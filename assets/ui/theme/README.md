@@ -1,13 +1,13 @@
 # UI Theme
 
-目标文件：`assets/ui/theme/steam_navigator_theme.tres`
+运行时文件：`assets/ui/theme/steam_navigator_theme.tres`
 
 ## 来源
 
 - `assets/ui/tokens.json`：颜色、字号、间距、动效时长。
 - `.design/styles.css`：按钮、Panel、Tab、Tooltip 的视觉参考。
 
-## 映射建议
+## 已落地映射
 
 | Token | Godot |
 | --- | --- |
@@ -23,4 +23,11 @@
 | `motion_ms.*` | Tween 时长 |
 | `nine_slice.corner_px` | StyleBox 圆角/九宫格角区 |
 
-明天先只做 Theme 和 UI Kit，不改领域逻辑。
+## Theme variations
+
+- 按钮：`SNPrimaryButton`、`SNSecondaryButton`、`SNDangerButton`、`SNGhostButton`
+- 面板：`SNPanel`、`SNElevatedPanel`、`SNInsetPanel`
+- 徽标：`SNBadge`、`SNSuccessBadge`、`SNWarningBadge`、`SNDangerBadge`
+- 存量条：`SNBrassProgressBar`、`SNWaterProgressBar`、`SNDangerProgressBar`
+
+配套控件位于 `framework/ui/components/`，展示场景为 `framework/ui/showcase/ui_kit_showcase.tscn`。主界面已直接加载该 Theme；领域逻辑未改动。

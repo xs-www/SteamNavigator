@@ -12,22 +12,18 @@
 | `.design/tokens.json` | 可映射至 Godot Theme 的颜色、字体、间距、9-slice 与动效令牌。 |
 | `.design/assets/main-menu-harbor.png` | 主菜单蒸汽船与港口概念背景。 |
 | `.design/assets/iron-harbor-banner.png` | 铁港港口页横幅概念图。 |
-| `.design/README.md` | 浏览方式、覆盖流程、资产来源与 Godot 落地顺序。 |
 
-## 美术方向
+## Godot 落地
 
-- 主色使用深青、黄铜、纸张灰与锈红，材质强调铆钉金属、油污、海雾和报告纸张。
-- 商品、港口、船体、锅炉、货舱、风险、声望采用统一的 24×24、约 2px 线框图标语言。
-- 卡片和面板使用固定 16px 角区与 2px 内框，可转换为 Godot `StyleBoxTexture` 9-slice。
-- 标题使用宋体/衬线字体表达航海叙事，正文与数字使用黑体/无衬线字体保证信息密度和可读性。
-- 交互节奏统一为按钮 120ms、hover 220ms、页面切换 420ms、环境循环 8–14s。
+- `assets/ui/theme/steam_navigator_theme.tres` 是运行时共享 Theme。
+- `framework/ui/components/` 提供可拖入场景的语义按钮、面板、徽标、章节标题和资源存量条。
+- `framework/ui/showcase/ui_kit_showcase.tscn` 用于独立预览与视觉冒烟。
+- 页面先使用 Theme variation 表达公共状态，业务脚本只负责布局和数据绑定。
 
 ## 原型契约
 
 - 原型只用于视觉与流程验证，不直接读写游戏状态，也不作为运行时依赖。
-- 关键决策信息必须同屏：市场展示价格趋势与持仓；委托展示目的地、期限、报酬和风险；出航展示耗时、消耗与失败来源。
 - 当前港、已访问港、可航行港、未知港使用形状、颜色和明度三重区分，不能只依赖颜色。
 - 抵达采用独立结算页，至少显示收入、奖金、耗时、煤水、耐久和声望变化。
-- 后续落地优先迁移设计令牌和基础控件，再逐页替换现有程序化 UI。
 
-模块索引：[静态代码文档](README.md)
+模块索引：[静态代码文档](../static/README.md)

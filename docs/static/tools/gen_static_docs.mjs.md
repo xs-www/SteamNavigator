@@ -12,29 +12,31 @@
 | `DOC_ROOT` | L19 |
 | `MODE` | L20 |
 | `RULE_VERSION` | L21 |
-| `MODULE_PATHS` | L23 |
-| `SKIP_SOURCES` | L42 |
-| `MODULE_OF` | L49 |
-| `GROUP_README` | L58 |
-| `walk(dir, out = [])` | L61 |
-| `read(relativePath)` | L78 |
-| `sha256(relativePath)` | L82 |
-| `lineAt(text, index)` | L86 |
-| `extractSymbols(relativePath, text)` | L90 |
-| `sourceTypeLabel(source)` | L141 |
-| `ensureDir(dirPath)` | L151 |
-| `writeDoc(relativePath, content)` | L155 |
-| `perFileDoc(source)` | L161 |
-| `fallbackRole(source)` | L217 |
-| `moduleSources(modulePath)` | L234 |
-| `renderModuleReadme(modulePath)` | L241 |
-| `moduleDescription(modulePath)` | L282 |
-| `main()` | L286 |
+| `STATIC_COPY_PAGES` | L22 |
+| `MODULE_PATHS` | L26 |
+| `SKIP_SOURCES` | L45 |
+| `MODULE_OF` | L52 |
+| `GROUP_README` | L61 |
+| `walk(dir, out = [])` | L64 |
+| `read(relativePath)` | L81 |
+| `sha256(relativePath)` | L85 |
+| `lineAt(text, index)` | L89 |
+| `extractSymbols(relativePath, text)` | L93 |
+| `sourceTypeLabel(source)` | L144 |
+| `ensureDir(dirPath)` | L154 |
+| `writeDoc(relativePath, content)` | L158 |
+| `perFileDoc(source)` | L164 |
+| `fallbackRole(source)` | L220 |
+| `moduleSources(modulePath)` | L237 |
+| `renderModuleReadme(modulePath)` | L244 |
+| `moduleDescription(modulePath)` | L285 |
+| `main()` | L289 |
 
 ## 契约与约束
 
 - GDScript 符号按 `class_name/signal/const/func` 提取；`.js/.mjs` 额外提取顶层 function、常量与 `root.SN*` 导出。
 - 生成前清空 `docs/static`；`SKIP_SOURCES` 中的生成物不进入文档与 manifest。
+- `STATIC_COPY_PAGES` 把策展型设计文档复制进静态索引，避免清理时丢失非源码页面。
 - 修改规则或分类后重新运行；`commit` 取当前 HEAD 短哈希。
 
 模块索引：[tools](./README.md)

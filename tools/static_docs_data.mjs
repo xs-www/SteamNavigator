@@ -680,20 +680,81 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/shell/main.gd": {
-    role: "可玩 UI 外壳：启动主菜单、总览/市场/委托/船厂/补给/情报/出航七个界面，以及海图、事件选择与诊断。",
+    role: "可玩 UI 外壳：共享 Theme 的主菜单、总览/市场/委托/船厂/补给/情报/出航、抵达结算、海图与诊断。",
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
       "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
       "每轮命令后整页重建；选项/目的地/构筑选择保存在 UI 成员。",
       "每个 PanelContainer 只允许一个 VBoxContainer 内容容器；面板子节点必须经 `_panel_add()` 添加，避免多子节点互相重叠。",
       "海图点击已访问港口：当前港跳转市场，远程港打开只读港口记忆。",
-      "市场页显示 buyable 与持仓均价；仅收购品种的买入按钮禁用。",
+      "启动主菜单使用全屏港口背景；进入游戏后保留顶部导航，并用共享 Theme 的徽标/章节标题/资源条构建信息层级。",
+      "总览港口横幅通过 Core manifest 的 `banner.port.*` 资产键与 `banner_asset` 字段解析；无横幅港口退回普通面板。",
+      "市场页显示 buyable 与持仓均价；仅收购品种不显示买入按钮。",
+      "委托页使用两列卡片；接取/规划按钮与状态通过 Badge 表达。",
       "补给页显示市场煤水价、港口库存、载重余量、可买上限和维修报价，按钮直接派发 supply.* 命令。",
-      "事件面板只展示本次抽样出的 2 个选项。",
+      "抵达后进入只读结算页，显示委托收入、准时、延误、煤水/耐久与交付明细。",
+      "交易、委托接取和补给购买成功后播放 pickup_gold_00.wav。",
       "无存档时进入主菜单：开始游戏进入新航程配置，加载游戏读取 autosave，模组页只读展示本次加载结果，设置可切换语言与自动存档，退出直接关闭。",
       "设置写入 `user://config/config.json`，默认值来自 `config/config.json`；首次加载会创建用户配置。",
       "右下角固定显示开发团队与游戏版本；版本来自 `application/config/version`。",
-      "加载游戏读取 autosave 并做模组兼容性校验。"
+      "加载游戏读取 autosave 并做模组兼容性校验。",
+      "根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。"
+    ]
+  },
+
+  "framework/ui/components/sn_button.gd": {
+    role: "可复用语义按钮：在 Inspector 中选择主操作、次操作、危险或幽灵样式。",
+    dependencies: ["steam_navigator_theme.tres"],
+    contracts: [
+      "只通过 `theme_type_variation` 选择视觉状态，不在业务页面复制 StyleBox。",
+      "默认保留键盘焦点并使用指针光标；compact 只调整高度和字号。"
+    ]
+  },
+
+  "framework/ui/components/sn_panel.gd": {
+    role: "可复用界面表面：基础、高架与内嵌三种层级。",
+    dependencies: ["steam_navigator_theme.tres"],
+    contracts: ["变体只表达视觉层级；内容布局仍由调用页面负责。"]
+  },
+
+  "framework/ui/components/sn_badge.gd": {
+    role: "紧凑状态徽标：中性、成功、警告和危险四种语义色。",
+    dependencies: ["steam_navigator_theme.tres"],
+    contracts: ["颜色必须配合明确文字使用，不能作为状态的唯一表达。"]
+  },
+
+  "framework/ui/components/sn_section_header.gd": {
+    role: "章节标题组合控件：眉题、标题和可选右侧说明。",
+    contracts: [
+      "内部子节点只创建一次，运行时和 `@tool` 编辑器预览共享同一同步路径。",
+      "detail 为空时隐藏右侧标签，标题区自动占满剩余宽度。"
+    ]
+  },
+
+  "framework/ui/components/sn_resource_meter.gd": {
+    role: "煤水、耐久与载重共用的标签化资源存量条。",
+    dependencies: ["steam_navigator_theme.tres"],
+    contracts: [
+      "当前值在 0 到最大值之间显示；最大值最低为 0.1，避免无效 ProgressBar 范围。",
+      "色调只切换 Theme variation，名称、数值、单位与安全提示保持同一信息结构。"
+    ]
+  },
+
+  "framework/ui/showcase/ui_kit_showcase.gd": {
+    role: "独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。",
+    dependencies: ["SNButton", "SNPanel", "SNBadge", "SNSectionHeader", "SNResourceMeter"],
+    contracts: [
+      "不依赖 AppContext 或 Core 内容，可在编辑器中单独运行。",
+      "展示按钮、徽标、资源条、输入框、选项框与复选框的默认/禁用/焦点样式。"
+    ]
+  },
+
+  "assets/ui/theme/steam_navigator_theme.tres": {
+    role: "全局 Godot Theme：把深青、黄铜、纸色令牌映射为基础控件与语义变体。",
+    contracts: [
+      "基础类型覆盖 Button、PanelContainer、LineEdit、OptionButton、ProgressBar 与容器间距。",
+      "自定义 variation 名称由 framework/ui/components 使用；删除或改名时必须同步控件脚本。",
+      "字体使用 SystemFont 回退链，不把本机字体文件写入资源。"
     ]
   },
 
@@ -720,6 +781,7 @@ export const FILE_DOCS = {
     contracts: [
       "GDScript 符号按 `class_name/signal/const/func` 提取；`.js/.mjs` 额外提取顶层 function、常量与 `root.SN*` 导出。",
       "生成前清空 `docs/static`；`SKIP_SOURCES` 中的生成物不进入文档与 manifest。",
+      "`STATIC_COPY_PAGES` 把策展型设计文档复制进静态索引，避免清理时丢失非源码页面。",
       "修改规则或分类后重新运行；`commit` 取当前 HEAD 短哈希。"
     ]
   },
@@ -997,8 +1059,11 @@ export const MODULES = {
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
-    intro: "展示层。当前只有一个最小可玩外壳，后续可拆分为海图/面板/出航等场景。",
-    contracts: ["UI 只识别 Query/Command 与定义类型，不识别 core 内容。"]
+    intro: "展示层。包含可玩外壳、共享 Godot Theme、可复用控件与独立 UI Kit 展示场景。",
+    contracts: [
+      "UI 只识别 Query/Command 与定义类型，不识别 core 内容。",
+      "公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。"
+    ]
   },
   "framework/tests": {
     intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、存档、ZIP 与框架约束。",

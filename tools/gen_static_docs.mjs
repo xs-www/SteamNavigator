@@ -19,6 +19,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DOC_ROOT = path.join(ROOT, "docs", "static");
 const MODE = "compact";
 const RULE_VERSION = "2.0";
+const STATIC_COPY_PAGES = [
+  ["docs/design/UI_PROTOTYPE.md", "design-prototype.md"],
+];
 
 const MODULE_PATHS = [
   "framework/bootstrap",
@@ -298,6 +301,9 @@ function main() {
   for (const modulePath of MODULE_PATHS) {
     renderModuleReadme(modulePath);
   }
+  for (const [source, target] of STATIC_COPY_PAGES) {
+    if (fs.existsSync(path.join(ROOT, source))) writeDoc(target, read(source));
+  }
 
   const commit = (() => {
     try {
@@ -324,6 +330,7 @@ function main() {
   l0.push("- 官方内容：[Core 内容包](dev_mods/core/README.md)");
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
   l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");
+  l0.push("- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)");
   l0.push("");
   l0.push("## 模块索引");
   l0.push("");
@@ -371,7 +378,7 @@ function main() {
   for (const modulePath of MODULE_PATHS) {
     for (const source of moduleSources(modulePath)) sourceSet.add(source);
   }
-  for (const extra of ["project.godot", "README.md", "todo.md", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs"]) {
+  for (const extra of ["project.godot", "README.md", "todo.md", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "docs/design/UI_PROTOTYPE.md"]) {
     if (fs.existsSync(path.join(ROOT, extra))) sourceSet.add(extra);
   }
 

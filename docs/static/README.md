@@ -24,14 +24,13 @@
 | [`framework/domain`](framework/domain/README.md) | 纯领域逻辑：航行、市场、委托、船只、地图、事件与债务。 |
 | [`framework/services`](framework/services/README.md) | 基础设施服务：日志、RNG、时钟、本地化、资源、存档。 |
 | [`framework/state`](framework/state/README.md) | 运行态数据模型。GameState 是唯一持久化状态，定义对象永不进入存档。 |
-| [`framework/ui`](framework/ui/README.md) | 展示层。当前只有一个最小可玩外壳，后续可拆分为海图/面板/出航等场景。 |
+| [`framework/ui`](framework/ui/README.md) | 展示层。包含可玩外壳、共享 Godot Theme、可复用控件与独立 UI Kit 展示场景。 |
 | [`framework/tests`](framework/tests/README.md) | 无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、存档、ZIP 与框架约束。 |
 | [`sdk`](sdk/README.md) | 模组开发工具：打包、校验、模板与示例。 |
 | [`schemas`](schemas/README.md) | Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）。 |
 | [`dev_mods/core`](dev_mods/core/README.md) | 官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化。 |
 | [`tools`](tools/README.md) | PowerShell 辅助脚本与静态文档生成器。 |
 | [`SNModMaker`](SNModMaker/README.md) | 零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。 |
-| [`.design`](design-prototype.md) | 本地美术方向与交互验证台；被 Git 忽略，不进入游戏构建与发行。 |
 
 ## 主要数据流
 
@@ -59,8 +58,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-18T13:36:46.990Z
-- 生成 commit：`b6e728c`
+- 生成时间：2026-10-18T22:45:41.025Z
+- 生成 commit：`f547a12`
 - 模式：`compact`；规则版本：`2.0`
 - 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。
 - 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://framework/ui/components/sn_button.gd" id="1"]
+
+[node name="SNButton" type="Button"]
+custom_minimum_size = Vector2(160, 44)
+text = "主操作"
+script = ExtResource("1")

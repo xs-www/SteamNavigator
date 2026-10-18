@@ -33,7 +33,10 @@
 - [x] 煤炭/淡水作为补给商品，价格随港口库存和 NPC 商船流动浮动
 - [x] 运行时扫描 `dist/mods`；松散 mod 覆盖同名 zip，core zip 构建产物自动忽略
 - [x] 美术与交互原型：统一深青/黄铜视觉、图标族、主菜单、港口海图、信息页、反馈与独立抵达结算（本地 `.design/`）
+- [x] Godot UI Kit：共享 Theme、语义按钮/面板/徽标/章节标题/资源存量条与独立展示场景
 - [x] 资产落位：`assets/ui`、`assets/audio`、`assets/fonts`、Core 港口图；来源与路径见 `docs/design/ASSET_MAP.md`
+- [x] 表现层第一轮：全屏主菜单背景、共享 Theme 顶栏/统计/导航、铁港港口横幅、两列委托卡、抵达结算页
+- [x] 交易反馈：接入 `pickup_gold_00.wav`，买入/卖出/接委托/补给成功播放
 
 ### 阶段 C：Core 内容（MVP 骨架）
 

@@ -78,6 +78,9 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"current_port": {
 			"id": current_port,
 			"name_key": String(port_data.get("name_key", current_port)),
+			"description_key": String(port_data.get("description_key", "")),
+			"source_mod": String(port_data.get("source_mod", "")),
+			"banner_asset": String(port_data.get("banner_asset", "")),
 			"facilities": Array(port_data.get("facilities", [])),
 			"tags": Array(port_data.get("tags", [])),
 			"visited": bool(port_data.get("visited", false)),

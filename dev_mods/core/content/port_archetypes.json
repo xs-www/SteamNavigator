@@ -10,6 +10,7 @@
       "enabled": true,
       "data": {
         "size": "medium",
+        "banner_asset": "banner.port.iron_harbor",
         "facilities": ["exchange", "contracts", "supply", "shipyard"],
         "market": [
           {"good": "core:good/iron_ore", "stock_range": [70, 130]},

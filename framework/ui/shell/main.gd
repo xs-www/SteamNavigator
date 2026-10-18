@@ -5,15 +5,16 @@ extends Control
 ## CommandBus. Each major function has its own screen; the shell owns
 ## navigation, the header, and transient selection state only.
 
-const COLOR_BG := Color("0b1116")
-const COLOR_PANEL := Color("16212a")
-const COLOR_PANEL_ALT := Color("1d2a34")
-const COLOR_TEXT := Color("d7e3ea")
-const COLOR_MUTED := Color("8b9aa5")
-const COLOR_BRASS := Color("f0c674")
-const COLOR_TEAL := Color("7fc8e8")
-const COLOR_RED := Color("e8837f")
-const COLOR_GREEN := Color("8fd694")
+const UI_THEME := preload("res://assets/ui/theme/steam_navigator_theme.tres")
+const COLOR_BG := Color("071a1d")
+const COLOR_PANEL := Color("10353a")
+const COLOR_PANEL_ALT := Color("17464a")
+const COLOR_TEXT := Color("ece1c5")
+const COLOR_MUTED := Color("9fafa7")
+const COLOR_BRASS := Color("e1c487")
+const COLOR_TEAL := Color("76aaa7")
+const COLOR_RED := Color("c36b53")
+const COLOR_GREEN := Color("76aa8c")
 const DEV_TEAM := "Steam Navigator Team"
 const GAME_VERSION_FALLBACK := "0.1.0"
 
@@ -52,59 +53,18 @@ var _status_message: String = ""
 var _status_is_error: bool = false
 var _footer_team: Label = null
 var _footer_version: Label = null
+var _menu_background: TextureRect = null
+var _menu_overlay: ColorRect = null
+var _pickup_player: AudioStreamPlayer = null
+var _settlement_summary: Dictionary = {}
 
 
 func _ready() -> void:
-	theme = _build_theme()
+	theme = UI_THEME
 	_settings = SettingsService.load_settings()
 	_build_shell()
+	_build_audio()
 	_refresh()
-
-
-func _build_theme() -> Theme:
-	var font := SystemFont.new()
-	font.font_names = PackedStringArray([
-		"Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC",
-		"Source Han Sans SC", "SimHei", "Arial", "sans-serif",
-	])
-	var result := Theme.new()
-	result.default_font = font
-	result.default_font_size = 15
-	result.set_color("font_color", "Label", COLOR_TEXT)
-	result.set_color("font_color", "Button", COLOR_TEXT)
-	result.set_color("font_color", "RichTextLabel", COLOR_TEXT)
-	result.set_color("font_color", "OptionButton", COLOR_TEXT)
-	result.set_color("font_color", "LineEdit", COLOR_TEXT)
-	result.set_color("font_hover_color", "Button", COLOR_BRASS)
-	result.set_stylebox("panel", "PanelContainer", _style(COLOR_PANEL, 10))
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var color := COLOR_PANEL_ALT
-		if state == "hover":
-			color = Color("2a3945")
-		elif state == "pressed":
-			color = Color("0f1a22")
-		elif state == "disabled":
-			color = Color("121b22")
-		result.set_stylebox(state, "Button", _style(color, 6))
-	result.set_color("font_disabled_color", "Button", Color("5a6a75"))
-	result.set_constant("separation", "VBoxContainer", 10)
-	result.set_constant("separation", "HBoxContainer", 10)
-	result.set_constant("h_separation", "GridContainer", 12)
-	return result
-
-
-func _style(color: Color, radius: int) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = color
-	box.corner_radius_top_left = radius
-	box.corner_radius_top_right = radius
-	box.corner_radius_bottom_left = radius
-	box.corner_radius_bottom_right = radius
-	box.content_margin_left = 14
-	box.content_margin_right = 14
-	box.content_margin_top = 12
-	box.content_margin_bottom = 12
-	return box
 
 
 func _build_shell() -> void:
@@ -112,6 +72,24 @@ func _build_shell() -> void:
 	background.color = COLOR_BG
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
+
+	_menu_background = TextureRect.new()
+	_menu_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_menu_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_menu_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_menu_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu_background.visible = false
+	var menu_texture := load("res://assets/ui/banners/main_menu_harbor.png") as Texture2D
+	if menu_texture != null:
+		_menu_background.texture = menu_texture
+	add_child(_menu_background)
+
+	_menu_overlay = ColorRect.new()
+	_menu_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_menu_overlay.color = Color(0.01, 0.04, 0.05, 0.58)
+	_menu_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu_overlay.visible = false
+	add_child(_menu_overlay)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -141,6 +119,27 @@ func _apply_settings_if_needed() -> void:
 	_context.localization.set_locale(_settings.locale())
 	_context.autosave_enabled = _settings.autosave()
 	_settings_applied = true
+
+
+func _build_audio() -> void:
+	_pickup_player = AudioStreamPlayer.new()
+	var stream := load("res://assets/audio/sfx/economy/pickup_gold_00.wav") as AudioStream
+	if stream != null:
+		_pickup_player.stream = stream
+		_pickup_player.volume_db = -7.0
+	add_child(_pickup_player)
+
+
+func _play_pickup() -> void:
+	if _pickup_player != null and _pickup_player.stream != null:
+		_pickup_player.play()
+
+
+func _set_menu_visual(enabled: bool) -> void:
+	if _menu_background != null:
+		_menu_background.visible = enabled
+	if _menu_overlay != null:
+		_menu_overlay.visible = enabled
 
 
 func _build_footer() -> void:
@@ -193,10 +192,12 @@ func _refresh() -> void:
 		return
 	var app: Dictionary = app_view["data"]
 	_refresh_footer()
-	_build_header(app)
-	if not bool(app.get("has_run", false)):
+	var has_run := bool(app.get("has_run", false))
+	_set_menu_visual(not has_run)
+	if not has_run:
 		_build_menu(app)
 		return
+	_build_header(app)
 
 	var port_result := _context.queries.execute(&"port.view")
 	if not bool(port_result.get("ok", false)):
@@ -217,7 +218,7 @@ func _refresh() -> void:
 
 	_build_nav(data)
 	_build_status_banner()
-	if not SCREENS.has(_active_screen) and _active_screen != "port_memory":
+	if not SCREENS.has(_active_screen) and _active_screen != "port_memory" and _active_screen != "settlement":
 		_active_screen = "overview"
 	match _active_screen:
 		"market":
@@ -234,6 +235,8 @@ func _refresh() -> void:
 			_screen_voyage(data)
 		"port_memory":
 			_screen_port_memory(data)
+		"settlement":
+			_screen_settlement(data)
 		_:
 			_screen_overview(data)
 
@@ -243,25 +246,40 @@ func _refresh() -> void:
 ## ---------------------------------------------------------------------------
 
 func _build_header(app: Dictionary) -> void:
+	var bar := PanelContainer.new()
+	bar.theme_type_variation = &"SNInsetPanel"
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_root_box.add_child(bar)
 	var header := HBoxContainer.new()
-	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_root_box.add_child(header)
-	var has_run := bool(app.get("has_run", false))
-	if has_run:
-		var title := _label(_tr("ui.app.title", "Steam Navigator"), 24, COLOR_BRASS)
-		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		header.add_child(title)
-	else:
-		var spacer := Control.new()
-		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		header.add_child(spacer)
-	header.add_child(_label(_tr(String(app.get("status_key", "ui.status.ok")), ""), 14, _status_color(app)))
-	if has_run:
-		header.add_child(_label("v%s" % app.get("framework_version", "?"), 13, COLOR_MUTED))
-	header.add_child(_button(_tr("ui.button.log", "Diagnostics"), _show_diagnostics))
-	if has_run:
-		header.add_child(_button(_tr("ui.button.refresh", "Refresh"), _refresh))
-	_root_box.add_child(HSeparator.new())
+	header.add_theme_constant_override("separation", 14)
+	bar.add_child(header)
+	var brand := VBoxContainer.new()
+	brand.add_theme_constant_override("separation", 0)
+	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(brand)
+	brand.add_child(_label("S T E A M   N A V I G A T O R", 9, COLOR_MUTED))
+	brand.add_child(_label(_tr("ui.app.title", "Steam Navigator"), 24, COLOR_BRASS))
+	header.add_child(_badge(
+		_tr(String(app.get("status_key", "ui.status.ok")), ""),
+		_status_badge_tone(app)
+	))
+	header.add_child(_label("v%s" % app.get("framework_version", "?"), 12, COLOR_MUTED))
+	var log_button := _button(_tr("ui.button.log", "Diagnostics"), _show_diagnostics)
+	log_button.theme_type_variation = &"SNGhostButton"
+	header.add_child(log_button)
+	var refresh_button := _button(_tr("ui.button.refresh", "Refresh"), _refresh)
+	refresh_button.theme_type_variation = &"SNGhostButton"
+	header.add_child(refresh_button)
+
+
+func _status_badge_tone(app: Dictionary) -> int:
+	match String(app.get("status", "fatal")):
+		"ok":
+			return SNBadge.Tone.SUCCESS
+		"degraded":
+			return SNBadge.Tone.WARNING
+		_:
+			return SNBadge.Tone.DANGER
 
 
 func _status_color(app: Dictionary) -> Color:
@@ -276,56 +294,66 @@ func _status_color(app: Dictionary) -> Color:
 
 func _build_stats_bar(data: Dictionary) -> void:
 	var panel := _panel()
+	panel.theme_type_variation = &"SNElevatedPanel"
 	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
 	_panel_add(panel, row)
 	var ship: Dictionary = data.get("ship", {})
-	var pairs := [
-		[_tr("ui.label.time", "Time"), String(data.get("time_label", ""))],
-		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0)))],
-		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0)))],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0)))],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0)))],
-		[_tr("ui.label.weight", "Weight"), "%s / %s" % [_fmt(float(ship.get("total_weight", 0.0))), _fmt(float(ship.get("max_weight", 0.0)))]],
-		[_tr("ui.label.durability", "Durability"), "%s / %s" % [_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0)))]],
+	var stats := [
+		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), COLOR_TEXT],
+		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), COLOR_BRASS],
+		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), COLOR_GREEN],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL],
+		[_tr("ui.label.weight", "Weight"), "%s / %s" % [_fmt(float(ship.get("total_weight", 0.0))), _fmt(float(ship.get("max_weight", 0.0)))], COLOR_TEXT],
+		[_tr("ui.label.durability", "Durability"), "%s / %s" % [_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0)))], COLOR_GREEN],
 	]
-	for pair in pairs:
-		var column := VBoxContainer.new()
-		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		column.add_child(_label(pair[0], 12, COLOR_MUTED))
-		column.add_child(_label(pair[1], 17, COLOR_TEXT))
-		row.add_child(column)
+	for index in stats.size():
+		if index > 0:
+			row.add_child(VSeparator.new())
+		row.add_child(_stat_chip(stats[index][0], stats[index][1], stats[index][2]))
 	_root_box.add_child(panel)
 
 
+func _stat_chip(label_text: String, value_text: String, accent: Color) -> Control:
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 1)
+	column.add_child(_label(label_text, 10, COLOR_MUTED))
+	column.add_child(_label(value_text, 16, accent))
+	return column
+
+
 func _build_nav(data: Dictionary) -> void:
+	var panel := _panel()
+	panel.theme_type_variation = &"SNInsetPanel"
 	var nav := HBoxContainer.new()
-	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_root_box.add_child(nav)
-	var visual_active := "overview" if _active_screen == "port_memory" else _active_screen
+	nav.add_theme_constant_override("separation", 2)
+	_panel_add(panel, nav)
+	var visual_active := "overview" if _active_screen == "port_memory" or _active_screen == "settlement" else _active_screen
 	for screen in SCREENS:
 		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
-		button.custom_minimum_size = Vector2(96, 34)
-		button.toggle_mode = false
-		if screen == visual_active:
-			button.disabled = true
-			button.add_theme_color_override("font_disabled_color", COLOR_BRASS)
-			button.add_theme_stylebox_override("disabled", _style(COLOR_PANEL_ALT, 6))
+		button.custom_minimum_size = Vector2(100, 36)
+		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
 		nav.add_child(button)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nav.add_child(spacer)
 	var port: Dictionary = data.get("current_port", {})
-	nav.add_child(_label("%s · %s" % [
+	nav.add_child(_badge("%s · %s" % [
 		_tr("ui.label.port", "Port"),
 		_tr(String(port.get("name_key", "")), String(port.get("id", ""))),
-	], 14, COLOR_MUTED))
-	_root_box.add_child(HSeparator.new())
+	], SNBadge.Tone.NEUTRAL))
+	_root_box.add_child(panel)
 
 
 func _build_status_banner() -> void:
 	if _status_message.is_empty():
 		return
-	_root_box.add_child(_label(_status_message, 14, COLOR_RED if _status_is_error else COLOR_GREEN))
+	var panel := _panel()
+	panel.theme_type_variation = &"SNInsetPanel"
+	_panel_add(panel, _badge(_status_message, SNBadge.Tone.DANGER if _status_is_error else SNBadge.Tone.SUCCESS))
+	_root_box.add_child(panel)
 
 
 func _build_menu(app: Dictionary) -> void:
@@ -350,37 +378,57 @@ func _build_menu(app: Dictionary) -> void:
 			_screen_main_menu(app)
 
 
-func _menu_button(text: String, callback: Callable, disabled: bool = false) -> Button:
-	var button := _button(text, callback)
-	button.custom_minimum_size = Vector2(340, 48)
-	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	button.add_theme_font_size_override("font_size", 18)
-	button.disabled = disabled
+func _menu_button(text: String, callback: Callable, disabled: bool = false, primary: bool = false) -> Button:
+	var button := _button(text, callback, disabled)
+	button.custom_minimum_size = Vector2(360, 52)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.theme_type_variation = &"SNPrimaryButton" if primary else &"SNSecondaryButton"
+	button.add_theme_font_size_override("font_size", 17)
 	return button
 
 
-func _screen_main_menu(_app: Dictionary) -> void:
-	var center := CenterContainer.new()
-	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	center.custom_minimum_size = Vector2(0, 610)
-	_root_box.add_child(center)
-	var column := VBoxContainer.new()
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_theme_constant_override("separation", 10)
-	center.add_child(column)
+func _screen_main_menu(app: Dictionary) -> void:
+	var top_row := HBoxContainer.new()
+	var top_spacer := Control.new()
+	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_row.add_child(top_spacer)
+	top_row.add_child(_badge(
+		_tr(String(app.get("status_key", "ui.status.ok")), ""),
+		_status_badge_tone(app)
+	))
+	var log_button := _button(_tr("ui.button.log", "Diagnostics"), _show_diagnostics)
+	log_button.theme_type_variation = &"SNGhostButton"
+	top_row.add_child(log_button)
+	_root_box.add_child(top_row)
 
-	var title := _label(_tr("ui.app.title", "Steam Navigator"), 52, COLOR_BRASS)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var shell := HBoxContainer.new()
+	shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shell.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_root_box.add_child(shell)
+	var left_margin := MarginContainer.new()
+	left_margin.add_theme_constant_override("margin_left", 72)
+	shell.add_child(left_margin)
+	var column := VBoxContainer.new()
+	column.custom_minimum_size = Vector2(470, 0)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 12)
+	left_margin.add_child(column)
+
+	column.add_child(_label("S T E A M   N A V I G A T O R", 11, COLOR_MUTED))
+	var title := _label(_tr("ui.app.title", "Steam Navigator"), 68, COLOR_BRASS)
 	column.add_child(title)
-	var subtitle := _label(_tr("ui.menu.subtitle", ""), 16, COLOR_MUTED)
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(subtitle)
+	column.add_child(_label(_tr("ui.menu.subtitle", ""), 16, COLOR_TEXT))
+	var rule := ColorRect.new()
+	rule.color = Color(COLOR_BRASS, 0.45)
+	rule.custom_minimum_size = Vector2(360, 1)
+	column.add_child(rule)
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 22)
+	spacer.custom_minimum_size = Vector2(0, 14)
 	column.add_child(spacer)
 
-	var has_save := bool(_app.get("autosave_available", false))
-	column.add_child(_menu_button(_tr("ui.menu.start", "开始游戏"), _on_menu.bind("new_game")))
+	var has_save := bool(app.get("autosave_available", false))
+	column.add_child(_menu_button(_tr("ui.menu.start", "开始游戏"), _on_menu.bind("new_game"), false, true))
 	column.add_child(_menu_button(
 		_tr("ui.menu.load", "加载游戏") if has_save else _tr("ui.menu.load_empty", "加载游戏（无存档）"),
 		_on_continue,
@@ -389,13 +437,15 @@ func _screen_main_menu(_app: Dictionary) -> void:
 	column.add_child(_menu_button(_tr("ui.menu.mods", "模组"), _on_menu.bind("mods")))
 	column.add_child(_menu_button(_tr("ui.menu.settings", "设置"), _on_menu.bind("settings")))
 	column.add_child(_menu_button(_tr("ui.menu.quit", "退出游戏"), _on_quit))
+	var right_spacer := Control.new()
+	right_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shell.add_child(right_spacer)
 
 	_build_status_banner()
 
 
 func _screen_new_game(app: Dictionary) -> void:
-	var title := _label(_tr("ui.menu.new_game", "新航程"), 26, COLOR_BRASS)
-	_root_box.add_child(title)
+	_root_box.add_child(_page_heading("新航程", _tr("ui.menu.new_game", "新航程"), "选择初始构筑与种子"))
 
 	var intro := _panel()
 	_panel_add(intro, _label(_tr("ui.app.subtitle", ""), 15, COLOR_MUTED))
@@ -456,7 +506,7 @@ func _screen_new_game(app: Dictionary) -> void:
 
 
 func _screen_mods(app: Dictionary) -> void:
-	_root_box.add_child(_label(_tr("ui.menu.mods_title", "已加载模组"), 26, COLOR_BRASS))
+	_root_box.add_child(_page_heading("模组", _tr("ui.menu.mods_title", "已加载模组"), "启动时实际加载的内容包"))
 	var note := _panel()
 	_panel_add(note, _label(_tr("ui.menu.mods_note", "模组启用/禁用和加载顺序管理尚未实现；这里显示本次启动实际加载的模组。"), 13, COLOR_MUTED))
 	_root_box.add_child(note)
@@ -491,7 +541,7 @@ func _screen_mods(app: Dictionary) -> void:
 
 
 func _screen_settings(_app: Dictionary) -> void:
-	_root_box.add_child(_label(_tr("ui.menu.settings_title", "设置"), 26, COLOR_BRASS))
+	_root_box.add_child(_page_heading("设置", _tr("ui.menu.settings_title", "设置"), "语言与自动存档"))
 	var panel := _panel()
 	var locale_row := HBoxContainer.new()
 	locale_row.add_child(_label(_tr("ui.menu.language", "语言"), 15, COLOR_TEXT))
@@ -524,6 +574,9 @@ func _screen_settings(_app: Dictionary) -> void:
 ## ---------------------------------------------------------------------------
 
 func _screen_overview(data: Dictionary) -> void:
+	var hero := _port_hero(data)
+	if hero != null:
+		_root_box.add_child(hero)
 	_root_box.add_child(_map_panel())
 	var columns := HBoxContainer.new()
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -546,6 +599,60 @@ func _screen_overview(data: Dictionary) -> void:
 	right.add_child(_finance_panel(data))
 
 
+func _port_hero(data: Dictionary) -> Control:
+	var port: Dictionary = data.get("current_port", {})
+	var banner_key := String(port.get("banner_asset", ""))
+	var source_mod := String(port.get("source_mod", ""))
+	if banner_key.is_empty() or source_mod.is_empty():
+		return null
+	var logical_key := "asset://%s/%s" % [source_mod, banner_key]
+	if not _context.assets.has(logical_key):
+		return null
+	var texture := load(_context.assets.resolve(logical_key)) as Texture2D
+	if texture == null:
+		return null
+
+	var hero := Control.new()
+	hero.custom_minimum_size = Vector2(0, 236)
+	hero.clip_contents = true
+	hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var image := TextureRect.new()
+	image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	image.texture = texture
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hero.add_child(image)
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.02, 0.06, 0.07, 0.6)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hero.add_child(shade)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 30)
+	margin.add_theme_constant_override("margin_right", 30)
+	margin.add_theme_constant_override("margin_top", 22)
+	margin.add_theme_constant_override("margin_bottom", 22)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hero.add_child(margin)
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_END
+	column.add_theme_constant_override("separation", 4)
+	margin.add_child(column)
+	column.add_child(_label("北纬 52° · 工业港", 11, COLOR_BRASS))
+	column.add_child(_label(_tr(String(port.get("name_key", "")), String(port.get("id", ""))), 46, COLOR_BRASS))
+	var description_key := String(port.get("description_key", ""))
+	if not description_key.is_empty():
+		column.add_child(_label(_tr(description_key, ""), 14, COLOR_TEXT))
+	var facility_row := HBoxContainer.new()
+	facility_row.add_theme_constant_override("separation", 6)
+	for facility in port.get("facilities", []):
+		facility_row.add_child(_badge(_facility_name(String(facility)), SNBadge.Tone.NEUTRAL))
+	column.add_child(facility_row)
+	return hero
+
+
 func _map_panel() -> Control:
 	var panel := _panel()
 	var map_view := _context.queries.execute(&"map.view")
@@ -553,7 +660,11 @@ func _map_panel() -> Control:
 		_panel_add(panel, _label(_error_text(map_view), 14, COLOR_RED))
 		return panel
 	var map_data: Dictionary = map_view["data"]
-	_panel_add(panel, _label(_tr("ui.map.hint", ""), 12, COLOR_MUTED))
+	var discovered := 0
+	for map_port in map_data.get("ports", []):
+		if bool(map_port.get("visited", false)):
+			discovered += 1
+	_panel_add(panel, _page_heading("航路局", "北部海图", "%d 个已访问港口 · 点击港口查看记忆" % discovered))
 	var canvas := MapCanvas.new()
 	canvas.custom_minimum_size = Vector2(0, 280)
 	canvas.ports = map_data.get("ports", [])
@@ -564,16 +675,20 @@ func _map_panel() -> Control:
 	canvas.mouse_filter = Control.MOUSE_FILTER_STOP
 	canvas.port_clicked.connect(_on_map_port_clicked)
 	_panel_add(panel, canvas)
+	var legend := HBoxContainer.new()
+	legend.add_theme_constant_override("separation", 18)
+	legend.add_child(_label("● 当前港", 11, COLOR_BRASS))
+	legend.add_child(_label("● 已访问", 11, COLOR_TEAL))
+	legend.add_child(_label("● 可航行", 11, COLOR_GREEN))
+	legend.add_child(_label("● 未知", 11, COLOR_MUTED))
+	_panel_add(panel, legend)
 	return panel
 
 
 func _port_panel(data: Dictionary) -> Control:
 	var panel := _panel()
 	var port: Dictionary = data.get("current_port", {})
-	_panel_add(panel, _label("%s · %s" % [
-		_tr("ui.label.port", "Port"),
-		_tr(String(port.get("name_key", "")), String(port.get("id", ""))),
-	], 18, COLOR_BRASS))
+	_panel_add(panel, _page_heading("港口", _tr(String(port.get("name_key", "")), String(port.get("id", ""))), "当前停靠"))
 	var facilities := PackedStringArray()
 	for facility in port.get("facilities", []):
 		facilities.append(_facility_name(String(facility)))
@@ -592,7 +707,7 @@ func _port_panel(data: Dictionary) -> Control:
 
 func _objective_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	_panel_add(panel, _label("当前目标", 17, COLOR_BRASS))
+	_panel_add(panel, _page_heading("当前目标", "主线航程", "优先完成主线以推进章节"))
 	var contracts: Dictionary = data.get("contracts", {})
 	var main_contract: Variant = contracts.get("main", null)
 	var main_offer: Variant = contracts.get("main_offer", null)
@@ -619,24 +734,28 @@ func _objective_panel(data: Dictionary) -> Control:
 func _ship_summary_panel(data: Dictionary) -> Control:
 	var panel := _panel()
 	var ship: Dictionary = data.get("ship", {})
-	_panel_add(panel, _label("船只", 17, COLOR_BRASS))
+	_panel_add(panel, _page_heading("船只", "当前船只", "载重与消耗"))
 	_panel_add(panel, _label("航速 %s · 煤耗 %s/h · 水耗 %s/h" % [
 		_fmt(float(ship.get("speed", 0.0)), 2),
 		_fmt(float(ship.get("coal_rate", 0.0)), 2),
 		_fmt(float(ship.get("water_rate", 0.0)), 2),
 	], 13, COLOR_MUTED))
-	_panel_add(panel, _label("重量 %s / %s · 耐久 %s / %s" % [
-		_fmt(float(ship.get("total_weight", 0.0))),
-		_fmt(float(ship.get("max_weight", 0.0))),
-		_fmt(float(ship.get("durability", 0.0))),
-		_fmt(float(ship.get("max_durability", 0.0))),
-	], 13, COLOR_TEXT))
-	_panel_add(panel, _label("货舱 %s / %s · 旅客 %d / %d" % [
-		_fmt(float(ship.get("cargo_used", 0.0))),
-		_fmt(float(ship.get("cargo_capacity", 0.0))),
-		int(ship.get("passengers", 0)),
-		int(ship.get("passenger_capacity", 0)),
-	], 13, COLOR_MUTED))
+	var durability := SNResourceMeter.new()
+	durability.label_text = "耐久"
+	durability.current_value = float(ship.get("durability", 0.0))
+	durability.maximum_value = maxf(1.0, float(ship.get("max_durability", 1.0)))
+	durability.suffix = ""
+	durability.hint = ""
+	durability.tone = SNResourceMeter.Tone.BRASS
+	_panel_add(panel, durability)
+	var cargo := SNResourceMeter.new()
+	cargo.label_text = "货舱"
+	cargo.current_value = float(ship.get("cargo_used", 0.0))
+	cargo.maximum_value = maxf(1.0, float(ship.get("cargo_capacity", 1.0)))
+	cargo.suffix = ""
+	cargo.hint = "旅客 %d / %d" % [int(ship.get("passengers", 0)), int(ship.get("passenger_capacity", 0))]
+	cargo.tone = SNResourceMeter.Tone.WATER
+	_panel_add(panel, cargo)
 	_panel_add(panel, _label("%s %s" % [_tr("ui.label.inventory_cost", ""), _fmt(float(ship.get("cargo_cost_basis", 0.0)))], 13, COLOR_MUTED))
 	for module in ship.get("modules", []):
 		_panel_add(panel, _label("· %s" % _tr(String(module.get("name_key", "")), String(module.get("module_id", ""))), 13, COLOR_TEXT))
@@ -657,7 +776,7 @@ func _ship_summary_panel(data: Dictionary) -> Control:
 
 func _quick_actions_panel() -> Control:
 	var panel := _panel()
-	_panel_add(panel, _label("快捷入口", 17, COLOR_BRASS))
+	_panel_add(panel, _page_heading("快捷入口", "港口操作", "常用功能"))
 	var actions := [
 		["market", "市场买卖"],
 		["contracts", "接取委托"],
@@ -667,13 +786,15 @@ func _quick_actions_panel() -> Control:
 		["voyage", "规划出航"],
 	]
 	for action in actions:
-		_panel_add(panel, _button(String(action[1]), _on_nav.bind(String(action[0]))))
+		var button := _button(String(action[1]), _on_nav.bind(String(action[0])))
+		button.theme_type_variation = &"SNGhostButton"
+		_panel_add(panel, button)
 	return panel
 
 
 func _finance_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	_panel_add(panel, _label("财务", 17, COLOR_BRASS))
+	_panel_add(panel, _page_heading("财务", "现金与债务", ""))
 	_panel_add(panel, _label("金币 %d" % int(data.get("money", 0)), 15, COLOR_TEXT))
 	if data.get("debt", null) is Dictionary:
 		_panel_add(panel, _label("已有贷款，收入将优先自动还款。", 12, COLOR_MUTED))
@@ -699,9 +820,13 @@ func _notices_panel(data: Dictionary) -> Control:
 ## ---------------------------------------------------------------------------
 
 func _screen_market(data: Dictionary) -> void:
-	var panel := _panel()
 	var port: Dictionary = data.get("current_port", {})
-	_panel_add(panel, _label("交易所 · %s" % _tr(String(port.get("name_key", "")), String(port.get("id", ""))), 20, COLOR_BRASS))
+	_root_box.add_child(_page_heading(
+		_tr("ui.nav.market", "Market"),
+		_tr(String(port.get("name_key", "")), String(port.get("id", ""))),
+		"市场行情"
+	))
+	var panel := _panel()
 	var ship: Dictionary = data.get("ship", {})
 	_panel_add(panel, _label("金币 %d · 重量 %s / %s · 货舱 %s / %s · %s %s" % [
 		int(data.get("money", 0)),
@@ -736,10 +861,13 @@ func _screen_market(data: Dictionary) -> void:
 		grid.add_child(_label(_trend_text(trends.get(item_id, "")), 13, _trend_color(trends.get(item_id, ""))))
 		var buy_row := HBoxContainer.new()
 		buy_row.add_theme_constant_override("separation", 2)
-		for amount in [1, 5, 10]:
-			var buy_button := _small_button(str(amount), _on_buy.bind(item_id, amount))
-			buy_button.disabled = not buyable or int(row.get("stock", 0)) < amount
-			buy_row.add_child(buy_button)
+		if buyable:
+			for amount in [1, 5, 10]:
+				var buy_button := _small_button(str(amount), _on_buy.bind(item_id, amount))
+				buy_button.disabled = int(row.get("stock", 0)) < amount
+				buy_row.add_child(buy_button)
+		else:
+			buy_row.add_child(_label("—", 13, COLOR_MUTED))
 		grid.add_child(buy_row)
 		var sell_row := HBoxContainer.new()
 		sell_row.add_theme_constant_override("separation", 2)
@@ -781,8 +909,8 @@ func _screen_port_memory(_data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var memory: Dictionary = result["data"]
+	_root_box.add_child(_page_heading("港口记忆", _tr(String(memory.get("name_key", "")), String(memory.get("port_id", ""))), "上次在港时的只读快照"))
 	var panel := _panel()
-	_panel_add(panel, _label("港口记忆 · %s" % _tr(String(memory.get("name_key", "")), String(memory.get("port_id", ""))), 20, COLOR_BRASS))
 	if bool(memory.get("has_memory", false)):
 		_panel_add(panel, _label("%s：%s · %s" % [
 			_tr("ui.label.last_visit", ""),
@@ -822,31 +950,35 @@ func _screen_port_memory(_data: Dictionary) -> void:
 
 func _screen_contracts(data: Dictionary) -> void:
 	var contracts: Dictionary = data.get("contracts", {})
-	var header := _panel()
-	_panel_add(header, _label("委托", 20, COLOR_BRASS))
-	_panel_add(header, _label("主线只能同时进行一个；普通委托持有上限随声誉提高。", 12, COLOR_MUTED))
-	_root_box.add_child(header)
+	_root_box.add_child(_page_heading("海事局委托处", "可接委托", "主线只能同时进行一个；普通委托持有上限随声誉提高。"))
 
 	var any := false
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 16)
+	_root_box.add_child(grid)
 	var main_contract: Variant = contracts.get("main", null)
 	if main_contract is Dictionary:
 		any = true
-		_root_box.add_child(_contract_card(main_contract, "主线进行中", false, true))
+		grid.add_child(_contract_card(main_contract, "主线进行中", false, true))
 	var main_offer: Variant = contracts.get("main_offer", null)
 	if main_offer is Dictionary:
 		any = true
-		_root_box.add_child(_contract_card(main_offer, "可接主线", true, false))
+		grid.add_child(_contract_card(main_offer, "可接主线", true, false))
 	var offers: Array = contracts.get("offers", [])
 	for offer in offers:
 		if offer is Dictionary:
 			any = true
-			_root_box.add_child(_contract_card(offer, "普通委托", true, false))
+			grid.add_child(_contract_card(offer, "普通委托", true, false))
 	var active: Array = contracts.get("active", [])
 	for contract in active:
 		if contract is Dictionary:
 			any = true
-			_root_box.add_child(_contract_card(contract, "普通进行中", false, true))
+			grid.add_child(_contract_card(contract, "普通进行中", false, true))
 	if not any:
+		grid.queue_free()
 		var empty := _panel()
 		_panel_add(empty, _label(_tr("ui.label.no_contracts", "暂无委托"), 14, COLOR_MUTED))
 		_root_box.add_child(empty)
@@ -862,13 +994,14 @@ func _screen_contracts(data: Dictionary) -> void:
 
 func _contract_card(contract: Dictionary, tag: String, can_accept: bool, can_plan: bool) -> Control:
 	var panel := _panel()
-	panel.add_theme_stylebox_override("panel", _style(COLOR_PANEL_ALT, 8))
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.theme_type_variation = &"SNElevatedPanel"
 	var title_row := HBoxContainer.new()
 	var title := _label(_tr(String(contract.get("name_key", "")), String(contract.get("template_id", ""))), 16, COLOR_BRASS)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_row.add_child(title)
-	title_row.add_child(_label(tag, 12, COLOR_MUTED))
+	title_row.add_child(_badge(tag, SNBadge.Tone.SUCCESS if can_plan else SNBadge.Tone.WARNING))
 	_panel_add(panel, title_row)
 	_panel_add(panel, _label("%s → %s" % [
 		_tr(String(contract.get("origin_name_key", "")), String(contract.get("origin", ""))),
@@ -953,13 +1086,18 @@ func _screen_shipyard(_data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var yard: Dictionary = result["data"]
+	_root_box.add_child(_page_heading(
+		_tr("ui.nav.shipyard", "Shipyard"),
+		_tr(String(yard.get("port_name_key", "")), String(yard.get("port_id", ""))),
+		"槽位、当前模块与替换限制"
+	))
 	if not bool(yard.get("has_shipyard", false)):
 		var warn := _panel()
 		_panel_add(warn, _label(_tr("ui.label.shipyard_absent", ""), 15, COLOR_RED))
 		_root_box.add_child(warn)
 
 	var current := _panel()
-	_panel_add(current, _label("%s · %s" % [_tr("ui.label.current_ship", ""), _tr(String(yard.get("port_name_key", "")), String(yard.get("port_id", "")))], 20, COLOR_BRASS))
+	_panel_add(current, _label(_tr("ui.label.current_ship", ""), 18, COLOR_BRASS))
 	var ship: Dictionary = yard.get("ship", {})
 	_panel_add(current, _label("货舱槽 %d / %d · 客舱槽 %d / %d · 导航 %s · 安全 %s" % [
 		int(ship.get("cargo_used", 0)), int(ship.get("cargo_slots", 0)),
@@ -1089,8 +1227,8 @@ func _screen_supply(_data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var supply: Dictionary = result["data"]
+	_root_box.add_child(_page_heading("港务补给站", "补给与装载", "煤水价格随港口库存浮动；补给计入总重量。"))
 	var panel := _panel()
-	_panel_add(panel, _label("补给码头 · %s" % _tr(String(supply.get("port_name_key", "")), String(supply.get("port_id", ""))), 20, COLOR_BRASS))
 	if not bool(supply.get("has_supply", false)):
 		_panel_add(panel, _label("当前港口没有补给码头。", 14, COLOR_RED))
 	_panel_add(panel, _label("煤炭 %s · 淡水 %s · 耐久 %s / %s" % [
@@ -1166,9 +1304,8 @@ func _screen_intel(_data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var intel: Dictionary = result["data"]
+	_root_box.add_child(_page_heading("航路情报站", "商情报告", _tr("ui.hint.intel", "")))
 	var header := _panel()
-	_panel_add(header, _label("情报", 20, COLOR_BRASS))
-	_panel_add(header, _label(_tr("ui.hint.intel", ""), 12, COLOR_MUTED))
 	if bool(intel.get("has_report", false)):
 		_panel_add(header, _label("%s：%s · %s" % [
 			_tr("ui.label.generated", ""),
@@ -1236,8 +1373,8 @@ func _screen_intel(_data: Dictionary) -> void:
 ## ---------------------------------------------------------------------------
 
 func _screen_voyage(data: Dictionary) -> void:
+	_root_box.add_child(_page_heading("航路规划", "出航准备", "出航前确认耗时、消耗与风险来源。"))
 	var panel := _panel()
-	_panel_add(panel, _label("出航规划", 20, COLOR_BRASS))
 	var destinations: Array = data.get("destinations", [])
 	var strategies: Array = data.get("strategies", [])
 	if destinations.is_empty() or strategies.is_empty():
@@ -1350,6 +1487,70 @@ func _screen_voyage(data: Dictionary) -> void:
 ## ---------------------------------------------------------------------------
 ## At sea and events
 ## ---------------------------------------------------------------------------
+
+func _screen_settlement(data: Dictionary) -> void:
+	if _settlement_summary.is_empty():
+		_screen_overview(data)
+		return
+	var summary := _settlement_summary
+	var destination := String(summary.get("destination", ""))
+	var ship: Dictionary = data.get("ship", {})
+	_root_box.add_child(_page_heading(
+		"航次完成",
+		"抵达 %s" % (_port_name(destination) if not destination.is_empty() else "目的港"),
+		ClockService.format_time(float(summary.get("arrival_time", 0.0)))
+	))
+	var panel := _panel()
+	panel.theme_type_variation = &"SNElevatedPanel"
+	var stats_row := HBoxContainer.new()
+	stats_row.add_theme_constant_override("separation", 6)
+	var contracts: Array = summary.get("contracts", [])
+	var payout := 0
+	var on_time := 0
+	for contract in contracts:
+		if contract is Dictionary:
+			payout += int(contract.get("payout", 0))
+			if bool(contract.get("on_time", false)):
+				on_time += 1
+	stats_row.add_child(_stat_chip("委托收入", str(payout), COLOR_BRASS))
+	stats_row.add_child(VSeparator.new())
+	stats_row.add_child(_stat_chip("准时交付", "%d / %d" % [on_time, contracts.size()], COLOR_GREEN))
+	stats_row.add_child(VSeparator.new())
+	stats_row.add_child(_stat_chip("延误", "%s h" % _fmt(float(summary.get("delayed_hours", 0.0))), COLOR_RED if float(summary.get("delayed_hours", 0.0)) > 0.0 else COLOR_TEXT))
+	stats_row.add_child(VSeparator.new())
+	stats_row.add_child(_stat_chip("当前金币", str(int(data.get("money", 0))), COLOR_BRASS))
+	_panel_add(panel, stats_row)
+	var resource_row := HBoxContainer.new()
+	resource_row.add_theme_constant_override("separation", 18)
+	resource_row.add_child(_badge("煤炭 %s" % _fmt(float(ship.get("coal", 0.0))), SNBadge.Tone.WARNING))
+	resource_row.add_child(_badge("淡水 %s" % _fmt(float(ship.get("water", 0.0))), SNBadge.Tone.NEUTRAL))
+	resource_row.add_child(_badge("耐久 %s / %s" % [
+		_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0))),
+	], SNBadge.Tone.SUCCESS if float(ship.get("durability", 0.0)) > float(ship.get("max_durability", 1.0)) * 0.5 else SNBadge.Tone.DANGER))
+	_panel_add(panel, resource_row)
+	if not contracts.is_empty():
+		_panel_add(panel, _label("交付明细", 14, COLOR_BRASS))
+		for contract in contracts:
+			if not (contract is Dictionary):
+				continue
+			var row := HBoxContainer.new()
+			var contract_name_key := String(contract.get("name_key", ""))
+			var contract_label := _tr(contract_name_key, "") if not contract_name_key.is_empty() else _definition_name(String(contract.get("template_id", "")))
+			var name_label := _label(contract_label, 13, COLOR_TEXT)
+			name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(name_label)
+			row.add_child(_badge(
+				"准时" if bool(contract.get("on_time", false)) else "延误",
+				SNBadge.Tone.SUCCESS if bool(contract.get("on_time", false)) else SNBadge.Tone.DANGER
+			))
+			row.add_child(_label("+%d" % int(contract.get("payout", 0)), 13, COLOR_BRASS))
+			_panel_add(panel, row)
+	var injuries := int(summary.get("injuries", 0))
+	if injuries > 0:
+		_panel_add(panel, _label("旅客受伤 %d 人" % injuries, 13, COLOR_RED))
+	_panel_add(panel, _button("进入港口", _on_nav.bind("overview")))
+	_root_box.add_child(panel)
+
 
 func _screen_at_sea(data: Dictionary, voyage: Variant) -> void:
 	var panel := _panel()
@@ -1573,6 +1774,8 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 
 func _handle_success(command: StringName, result: Dictionary) -> void:
 	var data: Dictionary = result.get("data", {})
+	if command in [&"trade.buy", &"trade.sell", &"contract.accept", &"supply.buy_coal", &"supply.buy_water"]:
+		_play_pickup()
 	match String(command):
 		"run.start":
 			_active_screen = "overview"
@@ -1637,35 +1840,14 @@ func _handle_voyage_result(data: Dictionary) -> void:
 
 
 func _full_stop_after_voyage(data: Dictionary) -> void:
-	_active_screen = "overview"
 	var summary: Variant = data.get("summary", data.get("event_result", null))
 	if summary is Dictionary:
-		_set_status(_arrival_message(summary), false)
+		_settlement_summary = summary
+		_active_screen = "settlement"
+		_status_message = ""
 	else:
+		_active_screen = "overview"
 		_set_status("已抵达目的港。", false)
-
-
-func _arrival_message(summary: Dictionary) -> String:
-	var parts := PackedStringArray()
-	var destination := String(summary.get("destination", ""))
-	parts.append("抵达 %s" % (_port_name(destination) if not destination.is_empty() else "目的港"))
-	var contracts: Array = summary.get("contracts", [])
-	if not contracts.is_empty():
-		var payout := 0
-		var on_time := 0
-		for contract in contracts:
-			if contract is Dictionary:
-				payout += int(contract.get("payout", 0))
-				if bool(contract.get("on_time", false)):
-					on_time += 1
-		parts.append("交付 %d 个委托" % contracts.size())
-		parts.append("收入 %d 金币" % payout)
-		if on_time > 0:
-			parts.append("准时 %d 个" % on_time)
-	var injuries := int(summary.get("injuries", 0))
-	if injuries > 0:
-		parts.append("旅客受伤 %d 人" % injuries)
-	return " · ".join(parts)
 
 
 ## ---------------------------------------------------------------------------
@@ -1729,6 +1911,22 @@ func _label(text: String, font_size: int = 15, color: Color = COLOR_TEXT) -> Lab
 	label.add_theme_color_override("font_color", color)
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	return label
+
+
+func _badge(text: String, tone: int = SNBadge.Tone.NEUTRAL) -> Label:
+	var badge := SNBadge.new()
+	badge.text = text
+	badge.tone = tone
+	return badge
+
+
+func _page_heading(eyebrow: String, title: String, detail: String = "") -> SNSectionHeader:
+	var header := SNSectionHeader.new()
+	header.eyebrow = eyebrow
+	header.title = title
+	header.detail = detail
+	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return header
 
 
 func _button(text: String, callback: Callable, disabled: bool = false) -> Button:
@@ -1887,6 +2085,10 @@ class MapCanvas:
 		_layout()
 		if ports.is_empty():
 			return
+		for x in range(0, int(size.x), 48):
+			draw_line(Vector2(x, 0), Vector2(x, size.y), Color(0.35, 0.52, 0.52, 0.1), 1.0)
+		for y in range(0, int(size.y), 48):
+			draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.35, 0.52, 0.52, 0.1), 1.0)
 		for route in routes:
 			var from_id := String(route.get("a", ""))
 			var to_id := String(route.get("b", ""))
@@ -1973,4 +2175,3 @@ class MapCanvas:
 				best = port_id
 				best_distance = distance
 		return best
-

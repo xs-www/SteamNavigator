@@ -9,6 +9,7 @@
 | `assets/icons/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/money.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/water.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/ports/iron_harbor_banner.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/boilers.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/cabins.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/cargo_modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
