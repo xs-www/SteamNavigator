@@ -38,6 +38,8 @@ const MODULE_TYPE_LABELS := {
 var _context: AppContext = null
 var _root_box: VBoxContainer = null
 var _last_port_view: Dictionary = {}
+var _settings: SettingsService = null
+var _settings_applied: bool = false
 
 var _active_screen: String = "overview"
 var _menu_screen: String = "main"
@@ -54,6 +56,7 @@ var _footer_version: Label = null
 
 func _ready() -> void:
 	theme = _build_theme()
+	_settings = SettingsService.load_settings()
 	_build_shell()
 	_refresh()
 
@@ -132,6 +135,14 @@ func _build_shell() -> void:
 	scroll.add_child(_root_box)
 
 
+func _apply_settings_if_needed() -> void:
+	if _context == null or _settings == null or _settings_applied:
+		return
+	_context.localization.set_locale(_settings.locale())
+	_context.autosave_enabled = _settings.autosave()
+	_settings_applied = true
+
+
 func _build_footer() -> void:
 	var footer := VBoxContainer.new()
 	footer.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -175,6 +186,7 @@ func _refresh() -> void:
 		_root_box.add_child(_label("Loading framework...", 20, COLOR_MUTED))
 		get_tree().create_timer(0.4).timeout.connect(_refresh)
 		return
+	_apply_settings_if_needed()
 	var app_view := _context.queries.execute(&"app.view")
 	if not bool(app_view.get("ok", false)):
 		_root_box.add_child(_label(_error_text(app_view), 18, COLOR_RED))
@@ -500,6 +512,8 @@ func _screen_settings(_app: Dictionary) -> void:
 
 	var note := _panel()
 	_panel_add(note, _label(_tr("ui.menu.settings_note", "设置仅对本次运行生效。"), 12, COLOR_MUTED))
+	if _settings != null:
+		_panel_add(note, _label(_tr("ui.menu.settings_path", "保存位置：user://config/config.json（默认 config/config.json）"), 12, COLOR_MUTED))
 	_root_box.add_child(note)
 	_root_box.add_child(_button(_tr("ui.menu.back", "返回主菜单"), _on_menu_back))
 	_build_status_banner()
@@ -1398,13 +1412,29 @@ func _on_quit() -> void:
 func _on_set_locale(locale: String) -> void:
 	if _context != null:
 		_context.localization.set_locale(locale)
+	if _settings != null:
+		_settings.set_locale(locale)
+	_save_settings()
 	_refresh()
 
 
 func _on_toggle_autosave() -> void:
 	if _context != null:
 		_context.autosave_enabled = not _context.autosave_enabled
+	if _settings != null:
+		_settings.set_autosave(_context.autosave_enabled if _context != null else true)
+	_save_settings()
 	_refresh()
+
+
+func _save_settings() -> void:
+	if _settings == null:
+		return
+	var saved := _settings.save()
+	if bool(saved.get("ok", false)):
+		_set_status(_tr("ui.menu.settings_saved", "设置已保存。"), false)
+	else:
+		_set_status(_error_text(saved), true)
 
 
 func _on_nav(screen: String) -> void:
@@ -1662,6 +1692,7 @@ func _retry_bootstrap() -> void:
 	var report := boot.run()
 	AppContext.set_active(boot.context)
 	_context = boot.context
+	_settings_applied = false
 	_set_status("" if not report.has_fatal() else _tr("ui.error.start_failed", ""), report.has_fatal())
 	_refresh()
 

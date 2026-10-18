@@ -20,8 +20,9 @@
 - 煤炭与淡水作为补给商品进入港口市场，价格随港口库存和 NPC 商船流动浮动；在补给页按当前市场价买入。
 - 5 段主线委托链（自动接第 1 段，后续以 offer 形式接取）、4 个普通委托模板。
 - 启动主菜单：开始游戏 / 加载游戏 / 模组 / 设置 / 退出游戏；右下角显示开发团队与版本。
+- 设置持久化：语言与自动存档写入 `user://config/config.json`；仓库内的 `config/config.json` 是默认配置。
 - 最小 UI：开局构筑选择，以及总览、市场、委托、船厂、补给、情报、出航七个独立界面；含海图点击、港口记忆、事件选择与诊断。
-- 无头测试套件：**48 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突、港口记忆、补给与库存成本）。
+- 无头测试套件：**49 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突、港口记忆、补给与库存成本）。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
 - [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`。
 
@@ -57,7 +58,7 @@ godot --headless --path . --script res://framework/tests/test_runner.gd
 ```text
 [PASS] test_mod_loading::test_core_loads_cleanly
 ...
-Tests: 48 passed, 0 failed, 48 total
+Tests: 49 passed, 0 failed, 49 total
 ```
 
 ### 打包 Core 模组
@@ -132,10 +133,11 @@ framework/
   services/                    RNG、时钟、日志、本地化、资源、存档
   state/                       GameState（纯数据、可克隆、可哈希）
   ui/                          最小可玩外壳
-  tests/                       无头测试运行器与 48 个测试
+  tests/                       无头测试运行器与 49 个测试
   localization/                框架 UI 文案（zh_CN / en）
   assets/                      缺失资源占位符
 schemas/                       Manifest 与各类内容的 JSON Schema
+config/                        默认 UI 设置（config.json）
 sdk/                           打包、校验、模组模板、第三方示例
 SNModMaker/                    零依赖网页端模组制作器（原生 HTML/CSS/JS）
 dev_mods/core/                 官方 MVP 内容（松散的开发态 mod）

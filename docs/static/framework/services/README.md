@@ -12,6 +12,7 @@
 | `logger.gd` | 有界结构化日志（DEBUG–FATAL），带模组/文件上下文字段。 | [查看](./logger.gd.md) |
 | `rng_service.gd` | 命名随机流：按（种子、流名、上下文）派生独立 RNG。 | [查看](./rng_service.gd.md) |
 | `save_service.gd` | JSON 存档槽：模组头、状态、临时文件校验后替换、兼容性检查。 | [查看](./save_service.gd.md) |
+| `settings_service.gd` | 持久化 UI 设置：默认读取 `res://config/config.json`，运行时写入 `user://config/config.json`。 | [查看](./settings_service.gd.md) |
 
 ## 模块契约
 

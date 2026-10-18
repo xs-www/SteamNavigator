@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，48 个测试通过；SNModMaker 28 个 Node 用例 + 14 个浏览器用例通过。
+> 最近验证：Godot 4.7.2 headless，49 个测试通过；SNModMaker 28 个 Node 用例 + 14 个浏览器用例通过。
 
 ## 已完成
 
@@ -24,6 +24,7 @@
 - [x] UI 不直接写 `GameState`
 - [x] 七个独立界面：总览 / 市场 / 委托 / 船厂 / 补给 / 情报 / 出航
 - [x] 启动主菜单：开始游戏 / 加载游戏 / 模组列表 / 设置 / 退出；右下角团队与版本
+- [x] 设置持久化：默认 `config/config.json`，运行时写入 `user://config/config.json`
 - [x] 补给界面：煤炭/淡水购买、剩余载重提示、维修报价
 - [x] 点击已访问港口查看上次在港的货价与储备（港口记忆）
 - [x] 任意港口收购所有普通货物；只允许买入本港商品表中的品种

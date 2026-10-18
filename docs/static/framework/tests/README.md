@@ -6,24 +6,25 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
-| `cases/test_contract_flow.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_events_effects.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_map_constraints.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_market_memory.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_market_trade.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_mod_loading.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_no_core_ids.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_patches.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_registry.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_rng.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_run_pipeline.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_save_load.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_schema_validator.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_semver_range.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_ship_upgrade.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_supply.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_ui_views.gd` | 按主题拆分的 48 个测试。 | 本页 |
-| `cases/test_zip_pack.gd` | 按主题拆分的 48 个测试。 | 本页 |
+| `cases/test_contract_flow.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_events_effects.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_map_constraints.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_market_memory.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_market_trade.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_mod_loading.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_no_core_ids.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_patches.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_registry.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_rng.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_run_pipeline.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_save_load.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_schema_validator.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_semver_range.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_settings.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_ship_upgrade.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_supply.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_ui_views.gd` | 按主题拆分的 49 个测试。 | 本页 |
+| `cases/test_zip_pack.gd` | 按主题拆分的 49 个测试。 | 本页 |
 | `smoke_load.gd` | 手动冒烟：加载 Core 并打印启动报告。 | 本页 |
 | `smoke_play.gd` | 手动冒烟：开局、预览、出航、事件选择。 | 本页 |
 | `test_case.gd` | 测试断言与 Core bootstrap 辅助。 | 本页 |

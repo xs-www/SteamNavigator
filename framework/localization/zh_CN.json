@@ -197,7 +197,7 @@
   "ui.menu.autosave_on": "开",
   "ui.menu.autosave_off": "关",
   "ui.menu.autosave_note": "关闭后本次运行不再自动写入自动存档。",
-  "ui.menu.settings_note": "设置仅对本次运行生效。",
+  "ui.menu.settings_note": "设置会保存到用户配置目录，下次启动自动生效。",
   "ui.menu.team": "开发团队：Steam Navigator Team",
   "ui.menu.version": "版本",
   "ui.menu.rescan": "重新扫描",
@@ -207,5 +207,8 @@
   "ui.menu.yes": "是",
   "ui.menu.no": "否",
   "ui.menu.current": "当前",
-  "ui.menu.subtitle": "蒸汽、贸易与远洋冒险"
+  "ui.menu.subtitle": "蒸汽、贸易与远洋冒险",
+  "ui.menu.settings_path": "保存位置：user://config/config.json（默认 config/config.json）",
+  "ui.menu.settings_saved": "设置已保存。",
+  "ui.error.settings_save_failed": "设置保存失败"
 }

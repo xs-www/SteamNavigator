@@ -617,6 +617,16 @@ export const FILE_DOCS = {
     }
   },
 
+  "framework/services/settings_service.gd": {
+    role: "持久化 UI 设置：默认读取 `res://config/config.json`，运行时写入 `user://config/config.json`。",
+    contracts: [
+      "只接受 zh_CN / en 两种语言；非法值回退 zh_CN。",
+      "自动存档为布尔值；首次启动会把默认配置写入 user://。",
+      "保存失败返回结构化 Result，不抛异常；调用方负责提示。",
+      "测试可覆盖 user/default 路径，避免污染真实用户配置。"
+    ]
+  },
+
   "framework/services/localization_service.gd": {
     role: "合并框架与模组本地化表，提供活动语言回退与缺失检测。",
     contracts: [
@@ -681,6 +691,7 @@ export const FILE_DOCS = {
       "补给页显示市场煤水价、港口库存、载重余量、可买上限和维修报价，按钮直接派发 supply.* 命令。",
       "事件面板只展示本次抽样出的 2 个选项。",
       "无存档时进入主菜单：开始游戏进入新航程配置，加载游戏读取 autosave，模组页只读展示本次加载结果，设置可切换语言与自动存档，退出直接关闭。",
+      "设置写入 `user://config/config.json`，默认值来自 `config/config.json`；首次加载会创建用户配置。",
       "右下角固定显示开发团队与游戏版本；版本来自 `application/config/version`。",
       "加载游戏读取 autosave 并做模组兼容性校验。"
     ]
@@ -1068,7 +1079,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码。",
-  "framework/tests/cases": "按主题拆分的 48 个测试。",
+  "framework/tests/cases": "按主题拆分的 49 个测试。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",

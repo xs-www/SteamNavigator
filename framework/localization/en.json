@@ -197,7 +197,7 @@
   "ui.menu.autosave_on": "On",
   "ui.menu.autosave_off": "Off",
   "ui.menu.autosave_note": "When off, this run will not write autosaves.",
-  "ui.menu.settings_note": "Settings apply to this run only.",
+  "ui.menu.settings_note": "Settings are saved to the user config directory and applied on the next launch.",
   "ui.menu.team": "Team: Steam Navigator Team",
   "ui.menu.version": "Version",
   "ui.menu.rescan": "Rescan",
@@ -207,5 +207,8 @@
   "ui.menu.yes": "Yes",
   "ui.menu.no": "No",
   "ui.menu.current": "Current",
-  "ui.menu.subtitle": "Steam, trade and distant waters"
+  "ui.menu.subtitle": "Steam, trade and distant waters",
+  "ui.menu.settings_path": "Saved to: user://config/config.json (default: config/config.json)",
+  "ui.menu.settings_saved": "Settings saved.",
+  "ui.error.settings_save_failed": "Failed to save settings"
 }
