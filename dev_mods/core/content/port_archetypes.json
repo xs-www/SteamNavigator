@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "content_type": "port_archetypes",
+  "definitions": [
+    {
+      "id": "core:port_archetype/iron_harbor",
+      "name_key": "port.core.iron_harbor.name",
+      "description_key": "port.core.iron_harbor.description",
+      "tags": ["port.hub", "port.industrial", "port.shipyard"],
+      "enabled": true,
+      "data": {
+        "size": "medium",
+        "facilities": ["exchange", "contracts", "supply", "shipyard"],
+        "market": [
+          {"good": "core:good/iron_ore", "stock_range": [70, 130]},
+          {"good": "core:good/timber", "stock_range": [80, 140]},
+          {"good": "core:good/brass", "stock_range": [40, 90], "price_bias": 0.95},
+          {"good": "core:material/boiler_plate", "stock_range": [30, 70]},
+          {"good": "core:material/sealing_compound", "stock_range": [40, 80]}
+        ]
+      }
+    },
+    {
+      "id": "core:port_archetype/spice_port",
+      "name_key": "port.core.spice_port.name",
+      "description_key": "port.core.spice_port.description",
+      "tags": ["port.trade", "port.intel"],
+      "enabled": true,
+      "data": {
+        "size": "small",
+        "facilities": ["exchange", "contracts", "supply", "intel"],
+        "market": [
+          {"good": "core:good/spices", "stock_range": [30, 70], "price_bias": 0.9},
+          {"good": "core:good/textiles", "stock_range": [50, 110]},
+          {"good": "core:good/glassware", "stock_range": [30, 80]},
+          {"good": "core:material/sealing_compound", "stock_range": [30, 60]}
+        ]
+      }
+    },
+    {
+      "id": "core:port_archetype/free_town",
+      "name_key": "port.core.free_town.name",
+      "description_key": "port.core.free_town.description",
+      "tags": ["port.hub", "port.trade", "port.shipyard", "port.intel"],
+      "enabled": true,
+      "data": {
+        "size": "medium",
+        "facilities": ["exchange", "contracts", "supply", "shipyard", "intel"],
+        "market": [
+          {"good": "core:good/brass", "stock_range": [40, 90]},
+          {"good": "core:good/timber", "stock_range": [60, 120]},
+          {"good": "core:good/textiles", "stock_range": [50, 100]},
+          {"good": "core:good/spices", "stock_range": [25, 60]},
+          {"good": "core:good/glassware", "stock_range": [30, 75]},
+          {"good": "core:material/boiler_plate", "stock_range": [25, 60]}
+        ]
+      }
+    },
+    {
+      "id": "core:port_archetype/fishing_village",
+      "name_key": "port.core.fishing_village.name",
+      "description_key": "port.core.fishing_village.description",
+      "tags": ["port.rural", "port.supply"],
+      "enabled": true,
+      "data": {
+        "size": "small",
+        "facilities": ["exchange", "contracts", "supply"],
+        "market": [
+          {"good": "core:good/timber", "stock_range": [90, 150], "price_bias": 0.9},
+          {"good": "core:good/iron_ore", "stock_range": [60, 110]},
+          {"good": "core:good/textiles", "stock_range": [40, 90]},
+          {"good": "core:material/sealing_compound", "stock_range": [30, 70]}
+        ]
+      }
+    },
+    {
+      "id": "core:port_archetype/glass_port",
+      "name_key": "port.core.glass_port.name",
+      "description_key": "port.core.glass_port.description",
+      "tags": ["port.craft", "port.intel"],
+      "enabled": true,
+      "data": {
+        "size": "small",
+        "facilities": ["exchange", "contracts", "supply", "intel"],
+        "market": [
+          {"good": "core:good/glassware", "stock_range": [40, 90], "price_bias": 0.9},
+          {"good": "core:good/brass", "stock_range": [35, 80]},
+          {"good": "core:good/spices", "stock_range": [25, 55]},
+          {"good": "core:material/precision_gear", "stock_range": [15, 40]}
+        ]
+      }
+    }
+  ]
+}

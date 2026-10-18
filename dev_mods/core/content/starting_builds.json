@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "content_type": "starting_builds",
+  "definitions": [
+    {
+      "id": "core:starting_build/steady",
+      "name_key": "starting_build.core.steady.name",
+      "description_key": "starting_build.core.steady.description",
+      "tags": ["starting_build.efficient", "starting_build.safe"],
+      "enabled": true,
+      "data": {
+        "money": 900,
+        "reputation": 0,
+        "hull": "core:hull/small_efficient",
+        "boiler": "core:boiler/small_efficient",
+        "cargo_modules": ["core:cargo_module/small_hold"],
+        "navigation_module": "core:navigation_module/spyglass",
+        "safety_module": "core:safety_module/lifeboat",
+        "engineer": "core:role/engineer_basic",
+        "navigator": "core:role/navigator_basic",
+        "coal": 26,
+        "water": 18,
+        "durability_ratio": 1.0
+      }
+    },
+    {
+      "id": "core:starting_build/swift",
+      "name_key": "starting_build.core.swift.name",
+      "description_key": "starting_build.core.swift.description",
+      "tags": ["starting_build.performance", "starting_build.risky"],
+      "enabled": true,
+      "data": {
+        "money": 700,
+        "reputation": 0,
+        "hull": "core:hull/small_efficient",
+        "boiler": "core:boiler/performance",
+        "cargo_modules": ["core:cargo_module/small_hold"],
+        "navigation_module": "core:navigation_module/spyglass",
+        "navigator": "core:role/navigator_basic",
+        "coal": 20,
+        "water": 14,
+        "durability_ratio": 0.9
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/contract-1.json",
+  "title": "Steam Navigator contract content file",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "enum": ["1.0"]
+    },
+    "content_type": {
+      "const": "contracts"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/contract_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "contract_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "generator", "payloads", "deadline_formula", "rewards"],
+      "properties": {
+        "kind": {
+          "enum": ["main", "normal"]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "generator": {
+          "enum": ["route_pair", "random_pair"]
+        },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requires_discovered_origin": {
+              "type": "boolean"
+            },
+            "min_route_edges": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "max_route_edges": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "required_port_tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "payloads": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "$ref": "common.schema.json#/$defs/payload"
+          }
+        },
+        "deadline_formula": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rewards": {
+          "$ref": "common.schema.json#/$defs/rewards"
+        },
+        "requires_completed": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        }
+      }
+    }
+  }
+}

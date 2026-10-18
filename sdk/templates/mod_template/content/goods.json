@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "content_type": "goods",
+  "definitions": [
+    {
+      "id": "example_mod:good/tea",
+      "name_key": "good.example_mod.tea.name",
+      "description_key": "good.example_mod.tea.description",
+      "tags": ["good.trade", "good.consumer"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 0.8,
+        "base_price": 95,
+        "base_stock": 60,
+        "price_elasticity": 0.16,
+        "spawn_weight": 0.5,
+        "category": "beverage"
+      }
+    }
+  ]
+}

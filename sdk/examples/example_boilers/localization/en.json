@@ -1,0 +1,4 @@
+{
+  "module.example_boilers.compound_efficient.name": "Compound Efficient Boiler",
+  "module.example_boilers.compound_efficient.description": "An example third-party boiler between efficiency and performance."
+}

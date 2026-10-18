@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/strategy-1.json",
+  "title": "Steam Navigator boiler strategy content file",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "enum": ["1.0"]
+    },
+    "content_type": {
+      "const": "strategies"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/strategy_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "strategy_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["speed_mul", "coal_mul", "water_mul", "risk_add"],
+      "properties": {
+        "speed_mul": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 2
+        },
+        "coal_mul": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "water_mul": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "risk_add": {
+          "type": "number",
+          "minimum": -0.2,
+          "maximum": 0.3
+        }
+      }
+    }
+  }
+}

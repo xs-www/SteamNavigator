@@ -1,0 +1,4 @@
+{
+  "module.example_boilers.compound_efficient.name": "复合式高效锅炉",
+  "module.example_boilers.compound_efficient.description": "示例第三方锅炉：介于效率与性能之间。"
+}

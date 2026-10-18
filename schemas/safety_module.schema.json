@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/safety-module-1.json",
+  "title": "Steam Navigator safety module content file",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "enum": ["1.0"]
+    },
+    "content_type": {
+      "const": "safety_modules"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/safety_module_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "safety_module_data": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/module_common"
+        },
+        {
+          "type": "object",
+          "required": ["risk_add", "damage_mul", "repair_cost_mul"],
+          "properties": {
+            "risk_add": {
+              "type": "number",
+              "minimum": -0.5,
+              "maximum": 0.5
+            },
+            "damage_mul": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1.5
+            },
+            "repair_cost_mul": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "content_type": "boilers",
+  "definitions": [
+    {
+      "id": "core:boiler/small_efficient",
+      "name_key": "module.core.small_efficient_boiler.name",
+      "description_key": "module.core.small_efficient_boiler.description",
+      "tags": ["module.boiler", "module.small", "module.efficient"],
+      "enabled": true,
+      "data": {
+        "tier": 1,
+        "weight": 8.0,
+        "purchase_price": 420,
+        "craft_time_hours": 4,
+        "materials": [
+          {"id": "core:good/brass", "amount": 4},
+          {"id": "core:material/sealing_compound", "amount": 2}
+        ],
+        "speed_mul": 0.94,
+        "coal_rate": 0.30,
+        "water_rate": 0.22
+      }
+    },
+    {
+      "id": "core:boiler/standard",
+      "name_key": "module.core.standard_boiler.name",
+      "description_key": "module.core.standard_boiler.description",
+      "tags": ["module.boiler", "module.standard"],
+      "enabled": true,
+      "data": {
+        "tier": 1,
+        "weight": 10.0,
+        "purchase_price": 650,
+        "craft_time_hours": 5,
+        "materials": [
+          {"id": "core:good/brass", "amount": 6},
+          {"id": "core:material/boiler_plate", "amount": 2}
+        ],
+        "speed_mul": 1.0,
+        "coal_rate": 0.40,
+        "water_rate": 0.28
+      }
+    },
+    {
+      "id": "core:boiler/performance",
+      "name_key": "module.core.performance_boiler.name",
+      "description_key": "module.core.performance_boiler.description",
+      "tags": ["module.boiler", "module.performance"],
+      "enabled": true,
+      "data": {
+        "tier": 2,
+        "weight": 14.0,
+        "purchase_price": 1200,
+        "craft_time_hours": 7,
+        "materials": [
+          {"id": "core:good/brass", "amount": 8},
+          {"id": "core:material/boiler_plate", "amount": 4},
+          {"id": "core:material/precision_gear", "amount": 1}
+        ],
+        "speed_mul": 1.18,
+        "coal_rate": 0.58,
+        "water_rate": 0.36
+      }
+    }
+  ]
+}

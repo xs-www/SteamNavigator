@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0",
+  "content_type": "goods",
+  "definitions": [
+    {
+      "id": "core:good/iron_ore",
+      "name_key": "good.core.iron_ore.name",
+      "description_key": "good.core.iron_ore.description",
+      "tags": ["good.trade", "good.bulk", "good.shipbuilding"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 3.0,
+        "base_price": 42,
+        "base_stock": 120,
+        "price_elasticity": 0.16,
+        "spawn_weight": 1.0,
+        "crafting_material": true,
+        "category": "ore"
+      }
+    },
+    {
+      "id": "core:good/brass",
+      "name_key": "good.core.brass.name",
+      "description_key": "good.core.brass.description",
+      "tags": ["good.trade", "good.shipbuilding"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 2.0,
+        "base_price": 88,
+        "base_stock": 80,
+        "price_elasticity": 0.18,
+        "spawn_weight": 1.0,
+        "crafting_material": true,
+        "category": "metal"
+      }
+    },
+    {
+      "id": "core:good/textiles",
+      "name_key": "good.core.textiles.name",
+      "description_key": "good.core.textiles.description",
+      "tags": ["good.trade", "good.consumer"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 1.0,
+        "base_price": 64,
+        "base_stock": 90,
+        "price_elasticity": 0.15,
+        "spawn_weight": 1.0,
+        "category": "textile"
+      }
+    },
+    {
+      "id": "core:good/spices",
+      "name_key": "good.core.spices.name",
+      "description_key": "good.core.spices.description",
+      "tags": ["good.trade", "good.luxury"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 0.5,
+        "base_price": 150,
+        "base_stock": 55,
+        "price_elasticity": 0.12,
+        "spawn_weight": 0.8,
+        "category": "luxury"
+      }
+    },
+    {
+      "id": "core:good/timber",
+      "name_key": "good.core.timber.name",
+      "description_key": "good.core.timber.description",
+      "tags": ["good.trade", "good.bulk", "good.shipbuilding"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 2.5,
+        "base_price": 36,
+        "base_stock": 130,
+        "price_elasticity": 0.17,
+        "spawn_weight": 1.0,
+        "crafting_material": true,
+        "category": "wood"
+      }
+    },
+    {
+      "id": "core:good/glassware",
+      "name_key": "good.core.glassware.name",
+      "description_key": "good.core.glassware.description",
+      "tags": ["good.trade", "good.fragile"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 1.5,
+        "base_price": 105,
+        "base_stock": 60,
+        "price_elasticity": 0.2,
+        "spawn_weight": 0.9,
+        "category": "craft"
+      }
+    },
+    {
+      "id": "core:good/contract_freight",
+      "name_key": "good.core.contract_freight.name",
+      "description_key": "good.core.contract_freight.description",
+      "tags": ["good.contract"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 1.0,
+        "base_price": 1,
+        "base_stock": 1,
+        "price_elasticity": 0.1,
+        "spawn_weight": 0.0,
+        "category": "contract"
+      }
+    }
+  ]
+}

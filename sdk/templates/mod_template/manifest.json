@@ -1,0 +1,27 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_mod",
+  "name": "Example Content Mod",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 10,
+  "required": false,
+  "dependencies": [
+    {"id": "core", "version": ">=1.0.0 <2.0.0"}
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/goods.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": ["Your Name"],
+  "license": "CC-BY-4.0",
+  "description": "Copy this template, change the id, and add content files.",
+  "capabilities": []
+}

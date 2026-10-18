@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "content_type": "safety_modules",
+  "definitions": [
+    {
+      "id": "core:safety_module/lifeboat",
+      "name_key": "module.core.lifeboat.name",
+      "description_key": "module.core.lifeboat.description",
+      "tags": ["module.safety", "module.efficient"],
+      "enabled": true,
+      "data": {
+        "tier": 1,
+        "weight": 4.0,
+        "purchase_price": 280,
+        "craft_time_hours": 2,
+        "materials": [
+          {"id": "core:good/timber", "amount": 3}
+        ],
+        "risk_add": -0.015,
+        "damage_mul": 0.9,
+        "repair_cost_mul": 1.0
+      }
+    },
+    {
+      "id": "core:safety_module/safety_valve",
+      "name_key": "module.core.safety_valve.name",
+      "description_key": "module.core.safety_valve.description",
+      "tags": ["module.safety", "module.performance"],
+      "enabled": true,
+      "data": {
+        "tier": 2,
+        "weight": 6.0,
+        "purchase_price": 760,
+        "craft_time_hours": 4,
+        "materials": [
+          {"id": "core:good/brass", "amount": 4},
+          {"id": "core:material/sealing_compound", "amount": 3}
+        ],
+        "risk_add": -0.03,
+        "damage_mul": 0.75,
+        "repair_cost_mul": 0.85
+      }
+    }
+  ]
+}

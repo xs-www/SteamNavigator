@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/map-profile-1.json",
+  "title": "Steam Navigator map generation profile content file",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "enum": ["1.0"]
+    },
+    "content_type": {
+      "const": "map_profiles"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/map_profile_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "map_profile_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port_count_range",
+        "edge_count_range",
+        "distance_range",
+        "route_risk_range",
+        "archetypes",
+        "port_name_keys",
+        "required_facility_tags"
+      ],
+      "properties": {
+        "port_count_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "edge_count_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "distance_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "route_risk_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "archetypes": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        },
+        "port_name_keys": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "start_archetype_tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_facility_tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^port\\.[a-z_]+$"
+          }
+        },
+        "required_facility_max_edges": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "npc_count_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "npc_cargo_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "supply_prices": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["coal", "water", "repair_per_point"],
+          "properties": {
+            "coal": {
+              "type": "number",
+              "minimum": 0
+            },
+            "water": {
+              "type": "number",
+              "minimum": 0
+            },
+            "repair_per_point": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "loan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["limit", "interest_rate", "term_hours"],
+          "properties": {
+            "limit": {
+              "type": "number",
+              "minimum": 1
+            },
+            "interest_rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5
+            },
+            "term_hours": {
+              "type": "number",
+              "minimum": 1
+            }
+          }
+        },
+        "intel_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "trade_margin": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1
+        },
+        "default_starting_build": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        }
+      }
+    }
+  }
+}

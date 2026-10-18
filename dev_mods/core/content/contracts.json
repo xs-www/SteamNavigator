@@ -1,0 +1,315 @@
+{
+  "schema_version": "1.0",
+  "content_type": "contracts",
+  "definitions": [
+    {
+      "id": "core:contract/main_01",
+      "name_key": "contract.core.main_01.name",
+      "description_key": "contract.core.main_01.description",
+      "tags": ["contract.main", "contract.cargo", "contract.tutorial"],
+      "enabled": true,
+      "data": {
+        "kind": "main",
+        "sequence": 1,
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "name_key": "contract.core.main_01.payload",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [8, 12]
+          }
+        ],
+        "deadline_formula": "tutorial_first",
+        "rewards": {
+          "base_money": [220, 260],
+          "on_time_bonus": [80, 100],
+          "reputation": 1,
+          "unlock_ids": []
+        },
+        "requires_completed": []
+      }
+    },
+    {
+      "id": "core:contract/main_02",
+      "name_key": "contract.core.main_02.name",
+      "description_key": "contract.core.main_02.description",
+      "tags": ["contract.main", "contract.cargo", "contract.tutorial"],
+      "enabled": true,
+      "data": {
+        "kind": "main",
+        "sequence": 2,
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "name_key": "contract.core.main_02.payload",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [10, 14]
+          }
+        ],
+        "deadline_formula": "tutorial_trade",
+        "rewards": {
+          "base_money": [300, 340],
+          "on_time_bonus": [120, 140],
+          "reputation": 1,
+          "unlock_ids": []
+        },
+        "requires_completed": ["core:contract/main_01"]
+      }
+    },
+    {
+      "id": "core:contract/main_03",
+      "name_key": "contract.core.main_03.name",
+      "description_key": "contract.core.main_03.description",
+      "tags": ["contract.main", "contract.cargo", "contract.tutorial"],
+      "enabled": true,
+      "data": {
+        "kind": "main",
+        "sequence": 3,
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "name_key": "contract.core.main_03.payload",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [12, 16]
+          }
+        ],
+        "deadline_formula": "tutorial_craft",
+        "rewards": {
+          "base_money": [380, 420],
+          "on_time_bonus": [150, 180],
+          "reputation": 1,
+          "unlock_ids": [
+            "core:hull/medium_standard",
+            "core:cargo_module/medium_hold"
+          ]
+        },
+        "requires_completed": ["core:contract/main_02"]
+      }
+    },
+    {
+      "id": "core:contract/main_04",
+      "name_key": "contract.core.main_04.name",
+      "description_key": "contract.core.main_04.description",
+      "tags": ["contract.main", "contract.passenger", "contract.tutorial"],
+      "enabled": true,
+      "data": {
+        "kind": "main",
+        "sequence": 4,
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "passenger",
+            "name_key": "contract.core.main_04.payload",
+            "count_range": [2, 3]
+          }
+        ],
+        "deadline_formula": "passenger_run",
+        "rewards": {
+          "base_money": [420, 460],
+          "on_time_bonus": [180, 220],
+          "reputation": 2,
+          "unlock_ids": [
+            "core:safety_module/safety_valve"
+          ]
+        },
+        "requires_completed": ["core:contract/main_03"]
+      }
+    },
+    {
+      "id": "core:contract/main_05",
+      "name_key": "contract.core.main_05.name",
+      "description_key": "contract.core.main_05.description",
+      "tags": ["contract.main", "contract.cargo", "contract.passenger", "contract.finale"],
+      "enabled": true,
+      "data": {
+        "kind": "main",
+        "sequence": 5,
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "name_key": "contract.core.main_05.cargo",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [22, 30]
+          },
+          {
+            "kind": "passenger",
+            "name_key": "contract.core.main_05.passengers",
+            "count_range": [2, 4]
+          }
+        ],
+        "deadline_formula": "balanced_finale",
+        "rewards": {
+          "base_money": [900, 1200],
+          "on_time_bonus": [500, 700],
+          "reputation": 2,
+          "unlock_ids": [
+            "core:hull/large_efficient",
+            "core:hull/large_performance"
+          ]
+        },
+        "requires_completed": ["core:contract/main_04"]
+      }
+    },
+    {
+      "id": "core:contract/normal_cargo_short",
+      "name_key": "contract.core.normal_cargo_short.name",
+      "description_key": "contract.core.normal_cargo_short.description",
+      "tags": ["contract.normal", "contract.cargo"],
+      "enabled": true,
+      "data": {
+        "kind": "normal",
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [6, 10]
+          }
+        ],
+        "deadline_formula": "normal_standard",
+        "rewards": {
+          "base_money": [140, 180],
+          "on_time_bonus": [40, 60],
+          "reputation": 1,
+          "unlock_ids": []
+        },
+        "requires_completed": []
+      }
+    },
+    {
+      "id": "core:contract/normal_cargo_long",
+      "name_key": "contract.core.normal_cargo_long.name",
+      "description_key": "contract.core.normal_cargo_long.description",
+      "tags": ["contract.normal", "contract.cargo"],
+      "enabled": true,
+      "data": {
+        "kind": "normal",
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [14, 20]
+          }
+        ],
+        "deadline_formula": "normal_standard",
+        "rewards": {
+          "base_money": [240, 300],
+          "on_time_bonus": [60, 90],
+          "reputation": 1,
+          "unlock_ids": []
+        },
+        "requires_completed": []
+      }
+    },
+    {
+      "id": "core:contract/normal_passenger",
+      "name_key": "contract.core.normal_passenger.name",
+      "description_key": "contract.core.normal_passenger.description",
+      "tags": ["contract.normal", "contract.passenger"],
+      "enabled": true,
+      "data": {
+        "kind": "normal",
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "passenger",
+            "count_range": [1, 2]
+          }
+        ],
+        "deadline_formula": "normal_standard",
+        "rewards": {
+          "base_money": [180, 220],
+          "on_time_bonus": [50, 70],
+          "reputation": 1,
+          "unlock_ids": []
+        },
+        "requires_completed": []
+      }
+    },
+    {
+      "id": "core:contract/normal_urgent",
+      "name_key": "contract.core.normal_urgent.name",
+      "description_key": "contract.core.normal_urgent.description",
+      "tags": ["contract.normal", "contract.cargo", "contract.urgent"],
+      "enabled": true,
+      "data": {
+        "kind": "normal",
+        "generator": "route_pair",
+        "constraints": {
+          "requires_discovered_origin": true,
+          "min_route_edges": 1,
+          "max_route_edges": 1,
+          "required_port_tags": []
+        },
+        "payloads": [
+          {
+            "kind": "cargo",
+            "cargo_item_id": "core:good/contract_freight",
+            "weight_range": [8, 12]
+          }
+        ],
+        "deadline_formula": "normal_urgent",
+        "rewards": {
+          "base_money": [220, 260],
+          "on_time_bonus": [100, 140],
+          "reputation": 1,
+          "unlock_ids": []
+        },
+        "requires_completed": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "core",
+  "name": "Steam Navigator Core Content",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 0,
+  "required": true,
+  "dependencies": [],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/goods.json",
+    "content/materials.json",
+    "content/hulls.json",
+    "content/boilers.json",
+    "content/cargo_modules.json",
+    "content/navigation_modules.json",
+    "content/safety_modules.json",
+    "content/cabins.json",
+    "content/roles.json",
+    "content/strategies.json",
+    "content/port_archetypes.json",
+    "content/map_profiles.json",
+    "content/starting_builds.json",
+    "content/contracts.json",
+    "content/events.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {
+    "icon.coal": "assets/icons/coal.png",
+    "icon.water": "assets/icons/water.png",
+    "icon.money": "assets/icons/money.png"
+  },
+  "authors": ["Steam Navigator Team"],
+  "license": "Proprietary",
+  "description": "Official MVP content: ports, goods, ships, contracts and events.",
+  "capabilities": [
+    "content.contract.passenger.v1",
+    "content.event.choice_pool.v1"
+  ]
+}

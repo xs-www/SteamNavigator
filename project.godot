@@ -1,0 +1,45 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Steam Navigator"
+config/description="《蒸汽航海》MVP — Framework + Core Mod Godot prototype."
+config/version="0.1.0"
+run/main_scene="res://framework/ui/shell/main.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.png"
+
+[autoload]
+
+AppBootstrap="*res://framework/bootstrap/app_bootstrap.gd"
+
+[display]
+
+window/size/viewport_width=1440
+window/size/viewport_height=900
+window/size/window_width_override=1440
+window/size/window_height_override=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[framework]
+
+mods/allow_loose_mods=true
+mods/scan_roots=PackedStringArray("res://dev_mods", "user://mods_dev", "user://mods")
+mods/mount_packs=true
+mods/autosave=true
+mods/strict_validation=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false

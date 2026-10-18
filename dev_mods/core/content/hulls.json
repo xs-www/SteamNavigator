@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0",
+  "content_type": "hulls",
+  "definitions": [
+    {
+      "id": "core:hull/small_efficient",
+      "name_key": "module.core.small_efficient_hull.name",
+      "description_key": "module.core.small_efficient_hull.description",
+      "tags": ["module.hull", "module.small", "module.efficient", "ship.small"],
+      "enabled": true,
+      "data": {
+        "tier": 1,
+        "weight": 22.0,
+        "purchase_price": 380,
+        "craft_time_hours": 4,
+        "materials": [
+          {"id": "core:good/timber", "amount": 4},
+          {"id": "core:good/iron_ore", "amount": 2}
+        ],
+        "base_speed": 14.0,
+        "max_weight": 100.0,
+        "max_durability": 100.0,
+        "cargo_slots": 1,
+        "cabin_slots": 0,
+        "base_risk": 0.025,
+        "size_tag": "small"
+      }
+    },
+    {
+      "id": "core:hull/medium_standard",
+      "name_key": "module.core.medium_standard_hull.name",
+      "description_key": "module.core.medium_standard_hull.description",
+      "tags": ["module.hull", "module.medium", "module.standard", "ship.medium"],
+      "enabled": true,
+      "data": {
+        "tier": 2,
+        "weight": 38.0,
+        "purchase_price": 1100,
+        "craft_time_hours": 8,
+        "materials": [
+          {"id": "core:good/timber", "amount": 8},
+          {"id": "core:material/boiler_plate", "amount": 3}
+        ],
+        "base_speed": 15.0,
+        "max_weight": 165.0,
+        "max_durability": 140.0,
+        "cargo_slots": 2,
+        "cabin_slots": 1,
+        "base_risk": 0.02,
+        "size_tag": "medium"
+      }
+    },
+    {
+      "id": "core:hull/large_efficient",
+      "name_key": "module.core.large_efficient_hull.name",
+      "description_key": "module.core.large_efficient_hull.description",
+      "tags": ["module.hull", "module.large", "module.efficient", "ship.large"],
+      "enabled": true,
+      "data": {
+        "tier": 3,
+        "weight": 60.0,
+        "purchase_price": 2600,
+        "craft_time_hours": 12,
+        "materials": [
+          {"id": "core:good/timber", "amount": 14},
+          {"id": "core:material/boiler_plate", "amount": 6},
+          {"id": "core:material/precision_gear", "amount": 2}
+        ],
+        "base_speed": 14.0,
+        "max_weight": 260.0,
+        "max_durability": 200.0,
+        "cargo_slots": 3,
+        "cabin_slots": 1,
+        "base_risk": 0.02,
+        "size_tag": "large"
+      }
+    },
+    {
+      "id": "core:hull/large_performance",
+      "name_key": "module.core.large_performance_hull.name",
+      "description_key": "module.core.large_performance_hull.description",
+      "tags": ["module.hull", "module.large", "module.performance", "ship.large"],
+      "enabled": true,
+      "data": {
+        "tier": 3,
+        "weight": 66.0,
+        "purchase_price": 3400,
+        "craft_time_hours": 14,
+        "materials": [
+          {"id": "core:good/timber", "amount": 12},
+          {"id": "core:material/boiler_plate", "amount": 8},
+          {"id": "core:material/precision_gear", "amount": 4}
+        ],
+        "base_speed": 17.0,
+        "max_weight": 240.0,
+        "max_durability": 180.0,
+        "cargo_slots": 3,
+        "cabin_slots": 1,
+        "base_risk": 0.025,
+        "size_tag": "large"
+      }
+    }
+  ]
+}

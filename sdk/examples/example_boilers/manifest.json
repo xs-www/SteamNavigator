@@ -1,0 +1,27 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_boilers",
+  "name": "Example Boilers",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 20,
+  "required": false,
+  "dependencies": [
+    {"id": "core", "version": ">=1.0.0 <2.0.0"}
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/boilers.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": ["Steam Navigator Team"],
+  "license": "CC-BY-4.0",
+  "description": "A third-party boiler that uses only the public content API.",
+  "capabilities": []
+}

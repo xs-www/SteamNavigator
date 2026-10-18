@@ -1,0 +1,199 @@
+class_name PortViewQuery
+extends RefCounted
+
+static func execute(_params: Dictionary, context) -> Dictionary:
+	var state: GameState = context.state
+	if not context.has_run():
+		return Result.ok({"has_run": false})
+	var hub: RegistryHub = context.registries
+	var world := state.world()
+	var current_port := state.current_port_id()
+	var port_data := MapOps.port(world, current_port)
+	var ship := state.ship()
+	var stats := ShipOps.stats(hub, ship)
+	var voyage: Variant = state.data.get("voyage", null)
+
+	var market_rows: Array = []
+	var market := MarketOps.market_for(state, current_port)
+	var item_ids: Array = market.keys()
+	item_ids.sort()
+	for item_id in item_ids:
+		var entry: Dictionary = market[item_id]
+		var definition := ShipOps.item_definition(hub, String(item_id))
+		if definition == null:
+			continue
+		market_rows.append({
+			"item_id": String(item_id),
+			"name_key": definition.name_key,
+			"unit_weight": float(definition.data.get("unit_weight", 0.0)),
+			"price": int(round(float(entry.get("price", 0.0)))),
+			"stock": int(entry.get("stock", 0)),
+			"trend": _trend(entry),
+			"cargo_amount": ShipOps.cargo_amount(ship, String(item_id), true),
+			"sellable_amount": ShipOps.cargo_amount(ship, String(item_id), false),
+		})
+
+	var destinations: Array = []
+	for neighbor in MapOps.neighbors(world, current_port):
+		var neighbor_data := MapOps.port(world, neighbor)
+		var route := MapOps.route_between(world, current_port, neighbor)
+		destinations.append({
+			"port_id": neighbor,
+			"name_key": MapOps.port_display_key(world, neighbor),
+			"distance": float(route.get("distance", 0.0)),
+			"base_risk": float(route.get("base_risk", 0.0)),
+			"discovered": MapOps.is_discovered(state, neighbor),
+			"visited": MapOps.is_visited(state, neighbor),
+			"facilities_known": MapOps.facilities_known(state, hub, neighbor),
+			"facilities": MapOps.visible_facilities(state, hub, neighbor),
+		})
+	destinations.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return String(left["port_id"]) < String(right["port_id"])
+	)
+
+	var strategies: Array = []
+	for strategy in hub.get_all(ContentTypes.STRATEGY):
+		strategies.append({
+			"id": strategy.id,
+			"name_key": strategy.name_key,
+			"description_key": strategy.description_key,
+			"tags": Array(strategy.tags),
+			"data": strategy.data.duplicate(true),
+		})
+
+	var contracts: Dictionary = state.contracts()
+	var main_contract: Variant = contracts.get("main", null)
+	var main_offer: Variant = contracts.get("main_offer", null)
+	var intel := IntelService.get_snapshot(state)
+	var debt: Variant = state.player().get("debt", null)
+	return Result.ok({
+		"has_run": true,
+		"at_sea": voyage is Dictionary,
+		"voyage": voyage.duplicate(true) if voyage is Dictionary else null,
+		"current_port_id": current_port,
+		"current_port": {
+			"id": current_port,
+			"name_key": String(port_data.get("name_key", current_port)),
+			"facilities": Array(port_data.get("facilities", [])),
+			"tags": Array(port_data.get("tags", [])),
+			"visited": bool(port_data.get("visited", false)),
+		},
+		"time": state.now(),
+		"time_label": ClockService.format_time(state.now()),
+		"money": state.money(),
+		"reputation": int(state.player().get("reputation", 0)),
+		"debt": debt.duplicate(true) if debt is Dictionary else null,
+		"market": market_rows,
+		"destinations": destinations,
+		"strategies": strategies,
+		"ship": _ship_view(hub, state, stats, ship),
+		"contracts": {
+			"main": _contract_view(hub, world, main_contract),
+			"main_offer": _contract_view(hub, world, main_offer),
+			"active": _contract_list(hub, world, contracts.get("active", [])),
+			"offers": _contract_list(hub, world, contracts.get("offers", [])),
+			"completed": Array(contracts.get("completed", [])),
+			"next_main_sequence": int(contracts.get("next_main_sequence", 1)),
+		},
+		"intelligence": {
+			"generated_at": float(intel.get("generated_at", -1.0)),
+			"generated_label": String(intel.get("generated_label", "")),
+			"age_hours": IntelService.snapshot_age(state),
+			"ports": intel.get("ports", []).size(),
+			"npcs": intel.get("npcs", []).size(),
+		},
+		"notices": state.recent_notices(6),
+		"unlocks": Array(state.player().get("unlocks", [])),
+		"stats": state.data.get("stats", {}).duplicate(true),
+	})
+
+
+static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, ship: Dictionary) -> Dictionary:
+	var modules: Array = []
+	var slots := {
+		"hull": "hull_id",
+		"boiler": "boiler_id",
+		"navigation": "navigation_module_id",
+		"safety": "safety_module_id",
+		"cabin": "passenger_cabin_id",
+	}
+	for slot in slots.keys():
+		var module_id := String(ship.get(slots[slot], ""))
+		if module_id.is_empty():
+			continue
+		var definition := ShipOps.find_module(hub, module_id)
+		modules.append({
+			"slot": slot,
+			"module_id": module_id,
+			"name_key": definition.name_key if definition != null else module_id,
+			"tier": int(definition.data.get("tier", 0)) if definition != null else 0,
+		})
+	for module_id in ShipOps.cargo_module_ids(ship):
+		var definition := hub.get_by_id(ContentTypes.CARGO_MODULE, module_id)
+		modules.append({
+			"slot": "cargo",
+			"module_id": module_id,
+			"name_key": definition.name_key if definition != null else module_id,
+			"tier": int(definition.data.get("tier", 0)) if definition != null else 0,
+		})
+	var cargo: Array = []
+	for stack in ship.get("cargo", []):
+		var definition := ShipOps.item_definition(hub, String(stack.get("item_id", "")))
+		cargo.append({
+			"item_id": String(stack.get("item_id", "")),
+			"name_key": definition.name_key if definition != null else String(stack.get("item_id", "")),
+			"amount": int(stack.get("amount", 0)),
+			"contract_id": String(stack.get("contract_id", "")),
+		})
+	return {
+		"hull_id": String(ship.get("hull_id", "")),
+		"boiler_id": String(ship.get("boiler_id", "")),
+		"modules": modules,
+		"cargo": cargo,
+		"durability": float(ship.get("durability", 0.0)),
+		"max_durability": float(stats.get("max_durability", 0.0)),
+		"coal": float(ship.get("coal", 0.0)),
+		"water": float(ship.get("water", 0.0)),
+		"total_weight": ShipOps.total_weight(hub, state),
+		"max_weight": ShipOps.max_weight(hub, ship),
+		"cargo_capacity": ShipOps.cargo_capacity(hub, ship),
+		"cargo_used": ShipOps.cargo_used(hub, ship),
+		"passengers": ShipOps.passenger_count(state),
+		"passenger_capacity": ShipOps.passenger_capacity(hub, ship),
+		"speed": float(stats.get("speed", 0.0)),
+		"coal_rate": float(stats.get("coal_rate", 0.0)),
+		"water_rate": float(stats.get("water_rate", 0.0)),
+		"hull_tier": int(stats.get("hull_tier", 1)),
+		"engineer_id": String(ship.get("engineer_id", "")),
+		"navigator_id": String(ship.get("navigator_id", "")),
+	}
+
+
+static func _contract_view(hub: RegistryHub, world: Dictionary, contract: Variant) -> Variant:
+	if not (contract is Dictionary):
+		return null
+	var copy: Dictionary = contract.duplicate(true)
+	copy["destination_name_key"] = MapOps.port_display_key(world, String(contract.get("destination", "")))
+	copy["origin_name_key"] = MapOps.port_display_key(world, String(contract.get("origin", "")))
+	copy["deadline_label"] = ClockService.format_time(float(contract.get("deadline", 0.0)))
+	return copy
+
+
+static func _contract_list(hub: RegistryHub, world: Dictionary, contracts: Variant) -> Array:
+	var result: Array = []
+	if not (contracts is Array):
+		return result
+	for contract in contracts:
+		if contract is Dictionary:
+			result.append(_contract_view(hub, world, contract))
+	return result
+
+
+static func _trend(entry: Dictionary) -> String:
+	var stock := float(entry.get("stock", 0.0))
+	var base_stock := maxf(1.0, float(entry.get("base_stock", 1.0)))
+	if stock < base_stock * 0.85:
+		return "up"
+	if stock > base_stock * 1.15:
+		return "down"
+	return "stable"

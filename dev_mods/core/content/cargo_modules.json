@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "content_type": "cargo_modules",
+  "definitions": [
+    {
+      "id": "core:cargo_module/small_hold",
+      "name_key": "module.core.small_hold.name",
+      "description_key": "module.core.small_hold.description",
+      "tags": ["module.cargo", "module.small", "module.efficient"],
+      "enabled": true,
+      "data": {
+        "tier": 1,
+        "weight": 6.0,
+        "purchase_price": 260,
+        "craft_time_hours": 3,
+        "materials": [
+          {"id": "core:good/timber", "amount": 3}
+        ],
+        "capacity": 32.0
+      }
+    },
+    {
+      "id": "core:cargo_module/medium_hold",
+      "name_key": "module.core.medium_hold.name",
+      "description_key": "module.core.medium_hold.description",
+      "tags": ["module.cargo", "module.medium", "module.standard"],
+      "enabled": true,
+      "data": {
+        "tier": 2,
+        "weight": 12.0,
+        "purchase_price": 900,
+        "craft_time_hours": 6,
+        "materials": [
+          {"id": "core:good/timber", "amount": 6},
+          {"id": "core:material/boiler_plate", "amount": 2}
+        ],
+        "capacity": 68.0
+      }
+    },
+    {
+      "id": "core:cargo_module/large_hold",
+      "name_key": "module.core.large_hold.name",
+      "description_key": "module.core.large_hold.description",
+      "tags": ["module.cargo", "module.large", "module.performance"],
+      "enabled": true,
+      "data": {
+        "tier": 3,
+        "weight": 20.0,
+        "purchase_price": 1800,
+        "craft_time_hours": 9,
+        "materials": [
+          {"id": "core:good/timber", "amount": 10},
+          {"id": "core:material/boiler_plate", "amount": 4}
+        ],
+        "capacity": 110.0
+      }
+    }
+  ]
+}

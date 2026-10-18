@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/common-1.json",
+  "title": "Steam Navigator common content schema",
+  "$defs": {
+    "id_ref": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,31}:[a-z_]+/[a-z0-9_]+$"
+    },
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name_key", "enabled", "data"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id_ref"
+        },
+        "name_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]*$"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "range2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "modifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stat", "op", "value"],
+      "properties": {
+        "stat": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "op": {
+          "enum": ["add", "mul", "set"]
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "craft_material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "amount"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id_ref"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0.1
+        }
+      }
+    },
+    "module_common": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["tier", "weight", "purchase_price"],
+      "properties": {
+        "tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0
+        },
+        "purchase_price": {
+          "type": "number",
+          "minimum": 0
+        },
+        "craft_time_hours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "craft_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/craft_material"
+          }
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modifier"
+          }
+        },
+        "unlock_reputation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "enum": ["cargo", "passenger"]
+        },
+        "name_key": {
+          "type": "string"
+        },
+        "weight_range": {
+          "$ref": "#/$defs/range2"
+        },
+        "count_range": {
+          "$ref": "#/$defs/range2"
+        }
+      }
+    },
+    "rewards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_money", "on_time_bonus", "reputation"],
+      "properties": {
+        "base_money": {
+          "$ref": "#/$defs/range2"
+        },
+        "on_time_bonus": {
+          "$ref": "#/$defs/range2"
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unlock_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id_ref"
+          }
+        }
+      }
+    },
+    "condition_node": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "all": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/condition_node"
+          }
+        },
+        "any": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/condition_node"
+          }
+        },
+        "not": {
+          "$ref": "#/$defs/condition_node"
+        },
+        "op": {
+          "enum": [
+            "money_gte",
+            "reputation_gte",
+            "debt_lte",
+            "at_port",
+            "port_has_tag",
+            "has_item",
+            "has_module",
+            "has_module_tag",
+            "has_role",
+            "contract_completed",
+            "port_discovered",
+            "ship_tier_gte",
+            "durability_gte"
+          ]
+        },
+        "value": {},
+        "tag": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "port_id": {
+          "type": "string"
+        },
+        "role_kind": {
+          "type": "string"
+        }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "enum": [
+            "add_money",
+            "remove_money",
+            "add_reputation",
+            "remove_reputation",
+            "add_item",
+            "remove_item",
+            "add_coal",
+            "remove_coal",
+            "add_water",
+            "remove_water",
+            "damage_ship",
+            "repair_ship",
+            "add_delay_hours",
+            "damage_cargo",
+            "injure_passenger",
+            "unlock_definition",
+            "complete_contract",
+            "fail_voyage",
+            "reveal_port_facilities",
+            "update_intelligence",
+            "emit_notice"
+          ]
+        },
+        "amount": {
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "contract_id": {
+          "type": "string"
+        },
+        "port_id": {
+          "type": "string"
+        },
+        "text_key": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
