@@ -18,5 +18,6 @@
 - 松散目录允许 Godot 生成的 `.import`/`.uid` 元数据；ZIP 不允许。
 - 未知扩展名、脚本/动态库、路径穿越、超大包/文件数量均拒绝。
 - Manifest 同时经过 JSON Schema 与 `ModManifest` 语义检查。
+- 同名松散目录优先于 ZIP；core 的 ZIP 构建产物被松散 core 静默忽略，其他重复 ID 产生 warning。
 
 模块索引：[framework/modding](./README.md)

@@ -16,6 +16,7 @@
 
 - 加载失败不抛异常：所有可预期错误进入 StartupReport，UI 据此进入诊断界面。
 - 即使 fatal，也会注册命令/查询并冻结空注册表，保证后续调用返回结构化错误。
+- 默认扫描 `res://dev_mods`、`res://dist/mods`、`user://mods_dev`、`user://mods`；发布版追加可执行文件旁 `mods/`。
 - 测试可通过 `run(overrides)` 覆盖扫描根、存档目录、日志开关与自动存档。
 
 ## 重点逻辑

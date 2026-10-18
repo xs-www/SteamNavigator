@@ -33,7 +33,7 @@ window/stretch/aspect="expand"
 [framework]
 
 mods/allow_loose_mods=true
-mods/scan_roots=PackedStringArray("res://dev_mods", "user://mods_dev", "user://mods")
+mods/scan_roots=PackedStringArray("res://dev_mods", "res://dist/mods", "user://mods_dev", "user://mods")
 mods/mount_packs=true
 mods/autosave=true
 mods/strict_validation=true

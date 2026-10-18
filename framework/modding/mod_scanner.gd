@@ -48,8 +48,28 @@ func scan(roots: PackedStringArray, allow_loose: bool = true) -> Dictionary:
 				continue
 			packages.append(_load_zip(root.rstrip("/") + "/" + file_name))
 
+	var filtered: Array[ModPackage] = []
+	var loose_ids: Dictionary = {}
+	for package in packages:
+		if package.source != null and not package.source.is_pack() and not package.id.is_empty() and package.errors.is_empty():
+			loose_ids[package.id] = true
+	for package in packages:
+		if package.source != null and package.source.is_pack() and loose_ids.has(package.id):
+			# The core zip under dist/mods is a build artifact; in a dev
+			# checkout the loose core is authoritative. Other duplicate ids
+			# still produce a visible warning.
+			if package.id != DependencyResolver.CORE_ID:
+				warnings.append({
+					"code": "loose_mod_shadows_pack",
+					"message": "loose mod '%s' shadows packed copy %s" % [package.id, package.source.get_display_name()],
+					"mod_id": package.id,
+					"path": package.source.get_display_name(),
+				})
+			continue
+		filtered.append(package)
+
 	return {
-		"packages": packages,
+		"packages": filtered,
 		"errors": errors,
 		"warnings": warnings,
 		"scanned_roots": scanned_roots,

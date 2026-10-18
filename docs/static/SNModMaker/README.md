@@ -18,6 +18,28 @@
 | `js/validate.js` | JSON Schema 子集校验器与 Steam Navigator 项目语义校验：ID、引用、本地化、补丁与清单一致性。 | [查看](./js/validate.js.md) |
 | `js/zip.js` | 零依赖 ZIP 读写：中央目录解析、CRC32、store / deflate-raw 压缩，以及 ZIP 体积与路径限制。 | [查看](./js/zip.js.md) |
 | `mods/README.md` | 磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。 | 本页 |
+| `mods/core/.snmodproj.json` | 源文件：.snmodproj.json | 本页 |
+| `mods/core/assets/icons/coal.png` | 源文件：coal.png | 本页 |
+| `mods/core/assets/icons/money.png` | 源文件：money.png | 本页 |
+| `mods/core/assets/icons/water.png` | 源文件：water.png | 本页 |
+| `mods/core/content/boilers.json` | 源文件：boilers.json | 本页 |
+| `mods/core/content/cabins.json` | 源文件：cabins.json | 本页 |
+| `mods/core/content/cargo_modules.json` | 源文件：cargo_modules.json | 本页 |
+| `mods/core/content/contracts.json` | 源文件：contracts.json | 本页 |
+| `mods/core/content/events.json` | 源文件：events.json | 本页 |
+| `mods/core/content/goods.json` | 源文件：goods.json | 本页 |
+| `mods/core/content/hulls.json` | 源文件：hulls.json | 本页 |
+| `mods/core/content/map_profiles.json` | 源文件：map_profiles.json | 本页 |
+| `mods/core/content/materials.json` | 源文件：materials.json | 本页 |
+| `mods/core/content/navigation_modules.json` | 源文件：navigation_modules.json | 本页 |
+| `mods/core/content/port_archetypes.json` | 源文件：port_archetypes.json | 本页 |
+| `mods/core/content/roles.json` | 源文件：roles.json | 本页 |
+| `mods/core/content/safety_modules.json` | 源文件：safety_modules.json | 本页 |
+| `mods/core/content/starting_builds.json` | 源文件：starting_builds.json | 本页 |
+| `mods/core/content/strategies.json` | 源文件：strategies.json | 本页 |
+| `mods/core/localization/en.json` | 源文件：en.json | 本页 |
+| `mods/core/localization/zh_CN.json` | 源文件：zh_CN.json | 本页 |
+| `mods/core/manifest.json` | 源文件：manifest.json | 本页 |
 | `tests/browser-smoke.mjs` | Chrome DevTools Protocol 冒烟测试：新建项目、编辑、本地化、检视、自动保存、ZIP、导入与撤销。 | [查看](./tests/browser-smoke.mjs.md) |
 | `tests/run-tests.js` | Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP 与导入导出往返。 | [查看](./tests/run-tests.js.md) |
 | `tools/serve.mjs` | 零依赖本地静态服务器 + 磁盘 API：项目写入 `mods/<id>/`，ZIP 写入 `exports/`。 | [查看](./tools/serve.mjs.md) |

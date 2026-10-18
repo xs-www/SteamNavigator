@@ -48,7 +48,7 @@ func _build_config(overrides: Dictionary) -> Dictionary:
 func _default_scan_roots() -> PackedStringArray:
 	var configured: Variant = ProjectSettings.get_setting(
 		"framework/mods/scan_roots",
-		PackedStringArray(["res://dev_mods", "user://mods_dev", "user://mods"])
+		PackedStringArray(["res://dev_mods", "res://dist/mods", "user://mods_dev", "user://mods"])
 	)
 	var roots := PackedStringArray()
 	if configured is PackedStringArray:

@@ -14,6 +14,8 @@ const COLOR_BRASS := Color("f0c674")
 const COLOR_TEAL := Color("7fc8e8")
 const COLOR_RED := Color("e8837f")
 const COLOR_GREEN := Color("8fd694")
+const DEV_TEAM := "Steam Navigator Team"
+const GAME_VERSION_FALLBACK := "0.1.0"
 
 const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]
 const MODULE_TYPE_ORDER := [
@@ -38,6 +40,7 @@ var _root_box: VBoxContainer = null
 var _last_port_view: Dictionary = {}
 
 var _active_screen: String = "overview"
+var _menu_screen: String = "main"
 var _memory_port_id: String = ""
 var _selected_build: String = ""
 var _selected_destination: String = ""
@@ -45,6 +48,8 @@ var _selected_strategy: String = ""
 var _seed_text: String = ""
 var _status_message: String = ""
 var _status_is_error: bool = false
+var _footer_team: Label = null
+var _footer_version: Label = null
 
 
 func _ready() -> void:
@@ -110,8 +115,10 @@ func _build_shell() -> void:
 	margin.add_theme_constant_override("margin_left", 20)
 	margin.add_theme_constant_override("margin_right", 20)
 	margin.add_theme_constant_override("margin_top", 14)
-	margin.add_theme_constant_override("margin_bottom", 14)
+	margin.add_theme_constant_override("margin_bottom", 56)
 	add_child(margin)
+
+	_build_footer()
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -123,6 +130,40 @@ func _build_shell() -> void:
 	_root_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_root_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_root_box)
+
+
+func _build_footer() -> void:
+	var footer := VBoxContainer.new()
+	footer.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	footer.offset_left = -420
+	footer.offset_top = -46
+	footer.offset_right = -24
+	footer.offset_bottom = -14
+	footer.alignment = BoxContainer.ALIGNMENT_END
+	footer.add_theme_constant_override("separation", 0)
+	footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(footer)
+	_footer_team = _label("开发团队：%s" % DEV_TEAM, 11, COLOR_MUTED)
+	_footer_team.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_footer_team.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_footer_team.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	footer.add_child(_footer_team)
+	_footer_version = _label("版本 v%s" % _game_version(), 11, COLOR_MUTED)
+	_footer_version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_footer_version.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_footer_version.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	footer.add_child(_footer_version)
+
+
+func _game_version() -> String:
+	return String(ProjectSettings.get_setting("application/config/version", GAME_VERSION_FALLBACK))
+
+
+func _refresh_footer() -> void:
+	if _footer_team != null:
+		_footer_team.text = _tr("ui.menu.team", "开发团队：%s" % DEV_TEAM)
+	if _footer_version != null:
+		_footer_version.text = "%s v%s" % [_tr("ui.menu.version", "版本"), _game_version()]
 
 
 func _refresh() -> void:
@@ -139,6 +180,7 @@ func _refresh() -> void:
 		_root_box.add_child(_label(_error_text(app_view), 18, COLOR_RED))
 		return
 	var app: Dictionary = app_view["data"]
+	_refresh_footer()
 	_build_header(app)
 	if not bool(app.get("has_run", false)):
 		_build_menu(app)
@@ -192,13 +234,20 @@ func _build_header(app: Dictionary) -> void:
 	var header := HBoxContainer.new()
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_root_box.add_child(header)
-	var title := _label(_tr("ui.app.title", "Steam Navigator"), 24, COLOR_BRASS)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
+	var has_run := bool(app.get("has_run", false))
+	if has_run:
+		var title := _label(_tr("ui.app.title", "Steam Navigator"), 24, COLOR_BRASS)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		header.add_child(title)
+	else:
+		var spacer := Control.new()
+		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		header.add_child(spacer)
 	header.add_child(_label(_tr(String(app.get("status_key", "ui.status.ok")), ""), 14, _status_color(app)))
-	header.add_child(_label("v%s" % app.get("framework_version", "?"), 13, COLOR_MUTED))
+	if has_run:
+		header.add_child(_label("v%s" % app.get("framework_version", "?"), 13, COLOR_MUTED))
 	header.add_child(_button(_tr("ui.button.log", "Diagnostics"), _show_diagnostics))
-	if bool(app.get("has_run", false)):
+	if has_run:
 		header.add_child(_button(_tr("ui.button.refresh", "Refresh"), _refresh))
 	_root_box.add_child(HSeparator.new())
 
@@ -278,8 +327,66 @@ func _build_menu(app: Dictionary) -> void:
 		_root_box.add_child(_button(_tr("ui.button.retry", "Retry"), _retry_bootstrap))
 		return
 
+	match _menu_screen:
+		"new_game":
+			_screen_new_game(app)
+		"mods":
+			_screen_mods(app)
+		"settings":
+			_screen_settings(app)
+		_:
+			_screen_main_menu(app)
+
+
+func _menu_button(text: String, callback: Callable, disabled: bool = false) -> Button:
+	var button := _button(text, callback)
+	button.custom_minimum_size = Vector2(340, 48)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.add_theme_font_size_override("font_size", 18)
+	button.disabled = disabled
+	return button
+
+
+func _screen_main_menu(_app: Dictionary) -> void:
+	var center := CenterContainer.new()
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	center.custom_minimum_size = Vector2(0, 610)
+	_root_box.add_child(center)
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 10)
+	center.add_child(column)
+
+	var title := _label(_tr("ui.app.title", "Steam Navigator"), 52, COLOR_BRASS)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(title)
+	var subtitle := _label(_tr("ui.menu.subtitle", ""), 16, COLOR_MUTED)
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(subtitle)
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 22)
+	column.add_child(spacer)
+
+	var has_save := bool(_app.get("autosave_available", false))
+	column.add_child(_menu_button(_tr("ui.menu.start", "开始游戏"), _on_menu.bind("new_game")))
+	column.add_child(_menu_button(
+		_tr("ui.menu.load", "加载游戏") if has_save else _tr("ui.menu.load_empty", "加载游戏（无存档）"),
+		_on_continue,
+		not has_save
+	))
+	column.add_child(_menu_button(_tr("ui.menu.mods", "模组"), _on_menu.bind("mods")))
+	column.add_child(_menu_button(_tr("ui.menu.settings", "设置"), _on_menu.bind("settings")))
+	column.add_child(_menu_button(_tr("ui.menu.quit", "退出游戏"), _on_quit))
+
+	_build_status_banner()
+
+
+func _screen_new_game(app: Dictionary) -> void:
+	var title := _label(_tr("ui.menu.new_game", "新航程"), 26, COLOR_BRASS)
+	_root_box.add_child(title)
+
 	var intro := _panel()
-	_panel_add(intro, _label(_tr("ui.app.subtitle", ""), 16, COLOR_MUTED))
+	_panel_add(intro, _label(_tr("ui.app.subtitle", ""), 15, COLOR_MUTED))
 	_panel_add(intro, _label("%s: %d" % [_tr("ui.label.content", "Content"), int(app.get("content_total", 0))], 14, COLOR_TEXT))
 	_panel_add(intro, _label("%s: %s" % [_tr("ui.label.registry", "Registry"), "frozen" if bool(app.get("registry_frozen", false)) else "open"], 14, COLOR_TEXT))
 	var mod_names := PackedStringArray()
@@ -320,20 +427,82 @@ func _build_menu(app: Dictionary) -> void:
 	_panel_add(form, seed_row)
 
 	var buttons := HBoxContainer.new()
-	var new_run := _button(_tr("ui.button.new_run", "Start a new run"), _on_new_run)
+	var new_run := _button(_tr("ui.button.new_run", "开始航行"), _on_new_run)
 	new_run.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(new_run)
-	if bool(app.get("autosave_available", false)):
-		buttons.add_child(_button(_tr("ui.button.continue", "Continue"), _on_continue))
+	buttons.add_child(_button(_tr("ui.menu.back", "返回主菜单"), _on_menu_back))
 	_panel_add(form, buttons)
 	_root_box.add_child(form)
 
-	if not report.get("warnings", []).is_empty():
+	if not app.get("report", {}).get("warnings", []).is_empty():
 		var warning_panel := _panel()
 		_panel_add(warning_panel, _label(_tr("ui.label.warnings", "Warnings"), 15, COLOR_BRASS))
-		for warning in report.get("warnings", []).slice(0, 5):
+		for warning in app.get("report", {}).get("warnings", []).slice(0, 5):
 			_panel_add(warning_panel, _label("• %s" % warning.get("message", ""), 13, COLOR_MUTED))
 		_root_box.add_child(warning_panel)
+	_build_status_banner()
+
+
+func _screen_mods(app: Dictionary) -> void:
+	_root_box.add_child(_label(_tr("ui.menu.mods_title", "已加载模组"), 26, COLOR_BRASS))
+	var note := _panel()
+	_panel_add(note, _label(_tr("ui.menu.mods_note", "模组启用/禁用和加载顺序管理尚未实现；这里显示本次启动实际加载的模组。"), 13, COLOR_MUTED))
+	_root_box.add_child(note)
+
+	for mod in app.get("mods", []):
+		var panel := _panel()
+		var header := HBoxContainer.new()
+		var name_label := _label("%s  ·  %s" % [String(mod.get("name", mod.get("id", ""))), String(mod.get("id", ""))], 17, COLOR_BRASS)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		header.add_child(name_label)
+		header.add_child(_label("v%s" % String(mod.get("version", "?")), 13, COLOR_MUTED))
+		_panel_add(panel, header)
+		var source := String(mod.get("source", ""))
+		if not source.is_empty():
+			_panel_add(panel, _label("%s：%s" % [_tr("ui.menu.source", "源"), source], 12, COLOR_MUTED))
+		var dependencies: Array = mod.get("dependencies", [])
+		_panel_add(panel, _label("%s：%s" % [
+			_tr("ui.menu.dependencies", "依赖"),
+			", ".join(dependencies) if not dependencies.is_empty() else "—",
+		], 12, COLOR_MUTED))
+		_panel_add(panel, _label("%s：%s" % [
+			_tr("ui.menu.required", "必需"),
+			_tr("ui.menu.yes", "是") if bool(mod.get("required", false)) else _tr("ui.menu.no", "否"),
+		], 12, COLOR_MUTED))
+		_root_box.add_child(panel)
+
+	var footer_buttons := HBoxContainer.new()
+	footer_buttons.add_child(_button(_tr("ui.menu.back", "返回主菜单"), _on_menu_back))
+	footer_buttons.add_child(_button(_tr("ui.menu.rescan", "重新扫描"), _retry_bootstrap))
+	_root_box.add_child(footer_buttons)
+	_build_status_banner()
+
+
+func _screen_settings(_app: Dictionary) -> void:
+	_root_box.add_child(_label(_tr("ui.menu.settings_title", "设置"), 26, COLOR_BRASS))
+	var panel := _panel()
+	var locale_row := HBoxContainer.new()
+	locale_row.add_child(_label(_tr("ui.menu.language", "语言"), 15, COLOR_TEXT))
+	var locale := _context.localization.active_locale if _context != null else "zh_CN"
+	locale_row.add_child(_button("中文", _on_set_locale.bind("zh_CN")))
+	locale_row.add_child(_button("English", _on_set_locale.bind("en")))
+	var active := _label("%s：%s" % [_tr("ui.menu.current", "当前"), "中文" if locale == "zh_CN" else "English"], 13, COLOR_MUTED)
+	locale_row.add_child(active)
+	_panel_add(panel, locale_row)
+
+	var autosave_row := HBoxContainer.new()
+	autosave_row.add_child(_label(_tr("ui.menu.autosave", "自动存档"), 15, COLOR_TEXT))
+	var enabled := bool(_context.autosave_enabled) if _context != null else true
+	autosave_row.add_child(_button(_tr("ui.menu.autosave_on", "开") if enabled else _tr("ui.menu.autosave_off", "关"), _on_toggle_autosave))
+	autosave_row.add_child(_label(_tr("ui.menu.autosave_note", "关闭后本次运行不再自动写入自动存档。"), 12, COLOR_MUTED))
+	_panel_add(panel, autosave_row)
+	_root_box.add_child(panel)
+
+	var note := _panel()
+	_panel_add(note, _label(_tr("ui.menu.settings_note", "设置仅对本次运行生效。"), 12, COLOR_MUTED))
+	_root_box.add_child(note)
+	_root_box.add_child(_button(_tr("ui.menu.back", "返回主菜单"), _on_menu_back))
+	_build_status_banner()
 
 
 ## ---------------------------------------------------------------------------
@@ -1209,6 +1378,34 @@ func _screen_event(data: Dictionary, event: Dictionary) -> void:
 ## ---------------------------------------------------------------------------
 ## Commands and callbacks
 ## ---------------------------------------------------------------------------
+
+func _on_menu(screen: String) -> void:
+	_menu_screen = screen
+	_status_message = ""
+	_refresh()
+
+
+func _on_menu_back() -> void:
+	_menu_screen = "main"
+	_status_message = ""
+	_refresh()
+
+
+func _on_quit() -> void:
+	get_tree().quit()
+
+
+func _on_set_locale(locale: String) -> void:
+	if _context != null:
+		_context.localization.set_locale(locale)
+	_refresh()
+
+
+func _on_toggle_autosave() -> void:
+	if _context != null:
+		_context.autosave_enabled = not _context.autosave_enabled
+	_refresh()
+
 
 func _on_nav(screen: String) -> void:
 	_active_screen = screen
