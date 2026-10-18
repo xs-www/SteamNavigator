@@ -12,6 +12,7 @@ static func buy(params: Dictionary, context) -> Dictionary:
 	var margin := float(profile.get("trade_margin", MarketOps.DEFAULT_TRADE_MARGIN))
 	var result := MarketOps.buy(state, context.registries, port_id, item_id, amount, margin)
 	if bool(result["ok"]):
+		MarketMemoryService.remember(state, port_id)
 		var entry := MarketOps.entry_for(state, port_id, item_id)
 		result["events"] = [{
 			"type": "market.changed",
@@ -37,6 +38,7 @@ static func sell(params: Dictionary, context) -> Dictionary:
 	var margin := float(profile.get("trade_margin", MarketOps.DEFAULT_TRADE_MARGIN))
 	var result := MarketOps.sell(state, context.registries, port_id, item_id, amount, margin)
 	if bool(result["ok"]):
+		MarketMemoryService.remember(state, port_id)
 		var entry := MarketOps.entry_for(state, port_id, item_id)
 		result["events"] = [{
 			"type": "market.changed",

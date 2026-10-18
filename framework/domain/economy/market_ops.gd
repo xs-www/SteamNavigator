@@ -5,6 +5,7 @@ extends RefCounted
 const DEFAULT_TRADE_MARGIN := 0.95
 const MIN_PRICE_FACTOR := 0.55
 const MAX_PRICE_FACTOR := 2.2
+const SELL_ONLY_PRICE_FACTOR := 0.9
 
 
 static func create_market_entry(item_definition: ContentDefinition, stock: int, price_bias: float = 1.0) -> Dictionary:
@@ -18,6 +19,7 @@ static func create_market_entry(item_definition: ContentDefinition, stock: int, 
 		"base_price": base_price,
 		"price_bias": price_bias,
 		"elasticity": elasticity,
+		"buyable": true,
 		"price": 0.0,
 	}
 	recalc(entry)
@@ -25,8 +27,15 @@ static func create_market_entry(item_definition: ContentDefinition, stock: int, 
 
 
 static func compute_price(entry: Dictionary) -> float:
-	var stock := maxf(1.0, float(entry.get("stock", 1)))
 	var base_stock := maxf(1.0, float(entry.get("base_stock", 1)))
+	if not bool(entry.get("buyable", true)):
+		# Ports will buy any cargo, but goods outside the local assortment do
+		# not have a real buy-side market. The more the player dumps, the lower
+		# the one-way purchase price becomes.
+		var held := maxf(0.0, float(entry.get("stock", 0)))
+		var factor := clampf(base_stock / maxf(1.0, base_stock + held), 0.45, 1.0)
+		return maxf(1.0, float(entry.get("base_price", 1)) * SELL_ONLY_PRICE_FACTOR * factor)
+	var stock := maxf(1.0, float(entry.get("stock", 1)))
 	var ratio := base_stock / stock
 	var elasticity := float(entry.get("elasticity", 0.15))
 	var factor := clampf(pow(ratio, elasticity), MIN_PRICE_FACTOR, MAX_PRICE_FACTOR)
@@ -47,6 +56,7 @@ static func entry_for(state: GameState, port_id: String, item_id: String) -> Dic
 
 static func initialize_port_market(hub: RegistryHub, archetype: ContentDefinition, rng: RandomNumberGenerator) -> Dictionary:
 	var market := {}
+	var listed := {}
 	var entries: Array = archetype.data.get("market", [])
 	for raw_entry in entries:
 		if not (raw_entry is Dictionary):
@@ -61,8 +71,39 @@ static func initialize_port_market(hub: RegistryHub, archetype: ContentDefinitio
 		var stock := rng.randi_range(mini(minimum, maximum), maxi(minimum, maximum))
 		var price_bias := float(raw_entry.get("price_bias", 1.0))
 		var entry := create_market_entry(item_definition, stock, price_bias)
+		entry["buyable"] = true
 		market[item_id] = entry
+		listed[item_id] = true
+	# Every port buys every ordinary good/material, but only the listed
+	# assortment has a buy-side market.
+	for content_type in [ContentTypes.GOOD, ContentTypes.MATERIAL]:
+		for item_definition in hub.get_all(content_type):
+			if listed.has(item_definition.id) or item_definition.has_tag("good.contract"):
+				continue
+			var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
+			entry["stock"] = 0
+			entry["buyable"] = false
+			recalc(entry)
+			market[item_definition.id] = entry
 	return market
+
+
+## Adds sell-only entries to markets created before the all-goods model.
+static func ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void:
+	for port_id in state.market().keys():
+		var market: Dictionary = state.market()[port_id]
+		for entry in market.values():
+			if entry is Dictionary and not entry.has("buyable"):
+				entry["buyable"] = true
+		for content_type in [ContentTypes.GOOD, ContentTypes.MATERIAL]:
+			for item_definition in hub.get_all(content_type):
+				if market.has(item_definition.id) or item_definition.has_tag("good.contract"):
+					continue
+				var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
+				entry["stock"] = 0
+				entry["buyable"] = false
+				recalc(entry)
+				market[item_definition.id] = entry
 
 
 static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN) -> Dictionary:
@@ -76,6 +117,8 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	var entry := entry_for(state, port_id, item_id)
 	if entry.is_empty():
 		return Result.fail("item_not_traded", "ui.error.item_not_traded", {"item_id": item_id, "port_id": port_id})
+	if not bool(entry.get("buyable", true)):
+		return Result.fail("not_buyable", "ui.error.not_buyable", {"item_id": item_id, "port_id": port_id})
 	if int(entry.get("stock", 0)) < amount:
 		return Result.fail("insufficient_stock", "ui.error.insufficient_stock", {"stock": int(entry.get("stock", 0))})
 	var unit_price := float(entry.get("price", 1.0))
@@ -93,7 +136,7 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	state.add_money(-total)
 	entry["stock"] = int(entry.get("stock", 0)) - amount
 	recalc(entry)
-	ShipOps.add_cargo(ship, item_id, amount)
+	ShipOps.add_cargo(ship, item_id, amount, "", float(total))
 	return Result.ok({
 		"item_id": item_id,
 		"amount": amount,

@@ -96,11 +96,14 @@ static func _assign_route(state: GameState, npc: Dictionary, rng_service: RngSer
 	candidates.sort()
 	var destination := candidates[rng.randi_range(0, candidates.size() - 1)]
 	var market: Dictionary = state.market().get(destination, {})
-	var item_ids: Array = market.keys()
+	var item_ids: Array[String] = []
+	for item_id in market.keys():
+		if bool(market[item_id].get("buyable", true)):
+			item_ids.append(String(item_id))
 	if item_ids.is_empty():
 		return
 	item_ids.sort()
-	var item_id := String(item_ids[rng.randi_range(0, item_ids.size() - 1)])
+	var item_id := item_ids[rng.randi_range(0, item_ids.size() - 1)]
 	var action := "deliver" if rng.randf() < 0.6 else "buy"
 	var minimum := int(cargo_range[0]) if cargo_range.size() > 0 else 8
 	var maximum := int(cargo_range[1]) if cargo_range.size() > 1 else minimum

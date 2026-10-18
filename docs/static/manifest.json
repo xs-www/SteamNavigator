@@ -1,19 +1,19 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-18T12:01:14.887Z",
-  "commit": "ad2d238",
+  "generated_at": "2026-10-18T12:14:14.281Z",
+  "commit": "a57bf06",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 150,
-    "documented": 53,
-    "grouped": 97
+    "sources": 153,
+    "documented": 55,
+    "grouped": 98
   },
   "files": [
     {
       "source": "README.md",
-      "sha256": "56dc8f66f22f9a357e390f95ecd0bc4de8afa3d77d079223b276ff76ee04c6c7",
+      "sha256": "94ba632a6a95cd6511cd4d6ece490d4202b5e934081956a9f42d81d49a1317a6",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -221,7 +221,7 @@
     },
     {
       "source": "framework/application/commands/trade_commands.gd",
-      "sha256": "b8264ad1e41abe07cdeec6855de05320f93335e32d2d570e3928c91754634190",
+      "sha256": "ffbf46c187e2217e4036eef2db296ec7881958701b69175b46dcffc11a35424f",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -267,14 +267,20 @@
       "group": "docs/static/framework/application/README.md"
     },
     {
+      "source": "framework/application/queries/port_memory_view.gd",
+      "sha256": "7970ae7936eb2e4e431ced4aa51945361a21cd0621e33d3ef668d310795355d2",
+      "doc": "docs/static/framework/application/queries/port_memory_view.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "d09c1ac76a2553d3063b1abf5375d435c5b2437b58c67427d7ca3f5cd8521c1e",
+      "sha256": "f081afcbcc452726eb0a639a1ea0501647cd858be67c6b9ca8805ab3a0f39576",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/application/queries/query_registry.gd",
-      "sha256": "9df99b57ff4c4134c6a51ccf37069fa2da9a07045ece20d2f1e5a343bac8a655",
+      "sha256": "201b62421543bdb96e7dfd77b7d1ea9c16c6bcf56562fc35ecf877ab137f98c3",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -388,7 +394,7 @@
     },
     {
       "source": "framework/domain/contracts/run_factory.gd",
-      "sha256": "c872885b80adce252b33cb2809b3897d88faa23824520170a29d63763881cdce",
+      "sha256": "1db62045b82a23763d339233239d1dbd1c1720efc288de9190eabf87f5e1bc7a",
       "doc": "docs/static/framework/domain/contracts/run_factory.gd.md",
       "status": "documented"
     },
@@ -400,19 +406,25 @@
     },
     {
       "source": "framework/domain/economy/intel_service.gd",
-      "sha256": "e2a91bd044523efb6768e30e51da71ee30210f4b92122fb1dbbf791ef55a3868",
+      "sha256": "7755ba35766ecde339c3bcb33d611c66eb6ef6e94511425feaba6f4a9aff4c72",
       "doc": "docs/static/framework/domain/economy/intel_service.gd.md",
       "status": "documented"
     },
     {
+      "source": "framework/domain/economy/market_memory_service.gd",
+      "sha256": "23408675a69c148b8e4064fb9787e4043411e0ee32a0601b046e6b991f43c65e",
+      "doc": "docs/static/framework/domain/economy/market_memory_service.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/domain/economy/market_ops.gd",
-      "sha256": "5fac143a4dfb9932175cbf40d61df2ba5390cc8de0484a3031182f4f22cf08ba",
+      "sha256": "d7bbe9eca44b762e4e4f75048d9b0d74a10a51f4c93e3efb440a3a0e627e099a",
       "doc": "docs/static/framework/domain/economy/market_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/economy/npc_trader_simulator.gd",
-      "sha256": "43a69ce546afe7f732a02bf06299bfc60598fb9aa85eecc0b90a6a9e50deb02a",
+      "sha256": "961b573cc0318ab66b50ee2d3e2abeba8da2d0394be8e54eec59912bf3fa8dee",
       "doc": "docs/static/framework/domain/economy/npc_trader_simulator.gd.md",
       "status": "documented"
     },
@@ -454,7 +466,7 @@
     },
     {
       "source": "framework/domain/ship/ship_ops.gd",
-      "sha256": "7af5ee9d88b6b4856d1753322ce8a44a1b9cf203f667e8d1631648bdd6c3c80d",
+      "sha256": "1d1283cff6d5f7d899ea05b07a1ad63bd9b35cd709aa4635cd54af9340ef8cd0",
       "doc": "docs/static/framework/domain/ship/ship_ops.gd.md",
       "status": "documented"
     },
@@ -466,7 +478,7 @@
     },
     {
       "source": "framework/domain/voyage/voyage_service.gd",
-      "sha256": "be853cd3f9944a4d61d5953a8d3883ca29e7cc44c58f8d9d36a1af1f53c4dc5a",
+      "sha256": "b3fadd4d89d37ed7cd8291278266909a7a8d1afefb0e7f8be82d7ffc97deee60",
       "doc": "docs/static/framework/domain/voyage/voyage_service.gd.md",
       "status": "documented"
     },
@@ -635,6 +647,13 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_market_memory.gd",
+      "sha256": "b3e3e159f284e879c7dad5b3db9377aa8415f61dbadbd08b2969bf22cac08613",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
       "source": "framework/tests/cases/test_market_trade.gd",
       "sha256": "57ab8a720226d3a2d83c5df6c15c83e0200acafa59602e11428def07d711556e",
       "doc": "docs/static/framework/tests/README.md",
@@ -748,14 +767,14 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "e2f7748345e39d8aba64fbf989738cf107e8c1761009d28122f5d6a0a498dce9",
+      "sha256": "909f52f1e735ddde1e0c5d9f66d95d85f1642acee4486b6ecf86e29e3619d970",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "655f4bfaa12a2ca2558c7a11fc354a7c3654096898139ecdd92ac8d15e14f465",
+      "sha256": "da899d8b2508a1ad6cbc8d5ab43dabb36c8596f692f611044e98821fc10e22ca",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -975,7 +994,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "23d689b088cf0c0f9be0ad9b102f73dc80da05b796f258c5fa8a5b3172693439",
+      "sha256": "9785002026f50010bc2ce084bf925c15f494e21d890a46ea02d8446c186a875e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -996,7 +1015,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "c7f29d44e5145d5106b595c282f1c2061735bf764e12002a854caa59d9c6eda5",
+      "sha256": "0d6cf94fa21fb337f2f5b475d520b32e7f809768a3fea75aac2b4b46cb3abf48",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

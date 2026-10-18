@@ -247,7 +247,7 @@ static func role_definition(hub: RegistryHub, ship: Dictionary, kind: String) ->
 	return role
 
 
-static func add_cargo(ship: Dictionary, item_id: String, amount: int, contract_id: String = "") -> void:
+static func add_cargo(ship: Dictionary, item_id: String, amount: int, contract_id: String = "", total_cost: float = 0.0) -> void:
 	if amount <= 0:
 		return
 	if not ship.has("cargo"):
@@ -256,8 +256,14 @@ static func add_cargo(ship: Dictionary, item_id: String, amount: int, contract_i
 	for stack in cargo:
 		if String(stack.get("item_id", "")) == item_id and String(stack.get("contract_id", "")) == contract_id:
 			stack["amount"] = int(stack.get("amount", 0)) + amount
+			stack["total_cost"] = float(stack.get("total_cost", 0.0)) + maxf(0.0, total_cost)
 			return
-	cargo.append({"item_id": item_id, "amount": amount, "contract_id": contract_id})
+	cargo.append({
+		"item_id": item_id,
+		"amount": amount,
+		"contract_id": contract_id,
+		"total_cost": maxf(0.0, total_cost),
+	})
 
 
 static func cargo_amount(ship: Dictionary, item_id: String, allow_contract: bool = true) -> int:
@@ -269,6 +275,28 @@ static func cargo_amount(ship: Dictionary, item_id: String, allow_contract: bool
 			continue
 		total += int(stack.get("amount", 0))
 	return total
+
+
+static func cargo_total_cost(ship: Dictionary, allow_contract: bool = false) -> float:
+	var total := 0.0
+	for stack in ship.get("cargo", []):
+		if not allow_contract and not String(stack.get("contract_id", "")).is_empty():
+			continue
+		total += float(stack.get("total_cost", 0.0))
+	return total
+
+
+static func cargo_average_cost(ship: Dictionary, item_id: String, allow_contract: bool = false) -> float:
+	var amount := 0
+	var cost := 0.0
+	for stack in ship.get("cargo", []):
+		if String(stack.get("item_id", "")) != item_id:
+			continue
+		if not allow_contract and not String(stack.get("contract_id", "")).is_empty():
+			continue
+		amount += int(stack.get("amount", 0))
+		cost += float(stack.get("total_cost", 0.0))
+	return cost / float(amount) if amount > 0 else 0.0
 
 
 static func remove_cargo(ship: Dictionary, item_id: String, amount: int, allow_contract: bool = false) -> int:
@@ -285,7 +313,10 @@ static func remove_cargo(ship: Dictionary, item_id: String, amount: int, allow_c
 			continue
 		var available := int(stack.get("amount", 0))
 		var take := mini(remaining, available)
+		var stack_cost := float(stack.get("total_cost", 0.0))
+		var take_cost := stack_cost * float(take) / float(available) if available > 0 else 0.0
 		stack["amount"] = available - take
+		stack["total_cost"] = maxf(0.0, stack_cost - take_cost)
 		remaining -= take
 		removed += take
 		if int(stack["amount"]) <= 0:
@@ -313,7 +344,9 @@ static func remove_non_contract_cargo_by_weight(hub: RegistryHub, ship: Dictiona
 		var available := int(stack.get("amount", 0))
 		var needed_units := int(ceil(weight / unit_weight))
 		var take := mini(needed_units, available)
+		var stack_cost := float(stack.get("total_cost", 0.0))
 		stack["amount"] = available - take
+		stack["total_cost"] = maxf(0.0, stack_cost * (1.0 - float(take) / float(available))) if available > 0 else 0.0
 		removed_weight += take * unit_weight
 		if int(stack["amount"]) <= 0:
 			cargo.remove_at(index)

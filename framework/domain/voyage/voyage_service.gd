@@ -202,6 +202,7 @@ static func _complete_arrival(context) -> Dictionary:
 		arrival_time,
 		_profile_data(context)
 	)
+	MarketMemoryService.remember(state, destination)
 	var debt_events := DebtService.check_overdue(state)
 	var stats: Dictionary = state.data.get("stats", {})
 	stats["voyages"] = int(stats.get("voyages", 0)) + 1

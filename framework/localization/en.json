@@ -83,7 +83,7 @@
   "ui.button.plan": "Plan voyage",
   "ui.button.install": "Buy and install",
   "ui.button.refresh_intel": "Refresh intelligence",
-  "ui.hint.market": "Buying lowers stock and raises price; selling settles at 95% of the current price.",
+  "ui.hint.market": "Every port buys cargo you carry; only listed goods can be bought. Buying pushes prices up.",
   "ui.hint.shipyard": "The hull determines cargo/cabin slots. Single-slot equipment cannot be removed or replaced yet.",
   "ui.hint.intel": "Only discovered ports are covered; NPC reports give rough arrival ranges.",
   "ui.reason.cargo_slots_full": "Cargo slots are full; upgrade the hull first",
@@ -162,5 +162,14 @@
   "ui.error.unsupported_effect": "Unsupported effect op",
   "ui.error.effect_failed": "Effect failed",
   "ui.error.insufficient_coal": "Not enough coal",
-  "ui.error.insufficient_water": "Not enough water"
+  "ui.error.insufficient_water": "Not enough water",
+  "ui.label.sell_only": "Sell-only",
+  "ui.label.last_visit": "Last visit",
+  "ui.label.readonly_memory": "Read-only snapshot from the last visit; later market changes are not reflected.",
+  "ui.map.hint": "Click a visited port to see its last-known prices and stock.",
+  "ui.button.back_overview": "Back to overview",
+  "ui.error.not_buyable": "This port only buys that good and does not sell it",
+  "ui.label.avg_cost": "Avg cost",
+  "ui.label.inventory_cost": "Inventory cost",
+  "ui.label.contract_cargo": "Contract cargo"
 }

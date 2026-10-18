@@ -38,6 +38,7 @@ var _root_box: VBoxContainer = null
 var _last_port_view: Dictionary = {}
 
 var _active_screen: String = "overview"
+var _memory_port_id: String = ""
 var _selected_build: String = ""
 var _selected_destination: String = ""
 var _selected_strategy: String = ""
@@ -74,7 +75,10 @@ func _build_theme() -> Theme:
 			color = Color("2a3945")
 		elif state == "pressed":
 			color = Color("0f1a22")
+		elif state == "disabled":
+			color = Color("121b22")
 		result.set_stylebox(state, "Button", _style(color, 6))
+	result.set_color("font_disabled_color", "Button", Color("5a6a75"))
 	result.set_constant("separation", "VBoxContainer", 10)
 	result.set_constant("separation", "HBoxContainer", 10)
 	result.set_constant("h_separation", "GridContainer", 12)
@@ -159,7 +163,7 @@ func _refresh() -> void:
 
 	_build_nav(data)
 	_build_status_banner()
-	if not SCREENS.has(_active_screen):
+	if not SCREENS.has(_active_screen) and _active_screen != "port_memory":
 		_active_screen = "overview"
 	match _active_screen:
 		"market":
@@ -172,6 +176,8 @@ func _refresh() -> void:
 			_screen_intel(data)
 		"voyage":
 			_screen_voyage(data)
+		"port_memory":
+			_screen_port_memory(data)
 		_:
 			_screen_overview(data)
 
@@ -232,11 +238,12 @@ func _build_nav(data: Dictionary) -> void:
 	var nav := HBoxContainer.new()
 	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_root_box.add_child(nav)
+	var visual_active := "overview" if _active_screen == "port_memory" else _active_screen
 	for screen in SCREENS:
 		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
 		button.custom_minimum_size = Vector2(96, 34)
 		button.toggle_mode = false
-		if screen == _active_screen:
+		if screen == visual_active:
 			button.disabled = true
 			button.add_theme_color_override("font_disabled_color", COLOR_BRASS)
 			button.add_theme_stylebox_override("disabled", _style(COLOR_PANEL_ALT, 6))
@@ -361,6 +368,7 @@ func _map_panel() -> Control:
 		_panel_add(panel, _label(_error_text(map_view), 14, COLOR_RED))
 		return panel
 	var map_data: Dictionary = map_view["data"]
+	_panel_add(panel, _label(_tr("ui.map.hint", ""), 12, COLOR_MUTED))
 	var canvas := MapCanvas.new()
 	canvas.custom_minimum_size = Vector2(0, 280)
 	canvas.ports = map_data.get("ports", [])
@@ -368,7 +376,8 @@ func _map_panel() -> Control:
 	canvas.labels = {}
 	for port in canvas.ports:
 		canvas.labels[String(port.get("id", ""))] = _tr(String(port.get("name_key", "")), String(port.get("id", "")))
-	canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.port_clicked.connect(_on_map_port_clicked)
 	_panel_add(panel, canvas)
 	return panel
 
@@ -443,8 +452,20 @@ func _ship_summary_panel(data: Dictionary) -> Control:
 		int(ship.get("passengers", 0)),
 		int(ship.get("passenger_capacity", 0)),
 	], 13, COLOR_MUTED))
+	_panel_add(panel, _label("%s %s" % [_tr("ui.label.inventory_cost", ""), _fmt(float(ship.get("cargo_cost_basis", 0.0)))], 13, COLOR_MUTED))
 	for module in ship.get("modules", []):
 		_panel_add(panel, _label("· %s" % _tr(String(module.get("name_key", "")), String(module.get("module_id", ""))), 13, COLOR_TEXT))
+	for stack in ship.get("cargo", []):
+		var cargo_name := _tr(String(stack.get("name_key", "")), String(stack.get("item_id", "")))
+		if bool(stack.get("is_contract", false)):
+			_panel_add(panel, _label("· %s ×%d · %s" % [cargo_name, int(stack.get("amount", 0)), _tr("ui.label.contract_cargo", "")], 13, COLOR_MUTED))
+		else:
+			_panel_add(panel, _label("· %s ×%d · %s %s" % [
+				cargo_name,
+				int(stack.get("amount", 0)),
+				_tr("ui.label.avg_cost", ""),
+				_fmt(float(stack.get("average_cost", 0.0))),
+			], 13, COLOR_TEXT))
 	_panel_add(panel, _button("前往船厂改造", _on_nav.bind("shipyard")))
 	return panel
 
@@ -496,34 +517,42 @@ func _screen_market(data: Dictionary) -> void:
 	var port: Dictionary = data.get("current_port", {})
 	_panel_add(panel, _label("交易所 · %s" % _tr(String(port.get("name_key", "")), String(port.get("id", ""))), 20, COLOR_BRASS))
 	var ship: Dictionary = data.get("ship", {})
-	_panel_add(panel, _label("金币 %d · 重量 %s / %s · 货舱 %s / %s" % [
+	_panel_add(panel, _label("金币 %d · 重量 %s / %s · 货舱 %s / %s · %s %s" % [
 		int(data.get("money", 0)),
 		_fmt(float(ship.get("total_weight", 0.0))),
 		_fmt(float(ship.get("max_weight", 0.0))),
 		_fmt(float(ship.get("cargo_used", 0.0))),
 		_fmt(float(ship.get("cargo_capacity", 0.0))),
+		_tr("ui.label.inventory_cost", ""),
+		_fmt(float(ship.get("cargo_cost_basis", 0.0))),
 	], 13, COLOR_MUTED))
 	_panel_add(panel, _label(_tr("ui.hint.market", ""), 12, COLOR_MUTED))
 
 	var trends := _market_trends()
 	var grid := GridContainer.new()
-	grid.columns = 8
+	grid.columns = 9
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for heading in ["商品", "单价", "库存", _tr("ui.label.unit_weight", "单位重量"), "持有 / 可售", _tr("ui.label.trend", "趋势"), "买入", "卖出"]:
+	for heading in ["商品", "单价", "库存", _tr("ui.label.unit_weight", "单位重量"), "持有 / 可售", _tr("ui.label.avg_cost", ""), _tr("ui.label.trend", "趋势"), "买入", "卖出"]:
 		grid.add_child(_label(heading, 12, COLOR_MUTED))
 	for row in data.get("market", []):
 		var item_id := String(row.get("item_id", ""))
-		grid.add_child(_label(_tr(String(row.get("name_key", "")), item_id), 13, COLOR_TEXT))
+		var buyable := bool(row.get("buyable", true))
+		var item_label := _tr(String(row.get("name_key", "")), item_id)
+		if not buyable:
+			item_label += " · " + _tr("ui.label.sell_only", "Sell-only")
+		grid.add_child(_label(item_label, 13, COLOR_TEXT if buyable else COLOR_MUTED))
 		grid.add_child(_label(str(int(row.get("price", 0))), 13, COLOR_TEAL))
 		grid.add_child(_label(str(int(row.get("stock", 0))), 13, COLOR_TEXT))
 		grid.add_child(_label(_fmt(float(row.get("unit_weight", 0.0))), 13, COLOR_MUTED))
 		grid.add_child(_label("%d / %d" % [int(row.get("cargo_amount", 0)), int(row.get("sellable_amount", 0))], 13, COLOR_TEXT))
+		var average_cost := float(row.get("cargo_avg_cost", 0.0))
+		grid.add_child(_label(_fmt(average_cost) if average_cost > 0.0 else "—", 13, COLOR_TEXT))
 		grid.add_child(_label(_trend_text(trends.get(item_id, "")), 13, _trend_color(trends.get(item_id, ""))))
 		var buy_row := HBoxContainer.new()
 		buy_row.add_theme_constant_override("separation", 2)
 		for amount in [1, 5, 10]:
 			var buy_button := _small_button(str(amount), _on_buy.bind(item_id, amount))
-			buy_button.disabled = int(row.get("stock", 0)) < amount
+			buy_button.disabled = not buyable or int(row.get("stock", 0)) < amount
 			buy_row.add_child(buy_button)
 		grid.add_child(buy_row)
 		var sell_row := HBoxContainer.new()
@@ -549,6 +578,52 @@ func _market_trends() -> Dictionary:
 		for row in port_report.get("market", []):
 			result[String(row.get("item_id", ""))] = String(row.get("trend", ""))
 	return result
+
+
+## ---------------------------------------------------------------------------
+## Port memory (clicked on the map)
+## ---------------------------------------------------------------------------
+
+func _screen_port_memory(_data: Dictionary) -> void:
+	if _memory_port_id.is_empty():
+		_memory_port_id = String(_last_port_view.get("current_port_id", ""))
+	var result := _context.queries.execute(&"port.memory", {"port_id": _memory_port_id})
+	if not bool(result.get("ok", false)):
+		var error_panel := _panel()
+		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _button(_tr("ui.button.back_overview", ""), _on_nav.bind("overview")))
+		_root_box.add_child(error_panel)
+		return
+	var memory: Dictionary = result["data"]
+	var panel := _panel()
+	_panel_add(panel, _label("港口记忆 · %s" % _tr(String(memory.get("name_key", "")), String(memory.get("port_id", ""))), 20, COLOR_BRASS))
+	if bool(memory.get("has_memory", false)):
+		_panel_add(panel, _label("%s：%s · %s" % [
+			_tr("ui.label.last_visit", ""),
+			String(memory.get("captured_label", "")),
+			_age_text(float(memory.get("age_hours", 0.0))),
+		], 14, COLOR_TEXT))
+		_panel_add(panel, _label(_tr("ui.label.readonly_memory", ""), 12, COLOR_MUTED))
+		var grid := GridContainer.new()
+		grid.columns = 4
+		for heading in ["商品", "上次单价", "上次储备", "买卖"]:
+			grid.add_child(_label(heading, 12, COLOR_MUTED))
+		for row in memory.get("market", []):
+			var buyable := bool(row.get("buyable", true))
+			grid.add_child(_label(_tr(String(row.get("name_key", "")), String(row.get("item_id", ""))), 13, COLOR_TEXT))
+			grid.add_child(_label(str(int(row.get("price", 0))), 13, COLOR_TEAL))
+			grid.add_child(_label(str(int(row.get("stock", 0))), 13, COLOR_TEXT))
+			grid.add_child(_label("可买" if buyable else _tr("ui.label.sell_only", ""), 13, COLOR_GREEN if buyable else COLOR_MUTED))
+		_panel_add(panel, grid)
+	else:
+		_panel_add(panel, _label("没有该港口的到港市场记录。", 14, COLOR_MUTED))
+	var facilities := PackedStringArray()
+	for facility in memory.get("facilities", []):
+		facilities.append(_facility_name(String(facility)))
+	if bool(memory.get("facilities_known", false)):
+		_panel_add(panel, _label("设施：" + (", ".join(facilities) if not facilities.is_empty() else "—"), 13, COLOR_MUTED))
+	_panel_add(panel, _button(_tr("ui.button.back_overview", ""), _on_nav.bind("overview")))
+	_root_box.add_child(panel)
 
 
 ## ---------------------------------------------------------------------------
@@ -855,7 +930,10 @@ func _screen_intel(_data: Dictionary) -> void:
 		for heading in ["商品", "价格", "库存", _tr("ui.label.trend", "")]:
 			grid.add_child(_label(heading, 12, COLOR_MUTED))
 		for row in port_report.get("market", []):
-			grid.add_child(_label(_tr(String(row.get("item_name_key", "")), String(row.get("item_id", ""))), 13, COLOR_TEXT))
+			var item_label := _tr(String(row.get("item_name_key", "")), String(row.get("item_id", "")))
+			if not bool(row.get("buyable", true)):
+				item_label += " · " + _tr("ui.label.sell_only", "")
+			grid.add_child(_label(item_label, 13, COLOR_TEXT))
 			grid.add_child(_label(str(int(row.get("price", 0))), 13, COLOR_TEAL))
 			grid.add_child(_label(str(int(row.get("stock", 0))), 13, COLOR_TEXT))
 			grid.add_child(_label(_trend_text(String(row.get("trend", ""))), 13, _trend_color(String(row.get("trend", "")))))
@@ -1052,6 +1130,16 @@ func _on_nav(screen: String) -> void:
 	_refresh()
 
 
+func _on_map_port_clicked(port_id: String) -> void:
+	if port_id == String(_last_port_view.get("current_port_id", "")):
+		_active_screen = "market"
+	else:
+		_memory_port_id = port_id
+		_active_screen = "port_memory"
+	_status_message = ""
+	_refresh()
+
+
 func _on_build_selected(_index: int, option: OptionButton) -> void:
 	_selected_build = String(option.get_item_metadata(option.selected))
 	_refresh()
@@ -1090,6 +1178,9 @@ func _on_continue() -> void:
 		return
 	_context.set_state(loaded["state"])
 	_context.set_seed(_context.state.seed())
+	MarketOps.ensure_sell_only_entries(_context.registries, _context.state)
+	if not MarketMemoryService.has_memory(_context.state, _context.state.current_port_id()):
+		MarketMemoryService.remember(_context.state, _context.state.current_port_id())
 	_selected_destination = ""
 	_selected_strategy = ""
 	_active_screen = "overview"
@@ -1452,12 +1543,61 @@ func _destination_exists(destinations: Array, port_id: String) -> bool:
 class MapCanvas:
 	extends Control
 
+	signal port_clicked(port_id: String)
+
 	var ports: Array = []
 	var routes: Array = []
 	var labels: Dictionary = {}
 
+	var _hovered_port: String = ""
+	var _positions: Dictionary = {}
+
 	func _draw() -> void:
+		_layout()
 		if ports.is_empty():
+			return
+		for route in routes:
+			var from_id := String(route.get("a", ""))
+			var to_id := String(route.get("b", ""))
+			if _positions.has(from_id) and _positions.has(to_id):
+				draw_line(_positions[from_id], _positions[to_id], Color(0.35, 0.45, 0.52, 0.75), 2.0)
+		var font := get_theme_default_font()
+		for port in ports:
+			var port_id := String(port.get("id", ""))
+			if not _positions.has(port_id):
+				continue
+			var position: Vector2 = _positions[port_id]
+			var color := Color(0.4, 0.48, 0.54)
+			if bool(port.get("current", false)):
+				color = Color("f0c674")
+			elif bool(port.get("visited", false)):
+				color = Color("7fc8e8")
+			elif bool(port.get("discovered", false)):
+				color = Color("8fd694")
+			draw_circle(position, 10.0, color)
+			draw_circle(position, 4.0, Color("0b1116"))
+			if port_id == _hovered_port:
+				draw_arc(position, 15.0, 0.0, TAU, 32, Color("f0c674"), 2.0)
+			var label := String(labels.get(port_id, port_id))
+			draw_string(font, position + Vector2(-50.0, 28.0), label, HORIZONTAL_ALIGNMENT_CENTER, 100.0, 13, Color("d7e3ea"))
+
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var port_id := _port_at(event.position)
+			if not port_id.is_empty():
+				port_clicked.emit(port_id)
+				accept_event()
+			return
+		if event is InputEventMouseMotion:
+			var port_id := _port_at(event.position)
+			if port_id != _hovered_port:
+				_hovered_port = port_id
+				mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if not port_id.is_empty() else Control.CURSOR_ARROW
+				queue_redraw()
+
+	func _layout() -> void:
+		_positions = {}
+		if ports.is_empty() or size.x <= 1.0 or size.y <= 1.0:
 			return
 		var min_x := 0.0
 		var max_x := 0.0
@@ -1484,28 +1624,22 @@ class MapCanvas:
 		scale_value = clampf(scale_value, 0.2, 2.0)
 		var center := size * 0.5
 		var origin := Vector2((min_x + max_x) * 0.5, (min_y + max_y) * 0.5)
-		var positions := {}
 		for port in ports:
-			positions[String(port.get("id", ""))] = center + (Vector2(float(port.get("x", 0.0)), float(port.get("y", 0.0))) - origin) * scale_value
-		for route in routes:
-			var from_id := String(route.get("a", ""))
-			var to_id := String(route.get("b", ""))
-			if positions.has(from_id) and positions.has(to_id):
-				draw_line(positions[from_id], positions[to_id], Color(0.35, 0.45, 0.52, 0.75), 2.0)
-		var font := get_theme_default_font()
+			_positions[String(port.get("id", ""))] = center + (Vector2(float(port.get("x", 0.0)), float(port.get("y", 0.0))) - origin) * scale_value
+
+	func _port_at(position: Vector2) -> String:
+		_layout()
+		var best := ""
+		var best_distance := 18.0
 		for port in ports:
-			var port_id := String(port.get("id", ""))
-			if not positions.has(port_id):
+			if not bool(port.get("visited", false)):
 				continue
-			var position: Vector2 = positions[port_id]
-			var color := Color(0.4, 0.48, 0.54)
-			if bool(port.get("current", false)):
-				color = Color("f0c674")
-			elif bool(port.get("visited", false)):
-				color = Color("7fc8e8")
-			elif bool(port.get("discovered", false)):
-				color = Color("8fd694")
-			draw_circle(position, 10.0, color)
-			draw_circle(position, 4.0, Color("0b1116"))
-			var label := String(labels.get(port_id, port_id))
-			draw_string(font, position + Vector2(-50.0, 28.0), label, HORIZONTAL_ALIGNMENT_CENTER, 100.0, 13, Color("d7e3ea"))
+			var port_id := String(port.get("id", ""))
+			if not _positions.has(port_id):
+				continue
+			var distance := position.distance_to(_positions[port_id])
+			if distance <= best_distance:
+				best = port_id
+				best_distance = distance
+		return best
+

@@ -83,7 +83,7 @@
   "ui.button.plan": "规划出航",
   "ui.button.install": "购买并安装",
   "ui.button.refresh_intel": "刷新情报",
-  "ui.hint.market": "买入会降低库存并推高价格；卖出按当前价的 95% 结算。",
+  "ui.hint.market": "任意港口都收购你手中的货物；但只有商品表里列出的品种可以直接买入。买入会推高价格。",
   "ui.hint.shipyard": "船体决定货舱/客舱槽位。单槽设备目前不能拆卸或替换。",
   "ui.hint.intel": "只覆盖已发现港口；NPC 只给出大致抵达区间。",
   "ui.reason.cargo_slots_full": "货舱槽已满，先升级船体",
@@ -162,5 +162,14 @@
   "ui.error.unsupported_effect": "不支持的效果操作",
   "ui.error.effect_failed": "效果执行失败",
   "ui.error.insufficient_coal": "煤炭不足",
-  "ui.error.insufficient_water": "淡水不足"
+  "ui.error.insufficient_water": "淡水不足",
+  "ui.label.sell_only": "仅收购",
+  "ui.label.last_visit": "上次在港",
+  "ui.label.readonly_memory": "这是上次在港时的只读快照，之后的市场变化不会同步。",
+  "ui.map.hint": "点击已访问的港口，查看上次在港时的货价与储备。",
+  "ui.button.back_overview": "返回总览",
+  "ui.error.not_buyable": "该港口只收购此商品，不向你出售",
+  "ui.label.avg_cost": "持仓均价",
+  "ui.label.inventory_cost": "库存成本",
+  "ui.label.contract_cargo": "委托货"
 }

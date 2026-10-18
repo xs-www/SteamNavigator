@@ -21,6 +21,7 @@
 | `queries/app_view.gd` | 启动与菜单 ViewModel：状态、模组、计数、构筑、命令列表。 | 本页 |
 | `queries/intel_view.gd` | 情报独立界面 ViewModel：快照时间/年龄、已发现港口市场表和 NPC 预计动向。 | [查看](./queries/intel_view.gd.md) |
 | `queries/map_view.gd` | 海图 ViewModel：港口坐标、发现/访问、设施与航线。 | 本页 |
+| `queries/port_memory_view.gd` | 点击已访问港口时的只读市场记忆 ViewModel：上次在港的价格、储备与可买标记。 | [查看](./queries/port_memory_view.gd.md) |
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知与统计。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表。 | 本页 |
 | `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前模块、槽位占用和所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |

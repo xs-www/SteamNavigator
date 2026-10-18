@@ -14,6 +14,8 @@
 
 - 总重量包含已装模块、货物、煤、水、旅客；合同货箱同样计入。
 - 货舱容量是重量容量；合同货物不可出售/抛弃。
+- 每个 cargo stack 保存 total_cost；买入累加，卖出/抛弃按数量比例扣减。
+- `cargo_total_cost()` 与 `cargo_average_cost()` 是 UI 显示库存成本的唯一口径。
 - 派生属性计算船体基础、锅炉、导航、安全、模块 modifiers 与岗位 modifiers。
 - `validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。
 - `install_blockers()` 是 ship.install_module 命令与船厂 ViewModel 共用的校验源：声誉、货币、槽位、重量替换差量。

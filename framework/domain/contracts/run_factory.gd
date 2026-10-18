@@ -101,6 +101,7 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 		"ship": ship,
 		"contracts": {},
 		"market": {},
+		"port_memory": {},
 		"npcs": [],
 		"intelligence": {},
 		"notices": [],
@@ -108,6 +109,7 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 	}
 	ContractOps.ensure_structure(state)
 	_initialize_markets(state, hub, profile, rng)
+	MarketMemoryService.remember(state, state.current_port_id())
 	state.data["npcs"] = NpcTraderSimulator.create_initial(state, hub, rng, profile.data)
 
 	var main_offer := _generate_main_offer(state, hub, 1, rng)

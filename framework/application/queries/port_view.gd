@@ -28,9 +28,11 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"unit_weight": float(definition.data.get("unit_weight", 0.0)),
 			"price": int(round(float(entry.get("price", 0.0)))),
 			"stock": int(entry.get("stock", 0)),
+			"buyable": bool(entry.get("buyable", true)),
 			"trend": _trend(entry),
 			"cargo_amount": ShipOps.cargo_amount(ship, String(item_id), true),
 			"sellable_amount": ShipOps.cargo_amount(ship, String(item_id), false),
+			"cargo_avg_cost": ShipOps.cargo_average_cost(ship, String(item_id), false),
 		})
 
 	var destinations: Array = []
@@ -139,17 +141,24 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 	var cargo: Array = []
 	for stack in ship.get("cargo", []):
 		var definition := ShipOps.item_definition(hub, String(stack.get("item_id", "")))
+		var amount := int(stack.get("amount", 0))
+		var stack_cost := float(stack.get("total_cost", 0.0))
+		var contract_id := String(stack.get("contract_id", ""))
 		cargo.append({
 			"item_id": String(stack.get("item_id", "")),
 			"name_key": definition.name_key if definition != null else String(stack.get("item_id", "")),
-			"amount": int(stack.get("amount", 0)),
-			"contract_id": String(stack.get("contract_id", "")),
+			"amount": amount,
+			"contract_id": contract_id,
+			"is_contract": not contract_id.is_empty(),
+			"total_cost": stack_cost,
+			"average_cost": stack_cost / float(amount) if amount > 0 and contract_id.is_empty() else 0.0,
 		})
 	return {
 		"hull_id": String(ship.get("hull_id", "")),
 		"boiler_id": String(ship.get("boiler_id", "")),
 		"modules": modules,
 		"cargo": cargo,
+		"cargo_cost_basis": ShipOps.cargo_total_cost(ship),
 		"durability": float(ship.get("durability", 0.0)),
 		"max_durability": float(stats.get("max_durability", 0.0)),
 		"coal": float(ship.get("coal", 0.0)),

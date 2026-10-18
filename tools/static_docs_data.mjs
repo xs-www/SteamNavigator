@@ -302,9 +302,10 @@ export const FILE_DOCS = {
   "framework/application/queries/port_view.gd": {
     role: "主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知与统计。",
     contracts: [
-      "所有数值只读复制；市场行同时给出库存、单价、持有与可售数量。",
+      "所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable 与持仓均价。",
       "目的地只列当前港的相邻航线，标记未知设施与风险。",
       "委托 ViewModel 额外提供目的港名称键与期限显示文本。",
+      "船只 ViewModel 的 cargo_cost_basis 与 average_cost 来自 ShipOps 的成本口径。",
       "不返回 ContentDefinition 或 GameState 内部引用。"
     ]
   },
@@ -324,6 +325,15 @@ export const FILE_DOCS = {
       "与 `ship.install_module` 共用 `ShipOps.install_blockers()`，UI 不复制规则。",
       "`candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。",
       "已安装模块标记 installed，并附加 already_installed 限制。"
+    ]
+  },
+
+  "framework/application/queries/port_memory_view.gd": {
+    role: "点击已访问港口时的只读市场记忆 ViewModel：上次在港的价格、储备与可买标记。",
+    contracts: [
+      "数据来自 `MarketMemoryService`，不是实时市场；时间流逝不会自动刷新。",
+      "包含港口名、上次到港时间/年龄、设施与全部普通商品行。",
+      "未访问港口或旧存档缺少快照时返回 has_memory=false，不伪造价格。"
     ]
   },
 
@@ -383,6 +393,8 @@ export const FILE_DOCS = {
     contracts: [
       "总重量包含已装模块、货物、煤、水、旅客；合同货箱同样计入。",
       "货舱容量是重量容量；合同货物不可出售/抛弃。",
+      "每个 cargo stack 保存 total_cost；买入累加，卖出/抛弃按数量比例扣减。",
+      "`cargo_total_cost()` 与 `cargo_average_cost()` 是 UI 显示库存成本的唯一口径。",
       "派生属性计算船体基础、锅炉、导航、安全、模块 modifiers 与岗位 modifiers。",
       "`validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。",
       "`install_blockers()` 是 ship.install_module 命令与船厂 ViewModel 共用的校验源：声誉、货币、槽位、重量替换差量。"
@@ -397,19 +409,33 @@ export const FILE_DOCS = {
   },
 
   "framework/domain/economy/market_ops.gd": {
-    role: "市场价格、买卖、补给购买与维修结算。",
+    role: "市场价格、买卖、补给购买与维修结算；任意港收购所有货物，买入仅限本地品种。",
     contracts: [
-      "价格 = base_price × bias × (base_stock / stock)^elasticity，限制在 0.55–2.2。",
-      "买入改变库存并立即重算价格；卖出使用买卖价差 trade_margin。",
-      "买入检查货币、库存、总重量与货舱容量；合同货物不可卖。",
-      "补给只检查重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。"
+      "本地品种价格 = base_price × bias × (base_stock / stock)^elasticity，限制在 0.55–2.2。",
+      "非本地品种以 `buyable=false` 进入市场：只收购、不卖给你；价格按 base_price × 0.9 × 库存折减。",
+      "买入检查 buyable、货币、库存、总重量与货舱容量；卖出允许所有非合同货物。",
+      "买入把成交总额写入 cargo stack 的 total_cost，卖出按数量比例扣减成本。",
+      "补给只检查重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。",
+      "`ensure_sell_only_entries()` 为旧存档补齐非本地收购项。"
     ],
     l2: {
       "buy(state, hub, port_id, item_id, amount, trade_margin)": [
-        "所有前置条件通过后才扣款、减库存、重算价格、写入 cargo stack。",
+        "所有前置条件通过后才扣款、减库存、重算价格、写入 cargo stack 和成本。",
         "失败返回带 message_key 的 Result；命令总线因此不会提交工作副本。"
+      ],
+      "compute_price(entry)": [
+        "buyable=true 走本地市场供需公式；buyable=false 使用单向收购价，库存越多价格越低。"
       ]
     }
+  },
+
+  "framework/domain/economy/market_memory_service.gd": {
+    role: "每港“上次在港时”的市场快照：价格、储备、可买标记与时间戳。",
+    contracts: [
+      "只在开局、抵达港口、在该港完成买卖时刷新；时间流逝和 NPC 变化不会改写快照。",
+      "与情报快照互相独立：情报可远程刷新，港口记忆只记录亲历市场。",
+      "快照存放在 GameState.port_memory，使用普通 Dictionary，可直接存档。"
+    ]
   },
 
   "framework/domain/economy/npc_trader_simulator.gd": {
@@ -417,6 +443,7 @@ export const FILE_DOCS = {
     contracts: [
       "NPC 不显示为海上实体，只保存当前位置、目的地、货类、数量、动作与 ETA。",
       "抵达时 deliver 增加库存、buy 减少库存，随后重算价格并重新分配路线。",
+      "NPC 只在 `buyable=true` 的本地商品中选货，不会为仅收购港口创造买侧市场。",
       "单次推进每个 NPC 最多追赶 4 个周期，避免长时间跳跃导致无限循环。",
       "随机流按 NPC ID 分离；市场事件返回 `{type:\"market.changed\"}`。"
     ]
@@ -628,6 +655,8 @@ export const FILE_DOCS = {
       "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
       "每轮命令后整页重建；选项/目的地/构筑选择保存在 UI 成员。",
       "每个 PanelContainer 只允许一个 VBoxContainer 内容容器；面板子节点必须经 `_panel_add()` 添加，避免多子节点互相重叠。",
+      "海图点击已访问港口：当前港跳转市场，远程港打开只读港口记忆。",
+      "市场页显示 buyable 与持仓均价；仅收购品种的买入按钮禁用。",
       "事件面板只展示本次抽样出的 2 个选项。",
       "Continue 读取 autosave 并做模组兼容性校验。"
     ]
@@ -773,7 +802,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码。",
-  "framework/tests/cases": "按主题拆分的 42 个测试。",
+  "framework/tests/cases": "按主题拆分的 45 个测试。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",
