@@ -5,6 +5,7 @@
 - 设计文档：[MVP GDD v1.0](docs/蒸汽航海_MVP_GDD_V1.0.md)
 - 架构文档：[框架 + 模组 v1.0](docs/蒸汽航海_项目架构方案_框架与模组_V1.0.md)
 - 静态代码文档：[docs/static/README.md](docs/static/README.md)
+- 美术/音频资产映射：[docs/design/ASSET_MAP.md](docs/design/ASSET_MAP.md)
 - 任务与路线图：[todo.md](todo.md)
 
 ## 当前状态
@@ -154,6 +155,7 @@ config/                        默认 UI 设置（config.json）
 sdk/                           打包、校验、模组模板、第三方示例
 .github/workflows/            GitHub Actions：tag 触发的开发版发布
 SNModMaker/                    零依赖网页端模组制作器（原生 HTML/CSS/JS）
+assets/                        运行时 UI、音频与字体资产
 dev_mods/core/                 官方 MVP 内容（松散的开发态 mod）
 dist/mods/                     本地 mod 包（.snavmod.zip）与 core 构建产物；运行时扫描
 docs/                          GDD、架构方案、静态代码文档

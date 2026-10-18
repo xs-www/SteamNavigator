@@ -18,6 +18,9 @@ dist/release/
 Thumbs.db
 desktop.ini
 
+# Local art direction prototypes
+.design/
+
 # Test output
 user_data/
 test_output/

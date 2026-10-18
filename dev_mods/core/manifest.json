@@ -34,7 +34,8 @@
   "assets": {
     "icon.coal": "assets/icons/coal.png",
     "icon.water": "assets/icons/water.png",
-    "icon.money": "assets/icons/money.png"
+    "icon.money": "assets/icons/money.png",
+    "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png"
   },
   "authors": ["Steam Navigator Team"],
   "license": "Proprietary",

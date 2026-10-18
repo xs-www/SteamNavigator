@@ -11,6 +11,7 @@
 - 官方内容：[Core 内容包](dev_mods/core/README.md)
 - SDK：[打包/校验/模板](sdk/README.md)
 - 模组制作器：[SNModMaker](SNModMaker/README.md)
+- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)
 
 ## 模块索引
 
@@ -30,6 +31,7 @@
 | [`dev_mods/core`](dev_mods/core/README.md) | 官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化。 |
 | [`tools`](tools/README.md) | PowerShell 辅助脚本与静态文档生成器。 |
 | [`SNModMaker`](SNModMaker/README.md) | 零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。 |
+| [`.design`](design-prototype.md) | 本地美术方向与交互验证台；被 Git 忽略，不进入游戏构建与发行。 |
 
 ## 主要数据流
 
