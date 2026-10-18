@@ -1,0 +1,993 @@
+{
+  "rule_version": "2.0",
+  "mode": "compact",
+  "generated_at": "2026-10-18T11:35:10.734Z",
+  "commit": "b4ab302",
+  "project_root": ".",
+  "doc_root": "docs/static",
+  "counts": {
+    "sources": 147,
+    "documented": 51,
+    "grouped": 96
+  },
+  "files": [
+    {
+      "source": "README.md",
+      "sha256": "fc6a4c855756024730b7131b4ee5f58c695118db9b05e083339deb598a1e05d4",
+      "doc": "docs/static/README.md",
+      "status": "grouped",
+      "group": "docs/static/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/coal.png",
+      "sha256": "d011a713738dfb0a95f62a0c68f09d6a93b71067fb27c54b10f250a74bb28b8a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/money.png",
+      "sha256": "248d23a1fced2ec5b1dd84ed32ff451221332f8694f6a5304a162ab2157aae28",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/water.png",
+      "sha256": "5ed3c2afb088883cf3c3d902188a4040a175ad17d8a23c304935bec459608646",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/boilers.json",
+      "sha256": "77be1ca6e9509739ed9b3f8d47fc7d99043c3f2ed17285e1f05df131b54c4d3d",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/cabins.json",
+      "sha256": "4d9932225c689ecd98105d70d7a671c273f30fd76c6ff6abb254564ea8be3567",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/cargo_modules.json",
+      "sha256": "808d27a9b1a3d9075d56e5561f6771ac769798422f483408e1642138f6846828",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/contracts.json",
+      "sha256": "66cf3245804bfa8eab8b33fad92ca86df52d0a4cdbac5af8f3000500241660b6",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/events.json",
+      "sha256": "b180b2b19c29d1564b913c2f033aac7d781126c38a759e943f3a62f19d6e5b73",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/goods.json",
+      "sha256": "9f5a65c69ea1e200ecf6306e67e4cfd828569750858503a97bad1ca00e30eaaa",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/hulls.json",
+      "sha256": "234ae981cda842295edaf951b658c0a0ad26784bce5a704567220be6422d404c",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/map_profiles.json",
+      "sha256": "7e0d55d61d27732b55f5d6964be2820e795597c6a723d4ecafa0d67071949d0e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/materials.json",
+      "sha256": "30c4db2d0dbaf4f58f232918c0e5df9d2d34002ccf9e8289b7d22705b15d3a96",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/navigation_modules.json",
+      "sha256": "6a19b38a752d34e1393b81cc807fdc45d7745811a98d1b5da35b366f5ba6ed70",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/port_archetypes.json",
+      "sha256": "0ddf82bda0d45928de10d26957f530df49d4514b27c76153967b93d7f6b2a654",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/roles.json",
+      "sha256": "0553d58045945ae0d1bb4862e9c2e0f33ad58084770d7d39042d27e452dfaccc",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/safety_modules.json",
+      "sha256": "52d33dbdb0cc459eff3d999d54d0c4090456c8fccc4eb95c315332ff4d555ea1",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/starting_builds.json",
+      "sha256": "de4eca9e5ec2c25bf289506f66f94b13496b9370ceb85ca75472e094ced6a7ef",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/content/strategies.json",
+      "sha256": "bd47e46442c3e1b8e73c040a0985249a022028c6f5c66a203f4202b883e75568",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/localization/en.json",
+      "sha256": "0ebd29cb1ae49755d644a323a1ad3a41d86031af25e5224d65fe918b6479a281",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/localization/zh_CN.json",
+      "sha256": "d43dec645f2134506033ada02281e8004c455b9059b44f9605a88f4ad1d065f0",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/manifest.json",
+      "sha256": "46012b7c521a44e6cc71313f0005632a4aa2053df7c91328dd7f36ef57d013e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "framework/application/command_bus.gd",
+      "sha256": "3304f649d9b6b6696fcdf266207af59c15553287451318bf8d035936bf9c0244",
+      "doc": "docs/static/framework/application/command_bus.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/commands/command_registry.gd",
+      "sha256": "5bcb96534b2ed8d5cd1888eb6db64bc65bfecedd8caaa41796159b78d3f9e1d3",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/contract_commands.gd",
+      "sha256": "2f9eef4e2af083643d6b0b0ec3bf2dcee1932f41cc5d437c36e007e6949851bf",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/debt_commands.gd",
+      "sha256": "5ce19b1c64d0114f2ec6407181c92ffa34266955220c4f491f35735bd5a77db1",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/intel_commands.gd",
+      "sha256": "f4216a4ffa393f7de7db9002d06b9e85c47b5501c3e108ac10f17afb45d32a98",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/run_start.gd",
+      "sha256": "3f858cb73be61f42acad111a4fb8f8e34cfd6dc3da45a21a95e4cd3b807b9886",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/ship_commands.gd",
+      "sha256": "a6eba3213c8100e3ee3ef459cb6ef89a8679fed9116a94a0cc64c51b35b9d77d",
+      "doc": "docs/static/framework/application/commands/ship_commands.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/commands/supply_commands.gd",
+      "sha256": "df4261df07c01e4ea899cbc707491f1fd26a36f158732928929bb4d81c235605",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/trade_commands.gd",
+      "sha256": "b8264ad1e41abe07cdeec6855de05320f93335e32d2d570e3928c91754634190",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/voyage_commands.gd",
+      "sha256": "7574383fe9e3654a358b92513ba7168c1d14236547712341dc688d89d8312f24",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/domain_event_bus.gd",
+      "sha256": "7661c0d874402dc3ca990091517189a7d452c6debaab37f925e88684d2d40e94",
+      "doc": "docs/static/framework/application/domain_event_bus.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/framework_api.gd",
+      "sha256": "45d802b89782732e92baa1f34c8bfd2c1c42fdf918b0f9bdc2ac99103dea4486",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/queries/app_view.gd",
+      "sha256": "a917ca5a0db35ddd4f837346884905d753afb00345a2591c5b7ed1fa8dcb5aac",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/queries/map_view.gd",
+      "sha256": "f438c1cfe1c701673a05d4a22d681a143b67c65c312278a80ae86c3c47962601",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/queries/port_view.gd",
+      "sha256": "d09c1ac76a2553d3063b1abf5375d435c5b2437b58c67427d7ca3f5cd8521c1e",
+      "doc": "docs/static/framework/application/queries/port_view.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/queries/query_registry.gd",
+      "sha256": "c141b0512d5a5ddfd55f7794eeda0e24ce2ab2b3ca9e4a314fb3157a940e1d0d",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/queries/voyage_preview.gd",
+      "sha256": "031e8be9c740246472f5014646c04e4a2adebbf3b73992574fed2fadf129d571",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/query_bus.gd",
+      "sha256": "5f8c3d50b4ab19e413714bd1ab435ff27929cb20978d515647661e178c6ad226",
+      "doc": "docs/static/framework/application/query_bus.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/result.gd",
+      "sha256": "73a712da1a8f463d4cd389fc9d0802fa81f7f0891a87237b8798788a9791e968",
+      "doc": "docs/static/framework/application/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/bootstrap/app_bootstrap.gd",
+      "sha256": "256761e2950e96214d94a949fda6afadb40c2813fde3c08824742991b25f8b71",
+      "doc": "docs/static/framework/bootstrap/app_bootstrap.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/bootstrap/app_context.gd",
+      "sha256": "4168b0960a1137d829e4b5c47e54085942bc33b8ee459aa02bff7d0100748050",
+      "doc": "docs/static/framework/bootstrap/app_context.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/bootstrap/bootstrap.gd",
+      "sha256": "89ff7a85a771d5f0713b31de48d3aaeba16ad717c2101f3cbd07a28697284c95",
+      "doc": "docs/static/framework/bootstrap/bootstrap.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/bootstrap/framework_runtime.gd",
+      "sha256": "155f40711c7f7a3de1cea4645b935e2fcb9ddd815cfc60521a722ffa05c38e37",
+      "doc": "docs/static/framework/bootstrap/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/bootstrap/README.md"
+    },
+    {
+      "source": "framework/bootstrap/startup_report.gd",
+      "sha256": "073bbc5ef2b1db8beb61799fe4e243563fd8af358e7a7c68e981738c439e6dcb",
+      "doc": "docs/static/framework/bootstrap/startup_report.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/core/framework_info.gd",
+      "sha256": "f03c344bd0e23ef61876da24f1d8b65232d2897228f640ce632231d6e33d4fc0",
+      "doc": "docs/static/framework/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/core/README.md"
+    },
+    {
+      "source": "framework/core/json_utils.gd",
+      "sha256": "83fd29d4f901876451f98c4733f2bc9109179496b5796251e6da43d4e8798f99",
+      "doc": "docs/static/framework/core/json_utils.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/core/path_guard.gd",
+      "sha256": "e5cef3a5c5b9eb50bd44eaabfd4bfe0a1d9d9c0ba97ac910a41d7822825e36cb",
+      "doc": "docs/static/framework/core/path_guard.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/core/semver.gd",
+      "sha256": "610811cdf6bc9ecc857c295422795f311f6f9079b41c9a3a9c3fdd64043da33d",
+      "doc": "docs/static/framework/core/semver.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/core/stable_hash.gd",
+      "sha256": "d56bd9406ea2829cbc0ca9c8b0caf95e72fcce54c7ddf19cc3b373738d9c6ebd",
+      "doc": "docs/static/framework/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/core/README.md"
+    },
+    {
+      "source": "framework/core/version_range.gd",
+      "sha256": "066587210edfc307818a2f75569b5c60c770fd20f67c6d0ceb9da894117fcfa4",
+      "doc": "docs/static/framework/core/version_range.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/contracts/contract_ops.gd",
+      "sha256": "58c8cf6caabc0a7b329691401d70fef942428233515c5f32bfa44b0d8bcfcb48",
+      "doc": "docs/static/framework/domain/contracts/contract_ops.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/contracts/formula_registry.gd",
+      "sha256": "7f33e46cdc09a493179da905d90dffcca9d6f08dd01a1587e34aa97e7be2048d",
+      "doc": "docs/static/framework/domain/contracts/formula_registry.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/contracts/run_factory.gd",
+      "sha256": "c872885b80adce252b33cb2809b3897d88faa23824520170a29d63763881cdce",
+      "doc": "docs/static/framework/domain/contracts/run_factory.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/debt/debt_service.gd",
+      "sha256": "533a7b9ef1a182860c84850159cba6e7cc6609309578a23486a18ae18fce2d85",
+      "doc": "docs/static/framework/domain/debt/debt_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/economy/intel_service.gd",
+      "sha256": "e2a91bd044523efb6768e30e51da71ee30210f4b92122fb1dbbf791ef55a3868",
+      "doc": "docs/static/framework/domain/economy/intel_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/economy/market_ops.gd",
+      "sha256": "5fac143a4dfb9932175cbf40d61df2ba5390cc8de0484a3031182f4f22cf08ba",
+      "doc": "docs/static/framework/domain/economy/market_ops.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/economy/npc_trader_simulator.gd",
+      "sha256": "43a69ce546afe7f732a02bf06299bfc60598fb9aa85eecc0b90a6a9e50deb02a",
+      "doc": "docs/static/framework/domain/economy/npc_trader_simulator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/events/condition_evaluator.gd",
+      "sha256": "19560120139ceeb22bed2ed243372ea7a1d3432b26bf2be9ee82270df07018c8",
+      "doc": "docs/static/framework/domain/events/condition_evaluator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/events/condition_op_registry.gd",
+      "sha256": "3137676506140a7cafd5db02ebbc7404dcf24337cd506581c2fc13434c5a0733",
+      "doc": "docs/static/framework/domain/events/condition_op_registry.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/events/effect_executor.gd",
+      "sha256": "550d379977e4fdec73525fabd61e741db4dd3175c9c7853856c9474ac1a816b2",
+      "doc": "docs/static/framework/domain/events/effect_executor.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/events/effect_op_registry.gd",
+      "sha256": "4e51e707f8fd5bce6deea7120fd97919ca57a7b67382cbf99226f68dad714456",
+      "doc": "docs/static/framework/domain/events/effect_op_registry.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/map/map_generator.gd",
+      "sha256": "f8b69e26c72ad1d1e702f001de8a801790ec5178d85af9280518e82d3dcf7e70",
+      "doc": "docs/static/framework/domain/map/map_generator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/map/map_ops.gd",
+      "sha256": "8ef65c29a5f1707acff6655adc456bc1db1d6c147a1f20d3e2b78396e7e5b1e1",
+      "doc": "docs/static/framework/domain/map/map_ops.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/ship/ship_ops.gd",
+      "sha256": "2398484474b88a0f61b139ecf94e0de809bb52e4e9fea14ea6eed66d0203cf2f",
+      "doc": "docs/static/framework/domain/ship/ship_ops.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/voyage/voyage_calculator.gd",
+      "sha256": "daab1f7dd32b399dde8150da0c5d861a72979fe43eb60765dc1a2f4a5755479b",
+      "doc": "docs/static/framework/domain/voyage/voyage_calculator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/voyage/voyage_service.gd",
+      "sha256": "be853cd3f9944a4d61d5953a8d3883ca29e7cc44c58f8d9d36a1af1f53c4dc5a",
+      "doc": "docs/static/framework/domain/voyage/voyage_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/content_compiler.gd",
+      "sha256": "0af9d4fd70ae7a4a759ea3849b04b0edb6e9d0a74ea35d2d9a5d871cf025512c",
+      "doc": "docs/static/framework/modding/content_compiler.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/content_types.gd",
+      "sha256": "e8b70f2123fb83c016d991e6ca5d7acef91adf6d0db5c28cb208a865b1d543a0",
+      "doc": "docs/static/framework/modding/content_types.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/core_completeness_checker.gd",
+      "sha256": "5bb940f25e2a486307dd192bb25628ebb28dce69c3ce309c37fca4df5fed09e2",
+      "doc": "docs/static/framework/modding/core_completeness_checker.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/cross_reference_validator.gd",
+      "sha256": "aea681b7154c45dd6ea3bf8885248dd5f5df8d7443811897599b1820f38408b1",
+      "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/dependency_resolver.gd",
+      "sha256": "3b058acded72efecad4c56458c61ce9faa6c9101326f7db38dc9befd00c0eb09",
+      "doc": "docs/static/framework/modding/dependency_resolver.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/dir_mod_source.gd",
+      "sha256": "3e17dc9c117ecb806fffca817efb711895237a259656bffe564f33c69b27775f",
+      "doc": "docs/static/framework/modding/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/modding/README.md"
+    },
+    {
+      "source": "framework/modding/mod_loader.gd",
+      "sha256": "63b100fc26fd4ea15ac520f273e340499a0ad4be7b6d1011943e6ba87dca9c5e",
+      "doc": "docs/static/framework/modding/mod_loader.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/mod_manifest.gd",
+      "sha256": "015746a78830e5941db54145c6bd00d0f307cd3887aafb4d9019e182a71361d1",
+      "doc": "docs/static/framework/modding/mod_manifest.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/mod_package.gd",
+      "sha256": "0c7ba75cfe4b1aa5632a21a24a40ff099848240bf27fc560b76c63d1a04e999e",
+      "doc": "docs/static/framework/modding/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/modding/README.md"
+    },
+    {
+      "source": "framework/modding/mod_scanner.gd",
+      "sha256": "02048720c9b611483a624ec344bc07564fe04d97f201d938decacbe66f13c2b6",
+      "doc": "docs/static/framework/modding/mod_scanner.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/mod_source.gd",
+      "sha256": "2cd82bbf30ba413b02945e80a8b8d94ed906900a300ccd65595d2eedd34f71b7",
+      "doc": "docs/static/framework/modding/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/modding/README.md"
+    },
+    {
+      "source": "framework/modding/registries/content_definition.gd",
+      "sha256": "798dbdf090568583c64521e0ab55c7c6f347df6d441d9d76a7ea0c7092052383",
+      "doc": "docs/static/framework/modding/registries/content_definition.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/registries/definition_registry.gd",
+      "sha256": "1ea8fde3570c0c080ee57c849796726570560b9a9dd222b6614fd8eefaa09ff2",
+      "doc": "docs/static/framework/modding/registries/definition_registry.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/registries/registry_hub.gd",
+      "sha256": "2ea1cd8ae2c8792fb8a22065b5f27a1afb4d57ce5f6a94c5b9d7a8f5436d250c",
+      "doc": "docs/static/framework/modding/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/modding/README.md"
+    },
+    {
+      "source": "framework/modding/schema_validator.gd",
+      "sha256": "1a3fb3f92fb72925663d6c09fda355c87928b6702fa8d640fb1b547c22e62b62",
+      "doc": "docs/static/framework/modding/schema_validator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/modding/zip_mod_source.gd",
+      "sha256": "f2d23480bd1cdd45abec0decda20eb1958460e47681e1f2f2c23305e30c7b205",
+      "doc": "docs/static/framework/modding/zip_mod_source.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/asset_service.gd",
+      "sha256": "0587122c3c0b7c79fa120f9ec8fd6f034b4c3672f23fcadf275eb0cd046b8b91",
+      "doc": "docs/static/framework/services/asset_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/clock_service.gd",
+      "sha256": "fdc4dea045f320e66d58584aa17a909d447b95ca4c2a2dda56c38e6eb5c9af8a",
+      "doc": "docs/static/framework/services/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/services/README.md"
+    },
+    {
+      "source": "framework/services/localization_service.gd",
+      "sha256": "64ecd7fca842b9b791bdcebf7c106a57b416a90b6bb7627a8892e9cf5db28258",
+      "doc": "docs/static/framework/services/localization_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/logger.gd",
+      "sha256": "7cc5937ddcd81b66aee9c048b44913504467fbe616e21005045490394ef9740b",
+      "doc": "docs/static/framework/services/logger.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/rng_service.gd",
+      "sha256": "5fbc67ca3bdefb06cdc4580f2e2bf1c90ed433e4413bcefb5105e34a34368294",
+      "doc": "docs/static/framework/services/rng_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/save_service.gd",
+      "sha256": "352b80a0dca9735e7ada9240aa25d39a12c6bdf2e9231eaf117ef3015fb3fe89",
+      "doc": "docs/static/framework/services/save_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/state/game_state.gd",
+      "sha256": "405ab0239519266887b337019287827974e12569ba590db1399f5c7b6e9a7bae",
+      "doc": "docs/static/framework/state/game_state.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/tests/cases/test_contract_flow.gd",
+      "sha256": "c8140a19181bf4f59916f71159a88d2e2d83c0d69c7c5246867b4f0130847cb2",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_events_effects.gd",
+      "sha256": "14b25811ff696c96e720b2d559e64489b801c8a5a53948b85be01b9a8ad987dc",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_map_constraints.gd",
+      "sha256": "ef953e1fef145a4c8bdbe0a82abd2a847307e58d4497c61740f81bc4cb98fcff",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_market_trade.gd",
+      "sha256": "57ab8a720226d3a2d83c5df6c15c83e0200acafa59602e11428def07d711556e",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_mod_loading.gd",
+      "sha256": "928508b09a6548056c4d5b5e45c93c0716ca749f9a6056930cbcca68f9bb9d58",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_no_core_ids.gd",
+      "sha256": "fb1cd5a5a22fc3b1ebbe414e6db61f2123b9e55c10dcdc3a6098b3f41744232b",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_patches.gd",
+      "sha256": "dc708276f52a47273c13bdcfe1cc8b806fbafb6add2a260eb10941b24584aff0",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_registry.gd",
+      "sha256": "b4ee803ecb64c55bc80c0026f4581f796d0d510830f19af2929993b63355b365",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_rng.gd",
+      "sha256": "23b70934e59e8d9be09b000032a88ca1e124c1dddddbd9c5b46b6cbb61518b1c",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_run_pipeline.gd",
+      "sha256": "cc3492477e9cfb1af0c1594d5e807932747a5d906643d19cd21f064a4046281a",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_save_load.gd",
+      "sha256": "4a9615c984cb637c24de2b60c80d625f653bea393b9287e30350dbccb767f9ef",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_schema_validator.gd",
+      "sha256": "a8bfea22eced9050c4e390541e5a588fe142b35eccbfd2ea7bb1af89fad19119",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_semver_range.gd",
+      "sha256": "87ce23d201d07ebd9130cab38cf53e1a02230245cf278249a92a6163c2cc62cd",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_ship_upgrade.gd",
+      "sha256": "a24cecc1a7f188025b7069b3a33f10365ed3f44d3c710790eb38bc3be002506e",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_zip_pack.gd",
+      "sha256": "1828546438e61dad0cb26cbcec34e532ef7dffaca1711df4f9cac16c9e2b9a33",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/smoke_load.gd",
+      "sha256": "c496d456624589b07057c152d9e83db3653536ef89cf3e84afcad2e6e58b63bf",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/smoke_play.gd",
+      "sha256": "de1f00389c9ea6b647a90d74ff9f3b9b5c19219c33e8b5cb03619a6db26276ea",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/test_case.gd",
+      "sha256": "cf5ea39ca3d8980b73b7dcfb3341c2a8ff3dd86bfe812899331772346eea66bc",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/test_runner.gd",
+      "sha256": "ee3b926743b9533a74c3eb39e7fb1650ba07278633e4607bd4603aec885bb9e2",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/ui/shell/main.gd",
+      "sha256": "91e4d58146687f8d2f9e921f19644a525fe850a7fc9208c759c74d0234a5b912",
+      "doc": "docs/static/framework/ui/shell/main.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/shell/main.tscn",
+      "sha256": "fca46f4797bdabf31985dc6a371673b77b4f9964f42b4196c01407385166be98",
+      "doc": "docs/static/framework/ui/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "project.godot",
+      "sha256": "aa0997a4a261d0b4be81912b026d132d8e22f96e42dba5f5e3da418e8f5fc340",
+      "doc": "docs/static/project.godot.md",
+      "status": "documented"
+    },
+    {
+      "source": "schemas/boiler.schema.json",
+      "sha256": "10c59882990cd6278d95c7236c4b74b2f9cd4f138ec72f04a21a61d144697e8d",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/cabin.schema.json",
+      "sha256": "c377667a3fe68ac9caa01bcd8f34cf3f32e060febcb09b5c7fbf02c0ee4ae513",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/cargo_module.schema.json",
+      "sha256": "d97024345ac74b6214ce6ad00311855e08330e18668bff88403dccf07983dac1",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/common.schema.json",
+      "sha256": "646198a825961fff790cb37cd8610696d5e10a06d2a3c0433518c89e03fcfab6",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/contract.schema.json",
+      "sha256": "f141d7d4efcd64719deca10967627f9cd7cbd452903149573aad996908b10bb2",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/event.schema.json",
+      "sha256": "ff622e6480c53f184691c0db368c436c53f9126d68ac2eab2430cfc4caafd8e3",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/good.schema.json",
+      "sha256": "9aa844b7118f2bc74748946145125a1cf619415a258a1043d3894e3436d74ad1",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/hull.schema.json",
+      "sha256": "96c6830353cc4539a71d3b39ce5ddba35a8d8e18605772c6f7f7da620e7cc6c1",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/manifest.schema.json",
+      "sha256": "7650bc60a3485476f8c3bbb9b1198663a77503ca603f35663e37aa3715a30216",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/map_profile.schema.json",
+      "sha256": "7fbdb8dbff0b5cb59650ea11bf6c0a8f9e7e304ccbfacb9ab0bbe19eaf90155d",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/material.schema.json",
+      "sha256": "9a401070392a6d7eea359c828d03e66f6741940f8461e8f46387e1ad019f1c06",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/navigation_module.schema.json",
+      "sha256": "32ea293c407d64611b9dd6d9fe16c5e934d0b45488305c8fd299e6081f72b5e1",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/patch.schema.json",
+      "sha256": "c0cdb0fac3a725923aa0658c42d62ccb8b5567bee66f8e7a2a8800fdfa9f2249",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/port_archetype.schema.json",
+      "sha256": "36408e09b024bc65cf1dae9b256553050d91261f15802cea49f39e09e231997f",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/role.schema.json",
+      "sha256": "461878c66aa45d44e956125a8fbb2e560115db94411a2e40f252376e1223a01f",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/safety_module.schema.json",
+      "sha256": "aed25b7572325f5f3533d5ee5213ffaae8320db3acab3e3210ae13d088cc1a65",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/starting_build.schema.json",
+      "sha256": "8bff39b37b0ac6d1a09fc908c7d9ecaed33fb2ab4dea50b9f10abcc1fce1d3a8",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/strategy.schema.json",
+      "sha256": "174ac218d540fd89185dfbf6e039e465326d5c8c7c947e9741431cbac25c3c30",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "sdk/examples/example_boilers/content/boilers.json",
+      "sha256": "624eeb26495294d2cff969f6beb736b8ba3125ba7a1534f47e48bd5aa93519e4",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_boilers/localization/en.json",
+      "sha256": "7b1a810be653d72169e551a40f2f5fcc494609f10b0aafe8b35db2d91dec6296",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_boilers/localization/zh_CN.json",
+      "sha256": "a9bcde0473ee2842c54824eeec35dc3074142aea576d5822d225448014dccd47",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_boilers/manifest.json",
+      "sha256": "dc83905fadbf0bb6e46b08fab15cf80b97dc4724208d133f5071a9a19fb13c28",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/pack_mod.gd",
+      "sha256": "95f4968bdd781078cfe955e6c01f71286716f6a697d0fa9ff106c52f37470c79",
+      "doc": "docs/static/sdk/pack_mod.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "sdk/templates/mod_template/README.md",
+      "sha256": "a349b8d4d6457847dcca07468414cf5d180d6cf9383323d4e53855b8c8867786",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/mod_template/content/goods.json",
+      "sha256": "fa9f01a74902771149056467955779819ea26b4e329c467a0336737fa606b446",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/mod_template/localization/en.json",
+      "sha256": "c9ff820aa6fdbcfe03442739fcb6a4a97884951cdb0d4cfd0ce943a06f22f0a1",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/mod_template/localization/zh_CN.json",
+      "sha256": "fcd6f293cc2920fcec34e95bcd9becd574dd781a2b266f5008d1ffbd71ffeab6",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/mod_template/manifest.json",
+      "sha256": "9234cfaa0c5e4e11b4455a79591163d359e5b7957ee2ead194fa4802da29e73a",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/validate.gd",
+      "sha256": "eae9025ea76c0b8b699b50b2df460e7ab1746626ee766d686c2946d89b5a690c",
+      "doc": "docs/static/sdk/validate.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "todo.md",
+      "sha256": "82767db326a7a188d8233052bb04e5b803146f98ceadd4c8c1850f04bf3e730e",
+      "doc": "docs/static/README.md",
+      "status": "grouped",
+      "group": "docs/static/README.md"
+    },
+    {
+      "source": "tools/gen_static_docs.mjs",
+      "sha256": "6bb3044be7e37a74fdddecec43b5e8f380ecd04fa228a58a3802e4214614cc3e",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/pack_core.ps1",
+      "sha256": "08d3113ba57ff6c3db8b15250de8158989c1cc49befcfe39cf5bfd8afd14b579",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/static_docs_data.mjs",
+      "sha256": "84f56cb1175b52b2a0f29d3ec566703495580efbcb0f9abef0aa3a7ca38e17c5",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/test.ps1",
+      "sha256": "25485fbbbf5ba05809897020fbaaf8e6887e9b9a9463ebc527309bffd527d5e2",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    }
+  ]
+}
