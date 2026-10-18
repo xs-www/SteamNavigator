@@ -49,17 +49,17 @@ jobs:
           chmod +x "$HOME/godot-bin/godot"
           echo "$HOME/godot-bin" >> "$GITHUB_PATH"
 
-      - name: Run tests
-        shell: bash
-        run: |
-          set -euo pipefail
-          godot --headless --path . --script res://framework/tests/test_runner.gd
-
       - name: Import project
         shell: bash
         run: |
           set -euo pipefail
           godot --headless --path . --editor --quit
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --script res://framework/tests/test_runner.gd
 
       - name: Export Windows and Linux
         shell: bash
