@@ -58,6 +58,34 @@ func test_price_moves_with_stock() -> void:
 	fail("no market row could be bought for the price test")
 
 
+func test_player_trade_price_impact_is_damped() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 3434})
+	context.state.ship()["coal"] = 0.0
+	context.state.ship()["water"] = 0.0
+	var view := context.queries.execute(&"port.view")
+	var target := {}
+	for row in view["data"]["market"]:
+		if bool(row.get("buyable", true)) and String(row["item_id"]) == "core:material/sealing_compound":
+			target = row
+			break
+	assert_true(not target.is_empty(), "found the sealing compound row")
+	var entry: Dictionary = context.state.market()[context.state.current_port_id()][String(target["item_id"])]
+	var price_before := float(entry["price"])
+	var target_entry: Dictionary = entry.duplicate(true)
+	target_entry["stock"] = int(target_entry["stock"]) - 5
+	var full_price := MarketOps.compute_price(target_entry)
+	var result := context.commands.execute(&"trade.buy", {"item_id": String(target["item_id"]), "amount": 5})
+	assert_true(bool(result["ok"]), "purchase succeeds: %s" % str(result))
+	var entry_after: Dictionary = context.state.market()[context.state.current_port_id()][String(target["item_id"])]
+	var after_price := float(entry_after["price"])
+	var expected := lerpf(price_before, full_price, 0.35)
+	assert_almost_eq(after_price, expected, 0.01, "player trade only passes 35% of the price impulse")
+	assert_true(absf(after_price - price_before) < absf(full_price - price_before), "damped move is smaller than full equilibrium")
+
+
+
 func _field(rows: Array, key: String, value: Variant) -> Dictionary:
 	for row in rows:
 		if row is Dictionary and row.get(key) == value:

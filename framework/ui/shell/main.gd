@@ -15,7 +15,7 @@ const COLOR_TEAL := Color("7fc8e8")
 const COLOR_RED := Color("e8837f")
 const COLOR_GREEN := Color("8fd694")
 
-const SCREENS := ["overview", "market", "contracts", "shipyard", "intel", "voyage"]
+const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]
 const MODULE_TYPE_ORDER := [
 	ContentTypes.HULL,
 	ContentTypes.BOILER,
@@ -172,6 +172,8 @@ func _refresh() -> void:
 			_screen_contracts(data)
 		"shipyard":
 			_screen_shipyard(data)
+		"supply":
+			_screen_supply(data)
 		"intel":
 			_screen_intel(data)
 		"voyage":
@@ -477,6 +479,7 @@ func _quick_actions_panel() -> Control:
 		["market", "市场买卖"],
 		["contracts", "接取委托"],
 		["shipyard", "船只改造"],
+		["supply", "补给维修"],
 		["intel", "情报报告"],
 		["voyage", "规划出航"],
 	]
@@ -888,6 +891,75 @@ func _blocker_text(blockers: Array) -> String:
 
 
 ## ---------------------------------------------------------------------------
+## Supply dock
+## ---------------------------------------------------------------------------
+
+func _screen_supply(_data: Dictionary) -> void:
+	var result := _context.queries.execute(&"supply.view")
+	if not bool(result.get("ok", false)):
+		var error_panel := _panel()
+		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_root_box.add_child(error_panel)
+		return
+	var supply: Dictionary = result["data"]
+	var panel := _panel()
+	_panel_add(panel, _label("补给码头 · %s" % _tr(String(supply.get("port_name_key", "")), String(supply.get("port_id", ""))), 20, COLOR_BRASS))
+	if not bool(supply.get("has_supply", false)):
+		_panel_add(panel, _label("当前港口没有补给码头。", 14, COLOR_RED))
+	_panel_add(panel, _label("煤炭 %s · 淡水 %s · 耐久 %s / %s" % [
+		_fmt(float(supply.get("coal", 0.0))),
+		_fmt(float(supply.get("water", 0.0))),
+		_fmt(float(supply.get("durability", 0.0))),
+		_fmt(float(supply.get("repair", {}).get("max_durability", 0.0))),
+	], 14, COLOR_TEXT))
+	_panel_add(panel, _label("重量 %s / %s · 剩余载重 %s · 金币 %d" % [
+		_fmt(float(supply.get("total_weight", 0.0))),
+		_fmt(float(supply.get("max_weight", 0.0))),
+		_fmt(float(supply.get("remaining_weight", 0.0))),
+		int(supply.get("money", 0)),
+	], 13, COLOR_MUTED))
+	_panel_add(panel, _label("补给会计入总重量；载重不足时先卖货或换大船。", 12, COLOR_MUTED))
+	_root_box.add_child(panel)
+
+	var coal_panel := _panel()
+	_panel_add(coal_panel, _label("%s · 单价 %s · 最多可买 %d" % [
+		_tr("ui.label.coal", ""), _fmt(float(supply.get("coal_price", 0.0))), int(supply.get("max_coal", 0)),
+	], 16, COLOR_BRASS))
+	var coal_buttons := HBoxContainer.new()
+	for amount in [5, 10, 25]:
+		var button := _button("买入 %d" % amount, _on_buy_coal.bind(amount))
+		button.disabled = not bool(supply.get("has_supply", false)) or int(supply.get("max_coal", 0)) < amount
+		coal_buttons.add_child(button)
+	_panel_add(coal_panel, coal_buttons)
+	_root_box.add_child(coal_panel)
+
+	var water_panel := _panel()
+	_panel_add(water_panel, _label("%s · 单价 %s · 最多可买 %d" % [
+		_tr("ui.label.water", ""), _fmt(float(supply.get("water_price", 0.0))), int(supply.get("max_water", 0)),
+	], 16, COLOR_BRASS))
+	var water_buttons := HBoxContainer.new()
+	for amount in [5, 10, 25]:
+		var button := _button("买入 %d" % amount, _on_buy_water.bind(amount))
+		button.disabled = not bool(supply.get("has_supply", false)) or int(supply.get("max_water", 0)) < amount
+		water_buttons.add_child(button)
+	_panel_add(water_panel, water_buttons)
+	_root_box.add_child(water_panel)
+
+	var repair_panel := _panel()
+	var repair: Dictionary = supply.get("repair", {})
+	_panel_add(repair_panel, _label("维修", 16, COLOR_BRASS))
+	_panel_add(repair_panel, _label("缺失耐久 %s · 预计费用 %d 金币（单位维修价 %s）" % [
+		_fmt(float(repair.get("missing", 0.0))),
+		int(repair.get("cost", 0)),
+		_fmt(float(supply.get("repair_per_point", 0.0))),
+	], 13, COLOR_TEXT))
+	var repair_button := _button(_tr("ui.button.repair", ""), _on_repair)
+	repair_button.disabled = not bool(supply.get("can_repair", false))
+	_panel_add(repair_panel, repair_button)
+	_root_box.add_child(repair_panel)
+
+
+## ---------------------------------------------------------------------------
 ## Intelligence
 ## ---------------------------------------------------------------------------
 
@@ -1215,6 +1287,18 @@ func _on_install_module(module_id: String) -> void:
 	_run_command(&"ship.install_module", {"module_id": module_id})
 
 
+func _on_buy_coal(amount: int) -> void:
+	_run_command(&"supply.buy_coal", {"amount": amount})
+
+
+func _on_buy_water(amount: int) -> void:
+	_run_command(&"supply.buy_water", {"amount": amount})
+
+
+func _on_repair() -> void:
+	_run_command(&"supply.repair", {})
+
+
 func _on_refresh_intel() -> void:
 	_run_command(&"intel.refresh", {})
 
@@ -1275,7 +1359,12 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 				int(data.get("revenue", 0)),
 			], false)
 		"supply.buy_coal", "supply.buy_water":
-			_set_status("已购买补给 %d。" % int(data.get("amount", 0)), false)
+			var supply_kind := "ui.label.coal" if String(data.get("kind", "")) == "coal" else "ui.label.water"
+			_set_status("已购买%s ×%d，花费 %d 金币。" % [
+				_tr(supply_kind, ""),
+				int(data.get("amount", 0)),
+				int(data.get("total", 0)),
+			], false)
 		"supply.repair":
 			_set_status("维修完成，花费 %d 金币。" % int(data.get("cost", 0)), false)
 		"ship.install_module":

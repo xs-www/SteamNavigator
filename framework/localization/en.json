@@ -171,5 +171,7 @@
   "ui.error.not_buyable": "This port only buys that good and does not sell it",
   "ui.label.avg_cost": "Avg cost",
   "ui.label.inventory_cost": "Inventory cost",
-  "ui.label.contract_cargo": "Contract cargo"
+  "ui.label.contract_cargo": "Contract cargo",
+  "ui.nav.supply": "Supplies",
+  "ui.error.no_supply": "This port has no supply dock"
 }

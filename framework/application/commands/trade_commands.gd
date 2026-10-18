@@ -10,7 +10,8 @@ static func buy(params: Dictionary, context) -> Dictionary:
 	var amount := int(params.get("amount", 1))
 	var profile := _profile(context)
 	var margin := float(profile.get("trade_margin", MarketOps.DEFAULT_TRADE_MARGIN))
-	var result := MarketOps.buy(state, context.registries, port_id, item_id, amount, margin)
+	var impact := float(profile.get("player_trade_impact", MarketOps.DEFAULT_PLAYER_PRICE_IMPACT))
+	var result := MarketOps.buy(state, context.registries, port_id, item_id, amount, margin, impact)
 	if bool(result["ok"]):
 		MarketMemoryService.remember(state, port_id)
 		var entry := MarketOps.entry_for(state, port_id, item_id)
@@ -36,7 +37,8 @@ static func sell(params: Dictionary, context) -> Dictionary:
 	var amount := int(params.get("amount", 1))
 	var profile := _profile(context)
 	var margin := float(profile.get("trade_margin", MarketOps.DEFAULT_TRADE_MARGIN))
-	var result := MarketOps.sell(state, context.registries, port_id, item_id, amount, margin)
+	var impact := float(profile.get("player_trade_impact", MarketOps.DEFAULT_PLAYER_PRICE_IMPACT))
+	var result := MarketOps.sell(state, context.registries, port_id, item_id, amount, margin, impact)
 	if bool(result["ok"]):
 		MarketMemoryService.remember(state, port_id)
 		var entry := MarketOps.entry_for(state, port_id, item_id)

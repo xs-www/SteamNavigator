@@ -45,6 +45,7 @@
         },
         "intel_cost": 25,
         "trade_margin": 0.95,
+        "player_trade_impact": 0.35,
         "default_starting_build": "core:starting_build/steady"
       }
     }

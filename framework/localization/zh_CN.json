@@ -171,5 +171,7 @@
   "ui.error.not_buyable": "该港口只收购此商品，不向你出售",
   "ui.label.avg_cost": "持仓均价",
   "ui.label.inventory_cost": "库存成本",
-  "ui.label.contract_cargo": "委托货"
+  "ui.label.contract_cargo": "委托货",
+  "ui.nav.supply": "补给",
+  "ui.error.no_supply": "该港口没有补给码头"
 }

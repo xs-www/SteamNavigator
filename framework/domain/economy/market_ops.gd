@@ -6,6 +6,7 @@ const DEFAULT_TRADE_MARGIN := 0.95
 const MIN_PRICE_FACTOR := 0.55
 const MAX_PRICE_FACTOR := 2.2
 const SELL_ONLY_PRICE_FACTOR := 0.9
+const DEFAULT_PLAYER_PRICE_IMPACT := 0.35
 
 
 static func create_market_entry(item_definition: ContentDefinition, stock: int, price_bias: float = 1.0) -> Dictionary:
@@ -44,6 +45,14 @@ static func compute_price(entry: Dictionary) -> float:
 
 static func recalc(entry: Dictionary) -> void:
 	entry["price"] = compute_price(entry)
+
+
+## Player trades move the live price only part-way toward the new equilibrium.
+## NPC trades still reprice fully, so the world can move without the player's
+## single purchase hammering the local market.
+static func _apply_player_price_change(entry: Dictionary, price_before: float, impact: float) -> void:
+	var target := compute_price(entry)
+	entry["price"] = lerpf(price_before, target, clampf(impact, 0.0, 1.0))
 
 
 static func market_for(state: GameState, port_id: String) -> Dictionary:
@@ -106,7 +115,7 @@ static func ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void
 				market[item_definition.id] = entry
 
 
-static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN) -> Dictionary:
+static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:
 	if state.current_port_id() != port_id or not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if amount <= 0:
@@ -134,8 +143,9 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	if ShipOps.cargo_used(hub, ship) + added_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
 		return Result.fail("cargo_capacity", "ui.error.capacity", {"capacity": ShipOps.cargo_capacity(hub, ship)})
 	state.add_money(-total)
+	var price_before := unit_price
 	entry["stock"] = int(entry.get("stock", 0)) - amount
-	recalc(entry)
+	_apply_player_price_change(entry, price_before, price_impact)
 	ShipOps.add_cargo(ship, item_id, amount, "", float(total))
 	return Result.ok({
 		"item_id": item_id,
@@ -148,7 +158,7 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	})
 
 
-static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN) -> Dictionary:
+static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:
 	if state.current_port_id() != port_id or not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if amount <= 0:
@@ -164,7 +174,7 @@ static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: S
 	var revenue := int(floor(unit_price * trade_margin * float(amount)))
 	ShipOps.remove_cargo(ship, item_id, amount, false)
 	entry["stock"] = int(entry.get("stock", 0)) + amount
-	recalc(entry)
+	_apply_player_price_change(entry, unit_price, price_impact)
 	state.add_money(revenue)
 	return Result.ok({
 		"item_id": item_id,
@@ -179,6 +189,8 @@ static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: S
 static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind: String, amount: int, unit_price: float) -> Dictionary:
 	if state.current_port_id() != port_id or not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
+	if not MapOps.has_facility(MapOps.port(state.world(), port_id), "supply"):
+		return Result.fail("no_supply", "ui.error.no_supply", {"port_id": port_id})
 	if amount <= 0:
 		return Result.fail("invalid_amount", "ui.error.invalid_amount")
 	if kind != "coal" and kind != "water":
@@ -202,25 +214,40 @@ static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind
 	})
 
 
-static func repair(state: GameState, hub: RegistryHub, port_id: String, repair_per_point: float) -> Dictionary:
-	if state.current_port_id() != port_id or not state.is_at_port():
-		return Result.fail("not_at_port", "ui.error.not_at_port")
+static func repair_cost(hub: RegistryHub, state: GameState, repair_per_point: float) -> Dictionary:
 	var ship := state.ship()
 	var maximum := ShipOps.durability_max(hub, ship)
 	var missing := maxf(0.0, maximum - float(ship.get("durability", 0.0)))
-	if missing <= 0.0:
-		return Result.fail("not_damaged", "ui.error.not_damaged")
 	var stats := ShipOps.stats(hub, ship)
 	var cost := int(ceil(missing * repair_per_point * float(stats.get("repair_cost_mul", 1.0))))
+	return {
+		"missing": missing,
+		"cost": cost,
+		"max_durability": maximum,
+		"repair_cost_mul": float(stats.get("repair_cost_mul", 1.0)),
+	}
+
+
+static func repair(state: GameState, hub: RegistryHub, port_id: String, repair_per_point: float) -> Dictionary:
+	if state.current_port_id() != port_id or not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port")
+	if not MapOps.has_facility(MapOps.port(state.world(), port_id), "supply"):
+		return Result.fail("no_supply", "ui.error.no_supply", {"port_id": port_id})
+	var details := repair_cost(hub, state, repair_per_point)
+	var missing := float(details["missing"])
+	if missing <= 0.0:
+		return Result.fail("not_damaged", "ui.error.not_damaged")
+	var cost := int(details["cost"])
 	if state.money() < cost:
 		return Result.fail("insufficient_money", "ui.error.money", {"required": cost, "money": state.money()})
 	state.add_money(-cost)
-	ship["durability"] = maximum
+	var ship := state.ship()
+	ship["durability"] = float(details["max_durability"])
 	return Result.ok({
 		"repaired": missing,
 		"cost": cost,
 		"money": state.money(),
-		"durability": maximum,
+		"durability": float(details["max_durability"]),
 	})
 
 

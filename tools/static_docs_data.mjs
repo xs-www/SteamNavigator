@@ -328,6 +328,15 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/application/queries/supply_view.gd": {
+    role: "补给界面 ViewModel：煤水单价、载重余量、可买上限与维修报价。",
+    contracts: [
+      "煤水价格与维修单价来自 map_profile；买卖上限同时受剩余载重和金币限制。",
+      "维修报价与 supply.repair 共用 `MarketOps.repair_cost()`，UI 不复制耐久/改装修正。",
+      "当前港没有 supply 设施时 has_supply=false，界面禁用补给与维修。"
+    ]
+  },
+
   "framework/application/queries/port_memory_view.gd": {
     role: "点击已访问港口时的只读市场记忆 ViewModel：上次在港的价格、储备与可买标记。",
     contracts: [
@@ -414,17 +423,21 @@ export const FILE_DOCS = {
       "本地品种价格 = base_price × bias × (base_stock / stock)^elasticity，限制在 0.55–2.2。",
       "非本地品种以 `buyable=false` 进入市场：只收购、不卖给你；价格按 base_price × 0.9 × 库存折减。",
       "买入检查 buyable、货币、库存、总重量与货舱容量；卖出允许所有非合同货物。",
+      "玩家买卖只把价格向新均衡推进 `player_trade_impact`（默认 0.35）；NPC 交易仍完整重算。",
       "买入把成交总额写入 cargo stack 的 total_cost，卖出按数量比例扣减成本。",
       "补给只检查重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。",
       "`ensure_sell_only_entries()` 为旧存档补齐非本地收购项。"
     ],
     l2: {
-      "buy(state, hub, port_id, item_id, amount, trade_margin)": [
-        "所有前置条件通过后才扣款、减库存、重算价格、写入 cargo stack 和成本。",
+      "buy(state, hub, port_id, item_id, amount, trade_margin, price_impact)": [
+        "所有前置条件通过后才扣款、减库存、按 price_impact 平滑重算价格、写入 cargo stack 和成本。",
         "失败返回带 message_key 的 Result；命令总线因此不会提交工作副本。"
       ],
       "compute_price(entry)": [
         "buyable=true 走本地市场供需公式；buyable=false 使用单向收购价，库存越多价格越低。"
+      ],
+      "repair_cost(hub, state, repair_per_point)": [
+        "返回缺失耐久、费用、耐久上限与维修修正；supply.view 和 supply.repair 共用。"
       ]
     }
   },
@@ -657,6 +670,7 @@ export const FILE_DOCS = {
       "每个 PanelContainer 只允许一个 VBoxContainer 内容容器；面板子节点必须经 `_panel_add()` 添加，避免多子节点互相重叠。",
       "海图点击已访问港口：当前港跳转市场，远程港打开只读港口记忆。",
       "市场页显示 buyable 与持仓均价；仅收购品种的买入按钮禁用。",
+      "补给页显示煤水价格、载重余量、可买上限和维修报价，按钮直接派发 supply.* 命令。",
       "事件面板只展示本次抽样出的 2 个选项。",
       "Continue 读取 autosave 并做模组兼容性校验。"
     ]
@@ -802,7 +816,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码。",
-  "framework/tests/cases": "按主题拆分的 45 个测试。",
+  "framework/tests/cases": "按主题拆分的 48 个测试。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",

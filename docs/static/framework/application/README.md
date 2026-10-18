@@ -25,6 +25,7 @@
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知与统计。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表。 | 本页 |
 | `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前模块、槽位占用和所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
+| `queries/supply_view.gd` | 补给界面 ViewModel：煤水单价、载重余量、可买上限与维修报价。 | [查看](./queries/supply_view.gd.md) |
 | `queries/voyage_preview.gd` | 出航预览查询包装。 | 本页 |
 | `query_bus.gd` | 只读查询执行器：给处理器临时克隆的 GameState，返回 ViewModel。 | [查看](./query_bus.gd.md) |
 | `result.gd` | 统一 `{ok,error_code,message_key,data,events}` 结果构造。 | 本页 |
