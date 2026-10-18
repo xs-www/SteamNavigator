@@ -290,10 +290,10 @@ export const FILE_DOCS = {
   },
 
   "framework/application/commands/ship_commands.gd": {
-    role: "船厂最小流程：购买并安装船体/锅炉/货舱/导航/安全/客舱。",
+    role: "船厂流程：购买并安装船体/锅炉/货舱/导航/安全/客舱。",
     contracts: [
       "必须在有 shipyard 设施的港口且处于港口状态。",
-      "货币、槽位、舱位、重量与解锁声誉任一不满足即失败。",
+      "槽位/重量/货币/声誉失败原因由 `ShipOps.install_blockers()` 统一生成，避免 UI 与命令漂移。",
       "替换船体时重新校验货舱/客舱槽位并把耐久设为新船体上限。",
       "所有修改在命令事务内完成，失败自动回滚。"
     ]
@@ -306,6 +306,24 @@ export const FILE_DOCS = {
       "目的地只列当前港的相邻航线，标记未知设施与风险。",
       "委托 ViewModel 额外提供目的港名称键与期限显示文本。",
       "不返回 ContentDefinition 或 GameState 内部引用。"
+    ]
+  },
+
+  "framework/application/queries/intel_view.gd": {
+    role: "情报独立界面 ViewModel：快照时间/年龄、已发现港口市场表和 NPC 预计动向。",
+    contracts: [
+      "只返回已发现港口；未发现港口不会出现在快照中。",
+      "每个市场行附带 item_name_key；每个 NPC 行附带货物名和动作本地化键。",
+      "`can_refresh` 由当前港情报站、港口状态和金币共同决定。"
+    ]
+  },
+
+  "framework/application/queries/shipyard_view.gd": {
+    role: "船厂独立界面 ViewModel：当前模块、槽位占用和所有可购买模块的限制原因。",
+    contracts: [
+      "与 `ship.install_module` 共用 `ShipOps.install_blockers()`，UI 不复制规则。",
+      "`candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。",
+      "已安装模块标记 installed，并附加 already_installed 限制。"
     ]
   },
 
@@ -366,7 +384,8 @@ export const FILE_DOCS = {
       "总重量包含已装模块、货物、煤、水、旅客；合同货箱同样计入。",
       "货舱容量是重量容量；合同货物不可出售/抛弃。",
       "派生属性计算船体基础、锅炉、导航、安全、模块 modifiers 与岗位 modifiers。",
-      "`validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。"
+      "`validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。",
+      "`install_blockers()` 是 ship.install_module 命令与船厂 ViewModel 共用的校验源：声誉、货币、槽位、重量替换差量。"
     ],
     l2: {
       "stats(hub, ship)": [
@@ -603,9 +622,10 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/shell/main.gd": {
-    role: "最小可玩 UI：菜单、状态栏、海图、市场、委托、船只、船厂、情报、出航预览与事件选择。",
+    role: "可玩 UI 外壳：总览/市场/委托/船厂/情报/出航六个独立界面，以及海图、事件选择与诊断。",
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
+      "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
       "每轮命令后整页重建；选项/目的地/构筑选择保存在 UI 成员。",
       "每个 PanelContainer 只允许一个 VBoxContainer 内容容器；面板子节点必须经 `_panel_add()` 添加，避免多子节点互相重叠。",
       "事件面板只展示本次抽样出的 2 个选项。",
@@ -753,7 +773,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码。",
-  "framework/tests/cases": "按主题拆分的 40 个测试。",
+  "framework/tests/cases": "按主题拆分的 42 个测试。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",

@@ -7,6 +7,14 @@ const WATER_WEIGHT := 1.0
 const PASSENGER_WEIGHT := 0.8
 
 const EQUIPMENT_KEYS := ["hull_id", "boiler_id", "navigation_module_id", "safety_module_id", "passenger_cabin_id"]
+const INSTALLABLE_TYPES := [
+	ContentTypes.HULL,
+	ContentTypes.BOILER,
+	ContentTypes.CARGO_MODULE,
+	ContentTypes.NAVIGATION_MODULE,
+	ContentTypes.SAFETY_MODULE,
+	ContentTypes.CABIN,
+]
 
 
 static func all_installed_module_ids(ship: Dictionary) -> Array[String]:
@@ -312,6 +320,81 @@ static func remove_non_contract_cargo_by_weight(hub: RegistryHub, ship: Dictiona
 		if removed_weight >= weight:
 			break
 	return removed_weight
+
+
+static func module_type(hub: RegistryHub, module_id: String) -> StringName:
+	for content_type in INSTALLABLE_TYPES:
+		if hub.contains(content_type, module_id):
+			return content_type
+	return &""
+
+
+## Returns a stable list of blocker codes for installing/buying a module.
+## Callers add port/facility checks. The first code is the user-facing reason.
+static func install_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]:
+	var blockers: Array[String] = []
+	var content_type := module_type(hub, module_id)
+	if content_type == &"":
+		blockers.append("unknown_module")
+		return blockers
+	var module := hub.get_by_id(content_type, module_id)
+	if module == null:
+		blockers.append("unknown_module")
+		return blockers
+	var player := state.player()
+	if int(module.data.get("unlock_reputation", 0)) > int(player.get("reputation", 0)):
+		blockers.append("locked_by_reputation")
+	var price := int(round(float(module.data.get("purchase_price", 0.0))))
+	if state.money() < price:
+		blockers.append("insufficient_money")
+	var ship := state.ship()
+	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
+	var current_weight := total_weight(hub, state)
+	var current_max := max_weight(hub, ship)
+	var module_weight := float(module.data.get("weight", 0.0))
+
+	match content_type:
+		ContentTypes.CARGO_MODULE:
+			var slots := int(hull.data.get("cargo_slots", 0)) if hull != null else 0
+			if cargo_module_ids(ship).size() >= slots:
+				blockers.append("cargo_slots_full")
+			if current_weight + module_weight > current_max + 0.0001:
+				blockers.append("weight_limit")
+		ContentTypes.CABIN:
+			if hull == null or int(hull.data.get("cabin_slots", 0)) < 1:
+				blockers.append("no_cabin_slot")
+			elif not String(ship.get("passenger_cabin_id", "")).is_empty():
+				blockers.append("slot_occupied")
+			if current_weight + module_weight > current_max + 0.0001:
+				blockers.append("weight_limit")
+		ContentTypes.NAVIGATION_MODULE:
+			if not String(ship.get("navigation_module_id", "")).is_empty():
+				blockers.append("slot_occupied")
+			if current_weight + module_weight > current_max + 0.0001:
+				blockers.append("weight_limit")
+		ContentTypes.SAFETY_MODULE:
+			if not String(ship.get("safety_module_id", "")).is_empty():
+				blockers.append("slot_occupied")
+			if current_weight + module_weight > current_max + 0.0001:
+				blockers.append("weight_limit")
+		ContentTypes.HULL:
+			if hull != null:
+				if cargo_module_ids(ship).size() > int(module.data.get("cargo_slots", 0)):
+					blockers.append("too_many_cargo_modules")
+				if not String(ship.get("passenger_cabin_id", "")).is_empty() and int(module.data.get("cabin_slots", 0)) < 1:
+					blockers.append("no_cabin_slot")
+				var new_max := float(module.data.get("max_weight", current_max))
+				var delta := module_weight - float(hull.data.get("weight", 0.0))
+				if current_weight + delta > new_max + 0.0001:
+					blockers.append("weight_limit")
+		ContentTypes.BOILER:
+			var old_boiler := hub.get_by_id(ContentTypes.BOILER, String(ship.get("boiler_id", "")))
+			var delta := module_weight
+			if old_boiler != null:
+				delta -= float(old_boiler.data.get("weight", 0.0))
+			if current_weight + delta > current_max + 0.0001:
+				blockers.append("weight_limit")
+	return blockers
 
 
 static func validate_configuration(hub: RegistryHub, ship: Dictionary) -> Dictionary:

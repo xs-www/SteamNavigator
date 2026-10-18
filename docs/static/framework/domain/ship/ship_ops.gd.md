@@ -16,6 +16,7 @@
 - 货舱容量是重量容量；合同货物不可出售/抛弃。
 - 派生属性计算船体基础、锅炉、导航、安全、模块 modifiers 与岗位 modifiers。
 - `validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。
+- `install_blockers()` 是 ship.install_module 命令与船厂 ViewModel 共用的校验源：声誉、货币、槽位、重量替换差量。
 
 ## 重点逻辑
 

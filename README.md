@@ -17,8 +17,8 @@
 - 命令 / 查询总线（事务克隆提交、领域事件、只读 ViewModel）。
 - 可玩的程序生成海图：贸易、补给、维修、造船厂模块安装、委托接取、出航预览、风险事件、抵达结算。
 - 5 段主线委托链（自动接第 1 段，后续以 offer 形式接取）、4 个普通委托模板。
-- 最小 UI：开局构筑选择、市场、船只、船厂、委托、情报、出航预览与事件选择。
-- 无头测试套件：**40 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突）。
+- 最小 UI：开局构筑选择，以及总览、市场、委托、船厂、情报、出航六个独立界面；含海图、事件选择与诊断。
+- 无头测试套件：**42 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突）。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
 
 尚未完成、但已留出扩展位置的内容见 [todo.md](todo.md)。
@@ -53,7 +53,7 @@ godot --headless --path . --script res://framework/tests/test_runner.gd
 ```text
 [PASS] test_mod_loading::test_core_loads_cleanly
 ...
-Tests: 40 passed, 0 failed, 40 total
+Tests: 42 passed, 0 failed, 42 total
 ```
 
 ### 打包 Core 模组
@@ -128,7 +128,7 @@ framework/
   services/                    RNG、时钟、日志、本地化、资源、存档
   state/                       GameState（纯数据、可克隆、可哈希）
   ui/                          最小可玩外壳
-  tests/                       无头测试运行器与 40 个测试
+  tests/                       无头测试运行器与 42 个测试
   localization/                框架 UI 文案（zh_CN / en）
   assets/                      缺失资源占位符
 schemas/                       Manifest 与各类内容的 JSON Schema

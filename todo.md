@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，40 个测试通过。
+> 最近验证：Godot 4.7.2 headless，42 个测试通过。
 
 ## 已完成
 

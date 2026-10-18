@@ -1,19 +1,19 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-18T11:45:27.521Z",
-  "commit": "a877418",
+  "generated_at": "2026-10-18T12:01:14.887Z",
+  "commit": "ad2d238",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 147,
-    "documented": 51,
-    "grouped": 96
+    "sources": 150,
+    "documented": 53,
+    "grouped": 97
   },
   "files": [
     {
       "source": "README.md",
-      "sha256": "fc6a4c855756024730b7131b4ee5f58c695118db9b05e083339deb598a1e05d4",
+      "sha256": "56dc8f66f22f9a357e390f95ecd0bc4de8afa3d77d079223b276ff76ee04c6c7",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -208,7 +208,7 @@
     },
     {
       "source": "framework/application/commands/ship_commands.gd",
-      "sha256": "a6eba3213c8100e3ee3ef459cb6ef89a8679fed9116a94a0cc64c51b35b9d77d",
+      "sha256": "8ad46d93a81f3b517aa44883a8026b1c98ae5e814df545f40e3767883008c59e",
       "doc": "docs/static/framework/application/commands/ship_commands.gd.md",
       "status": "documented"
     },
@@ -254,6 +254,12 @@
       "group": "docs/static/framework/application/README.md"
     },
     {
+      "source": "framework/application/queries/intel_view.gd",
+      "sha256": "4633064ebf5fd64dd4a19c5d542ac3800d7151e13a270553f4b18d278efebdf5",
+      "doc": "docs/static/framework/application/queries/intel_view.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/application/queries/map_view.gd",
       "sha256": "f438c1cfe1c701673a05d4a22d681a143b67c65c312278a80ae86c3c47962601",
       "doc": "docs/static/framework/application/README.md",
@@ -268,10 +274,16 @@
     },
     {
       "source": "framework/application/queries/query_registry.gd",
-      "sha256": "c141b0512d5a5ddfd55f7794eeda0e24ce2ab2b3ca9e4a314fb3157a940e1d0d",
+      "sha256": "9df99b57ff4c4134c6a51ccf37069fa2da9a07045ece20d2f1e5a343bac8a655",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/queries/shipyard_view.gd",
+      "sha256": "297b7e27a2405fc32992d806fe7db506d3b9da98e8cf57be88568071f0994514",
+      "doc": "docs/static/framework/application/queries/shipyard_view.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/application/queries/voyage_preview.gd",
@@ -442,7 +454,7 @@
     },
     {
       "source": "framework/domain/ship/ship_ops.gd",
-      "sha256": "2398484474b88a0f61b139ecf94e0de809bb52e4e9fea14ea6eed66d0203cf2f",
+      "sha256": "7af5ee9d88b6b4856d1753322ce8a44a1b9cf203f667e8d1631648bdd6c3c80d",
       "doc": "docs/static/framework/domain/ship/ship_ops.gd.md",
       "status": "documented"
     },
@@ -700,6 +712,13 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_ui_views.gd",
+      "sha256": "0df498c3a70480e3039d6ce722058cdf94974388ed4622f98c6b508d256cc479",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
       "source": "framework/tests/cases/test_zip_pack.gd",
       "sha256": "1828546438e61dad0cb26cbcec34e532ef7dffaca1711df4f9cac16c9e2b9a33",
       "doc": "docs/static/framework/tests/README.md",
@@ -729,14 +748,14 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "ee3b926743b9533a74c3eb39e7fb1650ba07278633e4607bd4603aec885bb9e2",
+      "sha256": "e2f7748345e39d8aba64fbf989738cf107e8c1761009d28122f5d6a0a498dce9",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "65f827815ffa026bb78a531665f3b21dbec1748bd9ad1212a9b57c3c61f2355b",
+      "sha256": "655f4bfaa12a2ca2558c7a11fc354a7c3654096898139ecdd92ac8d15e14f465",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -956,7 +975,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "82767db326a7a188d8233052bb04e5b803146f98ceadd4c8c1850f04bf3e730e",
+      "sha256": "23d689b088cf0c0f9be0ad9b102f73dc80da05b796f258c5fa8a5b3172693439",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -977,7 +996,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "624eb15fef522400def15c69e885d4af4a8b1fed40d00202ae4a46a07fb77502",
+      "sha256": "c7f29d44e5145d5106b595c282f1c2061735bf764e12002a854caa59d9c6eda5",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

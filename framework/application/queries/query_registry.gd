@@ -7,3 +7,5 @@ static func register_all(bus: QueryBus) -> void:
 	bus.register(&"port.view", Callable(PortViewQuery, "execute"))
 	bus.register(&"map.view", Callable(MapViewQuery, "execute"))
 	bus.register(&"voyage.preview", Callable(VoyagePreviewQuery, "execute"))
+	bus.register(&"intel.view", Callable(IntelViewQuery, "execute"))
+	bus.register(&"shipyard.view", Callable(ShipyardViewQuery, "execute"))

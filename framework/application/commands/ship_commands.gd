@@ -2,15 +2,6 @@ class_name ShipCommands
 extends RefCounted
 ## Minimal shipyard flow for the framework slice: buy and install a module.
 
-const INSTALLABLE_TYPES := [
-	ContentTypes.HULL,
-	ContentTypes.BOILER,
-	ContentTypes.CARGO_MODULE,
-	ContentTypes.NAVIGATION_MODULE,
-	ContentTypes.SAFETY_MODULE,
-	ContentTypes.CABIN,
-]
-
 
 static func install_module(params: Dictionary, context) -> Dictionary:
 	var state: GameState = context.state
@@ -25,52 +16,19 @@ static func install_module(params: Dictionary, context) -> Dictionary:
 	var module_id := String(params.get("module_id", ""))
 	if module_id.is_empty():
 		return Result.fail("missing_module", "ui.error.missing_module")
-	var content_type := &""
-	var module: ContentDefinition = null
-	for candidate_type in INSTALLABLE_TYPES:
-		var candidate := hub.get_by_id(candidate_type, module_id)
-		if candidate != null:
-			content_type = candidate_type
-			module = candidate
-			break
+	var content_type := ShipOps.module_type(hub, module_id)
+	var module := hub.get_by_id(content_type, module_id) if content_type != &"" else null
 	if module == null:
 		return Result.fail("unknown_module", "ui.error.unknown_module", {"module_id": module_id})
-	if int(module.data.get("unlock_reputation", 0)) > int(state.player().get("reputation", 0)):
-		return Result.fail("locked_by_reputation", "ui.error.locked_by_reputation", {
-			"required": int(module.data.get("unlock_reputation", 0)),
-		})
+	var blockers := ShipOps.install_blockers(hub, state, module_id)
+	if not blockers.is_empty():
+		return Result.fail(
+			String(blockers[0]),
+			"ui.error.%s" % String(blockers[0]),
+			{"module_id": module_id, "blockers": blockers}
+		)
 	var price := int(round(float(module.data.get("purchase_price", 0.0))))
-	if state.money() < price:
-		return Result.fail("insufficient_money", "ui.error.money", {"required": price, "money": state.money()})
 	var ship := state.ship()
-	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
-
-	if content_type == ContentTypes.CARGO_MODULE:
-		var slots := int(hull.data.get("cargo_slots", 0)) if hull != null else 0
-		if Array(ship.get("cargo_modules", [])).size() >= slots:
-			return Result.fail("cargo_slots_full", "ui.error.cargo_slots_full", {"slots": slots})
-	elif content_type == ContentTypes.CABIN:
-		if hull == null or int(hull.data.get("cabin_slots", 0)) < 1:
-			return Result.fail("no_cabin_slot", "ui.error.no_cabin_slot")
-		if not String(ship.get("passenger_cabin_id", "")).is_empty():
-			return Result.fail("slot_occupied", "ui.error.slot_occupied")
-	elif content_type == ContentTypes.NAVIGATION_MODULE:
-		if not String(ship.get("navigation_module_id", "")).is_empty():
-			return Result.fail("slot_occupied", "ui.error.slot_occupied")
-	elif content_type == ContentTypes.SAFETY_MODULE:
-		if not String(ship.get("safety_module_id", "")).is_empty():
-			return Result.fail("slot_occupied", "ui.error.slot_occupied")
-	elif content_type == ContentTypes.HULL:
-		if hull != null:
-			if Array(ship.get("cargo_modules", [])).size() > int(module.data.get("cargo_slots", 0)):
-				return Result.fail("too_many_cargo_modules", "ui.error.too_many_cargo_modules")
-			if not String(ship.get("passenger_cabin_id", "")).is_empty() and int(module.data.get("cabin_slots", 0)) < 1:
-				return Result.fail("no_cabin_slot", "ui.error.no_cabin_slot")
-
-	var added_weight := float(module.data.get("weight", 0.0))
-	if ShipOps.total_weight(hub, state) + added_weight > ShipOps.max_weight(hub, ship) + 0.0001 and content_type != ContentTypes.HULL:
-		return Result.fail("weight_limit", "ui.error.weight")
-
 	state.add_money(-price)
 	match content_type:
 		ContentTypes.CARGO_MODULE:
