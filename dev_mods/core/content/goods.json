@@ -109,6 +109,36 @@
         "spawn_weight": 0.0,
         "category": "contract"
       }
+    },
+    {
+      "id": "core:good/coal",
+      "name_key": "good.core.coal.name",
+      "description_key": "good.core.coal.description",
+      "tags": ["good.supply", "supply.coal", "good.bulk"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 1.0,
+        "base_price": 4,
+        "base_stock": 140,
+        "price_elasticity": 0.12,
+        "spawn_weight": 0.0,
+        "category": "supply"
+      }
+    },
+    {
+      "id": "core:good/water",
+      "name_key": "good.core.water.name",
+      "description_key": "good.core.water.description",
+      "tags": ["good.supply", "supply.water", "good.bulk"],
+      "enabled": true,
+      "data": {
+        "unit_weight": 1.0,
+        "base_price": 2,
+        "base_stock": 160,
+        "price_elasticity": 0.1,
+        "spawn_weight": 0.0,
+        "category": "supply"
+      }
     }
   ]
 }

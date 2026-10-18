@@ -329,9 +329,10 @@ export const FILE_DOCS = {
   },
 
   "framework/application/queries/supply_view.gd": {
-    role: "补给界面 ViewModel：煤水单价、载重余量、可买上限与维修报价。",
+    role: "补给界面 ViewModel：市场煤水价/库存、载重余量与维修报价。",
     contracts: [
-      "煤水价格与维修单价来自 map_profile；买卖上限同时受剩余载重和金币限制。",
+      "煤水单价与港口库存来自 `MarketOps.supply_entry_for()`，不再使用固定价格。",
+      "可买上限同时受剩余载重、金币和港口库存限制。",
       "维修报价与 supply.repair 共用 `MarketOps.repair_cost()`，UI 不复制耐久/改装修正。",
       "当前港没有 supply 设施时 has_supply=false，界面禁用补给与维修。"
     ]
@@ -418,20 +419,24 @@ export const FILE_DOCS = {
   },
 
   "framework/domain/economy/market_ops.gd": {
-    role: "市场价格、买卖、补给购买与维修结算；任意港收购所有货物，买入仅限本地品种。",
+    role: "市场价格、买卖、补给商品与维修结算；煤/水价格随港口库存浮动。",
     contracts: [
       "本地品种价格 = base_price × bias × (base_stock / stock)^elasticity，限制在 0.55–2.2。",
       "非本地品种以 `buyable=false` 进入市场：只收购、不卖给你；价格按 base_price × 0.9 × 库存折减。",
-      "买入检查 buyable、货币、库存、总重量与货舱容量；卖出允许所有非合同货物。",
+      "煤/水以 `is_supply=true` 的补给商品进入每个港口市场，初始库存 90–180，价格与普通商品同一供需公式。",
+      "买入检查 buyable、货币、库存、总重量与货舱容量；卖出允许所有非合同货物；补给商品只能走补给码头。",
       "玩家买卖只把价格向新均衡推进 `player_trade_impact`（默认 0.35）；NPC 交易仍完整重算。",
       "买入把成交总额写入 cargo stack 的 total_cost，卖出按数量比例扣减成本。",
-      "补给只检查重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。",
-      "`ensure_sell_only_entries()` 为旧存档补齐非本地收购项。"
+      "补给只检查设施、库存、重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。",
+      "`ensure_sell_only_entries()` 为旧存档补齐非本地收购项与补给商品。"
     ],
     l2: {
       "buy(state, hub, port_id, item_id, amount, trade_margin, price_impact)": [
         "所有前置条件通过后才扣款、减库存、按 price_impact 平滑重算价格、写入 cargo stack 和成本。",
         "失败返回带 message_key 的 Result；命令总线因此不会提交工作副本。"
+      ],
+      "buy_supply(state, hub, port_id, kind, amount, price_impact)": [
+        "按 `supply_entry_for()` 找到煤/水市场条目，使用当前价格和库存；购买后按玩家冲击平滑更新价格。"
       ],
       "compute_price(entry)": [
         "buyable=true 走本地市场供需公式；buyable=false 使用单向收购价，库存越多价格越低。"
@@ -447,6 +452,7 @@ export const FILE_DOCS = {
     contracts: [
       "只在开局、抵达港口、在该港完成买卖时刷新；时间流逝和 NPC 变化不会改写快照。",
       "与情报快照互相独立：情报可远程刷新，港口记忆只记录亲历市场。",
+      "快照包含普通商品与补给商品（煤/水），并记录 is_supply 标记。",
       "快照存放在 GameState.port_memory，使用普通 Dictionary，可直接存档。"
     ]
   },
@@ -670,7 +676,7 @@ export const FILE_DOCS = {
       "每个 PanelContainer 只允许一个 VBoxContainer 内容容器；面板子节点必须经 `_panel_add()` 添加，避免多子节点互相重叠。",
       "海图点击已访问港口：当前港跳转市场，远程港打开只读港口记忆。",
       "市场页显示 buyable 与持仓均价；仅收购品种的买入按钮禁用。",
-      "补给页显示煤水价格、载重余量、可买上限和维修报价，按钮直接派发 supply.* 命令。",
+      "补给页显示市场煤水价、港口库存、载重余量、可买上限和维修报价，按钮直接派发 supply.* 命令。",
       "事件面板只展示本次抽样出的 2 个选项。",
       "Continue 读取 autosave 并做模组兼容性校验。"
     ]
@@ -806,7 +812,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/query_registry.gd": "查询名到 ViewModel 构造器的绑定表。",
   "framework/application/commands/run_start.gd": "run.start 命令：调用 RunFactory 并写回状态/随机流。",
   "framework/application/commands/trade_commands.gd": "trade.buy / trade.sell 命令包装与市场事件。",
-  "framework/application/commands/supply_commands.gd": "煤水购买与维修命令包装。",
+  "framework/application/commands/supply_commands.gd": "按市场价购买煤水与维修命令包装。",
   "framework/application/commands/intel_commands.gd": "情报刷新命令：设施、费用、快照。",
   "framework/application/commands/debt_commands.gd": "借款命令包装。",
   "framework/application/commands/contract_commands.gd": "委托接取命令包装。",

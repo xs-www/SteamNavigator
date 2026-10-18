@@ -15,10 +15,11 @@ static func _buy_supply(kind: String, params: Dictionary, context) -> Dictionary
 		return Result.fail("no_run", "ui.error.no_run")
 	var port_id := String(params.get("port_id", state.current_port_id()))
 	var amount := int(params.get("amount", 10))
-	var prices: Dictionary = _profile(context).get("supply_prices", {})
-	var unit_price := float(prices.get(kind, 4.0 if kind == "coal" else 2.0))
-	var result := MarketOps.buy_supply(state, context.registries, port_id, kind, amount, unit_price)
+	var profile := _profile(context)
+	var impact := float(profile.get("player_trade_impact", MarketOps.DEFAULT_PLAYER_PRICE_IMPACT))
+	var result := MarketOps.buy_supply(state, context.registries, port_id, kind, amount, impact)
 	if bool(result["ok"]):
+		MarketMemoryService.remember(state, port_id)
 		result["events"] = [{
 			"type": "supply.purchased",
 			"payload": {"kind": kind, "amount": amount, "total": result["data"].get("total", 0)},

@@ -26,6 +26,7 @@ static func remember(state: GameState, port_id: String) -> void:
 			"stock": int(entry.get("stock", 0)),
 			"base_stock": float(entry.get("base_stock", 0.0)),
 			"buyable": bool(entry.get("buyable", true)),
+			"is_supply": bool(entry.get("is_supply", false)),
 		}
 	state.data[MEMORY_KEY][port_id] = {
 		"captured_at": state.now(),

@@ -173,5 +173,12 @@
   "ui.label.inventory_cost": "Inventory cost",
   "ui.label.contract_cargo": "Contract cargo",
   "ui.nav.supply": "Supplies",
-  "ui.error.no_supply": "This port has no supply dock"
+  "ui.error.no_supply": "This port has no supply dock",
+  "good.core.coal.name": "Coal",
+  "good.core.coal.description": "Boiler fuel; prices move with port stock and trader traffic.",
+  "good.core.water.name": "Fresh water",
+  "good.core.water.description": "Boiler and crew water; prices follow port stock.",
+  "ui.label.port_stock": "Port stock",
+  "ui.error.supply_only": "Buy supplies at the supply dock",
+  "ui.label.supply": "Supply"
 }

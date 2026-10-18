@@ -19,6 +19,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	item_ids.sort()
 	for item_id in item_ids:
 		var entry: Dictionary = market[item_id]
+		if bool(entry.get("is_supply", false)):
+			continue
 		var definition := ShipOps.item_definition(hub, String(item_id))
 		if definition == null:
 			continue

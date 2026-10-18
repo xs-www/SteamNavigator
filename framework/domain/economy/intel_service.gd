@@ -24,6 +24,7 @@ static func build_snapshot(state: GameState, hub: RegistryHub, game_time: float)
 				"price": int(round(float(entry.get("price", 0.0)))),
 				"stock": int(entry.get("stock", 0)),
 				"buyable": bool(entry.get("buyable", true)),
+				"is_supply": bool(entry.get("is_supply", false)),
 				"trend": _trend(entry),
 			})
 		port_reports.append({

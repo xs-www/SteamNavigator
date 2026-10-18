@@ -613,10 +613,14 @@ func _screen_port_memory(_data: Dictionary) -> void:
 			grid.add_child(_label(heading, 12, COLOR_MUTED))
 		for row in memory.get("market", []):
 			var buyable := bool(row.get("buyable", true))
+			var is_supply := bool(row.get("is_supply", false))
 			grid.add_child(_label(_tr(String(row.get("name_key", "")), String(row.get("item_id", ""))), 13, COLOR_TEXT))
 			grid.add_child(_label(str(int(row.get("price", 0))), 13, COLOR_TEAL))
 			grid.add_child(_label(str(int(row.get("stock", 0))), 13, COLOR_TEXT))
-			grid.add_child(_label("可买" if buyable else _tr("ui.label.sell_only", ""), 13, COLOR_GREEN if buyable else COLOR_MUTED))
+			if is_supply:
+				grid.add_child(_label(_tr("ui.label.supply", "Supply"), 13, COLOR_BRASS))
+			else:
+				grid.add_child(_label("可买" if buyable else _tr("ui.label.sell_only", ""), 13, COLOR_GREEN if buyable else COLOR_MUTED))
 		_panel_add(panel, grid)
 	else:
 		_panel_add(panel, _label("没有该港口的到港市场记录。", 14, COLOR_MUTED))
@@ -918,12 +922,16 @@ func _screen_supply(_data: Dictionary) -> void:
 		_fmt(float(supply.get("remaining_weight", 0.0))),
 		int(supply.get("money", 0)),
 	], 13, COLOR_MUTED))
-	_panel_add(panel, _label("补给会计入总重量；载重不足时先卖货或换大船。", 12, COLOR_MUTED))
+	_panel_add(panel, _label("补给价格随港口库存和商船流动浮动；补给计入总重量。", 12, COLOR_MUTED))
 	_root_box.add_child(panel)
 
 	var coal_panel := _panel()
-	_panel_add(coal_panel, _label("%s · 单价 %s · 最多可买 %d" % [
-		_tr("ui.label.coal", ""), _fmt(float(supply.get("coal_price", 0.0))), int(supply.get("max_coal", 0)),
+	_panel_add(coal_panel, _label("%s · 单价 %s · %s %d · 最多可买 %d" % [
+		_tr("ui.label.coal", ""),
+		_fmt(float(supply.get("coal_price", 0.0))),
+		_tr("ui.label.port_stock", ""),
+		int(supply.get("coal_stock", 0)),
+		int(supply.get("max_coal", 0)),
 	], 16, COLOR_BRASS))
 	var coal_buttons := HBoxContainer.new()
 	for amount in [5, 10, 25]:
@@ -934,8 +942,12 @@ func _screen_supply(_data: Dictionary) -> void:
 	_root_box.add_child(coal_panel)
 
 	var water_panel := _panel()
-	_panel_add(water_panel, _label("%s · 单价 %s · 最多可买 %d" % [
-		_tr("ui.label.water", ""), _fmt(float(supply.get("water_price", 0.0))), int(supply.get("max_water", 0)),
+	_panel_add(water_panel, _label("%s · 单价 %s · %s %d · 最多可买 %d" % [
+		_tr("ui.label.water", ""),
+		_fmt(float(supply.get("water_price", 0.0))),
+		_tr("ui.label.port_stock", ""),
+		int(supply.get("water_stock", 0)),
+		int(supply.get("max_water", 0)),
 	], 16, COLOR_BRASS))
 	var water_buttons := HBoxContainer.new()
 	for amount in [5, 10, 25]:
@@ -1003,7 +1015,9 @@ func _screen_intel(_data: Dictionary) -> void:
 			grid.add_child(_label(heading, 12, COLOR_MUTED))
 		for row in port_report.get("market", []):
 			var item_label := _tr(String(row.get("item_name_key", "")), String(row.get("item_id", "")))
-			if not bool(row.get("buyable", true)):
+			if bool(row.get("is_supply", false)):
+				item_label += " · " + _tr("ui.label.supply", "")
+			elif not bool(row.get("buyable", true)):
 				item_label += " · " + _tr("ui.label.sell_only", "")
 			grid.add_child(_label(item_label, 13, COLOR_TEXT))
 			grid.add_child(_label(str(int(row.get("price", 0))), 13, COLOR_TEAL))

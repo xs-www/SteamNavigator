@@ -84,17 +84,41 @@ static func initialize_port_market(hub: RegistryHub, archetype: ContentDefinitio
 		market[item_id] = entry
 		listed[item_id] = true
 	# Every port buys every ordinary good/material, but only the listed
-	# assortment has a buy-side market.
+	# assortment has a buy-side market. Coal and water are handled separately
+	# below as supply commodities.
 	for content_type in [ContentTypes.GOOD, ContentTypes.MATERIAL]:
 		for item_definition in hub.get_all(content_type):
-			if listed.has(item_definition.id) or item_definition.has_tag("good.contract"):
+			if listed.has(item_definition.id) or item_definition.has_tag("good.contract") or item_definition.has_tag("good.supply"):
 				continue
 			var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
 			entry["stock"] = 0
 			entry["buyable"] = false
 			recalc(entry)
 			market[item_definition.id] = entry
+	for item_definition in hub.get_all(ContentTypes.GOOD):
+		var supply_kind := supply_kind_for(item_definition)
+		if supply_kind.is_empty():
+			continue
+		var entry := create_market_entry(item_definition, rng.randi_range(90, 180), 1.0)
+		entry["is_supply"] = true
+		entry["supply_kind"] = supply_kind
+		market[item_definition.id] = entry
 	return market
+
+
+static func supply_kind_for(definition: ContentDefinition) -> String:
+	if definition.has_tag("supply.coal"):
+		return "coal"
+	if definition.has_tag("supply.water"):
+		return "water"
+	return ""
+
+
+static func supply_entry_for(state: GameState, port_id: String, kind: String) -> Dictionary:
+	for entry in market_for(state, port_id).values():
+		if entry is Dictionary and bool(entry.get("is_supply", false)) and String(entry.get("supply_kind", "")) == kind:
+			return entry
+	return {}
 
 
 ## Adds sell-only entries to markets created before the all-goods model.
@@ -106,13 +130,21 @@ static func ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void
 				entry["buyable"] = true
 		for content_type in [ContentTypes.GOOD, ContentTypes.MATERIAL]:
 			for item_definition in hub.get_all(content_type):
-				if market.has(item_definition.id) or item_definition.has_tag("good.contract"):
+				if market.has(item_definition.id) or item_definition.has_tag("good.contract") or item_definition.has_tag("good.supply"):
 					continue
 				var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
 				entry["stock"] = 0
 				entry["buyable"] = false
 				recalc(entry)
 				market[item_definition.id] = entry
+		for item_definition in hub.get_all(ContentTypes.GOOD):
+			var supply_kind := supply_kind_for(item_definition)
+			if supply_kind.is_empty() or market.has(item_definition.id):
+				continue
+			var entry := create_market_entry(item_definition, 120, 1.0)
+			entry["is_supply"] = true
+			entry["supply_kind"] = supply_kind
+			market[item_definition.id] = entry
 
 
 static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:
@@ -126,6 +158,8 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	var entry := entry_for(state, port_id, item_id)
 	if entry.is_empty():
 		return Result.fail("item_not_traded", "ui.error.item_not_traded", {"item_id": item_id, "port_id": port_id})
+	if bool(entry.get("is_supply", false)):
+		return Result.fail("supply_only", "ui.error.supply_only", {"item_id": item_id, "port_id": port_id})
 	if not bool(entry.get("buyable", true)):
 		return Result.fail("not_buyable", "ui.error.not_buyable", {"item_id": item_id, "port_id": port_id})
 	if int(entry.get("stock", 0)) < amount:
@@ -166,6 +200,8 @@ static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: S
 	var entry := entry_for(state, port_id, item_id)
 	if entry.is_empty():
 		return Result.fail("item_not_traded", "ui.error.item_not_traded", {"item_id": item_id, "port_id": port_id})
+	if bool(entry.get("is_supply", false)):
+		return Result.fail("supply_only", "ui.error.supply_only", {"item_id": item_id, "port_id": port_id})
 	var ship := state.ship()
 	var available := ShipOps.cargo_amount(ship, item_id, false)
 	if available < amount:
@@ -186,7 +222,7 @@ static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: S
 	})
 
 
-static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind: String, amount: int, unit_price: float) -> Dictionary:
+static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind: String, amount: int, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:
 	if state.current_port_id() != port_id or not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if not MapOps.has_facility(MapOps.port(state.world(), port_id), "supply"):
@@ -195,6 +231,12 @@ static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind
 		return Result.fail("invalid_amount", "ui.error.invalid_amount")
 	if kind != "coal" and kind != "water":
 		return Result.fail("unknown_supply", "ui.error.unknown_supply", {"kind": kind})
+	var entry := supply_entry_for(state, port_id, kind)
+	if entry.is_empty():
+		return Result.fail("no_supply", "ui.error.no_supply", {"port_id": port_id})
+	if int(entry.get("stock", 0)) < amount:
+		return Result.fail("insufficient_stock", "ui.error.insufficient_stock", {"stock": int(entry.get("stock", 0))})
+	var unit_price := float(entry.get("price", 0.0))
 	var total := int(ceil(unit_price * float(amount)))
 	if state.money() < total:
 		return Result.fail("insufficient_money", "ui.error.money", {"required": total, "money": state.money()})
@@ -204,13 +246,18 @@ static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind
 	if max_weight > 0.0 and ShipOps.total_weight(hub, state) + unit_weight * float(amount) > max_weight + 0.0001:
 		return Result.fail("weight_limit", "ui.error.weight", {"max_weight": max_weight})
 	state.add_money(-total)
+	entry["stock"] = int(entry.get("stock", 0)) - amount
+	_apply_player_price_change(entry, unit_price, price_impact)
 	ship[kind] = float(ship.get(kind, 0.0)) + float(amount)
 	return Result.ok({
 		"kind": kind,
 		"amount": amount,
+		"unit_price": unit_price,
 		"total": total,
 		"money": state.money(),
 		"stock": float(ship[kind]),
+		"port_stock": int(entry["stock"]),
+		"price_after": float(entry["price"]),
 	})
 
 

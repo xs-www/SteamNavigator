@@ -13,7 +13,7 @@
 | `commands/intel_commands.gd` | 情报刷新命令：设施、费用、快照。 | 本页 |
 | `commands/run_start.gd` | run.start 命令：调用 RunFactory 并写回状态/随机流。 | 本页 |
 | `commands/ship_commands.gd` | 船厂流程：购买并安装船体/锅炉/货舱/导航/安全/客舱。 | [查看](./commands/ship_commands.gd.md) |
-| `commands/supply_commands.gd` | 煤水购买与维修命令包装。 | 本页 |
+| `commands/supply_commands.gd` | 按市场价购买煤水与维修命令包装。 | 本页 |
 | `commands/trade_commands.gd` | trade.buy / trade.sell 命令包装与市场事件。 | 本页 |
 | `commands/voyage_commands.gd` | 预览/出航/事件选择命令包装。 | 本页 |
 | `domain_event_bus.gd` | 已提交领域事件的 envelope、历史与订阅信号。 | [查看](./domain_event_bus.gd.md) |
@@ -25,7 +25,7 @@
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知与统计。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表。 | 本页 |
 | `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前模块、槽位占用和所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
-| `queries/supply_view.gd` | 补给界面 ViewModel：煤水单价、载重余量、可买上限与维修报价。 | [查看](./queries/supply_view.gd.md) |
+| `queries/supply_view.gd` | 补给界面 ViewModel：市场煤水价/库存、载重余量与维修报价。 | [查看](./queries/supply_view.gd.md) |
 | `queries/voyage_preview.gd` | 出航预览查询包装。 | 本页 |
 | `query_bus.gd` | 只读查询执行器：给处理器临时克隆的 GameState，返回 ViewModel。 | [查看](./query_bus.gd.md) |
 | `result.gd` | 统一 `{ok,error_code,message_key,data,events}` 结果构造。 | 本页 |

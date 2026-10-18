@@ -77,6 +77,11 @@ func test_port_memory_is_last_visit_snapshot() -> void:
 	assert_true(bool(data["has_memory"]), "starting port has a memory snapshot")
 	assert_eq(float(data["captured_at"]), 0.0, "snapshot is captured at run start")
 	assert_true(Array(data["market"]).size() >= 8, "all ordinary goods are snapshotted")
+	var supply_rows := 0
+	for row in data["market"]:
+		if bool(row.get("is_supply", false)):
+			supply_rows += 1
+	assert_eq(supply_rows, 2, "coal and water are part of the port memory")
 	context.state.advance_time(5.0)
 	var unchanged_result := context.queries.execute(&"port.memory", {"port_id": start_port})
 	var unchanged: Dictionary = unchanged_result["data"]

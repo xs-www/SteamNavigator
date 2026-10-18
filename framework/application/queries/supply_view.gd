@@ -11,8 +11,12 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var has_supply := MapOps.has_facility(port_data, "supply")
 	var profile := _profile(context)
 	var prices: Dictionary = profile.get("supply_prices", {})
-	var coal_price := float(prices.get("coal", 4.0))
-	var water_price := float(prices.get("water", 2.0))
+	var coal_entry := MarketOps.supply_entry_for(state, state.current_port_id(), "coal")
+	var water_entry := MarketOps.supply_entry_for(state, state.current_port_id(), "water")
+	var coal_price := float(coal_entry.get("price", prices.get("coal", 4.0)))
+	var water_price := float(water_entry.get("price", prices.get("water", 2.0)))
+	var coal_stock := int(coal_entry.get("stock", 0))
+	var water_stock := int(water_entry.get("stock", 0))
 	var repair_per_point := float(prices.get("repair_per_point", 6.0))
 	var ship := state.ship()
 	var total_weight := ShipOps.total_weight(hub, state)
@@ -20,7 +24,9 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var remaining_weight := maxf(0.0, max_weight - total_weight)
 	var money := state.money()
 	var max_coal := mini(int(remaining_weight / ShipOps.COAL_WEIGHT), int(floor(money / maxf(0.01, coal_price))))
+	max_coal = mini(max_coal, coal_stock)
 	var max_water := mini(int(remaining_weight / ShipOps.WATER_WEIGHT), int(floor(money / maxf(0.01, water_price))))
+	max_water = mini(max_water, water_stock)
 	var repair := MarketOps.repair_cost(hub, state, repair_per_point)
 	return Result.ok({
 		"has_run": true,
@@ -30,6 +36,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"has_supply": has_supply,
 		"coal_price": coal_price,
 		"water_price": water_price,
+		"coal_stock": coal_stock,
+		"water_stock": water_stock,
 		"repair_per_point": repair_per_point,
 		"money": money,
 		"coal": float(ship.get("coal", 0.0)),

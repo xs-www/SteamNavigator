@@ -11,7 +11,7 @@ func test_core_loads_cleanly() -> void:
 	assert_eq(report.mods.size(), 1, "one mod loaded")
 	assert_eq(String(report.mods[0]["id"]), "core", "loaded mod is core")
 	assert_true(report.content_total() >= 45, "core provides a substantial content set")
-	assert_eq(int(report.content_counts.get("goods", 0)), 7, "goods count")
+	assert_eq(int(report.content_counts.get("goods", 0)), 9, "goods count includes coal and water")
 	assert_eq(int(report.content_counts.get("hulls", 0)), 4, "hull count")
 	assert_eq(int(report.content_counts.get("contracts", 0)), 9, "contract count")
 

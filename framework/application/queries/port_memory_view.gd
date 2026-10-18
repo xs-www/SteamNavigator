@@ -25,6 +25,7 @@ static func execute(params: Dictionary, context) -> Dictionary:
 			"price": int(round(float(entry.get("price", 0.0)))),
 			"stock": int(entry.get("stock", 0)),
 			"buyable": bool(entry.get("buyable", true)),
+			"is_supply": bool(entry.get("is_supply", false)),
 		})
 	var captured_at := float(memory.get("captured_at", 0.0))
 	return Result.ok({

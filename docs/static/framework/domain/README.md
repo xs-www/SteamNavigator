@@ -12,7 +12,7 @@
 | `debt/debt_service.gd` | 固定利率贷款：借款、收入优先还款、逾期扣声誉。 | [查看](./debt/debt_service.gd.md) |
 | `economy/intel_service.gd` | 生成不可变的市场/NPC 情报快照，并保留生成时间。 | [查看](./economy/intel_service.gd.md) |
 | `economy/market_memory_service.gd` | 每港“上次在港时”的市场快照：价格、储备、可买标记与时间戳。 | [查看](./economy/market_memory_service.gd.md) |
-| `economy/market_ops.gd` | 市场价格、买卖、补给购买与维修结算；任意港收购所有货物，买入仅限本地品种。 | [查看](./economy/market_ops.gd.md) |
+| `economy/market_ops.gd` | 市场价格、买卖、补给商品与维修结算；煤/水价格随港口库存浮动。 | [查看](./economy/market_ops.gd.md) |
 | `economy/npc_trader_simulator.gd` | 后台 NPC 商船：在港口间运输/采购商品，推动库存与价格。 | [查看](./economy/npc_trader_simulator.gd.md) |
 | `events/condition_evaluator.gd` | 解析 all/any/not 组合器并调用条件操作码，限制条件节点数。 | [查看](./events/condition_evaluator.gd.md) |
 | `events/condition_op_registry.gd` | 白名单条件操作码及其只读判定实现。 | [查看](./events/condition_op_registry.gd.md) |
