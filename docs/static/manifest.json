@@ -1,8 +1,8 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-18T11:36:12.922Z",
-  "commit": "bb11e4f",
+  "generated_at": "2026-10-18T11:45:27.521Z",
+  "commit": "a877418",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -736,7 +736,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "91e4d58146687f8d2f9e921f19644a525fe850a7fc9208c759c74d0234a5b912",
+      "sha256": "65f827815ffa026bb78a531665f3b21dbec1748bd9ad1212a9b57c3c61f2355b",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -977,7 +977,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "ff12292949f8be2b2d29e84d0d00970a7577285d3a29866db1aa1e49298d5194",
+      "sha256": "624eb15fef522400def15c69e885d4af4a8b1fed40d00202ae4a46a07fb77502",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

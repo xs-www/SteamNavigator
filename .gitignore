@@ -21,3 +21,4 @@ desktop.ini
 # Test output
 user_data/
 test_output/
+/tmp/

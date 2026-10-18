@@ -170,26 +170,26 @@ func _build_menu(app: Dictionary) -> void:
 	var report: Dictionary = app.get("report", {})
 	if not report.get("errors", []).is_empty():
 		var error_panel := _panel()
-		error_panel.add_child(_label(_tr("ui.error.start_failed", "Startup failed"), 18, COLOR_RED))
+		_panel_add(error_panel, _label(_tr("ui.error.start_failed", "Startup failed"), 18, COLOR_RED))
 		for entry in report.get("errors", []):
-			error_panel.add_child(_label("[%s] %s" % [entry.get("severity", "error"), entry.get("message", "")], 14, COLOR_RED))
+			_panel_add(error_panel, _label("[%s] %s" % [entry.get("severity", "error"), entry.get("message", "")], 14, COLOR_RED))
 		_root_box.add_child(error_panel)
 		var retry := _button(_tr("ui.button.retry", "Retry"), _retry_bootstrap)
 		_root_box.add_child(retry)
 		return
 
 	var intro := _panel()
-	intro.add_child(_label(_tr("ui.app.subtitle", ""), 16, COLOR_MUTED))
-	intro.add_child(_label("%s: %d" % [_tr("ui.label.content", "Content"), int(app.get("content_total", 0))], 14, COLOR_TEXT))
-	intro.add_child(_label("%s: %s" % [_tr("ui.label.registry", "Registry"), "frozen" if bool(app.get("registry_frozen", false)) else "open"], 14, COLOR_TEXT))
+	_panel_add(intro, _label(_tr("ui.app.subtitle", ""), 16, COLOR_MUTED))
+	_panel_add(intro, _label("%s: %d" % [_tr("ui.label.content", "Content"), int(app.get("content_total", 0))], 14, COLOR_TEXT))
+	_panel_add(intro, _label("%s: %s" % [_tr("ui.label.registry", "Registry"), "frozen" if bool(app.get("registry_frozen", false)) else "open"], 14, COLOR_TEXT))
 	var mod_names := PackedStringArray()
 	for mod in app.get("mods", []):
 		mod_names.append("%s %s" % [mod.get("id", "?"), mod.get("version", "?")])
-	intro.add_child(_label("%s: %s" % [_tr("ui.label.mods", "Mods"), ", ".join(mod_names)], 14, COLOR_TEXT))
+	_panel_add(intro, _label("%s: %s" % [_tr("ui.label.mods", "Mods"), ", ".join(mod_names)], 14, COLOR_TEXT))
 	_root_box.add_child(intro)
 
 	var form := _panel()
-	form.add_child(_label(_tr("ui.label.build", "Starting build"), 15, COLOR_BRASS))
+	_panel_add(form, _label(_tr("ui.label.build", "Starting build"), 15, COLOR_BRASS))
 	var build_option := OptionButton.new()
 	build_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var builds: Array = app.get("builds", [])
@@ -201,13 +201,13 @@ func _build_menu(app: Dictionary) -> void:
 			build_option.select(index)
 			_selected_build = String(build.get("id", ""))
 	build_option.item_selected.connect(_on_build_selected.bind(build_option))
-	form.add_child(build_option)
+	_panel_add(form, build_option)
 	if not builds.is_empty():
 		var selected: Dictionary = builds[0]
 		for build in builds:
 			if String(build.get("id", "")) == _selected_build:
 				selected = build
-		form.add_child(_label(_tr(String(selected.get("description_key", "")), ""), 13, COLOR_MUTED))
+		_panel_add(form, _label(_tr(String(selected.get("description_key", "")), ""), 13, COLOR_MUTED))
 
 	var seed_row := HBoxContainer.new()
 	seed_row.add_child(_label(_tr("ui.label.seed", "Seed"), 14, COLOR_TEXT))
@@ -217,7 +217,7 @@ func _build_menu(app: Dictionary) -> void:
 	seed_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	seed_input.text_changed.connect(func(value: String) -> void: _seed_text = value)
 	seed_row.add_child(seed_input)
-	form.add_child(seed_row)
+	_panel_add(form, seed_row)
 
 	var buttons := HBoxContainer.new()
 	var new_run := _button(_tr("ui.button.new_run", "Start a new run"), _on_new_run)
@@ -225,14 +225,14 @@ func _build_menu(app: Dictionary) -> void:
 	buttons.add_child(new_run)
 	if bool(app.get("autosave_available", false)):
 		buttons.add_child(_button(_tr("ui.button.continue", "Continue"), _on_continue))
-	form.add_child(buttons)
+	_panel_add(form, buttons)
 	_root_box.add_child(form)
 
 	if not report.get("warnings", []).is_empty():
 		var warning_panel := _panel()
-		warning_panel.add_child(_label(_tr("ui.label.warnings", "Warnings"), 15, COLOR_BRASS))
+		_panel_add(warning_panel, _label(_tr("ui.label.warnings", "Warnings"), 15, COLOR_BRASS))
 		for warning in report.get("warnings", []).slice(0, 5):
-			warning_panel.add_child(_label("• %s" % warning.get("message", ""), 13, COLOR_MUTED))
+			_panel_add(warning_panel, _label("• %s" % warning.get("message", ""), 13, COLOR_MUTED))
 		_root_box.add_child(warning_panel)
 
 
@@ -268,9 +268,9 @@ func _build_game(data: Dictionary, _app: Dictionary) -> void:
 		_root_box.add_child(_voyage_panel(data))
 	else:
 		var waiting := _panel()
-		waiting.add_child(_label(_tr("ui.label.voyage", "Voyage") + " · at sea", 16, COLOR_TEAL))
+		_panel_add(waiting, _label(_tr("ui.label.voyage", "Voyage") + " · at sea", 16, COLOR_TEAL))
 		if voyage is Dictionary:
-			waiting.add_child(_label("%s → %s" % [
+			_panel_add(waiting, _label("%s → %s" % [
 				_tr(String(voyage.get("origin", "")), String(voyage.get("origin", ""))),
 				_tr(String(voyage.get("destination", "")), String(voyage.get("destination", ""))),
 			], 14, COLOR_TEXT))
@@ -281,7 +281,7 @@ func _build_game(data: Dictionary, _app: Dictionary) -> void:
 func _stats_bar(data: Dictionary) -> Control:
 	var panel := _panel()
 	var row := HBoxContainer.new()
-	panel.add_child(row)
+	_panel_add(panel, row)
 	var ship: Dictionary = data.get("ship", {})
 	var pairs := [
 		[_tr("ui.label.time", "Time"), String(data.get("time_label", ""))],
@@ -306,7 +306,7 @@ func _map_panel() -> Control:
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var map_view := _context.queries.execute(&"map.view")
 	if not bool(map_view.get("ok", false)):
-		panel.add_child(_label(_error_text(map_view), 14, COLOR_RED))
+		_panel_add(panel, _label(_error_text(map_view), 14, COLOR_RED))
 		return panel
 	var map_data: Dictionary = map_view["data"]
 	var canvas := MapCanvas.new()
@@ -317,24 +317,24 @@ func _map_panel() -> Control:
 	for port in canvas.ports:
 		canvas.labels[String(port.get("id", ""))] = _tr(String(port.get("name_key", "")), String(port.get("id", "")))
 	canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(canvas)
+	_panel_add(panel, canvas)
 	return panel
 
 
 func _port_panel(data: Dictionary) -> Control:
 	var panel := _panel()
 	var port: Dictionary = data.get("current_port", {})
-	panel.add_child(_label("%s · %s" % [
+	_panel_add(panel, _label("%s · %s" % [
 		_tr("ui.label.port", "Port"),
 		_tr(String(port.get("name_key", "")), String(port.get("id", ""))),
 	], 18, COLOR_BRASS))
 	var facilities := PackedStringArray()
 	for facility in port.get("facilities", []):
 		facilities.append(_facility_name(String(facility)))
-	panel.add_child(_label("设施: " + (", ".join(facilities) if not facilities.is_empty() else "—"), 13, COLOR_MUTED))
+	_panel_add(panel, _label("设施: " + (", ".join(facilities) if not facilities.is_empty() else "—"), 13, COLOR_MUTED))
 	if data.get("debt", null) is Dictionary:
 		var debt: Dictionary = data["debt"]
-		panel.add_child(_label("债务剩余: %s（到期 %s）" % [
+		_panel_add(panel, _label("债务剩余: %s（到期 %s）" % [
 			_fmt(float(debt.get("remaining", 0.0))),
 			ClockService.format_time(float(debt.get("due_time", 0.0))),
 		], 13, COLOR_RED))
@@ -343,7 +343,7 @@ func _port_panel(data: Dictionary) -> Control:
 
 func _market_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	panel.add_child(_label(_tr("ui.label.market", "Market"), 17, COLOR_BRASS))
+	_panel_add(panel, _label(_tr("ui.label.market", "Market"), 17, COLOR_BRASS))
 	var grid := GridContainer.new()
 	grid.columns = 7
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -356,31 +356,33 @@ func _market_panel(data: Dictionary) -> Control:
 		grid.add_child(_label(_fmt(float(row.get("unit_weight", 0.0))), 13, COLOR_MUTED))
 		grid.add_child(_label(str(int(row.get("cargo_amount", 0))), 13, COLOR_TEXT))
 		var buy_row := HBoxContainer.new()
+		buy_row.add_theme_constant_override("separation", 2)
 		buy_row.add_child(_small_button("1", _on_buy.bind(String(row.get("item_id", "")), 1)))
 		buy_row.add_child(_small_button("5", _on_buy.bind(String(row.get("item_id", "")), 5)))
 		grid.add_child(buy_row)
 		var sell_row := HBoxContainer.new()
+		sell_row.add_theme_constant_override("separation", 2)
 		sell_row.add_child(_small_button("1", _on_sell.bind(String(row.get("item_id", "")), 1)))
 		sell_row.add_child(_small_button("5", _on_sell.bind(String(row.get("item_id", "")), 5)))
 		grid.add_child(sell_row)
-	panel.add_child(grid)
+	_panel_add(panel, grid)
 	return panel
 
 
 func _contract_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	panel.add_child(_label("委托", 17, COLOR_BRASS))
+	_panel_add(panel, _label("委托", 17, COLOR_BRASS))
 	var contracts: Dictionary = data.get("contracts", {})
 	var main_contract: Variant = contracts.get("main", null)
 	if main_contract is Dictionary:
-		panel.add_child(_contract_line(main_contract, "主线"))
+		_panel_add(panel, _contract_line(main_contract, "主线"))
 	var main_offer: Variant = contracts.get("main_offer", null)
 	if main_offer is Dictionary:
-		panel.add_child(_contract_line(main_offer, "可接主线", true))
+		_panel_add(panel, _contract_line(main_offer, "可接主线", true))
 	for offer in contracts.get("offers", []):
-		panel.add_child(_contract_line(offer, "普通", true))
+		_panel_add(panel, _contract_line(offer, "普通", true))
 	for active in contracts.get("active", []):
-		panel.add_child(_contract_line(active, "普通", false))
+		_panel_add(panel, _contract_line(active, "普通", false))
 	return panel
 
 
@@ -404,26 +406,26 @@ func _contract_line(contract: Dictionary, tag: String, can_accept: bool = false)
 func _ship_panel(data: Dictionary) -> Control:
 	var panel := _panel()
 	var ship: Dictionary = data.get("ship", {})
-	panel.add_child(_label("船只", 17, COLOR_BRASS))
-	panel.add_child(_label("航速 %s · 煤耗 %s/h · 水耗 %s/h" % [
+	_panel_add(panel, _label("船只", 17, COLOR_BRASS))
+	_panel_add(panel, _label("航速 %s · 煤耗 %s/h · 水耗 %s/h" % [
 		_fmt(float(ship.get("speed", 0.0)), 2),
 		_fmt(float(ship.get("coal_rate", 0.0)), 2),
 		_fmt(float(ship.get("water_rate", 0.0)), 2),
 	], 13, COLOR_MUTED))
-	panel.add_child(_label("货舱 %s / %s · 旅客 %d / %d" % [
+	_panel_add(panel, _label("货舱 %s / %s · 旅客 %d / %d" % [
 		_fmt(float(ship.get("cargo_used", 0.0))),
 		_fmt(float(ship.get("cargo_capacity", 0.0))),
 		int(ship.get("passengers", 0)),
 		int(ship.get("passenger_capacity", 0)),
 	], 13, COLOR_MUTED))
 	for module in ship.get("modules", []):
-		panel.add_child(_label("· %s" % _tr(String(module.get("name_key", "")), String(module.get("module_id", ""))), 13, COLOR_TEXT))
+		_panel_add(panel, _label("· %s" % _tr(String(module.get("name_key", "")), String(module.get("module_id", ""))), 13, COLOR_TEXT))
 	var cargo: Array = ship.get("cargo", [])
 	if not cargo.is_empty():
 		var cargo_names := PackedStringArray()
 		for stack in cargo:
 			cargo_names.append("%s ×%d" % [_tr(String(stack.get("name_key", "")), String(stack.get("item_id", ""))), int(stack.get("amount", 0))])
-		panel.add_child(_label("装载: " + ", ".join(cargo_names), 12, COLOR_MUTED))
+		_panel_add(panel, _label("装载: " + ", ".join(cargo_names), 12, COLOR_MUTED))
 	return panel
 
 
@@ -432,7 +434,7 @@ func _shipyard_panel(data: Dictionary) -> Control:
 	var port: Dictionary = data.get("current_port", {})
 	if not Array(port.get("facilities", [])).has("shipyard"):
 		return panel
-	panel.add_child(_label("船厂", 17, COLOR_BRASS))
+	_panel_add(panel, _label("船厂", 17, COLOR_BRASS))
 	var available: Array = []
 	for content_type in [ContentTypes.CARGO_MODULE, ContentTypes.NAVIGATION_MODULE, ContentTypes.SAFETY_MODULE, ContentTypes.CABIN, ContentTypes.HULL, ContentTypes.BOILER]:
 		for module in _context.registries.get_all(content_type):
@@ -440,7 +442,7 @@ func _shipyard_panel(data: Dictionary) -> Control:
 				continue
 			available.append(module)
 	if available.is_empty():
-		panel.add_child(_label("暂无可安装模块", 13, COLOR_MUTED))
+		_panel_add(panel, _label("暂无可安装模块", 13, COLOR_MUTED))
 		return panel
 	var option := OptionButton.new()
 	option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -456,34 +458,34 @@ func _shipyard_panel(data: Dictionary) -> Control:
 	option.item_selected.connect(func(index: int) -> void:
 		_selected_module = String(option.get_item_metadata(index))
 	)
-	panel.add_child(option)
-	panel.add_child(_button("购买并安装", _on_install_module))
+	_panel_add(panel, option)
+	_panel_add(panel, _button("购买并安装", _on_install_module))
 	return panel
 
 
 func _intel_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	panel.add_child(_label("情报", 17, COLOR_BRASS))
+	_panel_add(panel, _label("情报", 17, COLOR_BRASS))
 	var intel: Dictionary = data.get("intelligence", {})
 	var generated := String(intel.get("generated_label", ""))
 	if generated.is_empty():
-		panel.add_child(_label("尚无情报快照", 13, COLOR_MUTED))
+		_panel_add(panel, _label("尚无情报快照", 13, COLOR_MUTED))
 	else:
-		panel.add_child(_label("%s · %s 前" % [generated, _fmt(float(intel.get("age_hours", 0.0)))], 12, COLOR_MUTED))
+		_panel_add(panel, _label("%s · %s 前" % [generated, _fmt(float(intel.get("age_hours", 0.0)))], 12, COLOR_MUTED))
 	var port: Dictionary = data.get("current_port", {})
 	if Array(port.get("facilities", [])).has("intel"):
-		panel.add_child(_button("刷新情报（25 金币）", _on_refresh_intel))
-	panel.add_child(_button("借款 400（10% 利息）", _on_borrow))
+		_panel_add(panel, _button("刷新情报（25 金币）", _on_refresh_intel))
+	_panel_add(panel, _button("借款 400（10% 利息）", _on_borrow))
 	return panel
 
 
 func _voyage_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	panel.add_child(_label(_tr("ui.label.preview", "Voyage preview"), 17, COLOR_BRASS))
+	_panel_add(panel, _label(_tr("ui.label.preview", "Voyage preview"), 17, COLOR_BRASS))
 	var destinations: Array = data.get("destinations", [])
 	var strategies: Array = data.get("strategies", [])
 	if destinations.is_empty() or strategies.is_empty():
-		panel.add_child(_label("无可用航线", 13, COLOR_MUTED))
+		_panel_add(panel, _label("无可用航线", 13, COLOR_MUTED))
 		return panel
 	var row := HBoxContainer.new()
 	var destination_option := OptionButton.new()
@@ -523,14 +525,14 @@ func _voyage_panel(data: Dictionary) -> Control:
 	strategy_option.item_selected.connect(_on_strategy_selected.bind(strategy_option))
 	row.add_child(strategy_option)
 	row.add_child(_small_button(_tr("ui.button.refresh", "Refresh"), _refresh))
-	panel.add_child(row)
+	_panel_add(panel, row)
 
 	var preview := _context.queries.execute(&"voyage.preview", {
 		"destination_id": _selected_destination,
 		"strategy_id": _selected_strategy,
 	})
 	if not bool(preview.get("ok", false)):
-		panel.add_child(_label(_error_text(preview), 13, COLOR_RED))
+		_panel_add(panel, _label(_error_text(preview), 13, COLOR_RED))
 		return panel
 	var p: Dictionary = preview["data"]
 	var lines := PackedStringArray()
@@ -553,38 +555,38 @@ func _voyage_panel(data: Dictionary) -> Control:
 	lines.append("情报时间: %s" % ("无" if float(p.get("intel_generated_at", -1.0)) < 0.0 else ClockService.format_time(float(p.get("intel_generated_at", 0.0)))))
 	var body := _label("\n".join(lines), 13, COLOR_TEXT)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	panel.add_child(body)
+	_panel_add(panel, body)
 	if not p.get("blockers", []).is_empty():
 		var blocker_text := PackedStringArray()
 		for blocker in p.get("blockers", []):
 			blocker_text.append(_tr(String(blocker.get("message_key", "")), String(blocker.get("code", ""))))
-		panel.add_child(_label("无法出航: " + ", ".join(blocker_text), 13, COLOR_RED))
+		_panel_add(panel, _label("无法出航: " + ", ".join(blocker_text), 13, COLOR_RED))
 	var depart := _button(_tr("ui.button.depart", "Depart"), _on_depart)
 	depart.disabled = not bool(p.get("feasible", false))
-	panel.add_child(depart)
+	_panel_add(panel, depart)
 	return panel
 
 
 func _event_panel(event: Dictionary) -> Control:
 	var panel := _panel()
-	panel.add_child(_label(_tr(String(event.get("name_key", "")), String(event.get("event_id", ""))), 20, COLOR_RED))
+	_panel_add(panel, _label(_tr(String(event.get("name_key", "")), String(event.get("event_id", ""))), 20, COLOR_RED))
 	var description_key := String(event.get("description_key", ""))
 	if not description_key.is_empty():
-		panel.add_child(_label(_tr(description_key, ""), 14, COLOR_TEXT))
+		_panel_add(panel, _label(_tr(description_key, ""), 14, COLOR_TEXT))
 	for option in event.get("options", []):
 		var option_id := String(option.get("id", ""))
-		panel.add_child(_button(_tr(String(option.get("name_key", "")), option_id), _on_event_option.bind(option_id)))
+		_panel_add(panel, _button(_tr(String(option.get("name_key", "")), option_id), _on_event_option.bind(option_id)))
 	return panel
 
 
 func _notices_panel(data: Dictionary) -> Control:
 	var panel := _panel()
-	panel.add_child(_label("航行记录", 14, COLOR_MUTED))
+	_panel_add(panel, _label("航行记录", 14, COLOR_MUTED))
 	var notices: Array = data.get("notices", [])
 	if notices.is_empty():
-		panel.add_child(_label("—", 13, COLOR_MUTED))
+		_panel_add(panel, _label("—", 13, COLOR_MUTED))
 	for notice in notices.slice(maxi(0, notices.size() - 5), notices.size()):
-		panel.add_child(_label("· %s" % _tr(String(notice.get("text_key", "")), ""), 13, COLOR_TEXT))
+		_panel_add(panel, _label("· %s" % _tr(String(notice.get("text_key", "")), ""), 13, COLOR_TEXT))
 	return panel
 
 
@@ -733,14 +735,26 @@ func _button(text: String, callback: Callable, disabled: bool = false) -> Button
 func _small_button(text: String, callback: Callable) -> Button:
 	var button := _button(text, callback)
 	button.add_theme_font_size_override("font_size", 12)
-	button.custom_minimum_size = Vector2(34, 26)
+	button.custom_minimum_size = Vector2(30, 26)
 	return button
 
 
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var content := VBoxContainer.new()
+	content.name = "Content"
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(content)
 	return panel
+
+
+func _panel_add(panel: PanelContainer, node: Node) -> void:
+	var content := panel.get_node_or_null("Content")
+	if content is VBoxContainer:
+		content.add_child(node)
+	else:
+		panel.add_child(node)
 
 
 func _fmt(value: float, decimals: int = 1) -> String:
