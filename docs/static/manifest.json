@@ -1,19 +1,19 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-18T23:03:22.526Z",
-  "commit": "403448d",
+  "generated_at": "2026-10-18T23:36:29.762Z",
+  "commit": "aaa9493",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 212,
-    "documented": 80,
-    "grouped": 132
+    "sources": 216,
+    "documented": 82,
+    "grouped": 134
   },
   "files": [
     {
       "source": "README.md",
-      "sha256": "4846b8cd4aac3c247cbec0c44a091479a0cb402e97987ea544f07a558a92de49",
+      "sha256": "bb451258d4cf084aa003bfdc32bf61339bcce04a868618c07e46c39048b90eaa",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -553,7 +553,7 @@
     },
     {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "84356bcf8a4478672e19215f18ccd23a80104d62b6625925cfaa88d8f69b37b9",
+      "sha256": "4b49cf17bd00d593fdeeef215a6d128aace55683241494298376db864ed6b3a3",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
@@ -572,7 +572,7 @@
     },
     {
       "source": "framework/application/queries/supply_view.gd",
-      "sha256": "263bfb92c109a5ba81bef5d85f4ddd617e4fdf07cdf0e0e2fdc96b32f425eeb9",
+      "sha256": "42e2aaa672995debad92c44868bb9d49789d033491540b33264fd38f1a09187b",
       "doc": "docs/static/framework/application/queries/supply_view.gd.md",
       "status": "documented"
     },
@@ -703,7 +703,7 @@
     },
     {
       "source": "framework/domain/economy/market_ops.gd",
-      "sha256": "bcc5d180ac90b5441b1149a5dfa652a2d6fd63a27907c991479331e0268c94e0",
+      "sha256": "43fc397f6a5212c5ca34c84c6cbc623411172fc2b44a231bf2a9adc17f27cdf9",
       "doc": "docs/static/framework/domain/economy/market_ops.gd.md",
       "status": "documented"
     },
@@ -918,7 +918,7 @@
     },
     {
       "source": "framework/tests/cases/test_contract_flow.gd",
-      "sha256": "c8140a19181bf4f59916f71159a88d2e2d83c0d69c7c5246867b4f0130847cb2",
+      "sha256": "4f369439636d60fffdea941032ff2574a7476b3e4541b1463218afdec8ea6fa2",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -946,7 +946,7 @@
     },
     {
       "source": "framework/tests/cases/test_market_trade.gd",
-      "sha256": "b2e3dd6d2889417bffb4689b2d2df494af456818a14378b749ad4a98ab95b3d8",
+      "sha256": "6b5633b02ff4ac486cb49526a1188ea776d4b666830f013503d2a09c304c82f2",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -1030,7 +1030,7 @@
     },
     {
       "source": "framework/tests/cases/test_supply.gd",
-      "sha256": "91b48e74439be0d78de35c6983bc1b4f6766b63b3d915c7ae70de76afb530977",
+      "sha256": "7fc34e7d50ff2f8db1786e72e1523d818b16ed7e3251fc93ac7910e7ba6729bd",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -1079,7 +1079,7 @@
     },
     {
       "source": "framework/ui/components/README.md",
-      "sha256": "ca9661b441ac107ab84719c50fea26fbe0be18836ebf44fc8f38315e75d20078",
+      "sha256": "247da9a4bc30d617b87968075727546f0890806714eff82ea13e390a36727240",
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
@@ -1150,8 +1150,34 @@
       "group": "docs/static/framework/ui/README.md"
     },
     {
+      "source": "framework/ui/components/sn_sparkline.gd",
+      "sha256": "3f5b50fee4c02e92c23a09a21cac85bfcc45043b6fd2d804235cab07a270944f",
+      "doc": "docs/static/framework/ui/components/sn_sparkline.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_sparkline.tscn",
+      "sha256": "26968c2a71310cf1205bdfa54049d0ced2b09f8c747797742b42053806526d19",
+      "doc": "docs/static/framework/ui/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/components/sn_supply_card.gd",
+      "sha256": "aaad829e050eaccfe5ec04c626f3372ca92b4fe4fb4c5f4af8837051660a750c",
+      "doc": "docs/static/framework/ui/components/sn_supply_card.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_supply_card.tscn",
+      "sha256": "dd3e468a89c51e34b5ee542475437711a1a8b7ca66dbebff73606038f619c57b",
+      "doc": "docs/static/framework/ui/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/ui/README.md"
+    },
+    {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "d9c63c314682e65e92d6e98e386f282a28309975f87269cfc57b0b59af539cd4",
+      "sha256": "581db53720710a668b41d773a4668c0eab9cdce81273189ac58593895c0eca71",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -1164,7 +1190,7 @@
     },
     {
       "source": "framework/ui/showcase/ui_kit_showcase.gd",
-      "sha256": "c3db8dea609d7e3f9814d684639c998e46de21b6b5fd153531e607537470f09a",
+      "sha256": "16e31e0e435458d0c7e4a2477696cb44576c1685b5289a8b1525ea824ef25a35",
       "doc": "docs/static/framework/ui/showcase/ui_kit_showcase.gd.md",
       "status": "documented"
     },
@@ -1384,7 +1410,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "00278aad1dec809eccf5ba311f2cf413d0450e23117c5fe4096239d4daa533fb",
+      "sha256": "49e5490abc9fecec8e29dc53aa511a78c8f691bcfbe09b25814a3366a9cad27f",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1404,7 +1430,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "b431090b1a6d1383d3219a634a2ce3060417b1b315ca852ff2424c45ae5241da",
+      "sha256": "a7f326fdc0e026600611544f812bd613815390a97624c8730f63a99a73b83839",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

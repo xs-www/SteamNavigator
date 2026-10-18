@@ -12,9 +12,10 @@
 
 ## 契约与约束
 
-- 所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable 与持仓均价。
+- 所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable、持仓均价与价格历史。
+- 市场行的 recent_prices 与 trend_percent 只来自真实 price_history；样本不足时 sparkline 不绘制折线。
 - 目的地只列当前港的相邻航线，标记未知设施与风险。
-- 委托 ViewModel 额外提供目的港名称键与期限显示文本。
+- 委托 ViewModel 提供目的港名称键、剩余期限、预计航程、风险和说明键；风险/航程由查询层计算，卡片不调用航行公式。
 - 船只 ViewModel 的 cargo_cost_basis 与 average_cost 来自 ShipOps 的成本口径。
 - 不返回 ContentDefinition 或 GameState 内部引用。
 

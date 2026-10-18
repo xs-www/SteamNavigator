@@ -15,6 +15,12 @@ func test_supply_view_and_purchases() -> void:
 	assert_true(float(data["water_price"]) > 0.0, "water has a price")
 	assert_true(int(data["max_coal"]) >= 10, "weight and money allow coal")
 	assert_true(int(data["max_water"]) >= 10, "weight and money allow water")
+	var coal_view: Dictionary = data["coal_view"]
+	assert_eq(int(coal_view["max_buy"]), int(data["max_coal"]), "coal card uses the same max-buy rule")
+	assert_true(coal_view.has("fill_to"), "coal card exposes fill-to value")
+	assert_true(coal_view.has("estimated_days"), "coal card exposes estimated endurance")
+	assert_true(int(coal_view["fill_cost"]) >= 0, "coal card exposes fill cost")
+	assert_true(Array(coal_view["blockers"]).is_empty(), "coal card has no blockers at start")
 	var coal_stock_before := int(data["coal_stock"])
 	var coal_price_before := float(data["coal_price"])
 	assert_true(coal_stock_before >= 10, "port has coal stock")

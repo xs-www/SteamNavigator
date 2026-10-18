@@ -28,6 +28,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var max_water := mini(int(remaining_weight / ShipOps.WATER_WEIGHT), int(floor(money / maxf(0.01, water_price))))
 	max_water = mini(max_water, water_stock)
 	var repair := MarketOps.repair_cost(hub, state, repair_per_point)
+	var coal := _resource_view("coal", float(ship.get("coal", 0.0)), float(ShipOps.stats(hub, ship).get("coal_rate", 0.0)), coal_price, coal_stock, maxi(0, max_coal), has_supply, money, remaining_weight, ShipOps.COAL_WEIGHT)
+	var water := _resource_view("water", float(ship.get("water", 0.0)), float(ShipOps.stats(hub, ship).get("water_rate", 0.0)), water_price, water_stock, maxi(0, max_water), has_supply, money, remaining_weight, ShipOps.WATER_WEIGHT)
 	return Result.ok({
 		"has_run": true,
 		"at_port": state.is_at_port(),
@@ -42,6 +44,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"money": money,
 		"coal": float(ship.get("coal", 0.0)),
 		"water": float(ship.get("water", 0.0)),
+		"coal_view": coal,
+		"water_view": water,
 		"durability": float(ship.get("durability", 0.0)),
 		"total_weight": total_weight,
 		"max_weight": max_weight,
@@ -51,6 +55,37 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"repair": repair,
 		"can_repair": has_supply and state.is_at_port() and float(repair.get("missing", 0.0)) > 0.0 and money >= int(repair.get("cost", 0)),
 	})
+
+
+static func _resource_view(kind: String, current: float, rate: float, price: float, port_stock: int, max_buy: int, has_supply: bool, money: int, remaining_weight: float, unit_weight: float) -> Dictionary:
+	var fill_to := current + float(max_buy)
+	var safe_level := minf(fill_to, rate * 24.0 * 2.0)
+	var daily_rate := rate * 24.0
+	var blockers: Array[String] = []
+	if not has_supply:
+		blockers.append("no_supply")
+	if port_stock <= 0:
+		blockers.append("no_stock")
+	if remaining_weight < unit_weight:
+		blockers.append("weight_limit")
+	if money < int(ceil(price)):
+		blockers.append("insufficient_money")
+	return {
+		"kind": kind,
+		"current": current,
+		"fill_to": fill_to,
+		"maximum": maxf(fill_to, current),
+		"safe_level": safe_level,
+		"estimated_days": current / daily_rate if daily_rate > 0.0 else -1.0,
+		"daily_rate": daily_rate,
+		"price": price,
+		"port_stock": port_stock,
+		"max_buy": max_buy,
+		"fill_cost": int(ceil(price * float(max_buy))),
+		"can_buy": has_supply and max_buy > 0,
+		"blockers": blockers,
+		"unit_weight": unit_weight,
+	}
 
 
 static func _profile(context) -> Dictionary:

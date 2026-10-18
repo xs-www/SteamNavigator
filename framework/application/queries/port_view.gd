@@ -24,6 +24,11 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		var definition := ShipOps.item_definition(hub, String(item_id))
 		if definition == null:
 			continue
+		var history: Array = entry.get("price_history", [])
+		var recent_prices: Array = history.slice(maxi(0, history.size() - 8), history.size())
+		var trend_percent := 0.0
+		if recent_prices.size() >= 2 and float(recent_prices[0]) > 0.0:
+			trend_percent = (float(recent_prices[recent_prices.size() - 1]) - float(recent_prices[0])) / float(recent_prices[0])
 		market_rows.append({
 			"item_id": String(item_id),
 			"name_key": definition.name_key,
@@ -32,6 +37,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"stock": int(entry.get("stock", 0)),
 			"buyable": bool(entry.get("buyable", true)),
 			"trend": _trend(entry),
+			"trend_percent": trend_percent,
+			"recent_prices": recent_prices,
 			"cargo_amount": ShipOps.cargo_amount(ship, String(item_id), true),
 			"sellable_amount": ShipOps.cargo_amount(ship, String(item_id), false),
 			"cargo_avg_cost": ShipOps.cargo_average_cost(ship, String(item_id), false),
@@ -95,10 +102,10 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"strategies": strategies,
 		"ship": _ship_view(hub, state, stats, ship),
 		"contracts": {
-			"main": _contract_view(hub, world, main_contract),
-			"main_offer": _contract_view(hub, world, main_offer),
-			"active": _contract_list(hub, world, contracts.get("active", [])),
-			"offers": _contract_list(hub, world, contracts.get("offers", [])),
+			"main": _contract_view(hub, state, main_contract),
+			"main_offer": _contract_view(hub, state, main_offer),
+			"active": _contract_list(hub, state, contracts.get("active", [])),
+			"offers": _contract_list(hub, state, contracts.get("offers", [])),
 			"completed": Array(contracts.get("completed", [])),
 			"next_main_sequence": int(contracts.get("next_main_sequence", 1)),
 		},
@@ -183,23 +190,51 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 	}
 
 
-static func _contract_view(hub: RegistryHub, world: Dictionary, contract: Variant) -> Variant:
+static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant) -> Variant:
 	if not (contract is Dictionary):
 		return null
+	var world := state.world()
 	var copy: Dictionary = contract.duplicate(true)
-	copy["destination_name_key"] = MapOps.port_display_key(world, String(contract.get("destination", "")))
-	copy["origin_name_key"] = MapOps.port_display_key(world, String(contract.get("origin", "")))
+	var origin := String(contract.get("origin", ""))
+	var destination := String(contract.get("destination", ""))
+	copy["destination_name_key"] = MapOps.port_display_key(world, destination)
+	copy["origin_name_key"] = MapOps.port_display_key(world, origin)
 	copy["deadline_label"] = ClockService.format_time(float(contract.get("deadline", 0.0)))
+	var remaining_hours := maxf(0.0, float(contract.get("deadline", 0.0)) - state.now())
+	copy["remaining_hours"] = remaining_hours
+	copy["remaining_label"] = _format_remaining(remaining_hours)
+	var template_id := String(contract.get("template_id", ""))
+	var template := hub.get_by_id(ContentTypes.CONTRACT, template_id)
+	if template != null:
+		copy["description_key"] = template.description_key
+	var route := MapOps.route_between(world, origin, destination)
+	var distance := float(route.get("distance", 0.0))
+	var ship_stats := ShipOps.stats(hub, state.ship())
+	var speed := maxf(1.0, float(ship_stats.get("speed", 12.0)))
+	copy["estimated_hours"] = distance / speed
+	copy["estimated_label"] = _format_remaining(distance / speed)
+	var risk := float(route.get("base_risk", 0.0))
+	copy["risk"] = "high" if risk >= 0.09 else ("medium" if risk >= 0.05 else "low")
 	return copy
 
 
-static func _contract_list(hub: RegistryHub, world: Dictionary, contracts: Variant) -> Array:
+static func _format_remaining(hours: float) -> String:
+	if hours <= 0.0:
+		return "已到期"
+	var days := int(hours / 24.0)
+	var remainder := int(hours) % 24
+	if days > 0:
+		return "%d天%d时" % [days, remainder]
+	return "%d时" % remainder
+
+
+static func _contract_list(hub: RegistryHub, state: GameState, contracts: Variant) -> Array:
 	var result: Array = []
 	if not (contracts is Array):
 		return result
 	for contract in contracts:
 		if contract is Dictionary:
-			result.append(_contract_view(hub, world, contract))
+			result.append(_contract_view(hub, state, contract))
 	return result
 
 

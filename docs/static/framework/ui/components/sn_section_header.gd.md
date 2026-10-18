@@ -13,6 +13,7 @@
 ## 契约与约束
 
 - 内部子节点只创建一次，运行时和 `@tool` 编辑器预览共享同一同步路径。
+- 子标签使用 SNEyebrowLabel/SNTitleLabel/SNDetailLabel 变体，颜色与字号由 Theme 决定。
 - detail 为空时隐藏右侧标签，标题区自动占满剩余宽度。
 
 模块索引：[framework/ui](../README.md)

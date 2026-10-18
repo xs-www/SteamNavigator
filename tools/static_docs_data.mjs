@@ -304,9 +304,10 @@ export const FILE_DOCS = {
   "framework/application/queries/port_view.gd": {
     role: "主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知与统计。",
     contracts: [
-      "所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable 与持仓均价。",
+      "所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable、持仓均价与价格历史。",
+      "市场行的 recent_prices 与 trend_percent 只来自真实 price_history；样本不足时 sparkline 不绘制折线。",
       "目的地只列当前港的相邻航线，标记未知设施与风险。",
-      "委托 ViewModel 额外提供目的港名称键与期限显示文本。",
+      "委托 ViewModel 提供目的港名称键、剩余期限、预计航程、风险和说明键；风险/航程由查询层计算，卡片不调用航行公式。",
       "船只 ViewModel 的 cargo_cost_basis 与 average_cost 来自 ShipOps 的成本口径。",
       "不返回 ContentDefinition 或 GameState 内部引用。"
     ]
@@ -331,10 +332,10 @@ export const FILE_DOCS = {
   },
 
   "framework/application/queries/supply_view.gd": {
-    role: "补给界面 ViewModel：市场煤水价/库存、载重余量与维修报价。",
+    role: "补给界面 ViewModel：煤水价/库存、载重余量、可补上限、预计续航与维修报价。",
     contracts: [
       "煤水单价与港口库存来自 `MarketOps.supply_entry_for()`，不再使用固定价格。",
-      "可买上限同时受剩余载重、金币和港口库存限制。",
+      "可买上限同时受剩余载重、金币和港口库存限制；`coal_view`/`water_view` 额外给出 fill_to、safe_level、estimated_days、fill_cost 和 blocker 代码。",
       "维修报价与 supply.repair 共用 `MarketOps.repair_cost()`，UI 不复制耐久/改装修正。",
       "当前港没有 supply 设施时 has_supply=false，界面禁用补给与维修。"
     ]
@@ -428,6 +429,7 @@ export const FILE_DOCS = {
       "煤/水以 `is_supply=true` 的补给商品进入每个港口市场，初始库存 90–180，价格与普通商品同一供需公式。",
       "买入检查 buyable、货币、库存、总重量与货舱容量；卖出允许所有非合同货物；补给商品只能走补给码头。",
       "玩家买卖只把价格向新均衡推进 `player_trade_impact`（默认 0.35）；NPC 交易仍完整重算。",
+      "每个可买入市场条目维护最多 8 个真实价格样本 `price_history`；非本地收购项不写历史，避免伪造趋势。",
       "买入把成交总额写入 cargo stack 的 total_cost，卖出按数量比例扣减成本。",
       "补给只检查设施、库存、重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。",
       "`ensure_sell_only_entries()` 为旧存档补齐非本地收购项与补给商品。"
@@ -689,8 +691,9 @@ export const FILE_DOCS = {
       "海图点击已访问港口：当前港跳转市场，远程港打开只读港口记忆。",
       "启动主菜单使用全屏港口背景；进入游戏后保留顶部导航，并用共享 Theme 的徽标/章节标题/资源条构建信息层级。",
       "总览港口横幅通过 Core manifest 的 `banner.port.*` 资产键与 `banner_asset` 字段解析；无横幅港口退回普通面板。",
-      "市场页显示 buyable 与持仓均价；仅收购品种不显示买入按钮。",
-      "委托页使用两列卡片；接取/规划按钮与状态通过 Badge 表达。",
+      "市场页显示 buyable 与持仓均价；仅收购品种不显示买入按钮，并用真实 price_history 绘制迷你折线。",
+      "委托页使用两列卡片和“可接/进行中”分区；固定结构含目的地、剩余期限、载重、预计航程、说明与声望。",
+      "补给页使用 SNSupplyCard 展示煤水存量、可补上限、港存、续航和补满花费；页面只发 command_requested。",
       "补给页显示市场煤水价、港口库存、载重余量、可买上限和维修报价，按钮直接派发 supply.* 命令。",
       "抵达后进入只读结算页，显示委托收入、准时、延误、煤水/耐久与交付明细。",
       "交易、委托接取和补给购买成功后播放 pickup_gold_00.wav。",
@@ -729,6 +732,7 @@ export const FILE_DOCS = {
     role: "章节标题组合控件：眉题、标题和可选右侧说明。",
     contracts: [
       "内部子节点只创建一次，运行时和 `@tool` 编辑器预览共享同一同步路径。",
+      "子标签使用 SNEyebrowLabel/SNTitleLabel/SNDetailLabel 变体，颜色与字号由 Theme 决定。",
       "detail 为空时隐藏右侧标签，标题区自动占满剩余宽度。"
     ]
   },
@@ -742,12 +746,30 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/ui/components/sn_supply_card.gd": {
+    role: "单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。",
+    dependencies: ["SNResourceMeter", "SNBadge", "steam_navigator_theme.tres"],
+    contracts: [
+      "只渲染传入的 ViewModel 并发出 `command_requested(command, params)`；不访问 CommandBus。",
+      "最大购买量由查询层计算；卡片禁用 +5/+10/补满时必须已有明确的 blocker 文本。",
+      "`maximum` 是补给后可达上限，不是固定舱容；UI 文案使用“可补至”避免误导。"
+    ]
+  },
+
+  "framework/ui/components/sn_sparkline.gd": {
+    role: "市场价格历史迷你折线；只有两个以上真实样本才绘制。",
+    contracts: [
+      "样本不足时显示“样本不足”，不根据 up/down 状态伪造折线。",
+      "输入为真实价格历史数组；颜色由调用页面按趋势传入。"
+    ]
+  },
+
   "framework/ui/showcase/ui_kit_showcase.gd": {
     role: "独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。",
-    dependencies: ["SNButton", "SNPanel", "SNBadge", "SNSectionHeader", "SNResourceMeter"],
+    dependencies: ["SNButton", "SNPanel", "SNBadge", "SNSectionHeader", "SNResourceMeter", "SNSupplyCard", "SNSparkline"],
     contracts: [
       "不依赖 AppContext 或 Core 内容，可在编辑器中单独运行。",
-      "展示按钮、徽标、资源条、输入框、选项框与复选框的默认/禁用/焦点样式。"
+      "展示按钮、徽标、资源条、补给卡、价格折线、输入框、选项框与复选框的默认/禁用/焦点样式。"
     ]
   },
 
@@ -755,7 +777,7 @@ export const FILE_DOCS = {
     role: "全局 Godot Theme：把深青、黄铜、纸色令牌映射为基础控件与语义变体。",
     contracts: [
       "基础类型覆盖 Button、PanelContainer、LineEdit、OptionButton、ProgressBar 与容器间距。",
-      "自定义 variation 名称由 framework/ui/components 使用；删除或改名时必须同步控件脚本。",
+      "自定义 variation 包含按钮/面板/徽标/标签/进度条；删除或改名时必须同步控件脚本。",
       "字体使用 SystemFont 回退链，不把本机字体文件写入资源。"
     ]
   },

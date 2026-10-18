@@ -904,7 +904,21 @@ func _screen_market(data: Dictionary) -> void:
 		grid.add_child(_label("%d / %d" % [int(row.get("cargo_amount", 0)), int(row.get("sellable_amount", 0))], 13, COLOR_TEXT))
 		var average_cost := float(row.get("cargo_avg_cost", 0.0))
 		grid.add_child(_label(_fmt(average_cost) if average_cost > 0.0 else "—", 13, COLOR_TEXT))
-		grid.add_child(_label(_trend_text(trends.get(item_id, "")), 13, _trend_color(trends.get(item_id, ""))))
+		var trend_cell := HBoxContainer.new()
+		trend_cell.add_theme_constant_override("separation", 4)
+		var spark := SNSparkline.new()
+		spark.custom_minimum_size = Vector2(58, 22)
+		spark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var recent_prices: Array = row.get("recent_prices", [])
+		spark.set_values(recent_prices, _trend_color(trends.get(item_id, "")))
+		trend_cell.add_child(spark)
+		var trend_percent := float(row.get("trend_percent", 0.0)) * 100.0
+		trend_cell.add_child(_label(
+			("%+.1f%%" % trend_percent) if recent_prices.size() >= 2 else "—",
+			11,
+			_trend_color(trends.get(item_id, ""))
+		))
+		grid.add_child(trend_cell)
 		var buy_row := HBoxContainer.new()
 		buy_row.add_theme_constant_override("separation", 2)
 		if buyable:
@@ -996,35 +1010,45 @@ func _screen_port_memory(_data: Dictionary) -> void:
 
 func _screen_contracts(data: Dictionary) -> void:
 	var contracts: Dictionary = data.get("contracts", {})
-	_root_box.add_child(_page_heading("海事局委托处", "可接委托", "主线只能同时进行一个；普通委托持有上限随声誉提高。"))
-
-	var any := false
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.add_theme_constant_override("h_separation", 16)
-	grid.add_theme_constant_override("v_separation", 16)
-	_root_box.add_child(grid)
+	_root_box.add_child(_page_heading("海事局委托处", "委托与航线", "主线只能同时进行一个；普通委托持有上限随声誉提高。"))
 	var main_contract: Variant = contracts.get("main", null)
-	if main_contract is Dictionary:
-		any = true
-		grid.add_child(_contract_card(main_contract, "主线进行中", false, true))
 	var main_offer: Variant = contracts.get("main_offer", null)
-	if main_offer is Dictionary:
-		any = true
-		grid.add_child(_contract_card(main_offer, "可接主线", true, false))
 	var offers: Array = contracts.get("offers", [])
-	for offer in offers:
-		if offer is Dictionary:
-			any = true
-			grid.add_child(_contract_card(offer, "普通委托", true, false))
 	var active: Array = contracts.get("active", [])
-	for contract in active:
-		if contract is Dictionary:
-			any = true
-			grid.add_child(_contract_card(contract, "普通进行中", false, true))
-	if not any:
-		grid.queue_free()
+
+	var available_count := offers.size() + (1 if main_offer is Dictionary else 0)
+	if available_count > 0:
+		var available_header := HBoxContainer.new()
+		var available_title := _label("可接委托", 18, COLOR_BRASS)
+		available_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		available_header.add_child(available_title)
+		available_header.add_child(_badge("%d 个" % available_count, SNBadge.Tone.NEUTRAL))
+		_root_box.add_child(available_header)
+		var grid := _contract_grid()
+		_root_box.add_child(grid)
+		if main_offer is Dictionary:
+			grid.add_child(_contract_card(main_offer, "可接主线", true, false))
+		for offer in offers:
+			if offer is Dictionary:
+				grid.add_child(_contract_card(offer, "普通委托", true, false))
+
+	var active_count := active.size() + (1 if main_contract is Dictionary else 0)
+	if active_count > 0:
+		var active_header := HBoxContainer.new()
+		var active_title := _label("进行中", 18, COLOR_BRASS)
+		active_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		active_header.add_child(active_title)
+		active_header.add_child(_badge("%d 个" % active_count, SNBadge.Tone.SUCCESS))
+		_root_box.add_child(active_header)
+		var grid := _contract_grid()
+		_root_box.add_child(grid)
+		if main_contract is Dictionary:
+			grid.add_child(_contract_card(main_contract, "主线进行中", false, true))
+		for contract in active:
+			if contract is Dictionary:
+				grid.add_child(_contract_card(contract, "普通进行中", false, true))
+
+	if available_count == 0 and active_count == 0:
 		var empty := _panel()
 		_panel_add(empty, _label(_tr("ui.label.no_contracts", "暂无委托"), 14, COLOR_MUTED))
 		_root_box.add_child(empty)
@@ -1038,41 +1062,106 @@ func _screen_contracts(data: Dictionary) -> void:
 		_root_box.add_child(panel)
 
 
+func _contract_grid() -> GridContainer:
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 16)
+	return grid
+
+
 func _contract_card(contract: Dictionary, tag: String, can_accept: bool, can_plan: bool) -> Control:
 	var panel := _panel()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.theme_type_variation = &"SNElevatedPanel"
+	var is_main := tag.begins_with("主线")
 	var title_row := HBoxContainer.new()
-	var title := _label(_tr(String(contract.get("name_key", "")), String(contract.get("template_id", ""))), 16, COLOR_BRASS)
+	var title := _label(_tr(String(contract.get("name_key", "")), String(contract.get("template_id", ""))), 18, COLOR_BRASS)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_row.add_child(title)
-	title_row.add_child(_badge(tag, SNBadge.Tone.SUCCESS if can_plan else SNBadge.Tone.WARNING))
+	title_row.add_child(_badge("主线" if is_main else "普通", SNBadge.Tone.WARNING if is_main else SNBadge.Tone.NEUTRAL))
+	var risk := String(contract.get("risk", "low"))
+	title_row.add_child(_badge(_risk_label(risk), _risk_tone(risk)))
 	_panel_add(panel, title_row)
-	_panel_add(panel, _label("%s → %s" % [
-		_tr(String(contract.get("origin_name_key", "")), String(contract.get("origin", ""))),
-		_tr(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))),
-	], 14, COLOR_TEXT))
-	_panel_add(panel, _label("期限 %s" % String(contract.get("deadline_label", "")), 13, COLOR_MUTED))
-	_panel_add(panel, _label(_contract_payload_text(contract), 13, COLOR_TEXT))
-	_panel_add(panel, _label(_contract_reward_text(contract), 13, COLOR_TEXT))
+
+	var data_row := HBoxContainer.new()
+	data_row.add_theme_constant_override("separation", 6)
+	var remaining := float(contract.get("remaining_hours", 0.0))
+	data_row.add_child(_contract_stat("目的地", _tr(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), COLOR_TEXT))
+	data_row.add_child(VSeparator.new())
+	data_row.add_child(_contract_stat("剩余期限", String(contract.get("remaining_label", "—")), COLOR_RED if remaining < 24.0 else COLOR_TEXT))
+	data_row.add_child(VSeparator.new())
+	data_row.add_child(_contract_stat("载重", _contract_payload_text(contract).trim_prefix("载荷："), COLOR_TEXT))
+	data_row.add_child(VSeparator.new())
+	data_row.add_child(_contract_stat("预计航程", String(contract.get("estimated_label", "—")), COLOR_MUTED))
+	_panel_add(panel, data_row)
+
+	var description_key := String(contract.get("description_key", ""))
+	if not description_key.is_empty():
+		var description := _label(_tr(description_key, ""), 13, COLOR_MUTED)
+		description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		description.max_lines_visible = 2
+		_panel_add(panel, description)
+	var deadline_label := _label("截止 %s" % String(contract.get("deadline_label", "")), 11, COLOR_MUTED)
+	deadline_label.tooltip_text = _tr("ui.label.deadline_hint", "绝对时间仅作参考，优先看剩余期限")
+	_panel_add(panel, deadline_label)
+	var reward_row := HBoxContainer.new()
+	var reward := _label(_contract_reward_text(contract), 14, COLOR_TEXT)
+	reward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	reward_row.add_child(reward)
+	reward_row.add_child(_badge("声望 +%d" % int(contract.get("reputation", 0)), SNBadge.Tone.SUCCESS))
+	_panel_add(panel, reward_row)
 	var unlock_text := _contract_unlock_text(contract)
 	if not unlock_text.is_empty():
-		_panel_add(panel, _label("解锁：%s" % unlock_text, 13, COLOR_TEAL))
-	var time_hint := _contract_time_hint(contract)
-	if not time_hint.is_empty():
-		_panel_add(panel, _label(time_hint, 12, COLOR_MUTED))
+		_panel_add(panel, _label("解锁：%s" % unlock_text, 12, COLOR_TEAL))
+
 	var buttons := HBoxContainer.new()
 	if can_accept:
-		buttons.add_child(_button(_tr("ui.button.accept", "接受"), _on_accept_contract.bind(String(contract.get("instance_id", "")))))
+		var accept := _button(_tr("ui.button.accept", "接受"), _on_accept_contract.bind(String(contract.get("instance_id", ""))))
+		accept.theme_type_variation = &"SNPrimaryButton"
+		buttons.add_child(accept)
 	if can_plan:
 		var destination := String(contract.get("destination", ""))
 		var plan := _button(_tr("ui.button.plan", "规划出航"), _on_plan_contract.bind(destination))
+		plan.theme_type_variation = &"SNPrimaryButton" if not can_accept else &"SNSecondaryButton"
 		plan.disabled = not _is_neighbor(destination)
 		buttons.add_child(plan)
 	if buttons.get_child_count() > 0:
 		_panel_add(panel, buttons)
+	if can_plan and not _is_neighbor(String(contract.get("destination", ""))):
+		_panel_add(panel, _label("目的港不直达，需要先到中转港。", 11, COLOR_RED))
 	return panel
+
+
+func _contract_stat(label_text: String, value_text: String, value_color: Color) -> Control:
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 1)
+	column.add_child(_label(label_text, 10, COLOR_MUTED))
+	column.add_child(_label(value_text, 14, value_color))
+	return column
+
+
+func _risk_tone(risk: String) -> int:
+	match risk:
+		"high":
+			return SNBadge.Tone.DANGER
+		"medium":
+			return SNBadge.Tone.WARNING
+		_:
+			return SNBadge.Tone.SUCCESS
+
+
+func _risk_label(risk: String) -> String:
+	match risk:
+		"high":
+			return "高风险"
+		"medium":
+			return "中等风险"
+		_:
+			return "低风险"
 
 
 func _contract_payload_text(contract: Dictionary) -> String:
@@ -1273,69 +1362,85 @@ func _screen_supply(_data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var supply: Dictionary = result["data"]
-	_root_box.add_child(_page_heading("港务补给站", "补给与装载", "煤水价格随港口库存浮动；补给计入总重量。"))
-	var panel := _panel()
-	if not bool(supply.get("has_supply", false)):
-		_panel_add(panel, _label("当前港口没有补给码头。", 14, COLOR_RED))
-	_panel_add(panel, _label("煤炭 %s · 淡水 %s · 耐久 %s / %s" % [
-		_fmt(float(supply.get("coal", 0.0))),
-		_fmt(float(supply.get("water", 0.0))),
-		_fmt(float(supply.get("durability", 0.0))),
-		_fmt(float(supply.get("repair", {}).get("max_durability", 0.0))),
-	], 14, COLOR_TEXT))
-	_panel_add(panel, _label("重量 %s / %s · 剩余载重 %s · 金币 %d" % [
+	var port_name := _tr(String(supply.get("port_name_key", "")), String(supply.get("port_id", "")))
+	_root_box.add_child(_page_heading("港务补给站", "补给与维护 · %s" % port_name, "煤水按当前港价购买；补给计入总重量。"))
+
+	var summary := _panel()
+	summary.theme_type_variation = &"SNInsetPanel"
+	var summary_row := HBoxContainer.new()
+	summary_row.add_theme_constant_override("separation", 18)
+	summary_row.add_child(_badge("金币 %d" % int(supply.get("money", 0)), SNBadge.Tone.NEUTRAL))
+	summary_row.add_child(_badge("重量 %s / %s" % [
 		_fmt(float(supply.get("total_weight", 0.0))),
 		_fmt(float(supply.get("max_weight", 0.0))),
-		_fmt(float(supply.get("remaining_weight", 0.0))),
-		int(supply.get("money", 0)),
-	], 13, COLOR_MUTED))
-	_panel_add(panel, _label("补给价格随港口库存和商船流动浮动；补给计入总重量。", 12, COLOR_MUTED))
-	_root_box.add_child(panel)
+	], SNBadge.Tone.NEUTRAL))
+	summary_row.add_child(_badge("剩余载重 %s" % _fmt(float(supply.get("remaining_weight", 0.0))), SNBadge.Tone.WARNING))
+	summary_row.add_child(_badge("耐久 %s / %s" % [
+		_fmt(float(supply.get("durability", 0.0))),
+		_fmt(float(supply.get("repair", {}).get("max_durability", 0.0))),
+	], SNBadge.Tone.SUCCESS))
+	_panel_add(summary, summary_row)
+	if not bool(supply.get("has_supply", false)):
+		_panel_add(summary, _label("当前港口没有补给码头。", 14, COLOR_RED))
+	_root_box.add_child(summary)
 
-	var coal_panel := _panel()
-	_panel_add(coal_panel, _label("%s · 单价 %s · %s %d · 最多可买 %d" % [
-		_tr("ui.label.coal", ""),
-		_fmt(float(supply.get("coal_price", 0.0))),
-		_tr("ui.label.port_stock", ""),
-		int(supply.get("coal_stock", 0)),
-		int(supply.get("max_coal", 0)),
-	], 16, COLOR_BRASS))
-	var coal_buttons := HBoxContainer.new()
-	for amount in [5, 10, 25]:
-		var button := _button("买入 %d" % amount, _on_buy_coal.bind(amount))
-		button.disabled = not bool(supply.get("has_supply", false)) or int(supply.get("max_coal", 0)) < amount
-		coal_buttons.add_child(button)
-	_panel_add(coal_panel, coal_buttons)
-	_root_box.add_child(coal_panel)
-
-	var water_panel := _panel()
-	_panel_add(water_panel, _label("%s · 单价 %s · %s %d · 最多可买 %d" % [
-		_tr("ui.label.water", ""),
-		_fmt(float(supply.get("water_price", 0.0))),
-		_tr("ui.label.port_stock", ""),
-		int(supply.get("water_stock", 0)),
-		int(supply.get("max_water", 0)),
-	], 16, COLOR_BRASS))
-	var water_buttons := HBoxContainer.new()
-	for amount in [5, 10, 25]:
-		var button := _button("买入 %d" % amount, _on_buy_water.bind(amount))
-		button.disabled = not bool(supply.get("has_supply", false)) or int(supply.get("max_water", 0)) < amount
-		water_buttons.add_child(button)
-	_panel_add(water_panel, water_buttons)
-	_root_box.add_child(water_panel)
+	var cards := HFlowContainer.new()
+	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cards.add_theme_constant_override("h_separation", 16)
+	cards.add_theme_constant_override("v_separation", 16)
+	_root_box.add_child(cards)
+	for kind in ["coal", "water"]:
+		var data: Dictionary = supply.get("%s_view" % kind, {})
+		var card := SNSupplyCard.new()
+		card.custom_minimum_size = Vector2(560, 250)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.bind(data, _tr("ui.label.%s" % kind, ""), _supply_blocker_labels(data.get("blockers", [])))
+		card.command_requested.connect(_on_supply_card_command)
+		cards.add_child(card)
 
 	var repair_panel := _panel()
+	repair_panel.theme_type_variation = &"SNElevatedPanel"
 	var repair: Dictionary = supply.get("repair", {})
-	_panel_add(repair_panel, _label("维修", 16, COLOR_BRASS))
+	var repair_header := HBoxContainer.new()
+	var repair_title := _label("维修", 20, COLOR_BRASS)
+	repair_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	repair_header.add_child(repair_title)
+	repair_header.add_child(_badge(
+		"可维修" if bool(supply.get("can_repair", false)) else "无需维修或资源不足",
+		SNBadge.Tone.SUCCESS if bool(supply.get("can_repair", false)) else SNBadge.Tone.WARNING
+	))
+	_panel_add(repair_panel, repair_header)
 	_panel_add(repair_panel, _label("缺失耐久 %s · 预计费用 %d 金币（单位维修价 %s）" % [
 		_fmt(float(repair.get("missing", 0.0))),
 		int(repair.get("cost", 0)),
 		_fmt(float(supply.get("repair_per_point", 0.0))),
 	], 13, COLOR_TEXT))
 	var repair_button := _button(_tr("ui.button.repair", ""), _on_repair)
+	repair_button.theme_type_variation = &"SNPrimaryButton"
 	repair_button.disabled = not bool(supply.get("can_repair", false))
 	_panel_add(repair_panel, repair_button)
 	_root_box.add_child(repair_panel)
+
+
+func _on_supply_card_command(command: StringName, params: Dictionary) -> void:
+	_run_command(command, params)
+
+
+func _supply_blocker_labels(blockers: Array) -> Array:
+	var labels: Array = []
+	for blocker in blockers:
+		match String(blocker):
+			"no_supply":
+				labels.append(_tr("ui.error.no_supply", ""))
+			"no_stock":
+				labels.append(_tr("ui.error.insufficient_stock", ""))
+			"weight_limit":
+				labels.append(_tr("ui.error.weight", ""))
+			"insufficient_money":
+				labels.append(_tr("ui.error.money", ""))
+			_:
+				labels.append(String(blocker))
+	return labels
 
 
 ## ---------------------------------------------------------------------------
@@ -1773,14 +1878,6 @@ func _on_plan_contract(destination: String) -> void:
 
 func _on_install_module(module_id: String) -> void:
 	_run_command(&"ship.install_module", {"module_id": module_id})
-
-
-func _on_buy_coal(amount: int) -> void:
-	_run_command(&"supply.buy_coal", {"amount": amount})
-
-
-func _on_buy_water(amount: int) -> void:
-	_run_command(&"supply.buy_water", {"amount": amount})
 
 
 func _on_repair() -> void:

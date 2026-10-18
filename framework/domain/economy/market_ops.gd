@@ -7,6 +7,7 @@ const MIN_PRICE_FACTOR := 0.55
 const MAX_PRICE_FACTOR := 2.2
 const SELL_ONLY_PRICE_FACTOR := 0.9
 const DEFAULT_PLAYER_PRICE_IMPACT := 0.35
+const PRICE_HISTORY_LIMIT := 8
 
 
 static func create_market_entry(item_definition: ContentDefinition, stock: int, price_bias: float = 1.0) -> Dictionary:
@@ -22,6 +23,7 @@ static func create_market_entry(item_definition: ContentDefinition, stock: int, 
 		"elasticity": elasticity,
 		"buyable": true,
 		"price": 0.0,
+		"price_history": [],
 	}
 	recalc(entry)
 	return entry
@@ -45,6 +47,16 @@ static func compute_price(entry: Dictionary) -> float:
 
 static func recalc(entry: Dictionary) -> void:
 	entry["price"] = compute_price(entry)
+	if bool(entry.get("buyable", true)):
+		_push_price_history(entry, float(entry["price"]))
+
+
+static func _push_price_history(entry: Dictionary, price: float) -> void:
+	var history: Array = entry.get("price_history", [])
+	history.append(price)
+	while history.size() > PRICE_HISTORY_LIMIT:
+		history.pop_front()
+	entry["price_history"] = history
 
 
 ## Player trades move the live price only part-way toward the new equilibrium.
@@ -53,6 +65,8 @@ static func recalc(entry: Dictionary) -> void:
 static func _apply_player_price_change(entry: Dictionary, price_before: float, impact: float) -> void:
 	var target := compute_price(entry)
 	entry["price"] = lerpf(price_before, target, clampf(impact, 0.0, 1.0))
+	if bool(entry.get("buyable", true)):
+		_push_price_history(entry, float(entry["price"]))
 
 
 static func market_for(state: GameState, port_id: String) -> Dictionary:

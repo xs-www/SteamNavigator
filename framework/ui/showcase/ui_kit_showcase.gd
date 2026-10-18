@@ -6,6 +6,8 @@ const SNPanelScene := preload("res://framework/ui/components/sn_panel.tscn")
 const SNBadgeScene := preload("res://framework/ui/components/sn_badge.tscn")
 const SNSectionHeaderScene := preload("res://framework/ui/components/sn_section_header.tscn")
 const SNResourceMeterScene := preload("res://framework/ui/components/sn_resource_meter.tscn")
+const SNSupplyCardScene := preload("res://framework/ui/components/sn_supply_card.tscn")
+const SNSparklineScene := preload("res://framework/ui/components/sn_sparkline.tscn")
 
 
 func _ready() -> void:
@@ -31,6 +33,8 @@ func _build_showcase() -> void:
 	grid.add_child(_badge_panel())
 	grid.add_child(_meter_panel())
 	grid.add_child(_form_panel())
+	grid.add_child(_supply_panel())
+	grid.add_child(_sparkline_panel())
 
 
 func _button_panel() -> Control:
@@ -104,6 +108,44 @@ func _form_panel() -> Control:
 	check.text = "抵达时自动保存"
 	check.button_pressed = true
 	content.add_child(check)
+	return panel
+
+
+func _supply_panel() -> Control:
+	var panel := _panel_with_content("补给卡", "正常 / 禁用原因 / 最大购买")
+	var content := panel.get_meta("content") as VBoxContainer
+	var card := SNSupplyCardScene.instantiate() as SNSupplyCard
+	card.bind({
+		"kind": "coal",
+		"current": 31.0,
+		"fill_to": 40.0,
+		"maximum": 50.0,
+		"safe_level": 24.0,
+		"estimated_days": 6.2,
+		"price": 3.9,
+		"port_stock": 170,
+		"max_buy": 9,
+		"fill_cost": 35,
+	}, "煤炭", [])
+	content.add_child(card)
+	return panel
+
+
+func _sparkline_panel() -> Control:
+	var panel := _panel_with_content("价格趋势", "历史不足显示样本不足；有样本后绘制折线")
+	var content := panel.get_meta("content") as VBoxContainer
+	for prices in [[72, 75, 73, 79, 78, 84], [84, 82, 80, 77, 74, 71], [63]]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		var spark := SNSparklineScene.instantiate() as SNSparkline
+		spark.set_values(prices, Color("e1c487") if prices.size() > 1 and float(prices[prices.size() - 1]) >= float(prices[0]) else Color("c36b53"))
+		row.add_child(spark)
+		var note := Label.new()
+		note.text = "样本不足" if prices.size() < 2 else "%d 个样本" % prices.size()
+		note.add_theme_font_size_override("font_size", 11)
+		note.add_theme_color_override("font_color", Color("9fafa7"))
+		row.add_child(note)
+		content.add_child(row)
 	return panel
 
 

@@ -5,6 +5,13 @@ func test_main_chain_offer_and_accept() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4242})
+	var port_result := context.queries.execute(&"port.view")
+	var main_view: Dictionary = port_result["data"]["contracts"]["main"]
+	assert_true(not main_view.is_empty(), "current main contract is exposed")
+	assert_true(float(main_view["remaining_hours"]) > 0.0, "contract exposes remaining hours")
+	assert_true(not String(main_view["remaining_label"]).is_empty(), "contract exposes remaining label")
+	assert_true(float(main_view["estimated_hours"]) > 0.0, "contract exposes estimated voyage hours")
+	assert_contains(["low", "medium", "high"], String(main_view["risk"]), "contract risk is derived")
 	var destination := String(context.state.contracts()["main"]["destination"])
 	var voyage := context.commands.execute(&"voyage.start", {
 		"destination_id": destination,

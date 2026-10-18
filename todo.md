@@ -39,6 +39,8 @@
 - [x] 交易反馈：接入 `pickup_gold_00.wav`，买入/卖出/接委托/补给成功播放
 - [x] 页面切换 TransitionLayer：旧页淡出后重建，新页淡入；数据刷新不转场
 - [x] 新航程主按钮改用 `SNPrimaryButton`；章节标题改用语义 Label 变体
+- [x] 高频决策页第一轮：补给 `SNSupplyCard`、委托固定结构/可接与进行中分区、市场真实价格历史与 `SNSparkline`
+- [ ] 高频决策页第二轮：市场数量步进/即时成本、船厂槽位选择、持久 ScreenHost 与局部数据刷新
 
 ### 阶段 C：Core 内容（MVP 骨架）
 

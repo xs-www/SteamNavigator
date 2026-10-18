@@ -17,6 +17,10 @@
 | `components/sn_resource_meter.tscn` | 框架源文件：sn_resource_meter.tscn | 本页 |
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
+| `components/sn_sparkline.gd` | 市场价格历史迷你折线；只有两个以上真实样本才绘制。 | [查看](./components/sn_sparkline.gd.md) |
+| `components/sn_sparkline.tscn` | 框架源文件：sn_sparkline.tscn | 本页 |
+| `components/sn_supply_card.gd` | 单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。 | [查看](./components/sn_supply_card.gd.md) |
+| `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
 | `shell/main.gd` | 可玩 UI 外壳：共享 Theme 的主菜单、总览/市场/委托/船厂/补给/情报/出航、抵达结算、海图与诊断。 | [查看](./shell/main.gd.md) |
 | `shell/main.tscn` | 框架源文件：main.tscn | 本页 |
 | `showcase/ui_kit_showcase.gd` | 独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。 | [查看](./showcase/ui_kit_showcase.gd.md) |

@@ -24,6 +24,8 @@ func test_trade_buy_and_sell() -> void:
 	var after_buy_view := context.queries.execute(&"port.view")
 	var after_row := _field(after_buy_view["data"]["market"], "item_id", item_id)
 	assert_eq(int(after_row["cargo_amount"]), cargo_before + 2, "cargo amount increases")
+	assert_true(Array(after_row["recent_prices"]).size() >= 2, "buying appends a real price-history sample")
+	assert_true(float(after_row["trend_percent"]) >= 0.0, "trend percent is derived from history")
 	var sell := context.commands.execute(&"trade.sell", {"item_id": item_id, "amount": 1})
 	assert_true(bool(sell["ok"]), "sell succeeds: %s" % str(sell))
 	var after_sell_view := context.queries.execute(&"port.view")
