@@ -6,6 +6,7 @@
 - 架构文档：[框架 + 模组 v1.0](docs/蒸汽航海_项目架构方案_框架与模组_V1.0.md)
 - 静态代码文档：[docs/static/README.md](docs/static/README.md)
 - 美术/音频资产映射：[docs/design/ASSET_MAP.md](docs/design/ASSET_MAP.md)
+- 物品建模半工作流（派发给子代理）：[docs/design/MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)
 - UI 原型与落地说明：[docs/design/UI_PROTOTYPE.md](docs/design/UI_PROTOTYPE.md)
 - 高频决策页面重构指南：[docs/design/HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md](docs/design/HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md)
 - 任务与路线图：[todo.md](todo.md)
@@ -27,6 +28,7 @@
 - 最小 UI：开局构筑选择，以及总览、市场、委托、船厂、补给、情报、出航七个独立界面；共享蒸汽朋克 Theme、全屏主菜单背景、铁港横幅、两列委托卡、顶部导航、页面淡入淡出与抵达结算页。
 - 交易反馈：买入/卖出、接取委托、购买补给成功后播放金币音效；右下角固定开发团队与版本。
 - 高频决策页第一轮：补给卡（存量/可补上限/续航/补满花费）、委托固定五区卡片与可接/进行中分区、市场真实价格历史与迷你折线。
+- 海图重设计：三次贝塞尔曲线航路、经纬网、洋流、罗盘、图内图例、当前港脉冲光晕与更宽的图表布局。
 - 无头测试套件：**49 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突、港口记忆、补给与库存成本）。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
 - [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`。
