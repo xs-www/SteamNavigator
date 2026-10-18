@@ -34,7 +34,17 @@ const MODULE_PATHS = [
   "schemas",
   "dev_mods/core",
   "tools",
+  "SNModMaker",
 ];
+
+// Generated bundles are reproduced from schemas/ and dev_mods/core; they are
+// intentionally excluded from per-file docs and from the manifest.
+const SKIP_SOURCES = new Set([
+  "SNModMaker/js/schema-bundle.js",
+  "SNModMaker/js/core-index.js",
+  "SNModMaker/mods/.gitignore",
+  "SNModMaker/exports/.gitignore",
+]);
 
 const MODULE_OF = (source) => {
   for (const modulePath of MODULE_PATHS) {
@@ -57,6 +67,8 @@ function walk(dir, out = []) {
     if (entry.isDirectory()) {
       walk(full, out);
     } else {
+      const relative = path.relative(ROOT, full).replaceAll("\\", "/");
+      if (SKIP_SOURCES.has(relative)) continue;
       out.push(full);
     }
   }
@@ -98,8 +110,42 @@ function extractSymbols(relativePath, text) {
     const label = returnType ? `${name}(${args}) -> ${returnType}` : `${name}(${args})`;
     symbols.push({ label, line: lineAt(text, match.index), kind: "func" });
   }
-  symbols.sort((left, right) => left.line - right.line);
-  return symbols;
+
+  if (relativePath.endsWith(".js") || relativePath.endsWith(".mjs")) {
+    const jsFunctionRegex = /^(?: {2})?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)/gm;
+    for (const match of text.matchAll(jsFunctionRegex)) {
+      const args = match[2].split(",").map((arg) => arg.trim()).filter(Boolean).join(", ");
+      symbols.push({ label: `${match[1]}(${args})`, line: lineAt(text, match.index), kind: "func" });
+    }
+    const jsConstRegex = /^ {2}const\s+([A-Z][A-Z0-9_]+)\s*=/gm;
+    for (const match of text.matchAll(jsConstRegex)) {
+      symbols.push({ label: match[1], line: lineAt(text, match.index), kind: "const" });
+    }
+    const exportRegex = /root\.(SN[A-Za-z]+)\s*=\s*\{/g;
+    for (const match of text.matchAll(exportRegex)) {
+      symbols.push({ label: `${match[1]} (global)`, line: lineAt(text, match.index), kind: "export" });
+    }
+  }
+
+  const seen = new Set();
+  const unique = symbols.filter((symbol) => {
+    const key = `${symbol.label}@${symbol.line}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  unique.sort((left, right) => left.line - right.line);
+  return unique;
+}
+
+function sourceTypeLabel(source) {
+  if (source.endsWith(".gd")) return "GDScript 源文件";
+  if (source.endsWith(".js")) return "浏览器经典脚本";
+  if (source.endsWith(".mjs")) return "Node ES 模块";
+  if (source.endsWith(".html")) return "HTML 应用外壳";
+  if (source.endsWith(".css")) return "样式表";
+  if (source.endsWith(".json")) return "JSON 数据/配置";
+  return "项目配置/数据文件";
 }
 
 function ensureDir(dirPath) {
@@ -125,7 +171,7 @@ function perFileDoc(source) {
   if (metadata.dependencies && metadata.dependencies.length) {
     lines.push(`- 关键依赖：${metadata.dependencies.map((dep) => `\`${dep}\``).join("、")}`);
   }
-  lines.push(`- 类型：${source.endsWith(".gd") ? "GDScript 源文件" : "项目配置/数据文件"}`);
+  lines.push(`- 类型：${sourceTypeLabel(source)}`);
   lines.push("");
   if (symbols.length) {
     lines.push("## 关键符号");
@@ -277,6 +323,7 @@ function main() {
   l0.push("- 主界面：[main.gd](framework/ui/shell/main.gd.md)");
   l0.push("- 官方内容：[Core 内容包](dev_mods/core/README.md)");
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
+  l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");
   l0.push("");
   l0.push("## 模块索引");
   l0.push("");

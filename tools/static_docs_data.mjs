@@ -21,6 +21,7 @@ export const FILE_DOCS = {
     contracts: [
       "加载失败不抛异常：所有可预期错误进入 StartupReport，UI 据此进入诊断界面。",
       "即使 fatal，也会注册命令/查询并冻结空注册表，保证后续调用返回结构化错误。",
+      "默认扫描 `res://dev_mods`、`res://dist/mods`、`user://mods_dev`、`user://mods`；发布版追加可执行文件旁 `mods/`。",
       "测试可通过 `run(overrides)` 覆盖扫描根、存档目录、日志开关与自动存档。"
     ],
     l2: {
@@ -132,7 +133,8 @@ export const FILE_DOCS = {
       "ZIP 必须只有一个 manifest，且路径为 `mods/<id>/manifest.json`。",
       "松散目录允许 Godot 生成的 `.import`/`.uid` 元数据；ZIP 不允许。",
       "未知扩展名、脚本/动态库、路径穿越、超大包/文件数量均拒绝。",
-      "Manifest 同时经过 JSON Schema 与 `ModManifest` 语义检查。"
+      "Manifest 同时经过 JSON Schema 与 `ModManifest` 语义检查。",
+      "同名松散目录优先于 ZIP；core 的 ZIP 构建产物被松散 core 静默忽略，其他重复 ID 产生 warning。"
     ]
   },
 
@@ -698,6 +700,238 @@ export const FILE_DOCS = {
       "任何 fatal 或普通错误均以退出码 1 结束；纯警告退出码 0。",
       "使用 `dev_mods` 中的 Core，便于第三方内容依赖官方内容。"
     ]
+  },
+
+  "tools/gen_static_docs.mjs": {
+    role: "静态文档生成器：读取本文件的 FILE_DOCS/MODULES，生成镜像文档、模块 README、总计索引与带 SHA-256 的 manifest。",
+    contracts: [
+      "GDScript 符号按 `class_name/signal/const/func` 提取；`.js/.mjs` 额外提取顶层 function、常量与 `root.SN*` 导出。",
+      "生成前清空 `docs/static`；`SKIP_SOURCES` 中的生成物不进入文档与 manifest。",
+      "修改规则或分类后重新运行；`commit` 取当前 HEAD 短哈希。"
+    ]
+  },
+
+  "tools/static_docs_data.mjs": {
+    role: "静态文档的策展数据：文件职责/契约/L2、模块简介与分组角色。",
+    contracts: [
+      "只描述源码可证实的职责与约束；符号位置由生成器扫描，不手写行号。",
+      "新增源文件或模块时同步 FILE_DOCS、MODULES、GROUPED_ROLES 与 MODULE_PATHS。"
+    ]
+  },
+
+  "SNModMaker/index.html": {
+    role: "模组制作器的静态外壳：顶栏、导航/工作区/检视器布局，以及模态框、Toast、拖放与忙碌层宿主。",
+    contracts: [
+      "脚本按 `schema-bundle → core-index → catalog → zip → validate → store → io → ui → app` 顺序加载，全部为经典 script，支持 file://。",
+      "不引用外部字体、CDN、图片或模块；图标为内联 SVG / CSS。",
+      "`#datalists` 必须保持可被表单引用，不能使用 `display:none` 以外的移除方式。"
+    ]
+  },
+
+  "SNModMaker/css/app.css": {
+    role: "暗色工业主题与响应式布局：顶栏、侧栏、内容编辑器、表单控件、条件/效果编辑器、模态框与 Toast。",
+    contracts: [
+      "颜色、间距、字体通过 `:root` 变量统一；不引入外部字体。",
+      "`[hidden] { display: none !important; }` 支撑视图与过滤逻辑。",
+      "断点 1240 / 1000 / 800 / 760 / 560：编辑区单列、侧栏图标化、顶栏换行与操作压缩。"
+    ]
+  },
+
+  "SNModMaker/js/catalog.js": {
+    role: "内容类型展示元数据、字段标签、默认值、标签建议、条件/效果词汇与新建模板。",
+    dependencies: ["JSON Schema（结构约束）", "ContentTypes（类型/singular 映射）"],
+    contracts: [
+      "`TYPES` 的顺序决定侧栏分组与表单类型；每项的 `schema` 必须对应仓库 `schemas/` 文件。",
+      "`keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。",
+      "`DEFAULTS` 生成的定义必须能通过对应 Schema；新增字段时同步更新这里与 `store.js`。",
+      "操作码、公式、设施等词汇与框架注册表保持同源；页面只做候选与提示，不自行执行。"
+    ]
+  },
+
+  "SNModMaker/js/zip.js": {
+    role: "零依赖 ZIP 读写：中央目录解析、CRC32、store / deflate-raw 压缩，以及 ZIP 体积与路径限制。",
+    contracts: [
+      "写包使用 UTF-8 文件名标志；不支持 Zip64，读取时拒绝 0xFFFFFFFF 尺寸。",
+      "解压限制：最多 2000 条目、总解压体积 64 MB；每条校验 CRC。",
+      "压缩优先 `CompressionStream('deflate-raw')`，不可用或收益为负时退化为 store。",
+      "`build()` 只接收逻辑路径；`mods/<id>/` 前缀由 `store.toExportFiles()` 添加。"
+    ],
+    l2: {
+      "build(entries)": [
+        "先写本地文件头与数据，再写中央目录与 EOCD；偏移量按实际字节累计。",
+        "压缩失败不抛错，直接使用原始字节和 method=0。"
+      ],
+      "read(input)": [
+        "从尾部扫描 EOCD，按中央目录读取路径与偏移，再定位本地头数据起点。",
+        "method=8 使用 `DecompressionStream('deflate-raw')`；method=0 直接切片。"
+      ]
+    }
+  },
+
+  "SNModMaker/js/validate.js": {
+    role: "JSON Schema 子集校验器与 Steam Navigator 项目语义校验：ID、引用、本地化、补丁与清单一致性。",
+    dependencies: ["schema-bundle.js", "catalog.js", "core-index.js（可选外部引用检查）"],
+    contracts: [
+      "Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。",
+      "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
+      "语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。",
+      "同一问题按 severity/code/message/view 去重，最多收集 300 条 Schema 错误。"
+    ],
+    l2: {
+      "validateSchema(instance, schema, file)": [
+        "递归处理 `$ref`、allOf、anyOf/oneOf/not 探测、类型/枚举/范围/数组/对象约束。",
+        "`additionalProperties: false` 报告未知字段；组合器探测使用独立 context，避免文件基准污染。"
+      ],
+      "flattenObject(schema, file)": [
+        "合并 `$ref` 与 allOf 的 properties/required，仅用于表单渲染，不用于替代校验。"
+      ],
+      "validateProject(project)": [
+        "先跑 Manifest Schema 与内容文件 Schema，再检查命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。",
+        "引用本模组缺失为 error；Core 缺失为 warning；其他命名空间只提示外部引用。",
+        "结果包含 counts 与 stats（定义/文件/语言/资源数量）。"
+      ]
+    }
+  },
+
+  "SNModMaker/js/store.js": {
+    role: "项目模型与纯数据操作：模板、定义增删改复制、Manifest 同步、导入导出映射与 Core 克隆。",
+    dependencies: ["catalog.js", "core-index.js"],
+    contracts: [
+      "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
+      "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
+      "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
+      "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
+      "资产以 data URL 存项目；导出时解码为字节；`checksum` 不在网页端计算。"
+    ],
+    l2: {
+      "createProject(options)": [
+        "创建 Manifest + zh_CN/en 两个语言文件，再按模板写入定义；模板包含 goods / boiler / event / starter_kit / blank。",
+        "模板只使用默认值与 Core 引用，生成后立即由 `syncManifest()` 对齐清单。"
+      ],
+      "addDefinition(project, typeKey, options)": [
+        "生成唯一 local ID、完整 ID、名称/描述键，填充嵌套选项键，并同步创建/更新双语翻译。",
+        "`localeExtras` 用于模板中的公告文本；`optionNamesZh/En` 用于事件选项的可读名。"
+      ],
+      "cloneCoreDefinition(project, coreDefinitionId)": [
+        "深拷贝 Core 定义，按 `name_key` 推导旧键基，改写全部 `_key` 字符串与本地化条目。",
+        "新 ID 与键基使用当前模组命名空间，并在名称后追加“副本”。"
+      ],
+      "toExportFiles(project, options)": [
+        "产出 manifest、内容、本地化与二进制资产；`prefix:false` 用于文件夹导出。",
+        "内容 envelope 只保留 `schema_version/content_type/definitions`。"
+      ],
+      "fromFiles(entries)": [
+        "定位最短路径的 `manifest.json`，剥离根目录；按清单读取内容/本地化/资产。",
+        "缺失声明文件生成占位并返回 warnings；未知 content_type 跳过。"
+      ]
+    }
+  },
+
+  "SNModMaker/js/io.js": {
+    role: "浏览器 I/O：IndexedDB 项目库、文件/文件夹/ZIP 导入、下载、File System Access 目录导出。",
+    contracts: [
+      "IndexedDB 数据库 `snmodmaker`、对象仓库 `projects`（keyPath=uid）；打开超过 3 秒视为不可用，由 app 回退 localStorage。",
+      "文件夹/拖放导入递归读取 `webkitGetAsEntry`；ZIP 交给 `SNZip.read()`。",
+      "目录导出需要 Chromium 的 `showDirectoryPicker`，在所选父目录下创建 `<mod_id>/`。",
+      "检测到 `tools/serve.mjs` 时使用同源 `/api` 读写 `mods/` 与 `exports/`；`detectBackend` 1.5s 超时后静默退化。",
+      "下载使用 Blob URL；不向外部网络上传任何内容。"
+    ]
+  },
+
+  "SNModMaker/js/ui.js": {
+    role: "Schema 驱动的表单渲染与通用 UI 组件：字段控件、数组/条件/效果编辑器、模态框、Toast、Datalist。",
+    dependencies: ["validate.flattenObject/deref", "store", "catalog"],
+    contracts: [
+      "渲染层只输出 HTML；所有编辑通过 `data-field` / `data-action` 交给 app.js，不直接修改项目。",
+      "表单字段类型、枚举、范围与必填来自 Schema；专用控件只针对 modifier/material/payload/condition/effect/option 等结构。",
+      "所有用户文本与属性值经过 `esc/attr` 转义；引用候选来自当前项目 + Core 索引。",
+      "表单生成的路径是相对定义的属性路径（manifest 除外），与 app.setByPath 的约定一致。"
+    ],
+    l2: {
+      "renderField(field, schema, value, path, ctx, options, schemaFile)": [
+        "先解引用；按 `id_ref/range2/modifier/craft_material/payload/option_data/effect/condition_node` 分派专用控件，再按 type/enum 分派通用控件。",
+        "递归传入当前 schema 文件，保证 common.schema.json 内的本地 `$ref` 能正确解析。"
+      ],
+      "renderDefinitionForm(ctx)": [
+        "普通定义渲染身份区（ID/名称键/描述键/标签/启用）与数据区；补丁定义渲染目标、来源约束与操作列表。",
+        "ID 输入只显示 local 部分，前缀由 app 在写回时补齐。"
+      ],
+      "renderCondition(value, path, ctx)": [
+        "支持 leaf、all、any、not 递归；操作码切换只保留适用字段。",
+        "空条件显示“始终满足”，由 app 添加首个节点。"
+      ]
+    }
+  },
+
+  "SNModMaker/js/app.js": {
+    role: "应用控制器：视图状态、事件委托、表单写回、撤销/重做、自动保存、导入导出与 Modal 流程。",
+    dependencies: ["store", "validate", "ui", "io", "catalog", "zip（经 io）"],
+    contracts: [
+      "`state.project` 是唯一项目源；视图与选择状态不写入导出 JSON。",
+      "文本输入只更新模型并调度校验/保存，不整页重绘；结构操作才重绘并保留滚动位置。",
+      "历史快照最多 40 个；一次焦点内的连续输入只压入一个快照。",
+      "自动保存有 800ms 防抖，并用 revision 防止旧保存清除新改动；IDB 失败回退 localStorage。",
+      "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
+      "Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。"
+    ],
+    l2: {
+      "applyField(element, fromChange)": [
+        "区分 manifest 与当前定义；数字/整数/布尔/JSON 各有解析，解析失败不写回。",
+        "ID 输入按前缀重建完整 ID，并同步重命名以旧 `name_key` 为基的 `_key` 与翻译。",
+        "空描述键与空 checksum 会删除字段，避免违反可选字段的 pattern/minLength。"
+      ],
+      "saveNow()": [
+        "写入 IndexedDB；失败时写 localStorage 并标记存储模式。",
+        "保存完成后比较 revision：有更新则保持 dirty 并排队下一次保存。"
+      ],
+      "importEntries(entries)": [
+        "识别单个 `.zip`、单个 `.snmodproj.json` 或目录文件集；导入后立即保存并展示 warnings。",
+        "所有解析错误转换为 Toast，不改变当前项目。"
+      ]
+    }
+  },
+
+  "SNModMaker/tools/sync-schemas.mjs": {
+    role: "把 `schemas/*.schema.json` 打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。",
+    contracts: [
+      "生成文件头带 AUTO-GENERATED 标记；修改 Schema 后必须重跑。",
+      "只做 JSON 解析与嵌入，不校验 Schema 自身。"
+    ]
+  },
+
+  "SNModMaker/tools/sync-core-index.mjs": {
+    role: "从 `dev_mods/core` 生成 `js/core-index.js`：Manifest、内容文件、双语本地化与定义索引。",
+    contracts: [
+      "索引用于引用候选、中文名、外部引用检查与从 Core 复制。",
+      "修改 Core 内容或本地化后必须重跑。"
+    ]
+  },
+
+  "SNModMaker/tools/serve.mjs": {
+    role: "零依赖本地静态服务器 + 磁盘 API：项目写入 `mods/<id>/`，ZIP 写入 `exports/`。",
+    contracts: [
+      "仅监听 127.0.0.1；默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` 覆盖数据目录。",
+      "API：status、projects 的 GET/PUT/DELETE、exports 的 GET/POST/DELETE；请求体上限 128 MB。",
+      "项目先写临时目录再替换，文件路径拒绝绝对路径、`..`、盘符与超过 16 层。",
+      "静态文件带 `Cache-Control: no-store`，路径解析后必须位于 SNModMaker 目录内。"
+    ]
+  },
+
+  "SNModMaker/tests/run-tests.js": {
+    role: "Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP 与导入导出往返。",
+    contracts: [
+      "不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。",
+      "覆盖 28 个用例；任何失败以退出码 1 结束。"
+    ]
+  },
+
+  "SNModMaker/tests/browser-smoke.mjs": {
+    role: "Chrome DevTools Protocol 冒烟测试：新建项目、编辑、本地化、检视、自动保存、ZIP、导入与撤销。",
+    contracts: [
+      "需要 Chrome 以 `--remote-debugging-port=9222` 启动，并已有静态服务。",
+      "测试开始前清空该 origin 的存储；直接调用页面内 `SN*` 模块做导出/导入断言。",
+      "收集 `Runtime.exceptionThrown` 与 console error，任何一条都会导致非零退出。"
+    ]
   }
 };
 
@@ -790,6 +1024,16 @@ export const MODULES = {
       "`gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。"
     ]
   },
+  "SNModMaker": {
+    intro: "零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。",
+    contracts: [
+      "运行时无第三方依赖、无构建步骤、无 CDN；经典 script 以支持 file://。",
+      "Schema 与 Core 数据以仓库为唯一来源；`schema-bundle.js` / `core-index.js` 只由生成脚本产出。",
+      "导出 JSON 与 Godot 加载链共享同一套 Schema；网页端不运行领域逻辑、注册表或 Core 完整性检查。",
+      "所有导入内容都经过 HTML 转义、路径检查与 ZIP 体积/条目/CRC 限制。",
+      "浏览器存储始终可用；`tools/serve.mjs` 运行时额外镜像到 `mods/`，导出可写入 `exports/`。"
+    ]
+  },
   "root": {
     intro: "仓库根：Godot 项目配置、README、路线图。",
     contracts: ["README 是开发入口；todo.md 维护阶段与验收状态。"]
@@ -829,5 +1073,10 @@ export const GROUPED_ROLES = {
   "sdk/examples": "第三方锅炉示例，验证公共内容接口。",
   "schemas": "JSON Schema 文件（Manifest/common/15 类内容）。",
   "dev_mods/core": "官方 Core 内容文件（manifest/content/localization/assets）。",
-  "tools": "PowerShell 测试/打包脚本与静态文档生成器。"
+  "tools": "PowerShell 测试/打包脚本与静态文档生成器。",
+  "SNModMaker/README.md": "使用说明、数据流、开发约定与已知边界。",
+  "SNModMaker/mods/README.md": "磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。",
+  "SNModMaker/exports/README.md": "本地导出目录说明：ZIP 命名与忽略规则。",
+  "SNModMaker/js/schema-bundle.js": "自动生成：嵌入 `/schemas/*.schema.json`。",
+  "SNModMaker/js/core-index.js": "自动生成：Core 定义、内容与双语本地化索引。"
 };

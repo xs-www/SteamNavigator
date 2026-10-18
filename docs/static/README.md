@@ -10,6 +10,7 @@
 - 主界面：[main.gd](framework/ui/shell/main.gd.md)
 - 官方内容：[Core 内容包](dev_mods/core/README.md)
 - SDK：[打包/校验/模板](sdk/README.md)
+- 模组制作器：[SNModMaker](SNModMaker/README.md)
 
 ## 模块索引
 
@@ -28,6 +29,7 @@
 | [`schemas`](schemas/README.md) | Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）。 |
 | [`dev_mods/core`](dev_mods/core/README.md) | 官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化。 |
 | [`tools`](tools/README.md) | PowerShell 辅助脚本与静态文档生成器。 |
+| [`SNModMaker`](SNModMaker/README.md) | 零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。 |
 
 ## 主要数据流
 
@@ -55,8 +57,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-18T12:34:10.525Z
-- 生成 commit：`6babbb3`
+- 生成时间：2026-10-18T13:21:47.708Z
+- 生成 commit：`4dbeebd`
 - 模式：`compact`；规则版本：`2.0`
 - 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。
 - 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。

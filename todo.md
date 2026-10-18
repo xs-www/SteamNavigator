@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，48 个测试通过。
+> 最近验证：Godot 4.7.2 headless，48 个测试通过；SNModMaker 28 个 Node 用例 + 14 个浏览器用例通过。
 
 ## 已完成
 
@@ -29,6 +29,7 @@
 - [x] 船上库存按加权平均成本记录并在市场/总览显示
 - [x] 玩家单笔贸易价格影响阻尼为 35%，NPC 仍按完整供需重算
 - [x] 煤炭/淡水作为补给商品，价格随港口库存和 NPC 商船流动浮动
+- [x] 运行时扫描 `dist/mods`；松散 mod 覆盖同名 zip，core zip 构建产物自动忽略
 
 ### 阶段 C：Core 内容（MVP 骨架）
 
@@ -59,6 +60,7 @@
 - [x] `sdk/validate.gd`
 - [x] 模组模板
 - [x] 第三方锅炉示例并通过公共注册表加载
+- [x] 零依赖网页端模组制作器 `SNModMaker/`（表单、校验、本地化、资源、导入导出、ZIP、自动保存）
 - [ ] 模组管理 UI（启用 / 禁用 / 优先级）
 - [ ] 发布签名与固定哈希校验
 
@@ -95,4 +97,4 @@
 - 改代码后同步更新 `docs/static/` 对应文件与 `docs/static/manifest.json`。
 - 数值改动先改 Core JSON，不在框架里写死。
 - 新增命令/查询必须经 `FrameworkApi` 注册，并补测试。
-- 新增内容类型需要同时补 Schema、注册表映射、跨引用检查与文档。
+- 新增内容类型需要同时补 Schema、注册表映射、跨引用检查与文档；随后运行 `node SNModMaker/tools/sync-schemas.mjs` 与 `node SNModMaker/tools/sync-core-index.mjs`，并跑 `node SNModMaker/tests/run-tests.js`。

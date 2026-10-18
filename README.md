@@ -22,6 +22,7 @@
 - 最小 UI：开局构筑选择，以及总览、市场、委托、船厂、补给、情报、出航七个独立界面；含海图点击、港口记忆、事件选择与诊断。
 - 无头测试套件：**48 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突、港口记忆、补给与库存成本）。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
+- [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`。
 
 尚未完成、但已留出扩展位置的内容见 [todo.md](todo.md)。
 
@@ -37,7 +38,7 @@
 2. 按 **F5** 运行。主场景为 `framework/ui/shell/main.tscn`。
 3. 选择初始构筑（低耗稳健型 / 高速冒险型）和可选种子，开始新航程。
 
-开发模式下，Core 从 `res://dev_mods/core/` 松散目录加载。发布模式扫描可执行文件旁的 `mods/` 与 `user://mods/`。
+开发模式下，Core 从 `res://dev_mods/core/` 松散目录加载；同时扫描 `res://dist/mods`，方便直接放入第三方 `.snavmod.zip`。同 ID 时松散目录优先，`dist/mods` 里的 core 构建产物会被自动忽略。发布模式扫描可执行文件旁的 `mods/` 与 `user://mods/`。
 
 ### 运行测试
 
@@ -135,8 +136,9 @@ framework/
   assets/                      缺失资源占位符
 schemas/                       Manifest 与各类内容的 JSON Schema
 sdk/                           打包、校验、模组模板、第三方示例
+SNModMaker/                    零依赖网页端模组制作器（原生 HTML/CSS/JS）
 dev_mods/core/                 官方 MVP 内容（松散的开发态 mod）
-dist/mods/                     构建产物（core-*.snavmod.zip）
+dist/mods/                     本地 mod 包（.snavmod.zip）与 core 构建产物；运行时扫描
 docs/                          GDD、架构方案、静态代码文档
 tools/                         PowerShell 辅助脚本
 ```
@@ -153,6 +155,15 @@ tools/                         PowerShell 辅助脚本
 - 所有数值均为数据驱动，位于 `dev_mods/core/content/*.json`。
 
 ## 模组制作
+
+除了手写 JSON 与 SDK 脚本，也可以使用 [SNModMaker](SNModMaker/README.md)（零依赖网页端）：
+
+```powershell
+node SNModMaker/tools/serve.mjs
+# 打开 http://127.0.0.1:8099/
+```
+
+它从 `schemas/` 读取同一套约束，支持 15 类内容、显式补丁、本地化与资源编辑，可导入现有目录 / ZIP，并导出 `mods/<id>/` 结构的 `.snavmod.zip`。使用本地服务时，项目会同时写入 `SNModMaker/mods/`，导出可写入 `SNModMaker/exports/`。
 
 最小结构：
 

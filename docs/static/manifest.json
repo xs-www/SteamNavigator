@@ -1,22 +1,127 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-18T12:34:10.525Z",
-  "commit": "6babbb3",
+  "generated_at": "2026-10-18T13:21:47.708Z",
+  "commit": "4dbeebd",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 155,
-    "documented": 56,
-    "grouped": 99
+    "sources": 172,
+    "documented": 72,
+    "grouped": 100
   },
   "files": [
     {
       "source": "README.md",
-      "sha256": "637ebccbd4756a432532d518d8f302ebc9b507fa7ebfe7d1c0aead7ede5c1c66",
+      "sha256": "d586e1b54f550d52383d3b6a2c2e9152190cdb2715fb6ef805c2c433ca655339",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
+    },
+    {
+      "source": "SNModMaker/README.md",
+      "sha256": "3e070b1c17eb155759385f116f20015612d7e5e938ce024b87bcb1720af742fc",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/css/app.css",
+      "sha256": "e2d9932222429a1d7f0f632073d10a4d99186ef749302aec0378c9857bf20924",
+      "doc": "docs/static/SNModMaker/css/app.css.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/exports/README.md",
+      "sha256": "9de04d5a44a75e5fede1302db61e58a2d5cf2580ecf0adf125d2270f474dd1c9",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/index.html",
+      "sha256": "8303a528554b16b6e1f3060004ab4a04595c3aa9196b72198cf0c76865e7bb8b",
+      "doc": "docs/static/SNModMaker/index.html.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/app.js",
+      "sha256": "6d9dbd0416fa898fb519e5ba9e9595e61578c4501ea098ce022a6161d409f47f",
+      "doc": "docs/static/SNModMaker/js/app.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/catalog.js",
+      "sha256": "f0257d89a169e798b82270888b8d4923d7638281eb80b6b47ff1c89af30eef8e",
+      "doc": "docs/static/SNModMaker/js/catalog.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/io.js",
+      "sha256": "553ad41d5943f7e9222baa8d78cbd5047893022224904fdf12b719e1ffedf76d",
+      "doc": "docs/static/SNModMaker/js/io.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/store.js",
+      "sha256": "aff0f4ebff664c078abf4ea5462aba09013f4a4875ed7ad38a46dbb7c5795e30",
+      "doc": "docs/static/SNModMaker/js/store.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/ui.js",
+      "sha256": "31371db2b17b4b482f6a0422748a6ef80e60fda8bb8aacdecf028af8355f772a",
+      "doc": "docs/static/SNModMaker/js/ui.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/validate.js",
+      "sha256": "958d7b538bf5e6625a9681b154b1252a916ddcadaadb3a25c2819a192ed66e15",
+      "doc": "docs/static/SNModMaker/js/validate.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/zip.js",
+      "sha256": "0b37d1c6f631577930ca2a9bcbba65812360c46ec90cf71853cbd9f6611a8cbe",
+      "doc": "docs/static/SNModMaker/js/zip.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/mods/README.md",
+      "sha256": "dc601a9ac10a137ecd3938d2062aafceff59acb7c681c286c518ace0703ea497",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/tests/browser-smoke.mjs",
+      "sha256": "86e589bcbc27735148a8069962d699902c7f13fb7896a86dd48eab83d1c70e0d",
+      "doc": "docs/static/SNModMaker/tests/browser-smoke.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/tests/run-tests.js",
+      "sha256": "4e8b098731c649ae649169039c3470131a78536f70e1d83447ab41f60e5b6d9d",
+      "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/tools/serve.mjs",
+      "sha256": "a2951d9c927968f76d65f519cf25d2006e8486b8790e0e8de5bb25e5ff2fc1e3",
+      "doc": "docs/static/SNModMaker/tools/serve.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/tools/sync-core-index.mjs",
+      "sha256": "6288bc8307513656ec99f95b0449644bd449dd18cd97703f01bbcf0acba8eb0a",
+      "doc": "docs/static/SNModMaker/tools/sync-core-index.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/tools/sync-schemas.mjs",
+      "sha256": "2dd096e894ad1aeee6aefa0b2763502db18f9f47e6f7224942ea3f2886e796ca",
+      "doc": "docs/static/SNModMaker/tools/sync-schemas.mjs.md",
+      "status": "documented"
     },
     {
       "source": "dev_mods/core/assets/icons/coal.png",
@@ -1007,17 +1112,16 @@
     },
     {
       "source": "todo.md",
-      "sha256": "5558240abe2388c0f1e521cee2b7212bbf2cca98167c9ed20b5ef0f63455e0af",
+      "sha256": "4cb2200e035f2ce4e4b979eabdeb6abc01db3903b79cb58b35c290121feb9748",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "6bb3044be7e37a74fdddecec43b5e8f380ecd04fa228a58a3802e4214614cc3e",
-      "doc": "docs/static/tools/README.md",
-      "status": "grouped",
-      "group": "docs/static/tools/README.md"
+      "sha256": "64153cf5daa63f7189b51afa08f46fee625434192bc7cb41800790e5d3d56ac9",
+      "doc": "docs/static/tools/gen_static_docs.mjs.md",
+      "status": "documented"
     },
     {
       "source": "tools/pack_core.ps1",
@@ -1028,10 +1132,9 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "96e204da9cdb04dc6eb6e2c6d83e83b2b6992f150304e825400a9c5b09dfb638",
-      "doc": "docs/static/tools/README.md",
-      "status": "grouped",
-      "group": "docs/static/tools/README.md"
+      "sha256": "197f4b836845fdc392db7d2663817a565082c0127d9257e194da370cc0699979",
+      "doc": "docs/static/tools/static_docs_data.mjs.md",
+      "status": "documented"
     },
     {
       "source": "tools/test.ps1",
