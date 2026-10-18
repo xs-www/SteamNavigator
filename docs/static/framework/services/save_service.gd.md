@@ -26,7 +26,7 @@
 ## 契约与约束
 
 - 存档头记录 save_schema/framework_version/mod_api_version/seed/mods/meta。
-- 写入 `.tmp` 并重新解析校验，再替换正式文件（Windows 无法原子 rename 覆盖）。
+- 写入 `.tmp` 并重新解析校验；旧文件先改名为 `.bak`，最终替换失败会回滚。
 - 槽位名限制 `^[a-z][a-z0-9_]{1,31}$`；自动存档与出航前快照为独立槽。
 - 缺失存档所需模组拒绝加载；版本/哈希漂移只警告。
 

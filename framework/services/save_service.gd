@@ -179,6 +179,7 @@ func validate_mods(header: Dictionary, current_mods: Array) -> Dictionary:
 
 func _write_atomic(path: String, text: String) -> Dictionary:
 	var temporary_path := path + ".tmp"
+	var backup_path := path + ".bak"
 	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
 	if file == null:
 		return {"ok": false, "error": "cannot open temporary save file", "path": path}
@@ -189,14 +190,26 @@ func _write_atomic(path: String, text: String) -> Dictionary:
 	if not verify["ok"]:
 		DirAccess.remove_absolute(temporary_path)
 		return {"ok": false, "error": "written save failed verification: %s" % verify["error"], "path": path}
-	if FileAccess.file_exists(path):
-		var remove_error := DirAccess.remove_absolute(path)
-		if remove_error != OK:
+
+	# Move the old save aside first. If the final rename fails, restore it.
+	var had_previous := FileAccess.file_exists(path)
+	if had_previous:
+		if FileAccess.file_exists(backup_path):
+			DirAccess.remove_absolute(backup_path)
+		var backup_error := DirAccess.rename_absolute(path, backup_path)
+		if backup_error != OK:
 			DirAccess.remove_absolute(temporary_path)
-			return {"ok": false, "error": "cannot replace previous save (error %d)" % remove_error, "path": path}
+			return {"ok": false, "error": "cannot back up previous save (error %d)" % backup_error, "path": path}
+
 	var rename_error := DirAccess.rename_absolute(temporary_path, path)
 	if rename_error != OK:
+		if had_previous and FileAccess.file_exists(backup_path):
+			DirAccess.rename_absolute(backup_path, path)
+		DirAccess.remove_absolute(temporary_path)
 		return {"ok": false, "error": "cannot rename temporary save (error %d)" % rename_error, "path": path}
+
+	if had_previous and FileAccess.file_exists(backup_path):
+		DirAccess.remove_absolute(backup_path)
 	return {"ok": true, "error": "", "path": path}
 
 
