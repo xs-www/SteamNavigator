@@ -28,6 +28,7 @@
 - 按钮：`SNPrimaryButton`、`SNSecondaryButton`、`SNDangerButton`、`SNGhostButton`
 - 面板：`SNPanel`、`SNElevatedPanel`、`SNInsetPanel`
 - 徽标：`SNBadge`、`SNSuccessBadge`、`SNWarningBadge`、`SNDangerBadge`
+- 标签：`SNEyebrowLabel`、`SNTitleLabel`、`SNDetailLabel`
 - 存量条：`SNBrassProgressBar`、`SNWaterProgressBar`、`SNDangerProgressBar`
 
 配套控件位于 `framework/ui/components/`，展示场景为 `framework/ui/showcase/ui_kit_showcase.tscn`。主界面已直接加载该 Theme；领域逻辑未改动。

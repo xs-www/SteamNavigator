@@ -57,6 +57,9 @@ var _menu_background: TextureRect = null
 var _menu_overlay: ColorRect = null
 var _pickup_player: AudioStreamPlayer = null
 var _settlement_summary: Dictionary = {}
+var _fade_layer: ColorRect = null
+var _transitioning: bool = false
+var _pending_transition: bool = false
 
 
 func _ready() -> void:
@@ -111,6 +114,13 @@ func _build_shell() -> void:
 	_root_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_root_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_root_box)
+
+	_fade_layer = ColorRect.new()
+	_fade_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fade_layer.color = Color(COLOR_BG.r, COLOR_BG.g, COLOR_BG.b, 0.0)
+	_fade_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade_layer.visible = false
+	add_child(_fade_layer)
 
 
 func _apply_settings_if_needed() -> void:
@@ -176,7 +186,40 @@ func _refresh_footer() -> void:
 		_footer_version.text = "%s v%s" % [_tr("ui.menu.version", "版本"), _game_version()]
 
 
-func _refresh() -> void:
+func _refresh(animate: bool = false) -> void:
+	if _transitioning:
+		_pending_transition = true
+		return
+	if animate and _fade_layer != null:
+		_begin_transition()
+		return
+	_rebuild_ui()
+
+
+func _begin_transition() -> void:
+	_transitioning = true
+	_fade_layer.visible = true
+	_fade_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_fade_layer.color = Color(COLOR_BG.r, COLOR_BG.g, COLOR_BG.b, 0.0)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_fade_layer, "color:a", 0.96, 0.16)
+	tween.tween_callback(func() -> void:
+		_rebuild_ui()
+		_fade_layer.color.a = 0.96
+	)
+	tween.tween_property(_fade_layer, "color:a", 0.0, 0.22)
+	tween.tween_callback(func() -> void:
+		_fade_layer.visible = false
+		_fade_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_transitioning = false
+		if _pending_transition:
+			_pending_transition = false
+			_refresh(true)
+	)
+
+
+func _rebuild_ui() -> void:
 	_context = _resolve_context()
 	for child in _root_box.get_children():
 		_root_box.remove_child(child)
@@ -445,7 +488,7 @@ func _screen_main_menu(app: Dictionary) -> void:
 
 
 func _screen_new_game(app: Dictionary) -> void:
-	_root_box.add_child(_page_heading("新航程", _tr("ui.menu.new_game", "新航程"), "选择初始构筑与种子"))
+	_root_box.add_child(_page_heading("航程准备", _tr("ui.menu.new_game", "新航程"), "选择初始构筑与种子"))
 
 	var intro := _panel()
 	_panel_add(intro, _label(_tr("ui.app.subtitle", ""), 15, COLOR_MUTED))
@@ -490,9 +533,12 @@ func _screen_new_game(app: Dictionary) -> void:
 
 	var buttons := HBoxContainer.new()
 	var new_run := _button(_tr("ui.button.new_run", "开始航行"), _on_new_run)
+	new_run.theme_type_variation = &"SNPrimaryButton"
 	new_run.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(new_run)
-	buttons.add_child(_button(_tr("ui.menu.back", "返回主菜单"), _on_menu_back))
+	var back_button := _button(_tr("ui.menu.back", "返回主菜单"), _on_menu_back)
+	back_button.theme_type_variation = &"SNGhostButton"
+	buttons.add_child(back_button)
 	_panel_add(form, buttons)
 	_root_box.add_child(form)
 
@@ -541,7 +587,7 @@ func _screen_mods(app: Dictionary) -> void:
 
 
 func _screen_settings(_app: Dictionary) -> void:
-	_root_box.add_child(_page_heading("设置", _tr("ui.menu.settings_title", "设置"), "语言与自动存档"))
+	_root_box.add_child(_page_heading("偏好", _tr("ui.menu.settings_title", "设置"), "语言与自动存档"))
 	var panel := _panel()
 	var locale_row := HBoxContainer.new()
 	locale_row.add_child(_label(_tr("ui.menu.language", "语言"), 15, COLOR_TEXT))
@@ -1597,13 +1643,13 @@ func _screen_event(data: Dictionary, event: Dictionary) -> void:
 func _on_menu(screen: String) -> void:
 	_menu_screen = screen
 	_status_message = ""
-	_refresh()
+	_refresh(true)
 
 
 func _on_menu_back() -> void:
 	_menu_screen = "main"
 	_status_message = ""
-	_refresh()
+	_refresh(true)
 
 
 func _on_quit() -> void:
@@ -1616,7 +1662,7 @@ func _on_set_locale(locale: String) -> void:
 	if _settings != null:
 		_settings.set_locale(locale)
 	_save_settings()
-	_refresh()
+	_refresh(true)
 
 
 func _on_toggle_autosave() -> void:
@@ -1625,7 +1671,7 @@ func _on_toggle_autosave() -> void:
 	if _settings != null:
 		_settings.set_autosave(_context.autosave_enabled if _context != null else true)
 	_save_settings()
-	_refresh()
+	_refresh(true)
 
 
 func _save_settings() -> void:
@@ -1641,7 +1687,7 @@ func _save_settings() -> void:
 func _on_nav(screen: String) -> void:
 	_active_screen = screen
 	_status_message = ""
-	_refresh()
+	_refresh(true)
 
 
 func _on_map_port_clicked(port_id: String) -> void:
@@ -1651,7 +1697,7 @@ func _on_map_port_clicked(port_id: String) -> void:
 		_memory_port_id = port_id
 		_active_screen = "port_memory"
 	_status_message = ""
-	_refresh()
+	_refresh(true)
 
 
 func _on_build_selected(_index: int, option: OptionButton) -> void:
@@ -1699,7 +1745,7 @@ func _on_continue() -> void:
 	_selected_strategy = ""
 	_active_screen = "overview"
 	_set_status("已载入自动存档", false)
-	_refresh()
+	_refresh(true)
 
 
 func _on_buy(item_id: String, amount: int) -> void:
@@ -1722,7 +1768,7 @@ func _on_plan_contract(destination: String) -> void:
 	_selected_destination = destination
 	_active_screen = "voyage"
 	_status_message = ""
-	_refresh()
+	_refresh(true)
 
 
 func _on_install_module(module_id: String) -> void:
@@ -1769,7 +1815,8 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 		_handle_success(command, result)
 	else:
 		_set_status(_error_text(result), true)
-	_refresh()
+	var animate := command in [&"run.start", &"voyage.start", &"event.choose_option"]
+	_refresh(animate)
 
 
 func _handle_success(command: StringName, result: Dictionary) -> void:
@@ -1876,7 +1923,7 @@ func _retry_bootstrap() -> void:
 	_context = boot.context
 	_settings_applied = false
 	_set_status("" if not report.has_fatal() else _tr("ui.error.start_failed", ""), report.has_fatal())
-	_refresh()
+	_refresh(true)
 
 
 func _show_diagnostics() -> void:

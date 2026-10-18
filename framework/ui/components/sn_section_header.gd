@@ -41,18 +41,16 @@ func _build_once() -> void:
 	add_child(text_box)
 	_eyebrow_label = Label.new()
 	_eyebrow_label.name = "Eyebrow"
-	_eyebrow_label.add_theme_color_override("font_color", Color("c59a54"))
-	_eyebrow_label.add_theme_font_size_override("font_size", 11)
+	_eyebrow_label.theme_type_variation = &"SNEyebrowLabel"
 	text_box.add_child(_eyebrow_label)
 	_title_label = Label.new()
 	_title_label.name = "Title"
-	_title_label.add_theme_font_size_override("font_size", 24)
+	_title_label.theme_type_variation = &"SNTitleLabel"
 	text_box.add_child(_title_label)
 	_detail_label = Label.new()
 	_detail_label.name = "Detail"
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detail_label.add_theme_color_override("font_color", Color("9fafa7"))
-	_detail_label.add_theme_font_size_override("font_size", 12)
+	_detail_label.theme_type_variation = &"SNDetailLabel"
 	add_child(_detail_label)
 
 

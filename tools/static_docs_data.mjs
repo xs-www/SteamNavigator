@@ -697,6 +697,8 @@ export const FILE_DOCS = {
       "无存档时进入主菜单：开始游戏进入新航程配置，加载游戏读取 autosave，模组页只读展示本次加载结果，设置可切换语言与自动存档，退出直接关闭。",
       "设置写入 `user://config/config.json`，默认值来自 `config/config.json`；首次加载会创建用户配置。",
       "右下角固定显示开发团队与游戏版本；版本来自 `application/config/version`。",
+      "页面切换使用全屏 TransitionLayer：旧页淡出、重建、新页淡入；数据刷新不播放转场。",
+      "新航程主操作使用 `SNPrimaryButton`，返回使用 ghost；章节标题控件只声明语义标签（SNEyebrowLabel/SNTitleLabel/SNDetailLabel）。",
       "加载游戏读取 autosave 并做模组兼容性校验。",
       "根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。"
     ]

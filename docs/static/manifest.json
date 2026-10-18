@@ -1,8 +1,8 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-18T22:45:41.025Z",
-  "commit": "f547a12",
+  "generated_at": "2026-10-18T23:03:22.526Z",
+  "commit": "403448d",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -13,7 +13,7 @@
   "files": [
     {
       "source": "README.md",
-      "sha256": "64b818e1f320b14d343e04d3f9dafdd182240e34b187bf7160545a2b15dc9698",
+      "sha256": "4846b8cd4aac3c247cbec0c44a091479a0cb402e97987ea544f07a558a92de49",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -279,7 +279,7 @@
     },
     {
       "source": "assets/ui/theme/steam_navigator_theme.tres",
-      "sha256": "bf7590a60ea48be9ed4024a6925fee6eb02e182a84ae47fb10bb8331cd562ff4",
+      "sha256": "048c81600589729edbc901292cef14b8e2bde360fcdbac73142f677dd883e844",
       "doc": "docs/static/assets/ui/theme/steam_navigator_theme.tres.md",
       "status": "documented"
     },
@@ -1138,7 +1138,7 @@
     },
     {
       "source": "framework/ui/components/sn_section_header.gd",
-      "sha256": "e87573771efcb01aefe7621747958273560cb951f1d3c0d962d1f0219d5b0678",
+      "sha256": "92da048206090e3219b697561ca659515a690cdeba78bdcc1718565c6e631428",
       "doc": "docs/static/framework/ui/components/sn_section_header.gd.md",
       "status": "documented"
     },
@@ -1151,7 +1151,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "5f55ff9f56b71c04267ec68c553b6ee936e7babc6ef682067f98c168c4d0dde1",
+      "sha256": "d9c63c314682e65e92d6e98e386f282a28309975f87269cfc57b0b59af539cd4",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -1384,7 +1384,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "4ecfbdee315285e21620b640f35bf6fe93c2bf40f559cf76215c44991f920be2",
+      "sha256": "00278aad1dec809eccf5ba311f2cf413d0450e23117c5fe4096239d4daa533fb",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1404,7 +1404,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "11a6352dae2b8615bc81bf74d31394707541003fda58a2dbff1d1c4a02f0bc27",
+      "sha256": "b431090b1a6d1383d3219a634a2ce3060417b1b315ca852ff2424c45ae5241da",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

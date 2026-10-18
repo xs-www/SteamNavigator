@@ -37,6 +37,8 @@
 - [x] 资产落位：`assets/ui`、`assets/audio`、`assets/fonts`、Core 港口图；来源与路径见 `docs/design/ASSET_MAP.md`
 - [x] 表现层第一轮：全屏主菜单背景、共享 Theme 顶栏/统计/导航、铁港港口横幅、两列委托卡、抵达结算页
 - [x] 交易反馈：接入 `pickup_gold_00.wav`，买入/卖出/接委托/补给成功播放
+- [x] 页面切换 TransitionLayer：旧页淡出后重建，新页淡入；数据刷新不转场
+- [x] 新航程主按钮改用 `SNPrimaryButton`；章节标题改用语义 Label 变体
 
 ### 阶段 C：Core 内容（MVP 骨架）
 
