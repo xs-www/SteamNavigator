@@ -1,0 +1,112 @@
+name: Dev Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Godot editor and templates
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot-bin
+            ~/.local/share/godot/export_templates/4.7.2.stable
+          key: godot-4.7.2-stable-v1
+
+      - name: Install Godot 4.7.2
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y unzip libfontconfig1
+          mkdir -p "$HOME/godot-bin"
+          curl -fL --retry 3 -o /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          mv /tmp/godot/Godot_v4.7.2-stable_linux.x86_64 "$HOME/godot-bin/godot"
+          chmod +x "$HOME/godot-bin/godot"
+          curl -fL --retry 3 -o /tmp/templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          mv /tmp/godot-templates/templates "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+
+      - name: Put Godot on PATH
+        shell: bash
+        run: |
+          chmod +x "$HOME/godot-bin/godot"
+          echo "$HOME/godot-bin" >> "$GITHUB_PATH"
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --script res://framework/tests/test_runner.gd
+
+      - name: Import project
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --editor --quit
+
+      - name: Export Windows and Linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/build/windows dist/build/linux dist/release
+          godot --headless --path . --export-release "Windows Desktop" "dist/build/windows/SteamNavigator.exe"
+          godot --headless --path . --export-release "Linux/X11" "dist/build/linux/SteamNavigator.x86_64"
+
+      - name: Pack core mod
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/mods
+          godot --headless --path . --script res://sdk/pack_mod.gd -- \
+            --source=dev_mods/core --out=dist/mods
+
+      - name: Package release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          cd dist/build/windows
+          zip -q -r "../../release/SteamNavigator-${TAG}-windows.zip" .
+          cd ../linux
+          zip -q -r "../../release/SteamNavigator-${TAG}-linux.zip" .
+          cd ../..
+          sha256sum release/*.zip mods/*.snavmod.zip > release/SHA256SUMS.txt
+          ls -lh release mods
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SteamNavigator-${{ github.ref_name }}
+          path: |
+            dist/release/*
+            dist/mods/*.snavmod.zip
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Steam Navigator ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, '-dev.') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/release/*.zip
+            dist/release/SHA256SUMS.txt
+            dist/mods/*.snavmod.zip

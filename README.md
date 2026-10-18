@@ -71,6 +71,19 @@ godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/co
 
 产物：`dist/mods/core-1.0.0.snavmod.zip`（包内路径为 `mods/core/...`）。
 
+### 开发版发布
+
+推送 `v*` tag 会触发 `.github/workflows/release.yml`：跑测试、导出 Windows/Linux、打包 Core、生成 SHA256，并创建 GitHub Release。带 `-dev.` 的 tag 自动标记为预发布。
+
+```powershell
+git tag -a v0.1.0-dev.1 -m "Steam Navigator v0.1.0-dev.1"
+git push origin v0.1.0-dev.1
+```
+
+发布资产：`SteamNavigator-<tag>-windows.zip`、`SteamNavigator-<tag>-linux.zip`、`core-1.0.0.snavmod.zip`、`SHA256SUMS.txt`。
+
+本地导出需要安装 Godot 4.7.2 导出模板；预设名为 `Windows Desktop` 和 `Linux/X11`。
+
 ### 校验第三方模组
 
 ```powershell
@@ -139,6 +152,7 @@ framework/
 schemas/                       Manifest 与各类内容的 JSON Schema
 config/                        默认 UI 设置（config.json）
 sdk/                           打包、校验、模组模板、第三方示例
+.github/workflows/            GitHub Actions：tag 触发的开发版发布
 SNModMaker/                    零依赖网页端模组制作器（原生 HTML/CSS/JS）
 dev_mods/core/                 官方 MVP 内容（松散的开发态 mod）
 dist/mods/                     本地 mod 包（.snavmod.zip）与 core 构建产物；运行时扫描
