@@ -18,6 +18,10 @@ dist/release/
 Thumbs.db
 desktop.ini
 
+# Python 工具脚本的缓存（tools/modeling/generators 现在入库）
+__pycache__/
+*.pyc
+
 # Local art direction prototypes
 .design/
 

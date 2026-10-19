@@ -1,0 +1,65 @@
+{
+  "id": "sn_prop_harbor_crane_v2",
+  "title": "港口塔式起重机原型（锤头式塔吊）",
+  "purpose": "码头装卸用的塔吊；长水平主臂 + 小车吊钩，用于 3D 港口场景",
+  "category": "prop",
+  "style": {
+    "look": "low-poly / flat shaded / 单层色块，无贴图",
+    "palette": ["wood", "dark_wood", "metal", "stone"],
+    "reference_images": [],
+    "notes": "与 SN_Ship_Prototype 同一套材质与比例语言：木格构塔身与吊臂，金属节点，石砌配重基座"
+  },
+  "dimensions": {
+    "length": 26.0,
+    "width": 6.09,
+    "height": 21.5,
+    "unit": "m",
+    "tolerance": 0.8
+  },
+  "tri_budget": 4000,
+  "required_parts": [
+    "base", "mast", "slewing", "cab", "tower_head", "jib",
+    "counter_jib", "tie_bars", "counterweights", "trolley", "hook", "winch"
+  ],
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Stone"],
+  "naming": {
+    "prefix": "SN_",
+    "collection": "SN_Harbor_Crane_Prototype"
+  },
+  "transform": {
+    "pivot": "ground centre (base centre, z=0)",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "hierarchy": {
+    "root": "SN_Crane_Root",
+    "pivots": ["SN_Crane_Slew_Pivot"]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype"],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "scene_location": [0, 16, 0]
+  },
+  "deliverables": {
+    "blend": ".design/SN_Asset_Workbench.blend",
+    "glb": "assets/models/props/SN_Harbor_Crane.glb",
+    "generator": ".design/props/sn_harbor_crane_generator.py",
+    "screenshots": ["three_quarter", "side", "top"]
+  },
+  "acceptance": [
+    "所有新对象 SN_ 前缀并位于 SN_Harbor_Crane_Prototype 集合",
+    "三角面 <= 4000",
+    "包围盒 26.0 x 6.09 x 21.5 m，误差 <= 0.8 m",
+    "主臂水平（与地面夹角 <= 3°），从回转中心向外伸出 >= 18 m",
+    "塔头 A 字架 + 拉杆存在，拉杆连接塔头顶点与主臂/配重臂",
+    "小车在主臂上，吊钩由小车垂下，最低点离地 3–6 m",
+    "配重臂向后伸出 5–7 m，末端有 2–3 块配重",
+    "SN_Crane_Slew_Pivot 位于塔顶回转中心，主臂/配重臂/小车/吊钩/驾驶室挂在它下面",
+    "场景中原有对象（Camera / Light / SN_Ship_Prototype 36 个）未被删除或修改",
+    "斜上方 3/4 视角能一眼认出是塔吊：高塔 + 长水平臂 + 配重 + 塔头拉杆"
+  ],
+  "notes": "v2：用户反馈上一版斜吊臂不像塔吊，改为锤头式塔吊。塔身 17 m，主臂 20 m 水平伸出，配重臂 6 m，A 字塔头高约 4 m（总高 21.5 m）。吊钩在小车下方、离地约 4 m。静止状态，不做动画；Slew_Pivot 留给后续回转。"
+}

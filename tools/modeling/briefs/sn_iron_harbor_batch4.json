@@ -1,0 +1,35 @@
+{
+  "id": "sn_iron_harbor_batch4",
+  "title": "铁港码头第四批 6 件（机械 / 水上件）",
+  "purpose": "补齐绞盘、手推车、浮标、锚链、碰垫与齿轮箱，增加作业细节",
+  "category": "prop_pack",
+  "collection": "SN_IronHarbor_Props",
+  "prefix": "SN_",
+  "layout": "沿 y=42 一字排开，每件 5 m 间距：x = -12, -7, -2, 3, 8, 13",
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Stone", "SN_Canvas", "SN_Ore", "SN_Coal"],
+  "transform": { "pivot": "ground centre (base centre, z=0)", "forward": "+X", "up": "+Z", "unit_scale": 1.0 },
+  "tri_budget_total": 1600,
+  "items": [
+    { "id": "buoy", "name": "SN_Buoy", "desc": "浮标：圆柱浮体 + 顶部灯架 + 底部配重环", "size": [1.2, 1.2, 1.8], "tri_budget": 250, "materials": ["SN_Metal", "SN_Wood_Dark"], "position": [-12, 42, 0] },
+    { "id": "chain_coil", "name": "SN_Chain_Coil", "desc": "锚链堆：盘绕的链环堆，低模用间断链节表现", "size": [1.0, 1.0, 0.3], "tri_budget": 250, "materials": ["SN_Metal"], "position": [-7, 42, 0] },
+    { "id": "capstan", "name": "SN_Capstan", "desc": "手动绞盘：木卷筒 + 金属齿轮箱 + 四根推杆", "size": [1.2, 1.2, 1.1], "tri_budget": 350, "materials": ["SN_Metal", "SN_Wood"], "position": [-2, 42, 0] },
+    { "id": "handcart", "name": "SN_Handcart", "desc": "平板手推车：木板面 + 两轮 + 两个把手", "size": [2.0, 1.0, 1.0], "tri_budget": 300, "materials": ["SN_Wood", "SN_Metal"], "position": [3, 42, 0] },
+    { "id": "fender_ball", "name": "SN_Fender_Ball", "desc": "碰垫：圆形碰垫 + 顶部吊环 + 表面编织纹", "size": [0.8, 0.8, 0.9], "tri_budget": 120, "materials": ["SN_Canvas", "SN_Metal"], "position": [8, 42, 0] },
+    { "id": "gear_crate", "name": "SN_Gear_Crate", "desc": "精密齿轮箱：带盖木箱 + 顶盖缝隙 + 铁包角 + 露出的齿轮轮廓", "size": [0.8, 0.8, 0.8], "tri_budget": 250, "materials": ["SN_Metal", "SN_Wood"], "position": [13, 42, 0] }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_Dock_Wall", "SN_Dock_Fender", "SN_Mooring_Bollard", "SN_Crate", "SN_Barrel", "SN_Ore_Pile"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "acceptance": [
+    "6 个对象命名严格匹配，全部位于 SN_IronHarbor_Props",
+    "每件原点在自身底面中心；总三角面 <= 1600",
+    "材质只用调色板",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界",
+    "原有对象未被修改",
+    "3/4 视角下可辨认：浮标、锚链堆、绞盘、手推车、碰垫、齿轮箱"
+  ],
+  "notes": "第四批。齿轮箱对应 Core 里的 precision_gear 商品，可作为市场货台的道具。"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "sn_ship_prototype_v04",
+  "title": "Steam Navigator 第一艘低多边形帆船",
+  "purpose": "游戏资产原型：验证低模船只的美术方向与 Blender → Godot 管线",
+  "category": "ship",
+  "style": {
+    "look": "low-poly / flat shaded / 单层色块，无贴图",
+    "palette": ["wood", "dark_wood", "deck_wood", "canvas", "metal"],
+    "reference_images": [],
+    "notes": "高艉楼、三桅六帆、深色腰板分层"
+  },
+  "dimensions": {
+    "length": 17.83,
+    "width": 8.0,
+    "height": 14.47,
+    "unit": "m",
+    "tolerance": 0.5
+  },
+  "tri_budget": 3000,
+  "required_parts": [
+    "hull", "keel", "deck", "bulwark", "quarterdeck",
+    "masts", "yards", "sails", "rudder", "bowsprit", "wales"
+  ],
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Canvas", "SN_Metal"],
+  "naming": {
+    "prefix": "SN_",
+    "collection": "SN_Ship_Prototype"
+  },
+  "transform": {
+    "pivot": "waterline, centre of hull",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "hierarchy": {
+    "root": "SN_Ship_Root",
+    "pivots": ["SN_Mast_Fore_Pivot", "SN_Mast_Main_Pivot", "SN_Mast_Mizzen_Pivot"]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "deliverables": {
+    "blend": ".design/ships/SN_Ship_Prototype.blend",
+    "glb": "assets/models/ships/SN_Ship_Prototype.glb",
+    "generator": ".design/ships/sn_ship_prototype_generator.py",
+    "screenshots": ["three_quarter", "side", "top"]
+  },
+  "acceptance": [
+    "36 个对象 / 32 网格 / 2608 三角面（实测）",
+    "5 个材质，3 类基础材质（木 / 帆布 / 金属）+ 木色变体",
+    "水线轴心，整船包围盒 17.83 × 8.00 × 14.47 m",
+    "根节点 SN_Ship_Root 带 asset/version/pivot/forward_axis 自定义属性",
+    "相机与灯光已按第三人称斜上方调整并渲染验证"
+  ],
+  "notes": "第一个工单样板；参数化脚本见 deliverables.generator，改 STATIONS / MASTS 可派生其他吨位"
+}

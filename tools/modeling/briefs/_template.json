@@ -1,0 +1,57 @@
+{
+  "id": "sn_<category>_<name>_v1",
+  "title": "<物品名称> 原型",
+  "purpose": "这个物品在游戏里用来做什么（一句话）",
+  "category": "prop",
+  "style": {
+    "look": "low-poly / flat shaded / 单层色块，无贴图",
+    "palette": ["wood", "metal", "canvas"],
+    "reference_images": [],
+    "notes": "参考现有 SN_Ship_Prototype 的比例与材质节奏"
+  },
+  "dimensions": {
+    "length": 2.0,
+    "width": 1.0,
+    "height": 1.2,
+    "unit": "m",
+    "tolerance": 0.1
+  },
+  "tri_budget": 1500,
+  "required_parts": ["body", "lid", "metal_bands"],
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal"],
+  "naming": {
+    "prefix": "SN_",
+    "collection": "SN_<Name>_Prototype"
+  },
+  "transform": {
+    "pivot": "ground centre",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "hierarchy": {
+    "root": "SN_<Name>_Root",
+    "pivots": []
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "deliverables": {
+    "blend": ".design/<category>/SN_<Name>.blend",
+    "glb": "assets/models/<category>/SN_<Name>.glb",
+    "generator": ".design/<category>/sn_<name>_generator.py",
+    "screenshots": ["three_quarter", "side", "top"]
+  },
+  "acceptance": [
+    "对象命名 100% 以 SN_ 开头，且都在指定集合内",
+    "三角面数 <= tri_budget",
+    "无孤立点 / 退化面 / 材质槽越界",
+    "包围盒符合 dimensions，误差在 tolerance 内",
+    "斜上方 3/4 视角能辨认轮廓",
+    "场景中原有对象未被删除或修改"
+  ],
+  "notes": "工单必须自包含：子代理不共享主会话上下文"
+}

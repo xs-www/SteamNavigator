@@ -1,0 +1,90 @@
+{
+  "id": "sn_iron_harbor_batch1",
+  "title": "铁港码头第一批 6 件小部件",
+  "purpose": "验证批量工作流；搭出铁港码头的基本可读性（岸壁 + 系缆 + 货物）",
+  "category": "prop_pack",
+  "collection": "SN_IronHarbor_Props",
+  "prefix": "SN_",
+  "layout": "沿 y=24 一字排开，每件 5 m 间距：x = -12, -7, -2, 3, 8, 13",
+  "style": "low-poly / flat shaded / 无贴图；材质复用现有调色板，矿石需要新建 SN_Ore",
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Stone", "SN_Canvas", "SN_Ore"],
+  "transform": {
+    "pivot": "ground centre (base centre, z=0), 每件独立原点",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "tri_budget_total": 2500,
+  "items": [
+    {
+      "id": "dock_wall",
+      "name": "SN_Dock_Wall",
+      "desc": "石砌岸壁模块：石砌墙体 + 顶部压顶木条 + 铁质护角，可沿 X 拼接",
+      "size": [6.0, 3.0, 3.5],
+      "tri_budget": 1000,
+      "materials": ["SN_Stone", "SN_Wood_Dark", "SN_Metal"],
+      "position": [-12.0, 24.0, 0.0]
+    },
+    {
+      "id": "dock_fender",
+      "name": "SN_Dock_Fender",
+      "desc": "木护舷：竖向木方 + 两道铁箍，贴岸壁用",
+      "size": [0.3, 0.3, 2.5],
+      "tri_budget": 100,
+      "materials": ["SN_Wood_Dark", "SN_Metal"],
+      "position": [-7.0, 24.0, 0.0]
+    },
+    {
+      "id": "mooring_bollard",
+      "name": "SN_Mooring_Bollard",
+      "desc": "铸铁系缆桩：方形法兰底板（四角螺栓）+ 粗圆柱桩身（根部喇叭脚）+ 圆柱十字横臂（端部倒角收口）+ 柱顶平盘，可挂缆绳",
+      "size": [0.62, 0.62, 0.7],
+      "tri_budget": 200,
+      "materials": ["SN_Metal"],
+      "position": [-2.0, 24.0, 0.0]
+    },
+    {
+      "id": "crate",
+      "name": "SN_Crate",
+      "desc": "木箱：箱体 + 四角铁包角 + 顶部盖板缝隙，可堆叠",
+      "size": [1.2, 1.2, 1.2],
+      "tri_budget": 150,
+      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal"],
+      "position": [3.0, 24.0, 0.0]
+    },
+    {
+      "id": "barrel",
+      "name": "SN_Barrel",
+      "desc": "铁箍木桶：弧形桶身 + 两道铁箍 + 顶盖",
+      "size": [0.9, 0.9, 1.1],
+      "tri_budget": 200,
+      "materials": ["SN_Wood", "SN_Metal"],
+      "position": [8.0, 24.0, 0.0]
+    },
+    {
+      "id": "ore_pile",
+      "name": "SN_Ore_Pile",
+      "desc": "铁矿石堆：低多边形不规则矿堆 + 几块散落矿石，锈红材质 SN_Ore",
+      "size": [4.0, 3.0, 1.5],
+      "tri_budget": 700,
+      "materials": ["SN_Ore"],
+      "position": [13.0, 24.0, 0.0]
+    }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "acceptance": [
+    "6 个对象，命名严格为 SN_Dock_Wall / SN_Dock_Fender / SN_Mooring_Bollard / SN_Crate / SN_Barrel / SN_Ore_Pile",
+    "全部位于集合 SN_IronHarbor_Props，且每个对象原点在自身底面中心（object.location = 布局位置，几何为局部坐标）",
+    "总三角面 <= 2500，单件不超过各自 tri_budget 的 1.5 倍",
+    "材质只用调色板：SN_Wood / SN_Wood_Dark / SN_Metal / SN_Stone / SN_Canvas / SN_Ore",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界；闭合件无非流形边",
+    "原有对象（Camera / Light / 帆船 36 / 塔吊 34）未被删除或修改",
+    "3/4 视角下 6 件能清晰分辨：石墙、木护舷、系缆桩、木箱、木桶、矿堆"
+  ],
+  "notes": "这是批量工作流的第一次实测：一个 Builder 一次建 6 件，一件一次质检；为省调用不单独做返工，除非硬性不合格。"
+}

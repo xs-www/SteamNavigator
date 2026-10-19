@@ -1,0 +1,39 @@
+{
+  "id": "sn_iron_harbor_batch2",
+  "title": "铁港码头第二批 6 件（照明 / 靠泊 / 装卸 / 煤）",
+  "purpose": "补齐码头照明、船岸连接、矿料抓取与煤堆，让码头有夜间与作业感",
+  "category": "prop_pack",
+  "collection": "SN_IronHarbor_Props",
+  "prefix": "SN_",
+  "layout": "沿 y=30 一字排开，每件 5 m 间距：x = -12, -7, -2, 3, 8, 13",
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Stone", "SN_Canvas", "SN_Ore", "SN_Coal"],
+  "new_materials": [
+    { "name": "SN_Coal", "base": [0.020, 0.019, 0.018], "roughness": 0.95, "metallic": 0.0 }
+  ],
+  "transform": { "pivot": "ground centre (base centre, z=0)", "forward": "+X", "up": "+Z", "unit_scale": 1.0 },
+  "tri_budget_total": 1900,
+  "items": [
+    { "id": "gas_lamp", "name": "SN_Gas_Lamp", "desc": "煤气灯柱：铸铁灯杆 + 横臂 + 灯罩 + 顶盖", "size": [0.35, 0.35, 3.5], "tri_budget": 250, "materials": ["SN_Metal", "SN_Canvas"], "position": [-12, 30, 0] },
+    { "id": "gangway", "name": "SN_Gangway", "desc": "船岸跳板：木板面 + 两侧金属扶手 + 端部搭钩", "size": [6.0, 1.2, 0.5], "tri_budget": 300, "materials": ["SN_Wood", "SN_Metal"], "position": [-7, 30, 0] },
+    { "id": "grab_bucket", "name": "SN_Grab_Bucket", "desc": "双瓣抓斗：两瓣斗体 + 铰接臂 + 顶部吊环（配合塔吊吊矿）", "size": [1.5, 1.5, 1.5], "tri_budget": 400, "materials": ["SN_Metal"], "position": [-2, 30, 0] },
+    { "id": "coal_pile", "name": "SN_Coal_Pile", "desc": "煤堆：低多边形不规则煤堆 + 散落煤块", "size": [3.0, 2.5, 1.2], "tri_budget": 500, "materials": ["SN_Coal"], "position": [3, 30, 0] },
+    { "id": "dock_ladder", "name": "SN_Dock_Ladder", "desc": "码头铁爬梯：两侧立杆 + 踏杆 + 顶部挂钩", "size": [0.6, 0.25, 3.2], "tri_budget": 160, "materials": ["SN_Metal"], "position": [8, 30, 0] },
+    { "id": "plate_stack", "name": "SN_Plate_Stack", "desc": "钢板堆：多层钢板叠放 + 木垫条 + 金属绑带", "size": [3.0, 2.0, 0.6], "tri_budget": 250, "materials": ["SN_Metal", "SN_Wood_Dark"], "position": [13, 30, 0] }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_Dock_Wall", "SN_Dock_Fender", "SN_Mooring_Bollard", "SN_Crate", "SN_Barrel", "SN_Ore_Pile"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "acceptance": [
+    "6 个对象命名严格匹配，全部位于 SN_IronHarbor_Props",
+    "每件原点在自身底面中心（object.location = 布局位置，几何为局部坐标）",
+    "总三角面 <= 1900，单件不超过预算 1.5 倍",
+    "材质只用调色板；SN_Coal 参数为 base 0.020/0.019/0.018、rough 0.95、metallic 0",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界；闭合件无非流形边",
+    "原有对象（相机 / 灯光 / 帆船 36 / 塔吊 34 / 第一批 6 件）未被修改",
+    "3/4 视角下 6 件可辨认：灯柱、跳板、抓斗、煤堆、爬梯、钢板堆"
+  ],
+  "notes": "第二批。抓斗要和塔吊的吊钩口径匹配（1.5 m 级），后续可直接挂到 SN_Crane_Hook 上。"
+}

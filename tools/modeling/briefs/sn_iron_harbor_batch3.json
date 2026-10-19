@@ -1,0 +1,35 @@
+{
+  "id": "sn_iron_harbor_batch3",
+  "title": "铁港码头第三批 6 件（货物堆场 / 管线）",
+  "purpose": "补齐木材、麻袋、钢板管件与系缆绳，撑起堆场体积感",
+  "category": "prop_pack",
+  "collection": "SN_IronHarbor_Props",
+  "prefix": "SN_",
+  "layout": "沿 y=36 一字排开，每件 5 m 间距：x = -12, -7, -2, 3, 8, 13",
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Stone", "SN_Canvas", "SN_Ore", "SN_Coal"],
+  "transform": { "pivot": "ground centre (base centre, z=0)", "forward": "+X", "up": "+Z", "unit_scale": 1.0 },
+  "tri_budget_total": 1300,
+  "items": [
+    { "id": "timber_stack", "name": "SN_Timber_Stack", "desc": "木料堆：多层方木交错堆叠 + 两端金属绑带", "size": [4.0, 1.5, 1.2], "tri_budget": 250, "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal"], "position": [-12, 36, 0] },
+    { "id": "sack_pile", "name": "SN_Sack_Pile", "desc": "麻袋堆：4-6 个鼓形麻袋堆叠，表面简单折痕", "size": [1.5, 1.0, 0.8], "tri_budget": 300, "materials": ["SN_Canvas"], "position": [-7, 36, 0] },
+    { "id": "steam_pipe", "name": "SN_Steam_Pipe", "desc": "蒸汽管段：主钢管 + 法兰 + 两道支墩，可沿 X 拼接", "size": [2.0, 0.3, 0.4], "tri_budget": 150, "materials": ["SN_Metal"], "position": [-2, 36, 0] },
+    { "id": "mooring_rope", "name": "SN_Mooring_Rope", "desc": "缆绳卷：盘绕盘绳 + 端头垂下一段", "size": [0.9, 0.9, 0.5], "tri_budget": 200, "materials": ["SN_Canvas"], "position": [3, 36, 0] },
+    { "id": "cargo_net", "name": "SN_Cargo_Net", "desc": "吊货网：网格绳面 + 四角吊环（平铺态）", "size": [3.0, 3.0, 0.15], "tri_budget": 250, "materials": ["SN_Canvas", "SN_Metal"], "position": [8, 36, 0] },
+    { "id": "pallet", "name": "SN_Pallet", "desc": "托盘：底板 + 三根纵梁 + 面板条", "size": [1.2, 1.0, 0.15], "tri_budget": 100, "materials": ["SN_Wood"], "position": [13, 36, 0] }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_Dock_Wall", "SN_Dock_Fender", "SN_Mooring_Bollard", "SN_Crate", "SN_Barrel", "SN_Ore_Pile"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "acceptance": [
+    "6 个对象命名严格匹配，全部位于 SN_IronHarbor_Props",
+    "每件原点在自身底面中心；总三角面 <= 1300",
+    "材质只用调色板",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界",
+    "原有对象未被修改",
+    "3/4 视角下可辨认：木料堆、麻袋堆、蒸汽管、缆绳卷、吊货网、托盘"
+  ],
+  "notes": "第三批。吊货网与托盘是给塔吊挂载演示准备的；蒸汽管可沿 X 重复拼接。"
+}

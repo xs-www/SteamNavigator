@@ -1,0 +1,36 @@
+{
+  "id": "sn_iron_harbor_batch5",
+  "title": "铁港码头第五批 7 件（结构 / 标识 / 动力）",
+  "purpose": "补齐石阶、港口牌子、钟、旗杆、煤溜槽、小锅炉与船台龙骨墩",
+  "category": "prop_pack",
+  "collection": "SN_IronHarbor_Props",
+  "prefix": "SN_",
+  "layout": "沿 y=48 一字排开，每件 5 m 间距：x = -12, -7, -2, 3, 8, 13, 18",
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Stone", "SN_Canvas", "SN_Ore", "SN_Coal"],
+  "transform": { "pivot": "ground centre (base centre, z=0)", "forward": "+X", "up": "+Z", "unit_scale": 1.0 },
+  "tri_budget_total": 2100,
+  "items": [
+    { "id": "dock_stairs", "name": "SN_Dock_Stairs", "desc": "码头石阶：5-7 级台阶 + 两侧矮挡墙 + 木扶手", "size": [3.0, 2.0, 3.0], "tri_budget": 300, "materials": ["SN_Stone", "SN_Wood"], "position": [-12, 48, 0] },
+    { "id": "port_sign", "name": "SN_Port_Sign", "desc": "港口牌：两根木柱 + 横向木牌 + 铁边框 + 顶部装饰", "size": [2.0, 0.25, 1.6], "tri_budget": 150, "materials": ["SN_Wood", "SN_Metal"], "position": [-7, 48, 0] },
+    { "id": "bell", "name": "SN_Bell", "desc": "港口钟：金属钟体 + 支架 + 钟锤", "size": [0.6, 0.6, 0.9], "tri_budget": 200, "materials": ["SN_Metal"], "position": [-2, 48, 0] },
+    { "id": "flag_pole", "name": "SN_Flag_Pole", "desc": "旗杆 + 旗：细杆 + 顶部球 + 一面低模旗", "size": [1.4, 0.3, 6.0], "tri_budget": 200, "materials": ["SN_Wood", "SN_Canvas"], "position": [3, 48, 0] },
+    { "id": "coal_chute", "name": "SN_Coal_Chute", "desc": "煤溜槽：漏斗 + 斜槽 + 支架，可把煤倒入货舱", "size": [2.5, 1.5, 1.5], "tri_budget": 400, "materials": ["SN_Metal", "SN_Wood_Dark"], "position": [8, 48, 0] },
+    { "id": "boiler_unit", "name": "SN_Boiler_Unit", "desc": "小型锅炉机组：卧式锅炉 + 烟管 + 阀门 + 底座", "size": [3.0, 2.0, 2.5], "tri_budget": 700, "materials": ["SN_Metal", "SN_Wood"], "position": [13, 48, 0] },
+    { "id": "keel_block", "name": "SN_Keel_Block", "desc": "船台龙骨墩：梯形木墩 + 顶部弧形托座 + 铁箍", "size": [1.2, 0.8, 0.6], "tri_budget": 160, "materials": ["SN_Wood_Dark", "SN_Metal"], "position": [18, 48, 0] }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_Dock_Wall", "SN_Dock_Fender", "SN_Mooring_Bollard", "SN_Crate", "SN_Barrel", "SN_Ore_Pile"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "acceptance": [
+    "7 个对象命名严格匹配，全部位于 SN_IronHarbor_Props",
+    "每件原点在自身底面中心；总三角面 <= 2100",
+    "材质只用调色板",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界",
+    "原有对象未被修改",
+    "3/4 视角下可辨认：石阶、港口牌、钟、旗杆、煤溜槽、锅炉、龙骨墩"
+  ],
+  "notes": "第五批。锅炉机组与煤溜槽是同批里最重的两件，优先保证轮廓可读；龙骨墩对应造船厂设施。"
+}
