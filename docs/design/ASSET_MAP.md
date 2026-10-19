@@ -159,6 +159,33 @@
 - 工作台：`.design/SN_Asset_Workbench.blend` → `SN_Ship_Modules` 集合（场景现 160 对象 / 145 mesh；GLB 备份在 `.design/modules/backup_glb/`）
 - 返工记录：R0 独立质检发现 5 处同法线共面 + 9 处悬空壳体，已按参数级修正并重建（合计 6968 → 7016 tri），R1 复验见验收报告
 
+## 3D 港口设施锚点（第一批 6 件）
+
+2.5D 固定机位港口舞台（`PortStage`）的设施可辨认锚点：只做一眼可认的外轮廓 + 1–2 个标志性细节，不建室内 / 碰撞 / 可进入门，招牌与纸张上**不烘焙任何文字**（文字交给 2D UI 标签层）。6 件各是一个 mesh、原点在底面中心（`object.location` = 布局位置、几何为局部坐标、zmin=0），导出为 `assets/models/port/` 下的独立 `.glb`（单节点 / glTF Y-up / 全部材质 doubleSided）。合计 **4996 三角面**（预算 10500）。
+
+| 设施 | 锚点（GLB） | 尺寸 L×W×H (m) | tri | 主要材质 |
+| --- | --- | --- | ---: | --- |
+| `exchange` 市场 | `assets/models/port/SN_Market_Stall.glb` | 5.00 × 3.00 × 3.20 | 768 | Wood / Wood_Dark / Canvas / Metal / Brass |
+| `contracts` 委托 | `assets/models/port/SN_Notice_Board.glb` | 2.80 × 0.50 × 2.60 | 272 | Wood / Wood_Dark / Canvas / Metal |
+| `supply` 补给 | `assets/models/port/SN_Water_Tank.glb` | 4.00 × 4.00 × 5.20 | 1324 | Stone / Metal / Iron / Brass |
+| `intel` 情报 | `assets/models/port/SN_Signal_Tower.glb` | 3.20 × 2.40 × 8.50 | 1052 | Metal / Wood_Dark / Brass / Iron / Canvas |
+| `shipyard` 船厂 | `assets/models/port/SN_Shipyard_Gantry.glb` | 14.00 × 4.014 × 10.00（Y 含爬梯外凸 14 mm） | 1064 | Metal / Iron / Wood_Dark / Brass |
+| `shipyard` 船厂 | `assets/models/port/SN_Dry_Dock.glb` | 18.00 × 8.00 × 2.60 | 516 | Stone / Metal / Wood_Dark |
+
+- 结构要点：市场棚（4 柱前倾帆布顶 + 柜台 + 空图标招牌 + 2 挂灯 + 货架/木箱）；告示板（2 柱 + 木框 + 后挡板 + 6 张空白纸 + 深色小披檐 + 侧挂灯托架，纸面朝 −Y 相机侧、整体后仰 5°）；水箱（石基座 + 16 边筒身 + 锥顶 + 3 道铁箍 + 32 颗铆钉 + 弯管/阀 + 侧爬梯 + 液位计 + 空白黄铜铭牌）；信号塔（4 收分腿 + X 斜撑 + 平台栏杆 + 旗语桅杆 + 2 摆臂 + 灯室 + 旗绳 + 工具柜 + 斜爬梯）；龙门吊（2 组 A 形腿 + 箱形主梁下沿净高 9.00 m + 第 3/4 跨小车/吊钩滑轮组 + 2 钢缆 + 横纵斜撑 + 侧爬梯 + 操作平台）；干船坞（坞底 + 每侧 3 级收分坞壁 + 2 条滑道轨 + 5 组龙骨墩（间距 3 m，骑轨）+ 排水沟 + 两侧各 6 级石阶）。
+- 材质：只用调色板；本批新增 `SN_Iron`（氧化铁，base 0.072/0.076/0.084、rough 0.52、metallic 0.62，仅被水箱/信号塔/龙门吊引用）。`SN_Wood_Deck` / `SN_Canvas_Shade` 本批未使用。
+- 工作台：`.design/SN_Asset_Workbench.blend` → `SN_Port_Facilities` 集合（场景 234 对象 / 213 mesh / 19 材质）；暂存排原定 y=60，因与 `SN_Ship_Modules` 冲突改为 **y=75**（x = 10 / 18 / 26 / 36 / −8 / −30），工单已记 `layout_revision`。
+- 源快照：`.design/port/SN_<Name>.blend`（6 个，单件、轴心归零）；GLB 备份在 `.design/port/backup_glb/`；实测数据 `.design/port/report.json`。
+- 工单 / 规划：`tools/modeling/briefs/sn_port_facilities_batch1.json`、`PORT_FACILITIES_PLAN.md`
+- 生成器：`tools/modeling/generators/sn_port_facilities_generator.py`（顶部 ITEMS 参数表 + 各 `build_*`，纯几何可离线干跑）
+- 离线干跑：`tools/modeling/generators/dryrun_props.py`
+- 预览渲染：`tools/modeling/generators/render_port_preview.py`
+- GLB 导出：`tools/modeling/generators/export_port_glb.py`（逐件归零导出 + 单件 `.blend` 快照）
+- GLB 结构自检：`tools/modeling/generators/verify_port_glb.py`（单节点 / 调色板 / 尺寸 ≤0.1 m / 轴心 / doubleSided）
+- 截图：`docs/design/screenshots/port_facilities_batch1_{overview,shipyard,market,notice,tank,tower,gantry,dock}.png`
+- 验收记录：6/6 独立只读质检通过（命名/集合/轴心/尺寸误差 0.000/预算/材质/网格健康全 0/回归 digest 命中/视觉可辨）；工单里"信号塔是港口最高剪影"与本批尺寸表自相矛盾（塔 8.5 m < 龙门吊 10.0 m，场景既有铁甲舰 24.44 m），按尺寸表实现，塔为最高**塔类**竖向剪影。
+- 待接入：`PortStage` 的 `facility_visuals`（仓库目前尚无 PortStage 代码，依赖 `StageHost` 泛化）；接入后玩家可在总览/船厂页按设施替换这 6 个 GLB。
+
 ## 3D 港口样片（水面着色器试做）
 
 独立场景 `dev_scenes/harbor/harbor_diorama.tscn`，不接入主流程；只用已有 GLB 资产 + 场景内程序化 BoxMesh 剪影。浮船已从旧 `SN_Ship_Prototype` 换成 `SN_Schooner_Fame`（1795 双桅纵帆船），水面泡沫环的 `boat_half_size` 同步改为 13.2 × 3.9；场景相机构图已验证可容纳新船 33.44 m 总长 / 26.82 m 总高。

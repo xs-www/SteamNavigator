@@ -36,8 +36,14 @@ ITEMS = [
 
 THREE_QUARTER = Vector((0.85, -1.0, 0.55))
 FRONT = Vector((1.0, 0.0, 0.22))
-ROW_DIR = Vector((0.18, -1.0, 0.34))
-GROUP_DIR = Vector((0.55, -1.0, 0.45))
+ROW_DIR = Vector((0.20, -1.0, 0.52))
+GROUP_DIR = Vector((0.55, -1.0, 0.58))
+
+# 逐件取景方向：干船坞低矮宽扁，必须抬高机位才能看清坞内台阶 / 滑道轨 / 龙骨墩
+ITEM_DIRS = {
+    "SN_Dry_Dock": Vector((0.42, -1.0, 0.95)),
+    "SN_Market_Stall": Vector((0.70, -1.0, 0.42)),
+}
 
 
 def _world_points(obj):
@@ -171,7 +177,8 @@ def render_all():
     for name in ITEMS:
         states = _set_visibility({name})
         try:
-            _place_camera(cam, [items[name]], THREE_QUARTER, 760, 760, margin=1.08)
+            direction = ITEM_DIRS.get(name, THREE_QUARTER)
+            _place_camera(cam, [items[name]], direction, 760, 760, margin=1.08)
             results.append(_render(os.path.join(OUT_DIR, "%s_3q.png" % name), (760, 760)))
             _place_camera(cam, [items[name]], FRONT, 760, 760, margin=1.08)
             results.append(_render(os.path.join(OUT_DIR, "%s_front.png" % name), (760, 760)))
