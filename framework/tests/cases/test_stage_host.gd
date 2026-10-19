@@ -368,6 +368,17 @@ func test_port_stage_mounts_the_player_hull_and_requests_portals() -> void:
 	})
 	assert_true(port.has_ship(), "a resolved hull_model_path mounts the player ship in the port")
 
+	# The rigid steamer hull is baked into ship-local draw batches.
+	var ship_stats: Dictionary = port.batch_stats()
+	assert_false(bool(ship_stats["ship_fallback"]), "the rigid paddle-steamer hull batches instead of falling back")
+	assert_true(int(ship_stats["ship_batches"]) > 0, "the hull produces ship-local draw batches")
+	assert_true(
+		int(ship_stats["ship_meshes_after"]) < int(ship_stats["ship_meshes_before"]),
+		"hull batching reduces the hull draw meshes: %d -> %d" % [
+			int(ship_stats["ship_meshes_before"]), int(ship_stats["ship_meshes_after"])
+		]
+	)
+
 	port.request_portal("exchange")
 	assert_eq(portals.size(), 1, "request_portal is re-emitted by the host")
 	assert_eq(portals[0], "exchange", "the portal target is the requested facility")
@@ -503,8 +514,9 @@ func test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void:
 # --- 8. PortStage harbour-town street kit (L2b) ------------------------------
 
 ## The official town kit as the query resolves it for a dev/loose `core` mod.
-## Five buildings + seven repeated fence modules + six workers + eight reused
-## props + three boats = 29 mounted props when every slot resolves.
+## Five buildings + nine repeated fence modules + nine workers + ten plaza props
+## + five boats + ten dock-side industry props are the maximum (busy tier);
+## a tier mounts a prefix of each group.
 const TOWN_VISUALS := {
 	"warehouse_long": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb",
 	"warehouse_short": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Short.glb",
@@ -522,7 +534,19 @@ const TOWN_VISUALS := {
 	"timber_stack": "res://dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
 	"handcart": "res://dev_mods/core/assets/models/props/SN_Handcart.glb",
 	"gas_lamp": "res://dev_mods/core/assets/models/props/SN_Gas_Lamp.glb",
+	"market_stall": "res://assets/models/port/SN_Market_Stall.glb",
+	"harbor_crane": "res://dev_mods/core/assets/models/props/SN_Harbor_Crane.glb",
+	"sack_pile": "res://dev_mods/core/assets/models/props/SN_Sack_Pile.glb",
+	"plate_stack": "res://dev_mods/core/assets/models/props/SN_Plate_Stack.glb",
+	"ore_pile": "res://dev_mods/core/assets/models/props/SN_Ore_Pile.glb",
+	"pallet": "res://dev_mods/core/assets/models/props/SN_Pallet.glb",
+	"gangway": "res://dev_mods/core/assets/models/props/SN_Gangway.glb",
+	"mooring_bollard": "res://dev_mods/core/assets/models/props/SN_Mooring_Bollard.glb",
+	"capstan": "res://dev_mods/core/assets/models/props/SN_Capstan.glb",
+	"buoy": "res://dev_mods/core/assets/models/props/SN_Buoy.glb",
 }
+## town_prop_count per density tier (buildings are always mounted).
+const TOWN_DENSITY_COUNTS := {"sparse": 28, "normal": 47, "busy": 63}
 const TOWN_MISSING_MODEL := "res://dev_mods/core/assets/models/props/SN_Does_Not_Exist.glb"
 const STEADY_BUILD := "core:starting_build/steady"
 
@@ -538,7 +562,12 @@ func test_port_stage_town_kit_mounts_full_streetscape() -> void:
 	var port := stage as PortStage
 
 	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
-	assert_eq(port.town_prop_count(), 29, "5 buildings + 7 fence modules + 6 workers + 8 props + 3 boats mount")
+	assert_eq(port.town_density(), "normal", "medium ports default to the normal street density")
+	assert_eq(
+		port.town_prop_count(),
+		int(TOWN_DENSITY_COUNTS["normal"]),
+		"5 buildings + 7 fences + 7 workers + 8 plaza props + 3 boats + 17 quay props mount"
+	)
 	assert_eq(port.town_blockout_count(), 0, "every resolved town slot loads its GLB instead of a blockout")
 	assert_eq(port.skyline_building_count(), 0, "a mounted town kit replaces the L2 skyline")
 	assert_eq(port.skyline_crane_count(), 0, "a mounted town kit replaces the L2 cranes")
@@ -549,8 +578,87 @@ func test_port_stage_town_kit_mounts_full_streetscape() -> void:
 		"banner_path": IRON_HARBOR_BANNER,
 	}))
 	assert_true(port.has_backdrop(), "the authored banner still loads with a town kit bound")
-	assert_eq(port.town_prop_count(), 29, "the town kit stays mounted under a painted banner")
+	assert_eq(
+		port.town_prop_count(),
+		int(TOWN_DENSITY_COUNTS["normal"]),
+		"the town kit stays mounted under a painted banner"
+	)
 	assert_eq(port.town_blockout_count(), 0, "the banner does not disturb the town kit")
+	_free_host(host)
+
+
+func test_port_stage_town_density_scales_with_size_and_override() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	# size derives the density tier when no explicit density is bound.
+	host.bind_view_model(_port_view("small", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_eq(port.town_density(), "sparse", "small ports default to the sparse street density")
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["sparse"]), "sparse mounts 28 street props")
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_eq(port.town_density(), "normal", "medium ports default to normal density")
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["normal"]), "normal mounts 47 street props")
+	host.bind_view_model(_port_view("large", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_eq(port.town_density(), "busy", "large ports default to the busy street density")
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["busy"]), "busy mounts 63 street props")
+
+	# An explicit density wins over the size default.
+	host.bind_view_model(_port_view("small", PORT_FACILITIES, {
+		"town_visuals": TOWN_VISUALS,
+		"density": "busy",
+	}))
+	assert_eq(port.town_density(), "busy", "an explicit density beats the size default")
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["busy"]), "the explicit busy density mounts 63 props")
+
+	# The shell also forwards the same value inside port.diorama.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {
+		"town_visuals": TOWN_VISUALS,
+		"diorama": {"density": "sparse"},
+	}))
+	assert_eq(port.town_density(), "sparse", "port.diorama.density is honoured")
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["sparse"]), "the diorama sparse density mounts 28 props")
+
+	# Unknown density never breaks the stage: fall back to the size default.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {
+		"town_visuals": TOWN_VISUALS,
+		"density": "ultra",
+	}))
+	assert_eq(port.town_density(), "normal", "an unknown density falls back to the size default")
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["normal"]), "the fallback density mounts the normal street")
+
+	# Deterministic layout: binding the same ViewModel twice mounts the same set.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_eq(port.town_prop_count(), int(TOWN_DENSITY_COUNTS["normal"]), "re-binding the same port keeps the same street layout")
+	_free_host(host)
+
+
+func test_port_stage_town_kit_does_not_require_every_optional_slot() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	# Old saves resolve the original ten slots only: new slots are simply absent
+	# (fewer props), never an error or an empty anchor.
+	var legacy := TOWN_VISUALS.duplicate(true)
+	for slot in ["market_stall", "harbor_crane", "sack_pile", "plate_stack", "ore_pile",
+			"pallet", "gangway", "mooring_bollard", "capstan", "buoy"]:
+		legacy.erase(String(slot))
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": legacy}))
+	assert_eq(port.town_density(), "normal", "the density tier still resolves without the new slots")
+	assert_eq(port.town_prop_count(), 30, "only the authored 30 street props mount when the new slots are absent")
+	assert_eq(port.town_blockout_count(), 0, "missing optional slots are skipped, not blockout-filled")
+	assert_eq(port.skyline_building_count(), 0, "the mounted town kit still suppresses the L2 skyline")
 	_free_host(host)
 
 
@@ -588,7 +696,11 @@ func test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void:
 	partial["warehouse_long"] = TOWN_MISSING_MODEL
 	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": partial}))
 	assert_eq(port.town_blockout_count(), 1, "only the broken building falls back to a blockout")
-	assert_eq(port.town_prop_count(), 29, "the other town props still mount")
+	assert_eq(
+		port.town_prop_count(),
+		int(TOWN_DENSITY_COUNTS["normal"]),
+		"the other town props still mount"
+	)
 	assert_eq(port.skyline_building_count(), 0, "a mounted town kit still suppresses the L2 skyline")
 
 	# Every path broken: the five buildings stay as blockouts, the optional
@@ -614,8 +726,10 @@ func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 	assert_false(current_port.is_empty(), "port.view reports the current port")
 
 	var town: Dictionary = current_port.get("town_visuals", {})
-	assert_true(town.size() >= 10, "port.view resolves at least the 10 town-kit slots: %d" % town.size())
-	for slot in ["warehouse_long", "rowboat", "crate", "gas_lamp"]:
+	assert_true(town.size() >= 26, "port.view resolves the extended town kit slots: %d" % town.size())
+	for slot in ["warehouse_long", "rowboat", "crate", "gas_lamp",
+			"market_stall", "harbor_crane", "sack_pile", "plate_stack", "ore_pile",
+			"pallet", "gangway", "mooring_bollard", "capstan", "buoy"]:
 		assert_true(town.has(String(slot)), "the resolved town kit exposes the %s slot" % slot)
 	for slot in town.keys():
 		var path := String(town[slot])
@@ -637,6 +751,278 @@ func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 	if stage is PortStage:
 		host.bind_view_model({"port": current_port})
 		var port := stage as PortStage
-		assert_eq(port.town_prop_count(), 29, "the resolved query ViewModel mounts the full streetscape")
+		var expected_street := int(TOWN_DENSITY_COUNTS.get(port.town_density(), -1))
+		assert_true(expected_street > 0, "the resolved port reports a known density tier: %s" % port.town_density())
+		assert_eq(
+			port.town_prop_count(),
+			expected_street,
+			"the resolved query ViewModel mounts the full %s streetscape" % port.town_density()
+		)
 		assert_eq(port.town_blockout_count(), 0, "every resolved town visual replaces its blockout")
+	_free_host(host)
+
+
+# --- 9. PortStage static batching + painted backdrop depth -------------------
+
+
+func test_port_stage_batches_static_layers_into_few_draws() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	var stats: Dictionary = port.batch_stats()
+	assert_true(int(stats["batches"]) > 0, "the static town/facility layers produce draw batches")
+	assert_eq(
+		int(stats["batches"]),
+		int(stats["multimesh_batches"]) + int(stats["material_batches"]),
+		"the batch count is the sum of MultiMesh and material-merge batches"
+	)
+	assert_true(int(stats["multimesh_batches"]) > 0, "procedural boxes batch through MultiMesh")
+	assert_true(int(stats["material_batches"]) > 0, "content-kit GLB surfaces merge by material")
+	assert_true(
+		int(stats["meshes_before"]) > int(stats["meshes_after"]),
+		"batching reduces the draw-mesh count: %d -> %d" % [int(stats["meshes_before"]), int(stats["meshes_after"])]
+	)
+	assert_true(
+		int(stats["surfaces_before"]) > int(stats["surfaces_after"]),
+		"batching reduces the surface/draw-call estimate: %d -> %d" % [int(stats["surfaces_before"]), int(stats["surfaces_after"])]
+	)
+
+	# Batching must not disturb the 2D hotspot contract.
+	var anchors := port.facility_anchors()
+	assert_eq(anchors.size(), PORT_FACILITIES.size(), "every present facility still exposes an anchor after batching")
+	for facility in PORT_FACILITIES:
+		assert_true(anchors.has(facility), "the %s anchor survives batching" % facility)
+		var screen_anchor := port.facility_screen_anchor(facility)
+		assert_true(
+			is_finite(screen_anchor.x) and is_finite(screen_anchor.y),
+			"the %s projected anchor stays finite after batching" % facility
+		)
+
+	# Batch stats are per-bind, not cumulative.
+	var normal_meshes := int(stats["meshes_before"])
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {
+		"town_visuals": TOWN_VISUALS,
+		"density": "busy",
+	}))
+	var busy: Dictionary = port.batch_stats()
+	assert_true(
+		int(busy["meshes_before"]) > normal_meshes,
+		"a denser bind mounts more street nodes before batching: %d -> %d" % [normal_meshes, int(busy["meshes_before"])]
+	)
+	assert_true(
+		int(busy["meshes_after"]) < int(busy["meshes_before"]),
+		"the busy street is batched as well: %d -> %d" % [int(busy["meshes_before"]), int(busy["meshes_after"])]
+	)
+	assert_true(int(busy["batches"]) > 0, "the busy street still batches")
+	_free_host(host)
+
+
+func test_port_stage_without_town_still_batches_facilities() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	var stats: Dictionary = port.batch_stats()
+	assert_true(int(stats["batches"]) > 0, "the procedural facility billboards still batch without a town kit")
+	assert_true(
+		int(stats["meshes_after"]) < int(stats["meshes_before"]),
+		"the facility-only stage still drops draw meshes: %d -> %d" % [int(stats["meshes_before"]), int(stats["meshes_after"])]
+	)
+	assert_eq(port.town_prop_count(), 5, "the five town blockouts stay mounted")
+	_free_host(host)
+
+
+func test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	# No banner + town: the town kit replaces the L2 row, but the painted far
+	# backdrop still supplies mountain/city/roofline depth behind it.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_false(port.has_backdrop(), "the painted-backdrop fixture has no banner")
+	var town_layers := port.painted_backdrop_layer_count()
+	assert_true(
+		town_layers >= 2 and town_layers <= 3,
+		"the no-banner town stage paints 2..3 far backdrop layers: %d" % town_layers
+	)
+	assert_eq(port.skyline_building_count(), 0, "the mounted town kit still suppresses the L2 row")
+
+	# No banner + no town: the L2 silhouette row returns and the painted layers
+	# stay mounted (both read as distance behind the empty plaza).
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	assert_false(port.has_backdrop(), "still no banner")
+	assert_eq(port.painted_backdrop_layer_count(), town_layers, "the painted far layers survive a town-less bind")
+	assert_eq(port.skyline_building_count(), 10, "the procedural L2 skyline returns without a town kit")
+
+	# A painted L1 banner replaces the whole fallback backdrop: the painted
+	# depth layers and the L2 row must both disappear.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"banner_path": IRON_HARBOR_BANNER}))
+	assert_true(port.has_backdrop(), "the authored banner loads")
+	assert_eq(port.painted_backdrop_layer_count(), 0, "a painted banner hides the painted depth layers")
+	assert_eq(port.skyline_building_count(), 0, "a painted banner still hides the L2 skyline")
+	var fallback := port.get_node_or_null("FallbackBackdrop")
+	assert_not_null(fallback, "the fallback backdrop group stays mounted for banner-less ports")
+	if fallback != null:
+		assert_false((fallback as Node3D).visible, "the fallback backdrop group is hidden under a banner")
+
+	# Dropping the banner brings the painted depth back.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	assert_eq(port.painted_backdrop_layer_count(), town_layers, "the painted depth layers return when the banner is dropped")
+	if fallback != null:
+		assert_true((fallback as Node3D).visible, "the fallback backdrop group is visible again")
+	_free_host(host)
+
+
+# --- 10. PortStage rigid player-hull batching -------------------------------
+
+
+func test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model({
+		"port": {"id": "test_harbor", "size": "medium", "facilities": PORT_FACILITIES},
+		"ship": {"hull_model_path": STEAMER_MODEL, "hull_tier": 1},
+	})
+	assert_true(port.has_ship(), "the player hull stays mounted after rigid batching")
+	var stats: Dictionary = port.batch_stats()
+	assert_false(bool(stats["ship_fallback"]), "the rigid paddle-steamer hull batches instead of falling back")
+	assert_eq(
+		int(stats["ship_batches"]),
+		int(stats["ship_multimesh_batches"]) + int(stats["ship_material_batches"]),
+		"the ship batch count is the sum of its MultiMesh and material batches"
+	)
+	assert_true(
+		int(stats["ship_surfaces_before"]) >= 40,
+		"the fixture hull really is multi-surface: %d" % int(stats["ship_surfaces_before"])
+	)
+	assert_true(
+		int(stats["ship_surfaces_after"]) * 3 <= int(stats["ship_surfaces_before"]),
+		"hull batching drops surfaces by at least 3x: %d -> %d" % [
+			int(stats["ship_surfaces_before"]), int(stats["ship_surfaces_after"])
+		]
+	)
+	assert_true(
+		int(stats["ship_meshes_after"]) < int(stats["ship_meshes_before"]),
+		"hull batching drops draw meshes: %d -> %d" % [
+			int(stats["ship_meshes_before"]), int(stats["ship_meshes_after"])
+		]
+	)
+
+	# The batches stay under the animated ship root, so the bob/turn keeps
+	# moving the whole ship.
+	var ship_node := port.get_node_or_null("Content/PlayerShip")
+	assert_not_null(ship_node, "the PlayerShip root stays in Content")
+	if ship_node != null:
+		assert_not_null(ship_node.get_node_or_null("ShipBatches"), "the hull batches live under the animated ship root")
+
+	# The foam ring was configured from the un-batched hull; it must still match
+	# a freshly instantiated copy of the authored hull positioned like the ship.
+	var foam := port.ship_foam_bounds()
+	assert_true(
+		foam.size.x > 1.0 and foam.size.y > 1.0 and foam.size.z > 1.0,
+		"the foam bounds capture the authored hull size: %s" % str(foam.size)
+	)
+	var packed := load(STEAMER_MODEL) as PackedScene
+	assert_not_null(packed, "the authored steamer hull loads as a PackedScene")
+	if packed != null:
+		var fresh := packed.instantiate()
+		var holder := Node3D.new()
+		holder.name = "HullReference"
+		holder.position = PortStage.SHIP_SPAWN
+		holder.rotation = Vector3(0.0, deg_to_rad(PortStage.SHIP_YAW_DEG), 0.0)
+		holder.scale = Vector3.ONE * PortStage.SHIP_SCALE
+		holder.add_child(fresh)
+		var expected := StageKit.visual_aabb(holder)
+		holder.free()
+		assert_true(expected.size.length() > 1.0, "the authored hull has a non-degenerate size")
+		assert_almost_eq(foam.size.x, expected.size.x, 0.01, "foam bounds keep the authored hull width")
+		assert_almost_eq(foam.size.y, expected.size.y, 0.01, "foam bounds keep the authored hull height")
+		assert_almost_eq(foam.size.z, expected.size.z, 0.01, "foam bounds keep the authored hull length")
+		assert_true(
+			foam.position.distance_to(expected.position) < 0.01,
+			"foam bounds keep the authored hull AABB position: %s vs %s" % [str(foam.position), str(expected.position)]
+		)
+	_free_host(host)
+
+
+func test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model({
+		"port": {"id": "test_harbor", "size": "medium", "facilities": PORT_FACILITIES},
+		"ship": {"hull_model_path": STEAMER_MODEL, "hull_tier": 1},
+	})
+	assert_false(bool(port.batch_stats()["ship_fallback"]), "the fallback flag defaults to false for the rigid steamer")
+	var ship_node := port.get_node_or_null("Content/PlayerShip")
+	assert_not_null(ship_node, "the player ship root is mounted")
+	if ship_node != null:
+		assert_true(port.ship_visual_is_rigid(ship_node), "the batched steamer hull is recognised as rigid")
+
+	# Animation -> whole-hull fallback.
+	var animated := Node3D.new()
+	animated.add_child(AnimationPlayer.new())
+	assert_false(port.ship_visual_is_rigid(animated), "an animated hull is rejected (safe fallback)")
+	animated.free()
+
+	# Skeleton/bones -> whole-hull fallback.
+	var skinned := Node3D.new()
+	skinned.add_child(Skeleton3D.new())
+	assert_false(port.ship_visual_is_rigid(skinned), "a skeleton hull is rejected (safe fallback)")
+	skinned.free()
+
+	# Particles -> whole-hull fallback.
+	var particle_visual := Node3D.new()
+	particle_visual.add_child(GPUParticles3D.new())
+	assert_false(port.ship_visual_is_rigid(particle_visual), "a particle hull is rejected (safe fallback)")
+	particle_visual.free()
+
+	# Transparent material -> whole-hull fallback (sorting must stay correct).
+	var transparent_visual := Node3D.new()
+	var transparent_instance := MeshInstance3D.new()
+	transparent_instance.mesh = BoxMesh.new()
+	var alpha_material := StandardMaterial3D.new()
+	alpha_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	transparent_instance.material_override = alpha_material
+	transparent_visual.add_child(transparent_instance)
+	assert_false(port.ship_visual_is_rigid(transparent_visual), "a transparent hull material is rejected (safe fallback)")
+	transparent_visual.free()
+
+	# Sanity: the predicate is not always false — a plain opaque rigid hull works.
+	var rigid_visual := Node3D.new()
+	var box_instance := MeshInstance3D.new()
+	box_instance.mesh = BoxMesh.new()
+	rigid_visual.add_child(box_instance)
+	assert_true(port.ship_visual_is_rigid(rigid_visual), "a plain rigid hull is accepted")
+	rigid_visual.free()
 	_free_host(host)

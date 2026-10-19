@@ -20,7 +20,9 @@ extends Control
 const STAGE_SCENE := "res://framework/ui/stages/port_stage.tscn"
 const BANNER_PATH := "res://dev_mods/core/assets/ports/iron_harbor_banner.png"
 ## Pre-resolved town-kit paths (inside the loose dev core mod), mirroring what
-## `port.view` resolves from `port.diorama.town` in the real game.
+## `port.view` resolves from `port.diorama.town` in the real game. The new
+## dock-side industry slots reuse the official core-kit prop keys, so the
+## preview exercises the exact same asset keys as the archetype content.
 const TOWN_VISUALS := {
 	"warehouse_long": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb",
 	"warehouse_short": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Short.glb",
@@ -38,6 +40,16 @@ const TOWN_VISUALS := {
 	"timber_stack": "res://dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
 	"handcart": "res://dev_mods/core/assets/models/props/SN_Handcart.glb",
 	"gas_lamp": "res://dev_mods/core/assets/models/props/SN_Gas_Lamp.glb",
+	"market_stall": "res://assets/models/port/SN_Market_Stall.glb",
+	"harbor_crane": "res://dev_mods/core/assets/models/props/SN_Harbor_Crane.glb",
+	"sack_pile": "res://dev_mods/core/assets/models/props/SN_Sack_Pile.glb",
+	"plate_stack": "res://dev_mods/core/assets/models/props/SN_Plate_Stack.glb",
+	"ore_pile": "res://dev_mods/core/assets/models/props/SN_Ore_Pile.glb",
+	"pallet": "res://dev_mods/core/assets/models/props/SN_Pallet.glb",
+	"gangway": "res://dev_mods/core/assets/models/props/SN_Gangway.glb",
+	"mooring_bollard": "res://dev_mods/core/assets/models/props/SN_Mooring_Bollard.glb",
+	"capstan": "res://dev_mods/core/assets/models/props/SN_Capstan.glb",
+	"buoy": "res://dev_mods/core/assets/models/props/SN_Buoy.glb",
 }
 const VARIANT_PREVIEW := "preview"
 const VARIANT_SPARSE := "sparse"
@@ -169,9 +181,22 @@ func _print_scene_fill(stage: Node) -> void:
 		int(stage.skyline_crane_count()),
 	])
 	if stage.has_method("town_prop_count"):
-		print("[PortStagePreview] town: props=%d blockouts=%d" % [
+		print("[PortStagePreview] town: density=%s props=%d blockouts=%d painted_layers=%d" % [
+			String(stage.town_density()) if stage.has_method("town_density") else "?",
 			int(stage.town_prop_count()),
 			int(stage.town_blockout_count()),
+			int(stage.painted_backdrop_layer_count()) if stage.has_method("painted_backdrop_layer_count") else 0,
+		])
+	if stage.has_method("batch_stats"):
+		var batch: Dictionary = stage.batch_stats()
+		print("[PortStagePreview] static batches: batches=%d (multimesh=%d material=%d) meshes %d -> %d surfaces %d -> %d" % [
+			int(batch.get("batches", 0)),
+			int(batch.get("multimesh_batches", 0)),
+			int(batch.get("material_batches", 0)),
+			int(batch.get("meshes_before", 0)),
+			int(batch.get("meshes_after", 0)),
+			int(batch.get("surfaces_before", 0)),
+			int(batch.get("surfaces_after", 0)),
 		])
 	var frame: Node3D = stage.foreground_frame()
 	var camera: Camera3D = stage.get_node_or_null("StageCamera") as Camera3D

@@ -61,6 +61,9 @@
               "type": "string",
               "pattern": "^[a-z][a-z0-9_.-]*$"
             },
+            "density": {
+              "enum": ["sparse", "normal", "busy"]
+            },
             "town": {
               "type": "object",
               "minProperties": 1,

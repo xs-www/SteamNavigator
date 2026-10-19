@@ -32,7 +32,17 @@
             "coal_pile": "model.prop.coal_pile",
             "timber_stack": "model.prop.timber_stack",
             "handcart": "model.prop.handcart",
-            "gas_lamp": "model.prop.gas_lamp"
+            "gas_lamp": "model.prop.gas_lamp",
+            "market_stall": "model.port.market_stall",
+            "harbor_crane": "model.prop.harbor_crane",
+            "sack_pile": "model.prop.sack_pile",
+            "plate_stack": "model.prop.plate_stack",
+            "ore_pile": "model.prop.ore_pile",
+            "pallet": "model.prop.pallet",
+            "gangway": "model.prop.gangway",
+            "mooring_bollard": "model.prop.mooring_bollard",
+            "capstan": "model.prop.capstan",
+            "buoy": "model.prop.buoy"
           }
         },
         "facilities": ["exchange", "contracts", "supply", "shipyard"],
@@ -72,7 +82,17 @@
             "coal_pile": "model.prop.coal_pile",
             "timber_stack": "model.prop.timber_stack",
             "handcart": "model.prop.handcart",
-            "gas_lamp": "model.prop.gas_lamp"
+            "gas_lamp": "model.prop.gas_lamp",
+            "market_stall": "model.port.market_stall",
+            "harbor_crane": "model.prop.harbor_crane",
+            "sack_pile": "model.prop.sack_pile",
+            "plate_stack": "model.prop.plate_stack",
+            "ore_pile": "model.prop.ore_pile",
+            "pallet": "model.prop.pallet",
+            "gangway": "model.prop.gangway",
+            "mooring_bollard": "model.prop.mooring_bollard",
+            "capstan": "model.prop.capstan",
+            "buoy": "model.prop.buoy"
           }
         },
         "facilities": ["exchange", "contracts", "supply", "intel"],
@@ -110,7 +130,17 @@
             "coal_pile": "model.prop.coal_pile",
             "timber_stack": "model.prop.timber_stack",
             "handcart": "model.prop.handcart",
-            "gas_lamp": "model.prop.gas_lamp"
+            "gas_lamp": "model.prop.gas_lamp",
+            "market_stall": "model.port.market_stall",
+            "harbor_crane": "model.prop.harbor_crane",
+            "sack_pile": "model.prop.sack_pile",
+            "plate_stack": "model.prop.plate_stack",
+            "ore_pile": "model.prop.ore_pile",
+            "pallet": "model.prop.pallet",
+            "gangway": "model.prop.gangway",
+            "mooring_bollard": "model.prop.mooring_bollard",
+            "capstan": "model.prop.capstan",
+            "buoy": "model.prop.buoy"
           }
         },
         "facilities": ["exchange", "contracts", "supply", "shipyard", "intel"],
@@ -151,7 +181,17 @@
             "coal_pile": "model.prop.coal_pile",
             "timber_stack": "model.prop.timber_stack",
             "handcart": "model.prop.handcart",
-            "gas_lamp": "model.prop.gas_lamp"
+            "gas_lamp": "model.prop.gas_lamp",
+            "market_stall": "model.port.market_stall",
+            "harbor_crane": "model.prop.harbor_crane",
+            "sack_pile": "model.prop.sack_pile",
+            "plate_stack": "model.prop.plate_stack",
+            "ore_pile": "model.prop.ore_pile",
+            "pallet": "model.prop.pallet",
+            "gangway": "model.prop.gangway",
+            "mooring_bollard": "model.prop.mooring_bollard",
+            "capstan": "model.prop.capstan",
+            "buoy": "model.prop.buoy"
           }
         },
         "facilities": ["exchange", "contracts", "supply"],
@@ -189,7 +229,17 @@
             "coal_pile": "model.prop.coal_pile",
             "timber_stack": "model.prop.timber_stack",
             "handcart": "model.prop.handcart",
-            "gas_lamp": "model.prop.gas_lamp"
+            "gas_lamp": "model.prop.gas_lamp",
+            "market_stall": "model.port.market_stall",
+            "harbor_crane": "model.prop.harbor_crane",
+            "sack_pile": "model.prop.sack_pile",
+            "plate_stack": "model.prop.plate_stack",
+            "ore_pile": "model.prop.ore_pile",
+            "pallet": "model.prop.pallet",
+            "gangway": "model.prop.gangway",
+            "mooring_bollard": "model.prop.mooring_bollard",
+            "capstan": "model.prop.capstan",
+            "buoy": "model.prop.buoy"
           }
         },
         "facilities": ["exchange", "contracts", "supply", "intel"],

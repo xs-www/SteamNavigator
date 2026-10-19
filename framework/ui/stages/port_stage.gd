@@ -4,20 +4,28 @@ extends LocationStage
 ## player's moored ship in one 3/4 long-lens frame.
 ##
 ## Lifecycle: `_ready()` builds the static stage once (environment, lights,
-## water, quay, camera). `bind()` only rebuilds the data-driven layers under
-## `_content`:
-##   L1  backdrop      banner texture, otherwise nothing (sky + fog + silhouettes)
+## water, quay, camera, fallback painted backdrop). `bind()` only rebuilds the
+## data-driven layers under `_content`:
+##   L1  backdrop      banner texture; otherwise a painted dusk backdrop with
+##                     three batched silhouette depth layers (ridge/city/roofline)
 ##   L2  shoreline     deterministic BoxMesh silhouettes seeded by `port.id`
+##   L2b harbour town  density-scaled street kit (`port.size` -> sparse/normal/
+##                     busy, or `port.density` / `port.diorama.density`)
 ##   L3  facilities    anchors from `port.facilities`; missing ones get fillers
 ##   L5  player ship   `ship.hull_model_path`, tier fallback, bobbing in `_process`
-## Repeated binds with the same ViewModel are no-ops, so the host can forward
-## every application update without leaking nodes.
+## After the dynamic layers are built they are folded into static draw batches
+## (MultiMesh for shared-mesh boxes, material-signature merges for GLB props);
+## see `batch_stats()`. Repeated binds with the same ViewModel are no-ops, so
+## the host can forward every application update without leaking nodes.
 ##
 ## `bind()` ViewModel (every field optional):
-##   port.id               String  deterministic shoreline variation
+##   port.id               String  deterministic shoreline/street variation
 ##   port.size             String  "small" | "medium" | "large" -> 0.9/1.0/1.15
 ##   port.facilities       Array[String], subset of FACILITY_ORDER
 ##   port.banner_path      String  resolved L1 backdrop texture path
+##   port.density          String  "sparse" | "normal" | "busy" street density
+##   port.diorama          Dictionary  optional; `density` is read from here too
+##   port.town_visuals     Dictionary  town slot -> resolved GLB path
 ##   port.palette          Dictionary  stone/deck/wood/wood_dark/metal/iron/canvas/
 ##                                   brass plus per-facility sign colours
 ##   port.facility_visuals Dictionary  facility -> resolved GLB path (String or
@@ -106,13 +114,13 @@ const BACKDROP_SIZE := Vector2(260.0, 76.0)
 const BACKDROP_POSITION := Vector3(-70.0, 12.0, -70.0)
 const NEAR_WATER_SIZE := 600.0
 const FAR_WATER_SIZE := 2400.0
-## Fallback "sky wall": a dusk gradient card sitting just behind the far shore
-## edge. It hides the endless water sheet behind the shore, so the no-backdrop
-## variant gets a continuous warm haze horizon instead of the procedural sky's
-## ground hemisphere or a hard waterline. Hidden whenever a painted L1 backdrop
-## is mounted (the backdrop itself is the sky there).
-const SKY_CARD_SIZE := Vector2(340.0, 100.0)
-const SKY_CARD_POSITION := Vector3(-135.0, 25.0, -56.0)
+## Fallback "sky wall": a camera-facing dusk gradient card far behind the town.
+## A fixed depth + screen-fraction size replaces the old oblique quad, whose
+## near right edge used to slice the painted backdrops on the right-hand side.
+## The painted depth layers (see `_add_painted_backdrop_layers`) sit in front.
+const SKY_CARD_DEPTH := 260.0
+const SKY_CARD_SCREEN_CENTER := Vector2(-0.015, 0.185)
+const SKY_CARD_SCREEN_SIZE := Vector2(2.04, 0.96)
 
 ## L2 skyline instances per `port.size`: building count plus crane count. The
 ## plan's L2 budget is 8-20 instances, so small/medium/large stay inside it.
@@ -123,14 +131,72 @@ const SKYLINE_CRANES_BY_SIZE := {"small": 2, "medium": 2, "large": 3}
 ## `port.town_visuals` (slot -> pre-resolved GLB path); a missing visual falls
 ## back to a procedural blockout so the town silhouette still reads as a dense
 ## working harbour before/without the content kit.
+##
+## Density: `port.density` or `port.diorama.density` picks the tier explicitly
+## (sparse / normal / busy); otherwise `port.size` derives it (small -> sparse,
+## medium -> normal, large -> busy). Every group below is a curated ordered list
+## and a tier mounts a prefix of it, so a denser street grows outward from the
+## authored core instead of reshuffling. `port.id.hash()` only adds small
+## deterministic yaw jitter to free-standing props (never a global RNG).
+##
+## Normal tier = the official harbour look: 5 buildings + 7 fences + 7 workers +
+## 8 plaza props + 3 boats + 17 quay/industry props = 47 props.
+const DENSITY_BY_SIZE := {"small": "sparse", "medium": "normal", "large": "busy"}
+const DENSITY_ORDER := ["sparse", "normal", "busy"]
+const TOWN_COUNTS := {
+	"fence": {"sparse": 5, "normal": 7, "busy": 9},
+	"worker": {"sparse": 4, "normal": 7, "busy": 9},
+	"decor": {"sparse": 5, "normal": 8, "busy": 10},
+	"boat": {"sparse": 2, "normal": 3, "busy": 5},
+	"market_stall": {"sparse": 1, "normal": 2, "busy": 3},
+	"harbor_crane": {"sparse": 0, "normal": 1, "busy": 2},
+	"sack_pile": {"sparse": 1, "normal": 2, "busy": 2},
+	"plate_stack": {"sparse": 0, "normal": 1, "busy": 2},
+	"ore_pile": {"sparse": 1, "normal": 1, "busy": 2},
+	"pallet": {"sparse": 1, "normal": 3, "busy": 4},
+	"gangway": {"sparse": 0, "normal": 1, "busy": 2},
+	"mooring_bollard": {"sparse": 2, "normal": 3, "busy": 4},
+	"capstan": {"sparse": 0, "normal": 1, "busy": 1},
+	"buoy": {"sparse": 1, "normal": 2, "busy": 3},
+}
+## Iteration order for the quay/industry prop groups (deterministic mount order).
+const TOWN_QUAY_ORDER := [
+	"market_stall", "harbor_crane", "sack_pile", "plate_stack", "ore_pile",
+	"pallet", "gangway", "mooring_bollard", "capstan", "buoy",
+]
 ## Buildings stand on a raised stone plaza behind the quay, facing the camera
 ## (+Z). The plaza is what makes them read as ground-level buildings instead of
 ## floating boxes on the water sheet.
 const TOWN_GROUND_Y := 1.9
 const TOWN_PLAZA_SIZE := Vector3(120.0, 2.2, 34.0)
 const TOWN_PLAZA_CENTER := Vector3(0.0, 0.8, -27.0)
-## Reused core props placed on the town plaza to keep it from reading as an
-## empty slab. They are mounted through the same `town_visuals` map.
+## Buildings are always mounted: they carry the street silhouette and only fall
+## back to blockouts when their GLB is missing.
+const TOWN_SLOTS := [
+	{"slot": "warehouse_long", "pos": Vector3(-30.0, TOWN_GROUND_Y, -34.0), "yaw": -90.0, "scale": 1.0},
+	{"slot": "warehouse_short", "pos": Vector3(27.0, TOWN_GROUND_Y, -30.0), "yaw": -90.0, "scale": 0.95},
+	{"slot": "harbor_office", "pos": Vector3(14.0, TOWN_GROUND_Y, -40.0), "yaw": -80.0, "scale": 1.0},
+	{"slot": "tavern", "pos": Vector3(-12.0, TOWN_GROUND_Y, -26.0), "yaw": -100.0, "scale": 1.0},
+	{"slot": "cargo_shed", "pos": Vector3(1.0, TOWN_GROUND_Y, -20.0), "yaw": -90.0, "scale": 1.0},
+]
+## Fence modules line the plaza/quay seam (6 m modules, mounted left to right).
+const TOWN_FENCE_X := [-24.0, -18.0, -12.0, -6.0, 0.0, 6.0, 12.0, 18.0, 24.0]
+## Worker silhouettes on the quay deck / plaza (human scale, no animation).
+## Ordered: quay crew first (sparse still reads as a working pier), then plaza
+## pairs, then the busy tier extras.
+const TOWN_WORKER_SLOTS := [
+	{"slot": "dock_worker_a", "pos": Vector3(-7.0, DOCK_TOP, -2.2), "yaw": 35.0},
+	{"slot": "dock_worker_b", "pos": Vector3(6.5, DOCK_TOP, -2.4), "yaw": -40.0},
+	{"slot": "dock_worker_a", "pos": Vector3(21.0, DOCK_TOP, -2.6), "yaw": 150.0},
+	{"slot": "dock_worker_b", "pos": Vector3(0.0, DOCK_TOP, -5.8), "yaw": 10.0},
+	{"slot": "dock_worker_a", "pos": Vector3(-14.0, TOWN_GROUND_Y, -13.6), "yaw": 60.0},
+	{"slot": "dock_worker_b", "pos": Vector3(16.0, TOWN_GROUND_Y, -14.2), "yaw": -120.0},
+	{"slot": "dock_worker_a", "pos": Vector3(21.5, DOCK_TOP, -10.6), "yaw": 75.0},
+	{"slot": "dock_worker_b", "pos": Vector3(-19.6, DOCK_TOP, -11.0), "yaw": 20.0},
+	{"slot": "dock_worker_a", "pos": Vector3(8.0, TOWN_GROUND_Y, -16.5), "yaw": -95.0},
+]
+## Reused core props keep the plaza from reading as an empty slab. Ordered:
+## the authored eight first, then the busy-tier extras.
 const TOWN_DECOR_SLOTS := [
 	{"slot": "crate", "pos": Vector3(-21.0, TOWN_GROUND_Y, -16.0), "yaw": 20.0},
 	{"slot": "crate", "pos": Vector3(-19.4, TOWN_GROUND_Y, -15.1), "yaw": -15.0},
@@ -140,39 +206,68 @@ const TOWN_DECOR_SLOTS := [
 	{"slot": "handcart", "pos": Vector3(-16.0, TOWN_GROUND_Y, -14.0), "yaw": 60.0},
 	{"slot": "gas_lamp", "pos": Vector3(-9.0, TOWN_GROUND_Y, -11.6), "yaw": 0.0},
 	{"slot": "gas_lamp", "pos": Vector3(9.0, TOWN_GROUND_Y, -11.6), "yaw": 0.0},
+	{"slot": "crate", "pos": Vector3(-26.5, TOWN_GROUND_Y, -19.5), "yaw": 45.0},
+	{"slot": "barrel", "pos": Vector3(25.5, TOWN_GROUND_Y, -19.0), "yaw": -30.0},
 ]
-const TOWN_SLOTS := [
-	{"slot": "warehouse_long", "pos": Vector3(-30.0, TOWN_GROUND_Y, -34.0), "yaw": -90.0, "scale": 1.0},
-	{"slot": "warehouse_short", "pos": Vector3(27.0, TOWN_GROUND_Y, -30.0), "yaw": -90.0, "scale": 0.95},
-	{"slot": "harbor_office", "pos": Vector3(14.0, TOWN_GROUND_Y, -40.0), "yaw": -80.0, "scale": 1.0},
-	{"slot": "tavern", "pos": Vector3(-12.0, TOWN_GROUND_Y, -26.0), "yaw": -100.0, "scale": 1.0},
-	{"slot": "cargo_shed", "pos": Vector3(1.0, TOWN_GROUND_Y, -20.0), "yaw": -90.0, "scale": 1.0},
-]
-## Fence modules are repeated along the plaza/quay seam.
-const TOWN_FENCE_POSITIONS := [
-	Vector3(-18.0, TOWN_GROUND_Y, -12.6),
-	Vector3(-12.0, TOWN_GROUND_Y, -12.6),
-	Vector3(-6.0, TOWN_GROUND_Y, -12.6),
-	Vector3(0.0, TOWN_GROUND_Y, -12.6),
-	Vector3(6.0, TOWN_GROUND_Y, -12.6),
-	Vector3(12.0, TOWN_GROUND_Y, -12.6),
-	Vector3(18.0, TOWN_GROUND_Y, -12.6),
-]
-## Worker silhouettes on the quay deck (human scale, no animation).
-const TOWN_WORKER_SLOTS := [
-	{"slot": "dock_worker_a", "pos": Vector3(-7.0, DOCK_TOP, -2.2), "yaw": 35.0},
-	{"slot": "dock_worker_b", "pos": Vector3(6.5, DOCK_TOP, -2.4), "yaw": -40.0},
-	{"slot": "dock_worker_a", "pos": Vector3(21.0, DOCK_TOP, -2.6), "yaw": 150.0},
-	{"slot": "dock_worker_b", "pos": Vector3(0.0, DOCK_TOP, -5.8), "yaw": 10.0},
-	{"slot": "dock_worker_a", "pos": Vector3(-14.0, TOWN_GROUND_Y, -13.6), "yaw": 60.0},
-	{"slot": "dock_worker_b", "pos": Vector3(16.0, TOWN_GROUND_Y, -14.2), "yaw": -120.0},
-]
-## Small craft in the water around the player ship.
+## Small craft in the water around the player ship (authored three, then the
+## busy-tier extras).
 const TOWN_BOAT_SLOTS := [
 	{"slot": "rowboat", "pos": Vector3(-28.0, 0.02, 2.0), "yaw": -25.0},
 	{"slot": "rowboat", "pos": Vector3(26.0, 0.02, 1.0), "yaw": 20.0},
 	{"slot": "cargo_lighter", "pos": Vector3(20.0, 0.02, 3.0), "yaw": -75.0},
+	{"slot": "rowboat", "pos": Vector3(-34.0, 0.02, 4.0), "yaw": 15.0},
+	{"slot": "rowboat", "pos": Vector3(33.0, 0.02, -2.0), "yaw": -10.0},
 ]
+## New dock-side industry/market props (official kit keys only). Each list is
+## cut to the density count above; positions avoid the facility slots on the
+## quay and the authored town row on the plaza.
+const TOWN_QUAY_SLOTS := {
+	"market_stall": [
+		{"pos": Vector3(-24.5, TOWN_GROUND_Y, -14.6), "yaw": 8.0},
+		{"pos": Vector3(4.0, TOWN_GROUND_Y, -14.8), "yaw": -6.0},
+		{"pos": Vector3(23.0, TOWN_GROUND_Y, -16.0), "yaw": 175.0},
+	],
+	"harbor_crane": [
+		{"pos": Vector3(-42.0, TOWN_GROUND_Y, -41.0), "yaw": -90.0},
+		{"pos": Vector3(33.0, TOWN_GROUND_Y, -40.0), "yaw": -90.0},
+	],
+	"sack_pile": [
+		{"pos": Vector3(-21.2, DOCK_TOP, -9.8), "yaw": 12.0},
+		{"pos": Vector3(23.5, DOCK_TOP, -9.4), "yaw": -8.0},
+	],
+	"plate_stack": [
+		{"pos": Vector3(-25.2, DOCK_TOP, -10.8), "yaw": 0.0},
+		{"pos": Vector3(24.8, DOCK_TOP, -10.8), "yaw": 90.0},
+	],
+	"ore_pile": [
+		{"pos": Vector3(-23.0, DOCK_TOP, -4.8), "yaw": 18.0},
+		{"pos": Vector3(24.0, DOCK_TOP, -4.5), "yaw": -24.0},
+	],
+	"pallet": [
+		{"pos": Vector3(-25.2, DOCK_TOP, -8.0), "yaw": 6.0},
+		{"pos": Vector3(-23.8, DOCK_TOP, -8.8), "yaw": -12.0},
+		{"pos": Vector3(23.0, DOCK_TOP, -6.6), "yaw": 30.0},
+		{"pos": Vector3(25.0, DOCK_TOP, -7.8), "yaw": -22.0},
+	],
+	"gangway": [
+		{"pos": Vector3(-20.5, DOCK_TOP, -0.1), "yaw": 0.0},
+		{"pos": Vector3(18.5, DOCK_TOP, -0.1), "yaw": 0.0},
+	],
+	"mooring_bollard": [
+		{"pos": Vector3(-22.0, DOCK_TOP, -0.5), "yaw": 0.0},
+		{"pos": Vector3(-12.0, DOCK_TOP, -0.5), "yaw": 0.0},
+		{"pos": Vector3(3.0, DOCK_TOP, -0.5), "yaw": 0.0},
+		{"pos": Vector3(22.0, DOCK_TOP, -0.5), "yaw": 0.0},
+	],
+	"capstan": [
+		{"pos": Vector3(-26.0, DOCK_TOP, -2.6), "yaw": 0.0},
+	],
+	"buoy": [
+		{"pos": Vector3(-30.0, 0.02, 7.0), "yaw": 0.0},
+		{"pos": Vector3(30.0, 0.02, 6.0), "yaw": 0.0},
+		{"pos": Vector3(-36.0, 0.02, 3.0), "yaw": 0.0},
+	],
+}
 ## Procedural blockout sizes for the town buildings when the GLB kit is missing
 ## (X = frontage, Y = height, Z = depth, matching the kit's footprint).
 const TOWN_BLOCKOUT_SIZES := {
@@ -244,9 +339,28 @@ var _town_root: Node3D
 var _town_visuals: Dictionary = {}
 var _town_prop_count := 0
 var _town_blockout_count := 0
+var _town_density := "normal"
+var _painted_layer_count := 0
+var _batch_batches := 0
+var _batch_multimesh_batches := 0
+var _batch_material_batches := 0
+var _batch_meshes_before := 0
+var _batch_meshes_after := 0
+var _batch_surfaces_before := 0
+var _batch_surfaces_after := 0
+var _unshaded_materials: Dictionary = {}
 var _ship_root: Node3D
 var _ship_base := SHIP_SPAWN
 var _ship_yaw := deg_to_rad(SHIP_YAW_DEG)
+var _ship_bounds := AABB()
+var _ship_batches := 0
+var _ship_multimesh_batches := 0
+var _ship_material_batches := 0
+var _ship_meshes_before := 0
+var _ship_meshes_after := 0
+var _ship_surfaces_before := 0
+var _ship_surfaces_after := 0
+var _ship_fallback := false
 var _signature := ""
 var _enter_payload: Dictionary = {}
 var _time := 0.0
@@ -399,6 +513,115 @@ func town_blockout_count() -> int:
 	return _town_blockout_count
 
 
+## Resolved street density tier for the current bind: "sparse" | "normal" |
+## "busy". It is `port.density` / `port.diorama.density` when valid, otherwise
+## derived from `port.size` (small -> sparse, medium -> normal, large -> busy).
+func town_density() -> String:
+	return _town_density
+
+
+## Painted far-backdrop depth layers (ridge / distant city / harbour roofline)
+## drawn behind the town when no L1 banner is mounted; 0 with a painted banner,
+## which already supplies sky and skyline.
+func painted_backdrop_layer_count() -> int:
+	if _has_backdrop:
+		return 0
+	return _painted_layer_count
+
+
+## Read-only static-batching report for tests and the preview/measure tools:
+##   batches              MultiMesh + material-merged draw batches built
+##                        for the facilities/town static layers
+##   multimesh_batches    batched via MultiMeshInstance3D (shared mesh)
+##   material_batches     merged by material signature into one static mesh
+##   meshes_before/after  draw-mesh node count under the batched roots
+##   surfaces_before/after surface count (the renderer's per-surface draws)
+##   ship_*               the same report for the rigidly batched player hull
+##                        (ship-local batches under `_ship_root`, so the bob and
+##                        turn animation keeps moving the whole ship)
+##   ship_fallback        true when the hull kept its original GLB hierarchy
+##                        (animation/skeleton/particles/transparent material)
+func batch_stats() -> Dictionary:
+	return {
+		"batches": _batch_batches,
+		"multimesh_batches": _batch_multimesh_batches,
+		"material_batches": _batch_material_batches,
+		"meshes_before": _batch_meshes_before,
+		"meshes_after": _batch_meshes_after,
+		"surfaces_before": _batch_surfaces_before,
+		"surfaces_after": _batch_surfaces_after,
+		"ship_batches": _ship_batches,
+		"ship_multimesh_batches": _ship_multimesh_batches,
+		"ship_material_batches": _ship_material_batches,
+		"ship_meshes_before": _ship_meshes_before,
+		"ship_meshes_after": _ship_meshes_after,
+		"ship_surfaces_before": _ship_surfaces_before,
+		"ship_surfaces_after": _ship_surfaces_after,
+		"ship_fallback": _ship_fallback,
+	}
+
+
+## World-space hull bounds used to configure the water foam ring. Captured from
+## the un-batched hull before rigid batching, so batching can never move or
+## resize the foam.
+func ship_foam_bounds() -> AABB:
+	return _ship_bounds
+
+
+## True when `visual` is a purely rigid hull that can be baked into ship-local
+## draw batches: no AnimationPlayer/AnimationTree, no skeleton/bones, no
+## particles, no MultiMesh, no skinned/blend-shape meshes, and every
+## MeshInstance3D is an opaque batchable box or mergeable triangle mesh.
+## A false result makes the hull batching pass keep the original GLB untouched.
+func ship_visual_is_rigid(visual: Node) -> bool:
+	if visual == null or not is_instance_valid(visual):
+		return false
+	var stack: Array[Node] = [visual]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is AnimationPlayer or node is AnimationTree:
+			return false
+		if node is GPUParticles3D or node is CPUParticles3D:
+			return false
+		if node is Skeleton3D or node is BoneAttachment3D:
+			return false
+		if node is MultiMeshInstance3D:
+			return false
+		if node is MeshInstance3D:
+			var instance := node as MeshInstance3D
+			if instance.mesh != null:
+				# A skinned mesh is deformed by its skeleton; the default
+				# `skeleton` NodePath("..") alone is harmless without a skin.
+				if instance.skin != null:
+					return false
+				if instance.mesh is ArrayMesh and (instance.mesh as ArrayMesh).get_blend_shape_count() > 0:
+					return false
+				if instance.mesh is BoxMesh:
+					if not _can_batch_box(instance):
+						return false
+				elif not _can_merge_instance(instance):
+					return false
+				if not _mesh_bakeable(instance.mesh):
+					return false
+		for child in node.get_children():
+			stack.append(child)
+	return true
+
+
+## True when every surface of `mesh` is a triangle surface with readable arrays
+## (the hull batching pass requires a clean all-triangles mesh).
+func _mesh_bakeable(mesh: Mesh) -> bool:
+	if mesh.get_surface_count() <= 0:
+		return false
+	for surface in mesh.get_surface_count():
+		if mesh is ArrayMesh and (mesh as ArrayMesh).surface_get_primitive_type(surface) != Mesh.PRIMITIVE_TRIANGLES:
+			return false
+		var arrays := mesh.surface_get_arrays(surface)
+		if not (arrays[Mesh.ARRAY_VERTEX] is PackedVector3Array):
+			return false
+	return true
+
+
 # --- Frame loop -------------------------------------------------------------
 
 func _process(delta: float) -> void:
@@ -441,6 +664,7 @@ func _ensure_static() -> void:
 
 func _build_materials() -> void:
 	_materials.clear()
+	_unshaded_materials.clear()
 	for key in MATERIAL_DEFAULTS.keys():
 		var spec: Array = MATERIAL_DEFAULTS[key]
 		var material := StandardMaterial3D.new()
@@ -520,10 +744,11 @@ func _add_water() -> void:
 		far_material.set_shader_parameter("horizon_color", FOG_COLOR)
 
 
-## L1 fallback painted backdrop (no banner): a multi-quad dusk sky — warm
-## gradient base + additive sun halo/core + a low horizon afterglow band. Every
-## texture is a procedural GradientTexture2D, so the stage needs no new assets.
-## The whole group is hidden whenever a real banner backdrop is mounted.
+## L1 fallback painted backdrop (no banner): a camera-facing dusk sky card with
+## a warm gradient + additive sun halo/core, plus three batched silhouette depth
+## layers (mountain ridge / distant city towers / harbour roofline + chimneys).
+## Every texture is procedural, so the stage needs no new assets. The whole
+## group is hidden whenever a real banner backdrop is mounted.
 func _add_fallback_backdrop() -> void:
 	_fallback_sky_root = Node3D.new()
 	_fallback_sky_root.name = "FallbackBackdrop"
@@ -538,12 +763,15 @@ func _add_fallback_backdrop() -> void:
 	material.albedo_texture = texture
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var quad := QuadMesh.new()
-	quad.size = SKY_CARD_SIZE
+	quad.size = Vector2.ONE
 	var card := MeshInstance3D.new()
 	card.name = "SkyCard"
 	card.mesh = quad
 	card.material_override = material
-	card.position = SKY_CARD_POSITION
+	card.transform = _screen_frame_xform(
+		SKY_CARD_SCREEN_CENTER.x, SKY_CARD_SCREEN_CENTER.y, SKY_CARD_DEPTH,
+		SKY_CARD_SCREEN_SIZE.x, SKY_CARD_SCREEN_SIZE.y
+	)
 	card.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_fallback_sky_root.add_child(card)
 	_sky_card = card
@@ -553,6 +781,128 @@ func _add_fallback_backdrop() -> void:
 	var sun_pos := _screen_point(0.70, 0.10, 118.0)
 	_add_sky_glow(_fallback_sky_root, sun_pos, 90.0, Color(0.95, 0.66, 0.38), 0.12, "SunHalo")
 	_add_sky_glow(_fallback_sky_root, sun_pos, 18.0, SKY_GLOW_COLOR, 0.62, "SunCore")
+	# Painted depth: three batched silhouette bands between the L2 shoreline and
+	# the sky card, so the no-banner stage gets a layered horizon instead of a
+	# flat warm gradient even when the town kit is mounted (the L2 row is skipped
+	# there). All of it lives under `_fallback_sky_root`, so a painted banner
+	# hides the whole fallback backdrop in one toggle.
+	_add_painted_backdrop_layers()
+
+
+## Adds the painted far-backdrop layers: a low harbour roofline with chimneys,
+## a distant city tower cluster and a mountain ridge. Each layer is a run of
+## screen-aligned boxes placed by `_screen_point()` at a depth behind the
+## town/L2 rows but well in front of the sky card, so they read as one painted
+## backdrop with real depth. Every piece is folded into a single MultiMesh
+## (1 draw call), unshaded, no shadows, low contrast against the dusk haze.
+func _add_painted_backdrop_layers() -> void:
+	# Bases sit below the water/shore horizon so the far water clips them: the
+	# silhouettes rise out of the haze instead of showing a floating bottom edge.
+	# Depths are 40-80 m behind the L2 row and far in front of the sky card.
+	var bottom := 0.460
+	var layer_specs := [
+		{
+			"depth": 200.0,
+			"color": Color(0.115, 0.082, 0.058),
+			"pieces": [
+				# [u, width_fraction, height_fraction] — harbour roofline blocks…
+				Vector3(-0.02, 0.230, 0.062), Vector3(0.170, 0.200, 0.055),
+				Vector3(0.360, 0.220, 0.070), Vector3(0.560, 0.240, 0.052),
+				Vector3(0.760, 0.230, 0.064), Vector3(0.940, 0.200, 0.056),
+				# …plus the chimney silhouettes on top of that skyline.
+				Vector3(0.095, 0.012, 0.150), Vector3(0.260, 0.010, 0.170),
+				Vector3(0.620, 0.012, 0.142), Vector3(0.845, 0.010, 0.160),
+			],
+		},
+		{
+			"depth": 220.0,
+			"color": Color(0.190, 0.138, 0.098),
+			"pieces": [
+				# Distant city: a quay band with a cluster of tower footprints.
+				Vector3(0.50, 0.98, 0.018),
+				Vector3(0.070, 0.030, 0.140), Vector3(0.115, 0.024, 0.180),
+				Vector3(0.160, 0.032, 0.125), Vector3(0.235, 0.026, 0.155),
+				Vector3(0.310, 0.036, 0.135), Vector3(0.395, 0.028, 0.190),
+				Vector3(0.470, 0.022, 0.148), Vector3(0.535, 0.020, 0.205),
+				Vector3(0.600, 0.034, 0.140), Vector3(0.675, 0.026, 0.170),
+				Vector3(0.745, 0.032, 0.132), Vector3(0.820, 0.024, 0.182),
+				Vector3(0.895, 0.030, 0.144), Vector3(0.965, 0.026, 0.160),
+			],
+		},
+		{
+			"depth": 240.0,
+			"color": Color(0.300, 0.230, 0.170),
+			"pieces": [
+				# Mountain ridge: narrow overlapping peaks give a jagged profile.
+				Vector3(0.010, 0.095, 0.170), Vector3(0.060, 0.080, 0.245),
+				Vector3(0.105, 0.100, 0.140), Vector3(0.155, 0.075, 0.225),
+				Vector3(0.200, 0.090, 0.165), Vector3(0.245, 0.080, 0.260),
+				Vector3(0.290, 0.100, 0.150), Vector3(0.340, 0.075, 0.230),
+				Vector3(0.385, 0.095, 0.200), Vector3(0.435, 0.080, 0.285),
+				Vector3(0.480, 0.100, 0.165), Vector3(0.530, 0.075, 0.240),
+				Vector3(0.575, 0.095, 0.185), Vector3(0.625, 0.080, 0.265),
+				Vector3(0.670, 0.100, 0.155), Vector3(0.720, 0.075, 0.225),
+				Vector3(0.765, 0.095, 0.200), Vector3(0.815, 0.080, 0.270),
+				Vector3(0.860, 0.100, 0.165), Vector3(0.910, 0.075, 0.235),
+				Vector3(0.955, 0.095, 0.180), Vector3(1.000, 0.080, 0.215),
+			],
+		},
+	]
+	var unit_box := BoxMesh.new()
+	unit_box.size = Vector3.ONE
+	var material := _make_vertex_color_unshaded()
+	var transforms: Array[Transform3D] = []
+	var colors: Array[Color] = []
+	for layer_index in layer_specs.size():
+		var layer: Dictionary = layer_specs[layer_index]
+		var depth := float(layer["depth"])
+		var layer_color: Color = layer["color"]
+		var pieces: Array = layer["pieces"]
+		for piece_index in pieces.size():
+			var piece: Vector3 = pieces[piece_index]
+			# Slightly staggered depths keep overlapping silhouettes from
+			# z-fighting without changing the painted layer reading.
+			var piece_depth := depth + float(piece_index) * 0.3
+			transforms.append(_screen_frame_xform(
+				piece.x, bottom - piece.z * 0.5, piece_depth, piece.y, piece.z
+			))
+			colors.append(layer_color)
+	var bounds := AABB()
+	var has_bounds := false
+	for xform in transforms:
+		var box := StageKit.transform_aabb(xform, unit_box.get_aabb())
+		bounds = box if not has_bounds else bounds.merge(box)
+		has_bounds = true
+	_add_multimesh(
+		_fallback_sky_root, unit_box, transforms, material, "PaintedBackdrop",
+		bounds, colors
+	)
+	_painted_layer_count = layer_specs.size()
+
+
+## Screen-fraction transform for a camera-facing quad/box: `u`/`v` are the
+## frame centre (0..1) and `width`/`height` are fractions of the 16:9 frame at
+## `depth` metres along the camera forward axis. Built from the fixed camera
+## axes, so a stage camera never sees it from the side.
+func _screen_frame_xform(u: float, v: float, depth: float, width: float, height: float) -> Transform3D:
+	var tan_v := tan(deg_to_rad(CAMERA_FOV * 0.5))
+	var tan_h := tan_v * (1440.0 / 900.0)
+	var world_size := Vector3(
+		width * 2.0 * depth * tan_h,
+		height * 2.0 * depth * tan_v,
+		1.2
+	)
+	var forward := (CAMERA_TARGET - CAMERA_POS).normalized()
+	var zaxis := -forward
+	var xaxis := Vector3.UP.cross(zaxis).normalized()
+	var yaxis := zaxis.cross(xaxis)
+	# Columns are the scaled screen axes, so the quad/box is exactly
+	# camera-facing and its projected corners stay axis-aligned in the frame.
+	var basis := Basis()
+	basis.x = xaxis * world_size.x
+	basis.y = yaxis * world_size.y
+	basis.z = zaxis * world_size.z
+	return Transform3D(basis, _screen_point(u, v, depth))
 
 
 ## Adds one procedural, camera-facing additive glow sprite (used for the sun).
@@ -578,7 +928,7 @@ func _add_foreground_frame() -> void:
 	_foreground_frame = Node3D.new()
 	_foreground_frame.name = "ForegroundFrame"
 	add_child(_foreground_frame)
-	var material := _make_unshaded(Color(0.095, 0.078, 0.062))
+	var material := _make_unshaded_fresh(Color(0.095, 0.078, 0.062))
 	# Rim-light the silhouette a touch so it reads as warm iron, not black.
 	material.emission_enabled = true
 	material.emission = Color(0.17, 0.11, 0.06)
@@ -830,6 +1180,9 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	_rebuild_town()
 	_rebuild_facilities()
 	_rebuild_landmark()
+	# Fold the freshly built static layers into draw batches before the player
+	# ship is mounted (the ship bobs and is deliberately not batched).
+	_batch_static_meshes()
 	_rebuild_ship(ship)
 
 
@@ -848,6 +1201,23 @@ func _clear_dynamic() -> void:
 	_town_root = null
 	_town_prop_count = 0
 	_town_blockout_count = 0
+	_town_density = _resolve_town_density()
+	_batch_batches = 0
+	_batch_multimesh_batches = 0
+	_batch_material_batches = 0
+	_batch_meshes_before = 0
+	_batch_meshes_after = 0
+	_batch_surfaces_before = 0
+	_batch_surfaces_after = 0
+	_ship_batches = 0
+	_ship_multimesh_batches = 0
+	_ship_material_batches = 0
+	_ship_meshes_before = 0
+	_ship_meshes_after = 0
+	_ship_surfaces_before = 0
+	_ship_surfaces_after = 0
+	_ship_fallback = false
+	_ship_bounds = AABB()
 	_fog_nodes.clear()
 	_fog_bases.clear()
 	_fog_phases.clear()
@@ -897,6 +1267,12 @@ func _hash01(seed_value: int, index: int, salt: int) -> float:
 
 
 func _make_unshaded(color: Color, emission_energy: float = 0.0) -> StandardMaterial3D:
+	# Cached by exact colour+emission: lamp glows, sign faces and notice papers
+	# are re-created per facility, and sharing the material is what lets the
+	# static batcher fold them into one draw.
+	var key := "%s|%.3f" % [color.to_html(), emission_energy]
+	if _unshaded_materials.has(key):
+		return _unshaded_materials[key] as StandardMaterial3D
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_color = color
@@ -906,6 +1282,29 @@ func _make_unshaded(color: Color, emission_energy: float = 0.0) -> StandardMater
 		material.emission_enabled = true
 		material.emission = color
 		material.emission_energy_multiplier = emission_energy
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_unshaded_materials[key] = material
+	return material
+
+
+## Fresh unshaded material that multiplies per-instance / per-vertex colour.
+## Deliberately uncached: callers mutate `vertex_color_use_as_albedo` and the
+## shared cache above must stay untouched.
+func _make_vertex_color_unshaded() -> StandardMaterial3D:
+	var material := _make_unshaded_fresh(Color.WHITE)
+	material.vertex_color_use_as_albedo = true
+	material.disable_receive_shadows = true
+	return material
+
+
+## Fresh (uncached) unshaded material for callers that customise it afterwards
+## (e.g. the rim-lit L6 foreground frame) without leaking into the shared cache.
+func _make_unshaded_fresh(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	material.roughness = 1.0
+	material.metallic = 0.0
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
 
@@ -1048,8 +1447,7 @@ func _rebuild_shoreline() -> void:
 		_append_skyline_box(box_xforms, box_colors, base + Vector3(2.5, 7.1, 0.0), Vector3(6.4, 0.5, 0.5), tone)
 		_append_skyline_box(box_xforms, box_colors, base + Vector3(4.6, 5.5, 0.0), Vector3(0.14, 2.7, 0.14), tone)
 		_skyline_crane_count += 1
-	var silhouette_material := _make_unshaded(Color.WHITE)
-	silhouette_material.vertex_color_use_as_albedo = true
+	var silhouette_material := _make_vertex_color_unshaded()
 	var box_unit := BoxMesh.new()
 	box_unit.size = Vector3.ONE
 	_add_multimesh(
@@ -1459,14 +1857,94 @@ func _rebuild_town() -> void:
 			float(spec["scale"]),
 			true
 		)
-	for pos in TOWN_FENCE_POSITIONS:
-		_add_town_prop("fence_row", pos, 0.0, 1.0, false)
-	for spec in TOWN_WORKER_SLOTS:
-		_add_town_prop(String(spec["slot"]), spec["pos"], float(spec["yaw"]), 1.0, false)
-	for spec in TOWN_DECOR_SLOTS:
-		_add_town_prop(String(spec["slot"]), spec["pos"], float(spec["yaw"]), 1.0, false)
-	for spec in TOWN_BOAT_SLOTS:
-		_add_town_prop(String(spec["slot"]), spec["pos"], float(spec["yaw"]), 1.0, false)
+	var seed_value := String(_port.get("id", "port")).hash()
+	# Fence modules along the plaza/quay seam.
+	var fence_count := mini(_town_count("fence"), TOWN_FENCE_X.size())
+	for index in fence_count:
+		_add_town_prop(
+			"fence_row",
+			Vector3(TOWN_FENCE_X[index], TOWN_GROUND_Y, -12.6),
+			0.0, 1.0, false
+		)
+	# Workers read as people, not props: a small deterministic yaw offset stops
+	# the repeated poses from lining up exactly.
+	var worker_count := mini(_town_count("worker"), TOWN_WORKER_SLOTS.size())
+	for index in worker_count:
+		var worker_spec: Dictionary = TOWN_WORKER_SLOTS[index]
+		_add_town_prop(
+			String(worker_spec["slot"]),
+			worker_spec["pos"],
+			_town_jitter_yaw(seed_value, index, float(worker_spec["yaw"]), 61, 14.0),
+			1.0, false
+		)
+	# Plaza props (crates/barrels/lamps/market clutter).
+	var decor_count := mini(_town_count("decor"), TOWN_DECOR_SLOTS.size())
+	for index in decor_count:
+		var decor_spec: Dictionary = TOWN_DECOR_SLOTS[index]
+		_add_town_prop(
+			String(decor_spec["slot"]),
+			decor_spec["pos"],
+			_town_jitter_yaw(seed_value, index, float(decor_spec["yaw"]), 67, 12.0),
+			1.0, false
+		)
+	# Moored small craft.
+	var boat_count := mini(_town_count("boat"), TOWN_BOAT_SLOTS.size())
+	for index in boat_count:
+		var boat_spec: Dictionary = TOWN_BOAT_SLOTS[index]
+		_add_town_prop(
+			String(boat_spec["slot"]),
+			boat_spec["pos"],
+			float(boat_spec["yaw"]),
+			1.0, false
+		)
+	# Dock-side industry: market stalls, cranes, cargo piles, pallets, gangways,
+	# bollards, capstans and buoys. Only official core-kit asset keys are used.
+	for group_index in TOWN_QUAY_ORDER.size():
+		var group := String(TOWN_QUAY_ORDER[group_index])
+		var slots_value: Variant = TOWN_QUAY_SLOTS.get(group, [])
+		if not (slots_value is Array):
+			continue
+		var slots: Array = slots_value
+		var group_count := mini(_town_count(group), slots.size())
+		for index in group_count:
+			var quay_spec: Dictionary = slots[index]
+			var yaw := float(quay_spec["yaw"])
+			# Loose freight rolls a little differently per harbour; the authored
+			# alignments (stalls, cranes, gangways, bollards) stay square.
+			if group == "pallet" or group == "buoy":
+				yaw = _town_jitter_yaw(seed_value, index + group_index * 13, yaw, 73, 30.0)
+			_add_town_prop(group, quay_spec["pos"], yaw, 1.0, false)
+
+
+## Resolves the street density tier: explicit `port.density` (the shell also
+## forwards it) or `port.diorama.density` wins; otherwise `port.size` derives it.
+## Unknown values fall back to the size default, so old saves keep rendering.
+func _resolve_town_density() -> String:
+	var raw := String(_port.get("density", "")).to_lower()
+	if raw.is_empty():
+		var diorama_value: Variant = _port.get("diorama", {})
+		if diorama_value is Dictionary:
+			raw = String((diorama_value as Dictionary).get("density", "")).to_lower()
+	if DENSITY_ORDER.has(raw):
+		return raw
+	var derived := String(DENSITY_BY_SIZE.get(_size, "normal"))
+	return derived if DENSITY_ORDER.has(derived) else "normal"
+
+
+## Props mounted for one layout group at the current density tier.
+func _town_count(group: String) -> int:
+	var table_value: Variant = TOWN_COUNTS.get(group, {})
+	if not (table_value is Dictionary):
+		return 0
+	var table: Dictionary = table_value
+	if not table.has(_town_density):
+		return 0
+	return maxi(0, int(table[_town_density]))
+
+
+## Deterministic yaw jitter from the port id hash (never global RNG).
+func _town_jitter_yaw(seed_value: int, index: int, base_yaw: float, salt: int, amplitude: float) -> float:
+	return base_yaw + (_hash01(seed_value, index, salt) - 0.5) * amplitude
 
 
 ## Mounts one town-kit GLB (pre-resolved path in `port.town_visuals`) or, for
@@ -1525,6 +2003,391 @@ func _build_town_blockout(slot: String) -> Node3D:
 	return root
 
 
+# --- Static batching --------------------------------------------------------
+#
+# The fixed-camera stage is mostly static boxes and repeated content-kit props,
+# and every surface is a draw call. After the dynamic layers are rebuilt:
+#
+#   1. procedural BoxMesh nodes share one unit cube and one MultiMesh per
+#      material (per-instance scale = the authored box size);
+#   2. every other bakeable static mesh (GLB props, cylinders, sign quads) is
+#      merged by *material signature* into one static ArrayMesh per material.
+#      Content-kit GLBs are multi-surface (one surface per palette material), so
+#      merging by material is what actually collapses the harbour down to one
+#      draw per material instead of ~10 per building + 32 per crane.
+#
+# Transparency, shader materials, overlays and non-triangle surfaces are left
+# untouched (safe fallback): the merge never changes how something is drawn.
+# The player hull is folded separately in ship-local space (see
+# `_batch_ship_visual`), while water, particles, fog, the L2 MultiMesh and the
+# foreground frame stay outside the batched roots on purpose.
+
+func _batch_static_meshes() -> void:
+	_batch_batches = 0
+	_batch_multimesh_batches = 0
+	_batch_material_batches = 0
+	_batch_meshes_before = 0
+	_batch_meshes_after = 0
+	_batch_surfaces_before = 0
+	_batch_surfaces_after = 0
+	if _content == null or not is_instance_valid(_content):
+		return
+	var roots: Array[Node] = []
+	if _facilities_root != null:
+		roots.append(_facilities_root)
+	if _town_root != null:
+		roots.append(_town_root)
+	if roots.is_empty():
+		return
+	var before := _count_draw_meshes(roots)
+	_batch_meshes_before = int(before["meshes"])
+	_batch_surfaces_before = int(before["surfaces"])
+	var candidates: Array[MeshInstance3D] = []
+	for root in roots:
+		_collect_static_meshes(root, candidates)
+	if candidates.is_empty():
+		_batch_meshes_after = _batch_meshes_before
+		_batch_surfaces_after = _batch_surfaces_before
+		return
+	var content_inverse := _content.global_transform.affine_inverse()
+	var batch_root := Node3D.new()
+	batch_root.name = "StaticBatches"
+	_content.add_child(batch_root)
+	var result := _batch_into(batch_root, candidates, content_inverse, "")
+	_batch_multimesh_batches = int(result["multimesh"])
+	_batch_material_batches = int(result["material"])
+	_batch_batches = int(result["batches"])
+	if _batch_batches == 0:
+		_content.remove_child(batch_root)
+		batch_root.free()
+	# The originals are gone: every one of them is now geometry inside a batch.
+	for instance in (result["nodes"] as Array):
+		if not is_instance_valid(instance):
+			continue
+		if instance.get_parent() != null:
+			instance.get_parent().remove_child(instance)
+		instance.free()
+	var after := _count_draw_meshes(roots)
+	# The batch nodes live directly under `_content`, beside the batched layers,
+	# so they are added to the draw census by hand (one surface each).
+	_batch_meshes_after = int(after["meshes"]) + _batch_batches
+	_batch_surfaces_after = int(after["surfaces"]) + _batch_batches
+
+
+## Bakes `candidates` into `container` (in the container's parent space):
+## procedural boxes become one MultiMesh per material (shared unit cube +
+## per-instance scale); every other bakeable mesh is merged per material
+## signature into one ArrayMesh. Returns the batch counts plus the source nodes
+## that are now redundant — the caller frees them (static layers) or drops the
+## whole original hierarchy (hull). `name_prefix` separates the static batches
+## ("") from the ship batches ("Ship").
+func _batch_into(
+	container: Node3D,
+	candidates: Array[MeshInstance3D],
+	space_inverse: Transform3D,
+	name_prefix: String
+) -> Dictionary:
+	var unit_box := BoxMesh.new()
+	unit_box.size = Vector3.ONE
+	var box_groups: Dictionary = {}
+	var merged_groups: Dictionary = {}
+	var merged_order: Array[String] = []
+	var to_free: Array[MeshInstance3D] = []
+	for instance in candidates:
+		if not is_instance_valid(instance) or instance.mesh == null:
+			continue
+		var local_xform := space_inverse * instance.global_transform
+		var mesh := instance.mesh
+		if mesh is BoxMesh and _can_batch_box(instance):
+			var box := mesh as BoxMesh
+			var box_material := _instance_material(instance)
+			var key := "box|" + _material_identity(box_material)
+			if not box_groups.has(key):
+				box_groups[key] = {"material": box_material, "transforms": [] as Array[Transform3D]}
+			var box_group: Dictionary = box_groups[key]
+			var transforms: Array[Transform3D] = box_group["transforms"]
+			transforms.append(local_xform * Transform3D(Basis.IDENTITY.scaled(box.size), Vector3.ZERO))
+			box_group["transforms"] = transforms
+			to_free.append(instance)
+		elif _can_merge_instance(instance):
+			_merge_instance(instance, local_xform, merged_groups, merged_order)
+			to_free.append(instance)
+	# 1) One MultiMesh per box material (shared unit cube, per-instance scale).
+	var multimesh_batches := 0
+	for key in box_groups.keys():
+		var box_group: Dictionary = box_groups[key]
+		var box_transforms: Array[Transform3D] = box_group["transforms"]
+		if box_transforms.is_empty():
+			continue
+		var box_bounds := _transforms_aabb(unit_box, box_transforms)
+		_add_multimesh(
+			container, unit_box, box_transforms, box_group["material"],
+			"%sBoxBatch_%d" % [name_prefix, multimesh_batches], box_bounds
+		)
+		multimesh_batches += 1
+	# 2) One merged static mesh per material signature (GLB surfaces + primitives).
+	var material_batches := 0
+	for material_index in merged_order.size():
+		var key := merged_order[material_index]
+		var group: Dictionary = merged_groups[key]
+		var vertices: PackedVector3Array = group["vertices"]
+		if vertices.is_empty():
+			continue
+		var mesh_arrays: Array = []
+		mesh_arrays.resize(Mesh.ARRAY_MAX)
+		mesh_arrays[Mesh.ARRAY_VERTEX] = vertices
+		if bool(group["has_normal"]):
+			mesh_arrays[Mesh.ARRAY_NORMAL] = group["normals"]
+		if bool(group["has_uv"]):
+			mesh_arrays[Mesh.ARRAY_TEX_UV] = group["uvs"]
+		if bool(group["has_color"]):
+			mesh_arrays[Mesh.ARRAY_COLOR] = group["colors"]
+		mesh_arrays[Mesh.ARRAY_INDEX] = group["indices"]
+		var merged_mesh := ArrayMesh.new()
+		merged_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mesh_arrays)
+		var merged_material: Material = group["material"]
+		if merged_material != null:
+			merged_mesh.surface_set_material(0, merged_material)
+		var merged_instance := MeshInstance3D.new()
+		merged_instance.name = "%sMaterialBatch_%d" % [name_prefix, material_batches]
+		merged_instance.mesh = merged_mesh
+		merged_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		container.add_child(merged_instance)
+		material_batches += 1
+	return {
+		"batches": multimesh_batches + material_batches,
+		"multimesh": multimesh_batches,
+		"material": material_batches,
+		"nodes": to_free,
+	}
+
+
+## Collects the MeshInstance3D nodes under `node` that belong to the static
+## batched layers. MultiMesh batches and particles are already draw-optimal.
+func _collect_static_meshes(node: Node, out: Array[MeshInstance3D]) -> void:
+	if node is MultiMeshInstance3D or node is GPUParticles3D:
+		return
+	if node is MeshInstance3D:
+		var instance := node as MeshInstance3D
+		if instance.mesh != null:
+			out.append(instance)
+	for child in node.get_children():
+		_collect_static_meshes(child, out)
+
+
+## Draw-mesh / surface census under the batched roots (before and after).
+func _count_draw_meshes(roots: Array[Node]) -> Dictionary:
+	var result := {"meshes": 0, "surfaces": 0}
+	for root in roots:
+		_count_draw_meshes_under(root, result)
+	return result
+
+
+func _count_draw_meshes_under(node: Node, result: Dictionary) -> void:
+	if node is MultiMeshInstance3D:
+		var multi := (node as MultiMeshInstance3D).multimesh
+		if multi != null and multi.mesh != null:
+			result["meshes"] = int(result["meshes"]) + 1
+			result["surfaces"] = int(result["surfaces"]) + multi.mesh.get_surface_count()
+	elif node is MeshInstance3D:
+		var instance := node as MeshInstance3D
+		if instance.mesh != null:
+			result["meshes"] = int(result["meshes"]) + 1
+			result["surfaces"] = int(result["surfaces"]) + instance.mesh.get_surface_count()
+	for child in node.get_children():
+		_count_draw_meshes_under(child, result)
+
+
+## Effective material of a MeshInstance3D: `material_override` wins, then the
+## primitive's own material, then its single surface material.
+func _instance_material(instance: MeshInstance3D) -> Material:
+	if instance.material_override != null:
+		return instance.material_override
+	var mesh := instance.mesh
+	if mesh is PrimitiveMesh and (mesh as PrimitiveMesh).material != null:
+		return (mesh as PrimitiveMesh).material
+	if mesh != null and mesh.get_surface_count() == 1:
+		return mesh.surface_get_material(0)
+	return null
+
+
+## Materials the batcher may fold together: opaque StandardMaterial3D only.
+## Transparent / shader materials keep their own node (sorting stays correct),
+## and normal-mapped materials stay unbatched because the merge drops tangents.
+func _is_batchable_material(material: Material) -> bool:
+	if material == null:
+		return true
+	if not (material is StandardMaterial3D):
+		return false
+	var standard := material as StandardMaterial3D
+	if standard.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+		return false
+	if standard.normal_texture != null:
+		return false
+	return true
+
+
+func _material_identity(material: Material) -> String:
+	if material == null:
+		return "none"
+	return str(material.get_instance_id())
+
+
+## Visual identity of a material, so content-kit GLBs that were authored from
+## the same palette collapse into one merged batch even though each GLB import
+## creates its own material resources.
+func _material_signature(material: Material) -> String:
+	if material == null:
+		return "none"
+	if not (material is StandardMaterial3D):
+		return "res|%d" % material.get_instance_id()
+	var standard := material as StandardMaterial3D
+	var texture_id := 0
+	if standard.albedo_texture != null:
+		texture_id = standard.albedo_texture.get_instance_id()
+	var parts: Array[String] = [
+		"std",
+		standard.albedo_color.to_html(),
+		"%.4f" % standard.metallic,
+		"%.4f" % standard.roughness,
+		"%.4f" % standard.metallic_specular,
+		"%d" % int(standard.shading_mode),
+		"%d" % int(standard.transparency),
+		"%d" % int(standard.blend_mode),
+		"%d" % int(standard.cull_mode),
+		"%d" % int(standard.emission_enabled),
+		standard.emission.to_html(),
+		"%.4f" % standard.emission_energy_multiplier,
+		"%d" % (1 if standard.vertex_color_use_as_albedo else 0),
+		"%d" % texture_id,
+	]
+	return "|".join(parts)
+
+
+func _can_batch_box(instance: MeshInstance3D) -> bool:
+	if instance.material_overlay != null:
+		return false
+	return _is_batchable_material(_instance_material(instance))
+
+
+## A non-box static mesh can be merged only when every surface is a triangle
+## surface with an opaque StandardMaterial3D (or no material at all).
+func _can_merge_instance(instance: MeshInstance3D) -> bool:
+	if instance.material_overlay != null:
+		return false
+	var mesh := instance.mesh
+	if mesh == null:
+		return false
+	for surface in mesh.get_surface_count():
+		if mesh is ArrayMesh and (mesh as ArrayMesh).surface_get_primitive_type(surface) != Mesh.PRIMITIVE_TRIANGLES:
+			return false
+		var material: Material = instance.material_override
+		if material == null:
+			material = mesh.surface_get_material(surface)
+		if not _is_batchable_material(material):
+			return false
+	return true
+
+
+## Bakes one static MeshInstance3D into its material-signature group: vertices
+## are transformed into `_content` space, normals by the inverse transpose.
+func _merge_instance(
+	instance: MeshInstance3D,
+	local_xform: Transform3D,
+	groups: Dictionary,
+	order: Array[String]
+) -> void:
+	var mesh := instance.mesh
+	if mesh == null:
+		return
+	var normal_basis := local_xform.basis.inverse().transposed()
+	for surface in mesh.get_surface_count():
+		var material: Material = instance.material_override
+		if material == null:
+			material = mesh.surface_get_material(surface)
+		var arrays := mesh.surface_get_arrays(surface)
+		var vertices_value: Variant = arrays[Mesh.ARRAY_VERTEX]
+		if not (vertices_value is PackedVector3Array):
+			continue
+		var vertices: PackedVector3Array = vertices_value
+		if vertices.is_empty():
+			continue
+		var normals_value: Variant = arrays[Mesh.ARRAY_NORMAL]
+		var uvs_value: Variant = arrays[Mesh.ARRAY_TEX_UV]
+		var colors_value: Variant = arrays[Mesh.ARRAY_COLOR]
+		var normals: PackedVector3Array = normals_value if normals_value is PackedVector3Array else PackedVector3Array()
+		var uvs: PackedVector2Array = uvs_value if uvs_value is PackedVector2Array else PackedVector2Array()
+		var colors: PackedColorArray = colors_value if colors_value is PackedColorArray else PackedColorArray()
+		var has_normal := normals.size() == vertices.size()
+		var has_uv := uvs.size() == vertices.size()
+		var has_color := colors.size() == vertices.size()
+		var key := "%s|%d|%d|%d" % [
+			_material_signature(material),
+			1 if has_normal else 0,
+			1 if has_uv else 0,
+			1 if has_color else 0,
+		]
+		if not groups.has(key):
+			groups[key] = {
+				"material": material,
+				"vertices": PackedVector3Array(),
+				"normals": PackedVector3Array(),
+				"uvs": PackedVector2Array(),
+				"colors": PackedColorArray(),
+				"indices": PackedInt32Array(),
+				"has_normal": has_normal,
+				"has_uv": has_uv,
+				"has_color": has_color,
+			}
+			order.append(key)
+		var group: Dictionary = groups[key]
+		var group_vertices: PackedVector3Array = group["vertices"]
+		var base_index := group_vertices.size()
+		var transformed_vertices := PackedVector3Array()
+		transformed_vertices.resize(vertices.size())
+		for index in vertices.size():
+			transformed_vertices[index] = local_xform * vertices[index]
+		group_vertices.append_array(transformed_vertices)
+		group["vertices"] = group_vertices
+		if has_normal:
+			var group_normals: PackedVector3Array = group["normals"]
+			var transformed_normals := PackedVector3Array()
+			transformed_normals.resize(normals.size())
+			for index in normals.size():
+				transformed_normals[index] = (normal_basis * normals[index]).normalized()
+			group_normals.append_array(transformed_normals)
+			group["normals"] = group_normals
+		if has_uv:
+			var group_uvs: PackedVector2Array = group["uvs"]
+			group_uvs.append_array(uvs)
+			group["uvs"] = group_uvs
+		if has_color:
+			var group_colors: PackedColorArray = group["colors"]
+			group_colors.append_array(colors)
+			group["colors"] = group_colors
+		var group_indices: PackedInt32Array = group["indices"]
+		var index_value: Variant = arrays[Mesh.ARRAY_INDEX]
+		if index_value is PackedInt32Array and (index_value as PackedInt32Array).size() > 0:
+			var surface_indices: PackedInt32Array = (index_value as PackedInt32Array).duplicate()
+			for index in surface_indices.size():
+				surface_indices[index] = surface_indices[index] + base_index
+			group_indices.append_array(surface_indices)
+		else:
+			for index in vertices.size():
+				group_indices.append(base_index + index)
+		group["indices"] = group_indices
+
+
+func _transforms_aabb(mesh: Mesh, transforms: Array[Transform3D]) -> AABB:
+	var bounds := AABB()
+	var has_bounds := false
+	for xform in transforms:
+		var box := StageKit.transform_aabb(xform, mesh.get_aabb())
+		bounds = box if not has_bounds else bounds.merge(box)
+		has_bounds = true
+	return bounds
+
+
 # --- L5 player ship ---------------------------------------------------------
 
 func _rebuild_ship(ship: Dictionary) -> void:
@@ -1545,10 +2408,80 @@ func _rebuild_ship(ship: Dictionary) -> void:
 	_ship_base = SHIP_SPAWN
 	root.add_child(visual)
 	var bounds := StageKit.visual_aabb(root)
+	# The foam ring is configured from the *un-batched* hull, then the hull is
+	# rigidly baked into ship-local draw batches. The batches stay children of
+	# `_ship_root`, so the `_process` bob/turn keeps moving the whole ship.
+	_ship_bounds = bounds
 	if _water_material != null:
 		StageKit.configure_boat_foam(_water_material, bounds)
 		_water_material.set_shader_parameter("boat_yaw", _ship_yaw)
 		_water_material.set_shader_parameter("boat_foam_width", 0.8)
+	_batch_ship_visual(visual)
+
+
+## Rigidly bakes the hull visual into ship-local draw batches under `_ship_root`.
+## The foam bounds are captured before this runs, so the water foam ring keeps
+## matching the authored hull. Non-rigid hulls (animation/skeleton/particles/
+## transparent materials) are left untouched and reported via `ship_fallback`.
+func _batch_ship_visual(visual: Node3D) -> void:
+	_ship_batches = 0
+	_ship_multimesh_batches = 0
+	_ship_material_batches = 0
+	_ship_meshes_before = 0
+	_ship_meshes_after = 0
+	_ship_surfaces_before = 0
+	_ship_surfaces_after = 0
+	_ship_fallback = false
+	if _ship_root == null or not is_instance_valid(_ship_root) or visual == null or not is_instance_valid(visual):
+		_ship_fallback = true
+		return
+	var before := _count_draw_meshes([visual])
+	_ship_meshes_before = int(before["meshes"])
+	_ship_surfaces_before = int(before["surfaces"])
+	if not ship_visual_is_rigid(visual):
+		_ship_fallback = true
+		_ship_meshes_after = _ship_meshes_before
+		_ship_surfaces_after = _ship_surfaces_before
+		return
+	var candidates: Array[MeshInstance3D] = []
+	_collect_static_meshes(visual, candidates)
+	if candidates.is_empty() or candidates.size() != _ship_meshes_before:
+		_ship_fallback = true
+		_ship_meshes_after = _ship_meshes_before
+		_ship_surfaces_after = _ship_surfaces_before
+		return
+	var ship_space_inverse := _ship_root.global_transform.affine_inverse()
+	var batch_root := Node3D.new()
+	batch_root.name = "ShipBatches"
+	_ship_root.add_child(batch_root)
+	var result := _batch_into(batch_root, candidates, ship_space_inverse, "Ship")
+	var baked: Array = result["nodes"]
+	if int(result["batches"]) == 0 or baked.size() != candidates.size():
+		# Nothing safely bakeable: drop the half-built batches and keep the
+		# original hull untouched (no visual regression).
+		_ship_root.remove_child(batch_root)
+		batch_root.free()
+		_ship_fallback = true
+		_ship_meshes_after = _ship_meshes_before
+		_ship_surfaces_after = _ship_surfaces_before
+		return
+	_ship_multimesh_batches = int(result["multimesh"])
+	_ship_material_batches = int(result["material"])
+	_ship_batches = int(result["batches"])
+	# Every hull mesh is baked into ShipBatches now; the original hierarchy is
+	# redundant and would double the draw calls.
+	for instance in baked:
+		if not is_instance_valid(instance):
+			continue
+		if instance.get_parent() != null:
+			instance.get_parent().remove_child(instance)
+		instance.free()
+	if visual.get_parent() != null:
+		visual.get_parent().remove_child(visual)
+	visual.free()
+	var after := _count_draw_meshes([_ship_root])
+	_ship_meshes_after = int(after["meshes"])
+	_ship_surfaces_after = int(after["surfaces"])
 
 
 func _fallback_path_for_tier(tier: int) -> String:
