@@ -331,10 +331,12 @@ func test_renderer_slot_is_swappable_for_the_future_2_5d_scene() -> void:
 		var renderer: Node = stage.get("_renderer")
 		if renderer is SNShipStage3D:
 			assert_true(bool(renderer.has_ship()), "the 3D stage mounts a hull model")
+			assert_true(bool(renderer.has_stage()), "the 3D host mounts a LocationStage scene")
+			assert_eq(String(renderer.stage_id()), "shipyard", "the shipyard stage reports its stage id")
 			stage.set_mode(MODE_CUTAWAY)
-			assert_false(bool(renderer.get("_container").visible), "cutaway mode hides the 3D stage behind the section texture")
+			assert_false(bool(renderer.is_stage_visible()), "cutaway mode hides the 3D stage behind the section texture")
 			stage.set_mode(MODE_EXTERIOR)
-			assert_true(bool(renderer.get("_container").visible), "exterior mode shows the 3D stage again")
+			assert_true(bool(renderer.is_stage_visible()), "exterior mode shows the 3D stage again")
 	else:
 		assert_false(bool(stage.has_renderer()), "without ship GLBs the procedural placeholder stays active")
 	var provider := Control.new()
