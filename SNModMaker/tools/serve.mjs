@@ -21,6 +21,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { resolveGameModsDir } from './game_mods_dir.mjs';
 
@@ -106,6 +107,7 @@ function projectFile(id) {
 const WORKSPACE_ROOT = process.env.SNMODMAKER_WORKSPACE_ROOT
   ? path.resolve(process.env.SNMODMAKER_WORKSPACE_ROOT)
   : path.join(root, '..', 'dev_mods');
+const DEFAULT_WORKSPACE_ROOT = path.join(root, '..', 'dev_mods');
 
 const MIME_BY_EXT = {
   '.png': 'image/png',
@@ -225,10 +227,64 @@ function readWorkspaceProject(id) {
   };
 }
 
+/** Runs a Node tool from the repo root; used for post-save validation. */
+function runNodeTool(args, timeoutMs = 30000) {
+  const repoRoot = path.join(root, '..');
+  const result = spawnSync(process.execPath, args, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    timeout: timeoutMs,
+    windowsHide: true,
+  });
+  return {
+    code: result.status == null ? -1 : result.status,
+    stdout: String(result.stdout || ''),
+    stderr: String(result.stderr || ''),
+  };
+}
+
+/** Runs the Content CLI validator against a workspace and returns its JSON
+ *  payload (or null when the CLI is unavailable / not valid JSON). */
+function validateWorkspace(id) {
+  const result = runNodeTool([
+    path.join('SNModMaker', 'tools', 'content.mjs'),
+    'validate',
+    '--mod',
+    workspaceDir(id),
+    '--json',
+  ]);
+  try {
+    const payload = JSON.parse(result.stdout.trim());
+    const issues = payload.issues || {};
+    const counts = {
+      error: Number(issues.errors || 0),
+      warning: Number(issues.warnings || 0),
+      total: Number(issues.errors || 0) + Number(issues.warnings || 0),
+    };
+    return {
+      ok: Boolean(payload.ok),
+      counts,
+      stats: payload.stats || null,
+      issues: Array.isArray(issues.list) ? issues.list.slice(0, 20) : [],
+      error: payload.error || null,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function syncCoreIndex() {
+  const result = runNodeTool([path.join('SNModMaker', 'tools', 'sync-core-index.mjs')], 60000);
+  return result.code === 0;
+}
+
 /** Writes the editor's text files back into dev_mods/<id> without touching
  *  undeclared assets. Removed content/localization files are deleted; added
- *  definitions/files appear because they are part of `files`. */
-function saveWorkspaceProject(id, project, files) {
+ *  definitions/files appear because they are part of `files`. When the caller
+ *  asks for validation (manual save), the Content CLI runs on the result and
+ *  the Core index is regenerated. */
+function saveWorkspaceProject(id, project, files, options) {
+  const opts = options || {};
   const dir = workspaceDir(id);
   if (!fs.existsSync(dir)) throw Object.assign(new Error('工作区不存在'), { status: 404 });
   const manifestPath = path.join(dir, 'manifest.json');
@@ -269,7 +325,13 @@ function saveWorkspaceProject(id, project, files) {
       }
     }
   }
-  return { id, workspace: true, files: written.length, removed };
+  let validation = null;
+  let indexSynced = false;
+  if (opts.validate) {
+    validation = validateWorkspace(id);
+    if (id === 'core' && WORKSPACE_ROOT === DEFAULT_WORKSPACE_ROOT) indexSynced = syncCoreIndex();
+  }
+  return { id, workspace: true, files: written.length, removed, validation, indexSynced };
 }
 
 function listProjects() {
@@ -480,7 +542,10 @@ async function handleApi(request, response, url) {
       try {
         const body = await readBody(request);
         const payload = JSON.parse(body.toString('utf8'));
-        sendJson(response, 200, { ok: true, ...saveWorkspaceProject(id, payload.project, payload.files) });
+        sendJson(response, 200, {
+          ok: true,
+          ...saveWorkspaceProject(id, payload.project, payload.files, { validate: Boolean(payload.validate) }),
+        });
       } catch (error) {
         sendJson(response, error.status || 500, { ok: false, error: error.message });
       }

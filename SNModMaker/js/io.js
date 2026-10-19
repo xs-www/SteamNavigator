@@ -363,11 +363,14 @@
     return data.project || null;
   }
 
-  async function putWorkspaceProject(project) {
+  async function putWorkspaceProject(project, options) {
+    const opts = options || {};
+    const payload = projectPayload(project);
+    if (opts.validate) payload.validate = true;
     return apiJson(`api/workspace/${encodeURIComponent(project.manifest.id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(projectPayload(project)),
+      body: JSON.stringify(payload),
     });
   }
 

@@ -8,32 +8,36 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MODS_DIR` | L36 |
-| `EXPORTS_DIR` | L37 |
-| `GAME_MODS_DIR` | L38 |
-| `MAX_BODY` | L39 |
-| `MIME` | L41 |
-| `sendJson(response, status, body)` | L55 |
-| `readBody(request)` | L66 |
-| `safeRelative(value)` | L86 |
-| `projectDir(id)` | L94 |
-| `projectFile(id)` | L98 |
-| `WORKSPACE_ROOT` | L106 |
-| `MIME_BY_EXT` | L110 |
-| `workspaceDir(id)` | L122 |
-| `workspaceIds()` | L126 |
-| `countWorkspaceDefinitions(manifest)` | L139 |
-| `listWorkspaces()` | L152 |
-| `readWorkspaceProject(id)` | L176 |
-| `saveWorkspaceProject(id, project, files)` | L231 |
-| `listProjects()` | L275 |
-| `saveProject(id, payload)` | L306 |
-| `listExports()` | L341 |
-| `safeExportName(value)` | L353 |
-| `gameModName(id)` | L359 |
-| `listGameMods()` | L363 |
-| `deployGameMod(id, body)` | L374 |
-| `handleApi(request, response, url)` | L396 |
+| `MODS_DIR` | L37 |
+| `EXPORTS_DIR` | L38 |
+| `GAME_MODS_DIR` | L39 |
+| `MAX_BODY` | L40 |
+| `MIME` | L42 |
+| `sendJson(response, status, body)` | L56 |
+| `readBody(request)` | L67 |
+| `safeRelative(value)` | L87 |
+| `projectDir(id)` | L95 |
+| `projectFile(id)` | L99 |
+| `WORKSPACE_ROOT` | L107 |
+| `DEFAULT_WORKSPACE_ROOT` | L110 |
+| `MIME_BY_EXT` | L112 |
+| `workspaceDir(id)` | L124 |
+| `workspaceIds()` | L128 |
+| `countWorkspaceDefinitions(manifest)` | L141 |
+| `listWorkspaces()` | L154 |
+| `readWorkspaceProject(id)` | L178 |
+| `runNodeTool(args, timeoutMs = 30000)` | L231 |
+| `validateWorkspace(id)` | L248 |
+| `syncCoreIndex()` | L276 |
+| `saveWorkspaceProject(id, project, files, options)` | L286 |
+| `listProjects()` | L337 |
+| `saveProject(id, payload)` | L368 |
+| `listExports()` | L403 |
+| `safeExportName(value)` | L415 |
+| `gameModName(id)` | L421 |
+| `listGameMods()` | L425 |
+| `deployGameMod(id, body)` | L436 |
+| `handleApi(request, response, url)` | L458 |
 
 ## 契约与约束
 

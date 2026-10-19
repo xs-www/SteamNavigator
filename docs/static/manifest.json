@@ -1,14 +1,14 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T13:20:24.565Z",
-  "commit": "c34b570",
+  "generated_at": "2026-10-19T13:24:48.566Z",
+  "commit": "d1e46f7",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 470,
-    "documented": 149,
-    "grouped": 321
+    "sources": 477,
+    "documented": 150,
+    "grouped": 327
   },
   "files": [
     {
@@ -59,7 +59,7 @@
     },
     {
       "source": "SNModMaker/js/app.js",
-      "sha256": "5580e3ff4e4ddad288373961c21550a99541f462ada52f24cdd830b2c669e4e3",
+      "sha256": "216942b290cd17eef9167e0bd3740348f61a81725a3b53075faeaf1d49ec6e1a",
       "doc": "docs/static/SNModMaker/js/app.js.md",
       "status": "documented"
     },
@@ -77,7 +77,7 @@
     },
     {
       "source": "SNModMaker/js/io.js",
-      "sha256": "7d8f00898504995b9a78c59f1ed18ee388cb297022ce32ebe5091c7c74d7dfa1",
+      "sha256": "5a99385bab606be46997a2e7d769a917b8fecdabe0c366b850d9bffa1775461b",
       "doc": "docs/static/SNModMaker/js/io.js.md",
       "status": "documented"
     },
@@ -545,7 +545,7 @@
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "b51713eb4dd09272ff3500bba055d8fcb7211daeb807dce3eac09254ad4a1072",
+      "sha256": "abc18a9957d6edbea7143aa51800331bd095ce46d92cf9908e49d1b6f1c796cc",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -557,7 +557,7 @@
     },
     {
       "source": "SNModMaker/tests/workspace-smoke.mjs",
-      "sha256": "d98587b96a2fe7c498076bff1bbb316664fa84f4efd1525636a33310b76d012e",
+      "sha256": "f8a4bc44e8209773fa4564fde7d66f335bf4cd723fecdca41feaaa4fb094a62a",
       "doc": "docs/static/SNModMaker/tests/workspace-smoke.mjs.md",
       "status": "documented"
     },
@@ -581,7 +581,7 @@
     },
     {
       "source": "SNModMaker/tools/serve.mjs",
-      "sha256": "45c7dceacb9ec6b8ede5da6c9d2c88130ecb07346ce77601a6072a392e2dd158",
+      "sha256": "82f0da9e87f99a0036a204999041bc06d853f9dfe5201ef319418a92fdd490d9",
       "doc": "docs/static/SNModMaker/tools/serve.mjs.md",
       "status": "documented"
     },
@@ -770,6 +770,48 @@
     {
       "source": "dev_mods/core/assets/models/modules/SN_Safety_Valve.glb",
       "sha256": "e10f328d198caf9833a8f00bd9c3d7a9c70a78ec49176117d0b7a46a5ece4a85",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/SN_Dry_Dock.glb",
+      "sha256": "2336dcf0592ceef1a37ec4fbec05182844df09e778a3cdec2682fa6b95dd02c7",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/SN_Market_Stall.glb",
+      "sha256": "1c4ba847dca2b27f14b60b2f38d73d31d2edbe137796f71a2678af9c58c4fa54",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/SN_Notice_Board.glb",
+      "sha256": "1a61f15ae0bf411562f53f7279ebac0d8cf71c52dc4135348fe7499d0908bb79",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/SN_Shipyard_Gantry.glb",
+      "sha256": "8f996e3e86637d3f364d2b81d0b16033049be07872b1a090a64a9516b5b874ef",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/SN_Signal_Tower.glb",
+      "sha256": "754cb94e2282e1d261645cc5206a71da61d48b6e7adc39ce1b7e049513484344",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/SN_Water_Tank.glb",
+      "sha256": "660290be5bc36821c1afbfad8dbbdb327da934645147d95815ad61c0b1cd9b46",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1161,7 +1203,7 @@
     },
     {
       "source": "dev_mods/core/manifest.json",
-      "sha256": "dbb0be96131a83806f860775da99f69fa8b1bd969b6ff26207702d639ef6f1ec",
+      "sha256": "3dc4499cf75912a2f1c7be85745138802983fc336764bb03039b0c49932946bd",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1797,7 +1839,7 @@
     },
     {
       "source": "framework/tests/cases/test_mod_loading.gd",
-      "sha256": "6e97625375970e8013741ccc6a2f3a625a98856490d29773bfab3d936ddd0ee7",
+      "sha256": "4ed604ffd1fd84a692cd053b4c2bbc30181eec81f28904746e45e96c9cfd2f46",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2673,6 +2715,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/godot/verify_port_facilities.gd",
+      "sha256": "f4ae0527310518068cd3b930619ef834371aaf06afbaaf69059bad2a5d3441f6",
+      "doc": "docs/static/tools/godot/verify_port_facilities.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/godot/verify_props.gd",
       "sha256": "c37d8ce009bfcd38372deee6e9d410b237eaec417a284e5ade9b3f062b66af62",
       "doc": "docs/static/tools/godot/verify_props.gd.md",
@@ -3135,7 +3183,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "9c6d399daf3e193d856e362a999f135a56be7643b6715ff362df1c5dcd632124",
+      "sha256": "9b1461f7454956f339c70d93a7202f34643cbb974036e18f866efb7a438b50a5",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

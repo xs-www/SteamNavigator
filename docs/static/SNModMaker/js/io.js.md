@@ -44,15 +44,15 @@
 | `projectPayload(project)` | L340 |
 | `putDiskProject(project)` | L352 |
 | `getWorkspaceProject(id)` | L361 |
-| `putWorkspaceProject(project)` | L366 |
-| `deleteDiskProject(id)` | L374 |
-| `listExports()` | L378 |
-| `saveExportToDisk(filename, bytes)` | L383 |
-| `deleteExport(name)` | L391 |
-| `listGameMods()` | L395 |
-| `deployGameMod(id, bytes)` | L400 |
-| `deleteGameMod(id)` | L408 |
-| `SNIO (global)` | L412 |
+| `putWorkspaceProject(project, options)` | L366 |
+| `deleteDiskProject(id)` | L377 |
+| `listExports()` | L381 |
+| `saveExportToDisk(filename, bytes)` | L386 |
+| `deleteExport(name)` | L394 |
+| `listGameMods()` | L398 |
+| `deployGameMod(id, bytes)` | L403 |
+| `deleteGameMod(id)` | L411 |
+| `SNIO (global)` | L415 |
 
 ## 契约与约束
 

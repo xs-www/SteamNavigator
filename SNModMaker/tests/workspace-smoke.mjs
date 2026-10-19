@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /* Native workspace smoke test: open dev_mods/<id> in place, delete and add
  * definitions/files through the same payload the browser editor sends. */
 import assert from 'node:assert/strict';
@@ -123,6 +123,15 @@ try {
   });
   assert.equal(saved.response.status, 200, JSON.stringify(saved.data));
   assert.equal(saved.data.workspace, true);
+
+  const validated = await api('/api/workspace/core', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ project, files, validate: true }),
+  });
+  assert.equal(validated.response.status, 200, JSON.stringify(validated.data));
+  assert.ok(validated.data.validation, 'manual workspace save runs Content CLI validation');
+  assert.equal(typeof validated.data.validation.counts.error, 'number', 'validation returns schema error count');
 
   const goodsOnDisk = JSON.parse(fs.readFileSync(path.join(coreDir, 'content/goods.json'), 'utf8'));
   assert.deepEqual(goodsOnDisk.definitions.map((definition) => definition.id), ['core:good/keep', 'core:good/new']);

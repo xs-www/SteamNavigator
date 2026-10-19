@@ -318,10 +318,22 @@
 - [x] **P0 提交当前批次**：已拆 4 个 commit（`f8d8c29` 框架/模块实例、`480a440` 3D 舞台/UI、`35abfbf` 资产/建模、`3cf61fe` SNModMaker/发布/文档）；船体与 core 资产已入库，工作区清空。
 - [x] **P1 导出实测**：Windows 导出包（114 MB，embed PCK）启动正常，`mods/core-1.0.0.snavmod.zip` + `config/config.json` 布局生效；导出包内确认包含 `SNShipStage3D`、船体 GLB、`ship_modules` 与 `harbor_water`；导出包实机进入船厂 3D 舞台通过（1440×900）。1280×720 / 960×540 用同一构建在编辑器窗口验收通过（movie writer 固定输出 1440×900 画布，不能当窗口截图用）。截图见 [export](docs/design/screenshots/export/)。
 - [ ] **P1 `StageHost` + `LocationStage` 泛化**：把 `SNShipStage3D` 的视口/机位/灯光/水面逻辑收进通用舞台宿主，支持舞台显隐、隐藏即停更、2D 回退；船厂先迁过去，作为 PortStage 的宿主。
-- [ ] **P1 `PortStage` 骨架**：按 `facilities` 装配设施 billboard 占位（市场/委托/补给/情报/船厂）+ L0 天空/L1 远景背板；等 6 件锚点模型（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)）到位后按 `facility_visuals` 替换。
+- [ ] **P1 `PortStage` 骨架**：按 `facilities` 装配设施 billboard 占位（市场/委托/补给/情报/船厂）+ L0 天空/L1 远景背板；6 件锚点模型已到位（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)，GLB 在 `assets/models/port/`），接线时按 `facility_visuals` 替换。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。
+
+## 港口设施锚点第一批（2026-10-20，模型已交付）
+
+> 2.5D 港口舞台的设施可辨认锚点，6 件合计 4996 tri（预算 10500）。工单 [sn_port_facilities_batch1.json](tools/modeling/briefs/sn_port_facilities_batch1.json)，规划 [PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)，资产登记 [ASSET_MAP.md](docs/design/ASSET_MAP.md)。
+
+- [x] Lead 写参数化生成器 `sn_port_facilities_generator.py`（ITEMS 参数表 + 6 个 build_*；纯几何可离线干跑），纯 Python 干跑 `dryrun_props.py` ALL OK（尺寸误差 0、tri 4996、边界/非流形 0）
+- [x] Builder 六轮迭代（每轮只重建本集合 6 件）：布局冲突（y=60 与 `SN_Ship_Modules` 互穿）→ 整排移到空闲 y=75；告示板纸面翻到 -Y + 绕 X 后仰；龙门吊横梁接腿 / 爬梯踏棍外移出腿体；干船坞龙骨墩改骑滑道轨 + 删不可见死几何；市场侧梁收进帆布下；水箱收口环改 SN_Metal
+- [x] 独立 Verifier 只读验收通过：命名/集合/轴心/尺寸（误差 0.000，龙门吊 Y +0.014 来自爬梯外凸）/预算/材质（7 种调色板 + 新增 SN_Iron）/网格健康全 0/剔除 6 件后回归 digest 命中（基线 228 对象）/6 件视觉可辨
+- [x] 归档：`assets/models/port/` 6 个 GLB（42.6/17.4/67.9/59.0/59.6/30.5 KB，单节点、doubleSided）+ `.design/port/SN_<Name>.blend` 6 个源快照 + `.design/port/report.json`；`verify_port_glb.py` 6/6 PASS；预览截图 `docs/design/screenshots/port_facilities_batch1_*.png`
+- [x] 工作台 `.design/SN_Asset_Workbench.blend` 保存（234 对象 / 213 mesh / 19 材质，`SN_Port_Facilities` 集合在 y=75）
+- [ ] 待接入：`PortStage.facility_visuals`（依赖 P1 `StageHost` 泛化；接入后按设施替换这 6 个 GLB）
+- [ ] 备注：acceptance“信号塔最高剪影”与本批尺寸表矛盾（塔 8.5 m < 龙门吊 10.0 m），按尺寸表实现并在工单 `delivery_notes` 记录
 
 ## 维护约定
 

@@ -386,23 +386,39 @@
       }
     }
     if (state.backend) {
-      if (opts.disk) await flushDiskSave();
+      if (opts.disk) await flushDiskSave(true);
       else scheduleDiskSave();
     }
   }
 
-  async function flushDiskSave() {
+  async function flushDiskSave(options) {
     if (!state.project || !state.backend) return;
     if (state.diskSaving) {
       state.diskQueued = true;
       return;
     }
+    const validate = options === true;
     state.diskSaving = true;
     updateSaveState();
     try {
-      await (state.workspace ? IO.putWorkspaceProject(state.project) : IO.putDiskProject(state.project));
+      const result = state.workspace
+        ? await IO.putWorkspaceProject(state.project, { validate })
+        : await IO.putDiskProject(state.project);
       state.diskSavedAt = new Date();
       state.diskError = '';
+      if (validate && result && result.validation) {
+        const counts = result.validation.counts || {};
+        if (counts.error > 0) {
+          UI.toast(`工作区已写入，但校验有 ${counts.error} 个错误；先修掉再打包。`, 'warning', 6000);
+        } else if (counts.warning > 0) {
+          UI.toast(`工作区已写入（${counts.warning} 个警告）`, 'info', 2600);
+        } else {
+          UI.toast('工作区已写入并通过校验', 'success', 2200);
+        }
+      }
+      if (validate && result && result.indexSynced) {
+        UI.toast('Core 索引已重新生成', 'info', 2200);
+      }
     } catch (error) {
       state.diskError = error.message || '写入磁盘失败';
       const target = state.workspace

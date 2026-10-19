@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-19T13:12:27.560Z",
+    "generated_at": "2026-10-19T13:21:48.045Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -63,6 +63,12 @@
         "model.module.nav_spyglass": "assets/models/modules/SN_Nav_Spyglass.glb",
         "model.module.safety_lifeboat": "assets/models/modules/SN_Safety_Lifeboat.glb",
         "model.module.safety_valve": "assets/models/modules/SN_Safety_Valve.glb",
+        "model.port.dry_dock": "assets/models/port/SN_Dry_Dock.glb",
+        "model.port.market_stall": "assets/models/port/SN_Market_Stall.glb",
+        "model.port.notice_board": "assets/models/port/SN_Notice_Board.glb",
+        "model.port.shipyard_gantry": "assets/models/port/SN_Shipyard_Gantry.glb",
+        "model.port.signal_tower": "assets/models/port/SN_Signal_Tower.glb",
+        "model.port.water_tank": "assets/models/port/SN_Water_Tank.glb",
         "model.prop.barrel": "assets/models/props/SN_Barrel.glb",
         "model.prop.bell": "assets/models/props/SN_Bell.glb",
         "model.prop.boiler_unit": "assets/models/props/SN_Boiler_Unit.glb",

@@ -27,6 +27,12 @@
 | `assets/models/modules/SN_Nav_Spyglass.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/SN_Safety_Lifeboat.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/SN_Safety_Valve.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/SN_Dry_Dock.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/SN_Market_Stall.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/SN_Notice_Board.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/SN_Shipyard_Gantry.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/SN_Signal_Tower.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/SN_Water_Tank.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Barrel.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Bell.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Boiler_Unit.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

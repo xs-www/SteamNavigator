@@ -37,120 +37,120 @@
 | `fallbackKey(uid)` | L335 |
 | `loadFallbackProject()` | L339 |
 | `saveNow(options)` | L350 |
-| `flushDiskSave()` | L394 |
-| `openProject(uid)` | L422 |
-| `deleteProject(uid)` | L439 |
-| `render(options)` | L470 |
-| `renderChrome()` | L506 |
-| `renderStatus()` | L533 |
-| `saveStateText()` | L552 |
-| `saveStateTitle()` | L562 |
-| `updateSaveState()` | L567 |
-| `timeText(date)` | L575 |
-| `renderSidebar()` | L583 |
-| `sideTypeLink(type, count, issues)` | L641 |
-| `activeLocale(locale)` | L652 |
-| `renderWorkspace()` | L660 |
-| `renderWelcome()` | L682 |
-| `loadRecent()` | L707 |
-| `renderOverview()` | L763 |
-| `ovField(labelText, control, hintText, wide)` | L872 |
-| `depRow(list, dependency, index)` | L880 |
-| `structureTree(project)` | L888 |
-| `renderModuleTabs(activeType)` | L916 |
-| `renderContent()` | L932 |
-| `renderDefinitionEditor(selected, info)` | L1007 |
-| `collectNeededKeys(project)` | L1063 |
-| `renderLocalization()` | L1078 |
-| `renderAssets()` | L1157 |
-| `paintModelThumbnails()` | L1199 |
-| `runModelThumbQueue()` | L1218 |
-| `setModelThumbImage(node, dataUrl)` | L1237 |
-| `renderValidation()` | L1247 |
-| `issueLocation(issue)` | L1285 |
-| `gotoIssue(index)` | L1297 |
-| `attrSelector(value)` | L1337 |
-| `inspectorData()` | L1345 |
-| `renderInspector()` | L1359 |
-| `inspectorLabel()` | L1382 |
-| `bindEvents()` | L1400 |
-| `closeAssetPickers(except)` | L1417 |
-| `openAssetPicker(picker)` | L1426 |
-| `filterAssetPicker(input)` | L1436 |
-| `onClick(event)` | L1451 |
-| `selectDefinition(filePath, index)` | L1483 |
-| `navigate(kind, argument)` | L1492 |
-| `onInput(event)` | L1528 |
-| `onChange(event)` | L1576 |
-| `onKeyDown(event)` | L1601 |
-| `onFocusOut(event)` | L1659 |
-| `applyField(element, fromChange)` | L1667 |
-| `readValue(element)` | L1715 |
-| `markChanged(structural)` | L1742 |
-| `updateDefinitionLocalizationPreview(definition, draft)` | L1754 |
-| `updateEntityLocaleDraft(element)` | L1773 |
-| `updateLocaleValue(element)` | L1788 |
-| `filterDefinitionCards()` | L1808 |
-| `renderLocalizationListOnly()` | L1815 |
-| `autoProjectId(name)` | L1828 |
-| `filterCoreList(query)` | L1834 |
-| `handleAction(element, event)` | L1845 |
-| `saveDefinitionAction()` | L2080 |
-| `gotoDefinitionLocalization(field, keyOverride)` | L2117 |
-| `addDefinitionAction()` | L2134 |
-| `cloneCoreAction(coreId)` | L2145 |
-| `deleteDefinitionAction()` | L2161 |
-| `duplicateDefinitionAction()` | L2186 |
-| `applyRawJson()` | L2197 |
-| `addDependency(list)` | L2220 |
-| `removeDependency(list, index)` | L2230 |
-| `syncNamespace()` | L2239 |
-| `gotoKeyDefinition(filePath, index)` | L2284 |
-| `deleteLocaleKey(key)` | L2293 |
-| `fillMissingKeys()` | L2303 |
-| `arrayAdd(path)` | L2325 |
-| `defaultArrayItem(path, definition)` | L2339 |
-| `arrayRemove(path, index)` | L2362 |
-| `arrayMove(path, index, direction)` | L2373 |
-| `addListValue(path, input, button)` | L2387 |
-| `listRemove(path, index)` | L2411 |
-| `enumToggle(path, value, element)` | L2424 |
-| `addCondition(path, kind)` | L2441 |
-| `removeCondition(path)` | L2453 |
-| `changeConditionKind(element)` | L2462 |
-| `changeConditionOp(element)` | L2482 |
-| `changeEffectOp(element)` | L2502 |
-| `addAssets()` | L2526 |
-| `removeAsset(path)` | L2568 |
-| `downloadAsset(path)` | L2584 |
-| `showNewProject()` | L2594 |
-| `createProjectFromModal()` | L2627 |
-| `showImport()` | L2663 |
-| `importFolder()` | L2683 |
-| `importFile()` | L2688 |
-| `importEntries(entries)` | L2693 |
-| `showExport()` | L2733 |
-| `exportZip()` | L2767 |
-| `exportZipToDisk()` | L2789 |
-| `deployGameMod()` | L2812 |
-| `exportProjectFile()` | L2838 |
-| `exportFolder()` | L2848 |
-| `showProjectLibrary()` | L2860 |
-| `openDiskProject(id)` | L2921 |
-| `openWorkspaceProject(id)` | L2940 |
-| `deleteDiskProject(id)` | L2958 |
-| `showCoreClone()` | L2977 |
-| `showAddLocale()` | L3003 |
-| `createLocale()` | L3018 |
-| `showAddLocaleKey()` | L3039 |
-| `createLocaleKey()` | L3051 |
-| `showHelp()` | L3068 |
-| `onDragEnter(event)` | L3110 |
-| `onDragOver(event)` | L3117 |
-| `onDragLeave()` | L3121 |
-| `onDrop(event)` | L3129 |
-| `runValidation()` | L3146 |
-| `copyText(text)` | L3152 |
+| `flushDiskSave(options)` | L394 |
+| `openProject(uid)` | L438 |
+| `deleteProject(uid)` | L455 |
+| `render(options)` | L486 |
+| `renderChrome()` | L522 |
+| `renderStatus()` | L549 |
+| `saveStateText()` | L568 |
+| `saveStateTitle()` | L578 |
+| `updateSaveState()` | L583 |
+| `timeText(date)` | L591 |
+| `renderSidebar()` | L599 |
+| `sideTypeLink(type, count, issues)` | L657 |
+| `activeLocale(locale)` | L668 |
+| `renderWorkspace()` | L676 |
+| `renderWelcome()` | L698 |
+| `loadRecent()` | L723 |
+| `renderOverview()` | L779 |
+| `ovField(labelText, control, hintText, wide)` | L888 |
+| `depRow(list, dependency, index)` | L896 |
+| `structureTree(project)` | L904 |
+| `renderModuleTabs(activeType)` | L932 |
+| `renderContent()` | L948 |
+| `renderDefinitionEditor(selected, info)` | L1023 |
+| `collectNeededKeys(project)` | L1079 |
+| `renderLocalization()` | L1094 |
+| `renderAssets()` | L1173 |
+| `paintModelThumbnails()` | L1215 |
+| `runModelThumbQueue()` | L1234 |
+| `setModelThumbImage(node, dataUrl)` | L1253 |
+| `renderValidation()` | L1263 |
+| `issueLocation(issue)` | L1301 |
+| `gotoIssue(index)` | L1313 |
+| `attrSelector(value)` | L1353 |
+| `inspectorData()` | L1361 |
+| `renderInspector()` | L1375 |
+| `inspectorLabel()` | L1398 |
+| `bindEvents()` | L1416 |
+| `closeAssetPickers(except)` | L1433 |
+| `openAssetPicker(picker)` | L1442 |
+| `filterAssetPicker(input)` | L1452 |
+| `onClick(event)` | L1467 |
+| `selectDefinition(filePath, index)` | L1499 |
+| `navigate(kind, argument)` | L1508 |
+| `onInput(event)` | L1544 |
+| `onChange(event)` | L1592 |
+| `onKeyDown(event)` | L1617 |
+| `onFocusOut(event)` | L1675 |
+| `applyField(element, fromChange)` | L1683 |
+| `readValue(element)` | L1731 |
+| `markChanged(structural)` | L1758 |
+| `updateDefinitionLocalizationPreview(definition, draft)` | L1770 |
+| `updateEntityLocaleDraft(element)` | L1789 |
+| `updateLocaleValue(element)` | L1804 |
+| `filterDefinitionCards()` | L1824 |
+| `renderLocalizationListOnly()` | L1831 |
+| `autoProjectId(name)` | L1844 |
+| `filterCoreList(query)` | L1850 |
+| `handleAction(element, event)` | L1861 |
+| `saveDefinitionAction()` | L2096 |
+| `gotoDefinitionLocalization(field, keyOverride)` | L2133 |
+| `addDefinitionAction()` | L2150 |
+| `cloneCoreAction(coreId)` | L2161 |
+| `deleteDefinitionAction()` | L2177 |
+| `duplicateDefinitionAction()` | L2202 |
+| `applyRawJson()` | L2213 |
+| `addDependency(list)` | L2236 |
+| `removeDependency(list, index)` | L2246 |
+| `syncNamespace()` | L2255 |
+| `gotoKeyDefinition(filePath, index)` | L2300 |
+| `deleteLocaleKey(key)` | L2309 |
+| `fillMissingKeys()` | L2319 |
+| `arrayAdd(path)` | L2341 |
+| `defaultArrayItem(path, definition)` | L2355 |
+| `arrayRemove(path, index)` | L2378 |
+| `arrayMove(path, index, direction)` | L2389 |
+| `addListValue(path, input, button)` | L2403 |
+| `listRemove(path, index)` | L2427 |
+| `enumToggle(path, value, element)` | L2440 |
+| `addCondition(path, kind)` | L2457 |
+| `removeCondition(path)` | L2469 |
+| `changeConditionKind(element)` | L2478 |
+| `changeConditionOp(element)` | L2498 |
+| `changeEffectOp(element)` | L2518 |
+| `addAssets()` | L2542 |
+| `removeAsset(path)` | L2584 |
+| `downloadAsset(path)` | L2600 |
+| `showNewProject()` | L2610 |
+| `createProjectFromModal()` | L2643 |
+| `showImport()` | L2679 |
+| `importFolder()` | L2699 |
+| `importFile()` | L2704 |
+| `importEntries(entries)` | L2709 |
+| `showExport()` | L2749 |
+| `exportZip()` | L2783 |
+| `exportZipToDisk()` | L2805 |
+| `deployGameMod()` | L2828 |
+| `exportProjectFile()` | L2854 |
+| `exportFolder()` | L2864 |
+| `showProjectLibrary()` | L2876 |
+| `openDiskProject(id)` | L2937 |
+| `openWorkspaceProject(id)` | L2956 |
+| `deleteDiskProject(id)` | L2974 |
+| `showCoreClone()` | L2993 |
+| `showAddLocale()` | L3019 |
+| `createLocale()` | L3034 |
+| `showAddLocaleKey()` | L3055 |
+| `createLocaleKey()` | L3067 |
+| `showHelp()` | L3084 |
+| `onDragEnter(event)` | L3126 |
+| `onDragOver(event)` | L3133 |
+| `onDragLeave()` | L3137 |
+| `onDrop(event)` | L3145 |
+| `runValidation()` | L3162 |
+| `copyText(text)` | L3168 |
 
 ## 契约与约束
 

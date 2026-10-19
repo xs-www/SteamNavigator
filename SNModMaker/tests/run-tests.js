@@ -424,8 +424,8 @@ function warningsOf(result) {
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
     assert.equal(result.project.contentFiles.length, 15);
-    // 3 status icons + Iron Harbor banner + 55 entity GLB models.
-    assert.equal(result.project.assets.length, 59);
+    // 3 status icons + Iron Harbor banner + 61 entity GLB models.
+    assert.equal(result.project.assets.length, 65);
     const validation = Validate.validateProject(result.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
   });

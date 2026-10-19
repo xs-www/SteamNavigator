@@ -1337,6 +1337,16 @@ export const FILE_DOCS = {
     ]
   },
 
+  "tools/godot/verify_port_facilities.gd": {
+    role: "港口设施锚点 GLB 导入验收（只读）：加载 `assets/models/port/SN_*.glb` 6 件，量测 Godot 侧包围盒 / 三角面 / 材质名，对照工单尺寸与调色板判定。",
+    contracts: [
+      "glTF 由 Blender Z-up 转 Y-up，故期望尺寸 = (Blender X, Blender Z, Blender Y)；`EXPECTED` 表必须按此口径维护。",
+      "尺寸容差 0.1 m（龙门吊 Y 含爬梯外凸，期望值 4.014）；三角面必须与 `EXPECTED` 精确相等，抓\"改了 .blend 忘了重导 GLB\"与旧缓存。",
+      "包围盒最低点必须在 y=0（原点在底面中心）；材质名必须全部在调色板内；只读，失败退出码 1。",
+      "改 GLB 后先 `godot --headless --import` 刷新缓存再跑本脚本。"
+    ]
+  },
+
   "tools/godot/verify_props.gd": {
     role: "道具 GLB 导入验收（只读）：加载 `assets/models/props/*.glb`，量测 Godot 侧包围盒、三角面与材质名，对照 brief 尺寸判定尺度与轴向。",
     contracts: [
@@ -2190,7 +2200,7 @@ export const MODULES = {
       "`modeling/generators/*.py` 是几何唯一真源：改了参数重跑即可重建，禁止手工摆点；`.blend` 只是产物。",
       "`modeling/generators/dryrun_props.py` 必须在进 Blender 前跑通（tri 预算 / 包围盒 / 边界边 / 退化面）。",
       "`modeling/dispatch.workflow.js` 必须串行派发：Blender 单实例，禁止 `parallel`/`pipeline` 并发建模。",
-      "`godot/verify_props.gd` 是 GLB 导入的回归闸门，改动资产后必须重跑。"
+      "`godot/verify_props.gd` 是道具 GLB 导入的回归闸门，`godot/verify_port_facilities.gd` 是港口设施 6 件锚点的导入闸门；改动资产后先 `godot --headless --import` 再重跑对应脚本。"
     ]
   },
   "SNModMaker": {
@@ -2266,7 +2276,7 @@ export const GROUPED_ROLES = {
   "tools/modeling/generators/export_props_glb.py": "道具 GLB 导出：逐件把 location 临时归零、只导出选中对象、导出后还原；按批次分组避免无谓重导。",
   "tools/modeling/generators/p0_rework_2026-10-19.py": "第一批 P0 整改：重建系缆桩 → SN_Ore 改锈红 → 三段岸壁拼接测试。",
   "tools/modeling/generators/p0_finalize.py": "P0 归档：备份旧 GLB → 清临时对象 → 导出 → 保存工作台。",
-  "tools/modeling/generators/sn_port_facilities_generator.py": "港口设施锚点第一批 6 件生成器（市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞）：纯几何函数可离线干跑，单件一个 mesh、原点在底面中心，集合 SN_Port_Facilities，合计 5044 tri；本批新增 SN_Iron。",
+  "tools/modeling/generators/sn_port_facilities_generator.py": "港口设施锚点第一批 6 件生成器（市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞）：纯几何函数可离线干跑，单件一个 mesh、原点在底面中心，集合 SN_Port_Facilities，合计 4996 tri；本批新增 SN_Iron。",
   "tools/modeling/generators/export_port_glb.py": "港口设施 GLB 归档：备份旧 GLB → 保存工作台 → 逐件 location 归零导出 `assets/models/port/SN_<Name>.glb` → `libraries.write` 单件 `.blend` 快照 → 还原摆位；人工验收后由 Lead 运行。",
   "tools/modeling/generators/verify_port_glb.py": "港口设施 GLB 结构自检（纯 Python）：单节点/无相机灯光贴图、三角面 ≤1.2× 预算、glTF Y-up 包围盒换算与 items.size 误差 ≤0.1 m、轴心在底面中心、材质在调色板且 doubleSided。",
   "tools/modeling/generators/render_port_preview.py": "港口设施预览渲染：临时相机/双太阳/深色世界，逐件 3/4 与正视 + 一排总览 + 船厂组总览，干船坞单独抬高机位看坞内台阶；渲染后还原场景并删除临时对象。",
