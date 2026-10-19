@@ -1,13 +1,13 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T22:23:29.115Z",
-  "commit": "ebbf244",
+  "generated_at": "2026-10-19T23:27:30.288Z",
+  "commit": "d56f469",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 505,
-    "documented": 164,
+    "sources": 507,
+    "documented": 166,
     "grouped": 341
   },
   "files": [
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "ada477bfbd1bed70f8402e8f79461e222e6fecf9bf14f906d30ade8cee3bf9c2",
+      "sha256": "379b1033624a61fa9a60f72433d8a5da30e4c6e069a51e6ec867068419a20988",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1237,7 +1237,7 @@
     },
     {
       "source": "dev_mods/core/content/port_archetypes.json",
-      "sha256": "32f1abc1b4ce0ceed1d59cb50ba30ff3fb0a66a2fe632a6dba76a7bd30757a00",
+      "sha256": "380b2965e1cb9085eba8691b225f644a32f6eb977cc5fd1bc4f82de2d741ecf9",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1318,7 +1318,7 @@
     },
     {
       "source": "dev_scenes/port_stage/port_stage_preview.gd",
-      "sha256": "95e614b042d66f9dbc39eb61d44e45fd70c05ade623f145fddaf9cd717d436f5",
+      "sha256": "15f5924f86604c6585a56a481e38d1d8da17fcaf857e10716655c3ac1377ae7d",
       "doc": "docs/static/dev_scenes/port_stage/port_stage_preview.gd.md",
       "status": "documented"
     },
@@ -1815,7 +1815,7 @@
     },
     {
       "source": "framework/services/asset_service.gd",
-      "sha256": "413c543030a6657b1bcbfd84660acfbabd0ac35de9ad30d54132b2c076cf6043",
+      "sha256": "cc980e85ac93b90e675022a58e22740fb5bfd0633ce1277eed6c1d9047dc3a27",
       "doc": "docs/static/framework/services/asset_service.gd.md",
       "status": "documented"
     },
@@ -2042,7 +2042,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "03e37ed8079f5e30537a1f3de1b88b3bec55b9b81979119bd5b69caaee0e8804",
+      "sha256": "81f6dc8b0de08abcf318685587337f63d60729d2582aa81b9a9f911f056aba7b",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -2055,7 +2055,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "3ada5d192585ee2c00577aae27bd3955e7ae9b6803eede2295550f9bb31380cd",
+      "sha256": "1f2cf35ff88d8e6296ee0b3cc556e75c6e0c55cd52519fe8b6c4b1d1e066c72c",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -2158,6 +2158,12 @@
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/components/sn_harbor_sign.gd",
+      "sha256": "231d49cef776ee1c05cbfeff676befb0f1f0380883fc00d8f83aad3667b80581",
+      "doc": "docs/static/framework/ui/components/sn_harbor_sign.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_intel_table.gd",
@@ -2491,7 +2497,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "b5a17ac9e96353f1a7b4028b645d70cea86be50a72261cd3ba53f3b955a64b04",
+      "sha256": "3dd7ba8fcd36c343a58999ccb66518664fe9882a756c9729c59143be1af1a1cc",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -2523,7 +2529,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "f94c251b4022b83762339f2e047e6c38b8ffa408bd7b33847bd080bb82135568",
+      "sha256": "82e7cf5ddca2fa9c1001ff43e8a0cddd13f89ee303b8e9ddbbc481cebc31c774",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -2652,7 +2658,7 @@
     },
     {
       "source": "schemas/port_archetype.schema.json",
-      "sha256": "aec089fae31e2b7c5445f741c9784ad43574e2128551fe19ae8ad217e232edbf",
+      "sha256": "26c1f4fa4387cda2ef7e4261ae642447a83b352ad747c11b7ce8ff8e09b04444",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -2825,7 +2831,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "80201f929f7851125cdff73d5ad5e8bbf5fa0f89aa7238f3fa66908e2e32cd59",
+      "sha256": "c86c9153e9433c851a2d4bb270a1301d2910b36a34f8be5b3eab3996ad244f41",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2864,6 +2870,12 @@
       "source": "tools/godot/capture_port_stage.gd",
       "sha256": "59c7ed21ed9025dfaaf8f5e47aaee2d757a5fce61a139adeb428ec430fdc5a62",
       "doc": "docs/static/tools/godot/capture_port_stage.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/measure_port_stage.gd",
+      "sha256": "ca58de64d91aaa48bd4cdc0c520b6a71be9f6fd774ec68d35da6ebc3aa981061",
+      "doc": "docs/static/tools/godot/measure_port_stage.gd.md",
       "status": "documented"
     },
     {
@@ -3365,7 +3377,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "cdc0a0a3a128e4a44fb52ddeaab5348703a229c3fba9c82ae87d27d386613187",
+      "sha256": "5bfc26b98e2e17db276b4c9fac79870a01fe03a4f10846552b5220c01952509c",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

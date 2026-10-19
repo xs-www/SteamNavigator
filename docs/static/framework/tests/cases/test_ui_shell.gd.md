@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_ui_shell.gd`
 
-> 作用：迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 两侧招牌 + 底部状态条 + 详细总览抽屉 + 2D 回退）。
+> 作用：迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 资源图标 + 主题化两侧招牌 + 底部状态条 + 详细总览抽屉 + 2D 回退）与 960 窄布局 helper。
 
 - 类型：GDScript 源文件
 
@@ -8,18 +8,18 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L162 |
-| `test_damaged_module_is_visible_in_the_shell() -> void` | L198 |
-| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L217 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L282 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L328 |
-| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L378 |
-| `test_intel_screen_renders_the_port_comparison_table() -> void` | L408 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L455 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L513 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L546 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L673 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L692 |
+| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L170 |
+| `test_damaged_module_is_visible_in_the_shell() -> void` | L206 |
+| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L225 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L290 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L336 |
+| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L386 |
+| `test_intel_screen_renders_the_port_comparison_table() -> void` | L416 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L463 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L521 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L554 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L711 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L730 |
 
 ## 契约与约束
 
@@ -36,6 +36,9 @@
 - 扫描 domain/application 源码里所有 `push_notice("…")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。
 - 组件按路径 preload，不依赖编辑器全局类缓存。
 - `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 7 个导航按钮、诊断/刷新按钮全部保留。
+- HUD 图标：`AssetService.find_key("icon.money")` / coal / water 均能解析且 `has()` 为真；chrome 里至少 3 个 `TextureRect` 且每个都有已加载纹理（缺资产时页面应退化为纯文字，不产生空纹理节点）。
+- 紧凑布局 helper：`_compact_chrome_for_width(960/1179)` 为 true、1440 为 false；`_port_sign_size_for_width(960)` == 148×38、1440 == 172×42；`_port_sign_margin_for_width` 14/20。headless 假视口保持参考布局，所以上一组 1440 尺寸断言不变。
+- 招牌组件：present 设施的 Button 必须 `has_method("configure")`（SNHarborSign），`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。
 - 同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_voyage` 固定在右下）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market；切到市场后紧凑 chrome 仍在、舞台/状态条隐藏。
 - `test_overview_stage_falls_back_to_the_usable_2d_overview`：调 `_on_port_stage_fallback` 后 `_port_stage_load_failed` 记忆、stage 模式关闭、2D 地图挂载、显示 `ui.error.port_stage_unavailable`、导航仍可用。
 - `test_overview_status_strip_and_detail_drawer`：底部状态条可见且最小高度 ≤72，含耐久/货舱/受损/最新通告与「详细总览/出航/等待 12 小时」；打开抽屉后地图与 `ui.victory.plan_title` 出现、舞台未销毁、backdrop 显示、招牌隐藏；返回主界面后抽屉关闭；点等待按钮让 `GameState.now()` +12 h；切到 intel 时状态条隐藏、返回总览恢复、点出航进入 voyage 页。

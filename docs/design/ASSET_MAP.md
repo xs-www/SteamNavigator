@@ -207,9 +207,10 @@
 - 生成器：`tools/modeling/generators/sn_harbor_town_generator.py`（`ITEMS` + `build_*` 纯几何，可 `dryrun_props.py` 离线干跑；`build_all()/report()` 在 Blender 内执行）。
 - 导出：`tools/modeling/generators/export_town_glb.py`（逐件临时归零 location → 单对象 GLB → 还原摆位；轴心=底面中心、glTF Y-up、无相机/灯光）。
 - 质检：Builder 6204 tri；独立 Verifier R1 修复 Rowboat 压条悬空、Tavern 挂灯脱开、Office 塔身暗板过厚后复验 **passed=true**（244 objects / 223 mesh、回归 digest 命中）。
-- Core 接线：`dev_mods/core/manifest.json` 新增 10 个 `model.prop.*`（资产数 65→75）；`port_archetypes.json` 五港 `diorama.kit/town` 引用这 10 个键 + 6 个复用道具（crate/barrel/coal_pile/timber_stack/handcart/gas_lamp）。
-- 舞台装配：`PortStage` 的 L2b 在 `town_visuals` 存在时在抬升广场上放 5 建筑/7 围栏/6 工人/8 装饰/3 船（共 29 props）；建筑 GLB 缺失回退程序化 blockout，town 存在时跳过 L2 剪影。
-- 截图：`docs/design/screenshots/port_stage/port_stage_preview.png`、`port_stage_sparse.png`、`docs/design/screenshots/overview_port_stage.png`。
+- Core 接线：`dev_mods/core/manifest.json` 新增 10 个 `model.prop.*`（资产数 65→75）；`port_archetypes.json` 五港 `diorama.kit/town` 引用这 10 个键 + 16 个复用道具/设施键（crate/barrel/coal_pile/timber_stack/handcart/gas_lamp + market_stall/harbor_crane/sack_pile/plate_stack/ore_pile/pallet/gangway/mooring_bollard/capstan/buoy）。
+- 舞台装配：`PortStage` 的 L2b 按 `port.size` 与可选 `port.diorama.density`（small→sparse / medium→normal / large→busy）确定性放置：normal 为 5 建筑 + 7 围栏 + 7 工人 + 8 广场装饰 + 3 船 + 17 码头工业件 = **47 props**（sparse 28 / busy 63）；建筑 GLB 缺失回退程序化 blockout，town 存在时跳过 L2 剪影。设施/街景/玩家船在重建后静态合批（按材质合并），实测 preview 63 / sparse 56 draw calls。
+- HUD 图标：`icon.money` / `icon.coal` / `icon.water` 由 `AssetService.find_key()` 按裸键从任一已挂载内容包解析（金币/煤炭/淡水 chip），缺资产回退纯文字；不新增资产。
+- 截图：`docs/design/screenshots/port_stage/port_stage_preview.png`、`port_stage_sparse.png`、`docs/design/screenshots/overview_port_stage.png`、`overview_port_stage_960.png`。
 
 ## 3D 港口样片（水面着色器试做）
 

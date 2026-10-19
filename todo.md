@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**155 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施（LocationStage / SNStageHost 生命周期与回退 / ShipyardStage / PortStage 装配·替换·缩放·portal）、PortStage 场景填充访问器、港口街景 town kit（满配 29 / 无 town / 非法路径 / port.view 16 项端到端）、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**162 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施（LocationStage / SNStageHost 生命周期与回退 / ShipyardStage / PortStage 装配·替换·缩放·portal）、PortStage 场景填充访问器、港口街景 town kit（满配 29 / 无 town / 非法路径 / port.view 16 项端到端）、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -266,7 +266,7 @@
 
 ## 2.5D 固定舞台（阶段 1 已启动）
 
-> 设计已归档：[2.5D 固定舞台升级方案](docs/design/2.5D_STAGE_PLAN.md)。前五个切片（船厂 3D、通用舞台宿主 + 港口骨架、总览页接入、场景填充 L0–L2/L6/L7、Bounty Train 式主界面 HUD + 港口街景 kit/diorama）已落地；剩余项列在下面。
+> 设计已归档：[2.5D 固定舞台升级方案](docs/design/2.5D_STAGE_PLAN.md)。前六个切片（船厂 3D、通用舞台宿主 + 港口骨架、总览页接入、场景填充 L0–L2/L6/L7、Bounty Train 式主界面 HUD + 港口街景 kit/diorama、主界面美术收尾 + 街景密度 + 性能回收）已落地；剩余项列在下面。
 
 - [x] `StageHost` + `LocationStage` 泛化：`SNStageHost` 独占 `SubViewport`/`World3D`，驱动 enter→bind→exit，支持隐藏即停更、缺失场景 `fallback_requested`、`render_shrink` 低分辨率 3D
 - [x] `ShipyardStage` 迁移：环境/灯光/水面/机位/船体 GLB 绑定/升沉从 `SNShipStage3D` 迁出；`SNShipStage3D` 保留 `SNShipView` renderer 契约
@@ -282,10 +282,17 @@
 - [x] 港口街景 10 件：`SN_HT_*` 建筑/围栏/工人/小船 6204 tri（预算 11500，244 objects / 223 mesh，既有对象 digest 不变）；`sn_harbor_town_generator.py` 参数化真源 + `export_town_glb.py` 导出 + 工单；Verifier R1 复验 passed
 - [x] 街景接入：core manifest 新增 10 个 `model.prop.*`（资产 65→75）；五港 `diorama.kit/town`（16 项）+ `port_archetype.schema` 扩展；`port.view` 输出 diorama/town_visuals（旧存档按 archetype 回填）；`map_generator` 持久化 diorama；PortStage L2b 装配（满配 29 props / 建筑 blockout 回退 / town 存在时跳过 L2 剪影）
 - [x] 截图：主界面 [overview_port_stage.png](docs/design/screenshots/overview_port_stage.png) / [详细总览](docs/design/screenshots/overview_detail.png) / [完整港口](docs/design/screenshots/port_stage/port_stage_preview.png) / [稀疏港口](docs/design/screenshots/port_stage/port_stage_sparse.png)
+- [x] 第六切片·HUD 图标化：`_stat_chip()` 支持可选 `icon_key`，`_hud_icon()` 经 `AssetService.find_key("icon.money/coal/water")` 从任一内容包裸键解析并缓存，缺资产回退纯文字；金币/煤炭/淡水出现在顶部 chrome 与底部状态条
+- [x] 第六切片·主题化招牌：[sn_harbor_sign.gd](framework/ui/components/sn_harbor_sign.gd) 自绘木板/木纹/铁框/黄铜铆钉 + 设施徽记 + 指向场景的箭头 + 悬停黄铜光晕；Button 语义/text/tooltip 保留；1440 宽 172×42、窄窗口 148×38，紧凑 chrome 隐藏副要 chip
+- [x] 第六切片·街景密度：`port.size`/`port.diorama.density` 确定性分档（small→sparse 28、medium→normal 47、large→busy 63）；新增市场摊/吊车/麻袋堆/钢板堆/矿堆/托盘/跳板/系缆桩/绞盘/浮标 10 类 slot（全部复用已声明资产）；5 个 archetype 的 `diorama.town` 与 schema 的 `diorama.density` 同步
+- [x] 第六切片·静态与船体合批：facilities/town 程序化 box → 共享单位立方体 MultiMesh，其余按材质签名烘焙成每材质 1 个 ArrayMesh；玩家船在泡沫 AABB 后按 ship-local 刚性合批，动画/骨骼/粒子/透明/法线贴图整船安全回退；实测 **preview 63 / sparse 56 draw calls（37,280 / 29,738 tris）**，`batch_stats()` 暴露前后计数
+- [x] 第六切片·无 banner 程序化远景：山脊/远城塔楼/屋脊+烟囱 3 层低对比剪影合并为 1 个 MultiMesh，有 banner 时隐藏；旧斜置 sky card 改固定 260 m camera-facing，修掉右侧远景截断
+- [x] 第六切片·测试与工具：`test_stage_host` 增至 24 例（密度/可选 slot/静态合批/无 town 合批/远景层/船体合批与泡沫 AABB/非刚性回退），`test_ui_shell` 覆盖 HUD 图标与招牌组件/紧凑尺寸 helper，全量 **162 passed / 0 failed**；新增 [measure_port_stage.gd](tools/godot/measure_port_stage.gd) 窗口实测工具（真实 draw calls/分层 surface/合批统计，headless 降级）
+- [x] 第六切片·截图：主界面 1440×900 + 960×540 + 详细总览 + 完整/稀疏港口（见 [overview_port_stage.png](docs/design/screenshots/overview_port_stage.png) / [overview_port_stage_960.png](docs/design/screenshots/overview_port_stage_960.png) / [overview_detail.png](docs/design/screenshots/overview_detail.png)）
 - [ ] 港务/市场/补给等独立舞台（当前市场/委托等仍是 2D 页面）
 - [ ] 离港拉高 → 2D 海图 → 进港降落演出（可跳过、事件暂停）
 - [ ] 目的港舞台预加载、质量档位与低配回退、第三方 `.glb` 白名单评审
-- [ ] UI 图标化/主题化收尾、L2 LOD 与远景 `visibility_range`
+- [ ] L2 LOD 与远景 `visibility_range`
 
 ## GDD 验收对照（MVP）
 
@@ -339,8 +346,9 @@
 - [x] **P1 `StageHost` + `LocationStage` 泛化**：`SNStageHost` 独占 SubViewport/World3D，驱动 `LocationStage` 的 `enter → bind → exit`，支持舞台显隐/隐藏即停更/缺失场景回退；`SNShipStage3D` 已重写为宿主适配器，环境/灯光/水面/机位/升沉迁入 `ShipyardStage`，公共构建器在 `StageKit`。
 - [x] **P1 `PortStage` 骨架**：按 `facilities` 装配设施（已实现 `facility_visuals` GLB 替换 + 程序化 billboard 兜底 + 空槽货堆 filler）；L0 天空/L1 banner 背板/L2 确定性岸线剪影/L5 玩家船已跑通；6 件锚点模型（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)，GLB 在 `assets/models/port/`）已接线。预览：[完整港口](docs/design/screenshots/port_stage/port_stage_preview.png) / [稀疏港口](docs/design/screenshots/port_stage/port_stage_sparse.png)。
 - [x] **P1 总览页接入 `PortStage`**：全窗背景层 + 失败回退 2D + 切页隐藏/返回恢复已完成；第五切片进一步改为 Bounty Train 式主界面（紧凑 chrome、左右招牌、底部状态条、详细抽屉），并完成 `port.diorama` / 街景 town kit 接线。剩余：独立舞台与演出。
-- [x] **P1 港口舞台验收**：主界面默认全窗 3D 舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条 + 详细抽屉，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景（`test_ui_shell` 真实外壳用例守护，155 测试全绿）。
-- [ ] **剩余 2.5D 舞台工作**：港务/市场/补给等独立舞台、离港/进港演出与目的港舞台预加载、质量档位与低配回退、UI 图标化/主题化、L2 LOD、第三方 `.glb` 白名单评审。
+- [x] **P1 港口舞台验收**：主界面默认全窗 3D 舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条 + 详细抽屉，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景（`test_ui_shell` 真实外壳用例守护，162 测试全绿）。
+- [x] **P1 主界面美术收尾与性能回收（第六切片）**：HUD 资源图标（`AssetService.find_key` 裸键）、自绘木牌招牌 + 设施徽记 + 悬停光晕、窄窗口紧凑 chrome/招牌；街景 normal 47 件（size/density 分档）；设施/街景/玩家船静态合批把实测 draw calls 从 284/255 降到 **63/56**（37k/30k tris）；无 banner 港口 3 层程序化远景；新增 measure 工具与 7 个舞台用例，全量 162 tests 绿。截图：[主界面 1440](docs/design/screenshots/overview_port_stage.png) / [主界面 960×540](docs/design/screenshots/overview_port_stage_960.png) / [详细总览](docs/design/screenshots/overview_detail.png)。
+- [ ] **剩余 2.5D 舞台工作**：港务/市场/补给等独立舞台、离港/进港演出与目的港舞台预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审。
 - [ ] **铁港城镇建筑视觉升级**：按 `tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` 重建近中景建筑；先用 `SN_HT_Warehouse_Long` 灰模过固定机位门禁，再完成共享模块、2K trim sheet、5 个原位升级资产、3 个新增原型与 LOD1。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
