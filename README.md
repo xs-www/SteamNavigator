@@ -261,6 +261,7 @@ node SNModMaker/tools/serve.mjs
 - 船厂仓库/运输 UI 为基础版：材料按固定 5 件批量存取，尚无数量步进或批量选择。
 - 通关总结页为数据化总结，不含航线回放、成就与统计对比。
 - 船厂改装态纵剖图是一张 2D 授权贴图；正常态已是真实 3D 船体舞台（固定机位、只做表现，不含环绕与场景热点），3D 船体资产缺失时回退程序化 2D 占位。贴图与当前可玩船型视觉也不完全一致（纵剖图 / 船卡为铁甲舰风格）。
+- **内容资产全部走模组**：船体/模块/道具模型与港口横幅随 `core` 模组发布（`dev_mods/core/assets/**` + manifest `model.*`/`banner.*` 键），发布包 PCK 已排除 `assets/models/*`；运行时由 `ContentAssetLoader` 读取模组内原始 `.glb`/`.png`。本体内只保留框架资源（代码、Theme/字体、UI 外壳图、音频、水面 shader/材质/贴图）。新增内容模型请放 `dev_mods/core/assets/models/<category>/` 后重新 `pack_core`，不要放回 `res://assets/models`。
 - UI 是最小可用外壳，设施名称部分为中文硬编码；海图可按已访问港口打开上次在港的市场快照。
 - 存档已支持 save schema 1.x → 2.0 迁移（回填 campaign 元数据与分区，state/content schema 分离）；模块实例表 `ship.module_instances` 与 campaign 分区均由惰性 ensure 补齐；声明式 ID 别名迁移仍未实现，新字段继续通过惰性 ensure 补齐。
 - 模块 condition 目前只影响失效标记与维修费用，尚未改变航速/容量等派生属性；统一 Module 迁移（definition_id 移入实例）与战斗期性能影响在后续阶段。

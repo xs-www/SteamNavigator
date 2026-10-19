@@ -20,6 +20,7 @@ export const FILE_DOCS = {
     contracts: [
       "`binary_format/embed_pck=true`：发布产物是单个 exe，资源随 PCK 内嵌。",
       "`exclude_filter` 额外排除 `dev_mods`、`dev_scenes`、`framework/tests`，避免把开发态松散 core 半导出进发布版。",
+      "`exclude_filter` 还排除 `assets/models/*`：内容模型随 core 模组发布，本体 PCK 只保留框架资源；新增内容模型不要放回 `res://assets/models`。",
       "发布包的标准目录（exe + `mods/` + `config/`）由 `.github/workflows/release.yml` 在导出后组装。"
     ]
   },
@@ -411,6 +412,7 @@ export const FILE_DOCS = {
       "与 `ship.install_module` / `ship.uninstall_module` / `ship.craft_module` 共用 ShipOps/CraftOps 的规则函数，UI 不复制规则。",
       "`ship.modules[]` 每行含 `effect`：模块 `data` 的深拷贝（模块缺失时 `{}`），供船厂页渲染效果行与槽位卡；can_uninstall/uninstall_blockers/weight/tier 仍由本查询给出。",
       "`ship.modules[]` 同时给出模块实例的 `slot/index/condition/disabled`；`ship.worst_module_condition`、`ship.disabled_modules`、`ship.module_damage_points` 供界面显示与维修预览。",
+      "`ship.hull_model_key` 取船体定义的 `information.model`，`ship.hull_model_path` 通过 `context.assets` 解析成物理路径（松散模组或挂载 zip 内均可），供 3D 船厂舞台加载内容模组的原始 GLB。",
       "`candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。",
       "已安装模块标记 installed；will_replace 返回会被移入当前港仓库的旧模块 ID（空串=无替换）。",
       "`unlock_template_id` 给出合同解锁来源（用于 UI 文案），实际锁定判断在 ShipOps.locked_by_contract。",
@@ -817,11 +819,22 @@ export const FILE_DOCS = {
   },
 
   "framework/services/asset_service.gd": {
-    role: "把 `asset://<mod>/<key>` 解析为已挂载物理路径，缺失时回退占位图。",
+    role: "把 `asset://<mod>/<key>` 解析为已挂载物理路径，缺失时回退占位；并统一加载模组内原始 PNG/GLB 内容资源。",
     contracts: [
       "资源缺失只警告并回退，不导致崩溃或存档损坏。",
       "支持直接传入 `res://` 框架资源路径。",
-      "注册发生在编译阶段，解析发生在 mount 之后。"
+      "注册发生在编译阶段，解析发生在 mount 之后。",
+      "`load_texture()/load_model()`：框架资源走 `ResourceLoader`，模组内原始 `.png/.glb`（挂载包或松散目录）走 `ContentAssetLoader`；失败返回 null，调用方保留 2D 回退。"
+    ]
+  },
+
+  "framework/services/content_asset_loader.gd": {
+    role: "运行时读取模组内容资产：用 `Image.load_from_file` 读原始 PNG、用 `GLTFDocument.append_from_file` 读原始 GLB，并按路径缓存。",
+    contracts: [
+      "模组是挂载的普通资源包（含原始文件），`ResourceLoader` 无法直接 load 其中的 .png/.glb，因此必须走本项目加载器。",
+      "`load_texture(path)` 返回 ImageTexture；`load_scene(path)` 返回 GLTF 场景根；`instantiate_model()` 返回可挂到舞台的副本（缓存节点不被父级占用）。",
+      "解析失败按路径记入 failures 缓存，重复调用不反复尝试；`clear_cache()` 在 FrameworkRuntime.shutdown 中调用。",
+      "只负责表现资源，不读写 GameState、注册表或存档。"
     ]
   },
 
@@ -946,6 +959,7 @@ export const FILE_DOCS = {
     dependencies: ["MapCanvas", "SNResourceMeter", "SNBadge", "SNSectionHeader", "ClockService", "steam_navigator_theme.tres"],
     contracts: [
       "bind(vm, translate) 接收 Shell 组合后的 banner_path、map、current_port、contracts、victory、ship、debt 与 notice_texts，不访问 AppContext、QueryBus、注册表或资产服务。",
+      "港口横幅来自内容模组：页面优先用 `ContentAssetLoader.load_texture(banner_path)` 读原始 PNG，`ResourceLoader.exists` 为真时退回 `load()`；两种路径都失败则不渲染横幅。",
       "地图点击只发出 map_port_clicked；功能入口只发出 navigation_requested；等待与借款只发出 command_requested。",
       "航行记录使用 Shell 已安全填充并本地化的 notice_texts，页面不重复解释 GameState 通报参数。",
       "构筑胜利条件直接取 contracts 进度与 victory.conditions 展示，不在页面重新判断通关。",
@@ -961,7 +975,7 @@ export const FILE_DOCS = {
       "`bind(vm, translate)` 接收 Shell 组合后的 shipyard.view（含 refit/category/ship.hull_name/warehouse/candidates/craft/orders/wait_options），不访问 AppContext、QueryBus、CommandBus 或注册表；可重复 bind，每次 `_clear()` 后重建。",
       "`CATEGORY_ORDER` = 船体/锅炉/货舱/导航/安全/客舱 + `misc`；`MODULE_TYPES` 不含 misc。`set_category` 只接受这七个值，非法值直接 return；切换分类会同时进入改装态并发 `refit_category_changed`。",
       "`_body` 固定三列：正常态 `_ship_list_panel / _render_panel / _components_panel`；改装态 `_section_panel / _operations_panel / _category_tabs_panel`。`_rebuild_layout()` 只重建 `_body`，标题与摘要行保留。",
-      "正常态中央舞台由 `_make_stage(EXTERIOR, ...)` 创建；当 `SNShipStage3D.is_supported()` 为真时通过 `set_renderer(SNShipStage3D.new())` 挂载 3D 船体舞台，改装态仍用纵剖图贴图；无 3D 资产时保留程序化占位。",
+      "正常态中央舞台由 `_make_stage(EXTERIOR, ...)` 创建；`ship.hull_model_path` 非空（内容模组提供船体 GLB）或本地有旧路径回退时，通过 `set_renderer(SNShipStage3D.new())` 挂载 3D 船体舞台；改装态仍用纵剖图贴图，无模型时保留程序化占位。",
       "正常态：船卡用 `SHIP_THUMB_PATH`（存在才加载，210×118 cover；缺失回退占位面板），船名取 Shell 注入的 `ship.hull_name`，缺失回退 `hull_id` 的本地化键；组件列每类一行入口并显示槽位计数，「0 可拖」徽标统计仓库/随船可装行。",
       "改装态：纵剖图 `SNShipView(CUTAWAY)` + 槽位贴片；中间操作列按分类渲染槽位卡、仓库/随船行、购买卡与打造卡。操作列自带 ScrollContainer（`horizontal_scroll_mode=DISABLED`），全页只有中列纵向滚动。",
       "槽位卡：标题 + 固定槽徽标 + 已装名；效果行与重量/tier/卸下按钮取自 `ship.modules[]` 行的 `effect/can_uninstall/uninstall_blockers`（`shipyard.view._current_modules` 输出 `effect`）。",
@@ -1219,10 +1233,11 @@ export const FILE_DOCS = {
     role: "船厂正常态的真实 3D 船体舞台（2.5D 首个切片）：SubViewport 渲染固定 3/4 机位的船体、海面与灯光；2D 槽位、拖拽与 HUD 仍由 SNShipView 和页面负责。",
     contracts: [
       "通过既有 `SNShipView.set_renderer()` 协议接入：实现 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(ids)`。",
-      "按 `model.hull_tier` 选择 `assets/models/ships/*.glb`，取模型网格包围盒动态计算机位距离与目标点，让 24 m 明轮船与 60 m 铁甲舰保持同一构图。",
+      "船体模型来自内容模组：优先用 `model.hull_model_path`（船体定义 `information.model` 解析结果）经 `ContentAssetLoader.instantiate_model()` 读原始 GLB；路径为空时才回退旧的 `hull_tier -> assets/models/ships` 映射（dev/PCK）。",
+      "取模型网格包围盒动态计算机位距离与目标点，让 24 m 明轮船与 60 m 铁甲舰保持同一构图。",
       "EXTERIOR 显示 3D 视口；CUTAWAY 隐藏视口，让纵剖图贴图与槽位贴片接管，不改页面布局。",
       "复用 `assets/materials/water/harbor_water.tres`（duplicate 后把 shore 参数推远、boat 泡沫环绑到当前船体包围盒、调整水平线淡出）；材质缺失时退回 StandardMaterial。",
-      "`is_supported()` 静态判断是否存在可用船体 GLB；页面对 false 不挂空视口、保留 SNShipView 程序化占位，导出包与 CI 不依赖新资产。",
+      "`is_supported()` 只判断本地是否有旧路径可回退；正式发布由页面用 `hull_model_path` 非空来挂载舞台，PCK 不含 `assets/models` 也能显示 3D。",
       "只做表现层：不读 GameState / QueryBus / CommandBus；渲染器方法在 `_ready` 之前被调用时先缓存 model/mode，`_ready` 后统一应用。"
     ],
     l2: {
@@ -1775,7 +1790,7 @@ export const FILE_DOCS = {
       "正常态断言：stage 为 `EXTERIOR`、左列标题「已有船舶」、「组件」列提供六类入口、船卡显示当前船体名并预留缩略图区域（`SHIP_THUMB_SIZE` = 210×118），且页面恰好一个 ShipyardScreen。",
       "改装态断言：按本地化键 `ui.label.refit` 点真实按钮 → `_category == \"hulls\"`、stage 为 `CUTAWAY`、全部贴片可见、按钮改为「完成改装」；竖排 tab 含「杂项」。`shell._shipyard_refit` / `_shipyard_category` 让整页重建后仍恢复改装态与所选分类。",
       "贴图契约：`SHIP_VIEW_SCRIPT.SECTION_TEXTURE_PATH` 必须等于 `res://assets/ui/shipyard/ship_section.png` 且 `ResourceLoader.exists`；进入改装后 `has_section_texture()` 为真、`section_texture_size()` 两个分量 > 0。船卡缩略图断言 `_ship_thumb` 非空、页面仅有一个 TextureRect 使用它、占位文案不再出现。",
-      "渲染器替换：有船体 GLB 时正常态默认挂载 `SNShipStage3D`（断言 `has_ship()`、改装态隐藏视口、回到 EXTERIOR 重新显示）；无 GLB 时断言保留程序化占位。`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
+      "渲染器替换：正常态在 `ship.hull_model_path` 非空（或本地有旧路径回退）时挂载 `SNShipStage3D`（断言 `has_ship()`、改装态隐藏视口、回到 EXTERIOR 重新显示）；无模型时断言保留程序化占位。`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
       "拖放端到端：`WarehouseOps.add_module` 在仓库放一个导航模块 → 操作列恰好一行可拖拽；`_on_slot_drop` 发 `ship.install_module`，参数含 module_id / source 与槽位 `replace_module_id`，命令后模块离开仓库并装到船上；异类型部件与 purchase 候选被 `_accepts` 拒绝。",
       "分类导航：每个分类的中间面板标题取 `ui.category.<type>`，货舱按槽位数逐个列出「货舱槽 n」；杂项承载打造订单/在港等待/仓库材料/仓库模块，且不再出现「按配方打造」「槽位」；打造入口留在对应模块分类内。",
       "旧面板守护：`LEGACY_SECTION_KEYS`（parts_hud / warehouse / available_modules / craft / recipes / victory plan 等本地化键）的译文不得出现在页面任意 Label 中；这些键必须仍被本地化，键被删时用例应失败而不是静默通过。`_body` 子节点数恒为 3。",

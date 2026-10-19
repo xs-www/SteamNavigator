@@ -25,7 +25,7 @@ func test_registry_accessible_after_freeze() -> void:
 	assert_true(context.commands.has(&"run.start"), "run.start command is registered")
 	assert_true(context.queries.has(&"port.view"), "port.view query is registered")
 	assert_true(context.localization.has_key("good.core.iron_ore.name"), "localization loaded")
-	assert_eq(context.assets.count(), 13, "all Core image and model assets are registered")
+	assert_eq(context.assets.count(), 59, "all Core image and model assets are registered")
 	var coal := context.registries.get_by_id(ContentTypes.GOOD, "core:good/coal")
 	assert_eq(String(coal.information.get("texture", "")), "icon.coal", "Core goods expose parsed texture information")
 	assert_eq(coal.asset_uri("model"), "asset://core/model.good.coal", "Core goods expose namespaced model URIs")

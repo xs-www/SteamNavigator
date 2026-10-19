@@ -39,13 +39,13 @@ var _pending_mode := 0
 var _time := 0.0
 
 
-## True when at least one official ship GLB is importable in this build. The
-## screen uses it to decide whether to mount the 3D stage at all.
+## True when a fallback ship GLB is available locally (dev/PCK). Normally the
+## shipyard resolves the hull's own mod asset (`hull_model_path`) instead.
 static func is_supported() -> bool:
 	for path in MODEL_BY_TIER.values():
-		if ResourceLoader.exists(String(path)):
+		if FileAccess.file_exists(String(path)) or ResourceLoader.exists(String(path)):
 			return true
-	return ResourceLoader.exists(FALLBACK_MODEL)
+	return FileAccess.file_exists(FALLBACK_MODEL) or ResourceLoader.exists(FALLBACK_MODEL)
 
 
 func _ready() -> void:
@@ -217,14 +217,23 @@ func _add_camera() -> void:
 # --- Ship visual -------------------------------------------------------------
 
 func _apply_model() -> void:
-	var tier := int(_pending_model.get("hull_tier", 1))
-	_rebuild_ship(tier)
+	# The shipyard view resolves the hull definition's `information.model` asset
+	# key to a physical path inside the mounted content mod. The hardcoded tier
+	# mapping is only a fallback for dev builds that still carry PCK models.
+	var path := String(_pending_model.get("hull_model_path", ""))
+	if path.is_empty():
+		path = _fallback_path_for_tier(int(_pending_model.get("hull_tier", 1)))
+	_rebuild_ship(path)
 
 
-func _rebuild_ship(tier: int) -> void:
+func _fallback_path_for_tier(tier: int) -> String:
 	var path := String(MODEL_BY_TIER.get(tier, MODEL_BY_TIER[1]))
-	if not ResourceLoader.exists(path):
-		path = FALLBACK_MODEL
+	if FileAccess.file_exists(path) or ResourceLoader.exists(path):
+		return path
+	return FALLBACK_MODEL
+
+
+func _rebuild_ship(path: String) -> void:
 	if path == _model_path and has_ship():
 		return
 	if _ship_root != null:
@@ -234,12 +243,12 @@ func _rebuild_ship(tier: int) -> void:
 	_ship_root.name = "Ship"
 	_world.add_child(_ship_root)
 	_model_path = path
-	if not ResourceLoader.exists(path):
+	var visual := ContentAssetLoader.instantiate_model(path)
+	if visual == null and ResourceLoader.exists(path):
+		var packed := load(path) as PackedScene
+		visual = packed.instantiate() as Node3D if packed != null else null
+	if visual == null:
 		return
-	var packed := load(path) as PackedScene
-	if packed == null:
-		return
-	var visual: Node3D = packed.instantiate()
 	_ship_root.add_child(visual)
 	_frame_camera(visual)
 	_configure_water(_visual_aabb(visual))

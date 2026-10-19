@@ -9,4 +9,5 @@ static func shutdown() -> void:
 	FormulaRegistry.clear_runtime()
 	ConditionOpRegistry.clear_runtime()
 	EffectOpRegistry.clear_runtime()
+	ContentAssetLoader.clear_cache()
 	AppContext.set_active(null)

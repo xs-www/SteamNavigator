@@ -32,7 +32,8 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 func _port_hero(vm: Dictionary) -> Control:
 	var banner_path := String(vm.get("banner_path", ""))
 	if banner_path.is_empty(): return null
-	var texture := load(banner_path) as Texture2D
+	# 港口横幅随内容模组发布（mod 包内是原始 PNG），优先用内容资源加载器。
+	var texture := ContentAssetLoader.load_texture(banner_path) if not ResourceLoader.exists(banner_path) else (load(banner_path) as Texture2D)
 	if texture == null: return null
 	var port: Dictionary = vm.get("current_port", {})
 	var hero := Control.new(); hero.custom_minimum_size = Vector2(0, 236); hero.clip_contents = true; hero.mouse_filter = Control.MOUSE_FILTER_IGNORE

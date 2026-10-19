@@ -36,6 +36,29 @@ func resolve(logical_key: String) -> String:
 	return path
 
 
+## Loads a content texture from a mod (raw PNG in a mounted pack) or from an
+## imported framework texture. Returns null when the asset is missing.
+func load_texture(logical_key: String) -> Texture2D:
+	var path := resolve(logical_key)
+	if path == FALLBACK_PATH:
+		return load(FALLBACK_PATH) as Texture2D
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return ContentAssetLoader.load_texture(path)
+
+
+## Loads an instanced content model from a mod (raw GLB) or an imported scene.
+## Returns null when the asset is missing; callers keep their 2D fallback.
+func load_model(logical_key: String) -> Node3D:
+	var path := resolve(logical_key)
+	if path == FALLBACK_PATH:
+		return null
+	if ResourceLoader.exists(path):
+		var packed := load(path) as PackedScene
+		return packed.instantiate() as Node3D if packed != null else null
+	return ContentAssetLoader.instantiate_model(path)
+
+
 func has(logical_key: String) -> bool:
 	return _assets.has(logical_key) and FileAccess.file_exists(String(_assets[logical_key]))
 

@@ -19,10 +19,11 @@
 ## 契约与约束
 
 - 通过既有 `SNShipView.set_renderer()` 协议接入：实现 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(ids)`。
-- 按 `model.hull_tier` 选择 `assets/models/ships/*.glb`，取模型网格包围盒动态计算机位距离与目标点，让 24 m 明轮船与 60 m 铁甲舰保持同一构图。
+- 船体模型来自内容模组：优先用 `model.hull_model_path`（船体定义 `information.model` 解析结果）经 `ContentAssetLoader.instantiate_model()` 读原始 GLB；路径为空时才回退旧的 `hull_tier -> assets/models/ships` 映射（dev/PCK）。
+- 取模型网格包围盒动态计算机位距离与目标点，让 24 m 明轮船与 60 m 铁甲舰保持同一构图。
 - EXTERIOR 显示 3D 视口；CUTAWAY 隐藏视口，让纵剖图贴图与槽位贴片接管，不改页面布局。
 - 复用 `assets/materials/water/harbor_water.tres`（duplicate 后把 shore 参数推远、boat 泡沫环绑到当前船体包围盒、调整水平线淡出）；材质缺失时退回 StandardMaterial。
-- `is_supported()` 静态判断是否存在可用船体 GLB；页面对 false 不挂空视口、保留 SNShipView 程序化占位，导出包与 CI 不依赖新资产。
+- `is_supported()` 只判断本地是否有旧路径可回退；正式发布由页面用 `hull_model_path` 非空来挂载舞台，PCK 不含 `assets/models` 也能显示 3D。
 - 只做表现层：不读 GameState / QueryBus / CommandBus；渲染器方法在 `_ready` 之前被调用时先缓存 model/mode，`_ready` 后统一应用。
 
 ## 重点逻辑

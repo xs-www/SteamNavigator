@@ -585,9 +585,10 @@ func _make_stage(mode: int, minimum: Vector2) -> SNShipView:
 	stage.slot_drop_requested.connect(_on_slot_drop)
 	stage.slot_activated.connect(_on_slot_activated)
 	stage.set_mode(mode)
-	# 2.5D 舞台：正常态用真实 3D 船身，改装态仍走纵剖图贴图。3D 资产缺失时
-	# 自动保留 SNShipView 的程序化占位，不挂空视口。
-	if mode == SNShipView.Mode.EXTERIOR and SNShipStage3D.is_supported():
+	# 2.5D 舞台：正常态用真实 3D 船身，改装态仍走纵剖图贴图。船体模型由船体定义
+	# 的 information.model 资产键解析（来自内容模组）；解析不到时自动回退程序化占位。
+	var hull_model_path := String(_vm.get("ship", {}).get("hull_model_path", ""))
+	if mode == SNShipView.Mode.EXTERIOR and (not hull_model_path.is_empty() or SNShipStage3D.is_supported()):
 		stage.set_renderer(SNShipStage3D.new())
 	return stage
 

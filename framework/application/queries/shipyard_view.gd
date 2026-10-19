@@ -67,6 +67,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"ship": {
 			"hull_id": String(ship.get("hull_id", "")),
 			"hull_tier": int(stats.get("hull_tier", 1)),
+			"hull_model_key": String(hull.information.get("model", "")) if hull != null else "",
+			"hull_model_path": _asset_path(context, hull.asset_uri("model")) if hull != null else "",
 			"boiler_id": String(ship.get("boiler_id", "")),
 			"modules": current_modules,
 			"transit_modules": transit_rows,
@@ -107,6 +109,8 @@ static func _empty_view() -> Dictionary:
 		"ship": {
 			"hull_id": "",
 			"hull_tier": 1,
+			"hull_model_key": "",
+			"hull_model_path": "",
 			"boiler_id": "",
 			"modules": [],
 			"transit_modules": [],
@@ -183,6 +187,14 @@ static func _installed_ids_for(ship: Dictionary, content_type: StringName) -> Ar
 		ContentTypes.CABIN:
 			ids.append(String(ship.get("passenger_cabin_id", "")))
 	return ids
+
+
+static func _asset_path(context, uri: String) -> String:
+	if uri.is_empty() or context == null:
+		return ""
+	if context.assets.has(uri):
+		return context.assets.resolve(uri)
+	return ""
 
 
 static func _disabled_module_count(ship: Dictionary) -> int:

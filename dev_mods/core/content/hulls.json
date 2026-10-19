@@ -9,7 +9,7 @@
       "tags": ["module.hull", "module.small", "module.efficient", "ship.small"],
       "enabled": true,
       "information": {
-        "model": "model.ship.prototype"
+        "model": "model.ship.paddle_steamer"
       },
       "data": {
         "tier": 1,
@@ -34,7 +34,7 @@
       "tags": ["module.hull", "module.medium", "module.standard", "ship.medium"],
       "enabled": true,
       "information": {
-        "model": "model.ship.prototype"
+        "model": "model.ship.schooner_fame"
       },
       "data": {
         "tier": 2,
@@ -91,7 +91,7 @@
       "tags": ["module.hull", "module.large", "module.performance", "ship.large"],
       "enabled": true,
       "information": {
-        "model": "model.ship.paddle_freighter"
+        "model": "model.ship.ironclad"
       },
       "data": {
         "tier": 3,
