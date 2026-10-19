@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**135 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**144 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施（LocationStage / SNStageHost 生命周期与回退 / ShipyardStage / PortStage 装配·替换·缩放·portal）、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -105,7 +105,7 @@
 - [x] 本地化：新增 normal/refit 两态与分类页签中英键（`ui.label.ship_list`、`ui.label.components`、`ui.category.*`、`ui.hint.operations*`、`ui.tag.section_texture` 等）
 - [x] 测试：`test_shipyard_refit` 扩到 8 例（正常态 / 改装态 / 分类与模式记忆 / 贴图契约 / 船卡缩略图 / 2.5D 渲染器替换 / 拖拽安装 / 旧面板移除）；`test_ui_shell` 改为通关只在总览、打造与等待经分类和「杂项」。本轮验收船厂 / UI 套件 105/105 全绿
 - [x] 文档：`docs/static` 的船厂页 / `sn_ship_view` / Shell / `shipyard_view` / 两个测试条目重写契约，并新增 [SHIPYARD_UI_REFACTOR.md](docs/design/SHIPYARD_UI_REFACTOR.md)、更新 UI_PROTOTYPE 与 ASSET_MAP
-- [ ] 2.5D 舞台接入：正常态中央仍是程序化 2D 占位，改装态纵剖图是一张 2D 贴图；`SNShipView.set_renderer()` 渲染器协议已就绪，等待 `ShipyardStage` 落地
+- [x] 2.5D 舞台接入：正常态中央已是真实 3D 船体舞台（`SNShipStage3D` → `SNStageHost` → `ShipyardStage`），改装态仍是 2D 纵剖图；`SNShipView.set_renderer()` 渲染器协议不变，第二切片把视口/机位/灯光/水面迁进通用宿主与舞台场景
 
 ### 阶段 D：存档与兼容
 
@@ -246,7 +246,8 @@
 - [x] 黄昏逆光 + 仓库剪影 / 窗灯 + 煤气灯照明的固定 3/4 机位构图
 - [x] 无头验收 `tools/godot/verify_harbor_diorama.gd`（场景加载 / shader 挂载 / 船体随波运动 / 未接入主场景）
 - [x] 静态文档与截图归档：`docs/static/dev_scenes/`、`docs/design/screenshots/`
-- [ ] 升级为可接入的 `PortStage`：`StageHost` + `SubViewport` 透明合成、固定机位与 2D HUD 叠加
+- [x] 升级为可接入的 `PortStage`：`StageHost`（`SNStageHost`）+ `SubViewport` + 固定机位已落地，港口骨架在 `framework/ui/stages/port_stage.gd`；2D HUD 叠加待总览页接入（当前由独立预览场景验证构图与回退）
+- [ ] 总览页背景层接入 `PortStage` + 2D 热点层 + 场景填充 L0–L2 细化（见「2.5D 固定舞台」章节）
 - [ ] 水面性能档位：细分 / 阴影 / 远水层的低配回退；960 宽窗口构图复核
 - [ ] 港口变体：复用同一水面材质与资产 kit，做第二个港口的舞台
 - [ ] 船与码头的交互细节：跳板/缆绳随船体浮动、灯池烘托与靠港阴影
@@ -262,15 +263,21 @@
 7. **模组管理 UI**：启用 / 禁用 / 优先级。
 8. **在港等待的随机流细化**：`NpcTraderSimulator` 的命名流键仍为 `npc_trade::<npc_id>`（同 seed + 同命令序列可复现，已由测试守护）；若要「等待时段/港口」参与派生，需把该文件纳入改动范围并补确定性用例。
 
-## 暂缓：2.5D 固定舞台
+## 2.5D 固定舞台（阶段 1 已启动）
 
-> 等玩法闭环、存档与回归测试稳定，且 3D 船只/港口/模块资产达到最低量后再启动。设计已归档：[2.5D 固定舞台升级方案](docs/design/2.5D_STAGE_PLAN.md)。
+> 设计已归档：[2.5D 固定舞台升级方案](docs/design/2.5D_STAGE_PLAN.md)。首个切片（船厂 3D）与第二切片（通用舞台宿主 + 港口骨架）已落地；港口接入主界面前，剩余项列在下面。
 
-- [ ] `StageHost` + `PortStage`（固定机位、有限环绕、2D HUD 叠加）
-- [ ] `MarketStage` / `ShipyardStage`（固定机位、场景热点、无读条切换）
+- [x] `StageHost` + `LocationStage` 泛化：`SNStageHost` 独占 `SubViewport`/`World3D`，驱动 enter→bind→exit，支持隐藏即停更、缺失场景 `fallback_requested`、`render_shrink` 低分辨率 3D
+- [x] `ShipyardStage` 迁移：环境/灯光/水面/机位/船体 GLB 绑定/升沉从 `SNShipStage3D` 迁出；`SNShipStage3D` 保留 `SNShipView` renderer 契约
+- [x] `PortStage` 骨架：L0 天空 + L1 banner 背板（缺失不放黑盒，改用渐变 `SkyCard` + 岸线底座 + L2 剪影兜底，有 banner 时兜底层隐藏）+ L2 确定性岸线剪影（仅无 banner 时生成）+ L3 设施（billboard 默认 / `facility_visuals` GLB 替换 / 空槽货堆 filler）+ L5 玩家船随波；薄甲板桩基栈桥（入水木桩/桩帽/横梁）取代实心码头箱体；`size` 0.9/1.0/1.15 缩放设施层；`facility_anchors()` / `facility_screen_anchor()` 供 2D 热点
+- [x] 独立预览与截图：`dev_scenes/port_stage/`（preview / sparse 两份样例）+ `tools/godot/capture_port_stage.gd`（窗口 1440×900）；[完整港口](docs/design/screenshots/port_stage/port_stage_preview.png) / [稀疏港口](docs/design/screenshots/port_stage/port_stage_sparse.png)
+- [x] 测试：`test_stage_host.gd` 9 个同步用例（LocationStage 契约 / host 生命周期 / fallback / ShipyardStage / SNShipStage3D / PortStage 4 组）
+- [ ] 总览页背景层接入 `PortStage`：页面挂载 stage host、切页显隐、2D HUD 叠加
+- [ ] 2D 热点层：用 `facility_screen_anchor()` 投影，点击设施发 `portal_requested` → Shell 导航
+- [ ] 场景填充 L0–L2 细化：L1 用 5 张港口 banner 烘焙、L2 岸线密度/构图、L6 前景框、L7 蒸汽/雾
+- [ ] 港口 diorama 参数：`port.diorama`（kit/size/palette/landmark）接入 `port_archetypes`，做到「设施决定建模」
 - [ ] 离港拉高 → 2D 海图 → 进港降落演出（可跳过、事件暂停）
-- [ ] 目的港舞台预加载与 3D 资产缺失时的 2D 回退
-- [ ] 质量档位、低配回退与第三方 `.glb` 白名单评审
+- [ ] 目的港舞台预加载、质量档位与低配回退、第三方 `.glb` 白名单评审
 
 ## GDD 验收对照（MVP）
 
@@ -305,6 +312,7 @@
 - [x] `CampaignState` 分区骨架：`campaign.world` / `codex` / `factions` 惰性补齐，探索进度只追加 ID，`set_faction_reputation` 夹取，随存档往返；新局标记 `world.generated` 与起始港
 - [x] 模块实例化第一步：`ship.module_instances` + `module_serial`，实例 id/condition 随存档；`damage_module` 效果、锅炉过热接入、维修按部件计价、船厂状态徽标、顶部信息条/船卡/补给页可见；`capture_ui.ps1 -Damage` 可复现受损截图（见 [SHIP_MODULE_INSTANCES.md](docs/design/SHIP_MODULE_INSTANCES.md)）
 - [x] 2.5D 首个切片：船厂正常态 3D 实机舞台（`SNShipStage3D` 按 hull_tier 选船、固定 3/4 机位、复用港口水面着色器，改装态保持纵剖图，资产缺失回退程序化占位）；截图见 [stage3d](docs/design/screenshots/stage3d/shipyard_normal.png)，方案见 [2.5D_STAGE_PLAN.md](docs/design/2.5D_STAGE_PLAN.md)
+- [x] 2.5D 第二切片：`SNStageHost` + `LocationStage` 泛化、`ShipyardStage` 迁移、`PortStage` 骨架（设施/空槽/回退/玩家船）、独立预览与 9 个舞台测试；截图见 [port_stage_preview](docs/design/screenshots/port_stage/port_stage_preview.png) / [port_stage_sparse](docs/design/screenshots/port_stage/port_stage_sparse.png)
 - [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架
 - [ ] 阶段 1：广域海图与探索（区域 / 地点 / 迷雾 / 低细节远方模拟）
 - [ ] 阶段 2：舰队组成与战斗（先自动结算，再评估战术层）；模块分类收敛为 boiler/cargo/utility/cabin/crew，导航与安全并入 utility；战斗契约边界见 [战斗系统架构评审](docs/design/COMBAT_ARCHITECTURE_REVIEW.md)
@@ -317,8 +325,10 @@
 
 - [x] **P0 提交当前批次**：已拆 4 个 commit（`f8d8c29` 框架/模块实例、`480a440` 3D 舞台/UI、`35abfbf` 资产/建模、`3cf61fe` SNModMaker/发布/文档）；船体与 core 资产已入库，工作区清空。
 - [x] **P1 导出实测**：Windows 导出包（114 MB，embed PCK）启动正常，`mods/core-1.0.0.snavmod.zip` + `config/config.json` 布局生效；导出包内确认包含 `SNShipStage3D`、船体 GLB、`ship_modules` 与 `harbor_water`；导出包实机进入船厂 3D 舞台通过（1440×900）。1280×720 / 960×540 用同一构建在编辑器窗口验收通过（movie writer 固定输出 1440×900 画布，不能当窗口截图用）。截图见 [export](docs/design/screenshots/export/)。
-- [ ] **P1 `StageHost` + `LocationStage` 泛化**：把 `SNShipStage3D` 的视口/机位/灯光/水面逻辑收进通用舞台宿主，支持舞台显隐、隐藏即停更、2D 回退；船厂先迁过去，作为 PortStage 的宿主。
-- [ ] **P1 `PortStage` 骨架**：按 `facilities` 装配设施 billboard 占位（市场/委托/补给/情报/船厂）+ L0 天空/L1 远景背板；6 件锚点模型已到位（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)，GLB 在 `assets/models/port/`），接线时按 `facility_visuals` 替换。
+- [x] **P1 `StageHost` + `LocationStage` 泛化**：`SNStageHost` 独占 SubViewport/World3D，驱动 `LocationStage` 的 `enter → bind → exit`，支持舞台显隐/隐藏即停更/缺失场景回退；`SNShipStage3D` 已重写为宿主适配器，环境/灯光/水面/机位/升沉迁入 `ShipyardStage`，公共构建器在 `StageKit`。
+- [x] **P1 `PortStage` 骨架**：按 `facilities` 装配设施（已实现 `facility_visuals` GLB 替换 + 程序化 billboard 兜底 + 空槽货堆 filler）；L0 天空/L1 banner 背板/L2 确定性岸线剪影/L5 玩家船已跑通；6 件锚点模型（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)，GLB 在 `assets/models/port/`）已接线。预览：[完整港口](docs/design/screenshots/port_stage/port_stage_preview.png) / [稀疏港口](docs/design/screenshots/port_stage/port_stage_sparse.png)。
+- [ ] **P1 总览页接入 `PortStage`**：背景层挂载、2D 热点（用 `facility_anchors()` / `facility_screen_anchor()` 投影）、场景填充 L0–L2 细化、`port.diorama` 参数（kit/size/palette/landmark）接入 `port_archetypes`。
+- [ ] **P1 港口舞台验收**：总览页可切换到 3D 港口舞台且 2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。
@@ -332,7 +342,7 @@
 - [x] 独立 Verifier 只读验收通过：命名/集合/轴心/尺寸（误差 0.000，龙门吊 Y +0.014 来自爬梯外凸）/预算/材质（7 种调色板 + 新增 SN_Iron）/网格健康全 0/剔除 6 件后回归 digest 命中（基线 228 对象）/6 件视觉可辨
 - [x] 归档：`assets/models/port/` 6 个 GLB（42.6/17.4/67.9/59.0/59.6/30.5 KB，单节点、doubleSided）+ `.design/port/SN_<Name>.blend` 6 个源快照 + `.design/port/report.json`；`verify_port_glb.py` 6/6 PASS；预览截图 `docs/design/screenshots/port_facilities_batch1_*.png`
 - [x] 工作台 `.design/SN_Asset_Workbench.blend` 保存（234 对象 / 213 mesh / 19 材质，`SN_Port_Facilities` 集合在 y=75）
-- [ ] 待接入：`PortStage.facility_visuals`（依赖 P1 `StageHost` 泛化；接入后按设施替换这 6 个 GLB）
+- [x] 已接入：`PortStage.facility_visuals`（`StageHost` 泛化已完成）；ViewModel 传入已解析 GLB 路径时按设施替换这 6 个锚点，路径缺失/非法时回退程序化 billboard，默认仍是 billboard 占位。预览见 [完整港口](docs/design/screenshots/port_stage/port_stage_preview.png)。
 - [ ] 备注：acceptance“信号塔最高剪影”与本批尺寸表矛盾（塔 8.5 m < 龙门吊 10.0 m），按尺寸表实现并在工单 `delivery_notes` 记录
 
 ## 维护约定

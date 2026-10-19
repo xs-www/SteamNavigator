@@ -41,6 +41,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_campaign_state.gd",
 	"res://framework/tests/cases/test_zip_pack.gd",
 	"res://framework/tests/cases/test_no_core_ids.gd",
+	"res://framework/tests/cases/test_stage_host.gd",
 ]
 
 var _started := false

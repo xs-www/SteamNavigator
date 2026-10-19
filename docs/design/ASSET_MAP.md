@@ -184,7 +184,7 @@
 - GLB 结构自检：`tools/modeling/generators/verify_port_glb.py`（单节点 / 调色板 / 尺寸 ≤0.1 m / 轴心 / doubleSided）
 - 截图：`docs/design/screenshots/port_facilities_batch1_{overview,shipyard,market,notice,tank,tower,gantry,dock}.png`
 - 验收记录：6/6 独立只读质检通过（命名/集合/轴心/尺寸误差 0.000/预算/材质/网格健康全 0/回归 digest 命中/视觉可辨）；工单里"信号塔是港口最高剪影"与本批尺寸表自相矛盾（塔 8.5 m < 龙门吊 10.0 m，场景既有铁甲舰 24.44 m），按尺寸表实现，塔为最高**塔类**竖向剪影。
-- 待接入：`PortStage` 的 `facility_visuals`（仓库目前尚无 PortStage 代码，依赖 `StageHost` 泛化）；接入后玩家可在总览/船厂页按设施替换这 6 个 GLB。
+- 已接线：`PortStage` 的 `facility_visuals` 已实现（`StageHost` 泛化完成后落地）；ViewModel 传入已解析 GLB 路径时按设施替换这 6 个锚点，路径缺失/非法时回退程序化 billboard（当前默认仍是 billboard 占位）。截图：[完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。
 
 ## 3D 港口样片（水面着色器试做）
 

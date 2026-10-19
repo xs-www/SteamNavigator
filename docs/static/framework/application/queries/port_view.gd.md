@@ -23,5 +23,7 @@
 - 船只 ViewModel 额外给出 free_weight 与 free_cargo_capacity（剩余载重/剩余货舱），顶部信息条直接显示，避免只显示已用载重。
 - 船只 ViewModel 给出模块实例摘要 worst_module_condition / damaged_modules / disabled_modules / module_damage_points，顶部信息条据此显示「部件 N · NN%」，健康时不占位。
 - stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。
+- `current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。
+- `ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。
 
 模块索引：[framework/application](../README.md)

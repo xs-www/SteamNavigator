@@ -1,14 +1,14 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T13:28:35.290Z",
-  "commit": "0883b5d",
+  "generated_at": "2026-10-19T20:47:02.775Z",
+  "commit": "98a5985",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 477,
-    "documented": 150,
-    "grouped": 327
+    "sources": 488,
+    "documented": 158,
+    "grouped": 330
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "2245b69996804a9c06fb715f992d79591ae66311d54958c85e2643ef6eea036f",
+      "sha256": "4cdb94039343a8146c4d6e39de7d788e792ad59e01157bc7e2587c8ea6e7789e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1234,6 +1234,19 @@
       "status": "documented"
     },
     {
+      "source": "dev_scenes/port_stage/port_stage_preview.gd",
+      "sha256": "abe2f8cac12a7dddb82d4f2c1e570e0bdd4dda0ef6ba0dc837246905fd9db0bc",
+      "doc": "docs/static/dev_scenes/port_stage/port_stage_preview.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "dev_scenes/port_stage/port_stage_preview.tscn",
+      "sha256": "fa68ab480432f3e8777fee709490ffc69804a139ee907acb8400cc84802d80ec",
+      "doc": "docs/static/dev_scenes/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_scenes/README.md"
+    },
+    {
       "source": "docs/design/UI_PROTOTYPE.md",
       "sha256": "7da8b49cf545d04622e7adb586af6d8fae7819032a87523823226c14b82b91e4",
       "doc": "docs/static/README.md",
@@ -1367,7 +1380,7 @@
     },
     {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "421f4a049d644d91bf805ad3da8379ff97d504eaa4dd6c829d84bdd6c9c133f1",
+      "sha256": "f70913cee007bfb0a4b3d6f12a2c0fc228936b87a16bbb8d6b30d113de19de83",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
@@ -1934,8 +1947,14 @@
     },
     {
       "source": "framework/tests/cases/test_shipyard_refit.gd",
-      "sha256": "76d8085ab23a2597b267a4fd1a04766982723fc2ca767446386bb03d38edca14",
+      "sha256": "30560c8c991aea7f41b159192daf66b254ae95ececa12e78a5fd2437c88bb3e2",
       "doc": "docs/static/framework/tests/cases/test_shipyard_refit.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/tests/cases/test_stage_host.gd",
+      "sha256": "487cb7a70995814172dcbcb31837b031c0f7a42aa1dc41147cf4df8c59561d19",
+      "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
     {
@@ -2000,7 +2019,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "832657c865571ea0a1253f46917a423985553dcb6175aad66cd36330484663f4",
+      "sha256": "5e6346e2313ac99b3bf84ed409f65ac88591a5d9d2286531b840f8e4bb762ddc",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2111,7 +2130,7 @@
     },
     {
       "source": "framework/ui/components/sn_ship_stage_3d.gd",
-      "sha256": "2c441f3313cd59214d6623e2ea0aa8f0f21cec221f9c96aca970a4bc56516d62",
+      "sha256": "98700457d39cd92d0d916b8346441443d9fece7ececb6f613621efe6df32f597",
       "doc": "docs/static/framework/ui/components/sn_ship_stage_3d.gd.md",
       "status": "documented"
     },
@@ -2153,6 +2172,12 @@
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/components/sn_stage_host.gd",
+      "sha256": "40e094ea0c03673f16516282f686cffcdaa8c7ecd9882097b00268914c1cbd4c",
+      "doc": "docs/static/framework/ui/components/sn_stage_host.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_supply_card.gd",
@@ -2400,6 +2425,44 @@
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/stages/location_stage.gd",
+      "sha256": "4b9a02cfc2ca8bbf9d50b8322b4857ec5fbffcf99af068bb4dac6ab9fb45c9a2",
+      "doc": "docs/static/framework/ui/stages/location_stage.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/stages/port_stage.gd",
+      "sha256": "411a59451105f53f20c7e09c4d8485360bbc7b864b0f23477c14465536ea4936",
+      "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/stages/port_stage.tscn",
+      "sha256": "c52dd23bb415ff88a7c3b84bcd7864a1a1899348e6dbd7a57ac13e53fa3780fa",
+      "doc": "docs/static/framework/ui/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/stages/shipyard_stage.gd",
+      "sha256": "7cf401872bf956498f33db831aba22a6d1b442a57a6378611cd5672a9f92ae38",
+      "doc": "docs/static/framework/ui/stages/shipyard_stage.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/stages/shipyard_stage.tscn",
+      "sha256": "e4b60c1bba79024f05117b8dda75dab4cd4cf6cedf09ebbe471b03b7dccbe0df",
+      "doc": "docs/static/framework/ui/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/stages/stage_kit.gd",
+      "sha256": "504d932173f89256f58757421b3926398b0e70bff3150afa825aa2681ff51f64",
+      "doc": "docs/static/framework/ui/stages/stage_kit.gd.md",
+      "status": "documented"
     },
     {
       "source": "project.godot",
@@ -2673,7 +2736,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "819e1f6486da9c55e5a8c1a58552af5b481e8ee8f5fcf5d6382aa96cfb659cb6",
+      "sha256": "8fa74e3af6c6bcfe081fd3a83bf3dc75d2d60d302b531664acc34bbbd7ef85ce",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2706,6 +2769,12 @@
       "source": "tools/godot/capture_harbor_diorama.gd",
       "sha256": "3eaf339a1a0ac0b6fede0f4c3fe8d8cf3d82eb60fb9e680c1cc354c022e5e599",
       "doc": "docs/static/tools/godot/capture_harbor_diorama.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_port_stage.gd",
+      "sha256": "59c7ed21ed9025dfaaf8f5e47aaee2d757a5fce61a139adeb428ec430fdc5a62",
+      "doc": "docs/static/tools/godot/capture_port_stage.gd.md",
       "status": "documented"
     },
     {
@@ -3183,7 +3252,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "9b1461f7454956f339c70d93a7202f34643cbb974036e18f866efb7a438b50a5",
+      "sha256": "e974f7ec985a9e0a71f91e68c9a259e4051ea530e0e91de78d883dd1e2c74138",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

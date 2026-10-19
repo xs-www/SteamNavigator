@@ -8,11 +8,11 @@
 
 ## 0. 当前基线（已完成）
 
-- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，135 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
+- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，144 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
 - 内容交付：数据、模型、横幅全部随 `core` 模组发布；发布 PCK 已排除 `assets/models/*`，本体只保留框架资源。
 - 运行时加载：`ContentAssetLoader` 从模组包读原始 `.glb/.png`；船体模型由 `information.model` 资产键决定。
 - 编辑器：`dev_mods/core` 可作原生工作区直接编辑保存（删除/新增定义与内容文件会写回，资产不动）。
-- 3D：船厂正常态已有固定机位 3D 舞台；港口设施锚点的建模工单与 6 件需求已产出。
+- 3D：船厂正常态已有固定机位 3D 舞台；第二切片已交付通用 `StageHost`/`LocationStage`、`ShipyardStage` 迁移与 `PortStage` 骨架（独立预览 + 9 个舞台测试）；港口设施锚点的 6 件模型已接线 `facility_visuals`。
 - 持久化：存档 Schema 2.0、Campaign 分区、模块实例与部件损耗、Save 迁移完成。
 
 ## 1. 近期：P0 收口（1 天）
@@ -35,12 +35,12 @@
 
 ## 3. 近期：3D 舞台第二切片（P1，2–3 天）
 
-1. **StageHost + LocationStage 泛化**：把 `SNShipStage3D` 的视口/机位/灯光/水面收进通用舞台宿主，支持「隐藏即停更、资产缺失回退、舞台切换」；船厂迁移过去作为样板。
-2. **PortStage 骨架**：按 `facilities` 装配设施锚点（市场/委托/补给/情报/船厂）；先用 billboard 占位跑通构图、热点、设施缺席规则，再换成 6 件建模资产。
-3. **场景填充**：L0 天空 + L1 远景背板（先用 5 张港口 banner 烘焙）+ L2 岸线，按 2.5D 方案 §7 的层级预算执行。
-4. **港口差异参数**：`diorama` 块（kit/size/palette/landmark/facility_visuals）接入 `port_archetypes`，保证「设施决定建模」。
+1. **StageHost + LocationStage 泛化** ✅ **已完成**：`SNStageHost` 独占 SubViewport/World3D，驱动 `enter → bind → exit`；支持隐藏即停更、缺失场景回退 2D、`render_shrink`；`SNShipStage3D` 重写为宿主适配器，船厂舞台迁入 `ShipyardStage`。
+2. **PortStage 骨架** ✅ **已完成**：按 `facilities` 装配设施（billboard 默认，`facility_visuals` GLB 替换，缺席只放货堆 filler），L0 天空/L1 banner 背板（缺失不放黑盒）/L2 确定性岸线剪影/L3 设施/L5 玩家船已跑通；`facility_anchors()`/`facility_screen_anchor()` 已提供；独立预览 `dev_scenes/port_stage/` 与截图脚本已产出 [完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。6 件锚点 GLB 已接线 `facility_visuals`。
+3. **场景填充**（待办）：L0 天空 + L1 远景背板（先用 5 张港口 banner 烘焙）+ L2 岸线，按 2.5D 方案 §7 的层级预算细化；当前 L0–L2 只是初版，L6 前景框与 L7 蒸汽/雾未做。
+4. **港口差异参数**（待办）：`diorama` 块（kit/size/palette/landmark/facility_visuals）接入 `port_archetypes`，保证「设施决定建模」。
 
-验收：总览页可切换到 3D 港口舞台，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景。
+验收（待完成）：总览页可切换到 3D 港口舞台，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景。当前 PortStage 只在独立预览场景验证（页面背景层、2D 热点、场景填充细化与 diorama 参数仍待接入）。
 
 ## 4. 中期：玩法主线（P2，阶段 1 → 2）
 

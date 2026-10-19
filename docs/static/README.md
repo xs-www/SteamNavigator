@@ -29,12 +29,12 @@
 | [`framework/domain`](framework/domain/README.md) | 纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、事件、债务与通关判定。 |
 | [`framework/services`](framework/services/README.md) | 基础设施服务：日志、RNG、时钟、本地化、资源、存档。 |
 | [`framework/state`](framework/state/README.md) | 运行态数据模型。GameState 是唯一持久化状态，定义对象永不进入存档；含 campaign 分区（world/codex/factions）、探索进度、收入/支出/利润统计的惰性补齐。 |
-| [`framework/ui`](framework/ui/README.md) | 展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，未来 2.5D 渲染器经 set_renderer 接入。 |
-| [`framework/tests`](framework/tests/README.md) | 无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线与完整通关流程。 |
+| [`framework/ui`](framework/ui/README.md) | 展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器。 |
+| [`framework/tests`](framework/tests/README.md) | 无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施与完整通关流程。 |
 | [`sdk`](sdk/README.md) | 模组开发工具：打包、校验、模板与示例。 |
 | [`schemas`](schemas/README.md) | Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0 草案。 |
 | [`dev_mods/core`](dev_mods/core/README.md) | 官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化；模块含打造配方/工时/费用，tier1 为仅金币配方（materials 为空）。 |
-| [`dev_scenes`](dev_scenes/README.md) | 独立 3D 样片场景（不接入主流程）：用于验证水面着色器、已有 GLB 资产拼接与固定机位构图。 |
+| [`dev_scenes`](dev_scenes/README.md) | 独立 3D 样片与舞台预览场景（不接入主流程）：港口水面/浮船样片与 PortStage 港口舞台预览，用于验证水面着色器、GLB 资产拼接与固定机位构图。 |
 | [`tools`](tools/README.md) | PowerShell 辅助脚本、Godot 验收 / 截图脚本、建模工单 / 参数化生成器与静态文档生成器。 |
 | [`SNModMaker`](SNModMaker/README.md) | 零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。 |
 
@@ -70,8 +70,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-19T13:28:35.290Z
-- 生成 commit：`0883b5d`
+- 生成时间：2026-10-19T20:47:02.775Z
+- 生成 commit：`98a5985`
 - 模式：`compact`；规则版本：`2.0`
 - 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。
 - 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。

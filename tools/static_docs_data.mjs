@@ -389,7 +389,9 @@ export const FILE_DOCS = {
       "委托区给出 main_done/main_total（主线完成度），总览据此提示「主线完成后如何通关」。",
       "船只 ViewModel 额外给出 free_weight 与 free_cargo_capacity（剩余载重/剩余货舱），顶部信息条直接显示，避免只显示已用载重。",
       "船只 ViewModel 给出模块实例摘要 worst_module_condition / damaged_modules / disabled_modules / module_damage_points，顶部信息条据此显示「部件 N · NN%」，健康时不占位。",
-      "stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。"
+      "stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。",
+      "`current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。",
+      "`ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。"
     ]
   },
 
@@ -1230,24 +1232,145 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/components/sn_ship_stage_3d.gd": {
-    role: "船厂正常态的真实 3D 船体舞台（2.5D 首个切片）：SubViewport 渲染固定 3/4 机位的船体、海面与灯光；2D 槽位、拖拽与 HUD 仍由 SNShipView 和页面负责。",
+    role: "船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。",
+    dependencies: ["SNStageHost", "ShipyardStage", "SNShipView"],
     contracts: [
-      "通过既有 `SNShipView.set_renderer()` 协议接入：实现 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(ids)`。",
-      "船体模型来自内容模组：优先用 `model.hull_model_path`（船体定义 `information.model` 解析结果）经 `ContentAssetLoader.instantiate_model()` 读原始 GLB；路径为空时才回退旧的 `hull_tier -> assets/models/ships` 映射（dev/PCK）。",
-      "取模型网格包围盒动态计算机位距离与目标点，让 24 m 明轮船与 60 m 铁甲舰保持同一构图。",
-      "EXTERIOR 显示 3D 视口；CUTAWAY 隐藏视口，让纵剖图贴图与槽位贴片接管，不改页面布局。",
-      "复用 `assets/materials/water/harbor_water.tres`（duplicate 后把 shore 参数推远、boat 泡沫环绑到当前船体包围盒、调整水平线淡出）；材质缺失时退回 StandardMaterial。",
-      "`is_supported()` 只判断本地是否有旧路径可回退；正式发布由页面用 `hull_model_path` 非空来挂载舞台，PCK 不含 `assets/models` 也能显示 3D。",
+      "`SNShipStage3D` 现在是 `SNStageHost` 的薄适配器：视口、World3D 与舞台生命周期由宿主拥有，相机/灯光/水面/船体由 `ShipyardStage` 拥有。",
+      "实现 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(slot_ids)`；`_ready` 时自动加载 `res://framework/ui/stages/shipyard_stage.tscn`。",
+      "`ship_view_update` 把 `{\"ship\": model}` 转发给舞台并缓存；`ship_view_set_mode` 用 `set_stage_visible(mode == EXTERIOR)` 控制 3D 显隐，CUTAWAY 隐藏视口但保留 2D 纵剖图。",
+      "`ship_view_highlight()` 记录槽位并转发给舞台（舞台侧高亮属下一片）；`has_ship()` / `model_path()` 代理到当前舞台。",
+      "`is_supported()` 只判断本地是否有 `hull_tier` 旧路径可回退；正式发布由页面用 `hull_model_path` 非空来挂载舞台，PCK 不含 `assets/models` 也能显示 3D。",
       "只做表现层：不读 GameState / QueryBus / CommandBus；渲染器方法在 `_ready` 之前被调用时先缓存 model/mode，`_ready` 后统一应用。"
+    ]
+  },
+
+  "framework/ui/components/sn_stage_host.gd": {
+    role: "通用 3D 舞台宿主（SubViewportContainer）：持有独占 SubViewport/World3D，加载并挂载一个 `LocationStage`，驱动 enter→bind 生命周期、舞台显隐与渲染停更，并转发 `portal_requested` / `fallback_requested`；同时是船厂 `SNShipView` 的渲染器后端。",
+    dependencies: ["LocationStage", "SNShipStage3D"],
+    contracts: [
+      "一个宿主同一时间只承载一个舞台；`mount_stage()` 先卸载旧舞台再挂新的。",
+      "`load_stage(path, payload)` 在未进树（`_ready` 前）调用时只缓存 path/payload 并返回 false，由 `_ready` 补加载；场景缺失 / 非 PackedScene / 根不是 `LocationStage` 时发 `fallback_requested(reason)` 并返回 false。",
+      "挂载顺序固定 `enter(payload)` → `bind(_view_model)`；`stage_id` 取 `LocationStage.stage_id`，为空时回退节点名。",
+      "`bind_view_model()` 深拷贝缓存最新 ViewModel 并转发；之后挂载的舞台会自动收到最近一次 ViewModel。",
+      "`set_stage_visible(false)` 同时隐藏宿主、把 SubViewport 置 `UPDATE_DISABLED`、舞台 `process_mode=DISABLED`；显示时恢复 `UPDATE_WHEN_VISIBLE` / `PROCESS_MODE_INHERIT`。",
+      "`unmount_stage()` 先 `exit()` 再移出并 `free()` 舞台，发 `stage_unmounted(old_id)`。",
+      "`_ready` 设 `clip_contents`、`MOUSE_FILTER_IGNORE`、`PRESET_FULL_RECT` 与 `stretch_shrink=max(1, render_shrink)`；`auto_load` 且有 `stage_scene_path` 时立即加载。",
+      "`_exit_tree()` 对已挂舞台调用 `exit()`，避免离开树后舞台动画继续。"
     ],
     l2: {
-      "_build_stage()": [
-        "SubViewportContainer(stretch) + SubViewport(own_world_3d, transparent_bg=false) + 独立 World3D；一个页面同一时间只存在这一个 3D 视口。",
-        "环境为 BG_COLOR + 环境光 + 线性雾，灯光只用一个主光一个补光且关闭实时阴影，保证 1440×900 下的静态舞台开销可控。"
+      "_build_host()": [
+        "SubViewport（`own_world_3d=true`、`gui_disable_input=true`、默认 1440×900、初始 `UPDATE_DISABLED`）+ `StageWorld` 根；宿主不持有相机/灯光/水面，它们属于舞台场景。"
       ],
-      "_frame_camera(visual)": [
-        "遍历 MeshInstance3D 累积世界包围盒（8 角点变换），半径 × 长焦 FOV 求距离，再沿固定 3/4 方向摆放相机并 look_at 包围盒中心。",
-        "船体尺寸变化只改相机，不缩放模型，避免材质/噪声随缩放变形。"
+      "_apply_render_state()": [
+        "active = `_stage_visible and is_inside_tree() and is_visible_in_tree()`；隐藏时停 viewport 更新与舞台 process，符合「同一时间只渲染一个 3D 舞台」。"
+      ]
+    }
+  },
+
+  "framework/ui/stages/location_stage.gd": {
+    role: "2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。",
+    dependencies: ["SNStageHost", "SNShipStage3D"],
+    contracts: [
+      "信号 `portal_requested(target_id)` 只表达玩家意图；host 重新发出，由 UI Shell / 未来的 StageDirector 决定跳转。",
+      "`stage_id` 由具体舞台场景覆盖（`shipyard` / `port`）；为空时 host 回退到节点名。",
+      "`enter(payload)` 进入时启用局部动画并应用 payload；`bind(view_model)` 可重复调用做数据刷新；`exit()` 停止动画并丢弃局部状态。",
+      "`has_visual()` 默认 true：程序化舞台在内容资产缺失时仍可绘制，页面据此决定是否回退 2D banner。",
+      "`hotspot_anchors()` 返回设施/入口 id → 世界坐标；2D Control 热点用舞台相机投影这些点，不做 3D RayCast。"
+    ]
+  },
+
+  "framework/ui/stages/stage_kit.gd": {
+    role: "固定机位 2.5D 舞台的公共构建器：程序化天空/颜色环境、无阴影方向光、近/远水面材质、船体泡沫环、世界空间 AABB 与长焦取景。",
+    dependencies: ["assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres"],
+    contracts: [
+      "纯表现层：不读 GameState / 服务 / 内容 ID；相机取景只读 `visual_aabb()` 结果，不缩放模型。",
+      "`load_water_material()` 对共享 `harbor_water.tres` 做 `duplicate(true)` 再写 shader 参数，避免污染其他场景使用的同一资源。",
+      "`add_water()` 在材质缺失或路径非法时回退 `StandardMaterial3D`（`WATER_FALLBACK_COLOR`），舞台不会因框架材质缺失而失去水面。",
+      "`add_environment()` 支持 `mode=\"sky\"`（`ProceduralSkyMaterial` 调色板）与 `mode=\"color\"`（仅 BG_COLOR）；两种都开线性雾、FILMIC tonemap 与颜色环境光。",
+      "`add_directional_light()` 生成的灯 `shadow_enabled=false`：固定舞台只付一个 key + 一个 fill 的开销。",
+      "`configure_boat_foam()` 把泡沫椭圆贴到船体世界包围盒（`boat_center` / `boat_half_size`，`boat_yaw` 置 0）；换船后调用方需按实际船艏向覆盖 yaw。"
+    ],
+    l2: {
+      "visual_aabb(root) / transform_aabb(xform, box)": [
+        "遍历 Node3D 层级（显式栈 + 累积变换），对每个 MeshInstance3D 的 mesh AABB 做 8 角点变换后 merge；无网格时返回 12×5×12 的兜底盒。",
+        "只反映静态网格包围盒；骨骼蒙皮、粒子或运行时改 mesh 不在计算内。"
+      ],
+      "frame_camera(camera, bounds, direction, fov, margin)": [
+        "距离 = 包围盒半径 / tan(fov/2) × margin，再沿固定方向摆放并 `look_at` 包围盒中心；船体尺寸变化只改相机，不缩放模型。"
+      ]
+    }
+  },
+
+  "framework/ui/stages/shipyard_stage.gd": {
+    role: "船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。",
+    dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
+    contracts: [
+      "`stage_id` 默认 `shipyard`（舞台场景再显式覆盖）。",
+      "`bind()` 接受完整 ViewModel 或直接以 ship 字典作为根；内部深拷贝 `ship`，重复 bind 同一模型不重建船体。",
+      "船体路径优先 `hull_model_path`；为空才按 `hull_tier` 回退 `assets/models/ships/*.glb`，该文件不存在再退 `SN_Ship_Prototype.glb`；加载失败时舞台保持空场景，船厂继续用 `SNShipView` 程序化占位。",
+      "相机取景用 `StageKit.visual_aabb()` + 30° 长焦 FOV；水面泡沫环绑到当前船体包围盒（shore 推远、隐藏岸线泡沫）。",
+      "`enter()` 恢复 `_process`，`exit()` 停止；不可见时不写升沉，避免隐藏舞台继续运动。"
+    ],
+    l2: {
+      "_apply_model() / _rebuild_ship(path)": [
+        "`hull_model_path` 为空时用 `_fallback_path_for_tier(hull_tier)`；路径相同时直接复用现有 Ship 根，否则释放旧节点并新建 `Ship` 节点。",
+        "GLB 优先 `ContentAssetLoader.instantiate_model()` 读模组原始文件，`ResourceLoader` 作为已导入场景兜底；挂载成功后重新取景并更新泡沫环。"
+      ],
+      "_process(delta)": [
+        "`sin(t*0.9)*0.12` 升沉 + `sin(t*0.675)*0.004` 横摇；不做航行/物理。"
+      ]
+    }
+  },
+
+  "framework/ui/stages/port_stage.gd": {
+    role: "固定 3/4 长焦港口舞台骨架：`_ready` 一次建静态层（天空/雾/灯光/双层水面/桩基码头/岸线底座/兜底 sky card/相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 确定性岸线剪影（仅无 banner）、L3 设施（`facility_visuals` GLB 或程序化 billboard + 空槽货堆）、L5 玩家船随波。",
+    dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
+    contracts: [
+      "bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` 也可放在根层。",
+      "`bind()` 幂等：先按 `str(port) + str(ship) + str(root facility_visuals)` 计算签名，相同则直接返回；`enter(payload)` 的 payload 仅在 bind 收到不含 port/ship/facility_visuals 的数据时兜底。",
+      "设施顺序固定 `FACILITY_ORDER`（exchange/contracts/supply/intel/shipyard）；present 的设施才有锚点与热点，缺席只放程序化货堆 filler（`filler_count()`），`facility_visual_kind()` 返回 model/billboard/missing。",
+      "`facility_visuals` 值可为 String 或 Array[String]：能 `ResourceLoader` 加载的按 PackedScene 实例化，否则走 `ContentAssetLoader.instantiate_model()`；路径缺失/实例化失败回退程序化 billboard。",
+      "L1 banner：`port.banner_path` 缺失或贴图加载失败时**不放黑盒**：兜底层由 `SkyCard`（黄昏渐变卡片）+ `ShoreShelf` + L2 剪影组成；贴图加载成功才挂 banner，并隐藏兜底层。`has_backdrop()` / `loaded_banner_path()` 报告实际加载结果。",
+      "L2 岸线：仅在无 banner 时生成 **9 栋剪影 + 2 台吊机**（部分建筑带斜屋顶/烟囱，无发光窗），由 `port.id` 的稳定 hash 派生（`_hash01`，不用 RNG），同一港口每次绑定完全一致。",
+      "`_apply_sky_card_visibility()` 以 `use_fallback = not _has_backdrop` 统一控制 `_sky_card.visible` 与 `_shore_shelf.visible`：banner 自带天空/城市，兜底层必须隐藏，避免渐变卡片或岸线底座压住画好的画面。",
+      "码头是薄甲板桩基栈桥（不是实心箱体）：甲板前缘下方 7 根入水木桩 + 桩帽、一道纵向横梁（Waler）与甲板边梁；远景岸线底座 500×1.3×110 把镜头内的水面切边藏起来。",
+      "`port.size` ∈ small/medium/large → 设施组整体 0.9/1.0/1.15（`SIZE_SCALE`），只缩放设施层，不缩放船与码头。",
+      "`facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。",
+      "玩家船：`ship.hull_model_path` 优先，`hull_tier` 只作 dev 回退；船体在 `SHIP_SPAWN` 真尺度摆放，水面泡沫环按包围盒绑定并在 `_process` 做升沉/横摇。",
+      "`request_portal(facility)` 只发 `portal_requested`；`has_visual()` 恒 true（程序化舞台无资产也可绘制）。",
+      "表现层：不读 GameState / QueryBus / CommandBus；所有资产路径已在 ViewModel 中解析。"
+    ],
+    l2: {
+      "_ensure_static() / _build_environment()": [
+        "静态层只建一次：sky 模式黄昏调色 + 深度雾（默认 70–450 m，低于地平线的天空半球镜像暖雾色）+ 暖 key/冷 fill 无阴影；近水 `harbor_water.tres`（600 m）与远水 `harbor_water_far.tres`（2400 m，只输出雾色）；同一 `_ready` 里建桩基码头、岸线底座、SkyCard 与相机。"
+      ],
+      "_apply_view_model(port, ship, root_data)": [
+        "解析 size/scale/palette/visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（无 banner 才建）→ SkyCard/岸线底座可见性 → facilities → landmark → ship 的顺序重建；静态层跨 bind 复用。"
+      ],
+      "_rebuild_backdrop()": [
+        "只有 banner 贴图加载成功才建 `BACKDROP_SIZE`（260×76）的 unshaded quad 并放到 `BACKDROP_POSITION`（-70, 12, -70），albedo tint 成黄昏色调；失败直接返回，绝不创建黑色占位面。"
+      ],
+      "_add_sky_card() / _apply_sky_card_visibility()": [
+        "`SkyCard` 是 340×100 的 unshaded quad（`SKY_CARD_POSITION` -135, 25, -56），用 8×256 的 `GradientTexture2D` 画黄昏渐变，遮住远水网格与程序化天空下半球；`visible = not _has_backdrop`，不投阴影。"
+      ],
+      "_rebuild_shoreline()": [
+        "`port.id.hash()` 作种子，`_hash01` 生成 9 栋建筑的宽/高/深/偏移（近/远两档蓝灰 tone）；每 3 栋一个斜屋顶、每 4 栋一根烟囱，另加 2 台吊机剪影；有 banner 时首行直接 return，不生成任何剪影。"
+      ],
+      "_add_quay()": [
+        "薄甲板 `DOCK_SIZE`（54×0.6×12）坐在 7 根木桩（x = -24…24 步长 8，含 `PileCap`）上；另有 `DeckEdgeBeam`、纵向 `Waler`、护舷与木饰条，整体读作桩基栈桥。岸线底座 `SHORE_SIZE` 500×1.3×110 放在 `SHORE_CENTER`（0, -0.55, -65），灯柱与系缆桩同在这一步建。"
+      ],
+      "_add_camera()": [
+        "相机固定在 `CAMERA_POS`（46, 28, 64）看向 `CAMERA_TARGET`（0, 12, -8），30° 长焦、near/far 0.5/1200；换港口构图只改常量，不在运行时缩放模型。"
+      ],
+      "_rebuild_facilities() / _build_facility_visual()": [
+        "按 `FACILITY_ORDER` 建锚点组（`_facilities_root` 放在码头顶面 `DOCK_TOP`，局部位置 `SLOT_POSITIONS`）；船厂可挂两件（干船坞 + 龙门吊，`SHIPYARD_PIECE_OFFSETS`）。",
+        "有 facility_visuals 时逐路径实例化，至少成功一件即返回 `model`；否则走五种程序化 billboard 原型，失败/缺席由 kind 报告。"
+      ],
+      "_build_filler()": [
+        "用 `port.id` 与设施序号派生 2–4 个木箱 + 木桶 + 可选麻袋，只做货堆，不建锚点/热点，也不参与 `facility_anchors()`。"
+      ],
+      "_rebuild_ship(ship)": [
+        "船体在 `SHIP_SPAWN`（-13.5, 0, 9）、`SHIP_YAW_DEG` 20° 真尺度摆放；复用 `_instantiate_visual()`，成功时按 `StageKit.visual_aabb()` 配泡沫环（覆盖 `boat_yaw` / `boat_foam_width`），失败时 `_disable_boat_foam()` 把泡沫环推到不可见处。"
       ]
     }
   },
@@ -1907,11 +2030,25 @@ export const FILE_DOCS = {
       "正常态断言：stage 为 `EXTERIOR`、左列标题「已有船舶」、「组件」列提供六类入口、船卡显示当前船体名并预留缩略图区域（`SHIP_THUMB_SIZE` = 210×118），且页面恰好一个 ShipyardScreen。",
       "改装态断言：按本地化键 `ui.label.refit` 点真实按钮 → `_category == \"hulls\"`、stage 为 `CUTAWAY`、全部贴片可见、按钮改为「完成改装」；竖排 tab 含「杂项」。`shell._shipyard_refit` / `_shipyard_category` 让整页重建后仍恢复改装态与所选分类。",
       "贴图契约：`SHIP_VIEW_SCRIPT.SECTION_TEXTURE_PATH` 必须等于 `res://assets/ui/shipyard/ship_section.png` 且 `ResourceLoader.exists`；进入改装后 `has_section_texture()` 为真、`section_texture_size()` 两个分量 > 0。船卡缩略图断言 `_ship_thumb` 非空、页面仅有一个 TextureRect 使用它、占位文案不再出现。",
-      "渲染器替换：正常态在 `ship.hull_model_path` 非空（或本地有旧路径回退）时挂载 `SNShipStage3D`（断言 `has_ship()`、改装态隐藏视口、回到 EXTERIOR 重新显示）；无模型时断言保留程序化占位。`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
+      "渲染器替换：正常态在 `ship.hull_model_path` 非空（或本地有旧路径回退）时挂载 `SNShipStage3D`，断言 `has_ship()`、`has_stage()`、`stage_id()==\"shipyard\"`；改装态 `is_stage_visible()` 为 false、回 EXTERIOR 重新为 true；无模型时断言保留程序化占位。`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
       "拖放端到端：`WarehouseOps.add_module` 在仓库放一个导航模块 → 操作列恰好一行可拖拽；`_on_slot_drop` 发 `ship.install_module`，参数含 module_id / source 与槽位 `replace_module_id`，命令后模块离开仓库并装到船上；异类型部件与 purchase 候选被 `_accepts` 拒绝。",
       "分类导航：每个分类的中间面板标题取 `ui.category.<type>`，货舱按槽位数逐个列出「货舱槽 n」；杂项承载打造订单/在港等待/仓库材料/仓库模块，且不再出现「按配方打造」「槽位」；打造入口留在对应模块分类内。",
       "旧面板守护：`LEGACY_SECTION_KEYS`（parts_hud / warehouse / available_modules / craft / recipes / victory plan 等本地化键）的译文不得出现在页面任意 Label 中；这些键必须仍被本地化，键被删时用例应失败而不是静默通过。`_body` 子节点数恒为 3。",
       "模块状态徽标：健康船不出现「状态 NN%」；对锅炉实例造成 50% 损耗后重建船厂页，锅炉槽位卡出现 `ui.label.status` 50% 徽标（条件值来自 shipyard.view 的 condition，不在页面计算）。"
+    ]
+  },
+
+  "framework/tests/cases/test_stage_host.gd": {
+    role: "2.5D 舞台基础设施契约测试（9 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
+    contracts: [
+      "全部是同步函数（无 await）：节点在同一步内加入 SceneTree 即同步派发 `_ready` 与 `add_child` 通知，挂载/卸载可在一步内断言；每个用例自建节点并在结尾 free，避免残留节点影响其他套件。",
+      "LocationStage：裸节点 `stage_id` 为空、`has_visual()` true、`hotspot_anchors()` 空、`portal_requested` 可发。",
+      "SNStageHost：`stage_mounted` / `stage_unmounted` / `portal_requested` 转发；`enter` 先于 `bind` 且 payload 到达 enter；`bind_view_model` 重绑并缓存；隐藏 → 舞台 `PROCESS_MODE_DISABLED` + viewport `UPDATE_DISABLED`，显示恢复；卸载后 stage_id 清空且可挂新舞台（空 id 回退节点名）。",
+      "回退：缺失场景发 `stage_scene_missing:*`；根不是 LocationStage 的 `sn_badge.tscn` 发 `stage_not_location_stage:*` 且不挂载。",
+      "ShipyardStage：真实场景可加载、根类型与 stage_id 正确；`hull_tier=1` 绑定后 `has_ship()` 且 `model_path()` 含 `SN_Paddle_Steamer`。",
+      "SNShipStage3D 适配器：`_ready` 自动挂船厂舞台；`ship_view_update` 转发 `hull_model_path`；`ship_view_set_mode(1/0)` 隐藏/显示；`ship_view_highlight` 可调用。",
+      "PortStage 四组：present 设施才有锚点/热点且缺席只 filler（缺省 billboard / missing）；`facility_visuals` GLB 替换与非法路径回退 billboard；`size` 0.9/1.15 缩放锚点；`hull_model_path` 挂玩家船 + `request_portal` 经 host 转发。",
+      "PortStage 投影锚点断言有限值，缺席设施投影返回 `Vector2.ZERO`；`has_backdrop()` 在无 banner 时为 false。"
     ]
   },
 
@@ -1989,6 +2126,17 @@ export const FILE_DOCS = {
     ]
   },
 
+  "dev_scenes/port_stage/port_stage_preview.gd": {
+    role: "PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals GLB）两份样例 ViewModel。",
+    dependencies: ["SNStageHost", "framework/ui/stages/port_stage.tscn"],
+    contracts: [
+      "`set_variant(\"preview\"|\"sparse\")` 不重挂舞台，只重新 bind 样例 payload；`current_variant()` 返回当前样例。",
+      "`sparse` 同时覆盖三条回退分支：L1 无 banner（天空 + 雾 + 剪影）、根层 `facility_visuals` GLB 替换、`hull_model_path` 为空时按 `hull_tier` 回退。",
+      "每个 variant 打印设施 kinds / filler 数 / backdrop / ship 与投影后的设施锚点，便于截图时核对。",
+      "运行：`godot --path . res://dev_scenes/port_stage/port_stage_preview.tscn`；截图用 `tools/godot/capture_port_stage.gd`。"
+    ]
+  },
+
   "assets/shaders/water/harbor_water.gdshader": {
     role: "港口水面空间着色器：顶点正弦波位移、噪声法线、菲涅耳天空反射、太阳耀斑路径、岸线与船体泡沫，以及远处雾色淡出。",
     dependencies: ["assets/textures/water/water_normal.png", "assets/textures/water/water_foam.png"],
@@ -2049,6 +2197,17 @@ export const FILE_DOCS = {
       "等待 90 帧 + 1 s 后再抓第一张；近景把 Camera3D 移到 (30, 11, 34) 并对准船体中部。",
       "输出 `docs/design/screenshots/harbor_diorama_schooner.png` 与 `harbor_diorama_schooner_detail.png`；120 s watchdog；失败退出码 1。",
       "只写截图，不修改场景/源码。"
+    ]
+  },
+
+  "tools/godot/capture_port_stage.gd": {
+    role: "PortStage 真实渲染截图（窗口模式 1440×900）：加载 `port_stage_preview.tscn`，等水面/船体稳定后抓 `preview`，再切 `sparse` 抓第二张，输出到 `docs/design/screenshots/port_stage/`。",
+    dependencies: ["dev_scenes/port_stage/port_stage_preview.tscn"],
+    contracts: [
+      "必须窗口模式：`DisplayServer.get_name() == \"headless\"` 时直接失败（视口纹理为空）。",
+      "稳定窗口：首次 90 帧 + 1 s，切换 variant 后 30 帧 + 0.5 s；空图/保存失败计为 failures。",
+      "成功条件：2 张图都保存且 failures=0，否则退出码 1；输出 `port_stage_preview.png` 与 `port_stage_sparse.png`。",
+      "120 s watchdog 防止协程挂住窗口；只写截图，不修改场景/源码。"
     ]
   },
 
@@ -2138,15 +2297,16 @@ export const MODULES = {
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
-    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，未来 2.5D 渲染器经 set_renderer 接入。",
+    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器。",
     contracts: [
       "UI 只识别 Query/Command 与定义类型，不识别 core 内容。",
       "公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。",
-      "页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。"
+      "页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。",
+      "2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。"
     ]
   },
   "framework/tests": {
-    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线与完整通关流程。",
+    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施与完整通关流程。",
     contracts: [
       "测试入口：`godot --headless --path . --script res://framework/tests/test_runner.gd`。",
       "`test_case.gd` 提供断言与 Core 启动辅助；每个用例独立 bootstrap。",
@@ -2156,6 +2316,7 @@ export const MODULES = {
       "`test_save_migration.gd` 守护 save schema 1.x → 2.0 迁移、campaign 元数据与分区回填。",
       "`test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。",
       "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
+      "`test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
       "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 草案，并确认草案类型仍为 planned、不在 active 注册表。"
     ]
   },
@@ -2193,6 +2354,7 @@ export const MODULES = {
       "`gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。",
       "`ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。",
       "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）。",
+      "`godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，抓 `port_stage_preview.png` / `port_stage_sparse.png` 两张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。",
       "`art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。",
       "`modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。",
       "港口设施锚点工单见 `modeling/briefs/sn_port_facilities_batch1.json` 与 `PORT_FACILITIES_PLAN.md`：6 件设施锚点，总预算 10500 tri，轴心统一在底面中心；工作台暂存排原定 y=60，因与 `SN_Ship_Modules`（y 58.6–69.2）冲突改为 y=75（见工单 layout_revision）。",
@@ -2217,11 +2379,12 @@ export const MODULES = {
     ]
   },
   "dev_scenes": {
-    intro: "独立 3D 样片场景（不接入主流程）：用于验证水面着色器、已有 GLB 资产拼接与固定机位构图。",
+    intro: "独立 3D 样片与舞台预览场景（不接入主流程）：港口水面/浮船样片与 PortStage 港口舞台预览，用于验证水面着色器、GLB 资产拼接与固定机位构图。",
     contracts: [
       "`dev_scenes/` 不是游戏启动链的一部分；主场景仍为 `framework/ui/shell/main.tscn`。",
       "样片可以复用 `assets/` 与 `assets/models/`，但不得反向依赖 `framework/` 运行时。",
-      "水面材质/着色器属于表现层资产，后续 `PortStage` 可以直接复用。"
+      "水面材质/着色器属于表现层资产，`PortStage` 与 `dev_scenes/port_stage` 共用同一套水面材质。",
+      "`port_stage/` 通过真实 `SNStageHost` 挂载 `port_stage.tscn`，用两份样例 ViewModel 覆盖完整/稀疏港口；截图由 `tools/godot/capture_port_stage.gd` 生成。"
     ]
   },
   "root": {
@@ -2256,8 +2419,11 @@ export const GROUPED_ROLES = {
   "framework/application/queries/map_view.gd": "海图 ViewModel：港口坐标、发现/访问、设施与航线。",
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
-  "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 套件）。",
-  "framework/tests/cases": "按主题拆分的 135 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
+  "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 与 test_stage_host 2.5D 舞台套件）。",
+  "framework/tests/cases": "按主题拆分的 144 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
+  "framework/ui/stages/shipyard_stage.tscn": "船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id=\"shipyard\"`。",
+  "framework/ui/stages/port_stage.tscn": "港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id=\"port\"`。",
+  "dev_scenes/port_stage/port_stage_preview.tscn": "PortStage 独立预览场景：全屏 Control 挂 `port_stage_preview.gd`。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",

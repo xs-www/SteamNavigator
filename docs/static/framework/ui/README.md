@@ -1,6 +1,6 @@
 # `framework/ui`
 
-> 展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，未来 2.5D 渲染器经 set_renderer 接入。
+> 展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器。
 
 ## 文件索引
 
@@ -22,13 +22,14 @@
 | `components/sn_resource_meter.tscn` | 框架源文件：sn_resource_meter.tscn | 本页 |
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
-| `components/sn_ship_stage_3d.gd` | 船厂正常态的真实 3D 船体舞台（2.5D 首个切片）：SubViewport 渲染固定 3/4 机位的船体、海面与灯光；2D 槽位、拖拽与 HUD 仍由 SNShipView 和页面负责。 | [查看](./components/sn_ship_stage_3d.gd.md) |
+| `components/sn_ship_stage_3d.gd` | 船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。 | [查看](./components/sn_ship_stage_3d.gd.md) |
 | `components/sn_ship_view.gd` | 船厂中央改装台：`EXTERIOR` 画程序化侧视占位；`CUTAWAY` 画授权纵剖图贴图（`assets/ui/shipyard/ship_section.png`）+ 每槽位一个 `SNSlotTarget` 贴片，贴图缺失时回退程序化剖面；预留可替换的 2.5D 渲染器接口。 | [查看](./components/sn_ship_view.gd.md) |
 | `components/sn_ship_view.tscn` | 框架源文件：sn_ship_view.tscn | 本页 |
 | `components/sn_slot_target.gd` | 纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。 | [查看](./components/sn_slot_target.gd.md) |
 | `components/sn_slot_target.tscn` | 框架源文件：sn_slot_target.tscn | 本页 |
 | `components/sn_sparkline.gd` | 市场价格历史迷你折线；只有两个以上真实样本才绘制。 | [查看](./components/sn_sparkline.gd.md) |
 | `components/sn_sparkline.tscn` | 框架源文件：sn_sparkline.tscn | 本页 |
+| `components/sn_stage_host.gd` | 通用 3D 舞台宿主（SubViewportContainer）：持有独占 SubViewport/World3D，加载并挂载一个 `LocationStage`，驱动 enter→bind 生命周期、舞台显隐与渲染停更，并转发 `portal_requested` / `fallback_requested`；同时是船厂 `SNShipView` 的渲染器后端。 | [查看](./components/sn_stage_host.gd.md) |
 | `components/sn_supply_card.gd` | 单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。 | [查看](./components/sn_supply_card.gd.md) |
 | `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
 | `screens/flow/at_sea_screen.gd` | 航行中流程场景：显示起终港、预计抵达时间或等待结算状态。 | [查看](./screens/flow/at_sea_screen.gd.md) |
@@ -67,9 +68,16 @@
 | `shell/main.tscn` | 框架源文件：main.tscn | 本页 |
 | `showcase/ui_kit_showcase.gd` | 独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。 | [查看](./showcase/ui_kit_showcase.gd.md) |
 | `showcase/ui_kit_showcase.tscn` | 框架源文件：ui_kit_showcase.tscn | 本页 |
+| `stages/location_stage.gd` | 2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。 | [查看](./stages/location_stage.gd.md) |
+| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台骨架：`_ready` 一次建静态层（天空/雾/灯光/双层水面/桩基码头/岸线底座/兜底 sky card/相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 确定性岸线剪影（仅无 banner）、L3 设施（`facility_visuals` GLB 或程序化 billboard + 空槽货堆）、L5 玩家船随波。 | [查看](./stages/port_stage.gd.md) |
+| `stages/port_stage.tscn` | 港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id="port"`。 | 本页 |
+| `stages/shipyard_stage.gd` | 船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。 | [查看](./stages/shipyard_stage.gd.md) |
+| `stages/shipyard_stage.tscn` | 船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id="shipyard"`。 | 本页 |
+| `stages/stage_kit.gd` | 固定机位 2.5D 舞台的公共构建器：程序化天空/颜色环境、无阴影方向光、近/远水面材质、船体泡沫环、世界空间 AABB 与长焦取景。 | [查看](./stages/stage_kit.gd.md) |
 
 ## 模块契约
 
 - UI 只识别 Query/Command 与定义类型，不识别 core 内容。
 - 公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。
 - 页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。
+- 2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。
