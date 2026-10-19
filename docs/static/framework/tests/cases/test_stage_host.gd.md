@@ -30,8 +30,8 @@
 | `test_port_stage_batches_static_layers_into_few_draws() -> void` | L768 |
 | `test_port_stage_without_town_still_batches_facilities() -> void` | L827 |
 | `test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void` | L848 |
-| `test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void` | L898 |
-| `test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void` | L973 |
+| `test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void` | L895 |
+| `test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void` | L970 |
 
 ## 契约与约束
 

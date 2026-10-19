@@ -61,13 +61,6 @@ const PORT_SIGN_WIDTH := 172.0
 const PORT_SIGN_HEIGHT := 42.0
 const PORT_SIGN_GAP := 10.0
 const PORT_SIGN_MARGIN := 20.0
-## 960-wide windows: narrower sign plates and tighter edge margins leave the
-## 3D scene (and the projected facility anchors) readable.
-const PORT_SIGN_WIDTH_COMPACT := 148.0
-const PORT_SIGN_HEIGHT_COMPACT := 38.0
-const PORT_SIGN_MARGIN_COMPACT := 14.0
-## Below this window width the HUD drops secondary chrome and tightens spacing.
-const COMPACT_LAYOUT_WIDTH := 1180.0
 ## Optional HUD icon keys. Content packs may declare `icon.*` assets; the Shell
 ## resolves whichever mounted pack provides them and silently falls back to a
 ## text-only chip when none do.
@@ -303,7 +296,6 @@ func _rebuild_ui() -> void:
 ## The panel is semi-transparent so the 3D stage shows through; the measured
 ## minimum height stays below `TOP_CHROME_MAX_HEIGHT`.
 func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> void:
-	var compact := _compact_chrome_layout()
 	var panel := PanelContainer.new()
 	panel.name = "TopChrome"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -312,25 +304,23 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	_top_chrome = panel
 	var rows := VBoxContainer.new()
 	rows.name = "Rows"
-	rows.add_theme_constant_override("separation", 6 if compact else 8)
+	rows.add_theme_constant_override("separation", 8)
 	panel.add_child(rows)
 
 	var row := HBoxContainer.new()
 	row.name = "Chrome"
-	row.add_theme_constant_override("separation", 10 if compact else 12)
+	row.add_theme_constant_override("separation", 12)
 	rows.add_child(row)
 	var brand := VBoxContainer.new()
 	brand.add_theme_constant_override("separation", 0)
 	row.add_child(brand)
-	if not compact:
-		brand.add_child(_label("S T E A M   N A V I G A T O R", 9, COLOR_MUTED))
-	brand.add_child(_label(_tr("ui.app.title", "Steam Navigator"), 20 if compact else 22, COLOR_BRASS))
-	if not compact:
-		row.add_child(_badge(
-			_tr(String(app.get("status_key", "ui.status.ok")), ""),
-			_status_badge_tone(app)
-		))
-		row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, COLOR_MUTED))
+	brand.add_child(_label("S T E A M   N A V I G A T O R", 9, COLOR_MUTED))
+	brand.add_child(_label(_tr("ui.app.title", "Steam Navigator"), 22, COLOR_BRASS))
+	row.add_child(_badge(
+		_tr(String(app.get("status_key", "ui.status.ok")), ""),
+		_status_badge_tone(app)
+	))
+	row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, COLOR_MUTED))
 	row.add_child(VSeparator.new())
 	for stat in [
 		[_tr("ui.label.port", "Port"), _current_port_label(data), COLOR_BRASS, ""],
@@ -355,32 +345,25 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 
 	var row2 := HBoxContainer.new()
 	row2.name = "ChromeDetail"
-	row2.add_theme_constant_override("separation", 10 if compact else 14)
+	row2.add_theme_constant_override("separation", 14)
 	rows.add_child(row2)
 	var ship: Dictionary = data.get("ship", {})
-	var detail_stats := []
-	# The 960-wide layout keeps the resources a captain acts on (coal, water,
-	# durability) and drops the two capacity chips: they stay in the bottom
-	# status strip / detail drawer, so no actionable information is lost.
-	if not compact:
-		detail_stats.append_array([
-			[_tr("ui.label.free_weight", ""), "%s / %s" % [
-				_fmt(float(ship.get("free_weight", 0.0))),
-				_fmt(float(ship.get("max_weight", 0.0))),
-			], COLOR_TEXT, ""],
-			[_tr("ui.label.free_capacity", ""), "%s / %s" % [
-				_fmt(float(ship.get("free_cargo_capacity", 0.0))),
-				_fmt(float(ship.get("cargo_capacity", 0.0))),
-			], COLOR_TEAL, ""],
-		])
-	detail_stats.append_array([
+	var detail_stats := [
+		[_tr("ui.label.free_weight", ""), "%s / %s" % [
+			_fmt(float(ship.get("free_weight", 0.0))),
+			_fmt(float(ship.get("max_weight", 0.0))),
+		], COLOR_TEXT, ""],
+		[_tr("ui.label.free_capacity", ""), "%s / %s" % [
+			_fmt(float(ship.get("free_cargo_capacity", 0.0))),
+			_fmt(float(ship.get("cargo_capacity", 0.0))),
+		], COLOR_TEAL, ""],
 		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS, HUD_ICON_KEYS["coal"]],
 		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL, HUD_ICON_KEYS["water"]],
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
 			_fmt(float(ship.get("durability", 0.0))),
 			_fmt(float(ship.get("max_durability", 0.0))),
 		], COLOR_GREEN, ""],
-	])
+	]
 	var damaged_modules := int(ship.get("damaged_modules", 0))
 	if damaged_modules > 0:
 		var worst := clampf(float(ship.get("worst_module_condition", 1.0)), 0.0, 1.0)
@@ -409,8 +392,8 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 	parent.add_child(nav)
 	for screen in SCREENS:
 		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
-		button.custom_minimum_size = Vector2(52, 34) if _compact_chrome_layout() else Vector2(64, 36)
-		button.add_theme_font_size_override("font_size", 12 if _compact_chrome_layout() else 13)
+		button.custom_minimum_size = Vector2(64, 36)
+		button.add_theme_font_size_override("font_size", 13)
 		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
 		nav.add_child(button)
 
@@ -510,22 +493,11 @@ func _hud_icon(icon_key: String) -> Texture2D:
 	return texture
 
 
-## The 960-wide layout drops secondary chrome (brand eyebrow/status/version,
-## secondary capacity chips) and tightens spacing so the two-row HUD still fits
-## without pushing the 3D scene out of frame.
-func _compact_chrome_for_width(width: float) -> bool:
-	return width < COMPACT_LAYOUT_WIDTH
-
-
-func _compact_chrome_layout() -> bool:
-	# The headless test runner has a 100x100 dummy viewport; keep the 1440-wide
-	# reference layout there so the chrome assertions stay deterministic. Real
-	# 960x540 windows take the compact path.
-	if DisplayServer.get_name() == "headless":
-		return false
-	return _compact_chrome_for_width(get_viewport_rect().size.x)
-
-
+## Layout note: `project.godot` uses `canvas_items` stretch with a 1440x900 base
+## and `expand` aspect, so a real 960x540 window renders a scaled 1600x900
+## logical canvas: the two-row HUD keeps every chip and fits without clipping.
+## There is therefore no compact/drop-secondary branch; the 960x540 acceptance
+## screenshot is the evidence that the full layout stays in frame.
 func _build_status_banner() -> void:
 	if _status_message.is_empty():
 		return
@@ -589,10 +561,6 @@ func _ensure_port_status_bar() -> void:
 func _refresh_port_status_bar(data: Dictionary) -> void:
 	if _port_status_bar == null or not is_instance_valid(_port_status_bar):
 		return
-	# Keep the strip aligned with the themed signs on compact (960-wide) windows.
-	var margin := _port_sign_margin()
-	_port_status_bar.offset_left = margin
-	_port_status_bar.offset_right = -margin
 	var content := _port_status_bar.get_node_or_null("Content") as HBoxContainer
 	if content == null:
 		return
@@ -1084,19 +1052,17 @@ func _layout_port_hotspots() -> void:
 	_layout_sign_column(left, false, top_safe, bottom_safe, layer_size)
 	_layout_sign_column(right, true, top_safe, bottom_safe, layer_size)
 	# Permanent voyage sign pinned to the bottom of the right column.
-	var voyage_size := _port_sign_size()
 	var voyage_sign := _port_sign(
 		"%s ▶" % _tr("ui.nav.voyage", "Voyage"),
 		_on_port_hotspot.bind("voyage"),
 		true,
 		"voyage",
-		-1,
-		_compact_chrome_layout()
+		-1
 	)
 	voyage_sign.name = "Hotspot_voyage"
 	voyage_sign.position = Vector2(
-		layer_size.x - _port_sign_margin() - voyage_size.x,
-		bottom_safe - voyage_size.y
+		layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH,
+		bottom_safe - PORT_SIGN_HEIGHT
 	)
 	_port_hotspot_layer.add_child(voyage_sign)
 
@@ -1105,18 +1071,17 @@ func _layout_sign_column(entries: Array, right_column: bool, top_safe: float, bo
 	var count := entries.size()
 	if count == 0:
 		return
-	var sign_size := _port_sign_size()
 	var area_top := top_safe + 8.0
 	var area_bottom := bottom_safe - 8.0
 	if right_column:
 		# Keep the pinned voyage sign out of the facility stack.
-		area_bottom -= sign_size.y + PORT_SIGN_GAP
-	var total := count * sign_size.y + (count - 1) * PORT_SIGN_GAP
+		area_bottom -= PORT_SIGN_HEIGHT + PORT_SIGN_GAP
+	var total := count * PORT_SIGN_HEIGHT + (count - 1) * PORT_SIGN_GAP
 	var start := area_top + maxf(0.0, (area_bottom - area_top - total) * 0.5)
 	var x := (
-		layer_size.x - _port_sign_margin() - sign_size.x
+		layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH
 		if right_column
-		else _port_sign_margin()
+		else PORT_SIGN_MARGIN
 	)
 	for index in count:
 		var facility := String(entries[index]["facility"])
@@ -1125,42 +1090,18 @@ func _layout_sign_column(entries: Array, right_column: bool, top_safe: float, bo
 			if right_column
 			else "%s ▶" % _facility_sign_name(facility)
 		)
-		var button := _port_sign(label, _on_port_hotspot.bind(facility), false, facility, 1 if right_column else -1, _compact_chrome_layout())
+		var button := _port_sign(label, _on_port_hotspot.bind(facility), false, facility, 1 if right_column else -1)
 		button.name = "Hotspot_%s" % facility
-		button.position = Vector2(x, start + index * (sign_size.y + PORT_SIGN_GAP))
+		button.position = Vector2(x, start + index * (PORT_SIGN_HEIGHT + PORT_SIGN_GAP))
 		_port_hotspot_layer.add_child(button)
-
-
-## Plate size for the current window: 148×38 on 960-wide layouts, 172×42 at the
-## 1440-wide reference size.
-func _port_sign_size() -> Vector2:
-	if DisplayServer.get_name() == "headless":
-		return Vector2(PORT_SIGN_WIDTH, PORT_SIGN_HEIGHT)
-	return _port_sign_size_for_width(get_viewport_rect().size.x)
-
-
-func _port_sign_size_for_width(width: float) -> Vector2:
-	if _compact_chrome_for_width(width):
-		return Vector2(PORT_SIGN_WIDTH_COMPACT, PORT_SIGN_HEIGHT_COMPACT)
-	return Vector2(PORT_SIGN_WIDTH, PORT_SIGN_HEIGHT)
-
-
-func _port_sign_margin() -> float:
-	if DisplayServer.get_name() == "headless":
-		return PORT_SIGN_MARGIN
-	return _port_sign_margin_for_width(get_viewport_rect().size.x)
-
-
-func _port_sign_margin_for_width(width: float) -> float:
-	return PORT_SIGN_MARGIN_COMPACT if _compact_chrome_for_width(width) else PORT_SIGN_MARGIN
 
 
 ## One fixed signboard at the scene edge: themed wood/iron/brass plate with a
 ## painted facility emblem, a real arrow triangle pointing into the scene and a
 ## brass hover halo. Falls back to the plain themed button if the component is
 ## unavailable, so the stage never loses its navigation.
-func _port_sign(text: String, callback: Callable, primary: bool, facility: String = "", arrow: int = -1, compact: bool = false) -> Button:
-	var sign_size := _port_sign_size()
+func _port_sign(text: String, callback: Callable, primary: bool, facility: String = "", arrow: int = -1) -> Button:
+	var sign_size := Vector2(PORT_SIGN_WIDTH, PORT_SIGN_HEIGHT)
 	var button: Button
 	if HARBOR_SIGN_SCRIPT != null:
 		button = HARBOR_SIGN_SCRIPT.new()
@@ -1171,7 +1112,7 @@ func _port_sign(text: String, callback: Callable, primary: bool, facility: Strin
 	button.custom_minimum_size = sign_size
 	button.size = sign_size
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	button.add_theme_font_size_override("font_size", 13 if compact else 14)
+	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_hover_color", COLOR_BRASS)
 	button.tooltip_text = _tr("ui.hint.port_hotspot", "Open this facility")
 	if button.get_signal_connection_list("pressed").is_empty():

@@ -860,10 +860,7 @@ func test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void:
 	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
 	assert_false(port.has_backdrop(), "the painted-backdrop fixture has no banner")
 	var town_layers := port.painted_backdrop_layer_count()
-	assert_true(
-		town_layers >= 2 and town_layers <= 3,
-		"the no-banner town stage paints 2..3 far backdrop layers: %d" % town_layers
-	)
+	assert_eq(town_layers, 3, "the no-banner town stage paints exactly 3 far backdrop layers")
 	assert_eq(port.skyline_building_count(), 0, "the mounted town kit still suppresses the L2 row")
 
 	# No banner + no town: the L2 silhouette row returns and the painted layers

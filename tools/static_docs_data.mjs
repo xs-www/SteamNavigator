@@ -890,8 +890,8 @@ export const FILE_DOCS = {
       "主界面默认 `_overview_stage_mode=true`：全窗 3D 港口舞台是主视图，2D 详细总览收进 `_overview_detail` 抽屉（默认关闭）；两者都只是 UI 会话状态，不写存档。",
       "紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 7 个导航按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。",
       "HUD 图标：`_stat_chip(..., icon_key)` 在标签左侧挂 22 px `TextureRect`；`_hud_icon()` 经 `AssetService.find_key()` 把 `icon.money/coal/water` 解析到任一内容包并缓存 `Texture2D`，缺 key/缺文件时退回纯文字 chip。金币在顶部 chrome，煤炭/淡水同时在顶部与底部状态条。",
-      "窗口适配：`_compact_chrome_for_width(width)` 以 1180 为阈值；窄逻辑宽度下隐藏品牌副标/状态/版本与剩余载重·货舱 chip、压缩导航按钮与招牌；headless 测试用 100×100 假视口，`_compact_chrome_layout()` 显式返回 false 保持 1440 参考布局。工程为 `canvas_items + expand`：960×540 窗口映射到 1600×900 逻辑视口，因此 960 截图是缩放后的完整布局。",
-      "设施招牌由 `SNHarborSign`（`sn_harbor_sign.gd`）承载：`_port_sign()` 调 `configure(text, primary, facility, arrow)` 写木板/铁框/黄铜铆钉/徽记/箭头/悬停光晕，`Button` 语义与 `text`/tooltip 保留；`_port_sign_size_for_width()` / `_port_sign_margin_for_width()` 给 1440 参考 172×42/margin 20、窄窗口 148×38/margin 14。",
+      "窗口适配：工程为 `canvas_items` 拉伸（1440×900 基准）+ `expand` 宽高比，真实窗口的逻辑宽度恒 ≥1440（960×540 → 1600×900），因此 HUD 与招牌按同一份完整布局整体缩放，不设删信息/缩控件的 compact 分支；960×540 截图验证缩放后不裁切。",
+      "设施招牌由 `SNHarborSign`（`sn_harbor_sign.gd`）承载：`_port_sign()` 调 `configure(text, primary, facility, arrow)` 写木板/铁框/黄铜铆钉/徽记/箭头/悬停光晕，`Button` 语义与 `text`/tooltip 保留；招牌固定 172×42、边距 20。",
       "main.tscn 静态声明背景、菜单遮罩、滚动内容根、页脚、音频与 TransitionLayer；main.gd 通过 @onready 绑定，不再在运行时创建固定外壳。",
       "已迁移页面由 PackedScene 实例化：Shell 负责查询并调用 bind，页面只发 command_requested/navigation_requested/action_requested 意图，不接触 AppContext。",
       "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
@@ -932,7 +932,7 @@ export const FILE_DOCS = {
       "舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。",
       "`_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。",
       "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。",
-      "两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；参考规格 172×42 / margin 20，窄窗口 148×38 / margin 14，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「出航 ▶」招牌（`Hotspot_voyage`）。",
+      "两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；规格 172×42 / margin 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「出航 ▶」招牌（`Hotspot_voyage`）。",
       "招牌控件是 `SNHarborSign`（自绘木板/铁框/黄铜铆钉/设施徽记/箭头/悬停光晕），`text` 与 `Button` 语义保留；`_port_sign()` 兼容组件缺失时回退普通 Ghost Button。",
       "招牌布局避让紧凑 chrome 与底部状态条：`_port_hud_top_safe()` 取 `_top_chrome` 底边、`_port_hud_bottom_safe()` 取状态条顶边；`_refresh_port_hotspots_soon()` 做两次 deferred（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。",
       "底部状态条（`_port_status_bar`，`PORT_STATUS_BAR_HEIGHT=60`）只在 overview 显示：耐久/货舱/煤/水/受损模块 + 最新通告（沿用 `_notice_text` 模板填充）+「详细总览/返回主界面」+ 出航 + 等待 12 小时（`port.wait`）；显示时隐藏 footer 并增大 `PageMargin` 底部预留。",
@@ -942,12 +942,11 @@ export const FILE_DOCS = {
     l2: {
       "_build_top_chrome(app, data, show_nav)": [
         "一个半透明 `PanelContainer`（`_chrome_style()`：深青 0.84 + 黄铜底边）内放两行 `HBoxContainer`：第一行品牌/状态徽标/版本 + 港口·时间·金钱·声望 chip（金币带可选图标）+ 阶段切换（overview 且场景可用时才出现，「2D 总览/俯瞰港口」）+ 诊断/刷新；第二行剩余载重/货舱/煤/水/耐久/受损 chip（煤/水带图标）+ 7 个导航按钮。",
-        "`compact = _compact_chrome_layout()` 时隐藏品牌副标/状态/版本与剩余载重·货舱 chip、收紧行距/间距、导航 52×34/字号 12；`show_nav=false`（在航）时不挂导航；最小高度由 chip 字号与 panel margin 决定，`test_ui_shell` 断言 ≤130 px。每个页面共用同一份 chrome。"
+        "`show_nav=false`（在航）时不挂导航；最小高度由 chip 字号与 panel margin 决定，`test_ui_shell` 断言 ≤130 px。每个页面共用同一份 chrome，960×540 窗口由 canvas 拉伸整体缩放。"
       ],
-      "_stat_chip() / _hud_icon() / _compact_chrome_layout()": [
+      "_stat_chip() / _hud_icon()": [
         "`_stat_chip(label, value, accent, label_size, value_size, icon_key)`：有图标时在文字列左侧加 22 px `TextureRect`（KEEP_ASPECT_CENTERED、不吃鼠标），否则只输出两行 Label。",
-        "`_hud_icon(key)`：`AssetService.find_key(key)` → `has()` 校验 → `load_texture()`，结果（含 null）按 key 缓存；资产冻结后无需失效。",
-        "`_compact_chrome_for_width(width)` 是纯函数（阈值 1180），`_compact_chrome_layout()` 对 headless 假视口返回 false、否则读 `get_viewport_rect().size.x`；`_port_sign_size_for_width()` / `_port_sign_margin_for_width()` 复用同一阈值。"
+        "`_hud_icon(key)`：`AssetService.find_key(key)` → `has()` 校验 → `load_texture()`，结果（含 null）按 key 缓存；资产冻结后无需失效。"
       ],
       "_set_port_status_bar_visible(visible, data) / _refresh_port_status_bar(data)": [
         "状态条懒创建为全窗底部锚定的 `PanelContainer`（高 60、左右 20 边距、位于 fade 之下），只在 overview 显示；显示时隐藏 footer，并把 `PageMargin` 底部 margin 从 56 提到 84，避免遮住页面最后一行。",
@@ -2140,8 +2139,8 @@ export const FILE_DOCS = {
       "组件按路径 preload，不依赖编辑器全局类缓存。",
       "`test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 7 个导航按钮、诊断/刷新按钮全部保留。",
       "HUD 图标：`AssetService.find_key(\"icon.money\")` / coal / water 均能解析且 `has()` 为真；chrome 里至少 3 个 `TextureRect` 且每个都有已加载纹理（缺资产时页面应退化为纯文字，不产生空纹理节点）。",
-      "紧凑布局 helper：`_compact_chrome_for_width(960/1179)` 为 true、1440 为 false；`_port_sign_size_for_width(960)` == 148×38、1440 == 172×42；`_port_sign_margin_for_width` 14/20。headless 假视口保持参考布局，所以上一组 1440 尺寸断言不变。",
-      "招牌组件：present 设施的 Button 必须 `has_method(\"configure\")`（SNHarborSign），`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。",
+      "窗口缩放说明：`canvas_items + expand` 把 960×540 窗口映射为缩放后的 1600×900 逻辑画布，因此 chrome 保留全部 chip（含剩余载重/货舱），不设 compact 分支；960×540 验收截图是这条布局的证据。",
+      "招牌组件：present 设施的 Button 必须 `has_method(\"configure\")`（SNHarborSign）、`custom_minimum_size == 172×42`，`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。",
       "同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_voyage` 固定在右下）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market；切到市场后紧凑 chrome 仍在、舞台/状态条隐藏。",
       "`test_overview_stage_falls_back_to_the_usable_2d_overview`：调 `_on_port_stage_fallback` 后 `_port_stage_load_failed` 记忆、stage 模式关闭、2D 地图挂载、显示 `ui.error.port_stage_unavailable`、导航仍可用。",
       "`test_overview_status_strip_and_detail_drawer`：底部状态条可见且最小高度 ≤72，含耐久/货舱/受损/最新通告与「详细总览/出航/等待 12 小时」；打开抽屉后地图与 `ui.victory.plan_title` 出现、舞台未销毁、backdrop 显示、招牌隐藏；返回主界面后抽屉关闭；点等待按钮让 `GameState.now()` +12 h；切到 intel 时状态条隐藏、返回总览恢复、点出航进入 voyage 页。"

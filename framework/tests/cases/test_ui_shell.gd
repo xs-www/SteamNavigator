@@ -617,16 +617,10 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	for icon_node in hud_icons:
 		assert_not_null((icon_node as TextureRect).texture, "every HUD icon node has a loaded texture")
 
-	# Compact (960-wide) layout helpers: narrower sign plates and tighter edge
-	# margins. Headless keeps the 1440-wide reference layout (the dummy viewport is
-	# 100x100), so the assertions above stay deterministic.
-	assert_true(shell._compact_chrome_for_width(960.0), "960-wide windows take the compact chrome")
-	assert_true(shell._compact_chrome_for_width(1179.0), "widths under the threshold are compact")
-	assert_false(shell._compact_chrome_for_width(1440.0), "the 1440-wide reference layout is not compact")
-	assert_eq(shell._port_sign_size_for_width(960.0), Vector2(148.0, 38.0), "compact sign plates are 148x38")
-	assert_eq(shell._port_sign_size_for_width(1440.0), Vector2(172.0, 42.0), "reference sign plates are 172x42")
-	assert_almost_eq(shell._port_sign_margin_for_width(960.0), 14.0, 0.001, "compact signs sit 14 px from the edge")
-	assert_almost_eq(shell._port_sign_margin_for_width(1440.0), 20.0, 0.001, "reference signs sit 20 px from the edge")
+	# Window scaling: `canvas_items + expand` maps a 960x540 window to a scaled
+	# 1600x900 logical canvas, so the full-density HUD (including the capacity
+	# chips asserted above) is kept instead of dropping to a compact branch. The
+	# 960x540 acceptance screenshot is the evidence for that layout.
 
 	# Edge signboards: fixed left/right columns, one per present facility plus
 	# the permanent voyage sign. Positions come from the camera projection, but
@@ -650,6 +644,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 				var normalized: Vector2 = port_stage.facility_screen_anchor(String(facility))
 				var button := sign as Button
 				assert_true(button.has_method("configure"), "the %s sign uses the themed harbour-sign component" % facility)
+				assert_eq(button.custom_minimum_size, Vector2(172.0, 42.0), "the %s sign keeps the 172x42 plate" % facility)
 				if button.has_method("configure"):
 					assert_eq(int(button.get("arrow_direction")), -1 if normalized.x < 0.5 else 1, "the %s sign arrow points into the scene" % facility)
 				if normalized.x < 0.5:
