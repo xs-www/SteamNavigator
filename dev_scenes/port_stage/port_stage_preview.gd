@@ -134,3 +134,100 @@ func _print_state(variant_name: String) -> void:
 		var screen_pos: Vector2 = stage.facility_screen_anchor(String(facility))
 		screen.append("%s=(%.3f, %.3f)" % [String(facility), screen_pos.x, screen_pos.y])
 	print("[PortStagePreview] screen anchors: " + ", ".join(screen))
+	_print_scene_fill(stage)
+
+
+func _print_scene_fill(stage: Node) -> void:
+	if not stage.has_method("foreground_frame"):
+		return
+	print("[PortStagePreview] fill: particles=%d fog_layers=%d skyline_buildings=%d skyline_cranes=%d" % [
+		int(stage.atmosphere_particle_systems()),
+		int(stage.atmosphere_layers()),
+		int(stage.skyline_building_count()),
+		int(stage.skyline_crane_count()),
+	])
+	var frame: Node3D = stage.foreground_frame()
+	var camera: Camera3D = stage.get_node_or_null("StageCamera") as Camera3D
+	if frame == null or camera == null:
+		return
+	var viewport_size: Vector2 = camera.get_viewport().get_visible_rect().size
+	var min_uv := Vector2(1.0, 1.0)
+	var max_uv := Vector2(0.0, 0.0)
+	for child in frame.get_children():
+		if not (child is MeshInstance3D) or (child as MeshInstance3D).mesh == null:
+			continue
+		var mesh_instance := child as MeshInstance3D
+		var box: AABB = mesh_instance.mesh.get_aabb()
+		for index in 8:
+			var corner := box.position + Vector3(
+				box.size.x if index & 1 else 0.0,
+				box.size.y if index & 2 else 0.0,
+				box.size.z if index & 4 else 0.0
+			)
+			var projected := camera.unproject_position(mesh_instance.global_transform * corner)
+			var uv := Vector2(projected.x / viewport_size.x, projected.y / viewport_size.y)
+			min_uv = min_uv.min(uv)
+			max_uv = max_uv.max(uv)
+	print("[PortStagePreview] foreground frame screen uv: min=(%.3f, %.3f) max=(%.3f, %.3f)" % [
+		min_uv.x, min_uv.y, max_uv.x, max_uv.y
+	])
+	var budget := {"meshes": 0, "tris": 0, "particles": 0}
+	_count_meshes(stage, budget)
+	print("[PortStagePreview] budget: draw_meshes=%d particles=%d tris=%d" % [
+		int(budget["meshes"]), int(budget["particles"]), int(budget["tris"])
+	])
+	var breakdown: Array[String] = []
+	for child in stage.get_children():
+		var count := _count_meshes(child, {"meshes": 0, "tris": 0, "particles": 0})
+		if count > 0:
+			breakdown.append("%s=%d" % [String(child.name), count])
+	print("[PortStagePreview] mesh breakdown: " + ", ".join(breakdown))
+	var sky_root := stage.get_node_or_null("FallbackBackdrop")
+	if sky_root != null:
+		for child in sky_root.get_children():
+			if child is MeshInstance3D:
+				var mesh_instance := child as MeshInstance3D
+				var material := mesh_instance.material_override as StandardMaterial3D
+				var size_text := ""
+				if mesh_instance.mesh is QuadMesh:
+					size_text = str((mesh_instance.mesh as QuadMesh).size)
+				var center_uv := camera.unproject_position(mesh_instance.global_position)
+				print("[PortStagePreview] fallback child %s visible=%s size=%s bb=%s uv=(%.3f, %.3f)" % [
+					String(mesh_instance.name), str(mesh_instance.visible), size_text,
+					str(int(material.billboard_mode)) if material != null else "?",
+					center_uv.x / viewport_size.x, center_uv.y / viewport_size.y
+				])
+
+
+func _count_meshes(node: Node, budget: Dictionary) -> int:
+	var count := 0
+	if node is MultiMeshInstance3D:
+		var multi_instance := node as MultiMeshInstance3D
+		count += 1
+		budget["meshes"] = int(budget["meshes"]) + 1
+		var multi := multi_instance.multimesh
+		if multi != null and multi.mesh != null:
+			budget["tris"] = int(budget["tris"]) + _mesh_triangles(multi.mesh) * multi.instance_count
+	elif node is GPUParticles3D:
+		budget["particles"] = int(budget["particles"]) + 1
+	elif node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		count += 1
+		budget["meshes"] = int(budget["meshes"]) + 1
+		budget["tris"] = int(budget["tris"]) + _mesh_triangles((node as MeshInstance3D).mesh)
+	for child in node.get_children():
+		count += _count_meshes(child, budget)
+	return count
+
+
+func _mesh_triangles(mesh: Mesh) -> int:
+	var total := 0
+	for surface in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(surface)
+		var indices: Variant = arrays[Mesh.ARRAY_INDEX]
+		if indices is PackedInt32Array and (indices as PackedInt32Array).size() > 0:
+			total += int((indices as PackedInt32Array).size() / 3)
+		else:
+			var vertices: Variant = arrays[Mesh.ARRAY_VERTEX]
+			if vertices is PackedVector3Array:
+				total += int((vertices as PackedVector3Array).size() / 3)
+	return total

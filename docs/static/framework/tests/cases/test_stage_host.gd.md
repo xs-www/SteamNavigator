@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_stage_host.gd`
 
-> 作用：2.5D 舞台基础设施契约测试（9 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。
+> 作用：2.5D 舞台契约测试（13 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal，以及 PortStage 场景填充的 5 个只读访问器。
 
 - 类型：GDScript 源文件
 
@@ -17,6 +17,10 @@
 | `test_port_stage_uses_facility_visual_models_and_falls_back_on_missing_files() -> void` | L305 |
 | `test_port_stage_scales_facility_anchors_with_port_size() -> void` | L325 |
 | `test_port_stage_mounts_the_player_hull_and_requests_portals() -> void` | L353 |
+| `test_port_stage_scene_fill_builds_procedural_skyline_without_banner() -> void` | L382 |
+| `test_port_stage_skyline_counts_scale_with_port_size() -> void` | L407 |
+| `test_port_stage_banner_replaces_skyline_but_keeps_frame_and_atmosphere() -> void` | L442 |
+| `test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void` | L468 |
 
 ## 契约与约束
 
@@ -28,5 +32,8 @@
 - SNShipStage3D 适配器：`_ready` 自动挂船厂舞台；`ship_view_update` 转发 `hull_model_path`；`ship_view_set_mode(1/0)` 隐藏/显示；`ship_view_highlight` 可调用。
 - PortStage 四组：present 设施才有锚点/热点且缺席只 filler（缺省 billboard / missing）；`facility_visuals` GLB 替换与非法路径回退 billboard；`size` 0.9/1.15 缩放锚点；`hull_model_path` 挂玩家船 + `request_portal` 经 host 转发。
 - PortStage 投影锚点断言有限值，缺席设施投影返回 `Vector2.ZERO`；`has_backdrop()` 在无 banner 时为 false。
+- 场景填充访问器（无 banner、medium）：`foreground_frame()` 非空、`atmosphere_particle_systems()` ∈ 1..3、`atmosphere_layers()>=1`、`skyline_building_count()==10`、`skyline_crane_count()` ∈ 2..3、`has_backdrop()==false`。
+- size 缩放：small/medium/large 三次 bind 分别断言 `skyline_building_count()` 为 7/10/13，large 吊机 ≤3；铁港 banner 绑定后 `has_backdrop()==true`、L2 建筑/吊机归零，L6/L7 仍存在；去掉 banner 后 L2 恢复为 10。
+- 隐藏/显示宿主：`set_stage_visible(false/true)` 往返后访问器返回同一前景框节点，粒子/雾带/建筑/吊机计数保持稳定。
 
 模块索引：[framework/tests](../README.md)

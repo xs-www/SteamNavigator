@@ -1,8 +1,8 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T21:18:48.235Z",
-  "commit": "8df6b66",
+  "generated_at": "2026-10-19T21:50:22.750Z",
+  "commit": "0799b28",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "6b38efe274d2b9c9a78d21c63ec41b90000df5b378cad05b7956a2361d403ebe",
+      "sha256": "f391f704ee0dbf190c2ef2216bcd27c3e049f8402b5164c5747ab216a5fd591e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1235,7 +1235,7 @@
     },
     {
       "source": "dev_scenes/port_stage/port_stage_preview.gd",
-      "sha256": "abe2f8cac12a7dddb82d4f2c1e570e0bdd4dda0ef6ba0dc837246905fd9db0bc",
+      "sha256": "156fcb81d762c26e0e1952119e2e970844c2fe2f5d7f81827f5bcd6446dc6993",
       "doc": "docs/static/dev_scenes/port_stage/port_stage_preview.gd.md",
       "status": "documented"
     },
@@ -1953,7 +1953,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "487cb7a70995814172dcbcb31837b031c0f7a42aa1dc41147cf4df8c59561d19",
+      "sha256": "0cc9403ed1db7bb0cfdf44c8bed5a9bcfe01d3c913f236fa3d1e507aeebd5e43",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -2434,7 +2434,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "411a59451105f53f20c7e09c4d8485360bbc7b864b0f23477c14465536ea4936",
+      "sha256": "b67ac599ddee355da808985675879fe10ab4fc461f9799813642de1c2410c270",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -2736,7 +2736,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "588ffe8f855d6a658d34b7a8c5af547cdc58b4a80eae76e481e393675876fc99",
+      "sha256": "78319e74a11937529c922621d3552be0a47bc53f5505ea0a7344f5b0939f2f78",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3252,7 +3252,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "4376fcf8a9dbb44f54fe947af337ff04f97e59b6765712a0ad9ff127f7225556",
+      "sha256": "233f24f2c873722b7f050f0cb27c333d25a2deca3cb5051949e41fb1cb5943a1",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

@@ -372,3 +372,129 @@ func test_port_stage_mounts_the_player_hull_and_requests_portals() -> void:
 	assert_eq(portals.size(), 1, "request_portal is re-emitted by the host")
 	assert_eq(portals[0], "exchange", "the portal target is the requested facility")
 	_free_host(host)
+
+
+# --- 7. PortStage scene fill (L0/L1/L2/L6/L7) --------------------------------
+
+const IRON_HARBOR_BANNER := "res://dev_mods/core/assets/ports/iron_harbor_banner.png"
+
+
+func test_port_stage_scene_fill_builds_procedural_skyline_without_banner() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	assert_false(port.has_backdrop(), "the banner-less fixture uses the procedural fallback, not L1")
+	assert_not_null(port.foreground_frame(), "the L6 foreground frame is always mounted")
+	var particle_systems := port.atmosphere_particle_systems()
+	assert_true(
+		particle_systems >= 1 and particle_systems <= 3,
+		"the L7 atmosphere mounts 1..3 particle systems: %d" % particle_systems
+	)
+	assert_true(port.atmosphere_layers() >= 1, "the L7 atmosphere mounts at least one fog layer")
+	assert_eq(port.skyline_building_count(), 10, "medium ports draw 10 L2 skyline buildings")
+	var cranes := port.skyline_crane_count()
+	assert_true(cranes >= 2 and cranes <= 3, "the L2 skyline draws 2..3 cranes: %d" % cranes)
+	_free_host(host)
+
+
+func test_port_stage_skyline_counts_scale_with_port_size() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("small", PORT_FACILITIES))
+	var small_buildings := port.skyline_building_count()
+	var small_cranes := port.skyline_crane_count()
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	var medium_buildings := port.skyline_building_count()
+	var medium_cranes := port.skyline_crane_count()
+	host.bind_view_model(_port_view("large", PORT_FACILITIES))
+	var large_buildings := port.skyline_building_count()
+	var large_cranes := port.skyline_crane_count()
+
+	assert_eq(small_buildings, 7, "small ports draw 7 L2 skyline buildings")
+	assert_eq(medium_buildings, 10, "medium ports draw 10 L2 skyline buildings")
+	assert_eq(large_buildings, 13, "large ports draw 13 L2 skyline buildings")
+	assert_true(
+		small_buildings < medium_buildings and medium_buildings < large_buildings,
+		"the L2 building budget grows with port size: %d/%d/%d" % [small_buildings, medium_buildings, large_buildings]
+	)
+	assert_true(
+		small_cranes <= medium_cranes and medium_cranes <= large_cranes,
+		"the L2 crane budget never shrinks with port size: %d/%d/%d" % [small_cranes, medium_cranes, large_cranes]
+	)
+	assert_true(large_cranes <= 3, "the crane count stays within the L2 budget: %d" % large_cranes)
+	_free_host(host)
+
+
+func test_port_stage_banner_replaces_skyline_but_keeps_frame_and_atmosphere() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"banner_path": IRON_HARBOR_BANNER}))
+	assert_true(port.has_backdrop(), "the authored harbour banner loads as the L1 backdrop")
+	assert_eq(port.loaded_banner_path(), IRON_HARBOR_BANNER, "the loaded backdrop path is reported")
+	assert_eq(port.skyline_building_count(), 0, "a painted L1 banner replaces the L2 skyline")
+	assert_eq(port.skyline_crane_count(), 0, "no L2 cranes are drawn over a painted banner")
+	assert_not_null(port.foreground_frame(), "the L6 frame stays in front of the painted backdrop")
+	var particle_systems := port.atmosphere_particle_systems()
+	assert_true(particle_systems >= 1, "the L7 atmosphere stays active over a banner: %d" % particle_systems)
+	assert_true(port.atmosphere_layers() >= 1, "at least one L7 fog layer stays over a banner")
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	assert_false(port.has_backdrop(), "binding without a banner drops the L1 backdrop")
+	assert_eq(port.skyline_building_count(), 10, "the L2 skyline returns when the banner is gone")
+	_free_host(host)
+
+
+func test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	var frame := port.foreground_frame()
+	var particle_systems := port.atmosphere_particle_systems()
+	var fog_layers := port.atmosphere_layers()
+	var buildings := port.skyline_building_count()
+	var cranes := port.skyline_crane_count()
+
+	host.set_stage_visible(false)
+	assert_false(host.is_stage_visible(), "the host is hidden")
+	assert_true(is_instance_valid(frame), "the L6 frame node stays valid while the stage is hidden")
+	assert_eq(port.foreground_frame(), frame, "the L6 accessor still returns the frame while hidden")
+	assert_eq(port.atmosphere_particle_systems(), particle_systems, "the L7 particle count is stable while hidden")
+	assert_eq(port.atmosphere_layers(), fog_layers, "the L7 fog layer count is stable while hidden")
+	assert_eq(port.skyline_building_count(), buildings, "the L2 building count is stable while hidden")
+	assert_eq(port.skyline_crane_count(), cranes, "the L2 crane count is stable while hidden")
+
+	host.set_stage_visible(true)
+	assert_true(host.is_stage_visible(), "the host is shown again")
+	assert_eq(port.foreground_frame(), frame, "the L6 frame survives the visibility round-trip")
+	assert_eq(port.atmosphere_particle_systems(), particle_systems, "the L7 particle count survives the visibility round-trip")
+	assert_eq(port.atmosphere_layers(), fog_layers, "the L7 fog layer count survives the visibility round-trip")
+	assert_eq(port.skyline_building_count(), buildings, "the L2 building count survives the visibility round-trip")
+	_free_host(host)

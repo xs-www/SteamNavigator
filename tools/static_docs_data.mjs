@@ -1344,17 +1344,22 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/stages/port_stage.gd": {
-    role: "固定 3/4 长焦港口舞台骨架：`_ready` 一次建静态层（天空/雾/灯光/双层水面/桩基码头/岸线底座/兜底 sky card/相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 确定性岸线剪影（仅无 banner）、L3 设施（`facility_visuals` GLB 或程序化 billboard + 空槽货堆）、L5 玩家船随波。",
+    role: "固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner）、L3 设施、L5 玩家船、L7 雾带；全程序化、无外部新贴图。",
     dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
     contracts: [
       "bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` 也可放在根层。",
       "`bind()` 幂等：先按 `str(port) + str(ship) + str(root facility_visuals)` 计算签名，相同则直接返回；`enter(payload)` 的 payload 仅在 bind 收到不含 port/ship/facility_visuals 的数据时兜底。",
       "设施顺序固定 `FACILITY_ORDER`（exchange/contracts/supply/intel/shipyard）；present 的设施才有锚点与热点，缺席只放程序化货堆 filler（`filler_count()`），`facility_visual_kind()` 返回 model/billboard/missing。",
       "`facility_visuals` 值可为 String 或 Array[String]：能 `ResourceLoader` 加载的按 PackedScene 实例化，否则走 `ContentAssetLoader.instantiate_model()`；路径缺失/实例化失败回退程序化 billboard。",
-      "L1 banner：`port.banner_path` 缺失或贴图加载失败时**不放黑盒**：兜底层由 `SkyCard`（黄昏渐变卡片）+ `ShoreShelf` + L2 剪影组成；贴图加载成功才挂 banner，并隐藏兜底层。`has_backdrop()` / `loaded_banner_path()` 报告实际加载结果。",
-      "L2 岸线：仅在无 banner 时生成 **9 栋剪影 + 2 台吊机**（部分建筑带斜屋顶/烟囱，无发光窗），由 `port.id` 的稳定 hash 派生（`_hash01`，不用 RNG），同一港口每次绑定完全一致。",
-      "`_apply_sky_card_visibility()` 以 `use_fallback = not _has_backdrop` 统一控制 `_sky_card.visible` 与 `_shore_shelf.visible`：banner 自带天空/城市，兜底层必须隐藏，避免渐变卡片或岸线底座压住画好的画面。",
-      "码头是薄甲板桩基栈桥（不是实心箱体）：甲板前缘下方 7 根入水木桩 + 桩帽、一道纵向横梁（Waler）与甲板边梁；远景岸线底座 500×1.3×110 把镜头内的水面切边藏起来。",
+      "L1：有 `banner_path` 且贴图可加载时挂 banner 背板（albedo tint 黄昏化）并隐藏兜底层；无 banner 时 `has_backdrop()` 仍为 false，由 `FallbackBackdrop` 接管——暖霞渐变 `SkyCard` + 2 个 additive 太阳光晕，共 3 层程序化 painted backdrop，无黑盒、无外部贴图。",
+      "L2（仅无 banner）：双深度带（近带深蓝灰 / 远带暖雾）各 2 簇 + 低矮仓房连接排 + 远岸低雾带 + 灯塔剪影；MultiMesh 批量（box / 塔身 / 塔冠 3 draw），严格站 `SHORE_TOP`、unshaded、无阴影、无发光窗；建筑数 small 7 / medium 10 / large 13、吊机 2 / 2 / 3，`skyline_building_count()` / `skyline_crane_count()` 报告实际数量（有 banner 时均为 0）。",
+      "L2 实例总数 small 14 / medium 17 / large 20（建筑 + 吊机 + 仓房排/雾带/灯塔），仍在方案 L2 ≤20 预算内；small 的 7 栋低于任务描述的 8 下界，以源码为准。",
+      "`_apply_fallback_visibility()` 以 `use_fallback = not _has_backdrop` 统一控制 `FallbackBackdrop`、`ShoreShelf` 与 `ShoreSteam`：banner 自带天空/城市，兜底层必须整体隐藏；L2 剪影也只在无 banner 时生成。",
+      "L6 `foreground_frame()` 始终存在：3 根深色 unshaded 梁（吊臂 0.30 / 钢缆 0.12 / 桅杆 0.18 m）从左上角入镜，用 `_screen_point(u, v, depth)` 钉在固定 16:9 画幅；限定 u<0.24 / v<0.45，不遮挡 HUD、设施招牌与热点标签，不投阴影。",
+      "L7 大气：常驻 3 个 `GPUParticles3D`（ShipSteam / QuaySteam / ShoreSteam，16–22 粒、3.4–4.6 s、低 alpha 暖灰 + 程序化 radial `GradientTexture2D`）；雾带 billboard 有 banner 2 层 / 无 banner 3 层，`port.id` hash 决定正弦漂移相位；宿主 `process_mode` 停更时粒子与雾带一起停。",
+      "预算：全程序化、无新资产；preview ≈114 draws / 17,954 tris，sparse ≈73 / 19,228，控制在 ≤120 draws / ≤60k tris。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop（L2 是常规路径而非罕见回退）。",
+      "只读访问器：`foreground_frame()`、`atmosphere_particle_systems()`（1..3，当前固定 3）、`atmosphere_layers()`（有 banner 2 / 无 banner 3）、`skyline_building_count()`（无 banner 7/10/13，有 banner 0）、`skyline_crane_count()`（2/2/3）；`has_backdrop()` 语义仍只表示 banner。",
+      "码头是薄甲板桩基栈桥（不是实心箱体）：甲板前缘下方 7 根入水木桩 + 桩帽、纵向横梁与甲板边梁；远景岸线底座 500×1.3×110 把镜头内的水面切边藏起来。",
       "`port.size` ∈ small/medium/large → 设施组整体 0.9/1.0/1.15（`SIZE_SCALE`），只缩放设施层，不缩放船与码头。",
       "`facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。",
       "玩家船：`ship.hull_model_path` 优先，`hull_tier` 只作 dev 回退；船体在 `SHIP_SPAWN` 真尺度摆放，水面泡沫环按包围盒绑定并在 `_process` 做升沉/横摇。",
@@ -1363,25 +1368,35 @@ export const FILE_DOCS = {
     ],
     l2: {
       "_ensure_static() / _build_environment()": [
-        "静态层只建一次：sky 模式黄昏调色 + 深度雾（默认 70–450 m，低于地平线的天空半球镜像暖雾色）+ 暖 key/冷 fill 无阴影；近水 `harbor_water.tres`（600 m）与远水 `harbor_water_far.tres`（2400 m，只输出雾色）；同一 `_ready` 里建桩基码头、岸线底座、SkyCard 与相机。"
+        "静态层只建一次，顺序：材质 → 环境 → L1 兜底 → 双层水面 → 桩基码头 → 相机 → L6 前景框 → L7 粒子。环境为 sky 模式黄昏调色 + 深度雾 70–450 m + 环境光 0.6 + 暖 key(1.7)/冷 fill(0.5) 无阴影；`ProceduralSkyMaterial` 调 `sky_energy_multiplier=1.12`、`sun_angle_max=18`、`sun_curve=0.22`，让程序化天空与兜底 painted sky 同属一个暖色 grade。"
       ],
       "_apply_view_model(port, ship, root_data)": [
-        "解析 size/scale/palette/visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（无 banner 才建）→ SkyCard/岸线底座可见性 → facilities → landmark → ship 的顺序重建；静态层跨 bind 复用。"
+        "解析 size/scale/palette/visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（无 banner 才建）→ `_apply_fallback_visibility()` → `_rebuild_fog_layers()` → facilities → landmark → ship 的顺序重建；静态层与 L7 粒子跨 bind 复用。"
+      ],
+      "_add_fallback_backdrop() / _add_sky_glow()": [
+        "`FallbackBackdrop` 在 `_ready` 建一次：8×256 `GradientTexture2D` 暖霞 SkyCard（`SKY_CARD_SIZE` 340×100）+ `SunHalo`（90 m，alpha 0.12）+ `SunCore`（18 m，alpha 0.62）；太阳位置由 `_screen_point(0.70, 0.10, 118)` 钉在画幅右上。",
+        "光晕是 additive、camera-facing quad；radial 纹理只用到 72% UV 半径（fill_to 0.86），四边始终透明。有 banner 时整组 `visible=false`；无 banner 时与 L2 剪影、雾带组成 3 层 painted backdrop，避免地平线硬边。"
       ],
       "_rebuild_backdrop()": [
-        "只有 banner 贴图加载成功才建 `BACKDROP_SIZE`（260×76）的 unshaded quad 并放到 `BACKDROP_POSITION`（-70, 12, -70），albedo tint 成黄昏色调；失败直接返回，绝不创建黑色占位面。"
-      ],
-      "_add_sky_card() / _apply_sky_card_visibility()": [
-        "`SkyCard` 是 340×100 的 unshaded quad（`SKY_CARD_POSITION` -135, 25, -56），用 8×256 的 `GradientTexture2D` 画黄昏渐变，遮住远水网格与程序化天空下半球；`visible = not _has_backdrop`，不投阴影。"
+        "只有 banner 贴图加载成功才建 `BACKDROP_SIZE`（260×76）的 unshaded quad 放到 `BACKDROP_POSITION`（-70, 12, -70），albedo tint（0.72, 0.68, 0.64）成黄昏色调；失败直接返回，绝不创建黑色占位面。"
       ],
       "_rebuild_shoreline()": [
-        "`port.id.hash()` 作种子，`_hash01` 生成 9 栋建筑的宽/高/深/偏移（近/远两档蓝灰 tone）；每 3 栋一个斜屋顶、每 4 栋一根烟囱，另加 2 台吊机剪影；有 banner 时首行直接 return，不生成任何剪影。"
+        "有 banner 时首行 return。无 banner 时 `port.id.hash()` 作种子、`_hash01` 生成双深度带：约 55% 近带（深蓝灰、2 簇、仓房/屋顶/烟囱）+ 45% 远带（暖雾色、2 簇）+ 2 条低矮仓房连接排 + 2–3 条远岸低雾带 + 1–2 座灯塔。所有 box 追加到 3 个 MultiMesh（`SkylineBoxes` / `SkylineLighthouseBodies` / `SkylineLighthouseCaps`，vertex color + custom AABB），整层 3 draw、unshaded、无阴影、无发光窗；实例总数 small 14 / medium 17 / large 20（≤20 方案预算）。"
+      ],
+      "_rebuild_fog_layers()": [
+        "`FogBands` 为 bind 时重建：有 banner 2 条（u 0.50/0.72、v 0.76/0.86），无 banner 追加 1 条远景地平线雾带（u 0.50、v 0.44、depth 135）；每条是 radial alpha 的 camera-facing quad，`port.id` hash 决定漂移相位；`_process` 用 `sin(t*0.055+phase)*5 m` 缓慢横移，`_fog_layer_count` 递增。"
+      ],
+      "_add_foreground_frame()": [
+        "`ForegroundFrame` 在 `_ready` 建一次：`_add_beam()` 生成吊臂（0.30 m）/钢缆（0.12 m）/桅杆（0.18 m）3 根细构件，两端由 `_screen_point()` 的 u/v/depth 定位；材质 unshaded + 0.45 emission 暖轮廓，无阴影；位置限制在左上角（u<0.24 / v<0.45），不遮 HUD 与热点。"
+      ],
+      "_add_atmosphere() / _add_particle_system()": [
+        "3 个 GPUParticles3D 固定一次：ShipSteam（22 粒 / 4.2 s）、QuaySteam（16 / 3.4 s）、ShoreSteam（18 / 4.6 s，跟随无 banner 显隐）；ParticleProcessMaterial 球形发射、向上初速、轻重力；材质为 unshaded + billboard particles + 程序化 radial puff 贴图。"
       ],
       "_add_quay()": [
-        "薄甲板 `DOCK_SIZE`（54×0.6×12）坐在 7 根木桩（x = -24…24 步长 8，含 `PileCap`）上；另有 `DeckEdgeBeam`、纵向 `Waler`、护舷与木饰条，整体读作桩基栈桥。岸线底座 `SHORE_SIZE` 500×1.3×110 放在 `SHORE_CENTER`（0, -0.55, -65），灯柱与系缆桩同在这一步建。"
+        "码头/系缆桩/煤气灯等重复件全部走 MultiMesh（`DockPlatform`、`DockDeck`、`DockWood`、`DockPiles`、`Bollards`、`BollardCaps`、`LampPoles`、`LampGlow`、`LampCaps`）：薄甲板 `DOCK_SIZE` 54×0.6×12 + 7 根木桩（含桩帽）+ 横梁/护舷，岸线底座 `SHORE_SIZE` 500×1.3×110 放 `SHORE_CENTER`（0, -0.55, -65）。"
       ],
       "_add_camera()": [
-        "相机固定在 `CAMERA_POS`（46, 28, 64）看向 `CAMERA_TARGET`（0, 12, -8），30° 长焦、near/far 0.5/1200；换港口构图只改常量，不在运行时缩放模型。"
+        "相机固定在 `CAMERA_POS`（46, 28, 64）看向 `CAMERA_TARGET`（0, 12, -8），30° 长焦、near/far 0.5/1200；换构图只改常量，不在运行时缩放模型。"
       ],
       "_rebuild_facilities() / _build_facility_visual()": [
         "按 `FACILITY_ORDER` 建锚点组（`_facilities_root` 放在码头顶面 `DOCK_TOP`，局部位置 `SLOT_POSITIONS`）；船厂可挂两件（干船坞 + 龙门吊，`SHIPYARD_PIECE_OFFSETS`）。",
@@ -1392,6 +1407,9 @@ export const FILE_DOCS = {
       ],
       "_rebuild_ship(ship)": [
         "船体在 `SHIP_SPAWN`（-13.5, 0, 9）、`SHIP_YAW_DEG` 20° 真尺度摆放；复用 `_instantiate_visual()`，成功时按 `StageKit.visual_aabb()` 配泡沫环（覆盖 `boat_yaw` / `boat_foam_width`），失败时 `_disable_boat_foam()` 把泡沫环推到不可见处。"
+      ],
+      "_screen_point(u, v, depth) / _screen_units(...)": [
+        "用固定 FOV 与 16:9（1440/900）把归一化屏幕坐标换算成沿相机前向 `depth` 米处的世界点，供 SunHalo/SunCore、L6 前景框与 L7 雾带共用；换机位或窗口比例时这三层随画幅一起重算。"
       ]
     }
   },
@@ -2062,7 +2080,7 @@ export const FILE_DOCS = {
   },
 
   "framework/tests/cases/test_stage_host.gd": {
-    role: "2.5D 舞台基础设施契约测试（9 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
+    role: "2.5D 舞台契约测试（13 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal，以及 PortStage 场景填充的 5 个只读访问器。",
     contracts: [
       "全部是同步函数（无 await）：节点在同一步内加入 SceneTree 即同步派发 `_ready` 与 `add_child` 通知，挂载/卸载可在一步内断言；每个用例自建节点并在结尾 free，避免残留节点影响其他套件。",
       "LocationStage：裸节点 `stage_id` 为空、`has_visual()` true、`hotspot_anchors()` 空、`portal_requested` 可发。",
@@ -2071,7 +2089,10 @@ export const FILE_DOCS = {
       "ShipyardStage：真实场景可加载、根类型与 stage_id 正确；`hull_tier=1` 绑定后 `has_ship()` 且 `model_path()` 含 `SN_Paddle_Steamer`。",
       "SNShipStage3D 适配器：`_ready` 自动挂船厂舞台；`ship_view_update` 转发 `hull_model_path`；`ship_view_set_mode(1/0)` 隐藏/显示；`ship_view_highlight` 可调用。",
       "PortStage 四组：present 设施才有锚点/热点且缺席只 filler（缺省 billboard / missing）；`facility_visuals` GLB 替换与非法路径回退 billboard；`size` 0.9/1.15 缩放锚点；`hull_model_path` 挂玩家船 + `request_portal` 经 host 转发。",
-      "PortStage 投影锚点断言有限值，缺席设施投影返回 `Vector2.ZERO`；`has_backdrop()` 在无 banner 时为 false。"
+      "PortStage 投影锚点断言有限值，缺席设施投影返回 `Vector2.ZERO`；`has_backdrop()` 在无 banner 时为 false。",
+      "场景填充访问器（无 banner、medium）：`foreground_frame()` 非空、`atmosphere_particle_systems()` ∈ 1..3、`atmosphere_layers()>=1`、`skyline_building_count()==10`、`skyline_crane_count()` ∈ 2..3、`has_backdrop()==false`。",
+      "size 缩放：small/medium/large 三次 bind 分别断言 `skyline_building_count()` 为 7/10/13，large 吊机 ≤3；铁港 banner 绑定后 `has_backdrop()==true`、L2 建筑/吊机归零，L6/L7 仍存在；去掉 banner 后 L2 恢复为 10。",
+      "隐藏/显示宿主：`set_stage_visible(false/true)` 往返后访问器返回同一前景框节点，粒子/雾带/建筑/吊机计数保持稳定。"
     ]
   },
 
@@ -2150,12 +2171,13 @@ export const FILE_DOCS = {
   },
 
   "dev_scenes/port_stage/port_stage_preview.gd": {
-    role: "PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals GLB）两份样例 ViewModel。",
+    role: "PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals GLB）两份样例 ViewModel，并打印场景填充/前景框投影/预算自查。",
     dependencies: ["SNStageHost", "framework/ui/stages/port_stage.tscn"],
     contracts: [
       "`set_variant(\"preview\"|\"sparse\")` 不重挂舞台，只重新 bind 样例 payload；`current_variant()` 返回当前样例。",
-      "`sparse` 同时覆盖三条回退分支：L1 无 banner（天空 + 雾 + 剪影）、根层 `facility_visuals` GLB 替换、`hull_model_path` 为空时按 `hull_tier` 回退。",
+      "`sparse` 同时覆盖三条回退分支：L1 无 banner（painted backdrop + L2 剪影 + 3 层雾带）、根层 `facility_visuals` GLB 替换、`hull_model_path` 为空时按 `hull_tier` 回退；`preview` 走铁港 banner，L2 建筑/吊机数为 0。",
       "每个 variant 打印设施 kinds / filler 数 / backdrop / ship 与投影后的设施锚点，便于截图时核对。",
+      "`_print_scene_fill()` 只读自查：打印 particles / fog_layers / skyline_buildings / skyline_cranes、`foreground_frame()` 的屏幕 uv bbox、mesh/particle/tri 预算，以及 `FallbackBackdrop` 各子节点的可见性/尺寸与中心 uv；`_count_meshes()` / `_mesh_triangles()` 递归统计 MultiMesh / GPUParticles3D / MeshInstance3D。",
       "运行：`godot --path . res://dev_scenes/port_stage/port_stage_preview.tscn`；截图用 `tools/godot/capture_port_stage.gd`。"
     ]
   },
@@ -2444,7 +2466,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 与 test_stage_host 2.5D 舞台套件）。",
-  "framework/tests/cases": "按主题拆分的 145 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）、总览页 3D 港口舞台与 2D 设施热点、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
+  "framework/tests/cases": "按主题拆分的 149 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、总览页 3D 港口舞台与 2D 设施热点、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
   "framework/ui/stages/shipyard_stage.tscn": "船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id=\"shipyard\"`。",
   "framework/ui/stages/port_stage.tscn": "港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id=\"port\"`。",
   "dev_scenes/port_stage/port_stage_preview.tscn": "PortStage 独立预览场景：全屏 Control 挂 `port_stage_preview.gd`。",

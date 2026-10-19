@@ -8,7 +8,7 @@
 
 ## 0. 当前基线（已完成）
 
-- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，145 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
+- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，149 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
 - 内容交付：数据、模型、横幅全部随 `core` 模组发布；发布 PCK 已排除 `assets/models/*`，本体只保留框架资源。
 - 运行时加载：`ContentAssetLoader` 从模组包读原始 `.glb/.png`；船体模型由 `information.model` 资产键决定。
 - 编辑器：`dev_mods/core` 可作原生工作区直接编辑保存（删除/新增定义与内容文件会写回，资产不动）。
@@ -37,10 +37,10 @@
 
 1. **StageHost + LocationStage 泛化** ✅ **已完成**：`SNStageHost` 独占 SubViewport/World3D，驱动 `enter → bind → exit`；支持隐藏即停更、缺失场景回退 2D、`render_shrink`；`SNShipStage3D` 重写为宿主适配器，船厂舞台迁入 `ShipyardStage`。
 2. **PortStage 骨架** ✅ **已完成**：按 `facilities` 装配设施（billboard 默认，`facility_visuals` GLB 替换，缺席只放货堆 filler），L0 天空/L1 banner 背板（缺失不放黑盒）/L2 确定性岸线剪影/L3 设施/L5 玩家船已跑通；`facility_anchors()`/`facility_screen_anchor()` 已提供；独立预览 `dev_scenes/port_stage/` 与截图脚本已产出 [完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。6 件锚点 GLB 已接线 `facility_visuals`。**总览页接入已完成**：全窗 `PortStage` 背景层 + 2D 设施热点（相机投影 Ghost Button，点击进对应设施页）+ 俯瞰/返回切换 + 失败回退 2D；截图 [总览 3D 港口舞台](screenshots/overview_port_stage.png)，`test_ui_shell` 新增 1 例守护。
-3. **场景填充**（待办）：L0 天空 + L1 远景背板（先用 5 张港口 banner 烘焙）+ L2 岸线，按 2.5D 方案 §7 的层级预算细化；当前 L0–L2 只是初版，L6 前景框与 L7 蒸汽/雾未做。
+3. **场景填充** ✅ **已完成**：L0 程序化暖色天空 + 太阳光晕；L1 有 banner 用背板、无 banner 用 3 层程序化 painted backdrop（暖霞渐变 + 双光晕）；L2 双深度带 MultiMesh 剪影（小/中/大 7/10/13 栋 + 2/2/3 吊机，仅无 banner）；L6 左上角 3 根前景构件；L7 3 组蒸汽粒子 + 2–3 层雾带。全部程序化、无新资产，preview ≈114 draws / 17,954 tris、sparse ≈73 / 19,228（≤120 / ≤60k）。**注**：原计划「5 张港口 banner 烘焙」改为程序化 painted backdrop——目前内容侧只有铁港 1 张 banner，其余港口直接走兜底路径。截图 [完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。
 4. **港口差异参数**（待办）：`diorama` 块（kit/size/palette/landmark/facility_visuals）接入 `port_archetypes`，保证「设施决定建模」。
 
-验收（已完成）：总览页可切换到 3D 港口舞台，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景（145 测试全绿）。剩余项为上面的场景填充 L0–L2 细化与 diorama 参数。
+验收（已完成）：总览页可切换到 3D 港口舞台，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景；场景填充 L0–L2/L6/L7 已按层级预算完成（149 测试全绿）。剩余项仅为上面的 diorama 参数。
 
 ## 4. 中期：玩法主线（P2，阶段 1 → 2）
 

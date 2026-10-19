@@ -69,7 +69,7 @@
 | `showcase/ui_kit_showcase.gd` | 独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。 | [查看](./showcase/ui_kit_showcase.gd.md) |
 | `showcase/ui_kit_showcase.tscn` | 框架源文件：ui_kit_showcase.tscn | 本页 |
 | `stages/location_stage.gd` | 2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。 | [查看](./stages/location_stage.gd.md) |
-| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台骨架：`_ready` 一次建静态层（天空/雾/灯光/双层水面/桩基码头/岸线底座/兜底 sky card/相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 确定性岸线剪影（仅无 banner）、L3 设施（`facility_visuals` GLB 或程序化 billboard + 空槽货堆）、L5 玩家船随波。 | [查看](./stages/port_stage.gd.md) |
+| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner）、L3 设施、L5 玩家船、L7 雾带；全程序化、无外部新贴图。 | [查看](./stages/port_stage.gd.md) |
 | `stages/port_stage.tscn` | 港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id="port"`。 | 本页 |
 | `stages/shipyard_stage.gd` | 船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。 | [查看](./stages/shipyard_stage.gd.md) |
 | `stages/shipyard_stage.tscn` | 船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id="shipyard"`。 | 本页 |

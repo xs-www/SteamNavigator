@@ -114,6 +114,18 @@ const FAR_WATER_SIZE := 2400.0
 const SKY_CARD_SIZE := Vector2(340.0, 100.0)
 const SKY_CARD_POSITION := Vector3(-135.0, 25.0, -56.0)
 
+## L2 skyline instances per `port.size`: building count plus crane count. The
+## plan's L2 budget is 8-20 instances, so small/medium/large stay inside it.
+const SKYLINE_BUILDINGS_BY_SIZE := {"small": 7, "medium": 10, "large": 13}
+const SKYLINE_CRANES_BY_SIZE := {"small": 2, "medium": 2, "large": 3}
+
+## Procedural L6 foreground frame + L7 atmosphere (no external textures).
+const FOREGROUND_COLOR := Color(0.105, 0.082, 0.066)
+const FOG_BAND_COLOR := Color(0.68, 0.57, 0.45)
+const FOG_BAND_ALPHA := 0.15
+const ATMOSPHERE_PARTICLE_AMOUNT := 20
+const SKY_GLOW_COLOR := Color(1.0, 0.80, 0.50)
+
 const MATERIAL_DEFAULTS := {
 	"stone": [Color(0.15, 0.14, 0.12), 0.92, 0.0],
 	"deck": [Color(0.23, 0.16, 0.10), 0.88, 0.0],
@@ -151,6 +163,17 @@ var _loaded_banner_path := ""
 var _landmark: Node3D
 var _shore_shelf: MeshInstance3D
 var _sky_card: MeshInstance3D
+var _fallback_sky_root: Node3D
+var _foreground_frame: Node3D
+var _atmosphere_root: Node3D
+var _shore_steam: GPUParticles3D
+var _particle_count := 0
+var _fog_layer_count := 0
+var _fog_nodes: Array[MeshInstance3D] = []
+var _fog_bases: Array[Vector3] = []
+var _fog_phases: Array[float] = []
+var _skyline_building_count := 0
+var _skyline_crane_count := 0
 var _ship_root: Node3D
 var _ship_base := SHIP_SPAWN
 var _ship_yaw := deg_to_rad(SHIP_YAW_DEG)
@@ -266,16 +289,52 @@ func hotspot_anchors() -> Dictionary:
 	return facility_anchors()
 
 
+## --- Scene-fill (L0/L1/L2/L6/L7) read-only accessors -----------------------
+
+## L6 foreground frame root (2-4 dark unshaded props entering the frame edge).
+func foreground_frame() -> Node3D:
+	return _foreground_frame
+
+
+## Number of L7 smoke/steam particle systems mounted by the stage (<= 3).
+func atmosphere_particle_systems() -> int:
+	return _particle_count
+
+
+## Number of L7 low fog billboard layers mounted by the stage (<= 3).
+func atmosphere_layers() -> int:
+	return _fog_layer_count
+
+
+## L2 skyline buildings currently drawn (0 when an L1 banner is mounted).
+func skyline_building_count() -> int:
+	return _skyline_building_count
+
+
+## L2 skyline cranes currently drawn (0 when an L1 banner is mounted).
+func skyline_crane_count() -> int:
+	return _skyline_crane_count
+
+
 # --- Frame loop -------------------------------------------------------------
 
 func _process(delta: float) -> void:
 	_time += delta
-	if _ship_root == null or not is_instance_valid(_ship_root):
-		return
 	if not is_visible_in_tree():
 		return
-	_ship_root.position = _ship_base + Vector3(0.0, sin(_time * BOB_SPEED) * BOB_AMPLITUDE, 0.0)
-	_ship_root.rotation = Vector3(0.0, _ship_yaw, sin(_time * BOB_SPEED * 0.75) * 0.004)
+	if _ship_root != null and is_instance_valid(_ship_root):
+		_ship_root.position = _ship_base + Vector3(0.0, sin(_time * BOB_SPEED) * BOB_AMPLITUDE, 0.0)
+		_ship_root.rotation = Vector3(0.0, _ship_yaw, sin(_time * BOB_SPEED * 0.75) * 0.004)
+	# Fog bands drift slowly; the hash-seeded phase keeps each stage unique while
+	# the motion stays fully deterministic.
+	for index in _fog_nodes.size():
+		var fog := _fog_nodes[index]
+		if fog == null or not is_instance_valid(fog):
+			continue
+		if index >= _fog_bases.size() or index >= _fog_phases.size():
+			continue
+		var base := _fog_bases[index]
+		fog.position = base + Vector3(sin(_time * 0.055 + _fog_phases[index]) * 5.0, 0.0, 0.0)
 
 
 # --- Static construction ----------------------------------------------------
@@ -286,10 +345,12 @@ func _ensure_static() -> void:
 	_static_built = true
 	_build_materials()
 	_build_environment()
-	_add_sky_card()
+	_add_fallback_backdrop()
 	_add_water()
 	_add_quay()
 	_add_camera()
+	_add_foreground_frame()
+	_add_atmosphere()
 	_content = Node3D.new()
 	_content.name = "Content"
 	add_child(_content)
@@ -336,8 +397,17 @@ func _build_environment() -> void:
 		environment.fog_depth_begin = 70.0
 		environment.fog_depth_end = 450.0
 		environment.fog_depth_curve = 1.0
+		environment.ambient_light_energy = 0.6
+		# L0: warm the procedural sky and soften the sun so the fallback painted
+		# sky and the 3D lighting read as one dusk grade.
+		var sky := environment.sky
+		if sky != null and sky.sky_material is ProceduralSkyMaterial:
+			var sky_material := sky.sky_material as ProceduralSkyMaterial
+			sky_material.sky_energy_multiplier = 1.12
+			sky_material.sun_angle_max = 18.0
+			sky_material.sun_curve = 0.22
 	# One warm key + one cool fill; fixed stages never pay for real-time shadows.
-	StageKit.add_directional_light(self, "KeyLight", Color(1.0, 0.79, 0.55), 1.6, Vector3(-52.0, 38.0, 0.0))
+	StageKit.add_directional_light(self, "KeyLight", Color(1.0, 0.79, 0.55), 1.7, Vector3(-52.0, 38.0, 0.0))
 	StageKit.add_directional_light(self, "FillLight", Color(0.48, 0.63, 0.82), 0.5, Vector3(-26.0, -142.0, 0.0))
 
 
@@ -367,19 +437,18 @@ func _add_water() -> void:
 		far_material.set_shader_parameter("horizon_color", FOG_COLOR)
 
 
-func _add_sky_card() -> void:
-	# Dusk gradient painted onto one far quad. Acting as the fallback L1 haze, it
-	# replaces the procedural sky's ground hemisphere and hides the endless far
-	# water sheet behind the shore, so no hard horizon line ever shows.
+## L1 fallback painted backdrop (no banner): a multi-quad dusk sky — warm
+## gradient base + additive sun halo/core + a low horizon afterglow band. Every
+## texture is a procedural GradientTexture2D, so the stage needs no new assets.
+## The whole group is hidden whenever a real banner backdrop is mounted.
+func _add_fallback_backdrop() -> void:
+	_fallback_sky_root = Node3D.new()
+	_fallback_sky_root.name = "FallbackBackdrop"
+	add_child(_fallback_sky_root)
 	var gradient := Gradient.new()
 	gradient.offsets = PackedFloat32Array([0.0, 0.30, 0.55, 0.72, 1.0])
 	gradient.colors = PackedColorArray([SKY_TOP, SKY_TOP, SKY_HORIZON, FOG_COLOR, FOG_COLOR])
-	var texture := GradientTexture2D.new()
-	texture.gradient = gradient
-	texture.width = 8
-	texture.height = 256
-	texture.fill_from = Vector2(0.0, 0.0)
-	texture.fill_to = Vector2(0.0, 1.0)
+	var texture := _gradient_texture_2d(gradient, 8, 256, GradientTexture2D.FILL_LINEAR, Vector2(0.0, 0.0), Vector2(0.0, 1.0))
 	var material := StandardMaterial3D.new()
 	material.resource_name = "Port_SkyCard"
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -393,8 +462,165 @@ func _add_sky_card() -> void:
 	card.material_override = material
 	card.position = SKY_CARD_POSITION
 	card.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(card)
+	_fallback_sky_root.add_child(card)
 	_sky_card = card
+	# Sun halo + hot core, placed between the shoreline silhouettes and the
+	# gradient card so the skyline stays in front of the glow. Both quads are
+	# true soft gradients: radial alpha falls to zero on every edge.
+	var sun_pos := _screen_point(0.70, 0.10, 118.0)
+	_add_sky_glow(_fallback_sky_root, sun_pos, 90.0, Color(0.95, 0.66, 0.38), 0.12, "SunHalo")
+	_add_sky_glow(_fallback_sky_root, sun_pos, 18.0, SKY_GLOW_COLOR, 0.62, "SunCore")
+
+
+## Adds one procedural, camera-facing additive glow sprite (used for the sun).
+func _add_sky_glow(parent: Node3D, position3d: Vector3, size: float, color: Color, alpha: float, node_name: String) -> MeshInstance3D:
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.22, 0.60, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(color.r, color.g, color.b, alpha),
+		Color(color.r, color.g, color.b, alpha * 0.62),
+		Color(color.r, color.g, color.b, alpha * 0.16),
+		Color(color.r, color.g, color.b, 0.0),
+	])
+	# Fade the glow to zero well inside the quad: the texture only uses 72% of the
+	# UV radius, so the quad's straight edges are always fully transparent.
+	var texture := _gradient_texture_2d(gradient, 64, 64, GradientTexture2D.FILL_RADIAL, Vector2(0.5, 0.5), Vector2(0.86, 0.5))
+	return _add_billboard_quad(parent, Vector2(size, size), position3d, texture, Color.WHITE, BaseMaterial3D.BLEND_MODE_ADD, node_name)
+
+
+## L6 foreground frame: dark unshaded crane arm / cables entering from the
+## top-left corner. Kept above u=0.24 and v=0.45 so it never covers facility
+## signs, hotspot labels or the HUD-safe middle of the screen.
+func _add_foreground_frame() -> void:
+	_foreground_frame = Node3D.new()
+	_foreground_frame.name = "ForegroundFrame"
+	add_child(_foreground_frame)
+	var material := _make_unshaded(Color(0.095, 0.078, 0.062))
+	# Rim-light the silhouette a touch so it reads as warm iron, not black.
+	material.emission_enabled = true
+	material.emission = Color(0.17, 0.11, 0.06)
+	material.emission_energy_multiplier = 0.45
+	var arm_from := _screen_point(-0.10, -0.10, 18.0)
+	var arm_to := _screen_point(0.115, 0.170, 15.0)
+	_add_beam(_foreground_frame, arm_from, arm_to, 0.30, material, "CraneArm")
+	# A thin steel cable hangs from the arm tip; no hook block (it would read as
+	# a floating black square at this distance).
+	_add_beam(
+		_foreground_frame, arm_to, arm_to + Vector3(0.0, -1.0, 0.0), 0.12, material, "HookCable"
+	)
+	# Thin mast entering from the left edge only; keeps the frame read as a
+	# corner silhouette instead of an X across the sky.
+	var mast_from := _screen_point(-0.045, -0.05, 20.0)
+	var mast_to := _screen_point(-0.015, 0.40, 18.0)
+	_add_beam(_foreground_frame, mast_from, mast_to, 0.18, material, "Mast")
+
+
+## L7 atmosphere: two small smoke/steam particle systems (ship funnel + quay
+## vent). Both stop updating with the stage when the host disables processing.
+func _add_atmosphere() -> void:
+	_atmosphere_root = Node3D.new()
+	_atmosphere_root.name = "Atmosphere"
+	add_child(_atmosphere_root)
+	_add_particle_system(
+		_atmosphere_root, Vector3(-16.0, 12.0, 4.0), 22, 4.2, 2.2,
+		Color(0.82, 0.78, 0.70, 0.40), 1.1, 2.0, "ShipSteam"
+	)
+	_add_particle_system(
+		_atmosphere_root, Vector3(22.0, 4.2, -2.0), 16, 3.4, 1.3,
+		Color(0.80, 0.76, 0.68, 0.34), 0.7, 1.4, "QuaySteam"
+	)
+	_add_particle_system(
+		_atmosphere_root, Vector3(-24.0, 9.0, -34.0), 18, 4.6, 2.5,
+		Color(0.82, 0.78, 0.70, 0.36), 0.9, 1.7, "ShoreSteam"
+	)
+	_shore_steam = _atmosphere_root.get_node_or_null("ShoreSteam") as GPUParticles3D
+	_particle_count = 3
+
+
+func _add_particle_system(
+	parent: Node3D,
+	position3d: Vector3,
+	amount: int,
+	lifetime: float,
+	size: float,
+	color: Color,
+	velocity_min: float,
+	velocity_max: float,
+	node_name: String
+) -> GPUParticles3D:
+	var particles := GPUParticles3D.new()
+	particles.name = node_name
+	particles.amount = amount
+	particles.lifetime = lifetime
+	particles.local_coords = false
+	particles.position = position3d
+	particles.visibility_aabb = AABB(Vector3(-20.0, -6.0, -20.0), Vector3(40.0, 40.0, 40.0))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	process.emission_sphere_radius = 0.5
+	process.direction = Vector3(0.0, 1.0, 0.0)
+	process.spread = 10.0
+	process.initial_velocity_min = velocity_min
+	process.initial_velocity_max = velocity_max
+	process.gravity = Vector3(0.18, 0.35, 0.0)
+	process.scale_min = 0.9
+	process.scale_max = 1.7
+	process.color = Color(color.r, color.g, color.b, 1.0)
+	var ramp := Gradient.new()
+	ramp.offsets = PackedFloat32Array([0.0, 0.15, 1.0])
+	ramp.colors = PackedColorArray([
+		Color(0.86, 0.82, 0.74, 0.0),
+		Color(0.84, 0.80, 0.72, color.a),
+		Color(0.72, 0.68, 0.60, 0.0),
+	])
+	var ramp_texture := GradientTexture1D.new()
+	ramp_texture.gradient = ramp
+	process.color_ramp = ramp_texture
+	particles.process_material = process
+	var puff_gradient := Gradient.new()
+	puff_gradient.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+	puff_gradient.colors = PackedColorArray([
+		Color(1.0, 1.0, 1.0, 1.0), Color(1.0, 1.0, 1.0, 0.55), Color(1.0, 1.0, 1.0, 0.0),
+	])
+	var puff_texture := _gradient_texture_2d(puff_gradient, 64, 64, GradientTexture2D.FILL_RADIAL, Vector2(0.5, 0.5), Vector2(1.0, 0.5))
+	var draw_mesh := QuadMesh.new()
+	draw_mesh.size = Vector2(size, size)
+	var draw_material := StandardMaterial3D.new()
+	draw_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	draw_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	draw_material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	draw_material.vertex_color_use_as_albedo = true
+	draw_material.albedo_texture = puff_texture
+	draw_material.albedo_color = Color.WHITE
+	draw_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	draw_material.disable_receive_shadows = true
+	draw_mesh.material = draw_material
+	particles.draw_pass_1 = draw_mesh
+	parent.add_child(particles)
+	return particles
+
+
+## Converts a normalised screen position (0..1) at `depth` metres along the
+## camera forward axis into a world point. Used to pin the fallback sky glow and
+## the foreground frame to the fixed 16:9 framing without hardcoding numbers.
+func _screen_point(u: float, v: float, depth: float) -> Vector3:
+	var forward := (CAMERA_TARGET - CAMERA_POS).normalized()
+	var zaxis := -forward
+	var xaxis := Vector3.UP.cross(zaxis).normalized()
+	var yaxis := zaxis.cross(xaxis)
+	var tan_v := tan(deg_to_rad(CAMERA_FOV * 0.5))
+	var tan_h := tan_v * (1440.0 / 900.0)
+	var offset_x := (u - 0.5) * 2.0 * depth * tan_h
+	var offset_y := (0.5 - v) * 2.0 * depth * tan_v
+	return CAMERA_POS + forward * depth + xaxis * offset_x + yaxis * offset_y
+
+
+## World-space size that occupies `screen_fraction` of the frame width at
+## `depth` metres — keeps foreground frame pieces visually consistent.
+func _screen_units(screen_fraction: float, depth: float) -> float:
+	var tan_v := tan(deg_to_rad(CAMERA_FOV * 0.5))
+	var tan_h := tan_v * (1440.0 / 900.0)
+	return screen_fraction * 2.0 * depth * tan_h
 
 
 func _add_quay() -> void:
@@ -402,56 +628,69 @@ func _add_quay() -> void:
 	# ground and the quay reads as one shore instead of a floating box.
 	var shore_material := StandardMaterial3D.new()
 	shore_material.resource_name = "Port_Shore"
-	shore_material.albedo_color = Color(0.085, 0.082, 0.074)
+	shore_material.albedo_color = Color(0.125, 0.117, 0.105)
 	shore_material.roughness = 0.95
 	shore_material.metallic = 0.0
 	_shore_shelf = _add_box(self, SHORE_SIZE, SHORE_CENTER, shore_material, Vector3.ZERO, "ShoreShelf")
-	_add_box(self, DOCK_SIZE, DOCK_CENTER, _material("stone"), Vector3.ZERO, "DockPlatform")
-	_add_box(self, DECK_SIZE, Vector3(0.0, 2.15, -6.0), _material("deck"), Vector3.ZERO, "DockDeck")
-	_add_box(self, Vector3(54.0, 0.3, 0.34), Vector3(0.0, 1.66, -0.2), _material("wood_dark"), Vector3.ZERO, "DeckEdgeBeam")
-	# Trestle piles under the front edge, driven into the water.
-	for x in [-24.0, -16.0, -8.0, 0.0, 8.0, 16.0, 24.0]:
-		_add_cylinder(self, 0.3, 0.34, 3.6, Vector3(x, 0.4, 0.55), _material("wood_dark"), "Pile")
-		_add_box(self, Vector3(0.8, 0.5, 0.8), Vector3(x, 1.5, 0.55), _material("wood_dark"), Vector3.ZERO, "PileCap")
-	_add_box(self, Vector3(54.0, 0.35, 0.35), Vector3(0.0, 1.32, 0.5), _material("wood_dark"), Vector3.ZERO, "Waler")
-	# Timber stringers break up the long quay face.
+	# Repeated small props are batched through MultiMesh: one draw call per
+	# material/mesh pair instead of dozens of individual MeshInstance3D nodes.
+	var box_unit := BoxMesh.new()
+	box_unit.size = Vector3.ONE
+	var stone_xforms: Array[Transform3D] = [_scaled_xform(DOCK_CENTER, DOCK_SIZE)]
+	_add_multimesh(self, box_unit, stone_xforms, _material("stone"), "DockPlatform", AABB(Vector3(-30.0, -2.0, -16.0), Vector3(60.0, 6.0, 18.0)))
+	var deck_xforms: Array[Transform3D] = [_scaled_xform(Vector3(0.0, 2.15, -6.0), DECK_SIZE)]
+	_add_multimesh(self, box_unit, deck_xforms, _material("deck"), "DockDeck", AABB(Vector3(-30.0, 1.0, -14.0), Vector3(60.0, 3.0, 16.0)))
+	var wood_xforms: Array[Transform3D] = []
+	wood_xforms.append(_scaled_xform(Vector3(0.0, 1.66, -0.2), Vector3(54.0, 0.3, 0.34)))
+	wood_xforms.append(_scaled_xform(Vector3(0.0, 1.32, 0.5), Vector3(54.0, 0.35, 0.35)))
 	for x in [-18.0, -6.0, 6.0, 18.0]:
-		_add_box(self, Vector3(0.6, 0.6, 0.35), Vector3(x, 1.9, -0.15), _material("wood_dark"), Vector3.ZERO, "")
+		wood_xforms.append(_scaled_xform(Vector3(x, 1.9, -0.15), Vector3(0.6, 0.6, 0.35)))
+	for x in [-24.0, -16.0, -8.0, 0.0, 8.0, 16.0, 24.0]:
+		wood_xforms.append(_scaled_xform(Vector3(x, 1.5, 0.55), Vector3(0.8, 0.5, 0.8)))
+	_add_multimesh(self, box_unit, wood_xforms, _material("wood_dark"), "DockWood", AABB(Vector3(-30.0, -1.0, -2.0), Vector3(60.0, 5.0, 6.0)))
+	var pile_mesh := CylinderMesh.new()
+	pile_mesh.top_radius = 0.88
+	pile_mesh.bottom_radius = 1.0
+	pile_mesh.height = 1.0
+	pile_mesh.radial_segments = 10
+	var pile_xforms: Array[Transform3D] = []
+	for x in [-24.0, -16.0, -8.0, 0.0, 8.0, 16.0, 24.0]:
+		pile_xforms.append(_scaled_xform(Vector3(x, 0.4, 0.55), Vector3(0.34, 3.6, 0.34)))
+	_add_multimesh(self, pile_mesh, pile_xforms, _material("wood_dark"), "DockPiles", AABB(Vector3(-30.0, -2.0, -2.0), Vector3(60.0, 6.0, 6.0)))
+	var bollard_mesh := CylinderMesh.new()
+	bollard_mesh.top_radius = 0.26
+	bollard_mesh.bottom_radius = 0.30
+	bollard_mesh.height = 0.7
+	bollard_mesh.radial_segments = 12
+	var bollard_cap_mesh := CylinderMesh.new()
+	bollard_cap_mesh.top_radius = 0.34
+	bollard_cap_mesh.bottom_radius = 0.34
+	bollard_cap_mesh.height = 0.14
+	bollard_cap_mesh.radial_segments = 12
+	var bollard_bodies: Array[Transform3D] = []
+	var bollard_caps: Array[Transform3D] = []
 	for index in range(-3, 4):
-		_add_bollard(float(index) * 7.0, -1.1)
-	for x in [-18.0, -2.0, 13.0, 25.0]:
-		_add_lamp(float(x), -1.7)
-
-
-func _add_bollard(x: float, z: float) -> void:
-	var body_mesh := CylinderMesh.new()
-	body_mesh.top_radius = 0.26
-	body_mesh.bottom_radius = 0.30
-	body_mesh.height = 0.7
-	body_mesh.radial_segments = 12
-	_add_mesh(self, body_mesh, Vector3(x, DOCK_TOP + 0.35, z), _material("metal"), Vector3.ZERO, "")
-	var cap_mesh := CylinderMesh.new()
-	cap_mesh.top_radius = 0.34
-	cap_mesh.bottom_radius = 0.34
-	cap_mesh.height = 0.14
-	cap_mesh.radial_segments = 12
-	_add_mesh(self, cap_mesh, Vector3(x, DOCK_TOP + 0.77, z), _material("iron"), Vector3.ZERO, "")
-
-
-func _add_lamp(x: float, z: float) -> void:
+		var x := float(index) * 7.0
+		bollard_bodies.append(_xform(Vector3(x, DOCK_TOP + 0.35, -1.1)))
+		bollard_caps.append(_xform(Vector3(x, DOCK_TOP + 0.77, -1.1)))
+	_add_multimesh(self, bollard_mesh, bollard_bodies, _material("metal"), "Bollards", AABB(Vector3(-26.0, 1.5, -2.0), Vector3(52.0, 2.0, 2.0)))
+	_add_multimesh(self, bollard_cap_mesh, bollard_caps, _material("iron"), "BollardCaps", AABB(Vector3(-26.0, 2.0, -2.0), Vector3(52.0, 2.0, 2.0)))
+	# Gas lamps along the quay front.
 	var pole_mesh := CylinderMesh.new()
 	pole_mesh.top_radius = 0.07
 	pole_mesh.bottom_radius = 0.11
 	pole_mesh.height = 4.2
 	pole_mesh.radial_segments = 8
-	_add_mesh(self, pole_mesh, Vector3(x, DOCK_TOP + 2.1, z), _material("iron"), Vector3.ZERO, "")
-	var glow_material := _make_unshaded(Color(1.0, 0.68, 0.36), 1.6)
-	var glow_mesh := BoxMesh.new()
-	glow_mesh.size = Vector3(0.42, 0.46, 0.42)
-	_add_mesh(self, glow_mesh, Vector3(x, DOCK_TOP + 4.55, z), glow_material, Vector3.ZERO, "")
-	var cap_mesh := BoxMesh.new()
-	cap_mesh.size = Vector3(0.56, 0.1, 0.56)
-	_add_mesh(self, cap_mesh, Vector3(x, DOCK_TOP + 4.83, z), _material("iron"), Vector3.ZERO, "")
+	var pole_xforms: Array[Transform3D] = []
+	var glow_xforms: Array[Transform3D] = []
+	var lamp_cap_xforms: Array[Transform3D] = []
+	for x in [-18.0, -2.0, 13.0, 25.0]:
+		pole_xforms.append(_xform(Vector3(x, DOCK_TOP + 2.1, -1.7)))
+		glow_xforms.append(_scaled_xform(Vector3(x, DOCK_TOP + 4.55, -1.7), Vector3(0.42, 0.46, 0.42)))
+		lamp_cap_xforms.append(_scaled_xform(Vector3(x, DOCK_TOP + 4.83, -1.7), Vector3(0.56, 0.1, 0.56)))
+	_add_multimesh(self, pole_mesh, pole_xforms, _material("iron"), "LampPoles", AABB(Vector3(-26.0, 1.0, -2.0), Vector3(52.0, 6.0, 2.0)))
+	_add_multimesh(self, box_unit, glow_xforms, _make_unshaded(Color(1.0, 0.68, 0.36), 1.6), "LampGlow", AABB(Vector3(-26.0, 4.0, -2.0), Vector3(52.0, 4.0, 2.0)))
+	_add_multimesh(self, box_unit, lamp_cap_xforms, _material("iron"), "LampCaps", AABB(Vector3(-26.0, 4.0, -2.0), Vector3(52.0, 4.0, 2.0)))
 
 
 func _add_camera() -> void:
@@ -496,7 +735,8 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	# L2 silhouettes are the no-backdrop fallback only: a painted skyline plus
 	# black boxes on top of it reads as floating rectangles.
 	_rebuild_shoreline()
-	_apply_sky_card_visibility()
+	_apply_fallback_visibility()
+	_rebuild_fog_layers()
 	_rebuild_facilities()
 	_rebuild_landmark()
 	_rebuild_ship(ship)
@@ -514,6 +754,12 @@ func _clear_dynamic() -> void:
 	_landmark = null
 	_ship_root = null
 	_facilities_root = null
+	_fog_nodes.clear()
+	_fog_bases.clear()
+	_fog_phases.clear()
+	_fog_layer_count = 0
+	_skyline_building_count = 0
+	_skyline_crane_count = 0
 	if _content == null:
 		return
 	for child in _content.get_children():
@@ -573,55 +819,253 @@ func _make_unshaded(color: Color, emission_energy: float = 0.0) -> StandardMater
 # --- L2 shoreline silhouettes ----------------------------------------------
 
 ## Fallback layers only exist when there is no painted L1 backdrop: the shore
-## shelf and silhouette row would cover the banner's lower half, and the sky card
-## would sit in front of it. With a banner the pier stands directly against the
-## painted city/water, which is the intended "L1 backdrop first" reading.
-func _apply_sky_card_visibility() -> void:
+## shelf and silhouette row would cover the banner's lower half, and the fallback
+## sky would sit in front of it. With a banner the pier stands directly against
+## the painted city/water, which is the intended "L1 backdrop first" reading.
+func _apply_fallback_visibility() -> void:
 	var use_fallback := not _has_backdrop
-	if _sky_card != null:
-		_sky_card.visible = use_fallback
+	if _fallback_sky_root != null:
+		_fallback_sky_root.visible = use_fallback
 	if _shore_shelf != null:
 		_shore_shelf.visible = use_fallback
+	# The shore chimney only exists without a painted banner, so its steam plume
+	# is hidden together with the L2 silhouette row.
+	if _shore_steam != null:
+		_shore_steam.visible = use_fallback
+		_shore_steam.emitting = use_fallback
 
 
+## Deterministic two-depth silhouette bands (only when no banner is mounted).
+## Counts follow `port.size`; the near band is dark blue-grey and the far band is
+## warmer/mistier, so the skyline reads in layers instead of a black wall. Both
+## bands are batched into three MultiMeshes (box silhouettes, lighthouse towers,
+## lighthouse caps), so the whole L2 skyline costs 3 draw calls.
 func _rebuild_shoreline() -> void:
-	# A painted L1 backdrop already carries the skyline: stacking dark boxes in
-	# front of it reads as floating rectangles, so L2 is a no-backdrop fallback.
+	_skyline_building_count = 0
+	_skyline_crane_count = 0
 	if _has_backdrop:
 		return
+	var total_buildings := int(SKYLINE_BUILDINGS_BY_SIZE.get(_size, 10))
+	var total_cranes := int(SKYLINE_CRANES_BY_SIZE.get(_size, 2))
+	var near_count := int(round(float(total_buildings) * 0.55))
+	var far_count := total_buildings - near_count
 	var shoreline := Node3D.new()
 	shoreline.name = "Shoreline"
 	_content.add_child(shoreline)
+	var seed_value := String(_port.get("id", "port")).hash()
+	var box_xforms: Array[Transform3D] = []
+	var box_colors: Array[Color] = []
+	var tower_xforms: Array[Transform3D] = []
+	var tower_colors: Array[Color] = []
+	var cap_xforms: Array[Transform3D] = []
+	var cap_colors: Array[Color] = []
+	# Near band: deep blue-grey, small warehouses close to the quay.
+	var near_tone := Color(0.068, 0.082, 0.100)
+	var near_roof := Color(0.052, 0.064, 0.080)
+	# Far band: warm mist colour, low contrast against the dusk sky and haze.
+	var far_tone := Color(0.235, 0.210, 0.185)
+	var far_roof := Color(0.195, 0.174, 0.153)
+	var lighthouse_tone := Color(0.160, 0.148, 0.134)
+	# Two small clusters per band plus a low warehouse row, so the building budget
+	# reads as a working shore instead of isolated boxes spread over empty ground.
+	var near_centers := [-16.0, 13.0]
+	for index in near_count:
+		var r1 := _hash01(seed_value, index, 101)
+		var r2 := _hash01(seed_value, index, 103)
+		var r3 := _hash01(seed_value, index, 107)
+		var r4 := _hash01(seed_value, index, 109)
+		var width := 2.4 + r1 * 2.0
+		var height := 3.0 + r2 * 4.0
+		var depth := 2.2 + r3 * 1.6
+		var cluster := index % 2
+		var slot := int(index / 2)
+		var x := float(near_centers[cluster]) + (float(slot) - 0.5) * 3.4 + (r2 - 0.5) * 1.2
+		var z := -24.0 - float(slot) * 2.6 - r3 * 2.4
+		if index == 2:
+			_add_lighthouse_silhouette(
+				Vector3(x, SHORE_TOP, z), 0.8, lighthouse_tone,
+				box_xforms, box_colors, tower_xforms, tower_colors, cap_xforms, cap_colors
+			)
+		else:
+			_append_skyline_box(box_xforms, box_colors, Vector3(x, SHORE_TOP + height * 0.5, z), Vector3(width, height, depth), near_tone)
+			_append_skyline_roof(box_xforms, box_colors, Vector3(x, SHORE_TOP + height, z), width, depth, near_roof, r4)
+			if r4 > 0.62:
+				_append_skyline_box(
+					box_xforms, box_colors,
+					Vector3(x + width * 0.24, SHORE_TOP + height + 0.7, z - 0.3),
+					Vector3(0.55, 1.2 + r1 * 1.6, 0.55), near_roof
+				)
+		_skyline_building_count += 1
+	# Low continuous warehouse row linking the near clusters along the shore.
+	_append_skyline_box(box_xforms, box_colors, Vector3(-2.0, SHORE_TOP + 0.8, -29.0), Vector3(21.0, 1.6, 3.0), Color(0.085, 0.098, 0.115))
+	_append_skyline_box(box_xforms, box_colors, Vector3(-38.0, SHORE_TOP + 0.8, -31.0), Vector3(18.0, 1.6, 3.0), Color(0.085, 0.098, 0.115))
+	# Far band: warmer, mistier, two clusters further back.
+	var far_centers := [-20.0, 17.0]
+	for index in far_count:
+		var r1 := _hash01(seed_value, index, 211)
+		var r2 := _hash01(seed_value, index, 223)
+		var r3 := _hash01(seed_value, index, 227)
+		var r4 := _hash01(seed_value, index, 229)
+		var width := 2.6 + r1 * 2.4
+		var height := 3.5 + r2 * 5.5
+		var depth := 2.4 + r3 * 1.8
+		var cluster := index % 2
+		var slot := int(index / 2)
+		var x := float(far_centers[cluster]) + (float(slot) - 0.5) * 3.8 + (r2 - 0.5) * 1.4
+		var z := -38.0 - float(slot) * 3.0 - r3 * 4.0
+		if far_count > 1 and index == 1:
+			_add_lighthouse_silhouette(
+				Vector3(x, SHORE_TOP, z), 0.7, far_roof,
+				box_xforms, box_colors, tower_xforms, tower_colors, cap_xforms, cap_colors
+			)
+		else:
+			_append_skyline_box(box_xforms, box_colors, Vector3(x, SHORE_TOP + height * 0.5, z), Vector3(width, height, depth), far_tone)
+			_append_skyline_roof(box_xforms, box_colors, Vector3(x, SHORE_TOP + height, z), width, depth, far_roof, r4)
+			if r4 > 0.74:
+				_append_skyline_box(
+					box_xforms, box_colors,
+					Vector3(x - width * 0.22, SHORE_TOP + height + 0.9, z),
+					Vector3(0.6, 1.8 + r1 * 2.0, 0.6), far_roof
+				)
+		_skyline_building_count += 1
+	# Far low mist bank (long, hazy boxes) right before the fallback sky card:
+	# breaks the shelf edge into a soft "shore -> bank -> sky" transition. Large
+	# ports carry one fewer bank box so the L2 instance total stays <= 20.
+	var bank_tone := Color(0.320, 0.294, 0.260)
+	var bank_centers := [-48.0, -6.0, 42.0]
+	var bank_count := 2 if _size == "large" else 3
+	for index in bank_count:
+		var r1 := _hash01(seed_value, index, 311)
+		var r2 := _hash01(seed_value, index, 313)
+		var bank_width := 30.0 + r1 * 14.0
+		var bank_height := 1.2 + r2 * 1.4
+		_append_skyline_box(
+			box_xforms, box_colors,
+			Vector3(float(bank_centers[index]) + (r2 - 0.5) * 5.0, SHORE_TOP + bank_height * 0.5, -51.0 - r1 * 3.0),
+			Vector3(bank_width, bank_height, 7.0), bank_tone
+		)
+	# Cranes sit at the cluster edges; silhouettes only, no lights.
+	for index in total_cranes:
+		var cx := -8.0 + float(index) * 22.0 + _hash01(seed_value, index, 251) * 4.0
+		var cz := -30.0 - _hash01(seed_value, index, 257) * 6.0
+		var base := Vector3(cx, SHORE_TOP, cz)
+		var tone := near_roof if index % 2 else far_roof
+		_append_skyline_box(box_xforms, box_colors, base + Vector3(0.0, 3.7, 0.0), Vector3(0.55, 7.4, 0.55), tone)
+		_append_skyline_box(box_xforms, box_colors, base + Vector3(2.5, 7.1, 0.0), Vector3(6.4, 0.5, 0.5), tone)
+		_append_skyline_box(box_xforms, box_colors, base + Vector3(4.6, 5.5, 0.0), Vector3(0.14, 2.7, 0.14), tone)
+		_skyline_crane_count += 1
+	var silhouette_material := _make_unshaded(Color.WHITE)
+	silhouette_material.vertex_color_use_as_albedo = true
+	var box_unit := BoxMesh.new()
+	box_unit.size = Vector3.ONE
+	_add_multimesh(
+		shoreline, box_unit, box_xforms, silhouette_material, "SkylineBoxes",
+		AABB(Vector3(-42.0, -1.0, -50.0), Vector3(84.0, 20.0, 36.0)), box_colors
+	)
+	var tower_mesh := CylinderMesh.new()
+	tower_mesh.top_radius = 0.66
+	tower_mesh.bottom_radius = 1.0
+	tower_mesh.height = 1.0
+	tower_mesh.radial_segments = 8
+	_add_multimesh(
+		shoreline, tower_mesh, tower_xforms, silhouette_material, "SkylineLighthouseBodies",
+		AABB(Vector3(-40.0, -1.0, -50.0), Vector3(80.0, 20.0, 30.0)), tower_colors
+	)
+	var cap_mesh := CylinderMesh.new()
+	cap_mesh.top_radius = 0.0
+	cap_mesh.bottom_radius = 1.0
+	cap_mesh.height = 1.0
+	cap_mesh.radial_segments = 8
+	_add_multimesh(
+		shoreline, cap_mesh, cap_xforms, silhouette_material, "SkylineLighthouseCaps",
+		AABB(Vector3(-40.0, -1.0, -50.0), Vector3(80.0, 20.0, 30.0)), cap_colors
+	)
+
+
+## Low deterministic fog billboards (L7). Their phase comes from the port id hash
+## so every harbour drifts differently, while the motion stays a pure sine wave.
+func _rebuild_fog_layers() -> void:
+	var fog_root := Node3D.new()
+	fog_root.name = "FogBands"
+	_content.add_child(fog_root)
 	var port_id := String(_port.get("id", "port"))
 	var seed_value := port_id.hash()
-	# Faded blue-grey, not pure black: dusk fog should still show a little depth.
-	var near_tone := _make_unshaded(Color(0.075, 0.095, 0.115))
-	var far_tone := _make_unshaded(Color(0.10, 0.12, 0.14))
-	# Deliberately loose row: wide gaps and varied heights avoid a black wall.
-	for index in 9:
-		var r1 := _hash01(seed_value, index, 11)
-		var r2 := _hash01(seed_value, index, 23)
-		var r3 := _hash01(seed_value, index, 37)
-		var width := 3.8 + r1 * 3.2
-		var height := 3.0 + r2 * 6.0
-		var depth := 3.0 + r3 * 3.0
-		var x := -36.0 + float(index) * 9.2 + (r2 - 0.5) * 2.0
-		var z := -27.0 - r3 * 5.0
-		var tone := near_tone if index % 2 == 0 else far_tone
-		_add_box(shoreline, Vector3(width, height, depth), Vector3(x, SHORE_TOP + height * 0.5, z), tone, Vector3.ZERO, "")
-		if index % 3 == 1:
-			# A low pitched roof keeps a couple of buildings readable as roofs.
-			_add_box(shoreline, Vector3(width * 0.8, 1.1, depth * 0.9), Vector3(x, SHORE_TOP + height + 0.4, z), far_tone, Vector3(0.0, 0.0, 45.0), "")
-		if index % 4 == 2:
-			# One chimney silhouette only.
-			_add_box(shoreline, Vector3(0.8, 2.2, 0.8), Vector3(x + width * 0.25, SHORE_TOP + height + 1.0, z - 0.4), near_tone, Vector3.ZERO, "")
-	# Two crane silhouettes keep the shoreline reading as a working harbour.
-	for index in 2:
-		var cx := -24.0 + float(index) * 26.0 + _hash01(seed_value, index, 53) * 6.0
-		var cz := -30.0
-		_add_box(shoreline, Vector3(0.8, 9.5, 0.8), Vector3(cx, SHORE_TOP + 4.75, cz), far_tone, Vector3.ZERO, "")
-		_add_box(shoreline, Vector3(0.7, 0.7, 8.0), Vector3(cx, SHORE_TOP + 8.6, cz + 2.9), far_tone, Vector3.ZERO, "")
-		_add_box(shoreline, Vector3(0.18, 2.2, 0.18), Vector3(cx, SHORE_TOP + 7.4, cz + 6.2), far_tone, Vector3.ZERO, "")
+	var configs := [
+		{"u": 0.50, "v": 0.76, "depth": 46.0, "size": Vector2(56.0, 8.0), "color": Color(FOG_BAND_COLOR.r, FOG_BAND_COLOR.g, FOG_BAND_COLOR.b, FOG_BAND_ALPHA)},
+		{"u": 0.72, "v": 0.86, "depth": 36.0, "size": Vector2(44.0, 7.0), "color": Color(FOG_BAND_COLOR.r, FOG_BAND_COLOR.g, FOG_BAND_COLOR.b, FOG_BAND_ALPHA)},
+	]
+	if not _has_backdrop:
+		# Horizon haze between the far silhouette row and the fallback sky card:
+		# a soft radial alpha band so the sky/land boundary never becomes a hard
+		# straight line. With a real banner the painted backdrop has its own haze.
+		configs.append({
+			"u": 0.50, "v": 0.44, "depth": 135.0, "size": Vector2(320.0, 80.0),
+			"color": Color(0.92, 0.70, 0.47, 0.17),
+		})
+	for index in configs.size():
+		var config: Dictionary = configs[index]
+		# Radial alpha gradient stretched into a band: every edge fades out.
+		var gradient := Gradient.new()
+		gradient.offsets = PackedFloat32Array([0.0, 0.45, 0.80, 1.0])
+		gradient.colors = PackedColorArray([
+			Color(1.0, 1.0, 1.0, 1.0), Color(1.0, 1.0, 1.0, 0.65),
+			Color(1.0, 1.0, 1.0, 0.18), Color(1.0, 1.0, 1.0, 0.0),
+		])
+		var texture := _gradient_texture_2d(gradient, 64, 64, GradientTexture2D.FILL_RADIAL, Vector2(0.5, 0.5), Vector2(1.0, 0.5))
+		var position3d := _screen_point(float(config["u"]), float(config["v"]), float(config["depth"]))
+		var band := _add_billboard_quad(fog_root, config["size"], position3d, texture, config["color"], BaseMaterial3D.BLEND_MODE_MIX, "FogBand_%d" % index)
+		_fog_nodes.append(band)
+		_fog_bases.append(position3d)
+		_fog_phases.append(_hash01(seed_value, index, 71) * TAU)
+		_fog_layer_count += 1
+
+
+## Appends one scaled box instance for the batched silhouette MultiMesh.
+func _append_skyline_box(
+	transforms: Array[Transform3D], colors: Array[Color], center: Vector3, size: Vector3, color: Color,
+	rotation_degrees: Vector3 = Vector3.ZERO
+) -> void:
+	transforms.append(_scaled_xform(center, size, rotation_degrees))
+	colors.append(color)
+
+
+## Pitched roof / flat parapet as silhouette instances: a 45° box reads as a
+## gable from the fixed camera without extra geometry.
+func _append_skyline_roof(
+	transforms: Array[Transform3D], colors: Array[Color], base: Vector3, width: float, depth: float,
+	color: Color, roll: float
+) -> void:
+	if roll < 0.35:
+		_append_skyline_box(transforms, colors, base + Vector3(0.0, 0.28, 0.0), Vector3(width * 0.9, 0.55, depth * 0.92), color)
+		return
+	var roof_size := width * 0.78
+	_append_skyline_box(
+		transforms, colors, base + Vector3(0.0, roof_size * 0.30, 0.0),
+		Vector3(roof_size, roof_size, depth * 0.92), color, Vector3(0.0, 0.0, 45.0)
+	)
+
+
+## Lighthouse silhouette: tapered tower + lantern room box + cone cap, all
+## appended to the batched MultiMesh arrays.
+func _add_lighthouse_silhouette(
+	base: Vector3, scale_factor: float, color: Color,
+	box_xforms: Array[Transform3D], box_colors: Array[Color],
+	tower_xforms: Array[Transform3D], tower_colors: Array[Color],
+	cap_xforms: Array[Transform3D], cap_colors: Array[Color]
+) -> void:
+	var body_height := 5.4 * scale_factor
+	var body_radius := 0.8 * scale_factor
+	tower_xforms.append(_scaled_xform(base + Vector3(0.0, body_height * 0.5, 0.0), Vector3(body_radius, body_height, body_radius)))
+	tower_colors.append(color)
+	_append_skyline_box(
+		box_xforms, box_colors, base + Vector3(0.0, body_height + 0.35 * scale_factor, 0.0),
+		Vector3(0.9 * scale_factor, 0.7 * scale_factor, 0.9 * scale_factor), color
+	)
+	cap_xforms.append(_scaled_xform(
+		base + Vector3(0.0, body_height + 0.7 * scale_factor + 0.55 * scale_factor, 0.0),
+		Vector3(1.05 * scale_factor, 1.1 * scale_factor, 1.05 * scale_factor)
+	))
+	cap_colors.append(color)
 
 
 # --- L1 backdrop ------------------------------------------------------------
@@ -912,6 +1356,114 @@ func _disable_boat_foam() -> void:
 
 
 # --- Primitive helpers ------------------------------------------------------
+
+## Small wrapper so every procedural texture (sky gradient, sun glow, puff,
+## fog band) is built the same way: no external texture asset is involved.
+func _gradient_texture_2d(gradient: Gradient, width: int, height: int, fill: int, fill_from: Vector2, fill_to: Vector2) -> GradientTexture2D:
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.width = maxi(1, width)
+	texture.height = maxi(1, height)
+	texture.fill = fill
+	texture.fill_from = fill_from
+	texture.fill_to = fill_to
+	return texture
+
+
+## Camera-facing transparent quad used by the fallback sky glow and fog bands.
+## The stage camera is fixed, so the quad basis is built from the camera axes
+## explicitly: this is a screen-aligned quad without relying on shader billboard
+## behaviour (which is brittle for transparent additive materials on GL
+## Compatibility).
+func _add_billboard_quad(parent: Node3D, size: Vector2, position3d: Vector3, texture: Texture2D, tint: Color, blend: int, node_name: String) -> MeshInstance3D:
+	var mesh := QuadMesh.new()
+	mesh.size = size
+	var material := StandardMaterial3D.new()
+	material.resource_name = "Port_Billboard_" + node_name
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.blend_mode = blend
+	material.albedo_texture = texture
+	material.albedo_color = tint
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.disable_receive_shadows = true
+	var instance := MeshInstance3D.new()
+	if not node_name.is_empty():
+		instance.name = node_name
+	instance.mesh = mesh
+	instance.material_override = material
+	var forward := (CAMERA_TARGET - CAMERA_POS).normalized()
+	var zaxis := -forward
+	var xaxis := Vector3.UP.cross(zaxis).normalized()
+	var yaxis := zaxis.cross(xaxis)
+	instance.transform = Transform3D(Basis(xaxis, yaxis, zaxis), position3d)
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(instance)
+	return instance
+
+
+## Oriented box beam between two world points (foreground crane arm / cables).
+func _add_beam(parent: Node3D, from: Vector3, to: Vector3, thickness: float, material: Material, node_name: String) -> MeshInstance3D:
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(thickness, thickness, maxf(from.distance_to(to), 0.05))
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = mesh
+	instance.material_override = material
+	var direction := to - from
+	var center := (from + to) * 0.5
+	if direction.length_squared() > 0.0001:
+		instance.transform = Transform3D(Basis.looking_at(direction.normalized(), Vector3.UP), center)
+	else:
+		instance.position = center
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(instance)
+	return instance
+
+
+## Builds one MultiMeshInstance3D from a shared mesh + per-instance transforms
+## (optionally per-instance colours). Keeps repeated props at one draw call each.
+func _add_multimesh(
+	parent: Node3D,
+	mesh: Mesh,
+	transforms: Array[Transform3D],
+	material: Material,
+	node_name: String,
+	custom_aabb: AABB,
+	colors: Array[Color] = []
+) -> MultiMeshInstance3D:
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.use_colors = not colors.is_empty()
+	multi.mesh = mesh
+	multi.instance_count = transforms.size()
+	for index in transforms.size():
+		multi.set_instance_transform(index, transforms[index])
+		if multi.use_colors and index < colors.size():
+			multi.set_instance_color(index, colors[index])
+	var instance := MultiMeshInstance3D.new()
+	instance.name = node_name
+	instance.multimesh = multi
+	instance.material_override = material
+	instance.custom_aabb = custom_aabb
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(instance)
+	return instance
+
+
+func _xform(origin: Vector3) -> Transform3D:
+	return Transform3D(Basis.IDENTITY, origin)
+
+
+func _scaled_xform(origin: Vector3, size: Vector3, rotation_degrees: Vector3 = Vector3.ZERO) -> Transform3D:
+	var basis := Basis.IDENTITY
+	if rotation_degrees != Vector3.ZERO:
+		basis = Basis.from_euler(Vector3(
+			deg_to_rad(rotation_degrees.x), deg_to_rad(rotation_degrees.y), deg_to_rad(rotation_degrees.z)
+		))
+	basis = basis.scaled(size)
+	return Transform3D(basis, origin)
+
 
 func _add_box(parent: Node3D, size: Vector3, position3d: Vector3, material: Material, rotation_degrees: Vector3 = Vector3.ZERO, node_name: String = "") -> MeshInstance3D:
 	var mesh := BoxMesh.new()
