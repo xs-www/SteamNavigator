@@ -8,6 +8,7 @@
 - 导入松散目录 / `.snavmod.zip` / 项目文件；
 - 导出 `mods/<id>/` 结构的 `.snavmod.zip`、项目文件，或直接写入本地目录；
 - 启动本地服务后，自动把项目写入 [`mods/`](mods/README.md)，打包结果可写入 [`exports/`](exports/README.md)。
+- 无头命令行入口 `tools/content.mjs`：给 agent / CI / 批量脚本按 Schema 增删改定义、补本地化并校验（见下文「命令行（agent 无头工作流）」）。
 
 运行时**零第三方依赖**：没有 npm 包、没有 CDN、没有构建步骤、没有网络请求。所有代码都是仓库里的原生 HTML / CSS / JavaScript。
 
@@ -123,6 +124,102 @@ ZIP 使用浏览器原生 `CompressionStream('deflate-raw')`；不支持时自�
 
 ---
 
+## 命令行（agent 无头工作流）
+
+除网页编辑器外，`tools/content.mjs` 提供同一套内容模型的命令行入口：按 Schema 增删改定义、补本地化、读取类型说明、校验既有模组。它面向 agent、CI 与批量维护脚本，不启动浏览器，也不引入额外依赖（Node.js ≥ 18，ESM）。
+
+所有命令都从**仓库根**执行，`--mod` 指向仓库内的松散模组目录（例如 `dev_mods/core` 或 `SNModMaker/mods/<id>`，必须含 `manifest.json`）；所有写入都会留在该目录内。
+
+### 命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `types` | 列出内容类型：`content_type`、ID 类型段与内容文件 |
+| `describe <type>` | 输出该类型的字段表、默认值、ID 规则与可直接修改的骨架 |
+| `list --mod <dir>` | 列出模组内已有定义，可按 `--type` 过滤 |
+| `add --mod <dir>` | 新增一条定义（双语文案、tags、data），或以 patch 形式修改其他模组 |
+| `set --mod <dir> <id> <path>=<value>` | 修改既有定义的字段或数组（`+=` / `-=`） |
+| `loc --mod <dir> ...` | 写本地化文案：按定义键，或按任意 `--key` 直接写入 |
+| `rm --mod <dir> <id> --yes` | 删除定义，并清理它独占的本地化键 |
+| `clone --mod <dir> --from <core-id>` | 从 Core 定义复制一条到当前模组 |
+| `validate --mod <dir>` | 只读校验：Schema、引用、命名空间与本地化 |
+| `new --mod <dir> --id <mod_id>` | 从模板新建模组骨架 |
+
+每个命令都支持 `--json`、`--quiet`、`--help`（`-h`）；`add` / `set` / `rm` / `clone` 支持 `--dry-run`（`rm` 另需 `--yes`），`add` / `set` / `clone` 支持 `--force`。完整选项见 `node SNModMaker/tools/content.mjs <command> --help`。
+
+### 典型用法
+
+先看某个类型的字段与骨架，再照着写 `add`：
+
+```powershell
+node SNModMaker/tools/content.mjs describe goods
+```
+
+新增商品；`--data` 按路径赋值，支持 `a.b`、`a[2].b` 与 `/data/x`：
+
+```powershell
+node SNModMaker/tools/content.mjs add --mod SNModMaker/mods/my_mod --type goods --id tea `
+  --name-zh "红茶" --name-en "Black Tea" `
+  --desc-zh "来自东方的发酵茶。" --desc-en "A fermented tea from the east." `
+  --tag good.trade --data base_price=68 --data unit_weight=1
+```
+
+改既有定义；`+=` / `-=` 用于数组，`--dry-run` 只看 diff 不落盘：
+
+```powershell
+node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:good/tea data.base_price=72
+node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:good/tea tags+=good.luxury --dry-run
+```
+
+从 Core 复制一条再校验：
+
+```powershell
+node SNModMaker/tools/content.mjs clone --mod SNModMaker/mods/my_mod --from core:good/iron_ore --id iron_ore `
+  --name-zh "铁矿石" --name-en "Iron Ore"
+node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_mod --json
+```
+
+### JSON 输出与退出码
+
+加 `--json` 后 stdout 只有一个 JSON 对象，日志走 stderr 或放进 `notes`，可直接交给 jq / agent 解析：
+
+```json
+{
+  "ok": true,
+  "command": "add",
+  "mod": "dev_mods/core",
+  "changes": [{ "path": "content/goods.json", "action": "update", "bytes": 4321, "diff": "..." }],
+  "issues": { "errors": 0, "warnings": 29, "newErrors": 0, "newWarnings": 0, "list": [] },
+  "stats": { "definitions": 51, "contentFiles": 15, "locales": 2 },
+  "notes": []
+}
+```
+
+- `changes[].action` 为 `create` / `update` / `delete`；`--dry-run` 时为 `would-create` / `would-update` / `would-delete`。
+- `issues.list` 只列本次**新增**的问题，每项为 `{severity, code, message}`。
+- 失败时同样只有一个 JSON 对象：`{"ok": false, "command": "...", "error": {"code": "...", "message": "..."}}`。
+- 退出码：`0` 成功；`1` 执行失败 / 校验未通过 / 并发冲突；`2` 用法错误（缺参、未知命令或未知类型）。`--json` 在用法错误时也会输出 JSON。
+
+### 写入、格式与并发保护
+
+- **只写变化的文件**：内容 JSON 走保源编辑，只增删目标节点所在的行，不重排既有定义、不丢 `3.0` 这类结尾小数点、不改缩进；本地化文件只改受影响的值所在行；`manifest.json` 只增量插入或删除条目。
+- **校验闸门**：`add` / `set` / `rm` / `clone` 会对比改动前后的校验结果，出现新的 error 就不写盘并退出 `1`；`--force` 会在有 new error 时仍写盘，但结果标记为失败（退出 `1`），只在明确知情时使用。
+- **并发保护**：加载时记录每个待写文件的 SHA-256，写前重新读取比对；文件已被其他进程或 agent 改过就报 `conflict`，整批不写。写入使用同目录临时文件加 rename 原子替换。
+- **写盘后钩子**：对 `manifest.id` 为 `core` 的模组，`add` / `clone` 的 `--sync` 会在真实写入后重新生成 Core 索引；`add` 的 `--test` 会在真实写入后运行 `node SNModMaker/tests/run-tests.js`，失败则退出 `1`。
+
+### 可选：用 Godot 再校验
+
+`validate` 默认只跑网页端同源的 Schema 与语义校验。要让本体的加载链复核，先设置 Godot 可执行文件，再加 `--godot`：
+
+```powershell
+$env:GODOT_BIN = "C:\path\to\Godot_v4.7.2-stable_win64_console.exe"
+node SNModMaker/tools/content.mjs validate --mod dev_mods/core --godot
+```
+
+它通过 `GODOT_BIN` 调用 `sdk/validate.gd --mod-root=<mod>`，把退出码与输出并入结果；未设置 `GODOT_BIN` 时在 `notes` 里注明跳过，不算失败。
+
+---
+
 ## 校验范围
 
 网页端校验分两层：
@@ -166,6 +263,8 @@ SNModMaker/
 ├── tools/sync-core-index.mjs   重新生成 core-index.js
 ├── tools/serve.mjs             本地静态服务 + 磁盘 API（Node 内置模块）
 ├── tools/game_mods_dir.mjs     解析默认部署目标：发布包 dist/build/<platform>/mods/
+├── tools/content.mjs           Content CLI：按 Schema 增删改定义、本地化与校验
+├── tools/content_json.mjs      保源 JSON 编辑与风格化序列化（CLI 内部模块）
 ├── mods/                       本地磁盘工作区（默认被 .gitignore 忽略）
 ├── exports/                    本地导出目录（默认被 .gitignore 忽略）
 └── tests/                      Node 单元测试与 Chrome CDP 冒烟测试
@@ -241,6 +340,7 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 ### 代码约定
 
 - 纯经典脚本（无 ES module），便于直接 `file://` 打开；模块通过 `globalThis.SN*` 暴露。
+- `tools/*.mjs` 是 Node ESM 工具（本地服务、生成脚本与 Content CLI），不参与网页打包，也不要在 `index.html` 中引用。
 - 不引入第三方库、字体或 CDN；图标使用内联 SVG / CSS。
 - 新增内容类型时需要同步：`schemas/`、`ContentTypes`、`catalog.js`（标签 / 默认值 / key 前缀）、以及 `store.js` 使用这些默认值的模板/克隆逻辑。
 - 所有用户文本与属性值都经过 `esc` / `attr` 转义；导入的 ZIP 有路径、条目数、解压体积与 CRC 限制。
@@ -256,4 +356,6 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 - 不做模组启用/禁用与加载顺序管理（那是游戏侧 `mods/` 的职责）。
 - 浏览器端不运行领域逻辑，因此无法发现「数值可加载但玩法不可行」的问题。
 - 文件夹导出依赖 File System Access API（Chromium）；其他浏览器请用 ZIP。
+- Content CLI 只处理内容 JSON 与本地化；资源（图片 / GLB）与 ZIP 导入导出仍走网页编辑器或 SDK。
+- Content CLI 不做定义 ID 重命名（`clone --id` 新建条目除外），也不运行 Godot 领域逻辑；需要时用 `--godot` 交给 SDK 校验。
 - 大型资源会以 base64 存在项目 JSON 中；图片/音频建议单个资源 ≤ 2 MB，GLB 模型上限 20 MB，项目文件用于备份而非版本控制。

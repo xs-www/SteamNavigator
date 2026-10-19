@@ -1,14 +1,14 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T13:03:23.921Z",
-  "commit": "a47fb47",
+  "generated_at": "2026-10-19T13:20:24.565Z",
+  "commit": "c34b570",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 468,
-    "documented": 145,
-    "grouped": 323
+    "sources": 470,
+    "documented": 149,
+    "grouped": 321
   },
   "files": [
     {
@@ -26,7 +26,14 @@
     },
     {
       "source": "SNModMaker/README.md",
-      "sha256": "2f42321db20666ad842c4a04939520023f9fddd81e027cffd6c4321b6aac1174",
+      "sha256": "f5862f6d7490a81f866666a63140844b80b5ed39596ec6aaaf8a3d198455eab2",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/WORKSPACE.md",
+      "sha256": "53f5825690defac22d01a4ee844144a4bc841b594907d406d4a697dd7481e33a",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -52,7 +59,7 @@
     },
     {
       "source": "SNModMaker/js/app.js",
-      "sha256": "72a16616bb86b76fa2fc2f6465a585c5cc7bc36548916f2fe0860022e57170b9",
+      "sha256": "5580e3ff4e4ddad288373961c21550a99541f462ada52f24cdd830b2c669e4e3",
       "doc": "docs/static/SNModMaker/js/app.js.md",
       "status": "documented"
     },
@@ -70,7 +77,7 @@
     },
     {
       "source": "SNModMaker/js/io.js",
-      "sha256": "b99bcb74c4cc5ea3763590cde98b92dacf89580894e0db58afba5d416ad98ef4",
+      "sha256": "7d8f00898504995b9a78c59f1ed18ee388cb297022ce32ebe5091c7c74d7dfa1",
       "doc": "docs/static/SNModMaker/js/io.js.md",
       "status": "documented"
     },
@@ -526,20 +533,19 @@
     },
     {
       "source": "SNModMaker/tests/browser-smoke.mjs",
-      "sha256": "2a40eb5f6ffbb487c49cee5202ce2870fa152702172f87dc82743f43efbf7af9",
+      "sha256": "84a55fa1d412579e1a966c23a52bb6a96e9c439a5823d576724ba3c30cc4981e",
       "doc": "docs/static/SNModMaker/tests/browser-smoke.mjs.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/tests/content-cli.test.mjs",
-      "sha256": "8f712741f79469998334fd7e9fa73d1813c58eb473ed7b95a3952681d9431370",
-      "doc": "docs/static/SNModMaker/README.md",
-      "status": "grouped",
-      "group": "docs/static/SNModMaker/README.md"
+      "sha256": "c16d64495bf67d207efdacfe0f8607c45230b61da70d47db2d2cfa7c09e11477",
+      "doc": "docs/static/SNModMaker/tests/content-cli.test.mjs.md",
+      "status": "documented"
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "82a11841e191639f3ff4476b897571b0aab37913ef005075a8325449ff042138",
+      "sha256": "b51713eb4dd09272ff3500bba055d8fcb7211daeb807dce3eac09254ad4a1072",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -550,18 +556,22 @@
       "status": "documented"
     },
     {
+      "source": "SNModMaker/tests/workspace-smoke.mjs",
+      "sha256": "d98587b96a2fe7c498076bff1bbb316664fa84f4efd1525636a33310b76d012e",
+      "doc": "docs/static/SNModMaker/tests/workspace-smoke.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "912864d4b0d49a07995fd17bc6d05f10da17ddfc6c71eaa49dd4f272fd4b2c06",
-      "doc": "docs/static/SNModMaker/README.md",
-      "status": "grouped",
-      "group": "docs/static/SNModMaker/README.md"
+      "sha256": "5d75d9d269cdcd46259bb3f1b59c8f1c0eb38c0621297be247de6463fe09b966",
+      "doc": "docs/static/SNModMaker/tools/content.mjs.md",
+      "status": "documented"
     },
     {
       "source": "SNModMaker/tools/content_json.mjs",
-      "sha256": "3d5633eb419ca5a30307f7b3219d7dbe4ae64581c621020b367ea7f3eb3dc4bb",
-      "doc": "docs/static/SNModMaker/README.md",
-      "status": "grouped",
-      "group": "docs/static/SNModMaker/README.md"
+      "sha256": "bcc7d996ced0fb7b1011db70adf99d6e2557e514188221d97e223d1f0896bc93",
+      "doc": "docs/static/SNModMaker/tools/content_json.mjs.md",
+      "status": "documented"
     },
     {
       "source": "SNModMaker/tools/game_mods_dir.mjs",
@@ -571,7 +581,7 @@
     },
     {
       "source": "SNModMaker/tools/serve.mjs",
-      "sha256": "62032d5432ffae1603674d4b751cc7a0a207a4ee605c221e5ef2c08db50fe69c",
+      "sha256": "45c7dceacb9ec6b8ede5da6c9d2c88130ecb07346ce77601a6072a392e2dd158",
       "doc": "docs/static/SNModMaker/tools/serve.mjs.md",
       "status": "documented"
     },
@@ -2621,7 +2631,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "42871f94e80c6ae26156fdbfaee1d08c19662fbc23ba87c919e97757334e57d4",
+      "sha256": "819e1f6486da9c55e5a8c1a58552af5b481e8ee8f5fcf5d6382aa96cfb659cb6",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2646,7 +2656,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "581b9202747910c145800f85eba7b775022d5a4cde985f3add5f94998fabb05a",
+      "sha256": "54006b6ef551ca8809b80e2bbbe59a470023600cf783d1e80bb37fba34a2e3bc",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -2747,7 +2757,7 @@
     },
     {
       "source": "tools/modeling/briefs/sn_port_facilities_batch1.json",
-      "sha256": "3c2c826c651c6d900ae1aad21bc2926bbb645fda064d06d26be14c2d6f8a514e",
+      "sha256": "2df4415b7eac6bb9a8f273caef42b00e4679c3a47bebbfd3122927cccbbae0f9",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -2922,7 +2932,7 @@
     },
     {
       "source": "tools/modeling/generators/render_port_preview.py",
-      "sha256": "5e36347daf7715d6a820b5383e10567116ca0d051291735d7dd2786633eec31c",
+      "sha256": "0dd780d5e9d0b676b62d793f09cd397729143596c1f3fd8cc7a3ddf6ed40d4a7",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3048,7 +3058,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_port_facilities_generator.py",
-      "sha256": "3fce38b0e8451242023b2da5c2203c03594c8201a08be33a40f9a081d11f3cbb",
+      "sha256": "6ec7a7407715acf88981185d90bf707cafd31cf259c9122d7837c292f085feaf",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3125,7 +3135,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "4edc748f7ca61999e610bedb21a18344954e99c41ec61ec3cc160858b5132105",
+      "sha256": "9c6d399daf3e193d856e362a999f135a56be7643b6715ff362df1c5dcd632124",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

@@ -132,6 +132,7 @@
 - [x] SNModMaker 一键部署：导出并覆盖游戏 `mods/<id>.snavmod.zip`，清理同 ID 旧版本包；支持 `SNMODMAKER_GAME_MODS_DIR` 指向外部游戏安装目录
 - [x] SNModMaker 部署目标默认指向发布包 `dist/build/<platform>/mods/`（优先已导出的平台目录），`SNMODMAKER_GAME_MODS_DIR` 仍可覆盖
 - [x] SNModMaker 资源页 GLB 缩略图：内置 `js/glb.js` 解析 + `js/model_thumb.js` WebGL 单帧渲染，无第三方依赖；失败保留 GLB 占位
+- [x] Content CLI（agent 无头工作流）：`SNModMaker/tools/content.mjs` 提供 types / describe / list / add / set / loc / rm / clone / validate / new 十个命令，按 Schema 保源增删改定义与本地化；`--json` 单一 JSON 对象 + 退出码 0/1/2，`--dry-run` 预览 diff，SHA-256 并发冲突保护，`--godot` 可调 `sdk/validate.gd`（需 `GODOT_BIN`）；保源编辑器在 `SNModMaker/tools/content_json.mjs`。用法见 [SNModMaker/README.md](SNModMaker/README.md)
 - [ ] 模组管理 UI（启用 / 禁用 / 优先级）
 - [x] 发布链：GitHub Actions tag 发布 Windows/Linux + Core 包 + SHA256
 - [x] 标准便携发布布局：exe 同级内置 `mods/`（core 包）与 `config/`；导出排除 `dev_mods` / `dev_scenes` / `framework/tests`；发布前用 `sdk/validate.gd` 校验 core 资产完整
@@ -328,3 +329,4 @@
 - 数值改动先改 Core JSON，不在框架里写死。
 - 新增命令/查询必须经 `FrameworkApi` 注册，并补测试。
 - 新增内容类型需要同时补 Schema、注册表映射、跨引用检查与文档；随后运行 `node SNModMaker/tools/sync-schemas.mjs` 与 `node SNModMaker/tools/sync-core-index.mjs`，并跑 `node SNModMaker/tests/run-tests.js`。
+- 新增或修改内容（商品 / 船体 / 委托 / 事件等）优先用 `node SNModMaker/tools/content.mjs` 的 `add` / `set` / `clone` / `loc`，不要手改 JSON 后再靠编辑器重排格式。

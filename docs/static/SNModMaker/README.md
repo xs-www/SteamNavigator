@@ -7,6 +7,7 @@
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `README.md` | 使用说明、数据流、开发约定与已知边界。 | 本页 |
+| `WORKSPACE.md` | 原生工作区使用说明：启动本地服务、在编辑器里直接编辑 dev_mods/core、保存边界与发布前校验。 | 本页 |
 | `css/app.css` | 暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、内容/多语言编辑器、模态框与 Toast。 | [查看](./css/app.css.md) |
 | `exports/README.md` | 本地导出目录说明：ZIP 命名与忽略规则。 | 本页 |
 | `index.html` | 模组制作器的静态外壳：顶栏、导航/工作区/检视器布局，以及模态框、Toast、拖放与忙碌层宿主。 | [查看](./index.html.md) |
@@ -80,10 +81,14 @@
 | `mods/core/localization/zh_CN.json` | 源文件：zh_CN.json | 本页 |
 | `mods/core/manifest.json` | 源文件：manifest.json | 本页 |
 | `tests/browser-smoke.mjs` | Chrome DevTools Protocol 冒烟测试：新建项目、实体键事务、模块子分页与船体模块区、本地化、自定义资源选择器、ZIP、导入与撤销。 | [查看](./tests/browser-smoke.mjs.md) |
+| `tests/content-cli.test.mjs` | Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出。 | [查看](./tests/content-cli.test.mjs.md) |
 | `tests/run-tests.js` | Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析。 | [查看](./tests/run-tests.js.md) |
 | `tests/server-smoke.mjs` | 本地服务磁盘 API 冒烟测试：在隔离临时目录验证游戏模组部署、覆盖、枚举、删除与旧版本清理。 | [查看](./tests/server-smoke.mjs.md) |
+| `tests/workspace-smoke.mjs` | 原生工作区冒烟测试：用 `/api/workspace/<id>` 打开 dev_mods/<id>，验证删除定义、新增内容文件、删除本地化、资产不被改写与禁止整体删除。 | [查看](./tests/workspace-smoke.mjs.md) |
+| `tools/content.mjs` | SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验。 | [查看](./tools/content.mjs.md) |
+| `tools/content_json.mjs` | 保源 JSON 源文本编辑器（纯函数、无 fs）：解析带 start / end 的节点树，只替换目标节点附近的文本切片，让 CLI 增删改内容时既有字节、缩进与 BOM 保持不变。 | [查看](./tools/content_json.mjs.md) |
 | `tools/game_mods_dir.mjs` | 解析编辑器「导出并覆盖到发布包 mods/」的默认目标目录。 | [查看](./tools/game_mods_dir.mjs.md) |
-| `tools/serve.mjs` | 零依赖本地静态服务器 + 磁盘 API：项目工作区、普通导出与发布包模组覆盖部署。 | [查看](./tools/serve.mjs.md) |
+| `tools/serve.mjs` | 零依赖本地静态服务器 + 磁盘 API：项目工作区、原生模组工作区（dev_mods 原地编辑）、普通导出与发布包模组覆盖部署。 | [查看](./tools/serve.mjs.md) |
 | `tools/sync-core-index.mjs` | 从 `dev_mods/core` 生成 `js/core-index.js`：Manifest、内容文件、双语本地化与定义索引。 | [查看](./tools/sync-core-index.mjs.md) |
 | `tools/sync-schemas.mjs` | 把 `schemas/*.schema.json` 打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。 | [查看](./tools/sync-schemas.mjs.md) |
 
@@ -96,3 +101,4 @@
 - 标准实体可配置贴图与 GLB 模型资源键，编辑器校验资源存在性与格式。
 - 所有导入内容都经过 HTML 转义、路径检查与 ZIP 体积/条目/CRC 限制。
 - 浏览器存储始终可用；`tools/serve.mjs` 运行时额外镜像到 `mods/`，导出可写入 `exports/`。
+- `tools/content.mjs` 是无头 CLI，与网页端共用 `js/store.js` / `js/validate.js`；写回用 `tools/content_json.mjs` 保源编辑，写前按 SHA-256 检测并发修改。
