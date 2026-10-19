@@ -1,6 +1,6 @@
 # `SNModMaker/js/ui.js`
 
-> 作用：Schema 驱动的表单渲染与通用 UI 组件：字段控件、数组/条件/效果编辑器、模态框、Toast、Datalist。
+> 作用：Schema 驱动的表单渲染与通用 UI 组件：字段控件、数组/条件/效果编辑器、自定义资源选择器、船体模块区、模态框与 Toast。
 
 - 关键依赖：`validate.flattenObject/deref`、`store`、`catalog`
 - 类型：浏览器经典脚本
@@ -28,41 +28,49 @@
 | `expectedTypes(field)` | L204 |
 | `listIdFor(field)` | L208 |
 | `renderDatalists(project)` | L214 |
-| `translated(project, key)` | L262 |
-| `label(typeKey, field)` | L269 |
-| `hint(typeKey, field)` | L273 |
-| `fieldShell(typeKey, field, control, options)` | L277 |
-| `inputText(path, value, options)` | L291 |
-| `inputNumber(path, value, schema, options)` | L299 |
-| `selectEnum(path, value, values, options)` | L311 |
-| `toggle(path, checked, text)` | L323 |
-| `rangePair(path, value, itemSchema, itemFile)` | L330 |
-| `refInput(path, value, field, options)` | L340 |
-| `stringList(path, value, options)` | L351 |
-| `enumMulti(path, value, values)` | L369 |
-| `arrayShell(path, items, renderItem, addLabel, emptyText, addExtra)` | L383 |
-| `itemHead(path, index, title, options)` | L395 |
-| `renderModifier(item, index, path, ctx)` | L407 |
-| `renderMaterial(item, index, path, ctx)` | L419 |
-| `renderPayload(item, index, path, ctx)` | L430 |
-| `renderMarket(item, index, path)` | L444 |
-| `renderOperation(item, index, path)` | L456 |
-| `renderOption(item, index, path, ctx)` | L469 |
-| `conditionKind(value)` | L495 |
-| `renderCondition(value, path, ctx, nested, depth)` | L503 |
-| `conditionField(field, value, path)` | L560 |
-| `renderEffect(item, index, path, ctx)` | L574 |
-| `effectField(field, value, path)` | L589 |
-| `renderObjectFields(objectSchema, objectFile, value, basePath, ctx, options)` | L603 |
-| `renderField(field, schema, value, path, ctx, options, schemaFile)` | L621 |
-| `renderKeyBlock(project, definition, field, typeKey, key)` | L729 |
-| `renderDefinitionForm(options)` | L740 |
-| `SNUI (global)` | L798 |
+| `translated(project, key)` | L261 |
+| `label(typeKey, field)` | L268 |
+| `hint(typeKey, field)` | L272 |
+| `fieldShell(typeKey, field, control, options)` | L276 |
+| `inputText(path, value, options)` | L290 |
+| `assetMatchesKind(asset, kind)` | L298 |
+| `assetPicker(path, value, kind, project, options)` | L305 |
+| `inputNumber(path, value, schema, options)` | L337 |
+| `selectEnum(path, value, values, options)` | L349 |
+| `toggle(path, checked, text)` | L361 |
+| `rangePair(path, value, itemSchema, itemFile)` | L368 |
+| `refInput(path, value, field, options)` | L378 |
+| `stringList(path, value, options)` | L389 |
+| `enumMulti(path, value, values)` | L407 |
+| `arrayShell(path, items, renderItem, addLabel, emptyText, addExtra)` | L421 |
+| `itemHead(path, index, title, options)` | L433 |
+| `renderModifier(item, index, path, ctx)` | L445 |
+| `renderMaterial(item, index, path, ctx)` | L457 |
+| `renderPayload(item, index, path, ctx)` | L468 |
+| `renderMarket(item, index, path)` | L482 |
+| `renderOperation(item, index, path)` | L494 |
+| `renderOption(item, index, path, ctx)` | L507 |
+| `conditionKind(value)` | L533 |
+| `renderCondition(value, path, ctx, nested, depth)` | L541 |
+| `conditionField(field, value, path)` | L598 |
+| `renderEffect(item, index, path, ctx)` | L612 |
+| `effectField(field, value, path)` | L627 |
+| `renderObjectFields(objectSchema, objectFile, value, basePath, ctx, options)` | L641 |
+| `renderField(field, schema, value, path, ctx, options, schemaFile)` | L659 |
+| `previewLocalizationKey(key, draft)` | L769 |
+| `renderKeyBlock(project, definition, field, typeKey, key, draft, token)` | L777 |
+| `renderAdditionalLocalization(project, definition, typeKey, draft)` | L810 |
+| `renderHullModuleConfiguration(definition)` | L825 |
+| `renderDefinitionForm(options)` | L855 |
+| `SNUI (global)` | L925 |
 
 ## 契约与约束
 
 - 渲染层只输出 HTML；所有编辑通过 `data-field` / `data-action` 交给 app.js，不直接修改项目。
 - 表单字段类型、枚举、范围与必填来自 Schema；专用控件只针对 modifier/material/payload/condition/effect/option 等结构。
+- 标准实体表单额外呈现所有语言的名称/描述暂存输入，以及 information.texture/model 资源键配置。
+- 贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。
+- 船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。
 - 所有用户文本与属性值经过 `esc/attr` 转义；引用候选来自当前项目 + Core 索引。
 - 表单生成的路径是相对定义的属性路径（manifest 除外），与 app.setByPath 的约定一致。
 
@@ -75,8 +83,14 @@
 
 ### `renderDefinitionForm(ctx)`
 
-- 普通定义渲染身份区（ID/名称键/描述键/标签/启用）与数据区；补丁定义渲染目标、来源约束与操作列表。
-- ID 输入只显示 local 部分，前缀由 app 在写回时补齐。
+- 普通定义渲染身份区、条目内多语言值、视觉资源与数据区；补丁定义渲染目标、来源约束与操作列表。
+- ID 输入只显示 local 部分，前缀由 app 在写回时补齐；名称/描述键显示只读的待提交预览。
+- hulls 额外渲染模块配置区，并从通用数据字段中跳过 cargo_slots/cabin_slots。
+
+### `assetPicker(path, value, kind, project)`
+
+- 输出可编辑输入、展开按钮和主题化候选菜单；候选同时显示资源键与项目内路径。
+- kind=image 仅接受图片 MIME/扩展名，kind=model 仅接受 model/gltf-binary 或 .glb。
 
 ### `renderCondition(value, path, ctx)`
 

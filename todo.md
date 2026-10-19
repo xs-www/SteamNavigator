@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**100 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、密集界面横向排版与通报文案本地化守护）；SNModMaker 28 个 Node 用例通过（浏览器冒烟需本地 Chrome 环境）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**135 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -41,9 +41,9 @@
 - [x] 新航程主按钮改用 `SNPrimaryButton`；章节标题改用语义 Label 变体
 - [x] 高频决策页第一轮：补给 `SNSupplyCard`、委托固定结构/可接与进行中分区、市场真实价格历史与 `SNSparkline`
 - [x] 海图重设计：三次贝塞尔航路、每港邻居组中心出港方向、经纬网/洋流/罗盘/图内图例、当前港脉冲与宽屏布局
-- [ ] 高频决策页第二轮：市场数量步进/即时成本、船厂槽位选择、持久 ScreenHost 与局部数据刷新
+- [ ] 高频决策页第二轮：市场数量步进/即时成本、持久 ScreenHost 与局部数据刷新（船厂槽位选择已随图 2/图 3 重构落地）
 - [x] 情报页第二轮：`intel.view` 输出「商品 × 港口」矩阵（当前港实时市场，其余港快照 + 年龄），新增 `SNIntelTable`（`？`/`-` 规则、红降绿升百分比、未探索港整列）；main.gd 接线见 T4
-- [x] 宽屏布局回归：设置、总览、市场与船厂的密集横向字段禁止智能折行为逐字竖排；市场单元格保留最小列宽，情报矩阵随面板宽度展开
+- [x] 宽屏布局回归：设置、总览、市场、船厂与港口记忆的密集横向字段禁止智能折行为逐字竖排；市场/快照单元格保留最小列宽，情报矩阵随面板宽度展开
 - [ ] 界面场景化重构：静态 `main.tscn` 外壳、独立海图、七个功能页、四个菜单页，以及港口记忆/抵达结算/航行中/事件/通关五个流程页均已完成；页面迁移完成，剩余工作是把当前整页重建升级为持久 `ScreenHost` 与局部刷新。
 
 ### 阶段 C：Core 内容（MVP 骨架）
@@ -82,25 +82,30 @@
 - [x] 反馈 2：补给上限改为稳定物理上限（`capacity/baseline_capacity/cap_loss/headroom`），买一种补给只会压低另一种上限；`SNResourceMeter` 在 `loss_value > 0` 时用右端反向损失带表达上限损失（`loss_value <= 0` 仍走主题 ProgressBar）
 - [x] 反馈 3：情报页改为「商品 × 港口」对比矩阵（`IntelViewQuery.columns/rows/cells` + `SNIntelTable`）：未探索港口保留整列（「未知港口」+「？」），`-` 表示该港不经营，趋势为红降/绿升百分比数字；`IntelService` 快照行新增 `trend_percent`
 - [x] 反馈 5：顶部信息条常显当前港口（在航时为「在航 → 目的港」）与剩余载重/剩余货舱（`port.view.ship.free_weight/free_cargo_capacity`）
-- [x] 反馈 6：总览与船厂常驻通关条件清单（主线 n/5 → 大型船体 → 锅炉 → ≥1 货舱 → 造船厂组装）与主线完成后的下一步提示，数据来自 `port.view.victory.conditions` 与 `contracts.main_done/main_total`
+- [x] 反馈 6：总览常驻通关条件清单（主线 n/5 → 大型船体 → 锅炉 → ≥1 货舱 → 造船厂组装）与主线完成后的下一步提示，数据来自 `port.view.victory.conditions` 与 `contracts.main_done/main_total`；船厂页重构后不再重复该清单
 - [x] 测试：新增 `test_craft_wait`（8）与 `test_ui_shell`（8，把真实外壳场景挂进场景树逐条验证反馈 2–6、密集界面横向排版，并守护通报文案替换与 `push_notice` 键的中英一致性），更新仓库/打造、补给、船体升级、情报用例；测试运行器改为在**首个渲染帧**执行，使 UI 套件能获得正常的 `_ready`/viewport 语义
 - [x] 独立验证（T5，只读）发现的 3 处用户可见文案缺陷已修：`port.wait` 状态栏参数序、`ui.notice.craft_ordered` 英文模板序、「航行记录」裸模板；补齐 3 个缺失通报键（`discovered_port` / `run_started` / `no_contract_offer`），`arrived` 现在带上港口名
 - [x] 文档：`docs/static` 与新代码同步（新增 `port_commands.gd` / `sn_intel_table.gd` / `test_ui_shell.gd` / `test_craft_wait.gd` 条目，更新受影响的契约描述）
 
-### 船厂改装界面（已完成）
+### 船厂界面（图 2 / 图 3 布局重构，已完成）
 
-> 目标：船厂从「列表 + 按钮」升级为可交互的中央改装台；本迭代只做 2D 占位渲染与可拖拽槽位，2.5D 舞台留接口。同时覆盖「高频决策页第二轮」里的船厂槽位选择部分（市场数量步进与持久 `ScreenHost` 仍未做）。
+> 目标：主界面只保留「改装台 + 组件 HUD」，全部改装操作收进分类面板；旧的整页下方面板删除，但每条旧命令保留入口。设计说明：[SHIPYARD_UI_REFACTOR.md](docs/design/SHIPYARD_UI_REFACTOR.md)。
 
-- [x] `SNShipView` 中央改装台：船体侧视占位渲染 ↔ 纵剖图切换；纵剖图每槽位一枚 `SNSlotTarget` 贴片，槽位由当前船体反推（船体/锅炉/导航/安全各 1、客舱看 `cabin_slots`、货舱按 `cargo_slots`）
-- [x] `SNSlotTarget`：只接受 `ship_parts` 拖放载荷（仓库/随船、类型匹配、`can_install` 为真），发 `part_dropped` / `slot_activated`；购买候选与异类型部件被拒
-- [x] `SNPartRow` 部件 HUD：已装 / 仓库 / 随船 / 购买四种标签；仓库与随船且可装的行可拖，购买行点击即购买安装
-- [x] `ShipyardScreen` 重排：中央舞台 + 右侧 372 px 按槽位分组的 HUD + 改装开关；拖放映射 `ship.install_module(replace_module_id)`，保留订单/仓库/打造/购买/通关清单面板
-- [x] Shell：`_shipyard_refit` 记忆改装态，`shipyard_model.refit` 下发页面；切页或命令重建后仍保持纵剖图
-- [x] 本地化：新增 refit / stage / slot / tag / hint 中英键（`ui.label.refit`、`ui.label.slot_*`、`ui.tag.*`、`ui.hint.drag_*` 等）
-- [x] 2.5D 接口：`SNShipView.set_renderer(node)` / `has_renderer()` + 渲染器协议 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(slot_ids)`；传 `null` 恢复内置占位
-- [x] 测试：新增 `test_shipyard_refit`（3）——槽位数与模式持久、渲染器替换钩子、仓库模块拖拽安装并离开仓库；测试总数 97 → 100
-- [x] 截图：`docs/design/screenshots/shipyard_refit_exterior.png` / `shipyard_refit_cutaway.png`
-- [x] 文档：`docs/static` 新增 `sn_ship_view.gd` / `sn_slot_target.gd` / `sn_part_row.gd` / `test_shipyard_refit.gd` 条目，并刷新船厂页 / Shell / 测试运行器契约
+- [x] 正常态三列：左「已有船舶」贴图船卡（`assets/ui/shipyard/ship_thumb_ironclad.png`）+ 中间 `SNShipView(EXTERIOR)` 实机渲染占位 + 右「组件」六类入口（点击进入改装）
+- [x] 改装态三列：左授权贴图纵剖图（`SNShipView(CUTAWAY)` + 每槽位一枚 `SNSlotTarget` 贴片 + 舱室引线）+ 中当前分类的槽位 / 装配 / 购买 / 打造紧凑操作卡（唯一纵向滚动区）+ 右竖排分类页签（船体 / 锅炉 / 货舱 / 导航 / 安全 / 客舱 / 杂项）
+- [x] 删除旧的整页下方面板与构建函数：`_stage_row` / `_parts_hud` / `_victory_plan` / `_orders_panel` / `_warehouse_panel` / `_craft_panel` / `_build_purchase_panels`；`_body` 恒为三列
+- [x] 命令迁移：打造订单 + 在港等待 + 仓库材料 / 仓库模块 →「杂项」；购买并安装 + 按配方打造 → 各模块分类；卸下 → 槽位卡；拖拽装配保留；通关清单只在总览页
+- [x] `SNShipView` 贴图纵剖图：`SECTION_TEXTURE_PATH` + `has_section_texture()` / `section_texture_size()`，`_draw_section_texture()` 做 cover 裁切，贴图缺失回退程序化剖面；槽位行固定在 `h*0.60`（非货舱）/ `h*0.82`（货舱）
+- [x] 槽位贴片与拖放：`SNSlotTarget` 只接受 `ship_parts` 载荷（仓库 / 随船、类型匹配、`can_install` 为真），发 `part_dropped` / `slot_activated`；购买候选与异类型部件被拒
+- [x] `SNPartRow`：已装 / 仓库 / 随船 / 购买四种标签；仓库与随船且可装的行可拖，购买行点击即购买安装
+- [x] Shell 记忆改装态 + 分类：`refit_mode_changed` / `refit_category_changed` → `_shipyard_refit` / `_shipyard_category`，`_shipyard_model()` 下发 `refit` / `category` / `ship.hull_name`；切页或命令重建后仍保持
+- [x] 查询补字段：`shipyard.view` 的 `ship.modules[].effect` 供槽位卡显示效果行
+- [x] 贴图资产：`assets/ui/shipyard/ship_section.png`（1792×1008）与 `ship_thumb_ironclad.png`（640×360），确定性生成器 `tools/art/gen_shipyard_textures.py`（`python tools/art/gen_shipyard_textures.py` 可重建；`--thumb-only` 只重导船卡）
+- [x] 截图工具：`tools/ui_snapshot.gd` + `tools/capture_ui.ps1`（窗口 1440×900、bootstrap 与测试一致、模式/分类断言、120 s watchdog），产出 `shipyard_{normal,refit,refit_cargo,refit_misc}.png`
+- [x] 本地化：新增 normal/refit 两态与分类页签中英键（`ui.label.ship_list`、`ui.label.components`、`ui.category.*`、`ui.hint.operations*`、`ui.tag.section_texture` 等）
+- [x] 测试：`test_shipyard_refit` 扩到 8 例（正常态 / 改装态 / 分类与模式记忆 / 贴图契约 / 船卡缩略图 / 2.5D 渲染器替换 / 拖拽安装 / 旧面板移除）；`test_ui_shell` 改为通关只在总览、打造与等待经分类和「杂项」。本轮验收船厂 / UI 套件 105/105 全绿
+- [x] 文档：`docs/static` 的船厂页 / `sn_ship_view` / Shell / `shipyard_view` / 两个测试条目重写契约，并新增 [SHIPYARD_UI_REFACTOR.md](docs/design/SHIPYARD_UI_REFACTOR.md)、更新 UI_PROTOTYPE 与 ASSET_MAP
+- [ ] 2.5D 舞台接入：正常态中央仍是程序化 2D 占位，改装态纵剖图是一张 2D 贴图；`SNShipView.set_renderer()` 渲染器协议已就绪，等待 `ShipyardStage` 落地
 
 ### 阶段 D：存档与兼容
 
@@ -118,8 +123,18 @@
 - [x] 模组模板
 - [x] 第三方锅炉示例并通过公共注册表加载
 - [x] 零依赖网页端模组制作器 `SNModMaker/`（表单、校验、本地化、资源、导入导出、ZIP、自动保存）
+- [x] SNModMaker 实体约束编辑体验：ID 修改只预览多语言键，保存条目时原子迁移全部语言并删除旧键；名称/描述支持条目内多语言编辑与语言页跳转
+- [x] SNModMaker 船只与模块子分页：船体 / 锅炉 / 货舱 / 导航 / 安全 / 客舱 / 岗位 / 策略直接切换
+- [x] 标准实体视觉资源：可配置贴图与 GLB 模型资源键；使用主题化可搜索下拉框并按图片 / GLB 类型过滤；Schema、浏览器校验、资源白名单与导入导出同步支持
+- [x] SNModMaker 船体模块配置区：锅炉 / 导航 / 安全固定一槽，货舱 / 客舱槽位按实体约束直接编辑且不与普通字段重复
+- [x] 本体新版实体解析：`ContentDefinition` 保留 `information`，贴图 / GLB 键归一化为所属模组的 `asset://` URI；普通定义与 Patch 都校验资源存在性和扩展名
+- [x] Core 新版实体字段：15 条船体 / 锅炉 / 商品 / 材料 / 港口定义接入贴图或 GLB；Core 包声明并携带 13 个资源，编辑器派生条目保留 `asset://core/...` 归属
+- [x] SNModMaker 一键部署：导出并覆盖游戏 `mods/<id>.snavmod.zip`，清理同 ID 旧版本包；支持 `SNMODMAKER_GAME_MODS_DIR` 指向外部游戏安装目录
+- [x] SNModMaker 部署目标默认指向发布包 `dist/build/<platform>/mods/`（优先已导出的平台目录），`SNMODMAKER_GAME_MODS_DIR` 仍可覆盖
+- [x] SNModMaker 资源页 GLB 缩略图：内置 `js/glb.js` 解析 + `js/model_thumb.js` WebGL 单帧渲染，无第三方依赖；失败保留 GLB 占位
 - [ ] 模组管理 UI（启用 / 禁用 / 优先级）
 - [x] 发布链：GitHub Actions tag 发布 Windows/Linux + Core 包 + SHA256
+- [x] 标准便携发布布局：exe 同级内置 `mods/`（core 包）与 `config/`；导出排除 `dev_mods` / `dev_scenes` / `framework/tests`；发布前用 `sdk/validate.gd` 校验 core 资产完整
 - [ ] 发布签名与固定哈希校验
 
 ## 3D 资产：铁港码头道具
@@ -143,12 +158,87 @@
 - [ ] P1：补塔吊参数化生成脚本（`tools/modeling/generators/sn_harbor_crane_generator.py`）
 - [ ] 道具进港口灰盒后，按目标机位复核尺度、朝向、材质与阴影
 
+## 3D 资产：船舶模块（11 件）
+
+> 覆盖 Core 里除船体外的全部模块实体：3 锅炉 / 3 货舱 / 2 导航 / 2 安全 / 1 客舱。本批只交付 Blender 工作台 + 独立 GLB，不接入 Core 内容键。工单 [sn_ship_modules_batch1.json](tools/modeling/briefs/sn_ship_modules_batch1.json)，流程同 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)。
+
+- [x] 参数化生成器 `tools/modeling/generators/sn_ship_modules_generator.py`：11 件合计 **7016 tri**（预算 8300），全部由顶部参数表生成
+- [x] 纯 Python 干跑 `dryrun_props.py`：tri / 包围盒（误差 ≤0.1 m）/ 边界边 / 非流形边 / 退化面 / 底面 z 全部通过
+- [x] Blender 工作台 `SN_Ship_Modules` 集合：160 对象 / 145 mesh / 11 材质；网格健康四项全 0；原有 149 对象回归未变
+- [x] 导出 11 个独立 GLB 到 `assets/models/modules/`，`verify_modules_glb.py` 11/11 PASS（单节点、尺寸、材质、轴向）
+- [x] 验收截图归档：`docs/design/screenshots/ship_modules_batch1_{overview,boilers,cargo,nav_safety_cabin}.png`
+- [x] 独立 Verifier 只读复核 R0→R2 三轮：R0 报的 5 处同法线共面 + 9 处悬空壳体、R1 报的 4 处共面 + 1 处被穹顶包住的隐藏几何全部清零，R2 判定 **pass**（仅剩 2 处完全被遮挡的微小共面记录在案）；报告见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md)
+- [ ] 接入 Core：每个模块实体 `information.model` 资源键 + manifest 声明 + 资源校验测试
+- [ ] Godot 导入验收，并在船厂改装台 / 2.5D 舞台按 socket 试装
+
+## 3D 资产：舷侧炮铁甲舰（SN_Ironclad）
+
+> 纯展示资产（不接 Core 内容）：1860 年代舷侧炮铁甲舰，60 m 级、8830 tri。工单 [sn_ironclad_broadside.json](tools/modeling/briefs/sn_ironclad_broadside.json)，建模流程同 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)。
+
+- [x] 参数化生成器 `tools/modeling/generators/sn_ironclad_generator.py`：17 站放样铁壳 + 撞角艏 + 2.2 m 英雄化装甲带 + 每舷 6 门英雄化舷侧炮（炮门 1.9×1.9 m / 炮管 Ø0.88→0.72 m）+ 中央炮房/指挥塔/双烟囱 + 三桅横桁收帆 + 甲板件，**8830 tri**（预算 12000；英雄化后 6 门/舷、炮门/炮管/装甲带放大，炮数减少抵消加粗）
+- [x] 纯 Python 干跑 `dryrun_ironclad.py`：tri / 包围盒 60.14×18.00×28.64 / z -4.20..24.44 / 边界边 / 非流形边 / 退化面 / 孤立点 / 材质全部通过
+- [x] 只读连通性检查 `check_ironclad_connectivity.py`（拆岛 + BVH 相交/最近距离）：551 岛、floating=0、loose=0
+- [x] Blender 工作台 `SN_Ironclad_Prototype` 集合：161 对象 / 146 mesh / 11 材质；网格健康四项全 0；原有 160 对象回归未变
+- [x] 导出 `assets/models/ships/SN_Ironclad.glb`（单节点 / 8 图元 / 8830 tri / 约 468 KB）+ `.design/ships/SN_Ironclad.blend` 快照；`verify_ironclad_glb.py` PASS；Godot 已生成 `.import`（PackedScene）
+- [x] 截图归档：`docs/design/screenshots/ironclad_{three_quarter,broadside,bow,bow_closeup,guns_closeup,stage_ortho}.png`
+- [x] 独立 Verifier 只读复核 R0→R1 两轮：R0 的 8 类悬空/错位（桅顶饰、指挥塔、通风筒、甲板机械、小艇重合、桨叶脱毂、黄铜条/驾驶台、小间隙）全部清零，R1 判定 **pass**；R2 人工反馈（舰艏两个斜桁鞍座/绑扎块浮空）已加基座/艏柱座/锚吊架修复并复验仍 **pass**；报告见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md)
+- [ ] Godot 引擎侧复核（导入已成功；待跑轴向/包围盒/材质校验）与 2.5D 舞台目标机位试装
+- [ ] 如需转为战舰 / 第 5 种船体：接 Core 内容键 + manifest + 本地化 + 测试
+
+## 3D 资产：小型明轮蒸汽船（SN_Paddle_Steamer）
+
+> 参考澳大利亚国家博物馆的明轮蒸汽船 **PS Enterprise** 的 24 m 级小型明轮客船，纯展示资产（不接 Core）。**用户明确要求烟囱蒸汽不做几何，留给游戏内 VFX**。工单 [sn_ship_paddle_steamer.json](tools/modeling/briefs/sn_ship_paddle_steamer.json)，流程同 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)，验收记录见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md) 第 10 节。
+
+- [x] 参数化生成器 `tools/modeling/generators/sn_paddle_steamer_generator.py`：24 m 白漆内河船身 + 两舷 10 桨叶明轮 + 10 道格栅轮罩 + 前驾驶室（ENTERPRISE 文字铭牌）+ 后部雨棚游步甲板 + 黑烟囱 + 艏澳洲旗 + 艉弧形平台/舵，**11764 tri**（预算 12000）、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`）
+- [x] 纯 Python 干跑 `dryrun_paddle_steamer.py`：35 对象 / 32 mesh / 3 empty、包围盒 **24.56 × 8.74 × 10.47 m**、z −1.32..9.15、边界/非流形/退化/孤立点全 0（Deck 与铭牌单层双面白名单）、左右镜像误差 0
+- [x] Blender 工作台 `SN_Paddle_Steamer_Prototype` 集合：全场景 **196 对象**（161 既有 + 35 新增）；161 个既有对象名称/位置零漂移
+- [x] 明轮安全与连通性：双舷各 8 个旋转角（0/45/…/315°）与轮罩/船体/明轮台 0 交面；524 个连通岛悬空 0，松接触 0.008–0.027 m（台阶、铭牌字母）
+- [x] 独立 Verifier 只读 R0：**passed=true**，无阻断项；3 条非阻断视觉建议（轮罩下沿 / 雨棚体量 / 白色层次）
+- [x] 按 Verifier P1 把轮罩下沿 z 0.55→**0.90**，明轮露出约 0.9 m；重跑场景验收 **passed** 并重渲 5 张截图
+- [x] 导出 `assets/models/ships/SN_Paddle_Steamer.glb`（**35 节点 / 32 网格 / 11764 tri / 8 材质 doubleSided / 632.7 KB**）+ `.design/ships/SN_Paddle_Steamer.blend` 快照；`verify_paddle_steamer_glb.py` **GLB OK**
+- [x] 截图归档：`docs/design/screenshots/paddle_steamer_{three_quarter,broadside,bow,stern_quarter,top}.png`
+- [x] ~~烟囱蒸汽几何~~：按用户要求不建模，由游戏内粒子/VFX 负责；模型仅保留 `SN_PS_Steam_Pipes` 黄铜管路
+- [ ] Godot 导入验收（本机 `GODOT_BIN` 未设置）与 2.5D 舞台目标机位试装（水线高度 / 朝向 / 明轮 Pivot 旋转）
+- [ ] 可选：作为第 5 种船体 / 内河客运场景接入 Core 内容键 + manifest + 本地化 + 测试
+- [ ] 非阻断视觉打磨：雨棚体量、白色层次与暗红压条对比（下一轮再定，不改当前工单）
+
+## 3D 资产：1795 双桅纵帆船（SN_Schooner_Fame）
+
+> 用户 2026-10-19 反馈「港口样片里的旧帆船太简陋」，给定 1795 年 Salem 名船 Fame 的绘画参考，要求做一艘「又帅气又好看」的 24 m 级双桅纵帆船替换旧浮船；明确要求**不要星条旗**。工单 [sn_schooner_fame.json](tools/modeling/briefs/sn_schooner_fame.json)，流程同 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)。
+
+- [x] 人工门禁 1：新建 `SN_Schooner_Fame` 替换港口样片旧帆船；精度「风格化精修 ≈1.5–1.8 万 tri」；24 m 级、双桅纵帆、帆腹朝 −Y（Godot +Z 相机侧）
+- [x] 人工门禁 2：**移除星条旗**，只保留主桅顶红白长旒（生成器不再装配 `SN_SF_Flag` / 旗杆段）
+- [x] 参数化生成器 `tools/modeling/generators/sn_schooner_fame_generator.py`：18 站放样黑船身 + 赭黄上舷带 + 艉楼甲板；双桅后倾（Fore −2.5° / Main −3.2°，轴距 6.4 m）；前桅斜桁帆 + 方顶帆、主桅大斜桁帆 + 三角顶帆、两面艏三角帆；舷侧绳梯/支索/动索；艉廊 3 窗 + FAME 铭牌 + 双灯；甲板属具（舱口/绞盘/起锚机/舵轮/罗经柜/锚/钟/木桶/盘绳/fife rails/短梯/艏饰）；**13174 tri**（预算 18000）、12 材质
+- [x] 纯 Python 干跑 `dryrun_schooner_fame.py`：29 mesh、12994 tri（+铭牌 180 = 13174）、包围盒 **33.44 × 6.88 × 26.82 m**、边界边仅在 6 个单层曲面白名单、非流形/退化/孤立点 0；新增 Pivot 世界变换 + 两桅轴距/后倾断言（修掉 R1 P0 的干跑盲区）
+- [x] Builder R0→R4 + Verifier R0/R1 两轮：R0 抓出两桅世界坐标重合、rake 未生效（P0）；R1 修复后独立复核 **passed=true**，P2（艉柱与艉廊共面 20 mm、帆缝/索具细节、文档口径）已在 R4 收尾
+- [x] 导出 `assets/models/ships/SN_Schooner_Fame.glb`（**32 节点 / 29 网格 / 13174 tri / 12 材质 doubleSided / 720.9 KB**，glTF Y-up，水线轴心 z=0，无星条旗）+ `.design/ships/SN_Schooner_Fame.blend` 快照；`verify_schooner_fame_glb.py` **GLB OK**
+- [x] 截图归档：`docs/design/screenshots/schooner_fame_{three_quarter,broadside,bow_quarter,stern_quarter,top}.png`
+- [x] 接入 `dev_scenes/harbor/harbor_diorama.tscn`：浮船实例换成 `SN_Schooner_Fame`，水面泡沫环 `boat_half_size` 9×4.1 → **13.2×3.9**；相机构图按 33.44 m 总长 / 26.82 m 总高复核
+- [x] Godot 导入与场景验收：`godot --headless --import` 已生成 `SN_Schooner_Fame.glb.import`；`tools/godot/verify_harbor_diorama.gd` **21/21 PASS**（含新船实例、旧船移除、无星条旗、29 个网格、船体随波起伏）；`tools/godot/capture_harbor_diorama.gd` 已重截 `harbor_diorama_schooner.png` / `harbor_diorama_schooner_detail.png`
+- [ ] 可选：后续加船内灯光/船尾灯夜景、或在港口样片里加第二艘同级帆船做尺度对比
+
+## 可复用船体部件库（ship_parts，建模期复用）
+
+> 用户提出“把一些部件抽离，做可替换/可复用的部件”；先做**建模期部件库**（不立即做运行时可换装 GLB）。契约见 [ship_parts/README.md](tools/modeling/generators/ship_parts/README.md)，流程见 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md) 第 11.10 节。
+
+- [x] 锁定重构前基线：纯 Python 逐对象 verts/faces/tris/material/parent digest + Blender 逐对象 local/world/polys digest
+- [x] 抽出 `ship_parts/core.py`：`Part`、向量/基本体/放样/镜像工具、`PartSpec`、`tri_count`
+- [x] 抽出 `ship_parts/deck.py`：舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯（位置/甲板高由调用方传入）
+- [x] 抽出 `ship_parts/bow.py`：艏斜桁/jibboom/艏饰（船体主色由调用方传入）
+- [x] 抽出 `ship_parts/stern.py`：艉廊/3 艉窗/檐口/双艉灯
+- [x] 抽出 `ship_parts/assembly.py`：`BuildConfig/PivotSpec` + 集合/材质/空物体/文字/report；bpy 只在函数内 import
+- [x] 重构 `sn_schooner_fame_generator.py`：只保留船型参数、hull/桅帆/索具/锚架等船型相关几何与 `build_config()`；纯 Python 逐对象 digest **0 差异**，dryrun ALL OK（12994 tri / bbox 不变）
+- [x] Builder 重建 + Blender 逐对象 world/local/polys digest 对比：32 对象 / 29 mesh / 3 empty / 13174 tri 全一致
+- [ ] 抽出 `rig_kit`：桅杆/斜桁/帆面/索具参数化（按桅距、桅高、帆装配置复用）
+- [ ] 用第二艘船型验证部件库复用（如 30 m 纵帆船 / 单桅纵帆船）
+- [ ] 等 2.5D 舞台立项后再做运行时可替换：独立 GLB + `SN_Socket_*` + `parts_manifest.json` + `ShipVisualAssembler`
+
 ## 3D 港口样片：水面着色器试做（已完成一版）
 
 > 目标只是"试试水"：在独立场景里验证水面观感、已有 GLB 资产的拼接与固定机位构图；不接入主流程。
 > 运行与调参说明：[dev_scenes/harbor/README.md](dev_scenes/harbor/README.md)。
 
-- [x] 独立场景 `dev_scenes/harbor/harbor_diorama.tscn`：岸壁 / 护舷 / 爬梯 / 系缆桩 / 煤气灯 / 塔吊 / 货堆 + 帆船，全部复用 `assets/models` 的 GLB
+- [x] 独立场景 `dev_scenes/harbor/harbor_diorama.tscn`：岸壁 / 护舷 / 爬梯 / 系缆桩 / 煤气灯 / 塔吊 / 货堆 + **1795 双桅纵帆船 `SN_Schooner_Fame`**，全部复用 `assets/models` 的 GLB
 - [x] 自写水面 shader `assets/shaders/water/harbor_water.gdshader`：顶点正弦波位移、双层滚动噪声法线、菲涅耳天空反射、太阳耀斑路径、岸线泡沫、船体椭圆泡沫、远水雾色淡出；兼容 GL Compatibility，不使用深度/屏幕纹理
 - [x] 近水/远水双层材质：`FarWater` 下沉 3 m 只输出地平线雾色，遮住主水面网格边缘
 - [x] `bobbing_boat.gd` 用与 shader 同源的波浪公式驱动升沉 / 纵摇 / 横摇，避免船与水各动各的
@@ -200,6 +290,37 @@
 | 第三方内容走同一注册接口 | 完成 | 示例锅炉测试 |
 | 完整通关回归 | 完成 | `test_full_clear` 覆盖 9 个 seed，航次 ≤16 |
 | 试玩反馈 1–6 落地 | 完成 | 迭代 2：tier1 仅金币、补给反向损失带、情报对比矩阵、打造订单 + 在港等待、信息条剩余舱容、通关引导；`test_ui_shell` 逐条守护 |
+
+## 正式版方向：持久模拟经营（已确认）
+
+> 定位：一个战役 = 一份持久存档，世界随机开局后固定；多舰队、基地、自动贸易与遗迹都活在同一存档里。详见 [架构方向](docs/design/PERSISTENT_CAMPAIGN_ARCHITECTURE.md) 与 [路线图](docs/design/FULL_GAME_ROADMAP.md)。
+
+- [x] 产品决策：持久模拟经营战役 + 随机开局，失败不静默删档
+- [x] 实体契约 v2 草案 + `content_types.json` v1（含 16 个 active 类型、v2 模块分类与正式版 planned 系统，框架一致性测试守护）
+- [x] `content_types.json` 生成链：`tools/gen_content_types.mjs` → 框架 `ContentTypes.gd` + 编辑器 `content-types.js`；Godot/Node 测试与 `--check` 门禁
+- [x] 存档 Schema 2.0：新档写 save_schema/state_schema 2.0，`SaveMigrations` 支持 1.x → 2.0 并回填 campaign 元数据；旧档可加载且不自动改写
+- [x] Content Schema 2.0 草案：`schemas/v2/common` + start/world/region/site/route，`draft_schemas` 登记且保持 planned，SchemaValidator 有效/无效样本测试
+- [x] Content Schema 2.0 世界探索家族补齐：`weather_profile` / `faction` / `discovery` 草案，登记 `draft_schemas` 并补有效/无效样本测试
+- [x] `CampaignState` 分区骨架：`campaign.world` / `codex` / `factions` 惰性补齐，探索进度只追加 ID，`set_faction_reputation` 夹取，随存档往返；新局标记 `world.generated` 与起始港
+- [x] 模块实例化第一步：`ship.module_instances` + `module_serial`，实例 id/condition 随存档；`damage_module` 效果、锅炉过热接入、维修按部件计价、船厂状态徽标、顶部信息条/船卡/补给页可见；`capture_ui.ps1 -Damage` 可复现受损截图（见 [SHIP_MODULE_INSTANCES.md](docs/design/SHIP_MODULE_INSTANCES.md)）
+- [x] 2.5D 首个切片：船厂正常态 3D 实机舞台（`SNShipStage3D` 按 hull_tier 选船、固定 3/4 机位、复用港口水面着色器，改装态保持纵剖图，资产缺失回退程序化占位）；截图见 [stage3d](docs/design/screenshots/stage3d/shipyard_normal.png)，方案见 [2.5D_STAGE_PLAN.md](docs/design/2.5D_STAGE_PLAN.md)
+- [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架
+- [ ] 阶段 1：广域海图与探索（区域 / 地点 / 迷雾 / 低细节远方模拟）
+- [ ] 阶段 2：舰队组成与战斗（先自动结算，再评估战术层）；模块分类收敛为 boiler/cargo/utility/cabin/crew，导航与安全并入 utility；战斗契约边界见 [战斗系统架构评审](docs/design/COMBAT_ARCHITECTURE_REVIEW.md)
+- [ ] 阶段 3：基地建设与生产链（接入舰队/战斗/贸易）
+- [ ] 阶段 4：自动化贸易（航线、规则、风险与 tick 结算）
+- [ ] 阶段 5：遗迹探索（程序化房间、远征、战利品）
+- [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
+
+### 当前下一步（按优先级，2026-10 对齐）
+
+- [ ] **P0 提交当前批次**：`git status` 里 200+ 条未提交改动（3D 舞台、模块实例、v2 草案、文档/静态文档）。重点是 `assets/models/ships/` 的 `SN_Ironclad` / `SN_Paddle_Steamer` / `SN_Schooner_Fame` 等新资产必须入库，否则 CI 的 core 资产校验与导出包会缺资源、3D 舞台只能回退占位。建议按“模块实例 + 文档”“3D 船厂舞台”“港口样片/资产”“SNModMaker”拆 3–4 个 commit。
+- [ ] **P1 导出实测**：Windows 导出包跑一遍 3D 船厂舞台（SubViewport + GLB 导入是否进 PCK），覆盖 1440×900 / 1280×720 / 960 宽；顺带确认发布包 `mods/` + `config/` 布局仍正确。
+- [ ] **P1 `StageHost` + `LocationStage` 泛化**：把 `SNShipStage3D` 的视口/机位/灯光/水面逻辑收进通用舞台宿主，支持舞台显隐、隐藏即停更、2D 回退；船厂先迁过去，作为 PortStage 的宿主。
+- [ ] **P1 `PortStage` 骨架**：按 `facilities` 装配设施 billboard 占位（市场/委托/补给/情报/船厂）+ L0 天空/L1 远景背板；等 6 件锚点模型（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)）到位后按 `facility_visuals` 替换。
+- [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
+- [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
+- [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。
 
 ## 维护约定
 

@@ -1,6 +1,6 @@
 # `framework/application/queries/shipyard_view.gd`
 
-> 作用：船厂独立界面 ViewModel：当前/随船运输模块、港口仓库、打造配方与所有可购买模块的限制原因。
+> 作用：船厂独立界面 ViewModel：当前/随船运输模块、已装模块效果、港口仓库、打造配方与所有可购买模块的限制原因。
 
 - 类型：GDScript 源文件
 
@@ -13,6 +13,8 @@
 ## 契约与约束
 
 - 与 `ship.install_module` / `ship.uninstall_module` / `ship.craft_module` 共用 ShipOps/CraftOps 的规则函数，UI 不复制规则。
+- `ship.modules[]` 每行含 `effect`：模块 `data` 的深拷贝（模块缺失时 `{}`），供船厂页渲染效果行与槽位卡；can_uninstall/uninstall_blockers/weight/tier 仍由本查询给出。
+- `ship.modules[]` 同时给出模块实例的 `slot/index/condition/disabled`；`ship.worst_module_condition`、`ship.disabled_modules`、`ship.module_damage_points` 供界面显示与维修预览。
 - `candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。
 - 已安装模块标记 installed；will_replace 返回会被移入当前港仓库的旧模块 ID（空串=无替换）。
 - `unlock_template_id` 给出合同解锁来源（用于 UI 文案），实际锁定判断在 ShipOps.locked_by_contract。

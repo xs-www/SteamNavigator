@@ -10,8 +10,39 @@ export const FILE_DOCS = {
     contracts: [
       "`run/main_scene` 指向 `framework/ui/shell/main.tscn`。",
       "`AppBootstrap` Autoload 在场景加载前启动内容加载；`--script` 测试模式下自行跳过。",
-      "`framework/mods/scan_roots` 默认依次为 `res://dev_mods`、`user://mods_dev`、`user://mods`。",
+      "`framework/mods/scan_roots` 默认依次为 `res://dev_mods`、`res://dist/mods`、`user://mods_dev`、`user://mods`；模板构建会忽略所有 `res://` 根并追加 exe 同级 `mods/`。",
       "`config/features` 声明 4.4 兼容；实际验证引擎为 4.7.2。"
+    ]
+  },
+
+  "export_presets.cfg": {
+    role: "Godot 导出预设：Windows / Linux 发布预设、PCK 内嵌与导出过滤规则。",
+    contracts: [
+      "`binary_format/embed_pck=true`：发布产物是单个 exe，资源随 PCK 内嵌。",
+      "`exclude_filter` 额外排除 `dev_mods`、`dev_scenes`、`framework/tests`，避免把开发态松散 core 半导出进发布版。",
+      "发布包的标准目录（exe + `mods/` + `config/`）由 `.github/workflows/release.yml` 在导出后组装。"
+    ]
+  },
+
+  "content_types.json": {
+    role: "内容类型单一真源：键、单数、Schema 路径、注册表/patch 类型、编辑器展示元数据、v2 模块分类与正式版路线图规划。",
+    contracts: [
+      "`tools/gen_content_types.mjs` 生成 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js`；`--check` 用于门禁。",
+      "Godot 的 `test_content_types_manifest.gd` 与 Node 用例分别守护生成物与 manifest 一致。",
+      "`types` 只列可加载的 active 类型；`planned` 只用于路线图，禁止注册或加载。",
+      "`v2_target` / `aliases` 是迁移提示，不代表当前运行时支持合并后的实体。",
+      "`v2_module_categories` 记录目标分类：导航/安全归入 `utility`，不再单独设内容类型或编辑器分组。",
+      "`draft_schemas` 登记 Schema 2.0 草案：类型必须仍在 planned 中、不得 active，Schema 文件由 `test_schema_v2_drafts.gd` 校验；当前包含 start_profiles / world_profiles / regions / sites / route_templates / weather_profiles / factions / discoveries。"
+    ]
+  },
+
+  ".github/workflows/release.yml": {
+    role: "`v*` tag 触发的发布流水线：测试 → core 校验 → 导出 Windows/Linux → 打包标准便携目录 → GitHub Release。",
+    contracts: [
+      "发布前运行 `sdk/validate.gd`；core manifest 声明的内容 / 本地化 / 资产缺失时直接失败。",
+      "发布前运行 `gen_content_types.mjs --check`，防止框架常量或编辑器类型目录落后于 `content_types.json`。",
+      "Windows/Linux 压缩包统一为顶层 `SteamNavigator/`，内含 exe、`mods/core-*.snavmod.zip` 与 `config/config.json`。",
+      "`core-*.snavmod.zip` 同时作为独立 Release 资产，并参与 `SHA256SUMS.txt`。"
     ]
   },
 
@@ -21,7 +52,7 @@ export const FILE_DOCS = {
     contracts: [
       "加载失败不抛异常：所有可预期错误进入 StartupReport，UI 据此进入诊断界面。",
       "即使 fatal，也会注册命令/查询并冻结空注册表，保证后续调用返回结构化错误。",
-      "默认扫描 `res://dev_mods`、`res://dist/mods`、`user://mods_dev`、`user://mods`；发布版追加可执行文件旁 `mods/`。",
+      "默认扫描 `res://dev_mods`、`res://dist/mods`、`user://mods_dev`、`user://mods`；模板构建跳过所有 `res://` 根并追加可执行文件旁 `mods/`，避免把 PCK 里半导出的松散模组当成有效内容。",
       "测试可通过 `run(overrides)` 覆盖扫描根、存档目录、日志开关与自动存档。"
     ],
     l2: {
@@ -87,7 +118,7 @@ export const FILE_DOCS = {
     contracts: [
       "拒绝绝对路径、盘符、`..`、反斜杠、`://`、空段与超过 16 层的路径。",
       "脚本、动态库、场景、引擎导入文件在内容模组中一律禁止。",
-      "内容/资源/本地化分别使用白名单扩展名。"
+      "内容/资源/本地化分别使用白名单扩展名；资源允许图片、音频与单文件 GLB 模型。"
     ]
   },
 
@@ -166,10 +197,11 @@ export const FILE_DOCS = {
   },
 
   "framework/modding/content_compiler.gd": {
-    role: "读取模组内容 JSON，执行 Schema 校验、定义注册、本地化/资源登记与显式 Patch。",
+    role: "读取模组内容 JSON，执行 Schema 校验、实体 information 资源解析、定义注册、本地化/资源登记与显式 Patch。",
     contracts: [
       "定义 ID 的命名空间必须等于来源模组；ID 类型段必须与 content_type 单数一致。",
       "文件级 Schema 错误拒绝整份文件；单条定义错误只拒绝该定义。",
+      "information.texture/model 可使用本模组裸资源键或完整 asset:// URI；贴图只接受 png/webp/svg，模型只接受 GLB，缺失或类型错误拒绝该定义。",
       "Patch 冲突以 `target + JSON Pointer` 为键，跨模组同路径直接报错，不静默覆盖。",
       "Patch 后重新按目标类型 Schema 校验，失败则整条 Patch 回滚。",
       "所有定义注册后才执行 Patch；注册表此时仍未冻结。"
@@ -178,7 +210,11 @@ export const FILE_DOCS = {
       "_apply_patch(entry)": [
         "先校验 target 存在、requires 版本匹配，并在工作副本上逐条执行操作。",
         "`/id` 及 `/id/*` 被禁止；操作失败、ID 改变或 Schema 失败都放弃整条 Patch。",
-        "成功时只更新内容字段（name/desc/tags/raw/data），保留来源模组并追加 patched_by。"
+        "成功时同步更新 name/desc/tags/information/raw/data，保留来源模组并追加 patched_by；Patch 后的资源引用重新校验。"
+      ],
+      "_validate_definition_assets(default_mod_id, raw_definition, reporting_mod_id, file, pointer)": [
+        "裸资源键按定义来源模组解析；完整 asset://<mod>/<key> 可显式引用已加载模组资源。",
+        "资源必须出现在目标模组 manifest.assets；错误带定义内 /information/texture 或 /information/model 指针。"
       ]
     }
   },
@@ -221,11 +257,11 @@ export const FILE_DOCS = {
   },
 
   "framework/modding/content_types.gd": {
-    role: "内容类型常量、Schema 路径、单数类型名与模块类型集合。",
+    role: "内容类型常量、Schema 路径、单数类型名与模块类型集合；由 tools/gen_content_types.mjs 从 content_types.json 生成。",
     contracts: [
-      "`content_type` 决定注册表与 Schema，两者映射必须同步维护。",
-      "`all()` 不包含 patches；patches 由 ContentCompiler 单独收集。",
-      "单数类型用于 `<mod>:<type>/<id>` 的 ID 校验。"
+      "禁止手改；修改 `content_types.json` 后运行 `node tools/gen_content_types.mjs`。",
+      "`content_type` 决定注册表与 Schema；`all()` 不包含 patches，patches 由 ContentCompiler 单独收集。",
+      "`MODULE_TYPES` 由 manifest 的 `module: true` 派生；单数类型用于 `<mod>:<type>/<id>` 的 ID 校验。"
     ]
   },
 
@@ -239,12 +275,21 @@ export const FILE_DOCS = {
   },
 
   "framework/modding/registries/content_definition.gd": {
-    role: "单条内容定义的通用 envelope 与只读数据视图。",
+    role: "单条内容定义的通用 envelope 与只读数据视图，包含运行数据与新版展示资源信息。",
     contracts: [
-      "包含 ID、类型、本地化键、标签、enabled、data、来源模组/文件与 patch 记录。",
-      "`data` 与 `raw` 共享运行期引用；注册表冻结后按约定禁止修改。",
-      "`to_raw()` 返回深拷贝，供 Patch 与二次 Schema 校验使用。"
-    ]
+      "包含 ID、类型、本地化键、标签、enabled、information、data、来源模组/文件与 patch 记录。",
+      "`information` 和 `data` 与 `raw` 保持同步；注册表冻结后按约定禁止修改。",
+      "`to_raw()` 返回深拷贝，供 Patch 与二次 Schema 校验使用。",
+      "`asset_uri(field)` 保留完整 asset:// URI；裸键自动补成 asset://<source_mod>/<key>。"
+    ],
+    l2: {
+      "from_raw(raw_definition, type, mod_id, file)": [
+        "深拷贝 information/data，缺失 information 归一化为空字典且不向序列化结果添加空对象。"
+      ],
+      "asset_uri(field)": [
+        "空字段返回空字符串，完整逻辑 URI 原样返回，裸资源键使用定义来源模组作为命名空间。"
+      ]
+    }
   },
 
   "framework/modding/registries/definition_registry.gd": {
@@ -299,6 +344,7 @@ export const FILE_DOCS = {
       "槽位/重量/货币/声誉/合同解锁失败原因由 `ShipOps.install_blockers()` 统一生成，避免 UI 与命令漂移。",
       "单槽模块（船体/锅炉/导航/安全/客舱）自动替换，旧件写入当前港仓库；货舱槽满时需 replace_module_id。",
       "购买船体替换后耐久为新上限；warehouse/transit 船体替换取 min(当前耐久, 新上限)。",
+      "安装/卸下同一步维护 `ship.module_instances`：单槽替换用 `ShipModules.install_slot()` 生成全新实例（满状态、新 id），货舱追加用 `append_cargo()`、按位置删除用 `remove_cargo()`，避免旧条件串到新模块。",
       "`ship.uninstall_module` 只允许卸下导航/安全/客舱/货舱，船体与锅炉返回 required_module。",
       "`ship.craft_module` 复用 CraftOps：仓库材料优先、再扣船上普通货物，扣 craft_cost 后生成打造订单（不再即时推进时间/入库），发布事件 ship.craft_ordered；成品等 ready_at 后由 CraftOps.settle_orders 写入下单港仓库。",
       "install 成功后调用 `VictoryService.check()`，结果放入 data.victory，新通关时追加 run.victory_achieved 事件。",
@@ -341,6 +387,7 @@ export const FILE_DOCS = {
       "顶层 victory 字段给出 achieved/achieved_at 与 conditions（VictoryService.conditions），供总览目标、通关清单与通关页判断。",
       "委托区给出 main_done/main_total（主线完成度），总览据此提示「主线完成后如何通关」。",
       "船只 ViewModel 额外给出 free_weight 与 free_cargo_capacity（剩余载重/剩余货舱），顶部信息条直接显示，避免只显示已用载重。",
+      "船只 ViewModel 给出模块实例摘要 worst_module_condition / damaged_modules / disabled_modules / module_damage_points，顶部信息条据此显示「部件 N · NN%」，健康时不占位。",
       "stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。"
     ]
   },
@@ -359,9 +406,11 @@ export const FILE_DOCS = {
   },
 
   "framework/application/queries/shipyard_view.gd": {
-    role: "船厂独立界面 ViewModel：当前/随船运输模块、港口仓库、打造配方与所有可购买模块的限制原因。",
+    role: "船厂独立界面 ViewModel：当前/随船运输模块、已装模块效果、港口仓库、打造配方与所有可购买模块的限制原因。",
     contracts: [
       "与 `ship.install_module` / `ship.uninstall_module` / `ship.craft_module` 共用 ShipOps/CraftOps 的规则函数，UI 不复制规则。",
+      "`ship.modules[]` 每行含 `effect`：模块 `data` 的深拷贝（模块缺失时 `{}`），供船厂页渲染效果行与槽位卡；can_uninstall/uninstall_blockers/weight/tier 仍由本查询给出。",
+      "`ship.modules[]` 同时给出模块实例的 `slot/index/condition/disabled`；`ship.worst_module_condition`、`ship.disabled_modules`、`ship.module_damage_points` 供界面显示与维修预览。",
       "`candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。",
       "已安装模块标记 installed；will_replace 返回会被移入当前港仓库的旧模块 ID（空串=无替换）。",
       "`unlock_template_id` 给出合同解锁来源（用于 UI 文案），实际锁定判断在 ShipOps.locked_by_contract。",
@@ -463,6 +512,7 @@ export const FILE_DOCS = {
       "`cargo_total_cost()` 与 `cargo_average_cost()` 是 UI 显示库存成本的唯一口径。",
       "派生属性计算船体基础、锅炉、导航、安全、模块 modifiers 与岗位 modifiers。",
       "`validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。",
+      "`module_damage_points(hub, ship)` 按「模块重量 × 缺失耐久比例」把部件损耗换算成维修点数；`has_disabled_module()` 判断是否存在 0 状态的模块实例。模块性能影响留到战斗阶段。",
       "`install_blockers(hub,state,module_id,source,replace_module_id)` 是 ship.install_module 与船厂 ViewModel 共用的校验源：来源库存、合同解锁、声誉、货币、槽位与最终配置重量差量。",
       "合同解锁：模块出现在任一 contract.rewards.unlock_ids 且不在 player.unlocks 时返回 locked_by_contract；unlock_contract_id 给出解锁它的合同模板。",
       "单槽模块自动替换（不再返回 slot_occupied）；货舱槽满且未指定 replace_module_id 时返回 cargo_slots_full；同 ID 货舱在有空槽时允许重复购买。",
@@ -481,6 +531,27 @@ export const FILE_DOCS = {
     }
   },
 
+  "framework/domain/ship/ship_modules.gd": {
+    role: "船舶模块实例层：为每个已装模块维护稳定 instance_id 与 0..1 condition，对齐扁平槽位键，并作为损伤/维修/存档的唯一写入口。",
+    contracts: [
+      "`ship.module_instances` 存单槽（boiler/navigation/safety/cabin）实例与有序 cargo 实例数组；`ship.module_serial` 是实例编号计数器；condition 0 表示失效。",
+      "扁平槽位键（boiler_id 等）仍是「装了哪个定义」的权威投影；实例层只拥有身份与状态。统一 Module 迁移后再把 definition_id 移入实例。",
+      "`ensure()` 只增补/裁剪到与扁平键一致，保留已有 condition 与 id；新实例按槽位顺序分配 module_N，满状态。",
+      "写入点只有 install_slot/append_cargo/remove_cargo/remove_slot/damage/repair_all；读接口在旧船上按满状态兜底，不抛异常。",
+      "`installed_rows()` 是维修、UI 与未来战斗定位的统一行视图（slot/index/module_id/instance_id/condition/disabled）。"
+    ],
+    l2: {
+      "ensure(ship)": [
+        "先清掉扁平键已空的单槽实例，再为缺失槽位创建新实例；货舱按扁平列表长度逐位复用既有实例，不足的补满状态新实例。",
+        "幂等：布局不变时 serial、instance_id 与 condition 都不变，因此存档哈希稳定。"
+      ],
+      "damage(ship, slot, index, amount)": [
+        "只在 has_slot 为真时生效；结果 clamp 到 [0,1]，newly_disabled 只在跨越 0 的那一次为真。",
+        "返回 instance_id 供领域事件引用具体实例。"
+      ]
+    }
+  },
+
   "framework/domain/economy/market_ops.gd": {
     role: "市场价格、买卖、补给商品与维修结算；煤/水价格随港口库存浮动。",
     contracts: [
@@ -492,6 +563,7 @@ export const FILE_DOCS = {
       "每个可买入市场条目维护最多 8 个真实价格样本 `price_history`；非本地收购项不写历史，避免伪造趋势。",
       "买入把成交总额写入 cargo stack 的 total_cost，卖出按数量比例扣减成本。",
       "补给只检查设施、库存、重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。",
+      "维修报价 = (船体缺失点数 + `ShipOps.module_damage_points()` 部件损耗点数) × repair_per_point × repair_cost_mul；`repair()` 同时把船体耐久与所有模块实例恢复到满状态，返回 modules_repaired。",
       "成功的买入/补给/维修调用 `state.record_expense()`，卖出调用 `record_income()`，形成通关总结的收入/支出/利润口径。",
       "`ensure_sell_only_entries()` 为旧存档补齐非本地收购项与补给商品。"
     ],
@@ -602,6 +674,7 @@ export const FILE_DOCS = {
     contracts: [
       "框架不引用具体 core ID：默认构筑/地图配置取该类型第一个注册定义。",
       "创建顺序：船 → 地图 → 玩家/状态 → 仓库/运输/统计/通关字段 → 市场 → NPC → 主线 1 → 普通 offer。",
+      "状态写入后调用 `GameState.ensure_campaign()` 建立 campaign 分区，并把 `campaign.world.generated` 置为 true、起始港记入 `visited_port_ids`。",
       "主线 1 自动装载并接取；后续主线由 VoyageService 生成 offer。",
       "普通委托初始池与抵达刷新共用 ContractOps.generate_normal_offers，初始键为 `initial:<port>`。",
       "生成失败返回结构化 Result，不写入 AppContext。"
@@ -611,7 +684,9 @@ export const FILE_DOCS = {
         "本地 RngService 由 seed 派生，成功后才由 run.start 写回 context，失败不污染现有随机流。",
         "地图生成依赖初始船只属性（起始补给可达性检查）。",
         "调用 WarehouseOps.ensure_structure 初始化每港仓库与 ship.transit_modules；写入 stats 默认值与 victory=null。",
-        "初始债务按 build.loan 写入 player.debt，之后由收入自动偿还。"
+        "初始债务按 build.loan 写入 player.debt，之后由收入自动偿还。",
+        "`create_ship()` 在返回前调用 `ShipModules.ensure()`：按槽位顺序分配 module_1..N 实例 id 与满状态 condition，保证同 seed 同构筑的存档哈希一致。",
+        "战役分区（world/codex/factions）通过 `ensure_campaign_sections` 惰性补齐，探索进度只追加 id。"
       ]
     }
   },
@@ -626,11 +701,12 @@ export const FILE_DOCS = {
   },
 
   "framework/domain/events/effect_op_registry.gd": {
-    role: "白名单效果操作码及其纯实现（货币、补给、货物、船只、委托、情报、通知）。",
+    role: "白名单效果操作码及其纯实现（货币、补给、货物、船只与模块、委托、情报、通知）。",
     contracts: [
       "每个 handler 接收 `(node, execution_context)`，返回 `{ok,error_code,message_key}`。",
       "失败表示整个命令事务回滚；效果按数组顺序执行。",
       "`damage_ship` 应用安全设备 damage_mul；耐久归零设置 voyage_failed。",
+      "`damage_module` 按 `slot`（boiler/navigation/safety/cabin/cargo）+ 可选 `index` 扣减模块实例 condition，发布 ship.module_damaged；hull 不是模块槽位，非法槽位返回 unknown_module_slot。",
       "`update_intelligence` 生成并存储快照；`emit_notice` 写入 GameState 通知。",
       "未知操作码永远不会执行。"
     ]
@@ -673,26 +749,41 @@ export const FILE_DOCS = {
   },
 
   "framework/services/save_service.gd": {
-    role: "JSON 存档槽：模组头、状态、临时文件校验后替换、兼容性检查。",
+    role: "JSON 存档槽：模组头、状态、临时文件校验后替换、兼容性检查与旧档迁移入口。",
     contracts: [
-      "存档头记录 save_schema/framework_version/mod_api_version/seed/mods/meta。",
+      "新存档写 save_schema 2.0、state_schema 2.0 与 content_schema 1.0；写入前克隆状态并补齐 campaign，不修改实时状态。",
+      "写入快照与加载结果都会调用 `ShipModules.ensure()` 对齐模块实例表；旧档缺表时按满状态补齐，实例 id 与 condition 随存档往返。",
       "写入 `.tmp` 并重新解析校验；旧文件先改名为 `.bak`，最终替换失败会回滚。",
       "槽位名限制 `^[a-z][a-z0-9_]{1,31}$`；自动存档与出航前快照为独立槽。",
-      "缺失存档所需模组拒绝加载；版本/哈希漂移只警告。"
+      "缺失存档所需模组拒绝加载；版本/哈希漂移只警告。",
+      "加载时统一交给 `SaveMigrations.migrate()`；1.x 归档迁移为 2.0 并回填 campaign 元数据。"
     ],
     l2: {
       "load_slot(slot)": [
-        "拒绝非 1.x save_schema、非对象根与缺失 state 的文件。",
-        "返回 GameState、header 与 meta；调用方负责模组兼容性校验。"
+        "解析后先迁移 save payload，再校验 state；不支持的 save_schema 返回结构化错误。",
+        "返回 GameState、header、meta、migrated 与 migration_warnings；调用方负责模组兼容性校验。"
       ]
     }
   },
 
+  "framework/services/save_migrations.gd": {
+    role: "存档 payload 版本迁移：当前 save schema 2.0，支持 1.x → 2.0 并回填持久战役元数据。",
+    contracts: [
+      "`save_schema` 描述 payload 包装，`state_schema` 描述 GameState 数据；2.0 之前旧档的 content_schema 实际存放 state schema。",
+      "1.x → 2.0 只做兼容增量：保留既有 run/world/ship 字段，补 campaign、schema_version、state_schema 与 content_schema。",
+      "campaign id 从 seed 确定性生成；created_at 优先沿用 payload/run 时间；playtime 取 game_time。",
+      "缺失的 campaign 分区（world/codex/factions）由 `GameState.ensure_campaign_sections` 回填，并逐段写入 warnings。",
+      "未知主版本直接拒绝；迁移结果携带 warnings 供 UI/日志显示。"
+    ]
+  },
+
   "framework/services/settings_service.gd": {
-    role: "持久化 UI 设置：默认读取 `res://config/config.json`，运行时写入 `user://config/config.json`。",
+    role: "持久化 UI 设置：编辑器读 `res://config/config.json`；发布版优先读写 exe 同级 `config/config.json`，不可写时回退 `user://config/config.json`。",
     contracts: [
       "只接受 zh_CN / en 两种语言；非法值回退 zh_CN。",
-      "自动存档为布尔值；首次启动会把默认配置写入 user://。",
+      "自动存档为布尔值；首次启动会把默认配置写入可用的配置路径。",
+      "模板构建优先使用 exe 同级 `config/config.json`；若已存在 `user://config/config.json` 则以用户配置优先。",
+      "安装目录不可写时 `save()` 自动切换到 `user://config/config.json`，不丢失本次修改。",
       "保存失败返回结构化 Result，不抛异常；调用方负责提示。",
       "测试可覆盖 user/default 路径，避免污染真实用户配置。"
     ]
@@ -735,12 +826,15 @@ export const FILE_DOCS = {
   },
 
   "framework/state/game_state.gd": {
-    role: "纯数据运行态：可深克隆、可序列化、可哈希、事务替换，并提供收入/支出/利润统计与惰性结构修复。",
+    role: "纯数据运行态：可深克隆、可序列化、可哈希、事务替换，并提供战役元数据与分区（world/codex/factions）、探索进度记录、收入/支出/利润统计与惰性结构修复。",
     contracts: [
-      "只保存 ID/运行时数值，不保存 ContentDefinition 或 Node。",
+      "Schema 2.0 只保存 ID/运行时数值，不保存 ContentDefinition 或 Node；新增 campaign 块承载持久战役身份、生命周期与逐步加入的子分区。",
       "`clone()` 深拷贝，CommandBus 的事务基础。",
       "`hash()` 对规范化 JSON 做 SHA-256；存档往返需一致。",
       "`replace_with()` 原地替换，保持外部引用。",
+      "`campaign()/ensure_campaign()` 为旧状态或测试状态补齐 campaign 默认字段；id 从 seed 派生。",
+      "`CAMPAIGN_SECTION_DEFAULTS` + `ensure_campaign_sections()` 按系统逐步加入分区：`world`（生成标记与已访问区域/港口/已发现地点 id）、`codex`（发现条目 id）、`factions`（id → 运行态字典）。顶层 `world` 仍是已生成地图布局，`campaign.world` 只记探索进度。",
+      "进度写入全部幂等并只追加 id：`mark_region_visited` / `mark_port_visited` / `discover_site` / `discover_codex` 返回是否新增；`set_faction_reputation` 夹取到 [-100,100]。",
       "`stats()/ensure_stats()` 为旧存档与半初始化测试状态惰性补齐 voyages/on_time/accidents/income/expense/profit。",
       "`record_income()` / `record_expense()` 只累加整数并重算 profit=income-expense；贷款本金不计收入。"
     ],
@@ -748,6 +842,10 @@ export const FILE_DOCS = {
       "hash()": [
         "使用 JsonUtils 的排序键 + 浮点量化表示，避免字典顺序/数字类型差异。",
         "HashingContext SHA-256 输出十六进制；测试用保存/加载对比验证。"
+      ],
+      "ensure_campaign_sections(campaign, warnings)": [
+        "逐分区补默认值；分区或分区字段缺失时复制默认容器（数组/字典深拷贝），并可选记录 `campaign.<section>.<field> backfilled` 警告。",
+        "只增补不覆盖：已有进度数组原样保留，重复调用幂等。"
       ],
       "record_income(amount) / record_expense(amount)": [
         "只有 amount>0 才生效；先 ensure_stats 再累加，避免旧存档缺字段。",
@@ -760,6 +858,7 @@ export const FILE_DOCS = {
     role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主。",
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
+      "顶部信息条在船只存在受损部件时追加「部件 N · NN%」chip（来自 port.view.ship 的 damaged_modules / worst_module_condition），健康时不占位；chip 颜色在失效时为红。",
       "main.tscn 静态声明背景、菜单遮罩、滚动内容根、页脚、音频与 TransitionLayer；main.gd 通过 @onready 绑定，不再在运行时创建固定外壳。",
       "已迁移页面由 PackedScene 实例化：Shell 负责查询并调用 bind，页面只发 command_requested/navigation_requested/action_requested 意图，不接触 AppContext。",
       "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
@@ -785,14 +884,15 @@ export const FILE_DOCS = {
       "新航程主操作使用 `SNPrimaryButton`，返回使用 ghost；章节标题控件只声明语义标签（SNEyebrowLabel/SNTitleLabel/SNDetailLabel）。",
       "加载游戏读取 autosave 并做模组兼容性校验。",
       "根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。",
-      "船厂页由独立 shipyard_screen.tscn 承载；Shell 查询 shipyard.view 并补充通关进度、船上材料数量、解锁来源与替换件名称，页面发出的 ship/warehouse/port 命令统一交回 Shell。",
-      "船厂改装态由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`_shipyard_model()` 把 `refit` 并入 shipyard.view；整页重建后页面据此恢复纵剖图，切页不丢改装态。",
+      "船厂页由独立 shipyard_screen.tscn 承载；Shell 查询 shipyard.view 并补充 `contracts`/`victory`（历史合并字段，当前船厂页不渲染通关清单）、船上材料数量 `ship_amount`、解锁来源 `unlock_name`、替换件名 `replacement_name` 与 `ship.hull_name`；页面发出的 ship/warehouse/port 命令统一交回 Shell。",
+      "船厂页正常态三列（已有船舶 / 实机渲染 / 组件分类），点击分类由页面 `set_category()` 进入改装态并渲染所选分类的槽位操作；Shell 只做状态记忆与 ViewModel 组装，不决定布局。",
+      "船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复纵剖图与选中分类。",
       "委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。",
       "通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。",
       "反馈5：顶部信息条固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity。",
-      "反馈6：总览“当前目标”与船厂页顶部显示通关条件清单（主线 n/5 → 大型船体 → 锅炉 → ≥1 货舱 → 造船厂组装），主线完成后给出下一步提示；数据来自 port.view.victory.conditions 与 contracts.main_done/main_total。",
+      "反馈6：总览“当前目标”显示通关条件清单（主线 n/5 → 大型船体 → 锅炉 → ≥1 货舱 → 造船厂组装），主线完成后给出下一步提示；数据来自 port.view.victory.conditions 与 contracts.main_done/main_total。船厂页不再重复通关清单，只做组件分类入口。",
       "反馈3：情报页用 SNIntelTable 渲染 intel.view 的 columns/rows 矩阵（含未知港口列），替代旧的逐港商品表格。",
-      "反馈4：船厂页新增打造订单面板与在港等待 6/12/24 小时按钮（port.wait），总览快捷入口同样提供等待按钮；打造按钮文案带工时。",
+      "反馈4：打造订单与在港等待迁入船厂改装态「杂项」页签：等待按钮按 wait_options 生成 6/12/24 小时 `port.wait`，总览快捷入口同样提供等待按钮；模块类分类内保留「按配方打造」，打造按钮文案带工时。",
       "反馈2：补给卡绑定 SNSupplyCard 时传入 _tr 回调，显示“上限损失/剩余可装”本地化文案。",
       "`_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。"
     ]
@@ -855,23 +955,39 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/screens/port/shipyard_screen.gd": {
-    role: "船厂页面场景：中央 SNShipView 改装台 + 右侧按槽位分组的部件 HUD（已装/仓库/随船/购买），下方保留打造订单、港口仓库、配方、购买与通关清单面板。",
-    dependencies: ["SNShipView", "SNPartRow", "SNBadge", "SNSectionHeader", "steam_navigator_theme.tres"],
+    role: "船厂页两种布局共用一页：正常态为「已有船舶卡片 / 实机渲染舞台 / 组件分类入口」，改装态为「贴图纵剖图 / 所选分类的槽位与操作 / 竖排分类页签（含杂项）」。规则仍来自 `shipyard.view`，页面不写 `GameState`。",
+    dependencies: ["SNShipView", "SNPartRow", "SNBadge", "SNButton", "SNSectionHeader", "steam_navigator_theme.tres"],
     contracts: [
-      "bind(vm, translate) 接收 Shell 组合后的 shipyard.view、contracts、victory 与 refit，不访问 AppContext、QueryBus、CommandBus 或注册表。",
-      "`_stage_row()` 是中央改装台：SNShipView（520×390 起）+ 改装开关、船况摘要与提示；右侧 372 px 部件 HUD 按 TYPE_ORDER（船体/锅炉/货舱/导航/安全/客舱）分组。",
-      "槽位由 `_build_slots()` 从 ship.modules 反推：船体/锅炉/导航/安全各 1，cabin_slots≥1 时加 1，cargo_slots 个货舱槽；槽位 id 为 `<content_type>_<index>`，fixed 只对船体/锅炉为真。",
-      "拖放 `_on_slot_drop(payload, slot)`：类型一致且 source ∈ {warehouse, transit} 时发 `ship.install_module{module_id, source}`；槽位已有且不同于拖入件时补 `replace_module_id`。",
-      "点击 HUD 行 `_on_part_activated()`：只有 source == purchase 的行发 `ship.install_module{module_id}`（购买安装）；已装/仓库/随船行不触发。点击槽位 `_on_slot_activated()` 只高亮同类部件行，不改状态。",
-      "HUD 行标签：已装/仓库/随船/购买 n 金币；可拖行 = 仓库且 can_install 为真，或随船件；标题徽标显示 `ui.label.draggable_count` 可拖数量。",
-      "`refit_mode_changed(active)` 只通知 Shell 记住改装态；页面从 vm.refit 恢复，整页重建（切页/命令后刷新）仍保持纵剖图。",
-      "安装、卸下、打造、模块/材料存取和在港等待均发出 command_requested(command, params)，由 Shell 统一执行、存档并反馈错误。",
-      "所有 can_install/can_uninstall/can_craft 与 blockers 均来自 shipyard.view；页面只翻译原因、禁用按钮和组织布局，不复制领域规则。",
-      "打造按钮明确显示工时；未完成订单显示剩余时间和所属港口，等待选项直接来自 wait_options。",
-      "页面按模块类型分组购买候选，显示效果、解锁来源、替换提示、材料持有/需求和金币配方。",
-      "密集字段（模块行、限制原因、按钮、HUD 行）统一用 AUTOWRAP_OFF 单行排版，不允许智能换行压成竖列。",
-      "页面可重复 bind，每次 `_clear()` 重建；每个 PanelContainer 只有一个内容容器。"
-    ]
+      "`bind(vm, translate)` 接收 Shell 组合后的 shipyard.view（含 refit/category/ship.hull_name/warehouse/candidates/craft/orders/wait_options），不访问 AppContext、QueryBus、CommandBus 或注册表；可重复 bind，每次 `_clear()` 后重建。",
+      "`CATEGORY_ORDER` = 船体/锅炉/货舱/导航/安全/客舱 + `misc`；`MODULE_TYPES` 不含 misc。`set_category` 只接受这七个值，非法值直接 return；切换分类会同时进入改装态并发 `refit_category_changed`。",
+      "`_body` 固定三列：正常态 `_ship_list_panel / _render_panel / _components_panel`；改装态 `_section_panel / _operations_panel / _category_tabs_panel`。`_rebuild_layout()` 只重建 `_body`，标题与摘要行保留。",
+      "正常态中央舞台由 `_make_stage(EXTERIOR, ...)` 创建；当 `SNShipStage3D.is_supported()` 为真时通过 `set_renderer(SNShipStage3D.new())` 挂载 3D 船体舞台，改装态仍用纵剖图贴图；无 3D 资产时保留程序化占位。",
+      "正常态：船卡用 `SHIP_THUMB_PATH`（存在才加载，210×118 cover；缺失回退占位面板），船名取 Shell 注入的 `ship.hull_name`，缺失回退 `hull_id` 的本地化键；组件列每类一行入口并显示槽位计数，「0 可拖」徽标统计仓库/随船可装行。",
+      "改装态：纵剖图 `SNShipView(CUTAWAY)` + 槽位贴片；中间操作列按分类渲染槽位卡、仓库/随船行、购买卡与打造卡。操作列自带 ScrollContainer（`horizontal_scroll_mode=DISABLED`），全页只有中列纵向滚动。",
+      "槽位卡：标题 + 固定槽徽标 + 已装名；效果行与重量/tier/卸下按钮取自 `ship.modules[]` 行的 `effect/can_uninstall/uninstall_blockers`（`shipyard.view._current_modules` 输出 `effect`）。",
+      "槽位卡按 `ship.modules[]` 行的 `condition` 显示「状态 NN%」徽标（满状态不显示；0 为失效红色），条件值来自模块实例层，页面不自行计算。",
+      "槽位反推（`_build_slots`）：船体/锅炉/导航/安全各 1，`cabin_slots≥1` 时加客舱 1，`cargo_slots` 个货舱槽（至少覆盖已装货舱数）；槽位 id `<content_type>_<index>`，fixed 仅船体/锅炉。",
+      "拖放 `_on_slot_drop`：类型一致且 source ∈ {warehouse, transit} 才发 `ship.install_module{module_id, source}`；槽位已有且不同件时补 `replace_module_id`。点击购买行 `_on_part_activated` 发 `ship.install_module{module_id}`；点击贴片只切到同类分类并高亮兼容行。",
+      "杂项页签 `_build_misc_body`：打造订单 + 在港等待 6/12/24 h + 仓库材料（固定 5 件存/取）+ 仓库模块（免费安装 / 取出）；模块类分类内仍各自保留「按配方打造」与「购买并安装」。",
+      "旧整页下方面板已删除：`_stage_row/_parts_hud/_victory_plan/_orders_panel/_warehouse_panel/_craft_panel/_build_purchase_panels` 不再存在；通关条件清单只在总览页。",
+      "所有 can_install/can_uninstall/can_craft、blockers、价格与工时来自 shipyard.view；页面只翻译原因、禁用按钮与组织布局。",
+      "密集字段（模块行、限制原因、按钮）用 AUTOWRAP_OFF 单行；操作列描述/效果行用 `_wrap_label` 允许换行，避免固定宽度列被撑开。",
+      "摘要行的「改装 / 完成改装」按钮直接连 `_on_toggle_refit`（按钮在 `_body` 外，可同步重建）；`_body` 内的分类按钮走 `_ui_set_category` → `set_category.call_deferred`，避免按钮在自身信号里被 `free()`。"
+    ],
+    l2: {
+      "_rebuild_layout()": [
+        "清空 `_body` 子节点并重建当前布局；同时重置 `_stage/_stage_title/_stage_hint/_hud_rows`，最后 `_sync_refit_ui()` 同步改装按钮文案与 stage mode。",
+        "正常态与改装态互斥，仅靠 `_refit` 分支决定三列内容，不保留隐藏面板。"
+      ],
+      "set_category(category)": [
+        "测试与 Shell 可直接调用；当前不在改装态时先置 `_refit=true` 并发 `refit_mode_changed(true)`，再记录分类、发 `refit_category_changed`、重建布局。",
+        "页面从 `vm.category` 恢复同一分类；非法值回退 `hulls`，Shell 只需保存字符串。"
+      ],
+      "_build_misc_body(box)": [
+        "在港等待按钮按 `wait_options`（默认 6/12/24 h）动态生成 `port.wait`；订单行显示剩余工时，不在当前港时追加港口名。",
+        "仓库材料行按 `min(5, ship_amount/amount)` 生成存/取命令参数；仓库模块行在 can_install 时给免费安装，始终给取出。"
+      ]
+    }
   },
 
   "framework/ui/screens/flow/port_memory_screen.gd": {
@@ -880,6 +996,7 @@ export const FILE_DOCS = {
     contracts: [
       "bind(vm, translate) 接收 port.memory 结果及 Shell 补齐的 age_text/facility_labels，不直接查询端口记忆或注册表。",
       "市场快照不提供交易按钮；返回操作只发出 overview navigation_requested。",
+      "快照表四列使用明确最小宽度与横向间距，所有密集字段禁用自动换行，避免中文被压成逐字竖排。",
       "查询失败时展示 error_text，并仍保留返回总览入口。"
     ]
   },
@@ -930,7 +1047,8 @@ export const FILE_DOCS = {
       "bind(view_model, translate) 是唯一数据入口；页面不查询 AppContext、不访问 QueryBus/CommandBus，也不保存领域状态。",
       "煤水购买与维修统一发出 command_requested(command, params)，由 Shell 执行并决定刷新、音效和错误反馈。",
       "页面可重复 bind；每次先清理旧展示节点，页面实例复用时不会叠加卡片或信号。",
-      "阻断码只转换为展示文案，不在页面重新计算库存、重量、金钱或维修规则。"
+      "阻断码只转换为展示文案，不在页面重新计算库存、重量、金钱或维修规则。",
+      "维修卡把报价拆成「缺失耐久 X（船体 A · 部件 B）」，module_points>0 时追加「含部件损耗」徽标；数值全部来自 supply.view 的 repair 字段。"
     ]
   },
 
@@ -1063,27 +1181,58 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/components/sn_ship_view.gd": {
-    role: "船厂中央改装台：同一坐标系里切换船体侧视占位渲染与纵剖图（每槽位一个 SNSlotTarget 贴片），并预留可替换的 2.5D 渲染器接口。",
+    role: "船厂中央改装台：`EXTERIOR` 画程序化侧视占位；`CUTAWAY` 画授权纵剖图贴图（`assets/ui/shipyard/ship_section.png`）+ 每槽位一个 `SNSlotTarget` 贴片，贴图缺失时回退程序化剖面；预留可替换的 2.5D 渲染器接口。",
     dependencies: ["SNSlotTarget"],
     contracts: [
-      "`Mode.EXTERIOR` 画侧视占位（水面/烟/明轮动画），`Mode.CUTAWAY` 画纵剖图并显示槽位贴片；两种模式复用同一套槽位布局。",
-      "`set_slots(slots)` 为每个描述重建一个 SNSlotTarget；字段：id、content_type、index、title、module、replace_module_id、fixed、hint、tooltip。",
-      "贴片只在 CUTAWAY 可见；点击发 `slot_activated(slot)`，同类型部件拖到贴片发 `slot_drop_requested(payload, slot)`，本控件不发命令。",
-      "2.5D 接入协议：`set_renderer(node)` 把节点作为铺满本控件的子节点挂入，并立即下发 `ship_view_update(model)` / `ship_view_set_mode(mode)`；`has_renderer()` 判定是否已替换；传 `null` 恢复内置占位。",
-      "渲染器实现 `ship_view_update(model)`、`ship_view_set_mode(mode)`、`ship_view_highlight(slot_ids)` 即可；缺方法时用 `has_method` 跳过，不报错。",
-      "槽位贴片、拖放与命中布局都留在本控件，未来 2.5D 场景只画船体、可完全忽略输入，页面无需改动。",
-      "无渲染器或侧视模式下每帧 `queue_redraw` 驱动动画；接入渲染器后的纵剖图只在数据/尺寸变化时重绘。"
+      "`SECTION_TEXTURE_PATH` = `res://assets/ui/shipyard/ship_section.png`；`_ready()` 调用 `_load_section_texture()`，仅在 `ResourceLoader.exists` 为真时加载。`has_section_texture()` 判定是否用上授权贴图，`section_texture_size()` 返回像素尺寸（无贴图返回 `Vector2.ZERO`），供测试与调试确认贴图已导入。",
+      "`_draw_cutaway()` 优先 `_draw_section_texture()`（cover 裁切贴图）并始终叠加 `_draw_slot_leaders()`；仅贴图缺失/未导入时才用 `_draw_cutaway_placeholder()` 程序化剖面。`Mode.EXTERIOR` 保持程序化侧视、不读贴图。",
+      "`_draw_section_texture()` 为 cover 裁切：`cover_scale = max(dst.w/tex.w, dst.h/tex.h)`，取居中源矩形 `draw_texture_rect_region`，再叠 0.18 暗青蒙版；不改变纵横比、不移动控件。",
+      "槽位仍按两行排布（非货舱槽 `top = h*0.60`，货舱槽 `top = h*0.82`）；贴片宽 84–148 px（按可用跨度均分），控件宽 < 80 px 时跳过布局。",
+      "`_chip_anchor()` 的舱室锚点（船体/锅炉/货舱/导航/安全/客舱）必须与 `tools/art/gen_shipyard_textures.py` 的 `ANCHORS` 保持同一构图比例；换图时两侧一起改。",
+      "`Mode.EXTERIOR` 仍是程序化侧视（水面/烟/明轮动画），不读贴图；正常态与改装态共用同一套 `set_slots` 数据。",
+      "`set_slots(slots)` 为每个描述重建一个 `SNSlotTarget`；字段：id、content_type、index、title、module、replace_module_id、fixed、hint、tooltip。贴片只在 CUTAWAY 可见；点击发 `slot_activated(slot)`，同类型部件拖到贴片发 `slot_drop_requested(payload, slot)`，本控件不发命令。",
+      "2.5D 接入协议不变：`set_renderer(node)` 把节点作为铺满本控件的子节点挂入并立即下发 `ship_view_update(model)` / `ship_view_set_mode(mode)`；`has_renderer()` 判定是否已替换；传 `null` 恢复内置占位。",
+      "渲染器实现 `ship_view_update(model)`、`ship_view_set_mode(mode)`、`ship_view_highlight(slot_ids)` 即可；缺方法时用 `has_method` 跳过，不报错。槽位贴片、拖放与命中布局都留在本控件，未来 2.5D 场景只画船体即可。",
+      "无渲染器或 EXTERIOR 时每帧 `queue_redraw` 驱动动画；接入渲染器后的 CUTAWAY 只在数据/尺寸变化时重绘，贴图本身不参与动画。"
     ],
     l2: {
+      "_draw_section_texture()": [
+        "只处理正尺寸贴图；`destination` 恒为整个控件，`source` 按 cover 居中，保证 1792×1008 图在任意舞台尺寸下铺满且不变形。",
+        "绘制后统一加半透明暗色压住贴图亮度，保持与 Theme 暗青底一致；槽位引线在贴图之上。"
+      ],
+      "_layout_slots() / _place_row()": [
+        "把货舱槽与非货舱槽拆成两行分别 `_place_row`；`_place_row` 计算 chip 宽高、水平居中、直接写 `position/size`（不用容器排布，便于引线定位）。",
+        "贴片可见性每次布局都按 `mode == CUTAWAY` 重算，避免模式切换后残留。"
+      ],
+      "_draw_slot_leaders()": [
+        "从每枚贴片顶部中心画线到 `_chip_anchor` 对应舱室点；货舱按数量决定步长（≤1 时 0.055，否则 0.09）。"
+      ],
       "set_renderer(node)": [
         "先移除并 `queue_free` 旧渲染器，再 `add_child` + `move_child(..., 0)` 压到绘制底层。",
         "Control 渲染器铺满本控件并设为 `MOUSE_FILTER_IGNORE`，避免抢走槽位贴片的拖放。",
         "挂载后立即下发当前 model 与 mode，渲染器不必等待下一次刷新。"
+      ]
+    }
+  },
+
+  "framework/ui/components/sn_ship_stage_3d.gd": {
+    role: "船厂正常态的真实 3D 船体舞台（2.5D 首个切片）：SubViewport 渲染固定 3/4 机位的船体、海面与灯光；2D 槽位、拖拽与 HUD 仍由 SNShipView 和页面负责。",
+    contracts: [
+      "通过既有 `SNShipView.set_renderer()` 协议接入：实现 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(ids)`。",
+      "按 `model.hull_tier` 选择 `assets/models/ships/*.glb`，取模型网格包围盒动态计算机位距离与目标点，让 24 m 明轮船与 60 m 铁甲舰保持同一构图。",
+      "EXTERIOR 显示 3D 视口；CUTAWAY 隐藏视口，让纵剖图贴图与槽位贴片接管，不改页面布局。",
+      "复用 `assets/materials/water/harbor_water.tres`（duplicate 后把 shore 参数推远、boat 泡沫环绑到当前船体包围盒、调整水平线淡出）；材质缺失时退回 StandardMaterial。",
+      "`is_supported()` 静态判断是否存在可用船体 GLB；页面对 false 不挂空视口、保留 SNShipView 程序化占位，导出包与 CI 不依赖新资产。",
+      "只做表现层：不读 GameState / QueryBus / CommandBus；渲染器方法在 `_ready` 之前被调用时先缓存 model/mode，`_ready` 后统一应用。"
+    ],
+    l2: {
+      "_build_stage()": [
+        "SubViewportContainer(stretch) + SubViewport(own_world_3d, transparent_bg=false) + 独立 World3D；一个页面同一时间只存在这一个 3D 视口。",
+        "环境为 BG_COLOR + 环境光 + 线性雾，灯光只用一个主光一个补光且关闭实时阴影，保证 1440×900 下的静态舞台开销可控。"
       ],
-      "set_slots(slots) / set_mode(next) / highlight_slots(slot_ids)": [
-        "`set_slots` 深拷贝描述、重建全部贴片并重新布局；`set_mode` 同步贴片可见性与渲染器 mode；`highlight_slots` 同时给贴片与渲染器发高亮。",
-        "布局固定两行：非货舱槽一行、货舱槽一行；贴片宽 84–148 px，控件宽 < 80 px 时跳过布局。",
-        "槽位描述是深拷贝，页面后续修改 vm 不会反向影响已建贴片。"
+      "_frame_camera(visual)": [
+        "遍历 MeshInstance3D 累积世界包围盒（8 角点变换），半径 × 长焦 FOV 求距离，再沿固定 3/4 方向摆放相机并 look_at 包围盒中心。",
+        "船体尺寸变化只改相机，不缩放模型，避免材质/噪声随缩放变形。"
       ]
     }
   },
@@ -1145,6 +1294,15 @@ export const FILE_DOCS = {
     ]
   },
 
+  "tools/gen_content_types.mjs": {
+    role: "从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录；提供 `--check` 过期检查。",
+    contracts: [
+      "单一真源是 `content_types.json`；生成物 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js` 禁止手改。",
+      "生成前校验格式版本、key/singular/schema 唯一、分组与 v2 模块分类引用、Schema 文件存在、Patch 数量、planned 不覆盖 active、draft_schemas 只指向 planned 类型。",
+      "`--check` 不写文件，生成物缺失或过期时以退出码 1 结束，供 CI/发布门禁使用。"
+    ]
+  },
+
   "tools/gen_static_docs.mjs": {
     role: "静态文档生成器：读取本文件的 FILE_DOCS/MODULES，生成镜像文档、模块 README、总计索引与带 SHA-256 的 manifest。",
     contracts: [
@@ -1184,19 +1342,20 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/css/app.css": {
-    role: "暗色工业主题与响应式布局：顶栏、侧栏、内容编辑器、表单控件、条件/效果编辑器、模态框与 Toast。",
+    role: "暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、内容/多语言编辑器、模态框与 Toast。",
     contracts: [
       "颜色、间距、字体通过 `:root` 变量统一；不引入外部字体。",
       "`[hidden] { display: none !important; }` 支撑视图与过滤逻辑。",
+      "资源候选菜单使用编辑器主题、绝对定位和滚动上限；船体模块卡在窄屏断点退化为单列。",
       "断点 1240 / 1000 / 800 / 760 / 560：编辑区单列、侧栏图标化、顶栏换行与操作压缩。"
     ]
   },
 
   "SNModMaker/js/catalog.js": {
-    role: "内容类型展示元数据、字段标签、默认值、标签建议、条件/效果词汇与新建模板。",
-    dependencies: ["JSON Schema（结构约束）", "ContentTypes（类型/singular 映射）"],
+    role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板；内容类型列表来自生成的 content-types.js。",
+    dependencies: ["JSON Schema（结构约束）", "content-types.js（由 content_types.json 生成）"],
     contracts: [
-      "`TYPES` 的顺序决定侧栏分组与表单类型；每项的 `schema` 必须对应仓库 `schemas/` 文件。",
+      "`TYPES` 来自 `SNContentTypes.TYPES`；manifest 的顺序决定侧栏分组与表单类型，每项的 `schema` 对应仓库 `schemas/` 文件。",
       "`keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。",
       "`DEFAULTS` 生成的定义必须能通过对应 Schema；新增字段时同步更新这里与 `store.js`。",
       "操作码、公式、设施等词汇与框架注册表保持同源；页面只做候选与提示，不自行执行。"
@@ -1230,6 +1389,7 @@ export const FILE_DOCS = {
       "Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。",
       "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
       "语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。",
+      "实体 information.texture/model 支持当前模组裸资源键与完整 asset:// URI；当前模组和 Core 引用必须存在且格式匹配。",
       "同一问题按 severity/code/message/view 去重，最多收集 300 条 Schema 错误。"
     ],
     l2: {
@@ -1242,6 +1402,7 @@ export const FILE_DOCS = {
       ],
       "validateProject(project)": [
         "先跑 Manifest Schema 与内容文件 Schema，再检查命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。",
+        "资源裸键按当前模组 manifest.assets 解析；asset://core/<key> 使用嵌入 Core 索引校验，其他外部模组 URI 在无法读取其清单时给出未验证提示。",
         "引用本模组缺失为 error；Core 缺失为 warning；其他命名空间只提示外部引用。",
         "结果包含 counts 与 stats（定义/文件/语言/资源数量）。"
       ]
@@ -1269,7 +1430,12 @@ export const FILE_DOCS = {
       ],
       "cloneCoreDefinition(project, coreDefinitionId)": [
         "深拷贝 Core 定义，按 `name_key` 推导旧键基，改写全部 `_key` 字符串与本地化条目。",
+        "Core 定义中的贴图/模型裸键改写为 `asset://core/<key>`，使派生条目继续引用官方资源而不冒充当前模组资产。",
         "新 ID 与键基使用当前模组命名空间，并在名称后追加“副本”。"
+      ],
+      "commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)": [
+        "保存条目时才把定义内全部 `_key` 与所有语言文件从旧键基原子迁移到新键基。",
+        "迁移前检查目标键冲突；成功后删除旧键并覆盖用户在条目内暂存的多语言文本。"
       ],
       "toExportFiles(project, options)": [
         "产出 manifest、内容、本地化与二进制资产；`prefix:false` 用于文件夹导出。",
@@ -1282,23 +1448,47 @@ export const FILE_DOCS = {
     }
   },
 
+  "SNModMaker/js/glb.js": {
+    role: "最小 GLB（glTF 2.0 二进制）解析器，为资源卡片提供场景节点、三角形网格、法线与材质基色。",
+    dependencies: ["WebGL 渲染层 model_thumb.js"],
+    contracts: [
+      "只解析 JSON/BIN chunk、bufferView/accessor、node TRS/矩阵、TRIANGLES primitive 与 baseColorFactor；不支持贴图、Draco/KTX2、骨骼、变形目标与稀疏 accessor。",
+      "结果预变换到世界坐标并汇总 bbox、三角形数、节点数与材质数；无法预览的 primitive 跳过而不是整体失败。",
+      "纯函数、不依赖 DOM/WebGL，可在 Node 中直接测试。"
+    ]
+  },
+
+  "SNModMaker/js/model_thumb.js": {
+    role: "用共享 WebGL 上下文把 GLB 渲染成自动取景的 PNG 缩略图，并按键缓存结果。",
+    dependencies: ["glb.js", "store.js（dataUrlToBytes）"],
+    contracts: [
+      "固定 480×360、透明背景、单方向光 + 环境光；相机按 bbox 自动取景，不提供旋转交互。",
+      "单例 canvas/context 复用，每张图渲染后立即 `toDataURL` 并缓存，避免资源卡片重绘时重复解析与绘制。",
+      "没有 WebGL 或解析失败时返回 null，调用方保留 GLB 占位，不影响编辑/导出。"
+    ]
+  },
+
   "SNModMaker/js/io.js": {
-    role: "浏览器 I/O：IndexedDB 项目库、文件/文件夹/ZIP 导入、下载、File System Access 目录导出。",
+    role: "浏览器 I/O：IndexedDB 项目库、文件/文件夹/ZIP 导入、下载、目录导出与本地游戏模组部署 API。",
     contracts: [
       "IndexedDB 数据库 `snmodmaker`、对象仓库 `projects`（keyPath=uid）；打开超过 3 秒视为不可用，由 app 回退 localStorage。",
       "文件夹/拖放导入递归读取 `webkitGetAsEntry`；ZIP 交给 `SNZip.read()`。",
       "目录导出需要 Chromium 的 `showDirectoryPicker`，在所选父目录下创建 `<mod_id>/`。",
-      "检测到 `tools/serve.mjs` 时使用同源 `/api` 读写 `mods/` 与 `exports/`；`detectBackend` 1.5s 超时后静默退化。",
+      "检测到 `tools/serve.mjs` 时使用同源 `/api` 读写项目、普通导出与游戏模组目录；`detectBackend` 1.5s 超时后静默退化。",
+      "deployGameMod(id, bytes) 把已构建 ZIP 交给本地服务覆盖部署；纯静态/file:// 模式不暴露该操作。",
       "下载使用 Blob URL；不向外部网络上传任何内容。"
     ]
   },
 
   "SNModMaker/js/ui.js": {
-    role: "Schema 驱动的表单渲染与通用 UI 组件：字段控件、数组/条件/效果编辑器、模态框、Toast、Datalist。",
+    role: "Schema 驱动的表单渲染与通用 UI 组件：字段控件、数组/条件/效果编辑器、自定义资源选择器、船体模块区、模态框与 Toast。",
     dependencies: ["validate.flattenObject/deref", "store", "catalog"],
     contracts: [
       "渲染层只输出 HTML；所有编辑通过 `data-field` / `data-action` 交给 app.js，不直接修改项目。",
       "表单字段类型、枚举、范围与必填来自 Schema；专用控件只针对 modifier/material/payload/condition/effect/option 等结构。",
+      "标准实体表单额外呈现所有语言的名称/描述暂存输入，以及 information.texture/model 资源键配置。",
+      "贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。",
+      "船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。",
       "所有用户文本与属性值经过 `esc/attr` 转义；引用候选来自当前项目 + Core 索引。",
       "表单生成的路径是相对定义的属性路径（manifest 除外），与 app.setByPath 的约定一致。"
     ],
@@ -1308,8 +1498,13 @@ export const FILE_DOCS = {
         "递归传入当前 schema 文件，保证 common.schema.json 内的本地 `$ref` 能正确解析。"
       ],
       "renderDefinitionForm(ctx)": [
-        "普通定义渲染身份区（ID/名称键/描述键/标签/启用）与数据区；补丁定义渲染目标、来源约束与操作列表。",
-        "ID 输入只显示 local 部分，前缀由 app 在写回时补齐。"
+        "普通定义渲染身份区、条目内多语言值、视觉资源与数据区；补丁定义渲染目标、来源约束与操作列表。",
+        "ID 输入只显示 local 部分，前缀由 app 在写回时补齐；名称/描述键显示只读的待提交预览。",
+        "hulls 额外渲染模块配置区，并从通用数据字段中跳过 cargo_slots/cabin_slots。"
+      ],
+      "assetPicker(path, value, kind, project)": [
+        "输出可编辑输入、展开按钮和主题化候选菜单；候选同时显示资源键与项目内路径。",
+        "kind=image 仅接受图片 MIME/扩展名，kind=model 仅接受 model/gltf-binary 或 .glb。"
       ],
       "renderCondition(value, path, ctx)": [
         "支持 leaf、all、any、not 递归；操作码切换只保留适用字段。",
@@ -1326,14 +1521,24 @@ export const FILE_DOCS = {
       "文本输入只更新模型并调度校验/保存，不整页重绘；结构操作才重绘并保留滚动位置。",
       "历史快照最多 40 个；一次焦点内的连续输入只压入一个快照。",
       "自动保存有 800ms 防抖，并用 revision 防止旧保存清除新改动；IDB 失败回退 localStorage。",
+      "ID 修改与条目内翻译先进入 localizationDrafts；自动保存不写多语言键，只有“保存条目”提交键迁移。",
+      "船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。",
+      "自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。",
       "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
+      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量。",
+      "没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。",
+      "资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。",
       "Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。"
     ],
     l2: {
       "applyField(element, fromChange)": [
         "区分 manifest 与当前定义；数字/整数/布尔/JSON 各有解析，解析失败不写回。",
-        "ID 输入按前缀重建完整 ID，并同步重命名以旧 `name_key` 为基的 `_key` 与翻译。",
-        "空描述键与空 checksum 会删除字段，避免违反可选字段的 pattern/minLength。"
+        "ID 输入按前缀重建完整 ID，只更新多语言键预览，不直接改定义 `_key` 或语言文件。",
+        "空描述键、空 checksum 与空 information 资源字段会删除，避免违反可选字段的 pattern/minLength。"
+      ],
+      "saveDefinitionAction()": [
+        "把当前实体暂存的所有语言值映射到最终预览键，并调用 store 原子迁移旧键。",
+        "提交成功后清理草稿、重新校验并立即保存项目；冲突时保留草稿并提示错误。"
       ],
       "saveNow()": [
         "写入 IndexedDB；失败时写 localStorage 并标记存储模式。",
@@ -1363,25 +1568,44 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/serve.mjs": {
-    role: "零依赖本地静态服务器 + 磁盘 API：项目写入 `mods/<id>/`，ZIP 写入 `exports/`。",
+    role: "零依赖本地静态服务器 + 磁盘 API：项目工作区、普通导出与发布包模组覆盖部署。",
     contracts: [
-      "仅监听 127.0.0.1；默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` 覆盖数据目录。",
-      "API：status、projects 的 GET/PUT/DELETE、exports 的 GET/POST/DELETE；请求体上限 128 MB。",
+      "仅监听 127.0.0.1；默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` 覆盖目录。",
+      "默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。",
+      "API：status、projects、exports 与 game-mods；请求体上限 128 MB。",
+      "游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。",
       "项目先写临时目录再替换，文件路径拒绝绝对路径、`..`、盘符与超过 16 层。",
       "静态文件带 `Cache-Control: no-store`，路径解析后必须位于 SNModMaker 目录内。"
     ]
   },
 
+  "SNModMaker/tools/game_mods_dir.mjs": {
+    role: "解析编辑器「导出并覆盖到发布包 mods/」的默认目标目录。",
+    contracts: [
+      "优先级：`SNMODMAKER_GAME_MODS_DIR` > 当前平台已有的 `dist/build/<target>/` > 任意已有导出平台 > 当前平台 `dist/build/<platform>/mods`。",
+      "平台映射：win32→windows、darwin→macos，其余→linux。",
+      "纯函数可注入 env/platform/exists，供 Node 单元测试覆盖，不直接读真实目录。"
+    ]
+  },
+
   "SNModMaker/tests/run-tests.js": {
-    role: "Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP 与导入导出往返。",
+    role: "Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析。",
     contracts: [
       "不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。",
-      "覆盖 28 个用例；任何失败以退出码 1 结束。"
+      "覆盖 32 个用例，含实体多语言键事务、资源候选类型过滤、船体模块区、贴图/GLB 引用、GLB 解析与发布包 mods 目标解析；任何失败以退出码 1 结束。"
+    ]
+  },
+
+  "SNModMaker/tests/server-smoke.mjs": {
+    role: "本地服务磁盘 API 冒烟测试：在隔离临时目录验证游戏模组部署、覆盖、枚举、删除与旧版本清理。",
+    contracts: [
+      "启动真实 tools/serve.mjs 子进程，并通过三个环境变量把所有写入限制在临时目录。",
+      "测试结束终止服务并删除临时目录；任何断言失败以非零退出码结束。"
     ]
   },
 
   "SNModMaker/tests/browser-smoke.mjs": {
-    role: "Chrome DevTools Protocol 冒烟测试：新建项目、编辑、本地化、检视、自动保存、ZIP、导入与撤销。",
+    role: "Chrome DevTools Protocol 冒烟测试：新建项目、实体键事务、模块子分页与船体模块区、本地化、自定义资源选择器、ZIP、导入与撤销。",
     contracts: [
       "需要 Chrome 以 `--remote-debugging-port=9222` 启动，并已有静态服务。",
       "测试开始前清空该 origin 的存储；直接调用页面内 `SN*` 模块做导出/导入断言。",
@@ -1488,15 +1712,54 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/tests/cases/test_content_types_manifest.gd": {
+    role: "content_types.json 与框架 ContentTypes / 本地 Schema 文件的一致性守护，防止单一真源在过渡期漂移。",
+    contracts: [
+      "校验 key 集合、singular、schema 路径、definition/patch 分类与 registry 标志。",
+      "校验类型 key / singular / schema 唯一，分组、capability、aliases、default_file 字段完整，planned 类型不覆盖 active。",
+      "校验 `v2_module_categories` 唯一且被类型引用；导航/安全必须同属 `utility`，且不存在独立的 active utility 类型。",
+      "过渡期测试替代生成器；生成器接入后保留为回归测试。"
+    ]
+  },
+
+  "framework/tests/cases/test_save_migration.gd": {
+    role: "存档 Schema 2.0 迁移测试：v1 payload 加载为持久战役状态，v2 往返不迁移，缺失 campaign 回填，未知版本拒绝。",
+    contracts: [
+      "手写 1.0 payload 验证 save_schema → 2.0、state schema → 2.0、campaign/id/created_at/playtime 回填与 migrated_from 记录。",
+      "验证 v2 写入/读取的 save_schema、state_schema、content_schema 与 state hash 往返一致。",
+      "验证缺 campaign 的 2.0 payload 惰性补齐并产生 warning；3.0 等未知版本返回结构化错误。"
+    ]
+  },
+
+  "framework/tests/cases/test_schema_v2_drafts.gd": {
+    role: "Content Schema 2.0 草案测试：用现有 SchemaValidator 验证 start/world/region/site/route/weather/faction/discovery 草案，并守护草案类型不进入 active 注册表。",
+    contracts: [
+      "合法 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery envelope 必须零错误；缺字段、非法 ID、非法 difficulty、非法 cargo、越界概率、非法稀有度/权重必须报错。",
+      "`draft_schemas` 中的类型必须出现在 planned、不得出现在 ContentTypes.all()，对应 Schema 文件必须存在。",
+      "草案 Schema 只使用项目校验器支持的 JSON Schema 子集；正式接入运行时前保持 planned。"
+    ]
+  },
+
+  "framework/tests/cases/test_campaign_state.gd": {
+    role: "CampaignState 分区测试：分区惰性补齐、探索进度只追加 id、阵营声望夹取，以及分区随存档往返。",
+    contracts: [
+      "`ensure_campaign_sections()` 为 world/codex/factions 补齐默认结构；空状态也能安全读取，不抛异常。",
+      "`mark_region_visited` / `mark_port_visited` / `discover_site` / `discover_codex` 幂等，返回是否新增；空 id 忽略。",
+      "`set_faction_reputation` 夹取到 [-100,100]，未知阵营返回 0；空 faction id 不建条目。",
+      "新局 `campaign.world.generated=true` 且起始港记入 visited_port_ids；save→load 后 state.hash 与进度一致。"
+    ]
+  },
+
   "framework/tests/cases/test_ui_shell.gd": {
     role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化。",
     contracts: [
       "首帧运行器让 `_ready` 正常投递，因此控件树（含 SNSectionHeader 等自行构建子节点的组件）与游戏内一致。",
-      "覆盖信息条（当前港口 + 剩余载重/剩余舱容，反馈 5）、通关清单与两种提示分支（反馈 6）；期望值独立复算（RegistryHub 翻译 + ShipOps 重量/舱容 + printf），不使用被测 helper 自证。",
-      "覆盖船厂下单按钮 → CraftOps 订单 → 24 小时在港等待按钮 → 时间推进与成品入下单港仓库（反馈 4，经由真实按钮 pressed 信号）。",
+      "覆盖信息条（当前港口 + 剩余载重/剩余舱容，反馈 5）、通关清单与两种提示分支（反馈 6）；期望值独立复算（RegistryHub 翻译 + ShipOps 重量/舱容 + printf），不使用被测 helper 自证。通关清单只在总览页渲染：船厂页断言不再出现 `ui.victory.plan_title`，改为出现「组件」分类入口。",
+      "模块损耗可见性：健康船信息条不出现「部件」chip；对锅炉实例造成 50% 损耗后刷新，信息条出现「部件」chip 与「1 · 50%」，船厂船卡出现「受损部件」行与同一数值（期望文案来自 shell._tr 与实例状态，不用 UI helper 自证）。",
+      "覆盖船厂下单按钮 → CraftOps 订单 → 在港等待按钮 → 时间推进与成品入下单港仓库（反馈 4，经由真实按钮 pressed 信号）；打造入口在改装态模块分类内，下单后重建的页面必须保持改装态与分类，24 小时等待按钮在「杂项」页签。",
       "场景接线断言覆盖独立总览、市场、委托、船厂、补给、情报、出航页面及四个菜单页面；船厂流程从 ShipyardScreen 的真实按钮驱动。",
       "流程场景接线覆盖港口记忆、抵达结算、航行中、航行事件与通关总结，逐一调用 Shell 构建入口并按脚本类型断言实例。",
-      "覆盖设置/总览/市场/船厂密集字段禁用自动换行、市场单元格最小宽度，以及情报矩阵固定元数据列、可扩展港口列、最小列宽和深色单元格背景。",
+      "覆盖设置/总览/市场/船厂/港口记忆密集字段禁用自动换行、市场与快照单元格最小宽度，以及情报矩阵固定元数据列、可扩展港口列、最小列宽和深色单元格背景。",
       "覆盖补给页损失带：买煤后水的 meter.loss_value/cap_loss 与 baseline 跨度（反馈 2）、情报页 SNIntelTable 与未知港口掩码（反馈 3，列数对照 MapOps.ports）。",
       "覆盖「航行记录」：真实下单 + 等待后在 zh 与 en 两种 locale 下逐行断言通报无 `%s/%d` 残留、无裸键，并与**逐语言写死的期望句子**相等（模板槽位互换照样能渲染，只有字面期望能抓住「某一种语言的文案说反了」；en 只写错顺序时该用例会失败）。",
       "扫描 domain/application 源码里所有 `push_notice(\"…\")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。",
@@ -1505,14 +1768,30 @@ export const FILE_DOCS = {
   },
 
   "framework/tests/cases/test_shipyard_refit.gd": {
-    role: "船厂改装 UI 契约测试：纵剖图槽位与模式持久、2.5D 渲染器替换钩子、拖拽仓库模块到槽位的端到端链路。",
+    role: "船厂界面重构契约测试（正常态 / 改装态）：三列布局、槽位与分类记忆、授权贴图与船卡缩略图、2.5D 渲染器替换钩子、拖拽安装，以及旧整页下方面板必须消失。",
     contracts: [
-      "与 test_ui_shell 同一夹具：真实挂载 main.tscn 外壳并先 run.start，main.gd / 船厂页接线错误会在此失败。",
-      "槽位数 = 4 + cargo_slots +（cabin_slots > 0 时 +1），与 SNShipView._slot_targets 数量一致；改装开启前贴片全部隐藏。",
-      "按本地化键 `ui.label.refit` 找到改装按钮并真实 emit pressed：进入 CUTAWAY，`shell._shipyard_refit` 让重建后的船厂页仍保持改装态。",
-      "渲染器替换：默认 `has_renderer() == false`；`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
-      "拖放端到端：`WarehouseOps.add_module` 在仓库放一个导航模块 → HUD 恰好一行可拖拽；`_on_slot_drop` 发 `ship.install_module`，参数含 module_id / source 与槽位 replace_module_id，命令后模块离开仓库并装到船上。",
-      "覆盖来源与类型校验：异类型部件、purchase 候选均被 `_accepts` 拒绝。"
+      "与 test_ui_shell 同一夹具：真实挂载 main.tscn 外壳并先 run.start，main.gd / 船厂页接线错误会在此失败；用例按脚本类型在 `_root_box` 里定位 ShipyardScreen。",
+      "槽位数 = 4 + cargo_slots +（cabin_slots > 0 时 +1），与 `SNShipView._slot_targets` 数量一致；改装开启前贴片全部隐藏。",
+      "正常态断言：stage 为 `EXTERIOR`、左列标题「已有船舶」、「组件」列提供六类入口、船卡显示当前船体名并预留缩略图区域（`SHIP_THUMB_SIZE` = 210×118），且页面恰好一个 ShipyardScreen。",
+      "改装态断言：按本地化键 `ui.label.refit` 点真实按钮 → `_category == \"hulls\"`、stage 为 `CUTAWAY`、全部贴片可见、按钮改为「完成改装」；竖排 tab 含「杂项」。`shell._shipyard_refit` / `_shipyard_category` 让整页重建后仍恢复改装态与所选分类。",
+      "贴图契约：`SHIP_VIEW_SCRIPT.SECTION_TEXTURE_PATH` 必须等于 `res://assets/ui/shipyard/ship_section.png` 且 `ResourceLoader.exists`；进入改装后 `has_section_texture()` 为真、`section_texture_size()` 两个分量 > 0。船卡缩略图断言 `_ship_thumb` 非空、页面仅有一个 TextureRect 使用它、占位文案不再出现。",
+      "渲染器替换：有船体 GLB 时正常态默认挂载 `SNShipStage3D`（断言 `has_ship()`、改装态隐藏视口、回到 EXTERIOR 重新显示）；无 GLB 时断言保留程序化占位。`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
+      "拖放端到端：`WarehouseOps.add_module` 在仓库放一个导航模块 → 操作列恰好一行可拖拽；`_on_slot_drop` 发 `ship.install_module`，参数含 module_id / source 与槽位 `replace_module_id`，命令后模块离开仓库并装到船上；异类型部件与 purchase 候选被 `_accepts` 拒绝。",
+      "分类导航：每个分类的中间面板标题取 `ui.category.<type>`，货舱按槽位数逐个列出「货舱槽 n」；杂项承载打造订单/在港等待/仓库材料/仓库模块，且不再出现「按配方打造」「槽位」；打造入口留在对应模块分类内。",
+      "旧面板守护：`LEGACY_SECTION_KEYS`（parts_hud / warehouse / available_modules / craft / recipes / victory plan 等本地化键）的译文不得出现在页面任意 Label 中；这些键必须仍被本地化，键被删时用例应失败而不是静默通过。`_body` 子节点数恒为 3。",
+      "模块状态徽标：健康船不出现「状态 NN%」；对锅炉实例造成 50% 损耗后重建船厂页，锅炉槽位卡出现 `ui.label.status` 50% 徽标（条件值来自 shipyard.view 的 condition，不在页面计算）。"
+    ]
+  },
+
+  "framework/tests/cases/test_ship_modules.gd": {
+    role: "模块实例层测试：实例创建/补齐、condition 夹取与失效、安装替换重置状态、货舱对齐、damage_module 操作码、维修报价与存档往返。",
+    contracts: [
+      "新局每个已装模块都有唯一 instance_id 与满 condition；serial 覆盖全部实例。",
+      "旧版 ship（只有扁平槽位键）调用 ensure 后补齐实例，重复 ensure 不改变 id 与 serial。",
+      "damage 按比例扣减、0 处夹取并只在首次归零报告 newly_disabled；repair_all 恢复满状态并返回修复数；空/非法槽位返回结构化错误。",
+      "货舱实例与扁平列表逐位对齐：追加补新实例、按位置删除保留幸存实例 id。",
+      "单槽替换生成满状态新实例；damage_module 效果发布 ship.module_damaged，hull 不是合法槽位。",
+      "维修报价把模块损耗折算成点数并抬高 cost，不伪造船体缺失；save/load 后 condition 与 instance_id 哈希一致。"
     ]
   },
 
@@ -1547,15 +1826,16 @@ export const FILE_DOCS = {
   },
 
   "dev_scenes/harbor/harbor_diorama.tscn": {
-    role: "独立 3D 港口样片场景：固定机位黄昏逆光，用已有 GLB 资产拼码头/吊车/货堆，前方浮一艘船，水面使用自写着色器。",
-    dependencies: ["assets/models/ships/SN_Ship_Prototype.glb", "assets/materials/water/harbor_water.tres", "dev_scenes/harbor/bobbing_boat.gd", "dev_scenes/harbor/harbor_diorama.gd"],
+    role: "独立 3D 港口样片场景：固定机位黄昏逆光，用已有 GLB 资产拼码头/吊车/货堆，前方浮一艘 1795 双桅纵帆船，水面使用自写着色器。",
+    dependencies: ["assets/models/ships/SN_Schooner_Fame.glb", "assets/materials/water/harbor_water.tres", "dev_scenes/harbor/bobbing_boat.gd", "dev_scenes/harbor/harbor_diorama.gd"],
     contracts: [
       "不接入主场景：`project.godot` 的 `run/main_scene` 仍指向 `framework/ui/shell/main.tscn`。",
       "水面分两层：`Water` 为 500×400 细分网格（波动/泡沫/反射），`FarWater` 是下沉 3 m 的大平面，只输出地平线雾色，遮住主水面网格边缘。",
       "码头岸壁、护舷、爬梯、系缆桩、煤气灯、吊车、货堆与船体全部来自 `assets/models/`；仓库/烟囱/窗灯是场景内 BoxMesh 剪影，只做尺度参照。",
       "固定机位：`Camera3D`（fov 35）与 `Sun`/`Fill`/`WorldEnvironment` 都是场景内预置，不在运行时改。",
-      "`ShipBob` 只控制姿态，船体 GLB 作为其子节点实例；水面泡沫环参数 `boat_*` 要与 `ShipBob` 的位置/朝向一致。",
-      "改 `Sun` 朝向时必须同步 `assets/materials/water/harbor_water.tres` 的 `sun_direction`，否则水面耀斑与光照方向不一致。"
+      "`ShipBob` 只控制姿态，船体 GLB 作为其子节点实例；水面泡沫环参数 `boat_*` 要与 `ShipBob` 的位置/朝向及新船长一致（half_size 13.2×3.9）。",
+      "改 `Sun` 朝向时必须同步 `assets/materials/water/harbor_water.tres` 的 `sun_direction`，否则水面耀斑与光照方向不一致。",
+      "船体当前实例 `SN_Schooner_Fame`（29 mesh / 13174 tri / 无星条旗），旧 `SN_Ship_Prototype` 仅保留为历史原型资产，不再出现在本场景。"
     ]
   },
 
@@ -1606,6 +1886,7 @@ export const FILE_DOCS = {
     contracts: [
       "参数必须与 `harbor_water.gdshader` 的默认值同步；材质才是场景实际生效值。",
       "`sun_direction` 与场景 `Sun` 的朝向对应；`boat_*` 与 `World/ShipBob` 的位置/朝向对应。",
+      "浮船为 SN_Schooner_Fame 时 `boat_half_size` 取 (13.2, 3.9)（船体 LOA 24.4 m），换船或改船体比例时同步。",
       "`shore_z` 是码头前沿水线（世界 z），`shore_span` 覆盖码头宽度。"
     ]
   },
@@ -1619,11 +1900,56 @@ export const FILE_DOCS = {
   },
 
   "tools/godot/verify_harbor_diorama.gd": {
-    role: "港口样片验收（只读）：场景可加载、水面使用自定义着色器、浮船随波运动、未接入主场景。",
+    role: "港口样片验收（只读）：场景可加载、新浮船 SN_Schooner_Fame 在场景且旧船已移除、无星条旗、水面使用自定义着色器、浮船随波运动、未接入主场景。",
     contracts: [
       "先 `await process_frame` 再实例化并检查，保证 `_ready` 已执行、船的基础位姿已缓存。",
       "手动以 1/30 s 推进 `bobbing_boat._process` 60 次，避免依赖真实帧率与帧数。",
+      "检查 `SN_Schooner_Fame` 实例存在、旧 `SN_Ship_Prototype` 不存在、纵帆船网格实例 >= 20 且名称不含 Flag。",
       "失败退出码 1；只读，不写场景/资源。"
+    ]
+  },
+
+  "tools/godot/capture_harbor_diorama.gd": {
+    role: "港口样片真实渲染截图（窗口模式）：加载 harbor_diorama.tscn，等水面/浮船稳定后抓固定 3/4 机位与纵帆船近景两张 1440×900 截图。",
+    dependencies: ["dev_scenes/harbor/harbor_diorama.tscn"],
+    contracts: [
+      "必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。",
+      "等待 90 帧 + 1 s 后再抓第一张；近景把 Camera3D 移到 (30, 11, 34) 并对准船体中部。",
+      "输出 `docs/design/screenshots/harbor_diorama_schooner.png` 与 `harbor_diorama_schooner_detail.png`；120 s watchdog；失败退出码 1。",
+      "只写截图，不修改场景/源码。"
+    ]
+  },
+
+  "tools/ui_snapshot.gd": {
+    role: "船厂 UI 截图验收（真实渲染）：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取正常态 / 改装态 / 每个分类并断言模式与分类记忆。",
+    contracts: [
+      "必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。",
+      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit`。",
+      "`--damage=slot[:index]:ratio` 在 run.start 后用 `ShipModules.damage()` 损坏模块实例，额外截取 `shipyard_normal_damaged` / `shipyard_refit_damaged` / `supply_damaged`；只影响截图进程，不进入游戏逻辑。",
+      "进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用。",
+      "纯色画面判定为失败；120 s watchdog 防止协程中断挂住窗口；成功退出码 0，失败 1。",
+      "只写 `docs/design/screenshots/`，不修改游戏状态或源码。"
+    ]
+  },
+
+  "tools/capture_ui.ps1": {
+    role: "`tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。",
+    contracts: [
+      "引擎解析顺序：`-GodotBin` > `$env:GODOT_BIN` > 本机默认路径；找不到直接抛错。",
+      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo_modules,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜。",
+      "检查每张期望截图存在且比本次运行新，旧图/缺图把退出码改为 1；完整日志写入 `.godot-ui-snapshot.log`。",
+      "脚本保持 ASCII，兼容 Windows PowerShell 5.1 解析。"
+    ]
+  },
+
+  "tools/art/gen_shipyard_textures.py": {
+    role: "船厂两张授权贴图的确定性生成器：纵剖图 `ship_section.png`（1792×1008）与船卡缩略图 `ship_thumb_ironclad.png`（640×360）。",
+    contracts: [
+      "只依赖 Pillow + numpy；同一版本环境像素确定，几何/配色/构图锚点集中在文件顶部常量表。",
+      "输出路径相对 `--out-root`（默认仓库根）：`assets/ui/shipyard/`；`--section-only` / `--thumb-only` 可单独重建。",
+      "纵剖图不烘焙文字与 UI 边框；`ANCHORS` 必须与 `sn_ship_view.gd._chip_anchor()` 的舱室比例同步。",
+      "缩略图从 `docs/design/screenshots/ironclad_broadside.png` 裁切并替换为 UI 调色板背景。",
+      "重跑命令：`python tools/art/gen_shipyard_textures.py`；改完图不需要改页面代码。"
     ]
   }
 };
@@ -1661,7 +1987,7 @@ export const MODULES = {
     ]
   },
   "framework/domain": {
-    intro: "纯领域逻辑：航行、市场、委托、船只/仓库/打造订单、地图、事件、债务与通关判定。",
+    intro: "纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、事件、债务与通关判定。",
     contracts: [
       "领域函数尽量输入确定、输出确定；随机必须来自 RngService 命名流。",
       "不读写文件、不创建 UI、不直接访问场景树。",
@@ -1676,7 +2002,7 @@ export const MODULES = {
     ]
   },
   "framework/state": {
-    intro: "运行态数据模型。GameState 是唯一持久化状态，定义对象永不进入存档；含收入/支出/利润统计的惰性补齐。",
+    intro: "运行态数据模型。GameState 是唯一持久化状态，定义对象永不进入存档；含 campaign 分区（world/codex/factions）、探索进度、收入/支出/利润统计的惰性补齐。",
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
@@ -1693,7 +2019,12 @@ export const MODULES = {
       "测试入口：`godot --headless --path . --script res://framework/tests/test_runner.gd`。",
       "`test_case.gd` 提供断言与 Core 启动辅助；每个用例独立 bootstrap。",
       "测试源码可以引用 `core:*` ID；`test_no_core_ids.gd` 只扫描非测试框架代码。",
-      "`test_full_clear.gd` 通过公开命令/查询脚本化跑完五段主线并组装大型船，覆盖 9 个 seed。"
+      "`test_full_clear.gd` 通过公开命令/查询脚本化跑完五段主线并组装大型船，覆盖 9 个 seed。",
+      "`test_content_types_manifest.gd` 守护 `content_types.json` 与 `ContentTypes` / Schema 文件的一致性。",
+      "`test_save_migration.gd` 守护 save schema 1.x → 2.0 迁移、campaign 元数据与分区回填。",
+      "`test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。",
+      "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
+      "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 草案，并确认草案类型仍为 planned、不在 active 注册表。"
     ]
   },
   "sdk": {
@@ -1704,10 +2035,13 @@ export const MODULES = {
     ]
   },
   "schemas": {
-    intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）。",
+    intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0 草案。",
     contracts: [
       "每类内容一个 envelope Schema；公共字段在 `common.schema.json`。",
-      "Schema 的 `const`/`enum` 与 `ContentTypes`/操作码注册表需同步维护。"
+      "1.x 类型继续使用根目录 Schema；2.0 草案在 `schemas/v2/`，由 `content_types.json.draft_schemas` 登记，尚未接入运行时加载。",
+      "当前 2.0 草案：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`；对应类型仍为 planned。",
+      "标准实体可选 `information.texture/model` 资源键；贴图与 GLB 模型属于展示信息，不替代 data 权威字段。",
+      "Schema 的 `const`/`enum` 与 `ContentTypes`/操作码注册表需同步维护；效果操作码枚举（如 `damage_module`）必须与 `EffectOpRegistry` 同时增改，否则 core 校验会 fatal。"
     ]
   },
   "dev_mods/core": {
@@ -1721,11 +2055,15 @@ export const MODULES = {
     ]
   },
   "tools": {
-    intro: "PowerShell 辅助脚本、Godot 验收脚本、建模工单 / 参数化生成器与静态文档生成器。",
+    intro: "PowerShell 辅助脚本、Godot 验收 / 截图脚本、建模工单 / 参数化生成器与静态文档生成器。",
     contracts: [
-      "`test.ps1` / `pack_core.ps1` 通过 `GODOT_BIN` 定位引擎。",
+      "`test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。",
       "`gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。",
+      "`ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。",
+      "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）。",
+      "`art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。",
       "`modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。",
+      "港口设施锚点工单见 `modeling/briefs/sn_port_facilities_batch1.json` 与 `PORT_FACILITIES_PLAN.md`：6 件设施锚点，总预算 10500 tri，轴心统一在底面中心。",
       "`modeling/generators/*.py` 是几何唯一真源：改了参数重跑即可重建，禁止手工摆点；`.blend` 只是产物。",
       "`modeling/generators/dryrun_props.py` 必须在进 Blender 前跑通（tri 预算 / 包围盒 / 边界边 / 退化面）。",
       "`modeling/dispatch.workflow.js` 必须串行派发：Blender 单实例，禁止 `parallel`/`pipeline` 并发建模。",
@@ -1738,6 +2076,8 @@ export const MODULES = {
       "运行时无第三方依赖、无构建步骤、无 CDN；经典 script 以支持 file://。",
       "Schema 与 Core 数据以仓库为唯一来源；`schema-bundle.js` / `core-index.js` 只由生成脚本产出。",
       "导出 JSON 与 Godot 加载链共享同一套 Schema；网页端不运行领域逻辑、注册表或 Core 完整性检查。",
+      "实体 ID 修改只实时预览新多语言键，点击保存条目才原子迁移所有语言；模块类通过子分页切换。",
+      "标准实体可配置贴图与 GLB 模型资源键，编辑器校验资源存在性与格式。",
       "所有导入内容都经过 HTML 转义、路径检查与 ZIP 体积/条目/CRC 限制。",
       "浏览器存储始终可用；`tools/serve.mjs` 运行时额外镜像到 `mods/`，导出可写入 `exports/`。"
     ]
@@ -1783,11 +2123,12 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 套件）。",
-  "framework/tests/cases": "按主题拆分的 100 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、UI 外壳接线、密集界面横向排版、通报文案本地化与通关与多 seed 完整通关）。",
+  "framework/tests/cases": "按主题拆分的 135 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",
   "sdk/examples": "第三方锅炉示例，验证公共内容接口。",
+  "schemas/v2": "Content Schema 2.0 草案：common 与 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery；仍为 planned，暂不接入运行时加载。",
   "schemas": "JSON Schema 文件（Manifest/common/15 类内容）。",
   "dev_mods/core": "官方 Core 内容文件（manifest/content/localization/assets）。",
   "tools/modeling/generators": "铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。",
@@ -1802,9 +2143,31 @@ export const GROUPED_ROLES = {
   "tools/modeling/generators/p0_rework_2026-10-19.py": "第一批 P0 整改：重建系缆桩 → SN_Ore 改锈红 → 三段岸壁拼接测试。",
   "tools/modeling/generators/p0_finalize.py": "P0 归档：备份旧 GLB → 清临时对象 → 导出 → 保存工作台。",
   "tools/modeling/generators/sn_paddle_freighter_generator.py": "明轮货轮参数化生成器：铁壳船身 + 两舷明轮（14 桨叶/8 辐条/双轮缘/内加强环/斜撑）+ 半包轮罩箱板（观察窗/端封让开轮扫掠）+ 双烟囱 + 三岛甲板 + 艏艉楼侧封板 + 货舱吊杆，全部几何由顶部参数表重建（预算 ≤14000 tri）。",
+  "tools/modeling/generators/sn_paddle_steamer_generator.py": "小型明轮蒸汽船（PS Enterprise 参考）参数化生成器：24 m 白漆内河船身 + 两舷 10 桨叶明轮 + 梯形格栅轮罩 + 前驾驶室（ENTERPRISE 文字铭牌）+ 后部雨棚游步甲板 + 黑烟囱 + 艏旗杆澳洲旗 + 艉部弧形平台/舵；蒸汽不建模（留给游戏内 VFX），预算 ≤12000 tri，几何全部由顶部参数表重建。",
+  "tools/modeling/generators/sn_schooner_fame_generator.py": "1795 年 Salem 双桅纵帆船 SN_Schooner_Fame 参数化生成器：18 站放样黑船身 + 赭黄上舷带 + 双桅后倾（Fore -2.5° / Main -3.2°）+ 斜桁帆/方顶帆/三角顶帆 + 两面艏三角帆 + 舷侧绳梯/支索/动索 + 甲板属具（舱口/绞盘/舵轮/罗经柜/锚/木桶/盘绳/fife rails/短梯）+ 艉廊/3 窗/FAME 铭牌 + 红白长旒；帆腹镜像到 -Y（Godot +Z 相机侧），预算 ≤18000 tri。",
+  "tools/modeling/generators/ship_parts": "可复用船体部件库 v1：core（Part/基本体/PartSpec）/ deck（甲板属具）/ bow（艏斜桁/艏饰）/ stern（艉廊）/ assembly（Blender 装配与 report）；生成器只保留船型布局，重构后纵帆船输出逐对象 digest 不变。",
+  "tools/modeling/generators/ship_parts/core.py": "部件库核心：Part 数据容器、向量/基本体/放样/镜像工具、PartSpec 装配契约、tri_count；纯 Python，不 import bpy。",
+  "tools/modeling/generators/ship_parts/deck.py": "可复用甲板属具构建器：舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯；位置与甲板高度由调用方传入。",
+  "tools/modeling/generators/ship_parts/bow.py": "可复用艏部构件：艏斜桁/jibboom 铁箍、雕刻艏饰（黄铜卷饰+赭黄胸像）；船体主色由调用方传入。",
+  "tools/modeling/generators/ship_parts/stern.py": "可复用艉部构件：艉廊/3 艉窗/檐口/双艉灯；x0/x1/窗位/灯位/主色由调用方传入。",
+  "tools/modeling/generators/ship_parts/assembly.py": "可复用 Blender 装配层：BuildConfig/PivotSpec、清理/集合/材质/空物体/文字铭牌/report；bpy 只在函数内 import，干跑可安全加载生成器。",
+  "tools/modeling/generators/ship_parts/palette.py": "跨船共享材质名常量（木/深木/甲板木/帆布/金属/黄铜/旗帜色）；船体主色由各船生成器定义。",
+  "tools/modeling/generators/ship_parts/README.md": "可复用部件库使用说明与部件契约：分层、新增部件步骤、坐标/材质约定、输出不变的验收口径。",
+  "tools/modeling/generators/ship_parts/__init__.py": "部件库入口：导出 Part/PartSpec/tri_count 与 assembly/deck/bow/stern 子模块；约定纯几何不依赖 bpy。",
+  "tools/modeling/generators/dryrun_schooner_fame.py": "纵帆船纯 Python 干跑：对 FORE/MAIN 子件施加 pivot 世界变换后核对 tri/bbox/边界边/非流形/退化/孤立点/材质/命名/父级，并断言两桅轴距 6.4 m、双桅后倾与主桅更高（R1 P0 回归护栏）。",
+  "tools/modeling/generators/export_schooner_fame_glb.py": "纵帆船 GLB 归档：备份旧 GLB → 保存工作台 → 根节点临时归零导出 → `bpy.data.libraries.write` 船体快照（不切文件）→ 还原 (0,-70,0) 并重存工作台。",
+  "tools/modeling/generators/verify_schooner_fame_glb.py": "纵帆船 GLB 结构自检（纯 Python）：32 节点/29 网格/12 doubleSided 材质/13174 tri/glTF Y-up 包围盒 33.44×26.85×6.88/水线轴心 −2.74。",
+  "tools/modeling/generators/render_schooner_fame_preview.py": "纵帆船预览渲染：临时相机/双太阳/深色世界/临时水面，输出 3/4、正侧、艏 3/4、艉 3/4、俯视 5 张入库截图，渲染后还原场景并删除临时对象。",
+  "tools/modeling/generators/dryrun_paddle_steamer.py": "明轮蒸汽船纯 Python 干跑：空壳替换 bpy/bmesh 后核对 tri 预算、包围盒/Z 范围、边界/非流形边、退化面、孤立点、材质名单、父级键与左右镜像误差。",
+  "tools/modeling/generators/render_paddle_steamer_preview.py": "明轮蒸汽船预览渲染：临时相机/双太阳/深色世界/临时 matte 水面，输出 3/4、正侧、艏、艉 3/4、俯视 5 张入库截图，渲染后还原场景并删除临时对象。",
+  "tools/modeling/generators/verify_paddle_steamer_scene.py": "明轮蒸汽船场景只读验收：集合/命名/层级/Pivot/包围盒/tri/材质槽/网格健康/明轮 8 旋转角与轮罩·船体·明轮台世界坐标 BVH 交面/左右镜像/连通岛悬空/工作台回归，输出 JSON。",
+  "tools/modeling/generators/export_paddle_steamer_glb.py": "明轮蒸汽船 GLB 归档：备份旧 GLB → 保存工作台 → 根节点临时归零导出 → libraries.write 船体快照（不切文件）→ 还原 (45,0,0) 并重存工作台。",
+  "tools/modeling/generators/verify_paddle_steamer_glb.py": "明轮蒸汽船 GLB 结构自检（纯 Python）：节点/网格数、8 材质 doubleSided、tris=11764、glTF Y-up 包围盒与 −1.32 m 水线轴心，并拒绝蒸汽几何泄漏。",
   "tools/modeling/generators/dryrun_ship.py": "船只生成器纯 Python 干跑：空壳替换 bpy/bmesh 后加载生成器，核对 tri 预算、包围盒、边界/非流形边、退化面、材质名与父级。",
   "tools/modeling/generators/export_ship_glb.py": "船只 GLB 归档：备份旧 GLB → 保存工作台 → 导出（临时归零 SN_PF_Root）→ 写船体快照；人工验收后由 Lead 运行。",
   "tools/modeling/generators/verify_ship_glb.py": "船只 GLB 结构自检（纯 Python，不进 Blender/Godot）：读 GLB 头 + JSON chunk 核对节点/网格/材质 doubleSided/三角面/包围盒与轴心。",
+  "tools/modeling/briefs/sn_ship_paddle_steamer.json": "小型明轮蒸汽船工单：24.4 × 8.7 × 10.5 m、≤12000 tri、8 材质、明轮 10 桨叶/轮罩 10 道格栅、驾驶室 ENTERPRISE 铭牌；明确蒸汽不建模（游戏内 VFX）、明轮 8 旋转角零穿模与水线轴心验收。",
+  "tools/modeling/briefs/sn_schooner_fame.json": "1795 Salem 双桅纵帆船工单：船体 LOA 24.4 m / 总长 33.44 m / 总高 26.82 m、≤18000 tri、12 材质、双桅后倾/斜桁帆/方顶帆/艏三角帆/完整索具/艉廊 FAME 铭牌；用户 2026-10-19 明确不要星条旗，只保留红白长旒；帆腹朝 -Y。",
   "tools/modeling/briefs/_template.json": "建模工单模板：字段说明与必填项。",
   "tools/modeling/briefs/sn_ship_prototype.json": "帆船原型工单（三桅六帆低模）。",
   "tools/modeling/briefs/sn_paddle_freighter.json": "明轮蒸汽货轮工单：59.5 × 14.1 × 19.5 m、≤14000 tri、33 个必做部件的尺寸 / 材质 / 命名约定；含明轮轮系、半包轮罩、艏艉楼侧封板与 15 对零交面验收。",
@@ -1814,6 +2177,8 @@ export const GROUPED_ROLES = {
   "tools/modeling/briefs/sn_iron_harbor_batch3.json": "铁港第三批 6 件工单（堆场/管线，y=36）。",
   "tools/modeling/briefs/sn_iron_harbor_batch4.json": "铁港第四批 6 件工单（机械/水上件，y=42）。",
   "tools/modeling/briefs/sn_iron_harbor_batch5.json": "铁港第五批 7 件工单（结构/标识/动力，y=48）。",
+  "tools/modeling/briefs/sn_port_facilities_batch1.json": "港口设施锚点第一批工单：市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞，总预算 10500 tri，y=60。",
+  "tools/modeling/briefs/PORT_FACILITIES_PLAN.md": "港口设施锚点建模总表：设施→锚点映射、尺寸/tri/材质、已有道具复用、PortStage 装配与验收约定。",
   "tools/modeling/briefs/IRON_HARBOR_PLAN.md": "铁港小部件 31 件 / 5 批的工单总表、布局、材质与已知坑。",
   "tools/modeling/dispatch.workflow.js": "批量派发脚本：串行 Builder + 独立 Verifier，脚本内不落盘（导出由 Lead 在人工验收后执行）。",
   "tools": "PowerShell 测试/打包脚本与静态文档生成器。",

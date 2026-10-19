@@ -1,6 +1,6 @@
 # `SNModMaker/tests/run-tests.js`
 
-> 作用：Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP 与导入导出往返。
+> 作用：Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析。
 
 - 类型：浏览器经典脚本
 
@@ -8,15 +8,16 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI` | L25 |
-| `test(name, fn)` | L32 |
-| `freshProject()` | L45 |
-| `errorsOf(result)` | L49 |
-| `warningsOf(result)` | L53 |
+| `UI` | L28 |
+| `GLB` | L30 |
+| `test(name, fn)` | L36 |
+| `freshProject()` | L49 |
+| `errorsOf(result)` | L53 |
+| `warningsOf(result)` | L57 |
 
 ## 契约与约束
 
 - 不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。
-- 覆盖 28 个用例；任何失败以退出码 1 结束。
+- 覆盖 32 个用例，含实体多语言键事务、资源候选类型过滤、船体模块区、贴图/GLB 引用、GLB 解析与发布包 mods 目标解析；任何失败以退出码 1 结束。
 
 模块索引：[SNModMaker](../README.md)

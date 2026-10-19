@@ -9,7 +9,7 @@
 | `harbor/README.md` | 港口样片运行方式、文件清单、水面实现要点、调参入口与已知边界。 | 本页 |
 | `harbor/bobbing_boat.gd` | 浮船：采样与水面着色器同源的波浪，驱动升沉、纵摇、横摇和极缓慢系泊漂移。 | [查看](./harbor/bobbing_boat.gd.md) |
 | `harbor/harbor_diorama.gd` | 港口样片根脚本：运行时给码头石墙套更暗的复制材质，压住黄昏逆光下的高光。 | [查看](./harbor/harbor_diorama.gd.md) |
-| `harbor/harbor_diorama.tscn` | 独立 3D 港口样片场景：固定机位黄昏逆光，用已有 GLB 资产拼码头/吊车/货堆，前方浮一艘船，水面使用自写着色器。 | [查看](./harbor/harbor_diorama.tscn.md) |
+| `harbor/harbor_diorama.tscn` | 独立 3D 港口样片场景：固定机位黄昏逆光，用已有 GLB 资产拼码头/吊车/货堆，前方浮一艘 1795 双桅纵帆船，水面使用自写着色器。 | [查看](./harbor/harbor_diorama.tscn.md) |
 
 ## 模块契约
 

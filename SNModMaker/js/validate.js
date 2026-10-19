@@ -17,7 +17,8 @@
   const SEMVER_RE = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$/;
   const MOD_ID_RE = /^[a-z][a-z0-9_]{2,31}$/;
   const ID_REF_RE = /^[a-z][a-z0-9_]{2,31}:[a-z_]+\/[a-z0-9_]+$/;
-  const ASSET_EXTENSIONS = ['.png', '.webp', '.svg', '.ogg', '.wav'];
+  const ASSET_URI_RE = /^asset:\/\/([a-z][a-z0-9_]{2,31})\/(.+)$/;
+  const ASSET_EXTENSIONS = ['.png', '.webp', '.svg', '.ogg', '.wav', '.glb'];
   const FORBIDDEN_EXTENSIONS = ['.gd', '.gdshader', '.cs', '.dll', '.so', '.dylib', '.exe', '.bat',
     '.cmd', '.ps1', '.sh', '.pck', '.tscn', '.tres', '.import'];
 
@@ -485,7 +486,7 @@
       if (!safePath(asset.path)) {
         add('error', 'asset_path', `资源路径不安全：${asset.path}`, { name: 'assets', path: asset.path });
       } else if (!ASSET_EXTENSIONS.includes(extensionOf(asset.path))) {
-        add('error', 'asset_extension', `资源只允许 png/webp/svg/ogg/wav：${asset.path}`, { name: 'assets', path: asset.path });
+        add('error', 'asset_extension', `资源只允许 png/webp/svg/ogg/wav/glb：${asset.path}`, { name: 'assets', path: asset.path });
       }
       if (asset.path && isForbiddenPath(asset.path)) {
         add('error', 'asset_forbidden', `禁止的可执行/场景资源：${asset.path}`, { name: 'assets', path: asset.path });
@@ -496,6 +497,7 @@
     }
 
     const allIds = new Map();
+    const core = root.SN_CORE_INDEX;
     let usesCore = false;
     for (const entry of localization) {
       if (!entry.entries || typeof entry.entries !== 'object') continue;
@@ -574,6 +576,33 @@
           if (ownKeys.size && localization.length === 0) {
             add('warning', 'localization_absent', '内容使用了本地化键，但项目没有本地化文件。', view);
           }
+
+          const information = definition.information || {};
+          for (const [field, extensions] of Object.entries({ texture: ['.png', '.webp', '.svg'], model: ['.glb'] })) {
+            const reference = String(information[field] || '').trim();
+            if (!reference) continue;
+            const uriMatch = ASSET_URI_RE.exec(reference);
+            const namespace = uriMatch ? uriMatch[1] : modId;
+            const assetKey = uriMatch ? uriMatch[2] : reference;
+            let assetPath = '';
+            if (namespace === modId) {
+              assetPath = declaredAssets[assetKey] || '';
+            } else if (namespace === 'core') {
+              usesCore = true;
+              assetPath = String(core && core.manifest && core.manifest.assets && core.manifest.assets[assetKey] || '');
+            } else {
+              if (!dependencyIds.has(namespace)) {
+                add('warning', 'entity_asset_dependency', `实体资源引用了未声明的模组依赖：${namespace}`, view);
+              }
+              add('warning', `entity_${field}_unverified`, `编辑器无法验证外部模组资源：${reference}`, view);
+              continue;
+            }
+            if (!assetPath) {
+              add('error', `entity_${field}_missing`, `实体${field === 'texture' ? '贴图' : '模型'}引用了不存在的资源：${reference}`, view);
+            } else if (!extensions.includes(extensionOf(assetPath))) {
+              add('error', `entity_${field}_type`, `实体${field === 'texture' ? '贴图' : '模型'}资源格式不正确：${assetPath}`, view);
+            }
+          }
         }
 
         if (info.key === 'contracts') {
@@ -645,7 +674,6 @@
       }
     }
 
-    const core = root.SN_CORE_INDEX;
     for (const file of contentFiles) {
       file.definitions.forEach((definition, index) => {
         if (!definition || typeof definition !== 'object' || file.content_type === 'patches') return;

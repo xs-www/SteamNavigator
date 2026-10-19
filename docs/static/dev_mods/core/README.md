@@ -9,6 +9,15 @@
 | `assets/icons/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/money.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/water.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/goods/SN_Coal_Pile.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/goods/SN_Ore_Pile.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/goods/SN_Timber_Stack.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/materials/SN_Barrel.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/materials/SN_Gear_Crate.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/materials/SN_Plate_Stack.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/modules/SN_Boiler_Unit.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/ships/SN_Paddle_Freighter.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/ships/SN_Ship_Prototype.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/ports/iron_harbor_banner.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/boilers.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/cabins.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

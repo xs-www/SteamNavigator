@@ -74,11 +74,16 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 - **表单驱动**：字段、枚举、数字范围、必填项与数组结构来自 `schemas/*.schema.json`，与 Godot 加载链共用同一套约束。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
 - **引用选择**：船体、锅炉、商品、材料等字段带 Core + 当前项目的 ID 候选；显示中文名。
-- **复制与派生**：复制当前定义，或从 Core 复制一条完整定义并自动改写 ID、本地化键与翻译。
+- **复制与派生**：复制当前定义，或从 Core 复制一条完整定义并自动改写 ID、本地化键与翻译；官方贴图/模型会保留为 `asset://core/...` 引用，不会被误认成当前模组资产。
+- **实体键事务**：编辑 ID 时只同步显示多语言键预览；名称/描述可直接编辑所有语言，点击「保存条目」后才一次性迁移键和值并清理旧键。
+- **模块子分页**：船体、锅炉、货舱、导航、安全、客舱、岗位与策略在同一“船只与模块”工作区中直接切换。
+- **实体视觉资源**：每条标准实体都可通过暗色可搜索下拉框配置贴图与单文件 GLB 模型；图片、模型候选分开过滤，也允许直接输入资源键。
+- **船体模块配置**：船体表单单独展示锅炉、导航、安全固定槽位，并直接编辑货舱与客舱槽位数量，不再混在普通数值字段中。
 - **JSON 检视 / 编辑**：任意定义可切换为原始 JSON 编辑；右侧检视器可查看当前上下文。
 - **自动保存**：IndexedDB；状态栏显示保存时间。撤销 / 重做 40 步。
 - **批量本地化**：缺失键列表、一键补齐键、未引用键提示、覆盖率。
-- **资源**：添加 png / webp / svg / ogg / wav，自动生成 `manifest.assets` 映射并随 ZIP 打包。
+- **资源**：添加 png / webp / svg / ogg / wav / glb，自动生成 `manifest.assets` 映射并随 ZIP 打包；GLB 资源卡片会渲染自动取景的缩略图。
+- **模型缩略图**：内置 GLB 解析 + WebGL 单帧渲染，无第三方库；只读取场景节点、三角网格、法线与材质基色，不做交互旋转或动画。
 
 ### 导入 / 导出
 
@@ -102,11 +107,16 @@ DELETE /api/projects/<id>
 GET    /api/exports
 POST   /api/exports?filename=...
 DELETE /api/exports/<name>
+GET    /api/game-mods
+POST   /api/game-mods/<id>    覆盖部署 <id>.snavmod.zip
+DELETE /api/game-mods/<id>
 ```
 
 - 写入 `mods/<id>/` 时同时生成 `.snmodproj.json`（编辑器项目）与 `manifest.json`、`content/`、`localization/`、`assets/`（可直接作为松散模组使用）。
 - 服务只监听 `127.0.0.1`，没有鉴权，适合本机单人使用。
 - 浏览器自动保存仍走 IndexedDB；磁盘写入是同一份项目的镜像，Ctrl+S 会立即刷新磁盘。
+- 导出菜单的“导出并覆盖到发布包 mods/”默认写入当前平台发布包的 `dist/build/<platform>/mods/<id>.snavmod.zip`（Windows 为 `dist/build/windows/mods/`）；若已存在其他平台的导出目录则优先使用当前平台，重复部署会覆盖稳定文件名，并清理同 ID 的旧 `<id>-<version>.snavmod.zip`，避免游戏加载重复模组。
+- 默认目标由 `tools/game_mods_dir.mjs` 解析：优先 `SNMODMAKER_GAME_MODS_DIR`，其次已有的 `dist/build/*`，最后回退到当前平台目录。若编辑的是另一个游戏安装目录，启动服务前把 `SNMODMAKER_GAME_MODS_DIR` 设为该游戏旁的 `mods/`；开发态调试（编辑器 F5 扫描的 `dist/mods`）也可显式指向 `dist/mods`。项目与普通导出目录仍可分别用 `SNMODMAKER_MODS_DIR`、`SNMODMAKER_EXPORTS_DIR` 调整。
 - 静态托管或 `file://` 打开时 `api/status` 不可用，界面会自动退化为浏览器存储。
 
 ZIP 使用浏览器原生 `CompressionStream('deflate-raw')`；不支持时自动退化为存储（store）模式。Godot 的 `ZIPReader` 对两种模式都可读。
@@ -142,16 +152,20 @@ SNModMaker/
 ├── css/app.css                 暗色工业主题，无外部字体
 ├── js/schema-bundle.js         自动生成：/schemas/*.schema.json
 ├── js/core-index.js            自动生成：Core 定义、名称与翻译索引
-├── js/catalog.js               内容类型元数据、字段标签、默认值、条件/效果词汇
+├── js/content-types.js         自动生成：内容类型清单（来自 content_types.json）
+├── js/catalog.js               字段标签、默认值、条件/效果词汇
 ├── js/zip.js                   ZIP 读写（store / deflate-raw，CRC32）
 ├── js/validate.js              Schema 子集与项目语义校验
 ├── js/store.js                 项目模型、模板、导入导出映射、Core 克隆
+├── js/glb.js                   最小 GLB 解析：场景节点、网格、法线与材质基色
+├── js/model_thumb.js           WebGL 单帧缩略图渲染与缓存
 ├── js/io.js                    IndexedDB、文件/文件夹/ZIP 导入、下载与目录写入
 ├── js/ui.js                    表单渲染、条件/效果编辑器、模态框
 ├── js/app.js                   应用状态、事件、撤销、自动保存、视图
 ├── tools/sync-schemas.mjs      重新生成 schema-bundle.js
 ├── tools/sync-core-index.mjs   重新生成 core-index.js
 ├── tools/serve.mjs             本地静态服务 + 磁盘 API（Node 内置模块）
+├── tools/game_mods_dir.mjs     解析默认部署目标：发布包 dist/build/<platform>/mods/
 ├── mods/                       本地磁盘工作区（默认被 .gitignore 忽略）
 ├── exports/                    本地导出目录（默认被 .gitignore 忽略）
 └── tests/                      Node 单元测试与 Chrome CDP 冒烟测试
@@ -177,6 +191,18 @@ manifest.content / localization / assets 由上述集合自动重建；
 
 ## 开发
 
+### 重新生成内容类型清单
+
+修改 `/content_types.json` 后：
+
+```powershell
+node tools/gen_content_types.mjs
+# 只检查生成物是否最新
+node tools/gen_content_types.mjs --check
+```
+
+生成的 `framework/modding/content_types.gd` 与 `js/content-types.js` 不应手工编辑。
+
 ### 重新生成 Schema 包
 
 修改 `/schemas/*.schema.json` 后：
@@ -201,13 +227,16 @@ Core 索引提供引用候选、中文名、跨引用检查与「从 Core 复制
 # 纯逻辑：Schema、校验、项目模型、导入导出、ZIP、全部内容类型表单
 node SNModMaker/tests/run-tests.js
 
+# 本地服务：隔离临时目录中验证项目 API 与游戏模组覆盖部署
+node SNModMaker/tests/server-smoke.mjs
+
 # 浏览器冒烟：需要 Chrome 以调试端口启动，并先启动静态服务
 node SNModMaker/tools/serve.mjs
 & 'C:\Program Files\Google\Chrome\Application\chrome.exe' --headless=new --disable-gpu --remote-debugging-port=9222 --user-data-dir="$env:TEMP\snmod-cdp" about:blank
 node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-smoke.png"
 ```
 
-当前基线：**28 个 Node 用例 + 14 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` 与 `exports/`。
+当前基线：**33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
 
 ### 代码约定
 
@@ -222,8 +251,9 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 
 - 不支持 `.csv` 本地化；导入时会被跳过并给出警告。
 - 不读取 Godot `.import` / `.uid`；资源以原始文件打包。
+- 模型缩略图只做基础单帧渲染：不解析贴图、Draco / KTX2、骨骼动画与变形目标；解析失败时保留 GLB 占位，不影响编辑和导出。
 - 不做校验和自动计算；`checksum` 字段保留给 SDK / 发布链。
 - 不做模组启用/禁用与加载顺序管理（那是游戏侧 `mods/` 的职责）。
 - 浏览器端不运行领域逻辑，因此无法发现「数值可加载但玩法不可行」的问题。
 - 文件夹导出依赖 File System Access API（Chromium）；其他浏览器请用 ZIP。
-- 大型资源会以 base64 存在项目 JSON 中；建议单个资源 ≤ 2 MB，项目文件用于备份而非版本控制。
+- 大型资源会以 base64 存在项目 JSON 中；图片/音频建议单个资源 ≤ 2 MB，GLB 模型上限 20 MB，项目文件用于备份而非版本控制。

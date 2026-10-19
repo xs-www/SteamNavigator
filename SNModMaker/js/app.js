@@ -13,6 +13,7 @@
   const V = root.SNValidate;
   const IO = root.SNIO;
   const Cat = root.SNCatalog;
+  const MODULE_PAGE_TYPES = ['hulls', 'boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins', 'roles', 'strategies'];
 
   const state = {
     project: null,
@@ -41,6 +42,7 @@
     typing: false,
     history: { past: [], future: [], max: 40 },
     focusAfter: null,
+    localizationDrafts: new Map(),
   };
 
   const scheduleValidate = UI.debounce(() => {
@@ -136,6 +138,7 @@
     state.locSearch = '';
     state.missingOnly = false;
     state.focusAfter = null;
+    state.localizationDrafts = new Map();
     runValidation();
     IO.rememberCurrent(state.project.uid);
     render();
@@ -149,6 +152,7 @@
     state.issueByDef = new Map();
     state.dirty = false;
     state.savedAt = null;
+    state.localizationDrafts = new Map();
     render();
   }
 
@@ -180,6 +184,48 @@
   function selectedTypeInfo() {
     const file = currentFile();
     return file ? Cat.BY_KEY[file.content_type] : null;
+  }
+
+  function selectedDefinitionKey() {
+    return state.selected ? `${state.selected.file}#${state.selected.index}` : '';
+  }
+
+  function localizationDraft(definition, oldId, syncToId) {
+    const file = currentFile();
+    if (!definition || !file || file.content_type === 'patches') return null;
+    const key = selectedDefinitionKey();
+    let draft = state.localizationDrafts.get(key);
+    if (!draft) {
+      const localId = Store.localPart(oldId || definition.id);
+      draft = {
+        sourceBase: Store.keyBaseOf(definition, file.content_type, state.project.manifest.id, localId),
+        previewBase: '',
+        values: {},
+      };
+      state.localizationDrafts.set(key, draft);
+    }
+    if (syncToId) {
+      draft.previewBase = Store.keyBase(file.content_type, state.project.manifest.id, Store.localPart(definition.id));
+    } else if (!draft.previewBase) {
+      draft.previewBase = draft.sourceBase;
+    }
+    return draft;
+  }
+
+  function currentLocalizationDraft() {
+    return state.localizationDrafts.get(selectedDefinitionKey()) || null;
+  }
+
+  function previewLocalizationValue(key, draft) {
+    if (!key || !draft || !draft.sourceBase || !draft.previewBase) return key || '';
+    if (key === draft.sourceBase || key.startsWith(`${draft.sourceBase}.`)) {
+      return draft.previewBase + key.slice(draft.sourceBase.length);
+    }
+    return key;
+  }
+
+  function previewLocalizationKey(definition, field, draft) {
+    return previewLocalizationValue(definition && definition[field], draft);
   }
 
   function setByPath(object, path, value) {
@@ -241,6 +287,7 @@
     state.history.future.push(snapshot());
     state.project = state.history.past.pop();
     state.project = Store.normalizeProject(state.project);
+    state.localizationDrafts = new Map();
     state.dirty = true;
     state.revision += 1;
     state.typing = false;
@@ -256,6 +303,7 @@
     state.history.past.push(snapshot());
     state.project = state.history.future.pop();
     state.project = Store.normalizeProject(state.project);
+    state.localizationDrafts = new Map();
     state.dirty = true;
     state.revision += 1;
     state.typing = false;
@@ -424,6 +472,7 @@
     renderChrome();
     renderSidebar();
     renderWorkspace();
+    if (state.view.name === 'assets') paintModelThumbnails();
     renderStatus();
     renderInspector();
 
@@ -859,6 +908,22 @@
   /* Content type view                                                   */
   /* ------------------------------------------------------------------ */
 
+  function renderModuleTabs(activeType) {
+    if (!MODULE_PAGE_TYPES.includes(activeType)) return '';
+    return `<nav class="module-tabs" aria-label="船只与模块子分页">
+      <span class="module-tabs-label">船只与模块</span>
+      ${MODULE_PAGE_TYPES.map((typeKey) => {
+        const type = Cat.BY_KEY[typeKey];
+        const count = state.project.contentFiles
+          .filter((file) => file.content_type === typeKey)
+          .reduce((sum, file) => sum + (file.definitions || []).length, 0);
+        return `<button type="button" class="module-tab ${activeType === typeKey ? 'active' : ''}" data-nav="content:${UI.attr(typeKey)}">
+          ${UI.esc(type.label)}<span>${count}</span>
+        </button>`;
+      }).join('')}
+    </nav>`;
+  }
+
   function renderContent() {
     const typeKey = state.view.type;
     const info = Cat.BY_KEY[typeKey];
@@ -916,6 +981,8 @@
         </div>
       </header>
 
+      ${renderModuleTabs(typeKey)}
+
       <div class="content-layout">
         <section class="def-list-panel">
           <div class="list-tools">
@@ -938,6 +1005,7 @@
     const typeKey = file.content_type;
     const key = `${file.path}#${index}`;
     const badge = state.issueByDef.get(key) || { error: 0, warning: 0 };
+    const locDraft = currentLocalizationDraft();
     if (state.rawOpen) {
       return `<div class="editor-head">
         <div><h2>${UI.esc(title)}</h2><p class="mono muted-sm">${UI.esc(definition.id || definition.target || '')}</p></div>
@@ -963,6 +1031,8 @@
       <div class="head-actions">
         ${badge.error ? `<span class="mini-badge error">${badge.error} 错误</span>` : ''}
         ${badge.warning ? `<span class="mini-badge warning">${badge.warning} 警告</span>` : ''}
+        <span class="mini-badge warning" data-localization-pending ${locDraft ? '' : 'hidden'}>多语言待保存</span>
+        ${typeKey !== 'patches' ? `<button type="button" class="btn small ${locDraft ? 'primary' : ''}" data-action="save-definition">保存条目</button>` : ''}
         <button type="button" class="btn small ghost" data-action="toggle-raw">JSON</button>
         <button type="button" class="btn small ghost" data-action="duplicate-definition">复制</button>
         <button type="button" class="btn small danger ghost" data-action="delete-definition">删除</button>
@@ -976,6 +1046,7 @@
         file,
         index,
         schemaFile: info.schema,
+        localizationDraft: locDraft,
       })}
     </div>`;
   }
@@ -1082,8 +1153,14 @@
     const assets = state.project.assets;
     const cards = assets.map((asset) => {
       const isImage = /^image\//.test(asset.mime || '') && asset.dataUrl;
+      const isModel = !isImage && asset.dataUrl && (/model\/gltf-binary/i.test(asset.mime || '') || /\.glb$/i.test(asset.path));
+      const preview = isImage
+        ? `<img src="${UI.attr(asset.dataUrl)}" alt="">`
+        : isModel
+          ? `<span class="asset-model-thumb" data-model-thumb="${UI.attr(asset.path)}"><span class="asset-ext">GLB</span></span>`
+          : `<span class="asset-ext">${UI.esc((asset.path.split('.').pop() || '?').toUpperCase())}</span>`;
       return `<article class="asset-card">
-        <div class="asset-preview">${isImage ? `<img src="${UI.attr(asset.dataUrl)}" alt="">` : `<span class="asset-ext">${UI.esc((asset.path.split('.').pop() || '?').toUpperCase())}</span>`}</div>
+        <div class="asset-preview">${preview}</div>
         <div class="asset-body">
           <label class="field-label">资源键</label>
           <input class="input mono" type="text" value="${UI.attr(asset.key || '')}" data-asset-key="${UI.attr(asset.path)}" spellcheck="false">
@@ -1099,12 +1176,63 @@
 
     return `<div class="view assets-view">
       <header class="view-head">
-        <div><p class="eyebrow">ASSETS</p><h1>资源</h1><p class="view-sub">图标、贴图与音频。允许 png / webp / svg / ogg / wav；资源键会自动写入 manifest.assets。</p></div>
+        <div><p class="eyebrow">ASSETS</p><h1>资源</h1><p class="view-sub">图标、贴图、音频与实体模型。允许 png / webp / svg / ogg / wav / glb；GLB 会生成自动取景缩略图，资源键会自动写入 manifest.assets。</p></div>
         <div class="head-actions"><button type="button" class="btn primary small" data-action="add-asset">添加资源</button></div>
       </header>
       <div class="asset-grid">${cards || `<div class="empty-inline large">还没有资源。图标是可选的；内容定义里的 icon 字段可以引用这里的资源键。</div>`}</div>
       <p class="field-hint">单个资源建议不超过 2 MB，全部资源会随 ZIP 一起打包。网页端不导入 Godot 的 .import 元数据。</p>
     </div>`;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* GLB thumbnails                                                      */
+  /* ------------------------------------------------------------------ */
+
+  const modelThumbQueue = [];
+  let modelThumbBusy = false;
+
+  function paintModelThumbnails() {
+    if (!state.project || !root.SNModelThumb) return;
+    for (const node of document.querySelectorAll('[data-model-thumb]')) {
+      if (node.dataset.thumbReady) continue;
+      const path = node.getAttribute('data-model-thumb');
+      const asset = state.project.assets.find((item) => item.path === path);
+      if (!asset) continue;
+      const image = root.SNModelThumb.cached(asset);
+      if (image) {
+        setModelThumbImage(node, image);
+        continue;
+      }
+      if (node.dataset.thumbQueued) continue;
+      node.dataset.thumbQueued = '1';
+      modelThumbQueue.push({ node, asset });
+    }
+    if (!modelThumbBusy) runModelThumbQueue();
+  }
+
+  async function runModelThumbQueue() {
+    if (modelThumbBusy) return;
+    modelThumbBusy = true;
+    while (modelThumbQueue.length) {
+      const job = modelThumbQueue.shift();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (!job.node.isConnected) continue;
+      try {
+        const image = root.SNModelThumb.render(job.asset);
+        if (image && job.node.isConnected) setModelThumbImage(job.node, image);
+        else job.node.classList.add('is-failed');
+      } catch (error) {
+        job.node.classList.add('is-failed');
+        job.node.title = error && error.message ? error.message : '模型缩略图生成失败';
+      }
+    }
+    modelThumbBusy = false;
+  }
+
+  function setModelThumbImage(node, dataUrl) {
+    node.innerHTML = `<img src="${UI.attr(dataUrl)}" alt="">`;
+    node.dataset.thumbReady = '1';
+    node.classList.add('is-rendered');
   }
 
   /* ------------------------------------------------------------------ */
@@ -1281,7 +1409,47 @@
     });
   }
 
+  function closeAssetPickers(except) {
+    document.querySelectorAll('.asset-picker-menu').forEach((menu) => {
+      if (except && menu === except) return;
+      menu.hidden = true;
+      const toggle = menu.parentElement && menu.parentElement.querySelector('[data-action="asset-picker-toggle"]');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function openAssetPicker(picker) {
+    if (!picker) return;
+    const menu = picker.querySelector('.asset-picker-menu');
+    if (!menu) return;
+    closeAssetPickers(menu);
+    menu.hidden = false;
+    const toggle = picker.querySelector('[data-action="asset-picker-toggle"]');
+    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function filterAssetPicker(input) {
+    const picker = input.closest('.asset-picker');
+    if (!picker) return;
+    openAssetPicker(picker);
+    const query = input.value.trim().toLowerCase();
+    let visible = 0;
+    picker.querySelectorAll('.asset-picker-option[data-asset-search]').forEach((option) => {
+      if (option.classList.contains('asset-picker-clear')) return;
+      option.hidden = Boolean(query) && !String(option.dataset.assetSearch || '').includes(query);
+      if (!option.hidden) visible += 1;
+    });
+    const noMatch = picker.querySelector('.asset-picker-no-match');
+    if (noMatch) noMatch.hidden = visible > 0;
+  }
+
   function onClick(event) {
+    const picker = event.target.closest('.asset-picker');
+    if (!picker) closeAssetPickers();
+    if (event.target.matches('[data-asset-picker-input]')) {
+      filterAssetPicker(event.target);
+      return;
+    }
     const actionEl = event.target.closest('[data-action]');
     if (actionEl && actionEl.tagName !== 'SELECT' && actionEl.tagName !== 'INPUT' && actionEl.tagName !== 'TEXTAREA') {
       Promise.resolve(handleAction(actionEl, event)).catch((error) => {
@@ -1364,6 +1532,10 @@
       renderLocalizationListOnly();
       return;
     }
+    if (element.matches('[data-entity-locale]')) {
+      updateEntityLocaleDraft(element);
+      return;
+    }
     if (element.matches('[data-locale-input]')) {
       updateLocaleValue(element);
       return;
@@ -1382,6 +1554,9 @@
     if (element.matches('[data-core-search]')) {
       filterCoreList(element.value);
       return;
+    }
+    if (element.matches('[data-asset-picker-input]')) {
+      filterAssetPicker(element);
     }
     if (element.matches('[data-modal-field="np-name"]')) {
       autoProjectId(element.value);
@@ -1433,6 +1608,7 @@
       return;
     }
     if (event.key === 'Escape') {
+      closeAssetPickers();
       UI.closeModal();
       if (state.inspector) {
         state.inspector = false;
@@ -1476,7 +1652,7 @@
   }
 
   function onFocusOut(event) {
-    if (event.target && event.target.matches && event.target.matches('[data-field], [data-locale-input], [data-asset-key]')) {
+    if (event.target && event.target.matches && event.target.matches('[data-field], [data-locale-input], [data-entity-locale], [data-asset-key]')) {
       setTimeout(() => {
         state.typing = false;
       }, 0);
@@ -1516,10 +1692,18 @@
     }
 
     const oldId = !isManifest && path === 'id' && definition ? definition.id : null;
+    const draft = oldId ? localizationDraft(definition, oldId, true) : null;
     setByPath(target, relative, value);
     if (value === '' && !isManifest && relative === 'description_key') delete target.description_key;
+    if (value === '' && !isManifest && (relative === 'information.texture' || relative === 'information.model')) {
+      deleteByPath(target, relative);
+      if (target.information && Object.keys(target.information).length === 0) delete target.information;
+    }
     if (value === '' && isManifest && relative === 'checksum') delete target.checksum;
-    if (oldId && definition) syncKeysAfterIdChange(definition, oldId);
+    if (draft) {
+      draft.previewBase = Store.keyBase(currentFile().content_type, project.manifest.id, Store.localPart(definition.id));
+      updateDefinitionLocalizationPreview(definition, draft);
+    }
     markChanged(false);
   }
 
@@ -1562,42 +1746,38 @@
     if (structural) state.typing = false;
   }
 
-  function syncKeysAfterIdChange(definition, oldId) {
-    const file = currentFile();
-    if (!file || file.content_type === 'patches') return;
-    const info = Cat.BY_KEY[file.content_type];
-    if (!info) return;
-    const oldLocal = Store.localPart(oldId);
-    const newLocal = Store.localPart(definition.id);
-    if (!newLocal || oldLocal === newLocal) return;
-    const modId = state.project.manifest.id;
-    const oldBase = Store.keyBaseOf(definition, file.content_type, modId, oldLocal);
-    const newBase = Store.keyBase(file.content_type, modId, newLocal);
-    const walk = (value) => {
-      if (Array.isArray(value)) {
-        value.forEach(walk);
-        return;
-      }
-      if (value && typeof value === 'object') {
-        for (const key of Object.keys(value)) {
-          if (typeof value[key] === 'string' && key.endsWith('_key')) {
-            if (value[key] === oldBase || value[key].startsWith(`${oldBase}.`)) {
-              value[key] = newBase + value[key].slice(oldBase.length);
-            }
-          } else {
-            walk(value[key]);
-          }
-        }
-      }
-    };
-    walk(definition);
-    for (const entry of state.project.localization) {
-      for (const [key, value] of Object.entries(entry.entries || {})) {
-        if (key === oldBase || key.startsWith(`${oldBase}.`)) {
-          entry.entries[newBase + key.slice(oldBase.length)] = value;
-        }
-      }
-    }
+  function updateDefinitionLocalizationPreview(definition, draft) {
+    const idPreview = document.querySelector('[data-id-preview]');
+    if (idPreview) idPreview.textContent = definition.id || '';
+    document.querySelectorAll('[data-key-preview-field]').forEach((input) => {
+      input.value = previewLocalizationKey(definition, input.dataset.keyPreviewField, draft);
+    });
+    document.querySelectorAll('[data-nested-key-preview]').forEach((input) => {
+      input.value = previewLocalizationValue(input.dataset.sourceKey, draft);
+    });
+    document.querySelectorAll('.nested-key-title').forEach((label) => {
+      const input = label.parentElement && label.parentElement.querySelector('[data-nested-key-preview]');
+      if (input) label.textContent = input.value;
+    });
+    const badge = document.querySelector('.editor-head [data-localization-pending]');
+    if (badge) badge.hidden = false;
+    const saveButton = document.querySelector('[data-action="save-definition"]');
+    if (saveButton) saveButton.classList.add('primary');
+  }
+
+  function updateEntityLocaleDraft(element) {
+    const definition = currentDefinition();
+    if (!definition) return;
+    const draft = localizationDraft(definition, definition.id, false);
+    const locale = element.dataset.entityLocale;
+    const field = element.dataset.entityLocaleField;
+    if (!locale || !field) return;
+    if (!draft.values[locale]) draft.values[locale] = {};
+    draft.values[locale][field] = element.value;
+    const badge = document.querySelector('[data-localization-pending]');
+    if (badge) badge.hidden = false;
+    const saveButton = document.querySelector('[data-action="save-definition"]');
+    if (saveButton) saveButton.classList.add('primary');
   }
 
   function updateLocaleValue(element) {
@@ -1685,6 +1865,29 @@
       case 'save':
         await saveNow({ disk: true });
         return;
+      case 'save-definition':
+        await saveDefinitionAction();
+        return;
+      case 'goto-definition-localization':
+        gotoDefinitionLocalization(element.dataset.field || 'name_key', element.dataset.key || '');
+        return;
+      case 'asset-picker-toggle': {
+        const picker = element.closest('.asset-picker');
+        const menu = picker && picker.querySelector('.asset-picker-menu');
+        if (!menu) return;
+        if (menu.hidden) openAssetPicker(picker);
+        else closeAssetPickers();
+        return;
+      }
+      case 'asset-picker-value': {
+        const picker = element.closest('.asset-picker');
+        const input = picker && picker.querySelector('[data-asset-picker-input]');
+        if (!input) return;
+        input.value = element.dataset.value || '';
+        applyField(input, true);
+        closeAssetPickers();
+        return;
+      }
       case 'undo':
         undo();
         return;
@@ -1794,6 +1997,10 @@
         UI.closeModal();
         await exportZipToDisk();
         return;
+      case 'deploy-game-mod':
+        UI.closeModal();
+        await deployGameMod();
+        return;
       case 'refresh-recent':
         loadRecent();
         return;
@@ -1861,6 +2068,60 @@
   /* ------------------------------------------------------------------ */
   /* Content mutations                                                   */
   /* ------------------------------------------------------------------ */
+
+  async function saveDefinitionAction() {
+    const definition = currentDefinition();
+    const file = currentFile();
+    if (!definition || !file || file.content_type === 'patches') return;
+    const draft = currentLocalizationDraft();
+    if (draft) {
+      const translations = {};
+      for (const [locale, fields] of Object.entries(draft.values || {})) {
+        translations[locale] = {};
+        for (const [field, value] of Object.entries(fields || {})) {
+          const sourceKey = field.startsWith('key:') ? field.slice(4) : definition[field];
+          const key = previewLocalizationValue(sourceKey, draft);
+          if (key) translations[locale][key] = value;
+        }
+      }
+      pushHistory();
+      try {
+        Store.commitDefinitionLocalization(
+          state.project,
+          definition,
+          file.content_type,
+          draft.sourceBase,
+          draft.previewBase,
+          translations,
+        );
+      } catch (error) {
+        UI.toast(error.message || '保存多语言键失败', 'error', 4200);
+        return;
+      }
+      state.localizationDrafts.delete(selectedDefinitionKey());
+      markChanged(false);
+      render({ preserveScroll: true });
+    }
+    await saveNow({ disk: true });
+    UI.toast('条目与多语言键已保存', 'success', 1800);
+  }
+
+  function gotoDefinitionLocalization(field, keyOverride) {
+    const definition = currentDefinition();
+    if (!definition) return;
+    const key = keyOverride || definition[field];
+    const locale = state.locale || (state.project.localization[0] && state.project.localization[0].locale);
+    if (!locale || !key) {
+      UI.toast('这个字段还没有可打开的多语言键。', 'warning');
+      return;
+    }
+    state.locale = locale;
+    state.view = { name: 'localization', locale };
+    state.locSearch = '';
+    state.missingOnly = false;
+    state.focusAfter = { selector: `[data-locale-input="${attrSelector(key)}"]` };
+    render();
+  }
 
   function addDefinitionAction() {
     if (!state.project || state.view.name !== 'content') return;
@@ -2257,19 +2518,21 @@
   async function addAssets() {
     if (!state.project) return;
     try {
-      const entries = await IO.openFilePicker({ accept: '.png,.webp,.svg,.ogg,.wav' });
+      const entries = await IO.openFilePicker({ accept: '.png,.webp,.svg,.ogg,.wav,.glb' });
       if (!entries.length) return;
       pushHistory();
       let added = 0;
       for (const entry of entries) {
         const file = entry.file || new File([entry.data], entry.path.split('/').pop() || 'asset');
-        if (entry.data.length > 5 * 1024 * 1024) {
-          UI.toast(`${file.name} 超过 5 MB，已跳过`, 'warning');
+        const isModel = /\.glb$/i.test(file.name);
+        const maxBytes = isModel ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+        if (entry.data.length > maxBytes) {
+          UI.toast(`${file.name} 超过 ${isModel ? 20 : 5} MB，已跳过`, 'warning');
           continue;
         }
         const mime = Store.mimeFor(file.name);
         const safeName = String(file.name).replace(/[^A-Za-z0-9._-]+/g, '_');
-        const folder = mime.startsWith('image/') ? 'assets/icons' : mime.startsWith('audio/') ? 'assets/audio' : 'assets/files';
+        const folder = mime.startsWith('image/') ? 'assets/icons' : mime.startsWith('audio/') ? 'assets/audio' : isModel ? 'assets/models' : 'assets/files';
         let path = `${folder}/${safeName}`;
         let counter = 2;
         while (state.project.assets.some((asset) => asset.path === path)) {
@@ -2278,7 +2541,7 @@
         }
         const dataUrl = Store.bytesToDataUrl(entry.data, mime);
         Store.addAsset(state.project, {
-          key: `${mime.startsWith('image/') ? 'icon' : 'asset'}.${Store.slugify(safeName.replace(/\.[^.]+$/, ''), 'file')}`,
+          key: `${mime.startsWith('image/') ? 'icon' : isModel ? 'model' : 'asset'}.${Store.slugify(safeName.replace(/\.[^.]+$/, ''), 'file')}`,
           path,
           mime,
           size: entry.data.length,
@@ -2305,6 +2568,7 @@
     if (!ok) return;
     pushHistory();
     Store.removeAsset(state.project, path);
+    if (root.SNModelThumb) root.SNModelThumb.forget(path);
     markChanged(true);
     render();
   }
@@ -2472,6 +2736,13 @@
           <span class="import-icon">DIR</span>
           <span><strong>保存到 ${UI.esc(state.backend.exportsDir || 'exports')}/</strong><small>写入本地 <code>SNModMaker/${UI.esc(state.backend.exportsDir || 'exports')}/</code></small></span>
         </button>` : ''}
+        ${state.backend ? `<button type="button" class="import-option" data-action="deploy-game-mod">
+          <span class="import-icon">GAME</span>
+          <span><strong>导出并覆盖到发布包 mods/</strong><small>写入 <code>${UI.esc(state.backend.gameModsDir || '../dist/build/windows/mods')}/&lt;id&gt;.snavmod.zip</code>，并清理该 ID 的旧版本包</small></span>
+        </button>` : `<button type="button" class="import-option" disabled>
+          <span class="import-icon">GAME</span>
+          <span><strong>导出并覆盖到发布包 mods/</strong><small>需要本地服务：先运行 <code>node SNModMaker/tools/serve.mjs</code>，再从 http://127.0.0.1:8099/ 打开</small></span>
+        </button>`}
         <button type="button" class="import-option" data-action="export-project">
           <span class="import-icon">JSON</span>
           <span><strong>保存项目文件</strong><small>.snmodproj.json，包含所有内容、本地化与附件</small></span>
@@ -2525,6 +2796,32 @@
       UI.toast(`已写入 ${saved.name}（${UI.fmtSize(saved.size)}）`, 'success', 4200);
     } catch (error) {
       UI.toast(error.message || '写入 exports/ 失败', 'error');
+    } finally {
+      UI.setBusy(false);
+    }
+  }
+
+  async function deployGameMod() {
+    if (!state.project || !state.backend) return;
+    const target = `${state.backend.gameModsDir}/${state.project.manifest.id}.snavmod.zip`;
+    if (state.issues.counts.error) {
+      const ok = await UI.confirm({
+        title: '仍有错误',
+        message: `当前有 ${state.issues.counts.error} 个错误。游戏可能拒绝加载；仍要覆盖 ${target} 吗？`,
+        confirmLabel: '仍然覆盖',
+        danger: true,
+      });
+      if (!ok) return;
+    }
+    try {
+      UI.setBusy(true, '正在部署到游戏模组目录…');
+      await saveNow({ disk: true });
+      const result = await IO.buildZip(state.project);
+      const deployed = await IO.deployGameMod(state.project.manifest.id, result.bytes);
+      const cleanup = deployed.removed ? `，已清理 ${deployed.removed} 个旧版本包` : '';
+      UI.toast(`已覆盖 ${deployed.name}（${UI.fmtSize(deployed.size)}）${cleanup}`, 'success', 5200);
+    } catch (error) {
+      UI.toast(error.message || '部署到游戏模组目录失败', 'error', 6500);
     } finally {
       UI.setBusy(false);
     }

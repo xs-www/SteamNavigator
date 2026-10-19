@@ -500,6 +500,52 @@
     return value;
   }
 
+  /**
+   * Commit an editor localization transaction after an entity ID changes.
+   * Definition keys and every locale move together, so intermediate ID edits
+   * never leave copied keys behind. Translation overrides are keyed by locale
+   * and by their final localization key.
+   */
+  function commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations) {
+    const sourceBase = String(oldBase || '').trim();
+    const targetBase = String(newBase || '').trim();
+    if (!project || !definition || !sourceBase || !targetBase) {
+      throw new Error('无法保存多语言键：键前缀不完整');
+    }
+
+    const movesByLocale = [];
+    for (const locale of project.localization || []) {
+      const entries = locale.entries || {};
+      const moves = Object.keys(entries)
+        .filter((key) => key === sourceBase || key.startsWith(`${sourceBase}.`))
+        .map((key) => ({ from: key, to: targetBase + key.slice(sourceBase.length), value: entries[key] }));
+      for (const move of moves) {
+        if (move.to !== move.from && Object.prototype.hasOwnProperty.call(entries, move.to)
+            && !moves.some((candidate) => candidate.from === move.to)) {
+          throw new Error(`无法保存多语言键：${locale.locale} 已存在 ${move.to}`);
+        }
+      }
+      movesByLocale.push({ locale, moves });
+    }
+
+    rewriteKeyBase(definition, sourceBase, targetBase);
+    for (const { locale, moves } of movesByLocale) {
+      const entries = locale.entries || (locale.entries = {});
+      for (const move of moves) {
+        if (move.from !== move.to) delete entries[move.from];
+      }
+      for (const move of moves) entries[move.to] = move.value;
+      const localeOverrides = translations && translations[locale.locale];
+      for (const [key, value] of Object.entries(localeOverrides || {})) {
+        if (value == null || value === '') delete entries[key];
+        else entries[key] = String(value);
+      }
+    }
+    syncManifest(project);
+    touch(project);
+    return { oldBase: sourceBase, newBase: targetBase };
+  }
+
   function duplicateDefinition(project, filePath, index) {
     const file = project.contentFiles.find((item) => item.path === filePath);
     if (!file) return null;
@@ -542,6 +588,15 @@
     return root.SN_CORE_INDEX;
   }
 
+  function qualifyCoreAssetReferences(definition) {
+    const information = definition && definition.information;
+    if (!information || typeof information !== 'object') return;
+    for (const field of ['texture', 'model']) {
+      const value = String(information[field] || '').trim();
+      if (value && !value.startsWith('asset://')) information[field] = `asset://core/${value}`;
+    }
+  }
+
   function cloneCoreDefinition(project, coreDefinitionId) {
     const index = coreIndex();
     if (!index) return null;
@@ -558,6 +613,7 @@
     const oldBase = keyBaseOf(source.definition, typeKey, 'core', coreLocal);
     const newBase = keyBase(typeKey, modId, newLocal);
     rewriteKeyBase(clone, oldBase, newBase);
+    qualifyCoreAssetReferences(clone);
     clone.id = `${modId}:${info.singular}/${newLocal}`;
     file.definitions.push(clone);
     const indexInFile = file.definitions.length - 1;
@@ -686,6 +742,7 @@
       svg: 'image/svg+xml',
       ogg: 'audio/ogg',
       wav: 'audio/wav',
+      glb: 'model/gltf-binary',
       json: 'application/json',
     }[ext] || 'application/octet-stream';
   }
@@ -927,5 +984,6 @@
     localizationValue,
     definitionTitle,
     dependencyOnCore,
+    commitDefinitionLocalization,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

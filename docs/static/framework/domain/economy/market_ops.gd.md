@@ -20,6 +20,7 @@
 - 每个可买入市场条目维护最多 8 个真实价格样本 `price_history`；非本地收购项不写历史，避免伪造趋势。
 - 买入把成交总额写入 cargo stack 的 total_cost，卖出按数量比例扣减成本。
 - 补给只检查设施、库存、重量与货币；维修费用乘安全设备/工程师的 repair_cost 修正。
+- 维修报价 = (船体缺失点数 + `ShipOps.module_damage_points()` 部件损耗点数) × repair_per_point × repair_cost_mul；`repair()` 同时把船体耐久与所有模块实例恢复到满状态，返回 modules_repaired。
 - 成功的买入/补给/维修调用 `state.record_expense()`，卖出调用 `record_income()`，形成通关总结的收入/支出/利润口径。
 - `ensure_sell_only_entries()` 为旧存档补齐非本地收购项与补给商品。
 

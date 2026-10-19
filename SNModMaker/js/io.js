@@ -375,6 +375,23 @@
     return apiJson(`api/exports/${encodeURIComponent(name)}`, { method: 'DELETE' });
   }
 
+  async function listGameMods() {
+    const data = await apiJson('api/game-mods');
+    return Array.isArray(data.mods) ? data.mods : [];
+  }
+
+  async function deployGameMod(id, bytes) {
+    return apiJson(`api/game-mods/${encodeURIComponent(id)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: bytes,
+    });
+  }
+
+  async function deleteGameMod(id) {
+    return apiJson(`api/game-mods/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+
   root.SNIO = {
     openDB,
     putProject,
@@ -405,6 +422,9 @@
     listExports,
     saveExportToDisk,
     deleteExport,
+    listGameMods,
+    deployGameMod,
+    deleteGameMod,
     supportsFolderExport: () => typeof root.showDirectoryPicker === 'function',
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

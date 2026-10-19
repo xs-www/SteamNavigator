@@ -61,6 +61,20 @@ jobs:
           set -euo pipefail
           godot --headless --path . --script res://framework/tests/test_runner.gd
 
+      - name: Check generated content types
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/gen_content_types.mjs --check
+
+      # Fails the release when the loose core mod is missing a declared
+      # content file, localization file or asset (for example an untracked GLB).
+      - name: Validate core content
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --script res://sdk/validate.gd
+
       - name: Export Windows and Linux
         shell: bash
         run: |
@@ -77,16 +91,36 @@ jobs:
           godot --headless --path . --script res://sdk/pack_mod.gd -- \
             --source=dev_mods/core --out=dist/mods
 
+      # Standard portable layout: the executable sits next to mods/ and config/.
+      - name: Stage portable release layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          packs=(dist/mods/*.snavmod.zip)
+          if [ "${#packs[@]}" -ne 1 ]; then
+            echo "expected exactly one core pack in dist/mods, found ${#packs[@]}" >&2
+            exit 1
+          fi
+          CORE_PACK="${packs[0]}"
+          for target in windows linux; do
+            mkdir -p "dist/build/${target}/mods" "dist/build/${target}/config"
+            cp "${CORE_PACK}" "dist/build/${target}/mods/"
+            cp config/config.json "dist/build/${target}/config/config.json"
+          done
+
       - name: Package release assets
         shell: bash
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
-          cd dist/build/windows
-          zip -q -r "../../release/SteamNavigator-${TAG}-windows.zip" .
-          cd ../linux
-          zip -q -r "../../release/SteamNavigator-${TAG}-linux.zip" .
-          cd ../..
+          STAGE="dist/release-stage"
+          rm -rf "${STAGE}"
+          mkdir -p "${STAGE}/windows/SteamNavigator" "${STAGE}/linux/SteamNavigator"
+          cp -a dist/build/windows/. "${STAGE}/windows/SteamNavigator/"
+          cp -a dist/build/linux/. "${STAGE}/linux/SteamNavigator/"
+          (cd "${STAGE}/windows" && zip -q -r "../../release/SteamNavigator-${TAG}-windows.zip" "SteamNavigator")
+          (cd "${STAGE}/linux" && zip -q -r "../../release/SteamNavigator-${TAG}-linux.zip" "SteamNavigator")
           sha256sum release/*.zip mods/*.snavmod.zip > release/SHA256SUMS.txt
           ls -lh release mods
 

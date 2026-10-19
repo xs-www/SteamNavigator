@@ -19,6 +19,7 @@
 - `cargo_total_cost()` 与 `cargo_average_cost()` 是 UI 显示库存成本的唯一口径。
 - 派生属性计算船体基础、锅炉、导航、安全、模块 modifiers 与岗位 modifiers。
 - `validate_configuration()` 检查必需船体/锅炉、货舱/客舱槽位与耐久上限。
+- `module_damage_points(hub, ship)` 按「模块重量 × 缺失耐久比例」把部件损耗换算成维修点数；`has_disabled_module()` 判断是否存在 0 状态的模块实例。模块性能影响留到战斗阶段。
 - `install_blockers(hub,state,module_id,source,replace_module_id)` 是 ship.install_module 与船厂 ViewModel 共用的校验源：来源库存、合同解锁、声誉、货币、槽位与最终配置重量差量。
 - 合同解锁：模块出现在任一 contract.rewards.unlock_ids 且不在 player.unlocks 时返回 locked_by_contract；unlock_contract_id 给出解锁它的合同模板。
 - 单槽模块自动替换（不再返回 slot_occupied）；货舱槽满且未指定 replace_module_id 时返回 cargo_slots_full；同 ID 货舱在有空槽时允许重复购买。

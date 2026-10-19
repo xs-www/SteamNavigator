@@ -15,22 +15,22 @@
 | `STATIC_COPY_PAGES` | L22 |
 | `MODULE_PATHS` | L26 |
 | `SKIP_SOURCES` | L46 |
-| `MODULE_OF` | L53 |
-| `GROUP_README` | L62 |
-| `walk(dir, out = [])` | L65 |
-| `read(relativePath)` | L82 |
-| `sha256(relativePath)` | L86 |
-| `lineAt(text, index)` | L90 |
-| `extractSymbols(relativePath, text)` | L94 |
-| `sourceTypeLabel(source)` | L145 |
-| `ensureDir(dirPath)` | L158 |
-| `writeDoc(relativePath, content)` | L162 |
-| `perFileDoc(source)` | L168 |
-| `fallbackRole(source)` | L224 |
-| `moduleSources(modulePath)` | L241 |
-| `renderModuleReadme(modulePath)` | L248 |
-| `moduleDescription(modulePath)` | L289 |
-| `main()` | L293 |
+| `MODULE_OF` | L54 |
+| `GROUP_README` | L63 |
+| `walk(dir, out = [])` | L66 |
+| `read(relativePath)` | L83 |
+| `sha256(relativePath)` | L87 |
+| `lineAt(text, index)` | L91 |
+| `extractSymbols(relativePath, text)` | L95 |
+| `sourceTypeLabel(source)` | L146 |
+| `ensureDir(dirPath)` | L159 |
+| `writeDoc(relativePath, content)` | L163 |
+| `perFileDoc(source)` | L169 |
+| `fallbackRole(source)` | L225 |
+| `moduleSources(modulePath)` | L242 |
+| `renderModuleReadme(modulePath)` | L249 |
+| `moduleDescription(modulePath)` | L290 |
+| `main()` | L294 |
 
 ## 契约与约束
 

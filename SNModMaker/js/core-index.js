@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-19T00:24:02.180Z",
+    "generated_at": "2026-10-19T09:51:43.424Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -44,7 +44,16 @@
         "icon.coal": "assets/icons/coal.png",
         "icon.water": "assets/icons/water.png",
         "icon.money": "assets/icons/money.png",
-        "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png"
+        "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png",
+        "model.ship.prototype": "assets/models/ships/SN_Ship_Prototype.glb",
+        "model.ship.paddle_freighter": "assets/models/ships/SN_Paddle_Freighter.glb",
+        "model.module.boiler": "assets/models/modules/SN_Boiler_Unit.glb",
+        "model.good.iron_ore": "assets/models/goods/SN_Ore_Pile.glb",
+        "model.good.coal": "assets/models/goods/SN_Coal_Pile.glb",
+        "model.good.timber": "assets/models/goods/SN_Timber_Stack.glb",
+        "model.material.boiler_plate": "assets/models/materials/SN_Plate_Stack.glb",
+        "model.material.precision_gear": "assets/models/materials/SN_Gear_Crate.glb",
+        "model.material.sealing_compound": "assets/models/materials/SN_Barrel.glb"
       },
       "authors": [
         "Steam Navigator Team"
@@ -71,6 +80,9 @@
               "good.shipbuilding"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.good.iron_ore"
+            },
             "data": {
               "unit_weight": 3,
               "base_price": 42,
@@ -146,6 +158,9 @@
               "good.shipbuilding"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.good.timber"
+            },
             "data": {
               "unit_weight": 2.5,
               "base_price": 36,
@@ -201,6 +216,10 @@
               "good.bulk"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.coal",
+              "model": "model.good.coal"
+            },
             "data": {
               "unit_weight": 1,
               "base_price": 4,
@@ -220,6 +239,9 @@
               "good.bulk"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.water"
+            },
             "data": {
               "unit_weight": 1,
               "base_price": 2,
@@ -244,6 +266,9 @@
               "material.tier2"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.material.boiler_plate"
+            },
             "data": {
               "tier": 2,
               "unit_weight": 2,
@@ -262,6 +287,9 @@
               "material.tier3"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.material.precision_gear"
+            },
             "data": {
               "tier": 3,
               "unit_weight": 0.8,
@@ -280,6 +308,9 @@
               "material.tier1"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.material.sealing_compound"
+            },
             "data": {
               "tier": 1,
               "unit_weight": 0.5,
@@ -306,21 +337,16 @@
               "ship.small"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.ship.prototype"
+            },
             "data": {
               "tier": 1,
               "weight": 22,
               "purchase_price": 380,
+              "craft_cost": 170,
               "craft_time_hours": 4,
-              "materials": [
-                {
-                  "id": "core:good/timber",
-                  "amount": 4
-                },
-                {
-                  "id": "core:good/iron_ore",
-                  "amount": 2
-                }
-              ],
+              "materials": [],
               "base_speed": 14,
               "max_weight": 100,
               "max_durability": 100,
@@ -341,6 +367,9 @@
               "ship.medium"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.ship.prototype"
+            },
             "data": {
               "tier": 2,
               "weight": 38,
@@ -377,6 +406,9 @@
               "ship.large"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.ship.paddle_freighter"
+            },
             "data": {
               "tier": 3,
               "weight": 60,
@@ -417,6 +449,9 @@
               "ship.large"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.ship.paddle_freighter"
+            },
             "data": {
               "tier": 3,
               "weight": 66,
@@ -462,21 +497,16 @@
               "module.efficient"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.module.boiler"
+            },
             "data": {
               "tier": 1,
               "weight": 8,
               "purchase_price": 420,
+              "craft_cost": 190,
               "craft_time_hours": 4,
-              "materials": [
-                {
-                  "id": "core:good/brass",
-                  "amount": 4
-                },
-                {
-                  "id": "core:material/sealing_compound",
-                  "amount": 2
-                }
-              ],
+              "materials": [],
               "speed_mul": 0.94,
               "coal_rate": 0.3,
               "water_rate": 0.22
@@ -491,21 +521,16 @@
               "module.standard"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.module.boiler"
+            },
             "data": {
               "tier": 1,
               "weight": 10,
               "purchase_price": 650,
+              "craft_cost": 290,
               "craft_time_hours": 5,
-              "materials": [
-                {
-                  "id": "core:good/brass",
-                  "amount": 6
-                },
-                {
-                  "id": "core:material/boiler_plate",
-                  "amount": 2
-                }
-              ],
+              "materials": [],
               "speed_mul": 1,
               "coal_rate": 0.4,
               "water_rate": 0.28
@@ -520,6 +545,9 @@
               "module.performance"
             ],
             "enabled": true,
+            "information": {
+              "model": "model.module.boiler"
+            },
             "data": {
               "tier": 2,
               "weight": 14,
@@ -565,13 +593,9 @@
               "tier": 1,
               "weight": 6,
               "purchase_price": 260,
+              "craft_cost": 120,
               "craft_time_hours": 3,
-              "materials": [
-                {
-                  "id": "core:good/timber",
-                  "amount": 3
-                }
-              ],
+              "materials": [],
               "capacity": 32
             }
           },
@@ -652,13 +676,9 @@
               "tier": 1,
               "weight": 2,
               "purchase_price": 300,
+              "craft_cost": 140,
               "craft_time_hours": 2,
-              "materials": [
-                {
-                  "id": "core:good/brass",
-                  "amount": 2
-                }
-              ],
+              "materials": [],
               "risk_add": -0.012,
               "speed_mul": 1,
               "reveal_facilities": false
@@ -713,13 +733,9 @@
               "tier": 1,
               "weight": 4,
               "purchase_price": 280,
+              "craft_cost": 130,
               "craft_time_hours": 2,
-              "materials": [
-                {
-                  "id": "core:good/timber",
-                  "amount": 3
-                }
-              ],
+              "materials": [],
               "risk_add": -0.015,
               "damage_mul": 0.9,
               "repair_cost_mul": 1
@@ -774,17 +790,9 @@
               "tier": 1,
               "weight": 12,
               "purchase_price": 600,
+              "craft_cost": 270,
               "craft_time_hours": 4,
-              "materials": [
-                {
-                  "id": "core:good/timber",
-                  "amount": 4
-                },
-                {
-                  "id": "core:good/textiles",
-                  "amount": 3
-                }
-              ],
+              "materials": [],
               "passenger_capacity": 4
             }
           }
@@ -923,6 +931,9 @@
               "port.shipyard"
             ],
             "enabled": true,
+            "information": {
+              "texture": "banner.port.iron_harbor"
+            },
             "data": {
               "size": "medium",
               "banner_asset": "banner.port.iron_harbor",
@@ -2229,6 +2240,9 @@
             "good.shipbuilding"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.good.iron_ore"
+          },
           "data": {
             "unit_weight": 3,
             "base_price": 42,
@@ -2353,6 +2367,9 @@
             "good.shipbuilding"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.good.timber"
+          },
           "data": {
             "unit_weight": 2.5,
             "base_price": 36,
@@ -2444,6 +2461,10 @@
             "good.bulk"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.coal",
+            "model": "model.good.coal"
+          },
           "data": {
             "unit_weight": 1,
             "base_price": 4,
@@ -2476,6 +2497,9 @@
             "good.bulk"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.water"
+          },
           "data": {
             "unit_weight": 1,
             "base_price": 2,
@@ -2506,6 +2530,9 @@
             "material.tier2"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.material.boiler_plate"
+          },
           "data": {
             "tier": 2,
             "unit_weight": 2,
@@ -2536,6 +2563,9 @@
             "material.tier3"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.material.precision_gear"
+          },
           "data": {
             "tier": 3,
             "unit_weight": 0.8,
@@ -2566,6 +2596,9 @@
             "material.tier1"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.material.sealing_compound"
+          },
           "data": {
             "tier": 1,
             "unit_weight": 0.5,
@@ -2600,21 +2633,16 @@
             "ship.small"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.ship.prototype"
+          },
           "data": {
             "tier": 1,
             "weight": 22,
             "purchase_price": 380,
+            "craft_cost": 170,
             "craft_time_hours": 4,
-            "materials": [
-              {
-                "id": "core:good/timber",
-                "amount": 4
-              },
-              {
-                "id": "core:good/iron_ore",
-                "amount": 2
-              }
-            ],
+            "materials": [],
             "base_speed": 14,
             "max_weight": 100,
             "max_durability": 100,
@@ -2649,6 +2677,9 @@
             "ship.medium"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.ship.prototype"
+          },
           "data": {
             "tier": 2,
             "weight": 38,
@@ -2699,6 +2730,9 @@
             "ship.large"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.ship.paddle_freighter"
+          },
           "data": {
             "tier": 3,
             "weight": 60,
@@ -2753,6 +2787,9 @@
             "ship.large"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.ship.paddle_freighter"
+          },
           "data": {
             "tier": 3,
             "weight": 66,
@@ -2805,21 +2842,16 @@
             "module.efficient"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.module.boiler"
+          },
           "data": {
             "tier": 1,
             "weight": 8,
             "purchase_price": 420,
+            "craft_cost": 190,
             "craft_time_hours": 4,
-            "materials": [
-              {
-                "id": "core:good/brass",
-                "amount": 4
-              },
-              {
-                "id": "core:material/sealing_compound",
-                "amount": 2
-              }
-            ],
+            "materials": [],
             "speed_mul": 0.94,
             "coal_rate": 0.3,
             "water_rate": 0.22
@@ -2846,21 +2878,16 @@
             "module.standard"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.module.boiler"
+          },
           "data": {
             "tier": 1,
             "weight": 10,
             "purchase_price": 650,
+            "craft_cost": 290,
             "craft_time_hours": 5,
-            "materials": [
-              {
-                "id": "core:good/brass",
-                "amount": 6
-              },
-              {
-                "id": "core:material/boiler_plate",
-                "amount": 2
-              }
-            ],
+            "materials": [],
             "speed_mul": 1,
             "coal_rate": 0.4,
             "water_rate": 0.28
@@ -2887,6 +2914,9 @@
             "module.performance"
           ],
           "enabled": true,
+          "information": {
+            "model": "model.module.boiler"
+          },
           "data": {
             "tier": 2,
             "weight": 14,
@@ -2939,13 +2969,9 @@
             "tier": 1,
             "weight": 6,
             "purchase_price": 260,
+            "craft_cost": 120,
             "craft_time_hours": 3,
-            "materials": [
-              {
-                "id": "core:good/timber",
-                "amount": 3
-              }
-            ],
+            "materials": [],
             "capacity": 32
           }
         }
@@ -3058,13 +3084,9 @@
             "tier": 1,
             "weight": 2,
             "purchase_price": 300,
+            "craft_cost": 140,
             "craft_time_hours": 2,
-            "materials": [
-              {
-                "id": "core:good/brass",
-                "amount": 2
-              }
-            ],
+            "materials": [],
             "risk_add": -0.012,
             "speed_mul": 1,
             "reveal_facilities": false
@@ -3137,13 +3159,9 @@
             "tier": 1,
             "weight": 4,
             "purchase_price": 280,
+            "craft_cost": 130,
             "craft_time_hours": 2,
-            "materials": [
-              {
-                "id": "core:good/timber",
-                "amount": 3
-              }
-            ],
+            "materials": [],
             "risk_add": -0.015,
             "damage_mul": 0.9,
             "repair_cost_mul": 1
@@ -3216,17 +3234,9 @@
             "tier": 1,
             "weight": 12,
             "purchase_price": 600,
+            "craft_cost": 270,
             "craft_time_hours": 4,
-            "materials": [
-              {
-                "id": "core:good/timber",
-                "amount": 4
-              },
-              {
-                "id": "core:good/textiles",
-                "amount": 3
-              }
-            ],
+            "materials": [],
             "passenger_capacity": 4
           }
         }
@@ -3420,6 +3430,9 @@
             "port.shipyard"
           ],
           "enabled": true,
+          "information": {
+            "texture": "banner.port.iron_harbor"
+          },
           "data": {
             "size": "medium",
             "banner_asset": "banner.port.iron_harbor",

@@ -8,5 +8,5 @@
 
 - `run/main_scene` 指向 `framework/ui/shell/main.tscn`。
 - `AppBootstrap` Autoload 在场景加载前启动内容加载；`--script` 测试模式下自行跳过。
-- `framework/mods/scan_roots` 默认依次为 `res://dev_mods`、`user://mods_dev`、`user://mods`。
+- `framework/mods/scan_roots` 默认依次为 `res://dev_mods`、`res://dist/mods`、`user://mods_dev`、`user://mods`；模板构建会忽略所有 `res://` 根并追加 exe 同级 `mods/`。
 - `config/features` 声明 4.4 兼容；实际验证引擎为 4.7.2。

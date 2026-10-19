@@ -251,7 +251,6 @@
       .join('')}</datalist>`;
     html += `<datalist id="dl-stats">${catalog().MODIFIER_STATS.map((stat) => `<option value="${attr(stat)}"></option>`).join('')}</datalist>`;
     html += `<datalist id="dl-formulas">${catalog().DEADLINE_FORMULAS.map((item) => `<option value="${attr(item)}"></option>`).join('')}</datalist>`;
-    html += `<datalist id="dl-asset-keys">${project.assets.map((asset) => `<option value="${attr(asset.key)}"></option>`).join('')}</datalist>`;
     return html;
   }
 
@@ -294,6 +293,45 @@
       data-field="${attr(path)}" data-parse="${opts.parse || 'text'}"
       ${opts.list ? `list="${attr(opts.list)}"` : ''} ${opts.placeholder ? `placeholder="${attr(opts.placeholder)}"` : ''}
       ${opts.spellcheck === false ? 'spellcheck="false"' : ''} ${opts.extra || ''}>`;
+  }
+
+  function assetMatchesKind(asset, kind) {
+    const mime = String(asset && asset.mime || '').toLowerCase();
+    const path = String(asset && asset.path || '').toLowerCase();
+    if (kind === 'model') return mime === 'model/gltf-binary' || path.endsWith('.glb');
+    return mime.startsWith('image/') || /\.(png|webp|svg)$/.test(path);
+  }
+
+  function assetPicker(path, value, kind, project, options) {
+    const opts = options || {};
+    const assets = (project && Array.isArray(project.assets) ? project.assets : [])
+      .filter((asset) => assetMatchesKind(asset, kind))
+      .sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
+    const emptyText = kind === 'model'
+      ? '暂无 GLB 模型，请先到资源页添加。'
+      : '暂无图片资源，请先到资源页添加 png / webp / svg。';
+    const optionsHtml = assets.map((asset) => `
+      <button type="button" class="asset-picker-option" data-action="asset-picker-value"
+        data-value="${attr(asset.key || '')}" data-asset-search="${attr(`${asset.key || ''} ${asset.path || ''}`.toLowerCase())}">
+        <span class="asset-picker-key mono">${esc(asset.key || '')}</span>
+        <span class="asset-picker-path mono">${esc(asset.path || '')}</span>
+      </button>`).join('');
+    return `<div class="asset-picker" data-asset-kind="${attr(kind)}">
+      <div class="asset-picker-control">
+        <input class="input mono" type="text" value="${attr(value == null ? '' : value)}"
+          data-field="${attr(path)}" data-parse="text" data-asset-picker-input
+          placeholder="${attr(opts.placeholder || (kind === 'model' ? '例如 model.ship_part' : '例如 texture.entity_preview'))}"
+          autocomplete="off" spellcheck="false">
+        <button type="button" class="asset-picker-toggle" data-action="asset-picker-toggle" aria-label="展开资源候选" aria-expanded="false">⌄</button>
+      </div>
+      <div class="asset-picker-menu" hidden>
+        <button type="button" class="asset-picker-option asset-picker-clear" data-action="asset-picker-value" data-value="" data-asset-search="">
+          <span>不配置资源</span><span class="asset-picker-path">清空</span>
+        </button>
+        ${optionsHtml || `<p class="asset-picker-empty">${esc(emptyText)}</p>`}
+        ${optionsHtml ? '<p class="asset-picker-no-match" hidden>没有匹配的资源键。</p>' : ''}
+      </div>
+    </div>`;
   }
 
   function inputNumber(path, value, schema, options) {
@@ -711,13 +749,15 @@
     if (field === 'deadline_formula') {
       return fieldShell(typeKey, field, inputText(path, value || '', { list: 'dl-formulas', className: 'mono' }), shellOpts);
     }
-    if (field === 'icon') {
-      return fieldShell(typeKey, field, inputText(path, value || '', { list: 'dl-asset-keys', className: 'mono' }), shellOpts);
+    if (field === 'icon' || field === 'texture' || field === 'model') {
+      const kind = field === 'model' ? 'model' : 'image';
+      return fieldShell(typeKey, field, assetPicker(path, value || '', kind, ctx.project), shellOpts);
     }
     if (field === 'name_key' || field === 'description_key') {
+      const previewKey = previewLocalizationKey(value, ctx.localizationDraft);
       const preview = translated(ctx.project, value);
       return fieldShell(typeKey, field,
-        `${inputText(path, value || '', { className: 'mono' })}<p class="field-hint">${esc(preview || '本地化键尚未填写或没有翻译')}</p>`, shellOpts);
+        `<input class="input mono key-preview" type="text" value="${attr(previewKey)}" data-nested-key-preview data-source-key="${attr(value || '')}" readonly spellcheck="false"><p class="field-hint">${esc(preview || '本地化键尚未填写或没有翻译')}</p>`, shellOpts);
     }
     return fieldShell(typeKey, field, inputText(path, value == null ? '' : value, { className: 'mono' }), shellOpts);
   }
@@ -726,15 +766,90 @@
   /* Definition editor                                                   */
   /* ------------------------------------------------------------------ */
 
-  function renderKeyBlock(project, definition, field, typeKey, key) {
-    const preview = translated(project, key);
+  function previewLocalizationKey(key, draft) {
+    if (!key || !draft || !draft.sourceBase || !draft.previewBase) return key || '';
+    if (key === draft.sourceBase || key.startsWith(`${draft.sourceBase}.`)) {
+      return draft.previewBase + key.slice(draft.sourceBase.length);
+    }
+    return key;
+  }
+
+  function renderKeyBlock(project, definition, field, typeKey, key, draft, token) {
+    const draftToken = token || field;
+    const previewKey = previewLocalizationKey(key, draft);
+    const previewAttrs = draftToken.startsWith('key:')
+      ? `data-nested-key-preview data-source-key="${attr(key || '')}"`
+      : `data-key-preview-field="${attr(field)}"`;
+    const localeRows = (project.localization || []).map((entry) => {
+      const pending = draft && draft.values && draft.values[entry.locale]
+        && Object.prototype.hasOwnProperty.call(draft.values[entry.locale], draftToken);
+      const value = pending
+        ? draft.values[entry.locale][draftToken]
+        : ((entry.entries || {})[key] ?? (entry.entries || {})[previewKey] ?? '');
+      return `<label class="entity-locale-row">
+        <span class="locale-code mono">${esc(entry.locale)}</span>
+        <input class="input" type="text" value="${attr(value)}" data-entity-locale="${attr(entry.locale)}" data-entity-locale-field="${attr(draftToken)}" placeholder="输入 ${esc(entry.locale)} 文本">
+      </label>`;
+    }).join('');
+    const translatedCount = (project.localization || []).filter((entry) => {
+      const pending = draft && draft.values && draft.values[entry.locale]
+        && Object.prototype.hasOwnProperty.call(draft.values[entry.locale], draftToken);
+      return String(pending ? draft.values[entry.locale][draftToken] : ((entry.entries || {})[key] || '')).trim();
+    }).length;
+    const localeCount = (project.localization || []).length;
     return `<div class="key-block">
       <div class="key-line">
-        <input class="input mono" type="text" value="${attr(key || '')}" data-field="${attr(field)}" data-parse="text" spellcheck="false">
-        <span class="key-state ${preview ? 'ok' : 'missing'}">${preview ? '已翻译' : '缺翻译'}</span>
+        <input class="input mono key-preview" type="text" value="${attr(previewKey)}" ${previewAttrs} readonly spellcheck="false">
+        <span class="key-state ${translatedCount === localeCount && localeCount ? 'ok' : 'missing'}">${translatedCount}/${localeCount}</span>
       </div>
-      <p class="field-hint">${preview ? esc(preview) : '在「本地化」中补上这个键。'}</p>
+      <div class="entity-locales">${localeRows || '<p class="field-hint">项目尚未创建语言文件。</p>'}</div>
+      <button type="button" class="link-btn key-jump" data-action="goto-definition-localization" data-field="${attr(field)}" data-key="${attr(key || '')}">在语言配置中打开</button>
     </div>`;
+  }
+
+  function renderAdditionalLocalization(project, definition, typeKey, draft) {
+    const primary = new Set([definition.name_key, definition.description_key].filter(Boolean));
+    const keys = [...root.SNStore.collectDefinitionKeys(definition)].filter((key) => !primary.has(key));
+    if (!keys.length) return '';
+    return `<section class="form-section">
+      <header class="section-head"><h4>条目内其他多语言文本</h4><p>事件选项、载荷等嵌套键也随实体 ID 一起预览和保存。</p></header>
+      <div class="nested-localization-list">
+        ${keys.map((key) => `<div class="nested-localization-item">
+          <div class="nested-key-title mono">${esc(previewLocalizationKey(key, draft))}</div>
+          ${renderKeyBlock(project, definition, 'nested_key', typeKey, key, draft, `key:${key}`)}
+        </div>`).join('')}
+      </div>
+    </section>`;
+  }
+
+  function renderHullModuleConfiguration(definition) {
+    const data = definition.data || {};
+    const slotSchema = (max) => ({ type: 'integer', minimum: 0, maximum: max });
+    const fixed = [
+      { kind: 'boiler', code: 'BL', label: '锅炉', note: '推进系统，固定 1 位' },
+      { kind: 'navigation', code: 'NV', label: '导航模块', note: '航线修正，固定 1 位' },
+      { kind: 'safety', code: 'SF', label: '安全模块', note: '风险修正，固定 1 位' },
+    ];
+    return `<section class="form-section hull-module-section">
+      <header class="section-head"><h4>模块配置</h4><p>船体决定可安装的模块位置；锅炉、导航与安全位由运行时固定，货舱和客舱位可在这里配置。</p></header>
+      <div class="hull-module-grid">
+        ${fixed.map((item) => `<div class="hull-module-card fixed" data-module-kind="${attr(item.kind)}">
+          <span class="hull-module-code">${esc(item.code)}</span>
+          <div><strong>${esc(item.label)}</strong><p>${esc(item.note)}</p></div>
+          <span class="hull-module-count mono">1</span>
+        </div>`).join('')}
+        <div class="hull-module-card configurable" data-module-kind="cargo">
+          <span class="hull-module-code">CG</span>
+          <div><strong>货舱模块</strong><p>可安装的货舱模块数量</p></div>
+          ${inputNumber('data.cargo_slots', data.cargo_slots, slotSchema(8), { extra: 'aria-label="货舱模块槽位"' })}
+        </div>
+        <div class="hull-module-card configurable" data-module-kind="cabin">
+          <span class="hull-module-code">CB</span>
+          <div><strong>客舱模块</strong><p>可安装的客舱模块数量</p></div>
+          ${inputNumber('data.cabin_slots', data.cabin_slots, slotSchema(4), { extra: 'aria-label="客舱模块槽位"' })}
+        </div>
+      </div>
+    </section>`;
   }
 
   function renderDefinitionForm(options) {
@@ -767,15 +882,15 @@
               <span class="id-prefix mono">${esc(prefix)}</span>
               <input class="input mono" type="text" value="${attr(localId)}" data-id-local="true" data-field="id" data-prefix="${attr(prefix)}" spellcheck="false">
             </div>
-            <p class="field-hint">完整 ID：<span class="mono">${esc(definition.id || '')}</span></p>
+            <p class="field-hint">完整 ID：<span class="mono" data-id-preview>${esc(definition.id || '')}</span></p>
           </div>
           <div class="field">
             <label class="field-label">名称键<span class="req">*</span></label>
-            ${renderKeyBlock(project, definition, 'name_key', typeKey, definition.name_key)}
+            ${renderKeyBlock(project, definition, 'name_key', typeKey, definition.name_key, ctx.localizationDraft)}
           </div>
           <div class="field">
             <label class="field-label">描述键</label>
-            ${renderKeyBlock(project, definition, 'description_key', typeKey, definition.description_key)}
+            ${renderKeyBlock(project, definition, 'description_key', typeKey, definition.description_key, ctx.localizationDraft)}
           </div>
           <div class="field field-wide">
             <label class="field-label">标签</label>
@@ -788,9 +903,21 @@
           </div>
         </div>
       </section>
+      ${renderAdditionalLocalization(project, definition, typeKey, ctx.localizationDraft)}
+      <section class="form-section">
+        <header class="section-head"><h4>视觉资源</h4><p>每个实体可以引用一个贴图与一个 GLB 模型；先在“资源”页添加文件，再选择对应资源键。</p></header>
+        <div class="field-grid">
+          ${fieldShell(typeKey, 'texture', assetPicker('information.texture', definition.information && definition.information.texture || '', 'image', project), { label: '贴图资源键', hint: '仅显示 png / webp / svg；也可以直接输入资源键。' })}
+          ${fieldShell(typeKey, 'model', assetPicker('information.model', definition.information && definition.information.model || '', 'model', project), { label: '模型资源键', hint: '仅显示单文件 GLB；也可以直接输入资源键。' })}
+        </div>
+      </section>
+      ${typeKey === 'hulls' ? renderHullModuleConfiguration(definition) : ''}
       <section class="form-section">
         <header class="section-head"><h4>${esc(info.label)}数据</h4><p>字段约束来自 <code>${esc(info.schema)}</code>，留空或越界会立刻在校验页报出。</p></header>
-        ${renderObjectFields(data.schema, data.file, definition.data || {}, 'data', ctx, { extraNote: true })}
+        ${renderObjectFields(data.schema, data.file, definition.data || {}, 'data', ctx, {
+          extraNote: true,
+          skip: typeKey === 'hulls' ? ['cargo_slots', 'cabin_slots'] : [],
+        })}
       </section>
     </div>`;
   }
@@ -806,6 +933,7 @@
     renderDefinitionForm,
     renderObjectFields,
     inputText,
+    assetPicker,
     inputNumber,
     selectEnum,
     toggle,

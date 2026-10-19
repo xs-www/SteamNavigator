@@ -38,32 +38,34 @@
 | `addDefinition(project, typeKey, options)` | L395 |
 | `removeDefinition(project, filePath, index)` | L467 |
 | `rewriteKeyBase(value, oldBase, newBase)` | L478 |
-| `duplicateDefinition(project, filePath, index)` | L503 |
-| `coreIndex()` | L541 |
-| `cloneCoreDefinition(project, coreDefinitionId)` | L545 |
-| `addAsset(project, asset)` | L589 |
-| `removeAsset(project, path)` | L599 |
-| `syncManifest(project)` | L605 |
-| `touch(project)` | L623 |
-| `normalizeProject(raw, options)` | L628 |
-| `serialize(project)` | L655 |
-| `deserialize(text)` | L659 |
-| `bytesToBase64(bytes)` | L663 |
-| `base64ToBytes(base64)` | L672 |
-| `mimeFor(path)` | L681 |
-| `bytesToDataUrl(bytes, mime)` | L693 |
-| `dataUrlToBytes(dataUrl)` | L697 |
-| `decodeText(data)` | L701 |
-| `encodeText(text)` | L706 |
-| `toExportFiles(project, options)` | L711 |
-| `stripRoot(paths)` | L737 |
-| `fromFiles(entries)` | L750 |
-| `definitionKeys(project, typeKey)` | L853 |
-| `findDefinition(project, filePath, index)` | L857 |
-| `localizationValue(project, definition, field, locale)` | L863 |
-| `definitionTitle(project, definition)` | L870 |
-| `dependencyOnCore(project)` | L878 |
-| `SNStore (global)` | L882 |
+| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L509 |
+| `duplicateDefinition(project, filePath, index)` | L549 |
+| `coreIndex()` | L587 |
+| `qualifyCoreAssetReferences(definition)` | L591 |
+| `cloneCoreDefinition(project, coreDefinitionId)` | L600 |
+| `addAsset(project, asset)` | L645 |
+| `removeAsset(project, path)` | L655 |
+| `syncManifest(project)` | L661 |
+| `touch(project)` | L679 |
+| `normalizeProject(raw, options)` | L684 |
+| `serialize(project)` | L711 |
+| `deserialize(text)` | L715 |
+| `bytesToBase64(bytes)` | L719 |
+| `base64ToBytes(base64)` | L728 |
+| `mimeFor(path)` | L737 |
+| `bytesToDataUrl(bytes, mime)` | L750 |
+| `dataUrlToBytes(dataUrl)` | L754 |
+| `decodeText(data)` | L758 |
+| `encodeText(text)` | L763 |
+| `toExportFiles(project, options)` | L768 |
+| `stripRoot(paths)` | L794 |
+| `fromFiles(entries)` | L807 |
+| `definitionKeys(project, typeKey)` | L910 |
+| `findDefinition(project, filePath, index)` | L914 |
+| `localizationValue(project, definition, field, locale)` | L920 |
+| `definitionTitle(project, definition)` | L927 |
+| `dependencyOnCore(project)` | L935 |
+| `SNStore (global)` | L939 |
 
 ## 契约与约束
 
@@ -88,7 +90,13 @@
 ### `cloneCoreDefinition(project, coreDefinitionId)`
 
 - 深拷贝 Core 定义，按 `name_key` 推导旧键基，改写全部 `_key` 字符串与本地化条目。
+- Core 定义中的贴图/模型裸键改写为 `asset://core/<key>`，使派生条目继续引用官方资源而不冒充当前模组资产。
 - 新 ID 与键基使用当前模组命名空间，并在名称后追加“副本”。
+
+### `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)`
+
+- 保存条目时才把定义内全部 `_key` 与所有语言文件从旧键基原子迁移到新键基。
+- 迁移前检查目标键冲突；成功后删除旧键并覆盖用户在条目内暂存的多语言文本。
 
 ### `toExportFiles(project, options)`
 

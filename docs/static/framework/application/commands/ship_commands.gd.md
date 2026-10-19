@@ -17,6 +17,7 @@
 - 槽位/重量/货币/声誉/合同解锁失败原因由 `ShipOps.install_blockers()` 统一生成，避免 UI 与命令漂移。
 - 单槽模块（船体/锅炉/导航/安全/客舱）自动替换，旧件写入当前港仓库；货舱槽满时需 replace_module_id。
 - 购买船体替换后耐久为新上限；warehouse/transit 船体替换取 min(当前耐久, 新上限)。
+- 安装/卸下同一步维护 `ship.module_instances`：单槽替换用 `ShipModules.install_slot()` 生成全新实例（满状态、新 id），货舱追加用 `append_cargo()`、按位置删除用 `remove_cargo()`，避免旧条件串到新模块。
 - `ship.uninstall_module` 只允许卸下导航/安全/客舱/货舱，船体与锅炉返回 required_module。
 - `ship.craft_module` 复用 CraftOps：仓库材料优先、再扣船上普通货物，扣 craft_cost 后生成打造订单（不再即时推进时间/入库），发布事件 ship.craft_ordered；成品等 ready_at 后由 CraftOps.settle_orders 写入下单港仓库。
 - install 成功后调用 `VictoryService.check()`，结果放入 data.victory，新通关时追加 run.victory_achieved 事件。

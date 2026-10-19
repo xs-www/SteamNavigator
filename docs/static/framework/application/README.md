@@ -26,7 +26,7 @@
 | `queries/port_memory_view.gd` | 点击已访问港口时的只读市场记忆 ViewModel：上次在港的价格、储备与可买标记。 | [查看](./queries/port_memory_view.gd.md) |
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知、统计与通关状态。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表（含 shipyard/victory）。 | 本页 |
-| `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前/随船运输模块、港口仓库、打造配方与所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
+| `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前/随船运输模块、已装模块效果、港口仓库、打造配方与所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
 | `queries/supply_view.gd` | 补给界面 ViewModel：煤水价/库存、载重余量、可补上限、预计续航与维修报价。 | [查看](./queries/supply_view.gd.md) |
 | `queries/victory_view.gd` | 通关页 ViewModel：是否通关、通关时间与完整 run summary。 | [查看](./queries/victory_view.gd.md) |
 | `queries/voyage_preview.gd` | 出航预览查询包装。 | 本页 |

@@ -1,6 +1,6 @@
 # `framework/domain`
 
-> 纯领域逻辑：航行、市场、委托、船只/仓库/打造订单、地图、事件、债务与通关判定。
+> 纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、事件、债务与通关判定。
 
 ## 文件索引
 
@@ -17,11 +17,12 @@
 | `events/condition_evaluator.gd` | 解析 all/any/not 组合器并调用条件操作码，限制条件节点数。 | [查看](./events/condition_evaluator.gd.md) |
 | `events/condition_op_registry.gd` | 白名单条件操作码及其只读判定实现。 | [查看](./events/condition_op_registry.gd.md) |
 | `events/effect_executor.gd` | 顺序执行效果列表，失败即中止并返回带索引的错误。 | [查看](./events/effect_executor.gd.md) |
-| `events/effect_op_registry.gd` | 白名单效果操作码及其纯实现（货币、补给、货物、船只、委托、情报、通知）。 | [查看](./events/effect_op_registry.gd.md) |
+| `events/effect_op_registry.gd` | 白名单效果操作码及其纯实现（货币、补给、货物、船只与模块、委托、情报、通知）。 | [查看](./events/effect_op_registry.gd.md) |
 | `map/map_generator.gd` | 程序生成 4–5 港口连通分支网络，并验证 MVP 硬约束。 | [查看](./map/map_generator.gd.md) |
 | `map/map_ops.gd` | GameState.world 上的港口/航线查询、设施可见性、发现与 BFS。 | [查看](./map/map_ops.gd.md) |
 | `run/victory_service.gd` | 通关判定与服务：主线全部完成 + 造船厂内组装最低可运行大型船（大型船体 + 锅炉 + ≥1 货舱）。 | [查看](./run/victory_service.gd.md) |
 | `ship/craft_ops.gd` | 模块打造：读取模块 JSON 配方、规划材料来源、仓库优先消耗、扣费并生成带工时的打造订单，时间到位后把成品写入下单港仓库。 | [查看](./ship/craft_ops.gd.md) |
+| `ship/ship_modules.gd` | 船舶模块实例层：为每个已装模块维护稳定 instance_id 与 0..1 condition，对齐扁平槽位键，并作为损伤/维修/存档的唯一写入口。 | [查看](./ship/ship_modules.gd.md) |
 | `ship/ship_ops.gd` | 船只组合的纯函数：模块/货物/煤水/旅客/随船运输重量、容量、槽位、安装/卸下规则与派生属性。 | [查看](./ship/ship_ops.gd.md) |
 | `ship/warehouse_ops.gd` | 港口仓库与随船运输：每港独立保存模块/材料，transit 模块计入重量但不占货舱。 | [查看](./ship/warehouse_ops.gd.md) |
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |

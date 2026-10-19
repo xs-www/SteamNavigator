@@ -1,6 +1,6 @@
 # `SNModMaker/tests/browser-smoke.mjs`
 
-> 作用：Chrome DevTools Protocol 冒烟测试：新建项目、编辑、本地化、检视、自动保存、ZIP、导入与撤销。
+> 作用：Chrome DevTools Protocol 冒烟测试：新建项目、实体键事务、模块子分页与船体模块区、本地化、自定义资源选择器、ZIP、导入与撤销。
 
 - 类型：Node ES 模块
 

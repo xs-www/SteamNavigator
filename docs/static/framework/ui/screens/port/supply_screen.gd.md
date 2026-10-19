@@ -19,5 +19,6 @@
 - 煤水购买与维修统一发出 command_requested(command, params)，由 Shell 执行并决定刷新、音效和错误反馈。
 - 页面可重复 bind；每次先清理旧展示节点，页面实例复用时不会叠加卡片或信号。
 - 阻断码只转换为展示文案，不在页面重新计算库存、重量、金钱或维修规则。
+- 维修卡把报价拆成「缺失耐久 X（船体 A · 部件 B）」，module_points>0 时追加「含部件损耗」徽标；数值全部来自 supply.view 的 repair 字段。
 
 模块索引：[framework/ui](../../README.md)

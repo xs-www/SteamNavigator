@@ -3,19 +3,21 @@
  * Local server for the Mod Maker.
  *
  * Serves the static app and exposes a tiny same-origin API so the browser can
- * persist projects under SNModMaker/mods/ and write packaged ZIPs to
- * SNModMaker/exports/. The app detects /api/status and falls back to IndexedDB
- * when this server is not used.
+ * persist projects under SNModMaker/mods/, write packaged ZIPs to
+ * SNModMaker/exports/, and deploy an overwrite-safe package into the release
+ * package layout (`dist/build/<platform>/mods/`). The app detects /api/status
+ * and falls back to IndexedDB when this server is not used.
  *
  *   node SNModMaker/tools/serve.mjs [port]
  *
- * Environment overrides (useful for tests):
- *   SNMODMAKER_MODS_DIR, SNMODMAKER_EXPORTS_DIR
+ * Environment overrides (useful for tests and other installs):
+ *   SNMODMAKER_MODS_DIR, SNMODMAKER_EXPORTS_DIR, SNMODMAKER_GAME_MODS_DIR
  */
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveGameModsDir } from './game_mods_dir.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -28,6 +30,7 @@ const resolveDataDir = (value, fallback) => {
 };
 const MODS_DIR = resolveDataDir(process.env.SNMODMAKER_MODS_DIR, 'mods');
 const EXPORTS_DIR = resolveDataDir(process.env.SNMODMAKER_EXPORTS_DIR, 'exports');
+const GAME_MODS_DIR = resolveDataDir(resolveGameModsDir(root));
 const MAX_BODY = 128 * 1024 * 1024;
 
 const MIME = {
@@ -175,6 +178,43 @@ function safeExportName(value) {
   return name;
 }
 
+function gameModName(id) {
+  return `${id}.snavmod.zip`;
+}
+
+function listGameMods() {
+  const rows = [];
+  for (const entry of fs.readdirSync(GAME_MODS_DIR, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.snavmod.zip')) continue;
+    const stat = fs.statSync(path.join(GAME_MODS_DIR, entry.name));
+    rows.push({ name: entry.name, size: stat.size, updatedAt: stat.mtime.toISOString() });
+  }
+  rows.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  return rows;
+}
+
+function deployGameMod(id, body) {
+  const name = gameModName(id);
+  const target = path.join(GAME_MODS_DIR, name);
+  const temp = path.join(GAME_MODS_DIR, `.${id}.tmp-${process.pid}-${Date.now()}`);
+  let removed = 0;
+  try {
+    fs.writeFileSync(temp, body);
+    fs.rmSync(target, { force: true });
+    fs.renameSync(temp, target);
+    const legacyPattern = new RegExp(`^${id}-.+\\.snavmod\\.zip$`, 'i');
+    for (const entry of fs.readdirSync(GAME_MODS_DIR, { withFileTypes: true })) {
+      if (!entry.isFile() || !legacyPattern.test(entry.name)) continue;
+      fs.rmSync(path.join(GAME_MODS_DIR, entry.name), { force: true });
+      removed += 1;
+    }
+    return { id, name, size: body.length, removed };
+  } catch (error) {
+    fs.rmSync(temp, { force: true });
+    throw error;
+  }
+}
+
 async function handleApi(request, response, url) {
   const parts = url.pathname.split('/').filter(Boolean); // ["api", ...]
   const method = request.method || 'GET';
@@ -184,6 +224,7 @@ async function handleApi(request, response, url) {
       ok: true,
       modsDir: path.relative(root, MODS_DIR).replaceAll('\\', '/') || 'mods',
       exportsDir: path.relative(root, EXPORTS_DIR).replaceAll('\\', '/') || 'exports',
+      gameModsDir: path.relative(root, GAME_MODS_DIR).replaceAll('\\', '/') || GAME_MODS_DIR,
     });
     return;
   }
@@ -272,6 +313,38 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (url.pathname === '/api/game-mods' && method === 'GET') {
+    sendJson(response, 200, { ok: true, mods: listGameMods() });
+    return;
+  }
+
+  if (parts[1] === 'game-mods' && parts[2]) {
+    const id = decodeURIComponent(parts[2]);
+    if (!isModId(id)) {
+      sendJson(response, 400, { ok: false, error: '非法模组 ID' });
+      return;
+    }
+    if (method === 'POST') {
+      try {
+        const body = await readBody(request);
+        const result = deployGameMod(id, body);
+        sendJson(response, 200, { ok: true, ...result });
+      } catch (error) {
+        sendJson(response, error.status || 500, { ok: false, error: error.message });
+      }
+      return;
+    }
+    if (method === 'DELETE') {
+      try {
+        fs.rmSync(path.join(GAME_MODS_DIR, gameModName(id)), { force: true });
+        sendJson(response, 200, { ok: true });
+      } catch (error) {
+        sendJson(response, 500, { ok: false, error: error.message });
+      }
+      return;
+    }
+  }
+
   sendJson(response, 404, { ok: false, error: 'Not found' });
 }
 
@@ -318,4 +391,5 @@ server.listen(port, '127.0.0.1', () => {
   console.log(`Static: ${root}`);
   console.log(`Projects: ${MODS_DIR}`);
   console.log(`Exports:  ${EXPORTS_DIR}`);
+  console.log(`Game mods: ${GAME_MODS_DIR}`);
 });

@@ -17,7 +17,10 @@
 
 - `assets/ui/theme/steam_navigator_theme.tres` 是运行时共享 Theme。
 - `framework/ui/components/` 提供可拖入场景的语义按钮、面板、徽标、章节标题和资源存量条。
-- 船厂改装界面由 `SNShipView`（中央侧视/纵剖图舞台）+ `SNSlotTarget`（槽位贴片）+ `SNPartRow`（部件 HUD 行）组合；2.5D 渲染器经 `SNShipView.set_renderer()` 接入，截图见 `docs/design/screenshots/shipyard_refit_{exterior,cutaway}.png`。
+- 船厂界面按参考图 2 / 图 3 分成两态：正常态三列「已有船舶船卡 / `SNShipView` 实机渲染 / 组件分类入口」；点击分类进入改装态，三列变为「授权贴图纵剖图 / 所选分类的槽位·装配·购买·打造操作卡 / 竖排分类页签（船体·锅炉·货舱·导航·安全·客舱·杂项）」。
+- 改装态纵剖图使用 `assets/ui/shipyard/ship_section.png`（由 `tools/art/gen_shipyard_textures.py` 生成的 1792×1008 授权贴图，`SNShipView` 只做 cover 裁切与槽位叠加，不再运行时拼多边形）；`SNSlotTarget` 槽位贴片、`SNPartRow` 仓库/随船行与购买/打造卡共同承载全部改装操作。
+- 旧整页下方面板（打造订单 / 港口仓库 / 配方 / 可购买模块 / 通关清单）已删除，命令迁入改装分类与「杂项」页签；通关清单只在总览页。2.5D 渲染器仍经 `SNShipView.set_renderer()` 接入。
+- 截图：`docs/design/screenshots/shipyard_normal.png`（正常态）、`shipyard_refit.png`（改装态·船体）、`shipyard_refit_cargo.png`（货舱）、`shipyard_refit_misc.png`（杂项）；完整重构说明见 [SHIPYARD_UI_REFACTOR.md](SHIPYARD_UI_REFACTOR.md)。
 - `framework/ui/showcase/ui_kit_showcase.tscn` 用于独立预览与视觉冒烟。
 - 页面先使用 Theme variation 表达公共状态，业务脚本只负责布局和数据绑定。
 - 2.5D 固定舞台的后续升级方案见 [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md)。

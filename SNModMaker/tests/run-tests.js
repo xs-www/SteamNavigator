@@ -8,15 +8,18 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 
 const js = (name) => path.join(__dirname, '..', 'js', name);
 require(js('schema-bundle.js'));
 require(js('core-index.js'));
+require(js('content-types.js'));
 require(js('catalog.js'));
 require(js('zip.js'));
 require(js('validate.js'));
 require(js('store.js'));
+require(js('glb.js'));
 require(js('ui.js'));
 
 const Store = globalThis.SNStore;
@@ -24,6 +27,7 @@ const Validate = globalThis.SNValidate;
 const Catalog = globalThis.SNCatalog;
 const UI = globalThis.SNUI;
 const Zip = globalThis.SNZip;
+const GLB = globalThis.SNGLB;
 
 let passed = 0;
 let failed = 0;
@@ -133,12 +137,28 @@ function warningsOf(result) {
         assert.ok(html.includes('option-card'), 'event options use the option editor');
         assert.ok(html.includes('effect-row'), 'event effects use the effect editor');
         assert.ok(html.includes('condition-empty'), 'event conditions use the condition editor');
+        assert.ok(html.includes('条目内其他多语言文本'), 'nested localization values are editable in the entity');
       }
       if (info.key === 'boilers') {
         assert.ok(html.includes('item-card slim'), 'boiler materials use the material editor');
       }
       if (info.key === 'roles') {
         assert.ok(html.includes('dl-stats'), 'role modifiers use the stat editor');
+      }
+      if (info.key === 'hulls') {
+        assert.ok(html.includes('hull-module-grid'), 'hulls expose a dedicated module configuration area');
+        assert.ok(html.includes('data-module-kind="boiler"'), 'hulls show the fixed boiler slot');
+        assert.ok(html.includes('data-module-kind="navigation"'), 'hulls show the fixed navigation slot');
+        assert.ok(html.includes('data-module-kind="safety"'), 'hulls show the fixed safety slot');
+        assert.equal((html.match(/data-field="data\.cargo_slots"/g) || []).length, 1, 'cargo slots render once in module configuration');
+        assert.equal((html.match(/data-field="data\.cabin_slots"/g) || []).length, 1, 'cabin slots render once in module configuration');
+      }
+      if (info.key !== 'patches') {
+        assert.ok(html.includes('data-field="information.texture"'), `${info.key} exposes texture configuration`);
+        assert.ok(html.includes('data-field="information.model"'), `${info.key} exposes model configuration`);
+        assert.ok(html.includes('data-asset-kind="image"'), `${info.key} uses the custom image picker`);
+        assert.ok(html.includes('data-asset-kind="model"'), `${info.key} uses the custom model picker`);
+        assert.ok(!html.includes('list="dl-asset-keys"'), `${info.key} does not use the native asset datalist`);
       }
     }
     const result = Validate.validateProject(project);
@@ -153,6 +173,68 @@ function warningsOf(result) {
     assert.equal(hull.definition.name_key, 'module.test_mod.new_item.name');
     assert.notEqual(boiler.definition.name_key, hull.definition.name_key);
     assert.notEqual(cargo.definition.name_key, boiler.definition.name_key);
+  });
+
+  await test('entity localization rename commits once and removes old keys', () => {
+    const project = freshProject();
+    const definition = project.contentFiles[0].definitions[0];
+    const oldBase = 'good.test_mod.tea';
+    const newBase = 'good.test_mod.black_tea';
+    const zh = Store.getLoc(project, 'zh_CN');
+    const en = Store.getLoc(project, 'en');
+    assert.ok(zh.entries[`${oldBase}.name`]);
+    definition.id = 'test_mod:good/black_tea';
+    Store.commitDefinitionLocalization(project, definition, 'goods', oldBase, newBase, {
+      zh_CN: { [`${newBase}.name`]: '红茶' },
+      en: { [`${newBase}.name`]: 'Black tea' },
+    });
+    assert.equal(definition.name_key, `${newBase}.name`);
+    assert.equal(zh.entries[`${newBase}.name`], '红茶');
+    assert.equal(en.entries[`${newBase}.name`], 'Black tea');
+    assert.equal(zh.entries[`${oldBase}.name`], undefined);
+    assert.equal(en.entries[`${oldBase}.description`], undefined);
+
+    const event = Store.addDefinition(project, 'events', { localId: 'fog' });
+    const oldOptionKey = event.definition.data.options[0].name_key;
+    event.definition.id = 'test_mod:event/thick_fog';
+    Store.commitDefinitionLocalization(project, event.definition, 'events', 'event.test_mod.fog', 'event.test_mod.thick_fog', {});
+    assert.equal(event.definition.data.options[0].name_key, oldOptionKey.replace('event.test_mod.fog', 'event.test_mod.thick_fog'));
+    assert.equal(zh.entries[oldOptionKey], undefined);
+    assert.ok(zh.entries[event.definition.data.options[0].name_key]);
+  });
+
+  await test('entity texture and GLB model references validate against assets', () => {
+    const project = freshProject();
+    const definition = project.contentFiles[0].definitions[0];
+    Store.addAsset(project, {
+      key: 'texture.tea', path: 'assets/icons/tea.webp', mime: 'image/webp', size: 1,
+      dataUrl: 'data:image/webp;base64,AA==',
+    });
+    Store.addAsset(project, {
+      key: 'model.tea', path: 'assets/models/tea.glb', mime: 'model/gltf-binary', size: 1,
+      dataUrl: 'data:model/gltf-binary;base64,AA==',
+    });
+    Store.addAsset(project, {
+      key: 'audio.bell', path: 'assets/audio/bell.ogg', mime: 'audio/ogg', size: 1,
+      dataUrl: 'data:audio/ogg;base64,AA==',
+    });
+    const imagePicker = UI.assetPicker('information.texture', '', 'image', project);
+    const modelPicker = UI.assetPicker('information.model', '', 'model', project);
+    assert.ok(imagePicker.includes('texture.tea'));
+    assert.ok(!imagePicker.includes('model.tea'));
+    assert.ok(!imagePicker.includes('audio.bell'));
+    assert.ok(modelPicker.includes('model.tea'));
+    assert.ok(!modelPicker.includes('texture.tea'));
+    assert.ok(!modelPicker.includes('audio.bell'));
+    definition.information = { texture: 'texture.tea', model: 'model.tea' };
+    let result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+    definition.information = { texture: 'asset://core/icon.coal', model: 'asset://core/model.ship.prototype' };
+    result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+    definition.information.model = 'model.missing';
+    result = Validate.validateProject(project);
+    assert.ok(errorsOf(result).some((issue) => issue.code === 'entity_model_missing'));
   });
 
   await test('ID namespace and type mismatches are reported', () => {
@@ -220,6 +302,7 @@ function warningsOf(result) {
     const result = Store.cloneCoreDefinition(project, 'core:boiler/small_efficient');
     assert.ok(result);
     assert.equal(result.definition.id, 'test_mod:boiler/small_efficient_copy');
+    assert.equal(result.definition.information.model, 'asset://core/model.module.boiler');
     assert.ok(result.definition.name_key.startsWith('module.test_mod.'));
     const zh = Store.getLoc(project, 'zh_CN');
     assert.ok(zh.entries[result.definition.name_key]);
@@ -232,6 +315,7 @@ function warningsOf(result) {
     assert.ok(result);
     assert.ok(result.definition.name_key.startsWith('module.test_mod.small_efficient_copy.'));
     assert.equal(result.definition.description_key, 'module.test_mod.small_efficient_copy.description');
+    assert.equal(result.definition.information.model, 'asset://core/model.ship.prototype');
     const zh = Store.getLoc(project, 'zh_CN');
     assert.ok(zh.entries[result.definition.name_key]);
     const validation = Validate.validateProject(project);
@@ -340,8 +424,8 @@ function warningsOf(result) {
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
     assert.equal(result.project.contentFiles.length, 15);
-    // 3 status icons + the Iron Harbor banner art.
-    assert.equal(result.project.assets.length, 4);
+    // 3 status icons + Iron Harbor banner + 9 entity GLB models.
+    assert.equal(result.project.assets.length, 13);
     const validation = Validate.validateProject(result.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
   });
@@ -407,9 +491,69 @@ function warningsOf(result) {
     assert.ok(html.includes('全部满足'));
   });
 
+  await test('generated content types match content_types.json', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
+    const generated = globalThis.SNContentTypes;
+    assert.deepEqual(generated.TYPES.map((type) => type.key), manifest.types.map((type) => type.key));
+    const groupLabel = new Map(manifest.groups.map((group) => [group.id, group.label_zh]));
+    for (let index = 0; index < generated.TYPES.length; index += 1) {
+      const source = manifest.types[index];
+      const type = generated.TYPES[index];
+      assert.equal(type.singular, source.singular, `${source.key} singular`);
+      assert.equal(type.schema, path.posix.basename(source.schema), `${source.key} schema`);
+      assert.equal(type.keyPrefix, source.key_prefix, `${source.key} key prefix`);
+      assert.equal(type.group, groupLabel.get(source.group), `${source.key} group label`);
+      assert.equal(type.file, source.default_file, `${source.key} default file`);
+      assert.equal(Boolean(type.special), source.kind === 'patch', `${source.key} patch marker`);
+    }
+    assert.equal(globalThis.SNCatalog.TYPES, generated.TYPES, 'catalog uses the generated type list');
+  });
+
   await test('semver helper accepts prerelease and rejects leading zeros', () => {
     assert.ok(Validate.parseSemver('1.2.3-beta.1+build.5'));
     assert.equal(Validate.parseSemver('01.2.3'), null);
+  });
+
+  await test('parses a real GLB for thumbnail previews', () => {
+    const file = path.join(__dirname, '..', '..', 'dev_mods', 'core', 'assets', 'models', 'ships', 'SN_Ship_Prototype.glb');
+    const parsed = GLB.parse(fs.readFileSync(file));
+    assert.ok(parsed.triangles > 0, 'has triangles');
+    assert.ok(parsed.primitives.length > 0, 'has primitives');
+    assert.ok(parsed.materials > 0, 'has materials');
+    assert.ok(parsed.bbox.size.every((value) => value >= 0), 'bbox is valid');
+    assert.ok(parsed.bbox.radius > 0, 'bbox has a radius');
+    assert.ok(
+      parsed.primitives.every((primitive) => primitive.positions.length > 0 && primitive.normals.length === primitive.positions.length),
+      'primitives carry positions and normals',
+    );
+    assert.throws(() => GLB.parse(new Uint8Array(32)), /GLB|glTF/);
+  });
+
+  await test('game mods dir defaults to the release package mods folder', async () => {
+    const { pathToFileURL } = require('node:url');
+    const { resolveGameModsDir } = await import(pathToFileURL(path.join(__dirname, '..', 'tools', 'game_mods_dir.mjs')).href);
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'snmod-paths-'));
+    try {
+      const root = path.join(temp, 'SNModMaker');
+      fs.mkdirSync(root, { recursive: true });
+      fs.mkdirSync(path.join(temp, 'dist', 'build', 'windows'), { recursive: true });
+      assert.equal(
+        resolveGameModsDir(root, { env: {}, platform: 'win32', exists: fs.existsSync }),
+        path.join(temp, 'dist', 'build', 'windows', 'mods'),
+      );
+      assert.equal(
+        resolveGameModsDir(root, { env: { SNMODMAKER_GAME_MODS_DIR: path.join(temp, 'custom') }, platform: 'win32', exists: fs.existsSync }),
+        path.join(temp, 'custom'),
+      );
+      const emptyRoot = path.join(temp, 'empty', 'SNModMaker');
+      fs.mkdirSync(emptyRoot, { recursive: true });
+      assert.equal(
+        resolveGameModsDir(emptyRoot, { env: {}, platform: 'linux', exists: fs.existsSync }),
+        path.join(temp, 'empty', 'dist', 'build', 'linux', 'mods'),
+      );
+    } finally {
+      fs.rmSync(temp, { recursive: true, force: true });
+    }
   });
 
   console.log(`\nTests: ${passed} passed, ${failed} failed, ${passed + failed} total`);

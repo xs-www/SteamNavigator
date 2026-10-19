@@ -46,6 +46,7 @@ const MODULE_PATHS = [
 const SKIP_SOURCES = new Set([
   "SNModMaker/js/schema-bundle.js",
   "SNModMaker/js/core-index.js",
+  "SNModMaker/js/content-types.js",
   "SNModMaker/mods/.gitignore",
   "SNModMaker/exports/.gitignore",
 ]);
@@ -116,7 +117,7 @@ function extractSymbols(relativePath, text) {
   }
 
   if (relativePath.endsWith(".js") || relativePath.endsWith(".mjs")) {
-    const jsFunctionRegex = /^(?: {2})?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)/gm;
+    const jsFunctionRegex = /^(?:export\s+)?(?: {2})?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)/gm;
     for (const match of text.matchAll(jsFunctionRegex)) {
       const args = match[2].split(",").map((arg) => arg.trim()).filter(Boolean).join(", ");
       symbols.push({ label: `${match[1]}(${args})`, line: lineAt(text, match.index), kind: "func" });
@@ -328,6 +329,7 @@ function main() {
   l0.push("## 项目入口");
   l0.push("");
   l0.push("- 启动：[project.godot](project.godot.md)、[Bootstrap](framework/bootstrap/bootstrap.gd.md)、[AppBootstrap](framework/bootstrap/app_bootstrap.gd.md)");
+  l0.push("- 内容契约：[content_types.json](content_types.json.md)、[Entity Contract v2](../design/ENTITY_CONTRACT_V2.md)");
   l0.push("- 内容管线：[ModLoader](framework/modding/mod_loader.gd.md)、[ContentCompiler](framework/modding/content_compiler.gd.md)、[SchemaValidator](framework/modding/schema_validator.gd.md)");
   l0.push("- 运行时：[AppContext](framework/bootstrap/app_context.gd.md)、[GameState](framework/state/game_state.gd.md)");
   l0.push("- 主界面：[main.gd](framework/ui/shell/main.gd.md)");
@@ -335,6 +337,7 @@ function main() {
   l0.push("- 官方内容：[Core 内容包](dev_mods/core/README.md)");
   l0.push("- 迭代 1 契约：[MVP 闭环](../design/ITERATION_1_MVP_LOOP.md)");
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
+  l0.push("- 释放与导出：[export_presets.cfg](export_presets.cfg.md)、[release.yml](.github/workflows/release.yml.md)");
   l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");
   l0.push("- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)");
   l0.push("");
@@ -390,7 +393,7 @@ function main() {
   for (const modulePath of MODULE_PATHS) {
     for (const source of moduleSources(modulePath)) sourceSet.add(source);
   }
-  for (const extra of ["project.godot", "README.md", "todo.md", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
+  for (const extra of ["project.godot", "content_types.json", "README.md", "todo.md", "export_presets.cfg", ".github/workflows/release.yml", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
     if (fs.existsSync(path.join(ROOT, extra))) sourceSet.add(extra);
   }
 

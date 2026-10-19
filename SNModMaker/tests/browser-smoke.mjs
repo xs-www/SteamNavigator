@@ -121,8 +121,11 @@ try {
   /* older Chrome builds */
 }
 await cdp.send('Page.navigate', { url });
-await waitFor(cdp, "document.readyState === 'complete' && !!document.querySelector('.welcome')", 15000, 'welcome render');
-await sleep(1200);
+await waitFor(cdp, "document.readyState === 'complete' && !!document.getElementById('workspace')", 15000, 'application shell');
+await sleep(1500);
+await cdp.eval("document.querySelector('[data-action=\"welcome\"]')?.click()");
+await waitFor(cdp, "!!document.querySelector('.welcome')", 5000, 'welcome render');
+await sleep(200);
 
 await check('welcome renders and local project library settles', async () => {
   const hasTitle = await cdp.eval("!!document.querySelector('.welcome-intro h1')");
@@ -166,6 +169,71 @@ await check('goods editor adds a definition and edits a number field', async () 
   await sleep(500);
   const value = await cdp.eval("document.querySelector('#definition-editor [data-field=\"data.base_price\"]').value");
   if (value !== '77') throw new Error(`base_price did not update: ${value}`);
+});
+
+await check('entity ID previews localization keys and commits them only on save', async () => {
+  const original = await cdp.eval(`(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const project = (await SNIO.listProjects())[0];
+    const file = project.contentFiles.find((item) => item.content_type === 'goods');
+    const definition = file.definitions[file.definitions.length - 1];
+    return { id: definition.id, key: definition.name_key };
+  })()`);
+  await cdp.eval(`(() => {
+    const input = document.querySelector('#definition-editor [data-field="id"]');
+    input.value = 'renamed_good';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  const preview = await cdp.eval("document.querySelector('[data-key-preview-field=\"name_key\"]')?.value");
+  if (preview !== 'good.smoke_mod.renamed_good.name') throw new Error(`localization preview did not follow ID: ${preview}`);
+  await sleep(1100);
+  const staged = await cdp.eval(`(async () => {
+    const project = (await SNIO.listProjects())[0];
+    const file = project.contentFiles.find((item) => item.content_type === 'goods');
+    const definition = file.definitions.find((item) => item.id === 'smoke_mod:good/renamed_good');
+    const zh = project.localization.find((item) => item.locale === 'zh_CN').entries;
+    return { key: definition.name_key, oldValue: zh[definition.name_key], previewValue: zh['good.smoke_mod.renamed_good.name'] };
+  })()`);
+  if (staged.key !== original.key || !staged.oldValue || staged.previewValue != null) {
+    throw new Error(`localization keys changed before save: ${JSON.stringify(staged)}`);
+  }
+  await cdp.eval(`(() => {
+    const input = document.querySelector('[data-entity-locale="zh_CN"][data-entity-locale-field="name_key"]');
+    input.value = '已保存的红茶';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    document.querySelector('[data-action="save-definition"]').click();
+  })()`);
+  await waitFor(cdp, "!document.querySelector('[data-localization-pending]') || document.querySelector('[data-localization-pending]').hidden", 5000, 'localization transaction commit');
+  const committed = await cdp.eval(`(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    const project = (await SNIO.listProjects())[0];
+    const file = project.contentFiles.find((item) => item.content_type === 'goods');
+    const definition = file.definitions.find((item) => item.id === 'smoke_mod:good/renamed_good');
+    const zh = project.localization.find((item) => item.locale === 'zh_CN').entries;
+    return { key: definition.name_key, value: zh[definition.name_key], oldExists: Object.hasOwn(zh, ${JSON.stringify(original.key)}) };
+  })()`);
+  if (committed.key !== preview || committed.value !== '已保存的红茶' || committed.oldExists) {
+    throw new Error(`localization transaction failed: ${JSON.stringify(committed)}`);
+  }
+});
+
+await check('module workspace exposes type subpages', async () => {
+  await cdp.eval("document.querySelector('[data-nav=\"content:boilers\"]').click()");
+  await waitFor(cdp, "document.querySelectorAll('.module-tab').length >= 8", 3000, 'module subpages');
+  await cdp.eval("document.querySelector('.module-tab[data-nav=\"content:hulls\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('.module-tab.active[data-nav=\"content:hulls\"]')", 3000, 'hull module subpage');
+  await cdp.eval("document.querySelector('.content-view [data-action=\"add-definition\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('#definition-editor .hull-module-grid')", 4000, 'hull module configuration');
+  const hullModules = await cdp.eval(`(() => ({
+    fixed: document.querySelectorAll('#definition-editor .hull-module-card.fixed').length,
+    cargo: document.querySelectorAll('#definition-editor [data-field="data.cargo_slots"]').length,
+    cabin: document.querySelectorAll('#definition-editor [data-field="data.cabin_slots"]').length,
+  }))()`);
+  if (hullModules.fixed !== 3 || hullModules.cargo !== 1 || hullModules.cabin !== 1) {
+    throw new Error(`unexpected hull module configuration: ${JSON.stringify(hullModules)}`);
+  }
+  await cdp.eval("document.querySelector('.module-tab[data-nav=\"content:cargo_modules\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('.module-tab.active[data-nav=\"content:cargo_modules\"]')", 3000, 'cargo module subpage');
 });
 
 await check('localization view lists keys and accepts a translation', async () => {
@@ -259,6 +327,21 @@ await check('asset picker adds an asset and writes manifest.assets', async () =>
   if (saved.assets !== 1) throw new Error(`asset was not saved: ${JSON.stringify(saved)}`);
   if (!saved.manifestKeys.includes('icon.tea')) throw new Error('manifest.assets missing icon.tea');
   if (saved.errors) throw new Error(`asset project has ${saved.errors} errors`);
+  await cdp.eval("document.querySelector('[data-nav=\"content:goods\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('#definition-editor [data-asset-kind=\"image\"]')", 3000, 'custom image picker');
+  const pickerShape = await cdp.eval(`(() => ({
+    nativeList: document.querySelector('#definition-editor [data-field="information.texture"]')?.hasAttribute('list'),
+    imageHasAsset: !!document.querySelector('#definition-editor [data-asset-kind="image"] [data-value="icon.tea"]'),
+    modelHasImage: !!document.querySelector('#definition-editor [data-asset-kind="model"] [data-value="icon.tea"]'),
+  }))()`);
+  if (pickerShape.nativeList || !pickerShape.imageHasAsset || pickerShape.modelHasImage) {
+    throw new Error(`custom asset picker filtering failed: ${JSON.stringify(pickerShape)}`);
+  }
+  await cdp.eval("document.querySelector('#definition-editor [data-asset-kind=\"image\"] [data-action=\"asset-picker-toggle\"]').click()");
+  await waitFor(cdp, "!document.querySelector('#definition-editor [data-asset-kind=\"image\"] .asset-picker-menu').hidden", 2000, 'asset picker menu');
+  await cdp.eval("document.querySelector('#definition-editor [data-asset-kind=\"image\"] [data-value=\"icon.tea\"]').click()");
+  const selectedTexture = await cdp.eval("document.querySelector('#definition-editor [data-field=\"information.texture\"]')?.value");
+  if (selectedTexture !== 'icon.tea') throw new Error(`asset picker did not select texture: ${selectedTexture}`);
 });
 
 await check('event editor adds a condition and an effect', async () => {
@@ -352,7 +435,7 @@ await check('folder export writes the same tree through File System Access handl
   if (!keys.some((key) => key.includes('/content/'))) throw new Error('missing content file');
 });
 
-await check('local disk API saves mods/ and exports/', async () => {
+await check('local disk API saves projects, exports and deploys to game mods', async () => {
   const backend = await cdp.eval('SNIO.detectBackend()');
   if (!backend || !backend.ok) throw new Error('local disk API is not available');
   await cdp.eval("document.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }))");
@@ -383,8 +466,14 @@ await check('local disk API saves mods/ and exports/', async () => {
   const exported = exports.find((entry) => entry.name.startsWith('smoke_mod-') && entry.name.endsWith('.zip'));
   if (!exported) throw new Error(`exports/ missing zip: ${JSON.stringify(exports)}`);
 
+  await cdp.eval("document.querySelector('.topbar-actions [data-action=\"export\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('[data-action=\"deploy-game-mod\"]')", 3000, 'game deploy option');
+  await cdp.eval("document.querySelector('[data-action=\"deploy-game-mod\"]').click()");
+  await waitFor(cdp, "SNIO.listGameMods().then(rows => rows.some(row => row.name === 'smoke_mod.snavmod.zip'))", 6000, 'deployed game mod');
+
   await cdp.eval(`(async () => {
     await SNIO.deleteDiskProject('smoke_mod');
+    await SNIO.deleteGameMod('smoke_mod');
     const rows = await SNIO.listExports();
     for (const row of rows) {
       if (row.name.startsWith('smoke_mod-')) await SNIO.deleteExport(row.name);

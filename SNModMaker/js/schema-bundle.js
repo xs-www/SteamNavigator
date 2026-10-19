@@ -247,8 +247,27 @@
             "enabled": {
               "type": "boolean"
             },
+            "information": {
+              "$ref": "#/$defs/entity_information"
+            },
             "data": {
               "type": "object"
+            }
+          }
+        },
+        "entity_information": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "texture": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "model": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
             }
           }
         },
@@ -482,6 +501,7 @@
                 "remove_water",
                 "damage_ship",
                 "repair_ship",
+                "damage_module",
                 "add_delay_hours",
                 "damage_cargo",
                 "injure_passenger",
@@ -510,6 +530,14 @@
             },
             "text_key": {
               "type": "string"
+            },
+            "slot": {
+              "type": "string",
+              "pattern": "^(boiler|navigation|safety|cabin|cargo)$"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         }
