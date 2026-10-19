@@ -96,9 +96,13 @@ func _repair_panel(view_model: Dictionary) -> Control:
 		"可维修" if bool(view_model.get("can_repair", false)) else "无需维修或资源不足",
 		SNBadge.Tone.SUCCESS if bool(view_model.get("can_repair", false)) else SNBadge.Tone.WARNING
 	))
+	if float(repair.get("module_points", 0.0)) > 0.0:
+		header.add_child(_badge("含部件损耗", SNBadge.Tone.WARNING))
 	content.add_child(header)
-	content.add_child(_label("缺失耐久 %s · 预计费用 %d 金币（单位维修价 %s）" % [
+	content.add_child(_label("缺失耐久 %s（船体 %s · 部件 %s）· 预计费用 %d 金币（单位维修价 %s）" % [
 		_fmt(float(repair.get("missing", 0.0))),
+		_fmt(float(repair.get("durability_missing", 0.0))),
+		_fmt(float(repair.get("module_points", 0.0))),
 		int(repair.get("cost", 0)),
 		_fmt(float(view_model.get("repair_per_point", 0.0))),
 	], 13, COLOR_TEXT))

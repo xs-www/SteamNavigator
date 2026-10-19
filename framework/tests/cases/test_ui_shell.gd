@@ -160,7 +160,7 @@ func _meter_of_supply_card(root: Node, title: String) -> Control:
 
 
 func test_dense_screen_fields_keep_horizontal_minimum_widths() -> void:
-	for screen_script in [SETTINGS_SCREEN_SCRIPT, OVERVIEW_SCREEN_SCRIPT, MARKET_SCREEN_SCRIPT, SHIPYARD_SCREEN_SCRIPT]:
+	for screen_script in [SETTINGS_SCREEN_SCRIPT, OVERVIEW_SCREEN_SCRIPT, MARKET_SCREEN_SCRIPT, SHIPYARD_SCREEN_SCRIPT, PORT_MEMORY_SCREEN_SCRIPT]:
 		var screen: Control = screen_script.new()
 		var label: Label = screen._label("横向字段不可逐字换行", 13, Color.WHITE)
 		assert_eq(label.autowrap_mode, TextServer.AUTOWRAP_OFF, "%s keeps dense row labels on one line" % screen_script.resource_path)
@@ -171,6 +171,11 @@ func test_dense_screen_fields_keep_horizontal_minimum_widths() -> void:
 	assert_true(market_cell.custom_minimum_size.x >= 72.0, "market cells reserve enough width for horizontal text")
 	market_cell.free()
 	market.free()
+	var memory: Control = PORT_MEMORY_SCREEN_SCRIPT.new()
+	var memory_cell: Label = memory._grid_label("上次储备", 12, Color.WHITE, 140.0)
+	assert_true(memory_cell.custom_minimum_size.x >= 140.0, "port-memory snapshot columns reserve a readable width")
+	memory_cell.free()
+	memory.free()
 	var table: Control = INTEL_TABLE_SCRIPT.new()
 	table.bind(
 		[{"port_id": "port", "name_key": "港口", "discovered": true}],
@@ -188,6 +193,25 @@ func test_dense_screen_fields_keep_horizontal_minimum_widths() -> void:
 	var regular_style := goods_header.get_theme_stylebox("panel") as StyleBoxFlat
 	assert_true(regular_style.bg_color.r < 0.2 and regular_style.bg_color.g < 0.2, "ordinary intel cells use the dark interface palette instead of StyleBoxFlat default gray")
 	table.free()
+
+
+func test_damaged_module_is_visible_in_the_shell() -> void:
+	var bundle := _mount(5110)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var module_chip: String = context.translate("ui.label.module_status", "部件")
+	var damaged_label: String = context.translate("ui.label.damaged_modules", "受损部件")
+	assert_false(_label_texts(shell._root_box).has(module_chip), "a healthy ship shows no module chip in the info bar")
+	ShipModules.damage(context.state.ship(), "boiler", 0, 0.5)
+	shell._refresh()
+	var texts := _label_texts(shell._root_box)
+	assert_contains(texts, module_chip, "the info bar adds a module status chip once a part is damaged")
+	assert_contains(texts, "1 · 50%", "the module chip shows damaged count and worst condition")
+	_goto(shell, "shipyard")
+	var card_texts := _label_texts(shell._root_box)
+	assert_contains(card_texts, damaged_label, "the ship card lists damaged modules")
+	assert_contains(card_texts, "1 · 50%", "the ship card shows the worst condition")
+	_unmount(bundle)
 
 
 func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
@@ -285,8 +309,12 @@ func test_victory_plan_explains_how_to_clear_the_mvp() -> void:
 	})
 	assert_contains(_label_texts(ready), shell._tr("ui.victory.plan_ready", ""), "a satisfied build says installing a module wins")
 	ready.free()
+	# Requirement: the win checklist lives on the overview only; the refit page
+	# now opens the 组件 categories instead of repeating the victory plan.
 	_goto(shell, "shipyard")
-	assert_contains(_label_texts(shell._root_box), shell._tr("ui.victory.plan_title", ""), "the shipyard repeats the win conditions")
+	var shipyard_texts := _label_texts(shell._root_box)
+	assert_false(shipyard_texts.has(shell._tr("ui.victory.plan_title", "")), "the shipyard page no longer repeats the win conditions")
+	assert_contains(shipyard_texts, shell._tr("ui.label.components", ""), "the shipyard page shows the 组件 categories instead")
 	_unmount(bundle)
 
 
@@ -307,6 +335,9 @@ func test_shipyard_order_and_port_wait_make_time_move() -> void:
 			recipe = row
 			break
 	assert_true(not recipe.is_empty(), "a money-only tier-1 recipe is craftable without materials")
+	# Craft entries now live in the module type's refit category.
+	shipyard_screen.set_category(String(recipe["content_type"]))
+	assert_true(bool(shipyard_screen._refit), "opening a category enters refit mode")
 	var craft_button := _button_by_text(shell._root_box, shipyard_screen._craft_button_text(recipe))
 	assert_not_null(craft_button, "the craft button states the work hours it commits to")
 	var module_id := String(recipe["module_id"])
@@ -316,8 +347,19 @@ func test_shipyard_order_and_port_wait_make_time_move() -> void:
 	assert_eq(CraftOps.orders(context.state).size(), 1, "crafting queues an order instead of finishing instantly")
 	assert_eq(context.state.money(), money_before - int(recipe["craft_cost"]), "the order charges its gold cost")
 	assert_eq(WarehouseOps.module_qty(context.state, port_id, module_id), 0, "the ordered module is not delivered immediately")
+	# The command rebuilds the page; the shell must keep refit mode + category.
+	shipyard_screens = _nodes_with_script(shell._root_box, SHIPYARD_SCREEN_SCRIPT)
+	assert_eq(shipyard_screens.size(), 1, "the shell rebuilds the shipyard page after the craft command")
+	if shipyard_screens.size() != 1:
+		_unmount(bundle)
+		return
+	var rebuilt: Control = shipyard_screens[0]
+	assert_true(bool(rebuilt._refit), "the shell keeps refit mode after a command")
+	assert_eq(String(rebuilt._category), String(recipe["content_type"]), "the shell keeps the refit category across the rebuild")
+	# Port wait now lives in 杂项, together with orders and warehouse materials.
+	rebuilt.set_category("misc")
 	var wait_button := _button_by_text(shell._root_box, "24 h")
-	assert_not_null(wait_button, "the shipyard offers a 24-hour port wait")
+	assert_not_null(wait_button, "the 杂项 category offers a 24-hour port wait")
 	var time_before := context.state.now()
 	wait_button.emit_signal("pressed")
 	assert_almost_eq(context.state.now(), time_before + 24.0, 0.001, "the wait button advances game time")

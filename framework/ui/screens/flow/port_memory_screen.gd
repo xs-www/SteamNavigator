@@ -30,10 +30,12 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 
 
 func _market_grid(rows: Array) -> GridContainer:
-	var grid := GridContainer.new(); grid.columns = 4
-	for heading in ["商品", "上次单价", "上次储备", "买卖"]: grid.add_child(_label(heading, 12, MUTED))
+	var grid := GridContainer.new(); grid.columns = 4; grid.custom_minimum_size.x = 760.0; grid.add_theme_constant_override("h_separation", 16); grid.add_theme_constant_override("v_separation", 8)
+	var widths := [240.0, 140.0, 140.0, 160.0]
+	var headings := ["商品", "上次单价", "上次储备", "买卖"]
+	for index in headings.size(): grid.add_child(_grid_label(headings[index], 12, MUTED, widths[index]))
 	for row in rows:
-		var buyable := bool(row.get("buyable", true)); var supply := bool(row.get("is_supply", false)); grid.add_child(_label(_loc(String(row.get("name_key", "")), String(row.get("item_id", ""))), 13, TEXT)); grid.add_child(_label(str(int(row.get("price", 0))), 13, TEAL)); grid.add_child(_label(str(int(row.get("stock", 0))), 13, TEXT)); grid.add_child(_label(_loc("ui.label.supply", "Supply") if supply else ("可买" if buyable else _loc("ui.label.sell_only", "")), 13, BRASS if supply else (GREEN if buyable else MUTED)))
+		var buyable := bool(row.get("buyable", true)); var supply := bool(row.get("is_supply", false)); grid.add_child(_grid_label(_loc(String(row.get("name_key", "")), String(row.get("item_id", ""))), 13, TEXT, widths[0])); grid.add_child(_grid_label(str(int(row.get("price", 0))), 13, TEAL, widths[1])); grid.add_child(_grid_label(str(int(row.get("stock", 0))), 13, TEXT, widths[2])); grid.add_child(_grid_label(_loc("ui.label.supply", "Supply") if supply else ("可买" if buyable else _loc("ui.label.sell_only", "")), 13, BRASS if supply else (GREEN if buyable else MUTED), widths[3]))
 	return grid
 func _back_button() -> Button:
 	var button := Button.new(); button.text = _loc("ui.button.back_overview", ""); button.pressed.connect(func(): navigation_requested.emit(&"overview", {})); return button
@@ -43,8 +45,10 @@ func _content(panel: PanelContainer) -> VBoxContainer:
 	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 8); panel.add_child(box); return box
 func _heading(eyebrow: String, title: String, detail: String) -> SNSectionHeader:
 	var header := SNSectionHeader.new(); header.eyebrow = eyebrow; header.title = title; header.detail = detail; return header
+func _grid_label(text: String, size: int, color: Color, minimum_width: float) -> Label:
+	var label := _label(text, size, color); label.custom_minimum_size.x = minimum_width; return label
 func _label(text: String, size: int, color: Color) -> Label:
-	var label := Label.new(); label.text = text; label.add_theme_font_size_override("font_size", size); label.add_theme_color_override("font_color", color); label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; return label
+	var label := Label.new(); label.text = text; label.add_theme_font_size_override("font_size", size); label.add_theme_color_override("font_color", color); label.autowrap_mode = TextServer.AUTOWRAP_OFF; return label
 func _loc(key: String, fallback: String) -> String:
 	var text := String(_tr.call(key)) if _tr.is_valid() else fallback; return fallback if text.is_empty() or text == key else text
 func _clear() -> void:

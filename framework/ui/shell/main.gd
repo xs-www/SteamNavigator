@@ -58,6 +58,7 @@ var _status_is_error: bool = false
 var _settlement_summary: Dictionary = {}
 var _victory_dismissed: bool = false
 var _shipyard_refit: bool = false
+var _shipyard_category: String = "hulls"
 @onready var _fade_layer: ColorRect = $TransitionLayer
 var _transitioning: bool = false
 var _pending_transition: bool = false
@@ -283,6 +284,14 @@ func _build_stats_bar(data: Dictionary) -> void:
 		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL],
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0)))], COLOR_GREEN],
 	]
+	var damaged_modules := int(ship.get("damaged_modules", 0))
+	if damaged_modules > 0:
+		var worst := clampf(float(ship.get("worst_module_condition", 1.0)), 0.0, 1.0)
+		stats.append([
+			_tr("ui.label.module_status", "Modules"),
+			"%d · %d%%" % [damaged_modules, int(round(worst * 100.0))],
+			COLOR_RED if worst <= 0.0 else COLOR_BRASS,
+		])
 	for index in stats.size():
 		if index > 0:
 			row.add_child(VSeparator.new())
@@ -629,6 +638,7 @@ func _screen_shipyard(data: Dictionary) -> void:
 		return
 	var screen: Variant = SHIPYARD_SCREEN_SCENE.instantiate()
 	screen.refit_mode_changed.connect(func(active: bool): _shipyard_refit = active)
+	screen.refit_category_changed.connect(func(category: String): _shipyard_category = category)
 	screen.bind(_shipyard_model(result["data"], data), Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
 	_root_box.add_child(screen)
@@ -637,6 +647,10 @@ func _screen_shipyard(data: Dictionary) -> void:
 func _shipyard_model(yard: Dictionary, port_data: Dictionary) -> Dictionary:
 	var model := yard.duplicate(true)
 	model["refit"] = _shipyard_refit
+	model["category"] = _shipyard_category
+	var ship_model: Dictionary = model.get("ship", {}).duplicate(true)
+	ship_model["hull_name"] = _definition_name(String(ship_model.get("hull_id", "")))
+	model["ship"] = ship_model
 	model["contracts"] = port_data.get("contracts", {}).duplicate(true)
 	model["victory"] = port_data.get("victory", {}).duplicate(true)
 	var warehouse: Dictionary = model.get("warehouse", {}).duplicate(true)

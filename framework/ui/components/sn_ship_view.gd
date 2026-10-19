@@ -4,8 +4,10 @@ extends Control
 ##
 ## Two modes share one coordinate space:
 ##   EXTERIOR — a side view of the current ship (procedural placeholder today).
-##   CUTAWAY  — a longitudinal section with one SNSlotTarget chip per slot, so
-##              owned free modules can be dragged straight onto a slot.
+##   CUTAWAY  — a textured longitudinal section (assets/ui/shipyard/ship_section.png)
+##              with one SNSlotTarget chip per slot, so owned free modules can be
+##              dragged straight onto a slot. When the texture is missing the
+##              built-in procedural section is used as a fallback.
 ##
 ## ## 2.5D integration contract
 ## `set_renderer(node)` swaps the procedural placeholder for a real renderer.
@@ -32,6 +34,9 @@ const HULL_MID := Color("30474b")
 const WATER := Color("10212a")
 const SLOT_H := 62.0
 const CARGO_SLOT_H := 58.0
+## Refit cross-section texture. Replace this PNG to reskin the whole cutaway;
+## the screen and slot logic never depend on how the section is drawn.
+const SECTION_TEXTURE_PATH := "res://assets/ui/shipyard/ship_section.png"
 
 var mode: int = Mode.EXTERIOR
 var _model: Dictionary = {}
@@ -39,13 +44,16 @@ var _slots: Array = []
 var _slot_targets: Array = []
 var _renderer: Node = null
 var _slot_layer: Control
+var _section_texture: Texture2D = null
 var _time := 0.0
 
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(520, 400)
+	if custom_minimum_size == Vector2.ZERO:
+		custom_minimum_size = Vector2(520, 400)
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	_load_section_texture()
 	_slot_layer = Control.new()
 	_slot_layer.name = "SlotLayer"
 	_slot_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -82,6 +90,21 @@ func set_renderer(node: Node) -> void:
 
 func has_renderer() -> bool:
 	return _renderer != null and is_instance_valid(_renderer)
+
+
+## True once the authored cross-section PNG is imported and available.
+func has_section_texture() -> bool:
+	return _section_texture != null
+
+
+func section_texture_size() -> Vector2:
+	return _section_texture.get_size() if _section_texture != null else Vector2.ZERO
+
+
+func _load_section_texture() -> void:
+	if not ResourceLoader.exists(SECTION_TEXTURE_PATH):
+		return
+	_section_texture = load(SECTION_TEXTURE_PATH) as Texture2D
 
 
 func set_ship_model(model: Dictionary) -> void:
@@ -156,8 +179,8 @@ func _layout_slots() -> void:
 			fixed.append(target)
 	var w := size.x
 	var h := size.y
-	_place_row(fixed, 16.0, w - 32.0, h * 0.63, SLOT_H, 8.0)
-	_place_row(cargo, w * 0.12, w * 0.76, h * 0.845, CARGO_SLOT_H, 8.0)
+	_place_row(fixed, 16.0, w - 32.0, h * 0.60, SLOT_H, 8.0)
+	_place_row(cargo, w * 0.12, w * 0.76, h * 0.82, CARGO_SLOT_H, 8.0)
 
 
 func _place_row(targets: Array, left: float, span: float, top: float, chip_h: float, gap: float) -> void:
@@ -205,13 +228,6 @@ func _draw() -> void:
 		_draw_cutaway()
 	else:
 		_draw_exterior()
-	_draw_caption()
-
-
-func _draw_caption() -> void:
-	var font := get_theme_default_font()
-	var text := "纵剖图 · 把右侧拥有的部件拖到槽位" if mode == Mode.CUTAWAY else "船体侧视 · 占位渲染，2.5D 可通过 SNShipView.set_renderer() 接入"
-	draw_string(font, Vector2(16.0, size.y - 12.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, MUTED)
 
 
 func _draw_exterior() -> void:
@@ -272,6 +288,29 @@ func _draw_exterior() -> void:
 
 
 func _draw_cutaway() -> void:
+	if _section_texture != null:
+		_draw_section_texture()
+	else:
+		_draw_cutaway_placeholder()
+	_draw_slot_leaders()
+
+
+## Authored PNG section, cropped to cover the stage while keeping its aspect.
+## The whole refit view is a texture: no runtime hull/section geometry here.
+func _draw_section_texture() -> void:
+	var texture_size := _section_texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return
+	var destination := Rect2(Vector2.ZERO, size)
+	var cover_scale := maxf(destination.size.x / texture_size.x, destination.size.y / texture_size.y)
+	var source_size := destination.size / cover_scale
+	var source_position := (texture_size - source_size) * 0.5
+	draw_texture_rect_region(_section_texture, destination, Rect2(source_position, source_size))
+	draw_rect(destination, Color(0.02, 0.055, 0.065, 0.18))
+
+
+## Procedural fallback used only before the section texture is imported.
+func _draw_cutaway_placeholder() -> void:
 	var w := size.x
 	var h := size.y
 	var deck_y := h * 0.30
@@ -294,7 +333,6 @@ func _draw_cutaway() -> void:
 	draw_colored_polygon(inner, HULL_MID)
 	_draw_polyline_closed(hull, BRASS, 2.0)
 	draw_line(Vector2(left, deck_y), Vector2(right, deck_y), BRASS, 3.0)
-	# Deck structures keep the cutaway readable as the same ship as the side view.
 	var cabin := Rect2(w * 0.36, deck_y - h * 0.115, w * 0.26, h * 0.115)
 	draw_rect(cabin, HULL_MID)
 	draw_rect(cabin, BRASS, false, 1.5)
@@ -308,21 +346,21 @@ func _draw_cutaway() -> void:
 		Vector2(w * 0.72, deck_y - h * 0.10),
 	])
 	draw_colored_polygon(flag, TEAL)
-	# Compartments.
 	var sections := [0.18, 0.36, 0.54, 0.70, 0.86]
 	for fraction in sections:
 		var x := left + (right - left) * float(fraction)
 		draw_line(Vector2(x, deck_y + 2.0), Vector2(x, keel_y - 2.0), Color(TEAL, 0.35), 1.0)
-	# Boiler drum in the engine compartment.
 	var boiler_center := Vector2(left + (right - left) * 0.30, (deck_y + keel_y) * 0.55)
 	draw_circle(boiler_center, h * 0.055, HULL_MID)
 	draw_arc(boiler_center, h * 0.055, 0.0, TAU, 24, BRASS, 1.5)
-	# Paddle wheel cut.
 	var wheel_center := Vector2(left + (right - left) * 0.10, keel_y - h * 0.02)
 	draw_circle(wheel_center, h * 0.055, HULL_MID)
 	draw_arc(wheel_center, h * 0.055, 0.0, TAU, 24, TEAL, 1.5)
 	draw_line(Vector2(left, keel_y), Vector2(right, keel_y), TEAL, 1.0)
-	# Leader lines from slot chips towards their compartment.
+
+
+## Leader lines from slot chips towards their compartment in the texture.
+func _draw_slot_leaders() -> void:
 	if _slot_targets.is_empty():
 		return
 	var cargo_count := 0
