@@ -1,8 +1,8 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T13:24:48.566Z",
-  "commit": "d1e46f7",
+  "generated_at": "2026-10-19T13:28:35.290Z",
+  "commit": "0883b5d",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "42ba4875ed3d70de3752b1b86b2aec7f86a793fb5624d563704a4c13f21e2c84",
+      "sha256": "2245b69996804a9c06fb715f992d79591ae66311d54958c85e2643ef6eea036f",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1242,7 +1242,7 @@
     },
     {
       "source": "export_presets.cfg",
-      "sha256": "01298bbb9cc6e762dd31262dd55cbf6d34029098e70567445593a9d546e70da1",
+      "sha256": "2f7d37ac63775861c8398ea379819aca8975bf0bf22a69f3ced78868b612029f",
       "doc": "docs/static/export_presets.cfg.md",
       "status": "documented"
     },
@@ -2377,7 +2377,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "c0a1c31a55cce728aefa10aa24e9bb4e72ffe50fa184f7cf630aaf9a069cd7f9",
+      "sha256": "a4b67b2d15d037463e29bc51ffd3298c05f837825b3d1d1a358639b7cf4ff8ec",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -2403,7 +2403,7 @@
     },
     {
       "source": "project.godot",
-      "sha256": "4fe602b6398a6e3da5decfce78a05c4f67d8814a274387794e7cff1f90ae4a44",
+      "sha256": "f5711fc2312e8f6f7ef76c773b06fb7c08533b47a6192bd0975b73b44a5f254a",
       "doc": "docs/static/project.godot.md",
       "status": "documented"
     },

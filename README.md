@@ -98,8 +98,8 @@ godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/co
 推送 `v*` tag 会触发 `.github/workflows/release.yml`：跑测试、导出 Windows/Linux、打包 Core、生成 SHA256，并创建 GitHub Release。带 `-dev.` 的 tag 自动标记为预发布。
 
 ```powershell
-git tag -a v0.1.0-dev.1 -m "Steam Navigator v0.1.0-dev.1"
-git push origin v0.1.0-dev.1
+git tag -a v0.2.0-dev.1 -m "Steam Navigator v0.2.0-dev.1"
+git push origin v0.2.0-dev.1
 ```
 
 发布资产：`SteamNavigator-<tag>-windows.zip`、`SteamNavigator-<tag>-linux.zip`、`core-1.0.0.snavmod.zip`、`SHA256SUMS.txt`。

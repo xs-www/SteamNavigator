@@ -32,7 +32,7 @@ const COLOR_TEAL := Color("76aaa7")
 const COLOR_RED := Color("c36b53")
 const COLOR_GREEN := Color("76aa8c")
 const DEV_TEAM := "PlayThought Team"
-const GAME_VERSION_FALLBACK := "0.1.0"
+const GAME_VERSION_FALLBACK := "0.2.0"
 
 const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]
 var _context: AppContext = null
