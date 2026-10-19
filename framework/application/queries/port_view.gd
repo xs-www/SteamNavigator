@@ -15,6 +15,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 
 	var market_rows: Array = []
 	var market := MarketOps.market_for(state, current_port)
+	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 	var item_ids: Array = market.keys()
 	item_ids.sort()
 	for item_id in item_ids:
@@ -89,8 +90,10 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"name_key": String(port_data.get("name_key", current_port)),
 			"description_key": String(port_data.get("description_key", "")),
 			"source_mod": String(port_data.get("source_mod", "")),
+			"archetype_id": String(port_data.get("archetype_id", "")),
 			"banner_asset": String(port_data.get("banner_asset", "")),
 			"facilities": Array(port_data.get("facilities", [])),
+			"size": String(port_data.get("size", "medium")),
 			"tags": Array(port_data.get("tags", [])),
 			"visited": bool(port_data.get("visited", false)),
 		},
@@ -102,7 +105,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"market": market_rows,
 		"destinations": destinations,
 		"strategies": strategies,
-		"ship": _ship_view(hub, state, stats, ship),
+		"ship": _ship_view(hub, state, stats, ship, hull, context),
 		"contracts": {
 			"main": _contract_view(hub, state, main_contract),
 			"main_offer": _contract_view(hub, state, main_offer),
@@ -145,7 +148,7 @@ static func _completed_main_count(hub: RegistryHub, state: GameState) -> int:
 	return count
 
 
-static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, ship: Dictionary) -> Dictionary:
+static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, ship: Dictionary, hull, context) -> Dictionary:
 	var modules: Array = []
 	var slots := {
 		"hull": "hull_id",
@@ -208,6 +211,8 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 		"hull_id": String(ship.get("hull_id", "")),
 		"boiler_id": String(ship.get("boiler_id", "")),
 		"modules": modules,
+		"hull_model_key": String(hull.information.get("model", "")) if hull != null else "",
+		"hull_model_path": _asset_path(context, hull.asset_uri("model")) if hull != null else "",
 		"transit_modules": transit_entries,
 		"transit_weight": WarehouseOps.transit_module_weight(hub, ship),
 		"cargo": cargo,
@@ -243,6 +248,16 @@ static func _disabled_module_count(ship: Dictionary) -> int:
 		if bool(row["disabled"]):
 			count += 1
 	return count
+
+
+## Resolves a content asset uri (`asset://<mod>/<key>`) to the mounted physical
+## path for the presentation layer. Empty when the asset is missing.
+static func _asset_path(context, uri: String) -> String:
+	if uri.is_empty() or context == null:
+		return ""
+	if context.assets.has(uri):
+		return context.assets.resolve(uri)
+	return ""
 
 
 static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant) -> Variant:
