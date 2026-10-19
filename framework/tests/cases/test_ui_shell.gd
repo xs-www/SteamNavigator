@@ -77,6 +77,14 @@ func _label_texts(root: Node, out: Array = []) -> Array:
 	return out
 
 
+func _texture_rects(root: Node, out: Array = []) -> Array:
+	for child in root.get_children():
+		if child is TextureRect:
+			out.append(child)
+		_texture_rects(child, out)
+	return out
+
+
 ## Every `push_notice(key, …)` written by the game code, so a missing or
 ## mis-ordered localization entry fails here instead of showing a raw template to
 ## the player. The keys are read from the domain/application sources (test
@@ -594,9 +602,36 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.log", "")), "the compact chrome keeps the diagnostics button")
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.refresh", "")), "the compact chrome keeps the refresh button")
 
+	# HUD icons: optional content icons are resolved through AssetService by bare
+	# key (`icon.money`) so the framework never hardcodes a mod namespace. A pack
+	# without those keys still works: the chips render text-only.
+	var money_key: String = context.assets.find_key("icon.money")
+	assert_false(money_key.is_empty(), "AssetService.find_key resolves a bare HUD icon key")
+	assert_true(context.assets.has(money_key), "the resolved money icon exists in the mounted pack")
+	var coal_key: String = context.assets.find_key("icon.coal")
+	var water_key: String = context.assets.find_key("icon.water")
+	assert_false(coal_key.is_empty(), "the coal HUD icon resolves")
+	assert_false(water_key.is_empty(), "the water HUD icon resolves")
+	var hud_icons := _texture_rects(chrome)
+	assert_true(hud_icons.size() >= 3, "the chrome paints money/coal/water icons (%d texture nodes)" % hud_icons.size())
+	for icon_node in hud_icons:
+		assert_not_null((icon_node as TextureRect).texture, "every HUD icon node has a loaded texture")
+
+	# Compact (960-wide) layout helpers: narrower sign plates and tighter edge
+	# margins. Headless keeps the 1440-wide reference layout (the dummy viewport is
+	# 100x100), so the assertions above stay deterministic.
+	assert_true(shell._compact_chrome_for_width(960.0), "960-wide windows take the compact chrome")
+	assert_true(shell._compact_chrome_for_width(1179.0), "widths under the threshold are compact")
+	assert_false(shell._compact_chrome_for_width(1440.0), "the 1440-wide reference layout is not compact")
+	assert_eq(shell._port_sign_size_for_width(960.0), Vector2(148.0, 38.0), "compact sign plates are 148x38")
+	assert_eq(shell._port_sign_size_for_width(1440.0), Vector2(172.0, 42.0), "reference sign plates are 172x42")
+	assert_almost_eq(shell._port_sign_margin_for_width(960.0), 14.0, 0.001, "compact signs sit 14 px from the edge")
+	assert_almost_eq(shell._port_sign_margin_for_width(1440.0), 20.0, 0.001, "reference signs sit 20 px from the edge")
+
 	# Edge signboards: fixed left/right columns, one per present facility plus
 	# the permanent voyage sign. Positions come from the camera projection, but
-	# the controls themselves are pinned to the screen edges.
+	# the controls themselves are pinned to the screen edges and drawn as themed
+	# wood/iron plates (the Button component keeps text/accessibility semantics).
 	host.stage_viewport().size = Vector2i(1440, 900)
 	shell._layout_port_hotspots()
 	var layer_width: float = shell._port_hotspot_layer.size.x
@@ -614,6 +649,9 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 			if sign is Button:
 				var normalized: Vector2 = port_stage.facility_screen_anchor(String(facility))
 				var button := sign as Button
+				assert_true(button.has_method("configure"), "the %s sign uses the themed harbour-sign component" % facility)
+				if button.has_method("configure"):
+					assert_eq(int(button.get("arrow_direction")), -1 if normalized.x < 0.5 else 1, "the %s sign arrow points into the scene" % facility)
 				if normalized.x < 0.5:
 					assert_true(button.position.x < layer_width * 0.5, "%s sign sits in the left column" % facility)
 					assert_true(String(button.text).ends_with(" ▶"), "the left column points into the scene: %s" % String(button.text))

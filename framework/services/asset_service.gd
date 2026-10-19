@@ -59,6 +59,23 @@ func load_model(logical_key: String) -> Node3D:
 	return ContentAssetLoader.instantiate_model(path)
 
 
+## Resolves a bare asset key (`icon.money`) to the logical key of the first
+## mounted mod that declares it (`asset://core/icon.money`). Framework UI uses
+## this for optional, theme-level hints such as HUD icons: any content pack can
+## provide `icon.*` keys without the framework hardcoding a mod namespace.
+## Matching is deterministic (keys are scanned in sorted order) and returns ""
+## when no pack declares the key.
+func find_key(asset_key: String) -> String:
+	if asset_key.is_empty():
+		return ""
+	var sorted_keys := keys()
+	for logical_key in sorted_keys:
+		var text := String(logical_key)
+		if text.ends_with("/" + asset_key):
+			return text
+	return ""
+
+
 func has(logical_key: String) -> bool:
 	return _assets.has(logical_key) and FileAccess.file_exists(String(_assets[logical_key]))
 
