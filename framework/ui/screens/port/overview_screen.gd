@@ -5,6 +5,9 @@ extends VBoxContainer
 signal navigation_requested(screen_id: StringName, params: Dictionary)
 signal command_requested(command: StringName, params: Dictionary)
 signal map_port_clicked(port_id: String)
+## Requested when the player switches between the 2D overview and the 3D port
+## stage. The Shell owns the stage host; the page only expresses intent.
+signal stage_toggle_requested
 
 const MAP_CANVAS_SCENE := preload("res://framework/ui/components/map_canvas.tscn")
 const TEXT := Color("ece1c5")
@@ -19,6 +22,17 @@ var _tr: Callable
 func bind(vm: Dictionary, translate: Callable) -> void:
 	_tr = translate
 	_clear()
+	var stage_available := bool(vm.get("stage_available", false))
+	var stage_mode := bool(vm.get("stage_mode", false)) and stage_available
+	# 3D stage mode keeps the page nearly empty so the Shell's full-window stage
+	# shows through; the header, stats bar and navigation stay outside this page.
+	if stage_available:
+		add_child(_stage_control_row(stage_mode))
+	if stage_mode:
+		var spacer := Control.new()
+		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		add_child(spacer)
+		return
 	var hero := _port_hero(vm)
 	if hero != null: add_child(hero)
 	add_child(_map_panel(vm.get("map", {})))
@@ -27,6 +41,23 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	var right := VBoxContainer.new(); right.size_flags_horizontal = Control.SIZE_EXPAND_FILL; right.size_flags_stretch_ratio = 1.0; right.custom_minimum_size = Vector2(400, 0); columns.add_child(right)
 	left.add_child(_port_panel(vm)); left.add_child(_objective_panel(vm)); left.add_child(_notices_panel(vm))
 	right.add_child(_ship_summary_panel(vm)); right.add_child(_quick_actions_panel()); right.add_child(_finance_panel(vm))
+
+
+## One row above the content: opens/closes the Shell's 3D port stage.
+func _stage_control_row(stage_mode: bool) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var button := Button.new()
+	button.theme_type_variation = &"SNGhostButton"
+	button.text = (
+		_loc("ui.button.overview_back", "返回总览")
+		if stage_mode
+		else _loc("ui.button.port_stage", "俯瞰港口")
+	)
+	button.pressed.connect(func(): stage_toggle_requested.emit())
+	row.add_child(button)
+	row.add_child(_label(_loc("ui.hint.port_stage", "点击场景里的设施热点进入对应页面。"), 12, MUTED))
+	return row
 
 
 func _port_hero(vm: Dictionary) -> Control:

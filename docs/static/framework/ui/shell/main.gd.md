@@ -1,6 +1,6 @@
 # `framework/ui/shell/main.gd`
 
-> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主。
+> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；总览页的 3D 港口舞台宿主与 2D 设施热点层也由 Shell 持有（页面只发切换意图）。
 
 - 类型：GDScript 源文件
 
@@ -44,5 +44,24 @@
 - 反馈4：打造订单与在港等待迁入船厂改装态「杂项」页签：等待按钮按 wait_options 生成 6/12/24 小时 `port.wait`，总览快捷入口同样提供等待按钮；模块类分类内保留「按配方打造」，打造按钮文案带工时。
 - 反馈2：补给卡绑定 SNSupplyCard 时传入 _tr 回调，显示“上限损失/剩余可装”本地化文案。
 - `_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。
+- 总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 是 UI 会话状态，不写存档。
+- 舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；2D 热点层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有热点按钮吃点击。
+- `_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空热点。
+- `_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/palette/landmark_path`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`（替代原来内联在 `_overview_model` 的解析）。
+- 热点用 `facility_anchors()` → `facility_screen_anchor()` 投影成 136×36 的 `SNGhostButton`，按钮中心落在投影点；`_refresh_port_hotspots_soon()` 做两次 deferred 布局（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。
+- 加载失败 `_on_port_stage_fallback(reason)`：置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 模式、回退 2D、写状态提示 `ui.error.port_stage_unavailable` 并 deferred refresh。
+- 总览页在 stage 模式下只保留「返回总览」控制行 + expanding spacer，让全窗 3D 舞台露出；顶部 HUD/导航/状态条仍在页面外，不随切换重建。
+
+## 重点逻辑
+
+### `_sync_port_stage(data) / _ensure_port_stage_host()`
+
+- 显示条件 = `has_run && !at_sea && _active_screen == "overview" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，并把热点层置可见。
+- 宿主与热点层的层级通过 `move_child(..., $Background.get_index() + 1)` / `(..., $PageMargin.get_index() + 1)` 固定：3D 在背景之上、2D UI 之下；热点层在页面之后，透明区域点击落回页面。
+
+### `_layout_port_hotspots() / _on_port_hotspot(facility)`
+
+- 每次重排先清空旧按钮；只对 `facility_anchors()` 中设施生成热点，投影返回 `ZERO` 的跳过；按钮尺寸 136×36，位置为 `normalized × 层尺寸 - size/2`。
+- 点击热点查 `PORT_STAGE_FACILITY_SCREENS` 得到 screen id 后走 `_on_nav`，与顶部导航共用同一条页面切换路径；未知设施直接 return。
 
 模块索引：[framework/ui](../README.md)

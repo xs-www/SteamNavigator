@@ -35,6 +35,17 @@ const DEV_TEAM := "PlayThought Team"
 const GAME_VERSION_FALLBACK := "0.2.0"
 
 const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]
+## 2.5D port stage presented behind the overview page. Kept as a path (not a
+## preload) so a missing scene degrades to the 2D banner instead of a parse error.
+const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
+## Facility id -> page opened by the 2D hotspot drawn over the stage.
+const PORT_STAGE_FACILITY_SCREENS := {
+	"exchange": &"market",
+	"contracts": &"contracts",
+	"supply": &"supply",
+	"intel": &"intel",
+	"shipyard": &"shipyard",
+}
 var _context: AppContext = null
 @onready var _root_box: VBoxContainer = $PageMargin/PageScroll/RootBox
 var _last_port_view: Dictionary = {}
@@ -59,6 +70,11 @@ var _settlement_summary: Dictionary = {}
 var _victory_dismissed: bool = false
 var _shipyard_refit: bool = false
 var _shipyard_category: String = "hulls"
+## Overview 3D stage state. `_overview_stage_mode` is UI-session state only.
+var _overview_stage_mode: bool = false
+var _port_stage_load_failed: bool = false
+var _port_stage_host: SNStageHost = null
+var _port_hotspot_layer: Control = null
 @onready var _fade_layer: ColorRect = $TransitionLayer
 var _transitioning: bool = false
 var _pending_transition: bool = false
@@ -140,12 +156,14 @@ func _rebuild_ui() -> void:
 		_root_box.remove_child(child)
 		child.queue_free()
 	if _context == null:
+		_hide_port_stage()
 		_root_box.add_child(_label("Loading framework...", 20, COLOR_MUTED))
 		get_tree().create_timer(0.4).timeout.connect(_refresh)
 		return
 	_apply_settings_if_needed()
 	var app_view := _context.queries.execute(&"app.view")
 	if not bool(app_view.get("ok", false)):
+		_hide_port_stage()
 		_root_box.add_child(_label(_error_text(app_view), 18, COLOR_RED))
 		return
 	var app: Dictionary = app_view["data"]
@@ -153,12 +171,14 @@ func _rebuild_ui() -> void:
 	var has_run := bool(app.get("has_run", false))
 	_set_menu_visual(not has_run)
 	if not has_run:
+		_hide_port_stage()
 		_build_menu(app)
 		return
 	_build_header(app)
 
 	var port_result := _context.queries.execute(&"port.view")
 	if not bool(port_result.get("ok", false)):
+		_hide_port_stage()
 		_root_box.add_child(_label(_error_text(port_result), 18, COLOR_RED))
 		return
 	var data: Dictionary = port_result["data"]
@@ -170,12 +190,14 @@ func _rebuild_ui() -> void:
 	# only and never written to the save.
 	var victory := _victory_view()
 	if bool(victory.get("achieved", false)) and not _victory_dismissed:
+		_hide_port_stage()
 		_build_nav(data)
 		_build_status_banner()
 		_screen_victory(victory)
 		return
 
 	if bool(data.get("at_sea", false)):
+		_hide_port_stage()
 		_build_status_banner()
 		var voyage: Variant = data.get("voyage", null)
 		if voyage is Dictionary and voyage.get("event", null) is Dictionary:
@@ -207,6 +229,7 @@ func _rebuild_ui() -> void:
 			_screen_settlement(data)
 		_:
 			_screen_overview(data)
+	_sync_port_stage(data)
 
 
 ## ---------------------------------------------------------------------------
@@ -422,6 +445,7 @@ func _screen_overview(data: Dictionary) -> void:
 	screen.navigation_requested.connect(_on_screen_navigation)
 	screen.command_requested.connect(_run_command)
 	screen.map_port_clicked.connect(_on_map_port_clicked)
+	screen.stage_toggle_requested.connect(_on_overview_stage_toggle)
 	_root_box.add_child(screen)
 
 
@@ -432,13 +456,11 @@ func _overview_model(data: Dictionary) -> Dictionary:
 	for facility in port.get("facilities", []):
 		facilities.append(_facility_name(String(facility)))
 	model["facility_labels"] = facilities
-	model["banner_path"] = ""
-	var banner_key := String(port.get("banner_asset", ""))
-	var source_mod := String(port.get("source_mod", ""))
-	if not banner_key.is_empty() and not source_mod.is_empty():
-		var logical_key := "asset://%s/%s" % [source_mod, banner_key]
-		if _context.assets.has(logical_key):
-			model["banner_path"] = _context.assets.resolve(logical_key)
+	model["banner_path"] = _port_banner_path(data)
+	# 2.5D overview stage: availability is decided by the shell (scene present
+	# and not previously failed); mode is UI-session state.
+	model["stage_available"] = _port_stage_available()
+	model["stage_mode"] = _overview_stage_mode and _port_stage_available()
 	var map_result := _context.queries.execute(&"map.view")
 	if bool(map_result.get("ok", false)):
 		var map_data: Dictionary = map_result["data"].duplicate(true)
@@ -467,6 +489,202 @@ func _overview_model(data: Dictionary) -> Dictionary:
 		notice_texts.append(_notice_text(notice))
 	model["notice_texts"] = notice_texts
 	return model
+
+
+## ---------------------------------------------------------------------------
+## Overview 3D port stage (2.5D slice 3: page integration)
+## ---------------------------------------------------------------------------
+
+func _on_overview_stage_toggle() -> void:
+	if not _port_stage_available():
+		return
+	_overview_stage_mode = not _overview_stage_mode
+	_status_message = ""
+	_refresh()
+
+
+## The stage scene is loaded lazily; a failed load permanently falls back to the
+## 2D overview for this session instead of retrying on every refresh.
+func _port_stage_available() -> bool:
+	return not _port_stage_load_failed and ResourceLoader.exists(PORT_STAGE_SCENE_PATH)
+
+
+func _ensure_port_stage_host() -> void:
+	if _port_stage_host != null and is_instance_valid(_port_stage_host):
+		return
+	# Full-window 3D backdrop: directly above the flat Background and below every
+	# UI layer, so the existing header / stats bar / navigation stay unchanged.
+	_port_stage_host = SNStageHost.new()
+	_port_stage_host.name = "PortStageHost"
+	_port_stage_host.auto_load = false
+	_port_stage_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_port_stage_host.fallback_requested.connect(_on_port_stage_fallback)
+	add_child(_port_stage_host)
+	_port_stage_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	move_child(_port_stage_host, $Background.get_index() + 1)
+	_port_stage_host.set_stage_visible(false)
+
+	# 2D hotspots over the stage: transparent ghost buttons laid out from the
+	# PortStage camera projection, never 3D raycasts. The layer itself ignores the
+	# mouse so clicks outside the buttons fall through to the normal page.
+	_port_hotspot_layer = Control.new()
+	_port_hotspot_layer.name = "PortStageHotspots"
+	_port_hotspot_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_port_hotspot_layer)
+	_port_hotspot_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	move_child(_port_hotspot_layer, $PageMargin.get_index() + 1)
+	_port_hotspot_layer.visible = false
+	if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
+		get_viewport().size_changed.connect(_on_viewport_size_changed)
+
+
+func _sync_port_stage(data: Dictionary) -> void:
+	var should_show := (
+		bool(data.get("has_run", false))
+		and not bool(data.get("at_sea", false))
+		and _active_screen == "overview"
+		and _overview_stage_mode
+		and _port_stage_available()
+	)
+	if not should_show:
+		_hide_port_stage()
+		return
+	_ensure_port_stage_host()
+	if _port_stage_host == null:
+		_hide_port_stage()
+		return
+	if not _port_stage_host.has_stage():
+		if not _port_stage_host.load_stage(PORT_STAGE_SCENE_PATH):
+			_on_port_stage_fallback("stage_scene_load_failed")
+			return
+	_port_stage_host.bind_view_model(_port_stage_payload(data))
+	_port_stage_host.set_stage_visible(true)
+	if _port_hotspot_layer != null:
+		_port_hotspot_layer.visible = true
+	_refresh_port_hotspots_soon()
+
+
+func _hide_port_stage() -> void:
+	if _port_stage_host != null and is_instance_valid(_port_stage_host):
+		_port_stage_host.set_stage_visible(false)
+	if _port_hotspot_layer != null and is_instance_valid(_port_hotspot_layer):
+		_port_hotspot_layer.visible = false
+		for child in _port_hotspot_layer.get_children():
+			_port_hotspot_layer.remove_child(child)
+			child.queue_free()
+
+
+func _port_stage_active() -> bool:
+	return (
+		_overview_stage_mode
+		and _active_screen == "overview"
+		and _port_stage_host != null
+		and is_instance_valid(_port_stage_host)
+		and _port_stage_host.is_stage_visible()
+	)
+
+
+func _port_stage_payload(data: Dictionary) -> Dictionary:
+	var port: Dictionary = data.get("current_port", {})
+	var ship: Dictionary = data.get("ship", {})
+	var port_payload := {
+		"id": String(port.get("id", "")),
+		"size": String(port.get("size", "medium")),
+		"facilities": Array(port.get("facilities", [])).duplicate(),
+		"banner_path": _port_banner_path(data),
+	}
+	# Optional diorama inputs are forwarded only when present, so the stage keeps
+	# its defaults until content exposes them.
+	if port.get("facility_visuals", null) is Dictionary:
+		port_payload["facility_visuals"] = (port["facility_visuals"] as Dictionary).duplicate(true)
+	if port.get("palette", null) is Dictionary:
+		port_payload["palette"] = (port["palette"] as Dictionary).duplicate(true)
+	if not String(port.get("landmark_path", "")).is_empty():
+		port_payload["landmark_path"] = String(port.get("landmark_path", ""))
+	return {
+		"port": port_payload,
+		"ship": {
+			"hull_model_path": String(ship.get("hull_model_path", "")),
+			"hull_tier": int(ship.get("hull_tier", 1)),
+		},
+	}
+
+
+## Resolved physical path of the port banner (content-mod raw PNG) or "".
+func _port_banner_path(data: Dictionary) -> String:
+	var port: Dictionary = data.get("current_port", {})
+	var banner_key := String(port.get("banner_asset", ""))
+	var source_mod := String(port.get("source_mod", ""))
+	if banner_key.is_empty() or source_mod.is_empty() or _context == null:
+		return ""
+	var logical_key := "asset://%s/%s" % [source_mod, banner_key]
+	if _context.assets.has(logical_key):
+		return _context.assets.resolve(logical_key)
+	return ""
+
+
+func _on_port_stage_fallback(reason: String) -> void:
+	if _port_stage_load_failed:
+		return
+	_port_stage_load_failed = true
+	_overview_stage_mode = false
+	_hide_port_stage()
+	push_warning("PortStage unavailable (%s), falling back to the 2D overview" % reason)
+	_set_status(_tr("ui.error.port_stage_unavailable", "3D port stage unavailable, showing the 2D overview."), true)
+	_refresh.call_deferred()
+
+
+func _on_viewport_size_changed() -> void:
+	if _port_stage_active():
+		_refresh_port_hotspots_soon()
+
+
+## Two deferred passes: the first runs after the container re-layout, the second
+## catches the SubViewport resize that the stage uses for camera projection.
+func _refresh_port_hotspots_soon() -> void:
+	_layout_port_hotspots.call_deferred()
+	_delayed_port_hotspot_pass.call_deferred()
+
+
+func _delayed_port_hotspot_pass() -> void:
+	_layout_port_hotspots.call_deferred()
+
+
+func _layout_port_hotspots() -> void:
+	if _port_hotspot_layer == null or not is_instance_valid(_port_hotspot_layer):
+		return
+	for child in _port_hotspot_layer.get_children():
+		_port_hotspot_layer.remove_child(child)
+		child.queue_free()
+	if not _port_stage_active():
+		return
+	var stage := _port_stage_host.current_stage()
+	if stage == null or not stage.has_method("facility_anchors"):
+		return
+	var anchors: Dictionary = stage.facility_anchors()
+	var layer_size := _port_hotspot_layer.size
+	if layer_size.x <= 0.0 or layer_size.y <= 0.0:
+		layer_size = get_viewport_rect().size
+	for raw_facility in anchors.keys():
+		var facility := String(raw_facility)
+		var normalized: Vector2 = stage.facility_screen_anchor(facility)
+		if normalized == Vector2.ZERO:
+			continue
+		var button := _button(_facility_name(facility), _on_port_hotspot.bind(facility))
+		button.name = "Hotspot_%s" % facility
+		button.theme_type_variation = &"SNGhostButton"
+		button.custom_minimum_size = Vector2(136, 36)
+		button.size = Vector2(136, 36)
+		button.tooltip_text = _tr("ui.hint.port_hotspot", "Open this facility")
+		button.position = Vector2(normalized.x * layer_size.x, normalized.y * layer_size.y) - button.size * 0.5
+		_port_hotspot_layer.add_child(button)
+
+
+func _on_port_hotspot(facility: String) -> void:
+	var screen_id: StringName = PORT_STAGE_FACILITY_SCREENS.get(facility, &"")
+	if screen_id == &"":
+		return
+	_on_nav(String(screen_id))
 
 
 ## Renders one notice: its localized template filled with the parameters recorded

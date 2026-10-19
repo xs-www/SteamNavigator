@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_ui_shell.gd`
 
-> 作用：迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化。
+> 作用：迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖总览页 3D 港口舞台与 2D 设施热点（2.5D 第三切片）。
 
 - 类型：GDScript 源文件
 
@@ -17,6 +17,7 @@
 | `test_intel_screen_renders_the_port_comparison_table() -> void` | L401 |
 | `test_notice_log_renders_filled_localized_text() -> void` | L448 |
 | `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L504 |
+| `test_overview_can_show_the_3d_port_stage_with_facility_hotspots() -> void` | L539 |
 
 ## 契约与约束
 
@@ -31,5 +32,7 @@
 - 覆盖「航行记录」：真实下单 + 等待后在 zh 与 en 两种 locale 下逐行断言通报无 `%s/%d` 残留、无裸键，并与**逐语言写死的期望句子**相等（模板槽位互换照样能渲染，只有字面期望能抓住「某一种语言的文案说反了」；en 只写错顺序时该用例会失败）。
 - 扫描 domain/application 源码里所有 `push_notice("…")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。
 - 组件按路径 preload，不依赖编辑器全局类缓存。
+- 总览 3D 舞台用例（`test_overview_can_show_the_3d_port_stage_with_facility_hotspots`）：seed 5205 真实挂载外壳 → 切到 overview 断言默认 2D、`_port_stage_available()` 为真；调 `_on_overview_stage_toggle()` 后断言 `_overview_stage_mode`、宿主可见、挂载 `PortStage`、`stage_id()=="port"`、设施数 = `_last_port_view.current_port.facilities`、`has_ship()`、`_port_stage_active()`。
+- 同一用例断言 2D 热点与页面共存：视口设 1440×900 后 `_layout_port_hotspots()`，热点 Button 数 = `facility_count()`，且 2D 总览页仍挂载；离开总览到市场隐藏舞台，返回恢复，再 toggle 关闭后宿主隐藏。
 
 模块索引：[framework/tests](../README.md)

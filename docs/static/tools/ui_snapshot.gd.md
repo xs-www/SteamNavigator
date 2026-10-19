@@ -1,6 +1,6 @@
 # `tools/ui_snapshot.gd`
 
-> 作用：船厂 UI 截图验收（真实渲染）：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取正常态 / 改装态 / 每个分类并断言模式与分类记忆。
+> 作用：真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取总览页 3D 港口舞台（含 2D 设施热点）。
 
 - 类型：GDScript 源文件
 
@@ -8,13 +8,14 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `_init() -> void` | L55 |
+| `_init() -> void` | L60 |
 
 ## 契约与约束
 
 - 必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。
-- 参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit`。
+- 参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit` / `--overview-stage`。
 - `--damage=slot[:index]:ratio` 在 run.start 后用 `ShipModules.damage()` 损坏模块实例，额外截取 `shipyard_normal_damaged` / `shipyard_refit_damaged` / `supply_damaged`；只影响截图进程，不进入游戏逻辑。
+- `--overview-stage`：切到总览 → 调 `_on_overview_stage_toggle()` → 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、热点 Button 数 > 0 → 保存 `overview_port_stage.png`。
 - 进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用。
 - 纯色画面判定为失败；120 s watchdog 防止协程中断挂住窗口；成功退出码 0，失败 1。
 - 只写 `docs/design/screenshots/`，不修改游戏状态或源码。

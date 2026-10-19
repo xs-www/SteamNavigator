@@ -22,11 +22,14 @@ extends SceneTree
 ##   --category=cargo_modules,misc   改装态额外按分类各截一张
 ##   --damage=boiler:0.5[,cargo:0.4] 先损坏指定模块实例，再额外截取受损状态的
 ##                                   船厂正常态 / 改装态 / 补给维修页
+##   --overview-stage                额外切到总览页并打开 3D 港口舞台，截取
+##                                   overview_port_stage.png（含 2D 设施热点）
 ##   --skip-refit                    只截正常态
 ## 任一截图失败或画面为空（纯色）时以退出码 1 结束，方便 CI/验收脚本判断。
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
+const OVERVIEW_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/overview_screen.gd")
 const SN_SHIP_VIEW_SCRIPT := preload("res://framework/ui/components/sn_ship_view.gd")
 const STEADY_BUILD := "core:starting_build/steady"
 const DEFAULT_SEED := 5201
@@ -47,6 +50,8 @@ var _window := DEFAULT_WINDOW
 ## 额外截图的分类（--category=cargo_modules,misc）。
 var _categories: Array[String] = ["cargo_modules", "misc"]
 var _skip_refit := false
+## 是否额外截取总览页的 3D 港口舞台。
+var _overview_stage := false
 ## 截图前要损坏的模块实例：{"slot": "boiler", "index": 0, "ratio": 0.5}。
 var _damage_targets: Array = []
 var _saved: Array[String] = []
@@ -163,6 +168,31 @@ func _run() -> void:
 		shell._refresh()
 		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
 		await _capture(_path("supply_damaged.png"))
+
+	if _overview_stage:
+		shell._active_screen = "overview"
+		shell._refresh()
+		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		var overview := _node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT)
+		_expect(overview != null, "总览页已挂载")
+		_expect(bool(shell._port_stage_available()), "港口舞台场景存在")
+		shell._on_overview_stage_toggle()
+		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		_expect(bool(shell._overview_stage_mode), "总览进入 3D 港口舞台模式")
+		var port_host: SNStageHost = shell._port_stage_host
+		_expect(port_host != null and port_host.is_stage_visible(), "PortStage 宿主可见")
+		var port_stage: Variant = port_host.current_stage() if port_host != null else null
+		_expect(port_stage is PortStage, "挂载的是 PortStage 场景")
+		if port_stage is PortStage:
+			_expect(int(port_stage.facility_count()) > 0, "港口舞台装配了设施")
+			_expect(bool(port_stage.has_ship()), "港口舞台挂载了玩家船")
+		var hotspot_buttons := 0
+		if shell._port_hotspot_layer != null:
+			for child in shell._port_hotspot_layer.get_children():
+				if child is Button:
+					hotspot_buttons += 1
+		_expect(hotspot_buttons > 0, "总览舞台生成了 2D 设施热点（%d 个）" % hotspot_buttons)
+		await _capture(_path("overview_port_stage.png"))
 
 	await _teardown(shell)
 	_finish()
@@ -375,6 +405,8 @@ func _parse_args() -> void:
 					_categories.append(category)
 		elif text == "--skip-refit":
 			_skip_refit = true
+		elif text == "--overview-stage":
+			_overview_stage = true
 		elif text.begins_with("--damage="):
 			for part in text.get_slice("=", 1).split(",", false):
 				var pieces := String(part).strip_edges().split(":", false)

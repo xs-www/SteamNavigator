@@ -531,3 +531,76 @@ func test_every_pushed_notice_key_is_localized_in_both_languages() -> void:
 					key in LITERAL_EXPECTED_NOTICE_KEYS,
 					"%s has several slots, so test_notice_log_renders_filled_localized_text must spell out its sentence per language" % key
 				)
+
+
+## 2.5D overview stage: the Shell owns the full-window stage host and the 2D
+## hotspot layer; the overview page only switches its own content density. The
+## 2D shell (header/stats/navigation) must keep working across the switch.
+func test_overview_can_show_the_3d_port_stage_with_facility_hotspots() -> void:
+	var bundle := _mount(5205)
+	var shell: Control = bundle["shell"]
+	_goto(shell, "overview")
+	assert_true(bool(shell._port_stage_available()), "the port stage scene is available in this build")
+	assert_false(bool(shell._overview_stage_mode), "the 2D overview is the default")
+	# The page exposes the switch; pressing it goes through the same handler the
+	# shell uses, so the page <-> shell wiring is covered too.
+	var toggle := _button_by_text(shell._root_box, shell._tr("ui.button.port_stage", "俯瞰港口"))
+	assert_not_null(toggle, "the overview page exposes the 3D stage toggle")
+	if toggle != null:
+		toggle.emit_signal("pressed")
+	else:
+		shell._on_overview_stage_toggle()
+	assert_true(bool(shell._overview_stage_mode), "the overview stage mode is enabled")
+	var host: SNStageHost = shell._port_stage_host
+	assert_not_null(host, "the shell mounts a stage host")
+	if host == null:
+		_unmount(bundle)
+		return
+	assert_true(host.is_stage_visible() and host.visible, "the 3D stage host is visible")
+	var stage := host.current_stage()
+	assert_true(stage is PortStage, "the mounted stage is a PortStage")
+	if not (stage is PortStage):
+		_unmount(bundle)
+		return
+	assert_eq(String(host.stage_id()), "port", "the overview uses the port stage id")
+	var port_stage := stage as PortStage
+	var facilities: Array = shell._last_port_view.get("current_port", {}).get("facilities", [])
+	assert_eq(int(port_stage.facility_count()), facilities.size(), "every present facility is assembled in the stage")
+	assert_true(bool(port_stage.has_ship()), "the current hull is mounted in the scene")
+	assert_true(bool(shell._port_stage_active()), "the shell reports the stage as active on the overview")
+	# Hotspots are 2D controls produced from camera-projected facility anchors.
+	host.stage_viewport().size = Vector2i(1440, 900)
+	shell._layout_port_hotspots()
+	var hotspots := 0
+	for child in shell._port_hotspot_layer.get_children():
+		if child is Button:
+			hotspots += 1
+	assert_eq(hotspots, int(port_stage.facility_count()), "one 2D hotspot per present facility")
+	# The 2D shell is still mounted next to the stage.
+	assert_eq(_nodes_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT).size(), 1, "the 2D overview page is still mounted")
+	# Navigating away hides the 3D stage; the regular page takes over.
+	_goto(shell, "intel")
+	assert_false(host.visible, "leaving the overview hides the 3D stage")
+	assert_eq(_nodes_with_script(shell._root_box, INTEL_SCREEN_SCRIPT).size(), 1, "the intel page is mounted")
+	# Back to the overview with stage mode still on, then switch it off via the
+	# page's own return control.
+	_goto(shell, "overview")
+	assert_true(host.is_stage_visible(), "returning to the overview restores the stage")
+	var back := _button_by_text(shell._root_box, shell._tr("ui.button.overview_back", "返回总览"))
+	assert_not_null(back, "stage mode shows a return-to-overview control")
+	if back != null:
+		back.emit_signal("pressed")
+	else:
+		shell._on_overview_stage_toggle()
+	assert_false(bool(shell._overview_stage_mode), "the stage mode can be switched off again")
+	assert_false(host.visible, "the 2D overview hides the stage host")
+	# Re-open the stage and click a facility hotspot. The hotspot emits the same
+	# navigation intent as the top navigation, so exchange must open the market.
+	shell._on_overview_stage_toggle()
+	host.stage_viewport().size = Vector2i(1440, 900)
+	shell._layout_port_hotspots()
+	var exchange_hotspot: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_exchange")
+	if exchange_hotspot is Button:
+		(exchange_hotspot as Button).emit_signal("pressed")
+		assert_eq(String(shell._active_screen), "market", "clicking the exchange hotspot opens the market page")
+	_unmount(bundle)

@@ -870,7 +870,7 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/shell/main.gd": {
-    role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主。",
+    role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；总览页的 3D 港口舞台宿主与 2D 设施热点层也由 Shell 持有（页面只发切换意图）。",
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
       "顶部信息条在船只存在受损部件时追加「部件 N · NN%」chip（来自 port.view.ship 的 damaged_modules / worst_module_condition），健康时不占位；chip 颜色在失效时为红。",
@@ -909,8 +909,25 @@ export const FILE_DOCS = {
       "反馈3：情报页用 SNIntelTable 渲染 intel.view 的 columns/rows 矩阵（含未知港口列），替代旧的逐港商品表格。",
       "反馈4：打造订单与在港等待迁入船厂改装态「杂项」页签：等待按钮按 wait_options 生成 6/12/24 小时 `port.wait`，总览快捷入口同样提供等待按钮；模块类分类内保留「按配方打造」，打造按钮文案带工时。",
       "反馈2：补给卡绑定 SNSupplyCard 时传入 _tr 回调，显示“上限损失/剩余可装”本地化文案。",
-      "`_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。"
-    ]
+      "`_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。",
+      "总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 是 UI 会话状态，不写存档。",
+      "舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；2D 热点层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有热点按钮吃点击。",
+      "`_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空热点。",
+      "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/palette/landmark_path`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`（替代原来内联在 `_overview_model` 的解析）。",
+      "热点用 `facility_anchors()` → `facility_screen_anchor()` 投影成 136×36 的 `SNGhostButton`，按钮中心落在投影点；`_refresh_port_hotspots_soon()` 做两次 deferred 布局（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。",
+      "加载失败 `_on_port_stage_fallback(reason)`：置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 模式、回退 2D、写状态提示 `ui.error.port_stage_unavailable` 并 deferred refresh。",
+      "总览页在 stage 模式下只保留「返回总览」控制行 + expanding spacer，让全窗 3D 舞台露出；顶部 HUD/导航/状态条仍在页面外，不随切换重建。"
+    ],
+    l2: {
+      "_sync_port_stage(data) / _ensure_port_stage_host()": [
+        "显示条件 = `has_run && !at_sea && _active_screen == \"overview\" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，并把热点层置可见。",
+        "宿主与热点层的层级通过 `move_child(..., $Background.get_index() + 1)` / `(..., $PageMargin.get_index() + 1)` 固定：3D 在背景之上、2D UI 之下；热点层在页面之后，透明区域点击落回页面。"
+      ],
+      "_layout_port_hotspots() / _on_port_hotspot(facility)": [
+        "每次重排先清空旧按钮；只对 `facility_anchors()` 中设施生成热点，投影返回 `ZERO` 的跳过；按钮尺寸 136×36，位置为 `normalized × 层尺寸 - size/2`。",
+        "点击热点查 `PORT_STAGE_FACILITY_SCREENS` 得到 screen id 后走 `_on_nav`，与顶部导航共用同一条页面切换路径；未知设施直接 return。"
+      ]
+    }
   },
 
   "framework/ui/screens/menu/main_menu_screen.gd": {
@@ -957,7 +974,7 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/screens/port/overview_screen.gd": {
-    role: "港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录。",
+    role: "港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；支持 2D 总览与 3D 港口舞台两种密度（stage 模式只留控制行，让 Shell 的全窗舞台露出）。",
     dependencies: ["MapCanvas", "SNResourceMeter", "SNBadge", "SNSectionHeader", "ClockService", "steam_navigator_theme.tres"],
     contracts: [
       "bind(vm, translate) 接收 Shell 组合后的 banner_path、map、current_port、contracts、victory、ship、debt 与 notice_texts，不访问 AppContext、QueryBus、注册表或资产服务。",
@@ -966,7 +983,11 @@ export const FILE_DOCS = {
       "航行记录使用 Shell 已安全填充并本地化的 notice_texts，页面不重复解释 GameState 通报参数。",
       "构筑胜利条件直接取 contracts 进度与 victory.conditions 展示，不在页面重新判断通关。",
       "目标清单等密集横向字段保持单行，避免右侧说明被压缩成逐字竖排并撑高卡片。",
-      "页面可重复 bind，每次清理旧节点；海图仍由独立 map_canvas.tscn 负责绘制。"
+      "页面可重复 bind，每次清理旧节点；海图仍由独立 map_canvas.tscn 负责绘制。",
+      "新增 `signal stage_toggle_requested`：页面只表达「切换 2D/3D 总览」意图；舞台宿主的创建、显隐与回退都在 Shell，页面不持有 SNStageHost。",
+      "`bind(vm, translate)` 读 `stage_available` / `stage_mode`（`stage_mode` 需同时 stage_available）；stage 模式下只添加 `_stage_control_row(true)` + expanding spacer 后直接返回，不渲染横幅/海图/面板。",
+      "普通模式在 hero 之前添加同一行 `_stage_control_row(false)`：按钮文案 `ui.button.port_stage`（俯瞰港口）/ stage 模式 `ui.button.overview_back`（返回总览），旁边是 `ui.hint.port_stage` 提示；按钮发 `stage_toggle_requested`。",
+      "`_stage_control_row(in_stage)` 是本次唯一新增的 UI；其余布局与数据契约不变，页面仍不访问 AppContext、QueryBus 或资产服务。"
     ]
   },
 
@@ -2006,7 +2027,7 @@ export const FILE_DOCS = {
   },
 
   "framework/tests/cases/test_ui_shell.gd": {
-    role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化。",
+    role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖总览页 3D 港口舞台与 2D 设施热点（2.5D 第三切片）。",
     contracts: [
       "首帧运行器让 `_ready` 正常投递，因此控件树（含 SNSectionHeader 等自行构建子节点的组件）与游戏内一致。",
       "覆盖信息条（当前港口 + 剩余载重/剩余舱容，反馈 5）、通关清单与两种提示分支（反馈 6）；期望值独立复算（RegistryHub 翻译 + ShipOps 重量/舱容 + printf），不使用被测 helper 自证。通关清单只在总览页渲染：船厂页断言不再出现 `ui.victory.plan_title`，改为出现「组件」分类入口。",
@@ -2018,7 +2039,9 @@ export const FILE_DOCS = {
       "覆盖补给页损失带：买煤后水的 meter.loss_value/cap_loss 与 baseline 跨度（反馈 2）、情报页 SNIntelTable 与未知港口掩码（反馈 3，列数对照 MapOps.ports）。",
       "覆盖「航行记录」：真实下单 + 等待后在 zh 与 en 两种 locale 下逐行断言通报无 `%s/%d` 残留、无裸键，并与**逐语言写死的期望句子**相等（模板槽位互换照样能渲染，只有字面期望能抓住「某一种语言的文案说反了」；en 只写错顺序时该用例会失败）。",
       "扫描 domain/application 源码里所有 `push_notice(\"…\")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。",
-      "组件按路径 preload，不依赖编辑器全局类缓存。"
+      "组件按路径 preload，不依赖编辑器全局类缓存。",
+      "总览 3D 舞台用例（`test_overview_can_show_the_3d_port_stage_with_facility_hotspots`）：seed 5205 真实挂载外壳 → 切到 overview 断言默认 2D、`_port_stage_available()` 为真；调 `_on_overview_stage_toggle()` 后断言 `_overview_stage_mode`、宿主可见、挂载 `PortStage`、`stage_id()==\"port\"`、设施数 = `_last_port_view.current_port.facilities`、`has_ship()`、`_port_stage_active()`。",
+      "同一用例断言 2D 热点与页面共存：视口设 1440×900 后 `_layout_port_hotspots()`，热点 Button 数 = `facility_count()`，且 2D 总览页仍挂载；离开总览到市场隐藏舞台，返回恢复，再 toggle 关闭后宿主隐藏。"
     ]
   },
 
@@ -2212,11 +2235,12 @@ export const FILE_DOCS = {
   },
 
   "tools/ui_snapshot.gd": {
-    role: "船厂 UI 截图验收（真实渲染）：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取正常态 / 改装态 / 每个分类并断言模式与分类记忆。",
+    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取总览页 3D 港口舞台（含 2D 设施热点）。",
     contracts: [
       "必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。",
-      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit`。",
+      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit` / `--overview-stage`。",
       "`--damage=slot[:index]:ratio` 在 run.start 后用 `ShipModules.damage()` 损坏模块实例，额外截取 `shipyard_normal_damaged` / `shipyard_refit_damaged` / `supply_damaged`；只影响截图进程，不进入游戏逻辑。",
+      "`--overview-stage`：切到总览 → 调 `_on_overview_stage_toggle()` → 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、热点 Button 数 > 0 → 保存 `overview_port_stage.png`。",
       "进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用。",
       "纯色画面判定为失败；120 s watchdog 防止协程中断挂住窗口；成功退出码 0，失败 1。",
       "只写 `docs/design/screenshots/`，不修改游戏状态或源码。"
@@ -2227,7 +2251,7 @@ export const FILE_DOCS = {
     role: "`tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。",
     contracts: [
       "引擎解析顺序：`-GodotBin` > `$env:GODOT_BIN` > 本机默认路径；找不到直接抛错。",
-      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo_modules,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜。",
+      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo_modules,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图（同样校验新鲜度）。",
       "检查每张期望截图存在且比本次运行新，旧图/缺图把退出码改为 1；完整日志写入 `.godot-ui-snapshot.log`。",
       "脚本保持 ASCII，兼容 Windows PowerShell 5.1 解析。"
     ]
@@ -2297,7 +2321,7 @@ export const MODULES = {
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
-    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器。",
+    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。",
     contracts: [
       "UI 只识别 Query/Command 与定义类型，不识别 core 内容。",
       "公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。",
@@ -2306,7 +2330,7 @@ export const MODULES = {
     ]
   },
   "framework/tests": {
-    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施与完整通关流程。",
+    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施、总览页 3D 港口舞台接入与完整通关流程。",
     contracts: [
       "测试入口：`godot --headless --path . --script res://framework/tests/test_runner.gd`。",
       "`test_case.gd` 提供断言与 Core 启动辅助；每个用例独立 bootstrap。",
@@ -2353,7 +2377,7 @@ export const MODULES = {
       "`test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。",
       "`gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。",
       "`ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。",
-      "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）。",
+      "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜。",
       "`godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，抓 `port_stage_preview.png` / `port_stage_sparse.png` 两张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。",
       "`art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。",
       "`modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。",
@@ -2420,7 +2444,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 与 test_stage_host 2.5D 舞台套件）。",
-  "framework/tests/cases": "按主题拆分的 144 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
+  "framework/tests/cases": "按主题拆分的 145 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）、总览页 3D 港口舞台与 2D 设施热点、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
   "framework/ui/stages/shipyard_stage.tscn": "船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id=\"shipyard\"`。",
   "framework/ui/stages/port_stage.tscn": "港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id=\"port\"`。",
   "dev_scenes/port_stage/port_stage_preview.tscn": "PortStage 独立预览场景：全屏 Control 挂 `port_stage_preview.gd`。",
