@@ -1,14 +1,14 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T12:43:29.609Z",
-  "commit": "35abfbf",
+  "generated_at": "2026-10-19T12:49:53.943Z",
+  "commit": "3cf61fe",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 377,
+    "sources": 418,
     "documented": 144,
-    "grouped": 233
+    "grouped": 274
   },
   "files": [
     {
@@ -113,7 +113,7 @@
     },
     {
       "source": "SNModMaker/mods/core/.snmodproj.json",
-      "sha256": "b164dc09d36c2736a26e4c979765c5eef5e1dca1fd533b3184fadccf1b88b145",
+      "sha256": "1fa3672db8474fe0e5640290b58907e1ccf0ff77de5f74e14b20b2c6ee8fd37e",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -135,6 +135,265 @@
     {
       "source": "SNModMaker/mods/core/assets/icons/water.png",
       "sha256": "5ed3c2afb088883cf3c3d902188a4040a175ad17d8a23c304935bec459608646",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Barrel.glb",
+      "sha256": "4decffd45139a653a119639fbeda3bee1b8952e9e7c12ce556d7788911b56322",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Bell.glb",
+      "sha256": "b2d4bc2c8add34a925bee409cdea914279f4a5e7e704bfbbc0e4ff7d12b57814",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Boiler_Unit.glb",
+      "sha256": "e9328c7e1f9c0f1a2815ded34db3083ec76533e185dde473866cb363f9da7d3b",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Buoy.glb",
+      "sha256": "000e26fbbd29f2621652dd57704750cf7a70be18c03fe98213293c4c44f3d372",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Capstan.glb",
+      "sha256": "3fd809be0ff624c2933929ee2148d3fc046cd13ce9da4feaf95045b1e0c63da5",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Cargo_Net.glb",
+      "sha256": "b16e7e3242fe5e2ee8d14d77e86f11755bcf27e99162f6d473cd1fc9a1502b2b",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Chain_Coil.glb",
+      "sha256": "db5fdcab699f18cf760fc4e3562f5841e9266fce9281fdf4fc801bd6305c4c60",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Coal_Chute.glb",
+      "sha256": "f9414c4114613cd96ac910b255fd3e3d850792f4175c9434759edb45c93ea1c1",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Coal_Pile.glb",
+      "sha256": "289667359901250cc4ae4146fdb1dfde55ceac620ae650269bc5f641010c01bc",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Crate.glb",
+      "sha256": "e96fbb9781973bd9e27ab3d2db6a8b12513dd00932f3ba2ed658c0eaa3b89844",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Dock_Fender.glb",
+      "sha256": "a5016c8e4e50eca44e13aed2b176f19c9376e09fe18cc57c4014b72b05bc4309",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Dock_Ladder.glb",
+      "sha256": "e7ba5b4df4ffe5b709b65c05e9d5f89b6a732600e27726d64abc200f0852a756",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Dock_Stairs.glb",
+      "sha256": "035a7202317da30fc43da85d0a9067f36c32a310c70dbbdeec4e04463c35026f",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Dock_Wall.glb",
+      "sha256": "06239c827837672d763a8e98efda410f3efcea22e80b90dbe4e728462db1becd",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Fender_Ball.glb",
+      "sha256": "075703229e7214775697d960ff0a93d3bb0a439fdeb1361deb8bb7bb0c363638",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Flag_Pole.glb",
+      "sha256": "6a251941d5119cece6a7dc9886a1bfa80bb6496ed78218fb7e4c70fc2efe0385",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Gangway.glb",
+      "sha256": "07cc019dbcbba167bc2a5c2f12346eda0459fc9ccf1ea97db5661720b9ff040c",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Gas_Lamp.glb",
+      "sha256": "e2339232e15151c9ca863c5fbc55155775c3860d607275ca3295271dda5eb768",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Gear_Crate.glb",
+      "sha256": "a9882f6b361dfe2a41193ee0c12a02981ab33ef17177345354aebe30c535af35",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Grab_Bucket.glb",
+      "sha256": "fff07c1fb5c20da609d9f8718832d8d9b7f90b3217ed716aca15dcda1b1ca3ed",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Handcart.glb",
+      "sha256": "5828cf33b78a46f7e1c07ace60482cd4477b0d1793c750044a559fb3f1e9b3e3",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Harbor_Crane.glb",
+      "sha256": "78e3563b6f20330f29e046ebc26bfbe4114510bdf887478d4e22f3dc1d42a586",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Ironclad.glb",
+      "sha256": "715a8427a2a5c48754df9268089db48c274f6a35400c904eb5f4fc66df36d2fe",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Keel_Block.glb",
+      "sha256": "ee4c9c413c11c39931348a576c0b0db99678d9addac71bd007d43322dcab3717",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Mooring_Bollard.glb",
+      "sha256": "e964c78d6d59863b7b0dd556e1a45b070349044270486f74ff2f5fe490b737c1",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Mooring_Rope.glb",
+      "sha256": "2db9bb46b49e294ce4abc45f2b2d45a01421a2a4192e7cfc72e4908a67248f37",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Ore_Pile.glb",
+      "sha256": "f2ca726b0a881466bc6045d598d156eb18f15e5436ea082eb6c513235fd3ab73",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Paddle_Freighter.glb",
+      "sha256": "5e9a68ed573e677aee3fdacc4416b2f0d683e2008d775543ecdacc15e77df5cf",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Paddle_Steamer.glb",
+      "sha256": "fdef6425ca8a242756e00b627cc0e7b68d643e0c8dd3c000762d342d4ded5b5d",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Pallet.glb",
+      "sha256": "f7955a1112070d1146ef86c9747c5f6f78f6e484852bf8cd0ea65f148d00780a",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Plate_Stack.glb",
+      "sha256": "dad559535a789a613e16d1b0800ebc6fc0b68585dae5090444e0ca399826a420",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Port_Sign.glb",
+      "sha256": "02cd963275884ddb366b78d17bbd0e8f594f48b3ef7e9054719df93d77e816f6",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Sack_Pile.glb",
+      "sha256": "1230c21d4c157f2d0fbaf97f986b375f4e25405419e9d107a9f32784f3a9f71c",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Schooner_Fame.glb",
+      "sha256": "6af119fd1f3673180ca519688bf3d95b6b020faa9350b2834828ce234a48cf07",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Ship_Prototype.glb",
+      "sha256": "722286efd26a69f79294796ec4802d0543e89844185941057ab8e96cc47d7a54",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Steam_Pipe.glb",
+      "sha256": "9fb8a51fb6cdb27ab69292762b39b457fb2aa7506b2af0a417f61a494f87ea23",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/mods/core/assets/models/SN_Timber_Stack.glb",
+      "sha256": "84b51b586f188869d139e59583e472110276681b1a9f470bf55a53f4b3bceb81",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -260,7 +519,7 @@
     },
     {
       "source": "SNModMaker/mods/core/manifest.json",
-      "sha256": "63c72f55230f2731699d8db6e5e7089a49555073f3bfd66d2673256c67f60956",
+      "sha256": "05af5bcbddebd077750de3a7634ee9f1731d3b01eb987b1c910ec99c73c9a440",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -2013,7 +2272,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "a2411976e0bb7df9bab4b2564d760e439f552efd42d1e7f347e02db8552d255c",
+      "sha256": "450b06887a5532e1b45e49852be2917955fd2fdc233bcc890476adfdfcd5372e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2250,6 +2509,13 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/export_port_glb.py",
+      "sha256": "7dafe9b063f23bcef6c9497169f70470b19fd3e59d1b1340a624315d6f0bd127",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/generators/export_props_glb.py",
       "sha256": "9b8e21096e2c9db3f6b39067031586dbfd828d5ffa2e65f43078aca72a7601b7",
       "doc": "docs/static/tools/README.md",
@@ -2301,6 +2567,13 @@
     {
       "source": "tools/modeling/generators/render_paddle_steamer_preview.py",
       "sha256": "4322924f49dbe84d71b5cefaca23b28d2798c6ec3e4dbf7381eb1e3ad1a40993",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/render_port_preview.py",
+      "sha256": "5e36347daf7715d6a820b5383e10567116ca0d051291735d7dd2786633eec31c",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -2425,6 +2698,13 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/sn_port_facilities_generator.py",
+      "sha256": "d0ad23d237f3210dc7d92a7fae155f9636f1712150e1e483cf8951551e05a2e2",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/generators/sn_schooner_fame_generator.py",
       "sha256": "d24cd324a932a90838f252b88939a5cdf7d819ee24b620f1a8c6cc0f3e2f54fc",
       "doc": "docs/static/tools/README.md",
@@ -2462,6 +2742,13 @@
     {
       "source": "tools/modeling/generators/verify_paddle_steamer_scene.py",
       "sha256": "3b2dcf6b9728c328d0595a964b20a4fe0302e5479553fdb4d5fbffbec74e8364",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/verify_port_glb.py",
+      "sha256": "2ab2b8a3b3de3100b805b275642a0e015776b90a548ac99fb0cc2aae24d10d4a",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

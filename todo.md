@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**135 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**135 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -314,8 +314,8 @@
 
 ### 当前下一步（按优先级，2026-10 对齐）
 
-- [ ] **P0 提交当前批次**：`git status` 里 200+ 条未提交改动（3D 舞台、模块实例、v2 草案、文档/静态文档）。重点是 `assets/models/ships/` 的 `SN_Ironclad` / `SN_Paddle_Steamer` / `SN_Schooner_Fame` 等新资产必须入库，否则 CI 的 core 资产校验与导出包会缺资源、3D 舞台只能回退占位。建议按“模块实例 + 文档”“3D 船厂舞台”“港口样片/资产”“SNModMaker”拆 3–4 个 commit。
-- [ ] **P1 导出实测**：Windows 导出包跑一遍 3D 船厂舞台（SubViewport + GLB 导入是否进 PCK），覆盖 1440×900 / 1280×720 / 960 宽；顺带确认发布包 `mods/` + `config/` 布局仍正确。
+- [x] **P0 提交当前批次**：已拆 4 个 commit（`f8d8c29` 框架/模块实例、`480a440` 3D 舞台/UI、`35abfbf` 资产/建模、`3cf61fe` SNModMaker/发布/文档）；船体与 core 资产已入库，工作区清空。
+- [x] **P1 导出实测**：Windows 导出包（114 MB，embed PCK）启动正常，`mods/core-1.0.0.snavmod.zip` + `config/config.json` 布局生效；导出包内确认包含 `SNShipStage3D`、船体 GLB、`ship_modules` 与 `harbor_water`；导出包实机进入船厂 3D 舞台通过（1440×900）。1280×720 / 960×540 用同一构建在编辑器窗口验收通过（movie writer 固定输出 1440×900 画布，不能当窗口截图用）。截图见 [export](docs/design/screenshots/export/)。
 - [ ] **P1 `StageHost` + `LocationStage` 泛化**：把 `SNShipStage3D` 的视口/机位/灯光/水面逻辑收进通用舞台宿主，支持舞台显隐、隐藏即停更、2D 回退；船厂先迁过去，作为 PortStage 的宿主。
 - [ ] **P1 `PortStage` 骨架**：按 `facilities` 装配设施 billboard 占位（市场/委托/补给/情报/船厂）+ L0 天空/L1 远景背板；等 6 件锚点模型（[PORT_FACILITIES_PLAN.md](tools/modeling/briefs/PORT_FACILITIES_PLAN.md)）到位后按 `facility_visuals` 替换。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
