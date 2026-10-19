@@ -8,6 +8,9 @@
       "description_key": "port.core.iron_harbor.description",
       "tags": ["port.hub", "port.industrial", "port.shipyard"],
       "enabled": true,
+      "information": {
+        "texture": "banner.port.iron_harbor"
+      },
       "data": {
         "size": "medium",
         "banner_asset": "banner.port.iron_harbor",

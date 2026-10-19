@@ -16,6 +16,20 @@
 | `.design/tokens.json` | `assets/ui/tokens.json` | UI token |
 | `270408__littlerobotsoundfactory__pickup_gold_00.wav` | `assets/audio/sfx/economy/pickup_gold_00.wav` | 购买/金币音效 |
 
+## UI 贴图：船厂纵剖图与船卡缩略图
+
+船厂改装态与正常态船卡使用两张**可替换的框架表现层贴图**（不是 Core 内容资源，不注册 `information.texture`）：
+
+| 运行时路径 | 尺寸 | 用途 | 替换 / 生成 |
+| --- | --- | --- | --- |
+| `assets/ui/shipyard/ship_section.png` | 1792×1008（16:9） | 改装态纵剖图整幅背景；槽位贴片与引线由 `SNShipView` 叠加 | `python tools/art/gen_shipyard_textures.py`；也可手绘替换 |
+| `assets/ui/shipyard/ship_thumb_ironclad.png` | 640×360 | 正常态「已有船舶」船卡缩略图（210×118 cover 区域） | 同上；`--thumb-only` 只重导缩略图 |
+
+- 两张图由 `tools/art/gen_shipyard_textures.py` 确定性生成（Pillow + numpy，几何 / 配色 / 构图锚点都在文件顶部常量表）。改构图后重跑即可，不要手改像素。
+- 纵剖图构图锚点（`ANCHORS`，画布比例）：明轮 0.108/0.590、锅炉 0.345/0.552、货舱 0.545/0.578、安全 0.674/0.330、导航 0.756/0.340、客舱 0.854/0.340；甲板 / 龙骨 / 水线约 0.400 / 0.782 / 0.675。这些比例要与 `framework/ui/components/sn_ship_view.gd` 的 `_chip_anchor()` 一起改，否则槽位引线会指错舱室。
+- 替换贴图时保持 16:9（或同时调整 `sn_ship_view.gd` 的槽位行 `h*0.60` / `h*0.82` 与锚点），并让 Godot 重新导入生成 `.import`；缺失时 `SNShipView` 自动回退程序化剖面，船卡回退占位面板。
+- 两张图都属于框架表现层（`assets/ui/`），不进入 Core 模组包，也不参与 mod 资源校验。
+
 ## 3D 资产
 
 | 来源（本地源文件） | 运行时路径 | 说明 |
@@ -23,6 +37,9 @@
 | `.design/ships/SN_Ship_Prototype.blend` | `assets/models/ships/SN_Ship_Prototype.glb` | 低多边形帆船原型；2608 三角面、36 节点、5 种材质（木 / 深木 / 甲板木 / 帆布 / 金属） |
 | `.design/ships/sn_ship_prototype_generator.py` | — | 帆船参数化生成脚本；改 `STATIONS` / `MASTS` 表即可生成不同吨位船体 |
 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Freighter_Prototype` 集合）+ `.design/ships/SN_Paddle_Freighter.blend` | `assets/models/ships/SN_Paddle_Freighter.glb` | 大型明轮蒸汽货轮：**59.53 × 14.10 × 19.52 m**（船体 LOA 55 m，总长含艏斜桁）、**12200 三角面**、46 对象（39 mesh + 7 empty）、6 材质（`SN_Iron_Hull` / `SN_Iron_Red` / `SN_Brass` 新增，复用 `SN_Wood` / `SN_Wood_Deck` / `SN_Metal`）。双明轮（14 桨叶 / 每侧 8 辐条 / 16 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 斜撑）、半包轮罩箱板（-6°..186° + 中央观察窗 + 黄铜包边 / 铭牌，端封 r_in 2.75 避让轮扫掠、内板窗 2.30 避让蒸汽管）、双后倾烟囱、锅炉机舱围罩 + 蒸汽管、桥楼 + 驾驶室、4 货舱口 + 4 吊杆、双桅横桁 + 艏斜桁、艏楼 / 艉楼侧封板、吊艇架救生艇、舵轮 / 旗；根节点 `SN_PF_Root` 水线轴心、工作台摆位 (-45, 0, 0)；2 个明轮 Pivot + 4 个 `SN_Socket_*` |
+| `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend` | `assets/models/ships/SN_Ironclad.glb` | 舷侧炮铁甲舰：**60.14 × 18.00 × 28.64 m**（水线轴心，z -4.2..24.44）、**8830 三角面**、单 mesh / 8 材质；装甲带 + 板缝、每舷 6 门英雄化舷侧炮（炮门 1.9×1.9 m / 炮管 Ø0.88→0.72 m / 外露 1.55 m）+ 2 门艏 pivot 炮、2.2 m 装甲带（外凸 380 mm）与 120 mm 板缝、中央装甲炮房 + 指挥塔、双后倾烟囱、三桅横桁收帆 + 艏斜桁基座、锚吊架、撞角艏、艉廊、螺旋桨/舵；单节点 GLB、工作台摆位 (0, 90, 0) |
+| `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合）+ `.design/ships/SN_Paddle_Steamer.blend` | `assets/models/ships/SN_Paddle_Steamer.glb` | 小型澳洲明轮蒸汽客船（参考 PS Enterprise）：**24.56 × 8.74 × 10.47 m**（LOA 24.0 m，水线轴心 z=0）、**11764 三角面**、35 对象（32 mesh + 3 empty）、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`，复用 5）；白漆双层船身 + 暗红水线/舷缘压条 + 深色船底、两舷 10 桨叶明轮（14 段双轮缘 / 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑）+ 10 道水平格栅轮罩、前驾驶室（双侧 ENTERPRISE 文字铭牌）、后部白色立柱雨棚游步甲板、黑烟囱 + 黄铜箍/红顶圈、锅炉围罩 + 黄铜蒸汽管、艏旗杆澳洲旗、艉部弧形低平台 + 舵；**不含蒸汽几何**（留给游戏内 VFX）；根节点 `SN_PS_Root` 工作台摆位 (45, 0, 0) |
+| `.design/SN_Asset_Workbench.blend`（`SN_Schooner_Fame_Prototype` 集合）+ `.design/ships/SN_Schooner_Fame.blend` | `assets/models/ships/SN_Schooner_Fame.glb` | 1795 年 Salem 双桅纵帆船 **SN_Schooner_Fame**：**33.44 × 6.88 × 26.82 m**（船体 LOA 24.4 m，总长含艏斜桁/艏三角帆）、**13174 三角面**、32 对象（29 mesh + 3 empty）、12 材质（新增 `SN_Hull_Black` / `SN_Ochre` / `SN_Canvas_Shade` / `SN_Flag_Red`，复用 8）；18 站放样黑船身 + 赭黄上舷带 + 黑腰板/压顶、艉楼甲板；双桅后倾（Fore −2.5° / Main −3.2°，轴距 6.4 m）、前桅斜桁帆 + 方顶帆、主桅大斜桁帆 + 三角顶帆、两面艏三角帆（jib + fore staysail）、舷侧绳梯（shrouds + ratlines）/支索/动索、艉廊 3 蓝窗 + 双灯 + FAME 铭牌、舱口格栅/绞盘/起锚机/舵轮/罗经柜/锚/钟/木桶/盘绳/fife rails/短梯/艏饰；**无星条旗**（用户 2026-10-19 要求移除，仅保留主桅顶红白长旒）；帆腹镜像朝 −Y（Godot +Z 相机侧）；根节点 `SN_SF_Root` 水线轴心、工作台摆位 (0, −70, 0) |
 | `.design/SN_Asset_Workbench.blend` | `assets/models/props/SN_Harbor_Crane.glb` | 工作台主场景（帆船 36 对象 + 塔吊 34 对象 + 相机/灯光）；锤头式塔吊 3420 三角面、34 节点、4 材质（木 / 深木 / 金属 / 石材），主臂 20 m 水平、总高 21.5 m，场景摆放 (0, 16, 0) |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港码头第一批小部件：石砌岸壁 `SN_Dock_Wall` / 木护舷 `SN_Dock_Fender` / 系缆桩 `SN_Mooring_Bollard` / 木箱 `SN_Crate` / 木桶 `SN_Barrel` / 矿石堆 `SN_Ore_Pile`；P0 整改后合计 **1360 三角面**，材质 `SN_Ore` 已改为锈红铁矿色 |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第二批） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港第二批：煤气灯 `SN_Gas_Lamp` / 船岸跳板 `SN_Gangway` / 双瓣抓斗 `SN_Grab_Bucket` / 煤堆 `SN_Coal_Pile` / 码头爬梯 `SN_Dock_Ladder` / 钢板堆 `SN_Plate_Stack`；合计 **1214 三角面**，新增材质 `SN_Coal`（base 0.020/0.019/0.018、rough 0.95、metallic 0） |
@@ -44,20 +61,107 @@
 | `tools/modeling/generators/dryrun_ship.py` | — | 船舶生成器纯 Python 干跑：tri / 包围盒 / 边界边 / 非流形边 / 退化面 / 命名 / 父级键 / 明轮 Pivot 归属 |
 | `tools/modeling/generators/export_ship_glb.py` | — | 船舶归档：备份旧 GLB → 保存工作台 → 根节点归零导出 GLB → `bpy.data.libraries.write` 船体快照 → 还原根节点 |
 | `tools/modeling/generators/verify_ship_glb.py` | — | GLB 结构自检：节点 / 网格 / 材质 doubleSided / 三角面 / 世界包围盒（Y-up） |
+| `tools/modeling/briefs/sn_ironclad_broadside.json` | — | 舷侧炮铁甲舰工单（60 m 级、12000 tri、8 材质、水线轴心、纯展示资产） |
+| `tools/modeling/generators/sn_ironclad_generator.py` | — | 铁甲舰参数化生成器（`STATIONS` / `GUN_X` / `MASTS` / `FUNNELS` 参数表；船体放样 + 装甲带 + 炮列 + 炮房/烟囱 + 三桅 + 甲板件，单 mesh 装配 + `report()`） |
+| `tools/modeling/generators/dryrun_ironclad.py` | — | 铁甲舰纯 Python 干跑：tri / 包围盒（水线轴心）/ z 范围 / 边界边 / 非流形边 / 退化面 / 孤立点 / 材质 |
+| `tools/modeling/generators/render_ironclad_preview.py` | — | 铁甲舰预览渲染：3/4 / 正侧 / 舰艏 / 舰艉 3/4 四视角 |
+| `tools/modeling/generators/export_ironclad_glb.py` | — | 铁甲舰归档：备份旧 GLB → 轴心归零导出 → `bpy.data.libraries.write` 单对象快照 |
+| `tools/modeling/generators/verify_ironclad_glb.py` | — | 铁甲舰 GLB 结构自检：单节点 / 8 图元 / 8830 tri / 材质 / Y-up 包围盒 / z 范围 |
+| `tools/modeling/generators/check_ironclad_connectivity.py` | — | 铁甲舰连通性检查（只读）：拆连通岛 + BVH 三角面相交/最近距离，抓 `revolved()` 忘 translate、小艇漏偏移等"悬空/错位" |
+| `tools/modeling/briefs/sn_ship_paddle_steamer.json` | — | 小型明轮蒸汽船工单（24.4×8.7×10.5 m、12000 tri、8 材质、明轮 10 桨叶 / 10 道格栅、ENTERPRISE 铭牌；明确蒸汽不建模，明轮 8 旋转角零穿模） |
+| `tools/modeling/generators/sn_paddle_steamer_generator.py` | — | 明轮蒸汽船参数化生成器（`STATIONS` / `PROFILE` / `PADDLE` / `PADDLE_BOX` / `WHEELHOUSE` / `CANOPY` / `FLAG` 参数表；纯几何 + Blender 装配 + 文字铭牌 + `report()`） |
+| `tools/modeling/generators/dryrun_paddle_steamer.py` | — | 明轮蒸汽船纯 Python 干跑：tri / 包围盒 / z 范围 / 边界边 / 非流形边 / 退化面 / 孤立点 / 材质 / 父级 / 左右镜像误差 |
+| `tools/modeling/generators/render_paddle_steamer_preview.py` | — | 明轮蒸汽船预览渲染：3/4、正侧、艏、艉 3/4、俯视；临时双太阳/水面，渲后还原场景 |
+| `tools/modeling/generators/verify_paddle_steamer_scene.py` | — | 明轮蒸汽船场景只读验收：命名/层级/Pivot/网格健康/明轮 8 旋转角世界坐标 BVH 交面/左右镜像/连通岛悬空/工作台回归，输出 JSON |
+| `tools/modeling/generators/export_paddle_steamer_glb.py` | — | 明轮蒸汽船 GLB 归档：备份旧 GLB → 保存工作台 → 轴心归零导出 → `libraries.write` 快照 → 还原摆位 |
+| `tools/modeling/generators/verify_paddle_steamer_glb.py` | — | 明轮蒸汽船 GLB 结构自检：35 节点 / 32 网格 / 8 doubleSided 材质 / 11764 tri / Y-up bbox / 水线 −1.32，并拒绝蒸汽节点 |
+| `tools/modeling/briefs/sn_schooner_fame.json` | — | 1795 双桅纵帆船工单：船体 LOA 24.4 m / 总长 33.44 m / 总高 26.82 m、≤18000 tri、12 材质；双桅后倾 / 斜桁帆 / 方顶帆 / 艏三角帆 / 完整索具 / 艉廊 FAME 铭牌；用户明确不要星条旗，只保留红白长旒 |
+| `tools/modeling/generators/sn_schooner_fame_generator.py` | — | 纵帆船参数化生成器（`STATIONS` / `PROFILE` / `MASTS` / `FORE_SAIL` / `MAIN_SAIL` / `FORE_TOPSAIL` / `MAIN_TOPSAIL` 参数表；18 站放样 + 斜桁帆曲面 + 三角帆 + 索具 + 甲板属具 + 艉廊 + 文字铭牌 + `report()`） |
+| `tools/modeling/generators/ship_parts/` | — | **可复用船体部件库 v1**：`core`（Part/基本体/PartSpec）/ `deck`（舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯）/ `bow`（艏斜桁/jibboom/艏饰）/ `stern`（艉廊/艉窗/艉灯）/ `assembly`（集合/材质/Pivot/文字/report）/ `palette`；生成器只保留船型布局，重构后纵帆船逐对象 digest 不变 |
+| `tools/modeling/generators/ship_parts/README.md` | — | 部件库契约：分层、`PartSpec`、新增部件步骤、坐标/材质约定、输出不变的验收口径 |
+| `tools/modeling/generators/dryrun_schooner_fame.py` | — | 纵帆船纯 Python 干跑：对 FORE/MAIN 子件施加 Pivot 世界变换后核对 tri / bbox / 边界边 / 非流形 / 退化 / 孤立点 / 材质 / 命名 / 父级，并断言两桅轴距 6.4 m、后倾与主桅更高 |
+| `tools/modeling/generators/export_schooner_fame_glb.py` | — | 纵帆船 GLB 归档：备份旧 GLB → 保存工作台 → 根节点归零导出 → `libraries.write` 快照 → 还原 (0, −70, 0) |
+| `tools/modeling/generators/verify_schooner_fame_glb.py` | — | 纵帆船 GLB 结构自检：32 节点 / 29 网格 / 12 doubleSided 材质 / 13174 tri / Y-up bbox 33.44×26.85×6.88 / 水线轴心 −2.74 |
+| `tools/modeling/generators/render_schooner_fame_preview.py` | — | 纵帆船预览渲染：3/4、正侧、艏 3/4、艉 3/4、俯视 5 张；临时相机/太阳/水面，渲后还原场景 |
 | `tools/godot/verify_props.gd` | — | GLB 导入验收（只读）：核对 Godot 侧包围盒、三角面与材质名，专抓"改了 .blend 忘了重导 GLB" |
 | `tools/modeling/briefs/sn_iron_harbor_batch1.json` | — | 铁港第一批批量工单（6 件一次派发）；系缆桩尺寸在 P0 整改中改为 0.62 × 0.62 × 0.70 |
 | `tools/modeling/briefs/sn_iron_harbor_batch2.json` | — | 铁港第二批批量工单（6 件，y=30 一排，预算 1900 tri） |
 
-> `.design/SN_Asset_Workbench.blend` 是当前主场景；`.design/ships/SN_Ship_Prototype.blend` 是帆船的独立快照，`.design/ships/SN_Paddle_Freighter.blend` 是明轮货轮的独立快照（`bpy.data.libraries.write` 只打包该集合 46 对象，轴心水线、不切换当前文件）。新增资产一律进工作台的新集合，交付时按集合导出独立 `.glb`。
+> `.design/SN_Asset_Workbench.blend` 是当前主场景；`.design/ships/SN_Ship_Prototype.blend` 是旧帆船原型的独立快照，`.design/ships/SN_Schooner_Fame.blend` 是 1795 双桅纵帆船的独立快照（32 对象，轴心水线），`.design/ships/SN_Paddle_Freighter.blend` 是明轮货轮的独立快照（`bpy.data.libraries.write` 只打包该集合 46 对象，轴心水线、不切换当前文件），`.design/ships/SN_Paddle_Steamer.blend` 是小型明轮蒸汽船的独立快照（35 对象）。新增资产一律进工作台的新集合，交付时按集合导出独立 `.glb`。
 
 - 轴向：Blender 中 +X 为船首、+Z 向上；glTF 导出后 +Y 向上，进入 Godot 需绕 Y 轴 +90° 才对齐引擎的 −Z 前方。
 - 轴心：船体中部水线，1 unit = 1 m，可直接按水面高度摆放。
 - 帆为单层平面，材质必须双面（glTF 已标 `doubleSided`）；其余单层曲面（甲板 / 舷墙 / 腰板）也保持双面，后续可按材质开启背面剔除。
 - `.blend` 按本文件第 5 行决策留在 `.design/`（gitignore，不进构建）；只有 `.glb` 进入运行时资源。
 
+## 3D 资产：舷侧炮铁甲舰（SN_Ironclad）
+
+1860 年代舷侧炮铁甲舰，60 m 级纯展示资产（不接入 Core 内容键）。单 mesh / 8 材质槽，轴心在水线中心（x=0 船中、z=0 水线、+X 船首），工作台摆位 (0, 90, 0)：
+
+| 项 | 数值 |
+| --- | --- |
+| 包围盒 | **60.14 × 18.00 × 28.64 m**（LOA 含艏斜桁与艉廊；z -4.20 .. 24.44） |
+| 三角面 | **8830 / 12000** |
+| 材质 | Iron_Hull / Iron_Red / Wood_Deck / Wood / Wood_Dark / Metal / Brass / Canvas（复用既有调色板，不新增） |
+| 结构 | 17 站放样铁壳 + 撞角艏；**英雄化装甲带**（2.2 m 高、外凸 380 mm、120 mm 竖向板缝/黄铜压条）；**每舷 6 门英雄化舷侧炮**（炮门 1.9×1.9 m、炮管 Ø0.88→0.72 m、外露 1.55 m、炮口箍 Ø1.0 m、上翻炮门盖、前外张 12°）+ 2 门放大艏 pivot 炮；中央装甲炮房 + 指挥塔 + 艏驾驶台；双后倾烟囱 + 通风筒 + 天窗；三桅横桁（收帆卷）+ 艏斜桁 + 支索/侧支索；舷墙 + 黄铜压条；舱口格栅/绞盘/舵轮/罗经柜/小艇/锚（吊架）/螺旋桨/舵/艉廊/旗 |
+| 运行时 GLB | `assets/models/ships/SN_Ironclad.glb`（单节点 / 8 图元 / 约 468 KB / glTF Y-up，轴心水线中心） |
+| 源文件 | `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend`（单对象快照） |
+| 工单/脚本 | `briefs/sn_ironclad_broadside.json`、`sn_ironclad_generator.py`、`dryrun_ironclad.py`、`check_ironclad_connectivity.py`、`render_ironclad_preview.py`、`export_ironclad_glb.py`、`verify_ironclad_glb.py` |
+| 截图 | `docs/design/screenshots/ironclad_{three_quarter,broadside,bow,bow_closeup,guns_closeup,stage_ortho}.png` |
+
+> 纯展示资产：核心玩法仍使用现有 4 种船体；若将来把铁甲舰作为第 5 种船体或港口战舰接入，需要补内容 JSON、manifest 资源键、本地化与测试。
+
+## 3D 资产：小型明轮蒸汽船（SN_Paddle_Steamer）
+
+参考澳大利亚国家博物馆的明轮蒸汽船 **PS Enterprise**（堪培拉伯利·格里芬湖）的小型公开甲板客船，24 m 级纯展示资产（不接入 Core 内容键）。轴心在船体中部水线（x=0 船中、z=0 水线、+X 船首），工作台摆位 (45, 0, 0)：
+
+| 项 | 数值 |
+| --- | --- |
+| 包围盒 | **24.56 × 8.74 × 10.47 m**（LOA 24.0 m，总宽含轮罩，总高含烟囱顶；z -1.32 .. 9.15） |
+| 三角面 | **11764 / 12000** |
+| 材质 | `SN_White` / `SN_Iron_Hull` / `SN_Iron_Red` / `SN_Wood_Deck` / `SN_Metal` / `SN_Brass` / `SN_Flag_Blue` / `SN_Flag_White`（新增 3 个，复用 5 个） |
+| 结构 | 16 站放样白漆船身 + 深色水线以下船底 + 暗红压条；两舷 10 桨叶明轮（14 段双轮缘 / 每侧 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑 / 曲柄销）+ 梯形格栅轮罩（10 道水平格栅 + 深色内衬 + 暗红顶沿 + 黄铜铭牌）+ 明轮台走台/栏杆；主甲板客舱（白墙 + 玻璃窗 + 黄铜窗台 + 木门）、游步甲板 + 白色立柱雨棚 + 前后栏杆；前驾驶室（三面窗 + 顶板 + 双侧 `ENTERPRISE` 文字铭牌 + 黄铜钟）；锅炉围罩 + 黑烟囱（黄铜箍 / 暗红顶圈）+ 黄铜蒸汽管；艏旗杆 + 澳洲旗（蓝底 / 白十字 / 红星 / 南十字星）、艏部锚/绞盘/系缆桩、艉部弧形低平台 + 栏杆 + 舵/舵柄 + 救生圈/卷缆 |
+| 蒸汽 | **不建模**：烟囱蒸汽由游戏内粒子/VFX 渲染（用户 2026-10-19 明确要求） |
+| 运行时 GLB | `assets/models/ships/SN_Paddle_Steamer.glb`（35 节点 / 32 网格 / 11764 tri / 8 材质 doubleSided / 632.7 KB / glTF Y-up，轴心水线 z=0） |
+| 源文件 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合，工作台 196 对象）+ `.design/ships/SN_Paddle_Steamer.blend`（35 对象独立快照） |
+| 工单/脚本 | `briefs/sn_ship_paddle_steamer.json`、`sn_paddle_steamer_generator.py`、`dryrun_paddle_steamer.py`、`render_paddle_steamer_preview.py`、`verify_paddle_steamer_scene.py`、`export_paddle_steamer_glb.py`、`verify_paddle_steamer_glb.py` |
+| 截图 | `docs/design/screenshots/paddle_steamer_{three_quarter,broadside,bow,stern_quarter,top}.png` |
+
+> 纯展示资产：若将来作为第 5 种船体 / 内河客运场景接入，需要补 Core 内容 JSON、manifest 资源键、本地化、Godot 导入验收与 2.5D 舞台目标机位试装。明轮几何挂在 `SN_PS_Paddle_*_Pivot` 下，可直接绕 Y 轴做旋转动画；蒸汽建议在 Godot 侧用烟囱顶 `SN_PS_Funnel` 作为发射点做粒子。
+
+## 3D 船舶模块（11 件）
+
+`SN_Ship_Modules` 集合把 Core 里除船体外的全部模块实体做成独立可摆放的 3D 件：锅炉 3、货舱 3、导航 2、安全 2、客舱 1，合计 **7016 三角面**。每件一个 mesh 对象、3–6 个既有调色板材质槽、原点在底面中心（1 unit = 1 m，+X 为前向），导出为 `assets/models/modules/` 下的独立 `.glb`（单节点 / glTF Y-up），可直接按槽位摆到船体或舞台 socket 上。
+
+| Core 模块实体 | 运行时 GLB | 尺寸 L×W×H (m) | tri | 主要材质 |
+| --- | --- | ---: | ---: | --- |
+| `core:boiler/small_efficient` | `assets/models/modules/SN_Boiler_Efficient.glb` | 1.81 × 1.60 × 2.60 | 540 | Wood_Dark / Metal / Iron_Hull / Brass |
+| `core:boiler/standard` | `assets/models/modules/SN_Boiler_Standard.glb` | 2.82 × 1.90 × 2.62 | 860 | Wood_Dark / Metal / Iron_Hull / Brass |
+| `core:boiler/performance` | `assets/models/modules/SN_Boiler_Performance.glb` | 3.40 × 2.11 × 2.94 | 1152 | Wood_Dark / Metal / Iron_Hull / Brass |
+| `core:cargo_module/small_hold` | `assets/models/modules/SN_Cargo_Small_Hold.glb` | 2.40 × 2.00 × 1.80 | 456 | Wood / Wood_Dark / Metal / Brass |
+| `core:cargo_module/medium_hold` | `assets/models/modules/SN_Cargo_Medium_Hold.glb` | 3.20 × 2.40 × 2.20 | 492 | Wood / Wood_Dark / Metal / Brass |
+| `core:cargo_module/large_hold` | `assets/models/modules/SN_Cargo_Large_Hold.glb` | 4.01 × 2.81 × 2.60 | 672 | Wood / Wood_Dark / Metal / Brass |
+| `core:navigation_module/spyglass` | `assets/models/modules/SN_Nav_Spyglass.glb` | 1.38 × 0.80 × 1.75 | 328 | Brass / Metal / Wood_Dark / Wood |
+| `core:navigation_module/chart_room` | `assets/models/modules/SN_Nav_Chart_Room.glb` | 2.80 × 2.20 × 2.60 | 636 | Wood / Wood_Dark / Metal / Brass / Iron_Hull |
+| `core:safety_module/lifeboat` | `assets/models/modules/SN_Safety_Lifeboat.glb` | 4.20 × 1.50 × 1.10 | 660 | Wood / Wood_Dark / Canvas / Brass |
+| `core:safety_module/safety_valve` | `assets/models/modules/SN_Safety_Valve.glb` | 1.49 × 1.26 × 1.84 | 428 | Metal / Iron_Hull / Brass |
+| `core:cabin/passenger_cabin` | `assets/models/modules/SN_Cabin_Passenger.glb` | 3.40 × 2.40 × 2.55 | 792 | Wood_Deck / Wood / Wood_Dark / Metal / Brass / Iron_Hull |
+
+> 本批只交付 Blender 源场景 + GLB，**尚未接入 Core 内容键**：三种锅炉仍共用 `model.module.boiler`，货舱 / 导航 / 安全 / 客舱没有模型键。接入时需要同时改 `dev_mods/core/content/*.json` 的 `information.model`、manifest 的资源声明与校验测试。
+
+- 工单：`tools/modeling/briefs/sn_ship_modules_batch1.json`
+- 生成器：`tools/modeling/generators/sn_ship_modules_generator.py`（参数表驱动，改数值即可重建）
+- 离线干跑：`tools/modeling/generators/dryrun_props.py`
+- 预览渲染：`tools/modeling/generators/render_modules_preview.py`
+- GLB 导出：`tools/modeling/generators/export_modules_glb.py`
+- GLB 结构自检：`tools/modeling/generators/verify_modules_glb.py`
+- 截图：`docs/design/screenshots/ship_modules_batch1_{overview,boilers,cargo,nav_safety_cabin}.png`
+- 工作台：`.design/SN_Asset_Workbench.blend` → `SN_Ship_Modules` 集合（场景现 160 对象 / 145 mesh；GLB 备份在 `.design/modules/backup_glb/`）
+- 返工记录：R0 独立质检发现 5 处同法线共面 + 9 处悬空壳体，已按参数级修正并重建（合计 6968 → 7016 tri），R1 复验见验收报告
+
 ## 3D 港口样片（水面着色器试做）
 
-独立场景 `dev_scenes/harbor/harbor_diorama.tscn`，不接入主流程；只用已有 GLB 资产 + 场景内程序化 BoxMesh 剪影。
+独立场景 `dev_scenes/harbor/harbor_diorama.tscn`，不接入主流程；只用已有 GLB 资产 + 场景内程序化 BoxMesh 剪影。浮船已从旧 `SN_Ship_Prototype` 换成 `SN_Schooner_Fame`（1795 双桅纵帆船），水面泡沫环的 `boat_half_size` 同步改为 13.2 × 3.9；场景相机构图已验证可容纳新船 33.44 m 总长 / 26.82 m 总高。
 
 | 运行时路径 | 说明 |
 | --- | --- |
@@ -67,10 +171,37 @@
 | `assets/textures/water/water_normal.png` | 烘焙的无缝水面法线噪声（512²） |
 | `assets/textures/water/water_foam.png` | 烘焙的无缝泡沫噪声（512²） |
 | `dev_scenes/harbor/bobbing_boat.gd` | 浮船：采样与 shader 同源的波浪 |
-| `docs/design/screenshots/harbor_diorama_dusk.png` | 样片黄昏机位截图（1440×900） |
-| `docs/design/screenshots/harbor_diorama_detail.png` | 近景水面 / 船体截图（1440×900） |
+| `tools/godot/capture_harbor_diorama.gd` | 窗口模式截图脚本：加载港口样片，等水面/浮船稳定后抓固定机位与近景两张（1440×900） |
+| `docs/design/screenshots/harbor_diorama_schooner.png` | **当前**港口样片固定 3/4 机位截图（1440×900，浮船为 SN_Schooner_Fame） |
+| `docs/design/screenshots/harbor_diorama_schooner_detail.png` | **当前**纵帆船近景机位截图（1440×900） |
+| `docs/design/screenshots/harbor_diorama_dusk.png` | 历史截图：旧 SN_Ship_Prototype 浮船版本（1440×900） |
+| `docs/design/screenshots/harbor_diorama_detail.png` | 历史截图：旧浮船近景版本（1440×900） |
+| `docs/design/screenshots/schooner_fame_three_quarter.png` | 纵帆船 3/4 预览（Blender EEVEE，1400×860） |
+| `docs/design/screenshots/schooner_fame_broadside.png` | 纵帆船正侧预览（1500×780） |
+| `docs/design/screenshots/schooner_fame_bow_quarter.png` | 纵帆船艏 3/4 预览（1200×860） |
+| `docs/design/screenshots/schooner_fame_stern_quarter.png` | 纵帆船艉 3/4 预览（1200×860） |
+| `docs/design/screenshots/schooner_fame_top.png` | 纵帆船俯视预览（1000×900） |
 
 `dev_scenes/harbor/README.md` 记录运行方式、调参入口与已知边界；`tools/godot/verify_harbor_diorama.gd` 是无头验收脚本。
+
+## Core 实体资源映射
+
+Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB 从全局展示资产复制到 Core 包内，使松散 Core 与独立 `.snavmod.zip` 都能自行解析。全局副本继续供开发场景直接引用。
+
+| Core 资源键 | Core 包内路径 | 使用实体 |
+|---|---|---|
+| `model.ship.prototype` | `assets/models/ships/SN_Ship_Prototype.glb` | 小型、标准中型船体 |
+| `model.ship.paddle_freighter` | `assets/models/ships/SN_Paddle_Freighter.glb` | 两种大型船体 |
+| `model.module.boiler` | `assets/models/modules/SN_Boiler_Unit.glb` | 三种锅炉 |
+| `model.good.iron_ore` | `assets/models/goods/SN_Ore_Pile.glb` | 铁矿石 |
+| `model.good.coal` | `assets/models/goods/SN_Coal_Pile.glb` | 煤炭；同时使用 `icon.coal` |
+| `model.good.timber` | `assets/models/goods/SN_Timber_Stack.glb` | 木材 |
+| `model.material.boiler_plate` | `assets/models/materials/SN_Plate_Stack.glb` | 锅炉钢板 |
+| `model.material.precision_gear` | `assets/models/materials/SN_Gear_Crate.glb` | 精密齿轮 |
+| `model.material.sealing_compound` | `assets/models/materials/SN_Barrel.glb` | 密封剂 |
+| `banner.port.iron_harbor` | `assets/ports/iron_harbor_banner.png` | 铁港；作为贴图 |
+
+淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 13 个资源键。
 
 ## 为什么这样分
 

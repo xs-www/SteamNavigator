@@ -1,0 +1,111 @@
+{
+  "id": "sn_port_facilities_batch1",
+  "title": "港口设施锚点第一批 6 件",
+  "purpose": "给 2.5D 固定机位港口舞台提供 5 类设施的可辨认锚点，并补一个干船坞底座；让玩家在总览/船厂距离上一眼认出市场、委托、补给、情报、船厂。",
+  "category": "prop_pack",
+  "collection": "SN_Port_Facilities",
+  "prefix": "SN_",
+  "layout": "沿 y=60 一字排开，件间距 >= 8 m：x = -30, -8, 10, 18, 26, 36；全部 ground centre（底面中心 z=0）",
+  "style": "low-poly / flat shaded / 无贴图；蒸汽朋克港口语言，木+铁+黄铜+帆布；只用调色板材质，新增材质需在 items.materials 中显式声明",
+  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Iron", "SN_Brass", "SN_Stone", "SN_Canvas", "SN_Canvas_Shade"],
+  "transform": {
+    "pivot": "ground centre (base centre, z=0), 每件独立原点",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "tri_budget_total": 10500,
+  "items": [
+    {
+      "id": "market_stall",
+      "name": "SN_Market_Stall",
+      "facility": "exchange",
+      "desc": "市场棚/交易亭：4 根木柱 + 前柜台与侧挡板 + 微下垂帆布遮阳棚（双面）+ 2 盏挂灯钩 + 一块空图标招牌板（不放文字）+ 柜台后货架与 2 个木箱",
+      "parts": ["4 posts", "counter", "side panels", "canvas awning (double sided)", "sign board (blank)", "2 lantern hooks", "back shelf", "2 crates"],
+      "size": [5.0, 3.0, 3.2],
+      "tri_budget": 1800,
+      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Canvas", "SN_Metal", "SN_Brass"],
+      "position": [10.0, 60.0, 0.0],
+      "readability": "镂空棚架结构，3/4 视角下必须能同时看到柜台、帆布顶与挂灯，轮廓不被柱子糊死"
+    },
+    {
+      "id": "notice_board",
+      "name": "SN_Notice_Board",
+      "facility": "contracts",
+      "desc": "委托告示板：2 根立柱 + 木框布告板 + 后挡板 + 6 张微错位纸张（薄双面板）+ 小披檐 + 侧挂煤油灯托架",
+      "parts": ["2 posts", "frame", "back panel", "6 paper sheets (double sided)", "small shingle roof", "lantern bracket"],
+      "size": [2.8, 0.5, 2.6],
+      "tri_budget": 500,
+      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Canvas", "SN_Metal"],
+      "position": [18.0, 60.0, 0.0],
+      "readability": "纸张用 SN_Canvas 浅色对比木框；纸张不得超出板面，厚度 >= 4 mm 避免共面"
+    },
+    {
+      "id": "water_tank",
+      "name": "SN_Water_Tank",
+      "facility": "supply",
+      "desc": "港口水箱：石/木基座 + 16 边铆接圆筒水箱 + 锥形顶盖 + 3 道铁箍 + 出水弯管与阀门 + 侧爬梯 + 液位计 + 小黄铜铭牌",
+      "parts": ["base ring", "riveted cylinder", "conical roof", "3 iron hoops", "outlet pipe + valve", "ladder", "level gauge", "brass plate"],
+      "size": [4.0, 4.0, 5.2],
+      "tri_budget": 1400,
+      "materials": ["SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Brass", "SN_Stone"],
+      "position": [26.0, 60.0, 0.0],
+      "readability": "圆筒 + 锥顶 + 铁箍是识别点；液位计用细长深色条带，别做成发光体"
+    },
+    {
+      "id": "signal_tower",
+      "name": "SN_Signal_Tower",
+      "facility": "intel",
+      "desc": "情报信号塔：4 根收分钢腿 + X 斜撑 + 顶部平台与栏杆 + 旗语桅杆（2 片可摆臂）+ 灯室 + 旗绳 + 底部工具柜 + 爬梯",
+      "parts": ["4 tapered legs", "X braces", "platform + railing", "semaphore mast", "2 semaphore arms", "lamp housing", "flag halyard", "base locker", "ladder"],
+      "size": [3.2, 2.4, 8.5],
+      "tri_budget": 1600,
+      "materials": ["SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Canvas", "SN_Brass"],
+      "position": [36.0, 60.0, 0.0],
+      "readability": "信号塔轮廓必须是港口最高剪影；两片摆臂留出 0.15 m 间隙，避免和桅杆共面"
+    },
+    {
+      "id": "shipyard_gantry",
+      "name": "SN_Shipyard_Gantry",
+      "facility": "shipyard",
+      "desc": "船厂龙门吊：2 组 A 形腿 + 顶部箱形主梁 + 小车与吊钩滑轮组 + 钢缆 + 横向斜撑 + 侧爬梯 + 小型操作平台",
+      "parts": ["2 A-frame legs", "box girder", "trolley", "hook block", "cables", "cross braces", "ladder", "operator platform"],
+      "size": [14.0, 4.0, 10.0],
+      "tri_budget": 2600,
+      "materials": ["SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Brass"],
+      "position": [-8.0, 60.0, 0.0],
+      "readability": "主梁下沿净高 >= 8.5 m，能从下方看到船；吊钩组在第 3/4 跨位置，保证 3/4 视角能看清"
+    },
+    {
+      "id": "dry_dock",
+      "name": "SN_Dry_Dock",
+      "facility": "shipyard",
+      "desc": "干船坞底座：3 级收分石砌坞壁 + 2 条滑道轨 + 5 组龙骨墩（可复用 SN_Keel_Block 造型）+ 排水沟 + 两侧短石阶",
+      "parts": ["3 stepped stone walls", "2 slipway rails", "5 keel blocks", "drainage channel", "2 side stairs"],
+      "size": [18.0, 8.0, 2.6],
+      "tri_budget": 2200,
+      "materials": ["SN_Stone", "SN_Metal", "SN_Wood_Dark"],
+      "position": [-30.0, 60.0, 0.0],
+      "readability": "坞壁台阶与滑道轨要能读出“干船坞”；龙骨墩中心间距 3 m，可承载 60 m 船体"
+    }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_IronHarbor_Props"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "acceptance": [
+    "6 个对象，命名严格为 SN_Market_Stall / SN_Notice_Board / SN_Water_Tank / SN_Signal_Tower / SN_Shipyard_Gantry / SN_Dry_Dock",
+    "全部位于集合 SN_Port_Facilities，每个对象原点在自身底面中心（object.location = 布局位置，几何为局部坐标）",
+    "总三角面 <= 10500，单件不超过各自 tri_budget 的 1.2 倍",
+    "材质只用调色板 SN_Wood / SN_Wood_Dark / SN_Wood_Deck / SN_Metal / SN_Iron / SN_Brass / SN_Stone / SN_Canvas / SN_Canvas_Shade",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界；闭合件无非流形边",
+    "单层帆布、纸张、招牌板必须双面材质",
+    "包围盒与 items.size 误差 <= 0.1 m",
+    "3/4 视角下 6 件能清晰分辨：市场棚、告示板、水箱、信号塔、龙门吊、干船坞",
+    "招牌/纸张上不得烘焙任何文字；文字由 2D UI 层负责",
+    "原有对象（Camera / Light / 帆船 / 塔吊 / 铁港 31 件）未被删除或修改"
+  ],
+  "notes": "这批是 2.5D 港口舞台的设施锚点，不是完整建筑：不建室内、不做碰撞、不做可进入门。每件只做一眼可辨认的外轮廓 + 1–2 个标志性细节。建造完成后由 Lead 归档：.design/port/SN_<Name>.blend、assets/models/port/SN_<Name>.glb、tools/modeling/generators/sn_port_facilities_generator.py；随后登记 ASSET_MAP 并接入 PortStage 的 facility_visuals。"
+}

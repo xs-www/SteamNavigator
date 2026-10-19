@@ -1,0 +1,136 @@
+{
+  "id": "sn_schooner_fame_v1",
+  "title": "1795 年 Salem 双桅纵帆船 SN_Schooner_Fame",
+  "purpose": "替换 dev_scenes/harbor 港口样片里那艘简陋的三桅方帆占位船：按 1795 年 Salem 名船 Fame 的参考画做一艘黑船身 + 赭黄腰线 + 双桅纵帆（斜桁帆 / 方顶帆 / 艏三角帆）+ 全套索具的 24 m 级展示资产，作为港口场景的主角船。",
+  "category": "ship",
+  "style": {
+    "look": "low-poly / flat shaded / 单层色块，无贴图",
+    "palette": [
+      "SN_Hull_Black",
+      "SN_Ochre",
+      "SN_Wood",
+      "SN_Wood_Dark",
+      "SN_Wood_Deck",
+      "SN_Canvas",
+      "SN_Canvas_Shade",
+      "SN_Metal",
+      "SN_Brass",
+      "SN_Flag_Red",
+      "SN_Flag_White",
+      "SN_Flag_Blue"
+    ],
+    "reference_images": [
+      "C:/Users/Zhoei/.dsh/attachments/v1/objects/77/777111c7d9b9df51f70c051789f1d1d98f1f208672d749cb4bd5e645ddbb9e79"
+    ],
+    "notes": "参考画：Schooner Fame of Salem ~1795。黑色船身、赭黄色上舷带与舷墙内壁、黑色压条与压顶；双桅后倾，主桅顶挂红白长旒（用户要求不要星条旗，美国旗已移除）；前桅斜桁帆 + 方顶帆，主桅大斜桁帆 + 三角顶帆；艏斜桁外伸，两面艏三角帆；舷侧绳梯（shrouds + ratlines）、支索、转帆索完整；艉部弧形艉廊与 FAME 铭牌。"
+  },
+  "dimensions": {
+    "length": 33.2,
+    "width": 6.6,
+    "height": 26.7,
+    "note": "船体 LOA 24.4 m；总长含艏斜桁/艏三角帆 33.44 m；总宽含舷侧通道 6.88 m；总高从龙骨 -2.74 m 到主桅顶 24.08 m（约 26.82 m，不含旗；用户要求移除美国旗）。水线轴心 z=0，+X 船首。",
+    "unit": "m",
+    "tolerance": 0.8
+  },
+  "tri_budget": 18000,
+  "required_parts": [
+    "hull", "deck", "quarterdeck", "bulwark", "wales", "keel", "stem",
+    "stern_gallery", "rudder", "bowsprit", "jibboom",
+    "mast_fore", "mast_main", "gaffs", "booms", "yards",
+    "sails_fore", "sails_main", "headsails", "topsails",
+    "shrouds", "ratlines", "stays", "running_rigging",
+    "hatches", "capstan", "windlass", "ship_wheel", "binnacle",
+    "anchors", "catheads", "channels", "deadeyes",
+    "stern_lanterns", "pennant", "nameplate", "bell",
+    "barrels", "rope_coils", "ladders", "figurehead"
+  ],
+  "materials": [
+    "SN_Hull_Black", "SN_Ochre", "SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck",
+    "SN_Canvas", "SN_Canvas_Shade", "SN_Metal", "SN_Brass",
+    "SN_Flag_Red", "SN_Flag_White", "SN_Flag_Blue"
+  ],
+  "material_new": {
+    "SN_Hull_Black": "base 0.017/0.015/0.014，rough 0.55，metallic 0.10（黑船身 / 艉柱 / 舵 / 压条）",
+    "SN_Ochre": "base 0.430/0.230/0.052，rough 0.62，metallic 0.0（赭黄上舷带 / 舷墙 / 艉廊 / 桅顶平台缘）",
+    "SN_Canvas_Shade": "base 0.540/0.500/0.410，rough 0.92，metallic 0.0（帆缝 / 缩帆带）",
+    "SN_Flag_Red": "base 0.310/0.022/0.018，rough 0.72，metallic 0.0（红白长旒 / 艉廊窗框）"
+  },
+  "material_reuse": ["SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Canvas", "SN_Metal", "SN_Brass", "SN_Flag_Blue", "SN_Flag_White"],
+  "naming": {
+    "prefix": "SN_SF_",
+    "collection": "SN_Schooner_Fame_Prototype",
+    "root": "SN_SF_Root"
+  },
+  "transform": {
+    "pivot": "waterline, centre of hull（船体中部水线，z=0）",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0,
+    "staging_location": [0.0, -70.0, 0.0]
+  },
+  "hierarchy": {
+    "root": "SN_SF_Root",
+    "pivots": ["SN_SF_Mast_Fore_Pivot", "SN_SF_Mast_Main_Pivot"],
+    "sockets": []
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera", "Light", "SN_Ship_Root", "SN_Crane_Root", "SN_PF_Root", "SN_PS_Root",
+      "SN_Ironclad", "SN_Ironclad_Prototype", "SN_IronHarbor_Props", "SN_Ship_Modules",
+      "SN_Paddle_Freighter_Prototype", "SN_Paddle_Steamer_Prototype", "SN_Ship_Prototype"
+    ],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "no_file_switch": true,
+    "no_save_no_export": "保存 .blend / 导出 .glb 由 Lead 在人工验收后执行"
+  },
+  "deliverables": {
+    "workbench_collection": ".design/SN_Asset_Workbench.blend → SN_Schooner_Fame_Prototype",
+    "blend": ".design/ships/SN_Schooner_Fame.blend",
+    "glb": "assets/models/ships/SN_Schooner_Fame.glb",
+    "generator": "tools/modeling/generators/sn_schooner_fame_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_schooner_fame.py",
+    "screenshots": ["three_quarter", "broadside", "bow_quarter", "stern_quarter", "top"]
+  },
+  "acceptance": [
+    "除 2 个桅杆 Pivot 空物体外，所有新增对象 100% 以 SN_SF_ 开头，且全部位于集合 SN_Schooner_Fame_Prototype",
+    "三角面 <= 18000（预算），实测由 report() 输出",
+    "世界包围盒 33.44 × 6.88 × 26.82 m（含艏斜桁/艏三角帆、总宽、龙骨到桅顶），容差 ±0.8 m；轴心为船体中部水线 z=0，+X 船首",
+    "12 个材质且名称与工单一致；单层曲面（帆 / 长旒 / 甲板）材质双面，闭合件边界边 = 0",
+    "无孤立点 / 退化面 / 材质槽越界；闭合件非流形边 = 0",
+    "SN_SF_Root 带 asset / version / pivot / forward_axis 自定义属性，摆放 (0, -70, 0)",
+    "SN_SF_Mast_Fore_Pivot / SN_SF_Mast_Main_Pivot 存在，桅杆、桁、对应帆为其子级，可绕 Y 轴旋转",
+    "左右镜像误差 <= 0.002 m（船体 / 艉廊 / 双舷索具）",
+    "视觉：3/4 视角可辨认黑船身 + 赭黄腰线、双桅纵帆、方顶帆、艏三角帆、艉廊与红白长旒；侧视水线正确；无帆/索具明显穿模；**不含星条旗**（用户 2026-10-19 要求移除美国旗）",
+    "回归：工作台原有对象（相机 / 灯光 / 帆船 / 塔吊 / 道具 / 模块 / 货轮 / 明轮蒸汽船 / 铁甲舰）数量、名称、位置不变"
+  ],
+  "dryrun": {
+    "command": "python tools/modeling/generators/dryrun_schooner_fame.py",
+    "result": "ALL OK",
+    "objects": 28,
+    "meshes": 28,
+    "empties": 3,
+    "tris": 12994,
+    "report_tris": 13174,
+    "bbox": [33.44, 6.88, 26.82],
+    "mast_axis_gap": 6.4,
+    "date": "2026-10-19",
+    "note": "干跑对 FORE/MAIN 施加 Pivot 世界变换后统计；28 个几何 mesh = 12994 tri，Blender report 另加 FAME 文字铭牌 180 tri，合计 29 mesh / 13174 tri。"
+  },
+  "qa": {
+    "verifier": "qa-schooner（独立只读子代理，两轮）",
+    "result": "passed",
+    "date": "2026-10-19",
+    "r0": "passed=false：两桅世界坐标重合（origins 双重偏移）+ Pivot 未设 rake，索具/艏三角帆/长旒悬空；FAME 被舵头遮挡；艉廊窗框镜像 0.020。",
+    "fix": "origins 全零 + pivot.rotation_euler.y=radians(rake)；新增 fife rails/ladders/figurehead；艉廊 dy (-0.38,0.34)；铭牌/舵头避让；用户追加移除星条旗。",
+    "r1": "passed=true：32 对象 / 29 mesh / 3 empty / 13174 tri / 双桅轴距 6.39 m / 帆腹 -Y / Sails×Deck=0 / Headsails×Mast_Fore=156 / 长旒→主桅 0.0425 m / 艉廊镜像 0 / 铭牌后视 96/96 无遮挡 / 无星条旗 / 196 既有对象零漂移。",
+    "r4": "P2 收尾：艉柱上段 x -12.34→-12.32，原黑斑带 0 命中；艉部 -X 射线左右窗 0 遮挡。",
+    "visual_findings": [
+      "R1 后剩余 P2：前桅方顶帆帆杠与桅面间隙 ~0.35 m（远看正常，可选收 0.2 m）",
+      "索具与帆缘允许贴边接触（中位 1.5–4.6 cm，无横穿帆面）",
+      "Godot 导入与港口样片重截尚未执行（本机 GODOT_BIN 未设置）"
+    ]
+  },
+  "notes": "人工门禁 1：用户选定「新建 SN_Schooner_Fame，替换港口样片旧帆船」，精度「风格化精修 ≈1.5–1.8 万 tri」。人工门禁 2：用户 2026-10-19 明确要求「不要星条旗」——美国旗已移除，只保留红白长旒。Lead 编写参数化生成器 + 纯 Python 干跑，Builder 执行 + 只读自检，Verifier 独立复核，Lead 验收后导出 GLB 并接入 dev_scenes/harbor。"
+}

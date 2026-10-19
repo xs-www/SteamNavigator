@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://dev_scenes/harbor/harbor_diorama.gd" id="0_root"]
 [ext_resource type="Script" path="res://dev_scenes/harbor/bobbing_boat.gd" id="1_bob"]
 [ext_resource type="Material" path="res://assets/materials/water/harbor_water.tres" id="2_water"]
-[ext_resource type="PackedScene" path="res://assets/models/ships/SN_Ship_Prototype.glb" id="3_ship"]
+[ext_resource type="PackedScene" path="res://assets/models/ships/SN_Schooner_Fame.glb" id="3_ship"]
 [ext_resource type="PackedScene" path="res://assets/models/props/SN_Dock_Wall.glb" id="4_wall"]
 [ext_resource type="PackedScene" path="res://assets/models/props/SN_Harbor_Crane.glb" id="5_crane"]
 [ext_resource type="PackedScene" path="res://assets/models/props/SN_Mooring_Bollard.glb" id="6_bollard"]
@@ -555,7 +555,7 @@ position = Vector3(2, 0, -5.5)
 rotation_degrees = Vector3(0, -18, 0)
 script = ExtResource("1_bob")
 
-[node name="SN_Ship_Prototype" parent="World/ShipBob" instance=ExtResource("3_ship")]
+[node name="SN_Schooner_Fame" parent="World/ShipBob" instance=ExtResource("3_ship")]
 
 [node name="Camera3D" type="Camera3D" parent="."]
 position = Vector3(31, 12, 49)

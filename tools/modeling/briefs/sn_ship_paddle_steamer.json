@@ -1,0 +1,141 @@
+{
+  "id": "sn_ship_paddle_steamer_v1",
+  "title": "小型明轮蒸汽船 SN_Paddle_Steamer",
+  "purpose": "参考澳洲明轮蒸汽船（PS Enterprise / 澳大利亚国家博物馆藏，堪培拉伯利·格里芬湖）的小型双层明轮客船：白色船身、两舷明轮与格栅轮罩、前驾驶室 + 后敞开游步甲板、黑烟囱、艏部旗杆。作为 Steam Navigator 的第三艘船体展示资产，验证 Blender → Godot 管线。烟囱蒸汽不建模，留给游戏内 VFX",
+  "category": "ship",
+  "style": {
+    "look": "low-poly / flat shaded / 单层色块，无贴图",
+    "palette": [
+      "SN_White",
+      "SN_Iron_Hull",
+      "SN_Iron_Red",
+      "SN_Wood_Deck",
+      "SN_Metal",
+      "SN_Brass",
+      "SN_Flag_Blue",
+      "SN_Flag_White"
+    ],
+    "reference_images": [
+      "C:/Users/Zhoei/.dsh/attachments/v1/objects/7f/7f5d124c67ef00671bd2b00d9f48b6246543bba51c92f2443bd6b8847767d5ad"
+    ],
+    "notes": "澳洲内河明轮客船：白漆木质船身 + 深色水线以下船底 + 暗红压条；两舷大型梯形格栅轮罩；前部封闭驾驶室（侧板写 ENTERPRISE）、后部带白色立柱雨棚的敞开游步甲板；黑色烟囱（蒸汽留给游戏内 VFX）；艏部旗杆挂澳洲旗；艉部低甲板 + 舵"
+  },
+  "dimensions": {
+    "length": 24.4,
+    "width": 8.7,
+    "height": 10.5,
+    "note": "船体 LOA 24.0 m；总宽含两侧轮罩 8.7 m；总高从龙骨 -1.32 到烟囱顶/旗杆约 10.5 m；水线轴心 z=0。烟囱蒸汽不建模（留给游戏内 VFX）",
+    "unit": "m",
+    "tolerance": 0.8
+  },
+  "tri_budget": 12000,
+  "required_parts": [
+    "hull", "deck", "bulwark", "railing",
+    "main_cabin", "promenade_deck", "wheelhouse", "canopy",
+    "paddle_wheels", "paddle_boxes",
+    "funnel", "boiler_casing", "steam_pipes",
+    "flagstaff", "australian_flag", "nameplate",
+    "portholes", "anchors", "bollards", "deck_machinery",
+    "lifebuoy", "bell", "skylights", "vents",
+    "stairs", "rudder", "keel", "stern_platform"
+  ],
+  "wheel_detail": {
+    "blades": 10,
+    "spokes_per_rim_plane": 8,
+    "rim_segments": 14,
+    "extras": "双轮缘 + 内加强环 + 黄铜轮缘条 + 4 根轮缘斜撑 + 轮毂法兰 + 曲柄销",
+    "box": "梯形白漆轮罩：10 道水平白格栅 + 深色内衬 + 暗红顶沿 + 黄铜铭牌，箱板 y=4.06..4.30",
+    "note": "轮心 (-1.2, ±3.44, 1.55)，r=1.55，桨叶/轮缘下半露出轮罩底部"
+  },
+  "materials": [
+    "SN_White",
+    "SN_Iron_Hull",
+    "SN_Iron_Red",
+    "SN_Wood_Deck",
+    "SN_Metal",
+    "SN_Brass",
+    "SN_Flag_Blue",
+    "SN_Flag_White"
+  ],
+  "material_new": {
+    "SN_White": "base 0.760/0.735/0.680，rough 0.55，metallic 0.0（白漆船身/舱壁/轮罩/驾驶室）",
+    "SN_Flag_Blue": "base 0.012/0.035/0.120，rough 0.75，metallic 0.0（澳洲旗底）",
+    "SN_Flag_White": "base 0.800/0.800/0.800，rough 0.70，metallic 0.0（旗帜星与十字）"
+  },
+  "material_reuse": ["SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck", "SN_Metal", "SN_Brass"],
+  "naming": {
+    "prefix": "SN_PS_",
+    "collection": "SN_Paddle_Steamer_Prototype",
+    "root": "SN_PS_Root"
+  },
+  "transform": {
+    "pivot": "waterline, centre of hull（船体中部水线）",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0,
+    "staging_location": [45.0, 0.0, 0.0]
+  },
+  "hierarchy": {
+    "root": "SN_PS_Root",
+    "pivots": ["SN_PS_Paddle_Port_Pivot", "SN_PS_Paddle_Starboard_Pivot"],
+    "sockets": []
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera", "Light", "SN_Ship_Root", "SN_Crane_Root", "SN_PF_Root",
+      "SN_Ironclad", "SN_IronHarbor_Props", "SN_Ship_Modules"
+    ],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "no_file_switch": true,
+    "no_save_no_export": "保存 .blend / 导出 .glb 由 Lead 在验收后执行"
+  },
+  "deliverables": {
+    "workbench_collection": ".design/SN_Asset_Workbench.blend → SN_Paddle_Steamer_Prototype",
+    "blend": ".design/ships/SN_Paddle_Steamer.blend",
+    "glb": "assets/models/ships/SN_Paddle_Steamer.glb",
+    "generator": "tools/modeling/generators/sn_paddle_steamer_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_paddle_steamer.py",
+    "screenshots": ["three_quarter", "broadside", "bow", "stern_quarter", "top"]
+  },
+  "acceptance": [
+    "除 2 个明轮 Pivot 空物体外，所有新增对象 100% 以 SN_PS_ 开头，且全部位于集合 SN_Paddle_Steamer_Prototype",
+    "三角面 <= 12000（预算），实测由 report() 输出",
+    "世界包围盒 24.4 × 8.7 × 10.5 m（船体 LOA 24.0 m、总宽含轮罩、总高含烟囱/旗杆），容差 ±0.8 m；轴心为船体中部水线 z=0，+X 船首",
+    "8 个材质且名称与工单一致；单层曲面（甲板/铭牌贴片/旗面）材质双面，闭合件边界边 = 0",
+    "无孤立点 / 退化面 / 材质槽越界；闭合件非流形边 = 0",
+    "SN_PS_Root 带 asset / version / pivot / forward_axis 自定义属性，摆放 (45, 0, 0)",
+    "SN_PS_Paddle_Port_Pivot / SN_PS_Paddle_Starboard_Pivot 存在，轮系几何为其子级，可绕 Y 轴旋转",
+    "明轮轮系完整：10 片桨叶、每侧 8 根辐条、14 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 根轮缘斜撑；轮罩格栅 10 道、深色内衬与暗红顶沿；桨叶/轮缘不与轮罩、船体、明轮台相交（静态 + 0/45°…315° 八旋转角；轮轴穿过船体/轮罩属轴系结构，不计）",
+    "主甲板舱室、前驾驶室（侧板 ENTERPRISE 铭牌）、后部雨棚游步甲板、两舷明轮与轮罩、黑色烟囱、艏旗杆澳洲旗均可辨认；侧视水线高度正确",
+    "回归：原有 161 个对象（Camera/Light/帆船/塔吊/道具/模块/明轮货轮/铁甲舰）的名称、位置、数量不变",
+    "视觉：3/4 视角能辨认明轮、格栅轮罩、驾驶室、雨棚、烟囱、旗帜；侧视为典型双层明轮客船轮廓。**不含蒸汽几何**，蒸汽由游戏内 VFX 负责"
+  ],
+  "dryrun": {
+    "command": "python tools/modeling/generators/dryrun_paddle_steamer.py",
+    "result": "ALL OK",
+    "objects": 35,
+    "meshes": 32,
+    "empties": 3,
+    "tris": 11088,
+    "report_tris": 11764,
+    "bbox": [24.56, 8.74, 10.47],
+    "date": "2026-10-19",
+    "note": "删除烟囱蒸汽几何后重跑；Z 范围 -1.32..9.15，边界/非流形/退化/孤立点全 0。干跑只统计 32 个几何 mesh（11088 tri）；Blender report() 另含 2 个 ENTERPRISE 文字铭牌（各 434 tri），合计 11764 tri"
+  },
+  "smoke_vfx": "不在模型内：烟囱蒸汽由游戏内粒子/VFX 渲染（用户 2026-10-19 明确要求）",
+  "qa": {
+    "verifier": "qa-steamer（独立只读子代理）",
+    "result": "passed",
+    "date": "2026-10-19",
+    "checks": "35 对象 / 32 mesh / 3 empty、100% SN_PS_ 前缀、root 属性与 (45,0,0) 摆位、32 mesh 父级与 2 个 Pivot、tri 11764/12000、bbox 24.56×8.74×10.47、8 材质 doubleSided、网格健康全 0（边界边仅 Deck 42 + 铭牌各 6）、双舷明轮 8 旋转角 0 交面、524 岛悬空 0、161 既有对象回归零漂移、无蒸汽残留",
+    "visual_findings": [
+      "P1 轮罩下沿偏低，常规视角明轮露出偏少（已由 Lead 在验收后把 z0 0.55→0.90 并重跑 verify、重渲截图）",
+      "P2 后部雨棚整块大平顶体量偏重（非阻断，下一轮打磨）",
+      "P3 全白层次对比偏弱、暗红压条偏细（非阻断，下一轮打磨）"
+    ],
+    "post_qa_change": "PADDLE_BOX.z0 0.55→0.90；重跑 dryrun ALL OK、verify_paddle_steamer_scene passed、重渲 5 张截图、重导 GLB 并 verify_paddle_steamer_glb GLB OK"
+  },
+  "notes": "工单由 Lead 起草；参考图为澳大利亚明轮蒸汽船 PS Enterprise（白船身 / 格栅轮罩 / 前驾驶室 + 后雨棚）。用户明确要求：**烟囱蒸汽不做几何**，留给游戏内 VFX。Lead 编写参数化生成器并纯 Python 干跑，Builder 执行 + 只读自检，Verifier 独立复核，Lead 验收后落盘。"
+}

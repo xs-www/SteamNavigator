@@ -8,6 +8,9 @@
       "description_key": "material.core.boiler_plate.description",
       "tags": ["material.shipbuilding", "material.tier2"],
       "enabled": true,
+      "information": {
+        "model": "model.material.boiler_plate"
+      },
       "data": {
         "tier": 2,
         "unit_weight": 2.0,
@@ -23,6 +26,9 @@
       "description_key": "material.core.precision_gear.description",
       "tags": ["material.shipbuilding", "material.tier3"],
       "enabled": true,
+      "information": {
+        "model": "model.material.precision_gear"
+      },
       "data": {
         "tier": 3,
         "unit_weight": 0.8,
@@ -38,6 +44,9 @@
       "description_key": "material.core.sealing_compound.description",
       "tags": ["material.shipbuilding", "material.tier1"],
       "enabled": true,
+      "information": {
+        "model": "model.material.sealing_compound"
+      },
       "data": {
         "tier": 1,
         "unit_weight": 0.5,

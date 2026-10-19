@@ -53,6 +53,21 @@ func _check_nodes(scene: Node) -> void:
 	print("[INFO] 场景内嵌场景实例：%d" % instances)
 	_expect(instances >= 20, "至少复用 20 个已有模型实例")
 
+	# 浮船已从旧 SN_Ship_Prototype 换成 1795 双桅纵帆船 SN_Schooner_Fame。
+	var ship := scene.find_child("SN_Schooner_Fame", true, false)
+	_expect(ship != null, "有 SN_Schooner_Fame 纵帆船实例")
+	_expect(scene.find_child("SN_Ship_Prototype", true, false) == null,
+		"旧 SN_Ship_Prototype 已不在港口场景")
+	if ship != null:
+		var meshes := ship.find_children("*", "MeshInstance3D", true, false)
+		print("[INFO] SN_Schooner_Fame 网格实例：%d" % meshes.size())
+		_expect(meshes.size() >= 20, "纵帆船网格实例 >= 20")
+		var has_flag := false
+		for node in meshes:
+			if String(node.name).contains("Flag"):
+				has_flag = true
+		_expect(not has_flag, "纵帆船不含星条旗 / Flag 网格")
+
 
 func _check_water(scene: Node) -> void:
 	var water := scene.find_child("Water", true, false) as MeshInstance3D

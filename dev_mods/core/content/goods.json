@@ -8,6 +8,9 @@
       "description_key": "good.core.iron_ore.description",
       "tags": ["good.trade", "good.bulk", "good.shipbuilding"],
       "enabled": true,
+      "information": {
+        "model": "model.good.iron_ore"
+      },
       "data": {
         "unit_weight": 3.0,
         "base_price": 42,
@@ -70,6 +73,9 @@
       "description_key": "good.core.timber.description",
       "tags": ["good.trade", "good.bulk", "good.shipbuilding"],
       "enabled": true,
+      "information": {
+        "model": "model.good.timber"
+      },
       "data": {
         "unit_weight": 2.5,
         "base_price": 36,
@@ -116,6 +122,10 @@
       "description_key": "good.core.coal.description",
       "tags": ["good.supply", "supply.coal", "good.bulk"],
       "enabled": true,
+      "information": {
+        "texture": "icon.coal",
+        "model": "model.good.coal"
+      },
       "data": {
         "unit_weight": 1.0,
         "base_price": 4,
@@ -131,6 +141,9 @@
       "description_key": "good.core.water.description",
       "tags": ["good.supply", "supply.water", "good.bulk"],
       "enabled": true,
+      "information": {
+        "texture": "icon.water"
+      },
       "data": {
         "unit_weight": 1.0,
         "base_price": 2,

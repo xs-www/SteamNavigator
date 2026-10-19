@@ -286,3 +286,30 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 独立 Verifier | 只读全量复核：命名/集合、tri、6 材质与参数、包围盒、网格健康、层级、明轮结构（44 网格岛逐项）、侧封板射线、15 对交面、回归基线、视觉 —— R3 版本 **passed=true，failures=[]**；R4/R5 为人工追加设计轮次，由 Builder 交面矩阵 + Lead 三角化 BVH 复核（15 对全 0、8 个旋转角全 0） |
 | 归档 | `assets/models/ships/SN_Paddle_Freighter.glb`（46 节点 / 39 网格 / 6 材质全 doubleSided / 12200 tri / 639.5 KB）；`.design/ships/SN_Paddle_Freighter.blend` 用 `bpy.data.libraries.write` 只打包集合（不切文件）；工作台保存于 `.design/SN_Asset_Workbench.blend`（149 对象） |
 | 过程发现 | ① 干跑只查数字不查**对称**，hull 镜像缺点的靠 Builder 低角度侧视才抓到 → 大船验收必须加"左右镜像差"与"低角度侧视"两项；② `BVHTree.FromObject` 对父子对象在各自局部空间，跨对象直接 overlap 会出假阳性，必须用世界坐标 `FromPolygons`；③ 轮罩"看上去像什么"由**径向板宽**决定：0.4 m 窄环 = 裸轮框，1.4 m 半包板 = 明轮箱，光加桨叶/辐条不够 |
+
+### 11.9 1795 双桅纵帆船（SN_Schooner_Fame，R0 → R4）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求门禁 | 用户给 1795 Salem 名船 Fame 的绘画，要求替换港口旧帆船；选「新建资产 + 替换场景实例」、精度「风格化精修 ≈1.5–1.8 万 tri」；追加「不要星条旗」 |
+| Lead 生成器 | 18 站放样黑/赭黄船体 + 双桅后倾 + 斜桁帆/方顶帆/三角顶帆 + 两面艏三角帆 + 完整索具 + 艉廊/FAME 铭牌 + 红白长旒；帆腹镜像到 −Y 对齐 Godot 港口相机侧 |
+| 干跑盲区（教训 1） | 第一版 dryrun 直接累加 Part 原始顶点，**没有对 FORE/MAIN 施加 Pivot 平移/旋转**，导致 bbox 少 0.4 m、也无法发现“两桅世界坐标重合”；修复：驱动 `mast_to_world()` 后累加，并新增两桅轴距/后倾/主桅更高三条断言 |
+| 装配 P0（教训 2） | `build_all()` 给 FORE/MAIN 的 `_make_object` 传了 `mast_pivot_world()` 作为 origin，而 Part 本来就是 Pivot 局部坐标 → 减一次、父级再加回，**两桅在世界坐标完全重合**；同时 Pivot 没设 `rotation_euler.y`，rake 从未生效，索具/艏三角帆/长旒全部悬空。修复：`origins` 全零 + `pivot.rotation_euler[1]=radians(rake)` |
+| 返工 | R1 修复双桅/后倾；R2 修艉廊窗框镜像 0.020、FAME 被舵头遮挡；R3 修艉柱与艉廊面板共面黑斑；R4 把艉柱上段再收 20 mm，原黑斑带 0 命中 |
+| 自动质检 | 终版 32 对象 / 29 mesh / 3 empty / **13174 tri**（预算 18000）/ 12 材质 / bbox **33.44 × 6.88 × 26.82 m** / 双桅轴距 6.39 m / Sails×Deck=0 / Headsails×Mast_Fore=156 / 长旒→主桅 0.0425 m / 艉廊镜像 0 / 铭牌后视 96/96 无遮挡 / 非流形·退化·孤立点 0 |
+| 独立 Verifier | R0 `passed=false`（P0 双桅重合）；R1 独立复算后 **passed=true**，只余 3 项 P2；R4 终版可归档 |
+| 归档 | `assets/models/ships/SN_Schooner_Fame.glb`（32 节点 / 29 网格 / 13174 tri / 720.9 KB）+ `.design/ships/SN_Schooner_Fame.blend`（32 对象快照）；港口样片 `harbor_diorama.tscn` 浮船实例替换为新船，水面泡沫环同步改 13.2×3.9 |
+| 过程发现 | ① **Pivot 部件不要既减原点又在父级加回**：局部部件必须 `origin=(0,0,0)`，否则世界坐标退化为局部坐标；② 干跑必须复刻 Blender 的装配变换（Pivot 位移 + 旋转），否则 bbox 与桅轴类 P0 会漏检；③ 港口相机在 Godot +Z 侧 = Blender −Y，帆腹要朝相机侧镜像，否则游戏里看到的是凹面/暗面；④ 移除星条旗后旗杆段、旗材质、文档三处都要同步清理，避免“残留对象/过期说明” |
+
+### 11.10 可复用部件库 v1（ship_parts，建模期复用）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 用户问“能否把一些部件抽离，做可替换/可复用的部件”；选择先做**建模期部件库**，不立刻做运行时可换装 GLB |
+| 目录 | `tools/modeling/generators/ship_parts/`：`core.py`（Part/向量/基本体/PartSpec）、`deck.py`（甲板属具）、`bow.py`（艏斜桁/艏饰）、`stern.py`（艉廊/艉灯）、`assembly.py`（Blender 装配/材质/文字/report）、`palette.py`（共享材质名）、`README.md`（契约） |
+| 抽离边界 | 低耦合件先抽：舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯、艏斜桁/jibboom、艏饰、艉廊；hull/deck/bulwark/wales/keel/channels/rigging 仍留在船型生成器（与站表/曲面强耦合） |
+| 生成器 | `sn_schooner_fame_generator.py` 只保留船型参数、hull/桅帆/索具/艏部锚架等船型相关几何，以及 `build_config()`；Blender 装配全部走 `ship_parts.assembly.build_collection()` |
+| 基线锁 | 重构前保存两份基线：纯 Python 逐对象 verts/faces/tris/material/parent digest（`.design/schooner_baseline_geometry.json`）与 Blender 世界坐标/局部坐标/面材质 digest（`.design/schooner_blender_baseline.json`） |
+| 验收 | 重构后纯 Python digest **0 差异**；dryrun `ALL OK`、12994 tri、bbox/材质/命名不变；Builder 重建后 Blender 逐对象 world/local/polys digest **0 差异**（32 对象 / 29 mesh / 3 empty / 13174 tri；196 个既有对象零漂移）；`importlib` 加载与无 `__file__` 时 `bpy.data.filepath` 回退均已验证 |
+| 契约 | 单位米、+X 船首/+Z 向上；部件函数只收位置/尺寸/材质名，不 import 船型站表；`Part` 不含 bpy；`PartSpec(name, part, parent, origin, sockets, tags)` 预留给后续运行时可替换件 |
+| 后续 | ① 把 masts/sails/rigging 抽成 `rig_kit`（参数化桅距/帆装）；② 增加第二艘船型验证复用；③ 等 2.5D 舞台立项后，再从同一份部件源码导出独立 GLB + `SN_Socket_*` + `parts_manifest.json`，不在生成器里维护第二套几何 |

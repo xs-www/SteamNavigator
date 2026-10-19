@@ -1,0 +1,82 @@
+{
+  "id": "sn_ironclad_broadside_v1",
+  "title": "舷侧炮铁甲舰 SN_Ironclad（60 m 级）",
+  "purpose": "为 2.5D 港口/海战舞台补一条有压迫感的蒸汽铁甲舰：装甲带 + 舷侧炮列 + 三桅蒸汽风帆混合，纯展示资产",
+  "category": "ship",
+  "collection": "SN_Ironclad_Prototype",
+  "object": "SN_Ironclad",
+  "style": {
+    "look": "low-poly / flat shaded / 色块建模，无贴图；铁壳 + 木甲板 + 黄铜细节",
+    "palette": ["SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck", "SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Brass", "SN_Canvas"],
+    "reference_images": ["assets/models/ships/SN_Paddle_Freighter.glb", "assets/models/ships/SN_Ship_Prototype.glb"],
+    "notes": "1860 年代舷侧炮铁甲舰：低干舷铁壳、水线装甲带、舷侧炮门与炮管、中央装甲炮房、双烟囱、三桅横桁（帆收拢）"
+  },
+  "dimensions": {
+    "length": 60.0,
+    "width": 18.0,
+    "height": 28.4,
+    "unit": "m",
+    "tolerance": 0.5,
+    "z_range": [-4.2, 24.2]
+  },
+  "tri_budget": 12000,
+  "hero_proportions": {
+    "rationale": "固定 2.5D 机位下 0.36 m 的写实炮管只有 3–4 px，读不出炮列；世界尺度不变，只按镜头可读性放大叙事件",
+    "guns_per_side": 6,
+    "gun_spacing_m": 7.0,
+    "gun_port_m": [1.9, 1.9],
+    "barrel_diameter_m": [0.88, 0.72],
+    "barrel_exposed_m": 1.55,
+    "muzzle_ring_diameter_m": 1.0,
+    "barrel_toe_deg": 12,
+    "armor_belt": "2.2 m tall / 380 mm proud / 120 mm plate seams",
+    "minimum_on_screen": "炮门 >= 16 px、炮管 >= 6 px @ 1440 宽、正交视宽 100 m（约 14.4 px/m）的固定 3/4 舞台机位"
+  },
+  "required_parts": [
+    "hull", "ram_bow", "armor_belt", "gun_ports", "gun_barrels", "citadel",
+    "conning_tower", "funnels", "masts", "yards", "furled_sails", "bowsprit",
+    "rigging", "bulwark", "deck_fittings", "anchors", "rudder", "propeller",
+    "stern_gallery", "flags"
+  ],
+  "materials": ["SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck", "SN_Wood", "SN_Wood_Dark", "SN_Metal", "SN_Brass", "SN_Canvas"],
+  "naming": {
+    "prefix": "SN_",
+    "collection": "SN_Ironclad_Prototype",
+    "object": "SN_Ironclad"
+  },
+  "transform": {
+    "pivot": "waterline centre (x=0 船中, z=0 水线)",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "hierarchy": {
+    "root": null,
+    "pivots": [],
+    "note": "单 mesh 节点（纯展示资产）；如后续要做桅杆/炮门动画，再拆 Pivot"
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_IronHarbor_Props", "SN_Paddle_Freighter_Prototype", "SN_Ship_Modules"],
+    "keep_existing_objects": true,
+    "no_delete": true
+  },
+  "deliverables": {
+    "blend": ".design/SN_Asset_Workbench.blend（集合 SN_Ironclad_Prototype）+ .design/ships/SN_Ironclad.blend（集合快照）",
+    "glb": "assets/models/ships/SN_Ironclad.glb",
+    "generator": "tools/modeling/generators/sn_ironclad_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_ironclad.py",
+    "preview": "tools/modeling/generators/render_ironclad_preview.py",
+    "screenshots": ["three_quarter", "broadside", "bow"]
+  },
+  "acceptance": [
+    "对象名 SN_Ironclad，位于 SN_Ironclad_Prototype 集合，单 mesh、多材质槽",
+    "三角面 <= 12000",
+    "无孤立点 / 退化面 / 材质槽越界；闭合件边界边与非流形边 = 0",
+    "包围盒 60.0 × 18.0 × 28.4 m（逐轴误差 <= 0.5 m）；水线 z=0，龙骨 z≈-4.2",
+    "材质只用 8 色调色板，不新增材质",
+    "3/4 与侧视下能读出：铁壳装甲带、舷侧炮列、中央炮房、双烟囱、三桅横桁、撞角艏",
+    "场景中原有 160 对象（含 11 件模块）未被删除或修改"
+  ],
+  "notes": "纯展示资产：不接入 Core 内容键、不改游戏逻辑。生成器参数表驱动；GLB 单节点、轴心在水线中心。"
+}

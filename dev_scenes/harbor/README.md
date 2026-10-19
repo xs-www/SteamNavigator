@@ -1,8 +1,8 @@
 # 港口样片（独立场景）
 
 一个**不接入主流程**的 3D 港口试做场景：用 `assets/models` 里已有的低模资产搭一个小港口，
-用自写着色器渲染水面，港口前浮着一艘会随波起伏的船。用于验证水面观感、资产拼接与
-固定机位构图，不参与 `framework/` 的启动与玩法流程。
+用自写着色器渲染水面，港口前浮着一艘会随波起伏的 **1795 年 Salem 双桅纵帆船 `SN_Schooner_Fame`**。
+用于验证水面观感、资产拼接与固定机位构图，不参与 `framework/` 的启动与玩法流程。
 
 ## 运行
 
@@ -57,6 +57,15 @@ godot --headless --path . --script res://tools/godot/verify_harbor_diorama.gd
   必须同步修改**，否则船和水会各动各的。
 - 构图：`HarborDiorama/Camera3D` 固定机位（位置、`rotation_degrees`、`fov`）。
 - 船体泡沫环：`boat_center`、`boat_half_size`、`boat_yaw` 与 `World/ShipBob` 的位置/朝向对应。
+  当前 `SN_Schooner_Fame` 船体 LOA 24.4 m，`boat_half_size` 取 `(13.2, 3.9)`；换船或改船体比例时同步修改。
+- 新船的帆腹统一朝 Blender -Y（Godot +Z，即本场景相机侧），不要随意翻转，否则相机看到的是帆的凹面/背面。
+- 当前机位截图由窗口模式脚本生成（不能用 `--headless`，否则视口纹理为空）：
+  ```powershell
+  godot --path . --resolution 1440x900 --script res://tools/godot/capture_harbor_diorama.gd
+  ```
+  产出 `docs/design/screenshots/harbor_diorama_schooner.png`（固定机位）与 `harbor_diorama_schooner_detail.png`（近景）。
+  旧的 `harbor_diorama_dusk.png` / `harbor_diorama_detail.png` 是 `SN_Ship_Prototype` 浮船版本，仅作历史对照；
+  纵帆船本体预览见 `docs/design/screenshots/schooner_fame_*.png`。
 
 ## 已知边界
 

@@ -35,7 +35,16 @@
     "icon.coal": "assets/icons/coal.png",
     "icon.water": "assets/icons/water.png",
     "icon.money": "assets/icons/money.png",
-    "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png"
+    "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png",
+    "model.ship.prototype": "assets/models/ships/SN_Ship_Prototype.glb",
+    "model.ship.paddle_freighter": "assets/models/ships/SN_Paddle_Freighter.glb",
+    "model.module.boiler": "assets/models/modules/SN_Boiler_Unit.glb",
+    "model.good.iron_ore": "assets/models/goods/SN_Ore_Pile.glb",
+    "model.good.coal": "assets/models/goods/SN_Coal_Pile.glb",
+    "model.good.timber": "assets/models/goods/SN_Timber_Stack.glb",
+    "model.material.boiler_plate": "assets/models/materials/SN_Plate_Stack.glb",
+    "model.material.precision_gear": "assets/models/materials/SN_Gear_Crate.glb",
+    "model.material.sealing_compound": "assets/models/materials/SN_Barrel.glb"
   },
   "authors": ["Steam Navigator Team"],
   "license": "Proprietary",
