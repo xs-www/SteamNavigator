@@ -14,6 +14,27 @@
       "data": {
         "size": "medium",
         "banner_asset": "banner.port.iron_harbor",
+        "diorama": {
+          "kit": "harbor.iron",
+          "town": {
+            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_short": "model.prop.warehouse_short",
+            "harbor_office": "model.prop.harbor_office",
+            "cargo_shed": "model.prop.cargo_shed",
+            "tavern": "model.prop.tavern",
+            "fence_row": "model.prop.fence_row",
+            "dock_worker_a": "model.prop.dock_worker_a",
+            "dock_worker_b": "model.prop.dock_worker_b",
+            "rowboat": "model.prop.rowboat",
+            "cargo_lighter": "model.prop.cargo_lighter",
+            "crate": "model.prop.crate",
+            "barrel": "model.prop.barrel",
+            "coal_pile": "model.prop.coal_pile",
+            "timber_stack": "model.prop.timber_stack",
+            "handcart": "model.prop.handcart",
+            "gas_lamp": "model.prop.gas_lamp"
+          }
+        },
         "facilities": ["exchange", "contracts", "supply", "shipyard"],
         "market": [
           {"good": "core:good/iron_ore", "stock_range": [70, 130]},
@@ -33,6 +54,27 @@
       "enabled": true,
       "data": {
         "size": "small",
+        "diorama": {
+          "kit": "harbor.spice",
+          "town": {
+            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_short": "model.prop.warehouse_short",
+            "harbor_office": "model.prop.harbor_office",
+            "cargo_shed": "model.prop.cargo_shed",
+            "tavern": "model.prop.tavern",
+            "fence_row": "model.prop.fence_row",
+            "dock_worker_a": "model.prop.dock_worker_a",
+            "dock_worker_b": "model.prop.dock_worker_b",
+            "rowboat": "model.prop.rowboat",
+            "cargo_lighter": "model.prop.cargo_lighter",
+            "crate": "model.prop.crate",
+            "barrel": "model.prop.barrel",
+            "coal_pile": "model.prop.coal_pile",
+            "timber_stack": "model.prop.timber_stack",
+            "handcart": "model.prop.handcart",
+            "gas_lamp": "model.prop.gas_lamp"
+          }
+        },
         "facilities": ["exchange", "contracts", "supply", "intel"],
         "market": [
           {"good": "core:good/spices", "stock_range": [30, 70], "price_bias": 0.9},
@@ -50,6 +92,27 @@
       "enabled": true,
       "data": {
         "size": "medium",
+        "diorama": {
+          "kit": "harbor.free",
+          "town": {
+            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_short": "model.prop.warehouse_short",
+            "harbor_office": "model.prop.harbor_office",
+            "cargo_shed": "model.prop.cargo_shed",
+            "tavern": "model.prop.tavern",
+            "fence_row": "model.prop.fence_row",
+            "dock_worker_a": "model.prop.dock_worker_a",
+            "dock_worker_b": "model.prop.dock_worker_b",
+            "rowboat": "model.prop.rowboat",
+            "cargo_lighter": "model.prop.cargo_lighter",
+            "crate": "model.prop.crate",
+            "barrel": "model.prop.barrel",
+            "coal_pile": "model.prop.coal_pile",
+            "timber_stack": "model.prop.timber_stack",
+            "handcart": "model.prop.handcart",
+            "gas_lamp": "model.prop.gas_lamp"
+          }
+        },
         "facilities": ["exchange", "contracts", "supply", "shipyard", "intel"],
         "market": [
           {"good": "core:good/brass", "stock_range": [40, 90]},
@@ -70,6 +133,27 @@
       "enabled": true,
       "data": {
         "size": "small",
+        "diorama": {
+          "kit": "harbor.fishing",
+          "town": {
+            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_short": "model.prop.warehouse_short",
+            "harbor_office": "model.prop.harbor_office",
+            "cargo_shed": "model.prop.cargo_shed",
+            "tavern": "model.prop.tavern",
+            "fence_row": "model.prop.fence_row",
+            "dock_worker_a": "model.prop.dock_worker_a",
+            "dock_worker_b": "model.prop.dock_worker_b",
+            "rowboat": "model.prop.rowboat",
+            "cargo_lighter": "model.prop.cargo_lighter",
+            "crate": "model.prop.crate",
+            "barrel": "model.prop.barrel",
+            "coal_pile": "model.prop.coal_pile",
+            "timber_stack": "model.prop.timber_stack",
+            "handcart": "model.prop.handcart",
+            "gas_lamp": "model.prop.gas_lamp"
+          }
+        },
         "facilities": ["exchange", "contracts", "supply"],
         "market": [
           {"good": "core:good/timber", "stock_range": [90, 150], "price_bias": 0.9},
@@ -87,6 +171,27 @@
       "enabled": true,
       "data": {
         "size": "small",
+        "diorama": {
+          "kit": "harbor.glass",
+          "town": {
+            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_short": "model.prop.warehouse_short",
+            "harbor_office": "model.prop.harbor_office",
+            "cargo_shed": "model.prop.cargo_shed",
+            "tavern": "model.prop.tavern",
+            "fence_row": "model.prop.fence_row",
+            "dock_worker_a": "model.prop.dock_worker_a",
+            "dock_worker_b": "model.prop.dock_worker_b",
+            "rowboat": "model.prop.rowboat",
+            "cargo_lighter": "model.prop.cargo_lighter",
+            "crate": "model.prop.crate",
+            "barrel": "model.prop.barrel",
+            "coal_pile": "model.prop.coal_pile",
+            "timber_stack": "model.prop.timber_stack",
+            "handcart": "model.prop.handcart",
+            "gas_lamp": "model.prop.gas_lamp"
+          }
+        },
         "facilities": ["exchange", "contracts", "supply", "intel"],
         "market": [
           {"good": "core:good/glassware", "stock_range": [40, 90], "price_bias": 0.9},

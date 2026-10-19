@@ -53,6 +53,41 @@
           "type": "string",
           "pattern": "^[a-z][a-z0-9_.-]*$"
         },
+        "diorama": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kit": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.-]*$"
+            },
+            "town": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.-]*$"
+              }
+            },
+            "facility_visuals": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.-]*$"
+              }
+            },
+            "palette": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "landmark": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.-]*$"
+            }
+          }
+        },
         "market": {
           "type": "array",
           "minItems": 1,

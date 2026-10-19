@@ -498,3 +498,145 @@ func test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void:
 	assert_eq(port.atmosphere_layers(), fog_layers, "the L7 fog layer count survives the visibility round-trip")
 	assert_eq(port.skyline_building_count(), buildings, "the L2 building count survives the visibility round-trip")
 	_free_host(host)
+
+
+# --- 8. PortStage harbour-town street kit (L2b) ------------------------------
+
+## The official town kit as the query resolves it for a dev/loose `core` mod.
+## Five buildings + seven repeated fence modules + six workers + eight reused
+## props + three boats = 29 mounted props when every slot resolves.
+const TOWN_VISUALS := {
+	"warehouse_long": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb",
+	"warehouse_short": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Short.glb",
+	"harbor_office": "res://dev_mods/core/assets/models/props/SN_HT_Harbor_Office.glb",
+	"cargo_shed": "res://dev_mods/core/assets/models/props/SN_HT_Cargo_Shed.glb",
+	"tavern": "res://dev_mods/core/assets/models/props/SN_HT_Tavern.glb",
+	"fence_row": "res://dev_mods/core/assets/models/props/SN_HT_Fence_Row.glb",
+	"dock_worker_a": "res://dev_mods/core/assets/models/props/SN_HT_Dock_Worker_A.glb",
+	"dock_worker_b": "res://dev_mods/core/assets/models/props/SN_HT_Dock_Worker_B.glb",
+	"rowboat": "res://dev_mods/core/assets/models/props/SN_HT_Rowboat.glb",
+	"cargo_lighter": "res://dev_mods/core/assets/models/props/SN_HT_Cargo_Lighter.glb",
+	"crate": "res://dev_mods/core/assets/models/props/SN_Crate.glb",
+	"barrel": "res://dev_mods/core/assets/models/props/SN_Barrel.glb",
+	"coal_pile": "res://dev_mods/core/assets/models/props/SN_Coal_Pile.glb",
+	"timber_stack": "res://dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
+	"handcart": "res://dev_mods/core/assets/models/props/SN_Handcart.glb",
+	"gas_lamp": "res://dev_mods/core/assets/models/props/SN_Gas_Lamp.glb",
+}
+const TOWN_MISSING_MODEL := "res://dev_mods/core/assets/models/props/SN_Does_Not_Exist.glb"
+const STEADY_BUILD := "core:starting_build/steady"
+
+
+func test_port_stage_town_kit_mounts_full_streetscape() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_eq(port.town_prop_count(), 29, "5 buildings + 7 fence modules + 6 workers + 8 props + 3 boats mount")
+	assert_eq(port.town_blockout_count(), 0, "every resolved town slot loads its GLB instead of a blockout")
+	assert_eq(port.skyline_building_count(), 0, "a mounted town kit replaces the L2 skyline")
+	assert_eq(port.skyline_crane_count(), 0, "a mounted town kit replaces the L2 cranes")
+
+	# The painted L1 banner and the town kit are independent layers.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {
+		"town_visuals": TOWN_VISUALS,
+		"banner_path": IRON_HARBOR_BANNER,
+	}))
+	assert_true(port.has_backdrop(), "the authored banner still loads with a town kit bound")
+	assert_eq(port.town_prop_count(), 29, "the town kit stays mounted under a painted banner")
+	assert_eq(port.town_blockout_count(), 0, "the banner does not disturb the town kit")
+	_free_host(host)
+
+
+func test_port_stage_without_town_kit_uses_blockouts_and_keeps_skyline() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	assert_eq(port.town_prop_count(), 5, "the five town buildings fall back to blockouts")
+	assert_eq(port.town_blockout_count(), 5, "every missing building visual is a blockout")
+	assert_eq(port.skyline_building_count(), 10, "without a town kit the L2 skyline is still built")
+	assert_true(port.skyline_crane_count() >= 2, "without a town kit the L2 cranes are still built")
+	assert_false(port.has_backdrop(), "the banner-less fixture also has no town kit")
+	_free_host(host)
+
+
+func test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	# One broken building visual: only that slot degenerates to a blockout.
+	var partial := TOWN_VISUALS.duplicate(true)
+	partial["warehouse_long"] = TOWN_MISSING_MODEL
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": partial}))
+	assert_eq(port.town_blockout_count(), 1, "only the broken building falls back to a blockout")
+	assert_eq(port.town_prop_count(), 29, "the other town props still mount")
+	assert_eq(port.skyline_building_count(), 0, "a mounted town kit still suppresses the L2 skyline")
+
+	# Every path broken: the five buildings stay as blockouts, the optional
+	# fence/worker/prop/boat slots disappear instead of becoming empty anchors.
+	var broken := TOWN_VISUALS.duplicate(true)
+	for slot in broken.keys():
+		broken[String(slot)] = TOWN_MISSING_MODEL
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": broken}))
+	assert_eq(port.town_blockout_count(), 5, "every missing building falls back to its blockout")
+	assert_eq(port.town_prop_count(), 5, "only the five building blockouts remain")
+	_free_host(host)
+
+
+func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": 13013})
+	assert_true(bool(started.get("ok", false)), "run.start succeeds in the port-view fixture: %s" % str(started))
+	var result := context.queries.execute(&"port.view")
+	assert_true(bool(result.get("ok", false)), "port.view answers after run.start: %s" % str(result))
+	var data: Dictionary = result.get("data", {})
+	var current_port: Dictionary = data.get("current_port", {})
+	assert_false(current_port.is_empty(), "port.view reports the current port")
+
+	var town: Dictionary = current_port.get("town_visuals", {})
+	assert_true(town.size() >= 10, "port.view resolves at least the 10 town-kit slots: %d" % town.size())
+	for slot in ["warehouse_long", "rowboat", "crate", "gas_lamp"]:
+		assert_true(town.has(String(slot)), "the resolved town kit exposes the %s slot" % slot)
+	for slot in town.keys():
+		var path := String(town[slot])
+		assert_true(path.begins_with("res://"), "town slot %s resolves to a res:// path: %s" % [slot, path])
+		assert_true(FileAccess.file_exists(path), "town slot %s resolves to an existing file: %s" % [slot, path])
+	var diorama: Dictionary = current_port.get("diorama", {})
+	assert_false(
+		String(diorama.get("kit", "")).is_empty(),
+		"port.view keeps the diorama kit id: %s" % String(diorama.get("kit", ""))
+	)
+	var size := String(current_port.get("size", ""))
+	assert_true(["small", "medium", "large"].has(size), "the current port reports a known size: %s" % size)
+
+	# End to end: the ViewModel the page would bind mounts the full streetscape.
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if stage is PortStage:
+		host.bind_view_model({"port": current_port})
+		var port := stage as PortStage
+		assert_eq(port.town_prop_count(), 29, "the resolved query ViewModel mounts the full streetscape")
+		assert_eq(port.town_blockout_count(), 0, "every resolved town visual replaces its blockout")
+	_free_host(host)

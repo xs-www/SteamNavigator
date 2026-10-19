@@ -19,6 +19,26 @@ extends Control
 
 const STAGE_SCENE := "res://framework/ui/stages/port_stage.tscn"
 const BANNER_PATH := "res://dev_mods/core/assets/ports/iron_harbor_banner.png"
+## Pre-resolved town-kit paths (inside the loose dev core mod), mirroring what
+## `port.view` resolves from `port.diorama.town` in the real game.
+const TOWN_VISUALS := {
+	"warehouse_long": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb",
+	"warehouse_short": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Short.glb",
+	"harbor_office": "res://dev_mods/core/assets/models/props/SN_HT_Harbor_Office.glb",
+	"cargo_shed": "res://dev_mods/core/assets/models/props/SN_HT_Cargo_Shed.glb",
+	"tavern": "res://dev_mods/core/assets/models/props/SN_HT_Tavern.glb",
+	"fence_row": "res://dev_mods/core/assets/models/props/SN_HT_Fence_Row.glb",
+	"dock_worker_a": "res://dev_mods/core/assets/models/props/SN_HT_Dock_Worker_A.glb",
+	"dock_worker_b": "res://dev_mods/core/assets/models/props/SN_HT_Dock_Worker_B.glb",
+	"rowboat": "res://dev_mods/core/assets/models/props/SN_HT_Rowboat.glb",
+	"cargo_lighter": "res://dev_mods/core/assets/models/props/SN_HT_Cargo_Lighter.glb",
+	"crate": "res://dev_mods/core/assets/models/props/SN_Crate.glb",
+	"barrel": "res://dev_mods/core/assets/models/props/SN_Barrel.glb",
+	"coal_pile": "res://dev_mods/core/assets/models/props/SN_Coal_Pile.glb",
+	"timber_stack": "res://dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
+	"handcart": "res://dev_mods/core/assets/models/props/SN_Handcart.glb",
+	"gas_lamp": "res://dev_mods/core/assets/models/props/SN_Gas_Lamp.glb",
+}
 const VARIANT_PREVIEW := "preview"
 const VARIANT_SPARSE := "sparse"
 
@@ -70,6 +90,7 @@ func _preview_payload() -> Dictionary:
 			"size": "medium",
 			"facilities": ["exchange", "contracts", "supply", "intel", "shipyard"],
 			"banner_path": BANNER_PATH,
+			"town_visuals": TOWN_VISUALS.duplicate(true),
 			"palette": {
 				"stone": Color(0.14, 0.13, 0.115),
 				"deck": Color(0.24, 0.17, 0.11),
@@ -94,6 +115,7 @@ func _sparse_payload() -> Dictionary:
 			"size": "small",
 			"facilities": ["exchange", "contracts", "supply"],
 			"banner_path": "",
+			"town_visuals": TOWN_VISUALS.duplicate(true),
 			"palette": {
 				"stone": Color(0.17, 0.15, 0.125),
 				"deck": Color(0.26, 0.19, 0.12),
@@ -146,6 +168,11 @@ func _print_scene_fill(stage: Node) -> void:
 		int(stage.skyline_building_count()),
 		int(stage.skyline_crane_count()),
 	])
+	if stage.has_method("town_prop_count"):
+		print("[PortStagePreview] town: props=%d blockouts=%d" % [
+			int(stage.town_prop_count()),
+			int(stage.town_blockout_count()),
+		])
 	var frame: Node3D = stage.foreground_frame()
 	var camera: Camera3D = stage.get_node_or_null("StageCamera") as Camera3D
 	if frame == null or camera == null:

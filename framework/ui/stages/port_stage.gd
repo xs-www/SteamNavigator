@@ -119,6 +119,71 @@ const SKY_CARD_POSITION := Vector3(-135.0, 25.0, -56.0)
 const SKYLINE_BUILDINGS_BY_SIZE := {"small": 7, "medium": 10, "large": 13}
 const SKYLINE_CRANES_BY_SIZE := {"small": 2, "medium": 2, "large": 3}
 
+## Official harbour-town kit layout (framework-owned). Each slot is filled from
+## `port.town_visuals` (slot -> pre-resolved GLB path); a missing visual falls
+## back to a procedural blockout so the town silhouette still reads as a dense
+## working harbour before/without the content kit.
+## Buildings stand on a raised stone plaza behind the quay, facing the camera
+## (+Z). The plaza is what makes them read as ground-level buildings instead of
+## floating boxes on the water sheet.
+const TOWN_GROUND_Y := 1.9
+const TOWN_PLAZA_SIZE := Vector3(120.0, 2.2, 34.0)
+const TOWN_PLAZA_CENTER := Vector3(0.0, 0.8, -27.0)
+## Reused core props placed on the town plaza to keep it from reading as an
+## empty slab. They are mounted through the same `town_visuals` map.
+const TOWN_DECOR_SLOTS := [
+	{"slot": "crate", "pos": Vector3(-21.0, TOWN_GROUND_Y, -16.0), "yaw": 20.0},
+	{"slot": "crate", "pos": Vector3(-19.4, TOWN_GROUND_Y, -15.1), "yaw": -15.0},
+	{"slot": "barrel", "pos": Vector3(-23.0, TOWN_GROUND_Y, -18.0), "yaw": 0.0},
+	{"slot": "coal_pile", "pos": Vector3(22.0, TOWN_GROUND_Y, -18.0), "yaw": 0.0},
+	{"slot": "timber_stack", "pos": Vector3(-5.0, TOWN_GROUND_Y, -15.5), "yaw": 90.0},
+	{"slot": "handcart", "pos": Vector3(-16.0, TOWN_GROUND_Y, -14.0), "yaw": 60.0},
+	{"slot": "gas_lamp", "pos": Vector3(-9.0, TOWN_GROUND_Y, -11.6), "yaw": 0.0},
+	{"slot": "gas_lamp", "pos": Vector3(9.0, TOWN_GROUND_Y, -11.6), "yaw": 0.0},
+]
+const TOWN_SLOTS := [
+	{"slot": "warehouse_long", "pos": Vector3(-30.0, TOWN_GROUND_Y, -34.0), "yaw": -90.0, "scale": 1.0},
+	{"slot": "warehouse_short", "pos": Vector3(27.0, TOWN_GROUND_Y, -30.0), "yaw": -90.0, "scale": 0.95},
+	{"slot": "harbor_office", "pos": Vector3(14.0, TOWN_GROUND_Y, -40.0), "yaw": -80.0, "scale": 1.0},
+	{"slot": "tavern", "pos": Vector3(-12.0, TOWN_GROUND_Y, -26.0), "yaw": -100.0, "scale": 1.0},
+	{"slot": "cargo_shed", "pos": Vector3(1.0, TOWN_GROUND_Y, -20.0), "yaw": -90.0, "scale": 1.0},
+]
+## Fence modules are repeated along the plaza/quay seam.
+const TOWN_FENCE_POSITIONS := [
+	Vector3(-18.0, TOWN_GROUND_Y, -12.6),
+	Vector3(-12.0, TOWN_GROUND_Y, -12.6),
+	Vector3(-6.0, TOWN_GROUND_Y, -12.6),
+	Vector3(0.0, TOWN_GROUND_Y, -12.6),
+	Vector3(6.0, TOWN_GROUND_Y, -12.6),
+	Vector3(12.0, TOWN_GROUND_Y, -12.6),
+	Vector3(18.0, TOWN_GROUND_Y, -12.6),
+]
+## Worker silhouettes on the quay deck (human scale, no animation).
+const TOWN_WORKER_SLOTS := [
+	{"slot": "dock_worker_a", "pos": Vector3(-7.0, DOCK_TOP, -2.2), "yaw": 35.0},
+	{"slot": "dock_worker_b", "pos": Vector3(6.5, DOCK_TOP, -2.4), "yaw": -40.0},
+	{"slot": "dock_worker_a", "pos": Vector3(21.0, DOCK_TOP, -2.6), "yaw": 150.0},
+	{"slot": "dock_worker_b", "pos": Vector3(0.0, DOCK_TOP, -5.8), "yaw": 10.0},
+	{"slot": "dock_worker_a", "pos": Vector3(-14.0, TOWN_GROUND_Y, -13.6), "yaw": 60.0},
+	{"slot": "dock_worker_b", "pos": Vector3(16.0, TOWN_GROUND_Y, -14.2), "yaw": -120.0},
+]
+## Small craft in the water around the player ship.
+const TOWN_BOAT_SLOTS := [
+	{"slot": "rowboat", "pos": Vector3(-28.0, 0.02, 2.0), "yaw": -25.0},
+	{"slot": "rowboat", "pos": Vector3(26.0, 0.02, 1.0), "yaw": 20.0},
+	{"slot": "cargo_lighter", "pos": Vector3(20.0, 0.02, 3.0), "yaw": -75.0},
+]
+## Procedural blockout sizes for the town buildings when the GLB kit is missing
+## (X = frontage, Y = height, Z = depth, matching the kit's footprint).
+const TOWN_BLOCKOUT_SIZES := {
+	"warehouse_long": Vector3(20.0, 11.0, 9.0),
+	"warehouse_short": Vector3(11.0, 9.5, 9.0),
+	"harbor_office": Vector3(9.0, 14.0, 8.0),
+	"tavern": Vector3(10.0, 8.0, 8.0),
+	"cargo_shed": Vector3(8.0, 4.5, 6.0),
+}
+
+
 ## Procedural L6 foreground frame + L7 atmosphere (no external textures).
 const FOREGROUND_COLOR := Color(0.105, 0.082, 0.066)
 const FOG_BAND_COLOR := Color(0.68, 0.57, 0.45)
@@ -135,6 +200,7 @@ const MATERIAL_DEFAULTS := {
 	"iron": [Color(0.11, 0.12, 0.13), 0.6, 0.5],
 	"canvas": [Color(0.55, 0.46, 0.33), 0.95, 0.0],
 	"brass": [Color(0.52, 0.38, 0.16), 0.42, 0.65],
+	"plaza": [Color(0.24, 0.22, 0.19), 0.9, 0.0],
 }
 
 const LANDMARK_POS := Vector3(-25.0, DOCK_TOP, -15.5)
@@ -174,6 +240,10 @@ var _fog_bases: Array[Vector3] = []
 var _fog_phases: Array[float] = []
 var _skyline_building_count := 0
 var _skyline_crane_count := 0
+var _town_root: Node3D
+var _town_visuals: Dictionary = {}
+var _town_prop_count := 0
+var _town_blockout_count := 0
 var _ship_root: Node3D
 var _ship_base := SHIP_SPAWN
 var _ship_yaw := deg_to_rad(SHIP_YAW_DEG)
@@ -190,7 +260,7 @@ func _ready() -> void:
 
 
 func enter(payload: Dictionary = {}) -> void:
-	if payload.has("port") or payload.has("ship") or payload.has("facility_visuals"):
+	if payload.has("port") or payload.has("ship") or payload.has("facility_visuals") or payload.has("town_visuals"):
 		_enter_payload = payload.duplicate(true)
 	set_process(true)
 
@@ -209,7 +279,8 @@ func bind(view_model: Dictionary = {}) -> void:
 	var ship_value: Variant = data.get("ship", {})
 	var ship: Dictionary = ship_value if ship_value is Dictionary else {}
 	var root_visuals: Variant = data.get("facility_visuals", {})
-	var signature := str(port) + "|" + str(ship) + "|" + str(root_visuals)
+	var root_town: Variant = data.get("town_visuals", {})
+	var signature := str(port) + "|" + str(ship) + "|" + str(root_visuals) + "|" + str(root_town)
 	if signature == _signature:
 		return
 	_signature = signature
@@ -314,6 +385,18 @@ func skyline_building_count() -> int:
 ## L2 skyline cranes currently drawn (0 when an L1 banner is mounted).
 func skyline_crane_count() -> int:
 	return _skyline_crane_count
+
+
+## Number of harbour-town props mounted in the background (buildings, fence
+## modules, workers, moored boats). 0 only when the town layer is disabled.
+func town_prop_count() -> int:
+	return _town_prop_count
+
+
+## How many of those town props used the procedural blockout because the GLB
+## was missing/invalid; the stage still stays dense and drawable.
+func town_blockout_count() -> int:
+	return _town_blockout_count
 
 
 # --- Frame loop -------------------------------------------------------------
@@ -708,7 +791,7 @@ func _add_camera() -> void:
 # --- Dynamic rebuild (bind) -------------------------------------------------
 
 func _has_stage_data(data: Dictionary) -> bool:
-	return data.has("port") or data.has("ship") or data.has("facility_visuals")
+	return data.has("port") or data.has("ship") or data.has("facility_visuals") or data.has("town_visuals")
 
 
 func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary) -> void:
@@ -723,9 +806,13 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	if not (visuals_value is Dictionary):
 		visuals_value = root_data.get("facility_visuals", {})
 	_visuals = visuals_value if visuals_value is Dictionary else {}
+	var town_value: Variant = _port.get("town_visuals", null)
+	if not (town_value is Dictionary):
+		town_value = root_data.get("town_visuals", {})
 	_banner_path = String(_port.get("banner_path", ""))
 	_apply_palette()
 	_clear_dynamic()
+	_town_visuals = town_value if town_value is Dictionary else {}
 	_facilities_root = Node3D.new()
 	_facilities_root.name = "Facilities"
 	_facilities_root.position = Vector3(0.0, DOCK_TOP, 0.0)
@@ -733,10 +820,14 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	_content.add_child(_facilities_root)
 	_rebuild_backdrop()
 	# L2 silhouettes are the no-backdrop fallback only: a painted skyline plus
-	# black boxes on top of it reads as floating rectangles.
-	_rebuild_shoreline()
+	# black boxes on top of it reads as floating rectangles. A mounted town kit
+	# already provides the near skyline, so the procedural row is skipped there
+	# as well (otherwise its bases get buried by the raised plaza).
+	if _town_visuals.is_empty():
+		_rebuild_shoreline()
 	_apply_fallback_visibility()
 	_rebuild_fog_layers()
+	_rebuild_town()
 	_rebuild_facilities()
 	_rebuild_landmark()
 	_rebuild_ship(ship)
@@ -754,6 +845,9 @@ func _clear_dynamic() -> void:
 	_landmark = null
 	_ship_root = null
 	_facilities_root = null
+	_town_root = null
+	_town_prop_count = 0
+	_town_blockout_count = 0
 	_fog_nodes.clear()
 	_fog_bases.clear()
 	_fog_phases.clear()
@@ -1312,6 +1406,123 @@ func _rebuild_landmark() -> void:
 	landmark.add_child(visual)
 	_content.add_child(landmark)
 	_landmark = landmark
+
+
+# --- L2b: harbour town (dense background street behind the quay) ------------
+
+func _rebuild_town() -> void:
+	_town_root = Node3D.new()
+	_town_root.name = "HarborTown"
+	_content.add_child(_town_root)
+	_town_prop_count = 0
+	_town_blockout_count = 0
+	# Raised stone plaza: grounds the town row and turns the empty water sheet
+	# behind the quay into a readable harbour square.
+	_add_box(
+		_town_root,
+		TOWN_PLAZA_SIZE,
+		TOWN_PLAZA_CENTER,
+		_material("plaza"),
+		Vector3.ZERO,
+		"TownPlaza"
+	)
+	# Batched paving seams: one draw call instead of a dozen thin boxes.
+	var pave_mesh := BoxMesh.new()
+	pave_mesh.size = Vector3(0.12, 0.05, TOWN_PLAZA_SIZE.z - 2.0)
+	var pave_transforms: Array[Transform3D] = []
+	for index in 11:
+		var x := -40.0 + float(index) * 8.0
+		pave_transforms.append(
+			Transform3D(Basis.IDENTITY, Vector3(x, TOWN_GROUND_Y + 0.01, TOWN_PLAZA_CENTER.z))
+		)
+	_add_multimesh(
+		_town_root,
+		pave_mesh,
+		pave_transforms,
+		_material("wood_dark"),
+		"PlazaPaving",
+		AABB(Vector3(-44.0, TOWN_GROUND_Y - 0.2, -46.0), Vector3(88.0, 0.4, 40.0))
+	)
+	_add_box(
+		_town_root,
+		Vector3(TOWN_PLAZA_SIZE.x, 0.35, 0.5),
+		Vector3(0.0, TOWN_GROUND_Y - 0.15, -9.9),
+		_material("wood_dark"),
+		Vector3.ZERO,
+		"PlazaEdge"
+	)
+	for spec in TOWN_SLOTS:
+		_add_town_prop(
+			String(spec["slot"]),
+			spec["pos"],
+			float(spec["yaw"]),
+			float(spec["scale"]),
+			true
+		)
+	for pos in TOWN_FENCE_POSITIONS:
+		_add_town_prop("fence_row", pos, 0.0, 1.0, false)
+	for spec in TOWN_WORKER_SLOTS:
+		_add_town_prop(String(spec["slot"]), spec["pos"], float(spec["yaw"]), 1.0, false)
+	for spec in TOWN_DECOR_SLOTS:
+		_add_town_prop(String(spec["slot"]), spec["pos"], float(spec["yaw"]), 1.0, false)
+	for spec in TOWN_BOAT_SLOTS:
+		_add_town_prop(String(spec["slot"]), spec["pos"], float(spec["yaw"]), 1.0, false)
+
+
+## Mounts one town-kit GLB (pre-resolved path in `port.town_visuals`) or, for
+## the five building slots, a procedural blockout. Workers/boats/fence simply
+## disappear when their GLB is missing, so a content-less stage stays clean.
+func _add_town_prop(slot: String, pos: Vector3, yaw: float, prop_scale: float, blockout_fallback: bool) -> void:
+	var path := String(_town_visuals.get(slot, ""))
+	var visual: Node3D = _instantiate_visual(path) if not path.is_empty() else null
+	if visual == null:
+		if not blockout_fallback:
+			return
+		visual = _build_town_blockout(slot)
+		if visual == null:
+			return
+		_town_blockout_count += 1
+	var holder := Node3D.new()
+	holder.name = "Town_%s_%d" % [slot, _town_prop_count]
+	holder.position = pos
+	holder.rotation_degrees = Vector3(0.0, yaw, 0.0)
+	holder.scale = Vector3.ONE * prop_scale
+	holder.add_child(visual)
+	_town_root.add_child(holder)
+	_town_prop_count += 1
+
+
+## Cheap box/roof stand-in used only when the town kit is unavailable. It keeps
+## the skyline dense and lets the layout be judged before content is authored.
+func _build_town_blockout(slot: String) -> Node3D:
+	var size_value: Variant = TOWN_BLOCKOUT_SIZES.get(slot, null)
+	if not (size_value is Vector3):
+		return null
+	var size: Vector3 = size_value
+	var root := Node3D.new()
+	root.name = "TownBlockout_" + slot
+	var wall := _material("brick")
+	if wall == null:
+		wall = _material("stone")
+	var roof := _material("wood_dark")
+	var trim := _material("iron")
+	# Body: X frontage, Y depth, Z height (holder yaw rotates local +X to +Z).
+	_add_box(root, Vector3(size.x, size.z, size.y), Vector3(0.0, size.y * 0.5, 0.0), wall, Vector3.ZERO, "Body")
+	# Gable-ish roof: two sloped slabs rather than a full prism.
+	var half_depth := size.z * 0.5 + 0.45
+	var slab := Vector3(size.x + 0.8, half_depth, 0.28)
+	_add_box(root, slab, Vector3(0.0, size.y + 0.42, 0.0), roof, Vector3(28.0, 0.0, 0.0), "RoofFront")
+	_add_box(root, slab, Vector3(0.0, size.y + 0.42, 0.0), roof, Vector3(-28.0, 0.0, 0.0), "RoofBack")
+	# Facade rhythm: dark windows + door on the camera-facing local +X wall.
+	var facade_x := size.x * 0.5 + 0.04
+	var window_rows := 2 if size.y >= 9.0 else 1
+	for row in window_rows:
+		var z := size.y * 0.42 + float(row) * 2.6
+		for column in 3:
+			var y := -size.z * 0.28 + float(column) * size.z * 0.28
+			_add_box(root, Vector3(0.08, 1.1, 1.3), Vector3(facade_x, y, z), trim, Vector3.ZERO, "")
+	_add_box(root, Vector3(0.08, 1.5, 2.2), Vector3(facade_x, -size.z * 0.18, 1.1), roof, Vector3.ZERO, "Door")
+	return root
 
 
 # --- L5 player ship ---------------------------------------------------------

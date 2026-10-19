@@ -9,6 +9,19 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var world := state.world()
 	var current_port := state.current_port_id()
 	var port_data := MapOps.port(world, current_port)
+	var diorama_value: Variant = port_data.get("diorama", {})
+	var diorama: Dictionary = diorama_value if diorama_value is Dictionary else {}
+	# Older saves/world snapshots predate the stored `diorama` block; fall back to
+	# the archetype definition so the stage still gets its town kit.
+	if diorama.is_empty():
+		var archetype := hub.get_by_id(
+			ContentTypes.PORT_ARCHETYPE,
+			String(port_data.get("archetype_id", ""))
+		)
+		if archetype != null:
+			var archetype_diorama: Variant = archetype.data.get("diorama", {})
+			if archetype_diorama is Dictionary:
+				diorama = (archetype_diorama as Dictionary).duplicate(true)
 	var ship := state.ship()
 	var stats := ShipOps.stats(hub, ship)
 	var voyage: Variant = state.data.get("voyage", null)
@@ -94,6 +107,12 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"banner_asset": String(port_data.get("banner_asset", "")),
 			"facilities": Array(port_data.get("facilities", [])),
 			"size": String(port_data.get("size", "medium")),
+			"diorama": diorama.duplicate(true),
+			"town_visuals": _resolved_town_visuals(
+				context,
+				String(port_data.get("source_mod", "")),
+				diorama
+			),
 			"tags": Array(port_data.get("tags", [])),
 			"visited": bool(port_data.get("visited", false)),
 		},
@@ -258,6 +277,24 @@ static func _asset_path(context, uri: String) -> String:
 	if context.assets.has(uri):
 		return context.assets.resolve(uri)
 	return ""
+
+
+## Resolves the `diorama.town` slot -> asset-key map to slot -> physical path so
+## the presentation layer (PortStage) only consumes ready paths. Missing keys are
+## omitted; the stage then keeps its procedural blockout for that slot.
+static func _resolved_town_visuals(context, source_mod: String, diorama: Dictionary) -> Dictionary:
+	var result := {}
+	var town_value: Variant = diorama.get("town", {})
+	if not (town_value is Dictionary) or source_mod.is_empty() or context == null:
+		return result
+	for raw_slot in (town_value as Dictionary).keys():
+		var key := String((town_value as Dictionary)[raw_slot])
+		if key.is_empty():
+			continue
+		var logical_key := "asset://%s/%s" % [source_mod, key]
+		if context.assets.has(logical_key):
+			result[String(raw_slot)] = context.assets.resolve(logical_key)
+	return result
 
 
 static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant) -> Variant:

@@ -1,0 +1,160 @@
+{
+  "id": "sn_harbor_town_batch1",
+  "title": "港口街景建筑 / 人物 / 小船第一批 10 件",
+  "purpose": "给 2.5D 固定机位港口舞台（主界面）补足「码头广场 + 仓库街区」的空间密度：让码头背后出现成排仓库、港务楼、货棚与酒馆，岸边有围栏、工人剪影与系泊小船，使画面接近《Bounty Train》式的高密度固定 3/4 视角，而不是空栈桥 + 单点设施。",
+  "category": "building_pack",
+  "collection": "SN_Harbor_Town",
+  "prefix": "SN_HT_",
+  "layout": "沿工作台 y=110 一行排开（y=110 当前无对象；既有行 y=75 设施、y=81–99 铁甲舰、y=110 以后空闲）。x = -48, -28, -12, 2, 14, 24, 32, 40, 48, 58；全部 ground centre（底面中心 z=0），单件导出时原点归零。",
+  "style": "low-poly / flat shaded / 无贴图；蒸汽朋克维多利亚港口：砖、灰泥、木构、铁件、黄铜；统一调色板材质，招牌只做空白板/图形，禁止烘焙任何文字。",
+  "materials": [
+    "SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Iron",
+    "SN_Brass", "SN_Stone", "SN_Canvas", "SN_Canvas_Shade", "SN_Brick",
+    "SN_Plaster", "SN_Glass_Dark"
+  ],
+  "new_materials": [
+    {"name": "SN_Brick", "role": "红褐砖墙", "roughness": 0.92, "metallic": 0.0},
+    {"name": "SN_Plaster", "role": "暖灰/米色灰泥墙", "roughness": 0.95, "metallic": 0.0},
+    {"name": "SN_Glass_Dark", "role": "深色窗面（不做透明、不做发光）", "roughness": 0.25, "metallic": 0.35}
+  ],
+  "transform": {
+    "pivot": "ground centre (base centre, z=0)，每件独立原点",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "tri_budget_total": 11500,
+  "items": [
+    {
+      "id": "warehouse_long",
+      "name": "SN_HT_Warehouse_Long",
+      "desc": "长条砖木仓库：石基座 + 砖墙 + 木构立柱与横梁节奏 + 2 扇滑轨装卸大门 + 4 扇深色窗 + 双坡屋面 + 屋脊通风帽 + 山墙吊货梁与滑轮 + 一块空白招牌板",
+      "parts": ["stone plinth", "brick walls", "timber frame rhythm", "2 sliding loading doors", "4 dark windows", "gable roof", "2 roof vents", "hoist beam + pulley", "blank sign board"],
+      "size": [20.0, 9.0, 11.0],
+      "tri_budget": 2600,
+      "materials": ["SN_Stone", "SN_Brick", "SN_Wood_Dark", "SN_Wood", "SN_Glass_Dark", "SN_Iron"],
+      "readability": "3/4 视角一眼读成「大仓库」：长体量、双坡顶、两扇高门、山墙吊梁；门/窗不做凹陷室内，只做 0.05–0.1 m 深的暗色板"
+    },
+    {
+      "id": "warehouse_short",
+      "name": "SN_HT_Warehouse_Short",
+      "desc": "短仓库/转运站：石基 + 木构墙 + 单扇装卸门 + 2 窗 + 单坡侧棚 + 屋顶通风管 + 空白招牌",
+      "parts": ["stone plinth", "timber walls", "1 loading door", "2 windows", "lean-to side roof", "roof vent pipe", "blank sign"],
+      "size": [11.0, 9.0, 9.5],
+      "tri_budget": 1700,
+      "materials": ["SN_Stone", "SN_Wood", "SN_Wood_Dark", "SN_Plaster", "SN_Glass_Dark"],
+      "readability": "比长仓库矮、屋顶不对称（单坡侧棚），同屏并排时轮廓不重复"
+    },
+    {
+      "id": "harbor_office",
+      "name": "SN_HT_Harbor_Office",
+      "desc": "港务办公楼：3 层砖/灰泥立面 + 拱形入口 + 6 扇窗 + 2 层小阳台（铁栏）+ 屋顶钟楼（四面钟盘、无文字）+ 屋角旗杆座 + 空白门牌/招牌",
+      "parts": ["3-storey facade", "arched entrance", "6 windows", "2 iron balconies", "clock tower", "4 clock faces (no numerals)", "flag pole base", "blank sign board"],
+      "size": [9.0, 8.0, 14.0],
+      "tri_budget": 2200,
+      "materials": ["SN_Brick", "SN_Plaster", "SN_Stone", "SN_Iron", "SN_Brass", "SN_Glass_Dark", "SN_Wood_Dark"],
+      "readability": "本批最高建筑（14 m 钟楼），是街区竖向地标；钟盘只做圆形盘面 + 指针，不做数字"
+    },
+    {
+      "id": "cargo_shed",
+      "name": "SN_HT_Cargo_Shed",
+      "desc": "开放式货棚：4 根木柱 + 双坡帆布/木顶（双面）+ 后挡板 + 工作台 + 2 个木箱 + 吊挂钩",
+      "parts": ["4 posts", "double-sided roof", "back panel", "workbench", "2 crates", "2 hanging hooks"],
+      "size": [8.0, 6.0, 4.5],
+      "tri_budget": 700,
+      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Canvas", "SN_Metal"],
+      "readability": "低矮、开敞、顶棚双面；远看不要与市场棚混淆（货棚无柜台、无招牌面）"
+    },
+    {
+      "id": "tavern",
+      "name": "SN_HT_Tavern",
+      "desc": "码头酒馆：2 层灰泥+砖墙 + 双坡顶 + 门廊（2 柱 + 小雨棚）+ 悬挂空白招牌 + 烟囱 + 4 扇窗 + 木门 + 门前 2 只木桶",
+      "parts": ["2-storey walls", "gable roof", "porch (2 posts + canopy)", "hanging blank sign", "chimney", "4 windows", "door", "2 barrels"],
+      "size": [10.0, 8.0, 8.0],
+      "tri_budget": 1700,
+      "materials": ["SN_Plaster", "SN_Brick", "SN_Wood", "SN_Wood_Dark", "SN_Glass_Dark", "SN_Stone", "SN_Iron"],
+      "readability": "门廊 + 悬挂招牌 + 烟囱三点可辨；悬挂招牌为空白木板 + 铁支架，无文字"
+    },
+    {
+      "id": "fence_row",
+      "name": "SN_HT_Fence_Row",
+      "desc": "岸线围栏模块（6 m）：石基条 + 6 根铁立柱 + 2 道横栏 + 柱帽；可沿 X 首尾相接成排",
+      "parts": ["stone base strip", "6 iron posts", "2 horizontal rails", "post caps"],
+      "size": [6.0, 0.30, 1.5],
+      "tri_budget": 300,
+      "materials": ["SN_Stone", "SN_Iron"],
+      "readability": "重复模块，端头对齐（首尾 x 边贴在 0 与 6），不留缝隙"
+    },
+    {
+      "id": "dock_worker_a",
+      "name": "SN_HT_Dock_Worker_A",
+      "desc": "码头工人剪影 A（站立/张望）：低模人形，鸭舌帽、短外套、宽裤、靴子；无面部细节、无骨骼动画",
+      "parts": ["head + cap", "torso/coat", "2 arms", "2 legs", "boots"],
+      "size": [0.7, 0.45, 1.8],
+      "tri_budget": 250,
+      "materials": ["SN_Wood_Dark", "SN_Canvas_Shade", "SN_Metal"],
+      "readability": "1.8 m 人形，3/4 距离下只要读出「帽子 + 外套 + 靴子」；材质只用深色，剪影优先"
+    },
+    {
+      "id": "dock_worker_b",
+      "name": "SN_HT_Dock_Worker_B",
+      "desc": "码头工人剪影 B（搬货）：低模人形，双臂前抱木箱，身体略前倾；无面部细节、无骨骼动画",
+      "parts": ["head + cap", "torso", "2 arms wrapped around crate", "crate", "2 legs", "boots"],
+      "size": [0.8, 0.5, 1.8],
+      "tri_budget": 250,
+      "materials": ["SN_Wood_Dark", "SN_Canvas_Shade", "SN_Wood", "SN_Metal"],
+      "readability": "与 A 的姿态差异必须一眼可见（抱箱 vs 站立），不要只换颜色"
+    },
+    {
+      "id": "rowboat",
+      "name": "SN_HT_Rowboat",
+      "desc": "系泊小划艇：简化搭接船壳 + 2 道坐板 + 2 支桨 + 艏部系缆环 + 艉板；单件静态，不做水线以下细节",
+      "parts": ["clinker hull", "2 thwarts", "2 oars", "bow mooring ring", "stern board"],
+      "size": [4.2, 1.5, 0.8],
+      "tri_budget": 550,
+      "materials": ["SN_Wood", "SN_Wood_Deck", "SN_Metal", "SN_Iron"],
+      "readability": "船壳开口朝 +Z，桨斜放；轴心在船底中心（z=0），便于贴水面"
+    },
+    {
+      "id": "cargo_lighter",
+      "name": "SN_HT_Cargo_Lighter",
+      "desc": "平底驳船：低矮方箱船壳 + 前后舷板 + 小舱棚 + 舵柄 + 系缆桩 + 甲板上 1 个货箱",
+      "parts": ["flat hull", "bow/stern bulwarks", "small cabin", "tiller", "2 bollards", "1 crate"],
+      "size": [8.0, 3.0, 1.6],
+      "tri_budget": 700,
+      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Iron", "SN_Canvas_Shade"],
+      "readability": "与 rowboat 区分：驳船更大、平底、有舱棚；轴心在船底中心"
+    }
+  ],
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera", "Light", "SN_Ship_Root", "SN_Crane_Root", "SN_PF_Root", "SN_PS_Root", "SN_SF_Root",
+      "SN_Ironclad", "SN_Ship_Prototype", "SN_Harbor_Crane_Prototype", "SN_IronHarbor_Props",
+      "SN_Port_Facilities", "SN_Ship_Modules"
+    ],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "row_y": 110.0
+  },
+  "acceptance": [
+    "10 个对象，命名严格为 SN_HT_Warehouse_Long / SN_HT_Warehouse_Short / SN_HT_Harbor_Office / SN_HT_Cargo_Shed / SN_HT_Tavern / SN_HT_Fence_Row / SN_HT_Dock_Worker_A / SN_HT_Dock_Worker_B / SN_HT_Rowboat / SN_HT_Cargo_Lighter",
+    "全部位于集合 SN_Harbor_Town，对象前缀 SN_HT_ 100%，无重名",
+    "每个对象原点在自身底面中心（object.location = 布局位置，几何为局部坐标）",
+    "总三角面 <= 11500；单件不超过各自 tri_budget 的 1.2 倍",
+    "材质只用调色板 SN_Wood / SN_Wood_Dark / SN_Wood_Deck / SN_Metal / SN_Iron / SN_Brass / SN_Stone / SN_Canvas / SN_Canvas_Shade / SN_Brick / SN_Plaster / SN_Glass_Dark",
+    "网格健康：无孤立点 / 退化面 / 材质槽越界；建筑与船体为闭合体，帆布/棚顶双面",
+    "包围盒与 items.size 误差 <= 0.15 m",
+    "3/4 视角下 10 件能分辨：长仓库、短仓库、港务楼钟楼、货棚、酒馆、围栏、站立工人、搬货工人、划艇、驳船",
+    "招牌/钟盘/门牌上不得烘焙任何文字或数字；文字由 2D UI 层负责",
+    "不建室内、不做碰撞、不做可进入门；窗只用 0.05–0.1 m 深暗色板",
+    "原有对象（Camera / Light / 船 / 塔吊 / 铁港道具 / 模块 / 港口设施）数量、名称、位置未被修改"
+  ],
+  "deliverables": {
+    "generator": "tools/modeling/generators/sn_harbor_town_generator.py",
+    "blend_snapshot": ".design/buildings/SN_<Name>.blend（由 Lead 验收后导出）",
+    "glb": "dev_mods/core/assets/models/props/SN_HT_<Name>.glb（由 Lead 验收后导出，不放进 assets/models/*）",
+    "screenshots": ["three_quarter", "side"]
+  },
+  "notes": "Builder 只负责在 Blender 场景内参数化建模 + 只读自检，不保存 .blend、不导出 .glb（Lead 在人工验收后统一归档）。工作台文件 .design/SN_Asset_Workbench.blend 若被切换/打开，先确认场景名称与集合再写；一旦发现不在工作台场景立即停止并回报。生成器必须纯参数表驱动，便于后续改数字重建；不写文字、不加灯光/相机。"
+}
