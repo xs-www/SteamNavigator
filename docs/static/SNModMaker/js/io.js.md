@@ -41,15 +41,18 @@
 | `apiJson(url, options)` | L316 |
 | `listDiskProjects()` | L330 |
 | `getDiskProject(id)` | L335 |
-| `putDiskProject(project)` | L340 |
-| `deleteDiskProject(id)` | L357 |
-| `listExports()` | L361 |
-| `saveExportToDisk(filename, bytes)` | L366 |
-| `deleteExport(name)` | L374 |
-| `listGameMods()` | L378 |
-| `deployGameMod(id, bytes)` | L383 |
-| `deleteGameMod(id)` | L391 |
-| `SNIO (global)` | L395 |
+| `projectPayload(project)` | L340 |
+| `putDiskProject(project)` | L352 |
+| `getWorkspaceProject(id)` | L361 |
+| `putWorkspaceProject(project)` | L366 |
+| `deleteDiskProject(id)` | L374 |
+| `listExports()` | L378 |
+| `saveExportToDisk(filename, bytes)` | L383 |
+| `deleteExport(name)` | L391 |
+| `listGameMods()` | L395 |
+| `deployGameMod(id, bytes)` | L400 |
+| `deleteGameMod(id)` | L408 |
+| `SNIO (global)` | L412 |
 
 ## 契约与约束
 
@@ -57,6 +60,7 @@
 - 文件夹/拖放导入递归读取 `webkitGetAsEntry`；ZIP 交给 `SNZip.read()`。
 - 目录导出需要 Chromium 的 `showDirectoryPicker`，在所选父目录下创建 `<mod_id>/`。
 - 检测到 `tools/serve.mjs` 时使用同源 `/api` 读写项目、普通导出与游戏模组目录；`detectBackend` 1.5s 超时后静默退化。
+- `getWorkspaceProject/putWorkspaceProject` 走 `/api/workspace/<id>`，把 `dev_mods/<id>` 作为原生工作区直接读写；普通磁盘项目仍走 `/api/projects/<id>`，两者按 id 不会互相遮蔽。
 - deployGameMod(id, bytes) 把已构建 ZIP 交给本地服务覆盖部署；纯静态/file:// 模式不暴露该操作。
 - 下载使用 Blob URL；不向外部网络上传任何内容。
 

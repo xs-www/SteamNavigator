@@ -315,7 +315,7 @@ function warningsOf(result) {
     assert.ok(result);
     assert.ok(result.definition.name_key.startsWith('module.test_mod.small_efficient_copy.'));
     assert.equal(result.definition.description_key, 'module.test_mod.small_efficient_copy.description');
-    assert.equal(result.definition.information.model, 'asset://core/model.ship.prototype');
+    assert.equal(result.definition.information.model, 'asset://core/model.ship.paddle_steamer');
     const zh = Store.getLoc(project, 'zh_CN');
     assert.ok(zh.entries[result.definition.name_key]);
     const validation = Validate.validateProject(project);
@@ -424,8 +424,8 @@ function warningsOf(result) {
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
     assert.equal(result.project.contentFiles.length, 15);
-    // 3 status icons + Iron Harbor banner + 9 entity GLB models.
-    assert.equal(result.project.assets.length, 13);
+    // 3 status icons + Iron Harbor banner + 55 entity GLB models.
+    assert.equal(result.project.assets.length, 59);
     const validation = Validate.validateProject(result.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
   });

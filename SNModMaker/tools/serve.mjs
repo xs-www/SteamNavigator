@@ -11,7 +11,12 @@
  *   node SNModMaker/tools/serve.mjs [port]
  *
  * Environment overrides (useful for tests and other installs):
- *   SNMODMAKER_MODS_DIR, SNMODMAKER_EXPORTS_DIR, SNMODMAKER_GAME_MODS_DIR
+ *   SNMODMAKER_MODS_DIR, SNMODMAKER_EXPORTS_DIR, SNMODMAKER_GAME_MODS_DIR,
+ *   SNMODMAKER_WORKSPACE_ROOT (defaults to the repo's dev_mods/)
+ *
+ * Native workspace: /api/workspace/<id> opens and saves dev_mods/<id> in place,
+ * so the editor can modify the official core mod directly instead of exporting a
+ * ZIP. Assets stay on disk (only text files are round-tripped).
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -94,6 +99,179 @@ function projectFile(id) {
   return path.join(projectDir(id), '.snmodproj.json');
 }
 
+/* ------------------------------------------------------------------ */
+/* Native workspace: edit dev_mods/<id> in place                        */
+/* ------------------------------------------------------------------ */
+
+const WORKSPACE_ROOT = process.env.SNMODMAKER_WORKSPACE_ROOT
+  ? path.resolve(process.env.SNMODMAKER_WORKSPACE_ROOT)
+  : path.join(root, '..', 'dev_mods');
+
+const MIME_BY_EXT = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.glb': 'model/gltf-binary',
+  '.gltf': 'model/gltf+json',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+};
+const mimeForPath = (value) => MIME_BY_EXT[String(path.extname(value || '')).toLowerCase()] || 'application/octet-stream';
+
+function workspaceDir(id) {
+  return path.join(WORKSPACE_ROOT, id);
+}
+
+function workspaceIds() {
+  if (!fs.existsSync(WORKSPACE_ROOT)) return [];
+  const ids = [];
+  for (const entry of fs.readdirSync(WORKSPACE_ROOT, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+    if (!isModId(entry.name)) continue;
+    if (fs.existsSync(path.join(WORKSPACE_ROOT, entry.name, 'manifest.json'))) ids.push(entry.name);
+  }
+  return ids.sort();
+}
+
+const isWorkspaceId = (id) => workspaceIds().includes(String(id || ''));
+
+function countWorkspaceDefinitions(manifest) {
+  let total = 0;
+  for (const relative of manifest.content || []) {
+    try {
+      const payload = JSON.parse(fs.readFileSync(path.join(workspaceDir(manifest.id), relative), 'utf8'));
+      total += Array.isArray(payload.definitions) ? payload.definitions.length : 0;
+    } catch (error) {
+      /* unreadable file: keep counting the rest */
+    }
+  }
+  return total;
+}
+
+function listWorkspaces() {
+  const rows = [];
+  for (const id of workspaceIds()) {
+    const dir = workspaceDir(id);
+    try {
+      const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+      const stat = fs.statSync(path.join(dir, 'manifest.json'));
+      rows.push({
+        uid: `workspace-${id}`,
+        id,
+        name: manifest.name || id,
+        version: manifest.version || '',
+        updatedAt: stat.mtime.toISOString(),
+        definitions: countWorkspaceDefinitions(manifest),
+        hasProject: true,
+        workspace: true,
+      });
+    } catch (error) {
+      /* skip broken workspace */
+    }
+  }
+  return rows;
+}
+
+function readWorkspaceProject(id) {
+  const dir = workspaceDir(id);
+  const manifestPath = path.join(dir, 'manifest.json');
+  if (!fs.existsSync(manifestPath)) throw Object.assign(new Error('工作区不存在'), { status: 404 });
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  if (manifest.id !== id) throw Object.assign(new Error('manifest.id 与工作区目录不一致'), { status: 400 });
+  const contentFiles = (manifest.content || []).map((relative) => {
+    try {
+      const payload = JSON.parse(fs.readFileSync(path.join(dir, relative), 'utf8'));
+      return {
+        path: relative,
+        content_type: payload.content_type || 'goods',
+        schema_version: payload.schema_version || '1.0',
+        definitions: Array.isArray(payload.definitions) ? payload.definitions : [],
+      };
+    } catch (error) {
+      return { path: relative, content_type: 'goods', schema_version: '1.0', definitions: [] };
+    }
+  });
+  const localization = (manifest.localization || []).map((relative) => {
+    let entries = {};
+    try {
+      entries = JSON.parse(fs.readFileSync(path.join(dir, relative), 'utf8'));
+    } catch (error) {
+      entries = {};
+    }
+    return {
+      path: relative,
+      locale: String(relative).split('/').pop().replace(/\.(json|csv)$/i, ''),
+      entries: entries && typeof entries === 'object' ? entries : {},
+    };
+  });
+  const assets = Object.entries(manifest.assets || {}).map(([key, relative]) => ({
+    key,
+    path: relative,
+    mime: mimeForPath(relative),
+    size: 0,
+    dataUrl: '',
+  }));
+  const now = new Date().toISOString();
+  return {
+    format: 'steam-navigator-mod-maker',
+    formatVersion: 1,
+    uid: `workspace-${id}`,
+    manifest,
+    contentFiles,
+    localization,
+    assets,
+    meta: { createdAt: now, updatedAt: now, importedFrom: `workspace:${id}` },
+  };
+}
+
+/** Writes the editor's text files back into dev_mods/<id> without touching
+ *  undeclared assets. Removed content/localization files are deleted; added
+ *  definitions/files appear because they are part of `files`. */
+function saveWorkspaceProject(id, project, files) {
+  const dir = workspaceDir(id);
+  if (!fs.existsSync(dir)) throw Object.assign(new Error('工作区不存在'), { status: 404 });
+  const manifestPath = path.join(dir, 'manifest.json');
+  if (!project || !project.manifest || project.manifest.id !== id) {
+    throw Object.assign(new Error('project.manifest.id 与工作区不一致'), { status: 400 });
+  }
+  if (!Array.isArray(files) || files.length > 2000) throw Object.assign(new Error('文件数量非法'), { status: 400 });
+  let oldManifest = {};
+  try {
+    oldManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch (error) {
+    oldManifest = {};
+  }
+  const written = [];
+  for (const entry of files) {
+    const relative = safeRelative(entry && entry.path);
+    if (!relative) throw Object.assign(new Error(`非法文件路径: ${entry && entry.path}`), { status: 400 });
+    const absolute = path.join(dir, relative);
+    if (!absolute.startsWith(dir + path.sep)) throw Object.assign(new Error('路径越界'), { status: 400 });
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    const data = entry.encoding === 'base64'
+      ? Buffer.from(String(entry.data || ''), 'base64')
+      : String(entry.data == null ? '' : entry.data);
+    fs.writeFileSync(absolute, data);
+    written.push(relative);
+  }
+  const nextManifest = project.manifest;
+  const keep = new Set([...(nextManifest.content || []), ...(nextManifest.localization || [])]);
+  const removed = [];
+  for (const listName of ['content', 'localization']) {
+    for (const relative of oldManifest[listName] || []) {
+      if (keep.has(relative)) continue;
+      try {
+        fs.rmSync(path.join(dir, safeRelative(relative)), { force: true });
+        removed.push(relative);
+      } catch (error) {
+        /* missing file is fine */
+      }
+    }
+  }
+  return { id, workspace: true, files: written.length, removed };
+}
+
 function listProjects() {
   const rows = [];
   for (const entry of fs.readdirSync(MODS_DIR, { withFileTypes: true })) {
@@ -122,7 +300,7 @@ function listProjects() {
     }
   }
   rows.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-  return rows;
+  return rows.concat(listWorkspaces()).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
 }
 
 function saveProject(id, payload) {
@@ -225,6 +403,7 @@ async function handleApi(request, response, url) {
       modsDir: path.relative(root, MODS_DIR).replaceAll('\\', '/') || 'mods',
       exportsDir: path.relative(root, EXPORTS_DIR).replaceAll('\\', '/') || 'exports',
       gameModsDir: path.relative(root, GAME_MODS_DIR).replaceAll('\\', '/') || GAME_MODS_DIR,
+      workspaceDir: path.relative(path.join(root, '..'), WORKSPACE_ROOT).replaceAll('\\', '/') || WORKSPACE_ROOT,
     });
     return;
   }
@@ -272,6 +451,43 @@ async function handleApi(request, response, url) {
       } catch (error) {
         sendJson(response, 500, { ok: false, error: error.message });
       }
+      return;
+    }
+  }
+
+  /* Native workspace: /api/workspace/<id> edits dev_mods/<id> in place. The
+   * /api/projects namespace stays for SNModMaker/mods/ so a disk project named
+   * "core" cannot shadow the real core workspace. */
+  if (parts[1] === 'workspace' && parts[2]) {
+    const id = decodeURIComponent(parts[2]);
+    if (!isModId(id)) {
+      sendJson(response, 400, { ok: false, error: '非法模组 ID' });
+      return;
+    }
+    if (!isWorkspaceId(id)) {
+      sendJson(response, 404, { ok: false, error: '工作区不存在' });
+      return;
+    }
+    if (method === 'GET') {
+      try {
+        sendJson(response, 200, { ok: true, project: readWorkspaceProject(id) });
+      } catch (error) {
+        sendJson(response, error.status || 500, { ok: false, error: error.message });
+      }
+      return;
+    }
+    if (method === 'PUT') {
+      try {
+        const body = await readBody(request);
+        const payload = JSON.parse(body.toString('utf8'));
+        sendJson(response, 200, { ok: true, ...saveWorkspaceProject(id, payload.project, payload.files) });
+      } catch (error) {
+        sendJson(response, error.status || 500, { ok: false, error: error.message });
+      }
+      return;
+    }
+    if (method === 'DELETE') {
+      sendJson(response, 400, { ok: false, error: '工作区是游戏原生模组目录，不允许从编辑器整体删除' });
       return;
     }
   }

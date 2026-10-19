@@ -12,144 +12,145 @@
 | `UI` | L12 |
 | `IO` | L14 |
 | `MODULE_PAGE_TYPES` | L16 |
-| `init()` | L70 |
-| `probeBackend()` | L77 |
-| `loadInitialProject()` | L87 |
-| `setProject(project, options)` | L119 |
-| `clearProject()` | L147 |
-| `firstSelection(project)` | L159 |
-| `currentFile()` | L173 |
-| `currentDefinition()` | L178 |
-| `selectedTypeInfo()` | L184 |
-| `selectedDefinitionKey()` | L189 |
-| `localizationDraft(definition, oldId, syncToId)` | L193 |
-| `currentLocalizationDraft()` | L215 |
-| `previewLocalizationValue(key, draft)` | L219 |
-| `previewLocalizationKey(definition, field, draft)` | L227 |
-| `setByPath(object, path, value)` | L231 |
-| `getByPath(object, path)` | L247 |
-| `deleteByPath(object, path)` | L257 |
-| `snapshot()` | L270 |
-| `pushHistory()` | L274 |
-| `undo()` | L285 |
-| `redo()` | L301 |
-| `ensureSelection()` | L317 |
-| `fallbackKey(uid)` | L333 |
-| `loadFallbackProject()` | L337 |
-| `saveNow(options)` | L348 |
-| `flushDiskSave()` | L392 |
-| `openProject(uid)` | L417 |
-| `deleteProject(uid)` | L434 |
-| `render(options)` | L465 |
-| `renderChrome()` | L501 |
-| `renderStatus()` | L528 |
-| `saveStateText()` | L547 |
-| `saveStateTitle()` | L557 |
-| `updateSaveState()` | L562 |
-| `timeText(date)` | L570 |
-| `renderSidebar()` | L578 |
-| `sideTypeLink(type, count, issues)` | L636 |
-| `activeLocale(locale)` | L647 |
-| `renderWorkspace()` | L655 |
-| `renderWelcome()` | L677 |
-| `loadRecent()` | L702 |
-| `renderOverview()` | L758 |
-| `ovField(labelText, control, hintText, wide)` | L867 |
-| `depRow(list, dependency, index)` | L875 |
-| `structureTree(project)` | L883 |
-| `renderModuleTabs(activeType)` | L911 |
-| `renderContent()` | L927 |
-| `renderDefinitionEditor(selected, info)` | L1002 |
-| `collectNeededKeys(project)` | L1058 |
-| `renderLocalization()` | L1073 |
-| `renderAssets()` | L1152 |
-| `paintModelThumbnails()` | L1194 |
-| `runModelThumbQueue()` | L1213 |
-| `setModelThumbImage(node, dataUrl)` | L1232 |
-| `renderValidation()` | L1242 |
-| `issueLocation(issue)` | L1280 |
-| `gotoIssue(index)` | L1292 |
-| `attrSelector(value)` | L1332 |
-| `inspectorData()` | L1340 |
-| `renderInspector()` | L1354 |
-| `inspectorLabel()` | L1377 |
-| `bindEvents()` | L1395 |
-| `closeAssetPickers(except)` | L1412 |
-| `openAssetPicker(picker)` | L1421 |
-| `filterAssetPicker(input)` | L1431 |
-| `onClick(event)` | L1446 |
-| `selectDefinition(filePath, index)` | L1478 |
-| `navigate(kind, argument)` | L1487 |
-| `onInput(event)` | L1523 |
-| `onChange(event)` | L1571 |
-| `onKeyDown(event)` | L1596 |
-| `onFocusOut(event)` | L1654 |
-| `applyField(element, fromChange)` | L1662 |
-| `readValue(element)` | L1710 |
-| `markChanged(structural)` | L1737 |
-| `updateDefinitionLocalizationPreview(definition, draft)` | L1749 |
-| `updateEntityLocaleDraft(element)` | L1768 |
-| `updateLocaleValue(element)` | L1783 |
-| `filterDefinitionCards()` | L1803 |
-| `renderLocalizationListOnly()` | L1810 |
-| `autoProjectId(name)` | L1823 |
-| `filterCoreList(query)` | L1829 |
-| `handleAction(element, event)` | L1840 |
-| `saveDefinitionAction()` | L2072 |
-| `gotoDefinitionLocalization(field, keyOverride)` | L2109 |
-| `addDefinitionAction()` | L2126 |
-| `cloneCoreAction(coreId)` | L2137 |
-| `deleteDefinitionAction()` | L2153 |
-| `duplicateDefinitionAction()` | L2178 |
-| `applyRawJson()` | L2189 |
-| `addDependency(list)` | L2212 |
-| `removeDependency(list, index)` | L2222 |
-| `syncNamespace()` | L2231 |
-| `gotoKeyDefinition(filePath, index)` | L2276 |
-| `deleteLocaleKey(key)` | L2285 |
-| `fillMissingKeys()` | L2295 |
-| `arrayAdd(path)` | L2317 |
-| `defaultArrayItem(path, definition)` | L2331 |
-| `arrayRemove(path, index)` | L2354 |
-| `arrayMove(path, index, direction)` | L2365 |
-| `addListValue(path, input, button)` | L2379 |
-| `listRemove(path, index)` | L2403 |
-| `enumToggle(path, value, element)` | L2416 |
-| `addCondition(path, kind)` | L2433 |
-| `removeCondition(path)` | L2445 |
-| `changeConditionKind(element)` | L2454 |
-| `changeConditionOp(element)` | L2474 |
-| `changeEffectOp(element)` | L2494 |
-| `addAssets()` | L2518 |
-| `removeAsset(path)` | L2560 |
-| `downloadAsset(path)` | L2576 |
-| `showNewProject()` | L2586 |
-| `createProjectFromModal()` | L2619 |
-| `showImport()` | L2655 |
-| `importFolder()` | L2675 |
-| `importFile()` | L2680 |
-| `importEntries(entries)` | L2685 |
-| `showExport()` | L2725 |
-| `exportZip()` | L2759 |
-| `exportZipToDisk()` | L2781 |
-| `deployGameMod()` | L2804 |
-| `exportProjectFile()` | L2830 |
-| `exportFolder()` | L2840 |
-| `showProjectLibrary()` | L2852 |
-| `openDiskProject(id)` | L2913 |
-| `deleteDiskProject(id)` | L2930 |
-| `showCoreClone()` | L2949 |
-| `showAddLocale()` | L2975 |
-| `createLocale()` | L2990 |
-| `showAddLocaleKey()` | L3011 |
-| `createLocaleKey()` | L3023 |
-| `showHelp()` | L3040 |
-| `onDragEnter(event)` | L3082 |
-| `onDragOver(event)` | L3089 |
-| `onDragLeave()` | L3093 |
-| `onDrop(event)` | L3101 |
-| `runValidation()` | L3118 |
-| `copyText(text)` | L3124 |
+| `init()` | L71 |
+| `probeBackend()` | L78 |
+| `loadInitialProject()` | L88 |
+| `setProject(project, options)` | L120 |
+| `clearProject()` | L149 |
+| `firstSelection(project)` | L161 |
+| `currentFile()` | L175 |
+| `currentDefinition()` | L180 |
+| `selectedTypeInfo()` | L186 |
+| `selectedDefinitionKey()` | L191 |
+| `localizationDraft(definition, oldId, syncToId)` | L195 |
+| `currentLocalizationDraft()` | L217 |
+| `previewLocalizationValue(key, draft)` | L221 |
+| `previewLocalizationKey(definition, field, draft)` | L229 |
+| `setByPath(object, path, value)` | L233 |
+| `getByPath(object, path)` | L249 |
+| `deleteByPath(object, path)` | L259 |
+| `snapshot()` | L272 |
+| `pushHistory()` | L276 |
+| `undo()` | L287 |
+| `redo()` | L303 |
+| `ensureSelection()` | L319 |
+| `fallbackKey(uid)` | L335 |
+| `loadFallbackProject()` | L339 |
+| `saveNow(options)` | L350 |
+| `flushDiskSave()` | L394 |
+| `openProject(uid)` | L422 |
+| `deleteProject(uid)` | L439 |
+| `render(options)` | L470 |
+| `renderChrome()` | L506 |
+| `renderStatus()` | L533 |
+| `saveStateText()` | L552 |
+| `saveStateTitle()` | L562 |
+| `updateSaveState()` | L567 |
+| `timeText(date)` | L575 |
+| `renderSidebar()` | L583 |
+| `sideTypeLink(type, count, issues)` | L641 |
+| `activeLocale(locale)` | L652 |
+| `renderWorkspace()` | L660 |
+| `renderWelcome()` | L682 |
+| `loadRecent()` | L707 |
+| `renderOverview()` | L763 |
+| `ovField(labelText, control, hintText, wide)` | L872 |
+| `depRow(list, dependency, index)` | L880 |
+| `structureTree(project)` | L888 |
+| `renderModuleTabs(activeType)` | L916 |
+| `renderContent()` | L932 |
+| `renderDefinitionEditor(selected, info)` | L1007 |
+| `collectNeededKeys(project)` | L1063 |
+| `renderLocalization()` | L1078 |
+| `renderAssets()` | L1157 |
+| `paintModelThumbnails()` | L1199 |
+| `runModelThumbQueue()` | L1218 |
+| `setModelThumbImage(node, dataUrl)` | L1237 |
+| `renderValidation()` | L1247 |
+| `issueLocation(issue)` | L1285 |
+| `gotoIssue(index)` | L1297 |
+| `attrSelector(value)` | L1337 |
+| `inspectorData()` | L1345 |
+| `renderInspector()` | L1359 |
+| `inspectorLabel()` | L1382 |
+| `bindEvents()` | L1400 |
+| `closeAssetPickers(except)` | L1417 |
+| `openAssetPicker(picker)` | L1426 |
+| `filterAssetPicker(input)` | L1436 |
+| `onClick(event)` | L1451 |
+| `selectDefinition(filePath, index)` | L1483 |
+| `navigate(kind, argument)` | L1492 |
+| `onInput(event)` | L1528 |
+| `onChange(event)` | L1576 |
+| `onKeyDown(event)` | L1601 |
+| `onFocusOut(event)` | L1659 |
+| `applyField(element, fromChange)` | L1667 |
+| `readValue(element)` | L1715 |
+| `markChanged(structural)` | L1742 |
+| `updateDefinitionLocalizationPreview(definition, draft)` | L1754 |
+| `updateEntityLocaleDraft(element)` | L1773 |
+| `updateLocaleValue(element)` | L1788 |
+| `filterDefinitionCards()` | L1808 |
+| `renderLocalizationListOnly()` | L1815 |
+| `autoProjectId(name)` | L1828 |
+| `filterCoreList(query)` | L1834 |
+| `handleAction(element, event)` | L1845 |
+| `saveDefinitionAction()` | L2080 |
+| `gotoDefinitionLocalization(field, keyOverride)` | L2117 |
+| `addDefinitionAction()` | L2134 |
+| `cloneCoreAction(coreId)` | L2145 |
+| `deleteDefinitionAction()` | L2161 |
+| `duplicateDefinitionAction()` | L2186 |
+| `applyRawJson()` | L2197 |
+| `addDependency(list)` | L2220 |
+| `removeDependency(list, index)` | L2230 |
+| `syncNamespace()` | L2239 |
+| `gotoKeyDefinition(filePath, index)` | L2284 |
+| `deleteLocaleKey(key)` | L2293 |
+| `fillMissingKeys()` | L2303 |
+| `arrayAdd(path)` | L2325 |
+| `defaultArrayItem(path, definition)` | L2339 |
+| `arrayRemove(path, index)` | L2362 |
+| `arrayMove(path, index, direction)` | L2373 |
+| `addListValue(path, input, button)` | L2387 |
+| `listRemove(path, index)` | L2411 |
+| `enumToggle(path, value, element)` | L2424 |
+| `addCondition(path, kind)` | L2441 |
+| `removeCondition(path)` | L2453 |
+| `changeConditionKind(element)` | L2462 |
+| `changeConditionOp(element)` | L2482 |
+| `changeEffectOp(element)` | L2502 |
+| `addAssets()` | L2526 |
+| `removeAsset(path)` | L2568 |
+| `downloadAsset(path)` | L2584 |
+| `showNewProject()` | L2594 |
+| `createProjectFromModal()` | L2627 |
+| `showImport()` | L2663 |
+| `importFolder()` | L2683 |
+| `importFile()` | L2688 |
+| `importEntries(entries)` | L2693 |
+| `showExport()` | L2733 |
+| `exportZip()` | L2767 |
+| `exportZipToDisk()` | L2789 |
+| `deployGameMod()` | L2812 |
+| `exportProjectFile()` | L2838 |
+| `exportFolder()` | L2848 |
+| `showProjectLibrary()` | L2860 |
+| `openDiskProject(id)` | L2921 |
+| `openWorkspaceProject(id)` | L2940 |
+| `deleteDiskProject(id)` | L2958 |
+| `showCoreClone()` | L2977 |
+| `showAddLocale()` | L3003 |
+| `createLocale()` | L3018 |
+| `showAddLocaleKey()` | L3039 |
+| `createLocaleKey()` | L3051 |
+| `showHelp()` | L3068 |
+| `onDragEnter(event)` | L3110 |
+| `onDragOver(event)` | L3117 |
+| `onDragLeave()` | L3121 |
+| `onDrop(event)` | L3129 |
+| `runValidation()` | L3146 |
+| `copyText(text)` | L3152 |
 
 ## 契约与约束
 
@@ -161,6 +162,7 @@
 - 船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。
 - 自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。
 - 检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。
+- 项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。
 - 导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量。
 - 没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。
 - 资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。

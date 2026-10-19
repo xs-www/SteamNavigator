@@ -1490,6 +1490,7 @@ export const FILE_DOCS = {
       "文件夹/拖放导入递归读取 `webkitGetAsEntry`；ZIP 交给 `SNZip.read()`。",
       "目录导出需要 Chromium 的 `showDirectoryPicker`，在所选父目录下创建 `<mod_id>/`。",
       "检测到 `tools/serve.mjs` 时使用同源 `/api` 读写项目、普通导出与游戏模组目录；`detectBackend` 1.5s 超时后静默退化。",
+      "`getWorkspaceProject/putWorkspaceProject` 走 `/api/workspace/<id>`，把 `dev_mods/<id>` 作为原生工作区直接读写；普通磁盘项目仍走 `/api/projects/<id>`，两者按 id 不会互相遮蔽。",
       "deployGameMod(id, bytes) 把已构建 ZIP 交给本地服务覆盖部署；纯静态/file:// 模式不暴露该操作。",
       "下载使用 Blob URL；不向外部网络上传任何内容。"
     ]
@@ -1540,6 +1541,7 @@ export const FILE_DOCS = {
       "船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。",
       "自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。",
       "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
+      "项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。",
       "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量。",
       "没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。",
       "资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。",
@@ -1583,11 +1585,13 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/serve.mjs": {
-    role: "零依赖本地静态服务器 + 磁盘 API：项目工作区、普通导出与发布包模组覆盖部署。",
+    role: "零依赖本地静态服务器 + 磁盘 API：项目工作区、原生模组工作区（dev_mods 原地编辑）、普通导出与发布包模组覆盖部署。",
     contracts: [
-      "仅监听 127.0.0.1；默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` 覆盖目录。",
+      "仅监听 127.0.0.1；默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` / `SNMODMAKER_WORKSPACE_ROOT` 覆盖目录；工作区根默认是仓库 `dev_mods/`。",
       "默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。",
-      "API：status、projects、exports 与 game-mods；请求体上限 128 MB。",
+      "API：status、projects、workspace、exports 与 game-mods；请求体上限 128 MB。",
+      "`/api/workspace/<id>` 直接读写 `dev_mods/<id>`：打开时返回 manifest/content/localization 与资产键占位（不含二进制），保存时只写文本文件并删掉 manifest 不再声明的 content/localization 文件；资产目录永远不动。",
+      "工作区保存允许删除/新增定义与内容文件；`/api/workspace/<id>` DELETE 被拒绝，避免误删整个原生模组。",
       "游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。",
       "项目先写临时目录再替换，文件路径拒绝绝对路径、`..`、盘符与超过 16 层。",
       "静态文件带 `Cache-Control: no-store`，路径解析后必须位于 SNModMaker 目录内。"
@@ -1600,6 +1604,100 @@ export const FILE_DOCS = {
       "优先级：`SNMODMAKER_GAME_MODS_DIR` > 当前平台已有的 `dist/build/<target>/` > 任意已有导出平台 > 当前平台 `dist/build/<platform>/mods`。",
       "平台映射：win32→windows、darwin→macos，其余→linux。",
       "纯函数可注入 env/platform/exists，供 Node 单元测试覆盖，不直接读真实目录。"
+    ]
+  },
+
+  "SNModMaker/tools/content.mjs": {
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验。",
+    dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
+    contracts: [
+      "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
+      "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
+      "`--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。",
+      "输出契约：`--json` 时 stdout 只有一个 JSON 对象（成功 / 失败 / 用法错误都是），人读日志写 stderr；退出码 0 成功、1 执行失败 / 校验未通过 / 冲突、2 用法错误。",
+      "写命令统一预检：改动前后各跑 `Validate.validateProject`，按 `severity|code|message|view` 求新增问题；new error 默认整批不写并退出 1，`--force` 只解除拦截、结果仍 `ok:false`。",
+      "外部命令只在真实写入后执行：`--sync` 仅在 `manifest.id === 'core'` 时跑 `sync-core-index.mjs`，`--test` 跑 `SNModMaker/tests/run-tests.js`；`validate --godot` 需 `GODOT_BIN`，未设置只记 notes 不算失败。"
+    ],
+    l2: {
+      "loadMod(ctx, modArg)": [
+        "递归排序读取模组目录得到 `{path, data}` 条目，交 `Store.fromFiles` 生成 project / warnings；每个文件保存 buffer 与加载时的 SHA-256 供冲突检测。",
+        "文本按需 UTF-8 解码并缓存；`resolveInside` 对相对路径做前缀校验，越界抛 `path` 错误。"
+      ],
+      "collectChanges / verifyBaseline / commitChanges": [
+        "`collectChanges` 只保留与加载缓冲不同的文件，输出 create / update / delete（`--dry-run` 时加 `would-` 前缀）、bytes 与行级 LCS unified diff；内容相同的写入项直接丢弃。",
+        "`verifyBaseline` 写前重新读取每个待写 / 待删文件并与加载时 SHA-256 比对，不一致抛 `conflict`；`commitChanges` 先整体校验再逐个写入，因此冲突时零写入。",
+        "单文件写入用同目录 `.tmp-<pid>-<rand>` 写完 `fs.renameSync` 覆盖，失败清理临时文件。"
+      ],
+      "finalizeWrite(ctx, options)": [
+        "所有写命令的公共收尾：计算 newIssues、决定是否写盘、组装 `changes / issues / stats / notes` 与统一摘要。",
+        "`--dry-run` 或被 new error 拦截时只产出 `would-*` 变更；`--force` 只放开拦截，不改变失败状态与退出码。",
+        "真实写入成功后才执行 `--sync` / `--test`；无真实写入或非 core 时只往 notes 记录跳过原因。"
+      ],
+      "planAppendDefinition / planLocaleChanges / planManifest": [
+        "内容文件：解析源文本后定位 `definitions` 数组，用 `insertArrayItem` 在尾部插入；只有新建内容文件才整份序列化写出。",
+        "本地化：只写有实际变化的 locale 文件；纯新增键用 `insertLocaleEntries` 插到最后一个成员之前以保留既有字节，增删改混合时才整份 `JSON.stringify(entries, null, 2)`。",
+        "manifest：只对 `content` / `localization` 数组做元素级增删（`insertArrayItem` / `removeArrayItem` / 缺字段时 `insertObjectMember`），不重写其他字段。"
+      ],
+      "editDefinitionText / applyAssignmentToText": [
+        "`set` 先在内存定义上执行赋值，再在源文本上改写目标节点：标量 `replaceNodeValue`、数组插删、缺失路径插到最深的已存在父节点。",
+        "改写后用 `JSON.parse` 与内存期望值全等校验；不一致时兜底为只替换该 definition 节点并再次校验，仍不一致报 internal 且不写盘。"
+      ],
+      "commandRm": [
+        "删除前收集定义的全部键；删除后以所有剩余定义的键与任意字符串值作为保留集合，只删除未被保留的本地化键（`--keep-loc` 跳过）。",
+        "内容文件仍有定义时精确删除数组项；变空时改为删除该内容文件，并同步移除 manifest 声明。"
+      ],
+      "describeFields / describePayload": [
+        "字段表来自 `SN_SCHEMAS`：envelope `definitions.items` 的 allOf 用 `Validate.deref` 合并并保留属性所属 Schema 文件（跨文件 `$ref` 才正确），`data` 再展开一层；object 与数组元素递归到深度 4，路径写成 `data.market[].stock_range`。",
+        "每行只带实际存在的约束键；`defaults` 来自 `SNCatalog.DEFAULTS[type]?.()`，patches 的 defaults 为 null 并给出 target / operations 骨架。"
+      ],
+      "commandNew": [
+        "`Store.createProject` + `toExportFiles(prefix:false)` 写出模板文件树，内容文件用 `formatStyled` 统一风格；目标目录非空且无 `--force` 时退出 1。",
+        "真实写入后重新 `loadMod` 再校验；`--dry-run` 只列 `would-create`，不落盘。"
+      ]
+    }
+  },
+
+  "SNModMaker/tools/content_json.mjs": {
+    role: "保源 JSON 源文本编辑器（纯函数、无 fs）：解析带 start / end 的节点树，只替换目标节点附近的文本切片，让 CLI 增删改内容时既有字节、缩进与 BOM 保持不变。",
+    dependencies: ["content.mjs（唯一调用方）"],
+    contracts: [
+      "节点 `start / end` 是半开区间（`end` 指向最后一个字符之后），`open / close` 是括号下标；object 带 `members[{key, keyStart, value}]`（`findNode` 取同名键最后一个），array 带 `items[]`。",
+      "`parseSource` 是严格 JSON 解析：尾随内容、悬空逗号、前导零、未转义控制字符与嵌套超过 256 层都抛 `SyntaxError`（附源偏移）；字符串值交 `JSON.parse` 校验转义。",
+      "BOM 容忍：开头 U+FEFF 跳过但游标起点同步前移，节点偏移仍以原文为准，因此插入 / 删除切片会原样保留 BOM；`add` 后再 `rm` 仍可逐字节还原。",
+      "函数不重新定位节点：调用方传入的 node 必须与 text 来自同一次 `parseSource`，文本变化后需重新解析。",
+      "插入 / 删除只动目标节点附近的字节：是否多行、缩进与逗号都取自源文本；对象插入与数组插入使用同一套策略。",
+      "`formatStyled`：2 空格缩进（缩进基准可传列号或字符串），对象恒多行，纯标量数组在缩进基准加行内长度不超过 `inlineLimit`（默认 100）时单行，空容器为 `[]` / `{}`，返回值首行不带缩进。"
+    ],
+    l2: {
+      "parseSource(text)": [
+        "手写递归下降：skipWhitespace / parseString / parseNumber / parseLiteral / parseObject / parseArray 组成节点树并记录偏移。",
+        "数字用 JSON 数字正则后 `Number(...)`，字符串 value 由切片交 `JSON.parse`；解析结束要求恰好消费完整文本。"
+      ],
+      "insertArrayItem(text, arrayNode, value, formatter)": [
+        "空数组展开为三行（换行、缩进两格的新项、原关闭缩进）；单行数组在 `]` 前内联插入 `, <inline>`；多行数组在最后一项之后追加逗号、换行与新项，并复用最后一项的缩进。",
+        "插入前用 `assertInsertable` 拒绝 undefined 与不可序列化值；`formatter(value, indent)` 返回首行不带缩进的文本。"
+      ],
+      "removeArrayItem(text, arrayNode, index)": [
+        "唯一项 → `[]`；首项 → 删除到第二项 start（带走尾随逗号与缩进）；中间 / 末项 → 从前一项 end 删除到目标 end。",
+        "这正是 `add` → `rm` 逐字节还原与首 / 中 / 末 / 唯一项四种边界的关键不变量。"
+      ],
+      "replaceNodeValue / insertObjectMember": [
+        "标量直接切片替换 token；对象 / 数组用 `formatStyled(value, columnAt(node.start))` 按起始列重写。",
+        "`insertObjectMember` 与数组插入同策略：空对象展开、单行对象内联、多行对象插在最后成员之后。"
+      ],
+      "formatStyled / formatInline": [
+        "`formatStyled` 递归输出多行文本，首行不带缩进、后续行按基准逐层加两格；`formatInline` 生成永不换行的一行表示，供单行数组 / 对象与内联插入使用。",
+        "非有限数字或不可序列化值抛 `TypeError`；缩进参数传 number 时按列数生成空格。"
+      ]
+    }
+  },
+
+  "SNModMaker/tests/content-cli.test.mjs": {
+    role: "Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出。",
+    contracts: [
+      "每个用例在 `fs.mkdtempSync(os.tmpdir())` 建临时模组；仓库 `dev_mods/core` 只读（部分用例比对前后 SHA-256），任何写操作都不落在仓库内。",
+      "覆盖 types / describe / list / new / add / set / loc / clone / rm / validate 的正常路径与用法错误、`--dry-run` 不写盘、最小 diff 与 add → rm 逐字节还原（含 BOM）、本地化专属键清理、`--json` 单一对象与退出码 0 / 1 / 2。",
+      "运行：`node --test SNModMaker/tests/content-cli.test.mjs`（从仓库根执行），只用 Node 内置模块，不引入第三方依赖。"
     ]
   },
 
@@ -1616,6 +1714,15 @@ export const FILE_DOCS = {
     contracts: [
       "启动真实 tools/serve.mjs 子进程，并通过三个环境变量把所有写入限制在临时目录。",
       "测试结束终止服务并删除临时目录；任何断言失败以非零退出码结束。"
+    ]
+  },
+
+  "SNModMaker/tests/workspace-smoke.mjs": {
+    role: "原生工作区冒烟测试：用 `/api/workspace/<id>` 打开 dev_mods/<id>，验证删除定义、新增内容文件、删除本地化、资产不被改写与禁止整体删除。",
+    contracts: [
+      "在临时目录构造一个 workspace 根与 core 模组，并用 SNMODMAKER_WORKSPACE_ROOT 指向它，不触碰仓库 dev_mods。",
+      "保存使用与浏览器相同的 `{project, files}` 载荷；断言磁盘上定义集合、内容文件与本地化删除结果。",
+      "断言 `assets/models/*.glb` 字节不变，且 DELETE `/api/workspace/<id>` 返回 400。"
     ]
   },
 
@@ -2078,7 +2185,8 @@ export const MODULES = {
       "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）。",
       "`art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。",
       "`modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。",
-      "港口设施锚点工单见 `modeling/briefs/sn_port_facilities_batch1.json` 与 `PORT_FACILITIES_PLAN.md`：6 件设施锚点，总预算 10500 tri，轴心统一在底面中心。",
+      "港口设施锚点工单见 `modeling/briefs/sn_port_facilities_batch1.json` 与 `PORT_FACILITIES_PLAN.md`：6 件设施锚点，总预算 10500 tri，轴心统一在底面中心；工作台暂存排原定 y=60，因与 `SN_Ship_Modules`（y 58.6–69.2）冲突改为 y=75（见工单 layout_revision）。",
+      "`modeling/generators/sn_port_facilities_generator.py` 是港口设施 6 件的几何唯一真源；`export_port_glb.py` 逐件归零导出 + 写 `.design/port/SN_<Name>.blend` 快照，`verify_port_glb.py` 纯 Python 复核单节点 / 调色板 / 尺寸 / 轴心 / doubleSided，`render_port_preview.py` 出逐件 3/4 预览。",
       "`modeling/generators/*.py` 是几何唯一真源：改了参数重跑即可重建，禁止手工摆点；`.blend` 只是产物。",
       "`modeling/generators/dryrun_props.py` 必须在进 Blender 前跑通（tri 预算 / 包围盒 / 边界边 / 退化面）。",
       "`modeling/dispatch.workflow.js` 必须串行派发：Blender 单实例，禁止 `parallel`/`pipeline` 并发建模。",
@@ -2094,7 +2202,8 @@ export const MODULES = {
       "实体 ID 修改只实时预览新多语言键，点击保存条目才原子迁移所有语言；模块类通过子分页切换。",
       "标准实体可配置贴图与 GLB 模型资源键，编辑器校验资源存在性与格式。",
       "所有导入内容都经过 HTML 转义、路径检查与 ZIP 体积/条目/CRC 限制。",
-      "浏览器存储始终可用；`tools/serve.mjs` 运行时额外镜像到 `mods/`，导出可写入 `exports/`。"
+      "浏览器存储始终可用；`tools/serve.mjs` 运行时额外镜像到 `mods/`，导出可写入 `exports/`。",
+      "`tools/content.mjs` 是无头 CLI，与网页端共用 `js/store.js` / `js/validate.js`；写回用 `tools/content_json.mjs` 保源编辑，写前按 SHA-256 检测并发修改。"
     ]
   },
   "dev_scenes": {
@@ -2157,6 +2266,10 @@ export const GROUPED_ROLES = {
   "tools/modeling/generators/export_props_glb.py": "道具 GLB 导出：逐件把 location 临时归零、只导出选中对象、导出后还原；按批次分组避免无谓重导。",
   "tools/modeling/generators/p0_rework_2026-10-19.py": "第一批 P0 整改：重建系缆桩 → SN_Ore 改锈红 → 三段岸壁拼接测试。",
   "tools/modeling/generators/p0_finalize.py": "P0 归档：备份旧 GLB → 清临时对象 → 导出 → 保存工作台。",
+  "tools/modeling/generators/sn_port_facilities_generator.py": "港口设施锚点第一批 6 件生成器（市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞）：纯几何函数可离线干跑，单件一个 mesh、原点在底面中心，集合 SN_Port_Facilities，合计 5044 tri；本批新增 SN_Iron。",
+  "tools/modeling/generators/export_port_glb.py": "港口设施 GLB 归档：备份旧 GLB → 保存工作台 → 逐件 location 归零导出 `assets/models/port/SN_<Name>.glb` → `libraries.write` 单件 `.blend` 快照 → 还原摆位；人工验收后由 Lead 运行。",
+  "tools/modeling/generators/verify_port_glb.py": "港口设施 GLB 结构自检（纯 Python）：单节点/无相机灯光贴图、三角面 ≤1.2× 预算、glTF Y-up 包围盒换算与 items.size 误差 ≤0.1 m、轴心在底面中心、材质在调色板且 doubleSided。",
+  "tools/modeling/generators/render_port_preview.py": "港口设施预览渲染：临时相机/双太阳/深色世界，逐件 3/4 与正视 + 一排总览 + 船厂组总览，干船坞单独抬高机位看坞内台阶；渲染后还原场景并删除临时对象。",
   "tools/modeling/generators/sn_paddle_freighter_generator.py": "明轮货轮参数化生成器：铁壳船身 + 两舷明轮（14 桨叶/8 辐条/双轮缘/内加强环/斜撑）+ 半包轮罩箱板（观察窗/端封让开轮扫掠）+ 双烟囱 + 三岛甲板 + 艏艉楼侧封板 + 货舱吊杆，全部几何由顶部参数表重建（预算 ≤14000 tri）。",
   "tools/modeling/generators/sn_paddle_steamer_generator.py": "小型明轮蒸汽船（PS Enterprise 参考）参数化生成器：24 m 白漆内河船身 + 两舷 10 桨叶明轮 + 梯形格栅轮罩 + 前驾驶室（ENTERPRISE 文字铭牌）+ 后部雨棚游步甲板 + 黑烟囱 + 艏旗杆澳洲旗 + 艉部弧形平台/舵；蒸汽不建模（留给游戏内 VFX），预算 ≤12000 tri，几何全部由顶部参数表重建。",
   "tools/modeling/generators/sn_schooner_fame_generator.py": "1795 年 Salem 双桅纵帆船 SN_Schooner_Fame 参数化生成器：18 站放样黑船身 + 赭黄上舷带 + 双桅后倾（Fore -2.5° / Main -3.2°）+ 斜桁帆/方顶帆/三角顶帆 + 两面艏三角帆 + 舷侧绳梯/支索/动索 + 甲板属具（舱口/绞盘/舵轮/罗经柜/锚/木桶/盘绳/fife rails/短梯）+ 艉廊/3 窗/FAME 铭牌 + 红白长旒；帆腹镜像到 -Y（Godot +Z 相机侧），预算 ≤18000 tri。",
@@ -2192,12 +2305,13 @@ export const GROUPED_ROLES = {
   "tools/modeling/briefs/sn_iron_harbor_batch3.json": "铁港第三批 6 件工单（堆场/管线，y=36）。",
   "tools/modeling/briefs/sn_iron_harbor_batch4.json": "铁港第四批 6 件工单（机械/水上件，y=42）。",
   "tools/modeling/briefs/sn_iron_harbor_batch5.json": "铁港第五批 7 件工单（结构/标识/动力，y=48）。",
-  "tools/modeling/briefs/sn_port_facilities_batch1.json": "港口设施锚点第一批工单：市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞，总预算 10500 tri，y=60。",
+  "tools/modeling/briefs/sn_port_facilities_batch1.json": "港口设施锚点第一批工单：市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞，总预算 10500 tri；工作台暂存排原定 y=60，因与 SN_Ship_Modules 冲突改为 y=75（layout_revision）。",
   "tools/modeling/briefs/PORT_FACILITIES_PLAN.md": "港口设施锚点建模总表：设施→锚点映射、尺寸/tri/材质、已有道具复用、PortStage 装配与验收约定。",
   "tools/modeling/briefs/IRON_HARBOR_PLAN.md": "铁港小部件 31 件 / 5 批的工单总表、布局、材质与已知坑。",
   "tools/modeling/dispatch.workflow.js": "批量派发脚本：串行 Builder + 独立 Verifier，脚本内不落盘（导出由 Lead 在人工验收后执行）。",
   "tools": "PowerShell 测试/打包脚本与静态文档生成器。",
   "SNModMaker/README.md": "使用说明、数据流、开发约定与已知边界。",
+  "SNModMaker/WORKSPACE.md": "原生工作区使用说明：启动本地服务、在编辑器里直接编辑 dev_mods/core、保存边界与发布前校验。",
   "SNModMaker/mods/README.md": "磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。",
   "SNModMaker/exports/README.md": "本地导出目录说明：ZIP 命名与忽略规则。",
   "SNModMaker/js/schema-bundle.js": "自动生成：嵌入 `/schemas/*.schema.json`。",

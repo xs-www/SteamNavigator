@@ -33,6 +33,7 @@
     savedAt: null,
     storageMode: 'idb',
     backend: null,
+    workspace: false,
     diskSaving: false,
     diskQueued: false,
     diskSavedAt: null,
@@ -120,6 +121,7 @@
     const opts = options || {};
     state.project = Store.normalizeProject(project);
     Store.syncManifest(state.project);
+    state.workspace = Boolean(opts.workspace);
     state.view = opts.view || { name: 'overview' };
     state.selected = firstSelection(state.project);
     state.locale = (state.project.localization[0] && state.project.localization[0].locale) || 'zh_CN';
@@ -398,12 +400,15 @@
     state.diskSaving = true;
     updateSaveState();
     try {
-      await IO.putDiskProject(state.project);
+      await (state.workspace ? IO.putWorkspaceProject(state.project) : IO.putDiskProject(state.project));
       state.diskSavedAt = new Date();
       state.diskError = '';
     } catch (error) {
       state.diskError = error.message || '写入磁盘失败';
-      UI.toast(`写入 ${state.backend.modsDir || 'mods'}/ 失败：${state.diskError}`, 'warning', 5000);
+      const target = state.workspace
+        ? (state.backend.workspaceDir || 'dev_mods')
+        : (state.backend.modsDir || 'mods');
+      UI.toast(`写入 ${target}/ 失败：${state.diskError}`, 'warning', 5000);
     } finally {
       state.diskSaving = false;
       updateSaveState();
@@ -719,13 +724,13 @@
       }
       const diskHtml = diskRows.map((item) => `
         <div class="recent-row">
-          <button type="button" class="recent-main" data-action="open-disk-project" data-id="${UI.attr(item.id)}">
+          <button type="button" class="recent-main" data-action="${item.workspace ? 'open-workspace-project' : 'open-disk-project'}" data-id="${UI.attr(item.id)}">
             <span class="recent-name">${UI.esc(item.name)}</span>
             <span class="recent-meta mono">${UI.esc(item.id)} · v${UI.esc(item.version)} · ${item.definitions} 条定义</span>
           </button>
           <span class="recent-time">${UI.esc(UI.fmtDate(item.updatedAt))}</span>
-          <span class="recent-badge">mods/</span>
-          <button type="button" class="icon-btn tiny danger" data-action="delete-disk-project" data-id="${UI.attr(item.id)}" title="删除磁盘项目">✕</button>
+          <span class="recent-badge">${item.workspace ? '工作区' : 'mods/'}</span>
+          ${item.workspace ? '' : `<button type="button" class="icon-btn tiny danger" data-action="delete-disk-project" data-id="${UI.attr(item.id)}" title="删除磁盘项目">✕</button>`}
         </div>`).join('');
       const browserHtml = rows.map((project) => {
         const manifest = project.manifest || {};
@@ -741,7 +746,7 @@
         </div>`;
       }).join('');
       host.innerHTML = `
-        ${state.backend ? `<p class="recent-label mono">磁盘 · ${UI.esc(state.backend.modsDir || 'mods')}/</p>${diskHtml || '<p class="empty-inline">还没有写入磁盘的项目。保存后会自动出现在这里。</p>'}` : ''}
+        ${state.backend ? `<p class="recent-label mono">磁盘 · ${UI.esc(state.backend.modsDir || 'mods')}/ 与工作区 ${UI.esc(state.backend.workspaceDir || 'dev_mods')}/</p>${diskHtml || '<p class="empty-inline">还没有写入磁盘的项目。保存后会自动出现在这里。</p>'}` : ''}
         <p class="recent-label mono">浏览器 · IndexedDB</p>
         ${browserHtml || '<p class="empty-inline">没有浏览器项目。</p>'}`;
     } catch (error) {
@@ -1982,6 +1987,9 @@
       case 'open-disk-project':
         openDiskProject(element.dataset.id);
         return;
+      case 'open-workspace-project':
+        openWorkspaceProject(element.dataset.id);
+        return;
       case 'delete-disk-project':
         deleteDiskProject(element.dataset.id);
         return;
@@ -1991,7 +1999,7 @@
           return;
         }
         await saveNow({ disk: true });
-        UI.toast('已写入 mods/', 'success', 1800);
+        UI.toast('已写入磁盘', 'success', 1800);
         return;
       case 'export-disk':
         UI.closeModal();
@@ -2924,6 +2932,26 @@
       UI.toast(`已打开 ${project.manifest.name}`, 'success');
     } catch (error) {
       UI.toast(error.message || '打开磁盘项目失败', 'error');
+    }
+  }
+
+  /** Opens dev_mods/<id> in place; saves write back into the game's native mod
+   *  directory instead of SNModMaker/mods/ or a packaged ZIP. */
+  async function openWorkspaceProject(id) {
+    if (!id) return;
+    try {
+      if (state.dirty) await saveNow({ disk: true });
+      const project = await IO.getWorkspaceProject(id);
+      if (!project) {
+        UI.toast('工作区不存在。', 'error');
+        return;
+      }
+      setProject(project, { fromDisk: true, workspace: true });
+      UI.closeModal();
+      const rootDir = (state.backend && state.backend.workspaceDir) || 'dev_mods';
+      UI.toast(`已打开工作区 ${rootDir}/${id}；保存会直接写回该目录`, 'success', 3200);
+    } catch (error) {
+      UI.toast(error.message || '打开工作区失败', 'error', 5000);
     }
   }
 

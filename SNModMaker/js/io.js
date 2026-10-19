@@ -337,9 +337,9 @@
     return data.project || null;
   }
 
-  async function putDiskProject(project) {
+  function projectPayload(project) {
     const files = root.SNStore.toExportFiles(project, { prefix: false });
-    const payload = {
+    return {
       project: root.SNStore.normalizeProject(project),
       files: files.map((file) => ({
         path: file.path,
@@ -347,10 +347,27 @@
         data: typeof file.data === 'string' ? file.data : root.SNStore.bytesToBase64(file.data),
       })),
     };
+  }
+
+  async function putDiskProject(project) {
     return apiJson(`api/projects/${encodeURIComponent(project.manifest.id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(projectPayload(project)),
+    });
+  }
+
+  /* Native workspace: read/write dev_mods/<id> directly. */
+  async function getWorkspaceProject(id) {
+    const data = await apiJson(`api/workspace/${encodeURIComponent(id)}`);
+    return data.project || null;
+  }
+
+  async function putWorkspaceProject(project) {
+    return apiJson(`api/workspace/${encodeURIComponent(project.manifest.id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projectPayload(project)),
     });
   }
 
@@ -419,6 +436,8 @@
     getDiskProject,
     putDiskProject,
     deleteDiskProject,
+    getWorkspaceProject,
+    putWorkspaceProject,
     listExports,
     saveExportToDisk,
     deleteExport,

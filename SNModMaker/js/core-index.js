@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-19T09:51:43.424Z",
+    "generated_at": "2026-10-19T13:12:27.560Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -41,19 +41,65 @@
         "localization/en.json"
       ],
       "assets": {
-        "icon.coal": "assets/icons/coal.png",
-        "icon.water": "assets/icons/water.png",
-        "icon.money": "assets/icons/money.png",
         "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png",
-        "model.ship.prototype": "assets/models/ships/SN_Ship_Prototype.glb",
-        "model.ship.paddle_freighter": "assets/models/ships/SN_Paddle_Freighter.glb",
-        "model.module.boiler": "assets/models/modules/SN_Boiler_Unit.glb",
-        "model.good.iron_ore": "assets/models/goods/SN_Ore_Pile.glb",
+        "icon.coal": "assets/icons/coal.png",
+        "icon.money": "assets/icons/money.png",
+        "icon.water": "assets/icons/water.png",
         "model.good.coal": "assets/models/goods/SN_Coal_Pile.glb",
+        "model.good.iron_ore": "assets/models/goods/SN_Ore_Pile.glb",
         "model.good.timber": "assets/models/goods/SN_Timber_Stack.glb",
         "model.material.boiler_plate": "assets/models/materials/SN_Plate_Stack.glb",
         "model.material.precision_gear": "assets/models/materials/SN_Gear_Crate.glb",
-        "model.material.sealing_compound": "assets/models/materials/SN_Barrel.glb"
+        "model.material.sealing_compound": "assets/models/materials/SN_Barrel.glb",
+        "model.module.boiler": "assets/models/modules/SN_Boiler_Unit.glb",
+        "model.module.boiler_efficient": "assets/models/modules/SN_Boiler_Efficient.glb",
+        "model.module.boiler_performance": "assets/models/modules/SN_Boiler_Performance.glb",
+        "model.module.boiler_standard": "assets/models/modules/SN_Boiler_Standard.glb",
+        "model.module.cabin_passenger": "assets/models/modules/SN_Cabin_Passenger.glb",
+        "model.module.cargo_large_hold": "assets/models/modules/SN_Cargo_Large_Hold.glb",
+        "model.module.cargo_medium_hold": "assets/models/modules/SN_Cargo_Medium_Hold.glb",
+        "model.module.cargo_small_hold": "assets/models/modules/SN_Cargo_Small_Hold.glb",
+        "model.module.nav_chart_room": "assets/models/modules/SN_Nav_Chart_Room.glb",
+        "model.module.nav_spyglass": "assets/models/modules/SN_Nav_Spyglass.glb",
+        "model.module.safety_lifeboat": "assets/models/modules/SN_Safety_Lifeboat.glb",
+        "model.module.safety_valve": "assets/models/modules/SN_Safety_Valve.glb",
+        "model.prop.barrel": "assets/models/props/SN_Barrel.glb",
+        "model.prop.bell": "assets/models/props/SN_Bell.glb",
+        "model.prop.boiler_unit": "assets/models/props/SN_Boiler_Unit.glb",
+        "model.prop.buoy": "assets/models/props/SN_Buoy.glb",
+        "model.prop.capstan": "assets/models/props/SN_Capstan.glb",
+        "model.prop.cargo_net": "assets/models/props/SN_Cargo_Net.glb",
+        "model.prop.chain_coil": "assets/models/props/SN_Chain_Coil.glb",
+        "model.prop.coal_chute": "assets/models/props/SN_Coal_Chute.glb",
+        "model.prop.coal_pile": "assets/models/props/SN_Coal_Pile.glb",
+        "model.prop.crate": "assets/models/props/SN_Crate.glb",
+        "model.prop.dock_fender": "assets/models/props/SN_Dock_Fender.glb",
+        "model.prop.dock_ladder": "assets/models/props/SN_Dock_Ladder.glb",
+        "model.prop.dock_stairs": "assets/models/props/SN_Dock_Stairs.glb",
+        "model.prop.dock_wall": "assets/models/props/SN_Dock_Wall.glb",
+        "model.prop.fender_ball": "assets/models/props/SN_Fender_Ball.glb",
+        "model.prop.flag_pole": "assets/models/props/SN_Flag_Pole.glb",
+        "model.prop.gangway": "assets/models/props/SN_Gangway.glb",
+        "model.prop.gas_lamp": "assets/models/props/SN_Gas_Lamp.glb",
+        "model.prop.gear_crate": "assets/models/props/SN_Gear_Crate.glb",
+        "model.prop.grab_bucket": "assets/models/props/SN_Grab_Bucket.glb",
+        "model.prop.handcart": "assets/models/props/SN_Handcart.glb",
+        "model.prop.harbor_crane": "assets/models/props/SN_Harbor_Crane.glb",
+        "model.prop.keel_block": "assets/models/props/SN_Keel_Block.glb",
+        "model.prop.mooring_bollard": "assets/models/props/SN_Mooring_Bollard.glb",
+        "model.prop.mooring_rope": "assets/models/props/SN_Mooring_Rope.glb",
+        "model.prop.ore_pile": "assets/models/props/SN_Ore_Pile.glb",
+        "model.prop.pallet": "assets/models/props/SN_Pallet.glb",
+        "model.prop.plate_stack": "assets/models/props/SN_Plate_Stack.glb",
+        "model.prop.port_sign": "assets/models/props/SN_Port_Sign.glb",
+        "model.prop.sack_pile": "assets/models/props/SN_Sack_Pile.glb",
+        "model.prop.steam_pipe": "assets/models/props/SN_Steam_Pipe.glb",
+        "model.prop.timber_stack": "assets/models/props/SN_Timber_Stack.glb",
+        "model.ship.ironclad": "assets/models/ships/SN_Ironclad.glb",
+        "model.ship.paddle_freighter": "assets/models/ships/SN_Paddle_Freighter.glb",
+        "model.ship.paddle_steamer": "assets/models/ships/SN_Paddle_Steamer.glb",
+        "model.ship.prototype": "assets/models/ships/SN_Ship_Prototype.glb",
+        "model.ship.schooner_fame": "assets/models/ships/SN_Schooner_Fame.glb"
       },
       "authors": [
         "Steam Navigator Team"
@@ -338,7 +384,7 @@
             ],
             "enabled": true,
             "information": {
-              "model": "model.ship.prototype"
+              "model": "model.ship.paddle_steamer"
             },
             "data": {
               "tier": 1,
@@ -368,7 +414,7 @@
             ],
             "enabled": true,
             "information": {
-              "model": "model.ship.prototype"
+              "model": "model.ship.schooner_fame"
             },
             "data": {
               "tier": 2,
@@ -450,7 +496,7 @@
             ],
             "enabled": true,
             "information": {
-              "model": "model.ship.paddle_freighter"
+              "model": "model.ship.ironclad"
             },
             "data": {
               "tier": 3,
@@ -1823,6 +1869,11 @@
                       "amount": 2
                     },
                     {
+                      "op": "damage_module",
+                      "slot": "boiler",
+                      "amount": 0.2
+                    },
+                    {
                       "op": "emit_notice",
                       "text_key": "notice.core.overheat.cooled"
                     }
@@ -1882,6 +1933,11 @@
                     {
                       "op": "damage_ship",
                       "amount": 9
+                    },
+                    {
+                      "op": "damage_module",
+                      "slot": "boiler",
+                      "amount": 0.4
                     },
                     {
                       "op": "add_delay_hours",
@@ -2634,7 +2690,7 @@
           ],
           "enabled": true,
           "information": {
-            "model": "model.ship.prototype"
+            "model": "model.ship.paddle_steamer"
           },
           "data": {
             "tier": 1,
@@ -2678,7 +2734,7 @@
           ],
           "enabled": true,
           "information": {
-            "model": "model.ship.prototype"
+            "model": "model.ship.schooner_fame"
           },
           "data": {
             "tier": 2,
@@ -2788,7 +2844,7 @@
           ],
           "enabled": true,
           "information": {
-            "model": "model.ship.paddle_freighter"
+            "model": "model.ship.ironclad"
           },
           "data": {
             "tier": 3,
@@ -4511,6 +4567,11 @@
                     "amount": 2
                   },
                   {
+                    "op": "damage_module",
+                    "slot": "boiler",
+                    "amount": 0.2
+                  },
+                  {
                     "op": "emit_notice",
                     "text_key": "notice.core.overheat.cooled"
                   }
@@ -4570,6 +4631,11 @@
                   {
                     "op": "damage_ship",
                     "amount": 9
+                  },
+                  {
+                    "op": "damage_module",
+                    "slot": "boiler",
+                    "amount": 0.4
                   },
                   {
                     "op": "add_delay_hours",
