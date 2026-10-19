@@ -105,9 +105,11 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 		"npcs": [],
 		"intelligence": {},
 		"notices": [],
-		"stats": {"voyages": 0, "on_time": 0, "accidents": 0, "profit": 0},
+		"stats": GameState.STATS_DEFAULTS.duplicate(true),
+		"victory": null,
 	}
 	ContractOps.ensure_structure(state)
+	WarehouseOps.ensure_structure(state)
 	_initialize_markets(state, hub, profile, rng)
 	MarketMemoryService.remember(state, state.current_port_id())
 	state.data["npcs"] = NpcTraderSimulator.create_initial(state, hub, rng, profile.data)
@@ -124,7 +126,7 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 	else:
 		return Result.fail("no_main_contract", "ui.error.no_main_contract", {"sequence": 1})
 
-	_generate_normal_offers(state, hub, rng)
+	ContractOps.generate_normal_offers(state, hub, rng, "initial:%s" % state.current_port_id())
 	state.push_notice("ui.notice.run_started", {"build": build.name_key})
 	return Result.ok({
 		"state": state,
@@ -154,30 +156,6 @@ static func _generate_main_offer(state: GameState, hub: RegistryHub, sequence: i
 	if template == null:
 		return {}
 	return ContractOps.generate_offer(state, hub, template, rng, state.current_port_id())
-
-
-static func _generate_normal_offers(state: GameState, hub: RegistryHub, rng: RngService) -> void:
-	var templates := ContractOps.templates_by_kind(hub, "normal")
-	if templates.is_empty():
-		return
-	var candidates: Array = []
-	for template in templates:
-		candidates.append({"template": template, "weight": 1.0})
-	var offer_rng := rng.stream(RngService.STREAM_CONTRACT_GENERATION, "normal_offers")
-	var wanted := mini(3, templates.size())
-	var offers: Array = []
-	for _index in wanted:
-		if candidates.is_empty():
-			break
-		var picked: Variant = RngService.choose_weighted(offer_rng, candidates)
-		if not (picked is Dictionary):
-			break
-		var template: ContentDefinition = picked["template"]
-		candidates.erase(picked)
-		var offer := ContractOps.generate_offer(state, hub, template, rng, state.current_port_id())
-		if not offer.is_empty():
-			offers.append(offer)
-	state.data["contracts"]["offers"] = offers
 
 
 static func _random_seed() -> int:

@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/water/harbor_water.gdshader" id="1_water"]
+
+[resource]
+shader = ExtResource("1_water")
+shader_parameter/foam_strength = 0.0
+shader_parameter/swell_height = 0.0
+shader_parameter/detail_strength = 0.0
+shader_parameter/sun_energy = 0.0
+shader_parameter/reflection_strength = 0.0
+shader_parameter/horizon_color = Color(0.56, 0.37, 0.24, 1)
+shader_parameter/horizon_fade_start = 0.0
+shader_parameter/horizon_fade_end = 0.001

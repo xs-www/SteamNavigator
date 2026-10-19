@@ -3,6 +3,11 @@ extends SceneTree
 ##
 ## Usage:
 ##   godot --headless --path . --script res://framework/tests/test_runner.gd
+##
+## Suites run on the first frame rather than in `_initialize`, so the SceneTree
+## is already set up. UI suites can then parent the shell scene for real, which
+## makes engine notifications (`_ready`, viewport, audio) behave as they do in
+## the game instead of silently staying undelivered.
 
 const SUITE_PATHS := [
 	"res://framework/tests/cases/test_semver_range.gd",
@@ -16,18 +21,29 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_supply.gd",
 	"res://framework/tests/cases/test_run_pipeline.gd",
 	"res://framework/tests/cases/test_ui_views.gd",
+	"res://framework/tests/cases/test_ui_shell.gd",
 	"res://framework/tests/cases/test_settings.gd",
 	"res://framework/tests/cases/test_contract_flow.gd",
+	"res://framework/tests/cases/test_contract_refresh.gd",
 	"res://framework/tests/cases/test_map_constraints.gd",
 	"res://framework/tests/cases/test_ship_upgrade.gd",
+	"res://framework/tests/cases/test_warehouse_craft.gd",
+	"res://framework/tests/cases/test_craft_wait.gd",
+	"res://framework/tests/cases/test_victory.gd",
+	"res://framework/tests/cases/test_full_clear.gd",
 	"res://framework/tests/cases/test_events_effects.gd",
 	"res://framework/tests/cases/test_save_load.gd",
 	"res://framework/tests/cases/test_zip_pack.gd",
 	"res://framework/tests/cases/test_no_core_ids.gd",
 ]
 
+var _started := false
 
-func _initialize() -> void:
+
+func _process(_delta: float) -> bool:
+	if _started:
+		return true
+	_started = true
 	var total := 0
 	var failed := 0
 	var started_at := Time.get_ticks_msec()
@@ -64,3 +80,4 @@ func _initialize() -> void:
 	])
 	FrameworkRuntime.shutdown()
 	quit(0 if failed == 0 else 1)
+	return true

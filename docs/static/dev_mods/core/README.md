@@ -1,6 +1,6 @@
 # `dev_mods/core`
 
-> 官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化。
+> 官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化；模块含打造配方/工时/费用，tier1 为仅金币配方（materials 为空）。
 
 ## 文件索引
 
@@ -32,5 +32,7 @@
 ## 模块契约
 
 - `manifest.json` 声明 required=true，内容文件 15 个，本地化 zh_CN/en。
+- tier≥2 模块带 `craft_cost`；所有模块可带 `materials`/`craft_time_hours` 供 CraftOps 读取。
+- 两个造船厂港口（iron_harbor/free_town）市场限量出售精密齿轮，保证大型船材料在当局地图可获得。
 - 框架不得引用这里的具体 ID；所有引用由 Schema/交叉校验保证。
 - 修改数值只改 JSON，不改框架。

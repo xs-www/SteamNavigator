@@ -26,6 +26,7 @@ static func build_snapshot(state: GameState, hub: RegistryHub, game_time: float)
 				"buyable": bool(entry.get("buyable", true)),
 				"is_supply": bool(entry.get("is_supply", false)),
 				"trend": _trend(entry),
+				"trend_percent": _trend_percent(entry),
 			})
 		port_reports.append({
 			"port_id": port_id,
@@ -82,3 +83,14 @@ static func _trend(entry: Dictionary) -> String:
 	if stock > base_stock * 1.15:
 		return "down"
 	return "stable"
+
+
+## Same algorithm as PortViewQuery: first-to-last change of the last 8 real
+## price samples, as a fraction (0.12 == +12%). Sell-only entries never write
+## history, so they stay at 0.0 instead of faking a trend.
+static func _trend_percent(entry: Dictionary) -> float:
+	var history: Array = entry.get("price_history", [])
+	var recent: Array = history.slice(maxi(0, history.size() - 8), history.size())
+	if recent.size() >= 2 and float(recent[0]) > 0.0:
+		return (float(recent[recent.size() - 1]) - float(recent[0])) / float(recent[0])
+	return 0.0

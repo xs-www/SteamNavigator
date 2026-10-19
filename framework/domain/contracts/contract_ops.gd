@@ -137,6 +137,7 @@ static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, a
 		)
 	instance["status"] = "completed"
 	instance["completed_at"] = arrival_time
+	state.record_income(payout)
 	var template_id := String(instance.get("template_id", ""))
 	var completed: Array = state.contracts().get("completed", [])
 	if not completed.has(template_id):
@@ -171,6 +172,52 @@ static func templates_by_kind(hub: RegistryHub, kind: String) -> Array[ContentDe
 		if String(template.data.get("kind", "")) == kind:
 			result.append(template)
 	return result
+
+
+## Normal (non-main) contracts the player may hold at once: `maxi(1, 1 + reputation / 2)`.
+## The main-chain slot is tracked separately and never counts toward this limit.
+static func active_limit(state: GameState) -> int:
+	return maxi(1, 1 + int(state.player().get("reputation", 0)) / 2)
+
+
+## Replaces the whole normal-offer pool with up to three fresh instances.
+## Main-chain state (`main`, `main_offer`, `next_main_sequence`) is never touched.
+## The weighted template pick uses the named contract-generation stream so the
+## same seed + key always produces the same pool.
+static func generate_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, key: String) -> Array:
+	ensure_structure(state)
+	var templates := templates_by_kind(hub, "normal")
+	var offers: Array = []
+	if templates.is_empty():
+		state.data["contracts"]["offers"] = offers
+		return offers
+	var candidates: Array = []
+	for template in templates:
+		candidates.append({"template": template, "weight": 1.0})
+	var offer_rng := rng_service.stream(RngService.STREAM_CONTRACT_GENERATION, "normal_offers::%s" % key)
+	var wanted := mini(3, templates.size())
+	for _index in wanted:
+		if candidates.is_empty():
+			break
+		var picked: Variant = RngService.choose_weighted(offer_rng, candidates)
+		if not (picked is Dictionary):
+			break
+		var template: ContentDefinition = picked["template"]
+		candidates.erase(picked)
+		var offer := generate_offer(state, hub, template, rng_service, state.current_port_id())
+		if not offer.is_empty():
+			offers.append(offer)
+	state.data["contracts"]["offers"] = offers
+	return offers
+
+
+## Refreshes the normal-offer pool on arrival. The key includes the port, the
+## arrival time and the voyage count so every arrival gets its own deterministic
+## pool, while repeating the same seed + command sequence reproduces it exactly.
+static func refresh_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, port_id: String, arrival_time: float) -> Array:
+	var voyages := int(state.stats().get("voyages", 0))
+	var key := "%s:%.3f:%d" % [port_id, arrival_time, voyages]
+	return generate_normal_offers(state, hub, rng_service, key)
 
 
 static func generate_offer(state: GameState, hub: RegistryHub, template: ContentDefinition, rng_service: RngService, origin: String) -> Dictionary:
@@ -217,8 +264,9 @@ static func accept_offer(state: GameState, hub: RegistryHub, instance_id: String
 		var offer: Dictionary = contracts["offers"][index]
 		if String(offer.get("instance_id", "")) != instance_id:
 			continue
-		var active_limit := 1 + int(state.player().get("reputation", 0)) / 2
-		if contracts.get("active", []).size() >= active_limit:			return Result.fail("too_many_contracts", "ui.error.too_many_contracts", {"limit": active_limit})
+		var limit := active_limit(state)
+		if contracts.get("active", []).size() >= limit:
+			return Result.fail("too_many_contracts", "ui.error.too_many_contracts", {"limit": limit})
 		var attach_result := attach(state, hub, offer)
 		if not bool(attach_result["ok"]):
 			return attach_result

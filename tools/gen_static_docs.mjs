@@ -328,6 +328,7 @@ function main() {
   l0.push("- 运行时：[AppContext](framework/bootstrap/app_context.gd.md)、[GameState](framework/state/game_state.gd.md)");
   l0.push("- 主界面：[main.gd](framework/ui/shell/main.gd.md)");
   l0.push("- 官方内容：[Core 内容包](dev_mods/core/README.md)");
+  l0.push("- 迭代 1 契约：[MVP 闭环](../design/ITERATION_1_MVP_LOOP.md)");
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
   l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");
   l0.push("- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)");
@@ -352,6 +353,11 @@ function main() {
   l0.push("");
   l0.push("航行：voyage.preview → VoyageCalculator → voyage.start → VoyageService");
   l0.push("      → 风险事件/EffectExecutor → _complete_arrival → ContractOps + NPC + Debt");
+  l0.push("      → 普通委托池刷新（ContractOps.refresh_normal_offers）");
+  l0.push("");
+  l0.push("建造：ship.install_module(source=purchase|warehouse|transit) / ship.craft_module");
+  l0.push("      → ShipOps/CraftOps/WarehouseOps（旧件入当前港仓库、transit 计重不占货舱）");
+  l0.push("      → VictoryService.check（主线完成 + 大型船体/锅炉/货舱 → 通关）");
   l0.push("");
   l0.push("UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEventBus");
   l0.push("```");
@@ -362,6 +368,7 @@ function main() {
   l0.push("- 注册表加载完成后冻结；运行态数值只在 `GameState`。");
   l0.push("- 命令在状态深拷贝上执行，成功才提交；查询使用临时克隆。");
   l0.push("- 所有随机来自命名流；同 seed + 模组清单 + 命令序列结果一致。");
+  l0.push("- 港口仓库/随船运输/通关标记只存在于 GameState；注册表冻结后仍可自由存取。");
   l0.push("- 存档头记录模组版本；缺失关键模组的存档拒绝加载。");
   l0.push("");
   l0.push("## 生成信息");

@@ -12,10 +12,9 @@
         "tier": 1,
         "weight": 2.0,
         "purchase_price": 300,
+        "craft_cost": 140,
         "craft_time_hours": 2,
-        "materials": [
-          {"id": "core:good/brass", "amount": 2}
-        ],
+        "materials": [],
         "risk_add": -0.012,
         "speed_mul": 1.0,
         "reveal_facilities": false
@@ -32,6 +31,7 @@
         "weight": 5.0,
         "purchase_price": 850,
         "craft_time_hours": 5,
+        "craft_cost": 140,
         "materials": [
           {"id": "core:good/brass", "amount": 3},
           {"id": "core:material/sealing_compound", "amount": 2}

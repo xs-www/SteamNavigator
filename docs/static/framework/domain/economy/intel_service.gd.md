@@ -14,6 +14,6 @@
 
 - 只覆盖已发现港口；NPC 只显示大致 ETA 区间，不暴露精确抵达时刻。
 - 快照不会自动更新；刷新由 `intel.refresh` 命令显式触发。
-- 趋势由库存相对 base_stock 判断：up/down/stable。
+- 趋势由库存相对 base_stock 判断：up/down/stable；快照 market 行另给 trend_percent（最近 8 条 price_history 首尾变化率，样本不足或非 buyable 恒 0.0），供对比表显示红降/绿升数字。
 
 模块索引：[framework/domain](../README.md)

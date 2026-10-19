@@ -12,10 +12,9 @@
         "tier": 1,
         "weight": 4.0,
         "purchase_price": 280,
+        "craft_cost": 130,
         "craft_time_hours": 2,
-        "materials": [
-          {"id": "core:good/timber", "amount": 3}
-        ],
+        "materials": [],
         "risk_add": -0.015,
         "damage_mul": 0.9,
         "repair_cost_mul": 1.0
@@ -32,6 +31,7 @@
         "weight": 6.0,
         "purchase_price": 760,
         "craft_time_hours": 4,
+        "craft_cost": 130,
         "materials": [
           {"id": "core:good/brass", "amount": 4},
           {"id": "core:material/sealing_compound", "amount": 3}

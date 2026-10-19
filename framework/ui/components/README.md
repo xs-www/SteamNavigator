@@ -10,6 +10,7 @@
 | `SNSectionHeader` | `sn_section_header.tscn` | `eyebrow`、`title`、`detail`。 |
 | `SNResourceMeter` | `sn_resource_meter.tscn` | 名称、当前值、最大值、单位、提示和色调。 |
 | `SNSupplyCard` | `sn_supply_card.tscn` | `bind(data, title, blocker_labels)`；煤/水补给决策卡，发 `command_requested`。 |
+| `SNIntelTable` | 脚本-only | `bind(columns, rows, current_port_id, tr)`；情报页「商品 × 港口」对比矩阵，`？`/`-` 规则与红降绿升百分比。 |
 | `SNSparkline` | `sn_sparkline.tscn` | `set_values(prices, color)`；真实价格历史不足时不伪造折线。 |
 
 场景根节点或公共 UI 父节点设置：

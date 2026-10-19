@@ -17,7 +17,8 @@
           {"good": "core:good/timber", "stock_range": [80, 140]},
           {"good": "core:good/brass", "stock_range": [40, 90], "price_bias": 0.95},
           {"good": "core:material/boiler_plate", "stock_range": [30, 70]},
-          {"good": "core:material/sealing_compound", "stock_range": [40, 80]}
+          {"good": "core:material/sealing_compound", "stock_range": [40, 80]},
+          {"good": "core:material/precision_gear", "stock_range": [10, 25]}
         ]
       }
     },
@@ -53,7 +54,8 @@
           {"good": "core:good/textiles", "stock_range": [50, 100]},
           {"good": "core:good/spices", "stock_range": [25, 60]},
           {"good": "core:good/glassware", "stock_range": [30, 75]},
-          {"good": "core:material/boiler_plate", "stock_range": [25, 60]}
+          {"good": "core:material/boiler_plate", "stock_range": [25, 60]},
+          {"good": "core:material/precision_gear", "stock_range": [10, 25]}
         ]
       }
     },

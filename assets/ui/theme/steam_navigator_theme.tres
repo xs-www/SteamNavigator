@@ -1,109 +1,16 @@
-[gd_resource type="Theme" load_steps=24 format=3]
+[gd_resource type="Theme" format=3 uid="uid://donrdopu47413"]
 
-[sub_resource type="SystemFont" id="SystemFont_body"]
-font_names = PackedStringArray("Noto Sans CJK SC", "Microsoft YaHei UI", "Microsoft YaHei", "Source Han Sans SC", "Arial")
-
-[sub_resource type="StyleBoxEmpty" id="Empty"]
-
-[sub_resource type="StyleBoxFlat" id="PanelBase"]
-content_margin_left = 20.0
-content_margin_top = 18.0
-content_margin_right = 20.0
-content_margin_bottom = 18.0
-bg_color = Color(0.0627451, 0.207843, 0.227451, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.772549, 0.603922, 0.329412, 0.3)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-shadow_color = Color(0, 0, 0, 0.28)
-shadow_size = 10
-shadow_offset = Vector2(0, 5)
-
-[sub_resource type="StyleBoxFlat" id="PanelElevated"]
-content_margin_left = 24.0
-content_margin_top = 22.0
-content_margin_right = 24.0
-content_margin_bottom = 22.0
-bg_color = Color(0.0901961, 0.27451, 0.290196, 0.98)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.882353, 0.768627, 0.529412, 0.48)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0, 0, 0, 0.38)
-shadow_size = 16
-shadow_offset = Vector2(0, 8)
-
-[sub_resource type="StyleBoxFlat" id="PanelInset"]
-content_margin_left = 16.0
-content_margin_top = 14.0
-content_margin_right = 16.0
-content_margin_bottom = 14.0
-bg_color = Color(0.027451, 0.101961, 0.113725, 0.78)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.772549, 0.603922, 0.329412, 0.2)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
+[sub_resource type="StyleBoxFlat" id="ButtonDisabled"]
 content_margin_left = 18.0
 content_margin_top = 11.0
 content_margin_right = 18.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0627451, 0.207843, 0.227451, 1)
+bg_color = Color(0.0431373, 0.121569, 0.129412, 0.7)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.772549, 0.603922, 0.329412, 0.38)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="ButtonHover"]
-content_margin_left = 18.0
-content_margin_top = 11.0
-content_margin_right = 18.0
-content_margin_bottom = 11.0
-bg_color = Color(0.0901961, 0.27451, 0.290196, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.882353, 0.768627, 0.529412, 0.8)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0.772549, 0.603922, 0.329412, 0.16)
-shadow_size = 8
-
-[sub_resource type="StyleBoxFlat" id="ButtonPressed"]
-content_margin_left = 18.0
-content_margin_top = 12.0
-content_margin_right = 18.0
-content_margin_bottom = 10.0
-bg_color = Color(0.027451, 0.101961, 0.113725, 1)
-border_width_left = 1
-border_width_top = 2
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.772549, 0.603922, 0.329412, 0.9)
+border_color = Color(0.4, 0.45, 0.43, 0.18)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -129,90 +36,71 @@ expand_margin_top = 2.0
 expand_margin_right = 2.0
 expand_margin_bottom = 2.0
 
-[sub_resource type="StyleBoxFlat" id="ButtonDisabled"]
+[sub_resource type="StyleBoxFlat" id="ButtonHover"]
 content_margin_left = 18.0
 content_margin_top = 11.0
 content_margin_right = 18.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0431373, 0.121569, 0.129412, 0.7)
+bg_color = Color(0.0901961, 0.27451, 0.290196, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.4, 0.45, 0.43, 0.18)
+border_color = Color(0.882353, 0.768627, 0.529412, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.772549, 0.603922, 0.329412, 0.16)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
+content_margin_left = 18.0
+content_margin_top = 11.0
+content_margin_right = 18.0
+content_margin_bottom = 11.0
+bg_color = Color(0.0627451, 0.207843, 0.227451, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.772549, 0.603922, 0.329412, 0.38)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
-content_margin_left = 20.0
+[sub_resource type="StyleBoxFlat" id="ButtonPressed"]
+content_margin_left = 18.0
 content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
-bg_color = Color(0.470588, 0.341176, 0.180392, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.882353, 0.768627, 0.529412, 0.9)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0, 0, 0, 0.28)
-shadow_size = 6
-shadow_offset = Vector2(0, 3)
-
-[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
-bg_color = Color(0.647059, 0.458824, 0.227451, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.952941, 0.843137, 0.623529, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0.772549, 0.603922, 0.329412, 0.24)
-shadow_size = 10
-
-[sub_resource type="StyleBoxFlat" id="DangerNormal"]
-content_margin_left = 18.0
-content_margin_top = 11.0
 content_margin_right = 18.0
-content_margin_bottom = 11.0
-bg_color = Color(0.407843, 0.168627, 0.141176, 1)
+content_margin_bottom = 10.0
+bg_color = Color(0.027451, 0.101961, 0.113725, 1)
 border_width_left = 1
-border_width_top = 1
+border_width_top = 2
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.764706, 0.419608, 0.32549, 0.85)
+border_color = Color(0.772549, 0.603922, 0.329412, 0.9)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxFlat" id="DangerHover"]
-content_margin_left = 18.0
-content_margin_top = 11.0
-content_margin_right = 18.0
-content_margin_bottom = 11.0
-bg_color = Color(0.560784, 0.231373, 0.184314, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.87451, 0.537255, 0.423529, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+[sub_resource type="StyleBoxFlat" id="LineEditFocus"]
+content_margin_left = 12.0
+content_margin_top = 9.0
+content_margin_right = 12.0
+content_margin_bottom = 9.0
+bg_color = Color(0.027451, 0.101961, 0.113725, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.772549, 0.603922, 0.329412, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="LineEditNormal"]
 content_margin_left = 12.0
@@ -230,21 +118,24 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="LineEditFocus"]
-content_margin_left = 12.0
-content_margin_top = 9.0
-content_margin_right = 12.0
-content_margin_bottom = 9.0
-bg_color = Color(0.027451, 0.101961, 0.113725, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.772549, 0.603922, 0.329412, 0.8)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
+[sub_resource type="StyleBoxFlat" id="PanelBase"]
+content_margin_left = 20.0
+content_margin_top = 18.0
+content_margin_right = 20.0
+content_margin_bottom = 18.0
+bg_color = Color(0.0627451, 0.207843, 0.227451, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.772549, 0.603922, 0.329412, 0.3)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.28)
+shadow_size = 10
+shadow_offset = Vector2(0, 5)
 
 [sub_resource type="StyleBoxFlat" id="ProgressBackground"]
 bg_color = Color(0.027451, 0.101961, 0.113725, 1)
@@ -265,20 +156,6 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[sub_resource type="StyleBoxFlat" id="ProgressWater"]
-bg_color = Color(0.286275, 0.584314, 0.580392, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="ProgressDanger"]
-bg_color = Color(0.623529, 0.301961, 0.243137, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
 [sub_resource type="StyleBoxFlat" id="BadgeNeutral"]
 content_margin_left = 9.0
 content_margin_top = 4.0
@@ -294,6 +171,135 @@ corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="BadgeDanger"]
+content_margin_left = 9.0
+content_margin_top = 4.0
+content_margin_right = 9.0
+content_margin_bottom = 4.0
+bg_color = Color(0.352941, 0.137255, 0.117647, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.764706, 0.419608, 0.32549, 0.82)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="DangerHover"]
+content_margin_left = 18.0
+content_margin_top = 11.0
+content_margin_right = 18.0
+content_margin_bottom = 11.0
+bg_color = Color(0.560784, 0.231373, 0.184314, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.87451, 0.537255, 0.423529, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="DangerNormal"]
+content_margin_left = 18.0
+content_margin_top = 11.0
+content_margin_right = 18.0
+content_margin_bottom = 11.0
+bg_color = Color(0.407843, 0.168627, 0.141176, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.764706, 0.419608, 0.32549, 0.85)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="ProgressDanger"]
+bg_color = Color(0.623529, 0.301961, 0.243137, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="PanelElevated"]
+content_margin_left = 24.0
+content_margin_top = 22.0
+content_margin_right = 24.0
+content_margin_bottom = 22.0
+bg_color = Color(0.0901961, 0.27451, 0.290196, 0.98)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.882353, 0.768627, 0.529412, 0.48)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.38)
+shadow_size = 16
+shadow_offset = Vector2(0, 8)
+
+[sub_resource type="StyleBoxEmpty" id="Empty"]
+
+[sub_resource type="StyleBoxFlat" id="PanelInset"]
+content_margin_left = 16.0
+content_margin_top = 14.0
+content_margin_right = 16.0
+content_margin_bottom = 14.0
+bg_color = Color(0.027451, 0.101961, 0.113725, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.772549, 0.603922, 0.329412, 0.2)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.647059, 0.458824, 0.227451, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.952941, 0.843137, 0.623529, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.772549, 0.603922, 0.329412, 0.24)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.470588, 0.341176, 0.180392, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.882353, 0.768627, 0.529412, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0, 0, 0.28)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
 
 [sub_resource type="StyleBoxFlat" id="BadgeSuccess"]
 content_margin_left = 9.0
@@ -327,36 +333,30 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="BadgeDanger"]
-content_margin_left = 9.0
-content_margin_top = 4.0
-content_margin_right = 9.0
-content_margin_bottom = 4.0
-bg_color = Color(0.352941, 0.137255, 0.117647, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.764706, 0.419608, 0.32549, 0.82)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+[sub_resource type="StyleBoxFlat" id="ProgressWater"]
+bg_color = Color(0.286275, 0.584314, 0.580392, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="SystemFont" id="SystemFont_body"]
+font_names = PackedStringArray("Noto Sans CJK SC", "Microsoft YaHei UI", "Microsoft YaHei", "Source Han Sans SC", "Arial")
 
 [resource]
 default_font = SubResource("SystemFont_body")
 default_font_size = 14
 Button/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
+Button/colors/font_disabled_color = Color(0.4, 0.494118, 0.470588, 0.72)
+Button/colors/font_focus_color = Color(0.92549, 0.882353, 0.772549, 1)
 Button/colors/font_hover_color = Color(0.882353, 0.768627, 0.529412, 1)
 Button/colors/font_pressed_color = Color(0.882353, 0.768627, 0.529412, 1)
-Button/colors/font_focus_color = Color(0.92549, 0.882353, 0.772549, 1)
-Button/colors/font_disabled_color = Color(0.4, 0.494118, 0.470588, 0.72)
 Button/font_sizes/font_size = 14
-Button/styles/normal = SubResource("ButtonNormal")
-Button/styles/hover = SubResource("ButtonHover")
-Button/styles/pressed = SubResource("ButtonPressed")
-Button/styles/focus = SubResource("ButtonFocus")
 Button/styles/disabled = SubResource("ButtonDisabled")
+Button/styles/focus = SubResource("ButtonFocus")
+Button/styles/hover = SubResource("ButtonHover")
+Button/styles/normal = SubResource("ButtonNormal")
+Button/styles/pressed = SubResource("ButtonPressed")
 CheckBox/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
 CheckBox/colors/font_hover_color = Color(0.882353, 0.768627, 0.529412, 1)
 GridContainer/constants/h_separation = 16
@@ -366,86 +366,86 @@ Label/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
 Label/colors/font_shadow_color = Color(0, 0, 0, 0.32)
 Label/constants/shadow_offset_x = 1
 Label/constants/shadow_offset_y = 2
+LineEdit/colors/caret_color = Color(0.882353, 0.768627, 0.529412, 1)
 LineEdit/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
 LineEdit/colors/font_placeholder_color = Color(0.623529, 0.686275, 0.654902, 0.62)
-LineEdit/colors/caret_color = Color(0.882353, 0.768627, 0.529412, 1)
-LineEdit/styles/normal = SubResource("LineEditNormal")
 LineEdit/styles/focus = SubResource("LineEditFocus")
+LineEdit/styles/normal = SubResource("LineEditNormal")
 OptionButton/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
-OptionButton/styles/normal = SubResource("ButtonNormal")
-OptionButton/styles/hover = SubResource("ButtonHover")
-OptionButton/styles/pressed = SubResource("ButtonPressed")
 OptionButton/styles/focus = SubResource("ButtonFocus")
+OptionButton/styles/hover = SubResource("ButtonHover")
+OptionButton/styles/normal = SubResource("ButtonNormal")
+OptionButton/styles/pressed = SubResource("ButtonPressed")
 PanelContainer/styles/panel = SubResource("PanelBase")
 ProgressBar/styles/background = SubResource("ProgressBackground")
 ProgressBar/styles/fill = SubResource("ProgressBrass")
 RichTextLabel/colors/default_color = Color(0.92549, 0.882353, 0.772549, 1)
-ScrollContainer/styles/panel = SubResource("Empty")
-VSeparator/colors/separator = Color(0.772549, 0.603922, 0.329412, 0.25)
-VBoxContainer/constants/separation = 12
-SNPrimaryButton/base_type = &"Button"
-SNPrimaryButton/colors/font_color = Color(0.972549, 0.92549, 0.807843, 1)
-SNPrimaryButton/colors/font_hover_color = Color(1, 0.956863, 0.862745, 1)
-SNPrimaryButton/styles/normal = SubResource("PrimaryNormal")
-SNPrimaryButton/styles/hover = SubResource("PrimaryHover")
-SNPrimaryButton/styles/pressed = SubResource("ButtonPressed")
-SNPrimaryButton/styles/focus = SubResource("ButtonFocus")
-SNPrimaryButton/styles/disabled = SubResource("ButtonDisabled")
-SNSecondaryButton/base_type = &"Button"
-SNSecondaryButton/styles/normal = SubResource("ButtonNormal")
-SNSecondaryButton/styles/hover = SubResource("ButtonHover")
-SNSecondaryButton/styles/pressed = SubResource("ButtonPressed")
-SNSecondaryButton/styles/focus = SubResource("ButtonFocus")
-SNSecondaryButton/styles/disabled = SubResource("ButtonDisabled")
-SNDangerButton/base_type = &"Button"
-SNDangerButton/styles/normal = SubResource("DangerNormal")
-SNDangerButton/styles/hover = SubResource("DangerHover")
-SNDangerButton/styles/pressed = SubResource("ButtonPressed")
-SNDangerButton/styles/focus = SubResource("ButtonFocus")
-SNDangerButton/styles/disabled = SubResource("ButtonDisabled")
-SNGhostButton/base_type = &"Button"
-SNGhostButton/styles/normal = SubResource("Empty")
-SNGhostButton/styles/hover = SubResource("ButtonNormal")
-SNGhostButton/styles/pressed = SubResource("ButtonPressed")
-SNGhostButton/styles/focus = SubResource("ButtonFocus")
-SNGhostButton/styles/disabled = SubResource("Empty")
-SNPanel/base_type = &"PanelContainer"
-SNPanel/styles/panel = SubResource("PanelBase")
-SNElevatedPanel/base_type = &"PanelContainer"
-SNElevatedPanel/styles/panel = SubResource("PanelElevated")
-SNInsetPanel/base_type = &"PanelContainer"
-SNInsetPanel/styles/panel = SubResource("PanelInset")
 SNBadge/base_type = &"Label"
 SNBadge/colors/font_color = Color(0.882353, 0.768627, 0.529412, 1)
 SNBadge/font_sizes/font_size = 11
 SNBadge/styles/normal = SubResource("BadgeNeutral")
-SNSuccessBadge/base_type = &"Label"
-SNSuccessBadge/colors/font_color = Color(0.65098, 0.827451, 0.717647, 1)
-SNSuccessBadge/font_sizes/font_size = 11
-SNSuccessBadge/styles/normal = SubResource("BadgeSuccess")
-SNWarningBadge/base_type = &"Label"
-SNWarningBadge/colors/font_color = Color(0.952941, 0.843137, 0.623529, 1)
-SNWarningBadge/font_sizes/font_size = 11
-SNWarningBadge/styles/normal = SubResource("BadgeWarning")
+SNBrassProgressBar/base_type = &"ProgressBar"
+SNBrassProgressBar/styles/background = SubResource("ProgressBackground")
+SNBrassProgressBar/styles/fill = SubResource("ProgressBrass")
 SNDangerBadge/base_type = &"Label"
 SNDangerBadge/colors/font_color = Color(0.92549, 0.615686, 0.505882, 1)
 SNDangerBadge/font_sizes/font_size = 11
 SNDangerBadge/styles/normal = SubResource("BadgeDanger")
-SNBrassProgressBar/base_type = &"ProgressBar"
-SNBrassProgressBar/styles/background = SubResource("ProgressBackground")
-SNBrassProgressBar/styles/fill = SubResource("ProgressBrass")
-SNWaterProgressBar/base_type = &"ProgressBar"
-SNWaterProgressBar/styles/background = SubResource("ProgressBackground")
-SNWaterProgressBar/styles/fill = SubResource("ProgressWater")
+SNDangerButton/base_type = &"Button"
+SNDangerButton/styles/disabled = SubResource("ButtonDisabled")
+SNDangerButton/styles/focus = SubResource("ButtonFocus")
+SNDangerButton/styles/hover = SubResource("DangerHover")
+SNDangerButton/styles/normal = SubResource("DangerNormal")
+SNDangerButton/styles/pressed = SubResource("ButtonPressed")
 SNDangerProgressBar/base_type = &"ProgressBar"
 SNDangerProgressBar/styles/background = SubResource("ProgressBackground")
 SNDangerProgressBar/styles/fill = SubResource("ProgressDanger")
-SNEyebrowLabel/base_type = &"Label"
-SNEyebrowLabel/colors/font_color = Color(0.772549, 0.603922, 0.329412, 1)
-SNEyebrowLabel/font_sizes/font_size = 11
-SNTitleLabel/base_type = &"Label"
-SNTitleLabel/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
-SNTitleLabel/font_sizes/font_size = 24
 SNDetailLabel/base_type = &"Label"
 SNDetailLabel/colors/font_color = Color(0.623529, 0.686275, 0.654902, 1)
 SNDetailLabel/font_sizes/font_size = 12
+SNElevatedPanel/base_type = &"PanelContainer"
+SNElevatedPanel/styles/panel = SubResource("PanelElevated")
+SNEyebrowLabel/base_type = &"Label"
+SNEyebrowLabel/colors/font_color = Color(0.772549, 0.603922, 0.329412, 1)
+SNEyebrowLabel/font_sizes/font_size = 11
+SNGhostButton/base_type = &"Button"
+SNGhostButton/styles/disabled = SubResource("Empty")
+SNGhostButton/styles/focus = SubResource("ButtonFocus")
+SNGhostButton/styles/hover = SubResource("ButtonNormal")
+SNGhostButton/styles/normal = SubResource("Empty")
+SNGhostButton/styles/pressed = SubResource("ButtonPressed")
+SNInsetPanel/base_type = &"PanelContainer"
+SNInsetPanel/styles/panel = SubResource("PanelInset")
+SNPanel/base_type = &"PanelContainer"
+SNPanel/styles/panel = SubResource("PanelBase")
+SNPrimaryButton/base_type = &"Button"
+SNPrimaryButton/colors/font_color = Color(0.972549, 0.92549, 0.807843, 1)
+SNPrimaryButton/colors/font_hover_color = Color(1, 0.956863, 0.862745, 1)
+SNPrimaryButton/styles/disabled = SubResource("ButtonDisabled")
+SNPrimaryButton/styles/focus = SubResource("ButtonFocus")
+SNPrimaryButton/styles/hover = SubResource("PrimaryHover")
+SNPrimaryButton/styles/normal = SubResource("PrimaryNormal")
+SNPrimaryButton/styles/pressed = SubResource("ButtonPressed")
+SNSecondaryButton/base_type = &"Button"
+SNSecondaryButton/styles/disabled = SubResource("ButtonDisabled")
+SNSecondaryButton/styles/focus = SubResource("ButtonFocus")
+SNSecondaryButton/styles/hover = SubResource("ButtonHover")
+SNSecondaryButton/styles/normal = SubResource("ButtonNormal")
+SNSecondaryButton/styles/pressed = SubResource("ButtonPressed")
+SNSuccessBadge/base_type = &"Label"
+SNSuccessBadge/colors/font_color = Color(0.65098, 0.827451, 0.717647, 1)
+SNSuccessBadge/font_sizes/font_size = 11
+SNSuccessBadge/styles/normal = SubResource("BadgeSuccess")
+SNTitleLabel/base_type = &"Label"
+SNTitleLabel/colors/font_color = Color(0.92549, 0.882353, 0.772549, 1)
+SNTitleLabel/font_sizes/font_size = 24
+SNWarningBadge/base_type = &"Label"
+SNWarningBadge/colors/font_color = Color(0.952941, 0.843137, 0.623529, 1)
+SNWarningBadge/font_sizes/font_size = 11
+SNWarningBadge/styles/normal = SubResource("BadgeWarning")
+SNWaterProgressBar/base_type = &"ProgressBar"
+SNWaterProgressBar/styles/background = SubResource("ProgressBackground")
+SNWaterProgressBar/styles/fill = SubResource("ProgressWater")
+ScrollContainer/styles/panel = SubResource("Empty")
+VBoxContainer/constants/separation = 12
+VSeparator/colors/separator = Color(0.772549, 0.603922, 0.329412, 0.25)

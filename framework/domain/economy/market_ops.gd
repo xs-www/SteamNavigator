@@ -191,6 +191,7 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	if ShipOps.cargo_used(hub, ship) + added_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
 		return Result.fail("cargo_capacity", "ui.error.capacity", {"capacity": ShipOps.cargo_capacity(hub, ship)})
 	state.add_money(-total)
+	state.record_expense(total)
 	var price_before := unit_price
 	entry["stock"] = int(entry.get("stock", 0)) - amount
 	_apply_player_price_change(entry, price_before, price_impact)
@@ -226,6 +227,7 @@ static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: S
 	entry["stock"] = int(entry.get("stock", 0)) + amount
 	_apply_player_price_change(entry, unit_price, price_impact)
 	state.add_money(revenue)
+	state.record_income(revenue)
 	return Result.ok({
 		"item_id": item_id,
 		"amount": amount,
@@ -260,6 +262,7 @@ static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind
 	if max_weight > 0.0 and ShipOps.total_weight(hub, state) + unit_weight * float(amount) > max_weight + 0.0001:
 		return Result.fail("weight_limit", "ui.error.weight", {"max_weight": max_weight})
 	state.add_money(-total)
+	state.record_expense(total)
 	entry["stock"] = int(entry.get("stock", 0)) - amount
 	_apply_player_price_change(entry, unit_price, price_impact)
 	ship[kind] = float(ship.get(kind, 0.0)) + float(amount)
@@ -302,6 +305,7 @@ static func repair(state: GameState, hub: RegistryHub, port_id: String, repair_p
 	if state.money() < cost:
 		return Result.fail("insufficient_money", "ui.error.money", {"required": cost, "money": state.money()})
 	state.add_money(-cost)
+	state.record_expense(cost)
 	var ship := state.ship()
 	ship["durability"] = float(details["max_durability"])
 	return Result.ok({

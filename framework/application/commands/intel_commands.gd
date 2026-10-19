@@ -15,6 +15,7 @@ static func refresh(_params: Dictionary, context) -> Dictionary:
 	if state.money() < cost:
 		return Result.fail("insufficient_money", "ui.error.money", {"required": cost, "money": state.money()})
 	state.add_money(-cost)
+	state.record_expense(cost)
 	var snapshot := IntelService.build_snapshot(state, context.registries, state.now())
 	IntelService.store(state, snapshot)
 	return {

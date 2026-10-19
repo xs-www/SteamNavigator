@@ -1561,6 +1561,10 @@
                 ]
               }
             },
+            "banner_asset": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.-]*$"
+            },
             "market": {
               "type": "array",
               "minItems": 1,

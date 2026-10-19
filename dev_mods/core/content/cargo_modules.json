@@ -12,10 +12,9 @@
         "tier": 1,
         "weight": 6.0,
         "purchase_price": 260,
+        "craft_cost": 120,
         "craft_time_hours": 3,
-        "materials": [
-          {"id": "core:good/timber", "amount": 3}
-        ],
+        "materials": [],
         "capacity": 32.0
       }
     },
@@ -30,6 +29,7 @@
         "weight": 12.0,
         "purchase_price": 900,
         "craft_time_hours": 6,
+        "craft_cost": 160,
         "materials": [
           {"id": "core:good/timber", "amount": 6},
           {"id": "core:material/boiler_plate", "amount": 2}
@@ -48,6 +48,7 @@
         "weight": 20.0,
         "purchase_price": 1800,
         "craft_time_hours": 9,
+        "craft_cost": 320,
         "materials": [
           {"id": "core:good/timber", "amount": 10},
           {"id": "core:material/boiler_plate", "amount": 4}

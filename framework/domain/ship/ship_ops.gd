@@ -93,6 +93,7 @@ static func passenger_count(state: GameState) -> int:
 static func total_weight(hub: RegistryHub, state: GameState) -> float:
 	var ship := state.ship()
 	return module_weight(hub, ship) \
+		+ WarehouseOps.transit_module_weight(hub, ship) \
 		+ cargo_weight(hub, ship) \
 		+ float(ship.get("coal", 0.0)) * COAL_WEIGHT \
 		+ float(ship.get("water", 0.0)) * WATER_WEIGHT \
@@ -362,10 +363,41 @@ static func module_type(hub: RegistryHub, module_id: String) -> StringName:
 	return &""
 
 
-## Returns a stable list of blocker codes for installing/buying a module.
-## Callers add port/facility checks. The first code is the user-facing reason.
-static func install_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]:
+## Contract template whose `unlock_ids` gate this module, or "" when unlocked.
+static func unlock_contract_id(hub: RegistryHub, module_id: String) -> String:
+	if module_id.is_empty():
+		return ""
+	for template in hub.get_all(ContentTypes.CONTRACT):
+		for unlock_id in _contract_unlock_ids(template):
+			if String(unlock_id) == module_id:
+				return template.id
+	return ""
+
+
+## True when the module is gated behind a contract the player has not completed.
+## Completing a contract appends its `unlock_ids` (the module IDs themselves) to
+## player.unlocks, so ownership of the module ID is the unlock test.
+static func locked_by_contract(hub: RegistryHub, state: GameState, module_id: String) -> bool:
+	if unlock_contract_id(hub, module_id).is_empty():
+		return false
+	return not Array(state.player().get("unlocks", [])).has(module_id)
+
+
+## Returns a stable list of blocker codes for installing a module from a given
+## source ("purchase", "warehouse" or "transit"). Callers add port/facility
+## checks. The first code is the user-facing reason.
+##
+## Replacement semantics: hull/boiler/navigation/safety/cabin auto-replace the
+## existing module in their single slot, so `slot_occupied` is never returned.
+## Cargo modules need `replace_module_id` once all hull slots are used; passing
+## it makes the weight check use the replaced module instead of adding weight.
+## Weight is evaluated on the final configuration, subtracting both the replaced
+## module and (for transit sources) the module weight already carried.
+static func install_blockers(hub: RegistryHub, state: GameState, module_id: String, source: String = "purchase", replace_module_id: String = "") -> Array[String]:
 	var blockers: Array[String] = []
+	if not ["purchase", "warehouse", "transit"].has(source):
+		blockers.append("invalid_source")
+		return blockers
 	var content_type := module_type(hub, module_id)
 	if content_type == &"":
 		blockers.append("unknown_module")
@@ -377,56 +409,98 @@ static func install_blockers(hub: RegistryHub, state: GameState, module_id: Stri
 	var player := state.player()
 	if int(module.data.get("unlock_reputation", 0)) > int(player.get("reputation", 0)):
 		blockers.append("locked_by_reputation")
-	var price := int(round(float(module.data.get("purchase_price", 0.0))))
-	if state.money() < price:
-		blockers.append("insufficient_money")
+	if locked_by_contract(hub, state, module_id):
+		blockers.append("locked_by_contract")
 	var ship := state.ship()
+	var installed_ids := all_installed_module_ids(ship)
+	if installed_ids.has(module_id):
+		if content_type != ContentTypes.CARGO_MODULE:
+			blockers.append("already_installed")
+		else:
+			# Cargo modules may be bought as duplicates while a slot is free; the
+			# same ID is only "already installed" once every cargo slot is used.
+			var cargo_hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
+			var cargo_slot_count := int(cargo_hull.data.get("cargo_slots", 0)) if cargo_hull != null else 0
+			if cargo_module_ids(ship).size() >= cargo_slot_count:
+				blockers.append("already_installed")
+
+	match source:
+		"purchase":
+			var price := int(round(float(module.data.get("purchase_price", 0.0))))
+			if state.money() < price:
+				blockers.append("insufficient_money")
+		"warehouse":
+			if WarehouseOps.module_qty(state, state.current_port_id(), module_id) < 1:
+				blockers.append("warehouse_empty")
+		"transit":
+			if WarehouseOps.transit_qty(ship, module_id) < 1:
+				blockers.append("not_in_transit")
+
+	if not replace_module_id.is_empty() and replace_module_id != module_id:
+		if not installed_ids.has(replace_module_id):
+			blockers.append("not_installed")
+
 	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 	var current_weight := total_weight(hub, state)
 	var current_max := max_weight(hub, ship)
 	var module_weight := float(module.data.get("weight", 0.0))
+	var replaced_weight := 0.0
+	var weight_limit := current_max
 
 	match content_type:
 		ContentTypes.CARGO_MODULE:
 			var slots := int(hull.data.get("cargo_slots", 0)) if hull != null else 0
-			if cargo_module_ids(ship).size() >= slots:
+			var cargo_ids := cargo_module_ids(ship)
+			if not replace_module_id.is_empty():
+				if cargo_ids.has(replace_module_id):
+					replaced_weight = _module_weight_by_id(hub, ContentTypes.CARGO_MODULE, replace_module_id)
+				else:
+					if not blockers.has("not_installed"):
+						blockers.append("not_installed")
+					if cargo_ids.size() >= slots:
+						blockers.append("cargo_slots_full")
+			elif cargo_ids.size() >= slots:
 				blockers.append("cargo_slots_full")
-			if current_weight + module_weight > current_max + 0.0001:
-				blockers.append("weight_limit")
 		ContentTypes.CABIN:
 			if hull == null or int(hull.data.get("cabin_slots", 0)) < 1:
 				blockers.append("no_cabin_slot")
-			elif not String(ship.get("passenger_cabin_id", "")).is_empty():
-				blockers.append("slot_occupied")
-			if current_weight + module_weight > current_max + 0.0001:
-				blockers.append("weight_limit")
+			else:
+				replaced_weight = _module_weight_by_id(hub, ContentTypes.CABIN, String(ship.get("passenger_cabin_id", "")))
 		ContentTypes.NAVIGATION_MODULE:
-			if not String(ship.get("navigation_module_id", "")).is_empty():
-				blockers.append("slot_occupied")
-			if current_weight + module_weight > current_max + 0.0001:
-				blockers.append("weight_limit")
+			replaced_weight = _module_weight_by_id(hub, ContentTypes.NAVIGATION_MODULE, String(ship.get("navigation_module_id", "")))
 		ContentTypes.SAFETY_MODULE:
-			if not String(ship.get("safety_module_id", "")).is_empty():
-				blockers.append("slot_occupied")
-			if current_weight + module_weight > current_max + 0.0001:
-				blockers.append("weight_limit")
+			replaced_weight = _module_weight_by_id(hub, ContentTypes.SAFETY_MODULE, String(ship.get("safety_module_id", "")))
+		ContentTypes.BOILER:
+			replaced_weight = _module_weight_by_id(hub, ContentTypes.BOILER, String(ship.get("boiler_id", "")))
 		ContentTypes.HULL:
 			if hull != null:
 				if cargo_module_ids(ship).size() > int(module.data.get("cargo_slots", 0)):
 					blockers.append("too_many_cargo_modules")
 				if not String(ship.get("passenger_cabin_id", "")).is_empty() and int(module.data.get("cabin_slots", 0)) < 1:
 					blockers.append("no_cabin_slot")
-				var new_max := float(module.data.get("max_weight", current_max))
-				var delta := module_weight - float(hull.data.get("weight", 0.0))
-				if current_weight + delta > new_max + 0.0001:
-					blockers.append("weight_limit")
-		ContentTypes.BOILER:
-			var old_boiler := hub.get_by_id(ContentTypes.BOILER, String(ship.get("boiler_id", "")))
-			var delta := module_weight
-			if old_boiler != null:
-				delta -= float(old_boiler.data.get("weight", 0.0))
-			if current_weight + delta > current_max + 0.0001:
-				blockers.append("weight_limit")
+			replaced_weight = _module_weight_by_id(hub, ContentTypes.HULL, String(ship.get("hull_id", "")))
+			weight_limit = float(module.data.get("max_weight", current_max))
+
+	var transit_release := module_weight if source == "transit" else 0.0
+	var delta := module_weight - replaced_weight - transit_release
+	if current_weight + delta > weight_limit + 0.0001:
+		blockers.append("weight_limit")
+	return blockers
+
+
+## Returns blocker codes for uninstalling an installed module into the current
+## port warehouse. Hull and boiler are required and can never be removed.
+static func uninstall_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]:
+	var blockers: Array[String] = []
+	var content_type := module_type(hub, module_id)
+	if content_type == &"":
+		blockers.append("unknown_module")
+		return blockers
+	if not all_installed_module_ids(state.ship()).has(module_id):
+		blockers.append("not_installed")
+		return blockers
+	if content_type == ContentTypes.HULL or content_type == ContentTypes.BOILER:
+		blockers.append("required_module")
 	return blockers
 
 
@@ -447,6 +521,26 @@ static func validate_configuration(hub: RegistryHub, ship: Dictionary) -> Dictio
 	if float(ship.get("durability", 0.0)) > durability_max(hub, ship):
 		errors.append("durability_over_max")
 	return {"ok": errors.is_empty(), "errors": errors}
+
+
+static func _module_weight_by_id(hub: RegistryHub, content_type: StringName, module_id: String) -> float:
+	if module_id.is_empty():
+		return 0.0
+	var definition := hub.get_by_id(content_type, module_id)
+	return float(definition.data.get("weight", 0.0)) if definition != null else 0.0
+
+
+static func _contract_unlock_ids(template: ContentDefinition) -> Array:
+	var result: Array = []
+	var rewards: Variant = template.data.get("rewards", null)
+	if rewards is Dictionary:
+		var reward_ids: Variant = rewards.get("unlock_ids", null)
+		if reward_ids is Array:
+			result.append_array(reward_ids)
+	var top_level: Variant = template.data.get("unlock_ids", null)
+	if top_level is Array:
+		result.append_array(top_level)
+	return result
 
 
 static func _apply_modifier(base: float, op: String, value: float) -> float:

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://framework/ui/screens/port/voyage_screen.gd" id="1"]
+[node name="VoyageScreen" type="VBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+script = ExtResource("1")

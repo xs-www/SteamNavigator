@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-18T12:38:39.071Z",
+    "generated_at": "2026-10-19T00:24:02.180Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -43,7 +43,8 @@
       "assets": {
         "icon.coal": "assets/icons/coal.png",
         "icon.water": "assets/icons/water.png",
-        "icon.money": "assets/icons/money.png"
+        "icon.money": "assets/icons/money.png",
+        "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png"
       },
       "authors": [
         "Steam Navigator Team"
@@ -345,6 +346,7 @@
               "weight": 38,
               "purchase_price": 1100,
               "craft_time_hours": 8,
+              "craft_cost": 220,
               "materials": [
                 {
                   "id": "core:good/timber",
@@ -380,6 +382,7 @@
               "weight": 60,
               "purchase_price": 2600,
               "craft_time_hours": 12,
+              "craft_cost": 520,
               "materials": [
                 {
                   "id": "core:good/timber",
@@ -419,6 +422,7 @@
               "weight": 66,
               "purchase_price": 3400,
               "craft_time_hours": 14,
+              "craft_cost": 680,
               "materials": [
                 {
                   "id": "core:good/timber",
@@ -521,6 +525,7 @@
               "weight": 14,
               "purchase_price": 1200,
               "craft_time_hours": 7,
+              "craft_cost": 180,
               "materials": [
                 {
                   "id": "core:good/brass",
@@ -585,6 +590,7 @@
               "weight": 12,
               "purchase_price": 900,
               "craft_time_hours": 6,
+              "craft_cost": 160,
               "materials": [
                 {
                   "id": "core:good/timber",
@@ -613,6 +619,7 @@
               "weight": 20,
               "purchase_price": 1800,
               "craft_time_hours": 9,
+              "craft_cost": 320,
               "materials": [
                 {
                   "id": "core:good/timber",
@@ -671,6 +678,7 @@
               "weight": 5,
               "purchase_price": 850,
               "craft_time_hours": 5,
+              "craft_cost": 140,
               "materials": [
                 {
                   "id": "core:good/brass",
@@ -731,6 +739,7 @@
               "weight": 6,
               "purchase_price": 760,
               "craft_time_hours": 4,
+              "craft_cost": 130,
               "materials": [
                 {
                   "id": "core:good/brass",
@@ -916,6 +925,7 @@
             "enabled": true,
             "data": {
               "size": "medium",
+              "banner_asset": "banner.port.iron_harbor",
               "facilities": [
                 "exchange",
                 "contracts",
@@ -957,6 +967,13 @@
                   "stock_range": [
                     40,
                     80
+                  ]
+                },
+                {
+                  "good": "core:material/precision_gear",
+                  "stock_range": [
+                    10,
+                    25
                   ]
                 }
               ]
@@ -1073,6 +1090,13 @@
                   "stock_range": [
                     25,
                     60
+                  ]
+                },
+                {
+                  "good": "core:material/precision_gear",
+                  "stock_range": [
+                    10,
+                    25
                   ]
                 }
               ]
@@ -2630,6 +2654,7 @@
             "weight": 38,
             "purchase_price": 1100,
             "craft_time_hours": 8,
+            "craft_cost": 220,
             "materials": [
               {
                 "id": "core:good/timber",
@@ -2679,6 +2704,7 @@
             "weight": 60,
             "purchase_price": 2600,
             "craft_time_hours": 12,
+            "craft_cost": 520,
             "materials": [
               {
                 "id": "core:good/timber",
@@ -2732,6 +2758,7 @@
             "weight": 66,
             "purchase_price": 3400,
             "craft_time_hours": 14,
+            "craft_cost": 680,
             "materials": [
               {
                 "id": "core:good/timber",
@@ -2865,6 +2892,7 @@
             "weight": 14,
             "purchase_price": 1200,
             "craft_time_hours": 7,
+            "craft_cost": 180,
             "materials": [
               {
                 "id": "core:good/brass",
@@ -2949,6 +2977,7 @@
             "weight": 12,
             "purchase_price": 900,
             "craft_time_hours": 6,
+            "craft_cost": 160,
             "materials": [
               {
                 "id": "core:good/timber",
@@ -2990,6 +3019,7 @@
             "weight": 20,
             "purchase_price": 1800,
             "craft_time_hours": 9,
+            "craft_cost": 320,
             "materials": [
               {
                 "id": "core:good/timber",
@@ -3066,6 +3096,7 @@
             "weight": 5,
             "purchase_price": 850,
             "craft_time_hours": 5,
+            "craft_cost": 140,
             "materials": [
               {
                 "id": "core:good/brass",
@@ -3144,6 +3175,7 @@
             "weight": 6,
             "purchase_price": 760,
             "craft_time_hours": 4,
+            "craft_cost": 130,
             "materials": [
               {
                 "id": "core:good/brass",
@@ -3390,6 +3422,7 @@
           "enabled": true,
           "data": {
             "size": "medium",
+            "banner_asset": "banner.port.iron_harbor",
             "facilities": [
               "exchange",
               "contracts",
@@ -3431,6 +3464,13 @@
                 "stock_range": [
                   40,
                   80
+                ]
+              },
+              {
+                "good": "core:material/precision_gear",
+                "stock_range": [
+                  10,
+                  25
                 ]
               }
             ]
@@ -3573,6 +3613,13 @@
                 "stock_range": [
                   25,
                   60
+                ]
+              },
+              {
+                "good": "core:material/precision_gear",
+                "stock_range": [
+                  10,
+                  25
                 ]
               }
             ]

@@ -12,11 +12,9 @@
         "tier": 1,
         "weight": 22.0,
         "purchase_price": 380,
+        "craft_cost": 170,
         "craft_time_hours": 4,
-        "materials": [
-          {"id": "core:good/timber", "amount": 4},
-          {"id": "core:good/iron_ore", "amount": 2}
-        ],
+        "materials": [],
         "base_speed": 14.0,
         "max_weight": 100.0,
         "max_durability": 100.0,
@@ -37,6 +35,7 @@
         "weight": 38.0,
         "purchase_price": 1100,
         "craft_time_hours": 8,
+        "craft_cost": 220,
         "materials": [
           {"id": "core:good/timber", "amount": 8},
           {"id": "core:material/boiler_plate", "amount": 3}
@@ -61,6 +60,7 @@
         "weight": 60.0,
         "purchase_price": 2600,
         "craft_time_hours": 12,
+        "craft_cost": 520,
         "materials": [
           {"id": "core:good/timber", "amount": 14},
           {"id": "core:material/boiler_plate", "amount": 6},
@@ -86,6 +86,7 @@
         "weight": 66.0,
         "purchase_price": 3400,
         "craft_time_hours": 14,
+        "craft_cost": 680,
         "materials": [
           {"id": "core:good/timber", "amount": 12},
           {"id": "core:material/boiler_plate", "amount": 8},

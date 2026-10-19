@@ -37,9 +37,15 @@ func test_cargo_average_cost_tracks_purchases() -> void:
 	var context: AppContext = boot["context"]
 	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4444})
 	var view := context.queries.execute(&"port.view")
+	var hub: RegistryHub = context.registries
+	var weight_headroom := ShipOps.max_weight(hub, context.state.ship()) - ShipOps.total_weight(hub, context.state)
 	var target := {}
 	for row in view["data"]["market"]:
-		if bool(row.get("buyable", true)) and float(row.get("unit_weight", 99.0)) <= 1.0 and int(row.get("stock", 0)) >= 5:
+		var unit_weight := float(row.get("unit_weight", 99.0))
+		# Pick a light good that also fits three units in the remaining weight
+		# budget (the starting contract cargo already loads the ship).
+		if bool(row.get("buyable", true)) and unit_weight <= 1.0 and int(row.get("stock", 0)) >= 5 \
+				and unit_weight * 3.0 <= weight_headroom + 0.0001:
 			target = row
 			break
 	assert_true(not target.is_empty(), "found a light buyable good")

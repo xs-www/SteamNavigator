@@ -25,6 +25,7 @@ static func start(context, destination_id: String, strategy_id: String) -> Dicti
 	var wages := int(preview.get("crew_wages", 0))
 	if wages > 0:
 		state.add_money(-wages)
+		state.record_expense(wages)
 	ship["coal"] = maxf(0.0, float(ship.get("coal", 0.0)) - float(preview.get("coal_required", 0.0)))
 	ship["water"] = maxf(0.0, float(ship.get("water", 0.0)) - float(preview.get("water_required", 0.0)))
 
@@ -175,6 +176,10 @@ static func _complete_arrival(context) -> Dictionary:
 	MapOps.discover(state, destination, true)
 	var newly_discovered := not was_discovered
 
+	# Craft orders that finished while the ship was under way are delivered to
+	# their owning port warehouse on arrival (the ship may be elsewhere).
+	var completed_orders := CraftOps.settle_orders(state, hub)
+
 	var contract_results: Array = []
 	var contracts: Dictionary = state.data.get("contracts", {})
 	var main_contract: Variant = contracts.get("main", null)
@@ -204,7 +209,7 @@ static func _complete_arrival(context) -> Dictionary:
 	)
 	MarketMemoryService.remember(state, destination)
 	var debt_events := DebtService.check_overdue(state)
-	var stats: Dictionary = state.data.get("stats", {})
+	var stats: Dictionary = state.stats()
 	stats["voyages"] = int(stats.get("voyages", 0)) + 1
 	if not contract_results.is_empty():
 		var any_on_time := false
@@ -213,11 +218,13 @@ static func _complete_arrival(context) -> Dictionary:
 				any_on_time = true
 		if any_on_time:
 			stats["on_time"] = int(stats.get("on_time", 0)) + 1
-	state.data["stats"] = stats
 	var injuries := int(voyage.get("injuries", 0))
 	if injuries > 0:
 		stats["accidents"] = int(stats.get("accidents", 0)) + 1
-	state.data["stats"] = stats
+
+	# Arrival refreshes the whole normal-offer pool. This never fails the
+	# arrival: an empty template set simply clears the pool.
+	var refreshed_offers := ContractOps.refresh_normal_offers(state, hub, context.rng, destination, arrival_time)
 
 	state.data["voyage"] = null
 	context.pre_voyage_state = null
@@ -229,6 +236,17 @@ static func _complete_arrival(context) -> Dictionary:
 	if newly_discovered:
 		events.append({"type": "port.discovered", "payload": {"port_id": destination}})
 	events.append({"type": "port.arrived", "payload": {"port_id": destination, "arrival_time": arrival_time}})
+	for order in completed_orders:
+		events.append({
+			"type": "ship.module_crafted",
+			"payload": {
+				"order_id": String(order.get("order_id", "")),
+				"module_id": String(order.get("module_id", "")),
+				"content_type": String(order.get("content_type", "")),
+				"port_id": String(order.get("port_id", "")),
+				"warehouse_qty": int(order.get("warehouse_qty", 0)),
+			},
+		})
 	for contract_result in contract_results:
 		events.append({
 			"type": "contract.completed",
@@ -238,6 +256,14 @@ static func _complete_arrival(context) -> Dictionary:
 			events.append({"type": "contract.late", "payload": contract_result})
 	events.append_array(npc_events)
 	events.append_array(debt_events)
+	events.append({
+		"type": "contract.offers_refreshed",
+		"payload": {
+			"port_id": destination,
+			"count": refreshed_offers.size(),
+			"game_time": arrival_time,
+		},
+	})
 
 	var summary := {
 		"destination": destination,
@@ -247,6 +273,8 @@ static func _complete_arrival(context) -> Dictionary:
 		"contracts": contract_results,
 		"market_events": npc_events,
 		"debt_events": debt_events,
+		"completed_orders": completed_orders,
+		"offers_refreshed": true,
 		"stats": stats.duplicate(true),
 		"events": events,
 	}

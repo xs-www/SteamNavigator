@@ -75,8 +75,10 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var contracts: Dictionary = state.contracts()
 	var main_contract: Variant = contracts.get("main", null)
 	var main_offer: Variant = contracts.get("main_offer", null)
+	var active_count: int = Array(contracts.get("active", [])).size()
 	var intel := IntelService.get_snapshot(state)
 	var debt: Variant = state.player().get("debt", null)
+	var victory: Variant = state.data.get("victory", null)
 	return Result.ok({
 		"has_run": true,
 		"at_sea": voyage is Dictionary,
@@ -108,6 +110,12 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"offers": _contract_list(hub, state, contracts.get("offers", [])),
 			"completed": Array(contracts.get("completed", [])),
 			"next_main_sequence": int(contracts.get("next_main_sequence", 1)),
+			"active_limit": ContractOps.active_limit(state),
+			"active_count": active_count,
+			"normal_holds": active_count,
+			"main_chain_complete": VictoryService.main_chain_complete(hub, state),
+			"main_done": _completed_main_count(hub, state),
+			"main_total": ContractOps.templates_by_kind(hub, "main").size(),
 		},
 		"intelligence": {
 			"generated_at": float(intel.get("generated_at", -1.0)),
@@ -118,8 +126,23 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		},
 		"notices": state.recent_notices(6),
 		"unlocks": Array(state.player().get("unlocks", [])),
-		"stats": state.data.get("stats", {}).duplicate(true),
+		"stats": state.stats().duplicate(true),
+		"victory": {
+			"achieved": victory is Dictionary and bool(victory.get("achieved", false)),
+			"achieved_at": float(victory.get("achieved_at", 0.0)) if victory is Dictionary else 0.0,
+			"conditions": VictoryService.conditions(hub, state),
+		},
 	})
+
+
+## How many main-chapter templates the run has already delivered.
+static func _completed_main_count(hub: RegistryHub, state: GameState) -> int:
+	var completed: Array = state.contracts().get("completed", [])
+	var count := 0
+	for template in ContractOps.templates_by_kind(hub, "main"):
+		if completed.has(template.id):
+			count += 1
+	return count
 
 
 static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, ship: Dictionary) -> Dictionary:
@@ -165,10 +188,28 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 			"total_cost": stack_cost,
 			"average_cost": stack_cost / float(amount) if amount > 0 and contract_id.is_empty() else 0.0,
 		})
+	var transit_entries: Array = []
+	var transit_map: Dictionary = WarehouseOps.transit_modules(ship)
+	var transit_ids: Array = transit_map.keys()
+	transit_ids.sort()
+	for raw_module_id in transit_ids:
+		var module_id := String(raw_module_id)
+		var qty := int(transit_map[raw_module_id])
+		if qty <= 0:
+			continue
+		var transit_definition := ShipOps.find_module(hub, module_id)
+		transit_entries.append({
+			"module_id": module_id,
+			"name_key": transit_definition.name_key if transit_definition != null else module_id,
+			"qty": qty,
+			"weight": float(transit_definition.data.get("weight", 0.0)) if transit_definition != null else 0.0,
+		})
 	return {
 		"hull_id": String(ship.get("hull_id", "")),
 		"boiler_id": String(ship.get("boiler_id", "")),
 		"modules": modules,
+		"transit_modules": transit_entries,
+		"transit_weight": WarehouseOps.transit_module_weight(hub, ship),
 		"cargo": cargo,
 		"cargo_cost_basis": ShipOps.cargo_total_cost(ship),
 		"durability": float(ship.get("durability", 0.0)),
@@ -177,8 +218,10 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 		"water": float(ship.get("water", 0.0)),
 		"total_weight": ShipOps.total_weight(hub, state),
 		"max_weight": ShipOps.max_weight(hub, ship),
+		"free_weight": maxf(0.0, ShipOps.max_weight(hub, ship) - ShipOps.total_weight(hub, state)),
 		"cargo_capacity": ShipOps.cargo_capacity(hub, ship),
 		"cargo_used": ShipOps.cargo_used(hub, ship),
+		"free_cargo_capacity": ShipOps.free_cargo_capacity(hub, ship),
 		"passengers": ShipOps.passenger_count(state),
 		"passenger_capacity": ShipOps.passenger_capacity(hub, ship),
 		"speed": float(stats.get("speed", 0.0)),

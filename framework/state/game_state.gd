@@ -8,6 +8,16 @@ extends RefCounted
 
 const SCHEMA_VERSION := "1.0"
 
+## Default run statistics. `profit` is always derived as `income - expense`.
+const STATS_DEFAULTS := {
+	"voyages": 0,
+	"on_time": 0,
+	"accidents": 0,
+	"income": 0,
+	"expense": 0,
+	"profit": 0,
+}
+
 var data: Dictionary = {}
 
 
@@ -68,6 +78,41 @@ func market() -> Dictionary:
 
 func contracts() -> Dictionary:
 	return data.get("contracts", {})
+
+
+## Returns the run statistics, creating/repairing them lazily so old saves and
+## partially initialized test states never need a migration pass.
+func stats() -> Dictionary:
+	return ensure_stats()
+
+
+func ensure_stats() -> Dictionary:
+	var current: Variant = data.get("stats", null)
+	if not (current is Dictionary):
+		current = STATS_DEFAULTS.duplicate(true)
+		data["stats"] = current
+	var stats_data: Dictionary = current
+	for key in STATS_DEFAULTS.keys():
+		if not stats_data.has(key):
+			stats_data[key] = STATS_DEFAULTS[key]
+	stats_data["profit"] = int(stats_data.get("income", 0)) - int(stats_data.get("expense", 0))
+	return stats_data
+
+
+func record_income(amount: int) -> void:
+	if amount <= 0:
+		return
+	var stats_data := ensure_stats()
+	stats_data["income"] = int(stats_data.get("income", 0)) + amount
+	stats_data["profit"] = int(stats_data["income"]) - int(stats_data.get("expense", 0))
+
+
+func record_expense(amount: int) -> void:
+	if amount <= 0:
+		return
+	var stats_data := ensure_stats()
+	stats_data["expense"] = int(stats_data.get("expense", 0)) + amount
+	stats_data["profit"] = int(stats_data.get("income", 0)) - int(stats_data["expense"])
 
 
 func now() -> float:

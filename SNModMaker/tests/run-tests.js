@@ -340,7 +340,8 @@ function warningsOf(result) {
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
     assert.equal(result.project.contentFiles.length, 15);
-    assert.equal(result.project.assets.length, 3);
+    // 3 status icons + the Iron Harbor banner art.
+    assert.equal(result.project.assets.length, 4);
     const validation = Validate.validateProject(result.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
   });
