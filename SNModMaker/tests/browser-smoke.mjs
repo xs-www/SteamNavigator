@@ -481,6 +481,33 @@ await check('local disk API saves projects, exports and deploys to game mods', a
   })()`);
 });
 
+await check('native workspace opens dev_mods/core in place', async () => {
+  const backend = await cdp.eval('SNIO.detectBackend()');
+  if (!backend || !backend.workspaceDir) throw new Error('backend does not expose dev_mods workspace');
+  await cdp.eval("document.querySelector('[data-action=\"welcome\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('.welcome')", 5000, 'welcome for workspace');
+  await waitFor(
+    cdp,
+    "[...document.querySelectorAll('.recent-row')].some((row) => row.querySelector('.recent-badge')?.textContent.trim() === '工作区')",
+    6000,
+    'workspace row in recent projects',
+  );
+  const opened = await cdp.eval(`(() => {
+    const row = [...document.querySelectorAll('.recent-row')].find((item) =>
+      item.querySelector('.recent-badge')?.textContent.trim() === '工作区'
+      && item.querySelector('.recent-main')?.dataset.id === 'core');
+    if (!row) return false;
+    row.querySelector('.recent-main').click();
+    return true;
+  })()`);
+  if (!opened) throw new Error('workspace core row is missing');
+  await waitFor(cdp, "!!document.querySelector('.view.overview-view h1')", 8000, 'workspace overview');
+  const title = await cdp.eval("document.querySelector('.view.overview-view h1').textContent.trim()");
+  if (!title.includes('Steam Navigator')) throw new Error(`unexpected workspace title: ${title}`);
+  const hasAssetsTab = await cdp.eval("document.body.textContent.includes('资源')");
+  if (!hasAssetsTab) throw new Error('workspace project did not render the editor tabs');
+});
+
 const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
 fs.writeFileSync(screenshotPath, Buffer.from(shot.data, 'base64'));
 
