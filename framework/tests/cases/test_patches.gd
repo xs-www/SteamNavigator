@@ -7,7 +7,7 @@ func _write_file(path: String, text: String) -> void:
 	file.close()
 
 
-func _make_patch_mod(root: String, mod_id: String, price: int) -> void:
+func _make_patch_mod(root: String, mod_id: String, price: int, texture_key: String = "icon.coal") -> void:
 	var mod_root := root + "/" + mod_id
 	DirAccess.make_dir_recursive_absolute(mod_root + "/content")
 	var manifest := {
@@ -28,7 +28,10 @@ func _make_patch_mod(root: String, mod_id: String, price: int) -> void:
 		"content_type": "patches",
 		"definitions": [{
 			"target": "core:good/iron_ore",
-			"operations": [{"op": "replace", "path": "/data/base_price", "value": price}],
+			"operations": [
+				{"op": "replace", "path": "/data/base_price", "value": price},
+				{"op": "add", "path": "/information", "value": {"texture": texture_key}},
+			],
 		}],
 	}
 	_write_file(mod_root + "/content/patches.json", JsonUtils.canonical_stringify(patches, "  "))
@@ -55,6 +58,8 @@ func test_patch_applies_to_core_definition() -> void:
 	var iron_ore := context.registries.get_by_id(ContentTypes.GOOD, "core:good/iron_ore")
 	assert_not_null(iron_ore, "patched definition still exists")
 	assert_eq(int(iron_ore.data["base_price"]), 50, "patch replaces the value")
+	assert_eq(String(iron_ore.information.get("texture", "")), "icon.coal", "patch updates parsed information")
+	assert_eq(iron_ore.asset_uri("texture"), "asset://core/icon.coal", "patched bare asset key keeps the target namespace")
 	assert_true(iron_ore.patched_by.has("patch_a"), "patch source is recorded")
 
 
@@ -75,3 +80,18 @@ func test_conflicting_patches_are_reported() -> void:
 	for error in report.errors:
 		codes.append(String(error.get("code", "")))
 	assert_contains(codes, "patch_conflict", "conflicting patch is reported instead of silently winning")
+
+	var invalid_root := _temp_root()
+	_make_patch_mod(invalid_root, "patch_missing_asset", 50, "icon.missing")
+	var invalid_bootstrap := Bootstrap.new()
+	var invalid_report := invalid_bootstrap.run({
+		"scan_roots": PackedStringArray(["res://dev_mods", invalid_root]),
+		"allow_loose": true,
+		"mount_packs": false,
+		"log_to_console": false,
+		"autosave": false,
+	})
+	var invalid_codes := PackedStringArray()
+	for error in invalid_report.errors:
+		invalid_codes.append(String(error.get("code", "")))
+	assert_contains(invalid_codes, "entity_asset_missing", "missing information assets are rejected during compilation")

@@ -68,6 +68,29 @@ static func module_weight(hub: RegistryHub, ship: Dictionary) -> float:
 	return total
 
 
+## Damage points still owed by damaged module instances, using module weight as
+## the size/cost proxy so repair pricing stays data-driven and close to hull
+## points. Full condition contributes 0.
+static func module_damage_points(hub: RegistryHub, ship: Dictionary) -> float:
+	var total := 0.0
+	for row in ShipModules.installed_rows(ship):
+		var missing := 1.0 - float(row["condition"])
+		if missing <= 0.0:
+			continue
+		var definition := find_module(hub, String(row["module_id"]))
+		var weight := float(definition.data.get("weight", 0.0)) if definition != null else 0.0
+		total += weight * missing
+	return total
+
+
+## True when at least one installed module instance is at zero condition.
+static func has_disabled_module(ship: Dictionary) -> bool:
+	for row in ShipModules.installed_rows(ship):
+		if bool(row["disabled"]):
+			return true
+	return false
+
+
 static func cargo_weight(hub: RegistryHub, ship: Dictionary) -> float:
 	var total := 0.0
 	for stack in ship.get("cargo", []):

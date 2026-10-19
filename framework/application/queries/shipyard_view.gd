@@ -66,6 +66,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"money": state.money(),
 		"ship": {
 			"hull_id": String(ship.get("hull_id", "")),
+			"hull_tier": int(stats.get("hull_tier", 1)),
 			"boiler_id": String(ship.get("boiler_id", "")),
 			"modules": current_modules,
 			"transit_modules": transit_rows,
@@ -82,6 +83,10 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"safety_occupied": not String(ship.get("safety_module_id", "")).is_empty(),
 			"cargo_capacity": ShipOps.cargo_capacity(hub, ship),
 			"passenger_capacity": ShipOps.passenger_capacity(hub, ship),
+			"module_damage_points": ShipOps.module_damage_points(hub, ship),
+			"worst_module_condition": ShipModules.worst_condition(ship),
+			"damaged_modules": ShipModules.damaged_rows(ship).size(),
+			"disabled_modules": _disabled_module_count(ship),
 		},
 		"warehouse": warehouse_data,
 		"craft": craft_rows,
@@ -101,6 +106,7 @@ static func _empty_view() -> Dictionary:
 		"money": 0,
 		"ship": {
 			"hull_id": "",
+			"hull_tier": 1,
 			"boiler_id": "",
 			"modules": [],
 			"transit_modules": [],
@@ -117,6 +123,10 @@ static func _empty_view() -> Dictionary:
 			"safety_occupied": false,
 			"cargo_capacity": 0.0,
 			"passenger_capacity": 0,
+			"module_damage_points": 0.0,
+			"worst_module_condition": 1.0,
+			"damaged_modules": 0,
+			"disabled_modules": 0,
 		},
 		"warehouse": {"port_id": "", "modules": [], "materials": []},
 		"craft": [],
@@ -129,37 +139,58 @@ static func _empty_view() -> Dictionary:
 static func _current_modules(hub: RegistryHub, state: GameState, ship: Dictionary) -> Array:
 	var rows: Array = []
 	for content_type in ShipOps.INSTALLABLE_TYPES:
-		var module_ids: Array[String] = []
-		match content_type:
-			ContentTypes.CARGO_MODULE:
-				module_ids = ShipOps.cargo_module_ids(ship)
-			ContentTypes.HULL:
-				module_ids.append(String(ship.get("hull_id", "")))
-			ContentTypes.BOILER:
-				module_ids.append(String(ship.get("boiler_id", "")))
-			ContentTypes.NAVIGATION_MODULE:
-				module_ids.append(String(ship.get("navigation_module_id", "")))
-			ContentTypes.SAFETY_MODULE:
-				module_ids.append(String(ship.get("safety_module_id", "")))
-			ContentTypes.CABIN:
-				module_ids.append(String(ship.get("passenger_cabin_id", "")))
-		for module_id in module_ids:
+		var module_ids := _installed_ids_for(ship, content_type)
+		var slot := ShipModules.slot_for_content_type(String(content_type))
+		for index in module_ids.size():
+			var module_id: String = module_ids[index]
 			if module_id.is_empty():
 				continue
 			var module := hub.get_by_id(content_type, module_id)
 			var uninstall_blockers := ShipOps.uninstall_blockers(hub, state, module_id)
+			var condition := ShipModules.condition(ship, slot, index) if not slot.is_empty() else 1.0
 			rows.append({
 				"content_type": String(content_type),
+				"slot": slot,
+				"index": index,
 				"module_id": module_id,
 				"name_key": module.name_key if module != null else module_id,
 				"description_key": module.description_key if module != null else module_id,
 				"price": int(round(float(module.data.get("purchase_price", 0.0)))) if module != null else 0,
 				"weight": float(module.data.get("weight", 0.0)) if module != null else 0.0,
 				"tier": int(module.data.get("tier", 1)) if module != null else 1,
+				"effect": module.data.duplicate(true) if module != null else {},
+				"condition": condition,
+				"disabled": condition <= 0.0,
 				"can_uninstall": uninstall_blockers.is_empty(),
 				"uninstall_blockers": uninstall_blockers,
 			})
 	return rows
+
+
+static func _installed_ids_for(ship: Dictionary, content_type: StringName) -> Array[String]:
+	var ids: Array[String] = []
+	match content_type:
+		ContentTypes.CARGO_MODULE:
+			return ShipOps.cargo_module_ids(ship)
+		ContentTypes.HULL:
+			ids.append(String(ship.get("hull_id", "")))
+		ContentTypes.BOILER:
+			ids.append(String(ship.get("boiler_id", "")))
+		ContentTypes.NAVIGATION_MODULE:
+			ids.append(String(ship.get("navigation_module_id", "")))
+		ContentTypes.SAFETY_MODULE:
+			ids.append(String(ship.get("safety_module_id", "")))
+		ContentTypes.CABIN:
+			ids.append(String(ship.get("passenger_cabin_id", "")))
+	return ids
+
+
+static func _disabled_module_count(ship: Dictionary) -> int:
+	var count := 0
+	for row in ShipModules.installed_rows(ship):
+		if bool(row["disabled"]):
+			count += 1
+	return count
 
 
 static func _transit_rows(hub: RegistryHub, ship: Dictionary) -> Array:

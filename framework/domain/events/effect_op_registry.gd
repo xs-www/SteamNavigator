@@ -95,6 +95,21 @@ static func ensure_defaults() -> void:
 		ship["durability"] = minf(maximum, float(ship.get("durability", 0.0)) + float(node.get("amount", 0.0)))
 		return _ok()
 	)
+	register("damage_module", func(node: Dictionary, ctx: Dictionary) -> Dictionary:
+		var state: GameState = ctx["state"]
+		var ship := state.ship()
+		var slot := String(node.get("slot", ""))
+		var amount := float(node.get("amount", 0.0))
+		if amount <= 0.0:
+			return _fail("invalid_amount")
+		if not ShipModules.has_slot(ship, slot):
+			return _fail("unknown_module_slot")
+		var outcome: Dictionary = ShipModules.damage(ship, slot, int(node.get("index", 0)), amount)
+		if not bool(outcome.get("ok", false)):
+			return _fail(String(outcome.get("error", "invalid_amount")))
+		ctx["events"].append({"type": "ship.module_damaged", "payload": outcome})
+		return _ok()
+	)
 	register("add_delay_hours", func(node: Dictionary, ctx: Dictionary) -> Dictionary:
 		var hours := maxf(0.0, float(node.get("amount", 0.0)))
 		var state: GameState = ctx["state"]

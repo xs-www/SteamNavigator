@@ -6,7 +6,37 @@ extends RefCounted
 ## transaction, serialized directly, and fingerprinted for determinism tests.
 ## Content definitions never live here; only IDs and runtime values do.
 
-const SCHEMA_VERSION := "1.0"
+const SCHEMA_VERSION := "2.0"
+
+## Campaign metadata. The v2 state keeps the existing run fields and adds this
+## block so persistent saves can carry identity and lifecycle information.
+const CAMPAIGN_DEFAULTS := {
+	"id": "",
+	"name": "Steam Navigator",
+	"created_at": "",
+	"difficulty": "standard",
+	"status": "active",
+	"playtime_hours": 0.0,
+}
+
+## Campaign subsystem sections. A section is added when its runtime system lands
+## and only stores generated instances / progress (ids and primitives), never
+## content definitions. The top-level `world` block keeps the generated map
+## layout; `campaign.world` is the exploration progress layered over it.
+const CAMPAIGN_SECTION_DEFAULTS := {
+	"world": {
+		"profile_id": "",
+		"generated": false,
+		"visited_region_ids": [],
+		"discovered_site_ids": [],
+		"visited_port_ids": [],
+	},
+	"codex": {
+		"discovered_ids": [],
+		"entries": {},
+	},
+	"factions": {},
+}
 
 ## Default run statistics. `profit` is always derived as `income - expense`.
 const STATS_DEFAULTS := {
@@ -54,6 +84,143 @@ func hash() -> String:
 
 func schema_version() -> String:
 	return String(data.get("schema_version", ""))
+
+
+func campaign() -> Dictionary:
+	return ensure_campaign()
+
+
+## Backfills campaign metadata for states created before Schema 2.0 or by tests.
+func ensure_campaign() -> Dictionary:
+	var current: Variant = data.get("campaign", null)
+	if not (current is Dictionary):
+		current = CAMPAIGN_DEFAULTS.duplicate(true)
+		current["id"] = "campaign_%d" % self.seed()
+		current["created_at"] = String(run().get("started_at", ""))
+		current["playtime_hours"] = now()
+		data["campaign"] = current
+	var campaign: Dictionary = current
+	for key in CAMPAIGN_DEFAULTS.keys():
+		if not campaign.has(key):
+			campaign[key] = CAMPAIGN_DEFAULTS[key]
+	ensure_campaign_sections(campaign)
+	return campaign
+
+
+## Backfills campaign subsystem sections without touching existing values.
+## `warnings` (optional) receives one entry per backfilled section or field.
+static func ensure_campaign_sections(campaign: Dictionary, warnings: Array = []) -> void:
+	for section_key in CAMPAIGN_SECTION_DEFAULTS.keys():
+		var defaults: Dictionary = CAMPAIGN_SECTION_DEFAULTS[section_key]
+		var current: Variant = campaign.get(section_key, null)
+		if not (current is Dictionary):
+			campaign[section_key] = defaults.duplicate(true)
+			warnings.append("campaign.%s backfilled" % section_key)
+			continue
+		var section: Dictionary = current
+		for key in defaults.keys():
+			if not section.has(key):
+				section[key] = _copy_default(defaults[key])
+				warnings.append("campaign.%s.%s backfilled" % [section_key, key])
+
+
+static func _copy_default(value: Variant) -> Variant:
+	if value is Dictionary:
+		return (value as Dictionary).duplicate(true)
+	if value is Array:
+		return (value as Array).duplicate(true)
+	return value
+
+
+## Exploration progress: visited / discovered ids over the generated map.
+func campaign_world() -> Dictionary:
+	return ensure_campaign().get("world", {})
+
+
+func campaign_codex() -> Dictionary:
+	return ensure_campaign().get("codex", {})
+
+
+## Faction runtime state keyed by faction definition id; each value is a dict
+## with at least `reputation`.
+func campaign_factions() -> Dictionary:
+	return ensure_campaign().get("factions", {})
+
+
+func mark_region_visited(region_id: String) -> bool:
+	return _remember_id(campaign_world(), "visited_region_ids", region_id)
+
+
+func is_region_visited(region_id: String) -> bool:
+	return _contains_id(campaign_world(), "visited_region_ids", region_id)
+
+
+func mark_port_visited(port_id: String) -> bool:
+	return _remember_id(campaign_world(), "visited_port_ids", port_id)
+
+
+func is_port_visited(port_id: String) -> bool:
+	return _contains_id(campaign_world(), "visited_port_ids", port_id)
+
+
+func discover_site(site_id: String) -> bool:
+	return _remember_id(campaign_world(), "discovered_site_ids", site_id)
+
+
+func is_site_discovered(site_id: String) -> bool:
+	return _contains_id(campaign_world(), "discovered_site_ids", site_id)
+
+
+## Records a codex entry; returns true only when the id is newly discovered.
+func discover_codex(discovery_id: String) -> bool:
+	return _remember_id(campaign_codex(), "discovered_ids", discovery_id)
+
+
+func is_codex_discovered(discovery_id: String) -> bool:
+	return _contains_id(campaign_codex(), "discovered_ids", discovery_id)
+
+
+func set_faction_reputation(faction_id: String, value: int) -> void:
+	if faction_id.is_empty():
+		return
+	var factions := campaign_factions()
+	var current: Variant = factions.get(faction_id, null)
+	var entry: Dictionary = current if current is Dictionary else {}
+	entry["reputation"] = clampi(value, -100, 100)
+	factions[faction_id] = entry
+
+
+func faction_reputation(faction_id: String) -> int:
+	var current: Variant = campaign_factions().get(faction_id, null)
+	if not (current is Dictionary):
+		return 0
+	return int(current.get("reputation", 0))
+
+
+func _remember_id(section: Dictionary, key: String, id: String) -> bool:
+	if id.is_empty():
+		return false
+	var ids: Array = _id_list(section, key)
+	if ids.has(id):
+		return false
+	ids.append(id)
+	section[key] = ids
+	return true
+
+
+func _contains_id(section: Dictionary, key: String, id: String) -> bool:
+	if id.is_empty():
+		return false
+	return _id_list(section, key).has(id)
+
+
+func _id_list(section: Dictionary, key: String) -> Array:
+	var current: Variant = section.get(key, null)
+	if current is Array:
+		return current
+	var ids: Array = []
+	section[key] = ids
+	return ids
 
 
 func run() -> Dictionary:

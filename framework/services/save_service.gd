@@ -5,8 +5,9 @@ extends RefCounted
 ## Windows cannot atomically replace an existing file with rename, so the save
 ## is written to `.tmp`, re-parsed for integrity, then the target is replaced.
 
-const SAVE_SCHEMA := "1.0"
-const SAVE_SCHEMA_MAJOR := 1
+const SAVE_SCHEMA := "2.0"
+const SAVE_SCHEMA_MAJOR := 2
+const SaveMigrationsScript := preload("res://framework/services/save_migrations.gd")
 const AUTOSAVE_SLOT := "autosave"
 const PRE_VOYAGE_SLOT := "pre_voyage"
 
@@ -35,16 +36,22 @@ func save_slot(slot: String, state: GameState, meta: Dictionary = {}) -> Diction
 		return {"ok": false, "error": "cannot save an empty state", "path": ""}
 	if not ensure_directory():
 		return {"ok": false, "error": "cannot create save directory: %s" % directory, "path": ""}
+	# Snapshot into the current state schema without mutating the live state.
+	var snapshot := state.clone()
+	snapshot.data["schema_version"] = GameState.SCHEMA_VERSION
+	snapshot.ensure_campaign()
+	ShipModules.ensure(snapshot.ship())
 	var payload := {
 		"save_schema": SAVE_SCHEMA,
 		"framework_version": FrameworkInfo.VERSION,
 		"mod_api_version": "%d.%d" % [FrameworkInfo.API_MAJOR, FrameworkInfo.API_MINOR],
-		"content_schema": GameState.SCHEMA_VERSION,
+		"state_schema": GameState.SCHEMA_VERSION,
+		"content_schema": FrameworkInfo.CONTENT_SCHEMA,
 		"created_at": Time.get_datetime_string_from_system(true),
-		"seed": state.seed(),
+		"seed": snapshot.seed(),
 		"mods": meta.get("mods", []),
 		"meta": meta.duplicate(true),
-		"state": state.to_dict(),
+		"state": snapshot.to_dict(),
 	}
 	var text := JsonUtils.canonical_stringify(payload, "\t")
 	var path := _slot_path(slot)
@@ -71,31 +78,39 @@ func load_slot(slot: String) -> Dictionary:
 	if not (parsed["value"] is Dictionary):
 		return {"ok": false, "error": "save root is not an object", "state": null, "header": {}}
 	var payload: Dictionary = parsed["value"]
-	var schema_text := String(payload.get("save_schema", ""))
-	if not schema_text.begins_with("1."):
+	var migration := SaveMigrationsScript.migrate(payload)
+	if not bool(migration.get("ok", false)):
 		return {
 			"ok": false,
-			"error": "unsupported save schema: %s" % schema_text,
+			"error": String(migration.get("error", "unsupported save schema")),
 			"state": null,
 			"header": payload,
 		}
+	payload = migration["payload"]
 	if not (payload.get("state", null) is Dictionary):
 		return {"ok": false, "error": "save is missing state", "state": null, "header": payload}
 	var header := {
-		"save_schema": schema_text,
+		"save_schema": String(payload.get("save_schema", "")),
 		"framework_version": String(payload.get("framework_version", "")),
 		"mod_api_version": String(payload.get("mod_api_version", "")),
+		"state_schema": String(payload.get("state_schema", "")),
 		"content_schema": String(payload.get("content_schema", "")),
 		"created_at": String(payload.get("created_at", "")),
 		"seed": int(payload.get("seed", 0)),
 		"mods": payload.get("mods", []),
+		"migrated_from": String(payload.get("migrated_from", "")),
 	}
+	var loaded_state := GameState.from_dict(payload["state"])
+	loaded_state.ensure_campaign()
+	ShipModules.ensure(loaded_state.ship())
 	return {
 		"ok": true,
 		"error": "",
-		"state": GameState.from_dict(payload["state"]),
+		"state": loaded_state,
 		"header": header,
 		"meta": payload.get("meta", {}),
+		"migrated": bool(migration.get("migrated", false)),
+		"migration_warnings": migration.get("warnings", []),
 	}
 
 

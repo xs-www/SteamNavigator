@@ -40,6 +40,7 @@ static func create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionar
 		"water": float(data.get("water", 0.0)),
 		"cargo": [],
 	}
+	ShipModules.ensure(ship)
 	return ship
 
 
@@ -89,6 +90,14 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 	var state := GameState.new()
 	state.data = {
 		"schema_version": GameState.SCHEMA_VERSION,
+		"campaign": {
+			"id": "campaign_%d" % seed_value,
+			"name": "Steam Navigator",
+			"created_at": Time.get_datetime_string_from_system(true),
+			"difficulty": "standard",
+			"status": "active",
+			"playtime_hours": 0.0,
+		},
 		"run": {
 			"seed": seed_value,
 			"game_time": 0.0,
@@ -108,6 +117,12 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 		"stats": GameState.STATS_DEFAULTS.duplicate(true),
 		"victory": null,
 	}
+	state.ensure_campaign()
+	var world_progress := state.campaign_world()
+	world_progress["generated"] = true
+	var starting_port_id := state.current_port_id()
+	if not starting_port_id.is_empty():
+		state.mark_port_visited(starting_port_id)
 	ContractOps.ensure_structure(state)
 	WarehouseOps.ensure_structure(state)
 	_initialize_markets(state, hub, profile, rng)

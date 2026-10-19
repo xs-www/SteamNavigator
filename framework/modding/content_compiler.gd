@@ -173,6 +173,8 @@ func _register_definition(package: ModPackage, content_type: StringName, raw_def
 		return
 	if not bool(raw_definition.get("enabled", true)):
 		return
+	if not _validate_definition_assets(package.id, raw_definition, package.id, relative_path, pointer):
+		return
 	var definition := ContentDefinition.from_raw(raw_definition, content_type, package.id, relative_path)
 	var register_result := _hub.register(definition, package.id)
 	if not bool(register_result["ok"]):
@@ -298,13 +300,22 @@ func _apply_patch(entry: Dictionary) -> void:
 				pointer + String(schema_error["path"])
 			)
 		return
+	if not _validate_definition_assets(definition.source_mod, working, mod_id, file, pointer):
+		return
 	var previous_source := definition.source_mod
 	definition.name_key = String(working.get("name_key", definition.name_key))
 	definition.description_key = String(working.get("description_key", definition.description_key))
 	definition.tags = PackedStringArray(working.get("tags", []))
 	definition.enabled = bool(working.get("enabled", definition.enabled))
+	var patched_information: Variant = working.get("information", {})
+	definition.information = patched_information.duplicate(true) if patched_information is Dictionary else {}
 	definition.data = working.get("data", {})
 	definition.raw = working
+	if definition.information.is_empty():
+		definition.raw.erase("information")
+	else:
+		definition.raw["information"] = definition.information
+	definition.raw["data"] = definition.data
 	definition.source_mod = previous_source
 	definition.patched_by.append(mod_id)
 	if _logger != null:
@@ -318,6 +329,83 @@ func _validate_definition(content_type: StringName, raw_definition: Dictionary) 
 		"definitions": [raw_definition],
 	}
 	return _validator.validate_file(envelope, ContentTypes.schema_path(content_type))
+
+
+func _validate_definition_assets(
+	default_mod_id: String,
+	raw_definition: Dictionary,
+	reporting_mod_id: String,
+	file: String,
+	pointer: String
+) -> bool:
+	var raw_information: Variant = raw_definition.get("information", {})
+	if not (raw_information is Dictionary):
+		return true # Schema validation owns the structural error.
+	var information: Dictionary = raw_information
+	var valid := true
+	for field in PackedStringArray(["texture", "model"]):
+		if not information.has(field):
+			continue
+		var value := String(information.get(field, "")).strip_edges()
+		if value.is_empty():
+			_add_error(
+				"entity_asset_reference",
+				"%s asset reference must not be blank" % field,
+				reporting_mod_id,
+				file,
+				pointer + "/information/" + field
+			)
+			valid = false
+			continue
+		var reference := _parse_asset_reference(value, default_mod_id)
+		if reference.is_empty():
+			_add_error(
+				"entity_asset_reference",
+				"invalid %s asset reference '%s'" % [field, value],
+				reporting_mod_id,
+				file,
+				pointer + "/information/" + field
+			)
+			valid = false
+			continue
+		var asset_mod_id := String(reference["mod_id"])
+		var asset_key := String(reference["key"])
+		var package: Variant = _packages.get(asset_mod_id, null)
+		if not (package is ModPackage) or not package.manifest.assets.has(asset_key):
+			_add_error(
+				"entity_asset_missing",
+				"%s asset '%s' is not declared by mod '%s'" % [field, asset_key, asset_mod_id],
+				reporting_mod_id,
+				file,
+				pointer + "/information/" + field
+			)
+			valid = false
+			continue
+		var asset_path := String(package.manifest.assets[asset_key]).to_lower()
+		var extension := "." + asset_path.get_extension()
+		var expected := PackedStringArray([".png", ".webp", ".svg"]) if field == "texture" else PackedStringArray([".glb"])
+		if not expected.has(extension):
+			_add_error(
+				"entity_asset_type",
+				"%s asset '%s' must use %s, got '%s'" % [field, asset_key, "/".join(expected), extension],
+				reporting_mod_id,
+				file,
+				pointer + "/information/" + field
+			)
+			valid = false
+	return valid
+
+
+func _parse_asset_reference(value: String, default_mod_id: String) -> Dictionary:
+	if not value.begins_with("asset://"):
+		return {"mod_id": default_mod_id, "key": value}
+	var regex := RegEx.new()
+	if regex.compile("^asset://([a-z][a-z0-9_]{2,31})/([a-z][a-z0-9_.-]*)$") != OK:
+		return {}
+	var match_result := regex.search(value)
+	if match_result == null:
+		return {}
+	return {"mod_id": match_result.get_string(1), "key": match_result.get_string(2)}
 
 
 func _check_localization_keys() -> void:

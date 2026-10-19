@@ -1,0 +1,459 @@
+{
+  "format": "steam-navigator-content-types",
+  "format_version": 1,
+  "content_schema": "1.0",
+  "description": "Single source for content type keys, schema paths, registry kind and editor presentation metadata. Entries under 'planned' are roadmap only and have no schema yet. 'v2_module_categories' records the target module taxonomy; it is not a runtime type list.",
+  "draft_schemas": {
+    "start_profiles": "schemas/v2/start_profile.schema.json",
+    "world_profiles": "schemas/v2/world_profile.schema.json",
+    "regions": "schemas/v2/region.schema.json",
+    "sites": "schemas/v2/site.schema.json",
+    "route_templates": "schemas/v2/route_template.schema.json",
+    "weather_profiles": "schemas/v2/weather_profile.schema.json",
+    "factions": "schemas/v2/faction.schema.json",
+    "discoveries": "schemas/v2/discovery.schema.json"
+  },
+  "groups": [
+    {
+      "id": "economy",
+      "label_zh": "经济与贸易",
+      "label_en": "Economy & Trade"
+    },
+    {
+      "id": "ships_modules",
+      "label_zh": "船只与模块",
+      "label_en": "Ships & Modules"
+    },
+    {
+      "id": "world_generation",
+      "label_zh": "世界生成",
+      "label_en": "World Generation"
+    },
+    {
+      "id": "narrative_events",
+      "label_zh": "叙事与事件",
+      "label_en": "Narrative & Events"
+    },
+    {
+      "id": "system",
+      "label_zh": "系统",
+      "label_en": "System"
+    }
+  ],
+  "v2_module_categories": [
+    {
+      "id": "boiler",
+      "label_zh": "锅炉",
+      "label_en": "Boiler"
+    },
+    {
+      "id": "cargo",
+      "label_zh": "货舱",
+      "label_en": "Cargo"
+    },
+    {
+      "id": "utility",
+      "label_zh": "杂项功能",
+      "label_en": "Utility",
+      "note": "导航、安全与后续小功能模块并入此类别，不再单独设内容类型或编辑器分组。"
+    },
+    {
+      "id": "cabin",
+      "label_zh": "客舱",
+      "label_en": "Cabin"
+    },
+    {
+      "id": "crew",
+      "label_zh": "船员居住",
+      "label_en": "Crew quarters"
+    }
+  ],
+  "types": [
+    {
+      "key": "goods",
+      "singular": "good",
+      "key_prefix": "good",
+      "label_zh": "商品",
+      "label_en": "Goods",
+      "abbr": "GD",
+      "color": "#e0a94a",
+      "group": "economy",
+      "schema": "schemas/good.schema.json",
+      "default_file": "content/goods.json",
+      "summary_zh": "港口买卖、库存与价格弹性的基础物品，也是委托货箱与补给的载体。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.goods.v1",
+      "v2_target": "item",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "materials",
+      "singular": "material",
+      "key_prefix": "material",
+      "label_zh": "造船材料",
+      "label_en": "Materials",
+      "abbr": "MT",
+      "color": "#c98b5e",
+      "group": "economy",
+      "schema": "schemas/material.schema.json",
+      "default_file": "content/materials.json",
+      "summary_zh": "打造与升级模块时消耗的专用材料，参与库存、价格与重量计算。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.materials.v1",
+      "v2_target": "item",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "hulls",
+      "singular": "hull",
+      "key_prefix": "module",
+      "label_zh": "船体",
+      "label_en": "Hulls",
+      "abbr": "HL",
+      "color": "#6fb3c9",
+      "group": "ships_modules",
+      "schema": "schemas/hull.schema.json",
+      "default_file": "content/hulls.json",
+      "summary_zh": "决定基础航速、最大载重、耐久与货舱/客舱槽位。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.hulls.v1",
+      "v2_target": "hull",
+      "aliases": [],
+      "module": true
+    },
+    {
+      "key": "boilers",
+      "singular": "boiler",
+      "key_prefix": "module",
+      "label_zh": "锅炉",
+      "label_en": "Boilers",
+      "abbr": "BL",
+      "color": "#e07b54",
+      "group": "ships_modules",
+      "schema": "schemas/boiler.schema.json",
+      "default_file": "content/boilers.json",
+      "summary_zh": "航速与煤水消耗的核心模块，与三种锅炉策略相乘。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.boilers.v1",
+      "v2_target": "module",
+      "v2_category": "boiler",
+      "aliases": [],
+      "module": true
+    },
+    {
+      "key": "cargo_modules",
+      "singular": "cargo_module",
+      "key_prefix": "module",
+      "label_zh": "货舱",
+      "label_en": "Cargo modules",
+      "abbr": "CG",
+      "color": "#9db36a",
+      "group": "ships_modules",
+      "schema": "schemas/cargo_module.schema.json",
+      "default_file": "content/cargo_modules.json",
+      "summary_zh": "安装到船体货舱槽位，提供额外载货容量。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.cargo_modules.v1",
+      "v2_target": "module",
+      "v2_category": "cargo",
+      "aliases": [],
+      "module": true
+    },
+    {
+      "key": "navigation_modules",
+      "singular": "navigation_module",
+      "key_prefix": "module",
+      "label_zh": "导航模块",
+      "label_en": "Navigation modules",
+      "abbr": "NV",
+      "color": "#8f9fd6",
+      "group": "ships_modules",
+      "schema": "schemas/navigation_module.schema.json",
+      "default_file": "content/navigation_modules.json",
+      "summary_zh": "影响风险与航速，部分可提前揭示港口设施。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.navigation_modules.v1",
+      "v2_target": "module",
+      "v2_category": "utility",
+      "aliases": [],
+      "module": true
+    },
+    {
+      "key": "safety_modules",
+      "singular": "safety_module",
+      "key_prefix": "module",
+      "label_zh": "安全模块",
+      "label_en": "Safety modules",
+      "abbr": "SF",
+      "color": "#d68f8f",
+      "group": "ships_modules",
+      "schema": "schemas/safety_module.schema.json",
+      "default_file": "content/safety_modules.json",
+      "summary_zh": "降低航行风险、损伤与维修费用。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.safety_modules.v1",
+      "v2_target": "module",
+      "v2_category": "utility",
+      "aliases": [],
+      "module": true
+    },
+    {
+      "key": "cabins",
+      "singular": "cabin",
+      "key_prefix": "module",
+      "label_zh": "客舱",
+      "label_en": "Cabins",
+      "abbr": "CB",
+      "color": "#c9a0d6",
+      "group": "ships_modules",
+      "schema": "schemas/cabin.schema.json",
+      "default_file": "content/cabins.json",
+      "summary_zh": "提供载客容量，是客运委托的前置条件。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.cabins.v1",
+      "v2_target": "module",
+      "v2_category": "cabin",
+      "aliases": [],
+      "module": true
+    },
+    {
+      "key": "roles",
+      "singular": "role",
+      "key_prefix": "role",
+      "label_zh": "船员岗位",
+      "label_en": "Crew roles",
+      "abbr": "RL",
+      "color": "#b9b06a",
+      "group": "ships_modules",
+      "schema": "schemas/role.schema.json",
+      "default_file": "content/roles.json",
+      "summary_zh": "工程师与领航员等岗位，每航程支付工资并提供属性修正。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.roles.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "strategies",
+      "singular": "strategy",
+      "key_prefix": "strategy",
+      "label_zh": "锅炉策略",
+      "label_en": "Boiler strategies",
+      "abbr": "ST",
+      "color": "#d6a06a",
+      "group": "ships_modules",
+      "schema": "schemas/strategy.schema.json",
+      "default_file": "content/strategies.json",
+      "summary_zh": "出航时选择的推进策略：经济、标准或极速。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.strategies.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "port_archetypes",
+      "singular": "port_archetype",
+      "key_prefix": "port",
+      "label_zh": "港口原型",
+      "label_en": "Port archetypes",
+      "abbr": "PT",
+      "color": "#5fa8a0",
+      "group": "world_generation",
+      "schema": "schemas/port_archetype.schema.json",
+      "default_file": "content/port_archetypes.json",
+      "summary_zh": "程序生成港口的模板：规模、设施与可交易商品表。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.port_archetypes.v1",
+      "v2_target": "port_template",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "map_profiles",
+      "singular": "map_profile",
+      "key_prefix": "map_profile",
+      "label_zh": "地图配置",
+      "label_en": "Map profiles",
+      "abbr": "MP",
+      "color": "#76a8c9",
+      "group": "world_generation",
+      "schema": "schemas/map_profile.schema.json",
+      "default_file": "content/map_profiles.json",
+      "summary_zh": "港口数量、航路、风险、NPC 与初始经济参数。Core 完整性要求至少一个。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.map_profiles.v1",
+      "v2_target": "map_config",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "starting_builds",
+      "singular": "starting_build",
+      "key_prefix": "starting_build",
+      "label_zh": "初始构筑",
+      "label_en": "Starting builds",
+      "abbr": "SB",
+      "color": "#a8c98f",
+      "group": "world_generation",
+      "schema": "schemas/starting_build.schema.json",
+      "default_file": "content/starting_builds.json",
+      "summary_zh": "开局金钱、船只模块、补给与贷款配置。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.starting_builds.v1",
+      "v2_target": "starting_scenario",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "contracts",
+      "singular": "contract",
+      "key_prefix": "contract",
+      "label_zh": "委托",
+      "label_en": "Contracts",
+      "abbr": "CT",
+      "color": "#d9b45f",
+      "group": "narrative_events",
+      "schema": "schemas/contract.schema.json",
+      "default_file": "content/contracts.json",
+      "summary_zh": "主线或普通委托：生成约束、载货/载客需求、截止公式与奖励。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.contracts.v1",
+      "v2_target": "quest",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "events",
+      "singular": "event",
+      "key_prefix": "event",
+      "label_zh": "航行事件",
+      "label_en": "Voyage events",
+      "abbr": "EV",
+      "color": "#c96f8f",
+      "group": "narrative_events",
+      "schema": "schemas/event.schema.json",
+      "default_file": "content/events.json",
+      "summary_zh": "航行途中触发的事件与选项；条件与效果只使用框架操作码。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.events.v1",
+      "v2_target": "voyage_event",
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "patches",
+      "singular": "patch",
+      "key_prefix": "patch",
+      "label_zh": "显式补丁",
+      "label_en": "Patches",
+      "abbr": "PA",
+      "color": "#b8b8b8",
+      "group": "system",
+      "schema": "schemas/patch.schema.json",
+      "default_file": "content/patches.json",
+      "summary_zh": "修改其他模组的定义。必须声明目标与来源版本，冲突时阻止启动。",
+      "kind": "patch",
+      "registry": false,
+      "capability": "content.patches.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    }
+  ],
+  "planned": [
+    {
+      "system": "world_exploration",
+      "capability": "content.world.v1",
+      "types": [
+        "regions",
+        "sites",
+        "route_templates",
+        "world_profiles",
+        "weather_profiles",
+        "discoveries",
+        "factions"
+      ]
+    },
+    {
+      "system": "fleet",
+      "capability": "content.fleet.v1",
+      "types": [
+        "ship_archetypes",
+        "captains",
+        "crew_roles",
+        "formations",
+        "fleet_doctrines"
+      ]
+    },
+    {
+      "system": "combat",
+      "capability": "content.combat.v1",
+      "types": [
+        "weapons",
+        "damage_types",
+        "combat_abilities",
+        "enemy_archetypes",
+        "encounter_tables",
+        "loot_tables"
+      ]
+    },
+    {
+      "system": "base",
+      "capability": "content.base.v1",
+      "types": [
+        "base_sites",
+        "buildings",
+        "building_upgrades",
+        "production_recipes",
+        "worker_roles"
+      ]
+    },
+    {
+      "system": "auto_trade",
+      "capability": "content.trade.v1",
+      "types": [
+        "trade_policies",
+        "automation_rules"
+      ]
+    },
+    {
+      "system": "ruins",
+      "capability": "content.ruins.v1",
+      "types": [
+        "ruin_archetypes",
+        "room_templates",
+        "expedition_events",
+        "hazard_tables",
+        "relics"
+      ]
+    },
+    {
+      "system": "campaign",
+      "capability": "content.campaign.v1",
+      "types": [
+        "start_profiles",
+        "difficulty_profiles",
+        "simulation_profiles"
+      ]
+    }
+  ]
+}

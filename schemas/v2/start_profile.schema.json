@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/start-profile-2.json",
+  "title": "Steam Navigator start profile content file (Schema 2.0 draft)",
+  "description": "Persistent campaign start profile: world profile, starting build, difficulty, port tags and optional cargo/contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "start_profiles"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/start_profile_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "start_profile_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["world_profile", "starting_build", "difficulty", "starting_port_tags"],
+      "properties": {
+        "world_profile": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "starting_build": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "difficulty": {
+          "enum": ["easy", "standard", "hard"]
+        },
+        "starting_port_tags": {
+          "$ref": "common.schema.json#/$defs/tag_list"
+        },
+        "starting_money": {
+          "type": "number",
+          "minimum": 0
+        },
+        "starting_reputation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "starting_cargo": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/cargo_stack"
+          }
+        },
+        "starting_contract": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "notes_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    }
+  }
+}

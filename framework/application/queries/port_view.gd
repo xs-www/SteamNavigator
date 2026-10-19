@@ -230,7 +230,19 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 		"hull_tier": int(stats.get("hull_tier", 1)),
 		"engineer_id": String(ship.get("engineer_id", "")),
 		"navigator_id": String(ship.get("navigator_id", "")),
+		"worst_module_condition": ShipModules.worst_condition(ship),
+		"damaged_modules": ShipModules.damaged_rows(ship).size(),
+		"disabled_modules": _disabled_module_count(ship),
+		"module_damage_points": ShipOps.module_damage_points(hub, ship),
 	}
+
+
+static func _disabled_module_count(ship: Dictionary) -> int:
+	var count := 0
+	for row in ShipModules.installed_rows(ship):
+		if bool(row["disabled"]):
+			count += 1
+	return count
 
 
 static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant) -> Variant:

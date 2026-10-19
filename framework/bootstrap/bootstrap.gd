@@ -57,7 +57,18 @@ func _default_scan_roots() -> PackedStringArray:
 		for entry in configured:
 			roots.append(String(entry))
 	if OS.has_feature("template"):
-		roots.append(OS.get_executable_path().get_base_dir() + "/mods")
+		# Exported builds must not scan res://: the PCK only carries imported
+		# resources, so a loose mod checked into the repository would appear
+		# half-present (manifest + JSON yes, raw PNG/GLB no). Release content
+		# comes from the executable-side mods/ folder and user://mods instead.
+		var release_roots := PackedStringArray()
+		for root in roots:
+			if not root.begins_with("res://"):
+				release_roots.append(root)
+		roots = release_roots
+		var executable_mods := OS.get_executable_path().get_base_dir().path_join("mods")
+		if not roots.has(executable_mods):
+			roots.append(executable_mods)
 	return roots
 
 

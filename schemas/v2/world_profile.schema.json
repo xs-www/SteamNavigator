@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/world-profile-2.json",
+  "title": "Steam Navigator world profile content file (Schema 2.0 draft)",
+  "description": "Persistent world generation profile for regions, sites, ports, ruins, bases and factions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "world_profiles"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/world_profile_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "world_profile_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region_count", "sites_per_region", "port_count", "start_region_tags"],
+      "properties": {
+        "region_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "sites_per_region": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "port_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "ruin_density": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "base_site_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "faction_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "weather_profile": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "start_region_tags": {
+          "$ref": "common.schema.json#/$defs/tag_list"
+        }
+      }
+    }
+  }
+}

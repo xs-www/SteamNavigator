@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/route-template-2.json",
+  "title": "Steam Navigator route template content file (Schema 2.0 draft)",
+  "description": "Generated sea route prototype: distance, risk, travel time, region affinity and optional encounters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "route_templates"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/route_template_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "route_template_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "distance_range", "risk_range", "travel_time_range"],
+      "properties": {
+        "kind": {
+          "enum": ["sea_lane", "trade_route", "hazardous_shortcut"]
+        },
+        "distance_range": {
+          "$ref": "common.schema.json#/$defs/integer_range2"
+        },
+        "risk_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "travel_time_range": {
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "bidirectional": {
+          "type": "boolean"
+        },
+        "region_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["coastal", "archipelago", "open_sea", "industrial", "frontier"]
+          }
+        },
+        "encounter_table": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 class_name ContentTypes
 extends RefCounted
-## Canonical content type identifiers and their framework schema mapping.
+## AUTO-GENERATED from content_types.json; do not edit by hand.
+## Regenerate: node tools/gen_content_types.mjs
 ##
 ## A content file's `content_type` selects both its registry and its JSON
 ## schema. Framework code never refers to concrete content IDs.
@@ -15,11 +16,11 @@ const SAFETY_MODULE := &"safety_modules"
 const CABIN := &"cabins"
 const ROLE := &"roles"
 const STRATEGY := &"strategies"
-const CONTRACT := &"contracts"
-const EVENT := &"events"
 const PORT_ARCHETYPE := &"port_archetypes"
 const MAP_PROFILE := &"map_profiles"
 const STARTING_BUILD := &"starting_builds"
+const CONTRACT := &"contracts"
+const EVENT := &"events"
 const PATCH := &"patches"
 
 const SCHEMA_PATHS := {
@@ -33,11 +34,11 @@ const SCHEMA_PATHS := {
 	CABIN: "res://schemas/cabin.schema.json",
 	ROLE: "res://schemas/role.schema.json",
 	STRATEGY: "res://schemas/strategy.schema.json",
-	CONTRACT: "res://schemas/contract.schema.json",
-	EVENT: "res://schemas/event.schema.json",
 	PORT_ARCHETYPE: "res://schemas/port_archetype.schema.json",
 	MAP_PROFILE: "res://schemas/map_profile.schema.json",
 	STARTING_BUILD: "res://schemas/starting_build.schema.json",
+	CONTRACT: "res://schemas/contract.schema.json",
+	EVENT: "res://schemas/event.schema.json",
 	PATCH: "res://schemas/patch.schema.json",
 }
 
@@ -52,11 +53,11 @@ const SINGULAR := {
 	CABIN: "cabin",
 	ROLE: "role",
 	STRATEGY: "strategy",
-	CONTRACT: "contract",
-	EVENT: "event",
 	PORT_ARCHETYPE: "port_archetype",
 	MAP_PROFILE: "map_profile",
 	STARTING_BUILD: "starting_build",
+	CONTRACT: "contract",
+	EVENT: "event",
 	PATCH: "patch",
 }
 
@@ -65,9 +66,9 @@ const MODULE_TYPES := [HULL, BOILER, CARGO_MODULE, NAVIGATION_MODULE, SAFETY_MOD
 
 static func all() -> Array[StringName]:
 	var types: Array[StringName] = [
-		GOOD, MATERIAL, HULL, BOILER, CARGO_MODULE, NAVIGATION_MODULE,
-		SAFETY_MODULE, CABIN, ROLE, STRATEGY, CONTRACT, EVENT,
-		PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD,
+		GOOD, MATERIAL, HULL, BOILER, CARGO_MODULE,
+		NAVIGATION_MODULE, SAFETY_MODULE, CABIN, ROLE, STRATEGY,
+		PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, CONTRACT, EVENT,
 	]
 	return types
 

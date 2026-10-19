@@ -41,6 +41,8 @@ func test_deterministic_run_generation() -> void:
 	var second_state: GameState = second["data"]["state"]
 	first_state.data["run"].erase("started_at")
 	second_state.data["run"].erase("started_at")
+	first_state.data["campaign"].erase("created_at")
+	second_state.data["campaign"].erase("created_at")
 	assert_eq(first_state.hash(), second_state.hash(), "same seed and build reproduce the same run")
 
 

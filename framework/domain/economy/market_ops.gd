@@ -281,11 +281,15 @@ static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind
 static func repair_cost(hub: RegistryHub, state: GameState, repair_per_point: float) -> Dictionary:
 	var ship := state.ship()
 	var maximum := ShipOps.durability_max(hub, ship)
-	var missing := maxf(0.0, maximum - float(ship.get("durability", 0.0)))
+	var durability_missing := maxf(0.0, maximum - float(ship.get("durability", 0.0)))
+	var module_points := ShipOps.module_damage_points(hub, ship)
+	var missing := durability_missing + module_points
 	var stats := ShipOps.stats(hub, ship)
 	var cost := int(ceil(missing * repair_per_point * float(stats.get("repair_cost_mul", 1.0))))
 	return {
 		"missing": missing,
+		"durability_missing": durability_missing,
+		"module_points": module_points,
 		"cost": cost,
 		"max_durability": maximum,
 		"repair_cost_mul": float(stats.get("repair_cost_mul", 1.0)),
@@ -308,8 +312,11 @@ static func repair(state: GameState, hub: RegistryHub, port_id: String, repair_p
 	state.record_expense(cost)
 	var ship := state.ship()
 	ship["durability"] = float(details["max_durability"])
+	var repaired_modules := ShipModules.repair_all(ship)
 	return Result.ok({
 		"repaired": missing,
+		"durability_repaired": float(details["durability_missing"]),
+		"modules_repaired": repaired_modules,
 		"cost": cost,
 		"money": state.money(),
 		"durability": float(details["max_durability"]),

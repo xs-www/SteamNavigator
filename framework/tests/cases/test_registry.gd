@@ -7,6 +7,7 @@ func _make_definition(id: String, tags: Array) -> ContentDefinition:
 		"name_key": "test.name",
 		"enabled": true,
 		"tags": tags,
+		"information": {"texture": "icon.test", "model": "model.test"},
 		"data": {"unit_weight": 1, "base_price": 10, "base_stock": 10, "price_elasticity": 0.1},
 	}, ContentTypes.GOOD, "testmod", "content/goods.json")
 
@@ -20,6 +21,10 @@ func test_register_and_query() -> void:
 	assert_eq(hub.get_all(ContentTypes.GOOD).size(), 1, "registry count")
 	assert_eq(hub.query(ContentTypes.GOOD, ["good.bulk"]).size(), 1, "tag query finds definition")
 	assert_eq(hub.query(ContentTypes.GOOD, ["good.missing"]).size(), 0, "tag query filters")
+	assert_eq(String(definition.get_information_value("texture")), "icon.test", "information is parsed")
+	assert_eq(definition.asset_uri("texture"), "asset://testmod/icon.test", "bare asset keys use the definition namespace")
+	assert_eq(definition.asset_uri("model"), "asset://testmod/model.test", "model keys resolve like textures")
+	assert_eq(String(definition.to_raw()["information"]["texture"]), "icon.test", "information survives serialization")
 
 
 func test_duplicate_id_rejected() -> void:

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/discovery-2.json",
+  "title": "Steam Navigator discovery content file (Schema 2.0 draft)",
+  "description": "Codex entry prototype: what a site/ruin reveals, its rarity, spawn weight and the ids it unlocks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "discoveries"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/discovery_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "discovery_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "rarity", "weight", "repeatable"],
+      "properties": {
+        "kind": {
+          "enum": ["site", "ruin_room", "relic", "species", "blueprint", "lore"]
+        },
+        "rarity": {
+          "enum": ["common", "uncommon", "rare", "unique"]
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "repeatable": {
+          "type": "boolean"
+        },
+        "source_site_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["ruin", "base_site", "resource", "wreck", "landmark", "encounter"]
+          }
+        },
+        "region_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["coastal", "archipelago", "open_sea", "industrial", "frontier"]
+          }
+        },
+        "requires_tags": {
+          "$ref": "common.schema.json#/$defs/tag_list"
+        },
+        "unlock_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        }
+      }
+    }
+  }
+}

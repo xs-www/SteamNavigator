@@ -198,11 +198,15 @@ static func _different(current_id: String, new_id: String) -> String:
 
 
 ## Removes one installed module from the ship without touching the warehouse.
+## The flat slot key is the definition projection; the module instance carrying
+## identity/condition is dropped in the same step.
 static func _remove_installed(state: GameState, content_type: StringName, module_id: String) -> void:
 	var ship := state.ship()
+	var slot := ShipModules.slot_for_content_type(String(content_type))
 	match content_type:
 		ContentTypes.HULL:
 			ship["hull_id"] = ""
+			return
 		ContentTypes.BOILER:
 			ship["boiler_id"] = ""
 		ContentTypes.NAVIGATION_MODULE:
@@ -217,13 +221,18 @@ static func _remove_installed(state: GameState, content_type: StringName, module
 			if index >= 0:
 				cargo_modules.remove_at(index)
 				ship["cargo_modules"] = cargo_modules
+				ShipModules.remove_cargo(ship, index)
+			return
+	ShipModules.remove_slot(ship, slot)
 
 
 ## Installs a module onto the ship. Purchase replacements start at full durability;
 ## warehouse/transit hull swaps keep min(current durability, new max) so moving an
-## old hull cannot repair it for free.
+## old hull cannot repair it for free. Every installed module gets a fresh
+## instance at full condition; a swapped-in old module is not repaired for free.
 static func _install(hub: RegistryHub, state: GameState, content_type: StringName, module_id: String, source: String) -> void:
 	var ship := state.ship()
+	var slot := ShipModules.slot_for_content_type(String(content_type))
 	match content_type:
 		ContentTypes.HULL:
 			var previous_durability := float(ship.get("durability", 0.0))
@@ -233,13 +242,17 @@ static func _install(hub: RegistryHub, state: GameState, content_type: StringNam
 				ship["durability"] = new_max
 			else:
 				ship["durability"] = minf(previous_durability, new_max)
+			return
 		ContentTypes.BOILER:
 			ship["boiler_id"] = module_id
 		ContentTypes.CARGO_MODULE:
 			ship["cargo_modules"] = Array(ship.get("cargo_modules", [])) + [module_id]
+			ShipModules.append_cargo(ship)
+			return
 		ContentTypes.NAVIGATION_MODULE:
 			ship["navigation_module_id"] = module_id
 		ContentTypes.SAFETY_MODULE:
 			ship["safety_module_id"] = module_id
 		ContentTypes.CABIN:
 			ship["passenger_cabin_id"] = module_id
+	ShipModules.install_slot(ship, slot)

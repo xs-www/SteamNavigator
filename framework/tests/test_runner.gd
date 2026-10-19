@@ -12,6 +12,8 @@ extends SceneTree
 const SUITE_PATHS := [
 	"res://framework/tests/cases/test_semver_range.gd",
 	"res://framework/tests/cases/test_schema_validator.gd",
+	"res://framework/tests/cases/test_content_types_manifest.gd",
+	"res://framework/tests/cases/test_schema_v2_drafts.gd",
 	"res://framework/tests/cases/test_registry.gd",
 	"res://framework/tests/cases/test_mod_loading.gd",
 	"res://framework/tests/cases/test_patches.gd",
@@ -23,6 +25,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_ui_views.gd",
 	"res://framework/tests/cases/test_ui_shell.gd",
 	"res://framework/tests/cases/test_shipyard_refit.gd",
+	"res://framework/tests/cases/test_ship_modules.gd",
 	"res://framework/tests/cases/test_settings.gd",
 	"res://framework/tests/cases/test_contract_flow.gd",
 	"res://framework/tests/cases/test_contract_refresh.gd",
@@ -34,6 +37,8 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_full_clear.gd",
 	"res://framework/tests/cases/test_events_effects.gd",
 	"res://framework/tests/cases/test_save_load.gd",
+	"res://framework/tests/cases/test_save_migration.gd",
+	"res://framework/tests/cases/test_campaign_state.gd",
 	"res://framework/tests/cases/test_zip_pack.gd",
 	"res://framework/tests/cases/test_no_core_ids.gd",
 ]

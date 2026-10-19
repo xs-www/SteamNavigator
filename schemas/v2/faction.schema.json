@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/faction-2.json",
+  "title": "Steam Navigator faction content file (Schema 2.0 draft)",
+  "description": "Persistent faction prototype: attitude thresholds, trade affinity, patrol presence and rivalries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "factions"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/faction_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "attitude_thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostile_below", "friendly_at"],
+      "properties": {
+        "hostile_below": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "friendly_at": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100
+        }
+      }
+    },
+    "faction_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "starting_reputation", "attitude_thresholds", "patrol_strength"],
+      "properties": {
+        "kind": {
+          "enum": ["merchant_guild", "naval", "scientific", "pirates", "civic", "industrial"]
+        },
+        "starting_reputation": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "attitude_thresholds": {
+          "$ref": "#/$defs/attitude_thresholds"
+        },
+        "patrol_strength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "trade_goods": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        },
+        "home_region_tags": {
+          "$ref": "common.schema.json#/$defs/tag_list"
+        },
+        "contract_family": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "rival_factions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        }
+      }
+    }
+  }
+}

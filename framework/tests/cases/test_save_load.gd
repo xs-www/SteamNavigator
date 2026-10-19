@@ -16,7 +16,9 @@ func test_save_and_load_state_hash() -> void:
 	var loaded_state: GameState = loaded["state"]
 	assert_eq(loaded_state.hash(), before, "state hash is identical after load")
 	var header: Dictionary = loaded["header"]
-	assert_eq(String(header["save_schema"]), "1.0", "save schema is recorded")
+	assert_eq(String(header["save_schema"]), "2.0", "save schema is recorded")
+	assert_eq(String(header["state_schema"]), "2.0", "state schema is recorded")
+	assert_eq(String(header["content_schema"]), FrameworkInfo.CONTENT_SCHEMA, "content schema is recorded separately")
 	assert_true(Array(header["mods"]).size() >= 1, "save header records mods")
 	var compatible := context.save.validate_mods(header, context.mod_summaries())
 	assert_true(bool(compatible["ok"]), "current mod set is compatible")

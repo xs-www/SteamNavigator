@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+// Generate framework ContentTypes and the editor's content type catalog from
+// content_types.json.
+//
+//   node tools/gen_content_types.mjs
+//   node tools/gen_content_types.mjs --check
+//
+// The manifest is the single source; the generated files must not be edited by
+// hand. --check exits with 1 when a generated file is missing or stale.
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const MANIFEST = path.join(ROOT, 'content_types.json');
+const GD_OUTPUT = 'framework/modding/content_types.gd';
+const JS_OUTPUT = 'SNModMaker/js/content-types.js';
+const CHECK = process.argv.includes('--check');
+
+function fail(message) {
+  console.error(`[gen-content-types] ${message}`);
+  process.exit(1);
+}
+
+function readManifest() {
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+  } catch (error) {
+    fail(`cannot read content_types.json: ${error.message}`);
+  }
+  if (data.format !== 'steam-navigator-content-types' || data.format_version !== 1) {
+    fail('content_types.json has an unsupported format');
+  }
+  if (!Array.isArray(data.types) || !data.types.length) fail('content_types.json has no types');
+  if (!Array.isArray(data.groups) || !data.groups.length) fail('content_types.json has no groups');
+  return data;
+}
+
+function validate(data) {
+  const groupIds = new Set();
+  for (const group of data.groups) {
+    if (!group.id || !group.label_zh) fail(`invalid group: ${JSON.stringify(group)}`);
+    if (groupIds.has(group.id)) fail(`duplicate group id: ${group.id}`);
+    groupIds.add(group.id);
+  }
+  const categoryIds = new Set();
+  for (const category of data.v2_module_categories || []) {
+    if (!category.id) fail(`invalid v2 module category: ${JSON.stringify(category)}`);
+    if (categoryIds.has(category.id)) fail(`duplicate v2 module category: ${category.id}`);
+    categoryIds.add(category.id);
+  }
+  const keys = new Set();
+  const singulars = new Set();
+  const schemas = new Set();
+  let patches = 0;
+  for (const type of data.types) {
+    for (const field of ['key', 'singular', 'label_zh', 'label_en', 'group', 'schema', 'default_file', 'kind', 'capability']) {
+      if (!type[field]) fail(`type ${type.key || '?'} is missing ${field}`);
+    }
+    if (keys.has(type.key)) fail(`duplicate type key: ${type.key}`);
+    if (singulars.has(type.singular)) fail(`duplicate singular: ${type.singular}`);
+    if (schemas.has(type.schema)) fail(`duplicate schema path: ${type.schema}`);
+    if (!groupIds.has(type.group)) fail(`type ${type.key} references unknown group ${type.group}`);
+    if (type.v2_category && !categoryIds.has(type.v2_category)) {
+      fail(`type ${type.key} references unknown v2 module category ${type.v2_category}`);
+    }
+    if (!fs.existsSync(path.join(ROOT, type.schema))) fail(`schema file is missing: ${type.schema}`);
+    if (!Array.isArray(type.aliases)) fail(`type ${type.key} aliases must be an array`);
+    if (type.v2_target != null && typeof type.v2_target !== 'string') fail(`type ${type.key} v2_target must be a string or null`);
+    if (type.kind === 'patch') patches += 1;
+    if (typeof type.module !== 'boolean') fail(`type ${type.key} must declare module: true/false`);
+    keys.add(type.key);
+    singulars.add(type.singular);
+    schemas.add(type.schema);
+  }
+  if (patches !== 1) fail(`expected exactly one patch type, found ${patches}`);
+  const plannedTypes = new Set();
+  for (const system of data.planned || []) {
+    if (!system.system || !system.capability || !Array.isArray(system.types)) fail('invalid planned system entry');
+    for (const plannedType of system.types) {
+      if (keys.has(plannedType)) fail(`planned type shadows active type: ${plannedType}`);
+      plannedTypes.add(plannedType);
+    }
+  }
+  for (const [draftType, draftSchema] of Object.entries(data.draft_schemas || {})) {
+    if (keys.has(draftType)) fail(`draft type shadows active type: ${draftType}`);
+    if (!plannedTypes.has(draftType)) fail(`draft type is not listed in planned: ${draftType}`);
+    if (!fs.existsSync(path.join(ROOT, draftSchema))) fail(`draft schema file is missing: ${draftSchema}`);
+  }
+}
+
+function constantName(type) {
+  return String(type.singular).toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+}
+
+function generatedHeader(commentPrefix) {
+  return [
+    `${commentPrefix} AUTO-GENERATED from content_types.json; do not edit by hand.`,
+    `${commentPrefix} Regenerate: node tools/gen_content_types.mjs`,
+  ];
+}
+
+function renderGd(data) {
+  const defs = data.types.filter((type) => type.kind === 'definition');
+  const patch = data.types.find((type) => type.kind === 'patch');
+  const modules = data.types.filter((type) => type.module);
+  const lines = [];
+  lines.push('class_name ContentTypes');
+  lines.push('extends RefCounted');
+  for (const line of generatedHeader('##')) lines.push(line);
+  lines.push('##');
+  lines.push('## A content file\'s `content_type` selects both its registry and its JSON');
+  lines.push('## schema. Framework code never refers to concrete content IDs.');
+  lines.push('');
+  for (const type of data.types) lines.push(`const ${constantName(type)} := &"${type.key}"`);
+  lines.push('');
+  lines.push('const SCHEMA_PATHS := {');
+  for (const type of data.types) lines.push(`\t${constantName(type)}: "res://${type.schema}",`);
+  lines.push('}');
+  lines.push('');
+  lines.push('const SINGULAR := {');
+  for (const type of data.types) lines.push(`\t${constantName(type)}: "${type.singular}",`);
+  lines.push('}');
+  lines.push('');
+  lines.push(`const MODULE_TYPES := [${modules.map((type) => constantName(type)).join(', ')}]`);
+  lines.push('');
+  lines.push('');
+  lines.push('static func all() -> Array[StringName]:');
+  lines.push('\tvar types: Array[StringName] = [');
+  const allNames = defs.map((type) => constantName(type));
+  const rows = [];
+  for (let i = 0; i < allNames.length; i += 5) rows.push(allNames.slice(i, i + 5).join(', '));
+  for (let i = 0; i < rows.length; i += 1) lines.push(`\t\t${rows[i]}${i + 1 < rows.length ? ',' : ','}`);
+  lines.push('\t]');
+  lines.push('\treturn types');
+  lines.push('');
+  lines.push('');
+  lines.push('static func registry_types() -> Array[StringName]:');
+  lines.push('\tvar types := all()');
+  lines.push(`\ttypes.append(${constantName(patch)})`);
+  lines.push('\treturn types');
+  lines.push('');
+  lines.push('');
+  lines.push('static func is_known(content_type: StringName) -> bool:');
+  lines.push('\treturn SCHEMA_PATHS.has(content_type)');
+  lines.push('');
+  lines.push('');
+  lines.push('static func is_module(content_type: StringName) -> bool:');
+  lines.push('\treturn MODULE_TYPES.has(content_type)');
+  lines.push('');
+  lines.push('');
+  lines.push('static func is_patch(content_type: StringName) -> bool:');
+  lines.push(`\treturn content_type == ${constantName(patch)}`);
+  lines.push('');
+  lines.push('');
+  lines.push('static func schema_path(content_type: StringName) -> String:');
+  lines.push('\treturn String(SCHEMA_PATHS.get(content_type, ""))');
+  lines.push('');
+  lines.push('');
+  lines.push('static func singular(content_type: StringName) -> String:');
+  lines.push('\treturn String(SINGULAR.get(content_type, ""))');
+  lines.push('');
+  lines.push('');
+  lines.push('static func from_singular(singular_name: String) -> StringName:');
+  lines.push('\tfor content_type in SINGULAR.keys():');
+  lines.push('\t\tif SINGULAR[content_type] == singular_name:');
+  lines.push('\t\t\treturn content_type');
+  lines.push('\treturn &""');
+  return `${lines.join('\n')}\n`;
+}
+
+function renderJs(data) {
+  const groupLabel = new Map(data.groups.map((group) => [group.id, group.label_zh]));
+  const lines = [];
+  lines.push('/*');
+  for (const line of generatedHeader(' *')) lines.push(line);
+  lines.push(' *');
+  lines.push(' * Exposes globalThis.SNContentTypes = { GROUPS, TYPES }.');
+  lines.push(' */');
+  lines.push('(function (root) {');
+  lines.push("  'use strict';");
+  lines.push('');
+  lines.push('  const GROUPS = [');
+  for (const group of data.groups) lines.push(`    ${JSON.stringify(group.label_zh)},`);
+  lines.push('  ];');
+  lines.push('');
+  lines.push('  const TYPES = [');
+  for (const type of data.types) {
+    lines.push('    {');
+    lines.push(`      key: ${JSON.stringify(type.key)},`);
+    lines.push(`      singular: ${JSON.stringify(type.singular)},`);
+    lines.push(`      keyPrefix: ${JSON.stringify(type.key_prefix)},`);
+    lines.push(`      label: ${JSON.stringify(type.label_zh)},`);
+    lines.push(`      en: ${JSON.stringify(type.label_en)},`);
+    lines.push(`      abbr: ${JSON.stringify(type.abbr)},`);
+    lines.push(`      color: ${JSON.stringify(type.color)},`);
+    lines.push(`      group: ${JSON.stringify(groupLabel.get(type.group))},`);
+    lines.push(`      file: ${JSON.stringify(type.default_file)},`);
+    lines.push(`      schema: ${JSON.stringify(path.posix.basename(type.schema))},`);
+    lines.push(`      summary: ${JSON.stringify(type.summary_zh)},`);
+    if (type.kind === 'patch') lines.push('      special: true,');
+    lines.push('    },');
+  }
+  lines.push('  ];');
+  lines.push('');
+  lines.push('  root.SNContentTypes = { GROUPS, TYPES };');
+  lines.push('})(globalThis);');
+  return `${lines.join('\n')}\n`;
+}
+
+function compareOrWrite(relativePath, content) {
+  const absolute = path.join(ROOT, relativePath);
+  const current = fs.existsSync(absolute) ? fs.readFileSync(absolute, 'utf8') : null;
+  if (CHECK) {
+    if (current === content) return true;
+    console.error(`[gen-content-types] stale: ${relativePath} (run node tools/gen_content_types.mjs)`);
+    return false;
+  }
+  if (current !== content) {
+    fs.writeFileSync(absolute, content, 'utf8');
+    console.log(`[gen-content-types] wrote ${relativePath}`);
+  }
+  return true;
+}
+
+const data = readManifest();
+validate(data);
+const results = [
+  compareOrWrite(GD_OUTPUT, renderGd(data)),
+  compareOrWrite(JS_OUTPUT, renderJs(data)),
+];
+if (!results.every(Boolean)) process.exit(1);
+if (CHECK) console.log('[gen-content-types] generated files are up to date');

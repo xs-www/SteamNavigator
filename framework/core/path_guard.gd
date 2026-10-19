@@ -14,7 +14,7 @@ const FORBIDDEN_EXTENSIONS := [
 ]
 
 const CONTENT_EXTENSIONS := [".json"]
-const ASSET_EXTENSIONS := [".png", ".webp", ".svg", ".ogg", ".wav"]
+const ASSET_EXTENSIONS := [".png", ".webp", ".svg", ".ogg", ".wav", ".glb"]
 const LOCALIZATION_EXTENSIONS := [".json", ".csv"]
 
 

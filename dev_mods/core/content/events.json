@@ -21,6 +21,7 @@
 			"effects": [
 			  {"op": "remove_water", "amount": 6},
 			  {"op": "damage_ship", "amount": 2},
+			  {"op": "damage_module", "slot": "boiler", "amount": 0.2},
 			  {"op": "emit_notice", "text_key": "notice.core.overheat.cooled"}
 			]
 		  },
@@ -52,6 +53,7 @@
 			"weight": 1.0,
 			"effects": [
 			  {"op": "damage_ship", "amount": 9},
+			  {"op": "damage_module", "slot": "boiler", "amount": 0.4},
 			  {"op": "add_delay_hours", "amount": 1},
 			  {"op": "emit_notice", "text_key": "notice.core.overheat.forced"}
 			]
