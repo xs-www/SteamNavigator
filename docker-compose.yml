@@ -1,0 +1,32 @@
+# SNModMaker 容器部署：数据只保存在容器侧命名卷，不挂载宿主机仓库。
+#
+#   docker compose up -d --build
+#   docker compose logs -f
+#   docker compose down        # 保留 snmodmaker-data
+#   docker compose down -v     # 连数据一起删除
+#
+# 远程访问用宿主机的 tailscale serve（见 SNModMaker/README.md）：
+#   tailscale serve --bg 8099
+services:
+  snmodmaker:
+    build:
+      context: ./SNModMaker
+      dockerfile: Dockerfile
+    image: snmodmaker:local
+    container_name: snmodmaker
+    restart: unless-stopped
+    ports:
+      # 只发布到宿主机 loopback；外部访问交给 tailscale serve。
+      - "127.0.0.1:${SNMODMAKER_PORT:-8099}:8099"
+    volumes:
+      - snmodmaker-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8099/api/status').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  snmodmaker-data:
+    name: snmodmaker-data

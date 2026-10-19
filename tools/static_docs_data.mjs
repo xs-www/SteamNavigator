@@ -25,6 +25,15 @@ export const FILE_DOCS = {
     ]
   },
 
+  "docker-compose.yml": {
+    role: "SNModMaker 的 Docker Compose 部署：构建零依赖镜像，数据持久化到命名卷 `snmodmaker-data`，只发布到宿主机 loopback。",
+    contracts: [
+      "`ports` 固定 `127.0.0.1:${SNMODMAKER_PORT:-8099}:8099`；远程访问由宿主机 `tailscale serve --bg 8099` 提供 HTTPS，不要用 tailscale funnel。",
+      "`snmodmaker-data` → `/app/data`：容器内保存项目、导出、部署包与空的工作区根，不挂载宿主机仓库，因此不会改 `dev_mods/core`。",
+      "healthcheck 用 Node 内置 fetch 探测 `/api/status`；静态文件变更后需重新 build 镜像。"
+    ]
+  },
+
   "content_types.json": {
     role: "内容类型单一真源：键、单数、Schema 路径、注册表/patch 类型、编辑器展示元数据、v2 模块分类与正式版路线图规划。",
     contracts: [
@@ -1759,7 +1768,7 @@ export const FILE_DOCS = {
   "SNModMaker/tools/serve.mjs": {
     role: "零依赖本地静态服务器 + 磁盘 API：项目工作区、原生模组工作区（dev_mods 原地编辑）、普通导出与发布包模组覆盖部署。",
     contracts: [
-      "仅监听 127.0.0.1；默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` / `SNMODMAKER_WORKSPACE_ROOT` 覆盖目录；工作区根默认是仓库 `dev_mods/`。",
+      "默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可改绑定地址（容器设 `0.0.0.0`），默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` / `SNMODMAKER_WORKSPACE_ROOT` 覆盖目录；工作区根默认是仓库 `dev_mods/`。",
       "默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。",
       "API：status、projects、workspace、exports 与 game-mods；请求体上限 128 MB。",
       "`/api/workspace/<id>` 直接读写 `dev_mods/<id>`：打开时返回 manifest/content/localization 与资产键占位（不含二进制），保存时只写文本文件并删掉 manifest 不再声明的 content/localization 文件；资产目录永远不动。",
@@ -1767,6 +1776,16 @@ export const FILE_DOCS = {
       "游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。",
       "项目先写临时目录再替换，文件路径拒绝绝对路径、`..`、盘符与超过 16 层。",
       "静态文件带 `Cache-Control: no-store`，路径解析后必须位于 SNModMaker 目录内。"
+    ]
+  },
+
+  "SNModMaker/Dockerfile": {
+    role: "零依赖容器镜像：Node 22 Alpine 打包静态编辑器与 tools/，以 node 用户运行，所有可写目录重定向到 /app/data 命名卷。",
+    contracts: [
+      "构建上下文是 `SNModMaker/`（`.dockerignore` 排除本地 `mods/`、`exports/`），支持 `docker build -t snmodmaker:local SNModMaker`。",
+      "设置 `SNMODMAKER_HOST=0.0.0.0` 仅用于容器端口映射；宿主机 compose 仍只发布到 `127.0.0.1`，远程访问交给 tailscale serve。",
+      "`SNMODMAKER_MODS_DIR` / `EXPORTS_DIR` / `GAME_MODS_DIR` / `WORKSPACE_ROOT` 全部指向 `/app/data/*`，镜像层保持只读；工作区根在容器内，不写回宿主机 `dev_mods/core`。",
+      "镜像内预创建 `/app/data/*` 并 `chown node:node`，配合命名卷首挂载继承属主。"
     ]
   },
 
@@ -2536,6 +2555,7 @@ export const GROUPED_ROLES = {
   "SNModMaker/WORKSPACE.md": "原生工作区使用说明：启动本地服务、在编辑器里直接编辑 dev_mods/core、保存边界与发布前校验。",
   "SNModMaker/mods/README.md": "磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。",
   "SNModMaker/exports/README.md": "本地导出目录说明：ZIP 命名与忽略规则。",
+  "SNModMaker/.dockerignore": "Docker 构建上下文过滤：排除本地 mods/、exports/ 与 Docker 自身文件。",
   "SNModMaker/js/schema-bundle.js": "自动生成：嵌入 `/schemas/*.schema.json`。",
   "SNModMaker/js/core-index.js": "自动生成：Core 定义、内容与双语本地化索引。"
 };

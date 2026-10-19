@@ -1,14 +1,14 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-19T21:50:22.750Z",
-  "commit": "0799b28",
+  "generated_at": "2026-10-19T21:55:30.046Z",
+  "commit": "75493ae",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 488,
-    "documented": 158,
-    "grouped": 330
+    "sources": 494,
+    "documented": 160,
+    "grouped": 334
   },
   "files": [
     {
@@ -25,8 +25,21 @@
       "group": "docs/static/README.md"
     },
     {
+      "source": "SNModMaker/.dockerignore",
+      "sha256": "556ab34fdcdcf1b68d3475d511d172acb3eeaaa2cd6cc5a0d7fecd134aa190a0",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/Dockerfile",
+      "sha256": "8909d8c8b4b92c0e88b0987b999cfb99d7cb88e0f195706903fcef9298acd201",
+      "doc": "docs/static/SNModMaker/Dockerfile.md",
+      "status": "documented"
+    },
+    {
       "source": "SNModMaker/README.md",
-      "sha256": "f5862f6d7490a81f866666a63140844b80b5ed39596ec6aaaf8a3d198455eab2",
+      "sha256": "1cc8873bef34b3ea4998b94bfe6d05f154849083ca127a17bddb71d50fd93121",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -581,7 +594,7 @@
     },
     {
       "source": "SNModMaker/tools/serve.mjs",
-      "sha256": "82f0da9e87f99a0036a204999041bc06d853f9dfe5201ef319418a92fdd490d9",
+      "sha256": "115bc86010bf1a2c9f2aa6e09398163fe8330ac056e80d714ae3b7b60f76b285",
       "doc": "docs/static/SNModMaker/tools/serve.mjs.md",
       "status": "documented"
     },
@@ -1245,6 +1258,12 @@
       "doc": "docs/static/dev_scenes/README.md",
       "status": "grouped",
       "group": "docs/static/dev_scenes/README.md"
+    },
+    {
+      "source": "docker-compose.yml",
+      "sha256": "2a0854cc1c03d0d6824dcc996705a4ff3a8a9b8d01e9f8eda23f715fb3dead50",
+      "doc": "docs/static/docker-compose.yml.md",
+      "status": "documented"
     },
     {
       "source": "docs/design/UI_PROTOTYPE.md",
@@ -2402,7 +2421,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "0b5521224d50a9bf18bd9316f357d616392253705537a68b48a8b56e5faa29be",
+      "sha256": "1ac7799e6d219e7bb2dc3103b894e26fd3e2c8b9a1d26045354fb0880ddac204",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -2761,7 +2780,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "54006b6ef551ca8809b80e2bbbe59a470023600cf783d1e80bb37fba34a2e3bc",
+      "sha256": "256b5523dc9f8652d50d4947cbb9a640a863f75181c88c530122a9727e436e57",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -2819,6 +2838,13 @@
     {
       "source": "tools/modeling/briefs/sn_harbor_crane.json",
       "sha256": "a062eef4806bb8cc20f08b920e16eb5a00f1bc181879095bb6deb5f7e09021e6",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/briefs/sn_harbor_town_batch1.json",
+      "sha256": "6c5123265ad462a743628fd9043c7c81173a8c62f2826397cc36b8d52b43b51b",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3013,6 +3039,13 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/export_town_glb.py",
+      "sha256": "4a9268a7254aab329aced2451c9c5f5021a75a2b7628339def6dcc08a495fff7",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/generators/p0_finalize.py",
       "sha256": "d81d6094791a3d2a11d8f1fd6d4b776e17cbc5778e53919c2d0805d7e473399b",
       "doc": "docs/static/tools/README.md",
@@ -3113,6 +3146,13 @@
     {
       "source": "tools/modeling/generators/ship_parts/stern.py",
       "sha256": "9af0186e3d95576746f9b022a71baacac498c227fed153d5d15c8c96b22b57b0",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/sn_harbor_town_generator.py",
+      "sha256": "5ac33ae7666c4bdbbbdeda861a2a1ff952dc32a3d46dda58ee694cf1f9d316bf",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3252,7 +3292,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "233f24f2c873722b7f050f0cb27c333d25a2deca3cb5051949e41fb1cb5943a1",
+      "sha256": "a89d5a82e46fe3d1cdc02de6bb477b3d87ac9fb6b7bfd55e1f2314492bb21f06",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

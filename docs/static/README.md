@@ -16,6 +16,7 @@
 - 释放与导出：[export_presets.cfg](export_presets.cfg.md)、[release.yml](.github/workflows/release.yml.md)
 - 模组制作器：[SNModMaker](SNModMaker/README.md)
 - 内容 CLI：[content.mjs](SNModMaker/tools/content.mjs.md)（agent 无头增删改内容）
+- 容器部署：[docker-compose.yml](docker-compose.yml.md)、[Dockerfile](SNModMaker/Dockerfile.md)（数据在容器卷，配合 tailscale serve）
 - 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)
 
 ## 模块索引
@@ -70,8 +71,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-19T21:50:22.750Z
-- 生成 commit：`0799b28`
+- 生成时间：2026-10-19T21:55:30.046Z
+- 生成 commit：`75493ae`
 - 模式：`compact`；规则版本：`2.0`
 - 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。
 - 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。

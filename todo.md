@@ -133,6 +133,7 @@
 - [x] SNModMaker 部署目标默认指向发布包 `dist/build/<platform>/mods/`（优先已导出的平台目录），`SNMODMAKER_GAME_MODS_DIR` 仍可覆盖
 - [x] SNModMaker 资源页 GLB 缩略图：内置 `js/glb.js` 解析 + `js/model_thumb.js` WebGL 单帧渲染，无第三方依赖；失败保留 GLB 占位
 - [x] Content CLI（agent 无头工作流）：`SNModMaker/tools/content.mjs` 提供 types / describe / list / add / set / loc / rm / clone / validate / new 十个命令，按 Schema 保源增删改定义与本地化；`--json` 单一 JSON 对象 + 退出码 0/1/2，`--dry-run` 预览 diff，SHA-256 并发冲突保护，`--godot` 可调 `sdk/validate.gd`（需 `GODOT_BIN`）；保源编辑器在 `SNModMaker/tools/content_json.mjs`。用法见 [SNModMaker/README.md](SNModMaker/README.md)
+- [x] SNModMaker 容器部署：`SNModMaker/Dockerfile` + 仓库根 `docker-compose.yml`（命名卷保存项目/导出/部署包，不挂载宿主机仓库、不写 `dev_mods/core`）；`SNMODMAKER_HOST` 支持容器内 `0.0.0.0`，宿主机只发布 `127.0.0.1:8099`，远程访问用 `tailscale serve --bg`（tailnet HTTPS，不用 funnel）
 - [ ] 模组管理 UI（启用 / 禁用 / 优先级）
 - [x] 发布链：GitHub Actions tag 发布 Windows/Linux + Core 包 + SHA256
 - [x] 标准便携发布布局：exe 同级内置 `mods/`（core 包）与 `config/`；导出排除 `dev_mods` / `dev_scenes` / `framework/tests`；发布前用 `sdk/validate.gd` 校验 core 资产完整

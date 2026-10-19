@@ -6,6 +6,8 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
+| `.dockerignore` | Docker 构建上下文过滤：排除本地 mods/、exports/ 与 Docker 自身文件。 | 本页 |
+| `Dockerfile` | 零依赖容器镜像：Node 22 Alpine 打包静态编辑器与 tools/，以 node 用户运行，所有可写目录重定向到 /app/data 命名卷。 | [查看](./Dockerfile.md) |
 | `README.md` | 使用说明、数据流、开发约定与已知边界。 | 本页 |
 | `WORKSPACE.md` | 原生工作区使用说明：启动本地服务、在编辑器里直接编辑 dev_mods/core、保存边界与发布前校验。 | 本页 |
 | `css/app.css` | 暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、内容/多语言编辑器、模态框与 Toast。 | [查看](./css/app.css.md) |

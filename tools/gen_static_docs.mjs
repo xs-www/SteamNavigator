@@ -340,6 +340,7 @@ function main() {
   l0.push("- 释放与导出：[export_presets.cfg](export_presets.cfg.md)、[release.yml](.github/workflows/release.yml.md)");
   l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");
   l0.push("- 内容 CLI：[content.mjs](SNModMaker/tools/content.mjs.md)（agent 无头增删改内容）");
+  l0.push("- 容器部署：[docker-compose.yml](docker-compose.yml.md)、[Dockerfile](SNModMaker/Dockerfile.md)（数据在容器卷，配合 tailscale serve）");
   l0.push("- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)");
   l0.push("");
   l0.push("## 模块索引");
@@ -394,7 +395,7 @@ function main() {
   for (const modulePath of MODULE_PATHS) {
     for (const source of moduleSources(modulePath)) sourceSet.add(source);
   }
-  for (const extra of ["project.godot", "content_types.json", "README.md", "todo.md", "export_presets.cfg", ".github/workflows/release.yml", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
+  for (const extra of ["project.godot", "content_types.json", "README.md", "todo.md", "export_presets.cfg", "docker-compose.yml", ".github/workflows/release.yml", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
     if (fs.existsSync(path.join(ROOT, extra))) sourceSet.add(extra);
   }
 

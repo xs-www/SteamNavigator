@@ -114,13 +114,56 @@ DELETE /api/game-mods/<id>
 ```
 
 - 写入 `mods/<id>/` 时同时生成 `.snmodproj.json`（编辑器项目）与 `manifest.json`、`content/`、`localization/`、`assets/`（可直接作为松散模组使用）。
-- 服务只监听 `127.0.0.1`，没有鉴权，适合本机单人使用。
+- 默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可覆盖（容器里设为 `0.0.0.0`），但服务没有鉴权，只应经宿主机端口映射 + `tailscale serve` 之类的可信通道访问。
 - 浏览器自动保存仍走 IndexedDB；磁盘写入是同一份项目的镜像，Ctrl+S 会立即刷新磁盘。
 - 导出菜单的“导出并覆盖到发布包 mods/”默认写入当前平台发布包的 `dist/build/<platform>/mods/<id>.snavmod.zip`（Windows 为 `dist/build/windows/mods/`）；若已存在其他平台的导出目录则优先使用当前平台，重复部署会覆盖稳定文件名，并清理同 ID 的旧 `<id>-<version>.snavmod.zip`，避免游戏加载重复模组。
 - 默认目标由 `tools/game_mods_dir.mjs` 解析：优先 `SNMODMAKER_GAME_MODS_DIR`，其次已有的 `dist/build/*`，最后回退到当前平台目录。若编辑的是另一个游戏安装目录，启动服务前把 `SNMODMAKER_GAME_MODS_DIR` 设为该游戏旁的 `mods/`；开发态调试（编辑器 F5 扫描的 `dist/mods`）也可显式指向 `dist/mods`。项目与普通导出目录仍可分别用 `SNMODMAKER_MODS_DIR`、`SNMODMAKER_EXPORTS_DIR` 调整。
 - 静态托管或 `file://` 打开时 `api/status` 不可用，界面会自动退化为浏览器存储。
 
 ZIP 使用浏览器原生 `CompressionStream('deflate-raw')`；不支持时自动退化为存储（store）模式。Godot 的 `ZIPReader` 对两种模式都可读。
+
+---
+
+## Docker 与 Tailscale 远程访问
+
+仓库根 `docker-compose.yml` + [`Dockerfile`](Dockerfile) 把编辑器打包成零依赖容器：只用 Node 内置模块，数据全部写容器侧命名卷，**不挂载宿主机仓库，也不会改 `dev_mods/core`**。
+
+```powershell
+docker compose up -d --build
+# 本机打开 http://127.0.0.1:8099/
+docker compose logs -f
+docker compose down        # 停止，保留数据卷
+docker compose down -v     # 停止并删除数据卷
+```
+
+容器内数据都在命名卷 `snmodmaker-data` 的 `/app/data` 下：
+
+| 容器路径 | 用途 |
+| --- | --- |
+| `/app/data/mods/` | 编辑器项目副本（普通项目模式） |
+| `/app/data/exports/` | ZIP / 项目文件导出 |
+| `/app/data/game-mods/` | 「导出并覆盖到发布包 mods/」的落点 |
+| `/app/data/workspace/` | 原生工作区根（在容器内，默认空；不会写回宿主机 core） |
+
+- 宿主机只映射 `127.0.0.1:8099`；可用 `SNMODMAKER_PORT` 改宿主端口（`$env:SNMODMAKER_PORT=8100; docker compose up -d`）。
+- 静态文件在镜像里，改 `js/`、`css/`、`index.html` 后要 `docker compose build` 再 `up -d`。
+- 备份数据卷：`docker run --rm -v snmodmaker-data:/data -v "${PWD}:/backup" alpine tar czf /backup/snmodmaker-data.tgz -C /data .`
+- 服务没有鉴权，不要把容器端口发布到 `0.0.0.0` 或公网。
+
+### Tailscale 远程访问
+
+宿主机 Tailscale 登录后，用 Serve 把本机 8099 以 HTTPS 暴露给 tailnet（Windows / Linux 均可）：
+
+```powershell
+tailscale serve --bg 8099
+tailscale serve status
+# 浏览器打开 https://<机器名>.<tailnet>.ts.net/
+tailscale serve reset    # 停止共享
+```
+
+- 只走 tailnet；**不要用 `tailscale funnel`**，它会把无鉴权编辑器公开到互联网。
+- 用 Tailscale ACL 限制可访问该设备的用户/设备；需要额外一层认证时可在前面加 Caddy Basic Auth。
+- `tailscale serve` 提供有效 HTTPS 证书，浏览器处于 secure context，「文件夹导出」等 File System Access 功能可用。
 
 ---
 
@@ -259,6 +302,7 @@ SNModMaker/
 ├── js/io.js                    IndexedDB、文件/文件夹/ZIP 导入、下载与目录写入
 ├── js/ui.js                    表单渲染、条件/效果编辑器、模态框
 ├── js/app.js                   应用状态、事件、撤销、自动保存、视图
+├── Dockerfile                  容器镜像：Node 22 Alpine，数据写入 /app/data（见后文）
 ├── tools/sync-schemas.mjs      重新生成 schema-bundle.js
 ├── tools/sync-core-index.mjs   重新生成 core-index.js
 ├── tools/serve.mjs             本地静态服务 + 磁盘 API（Node 内置模块）

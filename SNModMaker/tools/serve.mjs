@@ -10,7 +10,8 @@
  *
  *   node SNModMaker/tools/serve.mjs [port]
  *
- * Environment overrides (useful for tests and other installs):
+ * Environment overrides (useful for tests, containers and other installs):
+ *   SNMODMAKER_HOST (default 127.0.0.1; set 0.0.0.0 only behind a trusted proxy),
  *   SNMODMAKER_MODS_DIR, SNMODMAKER_EXPORTS_DIR, SNMODMAKER_GAME_MODS_DIR,
  *   SNMODMAKER_WORKSPACE_ROOT (defaults to the repo's dev_mods/)
  *
@@ -28,6 +29,9 @@ import { resolveGameModsDir } from './game_mods_dir.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const port = Number(process.argv[2] || process.env.PORT || 8099);
+// 默认只暴露给本机。容器/反向代理场景用 SNMODMAKER_HOST=0.0.0.0，
+// 但服务没有鉴权，必须只通过 tailscale serve / ACL 之类的可信通道访问。
+const host = process.env.SNMODMAKER_HOST || '127.0.0.1';
 
 const resolveDataDir = (value, fallback) => {
   const target = value ? path.resolve(value) : path.join(root, fallback);
@@ -667,8 +671,8 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(port, '127.0.0.1', () => {
-  console.log(`Steam Navigator Mod Maker: http://127.0.0.1:${port}/`);
+server.listen(port, host, () => {
+  console.log(`Steam Navigator Mod Maker: http://${host}:${port}/`);
   console.log(`Static: ${root}`);
   console.log(`Projects: ${MODS_DIR}`);
   console.log(`Exports:  ${EXPORTS_DIR}`);

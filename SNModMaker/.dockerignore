@@ -1,0 +1,6 @@
+# 构建上下文是 SNModMaker/：本地数据与 Docker 自身文件不进镜像。
+mods/
+exports/
+Dockerfile
+.dockerignore
+*.log
