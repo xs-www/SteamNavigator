@@ -1,6 +1,6 @@
 # `framework/ui/stages/port_stage.gd`
 
-> 作用：固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner）、L3 设施、L5 玩家船、L7 雾带；全程序化、无外部新贴图。
+> 作用：固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街景 town kit、L3 设施、L5 玩家船、L7 雾带；全程序化 + 内容模组 GLB，无外部框架贴图。
 
 - 关键依赖：`LocationStage`、`StageKit`、`ContentAssetLoader`
 - 类型：GDScript 源文件
@@ -10,40 +10,44 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PortStage` | L1 |
-| `enter(payload: Dictionary = {}) -> void` | L192 |
-| `exit() -> void` | L198 |
-| `bind(view_model: Dictionary = {}) -> void` | L202 |
-| `has_visual() -> bool` | L222 |
-| `has_backdrop() -> bool` | L226 |
-| `loaded_banner_path() -> String` | L231 |
-| `facility_count() -> int` | L235 |
-| `filler_count() -> int` | L241 |
-| `facility_visual_kind(facility: String) -> String` | L247 |
-| `facility_anchors() -> Dictionary` | L252 |
-| `facility_screen_anchor(facility: String) -> Vector2` | L266 |
-| `has_ship() -> bool` | L279 |
-| `request_portal(facility: String) -> void` | L284 |
-| `hotspot_anchors() -> Dictionary` | L288 |
-| `foreground_frame() -> Node3D` | L295 |
-| `atmosphere_particle_systems() -> int` | L300 |
-| `atmosphere_layers() -> int` | L305 |
-| `skyline_building_count() -> int` | L310 |
-| `skyline_crane_count() -> int` | L315 |
+| `enter(payload: Dictionary = {}) -> void` | L262 |
+| `exit() -> void` | L268 |
+| `bind(view_model: Dictionary = {}) -> void` | L272 |
+| `has_visual() -> bool` | L293 |
+| `has_backdrop() -> bool` | L297 |
+| `loaded_banner_path() -> String` | L302 |
+| `facility_count() -> int` | L306 |
+| `filler_count() -> int` | L312 |
+| `facility_visual_kind(facility: String) -> String` | L318 |
+| `facility_anchors() -> Dictionary` | L323 |
+| `facility_screen_anchor(facility: String) -> Vector2` | L337 |
+| `has_ship() -> bool` | L350 |
+| `request_portal(facility: String) -> void` | L355 |
+| `hotspot_anchors() -> Dictionary` | L359 |
+| `foreground_frame() -> Node3D` | L366 |
+| `atmosphere_particle_systems() -> int` | L371 |
+| `atmosphere_layers() -> int` | L376 |
+| `skyline_building_count() -> int` | L381 |
+| `skyline_crane_count() -> int` | L386 |
+| `town_prop_count() -> int` | L392 |
+| `town_blockout_count() -> int` | L398 |
 
 ## 契约与约束
 
-- bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` 也可放在根层。
-- `bind()` 幂等：先按 `str(port) + str(ship) + str(root facility_visuals)` 计算签名，相同则直接返回；`enter(payload)` 的 payload 仅在 bind 收到不含 port/ship/facility_visuals 的数据时兜底。
+- bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,town_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` / `town_visuals` 也可放在根层。
+- `bind()` 幂等：先按 `str(port) + str(ship) + str(root facility_visuals) + str(root town_visuals)` 计算签名，相同则直接返回；`enter(payload)` 的 payload 仅在 bind 收到不含 port/ship/facility_visuals/town_visuals 的数据时兜底。
 - 设施顺序固定 `FACILITY_ORDER`（exchange/contracts/supply/intel/shipyard）；present 的设施才有锚点与热点，缺席只放程序化货堆 filler（`filler_count()`），`facility_visual_kind()` 返回 model/billboard/missing。
 - `facility_visuals` 值可为 String 或 Array[String]：能 `ResourceLoader` 加载的按 PackedScene 实例化，否则走 `ContentAssetLoader.instantiate_model()`；路径缺失/实例化失败回退程序化 billboard。
 - L1：有 `banner_path` 且贴图可加载时挂 banner 背板（albedo tint 黄昏化）并隐藏兜底层；无 banner 时 `has_backdrop()` 仍为 false，由 `FallbackBackdrop` 接管——暖霞渐变 `SkyCard` + 2 个 additive 太阳光晕，共 3 层程序化 painted backdrop，无黑盒、无外部贴图。
 - L2（仅无 banner）：双深度带（近带深蓝灰 / 远带暖雾）各 2 簇 + 低矮仓房连接排 + 远岸低雾带 + 灯塔剪影；MultiMesh 批量（box / 塔身 / 塔冠 3 draw），严格站 `SHORE_TOP`、unshaded、无阴影、无发光窗；建筑数 small 7 / medium 10 / large 13、吊机 2 / 2 / 3，`skyline_building_count()` / `skyline_crane_count()` 报告实际数量（有 banner 时均为 0）。
 - L2 实例总数 small 14 / medium 17 / large 20（建筑 + 吊机 + 仓房排/雾带/灯塔），仍在方案 L2 ≤20 预算内；small 的 7 栋低于任务描述的 8 下界，以源码为准。
+- L2b 港口街景：`port.town_visuals`（slot → 已解析 GLB 路径）存在时在码头后方的抬升石广场（`TOWN_GROUND_Y=1.9`、`TOWN_PLAZA` 120×2.2×34）上装配 5 座建筑（`TOWN_SLOTS`：长/短仓库、港务楼、酒馆、货棚，按 slot 命名）、7 段围栏、6 个工人、8 个复用道具（木箱/木桶/煤堆/木料/手推车/煤气灯）、3 艘小船（2 划艇 + 1 驳船）；建筑缺失 GLB 时回退程序化 blockout，围栏/工人/船/装饰缺失则直接省略。
+- town kit 存在时跳过 L2 程序化 skyline（`if _town_visuals.is_empty(): _rebuild_shoreline()`），因为街区已有近景轮廓；town 与 banner 相互独立（有 banner 也可有 town）。
 - `_apply_fallback_visibility()` 以 `use_fallback = not _has_backdrop` 统一控制 `FallbackBackdrop`、`ShoreShelf` 与 `ShoreSteam`：banner 自带天空/城市，兜底层必须整体隐藏；L2 剪影也只在无 banner 时生成。
+- 只读访问器：`foreground_frame()`、`atmosphere_particle_systems()`（1..3，当前固定 3）、`atmosphere_layers()`（有 banner 2 / 无 banner 3）、`skyline_building_count()`（无 banner 7/10/13，有 banner 0）、`skyline_crane_count()`（2/2/3）、`town_prop_count()`（装配的镇区道具数，无 town 时为 0）、`town_blockout_count()`（其中用程序化 blockout 的建筑数）；`has_backdrop()` 语义仍只表示 banner。
 - L6 `foreground_frame()` 始终存在：3 根深色 unshaded 梁（吊臂 0.30 / 钢缆 0.12 / 桅杆 0.18 m）从左上角入镜，用 `_screen_point(u, v, depth)` 钉在固定 16:9 画幅；限定 u<0.24 / v<0.45，不遮挡 HUD、设施招牌与热点标签，不投阴影。
 - L7 大气：常驻 3 个 `GPUParticles3D`（ShipSteam / QuaySteam / ShoreSteam，16–22 粒、3.4–4.6 s、低 alpha 暖灰 + 程序化 radial `GradientTexture2D`）；雾带 billboard 有 banner 2 层 / 无 banner 3 层，`port.id` hash 决定正弦漂移相位；宿主 `process_mode` 停更时粒子与雾带一起停。
-- 预算：全程序化、无新资产；preview ≈114 draws / 17,954 tris，sparse ≈73 / 19,228，控制在 ≤120 draws / ≤60k tris。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop（L2 是常规路径而非罕见回退）。
-- 只读访问器：`foreground_frame()`、`atmosphere_particle_systems()`（1..3，当前固定 3）、`atmosphere_layers()`（有 banner 2 / 无 banner 3）、`skyline_building_count()`（无 banner 7/10/13，有 banner 0）、`skyline_crane_count()`（2/2/3）；`has_backdrop()` 语义仍只表示 banner。
+- 预算目标仍为 ≤120 draws / ≤60k tris；L0/L1/L2/L6/L7 + town kit 全开时的实际 draws/tris 由 `dev_scenes/port_stage` 预览脚本的 `[PortStagePreview] budget` 与 `town` 自查打印给出。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop。
 - 码头是薄甲板桩基栈桥（不是实心箱体）：甲板前缘下方 7 根入水木桩 + 桩帽、纵向横梁与甲板边梁；远景岸线底座 500×1.3×110 把镜头内的水面切边藏起来。
 - `port.size` ∈ small/medium/large → 设施组整体 0.9/1.0/1.15（`SIZE_SCALE`），只缩放设施层，不缩放船与码头。
 - `facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。
@@ -59,7 +63,7 @@
 
 ### `_apply_view_model(port, ship, root_data)`
 
-- 解析 size/scale/palette/visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（无 banner 才建）→ `_apply_fallback_visibility()` → `_rebuild_fog_layers()` → facilities → landmark → ship 的顺序重建；静态层与 L7 粒子跨 bind 复用。
+- 解析 size/scale/palette/visuals/town_visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（仅 `_town_visuals` 为空且无 banner 才建）→ `_apply_fallback_visibility()` → `_rebuild_fog_layers()` → `_rebuild_town()` → facilities → landmark → ship 的顺序重建；静态层与 L7 粒子跨 bind 复用。
 
 ### `_add_fallback_backdrop() / _add_sky_glow()`
 
@@ -106,6 +110,11 @@
 ### `_rebuild_ship(ship)`
 
 - 船体在 `SHIP_SPAWN`（-13.5, 0, 9）、`SHIP_YAW_DEG` 20° 真尺度摆放；复用 `_instantiate_visual()`，成功时按 `StageKit.visual_aabb()` 配泡沫环（覆盖 `boat_yaw` / `boat_foam_width`），失败时 `_disable_boat_foam()` 把泡沫环推到不可见处。
+
+### `_rebuild_town() / _add_town_prop() / _build_town_blockout()`
+
+- `_rebuild_town()` 在 `_content` 下建 `HarborTown`：抬升广场 `TOWN_PLAZA_SIZE` 120×2.2×34（`plaza` 调色板材质）+ MultiMesh 铺装线 + 广场边梁；随后依次装配 `TOWN_SLOTS`（5 建筑）、`TOWN_FENCE_POSITIONS`（7 段）、`TOWN_WORKER_SLOTS`（6 工人）、`TOWN_DECOR_SLOTS`（8 装饰）、`TOWN_BOAT_SLOTS`（3 船）。
+- `_add_town_prop(slot, pos, yaw, scale, blockout_fallback)`：从 `_town_visuals[slot]` 取已解析路径并 `_instantiate_visual()`；建筑槽（blockout_fallback=true）失败时用 `_build_town_blockout()` 生成 box 体 + 双坡屋顶 + 窗/门节奏并计入 `_town_blockout_count`，其余槽失败直接跳过。每个 prop 包在带 yaw/scale 的 holder 下并计入 `_town_prop_count`。
 
 ### `_screen_point(u, v, depth) / _screen_units(...)`
 

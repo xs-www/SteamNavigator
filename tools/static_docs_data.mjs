@@ -400,7 +400,9 @@ export const FILE_DOCS = {
       "船只 ViewModel 给出模块实例摘要 worst_module_condition / damaged_modules / disabled_modules / module_damage_points，顶部信息条据此显示「部件 N · NN%」，健康时不占位。",
       "stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。",
       "`current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。",
-      "`ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。"
+      "`ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。",
+      "`current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从 `core:port_archetype/*` 的 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。",
+      "`current_port.town_visuals` 由 `_resolved_town_visuals(context, source_mod, diorama)` 解析：把 `diorama.town` 的 slot → `model.prop.*` 资产键转成 `asset://<mod>/<key>` 并 `assets.resolve()` 成物理路径；缺键省略，PortStage 对缺失 slot 回退 blockout。"
     ]
   },
 
@@ -633,12 +635,14 @@ export const FILE_DOCS = {
       "先建随机生成树，再补边直到目标边数；要求存在环（非纯链）且起点度数 ≥2。",
       "必需设施标签（造船厂/情报站）必须在起点 max_edges 内；否则重试最多 60 次。",
       "起始煤水必须能抵达至少一个相邻港口，否则重试。",
-      "所有随机来自 `map_generation` 命名流；不使用全局 randf/shuffle。"
+      "所有随机来自 `map_generation` 命名流；不使用全局 randf/shuffle。",
+      "生成的每个港口把所选原型的 `diorama` 深拷贝进 world 港口数据（与 `archetype_id/source_mod/banner_asset/facilities/size` 一起持久化），供 PortStage 的 town kit 使用；旧存档缺少该字段时由 port.view 按原型回填。"
     ],
     l2: {
       "_try_generate(profile, profile_data, hub, rng, ship, attempt)": [
         "港口数与边数从 profile 范围抽样；起点原型按 start_archetype_tags 选择。",
         "先分配起点，再为每个必需设施标签选择最近未分配节点；剩余节点随机补原型。",
+        "写港口数据时复制原型 `data.diorama`（含 `kit/town/facility_visuals/palette/landmark`），之后由 port.view 解析成舞台可用的 `town_visuals` 路径。",
         "最后校验连通性、分支、必需设施距离与起始补给可达性，任一失败返回重试。"
       ]
     }
@@ -879,10 +883,11 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/shell/main.gd": {
-    role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；总览页的 3D 港口舞台宿主与 2D 设施热点层也由 Shell 持有（页面只发切换意图）。",
+    role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。",
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
-      "顶部信息条在船只存在受损部件时追加「部件 N · NN%」chip（来自 port.view.ship 的 damaged_modules / worst_module_condition），健康时不占位；chip 颜色在失效时为红。",
+      "主界面默认 `_overview_stage_mode=true`：全窗 3D 港口舞台是主视图，2D 详细总览收进 `_overview_detail` 抽屉（默认关闭）；两者都只是 UI 会话状态，不写存档。",
+      "紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 7 个导航按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。",
       "main.tscn 静态声明背景、菜单遮罩、滚动内容根、页脚、音频与 TransitionLayer；main.gd 通过 @onready 绑定，不再在运行时创建固定外壳。",
       "已迁移页面由 PackedScene 实例化：Shell 负责查询并调用 bind，页面只发 command_requested/navigation_requested/action_requested 意图，不接触 AppContext。",
       "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
@@ -913,28 +918,43 @@ export const FILE_DOCS = {
       "船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复纵剖图与选中分类。",
       "委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。",
       "通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。",
-      "反馈5：顶部信息条固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity。",
+      "反馈5：紧凑 chrome 固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity；总览底部状态条再显示耐久/货舱/煤/水/受损/最新通告，避免信息只存在于详细抽屉。",
       "反馈6：总览“当前目标”显示通关条件清单（主线 n/5 → 大型船体 → 锅炉 → ≥1 货舱 → 造船厂组装），主线完成后给出下一步提示；数据来自 port.view.victory.conditions 与 contracts.main_done/main_total。船厂页不再重复通关清单，只做组件分类入口。",
       "反馈3：情报页用 SNIntelTable 渲染 intel.view 的 columns/rows 矩阵（含未知港口列），替代旧的逐港商品表格。",
       "反馈4：打造订单与在港等待迁入船厂改装态「杂项」页签：等待按钮按 wait_options 生成 6/12/24 小时 `port.wait`，总览快捷入口同样提供等待按钮；模块类分类内保留「按配方打造」，打造按钮文案带工时。",
       "反馈2：补给卡绑定 SNSupplyCard 时传入 _tr 回调，显示“上限损失/剩余可装”本地化文案。",
       "`_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。",
-      "总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 是 UI 会话状态，不写存档。",
-      "舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；2D 热点层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有热点按钮吃点击。",
-      "`_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空热点。",
-      "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/palette/landmark_path`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`（替代原来内联在 `_overview_model` 的解析）。",
-      "热点用 `facility_anchors()` → `facility_screen_anchor()` 投影成 136×36 的 `SNGhostButton`，按钮中心落在投影点；`_refresh_port_hotspots_soon()` 做两次 deferred 布局（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。",
-      "加载失败 `_on_port_stage_fallback(reason)`：置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 模式、回退 2D、写状态提示 `ui.error.port_stage_unavailable` 并 deferred refresh。",
-      "总览页在 stage 模式下只保留「返回总览」控制行 + expanding spacer，让全窗 3D 舞台露出；顶部 HUD/导航/状态条仍在页面外，不随切换重建。"
+      "总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 默认 true（3D 是主视图），`_overview_detail` 默认 false。",
+      "舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。",
+      "`_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。",
+      "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/palette/landmark_path`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。",
+      "两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；`PORT_SIGN_WIDTH/HEIGHT` 172×42、`PORT_SIGN_MARGIN` 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「出航 ▶」招牌（`Hotspot_voyage`）。",
+      "招牌布局避让紧凑 chrome 与底部状态条：`_port_hud_top_safe()` 取 `_top_chrome` 底边、`_port_hud_bottom_safe()` 取状态条顶边；`_refresh_port_hotspots_soon()` 做两次 deferred（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。",
+      "底部状态条（`_port_status_bar`，`PORT_STATUS_BAR_HEIGHT=60`）只在 overview 显示：耐久/货舱/煤/水/受损模块 + 最新通告（沿用 `_notice_text` 模板填充）+「详细总览/返回主界面」+ 出航 + 等待 12 小时（`port.wait`）；显示时隐藏 footer 并增大 `PageMargin` 底部预留。",
+      "详细总览抽屉：`_on_overview_detail_toggle()` 切换 `_overview_detail`，抽屉用原 2D 面板（含 `_victory_plan`）覆盖在舞台上方；舞台宿主不销毁，招牌层隐藏，关闭后回到裸舞台；离开 stage、切到非 overview、重开/继续游戏与加载失败都会复位抽屉。",
+      "2D 回退：chrome 上的「2D 总览」按钮切换 `_overview_stage_mode`；舞台加载失败 `_on_port_stage_fallback(reason)` 置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 与抽屉、回退 2D、提示 `ui.error.port_stage_unavailable` 并 deferred refresh。",
     ],
     l2: {
-      "_sync_port_stage(data) / _ensure_port_stage_host()": [
-        "显示条件 = `has_run && !at_sea && _active_screen == \"overview\" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，并把热点层置可见。",
-        "宿主与热点层的层级通过 `move_child(..., $Background.get_index() + 1)` / `(..., $PageMargin.get_index() + 1)` 固定：3D 在背景之上、2D UI 之下；热点层在页面之后，透明区域点击落回页面。"
+      "_build_top_chrome(app, data, show_nav)": [
+        "一个半透明 `PanelContainer`（`_chrome_style()`：深青 0.84 + 黄铜底边）内放两行 `HBoxContainer`：第一行品牌/状态徽标/版本 + 港口·时间·金钱·声望 chip + 阶段切换（overview 且场景可用时才出现，「2D 总览/俯瞰港口」）+ 诊断/刷新；第二行剩余载重/货舱/煤/水/耐久/受损 chip + 7 个导航按钮。",
+        "`show_nav=false`（在航）时不挂导航；最小高度由 chip 字号与 panel margin 决定，`test_ui_shell` 断言 ≤130 px。每个页面共用同一份 chrome。"
       ],
-      "_layout_port_hotspots() / _on_port_hotspot(facility)": [
-        "每次重排先清空旧按钮；只对 `facility_anchors()` 中设施生成热点，投影返回 `ZERO` 的跳过；按钮尺寸 136×36，位置为 `normalized × 层尺寸 - size/2`。",
-        "点击热点查 `PORT_STAGE_FACILITY_SCREENS` 得到 screen id 后走 `_on_nav`，与顶部导航共用同一条页面切换路径；未知设施直接 return。"
+      "_set_port_status_bar_visible(visible, data) / _refresh_port_status_bar(data)": [
+        "状态条懒创建为全窗底部锚定的 `PanelContainer`（高 60、左右 20 边距、位于 fade 之下），只在 overview 显示；显示时隐藏 footer，并把 `PageMargin` 底部 margin 从 56 提到 84，避免遮住页面最后一行。",
+        "内容每次刷新重建：耐久/货舱/煤/水/受损 chip + 最新通告（`_latest_notice_text` → `_notice_text`）+「详细总览/返回主界面」（仅 stage 模式）+「出航 ▶」+「等待 12 小时」（`port.wait`）。"
+      ],
+      "_layout_port_hotspots() / _layout_sign_column() / _port_sign()": [
+        "清空旧招牌后按 `facility_screen_anchor()` 把 present 设施分左右两列（x<0.5 / ≥0.5），同列按投影 y 排序，在两列各自的 safe 区内垂直居中均匀排布（172×42、gap 10）。",
+        "safe 区来自真实 HUD 高度：顶部 = `_top_chrome` 底边 + 8，底部 = 状态条顶边（未建时回退 48 px）；右列底部预留「出航」招牌位，`Hotspot_voyage` 固定在右下。",
+        "点击招牌走 `_on_port_hotspot`：voyage 直接 `_on_nav(\"voyage\")`，其余查 `PORT_STAGE_FACILITY_SCREENS` 后与顶部导航同一路径；抽屉打开或舞台不活跃时整层不生成招牌。"
+      ],
+      "_sync_overview_detail_backdrop() / _place_overview_detail_backdrop()": [
+        "抽屉用不透明 `ColorRect(COLOR_BG)` 盖住舞台（不盖 chrome/状态条），`mouse_filter=IGNORE` 不抢滚动；只通过 sibling index 调整保证它在 `PageMargin` 之下。",
+        "`_sync_overview_detail_backdrop()` 仅在 `_overview_detail && _port_stage_active()` 时显示；隐藏舞台、离开 overview 或加载失败时同步关闭，招牌层同时隐藏。"
+      ],
+      "_sync_port_stage(data) / _ensure_port_stage_host()": [
+        "显示条件 = `has_run && !at_sea && _active_screen == \"overview\" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，再同步抽屉 backdrop 与招牌层。",
+        "宿主/招牌层/抽屉 backdrop 的层级用 `move_child(..., $Background.get_index() + 1)`、`(..., $PageMargin.get_index() + 1)` 与 `_place_overview_detail_backdrop()` 固定：3D 在背景之上、2D UI 之下，抽屉 backdrop 在页面之下。"
       ]
     }
   },
@@ -983,7 +1003,7 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/screens/port/overview_screen.gd": {
-    role: "港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；支持 2D 总览与 3D 港口舞台两种密度（stage 模式只留控制行，让 Shell 的全窗舞台露出）。",
+    role: "港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。",
     dependencies: ["MapCanvas", "SNResourceMeter", "SNBadge", "SNSectionHeader", "ClockService", "steam_navigator_theme.tres"],
     contracts: [
       "bind(vm, translate) 接收 Shell 组合后的 banner_path、map、current_port、contracts、victory、ship、debt 与 notice_texts，不访问 AppContext、QueryBus、注册表或资产服务。",
@@ -993,10 +1013,10 @@ export const FILE_DOCS = {
       "构筑胜利条件直接取 contracts 进度与 victory.conditions 展示，不在页面重新判断通关。",
       "目标清单等密集横向字段保持单行，避免右侧说明被压缩成逐字竖排并撑高卡片。",
       "页面可重复 bind，每次清理旧节点；海图仍由独立 map_canvas.tscn 负责绘制。",
-      "新增 `signal stage_toggle_requested`：页面只表达「切换 2D/3D 总览」意图；舞台宿主的创建、显隐与回退都在 Shell，页面不持有 SNStageHost。",
-      "`bind(vm, translate)` 读 `stage_available` / `stage_mode`（`stage_mode` 需同时 stage_available）；stage 模式下只添加 `_stage_control_row(true)` + expanding spacer 后直接返回，不渲染横幅/海图/面板。",
-      "普通模式在 hero 之前添加同一行 `_stage_control_row(false)`：按钮文案 `ui.button.port_stage`（俯瞰港口）/ stage 模式 `ui.button.overview_back`（返回总览），旁边是 `ui.hint.port_stage` 提示；按钮发 `stage_toggle_requested`。",
-      "`_stage_control_row(in_stage)` 是本次唯一新增的 UI；其余布局与数据契约不变，页面仍不访问 AppContext、QueryBus 或资产服务。"
+      "有两个意图信号：`stage_toggle_requested`（2D/3D 总览切换）与 `detail_toggle_requested`（详细总览抽屉开关）；舞台宿主、抽屉 backdrop、状态条与回退都在 Shell，页面不持有 SNStageHost。",
+      "`bind(vm, translate)` 读 `stage_available/stage_mode/overview_detail`；当 `overview_detail && stage_available` 时先加 `_detail_header()`（「返回主界面」按钮 + `ui.hint.overview_detail` 提示），再 `_build_detail(vm)` 渲染原 2D 面板（含 victory plan），该路径是抽屉内容。",
+      "stage_mode 且未开抽屉：只加 expanding spacer 后直接返回，让 Shell 的全窗 3D 舞台露出；2D 回退模式在 hero 前加 `_stage_control_row(false)`（`ui.button.port_stage`「俯瞰港口」，发 stage_toggle_requested），同时渲染完整 `_build_detail(vm)`。",
+      "`_build_detail(vm)` 只是原总览面板的入口重构，横幅/海图/左右面板/通告布局与数据契约不变；页面仍不访问 AppContext、QueryBus 或资产服务。"
     ]
   },
 
@@ -1353,21 +1373,23 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/stages/port_stage.gd": {
-    role: "固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner）、L3 设施、L5 玩家船、L7 雾带；全程序化、无外部新贴图。",
+    role: "固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街景 town kit、L3 设施、L5 玩家船、L7 雾带；全程序化 + 内容模组 GLB，无外部框架贴图。",
     dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
     contracts: [
-      "bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` 也可放在根层。",
-      "`bind()` 幂等：先按 `str(port) + str(ship) + str(root facility_visuals)` 计算签名，相同则直接返回；`enter(payload)` 的 payload 仅在 bind 收到不含 port/ship/facility_visuals 的数据时兜底。",
+      "bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,town_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` / `town_visuals` 也可放在根层。",
+      "`bind()` 幂等：先按 `str(port) + str(ship) + str(root facility_visuals) + str(root town_visuals)` 计算签名，相同则直接返回；`enter(payload)` 的 payload 仅在 bind 收到不含 port/ship/facility_visuals/town_visuals 的数据时兜底。",
       "设施顺序固定 `FACILITY_ORDER`（exchange/contracts/supply/intel/shipyard）；present 的设施才有锚点与热点，缺席只放程序化货堆 filler（`filler_count()`），`facility_visual_kind()` 返回 model/billboard/missing。",
       "`facility_visuals` 值可为 String 或 Array[String]：能 `ResourceLoader` 加载的按 PackedScene 实例化，否则走 `ContentAssetLoader.instantiate_model()`；路径缺失/实例化失败回退程序化 billboard。",
       "L1：有 `banner_path` 且贴图可加载时挂 banner 背板（albedo tint 黄昏化）并隐藏兜底层；无 banner 时 `has_backdrop()` 仍为 false，由 `FallbackBackdrop` 接管——暖霞渐变 `SkyCard` + 2 个 additive 太阳光晕，共 3 层程序化 painted backdrop，无黑盒、无外部贴图。",
       "L2（仅无 banner）：双深度带（近带深蓝灰 / 远带暖雾）各 2 簇 + 低矮仓房连接排 + 远岸低雾带 + 灯塔剪影；MultiMesh 批量（box / 塔身 / 塔冠 3 draw），严格站 `SHORE_TOP`、unshaded、无阴影、无发光窗；建筑数 small 7 / medium 10 / large 13、吊机 2 / 2 / 3，`skyline_building_count()` / `skyline_crane_count()` 报告实际数量（有 banner 时均为 0）。",
       "L2 实例总数 small 14 / medium 17 / large 20（建筑 + 吊机 + 仓房排/雾带/灯塔），仍在方案 L2 ≤20 预算内；small 的 7 栋低于任务描述的 8 下界，以源码为准。",
+      "L2b 港口街景：`port.town_visuals`（slot → 已解析 GLB 路径）存在时在码头后方的抬升石广场（`TOWN_GROUND_Y=1.9`、`TOWN_PLAZA` 120×2.2×34）上装配 5 座建筑（`TOWN_SLOTS`：长/短仓库、港务楼、酒馆、货棚，按 slot 命名）、7 段围栏、6 个工人、8 个复用道具（木箱/木桶/煤堆/木料/手推车/煤气灯）、3 艘小船（2 划艇 + 1 驳船）；建筑缺失 GLB 时回退程序化 blockout，围栏/工人/船/装饰缺失则直接省略。",
+      "town kit 存在时跳过 L2 程序化 skyline（`if _town_visuals.is_empty(): _rebuild_shoreline()`），因为街区已有近景轮廓；town 与 banner 相互独立（有 banner 也可有 town）。",
       "`_apply_fallback_visibility()` 以 `use_fallback = not _has_backdrop` 统一控制 `FallbackBackdrop`、`ShoreShelf` 与 `ShoreSteam`：banner 自带天空/城市，兜底层必须整体隐藏；L2 剪影也只在无 banner 时生成。",
+      "只读访问器：`foreground_frame()`、`atmosphere_particle_systems()`（1..3，当前固定 3）、`atmosphere_layers()`（有 banner 2 / 无 banner 3）、`skyline_building_count()`（无 banner 7/10/13，有 banner 0）、`skyline_crane_count()`（2/2/3）、`town_prop_count()`（装配的镇区道具数，无 town 时为 0）、`town_blockout_count()`（其中用程序化 blockout 的建筑数）；`has_backdrop()` 语义仍只表示 banner。",
       "L6 `foreground_frame()` 始终存在：3 根深色 unshaded 梁（吊臂 0.30 / 钢缆 0.12 / 桅杆 0.18 m）从左上角入镜，用 `_screen_point(u, v, depth)` 钉在固定 16:9 画幅；限定 u<0.24 / v<0.45，不遮挡 HUD、设施招牌与热点标签，不投阴影。",
       "L7 大气：常驻 3 个 `GPUParticles3D`（ShipSteam / QuaySteam / ShoreSteam，16–22 粒、3.4–4.6 s、低 alpha 暖灰 + 程序化 radial `GradientTexture2D`）；雾带 billboard 有 banner 2 层 / 无 banner 3 层，`port.id` hash 决定正弦漂移相位；宿主 `process_mode` 停更时粒子与雾带一起停。",
-      "预算：全程序化、无新资产；preview ≈114 draws / 17,954 tris，sparse ≈73 / 19,228，控制在 ≤120 draws / ≤60k tris。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop（L2 是常规路径而非罕见回退）。",
-      "只读访问器：`foreground_frame()`、`atmosphere_particle_systems()`（1..3，当前固定 3）、`atmosphere_layers()`（有 banner 2 / 无 banner 3）、`skyline_building_count()`（无 banner 7/10/13，有 banner 0）、`skyline_crane_count()`（2/2/3）；`has_backdrop()` 语义仍只表示 banner。",
+      "预算目标仍为 ≤120 draws / ≤60k tris；L0/L1/L2/L6/L7 + town kit 全开时的实际 draws/tris 由 `dev_scenes/port_stage` 预览脚本的 `[PortStagePreview] budget` 与 `town` 自查打印给出。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop。",
       "码头是薄甲板桩基栈桥（不是实心箱体）：甲板前缘下方 7 根入水木桩 + 桩帽、纵向横梁与甲板边梁；远景岸线底座 500×1.3×110 把镜头内的水面切边藏起来。",
       "`port.size` ∈ small/medium/large → 设施组整体 0.9/1.0/1.15（`SIZE_SCALE`），只缩放设施层，不缩放船与码头。",
       "`facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。",
@@ -1380,7 +1402,7 @@ export const FILE_DOCS = {
         "静态层只建一次，顺序：材质 → 环境 → L1 兜底 → 双层水面 → 桩基码头 → 相机 → L6 前景框 → L7 粒子。环境为 sky 模式黄昏调色 + 深度雾 70–450 m + 环境光 0.6 + 暖 key(1.7)/冷 fill(0.5) 无阴影；`ProceduralSkyMaterial` 调 `sky_energy_multiplier=1.12`、`sun_angle_max=18`、`sun_curve=0.22`，让程序化天空与兜底 painted sky 同属一个暖色 grade。"
       ],
       "_apply_view_model(port, ship, root_data)": [
-        "解析 size/scale/palette/visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（无 banner 才建）→ `_apply_fallback_visibility()` → `_rebuild_fog_layers()` → facilities → landmark → ship 的顺序重建；静态层与 L7 粒子跨 bind 复用。"
+        "解析 size/scale/palette/visuals/town_visuals/banner 后 `_clear_dynamic()`，按 backdrop → shoreline（仅 `_town_visuals` 为空且无 banner 才建）→ `_apply_fallback_visibility()` → `_rebuild_fog_layers()` → `_rebuild_town()` → facilities → landmark → ship 的顺序重建；静态层与 L7 粒子跨 bind 复用。"
       ],
       "_add_fallback_backdrop() / _add_sky_glow()": [
         "`FallbackBackdrop` 在 `_ready` 建一次：8×256 `GradientTexture2D` 暖霞 SkyCard（`SKY_CARD_SIZE` 340×100）+ `SunHalo`（90 m，alpha 0.12）+ `SunCore`（18 m，alpha 0.62）；太阳位置由 `_screen_point(0.70, 0.10, 118)` 钉在画幅右上。",
@@ -1416,6 +1438,10 @@ export const FILE_DOCS = {
       ],
       "_rebuild_ship(ship)": [
         "船体在 `SHIP_SPAWN`（-13.5, 0, 9）、`SHIP_YAW_DEG` 20° 真尺度摆放；复用 `_instantiate_visual()`，成功时按 `StageKit.visual_aabb()` 配泡沫环（覆盖 `boat_yaw` / `boat_foam_width`），失败时 `_disable_boat_foam()` 把泡沫环推到不可见处。"
+      ],
+      "_rebuild_town() / _add_town_prop() / _build_town_blockout()": [
+        "`_rebuild_town()` 在 `_content` 下建 `HarborTown`：抬升广场 `TOWN_PLAZA_SIZE` 120×2.2×34（`plaza` 调色板材质）+ MultiMesh 铺装线 + 广场边梁；随后依次装配 `TOWN_SLOTS`（5 建筑）、`TOWN_FENCE_POSITIONS`（7 段）、`TOWN_WORKER_SLOTS`（6 工人）、`TOWN_DECOR_SLOTS`（8 装饰）、`TOWN_BOAT_SLOTS`（3 船）。",
+        "`_add_town_prop(slot, pos, yaw, scale, blockout_fallback)`：从 `_town_visuals[slot]` 取已解析路径并 `_instantiate_visual()`；建筑槽（blockout_fallback=true）失败时用 `_build_town_blockout()` 生成 box 体 + 双坡屋顶 + 窗/门节奏并计入 `_town_blockout_count`，其余槽失败直接跳过。每个 prop 包在带 yaw/scale 的 holder 下并计入 `_town_prop_count`。"
       ],
       "_screen_point(u, v, depth) / _screen_units(...)": [
         "用固定 FOV 与 16:9（1440/900）把归一化屏幕坐标换算成沿相机前向 `depth` 米处的世界点，供 SunHalo/SunCore、L6 前景框与 L7 雾带共用；换机位或窗口比例时这三层随画幅一起重算。"
@@ -2064,7 +2090,7 @@ export const FILE_DOCS = {
   },
 
   "framework/tests/cases/test_ui_shell.gd": {
-    role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖总览页 3D 港口舞台与 2D 设施热点（2.5D 第三切片）。",
+    role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 两侧招牌 + 底部状态条 + 详细总览抽屉 + 2D 回退）。",
     contracts: [
       "首帧运行器让 `_ready` 正常投递，因此控件树（含 SNSectionHeader 等自行构建子节点的组件）与游戏内一致。",
       "覆盖信息条（当前港口 + 剩余载重/剩余舱容，反馈 5）、通关清单与两种提示分支（反馈 6）；期望值独立复算（RegistryHub 翻译 + ShipOps 重量/舱容 + printf），不使用被测 helper 自证。通关清单只在总览页渲染：船厂页断言不再出现 `ui.victory.plan_title`，改为出现「组件」分类入口。",
@@ -2072,13 +2098,16 @@ export const FILE_DOCS = {
       "覆盖船厂下单按钮 → CraftOps 订单 → 在港等待按钮 → 时间推进与成品入下单港仓库（反馈 4，经由真实按钮 pressed 信号）；打造入口在改装态模块分类内，下单后重建的页面必须保持改装态与分类，24 小时等待按钮在「杂项」页签。",
       "场景接线断言覆盖独立总览、市场、委托、船厂、补给、情报、出航页面及四个菜单页面；船厂流程从 ShipyardScreen 的真实按钮驱动。",
       "流程场景接线覆盖港口记忆、抵达结算、航行中、航行事件与通关总结，逐一调用 Shell 构建入口并按脚本类型断言实例。",
+      "依赖详细总览面板的旧用例（信息条、通关清单、航行记录）先在 `_overview_detail = true` 下 `_refresh()`，因为默认主视图是裸 3D 舞台；其余断言不改。",
       "覆盖设置/总览/市场/船厂/港口记忆密集字段禁用自动换行、市场与快照单元格最小宽度，以及情报矩阵固定元数据列、可扩展港口列、最小列宽和深色单元格背景。",
       "覆盖补给页损失带：买煤后水的 meter.loss_value/cap_loss 与 baseline 跨度（反馈 2）、情报页 SNIntelTable 与未知港口掩码（反馈 3，列数对照 MapOps.ports）。",
       "覆盖「航行记录」：真实下单 + 等待后在 zh 与 en 两种 locale 下逐行断言通报无 `%s/%d` 残留、无裸键，并与**逐语言写死的期望句子**相等（模板槽位互换照样能渲染，只有字面期望能抓住「某一种语言的文案说反了」；en 只写错顺序时该用例会失败）。",
       "扫描 domain/application 源码里所有 `push_notice(\"…\")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。",
       "组件按路径 preload，不依赖编辑器全局类缓存。",
-      "总览 3D 舞台用例（`test_overview_can_show_the_3d_port_stage_with_facility_hotspots`）：seed 5205 真实挂载外壳 → 切到 overview 断言默认 2D、`_port_stage_available()` 为真；调 `_on_overview_stage_toggle()` 后断言 `_overview_stage_mode`、宿主可见、挂载 `PortStage`、`stage_id()==\"port\"`、设施数 = `_last_port_view.current_port.facilities`、`has_ship()`、`_port_stage_active()`。",
-      "同一用例断言 2D 热点与页面共存：视口设 1440×900 后 `_layout_port_hotspots()`，热点 Button 数 = `facility_count()`，且 2D 总览页仍挂载；离开总览到市场隐藏舞台，返回恢复，再 toggle 关闭后宿主隐藏。"
+      "`test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 7 个导航按钮、诊断/刷新按钮全部保留。",
+      "同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_voyage` 固定在右下）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market；切到市场后紧凑 chrome 仍在、舞台/状态条隐藏。",
+      "`test_overview_stage_falls_back_to_the_usable_2d_overview`：调 `_on_port_stage_fallback` 后 `_port_stage_load_failed` 记忆、stage 模式关闭、2D 地图挂载、显示 `ui.error.port_stage_unavailable`、导航仍可用。",
+      "`test_overview_status_strip_and_detail_drawer`：底部状态条可见且最小高度 ≤72，含耐久/货舱/受损/最新通告与「详细总览/出航/等待 12 小时」；打开抽屉后地图与 `ui.victory.plan_title` 出现、舞台未销毁、backdrop 显示、招牌隐藏；返回主界面后抽屉关闭；点等待按钮让 `GameState.now()` +12 h；切到 intel 时状态条隐藏、返回总览恢复、点出航进入 voyage 页。"
     ]
   },
 
@@ -2099,7 +2128,7 @@ export const FILE_DOCS = {
   },
 
   "framework/tests/cases/test_stage_host.gd": {
-    role: "2.5D 舞台契约测试（13 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal，以及 PortStage 场景填充的 5 个只读访问器。",
+    role: "2.5D 舞台契约测试（17 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal、场景填充的 5 个只读访问器，以及港口街景 town kit 的装配/blockout/查询接线。",
     contracts: [
       "全部是同步函数（无 await）：节点在同一步内加入 SceneTree 即同步派发 `_ready` 与 `add_child` 通知，挂载/卸载可在一步内断言；每个用例自建节点并在结尾 free，避免残留节点影响其他套件。",
       "LocationStage：裸节点 `stage_id` 为空、`has_visual()` true、`hotspot_anchors()` 空、`portal_requested` 可发。",
@@ -2111,7 +2140,11 @@ export const FILE_DOCS = {
       "PortStage 投影锚点断言有限值，缺席设施投影返回 `Vector2.ZERO`；`has_backdrop()` 在无 banner 时为 false。",
       "场景填充访问器（无 banner、medium）：`foreground_frame()` 非空、`atmosphere_particle_systems()` ∈ 1..3、`atmosphere_layers()>=1`、`skyline_building_count()==10`、`skyline_crane_count()` ∈ 2..3、`has_backdrop()==false`。",
       "size 缩放：small/medium/large 三次 bind 分别断言 `skyline_building_count()` 为 7/10/13，large 吊机 ≤3；铁港 banner 绑定后 `has_backdrop()==true`、L2 建筑/吊机归零，L6/L7 仍存在；去掉 banner 后 L2 恢复为 10。",
-      "隐藏/显示宿主：`set_stage_visible(false/true)` 往返后访问器返回同一前景框节点，粒子/雾带/建筑/吊机计数保持稳定。"
+      "隐藏/显示宿主：`set_stage_visible(false/true)` 往返后访问器返回同一前景框节点，粒子/雾带/建筑/吊机计数保持稳定。",
+      "town kit 装配（`test_port_stage_town_kit_mounts_full_streetscape`）：`TOWN_VISUALS`（10 个 SN_HT_* + 6 个复用道具路径）经 `port.town_visuals` 绑定后 `town_prop_count()==29`（5 建筑 + 7 围栏 + 6 工人 + 8 装饰 + 3 船）、`town_blockout_count()==0`；有 banner 时 town 仍为 29（town 与 banner 独立）。",
+      "无 town kit：`town_prop_count()==5`、`town_blockout_count()==5`（5 座建筑 blockout），且 L2 skyline 计数仍按无 banner 规则生成（town 缺失才建 L2）。",
+      "非法 town 路径：单个建筑路径改成不存在文件 → 该建筑回退 blockout（blockout=1、prop 仍 29）；全部路径非法 → 5 个 blockout、围栏/工人/船/装饰缺失（prop=5）。",
+      "`port.view` 端到端：`bootstrap_core()` + `run.start` 后执行 port.view，`current_port.diorama.kit` 非空、`town_visuals` 16 项且路径以 `res://` 开头；用该 payload bind PortStage 后 town 仍为 29/0（旧存档按 archetype 回填）。"
     ]
   },
 
@@ -2190,13 +2223,14 @@ export const FILE_DOCS = {
   },
 
   "dev_scenes/port_stage/port_stage_preview.gd": {
-    role: "PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals GLB）两份样例 ViewModel，并打印场景填充/前景框投影/预算自查。",
+    role: "PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 街道 town kit + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals/town_visuals）两份样例 ViewModel，并打印场景填充/前景框投影/预算与 town 自查。",
     dependencies: ["SNStageHost", "framework/ui/stages/port_stage.tscn"],
     contracts: [
       "`set_variant(\"preview\"|\"sparse\")` 不重挂舞台，只重新 bind 样例 payload；`current_variant()` 返回当前样例。",
-      "`sparse` 同时覆盖三条回退分支：L1 无 banner（painted backdrop + L2 剪影 + 3 层雾带）、根层 `facility_visuals` GLB 替换、`hull_model_path` 为空时按 `hull_tier` 回退；`preview` 走铁港 banner，L2 建筑/吊机数为 0。",
+      "`TOWN_VISUALS` 是 16 项 dev 路径映射（10 个 `res://dev_mods/core/assets/models/props/SN_HT_*.glb` + 6 个复用道具 crate/barrel/coal_pile/timber_stack/handcart/gas_lamp），两份 payload 都带 `town_visuals`，模拟 `port.view` 解析后的结果。",
+      "`sparse` 同时覆盖：L1 无 banner（painted backdrop + 3 层雾带）、根层 `facility_visuals`、`hull_model_path` 为空时按 `hull_tier` 回退；`preview` 走铁港 banner + town 街景（town 与 banner 独立）。",
       "每个 variant 打印设施 kinds / filler 数 / backdrop / ship 与投影后的设施锚点，便于截图时核对。",
-      "`_print_scene_fill()` 只读自查：打印 particles / fog_layers / skyline_buildings / skyline_cranes、`foreground_frame()` 的屏幕 uv bbox、mesh/particle/tri 预算，以及 `FallbackBackdrop` 各子节点的可见性/尺寸与中心 uv；`_count_meshes()` / `_mesh_triangles()` 递归统计 MultiMesh / GPUParticles3D / MeshInstance3D。",
+      "`_print_scene_fill()` 只读自查：打印 particles / fog_layers / skyline_buildings / skyline_cranes / town_props / town_blockouts、`foreground_frame()` 的屏幕 uv bbox、mesh/particle/tri 预算，以及 `FallbackBackdrop` 各子节点的可见性/尺寸与中心 uv；`_count_meshes()` / `_mesh_triangles()` 递归统计 MultiMesh / GPUParticles3D / MeshInstance3D。",
       "运行：`godot --path . res://dev_scenes/port_stage/port_stage_preview.tscn`；截图用 `tools/godot/capture_port_stage.gd`。"
     ]
   },
@@ -2276,12 +2310,13 @@ export const FILE_DOCS = {
   },
 
   "tools/ui_snapshot.gd": {
-    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取总览页 3D 港口舞台（含 2D 设施热点）。",
+    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）与详细总览抽屉。",
     contracts: [
       "必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。",
-      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit` / `--overview-stage`。",
+      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit` / `--overview-stage` / `--overview-detail`。",
       "`--damage=slot[:index]:ratio` 在 run.start 后用 `ShipModules.damage()` 损坏模块实例，额外截取 `shipyard_normal_damaged` / `shipyard_refit_damaged` / `supply_damaged`；只影响截图进程，不进入游戏逻辑。",
-      "`--overview-stage`：切到总览 → 调 `_on_overview_stage_toggle()` → 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、热点 Button 数 > 0 → 保存 `overview_port_stage.png`。",
+      "`--overview-stage`：切到总览（默认即 3D 舞台，若处于 2D 回退才调 `_on_overview_stage_toggle()`）→ 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、招牌数 = 设施数 + 1、`_top_chrome` 高度 ≤130、底部状态条可见 → 保存 `overview_port_stage.png`。",
+      "`--overview-detail`：在 `--overview-stage` 基础上点底部「详细总览」按钮（兜底直接置 `_overview_detail=true` 并 refresh），断言抽屉打开、总览页仍挂载 → 保存 `overview_detail.png`。",
       "进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用。",
       "纯色画面判定为失败；120 s watchdog 防止协程中断挂住窗口；成功退出码 0，失败 1。",
       "只写 `docs/design/screenshots/`，不修改游戏状态或源码。"
@@ -2292,9 +2327,49 @@ export const FILE_DOCS = {
     role: "`tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。",
     contracts: [
       "引擎解析顺序：`-GodotBin` > `$env:GODOT_BIN` > 本机默认路径；找不到直接抛错。",
-      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo_modules,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图（同样校验新鲜度）。",
+      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo_modules,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图；`-OverviewDetail` 再透传 `--overview-detail` 并追加 `overview_detail.png`（隐含 `-OverviewStage`，同样校验新鲜度）。",
       "检查每张期望截图存在且比本次运行新，旧图/缺图把退出码改为 1；完整日志写入 `.godot-ui-snapshot.log`。",
       "脚本保持 ASCII，兼容 Windows PowerShell 5.1 解析。"
+    ]
+  },
+
+  "tools/modeling/briefs/sn_harbor_town_batch1.json": {
+    role: "港口街景建筑/人物/小船第一批 10 件建模工单：集合 `SN_Harbor_Town`、前缀 `SN_HT_`、工作台 y=110 一排；定义 10 件尺寸/单件 tri 预算（合计 ≤11500）/调色板（含新增 SN_Brick/SN_Plaster/SN_Glass_Dark）/轴心与验收规则。",
+    contracts: [
+      "物件：长仓库 20×9×11 / 短仓库 11×9×9.5 / 港务楼 9×8×14（钟楼地标）/ 货棚 8×6×4.5 / 酒馆 10×8×8 / 围栏 6×0.3×1.5 / 工人 A 0.7×0.45×1.8 / 工人 B 0.8×0.5×1.8 / 划艇 4.2×1.5×0.8 / 驳船 8×3×1.6。",
+      "轴心统一底面中心（z=0）、+X 前向；窗/门只是 0.05–0.1 m 深暗色板，招牌/钟盘/门牌禁止文字，不做室内/碰撞/可进入门；单写者、只创建、不保存 .blend、不导出 .glb。",
+      "验收：10 件命名 100% 匹配、总 tri ≤11500 且单件 ≤1.2×预算、包围盒误差 ≤0.15 m、网格健康（无孤立点/退化面/材质槽越界，闭合件非流形边 0）、既有对象数量/名称/位置回归不变。",
+      "导出产物在 `dev_mods/core/assets/models/props/SN_HT_*.glb`（内容资产随 core 模组发布，不放 `assets/models/*`），由 Lead 验收后统一执行 `export_town_glb.py`。"
+    ]
+  },
+
+  "tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json": {
+    role: "铁港近中景城镇建筑视觉升级工单：以模块化中等精度建筑替换 PortStage 白盒，定义 8 类建筑、共享材质与纹理、LOD 和固定机位门禁。",
+    contracts: [
+      "现有 SN_HT_Warehouse_Long / Warehouse_Short / Harbor_Office / Cargo_Shed / Tavern 保持资产名和近似占地尺寸，可原位替换；另新增 Boiler_House / Workshop_Row / Brick_Tenement。",
+      "几何必须提供真实窗门深度、墙顶厚度和受控倒角；长度超过 6 m 的可见墙面至少用两种结构方式打断，不允许退回纯盒子或共面窗门。",
+      "典型 PortStage 同屏建筑目标 <=60000 tri；LOD1 <= LOD0 的 35%；每栋材质槽 <=6，并共享 2K trim sheet 与 1K 污渍遮罩。",
+      "Builder 只写 SN_Iron_Harbor_Architecture 集合并交付生成器/LOD/预览；运行时接线、manifest、打包和旧 GLB 替换由 Lead 在人工验收后执行。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_harbor_town_generator.py": {
+    role: "港口街景第一批 10 件的参数化几何唯一真源：顶部 `ITEMS` 参数表（名称/布局/tri 预算/目标包围盒）+ 各 `build_*` 纯几何函数，负责在 Blender 集合 `SN_Harbor_Town` 重建 10 件 `SN_HT_*` 单 mesh 对象。",
+    contracts: [
+      "`ITEMS` 与工单一一对应；`COLLECTION=\"SN_Harbor_Town\"`、`PREFIX=\"SN_HT_\"`、`ROW_Y=110`；重跑只删除/重建本集合内 `SN_HT_` 对象，不碰其他集合与既有对象。",
+      "几何函数（box/prism/roof_slab/sweep/loft 等）为纯 Python、不 import bpy，可 `dryrun_props.py` 离线干跑；`build_all()`/`report()` 才在 Blender 内执行。",
+      "`PALETTE` 限 12 个材质；`NEW_MATERIALS`（SN_Brick/SN_Plaster/SN_Glass_Dark）已存在则复用；`_make_object()` 按材质槽顺序写入面索引、`use_smooth=false`，轴心=底面中心。",
+      "`report()` 输出逐件 tri/尺寸误差/zmin/材质/网格健康、集合布局与 234 对象基线回归 digest（`BASELINE_DIGEST=4fe3f250…`）；Builder 只读自检、不保存/不导出。",
+      "质检记录：Builder 6204 tri；Verifier R1 修复 Rowboat 压条悬空、Tavern 挂灯脱开、Office 塔身暗板过厚后复验 passed=true；场景 244 objects / 223 mesh。"
+    ]
+  },
+
+  "tools/modeling/generators/export_town_glb.py": {
+    role: "把 Blender 工作台 `SN_Harbor_Town` 集合的 10 件 `SN_HT_*` 逐件导出为单对象 GLB，写入 `dev_mods/core/assets/models/props/`（内容资产随 core 模组发布）。",
+    contracts: [
+      "在 Blender 内经 `execute_blender_code` 执行；调用 `export_harbor_town()`；Builder 从不保存/导出，因此工作台保持干净，由 Lead 验收后运行。",
+      "逐件临时把 `object.location` 归零（几何已是局部坐标、轴心在底面中心）→ `export_scene.gltf`（GLB、Y-up、只导出选中、应用变换、不含相机/灯光/附加数据）→ `finally` 还原位置与选择。",
+      "输出 `dev_mods/core/assets/models/props/SN_HT_<Name>.glb`；返回 `{ok, collection, out_dir, items[], total_tris}`，逐件含 tri 与字节数；缺文件时 `ok=false`。"
     ]
   },
 
@@ -2418,10 +2493,12 @@ export const MODULES = {
       "`test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。",
       "`gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。",
       "`ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。",
-      "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜。",
+      "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜，`-OverviewDetail` 再要求 `overview_detail.png`。",
       "`godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，抓 `port_stage_preview.png` / `port_stage_sparse.png` 两张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。",
       "`art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。",
       "`modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。",
+      "港口街景第一批工单在 `modeling/briefs/sn_harbor_town_batch1.json`：10 件 `SN_HT_*`、集合 `SN_Harbor_Town`、工作台 y=110、总预算 11500 tri；`sn_harbor_town_generator.py` 是几何唯一真源（纯 Python 可干跑、`build_all()/report()` 在 Blender 内执行），`export_town_glb.py` 验收后逐件归零导出到 `dev_mods/core/assets/models/props/`。Verifier R1 复验 passed=true，场景 244 objects / 223 mesh、既有对象 digest 不变。",
+      "`modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` 是铁港近中景建筑升级契约：现有 5 个 `SN_HT_*` 资产原名原位升级，并新增 3 类建筑；要求真实窗门深度、共享 2K trim sheet、LOD1 <= LOD0 的 35%，典型 PortStage 同屏建筑 <=60000 tri。",
       "港口设施锚点工单见 `modeling/briefs/sn_port_facilities_batch1.json` 与 `PORT_FACILITIES_PLAN.md`：6 件设施锚点，总预算 10500 tri，轴心统一在底面中心；工作台暂存排原定 y=60，因与 `SN_Ship_Modules`（y 58.6–69.2）冲突改为 y=75（见工单 layout_revision）。",
       "`modeling/generators/sn_port_facilities_generator.py` 是港口设施 6 件的几何唯一真源；`export_port_glb.py` 逐件归零导出 + 写 `.design/port/SN_<Name>.blend` 快照，`verify_port_glb.py` 纯 Python 复核单节点 / 调色板 / 尺寸 / 轴心 / doubleSided，`render_port_preview.py` 出逐件 3/4 预览。",
       "`modeling/generators/*.py` 是几何唯一真源：改了参数重跑即可重建，禁止手工摆点；`.blend` 只是产物。",
@@ -2485,7 +2562,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 与 test_stage_host 2.5D 舞台套件）。",
-  "framework/tests/cases": "按主题拆分的 149 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、总览页 3D 港口舞台与 2D 设施热点、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
+  "framework/tests/cases": "按主题拆分的 155 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
   "framework/ui/stages/shipyard_stage.tscn": "船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id=\"shipyard\"`。",
   "framework/ui/stages/port_stage.tscn": "港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id=\"port\"`。",
   "dev_scenes/port_stage/port_stage_preview.tscn": "PortStage 独立预览场景：全屏 Control 挂 `port_stage_preview.gd`。",
@@ -2541,6 +2618,7 @@ export const GROUPED_ROLES = {
   "tools/modeling/briefs/sn_ship_prototype.json": "帆船原型工单（三桅六帆低模）。",
   "tools/modeling/briefs/sn_paddle_freighter.json": "明轮蒸汽货轮工单：59.5 × 14.1 × 19.5 m、≤14000 tri、33 个必做部件的尺寸 / 材质 / 命名约定；含明轮轮系、半包轮罩、艏艉楼侧封板与 15 对零交面验收。",
   "tools/modeling/briefs/sn_harbor_crane.json": "港口塔吊工单（锤头式，含回转枢轴与吊钩层级）。",
+  "tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json": "铁港城镇视觉升级工单：中等精度模块化建筑、共享 trim sheet、LOD0/LOD1、8 类建筑原型与固定 PortStage 机位验收标准。",
   "tools/modeling/briefs/sn_iron_harbor_batch1.json": "铁港第一批 6 件道具工单（岸壁/护舷/系缆桩/木箱/木桶/矿堆，y=24）。",
   "tools/modeling/briefs/sn_iron_harbor_batch2.json": "铁港第二批 6 件工单（煤气灯/跳板/抓斗/煤堆/爬梯/钢板堆，y=30）。",
   "tools/modeling/briefs/sn_iron_harbor_batch3.json": "铁港第三批 6 件工单（堆场/管线，y=36）。",

@@ -8,11 +8,11 @@
 
 ## 0. 当前基线（已完成）
 
-- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，149 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
+- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，155 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
 - 内容交付：数据、模型、横幅全部随 `core` 模组发布；发布 PCK 已排除 `assets/models/*`，本体只保留框架资源。
 - 运行时加载：`ContentAssetLoader` 从模组包读原始 `.glb/.png`；船体模型由 `information.model` 资产键决定。
 - 编辑器：`dev_mods/core` 可作原生工作区直接编辑保存（删除/新增定义与内容文件会写回，资产不动）。
-- 3D：船厂正常态已有固定机位 3D 舞台；第二切片已交付通用 `StageHost`/`LocationStage`、`ShipyardStage` 迁移与 `PortStage` 骨架（独立预览 + 9 个舞台测试）；第三切片已把 `PortStage` 作为总览页全窗背景层接入并生成 2D 设施热点（+1 test_ui_shell 用例）；港口设施锚点的 6 件模型已接线 `facility_visuals`。
+- 3D：船厂正常态已有固定机位 3D 舞台；`StageHost`/`LocationStage`、`ShipyardStage` 迁移、`PortStage` 骨架/场景填充、总览页接入、Bounty Train 式主界面 HUD、港口街景 10 件与 `port.diorama`/`town_visuals` 接线均已完成（17 个舞台用例 + 3 个主界面用例）。
 - 持久化：存档 Schema 2.0、Campaign 分区、模块实例与部件损耗、Save 迁移完成。
 
 ## 1. 近期：P0 收口（1 天）
@@ -38,9 +38,10 @@
 1. **StageHost + LocationStage 泛化** ✅ **已完成**：`SNStageHost` 独占 SubViewport/World3D，驱动 `enter → bind → exit`；支持隐藏即停更、缺失场景回退 2D、`render_shrink`；`SNShipStage3D` 重写为宿主适配器，船厂舞台迁入 `ShipyardStage`。
 2. **PortStage 骨架** ✅ **已完成**：按 `facilities` 装配设施（billboard 默认，`facility_visuals` GLB 替换，缺席只放货堆 filler），L0 天空/L1 banner 背板（缺失不放黑盒）/L2 确定性岸线剪影/L3 设施/L5 玩家船已跑通；`facility_anchors()`/`facility_screen_anchor()` 已提供；独立预览 `dev_scenes/port_stage/` 与截图脚本已产出 [完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。6 件锚点 GLB 已接线 `facility_visuals`。**总览页接入已完成**：全窗 `PortStage` 背景层 + 2D 设施热点（相机投影 Ghost Button，点击进对应设施页）+ 俯瞰/返回切换 + 失败回退 2D；截图 [总览 3D 港口舞台](screenshots/overview_port_stage.png)，`test_ui_shell` 新增 1 例守护。
 3. **场景填充** ✅ **已完成**：L0 程序化暖色天空 + 太阳光晕；L1 有 banner 用背板、无 banner 用 3 层程序化 painted backdrop（暖霞渐变 + 双光晕）；L2 双深度带 MultiMesh 剪影（小/中/大 7/10/13 栋 + 2/2/3 吊机，仅无 banner）；L6 左上角 3 根前景构件；L7 3 组蒸汽粒子 + 2–3 层雾带。全部程序化、无新资产，preview ≈114 draws / 17,954 tris、sparse ≈73 / 19,228（≤120 / ≤60k）。**注**：原计划「5 张港口 banner 烘焙」改为程序化 painted backdrop——目前内容侧只有铁港 1 张 banner，其余港口直接走兜底路径。截图 [完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。
-4. **港口差异参数**（待办）：`diorama` 块（kit/size/palette/landmark/facility_visuals）接入 `port_archetypes`，保证「设施决定建模」。
+4. **港口差异参数** ✅ **已完成**：`port_archetype.schema` 新增 `diorama`（kit/town/facility_visuals/palette/landmark）；五港 `diorama.kit/town`（16 项）+ core manifest 10 个 `model.prop.*`（资产 65→75）；`map_generator` 持久化 `diorama`，`port.view` 解析 `town_visuals`（旧存档按 archetype 回填）；PortStage L2b 装配 29 件镇区道具、建筑缺失回退 blockout、town 存在时跳过 L2 剪影。
+5. **Bounty Train 式主界面 + 港口街景** ✅ **已完成**：默认 3D 主界面、121 px 紧凑 chrome、左右设施招牌 + 出航招牌、60 px 底部状态条、详细总览抽屉、2D 回退；街景 10 件 `SN_HT_*`（6204 tri，Verifier R1 passed）与截图 [主界面](screenshots/overview_port_stage.png) / [详细总览](screenshots/overview_detail.png)。
 
-验收（已完成）：总览页可切换到 3D 港口舞台，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景；场景填充 L0–L2/L6/L7 已按层级预算完成（149 测试全绿）。剩余项仅为上面的 diorama 参数。
+验收（已完成）：主界面默认全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条 + 详细抽屉，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景；场景填充与 diorama/街景接线完成（155 测试全绿）。剩余：港务/市场等独立舞台、出航进港演出、质量档位/低配回退、UI 图标化/主题化、L2 LOD。
 
 ## 4. 中期：玩法主线（P2，阶段 1 → 2）
 

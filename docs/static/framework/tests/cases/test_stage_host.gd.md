@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_stage_host.gd`
 
-> 作用：2.5D 舞台契约测试（13 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal，以及 PortStage 场景填充的 5 个只读访问器。
+> 作用：2.5D 舞台契约测试（17 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal、场景填充的 5 个只读访问器，以及港口街景 town kit 的装配/blockout/查询接线。
 
 - 类型：GDScript 源文件
 
@@ -21,6 +21,10 @@
 | `test_port_stage_skyline_counts_scale_with_port_size() -> void` | L407 |
 | `test_port_stage_banner_replaces_skyline_but_keeps_frame_and_atmosphere() -> void` | L442 |
 | `test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void` | L468 |
+| `test_port_stage_town_kit_mounts_full_streetscape() -> void` | L530 |
+| `test_port_stage_without_town_kit_uses_blockouts_and_keeps_skyline() -> void` | L557 |
+| `test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void` | L576 |
+| `test_port_view_resolves_town_visuals_for_the_port_stage() -> void` | L605 |
 
 ## 契约与约束
 
@@ -35,5 +39,9 @@
 - 场景填充访问器（无 banner、medium）：`foreground_frame()` 非空、`atmosphere_particle_systems()` ∈ 1..3、`atmosphere_layers()>=1`、`skyline_building_count()==10`、`skyline_crane_count()` ∈ 2..3、`has_backdrop()==false`。
 - size 缩放：small/medium/large 三次 bind 分别断言 `skyline_building_count()` 为 7/10/13，large 吊机 ≤3；铁港 banner 绑定后 `has_backdrop()==true`、L2 建筑/吊机归零，L6/L7 仍存在；去掉 banner 后 L2 恢复为 10。
 - 隐藏/显示宿主：`set_stage_visible(false/true)` 往返后访问器返回同一前景框节点，粒子/雾带/建筑/吊机计数保持稳定。
+- town kit 装配（`test_port_stage_town_kit_mounts_full_streetscape`）：`TOWN_VISUALS`（10 个 SN_HT_* + 6 个复用道具路径）经 `port.town_visuals` 绑定后 `town_prop_count()==29`（5 建筑 + 7 围栏 + 6 工人 + 8 装饰 + 3 船）、`town_blockout_count()==0`；有 banner 时 town 仍为 29（town 与 banner 独立）。
+- 无 town kit：`town_prop_count()==5`、`town_blockout_count()==5`（5 座建筑 blockout），且 L2 skyline 计数仍按无 banner 规则生成（town 缺失才建 L2）。
+- 非法 town 路径：单个建筑路径改成不存在文件 → 该建筑回退 blockout（blockout=1、prop 仍 29）；全部路径非法 → 5 个 blockout、围栏/工人/船/装饰缺失（prop=5）。
+- `port.view` 端到端：`bootstrap_core()` + `run.start` 后执行 port.view，`current_port.diorama.kit` 非空、`town_visuals` 16 项且路径以 `res://` 开头；用该 payload bind PortStage 后 town 仍为 29/0（旧存档按 archetype 回填）。
 
 模块索引：[framework/tests](../README.md)

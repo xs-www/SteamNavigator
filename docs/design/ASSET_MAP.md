@@ -186,6 +186,31 @@
 - 验收记录：6/6 独立只读质检通过（命名/集合/轴心/尺寸误差 0.000/预算/材质/网格健康全 0/回归 digest 命中/视觉可辨）；工单里"信号塔是港口最高剪影"与本批尺寸表自相矛盾（塔 8.5 m < 龙门吊 10.0 m，场景既有铁甲舰 24.44 m），按尺寸表实现，塔为最高**塔类**竖向剪影。
 - 已接线：`PortStage` 的 `facility_visuals` 已实现（`StageHost` 泛化完成后落地）；ViewModel 传入已解析 GLB 路径时按设施替换这 6 个锚点，路径缺失/非法时回退程序化 billboard（当前默认仍是 billboard 占位）。截图：[完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。
 
+## 3D 港口街景（第一批 10 件）
+
+主界面港口舞台的「码头广场 + 仓库街区」背景 kit：10 件低模、平直着色、无贴图的建筑/人物/小船，放在工作台 `SN_Harbor_Town` 集合（y=110 一排），逐件导出为 `dev_mods/core/assets/models/props/SN_HT_*.glb`，随 core 模组发布（发布包 PCK 排除 `assets/models/*`）。合计 **6204 tri**（工单预算 11500）；场景总数 **244 objects / 223 mesh**，既有对象 digest `4fe3f250…` 未变。
+
+| 对象 | 运行时 GLB | 尺寸 L×W×H (m) | tri 预算 | 主要材质 |
+| --- | --- | ---: | ---: | --- |
+| `SN_HT_Warehouse_Long` | `dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb` | 20 × 9 × 11 | 2600 | Stone / Brick / Wood_Dark / Wood / Glass_Dark / Iron |
+| `SN_HT_Warehouse_Short` | `…/SN_HT_Warehouse_Short.glb` | 11 × 9 × 9.5 | 1700 | Stone / Wood / Wood_Dark / Plaster / Glass_Dark |
+| `SN_HT_Harbor_Office` | `…/SN_HT_Harbor_Office.glb` | 9 × 8 × 14 | 2200 | Brick / Plaster / Stone / Iron / Brass / Glass_Dark / Wood_Dark |
+| `SN_HT_Cargo_Shed` | `…/SN_HT_Cargo_Shed.glb` | 8 × 6 × 4.5 | 700 | Wood / Wood_Dark / Canvas / Metal |
+| `SN_HT_Tavern` | `…/SN_HT_Tavern.glb` | 10 × 8 × 8 | 1700 | Plaster / Brick / Wood / Wood_Dark / Glass_Dark / Stone / Iron |
+| `SN_HT_Fence_Row` | `…/SN_HT_Fence_Row.glb` | 6 × 0.3 × 1.5 | 300 | Stone / Iron |
+| `SN_HT_Dock_Worker_A` | `…/SN_HT_Dock_Worker_A.glb` | 0.7 × 0.45 × 1.8 | 250 | Wood_Dark / Canvas_Shade / Metal |
+| `SN_HT_Dock_Worker_B` | `…/SN_HT_Dock_Worker_B.glb` | 0.8 × 0.5 × 1.8 | 250 | Wood_Dark / Canvas_Shade / Wood / Metal |
+| `SN_HT_Rowboat` | `…/SN_HT_Rowboat.glb` | 4.2 × 1.5 × 0.8 | 550 | Wood / Wood_Deck / Metal / Iron |
+| `SN_HT_Cargo_Lighter` | `…/SN_HT_Cargo_Lighter.glb` | 8 × 3 × 1.6 | 700 | Wood / Wood_Dark / Wood_Deck / Metal / Iron / Canvas_Shade |
+
+- 工单：`tools/modeling/briefs/sn_harbor_town_batch1.json`（尺寸/预算/调色板/验收规则）；新增材质 `SN_Brick` / `SN_Plaster` / `SN_Glass_Dark`。
+- 生成器：`tools/modeling/generators/sn_harbor_town_generator.py`（`ITEMS` + `build_*` 纯几何，可 `dryrun_props.py` 离线干跑；`build_all()/report()` 在 Blender 内执行）。
+- 导出：`tools/modeling/generators/export_town_glb.py`（逐件临时归零 location → 单对象 GLB → 还原摆位；轴心=底面中心、glTF Y-up、无相机/灯光）。
+- 质检：Builder 6204 tri；独立 Verifier R1 修复 Rowboat 压条悬空、Tavern 挂灯脱开、Office 塔身暗板过厚后复验 **passed=true**（244 objects / 223 mesh、回归 digest 命中）。
+- Core 接线：`dev_mods/core/manifest.json` 新增 10 个 `model.prop.*`（资产数 65→75）；`port_archetypes.json` 五港 `diorama.kit/town` 引用这 10 个键 + 6 个复用道具（crate/barrel/coal_pile/timber_stack/handcart/gas_lamp）。
+- 舞台装配：`PortStage` 的 L2b 在 `town_visuals` 存在时在抬升广场上放 5 建筑/7 围栏/6 工人/8 装饰/3 船（共 29 props）；建筑 GLB 缺失回退程序化 blockout，town 存在时跳过 L2 剪影。
+- 截图：`docs/design/screenshots/port_stage/port_stage_preview.png`、`port_stage_sparse.png`、`docs/design/screenshots/overview_port_stage.png`。
+
 ## 3D 港口样片（水面着色器试做）
 
 独立场景 `dev_scenes/harbor/harbor_diorama.tscn`，不接入主流程；只用已有 GLB 资产 + 场景内程序化 BoxMesh 剪影。浮船已从旧 `SN_Ship_Prototype` 换成 `SN_Schooner_Fame`（1795 双桅纵帆船），水面泡沫环的 `boat_half_size` 同步改为 13.2 × 3.9；场景相机构图已验证可容纳新船 33.44 m 总长 / 26.82 m 总高。
@@ -228,7 +253,7 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 | `model.material.sealing_compound` | `assets/models/materials/SN_Barrel.glb` | 密封剂 |
 | `banner.port.iron_harbor` | `assets/ports/iron_harbor_banner.png` | 铁港；作为贴图 |
 
-淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 13 个资源键。
+淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **75 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节）。
 
 ## 为什么这样分
 

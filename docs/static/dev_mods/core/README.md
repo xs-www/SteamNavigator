@@ -53,6 +53,16 @@
 | `assets/models/props/SN_Gas_Lamp.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Gear_Crate.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Grab_Bucket.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Cargo_Lighter.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Cargo_Shed.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Dock_Worker_A.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Dock_Worker_B.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Fence_Row.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Harbor_Office.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Rowboat.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Tavern.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Warehouse_Long.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Warehouse_Short.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Handcart.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Harbor_Crane.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Keel_Block.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

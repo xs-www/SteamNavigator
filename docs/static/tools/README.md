@@ -19,6 +19,8 @@
 | `modeling/briefs/PORT_FACILITIES_PLAN.md` | 港口设施锚点建模总表：设施→锚点映射、尺寸/tri/材质、已有道具复用、PortStage 装配与验收约定。 | 本页 |
 | `modeling/briefs/_template.json` | 建模工单模板：字段说明与必填项。 | 本页 |
 | `modeling/briefs/sn_harbor_crane.json` | 港口塔吊工单（锤头式，含回转枢轴与吊钩层级）。 | 本页 |
+| `modeling/briefs/sn_harbor_town_batch1.json` | 港口街景建筑/人物/小船第一批 10 件建模工单：集合 `SN_Harbor_Town`、前缀 `SN_HT_`、工作台 y=110 一排；定义 10 件尺寸/单件 tri 预算（合计 ≤11500）/调色板（含新增 SN_Brick/SN_Plaster/SN_Glass_Dark）/轴心与验收规则。 | [查看](./modeling/briefs/sn_harbor_town_batch1.json.md) |
+| `modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` | 铁港近中景城镇建筑视觉升级工单：以模块化中等精度建筑替换 PortStage 白盒，定义 8 类建筑、共享材质与纹理、LOD 和固定机位门禁。 | [查看](./modeling/briefs/sn_iron_harbor_architecture_kit_v1.json.md) |
 | `modeling/briefs/sn_iron_harbor_batch1.json` | 铁港第一批 6 件道具工单（岸壁/护舷/系缆桩/木箱/木桶/矿堆，y=24）。 | 本页 |
 | `modeling/briefs/sn_iron_harbor_batch2.json` | 铁港第二批 6 件工单（煤气灯/跳板/抓斗/煤堆/爬梯/钢板堆，y=30）。 | 本页 |
 | `modeling/briefs/sn_iron_harbor_batch3.json` | 铁港第三批 6 件工单（堆场/管线，y=36）。 | 本页 |
@@ -46,6 +48,7 @@
 | `modeling/generators/export_props_glb.py` | 道具 GLB 导出：逐件把 location 临时归零、只导出选中对象、导出后还原；按批次分组避免无谓重导。 | 本页 |
 | `modeling/generators/export_schooner_fame_glb.py` | 纵帆船 GLB 归档：备份旧 GLB → 保存工作台 → 根节点临时归零导出 → `bpy.data.libraries.write` 船体快照（不切文件）→ 还原 (0,-70,0) 并重存工作台。 | 本页 |
 | `modeling/generators/export_ship_glb.py` | 船只 GLB 归档：备份旧 GLB → 保存工作台 → 导出（临时归零 SN_PF_Root）→ 写船体快照；人工验收后由 Lead 运行。 | 本页 |
+| `modeling/generators/export_town_glb.py` | 把 Blender 工作台 `SN_Harbor_Town` 集合的 10 件 `SN_HT_*` 逐件导出为单对象 GLB，写入 `dev_mods/core/assets/models/props/`（内容资产随 core 模组发布）。 | [查看](./modeling/generators/export_town_glb.py.md) |
 | `modeling/generators/p0_finalize.py` | P0 归档：备份旧 GLB → 清临时对象 → 导出 → 保存工作台。 | 本页 |
 | `modeling/generators/p0_rework_2026-10-19.py` | 第一批 P0 整改：重建系缆桩 → SN_Ore 改锈红 → 三段岸壁拼接测试。 | 本页 |
 | `modeling/generators/render_ironclad_preview.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
@@ -61,6 +64,7 @@
 | `modeling/generators/ship_parts/deck.py` | 可复用甲板属具构建器：舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯；位置与甲板高度由调用方传入。 | 本页 |
 | `modeling/generators/ship_parts/palette.py` | 跨船共享材质名常量（木/深木/甲板木/帆布/金属/黄铜/旗帜色）；船体主色由各船生成器定义。 | 本页 |
 | `modeling/generators/ship_parts/stern.py` | 可复用艉部构件：艉廊/3 艉窗/檐口/双艉灯；x0/x1/窗位/灯位/主色由调用方传入。 | 本页 |
+| `modeling/generators/sn_harbor_town_generator.py` | 港口街景第一批 10 件的参数化几何唯一真源：顶部 `ITEMS` 参数表（名称/布局/tri 预算/目标包围盒）+ 各 `build_*` 纯几何函数，负责在 Blender 集合 `SN_Harbor_Town` 重建 10 件 `SN_HT_*` 单 mesh 对象。 | [查看](./modeling/generators/sn_harbor_town_generator.py.md) |
 | `modeling/generators/sn_iron_harbor_batch2_generator.py` | 铁港第二批 6 件生成器（煤气灯/跳板/抓斗/煤堆/爬梯/钢板堆）。 | 本页 |
 | `modeling/generators/sn_iron_harbor_batch3_generator.py` | 铁港第三批 6 件生成器（木料堆/麻袋堆/蒸汽管/缆绳卷/吊货网/托盘）。 | 本页 |
 | `modeling/generators/sn_iron_harbor_batch4_generator.py` | 铁港第四批 6 件生成器（浮标/锚链堆/绞盘/手推车/碰垫/齿轮箱）。 | 本页 |
@@ -82,17 +86,19 @@
 | `pack_core.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `static_docs_data.mjs` | 静态文档的策展数据：文件职责/契约/L2、模块简介与分组角色。 | [查看](./static_docs_data.mjs.md) |
 | `test.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
-| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取总览页 3D 港口舞台（含 2D 设施热点）。 | [查看](./ui_snapshot.gd.md) |
+| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）与详细总览抽屉。 | [查看](./ui_snapshot.gd.md) |
 
 ## 模块契约
 
 - `test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。
 - `gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。
 - `ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。
-- `capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜。
+- `capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜，`-OverviewDetail` 再要求 `overview_detail.png`。
 - `godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，抓 `port_stage_preview.png` / `port_stage_sparse.png` 两张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。
 - `art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。
 - `modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。
+- 港口街景第一批工单在 `modeling/briefs/sn_harbor_town_batch1.json`：10 件 `SN_HT_*`、集合 `SN_Harbor_Town`、工作台 y=110、总预算 11500 tri；`sn_harbor_town_generator.py` 是几何唯一真源（纯 Python 可干跑、`build_all()/report()` 在 Blender 内执行），`export_town_glb.py` 验收后逐件归零导出到 `dev_mods/core/assets/models/props/`。Verifier R1 复验 passed=true，场景 244 objects / 223 mesh、既有对象 digest 不变。
+- `modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` 是铁港近中景建筑升级契约：现有 5 个 `SN_HT_*` 资产原名原位升级，并新增 3 类建筑；要求真实窗门深度、共享 2K trim sheet、LOD1 <= LOD0 的 35%，典型 PortStage 同屏建筑 <=60000 tri。
 - 港口设施锚点工单见 `modeling/briefs/sn_port_facilities_batch1.json` 与 `PORT_FACILITIES_PLAN.md`：6 件设施锚点，总预算 10500 tri，轴心统一在底面中心；工作台暂存排原定 y=60，因与 `SN_Ship_Modules`（y 58.6–69.2）冲突改为 y=75（见工单 layout_revision）。
 - `modeling/generators/sn_port_facilities_generator.py` 是港口设施 6 件的几何唯一真源；`export_port_glb.py` 逐件归零导出 + 写 `.design/port/SN_<Name>.blend` 快照，`verify_port_glb.py` 纯 Python 复核单节点 / 调色板 / 尺寸 / 轴心 / doubleSided，`render_port_preview.py` 出逐件 3/4 预览。
 - `modeling/generators/*.py` 是几何唯一真源：改了参数重跑即可重建，禁止手工摆点；`.blend` 只是产物。

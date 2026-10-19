@@ -1,13 +1,14 @@
 # `framework/ui/shell/main.gd`
 
-> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；总览页的 3D 港口舞台宿主与 2D 设施热点层也由 Shell 持有（页面只发切换意图）。
+> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。
 
 - 类型：GDScript 源文件
 
 ## 契约与约束
 
 - 所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。
-- 顶部信息条在船只存在受损部件时追加「部件 N · NN%」chip（来自 port.view.ship 的 damaged_modules / worst_module_condition），健康时不占位；chip 颜色在失效时为红。
+- 主界面默认 `_overview_stage_mode=true`：全窗 3D 港口舞台是主视图，2D 详细总览收进 `_overview_detail` 抽屉（默认关闭）；两者都只是 UI 会话状态，不写存档。
+- 紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 7 个导航按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。
 - main.tscn 静态声明背景、菜单遮罩、滚动内容根、页脚、音频与 TransitionLayer；main.gd 通过 @onready 绑定，不再在运行时创建固定外壳。
 - 已迁移页面由 PackedScene 实例化：Shell 负责查询并调用 bind，页面只发 command_requested/navigation_requested/action_requested 意图，不接触 AppContext。
 - 每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。
@@ -38,30 +39,48 @@
 - 船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复纵剖图与选中分类。
 - 委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。
 - 通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。
-- 反馈5：顶部信息条固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity。
+- 反馈5：紧凑 chrome 固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity；总览底部状态条再显示耐久/货舱/煤/水/受损/最新通告，避免信息只存在于详细抽屉。
 - 反馈6：总览“当前目标”显示通关条件清单（主线 n/5 → 大型船体 → 锅炉 → ≥1 货舱 → 造船厂组装），主线完成后给出下一步提示；数据来自 port.view.victory.conditions 与 contracts.main_done/main_total。船厂页不再重复通关清单，只做组件分类入口。
 - 反馈3：情报页用 SNIntelTable 渲染 intel.view 的 columns/rows 矩阵（含未知港口列），替代旧的逐港商品表格。
 - 反馈4：打造订单与在港等待迁入船厂改装态「杂项」页签：等待按钮按 wait_options 生成 6/12/24 小时 `port.wait`，总览快捷入口同样提供等待按钮；模块类分类内保留「按配方打造」，打造按钮文案带工时。
 - 反馈2：补给卡绑定 SNSupplyCard 时传入 _tr 回调，显示“上限损失/剩余可装”本地化文案。
 - `_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。
-- 总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 是 UI 会话状态，不写存档。
-- 舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；2D 热点层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有热点按钮吃点击。
-- `_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空热点。
-- `_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/palette/landmark_path`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`（替代原来内联在 `_overview_model` 的解析）。
-- 热点用 `facility_anchors()` → `facility_screen_anchor()` 投影成 136×36 的 `SNGhostButton`，按钮中心落在投影点；`_refresh_port_hotspots_soon()` 做两次 deferred 布局（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。
-- 加载失败 `_on_port_stage_fallback(reason)`：置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 模式、回退 2D、写状态提示 `ui.error.port_stage_unavailable` 并 deferred refresh。
-- 总览页在 stage 模式下只保留「返回总览」控制行 + expanding spacer，让全窗 3D 舞台露出；顶部 HUD/导航/状态条仍在页面外，不随切换重建。
+- 总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 默认 true（3D 是主视图），`_overview_detail` 默认 false。
+- 舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。
+- `_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。
+- `_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/palette/landmark_path`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。
+- 两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；`PORT_SIGN_WIDTH/HEIGHT` 172×42、`PORT_SIGN_MARGIN` 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「出航 ▶」招牌（`Hotspot_voyage`）。
+- 招牌布局避让紧凑 chrome 与底部状态条：`_port_hud_top_safe()` 取 `_top_chrome` 底边、`_port_hud_bottom_safe()` 取状态条顶边；`_refresh_port_hotspots_soon()` 做两次 deferred（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。
+- 底部状态条（`_port_status_bar`，`PORT_STATUS_BAR_HEIGHT=60`）只在 overview 显示：耐久/货舱/煤/水/受损模块 + 最新通告（沿用 `_notice_text` 模板填充）+「详细总览/返回主界面」+ 出航 + 等待 12 小时（`port.wait`）；显示时隐藏 footer 并增大 `PageMargin` 底部预留。
+- 详细总览抽屉：`_on_overview_detail_toggle()` 切换 `_overview_detail`，抽屉用原 2D 面板（含 `_victory_plan`）覆盖在舞台上方；舞台宿主不销毁，招牌层隐藏，关闭后回到裸舞台；离开 stage、切到非 overview、重开/继续游戏与加载失败都会复位抽屉。
+- 2D 回退：chrome 上的「2D 总览」按钮切换 `_overview_stage_mode`；舞台加载失败 `_on_port_stage_fallback(reason)` 置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 与抽屉、回退 2D、提示 `ui.error.port_stage_unavailable` 并 deferred refresh。
 
 ## 重点逻辑
 
+### `_build_top_chrome(app, data, show_nav)`
+
+- 一个半透明 `PanelContainer`（`_chrome_style()`：深青 0.84 + 黄铜底边）内放两行 `HBoxContainer`：第一行品牌/状态徽标/版本 + 港口·时间·金钱·声望 chip + 阶段切换（overview 且场景可用时才出现，「2D 总览/俯瞰港口」）+ 诊断/刷新；第二行剩余载重/货舱/煤/水/耐久/受损 chip + 7 个导航按钮。
+- `show_nav=false`（在航）时不挂导航；最小高度由 chip 字号与 panel margin 决定，`test_ui_shell` 断言 ≤130 px。每个页面共用同一份 chrome。
+
+### `_set_port_status_bar_visible(visible, data) / _refresh_port_status_bar(data)`
+
+- 状态条懒创建为全窗底部锚定的 `PanelContainer`（高 60、左右 20 边距、位于 fade 之下），只在 overview 显示；显示时隐藏 footer，并把 `PageMargin` 底部 margin 从 56 提到 84，避免遮住页面最后一行。
+- 内容每次刷新重建：耐久/货舱/煤/水/受损 chip + 最新通告（`_latest_notice_text` → `_notice_text`）+「详细总览/返回主界面」（仅 stage 模式）+「出航 ▶」+「等待 12 小时」（`port.wait`）。
+
+### `_layout_port_hotspots() / _layout_sign_column() / _port_sign()`
+
+- 清空旧招牌后按 `facility_screen_anchor()` 把 present 设施分左右两列（x<0.5 / ≥0.5），同列按投影 y 排序，在两列各自的 safe 区内垂直居中均匀排布（172×42、gap 10）。
+- safe 区来自真实 HUD 高度：顶部 = `_top_chrome` 底边 + 8，底部 = 状态条顶边（未建时回退 48 px）；右列底部预留「出航」招牌位，`Hotspot_voyage` 固定在右下。
+- 点击招牌走 `_on_port_hotspot`：voyage 直接 `_on_nav("voyage")`，其余查 `PORT_STAGE_FACILITY_SCREENS` 后与顶部导航同一路径；抽屉打开或舞台不活跃时整层不生成招牌。
+
+### `_sync_overview_detail_backdrop() / _place_overview_detail_backdrop()`
+
+- 抽屉用不透明 `ColorRect(COLOR_BG)` 盖住舞台（不盖 chrome/状态条），`mouse_filter=IGNORE` 不抢滚动；只通过 sibling index 调整保证它在 `PageMargin` 之下。
+- `_sync_overview_detail_backdrop()` 仅在 `_overview_detail && _port_stage_active()` 时显示；隐藏舞台、离开 overview 或加载失败时同步关闭，招牌层同时隐藏。
+
 ### `_sync_port_stage(data) / _ensure_port_stage_host()`
 
-- 显示条件 = `has_run && !at_sea && _active_screen == "overview" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，并把热点层置可见。
-- 宿主与热点层的层级通过 `move_child(..., $Background.get_index() + 1)` / `(..., $PageMargin.get_index() + 1)` 固定：3D 在背景之上、2D UI 之下；热点层在页面之后，透明区域点击落回页面。
-
-### `_layout_port_hotspots() / _on_port_hotspot(facility)`
-
-- 每次重排先清空旧按钮；只对 `facility_anchors()` 中设施生成热点，投影返回 `ZERO` 的跳过；按钮尺寸 136×36，位置为 `normalized × 层尺寸 - size/2`。
-- 点击热点查 `PORT_STAGE_FACILITY_SCREENS` 得到 screen id 后走 `_on_nav`，与顶部导航共用同一条页面切换路径；未知设施直接 return。
+- 显示条件 = `has_run && !at_sea && _active_screen == "overview" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，再同步抽屉 backdrop 与招牌层。
+- 宿主/招牌层/抽屉 backdrop 的层级用 `move_child(..., $Background.get_index() + 1)`、`(..., $PageMargin.get_index() + 1)` 与 `_place_overview_detail_backdrop()` 固定：3D 在背景之上、2D UI 之下，抽屉 backdrop 在页面之下。
 
 模块索引：[framework/ui](../README.md)

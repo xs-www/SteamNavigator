@@ -1,0 +1,144 @@
+{
+  "id": "sn_iron_harbor_architecture_kit_v1",
+  "title": "铁港中等精度模块化城镇建筑套件",
+  "status": "ready_for_modeling",
+  "purpose": "替换 PortStage 近景与中景中读取为大方块的城镇白盒，用可复用的维多利亚工业港模块、明确的立面深度和共享纹理，使建筑质量与玩家船、港口横幅和设施锚点处于同一视觉层级。",
+  "category": "architecture_kit",
+  "scope": {
+    "included": ["近景和中景建筑外壳", "模块化立面、屋顶和工业附件", "共享材质与纹理图集", "LOD0 与 LOD1", "PortStage 实机验收"],
+    "excluded": ["可进入室内", "碰撞体与导航网格", "可读文字", "角色动画", "远景天际线替换", "每栋建筑独占的 4K 纹理"]
+  },
+  "references": {
+    "problem_screenshots": ["docs/design/screenshots/overview_port_stage.png", "docs/design/screenshots/overview_detail.png"],
+    "existing_brief": "tools/modeling/briefs/sn_harbor_town_batch1.json",
+    "stage_plan": "docs/design/2.5D_STAGE_PLAN.md",
+    "visual_target": "风格化中等精度维多利亚工业港；近景可见窗洞、门洞、檐口、结构梁、烟囱、管线和平台的真实厚度。不要复制背景横幅的照片级细节，也不要继续使用无倒角的大盒子。"
+  },
+  "camera_and_readability": {
+    "primary_view": "PortStage 固定斜上方 3/4 机位",
+    "target_resolutions": [[1440, 900], [1280, 720], [960, 540]],
+    "distance_bands": {
+      "foreground": "使用 LOD0；窗门、檐口、平台和管线必须可读",
+      "midground": "优先 LOD1；轮廓、屋顶和大开口必须可读",
+      "background": "继续使用现有程序化剪影或横幅，不用本套件堆满远景"
+    },
+    "silhouette_rule": "每个建筑至少有两个不依赖颜色也能辨认的轮廓特征，例如钟楼、锯齿屋顶、高烟囱、连续装卸门、外置水箱或高架连廊。"
+  },
+  "art_direction": {
+    "look": "stylized mid-poly / restrained bevels / shared trim sheet / muted industrial palette",
+    "era": "19 世纪末至 20 世纪初的蒸汽工业港口",
+    "shape_language": ["石基座和厚重首层", "砖墙、灰泥与深木框架分区", "铁梁、铆接件和黄铜只做强调", "错落屋顶形成天际线", "附件集中在门窗、屋檐、屋顶和转角"],
+    "avoid": ["没有倒角、开口或附件的纯长方体", "只靠贴图画出窗门", "所有建筑同高同屋顶同窗距", "过度写实的微小噪声", "纯黑描边和高饱和卡通色", "烘焙文字"]
+  },
+  "transform": {
+    "unit": "m",
+    "forward": "+X",
+    "up": "+Z",
+    "pivot": "ground centre, z=0",
+    "unit_scale": 1.0,
+    "export_note": "单件导出前根节点归零；GLB 保持现有 PortStage 朝向约定。"
+  },
+  "geometry_standard": {
+    "quality_level": "mid-poly foreground architecture",
+    "bevel": {"required_on": ["建筑外轮廓", "石基", "檐口", "门窗框", "粗钢梁", "烟囱帽"], "width_m": [0.03, 0.12], "segments": "主要轮廓 2，次要构件 1"},
+    "openings": {"window_recess_m": [0.08, 0.18], "door_recess_m": [0.12, 0.30], "rule": "主要可见立面的窗门必须有框、窗台或雨棚中的至少两项；不得用共面深色板冒充开口。"},
+    "wall_and_roof": {"visible_wall_thickness_m": [0.12, 0.35], "roof_overhang_m": [0.20, 0.60], "rule": "山墙、檐口、雨棚和屋顶转角必须有可读厚度；封闭建筑保持水密。"},
+    "surface_breakup": "长度超过 6 m 的可见墙面必须由壁柱、梁、窗列、门、退台或材质分区至少两种方式打断。",
+    "health": ["无孤立点、退化面、重叠面和材质槽越界", "封闭建筑无非流形边；薄板附件显式双面或有厚度", "相邻模块不得共面闪烁；装饰件离基面至少 0.015 m", "删除不可见底面和完全被包裹的内部面"]
+  },
+  "triangle_budgets": {
+    "building_small_lod0": [3000, 5000],
+    "building_medium_lod0": [5000, 8000],
+    "building_landmark_lod0": [8000, 14000],
+    "lod1_ratio_max": 0.35,
+    "single_facade_module": [40, 500],
+    "single_roof_or_industrial_module": [100, 1200],
+    "visible_scene_target": "典型 PortStage 同屏城镇建筑 LOD 总计 <= 60000 tri；不含玩家船、水面和已有设施。"
+  },
+  "shared_materials": {
+    "maximum_material_slots_per_building": 6,
+    "materials": [
+      {"name": "SN_Town_Brick", "role": "红褐与烟熏砖墙", "metallic": 0.0, "roughness": [0.78, 0.94]},
+      {"name": "SN_Town_Plaster", "role": "暖灰、米灰和脏白灰泥", "metallic": 0.0, "roughness": [0.75, 0.92]},
+      {"name": "SN_Town_Wood", "role": "深木梁、门与装卸平台", "metallic": 0.0, "roughness": [0.68, 0.88]},
+      {"name": "SN_Town_Iron", "role": "深铁梁、栏杆、管道和屋面", "metallic": [0.45, 0.75], "roughness": [0.46, 0.72]},
+      {"name": "SN_Town_Stone", "role": "石基、台阶与墙脚", "metallic": 0.0, "roughness": [0.82, 0.96]},
+      {"name": "SN_Town_Glass", "role": "深色不透明窗面，可有很弱暖色发光变体", "metallic": [0.05, 0.20], "roughness": [0.18, 0.35]}
+    ],
+    "palette": {"brick": ["#6F4032", "#87503B", "#4D3430"], "plaster": ["#B3A58C", "#8F8A7A", "#C2B79E"], "wood": ["#4C3428", "#6A4731"], "iron": ["#263238", "#3D4545", "#59443A"], "stone": ["#777269", "#989080"], "accent": ["#9B6A32", "#A85A39", "#506A6C"]}
+  },
+  "texture_set": {
+    "strategy": "所有建筑共享 trim sheet 与可平铺材质，不为每栋建筑生成独占大贴图。AI 生成图只能作为材质源，必须经过无缝化、色阶统一和引擎实测。",
+    "trim_sheet": {"name": "iron_harbor_architecture_trim", "size": [2048, 2048], "channels": ["base_color", "normal", "orm"], "rows": ["砖墙", "石基", "灰泥边", "木梁", "铆接铁板", "屋面", "檐口", "门窗框"]},
+    "detail_mask": {"name": "iron_harbor_grime_mask", "size": [1024, 1024], "channels": ["edge_wear", "soot", "damp", "rust"], "rule": "污渍集中在墙脚、烟囱周围、落水管下方和金属连接处；覆盖率不得超过可见表面的 30%。"},
+    "uv_rules": ["目标 128 px/m；英雄地标可提高到 192 px/m", "不得拉伸砖缝、窗框或木纹方向", "镜像 UV 不得导致方向性污渍翻转", "若烘焙 AO，禁止跨岛渗色"]
+  },
+  "modular_kit": {
+    "facade_modules": ["3 m 砖墙实墙单元", "3 m 单窗单元", "3 m 双窗单元", "3 m 人门单元", "4.5 m 装卸门单元", "转角壁柱", "首层石基与台阶", "檐口、雨棚和空白招牌挂架"],
+    "roof_modules": ["双坡屋顶直段与山墙端", "单坡侧棚", "锯齿采光屋顶", "平屋顶女儿墙", "屋脊通风帽", "砖烟囱与铁烟囱", "天窗和落水管"],
+    "industrial_modules": ["外露蒸汽管与弯头", "水箱与支架", "钢制外楼梯", "猫道与栏杆", "装卸吊梁与滑轮", "小型风机和排气帽", "铁阳台", "空白门牌与悬挂招牌"],
+    "variation_rule": "同屏重复建筑必须至少改变屋顶、开口节奏、附件组合和主色中的三项；不得只缩放同一个盒子。"
+  },
+  "building_archetypes": [
+    {"id": "warehouse_long", "drop_in_asset": "SN_HT_Warehouse_Long", "size_m": [20.0, 9.0, 11.0], "budget_class": "building_medium_lod0", "required_features": ["至少 4 个立面 bay", "2 个内凹装卸门", "双坡顶", "吊货梁", "2 个通风帽", "墙脚石基", "背面服务门和落水管"], "silhouette": "长体量 + 双高门 + 山墙吊梁"},
+    {"id": "warehouse_short", "drop_in_asset": "SN_HT_Warehouse_Short", "size_m": [11.0, 9.0, 9.5], "budget_class": "building_small_lod0", "required_features": ["不对称单坡侧棚", "1 个内凹装卸门", "屋顶通风管", "立面 bay 节奏", "独立后门"], "silhouette": "短仓库 + 单坡侧棚 + 偏置通风管"},
+    {"id": "harbor_office", "drop_in_asset": "SN_HT_Harbor_Office", "size_m": [9.0, 8.0, 14.0], "budget_class": "building_landmark_lod0", "required_features": ["3 层立面分层", "拱形入口", "窗台和窗楣", "2 个铁阳台", "四面钟楼", "檐口", "屋角旗杆座"], "silhouette": "街区最高钟楼地标；钟盘无文字或数字"},
+    {"id": "cargo_shed", "drop_in_asset": "SN_HT_Cargo_Shed", "size_m": [8.0, 6.0, 4.5], "budget_class": "building_small_lod0", "required_features": ["开放柱廊", "真实厚度棚顶", "后挡板", "工作台", "吊钩", "货箱和托盘"], "silhouette": "低矮开敞，不得读成封闭小屋"},
+    {"id": "tavern", "drop_in_asset": "SN_HT_Tavern", "size_m": [10.0, 8.0, 8.0], "budget_class": "building_medium_lod0", "required_features": ["2 层立面", "门廊", "悬挂空白招牌", "砖烟囱", "窗框与窗台", "后侧服务门和木桶"], "silhouette": "门廊 + 悬挂招牌 + 高烟囱"},
+    {"id": "boiler_house", "new_asset": "SN_HT_Boiler_House", "size_m": [12.0, 10.0, 12.0], "budget_class": "building_medium_lod0", "required_features": ["错落屋顶", "高砖烟囱", "外露粗管", "侧墙百叶", "煤槽或灰斗", "检修平台"], "silhouette": "高烟囱 + 外露管线 + 检修平台"},
+    {"id": "workshop_row", "new_asset": "SN_HT_Workshop_Row", "size_m": [18.0, 7.0, 8.5], "budget_class": "building_medium_lod0", "required_features": ["3 个连续工坊 bay", "至少两种门宽", "锯齿采光顶", "墙面风机", "雨棚", "外置楼梯或猫道"], "silhouette": "重复工坊节奏 + 锯齿屋顶"},
+    {"id": "brick_tenement", "new_asset": "SN_HT_Brick_Tenement", "size_m": [10.0, 8.0, 12.0], "budget_class": "building_landmark_lod0", "required_features": ["3 层砖立面", "成列窗洞", "转角壁柱", "后侧铁质逃生楼梯", "多个烟囱", "首层小店雨棚或封板"], "silhouette": "窄高街屋 + 多烟囱 + 外置逃生楼梯"}
+  ],
+  "lod_rules": {
+    "lod0": "保留倒角、窗门深度、栏杆、管线、屋顶附件和主要污渍变化。",
+    "lod1": "保留外轮廓、屋顶、主要开口、烟囱和大型平台；合并小附件，栏杆可改实心薄板，三角面 <= LOD0 的 35%。",
+    "naming": "<Name>_LOD0 / <Name>_LOD1；未接入质量档位前默认导出 LOD0。"
+  },
+  "naming_and_hierarchy": {
+    "collection": "SN_Iron_Harbor_Architecture",
+    "prefix": "SN_HT_",
+    "root_pattern": "SN_HT_<Name>_Root",
+    "module_pattern": "SN_HT_MOD_<Category>_<Variant>",
+    "rule": "单件 GLB 只有一个可定位根节点；导出资产不得依赖工作台外部链接。"
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "keep_existing_objects": true,
+    "no_delete_outside_collection": true,
+    "do_not_modify": ["Camera", "Light", "SN_Ship_Prototype", "SN_IronHarbor_Props", "SN_Port_Facilities", "SN_Harbor_Town", "SN_Ship_Modules"],
+    "rebuild_rule": "重跑时只能删除和重建 SN_Iron_Harbor_Architecture 集合内以前缀 SN_HT_ 开头的对象。",
+    "generator_required": true
+  },
+  "deliverables": {
+    "generator": "tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py",
+    "blend_snapshots": ".design/buildings/iron_harbor/SN_HT_<Name>.blend",
+    "glb": "dev_mods/core/assets/models/buildings/SN_HT_<Name>.glb",
+    "textures": "dev_mods/core/assets/textures/buildings/iron_harbor_*",
+    "preview": "docs/design/screenshots/iron_harbor_architecture/",
+    "required_views": ["three_quarter_fixed_camera", "street_level_three_quarter", "front", "roof", "lod_comparison", "port_stage_1440x900", "port_stage_960x540"]
+  },
+  "acceptance": [
+    "固定机位下，任意前景建筑不得读成没有开口和结构层次的大方块。",
+    "5 个 drop_in_asset 保持原资产名和近似占地尺寸，可不改 PortStage 布局直接替换。",
+    "8 个建筑均满足 required_features，且至少有两个不依赖颜色的轮廓识别点。",
+    "主要可见立面的窗门 100% 具有规定深度，不允许共面深色板冒充开口。",
+    "长度超过 6 m 的可见墙面全部满足 surface_breakup 规则。",
+    "LOD1 <= LOD0 的 35%，轮廓识别点不得在 LOD1 消失。",
+    "典型 PortStage 同屏城镇建筑不超过 60000 tri；三种目标分辨率均无明显空洞或巨型遮挡。",
+    "每栋材质槽 <= 6；只使用共享 trim sheet / detail mask，不出现每栋独占 4K 贴图。",
+    "UV 无明显拉伸；砖缝、木纹和屋面方向正确；污渍覆盖不超过可见表面的 30%。",
+    "网格无孤立点、退化面、重叠面、材质槽越界；封闭建筑无非流形边。",
+    "招牌、钟盘、门牌不含烘焙文字或数字。",
+    "固定机位截图中，建筑与现有玩家船、设施锚点和背景横幅的明度、饱和度及细节密度协调，不抢过 UI。",
+    "原有工作台对象和其他集合未被删除、移动或修改。"
+  ],
+  "implementation_order": [
+    "先只做 warehouse_long 的 LOD0 灰模，在 PortStage 固定机位验证尺度、倒角和立面深度",
+    "灰模通过后完成共享 facade / roof / industrial 模块",
+    "用模块重建 5 个 drop-in 资产并做 LOD1",
+    "再制作 boiler_house / workshop_row / brick_tenement 三个新增原型",
+    "最后统一 UV、共享纹理、污渍与固定机位截图",
+    "独立 Verifier 按 acceptance 检查后再由 Lead 导出和接线"
+  ],
+  "notes": "这是 sn_harbor_town_batch1 的视觉升级标准，不宣告现有模型已废弃，也不授权建模代理修改运行时代码。Builder 只在指定集合内建模；PortStage 接入、manifest 登记、打包和旧 GLB 替换由 Lead 在人工验收后执行。"
+}
