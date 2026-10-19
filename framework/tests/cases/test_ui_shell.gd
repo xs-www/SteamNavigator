@@ -218,6 +218,10 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 	var bundle := _mount(5101)
 	var shell: Control = bundle["shell"]
 	var context: AppContext = bundle["context"]
+	# The main view is the bare 3D stage, so the detailed 2D panels live in the
+	# overview drawer; open it before asserting the map / detail content.
+	shell._overview_detail = true
+	shell._refresh()
 	var view: Dictionary = context.queries.execute(&"port.view")["data"]
 	var ship: Dictionary = view["ship"]
 	var texts := _label_texts(shell._root_box)
@@ -278,6 +282,9 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 func test_victory_plan_explains_how_to_clear_the_mvp() -> void:
 	var bundle := _mount(5102)
 	var shell: Control = bundle["shell"]
+	# The victory plan is part of the detailed overview drawer over the stage.
+	shell._overview_detail = true
+	shell._refresh()
 	var overview_screens := _nodes_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT)
 	assert_eq(overview_screens.size(), 1, "the victory plan is hosted by the extracted overview screen")
 	var overview_screen: Control = overview_screens[0]
@@ -467,6 +474,8 @@ func test_notice_log_renders_filled_localized_text() -> void:
 	# The shell takes its locale from the player's saved settings, so pin it here:
 	# the expected sentences below are per language.
 	context.localization.set_locale("zh_CN")
+	# The sailing log is part of the detailed overview drawer, not the bare stage.
+	shell._overview_detail = true
 	_goto(shell, "overview")
 	var log_texts := _log_lines(shell)
 	assert_true(log_texts.size() >= 3, "the sailing log lists the session notices: %s" % str(log_texts))
@@ -533,24 +542,14 @@ func test_every_pushed_notice_key_is_localized_in_both_languages() -> void:
 				)
 
 
-## 2.5D overview stage: the Shell owns the full-window stage host and the 2D
-## hotspot layer; the overview page only switches its own content density. The
-## 2D shell (header/stats/navigation) must keep working across the switch.
-func test_overview_can_show_the_3d_port_stage_with_facility_hotspots() -> void:
+## 主界面重构：总览页默认进入 3D 港口舞台，紧凑顶部 chrome 与两侧招牌常驻。
+func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	var bundle := _mount(5205)
 	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
 	_goto(shell, "overview")
 	assert_true(bool(shell._port_stage_available()), "the port stage scene is available in this build")
-	assert_false(bool(shell._overview_stage_mode), "the 2D overview is the default")
-	# The page exposes the switch; pressing it goes through the same handler the
-	# shell uses, so the page <-> shell wiring is covered too.
-	var toggle := _button_by_text(shell._root_box, shell._tr("ui.button.port_stage", "俯瞰港口"))
-	assert_not_null(toggle, "the overview page exposes the 3D stage toggle")
-	if toggle != null:
-		toggle.emit_signal("pressed")
-	else:
-		shell._on_overview_stage_toggle()
-	assert_true(bool(shell._overview_stage_mode), "the overview stage mode is enabled")
+	assert_true(bool(shell._overview_stage_mode), "the 3D port stage is the default overview")
 	var host: SNStageHost = shell._port_stage_host
 	assert_not_null(host, "the shell mounts a stage host")
 	if host == null:
@@ -562,45 +561,198 @@ func test_overview_can_show_the_3d_port_stage_with_facility_hotspots() -> void:
 	if not (stage is PortStage):
 		_unmount(bundle)
 		return
-	assert_eq(String(host.stage_id()), "port", "the overview uses the port stage id")
 	var port_stage := stage as PortStage
 	var facilities: Array = shell._last_port_view.get("current_port", {}).get("facilities", [])
 	assert_eq(int(port_stage.facility_count()), facilities.size(), "every present facility is assembled in the stage")
-	assert_true(bool(port_stage.has_ship()), "the current hull is mounted in the scene")
 	assert_true(bool(shell._port_stage_active()), "the shell reports the stage as active on the overview")
-	# Hotspots are 2D controls produced from camera-projected facility anchors.
+
+	# Compact chrome: one panel, every datum and button from the old three bars.
+	var chrome: PanelContainer = shell._top_chrome
+	assert_not_null(chrome, "the compact top chrome is mounted")
+	if chrome == null:
+		_unmount(bundle)
+		return
+	var chrome_height := chrome.get_combined_minimum_size().y
+	assert_true(
+		chrome_height <= 130.0,
+		"the compact chrome stays under 130 px (measured %.1f)" % chrome_height
+	)
+	var chrome_texts := _label_texts(chrome)
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var port_name := context.translate(String(view["current_port"]["name_key"]), "")
+	var ship: Dictionary = view["ship"]
+	assert_contains(chrome_texts, port_name, "the chrome names the current port")
+	assert_contains(chrome_texts, str(int(view["money"])), "the chrome keeps the money chip")
+	assert_contains(chrome_texts, str(int(view["reputation"])), "the chrome keeps the reputation chip")
+	assert_contains(chrome_texts, "%.1f / %.1f" % [float(ship["free_weight"]), float(ship["max_weight"])], "the chrome keeps the remaining weight chip")
+	assert_contains(chrome_texts, "%.1f / %.1f" % [float(ship["free_cargo_capacity"]), float(ship["cargo_capacity"])], "the chrome keeps the remaining cargo chip")
+	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
+	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
+	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
+	for screen in ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]:
+		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
+	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.log", "")), "the compact chrome keeps the diagnostics button")
+	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.refresh", "")), "the compact chrome keeps the refresh button")
+
+	# Edge signboards: fixed left/right columns, one per present facility plus
+	# the permanent voyage sign. Positions come from the camera projection, but
+	# the controls themselves are pinned to the screen edges.
 	host.stage_viewport().size = Vector2i(1440, 900)
 	shell._layout_port_hotspots()
-	var hotspots := 0
+	var layer_width: float = shell._port_hotspot_layer.size.x
+	if layer_width <= 0.0:
+		layer_width = shell.get_viewport_rect().size.x
+	var signs := 0
 	for child in shell._port_hotspot_layer.get_children():
 		if child is Button:
-			hotspots += 1
-	assert_eq(hotspots, int(port_stage.facility_count()), "one 2D hotspot per present facility")
-	# The 2D shell is still mounted next to the stage.
-	assert_eq(_nodes_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT).size(), 1, "the 2D overview page is still mounted")
-	# Navigating away hides the 3D stage; the regular page takes over.
-	_goto(shell, "intel")
-	assert_false(host.visible, "leaving the overview hides the 3D stage")
-	assert_eq(_nodes_with_script(shell._root_box, INTEL_SCREEN_SCRIPT).size(), 1, "the intel page is mounted")
-	# Back to the overview with stage mode still on, then switch it off via the
-	# page's own return control.
-	_goto(shell, "overview")
-	assert_true(host.is_stage_visible(), "returning to the overview restores the stage")
-	var back := _button_by_text(shell._root_box, shell._tr("ui.button.overview_back", "返回总览"))
-	assert_not_null(back, "stage mode shows a return-to-overview control")
-	if back != null:
-		back.emit_signal("pressed")
-	else:
-		shell._on_overview_stage_toggle()
-	assert_false(bool(shell._overview_stage_mode), "the stage mode can be switched off again")
-	assert_false(host.visible, "the 2D overview hides the stage host")
-	# Re-open the stage and click a facility hotspot. The hotspot emits the same
-	# navigation intent as the top navigation, so exchange must open the market.
-	shell._on_overview_stage_toggle()
-	host.stage_viewport().size = Vector2i(1440, 900)
+			signs += 1
+	assert_eq(signs, facilities.size() + 1, "one edge sign per facility plus the voyage sign")
+	for facility in ["exchange", "contracts", "supply", "intel", "shipyard"]:
+		var sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_%s" % facility)
+		if facilities.has(facility):
+			assert_not_null(sign, "the present %s facility gets an edge sign" % facility)
+			if sign is Button:
+				var normalized: Vector2 = port_stage.facility_screen_anchor(String(facility))
+				var button := sign as Button
+				if normalized.x < 0.5:
+					assert_true(button.position.x < layer_width * 0.5, "%s sign sits in the left column" % facility)
+					assert_true(String(button.text).ends_with(" ▶"), "the left column points into the scene: %s" % String(button.text))
+				else:
+					assert_true(button.position.x > layer_width * 0.5, "%s sign sits in the right column" % facility)
+					assert_true(String(button.text).begins_with("◀ "), "the right column points into the scene: %s" % String(button.text))
+		else:
+			assert_true(sign == null, "an absent %s facility gets no edge sign" % facility)
+	var voyage_sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_voyage")
+	assert_not_null(voyage_sign, "the voyage sign is always present at the bottom of the right column")
+	# A resize re-lays the sign columns without losing or duplicating signs.
+	host.stage_viewport().size = Vector2i(1280, 720)
+	shell._on_viewport_size_changed()
 	shell._layout_port_hotspots()
-	var exchange_hotspot: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_exchange")
-	if exchange_hotspot is Button:
-		(exchange_hotspot as Button).emit_signal("pressed")
-		assert_eq(String(shell._active_screen), "market", "clicking the exchange hotspot opens the market page")
+	var resized_signs := 0
+	for child in shell._port_hotspot_layer.get_children():
+		if child is Button:
+			resized_signs += 1
+	assert_eq(resized_signs, facilities.size() + 1, "resizing the window re-lays the edge signs")
+	var exchange_sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_exchange")
+	if exchange_sign is Button:
+		(exchange_sign as Button).emit_signal("pressed")
+		assert_eq(String(shell._active_screen), "market", "clicking the exchange sign opens the market page")
+	# The navigation refresh runs behind the fade tween; headless tests never
+	# advance frames, so settle the transition synchronously before continuing.
+	shell._transitioning = false
+	shell._pending_transition = false
+	shell._fade_layer.visible = false
+
+	# The chrome is shared: other pages keep the same compact top bar and hide
+	# the overview-only layers.
+	_goto(shell, "market")
+	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the market page is mounted")
+	assert_false(bool(host.visible), "leaving the overview hides the 3D stage")
+	assert_false(bool(shell._port_status_bar.visible), "leaving the overview hides the status strip")
+	assert_true(shell._top_chrome != null and shell._top_chrome.get_combined_minimum_size().y <= 130.0, "the compact chrome is shared by every page")
+	assert_not_null(_button_by_text(shell._top_chrome, shell._tr("ui.nav.market", "")), "the shared chrome keeps navigation on other pages")
+
+	# The 2D overview stays reachable as the fallback / accessibility toggle.
+	_goto(shell, "overview")
+	var toggle := _button_by_text(shell._top_chrome, shell._tr("ui.button.overview_2d", ""))
+	assert_not_null(toggle, "the chrome offers the 2D overview toggle")
+	if toggle != null:
+		toggle.emit_signal("pressed")
+	assert_false(bool(shell._overview_stage_mode), "the 2D overview can be selected")
+	assert_false(bool(host.visible), "the 2D overview hides the stage host")
+	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "the 2D overview shows the detailed map layout")
+	var stage_button := _button_by_text(shell._root_box, shell._tr("ui.button.port_stage", ""))
+	assert_not_null(stage_button, "the 2D page offers the way back to the 3D stage")
+	if stage_button != null:
+		stage_button.emit_signal("pressed")
+	assert_true(bool(shell._overview_stage_mode), "the 3D stage can be restored")
+	_unmount(bundle)
+
+
+## 舞台不可用 / 加载失败时仍自动回退 2D 总览并提示，不出现空画面。
+func test_overview_stage_falls_back_to_the_usable_2d_overview() -> void:
+	var bundle := _mount(5208)
+	var shell: Control = bundle["shell"]
+	_goto(shell, "overview")
+	assert_true(bool(shell._overview_stage_mode), "the fixture starts on the 3D stage")
+	shell._on_port_stage_fallback("fixture")
+	shell._refresh()
+	assert_true(bool(shell._port_stage_load_failed), "a failed stage load is remembered for the session")
+	assert_false(bool(shell._overview_stage_mode), "the fallback switches to the 2D overview")
+	assert_false(bool(shell._port_stage_available()), "a failed stage is not retried")
+	if shell._port_stage_host != null:
+		assert_false(bool(shell._port_stage_host.visible), "the failed stage host is hidden")
+	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "the fallback page is the usable 2D overview")
+	assert_contains(_label_texts(shell._root_box), shell._tr("ui.error.port_stage_unavailable", ""), "the fallback explains what happened")
+	assert_not_null(_button_by_text(shell._root_box, shell._tr("ui.nav.market", "")), "navigation keeps working after the fallback")
+	_unmount(bundle)
+
+
+## 底部船舶/港口状态条 + 详细总览抽屉：开关、状态数据、等待与出航命令。
+func test_overview_status_strip_and_detail_drawer() -> void:
+	var bundle := _mount(5206)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	_goto(shell, "overview")
+	var bar: PanelContainer = shell._port_status_bar
+	assert_not_null(bar, "the overview mounts the bottom status strip")
+	if bar == null:
+		_unmount(bundle)
+		return
+	assert_true(bar.visible, "the status strip is visible on the overview")
+	assert_true(bar.get_combined_minimum_size().y <= 72.0, "the status strip content fits its 72 px budget (%.1f)" % bar.get_combined_minimum_size().y)
+	var bar_texts := _label_texts(bar)
+	assert_contains(bar_texts, context.translate("ui.label.durability", ""), "the strip shows durability")
+	assert_contains(bar_texts, context.translate("ui.label.cargo_hold", ""), "the strip shows the cargo hold")
+	assert_contains(bar_texts, context.translate("ui.label.damaged_modules", ""), "the strip shows damaged parts")
+	assert_contains(bar_texts, context.translate("ui.label.latest_notice", ""), "the strip shows the latest notice label")
+	assert_not_null(_button_by_text(bar, shell._tr("ui.button.overview_detail", "")), "the strip offers the detail overview button")
+	assert_not_null(_button_by_text(bar, "%s ▶" % shell._tr("ui.nav.voyage", "")), "the strip offers the depart button")
+	var wait_text: String = shell._tr("ui.button.wait_hours", "") % 12
+	assert_not_null(_button_by_text(bar, wait_text), "the strip offers the 12-hour wait button")
+
+	# Opening the drawer shows the existing 2D overview panels over the stage.
+	var detail_button := _button_by_text(bar, shell._tr("ui.button.overview_detail", ""))
+	if detail_button != null:
+		detail_button.emit_signal("pressed")
+	assert_true(bool(shell._overview_detail), "the detail drawer opens")
+	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "the drawer shows the map")
+	assert_contains(_label_texts(shell._root_box), context.translate("ui.victory.plan_title", ""), "the drawer keeps the victory plan")
+	var host: SNStageHost = shell._port_stage_host
+	assert_not_null(host, "the stage host stays mounted behind the drawer")
+	if host != null:
+		assert_true(host.is_stage_visible(), "the 3D stage is not destroyed while the drawer is open")
+	assert_true(shell._overview_detail_backdrop != null and shell._overview_detail_backdrop.visible, "an opaque backdrop covers the scene behind the drawer")
+	if shell._port_hotspot_layer != null:
+		assert_false(shell._port_hotspot_layer.visible, "edge signs hide while the drawer is open")
+	# The same bottom button toggles back to the main view.
+	var back_button := _button_by_text(shell._port_status_bar, shell._tr("ui.button.overview_main", ""))
+	assert_not_null(back_button, "the strip offers the way back to the scene")
+	if back_button != null:
+		back_button.emit_signal("pressed")
+	assert_false(bool(shell._overview_detail), "the detail drawer closes")
+	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 0, "the main view is the bare stage again")
+	if shell._overview_detail_backdrop != null:
+		assert_false(shell._overview_detail_backdrop.visible, "the backdrop hides with the drawer")
+
+	# Wait 12h goes through the same command path as the port-wait UI.
+	var time_before := context.state.now()
+	var wait_button := _button_by_text(shell._port_status_bar, wait_text)
+	assert_not_null(wait_button, "the strip still offers the wait button after the rebuild")
+	if wait_button != null:
+		wait_button.emit_signal("pressed")
+	assert_almost_eq(context.state.now(), time_before + 12.0, 0.001, "the bottom wait button advances game time by 12 hours")
+
+	# Leave and re-enter the overview: the strip follows the page.
+	_goto(shell, "intel")
+	assert_false(bool(shell._port_status_bar.visible), "the status strip is overview-only")
+	if host != null:
+		assert_false(bool(host.visible), "the stage hides outside the overview")
+	_goto(shell, "overview")
+	assert_true(bool(shell._port_status_bar.visible), "returning to the overview restores the status strip")
+	var depart_button := _button_by_text(shell._port_status_bar, "%s ▶" % shell._tr("ui.nav.voyage", ""))
+	assert_not_null(depart_button, "the strip offers the depart button again")
+	if depart_button != null:
+		depart_button.emit_signal("pressed")
+	assert_eq(String(shell._active_screen), "voyage", "the bottom depart button opens the voyage page")
 	_unmount(bundle)

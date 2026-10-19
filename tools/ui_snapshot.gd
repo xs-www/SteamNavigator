@@ -22,8 +22,12 @@ extends SceneTree
 ##   --category=cargo_modules,misc   改装态额外按分类各截一张
 ##   --damage=boiler:0.5[,cargo:0.4] 先损坏指定模块实例，再额外截取受损状态的
 ##                                   船厂正常态 / 改装态 / 补给维修页
-##   --overview-stage                额外切到总览页并打开 3D 港口舞台，截取
-##                                   overview_port_stage.png（含 2D 设施热点）
+##   --overview-stage                额外切到总览页并截取主界面（3D 港口舞台 +
+##                                   紧凑顶部 HUD + 两侧招牌 + 底部状态条）：
+##                                   overview_port_stage.png
+##   --overview-detail               在 --overview-stage 的基础上打开「详细总览」
+##                                   抽屉，截取 overview_detail.png（隐含
+##                                   --overview-stage）
 ##   --skip-refit                    只截正常态
 ## 任一截图失败或画面为空（纯色）时以退出码 1 结束，方便 CI/验收脚本判断。
 
@@ -52,6 +56,8 @@ var _categories: Array[String] = ["cargo_modules", "misc"]
 var _skip_refit := false
 ## 是否额外截取总览页的 3D 港口舞台。
 var _overview_stage := false
+## 是否在总览主界面基础上再截取「详细总览」抽屉。
+var _overview_detail := false
 ## 截图前要损坏的模块实例：{"slot": "boiler", "index": 0, "ratio": 0.5}。
 var _damage_targets: Array = []
 var _saved: Array[String] = []
@@ -176,9 +182,12 @@ func _run() -> void:
 		var overview := _node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT)
 		_expect(overview != null, "总览页已挂载")
 		_expect(bool(shell._port_stage_available()), "港口舞台场景存在")
-		shell._on_overview_stage_toggle()
-		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
-		_expect(bool(shell._overview_stage_mode), "总览进入 3D 港口舞台模式")
+		# The 3D stage is the default main view; only toggle it on if a prior
+		# step left the shell in the 2D fallback.
+		if not bool(shell._overview_stage_mode):
+			shell._on_overview_stage_toggle()
+			await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		_expect(bool(shell._overview_stage_mode), "总览默认进入 3D 港口舞台模式")
 		var port_host: SNStageHost = shell._port_stage_host
 		_expect(port_host != null and port_host.is_stage_visible(), "PortStage 宿主可见")
 		var port_stage: Variant = port_host.current_stage() if port_host != null else null
@@ -186,13 +195,33 @@ func _run() -> void:
 		if port_stage is PortStage:
 			_expect(int(port_stage.facility_count()) > 0, "港口舞台装配了设施")
 			_expect(bool(port_stage.has_ship()), "港口舞台挂载了玩家船")
-		var hotspot_buttons := 0
+		var sign_buttons := 0
 		if shell._port_hotspot_layer != null:
 			for child in shell._port_hotspot_layer.get_children():
 				if child is Button:
-					hotspot_buttons += 1
-		_expect(hotspot_buttons > 0, "总览舞台生成了 2D 设施热点（%d 个）" % hotspot_buttons)
+					sign_buttons += 1
+		var facility_count := 0
+		if port_stage is PortStage:
+			facility_count = int((port_stage as PortStage).facility_count())
+		_expect(sign_buttons == facility_count + 1, "总览舞台生成了设施招牌 + 出航招牌（%d 个）" % sign_buttons)
+		_expect(shell._top_chrome != null, "紧凑顶部 HUD 已挂载")
+		if shell._top_chrome != null:
+			var chrome_height := (shell._top_chrome as Control).get_combined_minimum_size().y
+			_expect(chrome_height <= 130.0, "顶部 HUD 高度 %.1f px（预算 ≤130）" % chrome_height)
+		_expect(shell._port_status_bar != null and shell._port_status_bar.visible, "底部船舶/港口状态条可见")
 		await _capture(_path("overview_port_stage.png"))
+		if _overview_detail:
+			var detail_button := _button_with_text(shell._port_status_bar, String(shell._tr("ui.button.overview_detail", "")))
+			_expect(detail_button != null, "底部状态条上有「详细总览」按钮")
+			if detail_button != null:
+				detail_button.emit_signal("pressed")
+			else:
+				shell._overview_detail = true
+				shell._refresh()
+			await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+			_expect(bool(shell._overview_detail), "详细总览抽屉已打开")
+			_expect(_node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT) != null, "详细抽屉挂载在总览页上")
+			await _capture(_path("overview_detail.png"))
 
 	await _teardown(shell)
 	_finish()
@@ -289,6 +318,14 @@ func _buttons(from: Node, out: Array[Button] = []) -> Array[Button]:
 			out.append(child)
 		_buttons(child, out)
 	return out
+
+
+## First button (depth-first) whose text matches exactly.
+func _button_with_text(from: Node, text: String) -> Button:
+	for button in _buttons(from):
+		if String(button.text) == text:
+			return button
+	return null
 
 
 func _find_shipyard(shell: Control) -> Control:
@@ -406,6 +443,9 @@ func _parse_args() -> void:
 		elif text == "--skip-refit":
 			_skip_refit = true
 		elif text == "--overview-stage":
+			_overview_stage = true
+		elif text == "--overview-detail":
+			_overview_detail = true
 			_overview_stage = true
 		elif text.begins_with("--damage="):
 			for part in text.get_slice("=", 1).split(",", false):

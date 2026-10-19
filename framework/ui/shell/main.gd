@@ -38,7 +38,7 @@ const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "inte
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
-## Facility id -> page opened by the 2D hotspot drawn over the stage.
+## Facility id -> page opened by the 2D sign drawn over the stage.
 const PORT_STAGE_FACILITY_SCREENS := {
 	"exchange": &"market",
 	"contracts": &"contracts",
@@ -46,6 +46,23 @@ const PORT_STAGE_FACILITY_SCREENS := {
 	"intel": &"intel",
 	"shipyard": &"shipyard",
 }
+## Compact top chrome: header + resource stats + navigation in two tight rows.
+## The measured minimum height must stay under `TOP_CHROME_MAX_HEIGHT`, because
+## the 3D stage is the main view and the HUD only frames it.
+const TOP_CHROME_MAX_HEIGHT := 130.0
+## Bottom ship/port status strip on the overview page (fixed shell layer).
+const PORT_STATUS_BAR_HEIGHT := 60.0
+const PORT_STATUS_BAR_GAP := 14.0
+## Side signboards: fixed columns at the scene edges, one per present facility
+## plus the always-present "voyage" sign at the bottom of the right column.
+const PORT_SIGN_WIDTH := 172.0
+const PORT_SIGN_HEIGHT := 42.0
+const PORT_SIGN_GAP := 10.0
+const PORT_SIGN_MARGIN := 20.0
+## Page bottom reserve: default leaves room for the footer, the overview status
+## bar is taller and replaces the footer while it is visible.
+const PAGE_BOTTOM_MARGIN := 56
+const PAGE_BOTTOM_MARGIN_WITH_BAR := 84
 var _context: AppContext = null
 @onready var _root_box: VBoxContainer = $PageMargin/PageScroll/RootBox
 var _last_port_view: Dictionary = {}
@@ -71,10 +88,22 @@ var _victory_dismissed: bool = false
 var _shipyard_refit: bool = false
 var _shipyard_category: String = "hulls"
 ## Overview 3D stage state. `_overview_stage_mode` is UI-session state only.
-var _overview_stage_mode: bool = false
+## The 3D port stage is the default main view; the 2D overview stays reachable
+## as a fallback / accessibility toggle.
+var _overview_stage_mode: bool = true
 var _port_stage_load_failed: bool = false
 var _port_stage_host: SNStageHost = null
+## 2D sign layer over the stage (one sign per present facility + voyage).
 var _port_hotspot_layer: Control = null
+## Overview detail drawer: when opened, the existing 2D overview panels are
+## shown over an opaque backdrop instead of the bare 3D stage.
+var _overview_detail: bool = false
+var _overview_detail_backdrop: ColorRect = null
+## Fixed chrome nodes rebuilt every refresh; kept so tests and the layout code
+## can measure them without walking the whole tree.
+var _top_chrome: PanelContainer = null
+var _port_status_bar: PanelContainer = null
+@onready var _page_margin: MarginContainer = $PageMargin
 @onready var _fade_layer: ColorRect = $TransitionLayer
 var _transitioning: bool = false
 var _pending_transition: bool = false
@@ -155,8 +184,10 @@ func _rebuild_ui() -> void:
 	for child in _root_box.get_children():
 		_root_box.remove_child(child)
 		child.queue_free()
+	_top_chrome = null
 	if _context == null:
 		_hide_port_stage()
+		_set_port_status_bar_visible(false)
 		_root_box.add_child(_label("Loading framework...", 20, COLOR_MUTED))
 		get_tree().create_timer(0.4).timeout.connect(_refresh)
 		return
@@ -164,6 +195,7 @@ func _rebuild_ui() -> void:
 	var app_view := _context.queries.execute(&"app.view")
 	if not bool(app_view.get("ok", false)):
 		_hide_port_stage()
+		_set_port_status_bar_visible(false)
 		_root_box.add_child(_label(_error_text(app_view), 18, COLOR_RED))
 		return
 	var app: Dictionary = app_view["data"]
@@ -172,32 +204,36 @@ func _rebuild_ui() -> void:
 	_set_menu_visual(not has_run)
 	if not has_run:
 		_hide_port_stage()
+		_set_port_status_bar_visible(false)
 		_build_menu(app)
 		return
-	_build_header(app)
-
 	var port_result := _context.queries.execute(&"port.view")
 	if not bool(port_result.get("ok", false)):
 		_hide_port_stage()
+		_set_port_status_bar_visible(false)
 		_root_box.add_child(_label(_error_text(port_result), 18, COLOR_RED))
 		return
 	var data: Dictionary = port_result["data"]
 	_last_port_view = data
-	_build_stats_bar(data)
+	var at_sea := bool(data.get("at_sea", false))
 
 	# The victory summary takes priority over the regular screens until the
 	# player explicitly dismisses it. The dismissed flag is UI-session state
 	# only and never written to the save.
 	var victory := _victory_view()
-	if bool(victory.get("achieved", false)) and not _victory_dismissed:
+	var victory_active := bool(victory.get("achieved", false)) and not _victory_dismissed
+	# One compact chrome serves every port/flow page; navigation is omitted while
+	# at sea, exactly like the old separate nav panel.
+	_build_top_chrome(app, data, not at_sea)
+	if victory_active:
 		_hide_port_stage()
-		_build_nav(data)
+		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_victory(victory)
 		return
-
-	if bool(data.get("at_sea", false)):
+	if at_sea:
 		_hide_port_stage()
+		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		var voyage: Variant = data.get("voyage", null)
 		if voyage is Dictionary and voyage.get("event", null) is Dictionary:
@@ -206,10 +242,12 @@ func _rebuild_ui() -> void:
 			_screen_at_sea(data, voyage)
 		return
 
-	_build_nav(data)
 	_build_status_banner()
 	if not SCREENS.has(_active_screen) and _active_screen != "port_memory" and _active_screen != "settlement":
 		_active_screen = "overview"
+	# The overview main view is a full-window 3D stage with edge HUD; the other
+	# pages keep their own layout and hide the stage/status strip again.
+	_set_port_status_bar_visible(_active_screen == "overview", data)
 	match _active_screen:
 		"market":
 			_screen_market(data)
@@ -233,34 +271,139 @@ func _rebuild_ui() -> void:
 
 
 ## ---------------------------------------------------------------------------
-## Header, navigation, menu
+## Compact top chrome (shared by every in-run page)
 ## ---------------------------------------------------------------------------
+##
+## Two dense rows replace the old header + stats bar + navigation stack:
+##   row 1  brand / status / version | port · time · money · reputation | stage
+##          toggle · diagnostics · refresh
+##   row 2  remaining weight / cargo / coal / water / durability / damaged chip |
+##          7 navigation buttons
+## The panel is semi-transparent so the 3D stage shows through; the measured
+## minimum height stays below `TOP_CHROME_MAX_HEIGHT`.
+func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> void:
+	var panel := PanelContainer.new()
+	panel.name = "TopChrome"
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", _chrome_style())
+	_root_box.add_child(panel)
+	_top_chrome = panel
+	var rows := VBoxContainer.new()
+	rows.name = "Rows"
+	rows.add_theme_constant_override("separation", 8)
+	panel.add_child(rows)
 
-func _build_header(app: Dictionary) -> void:
-	var bar := PanelContainer.new()
-	bar.theme_type_variation = &"SNInsetPanel"
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_root_box.add_child(bar)
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 14)
-	bar.add_child(header)
+	var row := HBoxContainer.new()
+	row.name = "Chrome"
+	row.add_theme_constant_override("separation", 12)
+	rows.add_child(row)
 	var brand := VBoxContainer.new()
 	brand.add_theme_constant_override("separation", 0)
-	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(brand)
+	row.add_child(brand)
 	brand.add_child(_label("S T E A M   N A V I G A T O R", 9, COLOR_MUTED))
-	brand.add_child(_label(_tr("ui.app.title", "Steam Navigator"), 24, COLOR_BRASS))
-	header.add_child(_badge(
+	brand.add_child(_label(_tr("ui.app.title", "Steam Navigator"), 22, COLOR_BRASS))
+	row.add_child(_badge(
 		_tr(String(app.get("status_key", "ui.status.ok")), ""),
 		_status_badge_tone(app)
 	))
-	header.add_child(_label("v%s" % app.get("framework_version", "?"), 12, COLOR_MUTED))
-	var log_button := _button(_tr("ui.button.log", "Diagnostics"), _show_diagnostics)
-	log_button.theme_type_variation = &"SNGhostButton"
-	header.add_child(log_button)
-	var refresh_button := _button(_tr("ui.button.refresh", "Refresh"), _refresh)
-	refresh_button.theme_type_variation = &"SNGhostButton"
-	header.add_child(refresh_button)
+	row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, COLOR_MUTED))
+	row.add_child(VSeparator.new())
+	for stat in [
+		[_tr("ui.label.port", "Port"), _current_port_label(data), COLOR_BRASS],
+		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), COLOR_TEXT],
+		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), COLOR_BRASS],
+		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), COLOR_GREEN],
+	]:
+		row.add_child(_stat_chip(stat[0], stat[1], stat[2], 10, 16))
+	var top_spacer := Control.new()
+	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(top_spacer)
+	if _active_screen == "overview" and _port_stage_available():
+		var stage_button := _small_chrome_button(
+			_tr("ui.button.overview_2d", "2D overview")
+			if _overview_stage_mode
+			else _tr("ui.button.port_stage", "Port view (3D)"),
+			_on_overview_stage_toggle
+		)
+		row.add_child(stage_button)
+	row.add_child(_small_chrome_button(_tr("ui.button.log", "Diagnostics"), _show_diagnostics))
+	row.add_child(_small_chrome_button(_tr("ui.button.refresh", "Refresh"), _refresh))
+
+	var row2 := HBoxContainer.new()
+	row2.name = "ChromeDetail"
+	row2.add_theme_constant_override("separation", 14)
+	rows.add_child(row2)
+	var ship: Dictionary = data.get("ship", {})
+	var detail_stats := [
+		[_tr("ui.label.free_weight", ""), "%s / %s" % [
+			_fmt(float(ship.get("free_weight", 0.0))),
+			_fmt(float(ship.get("max_weight", 0.0))),
+		], COLOR_TEXT],
+		[_tr("ui.label.free_capacity", ""), "%s / %s" % [
+			_fmt(float(ship.get("free_cargo_capacity", 0.0))),
+			_fmt(float(ship.get("cargo_capacity", 0.0))),
+		], COLOR_TEAL],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL],
+		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
+			_fmt(float(ship.get("durability", 0.0))),
+			_fmt(float(ship.get("max_durability", 0.0))),
+		], COLOR_GREEN],
+	]
+	var damaged_modules := int(ship.get("damaged_modules", 0))
+	if damaged_modules > 0:
+		var worst := clampf(float(ship.get("worst_module_condition", 1.0)), 0.0, 1.0)
+		detail_stats.append([
+			_tr("ui.label.module_status", "Modules"),
+			"%d · %d%%" % [damaged_modules, int(round(worst * 100.0))],
+			COLOR_RED if worst <= 0.0 else COLOR_BRASS,
+		])
+	for stat in detail_stats:
+		row2.add_child(_stat_chip(stat[0], stat[1], stat[2], 10, 16))
+	var bottom_spacer := Control.new()
+	bottom_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row2.add_child(bottom_spacer)
+	if show_nav:
+		_build_nav_buttons(row2)
+
+
+func _build_nav_buttons(parent: HBoxContainer) -> void:
+	var visual_active := "overview" if _active_screen in ["port_memory", "settlement", "victory"] else _active_screen
+	# Nested container so the compact navigation gap does not override the
+	# resource-chip spacing of the chrome row it is mounted in.
+	var nav := HBoxContainer.new()
+	nav.name = "Nav"
+	nav.add_theme_constant_override("separation", 2)
+	parent.add_child(nav)
+	for screen in SCREENS:
+		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
+		button.custom_minimum_size = Vector2(64, 36)
+		button.add_theme_font_size_override("font_size", 13)
+		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
+		nav.add_child(button)
+
+
+func _small_chrome_button(text: String, callback: Callable) -> Button:
+	var button := _button(text, callback)
+	button.theme_type_variation = &"SNGhostButton"
+	button.custom_minimum_size = Vector2(0, 30)
+	button.add_theme_font_size_override("font_size", 12)
+	return button
+
+
+## Semi-transparent dark chrome so the 3D stage is visible but the HUD stays
+## readable over bright sky, water or a banner.
+func _chrome_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.027451, 0.101961, 0.113725, 0.84)
+	style.border_color = Color(COLOR_BRASS.r, COLOR_BRASS.g, COLOR_BRASS.b, 0.35)
+	style.border_width_bottom = 1
+	style.content_margin_left = 16.0
+	style.content_margin_top = 14.0
+	style.content_margin_right = 16.0
+	style.content_margin_bottom = 14.0
+	style.set_corner_radius_all(4)
+	return style
 
 
 func _status_badge_tone(app: Dictionary) -> int:
@@ -283,45 +426,6 @@ func _status_color(app: Dictionary) -> Color:
 			return COLOR_RED
 
 
-func _build_stats_bar(data: Dictionary) -> void:
-	var panel := _panel()
-	panel.theme_type_variation = &"SNElevatedPanel"
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	_panel_add(panel, row)
-	var ship: Dictionary = data.get("ship", {})
-	var stats := [
-		[_tr("ui.label.port", "Port"), _current_port_label(data), COLOR_BRASS],
-		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), COLOR_TEXT],
-		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), COLOR_BRASS],
-		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), COLOR_GREEN],
-		[_tr("ui.label.free_weight", ""), "%s / %s" % [
-			_fmt(float(ship.get("free_weight", 0.0))),
-			_fmt(float(ship.get("max_weight", 0.0))),
-		], COLOR_TEXT],
-		[_tr("ui.label.free_capacity", ""), "%s / %s" % [
-			_fmt(float(ship.get("free_cargo_capacity", 0.0))),
-			_fmt(float(ship.get("cargo_capacity", 0.0))),
-		], COLOR_TEAL],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL],
-		[_tr("ui.label.durability", "Durability"), "%s / %s" % [_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0)))], COLOR_GREEN],
-	]
-	var damaged_modules := int(ship.get("damaged_modules", 0))
-	if damaged_modules > 0:
-		var worst := clampf(float(ship.get("worst_module_condition", 1.0)), 0.0, 1.0)
-		stats.append([
-			_tr("ui.label.module_status", "Modules"),
-			"%d · %d%%" % [damaged_modules, int(round(worst * 100.0))],
-			COLOR_RED if worst <= 0.0 else COLOR_BRASS,
-		])
-	for index in stats.size():
-		if index > 0:
-			row.add_child(VSeparator.new())
-		row.add_child(_stat_chip(stats[index][0], stats[index][1], stats[index][2]))
-	_root_box.add_child(panel)
-
-
 ## Current port (or the destination while at sea) for the always-visible info bar.
 func _current_port_label(data: Dictionary) -> String:
 	var port: Dictionary = data.get("current_port", {})
@@ -335,36 +439,13 @@ func _current_port_label(data: Dictionary) -> String:
 	return _tr(String(port.get("name_key", "")), String(port.get("id", "")))
 
 
-func _stat_chip(label_text: String, value_text: String, accent: Color) -> Control:
+func _stat_chip(label_text: String, value_text: String, accent: Color, label_size: int = 9, value_size: int = 14) -> Control:
 	var column := VBoxContainer.new()
-	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", 1)
-	column.add_child(_label(label_text, 10, COLOR_MUTED))
-	column.add_child(_label(value_text, 16, accent))
+	column.size_flags_horizontal = Control.SIZE_FILL
+	column.add_theme_constant_override("separation", 0)
+	column.add_child(_label(label_text, label_size, COLOR_MUTED))
+	column.add_child(_label(value_text, value_size, accent))
 	return column
-
-
-func _build_nav(data: Dictionary) -> void:
-	var panel := _panel()
-	panel.theme_type_variation = &"SNInsetPanel"
-	var nav := HBoxContainer.new()
-	nav.add_theme_constant_override("separation", 2)
-	_panel_add(panel, nav)
-	var visual_active := "overview" if _active_screen in ["port_memory", "settlement", "victory"] else _active_screen
-	for screen in SCREENS:
-		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
-		button.custom_minimum_size = Vector2(100, 36)
-		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
-		nav.add_child(button)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nav.add_child(spacer)
-	var port: Dictionary = data.get("current_port", {})
-	nav.add_child(_badge("%s · %s" % [
-		_tr("ui.label.port", "Port"),
-		_tr(String(port.get("name_key", "")), String(port.get("id", ""))),
-	], SNBadge.Tone.NEUTRAL))
-	_root_box.add_child(panel)
 
 
 func _build_status_banner() -> void:
@@ -374,6 +455,167 @@ func _build_status_banner() -> void:
 	panel.theme_type_variation = &"SNInsetPanel"
 	_panel_add(panel, _badge(_status_message, SNBadge.Tone.DANGER if _status_is_error else SNBadge.Tone.SUCCESS))
 	_root_box.add_child(panel)
+
+
+## ---------------------------------------------------------------------------
+## Bottom ship / port status strip (overview only, fixed shell layer)
+## ---------------------------------------------------------------------------
+
+## Builds (once) the fixed bottom strip and syncs its contents for the current
+## view model: durability, hold usage, coal, water, damaged parts, the latest
+## notice and the detail / depart / wait actions.
+func _set_port_status_bar_visible(visible: bool, data: Dictionary = {}) -> void:
+	if not visible:
+		if _port_status_bar != null and is_instance_valid(_port_status_bar):
+			_port_status_bar.visible = false
+		_set_footer_visible(true)
+		_set_page_bottom_reserve(false)
+		return
+	if data.is_empty():
+		data = _last_port_view
+	if data.is_empty():
+		return
+	_ensure_port_status_bar()
+	_refresh_port_status_bar(data)
+	if _port_status_bar != null:
+		_port_status_bar.visible = true
+	_set_footer_visible(false)
+	_set_page_bottom_reserve(true)
+
+
+func _ensure_port_status_bar() -> void:
+	if _port_status_bar != null and is_instance_valid(_port_status_bar):
+		return
+	_port_status_bar = PanelContainer.new()
+	_port_status_bar.name = "PortStatusBar"
+	_port_status_bar.add_theme_stylebox_override("panel", _bottom_bar_style())
+	_port_status_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_port_status_bar)
+	_port_status_bar.anchor_left = 0.0
+	_port_status_bar.anchor_top = 1.0
+	_port_status_bar.anchor_right = 1.0
+	_port_status_bar.anchor_bottom = 1.0
+	_port_status_bar.offset_left = PORT_SIGN_MARGIN
+	_port_status_bar.offset_right = -PORT_SIGN_MARGIN
+	_port_status_bar.offset_top = -(PORT_STATUS_BAR_HEIGHT + PORT_STATUS_BAR_GAP)
+	_port_status_bar.offset_bottom = -PORT_STATUS_BAR_GAP
+	var content := HBoxContainer.new()
+	content.name = "Content"
+	content.add_theme_constant_override("separation", 12)
+	_port_status_bar.add_child(content)
+	# Above the page and footer, below the transition fade.
+	if _fade_layer != null:
+		move_child(_port_status_bar, _fade_layer.get_index())
+
+
+func _refresh_port_status_bar(data: Dictionary) -> void:
+	if _port_status_bar == null or not is_instance_valid(_port_status_bar):
+		return
+	var content := _port_status_bar.get_node_or_null("Content") as HBoxContainer
+	if content == null:
+		return
+	for child in content.get_children():
+		content.remove_child(child)
+		child.queue_free()
+	var ship: Dictionary = data.get("ship", {})
+	var damaged := int(ship.get("damaged_modules", 0))
+	var worst := clampf(float(ship.get("worst_module_condition", 1.0)), 0.0, 1.0)
+	var chips := [
+		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
+			_fmt(float(ship.get("durability", 0.0))),
+			_fmt(float(ship.get("max_durability", 0.0))),
+		], COLOR_GREEN],
+		[_tr("ui.label.cargo_hold", "Hold"), "%s / %s" % [
+			_fmt(float(ship.get("cargo_used", 0.0))),
+			_fmt(float(ship.get("cargo_capacity", 0.0))),
+		], COLOR_TEAL],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL],
+		[_tr("ui.label.damaged_modules", "Damaged modules"),
+			"%d · %d%%" % [damaged, int(round(worst * 100.0))] if damaged > 0
+			else _tr("ui.label.none", "None"),
+			COLOR_RED if damaged > 0 and worst <= 0.0 else (COLOR_BRASS if damaged > 0 else COLOR_MUTED)],
+	]
+	for chip in chips:
+		content.add_child(_stat_chip(chip[0], chip[1], chip[2], 10, 15))
+	content.add_child(VSeparator.new())
+	var notice_box := VBoxContainer.new()
+	notice_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notice_box.add_theme_constant_override("separation", 0)
+	notice_box.add_child(_label(_tr("ui.label.latest_notice", "Latest notice"), 9, COLOR_MUTED))
+	var notice_label := _label(_latest_notice_text(data), 12, COLOR_TEXT)
+	notice_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	notice_label.clip_text = true
+	notice_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notice_box.add_child(notice_label)
+	content.add_child(notice_box)
+	# The detail drawer only exists over the live stage; the 2D overview already
+	# shows every panel, so it gets no detail toggle.
+	if _active_screen == "overview" and _overview_stage_mode and _port_stage_available():
+		var detail_button := _button(
+			_tr("ui.button.overview_main", "Back to scene")
+			if _overview_detail
+			else _tr("ui.button.overview_detail", "Detail overview"),
+			_on_overview_detail_toggle
+		)
+		detail_button.custom_minimum_size = Vector2(0, 32)
+		detail_button.add_theme_font_size_override("font_size", 13)
+		content.add_child(detail_button)
+	var depart_button := _button("%s ▶" % _tr("ui.nav.voyage", "Voyage"), _on_nav.bind("voyage"))
+	depart_button.theme_type_variation = &"SNPrimaryButton"
+	depart_button.custom_minimum_size = Vector2(0, 32)
+	depart_button.add_theme_font_size_override("font_size", 13)
+	content.add_child(depart_button)
+	var wait_button := _button(
+		_tr("ui.button.wait_hours", "Wait %d h") % 12,
+		func() -> void: _run_command(&"port.wait", {"hours": 12})
+	)
+	wait_button.custom_minimum_size = Vector2(0, 32)
+	wait_button.add_theme_font_size_override("font_size", 13)
+	content.add_child(wait_button)
+
+
+## Last pushed notice rendered with the same template filling as the overview log.
+func _latest_notice_text(data: Dictionary) -> String:
+	var notices: Array = data.get("notices", [])
+	if notices.is_empty():
+		return _tr("ui.label.no_notice", "No notices yet")
+	var notice: Variant = notices[notices.size() - 1]
+	if not (notice is Dictionary):
+		return ""
+	return _notice_text(notice)
+
+
+func _bottom_bar_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.027451, 0.101961, 0.113725, 0.88)
+	style.border_color = Color(COLOR_BRASS.r, COLOR_BRASS.g, COLOR_BRASS.b, 0.32)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 14.0
+	style.content_margin_top = 6.0
+	style.content_margin_right = 14.0
+	style.content_margin_bottom = 6.0
+	return style
+
+
+func _set_footer_visible(visible: bool) -> void:
+	if _footer_team == null:
+		return
+	var footer := _footer_team.get_parent() as CanvasItem
+	if footer != null:
+		footer.visible = visible
+
+
+## Reserve space under the scroll page so neither the footer nor the status strip
+## covers the last row of a page.
+func _set_page_bottom_reserve(bar_visible: bool) -> void:
+	if _page_margin == null:
+		return
+	_page_margin.add_theme_constant_override(
+		"margin_bottom",
+		PAGE_BOTTOM_MARGIN_WITH_BAR if bar_visible else PAGE_BOTTOM_MARGIN
+	)
 
 
 func _build_menu(app: Dictionary) -> void:
@@ -446,6 +688,7 @@ func _screen_overview(data: Dictionary) -> void:
 	screen.command_requested.connect(_run_command)
 	screen.map_port_clicked.connect(_on_map_port_clicked)
 	screen.stage_toggle_requested.connect(_on_overview_stage_toggle)
+	screen.detail_toggle_requested.connect(_on_overview_detail_toggle)
 	_root_box.add_child(screen)
 
 
@@ -458,9 +701,11 @@ func _overview_model(data: Dictionary) -> Dictionary:
 	model["facility_labels"] = facilities
 	model["banner_path"] = _port_banner_path(data)
 	# 2.5D overview stage: availability is decided by the shell (scene present
-	# and not previously failed); mode is UI-session state.
+	# and not previously failed); stage mode and the detail drawer are UI-session
+	# state only.
 	model["stage_available"] = _port_stage_available()
 	model["stage_mode"] = _overview_stage_mode and _port_stage_available()
+	model["overview_detail"] = _overview_detail
 	var map_result := _context.queries.execute(&"map.view")
 	if bool(map_result.get("ok", false)):
 		var map_data: Dictionary = map_result["data"].duplicate(true)
@@ -492,13 +737,24 @@ func _overview_model(data: Dictionary) -> Dictionary:
 
 
 ## ---------------------------------------------------------------------------
-## Overview 3D port stage (2.5D slice 3: page integration)
+## Overview 3D port stage (2.5D fixed stage + edge signs + detail drawer)
 ## ---------------------------------------------------------------------------
 
+## Toggles the 3D stage / 2D overview fallback. Leaving the stage also closes the
+## detail drawer, because the drawer only makes sense over the live scene.
 func _on_overview_stage_toggle() -> void:
 	if not _port_stage_available():
 		return
 	_overview_stage_mode = not _overview_stage_mode
+	if not _overview_stage_mode:
+		_overview_detail = false
+	_status_message = ""
+	_refresh()
+
+
+## Toggles the detailed 2D overview drawer over the 3D stage.
+func _on_overview_detail_toggle() -> void:
+	_overview_detail = not _overview_detail
 	_status_message = ""
 	_refresh()
 
@@ -513,7 +769,7 @@ func _ensure_port_stage_host() -> void:
 	if _port_stage_host != null and is_instance_valid(_port_stage_host):
 		return
 	# Full-window 3D backdrop: directly above the flat Background and below every
-	# UI layer, so the existing header / stats bar / navigation stay unchanged.
+	# UI layer, so the chrome / status bar / side signs float over the scene.
 	_port_stage_host = SNStageHost.new()
 	_port_stage_host.name = "PortStageHost"
 	_port_stage_host.auto_load = false
@@ -524,9 +780,13 @@ func _ensure_port_stage_host() -> void:
 	move_child(_port_stage_host, $Background.get_index() + 1)
 	_port_stage_host.set_stage_visible(false)
 
-	# 2D hotspots over the stage: transparent ghost buttons laid out from the
-	# PortStage camera projection, never 3D raycasts. The layer itself ignores the
-	# mouse so clicks outside the buttons fall through to the normal page.
+	# Opaque backdrop for the detail drawer: covers the stage (but not the top
+	# chrome or the bottom status strip) while the 2D overview panels are open.
+	_ensure_overview_detail_backdrop()
+
+	# Edge sign layer over the stage: fixed left/right columns driven by the
+	# PortStage camera projection, never 3D raycasts. The layer itself ignores
+	# the mouse so clicks outside the signs fall through to the page.
 	_port_hotspot_layer = Control.new()
 	_port_hotspot_layer.name = "PortStageHotspots"
 	_port_hotspot_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -536,6 +796,44 @@ func _ensure_port_stage_host() -> void:
 	_port_hotspot_layer.visible = false
 	if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
 		get_viewport().size_changed.connect(_on_viewport_size_changed)
+
+
+func _ensure_overview_detail_backdrop() -> void:
+	if _overview_detail_backdrop != null and is_instance_valid(_overview_detail_backdrop):
+		return
+	_overview_detail_backdrop = ColorRect.new()
+	_overview_detail_backdrop.name = "OverviewDetailBackdrop"
+	_overview_detail_backdrop.color = COLOR_BG
+	_overview_detail_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overview_detail_backdrop.visible = false
+	add_child(_overview_detail_backdrop)
+	_overview_detail_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_place_overview_detail_backdrop()
+
+
+## Keeps the backdrop above the stage but below the scrolling page. `move_child`
+## takes the final sibling index, so a forward move needs the page's current
+## index while the backdrop is still behind it.
+func _place_overview_detail_backdrop() -> void:
+	if _overview_detail_backdrop == null or not is_instance_valid(_overview_detail_backdrop):
+		return
+	if _page_margin == null:
+		return
+	var page_index := _page_margin.get_index()
+	if _overview_detail_backdrop.get_index() < page_index:
+		return
+	move_child(_overview_detail_backdrop, page_index)
+
+
+func _sync_overview_detail_backdrop() -> void:
+	if _overview_detail_backdrop == null or not is_instance_valid(_overview_detail_backdrop):
+		_ensure_overview_detail_backdrop()
+	if _overview_detail_backdrop == null:
+		return
+	var visible_now := _overview_detail and _port_stage_active()
+	_overview_detail_backdrop.visible = visible_now
+	if visible_now:
+		_place_overview_detail_backdrop()
 
 
 func _sync_port_stage(data: Dictionary) -> void:
@@ -559,14 +857,18 @@ func _sync_port_stage(data: Dictionary) -> void:
 			return
 	_port_stage_host.bind_view_model(_port_stage_payload(data))
 	_port_stage_host.set_stage_visible(true)
+	_sync_overview_detail_backdrop()
 	if _port_hotspot_layer != null:
-		_port_hotspot_layer.visible = true
+		# The detail drawer owns the screen; signs would float over its panels.
+		_port_hotspot_layer.visible = not _overview_detail
 	_refresh_port_hotspots_soon()
 
 
 func _hide_port_stage() -> void:
 	if _port_stage_host != null and is_instance_valid(_port_stage_host):
 		_port_stage_host.set_stage_visible(false)
+	if _overview_detail_backdrop != null and is_instance_valid(_overview_detail_backdrop):
+		_overview_detail_backdrop.visible = false
 	if _port_hotspot_layer != null and is_instance_valid(_port_hotspot_layer):
 		_port_hotspot_layer.visible = false
 		for child in _port_hotspot_layer.get_children():
@@ -597,6 +899,8 @@ func _port_stage_payload(data: Dictionary) -> Dictionary:
 	# its defaults until content exposes them.
 	if port.get("facility_visuals", null) is Dictionary:
 		port_payload["facility_visuals"] = (port["facility_visuals"] as Dictionary).duplicate(true)
+	if port.get("town_visuals", null) is Dictionary:
+		port_payload["town_visuals"] = (port["town_visuals"] as Dictionary).duplicate(true)
 	if port.get("palette", null) is Dictionary:
 		port_payload["palette"] = (port["palette"] as Dictionary).duplicate(true)
 	if not String(port.get("landmark_path", "")).is_empty():
@@ -628,6 +932,7 @@ func _on_port_stage_fallback(reason: String) -> void:
 		return
 	_port_stage_load_failed = true
 	_overview_stage_mode = false
+	_overview_detail = false
 	_hide_port_stage()
 	push_warning("PortStage unavailable (%s), falling back to the 2D overview" % reason)
 	_set_status(_tr("ui.error.port_stage_unavailable", "3D port stage unavailable, showing the 2D overview."), true)
@@ -650,37 +955,153 @@ func _delayed_port_hotspot_pass() -> void:
 	_layout_port_hotspots.call_deferred()
 
 
+## Fixed edge signboards replacing the old floating labels: facilities are split
+## by their projected x (< 0.5 -> left column, otherwise right column), sorted by
+## projected y and stacked at the screen edges. The right column reserves its
+## bottom slot for the permanent "voyage" sign. Layout keeps clear of the compact
+## top chrome and the bottom status strip, and is redone on every resize.
 func _layout_port_hotspots() -> void:
 	if _port_hotspot_layer == null or not is_instance_valid(_port_hotspot_layer):
 		return
 	for child in _port_hotspot_layer.get_children():
 		_port_hotspot_layer.remove_child(child)
 		child.queue_free()
-	if not _port_stage_active():
+	if not _port_stage_active() or _overview_detail:
 		return
 	var stage := _port_stage_host.current_stage()
-	if stage == null or not stage.has_method("facility_anchors"):
+	if stage == null or not stage.has_method("facility_screen_anchor"):
 		return
-	var anchors: Dictionary = stage.facility_anchors()
+	var anchors: Dictionary = stage.facility_anchors() if stage.has_method("facility_anchors") else {}
 	var layer_size := _port_hotspot_layer.size
 	if layer_size.x <= 0.0 or layer_size.y <= 0.0:
 		layer_size = get_viewport_rect().size
+	var top_safe := _port_hud_top_safe()
+	var bottom_safe := _port_hud_bottom_safe(layer_size)
+	var left: Array = []
+	var right: Array = []
 	for raw_facility in anchors.keys():
 		var facility := String(raw_facility)
+		if not PORT_STAGE_FACILITY_SCREENS.has(facility):
+			continue
 		var normalized: Vector2 = stage.facility_screen_anchor(facility)
 		if normalized == Vector2.ZERO:
 			continue
-		var button := _button(_facility_name(facility), _on_port_hotspot.bind(facility))
+		var entry := {"facility": facility, "y": normalized.y}
+		if normalized.x < 0.5:
+			left.append(entry)
+		else:
+			right.append(entry)
+	left.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["y"]) < float(b["y"]))
+	right.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["y"]) < float(b["y"]))
+	_layout_sign_column(left, false, top_safe, bottom_safe, layer_size)
+	_layout_sign_column(right, true, top_safe, bottom_safe, layer_size)
+	# Permanent voyage sign pinned to the bottom of the right column.
+	var voyage_sign := _port_sign(
+		"%s ▶" % _tr("ui.nav.voyage", "Voyage"),
+		_on_port_hotspot.bind("voyage"),
+		true
+	)
+	voyage_sign.name = "Hotspot_voyage"
+	voyage_sign.position = Vector2(
+		layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH,
+		bottom_safe - PORT_SIGN_HEIGHT
+	)
+	_port_hotspot_layer.add_child(voyage_sign)
+
+
+func _layout_sign_column(entries: Array, right_column: bool, top_safe: float, bottom_safe: float, layer_size: Vector2) -> void:
+	var count := entries.size()
+	if count == 0:
+		return
+	var area_top := top_safe + 8.0
+	var area_bottom := bottom_safe - 8.0
+	if right_column:
+		# Keep the pinned voyage sign out of the facility stack.
+		area_bottom -= PORT_SIGN_HEIGHT + PORT_SIGN_GAP
+	var total := count * PORT_SIGN_HEIGHT + (count - 1) * PORT_SIGN_GAP
+	var start := area_top + maxf(0.0, (area_bottom - area_top - total) * 0.5)
+	var x := (
+		layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH
+		if right_column
+		else PORT_SIGN_MARGIN
+	)
+	for index in count:
+		var facility := String(entries[index]["facility"])
+		var label := (
+			"◀ %s" % _facility_sign_name(facility)
+			if right_column
+			else "%s ▶" % _facility_sign_name(facility)
+		)
+		var button := _port_sign(label, _on_port_hotspot.bind(facility), false)
 		button.name = "Hotspot_%s" % facility
-		button.theme_type_variation = &"SNGhostButton"
-		button.custom_minimum_size = Vector2(136, 36)
-		button.size = Vector2(136, 36)
-		button.tooltip_text = _tr("ui.hint.port_hotspot", "Open this facility")
-		button.position = Vector2(normalized.x * layer_size.x, normalized.y * layer_size.y) - button.size * 0.5
+		button.position = Vector2(x, start + index * (PORT_SIGN_HEIGHT + PORT_SIGN_GAP))
 		_port_hotspot_layer.add_child(button)
 
 
+## One fixed signboard at the scene edge: dark wood/iron plate with a brass
+## border, readable over sky, water and banner alike.
+func _port_sign(text: String, callback: Callable, primary: bool) -> Button:
+	var button := _button(text, callback)
+	button.theme_type_variation = &"SNGhostButton"
+	button.custom_minimum_size = Vector2(PORT_SIGN_WIDTH, PORT_SIGN_HEIGHT)
+	button.size = Vector2(PORT_SIGN_WIDTH, PORT_SIGN_HEIGHT)
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	button.add_theme_font_size_override("font_size", 14)
+	button.add_theme_color_override("font_color", COLOR_TEXT if not primary else Color("f4e6c8"))
+	button.add_theme_color_override("font_hover_color", COLOR_BRASS)
+	button.tooltip_text = _tr("ui.hint.port_hotspot", "Open this facility")
+	var normal := _sign_style(primary, 0.92)
+	var hover := _sign_style(primary, 1.0)
+	hover.bg_color = normal.bg_color.lightened(0.12)
+	hover.border_color = Color(COLOR_BRASS.r, COLOR_BRASS.g, COLOR_BRASS.b, 0.9)
+	var pressed := _sign_style(primary, 1.0)
+	pressed.bg_color = normal.bg_color.darkened(0.18)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", hover)
+	button.add_theme_stylebox_override("disabled", normal)
+	return button
+
+
+func _sign_style(primary: bool, alpha: float) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.043, 0.129, 0.141, alpha) if not primary else Color(0.09, 0.27, 0.29, alpha)
+	style.border_color = Color(COLOR_BRASS.r, COLOR_BRASS.g, COLOR_BRASS.b, 0.55 if not primary else 0.8)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 10.0
+	style.content_margin_right = 10.0
+	style.content_margin_top = 6.0
+	style.content_margin_bottom = 6.0
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
+	style.shadow_size = 4
+	return style
+
+
+## Bottom edge of the compact top chrome in window coordinates; fallback keeps
+## the first (not yet laid out) pass from drawing signs over the HUD.
+func _port_hud_top_safe() -> float:
+	if _top_chrome != null and is_instance_valid(_top_chrome):
+		var rect := _top_chrome.get_global_rect()
+		if rect.size.y > 0.0:
+			return rect.end.y + 8.0
+	return TOP_CHROME_MAX_HEIGHT + 8.0
+
+
+## Top edge of the bottom status strip (or the footer reserve) in window coords.
+func _port_hud_bottom_safe(layer_size: Vector2) -> float:
+	if _port_status_bar != null and is_instance_valid(_port_status_bar) and _port_status_bar.visible:
+		var rect := _port_status_bar.get_global_rect()
+		if rect.size.y > 0.0:
+			return rect.position.y - 8.0
+	return layer_size.y - 48.0
+
+
 func _on_port_hotspot(facility: String) -> void:
+	if facility == "voyage":
+		_on_nav("voyage")
+		return
 	var screen_id: StringName = PORT_STAGE_FACILITY_SCREENS.get(facility, &"")
 	if screen_id == &"":
 		return
@@ -1029,6 +1450,7 @@ func _on_play_again() -> void:
 	_victory_dismissed = false
 	_settlement_summary = {}
 	_status_message = ""
+	_overview_detail = false
 	_menu_screen = "new_game"
 	_active_screen = "overview"
 	_refresh(true)
@@ -1141,6 +1563,9 @@ func _save_settings() -> void:
 func _on_nav(screen: String) -> void:
 	# Navigating away from the victory summary counts as "keep playing".
 	_victory_dismissed = true
+	if screen != "overview":
+		# The detail drawer only belongs to the overview main view.
+		_overview_detail = false
 	_active_screen = screen
 	_status_message = ""
 	_refresh(true)
@@ -1191,6 +1616,7 @@ func _on_continue() -> void:
 	_selected_destination = ""
 	_selected_strategy = ""
 	_active_screen = "overview"
+	_overview_detail = false
 	_victory_dismissed = false
 	_set_status("已载入自动存档", false)
 	_refresh(true)
@@ -1463,6 +1889,12 @@ func _facility_name(facility: String) -> String:
 		"intel": "情报站",
 	}
 	return names.get(facility, facility)
+
+
+## Short label for an edge signboard ("市场" / "Market"); the long facility name
+## above stays in the detail panels.
+func _facility_sign_name(facility: String) -> String:
+	return _tr("ui.facility.%s" % facility, _facility_name(facility))
 
 
 func _age_text(age_hours: float) -> String:

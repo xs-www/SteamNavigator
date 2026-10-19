@@ -11,8 +11,11 @@
         docs/design/screenshots/shipyard_normal.png;
       - presses the refit button to enter the cutaway, then saves
         docs/design/screenshots/shipyard_refit.png;
-      - with -OverviewStage, switches to the overview, opens the 3D port stage
-        and saves docs/design/screenshots/overview_port_stage.png;
+      - with -OverviewStage, switches to the overview main view (3D port stage +
+        compact top HUD + edge signs + bottom status strip) and saves
+        docs/design/screenshots/overview_port_stage.png;
+      - with -OverviewDetail, also opens the detailed overview drawer and saves
+        docs/design/screenshots/overview_detail.png (implies -OverviewStage);
       - quits; exit code 0 when every expected capture was written and fresh, else 1.
     Godot executable resolution: -GodotBin > $env:GODOT_BIN > default local path.
     This script is ASCII-only so Windows PowerShell 5.1 can parse it.
@@ -31,7 +34,8 @@ param(
     [string]$Categories = "cargo_modules,misc",
     [string]$Damage = "",
     [switch]$SkipRefit,
-    [switch]$OverviewStage
+    [switch]$OverviewStage,
+    [switch]$OverviewDetail
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,6 +62,7 @@ $godotArgs = @(
 )
 if ($SkipRefit) { $godotArgs += "--skip-refit" }
 if ($OverviewStage) { $godotArgs += "--overview-stage" }
+if ($OverviewDetail) { $godotArgs += "--overview-detail" }
 if (-not [string]::IsNullOrWhiteSpace($Damage)) { $godotArgs += "--damage=$Damage" }
 
 $startedAt = Get-Date
@@ -110,7 +115,8 @@ if (-not [string]::IsNullOrWhiteSpace($Damage)) {
     $expected += "supply_damaged.png"
 }
 # Overview 3D port stage capture (2.5D slice 3) is opt-in.
-if ($OverviewStage) { $expected += "overview_port_stage.png" }
+if ($OverviewStage -or $OverviewDetail) { $expected += "overview_port_stage.png" }
+if ($OverviewDetail) { $expected += "overview_detail.png" }
 
 $shots = @()
 $stale = @()
