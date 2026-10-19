@@ -4,9 +4,9 @@ render_mode world_vertex_coords, cull_back, depth_draw_opaque, diffuse_burley, s
 // ---------------------------------------------------------------- palette ----
 // Hues follow the Iron Harbor UI tokens + main-menu banner:
 // petrol/teal body, brass sunset glints, paper-white foam.
-uniform vec3 deep_color : source_color = vec3(0.090, 0.260, 0.280);
-uniform vec3 shallow_color : source_color = vec3(0.150, 0.380, 0.380);
-uniform vec3 crest_color : source_color = vec3(0.400, 0.600, 0.570);
+uniform vec3 deep_color : source_color = vec3(0.080, 0.220, 0.240);
+uniform vec3 shallow_color : source_color = vec3(0.130, 0.340, 0.340);
+uniform vec3 crest_color : source_color = vec3(0.340, 0.520, 0.500);
 uniform vec3 sky_horizon_color : source_color = vec3(0.200, 0.260, 0.290);
 uniform vec3 sky_zenith_color : source_color = vec3(0.050, 0.080, 0.110);
 uniform vec3 sun_color : source_color = vec3(1.000, 0.740, 0.420);
@@ -24,7 +24,7 @@ uniform sampler2D foam_noise : hint_default_black, filter_linear_mipmap, repeat_
 // ------------------------------------------------------------- reflection ----
 uniform vec3 sun_direction = vec3(-0.33, 0.14, -0.93);
 uniform float sun_energy = 0.9;
-uniform float reflection_strength = 0.52;
+uniform float reflection_strength = 0.45;
 uniform float fresnel_power = 7.0;
 
 // --------------------------------------------------------------- shoreline ----
@@ -95,12 +95,12 @@ void fragment() {
 	vec3 refl = reflect(-view, n_world);
 	vec3 sky = mix(sky_horizon_color, sky_zenith_color, clamp(refl.y * 1.8 + 0.10, 0.0, 1.0));
 	float sun_glow = pow(clamp(dot(refl, normalize(sun_direction)), 0.0, 1.0), 32.0);
-	sky += sun_color * sun_glow * 0.25;
+	sky += sun_color * sun_glow * 0.16;
 	// Wide warm smear along the sun azimuth keeps the glitter path readable.
 	vec2 refl_flat = normalize(vec2(refl.x, refl.z) + vec2(0.0001));
 	vec2 sun_flat = normalize(vec2(sun_direction.x, sun_direction.z) + vec2(0.0001));
 	float sun_path = pow(clamp(dot(refl_flat, sun_flat), 0.0, 1.0), 30.0);
-	sky += sun_color * sun_path * 0.15;
+	sky += sun_color * sun_path * 0.10;
 
 	// --- body colour: troughs deep, crests lighter --------------------------
 	float crest = clamp(swell(p, t) * 0.5 + 0.5, 0.0, 1.0);
@@ -128,7 +128,7 @@ void fragment() {
 
 	// --- compose -------------------------------------------------------------
 	ALBEDO = body * 0.35;
-	EMISSION = body * 0.85 + sky * reflection * 0.95 + foam_color * foam * 0.45;
+	EMISSION = body * 0.70 + sky * reflection * 0.95 + foam_color * foam * 0.45;
 	ROUGHNESS = 0.06;
 	METALLIC = 0.0;
 	SPECULAR = 0.35;

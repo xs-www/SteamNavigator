@@ -57,6 +57,7 @@ var _status_is_error: bool = false
 @onready var _pickup_player: AudioStreamPlayer = $PickupPlayer
 var _settlement_summary: Dictionary = {}
 var _victory_dismissed: bool = false
+var _shipyard_refit: bool = false
 @onready var _fade_layer: ColorRect = $TransitionLayer
 var _transitioning: bool = false
 var _pending_transition: bool = false
@@ -627,6 +628,7 @@ func _screen_shipyard(data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = SHIPYARD_SCREEN_SCENE.instantiate()
+	screen.refit_mode_changed.connect(func(active: bool): _shipyard_refit = active)
 	screen.bind(_shipyard_model(result["data"], data), Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
 	_root_box.add_child(screen)
@@ -634,6 +636,7 @@ func _screen_shipyard(data: Dictionary) -> void:
 
 func _shipyard_model(yard: Dictionary, port_data: Dictionary) -> Dictionary:
 	var model := yard.duplicate(true)
+	model["refit"] = _shipyard_refit
 	model["contracts"] = port_data.get("contracts", {}).duplicate(true)
 	model["victory"] = port_data.get("victory", {}).duplicate(true)
 	var warehouse: Dictionary = model.get("warehouse", {}).duplicate(true)

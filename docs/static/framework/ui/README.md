@@ -1,6 +1,6 @@
 # `framework/ui`
 
-> 展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。
+> 展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，未来 2.5D 渲染器经 set_renderer 接入。
 
 ## 文件索引
 
@@ -16,10 +16,16 @@
 | `components/sn_intel_table.gd` | 商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。 | [查看](./components/sn_intel_table.gd.md) |
 | `components/sn_panel.gd` | 可复用界面表面：基础、高架与内嵌三种层级。 | [查看](./components/sn_panel.gd.md) |
 | `components/sn_panel.tscn` | 框架源文件：sn_panel.tscn | 本页 |
+| `components/sn_part_row.gd` | 船厂右侧部件 HUD 的单行条目：用标签区分已装 / 仓库 / 随船 / 可购买，持有且可装的行是拖拽来源。 | [查看](./components/sn_part_row.gd.md) |
+| `components/sn_part_row.tscn` | 框架源文件：sn_part_row.tscn | 本页 |
 | `components/sn_resource_meter.gd` | 煤水、耐久与载重共用的标签化资源存量条。 | [查看](./components/sn_resource_meter.gd.md) |
 | `components/sn_resource_meter.tscn` | 框架源文件：sn_resource_meter.tscn | 本页 |
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
+| `components/sn_ship_view.gd` | 船厂中央改装台：同一坐标系里切换船体侧视占位渲染与纵剖图（每槽位一个 SNSlotTarget 贴片），并预留可替换的 2.5D 渲染器接口。 | [查看](./components/sn_ship_view.gd.md) |
+| `components/sn_ship_view.tscn` | 框架源文件：sn_ship_view.tscn | 本页 |
+| `components/sn_slot_target.gd` | 纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。 | [查看](./components/sn_slot_target.gd.md) |
+| `components/sn_slot_target.tscn` | 框架源文件：sn_slot_target.tscn | 本页 |
 | `components/sn_sparkline.gd` | 市场价格历史迷你折线；只有两个以上真实样本才绘制。 | [查看](./components/sn_sparkline.gd.md) |
 | `components/sn_sparkline.tscn` | 框架源文件：sn_sparkline.tscn | 本页 |
 | `components/sn_supply_card.gd` | 单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。 | [查看](./components/sn_supply_card.gd.md) |
@@ -50,7 +56,7 @@
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
 | `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |
-| `screens/port/shipyard_screen.gd` | 船厂页面场景：展示当前/运输模块、打造订单、港口仓库、配方和可购买模块，并发出船只与仓库命令。 | [查看](./screens/port/shipyard_screen.gd.md) |
+| `screens/port/shipyard_screen.gd` | 船厂页面场景：中央 SNShipView 改装台 + 右侧按槽位分组的部件 HUD（已装/仓库/随船/购买），下方保留打造订单、港口仓库、配方、购买与通关清单面板。 | [查看](./screens/port/shipyard_screen.gd.md) |
 | `screens/port/shipyard_screen.tscn` | 框架源文件：shipyard_screen.tscn | 本页 |
 | `screens/port/supply_screen.gd` | 补给与维修页面场景：绑定 SupplyView，组合煤水决策卡、资源摘要与维修操作。 | [查看](./screens/port/supply_screen.gd.md) |
 | `screens/port/supply_screen.tscn` | 框架源文件：supply_screen.tscn | 本页 |

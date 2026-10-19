@@ -17,6 +17,7 @@
 
 - `assets/ui/theme/steam_navigator_theme.tres` 是运行时共享 Theme。
 - `framework/ui/components/` 提供可拖入场景的语义按钮、面板、徽标、章节标题和资源存量条。
+- 船厂改装界面由 `SNShipView`（中央侧视/纵剖图舞台）+ `SNSlotTarget`（槽位贴片）+ `SNPartRow`（部件 HUD 行）组合；2.5D 渲染器经 `SNShipView.set_renderer()` 接入，截图见 `docs/design/screenshots/shipyard_refit_{exterior,cutaway}.png`。
 - `framework/ui/showcase/ui_kit_showcase.tscn` 用于独立预览与视觉冒烟。
 - 页面先使用 Theme variation 表达公共状态，业务脚本只负责布局和数据绑定。
 - 2.5D 固定舞台的后续升级方案见 [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md)。

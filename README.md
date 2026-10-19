@@ -34,7 +34,9 @@
 - 高频决策页第一轮：补给卡（存量/可补上限/续航/补满花费）、委托固定五区卡片与可接/进行中分区、市场真实价格历史与迷你折线。
 - 海图重设计：三次贝塞尔曲线航路、每港从邻居组中心计算的唯一出港方向、经纬网、洋流、罗盘、图内图例、当前港脉冲光晕与更宽的图表布局。
 - **迭代 2 · MVP 反馈优化**（试玩反馈）：tier1 部件改为「仅金币」打造（不消耗材料）；打造变成带工时的**订单**，并新增 `port.wait`「在港等待」让时间流动可感知；补给比例条改用稳定物理上限，上限被另一项占用时用右端反向损失带表示；情报页合并为「商品 × 港口」对比表（未探索港口保留整列并显示「未知港口」+「？」，趋势为红降/绿升数字）；顶部信息条常显当前港口与剩余载重/剩余货舱；总览与船厂常驻通关条件清单，主线完成后提示下一步。
-- 无头测试套件：**97 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突、港口记忆、补给与库存成本、仓库存取/打造订单/在港等待/替换、委托刷新、通报文案本地化、密集界面横向排版、通关判定、主界面接线冒烟，以及 9 个 seed 的完整通关回归）。
+- **船厂改装界面**：中央改装台（`SNShipView`）在船体侧视与纵剖图之间切换，纵剖图每个槽位一枚贴片；右侧部件 HUD 按槽位类型分组列出已装 / 仓库 / 随船 / 可购买模块，把仓库或随船部件拖到匹配槽位即发 `ship.install_module`（同槽位旧件自动替换并存入当前港仓库）；改装态由 Shell 记忆，切页或命令重建后仍保持；未来 2.5D 场景可通过 `SNShipView.set_renderer()` 接入，页面与槽位逻辑无需改动。预览：[船体侧视](docs/design/screenshots/shipyard_refit_exterior.png) / [纵剖图](docs/design/screenshots/shipyard_refit_cutaway.png)。
+- 无头测试套件：**100 个测试全部通过**（含 ZIP 打包加载、30 个种子的地图硬约束、保存哈希一致性、显式 Patch 冲突、港口记忆、补给与库存成本、仓库存取/打造订单/在港等待/替换、委托刷新、通报文案本地化、密集界面横向排版、通关判定、船厂改装 UI（槽位/模式持久、2.5D 渲染器替换钩子、拖拽安装）、主界面接线冒烟，以及 9 个 seed 的完整通关回归）。
+- **3D 港口样片（独立场景）**：`dev_scenes/harbor/` 复用 `assets/models` 的帆船 / 塔吊 / 码头道具搭一个固定机位小港口，自写 Godot 水面着色器（顶点波浪 + 噪声法线 + 菲涅耳天空反射 + 太阳耀斑 + 岸线/船体泡沫 + 远水雾色），船体随与着色器同源的波浪起伏。**不接入主场景**，仅供水面观感与构图验证；说明见 [dev_scenes/harbor/README.md](dev_scenes/harbor/README.md)，预览见 [黄昏机位截图](docs/design/screenshots/harbor_diorama_dusk.png)。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
 - [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`。
 
@@ -70,7 +72,7 @@ godot --headless --path . --script res://framework/tests/test_runner.gd
 ```text
 [PASS] test_mod_loading::test_core_loads_cleanly
 ...
-Tests: 97 passed, 0 failed, 97 total
+Tests: 100 passed, 0 failed, 100 total
 ```
 
 ### 打包 Core 模组
@@ -158,7 +160,7 @@ framework/
   services/                    RNG、时钟、日志、本地化、资源、存档
   state/                       GameState（纯数据、可克隆、可哈希）
   ui/                          最小可玩外壳
-  tests/                       无头测试运行器与 97 个测试
+  tests/                       无头测试运行器与 100 个测试
   localization/                框架 UI 文案（zh_CN / en）
   assets/                      缺失资源占位符
 schemas/                       Manifest 与各类内容的 JSON Schema
@@ -166,7 +168,8 @@ config/                        默认 UI 设置（config.json）
 sdk/                           打包、校验、模组模板、第三方示例
 .github/workflows/            GitHub Actions：tag 触发的开发版发布
 SNModMaker/                    零依赖网页端模组制作器（原生 HTML/CSS/JS）
-assets/                        运行时 UI、音频与字体资产
+assets/                        运行时 UI、音频与字体资产；水面 shader / 材质 / 噪声纹理在 assets/{shaders,materials,textures}/water
+dev_scenes/harbor/             独立 3D 港口样片（不接入主流程；水面着色器与浮船试做）
 dev_mods/core/                 官方 MVP 内容（松散的开发态 mod）
 dist/mods/                     本地 mod 包（.snavmod.zip）与 core 构建产物；运行时扫描
 docs/                          GDD、架构方案、静态代码文档
@@ -231,6 +234,7 @@ node SNModMaker/tools/serve.mjs
 - 材料随船运输仍计入货舱容量；GDD 9.1 中“材料不占货舱容量”本轮只对未安装模块（transit）实现。
 - 船厂仓库/运输 UI 为基础版：材料按固定 5 件批量存取，尚无数量步进或批量选择。
 - 通关总结页为数据化总结，不含航线回放、成就与统计对比。
+- 船厂改装台目前是 2D 占位渲染（船体侧视 / 纵剖图）；2.5D 舞台只预留了 `SNShipView.set_renderer()` 接口与渲染器协议，尚未接入真实 3D。
 - UI 是最小可用外壳，设施名称部分为中文硬编码；海图可按已访问港口打开上次在港的市场快照。
 - 存档迁移仅支持 Schema 1.x 读取，尚未实现声明式 ID 别名迁移；新字段通过惰性 ensure 补齐。
 - 无头退出时 Godot 会报告静态注册表/脚本的 ObjectDB 泄漏警告；测试退出码仍为 0，不影响运行。

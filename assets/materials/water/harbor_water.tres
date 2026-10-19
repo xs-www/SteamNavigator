@@ -6,9 +6,9 @@
 
 [resource]
 shader = ExtResource("1_water")
-shader_parameter/deep_color = Color(0.09, 0.26, 0.28, 1)
-shader_parameter/shallow_color = Color(0.15, 0.38, 0.38, 1)
-shader_parameter/crest_color = Color(0.4, 0.6, 0.57, 1)
+shader_parameter/deep_color = Color(0.08, 0.22, 0.24, 1)
+shader_parameter/shallow_color = Color(0.13, 0.34, 0.34, 1)
+shader_parameter/crest_color = Color(0.34, 0.52, 0.5, 1)
 shader_parameter/sky_horizon_color = Color(0.2, 0.26, 0.29, 1)
 shader_parameter/sky_zenith_color = Color(0.05, 0.08, 0.11, 1)
 shader_parameter/sun_color = Color(1, 0.74, 0.42, 1)
@@ -21,7 +21,7 @@ shader_parameter/detail_normal = ExtResource("2_noise")
 shader_parameter/foam_noise = ExtResource("3_foam")
 shader_parameter/sun_direction = Vector3(-0.33, 0.14, -0.93)
 shader_parameter/sun_energy = 0.9
-shader_parameter/reflection_strength = 0.52
+shader_parameter/reflection_strength = 0.45
 shader_parameter/fresnel_power = 7.0
 shader_parameter/shore_z = -14.4
 shader_parameter/shore_span = 21.0

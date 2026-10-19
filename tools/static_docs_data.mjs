@@ -786,6 +786,7 @@ export const FILE_DOCS = {
       "加载游戏读取 autosave 并做模组兼容性校验。",
       "根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。",
       "船厂页由独立 shipyard_screen.tscn 承载；Shell 查询 shipyard.view 并补充通关进度、船上材料数量、解锁来源与替换件名称，页面发出的 ship/warehouse/port 命令统一交回 Shell。",
+      "船厂改装态由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`_shipyard_model()` 把 `refit` 并入 shipyard.view；整页重建后页面据此恢复纵剖图，切页不丢改装态。",
       "委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。",
       "通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。",
       "反馈5：顶部信息条固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity。",
@@ -854,16 +855,22 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/screens/port/shipyard_screen.gd": {
-    role: "船厂页面场景：展示当前/运输模块、打造订单、港口仓库、配方和可购买模块，并发出船只与仓库命令。",
-    dependencies: ["SNBadge", "SNSectionHeader", "steam_navigator_theme.tres"],
+    role: "船厂页面场景：中央 SNShipView 改装台 + 右侧按槽位分组的部件 HUD（已装/仓库/随船/购买），下方保留打造订单、港口仓库、配方、购买与通关清单面板。",
+    dependencies: ["SNShipView", "SNPartRow", "SNBadge", "SNSectionHeader", "steam_navigator_theme.tres"],
     contracts: [
-      "bind(vm, translate) 接收 Shell 组合后的 shipyard.view、contracts、victory，以及材料/解锁/替换展示字段，不访问 AppContext、QueryBus、CommandBus 或注册表。",
+      "bind(vm, translate) 接收 Shell 组合后的 shipyard.view、contracts、victory 与 refit，不访问 AppContext、QueryBus、CommandBus 或注册表。",
+      "`_stage_row()` 是中央改装台：SNShipView（520×390 起）+ 改装开关、船况摘要与提示；右侧 372 px 部件 HUD 按 TYPE_ORDER（船体/锅炉/货舱/导航/安全/客舱）分组。",
+      "槽位由 `_build_slots()` 从 ship.modules 反推：船体/锅炉/导航/安全各 1，cabin_slots≥1 时加 1，cargo_slots 个货舱槽；槽位 id 为 `<content_type>_<index>`，fixed 只对船体/锅炉为真。",
+      "拖放 `_on_slot_drop(payload, slot)`：类型一致且 source ∈ {warehouse, transit} 时发 `ship.install_module{module_id, source}`；槽位已有且不同于拖入件时补 `replace_module_id`。",
+      "点击 HUD 行 `_on_part_activated()`：只有 source == purchase 的行发 `ship.install_module{module_id}`（购买安装）；已装/仓库/随船行不触发。点击槽位 `_on_slot_activated()` 只高亮同类部件行，不改状态。",
+      "HUD 行标签：已装/仓库/随船/购买 n 金币；可拖行 = 仓库且 can_install 为真，或随船件；标题徽标显示 `ui.label.draggable_count` 可拖数量。",
+      "`refit_mode_changed(active)` 只通知 Shell 记住改装态；页面从 vm.refit 恢复，整页重建（切页/命令后刷新）仍保持纵剖图。",
       "安装、卸下、打造、模块/材料存取和在港等待均发出 command_requested(command, params)，由 Shell 统一执行、存档并反馈错误。",
       "所有 can_install/can_uninstall/can_craft 与 blockers 均来自 shipyard.view；页面只翻译原因、禁用按钮和组织布局，不复制领域规则。",
       "打造按钮明确显示工时；未完成订单显示剩余时间和所属港口，等待选项直接来自 wait_options。",
       "页面按模块类型分组购买候选，显示效果、解锁来源、替换提示、材料持有/需求和金币配方。",
-      "模块行、限制原因与按钮保持横向布局，不允许智能换行把限制文案压成竖列。",
-      "页面可重复 bind，每次清理旧节点；每个 PanelContainer 只有一个内容容器。"
+      "密集字段（模块行、限制原因、按钮、HUD 行）统一用 AUTOWRAP_OFF 单行排版，不允许智能换行压成竖列。",
+      "页面可重复 bind，每次 `_clear()` 重建；每个 PanelContainer 只有一个内容容器。"
     ]
   },
 
@@ -1055,6 +1062,53 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/ui/components/sn_ship_view.gd": {
+    role: "船厂中央改装台：同一坐标系里切换船体侧视占位渲染与纵剖图（每槽位一个 SNSlotTarget 贴片），并预留可替换的 2.5D 渲染器接口。",
+    dependencies: ["SNSlotTarget"],
+    contracts: [
+      "`Mode.EXTERIOR` 画侧视占位（水面/烟/明轮动画），`Mode.CUTAWAY` 画纵剖图并显示槽位贴片；两种模式复用同一套槽位布局。",
+      "`set_slots(slots)` 为每个描述重建一个 SNSlotTarget；字段：id、content_type、index、title、module、replace_module_id、fixed、hint、tooltip。",
+      "贴片只在 CUTAWAY 可见；点击发 `slot_activated(slot)`，同类型部件拖到贴片发 `slot_drop_requested(payload, slot)`，本控件不发命令。",
+      "2.5D 接入协议：`set_renderer(node)` 把节点作为铺满本控件的子节点挂入，并立即下发 `ship_view_update(model)` / `ship_view_set_mode(mode)`；`has_renderer()` 判定是否已替换；传 `null` 恢复内置占位。",
+      "渲染器实现 `ship_view_update(model)`、`ship_view_set_mode(mode)`、`ship_view_highlight(slot_ids)` 即可；缺方法时用 `has_method` 跳过，不报错。",
+      "槽位贴片、拖放与命中布局都留在本控件，未来 2.5D 场景只画船体、可完全忽略输入，页面无需改动。",
+      "无渲染器或侧视模式下每帧 `queue_redraw` 驱动动画；接入渲染器后的纵剖图只在数据/尺寸变化时重绘。"
+    ],
+    l2: {
+      "set_renderer(node)": [
+        "先移除并 `queue_free` 旧渲染器，再 `add_child` + `move_child(..., 0)` 压到绘制底层。",
+        "Control 渲染器铺满本控件并设为 `MOUSE_FILTER_IGNORE`，避免抢走槽位贴片的拖放。",
+        "挂载后立即下发当前 model 与 mode，渲染器不必等待下一次刷新。"
+      ],
+      "set_slots(slots) / set_mode(next) / highlight_slots(slot_ids)": [
+        "`set_slots` 深拷贝描述、重建全部贴片并重新布局；`set_mode` 同步贴片可见性与渲染器 mode；`highlight_slots` 同时给贴片与渲染器发高亮。",
+        "布局固定两行：非货舱槽一行、货舱槽一行；贴片宽 84–148 px，控件宽 < 80 px 时跳过布局。",
+        "槽位描述是深拷贝，页面后续修改 vm 不会反向影响已建贴片。"
+      ]
+    }
+  },
+
+  "framework/ui/components/sn_slot_target.gd": {
+    role: "纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。",
+    contracts: [
+      "`configure(slot)` 接收 id/content_type/index/title/module/hint/tooltip/fixed；`fixed` 槽位（船体/锅炉）用更亮的黄铜描边。",
+      "只接受 `kind == \"ship_parts\"`、`part.source` ∈ {warehouse, transit}、`content_type` 与槽位一致、`can_install` 未显式为 false 的载荷；购买候选不能拖入。",
+      "接收后发 `part_dropped(part, slot)`；左键点击发 `slot_activated(slot)`。命令构造与领域规则属于 ShipyardScreen。",
+      "悬停/拖入（`_can_drop_data` 通过）用 DROP_HINT 描边；`set_compatible_hint(true)` 用 TEAL 描边，由 SNShipView.highlight_slots 驱动。",
+      "`_ready` 之后重复 configure 只刷新文本与样式，不重建子节点；空槽显示“空槽位”。"
+    ]
+  },
+
+  "framework/ui/components/sn_part_row.gd": {
+    role: "船厂右侧部件 HUD 的单行条目：用标签区分已装 / 仓库 / 随船 / 可购买，持有且可装的行是拖拽来源。",
+    contracts: [
+      "`configure(part, tag_text, tag_color, meta_text, hint_text, can_drag)` 之后重复调用只刷新内容，不重建子节点。",
+      "`draggable` 行实现 `_get_drag_data`：返回 `{\"kind\": \"ship_parts\", \"part\": part}` 并调用 `set_drag_preview`，由 SNSlotTarget 消费。",
+      "不可拖拽行（已装 / 购买候选）左键点击发 `activated(part)`；只有 ShipyardScreen 会把购买行转成安装命令。",
+      "标签文字与颜色由调用方本地化后传入；控件不读 _tr、不访问总线。"
+    ]
+  },
+
   "framework/ui/showcase/ui_kit_showcase.gd": {
     role: "独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。",
     dependencies: ["SNButton", "SNPanel", "SNBadge", "SNSectionHeader", "SNResourceMeter", "SNSupplyCard", "SNSparkline"],
@@ -1096,6 +1150,7 @@ export const FILE_DOCS = {
     contracts: [
       "GDScript 符号按 `class_name/signal/const/func` 提取；`.js/.mjs` 额外提取顶层 function、常量与 `root.SN*` 导出。",
       "生成前清空 `docs/static`；`SKIP_SOURCES` 中的生成物不进入文档与 manifest。",
+      "遍历时跳过 `.git/.godot/node_modules/__pycache__` 目录与 `.import/.uid/.tmp/.pyc` 文件，缓存和编译产物不进入文档。",
       "`STATIC_COPY_PAGES` 把策展型设计文档复制进静态索引，避免清理时丢失非源码页面。",
       "修改规则或分类后重新运行；`commit` 取当前 HEAD 短哈希。"
     ]
@@ -1449,6 +1504,18 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/tests/cases/test_shipyard_refit.gd": {
+    role: "船厂改装 UI 契约测试：纵剖图槽位与模式持久、2.5D 渲染器替换钩子、拖拽仓库模块到槽位的端到端链路。",
+    contracts: [
+      "与 test_ui_shell 同一夹具：真实挂载 main.tscn 外壳并先 run.start，main.gd / 船厂页接线错误会在此失败。",
+      "槽位数 = 4 + cargo_slots +（cabin_slots > 0 时 +1），与 SNShipView._slot_targets 数量一致；改装开启前贴片全部隐藏。",
+      "按本地化键 `ui.label.refit` 找到改装按钮并真实 emit pressed：进入 CUTAWAY，`shell._shipyard_refit` 让重建后的船厂页仍保持改装态。",
+      "渲染器替换：默认 `has_renderer() == false`；`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
+      "拖放端到端：`WarehouseOps.add_module` 在仓库放一个导航模块 → HUD 恰好一行可拖拽；`_on_slot_drop` 发 `ship.install_module`，参数含 module_id / source 与槽位 replace_module_id，命令后模块离开仓库并装到船上。",
+      "覆盖来源与类型校验：异类型部件、purchase 候选均被 `_accepts` 拒绝。"
+    ]
+  },
+
   "framework/tests/cases/test_contract_refresh.gd": {
     role: "迭代 1 委托池测试：抵达刷新、持有上限、port.view 字段与同 seed 刷新确定性。",
     contracts: [
@@ -1476,6 +1543,87 @@ export const FILE_DOCS = {
       "覆盖 seed 4242 的详细总结断言，以及 111/222/333/444/555/666/777/888 的多 seed 通关回归。",
       "断言航次 ≤ 16、summary 字段完整、victory.view 与 state.victory 一致。",
       "导航按 BFS 逐段航行；缺钱时用普通委托/贷款兜底，缺补给时按预览购买煤水。"
+    ]
+  },
+
+  "dev_scenes/harbor/harbor_diorama.tscn": {
+    role: "独立 3D 港口样片场景：固定机位黄昏逆光，用已有 GLB 资产拼码头/吊车/货堆，前方浮一艘船，水面使用自写着色器。",
+    dependencies: ["assets/models/ships/SN_Ship_Prototype.glb", "assets/materials/water/harbor_water.tres", "dev_scenes/harbor/bobbing_boat.gd", "dev_scenes/harbor/harbor_diorama.gd"],
+    contracts: [
+      "不接入主场景：`project.godot` 的 `run/main_scene` 仍指向 `framework/ui/shell/main.tscn`。",
+      "水面分两层：`Water` 为 500×400 细分网格（波动/泡沫/反射），`FarWater` 是下沉 3 m 的大平面，只输出地平线雾色，遮住主水面网格边缘。",
+      "码头岸壁、护舷、爬梯、系缆桩、煤气灯、吊车、货堆与船体全部来自 `assets/models/`；仓库/烟囱/窗灯是场景内 BoxMesh 剪影，只做尺度参照。",
+      "固定机位：`Camera3D`（fov 35）与 `Sun`/`Fill`/`WorldEnvironment` 都是场景内预置，不在运行时改。",
+      "`ShipBob` 只控制姿态，船体 GLB 作为其子节点实例；水面泡沫环参数 `boat_*` 要与 `ShipBob` 的位置/朝向一致。",
+      "改 `Sun` 朝向时必须同步 `assets/materials/water/harbor_water.tres` 的 `sun_direction`，否则水面耀斑与光照方向不一致。"
+    ]
+  },
+
+  "dev_scenes/harbor/harbor_diorama.gd": {
+    role: "港口样片根脚本：运行时给码头石墙套更暗的复制材质，压住黄昏逆光下的高光。",
+    contracts: [
+      "只改本场景实例的 `surface_material_override`，不改 GLB 导入材质。",
+      "依赖 `SN_Dock_Wall` 的表面顺序：surface 0 = `SN_Stone`；改 GLB 材质顺序时需同步 `STONE_SURFACE`。"
+    ]
+  },
+
+  "dev_scenes/harbor/bobbing_boat.gd": {
+    role: "浮船：采样与水面着色器同源的波浪，驱动升沉、纵摇、横摇和极缓慢系泊漂移。",
+    contracts: [
+      "`SWELL_HEIGHT` / `WAVE_SPEED` 必须与 `harbor_water.gdshader` 的 `swell_height` / `wave_speed` 保持一致。",
+      "只在 `_process` 写 `position` / `rotation`；`_base_position` / `_base_rotation` 在 `_ready` 缓存，改初始位姿请改场景里的 `ShipBob`。",
+      "模型 +X 为船首、+Z 为右舷；横摇取负号，避免波面抬升一侧时船向反方向倾斜。",
+      "不做航行/碰撞/物理，仅表现层。"
+    ]
+  },
+
+  "assets/shaders/water/harbor_water.gdshader": {
+    role: "港口水面空间着色器：顶点正弦波位移、噪声法线、菲涅耳天空反射、太阳耀斑路径、岸线与船体泡沫，以及远处雾色淡出。",
+    dependencies: ["assets/textures/water/water_normal.png", "assets/textures/water/water_foam.png"],
+    contracts: [
+      "GL Compatibility 安全：不使用深度纹理/屏幕纹理，也不依赖光照 shadow map（`shadows_disabled`）；水面自身发光项负责主要观感。",
+      "`swell_height` / `wave_speed` 与 `bobbing_boat.gd` 的常量同源；两边必须一起改。",
+      "使用 `world_vertex_coords`，水面节点的世界变换应只有 XZ 平移，不要旋转或缩放。",
+      "岸边泡沫只在水侧（世界 z > `shore_z`）生成；船体泡沫用椭圆近似，参数 `boat_center` / `boat_half_size` / `boat_yaw` 由场景材质维护。",
+      "远处淡出到 `horizon_color`；`harbor_water_far.tres` 用同一 shader 并关掉波浪/细节/泡沫，保证两层水面在网格边缘颜色一致。"
+    ],
+    l2: {
+      "swell(p, t) / swell_gradient(p, t)": [
+        "三条方向、波数、相速不同的正弦叠加，返回约 [-1, 1] 的无量纲波高。",
+        "顶点位移与片元坡度共用这一函数；改公式等于同时改船的采样。",
+        "坡度用 ±0.8 m 的有限差分求得，用于构造世界空间法线，避免与顶点法线不一致。"
+      ],
+      "fragment()": [
+        "先用法线计算菲涅耳反射与太阳耀斑，再用 `shore_z` / `boat_*` 生成泡沫，最后按相机距离淡出到地平线色。",
+        "`ALBEDO` 只承担少量环境光，主要颜色放在 `EMISSION`；这样不受黄昏暖环境光和阴影质量影响。",
+        "`light()` 只叠加太阳高光/宽高光，不重复对齐天空反射。"
+      ]
+    }
+  },
+
+  "assets/materials/water/harbor_water.tres": {
+    role: "近处水面材质：港口样片的主水面参数（波浪、反射、岸线与船体泡沫、太阳方向）。",
+    contracts: [
+      "参数必须与 `harbor_water.gdshader` 的默认值同步；材质才是场景实际生效值。",
+      "`sun_direction` 与场景 `Sun` 的朝向对应；`boat_*` 与 `World/ShipBob` 的位置/朝向对应。",
+      "`shore_z` 是码头前沿水线（世界 z），`shore_span` 覆盖码头宽度。"
+    ]
+  },
+
+  "assets/materials/water/harbor_water_far.tres": {
+    role: "远处水面材质：同一 shader，关闭波浪/细节/泡沫与反射，只输出地平线雾色。",
+    contracts: [
+      "`horizon_fade_start` / `horizon_fade_end` 设为 0 / 0.001，让整层水面恒为 `horizon_color`。",
+      "`horizon_color` 必须与 `harbor_water.tres` 一致，否则主水面网格边缘会出现色差。"
+    ]
+  },
+
+  "tools/godot/verify_harbor_diorama.gd": {
+    role: "港口样片验收（只读）：场景可加载、水面使用自定义着色器、浮船随波运动、未接入主场景。",
+    contracts: [
+      "先 `await process_frame` 再实例化并检查，保证 `_ready` 已执行、船的基础位姿已缓存。",
+      "手动以 1/30 s 推进 `bobbing_boat._process` 60 次，避免依赖真实帧率与帧数。",
+      "失败退出码 1；只读，不写场景/资源。"
     ]
   }
 };
@@ -1532,7 +1680,7 @@ export const MODULES = {
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
-    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。",
+    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，未来 2.5D 渲染器经 set_renderer 接入。",
     contracts: [
       "UI 只识别 Query/Command 与定义类型，不识别 core 内容。",
       "公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。",
@@ -1540,7 +1688,7 @@ export const MODULES = {
     ]
   },
   "framework/tests": {
-    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、UI 外壳接线与完整通关流程。",
+    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线与完整通关流程。",
     contracts: [
       "测试入口：`godot --headless --path . --script res://framework/tests/test_runner.gd`。",
       "`test_case.gd` 提供断言与 Core 启动辅助；每个用例独立 bootstrap。",
@@ -1594,6 +1742,14 @@ export const MODULES = {
       "浏览器存储始终可用；`tools/serve.mjs` 运行时额外镜像到 `mods/`，导出可写入 `exports/`。"
     ]
   },
+  "dev_scenes": {
+    intro: "独立 3D 样片场景（不接入主流程）：用于验证水面着色器、已有 GLB 资产拼接与固定机位构图。",
+    contracts: [
+      "`dev_scenes/` 不是游戏启动链的一部分；主场景仍为 `framework/ui/shell/main.tscn`。",
+      "样片可以复用 `assets/` 与 `assets/models/`，但不得反向依赖 `framework/` 运行时。",
+      "水面材质/着色器属于表现层资产，后续 `PortStage` 可以直接复用。"
+    ]
+  },
   "root": {
     intro: "仓库根：Godot 项目配置、README、路线图。",
     contracts: ["README 是开发入口；todo.md 维护阶段与验收状态。"]
@@ -1602,6 +1758,7 @@ export const MODULES = {
 
 // Files that are intentionally documented only in their module README.
 export const GROUPED_ROLES = {
+  "dev_scenes/harbor/README.md": "港口样片运行方式、文件清单、水面实现要点、调参入口与已知边界。",
   "framework/core/stable_hash.gd": "FNV-1a 稳定哈希与命名流种子派生。",
   "framework/core/framework_info.gd": "框架版本、Mod API 版本与能力常量。",
   "framework/bootstrap/framework_runtime.gd": "进程退出前清理静态操作码/公式注册表。",
@@ -1625,8 +1782,8 @@ export const GROUPED_ROLES = {
   "framework/application/queries/map_view.gd": "海图 ViewModel：港口坐标、发现/访问、设施与航线。",
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
-  "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树。",
-  "framework/tests/cases": "按主题拆分的 97 个测试（含委托刷新、仓库/打造订单/在港等待、UI 外壳接线、密集界面横向排版、通报文案本地化与通关与多 seed 完整通关）。",
+  "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 套件）。",
+  "framework/tests/cases": "按主题拆分的 100 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、UI 外壳接线、密集界面横向排版、通报文案本地化与通关与多 seed 完整通关）。",
   "framework/tests/smoke_load.gd": "手动冒烟：加载 Core 并打印启动报告。",
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",
@@ -1644,8 +1801,13 @@ export const GROUPED_ROLES = {
   "tools/modeling/generators/export_props_glb.py": "道具 GLB 导出：逐件把 location 临时归零、只导出选中对象、导出后还原；按批次分组避免无谓重导。",
   "tools/modeling/generators/p0_rework_2026-10-19.py": "第一批 P0 整改：重建系缆桩 → SN_Ore 改锈红 → 三段岸壁拼接测试。",
   "tools/modeling/generators/p0_finalize.py": "P0 归档：备份旧 GLB → 清临时对象 → 导出 → 保存工作台。",
+  "tools/modeling/generators/sn_paddle_freighter_generator.py": "明轮货轮参数化生成器：铁壳船身 + 两舷明轮（14 桨叶/8 辐条/双轮缘/内加强环/斜撑）+ 半包轮罩箱板（观察窗/端封让开轮扫掠）+ 双烟囱 + 三岛甲板 + 艏艉楼侧封板 + 货舱吊杆，全部几何由顶部参数表重建（预算 ≤14000 tri）。",
+  "tools/modeling/generators/dryrun_ship.py": "船只生成器纯 Python 干跑：空壳替换 bpy/bmesh 后加载生成器，核对 tri 预算、包围盒、边界/非流形边、退化面、材质名与父级。",
+  "tools/modeling/generators/export_ship_glb.py": "船只 GLB 归档：备份旧 GLB → 保存工作台 → 导出（临时归零 SN_PF_Root）→ 写船体快照；人工验收后由 Lead 运行。",
+  "tools/modeling/generators/verify_ship_glb.py": "船只 GLB 结构自检（纯 Python，不进 Blender/Godot）：读 GLB 头 + JSON chunk 核对节点/网格/材质 doubleSided/三角面/包围盒与轴心。",
   "tools/modeling/briefs/_template.json": "建模工单模板：字段说明与必填项。",
   "tools/modeling/briefs/sn_ship_prototype.json": "帆船原型工单（三桅六帆低模）。",
+  "tools/modeling/briefs/sn_paddle_freighter.json": "明轮蒸汽货轮工单：59.5 × 14.1 × 19.5 m、≤14000 tri、33 个必做部件的尺寸 / 材质 / 命名约定；含明轮轮系、半包轮罩、艏艉楼侧封板与 15 对零交面验收。",
   "tools/modeling/briefs/sn_harbor_crane.json": "港口塔吊工单（锤头式，含回转枢轴与吊钩层级）。",
   "tools/modeling/briefs/sn_iron_harbor_batch1.json": "铁港第一批 6 件道具工单（岸壁/护舷/系缆桩/木箱/木桶/矿堆，y=24）。",
   "tools/modeling/briefs/sn_iron_harbor_batch2.json": "铁港第二批 6 件工单（煤气灯/跳板/抓斗/煤堆/爬梯/钢板堆，y=30）。",

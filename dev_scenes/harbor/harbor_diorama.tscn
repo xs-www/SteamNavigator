@@ -1,5 +1,6 @@
-[gd_scene load_steps=47 format=3]
+[gd_scene load_steps=48 format=3]
 
+[ext_resource type="Script" path="res://dev_scenes/harbor/harbor_diorama.gd" id="0_root"]
 [ext_resource type="Script" path="res://dev_scenes/harbor/bobbing_boat.gd" id="1_bob"]
 [ext_resource type="Material" path="res://assets/materials/water/harbor_water.tres" id="2_water"]
 [ext_resource type="PackedScene" path="res://assets/models/ships/SN_Ship_Prototype.glb" id="3_ship"]
@@ -36,6 +37,9 @@ subdivide_depth = 20
 
 [sub_resource type="BoxMesh" id="BoxMesh_window"]
 size = Vector3(0.7, 1, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lamp_glow"]
+size = Vector3(0.32, 0.4, 0.32)
 
 [sub_resource type="BoxMesh" id="BoxMesh_chimney_a"]
 size = Vector3(1.2, 3.5, 1.2)
@@ -92,14 +96,10 @@ emission_enabled = true
 emission = Color(1, 0.62, 0.24, 1)
 emission_energy_multiplier = 1.1
 
-[sub_resource type="StandardMaterial3D" id="Mat_stone_dark"]
-albedo_color = Color(0.26, 0.25, 0.23, 1)
-roughness = 0.92
-
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_harbor"]
-sky_top_color = Color(0.06, 0.09, 0.13, 1)
-sky_horizon_color = Color(0.7, 0.4, 0.22, 1)
-sky_curve = 0.55
+sky_top_color = Color(0.035, 0.05, 0.075, 1)
+sky_horizon_color = Color(0.62, 0.37, 0.21, 1)
+sky_curve = 0.05
 ground_bottom_color = Color(0.3, 0.22, 0.17, 1)
 ground_horizon_color = Color(0.56, 0.37, 0.24, 1)
 sun_angle_max = 3.0
@@ -113,10 +113,10 @@ background_mode = 2
 sky = SubResource("Sky_harbor")
 ambient_light_source = 2
 ambient_light_color = Color(0.3, 0.36, 0.46, 1)
-ambient_light_energy = 0.55
+ambient_light_energy = 1.0
 tonemap_mode = 3
-tonemap_exposure = 0.9
-fog_enabled = true
+tonemap_exposure = 1.0
+fog_enabled = false
 fog_light_color = Color(0.52, 0.4, 0.32, 1)
 fog_light_energy = 0.7
 fog_sun_scatter = 0.4
@@ -125,6 +125,7 @@ fog_aerial_perspective = 0.3
 fog_sky_affect = 0.12
 
 [node name="HarborDiorama" type="Node3D"]
+script = ExtResource("0_root")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Env_harbor")
@@ -141,7 +142,7 @@ directional_shadow_max_distance = 110.0
 [node name="Fill" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-30, 27.5, 0)
 light_color = Color(0.55, 0.7, 0.9, 1)
-light_energy = 0.55
+light_energy = 0.85
 
 [node name="World" type="Node3D" parent="."]
 
@@ -171,49 +172,38 @@ material_override = SubResource("Mat_land")
 
 [node name="Wall_1" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(-18, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_2" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(-12, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_3" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(-6, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_4" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(0, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_5" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(6, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_6" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(12, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_7" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(18, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_8" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(24, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Wall_9" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(30, -0.9, -16)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="EndWall_1" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(-21, -0.9, -19)
 rotation_degrees = Vector3(0, 90, 0)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="EndWall_2" parent="World/Quay" instance=ExtResource("4_wall")]
 position = Vector3(-21, -0.9, -25)
 rotation_degrees = Vector3(0, 90, 0)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Bollard_1" parent="World/Quay" instance=ExtResource("6_bollard")]
 position = Vector3(-20, 2.6, -14.9)
@@ -287,76 +277,87 @@ position = Vector3(21, -0.6, -14.38)
 [node name="Lamp_1" parent="World/Quay" instance=ExtResource("9_lamp")]
 position = Vector3(-13, 2.6, -16.8)
 
+[node name="Lamp_1_Glow" type="MeshInstance3D" parent="World/Quay"]
+position = Vector3(-13, 5.9, -16.8)
+mesh = SubResource("BoxMesh_lamp_glow")
+material_override = SubResource("Mat_window")
+
 [node name="Lamp_2" parent="World/Quay" instance=ExtResource("9_lamp")]
 position = Vector3(-1, 2.6, -16.8)
+
+[node name="Lamp_2_Glow" type="MeshInstance3D" parent="World/Quay"]
+position = Vector3(-1, 5.9, -16.8)
+mesh = SubResource("BoxMesh_lamp_glow")
+material_override = SubResource("Mat_window")
 
 [node name="Lamp_3" parent="World/Quay" instance=ExtResource("9_lamp")]
 position = Vector3(11, 2.6, -16.8)
 
+[node name="Lamp_3_Glow" type="MeshInstance3D" parent="World/Quay"]
+position = Vector3(11, 5.9, -16.8)
+mesh = SubResource("BoxMesh_lamp_glow")
+material_override = SubResource("Mat_window")
+
 [node name="Lamp_4" parent="World/Quay" instance=ExtResource("9_lamp")]
 position = Vector3(23, 2.6, -16.8)
+
+[node name="Lamp_4_Glow" type="MeshInstance3D" parent="World/Quay"]
+position = Vector3(23, 5.9, -16.8)
+mesh = SubResource("BoxMesh_lamp_glow")
+material_override = SubResource("Mat_window")
 
 [node name="LampLight_1" type="OmniLight3D" parent="World/Quay"]
 position = Vector3(-13, 5.75, -16.8)
 light_color = Color(1, 0.72, 0.4, 1)
-light_energy = 1.5
-omni_range = 8.0
+light_energy = 2.4
+omni_range = 9.0
 
 [node name="LampLight_2" type="OmniLight3D" parent="World/Quay"]
 position = Vector3(-1, 5.75, -16.8)
 light_color = Color(1, 0.72, 0.4, 1)
-light_energy = 1.5
-omni_range = 8.0
+light_energy = 2.4
+omni_range = 9.0
 
 [node name="LampLight_3" type="OmniLight3D" parent="World/Quay"]
 position = Vector3(11, 5.75, -16.8)
 light_color = Color(1, 0.72, 0.4, 1)
-light_energy = 1.5
-omni_range = 8.0
+light_energy = 2.4
+omni_range = 9.0
 
 [node name="LampLight_4" type="OmniLight3D" parent="World/Quay"]
 position = Vector3(23, 5.75, -16.8)
 light_color = Color(1, 0.72, 0.4, 1)
-light_energy = 1.5
-omni_range = 8.0
+light_energy = 2.4
+omni_range = 9.0
 
 [node name="BackWall" type="Node3D" parent="World"]
 
 [node name="BackWall_1" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(-18, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_2" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(-12, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_3" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(-6, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_4" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(0, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_5" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(6, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_6" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(12, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_7" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(18, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_8" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(24, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="BackWall_9" parent="World/BackWall" instance=ExtResource("4_wall")]
 position = Vector3(30, 2.6, -26)
-surface_material_override/0 = SubResource("Mat_stone_dark")
 
 [node name="Warehouse_A" type="MeshInstance3D" parent="World"]
 position = Vector3(4, 9.1, -32)

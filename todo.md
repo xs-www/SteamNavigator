@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**97 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、密集界面横向排版与通报文案本地化守护）；SNModMaker 28 个 Node 用例通过（浏览器冒烟需本地 Chrome 环境）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**100 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、密集界面横向排版与通报文案本地化守护）；SNModMaker 28 个 Node 用例通过（浏览器冒烟需本地 Chrome 环境）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -87,6 +87,21 @@
 - [x] 独立验证（T5，只读）发现的 3 处用户可见文案缺陷已修：`port.wait` 状态栏参数序、`ui.notice.craft_ordered` 英文模板序、「航行记录」裸模板；补齐 3 个缺失通报键（`discovered_port` / `run_started` / `no_contract_offer`），`arrived` 现在带上港口名
 - [x] 文档：`docs/static` 与新代码同步（新增 `port_commands.gd` / `sn_intel_table.gd` / `test_ui_shell.gd` / `test_craft_wait.gd` 条目，更新受影响的契约描述）
 
+### 船厂改装界面（已完成）
+
+> 目标：船厂从「列表 + 按钮」升级为可交互的中央改装台；本迭代只做 2D 占位渲染与可拖拽槽位，2.5D 舞台留接口。同时覆盖「高频决策页第二轮」里的船厂槽位选择部分（市场数量步进与持久 `ScreenHost` 仍未做）。
+
+- [x] `SNShipView` 中央改装台：船体侧视占位渲染 ↔ 纵剖图切换；纵剖图每槽位一枚 `SNSlotTarget` 贴片，槽位由当前船体反推（船体/锅炉/导航/安全各 1、客舱看 `cabin_slots`、货舱按 `cargo_slots`）
+- [x] `SNSlotTarget`：只接受 `ship_parts` 拖放载荷（仓库/随船、类型匹配、`can_install` 为真），发 `part_dropped` / `slot_activated`；购买候选与异类型部件被拒
+- [x] `SNPartRow` 部件 HUD：已装 / 仓库 / 随船 / 购买四种标签；仓库与随船且可装的行可拖，购买行点击即购买安装
+- [x] `ShipyardScreen` 重排：中央舞台 + 右侧 372 px 按槽位分组的 HUD + 改装开关；拖放映射 `ship.install_module(replace_module_id)`，保留订单/仓库/打造/购买/通关清单面板
+- [x] Shell：`_shipyard_refit` 记忆改装态，`shipyard_model.refit` 下发页面；切页或命令重建后仍保持纵剖图
+- [x] 本地化：新增 refit / stage / slot / tag / hint 中英键（`ui.label.refit`、`ui.label.slot_*`、`ui.tag.*`、`ui.hint.drag_*` 等）
+- [x] 2.5D 接口：`SNShipView.set_renderer(node)` / `has_renderer()` + 渲染器协议 `ship_view_update(model)` / `ship_view_set_mode(mode)` / `ship_view_highlight(slot_ids)`；传 `null` 恢复内置占位
+- [x] 测试：新增 `test_shipyard_refit`（3）——槽位数与模式持久、渲染器替换钩子、仓库模块拖拽安装并离开仓库；测试总数 97 → 100
+- [x] 截图：`docs/design/screenshots/shipyard_refit_exterior.png` / `shipyard_refit_cutaway.png`
+- [x] 文档：`docs/static` 新增 `sn_ship_view.gd` / `sn_slot_target.gd` / `sn_part_row.gd` / `test_shipyard_refit.gd` 条目，并刷新船厂页 / Shell / 测试运行器契约
+
 ### 阶段 D：存档与兼容
 
 - [x] 入港 / 出航前自动存档
@@ -120,10 +135,30 @@
 - [x] 铁港第四批 6 件（浮标 / 锚链堆 / 绞盘 / 手推车 / 碰垫 / 齿轮箱）：1452 tri，已导出 6 个 `.glb`；Godot 侧 24 件全 PASS
 - [x] 铁港第五批 7 件（石阶 / 港口牌 / 港口钟 / 旗杆 / 煤溜槽 / 锅炉机组 / 龙骨墩）：1232 tri，已导出 7 个 `.glb`；Godot 侧 **31 件全 PASS**
 - [x] 铁港道具 31 件 / 6282 三角面全部交付（工作台 103 对象 / 95 mesh / 8 材质）
+- [x] 大型明轮蒸汽货轮 `SN_Paddle_Freighter`（46 对象 = 39 mesh + 7 empty / **12200 tri** / 6 材质 / 59.53 × 14.10 × 19.52 m，船体 LOA 55 m）：工单 `sn_paddle_freighter.json` + 参数化生成器 + 纯 Python 干跑 + Builder R1–R5 返工 + 独立 Verifier 全绿（15 对零交面、明轮 8 个旋转角 0 穿模、hull / 救生艇 / 侧封板镜像差 0、35 个闭合件水密、4 个单层曲面白名单）。已导出 `assets/models/ships/SN_Paddle_Freighter.glb`（639.5 KB / 46 节点 / 39 网格 / 12200 tri / 6 材质 doubleSided）与 `.design/ships/SN_Paddle_Freighter.blend`（`libraries.write` 独立快照）；工作台现 **149 对象**（103 + 46）
+  - 明轮：14 桨叶 / 每侧 8 辐条 / 16 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 斜撑 + 轮毂法兰；轮罩 `-6°..186°` 半包箱板 + 中央观察窗 + 黄铜包边 / 铭牌（端封 r_in 2.75 让开轮扫掠、内板窗 2.30 让开蒸汽管）
+  - [ ] 待办：Godot 侧导入验收（`godot --headless --import` + 轴向 / 包围盒 / 材质复核）与 PortStage 目标机位试装
 - [ ] P1：补齐帆船与塔吊的 3/4、侧视、顶视截图；补塔吊参数化生成脚本
 - [x] P1 ~~生成器脚本在被 gitignore 的 `.design/`~~：已全部迁到 `tools/modeling/generators/` 并纳入版本管理（`.blend` / GLB 备份 / 基线快照仍留本地）
 - [ ] P1：补塔吊参数化生成脚本（`tools/modeling/generators/sn_harbor_crane_generator.py`）
 - [ ] 道具进港口灰盒后，按目标机位复核尺度、朝向、材质与阴影
+
+## 3D 港口样片：水面着色器试做（已完成一版）
+
+> 目标只是"试试水"：在独立场景里验证水面观感、已有 GLB 资产的拼接与固定机位构图；不接入主流程。
+> 运行与调参说明：[dev_scenes/harbor/README.md](dev_scenes/harbor/README.md)。
+
+- [x] 独立场景 `dev_scenes/harbor/harbor_diorama.tscn`：岸壁 / 护舷 / 爬梯 / 系缆桩 / 煤气灯 / 塔吊 / 货堆 + 帆船，全部复用 `assets/models` 的 GLB
+- [x] 自写水面 shader `assets/shaders/water/harbor_water.gdshader`：顶点正弦波位移、双层滚动噪声法线、菲涅耳天空反射、太阳耀斑路径、岸线泡沫、船体椭圆泡沫、远水雾色淡出；兼容 GL Compatibility，不使用深度/屏幕纹理
+- [x] 近水/远水双层材质：`FarWater` 下沉 3 m 只输出地平线雾色，遮住主水面网格边缘
+- [x] `bobbing_boat.gd` 用与 shader 同源的波浪公式驱动升沉 / 纵摇 / 横摇，避免船与水各动各的
+- [x] 黄昏逆光 + 仓库剪影 / 窗灯 + 煤气灯照明的固定 3/4 机位构图
+- [x] 无头验收 `tools/godot/verify_harbor_diorama.gd`（场景加载 / shader 挂载 / 船体随波运动 / 未接入主场景）
+- [x] 静态文档与截图归档：`docs/static/dev_scenes/`、`docs/design/screenshots/`
+- [ ] 升级为可接入的 `PortStage`：`StageHost` + `SubViewport` 透明合成、固定机位与 2D HUD 叠加
+- [ ] 水面性能档位：细分 / 阴影 / 远水层的低配回退；960 宽窗口构图复核
+- [ ] 港口变体：复用同一水面材质与资产 kit，做第二个港口的舞台
+- [ ] 船与码头的交互细节：跳板/缆绳随船体浮动、灯池烘托与靠港阴影
 
 ## 下一阶段优先级
 

@@ -33,6 +33,7 @@
 - 加载游戏读取 autosave 并做模组兼容性校验。
 - 根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。
 - 船厂页由独立 shipyard_screen.tscn 承载；Shell 查询 shipyard.view 并补充通关进度、船上材料数量、解锁来源与替换件名称，页面发出的 ship/warehouse/port 命令统一交回 Shell。
+- 船厂改装态由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`_shipyard_model()` 把 `refit` 并入 shipyard.view；整页重建后页面据此恢复纵剖图，切页不丢改装态。
 - 委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。
 - 通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。
 - 反馈5：顶部信息条固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity。

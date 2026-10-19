@@ -36,6 +36,7 @@ const MODULE_PATHS = [
   "sdk",
   "schemas",
   "dev_mods/core",
+  "dev_scenes",
   "tools",
   "SNModMaker",
 ];
@@ -64,8 +65,8 @@ const GROUP_README = (modulePath) =>
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === ".git" || entry.name === ".godot" || entry.name === "node_modules") continue;
-    if (entry.name.endsWith(".import") || entry.name.endsWith(".uid") || entry.name.endsWith(".tmp")) continue;
+    if (entry.name === ".git" || entry.name === ".godot" || entry.name === "node_modules" || entry.name === "__pycache__") continue;
+    if (entry.name.endsWith(".import") || entry.name.endsWith(".uid") || entry.name.endsWith(".tmp") || entry.name.endsWith(".pyc")) continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       walk(full, out);
@@ -143,6 +144,9 @@ function extractSymbols(relativePath, text) {
 
 function sourceTypeLabel(source) {
   if (source.endsWith(".gd")) return "GDScript 源文件";
+  if (source.endsWith(".gdshader")) return "Godot 着色器";
+  if (source.endsWith(".tscn")) return "Godot 场景";
+  if (source.endsWith(".tres")) return "Godot 资源";
   if (source.endsWith(".js")) return "浏览器经典脚本";
   if (source.endsWith(".mjs")) return "Node ES 模块";
   if (source.endsWith(".html")) return "HTML 应用外壳";
@@ -327,6 +331,7 @@ function main() {
   l0.push("- 内容管线：[ModLoader](framework/modding/mod_loader.gd.md)、[ContentCompiler](framework/modding/content_compiler.gd.md)、[SchemaValidator](framework/modding/schema_validator.gd.md)");
   l0.push("- 运行时：[AppContext](framework/bootstrap/app_context.gd.md)、[GameState](framework/state/game_state.gd.md)");
   l0.push("- 主界面：[main.gd](framework/ui/shell/main.gd.md)");
+  l0.push("- 3D 港口样片：[dev_scenes](dev_scenes/README.md)");
   l0.push("- 官方内容：[Core 内容包](dev_mods/core/README.md)");
   l0.push("- 迭代 1 契约：[MVP 闭环](../design/ITERATION_1_MVP_LOOP.md)");
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
@@ -385,7 +390,7 @@ function main() {
   for (const modulePath of MODULE_PATHS) {
     for (const source of moduleSources(modulePath)) sourceSet.add(source);
   }
-  for (const extra of ["project.godot", "README.md", "todo.md", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "docs/design/UI_PROTOTYPE.md"]) {
+  for (const extra of ["project.godot", "README.md", "todo.md", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
     if (fs.existsSync(path.join(ROOT, extra))) sourceSet.add(extra);
   }
 

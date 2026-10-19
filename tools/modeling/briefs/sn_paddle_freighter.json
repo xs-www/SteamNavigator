@@ -1,0 +1,119 @@
+{
+  "id": "sn_ship_paddle_freighter_v1",
+  "title": "大型明轮蒸汽货轮 SN_Paddle_Freighter",
+  "purpose": "游戏「大型船体」层级的蒸汽货轮资产：明轮 + 双烟囱 + 锅炉机组 + 货舱吊杆的蒸汽朋克轮廓，作为 Blender → Godot 管线的第二艘船体原型",
+  "category": "ship",
+  "style": {
+    "look": "low-poly / flat shaded / 单层色块，无贴图",
+    "palette": ["iron_hull", "iron_red", "deck_wood", "wood", "metal", "brass"],
+    "reference_images": [],
+    "notes": "1850s–70s 明轮蒸汽货轮：铁壳黑船身 + 红水线、两舷明轮与圆弧轮罩、两根后倾烟囱、艏楼/艉楼三岛式甲板、4 个货舱口 + 4 根吊杆、艏斜桁与双桅横桁"
+  },
+  "dimensions": {
+    "length": 59.5,
+    "width": 14.1,
+    "height": 19.5,
+    "note": "船体 LOA 55.0 m；总长含艏斜桁 59.5 m；高度从龙骨底 -2.74 到主桅顶 16.78（19.5 m）",
+    "unit": "m",
+    "tolerance": 1.0
+  },
+  "tri_budget": 14000,
+  "required_parts": [
+    "hull", "keel", "deck", "bulwark", "forecastle", "poop_deck", "raised_deck_plating",
+    "paddle_wheels", "paddle_boxes", "boiler_casing", "funnels",
+    "bridge", "wheelhouse", "fore_mast", "main_mast", "bowsprit",
+    "yards", "rigging", "cargo_hatches", "cargo_booms",
+    "deck_machinery", "windlass", "capstan", "bollards",
+    "anchors", "hawse_pipes", "portholes", "steering_wheel",
+    "lifeboat", "skylights", "ventilators", "flag", "rudder"
+  ],
+  "wheel_detail": {
+    "blades": 14,
+    "spokes_per_rim_plane": 8,
+    "rim_segments": 16,
+    "extras": "双轮缘 + 内加强环 + 黄铜轮缘条 + 4 根轮缘斜撑 + 轮毂法兰",
+    "box_arc_deg": [-6, 186],
+    "box_panel": "半包实心箱板：径向 r_in 1.95 / r_out 3.35（板宽 1.4 m），中央 r<1.95 观察窗 + 黄铜包边 + 外板铭牌",
+    "note": "轮罩遮住上半轮外圈，中央窗露出轮毂/辐条/内加强环，下半轮桨叶与轮缘外露"
+  },
+  "materials": [
+    "SN_Iron_Hull",
+    "SN_Iron_Red",
+    "SN_Wood_Deck",
+    "SN_Wood",
+    "SN_Metal",
+    "SN_Brass"
+  ],
+  "material_new": {
+    "SN_Iron_Hull": "base 0.045/0.048/0.052，rough 0.52，metallic 0.35（铁壳黑船身、烟囱、轮罩内板）",
+    "SN_Iron_Red": "base 0.190/0.035/0.022，rough 0.62，metallic 0.10（水线以下船底、轮罩外板、烟囱顶箍）",
+    "SN_Brass": "base 0.420/0.270/0.075，rough 0.28，metallic 0.85（舷窗、管路、阀件、天窗框、舵轮）"
+  },
+  "material_reuse": ["SN_Wood", "SN_Wood_Deck", "SN_Metal"],
+  "naming": {
+    "prefix": "SN_PF_",
+    "collection": "SN_Paddle_Freighter_Prototype",
+    "root": "SN_PF_Root"
+  },
+  "transform": {
+    "pivot": "waterline, centre of hull（船体中部水线）",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0,
+    "staging_location": [-45.0, 0.0, 0.0]
+  },
+  "hierarchy": {
+    "root": "SN_PF_Root",
+    "pivots": ["SN_PF_Paddle_Port_Pivot", "SN_PF_Paddle_Starboard_Pivot"],
+    "sockets": [
+      "SN_Socket_Engine",
+      "SN_Socket_Cabin",
+      "SN_Socket_Navigation",
+      "SN_Socket_Safety"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera", "Light", "SN_Ship_Root", "SN_Crane_Root",
+      "SN_IronHarbor_Props", "SN_Keel_Block"
+    ],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "no_file_switch": true,
+    "no_save_no_export": "保存 .blend / 导出 .glb 由 Lead 在人工验收后执行"
+  },
+  "deliverables": {
+    "workbench_collection": ".design/SN_Asset_Workbench.blend → SN_Paddle_Freighter_Prototype",
+    "blend": ".design/ships/SN_Paddle_Freighter.blend",
+    "glb": "assets/models/ships/SN_Paddle_Freighter.glb",
+    "generator": "tools/modeling/generators/sn_paddle_freighter_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_ship.py",
+    "screenshots": ["three_quarter", "side", "top"]
+  },
+  "acceptance": [
+    "除 4 个 SN_Socket_* 空物体外，所有新增对象 100% 以 SN_PF_ 开头，且全部位于集合 SN_Paddle_Freighter_Prototype",
+    "三角面 <= 14000（预算），实测报到 report() 输出",
+    "世界包围盒 59.5 × 14.1 × 19.5 m（含艏斜桁 / 主桅顶；船体 LOA 55.0 m），容差 ±1.0 m；轴心为船体中部水线 z=0",
+    "6 个材质且名称与工单一致；单层曲面（甲板/旗面）必须双面，闭合件边界边 = 0",
+    "无孤立点 / 退化面 / 材质槽越界；闭合件非流形边 = 0",
+    "SN_PF_Root 带 asset / version / pivot / forward_axis 自定义属性，摆放 (-45, 0, 0)",
+    "SN_PF_Paddle_Port_Pivot / SN_PF_Paddle_Starboard_Pivot 存在，明轮几何为其子级，可绕 Y 轴旋转",
+    "明轮轮系完整：14 片桨叶、每侧 8 根辐条、16 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 根轮缘斜撑；轮罩圆弧覆盖 -6°..186°（半包），轮缘/桨叶不与轮罩相交",
+    "艏楼/艉楼抬高甲板两侧有闭合封板 SN_PF_Raised_Plating（boundary=0），侧视无水线高度的空腔穿视",
+    "4 个 SN_Socket_* 空物体存在并挂在 SN_PF_Root 下",
+    "回归：原有 103 个对象（Camera/Light/帆船/塔吊/31 件道具）的名称、位置、数量不变",
+    "视觉：3/4 视角能辨认明轮（含轮缘/辐条/桨叶）、双烟囱、货舱口 + 吊杆、艏楼/艉楼；侧视轮廓成立；轮罩呈历史明轮箱的半包遮挡"
+  ],
+  "dryrun": {
+    "result": "ALL OK",
+    "objects": 46,
+    "meshes": 39,
+    "empties": 7,
+    "tris": 12200,
+    "bbox": [59.53, 14.10, 19.52],
+    "date": "2026-10-19",
+    "note": "R2 通过后按人工反馈加强明轮与轮罩、补艏楼/艉楼侧封板；R4 轮罩加宽为 1.4 m 半包箱板"
+  },
+  "notes": "工单由 Lead 起草，人工已选定「明轮蒸汽货轮 + 船长 55 m」，并追加「明轮要更像历史明轮船：补轮缘/辐条/桨叶，轮罩半包遮挡」。生成器由 Lead 编写并纯 Python 干跑，Builder 只做执行 + 只读自检 + 视觉复核 + 回报。"
+}
