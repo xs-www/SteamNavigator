@@ -20,6 +20,7 @@
 - 2.5D 固定舞台升级方案（阶段 1 前七个切片已落地：船厂 3D + 通用舞台宿主 + 港口骨架 + 场景填充 + Bounty Train 式主界面 + 街景密度/合批/程序化远景 + 连续港区相邻站位）：[docs/design/2.5D_STAGE_PLAN.md](docs/design/2.5D_STAGE_PLAN.md)
 - 高频决策页面重构指南：[docs/specs/HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md](docs/specs/HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md)
 - 任务与路线图：[todo.md](todo.md)
+- 变更日志（按版本的功能 / 变更）：[CHANGELOG.md](CHANGELOG.md)
 
 ## 当前状态
 
@@ -106,6 +107,8 @@ godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/co
 ### 开发版发布
 
 推送 `v*` tag 会触发 `.github/workflows/release.yml`：跑测试、导出 Windows/Linux、打包 Core、生成 SHA256，并创建 GitHub Release。带 `-dev.` 的 tag 自动标记为预发布。
+
+发布前先在本地把 [todo.md](todo.md) 中 `Recently Completed` 的条目归并进 [CHANGELOG.md](CHANGELOG.md)（只写有意义的功能 / 变更），再从 todo 移除，然后打 tag。
 
 ```powershell
 git tag -a v0.2.0-dev.1 -m "Steam Navigator v0.2.0-dev.1"

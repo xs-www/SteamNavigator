@@ -10,6 +10,7 @@
 
 - 改代码前先读 `README.md` 和 `docs/static/` 下的静态文档，禁止一上来通读全部代码文件。
 - 改完代码后按下方“静态文档”约定更新并检查 `docs/static/`，同时尝试更新 `todo.md`。
+- `todo.md` 只保留 `In Progress` / `Pending` / `Recently Completed`（最近 10–15 项完成，更早历史交给 git）；每次打 `v*` tag 发布前把已完成项按版本归并进 `CHANGELOG.md`（只写有意义的变更 / 功能，不写流水账），并从 todo 移除。
 - 代码审查未通过时，明确需求和失败原因，禁止以通过测试为目的进行 Debug。
 - 新增命令/查询必须经 `FrameworkApi` 注册，并补测试。
 - 数值改动先改 Core JSON（`dev_mods/core/content/`），不在框架里写死。
