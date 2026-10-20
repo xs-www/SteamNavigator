@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_stage_host.gd`
 
-> 作用：2.5D 舞台契约测试（24 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal、场景填充访问器、港口街景 town kit 与 size/density 分档、静态与玩家船合批、无 banner 程序化远景，以及查询接线。
+> 作用：2.5D 舞台契约测试（30 个同步用例）：LocationStage 默认契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器、PortStage 装配/替换/缩放/portal、场景填充访问器、港口街坊 town kit 与 size/density 分档、静态与玩家船合批、无 banner 程序化远景、连续港区三站位的相邻/聚焦/航行/重建保持，以及查询接线。
 
 - 类型：GDScript 源文件
 
@@ -21,17 +21,23 @@
 | `test_port_stage_skyline_counts_scale_with_port_size() -> void` | L418 |
 | `test_port_stage_banner_replaces_skyline_but_keeps_frame_and_atmosphere() -> void` | L453 |
 | `test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void` | L479 |
-| `test_port_stage_town_kit_mounts_full_streetscape() -> void` | L554 |
-| `test_port_stage_town_density_scales_with_size_and_override() -> void` | L590 |
-| `test_port_stage_town_kit_does_not_require_every_optional_slot() -> void` | L641 |
-| `test_port_stage_without_town_kit_uses_blockouts_and_keeps_skyline() -> void` | L665 |
-| `test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void` | L684 |
-| `test_port_view_resolves_town_visuals_for_the_port_stage() -> void` | L717 |
-| `test_port_stage_batches_static_layers_into_few_draws() -> void` | L768 |
-| `test_port_stage_without_town_still_batches_facilities() -> void` | L827 |
-| `test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void` | L848 |
-| `test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void` | L895 |
-| `test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void` | L970 |
+| `test_port_stage_town_kit_mounts_full_streetscape() -> void` | L556 |
+| `test_port_stage_town_density_scales_with_size_and_override() -> void` | L592 |
+| `test_port_stage_town_kit_does_not_require_every_optional_slot() -> void` | L643 |
+| `test_port_stage_without_town_kit_uses_blockouts_and_keeps_skyline() -> void` | L667 |
+| `test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void` | L686 |
+| `test_port_view_resolves_town_visuals_for_the_port_stage() -> void` | L719 |
+| `test_port_stage_batches_static_layers_into_few_draws() -> void` | L770 |
+| `test_port_stage_without_town_still_batches_facilities() -> void` | L829 |
+| `test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void` | L850 |
+| `test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void` | L897 |
+| `test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void` | L972 |
+| `test_port_stage_stations_are_adjacent_along_one_quay() -> void` | L1035 |
+| `test_port_stage_focus_station_pans_camera_and_sails_the_hull() -> void` | L1090 |
+| `test_port_stage_focus_station_immediate_and_idempotent() -> void` | L1159 |
+| `test_port_stage_bind_keeps_the_current_station_and_berth() -> void` | L1190 |
+| `test_port_stage_station_dressing_scales_with_density() -> void` | L1233 |
+| `test_port_stage_redirect_mid_transition_continues_from_current_pose() -> void` | L1261 |
 
 ## 契约与约束
 
@@ -56,5 +62,11 @@
 - 无 town kit：`town_prop_count()==5`、`town_blockout_count()==5`（5 座建筑 blockout），且 L2 skyline 计数仍按无 banner 规则生成（town 缺失才建 L2）。
 - 非法 town 路径：单个建筑路径改成不存在文件 → 该建筑回退 blockout（blockout=1、prop 仍 47）；全部路径非法 → 5 个 blockout、围栏/工人/船/装饰/工业件缺失（prop=5）。
 - `port.view` 端到端：`bootstrap_core()` + `run.start` 后执行 port.view，`current_port.diorama.kit` 非空、`town_visuals` 26 项且路径以 `res://` 开头；用该 payload bind PortStage 后 normal 密度 town 仍为 47/0（旧存档按 archetype 回填）。
+- 连续港区站位（`test_port_stage_stations_are_adjacent_along_one_quay`）：`station_ids()==[market,harbor,supply]`；三个泊位 X 严格递增且 market→supply ≥50 m；三站位 FOV 相同、market 相机 X < harbor；`panel` framing 恰为 `stage` framing 平移 `PANEL_FRAMING_SHIFT_X`；未知站位被拒绝且不移动当前镜头。
+- 聚焦与航行（`test_port_stage_focus_station_pans_camera_and_sails_the_hull`）：`focus_station(market)` 后 `is_station_transitioning()` 为 true，`advance_station()` 分步推进后镜头落到 market pose、船 X 到 market 泊位；`PlayerShip` 节点、`town_prop_count`、`station_prop_count`、`facility_count` 全部不变（没有重建）；再聚焦 supply 时船先向东航行再落到 supply 泊位。
+- 过渡中重定向（`test_port_stage_redirect_mid_transition_continues_from_current_pose`）：market→0.2 s→supply 时相机从当前位置续 pan，不瞬跳回旧目标；0.05 s 位移 <8 m，最终仍落到 supply pose。
+- 立即聚焦与幂等（`test_port_stage_focus_station_immediate_and_idempotent`）：`immediate=true` 直接 snap 镜头/泊位且不进入过渡；重复 focus 当前站位不重启动画、镜头位姿不变。
+- 重绑保持站位（`test_port_stage_bind_keeps_the_current_station_and_berth`）：supply/panel 下换船（bind 签名变化 → 真重建）后 `current_station`/framing/相机不变，新船体挂在 supply 泊位而不是参考 spawn。
+- 站前道具密度（`test_port_stage_station_dressing_scales_with_density`）：small/medium/large → 15/24/33 件（每站 5/8/11 × 3），`diorama.density=busy` 覆盖；无 town kit 时 0 件且不生成占位盒。
 
 模块索引：[framework/tests](../README.md)

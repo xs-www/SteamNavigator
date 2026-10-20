@@ -11,8 +11,8 @@
 | `gen_content_types.mjs` | 从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录；提供 `--check` 过期检查。 | [查看](./gen_content_types.mjs.md) |
 | `gen_static_docs.mjs` | 静态文档生成器：读取本文件的 FILE_DOCS/MODULES，生成镜像文档、模块 README、总计索引与带 SHA-256 的 manifest。 | [查看](./gen_static_docs.mjs.md) |
 | `godot/capture_harbor_diorama.gd` | 港口样片真实渲染截图（窗口模式）：加载 harbor_diorama.tscn，等水面/浮船稳定后抓固定 3/4 机位与纵帆船近景两张 1440×900 截图。 | [查看](./godot/capture_harbor_diorama.gd.md) |
-| `godot/capture_port_stage.gd` | PortStage 真实渲染截图（窗口模式 1440×900）：加载 `port_stage_preview.tscn`，等水面/船体稳定后抓 `preview`，再切 `sparse` 抓第二张，输出到 `docs/design/screenshots/port_stage/`。 | [查看](./godot/capture_port_stage.gd.md) |
-| `godot/measure_port_stage.gd` | PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，等场景稳定后分别采样 `preview` 与 `sparse`，优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`（facilities/town 与船体合批前后）、`town_density()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。 | [查看](./godot/measure_port_stage.gd.md) |
+| `godot/capture_port_stage.gd` | PortStage 真实渲染截图（窗口模式 1440×900）：加载 `port_stage_preview.tscn`，依次抓 `preview`（harbor/stage）、`sparse`、`market` 站位、`supply` 站位与 `harbor` 的 panel 构图共 5 张，输出到 `docs/design/screenshots/port_stage/`。 | [查看](./godot/capture_port_stage.gd.md) |
+| `godot/measure_port_stage.gd` | PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与三个站位（harbor/market/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`（facilities/town 与船体合批前后）、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。 | [查看](./godot/measure_port_stage.gd.md) |
 | `godot/verify_harbor_diorama.gd` | 港口样片验收（只读）：场景可加载、新浮船 SN_Schooner_Fame 在场景且旧船已移除、无星条旗、水面使用自定义着色器、浮船随波运动、未接入主场景。 | [查看](./godot/verify_harbor_diorama.gd.md) |
 | `godot/verify_port_facilities.gd` | 港口设施锚点 GLB 导入验收（只读）：加载 `assets/models/port/SN_*.glb` 6 件，量测 Godot 侧包围盒 / 三角面 / 材质名，对照工单尺寸与调色板判定。 | [查看](./godot/verify_port_facilities.gd.md) |
 | `godot/verify_props.gd` | 道具 GLB 导入验收（只读）：加载 `assets/models/props/*.glb`，量测 Godot 侧包围盒、三角面与材质名，对照 brief 尺寸判定尺度与轴向。 | [查看](./godot/verify_props.gd.md) |
@@ -87,7 +87,7 @@
 | `pack_core.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `static_docs_data.mjs` | 静态文档的策展数据：文件职责/契约/L2、模块简介与分组角色。 | [查看](./static_docs_data.mjs.md) |
 | `test.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
-| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）与详细总览抽屉。 | [查看](./ui_snapshot.gd.md) |
+| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。 | [查看](./ui_snapshot.gd.md) |
 
 ## 模块契约
 
@@ -95,7 +95,7 @@
 - `gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。
 - `ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。
 - `capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜，`-OverviewDetail` 再要求 `overview_detail.png`。
-- `godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，抓 `port_stage_preview.png` / `port_stage_sparse.png` 两张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。
+- `godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，依次抓 `port_stage_preview.png` / `port_stage_sparse.png` / `port_stage_market.png` / `port_stage_supply.png` / `port_stage_harbor_page.png` 五张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。
 - `art/gen_shipyard_textures.py` 是船厂两张贴图的唯一真源：`python tools/art/gen_shipyard_textures.py` 可重建；纵剖图构图比例需与 `sn_ship_view.gd` 的 `_chip_anchor` 同步。
 - `modeling/briefs/*.json` 是建模子代理的自包含工单；尺寸/预算/材质只改这里，不靠口述传递。
 - 港口街景第一批工单在 `modeling/briefs/sn_harbor_town_batch1.json`：10 件 `SN_HT_*`、集合 `SN_Harbor_Town`、工作台 y=110、总预算 11500 tri；`sn_harbor_town_generator.py` 是几何唯一真源（纯 Python 可干跑、`build_all()/report()` 在 Blender 内执行），`export_town_glb.py` 验收后逐件归零导出到 `dev_mods/core/assets/models/props/`。Verifier R1 复验 passed=true，场景 244 objects / 223 mesh、既有对象 digest 不变。

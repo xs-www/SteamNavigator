@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**162 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施（LocationStage / SNStageHost 生命周期与回退 / ShipyardStage / PortStage 装配·替换·缩放·portal）、PortStage 场景填充访问器、港口街景 town kit（满配 29 / 无 town / 非法路径 / port.view 16 项端到端）、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**168 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施（LocationStage / SNStageHost 生命周期与回退 / ShipyardStage / PortStage 装配·替换·缩放·portal）、PortStage 场景填充访问器、港口街景 town kit（满配 47 / 站前道具 24 / 无 town / 非法路径 / port.view 26 项端到端）、连续港区三站位（相邻顺序/聚焦航行/重绑保持/站前道具密度）、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -289,7 +289,11 @@
 - [x] 第六切片·无 banner 程序化远景：山脊/远城塔楼/屋脊+烟囱 3 层低对比剪影合并为 1 个 MultiMesh，有 banner 时隐藏；旧斜置 sky card 改固定 260 m camera-facing，修掉右侧远景截断
 - [x] 第六切片·测试与工具：`test_stage_host` 增至 24 例（密度/可选 slot/静态合批/无 town 合批/远景层/船体合批与泡沫 AABB/非刚性回退），`test_ui_shell` 覆盖 HUD 图标与招牌组件/紧凑尺寸 helper，全量 **162 passed / 0 failed**；新增 [measure_port_stage.gd](tools/godot/measure_port_stage.gd) 窗口实测工具（真实 draw calls/分层 surface/合批统计，headless 降级）
 - [x] 第六切片·截图：主界面 1440×900 + 960×540 + 详细总览 + 完整/稀疏港口（见 [overview_port_stage.png](docs/design/screenshots/overview_port_stage.png) / [overview_port_stage_960.png](docs/design/screenshots/overview_port_stage_960.png) / [overview_detail.png](docs/design/screenshots/overview_detail.png)）
-- [ ] 港务/市场/补给等独立舞台（当前市场/委托等仍是 2D 页面）
+- [x] 第七切片·连续港区三站位：码头 54→160 m、广场 120→250 m，`STATIONS`（market -30 / harbor 0 / supply +30）定义各站位镜头 pose、泊位与道具组；`exchange`/`supply` 设施搬到对应站位；`focus_station()` / `advance_station()` 在 0.6 s 内平移镜头并把玩家船（先转艏、24 m/s 沿岸）开到新泊位，港口/街坊/设施/合批层不重建，泡沫环随船移动
+- [x] 第七切片·画幅层跟随与站前道具：镜头平移时天空/远景/banner/前景框/雾带按偏移平移保持构图、L2 剪影半速视差；`STATION_PROPS` 每站 5/8/11 件（复用 town kit 已解析路径，`station_prop_count()` 单独计数）
+- [x] 第七切片·主界面接线与泊位面板：`STAGE_SCREENS`（overview→harbor / market→market / supply→supply）让三页共用同一 `PortStage` 实例；market/supply 页改为右侧 640 px `DockPanel` + 左侧露出 3D 街景，站位间导航不播黑场淡出；市场页九列表改 620 px 纵向条目、补给页煤水卡改单列堆叠（最坏内容宽 574 px）
+- [x] 第七切片·测试/工具/截图：`test_stage_host` 增至 30 例（新增站位相邻顺序/镜头与泊位移动/立即聚焦幂等/过渡中重定向/重绑保持站位/站前道具密度），`test_ui_shell` 改写总览用例覆盖共用舞台/泊位面板/镜头到位/离页隐藏，全量 **167 passed / 0 failed**；`capture_port_stage.gd` 扩到 5 张站位截图、`measure_port_stage.gd` 增加三站位实测、`ui_snapshot.gd` 增加 `--station-shots`；截图 [市场站位](docs/design/screenshots/market_station.png) / [补给站位](docs/design/screenshots/supply_station.png) / [市场 960×540](docs/design/screenshots/market_station_960.png) / [market 镜头](docs/design/screenshots/port_stage/port_stage_market.png)
+- [ ] 委托 / 情报页舞台化（当前仍为 2D 页面）
 - [ ] 离港拉高 → 2D 海图 → 进港降落演出（可跳过、事件暂停）
 - [ ] 目的港舞台预加载、质量档位与低配回退、第三方 `.glb` 白名单评审
 - [ ] L2 LOD 与远景 `visibility_range`
@@ -348,7 +352,8 @@
 - [x] **P1 总览页接入 `PortStage`**：全窗背景层 + 失败回退 2D + 切页隐藏/返回恢复已完成；第五切片进一步改为 Bounty Train 式主界面（紧凑 chrome、左右招牌、底部状态条、详细抽屉），并完成 `port.diorama` / 街景 town kit 接线。剩余：独立舞台与演出。
 - [x] **P1 港口舞台验收**：主界面默认全窗 3D 舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条 + 详细抽屉，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景（`test_ui_shell` 真实外壳用例守护，162 测试全绿）。
 - [x] **P1 主界面美术收尾与性能回收（第六切片）**：HUD 资源图标（`AssetService.find_key` 裸键）、自绘木牌招牌 + 设施徽记 + 悬停光晕；街景 normal 47 件（size/density 分档）；设施/街景/玩家船静态合批把实测 draw calls 从 284/255 降到 **63/56**（37k/30k tris）；无 banner 港口 3 层程序化远景；新增 measure 工具与 7 个舞台用例，全量 162 tests 绿。截图：[主界面 1440](docs/design/screenshots/overview_port_stage.png) / [主界面 960×540](docs/design/screenshots/overview_port_stage_960.png) / [详细总览](docs/design/screenshots/overview_detail.png)。
-- [ ] **剩余 2.5D 舞台工作**：港务/市场/补给等独立舞台、离港/进港演出与目的港舞台预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审。
+- [x] **P1 连续港区 + 港务/市场/补给相邻站位（第七切片）**：码头 160 m、广场 250 m，`STATIONS` 把 market(-30)/harbor(0)/supply(+30) 排成相邻站位；`focus_station()`/`advance_station()` 只平移镜头 + 把船开到新泊位（0.6 s 镜头、转艏 + 24 m/s 航行），港口/街坊/设施/合批层不重建，画幅层跟随、L2 半速视差；`STAGE_SCREENS` 让 overview/market/supply 共用同一 `PortStage` 实例，market/supply 改成右侧 640 px 泊位面板 + 左侧露出 3D 街景且切页无黑场；`test_stage_host` 30 例、`test_ui_shell` 覆盖共用舞台/面板/镜头到位，全量 **168 tests 绿**。截图：[市场站位](docs/design/screenshots/market_station.png) / [补给站位](docs/design/screenshots/supply_station.png) / [市场 960×540](docs/design/screenshots/market_station_960.png) / [market 镜头](docs/design/screenshots/port_stage/port_stage_market.png)。
+- [ ] **剩余 2.5D 舞台工作**：委托/情报页舞台化、离港/进港演出与目的港舞台预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审。
 - [ ] **铁港城镇建筑视觉升级**：按 `tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` 重建近中景建筑；先用 `SN_HT_Warehouse_Long` 灰模过固定机位门禁，再完成共享模块、2K trim sheet、5 个原位升级资产、3 个新增原型与 LOD1。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。

@@ -8,11 +8,11 @@
 
 ## 0. 当前基线（已完成）
 
-- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，162 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
+- MVP：贸易 / 委托 / 航行 / 船厂 / 通关闭环稳定，168 个 Godot 测试、33 个 Node 用例、1 个服务冒烟、17 个浏览器用例通过。
 - 内容交付：数据、模型、横幅全部随 `core` 模组发布；发布 PCK 已排除 `assets/models/*`，本体只保留框架资源。
 - 运行时加载：`ContentAssetLoader` 从模组包读原始 `.glb/.png`；船体模型由 `information.model` 资产键决定。
 - 编辑器：`dev_mods/core` 可作原生工作区直接编辑保存（删除/新增定义与内容文件会写回，资产不动）。
-- 3D：船厂正常态已有固定机位 3D 舞台；`StageHost`/`LocationStage`、`ShipyardStage` 迁移、`PortStage` 骨架/场景填充、总览页接入、Bounty Train 式主界面 HUD、港口街景 10 件与 `port.diorama`/`town_visuals` 接线均已完成；第六切片再完成 HUD 图标化、主题化招牌、街景密度（normal 47 件）、设施/街景/玩家船静态合批（实测 63/56 draw calls）与无 banner 三层程序化远景（24 个舞台用例 + 4 个主界面用例）。
+- 3D：船厂正常态已有固定机位 3D 舞台；`StageHost`/`LocationStage`、`ShipyardStage` 迁移、`PortStage` 骨架/场景填充、总览页接入、Bounty Train 式主界面 HUD、港口街景 10 件与 `port.diorama`/`town_visuals` 接线均已完成；第六切片再完成 HUD 图标化、主题化招牌、街景密度（normal 47 件）、设施/街景/玩家船静态合批（实测 63/56 draw calls）与无 banner 三层程序化远景；第七切片把港口做成连续港区，市场/港务/补给是同一码头上的相邻站位，切页只平移镜头、把船开到对应泊位并换上右侧 640 px 泊位面板（30 个舞台用例 + 主界面站位接线用例）。
 - 持久化：存档 Schema 2.0、Campaign 分区、模块实例与部件损耗、Save 迁移完成。
 
 ## 1. 近期：P0 收口（1 天）
@@ -41,8 +41,9 @@
 4. **港口差异参数** ✅ **已完成**：`port_archetype.schema` 新增 `diorama`（kit/town/facility_visuals/palette/landmark）；五港 `diorama.kit/town`（16 项）+ core manifest 10 个 `model.prop.*`（资产 65→75）；`map_generator` 持久化 `diorama`，`port.view` 解析 `town_visuals`（旧存档按 archetype 回填）；PortStage L2b 装配 29 件镇区道具、建筑缺失回退 blockout、town 存在时跳过 L2 剪影。
 5. **Bounty Train 式主界面 + 港口街景** ✅ **已完成**：默认 3D 主界面、121 px 紧凑 chrome、左右设施招牌 + 出航招牌、60 px 底部状态条、详细总览抽屉、2D 回退；街景 10 件 `SN_HT_*`（6204 tri，Verifier R1 passed）与截图 [主界面](screenshots/overview_port_stage.png) / [详细总览](screenshots/overview_detail.png)。
 6. **主界面美术收尾 + 街景密度 + 性能回收（第六切片）** ✅ **已完成**：HUD 资源图标（`AssetService.find_key` 裸键解析）、自绘木牌/铁框/黄铜铆钉招牌 + 设施徽记 + 悬停光晕；街景 normal 29→47（`port.size`/`diorama.density` 分档，sparse 28 / busy 63）；设施/街景/玩家船静态合批，实测 draw calls **63/56**（原 284/255），37k/30k tris；无 banner 港口 3 层程序化远景（1 个 MultiMesh）；截图 [主界面 1440](screenshots/overview_port_stage.png) / [主界面 960×540](screenshots/overview_port_stage_960.png) / [详细总览](screenshots/overview_detail.png)。新增 `tools/godot/measure_port_stage.gd` 实测工具。
+7. **连续港区 + 港务/市场/补给相邻站位（第七切片）** ✅ **已完成**：按 Bounty Train「场景相邻、切场景只移动玩家船和镜头」重做港口表现——`PortStage` 的码头延长到 160 m，市场 / 港务 / 补给三个站位沿 X 相邻排布（`STATIONS` 定义每个站位的镜头 pose、泊位与道具组），`exchange` / `supply` 设施分别搬到 -30 / +30；新增 `focus_station(station, framing, immediate)` / `advance_station(delta)` / `is_station_transitioning()`：切页只在 0.6 s 内平移镜头并把玩家船（先转艏）以 24 m/s 开到新泊位，港口/街坊/设施/合批层不重建，泡沫环随船移动；相机朝向层（天空、painted backdrop、banner、前景框、雾带）按平移量保持构图，L2 剪影留半速视差；站前道具每站 5/8/11 件（复用现有 town kit，`station_prop_count()` 单独计数）。主界面 `STAGE_SCREENS` 让 overview/market/supply 共用同一 `PortStage` 实例，市场/补给页改为右侧 640 px 泊位面板 + 左侧 3D 街景，站位间导航不播黑场淡出。截图 [市场站位](screenshots/market_station.png) / [补给站位](screenshots/supply_station.png) / [市场站位 960×540](screenshots/market_station_960.png) / [连续港区市场镜头](screenshots/port_stage/port_stage_market.png)。
 
-验收（已完成）：主界面默认全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条 + 详细抽屉，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景；场景填充与 diorama/街景接线完成；draw call 回到预算内（162 测试全绿）。剩余：港务/市场等独立舞台、出航进港演出、质量档位/低配回退、L2 LOD。
+验收（已完成）：主界面默认全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条 + 详细抽屉，2D HUD 不变；不同 `facilities` 的港口出现/缺少对应设施；资产缺失时回退 2D 背景；场景填充与 diorama/街景接线完成；港口成为连续港区，港务/市场/补给切页只移动船与镜头、同一舞台实例复用；draw call 在预算内（167 测试全绿）。剩余：出航进港演出、质量档位/低配回退、L2 LOD、委托/情报页的舞台化（船厂已有独立舞台）。
 
 ## 4. 中期：玩法主线（P2，阶段 1 → 2）
 

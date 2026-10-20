@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_ui_shell.gd`
 
-> 作用：迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 资源图标 + 主题化两侧招牌 + 底部状态条 + 详细总览抽屉 + 2D 回退）与 960 窄布局 helper。
+> 作用：迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 资源图标 + 主题化两侧招牌 + 底部状态条 + 详细总览抽屉 + 2D 回退）、连续港区三站位的页面接线（overview/market/supply 共用同一舞台实例、镜头与船移动、右侧泊位面板），以及 960 窄布局 helper。
 
 - 类型：GDScript 源文件
 
@@ -18,8 +18,8 @@
 | `test_notice_log_renders_filled_localized_text() -> void` | L463 |
 | `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L521 |
 | `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L554 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L706 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L725 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L765 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L784 |
 
 ## 契约与约束
 
@@ -39,7 +39,9 @@
 - HUD 图标：`AssetService.find_key("icon.money")` / coal / water 均能解析且 `has()` 为真；chrome 里至少 3 个 `TextureRect` 且每个都有已加载纹理（缺资产时页面应退化为纯文字，不产生空纹理节点）。
 - 窗口缩放说明：`canvas_items + expand` 把 960×540 窗口映射为缩放后的 1600×900 逻辑画布，因此 chrome 保留全部 chip（含剩余载重/货舱），不设 compact 分支；960×540 验收截图是这条布局的证据。
 - 招牌组件：present 设施的 Button 必须 `has_method("configure")`（SNHarborSign）、`custom_minimum_size == 172×42`，`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。
-- 同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_voyage` 固定在右下）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market；切到市场后紧凑 chrome 仍在、舞台/状态条隐藏。
+- 同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_voyage` 固定在右下）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market。
+- 连续港区页面接线：切到 market 后宿主的 `PortStage` 实例不变（`host.current_stage()` 与切页前同一节点）、舞台保持可见、`_stage_station==market`/`_stage_framing==panel`、`PortStage.current_station()==market`；`_root_box` 下出现 `DockPanelRow` 与 ≥640 px 的 `DockPanel`，页面脚本仍恰好一个实例。headless 不推进帧，用例直接 `port_stage.advance_station()` 断言镜头落到 `station_camera_pose(market, panel)`、船落到 market 泊位。
+- 切到 supply 后仍是同一舞台实例，船从 market 泊位沿岸向东航行到 supply 泊位（两泊位相距 >40 m）；切到 contracts 等非舞台页时宿主隐藏；回到 overview 时舞台恢复并回到 harbor 站位。
 - `test_overview_stage_falls_back_to_the_usable_2d_overview`：调 `_on_port_stage_fallback` 后 `_port_stage_load_failed` 记忆、stage 模式关闭、2D 地图挂载、显示 `ui.error.port_stage_unavailable`、导航仍可用。
 - `test_overview_status_strip_and_detail_drawer`：底部状态条可见且最小高度 ≤72，含耐久/货舱/受损/最新通告与「详细总览/出航/等待 12 小时」；打开抽屉后地图与 `ui.victory.plan_title` 出现、舞台未销毁、backdrop 显示、招牌隐藏；返回主界面后抽屉关闭；点等待按钮让 `GameState.now()` +12 h；切到 intel 时状态条隐藏、返回总览恢复、点出航进入 voyage 页。
 

@@ -55,22 +55,22 @@
 | `screens/port/contracts_screen.tscn` | 框架源文件：contracts_screen.tscn | 本页 |
 | `screens/port/intel_screen.gd` | 航路情报页面场景：展示情报摘要、商品×港口矩阵与 NPC 商船动向。 | [查看](./screens/port/intel_screen.gd.md) |
 | `screens/port/intel_screen.tscn` | 框架源文件：intel_screen.tscn | 本页 |
-| `screens/port/market_screen.gd` | 港口市场页面场景：展示行情、真实价格历史、持仓成本及买卖操作。 | [查看](./screens/port/market_screen.gd.md) |
+| `screens/port/market_screen.gd` | 港口市场页面场景：展示行情、真实价格历史、持仓成本及买卖操作；作为泊位侧栏时按 620 px 窄列设计（纵向商品条目列表，替代旧九列表格），外层 PageScroll 负责竖向滚动。 | [查看](./screens/port/market_screen.gd.md) |
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
 | `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |
 | `screens/port/shipyard_screen.gd` | 船厂页两种布局共用一页：正常态为「已有船舶卡片 / 实机渲染舞台 / 组件分类入口」，改装态为「贴图纵剖图 / 所选分类的槽位与操作 / 竖排分类页签（含杂项）」。规则仍来自 `shipyard.view`，页面不写 `GameState`。 | [查看](./screens/port/shipyard_screen.gd.md) |
 | `screens/port/shipyard_screen.tscn` | 框架源文件：shipyard_screen.tscn | 本页 |
-| `screens/port/supply_screen.gd` | 补给与维修页面场景：绑定 SupplyView，组合煤水决策卡、资源摘要与维修操作。 | [查看](./screens/port/supply_screen.gd.md) |
+| `screens/port/supply_screen.gd` | 补给与维修页面场景：绑定 SupplyView，组合煤水决策卡、资源摘要与维修操作；作为泊位侧栏时按 620 px 窄列设计（卡片单列堆叠、badge 可换行），外层 PageScroll 负责竖向滚动。 | [查看](./screens/port/supply_screen.gd.md) |
 | `screens/port/supply_screen.tscn` | 框架源文件：supply_screen.tscn | 本页 |
 | `screens/port/voyage_screen.gd` | 出航规划页面场景：选择目的港与锅炉策略，展示完整 voyage.preview 并发出出航意图。 | [查看](./screens/port/voyage_screen.gd.md) |
 | `screens/port/voyage_screen.tscn` | 框架源文件：voyage_screen.tscn | 本页 |
-| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。 | [查看](./shell/main.gd.md) |
+| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。 | [查看](./shell/main.gd.md) |
 | `shell/main.tscn` | 框架源文件：main.tscn | 本页 |
 | `showcase/ui_kit_showcase.gd` | 独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。 | [查看](./showcase/ui_kit_showcase.gd.md) |
 | `showcase/ui_kit_showcase.tscn` | 框架源文件：ui_kit_showcase.tscn | 本页 |
 | `stages/location_stage.gd` | 2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。 | [查看](./stages/location_stage.gd.md) |
-| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街景 town kit（按 size/density 28/47/63 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街景 + 玩家船静态合批（按材质）。全程序化 + 内容模组 GLB，无外部框架贴图。 | [查看](./stages/port_stage.gd.md) |
+| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 补给是同一港区里从左到右的三个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建。全程序化 + 内容模组 GLB，无外部框架贴图。 | [查看](./stages/port_stage.gd.md) |
 | `stages/port_stage.tscn` | 港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id="port"`。 | 本页 |
 | `stages/shipyard_stage.gd` | 船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。 | [查看](./stages/shipyard_stage.gd.md) |
 | `stages/shipyard_stage.tscn` | 船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id="shipyard"`。 | 本页 |

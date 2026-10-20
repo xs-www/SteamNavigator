@@ -1,6 +1,6 @@
 # `framework/ui/shell/main.gd`
 
-> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。
+> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。
 
 - 类型：GDScript 源文件
 
@@ -49,8 +49,12 @@
 - 反馈2：补给卡绑定 SNSupplyCard 时传入 _tr 回调，显示“上限损失/剩余可装”本地化文案。
 - `_notice_text(notice)` 用 `_format_slots(template)`（`%[sd]` 正则、保序）取槽位：字符串参数先按本地化键解析，再按 push 顺序 `template % args`；槽位数与参数数不符、或 `%d` 槽位对应参数不是 int/float 时原样返回模板而不报格式错误；缺键时返回键名。空模板 / 无参数 / 无槽位直接返回模板本身，「航行记录」由此渲染成句。通知文案本地化由 test_ui_shell 的两个用例守护（真实渲染 + 源码 `push_notice` 键扫描，中英槽位序列保序一致）。
 - 总览 3D 港口舞台由 Shell 持有：`PORT_STAGE_SCENE_PATH`（`port_stage.tscn`）懒加载，`PORT_STAGE_FACILITY_SCREENS` 映射设施→页面（exchange→market / contracts / supply / intel / shipyard）；`_overview_stage_mode` 默认 true（3D 是主视图），`_overview_detail` 默认 false。
+- 连续港区：`STAGE_SCREENS = {overview→harbor, market→market, supply→supply}` 把页面映射到同一港区的三个相邻站位；`_stage_station` / `_stage_framing` 记录当前镜头站，overview 用 `stage` 构图，market/supply 用 `panel` 构图（右侧 640 px `DOCK_PANEL_WIDTH` 面板）。
+- `_focus_stage_station(station, framing, immediate)` 只在舞台已挂载后调 `PortStage.focus_station()`；重设当前站位是 no-op，所以整页重建不会重启动画。`_stage_backed_page()` 判断当前页是否该用泊位面板（舞台场景可用时）。
+- 市场/补给页的泊位面板：`_mount_dock_panel(screen)` 建 `DockPanelRow`（左 expanding `StageWindow` + 右 `PanelContainer(DockPanel, SNPanel, ≥640 px)`），页面放进面板；舞台不可用时退回原来的全宽页面。
+- 站位间导航不播放全屏淡出：`_on_nav()` 在 `from` 与目标都属于 `STAGE_SCREENS` 且场景可用时 `_refresh(false)`，让镜头平移与船体航行可见；离开到 contracts/intel/shipyard/voyage 等非舞台页仍走 `_refresh(true)` 淡入淡出。
 - 舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。
-- `_sync_port_stage(data)` 只在有 run、非在航、当前页为 overview、`_overview_stage_mode` 且场景可用时显示；菜单/无 run/通关/在航/错误分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。
+- `_sync_port_stage(data)` 在 `has_run && !at_sea && 当前页属于 STAGE_SCREENS && （非 overview 或 _overview_stage_mode） && 场景可用` 时显示；overview 额外要求 3D 总览模式，market/supply 不受该开关影响。菜单/无 run/通关/在航/错误/非舞台页分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。
 - `_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。
 - 两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；规格 172×42 / margin 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「出航 ▶」招牌（`Hotspot_voyage`）。
 - 招牌控件是 `SNHarborSign`（自绘木板/铁框/黄铜铆钉/设施徽记/箭头/悬停光晕），`text` 与 `Button` 语义保留；`_port_sign()` 兼容组件缺失时回退普通 Ghost Button。
@@ -89,7 +93,13 @@
 
 ### `_sync_port_stage(data) / _ensure_port_stage_host()`
 
-- 显示条件 = `has_run && !at_sea && _active_screen == "overview" && _overview_stage_mode && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，再同步抽屉 backdrop 与招牌层。
+- 显示条件 = `has_run && !at_sea && 当前页在 STAGE_SCREENS && （非 overview 或 _overview_stage_mode） && 场景存在`；宿主首次懒创建（全窗锚定、先隐藏），随后 `load_stage(PORT_STAGE_SCENE_PATH)` → `bind_view_model(_port_stage_payload(data))` → `set_stage_visible(true)`，再 `_focus_stage_station(station, framing, just_mounted)`、同步抽屉 backdrop 与招牌层。站位切换只调 `PortStage.focus_station()`，舞台实例与 3D 世界都不重建。
+- `_focus_stage_station(station, framing, immediate)`：overview 用 `stage` 构图，market/supply 用 `panel` 构图（右侧 640 px 面板，镜头右移 3 m 让站位设施留在可见左半屏）；`immediate` 只在首次挂载时传 true，其余走 0.6 s 镜头平移 + 船体沿岸航行。
 - 宿主/招牌层/抽屉 backdrop 的层级用 `move_child(..., $Background.get_index() + 1)`、`(..., $PageMargin.get_index() + 1)` 与 `_place_overview_detail_backdrop()` 固定：3D 在背景之上、2D UI 之下，抽屉 backdrop 在页面之下。
+
+### `_mount_dock_panel(screen)`
+
+- market / supply 页的布局：`DockPanelRow`（HBox）第一个子节点是 `StageWindow`（expanding、不吃鼠标、露出舞台），第二个是 `DockPanel`（SNPanel、`custom_minimum_size.x = 640`、纵向 expand），页面本体挂在面板下。
+- 舞台不可用（场景缺失或本会话加载失败）时 `_stage_backed_page()` 为 false，页面按原样全宽挂到 `_root_box`，功能不受影响。
 
 模块索引：[framework/ui](../README.md)

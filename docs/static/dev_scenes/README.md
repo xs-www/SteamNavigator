@@ -10,7 +10,7 @@
 | `harbor/bobbing_boat.gd` | 浮船：采样与水面着色器同源的波浪，驱动升沉、纵摇、横摇和极缓慢系泊漂移。 | [查看](./harbor/bobbing_boat.gd.md) |
 | `harbor/harbor_diorama.gd` | 港口样片根脚本：运行时给码头石墙套更暗的复制材质，压住黄昏逆光下的高光。 | [查看](./harbor/harbor_diorama.gd.md) |
 | `harbor/harbor_diorama.tscn` | 独立 3D 港口样片场景：固定机位黄昏逆光，用已有 GLB 资产拼码头/吊车/货堆，前方浮一艘 1795 双桅纵帆船，水面使用自写着色器。 | [查看](./harbor/harbor_diorama.tscn.md) |
-| `port_stage/port_stage_preview.gd` | PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 街道 town kit + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals/town_visuals）两份样例 ViewModel，并打印场景填充/前景框投影/预算与 town 自查。 | [查看](./port_stage/port_stage_preview.gd.md) |
+| `port_stage/port_stage_preview.gd` | PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 街道 town kit + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals/town_visuals）两份样例 ViewModel；`set_station()` 可把镜头切到 market/harbor/supply 三个相邻站位（stage 或 panel 构图）并打印站位自查。 | [查看](./port_stage/port_stage_preview.gd.md) |
 | `port_stage/port_stage_preview.tscn` | PortStage 独立预览场景：全屏 Control 挂 `port_stage_preview.gd`。 | 本页 |
 
 ## 模块契约
