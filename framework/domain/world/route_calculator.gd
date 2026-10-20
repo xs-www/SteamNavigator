@@ -17,14 +17,17 @@ extends RefCounted
 ## ### `_detour(...)`
 ## - 有界递归：对挡路的岛，取"沿其海岸外扩环走的较短弧"或"外切点"作候选，整条折线
 ##   过 `_path_is_clear` 才采纳；递归深度上限 3，无 A*、无网格。
+## - 外扩距离按岛屿尺寸自适应（`_detour_clearances`）：三档 = 半长轴 ×1/2/3，下限
+##   `COAST_CLEARANCE * 0.5`、上限 `COAST_CLEARANCE`，小礁石不再把航线拽出 42 单位。
 ## ### `compute_departure_angles(...)`
 ## - 默认取直接邻居质心方向；若该方向指向本岛内陆，回退为"背离本岛质心"的向海方向。
 ## @end-static-doc
 
 const BEZIER_SEGMENTS := 20
-## How far seaward a detour hugs the blocking coastline, in world units. Procedural
-## coastlines wiggle by several units, so a small offset would leave ring edges
-## cutting back into the shore.
+## Upper bound for how far seaward a detour hugs the blocking coastline, in world
+## units. Procedural coastlines wiggle by several units, so a small offset would
+## leave ring edges cutting back into the shore. The actual band is scaled to the
+## blocker by `_detour_clearances` — this is the ceiling a continent reaches.
 const COAST_CLEARANCE := 14.0
 ## Ports sit exactly on the coastline, so any path grazes land near its endpoints.
 ## Land contact within this distance of either end is a harbour approach, not a
@@ -257,7 +260,7 @@ static func _detour(start: Vector2, end: Vector2, landmasses: Array[Landmass], d
 ## clearance (both directions) plus a pass outside the blocker's bounding circle.
 static func _detour_candidates(start: Vector2, end: Vector2, blocker: Landmass) -> Array:
 	var candidates: Array = []
-	for clearance in [COAST_CLEARANCE, COAST_CLEARANCE * 2.0, COAST_CLEARANCE * 3.0]:
+	for clearance in _detour_clearances(blocker):
 		var ring := _offset_ring(blocker, clearance)
 		if ring.size() < 3:
 			continue
@@ -285,6 +288,18 @@ static func _detour_candidates(start: Vector2, end: Vector2, blocker: Landmass) 
 			var tangent: Vector2 = centre + normal * float(sign_value) * radius
 			candidates.append([start, tangent, end])
 	return candidates
+
+
+## Escalating seaward clearances for a coastline detour, scaled to the blocker's
+## own size: a small reef should not throw route waypoints 42 units into open
+## sea, while a continent keeps the full band needed to clear its wiggling coast.
+## Every candidate is still validated against the land, so an undersized ring
+## only costs one rejected attempt before the next clearance is tried.
+static func _detour_clearances(blocker: Landmass) -> Array:
+	var box := blocker.bounding_box()
+	var half_extent := maxf(box.size.x, box.size.y) * 0.5
+	var base := clampf(half_extent * 0.5, COAST_CLEARANCE * 0.5, COAST_CLEARANCE)
+	return [base, base * 2.0, base * 3.0]
 
 
 ## Keeps at most ~8 evenly spaced vertices of an arc so the chain has few legs.

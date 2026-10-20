@@ -298,6 +298,66 @@ func _away_from_ends(point: Vector2, path_start: Vector2, path_end: Vector2, tol
 	return point.distance_to(path_start) > tolerance and point.distance_to(path_end) > tolerance
 
 
+## Detour clearance bands scale with the blocker: a small reef must not throw
+## route waypoints out to the continent-sized band (a 4-unit atoll used to be
+## detoured by up to 42 units), while a continent keeps the full escalation.
+func test_detour_clearances_scale_with_island_size() -> void:
+	var reef := _circular_landmass("reef", Vector2(100.0, 100.0), 4.0, 24)
+	var floor_band := RouteCalculator.COAST_CLEARANCE * 0.5
+	var small_band: Array = RouteCalculator._detour_clearances(reef)
+	assert_eq(small_band, [floor_band, floor_band * 2.0, floor_band * 3.0],
+		"a tiny reef should use the floor band instead of the continent band")
+
+	var continent := _circular_landmass("continent", Vector2(0.0, 0.0), 90.0, 48)
+	var full_band: Array = RouteCalculator._detour_clearances(continent)
+	assert_eq(full_band, [RouteCalculator.COAST_CLEARANCE, RouteCalculator.COAST_CLEARANCE * 2.0, RouteCalculator.COAST_CLEARANCE * 3.0],
+		"a continent keeps the full legacy escalation band")
+
+	# End to end: the blocked route still exists, exactly crosses no land, and
+	# every detour waypoint stays inside the small-island band.
+	var landmasses: Array[Landmass] = [reef]
+	var from_port := _open_sea_port("west", Vector2(60.0, 100.0))
+	var to_port := _open_sea_port("east", Vector2(140.0, 100.0))
+	var route := RouteCalculator.calculate_route(from_port, to_port, landmasses)
+	var path: PackedVector2Array = route.get("bezier_path", PackedVector2Array())
+	assert_true(path.size() >= 2, "a route blocked by the reef should still be found")
+	for segment in range(path.size() - 1):
+		var crossing := _segment_land_crossing(
+			path[segment], path[segment + 1], landmasses,
+			from_port.position, to_port.position, RouteCalculator.END_GRAZE_TOLERANCE
+		)
+		assert_true(crossing.is_empty(), "reef detour must not cross the reef: %s" % crossing)
+
+	var centroid := Vector2(100.0, 100.0)
+	var max_ring := 4.0 + float(small_band[2])
+	for candidate in RouteCalculator._detour_candidates(from_port.position, to_port.position, reef):
+		# Endpoints are the harbours themselves (40 units out by construction);
+		# only the interior waypoints are detour geometry and must stay in-band.
+		for index in range(1, candidate.size() - 1):
+			var point: Vector2 = candidate[index]
+			var distance := point.distance_to(centroid)
+			assert_true(distance <= max_ring + 0.5,
+				"reef detour waypoints must stay within the small-island band: %.1f > %.1f" % [distance, max_ring + 0.5])
+
+
+func _circular_landmass(id: String, center: Vector2, radius: float, segments: int) -> Landmass:
+	var landmass := Landmass.new()
+	landmass.id = id
+	var polygon := PackedVector2Array()
+	for index in segments:
+		var angle := TAU * float(index) / float(segments)
+		polygon.append(center + Vector2(cos(angle), sin(angle)) * radius)
+	landmass.polygon = polygon
+	return landmass
+
+
+func _open_sea_port(id: String, position: Vector2) -> WorldPort:
+	var port := WorldPort.new()
+	port.id = id
+	port.position = position
+	return port
+
+
 func test_connectivity_graph_is_sparse_and_connected() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
