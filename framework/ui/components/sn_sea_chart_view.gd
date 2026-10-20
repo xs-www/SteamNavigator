@@ -1,19 +1,23 @@
 class_name SNSeaChartView
 extends Control
 ## @static-doc
-## 作用：可缩放/平移的 2D 海图视图，使用 `_draw()` 在世界坐标上绘制水面、
-## 陆地多边形、贝塞尔航线、港口图标、迷雾网格、船只标记、罗盘、图例与缩放指示。
+## 作用：可缩放/平移的 2D 海图视图，使用 `_draw()` 在世界坐标上绘制水面与图框、
+## 陆地、航线、港口图标、迷雾、船只标记、罗盘、图例与缩放指示。
 ##
-## - 关键依赖：`sea_chart.view` 查询输出的视图模型（`bind(vm)` 注入）。
+## - 关键依赖：`sea_chart.view` 查询输出的视图模型（`bind(vm, translate)` 注入）。
 ##
 ## ## 契约与约束
-## - 输入仅为 `sea_chart.view` 的输出；点击港口时发出 `port_clicked(port_id)`，
-##   hover 时发出 `port_hovered(port_id)`，不执行导航或查询。
-## - 世界↔屏幕坐标由 `_zoom` 和 `_offset` 线性变换；缩放以鼠标位置为不动点。
-## - 陆地多边形在迷雾未探索时使用暗色（explored 态），已探索时使用亮色（fill + outline）。
-## - 迷雾网格按 cell 绘制带状态的半透明矩形；BLACK 与 EXPLORED 用不同基色，VISIBLE 跳过。
-## - 港口图标半径随 `sqrt(_zoom)` 缩放，当前港带脉冲；选中港用黄铜弧线高亮。
-## - 滚轮缩放、左键拖拽、`Esc` 取消选中、`+/-` 键缩放。
+## - 输入仅为 `sea_chart.view` 的输出；点击港口发 `port_clicked(port_id)`，hover 发
+##   `port_hovered(port_id)`；不执行导航、不查询后端、不调 CommandBus。
+## - `bind(vm, translate)` 可带本地化回调；缺失时标签回退为键名（不渲染空串）。
+## - 世界↔屏幕由 `_zoom`/`_offset` 线性变换；缩放以鼠标位置为不动点；首次有尺寸时
+##   才做一次自动取景（`_needs_fit`），绑定早于布局不会留下 zoom=1 的错误取景。
+## - 迷雾烘焙成每格 1 texel 的 RGBA 纹理（`_build_fog_texture`）+ 线性过滤，一次绘制，
+##   格边插值平滑；BLACK 不透明、EXPLORED 半透明、VISIBLE 全透明。
+## - 陆地分两趟画：未探索的在迷雾之下（被黑雾遮住），已探索的在迷雾之上画暗淡剪影；
+##   "是否已探索"按海岸采样 ≥25% 已揭示判定，而不是只看质心。
+## - `select_port()` 只改选中态、**不移动视图**；需要移动时显式调 `center_on_port()`。
+## - `departure_angle` 是弧度，直接用于 cos/sin。
 ## @end-static-doc
 
 signal port_clicked(port_id: String)
@@ -522,9 +526,10 @@ func _draw_ports() -> void:
 		# Hover highlight
 		if port_id == _hovered_port:
 			draw_arc(screen_pos, r + 8.0, 0.0, TAU, 40, COLOR_BRASS, 2.0)
-		# Departure angle tick
+		# Departure angle tick. `departure_angle` is already in radians (atan2 output) —
+		# converting it again as degrees used to aim every tick due east.
 		var departure_angle: float = float(port_data.get("departure_angle", 0.0))
-		var exit := Vector2(cos(deg_to_rad(departure_angle)), sin(deg_to_rad(departure_angle)))
+		var exit := Vector2(cos(departure_angle), sin(departure_angle))
 		var tick_color := Color(0.62, 0.76, 0.73, 0.45)
 		if is_current:
 			tick_color = Color(0.94, 0.81, 0.5, 0.8)

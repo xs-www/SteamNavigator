@@ -1,14 +1,15 @@
 extends SceneTree
 ## @static-doc
 ## 作用：海图系统（阶段 2）的真实渲染截图工具，窗口 1440×900 挂载
-## `dev_scenes/sea_chart/sea_chart_preview.tscn`，依次切换三种预览变体并落盘 PNG。
+## `dev_scenes/sea_chart/sea_chart_preview.tscn`，依次切换预览变体并落盘 PNG。
 ##
 ## 用法（**必须窗口模式**，`--headless` 下视口纹理为空图）：
 ##   godot --path . --resolution 1440x900 --script res://tools/godot/capture_sea_chart.gd
 ##
 ## 输出（全部 1440×900，写入 `docs/design/screenshots/sea_chart/`）：
 ##   sea_chart_fresh.png     仅起点港已发现：大片黑雾 + 港口揭示光斑
-##   sea_chart_explored.png  两跳探索：多港口 + 贝塞尔航线 + 海岸灰雾
+##   sea_chart_bare.png      诊断：整张图已揭示，单独看陆地/港口/航线拓扑
+##   sea_chart_explored.png  沿岸航行后：海岸灰雾带 + 整岛剪影 + 稀疏航线网络
 ##   sea_chart_voyage.png    在航 + 选中目的港：右侧面板显示距离/风险/启航
 ##
 ## ## 契约与约束

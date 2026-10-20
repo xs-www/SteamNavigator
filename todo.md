@@ -354,18 +354,20 @@
   - `framework/domain/world/world_port.gd`: 港口实体，包含位置/区域/设施/出航角度，保留MVP字段兼容性
   - `framework/domain/world/region.gd`: 行政区域（沿岸/远洋），包含陆地ID列表
   - `framework/domain/world/world_map.gd`: 世界地图容器，支持序列化/反序列化
-- [x] 程序化陆地生成器（continent / large_island / small_island / atoll，Perlin/Simplex + Voronoi）
-  - `framework/domain/world/land_generator.gd`: 噪声+正弦波生成有机多边形，包含Douglas-Peucker简化算法
+- [x] 程序化陆地生成器（continent / large_island / small_island / atoll，相干谐波剖面 + Douglas-Peucker）
+  - `framework/domain/world/land_generator.gd`: 半径剖面 = base + Σ aᵢ·sin(fᵢ·θ+φᵢ)，相位每岛只抽一次 → 平滑海岸线；生成后按 0.3 单位容差简化
+  - 早期实现是逐顶点 `randf()`（白噪声）+ 每顶点随机正弦相位，海岸线呈锯齿星形；已改为相干噪声（注释里长期写的 "Perlin/Simplex" 当时并不存在）
   - 默认配置：400×400世界，11个陆地（1大陆+3大岛+4小岛+3环礁）
 - [x] 港口锚定算法（海岸线采样 + 最小间距约束）
   - `framework/domain/world/world_generator.gd`: `_place_ports_on_coastlines()` 在海岸线上采样，保证15单位最小间距
   - 默认13个港口，支持重试机制（20次尝试调整位置）
-- [x] 连通图预计算（A* 或 visibility graph 绕开陆地）
-  - `framework/domain/world/route_calculator.gd`: `build_connectivity_graph()` 构建全连接图
-  - `_find_path_around_land()` 绕开陆地的路径查找，最多1000次迭代
-- [x] 贝塞尔航线生成（每港口唯一出航角度，从邻居组中心计算）
-  - `framework/domain/world/route_calculator.gd`: `compute_departure_angles()` 从邻居质心推导出航方向
-  - `_create_bezier_path()` 生成三次贝塞尔曲线，20段细分，控制点长度=距离×0.3
+- [x] 连通关系预计算（绕开陆地的航线图，**稀疏但连通**）
+  - `route_calculator.gd`: `build_connectivity_graph()` 最小生成树（Prim）+ 每港 2 条最近邻捷径；13 港实测 38 条边（原为全连接 78 条，海图画成不可读的毛球）
+  - 绕陆走"沿岸外扩环 / 外切点"的有界递归（`_detour`，深度 ≤3），无 A*、无网格；每条发出的曲线都过 `_path_is_clear` 校验
+  - 端点附近 `END_GRAZE_TOLERANCE = 8` 单位内的擦岸算靠泊（港口就在海岸线上），不算穿陆
+- [x] 贝塞尔航线生成（出航角 + 陆上绕行）
+  - `route_calculator.gd`: `compute_departure_angles()` 取邻居质心方向；若指向本岛内陆则回退为背离本岛质心方向
+  - `_create_bezier_path()` 生成三次贝塞尔曲线，20段细分；控制臂按 0.3→0.18→0.09→0 逐档收紧直到曲线不穿陆
 - [x] 同 seed 可复现性测试（`RngService` 命名流）
   - `framework/tests/cases/test_world_generator.gd`: 12个测试用例
   - `test_same_seed_produces_identical_world()`: 同seed两次生成完全一致
@@ -499,7 +501,6 @@
 - [x] **铁港城镇建筑视觉升级 · 第一阶段 + R1**：`SN_HT_Warehouse_Long` LOD0 灰模 R1（7 436 tri / 20×9×11 m / 6 材质槽 / 网格健康全 0），已临时装配进 PortStage 并出 1440×900 与 960×540 实机截图（stage tri 37 280→43 584 证明新模型入场景），旧 GLB 已还原；见 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。
 - [x] **铁港城镇建筑视觉升级 · M1 材质轮**：`warehouse_long` 槽位 yaw −90→−106 / pos z −34→−33 让装卸门长立面正对固定机位（立面 +38%、两扇装卸门 +36%/+34%、山墙吊梁仍可见、足迹仍在广场内）；共享 2K trim sheet（16 cell）+ 每材质 512² 平铺贴图 + 盒投影 UV（0 tri 增加）；内容 GLB 已换成带贴图版本并重新 import，1440×900 与 960×540 实机截图已出；见 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)。**等待"是否扩展整批"决定**。
 - [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。剩余：LOD1（≤35%）、3 个新原型、共享外部贴图以减 20 个 draw call。
-- [ ] **下一批 3D 建模与资产优化**：需求草案见 [MODELING_REQUIREMENTS_NEXT_BATCH.md](docs/design/MODELING_REQUIREMENTS_NEXT_BATCH.md)；按 A（5 栋 LOD1 + 共享材质样板）→ B（Boiler House / Workshop Row / Brick Tenement）→ C（可选 Paddle Steamer 精修）串行推进，获人工批准前不开始建模。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。

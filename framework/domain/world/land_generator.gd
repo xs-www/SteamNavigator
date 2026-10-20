@@ -1,69 +1,102 @@
 class_name LandGenerator
 extends RefCounted
-## Procedural landmass generator using noise-based polygon generation.
+## @static-doc
+## 作用：程序化生成陆地多边形，支持大陆、大岛、小岛和环礁。
 ##
-## Generates different archetypes:
-##   - CONTINENT: Large landmass along world edge (Perlin/Simplex noise)
-##   - LARGE_ISLAND: Medium island with organic edges (Voronoi + noise)
-##   - SMALL_ISLAND: Small island with irregular shape
-##   - ATOLL: Ring-shaped island with central lagoon
+## ## 契约与约束
+## - 所有生成方法都接收 `rng`，保证同 seed 可复现。
+## - 海岸线是**相干**噪声：每个地形的谐波相位只抽一次，半径随角度连续变化；
+##   逐顶点 `randf()` 是白噪声，只会产生锯齿状尖刺。
+## - 轮廓必须保持星形（相对中心单值），避免自交导致多边形填充/三角形化出错。
+## - 生成后按 `SIMPLIFY_TOLERANCE` 做 Douglas-Peucker 简化，去掉近似共线的采样点。
+##
+## ## 重点逻辑
+## ### `_make_profile` / `_profile_radius`
+## - 半径剖面 = base + Σ amplitude·sin(frequency·θ + phase)，相位在生成前一次性抽取。
+## ### `generate_*`
+## - 各原型共用同一套剖面机制，只是谐波数量、频率与振幅不同。
+## @end-static-doc
 
-const CONTINENT_SEGMENTS := 48
-const ISLAND_SEGMENTS := 32
-const ATOLL_SEGMENTS := 24
+const CONTINENT_SEGMENTS := 128
+const ISLAND_SEGMENTS := 96
+const ATOLL_SEGMENTS := 64
+## Douglas-Peucker tolerance in world units; small enough to be invisible at chart
+## zoom while dropping near-collinear samples.
+const SIMPLIFY_TOLERANCE := 0.3
+
+## Harmonic sets per archetype: (frequency, amplitude) pairs. Low frequencies shape
+## the landmass, the highest octaves only ruffle the coastline.
+const CONTINENT_HARMONICS := [[2.0, 0.10], [3.0, 0.07], [5.0, 0.045], [8.0, 0.022], [13.0, 0.012]]
+const LARGE_ISLAND_HARMONICS := [[2.0, 0.12], [3.0, 0.09], [5.0, 0.055], [7.0, 0.030], [11.0, 0.016]]
+const SMALL_ISLAND_HARMONICS := [[2.0, 0.15], [3.0, 0.11], [5.0, 0.065], [8.0, 0.030]]
+const ATOLL_HARMONICS := [[3.0, 0.10], [5.0, 0.060], [8.0, 0.030]]
+
+
+## Radius profile sampled once per landmass: `radius(θ) = base + Σ aᵢ·sin(fᵢ·θ + φᵢ)`.
+## All phases come from the same `rng` call sequence, so the shape is reproducible.
+static func _make_profile(rng: RandomNumberGenerator, harmonics: Array, base_jitter: float) -> Dictionary:
+	var terms: Array = []
+	for harmonic in harmonics:
+		terms.append({
+			"frequency": float(harmonic[0]),
+			"amplitude": float(harmonic[1]) * (0.85 + rng.randf() * 0.3),
+			"phase": rng.randf() * TAU,
+		})
+	return {
+		"base": 1.0 + (rng.randf() - 0.5) * base_jitter,
+		"terms": terms,
+	}
+
+
+static func _profile_radius(profile: Dictionary, angle: float) -> float:
+	var radius: float = float(profile["base"])
+	for term in profile["terms"]:
+		radius += sin(angle * float(term["frequency"]) + float(term["phase"])) * float(term["amplitude"])
+	# Keep the outline star-shaped and non-degenerate.
+	return maxf(0.35, radius)
+
+
+## Builds a closed coastline polygon from a radial profile.
+static func _build_polygon(
+	id: String,
+	center: Vector2,
+	radius_x: float,
+	radius_y: float,
+	region_id: String,
+	archetype: Landmass.Archetype,
+	segments: int,
+	profile: Dictionary
+) -> Landmass:
+	var polygon := PackedVector2Array()
+	for index in segments:
+		var angle := (float(index) / float(segments)) * TAU
+		var radius := _profile_radius(profile, angle)
+		polygon.append(Vector2(
+			center.x + cos(angle) * radius_x * radius,
+			center.y + sin(angle) * radius_y * radius
+		))
+	polygon = simplify_polygon(polygon, SIMPLIFY_TOLERANCE)
+	return Landmass.new(id, polygon, archetype, region_id)
 
 
 static func generate_continent(id: String, center: Vector2, radius_x: float, radius_y: float, region_id: String, rng: RandomNumberGenerator) -> Landmass:
-	var polygon := PackedVector2Array()
-	for i in CONTINENT_SEGMENTS:
-		var angle := (float(i) / float(CONTINENT_SEGMENTS)) * TAU
-		var base_noise := 0.8 + rng.randf() * 0.4
-		var detail_noise := sin(angle * 3.0 + rng.randf() * 2.0) * 0.15
-		var noise := base_noise + detail_noise
-		var x := center.x + cos(angle) * radius_x * noise
-		var y := center.y + sin(angle) * radius_y * noise
-		polygon.append(Vector2(x, y))
-	return Landmass.new(id, polygon, Landmass.Archetype.CONTINENT, region_id)
+	var profile := _make_profile(rng, CONTINENT_HARMONICS, 0.10)
+	return _build_polygon(id, center, radius_x, radius_y, region_id, Landmass.Archetype.CONTINENT, CONTINENT_SEGMENTS, profile)
 
 
 static func generate_large_island(id: String, center: Vector2, radius_x: float, radius_y: float, region_id: String, rng: RandomNumberGenerator) -> Landmass:
-	var polygon := PackedVector2Array()
-	for i in ISLAND_SEGMENTS:
-		var angle := (float(i) / float(ISLAND_SEGMENTS)) * TAU
-		var n1 := 0.75 + rng.randf() * 0.5
-		var n2 := sin(angle * 3.0 + rng.randf() * 2.0) * 0.12
-		var n3 := cos(angle * 5.0 + rng.randf() * 3.0) * 0.06
-		var noise := n1 + n2 + n3
-		var x := center.x + cos(angle) * radius_x * noise
-		var y := center.y + sin(angle) * radius_y * noise
-		polygon.append(Vector2(x, y))
-	return Landmass.new(id, polygon, Landmass.Archetype.LARGE_ISLAND, region_id)
+	var profile := _make_profile(rng, LARGE_ISLAND_HARMONICS, 0.12)
+	return _build_polygon(id, center, radius_x, radius_y, region_id, Landmass.Archetype.LARGE_ISLAND, ISLAND_SEGMENTS, profile)
 
 
 static func generate_small_island(id: String, center: Vector2, radius_x: float, radius_y: float, region_id: String, rng: RandomNumberGenerator) -> Landmass:
-	var polygon := PackedVector2Array()
-	for i in ISLAND_SEGMENTS:
-		var angle := (float(i) / float(ISLAND_SEGMENTS)) * TAU
-		var n1 := 0.7 + rng.randf() * 0.6
-		var n2 := sin(angle * 4.0 + rng.randf() * 2.5) * 0.15
-		var noise := n1 + n2
-		var x := center.x + cos(angle) * radius_x * noise
-		var y := center.y + sin(angle) * radius_y * noise
-		polygon.append(Vector2(x, y))
-	return Landmass.new(id, polygon, Landmass.Archetype.SMALL_ISLAND, region_id)
+	var profile := _make_profile(rng, SMALL_ISLAND_HARMONICS, 0.15)
+	return _build_polygon(id, center, radius_x, radius_y, region_id, Landmass.Archetype.SMALL_ISLAND, ISLAND_SEGMENTS, profile)
 
 
 static func generate_atoll(id: String, center: Vector2, outer_radius_x: float, outer_radius_y: float, region_id: String, rng: RandomNumberGenerator) -> Landmass:
-	var polygon := PackedVector2Array()
-	for i in ATOLL_SEGMENTS:
-		var angle := (float(i) / float(ATOLL_SEGMENTS)) * TAU
-		var n1 := 0.8 + rng.randf() * 0.4
-		var n2 := sin(angle * 3.0 + rng.randf() * 2.0) * 0.1
-		var noise := n1 + n2
-		var x := center.x + cos(angle) * outer_radius_x * noise
-		var y := center.y + sin(angle) * outer_radius_y * noise
-		polygon.append(Vector2(x, y))
-	return Landmass.new(id, polygon, Landmass.Archetype.ATOLL, region_id)
+	var profile := _make_profile(rng, ATOLL_HARMONICS, 0.10)
+	return _build_polygon(id, center, outer_radius_x, outer_radius_y, region_id, Landmass.Archetype.ATOLL, ATOLL_SEGMENTS, profile)
 
 
 static func generate_region_landmasses(region: Region, world_bounds: Rect2, land_defs: Array, rng: RandomNumberGenerator) -> Array[Landmass]:

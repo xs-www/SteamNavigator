@@ -4,21 +4,27 @@ extends RefCounted
 ## 作用：计算避开陆地的港口间贝塞尔航路、出航角度和连通关系。
 ##
 ## ## 契约与约束
-## - 贝塞尔控制点方向由港口出航角度决定。
-## - 连通图是无向图；路径计算不考虑运行时海洋迷雾。
-## - A* 绕路使用曼哈顿距离作为启发式。
+## - 贝塞尔控制点方向由港口出航角度决定；控制臂过长会把曲线拽进岛里，
+##   因此每条曲线发出前都必须过陆地校验（`_safe_bezier` 逐档收紧控制臂）。
+## - 连通图是无向图，且**稀疏但连通**：最小生成树 + 每港 2 条最近邻捷径。
+## - 路径计算不考虑运行时海洋迷雾（那是运行时状态）。
+## - 港口正好在海岸线上，端点附近 `END_GRAZE_TOLERANCE` 内的擦岸算靠泊，不算穿陆。
 ##
 ## ## 重点逻辑
 ## ### `calculate_route(...)`
-## - 先检查直线是否穿过陆地，必要时 A* 绕行，再生成 20 段三次贝塞尔曲线。
+## - 直线不穿陆 → 直接造 20 段三次贝塞尔；穿陆 → `_find_path_around_land` 沿岸绕行，
+##   两者最终都由 `_safe_bezier` 生成并校验。
+## ### `_detour(...)`
+## - 有界递归：对挡路的岛，取"沿其海岸外扩环走的较短弧"或"外切点"作候选，整条折线
+##   过 `_path_is_clear` 才采纳；递归深度上限 3，无 A*、无网格。
 ## ### `compute_departure_angles(...)`
-## - 收集直接邻居并计算质心，由质心方向确定唯一出航角。
+## - 默认取直接邻居质心方向；若该方向指向本岛内陆，回退为"背离本岛质心"的向海方向。
 ## @end-static-doc
 
 const BEZIER_SEGMENTS := 20
-## How far seaward a detour hugs the blocking coastline, in world units. The
-## procedural coastlines are jagged (radial noise of up to ~15 units on a continent),
-## so a small offset would leave ring edges cutting back into the shore.
+## How far seaward a detour hugs the blocking coastline, in world units. Procedural
+## coastlines wiggle by several units, so a small offset would leave ring edges
+## cutting back into the shore.
 const COAST_CLEARANCE := 14.0
 ## Ports sit exactly on the coastline, so any path grazes land near its endpoints.
 ## Land contact within this distance of either end is a harbour approach, not a

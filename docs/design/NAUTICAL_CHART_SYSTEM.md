@@ -458,6 +458,7 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_sea_char
 
 | 现象 | 根因 | 修复 |
 |---|---|---|
+| 海岸线坑坑洼洼、呈锯齿星形（"噪声不该是平滑的吗？"） | **代码里没有 Perlin/Simplex**：每个顶点独立 `rng.randf()`（白噪声），且正弦项的相位也是逐顶点随机，把波形打碎 | `land_generator.gd` 改为相干谐波剖面 `radius(θ)=base+Σaᵢsin(fᵢθ+φᵢ)`，相位每岛只抽一次；采样段数 128/96/64；`simplify_polygon()` 真正投入使用（容差 0.3） |
 | 迷雾是硬边方块，和"格子间 alpha 插值平滑"不符 | 每个格子画一个纯色矩形 | 迷雾烘焙成一张每格 1 texel 的 RGBA 纹理 + 线性过滤，一次绘制且天然平滑 |
 | 海图把 13 个港口的**完全图**画成 78 条线，不可读 | `build_connectivity_graph` 连接所有港口对 | 改为最小生成树 + 每港 2 条最近邻捷径（38 条），保持连通但可读 |
 | 航线直接横穿岛屿 | `_find_path_around_land` 是"绕岛试探"循环，会振荡；返回折线从未校验；出航角可能指向内陆 | 出航角改为"邻居质心方向 + 内陆回退到背离陆地法线"；绕行改为沿岸环行 + 外切点候选的有界递归，且每条曲线落地前都用包围盒剪枝的陆地校验 |
@@ -466,6 +467,7 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_sea_char
 | 右侧面板显示 `Core:port Archetype/spice_port`、`facility.exchange` | 面板用端口 archetype id / 裸设施 key | 查询输出 `archetype_name_key` / `region_name_key`；面板按 `ui.facility.*` 解析设施 |
 | 点击港口会让海图跳位 | `select_port()` 顺带把视图居中到该港口 | `select_port()` 只改选中态；居中拆为显式 `center_on_port()` |
 | 航线距离文字压住港口名牌 | 用"路径点序号中点"定位，且不避让港口 | 改为按弧长取中点，且中点距任何港口 <46 px 时不画 |
+| 港口出航刻度全部指向正东、扎进陆地 | `departure_angle` 已是弧度，绘制时又套了一次 `deg_to_rad()` | 直接用弧度做 cos/sin |
 
 回归：`test_world_generator` 新增 2 个用例锁死上述行为（航线不得穿过陆地、连通图必须稀疏且连通），
 全套 **211 个测试通过 / 0 失败**。
