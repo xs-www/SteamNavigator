@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T09:39:06.224Z",
-  "commit": "79db07a",
+  "generated_at": "2026-10-20T10:13:19.261Z",
+  "commit": "35d6c86",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "fa5e56360aba3fccfb5dbe82b5ec5c8422cfee1519febd15db14eed8e50e5444",
+      "sha256": "3a9b2bd4fc85b452a1a1fb3a1abbc7fd7e6d9abdd5a5e6eb98483536de0831db",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1607,7 +1607,7 @@
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "d9584e06e7b46ca29aede5bd2f61e25b388cda2cd5048e3e2367344fedfe805a",
+      "sha256": "f57535335fc8c4ef0df390c9adb1ebdc3d0857c9c3fa7bfaf6f49b36a3a8caa7",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -1732,7 +1732,7 @@
     },
     {
       "source": "framework/domain/contracts/run_factory.gd",
-      "sha256": "dfd4278bd906f072c2a37152b11fa62be1ab456582f5441952d2bfe2d46119fc",
+      "sha256": "7679decf1ead085574937f64660eccec83267dd633a7bdf05ba219ba641199f4",
       "doc": "docs/static/framework/domain/contracts/run_factory.gd.md",
       "status": "documented"
     },
@@ -1840,7 +1840,7 @@
     },
     {
       "source": "framework/domain/voyage/voyage_service.gd",
-      "sha256": "227ee580294e53fb9c400b0a768105b5e88e6cfe9649a4ef59e720efd5ac8379",
+      "sha256": "66527ff93cc52c0017174ff1a07a500fc480e37e1d11107c9653877c34da7cf0",
       "doc": "docs/static/framework/domain/voyage/voyage_service.gd.md",
       "status": "documented"
     },
@@ -1852,7 +1852,7 @@
     },
     {
       "source": "framework/domain/world/fog_ops.gd",
-      "sha256": "6327d494d2b586df9565beeb54a9241ca18fda29086cc3a16cf845c1455fb8f6",
+      "sha256": "50c08e556e8629f1b18229c673142303525445196d304b80001638ac7d167b8b",
       "doc": "docs/static/framework/domain/world/fog_ops.gd.md",
       "status": "documented"
     },
@@ -2181,7 +2181,7 @@
     },
     {
       "source": "framework/tests/cases/test_run_pipeline.gd",
-      "sha256": "7dab23775b722613610d8642579521c6fd87697384217a708193ae55e11c4aab",
+      "sha256": "a325c915b549d935b85024dee99d63be43318b96bdc764135883d77169f6aa5c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2266,7 +2266,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "1dbce7c3600d9715582d7911008706370a6b8dd109e43a9ea478de88ce316565",
+      "sha256": "492ca151658006401764aecd8203d2849c37096ea4bafc9e53df846f414d86f4",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -3074,7 +3074,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "3f21579844e118e85c4b8235f4f094fcba61af024865ff9cf956ec96145d8789",
+      "sha256": "9d2e422230b68655b85faed538a0266d91569960ad28765340b1461b1e653486",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"

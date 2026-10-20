@@ -44,7 +44,7 @@
 | `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L555 |
 | `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L766 |
 | `test_overview_status_strip_and_detail_drawer() -> void` | L785 |
-| `test_sea_chart_entry_integration() -> void` | L863 |
+| `test_sea_chart_entry_integration() -> void` | L864 |
 
 ## 契约与约束
 

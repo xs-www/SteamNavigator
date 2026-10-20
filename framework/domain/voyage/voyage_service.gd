@@ -1,6 +1,12 @@
 class_name VoyageService
 extends RefCounted
 ## Voyage execution: supplies, risk event, event choice, arrival settlement.
+##
+## Arrival also keeps the coordinate-space twin world (`state.data["world_map"]`,
+## the nautical chart's data source) in step: `_complete_arrival` records the
+## visit via `WorldOps.mark_visited` and reveals the berth's fog through
+## `FogOps.reveal_arrival` (`_reveal_world_fog`). Absent `world_map` — legacy
+## saves — both are no-ops.
 
 const OPPORTUNITY_CHANCE := 0.12
 const MAX_EVENT_DELAY_HOURS := 72.0
@@ -164,6 +170,18 @@ static func choose_option(context, option_id: String) -> Dictionary:
 	return _with_autosave(Result.ok({"failed": false, "event_result": summary}, events))
 
 
+## Reveals the destination berth's fog in the coordinate-space twin world.
+## No-op when the run predates the chart integration (no `world_map`).
+static func _reveal_world_fog(state: GameState, destination: String) -> void:
+	var world := WorldOps.world_map(state)
+	if world.ports.is_empty():
+		return
+	var port := world.get_port(destination)
+	if port.is_empty():
+		return
+	FogOps.reveal_arrival(state, world, port)
+
+
 static func _complete_arrival(context) -> Dictionary:
 	var state: GameState = context.state
 	var hub: RegistryHub = context.registries
@@ -172,9 +190,15 @@ static func _complete_arrival(context) -> Dictionary:
 	var arrival_time := maxf(state.now(), float(voyage.get("arrival_time", state.now())))
 	state.set_now(arrival_time)
 	state.world()["current_port_id"] = destination
+	WorldOps.set_current_port(state, destination)
 	var was_discovered := MapOps.is_discovered(state, destination)
 	MapOps.discover(state, destination, true)
 	var newly_discovered := not was_discovered
+	# Keep the coordinate-space twin world (nautical chart) in step with the
+	# played map: record the visit in the campaign partition and reveal the
+	# berth's fog. Without `world_map` (legacy saves) both calls are no-ops.
+	WorldOps.mark_visited(state, destination)
+	_reveal_world_fog(state, destination)
 
 	# Craft orders that finished while the ship was under way are delivered to
 	# their owning port warehouse on arrival (the ship may be elsewhere).

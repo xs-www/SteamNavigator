@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**226 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 15 / 迷雾系统 17 / 海图 UI 16 / 入口集成与绕行自适应 +3）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 已做真实渲染视觉验收**（4 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**227 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 15 / 迷雾系统 17 / 海图 UI 16 / 入口集成·绕行自适应·真实对局孪生世界 +4）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 已做真实渲染视觉验收**（4 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -440,6 +440,8 @@
   - Shell：`Esc` 关闭返回来源页，`M` 全局开关（仅在 `has_run` 且非在航、无通关弹窗时生效），顶部导航行追加「海图」按钮（海图打开时高亮），新开/读档重置返回页记忆
   - 面板绑定港口/航线数据、图表点击选中与启航冒泡均有用例；Shell 集成用例同时覆盖「无 `world_map` 时显示无数据提示」与「注入世界后的完整数据路径」
   - 边界：MVP `run.start` 尚不生成坐标空间世界（`state.data["world_map"]` 仍只有测试夹具写入），真实对局中海图页暂显示无数据提示——数据接入属于阶段 3 / 正式版世界探索运行时
+- [x] 真实对局接入（孪生世界）：`RunFactory.create_run` 在抽象地图生成后用 `_coordinate_world_profile()` 生成**坐标空间孪生世界**写进 `state.data["world_map"]`——每港一岛、第 i 港落第 i 岛，与对局地图共享 `port_0..N` ID、原型与名称，海图查询、发现状态与迷雾天然对齐；起港灯塔揭示（`_initialize_world_fog`：海岸带标记 + 港口揭示 + 船视）；抵达时 `VoyageService` 经 `WorldOps.mark_visited` + `FogOps.reveal_arrival` 同步访问/发现与泊位迷雾（旧存档无 `world_map` 时全部为 no-op，海图仍显示无数据提示）；孪生世界生成失败只降级海图、不失败开局。已知边界：孪生世界连通图为自身 MST 图，与抽象地图航线不完全一致（出航仍按抽象地图邻居），阶段 3 航行演出统一
+  - 测试：`test_run_pipeline::test_run_maps_a_chart_twin_world`（真实 run.start 直接喂 `sea_chart.view`：ID/原型镜像、起港发现+访问+当前+出雾、首航后目的港访问+出雾）；`test_ui_shell` 海图集成用例改为钉住"真实对局出图、无数据提示不再出现"
 - [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）——阶段 4 探索系统落地后接入
 - [x] 航线绕行按岛屿尺寸自适应（`RouteCalculator._detour_clearances`）：外扩档位 = 岛屿半长轴 ×1/2/3，下限 `COAST_CLEARANCE * 0.5`、上限 `COAST_CLEARANCE`；小礁石不再把航线拽出 42 单位，大陆保持原档位；每个候选仍过 `_path_is_clear` 校验，新增档位缩放与绕行不穿陆用例
 - [x] ~~海图查询每条边都重算贝塞尔~~ 已由「航线预计算」覆盖：`WorldMap.edges[].path` 即生成期算好的贝塞尔折线，`sea_chart.view` 与 `WorldOps.route_between` 均只读表；仅缺 `edges` 的旧存档回退现场计算（此条为该工作完成前的过时记录）

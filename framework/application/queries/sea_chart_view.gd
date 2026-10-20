@@ -16,8 +16,10 @@ extends RefCounted
 ## - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
 ## @end-static-doc
 
-const DEFAULT_MIN_VISION_RADIUS := 20.0
-const DEFAULT_PORT_REVEAL_RADIUS := 24.0
+## Radii are owned by FogOps (domain); the query aliases them so the UI-facing
+## defaults stay addressable here without domain code depending on this layer.
+const DEFAULT_MIN_VISION_RADIUS := FogOps.DEFAULT_MIN_VISION_RADIUS
+const DEFAULT_PORT_REVEAL_RADIUS := FogOps.DEFAULT_PORT_REVEAL_RADIUS
 
 
 static func execute(_params: Dictionary, context) -> Dictionary:

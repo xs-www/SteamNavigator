@@ -851,11 +851,12 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	_unmount(bundle)
 
 
-## Sea chart entry integration: the chrome toggle and M key flip the active
-## screen, the full chart page degrades to a hint without a coordinate-space
-## world (MVP runs do not generate one yet), binds real data once a world is
-## injected, routes voyage_requested into a preselected voyage page, and the
-## voyage page carries its own chart entry button.
+## Sea chart entry integration: `run.start` stores a coordinate-space twin
+## world keyed by the played map's port ids, so the full chart page binds the
+## real run without fixtures (the start harbour is discovered, visited and
+## current). The chrome toggle and M key flip the active screen,
+## voyage_requested routes into a preselected voyage page, and the voyage page
+## carries its own chart entry button.
 ##
 ## Animated nav refreshes rebuild the page a few frames later, so content
 ## assertions run right after `_goto`/`_refresh()` (synchronous), and the
@@ -865,36 +866,23 @@ func test_sea_chart_entry_integration() -> void:
 	var shell: Control = bundle["shell"]
 	var context: AppContext = bundle["context"]
 
-	# Content first: without a world_map the page degrades to a hint.
+	# The real run feeds the chart: the twin world generated at run.start binds
+	# live data instead of the no-data hint.
 	_goto(shell, "sea_chart")
-	assert_true(_label_texts(shell).has(shell._tr("ui.sea_chart.no_data", "")),
-		"without a world the page shows the no-data hint")
-	assert_true(_nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT).size() == 1,
-		"the chart page mounts exactly one screen")
-
-	# Inject a generated world exactly like the chart fixtures do; the refresh
-	# rebuilds the still-open chart page with real data.
-	var chart_suite: GDScript = load("res://framework/tests/cases/test_sea_chart.gd")
-	var world_result := WorldGenerator.generate(chart_suite.TEST_PROFILE, context.registries, RngService.new(20260401), {})
-	assert_true(bool(world_result.get("ok", false)), "the injected fixture world generates")
-	var world := WorldMap.from_dict(world_result.get("world_map", {}))
-	var start_port := world.get_start_port()
-	var neighbors := WorldOps.neighbors(world, start_port.id)
-	var campaign := context.state.campaign_world()
-	campaign["discovered_port_ids"] = [start_port.id, String(neighbors[0])]
-	campaign["visited_port_ids"] = [start_port.id, String(neighbors[0])]
-	context.state.data["world_map"] = world_result.get("world_map", {})
-	shell._refresh()
-
+	assert_false(_label_texts(shell).has(shell._tr("ui.sea_chart.no_data", "")),
+		"a real run has chart data, so the no-data hint stays hidden")
 	var screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
-	assert_eq(screens.size(), 1, "the rebuilt chart page mounts exactly one screen")
+	assert_eq(screens.size(), 1, "the chart page mounts exactly one screen")
 	var chart_screen: Control = screens[0]
 	assert_true((chart_screen._view_model.get("ports", []) as Array).size() >= 1,
 		"the chart screen binds the query view model with the discovered ports")
 
 	# Departure routing: voyage_requested preselects the port on the voyage page,
-	# where the boiler strategy is still confirmed before voyage.start fires.
-	var port_id := String((chart_screen._view_model.get("ports", [])[0] as Dictionary).get("id", ""))
+	# where the boiler strategy is still confirmed before voyage.start fires. The
+	# routed id must be a sailable MVP destination, so pick a neighbour of the
+	# current port — the twin world and the played map share port ids.
+	var current_port_id := String(context.state.current_port_id())
+	var port_id := String(MapOps.neighbors(context.state.world(), current_port_id)[0])
 	chart_screen.voyage_requested.emit(port_id)
 	assert_eq(String(shell._active_screen), "voyage", "voyage_requested routes to the voyage page")
 	assert_eq(String(shell._selected_destination), port_id, "the requested port is preselected")

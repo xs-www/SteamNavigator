@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartViewQuery` | L1 |
-| `DEFAULT_MIN_VISION_RADIUS` | L19 |
-| `DEFAULT_PORT_REVEAL_RADIUS` | L20 |
-| `execute(_params: Dictionary, context) -> Dictionary` | L23 |
+| `DEFAULT_MIN_VISION_RADIUS` | L21 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L22 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L25 |
 
 陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
 
