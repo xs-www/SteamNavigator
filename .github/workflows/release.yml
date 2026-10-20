@@ -121,8 +121,10 @@ jobs:
           cp -a dist/build/linux/. "${STAGE}/linux/SteamNavigator/"
           (cd "${STAGE}/windows" && zip -q -r "../../release/SteamNavigator-${TAG}-windows.zip" "SteamNavigator")
           (cd "${STAGE}/linux" && zip -q -r "../../release/SteamNavigator-${TAG}-linux.zip" "SteamNavigator")
-          sha256sum release/*.zip mods/*.snavmod.zip > release/SHA256SUMS.txt
-          ls -lh release mods
+          # The subshells above return to the repo root, not to dist/: keep the
+          # checksum inputs and the sums file under dist/release.
+          sha256sum dist/release/*.zip dist/mods/*.snavmod.zip > dist/release/SHA256SUMS.txt
+          ls -lh dist/release dist/mods
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
