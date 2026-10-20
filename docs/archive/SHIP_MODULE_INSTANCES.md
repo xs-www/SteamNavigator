@@ -2,7 +2,7 @@
 
 > 状态：已落地（2026-10 迭代）
 > 适用：Save Schema 2.0 运行态、维修经济、船厂 UI，以及后续战斗持久伤害
-> 相关：[实体契约 v2](ENTITY_CONTRACT_V2.md)、[战斗系统架构评审](COMBAT_ARCHITECTURE_REVIEW.md)、[持久战役架构](PERSISTENT_CAMPAIGN_ARCHITECTURE.md)
+> 相关：[实体契约 v2](../design/ENTITY_CONTRACT_V2.md)、[战斗系统架构评审](../design/COMBAT_ARCHITECTURE_REVIEW.md)、[持久战役架构](../design/PERSISTENT_CAMPAIGN_ARCHITECTURE.md)
 
 ## 1. 为什么现在做
 
@@ -73,9 +73,9 @@ pwsh ./tools/capture_ui.ps1 -OutDir res://docs/design/screenshots/module_conditi
 
 | 画面 | 截图 |
 | --- | --- |
-| 正常态船厂 + 顶部部件 chip + 船卡受损行 | [shipyard_normal_damaged.png](screenshots/module_condition/shipyard_normal_damaged.png) |
-| 改装态锅炉槽「状态 50%」 | [shipyard_refit_damaged.png](screenshots/module_condition/shipyard_refit_damaged.png) |
-| 补给页维修报价「含部件损耗」 | [supply_damaged.png](screenshots/module_condition/supply_damaged.png) |
+| 正常态船厂 + 顶部部件 chip + 船卡受损行 | [shipyard_normal_damaged.png](../design/screenshots/module_condition/shipyard_normal_damaged.png) |
+| 改装态锅炉槽「状态 50%」 | [shipyard_refit_damaged.png](../design/screenshots/module_condition/shipyard_refit_damaged.png) |
+| 补给页维修报价「含部件损耗」 | [supply_damaged.png](../design/screenshots/module_condition/supply_damaged.png) |
 
 `--damage=boiler:0.5` 是截图工具的调试参数（`tools/ui_snapshot.gd`），只作用于截图进程；游戏内损坏仍由 `damage_module` 效果驱动。
 

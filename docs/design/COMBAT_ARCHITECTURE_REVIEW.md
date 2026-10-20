@@ -76,7 +76,7 @@
 
 ## 8. 下一步（阶段 2a）
 
-1. ~~Module 实例化迁移（船舶存档结构 + 兼容旧档）~~ 已完成第一步：[SHIP_MODULE_INSTANCES.md](SHIP_MODULE_INSTANCES.md)（实例 id + condition + damage_module + 维修计价 + UI 状态徽标）。
+1. ~~Module 实例化迁移（船舶存档结构 + 兼容旧档）~~ 已完成第一步：[SHIP_MODULE_INSTANCES.md](../archive/SHIP_MODULE_INSTANCES.md)（实例 id + condition + damage_module + 维修计价 + UI 状态徽标）。
 2. 战斗内容 Schema 2.0 草案（`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`），保持 planned。
 3. `CombatResolver` 纯函数层 + 自动结算命令 + 测试矩阵（先无 UI、无场景）。
 4. 遭遇生成接入世界探索（区域/地点/航线），战利品进仓库与市场。

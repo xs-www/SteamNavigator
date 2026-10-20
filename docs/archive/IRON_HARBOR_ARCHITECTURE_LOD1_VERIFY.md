@@ -1,6 +1,6 @@
 # 铁港建筑套件 · 批次 A · LOD1 + Warehouse_Short 檐口修复 · 独立验收
 
-> 验收对象：`docs/design/MODELING_REQUIREMENTS_NEXT_BATCH.md` §5.1 / §9 的批次 A 建模部分
+> 验收对象：`docs/archive/MODELING_REQUIREMENTS_NEXT_BATCH.md` §5.1 / §9 的批次 A 建模部分
 > （5 栋 LOD1 + `Warehouse_Short` 檐口修复 + 工作台重建/自检/预览）。
 > Builder 报告：[IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md](IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md)。
 > 验收方式：**独立 Verifier 只读复算**（自写 Blender 只读 dump / 纯 Python 分析 / 生成器重建 / 截图差分），

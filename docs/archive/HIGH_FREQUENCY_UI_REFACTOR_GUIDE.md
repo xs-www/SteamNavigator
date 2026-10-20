@@ -362,8 +362,8 @@ Shell 继续负责查询、命令和导航，页面只负责展示与产生用�
 
 ## 8. 相关资料
 
-- [UI 原型与落地说明](UI_PROTOTYPE.md)
-- [美术与音频资产映射](ASSET_MAP.md)
+- [UI 原型与落地说明](../design/UI_PROTOTYPE.md)
+- [美术与音频资产映射](../design/ASSET_MAP.md)
 - [UI 静态函数文档](../static/framework/ui/README.md)
 - [PortViewQuery](../static/framework/application/queries/port_view.gd.md)
 - [ShipyardViewQuery](../static/framework/application/queries/shipyard_view.gd.md)

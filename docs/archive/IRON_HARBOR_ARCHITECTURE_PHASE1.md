@@ -48,18 +48,18 @@
 
 固定 PortStage 机位等价预览（忠实画面 / 居中复查）：
 
-![port_stage_fixed_1440x900](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_fixed_1440x900.png)
-![port_stage_centred_1440x900](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_centred_1440x900.png)
+![port_stage_fixed_1440x900](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_fixed_1440x900.png)
+![port_stage_centred_1440x900](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_centred_1440x900.png)
 
 街道低机位（+Y 主立面）与正交正视：
 
-![street_low_1440x900](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_street_low_1440x900.png)
-![front_1440x900](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_front_1440x900.png)
+![street_low_1440x900](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_street_low_1440x900.png)
+![front_1440x900](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_front_1440x900.png)
 
 屋顶视图与 960×540 可读性复查：
 
-![roof_1440x900](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_roof_1440x900.png)
-![port_stage_fixed_960x540](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_fixed_960x540.png)
+![roof_1440x900](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_roof_1440x900.png)
+![port_stage_fixed_960x540](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_fixed_960x540.png)
 
 ## 6. PortStage 实机门禁（R1 必须项）
 
@@ -71,11 +71,11 @@
 
 游戏固定机位 1440×900：
 
-![port_stage_1440x900](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_1440x900.png)
+![port_stage_1440x900](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_1440x900.png)
 
 游戏固定机位 960×540：
 
-![port_stage_960x540](./screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_960x540.png)
+![port_stage_960x540](../design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_960x540.png)
 
 **在游戏机位下的读数（供"是否扩展整批"判断）**
 - 1440×900（约 260×190 px、13–17 px/m）：gable 端（+X）4 窗 + 3 壁柱 + 山墙吊梁（梁/滑轮/吊钩）可读；长墙（+Y）2 个双高门 + 气窗 + 人门雨棚 + 2 大窗可读但被 53° 斜视压缩；屋面 2 个通风帽 + 立缝可读；石基不再像托盘。

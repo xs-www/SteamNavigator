@@ -1,6 +1,6 @@
 # 迭代 2 · MVP 反馈优化 — 实现契约与决策记录
 
-> 来源：`docs/MVP反馈.md`（玩家 Xiao_Si_swx 的 6 条试玩反馈）。
+> 来源：`docs/archive/MVP反馈.md`（玩家 Xiao_Si_swx 的 6 条试玩反馈）。
 > 基线：Framework 0.1.0 · Core 1.0.0 · Schema 1.0 · 迭代 1（MVP 闭环）已完成。
 > 本文是实现期契约，代码完成后同步进静态文档。
 

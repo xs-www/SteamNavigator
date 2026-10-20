@@ -11,7 +11,7 @@
 - 主界面：[main.gd](framework/ui/shell/main.gd.md)
 - 3D 港口样片：[dev_scenes](dev_scenes/README.md)
 - 官方内容：[Core 内容包](dev_mods/core/README.md)
-- 迭代 1 契约：[MVP 闭环](../design/ITERATION_1_MVP_LOOP.md)
+- 迭代 1 契约：[MVP 闭环](../archive/ITERATION_1_MVP_LOOP.md)
 - SDK：[打包/校验/模板](sdk/README.md)
 - 释放与导出：[export_presets.cfg](export_presets.cfg.md)、[release.yml](.github/workflows/release.yml.md)
 - 模组制作器：[SNModMaker](SNModMaker/README.md)
@@ -73,8 +73,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-20T13:16:41.928Z
-- 生成 commit：`a612aa8`
+- 生成时间：2026-10-20T13:34:00.943Z
+- 生成 commit：`71a1c85`
 - 模式：`compact`；规则版本：`3.0`
 - 更新方式：在源码头部维护 `@static-doc` 注释，运行 `node tools/gen_static_docs.mjs`；无注释格式使用 `docs/static_headers/<源码路径>.md` sidecar。
 - 检查方式：`node tools/gen_static_docs.mjs --check`；旧的 `tools/static_docs_data.mjs` 仅作为尚未迁移文件的兼容层。

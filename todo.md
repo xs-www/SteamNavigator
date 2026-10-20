@@ -75,7 +75,7 @@
 
 ### 迭代 2：MVP 反馈优化（已完成）
 
-来源：`docs/MVP反馈.md`（玩家试玩反馈 6 条）。契约与决策：[ITERATION_2_MVP_FEEDBACK.md](docs/design/ITERATION_2_MVP_FEEDBACK.md)
+来源：`docs/archive/MVP反馈.md`（玩家试玩反馈 6 条）。契约与决策：[ITERATION_2_MVP_FEEDBACK.md](docs/archive/ITERATION_2_MVP_FEEDBACK.md)
 
 - [x] 反馈 1：tier1 模块改为「仅金币」配方（`materials: []` + `craft_cost`），`CraftOps.craftable()` 规则放宽；tier2/3 数值不变
 - [x] 反馈 4：打造改为带工时的**订单**（`state.data.shipyard_orders` / `order_serial`，`CraftOps.ensure_orders/settle_orders`），下单不再推进时间、不再即时入库；新增 `port.wait`（1..240 小时，在港）+ 船厂/总览「在港等待 6/12/24 小时」按钮；出航抵达亦结算订单
@@ -89,7 +89,7 @@
 
 ### 船厂界面（图 2 / 图 3 布局重构，已完成）
 
-> 目标：主界面只保留「改装台 + 组件 HUD」，全部改装操作收进分类面板；旧的整页下方面板删除，但每条旧命令保留入口。设计说明：[SHIPYARD_UI_REFACTOR.md](docs/design/SHIPYARD_UI_REFACTOR.md)。
+> 目标：主界面只保留「改装台 + 组件 HUD」，全部改装操作收进分类面板；旧的整页下方面板删除，但每条旧命令保留入口。设计说明：[SHIPYARD_UI_REFACTOR.md](docs/archive/SHIPYARD_UI_REFACTOR.md)。
 
 - [x] 正常态三列：左「已有船舶」贴图船卡（`assets/ui/shipyard/ship_thumb_ironclad.png`）+ 中间 `SNShipView(EXTERIOR)` 实机渲染占位 + 右「组件」六类入口（点击进入改装）
 - [x] 改装态三列：左授权贴图纵剖图（`SNShipView(CUTAWAY)` + 每槽位一枚 `SNSlotTarget` 贴片 + 舱室引线）+ 中当前分类的槽位 / 装配 / 购买 / 打造紧凑操作卡（唯一纵向滚动区）+ 右竖排分类页签（船体 / 锅炉 / 货舱 / 导航 / 安全 / 客舱 / 杂项）
@@ -104,7 +104,7 @@
 - [x] 截图工具：`tools/ui_snapshot.gd` + `tools/capture_ui.ps1`（窗口 1440×900、bootstrap 与测试一致、模式/分类断言、120 s watchdog），产出 `shipyard_{normal,refit,refit_cargo,refit_misc}.png`
 - [x] 本地化：新增 normal/refit 两态与分类页签中英键（`ui.label.ship_list`、`ui.label.components`、`ui.category.*`、`ui.hint.operations*`、`ui.tag.section_texture` 等）
 - [x] 测试：`test_shipyard_refit` 扩到 8 例（正常态 / 改装态 / 分类与模式记忆 / 贴图契约 / 船卡缩略图 / 2.5D 渲染器替换 / 拖拽安装 / 旧面板移除）；`test_ui_shell` 改为通关只在总览、打造与等待经分类和「杂项」。本轮验收船厂 / UI 套件 105/105 全绿
-- [x] 文档：`docs/static` 的船厂页 / `sn_ship_view` / Shell / `shipyard_view` / 两个测试条目重写契约，并新增 [SHIPYARD_UI_REFACTOR.md](docs/design/SHIPYARD_UI_REFACTOR.md)、更新 UI_PROTOTYPE 与 ASSET_MAP
+- [x] 文档：`docs/static` 的船厂页 / `sn_ship_view` / Shell / `shipyard_view` / 两个测试条目重写契约，并新增 [SHIPYARD_UI_REFACTOR.md](docs/archive/SHIPYARD_UI_REFACTOR.md)、更新 UI_PROTOTYPE 与 ASSET_MAP
 - [x] 2.5D 舞台接入：正常态中央已是真实 3D 船体舞台（`SNShipStage3D` → `SNStageHost` → `ShipyardStage`），改装态仍是 2D 纵剖图；`SNShipView.set_renderer()` 渲染器协议不变，第二切片把视口/机位/灯光/水面迁进通用宿主与舞台场景
 
 ### 阶段 D：存档与兼容
@@ -141,7 +141,7 @@
 
 ## 3D 资产：铁港码头道具
 
-> 工作流与角色分工见 [docs/design/MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)，验收记录见 [docs/design/MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md)，来源与运行时路径见 [docs/design/ASSET_MAP.md](docs/design/ASSET_MAP.md)。
+> 工作流与角色分工见 [docs/design/MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)，验收记录见 [docs/archive/MODELING_ACCEPTANCE_2026-10-19.md](docs/archive/MODELING_ACCEPTANCE_2026-10-19.md)，来源与运行时路径见 [docs/design/ASSET_MAP.md](docs/design/ASSET_MAP.md)。
 
 - [x] 帆船 `SN_Ship_Prototype`（2608 tri）与塔吊 `SN_Harbor_Crane`（3420 tri）：建模、导出、Godot 导入
 - [x] 铁港第一批 6 件道具（岸壁 / 护舷 / 系缆桩 / 木箱 / 木桶 / 矿堆）
@@ -169,7 +169,7 @@
 - [x] Blender 工作台 `SN_Ship_Modules` 集合：160 对象 / 145 mesh / 11 材质；网格健康四项全 0；原有 149 对象回归未变
 - [x] 导出 11 个独立 GLB 到 `assets/models/modules/`，`verify_modules_glb.py` 11/11 PASS（单节点、尺寸、材质、轴向）
 - [x] 验收截图归档：`docs/design/screenshots/ship_modules_batch1_{overview,boilers,cargo,nav_safety_cabin}.png`
-- [x] 独立 Verifier 只读复核 R0→R2 三轮：R0 报的 5 处同法线共面 + 9 处悬空壳体、R1 报的 4 处共面 + 1 处被穹顶包住的隐藏几何全部清零，R2 判定 **pass**（仅剩 2 处完全被遮挡的微小共面记录在案）；报告见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md)
+- [x] 独立 Verifier 只读复核 R0→R2 三轮：R0 报的 5 处同法线共面 + 9 处悬空壳体、R1 报的 4 处共面 + 1 处被穹顶包住的隐藏几何全部清零，R2 判定 **pass**（仅剩 2 处完全被遮挡的微小共面记录在案）；报告见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/archive/MODELING_ACCEPTANCE_2026-10-19.md)
 - [ ] 接入 Core：每个模块实体 `information.model` 资源键 + manifest 声明 + 资源校验测试
 - [ ] Godot 导入验收，并在船厂改装台 / 2.5D 舞台按 socket 试装
 
@@ -183,13 +183,13 @@
 - [x] Blender 工作台 `SN_Ironclad_Prototype` 集合：161 对象 / 146 mesh / 11 材质；网格健康四项全 0；原有 160 对象回归未变
 - [x] 导出 `assets/models/ships/SN_Ironclad.glb`（单节点 / 8 图元 / 8830 tri / 约 468 KB）+ `.design/ships/SN_Ironclad.blend` 快照；`verify_ironclad_glb.py` PASS；Godot 已生成 `.import`（PackedScene）
 - [x] 截图归档：`docs/design/screenshots/ironclad_{three_quarter,broadside,bow,bow_closeup,guns_closeup,stage_ortho}.png`
-- [x] 独立 Verifier 只读复核 R0→R1 两轮：R0 的 8 类悬空/错位（桅顶饰、指挥塔、通风筒、甲板机械、小艇重合、桨叶脱毂、黄铜条/驾驶台、小间隙）全部清零，R1 判定 **pass**；R2 人工反馈（舰艏两个斜桁鞍座/绑扎块浮空）已加基座/艏柱座/锚吊架修复并复验仍 **pass**；报告见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md)
+- [x] 独立 Verifier 只读复核 R0→R1 两轮：R0 的 8 类悬空/错位（桅顶饰、指挥塔、通风筒、甲板机械、小艇重合、桨叶脱毂、黄铜条/驾驶台、小间隙）全部清零，R1 判定 **pass**；R2 人工反馈（舰艏两个斜桁鞍座/绑扎块浮空）已加基座/艏柱座/锚吊架修复并复验仍 **pass**；报告见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/archive/MODELING_ACCEPTANCE_2026-10-19.md)
 - [ ] Godot 引擎侧复核（导入已成功；待跑轴向/包围盒/材质校验）与 2.5D 舞台目标机位试装
 - [ ] 如需转为战舰 / 第 5 种船体：接 Core 内容键 + manifest + 本地化 + 测试
 
 ## 3D 资产：小型明轮蒸汽船（SN_Paddle_Steamer）
 
-> 参考澳大利亚国家博物馆的明轮蒸汽船 **PS Enterprise** 的 24 m 级小型明轮客船，纯展示资产（不接 Core）。**用户明确要求烟囱蒸汽不做几何，留给游戏内 VFX**。工单 [sn_ship_paddle_steamer.json](tools/modeling/briefs/sn_ship_paddle_steamer.json)，流程同 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)，验收记录见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/design/MODELING_ACCEPTANCE_2026-10-19.md) 第 10 节。
+> 参考澳大利亚国家博物馆的明轮蒸汽船 **PS Enterprise** 的 24 m 级小型明轮客船，纯展示资产（不接 Core）。**用户明确要求烟囱蒸汽不做几何，留给游戏内 VFX**。工单 [sn_ship_paddle_steamer.json](tools/modeling/briefs/sn_ship_paddle_steamer.json)，流程同 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)，验收记录见 [MODELING_ACCEPTANCE_2026-10-19.md](docs/archive/MODELING_ACCEPTANCE_2026-10-19.md) 第 10 节。
 
 - [x] 参数化生成器 `tools/modeling/generators/sn_paddle_steamer_generator.py`：24 m 白漆内河船身 + 两舷 10 桨叶明轮 + 10 道格栅轮罩 + 前驾驶室（ENTERPRISE 文字铭牌）+ 后部雨棚游步甲板 + 黑烟囱 + 艏澳洲旗 + 艉弧形平台/舵，**11764 tri**（预算 12000）、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`）
 - [x] 纯 Python 干跑 `dryrun_paddle_steamer.py`：35 对象 / 32 mesh / 3 empty、包围盒 **24.56 × 8.74 × 10.47 m**、z −1.32..9.15、边界/非流形/退化/孤立点全 0（Deck 与铭牌单层双面白名单）、左右镜像误差 0
@@ -329,7 +329,7 @@
 - [x] Content Schema 2.0 草案：`schemas/v2/common` + start/world/region/site/route，`draft_schemas` 登记且保持 planned，SchemaValidator 有效/无效样本测试
 - [x] Content Schema 2.0 世界探索家族补齐：`weather_profile` / `faction` / `discovery` 草案，登记 `draft_schemas` 并补有效/无效样本测试
 - [x] `CampaignState` 分区骨架：`campaign.world` / `codex` / `factions` 惰性补齐，探索进度只追加 ID，`set_faction_reputation` 夹取，随存档往返；新局标记 `world.generated` 与起始港
-- [x] 模块实例化第一步：`ship.module_instances` + `module_serial`，实例 id/condition 随存档；`damage_module` 效果、锅炉过热接入、维修按部件计价、船厂状态徽标、顶部信息条/船卡/补给页可见；`capture_ui.ps1 -Damage` 可复现受损截图（见 [SHIP_MODULE_INSTANCES.md](docs/design/SHIP_MODULE_INSTANCES.md)）
+- [x] 模块实例化第一步：`ship.module_instances` + `module_serial`，实例 id/condition 随存档；`damage_module` 效果、锅炉过热接入、维修按部件计价、船厂状态徽标、顶部信息条/船卡/补给页可见；`capture_ui.ps1 -Damage` 可复现受损截图（见 [SHIP_MODULE_INSTANCES.md](docs/archive/SHIP_MODULE_INSTANCES.md)）
 - [x] 2.5D 首个切片：船厂正常态 3D 实机舞台（`SNShipStage3D` 按 hull_tier 选船、固定 3/4 机位、复用港口水面着色器，改装态保持纵剖图，资产缺失回退程序化占位）；截图见 [stage3d](docs/design/screenshots/stage3d/shipyard_normal.png)，方案见 [2.5D_STAGE_PLAN.md](docs/design/2.5D_STAGE_PLAN.md)
 - [x] 2.5D 第二切片：`SNStageHost` + `LocationStage` 泛化、`ShipyardStage` 迁移、`PortStage` 骨架（设施/空槽/回退/玩家船）、独立预览与 9 个舞台测试；截图见 [port_stage_preview](docs/design/screenshots/port_stage/port_stage_preview.png) / [port_stage_sparse](docs/design/screenshots/port_stage/port_stage_sparse.png)
 - [x] 2.5D 第三切片：总览页全窗 `PortStage` 背景层 + 2D 设施热点（相机投影 Ghost Button，点击进对应设施页）+ 俯瞰/返回切换 + 失败回退 2D；新增 `test_ui_shell` 用例与 `ui_snapshot --overview-stage` 截图；截图见 [overview_port_stage](docs/design/screenshots/overview_port_stage.png)
@@ -519,10 +519,10 @@
 - [x] **P1 主界面美术收尾与性能回收（第六切片）**：HUD 资源图标（`AssetService.find_key` 裸键）、自绘木牌招牌 + 设施徽记 + 悬停光晕；街景 normal 47 件（size/density 分档）；设施/街景/玩家船静态合批把实测 draw calls 从 284/255 降到 **63/56**（37k/30k tris）；无 banner 港口 3 层程序化远景；新增 measure 工具与 7 个舞台用例，全量 162 tests 绿。截图：[主界面 1440](docs/design/screenshots/overview_port_stage.png) / [主界面 960×540](docs/design/screenshots/overview_port_stage_960.png) / [详细总览](docs/design/screenshots/overview_detail.png)。
 - [x] **P1 连续港区 + 港务/市场/补给相邻站位（第七切片）**：码头 160 m、广场 250 m，`STATIONS` 把 market(-30)/harbor(0)/supply(+30) 排成相邻站位；`focus_station()`/`advance_station()` 只平移镜头 + 把船开到新泊位（0.6 s 镜头、转艏 + 24 m/s 航行），港口/街坊/设施/合批层不重建，画幅层跟随、L2 半速视差；`STAGE_SCREENS` 让 overview/market/supply 共用同一 `PortStage` 实例，market/supply 改成右侧 640 px 泊位面板 + 左侧露出 3D 街景且切页无黑场；`test_stage_host` 30 例、`test_ui_shell` 覆盖共用舞台/面板/镜头到位，全量 **168 tests 绿**。截图：[市场站位](docs/design/screenshots/market_station.png) / [补给站位](docs/design/screenshots/supply_station.png) / [市场 960×540](docs/design/screenshots/market_station_960.png) / [market 镜头](docs/design/screenshots/port_stage/port_stage_market.png)。
 - [ ] **剩余 2.5D 舞台工作**：委托/情报页舞台化、离港/进港演出与目的港舞台预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审。
-- [x] **铁港城镇建筑视觉升级 · 第一阶段 + R1**：`SN_HT_Warehouse_Long` LOD0 灰模 R1（7 436 tri / 20×9×11 m / 6 材质槽 / 网格健康全 0），已临时装配进 PortStage 并出 1440×900 与 960×540 实机截图（stage tri 37 280→43 584 证明新模型入场景），旧 GLB 已还原；见 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。
-- [x] **铁港城镇建筑视觉升级 · M1 材质轮**：`warehouse_long` 槽位 yaw −90→−106 / pos z −34→−33 让装卸门长立面正对固定机位（立面 +38%、两扇装卸门 +36%/+34%、山墙吊梁仍可见、足迹仍在广场内）；共享 2K trim sheet（16 cell）+ 每材质 512² 平铺贴图 + 盒投影 UV（0 tri 增加）；内容 GLB 已换成带贴图版本并重新 import，1440×900 与 960×540 实机截图已出；见 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)。**等待"是否扩展整批"决定**。
-- [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。LOD1 与共享外部贴图已由批次 A 完成；剩余 3 个新原型（批次 B）。
-- [x] **铁港建筑套件 · 批次 A（LOD1 + 共享贴图 + Warehouse_Short 檐口修复）**：5 栋 LOD1 共 **6 564 tri**（LOD0 的 21.85%，上限 10 508；逐栋 1 584 / 1 060 / 1 896 / 776 / 1 248），LOD1 与 LOD0 bbox 逐轴 0.000 m、轴心落地、网格健康全 0；`SN_HT_Warehouse_Short` 檐口顶皮@墙线 **−3.543 cm → 0.000 cm**（仅 8 个屋面顶点变化）；10 个 GLB 改为 **GLB + 外部共享贴图**（11 张 `iron_harbor_shared/*.png` 与手写 tile 逐字节一致，`ContentAssetLoader` 按 URI 共享 `Texture2D`），PortStage 舞台分析面 **91→73**、draw calls preview **89→71**（≤75 目标），5 栋模型+纹理 **4.17 MB**（≤4.5 MB）；松散 / `.snavmod.zip` / 发布包三条加载路径实测。见 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)、LOD1 构建/独立验收/共享贴图三份报告。剩余：批次 B（3 个新原型）。
+- [x] **铁港城镇建筑视觉升级 · 第一阶段 + R1**：`SN_HT_Warehouse_Long` LOD0 灰模 R1（7 436 tri / 20×9×11 m / 6 材质槽 / 网格健康全 0），已临时装配进 PortStage 并出 1440×900 与 960×540 实机截图（stage tri 37 280→43 584 证明新模型入场景），旧 GLB 已还原；见 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/archive/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。
+- [x] **铁港城镇建筑视觉升级 · M1 材质轮**：`warehouse_long` 槽位 yaw −90→−106 / pos z −34→−33 让装卸门长立面正对固定机位（立面 +38%、两扇装卸门 +36%/+34%、山墙吊梁仍可见、足迹仍在广场内）；共享 2K trim sheet（16 cell）+ 每材质 512² 平铺贴图 + 盒投影 UV（0 tri 增加）；内容 GLB 已换成带贴图版本并重新 import，1440×900 与 960×540 实机截图已出；见 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/archive/IRON_HARBOR_ARCHITECTURE_M1.md)。**等待"是否扩展整批"决定**。
+- [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/archive/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。LOD1 与共享外部贴图已由批次 A 完成；剩余 3 个新原型（批次 B）。
+- [x] **铁港建筑套件 · 批次 A（LOD1 + 共享贴图 + Warehouse_Short 檐口修复）**：5 栋 LOD1 共 **6 564 tri**（LOD0 的 21.85%，上限 10 508；逐栋 1 584 / 1 060 / 1 896 / 776 / 1 248），LOD1 与 LOD0 bbox 逐轴 0.000 m、轴心落地、网格健康全 0；`SN_HT_Warehouse_Short` 檐口顶皮@墙线 **−3.543 cm → 0.000 cm**（仅 8 个屋面顶点变化）；10 个 GLB 改为 **GLB + 外部共享贴图**（11 张 `iron_harbor_shared/*.png` 与手写 tile 逐字节一致，`ContentAssetLoader` 按 URI 共享 `Texture2D`），PortStage 舞台分析面 **91→73**、draw calls preview **89→71**（≤75 目标），5 栋模型+纹理 **4.17 MB**（≤4.5 MB）；松散 / `.snavmod.zip` / 发布包三条加载路径实测。见 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/archive/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)、LOD1 构建/独立验收/共享贴图三份报告。剩余：批次 B（3 个新原型）。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。
@@ -541,7 +541,7 @@
 
 ## 铁港建筑套件 · 第一阶段样板 + R1（2026-10-20，PortStage 实机截图已出，等待扩展决定）
 
-> 工单 [sn_iron_harbor_architecture_kit_v1.json](tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json)，报告 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。只做 `SN_HT_Warehouse_Long` 的 LOD0 灰模；R1 GLB 仅临时装配截图，已还原旧资产；不贴图、不改运行时代码。
+> 工单 [sn_iron_harbor_architecture_kit_v1.json](tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json)，报告 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/archive/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。只做 `SN_HT_Warehouse_Long` 的 LOD0 灰模；R1 GLB 仅临时装配截图，已还原旧资产；不贴图、不改运行时代码。
 
 - [x] 生成器 `tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py`：纯 Python 几何（可 `dryrun_props.py` 干跑）+ Blender 内 `build_all()/report()`，在 `SN_Iron_Harbor_Architecture` 建单 mesh 对象 `SN_HT_Warehouse_Long_LOD0`
 - [x] 几何与健康（R1）：**7 436 tri / 4 486 顶点**、20.000×9.000×11.000 m、轴心底面中心、zmin 0、6 材质槽、孤立点/退化面/非流形边/边界边全 0；真实凹口 窗 0.16 / 装卸门 0.28（门扇 0.16）/ 人门·服务门 0.26（门扇 0.20），墙厚 0.46 m；同向共面只剩隐藏接缝（无外露 z-fighting）
@@ -554,7 +554,7 @@
 
 ## 铁港建筑套件 · M1 材质轮（2026-10-20，PortStage 实机截图已出，等待扩展决定）
 
-> 报告 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)；材质源 [iron_harbor_trim_sheet_2048.spec.json](docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json)。几何冻结不动（仍 7 436 tri / 20×9×11 m）。
+> 报告 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/archive/IRON_HARBOR_ARCHITECTURE_M1.md)；材质源 [iron_harbor_trim_sheet_2048.spec.json](docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json)。几何冻结不动（仍 7 436 tri / 20×9×11 m）。
 
 - [x] 朝向/位置：`framework/ui/stages/port_stage.gd` `TOWN_SLOTS.warehouse_long` → `pos(-30, 1.9, -33) yaw -106`；主立面法线↔机位轴 52.2°→35.9°，立面投影 +38.2%、装卸门 +36.4%/+33.7%，门 100% 无遮挡，山墙吊梁仍可见；足迹 x −37.08…−22.92 / z −43.85…−22.15（广场内）、与岸吊间隙 0.92 m
 - [x] trim sheet 生成器 `tools/art/gen_iron_harbor_trim_sheet.py`（numpy+Pillow，确定性，PNG-8 ≤96 色）：4×4×512 px、2.0 m/cell=256 px/m、16 cell（6 主用 + 10 变体/预留）；自检 mean 误差 ≤±0.5/255、接缝率 0.26–1.18、两跑字节一致；产出 2048² 图集 3.68 MB + `tiles/` 16×512² 合计 2.66 MB
@@ -566,7 +566,7 @@
 
 ## 铁港建筑套件 · 批次 A（2026-10-20，LOD1 + 共享贴图 + 檐口修复）
 
-> 需求 [MODELING_REQUIREMENTS_NEXT_BATCH.md](docs/design/MODELING_REQUIREMENTS_NEXT_BATCH.md) §5 / §8 / §9；验收 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)，LOD1 构建 [IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md](docs/design/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md)，独立验收 [IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md](docs/design/IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md)，共享贴图 [IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md](docs/design/IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md)。
+> 需求 [MODELING_REQUIREMENTS_NEXT_BATCH.md](docs/archive/MODELING_REQUIREMENTS_NEXT_BATCH.md) §5 / §8 / §9；验收 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/archive/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)，LOD1 构建 [IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md](docs/archive/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md)，独立验收 [IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md](docs/archive/IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md)，共享贴图 [IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md](docs/archive/IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md)。
 
 - [x] Builder：新增 `sn_iron_harbor_architecture_lod1_generator.py`（纯 Python 参数化真源，5 栋 LOD1 合计 6 564 tri / 21.85%，逐栋 ≤35%；LOD0↔LOD1 bbox 逐轴 0.000、轴心落地、健康全 0、材质 6 槽 + 共享 cells/UV）；`sn_iron_harbor_warehouse_short_generator.py` 仅改 `_roof_section()`，顶皮@墙线 −3.543 cm→0.000 cm（tri/verts/bbox/轴心/主立面/材质不变）；30 张 1280×800 LOD1/对比预览；全场景 245 个非目标对象 digest 零改动。
 - [x] 独立 Verifier（只读）：t0/t1 dump 独立复算，LOD1 5/5 门禁 PASS、剪影 IoU 0.99+、§5.1 保留项全通过、檐口 0.0000 m、LOD0 4 栋逐字节一致 / Short 仅 8 顶点、非目标 0 modified；报告无 FAIL。
@@ -576,6 +576,11 @@
 - [x] 截图：PortStage 固定机位 LOD0/LOD1 1440×900 + 960×540（`docs/design/screenshots/iron_harbor_architecture/`），LOD1 临时入舞台 tri 73 228→49 760、draw calls 不变（合批按材质）。
 - [ ] 待人工视觉门禁确认（§10）：1440×900 / 960×540 轮廓与入口可读、LOD1 无明显塌陷、性能收益是否抵过资产格式复杂度；确认后再进入批次 B。
 - [ ] 移除构建卫生：`dev_mods/core/assets/models/props/SN_HT_*.png`（Godot 从内嵌 GLB 解包的旧构建产物）已清理，后续由 .gitignore + 导出流程守护。
+
+## 文档归档（2026-10-21）
+
+- [x] 设计文档整理：已完成开发的设计 / 实施契约 / 验收报告共 26 篇迁入 [`docs/archive/`](docs/archive/README.md)（MVP 设计基线、迭代 1/2、UI 重构、铁港建筑套件阶段 1→批次 B、建模验收与下一批需求、批次 C）；`docs/design/` 仅保留现行方案 / 路线图 / 工作流 / 资产映射 / 契约与原型说明。
+- [x] 引用同步：README、todo、各设计文档与 tools 工单内的相对链接已改为新路径；`docs/static/` 未重组，仅按生成器重跑同步 manifest 哈希与 1 个硬编码的「迭代 1 契约」链接。
 
 ## 维护约定
 

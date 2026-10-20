@@ -2,7 +2,7 @@
 
 > 用途：2.5D 固定机位港口舞台（`PortStage`）的设施可辨认锚点。
 > 工单：[`sn_port_facilities_batch1.json`](sn_port_facilities_batch1.json)（6 件，总预算 10500 tri）。
-> 规范来源：[2.5D_STAGE_PLAN.md](../../docs/design/2.5D_STAGE_PLAN.md) §8「设施锚点」。
+> 规范来源：[2.5D_STAGE_PLAN.md](../../../docs/design/2.5D_STAGE_PLAN.md) §8「设施锚点」。
 
 ## 1. 结论先说
 
