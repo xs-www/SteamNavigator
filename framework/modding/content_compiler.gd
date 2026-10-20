@@ -2,6 +2,19 @@ class_name ContentCompiler
 extends RefCounted
 ## Parses, schema-validates and registers content declarations, then applies
 ## explicit patches before the registry is frozen.
+## @static-doc
+## 作用：内容编译：解析内容文件、按类型 Schema 校验、注册定义、应用显式 Patch，最后冻结注册表。
+##
+## - 关键依赖：`ContentTypes`、`SchemaValidator`、`RegistryHub`、`LocalizationService`、`AssetService`
+##
+## ## 契约与约束
+## - 内容版本按内容类型声明：每个内容文件的 `schema_version` 必须等于
+##   `ContentTypes.schema_version(content_type)`；期望版本为空时回退
+##   `FrameworkInfo.CONTENT_SCHEMA`。未知类型仍按 `unknown_content_type` 拒绝。
+## - Phase A 只把全局版本比较改为按类型比较，1.0 内容行为完全不变；Schema 2.0
+##   草案类型尚未提升 active，仍不会进入加载链。
+## - Patch 的再校验用**目标定义类型**的版本构造 envelope，避免借用全局基线版本。
+## @end-static-doc
 
 const MAX_CONTENT_FILE_BYTES := 8 * 1024 * 1024
 const MAX_PATCHES := 256
@@ -104,19 +117,23 @@ func _load_content_file(package: ModPackage, relative_path: String) -> void:
 		_add_error("content_not_object", "content file root must be an object", package.id, relative_path)
 		return
 	var envelope: Dictionary = parsed["value"]
-	if String(envelope.get("schema_version", "")) != FrameworkInfo.CONTENT_SCHEMA:
-		_add_error(
-			"unsupported_schema",
-			"schema_version must be '%s'" % FrameworkInfo.CONTENT_SCHEMA,
-			package.id,
-			relative_path,
-			"/schema_version"
-		)
-		return
 	var content_type_name := String(envelope.get("content_type", ""))
 	var content_type := StringName(content_type_name)
 	if not ContentTypes.is_known(content_type):
 		_add_error("unknown_content_type", "unknown content_type '%s'" % content_type_name, package.id, relative_path, "/content_type")
+		return
+	var expected_schema_version := _expected_content_schema_version(content_type)
+	var declared_schema_version := String(envelope.get("schema_version", ""))
+	if declared_schema_version != expected_schema_version:
+		_add_error(
+			"unsupported_schema",
+			"schema_version must be '%s' for content type '%s', got '%s'" % [
+				expected_schema_version, content_type_name, declared_schema_version
+			],
+			package.id,
+			relative_path,
+			"/schema_version"
+		)
 		return
 	var schema_errors := _validator.validate_file(envelope, ContentTypes.schema_path(content_type))
 	if not schema_errors.is_empty():
@@ -322,9 +339,17 @@ func _apply_patch(entry: Dictionary) -> void:
 		_logger.info("content patch applied", {"target": target_id, "mod": mod_id, "file": file})
 
 
+## Expected content schema version for a type. `ContentTypes` declares one per
+## active type (Phase A); the framework baseline is only a defensive fallback
+## for types registered before the per-type version table existed.
+func _expected_content_schema_version(content_type: StringName) -> String:
+	var declared := ContentTypes.schema_version(content_type)
+	return declared if not declared.is_empty() else FrameworkInfo.CONTENT_SCHEMA
+
+
 func _validate_definition(content_type: StringName, raw_definition: Dictionary) -> Array[Dictionary]:
 	var envelope := {
-		"schema_version": FrameworkInfo.CONTENT_SCHEMA,
+		"schema_version": _expected_content_schema_version(content_type),
 		"content_type": String(content_type),
 		"definitions": [raw_definition],
 	}

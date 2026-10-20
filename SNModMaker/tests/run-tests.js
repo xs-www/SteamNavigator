@@ -209,6 +209,19 @@ function warningsOf(result) {
     assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to 1.0');
   });
 
+  await test('every runtime type declares its content schema version (type-level versioning)', () => {
+    assert.equal(Types.TYPES.length, 16, 'content_types.json keeps 16 runtime types (15 definitions + patches)');
+    for (const info of Types.TYPES) {
+      assert.equal(info.schemaVersion, '1.0', `${info.key} must declare schemaVersion 1.0`);
+      assert.equal(Catalog.schemaVersionFor(info.key), '1.0', `${info.key} catalog version`);
+      assert.equal(Validate.schemaVersionFor(info.key), '1.0', `${info.key} validator version by type`);
+      assert.equal(Validate.schemaVersionFor({ content_type: info.key }), '1.0', `${info.key} version by file`);
+    }
+    // An explicit file version still wins so a wrong version is reported by validation.
+    assert.equal(Validate.schemaVersionFor({ content_type: 'goods', schema_version: '2.0' }), '2.0');
+    assert.equal(Catalog.schemaVersionFor('patches'), '1.0', 'patches are a runtime type at 1.0');
+  });
+
   await test('every draft type validates with zero errors using catalog defaults', () => {
     const project = freshProject();
     for (const info of Types.DRAFT_TYPES) {

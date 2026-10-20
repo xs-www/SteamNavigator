@@ -8,7 +8,8 @@
 
 ## 契约与约束
 
-- `types` 只列可加载的 Content Schema 1.0 active 类型；`planned` 只是路线图，禁止注册或加载。
+- `types` 只列可加载的 active 类型；每个条目声明自己的 `schema_version`（当前全部 `1.0`），生成器校验它等于对应 Schema 的版本声明并产出 `ContentTypes.SCHEMA_VERSIONS`。`planned` 只是路线图，禁止注册或加载。
+- `content_schema` 只是基线/默认版本（存档 header、编辑器默认），运行时的唯一版本来源是每个类型的 `schema_version`。
 - `v2_target` / `aliases` 是迁移提示，不代表当前运行时支持合并后的实体。
 - `v2_module_categories` 记录目标分类：导航/安全归入 `utility`，不再单独设内容类型或编辑器分组。
 - `draft_schemas` 与 `draft_types` 键集合必须完全一致：前者登记 Schema 2.0 草案的 Schema 文件，后者登记编辑器展示元数据（`singular` / `key_prefix` / 标签 / 默认文件 / `schema_version` / `capability`）。草案类型必须仍在 `planned` 中、不得 active。

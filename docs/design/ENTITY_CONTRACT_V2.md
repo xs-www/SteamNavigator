@@ -250,6 +250,7 @@ scan → manifest / dependency resolve → schema compile
 | Save Schema | 战役存档结构 |
 
 - Content Schema 主版本变化必须提供迁移器与旧档只读兼容。
+- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。已落地 Phase A：全部 active 类型仍为 `1.0`，v2 类型在提升 active 时单独声明 `2.0`。
 - 新系统通过 capability 暴露（`content.world.v1`、`content.combat.v1`…）；模组使用新能力必须声明。
 - `v2_target` 只用于规划 Item/Module/Quest 等迁移，不代表当前可加载类型。
 

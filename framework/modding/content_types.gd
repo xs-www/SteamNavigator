@@ -42,6 +42,25 @@ const SCHEMA_PATHS := {
 	PATCH: "res://schemas/patch.schema.json",
 }
 
+const SCHEMA_VERSIONS := {
+	GOOD: "1.0",
+	MATERIAL: "1.0",
+	HULL: "1.0",
+	BOILER: "1.0",
+	CARGO_MODULE: "1.0",
+	NAVIGATION_MODULE: "1.0",
+	SAFETY_MODULE: "1.0",
+	CABIN: "1.0",
+	ROLE: "1.0",
+	STRATEGY: "1.0",
+	PORT_ARCHETYPE: "1.0",
+	MAP_PROFILE: "1.0",
+	STARTING_BUILD: "1.0",
+	CONTRACT: "1.0",
+	EVENT: "1.0",
+	PATCH: "1.0",
+}
+
 const SINGULAR := {
 	GOOD: "good",
 	MATERIAL: "material",
@@ -93,6 +112,10 @@ static func is_patch(content_type: StringName) -> bool:
 
 static func schema_path(content_type: StringName) -> String:
 	return String(SCHEMA_PATHS.get(content_type, ""))
+
+
+static func schema_version(content_type: StringName) -> String:
+	return String(SCHEMA_VERSIONS.get(content_type, ""))
 
 
 static func singular(content_type: StringName) -> String:

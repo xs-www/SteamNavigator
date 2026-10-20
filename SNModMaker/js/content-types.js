@@ -27,6 +27,7 @@
       group: "经济与贸易",
       file: "content/goods.json",
       schema: "good.schema.json",
+      schemaVersion: "1.0",
       summary: "港口买卖、库存与价格弹性的基础物品，也是委托货箱与补给的载体。",
     },
     {
@@ -40,6 +41,7 @@
       group: "经济与贸易",
       file: "content/materials.json",
       schema: "material.schema.json",
+      schemaVersion: "1.0",
       summary: "打造与升级模块时消耗的专用材料，参与库存、价格与重量计算。",
     },
     {
@@ -53,6 +55,7 @@
       group: "船只与模块",
       file: "content/hulls.json",
       schema: "hull.schema.json",
+      schemaVersion: "1.0",
       summary: "决定基础航速、最大载重、耐久与货舱/客舱槽位。",
     },
     {
@@ -66,6 +69,7 @@
       group: "船只与模块",
       file: "content/boilers.json",
       schema: "boiler.schema.json",
+      schemaVersion: "1.0",
       summary: "航速与煤水消耗的核心模块，与三种锅炉策略相乘。",
     },
     {
@@ -79,6 +83,7 @@
       group: "船只与模块",
       file: "content/cargo_modules.json",
       schema: "cargo_module.schema.json",
+      schemaVersion: "1.0",
       summary: "安装到船体货舱槽位，提供额外载货容量。",
     },
     {
@@ -92,6 +97,7 @@
       group: "船只与模块",
       file: "content/navigation_modules.json",
       schema: "navigation_module.schema.json",
+      schemaVersion: "1.0",
       summary: "影响风险与航速，部分可提前揭示港口设施。",
     },
     {
@@ -105,6 +111,7 @@
       group: "船只与模块",
       file: "content/safety_modules.json",
       schema: "safety_module.schema.json",
+      schemaVersion: "1.0",
       summary: "降低航行风险、损伤与维修费用。",
     },
     {
@@ -118,6 +125,7 @@
       group: "船只与模块",
       file: "content/cabins.json",
       schema: "cabin.schema.json",
+      schemaVersion: "1.0",
       summary: "提供载客容量，是客运委托的前置条件。",
     },
     {
@@ -131,6 +139,7 @@
       group: "船只与模块",
       file: "content/roles.json",
       schema: "role.schema.json",
+      schemaVersion: "1.0",
       summary: "工程师与领航员等岗位，每航程支付工资并提供属性修正。",
     },
     {
@@ -144,6 +153,7 @@
       group: "船只与模块",
       file: "content/strategies.json",
       schema: "strategy.schema.json",
+      schemaVersion: "1.0",
       summary: "出航时选择的推进策略：经济、标准或极速。",
     },
     {
@@ -157,6 +167,7 @@
       group: "世界生成",
       file: "content/port_archetypes.json",
       schema: "port_archetype.schema.json",
+      schemaVersion: "1.0",
       summary: "程序生成港口的模板：规模、设施与可交易商品表。",
     },
     {
@@ -170,6 +181,7 @@
       group: "世界生成",
       file: "content/map_profiles.json",
       schema: "map_profile.schema.json",
+      schemaVersion: "1.0",
       summary: "港口数量、航路、风险、NPC 与初始经济参数。Core 完整性要求至少一个。",
     },
     {
@@ -183,6 +195,7 @@
       group: "世界生成",
       file: "content/starting_builds.json",
       schema: "starting_build.schema.json",
+      schemaVersion: "1.0",
       summary: "开局金钱、船只模块、补给与贷款配置。",
     },
     {
@@ -196,6 +209,7 @@
       group: "叙事与事件",
       file: "content/contracts.json",
       schema: "contract.schema.json",
+      schemaVersion: "1.0",
       summary: "主线或普通委托：生成约束、载货/载客需求、截止公式与奖励。",
     },
     {
@@ -209,6 +223,7 @@
       group: "叙事与事件",
       file: "content/events.json",
       schema: "event.schema.json",
+      schemaVersion: "1.0",
       summary: "航行途中触发的事件与选项；条件与效果只使用框架操作码。",
     },
     {
@@ -222,6 +237,7 @@
       group: "系统",
       file: "content/patches.json",
       schema: "patch.schema.json",
+      schemaVersion: "1.0",
       summary: "修改其他模组的定义。必须声明目标与来源版本，冲突时阻止启动。",
       special: true,
     },

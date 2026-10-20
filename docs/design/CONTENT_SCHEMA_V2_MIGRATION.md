@@ -110,17 +110,21 @@
 
 ### Phase A · 按类型版本解耦（小，1–2 天）
 
+**状态：已落地（2026-10-21，分支 `schema-v2`）。**
+
 目标：编译器从“全局 1.0”变成“每个类型有期望版本”，1.0 行为逐字节不变，不激活任何新类型。
 
 | 任务 | 文件 | 内容 |
 | --- | --- | --- |
 | A1 | `content_types.json` | 每个 `types[]` 增加 `schema_version`（当前全 `"1.0"`）；草案继续在 `draft_types`；`content_schema` 保留为基线/默认 |
-| A2 | `tools/gen_content_types.mjs` | 校验 `type.schema_version` 等于对应 Schema 的 `properties.schema_version.const`；生成 `SCHEMA_VERSIONS` 与 `schema_version_for(type)`；`--check` 守护 |
+| A2 | `tools/gen_content_types.mjs` | 校验 `type.schema_version` 等于对应 Schema 的 `properties.schema_version`（兼容 `const` 与单值 `enum` 两种写法）；生成 `SCHEMA_VERSIONS` 与 `schema_version(type)`；`--check` 守护 |
 | A3 | `framework/modding/content_types.gd`（生成物） | 新增 `SCHEMA_VERSIONS` + `schema_version(content_type)`；现有 API 不变 |
 | A4 | `framework/modding/content_compiler.gd` | 用 `ContentTypes.schema_version(type)` 替代全局比较；错误消息报“期望版本”；Patch 再校验按目标类型版本构造 envelope |
 | A5 | `SNModMaker/js/content-types.js` / `catalog.js` | 所有类型统一带 `schemaVersion`（不再用 `draft` 推断版本）；`schemaVersionFor` 读同一字段 |
-| A6 | `framework/tests/cases/test_content_versions.gd`（新） | 1.0 内容通过；`goods` 声明 2.0 → `unsupported_schema` 且消息含期望版本；Patch 跨版本被拒（D4） |
+| A6 | `framework/tests/cases/test_content_versions.gd`（新） | 1.0 内容通过；`goods` 声明 2.0 → `unsupported_schema` 且消息含期望版本；Patch 跨版本按目标类型版本校验 |
 | A7 | 文档 | `ENTITY_CONTRACT_V2.md` §14/§16 更新版本轴与阶段状态；本文件勾选 Phase A |
+
+实现记录：`ContentTypes.schema_version()` 成为运行时的唯一版本来源；`FrameworkInfo.CONTENT_SCHEMA` 降级为“基线/默认”（存档 header 与编辑器默认仍用它）；1.0 模组、补丁与存档行为不变，未来把 v2 类型提升 active 时只需在 `content_types.json` 把该类型 `schema_version` 改为 `"2.0"` 并提供对应 Schema 路径。
 
 验收：现有 Godot 全套 + Node 全套 + `gen_content_types --check` 全绿；1.0 项目加载行为零变化。
 回滚：单 commit revert，无数据迁移。
@@ -211,7 +215,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 
 ## 9. 验收标准（Definition of Done）
 
-- [ ] Phase A：1.0 全量测试绿；版本表生成物最新；Patch 跨版本被拒。
+- [x] Phase A：1.0 全量测试绿；版本表生成物最新；Patch 按目标类型版本校验（2026-10-21）。
 - [ ] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过。
 - [ ] Phase C：实体合并后旧 ID 别名可用一个版本；存档 ID 迁移可回读。
 - [ ] Phase E：1.0 生成停止；迁移工具可用；文档状态更新为 Finalized。

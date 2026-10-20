@@ -15,15 +15,16 @@
 | `CHECK` | L21 |
 | `fail(message)` | L23 |
 | `readJson(relativePath)` | L28 |
-| `readManifest()` | L36 |
-| `validate(data)` | L51 |
-| `validateDraftTypes(data, context)` | L105 |
-| `constantName(type)` | L159 |
-| `generatedHeader(commentPrefix)` | L163 |
-| `renderGd(data)` | L170 |
-| `renderJs(data)` | L239 |
-| `SNContentTypes (global)` | L297 |
-| `compareOrWrite(relativePath, content)` | L302 |
+| `schemaVersionFromSchema(versionField)` | L41 |
+| `readManifest()` | L51 |
+| `validate(data)` | L66 |
+| `validateDraftTypes(data, context)` | L128 |
+| `constantName(type)` | L180 |
+| `generatedHeader(commentPrefix)` | L184 |
+| `renderGd(data)` | L191 |
+| `renderJs(data)` | L268 |
+| `SNContentTypes (global)` | L327 |
+| `compareOrWrite(relativePath, content)` | L332 |
 
 ## 契约与约束
 

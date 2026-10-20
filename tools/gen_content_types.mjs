@@ -33,6 +33,21 @@ function readJson(relativePath) {
   }
 }
 
+/**
+ * A content schema pins its version either with `const` (Schema 2.0 drafts) or
+ * a single-value `enum` (the 1.0 runtime schemas). Both must yield one string,
+ * which is what `content_types.json` has to mirror per type.
+ */
+function schemaVersionFromSchema(versionField) {
+  if (!versionField || typeof versionField !== 'object') return '';
+  if (typeof versionField.const === 'string' && versionField.const) return versionField.const;
+  if (Array.isArray(versionField.enum) && versionField.enum.length === 1) {
+    const only = versionField.enum[0];
+    if (typeof only === 'string' && only) return only;
+  }
+  return '';
+}
+
 function readManifest() {
   let data;
   try {
@@ -77,6 +92,14 @@ function validate(data) {
       fail(`type ${type.key} references unknown v2 module category ${type.v2_category}`);
     }
     if (!fs.existsSync(path.join(ROOT, type.schema))) fail(`schema file is missing: ${type.schema}`);
+    if (!type.schema_version) fail(`type ${type.key} is missing schema_version`);
+    const declaredSchemaVersion = schemaVersionFromSchema(readJson(type.schema).properties?.schema_version);
+    if (!declaredSchemaVersion) {
+      fail(`schema ${type.schema} does not pin properties.schema_version (const or single-value enum)`);
+    }
+    if (declaredSchemaVersion !== type.schema_version) {
+      fail(`type ${type.key} schema_version ${type.schema_version} does not match ${type.schema} (${declaredSchemaVersion})`);
+    }
     if (!Array.isArray(type.aliases)) fail(`type ${type.key} aliases must be an array`);
     if (type.v2_target != null && typeof type.v2_target !== 'string') fail(`type ${type.key} v2_target must be a string or null`);
     if (type.kind === 'patch') patches += 1;
@@ -138,12 +161,10 @@ function validateDraftTypes(data, context) {
     const schemaPath = draftSchemas[type.key];
     if (!fs.existsSync(path.join(ROOT, schemaPath))) fail(`draft schema file is missing: ${schemaPath}`);
     const schema = readJson(schemaPath);
-    const schemaVersion = schema && schema.properties && schema.properties.schema_version
-      ? schema.properties.schema_version.const
-      : undefined;
-    if (!schemaVersion) fail(`draft schema ${schemaPath} does not pin properties.schema_version.const`);
+    const schemaVersion = schemaVersionFromSchema(schema && schema.properties ? schema.properties.schema_version : null);
+    if (!schemaVersion) fail(`draft schema ${schemaPath} does not pin properties.schema_version`);
     if (schemaVersion !== type.schema_version) {
-      fail(`draft type ${type.key} schema_version ${type.schema_version} does not match ${schemaPath} const ${schemaVersion}`);
+      fail(`draft type ${type.key} schema_version ${type.schema_version} does not match ${schemaPath} (${schemaVersion})`);
     }
     draftKeys.add(type.key);
     draftSingulars.add(type.singular);
@@ -185,6 +206,10 @@ function renderGd(data) {
   for (const type of data.types) lines.push(`\t${constantName(type)}: "res://${type.schema}",`);
   lines.push('}');
   lines.push('');
+  lines.push('const SCHEMA_VERSIONS := {');
+  for (const type of data.types) lines.push(`\t${constantName(type)}: "${type.schema_version}",`);
+  lines.push('}');
+  lines.push('');
   lines.push('const SINGULAR := {');
   for (const type of data.types) lines.push(`\t${constantName(type)}: "${type.singular}",`);
   lines.push('}');
@@ -222,6 +247,10 @@ function renderGd(data) {
   lines.push('');
   lines.push('static func schema_path(content_type: StringName) -> String:');
   lines.push('\treturn String(SCHEMA_PATHS.get(content_type, ""))');
+  lines.push('');
+  lines.push('');
+  lines.push('static func schema_version(content_type: StringName) -> String:');
+  lines.push('\treturn String(SCHEMA_VERSIONS.get(content_type, ""))');
   lines.push('');
   lines.push('');
   lines.push('static func singular(content_type: StringName) -> String:');
@@ -266,6 +295,7 @@ function renderJs(data) {
     lines.push(`      group: ${JSON.stringify(groupLabel.get(type.group))},`);
     lines.push(`      file: ${JSON.stringify(type.default_file)},`);
     lines.push(`      schema: ${JSON.stringify(path.posix.basename(type.schema))},`);
+    lines.push(`      schemaVersion: ${JSON.stringify(type.schema_version)},`);
     lines.push(`      summary: ${JSON.stringify(type.summary_zh)},`);
     if (type.kind === 'patch') lines.push('      special: true,');
     lines.push('    },');

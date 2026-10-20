@@ -23,11 +23,11 @@
   const BY_SINGULAR = Object.fromEntries(ALL_TYPES.map((t) => [t.singular, t]));
   const GROUPS = [...new Set(TYPES.map((t) => t.group))];
 
-  /** Schema version a content file of this type must carry ('2.0' for drafts). */
+  /** Schema version a content file of this type must carry, declared per type in content_types.json. */
   function schemaVersionFor(typeKey) {
     const info = BY_KEY[typeKey];
     if (!info) return '1.0';
-    return info.schemaVersion || (info.draft ? '2.0' : '1.0');
+    return info.schemaVersion || '1.0';
   }
 
   /* Field labels are shared by all types; type-scoped overrides win. */
