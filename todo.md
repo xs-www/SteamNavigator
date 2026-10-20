@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**209 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 12 / 迷雾系统 16 / 海图 UI 13）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**211 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 14 / 迷雾系统 16 / 海图 UI 13）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 已做真实渲染视觉验收**（4 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -407,8 +407,22 @@
 - [x] 海图 UI 单元测试（13 个用例）
   - `framework/tests/cases/test_sea_chart.gd`：覆盖查询结构、世界边界匹配、陆地数量、当前港标记、航线生成、迷雾降采样、港口位置合理性、空上下文、JSON 序列化往返、同 seed 复现、异 seed 差异、发现计数、原型名称合法
 - [x] 附带修复：Phase 1 迷雾系统的 4 处编译问题（`fog_grid.gd` 类型推断、`fog_ops.gd` `GameState.has()` → `state.data.has()`）
+- [x] 真实渲染视觉验收（此前只有无头测试，海图从未被画出来过）
+  - 独立预览场景 `dev_scenes/sea_chart/`（`fresh` / `bare` / `explored` / `voyage` 四个变体，`explored` 会真实回放一圈沿岸航行产生永久灰雾）
+  - 截图工具 `tools/godot/capture_sea_chart.gd`（窗口 1440×900，先写 tmp 再原子提交、纯色画面判失败、90 s 看门狗）
+  - 产出 [fresh](docs/design/screenshots/sea_chart/sea_chart_fresh.png) / [bare](docs/design/screenshots/sea_chart/sea_chart_bare.png) / [explored](docs/design/screenshots/sea_chart/sea_chart_explored.png) / [voyage](docs/design/screenshots/sea_chart/sea_chart_voyage.png)
+- [x] 视觉验收带出的缺陷一并修掉（详见 [设计文档 §14.1](docs/design/NAUTICAL_CHART_SYSTEM.md)）
+  - 迷雾：每格纯色矩形 → 每格 1 texel 的 RGBA 纹理 + 线性过滤（平滑且 1 次绘制）
+  - 连通图：13 港完全图 78 条线 → 最小生成树 + 每港 2 条最近邻（38 条），连通且可读
+  - 航线穿陆：出航角可指向内陆 + 绕岛循环振荡 + 曲线从未校验 → 出航角背离陆地回退、沿岸环行/外切点有界递归、曲线落地前包围盒剪枝校验
+  - 沿岸带：`COASTAL_CELLS = 2` 格（原 2.0 世界单位 < 雾格）；已探索判定改为海岸采样 ≥25%
+  - 面板/预览裸键：查询补 `archetype_name_key` / `region_name_key`，设施走 `ui.facility.*`，预览用 Core 真实原型 ID
+  - 交互：`select_port()` 不再把视图跳位（居中拆为 `center_on_port()`）
+  - 回归：`test_world_generator` 新增「航线不得穿陆」「连通图稀疏且连通」2 个用例
 - [ ] 入口集成（M 键 / 准备出航按钮打开海图页）与 Shell 接线
 - [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）——阶段 4 探索系统落地后接入
+- [ ] 航线绕行仍偏保守：外扩 14–42 单位导致部分航线绕得很远，后续按岛屿尺寸自适应（阶段 0 打磨）
+- [ ] 海图查询每条边都重算贝塞尔（38 条约 0.7 s）：正式版应把 `bezier_path` 预计算并写进 `connectivity_graph`（设计文档 §4.1 的 `edges[].bezier_path`），查询只读表
 
 ### 阶段 3：航行演出状态机
 
@@ -485,6 +499,7 @@
 - [x] **铁港城镇建筑视觉升级 · 第一阶段 + R1**：`SN_HT_Warehouse_Long` LOD0 灰模 R1（7 436 tri / 20×9×11 m / 6 材质槽 / 网格健康全 0），已临时装配进 PortStage 并出 1440×900 与 960×540 实机截图（stage tri 37 280→43 584 证明新模型入场景），旧 GLB 已还原；见 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。
 - [x] **铁港城镇建筑视觉升级 · M1 材质轮**：`warehouse_long` 槽位 yaw −90→−106 / pos z −34→−33 让装卸门长立面正对固定机位（立面 +38%、两扇装卸门 +36%/+34%、山墙吊梁仍可见、足迹仍在广场内）；共享 2K trim sheet（16 cell）+ 每材质 512² 平铺贴图 + 盒投影 UV（0 tri 增加）；内容 GLB 已换成带贴图版本并重新 import，1440×900 与 960×540 实机截图已出；见 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)。**等待"是否扩展整批"决定**。
 - [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。剩余：LOD1（≤35%）、3 个新原型、共享外部贴图以减 20 个 draw call。
+- [ ] **下一批 3D 建模与资产优化**：需求草案见 [MODELING_REQUIREMENTS_NEXT_BATCH.md](docs/design/MODELING_REQUIREMENTS_NEXT_BATCH.md)；按 A（5 栋 LOD1 + 共享材质样板）→ B（Boiler House / Workshop Row / Brick Tenement）→ C（可选 Paddle Steamer 精修）串行推进，获人工批准前不开始建模。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。

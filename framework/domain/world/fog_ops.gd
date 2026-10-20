@@ -4,13 +4,16 @@ extends RefCounted
 ## 作用：战争迷雾高层操作，把 FogGrid 与 WorldMap、GameState 接合。
 ##
 ## ## 契约与约束
-## - `mark_coastal_cells` 把距陆地不超过 `COASTAL_DISTANCE` 的单元识别为海岸单元。
+## - `mark_coastal_cells` 把距海岸线 `COASTAL_CELLS` 个格子内的单元识别为海岸单元
+##   （单位是迷雾格子，不是世界单位：`cell_size` 由视野半径决定，固定世界距离会错配）。
 ## - `reveal_port` 使用 `FogGrid.reveal_circle` 揭示已发现港口周边。
 ## - `save_fog_state` / `load_fog_state` 持久化迷雾网格与海岸单元集合。
 ## - `get_visibility_at` / `is_position_visible` 是只读查询。
 ## @end-static-doc
 
-const COASTAL_DISTANCE := 2.0  # Cells within this distance from coastline are "coastal"
+## 海岸带宽度（迷雾格子数）。设计文档 §3.2 规定“距海岸线 N 个格子内”，
+## 因此这里以格数为准，换算成本地距离时乘以 `cell_size`。
+const COASTAL_CELLS := 2
 
 
 static func create_fog_grid(world: WorldMap, min_vision_radius: float) -> FogGrid:
@@ -27,28 +30,29 @@ static func mark_coastal_cells(fog: FogGrid, world: WorldMap) -> Dictionary:
 		for i in landmass.polygon.size():
 			var p0: Vector2 = landmass.polygon[i]
 			var p1: Vector2 = landmass.polygon[(i + 1) % landmass.polygon.size()]
-			
-			# Sample points along the edge
+
+			# Sample points along the edge (half a cell apart for a continuous band).
 			var edge_length := p0.distance_to(p1)
-			var num_samples := ceili(edge_length / (fog.cell_size * 0.5))
-			
+			var num_samples := maxi(1, ceili(edge_length / (fog.cell_size * 0.5)))
+			var band := float(COASTAL_CELLS) * fog.cell_size
+			var radius_cells := COASTAL_CELLS
+
 			for s in num_samples:
 				var t := float(s) / float(num_samples)
 				var point := p0.lerp(p1, t)
 				var grid_pos := fog.world_to_grid(point)
-				
-				# Mark cells within COASTAL_DISTANCE as coastal
-				var radius_cells := ceili(COASTAL_DISTANCE / fog.cell_size)
+
+				# Mark cells within COASTAL_CELLS of the sampled coastline point.
 				for dy in range(-radius_cells, radius_cells + 1):
 					for dx in range(-radius_cells, radius_cells + 1):
 						var gx := grid_pos.x + dx
 						var gy := grid_pos.y + dy
 						if gx >= 0 and gx < fog.width and gy >= 0 and gy < fog.height:
 							var world_pos := fog.grid_to_world(Vector2i(gx, gy))
-							if point.distance_to(world_pos) <= COASTAL_DISTANCE:
+							if point.distance_to(world_pos) <= band:
 								var key := "%d,%d" % [gx, gy]
 								coastal_cells[key] = true
-	
+
 	return coastal_cells
 
 

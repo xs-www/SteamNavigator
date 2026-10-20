@@ -209,6 +209,75 @@ func test_ports_have_departure_angles() -> void:
 		var neighbors := WorldOps.neighbors(world, port.id)
 		if not neighbors.is_empty():
 			assert_true(port.departure_angle >= -PI and port.departure_angle <= PI, "port %s departure angle should be in [-PI, PI], got %.2f" % [port.id, port.departure_angle])
+		# A departure angle pointing inland drags the whole Bezier across the island.
+		var landmass := world.get_landmass(port.landmass_id)
+		if landmass.is_empty():
+			continue
+		var exit := Vector2(cos(port.departure_angle), sin(port.departure_angle))
+		assert_false(landmass.contains_point(port.position + exit * 3.0), "port %s departure angle should point seaward" % port.id)
+
+
+## Regression guard: every connectivity edge must produce a sailable curve. The chart
+## draws these curves verbatim, so a route that cuts across an island shows up as a
+## line over a mountain. Harbour approaches (near the endpoints) may graze the coast
+## the port is built on; anything deeper is a failure.
+func test_routes_never_cross_land() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var result := _generate_world(SEED_A, context)
+
+	assert_true(bool(result.get("ok", false)), "generation should succeed")
+	var world_dict: Dictionary = result.get("world_map", {})
+	var world := WorldMap.from_dict(world_dict)
+
+	const ENDPOINT_GRAZE := 12.0
+	const SAMPLES := 41
+	var edges := 0
+	for from_id in world.connectivity_graph:
+		for to_id in world.connectivity_graph[from_id]:
+			if String(from_id) >= String(to_id):
+				continue
+			edges += 1
+			var from_port := world.get_port(String(from_id))
+			var to_port := world.get_port(String(to_id))
+			var route := RouteCalculator.calculate_route(from_port, to_port, world.landmasses)
+			var bezier: PackedVector2Array = route.get("bezier_path", PackedVector2Array())
+			assert_true(bezier.size() >= 2, "route %s -> %s should have a path" % [from_id, to_id])
+			if bezier.size() < 2:
+				continue
+			for sample in SAMPLES:
+				var t := float(sample) / float(SAMPLES - 1)
+				var scaled := clampf(t, 0.0, 1.0) * float(bezier.size() - 1)
+				var index := clampi(int(floor(scaled)), 0, bezier.size() - 2)
+				var point := bezier[index].lerp(bezier[index + 1], scaled - float(index))
+				if not world.is_point_on_land(point):
+					continue
+				var near_end := point.distance_to(from_port.position) <= ENDPOINT_GRAZE \
+					or point.distance_to(to_port.position) <= ENDPOINT_GRAZE
+				assert_true(near_end, "route %s -> %s crosses land at (%.1f, %.1f)" % [
+					from_id, to_id, point.x, point.y,
+				])
+	assert_true(edges >= world.ports.size() - 1, "connectivity should have at least n-1 edges, got %d" % edges)
+
+
+func test_connectivity_graph_is_sparse_but_connected() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var result := _generate_world(SEED_A, context)
+
+	assert_true(bool(result.get("ok", false)), "generation should succeed")
+	var world_dict: Dictionary = result.get("world_map", {})
+	var world := WorldMap.from_dict(world_dict)
+
+	var edges := 0
+	for from_id in world.connectivity_graph:
+		edges += world.connectivity_graph[from_id].size()
+	edges = edges / 2
+	var port_count := world.ports.size()
+	var complete_edges := port_count * (port_count - 1) / 2
+	# Connected (n-1) but far below a complete graph, so the chart stays readable.
+	assert_true(edges >= port_count - 1, "graph should stay connected, got %d edges for %d ports" % [edges, port_count])
+	assert_true(edges <= complete_edges / 2, "graph should stay sparse, got %d of %d possible edges" % [edges, complete_edges])
 
 
 func test_start_port_exists_and_is_valid() -> void:

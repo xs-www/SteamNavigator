@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T04:08:37.457Z",
-  "commit": "3351747",
+  "generated_at": "2026-10-20T05:14:05.187Z",
+  "commit": "6e31910",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 575,
-    "documented": 192,
-    "grouped": 383
+    "sources": 578,
+    "documented": 194,
+    "grouped": 384
   },
   "files": [
     {
@@ -1603,6 +1603,19 @@
       "group": "docs/static/dev_scenes/README.md"
     },
     {
+      "source": "dev_scenes/sea_chart/sea_chart_preview.gd",
+      "sha256": "28da149d5064a8662dd95ddd8ca6c4da53b17e504416251fe66ce82a9f203fb2",
+      "doc": "docs/static/dev_scenes/sea_chart/sea_chart_preview.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "dev_scenes/sea_chart/sea_chart_preview.tscn",
+      "sha256": "a5ddc12523345f0f47acef740ef464bac35c9287cc233dee613b6571ff58c6a2",
+      "doc": "docs/static/dev_scenes/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_scenes/README.md"
+    },
+    {
       "source": "docker-compose.yml",
       "sha256": "2a0854cc1c03d0d6824dcc996705a4ff3a8a9b8d01e9f8eda23f715fb3dead50",
       "doc": "docs/static/docker-compose.yml.md",
@@ -1755,7 +1768,7 @@
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "cf275faa4151af3f2ca267a7139742389d8226811e3803e42dacdceb4383cfb4",
+      "sha256": "cc718705d246c573a60122d9e7c19f0f0168ffb345083cfe03bf77c7113cd3bf",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -2000,7 +2013,7 @@
     },
     {
       "source": "framework/domain/world/fog_ops.gd",
-      "sha256": "cd4b5c3e64176e2067ff11c80dbc1863ffe68022766b11997a0e6f09a7c7020e",
+      "sha256": "6327d494d2b586df9565beeb54a9241ca18fda29086cc3a16cf845c1455fb8f6",
       "doc": "docs/static/framework/domain/world/fog_ops.gd.md",
       "status": "documented"
     },
@@ -2024,13 +2037,13 @@
     },
     {
       "source": "framework/domain/world/route_calculator.gd",
-      "sha256": "7c78aa91942e3039bb00bd181897a633ac475f55d4d779144ec9d339d067c4db",
+      "sha256": "dda60855ac3b83ef8e12a9da689dee1e679564543826c1b9fb19f1af3b17f99c",
       "doc": "docs/static/framework/domain/world/route_calculator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_generator.gd",
-      "sha256": "b47ef979b65f819c87d280e574acad4e9e8b1411e5471091fc63f7a507c4ed22",
+      "sha256": "2cdc1b620b5171060ee10513d17e9d2a2fd025ac1f49ad30fc819d40acc52e5a",
       "doc": "docs/static/framework/domain/world/world_generator.gd.md",
       "status": "documented"
     },
@@ -2432,7 +2445,7 @@
     },
     {
       "source": "framework/tests/cases/test_world_generator.gd",
-      "sha256": "855e0d9c6d335c9e2345ba85cf97df6ed69584b3689d96124666a9cc23e5f3b0",
+      "sha256": "417bba7c28c477c8de56f73ab71f0cf7c68c5ebdda47f3cf57d95fd53f8cc13a",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2571,13 +2584,13 @@
     },
     {
       "source": "framework/ui/components/sn_sea_chart_panel.gd",
-      "sha256": "2ec01a223c03fd4ae4042acbe50d4f54643b6d2fda2f01fefed9825fabf9f4e5",
+      "sha256": "2bcbd1ed389bfb9230c08a25741da38b605746fb018504d3e1f33c87738f7a89",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_panel.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_sea_chart_view.gd",
-      "sha256": "e9a4660de7de1d83815e018c9ae8e7d082ec7bf1ce7cf6b4e3314c695ccd46b5",
+      "sha256": "a260c6e5bef080f9ec7e7abe837f98dfbd0e7ce13ab25a73046002a00ecb64c8",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -3202,7 +3215,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "36e81df1d98f069c329c24445aa4296333740c9b009f3d879fe7cac902ff43ab",
+      "sha256": "8c1ab84f214e85f0d9e73a7df435da727f95efdd3c3a7e676d8c8f3b9a7a8789",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3260,6 +3273,12 @@
       "source": "tools/godot/capture_port_stage_res.gd",
       "sha256": "27e596bf721cbf3219c55163b281eab8282241f5d83a32f6e85cb2c09cfe7622",
       "doc": "docs/static/tools/godot/capture_port_stage_res.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_sea_chart.gd",
+      "sha256": "de386fbcec9eb94814f571c80bb7e13b4e86fce6b4fe63c77c111ff502f96776",
+      "doc": "docs/static/tools/godot/capture_sea_chart.gd.md",
       "status": "documented"
     },
     {

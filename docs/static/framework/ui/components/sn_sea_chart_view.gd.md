@@ -12,35 +12,39 @@
 | `port_clicked (signal)` | L19 |
 | `port_hovered (signal)` | L20 |
 | `COLOR_WATER` | L23 |
-| `COLOR_WATER_DEEP` | L24 |
-| `COLOR_WATER_SHALLOW` | L25 |
-| `COLOR_GRID_MINOR` | L26 |
-| `COLOR_GRID_MAJOR` | L27 |
-| `COLOR_LAND_FILL` | L28 |
-| `COLOR_LAND_OUTLINE` | L29 |
-| `COLOR_LAND_EXPLORED` | L30 |
-| `COLOR_LAND_EXPLORED_OUTLINE` | L31 |
-| `COLOR_FOG_BLACK` | L32 |
-| `COLOR_FOG_EXPLORED` | L33 |
-| `COLOR_ROUTE_ACTIVE` | L34 |
-| `COLOR_ROUTE_EXPLORED` | L35 |
-| `COLOR_ROUTE_UNKNOWN` | L36 |
-| `COLOR_PORT_CURRENT` | L37 |
-| `COLOR_PORT_VISITED` | L38 |
-| `COLOR_PORT_DISCOVERED` | L39 |
-| `COLOR_PORT_UNKNOWN` | L40 |
-| `COLOR_SHIP` | L41 |
-| `COLOR_BRASS` | L42 |
-| `COLOR_INK` | L43 |
-| `ZOOM_MIN` | L46 |
-| `ZOOM_MAX` | L47 |
-| `ZOOM_STEP` | L48 |
-| `bind(vm: Dictionary) -> void` | L69 |
-| `get_selected_port() -> String` | L85 |
-| `select_port(port_id: String) -> void` | L89 |
-| `get_zoom() -> float` | L96 |
-| `world_to_screen(world_pos: Vector2) -> Vector2` | L127 |
-| `screen_to_world(screen_pos: Vector2) -> Vector2` | L131 |
+| `COLOR_CHART_MARGIN` | L25 |
+| `COLOR_CHART_FRAME` | L26 |
+| `COLOR_WATER_DEEP` | L27 |
+| `COLOR_WATER_SHALLOW` | L28 |
+| `COLOR_GRID_MINOR` | L29 |
+| `COLOR_GRID_MAJOR` | L30 |
+| `COLOR_LAND_FILL` | L31 |
+| `COLOR_LAND_OUTLINE` | L32 |
+| `COLOR_LAND_EXPLORED` | L34 |
+| `COLOR_LAND_EXPLORED_OUTLINE` | L35 |
+| `COLOR_LAND_SILHOUETTE` | L37 |
+| `COLOR_LAND_SILHOUETTE_OUTLINE` | L38 |
+| `COLOR_FOG_BLACK` | L39 |
+| `COLOR_FOG_EXPLORED` | L40 |
+| `COLOR_ROUTE_ACTIVE` | L41 |
+| `COLOR_ROUTE_EXPLORED` | L42 |
+| `COLOR_ROUTE_UNKNOWN` | L43 |
+| `COLOR_PORT_CURRENT` | L44 |
+| `COLOR_PORT_VISITED` | L45 |
+| `COLOR_PORT_DISCOVERED` | L46 |
+| `COLOR_PORT_UNKNOWN` | L47 |
+| `COLOR_SHIP` | L48 |
+| `COLOR_BRASS` | L49 |
+| `COLOR_INK` | L50 |
+| `ZOOM_MIN` | L53 |
+| `ZOOM_MAX` | L54 |
+| `ZOOM_STEP` | L55 |
+| `get_selected_port() -> String` | L121 |
+| `select_port(port_id: String) -> void` | L125 |
+| `center_on_port(port_id: String) -> void` | L133 |
+| `get_zoom() -> float` | L141 |
+| `world_to_screen(world_pos: Vector2) -> Vector2` | L172 |
+| `screen_to_world(screen_pos: Vector2) -> Vector2` | L176 |
 
 陆地多边形、贝塞尔航线、港口图标、迷雾网格、船只标记、罗盘、图例与缩放指示。
 

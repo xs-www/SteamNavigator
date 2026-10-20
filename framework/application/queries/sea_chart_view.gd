@@ -61,6 +61,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		})
 
 	# Build port data with discovery levels
+	var hub: RegistryHub = context.registries
 	var ports_data: Array = []
 	for port in world.ports:
 		var is_discovered := discovered_ids.has(port.id)
@@ -69,6 +70,15 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		# Only include discovered ports on the chart
 		if not is_discovered:
 			continue
+		# Display keys so the chart/panel never render a raw content id.
+		var archetype_name_key := ""
+		var archetype_definition := hub.get_by_id(
+			ContentTypes.PORT_ARCHETYPE, port.archetype_id
+		)
+		if archetype_definition != null:
+			archetype_name_key = archetype_definition.name_key
+		var region := world.get_region(port.region_id)
+		var region_name_key := region.name_key if not region.is_empty() else ""
 		ports_data.append({
 			"id": port.id,
 			"name_key": port.name_key,
@@ -80,7 +90,9 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"departure_angle": port.departure_angle,
 			"facilities": Array(port.facilities),
 			"archetype": port.archetype_id,
+			"archetype_name_key": archetype_name_key,
 			"region_id": port.region_id,
+			"region_name_key": region_name_key,
 			"landmass_id": port.landmass_id,
 		})
 

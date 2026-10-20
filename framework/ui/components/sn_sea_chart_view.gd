@@ -21,14 +21,21 @@ signal port_hovered(port_id: String)
 
 # ── Visual constants ──
 const COLOR_WATER := Color("0b2428")
+## Chart table outside the mapped world (uncharted margin).
+const COLOR_CHART_MARGIN := Color("071418")
+const COLOR_CHART_FRAME := Color(0.35, 0.55, 0.52, 0.28)
 const COLOR_WATER_DEEP := Color(0.04, 0.12, 0.14, 0.12)
 const COLOR_WATER_SHALLOW := Color(0.12, 0.28, 0.30, 0.06)
 const COLOR_GRID_MINOR := Color(0.38, 0.58, 0.58, 0.06)
 const COLOR_GRID_MAJOR := Color(0.46, 0.68, 0.66, 0.12)
 const COLOR_LAND_FILL := Color(0.22, 0.38, 0.24, 0.85)
 const COLOR_LAND_OUTLINE := Color(0.35, 0.55, 0.35, 0.95)
-const COLOR_LAND_EXPLORED := Color(0.18, 0.30, 0.20, 0.55)
-const COLOR_LAND_EXPLORED_OUTLINE := Color(0.30, 0.48, 0.32, 0.65)
+## Unexplored land, drawn under the fog (mostly hidden by opaque black cells).
+const COLOR_LAND_EXPLORED := Color(0.16, 0.27, 0.19, 0.75)
+const COLOR_LAND_EXPLORED_OUTLINE := Color(0.28, 0.44, 0.30, 0.8)
+## Charted land, drawn above the fog: dim silhouette so a mapped island reads whole.
+const COLOR_LAND_SILHOUETTE := Color(0.20, 0.34, 0.23, 0.55)
+const COLOR_LAND_SILHOUETTE_OUTLINE := Color(0.42, 0.62, 0.42, 0.75)
 const COLOR_FOG_BLACK := Color(0.02, 0.06, 0.08, 1.0)
 const COLOR_FOG_EXPLORED := Color(0.05, 0.12, 0.14, 0.5)
 const COLOR_ROUTE_ACTIVE := Color(0.88, 0.76, 0.44, 0.86)
@@ -58,16 +65,28 @@ var _hovered_port: String = ""
 var _selected_port: String = ""
 var _time: float = 0.0
 var _world_bounds: Rect2 = Rect2(0, 0, 400, 400)
+var _translate: Callable = Callable()
+## Set on bind/resize while the control still has no layout size; the first draw
+## with a real size then frames the world once (binding before layout must not
+## leave the chart at zoom 1 offset 0).
+var _needs_fit: bool = true
+## Fog baked to one texel per cell; drawn with linear filtering so cell borders
+## interpolate instead of reading as hard rectangles.
+var _fog_texture: ImageTexture = null
+var _fog_rect_world: Rect2 = Rect2()
 
 
 func _ready() -> void:
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	resized.connect(_on_resized)
 
 
-func bind(vm: Dictionary) -> void:
+func bind(vm: Dictionary, translate: Callable = Callable()) -> void:
 	view_model = vm
+	_translate = translate
 	if vm.is_empty():
 		return
 	var bounds: Dictionary = vm.get("world_bounds", {})
@@ -77,9 +96,26 @@ func bind(vm: Dictionary) -> void:
 		float(bounds.get("w", 400.0)),
 		float(bounds.get("h", 400.0))
 	)
-	# Auto-fit on first bind
-	_fit_to_view()
+	_needs_fit = true
+	_build_fog_texture(vm.get("fog", {}))
+	_try_fit()
 	queue_redraw()
+
+
+func _on_resized() -> void:
+	if _needs_fit:
+		_try_fit()
+		queue_redraw()
+
+
+## Frames the world once, as soon as the control actually has a size.
+func _try_fit() -> void:
+	if not _needs_fit:
+		return
+	if size.x <= 1.0 or size.y <= 1.0 or view_model.is_empty():
+		return
+	_fit_to_view()
+	_needs_fit = false
 
 
 func get_selected_port() -> String:
@@ -87,9 +123,18 @@ func get_selected_port() -> String:
 
 
 func select_port(port_id: String) -> void:
+	# Selecting must not move the chart: re-centring on click would yank the map out
+	# from under the cursor. Callers that want to travel to a port use `center_on_port()`.
 	_selected_port = port_id
-	if not port_id.is_empty():
-		_center_on_port(port_id)
+	queue_redraw()
+
+
+## Explicitly pans the chart so `port_id` sits in the middle (entry animation, "show me").
+func center_on_port(port_id: String) -> void:
+	if port_id.is_empty():
+		return
+	_center_on_port(port_id)
+	_needs_fit = false
 	queue_redraw()
 
 
@@ -150,14 +195,20 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	_try_fit()
 	if view_model.is_empty():
 		_draw_empty_state()
 		return
 	_draw_water()
 	_draw_grid()
-	_draw_landmasses()
-	_draw_routes()
+	_draw_landmasses(false)
+	# Fog sits above unexplored land (unknown coastlines stay hidden) but below
+	# routes/ports: a known route between two discovered ports is knowledge, not terrain.
 	_draw_fog()
+	# Charted islands keep a dim silhouette above the grey fog so the landmass reads
+	# as a whole instead of a coastal fringe.
+	_draw_landmasses(true)
+	_draw_routes()
 	_draw_ports()
 	_draw_ship()
 	_draw_compass()
@@ -173,7 +224,14 @@ func _draw_empty_state() -> void:
 
 
 func _draw_water() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), COLOR_WATER)
+	# Chart table: everything outside the mapped world is darker "uncharted" margin,
+	# so the world rect reads as the charted area instead of ragging into open water.
+	draw_rect(Rect2(Vector2.ZERO, size), COLOR_CHART_MARGIN)
+	var world_rect := Rect2(
+		world_to_screen(_world_bounds.position),
+		_world_bounds.size * _zoom
+	)
+	draw_rect(world_rect, COLOR_WATER)
 	# Depth bands in world coordinates
 	var cx := _world_bounds.position.x + _world_bounds.size.x * 0.3
 	var cy := _world_bounds.position.y + _world_bounds.size.y * 0.4
@@ -181,6 +239,8 @@ func _draw_water() -> void:
 	cx = _world_bounds.position.x + _world_bounds.size.x * 0.75
 	cy = _world_bounds.position.y + _world_bounds.size.y * 0.6
 	draw_circle(world_to_screen(Vector2(cx, cy)), _world_bounds.size.y * 0.4 * _zoom, COLOR_WATER_SHALLOW)
+	# Chart frame around the mapped world.
+	draw_rect(world_rect, COLOR_CHART_FRAME, false, 1.0)
 
 
 func _draw_grid() -> void:
@@ -218,26 +278,30 @@ func _draw_grid() -> void:
 		y += step_minor
 
 
-func _draw_landmasses() -> void:
+func _draw_landmasses(only_explored: bool) -> void:
+	## `only_explored = false` runs before the fog and draws the unexplored land that
+	## the fog then blanks out. `only_explored = true` runs after the fog and paints a
+	## dim silhouette of the islands the player has charted: the design doc says an
+	## explored (grey) region still shows the coastline dimly, not just a fringe.
 	var landmasses: Array = view_model.get("landmasses", [])
 	var fog_data: Dictionary = view_model.get("fog", {})
 	for lm in landmasses:
 		var polygon: Array = lm.get("polygon", [])
 		if polygon.size() < 3:
 			continue
+		var is_explored := _is_landmass_explored(lm, fog_data)
+		if is_explored != only_explored:
+			continue
 		var screen_points := PackedVector2Array()
 		for point in polygon:
 			var wx := float(point.get("x", 0.0))
 			var wy := float(point.get("y", 0.0))
 			screen_points.append(world_to_screen(Vector2(wx, wy)))
-		# Determine if landmass is explored (any nearby fog cell is not black)
-		var is_explored := _is_landmass_explored(lm, fog_data)
 		if is_explored:
-			draw_colored_polygon(screen_points, COLOR_LAND_FILL)
-			draw_polyline(screen_points, COLOR_LAND_OUTLINE, 2.0, true)
-			# Close the polygon
+			draw_colored_polygon(screen_points, COLOR_LAND_SILHOUETTE)
+			draw_polyline(screen_points, COLOR_LAND_SILHOUETTE_OUTLINE, 1.5, true)
 			if screen_points.size() >= 2:
-				draw_line(screen_points[-1], screen_points[0], COLOR_LAND_OUTLINE, 2.0)
+				draw_line(screen_points[-1], screen_points[0], COLOR_LAND_SILHOUETTE_OUTLINE, 1.5)
 		else:
 			# Dim the landmass under fog
 			draw_colored_polygon(screen_points, COLOR_LAND_EXPLORED)
@@ -247,36 +311,41 @@ func _draw_landmasses() -> void:
 
 
 func _is_landmass_explored(lm: Dictionary, fog_data: Dictionary) -> bool:
-	## Check if any part of a landmass has been explored (nearby fog cells are not black).
-	## If no fog data exists, treat all as explored (fallback).
+	## A landmass is "charted" once a meaningful share of its coastline has been
+	## revealed. Sampling the centroid is wrong (the coastal band rings the island, so
+	## the centre stays BLACK while the coast is mapped); requiring only one revealed
+	## sample is equally wrong (sailing into one harbour would reveal a whole continent).
+	const EXPLORED_COAST_RATIO := 0.25
 	if fog_data.is_empty():
 		return true
 	var state_grid: Array = fog_data.get("state_grid", [])
 	if state_grid.is_empty():
 		return true
 	var polygon: Array = lm.get("polygon", [])
-	if polygon.is_empty():
+	if polygon.size() < 3:
 		return false
-	# Check the centroid of the landmass
-	var cx := 0.0
-	var cy := 0.0
-	for point in polygon:
-		cx += float(point.get("x", 0.0))
-		cy += float(point.get("y", 0.0))
-	cx /= float(polygon.size())
-	cy /= float(polygon.size())
-	# Map centroid to fog grid coordinates
 	var cell_size: float = fog_data.get("cell_size", 8.0)
-	var gx := int(cx / cell_size)
-	var gy := int(cy / cell_size)
 	var grid_height: int = fog_data.get("height", 0)
 	var grid_width: int = fog_data.get("width", 0)
-	if gy < 0 or gy >= grid_height or gx < 0 or gx >= grid_width:
+	if cell_size <= 0.0 or grid_height <= 0 or grid_width <= 0:
 		return false
-	var row: Array = state_grid[gy]
-	if gx < row.size():
-		return int(row[gx]) != 0  # 0 = BLACK
-	return false
+	var step := maxi(1, polygon.size() / 24)
+	var samples := 0
+	var revealed := 0
+	var index := 0
+	while index < polygon.size():
+		var point: Dictionary = polygon[index]
+		var gx := int(float(point.get("x", 0.0)) / cell_size)
+		var gy := int(float(point.get("y", 0.0)) / cell_size)
+		if gx >= 0 and gx < grid_width and gy >= 0 and gy < grid_height:
+			samples += 1
+			var row: Array = state_grid[gy]
+			if gx < row.size() and int(row[gx]) != 0:
+				revealed += 1
+		index += step
+	if samples == 0:
+		return false
+	return float(revealed) / float(samples) >= EXPLORED_COAST_RATIO
 
 
 func _draw_routes() -> void:
@@ -308,59 +377,102 @@ func _draw_routes() -> void:
 		# Draw route
 		var line_width := 2.0 if is_active else 1.3
 		draw_polyline(screen_path, color, line_width, true)
-		# Distance label at midpoint (only when zoomed in enough)
+		# Distance label at the arc-length midpoint, skipped when a port label would sit
+		# on top of it (index-based midpoints pile up next to the origin port).
 		if _zoom > 0.4 and distance > 0.0 and is_active:
-			var mid_idx := screen_path.size() / 2
-			var midpoint: Vector2 = screen_path[mid_idx]
-			var text := "%d 海里" % int(roundf(distance))
-			draw_string(font, midpoint + Vector2(-30, -8), text,
-				HORIZONTAL_ALIGNMENT_CENTER, 60.0, 9, Color(0.9, 0.8, 0.58, 0.55))
+			var midpoint := _path_midpoint(screen_path)
+			if not _near_any_port(midpoint, 46.0):
+				var text := "%d 海里" % int(roundf(distance))
+				var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x
+				var plate := Rect2(
+					midpoint + Vector2(-text_width * 0.5 - 3, -7),
+					Vector2(text_width + 6, 13)
+				)
+				draw_rect(plate, Color(0.02, 0.08, 0.09, 0.7), true)
+				draw_string(font, midpoint + Vector2(-text_width * 0.5, 3), text,
+					HORIZONTAL_ALIGNMENT_LEFT, -1.0, 9, Color(0.9, 0.8, 0.58, 0.8))
+
+
+## Point at half the polyline's arc length.
+func _path_midpoint(path: PackedVector2Array) -> Vector2:
+	if path.size() < 2:
+		return path[0] if path.size() == 1 else Vector2.ZERO
+	var total := 0.0
+	for index in range(1, path.size()):
+		total += path[index - 1].distance_to(path[index])
+	var target := total * 0.5
+	var walked := 0.0
+	for index in range(1, path.size()):
+		var segment := path[index - 1].distance_to(path[index])
+		if walked + segment >= target:
+			return path[index - 1].lerp(path[index], (target - walked) / maxf(segment, 0.0001))
+		walked += segment
+	return path[path.size() - 1]
+
+
+## True when `point` is within `radius` screen pixels of any drawn port icon.
+func _near_any_port(point: Vector2, radius: float) -> bool:
+	for port_data in view_model.get("ports", []):
+		var port_pos := world_to_screen(Vector2(
+			float(port_data.get("x", 0.0)), float(port_data.get("y", 0.0))
+		))
+		if point.distance_to(port_pos) <= radius:
+			return true
+	return false
 
 
 func _draw_fog() -> void:
-	var fog_data: Dictionary = view_model.get("fog", {})
-	if fog_data.is_empty():
+	## The fog is baked into a small RGBA texture (one texel per fog cell) and drawn
+	## with linear filtering, so cell borders interpolate instead of showing as hard
+	## rectangles — the design doc requires smoothed alpha between cells, and this is
+	## also a single draw call instead of one per cell.
+	if _fog_texture == null:
 		return
+	var top_left := world_to_screen(_fog_rect_world.position)
+	var bottom_right := world_to_screen(_fog_rect_world.end)
+	draw_texture_rect(_fog_texture, Rect2(top_left, bottom_right - top_left), false)
+
+
+## Bakes `fog.alpha_grid` / `fog.state_grid` into a texture, one texel per cell.
+func _build_fog_texture(fog_data: Dictionary) -> void:
+	_fog_texture = null
+	_fog_rect_world = Rect2()
+	var grid_w: int = int(fog_data.get("width", 0))
+	var grid_h: int = int(fog_data.get("height", 0))
 	var alpha_grid: Array = fog_data.get("alpha_grid", [])
 	var state_grid: Array = fog_data.get("state_grid", [])
-	if alpha_grid.is_empty():
+	var cell_size: float = float(fog_data.get("cell_size", 0.0))
+	if grid_w <= 0 or grid_h <= 0 or cell_size <= 0.0 or alpha_grid.size() < grid_h:
 		return
-	var grid_w: int = fog_data.get("width", 0)
-	var grid_h: int = fog_data.get("height", 0)
-	var cell_size: float = fog_data.get("cell_size", 8.0)
-	if grid_w <= 0 or grid_h <= 0:
-		return
-	# Draw fog cells as semi-transparent rectangles
+	var image := Image.create(grid_w, grid_h, false, Image.FORMAT_RGBA8)
 	for gy in grid_h:
 		var alpha_row: Array = alpha_grid[gy]
 		var state_row: Array = state_grid[gy]
 		for gx in grid_w:
-			if gx >= alpha_row.size() or gx >= state_row.size():
-				continue
-			var alpha: float = alpha_row[gx]
-			var cell_state: int = state_row[gx]
-			if alpha < 0.02:
-				continue  # Fully visible, skip
-			# World position of this fog cell
-			var wx := float(gx) * cell_size
-			var wy := float(gy) * cell_size
-			var screen_pos := world_to_screen(Vector2(wx, wy))
-			var screen_size := cell_size * _zoom
-			# Skip cells that are off screen
-			if screen_pos.x + screen_size < 0.0 or screen_pos.x > size.x:
-				continue
-			if screen_pos.y + screen_size < 0.0 or screen_pos.y > size.y:
-				continue
-			# Choose color based on state
-			var fog_color: Color
-			if cell_state == 0:  # BLACK
-				fog_color = Color(COLOR_FOG_BLACK.r, COLOR_FOG_BLACK.g, COLOR_FOG_BLACK.b, alpha)
-			elif cell_state == 1:  # EXPLORED
-				fog_color = Color(COLOR_FOG_EXPLORED.r, COLOR_FOG_EXPLORED.g, COLOR_FOG_EXPLORED.b, alpha)
-			else:  # VISIBLE
-				continue  # Fully visible, no fog
-			# Add 1px overlap to prevent seams
-			draw_rect(Rect2(screen_pos, Vector2(screen_size + 1.0, screen_size + 1.0)), fog_color)
+			var alpha: float = 1.0
+			if gx < alpha_row.size():
+				alpha = float(alpha_row[gx])
+			var cell_state: int = 0
+			if gx < state_row.size():
+				cell_state = int(state_row[gx])
+			var color: Color
+			if cell_state == 2:  # VISIBLE: no fog at all
+				color = Color(0, 0, 0, 0)
+			elif cell_state == 1:  # EXPLORED: dim, lets the coastline read through
+				color = Color(
+					COLOR_FOG_EXPLORED.r, COLOR_FOG_EXPLORED.g, COLOR_FOG_EXPLORED.b,
+					clampf(alpha * 0.85, 0.0, 1.0)
+				)
+			else:  # BLACK: opaque unknown
+				color = Color(
+					COLOR_FOG_BLACK.r, COLOR_FOG_BLACK.g, COLOR_FOG_BLACK.b,
+					clampf(alpha, 0.0, 1.0)
+				)
+			image.set_pixel(gx, gy, color)
+	_fog_texture = ImageTexture.create_from_image(image)
+	# FogGrid maps world (0,0) to grid (0,0); honour a shifted world origin if any.
+	var origin := Vector2(_world_bounds.position.x, _world_bounds.position.y)
+	_fog_rect_world = Rect2(origin, Vector2(grid_w * cell_size, grid_h * cell_size))
 
 
 func _draw_ports() -> void:
@@ -606,8 +718,10 @@ func _port_at(screen_pos: Vector2) -> String:
 func _tr(key: String) -> String:
 	if key.is_empty():
 		return key
-	# Try Engine.translate first (LocalizationService)
-	if Engine.has_singleton("LocalizationService"):
-		return Engine.get_singleton("LocalizationService").translate(key)
-	# Fallback: return the key itself
+	if _translate.is_valid():
+		var value: Variant = _translate.call(key)
+		if value is String and not (value as String).is_empty():
+			return value
+	# Fallback: return the key itself so a missing translate callback is visible,
+	# never a silently blank label.
 	return key

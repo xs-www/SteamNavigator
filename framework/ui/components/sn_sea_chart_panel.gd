@@ -69,16 +69,23 @@ func _rebuild() -> void:
 	header.add_theme_color_override("font_color", Color("e1c487"))
 	vbox.add_child(header)
 	
-	# Archetype and region
-	var archetype := String(_port_data.get("archetype", ""))
+	# Archetype and region: prefer the content name keys the query resolved, so a
+	# raw content id never reaches the label.
+	var archetype_key := String(_port_data.get("archetype_name_key", ""))
+	var archetype_id := String(_port_data.get("archetype", ""))
+	var region_key := String(_port_data.get("region_name_key", ""))
 	var region_id := String(_port_data.get("region_id", ""))
-	if archetype != "" or region_id != "":
+	if archetype_key != "" or archetype_id != "" or region_key != "" or region_id != "":
 		var detail := Label.new()
 		var parts: Array[String] = []
-		if archetype != "":
-			parts.append(_archetype_label(archetype))
-		if region_id != "":
-			parts.append(_tr("region." + region_id) if _tr("region." + region_id) != "region." + region_id else region_id)
+		if archetype_key != "":
+			parts.append(_tr(archetype_key))
+		elif archetype_id != "":
+			parts.append(_archetype_label(archetype_id))
+		if region_key != "":
+			parts.append(_tr(region_key))
+		elif region_id != "":
+			parts.append(region_id)
 		detail.text = " · ".join(parts)
 		detail.add_theme_font_size_override("font_size", 11)
 		detail.add_theme_color_override("font_color", Color(0.6, 0.7, 0.7, 0.75))
@@ -101,7 +108,11 @@ func _rebuild() -> void:
 		var fac_list := Label.new()
 		var fac_names: Array[String] = []
 		for fac in facilities:
-			fac_names.append(_tr("facility." + String(fac)))
+			# Framework localization owns `ui.facility.*`; the bare facility id is only
+			# a last-resort fallback when a mod ships an unknown facility.
+			var facility_key := "ui.facility." + String(fac)
+			var facility_label := _tr(facility_key)
+			fac_names.append(String(fac) if facility_label == facility_key else facility_label)
 		fac_list.text = "  " + "、".join(fac_names)
 		fac_list.add_theme_font_size_override("font_size", 11)
 		fac_list.add_theme_color_override("font_color", Color(0.65, 0.75, 0.73, 0.8))

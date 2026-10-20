@@ -1,6 +1,6 @@
 # `framework/domain/world/world_generator.gd`
 
-> 作用：世界生成器的主逻辑，协调陆地生成、港口放置、连通性计算。
+> 作用：世界生成总控，协调区域、陆地、港口放置、连通性与出航角计算。
 
 - 类型：GDScript 源文件
 
@@ -9,32 +9,20 @@
 | 符号 | 位置 |
 | --- | --- |
 | `WorldGenerator` | L1 |
+| `MAX_ATTEMPTS` | L18 |
+| `MIN_PORT_SPACING` | L19 |
+| `DEFAULT_WORLD_SIZE` | L20 |
+| `generate(profile: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L23 |
 
 ## 契约与约束
-
-- 生成过程是确定性的（同 seed 产生相同结果）。
-- 重试机制用于处理港口放置冲突（最多60次）。
-- 验证失败时会返回详细的错误信息。
-- 默认配置提供了合理的起点（4区域、11陆地、13港口）。
-- `required_tags` 从港口配置中读取，不依赖内容注册表。
+- 同 seed、profile 与内容注册表必须得到相同世界。
+- 港口冲突通过有限重试解决，最多尝试 60 次；失败返回结构化原因。
+- `required_tags` 来自港口配置，不依赖内容注册表中的硬编码 ID。
 
 ## 重点逻辑
-
-### `generate(profile, rng, content_registry)`
-
-- 从 profile 读取配置（世界大小、区域定义等）。
-- 为每个区域生成陆地（调用 LandGenerator）。
-- 在海岸线上放置港口（按配置顺序）。
-- 验证必需设施位置（船厂和情报站在起点2条边内）。
-- 构建连通性图（调用 RouteCalculator）。
-- 计算出航角度（调用 RouteCalculator）。
-
-### `_place_ports_on_coastlines(world, port_configs, content_registry, rng)`
-
-- 对于每个港口配置，找到对应的陆地。
-- 在海岸线上按 `coast_t` 参数采样位置，添加随机抖动（±0.04）。
-- 检查最小间距（15单位），如果不满足则重试（最多20次）。
-- 从配置中读取 `required_tags` 并添加到港口。
-- 从内容注册表查询原型，补充设施和标签。
+### `generate(...)`
+- 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图并计算出航角。
+### `_place_ports_on_coastlines(...)`
+- 按 `coast_t` 在目标海岸采样并施加确定性抖动，同时守住港口最小间距。
 
 模块索引：[framework/domain](../README.md)

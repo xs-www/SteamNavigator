@@ -1,9 +1,19 @@
 class_name WorldGenerator
 extends RefCounted
-## Generates a complete world map from a seed and profile.
+## @static-doc
+## 作用：世界生成总控，协调区域、陆地、港口放置、连通性与出航角计算。
 ##
-## Replaces the MVP-era MapGenerator (abstract graph of 4-5 ports) with a
-## coordinate-space world containing landmasses, coastlines, and 15-20 ports.
+## ## 契约与约束
+## - 同 seed、profile 与内容注册表必须得到相同世界。
+## - 港口冲突通过有限重试解决，最多尝试 60 次；失败返回结构化原因。
+## - `required_tags` 来自港口配置，不依赖内容注册表中的硬编码 ID。
+##
+## ## 重点逻辑
+## ### `generate(...)`
+## - 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图并计算出航角。
+## ### `_place_ports_on_coastlines(...)`
+## - 按 `coast_t` 在目标海岸采样并施加确定性抖动，同时守住港口最小间距。
+## @end-static-doc
 
 const MAX_ATTEMPTS := 60
 const MIN_PORT_SPACING := 15.0
@@ -56,7 +66,7 @@ static func _try_generate(profile: Dictionary, hub: RegistryHub, rng: RandomNumb
 
 	var connectivity := RouteCalculator.build_connectivity_graph(world.ports, world.landmasses)
 	world.connectivity_graph = connectivity
-	RouteCalculator.compute_departure_angles(world.ports, connectivity)
+	RouteCalculator.compute_departure_angles(world.ports, connectivity, world.landmasses)
 
 	_ensure_start_port(world)
 
