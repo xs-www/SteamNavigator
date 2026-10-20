@@ -54,6 +54,7 @@
 - **3D 港口样片（独立场景）**：`dev_scenes/harbor/` 复用 `assets/models` 的 1795 双桅纵帆船 `SN_Schooner_Fame`（黑船身 + 赭黄腰线 + 双桅斜桁帆，用户要求无星条旗） / 塔吊 / 码头道具搭一个固定机位小港口，自写 Godot 水面着色器（顶点波浪 + 噪声法线 + 菲涅耳天空反射 + 太阳耀斑 + 岸线/船体泡沫 + 远水雾色），船体随与着色器同源的波浪起伏。**不接入主场景**，仅供水面观感与构图验证；说明见 [dev_scenes/harbor/README.md](dev_scenes/harbor/README.md)，预览见 [港口样片截图](docs/design/screenshots/harbor_diorama_schooner.png) 与 [纵帆船近景](docs/design/screenshots/harbor_diorama_schooner_detail.png)。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
 - [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`；实体资源使用主题化可搜索选择器，船体可在独立模块区配置槽位。
+- [SNBattleSim](SNBattleSim/README.md)：独立 2D 舰队战斗规则试验台，验证固定三船体、多武器、视野、炮击、货船护航和自定义武器。
 
 尚未完成、但已留出扩展位置的内容见 [todo.md](todo.md)。
 

@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>蒸汽航海 · 战斗灰盒验证台</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F4F4F2;color:#2C2C2A;
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:13px;line-height:1.6}
+header{padding:10px 16px;background:#fff;border-bottom:1px solid #DCDCD8;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:16px;font-weight:600;color:#3C3C39}
+header .hint{color:#7A7A75;font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 330px;gap:12px;padding:12px;align-items:start}
+@media(max-width:1180px){.grid{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid #DCDCD8;border-radius:8px;padding:12px;margin-bottom:12px}
+.panel h2{margin:0 0 8px;font-size:13px;font-weight:600;color:#3C3C39;
+  border-bottom:1px solid #ECECE8;padding-bottom:5px}
+canvas{display:block;background:#EDEDEA;border:1px solid #DCDCD8;border-radius:6px;width:100%}
+.ctrls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+button{font-family:inherit;font-size:12px;padding:5px 11px;border:1px solid #C8C8C3;
+  background:#fff;border-radius:5px;cursor:pointer;color:#2C2C2A}
+button:hover{background:#EFEFEB}
+button.on{background:#3C3C39;color:#fff;border-color:#3C3C39}
+button.wide{flex:1}
+label.rng{display:block;margin:7px 0}
+label.rng .row{display:flex;justify-content:space-between;font-size:12px}
+label.rng .row b{font-weight:600;color:#185FA5;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;margin:2px 0}
+.gtitle{font-size:11px;color:#7A7A75;margin:12px 0 2px;font-weight:600;
+  border-top:1px solid #ECECE8;padding-top:6px}
+table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;color:#5F5E5A;border-bottom:1px solid #E0E0DB;padding:3px 4px;font-size:11px}
+td{padding:3px 4px;border-bottom:1px solid #F0F0EC}
+td.n{text-align:right}
+.bar{display:inline-block;height:7px;background:#D8D8D3;border-radius:2px;vertical-align:middle}
+.bar>i{display:block;height:100%;border-radius:2px}
+#log{max-height:190px;overflow-y:auto;font-size:11.5px;font-family:Consolas,monospace;line-height:1.5}
+#log div{padding:1px 0;border-bottom:1px solid #F4F4F2;color:#5F5E5A}
+#log .hit{color:#3B6D11}#log .miss{color:#8A8A84}
+#log .rupt{color:#A32D2D;font-weight:600}#log .rune{color:#534AB7;font-weight:600}
+#log .end{color:#185FA5;font-weight:600}
+#log .launch{color:#185FA5}#log .eject{color:#B07800}
+#log .ram{color:#A32D2D;font-weight:600}
+.mtx td.win{background:#EAF3DE;font-weight:600}
+.mtx td.lose{background:#FCEBEB}
+.mtx td.self{background:#F1EFE8;color:#8A8A84}
+.note{font-size:11.5px;color:#7A7A75;background:#FAFAF8;border-left:3px solid #D8D8D3;padding:6px 9px;margin-top:8px}
+kbd{background:#EFEFEB;border:1px solid #D8D8D3;border-radius:3px;padding:0 4px;font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>蒸汽航海 · 战斗灰盒验证台</h1>
+  <span class="hint">灰盒＝只验证玩法，不做美术。调参数 → 看统计 → 验证取舍</span>
+</header>
+
+<div class="grid">
+  <div>
+    <div class="panel">
+      <h2>战场</h2>
+      <canvas id="cv" width="920" height="520"></canvas>
+      <div class="ctrls">
+        <button id="btnPause">暂停</button>
+        <button id="btnStep">单步 +0.1s</button>
+        <button class="spd" data-s="0.5">0.5×</button>
+        <button class="spd on" data-s="1">1×</button>
+        <button class="spd" data-s="2">2×</button>
+        <button class="spd" data-s="4">4×</button>
+        <button id="btnReset">重置</button>
+        <span style="margin-left:auto;font-size:12px;color:#7A7A75">
+          玩家舰队压力：<b id="pVal">40</b> <span id="pBand"></span>
+        </span>
+      </div>
+      <div class="ctrls">
+        <button class="band" data-p="10">压火</button>
+        <button class="band" data-p="35">巡航</button>
+        <button class="band" data-p="65">全速</button>
+        <button class="band" data-p="90">超压</button>
+        <input type="range" id="pRange" min="0" max="100" step="1" value="40" style="flex:1">
+        <label style="font-size:12px"><input type="checkbox" id="cbAuto"> 敌方自动调压</label>
+      </div>
+      <div class="note">
+        核心取舍：<b>压火打得准但几乎不动</b>，<b>超压跑得快但命中掉、重炮降档</b>。<br>
+        <b>冲撞舰</b>：母船进入发射距离后自动分离 → 驾驶员锁定 → 弹射逃生 → 无人艇惯性撞上去。
+        冲撞伤害由<b>撞击瞬间的相对接近速度</b>决定，所以迎面对冲最狠、追着逃跑的船撞最轻。
+        <b>打捞需同时满足「靠近 + 减速 + 压力≤50」三个条件</b>——想捞回驾驶员就得先把自己变成活靶。
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>按档位统计（本局累计）</h2>
+      <table id="statTbl"></table>
+      <div class="note" id="verdict"></div>
+    </div>
+
+    <div class="panel">
+      <h2>冲撞舰统计（本局累计）</h2>
+      <table id="ramTbl"></table>
+      <div class="note" id="ramVerdict"></div>
+    </div>
+
+    <div class="panel">
+      <h2>档位对轰胜率矩阵（4×4）</h2>
+      <div class="ctrls">
+        <span style="font-size:12px">每格模拟</span>
+        <input type="range" id="batchN" min="20" max="400" step="20" value="120" style="width:150px">
+        <b id="batchNV">120</b><span style="font-size:12px">场</span>
+        <span style="font-size:12px">舰种（双方对称）</span>
+        <select id="batchShip"></select>
+        <span style="font-size:12px">场景</span>
+        <select id="batchScene">
+          <option value="duel">站桩对射（谁打赢）</option>
+          <option value="ram">冲撞战（启用冲撞舰，谁打赢）</option>
+          <option value="chase">追击（红方逃跑，蓝方能否吃掉）</option>
+          <option value="escape">脱离（蓝方 8s 后撤退，能剩多少血）</option>
+        </select>
+        <button id="btnBatch" class="wide" style="flex:0 0 auto">开始批量模拟</button>
+        <span id="batchStat" style="font-size:12px;color:#7A7A75"></span>
+      </div>
+      <table class="mtx" id="mtxTbl"></table>
+      <table class="mtx" id="ramScanTbl" style="margin-top:10px"></table>
+      <div class="note" id="ramScanNote" style="display:none"></div>
+      <div class="note">
+        读法：行＝蓝方策略，列＝红方策略，数字＝蓝方胜率。<b>对角线是同档镜像，用于自检，应≈50%（脱离场景应≈100%）。</b><br>
+        <b>三种场景必须分开看</b>——这是本灰盒最重要的一条结论：<br>
+        ① <b>站桩对射</b>：双方在镜像对决里距离永远相同，速度无法兑换成战果，机动性只有代价没有收益。
+        所以这个场景里速度档天生吃亏。<br>
+        ② <b>追击</b>：测的是「能不能追上<b>并且</b>打得赢」。光跑得快不够——追上之后开火效率低的档照样赢不了。<br>
+        ③ <b>脱离</b>：数值＝撤退方最终剩余船体比例，这是机动性最纯粹的兑现场景。<br>
+        只有三个场景<b>合起来</b>仍是同一档通吃，才算真的失衡。模拟使用与战场完全相同的规则与当前参数，调完记得重跑。
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel"><h2>参数（实时生效）</h2><div id="params"></div></div>
+    <div class="panel"><h2>船只状态</h2><table id="dbgTbl"></table></div>
+    <div class="panel"><h2>事件日志</h2><div id="log"></div></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   蒸汽航海 战斗灰盒 —— 逻辑移植自 combat_proto (Godot) v0.2.0
+   ============================================================ */
+
+/* ---------- 全局可调参数 ---------- */
+const CONFIG = {
+  boiler:{
+    t1:20, t2:50, t3:80,               // 档位上限：压火<t1 巡航<t2 全速<t3 超压>=t3
+    speedBase:0.30, speedGain:0.90,   // 航速系数 = base + gain * P/100
+    /* 以下四个数组经 4×4×3 场景批量模拟标定（铁甲炮舰，N=60/格，见 README 结论）：
+       站桩对轰 压火56/巡航51/全速48/超压43，极差 13% —— 四档在纯对射里接近均势。
+       调任何一个都要重跑矩阵，否则极易把某一档推到通吃。 */
+    accBanked:0.13, accCruise:0.00, accFull:-0.16, accOver:-0.22,
+    // 机动规避：目标所处档位越高越难被命中。这是机动性在"对射"里唯一的兑现渠道。
+    evasion:{banked:0.00, cruise:0.06, full:0.20, over:0.28},
+    // 装填倍率：低压则扬弹机无力（慢），高压则船体颠簸、装填手站不稳（也慢）。
+    // 数值上刻意让"全速"成为装填最优档——用它把全速从"纯亏"拉回均势。
+    reloadMul:{banked:1.22, cruise:1.06, full:1.00, over:0.80},
+    heatAccumAt:70, heatAccumRate:2.2,
+    heatCoolAt:50,  heatCoolRate:1.5,
+    heatMax:100,
+    overSpeedPenalty:0.80,            // 热量>80% 时的航速惩罚
+    boilerDmgSpeed:0.50,               // 爆管后最大航速系数
+    /* 超压开火的两项代价。关键：积热对"所有武器"生效，重炮降档只对重炮生效。
+       早期版本只惩罚重炮，结果 heavy:false 的船在超压下几乎无代价——
+       实测锈鸦级/共振巡洋的超压胜率飙到 69%/67% 通吃，铁甲炮舰却是 43%。 */
+    overHeavyDmgMul:0.90,              // 重炮降档射击的伤害倍率；调 0 可还原架构硬锁死
+    overFireHeatAdd:2.5,               // 超压下每发炮弹的额外积热（不分武器）。设为 10 会在 12 秒内自爆，勿用
+  },
+  // 距离命中修正：让"拉近/拉开"成为有意义的战术动作，机动性才有兑现渠道。
+  range:{
+    near:0.15,      // 贴脸（dist=0）时的命中加成
+    far:-0.25,      // 极限射程（dist=range）时的命中惩罚；偏好距离处为 0
+    dictation:1.0,  // 射程支配：速度优势转化为"距离控制权"的强度（0=无效）
+  },
+  damage:{ K:100, ruptureHullPct:0.25, ruptureStun:3.0, ruptureHeatReset:40 },
+  rune:{ timeThreshold:8.0, chancePerSec:0.02, armorPenalty:0.5 },
+  ships:{
+    rustcrow:{ name:'锈鸦级 T1', hullMax:100, armor:18, speed:70, turn:1.2, accel:45,
+               heatMul:1.0, brittle:false, dmg:11, range:230, cd:1.7, heavy:false, acc:0.65, pref:175 },
+    ironclad:{ name:'铁甲炮舰 T2', hullMax:150, armor:34, speed:62, turn:1.0, accel:38,
+               heatMul:0.65, brittle:false, dmg:18, range:265, cd:2.1, heavy:true, acc:0.60, pref:215 },
+    resonance:{ name:'共振巡洋 T3', hullMax:130, armor:28, speed:82, turn:1.4, accel:52,
+                heatMul:0.65, brittle:true, dmg:14, range:250, cd:1.5, heavy:false, acc:0.68, pref:195 },
+  },
+  setup:{ player:['rustcrow','resonance'], enemy:['ironclad','ironclad'],
+          bounds:{x0:20,y0:20,x1:900,y1:500} }
+};
+// 批量模拟用大场地，避免船只被地图边缘卡住而污染"追击/脱离"场景的测量
+const SIM_BOUNDS={x0:-1400,y0:-1400,x1:2400,y1:1900};
+
+/* ---------- 冲撞舰子系统 ----------
+   设计要点：伤害由"撞击瞬间的相对接近速度"决定，不是由型号决定。
+   这是本作第一次让"速度"在进攻端兑现——灰盒此前测出的结构性缺口正是：
+   镜像对决里机动性只有代价（命中下降）没有收益，速度换不成任何战果。
+   附带效果：迎面对冲最狠，追着逃跑的船撞最轻——"逃"从此有了对冲撞的防御价值。 */
+CONFIG.ram={
+  enabled:true,
+  /* 两种资源并存（对应"装备位 + 可回收船体"）：
+     racks   = 母船的挂载位数量，是船的永久改装项，战斗中不会变。
+     racksLeft = 当前实际挂载着的冲撞舰（消耗品）。发射一艘少一艘，
+                打捞回残骸才能"重铸"回挂架，上限是 racks。
+     pilots  = 驾驶员编制，持久资源：跳伞后要捞回逃生舱才归队，死在艇里就永久损失。
+     注意 racks 必须 ≥ 1 且与 pilots 同量级，否则其中一个资源永远不生效
+     （早期 racks:1 / pilots:2 时驾驶员从未成为瓶颈，整套"打捞救人"机制是死的）。 */
+  racks:2,              // 每艘母船的挂载位上限
+  pilots:2,             // 每艘母船的驾驶员编制（持久资源，损失不回补）
+  launchRange:340,      // 母船进入此距离才可分离
+  /* ★ 最小发射距离：冲撞舰需要助跑，贴脸发射是纯浪费。
+     实测低压档四艘船挤在一起回收逃生舱时会同时贴脸发射：小艇一出膛就已经在
+     目标的命中圈内，连线方向被舍入噪声主导，算出 -69 的接近速度、0 伤害，
+     还白送四条驾驶员的命（日志见 README）。 */
+  /* 210 = ejectDist + 最快档的接近速度 × lockTime，向上取整。
+     发射距离、锁定窗口、弹射距离三者必须配套：任何一艘在 minLaunch 处发射的艇，
+     都必须在撞上之前完成锁定并弹射，否则"有人撞击"会变成 artifact 而不是玩家的选择。 */
+  minLaunch:210,        // 目标近于此距离不发射（没有助跑+锁定的余量）
+  launchCooldown:7,     // 同一母船两次发射的间隔
+  speed:132,            // 冲撞舰基准航速（远高于母船）
+  /* 发射初速继承母船压力：压力越高推得越猛。
+     ★ 这条系数是本子系统的平衡闸门，不是 flavor。
+     gain 越大，接近速度越由"攻击方的压力"决定，于是速度被双重兑现：
+     高压方撞人更狠 + 自己也跑得掉、更难被撞。实测 gain=0.45 时三个舰种
+     清一色变成"全速 72% 通吃、压火 25% 崩盘"（极差 45%），
+     低压流派被彻底打废。压到 0.20 后，接近速度主要由"目标的航速"决定——
+     速度仍然兑现（跑得掉、更难被撞），但不再是"我快所以我撞得也更狠"。 */
+  launchPressGain:0.20, // 初速 = speed * (0.75 + gain * P/100)
+  /* ★ 弹射要抽锅炉的蒸汽：每次发射给母船加一笔热量。
+     低压锅炉（<50）自带散热，抽得起，可以持续弹射；
+     高压锅炉本就在积热，再抽就是往爆管上推。
+     这是低压流派在冲撞战里唯一的、也是决定性的补偿。 */
+  launchHeat:14,        // 每次弹射给母船锅炉增加的热量（再乘舰种 heatMul）
+  turn:2.6,             // 冲撞舰转向率（比母船灵活得多）
+  accel:90,
+  burnTime:11,          // 燃料秒数，烧完失速
+  hull:30,              // 冲撞舰耐久——很脆，用来被近防拦截
+  // 锁定距离必须明显大于"发射距离内的典型交战距离"，否则冲撞舰还没锁上就撞到了，
+  // 驾驶员根本来不及跳伞（实测 lockRange 215 / lockTime 2.4 时逃生舱生成数为 0）。
+  lockRange:300,        // 驾驶员能建立锁定的距离
+  lockCone:1.05,        // 锁定张角（rad）：目标需保持在艏向锥内
+  lockTime:0.7,         // 需持续锁定的秒数（与 minLaunch / ejectDist 联动，见 minLaunch 注释）
+  /* ★ 弹射距离：锁定完成后还要再贴近到这个距离才跳伞。
+     只在"锁定完成"时就跳伞会导致无人滑行段过长——目标有时间转向，
+     撞击几何被转向抹平，接近速度反而不再随压力上升
+     （实测全速档接近速度被压到 84，低于压火档的 113，档位信号直接反转）。
+     贴近后再跳伞，撞击几何基本由驾驶员自己设定，速度才能兑现成伤害。 */
+  ejectDist:120,        // 锁定完成后再贴近到此距离才弹射逃生舱
+  // 弹射时机：驾驶员在锁定完成时自动跳伞。早跳＝人活但可能脱靶，晚跳＝命中高但人可能一起炸
+  ejectOnLock:true,
+  /* 擦身而过不算撞击：命中圈内但相对速度几乎为零（甚至为负）时，
+     说明只是"贴着过去了"，物理上不该造成伤害。不放这道闸，日志里就会出现
+     接近速度 -69、伤害 0 的假命中，把命中率和平均接近速度全部污染。 */
+  grazeMin:25,          // 接近速度低于此值记为擦过（脱靶），不结算伤害
+  base:46,              // 冲撞基础伤害
+  refClosing:110,       // 参考接近速度：达到此值时伤害 = base
+  speedExp:1.5,         // 速度指数：>1 表示高速对冲收益加速增长
+  heatOnImpact:18,      // 撞击给目标锅炉的额外震动热量
+  armorFactor:0.5,      // 冲撞对装甲的敏感度：0.5=只按一半装甲算阻尼
+  // 近防用"命中骰"而不是持续 DPS：暴露时间与接近速度成反比，纯 DPS 会让拦截变成
+  // 按档位一刀切（慢艇必死、快艇必活）。命中骰引入方差，才拦得下一部分而不是全部。
+  pdRange:230,          // 近防拦截射程
+  pdHitRate:1.3,        // 每秒命中尝试次数，按距离线性衰减
+  pdDamage:11,          // 每次命中的伤害（冲撞舰耐久 30，约 3 发可拦下）
+  salvageRange:70,      // 打捞半径：必须真的开到逃生舱/残骸边上
+  salvageTime:3.5,      // 打捞所需停留时间
+  salvageMaxSpeed:26,   // ★ 打捞时母船速度上限：必须减速，减速就挨打
+  salvageMaxPressure:50,// ★ 打捞还要求锅炉压到巡航以下：蒸汽不稳放不下小艇
+  /* ★ 指派半径：只捡"顺路"的东西。给到 900 时母船会横穿战场去捡一个残骸，
+     实测低压档每艘船有 70% 的战斗时长耗在打捞上，直接把冲撞战打崩。 */
+  assignRadius:300,     // 超过此距离的目标不予指派
+  podSurvival:45,       // 逃生舱海上存活秒数，超时驾驶员损失
+  wreckLife:90          // 残骸存在时间
+};
+
+const BANDS = ['banked','cruise','full','over'];
+const BAND_CN = { banked:'压火', cruise:'巡航', full:'全速', over:'超压' };
+
+/* ---------- 工具 ---------- */
+function gpath(o,p){ return p.split('.').reduce((a,k)=>a[k], o); }
+function spath(o,p,v){ const ks=p.split('.'); let c=o;
+  for(let i=0;i<ks.length-1;i++) c=c[ks[i]]; c[ks[ks.length-1]]=v; }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function mulberry(seed){ let t=seed>>>0; return function(){ t+=0x6D2B79F5;
+  let r=t; r=Math.imul(r^r>>>15, r|1); r^=r+Math.imul(r^r>>>7, r|61);
+  return ((r^r>>>14)>>>0)/4294967296; }; }
+
+/* ---------- 锅炉压力子系统（架构第 9 章） ---------- */
+const Boiler = {
+  band(p){
+    const b=CONFIG.boiler;
+    if(p<b.t1) return 'banked';
+    if(p<b.t2) return 'cruise';
+    if(p<b.t3) return 'full';
+    return 'over';
+  },
+  speedFactor(p){
+    const b=CONFIG.boiler;
+    return b.speedBase + b.speedGain*(p/100);
+  },
+  accMod(p){
+    const b=CONFIG.boiler;
+    switch(Boiler.band(p)){
+      case 'banked': return b.accBanked;
+      case 'cruise': return b.accCruise;
+      case 'full':   return b.accFull;
+      default:       return b.accOver;
+    }
+  },
+  heatRate(p){
+    const b=CONFIG.boiler;
+    if(p>b.heatAccumAt) return (p-b.heatAccumAt)/30*b.heatAccumRate;
+    if(p<b.heatCoolAt)  return -b.heatCoolRate;
+    return 0;
+  },
+  heavyReady(p){ return Boiler.band(p)!=='over'; },
+  // 距离命中修正：偏好距离处为 0，贴脸 +near，极限射程 -far。
+  rangeAcc(dist,pref,range){
+    const r=CONFIG.range, d=Math.max(0,dist);
+    if(d<=pref) return r.near*(1-d/Math.max(1,pref));
+    return r.far*(d-pref)/Math.max(1,range-pref);
+  },
+  evasionOf(p){ return CONFIG.boiler.evasion[Boiler.band(p)]||0; },
+  reloadMulOf(p){ return CONFIG.boiler.reloadMul[Boiler.band(p)]||1; }
+};
+/* 射程支配：谁速度快，谁就能把实际交战距离拉向自己的偏好距离。
+   镜像对决（双方偏好相同）时此项天然无效——这是模型诚实的地方。 */
+function desiredRange(s,t){
+  const vs=s.maxSpeed(), vt=t.maxSpeed();
+  const dom=(vs-vt)/Math.max(1e-6,vs+vt);          // -1..1，>0 表示我方更快
+  const w=0.5+0.5*dom*CONFIG.range.dictation;      // 我对距离的控制权
+  return s.def.pref*w + t.def.pref*(1-w);
+}
+
+/* ---------- 船 ---------- */
+let SHIP_UID=0;
+class Ship{
+  constructor(defKey,faction,x,y,heading){
+    this.uid=++SHIP_UID;
+    this.key=defKey; this.def=CONFIG.ships[defKey];
+    this.faction=faction;
+    this.x=x; this.y=y; this.heading=heading;
+    this.vx=0; this.vy=0;
+    this.hull=this.def.hullMax;
+    this.pressure=40; this.heat=0; this.overTime=0; this.stun=0; this.cooldown=0;
+    this.boilerDamaged=false; this.runeFractured=false;
+    this.condition='operational';
+    this.target=null; this.order='attack';
+    // 冲撞舰相关：挂载位与驾驶员都是有限资源
+    this.racksLeft=CONFIG.ram.racks;
+    this.pilotsAvail=CONFIG.ram.pilots;
+    this.pilotsLost=0; this.ramCd=0;
+    this.salvage=null;                  // 当前前往打捞的 Pod / Wreck
+    this.desiredHeading=heading; this.desiredSpeed=0;
+    this.shots=0; this.hits=0; this.dmgDealt=0; this.dmgTaken=0;
+  }
+  isAlive(){ return this.condition==='operational'; }
+  setPressure(v){ this.pressure=clamp(v,0,100); }
+  maxSpeed(){
+    let s=this.def.speed*Boiler.speedFactor(this.pressure);
+    if(this.boilerDamaged) s*=CONFIG.boiler.boilerDmgSpeed;
+    if(this.heat>CONFIG.boiler.heatMax*0.8) s*=CONFIG.boiler.overSpeedPenalty;
+    if(this.stun>0) s=0;
+    return s;
+  }
+  effArmor(){ return this.runeFractured ? this.def.armor*CONFIG.rune.armorPenalty : this.def.armor; }
+  accuracy(target){
+    let a=this.def.acc+Boiler.accMod(this.pressure);
+    if(target){
+      a-=Boiler.evasionOf(target.pressure);
+      const d=Math.hypot(target.x-this.x,target.y-this.y);
+      a+=Boiler.rangeAcc(d,this.def.pref,this.def.range);
+    }
+    return clamp(a,0.05,0.95);
+  }
+  applyDamage(d){ this.hull=Math.max(0,this.hull-d); this.dmgTaken+=d;
+    if(this.hull<=0){ this.condition='disabled'; this.vx=0; this.vy=0; } }
+  integrate(dt){
+    const b=CONFIG.boiler;
+    this.heat=clamp(this.heat+Boiler.heatRate(this.pressure)*this.def.heatMul*dt,0,b.heatMax);
+    let tvx=0,tvy=0;
+    if(this.stun<=0){
+      const sp=Math.min(this.desiredSpeed,this.maxSpeed());
+      tvx=Math.cos(this.desiredHeading)*sp; tvy=Math.sin(this.desiredHeading)*sp;
+    }
+    const dvx=tvx-this.vx, dvy=tvy-this.vy;
+    const dl=Math.hypot(dvx,dvy), step=this.def.accel*dt;
+    if(dl>step){ this.vx+=dvx/dl*step; this.vy+=dvy/dl*step; }
+    else { this.vx=tvx; this.vy=tvy; }
+    this.x+=this.vx*dt; this.y+=this.vy*dt;
+    const bd=this.bounds||CONFIG.setup.bounds;
+    this.x=clamp(this.x,bd.x0,bd.x1); this.y=clamp(this.y,bd.y0,bd.y1);
+    if(this.vx*this.vx+this.vy*this.vy>1){
+      let da=Math.atan2(this.vy,this.vx)-this.heading;
+      while(da>Math.PI) da-=2*Math.PI; while(da<-Math.PI) da+=2*Math.PI;
+      this.heading+=clamp(da,-this.def.turn*dt,this.def.turn*dt);
+    }
+    this.cooldown=Math.max(0,this.cooldown-dt);
+    this.stun=Math.max(0,this.stun-dt);
+  }
+}
+
+/* ---------- 舰队 ---------- */
+const FORMATION={LINE_AHEAD:'line_ahead',LINE_ABREAST:'line_abreast',ECHELON:'echelon',CIRCULAR:'circular'};
+class Fleet{
+  constructor(id,formation){ this.id=id; this.ships=[]; this.formation=formation; this.spacing=70; }
+  add(s){ this.ships.push(s); }
+  living(){ return this.ships.filter(s=>s.isAlive()); }
+  defeated(){ return this.living().length===0; }
+  slotOffset(i){
+    const sp=this.spacing;
+    switch(this.formation){
+      case FORMATION.LINE_AHEAD:  return {x:0,y:i*sp};
+      case FORMATION.LINE_ABREAST:return {x:i*sp,y:0};
+      case FORMATION.ECHELON:     return {x:i*sp*0.7,y:i*sp*0.7};
+      case FORMATION.CIRCULAR:    return {x:Math.cos(i/4*Math.PI*2)*sp,y:Math.sin(i/4*Math.PI*2)*sp};
+    }
+    return {x:0,y:0};
+  }
+  anchorFor(ship){
+    const idx=this.ships.indexOf(ship); if(idx<=0) return ship;
+    const lead=this.ships[0], off=this.slotOffset(idx);
+    const c=Math.cos(lead.heading), s=Math.sin(lead.heading);
+    return { x:lead.x+off.x*c-off.y*s, y:lead.y+off.x*s+off.y*c };
+  }
+  assignTargets(enemies){
+    const allies=this.living();
+    const hostiles=enemies.filter(e=>e.isAlive());
+    if(!hostiles.length){ allies.forEach(a=>a.target=null); return; }
+    const assigned=new Map(); hostiles.forEach(h=>assigned.set(h,0));
+    for(const a of allies){
+      let best=null,bs=1e9;
+      for(const h of hostiles){
+        const sc=assigned.get(h)*10 + Math.hypot(h.x-a.x,h.y-a.y)*0.01;
+        if(sc<bs){ bs=sc; best=h; }
+      }
+      a.target=best; assigned.set(best,assigned.get(best)+1);
+    }
+  }
+}
+
+/* ---------- 冲撞舰 / 逃生舱 / 残骸 ---------- */
+const CRAFT={LAUNCHED:'launched',COASTING:'coasting',IMPACT:'impact',LOST:'lost'};
+
+class RamCraft{
+  constructor(mother,target,x,y,heading,speedCap){
+    this.mother=mother; this.faction=mother.faction;
+    this.x=x; this.y=y; this.heading=heading;
+    const v0=speedCap*0.35;
+    this.vx=Math.cos(heading)*v0; this.vy=Math.sin(heading)*v0;
+    this.target=target;
+    this.hull=CONFIG.ram.hull;
+    this.fuel=CONFIG.ram.burnTime;
+    this.lock=0; this.state=CRAFT.LAUNCHED;
+    this.life=0; this.speedCap=speedCap;
+    this.pilotEjected=false;
+  }
+  maxSpeed(){ return this.fuel>0 ? this.speedCap : this.speedCap*0.22; }
+  /* 驾驶员操纵阶段：制导 + 累积锁定。返回 'eject' 表示满足锁定、驾驶员该跳伞了。 */
+  integrate(dt){
+    this.life+=dt;
+    this.fuel=Math.max(0,this.fuel-dt);
+    let tvx,tvy, ret=null;
+    if(this.state===CRAFT.LAUNCHED && this.target && this.target.isAlive()){
+      const dx=this.target.x-this.x, dy=this.target.y-this.y, dist=Math.hypot(dx,dy);
+      const ang=Math.atan2(dy,dx);
+      let da=ang-this.heading;
+      while(da>Math.PI) da-=2*Math.PI; while(da<-Math.PI) da+=2*Math.PI;
+      this.heading+=clamp(da,-CONFIG.ram.turn*dt,CONFIG.ram.turn*dt);
+      // 锁定：目标在艏向锥内且距离够近才累积，脱离锥则缓慢流失
+      if(dist<CONFIG.ram.lockRange && Math.abs(da)<CONFIG.ram.lockCone){
+        this.lock+=dt;
+        // 锁定完成还不够，必须再贴近到 ejectDist 才弹射（理由见 CONFIG.ram.ejectDist 注释）
+        if(CONFIG.ram.ejectOnLock && this.lock>=CONFIG.ram.lockTime && dist<=CONFIG.ram.ejectDist)
+          ret='eject';
+      }else this.lock=Math.max(0,this.lock-dt*0.6);
+      tvx=Math.cos(this.heading)*this.maxSpeed(); tvy=Math.sin(this.heading)*this.maxSpeed();
+    }else{
+      // 无人滑行：不再制导，纯惯性。这就是"早跳伞可能脱靶"的来源。
+      tvx=this.vx; tvy=this.vy;
+      const sp=Math.hypot(tvx,tvy);
+      if(sp>this.maxSpeed()){ tvx=tvx/sp*this.maxSpeed(); tvy=tvy/sp*this.maxSpeed(); }
+    }
+    const dvx=tvx-this.vx, dvy=tvy-this.vy;
+    const dl=Math.hypot(dvx,dvy), step=CONFIG.ram.accel*dt;
+    if(dl>step){ this.vx+=dvx/dl*step; this.vy+=dvy/dl*step; }
+    else { this.vx=tvx; this.vy=tvy; }
+    this.x+=this.vx*dt; this.y+=this.vy*dt;
+    return ret;
+  }
+  /* 撞击瞬间沿连线的接近速度——伤害由它决定 */
+  closingOn(t){
+    const dx=t.x-this.x, dy=t.y-this.y, d=Math.max(1e-6,Math.hypot(dx,dy));
+    return ((this.vx-t.vx)*dx + (this.vy-t.vy)*dy)/d;
+  }
+  speed(){ return Math.hypot(this.vx,this.vy); }
+}
+class Pod{
+  constructor(x,y,vx,vy,faction){
+    this.x=x; this.y=y; this.faction=faction;
+    this.vx=vx*0.3; this.vy=vy*0.3;          // 入水后很快被海水拖住
+    this.t=0; this.prog=0; this.saved=false; this.lost=false;
+  }
+  integrate(dt){ this.t+=dt; this.x+=this.vx*dt; this.y+=this.vy*dt;
+    this.vx*=0.982; this.vy*=0.982;
+    if(!this.saved && this.t>CONFIG.ram.podSurvival) this.lost=true; }
+}
+class Wreck{
+  constructor(x,y,faction){ this.x=x; this.y=y; this.faction=faction;
+    this.t=0; this.prog=0; this.saved=false; }
+  integrate(dt){ this.t+=dt; }
+  expired(){ return this.saved || this.t>CONFIG.ram.wreckLife; }
+}
+
+/* 冲撞结算：伤害 = base × (接近速度 / 参考速度)^指数 × 护甲阻尼
+   迎面对冲接近速度最大 → 伤害最高；追着同向逃跑的船撞 → 接近速度小 → 伤害很低。
+   ★ 护甲阻尼必须走和炮击同一个公式（K/(K+armor)），不能绕过集中裁决器——
+     早期版本直接 applyDamage(raw)，等于让冲撞舰无视装甲，重甲舰在冲撞战里
+     没有任何生存优势，与架构第 11 章"伤害修正不可旁路"的约束冲突。
+   armorFactor：冲撞是整船动能撞击而非穿甲弹，对装甲的敏感度打折（0.5=只看一半装甲）。 */
+function resolveRam(c,t){
+  const R=CONFIG.ram;
+  const closing=c.closingOn(t);
+  const ratio=Math.max(0,closing)/R.refClosing;
+  const raw=R.base*Math.pow(ratio,R.speedExp);
+  const armor=t.effArmor()*R.armorFactor;
+  const dmg=raw*CONFIG.damage.K/(CONFIG.damage.K+armor);
+  t.applyDamage(dmg);
+  t.heat=clamp(t.heat+R.heatOnImpact,0,CONFIG.boiler.heatMax);
+  return {dmg,closing,ratio,raw};
+}
+
+/* ---------- 集中裁决器（架构第 11 章） ---------- */
+function tryAttack(a,rng,stats){
+  if(!a||!a.isAlive()) return null;
+  if(a.cooldown>0) return null;
+  const t=a.target; if(!t||!t.isAlive()) return null;
+  const dist=Math.hypot(t.x-a.x,t.y-a.y);
+  if(dist>a.def.range) return null;
+
+  // 重炮在超压下降档射击：能开火，但装药受限。调 overHeavyDmgMul=0 可还原架构硬锁死。
+  let dmgMul=1, degraded=false;
+  if(a.def.heavy && !Boiler.heavyReady(a.pressure)){
+    if(CONFIG.boiler.overHeavyDmgMul<=0) return null;
+    dmgMul=CONFIG.boiler.overHeavyDmgMul; degraded=true;
+  }
+  // 超压下每一次击发都在撕扯锅炉——这条对轻武器同样成立，是超压的通用代价。
+  if(Boiler.band(a.pressure)==='over')
+    a.heat=clamp(a.heat+CONFIG.boiler.overFireHeatAdd,0,CONFIG.boiler.heatMax);
+
+  a.cooldown=a.def.cd*Boiler.reloadMulOf(a.pressure);
+  a.shots++;
+  const band=Boiler.band(a.pressure);
+  stats[band].shots++;
+
+  if(rng()>a.accuracy(t)){ stats[band].miss++; return {type:'miss',a,t,band}; }
+
+  const dmg=a.def.dmg*dmgMul*CONFIG.damage.K/(CONFIG.damage.K+t.effArmor());
+  t.applyDamage(dmg); a.hits++; a.dmgDealt+=dmg;
+  stats[band].hits++; stats[band].damage+=dmg;
+  return {type:'hit',a,t,dmg,band,degraded};
+}
+function resolveRupture(s){
+  s.hull=Math.max(0,s.hull-s.def.hullMax*CONFIG.damage.ruptureHullPct);
+  s.boilerDamaged=true; s.heat=CONFIG.damage.ruptureHeatReset; s.stun=CONFIG.damage.ruptureStun;
+  s.vx=0; s.vy=0;
+  if(s.hull<=0) s.condition='disabled';
+  return {type:'rupture',ship:s};
+}
+function resolveRune(s){
+  s.runeFractured=true; s.overTime=0; return {type:'rune',ship:s};
+}
+
+/* ---------- AI（只生成意图） ---------- */
+function shipAI(s,fleet){
+  if(!s.isAlive()) return;
+  const t=s.target;
+  if(!t||!t.isAlive()){
+    const an=fleet.anchorFor(s);
+    s.desiredHeading=Math.atan2(an.y-s.y,an.x-s.x);
+    s.desiredSpeed=s.maxSpeed()*0.5; return;
+  }
+  const dx=t.x-s.x, dy=t.y-s.y, dist=Math.hypot(dx,dy), ang=Math.atan2(dy,dx);
+  const pref=desiredRange(s,t);
+  /* 打捞：先赶过去，进入作业圈后把油门压到打捞上限以下。
+     注意 salvaging 只解决"靠近 + 减速"，压力条件由 Battle._trySalvage 另行判定——
+     也就是说：就算你把船开过去停住，锅炉没压下来照样捞不上来。 */
+  if(s.order!=='retreat' && s.salvage &&
+     !(s.salvage.saved||s.salvage.lost||(s.salvage.expired&&s.salvage.expired()))){
+    const o=s.salvage, d=Math.hypot(o.x-s.x,o.y-s.y);
+    s.desiredHeading=Math.atan2(o.y-s.y,o.x-s.x);
+    s.desiredSpeed = d>CONFIG.ram.salvageRange*2.2
+      ? s.maxSpeed()
+      : Math.min(s.maxSpeed(), CONFIG.ram.salvageMaxSpeed*(d>CONFIG.ram.salvageRange*0.9?0.95:0.45));
+    return;
+  }
+  if(s.order==='retreat'){ s.desiredHeading=ang+Math.PI; s.desiredSpeed=s.maxSpeed(); }
+  else if(s.order==='approach'){ s.desiredHeading=ang; s.desiredSpeed=s.maxSpeed(); }
+  else{
+    /* 比例控制：油门按"距离误差"线性收敛，而不是二值的全速/巡航。
+       早期版本用 dist>pref*1.15 ? 全速 : 0.6倍，快船会直接冲过目标，
+       目标随即掉头反向逃，双方反复过冲震荡——实测距离从 430 越拉越大到 519。 */
+    const err=dist-pref, bandW=Math.max(30,pref*0.35);
+    const u=clamp(err/bandW,-1,1);            // >0 需靠近，<0 需拉开
+    if(Math.abs(u)<0.15){                     // 死区：横向游走保持射界
+      s.desiredHeading=ang+Math.PI*0.5; s.desiredSpeed=s.maxSpeed()*0.45;
+    }else{
+      s.desiredHeading=ang+(u<0?Math.PI:0); s.desiredSpeed=Math.abs(u)*s.maxSpeed();
+    }
+  }
+}
+
+/* ---------- 遭遇 ---------- */
+class Battle{
+  constructor(seed,opts){
+    opts=opts||{};
+    this.rng=mulberry(seed);
+    this.time=0; this.state='engaging'; this.finalized=false; this.outcome='';
+    this.events=[];
+    this.stats={}; BANDS.forEach(b=>this.stats[b]={shots:0,hits:0,miss:0,damage:0,time:0});
+    this.fleets=[
+      new Fleet(0,FORMATION.LINE_AHEAD),
+      new Fleet(1,FORMATION.LINE_ABREAST)
+    ];
+    this.bounds=opts.bounds||CONFIG.setup.bounds;
+    const ps=opts.playerShips||CONFIG.setup.player;
+    const es=opts.enemyShips||CONFIG.setup.enemy;
+    ps.forEach((k,i)=>{ const s=new Ship(k,0,330,250+(ps.length>1?i*130:0),0);
+      if(opts.playerPressure!=null) s.pressure=opts.playerPressure;
+      s.bounds=this.bounds; this.fleets[0].add(s); });
+    es.forEach((k,i)=>{ const s=new Ship(k,1,760,250+(es.length>1?i*130:0),Math.PI);
+      if(opts.enemyPressure!=null) s.pressure=opts.enemyPressure;
+      s.bounds=this.bounds; this.fleets[1].add(s); });
+    this.autoPressure=opts.autoPressure||null; // {0:p,1:p} 固定档位策略
+    this.ramEnabled = opts.ram!=null ? opts.ram : CONFIG.ram.enabled;
+    this.crafts=[]; this.pods=[]; this.wrecks=[];
+    this.ramStat={launched:0,hits:0,missed:0,intercepted:0,damage:0,
+                  pilotsSaved:0,pilotsLost:0,podsExpired:0,wrecksSaved:0,grazed:0,avgClosing:0};
+  }
+  enemiesOf(f){ const o=[]; this.fleets.forEach(x=>{ if(x!==f) o.push(...x.ships); }); return o; }
+
+  /* ---- 冲撞舰发射 ---- */
+  _tryLaunch(s,dt){
+    const R=CONFIG.ram;
+    if(!this.ramEnabled || !s.isAlive()) return;
+    s.ramCd=Math.max(0,s.ramCd-dt);
+    if(s.racksLeft<=0 || s.pilotsAvail<=0 || s.ramCd>0) return;
+    const t=s.target; if(!t||!t.isAlive()) return;
+    const d0=Math.hypot(t.x-s.x,t.y-s.y);
+    if(d0>R.launchRange || d0<R.minLaunch) return;   // 太远够不着，太近没有助跑距离
+    s.racksLeft--; s.pilotsAvail--; s.ramCd=R.launchCooldown;
+    s.heat=clamp(s.heat+R.launchHeat*s.def.heatMul,0,CONFIG.boiler.heatMax);
+    const ang=Math.atan2(t.y-s.y,t.x-s.x);
+    const sp=R.speed*(0.75+R.launchPressGain*s.pressure/100);  // 母船压力越高推得越猛
+    const c=new RamCraft(s,t,s.x+Math.cos(ang)*16,s.y+Math.sin(ang)*16,ang,sp);
+    this.crafts.push(c); this.ramStat.launched++;
+    this.events.push({type:'launch',ship:s,craft:c});
+  }
+
+  /* ---- 为每个"有东西可捞"的母船指派打捞目标 ---- */
+  _assignSalvage(){
+    for(const f of this.fleets) for(const s of f.living()){
+      if(s.salvage && (s.salvage.saved||s.salvage.lost||s.salvage.expired&&s.salvage.expired()))
+        s.salvage=null;
+      if(s.salvage) continue;
+      // 只在真的缺挂载位或缺驾驶员时才值得冒险去捞
+      if(s.racksLeft>=CONFIG.ram.racks && s.pilotsAvail>=CONFIG.ram.pilots) continue;
+      // ★ 压力超标的船根本放不下小艇，别让它白跑一趟还脱离战斗
+      if(s.pressure>CONFIG.ram.salvageMaxPressure) continue;
+      let best=null,bd=1e9;
+      for(const o of this.pods){ if(o.faction!==s.faction||o.saved||o.lost) continue;
+        const d=Math.hypot(o.x-s.x,o.y-s.y); if(d<bd){bd=d;best=o;} }
+      for(const o of this.wrecks){ if(o.faction!==s.faction||o.saved||o.expired()) continue;
+        const d=Math.hypot(o.x-s.x,o.y-s.y); if(d<bd){bd=d;best=o;} }
+      if(best && bd<CONFIG.ram.assignRadius) s.salvage=best;
+    }
+  }
+
+  /* ---- 打捞：必须靠近、必须减速、必须把压力压下来 ---- */
+  _trySalvage(dt){
+    const R=CONFIG.ram;
+    for(const list of [this.pods,this.wrecks]) for(const o of list){
+      if(o.saved || o.lost || (o.expired&&o.expired())) continue;
+      let ok=false, who=null;
+      for(const f of this.fleets){
+        if(f.id!==o.faction) continue;
+        for(const s of f.living()){
+          const d=Math.hypot(s.x-o.x,s.y-o.y), sp=Math.hypot(s.vx,s.vy);
+          const calm=s.pressure<=R.salvageMaxPressure;   // ★ 锅炉不压下来就放不下小艇
+          if(d<R.salvageRange && sp<R.salvageMaxSpeed && calm){ ok=true; who=s; break; }
+        }
+        if(ok) break;
+      }
+      if(ok){ o.prog+=dt;
+        if(o.prog>=R.salvageTime){
+          o.saved=true;
+          // 两类回收都受上限约束：挂架只有 racks 个，编制只有 pilots 人。
+          // 不加 cap 的话打捞会无限膨胀，冲撞舰就变成"白嫖的无限弹药"。
+          if(o instanceof Pod){ who.pilotsAvail=Math.min(CONFIG.ram.pilots,who.pilotsAvail+1);
+            this.ramStat.pilotsSaved++; this.events.push({type:'salvagePod',ship:who}); }
+          else { who.racksLeft=Math.min(CONFIG.ram.racks,who.racksLeft+1);
+            this.ramStat.wrecksSaved++; this.events.push({type:'salvageWreck',ship:who}); }
+        }
+      }else o.prog=Math.max(0,o.prog-dt*0.5);   // 条件不满足则进度倒退
+    }
+  }
+
+  /* ---- 冲撞舰主循环 ---- */
+  ramTick(dt){
+    const R=CONFIG.ram;
+    if(!this.ramEnabled) return;
+    for(const f of this.fleets) for(const s of f.living()) this._tryLaunch(s,dt);
+    this._assignSalvage();
+
+    for(const c of this.crafts){
+      if(c.state===CRAFT.IMPACT||c.state===CRAFT.LOST) continue;
+      const act=c.integrate(dt);
+      if(act==='eject'){
+        c.pilotEjected=true; c.state=CRAFT.COASTING;
+        this.pods.push(new Pod(c.x,c.y,c.vx,c.vy,c.faction));
+        this.events.push({type:'eject',craft:c});
+      }
+      // 近防拦截：射程内敌舰按距离线性衰减地投命中骰
+      for(const f of this.fleets){
+        if(f.id===c.faction) continue;
+        for(const s of f.living()){
+          const d=Math.hypot(s.x-c.x,s.y-c.y);
+          if(d<R.pdRange && this.rng()<R.pdHitRate*dt*(1-d/R.pdRange)) c.hull-=R.pdDamage;
+        }
+      }
+      if(c.hull<=0){
+        c.state=CRAFT.LOST; this.ramStat.intercepted++;
+        if(!c.pilotEjected){ c.mother.pilotsLost++; this.ramStat.pilotsLost++; }
+        this.wrecks.push(new Wreck(c.x,c.y,c.faction));
+        this.events.push({type:'intercepted',craft:c,pilotKilled:!c.pilotEjected});
+        continue;
+      }
+      // 命中判定
+      const t=c.target;
+      if(t&&t.isAlive()&&Math.hypot(t.x-c.x,t.y-c.y)<19){
+        // 擦身而过：贴着过去了，没有真正的相对撞击速度，不结算
+        if(c.closingOn(t)<R.grazeMin){
+          c.state=CRAFT.LOST; this.ramStat.missed++; this.ramStat.grazed++;
+          if(!c.pilotEjected){ c.mother.pilotsLost++; this.ramStat.pilotsLost++; }
+          this.wrecks.push(new Wreck(c.x,c.y,c.faction));
+          this.events.push({type:'ramGraze',craft:c,pilotKilled:!c.pilotEjected});
+          continue;
+        }
+        const r=resolveRam(c,t);
+        this.ramStat.hits++; this.ramStat.damage+=r.dmg; this.ramStat.avgClosing+=r.closing;
+        c.state=CRAFT.IMPACT;
+        // 有人撞击 = 驾驶员跟着一起撞上去了。这是"不肯跳伞"的代价，
+        // 早前版本漏记，导致阵亡数永远等于被拦截数，看不出这个取舍。
+        if(!c.pilotEjected){ c.mother.pilotsLost++; this.ramStat.pilotsLost++; }
+        this.wrecks.push(new Wreck(c.x,c.y,c.faction));
+        this.events.push({type:'ram',craft:c,target:t,dmg:r.dmg,closing:r.closing,
+                          pilotKilled:!c.pilotEjected});
+        continue;
+      }
+      /* 燃料耗尽即作废，不再"失速后继续飘"。
+         早期判据是 fuel<=0 && speed()<10，但失速后速度还有 cap*0.22≈23，
+         永远不满足，于是它继续制导绕圈十秒、最后蹭上目标算命中——
+         实测 37% 的撞击接近速度 <40 全是这类垃圾命中（中位数 129 / 均值 54 的双峰分布）。
+         冲撞舰只有"一个攻击航次"：冲过去，没撞上就是没了。 */
+      if(c.fuel<=0 || c.life>R.burnTime*1.2){
+        c.state=CRAFT.LOST; this.ramStat.missed++;
+        if(!c.pilotEjected){ c.mother.pilotsLost++; this.ramStat.pilotsLost++; }
+        this.wrecks.push(new Wreck(c.x,c.y,c.faction));
+        this.events.push({type:'ramMiss',craft:c,pilotEjected:c.pilotEjected});
+      }
+    }
+    this.crafts=this.crafts.filter(c=>c.state===CRAFT.LAUNCHED||c.state===CRAFT.COASTING);
+    for(const p of this.pods) p.integrate(dt);
+    for(const w of this.wrecks) w.integrate(dt);
+    // 逃生舱漂超时 = 驾驶员没等到自家船来，同样计入阵亡（早期版本完全漏记）
+    for(const p of this.pods) if(p.lost && !p.saved){ this.ramStat.pilotsLost++; this.ramStat.podsExpired++; }
+    this.pods=this.pods.filter(p=>!p.saved&&!p.lost);
+    this.wrecks=this.wrecks.filter(w=>!w.expired());
+    this._trySalvage(dt);
+  }
+  tick(dt){
+    if(this.state!=='engaging'&&this.state!=='retreating') return;
+    this.time+=dt;
+
+    if(this.autoPressure){
+      for(const kv of Object.entries(this.autoPressure)){
+        this.fleets[kv[0]].living().forEach(s=>s.setPressure(kv[1]));
+      }
+    }
+    this.fleets.forEach(f=>f.assignTargets(this.enemiesOf(f)));
+    for(const f of this.fleets) for(const s of f.living()) shipAI(s,f);
+
+    this.ramTick(dt);
+
+    for(const f of this.fleets) for(const s of f.living()){
+      this.stats[Boiler.band(s.pressure)].time += dt;
+      s.integrate(dt);
+      s.overTime = Boiler.band(s.pressure)==='over' ? s.overTime+dt : 0;
+      if(s.heat>=CONFIG.boiler.heatMax && !s.boilerDamaged)
+        this.events.push(resolveRupture(s));
+      if(s.def.brittle && !s.runeFractured && s.overTime>CONFIG.rune.timeThreshold
+         && this.rng()<CONFIG.rune.chancePerSec) this.events.push(resolveRune(s));
+      const r=tryAttack(s,this.rng,this.stats);
+      if(r) this.events.push(r);
+    }
+    const alive=this.fleets.filter(f=>!f.defeated()).length;
+    if(alive<=1) this._resolve();
+  }
+  _resolve(){
+    this.state='resolving';
+    let win=-1;
+    this.fleets.forEach((f,i)=>{ if(!f.defeated()) win=i; });
+    this.winner=win;
+    this.outcome = win<0 ? '全部失能' : ('舰队'+win+' 获胜');
+    this._settle();
+  }
+  _settle(){
+    if(this.finalized) return;
+    this.finalized=true;
+    for(const f of this.fleets) for(const s of f.ships){
+      s.residualHeat=s.heat;
+      if(s.hull<=0) s.condition='disabled';
+    }
+    if(this.state!=='escaped') this.state='finalized';
+  }
+}
+
+/* ============================================================
+   参数面板
+   ============================================================ */
+const PARAM_SCHEMA=[
+ {g:'压力档位阈值',items:[
+   {p:'boiler.t1',l:'压火上限',min:0,max:100,st:1},
+   {p:'boiler.t2',l:'巡航上限',min:0,max:100,st:1},
+   {p:'boiler.t3',l:'全速上限',min:0,max:100,st:1}]},
+ {g:'命中修正 · 核心取舍',items:[
+   {p:'boiler.accBanked',l:'压火',min:-0.6,max:0.6,st:0.01},
+   {p:'boiler.accCruise',l:'巡航',min:-0.6,max:0.6,st:0.01},
+   {p:'boiler.accFull',l:'全速',min:-0.6,max:0.6,st:0.01},
+   {p:'boiler.accOver',l:'超压',min:-0.6,max:0.6,st:0.01}]},
+ {g:'机动规避 · 机动性的防御价值',items:[
+   {p:'boiler.evasion.banked',l:'压火 规避',min:-0.6,max:0.6,st:0.01},
+   {p:'boiler.evasion.cruise',l:'巡航 规避',min:-0.6,max:0.6,st:0.01},
+   {p:'boiler.evasion.full',l:'全速 规避',min:-0.6,max:0.6,st:0.01},
+   {p:'boiler.evasion.over',l:'超压 规避',min:-0.6,max:0.6,st:0.01}]},
+ {g:'装填倍率 · 低压的代价',items:[
+   {p:'boiler.reloadMul.banked',l:'压火 装填×',min:0.4,max:3,st:0.05},
+   {p:'boiler.reloadMul.cruise',l:'巡航 装填×',min:0.4,max:3,st:0.05},
+   {p:'boiler.reloadMul.full',l:'全速 装填×',min:0.4,max:3,st:0.05},
+   {p:'boiler.reloadMul.over',l:'超压 装填×',min:0.4,max:3,st:0.05}]},
+ {g:'距离命中 · 机动性的兑现渠道',items:[
+   {p:'range.near',l:'贴脸加成',min:-0.4,max:0.6,st:0.01},
+   {p:'range.far',l:'极限射程惩罚',min:-0.8,max:0.4,st:0.01},
+   {p:'range.dictation',l:'射程支配强度',min:0,max:2,st:0.1}]},
+ {g:'超压开火代价',items:[
+   {p:'boiler.overHeavyDmgMul',l:'重炮伤害倍率（0=锁死）',min:0,max:1.5,st:0.05},
+   {p:'boiler.overFireHeatAdd',l:'每发积热（全武器）',min:0,max:10,st:0.5}]},
+ {g:'航速与积热',items:[
+   {p:'boiler.speedBase',l:'航速基数',min:0,max:1,st:0.01},
+   {p:'boiler.speedGain',l:'航速增益',min:0,max:2,st:0.01},
+   {p:'boiler.heatAccumAt',l:'积热阈值',min:0,max:100,st:1},
+   {p:'boiler.heatAccumRate',l:'积热速率',min:0,max:10,st:0.1},
+   {p:'boiler.heatCoolAt',l:'散热阈值',min:0,max:100,st:1},
+   {p:'boiler.heatCoolRate',l:'散热速率',min:0,max:10,st:0.1},
+   {p:'boiler.heatMax',l:'热量上限',min:20,max:200,st:5}]},
+ {g:'伤害',items:[
+   {p:'damage.K',l:'阻尼常数 K',min:10,max:500,st:10},
+   {p:'damage.ruptureHullPct',l:'爆管掉血比例',min:0,max:1,st:0.01}]},
+ {g:'冲撞舰 · 发射与飞行',items:[
+   {p:'ram.racks',l:'挂载位',min:0,max:6,st:1},
+   {p:'ram.pilots',l:'驾驶员编制',min:0,max:6,st:1},
+   {p:'ram.launchRange',l:'发射距离',min:100,max:600,st:10},
+   {p:'ram.minLaunch',l:'最小发射距离',min:0,max:400,st:10},
+   {p:'ram.launchCooldown',l:'发射冷却',min:1,max:30,st:1},
+   {p:'ram.speed',l:'基准航速',min:40,max:260,st:5},
+   {p:'ram.launchPressGain',l:'母船压力助推',min:0,max:1.5,st:0.05},
+   {p:'ram.launchHeat',l:'弹射抽汽(热量)',min:0,max:60,st:1},
+   {p:'ram.burnTime',l:'燃料秒数',min:3,max:30,st:1},
+   {p:'ram.hull',l:'冲撞舰耐久',min:5,max:120,st:1}]},
+ {g:'冲撞舰 · 锁定与弹射',items:[
+   {p:'ram.lockRange',l:'锁定距离',min:60,max:400,st:5},
+   {p:'ram.lockCone',l:'锁定张角(rad)',min:0.2,max:3,st:0.05},
+   {p:'ram.lockTime',l:'锁定耗时',min:0,max:8,st:0.1},
+   {p:'ram.ejectDist',l:'弹射距离',min:20,max:300,st:5}]},
+ {g:'冲撞舰 · 伤害（速度兑现）',items:[
+   {p:'ram.base',l:'基础伤害',min:5,max:200,st:5},
+   {p:'ram.refClosing',l:'参考接近速度',min:30,max:260,st:5},
+   {p:'ram.speedExp',l:'速度指数',min:0.5,max:3,st:0.1},
+   {p:'ram.armorFactor',l:'装甲敏感度',min:0,max:2,st:0.05},
+   {p:'ram.grazeMin',l:'擦过判定阈值',min:0,max:80,st:5},
+   {p:'ram.heatOnImpact',l:'撞击附加热量',min:0,max:60,st:2}]},
+ {g:'冲撞舰 · 拦截与打捞',items:[
+   {p:'ram.pdRange',l:'近防射程',min:0,max:400,st:10},
+   {p:'ram.pdHitRate',l:'近防命中骰/秒',min:0,max:6,st:0.1},
+   {p:'ram.pdDamage',l:'近防单发伤害',min:0,max:40,st:1},
+   {p:'ram.assignRadius',l:'打捞指派半径',min:0,max:900,st:20},
+   {p:'ram.salvageRange',l:'打捞半径',min:20,max:200,st:5},
+   {p:'ram.salvageTime',l:'打捞耗时',min:0.5,max:15,st:0.5},
+   {p:'ram.salvageMaxSpeed',l:'打捞速度上限',min:5,max:90,st:1},
+   {p:'ram.salvageMaxPressure',l:'打捞压力上限',min:0,max:100,st:5},
+   {p:'ram.podSurvival',l:'逃生舱存活秒',min:5,max:150,st:5}]},
+ {g:'崩纹（T3+）',items:[
+   {p:'rune.timeThreshold',l:'超压累计秒',min:1,max:30,st:1},
+   {p:'rune.chancePerSec',l:'每秒概率',min:0,max:0.2,st:0.005}]}
+];
+function buildParams(){
+  const host=document.getElementById('params'); let html='';
+  const emit=(it)=>{
+    const v=gpath(CONFIG,it.p);
+    html+=`<label class="rng"><span class="row"><span>${it.l}</span><b>${typeof v==='number'?v.toFixed(it.st<0.1?2:0):v}</b></span>
+      <input type="range" data-p="${it.p}" data-st="${it.st}" min="${it.min}" max="${it.max}" step="${it.st}" value="${v}"></label>`;
+  };
+  for(const grp of PARAM_SCHEMA){
+    html+=`<div class="gtitle">${grp.g}</div>`; grp.items.forEach(emit);
+  }
+  for(const key of Object.keys(CONFIG.ships)){
+    const s=CONFIG.ships[key];
+    html+=`<div class="gtitle">${s.name}</div>`;
+    [['hullMax','船体',20,400,5],['armor','装甲',0,120,1],['speed','基础航速',20,200,1],
+     ['heatMul','积热倍率',0,2,0.05],['dmg','伤害',1,60,1],['range','射程',80,500,5],
+     ['cd','冷却',0.2,6,0.1],['acc','基础命中',0.1,1,0.01],['pref','偏好距离',60,400,5]]
+     .forEach(([k,l,mn,mx,st])=>emit({p:`ships.${key}.${k}`,l,mn,min:mn,max:mx,st}));
+  }
+  host.innerHTML=html;
+  host.querySelectorAll('input[type=range]').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const v=parseFloat(el.value);
+      spath(CONFIG,el.dataset.p,v);
+      const st=parseFloat(el.dataset.st);
+      el.parentElement.querySelector('b').textContent = st<0.1?v.toFixed(2):v.toFixed(0);
+    });
+  });
+}
+
+/* ============================================================
+   渲染（灰盒）
+   ============================================================ */
+function drawShip(c,s){
+  const alive=s.isAlive();
+  c.save(); c.translate(s.x,s.y); c.rotate(s.heading);
+  c.beginPath(); c.moveTo(21,0); c.lineTo(-14,11); c.lineTo(-8,0); c.lineTo(-14,-11); c.closePath();
+  c.fillStyle = !alive ? '#B8B6AD' : (s.faction===0?'#2C5F8A':'#8A3B3B');
+  c.fill(); c.lineWidth=1; c.strokeStyle='#3C3C39'; c.stroke();
+  c.restore();
+
+  const w=46, hx=s.x-w/2, hy=s.y-32;
+  c.fillStyle='#D8D8D3'; c.fillRect(hx,hy,w,5);
+  c.fillStyle='#3B6D11'; c.fillRect(hx,hy,w*clamp(s.hull/s.def.hullMax,0,1),5);
+  c.fillStyle='#D8D8D3'; c.fillRect(hx,hy+7,w,4);
+  const hr=clamp(s.heat/CONFIG.boiler.heatMax,0,1);
+  c.fillStyle = hr>0.8 ? '#C0342B' : '#C98A22'; c.fillRect(hx,hy+7,w*hr,4);
+
+  c.font='10px system-ui'; c.textAlign='center';
+  c.fillStyle='#5F5E5A';
+  c.fillText(s.def.name.split(' ')[0], s.x, s.y+30);
+  c.font='9px system-ui'; c.fillStyle='#7A7A75';
+  c.fillText('架'+s.racksLeft+' 驾'+s.pilotsAvail+(s.pilotsLost?' (-'+s.pilotsLost+')':''), s.x, s.y+41);
+  c.font='10px system-ui';
+  if(s.salvage){ c.fillStyle='#185FA5'; c.fillText('打捞中', s.x, s.y-38); }
+  else if(s.runeFractured){ c.fillStyle='#534AB7'; c.fillText('崩纹', s.x, s.y-38); }
+  else if(s.boilerDamaged){ c.fillStyle='#A32D2D'; c.fillText('爆管', s.x, s.y-38); }
+  c.textAlign='left';
+}
+function draw(){
+  const cv=document.getElementById('cv'), c=cv.getContext('2d');
+  c.clearRect(0,0,920,520);
+  c.strokeStyle='#E4E4E0'; c.lineWidth=1;
+  for(let x=0;x<=920;x+=40){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,520); c.stroke(); }
+  for(let y=0;y<=520;y+=40){ c.beginPath(); c.moveTo(0,y); c.lineTo(920,y); c.stroke(); }
+  if(!BT) return;
+  c.strokeStyle='#CFCFC9'; c.setLineDash([3,3]);
+  for(const f of BT.fleets) for(const s of f.living())
+    if(s.target&&s.target.isAlive()){ c.beginPath(); c.moveTo(s.x,s.y); c.lineTo(s.target.x,s.target.y); c.stroke(); }
+  c.setLineDash([]);
+
+  /* 残骸：可回收的核心部件 */
+  for(const w of BT.wrecks){
+    c.save(); c.translate(w.x,w.y);
+    c.strokeStyle='#6E6E68'; c.lineWidth=2;
+    c.beginPath(); c.moveTo(-6,-6); c.lineTo(6,6); c.moveTo(6,-6); c.lineTo(-6,6); c.stroke();
+    if(w.prog>0){ c.strokeStyle='#3B6D11'; c.lineWidth=2;
+      c.beginPath(); c.arc(0,0,11,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(w.prog/CONFIG.ram.salvageTime,0,1)); c.stroke(); }
+    c.restore();
+  }
+  /* 逃生舱：外圈是海上存活倒计时 */
+  for(const p of BT.pods){
+    c.save(); c.translate(p.x,p.y);
+    const left=clamp(1-p.t/CONFIG.ram.podSurvival,0,1);
+    c.beginPath(); c.arc(0,0,6,0,Math.PI*2);
+    c.fillStyle='#E8E4D8'; c.fill(); c.lineWidth=1; c.strokeStyle='#5F5E5A'; c.stroke();
+    c.beginPath(); c.arc(0,0,10,-Math.PI/2,-Math.PI/2+Math.PI*2*left);
+    c.strokeStyle = left>0.4 ? '#3B6D11' : '#C0342B'; c.lineWidth=2; c.stroke();
+    if(p.prog>0){ c.beginPath(); c.arc(0,0,13,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(p.prog/CONFIG.ram.salvageTime,0,1));
+      c.strokeStyle='#185FA5'; c.lineWidth=2; c.stroke(); }
+    c.restore();
+  }
+  /* 冲撞舰：三角 + 锁定进度弧 */
+  for(const cr of BT.crafts){
+    c.save(); c.translate(cr.x,cr.y); c.rotate(cr.heading);
+    c.beginPath(); c.moveTo(11,0); c.lineTo(-7,6); c.lineTo(-4,0); c.lineTo(-7,-6); c.closePath();
+    c.fillStyle = cr.faction===0 ? '#185FA5' : '#A32D2D'; c.fill();
+    c.lineWidth=1; c.strokeStyle='#2C2C2A'; c.stroke(); c.restore();
+    if(cr.state===CRAFT.LAUNCHED){
+      c.beginPath(); c.arc(cr.x,cr.y,14,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(cr.lock/CONFIG.ram.lockTime,0,1));
+      c.strokeStyle = cr.pilotEjected?'#8A8A84':'#C98A22'; c.lineWidth=2; c.stroke();
+    }
+    c.font='9px system-ui'; c.fillStyle='#5F5E5A'; c.textAlign='center';
+    c.fillText(cr.pilotEjected?'无人':'有人', cr.x, cr.y-19); c.textAlign='left';
+  }
+
+  for(const f of BT.fleets) for(const s of f.ships) drawShip(c,s);
+  c.font='11px system-ui'; c.fillStyle='#8A8A84';
+  c.fillText('t='+BT.time.toFixed(1)+'s   '+BT.outcome, 8, 512);
+}
+
+/* ============================================================
+   统计 / 调试 / 日志
+   ============================================================ */
+function updateStats(){
+  const rows=[];
+  for(const b of BANDS){
+    const st=BT.stats[b];
+    if(st.shots===0 && st.time<0.5) continue;
+    const rate = st.shots? st.hits/st.shots : 0;
+    const dps  = st.time>0? st.damage/st.time : 0;
+    rows.push({b,shots:st.shots,rate,dps,dmg:st.damage});
+  }
+  let html='<tr><th>档位</th><th class="n">射击</th><th class="n">命中率</th><th class="n">总伤害</th><th class="n">有效DPS</th></tr>';
+  for(const r of rows){
+    html+=`<tr><td>${BAND_CN[r.b]}</td><td class="n">${r.shots}</td>
+      <td class="n">${(r.rate*100).toFixed(0)}%</td><td class="n">${r.dmg.toFixed(0)}</td>
+      <td class="n"><b>${r.dps.toFixed(2)}</b></td></tr>`;
+  }
+  document.getElementById('statTbl').innerHTML=html;
+
+  const v=document.getElementById('verdict');
+  if(rows.length<2){ v.textContent='继续战斗以积累样本……'; return; }
+  const best=rows.reduce((a,b)=>b.dps>a.dps?b:a);
+  const worst=rows.reduce((a,b)=>b.dps<a.dps?b:a);
+  const span=best.dps>0? (best.dps-worst.dps)/best.dps : 0;
+  let msg=`有效 DPS 最高：<b>${BAND_CN[best.b]}</b>（${best.dps.toFixed(2)}），最低：<b>${BAND_CN[worst.b]}</b>（${worst.dps.toFixed(2)}）。`;
+  if(span>0.6) msg+=` <span style="color:#A32D2D">差距达 ${(span*100).toFixed(0)}%，档位间严重失衡——强势档会让玩家无脑常驻。</span>`;
+  else if(span<0.15) msg+=` <span style="color:#3B6D11">差距仅 ${(span*100).toFixed(0)}%，取舍接近中性：选档取决于战场态势而非强弱。</span>`;
+  else msg+=` 差距 ${(span*100).toFixed(0)}%，有一定取舍空间。`;
+  v.innerHTML=msg;
+}
+function updateRam(){
+  if(!BT){ return; }
+  const r=BT.ramStat;
+  const avgC = r.hits? r.avgClosing/r.hits : 0;
+  const rows=[
+    ['发射', r.launched],
+    ['命中', r.hits + (r.launched?`　(${(r.hits/r.launched*100).toFixed(0)}%)`:'' )],
+    ['被拦截', r.intercepted],
+    ['脱靶', r.missed + (r.grazed?`（其中擦过 ${r.grazed}）`:'')],
+    ['冲撞总伤害', r.damage.toFixed(0)],
+    ['平均接近速度', avgC.toFixed(0)+(avgC?`　(参考 ${CONFIG.ram.refClosing})`:'')],
+    ['驾驶员：捞回 / 阵亡', `${r.pilotsSaved} / ${r.pilotsLost}`
+      + (r.podsExpired?`（漂失 ${r.podsExpired}）`:'')],
+    ['残骸重铸挂载位', r.wrecksSaved]
+  ];
+  let html='<tr><th>项</th><th class="n">值</th></tr>';
+  for(const [k,v] of rows) html+=`<tr><td>${k}</td><td class="n">${v}</td></tr>`;
+  document.getElementById('ramTbl').innerHTML=html;
+
+  const v=document.getElementById('ramVerdict');
+  if(!r.launched){
+    v.textContent='尚未发射过冲撞舰。母船需与目标保持 '+CONFIG.ram.minLaunch+'–'+CONFIG.ram.launchRange
+      +' 的距离才会分离（太近没有助跑和锁定的余量，太远够不着）。'; return; }
+  let msg=`接近速度 ${avgC.toFixed(0)} 对照参考值 ${CONFIG.ram.refClosing}：`;
+  if(avgC>CONFIG.ram.refClosing*1.1)
+    msg+=`<span style="color:#3B6D11">高于参考，说明撞的多是迎面/高速目标，伤害吃满。</span>`;
+  else if(avgC<CONFIG.ram.refClosing*0.7)
+    msg+=`<span style="color:#A32D2D">明显低于参考——多半是在追同向逃跑的目标，"追尾"撞不出伤害。这是设计意图，不是 bug。</span>`;
+  else msg+=`处于合理区间。`;
+  if(r.grazed>0)
+    msg+=` <b>擦过 ${r.grazed} 次</b>：贴到目标身上但相对速度低于 ${CONFIG.ram.grazeMin}，`
+        +`按设计不算撞击——追同向逃跑的船只会擦过去。`;
+  if(r.pilotsLost>0)
+    msg+=` <b>已损失驾驶员 ${r.pilotsLost} 名</b>——打捞需要同时满足「靠近 + 减速 + 压力≤${CONFIG.ram.salvageMaxPressure}」三个条件，缺一不可。`
+        +`压力高于 ${CONFIG.ram.salvageMaxPressure} 的母船放不下小艇，只能眼看着驾驶员漂失。`;
+  v.innerHTML=msg;
+}
+function updateDbg(){
+  let html='<tr><th>船</th><th class="n">HP</th><th class="n">P</th><th class="n">热</th>'
+    +'<th class="n">命中</th><th class="n">架</th><th class="n">驾</th><th>状态</th></tr>';
+  if(!BT) return;
+  for(const f of BT.fleets) for(const s of f.ships){
+    const rate=s.shots?(s.hits/s.shots*100).toFixed(0)+'%':'—';
+    let st = !s.isAlive()?'失能' : (s.runeFractured?'崩纹' : (s.boilerDamaged?'爆管':(s.stun>0?'失控':'正常')));
+    if(s.isAlive() && s.salvage) st='打捞中';
+    html+=`<tr><td style="color:${s.faction===0?'#2C5F8A':'#8A3B3B'}">${s.def.name.split(' ')[0]}</td>
+      <td class="n">${s.hull.toFixed(0)}</td><td class="n">${s.pressure.toFixed(0)}</td>
+      <td class="n">${s.heat.toFixed(0)}</td><td class="n">${rate}</td>
+      <td class="n">${s.racksLeft}</td><td class="n">${s.pilotsAvail}${s.pilotsLost?'<span style="color:#A32D2D">-'+s.pilotsLost+'</span>':''}</td>
+      <td>${st}</td></tr>`;
+  }
+  document.getElementById('dbgTbl').innerHTML=html;
+}
+let lastEv=0;
+function updateLog(){
+  const el=document.getElementById('log');
+  if(!BT) return;
+  for(let i=lastEv;i<BT.events.length;i++){
+    const e=BT.events[i]; const d=document.createElement('div');
+    if(e.type==='hit'){ d.className='hit';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.a.def.name.split(' ')[0]} → ${e.t.def.name.split(' ')[0]} 命中 ${e.dmg.toFixed(1)} (${BAND_CN[e.band]})${e.degraded?' ⚠降档':''}`; }
+    else if(e.type==='miss'){ d.className='miss';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.a.def.name.split(' ')[0]} 射失 (${BAND_CN[e.band]})`; }
+    else if(e.type==='rupture'){ d.className='rupt';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.ship.def.name.split(' ')[0]} 爆管！耐久 -25%，锅炉受损`; }
+    else if(e.type==='rune'){ d.className='rune';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.ship.def.name.split(' ')[0]} 崩纹！装甲减半`; }
+    else if(e.type==='launch'){ d.className='launch';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.ship.def.name.split(' ')[0]} 分离冲撞舰（余架${e.ship.racksLeft} 余驾${e.ship.pilotsAvail}）`; }
+    else if(e.type==='eject'){ d.className='eject';
+      d.textContent=`[${BT.time.toFixed(1)}s] 锁定完成，驾驶员弹射逃生`; }
+    else if(e.type==='ram'){ d.className='ram';
+      d.textContent=`[${BT.time.toFixed(1)}s] 冲撞命中！伤害 ${e.dmg.toFixed(1)}（接近速度 ${e.closing.toFixed(0)}）`; }
+    else if(e.type==='ramMiss'){ d.className='miss';
+      d.textContent=`[${BT.time.toFixed(1)}s] 冲撞脱靶${e.pilotEjected?'（已弹射，人在海上）':'（未弹射）'}`; }
+    else if(e.type==='intercepted'){ d.className='rupt';
+      d.textContent=`[${BT.time.toFixed(1)}s] 冲撞舰被近防击毁${e.pilotKilled?'，驾驶员阵亡':'（驾驶员已逃生）'}`; }
+    else if(e.type==='salvagePod'){ d.className='launch';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.ship.def.name.split(' ')[0]} 捞回驾驶员（余驾${e.ship.pilotsAvail}）`; }
+    else if(e.type==='salvageWreck'){ d.className='launch';
+      d.textContent=`[${BT.time.toFixed(1)}s] ${e.ship.def.name.split(' ')[0]} 回收残骸，重铸挂载位（余架${e.ship.racksLeft}）`; }
+    el.appendChild(d);
+  }
+  lastEv=BT.events.length;
+  while(el.childNodes.length>120) el.removeChild(el.firstChild);
+  el.scrollTop=el.scrollHeight;
+}
+
+/* ============================================================
+   批量模拟：4×4 档位对轰胜率矩阵
+   ============================================================ */
+const PRESET={banked:10,cruise:35,full:65,over:90};
+/* 对称对抗：双方同舰种；奇数局交换阵营以消除先手偏差。
+   scenario:
+     duel   —— 站桩对射，返回 pa 方是否获胜，平局计 0.5
+     chase  —— pb 方从 0s 起撤退，返回 pa 方（追击者）是否吃掉对方
+     escape —— pa 方从 8s 起撤退，返回 pa 方最终剩余船体比例（1=毫发无伤脱离）
+*/
+function simMatch(pa,pb,seed,shipKey,scenario){
+  const swap=(seed%2===1);
+  const A=swap?pb:pa, B=swap?pa:pb;
+  const key=shipKey||'ironclad';
+  const sc=scenario||'duel';
+  const b=new Battle(seed,{
+    playerShips:[key,key], enemyShips:[key,key], autoPressure:{0:A,1:B}, bounds:SIM_BOUNDS,
+    ram:(sc==='ram')                        // 只有 ram 场景启用冲撞舰，其余场景保持纯净对照
+  });
+  const iA=swap?1:0, iB=swap?0:1;          // pa / pb 各自所在的舰队下标
+  const limit = (sc==='duel'||sc==='ram') ? 200 : 90;
+  const retreatFrom = sc==='chase' ? 0 : (sc==='escape' ? 8 : -1);
+  const retreatFleet = sc==='chase' ? iB : iA;
+  let t=0;
+  while(!b.finalized && t<limit){
+    if(retreatFrom>=0 && t>=retreatFrom)
+      b.fleets[retreatFleet].living().forEach(s=>s.order='retreat');
+    b.tick(0.1); t+=0.1;
+  }
+  if(sc==='chase')  return {aWon: b.fleets[iB].defeated()?1:0, t:b.time};
+  if(sc==='escape'){
+    const sh=b.fleets[iA].ships;
+    return {aWon: sh.reduce((s,x)=>s+Math.max(0,x.hull)/x.def.hullMax,0)/sh.length, t:b.time};
+  }
+  let aWon=0.5;
+  if(b.winner===0) aWon = swap?0:1;
+  else if(b.winner===1) aWon = swap?1:0;
+  return {aWon, t:b.time};
+}
+function runBatch(){
+  const n=+document.getElementById('batchN').value;
+  const shipKey=document.getElementById('batchShip').value;
+  const scene=document.getElementById('batchScene').value;
+  const t0=performance.now();
+  const res={}; BANDS.forEach(a=>{res[a]={}; BANDS.forEach(b=>res[a][b]={w:0,n:0,t:0});});
+  let seed=12345;
+  for(const a of BANDS) for(const b of BANDS){
+    for(let i=0;i<n;i++){
+      const r=simMatch(PRESET[a],PRESET[b],seed++,shipKey,scene);
+      const rec=res[a][b]; rec.n++; rec.t+=r.t; rec.w+=r.aWon;
+    }
+  }
+  const SCENE_CN={duel:'站桩对射 · 蓝方胜率',ram:'冲撞战 · 蓝方胜率',
+                  chase:'追击 · 蓝方击杀率',escape:'脱离 · 蓝方剩余船体'};
+  let html='<tr><th>蓝＼红</th>';
+  BANDS.forEach(b=>html+=`<th class="n">${BAND_CN[b]}</th>`);
+  html+='<th class="n">均值</th></tr>';
+  const avg={};
+  for(const a of BANDS){
+    html+=`<tr><th>${BAND_CN[a]}</th>`;
+    let sum=0;
+    for(const b of BANDS){
+      const r=res[a][b], rate=r.w/r.n; sum+=rate;
+      // 镜像格（同档对决）只作自检，不参与强弱判定
+      const cls = a===b ? 'self' : (rate>0.55?'win':(rate<0.45?'lose':''));
+      html+=`<td class="n ${cls}">${(rate*100).toFixed(0)}%</td>`;
+    }
+    avg[a]=sum/4;
+    html+=`<td class="n"><b>${(avg[a]*100).toFixed(0)}%</b></td></tr>`;
+  }
+  document.getElementById('mtxTbl').innerHTML=html;
+
+  const sorted=BANDS.slice().sort((x,y)=>avg[y]-avg[x]);
+  const best=sorted[0], worst=sorted[sorted.length-1];
+  const diag=BANDS.map(b=>`${BAND_CN[b]}${(res[b][b].w/res[b][b].n*100).toFixed(0)}%`).join(' ');
+  let msg=`${SCENE_CN[scene]}　最高：<b>${BAND_CN[best]}</b> ${(avg[best]*100).toFixed(0)}% ／ 最低：<b>${BAND_CN[worst]}</b> ${(avg[worst]*100).toFixed(0)}%。`;
+  if(scene==='duel' && avg[best]>0.62)
+    msg+=` <span style="color:#A32D2D">${BAND_CN[best]}明显过强，玩家会无脑常驻该档。</span>`;
+  else if(scene!=='duel' && avg[best]-avg[worst]<0.10)
+    msg+=` <span style="color:#A32D2D">机动性在本场景里没有区分度——速度优势没有兑现成战果，需要检查航速/射程/追击逻辑。</span>`;
+  else if(Math.abs(avg[best]-avg[worst])<0.10)
+    msg+=` <span style="color:#3B6D11">四档接近均衡，取舍成立。</span>`;
+  else msg+=` 存在强弱差异。`;
+  document.getElementById('batchStat').innerHTML=
+    `${n*16} 场 / ${((performance.now()-t0)/1000).toFixed(1)}s　`+msg+
+    `<br>自检（同档镜像应≈50%／脱离应≈100%）：${diag}`;
+  if(scene==='ram') runRamScan(shipKey,Math.max(12,Math.round(n/2)));
+  else { document.getElementById('ramScanTbl').innerHTML='';
+         document.getElementById('ramScanNote').style.display='none'; }
+}
+
+/* 冲撞战专项扫描：同档镜像对决下，各压力档的冲撞舰表现。
+   核心要看的是「平均接近速度」是否随压力上升——那是速度在进攻端兑现的直接证据。 */
+function runRamScan(shipKey,n){
+  let html='<tr><th>压力档</th><th class="n">每局发射</th><th class="n">命中率</th>'
+    +'<th class="n">被拦截</th><th class="n">脱靶(擦过)</th><th class="n">平均接近速度</th>'
+    +'<th class="n">每局冲撞伤害</th><th class="n">捞回/阵亡(漂失)</th></tr>';
+  const acc={};
+  for(const b of BANDS){
+    let launched=0,hits=0,inter=0,miss=0,graze=0,dmg=0,sumClosing=0,saved=0,lost=0,exp=0;
+    const m=Math.max(1,Math.round(n/2));
+    for(let i=0;i<m;i++){
+      const bt=new Battle(9000+i*7,{playerShips:[shipKey,shipKey],enemyShips:[shipKey,shipKey],
+        autoPressure:{0:PRESET[b],1:PRESET[b]}, bounds:SIM_BOUNDS, ram:true});
+      let t=0; while(!bt.finalized && t<200){ bt.tick(0.1); t+=0.1; }
+      const r=bt.ramStat;
+      launched+=r.launched; hits+=r.hits; inter+=r.intercepted; miss+=r.missed; graze+=r.grazed||0;
+      dmg+=r.damage; sumClosing+=r.avgClosing; saved+=r.pilotsSaved; lost+=r.pilotsLost; exp+=r.podsExpired||0;
+    }
+    acc[b]={launched:launched/m, hitRate: launched? hits/launched : 0,
+      inter:inter/m, miss:miss/m, graze:graze/m, closing: hits? sumClosing/hits : 0,
+      dmg:dmg/m, saved:saved/m, lost:lost/m, exp:exp/m};
+  }
+  for(const b of BANDS){
+    const a=acc[b];
+    html+=`<tr><th>${BAND_CN[b]}</th><td class="n">${a.launched.toFixed(1)}</td>`
+      +`<td class="n">${(a.hitRate*100).toFixed(0)}%</td><td class="n">${a.inter.toFixed(1)}</td>`
+      +`<td class="n">${a.miss.toFixed(1)}${a.graze?' <span style="color:#8A6D1F">('+a.graze.toFixed(1)+')</span>':''}</td>`
+      +`<td class="n"><b>${a.closing.toFixed(0)}</b></td>`
+      +`<td class="n">${a.dmg.toFixed(0)}</td>`
+      +`<td class="n">${a.saved.toFixed(1)} / ${a.lost.toFixed(1)}${a.exp?' <span style="color:#A32D2D">('+a.exp.toFixed(1)+')</span>':''}</td></tr>`;
+  }
+  document.getElementById('ramScanTbl').innerHTML=html;
+  const cs=BANDS.map(b=>acc[b].closing);
+  const note=document.getElementById('ramScanNote');
+  note.style.display='';
+  /* 注意：不要拿「接近速度随档位单调上升」当验收标准。
+     同档镜像里双方压力相同，母船航速与冲撞舰航速一起涨，接近速度主要由
+     「目标能不能跑掉」决定，不必然单调。真正的证据在胜率矩阵里：
+     高压方撞得狠、自己也难被撞，所以挂载冲撞舰后最优档会整体推向高压。 */
+  note.innerHTML=`<b>同档镜像下的冲撞舰表现（每档 ${Math.max(1,Math.round(n/2))} 局）</b>　`
+    +`平均接近速度：${BANDS.map(b=>BAND_CN[b]+' '+acc[b].closing.toFixed(0)).join('　')}`
+    +`<br><b>读法提醒：</b>接近速度<span style="color:#8A6D1F">不必</span>随压力档单调上升——同档镜像里双方压力相同，`
+    +`接近速度主要由「目标跑不跑得掉」决定。要验证速度是否在进攻端兑现，`
+    +`请看上方胜率矩阵：挂载冲撞舰后三舰种的最优档会一起推向<b>全速</b>，这才是证据。`
+    +`<br>"擦过"=贴到目标但相对速度低于 ${CONFIG.ram.grazeMin}（多在追同向逃跑的船），按设计不算撞击；`
+    +`"漂失"=逃生舱没等到自家船来捞，压力高于 ${CONFIG.ram.salvageMaxPressure} 的母船放不下小艇，只能眼看着人没了。`;
+}
+
+/* ============================================================
+   交互与主循环
+   ============================================================ */
+let BT=null, paused=false, speed=1, acc=0, lastTs=0;
+const STEP=0.05;
+const pRange=document.getElementById('pRange');
+function reset(){
+  BT=new Battle((Date.now()&0xffff)+7,{});
+  applyPlayerPressure();
+  document.getElementById('log').innerHTML=''; lastEv=0; acc=0;
+}
+function applyPlayerPressure(){
+  if(!BT) return;
+  BT.fleets[0].living().forEach(s=>s.setPressure(parseFloat(pRange.value)));
+  document.getElementById('pVal').textContent=pRange.value;
+  document.getElementById('pBand').textContent='（'+BAND_CN[Boiler.band(parseFloat(pRange.value))]+'）';
+}
+function enemyAuto(){
+  if(!BT||!document.getElementById('cbAuto').checked) return;
+  for(const s of BT.fleets[1].living()){
+    const t=s.target;
+    if(!t||!t.isAlive()){ s.setPressure(35); continue; }
+    const d=Math.hypot(t.x-s.x,t.y-s.y);
+    if(d>s.def.pref*1.3 || d<s.def.pref*0.7) s.setPressure(90);
+    else s.setPressure(20);
+  }
+}
+pRange.addEventListener('input',applyPlayerPressure);
+document.querySelectorAll('.band').forEach(b=>b.addEventListener('click',()=>{
+  pRange.value=b.dataset.p; applyPlayerPressure();
+}));
+document.getElementById('btnPause').addEventListener('click',()=>{
+  paused=!paused; document.getElementById('btnPause').textContent=paused?'继续':'暂停';
+  document.getElementById('btnPause').classList.toggle('on',paused);
+});
+document.getElementById('btnStep').addEventListener('click',()=>{
+  if(BT){ enemyAuto(); BT.tick(0.1); }
+});
+document.getElementById('btnReset').addEventListener('click',reset);
+document.querySelectorAll('.spd').forEach(b=>b.addEventListener('click',()=>{
+  speed=parseFloat(b.dataset.s);
+  document.querySelectorAll('.spd').forEach(x=>x.classList.toggle('on',x===b));
+}));
+document.getElementById('batchN').addEventListener('input',e=>{
+  document.getElementById('batchNV').textContent=e.target.value;
+});
+document.getElementById('btnBatch').addEventListener('click',runBatch);
+
+let uiTick=0;
+function loop(ts){
+  const dt=Math.min(0.05,(ts-lastTs)/1000)||0; lastTs=ts;
+  if(!paused && BT && !BT.finalized){
+    acc+=dt*speed;
+    let guard=0;
+    while(acc>=STEP && guard++<20){ enemyAuto(); BT.tick(STEP); acc-=STEP; }
+  }
+  draw();
+  if(++uiTick%6===0){ updateDbg(); updateStats(); updateRam(); updateLog(); }
+  requestAnimationFrame(loop);
+}
+const bsEl=document.getElementById('batchShip');
+Object.keys(CONFIG.ships).forEach(k=>{
+  const o=document.createElement('option'); o.value=k; o.textContent=CONFIG.ships[k].name;
+  bsEl.appendChild(o);
+});
+bsEl.value='ironclad';
+buildParams(); reset(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

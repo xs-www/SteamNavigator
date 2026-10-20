@@ -2659,6 +2659,15 @@ export const MODULES = {
       "`godot/verify_props.gd` 是道具 GLB 导入的回归闸门，`godot/verify_port_facilities.gd` 是港口设施 6 件锚点的导入闸门；改动资产后先 `godot --headless --import` 再重跑对应脚本。"
     ]
   },
+  "SNBattleSim": {
+    intro: "独立 2D 舰队战斗规则试验台：验证固定船体、多武器、视野/战争迷雾、直射/炮击/侧弦齐射、货船护航与用户自定义武器。",
+    contracts: [
+      "不接入 Godot 主流程或战役存档；装配配置与战斗运行时严格分离。",
+      "船体固定为 small / medium / large 三种；武器与视野组件数据驱动，新增武器不得修改模拟核心。",
+      "相同 seed、装配和 tick 序列产生相同结果；浏览器界面只通过 BattleSimulation 公共接口驱动战斗。战斗世界无边界，镜头按全部在场船只包围盒独立取景。",
+      "greybox.html 保留为压力与冲撞专项旧灰盒；新版入口为 index.html，使用零依赖本地服务器加载 ES 模块。"
+    ]
+  },
   "SNModMaker": {
     intro: "零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。",
     contracts: [

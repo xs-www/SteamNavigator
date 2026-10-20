@@ -48,6 +48,7 @@ const MODULE_PATHS = [
   "dev_mods/core",
   "dev_scenes",
   "tools",
+  "SNBattleSim",
   "SNModMaker",
 ];
 
@@ -446,6 +447,7 @@ function renderRootReadme(docRoot, generatedAt, commit) {
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
   l0.push("- 释放与导出：[export_presets.cfg](export_presets.cfg.md)、[release.yml](.github/workflows/release.yml.md)");
   l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");
+  l0.push("- 战斗规则试验台：[SNBattleSim](SNBattleSim/README.md)");
   l0.push("- 内容 CLI：[content.mjs](SNModMaker/tools/content.mjs.md)（agent 无头增删改内容）");
   l0.push("- 容器部署：[docker-compose.yml](docker-compose.yml.md)、[Dockerfile](SNModMaker/Dockerfile.md)（数据在容器卷，配合 tailscale serve）");
   l0.push("- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)");

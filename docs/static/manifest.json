@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T10:13:19.261Z",
-  "commit": "35d6c86",
+  "generated_at": "2026-10-20T13:16:41.928Z",
+  "commit": "a612aa8",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 564,
-    "documented": 201,
-    "grouped": 363
+    "sources": 578,
+    "documented": 213,
+    "grouped": 365
   },
   "files": [
     {
@@ -19,10 +19,96 @@
     },
     {
       "source": "README.md",
-      "sha256": "3a9b2bd4fc85b452a1a1fb3a1abbc7fd7e6d9abdd5a5e6eb98483536de0831db",
+      "sha256": "52e1c22abd35da24bff7dc3da2b58b65a72f9129a3cd0bf75f5903609afc0bf4",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
+    },
+    {
+      "source": "SNBattleSim/README.md",
+      "sha256": "1621456936e4613aee7360c7261149d17005aadf1055153abf3ce5d33beef26e",
+      "doc": "docs/static/SNBattleSim/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNBattleSim/README.md"
+    },
+    {
+      "source": "SNBattleSim/css/app.css",
+      "sha256": "5111c4f252bcc0f873d008c5f4b0cef837af212693524ff65eee74bbb07e8cb0",
+      "doc": "docs/static/SNBattleSim/css/app.css.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/greybox.html",
+      "sha256": "88adf11eb29103ebac41b0b0606213d7fd2eff51f77814c02d957e9ff18cd7c4",
+      "doc": "docs/static/SNBattleSim/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNBattleSim/README.md"
+    },
+    {
+      "source": "SNBattleSim/index.html",
+      "sha256": "c0e0c9fe1f5bd82a27752505081c7a723707686639781733fbcb2a47f7dfc261",
+      "doc": "docs/static/SNBattleSim/index.html.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/app.mjs",
+      "sha256": "2809ac92223c99f0333d18368c5de323e7b23f97e9a68137536b4f5cf8f49942",
+      "doc": "docs/static/SNBattleSim/js/app.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/camera.mjs",
+      "sha256": "6b7429218aa6f621ed0cc747f21e94051d1be8c254fdecc15504e00e6cc6417a",
+      "doc": "docs/static/SNBattleSim/js/camera.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/catalog.mjs",
+      "sha256": "864442bc694bc75600145c1a229458300f738929eb73423a22b7f9b9c011e51f",
+      "doc": "docs/static/SNBattleSim/js/catalog.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/combat_hud.mjs",
+      "sha256": "587b7921cc093aef9f60d8ab3b211e0978bee254a5fd29d357e4c249fce38a54",
+      "doc": "docs/static/SNBattleSim/js/combat_hud.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/loadout.mjs",
+      "sha256": "2edc000046058e47418926a836eac583b9251f3aab4759d062672931ecca4bf3",
+      "doc": "docs/static/SNBattleSim/js/loadout.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/range_overlay.mjs",
+      "sha256": "1149e020dc4f1fb5e3fa104af74c5a4674ae09dc19047dcdabbfb91c3108c4e1",
+      "doc": "docs/static/SNBattleSim/js/range_overlay.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/simulation.mjs",
+      "sha256": "19042fe354d050197ed6c0dd88aefd916174e69e17902f14a7510cb7d64ff2a0",
+      "doc": "docs/static/SNBattleSim/js/simulation.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/tactics.mjs",
+      "sha256": "831fd6acd29f25be709e3bc4278e3ce72159eae8f31bb3223d638242d120984d",
+      "doc": "docs/static/SNBattleSim/js/tactics.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/tests/simulation.test.mjs",
+      "sha256": "a642bb984895b95a3ee1b00eb0e12665cda21e09dd0dcb0d3befcddbb39f918e",
+      "doc": "docs/static/SNBattleSim/tests/simulation.test.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/tools/serve.mjs",
+      "sha256": "44a53af9429622d72668a638a57cc0de02d58a3f33a130be9055490bb4b8ca28",
+      "doc": "docs/static/SNBattleSim/tools/serve.mjs.md",
+      "status": "documented"
     },
     {
       "source": "SNModMaker/.dockerignore",
@@ -2073,7 +2159,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_asset_loader.gd",
-      "sha256": "db5bef65f3a90e90ee4b2a6efe0ee568f173dc4cfbd68aaa5812d0f571a4e108",
+      "sha256": "5346692c95aa19ba8f36a6e1ecf88bbae9c240f5ee391eb2a20c0358573ee06c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2253,7 +2339,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "90c11c08f00f9789c06b822f7027e465c5957150fa0b36f9d126b7e68747982a",
+      "sha256": "21b9243b35db8d19f622aa419d53b13271d70a9f5861c3c37827372bcadf0bc2",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -3074,7 +3160,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "9d2e422230b68655b85faed538a0266d91569960ad28765340b1461b1e653486",
+      "sha256": "de5cea77b71458106fa81c95a8a66c278201194f1a4df7e16102323f6b73a72d",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3112,7 +3198,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "4ed70a850ac4c9ad1b32b7fea88c29a6c18cd3d5c1672b105af2be4e290a93d5",
+      "sha256": "58d5ed60cbea8472001d126092cff9326042a4e9e2fbb90098d073fe4c81882c",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -3247,7 +3333,7 @@
     },
     {
       "source": "tools/modeling/briefs/sn_ironclad_broadside.json",
-      "sha256": "45abbc287f50d54a203d5097856cd2653f1144a7f5f2f21b1e8d72e410ce93b0",
+      "sha256": "d90c9ea6af010b5aa4d1b678e305b15b64dd061363f9ab32d15903e8a27a21c7",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3514,7 +3600,7 @@
     },
     {
       "source": "tools/modeling/generators/ship_parts/core.py",
-      "sha256": "db33800080dea7ad015ea93dd8603a071aa69f8a92c7e77ee4f5eab97c56f2c1",
+      "sha256": "3e2fbec8d6ce6c7e7a2bf2bfcbaab4da0b13dc254bce9ee3b1765603ecf376da",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3600,25 +3686,25 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_kit_batch2.py",
-      "sha256": "2367b31a496d9f8eade7bc687e5e0603a8163c2b93aab489e03f331b720b3249",
+      "sha256": "7d3c36f6c81fa70c2cd0105448c4c41845cf691b913538feb98f8e8f945febcd",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_kit_batch2.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_materials.py",
-      "sha256": "a4c1751787ff6ef6065672fe06bebfa9f30ee93f29aedcc500afcb6edef1ae40",
+      "sha256": "1204c1dfe54351d82dd6bf287c5965ee4636071cacf6607cbe7bfb6e8e732d61",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_materials.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_tavern_generator.py",
-      "sha256": "1861463ce444c63ce138ffa23ea3457529ca6f25f700d3a094ad105c9fabdfdf",
+      "sha256": "4c28f6260d981d945852db7b92c12afc2e55ec9e527231bd81e5ac1e2f655603",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_tavern_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py",
-      "sha256": "b6c94b5610dfa90d8b6f165952f8bcc2d9f00d6b297ec2c1c1193a3017a18cbb",
+      "sha256": "5794cee2570d5836235d857bf1fc9011d04b6f2c01a0c928ab83ae7cc2b9ab17",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py.md",
       "status": "documented"
     },
@@ -3659,7 +3745,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_schooner_fame_generator.py",
-      "sha256": "d24cd324a932a90838f252b88939a5cdf7d819ee24b620f1a8c6cc0f3e2f54fc",
+      "sha256": "7b301f22789bb02b6024e6e0c196ab250ee511568602eee3d6fb18ec5c8f8894",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3735,7 +3821,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "af971754b6bd4c39c22e84ca3c54e3a40a763eee7ec4dc2c0545895e3307cb16",
+      "sha256": "4b9367a8aa72c19036dcbc1276894d55a398b2a150d20127cbece890c966cc91",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

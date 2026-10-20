@@ -1,0 +1,104 @@
+<!-- @static-doc -->
+<!-- 作用：战斗模拟器新版入口，承载 2D 战场、双舰队装配器、自定义武器目录与配置交换界面。 -->
+<!-- -->
+<!-- ## 契约与约束 -->
+<!-- - 页面无远程依赖，需通过本目录本地服务器加载 ES 模块。 -->
+<!-- - `greybox.html` 保留为旧版压力/冲撞参数验证台，不参与新版运行时。 -->
+<!-- - 舰队装配器同时编辑舰船部件与受限的声明式战术状态机。 -->
+<!-- - 战斗事件以战场内 HUD 呈现，战场下方保留给所选舰的实时状态。 -->
+<!-- @end-static-doc -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Steam Navigator · 舰队战斗模拟器</title>
+  <link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">STEAM NAVIGATOR / TACTICAL LAB</p>
+      <h1>舰队战斗模拟器</h1>
+      <p>固定三种船体，自由组合武器与视野组件，验证护航、侦测和炮击。</p>
+    </div>
+    <div class="top-actions">
+      <label class="file-button">导入配置<input id="importConfig" type="file" accept="application/json"></label>
+      <button id="exportConfig">导出配置</button>
+      <a href="./greybox.html">旧版压力灰盒</a>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel builder-panel">
+      <div class="panel-title">
+        <div><span>01</span><h2>舰队装配器</h2></div>
+        <div class="mini-actions"><button id="addCombat">+ 战斗舰</button><button id="addCargo">+ 货船</button></div>
+      </div>
+      <div id="fleetTabs" class="fleet-tabs"></div>
+      <div id="fleetList" class="fleet-list"></div>
+      <div id="shipEditor" class="ship-editor"></div>
+    </aside>
+
+    <section class="center-column">
+      <section class="panel battlefield-panel">
+        <div class="panel-title">
+          <div><span>02</span><h2>2D 战场</h2></div>
+          <div id="battleStatus" class="battle-status">等待开始</div>
+        </div>
+        <div class="battlefield-stage">
+          <canvas id="battlefield" width="920" height="560"></canvas>
+          <div id="eventLog" class="event-log battle-event-hud"><div class="empty compact">尚无事件</div></div>
+        </div>
+        <div class="battle-controls">
+          <button id="startBattle" class="primary">开始 / 重置</button>
+          <button id="pauseBattle">暂停</button>
+          <button id="stepBattle">单步 0.1s</button>
+          <label>速度<select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+          <label>观察方<select id="viewMode"><option value="0">蓝方视野</option><option value="1">红方视野</option><option value="both">双方 / 全知</option></select></label>
+          <label>种子<input id="seed" type="number" value="5201"></label>
+        </div>
+        <div class="legend"><span class="blue">蓝方</span><span class="red">红方</span><span class="vision">青圈＝所选舰视野</span><span class="attack">彩色范围＝逐武器射界（侧弦为双扇区）</span><span class="cargo">金边＝货船</span><span class="ghost">虚线＝最后已知位置</span></div>
+      </section>
+      <section class="panel ship-status-panel">
+        <div class="panel-title"><div><span>03</span><h2>所选舰实时状态</h2></div></div>
+        <div id="shipRuntimeStatus" class="ship-runtime-status"><div class="empty compact">开始战斗后显示所选舰实时状态</div></div>
+      </section>
+    </section>
+
+    <aside class="panel arsenal-panel">
+      <div class="panel-title"><div><span>04</span><h2>武器组件库</h2></div></div>
+      <div id="weaponCatalog" class="weapon-catalog"></div>
+      <div class="catalog-subtitle">视野组件库</div>
+      <div id="sensorCatalog" class="weapon-catalog sensor-catalog"></div>
+      <details open>
+        <summary>添加自定义武器</summary>
+        <form id="weaponForm" class="weapon-form">
+          <div class="form-grid two">
+            <label>武器 ID<input name="id" required placeholder="my_cannon" pattern="[A-Za-z0-9_-]+"></label>
+            <label>名称<input name="name" required placeholder="长管火炮"></label>
+            <label>类型<select name="kind"><option value="direct">直射</option><option value="artillery">炮击</option><option value="broadside">侧弦炮</option></select></label>
+            <label>颜色<input name="color" type="color" value="#8fe3ff"></label>
+            <label>伤害<input name="damage" type="number" min="1" max="120" value="18"></label>
+            <label>射程<input name="range" type="number" min="60" max="700" value="300"></label>
+            <label>最小射程<input name="minRange" type="number" min="0" max="400" value="0"></label>
+            <label>装填秒数<input name="cooldown" type="number" min="0.25" max="20" step="0.05" value="2.4"></label>
+            <label>基础命中<input name="accuracy" type="number" min="0.05" max="0.98" step="0.01" value="0.65"></label>
+            <label>炮弹速度<input name="projectileSpeed" type="number" min="60" max="900" value="280"></label>
+            <label>爆炸半径<input name="splash" type="number" min="0" max="100" value="0"></label>
+            <label>重量<input name="mass" type="number" min="1" max="80" value="12"></label>
+            <label>射界角度<input name="arc" type="number" min="30" max="360" value="180"></label>
+            <label>齐射弹数<input name="salvo" type="number" min="1" max="8" value="1"></label>
+          </div>
+          <button type="submit" class="primary full">添加到组件库</button>
+        </form>
+      </details>
+      <div class="rules-note">
+        <b>当前规则</b>
+        <p>直射要求当前视野；炮击可向刚丢失的最后位置盲射但精度较低；侧弦炮只在左右舷射界内齐射。每艘船可在装配器设置侦索、接近、交战、脱离和规避条件，不执行用户脚本。</p>
+      </div>
+    </aside>
+  </main>
+  <script type="module" src="./js/app.mjs"></script>
+</body>
+</html>
