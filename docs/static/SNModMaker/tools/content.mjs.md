@@ -1,6 +1,6 @@
 # `SNModMaker/tools/content.mjs`
 
-> 作用：SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验。
+> 作用：SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 16 个运行时类型与 8 个 Schema 2.0 草案类型。
 
 - 关键依赖：`SNStore`、`SNValidate`、`SNCatalog`、`content_json.mjs`、`Node 内置模块`
 - 类型：Node ES 模块
@@ -10,84 +10,90 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNMODMAKER` | L25 |
-| `USAGE` | L37 |
-| `BOOLEAN_FLAGS` | L88 |
-| `parseArgv(argv)` | L93 |
-| `flagTrue(ctx, name)` | L136 |
-| `flagValue(ctx, name)` | L143 |
-| `flagValues(ctx, name)` | L153 |
-| `requireFlag(ctx, name, label)` | L159 |
-| `jsonEqual(a, b)` | L173 |
-| `isPlainObject(value)` | L177 |
-| `sha256(buffer)` | L181 |
-| `splitLines(text)` | L185 |
-| `unifiedDiff(oldText, newText, context = 3)` | L193 |
-| `printJson(payload)` | L260 |
-| `stripChanges(changes)` | L264 |
-| `changeLines(changes)` | L272 |
-| `issueSummary(after, newIssues)` | L279 |
-| `buildStats(project)` | L293 |
-| `respond(ctx, payload, humanText, exitCode = 0)` | L301 |
-| `issueKey(issue)` | L313 |
-| `newIssuesBetween(baseline, after)` | L317 |
-| `listFilesRecursive(root)` | L326 |
-| `loadMod(ctx, modArg)` | L342 |
-| `fileText(load, rel)` | L367 |
-| `resolveInside(root, relative)` | L374 |
-| `validateContentFilePath(filePath)` | L387 |
-| `atomicWrite(absolute, buffer)` | L397 |
-| `collectChanges(load, writes, deletes, wouldWrite)` | L415 |
-| `verifyBaseline(load, writes, deletes)` | L444 |
-| `commitChanges(load, writes, deletes)` | L455 |
-| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L469 |
-| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L499 |
-| `planLocaleChanges(load, project, writes, localeNames)` | L518 |
-| `patchManifestText(originalText, manifest)` | L552 |
-| `planManifest(load, project, writes)` | L582 |
-| `runSyncCoreIndex(ctx)` | L594 |
-| `runNodeTests(ctx)` | L606 |
-| `finalizeWrite(ctx, options)` | L622 |
-| `parseDataPath(input)` | L696 |
-| `resolveTokenFile(reference)` | L741 |
-| `readTextFile(reference)` | L753 |
-| `parseValueToken(raw)` | L759 |
-| `parseJsonOrFile(raw, label)` | L784 |
-| `parseAssignmentSpec(raw)` | L794 |
-| `setByPath(target, pathSegments, value)` | L816 |
-| `getByPath(target, pathSegments)` | L830 |
-| `deepMerge(base, extra)` | L839 |
-| `buildData(typeKey, ctx)` | L850 |
-| `findLocalIdConflict(project, info, localId, exclude)` | L871 |
-| `validateLocalId(localId)` | L881 |
-| `collectStrings(value, output, depth = 0)` | L888 |
-| `applyValueAssignment(definition, assignment)` | L908 |
-| `nestValue(segments, value)` | L938 |
-| `insertValueAtPath(text, rootNode, pathSegments, value)` | L954 |
-| `applyAssignmentToText(text, definitionNode, assignment)` | L986 |
-| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1013 |
-| `describeFields(info)` | L1061 |
-| `collectObject(node, file)` | L1073 |
-| `inferType(target, raw)` | L1101 |
-| `expand(pathText, node, isRequired, file, depth)` | L1124 |
-| `describePayload(typeKey)` | L1162 |
-| `commandTypes(ctx)` | L1220 |
-| `commandDescribe(ctx)` | L1243 |
-| `commandList(ctx)` | L1270 |
-| `commandAdd(ctx)` | L1318 |
-| `commandSet(ctx)` | L1441 |
-| `commandLoc(ctx)` | L1497 |
-| `commandRm(ctx)` | L1549 |
-| `commandClone(ctx)` | L1619 |
-| `commandValidate(ctx)` | L1678 |
-| `commandNew(ctx)` | L1742 |
-| `COMMANDS` | L1826 |
-| `handleError(ctx, error)` | L1839 |
-| `main(argv)` | L1857 |
+| `draftTypes()` | L39 |
+| `allTypeInfos()` | L45 |
+| `findTypeInfo(typeKey)` | L49 |
+| `knownTypeKeys()` | L54 |
+| `schemaVersionFor(target)` | L59 |
+| `USAGE` | L72 |
+| `BOOLEAN_FLAGS` | L129 |
+| `parseArgv(argv)` | L134 |
+| `flagTrue(ctx, name)` | L177 |
+| `flagValue(ctx, name)` | L184 |
+| `flagValues(ctx, name)` | L194 |
+| `requireFlag(ctx, name, label)` | L200 |
+| `jsonEqual(a, b)` | L214 |
+| `isPlainObject(value)` | L218 |
+| `sha256(buffer)` | L222 |
+| `splitLines(text)` | L226 |
+| `unifiedDiff(oldText, newText, context = 3)` | L234 |
+| `printJson(payload)` | L301 |
+| `stripChanges(changes)` | L305 |
+| `changeLines(changes)` | L313 |
+| `issueSummary(after, newIssues)` | L320 |
+| `buildStats(project)` | L334 |
+| `respond(ctx, payload, humanText, exitCode = 0)` | L342 |
+| `issueKey(issue)` | L354 |
+| `newIssuesBetween(baseline, after)` | L358 |
+| `listFilesRecursive(root)` | L367 |
+| `loadMod(ctx, modArg)` | L383 |
+| `fileText(load, rel)` | L408 |
+| `resolveInside(root, relative)` | L415 |
+| `validateContentFilePath(filePath)` | L428 |
+| `atomicWrite(absolute, buffer)` | L438 |
+| `collectChanges(load, writes, deletes, wouldWrite)` | L456 |
+| `verifyBaseline(load, writes, deletes)` | L485 |
+| `commitChanges(load, writes, deletes)` | L496 |
+| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L510 |
+| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L540 |
+| `planLocaleChanges(load, project, writes, localeNames)` | L559 |
+| `patchManifestText(originalText, manifest)` | L593 |
+| `planManifest(load, project, writes)` | L623 |
+| `runSyncCoreIndex(ctx)` | L635 |
+| `runNodeTests(ctx)` | L647 |
+| `finalizeWrite(ctx, options)` | L663 |
+| `parseDataPath(input)` | L737 |
+| `resolveTokenFile(reference)` | L782 |
+| `readTextFile(reference)` | L794 |
+| `parseValueToken(raw)` | L800 |
+| `parseJsonOrFile(raw, label)` | L825 |
+| `parseAssignmentSpec(raw)` | L835 |
+| `setByPath(target, pathSegments, value)` | L857 |
+| `getByPath(target, pathSegments)` | L871 |
+| `deepMerge(base, extra)` | L880 |
+| `buildData(typeKey, ctx)` | L891 |
+| `findLocalIdConflict(project, info, localId, exclude)` | L912 |
+| `validateLocalId(localId)` | L922 |
+| `collectStrings(value, output, depth = 0)` | L929 |
+| `applyValueAssignment(definition, assignment)` | L949 |
+| `nestValue(segments, value)` | L979 |
+| `insertValueAtPath(text, rootNode, pathSegments, value)` | L995 |
+| `applyAssignmentToText(text, definitionNode, assignment)` | L1027 |
+| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1054 |
+| `describeFields(info)` | L1102 |
+| `collectObject(node, file)` | L1114 |
+| `inferType(target, raw)` | L1142 |
+| `expand(pathText, node, isRequired, file, depth)` | L1165 |
+| `describePayload(typeKey)` | L1203 |
+| `commandTypes(ctx)` | L1266 |
+| `commandDescribe(ctx)` | L1310 |
+| `commandList(ctx)` | L1340 |
+| `commandAdd(ctx)` | L1388 |
+| `commandSet(ctx)` | L1511 |
+| `commandLoc(ctx)` | L1567 |
+| `commandRm(ctx)` | L1619 |
+| `commandClone(ctx)` | L1689 |
+| `commandValidate(ctx)` | L1748 |
+| `commandNew(ctx)` | L1812 |
+| `COMMANDS` | L1896 |
+| `handleError(ctx, error)` | L1909 |
+| `main(argv)` | L1927 |
 
 ## 契约与约束
 
 - 十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。
 - 复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。
+- `types` 同时列出运行时类型与 Schema 2.0 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导（草案恒 2.0）。
 - `--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。
 - 输出契约：`--json` 时 stdout 只有一个 JSON 对象（成功 / 失败 / 用法错误都是），人读日志写 stderr；退出码 0 成功、1 执行失败 / 校验未通过 / 冲突、2 用法错误。
 - 写命令统一预检：改动前后各跑 `Validate.validateProject`，按 `severity|code|message|view` 求新增问题；new error 默认整批不写并退出 1，`--force` 只解除拦截、结果仍 `ok:false`。

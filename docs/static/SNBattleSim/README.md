@@ -23,13 +23,11 @@
 | `js/tactic_library.mjs` | 维护默认与自定义状态机库，迁移旧版随舰战术，并解析每艘船唯一挂载的状态机。 | [查看](./js/tactic_library.mjs.md) |
 | `js/tactics.mjs` | 定义开发者模式 FSM 的状态动作、模块化条件、AND/OR 聚合转移和确定性状态转换。 | [查看](./js/tactics.mjs.md) |
 | `mods/README.md` | 源文件：README.md | 本页 |
-| `mods/core-1.0.0.snavmod (1).zip` | 源文件：core-1.0.0.snavmod (1).zip | 本页 |
 | `tests/simulation.test.mjs` | 覆盖装配、十状态 FSM、状态机库挂载、模组目录/ZIP 往返、视野、武器射界和确定性战斗结果。 | [查看](./tests/simulation.test.mjs.md) |
 | `tools/cli.mjs` | 提供无浏览器的模组校验、状态机检查、确定性战斗快跑与示例模组导出，供 Agent 快速调试。 | [查看](./tools/cli.mjs.md) |
 | `tools/mod_io.mjs` | 为本地服务和 CLI 安全读取散装或 ZIP 形式的 SNBattleSim 模组，并导出游戏可识别的模组包。 | [查看](./tools/mod_io.mjs.md) |
 | `tools/serve.mjs` | 以零依赖本地 HTTP 服务启动 SNBattleSim，避免浏览器 file 协议阻止 ES 模块加载。 | [查看](./tools/serve.mjs.md) |
 | `tools/workspace_io.mjs` | 在 SNBattleSim/user_data 中原子读写模拟器工程，作为浏览器 localStorage 之外的明确持久化副本。 | [查看](./tools/workspace_io.mjs.md) |
-| `user_data/README.md` | 源文件：README.md | 本页 |
 
 ## 模块契约
 

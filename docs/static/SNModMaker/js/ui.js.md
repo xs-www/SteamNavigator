@@ -62,12 +62,13 @@
 | `renderAdditionalLocalization(project, definition, typeKey, draft)` | L810 |
 | `renderHullModuleConfiguration(definition)` | L825 |
 | `renderDefinitionForm(options)` | L855 |
-| `SNUI (global)` | L925 |
+| `SNUI (global)` | L940 |
 
 ## 契约与约束
 
 - 渲染层只输出 HTML；所有编辑通过 `data-field` / `data-action` 交给 app.js，不直接修改项目。
 - 表单字段类型、枚举、范围与必填来自 Schema；专用控件只针对 modifier/material/payload/condition/effect/option 等结构。
+- Schema 2.0 草案类型复用同一套 Schema 驱动表单；`schema-bundle` 缺少该 Schema 时给出提示并退回原始 JSON 编辑，而不是整页报错。
 - 标准实体表单额外呈现所有语言的名称/描述暂存输入，以及 information.texture/model 资源键配置。
 - 贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。
 - 船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。

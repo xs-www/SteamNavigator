@@ -48,109 +48,111 @@
 | `updateSaveState()` | L583 |
 | `timeText(date)` | L591 |
 | `renderSidebar()` | L599 |
-| `sideTypeLink(type, count, issues)` | L657 |
-| `activeLocale(locale)` | L668 |
-| `renderWorkspace()` | L676 |
-| `renderWelcome()` | L698 |
-| `loadRecent()` | L723 |
-| `renderOverview()` | L779 |
-| `ovField(labelText, control, hintText, wide)` | L888 |
-| `depRow(list, dependency, index)` | L896 |
-| `structureTree(project)` | L904 |
-| `renderModuleTabs(activeType)` | L932 |
-| `renderContent()` | L948 |
-| `renderDefinitionEditor(selected, info)` | L1023 |
-| `collectNeededKeys(project)` | L1079 |
-| `renderLocalization()` | L1094 |
-| `renderAssets()` | L1173 |
-| `paintModelThumbnails()` | L1215 |
-| `runModelThumbQueue()` | L1234 |
-| `setModelThumbImage(node, dataUrl)` | L1253 |
-| `renderValidation()` | L1263 |
-| `issueLocation(issue)` | L1301 |
-| `gotoIssue(index)` | L1313 |
-| `attrSelector(value)` | L1353 |
-| `inspectorData()` | L1361 |
-| `renderInspector()` | L1375 |
-| `inspectorLabel()` | L1398 |
-| `bindEvents()` | L1416 |
-| `closeAssetPickers(except)` | L1433 |
-| `openAssetPicker(picker)` | L1442 |
-| `filterAssetPicker(input)` | L1452 |
-| `onClick(event)` | L1467 |
-| `selectDefinition(filePath, index)` | L1499 |
-| `navigate(kind, argument)` | L1508 |
-| `onInput(event)` | L1544 |
-| `onChange(event)` | L1592 |
-| `onKeyDown(event)` | L1617 |
-| `onFocusOut(event)` | L1675 |
-| `applyField(element, fromChange)` | L1683 |
-| `readValue(element)` | L1731 |
-| `markChanged(structural)` | L1758 |
-| `updateDefinitionLocalizationPreview(definition, draft)` | L1770 |
-| `updateEntityLocaleDraft(element)` | L1789 |
-| `updateLocaleValue(element)` | L1804 |
-| `filterDefinitionCards()` | L1824 |
-| `renderLocalizationListOnly()` | L1831 |
-| `autoProjectId(name)` | L1844 |
-| `filterCoreList(query)` | L1850 |
-| `handleAction(element, event)` | L1861 |
-| `saveDefinitionAction()` | L2096 |
-| `gotoDefinitionLocalization(field, keyOverride)` | L2133 |
-| `addDefinitionAction()` | L2150 |
-| `cloneCoreAction(coreId)` | L2161 |
-| `deleteDefinitionAction()` | L2177 |
-| `duplicateDefinitionAction()` | L2202 |
-| `applyRawJson()` | L2213 |
-| `addDependency(list)` | L2236 |
-| `removeDependency(list, index)` | L2246 |
-| `syncNamespace()` | L2255 |
-| `gotoKeyDefinition(filePath, index)` | L2300 |
-| `deleteLocaleKey(key)` | L2309 |
-| `fillMissingKeys()` | L2319 |
-| `arrayAdd(path)` | L2341 |
-| `defaultArrayItem(path, definition)` | L2355 |
-| `arrayRemove(path, index)` | L2378 |
-| `arrayMove(path, index, direction)` | L2389 |
-| `addListValue(path, input, button)` | L2403 |
-| `listRemove(path, index)` | L2427 |
-| `enumToggle(path, value, element)` | L2440 |
-| `addCondition(path, kind)` | L2457 |
-| `removeCondition(path)` | L2469 |
-| `changeConditionKind(element)` | L2478 |
-| `changeConditionOp(element)` | L2498 |
-| `changeEffectOp(element)` | L2518 |
-| `addAssets()` | L2542 |
-| `removeAsset(path)` | L2584 |
-| `downloadAsset(path)` | L2600 |
-| `showNewProject()` | L2610 |
-| `createProjectFromModal()` | L2643 |
-| `showImport()` | L2679 |
-| `importFolder()` | L2699 |
-| `importFile()` | L2704 |
-| `importEntries(entries)` | L2709 |
-| `showExport()` | L2749 |
-| `exportZip()` | L2783 |
-| `exportZipToDisk()` | L2805 |
-| `deployGameMod()` | L2828 |
-| `exportProjectFile()` | L2854 |
-| `exportFolder()` | L2864 |
-| `showProjectLibrary()` | L2876 |
-| `openDiskProject(id)` | L2937 |
-| `openWorkspaceProject(id)` | L2956 |
-| `deleteDiskProject(id)` | L2974 |
-| `showCoreClone()` | L2993 |
-| `showAddLocale()` | L3019 |
-| `createLocale()` | L3034 |
-| `showAddLocaleKey()` | L3055 |
-| `createLocaleKey()` | L3067 |
-| `showHelp()` | L3084 |
-| `onDragEnter(event)` | L3126 |
-| `onDragOver(event)` | L3133 |
-| `onDragLeave()` | L3137 |
-| `onDrop(event)` | L3145 |
-| `runValidation()` | L3162 |
-| `copyText(text)` | L3168 |
+| `draftSchemaFootText()` | L660 |
+| `renderDraftSideGroup(counts, typeIssues)` | L665 |
+| `sideTypeLink(type, count, issues, draft)` | L677 |
+| `activeLocale(locale)` | L691 |
+| `renderWorkspace()` | L699 |
+| `renderWelcome()` | L721 |
+| `loadRecent()` | L746 |
+| `renderOverview()` | L802 |
+| `ovField(labelText, control, hintText, wide)` | L912 |
+| `depRow(list, dependency, index)` | L920 |
+| `structureTree(project)` | L928 |
+| `renderModuleTabs(activeType)` | L956 |
+| `renderContent()` | L972 |
+| `renderDefinitionEditor(selected, info)` | L1052 |
+| `collectNeededKeys(project)` | L1109 |
+| `renderLocalization()` | L1124 |
+| `renderAssets()` | L1203 |
+| `paintModelThumbnails()` | L1245 |
+| `runModelThumbQueue()` | L1264 |
+| `setModelThumbImage(node, dataUrl)` | L1283 |
+| `renderValidation()` | L1293 |
+| `issueLocation(issue)` | L1332 |
+| `gotoIssue(index)` | L1344 |
+| `attrSelector(value)` | L1384 |
+| `inspectorData()` | L1392 |
+| `renderInspector()` | L1406 |
+| `inspectorLabel()` | L1429 |
+| `bindEvents()` | L1447 |
+| `closeAssetPickers(except)` | L1464 |
+| `openAssetPicker(picker)` | L1473 |
+| `filterAssetPicker(input)` | L1483 |
+| `onClick(event)` | L1498 |
+| `selectDefinition(filePath, index)` | L1530 |
+| `navigate(kind, argument)` | L1539 |
+| `onInput(event)` | L1575 |
+| `onChange(event)` | L1623 |
+| `onKeyDown(event)` | L1648 |
+| `onFocusOut(event)` | L1706 |
+| `applyField(element, fromChange)` | L1714 |
+| `readValue(element)` | L1762 |
+| `markChanged(structural)` | L1789 |
+| `updateDefinitionLocalizationPreview(definition, draft)` | L1801 |
+| `updateEntityLocaleDraft(element)` | L1820 |
+| `updateLocaleValue(element)` | L1835 |
+| `filterDefinitionCards()` | L1855 |
+| `renderLocalizationListOnly()` | L1862 |
+| `autoProjectId(name)` | L1875 |
+| `filterCoreList(query)` | L1881 |
+| `handleAction(element, event)` | L1892 |
+| `saveDefinitionAction()` | L2127 |
+| `gotoDefinitionLocalization(field, keyOverride)` | L2164 |
+| `addDefinitionAction()` | L2181 |
+| `cloneCoreAction(coreId)` | L2192 |
+| `deleteDefinitionAction()` | L2208 |
+| `duplicateDefinitionAction()` | L2233 |
+| `applyRawJson()` | L2244 |
+| `addDependency(list)` | L2267 |
+| `removeDependency(list, index)` | L2277 |
+| `syncNamespace()` | L2286 |
+| `gotoKeyDefinition(filePath, index)` | L2331 |
+| `deleteLocaleKey(key)` | L2340 |
+| `fillMissingKeys()` | L2350 |
+| `arrayAdd(path)` | L2372 |
+| `defaultArrayItem(path, definition)` | L2386 |
+| `arrayRemove(path, index)` | L2409 |
+| `arrayMove(path, index, direction)` | L2420 |
+| `addListValue(path, input, button)` | L2434 |
+| `listRemove(path, index)` | L2458 |
+| `enumToggle(path, value, element)` | L2471 |
+| `addCondition(path, kind)` | L2488 |
+| `removeCondition(path)` | L2500 |
+| `changeConditionKind(element)` | L2509 |
+| `changeConditionOp(element)` | L2529 |
+| `changeEffectOp(element)` | L2549 |
+| `addAssets()` | L2573 |
+| `removeAsset(path)` | L2615 |
+| `downloadAsset(path)` | L2631 |
+| `showNewProject()` | L2641 |
+| `createProjectFromModal()` | L2674 |
+| `showImport()` | L2710 |
+| `importFolder()` | L2730 |
+| `importFile()` | L2735 |
+| `importEntries(entries)` | L2740 |
+| `showExport()` | L2780 |
+| `exportZip()` | L2814 |
+| `exportZipToDisk()` | L2836 |
+| `deployGameMod()` | L2859 |
+| `exportProjectFile()` | L2885 |
+| `exportFolder()` | L2895 |
+| `showProjectLibrary()` | L2907 |
+| `openDiskProject(id)` | L2968 |
+| `openWorkspaceProject(id)` | L2987 |
+| `deleteDiskProject(id)` | L3005 |
+| `showCoreClone()` | L3024 |
+| `showAddLocale()` | L3055 |
+| `createLocale()` | L3070 |
+| `showAddLocaleKey()` | L3091 |
+| `createLocaleKey()` | L3103 |
+| `showHelp()` | L3120 |
+| `onDragEnter(event)` | L3162 |
+| `onDragOver(event)` | L3169 |
+| `onDragLeave()` | L3173 |
+| `onDrop(event)` | L3181 |
+| `runValidation()` | L3198 |
+| `copyText(text)` | L3204 |
 
 ## 契约与约束
 
@@ -160,6 +162,7 @@
 - 自动保存有 800ms 防抖，并用 revision 防止旧保存清除新改动；IDB 失败回退 localStorage。
 - ID 修改与条目内翻译先进入 localizationDrafts；自动保存不写多语言键，只有“保存条目”提交键迁移。
 - 船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。
+- 侧栏在运行时类型分组之后渲染「Schema 2.0 草案 / 运行时不加载」分区（`DRAFT_TYPES` 为空则隐藏）；草案内容页显示 2.0 徽标与提示，并隐藏「从 Core 复制」。
 - 自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。
 - 检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。
 - 项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。

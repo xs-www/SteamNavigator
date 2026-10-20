@@ -1,6 +1,6 @@
 /*
  * AUTO-GENERATED FILE - do not edit by hand.
- * Source: /schemas/*.schema.json
+ * Source: /schemas (Content Schema 1.0 top-level + 2.0 draft under v2/)
  * Regenerate: node SNModMaker/tools/sync-schemas.mjs
  */
 (function (root) {
@@ -1593,6 +1593,48 @@
               "type": "string",
               "pattern": "^[a-z][a-z0-9_.-]*$"
             },
+            "diorama": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kit": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]*$"
+                },
+                "density": {
+                  "enum": [
+                    "sparse",
+                    "normal",
+                    "busy"
+                  ]
+                },
+                "town": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_.-]*$"
+                  }
+                },
+                "facility_visuals": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_.-]*$"
+                  }
+                },
+                "palette": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "landmark": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]*$"
+                }
+              }
+            },
             "market": {
               "type": "array",
               "minItems": 1,
@@ -1971,6 +2013,925 @@
               "type": "number",
               "minimum": -0.2,
               "maximum": 0.3
+            }
+          }
+        }
+      }
+    },
+    "v2/common.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/common-2.json",
+      "title": "Steam Navigator common content schema 2.0",
+      "description": "Shared definitions for Content Schema 2.0 files. Uses only the subset supported by the project SchemaValidator.",
+      "$defs": {
+        "id_ref": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{2,31}:[a-z_]+/[a-z0-9_]+$"
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "definition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name_key",
+            "enabled",
+            "data"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/id_ref"
+            },
+            "name_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "description_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "tags": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/tag"
+              }
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "information": {
+              "$ref": "#/$defs/entity_information"
+            },
+            "data": {
+              "type": "object"
+            }
+          }
+        },
+        "entity_information": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "texture": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "model": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          }
+        },
+        "range2": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "integer_range2": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "cargo_stack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "item",
+            "amount"
+          ],
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/id_ref"
+            },
+            "amount": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "tag_list": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/tag"
+          }
+        }
+      }
+    },
+    "v2/discovery.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/discovery-2.json",
+      "title": "Steam Navigator discovery content file (Schema 2.0 draft)",
+      "description": "Codex entry prototype: what a site/ruin reveals, its rarity, spawn weight and the ids it unlocks.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "discoveries"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/discovery_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "discovery_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rarity",
+            "weight",
+            "repeatable"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "site",
+                "ruin_room",
+                "relic",
+                "species",
+                "blueprint",
+                "lore"
+              ]
+            },
+            "rarity": {
+              "enum": [
+                "common",
+                "uncommon",
+                "rare",
+                "unique"
+              ]
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "repeatable": {
+              "type": "boolean"
+            },
+            "source_site_kinds": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "ruin",
+                  "base_site",
+                  "resource",
+                  "wreck",
+                  "landmark",
+                  "encounter"
+                ]
+              }
+            },
+            "region_kinds": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coastal",
+                  "archipelago",
+                  "open_sea",
+                  "industrial",
+                  "frontier"
+                ]
+              }
+            },
+            "requires_tags": {
+              "$ref": "common.schema.json#/$defs/tag_list"
+            },
+            "unlock_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/faction.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/faction-2.json",
+      "title": "Steam Navigator faction content file (Schema 2.0 draft)",
+      "description": "Persistent faction prototype: attitude thresholds, trade affinity, patrol presence and rivalries.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "factions"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/faction_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "attitude_thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hostile_below",
+            "friendly_at"
+          ],
+          "properties": {
+            "hostile_below": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "friendly_at": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            }
+          }
+        },
+        "faction_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "starting_reputation",
+            "attitude_thresholds",
+            "patrol_strength"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "merchant_guild",
+                "naval",
+                "scientific",
+                "pirates",
+                "civic",
+                "industrial"
+              ]
+            },
+            "starting_reputation": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "attitude_thresholds": {
+              "$ref": "#/$defs/attitude_thresholds"
+            },
+            "patrol_strength": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "trade_goods": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "home_region_tags": {
+              "$ref": "common.schema.json#/$defs/tag_list"
+            },
+            "contract_family": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "rival_factions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/region.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/region-2.json",
+      "title": "Steam Navigator region content file (Schema 2.0 draft)",
+      "description": "World region prototype: kind, size, density budgets, weather and faction presence.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "regions"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/region_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "region_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "size",
+            "port_density",
+            "site_density",
+            "weather_profile",
+            "region_tags"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "coastal",
+                "archipelago",
+                "open_sea",
+                "industrial",
+                "frontier"
+              ]
+            },
+            "size": {
+              "enum": [
+                "small",
+                "medium",
+                "large"
+              ]
+            },
+            "port_density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "site_density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "hostile_density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "weather_profile": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "factions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "region_tags": {
+              "$ref": "common.schema.json#/$defs/tag_list"
+            }
+          }
+        }
+      }
+    },
+    "v2/route_template.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/route-template-2.json",
+      "title": "Steam Navigator route template content file (Schema 2.0 draft)",
+      "description": "Generated sea route prototype: distance, risk, travel time, region affinity and optional encounters.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "route_templates"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/route_template_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "route_template_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "distance_range",
+            "risk_range",
+            "travel_time_range"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "sea_lane",
+                "trade_route",
+                "hazardous_shortcut"
+              ]
+            },
+            "distance_range": {
+              "$ref": "common.schema.json#/$defs/integer_range2"
+            },
+            "risk_range": {
+              "$ref": "common.schema.json#/$defs/range2"
+            },
+            "travel_time_range": {
+              "$ref": "common.schema.json#/$defs/range2"
+            },
+            "bidirectional": {
+              "type": "boolean"
+            },
+            "region_kinds": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coastal",
+                  "archipelago",
+                  "open_sea",
+                  "industrial",
+                  "frontier"
+                ]
+              }
+            },
+            "encounter_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            }
+          }
+        }
+      }
+    },
+    "v2/site.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/site-2.json",
+      "title": "Steam Navigator site content file (Schema 2.0 draft)",
+      "description": "Discoverable world site prototype (ruins, base sites, resources, wrecks, landmarks, encounters).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "sites"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/site_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "site_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "site_kind",
+            "weight"
+          ],
+          "properties": {
+            "site_kind": {
+              "enum": [
+                "ruin",
+                "base_site",
+                "resource",
+                "wreck",
+                "landmark",
+                "encounter"
+              ]
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "region_kinds": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coastal",
+                  "archipelago",
+                  "open_sea",
+                  "industrial",
+                  "frontier"
+                ]
+              }
+            },
+            "ruin_archetype": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "encounter_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "loot_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "repeatable": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "v2/start_profile.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/start-profile-2.json",
+      "title": "Steam Navigator start profile content file (Schema 2.0 draft)",
+      "description": "Persistent campaign start profile: world profile, starting build, difficulty, port tags and optional cargo/contract.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "start_profiles"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/start_profile_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "start_profile_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "world_profile",
+            "starting_build",
+            "difficulty",
+            "starting_port_tags"
+          ],
+          "properties": {
+            "world_profile": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "starting_build": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "difficulty": {
+              "enum": [
+                "easy",
+                "standard",
+                "hard"
+              ]
+            },
+            "starting_port_tags": {
+              "$ref": "common.schema.json#/$defs/tag_list"
+            },
+            "starting_money": {
+              "type": "number",
+              "minimum": 0
+            },
+            "starting_reputation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "starting_cargo": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/cargo_stack"
+              }
+            },
+            "starting_contract": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "notes_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        }
+      }
+    },
+    "v2/weather_profile.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/weather-profile-2.json",
+      "title": "Steam Navigator weather profile content file (Schema 2.0 draft)",
+      "description": "Climate band prototype: fog/storm/ice chances and voyage modifiers applied while a ship travels through a region.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "weather_profiles"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/weather_profile_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "weather_profile_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "climate",
+            "fog_chance",
+            "storm_chance",
+            "risk_modifier"
+          ],
+          "properties": {
+            "climate": {
+              "enum": [
+                "temperate",
+                "cold",
+                "tropical",
+                "volcanic",
+                "storm_belt"
+              ]
+            },
+            "fog_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "storm_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "ice_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "base_visibility": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "risk_modifier": {
+              "type": "number",
+              "minimum": -0.5,
+              "maximum": 0.5
+            },
+            "speed_modifier": {
+              "type": "number",
+              "minimum": -0.5,
+              "maximum": 0.5
+            },
+            "coal_drain_modifier": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "seasons": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "spring",
+                  "summer",
+                  "autumn",
+                  "winter"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/world_profile.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/world-profile-2.json",
+      "title": "Steam Navigator world profile content file (Schema 2.0 draft)",
+      "description": "Persistent world generation profile for regions, sites, ports, ruins, bases and factions.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "world_profiles"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/world_profile_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "world_profile_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "region_count",
+            "sites_per_region",
+            "port_count",
+            "start_region_tags"
+          ],
+          "properties": {
+            "region_count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "sites_per_region": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32
+            },
+            "port_count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "ruin_density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "base_site_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "faction_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "weather_profile": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "start_region_tags": {
+              "$ref": "common.schema.json#/$defs/tag_list"
             }
           }
         }

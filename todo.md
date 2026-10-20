@@ -14,6 +14,7 @@
 
 ### 近期
 
+- [ ] Content Schema 2.0 迁移（分层）：Phase A 按类型版本解耦 → B 世界探索家族提升 → C 实体合并 → D 其余系统 → E 冻结 1.0；方案见 [CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md)（待拍板 D1–D6）
 - [ ] 2.5D 舞台收尾：委托 / 情报页舞台化、事件触发的 3D 场景预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审
 - [ ] 高频决策页第二轮：市场数量步进 / 即时成本、持久 `ScreenHost` 与局部数据刷新
 - [ ] 存档：声明式 ID 别名与数据迁移执行器；出航失败回滚的存档路径端到端测试
@@ -40,6 +41,7 @@
 
 ## Recently Completed
 
+- [x] SNModMaker / Content CLI 适配 Content Schema 2.0 草案（2026-10-21）：`content_types.json.draft_types` 单一真源、8 类草案类型可编辑 / 校验 / 导出（`schema_version: "2.0"`）、v2 跨文件 `$ref` 与 `schema_version_mismatch` / `draft_content` / `capability_undeclared` 告警，运行时仍只加载 1.0
 - [x] 设计文档按生命周期整理：`docs/design/`（Active）/ `docs/specs/`（Finalized）/ `docs/archive/`（Archived）+ 顶层索引（2026-10-21）
 - [x] SNBattleSim 独立 2D 舰队战斗规则试验台（固定船体、多武器、视野、护航、自定义武器）
 - [x] 铁港建筑套件批次 A/B/C：LOD1、外部共享贴图、三栋新原型、明轮蒸汽船视觉精修
