@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CoreCompletenessChecker` | L1 |
+| `check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary` | L7 |
 
 ## 契约与约束
 

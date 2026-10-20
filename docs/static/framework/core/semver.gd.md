@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SemVer` | L1 |
+| `parse(text: String) -> SemVer` | L12 |
+| `is_valid(text: String) -> bool` | L31 |
 | `compare_to(other: SemVer) -> int` | L35 |
 | `as_text() -> String` | L76 |
 

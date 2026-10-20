@@ -10,6 +10,15 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipyardStage` | L1 |
+| `MODEL_BY_TIER` | L15 |
+| `FALLBACK_MODEL` | L20 |
+| `BACKGROUND_COLOR` | L21 |
+| `WATER_COLOR` | L22 |
+| `CAMERA_DIRECTION` | L23 |
+| `CAMERA_FOV` | L24 |
+| `FRAMING_MARGIN` | L25 |
+| `BOB_AMPLITUDE` | L26 |
+| `BOB_SPEED` | L27 |
 | `enter(_payload: Dictionary = {}) -> void` | L47 |
 | `exit() -> void` | L51 |
 | `bind(view_model: Dictionary = {}) -> void` | L55 |

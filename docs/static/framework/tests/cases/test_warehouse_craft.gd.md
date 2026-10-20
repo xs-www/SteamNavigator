@@ -8,6 +8,9 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `CONTRACT_FREIGHT` | L5 |
+| `MEDIUM_UNLOCKS` | L6 |
+| `LARGE_UNLOCKS` | L7 |
 | `test_run_start_initializes_warehouses_and_transit() -> void` | L41 |
 | `test_transit_weight_counts_without_cargo_capacity() -> void` | L77 |
 | `test_store_and_take_materials() -> void` | L100 |

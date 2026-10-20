@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `DependencyResolver` | L1 |
+| `CORE_ID` | L10 |
+| `MAX_CYCLE_PASSES` | L11 |
 
 ## 契约与约束
 

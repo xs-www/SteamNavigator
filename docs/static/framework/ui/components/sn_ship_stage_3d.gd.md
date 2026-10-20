@@ -10,6 +10,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNShipStage3D` | L1 |
+| `SHIPYARD_STAGE_SCENE` | L17 |
+| `MODEL_BY_TIER` | L18 |
+| `FALLBACK_MODEL` | L23 |
+| `is_supported() -> bool` | L32 |
 | `has_ship() -> bool` | L48 |
 | `model_path() -> String` | L53 |
 | `ship_view_update(model: Dictionary) -> void` | L60 |

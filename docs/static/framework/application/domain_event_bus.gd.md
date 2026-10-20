@@ -10,6 +10,8 @@
 | --- | --- |
 | `DomainEventBus` | L1 |
 | `event_published (signal)` | L5 |
+| `MAX_HISTORY` | L7 |
+| `SCHEMA_VERSION` | L8 |
 | `publish(event_type: StringName, payload: Dictionary = {}, game_time: float = 0.0, source: String = "framework") -> Dictionary` | L16 |
 | `publish_many(events: Array, game_time: float = 0.0, source: String = "framework") -> Array[Dictionary]` | L33 |
 | `get_history(event_type: StringName = &"", limit: int = 100) -> Array[Dictionary]` | L46 |

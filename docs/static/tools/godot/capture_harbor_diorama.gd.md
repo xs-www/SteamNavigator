@@ -9,6 +9,14 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `SCENE_PATH` | L14 |
+| `OUT_DIR` | L15 |
+| `WINDOW` | L16 |
+| `SETTLE_FRAMES` | L17 |
+| `SETTLE_SECONDS` | L18 |
+| `DETAIL_FRAMES` | L19 |
+| `DETAIL_SECONDS` | L20 |
+| `WATCHDOG_SECONDS` | L21 |
 | `_init() -> void` | L27 |
 
 ## 契约与约束

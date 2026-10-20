@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T05:14:05.187Z",
-  "commit": "6e31910",
+  "generated_at": "2026-10-20T06:04:49.573Z",
+  "commit": "af9bde1",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 578,
-    "documented": 194,
-    "grouped": 384
+    "sources": 562,
+    "documented": 200,
+    "grouped": 362
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "784eecadae8f2afe6655ce0590c74bd9c325e7a6b78ed3926e24867f6ec3820e",
+      "sha256": "6cfb40da6261242934934814e593250be8a8598ec2db6e12c7ec16cc74ac401d",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -978,63 +978,14 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed.glb",
-      "sha256": "31bbee82160e0e931b77c19cdc068d5dc441ed48603f843af0985a1efdfc443f",
+      "sha256": "174d2ae335578afa8ff45a82e89b6ce4068fd8bccac6c605c7baf475f7e513e4",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_glass_dark.png",
-      "sha256": "799350565c5c823f13294a93b38fc56e9b6db471bbb89f17b28f1e480c4babd1",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_glass_reflect.png",
-      "sha256": "270a2fb84f535a937392adaa4abd0122721e5f74a4cc3fed3a52c88d3cbd1d49",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_iron_dark.png",
-      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_iron_rust.png",
-      "sha256": "5e00d8c51dc5ca3d4aa076e0be99470c963d5f35e586ac906de46a815b1c73fc",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_plaster_grime.png",
-      "sha256": "385e8501edfdbdc914cdbf479374d41006e69ebb7bc0ca48e8dc6d5ece8c7c07",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_stone_base.png",
-      "sha256": "9b55547dc5e6c5c106f46830b4c18195ac8fefd4cd09cc8b72a3f40d0f016243",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_stone_base_dirty.png",
-      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_wood_plank.png",
-      "sha256": "66d05bb21e0ffc0e18727277824b7f447051b3b09c2d67133f300d3fad3ff41d",
+      "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Shed_LOD1.glb",
+      "sha256": "3a801721d32fe1757d2a140966becf1ef2155afa82c0861af4a8d3f50313e288",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1062,70 +1013,14 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office.glb",
-      "sha256": "f41f3bbdf81798e6702737b97b3408a6e72c09688f094685e7732697afefa177",
+      "sha256": "21ed7779327fa874730dff6b683feed5db1b35b463bd8599b98dd59f0ea26c02",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_brick_wall.png",
-      "sha256": "b8527fb098eafb28d28e75e3a374f8485ffb507b506dae5ce0e8396f95177703",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_glass_reflect.png",
-      "sha256": "270a2fb84f535a937392adaa4abd0122721e5f74a4cc3fed3a52c88d3cbd1d49",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_iron_dark.png",
-      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_plaster_grime.png",
-      "sha256": "385e8501edfdbdc914cdbf479374d41006e69ebb7bc0ca48e8dc6d5ece8c7c07",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_plaster_light.png",
-      "sha256": "c00ca280ca0a3403a7ea526c5d1625876770b73dbe5908a21abcdbe538d32b6f",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_stone_base.png",
-      "sha256": "9b55547dc5e6c5c106f46830b4c18195ac8fefd4cd09cc8b72a3f40d0f016243",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_stone_base_dirty.png",
-      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_wood_plank.png",
-      "sha256": "66d05bb21e0ffc0e18727277824b7f447051b3b09c2d67133f300d3fad3ff41d",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_wood_plank_weathered.png",
-      "sha256": "546feb6ebed0ef2f13c0d5badfba13dedfa64176ff8768809feafdb15834f420",
+      "source": "dev_mods/core/assets/models/props/SN_HT_Harbor_Office_LOD1.glb",
+      "sha256": "86e7ddd1850c48d46e55b27bdcc5f7a60fcdb7a1fc2af1b85732d21147dcd12f",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1139,175 +1034,42 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Tavern.glb",
-      "sha256": "c7532c30fe088e7d9c11fd177b872b69e5c42483e043a73cb390b34f7f795eef",
+      "sha256": "858e507ec17a43f04e1e3d20a236836fc81b45a0fed0ac663d12f40888e9d0a4",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_brick_wall.png",
-      "sha256": "b8527fb098eafb28d28e75e3a374f8485ffb507b506dae5ce0e8396f95177703",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_glass_reflect.png",
-      "sha256": "270a2fb84f535a937392adaa4abd0122721e5f74a4cc3fed3a52c88d3cbd1d49",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_iron_dark.png",
-      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_plaster_grime.png",
-      "sha256": "385e8501edfdbdc914cdbf479374d41006e69ebb7bc0ca48e8dc6d5ece8c7c07",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_stone_base_dirty.png",
-      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_wood_plank.png",
-      "sha256": "66d05bb21e0ffc0e18727277824b7f447051b3b09c2d67133f300d3fad3ff41d",
+      "source": "dev_mods/core/assets/models/props/SN_HT_Tavern_LOD1.glb",
+      "sha256": "9bf0bea504c965715419a80d1982a4d59f553ecadf247f21532b9d2ae15b824b",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb",
-      "sha256": "1b6d995f0f62bc1d3cb650ff22d3faae6bbd934fa99f0631f01e7cf1f62e437d",
+      "sha256": "d9cbd3b3a7de854e9d29930d39ee4e00309f0b9e20abc7dd2ad26e4e1e8541f1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_brick_wall.png",
-      "sha256": "b8527fb098eafb28d28e75e3a374f8485ffb507b506dae5ce0e8396f95177703",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_glass_dark.png",
-      "sha256": "799350565c5c823f13294a93b38fc56e9b6db471bbb89f17b28f1e480c4babd1",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_iron_dark.png",
-      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_plaster_light.png",
-      "sha256": "c00ca280ca0a3403a7ea526c5d1625876770b73dbe5908a21abcdbe538d32b6f",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_stone_base_dirty.png",
-      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_wood_plank_weathered.png",
-      "sha256": "546feb6ebed0ef2f13c0d5badfba13dedfa64176ff8768809feafdb15834f420",
+      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Long_LOD1.glb",
+      "sha256": "f490d1ce210aed4f414857ddd9c9be43403440dda45f3724b6035769cc827dcb",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short.glb",
-      "sha256": "77ffd1770d9aaeccf1f08492013baac6028a532934baab3a1b48821453b46b02",
+      "sha256": "6db4f20f64ca741c5618f39a79d11bba8ce26838159ca04606e4bd65c1d6ce93",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_brick_wall.png",
-      "sha256": "b8527fb098eafb28d28e75e3a374f8485ffb507b506dae5ce0e8396f95177703",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_glass_dark.png",
-      "sha256": "799350565c5c823f13294a93b38fc56e9b6db471bbb89f17b28f1e480c4babd1",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_glass_reflect.png",
-      "sha256": "270a2fb84f535a937392adaa4abd0122721e5f74a4cc3fed3a52c88d3cbd1d49",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_iron_dark.png",
-      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_iron_rust.png",
-      "sha256": "5e00d8c51dc5ca3d4aa076e0be99470c963d5f35e586ac906de46a815b1c73fc",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_plaster_grime.png",
-      "sha256": "385e8501edfdbdc914cdbf479374d41006e69ebb7bc0ca48e8dc6d5ece8c7c07",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_plaster_light.png",
-      "sha256": "c00ca280ca0a3403a7ea526c5d1625876770b73dbe5908a21abcdbe538d32b6f",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_stone_base.png",
-      "sha256": "9b55547dc5e6c5c106f46830b4c18195ac8fefd4cd09cc8b72a3f40d0f016243",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_stone_base_dirty.png",
-      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
-      "doc": "docs/static/dev_mods/core/README.md",
-      "status": "grouped",
-      "group": "docs/static/dev_mods/core/README.md"
-    },
-    {
-      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_wood_plank.png",
-      "sha256": "66d05bb21e0ffc0e18727277824b7f447051b3b09c2d67133f300d3fad3ff41d",
+      "source": "dev_mods/core/assets/models/props/SN_HT_Warehouse_Short_LOD1.glb",
+      "sha256": "bd2be412ed33b51007d1da1beeba62b8fad461fdbd1fd2dac2693297ce4a99e1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1392,6 +1154,83 @@
     {
       "source": "dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
       "sha256": "84b51b586f188869d139e59583e472110276681b1a9f470bf55a53f4b3bceb81",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/brick_wall.png",
+      "sha256": "b8527fb098eafb28d28e75e3a374f8485ffb507b506dae5ce0e8396f95177703",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/glass_dark.png",
+      "sha256": "799350565c5c823f13294a93b38fc56e9b6db471bbb89f17b28f1e480c4babd1",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/glass_reflect.png",
+      "sha256": "270a2fb84f535a937392adaa4abd0122721e5f74a4cc3fed3a52c88d3cbd1d49",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/iron_dark.png",
+      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/iron_rust.png",
+      "sha256": "5e00d8c51dc5ca3d4aa076e0be99470c963d5f35e586ac906de46a815b1c73fc",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/plaster_grime.png",
+      "sha256": "385e8501edfdbdc914cdbf479374d41006e69ebb7bc0ca48e8dc6d5ece8c7c07",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/plaster_light.png",
+      "sha256": "c00ca280ca0a3403a7ea526c5d1625876770b73dbe5908a21abcdbe538d32b6f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/stone_base.png",
+      "sha256": "9b55547dc5e6c5c106f46830b4c18195ac8fefd4cd09cc8b72a3f40d0f016243",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/stone_base_dirty.png",
+      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/wood_plank.png",
+      "sha256": "66d05bb21e0ffc0e18727277824b7f447051b3b09c2d67133f300d3fad3ff41d",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/iron_harbor_shared/wood_plank_weathered.png",
+      "sha256": "546feb6ebed0ef2f13c0d5badfba13dedfa64176ff8768809feafdb15834f420",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1559,7 +1398,7 @@
     },
     {
       "source": "dev_mods/core/manifest.json",
-      "sha256": "9104cd6740094e3533e38e0f57f30e4ec3836ecf4505967ba2f0386449070577",
+      "sha256": "f636eecdb7c03254db7182bd4ca19104a63172e8e779e4346e4d255bc04f7e08",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1591,7 +1430,7 @@
     },
     {
       "source": "dev_scenes/port_stage/port_stage_preview.gd",
-      "sha256": "7b165e342fd709545872f141594cd774302a920eee721ed9a198ae4b2306686d",
+      "sha256": "d48d600d7fcf3cfbe75debde7c516a1536c3c10a3f84ee50d75257d6ffc997d7",
       "doc": "docs/static/dev_scenes/port_stage/port_stage_preview.gd.md",
       "status": "documented"
     },
@@ -1604,7 +1443,7 @@
     },
     {
       "source": "dev_scenes/sea_chart/sea_chart_preview.gd",
-      "sha256": "28da149d5064a8662dd95ddd8ca6c4da53b17e504416251fe66ce82a9f203fb2",
+      "sha256": "54aec2f44cc0e6163cdcae0259be929170c098feac8a257b4c9fa46b3c36363a",
       "doc": "docs/static/dev_scenes/sea_chart/sea_chart_preview.gd.md",
       "status": "documented"
     },
@@ -1768,7 +1607,7 @@
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "cc718705d246c573a60122d9e7c19f0f0168ffb345083cfe03bf77c7113cd3bf",
+      "sha256": "d9584e06e7b46ca29aede5bd2f61e25b388cda2cd5048e3e2367344fedfe805a",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -2019,7 +1858,7 @@
     },
     {
       "source": "framework/domain/world/land_generator.gd",
-      "sha256": "9aff6550fc8855e7f30a0f61e33517a2ee92d7504c9b168dd1ffbc5c1443cf9a",
+      "sha256": "cd042c9b7bffcac78ba8affa1c834db607ac7e045d5414a631d9aa99d0b1ca8d",
       "doc": "docs/static/framework/domain/world/land_generator.gd.md",
       "status": "documented"
     },
@@ -2037,25 +1876,25 @@
     },
     {
       "source": "framework/domain/world/route_calculator.gd",
-      "sha256": "dda60855ac3b83ef8e12a9da689dee1e679564543826c1b9fb19f1af3b17f99c",
+      "sha256": "652c2f16e804eb7063c07fe0b4b913ad214589526f7c0d6b25cad3909d3e9d7b",
       "doc": "docs/static/framework/domain/world/route_calculator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_generator.gd",
-      "sha256": "2cdc1b620b5171060ee10513d17e9d2a2fd025ac1f49ad30fc819d40acc52e5a",
+      "sha256": "a3fe8dc9f98c5db13d5469d2aad4be134a48d52d47c644fb2ad740f5a039428d",
       "doc": "docs/static/framework/domain/world/world_generator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_map.gd",
-      "sha256": "3ed282d619ec015c52e6e7166eda49dfe6b7bc31f9682a3674a0fdebed66e294",
+      "sha256": "138c0df5e5c148bd5ca94129e499e35fde80bd03a226cacf82e91a002377b467",
       "doc": "docs/static/framework/domain/world/world_map.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_ops.gd",
-      "sha256": "9b20a2f60de46cdf189a757569dc0ff5af8179fe46b502782380675cc0719873",
+      "sha256": "4c6cac7c559bb0c820aceef6f7e8ccdb8d907f236ed1f9d90113a959727de024",
       "doc": "docs/static/framework/domain/world/world_ops.gd.md",
       "status": "documented"
     },
@@ -2180,7 +2019,7 @@
     },
     {
       "source": "framework/services/content_asset_loader.gd",
-      "sha256": "f4e9cc976d36ddd0fa3f86c5a93e79a64f75aa401aa0cc3cd38da2d9bae968d6",
+      "sha256": "6bd0de5c1eb0e923a7b4b312bf9ea208c1e014e98117902b31075c2e85bd08d2",
       "doc": "docs/static/framework/services/content_asset_loader.gd.md",
       "status": "documented"
     },
@@ -2233,6 +2072,13 @@
       "status": "documented"
     },
     {
+      "source": "framework/tests/cases/test_content_asset_loader.gd",
+      "sha256": "db5bef65f3a90e90ee4b2a6efe0ee568f173dc4cfbd68aaa5812d0f571a4e108",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
       "source": "framework/tests/cases/test_content_types_manifest.gd",
       "sha256": "2bb493129d1a477f9f9f3f3e68500d02220af5811bdb3adb780bcc35b4766f19",
       "doc": "docs/static/framework/tests/cases/test_content_types_manifest.gd.md",
@@ -2266,7 +2112,7 @@
     },
     {
       "source": "framework/tests/cases/test_fog_system.gd",
-      "sha256": "61bc748c99f84b36c3220062e36a2d8cb6ce4b36ca820810006867a3db6a212e",
+      "sha256": "4cf4779fe234825739440c88d171b146611d3efcd8cc328cea1ee396898ab565",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2300,7 +2146,7 @@
     },
     {
       "source": "framework/tests/cases/test_mod_loading.gd",
-      "sha256": "b0e03fc8586d0424e6d1ece92c48c14cc0955e914fc085512f69a62dd6448938",
+      "sha256": "8b1aeed46ba1c1d34df07e4a1fc0b8e9bffdfa3059579cd3fa1deda2ab5ff021",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2368,7 +2214,7 @@
     },
     {
       "source": "framework/tests/cases/test_sea_chart.gd",
-      "sha256": "02669c6bb33047f71bd7a7dd85f3bc10cf96e27e5d1c116d02f1c542f835dda6",
+      "sha256": "caa00c600df28461c2a1647e3fda82ac8a31b173db2c3ebd945ffdf7175739dd",
       "doc": "docs/static/framework/tests/cases/test_sea_chart.gd.md",
       "status": "documented"
     },
@@ -2445,7 +2291,7 @@
     },
     {
       "source": "framework/tests/cases/test_world_generator.gd",
-      "sha256": "417bba7c28c477c8de56f73ab71f0cf7c68c5ebdda47f3cf57d95fd53f8cc13a",
+      "sha256": "62326d9a297507267dd3fd653490679ef706f864623ad96efae5e7efea8cb7ab",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2480,7 +2326,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "8f98e518836ab10f992ff8a9351cc8d58b7cf1adba3425c4634ca2bc0ff5312c",
+      "sha256": "2d0c6c73ea1005b016645baf0785007009e315f36d828b74b32c2a5a90fc3865",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2590,7 +2436,7 @@
     },
     {
       "source": "framework/ui/components/sn_sea_chart_view.gd",
-      "sha256": "a260c6e5bef080f9ec7e7abe837f98dfbd0e7ce13ab25a73046002a00ecb64c8",
+      "sha256": "f24b3e0d557532d1a80c23ad9a98be4166d8d518c5d6ecac116578744bc10c20",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -3215,7 +3061,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "8c1ab84f214e85f0d9e73a7df435da727f95efdd3c3a7e676d8c8f3b9a7a8789",
+      "sha256": "cebf674a91af046724c33fe6a1b032eba2c19a8ea9d993fa154be3d8e8563a89",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3271,19 +3117,19 @@
     },
     {
       "source": "tools/godot/capture_port_stage_res.gd",
-      "sha256": "27e596bf721cbf3219c55163b281eab8282241f5d83a32f6e85cb2c09cfe7622",
+      "sha256": "f4f3975ef03938f9f0015d3e397e83d8014c135067cbf7e929f4164c90725752",
       "doc": "docs/static/tools/godot/capture_port_stage_res.gd.md",
       "status": "documented"
     },
     {
       "source": "tools/godot/capture_sea_chart.gd",
-      "sha256": "de386fbcec9eb94814f571c80bb7e13b4e86fce6b4fe63c77c111ff502f96776",
+      "sha256": "43989a7904ab8c45389fbc787ce35ca9b86aeeab3a3f05b339d81f9740fdaf89",
       "doc": "docs/static/tools/godot/capture_sea_chart.gd.md",
       "status": "documented"
     },
     {
       "source": "tools/godot/measure_port_stage.gd",
-      "sha256": "76b90da1946e6ab5731b9b29a72cf8bdae4e897fb4d5e9383d291cd5c1390f61",
+      "sha256": "67e989529d11635227679ac5b95e6bae1d504b8ebd0db53a3c40db162f8739df",
       "doc": "docs/static/tools/godot/measure_port_stage.gd.md",
       "status": "documented"
     },
@@ -3303,6 +3149,12 @@
       "source": "tools/godot/verify_props.gd",
       "sha256": "c37d8ce009bfcd38372deee6e9d410b237eaec417a284e5ade9b3f062b66af62",
       "doc": "docs/static/tools/godot/verify_props.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/verify_shared_textures.gd",
+      "sha256": "2ab6d98d2d7c3b5533a672cf67aecea12f9429d19f766818f1bf9be5b579a15c",
+      "doc": "docs/static/tools/godot/verify_shared_textures.gd.md",
       "status": "documented"
     },
     {
@@ -3458,6 +3310,12 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/dryrun_lod1_batch_a.py",
+      "sha256": "25a01c250591c9fdcdd05449a30209b515858d50ea44e4cfa6d6bf923f8fd2e7",
+      "doc": "docs/static/tools/modeling/generators/dryrun_lod1_batch_a.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/dryrun_paddle_steamer.py",
       "sha256": "4ad189dacf80b334e231723a2e9836dd378bbe61627655b306f7868fb6619682",
       "doc": "docs/static/tools/README.md",
@@ -3489,6 +3347,12 @@
       "source": "tools/modeling/generators/export_iron_harbor_architecture_glb.py",
       "sha256": "6838d7a3ad0259d7bfec02c5457d49c1119c8001584ba7ddb28bd324351d634c",
       "doc": "docs/static/tools/modeling/generators/export_iron_harbor_architecture_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/export_iron_harbor_architecture_lod_glb.py",
+      "sha256": "e3fc794742c7a486534e3e7a776a45fdcb0aa56b92e972118956b9ca2d93883c",
+      "doc": "docs/static/tools/modeling/generators/export_iron_harbor_architecture_lod_glb.py.md",
       "status": "documented"
     },
     {
@@ -3544,6 +3408,12 @@
       "source": "tools/modeling/generators/export_town_glb.py",
       "sha256": "4a9268a7254aab329aced2451c9c5f5021a75a2b7628339def6dcc08a495fff7",
       "doc": "docs/static/tools/modeling/generators/export_town_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/glb_shared_textures.py",
+      "sha256": "9fcb8a1aaa462f36438fa23b8a72137a6c3f093101f424b6ccaf31d23f2c3446",
+      "doc": "docs/static/tools/modeling/generators/glb_shared_textures.py.md",
       "status": "documented"
     },
     {
@@ -3670,6 +3540,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/sn_iron_harbor_architecture_lod1_generator.py",
+      "sha256": "7a6901fc1558b6cb976bdc97c09ea84bf942f1605fd4ee67420696947d4077db",
+      "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_architecture_lod1_generator.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_iron_harbor_batch2_generator.py",
       "sha256": "f712e95679c9079f829c4e34e576d2d7411039bbe9f0117ff6f0ee66999edfd3",
       "doc": "docs/static/tools/README.md",
@@ -3729,7 +3605,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py",
-      "sha256": "badb316d391023ab238c0fbcfb9babb8ea755a94df227fe3ccfd58f12065ede7",
+      "sha256": "b6c94b5610dfa90d8b6f165952f8bcc2d9f00d6b297ec2c1c1193a3017a18cbb",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py.md",
       "status": "documented"
     },
@@ -3781,6 +3657,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/verify_iron_harbor_architecture_lod_glb.py",
+      "sha256": "b70464a49cf86b29efb7b68ed893cc92403702311fc5e701d220241a0a787c12",
+      "doc": "docs/static/tools/modeling/generators/verify_iron_harbor_architecture_lod_glb.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/verify_ironclad_glb.py",
@@ -3840,7 +3722,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "a2c3f44ab78f0cfed2a04ffacfeda1b3c0600a44f4ba973f31a8eba12c04f3e6",
+      "sha256": "af971754b6bd4c39c22e84ca3c54e3a40a763eee7ec4dc2c0545895e3307cb16",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

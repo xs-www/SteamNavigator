@@ -11,6 +11,8 @@
 | --- | --- |
 | `SettingsScreen` | L1 |
 | `action_requested (signal)` | L5 |
+| `TEXT` | L7 |
+| `MUTED` | L8 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L12 |
 
 ## 契约与约束

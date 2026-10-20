@@ -9,6 +9,24 @@
 | 符号 | 位置 |
 | --- | --- |
 | `WarehouseOps` | L1 |
+| `MODULE_SECTION` | L10 |
+| `MATERIAL_SECTION` | L11 |
+| `ensure_structure(state: GameState) -> void` | L16 |
+| `warehouse(state: GameState, port_id: String) -> Dictionary` | L40 |
+| `module_qty(state: GameState, port_id: String, module_id: String) -> int` | L53 |
+| `material_amount(state: GameState, port_id: String, item_id: String) -> int` | L58 |
+| `transit_modules(ship: Dictionary) -> Dictionary` | L63 |
+| `transit_qty(ship: Dictionary, module_id: String) -> int` | L68 |
+| `transit_module_weight(hub: RegistryHub, ship: Dictionary) -> float` | L74 |
+| `owned_module_count(state: GameState, hub: RegistryHub, module_id: String) -> int` | L89 |
+| `store_module(state: GameState, hub: RegistryHub, port_id: String, module_id: String, qty: int = 1) -> Dictionary` | L101 |
+| `take_module(state: GameState, hub: RegistryHub, port_id: String, module_id: String, qty: int = 1) -> Dictionary` | L131 |
+| `store_materials(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int) -> Dictionary` | L169 |
+| `take_materials(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int) -> Dictionary` | L196 |
+| `add_module(state: GameState, port_id: String, module_id: String, qty: int = 1) -> int` | L239 |
+| `remove_module(state: GameState, port_id: String, module_id: String, qty: int = 1) -> int` | L248 |
+| `add_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int` | L261 |
+| `remove_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int` | L270 |
 
 ## 契约与约束
 

@@ -9,6 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `DebtService` | L1 |
+| `borrow(state: GameState, requested: float, limit: float, interest_rate: float, term_hours: float) -> Dictionary` | L5 |
+| `receive_income(state: GameState, amount: int) -> Dictionary` | L32 |
+| `check_overdue(state: GameState) -> Array[Dictionary]` | L56 |
+| `remaining(state: GameState) -> float` | L79 |
 
 ## 契约与约束
 

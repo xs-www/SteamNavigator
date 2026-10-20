@@ -9,6 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `EffectOpRegistry` | L1 |
+| `ensure_defaults() -> void` | L9 |
+| `register(op: String, handler: Callable) -> void` | L188 |
+| `has(op: String) -> bool` | L192 |
+| `get_handler(op: String) -> Callable` | L197 |
+| `known_ops() -> PackedStringArray` | L202 |
+| `clear_runtime() -> void` | L252 |
 
 ## 契约与约束
 

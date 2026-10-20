@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `EffectExecutor` | L1 |
+| `MAX_EFFECTS` | L6 |
+| `execute(effects: Variant, execution_context: Dictionary) -> Dictionary` | L9 |
 
 ## 契约与约束
 

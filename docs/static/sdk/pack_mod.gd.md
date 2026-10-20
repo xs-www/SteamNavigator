@@ -4,6 +4,12 @@
 
 - 类型：GDScript 源文件
 
+## 关键符号
+
+| 符号 | 位置 |
+| --- | --- |
+| `SKIP_SUFFIXES` | L8 |
+
 ## 契约与约束
 
 - 跳过 Godot `.import`/`.uid`/`.tmp` 与隐藏目录。

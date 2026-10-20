@@ -10,6 +10,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AtSeaScreen` | L1 |
+| `TEXT` | L5 |
+| `MUTED` | L6 |
+| `TEAL` | L7 |
 | `bind(vm: Dictionary, _translate: Callable) -> void` | L10 |
 
 ## 契约与约束

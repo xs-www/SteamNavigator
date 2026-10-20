@@ -9,6 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ModScanner` | L1 |
+| `MAX_FILES` | L6 |
+| `MAX_PACK_BYTES` | L7 |
+| `MAX_MANIFEST_BYTES` | L8 |
+| `MAX_CONTENT_FILE_BYTES` | L9 |
 | `_init(schema_validator: SchemaValidator = null) -> void` | L14 |
 | `scan(roots: PackedStringArray, allow_loose: bool = true) -> Dictionary` | L18 |
 

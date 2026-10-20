@@ -12,6 +12,16 @@
 | `SNShipView` | L1 |
 | `slot_drop_requested (signal)` | L23 |
 | `slot_activated (signal)` | L24 |
+| `TEXT` | L28 |
+| `MUTED` | L29 |
+| `BRASS` | L30 |
+| `TEAL` | L31 |
+| `HULL_DARK` | L32 |
+| `HULL_MID` | L33 |
+| `WATER` | L34 |
+| `SLOT_H` | L35 |
+| `CARGO_SLOT_H` | L36 |
+| `SECTION_TEXTURE_PATH` | L39 |
 | `set_renderer(node: Node) -> void` | L75 |
 | `has_renderer() -> bool` | L91 |
 | `has_section_texture() -> bool` | L96 |

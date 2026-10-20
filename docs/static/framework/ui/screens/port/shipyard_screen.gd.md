@@ -13,6 +13,17 @@
 | `command_requested (signal)` | L18 |
 | `refit_mode_changed (signal)` | L19 |
 | `refit_category_changed (signal)` | L20 |
+| `TEXT` | L22 |
+| `MUTED` | L23 |
+| `BRASS` | L24 |
+| `TEAL` | L25 |
+| `RED` | L26 |
+| `GREEN` | L27 |
+| `MODULE_TYPES` | L28 |
+| `CATEGORY_ORDER` | L29 |
+| `TYPE_LABELS` | L30 |
+| `SLOT_TITLES` | L31 |
+| `SHIP_THUMB_PATH` | L32 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L48 |
 | `set_category(category: String) -> void` | L136 |
 

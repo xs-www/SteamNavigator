@@ -12,6 +12,11 @@
 | `ContractsScreen` | L1 |
 | `command_requested (signal)` | L8 |
 | `navigation_requested (signal)` | L9 |
+| `COLOR_TEXT` | L11 |
+| `COLOR_MUTED` | L12 |
+| `COLOR_BRASS` | L13 |
+| `COLOR_TEAL` | L14 |
+| `COLOR_RED` | L15 |
 | `bind(view_model: Dictionary, translate: Callable) -> void` | L20 |
 
 ## 契约与约束

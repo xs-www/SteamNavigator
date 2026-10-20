@@ -11,6 +11,13 @@
 | --- | --- |
 | `MarketScreen` | L1 |
 | `command_requested (signal)` | L14 |
+| `SPARKLINE_SCENE` | L16 |
+| `COLOR_TEXT` | L17 |
+| `COLOR_MUTED` | L18 |
+| `COLOR_TEAL` | L19 |
+| `COLOR_RED` | L20 |
+| `COLOR_GREEN` | L21 |
+| `ENTRY_SEPARATION` | L23 |
 | `bind(view_model: Dictionary, translate: Callable) -> void` | L28 |
 
 ## 契约与约束

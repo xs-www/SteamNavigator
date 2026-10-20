@@ -9,6 +9,33 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ContentTypes` | L1 |
+| `GOOD` | L9 |
+| `MATERIAL` | L10 |
+| `HULL` | L11 |
+| `BOILER` | L12 |
+| `CARGO_MODULE` | L13 |
+| `NAVIGATION_MODULE` | L14 |
+| `SAFETY_MODULE` | L15 |
+| `CABIN` | L16 |
+| `ROLE` | L17 |
+| `STRATEGY` | L18 |
+| `PORT_ARCHETYPE` | L19 |
+| `MAP_PROFILE` | L20 |
+| `STARTING_BUILD` | L21 |
+| `CONTRACT` | L22 |
+| `EVENT` | L23 |
+| `PATCH` | L24 |
+| `SCHEMA_PATHS` | L26 |
+| `SINGULAR` | L45 |
+| `MODULE_TYPES` | L64 |
+| `all() -> Array[StringName]` | L67 |
+| `registry_types() -> Array[StringName]` | L76 |
+| `is_known(content_type: StringName) -> bool` | L82 |
+| `is_module(content_type: StringName) -> bool` | L86 |
+| `is_patch(content_type: StringName) -> bool` | L90 |
+| `schema_path(content_type: StringName) -> String` | L94 |
+| `singular(content_type: StringName) -> String` | L98 |
+| `from_singular(singular_name: String) -> StringName` | L102 |
 
 ## 契约与约束
 

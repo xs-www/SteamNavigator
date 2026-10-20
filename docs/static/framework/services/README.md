@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | `asset_service.gd` | 把 `asset://<mod>/<key>` 解析为已挂载物理路径，缺失时回退占位；并统一加载模组内原始 PNG/GLB 内容资源。 | [查看](./asset_service.gd.md) |
 | `clock_service.gd` | 游戏时间格式化、天数/小时与时长工具。 | 本页 |
-| `content_asset_loader.gd` | 运行时读取模组内容资产：用 `Image.load_from_file` 读原始 PNG、用 `GLTFDocument.append_from_file` 读原始 GLB，并按路径缓存。 | [查看](./content_asset_loader.gd.md) |
+| `content_asset_loader.gd` | 运行时读取模组内容资产（原始 PNG / 原始 GLB），并把 GLB 内嵌贴图之外的外部共享贴图按 URI 归一到同一个 `Texture2D` 实例，让多栋建筑在 Godot 里真正共享材质资源。 | [查看](./content_asset_loader.gd.md) |
 | `localization_service.gd` | 合并框架与模组本地化表，提供活动语言回退与缺失检测。 | [查看](./localization_service.gd.md) |
 | `logger.gd` | 有界结构化日志（DEBUG–FATAL），带模组/文件上下文字段。 | [查看](./logger.gd.md) |
 | `rng_service.gd` | 命名随机流：按（种子、流名、上下文）派生独立 RNG。 | [查看](./rng_service.gd.md) |

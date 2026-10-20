@@ -9,6 +9,15 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VoyageCalculator` | L1 |
+| `PASSENGER_WATER_RATE` | L7 |
+| `RISK_LABEL_LOW` | L8 |
+| `RISK_LABEL_HIGH` | L9 |
+| `preview(context, destination_id: String, strategy_id: String) -> Dictionary` | L12 |
+| `weight_speed_factor(load_ratio: float) -> float` | L150 |
+| `risk_label(risk_score: float) -> String` | L159 |
+| `event_chance(risk_score: float) -> float` | L167 |
+| `active_main_contract(state: GameState) -> Dictionary` | L171 |
+| `crew_wage(hub: RegistryHub, ship: Dictionary) -> int` | L176 |
 
 ## 契约与约束
 

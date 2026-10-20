@@ -39,12 +39,13 @@
 | `ZOOM_MIN` | L57 |
 | `ZOOM_MAX` | L58 |
 | `ZOOM_STEP` | L59 |
-| `get_selected_port() -> String` | L125 |
-| `select_port(port_id: String) -> void` | L129 |
-| `center_on_port(port_id: String) -> void` | L137 |
-| `get_zoom() -> float` | L145 |
-| `world_to_screen(world_pos: Vector2) -> Vector2` | L176 |
-| `screen_to_world(screen_pos: Vector2) -> Vector2` | L180 |
+| `get_selected_port() -> String` | L131 |
+| `select_port(port_id: String) -> void` | L135 |
+| `center_on_port(port_id: String) -> void` | L146 |
+| `get_zoom() -> float` | L158 |
+| `exit_direction(port_data: Dictionary) -> Vector2` | L164 |
+| `world_to_screen(world_pos: Vector2) -> Vector2` | L196 |
+| `screen_to_world(screen_pos: Vector2) -> Vector2` | L200 |
 
 陆地、航线、港口图标、迷雾、船只标记、罗盘、图例与缩放指示。
 

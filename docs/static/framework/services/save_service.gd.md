@@ -9,6 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SaveService` | L1 |
+| `SAVE_SCHEMA` | L8 |
+| `SAVE_SCHEMA_MAJOR` | L9 |
+| `AUTOSAVE_SLOT` | L11 |
+| `PRE_VOYAGE_SLOT` | L12 |
 | `_init(logger: AppLogger = null, save_directory: String = "user://saves") -> void` | L19 |
 | `ensure_directory() -> bool` | L25 |
 | `save_slot(slot: String, state: GameState, meta: Dictionary = {}) -> Dictionary` | L32 |

@@ -11,6 +11,12 @@
 | --- | --- |
 | `PortMemoryScreen` | L1 |
 | `navigation_requested (signal)` | L5 |
+| `TEXT` | L7 |
+| `MUTED` | L8 |
+| `BRASS` | L9 |
+| `TEAL` | L10 |
+| `RED` | L11 |
+| `GREEN` | L12 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L16 |
 
 ## 契约与约束

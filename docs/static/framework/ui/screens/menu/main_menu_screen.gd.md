@@ -11,6 +11,9 @@
 | --- | --- |
 | `MainMenuScreen` | L1 |
 | `action_requested (signal)` | L5 |
+| `BRASS` | L7 |
+| `TEXT` | L8 |
+| `MUTED` | L9 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L13 |
 
 ## 契约与约束

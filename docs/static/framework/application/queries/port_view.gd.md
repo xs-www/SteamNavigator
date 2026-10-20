@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PortViewQuery` | L1 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L4 |
 
 ## 契约与约束
 

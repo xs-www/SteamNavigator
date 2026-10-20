@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `StartupReport` | L1 |
+| `STATUS_NAMES` | L7 |
 | `add_error(code: String, message: String, fields: Dictionary = {}) -> void` | L24 |
 | `add_warning(code: String, message: String, fields: Dictionary = {}) -> void` | L35 |
 | `add_fatal(code: String, message: String, fields: Dictionary = {}) -> void` | L42 |

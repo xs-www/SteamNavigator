@@ -9,6 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `IntelService` | L1 |
+| `build_snapshot(state: GameState, hub: RegistryHub, game_time: float) -> Dictionary` | L8 |
+| `store(state: GameState, snapshot: Dictionary) -> void` | L63 |
+| `get_snapshot(state: GameState) -> Dictionary` | L67 |
+| `snapshot_age(state: GameState) -> float` | L71 |
 
 ## 契约与约束
 

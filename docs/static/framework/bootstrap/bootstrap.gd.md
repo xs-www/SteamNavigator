@@ -11,6 +11,7 @@
 | --- | --- |
 | `Bootstrap` | L1 |
 | `run(overrides: Dictionary = {}) -> StartupReport` | L8 |
+| `active_context() -> AppContext` | L75 |
 
 ## 契约与约束
 

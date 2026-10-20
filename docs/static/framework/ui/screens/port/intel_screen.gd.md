@@ -11,6 +11,11 @@
 | --- | --- |
 | `IntelScreen` | L1 |
 | `command_requested (signal)` | L5 |
+| `INTEL_TABLE_SCRIPT` | L7 |
+| `TEXT` | L8 |
+| `MUTED` | L9 |
+| `BRASS` | L10 |
+| `TEAL` | L11 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L15 |
 
 ## 契约与约束

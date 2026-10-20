@@ -1,9 +1,13 @@
 class_name WorldPort
 extends RefCounted
-## A port anchored to a landmass coastline in the world map.
+## @static-doc
+## 作用：表示锚定在陆地海岸线上的世界港口及其设施、连通性信息。
 ##
-## Ports are the primary navigation targets. Each port has a unique departure angle
-## used for Bezier curve route generation.
+## ## 契约与约束
+## - `departure_angle` 由 `RouteCalculator.compute_departure_angles()` 根据邻居质心计算。
+## - `connectivity` 只存储直接连通的港口。
+## - `facilities` 和 `tags` 供内容系统过滤与查询。
+## @end-static-doc
 
 var id: String
 var position: Vector2

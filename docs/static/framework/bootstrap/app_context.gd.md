@@ -10,7 +10,13 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AppContext` | L1 |
+| `FRAMEWORK_VERSION` | L8 |
+| `API_MAJOR` | L9 |
+| `API_MINOR` | L10 |
+| `KNOWN_CAPABILITIES` | L11 |
 | `_init(app_config: Dictionary = {}) -> void` | L33 |
+| `set_active(context: AppContext) -> void` | L51 |
+| `get_active() -> AppContext` | L55 |
 | `is_ready() -> bool` | L59 |
 | `has_run() -> bool` | L63 |
 | `reset_state() -> void` | L67 |

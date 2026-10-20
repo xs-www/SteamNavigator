@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AssetService` | L1 |
+| `FALLBACK_PATH` | L8 |
 | `_init(logger: AppLogger = null) -> void` | L14 |
 | `register(mod_id: String, key: String, relative_path: String, asset_prefix: String) -> void` | L18 |
 | `resolve(logical_key: String) -> String` | L24 |

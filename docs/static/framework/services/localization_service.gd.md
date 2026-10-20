@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `LocalizationService` | L1 |
+| `FALLBACK_LOCALE` | L9 |
+| `BASE_LOCALES` | L10 |
 | `_init(locale: String = "zh_CN", logger: AppLogger = null) -> void` | L20 |
 | `load_base_tables() -> void` | L25 |
 | `load_file(source: ModSource, relative_path: String, mod_id: String) -> Dictionary` | L37 |

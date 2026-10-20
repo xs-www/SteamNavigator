@@ -9,6 +9,19 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ContractOps` | L1 |
+| `ensure_structure(state: GameState) -> void` | L5 |
+| `next_serial(state: GameState) -> int` | L28 |
+| `create_instance(hub: RegistryHub, template: ContentDefinition, origin: String, destination: String, now: float, distance: float, serial: int, rng: RandomNumberGenerator) -> Dictionary` | L35 |
+| `attach(state: GameState, hub: RegistryHub, instance: Dictionary) -> Dictionary` | L91 |
+| `complete(state: GameState, hub: RegistryHub, instance: Dictionary, arrival_time: float) -> Dictionary` | L114 |
+| `find_template_by_sequence(hub: RegistryHub, sequence: int) -> ContentDefinition` | L162 |
+| `templates_by_kind(hub: RegistryHub, kind: String) -> Array[ContentDefinition]` | L169 |
+| `active_limit(state: GameState) -> int` | L179 |
+| `generate_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, key: String) -> Array` | L187 |
+| `refresh_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, port_id: String, arrival_time: float) -> Array` | L217 |
+| `generate_offer(state: GameState, hub: RegistryHub, template: ContentDefinition, rng_service: RngService, origin: String) -> Dictionary` | L223 |
+| `accept_offer(state: GameState, hub: RegistryHub, instance_id: String) -> Dictionary` | L252 |
+| `accepts_passengers(template: ContentDefinition) -> bool` | L279 |
 
 ## 契约与约束
 

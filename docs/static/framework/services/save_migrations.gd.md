@@ -9,6 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SaveMigrations` | L1 |
+| `CURRENT_SAVE_SCHEMA` | L9 |
+| `CURRENT_STATE_SCHEMA` | L10 |
+| `migrate(payload: Dictionary) -> Dictionary` | L14 |
 
 ## 契约与约束
 

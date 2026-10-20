@@ -71,8 +71,9 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-20T03:25:04.164Z
-- 生成 commit：`d9d6fb7`
-- 模式：`compact`；规则版本：`2.0`
-- 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。
-- 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。
+- 生成时间：2026-10-20T06:04:49.573Z
+- 生成 commit：`af9bde1`
+- 模式：`compact`；规则版本：`3.0`
+- 更新方式：在源码头部维护 `@static-doc` 注释，运行 `node tools/gen_static_docs.mjs`；无注释格式使用 `docs/static_headers/<源码路径>.md` sidecar。
+- 检查方式：`node tools/gen_static_docs.mjs --check`；旧的 `tools/static_docs_data.mjs` 仅作为尚未迁移文件的兼容层。
+- 变更依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。

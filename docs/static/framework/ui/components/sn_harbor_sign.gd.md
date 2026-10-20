@@ -9,6 +9,17 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `COLOR_TEXT` | L18 |
+| `COLOR_PRIMARY_TEXT` | L19 |
+| `COLOR_MUTED` | L20 |
+| `COLOR_BRASS` | L21 |
+| `COLOR_BRASS_DIM` | L22 |
+| `COLOR_IRON` | L23 |
+| `COLOR_WOOD` | L24 |
+| `COLOR_WOOD_LIGHT` | L25 |
+| `COLOR_WOOD_DARK` | L26 |
+| `COLOR_EMBLEM` | L27 |
+| `GLYPH_COLOR` | L28 |
 | `configure(label_text: String, sign_primary: bool, sign_facility: String, sign_arrow: int) -> void` | L63 |
 
 ## 契约与约束

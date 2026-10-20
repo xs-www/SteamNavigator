@@ -51,6 +51,7 @@ export const FILE_DOCS = {
     contracts: [
       "发布前运行 `sdk/validate.gd`；core manifest 声明的内容 / 本地化 / 资产缺失时直接失败。",
       "发布前运行 `gen_content_types.mjs --check`，防止框架常量或编辑器类型目录落后于 `content_types.json`。",
+      "发布前运行 `gen_static_docs.mjs --check`，防止源码注释、sidecar 或符号位置变化后漏提交 `docs/static`。",
       "Windows/Linux 压缩包统一为顶层 `SteamNavigator/`，内含 exe、`mods/core-*.snavmod.zip` 与 `config/config.json`。",
       "`core-*.snavmod.zip` 同时作为独立 Release 资产，并参与 `SHA256SUMS.txt`。"
     ]
@@ -658,143 +659,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/domain/world/landmass.gd": {
-    role: "表示世界地图中的陆地多边形，支持大陆、大岛、小岛、环礁四种原型。",
-    contracts: [
-      "多边形顶点顺序必须一致（全顺时针或全逆时针）。",
-      "海岸线采样假设多边形是闭合的（首尾顶点相连）。",
-      "面积计算结果始终为正数（使用 absf）。"
-    ]
-  },
-
-  "framework/domain/world/world_port.gd": {
-    role: "表示世界地图中的港口，包含位置、设施、连通性等信息。",
-    contracts: [
-      "`departure_angle` 由 `RouteCalculator.compute_departure_angles()` 计算，基于邻居质心。",
-      "`connectivity` 存储的是直接连通的港口，不包含间接连通。",
-      "`facilities` 和 `tags` 用于内容系统的过滤和查询。"
-    ]
-  },
-
-  "framework/domain/world/region.gd": {
-    role: "表示世界地图中的行政区域，区分沿岸区域和远洋区域。",
-    contracts: [
-      "`tier` 影响港口生成策略（沿岸区域优先放置必需设施）。",
-      "`landmass_ids` 用于快速查询区域内的陆地。"
-    ]
-  },
-
-  "framework/domain/world/world_map.gd": {
-    role: "世界地图的顶层容器，包含所有陆地、港口、区域和连通性图。",
-    contracts: [
-      "`connectivity_graph` 是无向图（A连接B意味着B也连接A）。",
-      "`bounds` 用于UI层的视口裁剪和坐标映射。",
-      "`world_seed` 用于验证存档与当前模组版本的兼容性。"
-    ]
-  },
-
-  "framework/domain/world/fog_grid.gd": {
-    "role": "Fog of war grid with three states: black (unexplored) / explored (coastal) / visible (ship vision).",
-    "contracts": [
-      "Cell size is derived from the minimum vision radius (cell_size = min_vision_radius / 4).",
-      "Coastal cells stay EXPLORED after ship leaves; ocean cells revert to BLACK.",
-      "Alpha interpolation smooths transitions between adjacent cells.",
-      "Serialization preserves cell_size, width, height, and all cell states."
-    ]
-  },
-  "framework/domain/world/fog_ops.gd": {
-    "role": "High-level fog operations that integrate FogGrid with WorldMap and GameState.",
-    "contracts": [
-      "mark_coastal_cells identifies cells within COASTAL_DISTANCE (2.0 units) from landmasses.",
-      "reveal_port uses FogGrid.reveal_circle to clear fog around discovered ports.",
-      "save_fog_state and load_fog_state persist fog grid and coastal cell data.",
-      "get_visibility_at and is_position_visible provide read-only fog queries."
-    ]
-  },
-  "framework/domain/world/land_generator.gd": {
-    role: "程序化生成陆地多边形，支持大陆、大岛、小岛、环礁四种原型。",
-    contracts: [
-      "所有生成方法都接受 `rng` 参数，确保同 seed 可复现。",
-      "大陆生成时会自动调整位置以贴边。",
-      "环礁生成需要额外参数（内圈半径比例）。",
-      "简化算法的 `tolerance` 参数控制简化程度（建议 1.0-5.0）。"
-    ],
-    l2: {
-      "generate_continent(center, size, seed)": [
-        "生成大陆原型：占据世界边缘，形状狭长，使用低频噪声+正弦波。"
-      ],
-      "generate_large_island(center, size, seed)": [
-        "生成大岛原型：圆形或椭圆形基础形状，中等频率噪声扰动，半径约 15-25 单位。"
-      ],
-      "generate_small_island(center, size, seed)": [
-        "生成小岛原型：不规则形状，高频噪声扰动，半径约 4-8 单位。"
-      ],
-      "generate_atoll(center, size, seed)": [
-        "生成环礁原型：环形结构（外圈+内圈），中心有泻湖，半径约 2-4 单位。"
-      ]
-    }
-  },
-
-  "framework/domain/world/route_calculator.gd": {
-    role: "计算港口间的贝塞尔曲线路径，生成出航角度，构建连通性图。",
-    contracts: [
-      "贝塞尔曲线的控制点方向由出航角度决定。",
-      "连通性图是无向的（A连接B意味着B也连接A）。",
-      "路径计算不考虑海洋迷雾（那是运行时状态）。",
-      "A* 绕路时使用曼哈顿距离作为启发式。"
-    ],
-    l2: {
-      "calculate_route(from, to, landmasses)": [
-        "计算直线距离和方向，检测是否穿过陆地。",
-        "如果穿过陆地，使用 A* 绕开。",
-        "生成三次贝塞尔曲线（20段细分），控制点长度 = 距离 × 0.3。"
-      ],
-      "compute_departure_angles(ports, connectivity)": [
-        "对于每个港口，收集所有直接邻居的位置，计算邻居的质心。",
-        "出航角度 = atan2(质心.y - 港口.y, 质心.x - 港口.x)。"
-      ]
-    }
-  },
-
-  "framework/domain/world/world_generator.gd": {
-    role: "世界生成器的主逻辑，协调陆地生成、港口放置、连通性计算。",
-    contracts: [
-      "生成过程是确定性的（同 seed 产生相同结果）。",
-      "重试机制用于处理港口放置冲突（最多60次）。",
-      "验证失败时会返回详细的错误信息。",
-      "默认配置提供了合理的起点（4区域、11陆地、13港口）。",
-      "`required_tags` 从港口配置中读取，不依赖内容注册表。"
-    ],
-    l2: {
-      "generate(profile, rng, content_registry)": [
-        "从 profile 读取配置（世界大小、区域定义等）。",
-        "为每个区域生成陆地（调用 LandGenerator）。",
-        "在海岸线上放置港口（按配置顺序）。",
-        "验证必需设施位置（船厂和情报站在起点2条边内）。",
-        "构建连通性图（调用 RouteCalculator）。",
-        "计算出航角度（调用 RouteCalculator）。"
-      ],
-      "_place_ports_on_coastlines(world, port_configs, content_registry, rng)": [
-        "对于每个港口配置，找到对应的陆地。",
-        "在海岸线上按 `coast_t` 参数采样位置，添加随机抖动（±0.04）。",
-        "检查最小间距（15单位），如果不满足则重试（最多20次）。",
-        "从配置中读取 `required_tags` 并添加到港口。",
-        "从内容注册表查询原型，补充设施和标签。"
-      ]
-    }
-  },
-
-  "framework/domain/world/world_ops.gd": {
-    role: "世界地图的查询和变更接口，替代 MVP 时期的 MapOps。",
-    contracts: [
-      "所有查询方法都是只读的，不修改世界状态。",
-      "状态管理方法通过 `GameState.campaign_world()` 存储发现/访问状态。",
-      "`find_path` 使用BFS，不考虑实际路径长度（只计算边数）。",
-      "`distance_between` 返回直线距离，不是路径长度。",
-      "`route_between` 返回的路径可能为空（如果港口不连通）。"
-    ]
-  },
-
   "framework/domain/contracts/contract_ops.gd": {
     role: "委托实例生成、装载、交付结算、接取规则、普通委托池生成与抵达刷新。",
     contracts: [
@@ -978,16 +842,6 @@ export const FILE_DOCS = {
       "注册发生在编译阶段，解析发生在 mount 之后。",
       "`find_key(asset_key)` 按裸键（如 `icon.money`）在已注册资产中按排序确定性扫描，返回首个 `asset://<pack>/<key>`；框架 UI 用它解析可选图标，不硬编码 mod 命名空间，未命中返回空串。",
       "`load_texture()/load_model()`：框架资源走 `ResourceLoader`，模组内原始 `.png/.glb`（挂载包或松散目录）走 `ContentAssetLoader`；失败返回 null，调用方保留 2D 回退。"
-    ]
-  },
-
-  "framework/services/content_asset_loader.gd": {
-    role: "运行时读取模组内容资产：用 `Image.load_from_file` 读原始 PNG、用 `GLTFDocument.append_from_file` 读原始 GLB，并按路径缓存。",
-    contracts: [
-      "模组是挂载的普通资源包（含原始文件），`ResourceLoader` 无法直接 load 其中的 .png/.glb，因此必须走本项目加载器。",
-      "`load_texture(path)` 返回 ImageTexture；`load_scene(path)` 返回 GLTF 场景根；`instantiate_model()` 返回可挂到舞台的副本（缓存节点不被父级占用）。",
-      "解析失败按路径记入 failures 缓存，重复调用不反复尝试；`clear_cache()` 在 FrameworkRuntime.shutdown 中调用。",
-      "只负责表现资源，不读写 GameState、注册表或存档。"
     ]
   },
 
@@ -1710,22 +1564,12 @@ export const FILE_DOCS = {
     ]
   },
 
-  "tools/gen_static_docs.mjs": {
-    role: "静态文档生成器：读取本文件的 FILE_DOCS/MODULES，生成镜像文档、模块 README、总计索引与带 SHA-256 的 manifest。",
-    contracts: [
-      "GDScript 符号按 `class_name/signal/const/func` 提取；`.js/.mjs` 额外提取顶层 function、常量与 `root.SN*` 导出。",
-      "生成前清空 `docs/static`；`SKIP_SOURCES` 中的生成物不进入文档与 manifest。",
-      "遍历时跳过 `.git/.godot/node_modules/__pycache__` 目录与 `.import/.uid/.tmp/.pyc` 文件，缓存和编译产物不进入文档。",
-      "`STATIC_COPY_PAGES` 把策展型设计文档复制进静态索引，避免清理时丢失非源码页面。",
-      "修改规则或分类后重新运行；`commit` 取当前 HEAD 短哈希。"
-    ]
-  },
-
   "tools/static_docs_data.mjs": {
-    role: "静态文档的策展数据：文件职责/契约/L2、模块简介与分组角色。",
+    role: "静态文档的兼容策展数据：保留尚未迁移文件的职责/契约，并维护模块简介与分组角色。",
     contracts: [
-      "只描述源码可证实的职责与约束；符号位置由生成器扫描，不手写行号。",
-      "新增源文件或模块时同步 FILE_DOCS、MODULES、GROUPED_ROLES 与 MODULE_PATHS。"
+      "新源码优先写 `@static-doc` 文件头；不能写注释的格式使用 `docs/static_headers/<源码路径>.md`，不再新增 FILE_DOCS 条目。",
+      "FILE_DOCS 只服务尚未迁移的旧文件；MODULES 与 GROUPED_ROLES 继续维护模块级说明和无独立页文件的兜底职责。",
+      "只描述源码可证实的职责与约束；符号位置由生成器扫描，不手写行号。"
     ]
   },
 
@@ -2434,21 +2278,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "dev_scenes/port_stage/port_stage_preview.gd": {
-    role: "PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`，挂载 `port_stage.tscn`，提供 `preview`（铁港全设施 + banner + 街道 town kit + 明轮船）与 `sparse`（香料港 small、三设施、无 banner、根层 facility_visuals/town_visuals）两份样例 ViewModel；`set_station()` 可把镜头切到 market/harbor/supply 三个相邻站位（stage 或 panel 构图）并打印站位自查。",
-    dependencies: ["SNStageHost", "framework/ui/stages/port_stage.tscn"],
-    contracts: [
-      "`set_variant(\"preview\"|\"sparse\")` 不重挂舞台，只重新 bind 样例 payload；`current_variant()` 返回当前样例。",
-      "`set_station(station_id = \"harbor\", framing = \"stage\")` 调 `PortStage.focus_station(id, framing, true)`（立即生效，截图确定性），返回是否被接受；`station_id()`/`station_framing()`/`current_stage()` 供截图与实测工具轮询。",
-      "`_print_station()` 打印站位/current/transitioning/station_props、相机 pose（position/target/fov）与实际相机、船位/船 X、设施屏幕锚点与 `station_ids()`，便于核对 panel 构图是否把设施留在可见左半屏。",
-      "`TOWN_VISUALS` 是 26 项 dev 路径映射（10 个 `res://dev_mods/core/assets/models/props/SN_HT_*.glb` + crate/barrel/coal_pile/timber_stack/handcart/gas_lamp + market_stall/harbor_crane/sack_pile/plate_stack/ore_pile/pallet/gangway/mooring_bollard/capstan/buoy），两份 payload 都带 `town_visuals`，模拟 `port.view` 解析后的结果；站前道具复用同一批 key。",
-      "`sparse` 同时覆盖：L1 无 banner（painted backdrop + 3 层远景 + 3 层雾带）、small→sparse 密度、根层 `facility_visuals`、`hull_model_path` 为空时按 `hull_tier` 回退；`preview` 走铁港 banner + normal 47 件 town 街景 + 24 件站前道具（town 与 banner 独立）。",
-      "每个 variant 打印设施 kinds / filler 数 / backdrop / ship / density / town_props / painted_layers / static batches（batches、mesh/surface before→after）与投影后的设施锚点，便于截图时核对。",
-      "`_print_scene_fill()` 只读自查：打印 particles / fog_layers / skyline_buildings / skyline_cranes / town_props / town_blockouts / town_density / painted_layers / static batches、`foreground_frame()` 的屏幕 uv bbox、mesh/particle/tri 预算，以及 `FallbackBackdrop` 各子节点的可见性/尺寸与中心 uv；`_count_meshes()` / `_mesh_triangles()` 递归统计 MultiMesh / GPUParticles3D / MeshInstance3D。",
-      "运行：`godot --path . res://dev_scenes/port_stage/port_stage_preview.tscn`；截图用 `tools/godot/capture_port_stage.gd`。"
-    ]
-  },
-
   "assets/shaders/water/harbor_water.gdshader": {
     role: "港口水面空间着色器：顶点正弦波位移、噪声法线、菲涅耳天空反射、太阳耀斑路径、岸线与船体泡沫，以及远处雾色淡出。",
     dependencies: ["assets/textures/water/water_normal.png", "assets/textures/water/water_foam.png"],
@@ -2520,18 +2349,6 @@ export const FILE_DOCS = {
       "稳定窗口：首次 90 帧 + 1 s，切换 variant/站位后 30 帧 + 0.5 s；每张额外轮询 `is_station_transitioning()==false` 且 `StageCamera` 位置接近 `station_camera_pose()`（≤0.75 m、朝向 dot>0.999）再截，空图/保存失败计为 failures。",
       "成功条件：5 张图都保存且 failures=0，否则退出码 1；文件名 `port_stage_preview/sparse/market/supply/harbor_page.png`。",
       "先写 `res://tmp_*`，全部成功后才搬进 docs 并删除 tmp；120 s watchdog 防止协程挂住窗口；只写截图，不修改场景/源码。"
-    ]
-  },
-
-  "tools/godot/measure_port_stage.gd": {
-    role: "PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与三个站位（harbor/market/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`（facilities/town 与船体合批前后）、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。",
-    dependencies: ["dev_scenes/port_stage/port_stage_preview.tscn", "RenderingServer", "StageKit"],
-    contracts: [
-      "必须窗口模式才能读到真实 draw calls；headless 时打印明确说明并走 mesh/surface 分析口径，不视为失败、不挂窗口。",
-      "采样 6 帧取峰值，避免 resize / 首帧低值；成功条件为 5 个样本（preview/sparse/harbor/market/supply）都完成测量，否则退出码 1。",
-      "预算阈值 120 draws / 60,000 tris；每个站位单独输出 ≤120 / ≤60k 判定与一行汇总，超出只报告 OVER 不改变退出码（测量工具不替代验收）。",
-      "180 s watchdog；只读场景，不修改游戏状态或源码。",
-      "输出包含总 draw calls（含已合并玩家船）与 stage 自身（excl. hull），便于区分舞台预算与不可批的船体开销。"
     ]
   },
 
@@ -2662,17 +2479,6 @@ export const FILE_DOCS = {
       "输出 8 张到 `docs/design/screenshots/iron_harbor_architecture/`：固定机位 1440×900 与 960×540、同视角居中复查、街道低机位（1.7 m 眼高）、正交正视（+Y 主立面）、屋顶视图，以及材质近景 `*_detail_door_*`（装卸门一带：砖/木/铁/玻璃/石）与 `*_detail_base_*`（墙脚：石基/砖转角/落水管/檐沟）。",
       "近景只为判读 trim sheet，不是验收机位：`DETAIL_DOOR` / `DETAIL_BASE` 的眼点与目标写在常量表里，改布局槽位不影响它们（它们用工作台坐标）。",
       "渲染期间临时隐藏其它 mesh（含旧占位资产），结束后逐项恢复；不修改任何模型数据与运行时代码。"
-    ]
-  },
-
-  "tools/godot/capture_port_stage_res.gd": {
-    role: "铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行。",
-    contracts: [
-      "用法：`godot --path . --script res://tools/godot/capture_port_stage_res.gd -- <w> <h>`；必须窗口模式（headless 下视口纹理为空）。",
-      "输出 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_<w>x<h>.png`；失败以非 0 退出码结束。",
-      "`_report_asset_materials()` 逐个 `load()` 5 个槽位 GLB（`TOWN_ASSETS`：warehouse_long / warehouse_short / harbor_office / cargo_shed / tavern，stage 采样同一路径），打印每栋 `[asset] ... surfaces/tris/uv_surfaces/textured_surfaces/materials/textures`；有面缺贴图/缺 UV、或 tri 数与 `EXPECTED_ASSET_TRIS`（7436 / 3788 / 10336 / 3356 / 5116）不符都记为失败。stage 里 static batching 会把逐对象节点合并释放，所以**不能**在场景树里找它。",
-      "`budget: ... tris=` 是整台 stage 的总量（含并行工作流往城镇加的道具），**不能**当单资产增量证据，单资产证据看 `[asset]` 行。",
-      "与既有 `capture_port_stage.gd`（固定 1440×900、preview+sparse 两张）并行存在，不改后者行为。"
     ]
   },
 
@@ -2837,7 +2643,7 @@ export const MODULES = {
     intro: "PowerShell 辅助脚本、Godot 验收 / 截图脚本、建模工单 / 参数化生成器与静态文档生成器。",
     contracts: [
       "`test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。",
-      "`gen_static_docs.mjs` 读取 `static_docs_data.mjs` 生成 `docs/static/`。",
+      "`gen_static_docs.mjs` 优先读取源码 `@static-doc` 与 `docs/static_headers/` sidecar，旧 `static_docs_data.mjs` 仅作兼容；默认原子生成，`--check` 只读检查过期。",
       "`ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。",
       "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜，`-OverviewDetail` 再要求 `overview_detail.png`。",
       "`godot/capture_port_stage.gd` 是 PortStage 预览截图入口：窗口模式 1440×900，依次抓 `port_stage_preview.png` / `port_stage_sparse.png` / `port_stage_market.png` / `port_stage_supply.png` / `port_stage_harbor_page.png` 五张到 `docs/design/screenshots/port_stage/`；`--headless` 直接失败，失败退出码 1。",

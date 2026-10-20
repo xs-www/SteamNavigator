@@ -11,6 +11,12 @@
 | `SNPartRow` | L1 |
 | `activated (signal)` | L9 |
 | `drag_started (signal)` | L10 |
+| `TEXT` | L12 |
+| `MUTED` | L13 |
+| `BRASS` | L14 |
+| `TEAL` | L15 |
+| `RED` | L16 |
+| `GREEN` | L17 |
 | `configure(part_data: Dictionary, tag_text: String, tag_color: Color, meta_text: String, hint_text: String, can_drag: bool) -> void` | L32 |
 | `set_compatible_hint(active: bool) -> void` | L57 |
 

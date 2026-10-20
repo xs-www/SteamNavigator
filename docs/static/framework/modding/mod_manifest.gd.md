@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ModManifest` | L1 |
+| `MANIFEST_SCHEMA_PATH` | L5 |
+| `from_dict(raw_manifest: Dictionary, source_label_value: String = "") -> ModManifest` | L34 |
 | `accepts_api(framework_major: int, framework_minor: int) -> bool` | L171 |
 | `has_capabilities(known: PackedStringArray) -> Array[String]` | L175 |
 | `to_summary() -> Dictionary` | L183 |

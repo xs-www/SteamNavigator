@@ -9,6 +9,11 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MarketMemoryService` | L1 |
+| `MEMORY_KEY` | L10 |
+| `ensure(state: GameState) -> void` | L13 |
+| `remember(state: GameState, port_id: String) -> void` | L18 |
+| `get_memory(state: GameState, port_id: String) -> Dictionary` | L38 |
+| `has_memory(state: GameState, port_id: String) -> bool` | L43 |
 
 ## 契约与约束
 

@@ -11,6 +11,11 @@
 | --- | --- |
 | `SupplyScreen` | L1 |
 | `command_requested (signal)` | L13 |
+| `SUPPLY_CARD_SCENE` | L15 |
+| `COLOR_TEXT` | L16 |
+| `COLOR_MUTED` | L17 |
+| `COLOR_BRASS` | L18 |
+| `COLOR_RED` | L19 |
 | `bind(view_model: Dictionary, translate: Callable) -> void` | L24 |
 
 ## 契约与约束

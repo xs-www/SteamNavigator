@@ -10,6 +10,14 @@
 | --- | --- |
 | `SNMapCanvas` | L1 |
 | `port_clicked (signal)` | L4 |
+| `WATER` | L6 |
+| `GRID_MINOR` | L7 |
+| `GRID_MAJOR` | L8 |
+| `INK` | L9 |
+| `MUTED` | L10 |
+| `BRASS` | L11 |
+| `VISITED` | L12 |
+| `DISCOVERED` | L13 |
 
 ## 契约与约束
 

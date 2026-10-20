@@ -11,6 +11,11 @@
 | --- | --- |
 | `VictoryScreen` | L1 |
 | `action_requested (signal)` | L5 |
+| `TEXT` | L7 |
+| `MUTED` | L8 |
+| `BRASS` | L9 |
+| `RED` | L10 |
+| `GREEN` | L11 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L15 |
 
 ## 契约与约束

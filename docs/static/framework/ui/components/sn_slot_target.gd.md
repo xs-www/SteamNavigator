@@ -11,6 +11,12 @@
 | `SNSlotTarget` | L1 |
 | `part_dropped (signal)` | L9 |
 | `slot_activated (signal)` | L10 |
+| `TEXT` | L12 |
+| `MUTED` | L13 |
+| `BRASS` | L14 |
+| `TEAL` | L15 |
+| `RED` | L16 |
+| `DROP_HINT` | L17 |
 | `configure(slot_data: Dictionary) -> void` | L36 |
 | `set_compatible_hint(active: bool) -> void` | L56 |
 

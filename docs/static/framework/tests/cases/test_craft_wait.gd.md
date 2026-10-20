@@ -8,6 +8,13 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `BUILD` | L6 |
+| `STRATEGY` | L7 |
+| `CONTRACT_FREIGHT` | L8 |
+| `TIER1_MODULES` | L9 |
+| `SMALL_HOLD` | L18 |
+| `SPYGLASS` | L19 |
+| `CHART_ROOM` | L20 |
 | `test_tier1_recipes_are_money_only() -> void` | L57 |
 | `test_money_only_craft_queues_order_and_wait_settles_it() -> void` | L75 |
 | `test_money_only_craft_without_gold_reports_insufficient_money() -> void` | L119 |

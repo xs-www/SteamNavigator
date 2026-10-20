@@ -10,6 +10,15 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNResourceMeter` | L2 |
+| `COLOR_BRASS` | L14 |
+| `COLOR_WATER` | L15 |
+| `COLOR_DANGER` | L16 |
+| `COLOR_TRACK` | L17 |
+| `COLOR_TRACK_BORDER` | L18 |
+| `COLOR_CAP_LOSS` | L19 |
+| `COLOR_CAP_LOSS_DANGER` | L20 |
+| `BAR_HEIGHT` | L21 |
+| `loss_bar_segments(width: float, current: float, maximum: float, loss: float) -> Dictionary` | L152 |
 
 ## 契约与约束
 

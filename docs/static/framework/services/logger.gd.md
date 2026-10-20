@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AppLogger` | L1 |
+| `LEVEL_NAMES` | L7 |
+| `MAX_ENTRIES` | L8 |
 | `_init(minimum: int = Level.INFO, echo: bool = true) -> void` | L17 |
 | `debug(message: String, fields: Dictionary = {}) -> void` | L22 |
 | `info(message: String, fields: Dictionary = {}) -> void` | L26 |

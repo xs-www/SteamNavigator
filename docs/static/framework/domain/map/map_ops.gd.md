@@ -9,6 +9,22 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MapOps` | L1 |
+| `ports(world: Dictionary) -> Dictionary` | L5 |
+| `port(world: Dictionary, port_id: String) -> Dictionary` | L9 |
+| `routes(world: Dictionary) -> Array` | L13 |
+| `route_between(world: Dictionary, from_port: String, to_port: String) -> Dictionary` | L17 |
+| `distance_between(world: Dictionary, from_port: String, to_port: String) -> float` | L28 |
+| `neighbors(world: Dictionary, port_id: String) -> Array[String]` | L33 |
+| `has_facility(port_data: Dictionary, facility: String) -> bool` | L47 |
+| `is_discovered(state: GameState, port_id: String) -> bool` | L51 |
+| `is_visited(state: GameState, port_id: String) -> bool` | L55 |
+| `facilities_known(state: GameState, hub: RegistryHub, port_id: String) -> bool` | L59 |
+| `visible_facilities(state: GameState, hub: RegistryHub, port_id: String) -> Array[String]` | L69 |
+| `discover(state: GameState, port_id: String, mark_visited: bool = false) -> bool` | L78 |
+| `bfs_distances(world: Dictionary, start_port: String) -> Dictionary` | L96 |
+| `reachable(world: Dictionary, start_port: String) -> bool` | L109 |
+| `port_display_key(world: Dictionary, port_id: String) -> String` | L113 |
+| `route_risk(world: Dictionary, from_port: String, to_port: String) -> float` | L117 |
 
 ## 契约与约束
 

@@ -14,6 +14,8 @@
 | `stage_unmounted (signal)` | L17 |
 | `portal_requested (signal)` | L18 |
 | `fallback_requested (signal)` | L19 |
+| `STAGE_WORLD_NAME` | L21 |
+| `DEFAULT_VIEWPORT_SIZE` | L22 |
 | `load_stage(path: String, payload: Dictionary = {}) -> bool` | L72 |
 | `mount_stage(stage: Node, payload: Dictionary = {}) -> bool` | L100 |
 | `unmount_stage() -> void` | L122 |

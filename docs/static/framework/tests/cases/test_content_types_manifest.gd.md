@@ -8,6 +8,7 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `MANIFEST_PATH` | L6 |
 | `test_manifest_matches_content_types() -> void` | L20 |
 | `test_manifest_entries_are_unique_and_complete() -> void` | L63 |
 | `test_minor_modules_share_one_utility_category() -> void` | L108 |

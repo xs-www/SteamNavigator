@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ContentDefinition` | L1 |
+| `from_raw(raw_definition: Dictionary, type: StringName, mod_id: String, file: String) -> ContentDefinition` | L19 |
 | `has_tag(tag: String) -> bool` | L42 |
 | `has_all_tags(required_tags: Array) -> bool` | L46 |
 | `to_raw() -> Dictionary` | L53 |

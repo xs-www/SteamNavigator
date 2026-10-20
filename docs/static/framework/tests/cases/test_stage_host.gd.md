@@ -8,19 +8,33 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `SHIPYARD_STAGE_SCENE` | L16 |
+| `NON_STAGE_SCENE` | L17 |
+| `STEAMER_MODEL` | L18 |
+| `PORT_STAGE_SCENE` | L19 |
 | `test_location_stage_default_contract_is_callable() -> void` | L73 |
 | `test_host_mounts_stage_and_drives_enter_bind_exit_lifecycle() -> void` | L92 |
 | `test_host_emits_fallback_for_missing_or_non_stage_scenes() -> void` | L168 |
 | `test_shipyard_stage_scene_loads_and_binds_a_hull() -> void` | L194 |
 | `test_ship_stage_3d_adapter_wraps_the_stage_host() -> void` | L215 |
+| `PORT_FACILITIES` | L242 |
+| `MARKET_STALL_MODEL` | L243 |
+| `MISSING_FACILITY_MODEL` | L244 |
+| `VIEWPORT_SIZE` | L245 |
 | `test_port_stage_assembles_present_facilities_and_fills_empty_slots() -> void` | L266 |
 | `test_port_stage_uses_facility_visual_models_and_falls_back_on_missing_files() -> void` | L305 |
 | `test_port_stage_scales_facility_anchors_with_port_size() -> void` | L325 |
 | `test_port_stage_mounts_the_player_hull_and_requests_portals() -> void` | L353 |
+| `IRON_HARBOR_BANNER` | L390 |
 | `test_port_stage_scene_fill_builds_procedural_skyline_without_banner() -> void` | L393 |
 | `test_port_stage_skyline_counts_scale_with_port_size() -> void` | L418 |
 | `test_port_stage_banner_replaces_skyline_but_keeps_frame_and_atmosphere() -> void` | L453 |
 | `test_port_stage_scene_fill_accessors_survive_visibility_toggle() -> void` | L479 |
+| `TOWN_VISUALS` | L520 |
+| `TOWN_DENSITY_COUNTS` | L549 |
+| `STATION_DENSITY_COUNTS` | L551 |
+| `TOWN_MISSING_MODEL` | L552 |
+| `STEADY_BUILD` | L553 |
 | `test_port_stage_town_kit_mounts_full_streetscape() -> void` | L556 |
 | `test_port_stage_town_density_scales_with_size_and_override() -> void` | L592 |
 | `test_port_stage_town_kit_does_not_require_every_optional_slot() -> void` | L643 |

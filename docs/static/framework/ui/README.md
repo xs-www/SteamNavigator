@@ -21,6 +21,8 @@
 | `components/sn_part_row.tscn` | 框架源文件：sn_part_row.tscn | 本页 |
 | `components/sn_resource_meter.gd` | 煤水、耐久与载重共用的标签化资源存量条。 | [查看](./components/sn_resource_meter.gd.md) |
 | `components/sn_resource_meter.tscn` | 框架源文件：sn_resource_meter.tscn | 本页 |
+| `components/sn_sea_chart_panel.gd` | 海图右侧信息面板。选中港口后展示港口名、原型、区域、设施列表与 | [查看](./components/sn_sea_chart_panel.gd.md) |
+| `components/sn_sea_chart_view.gd` | 可缩放/平移的 2D 海图视图，使用 `_draw()` 在世界坐标上绘制水面与图框、 | [查看](./components/sn_sea_chart_view.gd.md) |
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
 | `components/sn_ship_stage_3d.gd` | 船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。 | [查看](./components/sn_ship_stage_3d.gd.md) |

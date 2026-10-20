@@ -9,6 +9,20 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PathGuard` | L1 |
+| `MAX_PATH_LENGTH` | L8 |
+| `MAX_PATH_DEPTH` | L9 |
+| `FORBIDDEN_EXTENSIONS` | L11 |
+| `CONTENT_EXTENSIONS` | L16 |
+| `ASSET_EXTENSIONS` | L17 |
+| `LOCALIZATION_EXTENSIONS` | L18 |
+| `is_safe_relative(path: String) -> bool` | L21 |
+| `is_forbidden_file(path: String) -> bool` | L39 |
+| `is_allowed_content(path: String) -> bool` | L44 |
+| `is_allowed_asset(path: String) -> bool` | L48 |
+| `is_allowed_localization(path: String) -> bool` | L52 |
+| `join(root: String, relative: String) -> String` | L56 |
+| `strip_root(path: String, root: String) -> String` | L60 |
+| `depth(path: String) -> int` | L67 |
 
 ## 契约与约束
 

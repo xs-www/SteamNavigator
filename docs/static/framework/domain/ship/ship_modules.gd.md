@@ -9,6 +9,27 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipModules` | L1 |
+| `SINGLE_SLOTS` | L32 |
+| `CARGO_SLOT` | L38 |
+| `DEFAULT_CONDITION` | L39 |
+| `SLOT_BY_CONTENT_TYPE` | L41 |
+| `slot_for_content_type(content_type: String) -> String` | L51 |
+| `has_slot(ship: Dictionary, slot: String) -> bool` | L55 |
+| `ensure(ship: Dictionary) -> Dictionary` | L66 |
+| `instances(ship: Dictionary) -> Dictionary` | L96 |
+| `instance(ship: Dictionary, slot: String, index: int = 0) -> Dictionary` | L102 |
+| `condition(ship: Dictionary, slot: String, index: int = 0) -> float` | L113 |
+| `is_disabled(ship: Dictionary, slot: String, index: int = 0) -> bool` | L117 |
+| `set_condition(ship: Dictionary, slot: String, index: int, value: float) -> Dictionary` | L121 |
+| `damage(ship: Dictionary, slot: String, index: int, amount: float) -> Dictionary` | L132 |
+| `install_slot(ship: Dictionary, slot: String) -> Dictionary` | L155 |
+| `append_cargo(ship: Dictionary) -> Dictionary` | L168 |
+| `remove_cargo(ship: Dictionary, index: int) -> void` | L179 |
+| `remove_slot(ship: Dictionary, slot: String) -> void` | L190 |
+| `repair_all(ship: Dictionary) -> int` | L197 |
+| `installed_rows(ship: Dictionary) -> Array` | L218 |
+| `damaged_rows(ship: Dictionary) -> Array` | L247 |
+| `worst_condition(ship: Dictionary) -> float` | L255 |
 
 ## 契约与约束
 

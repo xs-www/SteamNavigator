@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `IntelViewQuery` | L1 |
+| `UNKNOWN_PORT_KEY` | L12 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L15 |
 
 ## 契约与约束
 

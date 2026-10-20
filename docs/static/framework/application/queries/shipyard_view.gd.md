@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipyardViewQuery` | L1 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L8 |
 
 ## 契约与约束
 

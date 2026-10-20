@@ -9,6 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `FormulaRegistry` | L1 |
+| `ensure_defaults() -> void` | L10 |
+| `register(formula_id: String, formula: Callable) -> void` | L39 |
+| `has(formula_id: String) -> bool` | L43 |
+| `evaluate(formula_id: String, params: Dictionary = {}) -> float` | L48 |
+| `ids() -> PackedStringArray` | L56 |
+| `clear_runtime() -> void` | L65 |
 
 ## 契约与约束
 

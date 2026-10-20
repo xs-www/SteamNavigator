@@ -8,5 +8,6 @@
 
 - 发布前运行 `sdk/validate.gd`；core manifest 声明的内容 / 本地化 / 资产缺失时直接失败。
 - 发布前运行 `gen_content_types.mjs --check`，防止框架常量或编辑器类型目录落后于 `content_types.json`。
+- 发布前运行 `gen_static_docs.mjs --check`，防止源码注释、sidecar 或符号位置变化后漏提交 `docs/static`。
 - Windows/Linux 压缩包统一为顶层 `SteamNavigator/`，内含 exe、`mods/core-*.snavmod.zip` 与 `config/config.json`。
 - `core-*.snavmod.zip` 同时作为独立 Release 资产，并参与 `SHA256SUMS.txt`。

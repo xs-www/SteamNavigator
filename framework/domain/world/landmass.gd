@@ -1,9 +1,13 @@
 class_name Landmass
 extends RefCounted
-## A landmass (continent, island, or atoll) in the world map.
+## @static-doc
+## 作用：表示世界地图中的陆地多边形，支持大陆、大岛、小岛、环礁四种原型。
 ##
-## Landmasses are procedurally generated polygons anchored to the world coordinate space.
-## Ports are placed on their coastlines.
+## ## 契约与约束
+## - 多边形顶点顺序必须一致（全顺时针或全逆时针）。
+## - 海岸线采样假设多边形闭合，首尾顶点相连。
+## - 面积计算使用绝对值，结果始终为正数。
+## @end-static-doc
 
 enum Archetype {
 	CONTINENT,

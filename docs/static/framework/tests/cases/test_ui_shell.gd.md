@@ -8,6 +8,29 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `MAIN_SCENE` | L9 |
+| `METER_SCRIPT` | L10 |
+| `CARD_SCRIPT` | L11 |
+| `INTEL_TABLE_SCRIPT` | L12 |
+| `MAP_CANVAS_SCRIPT` | L13 |
+| `MARKET_SCREEN_SCRIPT` | L14 |
+| `CONTRACTS_SCREEN_SCRIPT` | L15 |
+| `SUPPLY_SCREEN_SCRIPT` | L16 |
+| `INTEL_SCREEN_SCRIPT` | L17 |
+| `VOYAGE_SCREEN_SCRIPT` | L18 |
+| `OVERVIEW_SCREEN_SCRIPT` | L19 |
+| `SHIPYARD_SCREEN_SCRIPT` | L20 |
+| `PORT_MEMORY_SCREEN_SCRIPT` | L21 |
+| `SETTLEMENT_SCREEN_SCRIPT` | L22 |
+| `AT_SEA_SCREEN_SCRIPT` | L23 |
+| `EVENT_SCREEN_SCRIPT` | L24 |
+| `VICTORY_SCREEN_SCRIPT` | L25 |
+| `MAIN_MENU_SCREEN_SCRIPT` | L26 |
+| `NEW_GAME_SCREEN_SCRIPT` | L27 |
+| `MODS_SCREEN_SCRIPT` | L28 |
+| `SETTINGS_SCREEN_SCRIPT` | L29 |
+| `STEADY_BUILD` | L30 |
+| `LITERAL_EXPECTED_NOTICE_KEYS` | L36 |
 | `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L170 |
 | `test_damaged_module_is_visible_in_the_shell() -> void` | L206 |
 | `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L225 |

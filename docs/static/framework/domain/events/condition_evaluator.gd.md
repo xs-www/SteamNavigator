@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ConditionEvaluator` | L1 |
+| `MAX_NODES` | L5 |
+| `evaluate(condition: Variant, eval_context: Dictionary) -> Dictionary` | L8 |
 
 ## 契约与约束
 

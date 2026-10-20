@@ -67,6 +67,12 @@ jobs:
           set -euo pipefail
           node tools/gen_content_types.mjs --check
 
+      - name: Check static documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/gen_static_docs.mjs --check
+
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB).
       - name: Validate core content

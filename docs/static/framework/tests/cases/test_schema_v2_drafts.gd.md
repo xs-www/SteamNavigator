@@ -8,6 +8,14 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `START_PROFILE_SCHEMA` | L5 |
+| `WORLD_PROFILE_SCHEMA` | L6 |
+| `REGION_SCHEMA` | L7 |
+| `SITE_SCHEMA` | L8 |
+| `ROUTE_TEMPLATE_SCHEMA` | L9 |
+| `WEATHER_PROFILE_SCHEMA` | L10 |
+| `FACTION_SCHEMA` | L11 |
+| `DISCOVERY_SCHEMA` | L12 |
 | `test_start_profile_v2_schema_accepts_valid_file() -> void` | L45 |
 | `test_start_profile_v2_schema_rejects_invalid_data() -> void` | L51 |
 | `test_world_profile_v2_schema_accepts_valid_file() -> void` | L63 |

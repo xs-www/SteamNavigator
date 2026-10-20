@@ -9,7 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SettingsService` | L1 |
+| `DEFAULT_PATH` | L12 |
+| `USER_PATH` | L13 |
+| `EXE_CONFIG_PATH` | L14 |
+| `VALID_LOCALES` | L15 |
 | `_init(user_path_override: String = "", default_path_override: String = "") -> void` | L23 |
+| `load_settings(user_path_override: String = "", default_path_override: String = "") -> SettingsService` | L28 |
 | `load() -> void` | L58 |
 | `locale() -> String` | L82 |
 | `autosave() -> bool` | L86 |

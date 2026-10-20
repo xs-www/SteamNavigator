@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VersionRange` | L1 |
+| `parse(text: String) -> VersionRange` | L20 |
 | `matches(version: SemVer) -> bool` | L79 |
 
 ## 契约与约束

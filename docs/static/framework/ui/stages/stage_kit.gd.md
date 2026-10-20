@@ -10,6 +10,23 @@
 | 符号 | 位置 |
 | --- | --- |
 | `StageKit` | L1 |
+| `WATER_MATERIAL` | L13 |
+| `WATER_FAR_MATERIAL` | L14 |
+| `WATER_FALLBACK_COLOR` | L15 |
+| `DEFAULT_SKY_TOP` | L17 |
+| `DEFAULT_SKY_HORIZON` | L18 |
+| `DEFAULT_GROUND_HORIZON` | L19 |
+| `DEFAULT_GROUND_BOTTOM` | L20 |
+| `DEFAULT_FOG_COLOR` | L21 |
+| `DEFAULT_AMBIENT_COLOR` | L22 |
+| `add_environment(parent: Node3D, config: Dictionary = {}) -> WorldEnvironment` | L33 |
+| `add_directional_light(parent: Node3D,, node_name: String,, color: Color,, energy: float,, rotation_degrees: Vector3) -> DirectionalLight3D` | L68 |
+| `add_water(parent: Node3D,, material_path: String = WATER_MATERIAL,, plane_size: float = 600.0,, position_y: float = -0.05,, overrides: Dictionary = {}) -> MeshInstance3D` | L87 |
+| `load_water_material(material_path: String, overrides: Dictionary = {}) -> ShaderMaterial` | L116 |
+| `configure_boat_foam(material: ShaderMaterial, bounds: AABB) -> void` | L129 |
+| `frame_camera(camera: Camera3D,, bounds: AABB,, direction: Vector3,, fov: float,, margin: float) -> void` | L144 |
+| `visual_aabb(root: Node) -> AABB` | L160 |
+| `transform_aabb(xform: Transform3D, box: AABB) -> AABB` | L183 |
 
 ## 契约与约束
 

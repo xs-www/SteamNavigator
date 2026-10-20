@@ -9,6 +9,17 @@
 | 符号 | 位置 |
 | --- | --- |
 | `JsonUtils` | L1 |
+| `NULL_VALUE` | L5 |
+| `parse(text: String) -> Dictionary` | L8 |
+| `parse_file(path: String) -> Dictionary` | L21 |
+| `read_text(path: String) -> String` | L30 |
+| `canonical_stringify(value: Variant, indent: String = "") -> String` | L39 |
+| `pointer_escape(segment: String) -> String` | L71 |
+| `pointer_unescape(segment: String) -> String` | L75 |
+| `pointer_segments(pointer: String) -> PackedStringArray` | L79 |
+| `pointer_get(root: Variant, pointer: String) -> Dictionary` | L89 |
+| `pointer_apply(root: Variant, pointer: String, mode: String, value: Variant = null) -> Dictionary` | L111 |
+| `format_pointer(segments: Array) -> String` | L168 |
 
 ## 契约与约束
 

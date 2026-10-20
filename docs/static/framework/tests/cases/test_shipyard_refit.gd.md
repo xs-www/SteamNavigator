@@ -8,6 +8,17 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `MAIN_SCENE` | L12 |
+| `SHIPYARD_SCREEN_SCRIPT` | L13 |
+| `SHIP_VIEW_SCRIPT` | L14 |
+| `SLOT_TARGET_SCRIPT` | L15 |
+| `PART_ROW_SCRIPT` | L16 |
+| `STEADY_BUILD` | L17 |
+| `MODE_EXTERIOR` | L18 |
+| `MODE_CUTAWAY` | L19 |
+| `SHIP_THUMB_SIZE` | L20 |
+| `MODULE_TYPES` | L21 |
+| `LEGACY_SECTION_KEYS` | L24 |
 | `test_normal_mode_shows_owned_ship_render_and_component_categories() -> void` | L167 |
 | `test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> void` | L205 |
 | `test_damaged_module_shows_a_condition_badge() -> void` | L253 |

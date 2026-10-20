@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SchemaValidator` | L1 |
+| `MAX_DEPTH` | L15 |
+| `MAX_ERRORS` | L16 |
 | `validate(instance: Variant, schema: Dictionary, base_dir: String = "", root_schema: Dictionary = {}) -> Array[Dictionary]` | L23 |
 | `validate_file(instance: Variant, schema_path: String) -> Array[Dictionary]` | L31 |
 

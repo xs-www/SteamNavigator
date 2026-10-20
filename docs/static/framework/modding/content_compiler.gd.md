@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ContentCompiler` | L1 |
+| `MAX_CONTENT_FILE_BYTES` | L6 |
+| `MAX_PATCHES` | L7 |
 | `_init(hub: RegistryHub,, localization: LocalizationService,, assets: AssetService,, logger: AppLogger = null,, validator: SchemaValidator = null) -> void` | L22 |
 | `compile(packages: Dictionary, order: Array[String]) -> Dictionary` | L36 |
 

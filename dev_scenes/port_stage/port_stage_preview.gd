@@ -1,3 +1,17 @@
+## @static-doc
+## 作用：PortStage 独立预览场景根（不接入主流程）：构建铺满窗口的 `SNStageHost`、挂载 `port_stage.tscn`、提供 preview / sparse 两份样例 ViewModel，并支持三站位切换与 town 资源根覆盖，供截图、draw call 实测与三条资产加载路径复现。
+##
+## - 关键依赖：`SNStageHost`、`framework/ui/stages/port_stage.tscn`
+##
+## ## 契约与约束
+## - `set_variant("preview"|"sparse")` 不重挂舞台，只重新 bind 样例 payload；`current_variant()` 返回当前样例。
+## - `set_station(station_id = "harbor", framing = "stage")` 调 `PortStage.focus_station(id, framing, true)`（立即生效，截图确定性），返回是否被接受；`station_id()`/`station_framing()`/`current_stage()` 供截图与实测工具轮询。
+## - `TOWN_VISUALS` 是 26 项 dev 路径映射（10 个 `res://dev_mods/core/assets/models/props/SN_HT_*.glb` + 道具/设施）的样例；`_town_visuals()` 把其中位于松散 core props 目录的路径按 `SN_TOWN_ASSET_ROOT` 重新定根，从而让同一场景能从挂载的 `.snavmod.zip`（`res://mods/core/assets/models/props`，原始 `ContentAssetLoader` 路径）加载整套街景；框架自有资产（如 `market_stall`）保持原路径。
+## - `sparse` 覆盖：无 banner（painted backdrop + 3 层远景 + 3 层雾带）、small→sparse 密度、根层 `facility_visuals`、`hull_model_path` 为空时按 `hull_tier` 回退；`preview` 走铁港 banner + normal 47 件 town 街景 + 24 件站前道具。
+## - 每个 variant / 站位打印设施 kinds、filler 数、backdrop、density、town_props、painted_layers、合批前后（batches、mesh/surface before→after）与投影后的设施锚点；`_print_scene_fill()` 只读统计粒子/雾/远景/前景框/三角面预算。
+## - 运行：`godot --path . res://dev_scenes/port_stage/port_stage_preview.tscn`；截图 `tools/godot/capture_port_stage.gd`；实测 `tools/godot/measure_port_stage.gd`（加 `-- --core-zip` 切到 ZIP 加载路径）。
+## @end-static-doc
+
 extends Control
 ## Standalone preview for the 2.5D `PortStage` skeleton — not part of the main
 ## flow. It builds an `SNStageHost` that fills the window, mounts
@@ -24,6 +38,14 @@ extends Control
 ## offset framing used when a 620 px page panel covers the right edge. Both
 ## `set_variant()` and `set_station()` are callable from the screenshot tool;
 ## the station is applied immediately (no tween) so captures are deterministic.
+##
+## `SN_TOWN_ASSET_ROOT` (process environment) overrides the directory the town
+## kit paths resolve from, so the same scene can be measured with the buildings
+## loaded through a mounted `.snavmod.zip` (raw `ContentAssetLoader` path) instead
+## of the loose `dev_mods` directory (imported-resource path):
+##   SN_TOWN_ASSET_ROOT=res://mods/core/assets/models/props
+## This is how the shared-texture / draw-call evidence covers the ZIP and
+## release loading paths without duplicating the preview scene.
 
 const STAGE_SCENE := "res://framework/ui/stages/port_stage.tscn"
 const BANNER_PATH := "res://dev_mods/core/assets/ports/iron_harbor_banner.png"
@@ -147,6 +169,25 @@ func _payload_for(variant_name: String) -> Dictionary:
 	return _preview_payload()
 
 
+## Town-kit paths, re-rooted when `SN_TOWN_ASSET_ROOT` is set (the ZIP /
+## release loading-path measurement); otherwise the loose dev core paths.
+## Only paths that already live in the loose core props directory are re-rooted,
+## so framework assets (e.g. the market-stall model) keep their own path.
+func _town_visuals() -> Dictionary:
+	var root := OS.get_environment("SN_TOWN_ASSET_ROOT").strip_edges()
+	if root.is_empty():
+		return TOWN_VISUALS.duplicate(true)
+	var loose_props := "res://dev_mods/core/assets/models/props/"
+	var out := {}
+	for slot in TOWN_VISUALS.keys():
+		var path: String = TOWN_VISUALS[slot]
+		if path.begins_with(loose_props):
+			out[slot] = root.rstrip("/") + "/" + path.get_file()
+		else:
+			out[slot] = path
+	return out
+
+
 func _preview_payload() -> Dictionary:
 	return {
 		"port": {
@@ -154,7 +195,7 @@ func _preview_payload() -> Dictionary:
 			"size": "medium",
 			"facilities": ["exchange", "contracts", "supply", "intel", "shipyard"],
 			"banner_path": BANNER_PATH,
-			"town_visuals": TOWN_VISUALS.duplicate(true),
+			"town_visuals": _town_visuals(),
 			"palette": {
 				"stone": Color(0.14, 0.13, 0.115),
 				"deck": Color(0.24, 0.17, 0.11),
@@ -179,7 +220,7 @@ func _sparse_payload() -> Dictionary:
 			"size": "small",
 			"facilities": ["exchange", "contracts", "supply"],
 			"banner_path": "",
-			"town_visuals": TOWN_VISUALS.duplicate(true),
+			"town_visuals": _town_visuals(),
 			"palette": {
 				"stone": Color(0.17, 0.15, 0.125),
 				"deck": Color(0.26, 0.19, 0.12),

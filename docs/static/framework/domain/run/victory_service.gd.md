@@ -9,6 +9,11 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VictoryService` | L1 |
+| `achieved(state: GameState) -> bool` | L12 |
+| `main_chain_complete(hub: RegistryHub, state: GameState) -> bool` | L19 |
+| `conditions(hub: RegistryHub, state: GameState) -> Dictionary` | L31 |
+| `check(state: GameState, hub: RegistryHub) -> Dictionary` | L54 |
+| `summary(hub: RegistryHub, state: GameState) -> Dictionary` | L85 |
 
 ## 契约与约束
 

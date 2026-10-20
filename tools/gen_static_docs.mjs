@@ -5,20 +5,30 @@
 //   node tools/gen_static_docs.mjs
 //
 // The generator is intentionally conservative: it emits a mirrored per-file
-// index for curated files, a module README for everything else, and a manifest
-// with SHA-256 hashes for incremental updates.
+// index for documented files, a module README for everything else, and a
+// manifest with SHA-256 hashes for freshness checks.
+// @static-doc
+// 作用：从源码静态文档注释、sidecar 头文件和旧策展数据生成镜像文档、模块索引与 SHA-256 manifest。
+//
+// ## 契约与约束
+// - 新源码优先在前 120 行维护 `@static-doc`；不能写注释的格式使用 `docs/static_headers/<源码路径>.md`。
+// - 旧 `FILE_DOCS` 只作为迁移兼容层，优先级低于源码注释和 sidecar。
+// - 默认在临时目录完成构建后原子替换 `docs/static`；`--check` 只比较，不写工作区。
+// - GDScript 符号提取支持普通/静态函数、推断/显式类型常量、类与信号。
+// @end-static-doc
 
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { FILE_DOCS, MODULES, GROUPED_ROLES } from "./static_docs_data.mjs";
+import { FILE_DOCS as LEGACY_FILE_DOCS, MODULES, GROUPED_ROLES } from "./static_docs_data.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DOC_ROOT = path.join(ROOT, "docs", "static");
+const HEADER_ROOT = path.join(ROOT, "docs", "static_headers");
 const MODE = "compact";
-const RULE_VERSION = "2.0";
+const RULE_VERSION = "3.0";
 const STATIC_COPY_PAGES = [
   ["docs/design/UI_PROTOTYPE.md", "design-prototype.md"],
 ];
@@ -92,7 +102,7 @@ function lineAt(text, index) {
   return text.slice(0, index).split("\n").length;
 }
 
-function extractSymbols(relativePath, text) {
+export function extractSymbols(relativePath, text) {
   const symbols = [];
   const classMatch = /^class_name\s+(\w+)/m.exec(text);
   if (classMatch) {
@@ -102,11 +112,11 @@ function extractSymbols(relativePath, text) {
   for (const match of text.matchAll(signalRegex)) {
     symbols.push({ label: `${match[1]} (signal)`, line: lineAt(text, match.index), kind: "signal" });
   }
-  const constRegex = /^const\s+([A-Z][A-Z0-9_]*)\s*(?::[^=]+)?=/gm;
+  const constRegex = /^const\s+([A-Z][A-Z0-9_]*)\s*(?::=|:\s*[^=\n]+?\s*=|=)/gm;
   for (const match of text.matchAll(constRegex)) {
     symbols.push({ label: match[1], line: lineAt(text, match.index), kind: "const" });
   }
-  const functionRegex = /^func\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)\s*(?:->\s*([^:]+?))?:/gm;
+  const functionRegex = /^(?:static\s+)?func\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)\s*(?:->\s*([^:]+?))?:/gm;
   for (const match of text.matchAll(functionRegex)) {
     const name = match[1];
     if (name.startsWith("_") && name !== "_init") continue;
@@ -143,6 +153,77 @@ function extractSymbols(relativePath, text) {
   return unique;
 }
 
+function stripStaticDocComment(line) {
+  const value = line.trimStart();
+  if (/^\/\//.test(value)) return value.replace(/^\/\/\/?\s?/, "").trimEnd();
+  if (/^#/.test(value)) return value.replace(/^#{1,3}\s?/, "").trimEnd();
+  if (/^;/.test(value)) return value.replace(/^;\s?/, "").trimEnd();
+  if (/^<!--/.test(value)) return value.replace(/^<!--\s?/, "").replace(/\s*-->$/, "").trimEnd();
+  if (/^\/\*/.test(value)) return value.replace(/^\/\*+\s?/, "").replace(/\s*\*\/$/, "").trimEnd();
+  if (/^\*/.test(value)) return value.replace(/^\*\s?/, "").replace(/\s*\*\/$/, "").trimEnd();
+  return value.trimEnd();
+}
+
+function parseStaticDocFragment(lines, source) {
+  while (lines.length && !lines[0].trim()) lines.shift();
+  while (lines.length && !lines.at(-1).trim()) lines.pop();
+  const roleIndex = lines.findIndex((line) => /^(?:作用|role)\s*[：:]/i.test(line.trim()));
+  if (roleIndex < 0) {
+    throw new Error(`${source}: static doc block must contain \"作用：...\" or \"role: ...\"`);
+  }
+  const role = lines[roleIndex].trim().replace(/^(?:作用|role)\s*[：:]\s*/i, "").trim();
+  if (!role) throw new Error(`${source}: static doc role must not be empty`);
+  lines.splice(roleIndex, 1);
+  while (lines.length && !lines[0].trim()) lines.shift();
+  while (lines.length && !lines.at(-1).trim()) lines.pop();
+  return { role, fragment: lines.join("\n") };
+}
+
+export function extractStaticDoc(relativePath, text) {
+  const lines = text.split(/\r?\n/);
+  let start = -1;
+  for (let index = 0; index < Math.min(lines.length, 120); index += 1) {
+    if (stripStaticDocComment(lines[index]) === "@static-doc") {
+      start = index + 1;
+      break;
+    }
+  }
+  if (start < 0) return null;
+  const content = [];
+  for (let index = start; index < lines.length; index += 1) {
+    const line = stripStaticDocComment(lines[index]);
+    if (line === "@end-static-doc") return parseStaticDocFragment(content, relativePath);
+    content.push(line);
+  }
+  throw new Error(`${relativePath}: missing @end-static-doc`);
+}
+
+function readSidecarDoc(source) {
+  const sidecar = path.join(HEADER_ROOT, `${source}.md`);
+  if (!fs.existsSync(sidecar)) return null;
+  return parseStaticDocFragment(fs.readFileSync(sidecar, "utf8").split(/\r?\n/), `${source} sidecar`);
+}
+
+const metadataCache = new Map();
+
+function metadataFor(source) {
+  if (metadataCache.has(source)) return metadataCache.get(source);
+  let metadata = null;
+  const absolute = path.join(ROOT, source);
+  if (fs.existsSync(absolute) && fs.statSync(absolute).isFile()) {
+    try {
+      metadata = extractStaticDoc(source, fs.readFileSync(absolute, "utf8"));
+    } catch (error) {
+      if (error instanceof TypeError || error?.code === "ERR_INVALID_ARG_VALUE") metadata = null;
+      else throw error;
+    }
+  }
+  metadata ||= readSidecarDoc(source);
+  metadata ||= LEGACY_FILE_DOCS[source] || null;
+  metadataCache.set(source, metadata);
+  return metadata;
+}
+
 function sourceTypeLabel(source) {
   if (source.endsWith(".gd")) return "GDScript 源文件";
   if (source.endsWith(".gdshader")) return "Godot 着色器";
@@ -160,14 +241,14 @@ function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-function writeDoc(relativePath, content) {
-  const target = path.join(DOC_ROOT, relativePath);
+function writeDoc(docRoot, relativePath, content) {
+  const target = path.join(docRoot, relativePath);
   ensureDir(path.dirname(target));
   fs.writeFileSync(target, content, "utf8");
 }
 
-function perFileDoc(source) {
-  const metadata = FILE_DOCS[source];
+function perFileDoc(docRoot, source) {
+  const metadata = metadataFor(source);
   if (!metadata) return null;
   const text = read(source);
   const symbols = extractSymbols(source, text);
@@ -208,17 +289,21 @@ function perFileDoc(source) {
       lines.push("");
     }
   }
+  if (metadata.fragment) {
+    lines.push(metadata.fragment);
+    lines.push("");
+  }
   const modulePath = MODULE_OF(source);
   if (modulePath !== "root") {
-    const docDir = path.join(ROOT, "docs/static", path.dirname(source));
-    const moduleReadme = path.join(ROOT, "docs/static", modulePath, "README.md");
+    const docDir = path.join(docRoot, path.dirname(source));
+    const moduleReadme = path.join(docRoot, modulePath, "README.md");
     let link = path.relative(docDir, moduleReadme).replaceAll("\\", "/");
     if (!link.startsWith(".")) link = "./" + link;
     lines.push(`模块索引：[${modulePath}](${link})`);
     lines.push("");
   }
   const docRelative = `${source}.md`;
-  writeDoc(docRelative, lines.join("\n"));
+  writeDoc(docRoot, docRelative, lines.join("\n"));
   return `docs/static/${docRelative}`;
 }
 
@@ -246,7 +331,7 @@ function moduleSources(modulePath) {
     .sort();
 }
 
-function renderModuleReadme(modulePath) {
+function renderModuleReadme(docRoot, modulePath) {
   const metadata = MODULES[modulePath] || { intro: "", contracts: [] };
   const docPath = GROUP_README(modulePath);
   const lines = [];
@@ -265,14 +350,14 @@ function renderModuleReadme(modulePath) {
     const relative = path.relative(modulePath, source).replaceAll("\\", "/");
     const docRelative = `${source}.md`;
     let docCell = "本页";
-    if (FILE_DOCS[source]) {
-      const docAbsolute = path.join(ROOT, "docs/static", docRelative);
-      const moduleDocDir = path.join(ROOT, "docs/static", modulePath);
+    if (metadataFor(source)) {
+      const docAbsolute = path.join(docRoot, docRelative);
+      const moduleDocDir = path.join(docRoot, modulePath);
       let link = path.relative(moduleDocDir, docAbsolute).replaceAll("\\", "/");
       if (!link.startsWith(".")) link = "./" + link;
       docCell = `[查看](${link})`;
     }
-    const role = FILE_DOCS[source]?.role || fallbackRole(source);
+    const role = metadataFor(source)?.role || fallbackRole(source);
     lines.push(`| \`${relative}\` | ${role} | ${docCell} |`);
   }
   lines.push("");
@@ -282,7 +367,7 @@ function renderModuleReadme(modulePath) {
     for (const contract of metadata.contracts) lines.push(`- ${contract}`);
     lines.push("");
   }
-  const target = path.join(DOC_ROOT, modulePath, "README.md");
+  const target = path.join(docRoot, modulePath, "README.md");
   ensureDir(path.dirname(target));
   fs.writeFileSync(target, lines.join("\n"), "utf8");
 }
@@ -291,36 +376,58 @@ function moduleDescription(modulePath) {
   return MODULES[modulePath]?.intro || "见模块 README。";
 }
 
-function main() {
-  fs.rmSync(DOC_ROOT, { recursive: true, force: true });
-  ensureDir(DOC_ROOT);
-
-  let documented = 0;
-  for (const source of Object.keys(FILE_DOCS)) {
-    if (!fs.existsSync(path.join(ROOT, source))) {
-      console.warn(`[skip] missing source: ${source}`);
-      continue;
-    }
-    if (perFileDoc(source)) documented += 1;
-  }
+function collectSources() {
+  const sourceSet = new Set();
   for (const modulePath of MODULE_PATHS) {
-    renderModuleReadme(modulePath);
+    for (const source of moduleSources(modulePath)) sourceSet.add(source);
   }
-  for (const [source, target] of STATIC_COPY_PAGES) {
-    if (fs.existsSync(path.join(ROOT, source))) writeDoc(target, read(source));
+  for (const extra of ["project.godot", "content_types.json", "README.md", "todo.md", "export_presets.cfg", "docker-compose.yml", ".github/workflows/release.yml", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
+    if (fs.existsSync(path.join(ROOT, extra))) sourceSet.add(extra);
   }
+  return [...sourceSet].sort();
+}
 
-  const commit = (() => {
-    try {
-      return execSync("git rev-parse --short HEAD", { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] })
-        .toString()
-        .trim();
-    } catch {
-      return "uncommitted";
-    }
-  })();
-  const generatedAt = new Date().toISOString();
+function validateSidecars(sources) {
+  if (!fs.existsSync(HEADER_ROOT)) return;
+  const sourceSet = new Set(sources);
+  for (const absolute of walk(HEADER_ROOT)) {
+    const relative = path.relative(HEADER_ROOT, absolute).replaceAll("\\", "/");
+    if (relative === "README.md") continue;
+    if (!relative.endsWith(".md")) throw new Error(`static doc sidecar must be Markdown: ${relative}`);
+    const source = relative.slice(0, -3);
+    if (!sourceSet.has(source)) throw new Error(`orphan static doc sidecar: ${relative} (missing ${source})`);
+  }
+}
 
+function inputDigests(sources) {
+  const inputs = sources.map((source) => path.join(ROOT, source));
+  if (fs.existsSync(HEADER_ROOT)) inputs.push(...walk(HEADER_ROOT));
+  const result = new Map();
+  for (const absolute of inputs) {
+    result.set(absolute, crypto.createHash("sha256").update(fs.readFileSync(absolute)).digest("hex"));
+  }
+  return result;
+}
+
+function assertInputsUnchanged(before) {
+  for (const [absolute, digest] of before) {
+    if (!fs.existsSync(absolute)) throw new Error(`documentation input disappeared during generation: ${absolute}`);
+    const current = crypto.createHash("sha256").update(fs.readFileSync(absolute)).digest("hex");
+    if (current !== digest) throw new Error(`documentation input changed during generation: ${absolute}`);
+  }
+}
+
+function currentCommit() {
+  try {
+    return execSync("git rev-parse --short HEAD", { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return "uncommitted";
+  }
+}
+
+function renderRootReadme(docRoot, generatedAt, commit) {
   const l0 = [];
   l0.push("# Steam Navigator — 静态代码文档");
   l0.push("");
@@ -386,26 +493,36 @@ function main() {
   l0.push(`- 生成时间：${generatedAt}`);
   l0.push(`- 生成 commit：\`${commit}\``);
   l0.push(`- 模式：\`${MODE}\`；规则版本：\`${RULE_VERSION}\``);
-  l0.push("- 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。");
-  l0.push("- 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。");
+  l0.push("- 更新方式：在源码头部维护 `@static-doc` 注释，运行 `node tools/gen_static_docs.mjs`；无注释格式使用 `docs/static_headers/<源码路径>.md` sidecar。");
+  l0.push("- 检查方式：`node tools/gen_static_docs.mjs --check`；旧的 `tools/static_docs_data.mjs` 仅作为尚未迁移文件的兼容层。");
+  l0.push("- 变更依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。");
   l0.push("");
-  writeDoc("README.md", l0.join("\n"));
+  writeDoc(docRoot, "README.md", l0.join("\n"));
+}
 
-  const sourceSet = new Set();
-  for (const modulePath of MODULE_PATHS) {
-    for (const source of moduleSources(modulePath)) sourceSet.add(source);
+function buildDocs(docRoot, options = {}) {
+  ensureDir(docRoot);
+  metadataCache.clear();
+  const sources = collectSources();
+  validateSidecars(sources);
+  const inputsBefore = inputDigests(sources);
+  for (const source of sources) {
+    if (metadataFor(source)) perFileDoc(docRoot, source);
   }
-  for (const extra of ["project.godot", "content_types.json", "README.md", "todo.md", "export_presets.cfg", "docker-compose.yml", ".github/workflows/release.yml", "tools/test.ps1", "tools/pack_core.ps1", "tools/gen_static_docs.mjs", "tools/static_docs_data.mjs", "assets/ui/theme/steam_navigator_theme.tres", "assets/shaders/water/harbor_water.gdshader", "assets/materials/water/harbor_water.tres", "assets/materials/water/harbor_water_far.tres", "docs/design/UI_PROTOTYPE.md"]) {
-    if (fs.existsSync(path.join(ROOT, extra))) sourceSet.add(extra);
+  for (const modulePath of MODULE_PATHS) renderModuleReadme(docRoot, modulePath);
+  for (const [source, target] of STATIC_COPY_PAGES) {
+    if (fs.existsSync(path.join(ROOT, source))) writeDoc(docRoot, target, read(source));
   }
+
+  const generatedAt = options.generatedAt || new Date().toISOString();
+  const commit = options.commit || currentCommit();
+  renderRootReadme(docRoot, generatedAt, commit);
 
   const manifestEntries = [];
-  for (const source of [...sourceSet].sort()) {
-    if (!fs.existsSync(path.join(ROOT, source))) continue;
-    if (fs.statSync(path.join(ROOT, source)).isDirectory()) continue;
+  for (const source of sources) {
     const modulePath = MODULE_OF(source);
-    const doc = FILE_DOCS[source] ? `docs/static/${source}.md` : GROUP_README(modulePath);
-    const status = FILE_DOCS[source] ? "documented" : "grouped";
+    const status = metadataFor(source) ? "documented" : "grouped";
+    const doc = status === "documented" ? `docs/static/${source}.md` : GROUP_README(modulePath);
     manifestEntries.push({
       source,
       sha256: sha256(source),
@@ -429,12 +546,92 @@ function main() {
     },
     files: manifestEntries,
   };
-  fs.writeFileSync(path.join(DOC_ROOT, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
-
-  console.log(
-    `generated ${manifest.counts.documented} file docs, ${MODULE_PATHS.length} module indexes, ` +
-      `${manifest.counts.sources} manifest entries (${manifest.counts.grouped} grouped)`
-  );
+  fs.writeFileSync(path.join(docRoot, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  assertInputsUnchanged(inputsBefore);
+  return manifest;
 }
 
-main();
+function fileDigests(root) {
+  const result = new Map();
+  if (!fs.existsSync(root)) return result;
+  for (const absolute of walk(root)) {
+    const relative = path.relative(root, absolute).replaceAll("\\", "/");
+    result.set(relative, crypto.createHash("sha256").update(fs.readFileSync(absolute)).digest("hex"));
+  }
+  return result;
+}
+
+function compareDocTrees(expectedRoot, actualRoot) {
+  const expected = fileDigests(expectedRoot);
+  const actual = fileDigests(actualRoot);
+  const paths = new Set([...expected.keys(), ...actual.keys()]);
+  return [...paths].sort().filter((relative) => expected.get(relative) !== actual.get(relative));
+}
+
+function replaceDocsAtomically(tempRoot) {
+  const backupRoot = path.join(path.dirname(DOC_ROOT), `.static-backup-${process.pid}-${Date.now()}`);
+  let movedExisting = false;
+  try {
+    if (fs.existsSync(DOC_ROOT)) {
+      fs.renameSync(DOC_ROOT, backupRoot);
+      movedExisting = true;
+    }
+    fs.renameSync(tempRoot, DOC_ROOT);
+    if (movedExisting) fs.rmSync(backupRoot, { recursive: true, force: true });
+  } catch (error) {
+    if (!fs.existsSync(DOC_ROOT) && movedExisting && fs.existsSync(backupRoot)) fs.renameSync(backupRoot, DOC_ROOT);
+    throw error;
+  }
+}
+
+function baselineGenerationInfo() {
+  const manifestPath = path.join(DOC_ROOT, "manifest.json");
+  if (!fs.existsSync(manifestPath)) return { generatedAt: new Date(0).toISOString(), commit: "uncommitted" };
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  return { generatedAt: manifest.generated_at, commit: manifest.commit };
+}
+
+function printHelp() {
+  console.log(`Usage: node tools/gen_static_docs.mjs [--check]\n\n` +
+    `  no args   Build docs/static atomically from source annotations, sidecars, and legacy metadata.\n` +
+    `  --check   Rebuild in a temporary directory and fail when docs/static is stale.\n` +
+    `  --help    Show this help without generating files.`);
+}
+
+function main(args = process.argv.slice(2)) {
+  if (args.includes("--help") || args.includes("-h")) {
+    printHelp();
+    return;
+  }
+  const unknown = args.filter((arg) => arg !== "--check");
+  if (unknown.length) throw new Error(`unknown argument(s): ${unknown.join(", ")}`);
+
+  const tempRoot = fs.mkdtempSync(path.join(path.dirname(DOC_ROOT), ".static-build-"));
+  try {
+    if (args.includes("--check")) {
+      buildDocs(tempRoot, baselineGenerationInfo());
+      const changed = compareDocTrees(DOC_ROOT, tempRoot);
+      if (changed.length) {
+        console.error(`static docs are stale (${changed.length} changed path(s)):`);
+        for (const relative of changed.slice(0, 30)) console.error(`  ${relative}`);
+        process.exitCode = 1;
+        return;
+      }
+      console.log("static docs are up to date");
+      return;
+    }
+
+    const manifest = buildDocs(tempRoot);
+    replaceDocsAtomically(tempRoot);
+    console.log(
+      `generated ${manifest.counts.documented} file docs, ${MODULE_PATHS.length} module indexes, ` +
+        `${manifest.counts.sources} manifest entries (${manifest.counts.grouped} grouped)`
+    );
+  } finally {
+    if (fs.existsSync(tempRoot)) fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}

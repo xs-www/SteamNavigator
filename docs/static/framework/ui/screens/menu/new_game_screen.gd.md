@@ -11,6 +11,9 @@
 | --- | --- |
 | `NewGameScreen` | L1 |
 | `action_requested (signal)` | L5 |
+| `TEXT` | L7 |
+| `MUTED` | L8 |
+| `BRASS` | L9 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L17 |
 
 ## 契约与约束

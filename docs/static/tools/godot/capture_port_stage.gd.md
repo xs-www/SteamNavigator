@@ -9,6 +9,19 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `PREVIEW_SCENE` | L28 |
+| `OUT_DIR` | L29 |
+| `WINDOW` | L30 |
+| `SETTLE_FRAMES` | L31 |
+| `SETTLE_SECONDS` | L32 |
+| `SWITCH_FRAMES` | L33 |
+| `SWITCH_SECONDS` | L34 |
+| `STATION_TIMEOUT_SECONDS` | L35 |
+| `CAMERA_POSE_EPSILON` | L38 |
+| `CAMERA_POSE_GRACE_SECONDS` | L42 |
+| `TMP_PREFIX` | L43 |
+| `SHOTS` | L44 |
+| `WATCHDOG_SECONDS` | L51 |
 | `_init() -> void` | L59 |
 
 ## 契约与约束

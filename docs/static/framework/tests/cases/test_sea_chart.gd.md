@@ -12,19 +12,24 @@
 | `SEED_A` | L15 |
 | `SEED_B` | L16 |
 | `TEST_PROFILE` | L17 |
-| `test_sea_chart_query_returns_valid_structure() -> void` | L60 |
-| `test_sea_chart_query_world_bounds_match() -> void` | L82 |
-| `test_sea_chart_query_includes_all_landmasses() -> void` | L98 |
-| `test_sea_chart_query_current_port_marked() -> void` | L120 |
-| `test_sea_chart_query_routes_between_discovered_ports() -> void` | L143 |
-| `test_sea_chart_query_fog_grid_downsampled() -> void` | L169 |
-| `test_sea_chart_query_port_positions_within_bounds() -> void` | L202 |
-| `test_sea_chart_query_no_run_returns_empty() -> void` | L220 |
-| `test_sea_chart_query_serialization_roundtrip() -> void` | L231 |
-| `test_sea_chart_query_reproducible() -> void` | L252 |
-| `test_sea_chart_query_different_seeds_differ() -> void` | L274 |
-| `test_sea_chart_query_discovered_port_count() -> void` | L301 |
-| `test_sea_chart_query_archetype_names_valid() -> void` | L317 |
+| `test_sea_chart_query_returns_valid_structure() -> void` | L62 |
+| `test_sea_chart_query_world_bounds_match() -> void` | L84 |
+| `test_sea_chart_query_includes_all_landmasses() -> void` | L100 |
+| `test_sea_chart_query_current_port_marked() -> void` | L122 |
+| `test_sea_chart_query_routes_between_discovered_ports() -> void` | L145 |
+| `test_sea_chart_query_fog_grid_downsampled() -> void` | L171 |
+| `test_sea_chart_reads_precomputed_routes() -> void` | L207 |
+| `test_legacy_world_without_route_table_still_renders() -> void` | L251 |
+| `test_sea_chart_query_port_positions_within_bounds() -> void` | L269 |
+| `test_sea_chart_query_no_run_returns_empty() -> void` | L287 |
+| `test_sea_chart_query_serialization_roundtrip() -> void` | L298 |
+| `test_sea_chart_query_reproducible() -> void` | L319 |
+| `test_sea_chart_query_different_seeds_differ() -> void` | L341 |
+| `test_sea_chart_query_discovered_port_count() -> void` | L368 |
+| `test_sea_chart_query_archetype_names_valid() -> void` | L384 |
+| `test_port_view_model_carries_display_name_keys() -> void` | L437 |
+| `test_departure_tick_direction_uses_radians() -> void` | L464 |
+| `test_center_on_port_before_layout_is_queued() -> void` | L481 |
 
 陆地/港口/航线/迷雾数据正确性，以及同 seed 可复现性与 JSON 序列化往返。
 

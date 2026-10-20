@@ -10,6 +10,23 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNIntelTable` | L1 |
+| `COLOR_TEXT` | L15 |
+| `COLOR_MUTED` | L16 |
+| `COLOR_BRASS` | L17 |
+| `COLOR_RED` | L18 |
+| `COLOR_GREEN` | L19 |
+| `COLOR_CELL` | L20 |
+| `COLOR_CELL_BORDER` | L21 |
+| `KEY_UNKNOWN_PORT` | L23 |
+| `KEY_GOODS` | L24 |
+| `KEY_UNIT_WEIGHT` | L25 |
+| `KEY_REF_PRICE` | L26 |
+| `KEY_COL_AGE` | L27 |
+| `KEY_LEGEND_CELL` | L28 |
+| `KEY_LEGEND_GAP` | L29 |
+| `KEY_LEGEND_TREND` | L30 |
+| `UNKNOWN_TEXT` | L32 |
+| `GAP_TEXT` | L33 |
 | `bind(columns: Array, rows: Array, current_port_id: String, tr: Callable) -> void` | L41 |
 
 ## 契约与约束

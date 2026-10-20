@@ -9,6 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MapGenerator` | L1 |
+| `MAX_ATTEMPTS` | L11 |
+| `generate(profile: ContentDefinition, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L14 |
 
 ## 契约与约束
 

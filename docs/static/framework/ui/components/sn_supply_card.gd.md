@@ -11,6 +11,9 @@
 | --- | --- |
 | `SNSupplyCard` | L1 |
 | `command_requested (signal)` | L10 |
+| `COLOR_TEXT_MUTED` | L12 |
+| `COLOR_TEXT` | L13 |
+| `COLOR_WARNING` | L14 |
 
 ## 契约与约束
 

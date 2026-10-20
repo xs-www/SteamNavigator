@@ -8,6 +8,9 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `SCENE_PATH` | L13 |
+| `BOAT_SCRIPT` | L14 |
+| `WATER_SHADER` | L15 |
 | `_init() -> void` | L20 |
 
 ## 契约与约束

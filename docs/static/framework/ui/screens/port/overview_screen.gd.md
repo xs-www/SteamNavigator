@@ -15,6 +15,13 @@
 | `map_port_clicked (signal)` | L7 |
 | `stage_toggle_requested (signal)` | L10 |
 | `detail_toggle_requested (signal)` | L13 |
+| `MAP_CANVAS_SCENE` | L15 |
+| `TEXT` | L16 |
+| `MUTED` | L17 |
+| `BRASS` | L18 |
+| `TEAL` | L19 |
+| `RED` | L20 |
+| `GREEN` | L21 |
 | `bind(vm: Dictionary, translate: Callable) -> void` | L25 |
 
 ## 契约与约束

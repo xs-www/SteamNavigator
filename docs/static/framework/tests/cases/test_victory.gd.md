@@ -8,6 +8,11 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `STEADY_BUILD` | L5 |
+| `STANDARD_STRATEGY` | L6 |
+| `LARGE_HULL` | L7 |
+| `SMALL_HULL` | L8 |
+| `SUMMARY_KEYS` | L10 |
 | `test_victory_blocked_before_main_chain_complete() -> void` | L91 |
 | `test_victory_requires_shipyard_large_hull_boiler_and_cargo() -> void` | L114 |
 | `test_victory_awards_once_with_complete_summary() -> void` | L158 |

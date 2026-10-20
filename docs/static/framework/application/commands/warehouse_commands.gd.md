@@ -9,6 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `WarehouseCommands` | L1 |
+| `store_module(params: Dictionary, context) -> Dictionary` | L9 |
+| `take_module(params: Dictionary, context) -> Dictionary` | L28 |
+| `store_materials(params: Dictionary, context) -> Dictionary` | L47 |
+| `take_materials(params: Dictionary, context) -> Dictionary` | L66 |
 
 ## 契约与约束
 

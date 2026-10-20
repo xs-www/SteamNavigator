@@ -9,6 +9,21 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CraftOps` | L1 |
+| `CRAFTABLE_TYPES` | L17 |
+| `ORDER_KEY` | L26 |
+| `SERIAL_KEY` | L27 |
+| `EPSILON` | L28 |
+| `materials_required(hub: RegistryHub, module_id: String) -> Array` | L32 |
+| `craftable(hub: RegistryHub, module_id: String) -> bool` | L56 |
+| `money_only(hub: RegistryHub, module_id: String) -> bool` | L64 |
+| `craft_cost(hub: RegistryHub, module_id: String) -> int` | L70 |
+| `craft_time(hub: RegistryHub, module_id: String) -> float` | L77 |
+| `ensure_orders(state: GameState) -> void` | L87 |
+| `orders(state: GameState) -> Array` | L105 |
+| `material_plan(state: GameState, hub: RegistryHub, port_id: String, module_id: String) -> Array` | L111 |
+| `craft_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]` | L134 |
+| `craft(state: GameState, hub: RegistryHub, module_id: String) -> Dictionary` | L159 |
+| `settle_orders(state: GameState, hub: RegistryHub) -> Array` | L242 |
 
 ## 契约与约束
 

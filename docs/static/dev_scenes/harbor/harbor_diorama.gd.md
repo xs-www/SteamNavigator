@@ -4,6 +4,14 @@
 
 - 类型：GDScript 源文件
 
+## 关键符号
+
+| 符号 | 位置 |
+| --- | --- |
+| `STONE_ALBEDO` | L8 |
+| `STONE_ROUGHNESS` | L9 |
+| `STONE_SURFACE` | L11 |
+
 ## 契约与约束
 
 - 只改本场景实例的 `surface_material_override`，不改 GLB 导入材质。

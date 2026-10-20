@@ -8,6 +8,13 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `BUILD` | L10 |
+| `STRATEGY` | L11 |
+| `MEDIUM_HULL` | L12 |
+| `LARGE_HULL` | L13 |
+| `CABIN` | L14 |
+| `VOYAGE_LIMIT` | L15 |
+| `LIQUIDITY_FLOOR` | L16 |
 | `test_full_clear_seed_4242() -> void` | L19 |
 | `test_full_clear_multiple_seeds() -> void` | L27 |
 

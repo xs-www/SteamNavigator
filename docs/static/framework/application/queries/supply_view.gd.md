@@ -9,6 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SupplyViewQuery` | L1 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L14 |
 
 ## 契约与约束
 

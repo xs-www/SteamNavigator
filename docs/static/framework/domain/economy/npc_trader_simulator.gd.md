@@ -9,6 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `NpcTraderSimulator` | L1 |
+| `MAX_CATCH_UP_CYCLES` | L8 |
+| `create_initial(state: GameState, hub: RegistryHub, rng_service: RngService, config: Dictionary) -> Array` | L11 |
+| `advance(state: GameState, hub: RegistryHub, rng_service: RngService, now: float, config: Dictionary) -> Array[Dictionary]` | L38 |
 
 ## 契约与约束
 

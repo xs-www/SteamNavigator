@@ -8,6 +8,8 @@
 
 | 符号 | 位置 |
 | --- | --- |
+| `STEADY_BUILD` | L5 |
+| `STANDARD_STRATEGY` | L6 |
 | `test_initial_offers_and_port_view_limit_fields() -> void` | L68 |
 | `test_active_limit_formula_and_accept_rejection() -> void` | L103 |
 | `test_arrival_refreshes_normal_offer_pool() -> void` | L142 |

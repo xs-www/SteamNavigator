@@ -9,15 +9,21 @@
 | 符号 | 位置 |
 | --- | --- |
 | `GameState` | L1 |
+| `SCHEMA_VERSION` | L9 |
+| `CAMPAIGN_DEFAULTS` | L13 |
+| `CAMPAIGN_SECTION_DEFAULTS` | L26 |
+| `STATS_DEFAULTS` | L42 |
 | `_init(initial_data: Dictionary = {}) -> void` | L54 |
 | `clone() -> GameState` | L58 |
 | `replace_with(other: GameState) -> void` | L62 |
 | `to_dict() -> Dictionary` | L66 |
+| `from_dict(value: Dictionary) -> GameState` | L70 |
 | `is_empty() -> bool` | L74 |
 | `hash() -> String` | L78 |
 | `schema_version() -> String` | L85 |
 | `campaign() -> Dictionary` | L89 |
 | `ensure_campaign() -> Dictionary` | L94 |
+| `ensure_campaign_sections(campaign: Dictionary, warnings: Array = []) -> void` | L112 |
 | `campaign_world() -> Dictionary` | L136 |
 | `campaign_codex() -> Dictionary` | L140 |
 | `campaign_factions() -> Dictionary` | L146 |

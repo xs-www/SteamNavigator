@@ -4,6 +4,13 @@
 
 - 类型：GDScript 源文件
 
+## 关键符号
+
+| 符号 | 位置 |
+| --- | --- |
+| `SWELL_HEIGHT` | L9 |
+| `WAVE_SPEED` | L11 |
+
 ## 契约与约束
 
 - `SWELL_HEIGHT` / `WAVE_SPEED` 必须与 `harbor_water.gdshader` 的 `swell_height` / `wave_speed` 保持一致。
