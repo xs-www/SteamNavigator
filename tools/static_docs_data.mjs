@@ -34,18 +34,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "content_types.json": {
-    role: "内容类型单一真源：键、单数、Schema 路径、注册表/patch 类型、编辑器展示元数据、v2 模块分类与正式版路线图规划。",
-    contracts: [
-      "`tools/gen_content_types.mjs` 生成 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js`；`--check` 用于门禁。",
-      "Godot 的 `test_content_types_manifest.gd` 与 Node 用例分别守护生成物与 manifest 一致。",
-      "`types` 只列可加载的 active 类型；`planned` 只用于路线图，禁止注册或加载。",
-      "`v2_target` / `aliases` 是迁移提示，不代表当前运行时支持合并后的实体。",
-      "`v2_module_categories` 记录目标分类：导航/安全归入 `utility`，不再单独设内容类型或编辑器分组。",
-      "`draft_schemas` 登记 Schema 2.0 草案：类型必须仍在 planned 中、不得 active，Schema 文件由 `test_schema_v2_drafts.gd` 校验；当前包含 start_profiles / world_profiles / regions / sites / route_templates / weather_profiles / factions / discoveries。"
-    ]
-  },
-
   ".github/workflows/release.yml": {
     role: "`v*` tag 触发的发布流水线：测试 → core 校验 → 导出 Windows/Linux → 打包标准便携目录 → GitHub Release。",
     contracts: [
@@ -1556,10 +1544,12 @@ export const FILE_DOCS = {
   },
 
   "tools/gen_content_types.mjs": {
-    role: "从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录；提供 `--check` 过期检查。",
+    role: "从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录（active `TYPES` + Schema 2.0 草案 `DRAFT_TYPES`）；提供 `--check` 过期检查。",
     contracts: [
       "单一真源是 `content_types.json`；生成物 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js` 禁止手改。",
       "生成前校验格式版本、key/singular/schema 唯一、分组与 v2 模块分类引用、Schema 文件存在、Patch 数量、planned 不覆盖 active、draft_schemas 只指向 planned 类型。",
+      "`draft_types` 必须与 `draft_schemas` 键集合完全一致，且不得自带 schema 路径；生成器校验 singular/abbr/color/default_file 唯一、group 已声明、`schema_version` 等于对应 Schema 的 const、capability 等于该类型所属 planned system 的 capability。",
+      "`framework/modding/content_types.gd` 只输出可加载的 active 类型；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`，运行时类型清单不变。",
       "`--check` 不写文件，生成物缺失或过期时以退出码 1 结束，供 CI/发布门禁使用。"
     ]
   },
@@ -1608,17 +1598,19 @@ export const FILE_DOCS = {
       "颜色、间距、字体通过 `:root` 变量统一；不引入外部字体。",
       "`[hidden] { display: none !important; }` 支撑视图与过滤逻辑。",
       "资源候选菜单使用编辑器主题、绝对定位和滚动上限；船体模块卡在窄屏断点退化为单列。",
-      "断点 1240 / 1000 / 800 / 760 / 560：编辑区单列、侧栏图标化、顶栏换行与操作压缩。"
+      "断点 1240 / 1000 / 800 / 760 / 560：编辑区单列、侧栏图标化、顶栏换行与操作压缩。",
+      "Schema 2.0 草案分区与徽标（`side-group-draft` / `side-draft-tag` / `draft-badge` / `draft-notice` / `mini-badge.draft`）复用既有暗色变量，不引入新字体或配色体系。"
     ]
   },
 
   "SNModMaker/js/catalog.js": {
-    role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板；内容类型列表来自生成的 content-types.js。",
+    role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`）。",
     dependencies: ["JSON Schema（结构约束）", "content-types.js（由 content_types.json 生成）"],
     contracts: [
-      "`TYPES` 来自 `SNContentTypes.TYPES`；manifest 的顺序决定侧栏分组与表单类型，每项的 `schema` 对应仓库 `schemas/` 文件。",
+      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型与 Schema 2.0 草案类型；`schemaVersionFor()` 返回类型期望版本（草案 2.0，其余 1.0）。",
+      "`TYPES` 仍只含可加载的 Content Schema 1.0 类型，`DRAFT_TYPES` 与 `ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
+      "`DEFAULTS` 生成的定义必须能通过对应 Schema；8 个草案类型的默认值必须补齐 `schemas/v2/*` 的必需字段。",
       "`keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。",
-      "`DEFAULTS` 生成的定义必须能通过对应 Schema；新增字段时同步更新这里与 `store.js`。",
       "操作码、公式、设施等词汇与框架注册表保持同源；页面只做候选与提示，不自行执行。"
     ]
   },
@@ -1644,10 +1636,14 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/js/validate.js": {
-    role: "JSON Schema 子集校验器与 Steam Navigator 项目语义校验：ID、引用、本地化、补丁与清单一致性。",
+    role: "JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁与清单一致性。",
     dependencies: ["schema-bundle.js", "catalog.js", "core-index.js（可选外部引用检查）"],
     contracts: [
       "Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。",
+      "`resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。",
+      "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（草案 2.0），最后回退 1.0。",
+      "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
+      "草案内容文件每文件一条 `draft_content` 警告；草案 capability 未写入 `manifest.capabilities` 时按 capability 去重报 `capability_undeclared`；草案跨引用跳过 `ref_core_unknown`。",
       "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
       "语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。",
       "实体 information.texture/model 支持当前模组裸资源键与完整 asset:// URI；当前模组和 Core 引用必须存在且格式匹配。",
@@ -1662,9 +1658,10 @@ export const FILE_DOCS = {
         "合并 `$ref` 与 allOf 的 properties/required，仅用于表单渲染，不用于替代校验。"
       ],
       "validateProject(project)": [
-        "先跑 Manifest Schema 与内容文件 Schema，再检查命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。",
+        "先跑 Manifest Schema 与内容文件 Schema，再检查 schema_version、命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。",
+        "草案实例缺省版本按类型取 2.0，避免 v2 Schema 的 `schema_version` const 误报。",
         "资源裸键按当前模组 manifest.assets 解析；asset://core/<key> 使用嵌入 Core 索引校验，其他外部模组 URI 在无法读取其清单时给出未验证提示。",
-        "引用本模组缺失为 error；Core 缺失为 warning；其他命名空间只提示外部引用。",
+        "引用本模组缺失为 error；Core 缺失为 warning（草案文件跳过）；其他命名空间只提示外部引用。",
         "结果包含 counts 与 stats（定义/文件/语言/资源数量）。"
       ]
     }
@@ -1675,6 +1672,7 @@ export const FILE_DOCS = {
     dependencies: ["catalog.js", "core-index.js"],
     contracts: [
       "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
+      "`schema_version` 由内容类型推导（运行时类型 1.0、Schema 2.0 草案 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留草案 2.0。",
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
@@ -1700,10 +1698,11 @@ export const FILE_DOCS = {
       ],
       "toExportFiles(project, options)": [
         "产出 manifest、内容、本地化与二进制资产；`prefix:false` 用于文件夹导出。",
-        "内容 envelope 只保留 `schema_version/content_type/definitions`。"
+        "内容 envelope 保留 `schema_version/content_type/definitions`，`schema_version` 按类型推导。"
       ],
       "fromFiles(entries)": [
         "定位最短路径的 `manifest.json`，剥离根目录；按清单读取内容/本地化/资产。",
+        "内容文件保留显式 payload 版本（缺失时回退类型版本），让 1.0↔2.0 误配被校验器报出。",
         "缺失声明文件生成占位并返回 warnings；未知 content_type 跳过。"
       ]
     }
@@ -1748,6 +1747,7 @@ export const FILE_DOCS = {
     contracts: [
       "渲染层只输出 HTML；所有编辑通过 `data-field` / `data-action` 交给 app.js，不直接修改项目。",
       "表单字段类型、枚举、范围与必填来自 Schema；专用控件只针对 modifier/material/payload/condition/effect/option 等结构。",
+      "Schema 2.0 草案类型复用同一套 Schema 驱动表单；`schema-bundle` 缺少该 Schema 时给出提示并退回原始 JSON 编辑，而不是整页报错。",
       "标准实体表单额外呈现所有语言的名称/描述暂存输入，以及 information.texture/model 资源键配置。",
       "贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。",
       "船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。",
@@ -1785,6 +1785,7 @@ export const FILE_DOCS = {
       "自动保存有 800ms 防抖，并用 revision 防止旧保存清除新改动；IDB 失败回退 localStorage。",
       "ID 修改与条目内翻译先进入 localizationDrafts；自动保存不写多语言键，只有“保存条目”提交键迁移。",
       "船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。",
+      "侧栏在运行时类型分组之后渲染「Schema 2.0 草案 / 运行时不加载」分区（`DRAFT_TYPES` 为空则隐藏）；草案内容页显示 2.0 徽标与提示，并隐藏「从 Core 复制」。",
       "自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。",
       "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
       "项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。",
@@ -1815,9 +1816,10 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/sync-schemas.mjs": {
-    role: "把 `schemas/*.schema.json` 打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。",
+    role: "把 `schemas/` 下全部 `*.schema.json`（含 `v2/` 草案）递归打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。",
     contracts: [
-      "生成文件头带 AUTO-GENERATED 标记；修改 Schema 后必须重跑。",
+      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，草案为 `v2/...`，与磁盘文件一一对应（当前 27 个：18 顶层 + 9 个 v2）。",
+      "生成文件头带 AUTO-GENERATED 标记；修改任何 Schema 后必须重跑。",
       "只做 JSON 解析与嵌入，不校验 Schema 自身。"
     ]
   },
@@ -1837,6 +1839,7 @@ export const FILE_DOCS = {
       "默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。",
       "API：status、projects、workspace、exports 与 game-mods；请求体上限 128 MB。",
       "`/api/workspace/<id>` 直接读写 `dev_mods/<id>`：打开时返回 manifest/content/localization 与资产键占位（不含二进制），保存时只写文本文件并删掉 manifest 不再声明的 content/localization 文件；资产目录永远不动。",
+      "工作区内容文件缺失 `schema_version` 时按 `content_type` 推导（Schema 2.0 草案 2.0，未知类型回退 1.0）。",
       "工作区保存允许删除/新增定义与内容文件；`/api/workspace/<id>` DELETE 被拒绝，避免误删整个原生模组。",
       "游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。",
       "项目先写临时目录再替换，文件路径拒绝绝对路径、`..`、盘符与超过 16 层。",
@@ -1864,11 +1867,12 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 16 个运行时类型与 8 个 Schema 2.0 草案类型。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
+      "`types` 同时列出运行时类型与 Schema 2.0 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导（草案恒 2.0）。",
       "`--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。",
       "输出契约：`--json` 时 stdout 只有一个 JSON 对象（成功 / 失败 / 用法错误都是），人读日志写 stderr；退出码 0 成功、1 执行失败 / 校验未通过 / 冲突、2 用法错误。",
       "写命令统一预检：改动前后各跑 `Validate.validateProject`，按 `severity|code|message|view` 求新增问题；new error 默认整批不写并退出 1，`--force` 只解除拦截、结果仍 `ok:false`。",

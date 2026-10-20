@@ -13,10 +13,22 @@
   if (!GENERATED || !Array.isArray(GENERATED.TYPES)) {
     throw new Error('SNContentTypes is missing; load js/content-types.js before catalog.js');
   }
+  /* TYPES are the runtime-active Content Schema 1.0 types. DRAFT_TYPES are the
+   * Schema 2.0 draft types: the editor can create/validate/export them, but the
+   * game runtime still loads 1.0 only. */
   const TYPES = GENERATED.TYPES;
-  const BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
-  const BY_SINGULAR = Object.fromEntries(TYPES.map((t) => [t.singular, t]));
+  const DRAFT_TYPES = Array.isArray(GENERATED.DRAFT_TYPES) ? GENERATED.DRAFT_TYPES : [];
+  const ALL_TYPES = [...TYPES, ...DRAFT_TYPES];
+  const BY_KEY = Object.fromEntries(ALL_TYPES.map((t) => [t.key, t]));
+  const BY_SINGULAR = Object.fromEntries(ALL_TYPES.map((t) => [t.singular, t]));
   const GROUPS = [...new Set(TYPES.map((t) => t.group))];
+
+  /** Schema version a content file of this type must carry ('2.0' for drafts). */
+  function schemaVersionFor(typeKey) {
+    const info = BY_KEY[typeKey];
+    if (!info) return '1.0';
+    return info.schemaVersion || (info.draft ? '2.0' : '1.0');
+  }
 
   /* Field labels are shared by all types; type-scoped overrides win. */
   const FIELD_LABELS = {
@@ -144,6 +156,59 @@
     role_kind: '岗位类别',
     contract_id: '委托',
     is_valid: '有效',
+    /* Schema 2.0 draft data fields (shared by the draft content types). */
+    region_count: '区域数量',
+    sites_per_region: '每区域地点数',
+    port_count: '港口数量',
+    ruin_density: '遗迹密度',
+    base_site_count: '基地点数量',
+    faction_count: '阵营数量',
+    weather_profile: '天气配置',
+    start_region_tags: '起始区域标签',
+    port_density: '港口密度',
+    site_density: '地点密度',
+    hostile_density: '敌对密度',
+    factions: '阵营',
+    region_tags: '区域标签',
+    site_kind: '地点类型',
+    region_kinds: '适用区域类型',
+    ruin_archetype: '遗迹原型',
+    encounter_table: '遭遇表',
+    loot_table: '战利品表',
+    repeatable: '可重复',
+    risk_range: '风险区间',
+    travel_time_range: '航行耗时区间',
+    bidirectional: '双向航道',
+    climate: '气候',
+    fog_chance: '起雾概率',
+    storm_chance: '风暴概率',
+    ice_chance: '浮冰概率',
+    base_visibility: '基础能见度',
+    risk_modifier: '风险修正',
+    speed_modifier: '航速修正',
+    coal_drain_modifier: '煤耗修正',
+    seasons: '适用季节',
+    starting_reputation: '初始声望',
+    attitude_thresholds: '态度阈值',
+    hostile_below: '敌对上限（低于）',
+    friendly_at: '友好下限（达到）',
+    patrol_strength: '巡逻强度',
+    trade_goods: '偏好商品',
+    home_region_tags: '活动区域标签',
+    contract_family: '委托族',
+    rival_factions: '敌对阵营',
+    rarity: '稀有度',
+    source_site_kinds: '来源地点类型',
+    requires_tags: '必需标签',
+    world_profile: '世界配置',
+    starting_build: '起始构筑',
+    difficulty: '难度',
+    starting_port_tags: '起始港口标签',
+    starting_money: '起始金钱',
+    starting_cargo: '起始货物',
+    starting_contract: '起始委托',
+    notes_key: '备注键',
+    item: '物品',
   };
 
   const TYPE_FIELD_LABELS = {
@@ -157,6 +222,14 @@
     'patch.target': '目标定义',
     'patch.operations': '补丁操作',
     'patch.requires': '来源约束',
+    'regions.kind': '区域类型',
+    'regions.size': '区域规模',
+    'route_templates.kind': '航道类型',
+    'factions.kind': '阵营类型',
+    'discoveries.kind': '图鉴类型',
+    'sites.weight': '抽取权重',
+    'discoveries.weight': '抽取权重',
+    'route_templates.distance_range': '距离区间',
   };
 
   const FIELD_HINTS = {
@@ -183,6 +256,23 @@
     description_key: '本地化键；留空则不显示描述。',
     default_starting_build: '引用一个 starting_build 定义。',
     required_facility_tags: '例如 port.shipyard；Core 完整性依赖这些标签。',
+    /* Schema 2.0 draft hints. */
+    region_count: '生成的世界区域数量，1–64。',
+    sites_per_region: '每个区域平均生成的可发现地点数量，0–32。',
+    port_count: '世界内的港口总数，1–64。',
+    start_region_tags: '起始区域必须带有的标签，至少 1 个。',
+    port_density: '0–1；相对密度，越大生成越多港口。',
+    site_density: '0–1；相对密度，越大生成越多地点。',
+    weather_profile: '引用一个 weather_profile 定义（完整 ID，如 core:weather_profile/temperate）。',
+    region_tags: '区域的分类标签，至少 1 个。',
+    attitude_thresholds: '声望低于「敌对上限」转为敌对，达到「友好下限」转为友好。',
+    starting_reputation: '-100 到 100 的初始声望。',
+    patrol_strength: '0–10；阵营巡逻队强度。',
+    rarity: 'common / uncommon / rare / unique。',
+    repeatable: '是否允许在同一局中重复获得。',
+    starting_build: '引用一个 starting_build 定义（完整 ID）。',
+    starting_port_tags: '起始港口必须带有的标签，至少 1 个。',
+    world_profile: '引用一个 world_profile 草案定义（完整 ID）。',
   };
 
   const REF_LABELS = {
@@ -356,6 +446,79 @@
         },
       ],
     }),
+    /* Content Schema 2.0 draft defaults: every required field of the matching
+     * schemas/v2/*.schema.json file, so a freshly created draft definition
+     * validates with zero errors. */
+    world_profiles: () => ({
+      region_count: 3,
+      sites_per_region: 6,
+      port_count: 8,
+      ruin_density: 0.2,
+      base_site_count: 2,
+      faction_count: 3,
+      weather_profile: 'core:weather_profile/temperate',
+      start_region_tags: ['region.start'],
+    }),
+    regions: () => ({
+      kind: 'coastal',
+      size: 'medium',
+      port_density: 0.35,
+      site_density: 0.3,
+      hostile_density: 0.15,
+      weather_profile: 'core:weather_profile/temperate',
+      factions: [],
+      region_tags: ['region.coastal'],
+    }),
+    sites: () => ({
+      site_kind: 'ruin',
+      weight: 10,
+      region_kinds: ['coastal'],
+      repeatable: false,
+    }),
+    route_templates: () => ({
+      kind: 'sea_lane',
+      distance_range: [2, 8],
+      risk_range: [0.02, 0.15],
+      travel_time_range: [6, 18],
+      bidirectional: true,
+      region_kinds: ['coastal'],
+    }),
+    weather_profiles: () => ({
+      climate: 'temperate',
+      fog_chance: 0.12,
+      storm_chance: 0.08,
+      ice_chance: 0.0,
+      base_visibility: 0.9,
+      risk_modifier: 0.0,
+      speed_modifier: 0.0,
+      coal_drain_modifier: 1.0,
+      seasons: ['spring', 'summer', 'autumn', 'winter'],
+    }),
+    factions: () => ({
+      kind: 'merchant_guild',
+      starting_reputation: 0,
+      attitude_thresholds: { hostile_below: -20, friendly_at: 40 },
+      patrol_strength: 2,
+      trade_goods: [],
+      home_region_tags: ['region.coastal'],
+      rival_factions: [],
+    }),
+    discoveries: () => ({
+      kind: 'relic',
+      rarity: 'uncommon',
+      weight: 5,
+      repeatable: false,
+      source_site_kinds: ['ruin'],
+    }),
+    start_profiles: () => ({
+      world_profile: 'core:world_profile/default_world',
+      starting_build: 'core:starting_build/steady',
+      difficulty: 'standard',
+      starting_port_tags: ['port.start'],
+      starting_money: 1000,
+      starting_reputation: 0,
+      starting_cargo: [],
+    }),
     patches: () => null,
   };
 
@@ -373,6 +536,15 @@
     events: ['event.risk', 'event.opportunity', 'event.mechanical', 'event.merchant'],
     port_archetypes: ['port.shipyard', 'port.market', 'port.intel', 'port.start'],
     map_profiles: ['map.standard'],
+    /* Schema 2.0 draft tag suggestions. */
+    world_profiles: ['world.standard', 'world.large'],
+    regions: ['region.coastal', 'region.frontier', 'region.industrial'],
+    sites: ['site.ruin', 'site.wreck', 'site.landmark'],
+    route_templates: ['route.lane', 'route.shortcut', 'route.trade'],
+    weather_profiles: ['weather.temperate', 'weather.storm', 'weather.cold'],
+    factions: ['faction.guild', 'faction.naval', 'faction.pirates'],
+    discoveries: ['discovery.relic', 'discovery.blueprint', 'discovery.lore'],
+    start_profiles: ['start.standard', 'start.hard'],
   };
 
   const CONDITION_OPS = [
@@ -485,10 +657,12 @@
     },
   ];
 
-  const KEY_PREFIX = Object.fromEntries(TYPES.map((t) => [t.key, t.keyPrefix]));
+  const KEY_PREFIX = Object.fromEntries(ALL_TYPES.map((t) => [t.key, t.keyPrefix]));
 
   root.SNCatalog = {
     TYPES,
+    DRAFT_TYPES,
+    ALL_TYPES,
     BY_KEY,
     BY_SINGULAR,
     GROUPS,
@@ -508,6 +682,11 @@
     FACILITIES,
     TEMPLATES,
     KEY_PREFIX,
+    schemaVersionFor,
+    isDraft(typeKey) {
+      const info = BY_KEY[typeKey];
+      return Boolean(info && info.draft);
+    },
     typeInfo(key) {
       return BY_KEY[key] || null;
     },

@@ -625,6 +625,8 @@
       </div>`;
     }).join('');
 
+    const draftGroup = renderDraftSideGroup(counts, typeIssues);
+
     const localeLinks = state.project.localization.map((entry) => `
       <button type="button" class="side-link ${activeLocale(entry.locale) ? 'active' : ''}" data-nav="localization:${UI.attr(entry.locale)}">
         <span class="abbr loc">文</span><span class="side-label">${UI.esc(entry.locale)}</span>
@@ -636,6 +638,7 @@
         <span class="abbr">MN</span><span class="side-label">模组概览</span>
       </button>
       ${groups}
+      ${draftGroup}
       <div class="side-group">
         <h3>文本与资源</h3>
         ${localeLinks || '<p class="side-empty">没有本地化文件</p>'}
@@ -650,14 +653,34 @@
       </div>
       <div class="side-foot">
         <p>零依赖 · ${state.backend ? `磁盘 ${UI.esc(state.backend.modsDir || 'mods')}/ + ${UI.esc(state.backend.exportsDir || 'exports')}/` : '浏览器存储 IndexedDB'}</p>
-        <p class="mono">Schema 1.0 / API 1.0</p>
+        <p class="mono">${draftSchemaFootText()}</p>
       </div>`;
   }
 
-  function sideTypeLink(type, count, issues) {
+  function draftSchemaFootText() {
+    if (!Cat.DRAFT_TYPES || !Cat.DRAFT_TYPES.length) return 'Schema 1.0 / API 1.0';
+    return 'Schema 1.0 运行时 + 2.0 草案 / API 1.0';
+  }
+
+  function renderDraftSideGroup(counts, typeIssues) {
+    if (!Cat.DRAFT_TYPES || !Cat.DRAFT_TYPES.length) return '';
+    const links = Cat.DRAFT_TYPES.map((type) => sideTypeLink(type, counts.get(type.key) || 0, typeIssues.get(type.key), true)).join('');
+    return `<div class="side-group side-group-draft">
+      <h3 class="side-draft-head">
+        <span>Schema 2.0 草案</span>
+        <span class="side-draft-tag">运行时不加载</span>
+      </h3>
+      ${links}
+    </div>`;
+  }
+
+  function sideTypeLink(type, count, issues, draft) {
     const active = state.view.name === 'content' && state.view.type === type.key;
     const dot = issues && issues.error ? 'error' : issues && issues.warning ? 'warning' : '';
-    return `<button type="button" class="side-link ${active ? 'active' : ''}" data-nav="content:${UI.attr(type.key)}">
+    const isDraftType = Boolean(draft || type.draft);
+    const draftClass = isDraftType ? ' draft-type' : '';
+    const title = isDraftType ? ' title="Schema 2.0 草案 · 当前游戏运行时不加载"' : '';
+    return `<button type="button" class="side-link${draftClass} ${active ? 'active' : ''}" data-nav="content:${UI.attr(type.key)}"${title}>
       <span class="abbr" style="--abbr:${UI.attr(type.color)}">${UI.esc(type.abbr)}</span>
       <span class="side-label">${UI.esc(type.label)}</span>
       <span class="count">${count}</span>
@@ -850,6 +873,7 @@
               return `<button type="button" class="file-row" data-nav="content:${UI.attr(file.content_type)}">
                 <span class="file-type" style="--abbr:${UI.attr(info ? info.color : '#888')}">${UI.esc(info ? info.abbr : '??')}</span>
                 <span class="file-path mono">${UI.esc(file.path)}</span>
+                ${info && info.draft ? '<span class="mini-badge draft">2.0 草案</span>' : ''}
                 <span class="file-count">${(file.definitions || []).length} 条</span>
               </button>`;
             }).join('') || '<p class="empty-inline">还没有内容文件。</p>'}
@@ -992,12 +1016,17 @@
         <div class="type-heading">
           <span class="type-mark" style="--abbr:${UI.attr(info.color)}">${UI.esc(info.abbr)}</span>
           <div>
-            <h1>${UI.esc(info.label)} <span class="singular mono">${UI.esc(info.singular)}</span></h1>
+            <h1>${UI.esc(info.label)} <span class="singular mono">${UI.esc(info.singular)}</span>${info.draft ? ' <span class="draft-badge">Schema 2.0 草案</span>' : ''}</h1>
             <p class="view-sub">${UI.esc(info.summary)}</p>
+            ${info.draft ? `<div class="draft-notice" role="note">
+              <span class="draft-dot"></span>
+              <span><strong>Schema 2.0 草案 · 当前游戏运行时不加载。</strong>
+              导出内容使用 <code>schema_version: "2.0"</code>，可用于起草、编辑与校验；游戏运行时仍只加载 Content Schema 1.0。</span>
+            </div>` : ''}
           </div>
         </div>
         <div class="head-actions">
-          <button type="button" class="btn small ghost" data-action="core-clone">从 Core 复制</button>
+          ${info.draft ? '' : '<button type="button" class="btn small ghost" data-action="core-clone">从 Core 复制</button>'}
           <button type="button" class="btn primary small" data-action="add-definition">+ 新增定义</button>
         </div>
       </header>
@@ -1050,6 +1079,7 @@
         <h2>${UI.esc(title)}</h2>
       </div>
       <div class="head-actions">
+        ${info.draft ? '<span class="mini-badge draft">2.0 草案</span>' : ''}
         ${badge.error ? `<span class="mini-badge error">${badge.error} 错误</span>` : ''}
         ${badge.warning ? `<span class="mini-badge warning">${badge.warning} 警告</span>` : ''}
         <span class="mini-badge warning" data-localization-pending ${locDraft ? '' : 'hidden'}>多语言待保存</span>
@@ -1293,6 +1323,7 @@
           <li>本地化键覆盖情况、空翻译与未引用键。</li>
           <li>补丁目标、来源版本与操作安全性。</li>
         </ul>
+        ${Cat.DRAFT_TYPES && Cat.DRAFT_TYPES.length ? '<p class="muted-sm">Schema 2.0 草案类型（世界生成与起始档案）按 <code>schemas/v2</code> 校验；导出会写 <code>schema_version: "2.0"</code>，但当前游戏运行时只加载 1.0，这类文件不会生效。</p>' : ''}
         <p class="muted-sm">导出时不会自动修复任何问题；校验结果与 Godot 的加载校验保持同一套 Schema，但网页端不会运行领域规则或 Core 完整性检查。</p>
       </section>
     </div>`;
@@ -2993,6 +3024,11 @@
   function showCoreClone() {
     if (!state.project || state.view.name !== 'content') return;
     const typeKey = state.view.type;
+    const typeInfo = Cat.BY_KEY[typeKey];
+    if (typeInfo && typeInfo.draft) {
+      UI.toast('Schema 2.0 草案类型在 Core 中没有可复制的定义。', 'warning');
+      return;
+    }
     const core = root.SN_CORE_INDEX;
     if (!core) {
       UI.toast('Core 索引未加载。', 'error');

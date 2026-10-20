@@ -25,9 +25,26 @@ require(js('ui.js'));
 const Store = globalThis.SNStore;
 const Validate = globalThis.SNValidate;
 const Catalog = globalThis.SNCatalog;
+const Types = globalThis.SNContentTypes;
 const UI = globalThis.SNUI;
 const Zip = globalThis.SNZip;
 const GLB = globalThis.SNGLB;
+
+/* Recursively list every schema file relative to `/schemas`, posix style. */
+function schemaFilesOnDisk() {
+  const schemaDir = path.resolve(__dirname, '..', '..', 'schemas');
+  const files = [];
+  const walk = (dir, prefix) => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1));
+    for (const entry of entries) {
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(path.join(dir, entry.name), relative);
+      else if (entry.name.endsWith('.schema.json')) files.push(relative);
+    }
+  };
+  walk(schemaDir, '');
+  return files.sort();
+}
 
 let passed = 0;
 let failed = 0;
@@ -60,17 +77,21 @@ function warningsOf(result) {
 
 (async () => {
   await test('schema bundle contains every canonical schema', () => {
-    assert.equal(Object.keys(globalThis.SN_SCHEMAS).length, 18);
+    const files = schemaFilesOnDisk();
+    const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
+    assert.equal(keys.length, 27, `expected 18 top-level + 9 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 27, `expected 27 schema files on disk, got ${files.length}`);
+    assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
+    assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
+    assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
   });
 
-  await test('embedded schema bundle is in sync with /schemas', () => {
-    const schemaDir = path.resolve(__dirname, '..', '..', 'schemas');
-    const files = fs.readdirSync(schemaDir).filter((name) => name.endsWith('.schema.json'));
-    assert.equal(files.length, Object.keys(globalThis.SN_SCHEMAS).length);
+  await test('embedded schema bundle is in sync with /schemas recursively', () => {
+    const files = schemaFilesOnDisk();
     for (const file of files) {
-      const disk = JSON.parse(fs.readFileSync(path.join(schemaDir, file), 'utf8'));
+      const disk = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'schemas', file), 'utf8'));
       assert.deepEqual(globalThis.SN_SCHEMAS[file], disk, `${file} is stale; run sync-schemas.mjs`);
     }
   });
@@ -163,6 +184,160 @@ function warningsOf(result) {
     }
     const result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+  });
+
+  await test('draft types are generated with schema 2.0 and registered in the catalog', () => {
+    assert.equal(Types.DRAFT_TYPES.length, 8, 'content_types.json must expose 8 Schema 2.0 draft types');
+    const keys = Types.DRAFT_TYPES.map((info) => info.key).sort();
+    assert.deepEqual(keys, [
+      'discoveries', 'factions', 'regions', 'route_templates',
+      'sites', 'start_profiles', 'weather_profiles', 'world_profiles',
+    ]);
+    for (const info of Types.DRAFT_TYPES) {
+      assert.equal(info.draft, true, `${info.key} must be marked draft`);
+      assert.equal(info.schemaVersion, '2.0', `${info.key} must declare schema 2.0`);
+      assert.ok(info.capability, `${info.key} must declare a capability`);
+      assert.ok(globalThis.SN_SCHEMAS[info.schema], `${info.key} schema ${info.schema} must be embedded`);
+      assert.ok(Catalog.BY_KEY[info.key], `${info.key} must be registered in catalog.BY_KEY`);
+      assert.equal(typeof Catalog.DEFAULTS[info.key], 'function', `${info.key} must provide DEFAULTS`);
+      assert.equal(Validate.schemaVersionFor(info.key), '2.0', `${info.key} version by key`);
+      assert.equal(Validate.schemaVersionFor({ content_type: info.key }), '2.0', `${info.key} version by file`);
+    }
+    // 1.0 types keep their version without regression.
+    assert.equal(Validate.schemaVersionFor('goods'), '1.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'goods', schema_version: '1.0' }), '1.0');
+    assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to 1.0');
+  });
+
+  await test('every draft type validates with zero errors using catalog defaults', () => {
+    const project = freshProject();
+    for (const info of Types.DRAFT_TYPES) {
+      const added = Store.addDefinition(project, info.key, {});
+      assert.ok(added && added.definition && added.file, `add ${info.key}`);
+      assert.equal(added.file.schema_version, '2.0', `${info.key} content file must be written as schema 2.0`);
+      assert.equal(added.file.definitions.length, 1, `${info.key} adds exactly one definition`);
+      const html = UI.renderDefinitionForm({
+        project,
+        typeKey: info.key,
+        definition: added.definition,
+        file: added.file,
+        index: added.index,
+        schemaFile: info.schema,
+      });
+      assert.ok(html.length > 200, `${info.key} form too small`);
+      assert.ok(html.includes('data-field='), `${info.key} form has no inputs`);
+      assert.ok(!html.includes('undefined'), `${info.key} form contains undefined`);
+    }
+    const result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+    const warningCodes = new Set(warningsOf(result).map((issue) => issue.code));
+    assert.ok(warningCodes.has('draft_content'), 'draft content must produce a draft_content warning');
+    assert.ok(warningCodes.has('capability_undeclared'), 'undeclared capabilities must warn');
+  });
+
+  await test('draft files require schema 2.0 and 1.0 types keep 1.0', () => {
+    const project = freshProject();
+    Store.addDefinition(project, 'world_profiles', {});
+    let result = Validate.validateProject(project);
+    assert.equal(errorsOf(result).filter((issue) => issue.code === 'schema_version_mismatch').length, 0);
+
+    const draftFile = project.contentFiles.find((file) => file.content_type === 'world_profiles');
+    draftFile.schema_version = '1.0';
+    result = Validate.validateProject(project);
+    assert.ok(
+      errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
+      'a 2.0 draft file declaring 1.0 must report schema_version_mismatch'
+    );
+
+    draftFile.schema_version = '2.0';
+    const legacyFile = project.contentFiles.find((file) => file.content_type === 'goods');
+    legacyFile.schema_version = '2.0';
+    result = Validate.validateProject(project);
+    assert.ok(
+      errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
+      'a 1.0 type declaring 2.0 must report schema_version_mismatch'
+    );
+
+    legacyFile.schema_version = '1.0';
+    draftFile.schema_version = '3.0';
+    result = Validate.validateProject(project);
+    assert.ok(
+      errorsOf(result).some((issue) => issue.code === 'schema_version_unsupported'),
+      'an unsupported schema version must be reported'
+    );
+    draftFile.schema_version = '2.0';
+    result = Validate.validateProject(project);
+    assert.equal(errorsOf(result).length, 0, JSON.stringify(errorsOf(result), null, 2));
+  });
+
+  await test('draft warnings: one draft_content per file and capability_undeclared per capability', () => {
+    const project = freshProject();
+    Store.addDefinition(project, 'world_profiles', {});
+    Store.addDefinition(project, 'regions', {});
+    let result = Validate.validateProject(project);
+
+    const draftWarnings = warningsOf(result).filter((issue) => issue.code === 'draft_content');
+    assert.equal(draftWarnings.length, 2, 'each draft content file gets exactly one draft_content warning');
+    assert.deepEqual(
+      draftWarnings.map((issue) => issue.view && issue.view.file).sort(),
+      ['content/regions.json', 'content/world_profiles.json']
+    );
+    for (const issue of draftWarnings) {
+      assert.match(issue.message, /Content Schema 1\.0/);
+    }
+
+    const capabilityWarnings = warningsOf(result).filter((issue) => issue.code === 'capability_undeclared');
+    assert.equal(capabilityWarnings.length, 1, 'types sharing a capability warn once');
+    assert.ok(capabilityWarnings[0].message.includes('content.world.v1'));
+
+    project.manifest.capabilities = ['content.world.v1'];
+    result = Validate.validateProject(project);
+    assert.equal(
+      warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
+      0,
+      'declaring the capability in manifest.capabilities silences the warning'
+    );
+    assert.equal(
+      warningsOf(result).filter((issue) => issue.code === 'draft_content').length,
+      2,
+      'draft_content remains because the runtime still does not load draft content'
+    );
+  });
+
+  await test('v2 draft schemas resolve cross-file $refs from v2/common.schema.json', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'world_profiles', {});
+    delete added.definition.enabled; // required by v2/common.schema.json#/$defs/definition
+    added.definition.data.weather_profile = 'not-an-id'; // pattern from v2/common.schema.json#/$defs/id_ref
+    const result = Validate.validateProject(project);
+    const errors = errorsOf(result);
+    assert.ok(
+      errors.some((issue) => issue.code === 'schema_required' && issue.message.includes('enabled')),
+      `missing enabled must be reported through the common definition $ref: ${JSON.stringify(errors)}`
+    );
+    assert.ok(
+      errors.some((issue) => issue.code === 'schema_pattern' && String(issue.view && issue.view.field || '').includes('weather_profile')),
+      `invalid id_ref must be reported through the common id_ref $ref: ${JSON.stringify(errors)}`
+    );
+  });
+
+  await test('export and re-import preserves draft schema 2.0 alongside 1.0 content', () => {
+    const project = freshProject();
+    Store.addDefinition(project, 'start_profiles', {});
+    const files = Store.toExportFiles(project);
+    const draftFile = files.find((file) => file.path.endsWith('content/start_profiles.json'));
+    const legacyFile = files.find((file) => file.path.endsWith('content/goods.json'));
+    assert.ok(draftFile && legacyFile);
+    assert.equal(JSON.parse(draftFile.data).schema_version, '2.0');
+    assert.equal(JSON.parse(legacyFile.data).schema_version, '1.0', '1.0 content keeps its 1.0 envelope');
+
+    const back = Store.fromFiles(files);
+    assert.equal(back.project.contentFiles.find((file) => file.content_type === 'start_profiles').schema_version, '2.0');
+    assert.equal(back.project.contentFiles.find((file) => file.content_type === 'goods').schema_version, '1.0');
+    const validation = Validate.validateProject(back.project);
+    assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
+    assert.ok(warningsOf(validation).some((issue) => issue.code === 'draft_content'));
+    assert.ok(!warningsOf(validation).some((issue) => issue.code === 'schema_version_mismatch'));
   });
 
   await test('module localization keys do not collide across module types', () => {
@@ -424,8 +599,13 @@ function warningsOf(result) {
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
     assert.equal(result.project.contentFiles.length, 15);
-    // 3 status icons + Iron Harbor banner + 61 entity GLB models.
-    assert.equal(result.project.assets.length, 65);
+    // Every asset declared by the core manifest must be imported (icons, banner, entity GLBs).
+    const coreManifest = JSON.parse(fs.readFileSync(path.join(coreRoot, 'manifest.json'), 'utf8'));
+    assert.equal(
+      result.project.assets.length,
+      Object.keys(coreManifest.assets || {}).length,
+      'every core manifest asset must be imported'
+    );
     const validation = Validate.validateProject(result.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
   });

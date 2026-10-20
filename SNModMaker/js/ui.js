@@ -870,6 +870,21 @@
     }
 
     const data = dataSchema(typeKey);
+    if (!data) {
+      /* A draft type whose schema is missing from the bundle (stale
+       * schema-bundle.js) must not take the whole editor down. */
+      return `<div class="form-body">
+        <section class="form-section">
+          <div class="notice warning" role="note">
+            <div>
+              <strong>找不到 ${esc(info.schema)} 对应的 Schema。</strong>
+              <span>运行 <code>node SNModMaker/tools/sync-schemas.mjs</code> 重新生成 schema-bundle.js；在此之前可用顶部「JSON」直接编辑原始定义。</span>
+            </div>
+          </div>
+          <textarea class="input mono code raw-json" id="raw-json" spellcheck="false">${esc(JSON.stringify(definition, null, 2))}</textarea>
+        </section>
+      </div>`;
+    }
     const localId = root.SNStore.localPart(definition.id);
     const prefix = `${project.manifest.id}:${info.singular}/`;
     return `<div class="form-body">

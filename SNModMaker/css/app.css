@@ -325,6 +325,85 @@ a { color: var(--brass-bright); }
 }
 .side-foot p { margin: 0; }
 
+/* Schema 2.0 draft types: editable in the editor, not loaded by the runtime. */
+.side-group-draft {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(217, 164, 65, .3);
+}
+.side-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--brass) !important;
+}
+.side-draft-tag {
+  flex: 0 0 auto;
+  padding: 0 5px;
+  border: 1px solid rgba(217, 122, 114, .38);
+  border-radius: 999px;
+  background: rgba(217, 122, 114, .1);
+  color: #f0a39a;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .04em;
+  text-transform: none;
+  white-space: nowrap;
+}
+.side-link.draft-type .abbr { border-style: dashed; }
+.side-link.draft-type .side-label { color: #cdd8da; }
+.side-link.draft-type.active .side-label { color: var(--brass-bright); }
+
+/* Draft badges / notices on the content page and the manifest file list. */
+.draft-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border: 1px solid rgba(217, 164, 65, .5);
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(217, 164, 65, .2), rgba(217, 164, 65, .06));
+  color: var(--brass-bright);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.draft-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  max-width: 78ch;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px dashed rgba(217, 164, 65, .42);
+  border-left: 3px solid var(--brass);
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(217, 164, 65, .1), rgba(217, 164, 65, .02));
+  color: #d9cfae;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.draft-notice strong { color: var(--brass-bright); }
+.draft-notice code { border-color: rgba(217, 164, 65, .28); }
+.draft-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 8px rgba(217, 164, 65, .65);
+}
+.mini-badge.draft {
+  color: var(--brass-bright);
+  border-color: rgba(217, 164, 65, .42);
+  background: rgba(217, 164, 65, .1);
+}
+.file-row .mini-badge { flex: 0 0 auto; }
+
 /* ------------------------------------------------------------------ */
 /* Workspace                                                           */
 /* ------------------------------------------------------------------ */

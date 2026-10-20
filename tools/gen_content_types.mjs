@@ -5,7 +5,9 @@
 //   node tools/gen_content_types.mjs
 //   node tools/gen_content_types.mjs --check
 //
-// The manifest is the single source; the generated files must not be edited by
+// Content Schema 2.0 draft types (content_types.json "draft_types") are
+// exported to the Mod Maker only; the framework runtime stays on 1.0. The
+// manifest is the single source; the generated files must not be edited by
 // hand. --check exits with 1 when a generated file is missing or stale.
 
 import fs from 'node:fs';
@@ -21,6 +23,14 @@ const CHECK = process.argv.includes('--check');
 function fail(message) {
   console.error(`[gen-content-types] ${message}`);
   process.exit(1);
+}
+
+function readJson(relativePath) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), 'utf8'));
+  } catch (error) {
+    fail(`cannot read ${relativePath}: ${error.message}`);
+  }
 }
 
 function readManifest() {
@@ -76,18 +86,73 @@ function validate(data) {
     schemas.add(type.schema);
   }
   if (patches !== 1) fail(`expected exactly one patch type, found ${patches}`);
-  const plannedTypes = new Set();
+  const plannedTypes = new Map();
   for (const system of data.planned || []) {
     if (!system.system || !system.capability || !Array.isArray(system.types)) fail('invalid planned system entry');
     for (const plannedType of system.types) {
       if (keys.has(plannedType)) fail(`planned type shadows active type: ${plannedType}`);
-      plannedTypes.add(plannedType);
+      if (plannedTypes.has(plannedType)) fail(`planned type is listed twice: ${plannedType}`);
+      plannedTypes.set(plannedType, system.capability);
     }
   }
-  for (const [draftType, draftSchema] of Object.entries(data.draft_schemas || {})) {
-    if (keys.has(draftType)) fail(`draft type shadows active type: ${draftType}`);
-    if (!plannedTypes.has(draftType)) fail(`draft type is not listed in planned: ${draftType}`);
-    if (!fs.existsSync(path.join(ROOT, draftSchema))) fail(`draft schema file is missing: ${draftSchema}`);
+  validateDraftTypes(data, { keys, singulars, groupIds, plannedTypes });
+}
+
+/**
+ * Content Schema 2.0 draft types are editor-only metadata; their schema path
+ * lives in `draft_schemas` and must not be repeated on the type entry.
+ */
+function validateDraftTypes(data, context) {
+  const { keys, singulars, groupIds, plannedTypes } = context;
+  const draftSchemas = data.draft_schemas || {};
+  const draftSchemaKeys = new Set(Object.keys(draftSchemas));
+  const draftTypes = data.draft_types || [];
+  if (!Array.isArray(draftTypes)) fail('draft_types must be an array');
+  if (draftTypes.length !== draftSchemaKeys.size) {
+    fail(`draft_types (${draftTypes.length}) and draft_schemas (${draftSchemaKeys.size}) must describe the same types`);
+  }
+  const draftKeys = new Set();
+  const draftSingulars = new Set();
+  const draftAbbrs = new Set();
+  const draftColors = new Set();
+  const draftFiles = new Set();
+  for (const type of draftTypes) {
+    for (const field of ['key', 'singular', 'key_prefix', 'label_zh', 'label_en', 'abbr', 'color',
+      'group', 'default_file', 'schema_version', 'capability', 'summary_zh']) {
+      if (!type[field]) fail(`draft type ${type.key || '?'} is missing ${field}`);
+    }
+    if (type.schema) fail(`draft type ${type.key} must not declare schema; list it in draft_schemas`);
+    if (!draftSchemaKeys.has(type.key)) fail(`draft type ${type.key} has no draft_schemas entry`);
+    if (keys.has(type.key)) fail(`draft type key shadows active type: ${type.key}`);
+    if (singulars.has(type.singular)) fail(`draft singular shadows active type: ${type.singular}`);
+    if (draftKeys.has(type.key)) fail(`duplicate draft type key: ${type.key}`);
+    if (draftSingulars.has(type.singular)) fail(`duplicate draft singular: ${type.singular}`);
+    if (!groupIds.has(type.group)) fail(`draft type ${type.key} references unknown group ${type.group}`);
+    if (draftAbbrs.has(type.abbr)) fail(`duplicate draft abbr: ${type.abbr}`);
+    if (draftColors.has(type.color)) fail(`duplicate draft color: ${type.color}`);
+    if (draftFiles.has(type.default_file)) fail(`duplicate draft default_file: ${type.default_file}`);
+    if (!plannedTypes.has(type.key)) fail(`draft type is not listed in planned: ${type.key}`);
+    if (plannedTypes.get(type.key) !== type.capability) {
+      fail(`draft type ${type.key} capability ${type.capability} does not match planned system capability ${plannedTypes.get(type.key)}`);
+    }
+    const schemaPath = draftSchemas[type.key];
+    if (!fs.existsSync(path.join(ROOT, schemaPath))) fail(`draft schema file is missing: ${schemaPath}`);
+    const schema = readJson(schemaPath);
+    const schemaVersion = schema && schema.properties && schema.properties.schema_version
+      ? schema.properties.schema_version.const
+      : undefined;
+    if (!schemaVersion) fail(`draft schema ${schemaPath} does not pin properties.schema_version.const`);
+    if (schemaVersion !== type.schema_version) {
+      fail(`draft type ${type.key} schema_version ${type.schema_version} does not match ${schemaPath} const ${schemaVersion}`);
+    }
+    draftKeys.add(type.key);
+    draftSingulars.add(type.singular);
+    draftAbbrs.add(type.abbr);
+    draftColors.add(type.color);
+    draftFiles.add(type.default_file);
+  }
+  for (const draftSchemaKey of draftSchemaKeys) {
+    if (!draftKeys.has(draftSchemaKey)) fail(`draft_schemas entry has no draft_types metadata: ${draftSchemaKey}`);
   }
 }
 
@@ -173,11 +238,13 @@ function renderGd(data) {
 
 function renderJs(data) {
   const groupLabel = new Map(data.groups.map((group) => [group.id, group.label_zh]));
+  const draftSchemas = data.draft_schemas || {};
+  const draftTypes = data.draft_types || [];
   const lines = [];
   lines.push('/*');
   for (const line of generatedHeader(' *')) lines.push(line);
   lines.push(' *');
-  lines.push(' * Exposes globalThis.SNContentTypes = { GROUPS, TYPES }.');
+  lines.push(' * Exposes globalThis.SNContentTypes = { GROUPS, TYPES, DRAFT_TYPES }.');
   lines.push(' */');
   lines.push('(function (root) {');
   lines.push("  'use strict';");
@@ -205,7 +272,29 @@ function renderJs(data) {
   }
   lines.push('  ];');
   lines.push('');
-  lines.push('  root.SNContentTypes = { GROUPS, TYPES };');
+  lines.push('  const DRAFT_TYPES = [');
+  for (const type of draftTypes) {
+    const draftSchema = String(draftSchemas[type.key] || '').replace(/^schemas[\\/]/, '').replace(/\\/g, '/');
+    lines.push('    {');
+    lines.push(`      key: ${JSON.stringify(type.key)},`);
+    lines.push(`      singular: ${JSON.stringify(type.singular)},`);
+    lines.push(`      keyPrefix: ${JSON.stringify(type.key_prefix)},`);
+    lines.push(`      label: ${JSON.stringify(type.label_zh)},`);
+    lines.push(`      en: ${JSON.stringify(type.label_en)},`);
+    lines.push(`      abbr: ${JSON.stringify(type.abbr)},`);
+    lines.push(`      color: ${JSON.stringify(type.color)},`);
+    lines.push(`      group: ${JSON.stringify(groupLabel.get(type.group))},`);
+    lines.push(`      file: ${JSON.stringify(type.default_file)},`);
+    lines.push(`      schema: ${JSON.stringify(draftSchema)},`);
+    lines.push(`      summary: ${JSON.stringify(type.summary_zh)},`);
+    lines.push('      draft: true,');
+    lines.push(`      schemaVersion: ${JSON.stringify(type.schema_version)},`);
+    lines.push(`      capability: ${JSON.stringify(type.capability)},`);
+    lines.push('    },');
+  }
+  lines.push('  ];');
+  lines.push('');
+  lines.push('  root.SNContentTypes = { GROUPS, TYPES, DRAFT_TYPES };');
   lines.push('})(globalThis);');
   return `${lines.join('\n')}\n`;
 }

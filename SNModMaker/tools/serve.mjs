@@ -29,6 +29,27 @@ import { resolveGameModsDir } from './game_mods_dir.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const port = Number(process.argv[2] || process.env.PORT || 8099);
+// 内容类型清单的草案版本：读取仓库根的 content_types.json（单一真源）。
+// 草案类型（Schema 2.0）与运行时类型共用编辑器，但运行时只加载 1.0；
+// 这里只用于给缺失 schema_version 的内容文件桩补上正确版本，未知类型回退 1.0。
+const DRAFT_SCHEMA_VERSIONS = (() => {
+  const map = new Map();
+  try {
+    const source = path.join(root, '..', 'content_types.json');
+    const manifest = JSON.parse(fs.readFileSync(source, 'utf8'));
+    for (const type of manifest.draft_types || []) {
+      if (type && type.key) map.set(type.key, type.schema_version || '2.0');
+    }
+  } catch (error) {
+    /* 清单不可用时全部按 1.0 处理 */
+  }
+  return map;
+})();
+
+function schemaVersionForContentType(contentType) {
+  return DRAFT_SCHEMA_VERSIONS.get(contentType) || '1.0';
+}
+
 // 默认只暴露给本机。容器/反向代理场景用 SNMODMAKER_HOST=0.0.0.0，
 // 但服务没有鉴权，必须只通过 tailscale serve / ACL 之类的可信通道访问。
 const host = process.env.SNMODMAKER_HOST || '127.0.0.1';
@@ -191,11 +212,12 @@ function readWorkspaceProject(id) {
       return {
         path: relative,
         content_type: payload.content_type || 'goods',
-        schema_version: payload.schema_version || '1.0',
+        schema_version: payload.schema_version || schemaVersionForContentType(payload.content_type || 'goods'),
         definitions: Array.isArray(payload.definitions) ? payload.definitions : [],
       };
     } catch (error) {
-      return { path: relative, content_type: 'goods', schema_version: '1.0', definitions: [] };
+      // 文件读不出来时无法判断类型，只能按运行时 1.0 建桩；编辑器保存后会写回真实版本。
+      return { path: relative, content_type: 'goods', schema_version: schemaVersionForContentType('goods'), definitions: [] };
     }
   });
   const localization = (manifest.localization || []).map((relative) => {

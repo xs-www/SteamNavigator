@@ -23,6 +23,26 @@
     return root.SNCatalog;
   }
 
+  /**
+   * Schema version for a content type. Schema 2.0 draft types carry "2.0";
+   * every runtime-active type stays "1.0". The version belongs to the type, not
+   * to the individual file, so a stale/missing value cannot downgrade a draft.
+   */
+  function schemaVersionFor(typeKey) {
+    const cat = catalog();
+    if (cat && typeof cat.schemaVersionFor === 'function') return cat.schemaVersionFor(typeKey);
+    return '1.0';
+  }
+
+  /** Effective schema_version a content file should be saved/exported with. */
+  function fileSchemaVersion(file) {
+    if (!file) return '1.0';
+    const cat = catalog();
+    const info = cat && cat.BY_KEY ? cat.BY_KEY[file.content_type] : null;
+    if (info) return schemaVersionFor(info.key);
+    return file.schema_version || '1.0';
+  }
+
   function deepClone(value) {
     return value == null ? value : JSON.parse(JSON.stringify(value));
   }
@@ -260,7 +280,7 @@
     const file = {
       path,
       content_type: typeKey,
-      schema_version: '1.0',
+      schema_version: schemaVersionFor(typeKey),
       definitions: [],
     };
     project.contentFiles.push(file);
@@ -698,7 +718,7 @@
     project.meta.updatedAt = project.meta.updatedAt || new Date().toISOString();
     for (const file of project.contentFiles) {
       file.definitions = Array.isArray(file.definitions) ? file.definitions : [];
-      file.schema_version = file.schema_version || '1.0';
+      file.schema_version = fileSchemaVersion(file);
     }
     for (const entry of project.localization) {
       entry.entries = entry.entries && typeof entry.entries === 'object' ? entry.entries : {};
@@ -775,7 +795,7 @@
     files.push({ path: `${prefix}manifest.json`, data: `${JSON.stringify(manifest, null, 2)}\n` });
     for (const file of project.contentFiles) {
       const payload = {
-        schema_version: file.schema_version || '1.0',
+        schema_version: fileSchemaVersion(file),
         content_type: file.content_type,
         definitions: file.definitions || [],
       };
@@ -859,7 +879,7 @@
       project.contentFiles.push({
         path,
         content_type: contentType,
-        schema_version: payload.schema_version || '1.0',
+        schema_version: payload.schema_version || schemaVersionFor(contentType),
         definitions: Array.isArray(payload.definitions) ? payload.definitions : [],
       });
     }
@@ -947,6 +967,8 @@
     namespaceOf,
     keyBase,
     keyBaseOf,
+    schemaVersionFor,
+    fileSchemaVersion,
     blankManifest,
     createProject,
     applyTemplate,
