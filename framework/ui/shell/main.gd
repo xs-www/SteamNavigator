@@ -19,6 +19,7 @@ const PORT_MEMORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/port_
 const SETTLEMENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/settlement_screen.tscn")
 const AT_SEA_SCREEN_SCENE := preload("res://framework/ui/screens/flow/at_sea_screen.tscn")
 const EVENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/event_screen.tscn")
+const SEA_CHART_SCREEN_SCENE := preload("res://framework/ui/screens/flow/sea_chart_screen.tscn")
 const VICTORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/victory_screen.tscn")
 const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_menu_screen.tscn")
 const NEW_GAME_SCREEN_SCENE := preload("res://framework/ui/screens/menu/new_game_screen.tscn")
@@ -99,6 +100,7 @@ var _memory_port_id: String = ""
 var _selected_build: String = ""
 var _selected_destination: String = ""
 var _selected_strategy: String = ""
+var _sea_chart_return: String = "voyage"
 var _seed_text: String = ""
 var _status_message: String = ""
 var _status_is_error: bool = false
@@ -275,7 +277,7 @@ func _rebuild_ui() -> void:
 		return
 
 	_build_status_banner()
-	if not SCREENS.has(_active_screen) and _active_screen != "port_memory" and _active_screen != "settlement":
+	if not SCREENS.has(_active_screen) and not ["port_memory", "settlement", "sea_chart"].has(_active_screen):
 		_active_screen = "overview"
 	# The overview main view is a full-window 3D stage with edge HUD; the other
 	# pages keep their own layout and hide the stage/status strip again.
@@ -293,6 +295,8 @@ func _rebuild_ui() -> void:
 			_screen_intel(data)
 		"voyage":
 			_screen_voyage(data)
+		"sea_chart":
+			_screen_sea_chart(data)
 		"port_memory":
 			_screen_port_memory(data)
 		"settlement":
@@ -414,6 +418,13 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 		button.add_theme_font_size_override("font_size", 13)
 		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
 		nav.add_child(button)
+	# The nautical chart is a toggle, not a nav page: M opens/closes it and the
+	# button highlights only while the chart is up.
+	var chart_button := _button(_tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
+	chart_button.custom_minimum_size = Vector2(64, 36)
+	chart_button.add_theme_font_size_override("font_size", 13)
+	chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNGhostButton"
+	nav.add_child(chart_button)
 
 
 func _small_chrome_button(text: String, callback: Callable) -> Button:
@@ -1514,6 +1525,7 @@ func _screen_voyage(data: Dictionary) -> void:
 	screen.bind(model, Callable(self, "_tr"))
 	screen.selection_changed.connect(_on_voyage_selection_changed)
 	screen.command_requested.connect(_run_command)
+	screen.navigation_requested.connect(_on_screen_navigation)
 	_root_box.add_child(screen)
 
 
@@ -1521,6 +1533,61 @@ func _on_voyage_selection_changed(destination_id: String, strategy_id: String) -
 	_selected_destination = destination_id
 	_selected_strategy = strategy_id
 	_refresh()
+
+
+## Full-window nautical chart: the query result is passed straight into the
+## screen; departures route through the voyage page so the boiler strategy is
+## still confirmed there before `voyage.start` fires.
+func _screen_sea_chart(data: Dictionary) -> void:
+	var result := _context.queries.execute(&"sea_chart.view")
+	var view_model: Dictionary = result.get("data", {}) if bool(result.get("ok", false)) else {}
+	var screen: Variant = SEA_CHART_SCREEN_SCENE.instantiate()
+	screen.bind(view_model, Callable(self, "_tr"))
+	screen.close_requested.connect(_on_sea_chart_closed)
+	screen.voyage_requested.connect(_on_sea_chart_voyage)
+	_root_box.add_child(screen)
+
+
+func _toggle_sea_chart() -> void:
+	if _active_screen == "sea_chart":
+		_on_sea_chart_closed()
+	else:
+		_on_nav("sea_chart")
+
+
+## M/Esc shortcuts are only meaningful inside an active, in-port run without a
+## pending victory summary; every other state keeps the keys untouched.
+func _sea_chart_available() -> bool:
+	if _context == null or not _context.has_run():
+		return false
+	if bool(_context.state.data.get("at_sea", false)):
+		return false
+	var victory := _victory_view()
+	return not (bool(victory.get("achieved", false)) and not _victory_dismissed)
+
+
+func _on_sea_chart_closed() -> void:
+	var target := _sea_chart_return
+	if not SCREENS.has(target):
+		target = "voyage"
+	_on_nav(target)
+
+
+func _on_sea_chart_voyage(port_id: String) -> void:
+	_selected_destination = port_id
+	_on_nav("voyage")
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var key_event := event as InputEventKey
+	if key_event == null or not key_event.pressed or key_event.echo:
+		return
+	if key_event.keycode == KEY_M and (_active_screen == "sea_chart" or _sea_chart_available()):
+		_toggle_sea_chart()
+		get_viewport().set_input_as_handled()
+	elif key_event.keycode == KEY_ESCAPE and _active_screen == "sea_chart":
+		_on_sea_chart_closed()
+		get_viewport().set_input_as_handled()
 
 
 ## ---------------------------------------------------------------------------
@@ -1685,6 +1752,9 @@ func _on_nav(screen: String) -> void:
 	# Navigating away from the victory summary counts as "keep playing".
 	_victory_dismissed = true
 	var from := _active_screen
+	if screen == "sea_chart":
+		# Remember where the chart was opened from so closing returns there.
+		_sea_chart_return = from if SCREENS.has(from) else "voyage"
 	if screen != "overview":
 		# The detail drawer only belongs to the overview main view.
 		_overview_detail = false
@@ -1707,7 +1777,6 @@ func _on_screen_navigation(screen_id: StringName, params: Dictionary) -> void:
 		_selected_destination = String(params.get("destination", ""))
 	_on_nav(String(screen_id))
 
-
 func _on_map_port_clicked(port_id: String) -> void:
 	if port_id == String(_last_port_view.get("current_port_id", "")):
 		_active_screen = "market"
@@ -1724,6 +1793,7 @@ func _on_new_run() -> void:
 		seed = int(_seed_text.strip_edges())
 	_selected_destination = ""
 	_selected_strategy = ""
+	_sea_chart_return = "voyage"
 	_status_message = ""
 	_run_command(&"run.start", {"build_id": _selected_build, "seed": seed})
 
@@ -1746,6 +1816,7 @@ func _on_continue() -> void:
 		MarketMemoryService.remember(_context.state, _context.state.current_port_id())
 	_selected_destination = ""
 	_selected_strategy = ""
+	_sea_chart_return = "voyage"
 	_active_screen = "overview"
 	_overview_detail = false
 	_victory_dismissed = false

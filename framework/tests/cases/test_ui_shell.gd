@@ -22,6 +22,7 @@ const PORT_MEMORY_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/port
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
 const AT_SEA_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/at_sea_screen.gd")
 const EVENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/event_screen.gd")
+const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const VICTORY_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/victory_screen.gd")
 const MAIN_MENU_SCREEN_SCRIPT := preload("res://framework/ui/screens/menu/main_menu_screen.gd")
 const NEW_GAME_SCREEN_SCRIPT := preload("res://framework/ui/screens/menu/new_game_screen.gd")
@@ -847,4 +848,81 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	if depart_button != null:
 		depart_button.emit_signal("pressed")
 	assert_eq(String(shell._active_screen), "voyage", "the bottom depart button opens the voyage page")
+	_unmount(bundle)
+
+
+## Sea chart entry integration: the chrome toggle and M key flip the active
+## screen, the full chart page degrades to a hint without a coordinate-space
+## world (MVP runs do not generate one yet), binds real data once a world is
+## injected, routes voyage_requested into a preselected voyage page, and the
+## voyage page carries its own chart entry button.
+##
+## Animated nav refreshes rebuild the page a few frames later, so content
+## assertions run right after `_goto`/`_refresh()` (synchronous), and the
+## button/M-key checks only assert the synchronously flipped `_active_screen`.
+func test_sea_chart_entry_integration() -> void:
+	var bundle := _mount(20260401)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+
+	# Content first: without a world_map the page degrades to a hint.
+	_goto(shell, "sea_chart")
+	assert_true(_label_texts(shell).has(shell._tr("ui.sea_chart.no_data", "")),
+		"without a world the page shows the no-data hint")
+	assert_true(_nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT).size() == 1,
+		"the chart page mounts exactly one screen")
+
+	# Inject a generated world exactly like the chart fixtures do; the refresh
+	# rebuilds the still-open chart page with real data.
+	var chart_suite: GDScript = load("res://framework/tests/cases/test_sea_chart.gd")
+	var world_result := WorldGenerator.generate(chart_suite.TEST_PROFILE, context.registries, RngService.new(20260401), {})
+	assert_true(bool(world_result.get("ok", false)), "the injected fixture world generates")
+	var world := WorldMap.from_dict(world_result.get("world_map", {}))
+	var start_port := world.get_start_port()
+	var neighbors := WorldOps.neighbors(world, start_port.id)
+	var campaign := context.state.campaign_world()
+	campaign["discovered_port_ids"] = [start_port.id, String(neighbors[0])]
+	campaign["visited_port_ids"] = [start_port.id, String(neighbors[0])]
+	context.state.data["world_map"] = world_result.get("world_map", {})
+	shell._refresh()
+
+	var screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the rebuilt chart page mounts exactly one screen")
+	var chart_screen: Control = screens[0]
+	assert_true((chart_screen._view_model.get("ports", []) as Array).size() >= 1,
+		"the chart screen binds the query view model with the discovered ports")
+
+	# Departure routing: voyage_requested preselects the port on the voyage page,
+	# where the boiler strategy is still confirmed before voyage.start fires.
+	var port_id := String((chart_screen._view_model.get("ports", [])[0] as Dictionary).get("id", ""))
+	chart_screen.voyage_requested.emit(port_id)
+	assert_eq(String(shell._active_screen), "voyage", "voyage_requested routes to the voyage page")
+	assert_eq(String(shell._selected_destination), port_id, "the requested port is preselected")
+
+	# The chrome toggle and M key flip the active screen synchronously; closing
+	# returns to the remembered page. The chart is open at this point, so the
+	# first M closes it — then the full open/close cycle runs from the voyage page.
+	var chart_button := _button_by_text(shell, shell._tr("ui.nav.sea_chart", ""))
+	assert_not_null(chart_button, "the compact chrome exposes the chart toggle")
+	chart_button.emit_signal("pressed")
+	assert_eq(String(shell._active_screen), "sea_chart", "the chrome toggle opens the chart page")
+	var press_m := InputEventKey.new()
+	press_m.keycode = KEY_M
+	press_m.pressed = true
+	shell._unhandled_input(press_m)
+	assert_eq(String(shell._active_screen), "voyage", "M closes the open chart")
+	shell._unhandled_input(press_m)
+	assert_eq(String(shell._active_screen), "sea_chart", "M opens the chart from the voyage page")
+	shell._unhandled_input(press_m)
+	assert_eq(String(shell._active_screen), "voyage", "M again returns to the remembered page")
+
+	# The animated refreshes above left a transition in flight; complete it in
+	# place so the voyage page can be mounted synchronously for its entry button.
+	shell._transitioning = false
+	shell._pending_transition = false
+	_goto(shell, "voyage")
+	var open_button := _button_by_text(shell, shell._tr("ui.button.sea_chart", ""))
+	assert_not_null(open_button, "the voyage page exposes the chart entry")
+	open_button.emit_signal("pressed")
+	assert_eq(String(shell._active_screen), "sea_chart", "the voyage chart entry opens the chart")
 	_unmount(bundle)

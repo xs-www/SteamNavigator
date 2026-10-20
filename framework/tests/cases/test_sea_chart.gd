@@ -14,6 +14,10 @@ class_name TestSeaChart
 
 const SEED_A := 12345
 const SEED_B := 67890
+## Loaded by path, not via the global class cache: brand-new `class_name`s only
+## enter the cache after an editor reimport, and the headless runner must not
+## depend on one (same convention as `test_ui_shell.gd`).
+const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const TEST_PROFILE := {
 	"world_size": 400.0,
 	"min_ports": 10,
@@ -506,3 +510,65 @@ func test_center_on_port_before_layout_is_queued() -> void:
 	assert_almost_eq(on_screen.y, 300.0, 1.0, "queued centre should place the port at the viewport centre (y)")
 	assert_false(view._needs_fit, "fit should be resolved once layout exists")
 	view.free()
+
+
+## The full-screen chart page (phase 2 entry integration) composes the real view
+## and panel: `bind()` feeds the query result through, clicking a port selects it
+## and fills the panel, and the panel's depart button bubbles up as
+## `voyage_requested(port_id)` for the Shell to route to the voyage page.
+func test_sea_chart_screen_binds_chart_and_panel() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var world_dict := _setup_world_and_state(SEED_A, context)
+	var world := WorldMap.from_dict(world_dict)
+	var start_port := world.get_start_port()
+	var neighbor_id := String(WorldOps.neighbors(world, start_port.id)[0])
+
+	var result := SeaChartViewQuery.execute({}, context)
+	var vm: Dictionary = result.get("data", {})
+
+	var screen: Control = SEA_CHART_SCREEN_SCRIPT.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(screen)
+	screen.bind(vm, Callable(context, "translate"))
+
+	var chart := _find_descendant(screen, func(node: Node) -> bool: return node is SNSeaChartView) as SNSeaChartView
+	var panel := _find_descendant(screen, func(node: Node) -> bool: return node is SNSeaChartPanel) as SNSeaChartPanel
+	assert_not_null(chart, "the screen should mount a sea chart view")
+	assert_not_null(panel, "the screen should mount a sea chart panel")
+	assert_eq((chart.view_model.get("ports", []) as Array).size(), 2,
+		"the chart should bind exactly the discovered ports")
+
+	# The current harbour is preselected; the panel shows it without a route.
+	assert_eq(chart._selected_port, String(vm.get("current_port_id", "")),
+		"the screen should preselect the current port")
+	assert_false(panel._port_data.is_empty(),
+		"the panel should bind the preselected port")
+
+	# Clicking the neighbour selects it and rebinds the panel to that port.
+	screen._on_port_clicked(neighbor_id)
+	assert_eq(chart._selected_port, neighbor_id, "clicking a port should select it")
+	assert_eq(String(panel._port_data.get("id", "")), neighbor_id,
+		"the panel should bind the clicked port")
+
+	# The panel's depart button bubbles up as voyage_requested(port_id).
+	var received: Array = []
+	screen.voyage_requested.connect(func(port_id: String) -> void: received.append(port_id))
+	var depart := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).text) == String(context.translate("ui.button.start_voyage"))
+	)
+	assert_not_null(depart, "a selected remote port should expose the depart button")
+	(depart as Button).pressed.emit()
+	assert_eq(received, [neighbor_id], "the depart button should emit voyage_requested(port_id)")
+
+	screen.free()
+
+
+func _find_descendant(root: Node, predicate: Callable) -> Node:
+	for child in root.get_children():
+		if bool(predicate.call(child)):
+			return child
+		var found := _find_descendant(child, predicate)
+		if found != null:
+			return found
+	return null

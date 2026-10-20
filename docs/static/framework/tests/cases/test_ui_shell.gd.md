@@ -24,25 +24,27 @@
 | `SETTLEMENT_SCREEN_SCRIPT` | L22 |
 | `AT_SEA_SCREEN_SCRIPT` | L23 |
 | `EVENT_SCREEN_SCRIPT` | L24 |
-| `VICTORY_SCREEN_SCRIPT` | L25 |
-| `MAIN_MENU_SCREEN_SCRIPT` | L26 |
-| `NEW_GAME_SCREEN_SCRIPT` | L27 |
-| `MODS_SCREEN_SCRIPT` | L28 |
-| `SETTINGS_SCREEN_SCRIPT` | L29 |
-| `STEADY_BUILD` | L30 |
-| `LITERAL_EXPECTED_NOTICE_KEYS` | L36 |
-| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L170 |
-| `test_damaged_module_is_visible_in_the_shell() -> void` | L206 |
-| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L225 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L290 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L336 |
-| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L386 |
-| `test_intel_screen_renders_the_port_comparison_table() -> void` | L416 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L463 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L521 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L554 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L765 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L784 |
+| `SEA_CHART_SCREEN_SCRIPT` | L25 |
+| `VICTORY_SCREEN_SCRIPT` | L26 |
+| `MAIN_MENU_SCREEN_SCRIPT` | L27 |
+| `NEW_GAME_SCREEN_SCRIPT` | L28 |
+| `MODS_SCREEN_SCRIPT` | L29 |
+| `SETTINGS_SCREEN_SCRIPT` | L30 |
+| `STEADY_BUILD` | L31 |
+| `LITERAL_EXPECTED_NOTICE_KEYS` | L37 |
+| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L171 |
+| `test_damaged_module_is_visible_in_the_shell() -> void` | L207 |
+| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L226 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L291 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L337 |
+| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L387 |
+| `test_intel_screen_renders_the_port_comparison_table() -> void` | L417 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L464 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L522 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L555 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L766 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L785 |
+| `test_sea_chart_entry_integration() -> void` | L863 |
 
 ## 契约与约束
 

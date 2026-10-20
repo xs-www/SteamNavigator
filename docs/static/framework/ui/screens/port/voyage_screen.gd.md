@@ -12,11 +12,12 @@
 | `VoyageScreen` | L1 |
 | `selection_changed (signal)` | L5 |
 | `command_requested (signal)` | L6 |
-| `TEXT` | L8 |
-| `MUTED` | L9 |
-| `RED` | L10 |
-| `GREEN` | L11 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L17 |
+| `navigation_requested (signal)` | L7 |
+| `TEXT` | L9 |
+| `MUTED` | L10 |
+| `RED` | L11 |
+| `GREEN` | L12 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L18 |
 
 ## 契约与约束
 

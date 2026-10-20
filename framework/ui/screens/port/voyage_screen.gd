@@ -4,6 +4,7 @@ extends VBoxContainer
 
 signal selection_changed(destination_id: String, strategy_id: String)
 signal command_requested(command: StringName, params: Dictionary)
+signal navigation_requested(screen_id: StringName, params: Dictionary)
 
 const TEXT := Color("ece1c5")
 const MUTED := Color("9fafa7")
@@ -30,7 +31,8 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	var action := _panel(); var content := _content(action)
 	var depart := Button.new(); depart.text = _loc("ui.button.depart", "Depart"); depart.disabled = not bool(data.get("feasible", false))
 	depart.pressed.connect(func(): command_requested.emit(&"voyage.start", {"destination_id": vm.get("selected_destination", ""), "strategy_id": vm.get("selected_strategy", "")}))
-	content.add_child(depart); content.add_child(_label("出航后不能更改策略；遇到事件时只能从本次抽样出的选项中选择。", 12, MUTED)); add_child(action)
+	var chart := Button.new(); chart.text = _loc("ui.button.sea_chart", "打开海图 (M)"); chart.pressed.connect(func(): navigation_requested.emit(&"sea_chart", {}))
+	content.add_child(depart); content.add_child(chart); content.add_child(_label("出航后不能更改策略；遇到事件时只能从本次抽样出的选项中选择。", 12, MUTED)); add_child(action)
 
 
 func _selectors(vm: Dictionary) -> Control:
