@@ -1,10 +1,16 @@
 extends TestCase
 class_name TestSeaChart
-## Tests for the sea chart view model and UI components (Phase 2).
+## @static-doc
+## 作用：海图系统（阶段 2）的无头测试，验证 `sea_chart.view` 查询的输出结构、
+## 陆地/港口/航线/迷雾数据正确性，以及同 seed 可复现性与 JSON 序列化往返。
 ##
-## Covers: SeaChartViewQuery output structure, world bounds, landmass rendering,
-## port discovery states, route generation, fog grid downsample, ship position,
-## serialization, and reproducibility.
+## ## 契约与约束
+## - 每个用例通过 `bootstrap_core()` 获得真实 Core 注册表，再用内联 `TEST_PROFILE`
+##   生成世界；测试不实例化任何 UI 节点，只断言查询输出的纯数据。
+## - `_setup_world_and_state()` 把起始港与其首个邻居标为已发现/已访问，
+##   使航线用例具备两端可见的前提。
+## - 港口坐标断言使用宽松范围：大陆可能跨出 `world.bounds`，港口锚定在海岸线上。
+## @end-static-doc
 
 const SEED_A := 12345
 const SEED_B := 67890

@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T04:02:25.785Z",
-  "commit": "3204e10",
+  "generated_at": "2026-10-20T04:08:37.457Z",
+  "commit": "3351747",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
     "sources": 575,
-    "documented": 191,
-    "grouped": 384
+    "documented": 192,
+    "grouped": 383
   },
   "files": [
     {
@@ -2355,10 +2355,9 @@
     },
     {
       "source": "framework/tests/cases/test_sea_chart.gd",
-      "sha256": "1b05a1a90c4c878ccc214c9e98f8ecfef81e3b15f9fc4fd984deeda5b8f58054",
-      "doc": "docs/static/framework/tests/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/tests/README.md"
+      "sha256": "02669c6bb33047f71bd7a7dd85f3bc10cf96e27e5d1c116d02f1c542f835dda6",
+      "doc": "docs/static/framework/tests/cases/test_sea_chart.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_semver_range.gd",
@@ -3203,7 +3202,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "498baba24b971c3f2d6e1a14de63b30164bdcd1fe6831ba6f3a9d2eff03e959a",
+      "sha256": "36e81df1d98f069c329c24445aa4296333740c9b009f3d879fe7cac902ff43ab",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
