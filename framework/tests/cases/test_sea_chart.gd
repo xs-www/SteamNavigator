@@ -201,6 +201,71 @@ func test_sea_chart_query_fog_grid_downsampled() -> void:
 			assert_true(float(alpha) >= 0.0 and float(alpha) <= 1.0, "alpha should be in [0, 1]")
 
 
+## The chart must read the precomputed route table, not re-run pathfinding. Mutating a
+## stored path to a sentinel proves the query is a reader: a recomputing query would
+## ignore the sentinel and return the real curve.
+func test_sea_chart_reads_precomputed_routes() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	_setup_world_and_state(SEED_A, context)
+
+	var world_dict: Dictionary = context.state.data["world_map"]
+	var edges: Array = world_dict.get("edges", [])
+	assert_true(edges.size() > 0, "generated worlds should carry a route table")
+
+	# Pick any stored route between two discovered ports; both ends are in the fixture.
+	var discovered: Array = context.state.campaign_world().get("discovered_port_ids", [])
+	var target_index := -1
+	for index in edges.size():
+		var edge: Dictionary = edges[index]
+		if discovered.has(String(edge.get("from", ""))) and discovered.has(String(edge.get("to", ""))):
+			target_index = index
+			break
+	assert_true(target_index >= 0, "fixture should have a route between two discovered ports")
+
+	const SENTINEL_X := 123.45
+	const SENTINEL_Y := 234.56
+	var sentinel_flat: Array = [SENTINEL_X, SENTINEL_Y, SENTINEL_X + 10.0, SENTINEL_Y + 10.0]
+	edges[target_index]["path"] = sentinel_flat
+
+	var result := SeaChartViewQuery.execute({}, context)
+	var data: Dictionary = result.get("data", {})
+	var target_edge: Dictionary = edges[target_index]
+	var found := {}
+	for route in data.get("routes", []):
+		var from_id := String(route.get("from", ""))
+		var to_id := String(route.get("to", ""))
+		if (from_id == String(target_edge["from"]) and to_id == String(target_edge["to"])) \
+				or (from_id == String(target_edge["to"]) and to_id == String(target_edge["from"])):
+			found = route
+			break
+	assert_false(found.is_empty(), "the mutated route should still be listed")
+	var points: Array = found.get("bezier_path", [])
+	assert_true(points.size() >= 2, "route should expose a path")
+	if points.size() >= 2:
+		assert_almost_eq(float(points[0].get("x", 0.0)), SENTINEL_X, 0.01, "query should return the stored path, not a recomputed one")
+
+
+## Worlds saved before the route table existed must still render: the query falls back to
+## computing paths on the fly.
+func test_legacy_world_without_route_table_still_renders() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	_setup_world_and_state(SEED_A, context)
+
+	var world_dict: Dictionary = context.state.data["world_map"]
+	world_dict.erase("edges")
+
+	var result := SeaChartViewQuery.execute({}, context)
+	var data: Dictionary = result.get("data", {})
+	var routes: Array = data.get("routes", [])
+	assert_true(routes.size() > 0, "legacy worlds without a route table should still produce routes")
+	for route in routes:
+		var path: Array = route.get("bezier_path", [])
+		assert_true(path.size() >= 2, "fallback routes should carry a path")
+		assert_true(float(route.get("distance", 0.0)) > 0.0, "fallback routes should carry a distance")
+
+
 func test_sea_chart_query_port_positions_within_bounds() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]

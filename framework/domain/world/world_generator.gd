@@ -1,18 +1,24 @@
 class_name WorldGenerator
 extends RefCounted
 ## @static-doc
-## 作用：世界生成总控，协调区域、陆地、港口放置、连通性与出航角计算。
+## 作用：世界生成总控，协调区域、陆地、港口放置、连通性、出航角与航线预计算。
 ##
 ## ## 契约与约束
 ## - 同 seed、profile 与内容注册表必须得到相同世界。
-## - 港口冲突通过有限重试解决，最多尝试 60 次；失败返回结构化原因。
+## - 整世界生成最多尝试 `MAX_ATTEMPTS`（60）次；单次放置内每港最多 20 次间距重试。
 ## - `required_tags` 来自港口配置，不依赖内容注册表中的硬编码 ID。
+## - 航线在生成期算好后写入 `WorldMap.edges`（`{from,to,distance,path}`），
+##   运行期只读；换航线算法只需改这里，查询/UI 不受影响。
 ##
 ## ## 重点逻辑
 ## ### `generate(...)`
-## - 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图并计算出航角。
+## - 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图、计算
+##   出航角，最后调 `_build_route_edges` 预计算航线表。
 ## ### `_place_ports_on_coastlines(...)`
 ## - 按 `coast_t` 在目标海岸采样并施加确定性抖动，同时守住港口最小间距。
+## ### `_build_route_edges(...)`
+## - 每条连通边算一次 `RouteCalculator.calculate_route`；算不出航线的边跳过并告警，
+##   不让单条边拖垮整个世界生成。
 ## @end-static-doc
 
 const MAX_ATTEMPTS := 60
@@ -67,6 +73,10 @@ static func _try_generate(profile: Dictionary, hub: RegistryHub, rng: RandomNumb
 	var connectivity := RouteCalculator.build_connectivity_graph(world.ports, world.landmasses)
 	world.connectivity_graph = connectivity
 	RouteCalculator.compute_departure_angles(world.ports, connectivity, world.landmasses)
+	# Routes are computed once here and stored on the world (schema 1.1), so the chart and
+	# voyage code read a table instead of re-running pathfinding for every edge on every
+	# query. Swapping the route algorithm later only changes this call.
+	world.set_edges(_build_route_edges(world, connectivity))
 
 	_ensure_start_port(world)
 
@@ -75,6 +85,33 @@ static func _try_generate(profile: Dictionary, hub: RegistryHub, rng: RandomNumb
 		return {"ok": false, "reason": String(validation.get("reason", "validation failed")), "attempt": attempt}
 
 	return {"ok": true, "reason": "", "world_map": world.to_dict(), "attempt": attempt}
+
+
+## Precomputes one route record per connectivity edge (`{from, to, distance, path}`).
+## Edges whose route cannot be built are skipped with a warning rather than sinking the
+## whole world — the chart simply does not draw them.
+static func _build_route_edges(world: WorldMap, connectivity: Dictionary) -> Array[Dictionary]:
+	var edges: Array[Dictionary] = []
+	for from_id in connectivity:
+		for to_id in connectivity[from_id]:
+			if String(from_id) >= String(to_id):
+				continue
+			var from_port := world.get_port(String(from_id))
+			var to_port := world.get_port(String(to_id))
+			if from_port.is_empty() or to_port.is_empty():
+				continue
+			var route := RouteCalculator.calculate_route(from_port, to_port, world.landmasses)
+			var path: PackedVector2Array = route.get("bezier_path", PackedVector2Array())
+			if path.size() < 2:
+				push_warning("world generator: no sailable route %s -> %s" % [from_id, to_id])
+				continue
+			edges.append({
+				"from": String(from_id),
+				"to": String(to_id),
+				"distance": float(route.get("distance", 0.0)),
+				"path": path,
+			})
+	return edges
 
 
 static func _default_regions() -> Array:

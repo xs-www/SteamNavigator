@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartViewQuery` | L1 |
-| `DEFAULT_MIN_VISION_RADIUS` | L17 |
-| `DEFAULT_PORT_REVEAL_RADIUS` | L18 |
-| `execute(_params: Dictionary, context) -> Dictionary` | L21 |
+| `DEFAULT_MIN_VISION_RADIUS` | L19 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L20 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L23 |
 
 陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
 
@@ -21,6 +21,8 @@
 - 只在 `has_run=true` 且 `world_map` 非空时输出完整数据，否则返回空结果。
 - 港口列表只包含已发现港口；未发现的港口被过滤掉。
 - 航线只在两端都已发现时输出，`explored` 标记两端都**已访问**的航线。
+- 航线读取 `WorldMap.edges`（生成期预计算的只读表）；旧存档没有该表时回退到
+  现场计算（`_compute_routes`），这条回退路径不改状态。
 - 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
 - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
 

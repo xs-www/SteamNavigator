@@ -129,6 +129,15 @@ Route (航线 = 两个港口之间的可航行路径)
 └── is_explored: bool                      # 是否已被玩家走过
 ```
 
+**实现状态**：`WorldMap.edges[]` 已落地（world schema 1.1），每条连通边在**生成期**
+算好 `{from, to, distance, path}` 并随世界存档；查询与 UI 只读该表。
+`path` 以扁平整数组（`[x0,y0,x1,y1,…]`，坐标保留 2 位小数）存储以压小存档。
+`travel_hours` / `risk_level` 依赖船速与航行规则，留到阶段 3（航行演出）接入。
+
+> 换航线算法的约定：算法只在**生成期写入**这一张表。只要
+> `{from, to, distance, path}` 契约不变，海图查询、渲染与将来的航行演出都不需要改；
+> 缺 `edges` 的旧存档由消费方回退现场计算（`sea_chart.view` 的 `_compute_routes`）。
+
 ### 4.2 路径计算
 
 - 每港口有唯一出航角度（`departure_angle`）：贝塞尔曲线的起点切线

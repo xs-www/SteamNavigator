@@ -10,6 +10,8 @@ extends RefCounted
 ## - 只在 `has_run=true` 且 `world_map` 非空时输出完整数据，否则返回空结果。
 ## - 港口列表只包含已发现港口；未发现的港口被过滤掉。
 ## - 航线只在两端都已发现时输出，`explored` 标记两端都**已访问**的航线。
+## - 航线读取 `WorldMap.edges`（生成期预计算的只读表）；旧存档没有该表时回退到
+##   现场计算（`_compute_routes`），这条回退路径不改状态。
 ## - 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
 ## - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
 ## @end-static-doc
@@ -97,32 +99,28 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		})
 
 	# Build route data (only between discovered ports)
+	# Build route data (only between discovered ports). Routes are read from the world's
+	# precomputed route table; a world generated before schema 1.1 has none, so those
+	# saves fall back to computing paths here (slow, but only for legacy worlds).
 	var routes_data: Array = []
-	var connectivity: Dictionary = world.connectivity_graph
-	for from_id in connectivity:
-		if not discovered_ids.has(String(from_id)):
-			continue
-		var neighbor_ids: Array = connectivity[from_id]
-		for neighbor_id in neighbor_ids:
-			var to_id := String(neighbor_id)
-			if not discovered_ids.has(to_id):
+	if world.route_count() > 0:
+		for edge in world.edges:
+			var from_id := String(edge.get("from", ""))
+			var to_id := String(edge.get("to", ""))
+			if not discovered_ids.has(from_id) or not discovered_ids.has(to_id):
 				continue
-			# Avoid duplicate edges (only emit from < to)
-			if String(from_id) >= to_id:
+			var path: PackedVector2Array = edge.get("path", PackedVector2Array())
+			if path.size() < 2:
 				continue
-			var from_port := world.get_port(String(from_id))
-			var to_port := world.get_port(to_id)
-			if from_port.is_empty() or to_port.is_empty():
-				continue
-			var route := RouteCalculator.calculate_route(from_port, to_port, world.landmasses)
-			var both_visited := visited_ids.has(String(from_id)) and visited_ids.has(to_id)
 			routes_data.append({
-				"from": String(from_id),
+				"from": from_id,
 				"to": to_id,
-				"bezier_path": _pack_path(route.get("bezier_path", PackedVector2Array())),
-				"distance": float(route.get("distance", 0.0)),
-				"explored": both_visited,
+				"bezier_path": _pack_path(path),
+				"distance": float(edge.get("distance", 0.0)),
+				"explored": visited_ids.has(from_id) and visited_ids.has(to_id),
 			})
+	else:
+		routes_data = _compute_routes(world, discovered_ids, visited_ids)
 
 	# Build fog alpha grid (downsampled for UI performance)
 	var fog_grid_data: Dictionary = {}
@@ -191,6 +189,35 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"discovered_count": discovered_ids.size(),
 		"visited_count": visited_ids.size(),
 	})
+
+
+## Legacy fallback for worlds generated before schema 1.1 (no stored route table).
+static func _compute_routes(world: WorldMap, discovered_ids: Array, visited_ids: Array) -> Array:
+	var routes: Array = []
+	var connectivity: Dictionary = world.connectivity_graph
+	for from_id in connectivity:
+		if not discovered_ids.has(String(from_id)):
+			continue
+		for neighbor_id in connectivity[from_id]:
+			var to_id := String(neighbor_id)
+			if not discovered_ids.has(to_id):
+				continue
+			# Avoid duplicate edges (only emit from < to)
+			if String(from_id) >= to_id:
+				continue
+			var from_port := world.get_port(String(from_id))
+			var to_port := world.get_port(to_id)
+			if from_port.is_empty() or to_port.is_empty():
+				continue
+			var route := RouteCalculator.calculate_route(from_port, to_port, world.landmasses)
+			routes.append({
+				"from": String(from_id),
+				"to": to_id,
+				"bezier_path": _pack_path(route.get("bezier_path", PackedVector2Array())),
+				"distance": float(route.get("distance", 0.0)),
+				"explored": visited_ids.has(String(from_id)) and visited_ids.has(to_id),
+			})
+	return routes
 
 
 static func _empty_result() -> Dictionary:

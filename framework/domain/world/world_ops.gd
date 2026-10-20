@@ -1,9 +1,14 @@
 class_name WorldOps
 extends RefCounted
-## Query and mutation helpers over the generated world map.
+## @static-doc
+## 作用：世界地图查询与状态变更接口，替代 MVP 时期的 MapOps。
 ##
-## Replaces MVP-era MapOps. Works with the world map dictionary stored in
-## GameState.data.world_map (not the legacy GameState.data.world).
+## ## 契约与约束
+## - 世界结构查询只读，不修改 WorldMap。
+## - 发现与访问状态通过 `GameState.campaign_world()` 保存。
+## - `find_path` 使用 BFS，只按边数寻路；`distance_between` 返回直线距离。
+## - `route_between` 在港口不连通时可以返回空路径。
+## @end-static-doc
 
 static func world_map(state: GameState) -> WorldMap:
 	var world_data: Dictionary = state.data.get("world_map", {})
@@ -37,6 +42,11 @@ static func distance_between(world: WorldMap, from_port: String, to_port: String
 
 
 static func route_between(world: WorldMap, from_port: WorldPort, to_port: WorldPort) -> Dictionary:
+	## Prefer the route table computed at generation time; fall back to computing it for
+	## worlds generated before schema 1.1 (saves that carry no `edges`).
+	var stored := world.route_for(from_port.id, to_port.id)
+	if not stored.is_empty():
+		return stored
 	return RouteCalculator.calculate_route(from_port, to_port, world.landmasses)
 
 

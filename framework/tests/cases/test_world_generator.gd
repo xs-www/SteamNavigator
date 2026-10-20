@@ -326,6 +326,59 @@ func test_connectivity_graph_is_sparse_and_connected() -> void:
 	assert_true(edges <= 3 * port_count, "graph should stay sparse, got %d edges for %d ports" % [edges, port_count])
 
 
+## The route table is written once at generation time so the chart/voyage code never
+## re-runs pathfinding. This pins the data contract that makes swapping the route
+## algorithm later a non-event for consumers.
+func test_routes_are_precomputed_in_the_world() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var result := _generate_world(SEED_A, context)
+
+	assert_true(bool(result.get("ok", false)), "generation should succeed")
+	var world := WorldMap.from_dict(result.get("world_map", {}))
+
+	var graph_edges := 0
+	for from_id in world.connectivity_graph:
+		for to_id in world.connectivity_graph[from_id]:
+			if String(from_id) < String(to_id):
+				graph_edges += 1
+	assert_true(graph_edges > 0, "fixture should produce connectivity edges")
+	assert_eq(world.route_count(), graph_edges, "every connectivity edge should have one stored route")
+
+	var first_path_size := 0
+	for edge in world.edges:
+		var from_id := String(edge.get("from", ""))
+		var to_id := String(edge.get("to", ""))
+		assert_true(from_id < to_id, "stored routes are unique per unordered pair (%s, %s)" % [from_id, to_id])
+		var path: PackedVector2Array = edge.get("path", PackedVector2Array())
+		assert_true(path.size() >= 2, "stored route %s -> %s should carry a path" % [from_id, to_id])
+		assert_true(float(edge.get("distance", 0.0)) > 0.0, "stored route should carry a distance")
+		# Lookup must work in both directions.
+		assert_false(world.route_for(from_id, to_id).is_empty(), "route_for should find %s -> %s" % [from_id, to_id])
+		assert_false(world.route_for(to_id, from_id).is_empty(), "route_for should find %s -> %s" % [to_id, from_id])
+		if first_path_size == 0:
+			first_path_size = path.size()
+
+	# The table must survive the save roundtrip byte-for-byte at PATH_DECIMALS precision.
+	var restored := WorldMap.from_dict(world.to_dict())
+	assert_eq(restored.route_count(), world.route_count(), "route count should survive the roundtrip")
+	var original_edge: Dictionary = world.edges[0]
+	var restored_edge := restored.route_for(String(original_edge["from"]), String(original_edge["to"]))
+	assert_false(restored_edge.is_empty(), "first route should survive the roundtrip")
+	var original_path: PackedVector2Array = original_edge["path"]
+	var restored_path: PackedVector2Array = restored_edge["path"]
+	assert_eq(restored_path.size(), original_path.size(), "route path length should survive the roundtrip")
+	assert_almost_eq(restored_path[0].x, original_path[0].x, 0.01, "route start x should survive the roundtrip")
+	assert_almost_eq(float(restored_edge["distance"]), float(original_edge["distance"]), 0.01, "route distance should survive the roundtrip")
+
+	# Legacy worlds (no `edges`) must load and simply have no stored routes.
+	var legacy := world.to_dict()
+	legacy.erase("edges")
+	var legacy_world := WorldMap.from_dict(legacy)
+	assert_eq(legacy_world.route_count(), 0, "a world without `edges` should load with an empty route table")
+	assert_true(legacy_world.route_for("port_0", "port_1").is_empty(), "missing routes must report empty, not guess")
+
+
 func test_start_port_exists_and_is_valid() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]

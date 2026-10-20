@@ -1,19 +1,33 @@
 class_name WorldMap
 extends RefCounted
-## The complete world map containing landmasses, ports, regions, and connectivity.
+## @static-doc
+## 作用：世界地图顶层容器，保存陆地、港口、区域、连通性、已算好的航线与本世界种子。
 ##
-## Generated once per campaign from a seed; all procedural generation uses named
-## RNG streams for reproducibility.
+## ## 契约与约束
+## - `connectivity_graph` 是无向图，A 连接 B 时 B 也连接 A。
+## - `bounds` 供 UI 视口裁剪与世界坐标映射使用。
+## - `world_seed` 用于验证存档和当前内容版本的兼容性。
+## - `edges` 是**生成期算出、运行期只读**的航线表：每个连通边一条
+##   `{from, to, distance, path}`（`path` 为 `PackedVector2Array`）。航线算法可以随时替换，
+##   只要这个数据契约不变，查询/UI 就不受影响；缺 `edges` 的旧存档由消费方自行回退计算。
+## @end-static-doc
 
-const SCHEMA_VERSION := "1.0"
+const SCHEMA_VERSION := "1.1"
+## Path coordinates are stored rounded to this many decimals to keep saves small;
+## far below the chart's pixel resolution.
+const PATH_DECIMALS := 2
 
 var bounds: Rect2
 var landmasses: Array[Landmass]
 var ports: Array[WorldPort]
 var regions: Array[Region]
 var connectivity_graph: Dictionary
+## `{from, to, distance, path: PackedVector2Array}` per connectivity edge.
+var edges: Array[Dictionary]
 var world_seed: int
 var schema_version: String
+
+var _edges_by_pair: Dictionary = {}
 
 
 func _init() -> void:
@@ -22,6 +36,8 @@ func _init() -> void:
 	ports = []
 	regions = []
 	connectivity_graph = {}
+	edges = []
+	_edges_by_pair = {}
 	world_seed = 0
 	schema_version = SCHEMA_VERSION
 
@@ -49,6 +65,36 @@ func get_region(region_id: String) -> Region:
 		if region.id == region_id:
 			return region
 	return Region.new()
+
+
+## Replaces the precomputed route table and rebuilds the pair index.
+func set_edges(new_edges: Array[Dictionary]) -> void:
+	edges = new_edges
+	_rebuild_edge_index()
+
+
+## Stored route for an unordered port pair, or `{}` when this world has no precomputed
+## entry (old saves) — callers then fall back to `RouteCalculator.calculate_route`.
+func route_for(from_port_id: String, to_port_id: String) -> Dictionary:
+	return _edges_by_pair.get(_pair_key(from_port_id, to_port_id), {})
+
+
+func route_count() -> int:
+	return edges.size()
+
+
+func _rebuild_edge_index() -> void:
+	_edges_by_pair = {}
+	for edge in edges:
+		var from_id := String(edge.get("from", ""))
+		var to_id := String(edge.get("to", ""))
+		if from_id.is_empty() or to_id.is_empty():
+			continue
+		_edges_by_pair[_pair_key(from_id, to_id)] = edge
+
+
+static func _pair_key(a: String, b: String) -> String:
+	return a + "|" + b if a < b else b + "|" + a
 
 
 func get_start_port() -> WorldPort:
@@ -108,6 +154,9 @@ func to_dict() -> Dictionary:
 	var regions_array := []
 	for region in regions:
 		regions_array.append(region.to_dict())
+	var edges_array := []
+	for edge in edges:
+		edges_array.append(_edge_to_dict(edge))
 	return {
 		"schema_version": schema_version,
 		"world_seed": world_seed,
@@ -119,6 +168,39 @@ func to_dict() -> Dictionary:
 		"ports": ports_array,
 		"regions": regions_array,
 		"connectivity_graph": connectivity_graph.duplicate(true),
+		"edges": edges_array,
+	}
+
+
+## Paths are flattened to `[x0, y0, x1, y1, ...]` rounded to `PATH_DECIMALS`; object
+## per point would roughly double the JSON size of the route table.
+static func _edge_to_dict(edge: Dictionary) -> Dictionary:
+	var path: PackedVector2Array = edge.get("path", PackedVector2Array())
+	var flat: Array = []
+	flat.resize(path.size() * 2)
+	for index in path.size():
+		flat[index * 2] = snappedf(path[index].x, pow(10.0, -PATH_DECIMALS))
+		flat[index * 2 + 1] = snappedf(path[index].y, pow(10.0, -PATH_DECIMALS))
+	return {
+		"from": String(edge.get("from", "")),
+		"to": String(edge.get("to", "")),
+		"distance": snappedf(float(edge.get("distance", 0.0)), pow(10.0, -PATH_DECIMALS)),
+		"path": flat,
+	}
+
+
+static func _edge_from_dict(value: Dictionary) -> Dictionary:
+	var path := PackedVector2Array()
+	var flat: Array = value.get("path", [])
+	var index := 0
+	while index + 1 < flat.size():
+		path.append(Vector2(float(flat[index]), float(flat[index + 1])))
+		index += 2
+	return {
+		"from": String(value.get("from", "")),
+		"to": String(value.get("to", "")),
+		"distance": float(value.get("distance", 0.0)),
+		"path": path,
 	}
 
 
@@ -143,4 +225,10 @@ static func from_dict(value: Dictionary) -> WorldMap:
 		if region_dict is Dictionary:
 			world.regions.append(Region.from_dict(region_dict))
 	world.connectivity_graph = (value.get("connectivity_graph", {}) as Dictionary).duplicate(true)
+	# Absent in worlds generated before schema 1.1; consumers fall back to computing.
+	var parsed_edges: Array[Dictionary] = []
+	for edge_dict in value.get("edges", []):
+		if edge_dict is Dictionary:
+			parsed_edges.append(_edge_from_dict(edge_dict))
+	world.set_edges(parsed_edges)
 	return world
