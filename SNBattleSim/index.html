@@ -1,10 +1,10 @@
 <!-- @static-doc -->
-<!-- 作用：战斗模拟器新版入口，承载 2D 战场、双舰队装配器、自定义武器目录与配置交换界面。 -->
+<!-- 作用：战斗模拟器新版入口，承载 2D 战场、Mod 蓝图舰体装配、独立 FSM 工作台与工程持久化入口。 -->
 <!-- -->
 <!-- ## 契约与约束 -->
 <!-- - 页面无远程依赖，需通过本目录本地服务器加载 ES 模块。 -->
 <!-- - `greybox.html` 保留为旧版压力/冲撞参数验证台，不参与新版运行时。 -->
-<!-- - 舰队装配器同时编辑舰船部件与受限的声明式战术状态机。 -->
+<!-- - 战术状态机在独立全屏开发者工作台编辑；船舶、配件、状态与状态机可通过本地 mods/ 交换。 -->
 <!-- - 战斗事件以战场内 HUD 呈现，战场下方保留给所选舰的实时状态。 -->
 <!-- @end-static-doc -->
 <!doctype html>
@@ -24,8 +24,14 @@
     </div>
     <div class="top-actions">
       <label class="file-button">导入配置<input id="importConfig" type="file" accept="application/json"></label>
+      <button id="openTactics" class="tactics-entry">战术状态机 <span class="beta-badge">BETA</span></button>
+      <button id="loadMods">读取 mods/</button>
+      <button id="saveWorkspace">保存工程</button>
+      <button id="loadWorkspace">读取工程</button>
+      <button id="exportMod">导出为 Mod</button>
       <button id="exportConfig">导出配置</button>
-      <a href="./greybox.html">旧版压力灰盒</a>
+      <a href="./greybox.html" class="legacy-link">旧版压力灰盒</a>
+      <span id="modStatus" class="mod-status"></span>
     </div>
   </header>
 
@@ -33,7 +39,7 @@
     <aside class="panel builder-panel">
       <div class="panel-title">
         <div><span>01</span><h2>舰队装配器</h2></div>
-        <div class="mini-actions"><button id="addCombat">+ 战斗舰</button><button id="addCargo">+ 货船</button></div>
+        <div class="mini-actions"><button id="openShipBuilder">+ 舰体装配</button></div>
       </div>
       <div id="fleetTabs" class="fleet-tabs"></div>
       <div id="fleetList" class="fleet-list"></div>
@@ -58,7 +64,7 @@
           <label>观察方<select id="viewMode"><option value="0">蓝方视野</option><option value="1">红方视野</option><option value="both">双方 / 全知</option></select></label>
           <label>种子<input id="seed" type="number" value="5201"></label>
         </div>
-        <div class="legend"><span class="blue">蓝方</span><span class="red">红方</span><span class="vision">青圈＝所选舰视野</span><span class="attack">彩色范围＝逐武器射界（侧弦为双扇区）</span><span class="cargo">金边＝货船</span><span class="ghost">虚线＝最后已知位置</span></div>
+        <div class="legend"><span class="blue">蓝方</span><span class="red">红方</span><span class="target">红圈＝所选舰攻击目标</span><span class="vision">青圈＝所选舰视野</span><span class="attack">彩色范围＝逐武器射界（侧弦为双扇区）</span><span class="cargo">金边＝货船</span><span class="ghost">虚线＝最后已知位置</span></div>
       </section>
       <section class="panel ship-status-panel">
         <div class="panel-title"><div><span>03</span><h2>所选舰实时状态</h2></div></div>
@@ -95,10 +101,25 @@
       </details>
       <div class="rules-note">
         <b>当前规则</b>
-        <p>直射要求当前视野；炮击可向刚丢失的最后位置盲射但精度较低；侧弦炮只在左右舷射界内齐射。每艘船可在装配器设置侦索、接近、交战、脱离和规避条件，不执行用户脚本。</p>
+        <p>直射要求当前视野；炮击可向刚丢失的最后位置盲射但精度较低；侧弦炮只在左右舷射界内齐射。十种战术动作与模块化转移条件在独立开发者工作台配置。</p>
       </div>
     </aside>
   </main>
+  <dialog id="shipBuilderDialog" class="ship-builder-dialog">
+    <form id="shipBuilderForm" method="dialog">
+      <header><div><p class="eyebrow">SHIP ASSEMBLY / MOD BLUEPRINTS</p><h2>舰体装配</h2></div><button type="button" data-close-ship-builder>关闭</button></header>
+      <div id="shipBuilderContent"></div>
+      <footer><span id="shipBuilderValidation">选择舰体与组件</span><button type="submit" class="primary">组装并加入当前舰队</button></footer>
+    </form>
+  </dialog>
+  <section id="tacticsWorkspace" class="tactics-workspace" hidden>
+    <header class="tactics-header"><div><p class="eyebrow">DEVELOPER MODE / FSM WORKBENCH</p><h2>战术状态机工作台</h2></div><div class="top-actions"><button id="newTactic">+ 新建</button><button id="duplicateTactic">复制</button><button id="deleteTactic" class="danger-inline">删除</button><button id="closeTactics" class="primary">返回模拟器</button></div></header>
+    <div class="tactics-layout">
+      <aside class="tactics-sidebar"><div class="tactics-section-title">状态机库</div><div id="tacticLibraryList" class="tactic-library-list"></div><div class="tactics-section-title">状态定义</div><div id="actionReference" class="action-reference"></div></aside>
+      <main class="tactics-main"><div class="machine-title"><label>名称<input id="tacticName" maxlength="40"></label><span id="machineBadge"></span></div><div id="tacticsFsmEditor" class="fsm-editor fsm-editor-large"></div></main>
+      <aside class="tactics-properties"><div class="tactics-section-title">战术参数</div><div id="tacticParameters"></div><div class="tactics-section-title">舰船挂载 / 指挥官</div><div id="tacticAssignments"></div></aside>
+    </div>
+  </section>
   <script type="module" src="./js/app.mjs"></script>
 </body>
 </html>

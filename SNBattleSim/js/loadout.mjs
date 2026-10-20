@@ -5,11 +5,10 @@
 // - 装配只保存定义引用与调校值，战斗中的位置、耐久和冷却不写回装配。
 // - 一艘船可以重复安装同一种武器，但总挂载数不得超过船体武器槽位。
 // - 非武器组件暂以装甲、引擎、操舵和货舱调校反映到最终船舶数值。
-// - 每艘船保存一份经限幅的声明式战术配置，旧配置自动使用默认战术。
+// - 每艘船只保存一个 tacticId；战术库在开战时解析为 tactic 快照。
 // @end-static-doc
 
 import { HULLS, SENSORS } from "./catalog.mjs";
-import { normalizeTactic } from "./tactics.mjs";
 
 let shipSerial = 0;
 
@@ -33,14 +32,16 @@ export function createShip(overrides = {}) {
       cargo: clamp(overrides.tuning?.cargo ?? (overrides.role === "cargo" ? 35 : 0), 0, 100),
     },
     cargoValue: clamp(overrides.cargoValue ?? (overrides.role === "cargo" ? 800 : 0), 0, 999999),
-    tactic: normalizeTactic(overrides.tactic),
+    tacticId: String(overrides.tacticId || "default"),
+    isCommander: Boolean(overrides.isCommander),
+    ...(overrides.tactic ? { tactic: overrides.tactic } : {}),
   };
 }
 
-export function deriveShipStats(ship, weaponCatalog) {
+export function deriveShipStats(ship, weaponCatalog, sensorCatalog = SENSORS) {
   const hull = HULLS[ship.hullId] || HULLS.medium;
   const weapons = ship.weaponIds.map((id) => weaponCatalog[id]).filter(Boolean);
-  const sensors = ship.sensorIds.map((id) => SENSORS[id]).filter(Boolean);
+  const sensors = ship.sensorIds.map((id) => sensorCatalog[id]).filter(Boolean);
   const weaponMass = weapons.reduce((sum, weapon) => sum + weapon.mass, 0);
   const sensorMass = sensors.reduce((sum, sensor) => sum + sensor.mass, 0);
   const armorMass = Math.max(0, ship.tuning.armor) * 0.7;
@@ -68,15 +69,15 @@ export function deriveShipStats(ship, weaponCatalog) {
   };
 }
 
-export function validateShip(ship, weaponCatalog) {
+export function validateShip(ship, weaponCatalog, sensorCatalog = SENSORS) {
   const errors = [];
   const hull = HULLS[ship.hullId];
   if (!hull) return ["未知船体"];
   if (ship.weaponIds.length > hull.weaponSlots) errors.push(`武器槽超限：${ship.weaponIds.length}/${hull.weaponSlots}`);
   if (ship.sensorIds.length > hull.sensorSlots) errors.push(`视野槽超限：${ship.sensorIds.length}/${hull.sensorSlots}`);
   for (const id of ship.weaponIds) if (!weaponCatalog[id]) errors.push(`未知武器：${id}`);
-  for (const id of ship.sensorIds) if (!SENSORS[id]) errors.push(`未知视野组件：${id}`);
-  const stats = deriveShipStats(ship, weaponCatalog);
+  for (const id of ship.sensorIds) if (!sensorCatalog[id]) errors.push(`未知视野组件：${id}`);
+  const stats = deriveShipStats(ship, weaponCatalog, sensorCatalog);
   if (stats.mass > hull.massLimit) errors.push(`超重：${stats.mass.toFixed(1)}/${hull.massLimit}`);
   if (ship.role === "combat" && ship.weaponIds.length === 0) errors.push("战斗舰至少需要一件武器");
   if (ship.role === "cargo" && stats.cargoCapacity <= 0) errors.push("货船需要有效货舱");

@@ -5,7 +5,7 @@
 // - 战斗使用无限世界坐标，不存在地图边缘；镜头取景属于表现层。
 // - 战斗只读取已校验装配快照，不修改装配器中的舰队配置。
 // - 舰船丢失视野后会追向短时最后已知位置；直射要求当前视野，炮击可对新鲜的最后已知位置盲射。
-// - 每个武器挂载拥有独立冷却；侧弦炮只在左右舷射界内以多发齐射开火。
+// - 每个武器挂载拥有独立冷却；侧弦炮只在左右舷射界内以多发齐射开火；所有机动状态下均会尝试合法开火。
 // - 舰船机动与目标选择读取自身 tactic 配置，状态机本身不执行任意脚本。
 // - 相同 seed、装配与 tick 序列必须产生相同结果。
 // @end-static-doc
@@ -35,8 +35,10 @@ export function seededRandom(seed = 1) {
   };
 }
 
-function runtimeShip(config, faction, index, weaponCatalog) {
-  const stats = deriveShipStats(config, weaponCatalog);
+function runtimeShip(config, faction, index, weaponCatalog, sensorCatalog) {
+  const stats = deriveShipStats(config, weaponCatalog, sensorCatalog);
+  const tactic = normalizeTactic(config.tactic);
+  const initialNode = tactic.fsm.nodes.find((node) => node.id === tactic.fsm.initial) || tactic.fsm.nodes[0];
   const left = faction === 0;
   return {
     uid: `${faction}:${config.id}:${index}`, config, faction, stats,
@@ -45,16 +47,18 @@ function runtimeShip(config, faction, index, weaponCatalog) {
     vx: 0, vy: 0, heading: left ? 0 : Math.PI,
     velocityHeading: left ? 0 : Math.PI, speedCurrent: 0, angularVelocity: 0,
     hull: stats.hullMax, escaped: false, disabled: false, targetUid: null,
-    tactic: normalizeTactic(config.tactic), tacticalState: "search", tacticalReason: "无接触",
+    tactic, tacticalNodeId: initialNode.id, tacticalNodeName: initialNode.name,
+    tacticalState: initialNode.action, tacticalReason: "初始状态",
     lowHullRetreatTriggered: false,
     mounts: stats.weapons.map((weapon, mountIndex) => ({ weapon, mountIndex, cooldown: mountIndex * 0.18 })),
-    shots: 0, hits: 0, damage: 0, detected: false, wasThreatened: false,
+    shots: 0, hits: 0, damage: 0, detected: false, wasThreatened: false, threatenedUntil: 0,
   };
 }
 
 export class BattleSimulation {
-  constructor({ fleets, weaponCatalog, seed = 5201 }) {
+  constructor({ fleets, weaponCatalog, sensorCatalog, seed = 5201 }) {
     this.weaponCatalog = weaponCatalog;
+    this.sensorCatalog = sensorCatalog;
     this.rng = seededRandom(seed);
     this.time = 0;
     this.state = "engaging";
@@ -64,9 +68,9 @@ export class BattleSimulation {
     this.contacts = [new Map(), new Map()];
     this.ships = [];
     fleets.forEach((fleet, faction) => fleet.forEach((config, index) => {
-      const errors = validateShip(config, weaponCatalog);
+      const errors = validateShip(config, weaponCatalog, sensorCatalog);
       if (errors.length) throw new Error(`${config.name}：${errors.join("；")}`);
-      this.ships.push(runtimeShip(config, faction, index, weaponCatalog));
+      this.ships.push(runtimeShip(config, faction, index, weaponCatalog, sensorCatalog));
     }));
     this._scanContacts();
   }
@@ -106,13 +110,19 @@ export class BattleSimulation {
     }
   }
 
-  _chooseTarget(ship) {
+  _chooseTarget(ship, options = {}) {
     const candidates = this.living(1 - ship.faction).map((enemy) => {
       const contact = this.contactFor(ship.faction, enemy.uid);
       if (!contact || (!contact.visible && !ship.tactic.chaseLastKnown)) return null;
+      if (options.visibleOnly && !contact.visible) return null;
+      if (options.lastKnownOnly && contact.visible) return null;
       return { ship: enemy, contact, visible: contact.visible, x: contact.visible ? enemy.x : contact.x, y: contact.visible ? enemy.y : contact.y };
     }).filter(Boolean);
     if (!candidates.length) return null;
+    if (options.uid) {
+      const assigned = candidates.find((candidate) => candidate.ship.uid === options.uid);
+      if (assigned) return assigned;
+    }
     candidates.sort((a, b) => {
       const score = (candidate) => distance(ship, candidate) * (ship.tactic.targetPriority === "weakest" ? 0.35 : 1)
         + (ship.tactic.targetPriority === "cargo" && candidate.ship.config.role === "cargo" ? -240 : 0)
@@ -129,25 +139,33 @@ export class BattleSimulation {
     let desiredSpeed = 0;
     const enemies = this.living(1 - ship.faction);
     const threats = enemies.filter((enemy) => distance(ship, enemy) < ship.stats.vision * 0.9);
-    if (threats.length) ship.wasThreatened = true;
+    if (threats.length) ship.threatenedUntil = this.time + 3;
+    ship.wasThreatened = this.time < ship.threatenedUntil;
     const maxRange = Math.max(...ship.stats.weapons.map((weapon) => weapon.range), 120);
     const targetDistance = target ? distance(ship, target) : Infinity;
     const hullRatio = ship.hull / ship.stats.hullMax;
     const lowHullCrossed = !ship.lowHullRetreatTriggered && hullRatio <= ship.tactic.retreatHull;
+    const weaponReady = ship.mounts.some((mount) => mount.cooldown <= 0);
+    const broadsideReady = Boolean(target && ship.mounts.some((mount) => mount.cooldown <= 0 && mount.weapon.kind === "broadside" && targetDistance >= mount.weapon.minRange && targetDistance <= mount.weapon.range));
+    const commanderPresent = this.living(ship.faction).some((ally) => ally.config.isCommander);
     const decision = tacticalDecision({
       tactic: ship.tactic, role: ship.config.role, hullRatio: ship.hull / ship.stats.hullMax,
       hasTarget: Boolean(target), targetDistance, maxRange, threatened: threats.length > 0, wasThreatened: ship.wasThreatened,
-      previousState: ship.tacticalState, previousReason: ship.tacticalReason, lowHullCrossed,
+      targetVisible: Boolean(target?.visible), hasLastKnown: Boolean(target && !target.visible),
+      previousState: ship.tacticalState, previousNodeId: ship.tacticalNodeId, previousReason: ship.tacticalReason, lowHullCrossed,
+      weaponReady, broadsideReady, commanderPresent,
     });
     ship.tacticalState = decision.state;
+    ship.tacticalNodeId = decision.nodeId;
+    ship.tacticalNodeName = decision.nodeName;
     ship.tacticalReason = decision.reason;
-    if (lowHullCrossed && decision.state === "withdraw") ship.lowHullRetreatTriggered = true;
+    if (lowHullCrossed && decision.trigger === "withdraw_trigger") ship.lowHullRetreatTriggered = true;
 
-    if (ship.tacticalState === "evade") {
+    if (ship.tacticalState === "evade" || ship.tacticalState === "flee") {
       const nearest = [...enemies].sort((a, b) => distance(ship, a) - distance(ship, b))[0];
       if (nearest) {
         const separation = distance(ship, nearest);
-        if (ship.wasThreatened && separation > Math.max(560, ship.stats.vision * 1.08)) {
+        if (ship.tacticalState === "flee" && separation > Math.max(560, ship.stats.vision * 1.08)) {
           ship.escaped = true;
           this.events.push({ type: "escaped", time: this.time, ship });
           return;
@@ -155,21 +173,34 @@ export class BattleSimulation {
         desiredHeading = Math.atan2(ship.y - nearest.y, ship.x - nearest.x);
         desiredSpeed = ship.stats.speed;
       }
-    } else if (ship.tacticalState === "approach" && target) {
+    } else if ((ship.tacticalState === "approach" || ship.tacticalState === "recon") && target) {
       desiredHeading = Math.atan2(target.y - ship.y, target.x - ship.x);
+      desiredSpeed = ship.stats.speed * (ship.tacticalState === "recon" ? 0.72 : 1);
+    } else if (ship.tacticalState === "flank" && target) {
+      const center = enemies.reduce((sum, enemy) => ({ x: sum.x + enemy.x / enemies.length, y: sum.y + enemy.y / enemies.length }), { x: 0, y: 0 });
+      const bearing = Math.atan2(target.y - ship.y, target.x - ship.x);
+      const side = Math.sin(angleDelta(Math.atan2(ship.y - center.y, ship.x - center.x), bearing)) >= 0 ? 1 : -1;
+      const tangent = bearing + side * Math.PI / 2;
+      const away = Math.atan2(ship.y - center.y, ship.x - center.x);
+      desiredHeading = Math.atan2(Math.sin(tangent) * 0.72 + Math.sin(away) * 0.28, Math.cos(tangent) * 0.72 + Math.cos(away) * 0.28);
+      desiredSpeed = ship.stats.speed * 0.9;
+    } else if (ship.tacticalState === "maneuver" && target) {
+      const bearing = Math.atan2(target.y - ship.y, target.x - ship.x);
+      const side = ship.tactic.strafeSide === "port" ? -1 : ship.tactic.strafeSide === "starboard" ? 1 : (ship.faction ? -1 : 1);
+      desiredHeading = bearing + side * Math.PI / 2;
       desiredSpeed = ship.stats.speed;
     } else if (ship.tacticalState === "withdraw" && target) {
       desiredHeading = Math.atan2(target.y - ship.y, target.x - ship.x) + Math.PI;
       desiredSpeed = ship.stats.speed * 0.72;
-    } else if (ship.tacticalState === "engage" && target) {
+    } else if ((ship.tacticalState === "engage" || ship.tacticalState === "focus") && target) {
       const angle = Math.atan2(target.y - ship.y, target.x - ship.x);
       const side = ship.tactic.strafeSide === "port" ? -1 : ship.tactic.strafeSide === "starboard" ? 1 : (ship.faction ? -1 : 1);
-      desiredHeading = angle + side * Math.PI / 2;
+      const hasReadyBroadside = ship.mounts.some((mount) => mount.cooldown <= 0 && mount.weapon.kind === "broadside" && targetDistance >= mount.weapon.minRange && targetDistance <= mount.weapon.range);
+      desiredHeading = hasReadyBroadside ? angle + side * Math.PI / 2 : angle;
       desiredSpeed = ship.stats.speed * ship.tactic.engageSpeed;
     } else {
       desiredHeading = ship.faction === 0 ? 0 : Math.PI;
-      const waitingCargo = ship.config.role === "cargo" && ship.tactic.cargoBehavior === "flee";
-      desiredSpeed = !waitingCargo && ship.tactic.searchAction === "advance" ? ship.stats.speed * 0.58 : 0;
+      desiredSpeed = ship.tactic.searchAction === "advance" ? ship.stats.speed * 0.58 : 0;
     }
 
     const headingError = angleDelta(desiredHeading, ship.heading);
@@ -292,11 +323,17 @@ export class BattleSimulation {
     const step = clamp(dt, 0, 0.1);
     this.time += step;
     this._scanContacts();
+    this.focusTargets = [0, 1].map((faction) => {
+      const commander = this.living(faction).find((ship) => ship.config.isCommander);
+      return commander ? this._chooseTarget(commander, { visibleOnly: true })?.ship.uid || null : null;
+    });
     for (const ship of this.living()) {
       for (const mount of ship.mounts) mount.cooldown = Math.max(0, mount.cooldown - step);
-      const target = this._chooseTarget(ship);
+      const options = ship.tacticalState === "focus" ? { visibleOnly: true, uid: this.focusTargets[ship.faction] } : {};
+      const target = this._chooseTarget(ship, options);
       ship.targetUid = target?.ship.uid || null;
       this._steer(ship, target, step);
+      // 状态只决定机动；任何状态下只要存在合法射界和可用武器就继续开火。
       this._fire(ship, target);
     }
     this._tickProjectiles(step);

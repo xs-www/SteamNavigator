@@ -4,8 +4,15 @@
 
 - 类型：Node ES 模块
 
+## 关键符号
+
+| 符号 | 位置 |
+| --- | --- |
+| `json(response, status, value)` | L22 |
+| `readBody(request)` | L23 |
+
 ## 契约与约束
-- 只允许读取 SNBattleSim 目录内的已存在文件，路径解析后越界直接返回 403。
+- 静态文件只能读取 SNBattleSim 内路径；模组 API 可读取直接子目录和 ZIP，并导出 .snavmod.zip。
 - 默认监听 127.0.0.1:4174，可用 PORT 环境变量覆盖端口。
 
 模块索引：[SNBattleSim](../README.md)

@@ -4,7 +4,7 @@
 // ## 契约与约束
 // - 船体只有 small / medium / large 三种，用户配置不能创建第四种船体。
 // - 武器与视野组件是纯数据；模拟器不按组件 ID 写死行为，行为由 kind 与数值字段决定。
-// - 用户武器经 normalizeWeapon 校验与限幅后才进入目录。
+// - 用户武器与视野组件经规范化和 ID 冲突检查后才进入目录。
 // @end-static-doc
 
 export const HULLS = Object.freeze({
@@ -34,6 +34,16 @@ export const SENSORS = Object.freeze({
   mast: Object.freeze({ id: "mast", name: "高位观测桅", rangeBonus: 145, accuracyBonus: 0, mass: 9 }),
   director: Object.freeze({ id: "director", name: "炮术指挥仪", rangeBonus: 95, accuracyBonus: 0.12, mass: 12 }),
 });
+
+export function normalizeSensor(input, existingIds = []) {
+  const source = input ?? {};
+  const id = String(source.id || source.name || "custom_sensor").trim().toLowerCase().replace(/[^a-z0-9_\-]+/g, "_").replace(/^_+|_+$/g, "");
+  if (!id) throw new Error("视野组件 ID 不能为空");
+  if (existingIds.includes(id)) throw new Error(`视野组件 ID 已存在：${id}`);
+  const name = String(source.name || "自定义视野组件").trim();
+  if (!name) throw new Error("视野组件名称不能为空");
+  return { id, name, rangeBonus: clamp(finiteNumber(source.rangeBonus, 60), 0, 400), accuracyBonus: clamp(finiteNumber(source.accuracyBonus, 0), 0, 0.3), mass: clamp(finiteNumber(source.mass, 5), 0.5, 80) };
+}
 
 export const BUILTIN_WEAPONS = Object.freeze({
   deck_gun: Object.freeze({
@@ -103,6 +113,15 @@ export function createWeaponCatalog(customWeapons = []) {
   for (const value of customWeapons) {
     const weapon = normalizeWeapon(value, Object.keys(result));
     result[weapon.id] = Object.freeze(weapon);
+  }
+  return result;
+}
+
+export function createSensorCatalog(customSensors = []) {
+  const result = { ...SENSORS };
+  for (const value of customSensors) {
+    const sensor = normalizeSensor(value, Object.keys(result));
+    result[sensor.id] = sensor;
   }
   return result;
 }
