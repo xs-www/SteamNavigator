@@ -514,7 +514,8 @@
 - [ ] **剩余 2.5D 舞台工作**：委托/情报页舞台化、离港/进港演出与目的港舞台预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审。
 - [x] **铁港城镇建筑视觉升级 · 第一阶段 + R1**：`SN_HT_Warehouse_Long` LOD0 灰模 R1（7 436 tri / 20×9×11 m / 6 材质槽 / 网格健康全 0），已临时装配进 PortStage 并出 1440×900 与 960×540 实机截图（stage tri 37 280→43 584 证明新模型入场景），旧 GLB 已还原；见 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。
 - [x] **铁港城镇建筑视觉升级 · M1 材质轮**：`warehouse_long` 槽位 yaw −90→−106 / pos z −34→−33 让装卸门长立面正对固定机位（立面 +38%、两扇装卸门 +36%/+34%、山墙吊梁仍可见、足迹仍在广场内）；共享 2K trim sheet（16 cell）+ 每材质 512² 平铺贴图 + 盒投影 UV（0 tri 增加）；内容 GLB 已换成带贴图版本并重新 import，1440×900 与 960×540 实机截图已出；见 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)。**等待"是否扩展整批"决定**。
-- [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。剩余：LOD1（≤35%）、3 个新原型、共享外部贴图以减 20 个 draw call。
+- [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。LOD1 与共享外部贴图已由批次 A 完成；剩余 3 个新原型（批次 B）。
+- [x] **铁港建筑套件 · 批次 A（LOD1 + 共享贴图 + Warehouse_Short 檐口修复）**：5 栋 LOD1 共 **6 564 tri**（LOD0 的 21.85%，上限 10 508；逐栋 1 584 / 1 060 / 1 896 / 776 / 1 248），LOD1 与 LOD0 bbox 逐轴 0.000 m、轴心落地、网格健康全 0；`SN_HT_Warehouse_Short` 檐口顶皮@墙线 **−3.543 cm → 0.000 cm**（仅 8 个屋面顶点变化）；10 个 GLB 改为 **GLB + 外部共享贴图**（11 张 `iron_harbor_shared/*.png` 与手写 tile 逐字节一致，`ContentAssetLoader` 按 URI 共享 `Texture2D`），PortStage 舞台分析面 **91→73**、draw calls preview **89→71**（≤75 目标），5 栋模型+纹理 **4.17 MB**（≤4.5 MB）；松散 / `.snavmod.zip` / 发布包三条加载路径实测。见 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)、LOD1 构建/独立验收/共享贴图三份报告。剩余：批次 B（3 个新原型）。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。
@@ -542,7 +543,7 @@
 - [x] 预览渲染器 `render_iron_harbor_architecture_preview.py`：固定机位（eye(50,186,26.1)/target(-22,140,10.1)/41.9856 mm，与 Godot 30° vfov 等价）+ 960×540 + 居中复查 + 街道低机位 + 正交正视 + 屋顶，6 张到 `docs/design/screenshots/iron_harbor_architecture/`
 - [x] **PortStage 实机门禁**：`export_iron_harbor_architecture_glb.py` 临时替换内容 GLB（旧资产备份 + R1 候选在 `.design/buildings/iron_harbor/`）→ `godot --import` 刷新导入缓存 → `tools/godot/capture_port_stage_res.gd -- 1440 900 / 960 540` → 还原旧 GLB 并重新 import；证据 stage tri 37 280→43 584、draw_meshes 88→94；截图 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_{1440x900,960x540}.png`
 - [x] 回归：245 对象 = 244 旧 + 1 新；旧 `SN_HT_Warehouse_Long`（1 132 tri / 8 槽 / `(-48,110,0)` / 可见性）未动；内容 GLB 已恢复为旧资产（SHA-256 与备份一致）
-- [x] ~~其余 4 栋 drop-in~~ 已完成（见上方第二批条目）；剩：3 个新原型（Boiler_House / Workshop_Row / Brick_Tenement）、LOD1（≤35%）、1K 污渍遮罩通道 / UV2、把 6 张 tile 改为共享外部贴图以回收 +20 draw call
+- [x] ~~其余 4 栋 drop-in~~ 已完成（见上方第二批条目）；**批次 A 已补完 LOD1（≤35%）与共享外部贴图（draw_meshes 91→73）**；剩：3 个新原型（Boiler_House / Workshop_Row / Brick_Tenement）、1K 污渍遮罩通道 / UV2
 
 ## 铁港建筑套件 · M1 材质轮（2026-10-20，PortStage 实机截图已出，等待扩展决定）
 
@@ -555,6 +556,19 @@
 - [x] 证据：Blender 8 视图（新增装卸门近景 / 墙脚近景）+ 实机 `SN_HT_Warehouse_Long_LOD0_port_stage_{1440x900,960x540}.png`；`capture_port_stage_res.gd` 新增 `[asset]` 行自证 surfaces=6 tris=7436 uv_surfaces=6 textured_surfaces=6 + 6×512² 贴图；GLB 1 473 876 B（内嵌 6 PNG，合计 1 020 426 B，sha256 `1b6d995f…`）
 - [x] 卫生：Godot 把内嵌贴图解包到 GLB 同级目录，已 `.gitignore`（构建产物）；手写源在 `docs/design/textures/iron_harbor/tiles/`；旧 GLB 备份 sha256 仍 `2576e3db…`
 - [ ] 待决定：扩展整批 / 内容 GLB 是否正式保留带贴图版本（当前已装）/ 污渍强度与「1K 污渍遮罩」通道（建议先试顶点色）/ 是否给屋面开第 7 个材质槽用上 `roof_sheet` 瓦楞铁
+
+## 铁港建筑套件 · 批次 A（2026-10-20，LOD1 + 共享贴图 + 檐口修复）
+
+> 需求 [MODELING_REQUIREMENTS_NEXT_BATCH.md](docs/design/MODELING_REQUIREMENTS_NEXT_BATCH.md) §5 / §8 / §9；验收 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)，LOD1 构建 [IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md](docs/design/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md)，独立验收 [IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md](docs/design/IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md)，共享贴图 [IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md](docs/design/IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md)。
+
+- [x] Builder：新增 `sn_iron_harbor_architecture_lod1_generator.py`（纯 Python 参数化真源，5 栋 LOD1 合计 6 564 tri / 21.85%，逐栋 ≤35%；LOD0↔LOD1 bbox 逐轴 0.000、轴心落地、健康全 0、材质 6 槽 + 共享 cells/UV）；`sn_iron_harbor_warehouse_short_generator.py` 仅改 `_roof_section()`，顶皮@墙线 −3.543 cm→0.000 cm（tri/verts/bbox/轴心/主立面/材质不变）；30 张 1280×800 LOD1/对比预览；全场景 245 个非目标对象 digest 零改动。
+- [x] 独立 Verifier（只读）：t0/t1 dump 独立复算，LOD1 5/5 门禁 PASS、剪影 IoU 0.99+、§5.1 保留项全通过、檐口 0.0000 m、LOD0 4 栋逐字节一致 / Short 仅 8 顶点、非目标 0 modified；报告无 FAIL。
+- [x] 导出与结构检查：Blender 逐件按栋重写 cells 后导出 10 个 GLB（LOD0 5 + LOD1 5，根节点归零、tri 与验收表 10/10 相等），`glb_shared_textures.py` 把内嵌贴图外部化为 11 张共享 PNG 并压缩 BIN；`verify_iron_harbor_architecture_lod_glb.py` 10/10 PASS（结构/材质槽/URI/bbox/总量）。
+- [x] 运行时接线：10 个 GLB 装入 `dev_mods/core/assets/models/props/`（LOD1 为 `SN_HT_<Name>_LOD1.glb`），manifest 新增 5 个 `model.prop.*_lod1` 键（75→80）；`ContentAssetLoader` 共享贴图 + 5 例无头测试（216 tests 全绿）；`measure_port_stage.gd -- --core-zip` 扩展。
+- [x] 实测：draw_meshes（舞台分析面）91→73（≤75），渲染器 draw calls preview 89→71 / sparse 82→64，batches 59→41；5 栋模型+纹理 4.17 MB（GLB 2.28 MB + PNG 1.88 MB），LOD1 组合 6 564 tri（≤20 000）；松散 / ZIP / 发布包三路径均实测（发布 exe 启动 `content=51 status=ok`）。
+- [x] 截图：PortStage 固定机位 LOD0/LOD1 1440×900 + 960×540（`docs/design/screenshots/iron_harbor_architecture/`），LOD1 临时入舞台 tri 73 228→49 760、draw calls 不变（合批按材质）。
+- [ ] 待人工视觉门禁确认（§10）：1440×900 / 960×540 轮廓与入口可读、LOD1 无明显塌陷、性能收益是否抵过资产格式复杂度；确认后再进入批次 B。
+- [ ] 移除构建卫生：`dev_mods/core/assets/models/props/SN_HT_*.png`（Godot 从内嵌 GLB 解包的旧构建产物）已清理，后续由 .gitignore + 导出流程守护。
 
 ## 维护约定
 
