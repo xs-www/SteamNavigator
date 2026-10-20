@@ -693,6 +693,24 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/domain/world/fog_grid.gd": {
+    "role": "Fog of war grid with three states: black (unexplored) / explored (coastal) / visible (ship vision).",
+    "contracts": [
+      "Cell size is derived from the minimum vision radius (cell_size = min_vision_radius / 4).",
+      "Coastal cells stay EXPLORED after ship leaves; ocean cells revert to BLACK.",
+      "Alpha interpolation smooths transitions between adjacent cells.",
+      "Serialization preserves cell_size, width, height, and all cell states."
+    ]
+  },
+  "framework/domain/world/fog_ops.gd": {
+    "role": "High-level fog operations that integrate FogGrid with WorldMap and GameState.",
+    "contracts": [
+      "mark_coastal_cells identifies cells within COASTAL_DISTANCE (2.0 units) from landmasses.",
+      "reveal_port uses FogGrid.reveal_circle to clear fog around discovered ports.",
+      "save_fog_state and load_fog_state persist fog grid and coastal cell data.",
+      "get_visibility_at and is_position_visible provide read-only fog queries."
+    ]
+  },
   "framework/domain/world/land_generator.gd": {
     role: "程序化生成陆地多边形，支持大陆、大岛、小岛、环礁四种原型。",
     contracts: [

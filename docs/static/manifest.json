@@ -1,14 +1,14 @@
 {
   "rule_version": "2.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T03:16:40.851Z",
-  "commit": "0782401",
+  "generated_at": "2026-10-20T03:25:04.164Z",
+  "commit": "d9d6fb7",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 567,
-    "documented": 185,
-    "grouped": 382
+    "sources": 570,
+    "documented": 187,
+    "grouped": 383
   },
   "files": [
     {
@@ -1987,6 +1987,18 @@
       "status": "documented"
     },
     {
+      "source": "framework/domain/world/fog_grid.gd",
+      "sha256": "a503c7c77b463661202b78cdf5692222019d804ee624d610d60db88ee9784ae7",
+      "doc": "docs/static/framework/domain/world/fog_grid.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/world/fog_ops.gd",
+      "sha256": "43b52541241d4bb65a0263feea32cf5457f61284bb39a6b107286053bcb1a259",
+      "doc": "docs/static/framework/domain/world/fog_ops.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/domain/world/land_generator.gd",
       "sha256": "fa9f17864fad5e08f9a8f2a44ccdaca809c4b95004464ec48b6786f4a8bd0511",
       "doc": "docs/static/framework/domain/world/land_generator.gd.md",
@@ -2234,6 +2246,13 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_fog_system.gd",
+      "sha256": "95368ba3b3baac6f7916310796a94395b3279bb19ad9bc81a109fd69713a87d4",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
       "source": "framework/tests/cases/test_full_clear.gd",
       "sha256": "fa8cdcffcf9a0f176a729399fe369b5a68163fb55c727698d27be07aff4e4fd7",
       "doc": "docs/static/framework/tests/cases/test_full_clear.gd.md",
@@ -2436,7 +2455,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "13b2656d74591f209838613d25460a6d417df5a94185107208e54e3050cbd00b",
+      "sha256": "7478ac2baa08b4de33704d5fc53713899eb172a5de6ea5be8fa9bd6e9a5da31c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -3159,7 +3178,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "7fa5b0e8b03dabcdd268f7363137b8193e0fc9f25f997e394ac09a45b7d977af",
+      "sha256": "6a5a76c0bc7deb94fc2adf513844f70bfa38559b2e2f3d4243ba7214d64a0f8c",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3778,7 +3797,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "dfd4bc0055a5b1a496045e876093e3308f878d3a38eedcebc422cf658a054d3c",
+      "sha256": "c3bc1fc5ba277c99366f8b1d6959c2843c3178133b43cb3604dba80ce7c23fc7",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
