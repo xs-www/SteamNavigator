@@ -48,6 +48,19 @@ const PORT_STAGE_FACILITY_SCREENS := {
 	"intel": &"intel",
 	"shipyard": &"shipyard",
 }
+## Screens that share the one continuous 3D port stage. The pages map to adjacent
+## stations of the same harbour district: navigating between them keeps the same
+## stage instance mounted and only pans the camera + sails the player's hull to
+## the station berth (Bounty Train style), so there is no rebuild and no fade to
+## black between the market, the harbour authority and the supply yard.
+const STAGE_SCREENS := {
+	"overview": "harbor",
+	"market": "market",
+	"supply": "supply",
+}
+## Width of the dock information panel on the market / supply pages. The stage
+## keeps the left part of the window, the panel floats over the right side.
+const DOCK_PANEL_WIDTH := 640.0
 ## Compact top chrome: header + resource stats + navigation in two tight rows.
 ## The measured minimum height must stay under `TOP_CHROME_MAX_HEIGHT`, because
 ## the 3D stage is the main view and the HUD only frames it.
@@ -104,6 +117,11 @@ var _shipyard_category: String = "hulls"
 var _overview_stage_mode: bool = true
 var _port_stage_load_failed: bool = false
 var _port_stage_host: SNStageHost = null
+## Station the stage is currently showing ("harbor" / "market" / "supply") and
+## the framing it was asked for ("stage" / "panel"). Kept on the shell so a page
+## rebuild does not restart the pan.
+var _stage_station: String = ""
+var _stage_framing: String = ""
 ## 2D sign layer over the stage (one sign per present facility + voyage).
 var _port_hotspot_layer: Control = null
 ## Overview detail drawer: when opened, the existing 2D overview panels are
@@ -888,11 +906,15 @@ func _sync_overview_detail_backdrop() -> void:
 
 
 func _sync_port_stage(data: Dictionary) -> void:
+	var station := String(STAGE_SCREENS.get(_active_screen, ""))
+	# The 2D-overview toggle only affects the overview page; market / supply are
+	# always presented over the district because that is where their station is.
+	var stage_page_enabled := _active_screen != "overview" or _overview_stage_mode
 	var should_show := (
 		bool(data.get("has_run", false))
 		and not bool(data.get("at_sea", false))
-		and _active_screen == "overview"
-		and _overview_stage_mode
+		and not station.is_empty()
+		and stage_page_enabled
 		and _port_stage_available()
 	)
 	if not should_show:
@@ -902,17 +924,69 @@ func _sync_port_stage(data: Dictionary) -> void:
 	if _port_stage_host == null:
 		_hide_port_stage()
 		return
-	if not _port_stage_host.has_stage():
+	# The stage scene is loaded once and kept for the whole session: switching
+	# between overview / market / supply only retargets the camera and the hull.
+	var just_mounted := not _port_stage_host.has_stage()
+	if just_mounted:
 		if not _port_stage_host.load_stage(PORT_STAGE_SCENE_PATH):
 			_on_port_stage_fallback("stage_scene_load_failed")
 			return
+	var framing := "stage" if _active_screen == "overview" else "panel"
 	_port_stage_host.bind_view_model(_port_stage_payload(data))
 	_port_stage_host.set_stage_visible(true)
+	_focus_stage_station(station, framing, just_mounted)
 	_sync_overview_detail_backdrop()
 	if _port_hotspot_layer != null:
-		# The detail drawer owns the screen; signs would float over its panels.
-		_port_hotspot_layer.visible = not _overview_detail
+		# The edge signs belong to the overview main view; the market / supply dock
+		# panels carry their own navigation.
+		_port_hotspot_layer.visible = _active_screen == "overview" and not _overview_detail
 	_refresh_port_hotspots_soon()
+
+
+## Retargets the mounted stage to one of the adjacent stations. The stage API is
+## a no-op when the station/framing already match, so this is safe to call on
+## every page rebuild and never restarts the pan.
+func _focus_stage_station(station: String, framing: String, immediate: bool) -> void:
+	_stage_station = station
+	_stage_framing = framing
+	if _port_stage_host == null or not is_instance_valid(_port_stage_host):
+		return
+	var stage: Node = _port_stage_host.current_stage()
+	if stage == null or not stage.has_method("focus_station"):
+		return
+	stage.call("focus_station", station, framing, immediate)
+
+
+## True when the current page is drawn over the shared 3D district. Used by the
+## market / supply pages to pick the dock-panel layout instead of a full page.
+func _stage_backed_page() -> bool:
+	return not String(STAGE_SCREENS.get(_active_screen, "")).is_empty() and _port_stage_available()
+
+
+## Market / supply layout over the live stage: the scene keeps the left part of
+## the window, the page becomes an opaque dock panel pinned to the right side
+## (Bounty Train's station screens). Falls back to a plain full-width page when
+## the stage is unavailable, so the pages always stay usable.
+func _mount_dock_panel(screen: Control) -> void:
+	var row := HBoxContainer.new()
+	row.name = "DockPanelRow"
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var window := Control.new()
+	window.name = "StageWindow"
+	window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	window.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(window)
+	var panel := PanelContainer.new()
+	panel.name = "DockPanel"
+	panel.theme_type_variation = &"SNPanel"
+	panel.custom_minimum_size = Vector2(DOCK_PANEL_WIDTH, 0.0)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(screen)
+	row.add_child(panel)
+	_root_box.add_child(row)
 
 
 func _hide_port_stage() -> void:
@@ -1207,7 +1281,10 @@ func _screen_market(data: Dictionary) -> void:
 	}
 	screen.bind(model, Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
-	_root_box.add_child(screen)
+	if _stage_backed_page():
+		_mount_dock_panel(screen)
+	else:
+		_root_box.add_child(screen)
 
 
 func _market_trends() -> Dictionary:
@@ -1372,7 +1449,10 @@ func _screen_supply(_data: Dictionary) -> void:
 	var screen: Variant = SUPPLY_SCREEN_SCENE.instantiate()
 	screen.bind(result["data"], Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
-	_root_box.add_child(screen)
+	if _stage_backed_page():
+		_mount_dock_panel(screen)
+	else:
+		_root_box.add_child(screen)
 
 
 ## ---------------------------------------------------------------------------
@@ -1604,12 +1684,22 @@ func _save_settings() -> void:
 func _on_nav(screen: String) -> void:
 	# Navigating away from the victory summary counts as "keep playing".
 	_victory_dismissed = true
+	var from := _active_screen
 	if screen != "overview":
 		# The detail drawer only belongs to the overview main view.
 		_overview_detail = false
 	_active_screen = screen
 	_status_message = ""
-	_refresh(true)
+	# Adjacent station pages share one 3D district: a fade to black would hide the
+	# camera pan and the sailing hull that are the point of the switch, so those
+	# navigations rebuild instantly and let the stage carry the transition. Every
+	# other navigation keeps the fade.
+	var continuous := (
+		STAGE_SCREENS.has(from)
+		and STAGE_SCREENS.has(screen)
+		and _port_stage_available()
+	)
+	_refresh(not continuous)
 
 
 func _on_screen_navigation(screen_id: StringName, params: Dictionary) -> void:

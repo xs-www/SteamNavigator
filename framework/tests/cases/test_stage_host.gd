@@ -547,6 +547,8 @@ const TOWN_VISUALS := {
 }
 ## town_prop_count per density tier (buildings are always mounted).
 const TOWN_DENSITY_COUNTS := {"sparse": 28, "normal": 47, "busy": 63}
+## Station-dressing props per density tier (3 adjacent stations x prefix size).
+const STATION_DENSITY_COUNTS := {"sparse": 15, "normal": 24, "busy": 33}
 const TOWN_MISSING_MODEL := "res://dev_mods/core/assets/models/props/SN_Does_Not_Exist.glb"
 const STEADY_BUILD := "core:starting_build/steady"
 
@@ -1022,4 +1024,236 @@ func test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void:
 	rigid_visual.add_child(box_instance)
 	assert_true(port.ship_visual_is_rigid(rigid_visual), "a plain rigid hull is accepted")
 	rigid_visual.free()
+	_free_host(host)
+
+# --- 11. Adjacent stations (continuous harbour district) ---------------------
+
+
+## The three stations are adjacent on one quay: ordered in world X, tens of
+## metres apart, sharing one lens, and the panel framing is the same shot shifted
+## a few metres (not a different camera setup).
+func test_port_stage_stations_are_adjacent_along_one_quay() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	var ids := port.station_ids()
+	assert_eq(ids.size(), 3, "the district exposes three adjacent stations")
+	if ids.size() == 3:
+		assert_eq(String(ids[0]), "market", "the market is the west station")
+		assert_eq(String(ids[1]), "harbor", "the harbour authority is the centre station")
+		assert_eq(String(ids[2]), "supply", "the supply yard is the east station")
+	assert_eq(port.current_station(), "harbor", "the stage starts on the harbour reference shot")
+
+	var market_x := port.station_ship_position("market").x
+	var harbor_x := port.station_ship_position("harbor").x
+	var supply_x := port.station_ship_position("supply").x
+	assert_true(market_x < harbor_x and harbor_x < supply_x, "the berths are ordered west -> east")
+	assert_true(
+		supply_x - market_x >= 50.0,
+		"adjacent stations are far enough apart to read as a pan: %.1f m" % (supply_x - market_x)
+	)
+
+	# Same lens for every station, only the position/target move along the quay.
+	var market_pose := port.station_camera_pose("market")
+	var harbor_pose := port.station_camera_pose("harbor")
+	assert_almost_eq(float(market_pose["fov"]), float(harbor_pose["fov"]), 0.001, "stations share one lens")
+	var market_camera: Vector3 = market_pose["position"]
+	var harbor_camera: Vector3 = harbor_pose["position"]
+	assert_true(market_camera.x < harbor_camera.x, "the market shot stands west of the harbour shot")
+
+	# The panel framing keeps the same shot and only shifts it so the landmark
+	# stays clear of the 620 px dock panel on the market / supply pages.
+	var panel_pose := port.station_camera_pose("market", "panel")
+	var panel_camera: Vector3 = panel_pose["position"]
+	assert_almost_eq(
+		panel_camera.x - market_camera.x,
+		PortStage.PANEL_FRAMING_SHIFT_X,
+		0.001,
+		"panel framing shifts the station shot by the documented offset"
+	)
+	assert_true(
+		not port.focus_station("nowhere"),
+		"an unknown station id is rejected instead of moving the camera"
+	)
+	assert_eq(port.current_station(), "harbor", "a rejected station keeps the current shot")
+	_free_host(host)
+
+
+## Focus a station: the camera pans and the hull sails to that berth, while the
+## district nodes (town, facilities, hull root) are reused, never rebuilt.
+func test_port_stage_focus_station_pans_camera_and_sails_the_hull() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	var ship_root := port.get_node_or_null("Content/PlayerShip")
+	var town_props := port.town_prop_count()
+	var station_props := port.station_prop_count()
+	assert_eq(port.current_station(), "harbor", "the fixture starts at the harbour station")
+	assert_almost_eq(port.ship_x(), port.station_ship_position("harbor").x, 0.05, "the hull moors at the harbour berth")
+
+	assert_true(port.focus_station("market"), "focus_station accepts the market station")
+	assert_eq(port.current_station(), "market", "the stage reports the market shot")
+	assert_true(port.is_station_transitioning(), "a station switch starts a visible transition")
+	port.advance_station(0.3)
+	assert_true(port.is_station_transitioning(), "the camera is still panning after 0.3 s")
+	port.advance_station(10.0)
+	assert_false(port.is_station_transitioning(), "the pan and the sail settle")
+	var market_camera: Vector3 = port.station_camera_pose("market")["position"]
+	assert_almost_eq(
+		port.camera_position().distance_to(market_camera),
+		0.0,
+		0.05,
+		"the camera lands on the market shot"
+	)
+	var market_berth := port.station_ship_position("market").x
+	assert_almost_eq(
+		port.ship_x(),
+		market_berth,
+		0.3,
+		"the hull sails to the market berth (%.1f -> %.1f)" % [
+			port.station_ship_position("harbor").x, market_berth
+		]
+	)
+
+	# The district was not rebuilt: same hull root, same prop counts, same
+	# facility assembly. Only the shot and the hull moved.
+	assert_eq(port.get_node_or_null("Content/PlayerShip"), ship_root, "the hull root is reused across stations")
+	assert_eq(port.town_prop_count(), town_props, "the town kit is not rebuilt")
+	assert_eq(port.station_prop_count(), station_props, "the station dressing is not rebuilt")
+	assert_eq(port.facility_count(), PORT_FACILITIES.size(), "the facilities stay assembled")
+
+	# The next adjacent station pans the other way and sails the hull back.
+	assert_true(port.focus_station("supply"), "focus_station accepts the supply station")
+	port.advance_station(0.3)
+	assert_true(
+		port.ship_x() > market_berth,
+		"the hull is already sailing east towards the supply yard"
+	)
+	port.advance_station(10.0)
+	assert_false(port.is_station_transitioning(), "the second transition settles")
+	var supply_camera: Vector3 = port.station_camera_pose("supply")["position"]
+	assert_almost_eq(port.camera_position().distance_to(supply_camera), 0.0, 0.05, "the camera lands on the supply shot")
+	assert_almost_eq(
+		port.ship_x(),
+		port.station_ship_position("supply").x,
+		0.3,
+		"the hull moors at the supply berth"
+	)
+	_free_host(host)
+
+
+## Immediate focus (used when the stage mounts straight onto a page) snaps both
+## the shot and the berth, and re-focusing the same station is a no-op.
+func test_port_stage_focus_station_immediate_and_idempotent() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+
+	assert_true(port.focus_station("market", "panel", true), "an immediate focus is accepted")
+	assert_eq(port.current_station_framing(), "panel", "the panel framing is remembered")
+	assert_false(port.is_station_transitioning(), "an immediate focus snaps instead of animating")
+	var panel_camera: Vector3 = port.station_camera_pose("market", "panel")["position"]
+	assert_almost_eq(port.camera_position().distance_to(panel_camera), 0.0, 0.01, "the camera snaps to the panel shot")
+	assert_almost_eq(
+		port.ship_x(),
+		port.station_ship_position("market").x,
+		0.01,
+		"the hull snaps to the market berth"
+	)
+	var pose_before := port.camera_position()
+	assert_true(port.focus_station("market", "panel"), "re-focusing the current station succeeds")
+	assert_false(port.is_station_transitioning(), "re-focusing does not restart the transition")
+	assert_true(pose_before.is_equal_approx(port.camera_position()), "re-focusing keeps the settled shot")
+	_free_host(host)
+
+
+## A bind rebuild (cargo/ship change) must keep the current station: the new hull
+## is mounted at that berth and the camera stays where the player left it.
+func test_port_stage_bind_keeps_the_current_station_and_berth() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model({
+		"port": {"id": "test_harbor", "size": "medium", "facilities": PORT_FACILITIES},
+		"ship": {"hull_model_path": STEAMER_MODEL, "hull_tier": 1},
+	})
+	port.focus_station("supply", "panel", true)
+	var supply_x := port.station_ship_position("supply").x
+	var supply_camera: Vector3 = port.station_camera_pose("supply", "panel")["position"]
+
+	# Different ship -> new bind signature -> a real rebuild.
+	host.bind_view_model({
+		"port": {"id": "test_harbor", "size": "medium", "facilities": PORT_FACILITIES},
+		"ship": {"hull_model_path": "", "hull_tier": 2},
+	})
+	assert_eq(port.current_station(), "supply", "the rebuild keeps the supply station")
+	assert_eq(port.current_station_framing(), "panel", "the rebuild keeps the framing")
+	assert_almost_eq(
+		port.camera_position().distance_to(supply_camera),
+		0.0,
+		0.05,
+		"the rebuild keeps the camera on the current station shot"
+	)
+	var ship := port.get_node_or_null("Content/PlayerShip")
+	assert_not_null(ship, "the rebuilt hull is mounted")
+	if ship != null:
+		assert_almost_eq(
+			(ship as Node3D).position.x,
+			supply_x,
+			0.3,
+			"the rebuilt hull is mounted at the supply berth, not the reference spawn"
+		)
+	_free_host(host)
+
+
+## Each station gets its own dressing props, scaled by the street density tier.
+func test_port_stage_station_dressing_scales_with_density() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+
+	for size in ["small", "medium", "large"]:
+		host.bind_view_model(_port_view(size, PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+		var expected := int(STATION_DENSITY_COUNTS[PortStage.DENSITY_BY_SIZE[size]])
+		assert_eq(
+			port.station_prop_count(),
+			expected,
+			"size=%s mounts %d station dressing props" % [size, expected]
+		)
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS, "density": "busy"}))
+	assert_eq(port.station_prop_count(), int(STATION_DENSITY_COUNTS["busy"]), "diorama.density=busy mounts the busy station dressing")
+
+	# Without the town kit the station dressing has no visuals to mount; the
+	# stage still keeps its blockout town and never invents placeholder props.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	assert_eq(port.station_prop_count(), 0, "a content-less stage mounts no station dressing")
+	assert_true(port.town_prop_count() >= 5, "the blockout town still carries the silhouette")
 	_free_host(host)

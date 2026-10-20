@@ -16,6 +16,14 @@ extends Control
 ## facilities must render as cargo filler only, never as an anchor or hotspot)
 ## and the "no banner" L1 fallback (sky + fog + shoreline silhouettes, no black
 ## box).
+##
+## Stations (continuous harbour, three adjacent berths): `set_station(id,
+## framing)` translates the fixed camera to `market` / `harbor` / `supply`
+## (world X left → right) and moves the player ship to the matching berth.
+## `framing = "stage"` is the full-window overview framing; `"panel"` is the
+## offset framing used when a 620 px page panel covers the right edge. Both
+## `set_variant()` and `set_station()` are callable from the screenshot tool;
+## the station is applied immediately (no tween) so captures are deterministic.
 
 const STAGE_SCENE := "res://framework/ui/stages/port_stage.tscn"
 const BANNER_PATH := "res://dev_mods/core/assets/ports/iron_harbor_banner.png"
@@ -56,6 +64,10 @@ const VARIANT_SPARSE := "sparse"
 
 var _host: SNStageHost
 var _variant := VARIANT_PREVIEW
+## Last station requested through `set_station()` ("" until the Lead's station
+## API is used; the stage itself stays on its own default until then).
+var _station_id := ""
+var _station_framing := "stage"
 
 
 func _ready() -> void:
@@ -79,6 +91,46 @@ func set_variant(variant_name: String) -> void:
 
 func current_variant() -> String:
 	return _variant
+
+
+## The mounted `PortStage` node (null while the stage is not ready). Used by the
+## screenshot / measurement tools to poll the station transition state.
+func current_stage() -> Node:
+	if _host == null or not _host.has_stage():
+		return null
+	return _host.current_stage()
+
+
+## Moves the fixed camera to one of the three adjacent berths and parks the
+## player ship there. `station_id` is "market" / "harbor" / "supply"; `framing`
+## is "stage" (full-window overview) or "panel" (620 px right panel reserved).
+## Applies immediately (`focus_station(..., immediate = true)`) so screenshots
+## and measurements do not race a tween. Returns whether the stage accepted it.
+func set_station(station_id: String = "harbor", framing: String = "stage") -> bool:
+	var stage := current_stage()
+	if stage == null:
+		push_error("PortStagePreview: stage is not mounted")
+		return false
+	if not stage.has_method("focus_station"):
+		print("[PortStagePreview] station API missing: PortStage.focus_station() is not available yet")
+		return false
+	_station_id = station_id
+	_station_framing = framing
+	var focused := bool(stage.focus_station(station_id, framing, true))
+	if not focused:
+		push_warning("PortStagePreview: focus_station(%s, %s) returned false" % [station_id, framing])
+	_print_station(stage, station_id, framing)
+	return focused
+
+
+## Station id requested by the last `set_station()` call ("" when unused).
+func station_id() -> String:
+	return _station_id
+
+
+## Framing requested by the last `set_station()` call ("stage" by default).
+func station_framing() -> String:
+	return _station_framing
 
 
 func _apply_variant(variant_name: String) -> void:
@@ -169,6 +221,55 @@ func _print_state(variant_name: String) -> void:
 		screen.append("%s=(%.3f, %.3f)" % [String(facility), screen_pos.x, screen_pos.y])
 	print("[PortStagePreview] screen anchors: " + ", ".join(screen))
 	_print_scene_fill(stage)
+
+
+## Station report for the screenshot / measurement logs: requested station,
+## stage-reported station + transition flag, requested vs. actual camera pose,
+## ship berth X and the projected facility anchors for that framing.
+func _print_station(stage: Node, station_id: String, framing: String) -> void:
+	var current := String(stage.current_station()) if stage.has_method("current_station") else "?"
+	var transitioning := bool(stage.is_station_transitioning()) if stage.has_method("is_station_transitioning") else false
+	var station_props := int(stage.station_prop_count()) if stage.has_method("station_prop_count") else 0
+	print("[PortStagePreview] station=%s framing=%s current=%s transitioning=%s station_props=%d" % [
+		station_id, framing, current, str(transitioning), station_props,
+	])
+	var camera := stage.get_node_or_null("StageCamera") as Camera3D
+	var pose := {}
+	if stage.has_method("station_camera_pose"):
+		var raw: Variant = stage.station_camera_pose(station_id, framing)
+		if raw is Dictionary:
+			pose = raw
+	if not pose.is_empty():
+		print("[PortStagePreview] station camera pose: position=%s target=%s fov=%.2f" % [
+			_fmt_vec(pose.get("position", Vector3.ZERO)),
+			_fmt_vec(pose.get("target", Vector3.ZERO)),
+			float(pose.get("fov", 0.0)),
+		])
+	if camera != null:
+		var forward := -camera.global_transform.basis.z
+		var target := camera.global_position + forward * 64.0
+		print("[PortStagePreview] camera actual: position=%s target=%s fov=%.2f" % [
+			_fmt_vec(camera.global_position), _fmt_vec(target), camera.fov,
+		])
+	if stage.has_method("station_ship_position"):
+		var ship_position: Vector3 = stage.station_ship_position(station_id)
+		print("[PortStagePreview] station ship: position=%s x=%.3f" % [
+			_fmt_vec(ship_position), ship_position.x,
+		])
+	var screen: Array[String] = []
+	for facility in stage.facility_anchors().keys():
+		var screen_pos: Vector2 = stage.facility_screen_anchor(String(facility))
+		screen.append("%s=(%.3f, %.3f)" % [String(facility), screen_pos.x, screen_pos.y])
+	print("[PortStagePreview] station screen anchors: " + ", ".join(screen))
+	if stage.has_method("station_ids"):
+		var ids: Array[String] = []
+		for entry in stage.station_ids():
+			ids.append(String(entry))
+		print("[PortStagePreview] station ids: " + ", ".join(ids))
+
+
+func _fmt_vec(value: Vector3) -> String:
+	return "(%.2f, %.2f, %.2f)" % [value.x, value.y, value.z]
 
 
 func _print_scene_fill(stage: Node) -> void:

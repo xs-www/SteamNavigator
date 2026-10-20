@@ -28,6 +28,13 @@ extends SceneTree
 ##   --overview-detail               在 --overview-stage 的基础上打开「详细总览」
 ##                                   抽屉，截取 overview_detail.png（隐含
 ##                                   --overview-stage）
+##   --station-shots                 额外切到市场 / 补给页，截取常驻 3D 港口舞台的
+##                                   泊位画面（连续港区 + 三个相邻站位）：market_station.png
+##                                   / supply_station.png（1440×900），再把窗口缩到
+##                                   960×540 补一张 market_station_960.png。截图前
+##                                   轮询 shell._port_stage_host 的 PortStage
+##                                   current_station() / is_station_transitioning()，
+##                                   等舞台可见且泊位过渡结束。
 ##   --skip-refit                    只截正常态
 ## 任一截图失败或画面为空（纯色）时以退出码 1 结束，方便 CI/验收脚本判断。
 
@@ -44,6 +51,14 @@ const LAYOUT_FRAMES := 30
 const LAYOUT_SETTLE_SECONDS := 0.35
 const REFIT_FRAMES := 20
 const REFIT_SETTLE_SECONDS := 0.2
+## --station-shots：市场 / 补给页的常驻 3D 港口舞台（连续港区 + 三站位）。
+## 站点 id 与主界面页面一一对应，另补一张 960×540 的 market 泊位。
+const STATION_SCREENS := [
+	{"screen": "market", "station": "market", "file": "market_station.png"},
+	{"screen": "supply", "station": "supply", "file": "supply_station.png"},
+]
+const STATION_SMALL_WINDOW := Vector2i(960, 540)
+const STATION_TIMEOUT_SECONDS := 10.0
 ## 兜底：脚本错误会让协程中断而不退出，窗口就会挂住，这里强制收尾。
 const WATCHDOG_SECONDS := 120
 
@@ -58,6 +73,8 @@ var _skip_refit := false
 var _overview_stage := false
 ## 是否在总览主界面基础上再截取「详细总览」抽屉。
 var _overview_detail := false
+## 是否额外截取市场 / 补给页的常驻 3D 港口舞台（连续港区 + 三个相邻站位）。
+var _station_shots := false
 ## 截图前要损坏的模块实例：{"slot": "boiler", "index": 0, "ratio": 0.5}。
 var _damage_targets: Array = []
 var _saved: Array[String] = []
@@ -70,9 +87,10 @@ func _init() -> void:
 
 
 func _watchdog() -> void:
+	var seconds := WATCHDOG_SECONDS + (45 if _station_shots else 0)
 	await process_frame
-	await create_timer(WATCHDOG_SECONDS).timeout
-	push_error("ui_snapshot: 截图流程超时（%d 秒），强制退出" % WATCHDOG_SECONDS)
+	await create_timer(seconds).timeout
+	push_error("ui_snapshot: 截图流程超时（%d 秒），强制退出" % seconds)
 	quit(1)
 
 
@@ -223,8 +241,117 @@ func _run() -> void:
 			_expect(_node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT) != null, "详细抽屉挂载在总览页上")
 			await _capture(_path("overview_detail.png"))
 
+	if _station_shots:
+		await _snapshot_station_pages(shell)
+
 	await _teardown(shell)
 	_finish()
+
+
+## ---------------------------------------------------------------------------
+## --station-shots：市场 / 补给页的常驻 3D 港口舞台（连续港区 + 三站位）
+## ---------------------------------------------------------------------------
+
+## 先回总览页确保舞台宿主已建并可见，再依次切到 market / supply 页：每次刷新后
+## 轮询宿主可见、`PortStage.current_station()` 已切到对应泊位且
+## `is_station_transitioning()` 为 false，然后截图。最后把窗口缩到 960×540，
+## 在 market 页补一张 market_station_960.png。任何一个等待失败都会记为失败项。
+func _snapshot_station_pages(shell: Control) -> void:
+	print("[INFO] station shots：市场 / 补给页 3D 港口舞台")
+	if not bool(shell._port_stage_available()):
+		_expect(false, "3D 港口舞台场景可用（--station-shots 前置）")
+		return
+	if not bool(shell._overview_stage_mode):
+		if shell.has_method("_on_overview_stage_toggle"):
+			shell._on_overview_stage_toggle()
+		else:
+			shell._overview_stage_mode = true
+			shell._refresh()
+		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	shell._active_screen = "overview"
+	shell._refresh()
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	_expect(await _wait_port_stage(shell, "总览页"), "总览页港口舞台可见（--station-shots 前置）")
+
+	for entry in STATION_SCREENS:
+		var screen_id := String(entry["screen"])
+		var station_id := String(entry["station"])
+		var file_name := String(entry["file"])
+		shell._active_screen = screen_id
+		shell._refresh()
+		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		var page_stage_visible := await _wait_port_stage(shell, "%s 页" % screen_id)
+		_expect(page_stage_visible, "%s 页港口舞台可见" % screen_id)
+		var settled := await _wait_station(shell, station_id, "%s 页" % screen_id)
+		_expect(settled, "%s 页泊位 %s 过渡结束" % [screen_id, station_id])
+		if page_stage_visible and settled:
+			await _capture(_path(file_name))
+
+	# 960×540：窗口缩放后重新等布局与站位，再补一张 market 泊位。
+	shell._active_screen = "market"
+	shell._refresh()
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	DisplayServer.window_set_size(STATION_SMALL_WINDOW)
+	_window = STATION_SMALL_WINDOW
+	await _wait_window_size(STATION_SMALL_WINDOW)
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	var small_stage_visible := await _wait_port_stage(shell, "market 页 960×540")
+	_expect(small_stage_visible, "960×540 market 页港口舞台可见")
+	var small_settled := await _wait_station(shell, "market", "market 页 960×540")
+	_expect(small_settled, "960×540 market 页泊位 market 过渡结束")
+	if small_stage_visible and small_settled:
+		await _capture(_path("market_station_960.png"))
+
+
+## 轮询 shell 的 PortStage 宿主：已挂载场景且可见即为就绪。宿主由主界面在进入
+## 舞台模式时惰性创建，轮询期间一旦出现就继续等它可见。
+func _wait_port_stage(shell: Control, label: String) -> bool:
+	var deadline := Time.get_ticks_msec() + int(STATION_TIMEOUT_SECONDS * 1000.0)
+	while Time.get_ticks_msec() < deadline:
+		var host: SNStageHost = shell._port_stage_host
+		if host != null and is_instance_valid(host) and host.has_stage() and host.is_stage_visible():
+			return true
+		await process_frame
+	print("[FAIL] %s：港口舞台宿主在 %.0f 秒内不可见" % [label, STATION_TIMEOUT_SECONDS])
+	return false
+
+
+## 轮询站位：`current_station()` 等于目标 id 且 `is_station_transitioning()` 为
+## false 才算就位。缺少站位 API 时立即失败并说明是 Lead 改动尚未落地。
+func _wait_station(shell: Control, station_id: String, label: String) -> bool:
+	var host: SNStageHost = shell._port_stage_host
+	var stage: Variant = host.current_stage() if host != null and is_instance_valid(host) else null
+	if stage == null:
+		print("[FAIL] %s：PortStage 未挂载，无法等待泊位 %s" % [label, station_id])
+		return false
+	if not stage.has_method("is_station_transitioning"):
+		print("[FAIL] %s：PortStage 尚未提供站位 API（is_station_transitioning）——等待 Lead 的连续港区改动" % label)
+		return false
+	var deadline := Time.get_ticks_msec() + int(STATION_TIMEOUT_SECONDS * 1000.0)
+	var current := "?"
+	while Time.get_ticks_msec() < deadline:
+		host = shell._port_stage_host
+		stage = host.current_stage() if host != null and is_instance_valid(host) else null
+		if stage != null and stage.has_method("is_station_transitioning"):
+			current = String(stage.current_station()) if stage.has_method("current_station") else "?"
+			if not bool(stage.is_station_transitioning()) and current == station_id:
+				print("[PASS] %s：泊位 %s 已就位" % [label, station_id])
+				return true
+		await process_frame
+	print("[FAIL] %s：泊位 %s 在 %.0f 秒内未就位（current_station=%s）" % [
+		label, station_id, STATION_TIMEOUT_SECONDS, current,
+	])
+	return false
+
+
+## 窗口 resize 是异步的（DisplayServer → Window → Viewport），这里等 root.size
+## 真的匹配后再让布局稳定一轮。
+func _wait_window_size(size: Vector2i) -> void:
+	for i in 180:
+		if absi(root.size.x - size.x) <= 2 and absi(root.size.y - size.y) <= 2:
+			break
+		await process_frame
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
 
 
 ## 与 framework/tests/test_case.gd 的 bootstrap_core 逐项一致。
@@ -447,6 +574,8 @@ func _parse_args() -> void:
 		elif text == "--overview-detail":
 			_overview_detail = true
 			_overview_stage = true
+		elif text == "--station-shots":
+			_station_shots = true
 		elif text.begins_with("--damage="):
 			for part in text.get_slice("=", 1).split(",", false):
 				var pieces := String(part).strip_edges().split(":", false)

@@ -4,6 +4,11 @@ extends VBoxContainer
 ##
 ## The shell owns queries and commands. This scene only binds a SupplyView
 ## dictionary, renders it, and emits the player's command intent.
+##
+## Layout: the screen shares the window with the persistent 3D port stage, so it
+## is designed for a 620 px berth sidebar. The coal/water cards stack in a single
+## column and the summary badges flow onto an extra row instead of widening the
+## page; the outer PageScroll owns vertical scrolling.
 
 signal command_requested(command: StringName, params: Dictionary)
 
@@ -40,36 +45,40 @@ func _summary(view_model: Dictionary) -> Control:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 8)
 	panel.add_child(content)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	row.add_child(_badge("金币 %d" % int(view_model.get("money", 0)), SNBadge.Tone.NEUTRAL))
-	row.add_child(_badge("重量 %s / %s" % [
+	# The badges wrap instead of forcing the 620 px page wider.
+	var badges := HFlowContainer.new()
+	badges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	badges.add_theme_constant_override("h_separation", 10)
+	badges.add_theme_constant_override("v_separation", 6)
+	badges.add_child(_badge("金币 %d" % int(view_model.get("money", 0)), SNBadge.Tone.NEUTRAL))
+	badges.add_child(_badge("重量 %s / %s" % [
 		_fmt(float(view_model.get("total_weight", 0.0))),
 		_fmt(float(view_model.get("max_weight", 0.0))),
 	], SNBadge.Tone.NEUTRAL))
-	row.add_child(_badge(
+	badges.add_child(_badge(
 		"剩余载重 %s" % _fmt(float(view_model.get("remaining_weight", 0.0))),
 		SNBadge.Tone.WARNING
 	))
-	row.add_child(_badge("耐久 %s / %s" % [
+	badges.add_child(_badge("耐久 %s / %s" % [
 		_fmt(float(view_model.get("durability", 0.0))),
 		_fmt(float(view_model.get("repair", {}).get("max_durability", 0.0))),
 	], SNBadge.Tone.SUCCESS))
-	content.add_child(row)
+	content.add_child(badges)
 	if not bool(view_model.get("has_supply", false)):
 		content.add_child(_label("当前港口没有补给码头。", 14, COLOR_RED))
 	return panel
 
 
 func _supply_cards(view_model: Dictionary) -> Control:
-	var cards := HFlowContainer.new()
+	var cards := VBoxContainer.new()
 	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cards.add_theme_constant_override("h_separation", 16)
-	cards.add_theme_constant_override("v_separation", 16)
+	cards.add_theme_constant_override("separation", 8)
 	for kind in ["coal", "water"]:
 		var data: Dictionary = view_model.get("%s_view" % kind, {})
 		var card = SUPPLY_CARD_SCENE.instantiate()
-		card.custom_minimum_size = Vector2(560, 250)
+		# Single-column stack: the card fills the sidebar width, so it only needs
+		# the natural minimum of its own contents (well below the 620 px design).
+		card.custom_minimum_size = Vector2(0, 0)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.bind(
 			data,
@@ -92,12 +101,17 @@ func _repair_panel(view_model: Dictionary) -> Control:
 	var title := _label("维修", 20, COLOR_BRASS)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	header.add_child(_badge(
+	var badges := HFlowContainer.new()
+	badges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	badges.add_theme_constant_override("h_separation", 8)
+	badges.add_theme_constant_override("v_separation", 6)
+	badges.add_child(_badge(
 		"可维修" if bool(view_model.get("can_repair", false)) else "无需维修或资源不足",
 		SNBadge.Tone.SUCCESS if bool(view_model.get("can_repair", false)) else SNBadge.Tone.WARNING
 	))
 	if float(repair.get("module_points", 0.0)) > 0.0:
-		header.add_child(_badge("含部件损耗", SNBadge.Tone.WARNING))
+		badges.add_child(_badge("含部件损耗", SNBadge.Tone.WARNING))
+	header.add_child(badges)
 	content.add_child(header)
 	content.add_child(_label("缺失耐久 %s（船体 %s · 部件 %s）· 预计费用 %d 金币（单位维修价 %s）" % [
 		_fmt(float(repair.get("missing", 0.0))),

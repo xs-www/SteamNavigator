@@ -676,14 +676,73 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	shell._pending_transition = false
 	shell._fade_layer.visible = false
 
-	# The chrome is shared: other pages keep the same compact top bar and hide
-	# the overview-only layers.
+	# Adjacent-station pages: overview / market / supply share the same mounted
+	# district. Switching pages pans the camera and sails the hull, so the stage
+	# stays visible, the page becomes a dock panel and nothing is rebuilt.
+	var stage_instance := host.current_stage()
 	_goto(shell, "market")
 	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the market page is mounted")
-	assert_false(bool(host.visible), "leaving the overview hides the 3D stage")
+	assert_true(bool(host.visible), "the market page keeps the shared 3D district visible")
+	assert_eq(host.current_stage(), stage_instance, "the market page reuses the mounted stage instance")
+	assert_eq(String(shell._stage_station), "market", "the shell points the stage at the market station")
+	assert_eq(String(shell._stage_framing), "panel", "the market page uses the dock-panel framing")
+	assert_eq(String(port_stage.current_station()), "market", "the PortStage focuses the market station")
+	var dock_row: Variant = shell._root_box.get_node_or_null("DockPanelRow")
+	assert_not_null(dock_row, "the market page is laid out as a dock panel beside the stage window")
+	if dock_row is HBoxContainer:
+		var dock_panel := (dock_row as HBoxContainer).get_node_or_null("DockPanel") as PanelContainer
+		assert_not_null(dock_panel, "the dock panel is pinned to the right of the stage window")
+		if dock_panel != null:
+			assert_true(
+				dock_panel.custom_minimum_size.x >= 620.0,
+				"the dock panel keeps the narrow content column (%.0f px)" % dock_panel.custom_minimum_size.x
+			)
 	assert_false(bool(shell._port_status_bar.visible), "leaving the overview hides the status strip")
 	assert_true(shell._top_chrome != null and shell._top_chrome.get_combined_minimum_size().y <= 130.0, "the compact chrome is shared by every page")
 	assert_not_null(_button_by_text(shell._top_chrome, shell._tr("ui.nav.market", "")), "the shared chrome keeps navigation on other pages")
+
+	# Headless tests never advance frames, so step the stage clock directly: the
+	# camera really pans to the market shot and the hull really sails to the berth.
+	var market_shot: Vector3 = port_stage.station_camera_pose("market", "panel")["position"]
+	port_stage.advance_station(2.0)
+	assert_almost_eq(
+		port_stage.camera_position().distance_to(market_shot),
+		0.0,
+		0.05,
+		"the camera pans to the market station of the shared district"
+	)
+	port_stage.advance_station(8.0)
+	assert_false(port_stage.is_station_transitioning(), "the market station transition settles")
+	var market_berth := port_stage.station_ship_position("market").x
+	assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the hull moors at the market berth")
+
+	# Supply is the adjacent station on the other side: same instance, same page
+	# shell, only camera + hull move.
+	_goto(shell, "supply")
+	assert_eq(_nodes_with_script(shell._root_box, SUPPLY_SCREEN_SCRIPT).size(), 1, "the supply page is mounted")
+	assert_true(bool(host.visible), "the supply page keeps the shared 3D district visible")
+	assert_eq(host.current_stage(), stage_instance, "the supply page reuses the mounted stage instance")
+	assert_eq(String(shell._stage_station), "supply", "the shell points the stage at the supply station")
+	assert_eq(String(port_stage.current_station()), "supply", "the PortStage focuses the supply station")
+	assert_true(
+		port_stage.station_ship_position("supply").x - market_berth > 40.0,
+		"the two stations are tens of metres apart along the quay"
+	)
+	port_stage.advance_station(12.0)
+	assert_false(port_stage.is_station_transitioning(), "the supply station transition settles")
+	assert_almost_eq(
+		port_stage.ship_x(),
+		port_stage.station_ship_position("supply").x,
+		0.3,
+		"the hull sails east to the supply berth"
+	)
+
+	# Pages that are not stage-backed still hide the district and show the fade.
+	_goto(shell, "contracts")
+	assert_false(bool(host.visible), "leaving the station pages hides the 3D stage")
+	_goto(shell, "overview")
+	assert_true(bool(host.visible), "returning to the overview shows the district again")
+	assert_eq(String(port_stage.current_station()), "harbor", "the overview returns to the harbour station")
 
 	# The 2D overview stays reachable as the fallback / accessibility toggle.
 	_goto(shell, "overview")

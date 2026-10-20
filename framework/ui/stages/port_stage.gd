@@ -44,10 +44,12 @@ const SIZE_SCALE := {"small": 0.9, "medium": 1.0, "large": 1.15}
 
 const DOCK_TOP := 2.2
 ## Thin deck slab on piles: the quay reads as a trestle pier instead of a solid
-## box floating on the water.
-const DOCK_SIZE := Vector3(54.0, 0.6, 12.0)
+## box floating on the water. The quay is one continuous 160 m waterfront so the
+## market / harbour / supply stations are adjacent along the same deck instead of
+## being separate scenes.
+const DOCK_SIZE := Vector3(160.0, 0.6, 12.0)
 const DOCK_CENTER := Vector3(0.0, 1.9, -6.0)
-const DECK_SIZE := Vector3(54.0, 0.1, 12.0)
+const DECK_SIZE := Vector3(160.0, 0.1, 12.0)
 ## Shore shelf behind the quay: the L2 silhouette row stands on it, so the
 ## skyline never floats directly on the water plane.
 ## Shore shelf behind the quay, wider/deeper than the frame so no cut edge or
@@ -70,6 +72,56 @@ const SHIP_SCALE := 1.0
 const BOB_AMPLITUDE := 0.12
 const BOB_SPEED := 0.9
 
+# --- Adjacent stations (one continuous harbour district) --------------------
+#
+# Bounty Train style: the harbour is a single contiguous 3D district. The market,
+# the harbour authority frontage and the supply yard are three stations standing
+# side by side along the same quay, and switching pages only pans the camera and
+# sails the player's hull to that station's mooring — the world is never rebuilt
+# or reloaded, so the new page arrives before the camera has finished moving.
+#
+# Every station keeps the same lens (`CAMERA_FOV`) and the same relative framing,
+# so the district reads as one place; only the camera position and the ship
+# mooring change. `center` is the station anchor in world X (also the facility
+# anchor that station owns), `camera`/`target` are its department shot and
+# `ship` is the berth the player's vessel takes.
+const STATION_ORDER := ["market", "harbor", "supply"]
+const DEFAULT_STATION := "harbor"
+const STATION_FRAMINGS := ["stage", "panel"]
+const STATIONS := {
+	"market": {
+		"center": -30.0,
+		"camera": Vector3(16.0, 28.0, 64.0),
+		"target": Vector3(-30.0, 12.0, -8.0),
+		"ship": Vector3(-43.5, 0.0, 9.0),
+		"ship_yaw": SHIP_YAW_DEG,
+	},
+	"harbor": {
+		"center": 0.0,
+		"camera": CAMERA_POS,
+		"target": CAMERA_TARGET,
+		"ship": SHIP_SPAWN,
+		"ship_yaw": SHIP_YAW_DEG,
+	},
+	"supply": {
+		"center": 30.0,
+		"camera": Vector3(76.0, 28.0, 64.0),
+		"target": Vector3(30.0, 12.0, -8.0),
+		"ship": Vector3(16.5, 0.0, 9.0),
+		"ship_yaw": SHIP_YAW_DEG,
+	},
+}
+## Panel framing: the market/supply pages keep a 620 px information panel on the
+## right side of the window, so their shot is shifted a few metres to place the
+## station landmark inside the visible left part of the frame instead of behind
+## the panel. It is still the same pan — no rebuild, no second stage.
+const PANEL_FRAMING_SHIFT_X := 3.0
+## Station switch timing: the camera pans in 0.6 s while the hull sails along the
+## quay (~24 m/s) and turns back to its mooring yaw on arrival.
+const CAMERA_PAN_SECONDS := 0.6
+const SHIP_TRANSIT_SPEED := 24.0
+const SHIP_TURN_SPEED := 2.6
+
 const MODEL_BY_TIER := {
 	1: "res://assets/models/ships/SN_Paddle_Steamer.glb",
 	2: "res://assets/models/ships/SN_Paddle_Freighter.glb",
@@ -78,11 +130,13 @@ const MODEL_BY_TIER := {
 const FALLBACK_MODEL := "res://assets/models/ships/SN_Ship_Prototype.glb"
 
 ## Local positions inside the scaled facility group; y is the quay top because
-## the group itself sits on `DOCK_TOP`.
+## the group itself sits on `DOCK_TOP`. Exchange and supply sit at their own
+## stations (`STATIONS.market` / `STATIONS.supply`), so walking the quay changes
+## the scene instead of swapping a page background.
 const SLOT_POSITIONS := {
-	"exchange": Vector3(-16.0, 0.0, -3.0),
+	"exchange": Vector3(-30.0, 0.0, -3.0),
 	"contracts": Vector3(-8.0, 0.0, -4.0),
-	"supply": Vector3(0.0, 0.0, -3.0),
+	"supply": Vector3(30.0, 0.0, -3.0),
 	"intel": Vector3(7.0, 0.0, -4.0),
 	"shipyard": Vector3(14.5, 0.0, -4.5),
 }
@@ -168,12 +222,17 @@ const TOWN_QUAY_ORDER := [
 ## (+Z). The plaza is what makes them read as ground-level buildings instead of
 ## floating boxes on the water sheet.
 const TOWN_GROUND_Y := 1.9
-const TOWN_PLAZA_SIZE := Vector3(120.0, 2.2, 34.0)
+const TOWN_PLAZA_SIZE := Vector3(250.0, 2.2, 34.0)
 const TOWN_PLAZA_CENTER := Vector3(0.0, 0.8, -27.0)
 ## Buildings are always mounted: they carry the street silhouette and only fall
 ## back to blockouts when their GLB is missing.
+## `warehouse_long` is rotated -106 deg (not -90) and moved 1 m toward the quay so
+## its loading-door long facade faces the fixed camera instead of running away from
+## it: the facade normal goes from 52 deg to 36 deg off the camera axis (+38% facade
+## area, +35% door area on screen, doors unobstructed), the footprint still sits on
+## the plaza and keeps 0.9 m clearance to the quay crane block.
 const TOWN_SLOTS := [
-	{"slot": "warehouse_long", "pos": Vector3(-30.0, TOWN_GROUND_Y, -34.0), "yaw": -90.0, "scale": 1.0},
+	{"slot": "warehouse_long", "pos": Vector3(-30.0, TOWN_GROUND_Y, -33.0), "yaw": -106.0, "scale": 1.0},
 	{"slot": "warehouse_short", "pos": Vector3(27.0, TOWN_GROUND_Y, -30.0), "yaw": -90.0, "scale": 0.95},
 	{"slot": "harbor_office", "pos": Vector3(14.0, TOWN_GROUND_Y, -40.0), "yaw": -80.0, "scale": 1.0},
 	{"slot": "tavern", "pos": Vector3(-12.0, TOWN_GROUND_Y, -26.0), "yaw": -100.0, "scale": 1.0},
@@ -268,6 +327,53 @@ const TOWN_QUAY_SLOTS := {
 		{"pos": Vector3(-36.0, 0.02, 3.0), "yaw": 0.0},
 	],
 }
+## Per-station dressing: the moment the camera lands on a station the ground in
+## front of it must read as that station's place, not as generic quay. Each list
+## is an ordered prefix (core props first) cut by the street density tier, and
+## every slot reuses an official town-kit key already resolved into
+## `port.town_visuals` — no new content keys and no new models are required.
+const STATION_PROP_COUNTS := {"sparse": 5, "normal": 8, "busy": 11}
+const STATION_PROPS := {
+	"market": [
+		{"slot": "market_stall", "pos": Vector3(-30.0, TOWN_GROUND_Y, -15.4), "yaw": 2.0},
+		{"slot": "market_stall", "pos": Vector3(-37.8, TOWN_GROUND_Y, -16.2), "yaw": 9.0},
+		{"slot": "market_stall", "pos": Vector3(-43.0, TOWN_GROUND_Y, -15.0), "yaw": -5.0},
+		{"slot": "crate", "pos": Vector3(-21.6, TOWN_GROUND_Y, -13.6), "yaw": 26.0},
+		{"slot": "barrel", "pos": Vector3(-33.6, TOWN_GROUND_Y, -13.2), "yaw": -12.0},
+		{"slot": "handcart", "pos": Vector3(-27.4, TOWN_GROUND_Y, -20.4), "yaw": 96.0},
+		{"slot": "crate", "pos": Vector3(-40.6, TOWN_GROUND_Y, -19.6), "yaw": 44.0},
+		{"slot": "barrel", "pos": Vector3(-20.8, TOWN_GROUND_Y, -20.2), "yaw": 18.0},
+		{"slot": "sack_pile", "pos": Vector3(-35.8, DOCK_TOP, -9.6), "yaw": 8.0},
+		{"slot": "gas_lamp", "pos": Vector3(-31.2, TOWN_GROUND_Y, -12.3), "yaw": 0.0},
+		{"slot": "crate", "pos": Vector3(-45.2, TOWN_GROUND_Y, -19.0), "yaw": -30.0},
+	],
+	"harbor": [
+		{"slot": "gas_lamp", "pos": Vector3(-2.6, TOWN_GROUND_Y, -11.6), "yaw": 0.0},
+		{"slot": "handcart", "pos": Vector3(3.6, TOWN_GROUND_Y, -20.4), "yaw": -72.0},
+		{"slot": "crate", "pos": Vector3(9.2, TOWN_GROUND_Y, -18.6), "yaw": 32.0},
+		{"slot": "barrel", "pos": Vector3(-6.4, TOWN_GROUND_Y, -19.8), "yaw": 0.0},
+		{"slot": "mooring_bollard", "pos": Vector3(-4.0, DOCK_TOP, -0.5), "yaw": 0.0},
+		{"slot": "pallet", "pos": Vector3(12.2, DOCK_TOP, -7.2), "yaw": 8.0},
+		{"slot": "crate", "pos": Vector3(-11.2, TOWN_GROUND_Y, -14.8), "yaw": 40.0},
+		{"slot": "cargo_lighter", "pos": Vector3(13.2, 0.02, 4.0), "yaw": -70.0},
+		{"slot": "plate_stack", "pos": Vector3(15.6, DOCK_TOP, -10.4), "yaw": 90.0},
+		{"slot": "barrel", "pos": Vector3(7.6, TOWN_GROUND_Y, -16.2), "yaw": -20.0},
+		{"slot": "sack_pile", "pos": Vector3(-13.2, DOCK_TOP, -9.4), "yaw": 10.0},
+	],
+	"supply": [
+		{"slot": "coal_pile", "pos": Vector3(30.0, TOWN_GROUND_Y, -15.6), "yaw": 0.0},
+		{"slot": "ore_pile", "pos": Vector3(24.2, DOCK_TOP, -9.4), "yaw": 16.0},
+		{"slot": "sack_pile", "pos": Vector3(28.0, DOCK_TOP, -9.8), "yaw": -6.0},
+		{"slot": "plate_stack", "pos": Vector3(36.6, DOCK_TOP, -10.8), "yaw": 90.0},
+		{"slot": "timber_stack", "pos": Vector3(38.4, TOWN_GROUND_Y, -18.6), "yaw": 88.0},
+		{"slot": "coal_pile", "pos": Vector3(40.8, TOWN_GROUND_Y, -13.4), "yaw": 24.0},
+		{"slot": "handcart", "pos": Vector3(25.4, TOWN_GROUND_Y, -13.2), "yaw": 58.0},
+		{"slot": "pallet", "pos": Vector3(33.4, DOCK_TOP, -7.4), "yaw": 0.0},
+		{"slot": "barrel", "pos": Vector3(42.2, TOWN_GROUND_Y, -20.2), "yaw": 0.0},
+		{"slot": "crate", "pos": Vector3(35.0, TOWN_GROUND_Y, -12.8), "yaw": 22.0},
+		{"slot": "sack_pile", "pos": Vector3(31.2, DOCK_TOP, -9.2), "yaw": 4.0},
+	],
+}
 ## Procedural blockout sizes for the town buildings when the GLB kit is missing
 ## (X = frontage, Y = height, Z = depth, matching the kit's footprint).
 const TOWN_BLOCKOUT_SIZES := {
@@ -339,8 +445,34 @@ var _town_root: Node3D
 var _town_visuals: Dictionary = {}
 var _town_prop_count := 0
 var _town_blockout_count := 0
+var _station_prop_count := 0
 var _town_density := "normal"
 var _painted_layer_count := 0
+## Station state: which adjacent station the camera and the hull currently serve.
+## `focus_station()` only retargets the shot and the berth; the district itself
+## (facilities, town, water, backdrop) stays built exactly once per bind.
+var _station := DEFAULT_STATION
+var _station_framing := "stage"
+var _camera_target := CAMERA_TARGET
+var _camera_from := CAMERA_POS
+var _camera_from_target := CAMERA_TARGET
+var _camera_to := CAMERA_POS
+var _camera_to_target := CAMERA_TARGET
+var _camera_from_fov := CAMERA_FOV
+var _camera_to_fov := CAMERA_FOV
+var _camera_t := 1.0
+## Horizontal offset of the current shot against the harbour reference shot.
+## Camera-facing layers (sky card, painted backdrop, foreground frame, banner)
+## are translated by it so the pan keeps their screen composition, while world
+## geometry (quay, town, ships, water) really moves through the frame.
+var _camera_shift_x := 0.0
+var _ship_x := SHIP_SPAWN.x
+var _ship_moor_x := SHIP_SPAWN.x
+var _ship_moor_z := SHIP_SPAWN.z
+var _ship_moor_yaw := deg_to_rad(SHIP_YAW_DEG)
+var _ship_sailing := false
+var _skyline_root: Node3D
+var _ship_steam: GPUParticles3D
 var _batch_batches := 0
 var _batch_multimesh_batches := 0
 var _batch_material_batches := 0
@@ -350,9 +482,9 @@ var _batch_surfaces_before := 0
 var _batch_surfaces_after := 0
 var _unshaded_materials: Dictionary = {}
 var _ship_root: Node3D
-var _ship_base := SHIP_SPAWN
 var _ship_yaw := deg_to_rad(SHIP_YAW_DEG)
 var _ship_bounds := AABB()
+var _ship_bounds_offset := Vector3.ZERO
 var _ship_batches := 0
 var _ship_multimesh_batches := 0
 var _ship_material_batches := 0
@@ -376,6 +508,12 @@ func _ready() -> void:
 func enter(payload: Dictionary = {}) -> void:
 	if payload.has("port") or payload.has("ship") or payload.has("facility_visuals") or payload.has("town_visuals"):
 		_enter_payload = payload.duplicate(true)
+	# Optional initial station: the shell mounts the stage straight onto the page
+	# it is showing, so the first frame is already the right station shot instead
+	# of the harbour reference shot panning to it.
+	var station := String(payload.get("station", ""))
+	if STATIONS.has(station):
+		focus_station(station, String(payload.get("station_framing", "stage")), true)
 	set_process(true)
 
 
@@ -622,17 +760,241 @@ func _mesh_bakeable(mesh: Mesh) -> bool:
 	return true
 
 
+# --- Adjacent stations ------------------------------------------------------
+
+## Stations in world order (left -> right along the quay). Pages map to them, so
+## switching a page is a camera pan plus a short sail, never a scene swap.
+func station_ids() -> Array[String]:
+	var result: Array[String] = []
+	for station_id in STATION_ORDER:
+		result.append(station_id)
+	return result
+
+
+func current_station() -> String:
+	return _station
+
+
+func current_station_framing() -> String:
+	return _station_framing
+
+
+## Per-station shot in world space. `panel` framing shifts the same shot a few
+## metres so the station landmark stays visible beside the 620 px info panel.
+func station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary:
+	var shot: Dictionary = STATIONS.get(station_id, STATIONS[DEFAULT_STATION])
+	var shot_position: Vector3 = shot["camera"]
+	var shot_target: Vector3 = shot["target"]
+	var shift := PANEL_FRAMING_SHIFT_X if framing == "panel" else 0.0
+	return {
+		"position": shot_position + Vector3(shift, 0.0, 0.0),
+		"target": shot_target + Vector3(shift, 0.0, 0.0),
+		"fov": CAMERA_FOV,
+	}
+
+
+## The berth (world position) the player's hull takes at a station.
+func station_ship_position(station_id: String) -> Vector3:
+	var shot: Dictionary = STATIONS.get(station_id, STATIONS[DEFAULT_STATION])
+	return shot["ship"]
+
+
+func station_ship_yaw(station_id: String) -> float:
+	var shot: Dictionary = STATIONS.get(station_id, STATIONS[DEFAULT_STATION])
+	return deg_to_rad(float(shot.get("ship_yaw", SHIP_YAW_DEG)))
+
+
+## Switches the camera and the hull to a station. Safe to call on every refresh:
+## re-focusing the current station/framing is a no-op, so page rebuilds never
+## restart the pan. `immediate` snaps (used when the stage is first mounted);
+## otherwise the camera pans and the ship sails over the next 0.6-4 s.
+func focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool:
+	if not STATIONS.has(station_id):
+		return false
+	if not STATION_FRAMINGS.has(framing):
+		framing = "stage"
+	var changed := station_id != _station or framing != _station_framing
+	_station = station_id
+	_station_framing = framing
+	_ship_moor_x = station_ship_position(station_id).x
+	_ship_moor_z = station_ship_position(station_id).z
+	_ship_moor_yaw = station_ship_yaw(station_id)
+	if _camera == null:
+		return true
+	var pose := station_camera_pose(station_id, framing)
+	if immediate:
+		_camera_from = pose["position"]
+		_camera_from_target = pose["target"]
+		_camera_from_fov = float(pose["fov"])
+		_camera_to = _camera_from
+		_camera_to_target = _camera_from_target
+		_camera_to_fov = _camera_from_fov
+		_camera_t = 1.0
+		_camera.position = _camera_from
+		_camera_target = _camera_from_target
+		_camera.fov = _camera_from_fov
+		_ship_x = _ship_moor_x
+		_ship_yaw = _ship_moor_yaw
+		_ship_sailing = false
+		_apply_camera_shift()
+		_camera.look_at(_camera_target, Vector3.UP)
+		_apply_ship_pose()
+		return true
+	if not changed:
+		return true
+	if _camera_t >= 1.0:
+		_camera_from = _camera.position
+		_camera_from_target = _camera_target
+		_camera_from_fov = _camera.fov
+	_camera_to = pose["position"]
+	_camera_to_target = pose["target"]
+	_camera_to_fov = float(pose["fov"])
+	_camera_t = 0.0
+	return true
+
+
+## True while the camera is still panning or the hull is still manoeuvring.
+func is_station_transitioning() -> bool:
+	if _camera_t < 1.0:
+		return true
+	return absf(_ship_x - _ship_moor_x) > 0.25 or absf(angle_difference(_ship_yaw, _ship_moor_yaw)) > 0.02
+
+
+func camera_position() -> Vector3:
+	return _camera.position if _camera != null else Vector3.ZERO
+
+
+func camera_target() -> Vector3:
+	return _camera_target
+
+
+## World X of the player's hull (it moves between the station berths).
+func ship_x() -> float:
+	return _ship_x
+
+
+func station_ship_mooring_x() -> float:
+	return _ship_moor_x
+
+
+## Props mounted by the station dressing layer (market square / supply yard /
+## harbour-authority frontage). Town-kit props are counted separately.
+func station_prop_count() -> int:
+	return _station_prop_count
+
+
+## Current shot offset against the harbour reference shot (tests / preview).
+func camera_shift_x() -> float:
+	return _camera_shift_x
+
+
+## Advances the station transition by `delta` seconds. `_process` drives it in
+## the game; tests and capture tools step it directly so headless runs do not
+## depend on real frames. A large delta is sliced into 50 ms steps so a single
+## call settles the whole pan/sail instead of leaving the hull mid-manoeuvre.
+func advance_station(delta: float) -> void:
+	var remaining := maxf(0.0, delta)
+	while remaining > 0.0001:
+		var step := minf(remaining, 0.05)
+		_advance_camera(step)
+		_advance_ship(step)
+		remaining -= step
+
+
+func _advance_camera(delta: float) -> void:
+	if _camera == null:
+		return
+	if _camera_t < 1.0:
+		_camera_t = minf(1.0, _camera_t + delta / maxf(0.01, CAMERA_PAN_SECONDS))
+		var eased := smoothstep(0.0, 1.0, _camera_t)
+		_camera.position = _camera_from.lerp(_camera_to, eased)
+		_camera_target = _camera_from_target.lerp(_camera_to_target, eased)
+		_camera.fov = lerpf(_camera_from_fov, _camera_to_fov, eased)
+		_apply_camera_shift()
+	_camera.look_at(_camera_target, Vector3.UP)
+
+
+func _advance_ship(delta: float) -> void:
+	if _ship_root == null or not is_instance_valid(_ship_root):
+		return
+	var dx := _ship_moor_x - _ship_x
+	if absf(dx) > 0.25:
+		# Sailing: turn the bow into the travel direction first, then run along
+		# the quay so the hull visibly relocates instead of sliding sideways.
+		var travel_yaw := 0.0 if dx > 0.0 else PI
+		_ship_yaw = rotate_toward(_ship_yaw, travel_yaw, SHIP_TURN_SPEED * delta)
+		var alignment := maxf(0.25, cos(angle_difference(_ship_yaw, travel_yaw)))
+		_ship_x = move_toward(_ship_x, _ship_moor_x, SHIP_TRANSIT_SPEED * delta * alignment)
+		if absf(_ship_moor_x - _ship_x) <= 0.25:
+			_ship_x = _ship_moor_x
+		_ship_sailing = true
+	else:
+		_ship_x = _ship_moor_x
+		if _ship_sailing:
+			_ship_yaw = rotate_toward(_ship_yaw, _ship_moor_yaw, SHIP_TURN_SPEED * delta)
+			if absf(angle_difference(_ship_yaw, _ship_moor_yaw)) < 0.01:
+				_ship_yaw = _ship_moor_yaw
+				_ship_sailing = false
+		else:
+			_ship_yaw = _ship_moor_yaw
+	_apply_ship_pose()
+
+
+func _apply_ship_pose() -> void:
+	if _ship_root == null or not is_instance_valid(_ship_root):
+		return
+	_ship_root.position = Vector3(
+		_ship_x,
+		sin(_time * BOB_SPEED) * BOB_AMPLITUDE,
+		_ship_moor_z
+	)
+	_ship_root.rotation = Vector3(0.0, _ship_yaw, sin(_time * BOB_SPEED * 0.75) * 0.004)
+	_sync_boat_foam()
+	if _ship_steam != null and is_instance_valid(_ship_steam):
+		_ship_steam.position.x = _ship_x - 2.5
+
+
+## The foam ring belongs to the hull, not to the stage: while the ship sails
+## between berths the shader centre follows it, so the water never keeps a foam
+## ring at the previous station.
+func _sync_boat_foam() -> void:
+	if _water_material == null:
+		return
+	_water_material.set_shader_parameter(
+		"boat_center",
+		Vector2(
+			_ship_x + _ship_bounds_offset.x,
+			_ship_moor_z + _ship_bounds_offset.z
+		)
+	)
+	_water_material.set_shader_parameter("boat_yaw", _ship_yaw)
+
+
+## Keeps camera-facing layers glued to the frame while the shot pans. World
+## layers (quay, town, water, hull) pan naturally; the far silhouette row gets
+## half the shift so it keeps a little parallax instead of sliding like a sticker.
+func _apply_camera_shift() -> void:
+	_camera_shift_x = _camera_target.x - CAMERA_TARGET.x
+	if _fallback_sky_root != null and is_instance_valid(_fallback_sky_root):
+		_fallback_sky_root.position.x = _camera_shift_x
+	if _foreground_frame != null and is_instance_valid(_foreground_frame):
+		_foreground_frame.position.x = _camera_shift_x
+	if _backdrop != null and is_instance_valid(_backdrop):
+		_backdrop.position.x = BACKDROP_POSITION.x + _camera_shift_x
+	if _skyline_root != null and is_instance_valid(_skyline_root):
+		_skyline_root.position.x = _camera_shift_x * 0.5
+
+
 # --- Frame loop -------------------------------------------------------------
 
 func _process(delta: float) -> void:
 	_time += delta
 	if not is_visible_in_tree():
 		return
-	if _ship_root != null and is_instance_valid(_ship_root):
-		_ship_root.position = _ship_base + Vector3(0.0, sin(_time * BOB_SPEED) * BOB_AMPLITUDE, 0.0)
-		_ship_root.rotation = Vector3(0.0, _ship_yaw, sin(_time * BOB_SPEED * 0.75) * 0.004)
+	advance_station(delta)
 	# Fog bands drift slowly; the hash-seeded phase keeps each stage unique while
-	# the motion stays fully deterministic.
+	# the motion stays fully deterministic. The camera shift keeps them glued to
+	# the frame like the rest of the painted far layers.
 	for index in _fog_nodes.size():
 		var fog := _fog_nodes[index]
 		if fog == null or not is_instance_valid(fog):
@@ -640,7 +1002,9 @@ func _process(delta: float) -> void:
 		if index >= _fog_bases.size() or index >= _fog_phases.size():
 			continue
 		var base := _fog_bases[index]
-		fog.position = base + Vector3(sin(_time * 0.055 + _fog_phases[index]) * 5.0, 0.0, 0.0)
+		fog.position = base + Vector3(
+			_camera_shift_x + sin(_time * 0.055 + _fog_phases[index]) * 5.0, 0.0, 0.0
+		)
 
 
 # --- Static construction ----------------------------------------------------
@@ -660,6 +1024,10 @@ func _ensure_static() -> void:
 	_content = Node3D.new()
 	_content.name = "Content"
 	add_child(_content)
+	# The initial shot may already be a station other than the reference harbour
+	# one (the shell mounts the stage straight onto the page being shown), so the
+	# camera-facing layers are aligned before the first frame.
+	_apply_camera_shift()
 
 
 func _build_materials() -> void:
@@ -967,6 +1335,7 @@ func _add_atmosphere() -> void:
 		Color(0.82, 0.78, 0.70, 0.36), 0.9, 1.7, "ShoreSteam"
 	)
 	_shore_steam = _atmosphere_root.get_node_or_null("ShoreSteam") as GPUParticles3D
+	_ship_steam = _atmosphere_root.get_node_or_null("ShipSteam") as GPUParticles3D
 	_particle_count = 3
 
 
@@ -1074,22 +1443,22 @@ func _add_quay() -> void:
 	var deck_xforms: Array[Transform3D] = [_scaled_xform(Vector3(0.0, 2.15, -6.0), DECK_SIZE)]
 	_add_multimesh(self, box_unit, deck_xforms, _material("deck"), "DockDeck", AABB(Vector3(-30.0, 1.0, -14.0), Vector3(60.0, 3.0, 16.0)))
 	var wood_xforms: Array[Transform3D] = []
-	wood_xforms.append(_scaled_xform(Vector3(0.0, 1.66, -0.2), Vector3(54.0, 0.3, 0.34)))
-	wood_xforms.append(_scaled_xform(Vector3(0.0, 1.32, 0.5), Vector3(54.0, 0.35, 0.35)))
-	for x in [-18.0, -6.0, 6.0, 18.0]:
+	wood_xforms.append(_scaled_xform(Vector3(0.0, 1.66, -0.2), Vector3(160.0, 0.3, 0.34)))
+	wood_xforms.append(_scaled_xform(Vector3(0.0, 1.32, 0.5), Vector3(160.0, 0.35, 0.35)))
+	for x in [-72.0, -48.0, -24.0, 0.0, 24.0, 48.0, 72.0]:
 		wood_xforms.append(_scaled_xform(Vector3(x, 1.9, -0.15), Vector3(0.6, 0.6, 0.35)))
-	for x in [-24.0, -16.0, -8.0, 0.0, 8.0, 16.0, 24.0]:
+	for x in [-78.0, -66.0, -54.0, -42.0, -30.0, -18.0, -6.0, 6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0]:
 		wood_xforms.append(_scaled_xform(Vector3(x, 1.5, 0.55), Vector3(0.8, 0.5, 0.8)))
-	_add_multimesh(self, box_unit, wood_xforms, _material("wood_dark"), "DockWood", AABB(Vector3(-30.0, -1.0, -2.0), Vector3(60.0, 5.0, 6.0)))
+	_add_multimesh(self, box_unit, wood_xforms, _material("wood_dark"), "DockWood", AABB(Vector3(-80.0, -1.0, -2.0), Vector3(160.0, 5.0, 6.0)))
 	var pile_mesh := CylinderMesh.new()
 	pile_mesh.top_radius = 0.88
 	pile_mesh.bottom_radius = 1.0
 	pile_mesh.height = 1.0
 	pile_mesh.radial_segments = 10
 	var pile_xforms: Array[Transform3D] = []
-	for x in [-24.0, -16.0, -8.0, 0.0, 8.0, 16.0, 24.0]:
-		pile_xforms.append(_scaled_xform(Vector3(x, 0.4, 0.55), Vector3(0.34, 3.6, 0.34)))
-	_add_multimesh(self, pile_mesh, pile_xforms, _material("wood_dark"), "DockPiles", AABB(Vector3(-30.0, -2.0, -2.0), Vector3(60.0, 6.0, 6.0)))
+	for index in range(-9, 10):
+		pile_xforms.append(_scaled_xform(Vector3(float(index) * 8.0, 0.4, 0.55), Vector3(0.34, 3.6, 0.34)))
+	_add_multimesh(self, pile_mesh, pile_xforms, _material("wood_dark"), "DockPiles", AABB(Vector3(-80.0, -2.0, -2.0), Vector3(160.0, 6.0, 6.0)))
 	var bollard_mesh := CylinderMesh.new()
 	bollard_mesh.top_radius = 0.26
 	bollard_mesh.bottom_radius = 0.30
@@ -1102,12 +1471,12 @@ func _add_quay() -> void:
 	bollard_cap_mesh.radial_segments = 12
 	var bollard_bodies: Array[Transform3D] = []
 	var bollard_caps: Array[Transform3D] = []
-	for index in range(-3, 4):
-		var x := float(index) * 7.0
+	for index in range(-6, 7):
+		var x := float(index) * 12.0
 		bollard_bodies.append(_xform(Vector3(x, DOCK_TOP + 0.35, -1.1)))
 		bollard_caps.append(_xform(Vector3(x, DOCK_TOP + 0.77, -1.1)))
-	_add_multimesh(self, bollard_mesh, bollard_bodies, _material("metal"), "Bollards", AABB(Vector3(-26.0, 1.5, -2.0), Vector3(52.0, 2.0, 2.0)))
-	_add_multimesh(self, bollard_cap_mesh, bollard_caps, _material("iron"), "BollardCaps", AABB(Vector3(-26.0, 2.0, -2.0), Vector3(52.0, 2.0, 2.0)))
+	_add_multimesh(self, bollard_mesh, bollard_bodies, _material("metal"), "Bollards", AABB(Vector3(-76.0, 1.5, -2.0), Vector3(152.0, 2.0, 2.0)))
+	_add_multimesh(self, bollard_cap_mesh, bollard_caps, _material("iron"), "BollardCaps", AABB(Vector3(-76.0, 2.0, -2.0), Vector3(152.0, 2.0, 2.0)))
 	# Gas lamps along the quay front.
 	var pole_mesh := CylinderMesh.new()
 	pole_mesh.top_radius = 0.07
@@ -1117,13 +1486,13 @@ func _add_quay() -> void:
 	var pole_xforms: Array[Transform3D] = []
 	var glow_xforms: Array[Transform3D] = []
 	var lamp_cap_xforms: Array[Transform3D] = []
-	for x in [-18.0, -2.0, 13.0, 25.0]:
+	for x in [-66.0, -42.0, -18.0, 6.0, 30.0, 54.0, 78.0]:
 		pole_xforms.append(_xform(Vector3(x, DOCK_TOP + 2.1, -1.7)))
 		glow_xforms.append(_scaled_xform(Vector3(x, DOCK_TOP + 4.55, -1.7), Vector3(0.42, 0.46, 0.42)))
 		lamp_cap_xforms.append(_scaled_xform(Vector3(x, DOCK_TOP + 4.83, -1.7), Vector3(0.56, 0.1, 0.56)))
-	_add_multimesh(self, pole_mesh, pole_xforms, _material("iron"), "LampPoles", AABB(Vector3(-26.0, 1.0, -2.0), Vector3(52.0, 6.0, 2.0)))
-	_add_multimesh(self, box_unit, glow_xforms, _make_unshaded(Color(1.0, 0.68, 0.36), 1.6), "LampGlow", AABB(Vector3(-26.0, 4.0, -2.0), Vector3(52.0, 4.0, 2.0)))
-	_add_multimesh(self, box_unit, lamp_cap_xforms, _material("iron"), "LampCaps", AABB(Vector3(-26.0, 4.0, -2.0), Vector3(52.0, 4.0, 2.0)))
+	_add_multimesh(self, pole_mesh, pole_xforms, _material("iron"), "LampPoles", AABB(Vector3(-76.0, 1.0, -2.0), Vector3(152.0, 6.0, 2.0)))
+	_add_multimesh(self, box_unit, glow_xforms, _make_unshaded(Color(1.0, 0.68, 0.36), 1.6), "LampGlow", AABB(Vector3(-76.0, 4.0, -2.0), Vector3(152.0, 4.0, 2.0)))
+	_add_multimesh(self, box_unit, lamp_cap_xforms, _material("iron"), "LampCaps", AABB(Vector3(-76.0, 4.0, -2.0), Vector3(152.0, 4.0, 2.0)))
 
 
 func _add_camera() -> void:
@@ -1133,9 +1502,22 @@ func _add_camera() -> void:
 	_camera.near = 0.5
 	_camera.far = 1200.0
 	add_child(_camera)
-	_camera.position = CAMERA_POS
-	_camera.look_at(CAMERA_TARGET, Vector3.UP)
+	# The first shot is the station requested before the stage was built (the
+	# shell points the stage at the page it is showing); the harbour reference
+	# shot is the fallback.
+	var pose := station_camera_pose(_station, _station_framing)
+	_camera.position = pose["position"]
+	_camera_target = pose["target"]
+	_camera_from = _camera.position
+	_camera_from_target = _camera_target
+	_camera_from_fov = float(pose["fov"])
+	_camera_to = _camera.position
+	_camera_to_target = _camera_target
+	_camera_to_fov = CAMERA_FOV
+	_camera_t = 1.0
 	_camera.current = true
+	_camera.look_at(_camera_target, Vector3.UP)
+	_apply_camera_shift()
 
 
 # --- Dynamic rebuild (bind) -------------------------------------------------
@@ -1184,6 +1566,10 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	# ship is mounted (the ship bobs and is deliberately not batched).
 	_batch_static_meshes()
 	_rebuild_ship(ship)
+	# The rebuilt camera-facing layers (banner / sky card / painted layers) start
+	# at the reference framing; reapply the current station shift so a bind never
+	# lands the backdrop back on the harbour shot.
+	_apply_camera_shift()
 
 
 func _clear_dynamic() -> void:
@@ -1193,6 +1579,8 @@ func _clear_dynamic() -> void:
 	_kinds.clear()
 	_filler_count = 0
 	_backdrop = null
+	_skyline_root = null
+	_ship_steam = null
 	_has_backdrop = false
 	_loaded_banner_path = ""
 	_landmark = null
@@ -1201,6 +1589,7 @@ func _clear_dynamic() -> void:
 	_town_root = null
 	_town_prop_count = 0
 	_town_blockout_count = 0
+	_station_prop_count = 0
 	_town_density = _resolve_town_density()
 	_batch_batches = 0
 	_batch_multimesh_batches = 0
@@ -1345,6 +1734,7 @@ func _rebuild_shoreline() -> void:
 	var shoreline := Node3D.new()
 	shoreline.name = "Shoreline"
 	_content.add_child(shoreline)
+	_skyline_root = shoreline
 	var seed_value := String(_port.get("id", "port")).hash()
 	var box_xforms: Array[Transform3D] = []
 	var box_colors: Array[Color] = []
@@ -1591,6 +1981,7 @@ func _rebuild_backdrop() -> void:
 	_backdrop = backdrop
 	_has_backdrop = true
 	_loaded_banner_path = _banner_path
+	_apply_camera_shift()
 
 
 func _load_texture(path: String) -> Texture2D:
@@ -1828,8 +2219,8 @@ func _rebuild_town() -> void:
 	var pave_mesh := BoxMesh.new()
 	pave_mesh.size = Vector3(0.12, 0.05, TOWN_PLAZA_SIZE.z - 2.0)
 	var pave_transforms: Array[Transform3D] = []
-	for index in 11:
-		var x := -40.0 + float(index) * 8.0
+	for index in 31:
+		var x := -120.0 + float(index) * 8.0
 		pave_transforms.append(
 			Transform3D(Basis.IDENTITY, Vector3(x, TOWN_GROUND_Y + 0.01, TOWN_PLAZA_CENTER.z))
 		)
@@ -1839,7 +2230,7 @@ func _rebuild_town() -> void:
 		pave_transforms,
 		_material("wood_dark"),
 		"PlazaPaving",
-		AABB(Vector3(-44.0, TOWN_GROUND_Y - 0.2, -46.0), Vector3(88.0, 0.4, 40.0))
+		AABB(Vector3(-124.0, TOWN_GROUND_Y - 0.2, -46.0), Vector3(248.0, 0.4, 40.0))
 	)
 	_add_box(
 		_town_root,
@@ -1914,6 +2305,36 @@ func _rebuild_town() -> void:
 			if group == "pallet" or group == "buoy":
 				yaw = _town_jitter_yaw(seed_value, index + group_index * 13, yaw, 73, 30.0)
 			_add_town_prop(group, quay_spec["pos"], yaw, 1.0, false)
+	_rebuild_station_dressing()
+
+
+## Station dressing: each adjacent station owns the props in front of it, so the
+## three shots read as a working market square, a coal/water yard and a harbour
+## authority frontage inside the same continuous quay. Props reuse the official
+## town-kit keys; a missing visual simply disappears (no placeholder boxes).
+func _rebuild_station_dressing() -> void:
+	_station_prop_count = 0
+	var limit := _station_prop_count_for_density()
+	for station_id in STATION_ORDER:
+		var props_value: Variant = STATION_PROPS.get(station_id, [])
+		if not (props_value is Array):
+			continue
+		var props: Array = props_value
+		var count := mini(limit, props.size())
+		for index in count:
+			var spec: Dictionary = props[index]
+			_add_town_prop(
+				String(spec["slot"]),
+				spec["pos"],
+				float(spec["yaw"]),
+				1.0, false, true
+			)
+
+
+## Props mounted per station at the current density tier (a prefix per list).
+func _station_prop_count_for_density() -> int:
+	var value: Variant = STATION_PROP_COUNTS.get(_town_density, 0)
+	return maxi(0, int(value))
 
 
 ## Resolves the street density tier: explicit `port.density` (the shell also
@@ -1950,7 +2371,16 @@ func _town_jitter_yaw(seed_value: int, index: int, base_yaw: float, salt: int, a
 ## Mounts one town-kit GLB (pre-resolved path in `port.town_visuals`) or, for
 ## the five building slots, a procedural blockout. Workers/boats/fence simply
 ## disappear when their GLB is missing, so a content-less stage stays clean.
-func _add_town_prop(slot: String, pos: Vector3, yaw: float, prop_scale: float, blockout_fallback: bool) -> void:
+## `station` marks the per-station dressing props, which are counted separately
+## from the harbour-town kit (`station_prop_count()` vs `town_prop_count()`).
+func _add_town_prop(
+	slot: String,
+	pos: Vector3,
+	yaw: float,
+	prop_scale: float,
+	blockout_fallback: bool,
+	station: bool = false
+) -> void:
 	var path := String(_town_visuals.get(slot, ""))
 	var visual: Node3D = _instantiate_visual(path) if not path.is_empty() else null
 	if visual == null:
@@ -1961,13 +2391,17 @@ func _add_town_prop(slot: String, pos: Vector3, yaw: float, prop_scale: float, b
 			return
 		_town_blockout_count += 1
 	var holder := Node3D.new()
-	holder.name = "Town_%s_%d" % [slot, _town_prop_count]
+	var index := _station_prop_count if station else _town_prop_count
+	holder.name = ("Station_%s_%d" if station else "Town_%s_%d") % [slot, index]
 	holder.position = pos
 	holder.rotation_degrees = Vector3(0.0, yaw, 0.0)
 	holder.scale = Vector3.ONE * prop_scale
 	holder.add_child(visual)
 	_town_root.add_child(holder)
-	_town_prop_count += 1
+	if station:
+		_station_prop_count += 1
+	else:
+		_town_prop_count += 1
 
 
 ## Cheap box/roof stand-in used only when the town kit is unavailable. It keeps
@@ -2400,23 +2834,31 @@ func _rebuild_ship(ship: Dictionary) -> void:
 		return
 	var root := Node3D.new()
 	root.name = "PlayerShip"
-	root.position = SHIP_SPAWN
+	# A rebuild keeps the current station: the hull is rebuilt at its berth, not
+	# teleported back to the harbour reference shot.
+	_ship_x = _ship_moor_x
+	_ship_yaw = _ship_moor_yaw
+	_ship_sailing = false
+	root.position = Vector3(_ship_moor_x, 0.0, _ship_moor_z)
 	root.scale = Vector3.ONE * SHIP_SCALE
 	root.rotation = Vector3(0.0, _ship_yaw, 0.0)
 	_content.add_child(root)
 	_ship_root = root
-	_ship_base = SHIP_SPAWN
 	root.add_child(visual)
 	var bounds := StageKit.visual_aabb(root)
 	# The foam ring is configured from the *un-batched* hull, then the hull is
 	# rigidly baked into ship-local draw batches. The batches stay children of
-	# `_ship_root`, so the `_process` bob/turn keeps moving the whole ship.
+	# `_ship_root`, so the station transit / bob / turn keeps moving the whole
+	# ship. The centre offset is stored in ship-local space so the foam can follow
+	# the hull between berths.
 	_ship_bounds = bounds
+	_ship_bounds_offset = bounds.get_center() - root.position
 	if _water_material != null:
 		StageKit.configure_boat_foam(_water_material, bounds)
 		_water_material.set_shader_parameter("boat_yaw", _ship_yaw)
 		_water_material.set_shader_parameter("boat_foam_width", 0.8)
 	_batch_ship_visual(visual)
+	_sync_boat_foam()
 
 
 ## Rigidly bakes the hull visual into ship-local draw batches under `_ship_root`.
