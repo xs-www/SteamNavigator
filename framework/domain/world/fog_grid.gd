@@ -1,9 +1,14 @@
 class_name FogGrid
 extends RefCounted
-## Fog of war grid with three states: black (unexplored) / explored (coastal) / visible (ship vision).
+## @static-doc
+## 作用：战争迷雾网格，维护未探索、已探索海岸与当前可见三种状态。
 ##
-## Cell size is derived from the minimum vision radius to ensure fog resolution
-## is always finer than what the ship can see.
+## ## 契约与约束
+## - 单元尺寸由最小视野半径推导：`cell_size = min_vision_radius / 4`。
+## - 船只离开后，海岸单元保持 `EXPLORED`，普通海洋单元回到 `BLACK`。
+## - 相邻单元之间通过 alpha 插值平滑过渡。
+## - 序列化必须保留 `cell_size`、宽高和全部单元状态。
+## @end-static-doc
 
 enum CellState {
 	BLACK,      # Unexplored, fully opaque
@@ -17,7 +22,7 @@ var height: int
 var cells: Array[Array]  # cells[y][x] = { state: CellState, alpha: float }
 
 
-func _init(world_bounds: Rect2, min_vision_radius: float) -> void:
+func _init(world_bounds: Rect2 = Rect2(), min_vision_radius: float = 4.0) -> void:
 	cell_size = maxf(1.0, min_vision_radius / 4.0)
 	width = ceili(world_bounds.size.x / cell_size)
 	height = ceili(world_bounds.size.y / cell_size)
@@ -77,7 +82,7 @@ func reveal_circle(center: Vector2, radius: float, state: CellState = CellState.
 			# Check if within circular radius
 			var world_pos := grid_to_world(Vector2i(gx, gy))
 			if center.distance_to(world_pos) <= radius:
-				var current := get_cell(gx, gy)
+				var current: Dictionary = get_cell(gx, gy)
 				# Only upgrade state (BLACK -> EXPLORED -> VISIBLE)
 				if current["state"] < state:
 					set_cell(gx, gy, state)
@@ -90,7 +95,7 @@ func update_ship_vision(ship_pos: Vector2, vision_radius: float, coastal_cells: 
 	# First, revert all VISIBLE cells to their previous state
 	for y in height:
 		for x in width:
-			var cell := cells[y][x]
+			var cell: Dictionary = cells[y][x]
 			if cell["state"] == CellState.VISIBLE:
 				# Check if this is a coastal cell that should stay EXPLORED
 				var key := "%d,%d" % [x, y]
@@ -126,21 +131,21 @@ func smooth_alpha_interpolation() -> void:
 		temp_cells[y].resize(width)
 		
 		for x in width:
-			var current := cells[y][x]
-			var sum_alpha := current["alpha"]
-			var count := 1
+			var current: Dictionary = cells[y][x]
+			var sum_alpha: float = current["alpha"]
+			var count: int = 1
 			
 			# Sample 4 neighbors
 			for offset in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
-				var nx := x + offset.x
-				var ny := y + offset.y
+				var nx: int = x + offset.x
+				var ny: int = y + offset.y
 				if nx >= 0 and nx < width and ny >= 0 and ny < height:
 					sum_alpha += cells[ny][nx]["alpha"]
 					count += 1
 			
 			# Blend current with average of neighbors (70% current, 30% neighbors)
-			var neighbor_avg := sum_alpha / float(count)
-			var smoothed := current["alpha"] * 0.7 + neighbor_avg * 0.3
+			var neighbor_avg: float = sum_alpha / float(count)
+			var smoothed: float = current["alpha"] * 0.7 + neighbor_avg * 0.3
 			temp_cells[y][x] = {"state": current["state"], "alpha": smoothed}
 	
 	# Apply smoothed values
@@ -153,7 +158,7 @@ func get_alpha_at(world_pos: Vector2) -> float:
 
 
 func is_cell_visible(gx: int, gy: int) -> bool:
-	var cell := get_cell(gx, gy)
+	var cell: Dictionary = get_cell(gx, gy)
 	return cell["state"] != CellState.BLACK
 
 
@@ -187,7 +192,7 @@ func to_dict() -> Dictionary:
 	for y in height:
 		var row := []
 		for x in width:
-			var cell := cells[y][x]
+			var cell: Dictionary = cells[y][x]
 			row.append({"state": cell["state"], "alpha": cell["alpha"]})
 		cells_data.append(row)
 	

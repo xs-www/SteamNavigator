@@ -235,7 +235,7 @@ func test_mark_coastal_cells_identifies_cells_near_land() -> void:
 	assert_true(coastal_cells.size() > 0, "should identify at least one coastal cell")
 	
 	# Check that cells near the landmass are marked as coastal
-	var land_edge := Vector2(22.0, 30.0)  # Just outside the landmass
+	var land_edge := Vector2(22.0, 21.0)  # Just outside the top edge of the landmass (y=20)
 	var grid_pos := fog.world_to_grid(land_edge)
 	var key := "%d,%d" % [grid_pos.x, grid_pos.y]
 	assert_true(coastal_cells.has(key), "cells near landmass should be marked as coastal")

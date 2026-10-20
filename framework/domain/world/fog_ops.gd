@@ -1,8 +1,14 @@
 class_name FogOps
 extends RefCounted
-## High-level fog operations that integrate FogGrid with WorldMap and GameState.
+## @static-doc
+## 作用：战争迷雾高层操作，把 FogGrid 与 WorldMap、GameState 接合。
 ##
-## Handles coastal cell detection, port reveal, and fog state persistence.
+## ## 契约与约束
+## - `mark_coastal_cells` 把距陆地不超过 `COASTAL_DISTANCE` 的单元识别为海岸单元。
+## - `reveal_port` 使用 `FogGrid.reveal_circle` 揭示已发现港口周边。
+## - `save_fog_state` / `load_fog_state` 持久化迷雾网格与海岸单元集合。
+## - `get_visibility_at` / `is_position_visible` 是只读查询。
+## @end-static-doc
 
 const COASTAL_DISTANCE := 2.0  # Cells within this distance from coastline are "coastal"
 
@@ -60,7 +66,7 @@ static func update_ship_vision(fog: FogGrid, ship_pos: Vector2, vision_radius: f
 
 static func save_fog_state(state: GameState, fog: FogGrid, coastal_cells: Dictionary) -> void:
 	## Save fog grid and coastal cell data to GameState.
-	if not state.has("fog"):
+	if not state.data.has("fog"):
 		state.data["fog"] = {}
 	state.data["fog"]["grid"] = fog.to_dict()
 	state.data["fog"]["coastal_cells"] = coastal_cells
@@ -69,7 +75,7 @@ static func save_fog_state(state: GameState, fog: FogGrid, coastal_cells: Dictio
 static func load_fog_state(state: GameState) -> Dictionary:
 	## Load fog grid and coastal cell data from GameState.
 	## Returns { "fog": FogGrid, "coastal_cells": Dictionary } or empty if no fog data.
-	if not state.has("fog"):
+	if not state.data.has("fog"):
 		return {}
 	
 	var fog_data: Dictionary = state.data["fog"]
@@ -109,10 +115,10 @@ static func reveal_all_coastal(fog: FogGrid, world: WorldMap) -> int:
 	var revealed := 0
 	
 	for key in coastal_cells:
-		var parts := key.split(",")
+		var parts: PackedStringArray = key.split(",")
 		var gx := int(parts[0])
 		var gy := int(parts[1])
-		var cell := fog.get_cell(gx, gy)
+		var cell: Dictionary = fog.get_cell(gx, gy)
 		if cell["state"] == FogGrid.CellState.BLACK:
 			fog.set_cell(gx, gy, FogGrid.CellState.EXPLORED)
 			revealed += 1

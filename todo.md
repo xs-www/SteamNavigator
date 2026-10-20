@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**168 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施（LocationStage / SNStageHost 生命周期与回退 / ShipyardStage / PortStage 装配·替换·缩放·portal）、PortStage 场景填充访问器、港口街景 town kit（满配 47 / 站前道具 24 / 无 town / 非法路径 / port.view 26 项端到端）、连续港区三站位（相邻顺序/聚焦航行/重绑保持/站前道具密度）、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、内容类型单一真源与 v2 模块分类一致性、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**209 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 12 / 迷雾系统 16 / 海图 UI 13）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -389,12 +389,26 @@
 
 ### 阶段 2：海图 UI
 
-- [ ] `SNSeaChartView` 连续可缩放 2D 视图（滚轮缩放、拖拽平移）
-- [ ] 信息层级（港口/陆地/船只/线索按发现等级显示）
-- [ ] 右侧 Panel（目的地基础信息 + 预计时间/消耗/风险）
-- [ ] 入口（M 键 / 准备出航按钮）
-- [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）
-- [ ] 海图 UI 单元测试（信息层级、线索显示）
+- [x] `SNSeaChartView` 连续可缩放 2D 视图（滚轮缩放、拖拽平移、`Esc`/`+`/`-` 键盘控制）
+  - `framework/ui/components/sn_sea_chart_view.gd`：使用 `_draw()` 在世界坐标上绘制水面、陆地多边形（已探索/未探索双色调）、贝塞尔航线、港口图标（当前/已访问/已发现三态 + 脉冲/选中高亮）、降采样迷雾网格（BLACK/EXPLORED 分色、VISIBLE 跳过）、船只标记、罗盘、图例与缩放指示
+  - 世界↔屏幕线性变换：`world_to_screen / screen_to_world`，缩放以鼠标位置为不动点，半径按 `sqrt(_zoom)` 缩放
+  - 发出 `port_clicked(port_id)` 与 `port_hovered(port_id)` 信号，不执行导航或查询
+- [x] 信息层级（港口/陆地/船只按发现等级显示）
+  - 港口只在 `discovered=true` 时显示；航线只在两端都已发现时显示，`explored=true` 表示两端都已访问
+  - 陆地多边形在迷雾未探索时使用暗色，已探索时使用亮色（fill + outline）
+  - 在航时显示船只菱形标记（带脉冲）
+- [x] 右侧 Panel（目的地基础信息 + 预计时间/消耗/风险）
+  - `framework/ui/components/sn_sea_chart_panel.gd`：展示港口名、原型、区域、设施列表、航线信息（距离/预计时间/风险/是否已探索）与「启航」按钮
+  - 风险等级按阈值分四档（low/medium/high/extreme），文案与颜色走本地化
+  - 发出 `voyage_requested(port_id)`，由 Shell 路由到 `voyage.start`
+- [x] 查询层 `sea_chart.view`（已注册在 `QueryRegistry`）
+  - `framework/application/queries/sea_chart_view.gd`：输出世界边界、陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格（步长 `max(w,h)/80`）、船只位置
+  - 只读查询，不修改 `GameState`；`has_run=false` 或 `world_map` 为空时返回结构化空结果
+- [x] 海图 UI 单元测试（13 个用例）
+  - `framework/tests/cases/test_sea_chart.gd`：覆盖查询结构、世界边界匹配、陆地数量、当前港标记、航线生成、迷雾降采样、港口位置合理性、空上下文、JSON 序列化往返、同 seed 复现、异 seed 差异、发现计数、原型名称合法
+- [x] 附带修复：Phase 1 迷雾系统的 4 处编译问题（`fog_grid.gd` 类型推断、`fog_ops.gd` `GameState.has()` → `state.data.has()`）
+- [ ] 入口集成（M 键 / 准备出航按钮打开海图页）与 Shell 接线
+- [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）——阶段 4 探索系统落地后接入
 
 ### 阶段 3：航行演出状态机
 
@@ -514,7 +528,7 @@
 
 ## 维护约定
 
-- 改代码后同步更新 `docs/static/` 对应文件与 `docs/static/manifest.json`。
+- 改代码时在源码头维护 `@static-doc`（无注释格式用 `docs/static_headers/` sidecar），运行 `node tools/gen_static_docs.mjs`，并用 `--check` 守护 `docs/static/` 与 manifest 新鲜度；旧 `FILE_DOCS` 仅作迁移兼容。
 - 数值改动先改 Core JSON，不在框架里写死。
 - 新增命令/查询必须经 `FrameworkApi` 注册，并补测试。
 - 新增内容类型需要同时补 Schema、注册表映射、跨引用检查与文档；随后运行 `node SNModMaker/tools/sync-schemas.mjs` 与 `node SNModMaker/tools/sync-core-index.mjs`，并跑 `node SNModMaker/tests/run-tests.js`。

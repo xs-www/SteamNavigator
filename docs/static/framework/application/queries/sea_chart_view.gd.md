@@ -1,0 +1,27 @@
+# `framework/application/queries/sea_chart_view.gd`
+
+> 作用：为可缩放 2D 海图生成只读视图模型（`sea_chart.view`），输出世界边界、
+
+- 类型：GDScript 源文件
+
+## 关键符号
+
+| 符号 | 位置 |
+| --- | --- |
+| `SeaChartViewQuery` | L1 |
+| `DEFAULT_MIN_VISION_RADIUS` | L17 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L18 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L21 |
+
+陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
+
+- 关键依赖：`WorldOps`、`FogGrid`、`RouteCalculator`、`Landmass`、`GameState.campaign_world()`
+
+## 契约与约束
+- 只在 `has_run=true` 且 `world_map` 非空时输出完整数据，否则返回空结果。
+- 港口列表只包含已发现港口；未发现的港口被过滤掉。
+- 航线只在两端都已发现时输出，`explored` 标记两端都**已访问**的航线。
+- 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
+- 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
+
+模块索引：[framework/application](../README.md)

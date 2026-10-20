@@ -1,25 +1,25 @@
 {
-  "rule_version": "2.0",
+  "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T03:25:04.164Z",
-  "commit": "d9d6fb7",
+  "generated_at": "2026-10-20T04:02:25.785Z",
+  "commit": "3204e10",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 570,
-    "documented": 187,
-    "grouped": 383
+    "sources": 575,
+    "documented": 191,
+    "grouped": 384
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "be3f37eb5d2e01e4e437b5b376c3d4f471003e8aa0cb0e1409a99b19304ea4fa",
+      "sha256": "2582e4026ffd2e671e21f9cbf6ebb1e0bd87d35cc996832ff63fbc0f77a29831",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
     {
       "source": "README.md",
-      "sha256": "d53206e2972e0bf319ede3949e0a853501bf15a5c1de26995b84a793f7fdad9c",
+      "sha256": "784eecadae8f2afe6655ce0590c74bd9c325e7a6b78ed3926e24867f6ec3820e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1748,10 +1748,16 @@
     },
     {
       "source": "framework/application/queries/query_registry.gd",
-      "sha256": "23ec83aceadd7f5be875c4291aa5d97fd957e9d5ee04b48ca51bca78724b7d9f",
+      "sha256": "245c61e66b487930c601a7be85b55244f530085cbeb90e9e5d138d483a90a6a0",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/queries/sea_chart_view.gd",
+      "sha256": "cf275faa4151af3f2ca267a7139742389d8226811e3803e42dacdceb4383cfb4",
+      "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/application/queries/shipyard_view.gd",
@@ -1988,61 +1994,61 @@
     },
     {
       "source": "framework/domain/world/fog_grid.gd",
-      "sha256": "a503c7c77b463661202b78cdf5692222019d804ee624d610d60db88ee9784ae7",
+      "sha256": "2d29a27142f97a841965a87bac656fb81a084686ff14c8d7e0609f073ff91a7d",
       "doc": "docs/static/framework/domain/world/fog_grid.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/fog_ops.gd",
-      "sha256": "43b52541241d4bb65a0263feea32cf5457f61284bb39a6b107286053bcb1a259",
+      "sha256": "cd4b5c3e64176e2067ff11c80dbc1863ffe68022766b11997a0e6f09a7c7020e",
       "doc": "docs/static/framework/domain/world/fog_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/land_generator.gd",
-      "sha256": "fa9f17864fad5e08f9a8f2a44ccdaca809c4b95004464ec48b6786f4a8bd0511",
+      "sha256": "9aff6550fc8855e7f30a0f61e33517a2ee92d7504c9b168dd1ffbc5c1443cf9a",
       "doc": "docs/static/framework/domain/world/land_generator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/landmass.gd",
-      "sha256": "b2d4604502da89a504fc2eba88896abc752922705bf1e376156fdc21441adb14",
+      "sha256": "099e4328876c77a2c43531826bcc496c9a4116803473a30e0b992a5210567b37",
       "doc": "docs/static/framework/domain/world/landmass.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/region.gd",
-      "sha256": "d4991049a3d48728796a2e4099fd65e37d50b6d5f24f8c33f9117efa1bb0f5d6",
+      "sha256": "152494a08a19bc3aff264060cd4d69e02d771ebfdf1b9c4ac7171cd2738a4d05",
       "doc": "docs/static/framework/domain/world/region.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/route_calculator.gd",
-      "sha256": "fa20b2f530f1bf08a4b46d9910ee52f23709918c9a8bd7776975e84dfb85ea1a",
+      "sha256": "7c78aa91942e3039bb00bd181897a633ac475f55d4d779144ec9d339d067c4db",
       "doc": "docs/static/framework/domain/world/route_calculator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_generator.gd",
-      "sha256": "888a73930c467deeb4d612defe981ecf5f8036a061ec0f511e4eeaee29a69a14",
+      "sha256": "b47ef979b65f819c87d280e574acad4e9e8b1411e5471091fc63f7a507c4ed22",
       "doc": "docs/static/framework/domain/world/world_generator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_map.gd",
-      "sha256": "2dbc312b10fda31ad1f9e7a1283a3675b8a9dc9f9ebaadde30666478138bbc51",
+      "sha256": "3ed282d619ec015c52e6e7166eda49dfe6b7bc31f9682a3674a0fdebed66e294",
       "doc": "docs/static/framework/domain/world/world_map.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_ops.gd",
-      "sha256": "3b5153fe02b32fd0973a17e500ce08918635b8cb10a8d99371b0825550a9ab72",
+      "sha256": "9b20a2f60de46cdf189a757569dc0ff5af8179fe46b502782380675cc0719873",
       "doc": "docs/static/framework/domain/world/world_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_port.gd",
-      "sha256": "00a5eb7a6fc690c921c8c14c5dc62c9605948c90a1ca51747c0584d2eacd9437",
+      "sha256": "67a95afddd7414ffba19e38c11a40d6bd854461cb93ff9d3a17c97db3d36352d",
       "doc": "docs/static/framework/domain/world/world_port.gd.md",
       "status": "documented"
     },
@@ -2247,7 +2253,7 @@
     },
     {
       "source": "framework/tests/cases/test_fog_system.gd",
-      "sha256": "95368ba3b3baac6f7916310796a94395b3279bb19ad9bc81a109fd69713a87d4",
+      "sha256": "61bc748c99f84b36c3220062e36a2d8cb6ce4b36ca820810006867a3db6a212e",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2343,6 +2349,13 @@
     {
       "source": "framework/tests/cases/test_schema_validator.gd",
       "sha256": "a8bfea22eced9050c4e390541e5a588fe142b35eccbfd2ea7bb1af89fad19119",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_sea_chart.gd",
+      "sha256": "1b05a1a90c4c878ccc214c9e98f8ecfef81e3b15f9fc4fd984deeda5b8f58054",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2455,7 +2468,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "7478ac2baa08b4de33704d5fc53713899eb172a5de6ea5be8fa9bd6e9a5da31c",
+      "sha256": "8f98e518836ab10f992ff8a9351cc8d58b7cf1adba3425c4634ca2bc0ff5312c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2556,6 +2569,18 @@
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/components/sn_sea_chart_panel.gd",
+      "sha256": "2ec01a223c03fd4ae4042acbe50d4f54643b6d2fda2f01fefed9825fabf9f4e5",
+      "doc": "docs/static/framework/ui/components/sn_sea_chart_panel.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_sea_chart_view.gd",
+      "sha256": "e9a4660de7de1d83815e018c9ae8e7d082ec7bf1ce7cf6b4e3314c695ccd46b5",
+      "doc": "docs/static/framework/ui/components/sn_sea_chart_view.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_section_header.gd",
@@ -3178,7 +3203,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "6a5a76c0bc7deb94fc2adf513844f70bfa38559b2e2f3d4243ba7214d64a0f8c",
+      "sha256": "498baba24b971c3f2d6e1a14de63b30164bdcd1fe6831ba6f3a9d2eff03e959a",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3216,7 +3241,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "256b5523dc9f8652d50d4947cbb9a640a863f75181c88c530122a9727e436e57",
+      "sha256": "4ed70a850ac4c9ad1b32b7fea88c29a6c18cd3d5c1672b105af2be4e290a93d5",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -3797,7 +3822,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "c3bc1fc5ba277c99366f8b1d6959c2843c3178133b43cb3604dba80ce7c23fc7",
+      "sha256": "a2c3f44ab78f0cfed2a04ffacfeda1b3c0600a44f4ba973f31a8eba12c04f3e6",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
@@ -3807,6 +3832,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/tests/static_docs.test.mjs",
+      "sha256": "eac403d9b7148504a7f69e0117b22772cb8e8dcfc31ff9fc2311031e5d5fcbb4",
+      "doc": "docs/static/tools/tests/static_docs.test.mjs.md",
+      "status": "documented"
     },
     {
       "source": "tools/ui_snapshot.gd",
