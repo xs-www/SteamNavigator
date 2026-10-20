@@ -443,7 +443,7 @@ function renderRootReadme(docRoot, generatedAt, commit) {
   l0.push("- 主界面：[main.gd](framework/ui/shell/main.gd.md)");
   l0.push("- 3D 港口样片：[dev_scenes](dev_scenes/README.md)");
   l0.push("- 官方内容：[Core 内容包](dev_mods/core/README.md)");
-  l0.push("- 迭代 1 契约：[MVP 闭环](../archive/ITERATION_1_MVP_LOOP.md)");
+  l0.push("- 迭代 1 契约：[MVP 闭环](../specs/ITERATION_1_MVP_LOOP.md)");
   l0.push("- SDK：[打包/校验/模板](sdk/README.md)");
   l0.push("- 释放与导出：[export_presets.cfg](export_presets.cfg.md)、[release.yml](.github/workflows/release.yml.md)");
   l0.push("- 模组制作器：[SNModMaker](SNModMaker/README.md)");

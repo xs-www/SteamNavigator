@@ -6,7 +6,7 @@
 参考实现：tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py
       （几何已过门禁并冻结；本文件的 `Part` / `panel` / 局部立面坐标系 / 倒角构件
        全部按该实现逐字照抄，只把立面朝向与内部程序本楼化）
-舞台依据：docs/design/IRON_HARBOR_ARCHITECTURE_M1.md §2/§3
+舞台依据：docs/archive/IRON_HARBOR_ARCHITECTURE_M1.md §2/§3
 
 本文件只做**纯 Python 几何**（不 import bpy）。材质与 UV 由 Lead 用
 `sn_iron_harbor_materials.apply_to_object()` 在 Blender 里统一施加；本文件只负责

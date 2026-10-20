@@ -3,7 +3,7 @@
 > 定位：这份计划接在「MVP 闭环 + 内容全部模组化 + 编辑器原生工作区 + 3D 船厂首个切片」之后，
 > 用于决定接下来 2–4 周做什么、为什么做、怎样算完成。
 > 详细路线图见 [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md)，战斗边界见
-> [COMBAT_ARCHITECTURE_REVIEW.md](COMBAT_ARCHITECTURE_REVIEW.md)，舞台方案见
+> [COMBAT_ARCHITECTURE_REVIEW.md](../specs/COMBAT_ARCHITECTURE_REVIEW.md)，舞台方案见
 > [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md)。
 
 ## 0. 当前基线（已完成）

@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T13:38:26.484Z",
-  "commit": "077c6e6",
+  "generated_at": "2026-10-20T21:47:23.060Z",
+  "commit": "3dd68cb",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "a42d5c89ad85640394d8f5cb17fc63c1f255e93c236f638b76e9c37004bfe2d6",
+      "sha256": "6aa5dc026ba5f7ba1fc34033c74e3de3e79383ef8198062e594d6252dd5b4129",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1597,7 +1597,7 @@
     },
     {
       "source": "docs/design/UI_PROTOTYPE.md",
-      "sha256": "0354d764b9dfe26634d72e54e5171341990de20290d678734ea3523cb475ed38",
+      "sha256": "3fa78b65d5950af06cd3276f1afb6b4f4015e61859cfeb0795b44c404a8e8af8",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2220,7 +2220,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_asset_loader.gd",
-      "sha256": "db5bef65f3a90e90ee4b2a6efe0ee568f173dc4cfbd68aaa5812d0f571a4e108",
+      "sha256": "5346692c95aa19ba8f36a6e1ecf88bbae9c240f5ee391eb2a20c0358573ee06c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2240,13 +2240,13 @@
     },
     {
       "source": "framework/tests/cases/test_contract_refresh.gd",
-      "sha256": "566e439ca01cfb83445e274efafc1ae4f2b335adbe10e56716bf9d75ac3e6466",
+      "sha256": "a6f2679372954aeac5ec8d2e0eb68c455530a9e3843bae04a0331a773c5e1f90",
       "doc": "docs/static/framework/tests/cases/test_contract_refresh.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_craft_wait.gd",
-      "sha256": "10fa33aa9b4e3b621030ee69f5cc742e0d20e4ac9ba2f7f321fabafba3c1a476",
+      "sha256": "88230eed4099a3e2b052a0d34a6101e51397a7bb4d7f69ddefb8515343e10e57",
       "doc": "docs/static/framework/tests/cases/test_craft_wait.gd.md",
       "status": "documented"
     },
@@ -2400,7 +2400,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "f562fda384bfa40471523ef7a83bfc67aa34421298e3d23b381a9dfb30671fec",
+      "sha256": "a9a484c51544b4cee05561700918228d9e991b31586ffa41afc05404f9b4cb71",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -2426,7 +2426,7 @@
     },
     {
       "source": "framework/tests/cases/test_victory.gd",
-      "sha256": "c5989e3b279001129ceffd9de05b48af331743ea5276a38724aaa70fd4cd5d16",
+      "sha256": "8383cbe54890e4468df78b9a52d8fc6d001d13bc13c2837bfd485c0f1a35b6ca",
       "doc": "docs/static/framework/tests/cases/test_victory.gd.md",
       "status": "documented"
     },
@@ -2446,7 +2446,7 @@
     },
     {
       "source": "framework/tests/cases/test_warehouse_craft.gd",
-      "sha256": "f2c92b5ca9e9e42f1e89e1f06073df0a526d419ffad37f9cba5388d5404c4f84",
+      "sha256": "fe5beeb7fe612ec0774d20a8a4a8b176692a74c664a32041e1c476d5f3bba774",
       "doc": "docs/static/framework/tests/cases/test_warehouse_craft.gd.md",
       "status": "documented"
     },
@@ -3241,7 +3241,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "93659c6f2ec52b1f532f45f149b74f543a1c3fa8e1ca18f6f7e4d79916f4d042",
+      "sha256": "0f8c5056d8401715453a8101e3131ae7b597a1119612ee59edf48cc7766c984d",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3279,7 +3279,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "78173d53c604fcaf21015fc252a26ca0ff6f239a13ae17ed53d9f4c3109e012c",
+      "sha256": "bb6ac88901edf81d08abf10ae933b2de249490fca03a7921e6277fd2c16e54b0",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -3426,7 +3426,7 @@
     },
     {
       "source": "tools/modeling/briefs/sn_ironclad_broadside.json",
-      "sha256": "45abbc287f50d54a203d5097856cd2653f1144a7f5f2f21b1e8d72e410ce93b0",
+      "sha256": "d90c9ea6af010b5aa4d1b678e305b15b64dd061363f9ab32d15903e8a27a21c7",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3635,7 +3635,7 @@
     },
     {
       "source": "tools/modeling/generators/p0_rework_2026-10-19.py",
-      "sha256": "db3121248d0709b3be87b785f1a6126725c5f612097dced2c189d1a645890f62",
+      "sha256": "b08a3642cdd8ad8fb2ccccee23a27dbf00a51bdf8059248f10099e4103190427",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3711,7 +3711,7 @@
     },
     {
       "source": "tools/modeling/generators/ship_parts/core.py",
-      "sha256": "db33800080dea7ad015ea93dd8603a071aa69f8a92c7e77ee4f5eab97c56f2c1",
+      "sha256": "3e2fbec8d6ce6c7e7a2bf2bfcbaab4da0b13dc254bce9ee3b1765603ecf376da",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3791,37 +3791,37 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_harbor_office_generator.py",
-      "sha256": "b8a233ee4ab977e4bedc3c59de9d7e3aa272a97871cc765aeee68f852faebdba",
+      "sha256": "68c7f6fb1433a342f32f8d2388c55668fe684bd9360c2129effac1c6bc1354e7",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_harbor_office_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_kit_batch2.py",
-      "sha256": "2367b31a496d9f8eade7bc687e5e0603a8163c2b93aab489e03f331b720b3249",
+      "sha256": "7d3c36f6c81fa70c2cd0105448c4c41845cf691b913538feb98f8e8f945febcd",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_kit_batch2.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_materials.py",
-      "sha256": "a4c1751787ff6ef6065672fe06bebfa9f30ee93f29aedcc500afcb6edef1ae40",
+      "sha256": "1204c1dfe54351d82dd6bf287c5965ee4636071cacf6607cbe7bfb6e8e732d61",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_materials.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_prototypes_generator.py",
-      "sha256": "f7f94419adce8dfdf8924ba5edeb7fc5092886ff885da6eb04a92d5b5827ae95",
+      "sha256": "a032526f80f489f291b91e64c5fe7c9d9c20757881a1f82f7684d1c50654019d",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_prototypes_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_tavern_generator.py",
-      "sha256": "1861463ce444c63ce138ffa23ea3457529ca6f25f700d3a094ad105c9fabdfdf",
+      "sha256": "4c28f6260d981d945852db7b92c12afc2e55ec9e527231bd81e5ac1e2f655603",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_tavern_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py",
-      "sha256": "b6c94b5610dfa90d8b6f165952f8bcc2d9f00d6b297ec2c1c1193a3017a18cbb",
+      "sha256": "e21e5bbeaabe3c96a0c2190f174be462da94321f516e81c06ebd5187393ffdb4",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py.md",
       "status": "documented"
     },
@@ -3861,7 +3861,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_schooner_fame_generator.py",
-      "sha256": "d24cd324a932a90838f252b88939a5cdf7d819ee24b620f1a8c6cc0f3e2f54fc",
+      "sha256": "7b301f22789bb02b6024e6e0c196ab250ee511568602eee3d6fb18ec5c8f8894",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3943,7 +3943,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "4b9367a8aa72c19036dcbc1276894d55a398b2a150d20127cbece890c966cc91",
+      "sha256": "6cbf8fc61b139006952fc09c2c2e7610702b1474f54374f69c2c39b892533c7b",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

@@ -1,6 +1,6 @@
 extends TestCase
 ## Normal contract pool refresh and holding limit.
-## Owned by loop-systems; see docs/design/ITERATION_1_MVP_LOOP.md §3.5 / §5.2 / §8.
+## Owned by loop-systems; see docs/specs/ITERATION_1_MVP_LOOP.md §3.5 / §5.2 / §8.
 
 const STEADY_BUILD := "core:starting_build/steady"
 const STANDARD_STRATEGY := "core:strategy/standard"

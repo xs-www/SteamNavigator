@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Steam Navigator — 第一批 P0 整改脚本（2026-10-19）。
 
-依据 docs/design/MODELING_ACCEPTANCE_2026-10-19.md 第 5 节 P0：
+依据 docs/archive/MODELING_ACCEPTANCE_2026-10-19.md 第 5 节 P0：
 
   1. 修正系缆桩的桩头（改为十字形）和底座法兰
      -> 由 sn_mooring_bollard_generator.py 重建 SN_Mooring_Bollard

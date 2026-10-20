@@ -5,7 +5,7 @@
       building_archetypes → warehouse_short（11.0 × 9.0 × 9.5 m，3000–5000 tri）
 参考实现：tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py
       （几何已过门禁并冻结；本文件逐字复用其纯 Python 助手与造型语言）
-设计文档：docs/design/IRON_HARBOR_ARCHITECTURE_M1.md §2 / §3
+设计文档：docs/archive/IRON_HARBOR_ARCHITECTURE_M1.md §2 / §3
 
 本文件只输出几何（Part：顶点 + 面 + 每面材质），**不 import bpy**，材质 / UV /
 GLB 导出由 Lead 在 Blender 内用共享 trim sheet 材质完成。可离线自检：
@@ -763,7 +763,7 @@ def _shed(m):
 def _roof_section(sy):
     """主屋面单坡 YZ 截面：檐口外棱 2 段 45° 倒角，板厚 0.22，脊线收口。
 
-    LOD1 批次修复（见 docs/design/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md §4）：
+    LOD1 批次修复（见 docs/archive/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md §4）：
     顶皮必须严格落在 `z = RIDGE_TOP - |y - Y_RIDGE| * SLOPE` 这条线上。旧实现把
     檐口倒角起点由 ye 向内收 0.06 m 后**没有**同步抬升 0.06*SLOPE，导致实际顶皮
     坡度 0.6559 > SLOPE 0.6436：在 ±Y 墙线（|y - Y_RIDGE| = 2.89）处顶皮只有

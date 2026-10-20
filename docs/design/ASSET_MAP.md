@@ -292,4 +292,4 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 
 ## 后续界面重构
 
-市场、委托、补给与船厂的页面骨架、组件拆分、ViewModel 建议和验收标准见 [高频决策页面重构指南](../archive/HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md)。
+市场、委托、补给与船厂的页面骨架、组件拆分、ViewModel 建议和验收标准见 [高频决策页面重构指南](../specs/HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md)。

@@ -2,7 +2,7 @@
 
 > 状态：已落地（2026-10 迭代）
 > 适用：Save Schema 2.0 运行态、维修经济、船厂 UI，以及后续战斗持久伤害
-> 相关：[实体契约 v2](../design/ENTITY_CONTRACT_V2.md)、[战斗系统架构评审](../design/COMBAT_ARCHITECTURE_REVIEW.md)、[持久战役架构](../design/PERSISTENT_CAMPAIGN_ARCHITECTURE.md)
+> 相关：[实体契约 v2](../design/ENTITY_CONTRACT_V2.md)、[战斗系统架构评审](COMBAT_ARCHITECTURE_REVIEW.md)、[持久战役架构](PERSISTENT_CAMPAIGN_ARCHITECTURE.md)
 
 ## 1. 为什么现在做
 

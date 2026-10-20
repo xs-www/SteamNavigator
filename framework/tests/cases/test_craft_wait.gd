@@ -1,7 +1,7 @@
 extends TestCase
 ## Craft orders (feedback 4) and port.wait: tier-1 money-only recipes, order
 ## settlement while waiting in port and across a voyage, validation errors and
-## old-save backfill. See docs/design/ITERATION_1_MVP_LOOP.md §3.2, §4 and §9.
+## old-save backfill. See docs/specs/ITERATION_1_MVP_LOOP.md §3.2, §4 and §9.
 
 const BUILD := "core:starting_build/steady"
 const STRATEGY := "core:strategy/standard"

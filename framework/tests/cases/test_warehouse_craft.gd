@@ -1,6 +1,6 @@
 extends TestCase
 ## Warehouse, crafting, transit and replacement flows for iteration 1.
-## See docs/design/ITERATION_1_MVP_LOOP.md §3.1-3.3, §4, §6 and §8.
+## See docs/specs/ITERATION_1_MVP_LOOP.md §3.1-3.3, §4, §6 and §8.
 
 const CONTRACT_FREIGHT := "core:good/contract_freight"
 const MEDIUM_UNLOCKS := ["core:hull/medium_standard", "core:cargo_module/medium_hold"]

@@ -8,8 +8,8 @@
 #
 # - 关键依赖：`sn_iron_harbor_materials.py`（6 个 `SN_Town_*` 材质 + trim-sheet cell + 盒投影 UV）、
 #   `sn_iron_harbor_kit_batch2.py`（report/render 模板参考）、
-#   `docs/design/MODELING_REQUIREMENTS_NEXT_BATCH.md` §6.1–6.4（尺寸/tri/必须包含项/轮廓门禁）、
-#   `docs/design/IRON_HARBOR_ARCHITECTURE_PROTOTYPES_LOD0_BUILD.md`（构建报告 + LOD1 章节）。
+#   `docs/archive/MODELING_REQUIREMENTS_NEXT_BATCH.md` §6.1–6.4（尺寸/tri/必须包含项/轮廓门禁）、
+#   `docs/archive/IRON_HARBOR_ARCHITECTURE_PROTOTYPES_LOD0_BUILD.md`（构建报告 + LOD1 章节）。
 #
 # ## 契约与约束
 # - **参数化真源唯一**：三栋的尺寸、墙线、开洞表、构件坐标全部由本文件的模块常量与

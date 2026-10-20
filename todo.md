@@ -75,7 +75,7 @@
 
 ### 迭代 2：MVP 反馈优化（已完成）
 
-来源：`docs/archive/MVP反馈.md`（玩家试玩反馈 6 条）。契约与决策：[ITERATION_2_MVP_FEEDBACK.md](docs/archive/ITERATION_2_MVP_FEEDBACK.md)
+来源：`docs/archive/MVP反馈.md`（玩家试玩反馈 6 条）。契约与决策：[ITERATION_2_MVP_FEEDBACK.md](docs/specs/ITERATION_2_MVP_FEEDBACK.md)
 
 - [x] 反馈 1：tier1 模块改为「仅金币」配方（`materials: []` + `craft_cost`），`CraftOps.craftable()` 规则放宽；tier2/3 数值不变
 - [x] 反馈 4：打造改为带工时的**订单**（`state.data.shipyard_orders` / `order_serial`，`CraftOps.ensure_orders/settle_orders`），下单不再推进时间、不再即时入库；新增 `port.wait`（1..240 小时，在港）+ 船厂/总览「在港等待 6/12/24 小时」按钮；出航抵达亦结算订单
@@ -89,7 +89,7 @@
 
 ### 船厂界面（图 2 / 图 3 布局重构，已完成）
 
-> 目标：主界面只保留「改装台 + 组件 HUD」，全部改装操作收进分类面板；旧的整页下方面板删除，但每条旧命令保留入口。设计说明：[SHIPYARD_UI_REFACTOR.md](docs/archive/SHIPYARD_UI_REFACTOR.md)。
+> 目标：主界面只保留「改装台 + 组件 HUD」，全部改装操作收进分类面板；旧的整页下方面板删除，但每条旧命令保留入口。设计说明：[SHIPYARD_UI_REFACTOR.md](docs/specs/SHIPYARD_UI_REFACTOR.md)。
 
 - [x] 正常态三列：左「已有船舶」贴图船卡（`assets/ui/shipyard/ship_thumb_ironclad.png`）+ 中间 `SNShipView(EXTERIOR)` 实机渲染占位 + 右「组件」六类入口（点击进入改装）
 - [x] 改装态三列：左授权贴图纵剖图（`SNShipView(CUTAWAY)` + 每槽位一枚 `SNSlotTarget` 贴片 + 舱室引线）+ 中当前分类的槽位 / 装配 / 购买 / 打造紧凑操作卡（唯一纵向滚动区）+ 右竖排分类页签（船体 / 锅炉 / 货舱 / 导航 / 安全 / 客舱 / 杂项）
@@ -104,7 +104,7 @@
 - [x] 截图工具：`tools/ui_snapshot.gd` + `tools/capture_ui.ps1`（窗口 1440×900、bootstrap 与测试一致、模式/分类断言、120 s watchdog），产出 `shipyard_{normal,refit,refit_cargo,refit_misc}.png`
 - [x] 本地化：新增 normal/refit 两态与分类页签中英键（`ui.label.ship_list`、`ui.label.components`、`ui.category.*`、`ui.hint.operations*`、`ui.tag.section_texture` 等）
 - [x] 测试：`test_shipyard_refit` 扩到 8 例（正常态 / 改装态 / 分类与模式记忆 / 贴图契约 / 船卡缩略图 / 2.5D 渲染器替换 / 拖拽安装 / 旧面板移除）；`test_ui_shell` 改为通关只在总览、打造与等待经分类和「杂项」。本轮验收船厂 / UI 套件 105/105 全绿
-- [x] 文档：`docs/static` 的船厂页 / `sn_ship_view` / Shell / `shipyard_view` / 两个测试条目重写契约，并新增 [SHIPYARD_UI_REFACTOR.md](docs/archive/SHIPYARD_UI_REFACTOR.md)、更新 UI_PROTOTYPE 与 ASSET_MAP
+- [x] 文档：`docs/static` 的船厂页 / `sn_ship_view` / Shell / `shipyard_view` / 两个测试条目重写契约，并新增 [SHIPYARD_UI_REFACTOR.md](docs/specs/SHIPYARD_UI_REFACTOR.md)、更新 UI_PROTOTYPE 与 ASSET_MAP
 - [x] 2.5D 舞台接入：正常态中央已是真实 3D 船体舞台（`SNShipStage3D` → `SNStageHost` → `ShipyardStage`），改装态仍是 2D 纵剖图；`SNShipView.set_renderer()` 渲染器协议不变，第二切片把视口/机位/灯光/水面迁进通用宿主与舞台场景
 
 ### 阶段 D：存档与兼容
@@ -320,7 +320,7 @@
 
 ## 正式版方向：持久模拟经营（已确认）
 
-> 定位：一个战役 = 一份持久存档，世界随机开局后固定；多舰队、基地、自动贸易与遗迹都活在同一存档里。详见 [架构方向](docs/design/PERSISTENT_CAMPAIGN_ARCHITECTURE.md) 与 [路线图](docs/design/FULL_GAME_ROADMAP.md)。
+> 定位：一个战役 = 一份持久存档，世界随机开局后固定；多舰队、基地、自动贸易与遗迹都活在同一存档里。详见 [架构方向](docs/specs/PERSISTENT_CAMPAIGN_ARCHITECTURE.md) 与 [路线图](docs/design/FULL_GAME_ROADMAP.md)。
 
 - [x] 产品决策：持久模拟经营战役 + 随机开局，失败不静默删档
 - [x] 实体契约 v2 草案 + `content_types.json` v1（含 16 个 active 类型、v2 模块分类与正式版 planned 系统，框架一致性测试守护）
@@ -329,7 +329,7 @@
 - [x] Content Schema 2.0 草案：`schemas/v2/common` + start/world/region/site/route，`draft_schemas` 登记且保持 planned，SchemaValidator 有效/无效样本测试
 - [x] Content Schema 2.0 世界探索家族补齐：`weather_profile` / `faction` / `discovery` 草案，登记 `draft_schemas` 并补有效/无效样本测试
 - [x] `CampaignState` 分区骨架：`campaign.world` / `codex` / `factions` 惰性补齐，探索进度只追加 ID，`set_faction_reputation` 夹取，随存档往返；新局标记 `world.generated` 与起始港
-- [x] 模块实例化第一步：`ship.module_instances` + `module_serial`，实例 id/condition 随存档；`damage_module` 效果、锅炉过热接入、维修按部件计价、船厂状态徽标、顶部信息条/船卡/补给页可见；`capture_ui.ps1 -Damage` 可复现受损截图（见 [SHIP_MODULE_INSTANCES.md](docs/archive/SHIP_MODULE_INSTANCES.md)）
+- [x] 模块实例化第一步：`ship.module_instances` + `module_serial`，实例 id/condition 随存档；`damage_module` 效果、锅炉过热接入、维修按部件计价、船厂状态徽标、顶部信息条/船卡/补给页可见；`capture_ui.ps1 -Damage` 可复现受损截图（见 [SHIP_MODULE_INSTANCES.md](docs/specs/SHIP_MODULE_INSTANCES.md)）
 - [x] 2.5D 首个切片：船厂正常态 3D 实机舞台（`SNShipStage3D` 按 hull_tier 选船、固定 3/4 机位、复用港口水面着色器，改装态保持纵剖图，资产缺失回退程序化占位）；截图见 [stage3d](docs/design/screenshots/stage3d/shipyard_normal.png)，方案见 [2.5D_STAGE_PLAN.md](docs/design/2.5D_STAGE_PLAN.md)
 - [x] 2.5D 第二切片：`SNStageHost` + `LocationStage` 泛化、`ShipyardStage` 迁移、`PortStage` 骨架（设施/空槽/回退/玩家船）、独立预览与 9 个舞台测试；截图见 [port_stage_preview](docs/design/screenshots/port_stage/port_stage_preview.png) / [port_stage_sparse](docs/design/screenshots/port_stage/port_stage_sparse.png)
 - [x] 2.5D 第三切片：总览页全窗 `PortStage` 背景层 + 2D 设施热点（相机投影 Ghost Button，点击进对应设施页）+ 俯瞰/返回切换 + 失败回退 2D；新增 `test_ui_shell` 用例与 `ui_snapshot --overview-stage` 截图；截图见 [overview_port_stage](docs/design/screenshots/overview_port_stage.png)
@@ -337,7 +337,7 @@
 - [x] 2.5D 第五切片：Bounty Train 式主界面（默认 3D 舞台、121 px 紧凑 HUD、左右设施招牌 + 出航招牌、60 px 底部状态条、详细总览抽屉、2D 回退）+ 港口街景 10 件 `SN_HT_*` + `port.diorama`/`town_visuals` 接线（16 项、旧存档回填）；截图见 [overview_port_stage](docs/design/screenshots/overview_port_stage.png) / [overview_detail](docs/design/screenshots/overview_detail.png)
 - [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架
 - [ ] 阶段 1：广域海图与探索（区域 / 地点 / 迷雾 / 低细节远方模拟）
-- [ ] 阶段 2：舰队组成与战斗（先自动结算，再评估战术层）；模块分类收敛为 boiler/cargo/utility/cabin/crew，导航与安全并入 utility；战斗契约边界见 [战斗系统架构评审](docs/design/COMBAT_ARCHITECTURE_REVIEW.md)
+- [ ] 阶段 2：舰队组成与战斗（先自动结算，再评估战术层）；模块分类收敛为 boiler/cargo/utility/cabin/crew，导航与安全并入 utility；战斗契约边界见 [战斗系统架构评审](docs/specs/COMBAT_ARCHITECTURE_REVIEW.md)
   - [x] 建立独立 `SNBattleSim` 2D 规则试验台第一版：固定大/中/小船体、多武器、视野与最后已知位置追击、直射/炮击/侧弦齐射、货船护航、自定义武器及配置导入导出；战场使用无限坐标、全舰取景镜头、低机动船舶运动、阵营观察视角、航速/视野配平、所选舰逐武器射界、逐挂载武器装填倒计时、带脱离迟滞的逐舰可编辑战术状态机、战场事件 HUD 与实时舰船状态面板（未接入 Godot/战役存档）
 - [ ] 阶段 3：基地建设与生产链（接入舰队/战斗/贸易）
 - [ ] 阶段 4：自动化贸易（航线、规则、风险与 tick 结算）
@@ -686,10 +686,11 @@
 - [x] 导出 core 内容 GLB（633.3 KB，sha `cefec2b7aa2d`）+ framework 镜像；工作台/船体快照；Godot 船厂 1440/960 与 PortStage 重拍；完整测试 231 passed；静态文档 --check 通过。
 - [x] 人工视觉门禁（A/B/C）：通过（2026-10-21，用户确认截图：三项精修可读、其它资产零变化、实机无黑材质）。
 
-## 文档归档（2026-10-21）
+## 设计文档生命周期（2026-10-21）
 
-- [x] 设计文档整理：已完成开发的设计 / 实施契约 / 验收报告共 26 篇迁入 [`docs/archive/`](docs/archive/README.md)（MVP 设计基线、迭代 1/2、UI 重构、铁港建筑套件阶段 1→批次 B、建模验收与下一批需求、批次 C）；`docs/design/` 仅保留现行方案 / 路线图 / 工作流 / 资产映射 / 契约与原型说明。
-- [x] 引用同步：README、todo、各设计文档与 tools 工单内的相对链接已改为新路径；`docs/static/` 未重组，仅按生成器重跑同步 manifest 哈希与 1 个硬编码的「迭代 1 契约」链接。
+- [x] 文档按生命周期分三层：Active（正在讨论 / 持续修改）→ [`docs/design/`](docs/design/README.md)；Finalized（已定稿、仍然有效）→ [`docs/specs/`](docs/specs/README.md)；Archived（已被替代 / 仅追溯）→ [`docs/archive/`](docs/archive/README.md)；总索引 [`docs/README.md`](docs/README.md)。
+- [x] 归档重新拆分：MVP GDD / 架构方案 / 迭代 1-2 契约 / 模块实例 / 船厂界面 / 高频页指南 / 持久战役方向 / 战斗评审迁到 `docs/specs/`（定稿仍有效）；铁港建筑 / 建模 / 明轮批次报告与已替代规范留在 `docs/archive/`；README、todo、设计文档、tools 工单与代码注释引用同步。
+- [x] `docs/static/` 未重组，只在引用变化后按生成器重跑（「迭代 1 契约」链接指向 `../specs/`）。
 
 ## 维护约定
 

@@ -1,6 +1,6 @@
 extends TestCase
 ## Victory determination, summary completeness, and run statistics.
-## Owned by loop-systems; see docs/design/ITERATION_1_MVP_LOOP.md §3.4 / §3.8 / §5.3 / §8.
+## Owned by loop-systems; see docs/specs/ITERATION_1_MVP_LOOP.md §3.4 / §3.8 / §5.3 / §8.
 
 const STEADY_BUILD := "core:starting_build/steady"
 const STANDARD_STRATEGY := "core:strategy/standard"
