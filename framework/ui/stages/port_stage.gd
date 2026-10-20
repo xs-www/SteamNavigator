@@ -842,10 +842,12 @@ func focus_station(station_id: String, framing: String = "stage", immediate: boo
 		return true
 	if not changed:
 		return true
-	if _camera_t >= 1.0:
-		_camera_from = _camera.position
-		_camera_from_target = _camera_target
-		_camera_from_fov = _camera.fov
+	# Sample the *current* camera pose even when a previous pan is still running:
+	# rapid page switches (market → supply → market inside 0.6 s) then continue
+	# from where the camera is instead of snapping back to the last settled shot.
+	_camera_from = _camera.position
+	_camera_from_target = _camera_target
+	_camera_from_fov = _camera.fov
 	_camera_to = pose["position"]
 	_camera_to_target = pose["target"]
 	_camera_to_fov = float(pose["fov"])

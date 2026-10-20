@@ -1257,3 +1257,45 @@ func test_port_stage_station_dressing_scales_with_density() -> void:
 	assert_eq(port.station_prop_count(), 0, "a content-less stage mounts no station dressing")
 	assert_true(port.town_prop_count() >= 5, "the blockout town still carries the silhouette")
 	_free_host(host)
+
+func test_port_stage_redirect_mid_transition_continues_from_current_pose() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+
+	# Start a pan to the market, then redirect to the supply before it settles.
+	assert_true(port.focus_station("market"), "the first station switch starts")
+	port.advance_station(0.2)
+	var mid_position := port.camera_position()
+	var mid_shot: Vector3 = port.station_camera_pose("market")["position"]
+	assert_true(
+		mid_position.distance_to(mid_shot) > 1.0,
+		"the camera really is mid-pan (%.1f m from the market shot)" % mid_position.distance_to(mid_shot)
+	)
+	assert_true(port.focus_station("supply"), "a redirect during the pan is accepted")
+	assert_true(
+		port.camera_position().distance_to(mid_position) < 0.01,
+		"redirecting leaves the camera where it is (no snap)"
+	)
+	port.advance_station(0.05)
+	var step := port.camera_position().distance_to(mid_position)
+	assert_true(
+		step < 8.0,
+		"the redirect continues from the current pose instead of jumping to the old target (%.2f m in 0.05 s)" % step
+	)
+	port.advance_station(10.0)
+	assert_false(port.is_station_transitioning(), "the redirected transition still settles")
+	var supply_shot: Vector3 = port.station_camera_pose("supply")["position"]
+	assert_almost_eq(
+		port.camera_position().distance_to(supply_shot),
+		0.0,
+		0.05,
+		"the redirected transition lands on the supply shot"
+	)
+	_free_host(host)
