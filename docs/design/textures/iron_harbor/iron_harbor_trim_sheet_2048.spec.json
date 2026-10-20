@@ -1,0 +1,645 @@
+{
+  "id": "iron_harbor_trim_sheet_2048",
+  "schema": 1,
+  "role": "shared material atlas for the SN iron-harbor architecture kit (all buildings)",
+  "outputs": {
+    "png": "docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.png",
+    "tiles": "docs/design/textures/iron_harbor/tiles",
+    "stats": "docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.stats.json"
+  },
+  "atlas_px": 2048,
+  "grid": {
+    "cols": 4,
+    "rows": 4,
+    "cell_px": 512,
+    "gutter_px": 0,
+    "content_px": 512
+  },
+  "row_origin": "top",
+  "tile_m": 2.0,
+  "px_per_m": 256,
+  "color_space": "srgb",
+  "seamless": true,
+  "palette_rule": "sRGB 8-bit; colours below are the intended mean look, not a hard per-pixel clamp",
+  "art_direction": [
+    "warm sooty industrial harbour: brick body, cream plaster gable, stone plinth, near-black iron, dark slate iron roof, dark glass",
+    "reads at 124 m from the fixed camera: the per-cell MEAN colour carries the material identity, the detail is for the 3-6 m close-ups",
+    "light grime only: soot streaks, damp stone, rust blooms, darker weathered variants; never pitch-black or full-saturation",
+    "every cell must tile seamlessly in U and V (it is repeated every 2.0 m on the building)"
+  ],
+  "cells": [
+    {
+      "id": "brick_wall",
+      "col": 0,
+      "row": 0,
+      "kind": "brick",
+      "use": "SN_Town_Brick running-bond wall panels (the long +Y facade, side walls, pilasters)",
+      "palette": {
+        "brick": [
+          120,
+          80,
+          66
+        ],
+        "brick_alt": [
+          110,
+          72,
+          58
+        ],
+        "mortar": [
+          150,
+          140,
+          124
+        ],
+        "soot": [
+          78,
+          66,
+          60
+        ]
+      },
+      "mean_rgb": [
+        118,
+        86,
+        72
+      ],
+      "detail": "running bond, 26 courses per 2.0 m (18.4 px), 8 bricks per course (60 px), staggered half bond, 2 px mortar, per-brick colour jitter, faint vertical soot streaks",
+      "material": "SN_Town_Brick",
+      "primary": true
+    },
+    {
+      "id": "brick_wall_soot",
+      "col": 1,
+      "row": 0,
+      "kind": "brick",
+      "use": "sooty brick variant (per-part deterministic pick, ~1/3 of wall parts)",
+      "palette": {
+        "brick": [
+          102,
+          68,
+          56
+        ],
+        "brick_alt": [
+          92,
+          60,
+          50
+        ],
+        "mortar": [
+          128,
+          118,
+          104
+        ],
+        "soot": [
+          62,
+          54,
+          50
+        ]
+      },
+      "mean_rgb": [
+        100,
+        74,
+        64
+      ],
+      "detail": "same bond as brick_wall, heavier soot from the top, damp darkening at the bottom",
+      "material": "SN_Town_Brick",
+      "primary": false
+    },
+    {
+      "id": "stone_base",
+      "col": 2,
+      "row": 0,
+      "kind": "stone",
+      "use": "SN_Town_Stone clean ashlar variant (spare; keep for lintel/quoins on later buildings)",
+      "palette": {
+        "block": [
+          140,
+          134,
+          122
+        ],
+        "block_alt": [
+          126,
+          120,
+          108
+        ],
+        "joint": [
+          102,
+          96,
+          86
+        ],
+        "damp": [
+          110,
+          106,
+          94
+        ]
+      },
+      "mean_rgb": [
+        132,
+        126,
+        114
+      ],
+      "detail": "coursed ashlar, 4 courses per 2.0 m (120 px), block lengths 0.67/1.0 m, 3 px recessed joints, chipped corners, slight damp darkening",
+      "material": "SN_Town_Stone",
+      "primary": false
+    },
+    {
+      "id": "stone_base_dirty",
+      "col": 3,
+      "row": 0,
+      "kind": "stone",
+      "use": "SN_Town_Stone plinth + cornice + sills on this building: damp splash-zone weathering is what keeps the 0.58 m base from reading as a bright white band at 124 m",
+      "palette": {
+        "block": [
+          124,
+          118,
+          106
+        ],
+        "block_alt": [
+          110,
+          104,
+          94
+        ],
+        "joint": [
+          88,
+          84,
+          76
+        ],
+        "damp": [
+          96,
+          94,
+          86
+        ]
+      },
+      "mean_rgb": [
+        116,
+        111,
+        101
+      ],
+      "detail": "same masonry as stone_base plus vertical damp streaks and moss specks",
+      "material": "SN_Town_Stone",
+      "primary": true
+    },
+    {
+      "id": "iron_dark",
+      "col": 0,
+      "row": 1,
+      "kind": "iron",
+      "use": "SN_Town_Iron tracks, hangers, rollers, thresholds, hoist beam/sheaves, downpipes, vents, the iron roof slopes + ridge + standing seams",
+      "palette": {
+        "plate": [
+          46,
+          50,
+          54
+        ],
+        "plate_alt": [
+          40,
+          44,
+          48
+        ],
+        "seam": [
+          28,
+          32,
+          36
+        ],
+        "rivet": [
+          78,
+          82,
+          86
+        ],
+        "rust": [
+          96,
+          62,
+          44
+        ]
+      },
+      "mean_rgb": [
+        52,
+        54,
+        56
+      ],
+      "detail": "riveted plate: 1.0 m plate seams, rivet rows every 0.125 m (4 px dots), sparse rust speckles and short runs",
+      "material": "SN_Town_Iron",
+      "primary": true
+    },
+    {
+      "id": "iron_rust",
+      "col": 1,
+      "row": 1,
+      "kind": "iron",
+      "use": "rusty iron variant (roller assemblies, hoist chain area, thresholds)",
+      "palette": {
+        "plate": [
+          56,
+          52,
+          48
+        ],
+        "plate_alt": [
+          48,
+          44,
+          42
+        ],
+        "seam": [
+          34,
+          32,
+          30
+        ],
+        "rivet": [
+          84,
+          80,
+          74
+        ],
+        "rust": [
+          112,
+          70,
+          44
+        ]
+      },
+      "mean_rgb": [
+        72,
+        58,
+        50
+      ],
+      "detail": "same plate layout, rust blooms covering ~35% of the area, no full-saturation orange",
+      "material": "SN_Town_Iron",
+      "primary": false
+    },
+    {
+      "id": "roof_sheet",
+      "col": 2,
+      "row": 1,
+      "kind": "roof",
+      "use": "reserved: corrugated-sheet look for a future roof-only material or building variant",
+      "palette": {
+        "sheet": [
+          92,
+          98,
+          102
+        ],
+        "rib_hi": [
+          112,
+          118,
+          120
+        ],
+        "rib_lo": [
+          68,
+          74,
+          78
+        ],
+        "seam": [
+          54,
+          60,
+          64
+        ],
+        "rust": [
+          104,
+          68,
+          46
+        ]
+      },
+      "mean_rgb": [
+        88,
+        94,
+        98
+      ],
+      "detail": "corrugated sheet, ribs every 0.15 m (36 px) running along V (vertical in the cell), horizontal sheet seams every 1.0 m, thin rust runs down V",
+      "material": "SN_Town_Iron",
+      "primary": false
+    },
+    {
+      "id": "roof_sheet_weathered",
+      "col": 3,
+      "row": 1,
+      "kind": "roof",
+      "use": "weathered roof variant (one slope), same ribs",
+      "palette": {
+        "sheet": [
+          78,
+          84,
+          90
+        ],
+        "rib_hi": [
+          96,
+          102,
+          106
+        ],
+        "rib_lo": [
+          58,
+          64,
+          70
+        ],
+        "seam": [
+          46,
+          52,
+          56
+        ],
+        "rust": [
+          112,
+          72,
+          48
+        ]
+      },
+      "mean_rgb": [
+        74,
+        80,
+        86
+      ],
+      "detail": "same ribs, stronger rust streaks and soot along the sheet seams",
+      "material": "SN_Town_Iron",
+      "primary": false
+    },
+    {
+      "id": "glass_dark",
+      "col": 0,
+      "row": 2,
+      "kind": "glass",
+      "use": "SN_Town_Glass all windows and transoms (must read as dark holes)",
+      "palette": {
+        "glass": [
+          30,
+          40,
+          44
+        ],
+        "reflect": [
+          74,
+          96,
+          100
+        ],
+        "grime": [
+          50,
+          56,
+          56
+        ]
+      },
+      "mean_rgb": [
+        38,
+        47,
+        50
+      ],
+      "detail": "very dark pane with one soft diagonal reflection band (wrap-safe, low contrast) and a little dust",
+      "material": "SN_Town_Glass",
+      "primary": true
+    },
+    {
+      "id": "glass_reflect",
+      "col": 1,
+      "row": 2,
+      "kind": "glass",
+      "use": "reflective pane variant (upper windows, gable light)",
+      "palette": {
+        "glass": [
+          40,
+          52,
+          56
+        ],
+        "reflect": [
+          96,
+          116,
+          118
+        ],
+        "grime": [
+          56,
+          62,
+          62
+        ]
+      },
+      "mean_rgb": [
+        56,
+        72,
+        76
+      ],
+      "detail": "same pane, brighter sky reflection band",
+      "material": "SN_Town_Glass",
+      "primary": false
+    },
+    {
+      "id": "wood_plank",
+      "col": 2,
+      "row": 2,
+      "kind": "wood",
+      "use": "SN_Town_Wood clean plank variant (spare; the loading doors use the weathered cell)",
+      "palette": {
+        "plank": [
+          88,
+          64,
+          44
+        ],
+        "plank_alt": [
+          78,
+          56,
+          38
+        ],
+        "gap": [
+          46,
+          32,
+          22
+        ],
+        "grain": [
+          70,
+          50,
+          34
+        ]
+      },
+      "mean_rgb": [
+        80,
+        58,
+        40
+      ],
+      "detail": "vertical planks 0.22 m (53 px) with 2 px dark gaps, wavy grain lines, slight per-plank tone jitter",
+      "material": "SN_Town_Wood",
+      "primary": false
+    },
+    {
+      "id": "wood_plank_weathered",
+      "col": 3,
+      "row": 2,
+      "kind": "wood",
+      "use": "SN_Town_Wood loading-door leaves + person/service doors: grey weathered timber separates the door bays from the orange brick by hue as well as value",
+      "palette": {
+        "plank": [
+          74,
+          62,
+          52
+        ],
+        "plank_alt": [
+          66,
+          54,
+          46
+        ],
+        "gap": [
+          40,
+          34,
+          28
+        ],
+        "grain": [
+          60,
+          52,
+          44
+        ]
+      },
+      "mean_rgb": [
+        70,
+        60,
+        50
+      ],
+      "detail": "same planks, greyed by weather, a few split ends",
+      "material": "SN_Town_Wood",
+      "primary": true
+    },
+    {
+      "id": "plaster_light",
+      "col": 0,
+      "row": 3,
+      "kind": "plaster",
+      "use": "SN_Town_Plaster gable triangles (the pale gable is what makes the dark roof read)",
+      "palette": {
+        "plaster": [
+          200,
+          188,
+          164
+        ],
+        "wear": [
+          184,
+          172,
+          148
+        ],
+        "speck": [
+          166,
+          156,
+          136
+        ]
+      },
+      "mean_rgb": [
+        196,
+        184,
+        160
+      ],
+      "detail": "fine stucco noise, patchy wear, no visible tiling structure",
+      "material": "SN_Town_Plaster",
+      "primary": true
+    },
+    {
+      "id": "plaster_grime",
+      "col": 1,
+      "row": 3,
+      "kind": "plaster",
+      "use": "grime plaster variant (under-eave and base faces)",
+      "palette": {
+        "plaster": [
+          184,
+          174,
+          152
+        ],
+        "wear": [
+          166,
+          156,
+          136
+        ],
+        "speck": [
+          146,
+          138,
+          120
+        ]
+      },
+      "mean_rgb": [
+        172,
+        162,
+        142
+      ],
+      "detail": "stucco noise plus vertical soot streaks",
+      "material": "SN_Town_Plaster",
+      "primary": false
+    },
+    {
+      "id": "iron_grate",
+      "col": 2,
+      "row": 3,
+      "kind": "iron",
+      "reserved": true,
+      "use": "reserved for the remaining harbour buildings (gratings, walkways)",
+      "palette": {
+        "plate": [
+          58,
+          60,
+          62
+        ],
+        "plate_alt": [
+          50,
+          52,
+          54
+        ],
+        "seam": [
+          36,
+          38,
+          40
+        ],
+        "rivet": [
+          86,
+          88,
+          90
+        ],
+        "rust": [
+          100,
+          66,
+          46
+        ]
+      },
+      "mean_rgb": [
+        60,
+        62,
+        64
+      ],
+      "detail": "flat plate with a 0.25 m bar grating pattern",
+      "material": "SN_Town_Iron",
+      "primary": false
+    },
+    {
+      "id": "timber_beam",
+      "col": 3,
+      "row": 3,
+      "kind": "wood",
+      "reserved": true,
+      "use": "reserved for the remaining harbour buildings (timber beams, timber stacks)",
+      "palette": {
+        "plank": [
+          74,
+          58,
+          44
+        ],
+        "plank_alt": [
+          66,
+          50,
+          38
+        ],
+        "gap": [
+          42,
+          32,
+          24
+        ],
+        "grain": [
+          60,
+          46,
+          34
+        ]
+      },
+      "mean_rgb": [
+        70,
+        55,
+        42
+      ],
+      "detail": "coarse horizontal grain, knots",
+      "material": "SN_Town_Wood",
+      "primary": false
+    }
+  ],
+  "sampling": "each cell is ALSO emitted as a standalone 512x512 tiling texture; the 2048 atlas is the review montage of the same tiles. No gutters: the atlas is never sampled directly, so there is no mip bleed to guard.",
+  "quantize": {
+    "mode": "adaptive-palette-png",
+    "max_colors": 96,
+    "note": "keep the stylized flat look and the files tiny; PNG-8 is fine for glTF/Godot"
+  },
+  "primary_sampled": {
+    "SN_Town_Brick": "brick_wall",
+    "SN_Town_Stone": "stone_base_dirty",
+    "SN_Town_Iron": "iron_dark",
+    "SN_Town_Glass": "glass_dark",
+    "SN_Town_Wood": "wood_plank_weathered",
+    "SN_Town_Plaster": "plaster_light"
+  }
+}

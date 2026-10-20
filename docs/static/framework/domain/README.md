@@ -1,6 +1,6 @@
 # `framework/domain`
 
-> 纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、事件、债务与通关判定。
+> 纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、世界生成（坐标空间+程序化陆地+贝塞尔航线）、事件、债务与通关判定。
 
 ## 文件索引
 
@@ -27,9 +27,18 @@
 | `ship/warehouse_ops.gd` | 港口仓库与随船运输：每港独立保存模块/材料，transit 模块计入重量但不占货舱。 | [查看](./ship/warehouse_ops.gd.md) |
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |
 | `voyage/voyage_service.gd` | 航行执行：校验预览、扣补给/工资、抽取事件、事件选择、抵达结算与失败回滚。 | [查看](./voyage/voyage_service.gd.md) |
+| `world/land_generator.gd` | 程序化生成陆地多边形，支持大陆、大岛、小岛、环礁四种原型。 | [查看](./world/land_generator.gd.md) |
+| `world/landmass.gd` | 表示世界地图中的陆地多边形，支持大陆、大岛、小岛、环礁四种原型。 | [查看](./world/landmass.gd.md) |
+| `world/region.gd` | 表示世界地图中的行政区域，区分沿岸区域和远洋区域。 | [查看](./world/region.gd.md) |
+| `world/route_calculator.gd` | 计算港口间的贝塞尔曲线路径，生成出航角度，构建连通性图。 | [查看](./world/route_calculator.gd.md) |
+| `world/world_generator.gd` | 世界生成器的主逻辑，协调陆地生成、港口放置、连通性计算。 | [查看](./world/world_generator.gd.md) |
+| `world/world_map.gd` | 世界地图的顶层容器，包含所有陆地、港口、区域和连通性图。 | [查看](./world/world_map.gd.md) |
+| `world/world_ops.gd` | 世界地图的查询和变更接口，替代 MVP 时期的 MapOps。 | [查看](./world/world_ops.gd.md) |
+| `world/world_port.gd` | 表示世界地图中的港口，包含位置、设施、连通性等信息。 | [查看](./world/world_port.gd.md) |
 
 ## 模块契约
 
 - 领域函数尽量输入确定、输出确定；随机必须来自 RngService 命名流。
 - 不读写文件、不创建 UI、不直接访问场景树。
 - 仓库/运输/打造只操作 GameState 纯数据；通关判定读取注册表合同与船只派生属性。
+- 世界生成器使用坐标空间模型（替代 MVP 时期的抽象图），港口锚定在程序生成的陆地海岸线上。

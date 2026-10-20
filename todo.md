@@ -343,6 +343,120 @@
 - [ ] 阶段 5：遗迹探索（程序化房间、远征、战利品）
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
 
+## 航海图系统（Nautical Chart System，设计冻结 v1.0，待实施）
+
+> 正式版核心系统：坐标空间世界、三重迷雾、渐进式探索、事件化海洋。取代 MVP 时期的抽象图模型（`MapGenerator` 4-5 港口全连接图），作为正式版海图的唯一真源。设计文档：[NAUTICAL_CHART_SYSTEM.md](docs/design/NAUTICAL_CHART_SYSTEM.md)。
+
+### 阶段 0：数据模型与生成器
+
+- [x] `WorldMap` / `Landmass` / `Port` 数据结构（坐标空间，港口锚定在陆地海岸线上）
+  - `framework/domain/world/landmass.gd`: 陆地多边形，4种原型（大陆/大岛/小岛/环礁），支持面积/质心/边界框/海岸线采样
+  - `framework/domain/world/world_port.gd`: 港口实体，包含位置/区域/设施/出航角度，保留MVP字段兼容性
+  - `framework/domain/world/region.gd`: 行政区域（沿岸/远洋），包含陆地ID列表
+  - `framework/domain/world/world_map.gd`: 世界地图容器，支持序列化/反序列化
+- [x] 程序化陆地生成器（continent / large_island / small_island / atoll，Perlin/Simplex + Voronoi）
+  - `framework/domain/world/land_generator.gd`: 噪声+正弦波生成有机多边形，包含Douglas-Peucker简化算法
+  - 默认配置：400×400世界，11个陆地（1大陆+3大岛+4小岛+3环礁）
+- [x] 港口锚定算法（海岸线采样 + 最小间距约束）
+  - `framework/domain/world/world_generator.gd`: `_place_ports_on_coastlines()` 在海岸线上采样，保证15单位最小间距
+  - 默认13个港口，支持重试机制（20次尝试调整位置）
+- [x] 连通图预计算（A* 或 visibility graph 绕开陆地）
+  - `framework/domain/world/route_calculator.gd`: `build_connectivity_graph()` 构建全连接图
+  - `_find_path_around_land()` 绕开陆地的路径查找，最多1000次迭代
+- [x] 贝塞尔航线生成（每港口唯一出航角度，从邻居组中心计算）
+  - `framework/domain/world/route_calculator.gd`: `compute_departure_angles()` 从邻居质心推导出航方向
+  - `_create_bezier_path()` 生成三次贝塞尔曲线，20段细分，控制点长度=距离×0.3
+- [x] 同 seed 可复现性测试（`RngService` 命名流）
+  - `framework/tests/cases/test_world_generator.gd`: 12个测试用例
+  - `test_same_seed_produces_identical_world()`: 同seed两次生成完全一致
+  - `test_different_seeds_produce_different_worlds()`: 不同seed产生不同世界
+- [x] 15-20 港口合理分布验证
+  - 测试验证：港口数量10-20个、锚定到海岸线（距离<2单位）、最小间距15单位
+  - 必需设施（船厂/情报站）在起点2条边内
+  - 所有港口从起点可达
+- [x] `WorldOps` 替代旧 `MapOps`
+  - `framework/domain/world/world_ops.gd`: 世界地图查询和变更接口，保持GameState兼容性
+
+### 阶段 1：迷雾网格
+
+- [ ] `FogGrid` 数据结构（`cell_size = min_vision_radius / 4`）
+- [ ] 三重状态机（black / explored / visible）
+- [ ] 沿岸 vs 海洋不同规则：沿岸格子经过后永久保留灰雾，海洋格子离开后直接变回黑雾
+- [ ] 港口揭示（路灯花效应，半径 R 内永久清除战争迷雾）
+- [ ] 迷雾 shader（格子 alpha 插值平滑过渡，避免棋盘格感）
+- [ ] 陆地轮廓渲染（剪影优先，纯色多边形）
+- [ ] 迷雾单元测试（状态转换、沿岸规则、港口揭示）
+
+### 阶段 2：海图 UI
+
+- [ ] `SNSeaChartView` 连续可缩放 2D 视图（滚轮缩放、拖拽平移）
+- [ ] 信息层级（港口/陆地/船只/线索按发现等级显示）
+- [ ] 右侧 Panel（目的地基础信息 + 预计时间/消耗/风险）
+- [ ] 入口（M 键 / 准备出航按钮）
+- [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）
+- [ ] 海图 UI 单元测试（信息层级、线索显示）
+
+### 阶段 3：航行演出状态机
+
+- [ ] 状态机实现（InPort → OpenSeaChart → VoyagePlanned → Departure → AtSea → Arrived）
+- [ ] 镜头过渡（3D PortStage → 云层上升 → 2D 海图 → 云层下降 → 3D 入港）
+- [ ] 船舶 icon 沿贝塞尔路径移动（`Route.bezier_path`）
+- [ ] 时间加速流逝（顶部时钟同步）
+- [ ] 事件触发（云层下降 → 3D 场景，场景已预加载）
+- [ ] 航行演出单元测试（状态转换、镜头过渡）
+
+### 阶段 4：探索系统
+
+- [ ] `Clue` 数据结构与 `ClueService`（港口位置/港口货物两类）
+- [ ] 线索分级与海图可视化（存在/方向/距离/名称，渐进披露）
+- [ ] `explore_voyage.start(clue_id)` 命令
+- [ ] 搜索区判定与发现概率（按 `credibility` + 命名流）
+- [ ] 资源告急事件（资源消耗 50% 时触发，可选择继续/掉头）
+- [ ] 探索失败处理（消耗大量物资+耐久，漂到最近港口，允许未知港口直接发现）
+- [ ] 线索调查方式（花金币/花时间/完成委托）
+- [ ] 探索系统单元测试（发现/未发现/掉头/漂流）
+
+### 阶段 5：事件化海洋
+
+- [ ] 航行事件预生成（出航前全部确定，命名流 + seed 可复现）
+- [ ] 事件预加载机制（出航前生成事件遇见时间表 + 预加载场景）
+- [ ] 事件类型实现（敌对/环境/奖励/随机岛屿秘境/安全航行）
+- [ ] 事件触发与决策（云层下降 → 3D 场景 → 选择 → 回到 2D 海图）
+- [ ] 安全航行与消耗结算（物资/时间/耐久）
+- [ ] 事件系统单元测试（预生成一致性、事件触发、决策结果）
+
+### 阶段 6：固定未知岛屿与基地建设（中后期）
+
+- [ ] `FixedUnknownIsland` 数据结构（真实地图实体，勘探后才发现资源）
+- [ ] 勘探机制（抵达后触发勘探事件，发现资源列表）
+- [ ] 基地建设系统（建造设施、产能、存储）
+- [ ] 公开港口建立（把岛屿变成新港口，接入贸易网络）
+- [ ] 设施建造（码头/仓库/生产设施/防御设施）
+- [ ] 基地建设单元测试（勘探/建造/产能/贸易接入）
+
+### 验收标准（阶段 0-3 的 MVP 切片）
+
+- 同 seed 生成的世界布局一致
+- 15-20 港口合理分布在陆地海岸线上
+- 迷雾三态视觉清晰（黑雾/灰雾/可见）
+- 沿岸格子被经过后永久保留灰雾
+- 海洋格子离开后变回黑雾
+- 港口发现时路灯花效应正确清除周围战争迷雾
+- 航线为贝塞尔曲线，每港口有唯一出航角度
+- 航行演出完整：3D → 云层 → 2D → 事件 → 2D → 云层 → 3D
+- 海图 UI 连续可缩放，信息层级正确
+- 右侧 Panel 显示目的地基础信息与预计信息
+- 168+ 测试通过（新增海图系统测试）
+
+### 未决定的事项（留给后续迭代）
+
+- 陆地轮廓视觉风格升级（剪影 → 手绘风格）
+- 随机岛屿秘境的漂移规则
+- 多人港口区域（一个岛屿上多个港口）的可行性
+- 海图视觉风格统一（羊皮纸古地图 / 蓝图 / 蒸汽朋克铜版画）
+- 探索航行的演出细节（云层颜色/氛围）
+- 漂流到未知港口时的设施限制（维修/补给/交易）
+
 ### 当前下一步（按优先级，2026-10 对齐）
 
 - [x] **P0 提交当前批次**：已拆 4 个 commit（`f8d8c29` 框架/模块实例、`480a440` 3D 舞台/UI、`35abfbf` 资产/建模、`3cf61fe` SNModMaker/发布/文档）；船体与 core 资产已入库，工作区清空。
@@ -354,7 +468,9 @@
 - [x] **P1 主界面美术收尾与性能回收（第六切片）**：HUD 资源图标（`AssetService.find_key` 裸键）、自绘木牌招牌 + 设施徽记 + 悬停光晕；街景 normal 47 件（size/density 分档）；设施/街景/玩家船静态合批把实测 draw calls 从 284/255 降到 **63/56**（37k/30k tris）；无 banner 港口 3 层程序化远景；新增 measure 工具与 7 个舞台用例，全量 162 tests 绿。截图：[主界面 1440](docs/design/screenshots/overview_port_stage.png) / [主界面 960×540](docs/design/screenshots/overview_port_stage_960.png) / [详细总览](docs/design/screenshots/overview_detail.png)。
 - [x] **P1 连续港区 + 港务/市场/补给相邻站位（第七切片）**：码头 160 m、广场 250 m，`STATIONS` 把 market(-30)/harbor(0)/supply(+30) 排成相邻站位；`focus_station()`/`advance_station()` 只平移镜头 + 把船开到新泊位（0.6 s 镜头、转艏 + 24 m/s 航行），港口/街坊/设施/合批层不重建，画幅层跟随、L2 半速视差；`STAGE_SCREENS` 让 overview/market/supply 共用同一 `PortStage` 实例，market/supply 改成右侧 640 px 泊位面板 + 左侧露出 3D 街景且切页无黑场；`test_stage_host` 30 例、`test_ui_shell` 覆盖共用舞台/面板/镜头到位，全量 **168 tests 绿**。截图：[市场站位](docs/design/screenshots/market_station.png) / [补给站位](docs/design/screenshots/supply_station.png) / [市场 960×540](docs/design/screenshots/market_station_960.png) / [market 镜头](docs/design/screenshots/port_stage/port_stage_market.png)。
 - [ ] **剩余 2.5D 舞台工作**：委托/情报页舞台化、离港/进港演出与目的港舞台预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审。
-- [ ] **铁港城镇建筑视觉升级**：按 `tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` 重建近中景建筑；先用 `SN_HT_Warehouse_Long` 灰模过固定机位门禁，再完成共享模块、2K trim sheet、5 个原位升级资产、3 个新增原型与 LOD1。
+- [x] **铁港城镇建筑视觉升级 · 第一阶段 + R1**：`SN_HT_Warehouse_Long` LOD0 灰模 R1（7 436 tri / 20×9×11 m / 6 材质槽 / 网格健康全 0），已临时装配进 PortStage 并出 1440×900 与 960×540 实机截图（stage tri 37 280→43 584 证明新模型入场景），旧 GLB 已还原；见 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。
+- [x] **铁港城镇建筑视觉升级 · M1 材质轮**：`warehouse_long` 槽位 yaw −90→−106 / pos z −34→−33 让装卸门长立面正对固定机位（立面 +38%、两扇装卸门 +36%/+34%、山墙吊梁仍可见、足迹仍在广场内）；共享 2K trim sheet（16 cell）+ 每材质 512² 平铺贴图 + 盒投影 UV（0 tri 增加）；内容 GLB 已换成带贴图版本并重新 import，1440×900 与 960×540 实机截图已出；见 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)。**等待"是否扩展整批"决定**。
+- [x] **铁港建筑套件 · 第二批（其余 4 栋 drop-in）**：SN_HT_Warehouse_Short 3 788 tri / SN_HT_Harbor_Office 10 336 tri / SN_HT_Cargo_Shed 3 356 tri / SN_HT_Tavern 5 116 tri，尺寸与旧占位资产一致、网格健康全 0、同一套 6 材质槽 + 共享 trim sheet（每栋换 cell）、主立面在本地 +X 正对固定机位；实机 stage tri 53 908 → 73 228（增量 19 320 = Σ新 22 596 − Σ旧 3 276）、4 个旧占位资产零改动且各有备份。见 [IRON_HARBOR_ARCHITECTURE_BATCH2.md](docs/design/IRON_HARBOR_ARCHITECTURE_BATCH2.md)。剩余：LOD1（≤35%）、3 个新原型、共享外部贴图以减 20 个 draw call。
 - [ ] **P2 模块 condition 进入派生属性**：受损锅炉/导航/安全/货舱/客舱按 condition 降低速度、载重、风险修正与容量，补回归测试与 UI 提示（战斗前置）。
 - [ ] **P2 战斗内容 Schema 2.0 草案**：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，仍保持 planned，配套有效/无效样本测试。
 - [ ] **P3 世界探索运行时**：把 v2 草案提升 active，接世界生成、战役 `world` 分区、海图迷雾与区域低细节模拟（阶段 1 的主线）。
@@ -370,6 +486,31 @@
 - [x] 工作台 `.design/SN_Asset_Workbench.blend` 保存（234 对象 / 213 mesh / 19 材质，`SN_Port_Facilities` 集合在 y=75）
 - [x] 已接入：`PortStage.facility_visuals`（`StageHost` 泛化已完成）；ViewModel 传入已解析 GLB 路径时按设施替换这 6 个锚点，路径缺失/非法时回退程序化 billboard，默认仍是 billboard 占位。预览见 [完整港口](docs/design/screenshots/port_stage/port_stage_preview.png)。
 - [ ] 备注：acceptance“信号塔最高剪影”与本批尺寸表矛盾（塔 8.5 m < 龙门吊 10.0 m），按尺寸表实现并在工单 `delivery_notes` 记录
+
+## 铁港建筑套件 · 第一阶段样板 + R1（2026-10-20，PortStage 实机截图已出，等待扩展决定）
+
+> 工单 [sn_iron_harbor_architecture_kit_v1.json](tools/modeling/briefs/sn_iron_harbor_architecture_kit_v1.json)，报告 [IRON_HARBOR_ARCHITECTURE_PHASE1.md](docs/design/IRON_HARBOR_ARCHITECTURE_PHASE1.md)。只做 `SN_HT_Warehouse_Long` 的 LOD0 灰模；R1 GLB 仅临时装配截图，已还原旧资产；不贴图、不改运行时代码。
+
+- [x] 生成器 `tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py`：纯 Python 几何（可 `dryrun_props.py` 干跑）+ Blender 内 `build_all()/report()`，在 `SN_Iron_Harbor_Architecture` 建单 mesh 对象 `SN_HT_Warehouse_Long_LOD0`
+- [x] 几何与健康（R1）：**7 436 tri / 4 486 顶点**、20.000×9.000×11.000 m、轴心底面中心、zmin 0、6 材质槽、孤立点/退化面/非流形边/边界边全 0；真实凹口 窗 0.16 / 装卸门 0.28（门扇 0.16）/ 人门·服务门 0.26（门扇 0.20），墙厚 0.46 m；同向共面只剩隐藏接缝（无外露 z-fighting）
+- [x] R1 细化：双高门双滑轨 + 3 吊架 + 每扇 2 滚轮 + 石/铁门槛 + 3.10×0.30 m 铁短平台；山墙吊梁加牛腿/双滑轮组/梁端板/斜拉杆；4 段檐沟接 4 落水管雨水斗；侧墙 4 窗 + 3 壁柱；石基压到 0.58 m 并收窄到 19.56×8.56（去托盘感）；檐口顶面抬到 7.53，与屋面底皮只留 0.02 m 阴影缝（消檐口黑边）
+- [x] 朝向决策：town 槽位 yaw −90° 使固定机位只能看到本地 +X 山墙与 +Y 长墙（旧资产把门窗放 −Y，机位里不可见），故主立面改到 +Y、背面放 −Y；**整批 drop-in 需统一**
+- [x] 预览渲染器 `render_iron_harbor_architecture_preview.py`：固定机位（eye(50,186,26.1)/target(-22,140,10.1)/41.9856 mm，与 Godot 30° vfov 等价）+ 960×540 + 居中复查 + 街道低机位 + 正交正视 + 屋顶，6 张到 `docs/design/screenshots/iron_harbor_architecture/`
+- [x] **PortStage 实机门禁**：`export_iron_harbor_architecture_glb.py` 临时替换内容 GLB（旧资产备份 + R1 候选在 `.design/buildings/iron_harbor/`）→ `godot --import` 刷新导入缓存 → `tools/godot/capture_port_stage_res.gd -- 1440 900 / 960 540` → 还原旧 GLB 并重新 import；证据 stage tri 37 280→43 584、draw_meshes 88→94；截图 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_{1440x900,960x540}.png`
+- [x] 回归：245 对象 = 244 旧 + 1 新；旧 `SN_HT_Warehouse_Long`（1 132 tri / 8 槽 / `(-48,110,0)` / 可见性）未动；内容 GLB 已恢复为旧资产（SHA-256 与备份一致）
+- [x] ~~其余 4 栋 drop-in~~ 已完成（见上方第二批条目）；剩：3 个新原型（Boiler_House / Workshop_Row / Brick_Tenement）、LOD1（≤35%）、1K 污渍遮罩通道 / UV2、把 6 张 tile 改为共享外部贴图以回收 +20 draw call
+
+## 铁港建筑套件 · M1 材质轮（2026-10-20，PortStage 实机截图已出，等待扩展决定）
+
+> 报告 [IRON_HARBOR_ARCHITECTURE_M1.md](docs/design/IRON_HARBOR_ARCHITECTURE_M1.md)；材质源 [iron_harbor_trim_sheet_2048.spec.json](docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json)。几何冻结不动（仍 7 436 tri / 20×9×11 m）。
+
+- [x] 朝向/位置：`framework/ui/stages/port_stage.gd` `TOWN_SLOTS.warehouse_long` → `pos(-30, 1.9, -33) yaw -106`；主立面法线↔机位轴 52.2°→35.9°，立面投影 +38.2%、装卸门 +36.4%/+33.7%，门 100% 无遮挡，山墙吊梁仍可见；足迹 x −37.08…−22.92 / z −43.85…−22.15（广场内）、与岸吊间隙 0.92 m
+- [x] trim sheet 生成器 `tools/art/gen_iron_harbor_trim_sheet.py`（numpy+Pillow，确定性，PNG-8 ≤96 色）：4×4×512 px、2.0 m/cell=256 px/m、16 cell（6 主用 + 10 变体/预留）；自检 mean 误差 ≤±0.5/255、接缝率 0.26–1.18、两跑字节一致；产出 2048² 图集 3.68 MB + `tiles/` 16×512² 合计 2.66 MB
+- [x] 共享材质模块 `tools/modeling/generators/sn_iron_harbor_materials.py`：6 材质槽→6 cell（brick_wall / plaster_light / wood_plank_weathered / iron_dark / stone_base_dirty / glass_dark）、REPEAT 平铺、盒投影 UV（u/v = world/2.0，屋面 v=Y、门扇 v=Z）、`verify_object()` 自检
+- [x] 生成器接线：`build_all()` 建完对象后应用材质+UV，`report()` 增加 textures 段与 `uv_loops_complete / geometry_unchanged_by_uv / all_images_bound / texture_slots_6` 四项检查；贴图缺失时自动退回灰阶占位
+- [x] 证据：Blender 8 视图（新增装卸门近景 / 墙脚近景）+ 实机 `SN_HT_Warehouse_Long_LOD0_port_stage_{1440x900,960x540}.png`；`capture_port_stage_res.gd` 新增 `[asset]` 行自证 surfaces=6 tris=7436 uv_surfaces=6 textured_surfaces=6 + 6×512² 贴图；GLB 1 473 876 B（内嵌 6 PNG，合计 1 020 426 B，sha256 `1b6d995f…`）
+- [x] 卫生：Godot 把内嵌贴图解包到 GLB 同级目录，已 `.gitignore`（构建产物）；手写源在 `docs/design/textures/iron_harbor/tiles/`；旧 GLB 备份 sha256 仍 `2576e3db…`
+- [ ] 待决定：扩展整批 / 内容 GLB 是否正式保留带贴图版本（当前已装）/ 污渍强度与「1K 污渍遮罩」通道（建议先试顶点色）/ 是否给屋面开第 7 个材质槽用上 `roof_sheet` 瓦楞铁
 
 ## 维护约定
 

@@ -1,0 +1,501 @@
+{
+  "spec": "D:/\u684c\u9762/sisi_apps/SteamNavigator/docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json",
+  "atlas_px": 2048,
+  "grid": {
+    "cols": 4,
+    "rows": 4,
+    "cell_px": 512,
+    "gutter_px": 0,
+    "content_px": 512
+  },
+  "row_origin": "top",
+  "tile_m": 2.0,
+  "px_per_m": 256.0,
+  "quantize": {
+    "mode": "adaptive-palette-png",
+    "max_colors": 96
+  },
+  "png": "docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.png",
+  "tiles": "docs/design/textures/iron_harbor/tiles",
+  "sha256": "18f6828a9b393e9b0043dcfb4be77d5672afec50b1b6a5fb805502641cdef680",
+  "bytes": 3684190,
+  "tile_bytes_total": 2655480,
+  "deterministic_check": true,
+  "all_ok": true,
+  "checks": {
+    "spec_consistent": true,
+    "cells_complete": true,
+    "no_index_collisions": true,
+    "means_within_tolerance": true,
+    "seams_within_limit": true,
+    "tile_png_sizes": true,
+    "montage_size": true,
+    "deterministic": true
+  },
+  "cells": [
+    {
+      "id": "brick_wall",
+      "col": 0,
+      "row": 0,
+      "material": "SN_Town_Brick",
+      "primary": true,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/brick_wall.png",
+      "bytes": 173284,
+      "sha256": "b8527fb098eafb28d28e75e3a374f8485ffb507b506dae5ce0e8396f95177703",
+      "mean_rgb": [
+        117.96,
+        85.98,
+        72.06
+      ],
+      "target_rgb": [
+        118.0,
+        86.0,
+        72.0
+      ],
+      "delta": [
+        -0.04,
+        -0.02,
+        0.06
+      ],
+      "seam_u": 0.797,
+      "seam_v": 0.264,
+      "ok": true
+    },
+    {
+      "id": "brick_wall_soot",
+      "col": 1,
+      "row": 0,
+      "material": "SN_Town_Brick",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/brick_wall_soot.png",
+      "bytes": 144880,
+      "sha256": "982e524a3a64a078dbfd2bf83dd48d92df7ab3f7426ed58b9a84c06915f7843a",
+      "mean_rgb": [
+        100.0,
+        73.99,
+        64.05
+      ],
+      "target_rgb": [
+        100.0,
+        74.0,
+        64.0
+      ],
+      "delta": [
+        0.0,
+        -0.01,
+        0.05
+      ],
+      "seam_u": 0.612,
+      "seam_v": 0.293,
+      "ok": true
+    },
+    {
+      "id": "stone_base",
+      "col": 2,
+      "row": 0,
+      "material": "SN_Town_Stone",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/stone_base.png",
+      "bytes": 169184,
+      "sha256": "9b55547dc5e6c5c106f46830b4c18195ac8fefd4cd09cc8b72a3f40d0f016243",
+      "mean_rgb": [
+        132.02,
+        125.95,
+        114.04
+      ],
+      "target_rgb": [
+        132.0,
+        126.0,
+        114.0
+      ],
+      "delta": [
+        0.02,
+        -0.05,
+        0.04
+      ],
+      "seam_u": 0.82,
+      "seam_v": 0.855,
+      "ok": true
+    },
+    {
+      "id": "stone_base_dirty",
+      "col": 3,
+      "row": 0,
+      "material": "SN_Town_Stone",
+      "primary": true,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/stone_base_dirty.png",
+      "bytes": 170415,
+      "sha256": "bac7b2854c657f53a4d1ae12237fc727bc3243a336ca020f324598331d598290",
+      "mean_rgb": [
+        116.03,
+        111.02,
+        100.95
+      ],
+      "target_rgb": [
+        116.0,
+        111.0,
+        101.0
+      ],
+      "delta": [
+        0.03,
+        0.02,
+        -0.05
+      ],
+      "seam_u": 0.856,
+      "seam_v": 0.917,
+      "ok": true
+    },
+    {
+      "id": "iron_dark",
+      "col": 0,
+      "row": 1,
+      "material": "SN_Town_Iron",
+      "primary": true,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/iron_dark.png",
+      "bytes": 154782,
+      "sha256": "d466eb414acefaa162aea04d5d8b4242917bbb5ac69915335c2f8261a535ec18",
+      "mean_rgb": [
+        52.0,
+        54.0,
+        56.0
+      ],
+      "target_rgb": [
+        52.0,
+        54.0,
+        56.0
+      ],
+      "delta": [
+        -0.0,
+        -0.0,
+        -0.0
+      ],
+      "seam_u": 0.935,
+      "seam_v": 0.8,
+      "ok": true
+    },
+    {
+      "id": "iron_rust",
+      "col": 1,
+      "row": 1,
+      "material": "SN_Town_Iron",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/iron_rust.png",
+      "bytes": 177046,
+      "sha256": "5e00d8c51dc5ca3d4aa076e0be99470c963d5f35e586ac906de46a815b1c73fc",
+      "mean_rgb": [
+        71.96,
+        58.02,
+        50.03
+      ],
+      "target_rgb": [
+        72.0,
+        58.0,
+        50.0
+      ],
+      "delta": [
+        -0.04,
+        0.02,
+        0.03
+      ],
+      "seam_u": 0.931,
+      "seam_v": 0.82,
+      "ok": true
+    },
+    {
+      "id": "roof_sheet",
+      "col": 2,
+      "row": 1,
+      "material": "SN_Town_Iron",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/roof_sheet.png",
+      "bytes": 148626,
+      "sha256": "9555ab717bbd0fb99b491d06c5e3940a50ee2331014abda61049c36d9fb99616",
+      "mean_rgb": [
+        87.97,
+        94.03,
+        98.04
+      ],
+      "target_rgb": [
+        88.0,
+        94.0,
+        98.0
+      ],
+      "delta": [
+        -0.03,
+        0.03,
+        0.04
+      ],
+      "seam_u": 0.354,
+      "seam_v": 0.074,
+      "ok": true
+    },
+    {
+      "id": "roof_sheet_weathered",
+      "col": 3,
+      "row": 1,
+      "material": "SN_Town_Iron",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/roof_sheet_weathered.png",
+      "bytes": 158468,
+      "sha256": "1a339d3c8cef786546631ee339b3cb38e425b168396e4e11d6b03e6775c33edb",
+      "mean_rgb": [
+        74.03,
+        80.0,
+        86.08
+      ],
+      "target_rgb": [
+        74.0,
+        80.0,
+        86.0
+      ],
+      "delta": [
+        0.03,
+        -0.0,
+        0.08
+      ],
+      "seam_u": 1.037,
+      "seam_v": 0.192,
+      "ok": true
+    },
+    {
+      "id": "glass_dark",
+      "col": 0,
+      "row": 2,
+      "material": "SN_Town_Glass",
+      "primary": true,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/glass_dark.png",
+      "bytes": 148801,
+      "sha256": "799350565c5c823f13294a93b38fc56e9b6db471bbb89f17b28f1e480c4babd1",
+      "mean_rgb": [
+        38.01,
+        47.0,
+        49.99
+      ],
+      "target_rgb": [
+        38.0,
+        47.0,
+        50.0
+      ],
+      "delta": [
+        0.01,
+        0.0,
+        -0.01
+      ],
+      "seam_u": 0.901,
+      "seam_v": 1.035,
+      "ok": true
+    },
+    {
+      "id": "glass_reflect",
+      "col": 1,
+      "row": 2,
+      "material": "SN_Town_Glass",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/glass_reflect.png",
+      "bytes": 149818,
+      "sha256": "270a2fb84f535a937392adaa4abd0122721e5f74a4cc3fed3a52c88d3cbd1d49",
+      "mean_rgb": [
+        56.01,
+        72.0,
+        75.97
+      ],
+      "target_rgb": [
+        56.0,
+        72.0,
+        76.0
+      ],
+      "delta": [
+        0.01,
+        0.0,
+        -0.03
+      ],
+      "seam_u": 1.013,
+      "seam_v": 0.988,
+      "ok": true
+    },
+    {
+      "id": "wood_plank",
+      "col": 2,
+      "row": 2,
+      "material": "SN_Town_Wood",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/wood_plank.png",
+      "bytes": 187778,
+      "sha256": "66d05bb21e0ffc0e18727277824b7f447051b3b09c2d67133f300d3fad3ff41d",
+      "mean_rgb": [
+        80.16,
+        57.87,
+        39.54
+      ],
+      "target_rgb": [
+        80.0,
+        58.0,
+        40.0
+      ],
+      "delta": [
+        0.16,
+        -0.13,
+        -0.46
+      ],
+      "seam_u": 0.869,
+      "seam_v": 0.997,
+      "ok": true
+    },
+    {
+      "id": "wood_plank_weathered",
+      "col": 3,
+      "row": 2,
+      "material": "SN_Town_Wood",
+      "primary": true,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/wood_plank_weathered.png",
+      "bytes": 184277,
+      "sha256": "546feb6ebed0ef2f13c0d5badfba13dedfa64176ff8768809feafdb15834f420",
+      "mean_rgb": [
+        70.0,
+        59.98,
+        49.99
+      ],
+      "target_rgb": [
+        70.0,
+        60.0,
+        50.0
+      ],
+      "delta": [
+        0.0,
+        -0.02,
+        -0.01
+      ],
+      "seam_u": 0.737,
+      "seam_v": 0.981,
+      "ok": true
+    },
+    {
+      "id": "plaster_light",
+      "col": 0,
+      "row": 3,
+      "material": "SN_Town_Plaster",
+      "primary": true,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/plaster_light.png",
+      "bytes": 186751,
+      "sha256": "c00ca280ca0a3403a7ea526c5d1625876770b73dbe5908a21abcdbe538d32b6f",
+      "mean_rgb": [
+        195.93,
+        183.95,
+        159.95
+      ],
+      "target_rgb": [
+        196.0,
+        184.0,
+        160.0
+      ],
+      "delta": [
+        -0.07,
+        -0.05,
+        -0.05
+      ],
+      "seam_u": 1.024,
+      "seam_v": 1.056,
+      "ok": true
+    },
+    {
+      "id": "plaster_grime",
+      "col": 1,
+      "row": 3,
+      "material": "SN_Town_Plaster",
+      "primary": false,
+      "reserved": false,
+      "path": "docs/design/textures/iron_harbor/tiles/plaster_grime.png",
+      "bytes": 182737,
+      "sha256": "385e8501edfdbdc914cdbf479374d41006e69ebb7bc0ca48e8dc6d5ece8c7c07",
+      "mean_rgb": [
+        172.0,
+        161.99,
+        141.99
+      ],
+      "target_rgb": [
+        172.0,
+        162.0,
+        142.0
+      ],
+      "delta": [
+        -0.0,
+        -0.01,
+        -0.01
+      ],
+      "seam_u": 1.169,
+      "seam_v": 1.002,
+      "ok": true
+    },
+    {
+      "id": "iron_grate",
+      "col": 2,
+      "row": 3,
+      "material": "SN_Town_Iron",
+      "primary": false,
+      "reserved": true,
+      "path": "docs/design/textures/iron_harbor/tiles/iron_grate.png",
+      "bytes": 157297,
+      "sha256": "52e5f35a2a0613532b0629be2c2ea2ba350b019e36b0a3347b03aea7c0b40637",
+      "mean_rgb": [
+        60.02,
+        62.0,
+        63.97
+      ],
+      "target_rgb": [
+        60.0,
+        62.0,
+        64.0
+      ],
+      "delta": [
+        0.02,
+        0.0,
+        -0.03
+      ],
+      "seam_u": 0.864,
+      "seam_v": 0.848,
+      "ok": true
+    },
+    {
+      "id": "timber_beam",
+      "col": 3,
+      "row": 3,
+      "material": "SN_Town_Wood",
+      "primary": false,
+      "reserved": true,
+      "path": "docs/design/textures/iron_harbor/tiles/timber_beam.png",
+      "bytes": 161336,
+      "sha256": "7c5f1ab8ea515795aa9a9aa3b75b8f40e34d0fddff470d229309cb75aa0ff458",
+      "mean_rgb": [
+        69.99,
+        55.0,
+        42.01
+      ],
+      "target_rgb": [
+        70.0,
+        55.0,
+        42.0
+      ],
+      "delta": [
+        -0.01,
+        -0.0,
+        0.01
+      ],
+      "seam_u": 1.023,
+      "seam_v": 1.753,
+      "ok": true
+    }
+  ]
+}

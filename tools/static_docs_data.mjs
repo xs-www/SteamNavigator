@@ -658,6 +658,125 @@ export const FILE_DOCS = {
     ]
   },
 
+  "framework/domain/world/landmass.gd": {
+    role: "表示世界地图中的陆地多边形，支持大陆、大岛、小岛、环礁四种原型。",
+    contracts: [
+      "多边形顶点顺序必须一致（全顺时针或全逆时针）。",
+      "海岸线采样假设多边形是闭合的（首尾顶点相连）。",
+      "面积计算结果始终为正数（使用 absf）。"
+    ]
+  },
+
+  "framework/domain/world/world_port.gd": {
+    role: "表示世界地图中的港口，包含位置、设施、连通性等信息。",
+    contracts: [
+      "`departure_angle` 由 `RouteCalculator.compute_departure_angles()` 计算，基于邻居质心。",
+      "`connectivity` 存储的是直接连通的港口，不包含间接连通。",
+      "`facilities` 和 `tags` 用于内容系统的过滤和查询。"
+    ]
+  },
+
+  "framework/domain/world/region.gd": {
+    role: "表示世界地图中的行政区域，区分沿岸区域和远洋区域。",
+    contracts: [
+      "`tier` 影响港口生成策略（沿岸区域优先放置必需设施）。",
+      "`landmass_ids` 用于快速查询区域内的陆地。"
+    ]
+  },
+
+  "framework/domain/world/world_map.gd": {
+    role: "世界地图的顶层容器，包含所有陆地、港口、区域和连通性图。",
+    contracts: [
+      "`connectivity_graph` 是无向图（A连接B意味着B也连接A）。",
+      "`bounds` 用于UI层的视口裁剪和坐标映射。",
+      "`world_seed` 用于验证存档与当前模组版本的兼容性。"
+    ]
+  },
+
+  "framework/domain/world/land_generator.gd": {
+    role: "程序化生成陆地多边形，支持大陆、大岛、小岛、环礁四种原型。",
+    contracts: [
+      "所有生成方法都接受 `rng` 参数，确保同 seed 可复现。",
+      "大陆生成时会自动调整位置以贴边。",
+      "环礁生成需要额外参数（内圈半径比例）。",
+      "简化算法的 `tolerance` 参数控制简化程度（建议 1.0-5.0）。"
+    ],
+    l2: {
+      "generate_continent(center, size, seed)": [
+        "生成大陆原型：占据世界边缘，形状狭长，使用低频噪声+正弦波。"
+      ],
+      "generate_large_island(center, size, seed)": [
+        "生成大岛原型：圆形或椭圆形基础形状，中等频率噪声扰动，半径约 15-25 单位。"
+      ],
+      "generate_small_island(center, size, seed)": [
+        "生成小岛原型：不规则形状，高频噪声扰动，半径约 4-8 单位。"
+      ],
+      "generate_atoll(center, size, seed)": [
+        "生成环礁原型：环形结构（外圈+内圈），中心有泻湖，半径约 2-4 单位。"
+      ]
+    }
+  },
+
+  "framework/domain/world/route_calculator.gd": {
+    role: "计算港口间的贝塞尔曲线路径，生成出航角度，构建连通性图。",
+    contracts: [
+      "贝塞尔曲线的控制点方向由出航角度决定。",
+      "连通性图是无向的（A连接B意味着B也连接A）。",
+      "路径计算不考虑海洋迷雾（那是运行时状态）。",
+      "A* 绕路时使用曼哈顿距离作为启发式。"
+    ],
+    l2: {
+      "calculate_route(from, to, landmasses)": [
+        "计算直线距离和方向，检测是否穿过陆地。",
+        "如果穿过陆地，使用 A* 绕开。",
+        "生成三次贝塞尔曲线（20段细分），控制点长度 = 距离 × 0.3。"
+      ],
+      "compute_departure_angles(ports, connectivity)": [
+        "对于每个港口，收集所有直接邻居的位置，计算邻居的质心。",
+        "出航角度 = atan2(质心.y - 港口.y, 质心.x - 港口.x)。"
+      ]
+    }
+  },
+
+  "framework/domain/world/world_generator.gd": {
+    role: "世界生成器的主逻辑，协调陆地生成、港口放置、连通性计算。",
+    contracts: [
+      "生成过程是确定性的（同 seed 产生相同结果）。",
+      "重试机制用于处理港口放置冲突（最多60次）。",
+      "验证失败时会返回详细的错误信息。",
+      "默认配置提供了合理的起点（4区域、11陆地、13港口）。",
+      "`required_tags` 从港口配置中读取，不依赖内容注册表。"
+    ],
+    l2: {
+      "generate(profile, rng, content_registry)": [
+        "从 profile 读取配置（世界大小、区域定义等）。",
+        "为每个区域生成陆地（调用 LandGenerator）。",
+        "在海岸线上放置港口（按配置顺序）。",
+        "验证必需设施位置（船厂和情报站在起点2条边内）。",
+        "构建连通性图（调用 RouteCalculator）。",
+        "计算出航角度（调用 RouteCalculator）。"
+      ],
+      "_place_ports_on_coastlines(world, port_configs, content_registry, rng)": [
+        "对于每个港口配置，找到对应的陆地。",
+        "在海岸线上按 `coast_t` 参数采样位置，添加随机抖动（±0.04）。",
+        "检查最小间距（15单位），如果不满足则重试（最多20次）。",
+        "从配置中读取 `required_tags` 并添加到港口。",
+        "从内容注册表查询原型，补充设施和标签。"
+      ]
+    }
+  },
+
+  "framework/domain/world/world_ops.gd": {
+    role: "世界地图的查询和变更接口，替代 MVP 时期的 MapOps。",
+    contracts: [
+      "所有查询方法都是只读的，不修改世界状态。",
+      "状态管理方法通过 `GameState.campaign_world()` 存储发现/访问状态。",
+      "`find_path` 使用BFS，不考虑实际路径长度（只计算边数）。",
+      "`distance_between` 返回直线距离，不是路径长度。",
+      "`route_between` 返回的路径可能为空（如果港口不连通）。"
+    ]
+  },
+
   "framework/domain/contracts/contract_ops.gd": {
     role: "委托实例生成、装载、交付结算、接取规则、普通委托池生成与抵达刷新。",
     contracts: [
@@ -2443,6 +2562,111 @@ export const FILE_DOCS = {
     ]
   },
 
+  "tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py": {
+    role: "铁港建筑套件样板：`SN_HT_Warehouse_Long` LOD0 的几何唯一真源（纯 Python 几何 + Blender 内 `build_all()/report()`），建单 mesh 对象 `SN_HT_Warehouse_Long_LOD0` 并把材质/UV 交给共享材质模块；几何已在 R1 冻结。",
+    contracts: [
+      "R1 实测：**7 436 tri / 4 486 顶点**、20.000×9.000×11.000 m、轴心底面中心、`object.location=(-48,110,0)`，与旧占位资产同名同址；重跑只删除本集合内 `SN_HT_` 对象，`SN_Harbor_Town` 的旧 `SN_HT_Warehouse_Long` 原样保留（report 用全场景 digest 回归）。",
+      "主立面在本地 **+Y**、背面 −Y、山墙吊梁在 +X：PortStage town 槽位 yaw=−90° 时固定机位（world +X/+Z 一侧）只能看到本地 +X 山墙与 +Y 长墙，旧资产把门窗放 −Y 在该机位不可见，故样板按可见面重排主立面。",
+      "R1 细化：双高门双道滑轨 + 3 吊架 + 每扇 2 滚轮 + 石/铁门槛 + 3.10×0.30 m 铁短平台；山墙吊梁加铁牛腿/双滑轮组/梁端板/斜拉杆；**4 段檐沟**接 4 落水管雨水斗；侧墙改 4 窗 + 3 壁柱；石基压到 **0.58 m** 并收窄到 19.56×8.56；檐口顶面抬到 7.53（与屋面底皮只留 0.02 阴影缝，消除檐口黑边）。",
+      "`panel()` 生成带矩形凹口的闭合厚墙板：凹口侧壁/凹底按同一组网格线切分保证流形，窗凹 0.16 m、装卸门 0.28 m、人门/服务门 0.26 m（门扇面再退 0.16/0.20 m），墙体厚 0.46 m，不是共面深色板。",
+      "倒角不用全局 Bevel 修改器（会把砌块共面接缝切出沟槽），改显式倒角：主要轮廓 2 段（屋面檐口上棱 0.06 双段、石基压顶 0.015×2），次要构件 1 段（檐口 8 点型材最大出挑 0.30 m、吊货梁与壁柱/竖梃八边形截面、通风帽锥形帽、石窗台斜面）；主墙毛角由转角壁柱遮挡未单独倒角。",
+      "资产是多个互不相连的闭合实体拼装（非焊接单壳体），为保边界边=0 保留墙板内皮与石基底面；独立 Verifier 共面审计 477 对 / 5.74 m²，**0 对位于最外层 AABB 平面、0 对位于墙外表面**（最大外露为檐沟转角同材质 0.0112 m²，不可见；门槛挡铁 2 处跨材质 0.0088 m² 已内收 0.05 m 修掉），实机与六视图均无 z-fighting。",
+      "材质槽固定 6 个 `SN_Town_*`；`build_all(textured=True)` 建完对象后调用 `sn_iron_harbor_materials.apply_to_object()` 写 UV + 绑 trim sheet 贴图（模块按文件路径 importlib 加载，不依赖 sys.path；贴图缺失自动退回灰阶占位），`report()` 的 `textures` 段输出 uv 范围/loop 数/绑定贴图/校验，几何 `checks` 增加 `uv_loops_complete / geometry_unchanged_by_uv / all_images_bound / texture_slots_6` 四项，`checks.all_pass` 必须为 true。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py": {
+    role: "铁港建筑套件第二批：`SN_HT_Warehouse_Short` LOD0 的几何唯一真源（纯 Python，无 bpy），Part 交给 `sn_iron_harbor_kit_batch2.py` 装配/上材质/导出。",
+    contracts: [
+      "实测 **3 788 tri / 2 294 顶点**、11.000×9.000×9.500 m、轴心底面中心、zmin 0、材质槽 6、边界边/非流形边/孤立点/退化面全 0；`dryrun_props.py` 干跑 ALL OK。",
+      "主立面在本地 **+X** 端面（槽位 yaw −90° 时正对固定机位，偏轴 ≈11°）；+Y 侧是单坡侧棚所在的次可见面（掠射 ≈78°），−X/−Y 放服务门、后勤窗、落水管。",
+      "该栋特征：3 级收分石基 0.55 m、不对称单坡侧棚（3 木柱 + 斜撑 + 4.60→3.35 屋面）、1 个内凹 0.26 m 的 3.0×4.3 装卸门（含滑轨）、2 扇 1.15×1.45 真凹窗（凹 0.14）、山墙灰泥三角 + 0.8×0.8 山墙窗、2.0×0.55 空白木招牌、1 根偏置铁通风管（Ø0.24）、屋脊沿 X 的双坡铁屋面 0.22 厚（3 道立缝/坡）。",
+      "与参考实现 `sn_iron_harbor_architecture_kit_generator.py` 同一套 `panel()` 真凹口墙板 + 显式倒角写法，辅助函数逐字复制，保证套件语言一致。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_iron_harbor_harbor_office_generator.py": {
+    role: "铁港建筑套件第二批：`SN_HT_Harbor_Office` LOD0 的几何唯一真源（纯 Python，无 bpy）；镇里最高的钟楼地标。",
+    contracts: [
+      "实测 **10 336 tri / 6 292 顶点**、9.000×8.000×14.000 m、轴心底面中心、zmin 0、材质槽 6、网格健康全 0；`dryrun_props.py` 干跑 ALL OK。14.00 m 是包围盒最高点（八棱尖顶 + 铁尖），旗杆只在 13.60。",
+      "主立面在本地 **+X** 端面（槽位 yaw −80° 时偏轴仅 ≈7°）；+Y 侧 9 扇窗 + 2 根落水管，−X/−Y 只保证水密与开窗节奏。",
+      "该栋特征：3 层立面（腰线 4.62 / 7.77）+ 拱形入口（2.10 m 宽、拱顶 3.65、凹 0.28、10 段石拱券 + 拱心石 + 2 级石阶）、27 扇带石窗台/窗楣的窗（凹 0.16）、2 个铁阳台（2.48×0.46 挑板 + 3 横杆 + 4 立柱 + 2 回栏）、四面空白钟盘（⌀1.24 铁圈 + 灰泥盘面 + 铁指针，无数字）×4、3.0×3.0 钟楼塔身到 12.98、檐口 0.40 出挑 2 段折线 + 檐下齿饰、平屋面 + 女儿墙。",
+      "窗木/石构件约占 4 200 tri（41%），是 LOD0 预算里最贵的一族；日后压 LOD1 先砍窗棂。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_iron_harbor_cargo_shed_generator.py": {
+    role: "铁港建筑套件第二批：`SN_HT_Cargo_Shed` LOD0 的几何唯一真源（纯 Python，无 bpy）；低矮**开敞**货棚。",
+    contracts: [
+      "实测 **3 356 tri / 2 112 顶点**、8.000×6.000×4.500 m、轴心底面中心、zmin 0、材质槽 5（木/铁/石/灰泥/玻璃，无砖）、网格健康全 0；`dryrun_props.py` 干跑 ALL OK。",
+      "开敞柱廊在本地 **+X**（槽位 yaw −90° 偏轴 ≈28°）：4 根 0.22 八边形木柱 + 檐梁 4.02–4.30 + 系梁 3.26–3.48 + 端开间斜撑，净宽 4.98 × 净高 3.98 m；+X 正面 0.6 m 以上实体面只占 28.9%（71% 透空），因此不会读成封闭小屋。",
+      "单坡棚顶 5.57°（4.500 → 3.726）、板厚 0.22、前檐 2 段倒角、出挑 0.37/0.28/0.24、12 道立缝 + 10 道露明椽；后墙 0.28 木拼板 + 后挡板 + 高位真凹小窗，±Y 只 0.98 m 女墙（上部全开）。",
+      "内部：工作台（1.84×0.70×0.85）+ 吊钩（5 节链 + J 钩）+ 5 木箱 / 2 托盘 / 2 木桶 / 2 麻袋 / 木梯 / 吊灯，全部是闭合实体；额外硬门禁「不同材质同向共面重叠面 = 0」。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_iron_harbor_tavern_generator.py": {
+    role: "铁港建筑套件第二批：`SN_HT_Tavern` LOD0 的几何唯一真源（纯 Python，无 bpy）；两层门廊酒馆。",
+    contracts: [
+      "实测 **5 116 tri / 3 064 顶点**、10.000×8.000×8.000 m、轴心底面中心、zmin 0、材质槽 6、网格健康全 0；`dryrun_props.py` 干跑 ALL OK。",
+      "主立面在本地 **+X** 山墙端（槽位 yaw −100° 偏轴 ≈43°，仍清晰可见）；+Y 侧次可见（窗 + 铁灯 + 落水管），−X 放服务门。",
+      "两层：首层砖 0.43–3.90 / 二层灰泥 3.90–6.60 + 层间石腰带；屋脊沿 X（檐 6.60 / 脊 7.60）、铁屋面板厚 0.22、出挑 0.30、脊瓦 + 3 道立缝/坡；**门廊** 3.90→5.00（= 包围盒 +X）2 木柱 + 斜撑 + 单坡廊顶 + 矮栏；**悬挂空白招牌**（铁托架 + 卷叶 + 0.86×0.58 木牌，无文字）；−X 端砖烟囱顶面正好 **8.00 m**（轮廓最高点）。",
+      "16 扇窗全部真凹（0.14）+ 木窗框 + 石窗台/窗楣，其中二层 3 扇带木百叶；入口双开门凹 0.28、后服务门凹 0.20；3 个木桶（12 边形 + 铁箍）放在 +X 立面石基台沿上；主立面两角石砌错缝（quoins）打断 6.6 m 高墙。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_iron_harbor_kit_batch2.py": {
+    role: "铁港建筑套件第二批的 Blender 装配/自检/导出 harness：把 4 个纯 Python 生成器的 Part 变成单 mesh 对象、按栋写共享 trim sheet 材质与 UV、逐栋自检、导出内容 GLB、出预览图。",
+    contracts: [
+      "`BUILDINGS` 是唯一配置表：生成器文件、资产名、工作台摆放（y=150 一排）、目标尺寸、三角面上下限，以及**本栋采样哪一档 trim sheet cell**（同 6 材质槽、不同 cell = 同一套共享贴图下的建筑差异，不增贴图）。",
+      "`build_all()` 只删除本集合内这 4 个 `SN_HT_*_LOD0` 对象，旧 `SN_Harbor_Town` 占位资产原样保留；`report_all()` 逐栋校验 tri 预算/尺寸/落地/轴心/材质槽/调色板/网格健康/UV/贴图，并用全场景 digest 回归证明没有动其它对象。",
+      "`export_all()` 逐栋把 object.location 临时归零后单对象导出到 `dev_mods/core/assets/models/props/SN_HT_<Name>.glb`（内嵌贴图）；**旧 GLB 只在备份不存在时复制一次**，绝不覆盖；`restore_legacy()` 一次还原 4 个旧资产。",
+      "`render_previews()` 每栋 3 张（3/4 街道 / +X 正交正视 / 屋顶）到 `docs/design/screenshots/iron_harbor_architecture/`；渲染前必须 `view_layer.update()`（新建对象的 `matrix_world` 在 depsgraph 求值前是单位矩阵，会导致取景跑到原点、渲出纯背景），并且只保留当前一栋可见，临时相机/太阳/世界背景在 `finally` 里还原。"
+    ]
+  },
+
+  "tools/modeling/generators/sn_iron_harbor_materials.py": {
+    role: "铁港建筑套件的**共享材质库**：6 个调色板材质槽 → trim sheet 的 6 个 cell（一张 512² 平铺贴图）+ 盒投影 UV + 自检；所有 SN 铁港建筑生成器都调用它，不各自建材质。",
+    contracts: [
+      "`MATERIAL_SURFACES` 是材质↔cell↔tile_m↔roughness/metallic 的唯一表：Brick→brick_wall、Plaster→plaster_light、Wood→wood_plank_weathered、Iron→iron_dark、Stone→stone_base_dirty、Glass→glass_dark；tile_m 一律 2.0 m（= 256 px/m，与 spec 的 `px_per_m` 一致）。",
+      "贴图源：`docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json`（16 cell 4×4×512 px，无 gutter）+ `tiles/<cell>.png`；图集 `iron_harbor_trim_sheet_2048.png` 只做评审，**不**被 UV 直接采样。",
+      "为什么不直接采图集：墙/屋面/石基是单个 20 m 级四边形，UV 限在 cell 内必须切面（实测 +5 416 tri @2 m cell、+1 484 tri @4 m cell，超 7 436+564 的预算），故每材质各取一张 REPEAT 平铺贴图，UV = world/tile_m 无上限，0 tri 增加。",
+      "UV 规则：按面法线主轴盒投影（±Y→(x,z)、±X→(y,z)、±Z→(x,y)），不做每部件偏移 ⇒ 砖缝/石缝绕整栋连续、屋面立缝沿坡、门板竖直。",
+      "`apply_to_object(obj)` 只改 UV 层与材质槽内容，不动几何（`geometry_unchanged` 自证）；`mesh.materials.clear()` 会把多边形 material_index 归零，因此**必须**先快照每面材质名再清槽（曾因此把整栋刷成 Stone）。",
+      "`apply_to_object(obj, cells={material: cell})` 支持**每栋换 cell**（同一套 6 槽/6 贴图，砖石木铁玻璃各选一档；未知材质或未知 cell 直接抛错，不静默回退）；`verify_object(obj)` 校验调色板、槽位 ≤6、UV 完整、每槽贴图绑定 512²、无塌陷 UV 面、palette_spread（至少 5 个材质被用），以及 **`uv_projection_ok`**（按面主轴重算期望 `world/tile_m` 并与存盘 UV 逐 loop 比对，容差 1e-4——这是防下一栋建筑错投影的门禁）；贴图缺失时退回 R=G=B 灰阶占位让几何轮次仍可跑。"
+    ]
+  },
+
+  "tools/modeling/generators/render_iron_harbor_architecture_preview.py": {
+    role: "铁港建筑套件验收截图：临时相机 + 三盏太阳 + 地面 + 世界背景，只对 `SN_HT_Warehouse_Long_LOD0` 出图，渲染后还原可见性/相机/引擎/分辨率/世界并删除临时对象，不保存 .blend、不导出 GLB。",
+    contracts: [
+      "固定机位由 `framework/ui/stages/port_stage.gd` 换算：Godot eye(46,28,64)/look_at(0,12,-8)/vfov 30°/keep_height + town 槽位 pos(-30,1.9,-33)/**yaw -106°** → Blender eye(24.30,209.79,26.1)/target(-32.24,145.73,10.1)；960×540 用同一垂直 FOV 的横向展开焦距。换算公式：`g = R_yaw⁻¹(p - slot_pos)`，`blender = (-48,110,0) + (g.x, -g.z, g.y)`。",
+      "输出 8 张到 `docs/design/screenshots/iron_harbor_architecture/`：固定机位 1440×900 与 960×540、同视角居中复查、街道低机位（1.7 m 眼高）、正交正视（+Y 主立面）、屋顶视图，以及材质近景 `*_detail_door_*`（装卸门一带：砖/木/铁/玻璃/石）与 `*_detail_base_*`（墙脚：石基/砖转角/落水管/檐沟）。",
+      "近景只为判读 trim sheet，不是验收机位：`DETAIL_DOOR` / `DETAIL_BASE` 的眼点与目标写在常量表里，改布局槽位不影响它们（它们用工作台坐标）。",
+      "渲染期间临时隐藏其它 mesh（含旧占位资产），结束后逐项恢复；不修改任何模型数据与运行时代码。"
+    ]
+  },
+
+  "tools/godot/capture_port_stage_res.gd": {
+    role: "铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行。",
+    contracts: [
+      "用法：`godot --path . --script res://tools/godot/capture_port_stage_res.gd -- <w> <h>`；必须窗口模式（headless 下视口纹理为空）。",
+      "输出 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_<w>x<h>.png`；失败以非 0 退出码结束。",
+      "`_report_asset_materials()` 逐个 `load()` 5 个槽位 GLB（`TOWN_ASSETS`：warehouse_long / warehouse_short / harbor_office / cargo_shed / tavern，stage 采样同一路径），打印每栋 `[asset] ... surfaces/tris/uv_surfaces/textured_surfaces/materials/textures`；有面缺贴图/缺 UV、或 tri 数与 `EXPECTED_ASSET_TRIS`（7436 / 3788 / 10336 / 3356 / 5116）不符都记为失败。stage 里 static batching 会把逐对象节点合并释放，所以**不能**在场景树里找它。",
+      "`budget: ... tris=` 是整台 stage 的总量（含并行工作流往城镇加的道具），**不能**当单资产增量证据，单资产证据看 `[asset]` 行。",
+      "与既有 `capture_port_stage.gd`（固定 1440×900、preview+sparse 两张）并行存在，不改后者行为。"
+    ]
+  },
+
+  "tools/modeling/generators/export_iron_harbor_architecture_glb.py": {
+    role: "把 `SN_HT_Warehouse_Long_LOD0` 装配进 PortStage 的导出/还原工具：备份旧内容 GLB → 单对象导出（带内嵌 trim sheet 贴图）到内容路径 → 保留候选副本；`restore_legacy_glb()` 还原。",
+    contracts: [
+      "内容路径 `dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb`；备份与候选在 `.design/buildings/iron_harbor/`（`_legacy.glb` / `_R1.glb`），备份只在缺失时复制，绝不覆盖。",
+      "导出前把 object.location 临时归零（几何为局部坐标、轴心=底面中心），导出后还原；glTF Y-up、单对象、无相机灯光，与 `export_town_glb.py` 同参数。材质用默认实现：6 个材质各带一张 512² baseColor 贴图，贴图**内嵌**进 GLB（因此单文件 1.4 MB 级；Godot 会把内嵌图**解包**成 GLB 同级的 `<glb>_<image>.png`，那是构建产物，已在 `.gitignore`）。",
+      "PortStage 经 `ResourceLoader.load()` 读取已导入场景，替换 GLB 后必须 `godot --headless --path . --import` 刷新缓存，否则仍渲旧模型；M1 起内容路径已装带贴图版本，回滚用 `restore_legacy_glb()` + 再 import（旧备份 sha256 `2576e3db…`）。"
+    ]
+  },
+
   "tools/modeling/generators/sn_harbor_town_generator.py": {
     role: "港口街景第一批 10 件的参数化几何唯一真源：顶部 `ITEMS` 参数表（名称/布局/tri 预算/目标包围盒）+ 各 `build_*` 纯几何函数，负责在 Blender 集合 `SN_Harbor_Town` 重建 10 件 `SN_HT_*` 单 mesh 对象。",
     contracts: [
@@ -2471,6 +2695,17 @@ export const FILE_DOCS = {
       "纵剖图不烘焙文字与 UI 边框；`ANCHORS` 必须与 `sn_ship_view.gd._chip_anchor()` 的舱室比例同步。",
       "缩略图从 `docs/design/screenshots/ironclad_broadside.png` 裁切并替换为 UI 调色板背景。",
       "重跑命令：`python tools/art/gen_shipyard_textures.py`；改完图不需要改页面代码。"
+    ]
+  },
+
+  "tools/art/gen_iron_harbor_trim_sheet.py": {
+    role: "铁港建筑套件**共享 trim sheet 的确定性画图器**：按 `docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json` 画出 4×4×512 px 图集（评审件）与 16 张 512² 独立平铺贴图（运行时采样件），并写 stats。",
+    contracts: [
+      "唯一输入是 spec JSON（含 16 个 cell 的 id/col/row/kind/palette/mean_rgb/detail），不读代码；`--out-root` 默认仓库根，`--spec/--stats` 可覆盖；两跑必须字节一致（cell 级种子由 cell id 派生，不依赖遍历顺序）。",
+      "每 cell 内容自身 U/V 无缝（512 内容按 mod 坐标生成，无 gutter），砖层 512/26 px、石层 120 px、屋面肋 36 px、木板 53 px 等尺度常量由 `px_per_m=256` 与 `tile_m=2.0` 推得。",
+      "自检：每 cell 实测 mean 与目标差 ≤±14（实测 ≤±0.5）、接缝率（自身边界差/内部差）<2.5（实测 0.26–1.18）、cell 完整/索引不撞、PNG 尺寸、确定性；任一失败非 0 退出。",
+      "产出：`iron_harbor_trim_sheet_2048.png`（2048²，行 0 在顶部）+ `tiles/<cell>.png`（PNG-8 ≤96 色，单张 145–187 KB）+ `.stats.json`（每 cell mean/seam/bytes 与图集 sha256）。",
+      "只画图不建材质：材质↔cell 的映射在 `sn_iron_harbor_materials.MATERIAL_SURFACES`，改 cell 语义要两边一起改。重跑：`python tools/art/gen_iron_harbor_trim_sheet.py`。"
     ]
   },
 
@@ -2509,11 +2744,12 @@ export const MODULES = {
     ]
   },
   "framework/domain": {
-    intro: "纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、事件、债务与通关判定。",
+    intro: "纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、世界生成（坐标空间+程序化陆地+贝塞尔航线）、事件、债务与通关判定。",
     contracts: [
       "领域函数尽量输入确定、输出确定；随机必须来自 RngService 命名流。",
       "不读写文件、不创建 UI、不直接访问场景树。",
-      "仓库/运输/打造只操作 GameState 纯数据；通关判定读取注册表合同与船只派生属性。"
+      "仓库/运输/打造只操作 GameState 纯数据；通关判定读取注册表合同与船只派生属性。",
+      "世界生成器使用坐标空间模型（替代 MVP 时期的抽象图），港口锚定在程序生成的陆地海岸线上。"
     ]
   },
   "framework/services": {
@@ -2537,7 +2773,7 @@ export const MODULES = {
     ]
   },
   "framework/tests": {
-    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施、总览页 3D 港口舞台接入与完整通关流程。",
+    intro: "无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施、总览页 3D 港口舞台接入、完整通关流程与坐标空间世界生成器。",
     contracts: [
       "测试入口：`godot --headless --path . --script res://framework/tests/test_runner.gd`。",
       "`test_case.gd` 提供断言与 Core 启动辅助；每个用例独立 bootstrap。",
@@ -2548,7 +2784,8 @@ export const MODULES = {
       "`test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。",
       "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
       "`test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
-      "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 草案，并确认草案类型仍为 planned、不在 active 注册表。"
+      "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 草案，并确认草案类型仍为 planned、不在 active 注册表。",
+      "`test_world_generator.gd` 守护坐标空间世界生成：同 seed 可复现、港口锚定海岸线、最小间距、连通性、出航角度、必需设施位置与序列化往返。"
     ]
   },
   "sdk": {
@@ -2653,6 +2890,7 @@ export const GROUPED_ROLES = {
   "framework/application/queries/voyage_preview.gd": "出航预览查询包装。",
   "framework/tests/test_case.gd": "测试断言与 Core bootstrap 辅助。",
   "framework/tests/test_runner.gd": "无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI 与 test_stage_host 2.5D 舞台套件）。",
+  "framework/tests/cases/test_world_generator.gd": "坐标空间世界生成器测试：同 seed 可复现、不同 seed 不同世界、10-20 港口、锚定海岸线、最小间距、陆地多边形、覆盖率、连通性、出航角度、起点港口、必需设施位置与序列化往返（12 个测试用例）。",
   "framework/tests/cases": "按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。",
   "framework/ui/stages/shipyard_stage.tscn": "船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id=\"shipyard\"`。",
   "framework/ui/stages/port_stage.tscn": "港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id=\"port\"`。",

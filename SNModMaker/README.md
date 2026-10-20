@@ -152,18 +152,24 @@ docker compose down -v     # 停止并删除数据卷
 
 ### Tailscale 远程访问
 
-宿主机 Tailscale 登录后，用 Serve 把本机 8099 以 HTTPS 暴露给 tailnet（Windows / Linux 均可）：
+宿主机 Tailscale 登录后，用 Serve 把本机 8099 以 HTTPS 暴露给 tailnet（Windows / Linux 均可）。两种挂载方式任选：
 
 ```powershell
-tailscale serve --bg 8099
-tailscale serve status
-# 浏览器打开 https://<机器名>.<tailnet>.ts.net/
-tailscale serve reset    # 停止共享
+# 方式 A：独立 HTTPS 端口（推荐；不占用 443 上已有的路径）
+tailscale serve --bg --https 8443 http://127.0.0.1:8099
+# 浏览器打开 https://<机器名>.<tailnet>.ts.net:8443/
+tailscale serve --https=8443 off          # 撤销
+
+# 方式 B：挂到现有 443 的子路径（不额外占端口）
+tailscale serve --bg --set-path /snmodmaker http://127.0.0.1:8099
+# 浏览器打开 https://<机器名>.<tailnet>.ts.net/snmodmaker/
+# 结尾斜杠必须存在；漏写时 index.html 会自动补一次
 ```
 
 - 只走 tailnet；**不要用 `tailscale funnel`**，它会把无鉴权编辑器公开到互联网。
 - 用 Tailscale ACL 限制可访问该设备的用户/设备；需要额外一层认证时可在前面加 Caddy Basic Auth。
 - `tailscale serve` 提供有效 HTTPS 证书，浏览器处于 secure context，「文件夹导出」等 File System Access 功能可用。
+- 子路径挂载依赖相对路径加载资源；`index.html` 内置补斜杠脚本，反向代理不需要额外 rewrite。
 
 ---
 

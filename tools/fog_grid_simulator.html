@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Steam Navigator — 迷雾网格模拟器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0d8c0; font-family: 'Courier New', monospace; overflow: hidden; }
+#app { display: flex; height: 100vh; }
+#sidebar { width: 320px; background: #16213e; padding: 16px; overflow-y: auto; border-right: 2px solid #3a3a5c; }
+#sidebar h1 { font-size: 16px; color: #c9a959; margin-bottom: 12px; border-bottom: 1px solid #3a3a5c; padding-bottom: 8px; }
+#sidebar h2 { font-size: 13px; color: #c9a959; margin: 12px 0 6px; }
+.ctrl { margin-bottom: 10px; }
+.ctrl label { display: block; font-size: 11px; color: #9a9a7a; margin-bottom: 3px; }
+.ctrl input[type=range] { width: 100%; accent-color: #c9a959; }
+.ctrl input[type=checkbox] { accent-color: #c9a959; }
+.ctrl select { background: #1a1a2e; color: #e0d8c0; border: 1px solid #3a3a5c; padding: 4px; font-size: 12px; width: 100%; }
+.ctrl .val { float: right; color: #c9a959; font-size: 11px; }
+.legend { margin-top: 12px; font-size: 11px; }
+.legend-item { display: flex; align-items: center; margin: 4px 0; }
+.legend-swatch { width: 16px; height: 16px; border: 1px solid #3a3a5c; margin-right: 8px; border-radius: 2px; }
+#stats { font-size: 11px; color: #7a7a6a; margin-top: 12px; border-top: 1px solid #3a3a5c; padding-top: 8px; }
+#canvas-wrap { flex: 1; position: relative; }
+canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+#tooltip { position: absolute; background: rgba(22,33,62,0.95); border: 1px solid #c9a959; padding: 6px 10px; font-size: 11px; pointer-events: none; display: none; border-radius: 4px; }
+.hint { font-size: 10px; color: #6a6a5a; margin-top: 4px; }
+button { background: #3a3a5c; color: #e0d8c0; border: 1px solid #5a5a7c; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 12px; width: 100%; margin-top: 6px; }
+button:hover { background: #4a4a6c; }
+</style>
+</head>
+<body>
+<div id="app">
+<div id="sidebar">
+  <h1>⚓ 迷雾网格模拟器</h1>
+  
+  <h2>网格参数</h2>
+  <div class="ctrl">
+    <label>网格尺寸 (cell_size): <span class="val" id="v_cellsize">8</span></label>
+    <input type="range" id="cellsize" min="2" max="32" value="8" step="1">
+  </div>
+  <div class="ctrl">
+    <label>世界尺寸: <span class="val" id="v_worldsize">400</span></label>
+    <input type="range" id="worldsize" min="200" max="800" value="400" step="50">
+  </div>
+  
+  <h2>迷雾状态</h2>
+  <div class="ctrl">
+    <label><input type="checkbox" id="showGrid" checked> 显示网格线</label>
+  </div>
+  <div class="ctrl">
+    <label><input type="checkbox" id="showCellState" checked> 显示格子状态</label>
+  </div>
+  <div class="ctrl">
+    <label><input type="checkbox" id="smoothFog" checked> 迷雾边缘平滑</label>
+  </div>
+  <div class="ctrl">
+    <label><input type="checkbox" id="showLand" checked> 显示陆地轮廓</label>
+  </div>
+  <div class="ctrl">
+    <label><input type="checkbox" id="showPorts" checked> 显示港口</label>
+  </div>
+  
+  <h2>船只</h2>
+  <div class="ctrl">
+    <label>视野半径: <span class="val" id="v_vision">32</span></label>
+    <input type="range" id="vision" min="12" max="80" value="32" step="2">
+  </div>
+  <div class="ctrl">
+    <label>港口揭示半径: <span class="val" id="v_port_reveal">24</span></label>
+    <input type="range" id="port_reveal" min="8" max="60" value="24" step="2">
+  </div>
+  <div class="ctrl">
+    <label style="color:#c9a959">网格 = 视野÷4 = <span class="val" id="v_auto_cell">8</span></label>
+    <label><input type="checkbox" id="autoCell" checked> 自动联动网格尺寸</label>
+  </div>
+  <div class="ctrl">
+    <label><input type="checkbox" id="showShip" checked> 显示船只</label>
+  </div>
+  <div class="ctrl">
+    <label><input type="checkbox" id="animateShip" checked> 船只动画</label>
+  </div>
+  <p class="hint">点击海图移动船只；拖拽绘制航线</p>
+
+  <h2>迷雾模式</h2>
+  <div class="ctrl">
+    <label>海洋迷雾离开后:</label>
+    <select id="oceanFogMode">
+      <option value="explored">降为灰雾(explored)</option>
+      <option value="black">直接变黑(black)</option>
+    </select>
+  </div>
+  <p class="hint">灰雾 = 曾探索过，能看到陆地轮廓但暗淡<br>黑雾 = 完全不可见</p>
+  
+  <button id="btnReset">🔄 重置迷雾</button>
+  <button id="btnRevealCoast">🏖️ 揭示全部沿岸</button>
+  <button id="btnRandomShip">🚢 随机放置船只</button>
+  
+  <div class="legend">
+    <h2>图例</h2>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(10,10,25,0.95)"></div>黑雾 (未探索)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(30,40,60,0.5)"></div>灰雾 (曾探索)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(60,80,120,0.0)"></div>可见 (当前视野)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2a4a3a"></div>陆地轮廓</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c9a959"></div>港口</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#ff6b6b"></div>船只</div>
+  </div>
+  
+  <div id="stats">
+    <div>格子数: <span id="s_cells">-</span></div>
+    <div>黑雾: <span id="s_black">-</span> | 灰雾: <span id="s_explored">-</span> | 可见: <span id="s_visible">-</span></div>
+    <div>港口: <span id="s_ports">-</span> | 已发现: <span id="s_discovered">-</span></div>
+    <div>船位: <span id="s_ship">-</span></div>
+  </div>
+</div>
+<div id="canvas-wrap">
+  <canvas id="canvas"></canvas>
+  <div id="tooltip"></div>
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+
+// --- Config ---
+let CFG = {
+  cellSize: 8,
+  worldSize: 400,
+  vision: 32,
+  portReveal: 24,
+  showGrid: true,
+  showCellState: true,
+  smoothFog: true,
+  showLand: true,
+  showPorts: true,
+  showShip: true,
+  animateShip: true,
+  oceanFogMode: 'explored',
+};
+
+// --- State ---
+let grid = [];      // grid[gy][gx] = { state: 'black'|'explored'|'visible', alpha: 0-1 }
+let cols = 0, rows = 0;
+let landmasses = [];
+let ports = [];
+let ship = { x: 100, y: 100, tx: 100, ty: 100, path: [], discoveredPorts: new Set() };
+let animFrame = 0;
+let camera = { x: 0, y: 0, zoom: 1 };
+let isDragging = false, dragStart = null, dragCurrent = null;
+
+// --- Seed RNG ---
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+
+// --- World Generation ---
+function generateWorld() {
+  const rng = mulberry32(42);
+  const W = CFG.worldSize;
+  landmasses = [];
+  ports = [];
+  
+  // World is 400×400, ocean is ~80%, land is ~20%
+  // Continent: large landmass along one edge (like a coastline)
+  // Large island: 15-25 unit radius
+  // Small island: 4-8 unit radius
+  // Atoll: 2-4 unit radius
+  const landDefs = [
+    // Continent coastline along the left edge
+    { cx: -10, cy: W * 0.50, rx: 35, ry: 80, type: 'continent', name: '西大陆' },
+    // Large islands
+    { cx: W * 0.35, cy: W * 0.22, rx: 18, ry: 14, type: 'large_island', name: '铁锈岛' },
+    { cx: W * 0.55, cy: W * 0.72, rx: 15, ry: 12, type: 'large_island', name: '香料群岛' },
+    { cx: W * 0.78, cy: W * 0.35, rx: 20, ry: 16, type: 'large_island', name: '北境岛' },
+    // Small islands
+    { cx: W * 0.25, cy: W * 0.55, rx: 6, ry: 5, type: 'small_island', name: '珊瑚礁' },
+    { cx: W * 0.62, cy: W * 0.42, rx: 5, ry: 4, type: 'small_island', name: '迷雾礁' },
+    { cx: W * 0.45, cy: W * 0.88, rx: 7, ry: 5, type: 'small_island', name: '南风岛' },
+    { cx: W * 0.82, cy: W * 0.65, rx: 4, ry: 3.5, type: 'small_island', name: '碎骨礁' },
+    // Atolls
+    { cx: W * 0.38, cy: W * 0.45, rx: 3, ry: 2.5, type: 'atoll', name: '玻璃环礁' },
+    { cx: W * 0.70, cy: W * 0.18, rx: 2.5, ry: 2, type: 'atoll', name: '月影礁' },
+    { cx: W * 0.88, cy: W * 0.82, rx: 3, ry: 2, type: 'atoll', name: '远方礁' },
+  ];
+  
+  landDefs.forEach((def, i) => {
+    const points = [];
+    const segments = 32;
+    for (let j = 0; j < segments; j++) {
+      const angle = (j / segments) * Math.PI * 2;
+      // More organic noise: layered frequencies
+      const n1 = 0.75 + rng() * 0.5;
+      const n2 = Math.sin(angle * 3 + rng() * 2) * 0.12;
+      const n3 = Math.cos(angle * 5 + rng() * 3) * 0.06;
+      const noise = n1 + n2 + n3;
+      const x = def.cx + Math.cos(angle) * def.rx * noise;
+      const y = def.cy + Math.sin(angle) * def.ry * noise;
+      points.push({ x, y });
+    }
+    landmasses.push({ id: `land_${i}`, points, type: def.type, name: def.name });
+  });
+  
+  // Generate ports on coastlines — ports are small dots ON the shore
+  const portDefs = [
+    // Continent ports (left coast)
+    { land: 0, angle: -0.6, name: '铁港', archetype: 'industrial' },
+    { land: 0, angle: 0.1, name: '香料港', archetype: 'trade' },
+    { land: 0, angle: 0.7, name: '自由镇', archetype: 'pirate' },
+    { land: 0, angle: 1.3, name: '渔村', archetype: 'fishing' },
+    // Large island ports
+    { land: 1, angle: 2.2, name: '铁锈港', archetype: 'industrial' },
+    { land: 2, angle: -1.0, name: '玻璃港', archetype: 'craft' },
+    { land: 2, angle: 1.5, name: '南风驿', archetype: 'trade' },
+    { land: 3, angle: -0.5, name: '北方哨站', archetype: 'military' },
+    { land: 3, angle: 2.0, name: '冰风港', archetype: 'fishing' },
+    // Small island ports
+    { land: 4, angle: 0.8, name: '珊瑚驿站', archetype: 'trade' },
+    { land: 5, angle: -1.5, name: '迷雾灯塔', archetype: 'military' },
+    { land: 6, angle: 0.3, name: '南风口', archetype: 'fishing' },
+    // Atoll (maybe a hidden port)
+    { land: 8, angle: 1.0, name: '玻璃环礁', archetype: 'craft' },
+  ];
+  
+  portDefs.forEach((def, i) => {
+    const land = landDefs[def.land];
+    const noise = 0.92 + rng() * 0.12;
+    const x = land.cx + Math.cos(def.angle) * land.rx * noise;
+    const y = land.cy + Math.sin(def.angle) * land.ry * noise;
+    ports.push({ id: `port_${i}`, x, y, name: def.name, archetype: def.archetype, discovered: i < 2 });
+  });
+  
+  ship.x = ports[0].x + 8;
+  ship.y = ports[0].y + 8;
+  ship.tx = ship.x;
+  ship.ty = ship.y;
+  ship.discoveredPorts = new Set([0, 1]);
+}
+
+// --- Grid Management ---
+function initGrid() {
+  cols = Math.ceil(CFG.worldSize / CFG.cellSize);
+  rows = Math.ceil(CFG.worldSize / CFG.cellSize);
+  grid = [];
+  for (let gy = 0; gy < rows; gy++) {
+    grid[gy] = [];
+    for (let gx = 0; gx < cols; gx++) {
+      grid[gy][gx] = { state: 'black', alpha: 1.0 };
+    }
+  }
+  // Mark discovered ports
+  ports.forEach((p, i) => {
+    if (p.discovered) revealPort(p);
+  });
+}
+
+function worldToGrid(wx, wy) {
+  return {
+    gx: Math.floor(wx / CFG.cellSize),
+    gy: Math.floor(wy / CFG.cellSize)
+  };
+}
+
+function gridToWorld(gx, gy) {
+  return {
+    wx: gx * CFG.cellSize + CFG.cellSize / 2,
+    wy: gy * CFG.cellSize + CFG.cellSize / 2
+  };
+}
+
+function revealPort(port) {
+  const r = CFG.portReveal;
+  const { gx: cgx, gy: cgy } = worldToGrid(port.x, port.y);
+  const rg = Math.ceil(r / CFG.cellSize);
+  for (let dy = -rg; dy <= rg; dy++) {
+    for (let dx = -rg; dx <= rg; dx++) {
+      const gx = cgx + dx, gy = cgy + dy;
+      if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) {
+        const dist = Math.sqrt(dx * dx + dy * dy) * CFG.cellSize;
+        if (dist <= r) {
+          grid[gy][gx].state = 'explored';
+        }
+      }
+    }
+  }
+}
+
+function updateShipVision() {
+  // Reset visible → explored or black
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      if (grid[gy][gx].state === 'visible') {
+        grid[gy][gx].state = CFG.oceanFogMode === 'explored' ? 'explored' : 'black';
+      }
+    }
+  }
+  
+  // Set visible around ship
+  const { gx: sgx, gy: sgy } = worldToGrid(ship.x, ship.y);
+  const rg = Math.ceil(CFG.vision / CFG.cellSize);
+  for (let dy = -rg; dy <= rg; dy++) {
+    for (let dx = -rg; dx <= rg; dx++) {
+      const gx = sgx + dx, gy = sgy + dy;
+      if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) {
+        const dist = Math.sqrt(dx * dx + dy * dy) * CFG.cellSize;
+        if (dist <= CFG.vision) {
+          grid[gy][gx].state = 'visible';
+        }
+      }
+    }
+  }
+  
+  // Update target alpha
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const cell = grid[gy][gx];
+      let target;
+      if (cell.state === 'black') target = 0.92;
+      else if (cell.state === 'explored') target = 0.45;
+      else target = 0.0;
+      cell.alpha += (target - cell.alpha) * 0.15;
+    }
+  }
+}
+
+// --- Point in polygon ---
+function pointInPolygon(px, py, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x, yi = poly[i].y;
+    const xj = poly[j].x, yj = poly[j].y;
+    if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function isLand(wx, wy) {
+  return landmasses.some(lm => pointInPolygon(wx, wy, lm.points));
+}
+
+// --- Rendering ---
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+
+function worldToScreen(wx, wy) {
+  return {
+    sx: (wx - camera.x) * camera.zoom + canvas.width / 2,
+    sy: (wy - camera.y) * camera.zoom + canvas.height / 2
+  };
+}
+
+function screenToWorld(sx, sy) {
+  return {
+    wx: (sx - canvas.width / 2) / camera.zoom + camera.x,
+    wy: (sy - canvas.height / 2) / camera.zoom + camera.y
+  };
+}
+
+function render() {
+  // Ocean background
+  ctx.fillStyle = '#0a0a19';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Subtle ocean gradient in visible area
+  const tl = worldToScreen(0, 0);
+  const br = worldToScreen(CFG.worldSize, CFG.worldSize);
+  const oceanGrad = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, 0,
+    canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.7
+  );
+  oceanGrad.addColorStop(0, '#0e1525');
+  oceanGrad.addColorStop(1, '#080c15');
+  ctx.fillStyle = oceanGrad;
+  ctx.fillRect(tl.sx, tl.sy, br.sx - tl.sx, br.sy - tl.sy);
+  
+  const cellScreen = CFG.cellSize * camera.zoom;
+  
+  // Draw fog grid
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const { wx, wy } = gridToWorld(gx, gy);
+      const { sx, sy } = worldToScreen(wx - CFG.cellSize/2, wy - CFG.cellSize/2);
+      
+      if (sx + cellScreen < 0 || sy + cellScreen < 0 || sx > canvas.width || sy > canvas.height) continue;
+      
+      const cell = grid[gy][gx];
+      const alpha = cell.alpha;
+      
+      if (CFG.smoothFog && alpha > 0.01) {
+        // Get neighbor alphas for smooth gradient
+        const aL = gx > 0 ? grid[gy][gx-1].alpha : alpha;
+        const aR = gx < cols-1 ? grid[gy][gx+1].alpha : alpha;
+        const aU = gy > 0 ? grid[gy-1][gx].alpha : alpha;
+        const aD = gy < rows-1 ? grid[gy+1][gx].alpha : alpha;
+        
+        // Draw base
+        ctx.fillStyle = `rgba(10,10,25,${alpha})`;
+        ctx.fillRect(sx, sy, cellScreen + 0.5, cellScreen + 0.5);
+        
+        // Edge gradients
+        if (Math.abs(alpha - aL) > 0.05) {
+          const grad = ctx.createLinearGradient(sx, sy, sx + cellScreen * 0.5, sy);
+          grad.addColorStop(0, `rgba(10,10,25,${aL})`);
+          grad.addColorStop(1, `rgba(10,10,25,${alpha})`);
+          ctx.fillStyle = grad;
+          ctx.fillRect(sx, sy, cellScreen * 0.5, cellScreen + 0.5);
+        }
+        if (Math.abs(alpha - aR) > 0.05) {
+          const grad = ctx.createLinearGradient(sx + cellScreen * 0.5, sy, sx + cellScreen, sy);
+          grad.addColorStop(0, `rgba(10,10,25,${alpha})`);
+          grad.addColorStop(1, `rgba(10,10,25,${aR})`);
+          ctx.fillStyle = grad;
+          ctx.fillRect(sx + cellScreen * 0.5, sy, cellScreen * 0.5, cellScreen + 0.5);
+        }
+        if (Math.abs(alpha - aU) > 0.05) {
+          const grad = ctx.createLinearGradient(sx, sy, sx, sy + cellScreen * 0.5);
+          grad.addColorStop(0, `rgba(10,10,25,${aU})`);
+          grad.addColorStop(1, `rgba(10,10,25,${alpha})`);
+          ctx.fillStyle = grad;
+          ctx.fillRect(sx, sy, cellScreen + 0.5, cellScreen * 0.5);
+        }
+        if (Math.abs(alpha - aD) > 0.05) {
+          const grad = ctx.createLinearGradient(sx, sy + cellScreen * 0.5, sx, sy + cellScreen);
+          grad.addColorStop(0, `rgba(10,10,25,${alpha})`);
+          grad.addColorStop(1, `rgba(10,10,25,${aD})`);
+          ctx.fillStyle = grad;
+          ctx.fillRect(sx, sy + cellScreen * 0.5, cellScreen + 0.5, cellScreen * 0.5);
+        }
+      } else if (alpha > 0.01) {
+        ctx.fillStyle = `rgba(10,10,25,${alpha})`;
+        ctx.fillRect(sx, sy, cellScreen + 0.5, cellScreen + 0.5);
+      }
+    }
+  }
+  
+  // Grid lines
+  if (CFG.showGrid) {
+    ctx.strokeStyle = 'rgba(60,60,90,0.2)';
+    ctx.lineWidth = 0.5;
+    for (let gx = 0; gx <= cols; gx++) {
+      const { sx } = worldToScreen(gx * CFG.cellSize, 0);
+      const { sy: sy0 } = worldToScreen(0, 0);
+      const { sy: sy1 } = worldToScreen(0, CFG.worldSize);
+      ctx.beginPath(); ctx.moveTo(sx, sy0); ctx.lineTo(sx, sy1); ctx.stroke();
+    }
+    for (let gy = 0; gy <= rows; gy++) {
+      const { sy } = worldToScreen(0, gy * CFG.cellSize);
+      const { sx: sx0 } = worldToScreen(0, 0);
+      const { sx: sx1 } = worldToScreen(CFG.worldSize, 0);
+      ctx.beginPath(); ctx.moveTo(sx0, sy); ctx.lineTo(sx1, sy); ctx.stroke();
+    }
+  }
+  
+  // Cell state labels
+  if (CFG.showCellState && cellScreen > 12) {
+    ctx.font = `${Math.min(9, cellScreen * 0.3)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let gy = 0; gy < rows; gy++) {
+      for (let gx = 0; gx < cols; gx++) {
+        const cell = grid[gy][gx];
+        if (cell.state === 'visible' || cell.state === 'explored') {
+          const { wx, wy } = gridToWorld(gx, gy);
+          const { sx, sy } = worldToScreen(wx, wy);
+          if (sx > -20 && sx < canvas.width + 20 && sy > -20 && sy < canvas.height + 20) {
+            ctx.fillStyle = cell.state === 'visible' ? 'rgba(100,180,255,0.5)' : 'rgba(150,150,120,0.4)';
+            ctx.fillText(cell.state === 'visible' ? 'V' : 'E', sx, sy);
+          }
+        }
+      }
+    }
+  }
+  
+  // Landmasses
+  if (CFG.showLand) {
+    const landColors = {
+      'continent': { fill: '#1e3828', stroke: '#3a7a4a', shadow: '#0a1a0e' },
+      'large_island': { fill: '#1a3525', stroke: '#3a6a45', shadow: '#0a1a0e' },
+      'small_island': { fill: '#1e3a2a', stroke: '#4a7a55', shadow: '#0a1a0e' },
+      'atoll': { fill: '#2a4a3a', stroke: '#5a8a65', shadow: '#0a1a0e' },
+    };
+    
+    landmasses.forEach(lm => {
+      const colors = landColors[lm.type] || landColors['large_island'];
+      
+      // Shadow/depth
+      ctx.beginPath();
+      lm.points.forEach((p, i) => {
+        const { sx, sy } = worldToScreen(p.x + 1.5, p.y + 1.5);
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      });
+      ctx.closePath();
+      ctx.fillStyle = colors.shadow;
+      ctx.fill();
+      
+      // Main fill
+      ctx.beginPath();
+      lm.points.forEach((p, i) => {
+        const { sx, sy } = worldToScreen(p.x, p.y);
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      });
+      ctx.closePath();
+      ctx.fillStyle = colors.fill;
+      ctx.fill();
+      
+      // Coastline stroke
+      ctx.strokeStyle = colors.stroke;
+      ctx.lineWidth = Math.max(1, 1.5 * camera.zoom);
+      ctx.stroke();
+      
+      // Subtle inner highlight (shore line)
+      ctx.beginPath();
+      lm.points.forEach((p, i) => {
+        const { sx, sy } = worldToScreen(p.x * 0.97 + lm.points[0].x * 0.03, p.y * 0.97 + lm.points[0].y * 0.03);
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      });
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(100,160,110,0.15)';
+      ctx.lineWidth = Math.max(0.5, 0.8 * camera.zoom);
+      ctx.stroke();
+    });
+  }
+  
+  // Ports
+  if (CFG.showPorts) {
+    const portR = Math.max(2, 3 * camera.zoom);
+    const labelSize = Math.max(8, Math.min(14, 10 * camera.zoom));
+    
+    ports.forEach((p, i) => {
+      const { sx, sy } = worldToScreen(p.x, p.y);
+      const { gx, gy } = worldToGrid(p.x, p.y);
+      const cellState = (gx >= 0 && gx < cols && gy >= 0 && gy < rows) ? grid[gy][gx].state : 'black';
+      
+      if (sx < -30 || sx > canvas.width + 30 || sy < -30 || sy > canvas.height + 30) return;
+      
+      if (p.discovered || cellState !== 'black') {
+        // Port icon — small anchor dot
+        ctx.beginPath();
+        ctx.arc(sx, sy, portR, 0, Math.PI * 2);
+        ctx.fillStyle = p.discovered ? '#c9a959' : 'rgba(201,169,89,0.4)';
+        ctx.fill();
+        ctx.strokeStyle = p.discovered ? '#fff' : 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        
+        // Outer ring
+        ctx.beginPath();
+        ctx.arc(sx, sy, portR + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = p.discovered ? 'rgba(201,169,89,0.5)' : 'rgba(201,169,89,0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        
+        // Port name — show when zoomed in enough or port is discovered
+        const showLabel = p.discovered || camera.zoom > 2;
+        if (showLabel) {
+          ctx.font = `${labelSize}px 'Courier New', monospace`;
+          ctx.textAlign = 'center';
+          // Shadow for readability
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillText(p.name, sx + 1, sy - portR - 5 + 1);
+          ctx.fillStyle = p.discovered ? '#e0d8c0' : 'rgba(224,216,192,0.4)';
+          ctx.fillText(p.name, sx, sy - portR - 5);
+        }
+        
+        // Port reveal radius circle
+        if (p.discovered) {
+          ctx.beginPath();
+          ctx.arc(sx, sy, CFG.portReveal * camera.zoom, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(201,169,89,0.12)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4 * camera.zoom, 4 * camera.zoom]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+    });
+  }
+  
+  // Ship
+  if (CFG.showShip) {
+    const { sx, sy } = worldToScreen(ship.x, ship.y);
+    
+    // Vision radius
+    ctx.beginPath();
+    ctx.arc(sx, sy, CFG.vision * camera.zoom, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,107,107,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,107,107,0.04)';
+    ctx.fill();
+    
+    // Ship icon
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - 6 * camera.zoom);
+    ctx.lineTo(sx + 4 * camera.zoom, sy + 4 * camera.zoom);
+    ctx.lineTo(sx - 4 * camera.zoom, sy + 4 * camera.zoom);
+    ctx.closePath();
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Drag line (route preview)
+  if (isDragging && dragStart && dragCurrent) {
+    const s0 = worldToScreen(dragStart.wx, dragStart.wy);
+    const s1 = worldToScreen(dragCurrent.wx, dragCurrent.wy);
+    ctx.beginPath();
+    ctx.moveTo(s0.sx, s0.sy);
+    // Bezier curve
+    const mx = (s0.sx + s1.sx) / 2;
+    const my = Math.min(s0.sy, s1.sy) - 30;
+    ctx.quadraticCurveTo(mx, my, s1.sx, s1.sy);
+    ctx.strokeStyle = 'rgba(201,169,89,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  // World border
+  const tl = worldToScreen(0, 0);
+  const br = worldToScreen(CFG.worldSize, CFG.worldSize);
+  ctx.strokeStyle = 'rgba(90,90,120,0.4)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(tl.sx, tl.sy, br.sx - tl.sx, br.sy - tl.sy);
+}
+
+function updateStats() {
+  let black = 0, explored = 0, visible = 0;
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const s = grid[gy][gx].state;
+      if (s === 'black') black++;
+      else if (s === 'explored') explored++;
+      else visible++;
+    }
+  }
+  document.getElementById('s_cells').textContent = `${cols}×${rows} = ${cols*rows}`;
+  document.getElementById('s_black').textContent = black;
+  document.getElementById('s_explored').textContent = explored;
+  document.getElementById('s_visible').textContent = visible;
+  document.getElementById('s_ports').textContent = ports.length;
+  document.getElementById('s_discovered').textContent = ports.filter(p => p.discovered).length;
+  document.getElementById('s_ship').textContent = `(${ship.x.toFixed(1)}, ${ship.y.toFixed(1)})`;
+}
+
+// --- Animation ---
+function animate() {
+  // Move ship toward target
+  if (CFG.animateShip || ship.path.length > 0) {
+    if (ship.path.length > 0) {
+      const target = ship.path[0];
+      const dx = target.x - ship.x;
+      const dy = target.y - ship.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 0.5) {
+        ship.x = target.x;
+        ship.y = target.y;
+        ship.path.shift();
+      } else {
+        const speed = 0.8;
+        ship.x += (dx / dist) * speed;
+        ship.y += (dy / dist) * speed;
+      }
+    } else {
+      const dx = ship.tx - ship.x;
+      const dy = ship.ty - ship.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > 0.3) {
+        const speed = 0.6;
+        ship.x += (dx / dist) * speed;
+        ship.y += (dy / dist) * speed;
+      }
+    }
+  }
+  
+  // Check port discovery
+  ports.forEach((p, i) => {
+    if (!p.discovered) {
+      const dx = ship.x - p.x;
+      const dy = ship.y - p.y;
+      if (Math.sqrt(dx*dx + dy*dy) < CFG.portReveal * 0.5) {
+        p.discovered = true;
+        ship.discoveredPorts.add(i);
+        revealPort(p);
+      }
+    }
+  });
+  
+  updateShipVision();
+  updateAutoCell();
+  render();
+  updateStats();
+  animFrame = requestAnimationFrame(animate);
+}
+
+// --- Events ---
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const w = screenToWorld(sx, sy);
+  
+  if (e.button === 0) {
+    if (e.shiftKey) {
+      isDragging = true;
+      dragStart = w;
+      dragCurrent = w;
+    } else {
+      ship.tx = w.wx;
+      ship.ty = w.wy;
+      ship.path = [];
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const w = screenToWorld(sx, sy);
+  
+  if (isDragging) {
+    dragCurrent = w;
+  }
+  
+  // Tooltip
+  const { gx, gy } = worldToGrid(w.wx, w.wy);
+  if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) {
+    const cell = grid[gy][gx];
+    const landHere = isLand(w.wx, w.wy);
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX - canvas.parentElement.getBoundingClientRect().left + 12) + 'px';
+    tooltip.style.top = (e.clientY - canvas.parentElement.getBoundingClientRect().top - 20) + 'px';
+    tooltip.innerHTML = `格(${gx},${gy}) | ${cell.state} α${cell.alpha.toFixed(2)}<br>世界(${w.wx.toFixed(1)},${w.wy.toFixed(1)}) ${landHere ? '🏝️ 陆地' : '🌊 海洋'}`;
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (isDragging && dragStart) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const w = screenToWorld(sx, sy);
+    
+    // Generate bezier path from dragStart to dragCurrent
+    const steps = 20;
+    ship.path = [];
+    ship.x = dragStart.wx;
+    ship.y = dragStart.wy;
+    const mx = (dragStart.wx + w.wx) / 2;
+    const my = Math.min(dragStart.wy, w.wy) - 15;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const x = (1-t)*(1-t)*dragStart.wx + 2*(1-t)*t*mx + t*t*w.wx;
+      const y = (1-t)*(1-t)*dragStart.wy + 2*(1-t)*t*my + t*t*w.wy;
+      ship.path.push({ x, y });
+    }
+    ship.tx = w.wx;
+    ship.ty = w.wy;
+  }
+  isDragging = false;
+  dragStart = null;
+  dragCurrent = null;
+});
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.9 : 1.1;
+  camera.zoom = Math.max(0.5, Math.min(8, camera.zoom * factor));
+});
+
+// --- Controls ---
+function bindControl(id, key, transform) {
+  const el = document.getElementById(id);
+  if (el.type === 'range') {
+    el.addEventListener('input', () => {
+      const v = transform ? transform(el.value) : parseFloat(el.value);
+      CFG[key] = v;
+      const valEl = document.getElementById('v_' + id);
+      if (valEl) valEl.textContent = v;
+      if (key === 'cellSize' || key === 'worldSize') {
+        initGrid();
+        updateShipVision();
+      }
+    });
+  } else if (el.type === 'checkbox') {
+    el.addEventListener('change', () => { CFG[key] = el.checked; });
+  } else if (el.type === 'select-one') {
+    el.addEventListener('change', () => { CFG[key] = el.value; });
+  }
+}
+
+bindControl('cellsize', 'cellSize', v => parseInt(v));
+bindControl('worldsize', 'worldSize', v => {
+  const val = parseInt(v);
+  CFG.worldSize = val;
+  generateWorld();
+  initGrid();
+  camera.x = val / 2;
+  camera.y = val / 2;
+  camera.zoom = Math.min(canvas.width / val, canvas.height / val) * 0.85;
+  updateShipVision();
+  return val;
+});
+bindControl('vision', 'vision', v => parseInt(v));
+bindControl('port_reveal', 'portReveal', v => parseInt(v));
+bindControl('showGrid', 'showGrid');
+bindControl('showCellState', 'showCellState');
+bindControl('smoothFog', 'smoothFog');
+bindControl('showLand', 'showLand');
+bindControl('showPorts', 'showPorts');
+bindControl('showShip', 'showShip');
+bindControl('animateShip', 'animateShip');
+
+// Auto-link cell size to vision/4
+let autoCellEnabled = true;
+document.getElementById('autoCell').addEventListener('change', (e) => {
+  autoCellEnabled = e.target.checked;
+});
+
+function updateAutoCell() {
+  if (autoCellEnabled) {
+    const newCell = Math.max(2, Math.round(CFG.vision / 4));
+    if (newCell !== CFG.cellSize) {
+      CFG.cellSize = newCell;
+      document.getElementById('cellsize').value = newCell;
+      document.getElementById('v_cellsize').textContent = newCell;
+      initGrid();
+    }
+  }
+  document.getElementById('v_auto_cell').textContent = CFG.cellSize;
+}
+
+// Patch the vision slider to trigger auto-cell
+const origVisionInput = document.getElementById('vision').oninput;
+document.getElementById('vision').addEventListener('input', () => { updateAutoCell(); });
+
+document.getElementById('oceanFogMode').addEventListener('change', (e) => {
+  CFG.oceanFogMode = e.target.value;
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  initGrid();
+  updateShipVision();
+});
+
+document.getElementById('btnRevealCoast').addEventListener('click', () => {
+  ports.forEach(p => { p.discovered = true; revealPort(p); });
+});
+
+document.getElementById('btnRandomShip').addEventListener('click', () => {
+  ship.x = 20 + Math.random() * (CFG.worldSize - 40);
+  ship.y = 20 + Math.random() * (CFG.worldSize - 40);
+  ship.tx = ship.x;
+  ship.ty = ship.y;
+  ship.path = [];
+});
+
+// --- Init ---
+generateWorld();
+resize();
+camera.x = CFG.worldSize / 2;
+camera.y = CFG.worldSize / 2;
+camera.zoom = Math.min(canvas.width / CFG.worldSize, canvas.height / CFG.worldSize) * 0.85;
+initGrid();
+updateShipVision();
+animate();
+
+window.addEventListener('resize', () => { resize(); });
+</script>
+</body>
+</html>
