@@ -71,8 +71,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-20T00:30:42.315Z
-- 生成 commit：`bb61289`
+- 生成时间：2026-10-20T00:36:00.000Z
+- 生成 commit：`5321072`
 - 模式：`compact`；规则版本：`2.0`
 - 更新方式：修改代码后同步维护 `tools/static_docs_data.mjs`，运行 `node tools/gen_static_docs.mjs`。
 - 增量依据：[manifest.json](manifest.json) 记录每个源文件的 SHA-256、文档位置与分组。

@@ -1286,7 +1286,7 @@ func test_port_stage_redirect_mid_transition_continues_from_current_pose() -> vo
 	port.advance_station(0.05)
 	var step := port.camera_position().distance_to(mid_position)
 	assert_true(
-		step < 8.0,
+		step < 3.0,
 		"the redirect continues from the current pose instead of jumping to the old target (%.2f m in 0.05 s)" % step
 	)
 	port.advance_station(10.0)
