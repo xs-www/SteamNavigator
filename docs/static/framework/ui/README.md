@@ -13,6 +13,7 @@
 | `components/sn_badge.tscn` | 框架源文件：sn_badge.tscn | 本页 |
 | `components/sn_button.gd` | 可复用语义按钮：在 Inspector 中选择主操作、次操作、危险或幽灵样式。 | [查看](./components/sn_button.gd.md) |
 | `components/sn_button.tscn` | 框架源文件：sn_button.tscn | 本页 |
+| `components/sn_cloud_veil.gd` | 航行演出的云层转场层（阶段 3）。全屏、不吃鼠标，用程序化云团把画面从 | [查看](./components/sn_cloud_veil.gd.md) |
 | `components/sn_harbor_sign.gd` | 2.5D 港口主界面的主题化边缘招牌：`Button` 子类，用自绘木板/木纹/铁框/黄铜铆钉/四角包边/设施徽记/指向场景的箭头替代主题 StyleBox，悬停/按下/焦点用黄铜光晕与明暗反馈；点击、焦点、tooltip、`text` 语义仍由 Button 提供。 | [查看](./components/sn_harbor_sign.gd.md) |
 | `components/sn_intel_table.gd` | 商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。 | [查看](./components/sn_intel_table.gd.md) |
 | `components/sn_panel.gd` | 可复用界面表面：基础、高架与内嵌三种层级。 | [查看](./components/sn_panel.gd.md) |
@@ -21,7 +22,7 @@
 | `components/sn_part_row.tscn` | 框架源文件：sn_part_row.tscn | 本页 |
 | `components/sn_resource_meter.gd` | 煤水、耐久与载重共用的标签化资源存量条。 | [查看](./components/sn_resource_meter.gd.md) |
 | `components/sn_resource_meter.tscn` | 框架源文件：sn_resource_meter.tscn | 本页 |
-| `components/sn_sea_chart_panel.gd` | 海图右侧信息面板。选中港口后展示港口名、原型、区域、设施列表与 | [查看](./components/sn_sea_chart_panel.gd.md) |
+| `components/sn_sea_chart_panel.gd` | 海图右侧信息面板。选中港口后展示港口名、原型、区域、设施列表，以及 | [查看](./components/sn_sea_chart_panel.gd.md) |
 | `components/sn_sea_chart_view.gd` | 可缩放/平移的 2D 海图视图，使用 `_draw()` 在世界坐标上绘制水面与图框、 | [查看](./components/sn_sea_chart_view.gd.md) |
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
@@ -35,7 +36,7 @@
 | `components/sn_stage_host.gd` | 通用 3D 舞台宿主（SubViewportContainer）：持有独占 SubViewport/World3D，加载并挂载一个 `LocationStage`，驱动 enter→bind 生命周期、舞台显隐与渲染停更，并转发 `portal_requested` / `fallback_requested`；同时是船厂 `SNShipView` 的渲染器后端。 | [查看](./components/sn_stage_host.gd.md) |
 | `components/sn_supply_card.gd` | 单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。 | [查看](./components/sn_supply_card.gd.md) |
 | `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
-| `screens/flow/at_sea_screen.gd` | 航行中流程场景：显示起终港、预计抵达时间或等待结算状态。 | [查看](./screens/flow/at_sea_screen.gd.md) |
+| `screens/flow/at_sea_screen.gd` | 航行演出页（海图系统阶段 3）：整幅海图 + 底部航程条。船只 icon 沿 | [查看](./screens/flow/at_sea_screen.gd.md) |
 | `screens/flow/at_sea_screen.tscn` | 框架源文件：at_sea_screen.tscn | 本页 |
 | `screens/flow/event_screen.gd` | 航行事件流程场景：展示事件说明、当前资源和本次抽取的处理选项。 | [查看](./screens/flow/event_screen.gd.md) |
 | `screens/flow/event_screen.tscn` | 框架源文件：event_screen.tscn | 本页 |

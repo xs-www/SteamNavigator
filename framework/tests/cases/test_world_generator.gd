@@ -7,9 +7,15 @@ class_name TestWorldGenerator
 
 const SEED_A := 12345
 const SEED_B := 67890
+## Fixture for the design-frozen world size (NAUTICAL_CHART_SYSTEM.md §2.2/§12):
+## 18 ports on 11 landmasses across four regions. `min_ports` mirrors the formal
+## profile so the generator has to place all of them instead of silently
+## producing a smaller world.
+const TEST_PORT_COUNT := 18
 const TEST_PROFILE := {
 	"world_size": 400.0,
-	"min_ports": 10,
+	"min_ports": 15,
+	"max_ports": 20,
 	"max_land_coverage": 0.3,
 	"required_facility_tags": ["port.shipyard", "port.intelligence"],
 	"required_facility_max_edges": 2,
@@ -32,20 +38,27 @@ const TEST_PROFILE := {
 		{"id": "moon_atoll", "region_id": "ocean_1", "archetype": "atoll", "cx": 280.0, "cy": 72.0, "rx": 2.5, "ry": 2.0},
 		{"id": "far_reef", "region_id": "ocean_1", "archetype": "atoll", "cx": 352.0, "cy": 328.0, "rx": 3.0, "ry": 2.0},
 	],
+	# 18 ports: 6 on the home continent (dense starting coast), 3 around the
+	# mid-coast islands, 3 in the open ocean, 4 on the small islands, 2 atolls.
 	"ports": [
-		{"archetype_id": "port_archetype_1", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.2, "name_key": "port.iron_harbor", "is_start": true, "required_tags": ["port.shipyard"]},
-		{"archetype_id": "port_archetype_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.4, "name_key": "port.spice_harbor"},
-		{"archetype_id": "port_archetype_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.6, "name_key": "port.free_town"},
-		{"archetype_id": "port_archetype_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.8, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
-		{"archetype_id": "port_archetype_5", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.5, "name_key": "port.iron_port"},
-		{"archetype_id": "port_archetype_6", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.3, "name_key": "port.glass_port"},
-		{"archetype_id": "port_archetype_7", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.7, "name_key": "port.south_station"},
-		{"archetype_id": "port_archetype_8", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.2, "name_key": "port.north_outpost"},
-		{"archetype_id": "port_archetype_9", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.8, "name_key": "port.ice_wind"},
-		{"archetype_id": "port_archetype_10", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.5, "name_key": "port.coral_station"},
-		{"archetype_id": "port_archetype_11", "region_id": "ocean_1", "landmass_id": "fog_reef", "coast_t": 0.5, "name_key": "port.fog_lighthouse"},
-		{"archetype_id": "port_archetype_12", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.5, "name_key": "port.south_wind_port"},
-		{"archetype_id": "port_archetype_13", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.5, "name_key": "port.glass_atoll_port"},
+		{"archetype_id": "port_archetype_1", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.10, "name_key": "port.iron_harbor", "is_start": true, "required_tags": ["port.shipyard"]},
+		{"archetype_id": "port_archetype_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.24, "name_key": "port.spice_harbor"},
+		{"archetype_id": "port_archetype_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.38, "name_key": "port.free_town"},
+		{"archetype_id": "port_archetype_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.52, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
+		{"archetype_id": "port_archetype_5", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.68, "name_key": "port.iron_port"},
+		{"archetype_id": "port_archetype_6", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.84, "name_key": "port.glass_port"},
+		{"archetype_id": "port_archetype_7", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.20, "name_key": "port.south_station"},
+		{"archetype_id": "port_archetype_8", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.55, "name_key": "port.north_outpost"},
+		{"archetype_id": "port_archetype_9", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.88, "name_key": "port.ice_wind"},
+		{"archetype_id": "port_archetype_10", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.25, "name_key": "port.coral_station"},
+		{"archetype_id": "port_archetype_11", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.72, "name_key": "port.fog_lighthouse"},
+		{"archetype_id": "port_archetype_12", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.40, "name_key": "port.south_wind_port"},
+		{"archetype_id": "port_archetype_13", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.18, "name_key": "port.glass_atoll_port"},
+		{"archetype_id": "port_archetype_14", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.50, "name_key": "port.mist_cove"},
+		{"archetype_id": "port_archetype_15", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.85, "name_key": "port.bone_harbor"},
+		{"archetype_id": "port_archetype_16", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.35, "name_key": "port.reef_haven"},
+		{"archetype_id": "port_archetype_17", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.50, "name_key": "port.atoll_haven"},
+		{"archetype_id": "port_archetype_18", "region_id": "ocean_1", "landmass_id": "moon_atoll", "coast_t": 0.50, "name_key": "port.moon_haven"},
 	],
 }
 
@@ -115,8 +128,76 @@ func test_world_generates_enough_ports() -> void:
 	var world_dict: Dictionary = result.get("world_map", {})
 	var world := WorldMap.from_dict(world_dict)
 
-	assert_true(world.ports.size() >= 10, "should generate at least 10 ports, got %d" % world.ports.size())
-	assert_true(world.ports.size() <= 20, "should generate at most 20 ports, got %d" % world.ports.size())
+	# Design freeze (NAUTICAL_CHART_SYSTEM.md §2.2 / §12): a single run has 15-20
+	# harbours. Assert the frozen bounds, not whatever the fixture happens to emit.
+	var ports := world.ports.size()
+	assert_true(ports >= WorldGenerator.MIN_PORTS,
+		"should generate at least %d ports (design floor), got %d" % [WorldGenerator.MIN_PORTS, ports])
+	assert_true(ports <= WorldGenerator.MAX_PORTS,
+		"should generate at most %d ports (design ceiling), got %d" % [WorldGenerator.MAX_PORTS, ports])
+	assert_eq(ports, TEST_PORT_COUNT, "the fixture should place all %d of its ports" % TEST_PORT_COUNT)
+
+
+## A profile that authorises too few ports for the frozen world size must fail
+## generation rather than return a small world that quietly passes the count check.
+func test_world_below_port_floor_is_rejected() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var underfilled := TEST_PROFILE.duplicate(true)
+	underfilled["ports"] = (TEST_PROFILE["ports"] as Array).slice(0, 10)
+
+	var result := WorldGenerator.generate(underfilled, context.registries, RngService.new(SEED_A), {})
+	assert_false(bool(result.get("ok", false)), "a 10-port world must not pass the 15-port floor")
+	assert_true(String(result.get("reason", "")).contains("too few ports"),
+		"the failure should name the port floor, got: %s" % String(result.get("reason", "")))
+
+
+## The frozen 15-20 range must be executable, not just documented: a profile that
+## advertises those bounds has to actually yield a public world inside them, with
+## every port anchored to a coastline.
+func test_formal_profile_matches_design_bounds() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var spec := {
+		"port_count_range": [WorldGenerator.MIN_PORTS, WorldGenerator.MAX_PORTS],
+		"archetypes": [
+			"core:port_archetype/iron_harbor",
+			"core:port_archetype/spice_port",
+			"core:port_archetype/free_town",
+			"core:port_archetype/fishing_village",
+			"core:port_archetype/glass_port",
+		],
+		"port_name_keys": ["port_name.core.iron_harbor", "port_name.core.mist_cove"],
+		"required_facility_tags": ["port.shipyard", "port.intel"],
+		"required_facility_max_edges": 2,
+	}
+	var profile := ContentDefinition.new()
+	profile.content_type = ContentTypes.MAP_PROFILE
+	profile.id = "test:map_profile/nautical"
+	profile.name_key = "test.map_profile.nautical.name"
+	profile.data = spec.duplicate(true)
+	var formal := WorldGenerator.formal_profile(profile)
+	assert_eq(int(formal["min_ports"]), WorldGenerator.MIN_PORTS, "the formal profile floor is the design floor")
+	assert_eq(int(formal["max_ports"]), WorldGenerator.MAX_PORTS, "the formal profile ceiling is the design ceiling")
+	assert_eq((formal["ports"] as Array).size(), WorldGenerator.MIN_PORTS,
+		"the formal profile starts at the floor port count")
+
+	var world_result := WorldGenerator.generate(formal, context.registries, RngService.new(SEED_A), {})
+	assert_true(bool(world_result.get("ok", false)),
+		"the formal profile should generate a world: %s" % String(world_result.get("reason", "")))
+	if not bool(world_result.get("ok", false)):
+		return
+	var world := WorldMap.from_dict(world_result.get("world_map", {}))
+	assert_eq(world.ports.size(), WorldGenerator.MIN_PORTS, "every formal port should be placed")
+	assert_false(world.get_start_port().is_empty(), "the formal world should have a start port")
+	for port in world.ports:
+		assert_false(port.landmass_id.is_empty(), "formal world port %s should sit on a landmass" % port.id)
+		var landmass := world.get_landmass(port.landmass_id)
+		assert_false(landmass.is_empty(), "formal world port %s should reference a real landmass" % port.id)
+		if not landmass.is_empty():
+			assert_true(_distance_to_nearest_coastline(port.position, landmass) < 2.0,
+				"formal world port %s should be anchored on the coastline" % port.id)
+	assert_true(world.land_coverage_ratio() < 0.45, "the formal world should not be mostly land")
 
 
 func test_ports_are_anchored_to_landmasses() -> void:

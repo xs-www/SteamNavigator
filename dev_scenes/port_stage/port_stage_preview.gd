@@ -173,18 +173,45 @@ func _payload_for(variant_name: String) -> Dictionary:
 ## release loading-path measurement); otherwise the loose dev core paths.
 ## Only paths that already live in the loose core props directory are re-rooted,
 ## so framework assets (e.g. the market-stall model) keep their own path.
+## `SN_TOWN_COMBO=a|b` additionally swaps specific building slots to the batch-B
+## prototypes (workshop row / boiler house / brick tenement) so two different
+## five-building mixes can be captured from the same scene; missing prototype
+## GLBs simply keep the original slot asset.
+const PROTOTYPE_ROOT := "res://dev_mods/core/assets/models/props/"
+const COMBO_OVERRIDES := {
+	"a": {
+		"warehouse_long": "SN_HT_Workshop_Row.glb",
+		"tavern": "SN_HT_Boiler_House.glb",
+	},
+	"b": {
+		"warehouse_long": "SN_HT_Workshop_Row.glb",
+		"harbor_office": "SN_HT_Brick_Tenement.glb",
+	},
+}
+
+
 func _town_visuals() -> Dictionary:
 	var root := OS.get_environment("SN_TOWN_ASSET_ROOT").strip_edges()
-	if root.is_empty():
-		return TOWN_VISUALS.duplicate(true)
-	var loose_props := "res://dev_mods/core/assets/models/props/"
-	var out := {}
-	for slot in TOWN_VISUALS.keys():
-		var path: String = TOWN_VISUALS[slot]
-		if path.begins_with(loose_props):
-			out[slot] = root.rstrip("/") + "/" + path.get_file()
-		else:
-			out[slot] = path
+	var out := TOWN_VISUALS.duplicate(true)
+	if not root.is_empty():
+		var loose_props := "res://dev_mods/core/assets/models/props/"
+		for slot in out.keys():
+			var path: String = out[slot]
+			if path.begins_with(loose_props):
+				out[slot] = root.rstrip("/") + "/" + path.get_file()
+	var combo := OS.get_environment("SN_TOWN_COMBO").strip_edges().to_lower()
+	if COMBO_OVERRIDES.has(combo):
+		# The prototype root follows SN_TOWN_ASSET_ROOT so a ZIP-path measurement
+		# keeps every building on the mounted pack (mixed loose/zip roots would
+		# break the shared-texture batching and inflate the draw-call count).
+		var prototype_root := PROTOTYPE_ROOT
+		if not root.is_empty():
+			prototype_root = root.rstrip("/") + "/"
+		var overrides: Dictionary = COMBO_OVERRIDES[combo]
+		for slot in overrides.keys():
+			var prototype_path: String = prototype_root + String(overrides[slot])
+			if FileAccess.file_exists(prototype_path):
+				out[slot] = prototype_path
 	return out
 
 
@@ -205,7 +232,7 @@ func _preview_payload() -> Dictionary:
 			"landmark_path": "",
 		},
 		"ship": {
-			"hull_model_path": "res://assets/models/ships/SN_Paddle_Steamer.glb",
+			"hull_model_path": "res://dev_mods/core/assets/models/ships/SN_Paddle_Steamer.glb",
 			"hull_tier": 1,
 		},
 	}

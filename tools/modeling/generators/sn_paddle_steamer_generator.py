@@ -1,4 +1,38 @@
 # -*- coding: utf-8 -*-
+# @static-doc
+# 作用：`SN_Paddle_Steamer`（澳大利亚内河明轮蒸汽船）的**参数化真源生成器 + Blender 侧装配/自检**：
+# 纯 Python 由顶部参数表生成船体、舷墙、明轮、舱室、雨棚、烟囱、旗帜与属具的几何，Blender 侧只做
+# 集合 / 材质 / 空物体层级 / 父级 / 文字铭牌。
+#
+# ## 契约与约束
+# - 船体尺寸 24.4×8.7×10.5 m（dryrun 容差 0.8）、水线轴心（z=0，龙骨底 −1.32、烟囱顶 9.15）、
+#   `SN_PS_Root` 单根节点（工作台 (45,0,0)）、既有 `SN_PS_*` 命名/父子层级不变；
+#   tri 预算 ≤12 000（批次 C 对外上限沿用既有实测 11 764，改动不得超）；本船材质槽 9（批次 C +1）：
+#   SN_White / SN_Iron_Hull / SN_Iron_Red / SN_Wood_Deck / SN_Metal / SN_Brass /
+#   SN_Flag_Blue / SN_Flag_White / SN_PS_UpperWhite（仅本船使用的上层建筑二级白）。
+#   其中 SN_White 仅本船使用；其余共享材质数值一律保持原值（其它船/建筑/道具零变化）。
+# - 不变量：明轮 8 个 45° 旋转角与轮罩/船体/明轮台零穿插、澳洲旗（蓝底红白）、ENTERPRISE 铭牌
+#   文字/位置、上层建筑布局与船体结构不变；只改材质明度、压条厚度与后部雨棚构造。
+# - 几何全部来自 `build_all_geometry()`；Blender 侧只在 `build_all()` 建集合/空物体/文字，
+#   不手工摆点；不导出 GLB、不保存 .blend（由 Lead 在验收后处理）。
+#
+# ## 重点逻辑
+# ### 参数区（COLORS / REUSE_COLORS / STATIONS / PROFILE / CANOPY / BULWARK…）
+# - 船型、开窗、雨棚、明轮、旗帜全部由顶部常量驱动；批次 C 精修只动：
+#   ① `CANOPY` + `build_canopy()`：厚平板 → 4 条纵向分缝薄板（缝宽 0.11）+ 2 道横肋 + 3 对细柱 +
+#      微拱；后段 3.0 m（原长 28%）完全露空，露出艉部游步甲板与栏杆；
+#   ② 明度层次：仅提亮本船独占的 `SN_White`（船身 0.870/0.850/0.800）；新增本船局部材质
+#      `SN_PS_UpperWhite`（0.680/0.672/0.655）作上层建筑/舱室二级白（`MAT_WHITE_2`，+1 槽）；
+#      甲板沿用原共享 `SN_Wood_Deck`，形成 白船身 0.870 > 舱室 0.680 > 甲板 0.300 的层级；
+#   ③ `CAP_T` / 舷墙压条内外偏移 / 水线带与舷缘带厚度 / 舱室红腰带 / 雨棚红封檐适度加粗。
+# ### `build_all_geometry()` / `build_all()` / `report()`
+# - `build_all_geometry()` 返回 {对象名: (Part, 父级键)}，纯 Python 可 dryrun；
+# - `build_all()` 幂等重建集合 + 空物体层级 + 文字铭牌；`report()` 只读统计 tri/bbox/材质。
+# ### `dryrun_paddle_steamer.py` / `verify_paddle_steamer_scene.py`
+# - 纯 Python 拦几何缺陷（tri/bbox/z 范围/边界边/退化/材质/命名/父级/镜像）；
+# - Blender 内只读验收覆盖层级、明轮 8 角度穿插、连通岛浮空、其它对象回归基线。
+# @end-static-doc
+
 """Steam Navigator — SN_Paddle_Steamer 小型明轮蒸汽船参数化生成脚本。
 
 工单
@@ -43,12 +77,17 @@ ROOT_NAME = "SN_PS_Root"
 WORKBENCH_POS = (45.0, 0.0, 0.0)
 
 # 材质：名称 -> (线性 base color, roughness, metallic)
+# 批次 C（验收修正轮）：共享材质一律恢复原值，保证其它船/建筑/道具外观零变化；
+# 舰船白身使用仅本船使用的 SN_White（提亮），上层建筑改用本船局部新材质
+# SN_PS_UpperWhite（本船材质槽 8 -> 9，+1 只影响玩家船）；甲板沿用原共享 SN_Wood_Deck。
+# 明度层级：白船身 0.870 > 舱室/上层建筑 0.680 > 木甲板 0.300。
 COLORS = {
-    "SN_White":      ((0.760, 0.735, 0.680), 0.55, 0.00),
-    "SN_Flag_Blue":  ((0.012, 0.035, 0.120), 0.75, 0.00),
-    "SN_Flag_White": ((0.800, 0.800, 0.800), 0.70, 0.00),
+    "SN_White":         ((0.870, 0.850, 0.800), 0.52, 0.00),  # 仅本船使用，可提亮
+    "SN_PS_UpperWhite": ((0.680, 0.672, 0.655), 0.68, 0.00),  # 本船局部二级白（新材质，仅本船）
+    "SN_Flag_Blue":     ((0.012, 0.035, 0.120), 0.75, 0.00),
+    "SN_Flag_White":    ((0.800, 0.800, 0.800), 0.70, 0.00),  # 共享（纵帆船 pennant），恢复原值
 }
-# 复用工作台既有材质（不存在时才按下面数值新建）
+# 复用工作台既有材质（不存在时才按下面数值新建）；本轮全部恢复原值，不改其它资产外观
 REUSE_COLORS = {
     "SN_Iron_Hull": ((0.045, 0.048, 0.052), 0.52, 0.35),
     "SN_Iron_Red":  ((0.190, 0.035, 0.022), 0.62, 0.10),
@@ -57,6 +96,7 @@ REUSE_COLORS = {
     "SN_Brass":     ((0.420, 0.270, 0.075), 0.28, 0.85),
 }
 MAT_WHITE = "SN_White"
+MAT_WHITE_2 = "SN_PS_UpperWhite"   # 批次 C：本船局部的上层建筑「二级白」（仅本船使用，+1 槽）
 MAT_HULL = "SN_Iron_Hull"
 MAT_RED = "SN_Iron_Red"
 MAT_DECK = "SN_Wood_Deck"
@@ -99,7 +139,7 @@ DECK_CAMBER = 0.08       # 甲板拱高
 BULWARK_H = 0.60         # 舷墙高
 BULWARK_OUT = 0.030      # 舷墙外偏移
 BULWARK_IN = 0.075       # 舷墙内偏移
-CAP_T = 0.055            # 舷墙压条厚
+CAP_T = 0.075            # 舷墙压条厚（批次 C：0.055 -> 0.075，暗红压条适度加粗）
 WATERLINE_Z = 0.12       # 白色舷侧与深色船底的分界
 
 # 上层建筑
@@ -107,7 +147,14 @@ UPPER_Z = 3.42           # 游步甲板面
 UPPER_T = 0.16           # 甲板板厚
 CABIN = dict(x0=-8.20, x1=3.40, hy=2.25, z0=1.74, z1=3.26)
 WHEELHOUSE = dict(x0=3.50, x1=6.60, hy=1.95, z0=UPPER_Z + 0.02, z1=5.38)
-CANOPY = dict(x0=-9.35, x1=1.45, hy=2.95, z=5.24, t=0.14)
+# 批次 C：后部雨棚减重 —— 厚平板(0.14) -> 4 条纵向分缝薄板(0.07，缝宽 0.11) + 2 道横肋 + 细柱；
+# 后段 3.0 m（原长 10.8 m 的 28%）完全露空（x0 由 -9.35 收到 -6.35，露出艉部游步甲板与栏杆），
+# hy/z 不变；固定 3/4 机位可读出分缝、薄边与后段露空。
+CANOPY = dict(x0=-6.35, x1=1.45, hy=2.95, z=5.24, t=0.07)
+CANOPY_GAP = 0.20        # 纵向分缝宽（整船尺度下 3/4 可读）
+CANOPY_RIB_N = 3         # 顶面横向暗红压条数（白板上的红色分肋，固定机位可读）
+CANOPY_CROWN = 0.045     # 内侧两条板的微拱抬升
+CANOPY_POST_XS = (-6.15, -2.30, 1.10)   # 每舷 3 根细柱
 CASING = dict(x0=1.55, x1=2.95, hy=1.02, z0=UPPER_Z + 0.02, z1=4.10)
 FUNNEL = dict(x=2.20, r0=0.46, r1=0.38, z0=4.08, z1=9.05)
 PROM = dict(x0=-9.35, x1=7.05, w=2.72)   # 游步甲板平面范围
@@ -622,8 +669,8 @@ def build_bulwark():
     part = Part()
     part.merge(band_loop(loop, normals, BULWARK_H, BULWARK_OUT, -BULWARK_IN,
                          MAT_WHITE))
-    cap = band_loop(loop, normals, CAP_T, BULWARK_OUT + 0.025,
-                    -BULWARK_IN - 0.015, MAT_RED, z0=None)
+    cap = band_loop(loop, normals, CAP_T, BULWARK_OUT + 0.050,
+                    -BULWARK_IN - 0.040, MAT_RED, z0=None)
     # 压条抬到舷墙顶端
     for i, v in enumerate(cap.verts):
         v = list(v)
@@ -638,12 +685,13 @@ def build_hull_strakes():
     xs = stations_in(-11.40, 11.90)
     part = Part()
     for side in (1, -1):
-        for z0, z1, mat in ((0.14, 0.24, MAT_RED), (1.42, 1.52, MAT_RED)):
+        # 批次 C：暗红水线带 / 舷缘带适度加粗（厚 0.045 -> 0.062，高 0.10 -> 0.14）
+        for z0, z1, mat in ((0.13, 0.27, MAT_RED), (1.39, 1.53, MAT_RED)):
             verts = []
             for x in xs:
                 zm = 0.5 * (z0 + z1)
                 yo = hull_y_at(x, zm) + 0.022
-                yi = yo - 0.045
+                yi = yo - 0.062
                 verts.extend([(x, side * yo, z0), (x, side * yo, z1),
                               (x, side * yi, z1), (x, side * yi, z0)])
             faces = []
@@ -875,16 +923,16 @@ def build_paddle_box():
 # ============================================================
 
 def build_cabin():
-    """主甲板客舱：白墙 + 玻璃窗 + 黄铜窗台 + 木门 + 暗红腰线。"""
+    """主甲板客舱：二级白墙 + 玻璃窗 + 黄铜窗台 + 木门 + 暗红腰线。"""
     c = CABIN
     x0, x1, hy = c["x0"], c["x1"], c["hy"]
     z0, z1 = c["z0"], c["z1"]
     part = Part()
-    part.add(box((x0, -hy, z0), (x1, hy, z1)), MAT_WHITE)
-    # 暗红腰线
+    part.add(box((x0, -hy, z0), (x1, hy, z1)), MAT_WHITE_2)
+    # 暗红腰线（批次 C：高 0.13 -> 0.16、外凸 0.012 -> 0.017）
     for sy in (1, -1):
-        part.add(box((x0 - 0.01, sy * hy - 0.012, 2.40),
-                     (x1 + 0.01, sy * hy + 0.012, 2.53)), MAT_RED)
+        part.add(box((x0 - 0.01, sy * hy - 0.017, 2.395),
+                     (x1 + 0.01, sy * hy + 0.017, 2.555)), MAT_RED)
     # 侧窗
     win_xs = (-7.25, -5.95, -4.65, -3.35, -2.05, -0.75)
     for sy in (1, -1):
@@ -927,15 +975,16 @@ def build_promenade():
     loop = [(x, wfunc(x), UPPER_Z) for x in xs] + \
            [(x, -wfunc(x), UPPER_Z) for x in reversed(xs)]
     normals = loop_normals(loop)
-    fascia = band_loop(loop, normals, 0.11, 0.035, -0.02, MAT_RED,
+    # 批次 C：暗红封檐适度加高（0.11 -> 0.13、外凸 0.035 -> 0.045）
+    fascia = band_loop(loop, normals, 0.13, 0.045, -0.02, MAT_RED,
                        z0=UPPER_Z - UPPER_T - 0.01)
     part.merge(fascia)
-    # 支撑柱：在外侧窗墙之间托住游步甲板
+    # 支撑柱：在外侧窗墙之间托住游步甲板（批次 C：二级白，与船身白分层）
     for sy in (1, -1):
         for x in (-9.00, -7.55, -6.10, -4.65, -3.20, -1.75, -0.30, 1.15, 2.60):
             part.add(box((x - 0.055, sy * 2.30 - 0.055, deck_surface_z(x)),
                          (x + 0.055, sy * 2.30 + 0.055, UPPER_Z - UPPER_T)),
-                     MAT_WHITE)
+                     MAT_WHITE_2)
     return part
 
 
@@ -1023,12 +1072,12 @@ def build_bulwark_railings():
 
 
 def build_wheelhouse():
-    """前部封闭驾驶室：白墙 + 三面玻璃 + 顶板 + 暗红檐 + 木门。"""
+    """前部封闭驾驶室：二级白墙 + 三面玻璃 + 顶板 + 暗红檐 + 木门。"""
     w = WHEELHOUSE
     x0, x1, hy = w["x0"], w["x1"], w["hy"]
     z0, z1 = w["z0"], w["z1"]
     part = Part()
-    part.add(box((x0, -hy, z0), (x1, hy, z1)), MAT_WHITE)
+    part.add(box((x0, -hy, z0), (x1, hy, z1)), MAT_WHITE_2)
     # 正面三扇窗
     for sy in (-1.0, 0.0, 1.0):
         cy = sy * 0.68
@@ -1041,7 +1090,7 @@ def build_wheelhouse():
     # 白色窗间柱
     for cy in (-1.42, -0.12, 1.42):
         part.add(box((x1 - 0.01, cy - 0.07, 4.05), (x1 + 0.04, cy + 0.07, 5.08)),
-                 MAT_WHITE)
+                 MAT_WHITE_2)
     # 侧窗两扇
     for sy in (1, -1):
         y = sy * (hy + 0.01)
@@ -1054,43 +1103,56 @@ def build_wheelhouse():
                      MAT_BRASS)
     # 后门
     part.add(box((x0 - 0.03, -0.44, z0), (x0 + 0.02, 0.44, 4.92)), MAT_DECK)
-    # 顶板 + 暗红封檐（只做四边窄条，顶面保持白色）
+    # 顶板 + 暗红封檐（只做四边窄条，顶面保持白色；批次 C 檐口 0.07 -> 0.085 高）
     part.add(box((x0 - 0.28, -hy - 0.22, z1), (x1 + 0.30, hy + 0.22, z1 + 0.16)),
-             MAT_WHITE)
+             MAT_WHITE_2)
     ex0, ex1 = x0 - 0.30, x1 + 0.32
     ey = hy + 0.24
-    part.add(box((ex0, -ey, z1 + 0.10), (ex1, -ey + 0.10, z1 + 0.17)), MAT_RED)
-    part.add(box((ex0, ey - 0.10, z1 + 0.10), (ex1, ey, z1 + 0.17)), MAT_RED)
-    part.add(box((ex0, -ey, z1 + 0.10), (ex0 + 0.10, ey, z1 + 0.17)), MAT_RED)
-    part.add(box((ex1 - 0.10, -ey, z1 + 0.10), (ex1, ey, z1 + 0.17)), MAT_RED)
+    part.add(box((ex0, -ey, z1 + 0.095), (ex1, -ey + 0.12, z1 + 0.18)), MAT_RED)
+    part.add(box((ex0, ey - 0.12, z1 + 0.095), (ex1, ey, z1 + 0.18)), MAT_RED)
+    part.add(box((ex0, -ey, z1 + 0.095), (ex0 + 0.12, ey, z1 + 0.18)), MAT_RED)
+    part.add(box((ex1 - 0.12, -ey, z1 + 0.095), (ex1, ey, z1 + 0.18)), MAT_RED)
     return part
 
 
 def build_canopy():
-    """后部游步甲板雨棚：白色顶板 + 暗红封檐 + 白色立柱。"""
+    """后部游步甲板雨棚（批次 C 减重）：4 条纵向分缝薄板 + 3 道顶面暗红压条 + 3 对细柱 + 微拱 + 暗红封檐。
+
+    相比原「一块 10.8 m × 5.9 m × 0.14 m 厚整板」：顶板厚降到 0.07、沿船长分 4 条并留 0.20 分缝、
+    内侧两条微抬 0.045 形成浅拱、顶面 3 道 0.14 m 宽暗红分肋、柱由 6 根/舷减到 3 根/舷且截面 0.07；
+    后段 3.0 m 完全露空（x0 -9.35 -> -6.35），露出艉部游步甲板与栏杆。三角面数 228。
+    """
     c = CANOPY
     part = Part()
-    part.add(box((c["x0"], -c["hy"], c["z"]), (c["x1"], c["hy"], c["z"] + c["t"])),
-             MAT_WHITE)
-    # 封檐：四边窄条（顶面保持白色）
-    ex0, ex1 = c["x0"] - 0.04, c["x1"] + 0.04
-    ey = c["hy"] + 0.04
-    zb, zt = c["z"] + 0.10, c["z"] + c["t"] + 0.02
-    part.add(box((ex0, -ey, zb), (ex1, -ey + 0.10, zt)), MAT_RED)
-    part.add(box((ex0, ey - 0.10, zb), (ex1, ey, zt)), MAT_RED)
-    part.add(box((ex0, -ey, zb), (ex0 + 0.10, ey, zt)), MAT_RED)
-    part.add(box((ex1 - 0.10, -ey, zb), (ex1, ey, zt)), MAT_RED)
-    # 立柱
+    x0, x1, hy, z, t = c["x0"], c["x1"], c["hy"], c["z"], c["t"]
+    # 4 条纵向薄板（内侧两条 +CANOPY_CROWN 形成微拱）
+    plank_w = (2.0 * hy - 3.0 * CANOPY_GAP) / 4.0
+    y = -hy
+    for k in range(4):
+        zz = z + (CANOPY_CROWN if k in (1, 2) else 0.0)
+        part.add(box((x0, y, zz), (x1, y + plank_w, zz + t)), MAT_WHITE_2)
+        y += plank_w + CANOPY_GAP
+    # 顶面横向暗红压条（3 道）：白板上的红色分肋，固定 3/4 机位可直接读出「非整块平板」
+    for k in range(CANOPY_RIB_N):
+        xr = x0 + (x1 - x0) * (k + 0.5) / CANOPY_RIB_N
+        part.add(box((xr - 0.07, -hy, z + t - 0.01), (xr + 0.07, hy, z + t + 0.05)),
+                 MAT_RED)
+    # 两舷纵向边梁（暗红，压住外缘板、与柱顶相接；0.07 薄边下露一条红色窄边）
     for sy in (1, -1):
-        for x in (-9.10, -6.80, -4.50, -2.20, 0.10, 1.18):
-            part.add(box((x - 0.05, sy * (c["hy"] - 0.10) - 0.05,
-                          UPPER_Z),
-                         (x + 0.05, sy * (c["hy"] - 0.10) + 0.05, c["z"])),
-                     MAT_WHITE)
-    # 顶板下的横梁（两根）
-    for x in (-6.80, -2.20):
-        part.add(box((x - 0.06, -c["hy"], c["z"] - 0.10),
-                     (x + 0.06, c["hy"], c["z"])), MAT_WHITE)
+        part.add(box((x0, sy * (hy - 0.12), z - 0.09), (x1, sy * hy, z)), MAT_RED)
+    # 细柱 3 根/舷（0.07 见方，从游步甲板顶到雨棚底）
+    for sy in (1, -1):
+        for x in CANOPY_POST_XS:
+            part.add(box((x - 0.035, sy * (hy - 0.11) - 0.035, UPPER_Z),
+                         (x + 0.035, sy * (hy - 0.11) + 0.035, z)), MAT_WHITE_2)
+    # 暗红封檐（四边窄条，顶面保持白/木色；批次 C 适度加高到 0.11）
+    ex0, ex1 = x0 - 0.04, x1 + 0.04
+    ey = hy + 0.04
+    zb, zt = z + 0.02, z + t + 0.075
+    part.add(box((ex0, -ey, zb), (ex1, -ey + 0.11, zt)), MAT_RED)
+    part.add(box((ex0, ey - 0.11, zb), (ex1, ey, zt)), MAT_RED)
+    part.add(box((ex0, -ey, zb), (ex0 + 0.11, ey, zt)), MAT_RED)
+    part.add(box((ex1 - 0.11, -ey, zb), (ex1, ey, zt)), MAT_RED)
     return part
 
 
@@ -1135,7 +1197,7 @@ def build_funnel():
     part = Part()
     c = CASING
     part.add(box((c["x0"], -c["hy"], c["z0"]), (c["x1"], c["hy"], c["z1"])),
-             MAT_WHITE)
+             MAT_WHITE_2)
     part.add(box((c["x0"] - 0.03, -c["hy"] - 0.03, c["z1"] - 0.18),
                  (c["x1"] + 0.03, c["hy"] + 0.03, c["z1"])), MAT_RED)
     # 烟囱筒
@@ -1484,26 +1546,30 @@ def _clean_previous():
 def _ensure_material(name):
     import bpy
     mat = bpy.data.materials.get(name)
-    if mat is not None:
-        return mat
-    spec = COLORS.get(name) or REUSE_COLORS[name]
-    color, rough, metal = spec
-    mat = bpy.data.materials.new(name)
-    mat.use_nodes = True
-    nt = mat.node_tree
-    bsdf = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
-    if bsdf is None:
-        bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
-        out = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None)
-        if out is None:
-            out = nt.nodes.new("ShaderNodeOutputMaterial")
-        nt.links.new(bsdf.outputs[0], out.inputs[0])
-    bsdf.inputs["Base Color"].default_value = (color[0], color[1], color[2], 1.0)
-    bsdf.inputs["Roughness"].default_value = rough
-    bsdf.inputs["Metallic"].default_value = metal
-    mat.diffuse_color = (color[0], color[1], color[2], 1.0)
-    mat.roughness = rough
-    mat.metallic = metal
+    if mat is None:
+        mat = bpy.data.materials.new(name)
+        mat.use_nodes = True
+    spec = COLORS.get(name) or REUSE_COLORS.get(name)
+    if spec is not None:
+        # 批次 C：这些材质是共享 datablock；重建时按参数表刷新颜色/粗糙度/金属度，
+        # 否则旧值会一直留在文件里（其它资产若共用同名材质也会看到同一数值）。
+        color, rough, metal = spec
+        if not mat.use_nodes or mat.node_tree is None:
+            mat.use_nodes = True
+        nt = mat.node_tree
+        bsdf = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        if bsdf is None:
+            bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+            out = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None)
+            if out is None:
+                out = nt.nodes.new("ShaderNodeOutputMaterial")
+            nt.links.new(bsdf.outputs[0], out.inputs[0])
+        bsdf.inputs["Base Color"].default_value = (color[0], color[1], color[2], 1.0)
+        bsdf.inputs["Roughness"].default_value = rough
+        bsdf.inputs["Metallic"].default_value = metal
+        mat.diffuse_color = (color[0], color[1], color[2], 1.0)
+        mat.roughness = rough
+        mat.metallic = metal
     mat.use_backface_culling = False
     return mat
 

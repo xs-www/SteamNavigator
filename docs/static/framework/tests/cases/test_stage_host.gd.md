@@ -52,6 +52,8 @@
 | `test_port_stage_bind_keeps_the_current_station_and_berth() -> void` | L1190 |
 | `test_port_stage_station_dressing_scales_with_density() -> void` | L1233 |
 | `test_port_stage_redirect_mid_transition_continues_from_current_pose() -> void` | L1261 |
+| `test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void` | L1310 |
+| `test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void` | L1352 |
 
 ## 契约与约束
 

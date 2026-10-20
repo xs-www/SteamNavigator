@@ -53,6 +53,10 @@
 | `assets/models/props/SN_Gas_Lamp.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Gear_Crate.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Grab_Bucket.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Boiler_House.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Boiler_House_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Brick_Tenement.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Brick_Tenement_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Cargo_Lighter.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Cargo_Shed.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Cargo_Shed_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -68,6 +72,8 @@
 | `assets/models/props/SN_HT_Warehouse_Long_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Warehouse_Short.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Warehouse_Short_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Workshop_Row.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_HT_Workshop_Row_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Handcart.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Harbor_Crane.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Keel_Block.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -81,6 +87,7 @@
 | `assets/models/props/SN_Steam_Pipe.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Timber_Stack.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/brick_wall.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/iron_harbor_shared/brick_wall_soot.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/glass_reflect.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/iron_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

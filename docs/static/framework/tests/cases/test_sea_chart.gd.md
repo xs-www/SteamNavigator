@@ -13,25 +13,27 @@
 | `SEED_B` | L16 |
 | `SEA_CHART_SCREEN_SCRIPT` | L20 |
 | `TEST_PROFILE` | L21 |
-| `test_sea_chart_query_returns_valid_structure() -> void` | L66 |
-| `test_sea_chart_query_world_bounds_match() -> void` | L88 |
-| `test_sea_chart_query_includes_all_landmasses() -> void` | L104 |
-| `test_sea_chart_query_current_port_marked() -> void` | L126 |
-| `test_sea_chart_query_routes_between_discovered_ports() -> void` | L149 |
-| `test_sea_chart_query_fog_grid_downsampled() -> void` | L175 |
-| `test_sea_chart_reads_precomputed_routes() -> void` | L211 |
-| `test_legacy_world_without_route_table_still_renders() -> void` | L255 |
-| `test_sea_chart_query_port_positions_within_bounds() -> void` | L273 |
-| `test_sea_chart_query_no_run_returns_empty() -> void` | L291 |
-| `test_sea_chart_query_serialization_roundtrip() -> void` | L302 |
-| `test_sea_chart_query_reproducible() -> void` | L323 |
-| `test_sea_chart_query_different_seeds_differ() -> void` | L345 |
-| `test_sea_chart_query_discovered_port_count() -> void` | L372 |
-| `test_sea_chart_query_archetype_names_valid() -> void` | L388 |
-| `test_port_view_model_carries_display_name_keys() -> void` | L441 |
-| `test_departure_tick_direction_uses_radians() -> void` | L468 |
-| `test_center_on_port_before_layout_is_queued() -> void` | L485 |
-| `test_sea_chart_screen_binds_chart_and_panel() -> void` | L519 |
+| `test_sea_chart_query_returns_valid_structure() -> void` | L73 |
+| `test_sea_chart_query_world_bounds_match() -> void` | L95 |
+| `test_sea_chart_query_includes_all_landmasses() -> void` | L111 |
+| `test_sea_chart_query_current_port_marked() -> void` | L133 |
+| `test_sea_chart_query_routes_between_discovered_ports() -> void` | L156 |
+| `test_sea_chart_routes_carry_voyage_estimates() -> void` | L186 |
+| `test_sea_chart_panel_renders_voyage_estimates() -> void` | L271 |
+| `test_sea_chart_query_fog_grid_downsampled() -> void` | L370 |
+| `test_sea_chart_reads_precomputed_routes() -> void` | L406 |
+| `test_legacy_world_without_route_table_still_renders() -> void` | L450 |
+| `test_sea_chart_query_port_positions_within_bounds() -> void` | L468 |
+| `test_sea_chart_query_no_run_returns_empty() -> void` | L486 |
+| `test_sea_chart_query_serialization_roundtrip() -> void` | L497 |
+| `test_sea_chart_query_reproducible() -> void` | L518 |
+| `test_sea_chart_query_different_seeds_differ() -> void` | L540 |
+| `test_sea_chart_query_discovered_port_count() -> void` | L567 |
+| `test_sea_chart_query_archetype_names_valid() -> void` | L583 |
+| `test_port_view_model_carries_display_name_keys() -> void` | L636 |
+| `test_departure_tick_direction_uses_radians() -> void` | L663 |
+| `test_center_on_port_before_layout_is_queued() -> void` | L680 |
+| `test_sea_chart_screen_binds_chart_and_panel() -> void` | L714 |
 
 陆地/港口/航线/迷雾数据正确性，以及同 seed 可复现性与 JSON 序列化往返。
 

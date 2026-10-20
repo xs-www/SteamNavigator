@@ -5,6 +5,8 @@
 > 分项报告：[LOD1 构建](IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md)、[LOD1 独立验收](IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md)、[共享贴图技术样板](IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md)。
 > 日期：2026-10-20。状态：**自动门禁全部通过，等待人工视觉门禁（§10）**。
 
+> **人工视觉门禁：通过（2026-10-21，用户确认 A/B/C 截图）**。
+
 ## 0. 判定摘要
 
 | 需求项 | 目标 | 实测 | 判定 |

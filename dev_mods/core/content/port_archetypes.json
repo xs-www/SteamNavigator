@@ -17,11 +17,11 @@
         "diorama": {
           "kit": "harbor.iron",
           "town": {
-            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_long": "model.prop.workshop_row",
             "warehouse_short": "model.prop.warehouse_short",
             "harbor_office": "model.prop.harbor_office",
             "cargo_shed": "model.prop.cargo_shed",
-            "tavern": "model.prop.tavern",
+            "tavern": "model.prop.boiler_house",
             "fence_row": "model.prop.fence_row",
             "dock_worker_a": "model.prop.dock_worker_a",
             "dock_worker_b": "model.prop.dock_worker_b",
@@ -67,9 +67,9 @@
         "diorama": {
           "kit": "harbor.spice",
           "town": {
-            "warehouse_long": "model.prop.warehouse_long",
+            "warehouse_long": "model.prop.workshop_row",
             "warehouse_short": "model.prop.warehouse_short",
-            "harbor_office": "model.prop.harbor_office",
+            "harbor_office": "model.prop.brick_tenement",
             "cargo_shed": "model.prop.cargo_shed",
             "tavern": "model.prop.tavern",
             "fence_row": "model.prop.fence_row",

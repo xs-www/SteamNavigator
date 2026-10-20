@@ -19,6 +19,8 @@
 | `set_station(station_id: String = "harbor", framing: String = "stage") -> bool` | L131 |
 | `station_id() -> String` | L149 |
 | `station_framing() -> String` | L154 |
+| `PROTOTYPE_ROOT` | L180 |
+| `COMBO_OVERRIDES` | L181 |
 
 - 关键依赖：`SNStageHost`、`framework/ui/stages/port_stage.tscn`
 

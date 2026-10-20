@@ -188,6 +188,10 @@ func _build_host() -> void:
 	_viewport.transparent_bg = transparent_background
 	_viewport.gui_disable_input = true
 	_viewport.size = DEFAULT_VIEWPORT_SIZE
+	# The stage renders into its own SubViewport; the project-level MSAA default
+	# does not reach a runtime-created viewport, so building silhouettes and the
+	# water edge would alias. 4x MSAA is cheap on the fixed-camera stage.
+	_viewport.msaa_3d = Viewport.MSAA_4X
 	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	add_child(_viewport)
 

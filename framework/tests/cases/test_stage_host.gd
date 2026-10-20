@@ -1299,3 +1299,95 @@ func test_port_stage_redirect_mid_transition_continues_from_current_pose() -> vo
 		"the redirected transition lands on the supply shot"
 	)
 	_free_host(host)
+
+# --- 10. Voyage departure / arrival beat (nautical chart phase 3) -------------
+
+
+## The departure cut is a real 3D move: the hull sails from its berth toward the
+## harbour mouth while the camera climbs to the high, wide shot. The hull must be
+## exactly on `SEA_HANDOFF` when the beat ends — that is the point the chart's
+## ship marker takes over from.
+func test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	assert_true(bool(bundle["loaded"]), "the port stage scene loads")
+	var stage: Variant = bundle["stage"]
+	if not (stage is PortStage):
+		assert_true(false, "the port stage scene mounts a PortStage")
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	host.set_stage_visible(true)
+	var berth := port.station_ship_position(port.current_station())
+	var camera_before := port.camera_position()
+
+	port.begin_departure(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_eq(String(port.voyage_mode()), "depart", "the stage reports the departure beat")
+	assert_true(port.is_voyage_transitioning(), "the beat is running")
+	# Mid-beat the hull is between the berth and the harbour mouth, and the camera
+	# has already climbed: this is what the player actually sees before the clouds.
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS * 0.5)
+	var mid := port.ship_position()
+	assert_true(mid.z > berth.z, "the hull sails out to sea")
+	assert_true(mid.z < PortStage.SEA_HANDOFF.z, "the hull is still short of the handoff mid-beat")
+	assert_true(port.camera_position().y > camera_before.y + 1.0, "the camera climbs during the beat")
+
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_false(port.is_voyage_transitioning(), "the beat finishes")
+	assert_eq(String(port.voyage_mode()), "", "the stage is back to idle")
+	assert_true(
+		port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"the hull ends exactly on the sea handoff: %s" % str(port.ship_position())
+	)
+	assert_true(
+		port.camera_position().distance_to(PortStage.DEPART_CAMERA) < 0.5,
+		"the beat ends on the high departure shot"
+	)
+	_free_host(host)
+
+
+## Arrival plays it backwards: the destination harbour is already on screen from
+## the high shot, the camera comes down and the hull sails into its berth.
+func test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	assert_true(bool(bundle["loaded"]), "the port stage scene loads")
+	var stage: Variant = bundle["stage"]
+	if not (stage is PortStage):
+		assert_true(false, "the port stage scene mounts a PortStage")
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	host.set_stage_visible(true)
+	var berth := port.station_ship_position(port.current_station())
+
+	port.begin_arrival(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_eq(String(port.voyage_mode()), "arrive", "the stage reports the arrival beat")
+	assert_true(
+		port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"arrival starts from the same handoff point the departure vanished at"
+	)
+	assert_true(
+		port.camera_position().distance_to(PortStage.DEPART_CAMERA) < 0.5,
+		"arrival opens on the high 'from the sea' shot"
+	)
+
+	var mid_camera := port.camera_position()
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS * 0.5)
+	assert_true(port.camera_position().y < mid_camera.y, "the camera comes down into the harbour")
+	assert_true(port.ship_position().z < PortStage.SEA_HANDOFF.z, "the hull sails in")
+
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_false(port.is_voyage_transitioning(), "the beat finishes")
+	assert_true(
+		port.ship_position().is_equal_approx(Vector3(berth.x, 0.0, berth.z)),
+		"the hull ends on its berth: %s" % str(port.ship_position())
+	)
+	var station_shot: Vector3 = port.station_camera_pose(port.current_station())["position"]
+	assert_true(
+		port.camera_position().distance_to(station_shot) < 0.5,
+		"the beat ends on the station framing"
+	)
+	_free_host(host)

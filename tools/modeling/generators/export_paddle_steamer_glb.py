@@ -23,7 +23,11 @@ ROOT_DIR = r"D:\桌面\sisi_apps\SteamNavigator"
 COLLECTION = "SN_Paddle_Steamer_Prototype"
 ROOT_NAME = "SN_PS_Root"
 
-GLB = os.path.join(ROOT_DIR, "assets", "models", "ships", "SN_Paddle_Steamer.glb")
+# Batch C: the runtime asset lives in the core content mod; the legacy
+# `assets/models/ships/` copy is kept byte-identical for the dev preview scene.
+GLB_CONTENT = os.path.join(ROOT_DIR, "dev_mods", "core", "assets", "models", "ships", "SN_Paddle_Steamer.glb")
+GLB_FRAMEWORK = os.path.join(ROOT_DIR, "assets", "models", "ships", "SN_Paddle_Steamer.glb")
+GLB = GLB_CONTENT
 BACKUP_DIR = os.path.join(ROOT_DIR, ".design", "ships", "backup_glb")
 BLEND = os.path.join(ROOT_DIR, ".design", "ships", "SN_Paddle_Steamer.blend")
 WORKBENCH = os.path.join(ROOT_DIR, ".design", "SN_Asset_Workbench.blend")
@@ -70,7 +74,16 @@ def main():
         export_cameras=False,
         export_lights=False,
     )
-    print("GLB 导出: %s (%.1f KB)" % (GLB, os.path.getsize(GLB) / 1024.0))
+    import hashlib
+    shutil.copy2(GLB, GLB_FRAMEWORK)
+    def _sha(path):
+        digest = hashlib.sha256()
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    print("GLB 导出: %s (%.1f KB, sha %s)" % (GLB, os.path.getsize(GLB) / 1024.0, _sha(GLB)[:12]))
+    print("framework 同步: %s (sha %s)" % (GLB_FRAMEWORK, _sha(GLB_FRAMEWORK)[:12]))
 
     # 3) 船体快照：只写集合 + 相关 datablock（不切换当前文件，避免历史事故）
     root.location = (0.0, 0.0, 0.0)

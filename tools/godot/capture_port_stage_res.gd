@@ -2,8 +2,8 @@
 ## 作用：铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行；第三个参数可切换 LOD0/LOD1 标签与 tri 期望，用于 LOD1 临时入舞台的 960×540 可读性证据。
 ##
 ## ## 契约与约束
-## - 用法：`godot --path . --script res://tools/godot/capture_port_stage_res.gd -- <w> <h> [LOD0|LOD1]`；必须窗口模式（headless 下视口纹理为空）。
-## - 输出 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_<LABEL>_port_stage_<w>x<h>.png`；失败以非 0 退出码结束。
+## - 用法：`godot --path . --script res://tools/godot/capture_port_stage_res.gd -- <w> <h> [LOD0|LOD1] [tag]`；必须窗口模式（headless 下视口纹理为空）。`tag` 可选，用于批次 B 的五栋组合截图（如 `combo_a`），配合环境变量 `SN_TOWN_COMBO=a|b` 选择街景建筑混搭。
+## - 输出 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_<LABEL>[_<tag>]_port_stage_<w>x<h>.png`；失败以非 0 退出码结束。
 ## - `_report_asset_materials()` 逐个 `load()` 5 个槽位 GLB（`TOWN_ASSETS`：warehouse_long / warehouse_short / harbor_office / cargo_shed / tavern，stage 采样同一路径），打印每栋 `[asset] ... surfaces/tris/uv_surfaces/textured_surfaces/materials/textures`；有面缺贴图/缺 UV、或 tri 数与期望表（LOD0 7436 / 3788 / 10336 / 3356 / 5116；LOD1 1584 / 1060 / 1896 / 776 / 1248）不符都记为失败。stage 里 static batching 会把逐对象节点合并释放，所以**不能**在场景树里找它。
 ## - `budget: ... tris=` 是整台 stage 的总量（含并行工作流往城镇加的道具），**不能**当单资产增量证据，单资产证据看 `[asset]` 行。
 ## - 与既有 `capture_port_stage.gd`（固定 1440×900、preview+sparse 两张）并行存在，不改后者行为。
@@ -33,16 +33,20 @@ const SETTLE_FRAMES := 90
 const SETTLE_SECONDS := 1.0
 const RESIZE_FRAMES := 20
 const WATCHDOG_SECONDS := 150.0
-## The five drop-in buildings the iron-harbor town slots resolve to. The stage
-## mounts them through `port.town_visuals`, so inspecting the imported scenes is
-## the same geometry the fixed camera renders (the static batcher frees the
-## per-object nodes later, so they cannot be found in the live scene tree).
+## The eight building GLBs the iron-harbor town slots can resolve to (batch-A
+## five drop-ins + batch-B three prototypes). The stage mounts them through
+## `port.town_visuals`, so inspecting the imported scenes is the same geometry
+## the fixed camera renders (the static batcher frees the per-object nodes later,
+## so they cannot be found in the live scene tree).
 const TOWN_ASSETS := {
 	"warehouse_long": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb",
 	"warehouse_short": "res://dev_mods/core/assets/models/props/SN_HT_Warehouse_Short.glb",
 	"harbor_office": "res://dev_mods/core/assets/models/props/SN_HT_Harbor_Office.glb",
 	"cargo_shed": "res://dev_mods/core/assets/models/props/SN_HT_Cargo_Shed.glb",
 	"tavern": "res://dev_mods/core/assets/models/props/SN_HT_Tavern.glb",
+	"boiler_house": "res://dev_mods/core/assets/models/props/SN_HT_Boiler_House.glb",
+	"workshop_row": "res://dev_mods/core/assets/models/props/SN_HT_Workshop_Row.glb",
+	"brick_tenement": "res://dev_mods/core/assets/models/props/SN_HT_Brick_Tenement.glb",
 }
 const EXPECTED_ASSET_TRIS := {
 	"warehouse_long": 7436,
@@ -50,17 +54,25 @@ const EXPECTED_ASSET_TRIS := {
 	"harbor_office": 10336,
 	"cargo_shed": 3356,
 	"tavern": 5116,
+	"boiler_house": 7388,
+	"workshop_row": 7312,
+	"brick_tenement": 9376,
 }
-## Batch-A LOD1 tris, used when the third CLI arg is `LOD1` (the stage is pointed
-## at the LOD1 GLBs temporarily; the screenshot is named `..._LOD1_...`).
+## LOD1 tris, used when the third CLI arg is `LOD1` (the stage is pointed at the
+## LOD1 GLBs temporarily; the screenshot is named `..._LOD1_...`).
 const EXPECTED_LOD1_TRIS := {
 	"warehouse_long": 1584,
 	"warehouse_short": 1060,
 	"harbor_office": 1896,
 	"cargo_shed": 776,
 	"tavern": 1248,
+	"boiler_house": 2536,
+	"workshop_row": 2444,
+	"brick_tenement": 2704,
 }
 var _label := "LOD0"
+## Optional fourth CLI arg: extra filename tag (e.g. `combo_a`) for staged mixes.
+var _tag := ""
 
 var _failures := 0
 
@@ -91,6 +103,15 @@ func _resolve_label() -> String:
 	return "LOD0"
 
 
+## Optional fourth CLI arg: extra filename tag (e.g. `combo_a`); `SN_TOWN_COMBO`
+## (environment) selects the staged five-building mix in the preview scene.
+func _resolve_tag() -> String:
+	var args := OS.get_cmdline_user_args()
+	if args.size() >= 4:
+		return "_" + String(args[3])
+	return ""
+
+
 func _run() -> void:
 	if DisplayServer.get_name() == "headless":
 		_fail("must run windowed (drop --headless)")
@@ -98,6 +119,7 @@ func _run() -> void:
 		return
 	var target := _target_size()
 	_label = _resolve_label()
+	_tag = _resolve_tag()
 	DisplayServer.window_set_size(target)
 	for i in RESIZE_FRAMES:
 		await process_frame
@@ -112,7 +134,7 @@ func _run() -> void:
 	var scene: Node = packed.instantiate()
 	root.add_child(scene)
 	await _settle()
-	await _capture("SN_HT_Warehouse_Long_%s_port_stage_%dx%d.png" % [_label, target.x, target.y])
+	await _capture("SN_HT_Warehouse_Long_%s%s_port_stage_%dx%d.png" % [_label, _tag, target.x, target.y])
 	scene.queue_free()
 	await process_frame
 	_finish()

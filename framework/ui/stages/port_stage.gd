@@ -122,6 +122,30 @@ const CAMERA_PAN_SECONDS := 0.6
 const SHIP_TRANSIT_SPEED := 24.0
 const SHIP_TURN_SPEED := 2.6
 
+# --- Voyage departure / arrival beat (nautical chart phase 3) ----------------
+#
+# The 3D half of the voyage cut: on departure the hull sails off the berth toward
+# the open sea while the camera climbs to a high, wide shot; the cloud veil then
+# covers that shot and the 2D chart takes over. Arrival plays it backwards — the
+# chart is covered, the destination harbour appears from the high shot, the ship
+# sails in and the camera comes back down to the station framing.
+#
+# `SEA_HANDOFF` is the point the hull occupies when the veil closes (departure)
+# and the point it appears at (arrival). The chart is authoritative about where
+# that is geographically: the shell starts the chart ship marker at
+# `VoyagePresentation.handoff_progress`, i.e. exactly on the harbour marker the
+# 3D hull left from. Keeping one named handoff point on this side is what makes
+# "the ship disappears where the chart marker appears" a testable claim rather
+# than a coincidence.
+const SEA_HANDOFF := Vector3(-13.5, 0.0, 58.0)
+const DEPART_CAMERA := Vector3(24.0, 58.0, 156.0)
+const DEPART_CAMERA_TARGET := Vector3(-13.5, 2.0, 46.0)
+const DEPART_CAMERA_FOV := 38.0
+## Both beats are 1.8 s. The duration lives here (the stage owns the animation)
+## and `VoyagePresentation` is told the same number when the beat starts, so the
+## state machine and the 3D animation finish together.
+const VOYAGE_BEAT_SECONDS := 1.8
+
 const MODEL_BY_TIER := {
 	1: "res://assets/models/ships/SN_Paddle_Steamer.glb",
 	2: "res://assets/models/ships/SN_Paddle_Freighter.glb",
@@ -467,10 +491,28 @@ var _camera_t := 1.0
 ## geometry (quay, town, ships, water) really moves through the frame.
 var _camera_shift_x := 0.0
 var _ship_x := SHIP_SPAWN.x
+## World Z of the hull. Station berths share one Z (the quay line); the voyage
+## departure/arrival beat moves the ship along Z (out to sea / back in), which is
+## why the berth is no longer the only Z the ship can occupy.
+var _ship_z := SHIP_SPAWN.z
 var _ship_moor_x := SHIP_SPAWN.x
 var _ship_moor_z := SHIP_SPAWN.z
 var _ship_moor_yaw := deg_to_rad(SHIP_YAW_DEG)
 var _ship_sailing := false
+## Voyage beat state: "" = idle, "depart" / "arrive" while the 3D cut plays.
+## `advance_voyage()` steps it (the shell drives it; `_process` does not, so a
+## headless test can step the whole beat deterministically without double-time).
+var _voyage_mode := ""
+var _voyage_t := 1.0
+var _voyage_seconds := VOYAGE_BEAT_SECONDS
+var _voyage_ship_from := SHIP_SPAWN
+var _voyage_ship_to := SHIP_SPAWN
+var _voyage_camera_from := CAMERA_POS
+var _voyage_camera_to := CAMERA_POS
+var _voyage_target_from := CAMERA_TARGET
+var _voyage_target_to := CAMERA_TARGET
+var _voyage_fov_from := CAMERA_FOV
+var _voyage_fov_to := CAMERA_FOV
 var _skyline_root: Node3D
 var _ship_steam: GPUParticles3D
 var _batch_batches := 0
@@ -834,8 +876,11 @@ func focus_station(station_id: String, framing: String = "stage", immediate: boo
 		_camera_target = _camera_from_target
 		_camera.fov = _camera_from_fov
 		_ship_x = _ship_moor_x
+		_ship_z = _ship_moor_z
 		_ship_yaw = _ship_moor_yaw
 		_ship_sailing = false
+		_voyage_mode = ""
+		_voyage_t = 1.0
 		_apply_camera_shift()
 		_camera.look_at(_camera_target, Vector3.UP)
 		_apply_ship_pose()
@@ -919,6 +964,9 @@ func _advance_camera(delta: float) -> void:
 func _advance_ship(delta: float) -> void:
 	if _ship_root == null or not is_instance_valid(_ship_root):
 		return
+	# Station transit runs along the quay (Z is the berth line); a voyage beat is
+	# the only thing that moves the hull off it.
+	_ship_z = _ship_moor_z
 	var dx := _ship_moor_x - _ship_x
 	if absf(dx) > 0.25:
 		# Sailing: turn the bow into the travel direction first, then run along
@@ -948,12 +996,153 @@ func _apply_ship_pose() -> void:
 	_ship_root.position = Vector3(
 		_ship_x,
 		sin(_time * BOB_SPEED) * BOB_AMPLITUDE,
-		_ship_moor_z
+		_ship_z
 	)
 	_ship_root.rotation = Vector3(0.0, _ship_yaw, sin(_time * BOB_SPEED * 0.75) * 0.004)
 	_sync_boat_foam()
 	if _ship_steam != null and is_instance_valid(_ship_steam):
 		_ship_steam.position.x = _ship_x - 2.5
+
+
+# --- Voyage departure / arrival beat ---------------------------------------
+
+## Starts the departure beat: the hull sails from its berth to `SEA_HANDOFF`
+## while the camera climbs to the high, wide shot. The beat is *visible* — the
+## cloud veil only starts once `VoyagePresentation` is told the 3D shot is done.
+func begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void:
+	if _camera == null:
+		return
+	_voyage_mode = "depart"
+	_voyage_t = 0.0
+	# A station pan may still be queued; the beat owns the camera from here on.
+	_camera_t = 1.0
+	_voyage_ship_from = Vector3(_ship_x, 0.0, _ship_z)
+	_voyage_ship_to = SEA_HANDOFF
+	_voyage_camera_from = _camera.position
+	_voyage_target_from = _camera_target
+	_voyage_fov_from = _camera.fov
+	# Climb away from the quay: higher, further back and looking down the harbour
+	# mouth so the hull visibly leaves the berth instead of just fading out.
+	_voyage_camera_to = DEPART_CAMERA
+	_voyage_target_to = DEPART_CAMERA_TARGET
+	_voyage_fov_to = DEPART_CAMERA_FOV
+	_voyage_seconds = clampf(duration, 0.2, 10.0)
+
+
+## Starts the arrival beat: the hull appears at `SEA_HANDOFF` against the high
+## shot and sails into its berth while the camera comes back down.
+func begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void:
+	if _camera == null:
+		return
+	_voyage_mode = "arrive"
+	_voyage_t = 0.0
+	_camera_t = 1.0
+	_voyage_ship_from = SEA_HANDOFF
+	_voyage_ship_to = Vector3(_ship_moor_x, 0.0, _ship_moor_z)
+	_ship_x = SEA_HANDOFF.x
+	_ship_z = SEA_HANDOFF.z
+	_voyage_camera_from = DEPART_CAMERA
+	_voyage_target_from = DEPART_CAMERA_TARGET
+	_voyage_fov_from = DEPART_CAMERA_FOV
+	var pose := station_camera_pose(_station, _station_framing)
+	_voyage_camera_to = pose["position"]
+	_voyage_target_to = pose["target"]
+	_voyage_fov_to = float(pose["fov"])
+	_voyage_seconds = clampf(duration, 0.2, 10.0)
+	# Snap the high shot immediately so the first visible frame of the harbour is
+	# already the wide "arriving from sea" shot.
+	_camera.position = _voyage_camera_from
+	_camera_target = _voyage_target_from
+	_camera.fov = _voyage_fov_from
+	_camera.look_at(_camera_target, Vector3.UP)
+	_apply_ship_pose()
+	# The camera-facing layers keep the station framing during the cut: sliding the
+	# painted backdrop while the camera is also moving reads as a tearing sticker.
+	_camera_t = 1.0
+
+
+## Steps the voyage beat by `delta` seconds. Called by the shell (and by tests /
+## capture tools) instead of `_process`, so the beat advances exactly once per
+## tick and a headless run can step it deterministically.
+func advance_voyage(delta: float) -> void:
+	if _voyage_mode.is_empty() or _camera == null:
+		return
+	_voyage_t = minf(1.0, _voyage_t + maxf(0.0, delta) / maxf(0.01, _voyage_seconds))
+	var eased := smoothstep(0.0, 1.0, _voyage_t)
+	_camera.position = _voyage_camera_from.lerp(_voyage_camera_to, eased)
+	_camera_target = _voyage_target_from.lerp(_voyage_target_to, eased)
+	_camera.fov = lerpf(_voyage_fov_from, _voyage_fov_to, eased)
+	_camera.look_at(_camera_target, Vector3.UP)
+	_camera_t = 1.0
+	var ship := _voyage_ship_from.lerp(_voyage_ship_to, eased)
+	_ship_x = ship.x
+	_ship_z = ship.z
+	_apply_ship_pose()
+	if _voyage_t >= 1.0:
+		_finish_voyage_beat()
+
+
+## Ends the beat: a departure leaves the hull at the sea handoff (the veil is
+## covering it), an arrival puts it back on the berth with the station shot.
+func _finish_voyage_beat() -> void:
+	var mode := _voyage_mode
+	_voyage_mode = ""
+	_voyage_t = 1.0
+	if mode == "arrive":
+		_ship_x = _ship_moor_x
+		_ship_z = _ship_moor_z
+		var pose := station_camera_pose(_station, _station_framing)
+		_camera.position = pose["position"]
+		_camera_target = pose["target"]
+		_camera.fov = float(pose["fov"])
+		_apply_camera_shift()
+		_camera.look_at(_camera_target, Vector3.UP)
+		_apply_ship_pose()
+
+
+## Drops an in-flight beat and restores the station framing (new run, load,
+## leaving the presentation early). Safe to call when idle.
+func reset_voyage() -> void:
+	if _voyage_mode.is_empty():
+		return
+	_voyage_mode = ""
+	_voyage_t = 1.0
+	_ship_x = _ship_moor_x
+	_ship_z = _ship_moor_z
+	if _camera == null:
+		return
+	var pose := station_camera_pose(_station, _station_framing)
+	_camera.position = pose["position"]
+	_camera_target = pose["target"]
+	_camera.fov = float(pose["fov"])
+	_apply_camera_shift()
+	_camera.look_at(_camera_target, Vector3.UP)
+	_apply_ship_pose()
+
+
+func is_voyage_transitioning() -> bool:
+	return not _voyage_mode.is_empty() and _voyage_t < 1.0
+
+
+func voyage_mode() -> String:
+	return _voyage_mode
+
+
+## 0..1 progress of the current beat; 1.0 when idle.
+func voyage_progress() -> float:
+	return _voyage_t
+
+
+## The point the hull occupies when a departure cut closes (and where it appears
+## on arrival). The chart starts its ship marker where this point maps to.
+func voyage_handoff_position() -> Vector3:
+	return SEA_HANDOFF
+
+
+## Current world position of the hull (used by tests to prove the cut lands on
+## the handoff instead of somewhere along the quay).
+func ship_position() -> Vector3:
+	return Vector3(_ship_x, 0.0, _ship_z)
 
 
 ## The foam ring belongs to the hull, not to the stage: while the ship sails
@@ -966,7 +1155,7 @@ func _sync_boat_foam() -> void:
 		"boat_center",
 		Vector2(
 			_ship_x + _ship_bounds_offset.x,
-			_ship_moor_z + _ship_bounds_offset.z
+			_ship_z + _ship_bounds_offset.z
 		)
 	)
 	_water_material.set_shader_parameter("boat_yaw", _ship_yaw)
@@ -993,7 +1182,10 @@ func _process(delta: float) -> void:
 	_time += delta
 	if not is_visible_in_tree():
 		return
-	advance_station(delta)
+	# While a departure/arrival beat is playing it owns the camera and the hull;
+	# letting the station wheel run at the same time made the two fight each other.
+	if _voyage_mode.is_empty():
+		advance_station(delta)
 	# Fog bands drift slowly; the hash-seeded phase keeps each stage unique while
 	# the motion stays fully deterministic. The camera shift keeps them glued to
 	# the frame like the rest of the painted far layers.
@@ -2839,6 +3031,7 @@ func _rebuild_ship(ship: Dictionary) -> void:
 	# A rebuild keeps the current station: the hull is rebuilt at its berth, not
 	# teleported back to the harbour reference shot.
 	_ship_x = _ship_moor_x
+	_ship_z = _ship_moor_z
 	_ship_yaw = _ship_moor_yaw
 	_ship_sailing = false
 	root.position = Vector3(_ship_moor_x, 0.0, _ship_moor_z)

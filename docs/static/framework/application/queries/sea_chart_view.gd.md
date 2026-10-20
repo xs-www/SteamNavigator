@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartViewQuery` | L1 |
-| `DEFAULT_MIN_VISION_RADIUS` | L21 |
-| `DEFAULT_PORT_REVEAL_RADIUS` | L22 |
-| `execute(_params: Dictionary, context) -> Dictionary` | L25 |
+| `DEFAULT_MIN_VISION_RADIUS` | L27 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L28 |
+| `execute(params: Dictionary, context) -> Dictionary` | L31 |
 
 陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
 
@@ -25,5 +25,11 @@
   现场计算（`_compute_routes`），这条回退路径不改状态。
 - 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
 - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
+- 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
+  煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
+  几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：
+  `voyage` = 抽象地图上真有这条航线（数值与 `voyage.preview` 逐项一致），
+  `chart` = 孪生世界 MST 图独有、抽象地图上没有对应边，此时风险为未知（-1），
+  不能假装安全。
 
 模块索引：[framework/application](../README.md)

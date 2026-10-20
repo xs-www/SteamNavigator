@@ -141,12 +141,36 @@ var _hud_icon_cache: Dictionary = {}
 @onready var _fade_layer: ColorRect = $TransitionLayer
 var _transitioning: bool = false
 var _pending_transition: bool = false
+## Voyage presentation (nautical chart phase 3). `_presentation` is the whole
+## at-sea演出 session state: while it is set, the shell renders the chart
+## presentation, hides navigation and drives `_process` ticks. It is UI-session
+## state only — the voyage itself is already resolved by `voyage.start`.
+var _presentation: VoyagePresentation = null
+var _presentation_summary: Dictionary = {}
+## Endpoints of the voyage being presented. Kept on the shell because the domain
+## voyage record is already cleared when the arrival settles instantly.
+var _presentation_voyage: Dictionary = {}
+## `port.view` of the harbour the voyage departed from, captured before the
+## command settled the arrival (the departure cut is filmed there).
+var _presentation_origin_view: Dictionary = {}
+var _at_sea_screen: AtSeaScreen = null
+## Procedural cloud veil used by the presentation; created lazily as the topmost
+## child so it covers both the 3D stage and the pages.
+var _cloud_veil: SNCloudVeil = null
 
 
 func _ready() -> void:
 	theme = UI_THEME
 	_settings = SettingsService.load_settings()
 	_refresh()
+
+
+## Drives the at-sea演出. Only the presentation advances the animation; the
+## domain voyage was already resolved when `voyage.start` returned.
+func _process(delta: float) -> void:
+	if _presentation == null:
+		return
+	_tick_presentation(delta)
 
 
 func _apply_settings_if_needed() -> void:
@@ -219,6 +243,7 @@ func _rebuild_ui() -> void:
 		_root_box.remove_child(child)
 		child.queue_free()
 	_top_chrome = null
+	_at_sea_screen = null
 	if _context == null:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
@@ -250,6 +275,9 @@ func _rebuild_ui() -> void:
 	var data: Dictionary = port_result["data"]
 	_last_port_view = data
 	var at_sea := bool(data.get("at_sea", false))
+	# While the voyage presentation owns the screen the player is not actually in
+	# port: navigation stays hidden and the chart page is mounted instead.
+	var presenting := _presentation_on_chart()
 
 	# The victory summary takes priority over the regular screens until the
 	# player explicitly dismisses it. The dismissed flag is UI-session state
@@ -257,13 +285,33 @@ func _rebuild_ui() -> void:
 	var victory := _victory_view()
 	var victory_active := bool(victory.get("achieved", false)) and not _victory_dismissed
 	# One compact chrome serves every port/flow page; navigation is omitted while
-	# at sea, exactly like the old separate nav panel.
-	_build_top_chrome(app, data, not at_sea)
+	# at sea, exactly like the old separate nav panel. During the演出 the chrome
+	# must show the departure harbour and "在航 → 目的港" even though the domain
+	# already settled the arrival, otherwise the header would reveal the ending.
+	var chrome_data := data
+	if _presentation != null:
+		chrome_data = data.duplicate(true)
+		chrome_data["at_sea"] = true
+		chrome_data["current_port_id"] = String(_presentation_voyage.get("origin", data.get("current_port_id", "")))
+		chrome_data["voyage"] = _presentation_voyage
+	_build_top_chrome(app, chrome_data, not at_sea and _presentation == null)
 	if victory_active:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_victory(victory)
+		return
+	if _presentation_on_stage():
+		# Departure / arrival cut: the harbour *is* the screen, no page on top.
+		_set_port_status_bar_visible(false)
+		_build_status_banner()
+		_screen_voyage_stage(data)
+		return
+	if presenting:
+		_hide_port_stage()
+		_set_port_status_bar_visible(false)
+		_build_status_banner()
+		_screen_at_sea(data, data.get("voyage", null))
 		return
 	if at_sea:
 		_hide_port_stage()
@@ -916,16 +964,19 @@ func _sync_overview_detail_backdrop() -> void:
 		_place_overview_detail_backdrop()
 
 
-func _sync_port_stage(data: Dictionary) -> void:
-	var station := String(STAGE_SCREENS.get(_active_screen, ""))
+## Shows the shared 3D district. `force_station` is used by the voyage演出: during
+## the departure / arrival beat the harbour must be visible even though no page of
+## `STAGE_SCREENS` is active, and it always plays the harbour-authority shot.
+func _sync_port_stage(data: Dictionary, force_station: String = "") -> void:
+	var station := force_station if not force_station.is_empty() else String(STAGE_SCREENS.get(_active_screen, ""))
 	# The 2D-overview toggle only affects the overview page; market / supply are
 	# always presented over the district because that is where their station is.
 	var stage_page_enabled := _active_screen != "overview" or _overview_stage_mode
 	var should_show := (
 		bool(data.get("has_run", false))
-		and not bool(data.get("at_sea", false))
+		and (not force_station.is_empty() or not bool(data.get("at_sea", false)))
 		and not station.is_empty()
-		and stage_page_enabled
+		and (not force_station.is_empty() or stage_page_enabled)
 		and _port_stage_available()
 	)
 	if not should_show:
@@ -942,15 +993,15 @@ func _sync_port_stage(data: Dictionary) -> void:
 		if not _port_stage_host.load_stage(PORT_STAGE_SCENE_PATH):
 			_on_port_stage_fallback("stage_scene_load_failed")
 			return
-	var framing := "stage" if _active_screen == "overview" else "panel"
+	var framing := "stage" if _active_screen == "overview" or not force_station.is_empty() else "panel"
 	_port_stage_host.bind_view_model(_port_stage_payload(data))
 	_port_stage_host.set_stage_visible(true)
 	_focus_stage_station(station, framing, just_mounted)
 	_sync_overview_detail_backdrop()
 	if _port_hotspot_layer != null:
-		# The edge signs belong to the overview main view; the market / supply dock
-		# panels carry their own navigation.
-		_port_hotspot_layer.visible = _active_screen == "overview" and not _overview_detail
+		# Edge signs belong to the overview main view; the market / supply dock
+		# panels carry their own navigation, and the voyage cut shows a clean shot.
+		_port_hotspot_layer.visible = _active_screen == "overview" and not _overview_detail and force_station.is_empty()
 	_refresh_port_hotspots_soon()
 
 
@@ -1560,6 +1611,9 @@ func _toggle_sea_chart() -> void:
 func _sea_chart_available() -> bool:
 	if _context == null or not _context.has_run():
 		return false
+	# No chart, no navigation while the voyage演出 owns the screen.
+	if _presentation != null:
+		return false
 	if bool(_context.state.data.get("at_sea", false)):
 		return false
 	var victory := _victory_view()
@@ -1637,6 +1691,7 @@ func _on_play_again() -> void:
 	_context.reset_state()
 	_victory_dismissed = false
 	_settlement_summary = {}
+	_reset_voyage_presentation()
 	_status_message = ""
 	_overview_detail = false
 	_menu_screen = "new_game"
@@ -1658,15 +1713,273 @@ func _on_flow_action(action: StringName, _params: Dictionary) -> void:
 			_on_keep_playing()
 
 
+## At-sea page. While a voyage presentation is running this is the chart演出 page
+## (moving ship + voyage strip); with no presentation (legacy save already at sea)
+## it falls back to the same chart page without animation data.
 func _screen_at_sea(data: Dictionary, voyage: Variant) -> void:
-	var model := {"has_voyage": voyage is Dictionary}
-	if voyage is Dictionary:
-		model["origin_name"] = _port_name(String(voyage.get("origin", "")))
-		model["destination_name"] = _port_name(String(voyage.get("destination", "")))
-		model["arrival_time"] = voyage.get("arrival_time", 0.0)
+	var chart_vm: Dictionary = {}
+	var result := _context.queries.execute(&"sea_chart.view")
+	if bool(result.get("ok", false)):
+		chart_vm = result.get("data", {})
+	# The query reports the harbour the domain already put the ship in. While the
+	#演出 is running the chart should mark the departure harbour instead, so the
+	# pulsing "you are here" ring does not sit on the destination before arrival.
+	if _presentation != null and not chart_vm.is_empty():
+		chart_vm["current_port_id"] = String(_presentation_voyage.get("origin", chart_vm.get("current_port_id", "")))
+		chart_vm["at_sea"] = true
+	# While presenting, the endpoints come from the presentation session: the
+	# domain voyage record is gone the moment an eventless voyage arrives.
+	var endpoints: Variant = _presentation_voyage if _presentation != null else voyage
+	var model := {
+		"chart": chart_vm,
+		"voyage": endpoints if endpoints is Dictionary else {},
+		"positions": _presentation_positions(endpoints),
+	}
+	if _presentation != null:
+		model["presentation"] = _presentation.snapshot()
 	var screen: Variant = AT_SEA_SCREEN_SCENE.instantiate()
 	screen.bind(model, Callable(self, "_tr"))
+	screen.skip_requested.connect(_on_skip_presentation)
+	_at_sea_screen = screen
 	_root_box.add_child(screen)
+
+
+## World positions of the voyage endpoints. The chart only knows discovered
+## ports, and the destination of a fresh voyage usually is not discovered yet,
+## so the shell reads them from the twin world it already owns.
+func _presentation_positions(voyage: Variant) -> Dictionary:
+	var positions: Dictionary = {}
+	if not (voyage is Dictionary) or _context == null:
+		return positions
+	var world_map: Variant = _context.state.data.get("world_map", null)
+	if not (world_map is Dictionary) or (world_map as Dictionary).is_empty():
+		return positions
+	var world := WorldMap.from_dict(world_map)
+	for key in ["origin", "destination"]:
+		var port_id := String((voyage as Dictionary).get(key, ""))
+		if port_id.is_empty():
+			continue
+		var port := world.get_port(port_id)
+		if port.is_empty():
+			continue
+		positions[port_id] = {"x": port.position.x, "y": port.position.y}
+	return positions
+
+
+## ---------------------------------------------------------------------------
+## Voyage presentation (nautical chart phase 3)
+## ---------------------------------------------------------------------------
+
+## True while the chart演出 page should be mounted. `DEPARTURE_VEIL` is excluded
+## on purpose: the clouds first cover the 3D harbour shot, then the chart takes over.
+func _presentation_on_chart() -> bool:
+	if _presentation == null:
+		return false
+	return _presentation.phase in [
+		VoyagePresentation.Phase.AT_SEA,
+		VoyagePresentation.Phase.EVENT_APPROACH,
+		VoyagePresentation.Phase.EVENT_RESUME,
+		VoyagePresentation.Phase.ARRIVAL_APPROACH,
+	]
+
+
+## True while the 3D harbour is the screen: the ship sailing out (departure) and
+## the ship entering the destination harbour (arrival).
+func _presentation_on_stage() -> bool:
+	if _presentation == null:
+		return false
+	return _presentation.phase in [
+		VoyagePresentation.Phase.DEPARTURE_3D,
+		VoyagePresentation.Phase.ARRIVAL_HARBOR,
+	]
+
+
+## Full-window 3D cut. The stage is forced onto the harbour-authority shot even
+## though no `STAGE_SCREENS` page is active, and the beat is kicked off *after*
+## the stage has been (re)mounted so the high shot starts from a settled camera.
+func _screen_voyage_stage(data: Dictionary) -> void:
+	# Departure plays at the harbour the ship is leaving, which `port.view` no
+	# longer reports once the command has already settled the arrival; the origin
+	# view was captured from the last in-port rebuild. Arrival uses the live view
+	# (the ship is now at the destination).
+	var stage_data := data
+	if _presentation.phase == VoyagePresentation.Phase.DEPARTURE_3D \
+			and not _presentation_origin_view.is_empty():
+		stage_data = _presentation_origin_view
+	_sync_port_stage(stage_data, PortStage.DEFAULT_STATION)
+	if _presentation.phase == VoyagePresentation.Phase.DEPARTURE_3D:
+		_begin_stage_departure()
+	else:
+		_begin_stage_arrival()
+
+
+## Starts the演出 for a voyage that `voyage.start` already resolved. `hours` is
+## the voyage's own schedule, so the animation lasts as long as the voyage says.
+func _start_voyage_presentation(data: Dictionary) -> void:
+	# `voyage.start` erases the in-flight `state.data["voyage"]` as soon as the
+	# arrival settles, so the presentation reads the endpoints and duration from
+	# the command's preview instead of the (possibly already cleared) voyage.
+	var preview: Dictionary = data.get("preview", {}) if data.get("preview", null) is Dictionary else {}
+	var origin := String(preview.get("origin_id", ""))
+	var destination := String(preview.get("destination_id", ""))
+	var hours := float(preview.get("duration_hours", 0.0))
+	if hours <= 0.0:
+		var voyage: Variant = _context.state.data.get("voyage", null)
+		if voyage is Dictionary:
+			hours = float((voyage as Dictionary).get("arrival_time", 0.0)) \
+				- float((voyage as Dictionary).get("departure_time", 0.0))
+	if hours <= 0.0:
+		hours = VoyagePresentation.FALLBACK_HOURS
+	_presentation_voyage = {
+		"origin": origin,
+		"destination": destination,
+		"departure_time": float(preview.get("departure_time", _context.state.now())),
+		"arrival_time": float(preview.get("arrival_time", _context.state.now() + hours)),
+		"distance": float(preview.get("distance", 0.0)),
+		"strategy_id": String(preview.get("strategy_id", "")),
+	}
+	_presentation_summary = {}
+	var summary: Variant = data.get("summary", null)
+	if summary is Dictionary:
+		_presentation_summary = summary
+	var event: Variant = data.get("event", null)
+	var event_at := -1.0
+	if event is Dictionary:
+		event_at = VoyagePresentation.DEFAULT_EVENT_PROGRESS
+	_presentation = VoyagePresentation.new()
+	_presentation.plan(hours, event_at)
+	# Capture the origin harbour view *before* anything rebuilds: the departure cut
+	# is filmed at the harbour being left, and `port.view` has already moved on.
+	_presentation_origin_view = _last_port_view.duplicate(true)
+	_presentation.departure_3d_seconds = PortStage.VOYAGE_BEAT_SECONDS
+	_presentation.harbor_seconds = PortStage.VOYAGE_BEAT_SECONDS
+	_presentation.begin_departure()
+	_sync_cloud_veil(0.0)
+	_set_status("出航，航向 %s。" % _port_name(destination), false)
+
+
+func _tick_presentation(delta: float) -> void:
+	if _presentation == null:
+		return
+	var step := _presentation.tick(delta)
+	_sync_cloud_veil(delta)
+	# The port stage owns the 3D half of the cut; stepping it from the shell keeps
+	# it in lockstep with the state machine (and lets headless tests step both).
+	_advance_stage_voyage(delta)
+	if _at_sea_screen != null and _presentation.phase == VoyagePresentation.Phase.AT_SEA:
+		_at_sea_screen.set_presentation(_presentation.snapshot())
+	match step:
+		VoyagePresentation.Step.DEPARTED:
+			_set_status("离港，航向 %s。" % _port_name(String(_presentation_voyage.get("destination", ""))), false)
+		VoyagePresentation.Step.AT_SEA_STARTED:
+			_rebuild_ui()
+		VoyagePresentation.Step.EVENT_READY:
+			# The event decision is pushed to the player, then the veil clears over it.
+			_rebuild_ui()
+			_presentation.begin_event_reveal()
+		VoyagePresentation.Step.ARRIVAL_READY:
+			# Charts are covered: swap in the destination harbour from the high
+			# "arriving from sea" shot, then let the camera come down.
+			_set_status("抵达 %s。" % _port_name(String(_presentation_voyage.get("destination", ""))), false)
+			_rebuild_ui()
+			_begin_stage_arrival()
+		VoyagePresentation.Step.DONE:
+			_finish_presentation()
+		_:
+			pass
+
+
+## Ends the presentation on the settlement screen (or the overview when the
+## command produced no summary, e.g. a legacy save).
+func _finish_presentation() -> void:
+	_settlement_summary = _presentation_summary.duplicate(true)
+	_active_screen = "settlement" if not _settlement_summary.is_empty() else "overview"
+	_status_message = ""
+	_presentation = null
+	_at_sea_screen = null
+	_sync_cloud_veil(0.0)
+	_rebuild_ui()
+
+
+func _on_skip_presentation() -> void:
+	if _presentation == null:
+		return
+	_presentation.skip()
+
+
+## Steps the port stage's departure/arrival beat, if it is playing one.
+func _advance_stage_voyage(delta: float) -> void:
+	var stage := _port_stage()
+	if stage == null or not stage.is_voyage_transitioning():
+		return
+	stage.advance_voyage(delta)
+
+
+func _port_stage() -> PortStage:
+	if _port_stage_host == null:
+		return null
+	return _port_stage_host.current_stage() as PortStage
+
+
+## Starts the 3D harbour beat for a presentation phase. Called right after the
+## stage has been (re)mounted, so the high shot is set up before the first frame.
+func _begin_stage_departure() -> void:
+	var stage := _port_stage()
+	if stage == null:
+		# No 3D stage available: skip straight to the veil so the演出 still runs.
+		_presentation.finish_departure_beat()
+		return
+	if stage.voyage_mode() == "depart":
+		return
+	stage.begin_departure(_presentation.departure_3d_seconds)
+
+
+func _begin_stage_arrival() -> void:
+	var stage := _port_stage()
+	if stage == null:
+		_presentation.skip_harbor_beat()
+		return
+	stage.begin_arrival(_presentation.harbor_seconds)
+
+
+## Drops any in-flight presentation (new run, load, give-up paths). The veil is
+## pulled back to clear so a stale overlay never covers the next screen.
+func _reset_voyage_presentation() -> void:
+	_presentation = null
+	_presentation_summary = {}
+	_presentation_voyage = {}
+	_presentation_origin_view = {}
+	_at_sea_screen = null
+	if _cloud_veil != null:
+		_cloud_veil.cover = 0.0
+	var stage := _port_stage()
+	if stage != null:
+		stage.reset_voyage()
+
+
+## Lazily creates the veil as the topmost child so it covers the 3D stage, the
+## pages and the fade layer alike.
+func _ensure_cloud_veil() -> SNCloudVeil:
+	if _cloud_veil != null:
+		return _cloud_veil
+	_cloud_veil = SNCloudVeil.new()
+	_cloud_veil.name = "CloudVeil"
+	add_child(_cloud_veil)
+	# Keep it anchored to the whole shell even if the window is resized mid-演出.
+	_cloud_veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	return _cloud_veil
+
+
+func _sync_cloud_veil(delta: float) -> void:
+	if _presentation == null and _cloud_veil == null:
+		return
+	var veil := _ensure_cloud_veil()
+	if _presentation == null:
+		veil.cover = 0.0
+		return
+	veil.cover = _presentation.veil
+	veil.set_meta("veil_direction", _presentation.veil_direction)
+	veil.advance(delta)
 
 
 func _screen_event(data: Dictionary, event: Dictionary) -> void:
@@ -1817,6 +2130,7 @@ func _on_continue() -> void:
 	_selected_destination = ""
 	_selected_strategy = ""
 	_sea_chart_return = "voyage"
+	_reset_voyage_presentation()
 	_active_screen = "overview"
 	_overview_detail = false
 	_victory_dismissed = false
@@ -1832,7 +2146,10 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 		_handle_success(command, result)
 	else:
 		_set_status(_error_text(result), true)
-	var animate := command in [&"run.start", &"voyage.start", &"event.choose_option"]
+	# `voyage.start` / `event.choose_option` hand over to the cloud transition,
+	# so the generic page fade would fight the veil — rebuild without animation.
+	var presentation_handoff := _presentation != null and command in [&"voyage.start", &"event.choose_option"]
+	var animate := command in [&"run.start", &"voyage.start", &"event.choose_option"] and not presentation_handoff
 	_refresh(animate)
 
 
@@ -1847,13 +2164,24 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			_selected_strategy = ""
 			_victory_dismissed = false
 			_settlement_summary = {}
+			_reset_voyage_presentation()
 			_set_status("新航程开始 · 种子 %d" % int(data.get("seed", 0)), false)
 		"voyage.start":
 			_handle_voyage_result(data)
 		"event.choose_option":
 			if bool(data.get("failed", false)):
+				_presentation = null
+				_at_sea_screen = null
+				_sync_cloud_veil(0.0)
 				_active_screen = "overview"
 				_set_status("航行失败，已恢复到出航前状态。", true)
+			elif _presentation != null:
+				# Resume the remaining leg of the voyage: the veil comes back, the
+				# chart page returns, and the presentation plays out to arrival.
+				var summary: Variant = data.get("summary", data.get("event_result", null))
+				_presentation_summary = summary if summary is Dictionary else {}
+				_presentation.resolve_event()
+				_sync_cloud_veil(0.0)
 			else:
 				_full_stop_after_voyage(data)
 		"trade.buy":
@@ -1954,12 +2282,10 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 
 
 func _handle_voyage_result(data: Dictionary) -> void:
-	if bool(data.get("arrived", false)):
-		_full_stop_after_voyage(data)
-		return
-	if data.get("event", null) is Dictionary:
-		_active_screen = "voyage"
-		_set_status("航行中遭遇事件，请选择处理方案。", false)
+	# Every successful departure runs the phase-3 presentation: clouds over the
+	# port, the chart with the ship sailing, then event/arrival. The voyage itself
+	# was already settled by the command, so this only decides how it is shown.
+	_start_voyage_presentation(data)
 
 
 func _full_stop_after_voyage(data: Dictionary) -> void:

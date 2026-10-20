@@ -144,8 +144,12 @@ def main():
     check("bbox", all(abs(size[i] - SIZE_TARGET[i]) <= SIZE_TOL for i in range(3)),
           "%.2f x %.2f x %.2f" % size)
     check("mesh_health", not health_fail, str(health_fail[:8]))
+    # 批次 C：本船材质槽 8 -> 9，唯一新增为 SN_PS_UpperWhite（上层建筑/舱室「二级白」，
+    # 仅 SN_Paddle_Steamer 使用；新增理由：共享材质 SN_Wood_Deck / SN_Flag_White 必须保持原值，
+    # 不能拿它们做上层建筑分层）。其它阈值（单对象槽数 ≤8、双面、tri/尺寸等）均未放宽。
     expected_mats = {"SN_White", "SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck",
-                     "SN_Metal", "SN_Brass", "SN_Flag_Blue", "SN_Flag_White"}
+                     "SN_Metal", "SN_Brass", "SN_Flag_Blue", "SN_Flag_White",
+                     "SN_PS_UpperWhite"}
     check("materials", mats == expected_mats, ",".join(sorted(mats)))
     # 单层曲面材质双面
     bad_cull = [n for n in expected_mats

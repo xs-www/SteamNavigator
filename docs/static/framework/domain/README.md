@@ -26,6 +26,8 @@
 | `ship/ship_ops.gd` | 船只组合的纯函数：模块/货物/煤水/旅客/随船运输重量、容量、槽位、安装/卸下规则与派生属性。 | [查看](./ship/ship_ops.gd.md) |
 | `ship/warehouse_ops.gd` | 港口仓库与随船运输：每港独立保存模块/材料，transit 模块计入重量但不占货舱。 | [查看](./ship/warehouse_ops.gd.md) |
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |
+| `voyage/voyage_estimator.gd` | 把「一条航线 + 当前船况 + 锅炉策略 + 航行规则」折算成海图右侧面板需要的 | [查看](./voyage/voyage_estimator.gd.md) |
+| `voyage/voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**纯状态机**：把一次已经由 `voyage.start` | [查看](./voyage/voyage_presentation.gd.md) |
 | `voyage/voyage_service.gd` | 航行执行：校验预览、扣补给/工资、抽取事件、事件选择、抵达结算与失败回滚。 | [查看](./voyage/voyage_service.gd.md) |
 | `world/fog_grid.gd` | 战争迷雾网格，维护未探索、已探索海岸与当前可见三种状态。 | [查看](./world/fog_grid.gd.md) |
 | `world/fog_ops.gd` | 战争迷雾高层操作，把 FogGrid 与 WorldMap、GameState 接合。 | [查看](./world/fog_ops.gd.md) |

@@ -9,14 +9,14 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PREVIEW_PROFILE` | L20 |
-| `PREVIEW_NAMES` | L74 |
-| `SEED` | L84 |
-| `PANEL_WIDTH` | L85 |
-| `VISION_RADIUS` | L86 |
-| `PORT_REVEAL_RADIUS` | L87 |
-| `set_variant(variant_name: String) -> void` | L161 |
-| `get_chart() -> SNSeaChartView` | L387 |
-| `get_panel() -> SNSeaChartPanel` | L391 |
+| `PREVIEW_NAMES` | L82 |
+| `SEED` | L94 |
+| `PANEL_WIDTH` | L95 |
+| `VISION_RADIUS` | L96 |
+| `PORT_REVEAL_RADIUS` | L97 |
+| `set_variant(variant_name: String) -> void` | L189 |
+| `get_chart() -> SNSeaChartView` | L429 |
+| `get_panel() -> SNSeaChartPanel` | L433 |
 
 与 `SNSeaChartPanel` 按真实布局（海图铺满 + 右侧 320 px 信息面板）拼起来，供窗口截图
 与人工目视验收使用。不属于主流程，不写存档。

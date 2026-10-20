@@ -9,11 +9,22 @@ extends RefCounted
 ## - `required_tags` 来自港口配置，不依赖内容注册表中的硬编码 ID。
 ## - 航线在生成期算好后写入 `WorldMap.edges`（`{from,to,distance,path}`），
 ##   运行期只读；换航线算法只需改这里，查询/UI 不受影响。
+## - **港口规模**：世界验收口径是单局 `MIN_PORTS..MAX_PORTS`（15–20，见设计文档
+##   §2.2 与 §12）。`_validate_world` 用 profile 的 `min_ports`/`max_ports`，缺省即
+##   取这两个常量；`port_defs` 少于下限直接判定失败，所以「港口数不够」不会靠
+##   静默生成一张小图蒙混过关。真实对局（`RunFactory`）按抽象地图港口数显式传
+##   `min_ports`，那是另一条路径，不受此下限影响。
 ##
 ## ## 重点逻辑
 ## ### `generate(...)`
 ## - 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图、计算
 ##   出航角，最后调 `_build_route_edges` 预计算航线表。
+## ### `formal_profile(definition)`
+## - 把内容层世界 profile（`map_profiles` 定义）转成生成器 profile：五个区域
+##   （起始沿岸 / 中部沿岸 ×2 / 远洋 / 外洋）、十一块陆地（1 大陆 + 5 大岛 + 3 小岛 +
+##   2 环礁）、港口槽位按 `port_count_range` 取前 N 个，名称键来自 `port_name_keys`、
+##   原型按 `archetypes` 轮转。它是 §12 验收项「15-20 港口合理分布在陆地海岸线上」
+##   的可执行实现。
 ## ### `_place_ports_on_coastlines(...)`
 ## - 按 `coast_t` 在目标海岸采样并施加确定性抖动，同时守住港口最小间距。
 ## ### `_build_route_edges(...)`
@@ -24,15 +35,106 @@ extends RefCounted
 const MAX_ATTEMPTS := 60
 const MIN_PORT_SPACING := 15.0
 const DEFAULT_WORLD_SIZE := 400.0
+## 设计文档 §2.2 冻结的验收口径：单局 15–20 个港口。
+const MIN_PORTS := 15
+const MAX_PORTS := 20
+## `formal_profile()` 的陆地骨架：id / 区域 / 原型 / 中心 / 半径（400×400 世界）。
+## 全部贴在世界边界内，因为迷雾网格只覆盖 `bounds`，跨界的陆地会露出无雾水面。
+const FORMAL_LANDMASSES := [
+	{"id": "region_start_continent", "region_id": "start_coast", "archetype": "continent", "cx": 58.0, "cy": 208.0, "rx": 30.0, "ry": 74.0},
+	{"id": "region_start_island", "region_id": "start_coast", "archetype": "large_island", "cx": 142.0, "cy": 300.0, "rx": 17.0, "ry": 13.0},
+	{"id": "region_mid_island_a", "region_id": "mid_coast_1", "archetype": "large_island", "cx": 168.0, "cy": 96.0, "rx": 19.0, "ry": 15.0},
+	{"id": "region_mid_island_b", "region_id": "mid_coast_1", "archetype": "large_island", "cx": 248.0, "cy": 180.0, "rx": 16.0, "ry": 13.0},
+	{"id": "region_mid_island_c", "region_id": "mid_coast_2", "archetype": "large_island", "cx": 256.0, "cy": 318.0, "rx": 17.0, "ry": 13.0},
+	{"id": "region_ocean_island_a", "region_id": "ocean_1", "archetype": "large_island", "cx": 338.0, "cy": 92.0, "rx": 15.0, "ry": 12.0},
+	{"id": "region_ocean_islet_a", "region_id": "ocean_1", "archetype": "small_island", "cx": 330.0, "cy": 232.0, "rx": 8.0, "ry": 6.0},
+	{"id": "region_ocean_islet_b", "region_id": "ocean_1", "archetype": "small_island", "cx": 214.0, "cy": 58.0, "rx": 8.0, "ry": 6.0},
+	{"id": "region_ocean_islet_c", "region_id": "ocean_1", "archetype": "small_island", "cx": 108.0, "cy": 376.0, "rx": 8.0, "ry": 6.0},
+	{"id": "region_ocean_atoll_a", "region_id": "ocean_2", "archetype": "atoll", "cx": 374.0, "cy": 170.0, "rx": 4.0, "ry": 3.2},
+	{"id": "region_ocean_atoll_b", "region_id": "ocean_2", "archetype": "atoll", "cx": 26.0, "cy": 52.0, "rx": 4.0, "ry": 3.2},
+]
+
+## Port slots for the formal skeleton: `[landmass_index, coast_t]` per port, in
+## placement order. The home continent carries the dense starting coast (6
+## harbours, like §2.3's "起始沿岸区 4-5 港" plus a pair of outer berths), the
+## mid-coast islands carry 2-3 each, and the open-ocean islets/atolls one each —
+## small outlines cannot host two berths without breaking `MIN_PORT_SPACING`.
+const FORMAL_PORT_SLOTS := [
+	[0, 0.06], [0, 0.21], [0, 0.36], [0, 0.52], [0, 0.68], [0, 0.84],
+	[1, 0.30], [1, 0.78],
+	[2, 0.20], [2, 0.52], [2, 0.84],
+	[3, 0.28], [3, 0.74],
+	[4, 0.28], [4, 0.74],
+	[5, 0.40],
+	[6, 0.50],
+	[7, 0.50],
+	[8, 0.50],
+	[9, 0.50],
+]
 
 
 static func generate(profile: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary:
 	var rng := rng_service.stream(RngService.STREAM_MAP_GENERATION, "world")
+	# Keep the last attempt's reason: "failed after 60 attempts" alone hides the
+	# real constraint (too few ports, land coverage, facility distance, ...).
+	var last_reason := "no attempt ran"
 	for attempt in MAX_ATTEMPTS:
 		var result := _try_generate(profile, hub, rng, ship, attempt)
 		if bool(result.get("ok", false)):
 			return result
-	return {"ok": false, "reason": "world generation failed after %d attempts" % MAX_ATTEMPTS, "world_map": {}}
+		last_reason = String(result.get("reason", ""))
+	return {"ok": false, "reason": last_reason, "attempts": MAX_ATTEMPTS, "world_map": {}}
+
+
+## Turns one `map_profiles` definition into a generator profile. The content
+## definition stays the single source of truth for the port count / name keys /
+## archetypes; this only lays those ports out on the formal landmass skeleton.
+static func formal_profile(definition: ContentDefinition) -> Dictionary:
+	var data: Dictionary = definition.data
+	var port_range: Array = data.get("port_count_range", [MIN_PORTS, MAX_PORTS])
+	var port_count := clampi(int(port_range[0]), MIN_PORTS, mini(MAX_PORTS, FORMAL_PORT_SLOTS.size()))
+	var archetypes: Array = data.get("archetypes", [])
+	var name_keys: Array = data.get("port_name_keys", [])
+	var ports: Array = []
+	for i in port_count:
+		var slot: Array = FORMAL_PORT_SLOTS[i]
+		var land: Dictionary = FORMAL_LANDMASSES[int(slot[0])]
+		var archetype := ""
+		if not archetypes.is_empty():
+			archetype = String(archetypes[i % archetypes.size()])
+		# No baked-in content key: the definition owns naming. A profile that
+		# forgets `port_name_keys` still yields a stable, localizable key.
+		var name_key := "port_name.%s.%d" % [definition.id.get_file().get_basename(), i]
+		if not name_keys.is_empty():
+			name_key = String(name_keys[i % name_keys.size()])
+		ports.append({
+			"landmass_id": String(land["id"]),
+			"coast_t": float(slot[1]),
+			"archetype_id": archetype,
+			"name_key": name_key,
+			"is_start": i == 0,
+		})
+	var regions: Array = []
+	for region_id in ["start_coast", "mid_coast_1", "mid_coast_2", "ocean_1", "ocean_2"]:
+		regions.append({
+			"id": region_id,
+			"name_key": "world.region." + region_id,
+			"tier": "oceanic" if region_id.begins_with("ocean") else "coastal",
+		})
+	var landmasses: Array = []
+	for land in FORMAL_LANDMASSES:
+		landmasses.append((land as Dictionary).duplicate(true))
+	return {
+		"world_size": DEFAULT_WORLD_SIZE,
+		"min_ports": int(port_range[0]),
+		"max_ports": int(port_range[1]) if port_range.size() > 1 else int(port_range[0]),
+		"max_land_coverage": 0.45,
+		"required_facility_tags": Array(data.get("required_facility_tags", ["port.shipyard", "port.intel"])),
+		"required_facility_max_edges": int(data.get("required_facility_max_edges", 2)),
+		"regions": regions,
+		"landmasses": landmasses,
+		"ports": ports,
+	}
 
 
 static func _try_generate(profile: Dictionary, hub: RegistryHub, rng: RandomNumberGenerator, ship: Dictionary, attempt: int) -> Dictionary:
@@ -152,6 +254,10 @@ static func _place_ports_on_coastlines(world: WorldMap, port_defs: Array, hub: R
 		coast_t = clampf(coast_t + jitter, 0.0, 1.0)
 		var position := landmass.sample_coastline(coast_t)
 
+		# The configured coastline sample is the anchor; the retry only nudges
+		# along that same coastline. If spacing still cannot be met the port is
+		# dropped, and the world fails in `_validate_world` when the count drops
+		# below `min_ports` (silently shrinking the world is not acceptable).
 		if not _is_spacing_valid(position, placed_positions, MIN_PORT_SPACING):
 			var found_valid := false
 			for retry in 20:
@@ -163,7 +269,9 @@ static func _place_ports_on_coastlines(world: WorldMap, port_defs: Array, hub: R
 			if not found_valid:
 				continue
 
-		var port := WorldPort.new("port_%d" % i, position)
+		# Port ids stay tied to the placed order so the count never has holes
+		# (`port_0..port_N-1`), which the run twin world and fog both rely on.
+		var port := WorldPort.new("port_%d" % ports.size(), position)
 		port.region_id = landmass.region_id
 		port.landmass_id = landmass_id
 		port.archetype_id = String(def.get("archetype_id", ""))
@@ -216,9 +324,12 @@ static func _ensure_start_port(world: WorldMap) -> void:
 
 
 static func _validate_world(world: WorldMap, profile: Dictionary, hub: RegistryHub, ship: Dictionary) -> Dictionary:
-	var min_ports := int(profile.get("min_ports", 10))
+	var min_ports := int(profile.get("min_ports", MIN_PORTS))
+	var max_ports := int(profile.get("max_ports", MAX_PORTS))
 	if world.ports.size() < min_ports:
 		return {"ok": false, "reason": "too few ports: %d < %d" % [world.ports.size(), min_ports]}
+	if world.ports.size() > max_ports:
+		return {"ok": false, "reason": "too many ports: %d > %d" % [world.ports.size(), max_ports]}
 
 	var start_port := world.get_start_port()
 	if start_port.is_empty():

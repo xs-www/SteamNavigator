@@ -1,15 +1,20 @@
 class_name SNSeaChartPanel
 extends PanelContainer
 ## @static-doc
-## 作用：海图右侧信息面板。选中港口后展示港口名、原型、区域、设施列表与
-## 航线信息（距离/预计时间/风险/是否已探索），并提供「启航」按钮。
+## 作用：海图右侧信息面板。选中港口后展示港口名、原型、区域、设施列表，以及
+## **航程预估**（距离 / 预计时间 / 煤水消耗 / 风险 / 是否已探索），并提供「启航」按钮。
 ##
 ## - 关键依赖：`sea_chart.view` 中的 port/route 字典与本地化回调。
 ##
 ## ## 契约与约束
 ## - `bind(port_data, route_data, translate)` 注入数据；`clear()` 回到「点击港口」提示。
-## - 面板不自行计算距离/时间/风险；所有数值由外部传入。
-## - 风险等级按阈值分四档（low/medium/high/extreme），文案与颜色均走本地化。
+## - 面板不自行计算距离/时间/风险/消耗；所有数值由查询层（`VoyageEstimator`）给出。
+## - 风险分档直接复用 `VoyageCalculator.risk_label`（low/medium/high），文案与颜色走本地化；
+##   查询给的 `risk_label` 优先，避免海图与出航预览对同一个分数给出不同档位。
+## - `risk_level < 0` 表示该航线没有可用的基础风险（坐标世界缺抽象地图对应边），
+##   显示「无法评估」而不是「无风险」。
+## - 煤水块只在查询给出 `supplies` 时出现；`sufficient=false` 用警示色并提示，
+##   但不在这里拦截出航（阻断仍由出航页的 `voyage.preview` 决定）。
 ## - 点击「启航」发出 `voyage_requested(port_id)`，由 Shell 路由到 `voyage.start`。
 ## @end-static-doc
 
@@ -143,26 +148,36 @@ func _rebuild() -> void:
 		var travel_hours: float = float(_route_data.get("travel_hours", 0.0))
 		if travel_hours > 0.0:
 			var time_label := Label.new()
-			var days := int(travel_hours / 24.0)
-			var hours := int(fmod(travel_hours, 24.0))
-			var time_text := ""
-			if days > 0:
-				time_text = str(days) + " " + _tr("unit.days") + " " + str(hours) + " " + _tr("unit.hours")
-			else:
-				time_text = str(hours) + " " + _tr("unit.hours")
-			time_label.text = _tr("ui.label.estimated_time") + ": " + time_text
+			time_label.text = _tr("ui.label.estimated_time") + ": " + _format_duration(travel_hours)
 			time_label.add_theme_font_size_override("font_size", 12)
 			vbox.add_child(time_label)
-		
-		# Risk level (if available)
-		var risk_level: float = float(_route_data.get("risk_level", 0.0))
-		if risk_level > 0.0:
-			var risk_label := Label.new()
-			var risk_text := _risk_level_text(risk_level)
-			risk_label.text = _tr("ui.label.risk") + ": " + risk_text
-			risk_label.add_theme_font_size_override("font_size", 12)
-			risk_label.add_theme_color_override("font_color", _risk_color(risk_level))
-			vbox.add_child(risk_label)
+
+		# Fuel / water the voyage will burn (query-supplied; absent for worlds
+		# with no ship context, e.g. a legacy save without a run).
+		var supplies: Variant = _route_data.get("supplies", null)
+		if supplies is Dictionary and not (supplies as Dictionary).is_empty():
+			vbox.add_child(_supply_block(supplies as Dictionary))
+
+		# Risk level (if available). A negative value means "no base risk for this
+		# pair", which must not be rendered as zero risk. The query also ships the
+		# band name from `VoyageCalculator.risk_label`, so the chart and the voyage
+		# page cannot disagree about which band a score falls into; the numeric
+		# thresholds here are only a fallback for callers that pass a bare score.
+		var risk_level: float = float(_route_data.get("risk_level", -1.0))
+		var risk_band := String(_route_data.get("risk_label", ""))
+		var risk_label := Label.new()
+		risk_label.add_theme_font_size_override("font_size", 12)
+		if risk_level < 0.0 or risk_band == "unknown":
+			risk_label.text = _tr("ui.label.risk") + ": " + _tr("ui.label.risk_unknown")
+			risk_label.add_theme_color_override("font_color", Color(0.62, 0.68, 0.66, 0.85))
+		else:
+			var band_text := _tr("risk." + risk_band) if not risk_band.is_empty() else _risk_level_text(risk_level)
+			risk_label.text = _tr("ui.label.risk") + ": " + band_text
+			risk_label.add_theme_color_override(
+				"font_color",
+				_risk_band_color(risk_band) if not risk_band.is_empty() else _risk_color(risk_level)
+			)
+		vbox.add_child(risk_label)
 		
 		# Explored status
 		var explored := bool(_route_data.get("explored", false))
@@ -190,6 +205,68 @@ func _rebuild() -> void:
 		voyage_btn.add_theme_stylebox_override("pressed", _button_style(Color(0.20, 0.38, 0.35)))
 		voyage_btn.pressed.connect(_on_voyage_pressed)
 		vbox.add_child(voyage_btn)
+
+
+## Coal / water the voyage burns, with the on-board stock so the player can tell
+## whether the trip is affordable before opening the voyage page. Colours follow
+## the same convention as the supply page: sufficient = normal, short = warning.
+func _supply_block(supplies: Dictionary) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	var header := Label.new()
+	header.text = _tr("ui.label.voyage_supplies")
+	header.add_theme_font_size_override("font_size", 12)
+	header.add_theme_color_override("font_color", Color(0.7, 0.8, 0.78, 0.9))
+	box.add_child(header)
+	var sufficient := bool(supplies.get("sufficient", true))
+	for entry in [
+		{"key": "ui.label.coal", "required": "coal_required", "available": "coal_available"},
+		{"key": "ui.label.water", "required": "water_required", "available": "water_available"},
+	]:
+		var required := float(supplies.get(String(entry["required"]), 0.0))
+		var available := float(supplies.get(String(entry["available"]), 0.0))
+		var row := Label.new()
+		row.text = "  %s %s / %s" % [
+			_tr(String(entry["key"])),
+			_format_amount(required),
+			_format_amount(available),
+		]
+		row.add_theme_font_size_override("font_size", 11)
+		var short := available + 0.0001 < required
+		row.add_theme_color_override(
+			"font_color",
+			Color("e8967f") if short else Color(0.65, 0.75, 0.73, 0.85)
+		)
+		box.add_child(row)
+	if not sufficient:
+		var warning := Label.new()
+		warning.text = _tr("ui.hint.supplies_short")
+		warning.add_theme_font_size_override("font_size", 11)
+		warning.add_theme_color_override("font_color", Color("e8967f"))
+		warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(warning)
+	return box
+
+
+## `36` / `36.5` — one decimal only when it adds information, so a panel row
+## does not jitter between integer and fractional values.
+func _format_amount(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return str(int(roundf(value)))
+	return "%.1f" % value
+
+
+## Hours as "2 天 5 小时" / "7 小时"; the smallest unit is hours, matching the
+## clock resolution used by `voyage.preview`.
+func _format_duration(hours: float) -> String:
+	var total := maxi(0, int(roundf(hours)))
+	var days := total / 24
+	var remainder := total % 24
+	if days > 0 and remainder > 0:
+		return "%d %s %d %s" % [days, _tr("unit.days"), remainder, _tr("unit.hours")]
+	if days > 0:
+		return "%d %s" % [days, _tr("unit.days")]
+	return "%d %s" % [remainder, _tr("unit.hours")]
 
 
 func _build_empty_state() -> void:
@@ -239,26 +316,27 @@ func _archetype_label(archetype: String) -> String:
 			return archetype.replace("_", " ").capitalize()
 
 
+## Fallback banding for a bare 0–1 score. `VoyageCalculator` owns the real bands
+## (`RISK_LABEL_LOW` / `RISK_LABEL_HIGH`) and the query ships the resolved name in
+## `risk_label`; when it is present `_risk_band_color` is used instead.
 func _risk_level_text(risk: float) -> String:
-	if risk < 0.3:
-		return _tr("risk.low")
-	elif risk < 0.6:
-		return _tr("risk.medium")
-	elif risk < 0.85:
-		return _tr("risk.high")
-	else:
-		return _tr("risk.extreme")
+	return _tr("risk." + VoyageCalculator.risk_label(risk))
+
+
+func _risk_band_color(band: String) -> Color:
+	match band:
+		"low":
+			return Color("8fd694")  # Green
+		"medium":
+			return Color("e1c487")  # Yellow
+		"high":
+			return Color("e87f7f")  # Red
+		_:
+			return Color(0.62, 0.68, 0.66, 0.85)  # Unknown risk: neutral grey
 
 
 func _risk_color(risk: float) -> Color:
-	if risk < 0.3:
-		return Color("8fd694")  # Green
-	elif risk < 0.6:
-		return Color("e1c487")  # Yellow
-	elif risk < 0.85:
-		return Color("e8967f")  # Orange
-	else:
-		return Color("e87f7f")  # Red
+	return _risk_band_color(VoyageCalculator.risk_label(risk))
 
 
 func _button_style(bg_color: Color) -> StyleBoxFlat:

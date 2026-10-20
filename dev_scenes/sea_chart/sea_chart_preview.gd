@@ -19,7 +19,11 @@ extends Control
 
 const PREVIEW_PROFILE := {
 	"world_size": 400.0,
-	"min_ports": 10,
+	# Same acceptance floor the production generator enforces (design §2.2): the
+	# screenshots are the visual evidence for the 15-20 harbour world, so the
+	# preview must not quietly generate a smaller map.
+	"min_ports": WorldGenerator.MIN_PORTS,
+	"max_ports": WorldGenerator.MAX_PORTS,
 	"max_land_coverage": 0.3,
 	# Core archetype tags: iron_harbor/free_town carry port.shipyard, spice/free/glass carry port.intel.
 	"required_facility_tags": ["port.shipyard", "port.intel"],
@@ -64,6 +68,10 @@ const PREVIEW_PROFILE := {
 		{"archetype_id": "core:port_archetype/glass_port", "region_id": "ocean_1", "landmass_id": "fog_reef", "coast_t": 0.5, "name_key": "port_name.preview.fog_lighthouse"},
 		{"archetype_id": "core:port_archetype/free_town", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.5, "name_key": "port_name.preview.south_wind_port"},
 		{"archetype_id": "core:port_archetype/spice_port", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.5, "name_key": "port_name.preview.glass_atoll_port"},
+		# Two more berths on the outer reefs, so the preview actually exercises the
+		# 15-harbour acceptance floor instead of a smaller hand-made map.
+		{"archetype_id": "core:port_archetype/spice_port", "region_id": "ocean_1", "landmass_id": "bone_reef", "coast_t": 0.5, "name_key": "port_name.preview.bone_harbor"},
+		{"archetype_id": "core:port_archetype/glass_port", "region_id": "ocean_1", "landmass_id": "far_reef", "coast_t": 0.5, "name_key": "port_name.preview.far_reef_port"},
 	],
 }
 
@@ -79,6 +87,8 @@ const PREVIEW_NAMES := {
 	"port_name.preview.fog_lighthouse": "雾灯港",
 	"port_name.preview.south_wind_port": "南风港",
 	"port_name.preview.glass_atoll_port": "玻璃礁港",
+	"port_name.preview.bone_harbor": "骨礁港",
+	"port_name.preview.far_reef_port": "远礁港",
 }
 
 const SEED := 12345
@@ -92,6 +102,11 @@ var _chart: SNSeaChartView
 var _panel: SNSeaChartPanel
 var _translate: Callable
 var _variant: String = "explored"
+## A real run's state data (ship / run clock / abstract map) so the right panel
+## can show genuine voyage estimates instead of inventing numbers. The preview
+## only replaces the coordinate `world_map`; everything the estimate is derived
+## from (ship, boiler strategy, abstract-map routes) stays real domain data.
+var _run_state: Dictionary = {}
 
 
 func _ready() -> void:
@@ -126,6 +141,19 @@ func _bootstrap() -> void:
 	_world = WorldMap.from_dict(world_dict)
 	print("[INFO] preview world: ports=%d landmasses=%d seed=%d" % [
 		_world.ports.size(), _world.landmasses.size(), _world.world_seed,
+	])
+
+	# Real run: supplies the ship, the clock and the abstract-map routes that the
+	# chart's estimate is derived from (see `VoyageEstimator`). Failure is not
+	# fatal — the panel then shows geometry only, exactly like a legacy save.
+	var run := RunFactory.create_run(_context, "core:starting_build/steady", SEED)
+	if bool(run.get("ok", false)):
+		var run_state = (run.get("data", {}) as Dictionary).get("state", null)
+		if run_state is GameState:
+			_run_state = (run_state as GameState).data.duplicate(true)
+	print("[INFO] preview run: ship=%s abstract ports=%d" % [
+		"yes" if not _run_state.is_empty() else "no",
+		(_run_state.get("world", {}).get("ports", {}) as Dictionary).size(),
 	])
 
 
@@ -200,9 +228,13 @@ func set_variant(variant_name: String) -> void:
 				discovered.append(String(neighbor_id))
 				visited.append(String(neighbor_id))
 			# Pick the farthest discovered port as the destination so the ship icon
-			# clearly sits mid-ocean on a long active route.
+			# clearly sits mid-ocean on a long active route. Prefer a destination
+			# that also exists on the abstract map: only those have a base risk, so
+			# the panel can show a real band instead of the "unknown" fallback.
 			var farthest := ""
 			var farthest_distance := -1.0
+			var farthest_abstract := ""
+			var farthest_abstract_distance := -1.0
 			for port_id in discovered:
 				if String(port_id) == start_port.id:
 					continue
@@ -213,7 +245,13 @@ func set_variant(variant_name: String) -> void:
 				if candidate_distance > farthest_distance:
 					farthest_distance = candidate_distance
 					farthest = String(port_id)
-			selected_port = farthest
+				var abstract_world: Dictionary = _run_state.get("world", {})
+				if not abstract_world.is_empty() \
+						and not MapOps.route_between(abstract_world, start_port.id, String(port_id)).is_empty() \
+						and candidate_distance > farthest_abstract_distance:
+					farthest_abstract_distance = candidate_distance
+					farthest_abstract = String(port_id)
+			selected_port = farthest_abstract if not farthest_abstract.is_empty() else farthest
 			at_sea = true
 			if not selected_port.is_empty():
 				var to_port := _world.get_port(selected_port)
@@ -312,6 +350,10 @@ func _apply_state(
 	sailed_path: PackedVector2Array = PackedVector2Array()
 ) -> void:
 	var state := GameState.new()
+	if not _run_state.is_empty():
+		# Keep the run's ship / clock / abstract map; replace only the coordinate
+		# world and the progress the variant wants to show.
+		state.data = _run_state.duplicate(true)
 	state.data["world_map"] = _world.to_dict()
 	state.data["current_port_id"] = ship_port_id
 	state.data["at_sea"] = at_sea

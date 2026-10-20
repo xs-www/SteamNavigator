@@ -18,6 +18,8 @@ extends Control
 ##   "是否已探索"按海岸采样 ≥25% 已揭示判定，而不是只看质心。
 ## - `select_port()` 只改选中态、**不移动视图**；需要移动时显式调 `center_on_port()`。
 ## - `departure_angle` 是弧度，直接用于 cos/sin。
+## - 航行演出用 `set_ship_position()` 逐帧推船只坐标（覆盖 ViewModel 的
+##   `ship_position`），这样每帧只重绘一次海图，不必重新绑定整个 ViewModel。
 ## @end-static-doc
 
 signal port_clicked(port_id: String)
@@ -80,6 +82,9 @@ var _pending_center: String = ""
 ## interpolate instead of reading as hard rectangles.
 var _fog_texture: ImageTexture = null
 var _fog_rect_world: Rect2 = Rect2()
+## Live ship position pushed by the voyage presentation; `null` means "use the
+## ViewModel's `ship_position`" (the in-port / restored-save case).
+var _ship_override: Variant = null
 
 
 func _ready() -> void:
@@ -137,6 +142,23 @@ func select_port(port_id: String) -> void:
 	# from under the cursor. Callers that want to travel to a port use `center_on_port()`.
 	_selected_port = port_id
 	queue_redraw()
+
+
+## Overrides the drawn ship position (world coordinates) without re-binding the
+## whole ViewModel. Used by the at-sea presentation to animate the ship along the
+## route one frame at a time; `clear_ship_position()` returns to the ViewModel's.
+func set_ship_position(world_position: Vector2) -> void:
+	_ship_override = world_position
+	queue_redraw()
+
+
+func clear_ship_position() -> void:
+	_ship_override = null
+	queue_redraw()
+
+
+func has_ship_position() -> bool:
+	return _ship_override != null
 
 
 ## Explicitly pans the chart so `port_id` sits in the middle (entry animation, "show me").
@@ -212,7 +234,7 @@ func _process(delta: float) -> void:
 		return
 	_time += delta
 	# Only redraw when needed (current port pulse, ship movement)
-	var at_sea := bool(view_model.get("at_sea", false))
+	var at_sea := bool(view_model.get("at_sea", false)) or _ship_override != null
 	var current_port := String(view_model.get("current_port_id", ""))
 	if at_sea or not current_port.is_empty():
 		queue_redraw()
@@ -585,13 +607,16 @@ func _draw_ports() -> void:
 
 
 func _draw_ship() -> void:
-	var at_sea := bool(view_model.get("at_sea", false))
+	var at_sea := bool(view_model.get("at_sea", false)) or _ship_override != null
 	if not at_sea:
 		return
-	var ship_pos: Dictionary = view_model.get("ship_position", {})
-	var wx := float(ship_pos.get("x", 0.0))
-	var wy := float(ship_pos.get("y", 0.0))
-	var screen_pos := world_to_screen(Vector2(wx, wy))
+	var world := Vector2.ZERO
+	if _ship_override != null:
+		world = _ship_override
+	else:
+		var ship_pos: Dictionary = view_model.get("ship_position", {})
+		world = Vector2(float(ship_pos.get("x", 0.0)), float(ship_pos.get("y", 0.0)))
+	var screen_pos := world_to_screen(world)
 	var r := clampf(8.0 * sqrt(_zoom), 4.0, 14.0)
 	# Ship icon: filled diamond with pulse
 	var pulse := 1.5 + sin(_time * 3.0) * 1.5

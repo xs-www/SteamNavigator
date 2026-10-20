@@ -29,6 +29,8 @@ OPEN_ALLOWED = {"SN_PS_Deck"}
 ALLOWED_MATERIALS = {
     "SN_White", "SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck",
     "SN_Metal", "SN_Brass", "SN_Flag_Blue", "SN_Flag_White",
+    # 批次 C：本船局部二级白（仅 SN_Paddle_Steamer 使用；共享材质数值保持原值）
+    "SN_PS_UpperWhite",
 }
 PARENT_KEYS = {"ROOT", "PADDLE_PORT", "PADDLE_STARBOARD"}
 REQUIRED = [

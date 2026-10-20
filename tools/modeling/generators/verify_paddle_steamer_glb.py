@@ -18,7 +18,10 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 DEFAULT_GLB = os.path.join(ROOT, "assets", "models", "ships", "SN_Paddle_Steamer.glb")
 
 MATS = {"SN_White", "SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck",
-        "SN_Metal", "SN_Brass", "SN_Flag_Blue", "SN_Flag_White"}
+        "SN_Metal", "SN_Brass", "SN_Flag_Blue", "SN_Flag_White",
+        # Batch C: ship-local secondary white for the superstructure (see
+        # PADDLE_STEAMER_VISUAL_POLISH_C.md); other shared materials stay unused.
+        "SN_PS_UpperWhite"}
 EXPECTED_TRIS = 11764
 EXPECTED_SIZE = (24.56, 10.47, 8.74)   # glTF Y-up: X 船长 / Y 高 / Z 宽
 TOL = 0.30

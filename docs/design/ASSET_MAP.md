@@ -119,13 +119,14 @@
 | --- | --- |
 | 包围盒 | **24.56 × 8.74 × 10.47 m**（LOA 24.0 m，总宽含轮罩，总高含烟囱顶；z -1.32 .. 9.15） |
 | 三角面 | **11764 / 12000** |
-| 材质 | `SN_White` / `SN_Iron_Hull` / `SN_Iron_Red` / `SN_Wood_Deck` / `SN_Metal` / `SN_Brass` / `SN_Flag_Blue` / `SN_Flag_White`（新增 3 个，复用 5 个） |
+| 材质 | `SN_White` / `SN_Iron_Hull` / `SN_Iron_Red` / `SN_Wood_Deck` / `SN_Metal` / `SN_Brass` / `SN_Flag_Blue` / `SN_Flag_White`（新增 3 个，复用 5 个；批次 C 后为 9 槽，新增仅本船使用的 `SN_PS_UpperWhite`） |
 | 结构 | 16 站放样白漆船身 + 深色水线以下船底 + 暗红压条；两舷 10 桨叶明轮（14 段双轮缘 / 每侧 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑 / 曲柄销）+ 梯形格栅轮罩（10 道水平格栅 + 深色内衬 + 暗红顶沿 + 黄铜铭牌）+ 明轮台走台/栏杆；主甲板客舱（白墙 + 玻璃窗 + 黄铜窗台 + 木门）、游步甲板 + 白色立柱雨棚 + 前后栏杆；前驾驶室（三面窗 + 顶板 + 双侧 `ENTERPRISE` 文字铭牌 + 黄铜钟）；锅炉围罩 + 黑烟囱（黄铜箍 / 暗红顶圈）+ 黄铜蒸汽管；艏旗杆 + 澳洲旗（蓝底 / 白十字 / 红星 / 南十字星）、艏部锚/绞盘/系缆桩、艉部弧形低平台 + 栏杆 + 舵/舵柄 + 救生圈/卷缆 |
 | 蒸汽 | **不建模**：烟囱蒸汽由游戏内粒子/VFX 渲染（用户 2026-10-19 明确要求） |
-| 运行时 GLB | `assets/models/ships/SN_Paddle_Steamer.glb`（35 节点 / 32 网格 / 11764 tri / 8 材质 doubleSided / 632.7 KB / glTF Y-up，轴心水线 z=0） |
+| 运行时 GLB | `dev_mods/core/assets/models/ships/SN_Paddle_Steamer.glb`（35 节点 / 32 网格 / 11764 tri / 9 材质 doubleSided / 633.3 KB / sha256 `cefec2b7aa2d` / glTF Y-up，轴心水线 z=0） |
 | 源文件 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合，工作台 196 对象）+ `.design/ships/SN_Paddle_Steamer.blend`（35 对象独立快照） |
 | 工单/脚本 | `briefs/sn_ship_paddle_steamer.json`、`sn_paddle_steamer_generator.py`、`dryrun_paddle_steamer.py`、`render_paddle_steamer_preview.py`、`verify_paddle_steamer_scene.py`、`export_paddle_steamer_glb.py`、`verify_paddle_steamer_glb.py` |
-| 截图 | `docs/design/screenshots/paddle_steamer_{three_quarter,broadside,bow,stern_quarter,top}.png` |
+| 截图 | before `paddle_steamer_{three_quarter,broadside,bow,stern_quarter,top}.png`；after `paddle_steamer_*_batchc.png`；Godot 实机 `docs/design/screenshots/paddle_steamer_c/shipyard_paddle_steamer_{1440x900,960x540}.png` |
+| 批次 C 精修 | 雨棚减重（覆盖 63.72→41.34 m2 / 游步甲板 71.4→46.3%，4 薄板+3 分缝+后段 3 m 露空，薄边 0.14→0.07）；明度层级（白船身 0.870 > 舱室 0.680 > 甲板 0.300）；暗红压条加粗（舷墙压顶 0.055→0.075 等）；tri/尺寸/轴心/层级/旗/铭牌/明轮安全不变，共享材质已恢复。报告 [PADDLE_STEAMER_VISUAL_POLISH_C.md](../archive/PADDLE_STEAMER_VISUAL_POLISH_C.md) |
 
 > 纯展示资产：若将来作为第 5 种船体 / 内河客运场景接入，需要补 Core 内容 JSON、manifest 资源键、本地化、Godot 导入验收与 2.5D 舞台目标机位试装。明轮几何挂在 `SN_PS_Paddle_*_Pivot` 下，可直接绕 Y 轴做旋转动画；蒸汽建议在 Godot 侧用烟囱顶 `SN_PS_Funnel` 作为发射点做粒子。
 
@@ -207,6 +208,18 @@
 - Core manifest 新增 5 个 `model.prop.*_lod1` 资产键（LOD0 路径不变；清单资产键 75→80）。
 - 生成器/导出/自检：`tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py`（Long LOD0）、`sn_iron_harbor_{warehouse_short,harbor_office,cargo_shed,tavern}_generator.py`（其余 LOD0）、`sn_iron_harbor_architecture_lod1_generator.py`（5 栋 LOD1）、`sn_iron_harbor_materials.py`（共享材质/UV）、`glb_shared_textures.py`（内嵌贴图→外部共享 URI + BIN 压缩）、`export_iron_harbor_architecture_lod_glb.py`（Blender 侧 LOD0+LOD1 逐件导出）、`verify_iron_harbor_architecture_lod_glb.py`（纯 Python 结构/tri/bbox/贴图总量复检）。
 - 验收工具：`tools/godot/capture_port_stage_res.gd`（1440×900 / 960×540，第三参数 LOD0/LOD1）、`tools/godot/measure_port_stage.gd`（draw calls / batches / surfaces，`-- --core-zip` 走挂载 ZIP 路径）、`tools/godot/verify_shared_textures.gd`（共享贴图实例探针）。
+
+### 批次 B 新增三栋原型（2026-10-20）
+
+| 资产 | LOD0 GLB | LOD1 GLB | 尺寸 X×Y×Z (m) | LOD0 tri | LOD1 tri | 上限 |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| `SN_HT_Boiler_House` | `…/SN_HT_Boiler_House.glb` | `…/SN_HT_Boiler_House_LOD1.glb` | 12×10×12 | 7 388 | 2 536 | 8 000 / 2 800 |
+| `SN_HT_Workshop_Row` | `…/SN_HT_Workshop_Row.glb` | `…/SN_HT_Workshop_Row_LOD1.glb` | 18×7×8.5 | 7 312 | 2 444 | 8 000 / 2 800 |
+| `SN_HT_Brick_Tenement` | `…/SN_HT_Brick_Tenement.glb` | `…/SN_HT_Brick_Tenement_LOD1.glb` | 10×8×12 | 9 376 | 2 704 | 14 000 / 4 900 |
+
+- 复用同一套共享 trim sheet；新增共享 tile 仅 `brick_wall_soot`（12 张共享 PNG，2.03 MB）；新原型 6 GLB 合计 1.96 MB；8 栋建筑模型+纹理 6.27 MB，core zip 6.65 MB。
+- 组合接线：`iron_harbor` = WR + BH（warehouse_long/tavern 槽）；`spice_port` = WR + BT（warehouse_long/harbor_office 槽）；其余三港保持旧 5 栋。组合截图见 `docs/design/screenshots/iron_harbor_architecture/…_combo_{a,b,old}_port_stage_{1440x900,1280x720,960x540}.png`。
+- 实测：combo_a 75 376 tri / 72 draws / 42 batches；combo_b 72 144 tri / 71 draws / 41 batches（松散与 ZIP 一致）。报告：[IRON_HARBOR_ARCHITECTURE_BATCH_B.md](../archive/IRON_HARBOR_ARCHITECTURE_BATCH_B.md)。
 
 ### 舞台装配与性能（批次 A 实测）
 

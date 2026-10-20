@@ -16,7 +16,9 @@
 | `godot/capture_port_stage.gd` | PortStage 真实渲染截图（窗口模式 1440×900）：加载 `port_stage_preview.tscn`，依次抓 `preview`（harbor/stage）、`sparse`、`market` 站位、`supply` 站位与 `harbor` 的 panel 构图共 5 张，输出到 `docs/design/screenshots/port_stage/`。 | [查看](./godot/capture_port_stage.gd.md) |
 | `godot/capture_port_stage_res.gd` | 铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行；第三个参数可切换 LOD0/LOD1 标签与 tri 期望，用于 LOD1 临时入舞台的 960×540 可读性证据。 | [查看](./godot/capture_port_stage_res.gd.md) |
 | `godot/capture_sea_chart.gd` | 海图系统（阶段 2）的真实渲染截图工具，窗口 1440×900 挂载 | [查看](./godot/capture_sea_chart.gd.md) |
+| `godot/capture_voyage_presentation.gd` | 航行演出（海图系统阶段 3）的真实渲染截图工具。窗口模式挂载真正的 | [查看](./godot/capture_voyage_presentation.gd.md) |
 | `godot/measure_port_stage.gd` | PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与三个站位（market/harbor/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。 | [查看](./godot/measure_port_stage.gd.md) |
+| `godot/preview_voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**实机演示**：窗口模式下自动开一局、发出真实的 | [查看](./godot/preview_voyage_presentation.gd.md) |
 | `godot/verify_harbor_diorama.gd` | 港口样片验收（只读）：场景可加载、新浮船 SN_Schooner_Fame 在场景且旧船已移除、无星条旗、水面使用自定义着色器、浮船随波运动、未接入主场景。 | [查看](./godot/verify_harbor_diorama.gd.md) |
 | `godot/verify_port_facilities.gd` | 港口设施锚点 GLB 导入验收（只读）：加载 `assets/models/port/SN_*.glb` 6 件，量测 Godot 侧包围盒 / 三角面 / 材质名，对照工单尺寸与调色板判定。 | [查看](./godot/verify_port_facilities.gd.md) |
 | `godot/verify_props.gd` | 道具 GLB 导入验收（只读）：加载 `assets/models/props/*.glb`，量测 Godot 侧包围盒、三角面与材质名，对照 brief 尺寸判定尺度与轴向。 | [查看](./godot/verify_props.gd.md) |
@@ -46,10 +48,13 @@
 | `modeling/generators/dryrun_lod1_batch_a.py` | 批次 A（5 栋建筑 LOD1）的**纯 Python 干跑**：不进 Blender，先把 LOD1 的 tri / 上限 / | [查看](./modeling/generators/dryrun_lod1_batch_a.py.md) |
 | `modeling/generators/dryrun_paddle_steamer.py` | 明轮蒸汽船纯 Python 干跑：空壳替换 bpy/bmesh 后核对 tri 预算、包围盒/Z 范围、边界/非流形边、退化面、孤立点、材质名单、父级键与左右镜像误差。 | 本页 |
 | `modeling/generators/dryrun_props.py` | 通用纯 Python 干跑：把 bpy/bmesh 换成空壳加载生成器，离线校验 tri 预算、包围盒、边界边/非流形边/退化面。 | 本页 |
+| `modeling/generators/dryrun_prototypes_batch_b.py` | 批次 B 第一阶段（三栋新原型 LOD0）的**纯 Python 干跑**：不进 Blender，先收敛 | [查看](./modeling/generators/dryrun_prototypes_batch_b.py.md) |
+| `modeling/generators/dryrun_prototypes_lod1.py` | 批次 B 第二阶段（三栋新原型 **LOD1**）的纯 Python 干跑：不进 Blender，把 | [查看](./modeling/generators/dryrun_prototypes_lod1.py.md) |
 | `modeling/generators/dryrun_schooner_fame.py` | 纵帆船纯 Python 干跑：对 FORE/MAIN 子件施加 pivot 世界变换后核对 tri/bbox/边界边/非流形/退化/孤立点/材质/命名/父级，并断言两桅轴距 6.4 m、双桅后倾与主桅更高（R1 P0 回归护栏）。 | 本页 |
 | `modeling/generators/dryrun_ship.py` | 船只生成器纯 Python 干跑：空壳替换 bpy/bmesh 后加载生成器，核对 tri 预算、包围盒、边界/非流形边、退化面、材质名与父级。 | 本页 |
 | `modeling/generators/export_iron_harbor_architecture_glb.py` | 把 `SN_HT_Warehouse_Long_LOD0` 装配进 PortStage 的导出/还原工具：备份旧内容 GLB → 单对象导出（带内嵌 trim sheet 贴图）到内容路径 → 保留候选副本；`restore_legacy_glb()` 还原。 | [查看](./modeling/generators/export_iron_harbor_architecture_glb.py.md) |
 | `modeling/generators/export_iron_harbor_architecture_lod_glb.py` | 批次 A 的 Blender 侧导出器：把工作台里 5 栋 LOD0 + 5 栋 LOD1 逐件导出为单对象、根节点归零、内嵌贴图的 GLB 候选，并输出逐件 tri/尺寸/材质槽/cell/结构报告；后续由 `glb_shared_textures.py`（纯 Python、Blender 外）统一外部化共享贴图并安装进内容模组。 | [查看](./modeling/generators/export_iron_harbor_architecture_lod_glb.py.md) |
+| `modeling/generators/export_iron_harbor_prototypes_glb.py` | 批次 B 的 Blender 侧导出器：把工作台 y=200 / y=225 两排的三栋新原型（LOD0 + LOD1）逐件导出为单对象、根节点归零、内嵌贴图的 GLB 候选，并输出 tri/尺寸/材质槽/cell 报告；随后由 `glb_shared_textures.py` 外部化为共享贴图并安装进内容模组。 | [查看](./modeling/generators/export_iron_harbor_prototypes_glb.py.md) |
 | `modeling/generators/export_ironclad_glb.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/export_modules_glb.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/export_paddle_steamer_glb.py` | 明轮蒸汽船 GLB 归档：备份旧 GLB → 保存工作台 → 根节点临时归零导出 → libraries.write 船体快照（不切文件）→ 还原 (45,0,0) 并重存工作台。 | 本页 |
@@ -86,16 +91,18 @@
 | `modeling/generators/sn_iron_harbor_harbor_office_generator.py` | 铁港建筑套件第二批：`SN_HT_Harbor_Office` LOD0 的几何唯一真源（纯 Python，无 bpy）；镇里最高的钟楼地标。 | [查看](./modeling/generators/sn_iron_harbor_harbor_office_generator.py.md) |
 | `modeling/generators/sn_iron_harbor_kit_batch2.py` | 铁港建筑套件第二批的 Blender 装配/自检/导出 harness：把 4 个纯 Python 生成器的 Part 变成单 mesh 对象、按栋写共享 trim sheet 材质与 UV、逐栋自检、导出内容 GLB、出预览图。 | [查看](./modeling/generators/sn_iron_harbor_kit_batch2.py.md) |
 | `modeling/generators/sn_iron_harbor_materials.py` | 铁港建筑套件的**共享材质库**：6 个调色板材质槽 → trim sheet 的 6 个 cell（一张 512² 平铺贴图）+ 盒投影 UV + 自检；所有 SN 铁港建筑生成器都调用它，不各自建材质。 | [查看](./modeling/generators/sn_iron_harbor_materials.py.md) |
+| `modeling/generators/sn_iron_harbor_prototypes_generator.py` | 铁港建筑套件**批次 B**（三栋新原型 LOD0 + LOD1）的**参数化真源生成器 + Blender 侧 | [查看](./modeling/generators/sn_iron_harbor_prototypes_generator.py.md) |
 | `modeling/generators/sn_iron_harbor_tavern_generator.py` | 铁港建筑套件第二批：`SN_HT_Tavern` LOD0 的几何唯一真源（纯 Python，无 bpy）；两层门廊酒馆。 | [查看](./modeling/generators/sn_iron_harbor_tavern_generator.py.md) |
 | `modeling/generators/sn_iron_harbor_warehouse_short_generator.py` | 铁港建筑套件第二批：`SN_HT_Warehouse_Short` LOD0 的几何唯一真源（纯 Python，无 bpy），Part 交给 `sn_iron_harbor_kit_batch2.py` 装配/上材质/导出。 | [查看](./modeling/generators/sn_iron_harbor_warehouse_short_generator.py.md) |
 | `modeling/generators/sn_ironclad_generator.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/sn_mooring_bollard_generator.py` | 系缆桩生成器（十字桩头 + 方形法兰板 + 四螺栓 + 喇叭脚柱身）；单件 API，不走 dryrun_props。 | 本页 |
 | `modeling/generators/sn_paddle_freighter_generator.py` | 明轮货轮参数化生成器：铁壳船身 + 两舷明轮（14 桨叶/8 辐条/双轮缘/内加强环/斜撑）+ 半包轮罩箱板（观察窗/端封让开轮扫掠）+ 双烟囱 + 三岛甲板 + 艏艉楼侧封板 + 货舱吊杆，全部几何由顶部参数表重建（预算 ≤14000 tri）。 | 本页 |
-| `modeling/generators/sn_paddle_steamer_generator.py` | 小型明轮蒸汽船（PS Enterprise 参考）参数化生成器：24 m 白漆内河船身 + 两舷 10 桨叶明轮 + 梯形格栅轮罩 + 前驾驶室（ENTERPRISE 文字铭牌）+ 后部雨棚游步甲板 + 黑烟囱 + 艏旗杆澳洲旗 + 艉部弧形平台/舵；蒸汽不建模（留给游戏内 VFX），预算 ≤12000 tri，几何全部由顶部参数表重建。 | 本页 |
+| `modeling/generators/sn_paddle_steamer_generator.py` | `SN_Paddle_Steamer`（澳大利亚内河明轮蒸汽船）的**参数化真源生成器 + Blender 侧装配/自检**： | [查看](./modeling/generators/sn_paddle_steamer_generator.py.md) |
 | `modeling/generators/sn_port_facilities_generator.py` | 港口设施锚点第一批 6 件生成器（市场棚 / 告示板 / 水箱 / 信号塔 / 龙门吊 / 干船坞）：纯几何函数可离线干跑，单件一个 mesh、原点在底面中心，集合 SN_Port_Facilities，合计 4996 tri；本批新增 SN_Iron。 | 本页 |
 | `modeling/generators/sn_schooner_fame_generator.py` | 1795 年 Salem 双桅纵帆船 SN_Schooner_Fame 参数化生成器：18 站放样黑船身 + 赭黄上舷带 + 双桅后倾（Fore -2.5° / Main -3.2°）+ 斜桁帆/方顶帆/三角顶帆 + 两面艏三角帆 + 舷侧绳梯/支索/动索 + 甲板属具（舱口/绞盘/舵轮/罗经柜/锚/木桶/盘绳/fife rails/短梯）+ 艉廊/3 窗/FAME 铭牌 + 红白长旒；帆腹镜像到 -Y（Godot +Z 相机侧），预算 ≤18000 tri。 | 本页 |
 | `modeling/generators/sn_ship_modules_generator.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/verify_iron_harbor_architecture_lod_glb.py` | 批次 A 运行时建筑资产的纯 Python 结构复检：逐件解析 `dev_mods/core/assets/models/props/SN_HT_*.glb`（5×LOD0 + 5×LOD1），核对 tri/单根节点/材质槽/共享外部贴图 URI/LOD0↔LOD1 包围盒与轴心，并汇总「模型+纹理」总量是否 ≤4.5 MB。不依赖 Blender/Godot，可在 CI 与验收脚本里复跑。 | [查看](./modeling/generators/verify_iron_harbor_architecture_lod_glb.py.md) |
+| `modeling/generators/verify_iron_harbor_prototypes_glb.py` | 批次 B 三栋新原型（Boiler House / Workshop Row / Brick Tenement）运行时 GLB 的纯 Python 结构复检：逐件解析 LOD0+LOD1，核对 tri（LOD0 精确值 / LOD1 硬上限）、单根节点、材质槽、共享外部贴图 URI、LOD0↔LOD1 包围盒与轴心，并汇总「新原型模型+新增共享贴图」的包体增量。不依赖 Blender/Godot，可在 CI 与验收脚本里复跑。 | [查看](./modeling/generators/verify_iron_harbor_prototypes_glb.py.md) |
 | `modeling/generators/verify_ironclad_glb.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/verify_modules_glb.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/verify_paddle_steamer_glb.py` | 明轮蒸汽船 GLB 结构自检（纯 Python）：节点/网格数、8 材质 doubleSided、tris=11764、glTF Y-up 包围盒与 −1.32 m 水线轴心，并拒绝蒸汽几何泄漏。 | 本页 |

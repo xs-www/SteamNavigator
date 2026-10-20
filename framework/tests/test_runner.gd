@@ -46,6 +46,8 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_world_generator.gd",
 	"res://framework/tests/cases/test_fog_system.gd",
 	"res://framework/tests/cases/test_sea_chart.gd",
+	"res://framework/tests/cases/test_voyage_presentation.gd",
+	"res://framework/tests/cases/test_voyage_flow.gd",
 ]
 
 var _started := false

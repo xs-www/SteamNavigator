@@ -20,7 +20,9 @@ const SEED_B := 67890
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const TEST_PROFILE := {
 	"world_size": 400.0,
-	"min_ports": 10,
+	# Design freeze (NAUTICAL_CHART_SYSTEM.md §2.2/§12): 15-20 harbours per run.
+	"min_ports": 15,
+	"max_ports": 20,
 	"max_land_coverage": 0.3,
 	"required_facility_tags": ["port.shipyard", "port.intelligence"],
 	"required_facility_max_edges": 2,
@@ -46,19 +48,24 @@ const TEST_PROFILE := {
 	"ports": [
 		# The start port uses a real Core archetype / name key so the query's
 		# `archetype_name_key` / `region_name_key` resolution is actually exercised.
-		{"archetype_id": "core:port_archetype/iron_harbor", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.2, "name_key": "port_name.core.iron_harbor", "is_start": true},
-		{"archetype_id": "port_archetype_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.4, "name_key": "port.spice_harbor"},
-		{"archetype_id": "port_archetype_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.6, "name_key": "port.free_town"},
-		{"archetype_id": "port_archetype_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.8, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
-		{"archetype_id": "port_archetype_5", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.5, "name_key": "port.iron_port"},
-		{"archetype_id": "port_archetype_6", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.3, "name_key": "port.glass_port"},
-		{"archetype_id": "port_archetype_7", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.7, "name_key": "port.south_station"},
-		{"archetype_id": "port_archetype_8", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.2, "name_key": "port.north_outpost"},
-		{"archetype_id": "port_archetype_9", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.8, "name_key": "port.ice_wind"},
-		{"archetype_id": "port_archetype_10", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.5, "name_key": "port.coral_station"},
-		{"archetype_id": "port_archetype_11", "region_id": "ocean_1", "landmass_id": "fog_reef", "coast_t": 0.5, "name_key": "port.fog_lighthouse"},
-		{"archetype_id": "port_archetype_12", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.5, "name_key": "port.south_wind_port"},
-		{"archetype_id": "port_archetype_13", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.5, "name_key": "port.glass_atoll_port"},
+		{"archetype_id": "core:port_archetype/iron_harbor", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.10, "name_key": "port_name.core.iron_harbor", "is_start": true},
+		{"archetype_id": "port_archetype_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.24, "name_key": "port.spice_harbor"},
+		{"archetype_id": "port_archetype_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.38, "name_key": "port.free_town"},
+		{"archetype_id": "port_archetype_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.52, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
+		{"archetype_id": "port_archetype_5", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.68, "name_key": "port.iron_port"},
+		{"archetype_id": "port_archetype_6", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.84, "name_key": "port.glass_port"},
+		{"archetype_id": "port_archetype_7", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.20, "name_key": "port.south_station"},
+		{"archetype_id": "port_archetype_8", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.55, "name_key": "port.north_outpost"},
+		{"archetype_id": "port_archetype_9", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.88, "name_key": "port.ice_wind"},
+		{"archetype_id": "port_archetype_10", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.25, "name_key": "port.coral_station"},
+		{"archetype_id": "port_archetype_11", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.72, "name_key": "port.fog_lighthouse"},
+		{"archetype_id": "port_archetype_12", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.40, "name_key": "port.south_wind_port"},
+		{"archetype_id": "port_archetype_13", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.18, "name_key": "port.glass_atoll_port"},
+		{"archetype_id": "port_archetype_14", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.50, "name_key": "port.mist_cove"},
+		{"archetype_id": "port_archetype_15", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.85, "name_key": "port.bone_harbor"},
+		{"archetype_id": "port_archetype_16", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.35, "name_key": "port.reef_haven"},
+		{"archetype_id": "port_archetype_17", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.50, "name_key": "port.atoll_haven"},
+		{"archetype_id": "port_archetype_18", "region_id": "ocean_1", "landmass_id": "moon_atoll", "coast_t": 0.50, "name_key": "port.moon_haven"},
 	],
 }
 
@@ -170,6 +177,194 @@ func test_sea_chart_query_routes_between_discovered_ports() -> void:
 		var distance: float = float(route["distance"])
 		assert_true(distance > 0.0, "distance should be positive")
 		assert_true(distance < 10000.0, "distance should be reasonable")
+
+
+## Phase 2 required the right-hand panel to show estimated time, consumption and
+## risk. The world's stored edge only has geometry, so the query layer has to
+## derive the rest from the ship and the sailing rules: every route must carry a
+## positive travel time, a supply block and a risk level that the panel can print.
+func test_sea_chart_routes_carry_voyage_estimates() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": SEED_A})
+	var world := WorldOps.world_map(context.state)
+	var current := WorldOps.current_port_id(context.state)
+	# A fresh run only knows its starting harbour, so no edge has both ends
+	# discovered yet. Reveal the start's chart neighbours the way exploration
+	# would, so the query has real edges to estimate.
+	for neighbor_id in WorldOps.neighbors(world, current):
+		WorldOps.discover_port_id(context.state, String(neighbor_id))
+
+	var result := SeaChartViewQuery.execute({}, context)
+	var vm: Dictionary = result.get("data", {})
+	var routes: Array = vm.get("routes", [])
+	assert_true(routes.size() > 0, "the real run should expose at least one chart route")
+
+	var stats := ShipOps.stats(context.registries, context.state.ship())
+	for route in routes:
+		var label := "%s-%s" % [route.get("from", ""), route.get("to", "")]
+		assert_true(route.has("travel_hours"), "route %s should carry travel_hours" % label)
+		assert_true(float(route.get("travel_hours", 0.0)) > 0.0,
+			"route %s should have a positive travel time" % label)
+		assert_true(float(route.get("speed", 0.0)) > 0.0, "route %s should report the effective speed" % label)
+		assert_true(route.has("supplies"), "route %s should carry a supply estimate" % label)
+		assert_true(route.has("risk_level"), "route %s should carry a risk level" % label)
+		var supplies: Dictionary = route.get("supplies", {})
+		assert_true(float(supplies.get("coal_required", -1.0)) >= 0.0,
+			"route %s should estimate coal" % label)
+		assert_true(float(supplies.get("water_required", -1.0)) >= 0.0,
+			"route %s should estimate water" % label)
+		# The estimate must agree with the voyage preview formula: distance / speed.
+		var expected_hours := float(route.get("voyage_distance", 0.0)) / float(route.get("speed", 1.0))
+		assert_almost_eq(float(route.get("travel_hours", 0.0)), expected_hours, 0.01,
+			"route %s travel time should be distance / speed" % label)
+		# Coal is duration × boiler rate × strategy coal multiplier. Recompute it
+		# from the route's own travel time and the reported strategy.
+		var strategy_id := String(route.get("strategy_id", ""))
+		var strategy := context.registries.get_by_id(ContentTypes.STRATEGY, strategy_id)
+		var coal_mul := float(strategy.data.get("coal_mul", 1.0)) if strategy != null else 1.0
+		var water_mul := float(strategy.data.get("water_mul", 1.0)) if strategy != null else 1.0
+		var expected_coal := float(route.get("travel_hours", 0.0)) * float(stats.get("coal_rate", 0.0)) * coal_mul
+		assert_almost_eq(float(supplies.get("coal_required", 0.0)), expected_coal, 0.05,
+			"route %s coal should be duration × boiler rate × strategy multiplier" % label)
+		var expected_water := float(route.get("travel_hours", 0.0)) * (
+			float(stats.get("water_rate", 0.0)) * water_mul
+			+ float(ShipOps.passenger_count(context.state)) * VoyageCalculator.PASSENGER_WATER_RATE
+		)
+		assert_almost_eq(float(supplies.get("water_required", 0.0)), expected_water, 0.05,
+			"route %s water should match the preview's water rule" % label)
+
+		# The twin world's MST graph is not the abstract map's graph (a known
+		# boundary recorded in todo.md), so only pairs that exist on both can be
+		# cross-checked. For those, the chart estimate must equal the preview.
+		var from_id := String(route.get("from", ""))
+		var to_id := String(route.get("to", ""))
+		var destination := to_id if from_id == current else (from_id if to_id == current else "")
+		if destination.is_empty():
+			continue
+		var abstract_route := MapOps.route_between(context.state.world(), current, destination)
+		if abstract_route.is_empty():
+			assert_eq(String(route.get("distance_source", "")), "chart",
+				"route %s has no abstract-map counterpart, so it estimates on chart distance" % label)
+			assert_eq(String(route.get("risk_source", "")), "none",
+				"route %s has no abstract-map counterpart, so its risk is unknown" % label)
+			assert_almost_eq(float(route.get("risk_level", 0.0)), -1.0, 0.0001,
+				"route %s should report unknown risk (-1), not zero" % label)
+			continue
+		var preview := context.commands.execute(&"voyage.preview", {
+			"destination_id": destination,
+			"strategy_id": String(route.get("strategy_id", "")),
+		})
+		assert_true(bool(preview.get("ok", false)), "preview for %s should succeed" % label)
+		var preview_data: Dictionary = preview.get("data", {})
+		assert_almost_eq(float(route.get("travel_hours", 0.0)), float(preview_data.get("duration_hours", 0.0)), 0.05,
+			"chart estimate for %s should match voyage.preview duration (both feed the same voyage)" % label)
+		assert_almost_eq(float(route.get("risk_level", -1.0)), float(preview_data.get("risk_score", -2.0)), 0.02,
+			"chart risk for %s should match voyage.preview risk" % label)
+		assert_eq(String(route.get("distance_source", "")), "voyage",
+			"a route that exists on the abstract map should estimate on the voyage distance")
+
+
+## The panel is a pure renderer: when the query supplies the estimate it must
+## print estimated time, supplies and risk, and it must not print a made-up
+## "no risk" line when the query reports an unknown risk.
+func test_sea_chart_panel_renders_voyage_estimates() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	_setup_world_and_state(SEED_A, context)
+	var world := WorldMap.from_dict(context.state.data["world_map"])
+	var start_port := world.get_start_port()
+	var neighbor_id := String(WorldOps.neighbors(world, start_port.id)[0])
+
+	var panel := SNSeaChartPanel.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(panel)
+	var port_data := {"id": neighbor_id, "name_key": "port_name.core.mist_cove"}
+	var route_data := {
+		"from": start_port.id,
+		"to": neighbor_id,
+		"distance": 120.0,
+		"travel_hours": 30.0,
+		"risk_level": 0.42,
+		"risk_label": VoyageCalculator.risk_label(0.42),
+		"supplies": {
+			"coal_required": 36.0,
+			"coal_available": 120.0,
+			"water_required": 24.0,
+			"water_available": 60.0,
+			"sufficient": true,
+		},
+	}
+	panel.bind(port_data, route_data, Callable(context, "translate"))
+	var texts := _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.label.estimated_time")),
+		"the panel should print the estimated travel time, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.label.voyage_supplies")),
+		"the panel should print the supply estimate, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.label.coal")),
+		"the panel should print the coal requirement, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("risk." + VoyageCalculator.risk_label(0.42))),
+		"the panel should print the risk band the query reported, got: %s" % str(texts))
+	# 30 hours renders as "1 天 6 小时", not the raw float.
+	assert_true(_any_text_contains(texts, context.translate("unit.days")),
+		"the duration should use day/hour units, got: %s" % str(texts))
+
+	# Short supplies: the panel still renders, but flags the shortfall.
+	panel.bind(port_data, {
+		"from": start_port.id,
+		"to": neighbor_id,
+		"distance": 120.0,
+		"travel_hours": 12.0,
+		"risk_level": 0.2,
+		"risk_label": VoyageCalculator.risk_label(0.2),
+		"supplies": {
+			"coal_required": 90.0,
+			"coal_available": 20.0,
+			"water_required": 10.0,
+			"water_available": 80.0,
+			"sufficient": false,
+		},
+	}, Callable(context, "translate"))
+	texts = _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.hint.supplies_short")),
+		"a short supply estimate should warn, got: %s" % str(texts))
+
+	# The query's band wins over the numeric fallback, so the chart and the voyage
+	# page can never disagree about the same score.
+	panel.bind(port_data, {
+		"from": start_port.id, "to": neighbor_id, "distance": 120.0,
+		"risk_level": 0.42, "risk_label": "medium",
+	}, Callable(context, "translate"))
+	texts = _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("risk.medium")),
+		"an explicit risk_label should override the numeric fallback, got: %s" % str(texts))
+
+	# Unknown risk (no abstract-map route) must not look like zero risk.
+	panel.bind(port_data, {"from": start_port.id, "to": neighbor_id, "distance": 120.0}, Callable(context, "translate"))
+	texts = _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.label.risk_unknown")),
+		"an unknown risk should be labelled as such, got: %s" % str(texts))
+	assert_false(_any_text_contains(texts, context.translate("risk.low")),
+		"an unknown risk must not be rendered as low risk, got: %s" % str(texts))
+	panel.free()
+
+
+func _label_texts(root: Node) -> Array[String]:
+	var texts: Array[String] = []
+	for child in root.get_children():
+		if child is Label:
+			texts.append(String((child as Label).text))
+		texts.append_array(_label_texts(child))
+	return texts
+
+
+func _any_text_contains(texts: Array[String], needle: String) -> bool:
+	if needle.is_empty():
+		return false
+	for text in texts:
+		if text.contains(needle):
+			return true
+	return false
 
 
 func test_sea_chart_query_fog_grid_downsampled() -> void:

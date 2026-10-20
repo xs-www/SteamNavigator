@@ -1,7 +1,8 @@
 # Steam Navigator 下一批 3D 建模与资产优化需求 v1
 
-> 状态：**DRAFT / 待人工批准**  
-> 日期：2026-10-20  
+> 状态：**已批准并执行完成（A/B/C 三批全部通过；人工视觉门禁 2026-10-21 通过）**  
+> 日期：2026-10-20（需求）/ 2026-10-21（收尾）  
+> 执行记录：A 批 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](IRON_HARBOR_ARCHITECTURE_BATCH_A.md) / [BATCH_A_VERIFY](IRON_HARBOR_ARCHITECTURE_BATCH_A_VERIFY.md)；B 批 [IRON_HARBOR_ARCHITECTURE_BATCH_B.md](IRON_HARBOR_ARCHITECTURE_BATCH_B.md) / [BATCH_B_VERIFY](IRON_HARBOR_ARCHITECTURE_BATCH_B_VERIFY.md)；C 批 [PADDLE_STEAMER_BATCH_C.md](PADDLE_STEAMER_BATCH_C.md) / [C_VERIFY](PADDLE_STEAMER_VISUAL_POLISH_C_VERIFY.md)。收尾状态：完整测试 **252/252 全绿**（2026-10-21）；剩余唯一门禁为 release 发布包启动——打包版 content=52 严格校验 fatal、同刻编辑器松散加载 content=51 ok，已定位为外部内容源/发布打包差异，待单独排查。  
 > 范围：只定义需求与验收门禁；本文件不授权开始建模、替换 GLB 或修改运行时接线。
 
 ## 1. 背景与目标

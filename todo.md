@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**227 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 15 / 迷雾系统 17 / 海图 UI 16 / 入口集成·绕行自适应·真实对局孪生世界 +4）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 已做真实渲染视觉验收**（4 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**252 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 18 / 迷雾系统 17 / 海图 UI 21 / 航行演出 19 / 入口集成·绕行自适应·真实对局孪生世界 +4）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 与航行演出均已做真实渲染视觉验收**（海图 4 张 + 演出 5 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14/§15](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -374,9 +374,13 @@
   - `test_same_seed_produces_identical_world()`: 同seed两次生成完全一致
   - `test_different_seeds_produce_different_worlds()`: 不同seed产生不同世界
 - [x] 15-20 港口合理分布验证
-  - 测试验证：港口数量10-20个、锚定到海岸线（距离<2单位）、最小间距15单位
-  - 必需设施（船厂/情报站）在起点2条边内
-  - 所有港口从起点可达
+  - `WorldGenerator.MIN_PORTS = 15` / `MAX_PORTS = 20` 为冻结常量，`_validate_world` 缺省按此校验；港口不足直接判生成失败（`too few ports: N < 15`），不再静默返回小图
+  - 正式 profile 走 `WorldGenerator.formal_profile(definition)`：把内容层 `map_profiles` 定义（`port_count_range` / `archetypes` / `port_name_keys` / `required_facility_tags`）展开成 5 区域、11 块陆地（1 大陆 + 5 大岛 + 3 小岛 + 2 环礁）与 `FORMAL_PORT_SLOTS` 港口槽位（起始大陆 6 港、大岛 2–3 港、小岛/环礁各 1 港）
+  - 生成失败改为回传最后一次尝试的真实原因（`too few ports: 11 < 15`），不再吞成「failed after 60 attempts」
+  - 测试夹具从 13 港提到 18 港（`test_world_generator.gd` / `test_sea_chart.gd`），断言改用 `WorldGenerator.MIN_PORTS/MAX_PORTS` 而非字面量 `>=10`
+  - `test_world_below_port_floor_is_rejected` 锁死「10 港必须被拒」；`test_formal_profile_matches_design_bounds` 锁死「15–20 港 profile 能真的生成 15 港、全部锚定海岸线、陆地占比 < 45%」
+  - 锚定到海岸线（距离<2单位）、最小间距15单位、必需设施（船厂/情报站）在起点2条边内、所有港口从起点可达
+  - 边界：可玩 MVP 地图仍走 `MapGenerator` 的 4–5 港分支网络；15–20 港坐标空间世界的真实对局接入属于阶段 3 之后
 - [x] `WorldOps` 替代旧 `MapOps`
   - `framework/domain/world/world_ops.gd`: 世界地图查询和变更接口，保持GameState兼容性
 
@@ -401,19 +405,27 @@
   - 陆地多边形在迷雾未探索时使用暗色，已探索时使用亮色（fill + outline）
   - 在航时显示船只菱形标记（带脉冲）
 - [x] 右侧 Panel（目的地基础信息 + 预计时间/消耗/风险）
-  - `framework/ui/components/sn_sea_chart_panel.gd`：展示港口名、原型、区域、设施列表、航线信息（距离/预计时间/风险/是否已探索）与「启航」按钮
-  - 风险等级按阈值分四档（low/medium/high/extreme），文案与颜色走本地化
+  - `framework/ui/components/sn_sea_chart_panel.gd`：展示港口名、原型、区域、设施列表、航线信息（距离 / **预计时间** / **煤水预计消耗（需求 / 存量）** / **风险** / 是否已探索）与「启航」按钮
+  - 风险等级按阈值分四档（low/medium/high/extreme），文案与颜色走本地化；风险未知时显示「无法评估」而不是「无风险」
+  - 补给不足时给一行提示，但不在面板拦截出航（阻断仍由出航页的 `voyage.preview` 决定）
   - 发出 `voyage_requested(port_id)`，由 Shell 路由到 `voyage.start`
 - [x] 查询层 `sea_chart.view`（已注册在 `QueryRegistry`）
   - `framework/application/queries/sea_chart_view.gd`：输出世界边界、陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格（步长 `max(w,h)/80`）、船只位置
   - 只读查询，不修改 `GameState`；`has_run=false` 或 `world_map` 为空时返回结构化空结果
-- [x] 海图 UI 单元测试（13 个用例）
+  - **航程预估**：每条航线附 `travel_hours` / `arrival_hours` / `speed` / `supplies` / `risk_level` / `strategy_id` / `distance_source`，由 `framework/domain/voyage/voyage_estimator.gd` 结合船速、锅炉策略、载重系数与航行规则推导
+  - 公式与 `VoyageCalculator.preview` 完全一致（直接复用其 `weight_speed_factor` / `PASSENGER_WATER_RATE` / `risk_label` 与 0.01–0.7 风险钳位），面板与出航页不会给出两个数字
+  - 抽象地图航线距离优先（`distance_source="voyage"`）；孪生世界 MST 图上没有对应抽象边时退回海图距离，`risk_level = -1` 表示未知
+- [x] 海图 UI 单元测试（13 个用例 → 21 个）
   - `framework/tests/cases/test_sea_chart.gd`：覆盖查询结构、世界边界匹配、陆地数量、当前港标记、航线生成、迷雾降采样、港口位置合理性、空上下文、JSON 序列化往返、同 seed 复现、异 seed 差异、发现计数、原型名称合法
+  - 新增 `test_sea_chart_routes_carry_voyage_estimates`：真实 `run.start` 后逐条航线断言预估存在，并把海图时长/风险与 `voyage.preview` 逐项对齐（容差 0.05 h / 0.02）；无抽象边的航线必须报 `-1` 未知风险
+  - 新增 `test_sea_chart_panel_renders_voyage_estimates`：面板真实挂树后断言「预计时间 / 预计消耗 / 煤炭 / 风险档」文字出现，未知风险渲染为「无法评估」
 - [x] 附带修复：Phase 1 迷雾系统的 4 处编译问题（`fog_grid.gd` 类型推断、`fog_ops.gd` `GameState.has()` → `state.data.has()`）
 - [x] 真实渲染视觉验收（此前只有无头测试，海图从未被画出来过）
   - 独立预览场景 `dev_scenes/sea_chart/`（`fresh` / `bare` / `explored` / `voyage` 四个变体，`explored` 会真实回放一圈沿岸航行产生永久灰雾）
   - 截图工具 `tools/godot/capture_sea_chart.gd`（窗口 1440×900，先写 tmp 再原子提交、纯色画面判失败、90 s 看门狗）
   - 产出 [fresh](docs/design/screenshots/sea_chart/sea_chart_fresh.png) / [bare](docs/design/screenshots/sea_chart/sea_chart_bare.png) / [explored](docs/design/screenshots/sea_chart/sea_chart_explored.png) / [voyage](docs/design/screenshots/sea_chart/sea_chart_voyage.png)
+  - 预览世界按验收口径生成 **15 港**（`WorldGenerator.MIN_PORTS..MAX_PORTS`），不再是手搓的 13 港；`bare` 截图可直接数出 15 个港口
+  - 预览跑一次真实 `RunFactory.create_run`，只替换坐标 `world_map`：`voyage` 截图右侧面板显示的是**真实**距离 / 预计时间 / 煤水预计消耗 / 风险档（与 `voyage.preview` 同源），不是摆拍数值
 - [x] 视觉验收带出的缺陷一并修掉（详见 [设计文档 §14.1](docs/design/NAUTICAL_CHART_SYSTEM.md)）
   - 海岸线：逐顶点白噪声（"锯齿星形"）→ 相干谐波剖面，相位每岛只抽一次；`simplify_polygon()` 投入使用
   - 迷雾：每格纯色矩形 → 每格 1 texel 的 RGBA 纹理 + 线性过滤（平滑且 1 次绘制）
@@ -440,21 +452,95 @@
   - 新页面 `framework/ui/screens/flow/sea_chart_screen.tscn`（`SeaChartScreen`）：左侧 `SNSeaChartView` 铺满 + 右侧 `SNSeaChartPanel`（320 px），打开时预选当前港；面板「启航」冒泡为 `voyage_requested(port_id)`，Shell 路由到出航页预选目的港（锅炉策略仍在出航页确认后才发 `voyage.start`）
   - Shell：`Esc` 关闭返回来源页，`M` 全局开关（仅在 `has_run` 且非在航、无通关弹窗时生效），顶部导航行追加「海图」按钮（海图打开时高亮），新开/读档重置返回页记忆
   - 面板绑定港口/航线数据、图表点击选中与启航冒泡均有用例；Shell 集成用例同时覆盖「无 `world_map` 时显示无数据提示」与「注入世界后的完整数据路径」
-  - 边界：MVP `run.start` 尚不生成坐标空间世界（`state.data["world_map"]` 仍只有测试夹具写入），真实对局中海图页暂显示无数据提示——数据接入属于阶段 3 / 正式版世界探索运行时
+  - 边界：该条为历史记录——真实对局接入已由下方「真实对局接入（孪生世界）」完成，海图页不再显示无数据提示
 - [x] 真实对局接入（孪生世界）：`RunFactory.create_run` 在抽象地图生成后用 `_coordinate_world_profile()` 生成**坐标空间孪生世界**写进 `state.data["world_map"]`——每港一岛、第 i 港落第 i 岛，与对局地图共享 `port_0..N` ID、原型与名称，海图查询、发现状态与迷雾天然对齐；起港灯塔揭示（`_initialize_world_fog`：海岸带标记 + 港口揭示 + 船视）；抵达时 `VoyageService` 经 `WorldOps.mark_visited` + `FogOps.reveal_arrival` 同步访问/发现与泊位迷雾（旧存档无 `world_map` 时全部为 no-op，海图仍显示无数据提示）；孪生世界生成失败只降级海图、不失败开局。已知边界：孪生世界连通图为自身 MST 图，与抽象地图航线不完全一致（出航仍按抽象地图邻居），阶段 3 航行演出统一
   - 测试：`test_run_pipeline::test_run_maps_a_chart_twin_world`（真实 run.start 直接喂 `sea_chart.view`：ID/原型镜像、起港发现+访问+当前+出雾、首航后目的港访问+出雾）；`test_ui_shell` 海图集成用例改为钉住"真实对局出图、无数据提示不再出现"
+- [x] 航程预估进查询层（阶段 2 验收补齐）：世界表只存几何量，`travel_hours` / `risk_level` / 煤水消耗由 `VoyageEstimator` 在查询时推导
+  - `framework/domain/voyage/voyage_estimator.gd`：`estimate()` 只做只读投影，常量与钳位直接引用 `VoyageCalculator`，不复制第二套公式
+  - `sea_chart.view` 每条航线输出 `travel_hours` / `arrival_hours` / `speed` / `supplies`（需求/存量/余量/是否够）/ `risk_level` / `risk_label` / `risk_source` / `distance_source` / `strategy_id`
+  - 风险来源与 `_risk_breakdown` 逐项对齐（基础风险 + 策略 + 超载 + 低耐久 + 设备船员），跨页数值一致性由用例锁死
 - [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）——阶段 4 探索系统落地后接入
 - [x] 航线绕行按岛屿尺寸自适应（`RouteCalculator._detour_clearances`）：外扩档位 = 岛屿半长轴 ×1/2/3，下限 `COAST_CLEARANCE * 0.5`、上限 `COAST_CLEARANCE`；小礁石不再把航线拽出 42 单位，大陆保持原档位；每个候选仍过 `_path_is_clear` 校验，新增档位缩放与绕行不穿陆用例
 - [x] ~~海图查询每条边都重算贝塞尔~~ 已由「航线预计算」覆盖：`WorldMap.edges[].path` 即生成期算好的贝塞尔折线，`sea_chart.view` 与 `WorldOps.route_between` 均只读表；仅缺 `edges` 的旧存档回退现场计算（此条为该工作完成前的过时记录）
 
 ### 阶段 3：航行演出状态机
 
-- [ ] 状态机实现（InPort → OpenSeaChart → VoyagePlanned → Departure → AtSea → Arrived）
-- [ ] 镜头过渡（3D PortStage → 云层上升 → 2D 海图 → 云层下降 → 3D 入港）
-- [ ] 船舶 icon 沿贝塞尔路径移动（`Route.bezier_path`）
-- [ ] 时间加速流逝（顶部时钟同步）
-- [ ] 事件触发（云层下降 → 3D 场景，场景已预加载）
-- [ ] 航行演出单元测试（状态转换、镜头过渡）
+> **实机验收反馈（2026-10-21）：F1–F4 待修，先记录不开工**，见本小节末尾
+> 「阶段 3 实机验收反馈」——离港平移、镜头俯角/海图缩放、海图太小、船没沿航线。
+
+- [x] 状态机实现（InPort → OpenSeaChart → VoyagePlanned → Departure → AtSea → Arrived）
+  - `framework/domain/voyage/voyage_presentation.gd`（`VoyagePresentation`，纯模型）：10 个相位（`VOYAGE_PLANNED / DEPARTURE_3D / DEPARTURE_VEIL / AT_SEA / EVENT_APPROACH / EVENT_WAIT / EVENT_RESUME / ARRIVAL_APPROACH / ARRIVAL_HARBOR / DONE`）+ 5 个里程碑（`DEPARTED / AT_SEA_STARTED / EVENT_READY / ARRIVAL_READY / DONE`），逐帧 `tick()` 推进，云层与航程进度都在模型里算
+  - 不碰 `GameState`：`voyage.start` 仍一次性结算航行，演出层只决定"什么时候把哪个画面推给玩家"，旧存档 / 9 seed 通关回归 / `at_sea` 语义全部不变
+  - `skip()` 不替玩家做事件决策：未处理的事件仍会被推到玩家面前
+- [x] 3D 镜头升降（离港：船驶离 + 镜头上升；入港：镜头下降 + 船驶入）
+  - `framework/ui/stages/port_stage.gd` 新增 `begin_departure()` / `begin_arrival()` / `advance_voyage()` / `reset_voyage()` / `skip` 相关访问器：船从泊位驶向 `SEA_HANDOFF`（港外海面）时镜头升到 `DEPART_CAMERA` 高位广角；入港反过来从高位下降到站位机位，并把船停回泊位。beats 由 Shell 逐帧步进（`_process` 在 beat 期间让位给 `advance_voyage`，不双倍速），测试/截图工具可同步驱动
+  - 状态机与 3D 动画共用 beat 长度（`VoyagePresentation.DEPARTURE_3D_SECONDS == PortStage.VOYAGE_BEAT_SECONDS`，有测试守护），云层不会在镜头还在动时盖下
+  - **接缝不变量**：3D 船停在 `SEA_HANDOFF` 的那一刻，海图船标记从 `VoyagePresentation.handoff_progress`（默认 0 = 出发港图标）开始 —— 3D 船正是从这个港口驶出去的，两边是同一个地理位置。`test_chart_ship_starts_where_the_stage_ship_vanished` 用真实 Shell 断言 3D 船确实停在 `SEA_HANDOFF`、且海图接管第一帧的船标记坐标等于出发港在航线上的起点
+  - 演出期间 3D 舞台被强制挂在港务站位（不依赖 `STAGE_SCREENS` 页面）；离港用出发港的 `port.view`（命令前缓存 `_presentation_origin_view`），入港用抵达后的目的港
+- [x] 云层转场（3D 港口 → 云层 → 2D 海图 → 云层 → 3D 目的港）
+  - `framework/ui/components/sn_cloud_veil.gd`（`SNCloudVeil`）：程序化软边云团（运行时生成 128×128 smoothstep alpha 贴图 + 三档深浅 + 穿越漂移），只渲染 `cover`，不做时序
+  - 出航 / 事件 / 抵达三处都是"盖住 → 换页 → 散开"；`cover` 由状态机逐帧驱动
+- [x] 船舶 icon 沿贝塞尔路径移动（`Route.bezier_path`）
+  - `SNSeaChartView.set_ship_position()` 逐帧覆盖船只坐标（不重绑整个 ViewModel，避免每帧重建迷雾纹理与取景）
+  - `VoyagePresentation.sample_polyline()` 按**弧长**取点，曲线密集段不会走得比稀疏段慢；缺对应航线时退回起终港直线，船不会停在原地
+- [x] 时间加速流逝
+  - 整段航程压缩到 2–9 s（`SECONDS_PER_GAME_HOUR = 0.35` + 上下限），`hours_per_second` 即航程条上的倍率（实测 `×2.9`）；游戏时间本身已由 `voyage.start` 推进
+  - 航程条显示起终港 / 进度 / `航程 X 小时 / Y 小时` / 时间倍率 / 「跳过演出」
+- [x] 事件触发（云层下降 → 事件决策 → 回到海图）
+  - 事件落在航程 `DEFAULT_EVENT_PROGRESS`（50%）处，演出停在 `EVENT_WAIT` 等玩家选择；选完云层重新盖住再交还海图，不会把事件页硬切回海图
+  - 演出期间顶栏与"当前港"高亮都按出发港显示（`在航 → 目的港`），不提前剧透抵达
+- [x] 航行演出单元测试
+  - `framework/tests/cases/test_voyage_presentation.gd`：13 例（压缩窗口、3D 离港先于云层、出航交还、进度=压缩时间、事件中断与恢复、入港收尾、跳过不跳过事件、决策点跳过无效、快照字段、弧长采样、扁平路径还原、云层 clamp、beat 长度一致性）
+  - `framework/tests/cases/test_voyage_flow.gd`：6 例，真实 Shell + 真实命令（3D 离港 + 云层 → 海图、3D 交接点不变量、船只推进、抵达结算、跳过、事件中断后恢复），事件用例用确定种子真实抽到事件，不伪造航行状态
+  - `framework/tests/cases/test_stage_host.gd` 新增 2 例：离港 beat 结束时船正好停在 `SEA_HANDOFF` 且镜头升到 `DEPART_CAMERA`；入港 beat 结束时船回到泊位、镜头回到站位机位
+- [ ] 事件触发的 3D 场景预加载与云层下降（当前事件页仍是 2D 页面，只有 2D 云层转场）
+- [x] 视觉验收：`tools/godot/capture_voyage_presentation.gd` + [5 张 1440×900 截图](docs/design/screenshots/voyage_presentation/)（3D 离港 / 出航云层 / 海图航行 / 3D 入港 / 抵达结算），见 [设计文档 §15](docs/design/NAUTICAL_CHART_SYSTEM.md)
+
+#### 阶段 3 实机验收反馈（2026-10-21，**待修，尚未开工**）
+
+人工在实机演出里看到的 4 个问题，按验收顺序记录。每条都写了现状与验收口径，
+修的时候逐条对照，不要用"看起来更顺了"替代口径。
+
+- [ ] **F1 · 离港是"平移"不是"驶离"**
+  - 现象：船离开泊位时像在轨道上横移，船艏一直朝着原泊位方向，没有转向出海。
+  - 现状：`PortStage.advance_voyage()` 只对 `_ship_x/_ship_z` 做 lerp，`_ship_yaw` 始终是
+    泊位 yaw（`_ship_moor_yaw`，20°）；而离港方向是 +Z，船体因此横着"滑"出去。
+  - 验收口径：出航前先把船艏转到出海方向（+Z 对应 `PI/2`，用现有 `SHIP_TURN_SPEED` 或
+    beat 内插值），船体沿艏向航行；入港反向（先是出海朝向，接近泊位时转回 `_ship_moor_yaw`）。
+    截图里应能看到船头朝外、尾流在后方，而不是侧舷对着前方。
+
+- [ ] **F2 · 镜头应是"俯角加大到竖直 + 拉升"，云层后海图由最大缩到合适尺寸**
+  - 期望：离港镜头俯角不断加大直到接近竖直，同时拉升；云层盖住后，海图**从放大的近景
+    逐渐缩小**（模拟镜头还在继续上升，"天旋地转"到看得见整片海）。入港完全镜像：
+    先缩小到近景 → 云层 → 3D 镜头从竖直高位逐渐放下俯角。
+  - 现状：`advance_voyage()` 把相机 position/target/fov 各自线性插值到固定的
+    `DEPART_CAMERA` / `DEPART_CAMERA_TARGET`，俯角没有刻意做到竖直；海图接管时是一次
+    性 fit 到位，没有"由近到远"的缩放过程。
+  - 验收口径：离港末帧镜头几乎垂直向下（pitch ≥ 80°）且高度达到峰值；海图第一帧的
+    缩放明显大于最终值，随后在固定时长内（建议与出航 veil 同时长）缩到稳态；
+    入港为逆过程（近景 → 拉远 → 云层 → 3D 下降）。
+
+- [ ] **F3 · 海图太小，最高位时应铺满整屏**
+  - 现象：海图只占中间一块方形，四周大片暗色留白，看不出"大海广阔"。
+  - 现状：`AtSeaScreen` 里的 `SNSeaChartView` 挂在 `PageScroll/RootBox` 下，高度被滚动
+    容器限制；`_fit_to_view()` 永远把 400×400 世界整体放进控件（还留 60 px 边距），
+    16:9 窗口下必然出现左右大留白。
+  - 验收口径：航行页的海图铺满可用窗口（不进滚动容器或被撑满），最高位时视野裁掉
+    世界边界以外的空白、整屏都是海面与已探索内容；缩放下限仍保留（不能因为铺满而
+    裁掉正在走的航线与起终港）。
+
+- [ ] **F4 · 海图上船是"两点直线"，不是沿航线**（真 bug，优先级最高）
+  - 现象：船在实际航线之外沿起终港直线插值移动。
+  - 根因（已定位）：`AtSeaScreen._route_path()` 从 `sea_chart.view` 的 `routes` 里找这段
+    航线，但该查询**只输出两端都已发现**的航线；出发时目的港还没发现，于是找不到，
+    退回 `[origin, destination]` 两点直线。
+  - 修复方向：航线数据由 Shell 从坐标世界直接取（`WorldMap.edges` 的路点表 /
+    `WorldOps.route_between`），通过 `bind()` 的 `positions` 之外再传一个 `route_path`
+    给航行页；只有世界表里确实没有这条边时才退回直线。注意**不要**为此把海图查询的
+    战争迷雾规则放宽（未发现的航线仍不应画在图上）。
+  - 验收口径：`at_sea.get_ship_world_position()` 在任意进度都落在该航线的折线上
+    （逐点最小距离 < 1 世界单位），并在进度 0/1 时等于起终港坐标；新增用例锁死
+    "直线不是航线"的情况（目的港未发现时依然沿曲线走）。
 
 ### 阶段 4：探索系统
 
@@ -576,6 +662,25 @@
 - [x] 截图：PortStage 固定机位 LOD0/LOD1 1440×900 + 960×540（`docs/design/screenshots/iron_harbor_architecture/`），LOD1 临时入舞台 tri 73 228→49 760、draw calls 不变（合批按材质）。
 - [ ] 待人工视觉门禁确认（§10）：1440×900 / 960×540 轮廓与入口可读、LOD1 无明显塌陷、性能收益是否抵过资产格式复杂度；确认后再进入批次 B。
 - [ ] 移除构建卫生：`dev_mods/core/assets/models/props/SN_HT_*.png`（Godot 从内嵌 GLB 解包的旧构建产物）已清理，后续由 .gitignore + 导出流程守护。
+
+## 铁港建筑套件 · 批次 B（2026-10-20，三栋新原型 + 两港组合）
+
+> 需求 §6；验收 [IRON_HARBOR_ARCHITECTURE_BATCH_B.md](docs/archive/IRON_HARBOR_ARCHITECTURE_BATCH_B.md)；LOD0 构建/验收 [PROTOTYPES_LOD0_BUILD](docs/archive/IRON_HARBOR_ARCHITECTURE_PROTOTYPES_LOD0_BUILD.md) / [PROTOTYPES_LOD0_VERIFY](docs/archive/IRON_HARBOR_ARCHITECTURE_PROTOTYPES_LOD0_VERIFY.md)。
+
+- [x] Boiler_House 7 388 tri / 12×10×12、Workshop_Row 7 312 / 18×7×8.5、Brick_Tenement 9 376 / 10×8×12；LOD1 2 536 / 2 444 / 2 704（≤2 800/2 800/4 900 且 ≤35%）；LOD0↔LOD1 bbox 0.000、健康全 0、§6 必须项 3/3 PASS。
+- [x] 导出 + 共享贴图（新增 1 张 `brick_wall_soot`，共 12 张、2.03 MB）；manifest 80→86；iron_harbor=WR+BH、spice_port=WR+BT，其余三港旧 5 栋。
+- [x] 两组 5 栋组合 + 旧 5 栋对照 1440/960；combo_a 75 376 tri/72 draws、combo_b 72 144/71 draws（松散与 ZIP 一致）。
+- [ ] 待人工视觉门禁（组合轮廓可辨、无穿插遮挡）；待 verifier task-10 终验。
+- [ ] 外部阻塞：并发海图工作流修复后重跑完整测试套件与 release 导出/启动（批次 B 相关测试子集 49/49 已全绿）。
+
+## SN_Paddle_Steamer 视觉精修 · 批次 C（2026-10-20）
+
+> 需求 §7；报告 [PADDLE_STEAMER_VISUAL_POLISH_C.md](docs/archive/PADDLE_STEAMER_VISUAL_POLISH_C.md)；独立验收 [PADDLE_STEAMER_VISUAL_POLISH_C_VERIFY.md](docs/archive/PADDLE_STEAMER_VISUAL_POLISH_C_VERIFY.md)。
+
+- [x] 雨棚减重（投影 63.72→41.34 m2，占游步甲板 71.4→46.3%，薄边 0.14→0.07）、明度层级（0.870/0.680/0.300）、暗红压条加粗（0.055→0.075 等）。
+- [x] 不变量：tri 11764、尺寸 24.56x8.74x10.47、水线轴心、35 对象层级、旗/铭牌/明轮安全；共享材质 SN_Wood_Deck/SN_Flag_White 已恢复原值，非目标 226 对象 digest 不变；verify 26/26。
+- [x] 导出 core 内容 GLB（633.3 KB，sha `cefec2b7aa2d`）+ framework 镜像；工作台/船体快照；Godot 船厂 1440/960 与 PortStage 重拍；完整测试 231 passed；静态文档 --check 通过。
+- [x] 人工视觉门禁（A/B/C）：通过（2026-10-21，用户确认截图：三项精修可读、其它资产零变化、实机无黑材质）。
 
 ## 文档归档（2026-10-21）
 
