@@ -40,7 +40,9 @@ const TEST_PROFILE := {
 		{"id": "far_reef", "region_id": "ocean_1", "archetype": "atoll", "cx": 352.0, "cy": 328.0, "rx": 3.0, "ry": 2.0},
 	],
 	"ports": [
-		{"archetype_id": "port_archetype_1", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.2, "name_key": "port.iron_harbor", "is_start": true, "required_tags": ["port.shipyard"]},
+		# The start port uses a real Core archetype / name key so the query's
+		# `archetype_name_key` / `region_name_key` resolution is actually exercised.
+		{"archetype_id": "core:port_archetype/iron_harbor", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.2, "name_key": "port_name.core.iron_harbor", "is_start": true},
 		{"archetype_id": "port_archetype_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.4, "name_key": "port.spice_harbor"},
 		{"archetype_id": "port_archetype_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.6, "name_key": "port.free_town"},
 		{"archetype_id": "port_archetype_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.8, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
@@ -363,3 +365,79 @@ func _setup_world_and_state(seed_value: int, context: AppContext) -> Dictionary:
 
 	context.set_state(state)
 	return world_dict
+
+
+## The chart and its panel must never render a raw content id: the query resolves the
+## display keys for the archetype and the region so the UI can localize them.
+func test_port_view_model_carries_display_name_keys() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	_setup_world_and_state(SEED_A, context)
+
+	var result := SeaChartViewQuery.execute({}, context)
+	var data: Dictionary = result.get("data", {})
+	var start_port_id := String(data.get("current_port_id", ""))
+	var port_data := {}
+	for entry in data.get("ports", []):
+		if String(entry.get("id", "")) == start_port_id:
+			port_data = entry
+			break
+	assert_false(port_data.is_empty(), "current port should be in the view model")
+
+	var archetype_key := String(port_data.get("archetype_name_key", ""))
+	var region_key := String(port_data.get("region_name_key", ""))
+	assert_true(not archetype_key.is_empty(), "archetype_name_key should resolve for a Core archetype")
+	assert_true(not region_key.is_empty(), "region_name_key should resolve from the world regions")
+	assert_ne(archetype_key, String(port_data.get("archetype", "")), "name key must not be the raw archetype id")
+	# Both keys must be real localization entries, not invented ones.
+	assert_ne(context.translate(archetype_key), archetype_key, "archetype name key should have a translation")
+	assert_ne(context.translate(region_key), region_key, "region name key should have a translation")
+
+
+## Guards the departure tick unit handling: `departure_angle` is radians, and the chart
+## used to convert it again as degrees, aiming every tick due east.
+func test_departure_tick_direction_uses_radians() -> void:
+	var view := SNSeaChartView.new()
+	# PI/2 rad = north on a chart where +Y is south in screen space, so expect (0, 1).
+	var north := view.exit_direction({"departure_angle": PI / 2.0})
+	assert_almost_eq(north.x, 0.0, 0.001, "PI/2 radians should not point east")
+	assert_almost_eq(north.y, 1.0, 0.001, "PI/2 radians should point along +Y")
+	var east := view.exit_direction({"departure_angle": 0.0})
+	assert_almost_eq(east.x, 1.0, 0.001, "0 radians should point along +X")
+	assert_almost_eq(east.y, 0.0, 0.001, "0 radians should have no Y component")
+	# A degree-style value (90) must not be misread as radians-looking-east.
+	var degrees_like := view.exit_direction({"departure_angle": 90.0})
+	assert_true(absf(degrees_like.y) < 0.999, "90 must not be treated as 90 degrees")
+	view.free()
+
+
+## Centring before the control has a size must be queued, not silently applied with a
+## zero-size viewport (which would frame at the wrong zoom and lock `_needs_fit` off).
+func test_center_on_port_before_layout_is_queued() -> void:
+	var view := SNSeaChartView.new()
+	var vm := {
+		"has_run": true,
+		"world_bounds": {"x": 0.0, "y": 0.0, "w": 400.0, "h": 400.0},
+		"landmasses": [],
+		"ports": [
+			{"id": "port_a", "name_key": "port.a", "x": 120.0, "y": 240.0,
+				"discovered": true, "visited": true, "current": true, "departure_angle": 0.0},
+		],
+		"routes": [],
+		"fog": {},
+		"current_port_id": "port_a",
+		"ship_position": {"x": 120.0, "y": 240.0},
+		"at_sea": false,
+	}
+	view.bind(vm)
+	# No layout yet: the request has to wait for `_try_fit()`.
+	view.center_on_port("port_a")
+	assert_true(view._needs_fit, "an unlayouted centre request must keep the fit pending")
+
+	view.size = Vector2(800.0, 600.0)
+	view._try_fit()
+	var on_screen := view.world_to_screen(Vector2(120.0, 240.0))
+	assert_almost_eq(on_screen.x, 400.0, 1.0, "queued centre should place the port at the viewport centre (x)")
+	assert_almost_eq(on_screen.y, 300.0, 1.0, "queued centre should place the port at the viewport centre (y)")
+	assert_false(view._needs_fit, "fit should be resolved once layout exists")
+	view.free()

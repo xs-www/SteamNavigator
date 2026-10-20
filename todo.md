@@ -1,7 +1,7 @@
 # Steam Navigator — TODO / 路线图
 
 > 基线：Framework 0.1.0 / Core 1.0.0 / Mod API 1.0 / Content Schema 1.0
-> 最近验证：Godot 4.7.2 headless，**211 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 14 / 迷雾系统 16 / 海图 UI 13）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 已做真实渲染视觉验收**（4 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
+> 最近验证：Godot 4.7.2 headless，**220 个测试通过 / 0 失败**（含 9 个 seed 的完整通关回归、主界面接线冒烟、船厂改装 UI 契约、模块实例与部件损耗、密集界面横向排版与通报文案本地化守护、2.5D 舞台基础设施、PortStage 场景填充与 town kit、连续港区三站位、主界面紧凑 HUD + 两侧招牌 + 状态条 + 详细抽屉与 2D 回退、**海图系统（世界生成器 15 / 迷雾系统 17 / 海图 UI 16）**、save schema 1.x→2.0 迁移、CampaignState 分区、Content Schema 2.0 草案校验）；**海图 UI 已做真实渲染视觉验收**（4 张 1440×900 截图，见 [NAUTICAL_CHART_SYSTEM.md §14](docs/design/NAUTICAL_CHART_SYSTEM.md)）；SNModMaker **33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**通过；**Windows 导出包实机验收通过**（3D 船厂舞台 + `mods/`+`config/` 便携布局）；`node tools/gen_static_docs.mjs` 已重新生成静态文档。
 
 ## 已完成
 
@@ -414,6 +414,7 @@
   - 截图工具 `tools/godot/capture_sea_chart.gd`（窗口 1440×900，先写 tmp 再原子提交、纯色画面判失败、90 s 看门狗）
   - 产出 [fresh](docs/design/screenshots/sea_chart/sea_chart_fresh.png) / [bare](docs/design/screenshots/sea_chart/sea_chart_bare.png) / [explored](docs/design/screenshots/sea_chart/sea_chart_explored.png) / [voyage](docs/design/screenshots/sea_chart/sea_chart_voyage.png)
 - [x] 视觉验收带出的缺陷一并修掉（详见 [设计文档 §14.1](docs/design/NAUTICAL_CHART_SYSTEM.md)）
+  - 海岸线：逐顶点白噪声（"锯齿星形"）→ 相干谐波剖面，相位每岛只抽一次；`simplify_polygon()` 投入使用
   - 迷雾：每格纯色矩形 → 每格 1 texel 的 RGBA 纹理 + 线性过滤（平滑且 1 次绘制）
   - 连通图：13 港完全图 78 条线 → 最小生成树 + 每港 2 条最近邻（38 条），连通且可读
   - 航线穿陆：出航角可指向内陆 + 绕岛循环振荡 + 曲线从未校验 → 出航角背离陆地回退、沿岸环行/外切点有界递归、曲线落地前包围盒剪枝校验
@@ -421,6 +422,13 @@
   - 面板/预览裸键：查询补 `archetype_name_key` / `region_name_key`，设施走 `ui.facility.*`，预览用 Core 真实原型 ID
   - 交互：`select_port()` 不再把视图跳位（居中拆为 `center_on_port()`）
   - 回归：`test_world_generator` 新增「航线不得穿陆」「连通图稀疏且连通」2 个用例
+- [x] 测试收紧（按只读验收意见，把"比名字弱"的断言补实）
+  - 航线穿陆：41 点索引采样 → **逐段精确几何**（`Geometry2D.segment_intersects_segment` + 多点在内检测），容差直接引用 `RouteCalculator.END_GRAZE_TOLERANCE`（原 12.0 比实现 8.0 松，等于没测）
+  - 连通图：不只数边数，改为 `WorldOps.bfs_distances()` **真断言连通**；稀疏阈值 `complete/2`（n² 缩放、13 港只差 1 条就过）→ `3n` 上界
+  - 迷雾沿岸带：新增 `test_coastal_band_is_two_cells_wide`，断言 1.5 格内必为海岸、3.5 格外必不是（原用例在旧语义下也能过，等于没测出"按格数而不是世界单位"）
+  - 海图查询：新增 `archetype_name_key` / `region_name_key` 用例——**当场抓出 `world.region.*` 在全项目没有本地化条目**（面板会显示裸键，预览里被我自己的 workaround 遮住了），已补框架中英默认文案
+  - 出航刻度：把弧度→方向抽成 `SNSeaChartView.exit_direction()` 可测接缝，新增用例锁死"90 不得当 90 度处理"
+  - 布局前居中：`center_on_port()` 在控件无尺寸时改为排队、首次取景后应用，并加用例
 - [ ] 入口集成（M 键 / 准备出航按钮打开海图页）与 Shell 接线
 - [ ] 线索可视化（箭头/虚线圆圈/`？港口名？`，按 §7.2 分级）——阶段 4 探索系统落地后接入
 - [ ] 航线绕行仍偏保守：外扩 14–42 单位导致部分航线绕得很远，后续按岛屿尺寸自适应（阶段 0 打磨）

@@ -74,6 +74,8 @@ var _translate: Callable = Callable()
 ## with a real size then frames the world once (binding before layout must not
 ## leave the chart at zoom 1 offset 0).
 var _needs_fit: bool = true
+## `center_on_port()` requested before layout; applied right after the first fit.
+var _pending_center: String = ""
 ## Fog baked to one texel per cell; drawn with linear filtering so cell borders
 ## interpolate instead of reading as hard rectangles.
 var _fog_texture: ImageTexture = null
@@ -120,6 +122,10 @@ func _try_fit() -> void:
 		return
 	_fit_to_view()
 	_needs_fit = false
+	# A centre request that arrived before layout is applied now, after framing.
+	if not _pending_center.is_empty():
+		_center_on_port(_pending_center)
+		_pending_center = ""
 
 
 func get_selected_port() -> String:
@@ -134,8 +140,15 @@ func select_port(port_id: String) -> void:
 
 
 ## Explicitly pans the chart so `port_id` sits in the middle (entry animation, "show me").
+## Before the control has a size there is nothing to pan, so the request is queued and
+## applied by `_try_fit()` once layout lands (otherwise it would frame at zoom 0 and
+## lock `_needs_fit` off).
 func center_on_port(port_id: String) -> void:
 	if port_id.is_empty():
+		return
+	if size.x <= 1.0 or size.y <= 1.0:
+		_pending_center = port_id
+		_needs_fit = true
 		return
 	_center_on_port(port_id)
 	_needs_fit = false
@@ -144,6 +157,13 @@ func center_on_port(port_id: String) -> void:
 
 func get_zoom() -> float:
 	return _zoom
+
+
+## Unit vector a port's departure tick points along. `departure_angle` is radians;
+## this seam exists so the unit handling itself is testable without rendering.
+func exit_direction(port_data: Dictionary) -> Vector2:
+	var angle := float(port_data.get("departure_angle", 0.0))
+	return Vector2(cos(angle), sin(angle))
 
 
 func _fit_to_view() -> void:
@@ -528,8 +548,7 @@ func _draw_ports() -> void:
 			draw_arc(screen_pos, r + 8.0, 0.0, TAU, 40, COLOR_BRASS, 2.0)
 		# Departure angle tick. `departure_angle` is already in radians (atan2 output) —
 		# converting it again as degrees used to aim every tick due east.
-		var departure_angle: float = float(port_data.get("departure_angle", 0.0))
-		var exit := Vector2(cos(departure_angle), sin(departure_angle))
+		var exit := exit_direction(port_data)
 		var tick_color := Color(0.62, 0.76, 0.73, 0.45)
 		if is_current:
 			tick_color = Color(0.94, 0.81, 0.5, 0.8)

@@ -230,8 +230,10 @@ func test_routes_never_cross_land() -> void:
 	var world_dict: Dictionary = result.get("world_map", {})
 	var world := WorldMap.from_dict(world_dict)
 
-	const ENDPOINT_GRAZE := 12.0
-	const SAMPLES := 41
+	# Reference the implementation's own tolerance instead of a looser copy: straight-line
+	# distance to a crossing point is never more than its arc distance, so this bound still
+	# fails if the implementation starts allowing deeper land contact.
+	var endpoint_graze := RouteCalculator.END_GRAZE_TOLERANCE
 	var edges := 0
 	for from_id in world.connectivity_graph:
 		for to_id in world.connectivity_graph[from_id]:
@@ -245,22 +247,58 @@ func test_routes_never_cross_land() -> void:
 			assert_true(bezier.size() >= 2, "route %s -> %s should have a path" % [from_id, to_id])
 			if bezier.size() < 2:
 				continue
-			for sample in SAMPLES:
-				var t := float(sample) / float(SAMPLES - 1)
-				var scaled := clampf(t, 0.0, 1.0) * float(bezier.size() - 1)
-				var index := clampi(int(floor(scaled)), 0, bezier.size() - 2)
-				var point := bezier[index].lerp(bezier[index + 1], scaled - float(index))
-				if not world.is_point_on_land(point):
-					continue
-				var near_end := point.distance_to(from_port.position) <= ENDPOINT_GRAZE \
-					or point.distance_to(to_port.position) <= ENDPOINT_GRAZE
-				assert_true(near_end, "route %s -> %s crosses land at (%.1f, %.1f)" % [
-					from_id, to_id, point.x, point.y,
+			for segment in range(bezier.size() - 1):
+				var crossing := _segment_land_crossing(
+					bezier[segment], bezier[segment + 1], world.landmasses,
+					from_port.position, to_port.position, endpoint_graze
+				)
+				assert_true(crossing.is_empty(), "route %s -> %s crosses land: %s" % [
+					from_id, to_id, crossing,
 				])
 	assert_true(edges >= world.ports.size() - 1, "connectivity should have at least n-1 edges, got %d" % edges)
 
 
-func test_connectivity_graph_is_sparse_but_connected() -> void:
+## Exact crossing test for one segment: returns a description when the segment passes
+## over land farther than `tolerance` from either endpoint, otherwise "".
+##
+## This deliberately does not reuse `RouteCalculator`'s own helper — a regression in the
+## validator must not make the guard pass. Landing points from the harbour approach are
+## expected (ports are drawn on the coastline), so crossings near the endpoints are fine.
+func _segment_land_crossing(
+	start: Vector2,
+	end: Vector2,
+	landmasses: Array[Landmass],
+	path_start: Vector2,
+	path_end: Vector2,
+	tolerance: float
+) -> String:
+	var segment_box := Rect2(start, (end - start).abs()).grow(0.5)
+	for landmass in landmasses:
+		if landmass.polygon.size() < 3:
+			continue
+		if not landmass.bounding_box().intersects(segment_box):
+			continue
+		# Wholly inside the landmass: no boundary crossing to detect.
+		var midpoint := (start + end) * 0.5
+		if landmass.contains_point(midpoint) and _away_from_ends(midpoint, path_start, path_end, tolerance):
+			return "segment inside %s at (%.1f, %.1f)" % [landmass.id, midpoint.x, midpoint.y]
+		for index in landmass.polygon.size():
+			var edge_start: Vector2 = landmass.polygon[index]
+			var edge_end: Vector2 = landmass.polygon[(index + 1) % landmass.polygon.size()]
+			var hit: Variant = Geometry2D.segment_intersects_segment(start, end, edge_start, edge_end)
+			if hit == null:
+				continue
+			var point: Vector2 = hit
+			if _away_from_ends(point, path_start, path_end, tolerance):
+				return "crosses %s at (%.1f, %.1f)" % [landmass.id, point.x, point.y]
+	return ""
+
+
+func _away_from_ends(point: Vector2, path_start: Vector2, path_end: Vector2, tolerance: float) -> bool:
+	return point.distance_to(path_start) > tolerance and point.distance_to(path_end) > tolerance
+
+
+func test_connectivity_graph_is_sparse_and_connected() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var result := _generate_world(SEED_A, context)
@@ -274,10 +312,18 @@ func test_connectivity_graph_is_sparse_but_connected() -> void:
 		edges += world.connectivity_graph[from_id].size()
 	edges = edges / 2
 	var port_count := world.ports.size()
-	var complete_edges := port_count * (port_count - 1) / 2
-	# Connected (n-1) but far below a complete graph, so the chart stays readable.
-	assert_true(edges >= port_count - 1, "graph should stay connected, got %d edges for %d ports" % [edges, port_count])
-	assert_true(edges <= complete_edges / 2, "graph should stay sparse, got %d of %d possible edges" % [edges, complete_edges])
+
+	# Connected: assert reachability itself, not just an edge-count proxy.
+	var start_port := world.get_start_port()
+	assert_false(start_port.is_empty(), "should have a start port")
+	var reachable := WorldOps.bfs_distances(world, start_port.id)
+	assert_eq(reachable.size(), port_count, "every port should be reachable, got %d / %d" % [reachable.size(), port_count])
+
+	# Sparse: an MST is n-1 edges and each port adds at most 2 shortcuts, so the ceiling
+	# is ~3n regardless of port count (the old `complete/2` bound scaled with n² and only
+	# passed by one edge at 13 ports).
+	assert_true(edges >= port_count - 1, "graph needs at least n-1 edges, got %d for %d ports" % [edges, port_count])
+	assert_true(edges <= 3 * port_count, "graph should stay sparse, got %d edges for %d ports" % [edges, port_count])
 
 
 func test_start_port_exists_and_is_valid() -> void:

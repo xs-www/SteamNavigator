@@ -247,6 +247,38 @@ func test_mark_coastal_cells_identifies_cells_near_land() -> void:
 	assert_false(coastal_cells.has(far_key), "cells far from landmass should not be coastal")
 
 
+func test_coastal_band_is_two_cells_wide() -> void:
+	# The band is measured in fog cells, not world units: `cell_size` depends on the
+	# vision radius, so a fixed 2.0-unit band used to collapse to a single cell on a
+	# 5-unit grid (the chart then showed a one-pixel coastline fringe).
+	var world := WorldMap.new()
+	world.bounds = Rect2(Vector2.ZERO, Vector2(200.0, 200.0))
+	var landmass := Landmass.new()
+	landmass.polygon = PackedVector2Array([
+		Vector2(40.0, 40.0), Vector2(60.0, 40.0), Vector2(60.0, 60.0), Vector2(40.0, 60.0),
+	])
+	world.landmasses.append(landmass)
+
+	# cell_size = 8 / 4 = 2 units, so the 2-cell coastal band is 4 world units.
+	var fog := FogGrid.new(world.bounds, 8.0)
+	assert_almost_eq(fog.cell_size, 2.0, 0.001, "expected a 2-unit fog grid for this fixture")
+	var coastal := FogOps.mark_coastal_cells(fog, world)
+	assert_true(coastal.size() > 0, "should identify coastal cells")
+
+	# Cell centres land on odd multiples of the cell size; the land spans x∈[40,60], y∈[40,60].
+	# (31,25) → (63,51): 3 units (1.5 cells) off the east coast → inside the band.
+	var inside := fog.grid_to_world(fog.world_to_grid(Vector2(63.0, 51.0)))
+	assert_almost_eq(inside.x, 63.0, 0.001, "fixture expects an exact cell centre at x=63")
+	assert_true(coastal.has("31,25"), "a cell ~1.5 cells off the coast must be coastal")
+
+	# (33,25) → (67,51): 7 units (3.5 cells) off the same coast → outside the 2-cell band.
+	# This is the assertion that distinguishes "2 cells" from "any distance".
+	assert_true(coastal.has("33,25") == false, "a cell ~3.5 cells off the coast must not be coastal")
+
+	# Deep inland is not coastal either.
+	assert_true(coastal.has("25,25") == false, "cells inside the landmass are not coastal")
+
+
 func test_reveal_port_clears_fog_in_radius() -> void:
 	var world := WorldMap.new()
 	world.bounds = Rect2(Vector2.ZERO, Vector2(100.0, 100.0))

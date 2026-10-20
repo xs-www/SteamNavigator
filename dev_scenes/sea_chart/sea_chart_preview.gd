@@ -69,7 +69,8 @@ const PREVIEW_PROFILE := {
 
 ## Preview-only port names for the ports Core has no localization key for.
 ## The real chart will need these keys in core content; until then they live here
-## so the screenshot never shows a raw key.
+## so the screenshot never shows a raw key. Region names ship in framework
+## localization (`world.region.*`), so they are no longer listed here.
 const PREVIEW_NAMES := {
 	"port_name.preview.copper_cove": "铜湾",
 	"port_name.preview.salt_rock": "盐岩港",
@@ -78,10 +79,6 @@ const PREVIEW_NAMES := {
 	"port_name.preview.fog_lighthouse": "雾灯港",
 	"port_name.preview.south_wind_port": "南风港",
 	"port_name.preview.glass_atoll_port": "玻璃礁港",
-	"world.region.start_coast": "起始沿岸区",
-	"world.region.mid_coast_1": "中部沿岸区",
-	"world.region.mid_coast_2": "南部沿岸区",
-	"world.region.ocean_1": "远洋区",
 }
 
 const SEED := 12345
