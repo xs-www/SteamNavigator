@@ -16,13 +16,14 @@
 | `STREAM_VOYAGE_RISK` | L13 |
 | `STREAM_VOYAGE_EVENT` | L14 |
 | `STREAM_EVENT_OPTIONS` | L15 |
-| `STREAM_NAMES` | L17 |
-| `_init(seed_value: int = 1) -> void` | L32 |
-| `stream(stream_name: StringName, context_key: String = "") -> RandomNumberGenerator` | L36 |
-| `make_stream(stream_name: StringName, context_key: String = "") -> RandomNumberGenerator` | L46 |
-| `derive_seed(stream_name: StringName, context_key: String = "") -> int` | L52 |
-| `choose_weighted(generator: RandomNumberGenerator, items: Array, weight_key: String = "weight") -> Variant` | L56 |
-| `sample_without_replacement(generator: RandomNumberGenerator, items: Array, count: int) -> Array` | L77 |
+| `STREAM_EXPLORATION` | L18 |
+| `STREAM_NAMES` | L20 |
+| `_init(seed_value: int = 1) -> void` | L36 |
+| `stream(stream_name: StringName, context_key: String = "") -> RandomNumberGenerator` | L40 |
+| `make_stream(stream_name: StringName, context_key: String = "") -> RandomNumberGenerator` | L50 |
+| `derive_seed(stream_name: StringName, context_key: String = "") -> int` | L56 |
+| `choose_weighted(generator: RandomNumberGenerator, items: Array, weight_key: String = "weight") -> Variant` | L60 |
+| `sample_without_replacement(generator: RandomNumberGenerator, items: Array, count: int) -> Array` | L81 |
 
 ## 契约与约束
 

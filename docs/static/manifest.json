@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T21:54:01.093Z",
-  "commit": "80a1ee0",
+  "generated_at": "2026-10-20T23:48:36.604Z",
+  "commit": "12ae8a0",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 597,
-    "documented": 224,
-    "grouped": 373
+    "sources": 614,
+    "documented": 237,
+    "grouped": 377
   },
   "files": [
     {
@@ -19,23 +19,30 @@
     },
     {
       "source": "README.md",
-      "sha256": "513412b8b5f552c453b4d796db2afe517848b77e1e6ee23dc0ba684058e18f9d",
+      "sha256": "51f48bdfdf2cd4c2e5f698b8f1675efcae2e9ceb11a2ac06c1f4f08ea9ec7305",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
     },
     {
       "source": "SNBattleSim/README.md",
-      "sha256": "1621456936e4613aee7360c7261149d17005aadf1055153abf3ce5d33beef26e",
+      "sha256": "ccc6055872e3208ce81beff09313cb673017e734b4a393f32a9be5dc5807e567",
       "doc": "docs/static/SNBattleSim/README.md",
       "status": "grouped",
       "group": "docs/static/SNBattleSim/README.md"
     },
     {
       "source": "SNBattleSim/css/app.css",
-      "sha256": "5111c4f252bcc0f873d008c5f4b0cef837af212693524ff65eee74bbb07e8cb0",
+      "sha256": "0f5948f2886fa4c4b138be1a87954e8d7b0c1bd87376cea5c08e2a9ea832cc1f",
       "doc": "docs/static/SNBattleSim/css/app.css.md",
       "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/docs/FSM_MOD_CONTRACT.md",
+      "sha256": "c0458fc4673a3fa7c29102eca3635a88e887bc7ba6ed25e8c1de1fac93390d73",
+      "doc": "docs/static/SNBattleSim/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNBattleSim/README.md"
     },
     {
       "source": "SNBattleSim/greybox.html",
@@ -46,13 +53,13 @@
     },
     {
       "source": "SNBattleSim/index.html",
-      "sha256": "c0e0c9fe1f5bd82a27752505081c7a723707686639781733fbcb2a47f7dfc261",
+      "sha256": "597fc22fb6a2c8f55797ec30e8fe875dfb256975bfe95f8655ded2c0c31512c9",
       "doc": "docs/static/SNBattleSim/index.html.md",
       "status": "documented"
     },
     {
       "source": "SNBattleSim/js/app.mjs",
-      "sha256": "2809ac92223c99f0333d18368c5de323e7b23f97e9a68137536b4f5cf8f49942",
+      "sha256": "cf7ba670e51f44f76e4955a61fef0b04d93739ca8d9530b0f0f9f81a48ec8390",
       "doc": "docs/static/SNBattleSim/js/app.mjs.md",
       "status": "documented"
     },
@@ -64,7 +71,7 @@
     },
     {
       "source": "SNBattleSim/js/catalog.mjs",
-      "sha256": "864442bc694bc75600145c1a229458300f738929eb73423a22b7f9b9c011e51f",
+      "sha256": "6547a22aee7407b6716c797f0ebee5222367c941c536473487c5ca94a6dfbb3c",
       "doc": "docs/static/SNBattleSim/js/catalog.mjs.md",
       "status": "documented"
     },
@@ -75,9 +82,21 @@
       "status": "documented"
     },
     {
+      "source": "SNBattleSim/js/fsm_editor.mjs",
+      "sha256": "450fe62d73c7a587e7bdd949542257d6538f0deeca168757f70b691eaf3472ec",
+      "doc": "docs/static/SNBattleSim/js/fsm_editor.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "SNBattleSim/js/loadout.mjs",
-      "sha256": "2edc000046058e47418926a836eac583b9251f3aab4759d062672931ecca4bf3",
+      "sha256": "269c3c5758c19e81af1b4f525c136776948463f91bca96255136f6decf13b5a8",
       "doc": "docs/static/SNBattleSim/js/loadout.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/js/mod_format.mjs",
+      "sha256": "d92ab1ba4ffe7ec7d8ed61fb826916fa075d27ef510a4141d348feee5c8d4e42",
+      "doc": "docs/static/SNBattleSim/js/mod_format.mjs.md",
       "status": "documented"
     },
     {
@@ -88,27 +107,72 @@
     },
     {
       "source": "SNBattleSim/js/simulation.mjs",
-      "sha256": "19042fe354d050197ed6c0dd88aefd916174e69e17902f14a7510cb7d64ff2a0",
+      "sha256": "f3ca88dc6fe4bb49323e1d5ba166419ab455bcf9684c58593a5857ba2e13a3fd",
       "doc": "docs/static/SNBattleSim/js/simulation.mjs.md",
       "status": "documented"
     },
     {
+      "source": "SNBattleSim/js/tactic_library.mjs",
+      "sha256": "4adb93ff91c1f16678cc8903515bda49878c86fc00f5b4492dfc33d00b886a48",
+      "doc": "docs/static/SNBattleSim/js/tactic_library.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "SNBattleSim/js/tactics.mjs",
-      "sha256": "831fd6acd29f25be709e3bc4278e3ce72159eae8f31bb3223d638242d120984d",
+      "sha256": "89347842f58f80c2111fab625b1049490d97eaf616ed1dc98064ca4b60ff5650",
       "doc": "docs/static/SNBattleSim/js/tactics.mjs.md",
       "status": "documented"
     },
     {
+      "source": "SNBattleSim/mods/README.md",
+      "sha256": "c327bc377cbdda6b85235119dd708c64752bbfe406e6049abd4adf399adba4f6",
+      "doc": "docs/static/SNBattleSim/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNBattleSim/README.md"
+    },
+    {
+      "source": "SNBattleSim/mods/core-1.0.0.snavmod (1).zip",
+      "sha256": "91bdcbf8b4e196b89daa9efd69bd5a9d0e9f1b5673b7c35f569b837dd882b49b",
+      "doc": "docs/static/SNBattleSim/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNBattleSim/README.md"
+    },
+    {
       "source": "SNBattleSim/tests/simulation.test.mjs",
-      "sha256": "a642bb984895b95a3ee1b00eb0e12665cda21e09dd0dcb0d3befcddbb39f918e",
+      "sha256": "4e3f009c7324171b40e8feb2bbc485c808d669a18302f21a576a4bdc257ae78d",
       "doc": "docs/static/SNBattleSim/tests/simulation.test.mjs.md",
       "status": "documented"
     },
     {
+      "source": "SNBattleSim/tools/cli.mjs",
+      "sha256": "6746cfdedace02890c80a22287384823fd97a12b76b710f4c4409f7d27660dbc",
+      "doc": "docs/static/SNBattleSim/tools/cli.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/tools/mod_io.mjs",
+      "sha256": "1d6d5d930ea0c2a7458a1554ed125081e2244293d3d8b1ddcca174ec302fc0c0",
+      "doc": "docs/static/SNBattleSim/tools/mod_io.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "SNBattleSim/tools/serve.mjs",
-      "sha256": "44a53af9429622d72668a638a57cc0de02d58a3f33a130be9055490bb4b8ca28",
+      "sha256": "d3f2437154ad168a261757cb5796ed0b1467bc2ee0fea6283542cec950d5ff9c",
       "doc": "docs/static/SNBattleSim/tools/serve.mjs.md",
       "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/tools/workspace_io.mjs",
+      "sha256": "c9776f1e5abc0c7fbbcdd467ae22c40dcbc171ab74bf4ad7bf385d812834959d",
+      "doc": "docs/static/SNBattleSim/tools/workspace_io.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNBattleSim/user_data/README.md",
+      "sha256": "1147698199016d0dba78c8ef96ce6c5ee174be07cd1bb0e3edd448c62798d7cb",
+      "doc": "docs/static/SNBattleSim/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNBattleSim/README.md"
     },
     {
       "source": "SNModMaker/.dockerignore",
@@ -1463,7 +1527,7 @@
     },
     {
       "source": "dev_mods/core/content/map_profiles.json",
-      "sha256": "3ba9d72706d1bad722253c14bda554d75c28e0de27e17a829c219c80770356dd",
+      "sha256": "9d6706cce5006c0894d093b3ddd094a90184be1acd4b28d579d99d0d7dbf0fc3",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1616,7 +1680,7 @@
     },
     {
       "source": "framework/application/commands/command_registry.gd",
-      "sha256": "f0a071803157dadf15e10c65f2b99ae6b0cf0274c161a600ae82e992dfc116aa",
+      "sha256": "fcb7ed5656fc3ad390a18053880ddbce8bd5db29b174342e4b9b05b6ef1c895c",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -1634,6 +1698,12 @@
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
+    },
+    {
+      "source": "framework/application/commands/explore_commands.gd",
+      "sha256": "cc361f7a932e8d3ea2ed334090a80f2866061a973a01cbcaedbdb8d30e60fe63",
+      "doc": "docs/static/framework/application/commands/explore_commands.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/application/commands/intel_commands.gd",
@@ -1742,7 +1812,7 @@
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "f8e8334b7bd9eb287af40b7036a1656121af02dc914faa2c04923dcc4e1af7e0",
+      "sha256": "f820b879c4b8c580fbde5fb1d9409637e4964220ce505592c436188692cc0390",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -1926,6 +1996,30 @@
       "status": "documented"
     },
     {
+      "source": "framework/domain/exploration/clue_service.gd",
+      "sha256": "64f8b1144aa4ed36e264dcc1a8e831f0828be740eb26ceb33be01b8c61898341",
+      "doc": "docs/static/framework/domain/exploration/clue_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/exploration/exploration_calculator.gd",
+      "sha256": "70ce579ce506c7047cb9b95d555d5d3d8a93b457c9e3c779f9adad3db8a31abd",
+      "doc": "docs/static/framework/domain/exploration/exploration_calculator.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/exploration/exploration_rules.gd",
+      "sha256": "c7fe006e77e3c2ca7a0024fecf36a3d05760b9bed42980df3b1f1269f4e241b8",
+      "doc": "docs/static/framework/domain/exploration/exploration_rules.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/exploration/explore_voyage_service.gd",
+      "sha256": "4b9bcff0a6c261dc2c62cfaef515fd013d40c4a16d0ed8ab331b379b04d0cb64",
+      "doc": "docs/static/framework/domain/exploration/explore_voyage_service.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/domain/map/map_generator.gd",
       "sha256": "ee8f5ecbf4cc95123a7946ac2cca4bf60b8650ab3e71f6033eb93c23553345d2",
       "doc": "docs/static/framework/domain/map/map_generator.gd.md",
@@ -1981,13 +2075,13 @@
     },
     {
       "source": "framework/domain/voyage/voyage_presentation.gd",
-      "sha256": "7581d5d05853815052cde3d1abeafbedbed1e1b6c6b1d5cfdc853b03a2878758",
+      "sha256": "8ac5d5a1af19aeebfa97b3e13f5fede5ab29e6df5c778a6e4de3f224e1e9b64c",
       "doc": "docs/static/framework/domain/voyage/voyage_presentation.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/voyage/voyage_service.gd",
-      "sha256": "66527ff93cc52c0017174ff1a07a500fc480e37e1d11107c9653877c34da7cf0",
+      "sha256": "bdbcfb52d20c55934d5ecd639a5f9480bd6464c8aadc16b724f2fdea18417e4b",
       "doc": "docs/static/framework/domain/voyage/voyage_service.gd.md",
       "status": "documented"
     },
@@ -2184,7 +2278,7 @@
     },
     {
       "source": "framework/services/rng_service.gd",
-      "sha256": "5fbc67ca3bdefb06cdc4580f2e2bf1c90ed433e4413bcefb5105e34a34368294",
+      "sha256": "b35da5b691fb0ad680a1b46cfe0c13c3334761336a79f1411f5ac607f98268f4",
       "doc": "docs/static/framework/services/rng_service.gd.md",
       "status": "documented"
     },
@@ -2208,7 +2302,7 @@
     },
     {
       "source": "framework/state/game_state.gd",
-      "sha256": "b4a6247ddfe5cd0a8adf488536d73ea64a581cc99a417b369d0571ae22dc0290",
+      "sha256": "836cab9d3cf4fecfe7a871c14e926cfda780f0c1b167e396d655e70cb41cec87",
       "doc": "docs/static/framework/state/game_state.gd.md",
       "status": "documented"
     },
@@ -2220,7 +2314,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_asset_loader.gd",
-      "sha256": "5346692c95aa19ba8f36a6e1ecf88bbae9c240f5ee391eb2a20c0358573ee06c",
+      "sha256": "db5bef65f3a90e90ee4b2a6efe0ee568f173dc4cfbd68aaa5812d0f571a4e108",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2256,6 +2350,12 @@
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_exploration.gd",
+      "sha256": "a0033a24ab94897df484a3aac0b4dccfbb7db4b3bd731f92c3131e70fd62173a",
+      "doc": "docs/static/framework/tests/cases/test_exploration.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_fog_system.gd",
@@ -2361,7 +2461,7 @@
     },
     {
       "source": "framework/tests/cases/test_sea_chart.gd",
-      "sha256": "f8b386df204180bff87e4559b98bc355fafa67bc3922732c05a338f368f1aec6",
+      "sha256": "d283750514de00d83403e90b8c00657cd32aa102f45b6433ce73be921f362cbc",
       "doc": "docs/static/framework/tests/cases/test_sea_chart.gd.md",
       "status": "documented"
     },
@@ -2400,7 +2500,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "a9a484c51544b4cee05561700918228d9e991b31586ffa41afc05404f9b4cb71",
+      "sha256": "acc5dbb07450ed4984d9137d51af73d931a4c8c45d62b1c9a494cbb3c46706a7",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -2413,7 +2513,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "492ca151658006401764aecd8203d2849c37096ea4bafc9e53df846f414d86f4",
+      "sha256": "702332e29062ffe031dc76fac9f3827caf3f23432d6fa4a44cbdf1fc13491d39",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -2432,14 +2532,14 @@
     },
     {
       "source": "framework/tests/cases/test_voyage_flow.gd",
-      "sha256": "5c2e63795ccf556dd65ad5c6351c6b1dae48a4a95ed4dd0f3e453162b531e32e",
+      "sha256": "7eff29bf0a0ee4b1848c8af58ed3a317859b0ce1bcf1658fd68f8466cabccaff",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/tests/cases/test_voyage_presentation.gd",
-      "sha256": "8fd5d3c372359f800109ef790bb3c910189adc6db3cfb2379d8c9e22704f918a",
+      "sha256": "1306956930f67c481313f74c620f8d6d0ad7204bdfe6e101d6fa2b6f45751d25",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2487,7 +2587,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "24e5d0ca3b6128e093f58aad7bc6229aa8c0c431ee4fb569c5e640a28597c95a",
+      "sha256": "1c0b36a3f9f4d0d35b4876892dfb8197b18722d4f1797d8a9ad637a883f3ff08",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2597,13 +2697,13 @@
     },
     {
       "source": "framework/ui/components/sn_sea_chart_panel.gd",
-      "sha256": "c819ab47182b00cbaf823a560519606ec2bf401b85d27cc6d871167e16df7ffa",
+      "sha256": "2b0647ecd0bcdf343d7c32fdf81b51da025fbdf17b9e6dff7bac055b87438d1d",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_panel.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_sea_chart_view.gd",
-      "sha256": "9bfb4a65df7cd89b1b9f1ae260d4094bd2a5ec7406a9f8d8c3f2a6086d2cf7e6",
+      "sha256": "dbc8f7efc4e1ca137a127584116f037835898a758cd07a94f6024b5a2e3d4396",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -2686,7 +2786,7 @@
     },
     {
       "source": "framework/ui/screens/flow/at_sea_screen.gd",
-      "sha256": "dbf26ba92c15dcace97dc0455ea1b71e17abf6019e2a95025479af21f4b17845",
+      "sha256": "27a6de054c329c500492fdca39134d962d96c6752b11ec61d6b0de9e3a50c16e",
       "doc": "docs/static/framework/ui/screens/flow/at_sea_screen.gd.md",
       "status": "documented"
     },
@@ -2725,7 +2825,7 @@
     },
     {
       "source": "framework/ui/screens/flow/sea_chart_screen.gd",
-      "sha256": "1e519a3396991c9c272e83c24ae9b003a27486413beb70a7b65d6e475dd05844",
+      "sha256": "5c5ec120ad735567e26340b9fc9661553b12330cdc3dd3170079544701b32e27",
       "doc": "docs/static/framework/ui/screens/flow/sea_chart_screen.gd.md",
       "status": "documented"
     },
@@ -2738,7 +2838,7 @@
     },
     {
       "source": "framework/ui/screens/flow/settlement_screen.gd",
-      "sha256": "10b50892fe9e3b972743f64155a24d799484934abf81e0863a4438623d6b8e63",
+      "sha256": "610d5f168d00232de1e380c841eaf74b1480ce5d8de8dcbf5e76ae56cca744d5",
       "doc": "docs/static/framework/ui/screens/flow/settlement_screen.gd.md",
       "status": "documented"
     },
@@ -2907,13 +3007,13 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "1ffd79b4b1abe0161ad3342246ec7344ec66c86c88e7cb10ae4792bb5ed1f87d",
+      "sha256": "2492b1aacd0c816aacf10e76272c59f1be90bade86456488ae3ce10f6485b998",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/shell/main.tscn",
-      "sha256": "88bdc8e0b07b6f499adff8463a91bcdbc980d62ec64468d991f6b765b2f90b57",
+      "sha256": "9bccff62648346560f47c068e00774323773609b1deab77aa2b6e9ba93135f42",
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
@@ -2939,7 +3039,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "0c20d85cd7be13b37ed7bd46cc90964f28cd4b60cd3272ebb51f5965c00b9152",
+      "sha256": "22e8ab90a417442708d9f34b3da25f06037c35fe5c4106bcdbb3085e9df5b38a",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -3040,7 +3140,7 @@
     },
     {
       "source": "schemas/map_profile.schema.json",
-      "sha256": "fbca251f42f7a495c3a7e555349d1ecdb9aa78ec9be5f8def7785acebb7592af",
+      "sha256": "4bc0ead651cb2a3f272ab45a3e8fb914c0cf1308e227a10bcab3650085f326e6",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -3241,7 +3341,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "2ba902789ecbcd46a7f162e97144fee10aa6ebf2e7bf4436c31c215259813826",
+      "sha256": "59c6ea6794584d3bc6779d8c6f0e6a3f51eb6b5af2a542435e4cbe08c76f51ee",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3284,6 +3384,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/godot/capture_exploration.gd",
+      "sha256": "fbe4fbc2c31334516e78d26284b4781cc6b37fdfe960e4294f1d00e4d539bcea",
+      "doc": "docs/static/tools/godot/capture_exploration.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/godot/capture_harbor_diorama.gd",
       "sha256": "3eaf339a1a0ac0b6fede0f4c3fe8d8cf3d82eb60fb9e680c1cc354c022e5e599",
       "doc": "docs/static/tools/godot/capture_harbor_diorama.gd.md",
@@ -3309,7 +3415,7 @@
     },
     {
       "source": "tools/godot/capture_voyage_presentation.gd",
-      "sha256": "c1e95e909415a213c71ccec9968e363f067f1dd3185e126ae61e7148f29b59bb",
+      "sha256": "d904cf9e18eca625a2c65f4f3dac4e4d6f704b6edaa6456cfb0e445847fc578d",
       "doc": "docs/static/tools/godot/capture_voyage_presentation.gd.md",
       "status": "documented"
     },
@@ -3426,7 +3532,7 @@
     },
     {
       "source": "tools/modeling/briefs/sn_ironclad_broadside.json",
-      "sha256": "d90c9ea6af010b5aa4d1b678e305b15b64dd061363f9ab32d15903e8a27a21c7",
+      "sha256": "45abbc287f50d54a203d5097856cd2653f1144a7f5f2f21b1e8d72e410ce93b0",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3711,7 +3817,7 @@
     },
     {
       "source": "tools/modeling/generators/ship_parts/core.py",
-      "sha256": "3e2fbec8d6ce6c7e7a2bf2bfcbaab4da0b13dc254bce9ee3b1765603ecf376da",
+      "sha256": "db33800080dea7ad015ea93dd8603a071aa69f8a92c7e77ee4f5eab97c56f2c1",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3797,13 +3903,13 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_kit_batch2.py",
-      "sha256": "7d3c36f6c81fa70c2cd0105448c4c41845cf691b913538feb98f8e8f945febcd",
+      "sha256": "2367b31a496d9f8eade7bc687e5e0603a8163c2b93aab489e03f331b720b3249",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_kit_batch2.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_materials.py",
-      "sha256": "1204c1dfe54351d82dd6bf287c5965ee4636071cacf6607cbe7bfb6e8e732d61",
+      "sha256": "a4c1751787ff6ef6065672fe06bebfa9f30ee93f29aedcc500afcb6edef1ae40",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_materials.py.md",
       "status": "documented"
     },
@@ -3815,13 +3921,13 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_tavern_generator.py",
-      "sha256": "4c28f6260d981d945852db7b92c12afc2e55ec9e527231bd81e5ac1e2f655603",
+      "sha256": "1861463ce444c63ce138ffa23ea3457529ca6f25f700d3a094ad105c9fabdfdf",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_tavern_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py",
-      "sha256": "0abaf3d4e1da3eb47786600d7807c92346747d558f673ced0621ad458245acc8",
+      "sha256": "e21e5bbeaabe3c96a0c2190f174be462da94321f516e81c06ebd5187393ffdb4",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py.md",
       "status": "documented"
     },
@@ -3861,7 +3967,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_schooner_fame_generator.py",
-      "sha256": "7b301f22789bb02b6024e6e0c196ab250ee511568602eee3d6fb18ec5c8f8894",
+      "sha256": "d24cd324a932a90838f252b88939a5cdf7d819ee24b620f1a8c6cc0f3e2f54fc",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

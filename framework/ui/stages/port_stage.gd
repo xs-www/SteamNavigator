@@ -138,13 +138,26 @@ const SHIP_TURN_SPEED := 2.6
 # "the ship disappears where the chart marker appears" a testable claim rather
 # than a coincidence.
 const SEA_HANDOFF := Vector3(-13.5, 0.0, 58.0)
-const DEPART_CAMERA := Vector3(24.0, 58.0, 156.0)
-const DEPART_CAMERA_TARGET := Vector3(-13.5, 2.0, 46.0)
+## The "leaving from above" shot: the camera ends almost vertically over the
+## harbour mouth, so the cut reads as a climb over a ship that has genuinely
+## sailed out of the berth instead of a lateral truck. Pitch is geometric
+## (`camera_pitch_deg()`): atan2(165 - 0, horizontal 20) = 83.1 deg, well above
+## the ~10.6 deg station shot.
+const DEPART_CAMERA := Vector3(-13.5, 165.0, 78.0)
+const DEPART_CAMERA_TARGET := Vector3(-13.5, 0.0, 58.0)
 const DEPART_CAMERA_FOV := 38.0
 ## Both beats are 1.8 s. The duration lives here (the stage owns the animation)
 ## and `VoyagePresentation` is told the same number when the beat starts, so the
 ## state machine and the 3D animation finish together.
 const VOYAGE_BEAT_SECONDS := 1.8
+## Share of a beat spent swinging the bow before any way is made: departure turns
+## from the mooring yaw into the outbound heading first, arrival turns from that
+## outbound heading into the inbound heading first. Turning on the spot is what
+## separates "casting off and sailing away" from the old sideways slide.
+const VOYAGE_TURN_FRACTION := 0.4
+## Arrival only: the last share of the beat swings the bow back to the mooring
+## yaw while the hull settles onto its berth.
+const VOYAGE_MOOR_TURN_FRACTION := 0.25
 
 const MODEL_BY_TIER := {
 	1: "res://assets/models/ships/SN_Paddle_Steamer.glb",
@@ -503,14 +516,24 @@ var _ship_sailing := false
 ## `advance_voyage()` steps it (the shell drives it; `_process` does not, so a
 ## headless test can step the whole beat deterministically without double-time).
 var _voyage_mode := ""
+## Set when a departure beat ends: the hull stays on `SEA_HANDOFF` under the
+## cloud veil instead of letting the station wheel pull it back to its berth
+## before the cut. Cleared by the next departure/arrival beat or a reset.
+var _voyage_hold := false
 var _voyage_t := 1.0
 var _voyage_seconds := VOYAGE_BEAT_SECONDS
 var _voyage_ship_from := SHIP_SPAWN
 var _voyage_ship_to := SHIP_SPAWN
-var _voyage_camera_from := CAMERA_POS
-var _voyage_camera_to := CAMERA_POS
-var _voyage_target_from := CAMERA_TARGET
-var _voyage_target_to := CAMERA_TARGET
+## Heading bookkeeping for the beat: the departure starts at the mooring yaw and
+## ends on the outbound heading; the arrival starts on that same outbound heading
+## (seam invariant) and ends back on the mooring yaw.
+var _voyage_ship_yaw_from := 0.0
+var _voyage_ship_yaw_to := 0.0
+## Shot bookkeeping as orbit parameters (target / horizontal distance / height /
+## yaw) instead of raw position+target pairs: interpolating those keeps the
+## climb monotonic in height and pitch, which a position/target lerp does not.
+var _voyage_orbit_from := {}
+var _voyage_orbit_to := {}
 var _voyage_fov_from := CAMERA_FOV
 var _voyage_fov_to := CAMERA_FOV
 var _skyline_root: Node3D
@@ -880,6 +903,7 @@ func focus_station(station_id: String, framing: String = "stage", immediate: boo
 		_ship_yaw = _ship_moor_yaw
 		_ship_sailing = false
 		_voyage_mode = ""
+		_voyage_hold = false
 		_voyage_t = 1.0
 		_apply_camera_shift()
 		_camera.look_at(_camera_target, Vector3.UP)
@@ -1006,53 +1030,109 @@ func _apply_ship_pose() -> void:
 
 # --- Voyage departure / arrival beat ---------------------------------------
 
-## Starts the departure beat: the hull sails from its berth to `SEA_HANDOFF`
-## while the camera climbs to the high, wide shot. The beat is *visible* — the
-## cloud veil only starts once `VoyagePresentation` is told the 3D shot is done.
+## Heading (radians) of the hull once it has cast off and points at the open sea:
+## the berth -> `SEA_HANDOFF` direction on XZ. The hull's bow points at +X at
+## yaw 0 and Godot's positive Y rotation turns +X toward -Z, so a direction
+## (dx, dz) maps to `atan2(-dz, dx)` — the same convention `_advance_ship` uses
+## for the quay transit, where sailing toward +Z reads as -PI/2.
+func _voyage_outbound_yaw() -> float:
+	var delta := SEA_HANDOFF - Vector3(_ship_moor_x, 0.0, _ship_moor_z)
+	if Vector2(delta.x, delta.z).length() < 0.001:
+		return _ship_moor_yaw
+	return atan2(-delta.z, delta.x)
+
+
+## Heading (radians) that sails from the sea handoff back onto the berth.
+func _voyage_inbound_yaw() -> float:
+	return wrapf(_voyage_outbound_yaw() + PI, -PI, PI)
+
+
+## A shot as orbit parameters around the point the camera looks at. Interpolating
+## (target, horizontal distance, height, yaw) instead of lerping position and
+## target independently keeps the departure climb monotonic in height and in
+## pitch (= atan2(height, distance)); a raw position/target lerp can flatten the
+## angle mid-way and make the camera dive through the quay.
+static func _shot_orbit(position: Vector3, target: Vector3) -> Dictionary:
+	var offset := position - target
+	return {
+		"target": target,
+		"distance": Vector2(offset.x, offset.z).length(),
+		"height": offset.y,
+		"yaw": atan2(offset.x, offset.z),
+	}
+
+
+static func _orbit_position(orbit: Dictionary) -> Vector3:
+	var target: Vector3 = orbit["target"]
+	var distance := float(orbit["distance"])
+	var yaw := float(orbit["yaw"])
+	return target + Vector3(sin(yaw) * distance, float(orbit["height"]), cos(yaw) * distance)
+
+
+static func _orbit_lerp(from: Dictionary, to: Dictionary, weight: float) -> Dictionary:
+	var from_target: Vector3 = from["target"]
+	var to_target: Vector3 = to["target"]
+	return {
+		"target": from_target.lerp(to_target, weight),
+		"distance": lerpf(float(from["distance"]), float(to["distance"]), weight),
+		"height": lerpf(float(from["height"]), float(to["height"]), weight),
+		"yaw": lerp_angle(float(from["yaw"]), float(to["yaw"]), weight),
+	}
+
+
+## Starts the departure beat: the hull swings its bow out to sea first, then
+## sails from its berth to `SEA_HANDOFF` while the camera climbs to the high,
+## almost vertical wide shot. The beat is *visible* — the cloud veil only starts
+## once `VoyagePresentation` is told the 3D shot is done.
 func begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void:
 	if _camera == null:
 		return
 	_voyage_mode = "depart"
+	_voyage_hold = false
 	_voyage_t = 0.0
 	# A station pan may still be queued; the beat owns the camera from here on.
 	_camera_t = 1.0
 	_voyage_ship_from = Vector3(_ship_x, 0.0, _ship_z)
 	_voyage_ship_to = SEA_HANDOFF
-	_voyage_camera_from = _camera.position
-	_voyage_target_from = _camera_target
+	_voyage_ship_yaw_from = _ship_yaw
+	_voyage_ship_yaw_to = _voyage_outbound_yaw()
+	_voyage_orbit_from = _shot_orbit(_camera.position, _camera_target)
+	_voyage_orbit_to = _shot_orbit(DEPART_CAMERA, DEPART_CAMERA_TARGET)
 	_voyage_fov_from = _camera.fov
-	# Climb away from the quay: higher, further back and looking down the harbour
-	# mouth so the hull visibly leaves the berth instead of just fading out.
-	_voyage_camera_to = DEPART_CAMERA
-	_voyage_target_to = DEPART_CAMERA_TARGET
 	_voyage_fov_to = DEPART_CAMERA_FOV
 	_voyage_seconds = clampf(duration, 0.2, 10.0)
 
 
-## Starts the arrival beat: the hull appears at `SEA_HANDOFF` against the high
-## shot and sails into its berth while the camera comes back down.
+## Starts the arrival beat: the hull appears at `SEA_HANDOFF` pointing out to sea
+## — the exact heading it vanished at on departure — swings into the harbour,
+## sails into its berth while the camera comes back down from the high shot.
 func begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void:
 	if _camera == null:
 		return
 	_voyage_mode = "arrive"
+	_voyage_hold = false
 	_voyage_t = 0.0
 	_camera_t = 1.0
 	_voyage_ship_from = SEA_HANDOFF
 	_voyage_ship_to = Vector3(_ship_moor_x, 0.0, _ship_moor_z)
+	# Seam invariant: the first arrival frame faces exactly the way the departure
+	# cut's last frame faced, so the hull never flicks to a new heading between
+	# the chart and the harbour.
+	_voyage_ship_yaw_from = _voyage_outbound_yaw()
+	_voyage_ship_yaw_to = _voyage_inbound_yaw()
 	_ship_x = SEA_HANDOFF.x
 	_ship_z = SEA_HANDOFF.z
-	_voyage_camera_from = DEPART_CAMERA
-	_voyage_target_from = DEPART_CAMERA_TARGET
-	_voyage_fov_from = DEPART_CAMERA_FOV
+	_ship_yaw = _voyage_ship_yaw_from
+	_voyage_orbit_from = _shot_orbit(DEPART_CAMERA, DEPART_CAMERA_TARGET)
 	var pose := station_camera_pose(_station, _station_framing)
-	_voyage_camera_to = pose["position"]
-	_voyage_target_to = pose["target"]
+	_voyage_orbit_to = _shot_orbit(pose["position"], pose["target"])
+	_voyage_fov_from = DEPART_CAMERA_FOV
 	_voyage_fov_to = float(pose["fov"])
 	_voyage_seconds = clampf(duration, 0.2, 10.0)
 	# Snap the high shot immediately so the first visible frame of the harbour is
 	# already the wide "arriving from sea" shot.
-	_camera.position = _voyage_camera_from
-	_camera_target = _voyage_target_from
+	_camera.position = DEPART_CAMERA
+	_camera_target = DEPART_CAMERA_TARGET
 	_camera.fov = _voyage_fov_from
 	_camera.look_at(_camera_target, Vector3.UP)
 	_apply_ship_pose()
@@ -1069,28 +1149,66 @@ func advance_voyage(delta: float) -> void:
 		return
 	_voyage_t = minf(1.0, _voyage_t + maxf(0.0, delta) / maxf(0.01, _voyage_seconds))
 	var eased := smoothstep(0.0, 1.0, _voyage_t)
-	_camera.position = _voyage_camera_from.lerp(_voyage_camera_to, eased)
-	_camera_target = _voyage_target_from.lerp(_voyage_target_to, eased)
-	_camera.fov = lerpf(_voyage_fov_from, _voyage_fov_to, eased)
-	_camera.look_at(_camera_target, Vector3.UP)
+	_advance_voyage_camera(eased)
 	_camera_t = 1.0
-	var ship := _voyage_ship_from.lerp(_voyage_ship_to, eased)
-	_ship_x = ship.x
-	_ship_z = ship.z
-	_apply_ship_pose()
+	_advance_voyage_ship()
 	if _voyage_t >= 1.0:
 		_finish_voyage_beat()
 
 
-## Ends the beat: a departure leaves the hull at the sea handoff (the veil is
-## covering it), an arrival puts it back on the berth with the station shot.
+func _advance_voyage_camera(eased: float) -> void:
+	var orbit := _orbit_lerp(_voyage_orbit_from, _voyage_orbit_to, eased)
+	_camera_target = orbit["target"]
+	_camera.position = _orbit_position(orbit)
+	_camera.fov = lerpf(_voyage_fov_from, _voyage_fov_to, eased)
+	_camera.look_at(_camera_target, Vector3.UP)
+
+
+## 0..1 weight of the bow-first turn. Both beats spend the opening share of the
+## beat turning on the spot; no way is made until that turn is complete.
+func _voyage_turn_weight() -> float:
+	return smoothstep(0.0, 1.0, clampf(_voyage_t / VOYAGE_TURN_FRACTION, 0.0, 1.0))
+
+
+## 0..1 progress of the passage that follows the turn (0 during the turn).
+func _voyage_sail_weight() -> float:
+	return smoothstep(0.0, 1.0, clampf(
+		(_voyage_t - VOYAGE_TURN_FRACTION) / (1.0 - VOYAGE_TURN_FRACTION), 0.0, 1.0
+	))
+
+
+## Deterministic hull pose for the current `_voyage_t`: turn the bow first, then
+## sail the straight line to the target point; the arrival also swings the bow
+## back to the mooring yaw over the last stretch. Every weight derives from
+## `_voyage_t` alone, so any step size produces the same trajectory.
+func _advance_voyage_ship() -> void:
+	var point := _voyage_ship_from.lerp(_voyage_ship_to, _voyage_sail_weight())
+	_ship_x = point.x
+	_ship_z = point.z
+	var heading := lerp_angle(_voyage_ship_yaw_from, _voyage_ship_yaw_to, _voyage_turn_weight())
+	if _voyage_mode == "arrive":
+		var moor_weight := smoothstep(0.0, 1.0, clampf(
+			(_voyage_t - (1.0 - VOYAGE_MOOR_TURN_FRACTION)) / VOYAGE_MOOR_TURN_FRACTION,
+			0.0,
+			1.0
+		))
+		heading = lerp_angle(heading, _ship_moor_yaw, moor_weight)
+	_ship_yaw = heading
+	_apply_ship_pose()
+
+
+## Ends the beat: a departure leaves the hull exactly on the sea handoff under
+## the high shot (the veil is covering it), an arrival puts it back on the berth
+## with the station shot and the mooring yaw.
 func _finish_voyage_beat() -> void:
 	var mode := _voyage_mode
 	_voyage_mode = ""
 	_voyage_t = 1.0
 	if mode == "arrive":
+		_voyage_hold = false
 		_ship_x = _ship_moor_x
 		_ship_z = _ship_moor_z
+		_ship_yaw = _ship_moor_yaw
 		var pose := station_camera_pose(_station, _station_framing)
 		_camera.position = pose["position"]
 		_camera_target = pose["target"]
@@ -1098,17 +1216,33 @@ func _finish_voyage_beat() -> void:
 		_apply_camera_shift()
 		_camera.look_at(_camera_target, Vector3.UP)
 		_apply_ship_pose()
+		return
+	# Departure: land exactly on the constants, not on an interpolated approximation,
+	# and hold there — the hull vanished from this point under the veil; letting the
+	# station wheel run would drag it back to the berth while the clouds close.
+	_voyage_hold = true
+	_ship_x = _voyage_ship_to.x
+	_ship_z = _voyage_ship_to.z
+	_ship_yaw = _voyage_ship_yaw_to
+	_camera.position = DEPART_CAMERA
+	_camera_target = DEPART_CAMERA_TARGET
+	_camera.fov = DEPART_CAMERA_FOV
+	_camera.look_at(_camera_target, Vector3.UP)
+	_apply_ship_pose()
 
 
 ## Drops an in-flight beat and restores the station framing (new run, load,
-## leaving the presentation early). Safe to call when idle.
+## leaving the presentation early). Safe to call when idle — including the
+## handoff hold a finished departure leaves behind.
 func reset_voyage() -> void:
-	if _voyage_mode.is_empty():
+	if _voyage_mode.is_empty() and not _voyage_hold:
 		return
 	_voyage_mode = ""
+	_voyage_hold = false
 	_voyage_t = 1.0
 	_ship_x = _ship_moor_x
 	_ship_z = _ship_moor_z
+	_ship_yaw = _ship_moor_yaw
 	if _camera == null:
 		return
 	var pose := station_camera_pose(_station, _station_framing)
@@ -1128,6 +1262,13 @@ func voyage_mode() -> String:
 	return _voyage_mode
 
 
+## True after a departure beat ended and before the next beat/reset: the hull is
+## parked exactly on `SEA_HANDOFF` because that is where it vanished into the
+## veil. The station wheel is paused while this holds.
+func is_voyage_holding_handoff() -> bool:
+	return _voyage_hold
+
+
 ## 0..1 progress of the current beat; 1.0 when idle.
 func voyage_progress() -> float:
 	return _voyage_t
@@ -1143,6 +1284,24 @@ func voyage_handoff_position() -> Vector3:
 ## the handoff instead of somewhere along the quay).
 func ship_position() -> Vector3:
 	return Vector3(_ship_x, 0.0, _ship_z)
+
+
+## Current heading of the hull in radians (0 = bow toward +X). The departure beat
+## turns the bow into the outbound heading before any way is made; the arrival
+## beat starts on that same outbound heading (seam invariant) and ends back on
+## the mooring yaw.
+func ship_yaw() -> float:
+	return _ship_yaw
+
+
+## Pitch of the current shot in degrees: 0 = level, 90 = straight down. The
+## departure beat climbs to an almost vertical high shot (>= 80 deg) and the
+## arrival beat brings it back to the shallow (~10.6 deg) station pitch.
+func camera_pitch_deg() -> float:
+	if _camera == null:
+		return 0.0
+	var offset := _camera.position - _camera_target
+	return rad_to_deg(atan2(offset.y, Vector2(offset.x, offset.z).length()))
 
 
 ## The foam ring belongs to the hull, not to the stage: while the ship sails
@@ -1184,7 +1343,9 @@ func _process(delta: float) -> void:
 		return
 	# While a departure/arrival beat is playing it owns the camera and the hull;
 	# letting the station wheel run at the same time made the two fight each other.
-	if _voyage_mode.is_empty():
+	# A finished departure also holds the hull on the sea handoff until the cut
+	# closes, so the stage never drags it back to the berth under the clouds.
+	if _voyage_mode.is_empty() and not _voyage_hold:
 		advance_station(delta)
 	# Fog bands drift slowly; the hash-seeded phase keeps each stage unique while
 	# the motion stays fully deterministic. The camera shift keeps them glued to

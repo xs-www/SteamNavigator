@@ -9,8 +9,17 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNSeaChartPanel` | L1 |
-| `voyage_requested (signal)` | L21 |
-| `clear() -> void` | L48 |
+| `voyage_requested (signal)` | L27 |
+| `explore_requested (signal)` | L29 |
+| `purchase_clue_requested (signal)` | L31 |
+| `COMPASS_KEYS` | L34 |
+| `COMPASS_FALLBACK` | L36 |
+| `LEVEL_FALLBACK` | L40 |
+| `SOURCE_FALLBACK` | L43 |
+| `get_clue() -> Dictionary` | L85 |
+| `set_can_buy_clue(can_buy: Dictionary) -> void` | L91 |
+| `clear() -> void` | L95 |
+| `compass_key(angle: float) -> String` | L428 |
 
 **航程预估**（距离 / 预计时间 / 煤水消耗 / 风险 / 是否已探索），并提供「启航」按钮。
 
@@ -26,5 +35,11 @@
 - 煤水块只在查询给出 `supplies` 时出现；`sufficient=false` 用警示色并提示，
   但不在这里拦截出航（阻断仍由出航页的 `voyage.preview` 决定）。
 - 点击「启航」发出 `voyage_requested(port_id)`，由 Shell 路由到 `voyage.start`。
+- **线索区块**（探索系统 4.1）：`bind_clue(clue)` 时面板改成显示一条线索——标题、
+  来源（只给来源不给 credibility 数字）、等级、八方位、航程区间、预计航程/煤水/
+  风险/可行性（不可行时列出 blockers 的 message_key）。「循此线索出航」发出
+  `explore_requested(clue_id)`；`can_buy_clue.available` 时多一个购买按钮，发出
+  `purchase_clue_requested`，由 Shell 执行 `clue.buy` 并刷新海图。
+  面板仍不计算任何数值：预计值全部来自查询层的 `clue["estimated"]`。
 
 模块索引：[framework/ui](../README.md)

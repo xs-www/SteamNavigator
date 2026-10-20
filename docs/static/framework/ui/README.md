@@ -44,7 +44,7 @@
 | `screens/flow/port_memory_screen.tscn` | 框架源文件：port_memory_screen.tscn | 本页 |
 | `screens/flow/sea_chart_screen.gd` | 全屏航海图页（海图系统阶段 2 入口集成）：左侧 `SNSeaChartView` 铺满、 | [查看](./screens/flow/sea_chart_screen.gd.md) |
 | `screens/flow/sea_chart_screen.tscn` | 框架源文件：sea_chart_screen.tscn | 本页 |
-| `screens/flow/settlement_screen.gd` | 抵达结算流程场景：展示航次收入、准时率、延误、剩余资源、交付明细与伤员。 | [查看](./screens/flow/settlement_screen.gd.md) |
+| `screens/flow/settlement_screen.gd` | 抵达结算页。展示委托收入 / 准时 / 延误、船况资源、交付明细与旅客受伤， | [查看](./screens/flow/settlement_screen.gd.md) |
 | `screens/flow/settlement_screen.tscn` | 框架源文件：settlement_screen.tscn | 本页 |
 | `screens/flow/victory_screen.gd` | 通关总结流程场景：展示种子、构筑、航次、准时率、事故、财务、债务、耐久和最终模块。 | [查看](./screens/flow/victory_screen.gd.md) |
 | `screens/flow/victory_screen.tscn` | 框架源文件：victory_screen.tscn | 本页 |

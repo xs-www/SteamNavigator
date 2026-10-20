@@ -35,16 +35,17 @@
 | `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L171 |
 | `test_damaged_module_is_visible_in_the_shell() -> void` | L207 |
 | `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L226 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L291 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L337 |
-| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L387 |
-| `test_intel_screen_renders_the_port_comparison_table() -> void` | L417 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L464 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L522 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L555 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L766 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L785 |
-| `test_sea_chart_entry_integration() -> void` | L864 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L294 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L340 |
+| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L390 |
+| `test_intel_screen_renders_the_port_comparison_table() -> void` | L420 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L467 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L525 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L558 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L769 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L788 |
+| `test_sea_chart_entry_integration() -> void` | L867 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L924 |
 
 ## 契约与约束
 

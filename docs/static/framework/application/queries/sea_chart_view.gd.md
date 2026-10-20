@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartViewQuery` | L1 |
-| `DEFAULT_MIN_VISION_RADIUS` | L27 |
-| `DEFAULT_PORT_REVEAL_RADIUS` | L28 |
-| `execute(params: Dictionary, context) -> Dictionary` | L31 |
+| `DEFAULT_MIN_VISION_RADIUS` | L31 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L32 |
+| `execute(params: Dictionary, context) -> Dictionary` | L35 |
 
 陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
 
@@ -25,6 +25,10 @@
   现场计算（`_compute_routes`），这条回退路径不改状态。
 - 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
 - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
+- 探索系统（阶段 4.1）追加三组只读数据：`clues` 是 `ClueService.view` 的等级裁剪
+  视图（不含 `target_port_id` / `credibility` / 真实 `search_zone`）再合并
+  `ExplorationCalculator.preview` 的展示估算；`explore` 只说明是否有探索航次及其
+  clue id；`can_buy_clue` 用与 `clue.buy` 相同的门禁算出是否可买与原因键。
 - 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
   煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
   几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：

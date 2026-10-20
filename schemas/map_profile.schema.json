@@ -154,7 +154,127 @@
         },
         "default_starting_build": {
           "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "exploration": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rumor_clue_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "intel_clue_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max_active_clues": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "level_weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rumor", "intel"],
+              "properties": {
+                "rumor": {
+                  "$ref": "#/$defs/level_weight_vector"
+                },
+                "intel": {
+                  "$ref": "#/$defs/level_weight_vector"
+                }
+              }
+            },
+            "credibility_range": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rumor", "intel"],
+              "properties": {
+                "rumor": {
+                  "$ref": "common.schema.json#/$defs/range2"
+                },
+                "intel": {
+                  "$ref": "common.schema.json#/$defs/range2"
+                }
+              }
+            },
+            "distance_error_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "search_zone_radius": {
+              "type": "number",
+              "minimum": 0
+            },
+            "search_zone_noise": {
+              "type": "number",
+              "minimum": 0
+            },
+            "discovery_chance_base": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "discovery_chance_per_credibility": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "risk_base": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "risk_per_unreliability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "drift_durability_loss": {
+              "type": "number",
+              "minimum": 0
+            },
+            "drift_extra_coal": {
+              "type": "number",
+              "minimum": 0
+            },
+            "drift_extra_water": {
+              "type": "number",
+              "minimum": 0
+            },
+            "drift_hours": {
+              "type": "number",
+              "minimum": 0
+            },
+            "alert_threshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "alert_progress": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "turnback_extra_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
         }
+      }
+    },
+    "level_weight_vector": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
       }
     }
   }

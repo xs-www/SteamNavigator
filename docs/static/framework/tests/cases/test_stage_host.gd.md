@@ -52,8 +52,13 @@
 | `test_port_stage_bind_keeps_the_current_station_and_berth() -> void` | L1190 |
 | `test_port_stage_station_dressing_scales_with_density() -> void` | L1233 |
 | `test_port_stage_redirect_mid_transition_continues_from_current_pose() -> void` | L1261 |
-| `test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void` | L1310 |
-| `test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void` | L1352 |
+| `test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void` | L1337 |
+| `test_departure_hold_keeps_the_hull_on_the_sea_handoff_until_the_cut() -> void` | L1379 |
+| `test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void` | L1408 |
+| `test_port_stage_departure_turns_the_bow_out_to_sea_before_making_way() -> void` | L1455 |
+| `test_port_stage_voyage_handoff_heading_is_seamless() -> void` | L1494 |
+| `test_port_stage_departure_camera_climbs_to_a_near_vertical_high_shot() -> void` | L1540 |
+| `test_port_stage_arrival_camera_falls_back_to_the_station_shot() -> void` | L1597 |
 
 ## 契约与约束
 

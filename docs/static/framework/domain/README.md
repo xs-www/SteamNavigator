@@ -18,6 +18,10 @@
 | `events/condition_op_registry.gd` | 白名单条件操作码及其只读判定实现。 | [查看](./events/condition_op_registry.gd.md) |
 | `events/effect_executor.gd` | 顺序执行效果列表，失败即中止并返回带索引的错误。 | [查看](./events/effect_executor.gd.md) |
 | `events/effect_op_registry.gd` | 白名单效果操作码及其纯实现（货币、补给、货物、船只与模块、委托、情报、通知）。 | [查看](./events/effect_op_registry.gd.md) |
+| `exploration/clue_service.gd` | 港口位置线索的领域服务——生成（抵达传闻 / 酒馆购买）、按等级裁剪的只读视图、 | [查看](./exploration/clue_service.gd.md) |
+| `exploration/exploration_calculator.gd` | 把「一条线索的搜索区 + 当前船况 + 锅炉策略 + 探索规则」折算成探索出航预览 | [查看](./exploration/exploration_calculator.gd.md) |
+| `exploration/exploration_rules.gd` | 读取并合并探索系统规则（`map_profiles` 定义的 `data.exploration`）， | [查看](./exploration/exploration_rules.gd.md) |
+| `exploration/explore_voyage_service.gd` | 探索航次的领域执行——出航（扣工资与煤水、写探索航次与在航标记、抽定发现 roll）、 | [查看](./exploration/explore_voyage_service.gd.md) |
 | `map/map_generator.gd` | 程序生成 4–5 港口连通分支网络，并验证 MVP 硬约束。 | [查看](./map/map_generator.gd.md) |
 | `map/map_ops.gd` | GameState.world 上的港口/航线查询、设施可见性、发现与 BFS。 | [查看](./map/map_ops.gd.md) |
 | `run/victory_service.gd` | 通关判定与服务：主线全部完成 + 造船厂内组装最低可运行大型船（大型船体 + 锅炉 + ≥1 货舱）。 | [查看](./run/victory_service.gd.md) |

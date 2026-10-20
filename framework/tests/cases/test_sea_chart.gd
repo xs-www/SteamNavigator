@@ -1,14 +1,18 @@
 extends TestCase
 class_name TestSeaChart
 ## @static-doc
-## 作用：海图系统（阶段 2）的无头测试，验证 `sea_chart.view` 查询的输出结构、
-## 陆地/港口/航线/迷雾数据正确性，以及同 seed 可复现性与 JSON 序列化往返。
+## 作用：海图系统的无头测试——阶段 2 验证 `sea_chart.view` 的输出结构与陆地/港口/
+## 航线/迷雾数据；阶段 4.1 追加线索可视化（视图几何、点击命中、面板线索区块、
+## 未知终点）和整页信号转发。
 ##
 ## ## 契约与约束
 ## - 每个用例通过 `bootstrap_core()` 获得真实 Core 注册表，再用内联 `TEST_PROFILE`
-##   生成世界；测试不实例化任何 UI 节点，只断言查询输出的纯数据。
+##   生成世界；纯几何/组件用例直接构造视图模型或面板，不渲染、不驱动帧。
 ## - `_setup_world_and_state()` 把起始港与其首个邻居标为已发现/已访问，
 ##   使航线用例具备两端可见的前提。
+## - 线索用例用 `CLUE_VM`（含 level 2/3/4 线索与缺失参照港）断言：几何换算是
+##   纯静态函数（`clue_arrow_endpoint` / `clue_circle_screen` / `clue_hit_test`），
+##   面板/整页只验证接线与文案，不依赖真实对局。
 ## - 港口坐标断言使用宽松范围：大陆可能跨出 `world.bounds`，港口锚定在海岸线上。
 ## @end-static-doc
 
@@ -707,6 +711,136 @@ func test_center_on_port_before_layout_is_queued() -> void:
 	view.free()
 
 
+## 验收反馈 F3：航行页的海图按 cover 铺满窗口（世界边界外画成开阔水面，不再是
+## 中间一块方形），同时航线包围盒（含起终港）必须留在视野里。
+func test_presentation_framing_fills_the_window_and_keeps_the_route_visible() -> void:
+	var view := SNSeaChartView.new()
+	view.bind(_presentation_vm())
+	# 航线贴着世界中心：铺满后整幅世界仍能盖住窗口，不需要为了航线退让。
+	var route := PackedVector2Array([
+		Vector2(120.0, 190.0), Vector2(200.0, 196.0), Vector2(280.0, 205.0),
+	])
+	view.set_presentation_mode(true, route)
+	view.size = Vector2(1440.0, 700.0)
+	view._try_fit()
+
+	assert_true(view.is_presentation_mode(), "the at-sea page asks for the presentation framing")
+	var cover := maxf(1440.0 / 400.0, 700.0 / 400.0)
+	assert_almost_eq(view.get_base_zoom(), cover, 0.01,
+		"the chart fills the window (cover), not the letterboxed table fit")
+	var top_left := view.world_to_screen(Vector2(0.0, 0.0))
+	var bottom_right := view.world_to_screen(Vector2(400.0, 400.0))
+	assert_almost_eq(top_left.x, 0.0, 0.5, "the world starts at the left window edge")
+	assert_almost_eq(bottom_right.x, 1440.0, 0.5, "the world ends at the right window edge")
+	assert_true(top_left.y <= 0.5, "the chart covers the top edge")
+	assert_true(bottom_right.y >= 699.5, "the chart covers the bottom edge")
+	# 起终港都不能被铺满裁掉。
+	for point in [route[0], route[route.size() - 1]]:
+		var screen := view.world_to_screen(point)
+		assert_true(screen.x >= 0.0 and screen.x <= 1440.0 and screen.y >= 0.0 and screen.y <= 700.0,
+			"the route endpoint stays inside the window: %s" % str(screen))
+
+	# 演出倍数：>1 = 近景，1 = 严格回到上面的稳态取景；倍数变化时不重排稳态。
+	view.set_frame_scale(2.8)
+	assert_almost_eq(view.get_zoom(), cover * 2.8, 0.01, "the near shot scales the steady framing")
+	view.set_frame_scale(1.0)
+	assert_almost_eq(view.get_zoom(), cover, 0.01, "framing scale 1 returns to the steady shot")
+	view.free()
+
+
+## 铺满不能以裁掉航线为代价：航线比窗口高时退回「装得下整条航线」的缩放，
+## 世界边界外的余下部分由演出取景画成开阔水面。
+func test_presentation_framing_gives_way_to_a_long_route() -> void:
+	var view := SNSeaChartView.new()
+	view.bind(_presentation_vm())
+	var route := PackedVector2Array([Vector2(60.0, 10.0), Vector2(340.0, 390.0)])
+	view.set_presentation_mode(true, route)
+	view.size = Vector2(1440.0, 700.0)
+	view._try_fit()
+
+	var route_zoom := minf(
+		1440.0 / (route[1].x - route[0].x + SNSeaChartView.PRESENTATION_MARGIN * 2.0),
+		700.0 / (route[1].y - route[0].y + SNSeaChartView.PRESENTATION_MARGIN * 2.0)
+	)
+	assert_almost_eq(view.get_base_zoom(), route_zoom, 0.01,
+		"a route longer than the window falls back to a zoom that fits the whole route")
+	for point in [route[0], route[1]]:
+		var screen := view.world_to_screen(point)
+		assert_true(screen.x >= 0.0 and screen.x <= 1440.0 and screen.y >= 0.0 and screen.y <= 700.0,
+			"both route endpoints stay visible at the fallback zoom: %s" % str(screen))
+	view.free()
+
+
+## 孪生世界可能很小（真实对局里见过 160 单位见方的世界），铺满 1440 px 需要
+## ×9。演出的取景不能被手动缩放的 ZOOM_MAX 卡住，否则小世界又会缩回一块方形。
+func test_presentation_framing_ignores_the_manual_zoom_cap() -> void:
+	var view := SNSeaChartView.new()
+	var vm := _presentation_vm()
+	vm["world_bounds"] = {"x": 0.0, "y": 0.0, "w": 160.0, "h": 160.0}
+	for port_data in vm["ports"]:
+		(port_data as Dictionary)["x"] = float((port_data as Dictionary)["x"]) * 0.4
+		(port_data as Dictionary)["y"] = float((port_data as Dictionary)["y"]) * 0.4
+	var route := PackedVector2Array([Vector2(48.0, 76.0), Vector2(112.0, 82.0)])
+	view.bind(vm)
+	view.set_presentation_mode(true, route)
+	view.size = Vector2(1440.0, 810.0)
+	view._try_fit()
+
+	var cover := maxf(1440.0 / 160.0, 810.0 / 160.0)
+	assert_almost_eq(view.get_base_zoom(), cover, 0.01,
+		"a small world is scaled past ZOOM_MAX so the chart still fills the window")
+	assert_true(view.get_base_zoom() > SNSeaChartView.ZOOM_MAX,
+		"the presentation framing is not limited by the manual zoom cap")
+	var top_left := view.world_to_screen(Vector2(0.0, 0.0))
+	var bottom_right := view.world_to_screen(Vector2(160.0, 160.0))
+	assert_almost_eq(top_left.x, 0.0, 0.5, "the small world starts at the left window edge")
+	assert_almost_eq(bottom_right.x, 1440.0, 0.5, "the small world ends at the right window edge")
+	assert_true(top_left.y <= 0.5 and bottom_right.y >= 809.5, "the chart covers the window height")
+	view.free()
+
+
+## 船 icon 是船形而不是固定菱形：艏尖在本地 +X，按 heading 旋转后船头朝移动方向。
+func test_ship_icon_points_along_its_heading() -> void:
+	var shape := SNSeaChartView.ship_icon_shape(10.0)
+	assert_eq(shape.size(), 6, "the marker is a six-point hull outline")
+	var bow := shape[0]
+	assert_true(bow.x > 10.0, "the bow is the long-axis tip at +X")
+	for index in range(1, shape.size()):
+		assert_true(shape[index].x < bow.x, "every other hull point sits behind the bow")
+	# Chart space is +Y down, so a heading of +PI/2 (world south) must point down.
+	var south := bow.rotated(PI / 2.0)
+	assert_almost_eq(south.angle(), PI / 2.0, 0.001, "rotating by the heading aims the bow")
+	assert_true(south.y > 10.0 and absf(south.x) < 0.01, "world +Y points down on the chart")
+
+	var view := SNSeaChartView.new()
+	view.set_ship_pose(Vector2(10.0, 20.0), -PI / 2.0)
+	assert_true(view.has_ship_heading(), "a pose carries a real heading")
+	assert_almost_eq(view.get_ship_heading(), -PI / 2.0, 0.0001, "the chart keeps the heading it was fed")
+	view.set_ship_position(Vector2(30.0, 40.0))
+	assert_almost_eq(view.get_ship_heading(), -PI / 2.0, 0.0001,
+		"plain position updates keep the last known heading instead of snapping to 0")
+	view.free()
+
+
+func _presentation_vm() -> Dictionary:
+	return {
+		"has_run": true,
+		"world_bounds": {"x": 0.0, "y": 0.0, "w": 400.0, "h": 400.0},
+		"landmasses": [],
+		"ports": [
+			{"id": "port_a", "name_key": "port.a", "x": 120.0, "y": 190.0,
+				"discovered": true, "visited": true, "current": true, "departure_angle": 0.0},
+			{"id": "port_b", "name_key": "port.b", "x": 280.0, "y": 205.0,
+				"discovered": false, "visited": false, "current": false, "departure_angle": 0.0},
+		],
+		"routes": [],
+		"fog": {},
+		"current_port_id": "port_a",
+		"ship_position": {"x": 120.0, "y": 190.0},
+		"at_sea": true,
+	}
+
+
 ## The full-screen chart page (phase 2 entry integration) composes the real view
 ## and panel: `bind()` feeds the query result through, clicking a port selects it
 ## and fills the panel, and the panel's depart button bubbles up as
@@ -767,3 +901,336 @@ func _find_descendant(root: Node, predicate: Callable) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+# ── Exploration phase 4.1: clues / unknown destination ──
+
+const CLUE_VM := {
+	"has_run": true,
+	"world_bounds": {"x": 0.0, "y": 0.0, "w": 400.0, "h": 400.0},
+	"landmasses": [],
+	"ports": [
+		{"id": "port_a", "name_key": "port.a", "x": 120.0, "y": 140.0,
+			"discovered": true, "visited": true, "current": true, "departure_angle": 0.0},
+	],
+	"routes": [],
+	"fog": {},
+	"current_port_id": "port_a",
+	"ship_position": {"x": 120.0, "y": 140.0},
+	"at_sea": false,
+	"clues": [
+		{
+			"id": "clue:1", "source_key": "rumor", "source_display_key": "ui.clue.source.rumor",
+			"level": 2, "reference_port_id": "port_a", "direction_angle": 0.0,
+			"distance_min_hours": 4.0, "distance_max_hours": 9.0, "circle": null, "name_key": "",
+		},
+		{
+			"id": "clue:2", "source_key": "rumor", "source_display_key": "ui.clue.source.rumor",
+			"level": 2, "reference_port_id": "missing_port", "direction_angle": 0.0,
+			"distance_min_hours": 4.0, "distance_max_hours": 9.0, "circle": null, "name_key": "",
+		},
+		{
+			"id": "clue:3", "source_key": "intel", "source_display_key": "ui.clue.source.intel",
+			"level": 3, "reference_port_id": "port_a", "direction_angle": 0.5,
+			"distance_min_hours": 6.0, "distance_max_hours": 11.0,
+			"circle": {"x": 200.0, "y": 200.0, "radius": 14.0}, "name_key": "",
+		},
+		{
+			"id": "clue:4", "source_key": "intel", "source_display_key": "ui.clue.source.intel",
+			"level": 4, "reference_port_id": "port_a", "direction_angle": 0.5,
+			"distance_min_hours": 6.0, "distance_max_hours": 11.0,
+			"circle": {"x": 300.0, "y": 260.0, "radius": 14.0},
+			"name_key": "port_name.core.mist_cove",
+		},
+	],
+	"explore": {"active": false, "clue_id": ""},
+	"can_buy_clue": {"available": false, "cost": 40, "reason_key": ""},
+}
+
+
+## 线索几何是纯函数：方向箭头按世界弧度换算终点，虚线圆按 zoom/offset 换算屏幕
+## 圆心与半径；点击命中对箭头线段、圆环与圆心都留 12 px 容差。
+func test_clue_geometry_helpers_and_hit_test() -> void:
+	var origin := Vector2(100.0, 100.0)
+	var east := SNSeaChartView.clue_arrow_endpoint(origin, 0.0, 40.0)
+	assert_almost_eq(east.x, 140.0, 0.001, "angle 0 points along +X (chart east)")
+	assert_almost_eq(east.y, 100.0, 0.001, "angle 0 keeps y")
+	# 图表 +Y 朝下 = 南；PI/2 的箭头必须朝下而不是被当成角度。
+	var south := SNSeaChartView.clue_arrow_endpoint(origin, PI / 2.0, 40.0)
+	assert_almost_eq(south.x, 100.0, 0.001, "angle PI/2 has no x component")
+	assert_almost_eq(south.y, 140.0, 0.001, "angle PI/2 points along +Y")
+	assert_almost_eq(south.distance_to(origin), 40.0, 0.001, "the arrow keeps its world length")
+
+	var circle := SNSeaChartView.clue_circle_screen(
+		Vector2(50.0, 60.0), 12.0, 2.0, Vector2(10.0, 20.0)
+	)
+	var circle_center: Vector2 = circle["center"]
+	assert_almost_eq(circle_center.x, 110.0, 0.001, "circle centre x = world * zoom + offset")
+	assert_almost_eq(circle_center.y, 140.0, 0.001, "circle centre y = world * zoom + offset")
+	assert_almost_eq(float(circle["radius"]), 24.0, 0.001, "radius scales with zoom")
+
+	var arrow := {"kind": "arrow", "start": Vector2(0.0, 0.0), "end": Vector2(100.0, 0.0)}
+	assert_true(SNSeaChartView.clue_hit_test(Vector2(50.0, 8.0), arrow),
+		"a click 8 px off the arrow shaft is still a hit")
+	assert_false(SNSeaChartView.clue_hit_test(Vector2(50.0, 30.0), arrow),
+		"a click 30 px off the arrow is not a hit")
+	var ring := {"kind": "circle", "center": Vector2(200.0, 200.0), "radius": 30.0}
+	assert_true(SNSeaChartView.clue_hit_test(Vector2(230.0, 200.0), ring),
+		"clicking the dashed ring hits the clue")
+	assert_true(SNSeaChartView.clue_hit_test(Vector2(203.0, 200.0), ring),
+		"clicking the circle centre (the ? marker) hits the clue")
+	assert_false(SNSeaChartView.clue_hit_test(Vector2(260.0, 200.0), ring),
+		"a click far outside the circle misses")
+	assert_false(SNSeaChartView.clue_hit_test(Vector2(10.0, 10.0), {}),
+		"an unrenderable clue never reports a hit")
+
+
+## 八方位换算：世界弧度 0 = 东，+Y 朝下 = 南。面板与海图共用这个映射。
+func test_clue_compass_key_conversion() -> void:
+	assert_eq(SNSeaChartPanel.compass_key(0.0), "E", "0 rad is east")
+	assert_eq(SNSeaChartPanel.compass_key(PI / 4.0), "SE", "45 deg is south-east")
+	assert_eq(SNSeaChartPanel.compass_key(PI / 2.0), "S", "90 deg is south (+Y down)")
+	assert_eq(SNSeaChartPanel.compass_key(PI), "W", "180 deg is west")
+	assert_eq(SNSeaChartPanel.compass_key(-PI / 2.0), "N", "-90 deg is north")
+	assert_eq(SNSeaChartPanel.compass_key(TAU + PI / 4.0), "SE", "angles wrap around")
+
+
+## 视图绑定线索后：level 2 从存在的参照港画出箭头（缺失参照港跳过），level 3/4
+## 换算虚线圆；选中线索与选中港口互斥。
+func test_clue_view_geometry_and_selection() -> void:
+	var view := SNSeaChartView.new()
+	view.bind(CLUE_VM)
+	view.size = Vector2(800.0, 600.0)
+	view._try_fit()
+
+	assert_eq(view.get_clues().size(), 4, "all clues enter the view model")
+	assert_eq(String(view.clue_by_id("clue:1").get("id", "")), "clue:1", "clues are addressable by id")
+
+	var arrow := view.clue_screen_geometry(view.clue_by_id("clue:1"))
+	assert_eq(String(arrow.get("kind", "")), "arrow", "a level-2 clue draws a direction arrow")
+	var expected_end := view.world_to_screen(SNSeaChartView.clue_arrow_endpoint(
+		Vector2(120.0, 140.0), 0.0, SNSeaChartView.CLUE_ARROW_LENGTH
+	))
+	var arrow_end: Vector2 = arrow["end"]
+	assert_almost_eq(arrow_end.x, expected_end.x, 0.01, "the arrow endpoint is the projected helper value")
+	assert_almost_eq(arrow_end.y, expected_end.y, 0.01, "the arrow endpoint is the projected helper value")
+
+	assert_true(view.clue_screen_geometry(view.clue_by_id("clue:2")).is_empty(),
+		"a clue whose reference port is not on the chart is skipped instead of drawn at (0,0)")
+
+	var ring := view.clue_screen_geometry(view.clue_by_id("clue:3"))
+	assert_eq(String(ring.get("kind", "")), "circle", "a level-3 clue draws a dashed circle")
+	var ring_center: Vector2 = ring["center"]
+	assert_almost_eq(ring_center.x, view.world_to_screen(Vector2(200.0, 200.0)).x, 0.01,
+		"the circle centre comes from the clue's world circle")
+	assert_almost_eq(float(ring["radius"]), 14.0 * view.get_zoom(), 0.01,
+		"the circle radius is world radius × zoom")
+	assert_false(view.clue_screen_geometry(view.clue_by_id("clue:4")).is_empty(),
+		"a level-4 clue also draws its circle")
+
+	view.select_clue("clue:3")
+	assert_eq(view.get_selected_clue(), "clue:3", "select_clue stores the selection")
+	assert_eq(view.get_selected_port(), "", "selecting a clue clears the port selection")
+	view.select_port("port_a")
+	assert_eq(view.get_selected_port(), "port_a", "select_port stores the port")
+	assert_eq(view.get_selected_clue(), "", "selecting a port clears the clue selection")
+
+	# 点击虚线圆环 → clue_clicked(id) 且视图高亮该线索。
+	var received: Array = []
+	view.clue_clicked.connect(func(clue_id: String) -> void: received.append(clue_id))
+	var ring_point: Vector2 = ring_center + Vector2(float(ring["radius"]), 0.0)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = ring_point
+	view._gui_input(click)
+	assert_eq(received, ["clue:3"], "clicking the dashed circle emits clue_clicked(clue_id)")
+	assert_eq(view.get_selected_clue(), "clue:3", "the clicked clue becomes the highlighted clue")
+	view.free()
+
+
+## level 4 的圆内文字是 `？<翻译后的港口名>？`；缺键/缺回调时退回 `?`，绝不渲染键名。
+func test_clue_name_text_localizes_and_falls_back() -> void:
+	var view := SNSeaChartView.new()
+	view.bind(CLUE_VM, func(key: String) -> String:
+		return "雾湾" if key == "port_name.core.mist_cove" else key
+	)
+	assert_eq(view._clue_name_text("port_name.core.mist_cove"), "？雾湾？",
+		"the level-4 label wraps the translated port name")
+	assert_eq(view._clue_name_text(""), "?", "a missing name key falls back to ?")
+	var untranslated := SNSeaChartView.new()
+	untranslated.bind(CLUE_VM)
+	assert_eq(untranslated._clue_name_text("port_name.core.mist_cove"), "?",
+		"a key without a translation must not leak into the chart label")
+	untranslated.free()
+	view.free()
+
+
+## 探索演出：未知终点（搜索区中心）能从视图里存取，并在清空后不再绘制。
+func test_unknown_destination_roundtrip() -> void:
+	var view := SNSeaChartView.new()
+	view.bind(CLUE_VM)
+	assert_false(view.has_unknown_destination(), "a normal voyage has no unknown destination")
+	view.set_unknown_destination(Vector2(300.0, 220.0), "ui.label.unknown_destination")
+	assert_true(view.has_unknown_destination(), "the exploration destination is stored")
+	var stored := view.get_unknown_destination()
+	assert_almost_eq(float(stored.get("x", 0.0)), 300.0, 0.001, "x is kept")
+	assert_almost_eq(float(stored.get("y", 0.0)), 220.0, 0.001, "y is kept")
+	assert_eq(String(stored.get("label_key", "")), "ui.label.unknown_destination",
+		"the label key is kept for the ? marker")
+	view.clear_unknown_destination()
+	assert_false(view.has_unknown_destination(), "clear_unknown_destination removes it")
+	view.free()
+
+
+## 验收反馈：探索航行的 `?` 终点曾被顶栏整个盖住。未知终点标记必须 clamp 进
+## 「顶栏以下 + 左右/下留边」的可见区；正常在可见区的标记不应被移动。
+func test_unknown_destination_marker_is_clamped_below_the_hud() -> void:
+	var view_size := Vector2(1440.0, 900.0)
+	var hidden := SNSeaChartView.clamp_marker_to_view(Vector2(720.0, 58.0), view_size, 115.0)
+	assert_true(hidden.y >= 115.0 + 26.0 - 0.01,
+		"a marker under the top chrome is pushed below it: %s" % str(hidden))
+	assert_almost_eq(hidden.x, 720.0, 0.01, "clamping only moves the axis that was hidden")
+	var visible := SNSeaChartView.clamp_marker_to_view(Vector2(400.0, 500.0), view_size, 115.0)
+	assert_true(visible.is_equal_approx(Vector2(400.0, 500.0)),
+		"a marker already inside the visible area is left alone")
+	var corner := SNSeaChartView.clamp_marker_to_view(Vector2(1439.0, 899.0), view_size, 0.0)
+	assert_true(corner.x <= 1440.0 - 26.0 + 0.01 and corner.y <= 900.0 - 26.0 + 0.01,
+		"a marker beyond the bottom-right keeps a readable margin: %s" % str(corner))
+	# 存档的 inset 随终点一起保留，绘制时才能用同一套 clamp。
+	var view := SNSeaChartView.new()
+	view.set_unknown_destination(Vector2(10.0, 10.0), "ui.label.unknown_destination", 140.0)
+	assert_almost_eq(float(view.get_unknown_destination().get("top_inset", 0.0)), 140.0, 0.001,
+		"the top inset travels with the unknown destination")
+	view.free()
+
+
+## 面板线索区块：来源/等级/方位/航程区间/预计值，出航与购买按钮各自发信号；
+## 不可行时按钮禁用并列出 blockers 的 message_key。
+func test_sea_chart_panel_renders_clue_section() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var panel := SNSeaChartPanel.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(panel)
+	panel.set_can_buy_clue({"available": true, "cost": 40, "reason_key": ""})
+	var explored: Array = []
+	var purchased: Array = []
+	panel.explore_requested.connect(func(clue_id: String) -> void: explored.append(clue_id))
+	panel.purchase_clue_requested.connect(func() -> void: purchased.append(true))
+
+	var clue := {
+		"id": "clue:1",
+		"source_key": "intel",
+		"source_display_key": "ui.clue.source.intel",
+		"level": 4,
+		"reference_port_id": "port_a",
+		"direction_angle": PI / 2.0,
+		"distance_min_hours": 10.0,
+		"distance_max_hours": 18.0,
+		"circle": {"x": 200.0, "y": 200.0, "radius": 14.0},
+		"name_key": "port_name.core.mist_cove",
+		"estimated": {
+			"feasible": true,
+			"blockers": [],
+			"duration_hours": 12.0,
+			"coal_required": 10.0,
+			"water_required": 8.0,
+			"risk_score": 0.3,
+			"discovery_chance": 0.6,
+		},
+	}
+	panel.bind_clue(clue, Callable(context, "translate"))
+	var texts := _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.section_title")),
+		"the panel shows the clue section title, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.reliability_hint") % context.translate("ui.clue.source.intel")),
+		"the panel shows the source (reliability hint), got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.level.4")),
+		"the panel shows the level text, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.direction.S")),
+		"PI/2 is south, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts,
+		context.translate("ui.clue.distance_range") % [10, 18]),
+		"the panel shows the distance range, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.label.estimated_time")),
+		"the panel shows the estimated duration, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.label.coal")),
+		"the panel shows the coal estimate, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("risk." + VoyageCalculator.risk_label(0.3))),
+		"the panel shows the risk band, got: %s" % str(texts))
+
+	var explore_button := _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).text) == String(context.translate("ui.button.explore_clue"))
+	) as Button
+	assert_not_null(explore_button, "an explore button is present")
+	if explore_button != null:
+		explore_button.pressed.emit()
+	assert_eq(explored, ["clue:1"], "the explore button emits explore_requested(clue_id)")
+	var purchase := _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "PurchaseClueButton"
+	) as Button
+	assert_not_null(purchase, "can_buy_clue.available shows the purchase entry")
+	if purchase != null:
+		purchase.pressed.emit()
+	assert_eq(purchased.size(), 1, "the purchase entry emits purchase_clue_requested")
+
+	# 不可行：按钮禁用并逐条列出 blockers 的 message_key。
+	var blocked := clue.duplicate(true)
+	blocked["estimated"] = {
+		"feasible": false,
+		"blockers": [{"code": "insufficient_money", "message_key": "ui.error.insufficient_money"}],
+		"duration_hours": 12.0, "coal_required": 999.0, "water_required": 0.0,
+		"risk_score": 0.3, "discovery_chance": 0.6,
+	}
+	panel.bind_clue(blocked, Callable(context, "translate"))
+	texts = _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.error.insufficient_money")),
+		"an infeasible clue lists the blocker message, got: %s" % str(texts))
+	explore_button = _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).text) == String(context.translate("ui.button.explore_clue"))
+	) as Button
+	assert_not_null(explore_button, "the explore button stays visible for an infeasible clue")
+	if explore_button != null:
+		assert_true(explore_button.disabled, "an infeasible clue disables the explore button")
+	panel.free()
+
+
+## 整页接线：图上点线索 → 面板切到线索区块；线索的 explore_requested 由屏幕原样
+## 转发（Shell 再接 explore.start）。
+func test_sea_chart_screen_binds_clue_panel_and_forwards_signals() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var vm: Dictionary = CLUE_VM.duplicate(true)
+	vm["can_buy_clue"] = {"available": true, "cost": 40, "reason_key": ""}
+	var screen: Control = SEA_CHART_SCREEN_SCRIPT.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(screen)
+	screen.bind(vm, Callable(context, "translate"))
+	var chart := _find_descendant(screen, func(node: Node) -> bool: return node is SNSeaChartView) as SNSeaChartView
+	var panel := _find_descendant(screen, func(node: Node) -> bool: return node is SNSeaChartPanel) as SNSeaChartPanel
+	assert_not_null(chart, "the screen mounts the chart view")
+	assert_not_null(panel, "the screen mounts the panel")
+
+	# 视图发信号（真实鼠标路径由 test_clue_view_geometry_and_selection 覆盖）。
+	chart.clue_clicked.emit("clue:3")
+	assert_eq(String(panel.get_clue().get("id", "")), "clue:3",
+		"a chart clue click binds the clue into the panel")
+	assert_eq(chart.get_selected_clue(), "clue:3", "the chart keeps the clue selection")
+
+	# 面板出航按钮 → 屏幕 explore_requested(clue_id)。
+	var forwarded: Array = []
+	screen.explore_requested.connect(func(clue_id: String) -> void: forwarded.append(clue_id))
+	var button := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).text) == String(context.translate("ui.button.explore_clue"))
+	) as Button
+	assert_not_null(button, "the clue panel exposes its explore button")
+	if button != null:
+		button.pressed.emit()
+	assert_eq(forwarded, ["clue:3"], "the screen forwards explore_requested(clue_id)")
+
+	# 购买入口：屏幕把 view model 的 can_buy_clue 塞给面板。
+	assert_not_null(_find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "PurchaseClueButton"
+	), "the screen wires can_buy_clue into the panel")
+	screen.free()

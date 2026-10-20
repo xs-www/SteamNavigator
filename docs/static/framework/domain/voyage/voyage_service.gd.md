@@ -10,10 +10,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VoyageService` | L1 |
-| `OPPORTUNITY_CHANCE` | L11 |
-| `MAX_EVENT_DELAY_HOURS` | L12 |
-| `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L15 |
-| `choose_option(context, option_id: String) -> Dictionary` | L100 |
+| `OPPORTUNITY_CHANCE` | L15 |
+| `MAX_EVENT_DELAY_HOURS` | L16 |
+| `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L19 |
+| `choose_option(context, option_id: String) -> Dictionary` | L104 |
 
 ## 契约与约束
 

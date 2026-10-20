@@ -46,7 +46,34 @@
         "intel_cost": 25,
         "trade_margin": 0.95,
         "player_trade_impact": 0.35,
-        "default_starting_build": "core:starting_build/steady"
+        "default_starting_build": "core:starting_build/steady",
+        "exploration": {
+          "rumor_clue_chance": 0.65,
+          "intel_clue_cost": 40,
+          "max_active_clues": 4,
+          "level_weights": {
+            "rumor": [0.55, 0.35, 0.10, 0.00],
+            "intel": [0.00, 0.15, 0.45, 0.40]
+          },
+          "credibility_range": {
+            "rumor": [0.25, 0.55],
+            "intel": [0.60, 0.95]
+          },
+          "distance_error_ratio": 0.35,
+          "search_zone_radius": 14.0,
+          "search_zone_noise": 12.0,
+          "discovery_chance_base": 0.20,
+          "discovery_chance_per_credibility": 0.70,
+          "risk_base": 0.08,
+          "risk_per_unreliability": 0.12,
+          "drift_durability_loss": 8.0,
+          "drift_extra_coal": 4.0,
+          "drift_extra_water": 4.0,
+          "drift_hours": 6.0,
+          "alert_threshold": 0.5,
+          "alert_progress": 0.5,
+          "turnback_extra_ratio": 0.25
+        }
       }
     }
   ]

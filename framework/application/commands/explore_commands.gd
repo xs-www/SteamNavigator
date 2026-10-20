@@ -1,0 +1,45 @@
+class_name ExploreCommands
+extends RefCounted
+## @static-doc
+## 作用：探索系统的命令包装（`explore.start` / `explore.settle` / `explore.decide` /
+## `clue.buy`），把参数校验与领域服务的返回原样交给 CommandBus 的事务/事件流程。
+##
+## - 关键依赖：`ExploreVoyageService`、`ClueService`、`Result`
+##
+## ## 契约与约束
+## - 命令只在 `CommandBus` 的 GameState 克隆上执行；失败返回 `Result.fail`
+##   （`code` + `ui.error.*` message_key），成功返回 `Result.ok(payload, events)`，
+##   领域事件由总线发布。
+## - 所有会改变状态的扣费 / 时间推进 / 发现都发生在领域服务里，这里只做缺参校验。
+## @end-static-doc
+
+
+static func start(params: Dictionary, context) -> Dictionary:
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	var clue_id := String(params.get("clue_id", ""))
+	if clue_id.is_empty():
+		return Result.fail("unknown_clue", "ui.error.unknown_clue")
+	var strategy_id := String(params.get("strategy_id", ""))
+	if strategy_id.is_empty():
+		return Result.fail("missing_strategy", "ui.error.missing_strategy")
+	return ExploreVoyageService.start(context, clue_id, strategy_id)
+
+
+static func settle(_params: Dictionary, context) -> Dictionary:
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	return ExploreVoyageService.settle(context)
+
+
+static func decide(params: Dictionary, context) -> Dictionary:
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	var choice := String(params.get("choice", ""))
+	if choice.is_empty():
+		return Result.fail("unknown_choice", "ui.error.unknown_option")
+	return ExploreVoyageService.decide(context, choice)
+
+
+static func buy(_params: Dictionary, context) -> Dictionary:
+	return ClueService.buy(context)

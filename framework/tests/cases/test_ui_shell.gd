@@ -270,7 +270,10 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 	_goto(shell, "settlement")
 	assert_eq(_nodes_with_script(shell._root_box, SETTLEMENT_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted settlement screen")
 	shell._screen_at_sea(view, {"origin": String(view.get("current_port_id", "")), "destination": String(view.get("current_port_id", "")), "arrival_time": 1.0})
-	assert_eq(_nodes_with_script(shell._root_box, AT_SEA_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted at-sea screen")
+	# The at-sea chart is a full-window page (phase-3 acceptance feedback F3): it is
+	# mounted outside the scrolling page stack, under the top chrome.
+	assert_eq(_nodes_with_script(shell._fullscreen_layer, AT_SEA_SCREEN_SCRIPT).size(), 1,
+		"the shell instantiates the extracted at-sea screen in the full-window layer")
 	shell._screen_event(view, {"event_id": "fixture", "name_key": "fixture", "options": []})
 	assert_eq(_nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted event screen")
 	shell._screen_victory({"summary": {"seed": 5101, "modules": []}})
@@ -914,3 +917,66 @@ func test_sea_chart_entry_integration() -> void:
 	open_button.emit_signal("pressed")
 	assert_eq(String(shell._active_screen), "sea_chart", "the voyage chart entry opens the chart")
 	_unmount(bundle)
+
+
+## 探索系统 4.1 · 购买线索入口：海图面板在 `can_buy_clue.available` 时显示购买按钮，
+## 点击后由 Shell 执行真实的 `clue.buy`，成功后海图刷新出新线索（active 列表 +1）。
+func test_sea_chart_buys_an_intel_clue_from_the_panel() -> void:
+	var bundle := _mount(20260402)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	context.state.set_money(5000)
+	# 买线索需要情报站：把当前港设到地图上任意一个有 intel 设施的港口（真实对局里
+	# 玩家就是先把船开到这里再进海图页买）。
+	var intel_port := ""
+	for port in MapOps.ports(context.state.world()):
+		if MapOps.has_facility(port, "intel"):
+			intel_port = String((port as Dictionary).get("id", ""))
+			break
+	assert_true(not intel_port.is_empty(), "the fixture map has a port with an intel office")
+	if intel_port.is_empty():
+		_unmount(bundle)
+		return
+	context.state.data["current_port_id"] = intel_port
+	_goto(shell, "sea_chart")
+	var screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the chart page mounts")
+	if screens.is_empty():
+		_unmount(bundle)
+		return
+	var chart_screen: Control = screens[0]
+	var view_model: Dictionary = chart_screen._view_model
+	assert_true(bool((view_model.get("can_buy_clue", {}) as Dictionary).get("available", false)),
+		"the chart offers the buy entry at a port with an intel office: %s" % str(view_model.get("can_buy_clue", {})))
+	var purchase := _named_node(chart_screen, "PurchaseClueButton") as Button
+	assert_not_null(purchase, "the panel renders the purchase entry")
+	if purchase == null:
+		_unmount(bundle)
+		return
+	var clues_before: int = ClueService.active(context.state).size()
+	purchase.emit_signal("pressed")
+	assert_eq(ClueService.active(context.state).size(), clues_before + 1,
+		"pressing the buy entry runs the real clue.buy command")
+	var expected_notice: String = context.translate("ui.notice.clue_acquired") \
+		% context.translate("ui.clue.source.intel")
+	assert_true(String(shell._status_message).contains(expected_notice),
+		"the status bar reports the acquired clue, got: %s" % shell._status_message)
+	assert_true(context.state.money() < 5000, "the clue costs gold")
+	# `_run_command` rebuilds the chart page, so the new clue is in the fresh view model.
+	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the chart page is rebuilt after the purchase")
+	if not screens.is_empty():
+		var rebuilt: Control = screens[0]
+		assert_eq((rebuilt._view_model.get("clues", []) as Array).size(), clues_before + 1,
+			"the refreshed chart view model carries the new clue")
+	_unmount(bundle)
+
+
+func _named_node(root: Node, node_name: String) -> Node:
+	if String(root.name) == node_name:
+		return root
+	for child in root.get_children():
+		var found := _named_node(child, node_name)
+		if found != null:
+			return found
+	return null

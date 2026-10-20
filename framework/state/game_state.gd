@@ -48,6 +48,15 @@ const STATS_DEFAULTS := {
 	"profit": 0,
 }
 
+## Port-location clue log (stage 4 exploration). Lazy: old saves simply get this block
+## backfilled on first access, so no `schema_version` bump is needed.
+const CLUES_DEFAULTS := {
+	"next_id": 1,
+	"active": [],
+	"failed": [],
+	"resolved": [],
+}
+
 var data: Dictionary = {}
 
 
@@ -251,6 +260,36 @@ func contracts() -> Dictionary:
 ## partially initialized test states never need a migration pass.
 func stats() -> Dictionary:
 	return ensure_stats()
+
+
+## Exploration clue log. Missing in saves created before stage 4; backfilled lazily.
+func clues() -> Dictionary:
+	return ensure_clues()
+
+
+func ensure_clues() -> Dictionary:
+	var current: Variant = data.get("clues", null)
+	if not (current is Dictionary):
+		current = CLUES_DEFAULTS.duplicate(true)
+		data["clues"] = current
+	var clues_data: Dictionary = current
+	for key in CLUES_DEFAULTS.keys():
+		if not clues_data.has(key):
+			clues_data[key] = GameState._copy_default(CLUES_DEFAULTS[key])
+	return clues_data
+
+
+## Active exploration voyage (pure data) or null when not exploring.
+func explore_voyage() -> Variant:
+	return data.get("explore_voyage", null)
+
+
+func set_explore_voyage(voyage: Variant) -> void:
+	data["explore_voyage"] = voyage
+
+
+func is_exploring() -> bool:
+	return explore_voyage() is Dictionary
 
 
 func ensure_stats() -> Dictionary:

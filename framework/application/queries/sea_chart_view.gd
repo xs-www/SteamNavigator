@@ -14,6 +14,10 @@ extends RefCounted
 ##   现场计算（`_compute_routes`），这条回退路径不改状态。
 ## - 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
 ## - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
+## - 探索系统（阶段 4.1）追加三组只读数据：`clues` 是 `ClueService.view` 的等级裁剪
+##   视图（不含 `target_port_id` / `credibility` / 真实 `search_zone`）再合并
+##   `ExplorationCalculator.preview` 的展示估算；`explore` 只说明是否有探索航次及其
+##   clue id；`can_buy_clue` 用与 `clue.buy` 相同的门禁算出是否可买与原因键。
 ## - 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
 ##   煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
 ##   几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：
@@ -197,6 +201,9 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		"port_count": world.ports.size(),
 		"discovered_count": discovered_ids.size(),
 		"visited_count": visited_ids.size(),
+		"clues": _clue_views(context, params),
+		"explore": _explore_state(state),
+		"can_buy_clue": _can_buy_clue(context, state),
 	})
 
 
@@ -357,7 +364,79 @@ static func _empty_result() -> Dictionary:
 		"port_count": 0,
 		"discovered_count": 0,
 		"visited_count": 0,
+		"clues": [],
+		"explore": {"active": false, "clue_id": ""},
+		"can_buy_clue": {"available": false, "cost": 0, "reason_key": ""},
 	}
+
+
+## Level-trimmed clue views (`ClueService.view`) plus the ship-specific estimate the
+## panel needs. The estimate is a display projection of `explore.start`, so it uses the
+## same calculator and never reveals the departure roll.
+static func _clue_views(context, params: Dictionary) -> Array:
+	var state: GameState = context.state
+	var strategy_id := String(params.get("strategy_id", ""))
+	var views: Array = []
+	for entry in ClueService.view(state, context):
+		if not (entry is Dictionary):
+			continue
+		var clue_view: Dictionary = entry
+		clue_view["estimated"] = _clue_estimate(context, String(clue_view.get("id", "")), strategy_id)
+		views.append(clue_view)
+	return views
+
+
+static func _clue_estimate(context, clue_id: String, strategy_id: String) -> Dictionary:
+	var result := ExplorationCalculator.preview(context, clue_id, strategy_id)
+	if not bool(result.get("ok", false)):
+		return {
+			"feasible": false,
+			"blockers": [{
+				"code": String(result.get("error_code", "")),
+				"message_key": String(result.get("message_key", "")),
+			}],
+			"duration_hours": 0.0,
+			"coal_required": 0.0,
+			"water_required": 0.0,
+			"risk_score": 0.0,
+			"discovery_chance": 0.0,
+		}
+	var data: Dictionary = result.get("data", {})
+	return {
+		"feasible": bool(data.get("feasible", false)),
+		"blockers": data.get("blockers", []),
+		"duration_hours": float(data.get("duration_hours", 0.0)),
+		"coal_required": float(data.get("coal_required", 0.0)),
+		"water_required": float(data.get("water_required", 0.0)),
+		"risk_score": float(data.get("risk_score", 0.0)),
+		"discovery_chance": float(data.get("discovery_chance", 0.0)),
+	}
+
+
+static func _explore_state(state: GameState) -> Dictionary:
+	var voyage: Variant = state.explore_voyage()
+	if not (voyage is Dictionary):
+		return {"active": false, "clue_id": ""}
+	return {"active": true, "clue_id": String((voyage as Dictionary).get("clue_id", ""))}
+
+
+## Why the buy button is (not) available, resolved with the same gates `clue.buy` uses so
+## the button never lies about a cost the command would refuse.
+static func _can_buy_clue(context, state: GameState) -> Dictionary:
+	var rules := ExplorationRules.read(state, context.registries)
+	var cost := int(rules.get("intel_clue_cost", 40))
+	if not state.is_at_port():
+		return {"available": false, "cost": cost, "reason_key": "ui.error.not_at_port"}
+	var port_data := MapOps.port(state.world(), state.current_port_id())
+	if not MapOps.has_facility(port_data, "intel"):
+		return {"available": false, "cost": cost, "reason_key": "ui.error.no_intel_facility"}
+	if ClueService.active(state).size() >= int(rules.get("max_active_clues", 4)):
+		return {"available": false, "cost": cost, "reason_key": "ui.notice.no_clue_available"}
+	if state.money() < cost:
+		return {"available": false, "cost": cost, "reason_key": "ui.error.insufficient_money"}
+	if ClueService.eligible_target_ids(state).is_empty():
+		return {"available": false, "cost": cost, "reason_key": "ui.error.no_exploration_target"}
+	return {"available": true, "cost": cost, "reason_key": ""}
 
 
 static func _archetype_name(archetype: int) -> String:

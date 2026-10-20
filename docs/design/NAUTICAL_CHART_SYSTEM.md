@@ -194,6 +194,11 @@ Route (航线 = 两个港口之间的可航行路径)
   → 未发现 → 见 §5.3 探索失败处理
 ```
 
+**实现状态（4.1）**：`explore.start` / `explore.settle` 已按此流程落地，命令与字段形状见
+[EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) §4–§5。差异：发现判定在出发时抽定
+（`outcome_roll`，命名流 `explore:<clue_id>:<departure>`），抵达时才由 `explore.settle`
+应用结果；4.1 的搜索区就是航线终点，4.2 再补"进入搜索区后再判定"的过程感。
+
 ### 5.2 探索演出差异
 
 | | 已知港口航行 | 探索未知航行 |
@@ -290,6 +295,11 @@ Clue
 
 - 港口位置类线索：**无时效**（港口坐标不变）
 - 港口货物/市场类线索：**有时效**（`expires_at`）
+
+**实现状态（4.1）**：港口位置类线索已落地（`ClueService`，抵达传闻 + 购买情报，等级 1–4，
+海图箭头/虚线圆/`？港名？`，查询按等级裁剪且不泄露目标港与可信度）。港口货物类线索、
+调查方式（花时间在港等待消息 / 完成委托解锁）、时效字段留给后续切片；`Clue` 数据里已保留
+`expires_at` 位。字段形状见 [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) §2、§4。
 
 ## 8. 航行演出
 
@@ -509,6 +519,26 @@ GameState
 - 资源告急事件与掉头机制
 - 探索失败与漂流处理
 
+实现状态（**4.1 首切片已落地**，契约见 [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md)）：
+
+- 领域：`framework/domain/exploration/` 四个文件——`ExplorationRules`（读 `map_profiles` 的
+  `exploration` 块，发现概率/判定的单一真源）、`ClueService`（抵达传闻 / 购买情报、
+  等级裁剪视图、active → resolved / failed）、`ExplorationCalculator`（探索预览）、
+  `ExploreVoyageService`（`start` / `settle` / `decide`）。
+- 线索来源：抵达任意港口按 `rumor_clue_chance` 抽传闻（`VoyageService` 抵达钩子）；
+  有 `intel` 设施的港口可花 `intel_clue_cost` 购买情报线索。线索目标只会是坐标世界里
+  尚未发现、且未被其它活跃线索指向的港口。
+- 海图：level 2 方向箭头、level 3 虚线圆、level 4 `？港名？`，点击进入右侧线索面板
+  （来源 / 等级 / 八方位 / 航程区间 / 预计煤水风险 / 可出航性），面板可「循此线索出航」。
+- 探索航次：`explore.start` 扣工资与煤水、把航线画到**搜索区中心**（不是港口）；
+  海图航行页显示虚线预测线与 `?` 终点；抵达时 Shell 调 `explore.settle`：
+  成功发现目标港（解锁 + 迷雾揭示 + 入港）、失败线索作废并漂流到最近已知港
+  （扣耐久 / 煤水 / 时间）；结算页新增探索结果区块。
+- 查询：`sea_chart.view` 追加 `clues`（按等级裁剪，不泄露目标港 / 可信度）、
+  `explore`（是否有探索航次）与 `can_buy_clue`（与 `clue.buy` 同一门禁）。
+- 剩余的 4.2：资源告急中途决策与掉头、探索后的委托 / 市场 / NPC 结算、
+  探索中事件化海洋（阶段 5 一起做）。
+
 ### 阶段 5：事件化海洋
 
 - 航行事件预生成（出航前全部确定）
@@ -605,9 +635,14 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_voyage_p
 
 | 截图 | 里程碑 | 验证内容 |
 |---|---|---|
-| [voyage_departure_3d.png](screenshots/voyage_presentation/voyage_departure_3d.png) | `phase == departure_3d` 且舞台 `voyage_progress ≥ 0.45` | **3D 离港**：船已驶离泊位到港外水面、镜头升到高位广角；顶栏「在航 → 目的港」，导航按钮消失 |
+| [voyage_departure_turn.png](screenshots/voyage_presentation/voyage_departure_turn.png) | `phase == departure_3d` 且舞台 `voyage_progress` 20%–30% | **离港转艏**（F1）：船仍压在泊位上、位移 0 m，船艏已甩向出海方向——不是侧舷横滑 |
+| [voyage_departure_3d.png](screenshots/voyage_presentation/voyage_departure_3d.png) | `phase == departure_3d` 且舞台 `voyage_progress ≥ 0.60` | **3D 离港**：船沿艏向驶出泊位到港外水面、镜头已升到高位；顶栏「在航 → 目的港」，导航按钮消失 |
+| [voyage_departure_high.png](screenshots/voyage_presentation/voyage_departure_high.png) | `phase == departure_3d` 且 `camera_pitch_deg ≥ 75` | **高位镜头**（F2）：离港末段俯角接近竖直、机位升到 165 m |
 | [voyage_departure_clouds.png](screenshots/voyage_presentation/voyage_departure_clouds.png) | `_cloud_veil.cover ≥ 0.45` | 云层正在盖住那个高位镜头（盖满后才切海图） |
-| [voyage_at_sea.png](screenshots/voyage_presentation/voyage_at_sea.png) | `_presentation.progress ≥ 0.35` | 航行中：海图铺开、船只 icon 在航线中段、"当前港"高亮出发港；底部航程条显示起终港、进度条、`航程 5 小时 / 14 小时`、`时间加速 ×2.9` 与「跳过演出」 |
+| [voyage_chart_near.png](screenshots/voyage_presentation/voyage_chart_near.png) | `phase == at_sea` 且 `veil ≈ 0.65` | **海图近景**（F2）：云层散开时海图是近景（`frame_scale > 2`），不是一次性 fit 到位 |
+| [voyage_chart_steady.png](screenshots/voyage_presentation/voyage_chart_steady.png) | `phase == at_sea` 且 `veil ≤ 0.001`、`frame_scale ≈ 1` | **稳态铺满**（F2/F3）：海图铺满整窗、无中间方形与侧边暗带，顶部 chrome 浮在其上 |
+| [voyage_at_sea.png](screenshots/voyage_presentation/voyage_at_sea.png) | `_presentation.progress ≥ 0.35` | 航行中：船只 icon 压在金色航线折线上（F4），航程条显示起终港、进度、`航程 5 小时 / 14 小时`、`时间加速 ×2.9` 与「跳过演出」 |
+| [voyage_arrival_approach.png](screenshots/voyage_presentation/voyage_arrival_approach.png) | `phase == arrival_approach` 且 `veil ≥ 0.60` | **入港前推近**（F2）：云层盖住海图前取景推近（`frame_scale > 2`），与离港的"由近拉远"镜像 |
 | [voyage_arrival_3d.png](screenshots/voyage_presentation/voyage_arrival_3d.png) | `phase == arrival_harbor` 且舞台 `voyage_progress ≥ 0.45` | **3D 入港**：目的港从高位「从海上来」的机位出现，船从海门驶入泊位，镜头正在下降 |
 | [voyage_arrival.png](screenshots/voyage_presentation/voyage_arrival.png) | `_presentation == null` 且 `_active_screen == settlement` | 抵达：云层散尽后落在抵达结算页（委托收入 / 准时 / 延误 / 当前金币 / 交付明细） |
 
@@ -625,3 +660,42 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_voyage_p
 
 回归：`test_voyage_presentation`（13 例）+ `test_voyage_flow`（6 例）+ `test_stage_host` 新增 2 例，
 全套 **252 个测试通过 / 0 失败**。
+
+### 15.2 实机验收反馈 F1–F4 修复记录（2026-10-21）
+
+玩家在实机跑完阶段 3 后提出四条演出问题。四条都用「数值断言 + 窗口截图」双重
+锁定，截图脚本的硬断言会在不满足时以退出码 1 结束，图仍全部落盘。
+
+| 反馈 | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| **F1** 离港是"平移"不是"驶离" | 船离开泊位像在轨道上横滑，船艏一直朝原泊位方向 | `advance_voyage()` 只对 `_ship_x/_ship_z` 做 lerp，`_ship_yaw` 始终是泊位 yaw（20°），而离港方向是 +Z，于是侧舷"滑"出去 | `PortStage` 新增 `_voyage_outbound_yaw()`（泊位 → `SEA_HANDOFF` 的 XZ 方向，按船头 +X 约定 `atan2(-dz, dx)`）；`VOYAGE_TURN_FRACTION = 0.4` 让 beat 前 40% **原地转艏**（位置严格不动），之后沿艏向驶向 `SEA_HANDOFF`；入港完全镜像（首帧 = 离港末帧朝向 → 转向港内 → 末段 `VOYAGE_MOOR_TURN_FRACTION = 0.25` 转回泊位 yaw）。权重只由 `_voyage_t` 决定，与步长无关 |
+| **F2** 镜头俯角/海图取景不是"继续上升/下降" | 镜头只升到约 27°俯角的广角；海图接管时一次性 fit 到位 | 相机 position/target 各自线性插值；海图没有取景倍数概念 | 3D：相机改为**轨道参数**（target / 水平距离 / 高度 / yaw）插值，离港末帧 `DEPART_CAMERA = (-13.5, 165, 78)`、target = `SEA_HANDOFF`，几何俯角 **83.09°**（驻港 10.6°，拉升 137 m），高度与俯角单调不减；入港为其逆过程。2D：`VoyagePresentation.chart_zoom_scale()` 与云层同相输出取景倍数（`CHART_NEAR_SCALE = 2.8` → 1，入港 1 → 2.8），`SNSeaChartView.set_frame_scale()` 每帧施加；Shell 在 `_presentation_on_chart()` 的阶段（含 `ARRIVAL_APPROACH`）持续推送快照 |
+| **F3** 海图太小，最高位应铺满整屏 | 海图只占中间一块方形，四周大片暗色留白 | 航行页挂在 `PageScroll/RootBox` 内；`_fit_to_view()` 用 `min(zoom_x, zoom_y)` 把 400×400 世界整体塞进控件并留 60 px 边距，16:9 下必然左右留白 | 航行页改挂新增的 `FullscreenLayer`（滚动容器/页面边距之外，顶部 chrome 浮在其上）；`SNSeaChartView.set_presentation_mode()` 改为 **cover 取景**：`max(控件宽/世界宽, 控件高/世界高)`，世界边界外画成开阔水面；航线包围盒做保底（装不下时退回整条航线可见的缩放）；取景上限改用 `PRESENTATION_ZOOM_MAX = 64`，不再被手动缩放的 `ZOOM_MAX = 5` 夹住——真实对局的孪生世界只有 **160×160**，需要 ×9 才铺满 |
+| **F4** 海图上的船是"两点直线" | 船在实际航线之外沿起终港直线插值 | 航行页从 `sea_chart.view` 的 `routes` 找这段航线，但该查询受迷雾过滤（且旧解析只认扁平数组，海图渲染的 `{x,y}` 数组会被解析成零路径），找不到就退回两点直线 | Shell 新增 `_presentation_route_path()`：直接从 `WorldMap.edges`（旧世界回退现算）取完整航线、按几何位置对齐 origin→destination、两端对齐港口坐标后以扁平数组传给航行页；`AtSeaScreen` 解析顺序改为 `route_path` → 海图查询航线 → 两点直线；`VoyagePresentation.unpack_path()` 同时接受扁平/字典/`Vector2` 三种形态。**原则**：航线"发现没发现"是玩家视角规则，迷雾只决定画不画、面板显不显示，演出取程序内部事实——不能把 `sea_chart.view` 的过滤结果当数据源 |
+
+附带修掉的两处接缝问题：
+
+- **离港后船被拉回泊位**：departure beat 结束那帧 `_voyage_mode` 已清空，`PortStage._process`
+  立即跑 `advance_station()`，把船从 `SEA_HANDOFF`（z=58）拽回泊位（z=9）。新增 `_voyage_hold`：
+  离港结束后暂停站位轮，船一直停在 handoff，直到 `begin_arrival()` / `reset_voyage()` 清 hold。
+- **入港云层下海图不推近**：快照原先只在 `phase == AT_SEA` 推送，`ARRIVAL_APPROACH` 里模型算出的
+  `chart_zoom_scale()` 送不到海图。改为 `_presentation_on_chart()` 覆盖的阶段都推送。
+- **海图船标只是固定菱形**（后续优化）：`SNSeaChartView` 新增 `set_ship_pose(position, heading)`，
+  航行页每帧用航线切线作为艏向；图标换成「艏尖 + 艉迹 + 甲板室」的船形并按 heading 旋转，
+  转弯时船头跟着航线转（`test_sea_chart::test_ship_icon_points_along_its_heading` +
+  航行页样例位置切线断言锁死）。
+
+验证口径：
+
+| 项 | 数值断言（截图脚本 / 用例） |
+|---|---|
+| F1 | 离港早期（beat 20%–30%）位移 **0.0000 m**、艏向已偏离 55.6°；离港末帧艏向 = 出海方向（差 **0.0000 rad**）；入港首帧 = 离港末帧（差 **0.0000 rad**）；入港末帧 = 驻泊 yaw（差 **0.0000 rad**） |
+| F2 | 离港末帧俯角 **83.09°**、机位 y **165 m**，8 步采样高度/俯角单调；海图接管首帧 `frame_scale = 2.80`，稳态 **1.0000**；入港 `ARRIVAL_APPROACH` 期间 `frame_scale` 推到 **2.80** |
+| F3 | 航行页 `chart.size` **1440×797**（at_sea 1440×900，顶栏 115、航程条 103 浮在其上），parent 链无 `ScrollContainer`；160×160 世界 `base_zoom = 9.0 = cover`，世界矩形投影 **(0, −390.8)…(1440, 1049.2)** 覆盖整个 chart；航线 0 裁切 |
+| F4 | 航线 **141 点**；起/终点距起终港 **0.0000 / 0.0000**；progress ∈ {0, 0.17, 0.4, 0.63, 0.86, 1.0} 船位到折线最差 **0.0000** |
+
+回归测试：`test_voyage_presentation` 新增 2 例（海图近景→稳态、入港推近）并扩展
+`unpack_path` 字典形态；`test_sea_chart` 新增 3 例（cover 铺满 + 航线保底、长航线让位、
+小世界不受 `ZOOM_MAX` 限制）；`test_stage_host` 新增 4 例（先转艏后航行、接缝艏向、
+离港/入港镜头单调，以及 handoff hold）；`test_voyage_flow` 新增 2 例（船沿世界航线、
+入港推近接线）。全套 **264 个测试通过 / 0 失败**。

@@ -12,10 +12,17 @@ extends VBoxContainer
 ##   预选目的港（锅炉策略仍在出航页确认后才发 `voyage.start`）。
 ## - `close_requested` 交给 Shell 决定返回页；`has_run=false` 时只显示提示文案。
 ## - 选中当前港时面板只显示港口信息（无航线区、无启航按钮）。
+## - **线索**（探索系统 4.1）：图上点击线索 → 面板切到线索区块；面板的
+##   `explore_requested` / `purchase_clue_requested` 由本页原样转发给 Shell。
+##   `can_buy_clue` 来自同一个 `sea_chart.view`，本页只负责塞给面板。
 ## @end-static-doc
 
 signal close_requested
 signal voyage_requested(port_id: String)
+## 循线索出航：Shell 接 `explore.start`。
+signal explore_requested(clue_id: String)
+## 购买线索：Shell 接 `clue.buy`，成功后刷新海图。
+signal purchase_clue_requested
 
 const COLOR_MUTED := Color("9fafa7")
 const PANEL_WIDTH := 320.0
@@ -54,11 +61,17 @@ func _rebuild() -> void:
 	_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_chart.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_chart.port_clicked.connect(_on_port_clicked)
+	_chart.clue_clicked.connect(_on_clue_clicked)
 	row.add_child(_chart)
 	_panel = SNSeaChartPanel.new()
 	_panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
 	_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_panel.voyage_requested.connect(voyage_requested.emit)
+	_panel.explore_requested.connect(explore_requested.emit)
+	_panel.purchase_clue_requested.connect(purchase_clue_requested.emit)
+	var can_buy: Variant = _view_model.get("can_buy_clue", {})
+	if can_buy is Dictionary:
+		_panel.set_can_buy_clue(can_buy as Dictionary)
 	row.add_child(_panel)
 	_chart.bind(_view_model, _tr)
 	var initial := String(_view_model.get("current_port_id", ""))
@@ -91,8 +104,21 @@ func _header() -> Control:
 func _on_port_clicked(port_id: String) -> void:
 	if _chart == null:
 		return
+	# 港口选中会清掉线索选中（视图里两者互斥），面板随之回到港口信息。
 	_chart.select_port(port_id)
 	_bind_panel(port_id)
+
+
+## 图上点中线索引 → 面板进入线索区块。视图本身已经处理了选中高亮，这里只负责
+## 把线索数据喂给面板（屏幕不重算几何、不查询后端）。
+func _on_clue_clicked(clue_id: String) -> void:
+	if _chart == null or _panel == null:
+		return
+	var clue := _chart.clue_by_id(clue_id)
+	if clue.is_empty():
+		return
+	_chart.select_clue(clue_id)
+	_panel.bind_clue(clue, _tr)
 
 
 ## Same glue as the standalone preview: the selected port plus the route between

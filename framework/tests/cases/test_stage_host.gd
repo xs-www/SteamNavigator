@@ -1303,6 +1303,33 @@ func test_port_stage_redirect_mid_transition_continues_from_current_pose() -> vo
 # --- 10. Voyage departure / arrival beat (nautical chart phase 3) -------------
 
 
+## Mounts + binds the authored port stage for the voyage-beat cases. The caller
+## frees `host`; an empty dictionary means the scene did not mount a PortStage
+## (the assertion was already recorded, the test just bails out).
+func _bound_port_stage() -> Dictionary:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	if not (bool(bundle["loaded"]) and stage is PortStage):
+		assert_true(false, "the port stage scene mounts a PortStage")
+		_free_host(host)
+		return {}
+	var port := stage as PortStage
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES))
+	host.set_stage_visible(true)
+	return {"host": host, "stage": port}
+
+
+## Heading the departure cut must end on: berth -> SEA_HANDOFF in XZ. The model's
+## bow points at +X at yaw 0 and Godot's positive Y rotation takes +X toward -Z,
+## so a direction (dx, dz) is yaw = atan2(-dz, dx) — the same convention the
+## station transit uses.
+func _outbound_yaw_for(port: PortStage) -> float:
+	var berth := port.station_ship_position(port.current_station())
+	var delta := PortStage.SEA_HANDOFF - Vector3(berth.x, 0.0, berth.z)
+	return atan2(-delta.z, delta.x)
+
+
 ## The departure cut is a real 3D move: the hull sails from its berth toward the
 ## harbour mouth while the camera climbs to the high, wide shot. The hull must be
 ## exactly on `SEA_HANDOFF` when the beat ends — that is the point the chart's
@@ -1344,6 +1371,35 @@ func test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void:
 		port.camera_position().distance_to(PortStage.DEPART_CAMERA) < 0.5,
 		"the beat ends on the high departure shot"
 	)
+	_free_host(host)
+
+
+## 离港 beat 结束后云层还没盖满：船必须停在 SEA_HANDOFF 等入港，而不是被站位
+## 平移逻辑拉回泊位——否则「船消失在哪儿、海图就从哪儿出现」的接缝在 3D 侧就破了。
+func test_departure_hold_keeps_the_hull_on_the_sea_handoff_until_the_cut() -> void:
+	var mounted := _bound_port_stage()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+	port.begin_departure(PortStage.VOYAGE_BEAT_SECONDS)
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_true(port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"the hull vanished exactly on the sea handoff")
+	assert_true(port.is_voyage_holding_handoff(), "a finished departure holds the handoff")
+
+	# The stage's own frame loop must not sail the hull back to the berth while the
+	# cloud veil closes over that shot.
+	port._process(0.5)
+	assert_true(port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"the station wheel does not drag the hull back under the veil: %s" % str(port.ship_position()))
+	assert_eq(String(port.voyage_mode()), "", "holding is not a beat; the shell is not stepping one")
+
+	# The arrival beat takes over from the same point and releases the hold.
+	port.begin_arrival(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_false(port.is_voyage_holding_handoff(), "the arrival beat releases the hold")
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS * 0.5)
+	assert_true(port.ship_position().z < PortStage.SEA_HANDOFF.z, "the hull starts sailing in")
 	_free_host(host)
 
 
@@ -1389,5 +1445,206 @@ func test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void:
 	assert_true(
 		port.camera_position().distance_to(station_shot) < 0.5,
 		"the beat ends on the station framing"
+	)
+	_free_host(host)
+
+
+## F1: the departure cut is a real cast-off, not a sideways slide. The hull first
+## swings its bow to the outbound heading (berth -> SEA_HANDOFF) while still on
+## its berth, and only then makes way. The beat ends pointing out to sea.
+func test_port_stage_departure_turns_the_bow_out_to_sea_before_making_way() -> void:
+	var mounted := _bound_port_stage()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+	var berth := port.station_ship_position(port.current_station())
+	var moor_yaw := port.station_ship_yaw(port.current_station())
+	var outbound_yaw := _outbound_yaw_for(port)
+	var moor_gap := absf(angle_difference(moor_yaw, outbound_yaw))
+	assert_almost_eq(port.ship_yaw(), moor_yaw, 0.001, "the hull starts on its mooring yaw")
+
+	port.begin_departure(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_eq(String(port.voyage_mode()), "depart", "the stage reports the departure beat")
+	# 0.3 s into the 1.8 s beat: the turn is well underway but the hull still sits
+	# on its berth — a sideways slide would already have moved it.
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS * 0.17)
+	var turned := absf(angle_difference(port.ship_yaw(), outbound_yaw))
+	assert_true(
+		turned < moor_gap * 0.75,
+		"the bow has swung toward the open sea (%.0f deg left of a %.0f deg turn)"
+			% [rad_to_deg(turned), rad_to_deg(moor_gap)]
+	)
+	var shifted := port.ship_position().distance_to(berth)
+	assert_true(
+		shifted < 0.05,
+		"the opening turn makes no way: hull only %.3f m from its berth" % shifted
+	)
+
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_almost_eq(
+		port.ship_yaw(), outbound_yaw, 0.001, "the beat ends pointing straight out to sea"
+	)
+	_free_host(host)
+
+
+## F1 seam: the heading of the departure cut's last frame is the exact heading of
+## the arrival cut's first frame; the arrival then swings the bow into the
+## harbour and ends back on the mooring yaw.
+func test_port_stage_voyage_handoff_heading_is_seamless() -> void:
+	var mounted := _bound_port_stage()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+	var berth := port.station_ship_position(port.current_station())
+	var outbound_yaw := _outbound_yaw_for(port)
+
+	port.begin_departure(PortStage.VOYAGE_BEAT_SECONDS)
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	var departed_yaw := port.ship_yaw()
+	assert_true(
+		port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"departure ends on the sea handoff: %s" % str(port.ship_position())
+	)
+	assert_almost_eq(departed_yaw, outbound_yaw, 0.001, "departure ends on the outbound heading")
+
+	port.begin_arrival(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_almost_eq(
+		port.ship_yaw(),
+		departed_yaw,
+		0.001,
+		"arrival opens on exactly the heading the departure vanished with"
+	)
+	assert_true(
+		port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"arrival opens on the sea handoff the departure vanished at"
+	)
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_almost_eq(
+		port.ship_yaw(),
+		port.station_ship_yaw(port.current_station()),
+		0.001,
+		"arrival ends back on the mooring yaw"
+	)
+	assert_true(
+		port.ship_position().distance_to(berth) < 0.01,
+		"arrival ends exactly on its berth: %s" % str(port.ship_position())
+	)
+	_free_host(host)
+
+
+## F2-3D: the departure camera climbs to an almost vertical, high wide shot
+## instead of trucking sideways. Height and pitch must be monotonic across the
+## whole beat and the beat must land on the authored `DEPART_CAMERA`.
+func test_port_stage_departure_camera_climbs_to_a_near_vertical_high_shot() -> void:
+	var mounted := _bound_port_stage()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+	var station_height := port.camera_position().y
+	var station_pitch := port.camera_pitch_deg()
+	assert_true(
+		station_pitch < 45.0,
+		"the station shot is a shallow harbour angle (%.1f deg)" % station_pitch
+	)
+
+	port.begin_departure(PortStage.VOYAGE_BEAT_SECONDS)
+	var last_pitch := port.camera_pitch_deg()
+	var last_height := port.camera_position().y
+	var steps := 8
+	for index in steps:
+		port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS / float(steps))
+		var pitch := port.camera_pitch_deg()
+		var height := port.camera_position().y
+		assert_true(
+			pitch >= last_pitch - 0.001,
+			"pitch never dips while climbing (step %d: %.2f -> %.2f deg)"
+				% [index, last_pitch, pitch]
+		)
+		assert_true(
+			height >= last_height - 0.001,
+			"height never dips while climbing (step %d: %.2f -> %.2f m)"
+				% [index, last_height, height]
+		)
+		last_pitch = pitch
+		last_height = height
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_true(
+		port.camera_pitch_deg() >= 80.0,
+		"the high departure shot is almost vertical (%.1f deg)" % port.camera_pitch_deg()
+	)
+	assert_almost_eq(
+		port.camera_position().y,
+		PortStage.DEPART_CAMERA.y,
+		0.01,
+		"the climb ends at the authored high camera height"
+	)
+	assert_true(
+		port.camera_position().y > station_height + 100.0,
+		"the departure shot really is pulled up above the station shot"
+	)
+	assert_true(
+		port.camera_position().distance_to(PortStage.DEPART_CAMERA) < 0.01,
+		"the beat ends on the authored high shot"
+	)
+	_free_host(host)
+
+
+## F2-3D inverse: arrival opens on the near-vertical high shot and falls back
+## monotonically onto the station framing (height and pitch never rise).
+func test_port_stage_arrival_camera_falls_back_to_the_station_shot() -> void:
+	var mounted := _bound_port_stage()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+	var station_pose := port.station_camera_pose(
+		port.current_station(), port.current_station_framing()
+	)
+	var station_height := port.camera_position().y
+	var station_pitch := port.camera_pitch_deg()
+
+	port.begin_arrival(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_true(
+		port.camera_pitch_deg() >= 80.0,
+		"arrival opens near vertical (%.1f deg)" % port.camera_pitch_deg()
+	)
+	assert_almost_eq(
+		port.camera_position().y,
+		PortStage.DEPART_CAMERA.y,
+		0.01,
+		"arrival opens at the authored high camera height"
+	)
+	var last_pitch := port.camera_pitch_deg()
+	var last_height := port.camera_position().y
+	var steps := 8
+	for index in steps:
+		port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS / float(steps))
+		var pitch := port.camera_pitch_deg()
+		var height := port.camera_position().y
+		assert_true(
+			pitch <= last_pitch + 0.001,
+			"pitch never rises while descending (step %d: %.2f -> %.2f deg)"
+				% [index, last_pitch, pitch]
+		)
+		assert_true(
+			height <= last_height + 0.001,
+			"height never rises while descending (step %d: %.2f -> %.2f m)"
+				% [index, last_height, height]
+		)
+		last_pitch = pitch
+		last_height = height
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_true(
+		port.camera_position().distance_to(station_pose["position"]) < 0.01,
+		"arrival hands the harbour back with the station shot"
+	)
+	assert_almost_eq(
+		port.camera_position().y, station_height, 0.01, "camera height returns to the station height"
+	)
+	assert_almost_eq(
+		port.camera_pitch_deg(), station_pitch, 0.01, "camera pitch returns to the station pitch"
 	)
 	_free_host(host)

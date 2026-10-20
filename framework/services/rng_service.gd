@@ -13,6 +13,9 @@ const STREAM_CONTRACT_GENERATION := &"contract_generation"
 const STREAM_VOYAGE_RISK := &"voyage_risk"
 const STREAM_VOYAGE_EVENT := &"voyage_event"
 const STREAM_EVENT_OPTIONS := &"event_options"
+## Exploration clues / discovery rolls. Kept separate from voyage streams so adding a
+## rumour roll can never shift normal voyage outcomes for the same seed.
+const STREAM_EXPLORATION := &"exploration"
 
 const STREAM_NAMES := [
 	STREAM_MAP_GENERATION,
@@ -22,6 +25,7 @@ const STREAM_NAMES := [
 	STREAM_VOYAGE_RISK,
 	STREAM_VOYAGE_EVENT,
 	STREAM_EVENT_OPTIONS,
+	STREAM_EXPLORATION,
 ]
 
 var base_seed: int = 0

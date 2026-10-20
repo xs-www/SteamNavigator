@@ -7,6 +7,10 @@ extends RefCounted
 ## visit via `WorldOps.mark_visited` and reveals the berth's fog through
 ## `FogOps.reveal_arrival` (`_reveal_world_fog`). Absent `world_map` — legacy
 ## saves — both are no-ops.
+##
+## Stage 4.1: `_complete_arrival` also calls `ClueService.on_arrival(context)` so a
+## tavern rumour can be rolled on every arrival. It is purely additive: an empty
+## result (no roll / no target / clue cap) never blocks or fails the arrival.
 
 const OPPORTUNITY_CHANCE := 0.12
 const MAX_EVENT_DELAY_HOURS := 72.0
@@ -256,6 +260,10 @@ static func _complete_arrival(context) -> Dictionary:
 		state.push_notice("ui.notice.discovered_port", {"port": MapOps.port_display_key(state.world(), destination)})
 	state.push_notice("ui.notice.arrived", {"port": MapOps.port_display_key(state.world(), destination)})
 
+	# Stage 4.1: every arrival can produce a tavern rumour from the named exploration
+	# stream. This never blocks or fails the arrival — an empty result just means no clue.
+	var clue_result := ClueService.on_arrival(context)
+
 	var events: Array = []
 	if newly_discovered:
 		events.append({"type": "port.discovered", "payload": {"port_id": destination}})
@@ -288,6 +296,7 @@ static func _complete_arrival(context) -> Dictionary:
 			"game_time": arrival_time,
 		},
 	})
+	events.append_array(clue_result.get("events", []))
 
 	var summary := {
 		"destination": destination,

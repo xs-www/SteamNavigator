@@ -12,6 +12,7 @@
 | `fog_grid_simulator.html` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `gen_content_types.mjs` | 从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录；提供 `--check` 过期检查。 | [查看](./gen_content_types.mjs.md) |
 | `gen_static_docs.mjs` | 从源码静态文档注释、sidecar 头文件和旧策展数据生成镜像文档、模块索引与 SHA-256 manifest。 | [查看](./gen_static_docs.mjs.md) |
+| `godot/capture_exploration.gd` | 探索系统（海图阶段 4.1）的真实渲染截图工具。窗口模式挂载真正的 | [查看](./godot/capture_exploration.gd.md) |
 | `godot/capture_harbor_diorama.gd` | 港口样片真实渲染截图（窗口模式）：加载 harbor_diorama.tscn，等水面/浮船稳定后抓固定 3/4 机位与纵帆船近景两张 1440×900 截图。 | [查看](./godot/capture_harbor_diorama.gd.md) |
 | `godot/capture_port_stage.gd` | PortStage 真实渲染截图（窗口模式 1440×900）：加载 `port_stage_preview.tscn`，依次抓 `preview`（harbor/stage）、`sparse`、`market` 站位、`supply` 站位与 `harbor` 的 panel 构图共 5 张，输出到 `docs/design/screenshots/port_stage/`。 | [查看](./godot/capture_port_stage.gd.md) |
 | `godot/capture_port_stage_res.gd` | 铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行；第三个参数可切换 LOD0/LOD1 标签与 tri 期望，用于 LOD1 临时入舞台的 960×540 可读性证据。 | [查看](./godot/capture_port_stage_res.gd.md) |

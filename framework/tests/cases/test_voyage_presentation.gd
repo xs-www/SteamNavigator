@@ -161,10 +161,53 @@ func test_snapshot_exposes_the_hud_fields() -> void:
 	var model := VoyagePresentation.new()
 	model.plan(8.0)
 	var snapshot := model.snapshot()
-	for key in ["phase", "progress", "veil", "total_hours", "elapsed_hours", "remaining_hours", "hours_per_second"]:
+	for key in ["phase", "progress", "veil", "total_hours", "elapsed_hours", "remaining_hours", "hours_per_second", "chart_zoom_scale"]:
 		assert_true(snapshot.has(key), "the presentation snapshot carries %s" % key)
 	assert_almost_eq(float(snapshot["total_hours"]), 8.0, 0.001, "the snapshot reports the voyage hours")
 	assert_true(float(snapshot["hours_per_second"]) > 1.0, "time is compressed on screen")
+
+
+## 验收反馈 F2：海图取景不能一次性 fit 到位。云层刚散开时是近景，随云层散尽
+## 拉远到稳态；入港前反向推近，云层盖满那一刻最近（表现"镜头还在上升/下降"）。
+func test_chart_framing_starts_near_and_settles_after_the_clouds() -> void:
+	var model := VoyagePresentation.new()
+	model.plan(10.0)
+	model.begin_departure()
+	var steps := _drive_until_step(model, VoyagePresentation.Step.AT_SEA_STARTED, 10.0)
+	assert_true(steps.has(VoyagePresentation.Step.AT_SEA_STARTED), "the chart takes over after the veil")
+	assert_almost_eq(model.veil, 1.0, 0.001, "the chart mounts while the clouds still cover it")
+	assert_almost_eq(model.chart_zoom_scale(), VoyagePresentation.CHART_NEAR_SCALE, 0.02,
+		"the first chart frame is the near shot, not the steady framing")
+
+	# Halfway through the veil the framing is between the near shot and steady.
+	_drive(model, VoyagePresentation.VEIL_SECONDS * 0.5)
+	var mid_scale := model.chart_zoom_scale()
+	assert_true(mid_scale < VoyagePresentation.CHART_NEAR_SCALE and mid_scale > 1.0,
+		"the chart pulls back while the clouds clear (%f)" % mid_scale)
+
+	_drive(model, VoyagePresentation.VEIL_SECONDS)
+	assert_almost_eq(model.veil, 0.0, 0.001, "the chart is fully revealed")
+	assert_almost_eq(model.chart_zoom_scale(), 1.0, 0.001, "the framing settles once the chart is clear")
+
+
+func test_chart_framing_pushes_in_before_the_arrival_veil() -> void:
+	var model := VoyagePresentation.new()
+	model.plan(6.0)
+	_enter_at_sea(model)
+	var frames := 0
+	while model.phase != VoyagePresentation.Phase.ARRIVAL_APPROACH and frames < 2000:
+		model.tick(DELTA)
+		frames += 1
+	assert_eq(String(model.phase_name()), "arrival_approach", "the voyage reaches the arrival veil")
+	var last_scale := 0.0
+	while model.phase == VoyagePresentation.Phase.ARRIVAL_APPROACH and frames < 2200:
+		last_scale = model.chart_zoom_scale()
+		model.tick(DELTA)
+		frames += 1
+	assert_true(last_scale >= VoyagePresentation.CHART_NEAR_SCALE * 0.98,
+		"the chart is pushed all the way in when the clouds close (%f)" % last_scale)
+	assert_almost_eq(model.chart_zoom_scale(), 1.0, 0.001,
+		"once the harbour shot takes over the chart framing resets to steady")
 
 
 func test_sample_polyline_walks_by_arc_length() -> void:
@@ -183,6 +226,13 @@ func test_unpack_path_reads_the_chart_flat_array() -> void:
 	assert_true(points[1].is_equal_approx(Vector2(3.5, 4.0)), "each pair keeps its order")
 	assert_eq(VoyagePresentation.unpack_path([1.0]).size(), 0, "a dangling coordinate is ignored")
 	assert_eq(VoyagePresentation.unpack_path([]).size(), 0, "an empty path stays empty")
+	# The chart view renders routes as `{x,y}` dictionaries; the at-sea page used to
+	# parse only the flat form, so that fallback silently produced a zeroed path.
+	var dict_points := VoyagePresentation.unpack_path([
+		{"x": 1.0, "y": 2.0}, {"x": 3.0, "y": 4.0},
+	])
+	assert_eq(dict_points.size(), 2, "chart-rendered dictionaries unpack into points")
+	assert_true(dict_points[1].is_equal_approx(Vector2(3.0, 4.0)), "dictionary points keep their coordinates")
 
 
 func test_cloud_veil_is_a_pure_renderer_of_cover() -> void:

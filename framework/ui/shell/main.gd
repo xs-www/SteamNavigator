@@ -4,6 +4,19 @@ extends Control
 ## The UI only reads ViewModels through QueryBus and mutates through
 ## CommandBus. Each major function has its own screen; the shell owns
 ## navigation, the header, and transient selection state only.
+##
+## Two mount paths exist: ordinary pages go into `PageMargin/PageScroll/RootBox`,
+## while the at-sea chart page goes into the full-window `FullscreenLayer` (no
+## page margins, no scrolling) so the sea really fills the window. The voyage
+## presentation also feeds that page its route polyline straight from the twin
+## world's `WorldMap.edges` (`_presentation_route_path`) instead of the
+## fog-filtered `sea_chart.view` routes.
+##
+## Exploration (phase 4.1) reuses that same presentation: `explore.start` returns
+## a `presentation` block (`_presentation_explore`) whose route ends at a search
+## zone centre the player cannot name yet. The chart page then draws a dashed
+## prediction line to a `?` marker, and the arrival milestone runs `explore.settle`
+## before cutting to the harbour (the destination only exists after that command).
 
 const UI_THEME := preload("res://assets/ui/theme/steam_navigator_theme.tres")
 ## Themed edge signboard (wood/iron/brass custom draw, plain Button semantics).
@@ -90,6 +103,9 @@ const PAGE_BOTTOM_MARGIN := 56
 const PAGE_BOTTOM_MARGIN_WITH_BAR := 84
 var _context: AppContext = null
 @onready var _root_box: VBoxContainer = $PageMargin/PageScroll/RootBox
+## 全窗演出层：航行页的海图挂在这里（在网页边距/滚动容器之外），海图才能真正
+## 铺满整屏（阶段 3 验收反馈 F3）。它位于页面层之下、顶部 chrome 与转场层之上。
+@onready var _fullscreen_layer: Control = $FullscreenLayer
 var _last_port_view: Dictionary = {}
 var _settings: SettingsService = null
 var _settings_applied: bool = false
@@ -147,6 +163,10 @@ var _pending_transition: bool = false
 ## state only — the voyage itself is already resolved by `voyage.start`.
 var _presentation: VoyagePresentation = null
 var _presentation_summary: Dictionary = {}
+## 探索演出（阶段 4.1）：`explore.start` 命令返回的 `presentation`（origin / zone /
+## route_path / total_hours / …）。非空表示这次演出是探索，抵达摘要要由
+## `explore.settle` 现算，目的地直到结算后才存在。
+var _presentation_explore: Dictionary = {}
 ## Endpoints of the voyage being presented. Kept on the shell because the domain
 ## voyage record is already cleared when the arrival settles instantly.
 var _presentation_voyage: Dictionary = {}
@@ -241,6 +261,11 @@ func _rebuild_ui() -> void:
 	_context = _resolve_context()
 	for child in _root_box.get_children():
 		_root_box.remove_child(child)
+		child.queue_free()
+	# The at-sea chart lives outside the scrolling page stack (it must fill the
+	# window), so it has to be cleared here too or the page would linger.
+	for child in _fullscreen_layer.get_children():
+		_fullscreen_layer.remove_child(child)
 		child.queue_free()
 	_top_chrome = null
 	_at_sea_screen = null
@@ -527,6 +552,12 @@ func _current_port_label(data: Dictionary) -> String:
 			var destination := String(voyage.get("destination", ""))
 			if not destination.is_empty():
 				return "%s → %s" % [_tr("ui.label.at_sea", ""), _port_name(destination)]
+			# 探索演出：目的港要等 `explore.settle` 才知道，顶栏只能显示"探索中 → ？"。
+			if not _presentation_explore.is_empty():
+				return "%s → %s" % [
+					_tr("ui.label.exploring", "探索中"),
+					_tr("ui.label.unknown_destination", "？"),
+				]
 		return _tr("ui.label.at_sea", "")
 	return _tr(String(port.get("name_key", "")), String(port.get("id", "")))
 
@@ -1596,7 +1627,25 @@ func _screen_sea_chart(data: Dictionary) -> void:
 	screen.bind(view_model, Callable(self, "_tr"))
 	screen.close_requested.connect(_on_sea_chart_closed)
 	screen.voyage_requested.connect(_on_sea_chart_voyage)
+	screen.explore_requested.connect(_on_explore_requested)
+	screen.purchase_clue_requested.connect(_on_purchase_clue_requested)
 	_root_box.add_child(screen)
+
+
+## 海图面板「循此线索出航」：跑 `explore.start`，成功即进入探索演出。
+## 策略沿用出航页当前选择；还没有选择时用标准锅炉（注册表按 tag 解析，框架不写死
+## `core:*` ID —— 与"框架无具体内容 ID"不变量一致）。
+func _on_explore_requested(clue_id: String) -> void:
+	var strategy := _selected_strategy
+	if strategy.is_empty():
+		strategy = _standard_strategy_id()
+	_run_command(&"explore.start", {"clue_id": clue_id, "strategy_id": strategy})
+
+
+## 海图面板「购买线索」：`clue.buy` 成功后 `_run_command` 会重建当前页（仍是海图页），
+## 查询重新执行即带出新的 `clues` 列表。
+func _on_purchase_clue_requested() -> void:
+	_run_command(&"clue.buy", {})
 
 
 func _toggle_sea_chart() -> void:
@@ -1734,14 +1783,66 @@ func _screen_at_sea(data: Dictionary, voyage: Variant) -> void:
 		"chart": chart_vm,
 		"voyage": endpoints if endpoints is Dictionary else {},
 		"positions": _presentation_positions(endpoints),
+		# 航路点来自坐标世界的完整航线表（`WorldMap.edges`），不是 `sea_chart.view`
+		# 的迷雾过滤结果：航线发现与否是玩家视角的规则，演出取用程序内部事实
+		# （验收反馈 F4）。
+		"route_path": _presentation_route_path(endpoints),
 	}
+	# 探索演出：航线取自 `explore.start` 的 presentation（终点是搜索区中心，不是
+	# 已发现的港口），并把未知终点交给海图画虚线预测线 + `?`。`top_inset` 让 `?`
+	# 被顶部 chrome / 状态条挡住时 clamp 到可见区（截图验收发现的遮挡）。
+	if not _presentation_explore.is_empty():
+		model["route_path"] = _presentation_explore.get("route_path", [])
+		var zone: Variant = _presentation_explore.get("zone", null)
+		if zone is Dictionary and not (zone as Dictionary).is_empty():
+			model["unknown_destination"] = {
+				"x": float((zone as Dictionary).get("x", 0.0)),
+				"y": float((zone as Dictionary).get("y", 0.0)),
+				"label_key": "ui.label.unknown_destination",
+				"top_inset": _chart_top_inset(),
+			}
+		# 正在追的这条线索不画在演出海图上：它的虚线圆和 `?` 终点会重叠，反而看不清
+		# 探索目标；其它线索保留（玩家仍能看到别的传闻）。
+		_filter_chasing_clue(chart_vm)
 	if _presentation != null:
 		model["presentation"] = _presentation.snapshot()
 	var screen: Variant = AT_SEA_SCREEN_SCENE.instantiate()
 	screen.bind(model, Callable(self, "_tr"))
 	screen.skip_requested.connect(_on_skip_presentation)
 	_at_sea_screen = screen
-	_root_box.add_child(screen)
+	# 航行页是全窗海面：挂在滚动容器之外，页面边距也不再裁掉海图（F3）——
+	# 只有顶部 chrome 浮在它上面。
+	screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fullscreen_layer.add_child(screen)
+
+
+## 顶部固定 chrome（顶栏 + 状态提示条）占掉的高度。航行页挂在全窗层、海图从窗口
+## 顶边开始画，所以未知终点标记要把它当作不可用区：布局还没排完时用子控件的最小
+## 高度估算，第一帧也不会把 `?` 藏在顶栏后面。
+func _chart_top_inset() -> float:
+	var total := 24.0
+	var separation := 8.0
+	if _root_box == null:
+		return total
+	for child in _root_box.get_children():
+		if child is Control:
+			total += (child as Control).get_combined_minimum_size().y + separation
+	return total
+
+
+## 正在追的线索不画在探索演出的海图上：它的虚线圆和未知终点 `?` 会重叠，反而
+## 让玩家看不清自己在往哪走。其它线索保留，演出结束后海图页仍显示完整线索层。
+func _filter_chasing_clue(chart_vm: Dictionary) -> void:
+	var clue_id := String(_presentation_explore.get("clue_id", ""))
+	var clues: Variant = chart_vm.get("clues", null)
+	if clue_id.is_empty() or not (clues is Array):
+		return
+	var kept: Array = []
+	for entry in (clues as Array):
+		if entry is Dictionary and String((entry as Dictionary).get("id", "")) == clue_id:
+			continue
+		kept.append(entry)
+	chart_vm["clues"] = kept
 
 
 ## World positions of the voyage endpoints. The chart only knows discovered
@@ -1764,6 +1865,59 @@ func _presentation_positions(voyage: Variant) -> Dictionary:
 			continue
 		positions[port_id] = {"x": port.position.x, "y": port.position.y}
 	return positions
+
+
+## 航路点表：从坐标世界的航线表（`WorldMap.edges`，旧世界回退现算）取 origin →
+## destination 的完整折线，按「起点在 origin」的方向返回扁平数组 `[x0,y0,…]`。
+##
+## 它**不经过** `sea_chart.view` 的战争迷雾过滤：迷雾只决定玩家能不能在图上看到
+## 这条线，演出（船位、进度、取景）取的是程序内部事实（验收反馈 F4）。
+## 世界表里确实没有这条边时返回空数组，航行页再退回两点直线。
+func _presentation_route_path(voyage: Variant) -> Array:
+	if not (voyage is Dictionary) or _context == null:
+		return []
+	var world_map: Variant = _context.state.data.get("world_map", null)
+	if not (world_map is Dictionary) or (world_map as Dictionary).is_empty():
+		return []
+	var world := WorldMap.from_dict(world_map)
+	var origin_id := String((voyage as Dictionary).get("origin", ""))
+	var destination_id := String((voyage as Dictionary).get("destination", ""))
+	var from_port := world.get_port(origin_id)
+	var to_port := world.get_port(destination_id)
+	if from_port.is_empty() or to_port.is_empty():
+		return []
+	var route := WorldOps.route_between(world, from_port, to_port)
+	var raw: Variant = route.get("path", null)
+	if raw == null:
+		raw = route.get("bezier_path", null)
+	var path := _as_path_points(raw)
+	if path.size() < 2:
+		return []
+	# 航线表只存一个方向；按几何位置（而不是 from/to 字段）决定要不要反转，
+	# 这样旧世界现算出来的航线也能对齐。
+	if path[0].distance_to(from_port.position) > path[path.size() - 1].distance_to(from_port.position):
+		var reversed := PackedVector2Array()
+		for index in range(path.size() - 1, -1, -1):
+			reversed.append(path[index])
+		path = reversed
+	# 世界表里的路点是按存档精度存的（2 位小数），端点直接对齐港口坐标：演出的
+	# 起点必须正好是出发港图标，终点正好是目的港图标（阶段 3 的接缝不变量）。
+	path[0] = from_port.position
+	path[path.size() - 1] = to_port.position
+	# 航路点保持世界表里的原始精度，不做量化。
+	var flat: Array = []
+	for point in path:
+		flat.append(point.x)
+		flat.append(point.y)
+	return flat
+
+
+static func _as_path_points(raw: Variant) -> PackedVector2Array:
+	if raw is PackedVector2Array:
+		return raw
+	if raw is Array:
+		return VoyagePresentation.unpack_path(raw as Array)
+	return PackedVector2Array()
 
 
 ## ---------------------------------------------------------------------------
@@ -1858,6 +2012,65 @@ func _start_voyage_presentation(data: Dictionary) -> void:
 	_set_status("出航，航向 %s。" % _port_name(destination), false)
 
 
+## 探索演出（阶段 4.1）。`explore.start` 已经在领域层扣完资源并写好 `explore_voyage`，
+## 这里只保存它返回的 `presentation`（origin / zone / route_path / total_hours）并启动
+## 与普通航行相同的状态机：3D 离港 → 云层 → 海图。与普通航行的差别只有两点：
+## 目的地暂时为空（抵达时才由 `explore.settle` 决定），海图航线终点是搜索区中心。
+func _start_explore_presentation(data: Dictionary) -> void:
+	var presentation: Dictionary = {}
+	if data.get("presentation", null) is Dictionary:
+		presentation = (data["presentation"] as Dictionary).duplicate(true)
+	var preview: Dictionary = {}
+	if data.get("preview", null) is Dictionary:
+		preview = data["preview"] as Dictionary
+	var origin := String(presentation.get("origin", ""))
+	var hours := float(presentation.get("total_hours", 0.0))
+	if hours <= 0.0:
+		hours = float(preview.get("duration_hours", 0.0))
+	if hours <= 0.0:
+		hours = VoyagePresentation.FALLBACK_HOURS
+	_presentation_explore = presentation
+	_presentation_voyage = {
+		"kind": "explore",
+		"origin": origin,
+		# 目的港在 `explore.settle` 之前不存在：追查线索时玩家只知道搜索区。
+		"destination": "",
+		"clue_id": String(presentation.get("clue_id", "")),
+		"departure_time": float(presentation.get("departure_time", _context.state.now())),
+		"arrival_time": float(presentation.get("arrival_time", _context.state.now() + hours)),
+		"distance": float(preview.get("distance", 0.0)),
+		"strategy_id": String(presentation.get("strategy_id", _selected_strategy)),
+	}
+	_presentation_summary = {}
+	_presentation = VoyagePresentation.new()
+	# 探索 4.1 没有途中的资源告急决策（留给 4.2），事件位固定 -1。
+	_presentation.plan(hours, -1.0)
+	_presentation_origin_view = _last_port_view.duplicate(true)
+	_presentation.departure_3d_seconds = PortStage.VOYAGE_BEAT_SECONDS
+	_presentation.harbor_seconds = PortStage.VOYAGE_BEAT_SECONDS
+	_presentation.begin_departure()
+	_sync_cloud_veil(0.0)
+	_set_status("%s…" % _tr("ui.label.exploring", "探索中"), false)
+
+
+## 抵达海图终点后由 Shell 主动结算探索：目的地（目标港或失败后的漂流港）与
+## `summary.explore` 只存在于命令结果里。失败时把错误交给状态栏并返回 false，
+## 调用方负责退回出发港的入港镜头。
+func _settle_exploration() -> bool:
+	var result := _context.commands.execute(&"explore.settle", {})
+	if not bool(result.get("ok", false)):
+		_set_status(_error_text(result), true)
+		return false
+	var data: Dictionary = result.get("data", {})
+	var destination := String(data.get("destination", ""))
+	if not destination.is_empty():
+		_presentation_voyage["destination"] = destination
+	var summary: Variant = data.get("summary", null)
+	if summary is Dictionary:
+		_presentation_summary = summary
+	return true
+
+
 func _tick_presentation(delta: float) -> void:
 	if _presentation == null:
 		return
@@ -1866,11 +2079,19 @@ func _tick_presentation(delta: float) -> void:
 	# The port stage owns the 3D half of the cut; stepping it from the shell keeps
 	# it in lockstep with the state machine (and lets headless tests step both).
 	_advance_stage_voyage(delta)
-	if _at_sea_screen != null and _presentation.phase == VoyagePresentation.Phase.AT_SEA:
+	# The chart page stays mounted through the arrival veil (it is covered by the
+	# clouds, then swapped for the harbour), so it must keep receiving snapshots:
+	# `ARRIVAL_APPROACH` is what pushes the chart framing in before the cut. Feeding
+	# only `AT_SEA` used to freeze the framing at 1x for the whole arrival.
+	if _at_sea_screen != null and _presentation_on_chart():
 		_at_sea_screen.set_presentation(_presentation.snapshot())
 	match step:
 		VoyagePresentation.Step.DEPARTED:
-			_set_status("离港，航向 %s。" % _port_name(String(_presentation_voyage.get("destination", ""))), false)
+			if not _presentation_explore.is_empty():
+				# 探索出航还没有目的港：只说"探索中"，不能拼出一个空的目的港名。
+				_set_status("%s…" % _tr("ui.label.exploring", "探索中"), false)
+			else:
+				_set_status("离港，航向 %s。" % _port_name(String(_presentation_voyage.get("destination", ""))), false)
 		VoyagePresentation.Step.AT_SEA_STARTED:
 			_rebuild_ui()
 		VoyagePresentation.Step.EVENT_READY:
@@ -1878,6 +2099,19 @@ func _tick_presentation(delta: float) -> void:
 			_rebuild_ui()
 			_presentation.begin_event_reveal()
 		VoyagePresentation.Step.ARRIVAL_READY:
+			# 探索演出：先把目的地结算出来（目标港 / 失败漂流港），再换成目的港的
+			# 3D 入港镜头——普通航行的目的地出发时就已经知道，探索要等这一拍。
+			if not _presentation_explore.is_empty() and not _settle_exploration():
+				# 结算失败（状态被外部改动 / 没有 explore_voyage）：退回出发港，
+				# 不把玩家留在"没有目的地的入港镜头"里。错误已由结算函数写进状态栏。
+				_presentation_explore = {}
+				_presentation_summary = {}
+				_presentation_voyage["destination"] = String(
+					_presentation_voyage.get("origin", "")
+				)
+				_rebuild_ui()
+				_begin_stage_arrival()
+				return
 			# Charts are covered: swap in the destination harbour from the high
 			# "arriving from sea" shot, then let the camera come down.
 			_set_status("抵达 %s。" % _port_name(String(_presentation_voyage.get("destination", ""))), false)
@@ -1896,6 +2130,7 @@ func _finish_presentation() -> void:
 	_active_screen = "settlement" if not _settlement_summary.is_empty() else "overview"
 	_status_message = ""
 	_presentation = null
+	_presentation_explore = {}
 	_at_sea_screen = null
 	_sync_cloud_veil(0.0)
 	_rebuild_ui()
@@ -1947,6 +2182,7 @@ func _begin_stage_arrival() -> void:
 func _reset_voyage_presentation() -> void:
 	_presentation = null
 	_presentation_summary = {}
+	_presentation_explore = {}
 	_presentation_voyage = {}
 	_presentation_origin_view = {}
 	_at_sea_screen = null
@@ -2148,7 +2384,9 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 		_set_status(_error_text(result), true)
 	# `voyage.start` / `event.choose_option` hand over to the cloud transition,
 	# so the generic page fade would fight the veil — rebuild without animation.
-	var presentation_handoff := _presentation != null and command in [&"voyage.start", &"event.choose_option"]
+	var presentation_handoff := _presentation != null and command in [
+		&"voyage.start", &"event.choose_option", &"explore.start",
+	]
 	var animate := command in [&"run.start", &"voyage.start", &"event.choose_option"] and not presentation_handoff
 	_refresh(animate)
 
@@ -2168,9 +2406,15 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			_set_status("新航程开始 · 种子 %d" % int(data.get("seed", 0)), false)
 		"voyage.start":
 			_handle_voyage_result(data)
+		"explore.start":
+			# 探索出航走同一套演出，只是目的地要等 `explore.settle`。
+			_start_explore_presentation(data)
+		"clue.buy":
+			_handle_clue_bought(data)
 		"event.choose_option":
 			if bool(data.get("failed", false)):
 				_presentation = null
+				_presentation_explore = {}
 				_at_sea_screen = null
 				_sync_cloud_veil(0.0)
 				_active_screen = "overview"
@@ -2286,6 +2530,21 @@ func _handle_voyage_result(data: Dictionary) -> void:
 	# port, the chart with the ship sailing, then event/arrival. The voyage itself
 	# was already settled by the command, so this only decides how it is shown.
 	_start_voyage_presentation(data)
+
+
+## `clue.buy` 成功：状态栏只报来源（不泄露等级/目标港），海图由 `_run_command`
+## 的常规 `_refresh()` 重建，新的 `clues` 自然出现在图上。
+func _handle_clue_bought(data: Dictionary) -> void:
+	var clue: Dictionary = {}
+	if data.get("clue", null) is Dictionary:
+		clue = data["clue"] as Dictionary
+	elif data.get("source_key", null) != null or data.get("id", null) != null:
+		clue = data
+	var source_key := String(clue.get("source_display_key", ""))
+	if source_key.is_empty():
+		source_key = "ui.clue.source." + String(clue.get("source_key", ""))
+	var source := _tr(source_key, "线索")
+	_set_status(_tr("ui.notice.clue_acquired", "获得线索：%s") % source, false)
 
 
 func _full_stop_after_voyage(data: Dictionary) -> void:

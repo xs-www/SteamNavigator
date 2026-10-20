@@ -17,6 +17,9 @@ extends RefCounted
 ##   它已经由 `voyage.start` 一次性推进。
 ## - **跳过不等于替玩家做决定**：`skip()` 只跳过航行过程；未处理的事件仍然会被
 ##   推到玩家面前（决策不能替玩家做）。
+## - **海图取景也在模型里**：`chart_zoom_scale()` 与云层同相给出取景倍数（云层刚散开
+##   时近景，随云层散尽回到 1；入港前反向推近）。阶段 3 验收反馈 F2 要求"镜头还在
+##   继续上升/下降"，所以不能由 UI 一次性 fit 到位——倍数由本类决定，海图只负责缩放。
 ## @end-static-doc
 
 ## 演出阶段。名字与设计文档 §8.1 的状态机对应；与 3D 有关的两个额外阶段是
@@ -69,6 +72,10 @@ const HARBOR_SECONDS := 1.8
 const FALLBACK_HOURS := 8.0
 ## 事件默认落在航程的这个比例处（设计文档 §8.1：事件发生在途中）。
 const DEFAULT_EVENT_PROGRESS := 0.5
+## 海图取景的「近景倍数」：云层第一次散开时海图从近景开始，随云层散尽拉远到
+## 稳态取景（1x）；入港前反向推近，云层盖满时正好最近。它表现的是设计文档
+## §8.2 的「镜头还在继续上升 / 下降」，而不是一次性 fit 到位（验收反馈 F2）。
+const CHART_NEAR_SCALE := 2.8
 
 var phase: Phase = Phase.IN_PORT
 var progress: float = 0.0
@@ -255,6 +262,20 @@ func hours_per_second() -> float:
 	return total_hours / playback_seconds
 
 
+## 海图取景缩放倍数：1 = 稳态取景（`SNSeaChartView` 的自动 fit），大于 1 = 更近。
+## 它与云层同相：`AT_SEA` 在云层刚散开时从近景拉远，`ARRIVAL_APPROACH` 在云层
+## 盖满前推近。纯函数，Shell 每帧把它推给海图，海图只负责按倍数缩放。
+func chart_zoom_scale() -> float:
+	match phase:
+		Phase.AT_SEA:
+			var clear := clampf(1.0 - veil, 0.0, 1.0)
+			return lerpf(CHART_NEAR_SCALE, 1.0, smoothstep(0.0, 1.0, clear))
+		Phase.ARRIVAL_APPROACH:
+			return lerpf(1.0, CHART_NEAR_SCALE, smoothstep(0.0, 1.0, clampf(veil, 0.0, 1.0)))
+		_:
+			return 1.0
+
+
 func is_veiled() -> bool:
 	return veil >= 1.0 - 0.0001
 
@@ -277,6 +298,7 @@ func snapshot() -> Dictionary:
 		"has_event": has_event,
 		"event_fired": event_fired,
 		"handoff_progress": handoff_progress,
+		"chart_zoom_scale": chart_zoom_scale(),
 	}
 
 
@@ -308,8 +330,23 @@ static func polyline_length(points: PackedVector2Array) -> float:
 
 
 ## 把海图查询里 `bezier_path` 的扁平数组（`[x0,y0,x1,y1,…]`）还原成点列。
+## 兼容三种形态：扁平数字数组（世界表存储格式）、`{x,y}` 字典数组（
+## `SNSeaChartView._pack_path` 的渲染格式）、`Vector2` 数组。旧航行页只认第一种，
+## 于是海图航线兜底永远解析出零路径——验收反馈 F4 的一部分。
 static func unpack_path(flat: Array) -> PackedVector2Array:
 	var points := PackedVector2Array()
+	if flat.is_empty():
+		return points
+	if flat[0] is Dictionary or flat[0] is Vector2:
+		for entry in flat:
+			if entry is Vector2:
+				points.append(entry)
+			elif entry is Dictionary:
+				points.append(Vector2(
+					float((entry as Dictionary).get("x", 0.0)),
+					float((entry as Dictionary).get("y", 0.0))
+				))
+		return points
 	var index := 0
 	while index + 1 < flat.size():
 		points.append(Vector2(float(flat[index]), float(flat[index + 1])))

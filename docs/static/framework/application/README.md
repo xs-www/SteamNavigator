@@ -10,6 +10,7 @@
 | `commands/command_registry.gd` | 命令名到静态用例的绑定表（含船厂/仓库/打造/在港等待命令）。 | 本页 |
 | `commands/contract_commands.gd` | 委托接取命令包装。 | 本页 |
 | `commands/debt_commands.gd` | 借款命令包装。 | 本页 |
+| `commands/explore_commands.gd` | 探索系统的命令包装（`explore.start` / `explore.settle` / `explore.decide` / | [查看](./commands/explore_commands.gd.md) |
 | `commands/intel_commands.gd` | 情报刷新命令：设施、费用、快照。 | 本页 |
 | `commands/port_commands.gd` | 港口停留用例：在本港消耗时间，让打造订单、NPC 市场与债务期限一起推进。 | [查看](./commands/port_commands.gd.md) |
 | `commands/run_start.gd` | run.start 命令：调用 RunFactory 并写回状态/随机流。 | 本页 |
