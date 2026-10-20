@@ -761,17 +761,28 @@ def _shed(m):
 
 
 def _roof_section(sy):
-    """主屋面单坡 YZ 截面：檐口外棱 2 段 45° 倒角，板厚 0.22，脊线收口。"""
+    """主屋面单坡 YZ 截面：檐口外棱 2 段 45° 倒角，板厚 0.22，脊线收口。
+
+    LOD1 批次修复（见 docs/design/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md §4）：
+    顶皮必须严格落在 `z = RIDGE_TOP - |y - Y_RIDGE| * SLOPE` 这条线上。旧实现把
+    檐口倒角起点由 ye 向内收 0.06 m 后**没有**同步抬升 0.06*SLOPE，导致实际顶皮
+    坡度 0.6559 > SLOPE 0.6436：在 ±Y 墙线（|y - Y_RIDGE| = 2.89）处顶皮只有
+    z = 7.4644，比墙顶 EAVE_Z = 7.50 低 3.56 cm（砖墙顶沿露出一条细砖线），而
+    屋面立缝按 SLOPE 定位，檐口端实测悬空约 4.6 cm。此处所有倒角点都改按真实
+    顶皮线取 z：顶皮在 ±Y 墙线处正好 = EAVE_Z（7.50），两项残留同时归零。
+    三角面数、包围盒（20 顶点坐标只改屋面 6 个顶皮点）、轴心与主立面均不变。
+    """
+    def top(y):
+        return RIDGE_TOP - abs(y - Y_RIDGE) * SLOPE
+
     ye = Y_RIDGE + sy * ROOF_EAVE_DY
-    zt = RIDGE_TOP - ROOF_EAVE_DY * SLOPE             # 檐口外沿顶皮
-    zu = zt - ROOF_T                                   # 檐口外沿底皮
     return [
-        (Y_RIDGE, RIDGE_TOP - ROOF_T),
-        (ye, zu),
-        (ye, zt - 0.06),
-        (ye - sy * 0.0176, zt - 0.0176),
-        (ye - sy * 0.06, zt),
-        (Y_RIDGE, RIDGE_TOP),
+        (Y_RIDGE, top(Y_RIDGE) - ROOF_T),               # 脊线底皮 9.14
+        (ye, top(ye) - ROOF_T),                         # 檐口外沿底皮
+        (ye, top(ye) - 0.06),                           # 檐口立面顶（倒角第 1 段）
+        (ye - sy * 0.0176, top(ye - sy * 0.0176) - 0.0176),
+        (ye - sy * 0.06, top(ye - sy * 0.06)),          # 倒角第 2 段收口
+        (Y_RIDGE, top(Y_RIDGE)),                        # 脊线顶皮 9.36
     ]
 
 

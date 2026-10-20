@@ -186,31 +186,35 @@
 - 验收记录：6/6 独立只读质检通过（命名/集合/轴心/尺寸误差 0.000/预算/材质/网格健康全 0/回归 digest 命中/视觉可辨）；工单里"信号塔是港口最高剪影"与本批尺寸表自相矛盾（塔 8.5 m < 龙门吊 10.0 m，场景既有铁甲舰 24.44 m），按尺寸表实现，塔为最高**塔类**竖向剪影。
 - 已接线：`PortStage` 的 `facility_visuals` 已实现（`StageHost` 泛化完成后落地）；ViewModel 传入已解析 GLB 路径时按设施替换这 6 个锚点，路径缺失/非法时回退程序化 billboard（当前默认仍是 billboard 占位）。截图：[完整港口](screenshots/port_stage/port_stage_preview.png) / [稀疏港口](screenshots/port_stage/port_stage_sparse.png)。
 
-## 3D 港口街景（第一批 10 件）
+## 3D 港口街景（铁港建筑套件 LOD0 + 批次 A LOD1）
 
-主界面港口舞台的「码头广场 + 仓库街区」背景 kit：10 件低模、平直着色、无贴图的建筑/人物/小船，放在工作台 `SN_Harbor_Town` 集合（y=110 一排），逐件导出为 `dev_mods/core/assets/models/props/SN_HT_*.glb`，随 core 模组发布（发布包 PCK 排除 `assets/models/*`）。合计 **6204 tri**（工单预算 11500）；场景总数 **244 objects / 223 mesh**，既有对象 digest `4fe3f250…` 未变。
+主界面港口舞台的「码头广场 + 仓库街区」背景 kit。第一批 10 件低模道具（围栏/工人/小船等）仍在工作台 `SN_Harbor_Town` 集合（y=110），运行时为 `dev_mods/core/assets/models/props/SN_HT_*.glb`；其中 **5 栋建筑已在铁港建筑套件（M1 + 批次 B + 批次 A）升级为带共享 trim sheet 贴图的 LOD0，并新增 5 件 LOD1**，随 core 模组发布（发布包 PCK 排除 `assets/models/*`，内容只从 `.snavmod.zip` / 松散目录读取）。
 
-| 对象 | 运行时 GLB | 尺寸 L×W×H (m) | tri 预算 | 主要材质 |
-| --- | --- | ---: | ---: | --- |
-| `SN_HT_Warehouse_Long` | `dev_mods/core/assets/models/props/SN_HT_Warehouse_Long.glb` | 20 × 9 × 11 | 2600 | Stone / Brick / Wood_Dark / Wood / Glass_Dark / Iron |
-| `SN_HT_Warehouse_Short` | `…/SN_HT_Warehouse_Short.glb` | 11 × 9 × 9.5 | 1700 | Stone / Wood / Wood_Dark / Plaster / Glass_Dark |
-| `SN_HT_Harbor_Office` | `…/SN_HT_Harbor_Office.glb` | 9 × 8 × 14 | 2200 | Brick / Plaster / Stone / Iron / Brass / Glass_Dark / Wood_Dark |
-| `SN_HT_Cargo_Shed` | `…/SN_HT_Cargo_Shed.glb` | 8 × 6 × 4.5 | 700 | Wood / Wood_Dark / Canvas / Metal |
-| `SN_HT_Tavern` | `…/SN_HT_Tavern.glb` | 10 × 8 × 8 | 1700 | Plaster / Brick / Wood / Wood_Dark / Glass_Dark / Stone / Iron |
-| `SN_HT_Fence_Row` | `…/SN_HT_Fence_Row.glb` | 6 × 0.3 × 1.5 | 300 | Stone / Iron |
-| `SN_HT_Dock_Worker_A` | `…/SN_HT_Dock_Worker_A.glb` | 0.7 × 0.45 × 1.8 | 250 | Wood_Dark / Canvas_Shade / Metal |
-| `SN_HT_Dock_Worker_B` | `…/SN_HT_Dock_Worker_B.glb` | 0.8 × 0.5 × 1.8 | 250 | Wood_Dark / Canvas_Shade / Wood / Metal |
-| `SN_HT_Rowboat` | `…/SN_HT_Rowboat.glb` | 4.2 × 1.5 × 0.8 | 550 | Wood / Wood_Deck / Metal / Iron |
-| `SN_HT_Cargo_Lighter` | `…/SN_HT_Cargo_Lighter.glb` | 8 × 3 × 1.6 | 700 | Wood / Wood_Dark / Wood_Deck / Metal / Iron / Canvas_Shade |
+### 建筑资产（批次 A 终态）
 
-- 工单：`tools/modeling/briefs/sn_harbor_town_batch1.json`（尺寸/预算/调色板/验收规则）；新增材质 `SN_Brick` / `SN_Plaster` / `SN_Glass_Dark`。
-- 生成器：`tools/modeling/generators/sn_harbor_town_generator.py`（`ITEMS` + `build_*` 纯几何，可 `dryrun_props.py` 离线干跑；`build_all()/report()` 在 Blender 内执行）。
-- 导出：`tools/modeling/generators/export_town_glb.py`（逐件临时归零 location → 单对象 GLB → 还原摆位；轴心=底面中心、glTF Y-up、无相机/灯光）。
-- 质检：Builder 6204 tri；独立 Verifier R1 修复 Rowboat 压条悬空、Tavern 挂灯脱开、Office 塔身暗板过厚后复验 **passed=true**（244 objects / 223 mesh、回归 digest 命中）。
-- Core 接线：`dev_mods/core/manifest.json` 新增 10 个 `model.prop.*`（资产数 65→75）；`port_archetypes.json` 五港 `diorama.kit/town` 引用这 10 个键 + 16 个复用道具/设施键（crate/barrel/coal_pile/timber_stack/handcart/gas_lamp + market_stall/harbor_crane/sack_pile/plate_stack/ore_pile/pallet/gangway/mooring_bollard/capstan/buoy）。
-- 舞台装配：`PortStage` 的 L2b 按 `port.size` 与可选 `port.diorama.density`（small→sparse / medium→normal / large→busy）确定性放置：normal 为 5 建筑 + 7 围栏 + 7 工人 + 8 广场装饰 + 3 船 + 17 码头工业件 = **47 props**（sparse 28 / busy 63）；建筑 GLB 缺失回退程序化 blockout，town 存在时跳过 L2 剪影。设施/街景/玩家船在重建后静态合批（按材质合并），实测 preview 63 / sparse 56 draw calls。
-- HUD 图标：`icon.money` / `icon.coal` / `icon.water` 由 `AssetService.find_key()` 按裸键从任一已挂载内容包解析（金币/煤炭/淡水 chip），缺资产回退纯文字；不新增资产。
-- 截图：`docs/design/screenshots/port_stage/port_stage_preview.png`、`port_stage_sparse.png`、`docs/design/screenshots/overview_port_stage.png`、`overview_port_stage_960.png`。
+| 资产 | LOD0 运行时 GLB | LOD1 运行时 GLB | 尺寸 X×Y×Z (m) | LOD0 tri | LOD1 tri | LOD1 上限 | 材质槽 |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+| `SN_HT_Warehouse_Long` | `…/SN_HT_Warehouse_Long.glb` | `…/SN_HT_Warehouse_Long_LOD1.glb` | 20 × 9 × 11 | 7 436 | **1 584** | 2 602 | 6 |
+| `SN_HT_Warehouse_Short` | `…/SN_HT_Warehouse_Short.glb` | `…/SN_HT_Warehouse_Short_LOD1.glb` | 11 × 9 × 9.5 | 3 788 | **1 060** | 1 325 | 6 |
+| `SN_HT_Harbor_Office` | `…/SN_HT_Harbor_Office.glb` | `…/SN_HT_Harbor_Office_LOD1.glb` | 9 × 8 × 14 | 10 336 | **1 896** | 3 617 | 6 |
+| `SN_HT_Cargo_Shed` | `…/SN_HT_Cargo_Shed.glb` | `…/SN_HT_Cargo_Shed_LOD1.glb` | 8 × 6 × 4.5 | 3 356 | **776** | 1 174 | 5（无砖） |
+| `SN_HT_Tavern` | `…/SN_HT_Tavern.glb` | `…/SN_HT_Tavern_LOD1.glb` | 10 × 8 × 8 | 5 116 | **1 248** | 1 790 | 6 |
+| **合计** | — | — | — | **30 032** | **6 564（21.85%）** | 10 508 | — |
+
+- 材质：6 槽固定为 `SN_Town_Brick / Plaster / Wood / Iron / Stone / Glass`；贴图来自同一张 2048² trim sheet 的 16 个 512² cell，每栋按 M1/B 批选定 cell（不新增独占大贴图）。
+- **共享外部贴图（批次 A）**：10 个 GLB 的 `images[].uri` 统一指向 `assets/models/props/iron_harbor_shared/<cell>.png`（11 张、与 `docs/design/textures/iron_harbor/tiles/` 逐字节一致）；`ContentAssetLoader` 按 URI 缓存 `Texture2D`，5 栋建筑共用同一贴图实例，`PortStage` 静态合批因此把建筑材质批次从 29 收敛到 11。
+- LOD1 只作为「可被质量档位使用」的资产交付，**未接入运行时 LOD 切换**（按需求 §3/§5.1）。
+- Core manifest 新增 5 个 `model.prop.*_lod1` 资产键（LOD0 路径不变；清单资产键 75→80）。
+- 生成器/导出/自检：`tools/modeling/generators/sn_iron_harbor_architecture_kit_generator.py`（Long LOD0）、`sn_iron_harbor_{warehouse_short,harbor_office,cargo_shed,tavern}_generator.py`（其余 LOD0）、`sn_iron_harbor_architecture_lod1_generator.py`（5 栋 LOD1）、`sn_iron_harbor_materials.py`（共享材质/UV）、`glb_shared_textures.py`（内嵌贴图→外部共享 URI + BIN 压缩）、`export_iron_harbor_architecture_lod_glb.py`（Blender 侧 LOD0+LOD1 逐件导出）、`verify_iron_harbor_architecture_lod_glb.py`（纯 Python 结构/tri/bbox/贴图总量复检）。
+- 验收工具：`tools/godot/capture_port_stage_res.gd`（1440×900 / 960×540，第三参数 LOD0/LOD1）、`tools/godot/measure_port_stage.gd`（draw calls / batches / surfaces，`-- --core-zip` 走挂载 ZIP 路径）、`tools/godot/verify_shared_textures.gd`（共享贴图实例探针）。
+
+### 舞台装配与性能（批次 A 实测）
+
+- 5 栋建筑 + 7 围栏 + 7 工人 + 8 广场装饰 + 3 船 + 17 码头工业件 = **47 props**（sparse 28 / busy 63）；建筑 GLB 缺失回退程序化 blockout，town 存在时跳过 L2 剪影。
+- 共享贴图合批后实测 **preview 71 / sparse 64 draw calls**（batch B 内嵌贴图时为 91 / 82；共享前整帧 89/82），阶段分析面 **73**（≤75 目标、≤80 硬上限），`batches=41`（原 59）、`meshes_before 163→42`；5 栋模型+纹理 **4.17 MB**（≤4.5 MB；LOD0+LOD1 GLB 2.28 MB + 11 张共享 PNG 1.88 MB）。
+- LOD1 临时入舞台证据（非正式接线）：960×540 与 1440×900 固定机位截图可辨认 5 栋轮廓；量测见批次 A 验收报告。
+- 截图：LOD1 单价/对比 30 张（`docs/design/screenshots/iron_harbor_architecture/*_LOD1_*`）、PortStage 固定机位 `SN_HT_Warehouse_Long_LOD0_port_stage_{1440x900,960x540}.png` 与 `..._LOD1_port_stage_{1440x900,960x540}.png`；舞台截图 `docs/design/screenshots/port_stage/port_stage_preview.png`、`port_stage_sparse.png`、`overview_port_stage.png`、`overview_port_stage_960.png`。
+- 旧 `SN_Harbor_Town` 10 件占位（y=110）保留未动，作为回归基线；其上表第一批 tri 预算数字已被本套件取代。
 
 ## 3D 港口样片（水面着色器试做）
 

@@ -1,3 +1,17 @@
+## @static-doc
+## 作用：PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与三个站位（market/harbor/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。
+##
+## - 关键依赖：`dev_scenes/port_stage/port_stage_preview.tscn`、`RenderingServer`、`PortStage.batch_stats()`
+##
+## ## 契约与约束
+## - 必须窗口模式才能读到真实 draw calls；headless 时打印明确说明并走 mesh/surface 分析口径，不视为失败、不挂窗口。
+## - 采样 6 帧取峰值，避免 resize / 首帧低值；成功条件为 5 个样本（preview/sparse/market/harbor/supply）都完成测量，否则退出码 1。
+## - 预算阈值 120 draws / 60,000 tris；每个站位单独输出 ≤120 / ≤60k 判定与一行汇总，超出只报告 OVER 不改变退出码（测量工具不替代验收）。注意 60k 是整场景 tri 口径；§5.1 的「同屏城镇建筑 ≤60k / LOD1 组合 ≤20k」需用 5 栋 GLB 求和另行复算。
+## - `-- --core-zip` 会把 `dev_mods/core` 打成 `.snavmod.zip` 并挂载，把 `SN_TOWN_ASSET_ROOT` 指向 `res://mods/core/assets/models/props`，从而以原始 `ContentAssetLoader` 路径实测 ZIP 加载；`-- --core-zip=PATH` 挂载既有包（如 `dist/mods/core-1.0.0.snavmod.zip`）。不传时仍是松散 `dev_mods`（导入资源路径）。
+## - 180 s watchdog；只读场景，不修改游戏状态或源码。
+## - 输出包含总 draw calls（含已合并玩家船）与 stage 自身（excl. hull），便于区分舞台预算与不可批的船体开销。
+## @end-static-doc
+
 extends SceneTree
 ## Real-render budget measurement for the 2.5D `PortStage` sample scene.
 ##
@@ -84,6 +98,9 @@ func _run() -> void:
 	else:
 		DisplayServer.window_set_size(WINDOW)
 		DisplayServer.window_set_title("Steam Navigator · port stage measure")
+	if not _setup_town_asset_root():
+		_finish()
+		return
 	await process_frame
 	await process_frame
 
@@ -504,6 +521,75 @@ func _mesh_triangles(mesh: Mesh) -> int:
 			if vertices is PackedVector3Array:
 				total += int((vertices as PackedVector3Array).size() / 3)
 	return total
+
+
+## Optional loading-path mode: `--core-zip` packs the loose dev core into a
+## `.snavmod.zip`, mounts it and points the town kit at `res://mods/core/...` —
+## the raw `ContentAssetLoader` path a release build uses. `--core-zip=PATH`
+## mounts an existing pack instead of packing. Without either flag the scene
+## keeps the loose `dev_mods` paths (the imported-resource path).
+func _setup_town_asset_root() -> bool:
+	var zip_argument := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument == "--core-zip":
+			zip_argument = "pack"
+		elif argument.begins_with("--core-zip="):
+			zip_argument = argument.trim_prefix("--core-zip=")
+	var root := "res://dev_mods/core/assets/models/props"
+	if not zip_argument.is_empty():
+		var pack_path := "user://measure_port_stage/core-1.0.0.snavmod.zip"
+		if zip_argument == "pack":
+			if not _pack_core(pack_path):
+				_fail("cannot pack dev_mods/core into " + pack_path)
+				return false
+		else:
+			pack_path = zip_argument
+		if not ProjectSettings.load_resource_pack(pack_path, false):
+			_fail("cannot mount core pack: " + pack_path)
+			return false
+		root = "res://mods/core/assets/models/props"
+		print("[measure] loading path: ZIP pack (%s)" % pack_path)
+	OS.set_environment("SN_TOWN_ASSET_ROOT", root)
+	print("[measure] town asset root: " + root)
+	return true
+
+
+func _pack_core(pack_path: String) -> bool:
+	var directory := DirAccess.open("res://dev_mods/core")
+	if directory == null:
+		return false
+	DirAccess.make_dir_recursive_absolute(pack_path.get_base_dir())
+	if FileAccess.file_exists(pack_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(pack_path))
+	var files := PackedStringArray()
+	_walk_pack("res://dev_mods/core", "", files)
+	var packer := ZIPPacker.new()
+	if packer.open(pack_path) != OK:
+		return false
+	for relative_path in files:
+		var bytes := FileAccess.get_file_as_bytes("res://dev_mods/core/" + relative_path)
+		if packer.start_file("mods/core/" + relative_path) != OK:
+			packer.close()
+			return false
+		packer.write_file(bytes)
+		packer.close_file()
+	packer.close()
+	return true
+
+
+func _walk_pack(root: String, relative: String, output: PackedStringArray) -> void:
+	var path := root if relative.is_empty() else root + "/" + relative
+	var directory := DirAccess.open(path)
+	if directory == null:
+		return
+	for file_name in directory.get_files():
+		var child := file_name if relative.is_empty() else relative + "/" + file_name
+		if file_name.ends_with(".import") or file_name.ends_with(".uid"):
+			continue
+		output.append(child)
+	for directory_name in directory.get_directories():
+		var child := directory_name if relative.is_empty() else relative + "/" + directory_name
+		_walk_pack(root, child, output)
 
 
 func _fail(message: String) -> void:

@@ -1,3 +1,14 @@
+## @static-doc
+## 作用：铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行；第三个参数可切换 LOD0/LOD1 标签与 tri 期望，用于 LOD1 临时入舞台的 960×540 可读性证据。
+##
+## ## 契约与约束
+## - 用法：`godot --path . --script res://tools/godot/capture_port_stage_res.gd -- <w> <h> [LOD0|LOD1]`；必须窗口模式（headless 下视口纹理为空）。
+## - 输出 `docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_<LABEL>_port_stage_<w>x<h>.png`；失败以非 0 退出码结束。
+## - `_report_asset_materials()` 逐个 `load()` 5 个槽位 GLB（`TOWN_ASSETS`：warehouse_long / warehouse_short / harbor_office / cargo_shed / tavern，stage 采样同一路径），打印每栋 `[asset] ... surfaces/tris/uv_surfaces/textured_surfaces/materials/textures`；有面缺贴图/缺 UV、或 tri 数与期望表（LOD0 7436 / 3788 / 10336 / 3356 / 5116；LOD1 1584 / 1060 / 1896 / 776 / 1248）不符都记为失败。stage 里 static batching 会把逐对象节点合并释放，所以**不能**在场景树里找它。
+## - `budget: ... tris=` 是整台 stage 的总量（含并行工作流往城镇加的道具），**不能**当单资产增量证据，单资产证据看 `[asset]` 行。
+## - 与既有 `capture_port_stage.gd`（固定 1440×900、preview+sparse 两张）并行存在，不改后者行为。
+## @end-static-doc
+
 extends SceneTree
 ## Real-render PortStage screenshots at an explicit window resolution.
 ##
@@ -40,6 +51,16 @@ const EXPECTED_ASSET_TRIS := {
 	"cargo_shed": 3356,
 	"tavern": 5116,
 }
+## Batch-A LOD1 tris, used when the third CLI arg is `LOD1` (the stage is pointed
+## at the LOD1 GLBs temporarily; the screenshot is named `..._LOD1_...`).
+const EXPECTED_LOD1_TRIS := {
+	"warehouse_long": 1584,
+	"warehouse_short": 1060,
+	"harbor_office": 1896,
+	"cargo_shed": 776,
+	"tavern": 1248,
+}
+var _label := "LOD0"
 
 var _failures := 0
 
@@ -62,12 +83,21 @@ func _target_size() -> Vector2i:
 	return Vector2i(1440, 900)
 
 
+## Optional third CLI arg: screenshot/expectation label (`LOD0` default, `LOD1`).
+func _resolve_label() -> String:
+	var args := OS.get_cmdline_user_args()
+	if args.size() >= 3:
+		return String(args[2]).to_upper()
+	return "LOD0"
+
+
 func _run() -> void:
 	if DisplayServer.get_name() == "headless":
 		_fail("must run windowed (drop --headless)")
 		_finish()
 		return
 	var target := _target_size()
+	_label = _resolve_label()
 	DisplayServer.window_set_size(target)
 	for i in RESIZE_FRAMES:
 		await process_frame
@@ -82,7 +112,7 @@ func _run() -> void:
 	var scene: Node = packed.instantiate()
 	root.add_child(scene)
 	await _settle()
-	await _capture("SN_HT_Warehouse_Long_LOD0_port_stage_%dx%d.png" % [target.x, target.y])
+	await _capture("SN_HT_Warehouse_Long_%s_port_stage_%dx%d.png" % [_label, target.x, target.y])
 	scene.queue_free()
 	await process_frame
 	_finish()
@@ -175,7 +205,8 @@ func _report_one_asset(slot: String, path: String) -> void:
 		_fail("asset surfaces without albedo texture (%s): %d/%d" % [slot, surfaces - textured, surfaces])
 	if uv_surfaces < surfaces:
 		_fail("asset surfaces without UVs (%s): %d/%d" % [slot, surfaces - uv_surfaces, surfaces])
-	var expected := int(EXPECTED_ASSET_TRIS.get(slot, 0))
+	var expected_tris := EXPECTED_LOD1_TRIS if _label == "LOD1" else EXPECTED_ASSET_TRIS
+	var expected := int(expected_tris.get(slot, 0))
 	if expected > 0 and tris != expected:
 		_fail("asset tri count changed (%s): %d != %d" % [slot, tris, expected])
 	node.free()
