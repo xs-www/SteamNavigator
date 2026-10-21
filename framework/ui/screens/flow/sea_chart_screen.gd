@@ -23,10 +23,15 @@ extends VBoxContainer
 ##   `can_buy_clue` 来自同一个 `sea_chart.view`，本页只负责塞给面板。
 ## - **逐级调查**（4.3.2 / U2）：面板 `investigate_requested(clue_id)` 由本页原样
 ##   转发为同名信号；Shell 执行 `clue.investigate` 后刷新海图。
+## - **线索列表入口**（4.4.4）：顶栏「线索列表」按钮发 `clue_list_requested` 给 Shell；
+##   `view_model["preselect_clue_id"]` 非空时本页在绑定时直接选中该线索（列表页
+##   「点击回海图」用，即使货物线索在海图上没有几何也能在面板里打开）。
 ## @end-static-doc
 
 signal close_requested
-## 面板的出航入口（4.3.4 / U7）：`kind` = `voyage` | `explore`。
+## 打开线索列表页（4.4.4）：Shell 负责查询 `clue.list` 并挂载页面。
+signal clue_list_requested
+## 面板的出航入口（4.3.4 / U7）：`kind` = `voyage` | `explore` | `goods`。
 signal departure_requested(kind: String, target_id: String)
 ## 确认弹窗「启航」：Shell 直接执行 `voyage.start` / `explore.start`。
 signal departure_confirmed(kind: String, target_id: String, strategy_id: String)
@@ -130,6 +135,10 @@ func _rebuild() -> void:
 	if not initial.is_empty():
 		_chart.select_port(initial)
 		_bind_panel(initial)
+	# 4.4.4：从线索列表回海图时预选线索（货物线索没有几何，也能在面板里打开）。
+	var preselect_clue := String(_view_model.get("preselect_clue_id", ""))
+	if not preselect_clue.is_empty() and not _chart.clue_by_id(preselect_clue).is_empty():
+		_on_clue_clicked(preselect_clue)
 	if not _departure.is_empty():
 		_add_confirm_overlay(body)
 
@@ -161,6 +170,12 @@ func _header() -> Control:
 	heading.detail = _loc("ui.sea_chart.detail", "滚轮缩放 · 拖拽平移 · 点击港口查看详情")
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(heading)
+	var clue_list := Button.new()
+	clue_list.name = "ClueListButton"
+	clue_list.text = _loc("ui.button.clue_list", "线索列表")
+	clue_list.theme_type_variation = &"SNGhostButton"
+	clue_list.pressed.connect(func() -> void: clue_list_requested.emit())
+	header.add_child(clue_list)
 	var close := Button.new()
 	close.name = "CloseButton"
 	close.text = _loc("ui.sea_chart.close", "返回")

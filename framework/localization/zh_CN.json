@@ -519,6 +519,7 @@
   "ui.clue.list.empty": "目前没有线索。抵达港口、在港等待或完成委托都可能带来新线索。",
   "ui.clue.list.expired_section": "已过期",
   "ui.clue.list.click_hint": "点击线索回到海图",
+  "ui.clue.list.back": "返回海图",
   "ui.label.unknown_destination": "？",
   "ui.label.exploring": "探索中",
   "ui.notice.clue_acquired": "获得线索：%s",

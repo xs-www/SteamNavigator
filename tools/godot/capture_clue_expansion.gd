@@ -37,12 +37,14 @@ const WATCHDOG_SECONDS := 120.0
 const TMP_PREFIX := "res://tmp_clue_expansion_"
 
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
+const CLUE_LOG_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/clue_log_screen.gd")
 
 const SHOTS := [
 	{"file": "clue_goods_lead.png", "label": "货物行情线索面板（分级行情 + 剩余时效 + 前往该港）"},
 	{"file": "clue_goods_depart.png", "label": "货物线索的「前往该港」统一确认弹窗"},
 	{"file": "clue_investigate_cost.png", "label": "4.4.3 调查消耗：20 金 / 6 小时 / 成功率 75%"},
 	{"file": "clue_investigate_result.png", "label": "4.4.3 调查结果状态栏（成功升级 / 失败可重试）"},
+	{"file": "clue_log.png", "label": "4.4.4 线索列表页（active 卡片 + 过期折叠历史）"},
 ]
 
 var _failures := 0
@@ -157,6 +159,45 @@ func _run() -> void:
 
 	# 等待来源证据放在截图之后：连续等待会推进时间，可能让行情线索自然过期。
 	_assert_wait_source_evidence(context)
+
+	# ── 4.4.4: the clue list page (active cards + expired history), then the
+	# click-back-to-chart round-trip. ──
+	var chart_screen: Variant = await _open_chart(shell)
+	if chart_screen == null:
+		_finish()
+		return
+	var list_button: Button = _node_named(chart_screen, "ClueListButton") as Button
+	if list_button == null:
+		_fail("the chart header has no clue list button")
+		_finish()
+		return
+	list_button.pressed.emit()
+	await _settle(14, 0.9)
+	var log_screens := _nodes_with_script(shell._root_box, CLUE_LOG_SCREEN_SCRIPT)
+	_assert_eq(log_screens.size(), 1, "the clue list page is mounted")
+	if log_screens.is_empty():
+		_finish()
+		return
+	var log_screen: Variant = log_screens[0]
+	var first_card := _assert_clue_log_page(context, log_screen)
+	await _capture(String(SHOTS[4]["file"]), String(SHOTS[4]["label"]))
+	# 回海图 + 选中线索（列表页的核心交互，不额外截图，只做硬断言）。
+	if first_card != null:
+		var selected_id := String(first_card.get_meta("clue_id", ""))
+		first_card.pressed.emit()
+		await _settle(8, 0.35)
+		_assert_eq(String(shell._active_screen), "sea_chart",
+			"clicking a clue card returns to the chart")
+		var bound_id := "n/a"
+		var chart_screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+		if not chart_screens.is_empty():
+			var back_screen: Variant = chart_screens[0]
+			bound_id = String(back_screen._panel.get_clue().get("id", ""))
+			_assert_eq(bound_id, selected_id,
+				"the chart panel binds the clue selected in the list")
+		print("[EVIDENCE] clue log round-trip: card=%s -> chart panel=%s" % [
+			selected_id, bound_id,
+		])
 
 	_commit_shots()
 	_finish()
@@ -382,6 +423,48 @@ func _assert_investigation_result(
 		clue_id, level_before, level_after, str(success), context.state.money(),
 		context.state.now(), String(shell._status_message),
 	])
+
+
+## 4.4.4 列表页断言：标题 / 计数、至少一张 active 卡片、过期折叠行、卡片文本含行情。
+## 返回第一张 active 卡片（供回海图选中接线断言）。
+func _assert_clue_log_page(context: AppContext, screen: Variant) -> Button:
+	var texts := _label_texts(screen)
+	_assert_true(texts.has(String(context.translate("ui.clue.list.title"))),
+		"the clue log shows its title: %s" % str(texts))
+	var rules := ExplorationRules.read(context.state, context.registries)
+	var expected_count := String(context.translate("ui.clue.list.count")) % [
+		ClueService.active_count(context.state), int(rules.get("max_active_clues", 4)),
+	]
+	_assert_true(_texts_contain(texts, expected_count),
+		"the clue log shows the held / max count (%s): %s" % [expected_count, str(texts)])
+	var cards: Array = []
+	var expired_rows: Array = []
+	_collect_named(screen, "ClueCard_", cards)
+	_collect_named(screen, "ExpiredClue_", expired_rows)
+	_assert_true(cards.size() >= 2, "the clue log lists the active leads (%d)" % cards.size())
+	_assert_true(expired_rows.size() >= 1,
+		"the clue log folds the expired history (%d)" % expired_rows.size())
+	if expired_rows.is_empty():
+		return cards[0] if not cards.is_empty() else null
+	_assert_true(String((expired_rows[0] as Label).text).contains(
+		String(context.translate("ui.clue.expired"))
+	), "the expired row is marked as expired: %s" % String((expired_rows[0] as Label).text))
+	if cards.is_empty():
+		return null
+	var first: Button = cards[0]
+	print("[EVIDENCE] clue log: %d active card(s), %d expired row(s), first=%s text=%s" % [
+		cards.size(), expired_rows.size(), String(first.get_meta("clue_id", "")),
+		String(first.text),
+	])
+	return first
+
+
+## 收集名字以 prefix 开头的节点（卡片 / 过期行按名字约定区分）。
+func _collect_named(root_node: Node, prefix: String, out: Array) -> void:
+	if String(root_node.name).begins_with(prefix):
+		out.append(root_node)
+	for child in root_node.get_children():
+		_collect_named(child, prefix, out)
 
 
 # ---------------------------------------------------------------------------

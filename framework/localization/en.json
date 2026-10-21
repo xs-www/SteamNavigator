@@ -519,6 +519,7 @@
   "ui.clue.list.empty": "No clues right now. Arriving in port, waiting or completing contracts can reveal new leads.",
   "ui.clue.list.expired_section": "Expired",
   "ui.clue.list.click_hint": "Click a clue to return to the chart",
+  "ui.clue.list.back": "Back to chart",
   "ui.label.unknown_destination": "?",
   "ui.label.exploring": "Exploring",
   "ui.notice.clue_acquired": "Clue acquired: %s",

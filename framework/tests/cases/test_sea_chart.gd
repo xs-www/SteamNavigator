@@ -23,6 +23,7 @@ const SEED_B := 67890
 ## enter the cache after an editor reimport, and the headless runner must not
 ## depend on one (same convention as `test_ui_shell.gd`).
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
+const CLUE_LOG_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/clue_log_screen.gd")
 const TEST_PROFILE := {
 	"world_size": 400.0,
 	# Design freeze (NAUTICAL_CHART_SYSTEM.md §2.2/§12): 15-20 harbours per run.
@@ -1581,3 +1582,145 @@ func test_goods_clue_has_no_chart_geometry() -> void:
 	})
 	assert_true(geometry.is_empty(), "a goods lead draws nothing on the chart")
 	chart.free()
+
+
+# ── Stage 4.4.4: clue log page ──
+
+## 海图顶栏「线索列表」入口 + 列表页回海图时的线索预选（货物线索没有几何也能打开）。
+func test_sea_chart_header_opens_clue_list_and_preselects_a_clue() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var tree := Engine.get_main_loop() as SceneTree
+	var vm: Dictionary = CLUE_VM.duplicate(true)
+	vm["preselect_clue_id"] = "clue:3"
+	var screen: Control = SEA_CHART_SCREEN_SCRIPT.new()
+	tree.root.add_child(screen)
+	var requested: Array = []
+	screen.clue_list_requested.connect(func() -> void: requested.append(true))
+	screen.bind(vm, Callable(context, "translate"))
+	var panel := _find_descendant(screen, func(node: Node) -> bool: return node is SNSeaChartPanel) as SNSeaChartPanel
+	assert_not_null(panel, "the screen mounts the clue panel")
+	if panel != null:
+		assert_eq(String(panel.get_clue().get("id", "")), "clue:3",
+			"preselect_clue_id binds that clue into the panel")
+	var list_button := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "ClueListButton"
+	) as Button
+	assert_not_null(list_button, "the chart header exposes the clue list entry")
+	if list_button != null:
+		list_button.pressed.emit()
+	assert_eq(requested.size(), 1, "the clue list button emits clue_list_requested")
+	screen.free()
+
+
+## 线索列表页：active 卡片（港口位置 / 货物行情）、过期折叠历史、点击回海图、空态。
+func test_clue_log_screen_lists_active_and_expired_leads() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var tree := Engine.get_main_loop() as SceneTree
+	var screen: Control = CLUE_LOG_SCREEN_SCRIPT.new()
+	tree.root.add_child(screen)
+	var selected: Array = []
+	var closed: Array = []
+	screen.clue_selected.connect(func(clue_id: String) -> void: selected.append(clue_id))
+	screen.close_requested.connect(func() -> void: closed.append(true))
+	var vm := {
+		"has_run": true,
+		"now": 50.0,
+		"max_active": 4,
+		"active_count": 2,
+		"clues": [
+			{
+				"id": "clue:11", "type": "port_location", "source_key": "rumor",
+				"source_display_key": "ui.clue.source.rumor", "level": 3,
+				"next_level": 4, "next_level_key": "ui.clue.level.4",
+				"direction_angle": 0.0, "distance_min_hours": 6.0, "distance_max_hours": 11.0,
+				"circle": {"x": 200.0, "y": 200.0, "radius": 14.0}, "name_key": "",
+				"target_goods_id": "", "goods": null,
+				"expires_at": 0.0, "remaining_hours": -1.0, "is_expired": false,
+				"attempts": 0, "last_attempt_at": 0.0,
+				"can_investigate": true, "can_sail": true,
+			},
+			{
+				"id": "clue:12", "type": "port_goods", "source_key": "wait",
+				"source_display_key": "ui.clue.source.wait", "level": 4,
+				"next_level": 0, "next_level_key": "",
+				"direction_angle": 0.0, "distance_min_hours": 0.0, "distance_max_hours": 0.0,
+				"circle": null, "name_key": "", "target_goods_id": "core:good/spices",
+				"goods": {
+					"port_name_key": "port_name.core.spice_port",
+					"buy_price_min": 20, "buy_price_max": 24,
+					"sell_price_min": 18, "sell_price_max": 22,
+					"stock": 55, "demand": "high", "buy_price": 22, "sell_price": 20,
+				},
+				"expires_at": 80.0, "remaining_hours": 30.0, "is_expired": false,
+				"attempts": 0, "last_attempt_at": 0.0,
+				"can_investigate": false, "can_sail": true,
+			},
+		],
+		"expired": [
+			{
+				"id": "clue:9", "type": "port_goods", "level": 2,
+				"source_key": "wait", "source_display_key": "ui.clue.source.wait",
+				"expires_at": 40.0, "target_goods_id": "core:good/spices",
+				"port_name_key": "port_name.core.spice_port",
+			},
+		],
+	}
+	screen.bind(vm, Callable(context, "translate"))
+	var texts := _label_texts(screen)
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.list.title")),
+		"the page shows its title, got: %s" % str(texts))
+	assert_true(_any_text_contains(
+		texts, context.translate("ui.clue.list.count") % [2, 4]
+	), "the page shows the active / max count, got: %s" % str(texts))
+	var card := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "ClueCard_clue_11"
+	) as Button
+	assert_not_null(card, "the port-location lead has a card")
+	if card != null:
+		assert_true(String(card.text).contains(context.translate("ui.clue.direction.E")),
+			"level 3 shows the fixed compass direction: %s" % String(card.text))
+		card.pressed.emit()
+	assert_eq(selected, ["clue:11"], "clicking a card emits clue_selected(clue_id)")
+	var goods_card := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "ClueCard_clue_12"
+	) as Button
+	assert_not_null(goods_card, "the goods lead has a card")
+	if goods_card != null:
+		var card_text := String(goods_card.text)
+		assert_true(card_text.contains(context.translate("ui.clue.goods.price_exact") % [22, 20]),
+			"the goods card shows the exact market: %s" % card_text)
+		assert_true(card_text.contains(context.translate("ui.clue.expiry") % 30),
+			"the goods card shows the remaining lifetime: %s" % card_text)
+	var expired_row := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Label and String((node as Node).name) == "ExpiredClue_clue_9"
+	) as Label
+	assert_not_null(expired_row, "the expired history has its own row")
+	if expired_row != null:
+		assert_true(String(expired_row.text).contains(context.translate("ui.clue.expired")),
+			"the expired row is marked as expired: %s" % String(expired_row.text))
+	var close := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "CloseButton"
+	) as Button
+	assert_not_null(close, "the page exposes a close button")
+	if close != null:
+		close.pressed.emit()
+	assert_eq(closed.size(), 1, "closing the page emits close_requested")
+	screen.free()
+
+	# 空态：没有 active、没有过期历史时显示引导文案，不出现卡片。
+	var empty_screen: Control = CLUE_LOG_SCREEN_SCRIPT.new()
+	tree.root.add_child(empty_screen)
+	empty_screen.bind({
+		"has_run": true, "now": 0.0, "max_active": 4, "active_count": 0,
+		"clues": [], "expired": [],
+	}, Callable(context, "translate"))
+	var empty_texts := _label_texts(empty_screen)
+	assert_true(_any_text_contains(
+		empty_texts, context.translate("ui.clue.list.empty")
+	), "an empty log explains where clues come from, got: %s" % str(empty_texts))
+	assert_true(_find_descendant(empty_screen, func(node: Node) -> bool:
+		return node is Button and String((node as Node).name).begins_with("ClueCard_")
+	) == null, "an empty log renders no clue cards")
+	empty_screen.free()

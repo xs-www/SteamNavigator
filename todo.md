@@ -6,7 +6,7 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [ ] 海图阶段 4.4 线索扩展（4.4.1–4.4.3 已实现，4.4.4–4.4.5 进行中）：`port_goods` 货物行情线索（已发现港口 + 货物 + 冻结行情 + 分级披露）、`expires_at` 时效与过期历史、`clue.list` 只读查询、旧存档惰性 normalize、在港等待 / 完成委托解锁来源、货物线索「前往该港」（`clue.travel` + 统一确认弹窗 + 普通航行演出）、调查消耗落地（20 金 / 6h / 75%，失败可再试）；下一步线索列表页、截图/文档收尾。契约见 [EXPLORATION_SYSTEM.md §11](docs/design/EXPLORATION_SYSTEM.md)
+- [ ] 海图阶段 4.4 线索扩展（4.4.1–4.4.4 已实现，4.4.5 收尾）：`port_goods` 货物行情线索（已发现港口 + 货物 + 冻结行情 + 分级披露）、`expires_at` 时效与过期历史、`clue.list` 只读查询、旧存档惰性 normalize、在港等待 / 完成委托解锁来源、货物线索「前往该港」（`clue.travel` + 统一确认弹窗 + 普通航行演出）、调查消耗落地（20 金 / 6h / 75%，失败可再试）、线索列表页（active 卡片 + 过期折叠 + 点击回海图选中）；下一步全量测试 / 截图 / 静态文档收尾。契约见 [EXPLORATION_SYSTEM.md §11](docs/design/EXPLORATION_SYSTEM.md)
 
 ## Pending
 

@@ -330,7 +330,8 @@ Clue
 买价 / 卖价 / 库存 / 供需快照，按来源 24 / 48 / 72 游戏小时到期；1 级港口名 → 2 级参考价
 区间 → 3 级库存供需 → 4 级精确行情）。到期由命令路径 `sweep_expired` 移入
 `data.clues.expired` 历史并释放线索上限；「前往该港」走普通航线（`clue.travel`），
-不占用探索搜索区。字段与验收见 [EXPLORATION_SYSTEM.md §11](EXPLORATION_SYSTEM.md)。
+不占用探索搜索区。海图顶栏「线索列表」打开独立列表页（列全部 active 线索 + 过期折叠
+历史，点击回海图并选中）。字段与验收见 [EXPLORATION_SYSTEM.md §11](EXPLORATION_SYSTEM.md)。
 调查方式（花时间等待 / 完成委托解锁）见 §7.4；调查消耗 4.4.3 落地。
 
 ## 8. 航行演出

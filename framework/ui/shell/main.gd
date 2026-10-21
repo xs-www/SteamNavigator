@@ -41,6 +41,7 @@ const SETTLEMENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/settle
 const AT_SEA_SCREEN_SCENE := preload("res://framework/ui/screens/flow/at_sea_screen.tscn")
 const EVENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/event_screen.tscn")
 const SEA_CHART_SCREEN_SCENE := preload("res://framework/ui/screens/flow/sea_chart_screen.tscn")
+const CLUE_LOG_SCREEN_SCENE := preload("res://framework/ui/screens/flow/clue_log_screen.tscn")
 const VICTORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/victory_screen.tscn")
 const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_menu_screen.tscn")
 const NEW_GAME_SCREEN_SCENE := preload("res://framework/ui/screens/menu/new_game_screen.tscn")
@@ -132,6 +133,8 @@ var _sea_chart_return: String = "overview"
 var _chart_departure: Dictionary = {}
 ## 「规划出航」等入口请求打开海图时预选的港口（消费一次后清空）。
 var _pending_chart_port: String = ""
+## 4.4.4：线索列表页点击条目后，回海图时要选中的线索 id（消费一次后清空）。
+var _pending_chart_clue: String = ""
 var _seed_text: String = ""
 var _status_message: String = ""
 var _status_is_error: bool = false
@@ -382,7 +385,8 @@ func _rebuild_ui() -> void:
 		return
 
 	_build_status_banner()
-	if not SCREENS.has(_active_screen) and not ["port_memory", "settlement", "sea_chart"].has(_active_screen):
+	if not SCREENS.has(_active_screen) \
+			and not ["port_memory", "settlement", "sea_chart", "clue_log"].has(_active_screen):
 		_active_screen = "overview"
 	# The overview main view is a full-window 3D stage with edge HUD; the other
 	# pages keep their own layout and hide the stage/status strip again.
@@ -400,6 +404,8 @@ func _rebuild_ui() -> void:
 			_screen_intel(data)
 		"sea_chart":
 			_screen_sea_chart(data)
+		"clue_log":
+			_screen_clue_log(data)
 		"port_memory":
 			_screen_port_memory(data)
 		"settlement":
@@ -1616,11 +1622,16 @@ func _screen_sea_chart(data: Dictionary) -> void:
 	if not _pending_chart_port.is_empty() and not view_model.is_empty():
 		view_model["preselect_port_id"] = _pending_chart_port
 		_pending_chart_port = ""
+	# 4.4.4：从线索列表回到海图时预选线索（即使货物线索在海图上没有几何）。
+	if not _pending_chart_clue.is_empty() and not view_model.is_empty():
+		view_model["preselect_clue_id"] = _pending_chart_clue
+		_pending_chart_clue = ""
 	if not _chart_departure.is_empty() and not view_model.is_empty():
 		view_model["departure"] = _chart_departure_model(data, view_model)
 	var screen: Variant = SEA_CHART_SCREEN_SCENE.instantiate()
 	screen.bind(view_model, Callable(self, "_tr"))
 	screen.close_requested.connect(_on_sea_chart_closed)
+	screen.clue_list_requested.connect(_on_clue_list_requested)
 	screen.departure_requested.connect(_on_chart_departure_requested)
 	screen.departure_confirmed.connect(_on_chart_departure_confirmed)
 	screen.departure_cancelled.connect(_on_chart_departure_cancelled)
@@ -1808,10 +1819,47 @@ func _on_investigate_requested(clue_id: String) -> void:
 func _toggle_sea_chart() -> void:
 	if _active_screen == "sea_chart":
 		_on_sea_chart_closed()
+	elif _active_screen == "clue_log":
+		# 4.4.4：M 在列表页等于「返回海图」，不改变海图的来源页。
+		_on_clue_log_closed()
 	else:
 		# 新开海图不带上一次的待确认弹窗。
 		_chart_departure = {}
 		_on_nav("sea_chart")
+
+
+## 4.4.4 线索列表页：Shell 查询 `clue.list`（只读）并把 ViewModel 塞给独立页面；
+## 页面自己不发命令、不查询，只通过信号表达「关闭 / 选中线索」。
+func _screen_clue_log(_data: Dictionary) -> void:
+	var result := _context.queries.execute(&"clue.list", {})
+	var view_model: Dictionary = result.get("data", {}) if bool(result.get("ok", false)) else {}
+	var screen: Variant = CLUE_LOG_SCREEN_SCENE.instantiate()
+	screen.bind(view_model, Callable(self, "_tr"))
+	screen.close_requested.connect(_on_clue_log_closed)
+	screen.clue_selected.connect(_on_clue_log_clue_selected)
+	_root_box.add_child(screen)
+
+
+func _on_clue_list_requested() -> void:
+	_active_screen = "clue_log"
+	_status_message = ""
+	_refresh()
+
+
+func _on_clue_log_closed() -> void:
+	# 回到海图（保持原来打开海图的返回页），不经过 `_on_nav` 以免改写来源。
+	_active_screen = "sea_chart"
+	_refresh()
+
+
+## 列表页点击线索：回海图并选中该线索（货物线索没有几何也能在面板里打开）。
+func _on_clue_log_clue_selected(clue_id: String) -> void:
+	if clue_id.is_empty():
+		return
+	_pending_chart_clue = clue_id
+	_active_screen = "sea_chart"
+	_status_message = ""
+	_refresh()
 
 
 ## M/Esc shortcuts are only meaningful inside an active, in-port run without a
@@ -1850,6 +1898,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_chart_departure_cancelled()
 		else:
 			_on_sea_chart_closed()
+		get_viewport().set_input_as_handled()
+	elif key_event.keycode == KEY_ESCAPE and _active_screen == "clue_log":
+		# 4.4.4：列表页 Esc 回到海图。
+		_on_clue_log_closed()
 		get_viewport().set_input_as_handled()
 
 
@@ -2657,6 +2709,7 @@ func _on_new_run() -> void:
 		seed = int(_seed_text.strip_edges())
 	_selected_strategy = ""
 	_chart_departure = {}
+	_pending_chart_clue = ""
 	_sea_chart_return = "overview"
 	_status_message = ""
 	_run_command(&"run.start", {"build_id": _selected_build, "seed": seed})
@@ -2680,6 +2733,7 @@ func _on_continue() -> void:
 		MarketMemoryService.remember(_context.state, _context.state.current_port_id())
 	_selected_strategy = ""
 	_chart_departure = {}
+	_pending_chart_clue = ""
 	_sea_chart_return = "overview"
 	_reset_voyage_presentation()
 	_active_screen = "overview"
@@ -2717,6 +2771,7 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			_active_screen = "overview"
 			_selected_strategy = ""
 			_chart_departure = {}
+			_pending_chart_clue = ""
 			_victory_dismissed = false
 			_settlement_summary = {}
 			_reset_voyage_presentation()
