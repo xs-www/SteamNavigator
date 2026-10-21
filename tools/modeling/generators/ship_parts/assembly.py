@@ -22,6 +22,7 @@ class PivotSpec:
     location: tuple
     rotation: tuple = (0.0, 0.0, 0.0)
     size: float = 1.2
+    parent: str = "ROOT"   # 父级 PivotSpec.key（"ROOT" = 根空物体）
 
 
 @dataclass
@@ -195,7 +196,11 @@ def build_collection(parts, cfg):
 
     pivots = {}
     for spec in cfg.pivots:
-        pivot = _add_empty(spec.name, spec.location, root, col, spec.size)
+        parent = root if spec.parent == "ROOT" else pivots.get(spec.parent)
+        if parent is None:
+            raise RuntimeError("pivot %s: unknown parent %s" % (
+                spec.name, spec.parent))
+        pivot = _add_empty(spec.name, spec.location, parent, col, spec.size)
         pivot.rotation_euler = spec.rotation
         pivots[spec.key] = pivot
 

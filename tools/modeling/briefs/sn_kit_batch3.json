@@ -1,0 +1,443 @@
+{
+  "id": "sn_kit_batch3",
+  "title": "模型素材库批次 3（P2）：architecture_kit + environment_kit",
+  "purpose": "在批次 2（机械 / 货物 / 码头）之后补 P2 场景模块：建筑（仓库 / 工坊 / 酒馆 / 厂房）与环境（礁石 / 残骸 / 灯塔 / 航标浮标）。8 件资产沿用批次 1–2 的 Mount + 语义 socket + 根 extras 契约，按 4 m 网格拼装：建筑沿 X 平铺、门口 / 吊点 / 烟囱等接口外露；环境件根在水线，可单独成景或互相落座（灯塔落在礁石 Top、残骸倚靠礁石）。",
+  "category": "kit",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-21 指定 P2 两组：architecture_kit 仓库、工坊、酒馆、厂房；environment_kit 礁石、残骸、灯塔等。要求作为后续搭建的模型素材库。",
+  "style": {
+    "look": "与批次 1–2 同一套低模语言：石基座 + 铁板/木材 + 黄铜机械件 + 深色玻璃；轮廓优先；共享贴图 SN_Tex_*，禁止纯色材质。建筑是‘可拼装的体量 + 立面节奏’，不做室内；环境件用石材 / 朽木 / 锈铁，保持风化轮廓。",
+    "palette": [
+      "SN_Tex_Iron",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Brass",
+      "SN_Tex_Glass_Dark",
+      "SN_Tex_Canvas_Shade",
+      "SN_Tex_Stone"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*",
+      "SN_ShipPart_*",
+      "SN_Machinery_*",
+      "SN_Cargo_*",
+      "SN_Dock_*",
+      "SN_PF_Root",
+      "SN_SF_Root",
+      "SN_Ironclad"
+    ],
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV",
+    "conventions": "几何由生成器参数表驱动；闭合件边界边/非流形边/退化面必须为 0；Mount/Socket 为空节点，不参与几何。",
+    "datums": "建筑：根在建筑体量底面中心（zmin=0），+X 为正立面（门 / 雨棚 / 吊车），Module_Next/Prev 在体量 X 边 (±半长, 0, 0) 供平铺。环境：礁石 / 残骸 / 航标浮标根在水线 z=0（礁石到 z=-3.0、残骸船底到 z=-1.6、浮标吃水裙到 z=-0.7）；灯塔根在基座底面 z=0，由礁石 Top 接口托起。",
+    "material_rule": "新资产必须使用共享贴图材质 SN_Tex_*；本批不新增贴图（沿用 11 张共享贴图）。"
+  },
+  "kit_contract": {
+    "families": {
+      "architecture_kit": "建筑可拼装件：仓库（大跨度 + 装卸雨棚）、工坊（外墙飞轮/皮带接口）、酒馆（两层 + 门廊 + 悬挑招牌）、厂房（锯齿采光顶 + 双烟囱 + 外置吊车梁）。",
+      "environment_kit": "环境可拼装件：礁石群（水线上下 + 灯塔落座点）、沉船残骸（倾斜船壳/肋骨/断桅）、灯塔（石塔 + 环廊 + 灯室 + 透镜）、航标浮标（浮筒 + 灯架 + 钟 + 锚链）。"
+    },
+    "mount_frame": "每件资产根下提供 SN_<Asset>_Mount（+X 前向、Z 向上）。装配只对齐 Root/Mount。",
+    "architecture_chain": "建筑 Module_Next/Module_Prev 沿 X 平铺（间距 = 体量 X 长）；Door_Front 为入口落点；仓库 Hoist 为雨棚吊点；工坊 Drive_Shaft 接 machinery_kit 动力装置飞轮轴；厂房 Gantry 为吊车梁吊点；Chimney 为烟柱 VFX 点。",
+    "environment_chain": "礁石 Top 接收灯塔 / 残骸 Mount；灯塔 Lamp 为灯室光源点、Gallery 为环廊站位；残骸 Deck 为可站立甲板点、Mast 为断桅顶；浮标 Lamp/Bell/Chain 为灯、钟、锚链接口。",
+    "console": "Root extras 写 kit_family / part_role / datum / mount_frame / base_footprint_x/y / envelope_x/y / height / tri_budget / bbox_target；建筑另写 module_x/module_y；环境件另写 waterline（相对根的水线高度，航标=0、礁石=0、残骸=0、灯塔=0）。",
+    "catalog": "docs/design/KIT_ASSET_LIBRARY.md 增加批次 3 目录与装配配方；tools/modeling/kit_catalog.json 追加 8 件与配方；GLB 根节点 extras 保留机器可读字段。"
+  },
+  "items": [
+    {
+      "id": "sn_arch_warehouse_v1",
+      "asset": "SN_Arch_Warehouse",
+      "role": "仓库：石基座 + 铁包木墙体 + 双坡铁皮顶 + 山墙通风帽 + 正立面装卸门（滑门轨道/斜撑）+ 外挑装卸雨棚（立柱/吊货梁/滑轮）+ 高位玻璃窗 + 竖向壁柱与铆钉",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Arch_Warehouse_Prototype",
+      "root": "SN_Arch_Warehouse_Root",
+      "prefix": "SN_Arch_Warehouse_",
+      "workbench_pos": [
+        30.0,
+        600.0,
+        0.0
+      ],
+      "family": "architecture_kit",
+      "part_role": "warehouse",
+      "sockets": [
+        "Mount",
+        "Module_Next",
+        "Module_Prev",
+        "Door_Front",
+        "Hoist",
+        "Sign"
+      ],
+      "dimensions": {
+        "length": 10.95,
+        "width": 6.95,
+        "height": 6.35,
+        "tolerance": 0.15
+      },
+      "tri_budget": 3400,
+      "required_parts": [
+        "Plinth",
+        "Walls",
+        "Roof",
+        "DockDoor",
+        "Canopy",
+        "Windows"
+      ],
+      "acceptance": [
+        "tri <= 3400",
+        "包围盒 10.95 x 6.95 x 6.35（±0.15）",
+        "zmin = 0（石基座落地）",
+        "Module_Next/Prev 在 (±4.0, 0, 0)",
+        "Door_Front 在正立面门口、Hoist 在雨棚吊点",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_workshop_v1",
+      "asset": "SN_Arch_Workshop",
+      "role": "工坊：石基座 + 木铁墙体 + 带高侧窗的采光顶（monitor roof）+ 砖砌高烟囱 + 正立面双开大门 + 外置飞轮与皮带轮（接动力装置）+ 侧墙工具棚/卷扬吊臂 + 壁灯",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Arch_Workshop_Prototype",
+      "root": "SN_Arch_Workshop_Root",
+      "prefix": "SN_Arch_Workshop_",
+      "workbench_pos": [
+        44.0,
+        600.0,
+        0.0
+      ],
+      "family": "architecture_kit",
+      "part_role": "workshop",
+      "sockets": [
+        "Mount",
+        "Module_Next",
+        "Module_Prev",
+        "Door_Front",
+        "Drive_Shaft",
+        "Chimney"
+      ],
+      "dimensions": {
+        "length": 9.32,
+        "width": 6.63,
+        "height": 7.04,
+        "tolerance": 0.15
+      },
+      "tri_budget": 2900,
+      "required_parts": [
+        "Plinth",
+        "Walls",
+        "Roof",
+        "Smokestack",
+        "DoubleDoor",
+        "DriveWheel"
+      ],
+      "acceptance": [
+        "tri <= 2900",
+        "包围盒 9.32 x 6.63 x 7.04（±0.15）",
+        "zmin = 0",
+        "Drive_Shaft 在 -Y 外墙飞轮轴、Chimney 在烟囱顶",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_tavern_v1",
+      "asset": "SN_Arch_Tavern",
+      "role": "酒馆：石砌首层 + 悬挑木构二层 + 山墙双坡顶 + 正立面门廊（立柱/雨棚/台阶）+ 悬挑空白招牌 + 凸窗 + 二层阳台 + 石烟囱 + 玻璃窗组",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Arch_Tavern_Prototype",
+      "root": "SN_Arch_Tavern_Root",
+      "prefix": "SN_Arch_Tavern_",
+      "workbench_pos": [
+        56.0,
+        600.0,
+        0.0
+      ],
+      "family": "architecture_kit",
+      "part_role": "tavern",
+      "sockets": [
+        "Mount",
+        "Module_Next",
+        "Module_Prev",
+        "Door_Front",
+        "Sign",
+        "Chimney"
+      ],
+      "dimensions": {
+        "length": 8.67,
+        "width": 6.96,
+        "height": 7.64,
+        "tolerance": 0.15
+      },
+      "tri_budget": 3400,
+      "required_parts": [
+        "Plinth",
+        "GroundFloor",
+        "UpperFloor",
+        "Roof",
+        "Porch",
+        "SignBracket"
+      ],
+      "acceptance": [
+        "tri <= 3400",
+        "包围盒 8.67 x 6.96 x 7.64（±0.15）",
+        "zmin = 0",
+        "Sign 在悬挑招牌位置、Door_Front 在门廊入口",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_factory_v1",
+      "asset": "SN_Arch_Factory",
+      "role": "厂房：石基座 + 铁板墙体/壁柱 + 4 跨锯齿采光顶（北向玻璃）+ 双砖烟囱 + 正立面双滑门 + 外置吊车梁（立柱/端梁/小车/吊钩）+ 装卸平台 + 屋顶通风管",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Arch_Factory_Prototype",
+      "root": "SN_Arch_Factory_Root",
+      "prefix": "SN_Arch_Factory_",
+      "workbench_pos": [
+        70.0,
+        600.0,
+        0.0
+      ],
+      "family": "architecture_kit",
+      "part_role": "factory",
+      "sockets": [
+        "Mount",
+        "Module_Next",
+        "Module_Prev",
+        "Door_Front",
+        "Gantry",
+        "Chimney"
+      ],
+      "dimensions": {
+        "length": 14.74,
+        "width": 8.3,
+        "height": 9.64,
+        "tolerance": 0.2
+      },
+      "tri_budget": 4800,
+      "required_parts": [
+        "Plinth",
+        "Walls",
+        "SawtoothRoof",
+        "Chimneys",
+        "SlidingDoors",
+        "GantryBeam"
+      ],
+      "acceptance": [
+        "tri <= 4800",
+        "包围盒 14.74 x 8.30 x 9.64（±0.20）",
+        "zmin = 0",
+        "Gantry 在吊车梁下吊点、Chimney 在主烟囱顶",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_env_reef_v1",
+      "asset": "SN_Env_Reef",
+      "role": "礁石群：宽平礁顶 + 12 块外圈礁岩裙（顶部盖过石鼓底沿、外缘大于压顶）+ 4 块扶壁 + 石砌灯塔基台（4.6 m 落座面）+ 水线上下礁石 + 潮痕带 + 倾斜礁板 + 铁系缆环",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Env_Reef_Prototype",
+      "root": "SN_Env_Reef_Root",
+      "prefix": "SN_Env_Reef_",
+      "workbench_pos": [
+        30.0,
+        580.0,
+        0.0
+      ],
+      "family": "environment_kit",
+      "part_role": "reef",
+      "sockets": [
+        "Mount",
+        "Top",
+        "Mooring_Ring"
+      ],
+      "dimensions": {
+        "length": 7.13,
+        "width": 6.44,
+        "height": 5.52,
+        "tolerance": 0.2
+      },
+      "tri_budget": 2400,
+      "required_parts": [
+        "Rocks",
+        "TideShelf",
+        "Slab",
+        "MooringRing"
+      ],
+      "acceptance": [
+        "tri <= 2400",
+        "包围盒 7.13 x 6.44 x 5.52（±0.20）",
+        "根 = 水线 z=0，礁石到 zmin=-3.0、最高石砌基台顶 z≈2.48",
+        "Top 在石砌基台顶面 (0.60,-0.40,2.48)，可承载 4.6 m 见方灯塔基座",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_env_wreck_v1",
+      "asset": "SN_Env_Wreck",
+      "role": "沉船残骸：倾斜断裂木船壳（部分外板残缺）+ 外露肋骨 + 断桅 + 缆绳/铁箍 + 压舱石 + 破损艉楼",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Env_Wreck_Prototype",
+      "root": "SN_Env_Wreck_Root",
+      "prefix": "SN_Env_Wreck_",
+      "workbench_pos": [
+        44.0,
+        580.0,
+        0.0
+      ],
+      "family": "environment_kit",
+      "part_role": "wreck",
+      "sockets": [
+        "Mount",
+        "Deck",
+        "Mast"
+      ],
+      "dimensions": {
+        "length": 8.62,
+        "width": 3.96,
+        "height": 4.72,
+        "tolerance": 0.2
+      },
+      "tri_budget": 2800,
+      "required_parts": [
+        "Hull",
+        "Ribs",
+        "Planking",
+        "BrokenMast",
+        "Ballast"
+      ],
+      "acceptance": [
+        "tri <= 2800",
+        "包围盒 8.62 x 3.96 x 4.72（±0.15）",
+        "根 = 水线 z=0，船底到 zmin=-1.6、断桅顶 zmax≈3.2",
+        "Deck 在可站立甲板、Mast 在断桅接口",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_env_lighthouse_v1",
+      "asset": "SN_Env_Lighthouse",
+      "role": "灯塔：八边形石基座 + 锥形石塔（12 边）+ 收分塔身 + 4 个小窗 + 环廊（托架/栏杆）+ 灯室（黄铜窗框/深色玻璃）+ 穹顶 + 顶饰/避雷针 + 入口门",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Env_Lighthouse_Prototype",
+      "root": "SN_Env_Lighthouse_Root",
+      "prefix": "SN_Env_Lighthouse_",
+      "workbench_pos": [
+        58.0,
+        580.0,
+        0.0
+      ],
+      "family": "environment_kit",
+      "part_role": "lighthouse",
+      "sockets": [
+        "Mount",
+        "Door",
+        "Gallery",
+        "Lamp"
+      ],
+      "dimensions": {
+        "length": 4.62,
+        "width": 4.6,
+        "height": 13.16,
+        "tolerance": 0.2
+      },
+      "tri_budget": 2600,
+      "required_parts": [
+        "Base",
+        "Tower",
+        "Catwalk",
+        "Lantern",
+        "Dome"
+      ],
+      "acceptance": [
+        "tri <= 2600",
+        "包围盒 4.62 x 4.60 x 13.16（±0.20）",
+        "zmin = 0（基座落地）",
+        "Lamp 在灯室中心、Gallery 在环廊面、Door 在入口（网格名 Catwalk 避免与 socket 重名）",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_env_buoy_v1",
+      "asset": "SN_Env_Buoy",
+      "role": "航标浮标：锥形浮筒 + 吃水裙/压载 + 红铁箍 + 顶部灯架（玻璃灯罩/黄铜顶盖）+ 黄铜钟 + 锚链与卸扣 + 检修踏步",
+      "generator": "tools/modeling/generators/kit_batch3_generator.py",
+      "collection": "SN_Env_Buoy_Prototype",
+      "root": "SN_Env_Buoy_Root",
+      "prefix": "SN_Env_Buoy_",
+      "workbench_pos": [
+        70.0,
+        576.0,
+        0.0
+      ],
+      "family": "environment_kit",
+      "part_role": "buoy",
+      "sockets": [
+        "Mount",
+        "Lamp",
+        "Bell",
+        "Chain"
+      ],
+      "dimensions": {
+        "length": 1.88,
+        "width": 1.88,
+        "height": 3.84,
+        "tolerance": 0.02
+      },
+      "tri_budget": 1000,
+      "required_parts": [
+        "Hull",
+        "Skirt",
+        "Bands",
+        "LampFrame",
+        "BellRig",
+        "ChainLinks"
+      ],
+      "acceptance": [
+        "tri <= 1000",
+        "包围盒 1.88 x 1.88 x 3.84（±0.10）",
+        "根 = 水线 z=0，吃水裙到 zmin=-0.7、灯顶到 zmax≈3.1",
+        "Lamp/Bell/Chain 接口齐全",
+        "网格健康四项全 0"
+      ]
+    }
+  ],
+  "dryrun": "python tools/modeling/generators/dryrun_kit_batch3.py",
+  "export": "python tools/modeling/generators/export_kit_batch3_glb.py（Lead 在人工验收后执行）",
+  "deliverables": {
+    "glb": "assets/models/{architecture,environment}/SN_{Arch,Env}_*.glb",
+    "runtime_copy": "dev_mods/core/assets/models/{architecture,environment}/",
+    "preview": ".design/kits/preview/ + docs/design/screenshots/kits/",
+    "catalog": "docs/design/KIT_ASSET_LIBRARY.md + tools/modeling/kit_catalog.json"
+  },
+  "notes": "本批不登记 manifest、不接游戏逻辑；建筑根在建筑体量底面（zmin=0），环境件根在水线（礁石/残骸/浮标有水下部分，灯塔由礁石 Top 托起）。",
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "uv": {
+    "projection": "world-space box projection",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json"
+  }
+}

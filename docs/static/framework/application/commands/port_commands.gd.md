@@ -9,10 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PortCommands` | L1 |
-| `MIN_WAIT_HOURS` | L13 |
-| `MAX_WAIT_HOURS` | L14 |
-| `WAIT_OPTIONS` | L15 |
-| `wait(params: Dictionary, context) -> Dictionary` | L18 |
+| `MIN_WAIT_HOURS` | L17 |
+| `MAX_WAIT_HOURS` | L18 |
+| `WAIT_OPTIONS` | L19 |
+| `wait(params: Dictionary, context) -> Dictionary` | L22 |
 
 ## 契约与约束
 

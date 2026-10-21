@@ -9,21 +9,22 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartScreen` | L1 |
-| `close_requested (signal)` | L28 |
-| `departure_requested (signal)` | L30 |
-| `departure_confirmed (signal)` | L32 |
-| `departure_cancelled (signal)` | L34 |
-| `departure_strategy_changed (signal)` | L36 |
-| `purchase_clue_requested (signal)` | L38 |
-| `investigate_requested (signal)` | L40 |
-| `COLOR_MUTED` | L42 |
-| `PANEL_WIDTH` | L43 |
-| `VOYAGE_CONFIRM_SCRIPT` | L46 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L57 |
-| `get_chart() -> SNSeaChartView` | L64 |
-| `get_panel() -> SNSeaChartPanel` | L68 |
-| `is_departure_open() -> bool` | L73 |
-| `get_departure() -> Dictionary` | L77 |
+| `close_requested (signal)` | L31 |
+| `clue_list_requested (signal)` | L33 |
+| `departure_requested (signal)` | L35 |
+| `departure_confirmed (signal)` | L37 |
+| `departure_cancelled (signal)` | L39 |
+| `departure_strategy_changed (signal)` | L41 |
+| `purchase_clue_requested (signal)` | L43 |
+| `investigate_requested (signal)` | L45 |
+| `COLOR_MUTED` | L47 |
+| `PANEL_WIDTH` | L48 |
+| `VOYAGE_CONFIRM_SCRIPT` | L51 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L62 |
+| `get_chart() -> SNSeaChartView` | L69 |
+| `get_panel() -> SNSeaChartPanel` | L73 |
+| `is_departure_open() -> bool` | L78 |
+| `get_departure() -> Dictionary` | L82 |
 
 左侧 `SNSeaChartView` 铺满、右侧 `SNSeaChartPanel`（320 px）展示选中港口/航线/线索，
 顶部章节标题 + 关闭按钮；出航时在页内叠加 `SNVoyageConfirm` 确认弹窗。
@@ -46,5 +47,8 @@
   `can_buy_clue` 来自同一个 `sea_chart.view`，本页只负责塞给面板。
 - **逐级调查**（4.3.2 / U2）：面板 `investigate_requested(clue_id)` 由本页原样
   转发为同名信号；Shell 执行 `clue.investigate` 后刷新海图。
+- **线索列表入口**（4.4.4）：顶栏「线索列表」按钮发 `clue_list_requested` 给 Shell；
+  `view_model["preselect_clue_id"]` 非空时本页在绑定时直接选中该线索（列表页
+  「点击回海图」用，即使货物线索在海图上没有几何也能在面板里打开）。
 
 模块索引：[framework/ui](../../README.md)

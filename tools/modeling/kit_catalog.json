@@ -1,0 +1,2848 @@
+{
+  "schema": "steam-navigator/model-kit-catalog@1",
+  "version": "1.2",
+  "units": "metres",
+  "axes": {
+    "up": "+Z",
+    "forward": "+X"
+  },
+  "source_generators": [
+    "tools/modeling/generators/kit_batch1_generator.py",
+    "tools/modeling/generators/kit_batch2_generator.py",
+    "tools/modeling/generators/kit_batch3_generator.py"
+  ],
+  "briefs": [
+    "tools/modeling/briefs/sn_kit_batch1.json",
+    "tools/modeling/briefs/sn_kit_batch2.json",
+    "tools/modeling/briefs/sn_kit_batch3.json"
+  ],
+  "contract": "docs/design/KIT_ASSET_LIBRARY.md",
+  "families": {
+    "weapon_kit": "舰载武器可拼装件：火炮 / 炮架 / 炮塔 / 武器基座",
+    "ship_parts": "船体可拼装件：甲板 / 桅杆 / 烟囱 / 货舱盖",
+    "machinery_kit": "机械可拼装件：齿轮组 / 卷扬机 / 动力装置",
+    "cargo_kit": "货物可拼装件：货箱 / 煤斗 / 储罐 / 托盘",
+    "dock_kit": "码头可拼装件：码头结构 / 栈桥 / 系缆设施",
+    "architecture_kit": "建筑可拼装件：仓库 / 工坊 / 酒馆 / 厂房",
+    "environment_kit": "环境可拼装件：礁石 / 沉船残骸 / 灯塔 / 航标浮标"
+  },
+  "total_tri": 42058,
+  "assets": {
+    "SN_Weapon_Cannon": {
+      "family": "weapon_kit",
+      "role": "cannon",
+      "description": "naval cannon barrel assembly",
+      "collection": "SN_Weapon_Cannon_Prototype",
+      "root": "SN_Weapon_Cannon_Root",
+      "glb": "assets/models/weapons/SN_Weapon_Cannon.glb",
+      "core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_Cannon.glb",
+      "shared_materials": "assets/models/weapons/shared_materials",
+      "tri_count": 1156,
+      "tri_budget": 1400,
+      "dimensions": {
+        "x": 4.0,
+        "y": 1.44,
+        "z": 0.819
+      },
+      "datum": "trunnion axis at origin; barrel axis +0.10 z; +X muzzle",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal"
+      ],
+      "root_extras": {
+        "asset": "SN_Weapon_Cannon",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "weapon_kit",
+        "part_role": "cannon",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "trunnion axis at origin; barrel axis +0.10 z; +X muzzle",
+        "mount_frame": "SN_Weapon_Cannon_Mount at origin",
+        "base_footprint_x": 1.24,
+        "base_footprint_y": 0.88,
+        "envelope_x": 4.0,
+        "envelope_y": 1.44,
+        "height": 0.82,
+        "tri_budget": 1400,
+        "bbox_target": "4.00 x 1.44 x 0.82 m",
+        "collection": "SN_Weapon_Cannon_Prototype",
+        "type": "naval cannon barrel assembly",
+        "mount_class": "Heavy",
+        "assembly_spec": "weapon-assembly@2",
+        "weapon_class": "Modular",
+        "assembly_profile": "pitch_only",
+        "socket": "SN_Socket_Weapon",
+        "mount": "SN_Mount",
+        "pivot_yaw": "",
+        "pivot_pitch": "SN_Pivot_Pitch",
+        "recoil": "SN_Recoil",
+        "muzzle": "SN_Muzzle",
+        "has_yaw": false,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "yaw_axis": "Z",
+        "pitch_axis": "Y",
+        "recoil_axis": "-X",
+        "muzzle_count": 1
+      },
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Pivot_Pitch",
+          "key": "PITCH",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Recoil",
+          "key": "RECOIL",
+          "parent": "SN_Weapon_Cannon_PITCH",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Weapon_Cannon_Trunnion_L",
+          "key": "TRUNNION_L",
+          "parent": "SN_Weapon_Cannon_PITCH",
+          "location": [
+            -0.15,
+            0.62,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Weapon_Cannon_Trunnion_R",
+          "key": "TRUNNION_R",
+          "parent": "SN_Weapon_Cannon_PITCH",
+          "location": [
+            -0.15,
+            -0.62,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Muzzle",
+          "key": "MUZZLE",
+          "parent": "SN_Weapon_Cannon_RECOIL",
+          "location": [
+            1.95,
+            0.0,
+            0.1
+          ]
+        },
+        {
+          "name": "SN_Weapon_Cannon_Breech",
+          "key": "BREECH",
+          "parent": "SN_Weapon_Cannon_PITCH",
+          "location": [
+            -2.05,
+            0.0,
+            0.1
+          ]
+        }
+      ]
+    },
+    "SN_Weapon_GunCarriage": {
+      "family": "weapon_kit",
+      "role": "carriage",
+      "description": "four-wheel naval gun carriage",
+      "collection": "SN_Weapon_GunCarriage_Prototype",
+      "root": "SN_Weapon_GunCarriage_Root",
+      "glb": "assets/models/weapons/SN_Weapon_GunCarriage.glb",
+      "core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_GunCarriage.glb",
+      "shared_materials": "assets/models/weapons/shared_materials",
+      "tri_count": 2256,
+      "tri_budget": 2800,
+      "dimensions": {
+        "x": 2.965,
+        "y": 1.795,
+        "z": 1.1
+      },
+      "datum": "ground z=0; trunnion sockets at z=0.62",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Weapon_GunCarriage",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "weapon_kit",
+        "part_role": "carriage",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; trunnion sockets at z=0.62",
+        "mount_frame": "SN_Weapon_GunCarriage_Mount at origin",
+        "base_footprint_x": 1.3,
+        "base_footprint_y": 1.4,
+        "envelope_x": 2.96,
+        "envelope_y": 1.79,
+        "height": 1.1,
+        "tri_budget": 2800,
+        "bbox_target": "2.96 x 1.79 x 1.10 m",
+        "collection": "SN_Weapon_GunCarriage_Prototype",
+        "type": "four-wheel naval gun carriage",
+        "mount_class": "Heavy",
+        "assembly_spec": "weapon-assembly@2",
+        "weapon_class": "Modular",
+        "assembly_profile": "base_only",
+        "socket": "SN_Socket_Weapon",
+        "mount": "SN_Mount",
+        "pivot_yaw": "SN_Pivot_Yaw",
+        "pivot_pitch": "",
+        "recoil": "",
+        "muzzle": "",
+        "has_yaw": true,
+        "has_pitch": false,
+        "has_recoil": false,
+        "has_muzzle": false,
+        "yaw_axis": "Z",
+        "pitch_axis": "Y",
+        "recoil_axis": "-X",
+        "muzzle_count": 1
+      },
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Pivot_Yaw",
+          "key": "YAW",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.62
+          ]
+        },
+        {
+          "name": "SN_Weapon_GunCarriage_Trunnion_L",
+          "key": "TRUNNION_L",
+          "parent": "root",
+          "location": [
+            -0.15,
+            0.62,
+            0.62
+          ]
+        },
+        {
+          "name": "SN_Weapon_GunCarriage_Trunnion_R",
+          "key": "TRUNNION_R",
+          "parent": "root",
+          "location": [
+            -0.15,
+            -0.62,
+            0.62
+          ]
+        }
+      ]
+    },
+    "SN_Weapon_Turret": {
+      "family": "weapon_kit",
+      "role": "turret",
+      "description": "armoured rotating turret",
+      "collection": "SN_Weapon_Turret_Prototype",
+      "root": "SN_Weapon_Turret_Root",
+      "glb": "assets/models/weapons/SN_Weapon_Turret.glb",
+      "core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_Turret.glb",
+      "shared_materials": "assets/models/weapons/shared_materials",
+      "tri_count": 1904,
+      "tri_budget": 3400,
+      "dimensions": {
+        "x": 5.12,
+        "y": 3.44,
+        "z": 3.04
+      },
+      "datum": "deck surface z=0; yaw axis at z=0.22",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Weapon_Turret",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "weapon_kit",
+        "part_role": "turret",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "deck surface z=0; yaw axis at z=0.22",
+        "mount_frame": "SN_Weapon_Turret_Mount at origin",
+        "base_footprint_x": 3.44,
+        "base_footprint_y": 3.44,
+        "envelope_x": 5.12,
+        "envelope_y": 3.44,
+        "height": 3.04,
+        "tri_budget": 3400,
+        "bbox_target": "5.12 x 3.44 x 3.04 m",
+        "collection": "SN_Weapon_Turret_Prototype",
+        "type": "armoured rotating turret",
+        "mount_class": "Heavy",
+        "assembly_spec": "weapon-assembly@2",
+        "weapon_class": "Modular",
+        "assembly_profile": "yaw_only",
+        "socket": "SN_Socket_Weapon",
+        "mount": "SN_Mount",
+        "pivot_yaw": "SN_Pivot_Yaw",
+        "pivot_pitch": "",
+        "recoil": "",
+        "muzzle": "SN_Muzzle",
+        "has_yaw": true,
+        "has_pitch": false,
+        "has_recoil": false,
+        "has_muzzle": true,
+        "yaw_axis": "Z",
+        "pitch_axis": "Y",
+        "recoil_axis": "-X",
+        "muzzle_count": 1
+      },
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Pivot_Yaw",
+          "key": "YAW",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.22
+          ]
+        },
+        {
+          "name": "SN_Weapon_Turret_GunPort",
+          "key": "GUN_PORT",
+          "parent": "SN_Weapon_Turret_YAW",
+          "location": [
+            1.52,
+            0.0,
+            1.12
+          ]
+        },
+        {
+          "name": "SN_Muzzle",
+          "key": "MUZZLE",
+          "parent": "SN_Weapon_Turret_YAW",
+          "location": [
+            3.38,
+            0.0,
+            1.12
+          ]
+        },
+        {
+          "name": "SN_Weapon_Turret_Hatch",
+          "key": "HATCH",
+          "parent": "SN_Weapon_Turret_YAW",
+          "location": [
+            0.0,
+            0.0,
+            2.58
+          ]
+        },
+        {
+          "name": "SN_Anchor_1",
+          "key": "ANCHOR_1",
+          "parent": "root",
+          "location": [
+            -1.06,
+            1.06,
+            0.2
+          ]
+        },
+        {
+          "name": "SN_Anchor_2",
+          "key": "ANCHOR_2",
+          "parent": "root",
+          "location": [
+            -1.06,
+            -1.06,
+            0.2
+          ]
+        },
+        {
+          "name": "SN_Anchor_3",
+          "key": "ANCHOR_3",
+          "parent": "root",
+          "location": [
+            1.06,
+            1.06,
+            0.2
+          ]
+        },
+        {
+          "name": "SN_Anchor_4",
+          "key": "ANCHOR_4",
+          "parent": "root",
+          "location": [
+            1.06,
+            -1.06,
+            0.2
+          ]
+        }
+      ]
+    },
+    "SN_Weapon_Pedestal": {
+      "family": "weapon_kit",
+      "role": "pedestal",
+      "description": "deck weapon pedestal",
+      "collection": "SN_Weapon_Pedestal_Prototype",
+      "root": "SN_Weapon_Pedestal_Root",
+      "glb": "assets/models/weapons/SN_Weapon_Pedestal.glb",
+      "core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_Pedestal.glb",
+      "shared_materials": "assets/models/weapons/shared_materials",
+      "tri_count": 940,
+      "tri_budget": 1100,
+      "dimensions": {
+        "x": 1.9,
+        "y": 1.9,
+        "z": 1.2
+      },
+      "datum": "deck surface z=0; collar top z=1.10",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal"
+      ],
+      "root_extras": {
+        "asset": "SN_Weapon_Pedestal",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "weapon_kit",
+        "part_role": "pedestal",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "deck surface z=0; collar top z=1.10",
+        "mount_frame": "SN_Weapon_Pedestal_Mount at origin",
+        "base_footprint_x": 1.84,
+        "base_footprint_y": 1.84,
+        "envelope_x": 1.9,
+        "envelope_y": 1.9,
+        "height": 1.2,
+        "tri_budget": 1100,
+        "bbox_target": "1.90 x 1.90 x 1.20 m",
+        "collection": "SN_Weapon_Pedestal_Prototype",
+        "type": "deck weapon pedestal",
+        "mount_class": "Medium",
+        "assembly_spec": "weapon-assembly@2",
+        "weapon_class": "Modular",
+        "assembly_profile": "base_only",
+        "socket": "SN_Socket_Weapon",
+        "mount": "SN_Mount",
+        "pivot_yaw": "SN_Pivot_Yaw",
+        "pivot_pitch": "",
+        "recoil": "",
+        "muzzle": "",
+        "has_yaw": true,
+        "has_pitch": false,
+        "has_recoil": false,
+        "has_muzzle": false,
+        "yaw_axis": "Z",
+        "pitch_axis": "Y",
+        "recoil_axis": "-X",
+        "muzzle_count": 1
+      },
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Weapon_Pedestal_Collar",
+          "key": "COLLAR",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            1.1
+          ]
+        },
+        {
+          "name": "SN_Pivot_Yaw",
+          "key": "YAW",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            1.18
+          ]
+        },
+        {
+          "name": "SN_Anchor_1",
+          "key": "ANCHOR_1",
+          "parent": "root",
+          "location": [
+            -0.65,
+            0.65,
+            0.03
+          ]
+        },
+        {
+          "name": "SN_Anchor_2",
+          "key": "ANCHOR_2",
+          "parent": "root",
+          "location": [
+            -0.65,
+            -0.65,
+            0.03
+          ]
+        },
+        {
+          "name": "SN_Anchor_3",
+          "key": "ANCHOR_3",
+          "parent": "root",
+          "location": [
+            0.65,
+            0.65,
+            0.03
+          ]
+        },
+        {
+          "name": "SN_Anchor_4",
+          "key": "ANCHOR_4",
+          "parent": "root",
+          "location": [
+            0.65,
+            -0.65,
+            0.03
+          ]
+        }
+      ]
+    },
+    "SN_ShipPart_Deck": {
+      "family": "ship_parts",
+      "role": "deck",
+      "description": "modular deck section",
+      "collection": "SN_ShipPart_Deck_Prototype",
+      "root": "SN_ShipPart_Deck_Root",
+      "glb": "assets/models/ship_parts/SN_ShipPart_Deck.glb",
+      "core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Deck.glb",
+      "shared_materials": "assets/models/ship_parts/shared_materials",
+      "tri_count": 576,
+      "tri_budget": 1800,
+      "dimensions": {
+        "x": 8.4,
+        "y": 6.0,
+        "z": 0.355
+      },
+      "datum": "underside z=0; deck surface z=0.33",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_ShipPart_Deck",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "ship_parts",
+        "part_role": "deck",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "underside z=0; deck surface z=0.33",
+        "mount_frame": "SN_ShipPart_Deck_Mount at origin",
+        "base_footprint_x": 8.4,
+        "base_footprint_y": 6.0,
+        "envelope_x": 8.4,
+        "envelope_y": 6.0,
+        "height": 0.36,
+        "tri_budget": 1800,
+        "bbox_target": "8.40 x 6.00 x 0.36 m",
+        "collection": "SN_ShipPart_Deck_Prototype",
+        "type": "modular deck section",
+        "weapon_sockets": [
+          "SN_Socket_Weapon_Port",
+          "SN_Socket_Weapon_Starboard"
+        ],
+        "socket_class": "Medium",
+        "deck_height": 0.33,
+        "module_x": 8.4,
+        "module_y": 6.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Deck_Socket_Mast",
+          "key": "SOCKET_MAST",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.4,
+            0.33
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Deck_Socket_Funnel",
+          "key": "SOCKET_FUNNEL",
+          "parent": "root",
+          "location": [
+            2.4,
+            -0.6,
+            0.33
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Deck_Socket_Hatch",
+          "key": "SOCKET_HATCH",
+          "parent": "root",
+          "location": [
+            -2.4,
+            -0.3,
+            0.33
+          ]
+        },
+        {
+          "name": "SN_Socket_Weapon_Port",
+          "key": "SOCKET_WEAPON_PORT",
+          "parent": "root",
+          "location": [
+            2.3,
+            1.1,
+            0.33
+          ]
+        },
+        {
+          "name": "SN_Socket_Weapon_Starboard",
+          "key": "SOCKET_WEAPON_STARBOARD",
+          "parent": "root",
+          "location": [
+            -2.3,
+            1.1,
+            0.33
+          ]
+        }
+      ]
+    },
+    "SN_ShipPart_Mast": {
+      "family": "ship_parts",
+      "role": "mast",
+      "description": "full mast assembly with yards",
+      "collection": "SN_ShipPart_Mast_Prototype",
+      "root": "SN_ShipPart_Mast_Root",
+      "glb": "assets/models/ship_parts/SN_ShipPart_Mast.glb",
+      "core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Mast.glb",
+      "shared_materials": "assets/models/ship_parts/shared_materials",
+      "tri_count": 2764,
+      "tri_budget": 2800,
+      "dimensions": {
+        "x": 1.77,
+        "y": 6.2,
+        "z": 12.84
+      },
+      "datum": "deck surface z=0; +X forward",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_ShipPart_Mast",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "ship_parts",
+        "part_role": "mast",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "deck surface z=0; +X forward",
+        "mount_frame": "SN_ShipPart_Mast_Mount at origin",
+        "base_footprint_x": 1.77,
+        "base_footprint_y": 6.2,
+        "envelope_x": 1.77,
+        "envelope_y": 6.2,
+        "height": 12.84,
+        "tri_budget": 2800,
+        "bbox_target": "1.77 x 6.20 x 12.84 m",
+        "collection": "SN_ShipPart_Mast_Prototype",
+        "type": "full mast assembly with yards",
+        "deck_height": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_ShipPart_Mast_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Mast_Top",
+          "key": "TOP",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            12.6
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Mast_Yard_Lower_Mount",
+          "key": "YARD_LOWER",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            5.9
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Mast_Yard_Upper_Mount",
+          "key": "YARD_UPPER",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            10.4
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Mast_Lookout",
+          "key": "LOOKOUT",
+          "parent": "root",
+          "location": [
+            0.5,
+            0.0,
+            12.16
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Mast_Deadeye_Port",
+          "key": "DEADEYE_PORT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.66,
+            1.2
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Mast_Deadeye_Starboard",
+          "key": "DEADEYE_STARBOARD",
+          "parent": "root",
+          "location": [
+            0.0,
+            -0.66,
+            1.2
+          ]
+        }
+      ]
+    },
+    "SN_ShipPart_Funnel": {
+      "family": "ship_parts",
+      "role": "funnel",
+      "description": "steam funnel with stays",
+      "collection": "SN_ShipPart_Funnel_Prototype",
+      "root": "SN_ShipPart_Funnel_Root",
+      "glb": "assets/models/ship_parts/SN_ShipPart_Funnel.glb",
+      "core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Funnel.glb",
+      "shared_materials": "assets/models/ship_parts/shared_materials",
+      "tri_count": 1528,
+      "tri_budget": 1800,
+      "dimensions": {
+        "x": 2.4,
+        "y": 2.0,
+        "z": 4.66
+      },
+      "datum": "deck surface z=0; exhaust at top centre",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal"
+      ],
+      "root_extras": {
+        "asset": "SN_ShipPart_Funnel",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "ship_parts",
+        "part_role": "funnel",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "deck surface z=0; exhaust at top centre",
+        "mount_frame": "SN_ShipPart_Funnel_Mount at origin",
+        "base_footprint_x": 2.4,
+        "base_footprint_y": 2.0,
+        "envelope_x": 2.4,
+        "envelope_y": 2.0,
+        "height": 4.66,
+        "tri_budget": 1800,
+        "bbox_target": "2.40 x 2.00 x 4.66 m",
+        "collection": "SN_ShipPart_Funnel_Prototype",
+        "type": "steam funnel with stays",
+        "deck_height": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_ShipPart_Funnel_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Funnel_Exhaust",
+          "key": "EXHAUST",
+          "parent": "root",
+          "location": [
+            0.35,
+            0.0,
+            4.55
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Funnel_Steam_Inlet",
+          "key": "STEAM_INLET",
+          "parent": "root",
+          "location": [
+            -0.62,
+            0.0,
+            0.2
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Funnel_Stay_1",
+          "key": "STAY_1",
+          "parent": "root",
+          "location": [
+            -1.1,
+            0.9,
+            0.03
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Funnel_Stay_2",
+          "key": "STAY_2",
+          "parent": "root",
+          "location": [
+            -1.1,
+            -0.9,
+            0.03
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Funnel_Stay_3",
+          "key": "STAY_3",
+          "parent": "root",
+          "location": [
+            1.1,
+            0.9,
+            0.03
+          ]
+        },
+        {
+          "name": "SN_ShipPart_Funnel_Stay_4",
+          "key": "STAY_4",
+          "parent": "root",
+          "location": [
+            1.1,
+            -0.9,
+            0.03
+          ]
+        }
+      ]
+    },
+    "SN_ShipPart_HatchCover": {
+      "family": "ship_parts",
+      "role": "hatch_cover",
+      "description": "cargo hatch with twin lids",
+      "collection": "SN_ShipPart_HatchCover_Prototype",
+      "root": "SN_ShipPart_HatchCover_Root",
+      "glb": "assets/models/ship_parts/SN_ShipPart_HatchCover.glb",
+      "core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_HatchCover.glb",
+      "shared_materials": "assets/models/ship_parts/shared_materials",
+      "tri_count": 840,
+      "tri_budget": 1400,
+      "dimensions": {
+        "x": 2.72,
+        "y": 2.0,
+        "z": 0.49
+      },
+      "datum": "deck surface z=0; lid hinges at z=0.40",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_ShipPart_HatchCover",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "ship_parts",
+        "part_role": "hatch_cover",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "deck surface z=0; lid hinges at z=0.40",
+        "mount_frame": "SN_ShipPart_HatchCover_Mount at origin",
+        "base_footprint_x": 2.72,
+        "base_footprint_y": 2.0,
+        "envelope_x": 2.72,
+        "envelope_y": 2.0,
+        "height": 0.49,
+        "tri_budget": 1400,
+        "bbox_target": "2.72 x 2.00 x 0.49 m",
+        "collection": "SN_ShipPart_HatchCover_Prototype",
+        "type": "cargo hatch with twin lids",
+        "deck_height": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_ShipPart_HatchCover_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_ShipPart_HatchCover_Hinge_Fwd",
+          "key": "HINGE_FWD",
+          "parent": "root",
+          "location": [
+            1.3,
+            0.0,
+            0.4
+          ]
+        },
+        {
+          "name": "SN_ShipPart_HatchCover_Hinge_Aft",
+          "key": "HINGE_AFT",
+          "parent": "root",
+          "location": [
+            -1.3,
+            0.0,
+            0.4
+          ]
+        },
+        {
+          "name": "SN_ShipPart_HatchCover_Opening_Center",
+          "key": "OPENING",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.32
+          ]
+        },
+        {
+          "name": "SN_ShipPart_HatchCover_Lid_Pivot_Fwd",
+          "key": "LID_FWD",
+          "parent": "root",
+          "location": [
+            1.3,
+            0.0,
+            0.4
+          ]
+        },
+        {
+          "name": "SN_ShipPart_HatchCover_Lid_Pivot_Aft",
+          "key": "LID_AFT",
+          "parent": "root",
+          "location": [
+            -1.3,
+            0.0,
+            0.4
+          ]
+        }
+      ]
+    },
+    "SN_Machinery_GearSet": {
+      "family": "machinery_kit",
+      "role": "gear_set",
+      "description": "three-stage gear train",
+      "collection": "SN_Machinery_GearSet_Prototype",
+      "root": "SN_Machinery_GearSet_Root",
+      "glb": "assets/models/machinery/SN_Machinery_GearSet.glb",
+      "core_glb": "dev_mods/core/assets/models/machinery/SN_Machinery_GearSet.glb",
+      "shared_materials": "assets/models/machinery/shared_materials",
+      "tri_count": 2020,
+      "tri_budget": 2400,
+      "dimensions": {
+        "x": 1.9,
+        "y": 1.12,
+        "z": 1.06
+      },
+      "datum": "ground z=0; +X power flow; gear axes along Y",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Machinery_GearSet",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "machinery_kit",
+        "part_role": "gear_set",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; +X power flow; gear axes along Y",
+        "mount_frame": "SN_Machinery_GearSet_Mount at origin",
+        "base_footprint_x": 1.9,
+        "base_footprint_y": 1.12,
+        "envelope_x": 1.9,
+        "envelope_y": 1.12,
+        "height": 1.06,
+        "tri_budget": 2400,
+        "bbox_target": "1.90 x 1.12 x 1.06 m",
+        "collection": "SN_Machinery_GearSet_Prototype",
+        "type": "three-stage gear train"
+      },
+      "sockets": [
+        {
+          "name": "SN_Machinery_GearSet_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Machinery_GearSet_Shaft_In",
+          "key": "SHAFT_IN",
+          "parent": "root",
+          "location": [
+            -0.35,
+            -0.48,
+            0.58
+          ]
+        },
+        {
+          "name": "SN_Machinery_GearSet_Shaft_Out",
+          "key": "SHAFT_OUT",
+          "parent": "root",
+          "location": [
+            0.62,
+            -0.48,
+            0.5
+          ]
+        },
+        {
+          "name": "SN_Machinery_GearSet_Crank",
+          "key": "CRANK",
+          "parent": "root",
+          "location": [
+            -0.35,
+            0.66,
+            0.2
+          ]
+        }
+      ]
+    },
+    "SN_Machinery_Winch": {
+      "family": "machinery_kit",
+      "role": "winch",
+      "description": "hand winch with rope drum",
+      "collection": "SN_Machinery_Winch_Prototype",
+      "root": "SN_Machinery_Winch_Root",
+      "glb": "assets/models/machinery/SN_Machinery_Winch.glb",
+      "core_glb": "dev_mods/core/assets/models/machinery/SN_Machinery_Winch.glb",
+      "shared_materials": "assets/models/machinery/shared_materials",
+      "tri_count": 1776,
+      "tri_budget": 2600,
+      "dimensions": {
+        "x": 2.24,
+        "y": 1.82,
+        "z": 1.418
+      },
+      "datum": "ground z=0; drum axis along Y at z=0.95",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Machinery_Winch",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "machinery_kit",
+        "part_role": "winch",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; drum axis along Y at z=0.95",
+        "mount_frame": "SN_Machinery_Winch_Mount at origin",
+        "base_footprint_x": 2.24,
+        "base_footprint_y": 1.82,
+        "envelope_x": 2.24,
+        "envelope_y": 1.82,
+        "height": 1.42,
+        "tri_budget": 2600,
+        "bbox_target": "2.24 x 1.82 x 1.42 m",
+        "collection": "SN_Machinery_Winch_Prototype",
+        "type": "hand winch with rope drum"
+      },
+      "sockets": [
+        {
+          "name": "SN_Machinery_Winch_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Machinery_Winch_Drum_Pivot",
+          "key": "DRUM",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.95
+          ]
+        },
+        {
+          "name": "SN_Machinery_Winch_Rope_Out",
+          "key": "ROPE_OUT",
+          "parent": "root",
+          "location": [
+            0.9,
+            0.0,
+            1.1
+          ]
+        },
+        {
+          "name": "SN_Machinery_Winch_Brake",
+          "key": "BRAKE",
+          "parent": "root",
+          "location": [
+            0.3,
+            0.66,
+            1.3
+          ]
+        }
+      ]
+    },
+    "SN_Machinery_PowerUnit": {
+      "family": "machinery_kit",
+      "role": "power_unit",
+      "description": "horizontal steam engine",
+      "collection": "SN_Machinery_PowerUnit_Prototype",
+      "root": "SN_Machinery_PowerUnit_Root",
+      "glb": "assets/models/machinery/SN_Machinery_PowerUnit.glb",
+      "core_glb": "dev_mods/core/assets/models/machinery/SN_Machinery_PowerUnit.glb",
+      "shared_materials": "assets/models/machinery/shared_materials",
+      "tri_count": 2260,
+      "tri_budget": 3600,
+      "dimensions": {
+        "x": 3.78,
+        "y": 1.44,
+        "z": 2.113
+      },
+      "datum": "ground z=0; flywheel axis +Y at (1.25, 0, 0.95)",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Machinery_PowerUnit",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "machinery_kit",
+        "part_role": "power_unit",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; flywheel axis +Y at (1.25, 0, 0.95)",
+        "mount_frame": "SN_Machinery_PowerUnit_Mount at origin",
+        "base_footprint_x": 3.78,
+        "base_footprint_y": 1.44,
+        "envelope_x": 3.78,
+        "envelope_y": 1.44,
+        "height": 2.11,
+        "tri_budget": 3600,
+        "bbox_target": "3.78 x 1.44 x 2.11 m",
+        "collection": "SN_Machinery_PowerUnit_Prototype",
+        "type": "horizontal steam engine"
+      },
+      "sockets": [
+        {
+          "name": "SN_Machinery_PowerUnit_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Machinery_PowerUnit_Shaft_Out",
+          "key": "SHAFT_OUT",
+          "parent": "root",
+          "location": [
+            1.25,
+            0.4,
+            0.95
+          ]
+        },
+        {
+          "name": "SN_Machinery_PowerUnit_Steam_In",
+          "key": "STEAM_IN",
+          "parent": "root",
+          "location": [
+            -1.55,
+            0.0,
+            1.95
+          ]
+        },
+        {
+          "name": "SN_Machinery_PowerUnit_Exhaust_Out",
+          "key": "EXHAUST",
+          "parent": "root",
+          "location": [
+            -0.4,
+            0.0,
+            2.1
+          ]
+        },
+        {
+          "name": "SN_Machinery_PowerUnit_Coupling",
+          "key": "COUPLING",
+          "parent": "root",
+          "location": [
+            1.25,
+            0.0,
+            0.95
+          ]
+        }
+      ]
+    },
+    "SN_Cargo_Crate": {
+      "family": "cargo_kit",
+      "role": "crate",
+      "description": "steampunk cargo crate",
+      "collection": "SN_Cargo_Crate_Prototype",
+      "root": "SN_Cargo_Crate_Root",
+      "glb": "assets/models/cargo/SN_Cargo_Crate.glb",
+      "core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_Crate.glb",
+      "shared_materials": "assets/models/cargo/shared_materials",
+      "tri_count": 672,
+      "tri_budget": 1000,
+      "dimensions": {
+        "x": 1.26,
+        "y": 1.19,
+        "z": 1.035
+      },
+      "datum": "ground z=0; stackable along +Z",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_Cargo_Crate",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "cargo_kit",
+        "part_role": "crate",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; stackable along +Z",
+        "mount_frame": "SN_Cargo_Crate_Mount at origin",
+        "base_footprint_x": 1.26,
+        "base_footprint_y": 1.19,
+        "envelope_x": 1.26,
+        "envelope_y": 1.19,
+        "height": 1.04,
+        "tri_budget": 1000,
+        "bbox_target": "1.26 x 1.19 x 1.04 m",
+        "collection": "SN_Cargo_Crate_Prototype",
+        "type": "steampunk cargo crate"
+      },
+      "sockets": [
+        {
+          "name": "SN_Cargo_Crate_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Cargo_Crate_Stack_Top",
+          "key": "STACK_TOP",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            1.035
+          ]
+        },
+        {
+          "name": "SN_Cargo_Crate_Lift_L",
+          "key": "LIFT_L",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.53,
+            0.62
+          ]
+        },
+        {
+          "name": "SN_Cargo_Crate_Lift_R",
+          "key": "LIFT_R",
+          "parent": "root",
+          "location": [
+            0.0,
+            -0.53,
+            0.62
+          ]
+        }
+      ]
+    },
+    "SN_Cargo_CoalScuttle": {
+      "family": "cargo_kit",
+      "role": "coal_scuttle",
+      "description": "wheeled coal hopper",
+      "collection": "SN_Cargo_CoalScuttle_Prototype",
+      "root": "SN_Cargo_CoalScuttle_Root",
+      "glb": "assets/models/cargo/SN_Cargo_CoalScuttle.glb",
+      "core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_CoalScuttle.glb",
+      "shared_materials": "assets/models/cargo/shared_materials",
+      "tri_count": 588,
+      "tri_budget": 1500,
+      "dimensions": {
+        "x": 1.482,
+        "y": 1.14,
+        "z": 1.1
+      },
+      "datum": "ground z=0; fill top at z=0.95",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Coal",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Cargo_CoalScuttle",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "cargo_kit",
+        "part_role": "coal_scuttle",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; fill top at z=0.95",
+        "mount_frame": "SN_Cargo_CoalScuttle_Mount at origin",
+        "base_footprint_x": 1.48,
+        "base_footprint_y": 1.14,
+        "envelope_x": 1.48,
+        "envelope_y": 1.14,
+        "height": 1.1,
+        "tri_budget": 1500,
+        "bbox_target": "1.48 x 1.14 x 1.10 m",
+        "collection": "SN_Cargo_CoalScuttle_Prototype",
+        "type": "wheeled coal hopper"
+      },
+      "sockets": [
+        {
+          "name": "SN_Cargo_CoalScuttle_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Cargo_CoalScuttle_Fill_Top",
+          "key": "FILL_TOP",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.95
+          ]
+        },
+        {
+          "name": "SN_Cargo_CoalScuttle_Chute",
+          "key": "CHUTE",
+          "parent": "root",
+          "location": [
+            0.76,
+            0.0,
+            0.38
+          ]
+        }
+      ]
+    },
+    "SN_Cargo_Tank": {
+      "family": "cargo_kit",
+      "role": "tank",
+      "description": "riveted storage tank",
+      "collection": "SN_Cargo_Tank_Prototype",
+      "root": "SN_Cargo_Tank_Root",
+      "glb": "assets/models/cargo/SN_Cargo_Tank.glb",
+      "core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_Tank.glb",
+      "shared_materials": "assets/models/cargo/shared_materials",
+      "tri_count": 1820,
+      "tri_budget": 2600,
+      "dimensions": {
+        "x": 3.37,
+        "y": 1.6,
+        "z": 1.95
+      },
+      "datum": "ground z=0; tank axis +X at z=0.95",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone"
+      ],
+      "root_extras": {
+        "asset": "SN_Cargo_Tank",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "cargo_kit",
+        "part_role": "tank",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; tank axis +X at z=0.95",
+        "mount_frame": "SN_Cargo_Tank_Mount at origin",
+        "base_footprint_x": 3.37,
+        "base_footprint_y": 1.6,
+        "envelope_x": 3.37,
+        "envelope_y": 1.6,
+        "height": 1.95,
+        "tri_budget": 2600,
+        "bbox_target": "3.37 x 1.60 x 1.95 m",
+        "collection": "SN_Cargo_Tank_Prototype",
+        "type": "riveted storage tank"
+      },
+      "sockets": [
+        {
+          "name": "SN_Cargo_Tank_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Cargo_Tank_Fill_Top",
+          "key": "FILL_TOP",
+          "parent": "root",
+          "location": [
+            0.2,
+            0.0,
+            1.82
+          ]
+        },
+        {
+          "name": "SN_Cargo_Tank_Outlet",
+          "key": "OUTLET",
+          "parent": "root",
+          "location": [
+            1.76,
+            0.0,
+            0.95
+          ]
+        },
+        {
+          "name": "SN_Cargo_Tank_Vent",
+          "key": "VENT",
+          "parent": "root",
+          "location": [
+            -0.6,
+            0.0,
+            1.95
+          ]
+        }
+      ]
+    },
+    "SN_Cargo_Pallet": {
+      "family": "cargo_kit",
+      "role": "pallet",
+      "description": "wooden cargo pallet",
+      "collection": "SN_Cargo_Pallet_Prototype",
+      "root": "SN_Cargo_Pallet_Root",
+      "glb": "assets/models/cargo/SN_Cargo_Pallet.glb",
+      "core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_Pallet.glb",
+      "shared_materials": "assets/models/cargo/shared_materials",
+      "tri_count": 316,
+      "tri_budget": 600,
+      "dimensions": {
+        "x": 1.23,
+        "y": 1.02,
+        "z": 0.18
+      },
+      "datum": "ground z=0; stackable along +Z",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_Cargo_Pallet",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "cargo_kit",
+        "part_role": "pallet",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; stackable along +Z",
+        "mount_frame": "SN_Cargo_Pallet_Mount at origin",
+        "base_footprint_x": 1.23,
+        "base_footprint_y": 1.02,
+        "envelope_x": 1.23,
+        "envelope_y": 1.02,
+        "height": 0.18,
+        "tri_budget": 600,
+        "bbox_target": "1.23 x 1.02 x 0.18 m",
+        "collection": "SN_Cargo_Pallet_Prototype",
+        "type": "wooden cargo pallet"
+      },
+      "sockets": [
+        {
+          "name": "SN_Cargo_Pallet_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Cargo_Pallet_Stack_Top",
+          "key": "STACK_TOP",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.18
+          ]
+        }
+      ]
+    },
+    "SN_Dock_Structure": {
+      "family": "dock_kit",
+      "role": "dock_structure",
+      "description": "8.4 x 4.2 m quay module",
+      "collection": "SN_Dock_Structure_Prototype",
+      "root": "SN_Dock_Structure_Root",
+      "glb": "assets/models/dock/SN_Dock_Structure.glb",
+      "core_glb": "dev_mods/core/assets/models/dock/SN_Dock_Structure.glb",
+      "shared_materials": "assets/models/dock/shared_materials",
+      "tri_count": 1628,
+      "tri_budget": 3200,
+      "dimensions": {
+        "x": 8.4,
+        "y": 4.46,
+        "z": 3.16
+      },
+      "datum": "waterline z=0; quay top z=3.02; +Y water side",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Dock_Structure",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "dock_kit",
+        "part_role": "dock_structure",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "waterline z=0; quay top z=3.02; +Y water side",
+        "mount_frame": "SN_Dock_Structure_Mount at origin",
+        "base_footprint_x": 8.4,
+        "base_footprint_y": 4.2,
+        "envelope_x": 8.4,
+        "envelope_y": 4.47,
+        "height": 3.16,
+        "tri_budget": 3200,
+        "bbox_target": "8.40 x 4.47 x 3.16 m",
+        "collection": "SN_Dock_Structure_Prototype",
+        "type": "8.4 x 4.2 m quay module",
+        "module_x": 8.4,
+        "module_y": 4.2,
+        "deck_height": 3.02
+      },
+      "sockets": [
+        {
+          "name": "SN_Dock_Structure_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Dock_Structure_Module_Next",
+          "key": "MODULE_NEXT",
+          "parent": "root",
+          "location": [
+            4.2,
+            0.0,
+            3.02
+          ]
+        },
+        {
+          "name": "SN_Dock_Structure_Module_Prev",
+          "key": "MODULE_PREV",
+          "parent": "root",
+          "location": [
+            -4.2,
+            0.0,
+            3.02
+          ]
+        },
+        {
+          "name": "SN_Dock_Structure_Socket_Mooring_1",
+          "key": "MOORING_1",
+          "parent": "root",
+          "location": [
+            2.4,
+            0.0,
+            3.02
+          ]
+        },
+        {
+          "name": "SN_Dock_Structure_Socket_Mooring_2",
+          "key": "MOORING_2",
+          "parent": "root",
+          "location": [
+            -2.4,
+            0.0,
+            3.02
+          ]
+        },
+        {
+          "name": "SN_Dock_Structure_Socket_Jetty",
+          "key": "JETTY",
+          "parent": "root",
+          "location": [
+            0.0,
+            2.1,
+            1.3
+          ]
+        }
+      ]
+    },
+    "SN_Dock_Jetty": {
+      "family": "dock_kit",
+      "role": "jetty",
+      "description": "8 x 2.6 m timber jetty module",
+      "collection": "SN_Dock_Jetty_Prototype",
+      "root": "SN_Dock_Jetty_Root",
+      "glb": "assets/models/dock/SN_Dock_Jetty.glb",
+      "core_glb": "dev_mods/core/assets/models/dock/SN_Dock_Jetty.glb",
+      "shared_materials": "assets/models/dock/shared_materials",
+      "tri_count": 1660,
+      "tri_budget": 3000,
+      "dimensions": {
+        "x": 8.026,
+        "y": 2.66,
+        "z": 2.8
+      },
+      "datum": "waterline z=0; deck z=1.30; piles to z=-1.30",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_Dock_Jetty",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "dock_kit",
+        "part_role": "jetty",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "waterline z=0; deck z=1.30; piles to z=-1.30",
+        "mount_frame": "SN_Dock_Jetty_Mount at origin",
+        "base_footprint_x": 8.0,
+        "base_footprint_y": 2.6,
+        "envelope_x": 8.03,
+        "envelope_y": 2.66,
+        "height": 2.8,
+        "tri_budget": 3000,
+        "bbox_target": "8.03 x 2.66 x 2.80 m",
+        "collection": "SN_Dock_Jetty_Prototype",
+        "type": "8 x 2.6 m timber jetty module",
+        "module_x": 8.0,
+        "module_y": 2.6,
+        "deck_height": 1.3
+      },
+      "sockets": [
+        {
+          "name": "SN_Dock_Jetty_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Dock_Jetty_Module_Next",
+          "key": "MODULE_NEXT",
+          "parent": "root",
+          "location": [
+            4.0,
+            0.0,
+            1.3
+          ]
+        },
+        {
+          "name": "SN_Dock_Jetty_Module_Prev",
+          "key": "MODULE_PREV",
+          "parent": "root",
+          "location": [
+            -4.0,
+            0.0,
+            1.3
+          ]
+        },
+        {
+          "name": "SN_Dock_Jetty_Socket_Mooring",
+          "key": "MOORING",
+          "parent": "root",
+          "location": [
+            2.0,
+            0.0,
+            1.3
+          ]
+        },
+        {
+          "name": "SN_Dock_Jetty_Ladder",
+          "key": "LADDER",
+          "parent": "root",
+          "location": [
+            -4.0,
+            0.0,
+            1.3
+          ]
+        }
+      ]
+    },
+    "SN_Dock_Mooring": {
+      "family": "dock_kit",
+      "role": "mooring",
+      "description": "twin-bitt mooring point",
+      "collection": "SN_Dock_Mooring_Prototype",
+      "root": "SN_Dock_Mooring_Root",
+      "glb": "assets/models/dock/SN_Dock_Mooring.glb",
+      "core_glb": "dev_mods/core/assets/models/dock/SN_Dock_Mooring.glb",
+      "shared_materials": "assets/models/dock/shared_materials",
+      "tri_count": 940,
+      "tri_budget": 1400,
+      "dimensions": {
+        "x": 1.56,
+        "y": 1.146,
+        "z": 0.95
+      },
+      "datum": "deck surface z=0",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Dock_Mooring",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "dock_kit",
+        "part_role": "mooring",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "deck surface z=0",
+        "mount_frame": "SN_Dock_Mooring_Mount at origin",
+        "base_footprint_x": 1.56,
+        "base_footprint_y": 1.15,
+        "envelope_x": 1.56,
+        "envelope_y": 1.15,
+        "height": 0.95,
+        "tri_budget": 1400,
+        "bbox_target": "1.56 x 1.15 x 0.95 m",
+        "collection": "SN_Dock_Mooring_Prototype",
+        "type": "twin-bitt mooring point"
+      },
+      "sockets": [
+        {
+          "name": "SN_Dock_Mooring_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Dock_Mooring_Bitt_Port",
+          "key": "BITT_PORT",
+          "parent": "root",
+          "location": [
+            -0.42,
+            0.0,
+            0.95
+          ]
+        },
+        {
+          "name": "SN_Dock_Mooring_Bitt_Starboard",
+          "key": "BITT_STARBOARD",
+          "parent": "root",
+          "location": [
+            0.42,
+            0.0,
+            0.95
+          ]
+        },
+        {
+          "name": "SN_Dock_Mooring_Ring",
+          "key": "RING",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.52,
+            0.4
+          ]
+        },
+        {
+          "name": "SN_Dock_Mooring_Rope_Tie",
+          "key": "ROPE_TIE",
+          "parent": "root",
+          "location": [
+            -0.55,
+            0.25,
+            0.33
+          ]
+        }
+      ]
+    },
+    "SN_Arch_Warehouse": {
+      "family": "architecture_kit",
+      "role": "warehouse",
+      "description": "modular warehouse with loading canopy",
+      "collection": "SN_Arch_Warehouse_Prototype",
+      "root": "SN_Arch_Warehouse_Root",
+      "glb": "assets/models/architecture/SN_Arch_Warehouse.glb",
+      "core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Warehouse.glb",
+      "shared_materials": "assets/models/architecture/shared_materials",
+      "tri_count": 2704,
+      "tri_budget": 3400,
+      "dimensions": {
+        "x": 10.95,
+        "y": 6.954,
+        "z": 6.35
+      },
+      "datum": "ground z=0; body footprint 8x6 centred on root; +X loading front",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Arch_Warehouse",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "architecture_kit",
+        "part_role": "warehouse",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; body footprint 8x6 centred on root; +X loading front",
+        "mount_frame": "SN_Arch_Warehouse_Mount at origin",
+        "base_footprint_x": 8.0,
+        "base_footprint_y": 6.0,
+        "envelope_x": 10.95,
+        "envelope_y": 6.95,
+        "height": 6.35,
+        "tri_budget": 3400,
+        "bbox_target": "10.95 x 6.95 x 6.35 m",
+        "collection": "SN_Arch_Warehouse_Prototype",
+        "type": "modular warehouse with loading canopy",
+        "module_x": 8.0,
+        "module_y": 6.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Arch_Warehouse_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Warehouse_Module_Next",
+          "key": "MODULE_NEXT",
+          "parent": "root",
+          "location": [
+            4.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Warehouse_Module_Prev",
+          "key": "MODULE_PREV",
+          "parent": "root",
+          "location": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Warehouse_Door_Front",
+          "key": "DOOR_FRONT",
+          "parent": "root",
+          "location": [
+            4.0,
+            -1.6,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Warehouse_Hoist",
+          "key": "HOIST",
+          "parent": "root",
+          "location": [
+            6.3,
+            -1.45,
+            3.98
+          ]
+        },
+        {
+          "name": "SN_Arch_Warehouse_Sign",
+          "key": "SIGN",
+          "parent": "root",
+          "location": [
+            4.05,
+            -1.6,
+            4.5
+          ]
+        }
+      ]
+    },
+    "SN_Arch_Workshop": {
+      "family": "architecture_kit",
+      "role": "workshop",
+      "description": "workshop with monitor roof and external drive wheel",
+      "collection": "SN_Arch_Workshop_Prototype",
+      "root": "SN_Arch_Workshop_Root",
+      "glb": "assets/models/architecture/SN_Arch_Workshop.glb",
+      "core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Workshop.glb",
+      "shared_materials": "assets/models/architecture/shared_materials",
+      "tri_count": 1996,
+      "tri_budget": 2900,
+      "dimensions": {
+        "x": 9.32,
+        "y": 6.627,
+        "z": 7.04
+      },
+      "datum": "ground z=0; body footprint 8x6; drive wheel on -Y wall",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Arch_Workshop",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "architecture_kit",
+        "part_role": "workshop",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; body footprint 8x6; drive wheel on -Y wall",
+        "mount_frame": "SN_Arch_Workshop_Mount at origin",
+        "base_footprint_x": 8.0,
+        "base_footprint_y": 6.0,
+        "envelope_x": 9.32,
+        "envelope_y": 6.63,
+        "height": 7.04,
+        "tri_budget": 2900,
+        "bbox_target": "9.32 x 6.63 x 7.04 m",
+        "collection": "SN_Arch_Workshop_Prototype",
+        "type": "workshop with monitor roof and external drive wheel",
+        "module_x": 8.0,
+        "module_y": 6.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Arch_Workshop_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Workshop_Module_Next",
+          "key": "MODULE_NEXT",
+          "parent": "root",
+          "location": [
+            4.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Workshop_Module_Prev",
+          "key": "MODULE_PREV",
+          "parent": "root",
+          "location": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Workshop_Door_Front",
+          "key": "DOOR_FRONT",
+          "parent": "root",
+          "location": [
+            4.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Workshop_Drive_Shaft",
+          "key": "DRIVE_SHAFT",
+          "parent": "root",
+          "location": [
+            -1.0,
+            -3.08,
+            1.45
+          ]
+        },
+        {
+          "name": "SN_Arch_Workshop_Chimney",
+          "key": "CHIMNEY",
+          "parent": "root",
+          "location": [
+            -2.8,
+            -2.2,
+            7.0
+          ]
+        }
+      ]
+    },
+    "SN_Arch_Tavern": {
+      "family": "architecture_kit",
+      "role": "tavern",
+      "description": "two-storey tavern with porch, balcony and sign",
+      "collection": "SN_Arch_Tavern_Prototype",
+      "root": "SN_Arch_Tavern_Root",
+      "glb": "assets/models/architecture/SN_Arch_Tavern.glb",
+      "core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Tavern.glb",
+      "shared_materials": "assets/models/architecture/shared_materials",
+      "tri_count": 2884,
+      "tri_budget": 3400,
+      "dimensions": {
+        "x": 8.668,
+        "y": 6.962,
+        "z": 7.64
+      },
+      "datum": "ground z=0; body footprint 6x6; porch and steps extend +X",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_Arch_Tavern",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "architecture_kit",
+        "part_role": "tavern",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; body footprint 6x6; porch and steps extend +X",
+        "mount_frame": "SN_Arch_Tavern_Mount at origin",
+        "base_footprint_x": 6.0,
+        "base_footprint_y": 6.0,
+        "envelope_x": 8.67,
+        "envelope_y": 6.96,
+        "height": 7.64,
+        "tri_budget": 3400,
+        "bbox_target": "8.67 x 6.96 x 7.64 m",
+        "collection": "SN_Arch_Tavern_Prototype",
+        "type": "two-storey tavern with porch, balcony and sign",
+        "module_x": 6.0,
+        "module_y": 6.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Arch_Tavern_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Tavern_Module_Next",
+          "key": "MODULE_NEXT",
+          "parent": "root",
+          "location": [
+            3.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Tavern_Module_Prev",
+          "key": "MODULE_PREV",
+          "parent": "root",
+          "location": [
+            -3.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Tavern_Door_Front",
+          "key": "DOOR_FRONT",
+          "parent": "root",
+          "location": [
+            3.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Tavern_Sign",
+          "key": "SIGN",
+          "parent": "root",
+          "location": [
+            5.0,
+            1.8,
+            3.05
+          ]
+        },
+        {
+          "name": "SN_Arch_Tavern_Chimney",
+          "key": "CHIMNEY",
+          "parent": "root",
+          "location": [
+            -2.4,
+            -2.2,
+            7.6
+          ]
+        }
+      ]
+    },
+    "SN_Arch_Factory": {
+      "family": "architecture_kit",
+      "role": "factory",
+      "description": "sawtooth-roof factory with gantry and twin chimneys",
+      "collection": "SN_Arch_Factory_Prototype",
+      "root": "SN_Arch_Factory_Root",
+      "glb": "assets/models/architecture/SN_Arch_Factory.glb",
+      "core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Factory.glb",
+      "shared_materials": "assets/models/architecture/shared_materials",
+      "tri_count": 3020,
+      "tri_budget": 4800,
+      "dimensions": {
+        "x": 14.74,
+        "y": 8.305,
+        "z": 9.64
+      },
+      "datum": "ground z=0; body footprint 12x8; gantry and platform extend +X",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_Arch_Factory",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "architecture_kit",
+        "part_role": "factory",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "ground z=0; body footprint 12x8; gantry and platform extend +X",
+        "mount_frame": "SN_Arch_Factory_Mount at origin",
+        "base_footprint_x": 12.0,
+        "base_footprint_y": 8.0,
+        "envelope_x": 14.74,
+        "envelope_y": 8.3,
+        "height": 9.64,
+        "tri_budget": 4800,
+        "bbox_target": "14.74 x 8.30 x 9.64 m",
+        "collection": "SN_Arch_Factory_Prototype",
+        "type": "sawtooth-roof factory with gantry and twin chimneys",
+        "module_x": 12.0,
+        "module_y": 8.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Arch_Factory_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Factory_Module_Next",
+          "key": "MODULE_NEXT",
+          "parent": "root",
+          "location": [
+            6.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Factory_Module_Prev",
+          "key": "MODULE_PREV",
+          "parent": "root",
+          "location": [
+            -6.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Factory_Door_Front",
+          "key": "DOOR_FRONT",
+          "parent": "root",
+          "location": [
+            6.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Arch_Factory_Gantry",
+          "key": "GANTRY",
+          "parent": "root",
+          "location": [
+            8.35,
+            0.0,
+            7.05
+          ]
+        },
+        {
+          "name": "SN_Arch_Factory_Chimney",
+          "key": "CHIMNEY",
+          "parent": "root",
+          "location": [
+            -5.0,
+            2.8,
+            9.6
+          ]
+        }
+      ]
+    },
+    "SN_Env_Reef": {
+      "family": "environment_kit",
+      "role": "reef",
+      "description": "rock reef cluster with lighthouse pad",
+      "collection": "SN_Env_Reef_Prototype",
+      "root": "SN_Env_Reef_Root",
+      "glb": "assets/models/environment/SN_Env_Reef.glb",
+      "core_glb": "dev_mods/core/assets/models/environment/SN_Env_Reef.glb",
+      "shared_materials": "assets/models/environment/shared_materials",
+      "tri_count": 1944,
+      "tri_budget": 2400,
+      "dimensions": {
+        "x": 7.131,
+        "y": 6.444,
+        "z": 5.515
+      },
+      "datum": "waterline z=0; rocks to z=-3.0; Top pad at highest rock",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Env_Reef",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "environment_kit",
+        "part_role": "reef",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "waterline z=0; rocks to z=-3.0; Top pad at highest rock",
+        "mount_frame": "SN_Env_Reef_Mount at origin",
+        "base_footprint_x": 7.13,
+        "base_footprint_y": 6.44,
+        "envelope_x": 7.13,
+        "envelope_y": 6.44,
+        "height": 5.52,
+        "tri_budget": 2400,
+        "bbox_target": "7.13 x 6.44 x 5.52 m",
+        "collection": "SN_Env_Reef_Prototype",
+        "type": "rock reef cluster with lighthouse pad",
+        "waterline": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Env_Reef_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Env_Reef_Top",
+          "key": "TOP",
+          "parent": "root",
+          "location": [
+            0.6,
+            -0.4,
+            2.48
+          ]
+        },
+        {
+          "name": "SN_Env_Reef_Mooring_Ring",
+          "key": "MOORING_RING",
+          "parent": "root",
+          "location": [
+            1.8,
+            2.36,
+            0.92
+          ]
+        }
+      ]
+    },
+    "SN_Env_Wreck": {
+      "family": "environment_kit",
+      "role": "wreck",
+      "description": "broken wooden hull wreck",
+      "collection": "SN_Env_Wreck_Prototype",
+      "root": "SN_Env_Wreck_Root",
+      "glb": "assets/models/environment/SN_Env_Wreck.glb",
+      "core_glb": "dev_mods/core/assets/models/environment/SN_Env_Wreck.glb",
+      "shared_materials": "assets/models/environment/shared_materials",
+      "tri_count": 1046,
+      "tri_budget": 2800,
+      "dimensions": {
+        "x": 8.62,
+        "y": 3.962,
+        "z": 4.719
+      },
+      "datum": "waterline z=0; keel to z=-1.6; hull rolled about X",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck"
+      ],
+      "root_extras": {
+        "asset": "SN_Env_Wreck",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "environment_kit",
+        "part_role": "wreck",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "waterline z=0; keel to z=-1.6; hull rolled about X",
+        "mount_frame": "SN_Env_Wreck_Mount at origin",
+        "base_footprint_x": 8.62,
+        "base_footprint_y": 3.96,
+        "envelope_x": 8.62,
+        "envelope_y": 3.96,
+        "height": 4.72,
+        "tri_budget": 2800,
+        "bbox_target": "8.62 x 3.96 x 4.72 m",
+        "collection": "SN_Env_Wreck_Prototype",
+        "type": "broken wooden hull wreck",
+        "waterline": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Env_Wreck_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Env_Wreck_Deck",
+          "key": "DECK",
+          "parent": "root",
+          "location": [
+            -2.0,
+            -0.15,
+            0.6
+          ]
+        },
+        {
+          "name": "SN_Env_Wreck_Mast",
+          "key": "MAST",
+          "parent": "root",
+          "location": [
+            0.9,
+            -0.13,
+            0.53
+          ]
+        }
+      ]
+    },
+    "SN_Env_Lighthouse": {
+      "family": "environment_kit",
+      "role": "lighthouse",
+      "description": "stone lighthouse with gallery and lantern",
+      "collection": "SN_Env_Lighthouse_Prototype",
+      "root": "SN_Env_Lighthouse_Root",
+      "glb": "assets/models/environment/SN_Env_Lighthouse.glb",
+      "core_glb": "dev_mods/core/assets/models/environment/SN_Env_Lighthouse.glb",
+      "shared_materials": "assets/models/environment/shared_materials",
+      "tri_count": 1952,
+      "tri_budget": 2600,
+      "dimensions": {
+        "x": 4.62,
+        "y": 4.601,
+        "z": 13.16
+      },
+      "datum": "base slab z=0; tower axis Z; door on +X",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark"
+      ],
+      "root_extras": {
+        "asset": "SN_Env_Lighthouse",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "environment_kit",
+        "part_role": "lighthouse",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "base slab z=0; tower axis Z; door on +X",
+        "mount_frame": "SN_Env_Lighthouse_Mount at origin",
+        "base_footprint_x": 4.62,
+        "base_footprint_y": 4.6,
+        "envelope_x": 4.62,
+        "envelope_y": 4.6,
+        "height": 13.16,
+        "tri_budget": 2600,
+        "bbox_target": "4.62 x 4.60 x 13.16 m",
+        "collection": "SN_Env_Lighthouse_Prototype",
+        "type": "stone lighthouse with gallery and lantern",
+        "waterline": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Env_Lighthouse_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Env_Lighthouse_Door",
+          "key": "DOOR",
+          "parent": "root",
+          "location": [
+            1.5,
+            0.0,
+            0.9
+          ]
+        },
+        {
+          "name": "SN_Env_Lighthouse_Gallery",
+          "key": "GALLERY",
+          "parent": "root",
+          "location": [
+            1.6,
+            0.0,
+            9.8
+          ]
+        },
+        {
+          "name": "SN_Env_Lighthouse_Lamp",
+          "key": "LAMP",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            10.6
+          ]
+        }
+      ]
+    },
+    "SN_Env_Buoy": {
+      "family": "environment_kit",
+      "role": "buoy",
+      "description": "steam-era lighted navigational buoy",
+      "collection": "SN_Env_Buoy_Prototype",
+      "root": "SN_Env_Buoy_Root",
+      "glb": "assets/models/environment/SN_Env_Buoy.glb",
+      "core_glb": "dev_mods/core/assets/models/environment/SN_Env_Buoy.glb",
+      "shared_materials": "assets/models/environment/shared_materials",
+      "tri_count": 868,
+      "tri_budget": 1000,
+      "dimensions": {
+        "x": 1.88,
+        "y": 1.88,
+        "z": 3.84
+      },
+      "datum": "waterline z=0; draft skirt to z=-0.7",
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal"
+      ],
+      "root_extras": {
+        "asset": "SN_Env_Buoy",
+        "version": "1.0",
+        "units": "metres",
+        "kit_family": "environment_kit",
+        "part_role": "buoy",
+        "forward": "+X",
+        "up": "+Z",
+        "datum": "waterline z=0; draft skirt to z=-0.7",
+        "mount_frame": "SN_Env_Buoy_Mount at origin",
+        "base_footprint_x": 1.88,
+        "base_footprint_y": 1.88,
+        "envelope_x": 1.88,
+        "envelope_y": 1.88,
+        "height": 3.84,
+        "tri_budget": 1000,
+        "bbox_target": "1.88 x 1.88 x 3.84 m",
+        "collection": "SN_Env_Buoy_Prototype",
+        "type": "steam-era lighted navigational buoy",
+        "waterline": 0.0
+      },
+      "sockets": [
+        {
+          "name": "SN_Env_Buoy_Mount",
+          "key": "MOUNT",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "SN_Env_Buoy_Lamp",
+          "key": "LAMP",
+          "parent": "root",
+          "location": [
+            0.0,
+            0.0,
+            2.65
+          ]
+        },
+        {
+          "name": "SN_Env_Buoy_Bell",
+          "key": "BELL",
+          "parent": "root",
+          "location": [
+            0.0,
+            -0.45,
+            1.85
+          ]
+        },
+        {
+          "name": "SN_Env_Buoy_Chain",
+          "key": "CHAIN",
+          "parent": "root",
+          "location": [
+            0.55,
+            0.0,
+            0.35
+          ]
+        }
+      ]
+    }
+  },
+  "recipes": [
+    {
+      "id": "naval_gun_carriage",
+      "title": "火炮 + 炮架（四轮炮车）",
+      "parts": [
+        "SN_Weapon_Cannon",
+        "SN_Weapon_GunCarriage"
+      ],
+      "rule": "炮架 Root 放地面；火炮 Root 放到炮架 Root + (0, 0, 0.62)，耳轴与 SN_Weapon_GunCarriage_Trunnion_L/R 对齐；两件 +X 同向。",
+      "result": "完整可推行的舰炮；炮架 Yaw_Pivot 可做整机回转（可选）。"
+    },
+    {
+      "id": "turret_on_deck",
+      "title": "炮塔 + 甲板 socket",
+      "parts": [
+        "SN_Weapon_Turret",
+        "SN_ShipPart_Deck"
+      ],
+      "rule": "炮塔 Root 对齐 SN_ShipPart_Deck_Socket_Weapon_Port（Z = 0.33）；炮塔自带的 Yaw_Pivot 负责回转，不再需要额外基座。",
+      "result": "带装甲回转炮塔的甲板模块。"
+    },
+    {
+      "id": "pedestal_on_deck",
+      "title": "武器基座 + 甲板 socket",
+      "parts": [
+        "SN_Weapon_Pedestal",
+        "SN_ShipPart_Deck"
+      ],
+      "rule": "基座 Root 对齐 SN_ShipPart_Deck_Socket_Weapon_Starboard（Z = 0.33）；Collar（z=1.10）是上层武器的安装面，兼容 Medium class。",
+      "result": "通用回转安装点；现有 Light/Medium 武器批次 1–2 可视觉落座。"
+    },
+    {
+      "id": "deck_superstructure",
+      "title": "甲板 + 桅杆 + 烟囱 + 货舱盖",
+      "parts": [
+        "SN_ShipPart_Deck",
+        "SN_ShipPart_Mast",
+        "SN_ShipPart_Funnel",
+        "SN_ShipPart_HatchCover"
+      ],
+      "rule": "各子件 Root 对齐甲板对应 Socket_*（Z = 0.33）；mast→Socket_Mast、funnel→Socket_Funnel、hatch→Socket_Hatch。",
+      "result": "8.4 × 6.0 m 甲板模块的完整上建演示（见 kit_assembly_deck.png）。"
+    },
+    {
+      "id": "power_train",
+      "title": "动力装置 → 齿轮组 → 卷扬机",
+      "parts": [
+        "SN_Machinery_PowerUnit",
+        "SN_Machinery_GearSet",
+        "SN_Machinery_Winch"
+      ],
+      "rule": "动力装置 Shaft_Out（飞轮轴 +Y）与齿轮组 Shaft_In（−Y 侧）同轴对视，齿轮组 Shaft_Out / Crank 端接卷扬机 Drum_Pivot；三件 Root 都放地面，按轴高差做视觉对齐（本批不强制机械耦合）。",
+      "result": "一条可读的蒸汽动力链（见 kit_machinery_lineup.png）。"
+    },
+    {
+      "id": "cargo_stack",
+      "title": "托盘 + 货箱堆码",
+      "parts": [
+        "SN_Cargo_Pallet",
+        "SN_Cargo_Crate"
+      ],
+      "rule": "货箱 Root 放到托盘 Stack_Top（z=0.22）；货箱再用自身 Stack_Top（z=1.02）继续向上堆。",
+      "result": "可堆叠货组；托盘顶面 1.23 × 1.02 m。"
+    },
+    {
+      "id": "dock_module_chain",
+      "title": "码头结构模块沿 X 平铺",
+      "parts": [
+        "SN_Dock_Structure"
+      ],
+      "rule": "相邻模块 Root 沿 X 平移 8.40 m；Module_Next（+4.20,0,3.02）与下一件的Module_Prev（−4.20,0,3.02）重合；所有 Root 放在水线高度 z=0。",
+      "result": "任意长度的岸壁；顶面 z=3.02、+Y 朝水域。"
+    },
+    {
+      "id": "dock_mooring",
+      "title": "系缆设施上码头",
+      "parts": [
+        "SN_Dock_Mooring",
+        "SN_Dock_Structure"
+      ],
+      "rule": "系缆设施 Root 对齐 Socket_Mooring_1/2（±2.40,0,3.02），Root 的安装面就是码头顶面。",
+      "result": "码头上的双柱缆桩 + 系缆环 + 绳圈。"
+    },
+    {
+      "id": "dock_jetty",
+      "title": "栈桥接码头",
+      "parts": [
+        "SN_Dock_Jetty",
+        "SN_Dock_Structure"
+      ],
+      "rule": "栈桥 Root = 码头 Root + (0, 2.10, 0)，绕 Z 旋转 +90°（栈桥 +X → 码头 +Y）；栈桥桥面 z=1.30 正对 Socket_Jetty（0,2.10,1.30），桩伸到水下 z=−1.30。",
+      "result": "从岸壁伸向水域的木栈桥（见 kit_assembly_dock.png）。"
+    },
+    {
+      "id": "architecture_row",
+      "title": "仓库 / 工坊 / 酒馆 / 厂房沿 X 平铺成街区",
+      "parts": [
+        "SN_Arch_Warehouse",
+        "SN_Arch_Workshop",
+        "SN_Arch_Tavern",
+        "SN_Arch_Factory"
+      ],
+      "rule": "Root 全部 z=0；相邻建筑 Module_Next/Prev 对齐：仓库 8.00、工坊 8.00、酒馆 6.00、厂房 12.00 m。正立面 +X 同向；把整排绕 Z 转 90° 即正面朝街。",
+      "result": "任意长度的港区街区；门口 / 雨棚 / 吊车 / 烟囱接口外露（见 kit_assembly_town.png）。"
+    },
+    {
+      "id": "lighthouse_on_reef",
+      "title": "灯塔落在礁石 Top",
+      "parts": [
+        "SN_Env_Lighthouse",
+        "SN_Env_Reef"
+      ],
+      "rule": "礁石 Root 放水线 z=0；灯塔 Root = 礁石 Root + (0.60, −0.40, 2.48)（对齐 SN_Env_Reef_Top；礁石带 4.6 m 石砌基台）。",
+      "result": "礁石托起的灯塔；灯塔 Door / Gallery / Lamp 接口可用。"
+    },
+    {
+      "id": "coast_scene",
+      "title": "礁石 + 残骸 + 航标浮标",
+      "parts": [
+        "SN_Env_Reef",
+        "SN_Env_Wreck",
+        "SN_Env_Buoy"
+      ],
+      "rule": "三件 Root 都在水线 z=0；残骸在礁石 +X 侧 6–9 m、可绕 Z 旋转 20–30°；浮标放在航道侧。",
+      "result": "可复用的海岸险区小景（见 kit_assembly_coast.png）。"
+    },
+    {
+      "id": "workshop_power_link",
+      "title": "工坊 Drive_Shaft 接动力装置",
+      "parts": [
+        "SN_Arch_Workshop",
+        "SN_Machinery_PowerUnit"
+      ],
+      "rule": "工坊 Root 放地面；动力装置 Root 放到工坊 Drive_Shaft（−1.00, −3.08, 1.45）对应的飞轮轴位置（把 PowerUnit 的 Shaft_Out 对准该点）。",
+      "result": "建筑外墙飞轮与蒸汽动力装置同轴，形成工坊动力接口。"
+    }
+  ]
+}

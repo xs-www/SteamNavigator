@@ -9,14 +9,15 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ExploreCommands` | L1 |
-| `start(params: Dictionary, context) -> Dictionary` | L18 |
-| `settle(_params: Dictionary, context) -> Dictionary` | L30 |
-| `decide(params: Dictionary, context) -> Dictionary` | L36 |
-| `buy(_params: Dictionary, context) -> Dictionary` | L45 |
-| `investigate(params: Dictionary, context) -> Dictionary` | L51 |
+| `start(params: Dictionary, context) -> Dictionary` | L20 |
+| `settle(_params: Dictionary, context) -> Dictionary` | L32 |
+| `decide(params: Dictionary, context) -> Dictionary` | L38 |
+| `buy(_params: Dictionary, context) -> Dictionary` | L47 |
+| `investigate(params: Dictionary, context) -> Dictionary` | L53 |
+| `travel(params: Dictionary, context) -> Dictionary` | L65 |
 
-`clue.buy` / `clue.investigate`），把参数校验与领域服务的返回原样交给 CommandBus
-的事务/事件流程。
+`clue.buy` / `clue.investigate` / `clue.travel`），把参数校验与领域服务的返回原样
+交给 CommandBus 的事务/事件流程。
 
 - 关键依赖：`ExploreVoyageService`、`ClueService`、`Result`
 
@@ -25,5 +26,7 @@
   （`code` + `ui.error.*` message_key），成功返回 `Result.ok(payload, events)`，
   领域事件由总线发布。
 - 所有会改变状态的扣费 / 时间推进 / 发现都发生在领域服务里，这里只做缺参校验。
+- 4.4.2：`clue.travel` 只用于 `port_goods` 线索，目标港由 `ClueService.travel`
+  在领域层解析后调用 `VoyageService.start`；查询 / UI 不接触 `target_port_id`。
 
 模块索引：[framework/application](../README.md)

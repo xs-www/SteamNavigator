@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ExploreVoyageService` | L1 |
-| `start(context, clue_id: String, strategy_id: String) -> Dictionary` | L44 |
-| `decide(context, choice: String) -> Dictionary` | L171 |
-| `settle(context) -> Dictionary` | L277 |
+| `start(context, clue_id: String, strategy_id: String) -> Dictionary` | L47 |
+| `decide(context, choice: String) -> Dictionary` | L182 |
+| `settle(context) -> Dictionary` | L288 |
 
 航次与在航标记、抽定发现 roll）、资源告急决策（继续 / 掉头）、抵达结算（发现港口 +
 迷雾揭示 / 失败漂流 + 线索保留，按实际航行小时一次性扣煤水）。
@@ -49,5 +49,8 @@
   `trace_route` 自行 no-op。
 - 结算 `summary.explore` 与 `settlement_screen` 现有字段兼容；领域事件
   `explore.started` / `explore.finished` 随结果返回，由命令总线发布。
+- 4.4：`start` 入口先 `ClueService.sweep_expired` 清理到期线索并把 `clue.expired`
+  事件并入返回；过期线索不能再出航（`clue_expired`），避免 `port_goods` 线索被
+  误当成探索目标。
 
 模块索引：[framework/domain](../README.md)

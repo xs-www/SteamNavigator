@@ -15,7 +15,21 @@
   },
   "runtime_dirs": [
     "assets/models/props/shared_materials",
-    "dev_mods/core/assets/models/props/shared_materials"
+    "dev_mods/core/assets/models/props/shared_materials",
+    "assets/models/weapons/shared_materials",
+    "dev_mods/core/assets/models/weapons/shared_materials",
+    "assets/models/ship_parts/shared_materials",
+    "dev_mods/core/assets/models/ship_parts/shared_materials",
+    "assets/models/machinery/shared_materials",
+    "dev_mods/core/assets/models/machinery/shared_materials",
+    "assets/models/cargo/shared_materials",
+    "dev_mods/core/assets/models/cargo/shared_materials",
+    "assets/models/dock/shared_materials",
+    "dev_mods/core/assets/models/dock/shared_materials",
+    "assets/models/architecture/shared_materials",
+    "dev_mods/core/assets/models/architecture/shared_materials",
+    "assets/models/environment/shared_materials",
+    "dev_mods/core/assets/models/environment/shared_materials"
   ],
   "uri_prefix": "shared_materials",
   "materials": [
@@ -381,6 +395,37 @@
           44,
           52,
           56
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Coal",
+      "texture": "coal",
+      "tile_m": 1.0,
+      "roughness": 0.78,
+      "metallic": 0.15,
+      "kind": "coal",
+      "detail": "lumpy",
+      "mean_rgb": [
+        36,
+        36,
+        39
+      ],
+      "palette": {
+        "base": [
+          30,
+          30,
+          33
+        ],
+        "alt": [
+          46,
+          46,
+          50
+        ],
+        "hi": [
+          82,
+          82,
+          88
         ]
       }
     }

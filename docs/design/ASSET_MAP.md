@@ -135,10 +135,11 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | `SN_Tex_Brass` | `brass.png` | 1.0 | 0.28 / 0.85 | 黄铜件、铭牌、轴承 |
 | `SN_Tex_Canvas_Shade` | `canvas.png` | 0.5 | 0.92 / 0.00 | 帆布、绳索 |
 | `SN_Tex_Glass_Dark` | `glass_dark.png` | 2.0 | 0.25 / 0.35 | 深色玻璃窗 |
+| `SN_Tex_Coal` | `coal.png` | 1.0 | 0.78 / 0.15 | 碎煤堆、煤斗（批次 2 新增） |
 
-- 真源：`docs/design/textures/shared_materials/shared_materials.spec.json`；贴图生成器 `tools/art/gen_shared_material_textures.py`（10 张 512² 无缝贴图 + montage + stats，确定性可复现）。
+- 真源：`docs/design/textures/shared_materials/shared_materials.spec.json`；贴图生成器 `tools/art/gen_shared_material_textures.py`（11 张 512² 无缝贴图 + montage + stats，确定性可复现）。
 - 授权贴图：`docs/design/textures/shared_materials/tiles/<texture>.png`；评审 montage：`docs/design/textures/shared_materials/shared_materials_montage.png`。
-- 运行时副本：`assets/models/props/shared_materials/`（开发态）与 `dev_mods/core/assets/models/props/shared_materials/`（发布）；GLB `images[].uri` = `shared_materials/<texture>.png`。
+- 运行时副本：`assets/models/{props,weapons,ship_parts,machinery,cargo,dock}/shared_materials/`（开发态）与对应 `dev_mods/core/assets/models/.../shared_materials/`（发布）；GLB `images[].uri` = `shared_materials/<texture>.png`。
 - 运行时共享：`ContentAssetLoader` 按路径缓存 `Texture2D`，四台起重机与后续资产共用同一贴图实例；`PortStage` 按材质签名合批。
 - 契约与迁移细节：`docs/design/MODELING_WORKFLOW.md` §12。
 
@@ -301,6 +302,129 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | `docs/design/screenshots/schooner_fame_top.png` | 纵帆船俯视预览（1000×900） |
 
 `dev_scenes/harbor/README.md` 记录运行方式、调参入口与已知边界；`tools/godot/verify_harbor_diorama.gd` 是无头验收脚本。
+
+## 3D 舰载武器五件套（2026-10-21）
+
+把武器从船体资产里独立出来的第一批：每件一个 GLB、自带炮座与 Yaw / Pitch 两级 Pivot，
+可单独摆放或后续挂到任意船体/舞台。**本批只交付资产**：不登记 Core manifest 键、不改 content JSON、
+不改船体 GLB、不接战斗逻辑。
+
+| 资产 | 运行时 GLB | 集合 / 摆位 | 尺寸 L×W×H (m) | tri | 材质数 | 结构要点 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Weapon_DeckGun` | `assets/models/weapons/SN_Weapon_DeckGun.glb` | `SN_Weapon_DeckGun_Prototype` / (0, 320, 0) | 2.81 × 1.41 × 1.61 | **1456** | 4 | 铁炮座底板 + 回转环 + 收分炮座、双片铁护盾 + 黄铜铆钉、黄铜水冷套 + 3 道箍、炮管 / 炮口箍 / 耳轴 / 后坐滑轨、俯仰弧齿 + 手轮 + 螺杆 + 瞄具 |
+| `SN_Weapon_HeavyCannon` | `assets/models/weapons/SN_Weapon_HeavyCannon.glb` | `SN_Weapon_HeavyCannon_Prototype` / (0, 330, 0) | 4.80 × 2.20 × 2.20 | **1768** | 6 | 木炮床 + 双铁滑轨 + 横梁 + 四角螺栓、回转盘 + 滑座 + 颊板、双片炮盾 + 顶/底横梁 + 瞄具柱、俯仰弧齿 + 两侧手轮 + 止退索、粗炮管 + 4 道箍 + 炮口箍 + 炮尾 + 耳轴 + 双制退筒 |
+| `SN_Weapon_Mortar` | `assets/models/weapons/SN_Weapon_Mortar.glb` | `SN_Weapon_Mortar_Prototype` / (0, 340, 0) | 3.20 × 2.20 × 2.62 | **1460** | 6 | 木底台 + 铁底板 + 8 颗螺栓 + 侧压条、炮弹架 + 3 发炮弹、回转环 + 双颊板摇架 + 耳轴、升降螺杆 + 手轮、摇架蒸汽助力筒、固定 60° 高角臼炮（深色炮口 + 黄铜口沿）+ 瞄具 |
+| `SN_Weapon_Repeater` | `assets/models/weapons/SN_Weapon_Repeater.glb` | `SN_Weapon_Repeater_Prototype` / (0, 350, 0) | 2.86 × 1.60 × 1.86 | **1820** | 4 | 后部蒸汽机箱 + 飞轮（-Y 侧）+ 排气管 + 铆钉、回转台 + 立柱 + 三脚撑、6 管旋转炮簇 + 中央轴 + 机匣 + 轴承环 + 炮口前环、弹斗 + 盖板 + 手摇柄 + 蒸汽管、瞄具 |
+| `SN_Weapon_Broadside` | `assets/models/weapons/SN_Weapon_Broadside.glb` | `SN_Weapon_Broadside_Prototype` / (0, 360, 0) | 2.23 × 8.00 × 2.06 | **3200** | 7 | 4 门短舰炮共用一条回转滑轨、木炮列底板 + 两端船舷挂架、4 台炮车（各带颊板 / 俯仰弧齿 / 止退索）+ 4 组炮盾（每组 2 片）、后部装填工具架、瞄准具；炮列沿 Y 排列、炮口 +X |
+
+五件合计 **9,704 三角面**（预算 18,700），全部为闭合壳体、UV 完整、zmin = 0；详细验收见 [WEAPON_BATCH1_ACCEPTANCE.md](../archive/WEAPON_BATCH1_ACCEPTANCE.md)。
+
+- 轴向/轴心：Blender `+X` 炮口、`+Z` 向上，根空物体原点在炮座底面中心（z = 0）；glTF 导出后 `+Y` 向上，进入 Godot 尺寸为 (Blender X, Blender Z, Blender Y)。
+- Pivot：`SN_Weapon_<Name>_Yaw_Pivot` 绕 Z 回转、挂在 Root 下；`SN_Weapon_<Name>_Pitch_Pivot` 绕 Y 俯仰、挂在 Yaw 下，轴心在耳轴。侧弦炮列为 1 个 Yaw + 4 个独立 `Pitch_Pivot_1..4`；上船时把整个 Root 绕 Z 旋转 -90°，炮口朝舷外。
+- 共享贴图：全部使用 `SN_Tex_*` 外部贴图，GLB `images[].uri = shared_materials/<texture>.png`；运行时副本在 `assets/models/weapons/shared_materials/` 与 `dev_mods/core/assets/models/weapons/shared_materials/`，`shared_materials.spec.json` 的 `runtime_dirs` 已加入这两个目录。
+- 源/工具：工单 `tools/modeling/briefs/sn_weapon_batch1.json`；生成器 `tools/modeling/generators/sn_weapon_batch1_generator.py`；部件库 `weapon_kit.py`；材质视图 `sn_weapon_materials.py`；干跑 `dryrun_weapon_batch1.py`；导出 `export_weapon_glb.py`；GLB 自检 `verify_weapon_glb.py`；预览 `render_weapon_preview.py`。
+- 验收图：`docs/design/screenshots/weapons/weapon_<slug>_{three_quarter,side}.png` 与 `weapon_batch1_lineup.png`。
+- 后续：战斗内容 Schema 2.0 落地后再登记 `model.weapon.*`、补 `weapons` 内容类型与挂载 socket；本批不改 `dev_mods/core/manifest.json`。
+
+## 3D 舰载特殊武器三件套（2026-10-21）
+
+武器批次 2：三件**不规则形态**的舰载武器/载具。每件仍是独立 GLB，并首次显式导出
+`SN_Weapon_<Name>_Mount` + `Anchor_1..4` 空节点与根属性，作为“不规则形态如何拼进 socket”的模型侧接口。
+完整契约见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md)。
+
+| 资产 | 运行时 GLB | 集合 / 摆位 | 尺寸 L×W×H (m) | tri | 材质数 | mount_class | Pivot |
+| --- | --- | --- | --- | ---: | ---: | --- | --- |
+| `SN_Weapon_Ballista` | `assets/models/weapons/SN_Weapon_Ballista.glb` | `SN_Weapon_Ballista_Prototype` / (0, 380, 0) | 5.04 × 3.05 × 2.20 | **1956** | 8 | Heavy | Yaw + Pitch + Mount + 4 Anchor |
+| `SN_Weapon_ArrowTower` | `assets/models/weapons/SN_Weapon_ArrowTower.glb` | `SN_Weapon_ArrowTower_Prototype` / (0, 400, 0) | 3.80 × 3.80 × 6.55 | **3428** | 8 | Tower | Mount + 4 Anchor（fixed） |
+| `SN_Weapon_HarpoonLauncher` | `assets/models/weapons/SN_Weapon_HarpoonLauncher.glb` | `SN_Weapon_HarpoonLauncher_Prototype` / (0, 420, 0) | 4.60 × 1.84 × 2.28 | **1908** | 5 | Medium | Yaw + Pitch + Mount + 4 Anchor |
+
+三件合计 **7,292 三角面**（预算 14,500）；全部 zmin = 0、共享贴图外部化、UV 完整；GLB Root 的 `extras` 带 `mount_class / pivot_profile / base_footprint_* / envelope_* / height / swept_radius / anchor_count`。
+- 弩炮：回转底座 + 双弩臂 + 扭力弹簧 + 弩弦 + 大型弩箭 + 后部绞盘 + 前护盾。
+- 箭塔：方形底座 + 四角塔柱 + X 斜撑 + 作战平台 + 三面栏杆 + 竖缝箭窗 + 侧梯 + 帆布棚 + 箭袋/盾牌/铜钟；4 个底座拉索锚点。
+- 蒸汽鱼叉：回转底座 + 黄铜压力罐 + 蒸汽管 + 发射轨 + 大型鱼叉（倒钩/尾环）+ 绞盘/链条。
+- socket 契约：只标准化 Mount 帧、底座接口（collar / 方形 pad）与净空包络（footprint / height / swept_radius）；塔身、弩臂、鱼叉上部轮廓自由，不从外形做匹配。
+- 源/工具：工单 `tools/modeling/briefs/sn_weapon_batch2.json`；生成器 `sn_weapon_batch2_generator.py`；干跑 `dryrun_weapon_batch2.py`；导出 `export_weapon_batch2_glb.py`；GLB 自检 `verify_weapon_batch2_glb.py`；预览 `render_weapon_batch2_preview.py`。
+- 验收图：`docs/design/screenshots/weapons/weapon_batch2_lineup.png` 与 `weapon_{ballista,arrow_tower,harpoon_launcher}_*.png`。
+- 本批同样不登记 manifest、不接游戏侧；Mount/Anchor 是给未来 hull socket / assembler 用的。
+
+> 2026-10-22：武器装配规范升级 v2（`SN_Socket_Weapon` / `SN_Mount` / `SN_Pivot_Yaw` / `SN_Pivot_Pitch` / `SN_Recoil` / `SN_Muzzle`），8 件舰载武器 + kit 武器部件 + 甲板 socket 已重建并重导 GLB，详见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md)。
+
+## 模型素材库批次 1：武器套件 + 船体部件（2026-10-21）
+
+把「搭船 / 搭场景 / 战斗演出」的 P0 模块抽成 8 件可拼装资产：每组 4 件，每件独立 GLB，
+根下固定 `Mount` + 接口空节点，根 `extras` 带 `kit_family / part_role / footprint / height`。
+完整目录与装配配方见 [KIT_ASSET_LIBRARY.md](KIT_ASSET_LIBRARY.md)，机器可读目录见
+[kit_catalog.json](../../tools/modeling/kit_catalog.json)。
+
+| 资产 | 运行时 GLB | 集合 | 尺寸 X×Y×Z (m) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Weapon_Cannon` | `assets/models/weapons/SN_Weapon_Cannon.glb` | `SN_Weapon_Cannon_Prototype` | 4.00 × 1.44 × 0.82 | **1156** | 5 | 根 = 耳轴轴心；Pitch + Trunnion_L/R + Muzzle + Breech |
+| `SN_Weapon_GunCarriage` | `assets/models/weapons/SN_Weapon_GunCarriage.glb` | `SN_Weapon_GunCarriage_Prototype` | 2.96 × 1.79 × 1.10 | **2256** | 7 | 地面 z=0；Trunnion_L/R 在 z=0.62 |
+| `SN_Weapon_Turret` | `assets/models/weapons/SN_Weapon_Turret.glb` | `SN_Weapon_Turret_Prototype` | 5.12 × 3.44 × 3.04 | **1904** | 6 | 甲板面 z=0；Yaw_Pivot z=0.22；Heavy |
+| `SN_Weapon_Pedestal` | `assets/models/weapons/SN_Weapon_Pedestal.glb` | `SN_Weapon_Pedestal_Prototype` | 1.90 × 1.90 × 1.20 | **940** | 4 | 甲板面 z=0；Collar z=1.10；Medium |
+| `SN_ShipPart_Deck` | `assets/models/ship_parts/SN_ShipPart_Deck.glb` | `SN_ShipPart_Deck_Prototype` | 8.40 × 6.00 × 0.36 | **576** | 4 | 底面 z=0 / 甲板面 0.33；5 个 Socket_*（weapon socket ±2.30,1.10） |
+| `SN_ShipPart_Mast` | `assets/models/ship_parts/SN_ShipPart_Mast.glb` | `SN_ShipPart_Mast_Prototype` | 1.77 × 6.20 × 12.84 | **2764** | 6 | 甲板面 z=0；桅顶瞭望台 z=12.16；Top + Lookout + 双横桁 socket |
+| `SN_ShipPart_Funnel` | `assets/models/ship_parts/SN_ShipPart_Funnel.glb` | `SN_ShipPart_Funnel_Prototype` | 2.40 × 2.00 × 4.66 | **1528** | 4 | 甲板面 z=0；Exhaust + Stay_1..4 |
+| `SN_ShipPart_HatchCover` | `assets/models/ship_parts/SN_ShipPart_HatchCover.glb` | `SN_ShipPart_HatchCover_Prototype` | 2.72 × 2.00 × 0.49 | **840** | 6 | 甲板面 z=0；Lid_Pivot_Fwd/Aft |
+
+八件合计 **11,964 三角面**（预算 16,500），闭合壳体、四项网格健康全 0、UV 完整、共享贴图外部化。
+- 结构要点：火炮 = 12 边收分炮管 + 5 道加强箍 + 炮口箍 + 尾体/尾环/尾钮 + 双耳轴 + 准星；炮架 = 四轮炮车（辐条轮/铁轮箍/颊板/耳轴 U 型座/俯仰螺杆+手轮/侧挂炮刷）；炮塔 = 12 边铆接基座环 + 收分装甲体（12 条竖向板缝 + 3 道加固带）+ 炮口盾与炮管 + 顶部舱盖/潜望镜/通风帽；基座 = 八角安装板 + 收分柱 + 黄铜领圈 + 回转轴承；甲板 = 24 条铺板 + 四边压条 + 4 角黄铜护角 + 3 道横梁 + 6 个排水口；桅杆 = 下桅 + **桅顶瞭望台（平台/栏杆/登台长梯/黄铜望远镜）** + 上桅 + 顶桅 + 双横桁 + 支索眼板；烟囱 = 底座法兰 + 后倾收分烟囱 + 3 道铁箍 + 黄铜顶箍 + 防雨帽 + 蒸汽管/手轮 + 4 根拉索；货舱盖 = 围板 + 双开盖板 + 铁包条 + 铰链/搭扣 + 内部格栅。
+- 坐标：Blender `+X` 前向、`+Z` 向上；地面类根在底面中心，火炮根 = 耳轴轴心（局部 z −0.24…0.58），单独导入时轴心在地面以上。
+- 共享贴图：`assets/models/{weapons,ship_parts}/shared_materials/` + `dev_mods/core/.../shared_materials/`；`shared_materials.spec.json` 的 `runtime_dirs` 已加入 ship_parts 两处。
+- 源/工具：工单 `tools/modeling/briefs/sn_kit_batch1.json`；生成器 `kit_batch1_generator.py`；部件库 `weapon_kit.py`；材质视图 `sn_kit_materials.py`；干跑 `dryrun_kit_batch1.py`；导出 `export_kit_glb.py`；GLB 自检 `verify_kit_glb.py`；预览 `render_kit_preview.py`；目录导出 `gen_kit_catalog.py`。
+- 验收图：`docs/design/screenshots/kits/kit_weapon_lineup.png` / `kit_ship_parts_lineup.png` / `kit_assembly_gun.png` / `kit_assembly_deck.png` / `kit_assembly_deck_detail.png` 与 8 件 × {3/4, 侧视}。
+- 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH1_ACCEPTANCE.md](../archive/KIT_BATCH1_ACCEPTANCE.md)。
+
+## 模型素材库批次 2：机械 / 货物 / 码头（2026-10-21）
+
+P1 第二批 10 件：机械 3（齿轮组 / 卷扬机 / 动力装置）+ 货物 4（货箱 / 煤斗 / 储罐 / 托盘）+
+码头 3（码头结构 / 栈桥 / 系缆设施）。同样每件独立 GLB + Mount + 语义 socket + 根 extras；
+码头件根在水线，栈桥桩伸到 z=−1.30。完整目录与装配配方见 [KIT_ASSET_LIBRARY.md §9](KIT_ASSET_LIBRARY.md)。
+
+| 资产 | 运行时 GLB | 集合 | 尺寸 X×Y×Z (m) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Machinery_GearSet` | `assets/models/machinery/SN_Machinery_GearSet.glb` | `SN_Machinery_GearSet_Prototype` | 1.90 × 1.12 × 1.06 | **2020** | 5 | 地面 z=0；Shaft_In/Out + Crank |
+| `SN_Machinery_Winch` | `assets/models/machinery/SN_Machinery_Winch.glb` | `SN_Machinery_Winch_Prototype` | 2.24 × 1.82 × 1.42 | **1776** | 7 | 地面 z=0；Drum_Pivot + Rope_Out |
+| `SN_Machinery_PowerUnit` | `assets/models/machinery/SN_Machinery_PowerUnit.glb` | `SN_Machinery_PowerUnit_Prototype` | 3.78 × 1.44 × 2.11 | **2260** | 7 | 地面 z=0；Shaft_Out + Steam_In + Exhaust_Out |
+| `SN_Cargo_Crate` | `assets/models/cargo/SN_Cargo_Crate.glb` | `SN_Cargo_Crate_Prototype` | 1.26 × 1.19 × 1.04 | **672** | 8 | 地面 z=0；Stack_Top z=1.02 |
+| `SN_Cargo_CoalScuttle` | `assets/models/cargo/SN_Cargo_CoalScuttle.glb` | `SN_Cargo_CoalScuttle_Prototype` | 1.48 × 1.14 × 1.10 | **588** | 8 | 地面 z=0；Fill_Top；含 SN_Tex_Coal |
+| `SN_Cargo_Tank` | `assets/models/cargo/SN_Cargo_Tank.glb` | `SN_Cargo_Tank_Prototype` | 3.37 × 1.60 × 1.95 | **1820** | 5 | 地面 z=0；Fill_Top + Outlet + Vent |
+| `SN_Cargo_Pallet` | `assets/models/cargo/SN_Cargo_Pallet.glb` | `SN_Cargo_Pallet_Prototype` | 1.23 × 1.02 × 0.18 | **316** | 5 | 地面 z=0；Stack_Top z=0.18 |
+| `SN_Dock_Structure` | `assets/models/dock/SN_Dock_Structure.glb` | `SN_Dock_Structure_Prototype` | 8.40 × 4.46 × 3.16 | **1628** | 3 | 水线 z=0；Module_Next/Prev + Mooring + Jetty socket |
+| `SN_Dock_Jetty` | `assets/models/dock/SN_Dock_Jetty.glb` | `SN_Dock_Jetty_Prototype` | 8.03 × 2.66 × 2.80 | **1660** | 5 | 水线 z=0；桥面 1.30；桩到 −1.30；Module sockets |
+| `SN_Dock_Mooring` | `assets/models/dock/SN_Dock_Mooring.glb` | `SN_Dock_Mooring_Prototype` | 1.56 × 1.15 × 0.95 | **940** | 5 | 甲板面 z=0；Bitt/Ring/Rope_Tie |
+
+批次 2 合计 **13,680 三角面**（预算 20,600）；两批合计 **25,644 / 37,100**。
+- 新增共享贴图 `SN_Tex_Coal`（512² 无缝碎煤），spec / 生成器 / runtime_dirs 已同步；`shared_materials` 现为 11 张。
+- 结构要点：齿轮组 = 开式机架 + 三级齿轮（24/14/12 齿）+ 三轴 + 轴承 + 手摇曲柄；卷扬机 = 木铁底座 + A 形机架 + 缠绳绳鼓 + 棘轮/棘爪 + 刹车带 + 曲柄 + 吊钩；动力装置 = 滑橇 + 卧式汽缸 + 活塞/十字头/连杆 + 飞轮 + 阀箱/手轮 + 蒸汽管/排气管 + 压力表 + 调速器；货箱 = 板条箱体 + 铁包角/铁带 + 黄铜铭牌 + 提手；煤斗 = 收分铁斗 + 碎煤堆 + 双轮 + 支腿 + 拉手 + 出料滑槽；储罐 = 卧式铆接罐 + 双鞍座 + 3 道红箍 + 人孔 + 黄铜阀 + 排气管；托盘 = 7 板条 / 3 纵梁 / 3 垫块 / 铁包角；码头结构 = 石砌岸壁 + 顶面铺石 + 木压顶 + 4 护舷 + 系缆环 + 爬梯；栈桥 = 8 桩 + 纵梁/横梁/斜撑 + 21 铺板 + 端部爬梯；系缆设施 = 双柱缆桩 + 横档 + 系缆环 + 链条 + 绳圈 + 木护舷。
+- 源/工具：工单 `tools/modeling/briefs/sn_kit_batch2.json`；生成器 `kit_batch2_generator.py`；材质视图 `sn_kit_materials.py`；干跑 `dryrun_kit_batch2.py`；导出 `export_kit_batch2_glb.py`；GLB 自检 `verify_kit_batch2_glb.py`；预览 `render_kit_batch2_preview.py`；目录 `gen_kit_catalog.py`（合并两批）。
+- 验收图：`docs/design/screenshots/kits/kit_machinery_lineup.png` / `kit_cargo_lineup.png` / `kit_dock_lineup.png` / `kit_assembly_dock.png` / `kit_assembly_dock_detail.png` 与 10 件 × {3/4, 侧视}。
+- 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH2_ACCEPTANCE.md](../archive/KIT_BATCH2_ACCEPTANCE.md)。
+
+## 模型素材库批次 3：建筑 / 环境（2026-10-21）
+
+P2 第三批 8 件：建筑 4（仓库 / 工坊 / 酒馆 / 厂房）+ 环境 4（礁石 / 残骸 / 灯塔 / 航标浮标）。
+建筑按 4 m 网格拼装（`Module_Next/Prev` 沿 X 平铺），环境件根在水线；同样每件独立 GLB +
+Mount + 语义 socket + 根 extras（建筑另写 `module_x/y`，环境件另写 `waterline`）。
+完整目录与装配配方见 [KIT_ASSET_LIBRARY.md §10](KIT_ASSET_LIBRARY.md)。
+
+| 资产 | 运行时 GLB | 集合 | 尺寸 X×Y×Z (m) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Arch_Warehouse` | `assets/models/architecture/SN_Arch_Warehouse.glb` | `SN_Arch_Warehouse_Prototype` | 10.95 × 6.95 × 6.35 | **2704** | 8 | 地面 z=0；Module ±4 + Door/Hoist/Sign |
+| `SN_Arch_Workshop` | `assets/models/architecture/SN_Arch_Workshop.glb` | `SN_Arch_Workshop_Prototype` | 9.32 × 6.63 × 7.04 | **1996** | 9 | 地面 z=0；Drive_Shaft(−1,−3.08,1.45) 接动力装置 |
+| `SN_Arch_Tavern` | `assets/models/architecture/SN_Arch_Tavern.glb` | `SN_Arch_Tavern_Prototype` | 8.67 × 6.96 × 7.64 | **2884** | 9 | 地面 z=0；门廊 + 阳台 + 悬挑招牌 |
+| `SN_Arch_Factory` | `assets/models/architecture/SN_Arch_Factory.glb` | `SN_Arch_Factory_Prototype` | 14.74 × 8.30 × 9.64 | **3020** | 8 | 地面 z=0；锯齿顶 + 双烟囱 + Gantry |
+| `SN_Env_Reef` | `assets/models/environment/SN_Env_Reef.glb` | `SN_Env_Reef_Prototype` | 7.13 × 6.44 × 5.52 | **1944** | 3 | 水线 z=0；Top 落座灯塔（4.6 m 石砌基台） |
+| `SN_Env_Wreck` | `assets/models/environment/SN_Env_Wreck.glb` | `SN_Env_Wreck_Prototype` | 8.62 × 3.96 × 4.72 | **1046** | 7 | 水线 z=0；船底 −1.50；横倾 13°；断桅穿龙骨 |
+| `SN_Env_Lighthouse` | `assets/models/environment/SN_Env_Lighthouse.glb` | `SN_Env_Lighthouse_Prototype` | 4.62 × 4.60 × 13.16 | **1952** | 7 | 基座 z=0；环廊 / 灯室 / 穹顶 |
+| `SN_Env_Buoy` | `assets/models/environment/SN_Env_Buoy.glb` | `SN_Env_Buoy_Prototype` | 1.88 × 1.88 × 3.84 | **868** | 5 | 水线 z=0；吃水裙 −0.74；Lamp/Bell/Chain |
+
+批次 3 合计 **16,414 三角面**（预算 23,200）；三批合计 **42,058 / 60,300**。
+- 结构要点：仓库 = 石基座 + 铁包木墙 + 双坡铁皮顶 + 滑门/雨棚/吊货梁；工坊 = 采光顶（monitor roof）+ 高烟囱 + 双开大门 + 外墙飞轮与皮带；酒馆 = 石首层 + 悬挑木二层 + 门廊/阳台/悬挑招牌/凸窗；厂房 = 4 跨锯齿采光顶 + 双烟囱 + 双滑门 + 外置吊车梁与装卸平台；礁石 = 宽平礁顶 + 石砌灯塔基台 + 水线上下礁石 + 潮痕面 + 倾斜礁板 + 系缆环；残骸 = 横倾断裂船壳 + 外露肋骨 + 断桅（穿甲板落龙骨）+ 压舱石；灯塔 = 八边形基座 + 收分石塔 + 环廊 + 灯室 + 穹顶 + 避雷针；浮标 = 浮筒 + 吃水裙 + 灯架 + 黄铜钟 + 锚链。
+- 源/工具：工单 `tools/modeling/briefs/sn_kit_batch3.json`；生成器 `kit_batch3_generator.py`；材质视图 `sn_kit_materials.py`；干跑 `dryrun_kit_batch3.py`；导出 `export_kit_batch3_glb.py`；GLB 自检 `verify_kit_batch3_glb.py`；预览 `render_kit_batch3_preview.py`；目录 `gen_kit_catalog.py`（合并三批）。
+- 验收图：`docs/design/screenshots/kits/kit_architecture_lineup.png` / `kit_environment_lineup.png` / `kit_assembly_town.png` / `kit_assembly_town_detail.png` / `kit_assembly_coast.png` / `kit_assembly_coast_detail.png` 与 8 件 × {3/4, 侧视}。
+- 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH3_ACCEPTANCE.md](../archive/KIT_BATCH3_ACCEPTANCE.md)。
+- 共享贴图：`assets/models/{architecture,environment}/shared_materials/` + `dev_mods/core/.../shared_materials/`；`shared_materials.spec.json` 的 `runtime_dirs` 已扩到 16 个目录（11 张贴图、本批无新增）。
 
 ## Core 实体资源映射
 

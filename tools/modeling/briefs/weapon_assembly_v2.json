@@ -1,0 +1,80 @@
+{
+  "id": "weapon_assembly_v2",
+  "title": "舰载武器装配规范 v2（可拼接武器系统）",
+  "version": 2,
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-22 指定：优先实现可拼接武器系统；统一节点 SN_Socket_Weapon / SN_Pivot_Yaw / SN_Pivot_Pitch / SN_Muzzle / SN_Recoil；并非所有武器都必须使用全部节点（固定舷侧炮可无 Yaw，自由旋转甲板炮同时有 Yaw 和 Pitch）。",
+  "contract": "docs/design/WEAPON_SOCKET_CONTRACT.md",
+  "nodes": {
+    "hull_socket": "SN_Socket_Weapon",
+    "mount": "SN_Mount",
+    "yaw": "SN_Pivot_Yaw",
+    "pitch": "SN_Pivot_Pitch",
+    "recoil": "SN_Recoil",
+    "muzzle": "SN_Muzzle",
+    "anchors": "SN_Anchor_1..4"
+  },
+  "axes": {
+    "forward": "+X",
+    "up": "+Z",
+    "yaw": "Z",
+    "pitch": "Y",
+    "recoil": "-X"
+  },
+  "profiles": {
+    "fixed": ["SN_Mount"],
+    "pitch_only": ["SN_Mount", "SN_Pivot_Pitch", "SN_Recoil", "SN_Muzzle"],
+    "yaw_pitch": ["SN_Mount", "SN_Pivot_Yaw", "SN_Pivot_Pitch", "SN_Recoil", "SN_Muzzle"],
+    "yaw_pitch_multi": ["SN_Mount", "SN_Pivot_Yaw", "SN_Pivot_Pitch_1..N", "SN_Recoil_1..N", "SN_Muzzle_1..N"],
+    "yaw_only": ["SN_Mount", "SN_Pivot_Yaw"],
+    "base_only": ["SN_Mount", "SN_Pivot_Yaw"]
+  },
+  "assets": [
+    {"asset": "SN_Weapon_DeckGun", "profile": "yaw_pitch", "weapon_class": "Light"},
+    {"asset": "SN_Weapon_HeavyCannon", "profile": "yaw_pitch", "weapon_class": "Heavy"},
+    {"asset": "SN_Weapon_Mortar", "profile": "yaw_pitch", "weapon_class": "Heavy"},
+    {"asset": "SN_Weapon_Repeater", "profile": "yaw_pitch_multi", "weapon_class": "Medium", "muzzle_count": 6},
+    {"asset": "SN_Weapon_Broadside", "profile": "pitch_only", "weapon_class": "Side", "multi": 4},
+    {"asset": "SN_Weapon_Ballista", "profile": "yaw_pitch", "weapon_class": "Heavy", "anchors": 4},
+    {"asset": "SN_Weapon_ArrowTower", "profile": "fixed", "weapon_class": "Tower", "anchors": 4},
+    {"asset": "SN_Weapon_HarpoonLauncher", "profile": "yaw_pitch", "weapon_class": "Medium", "anchors": 4},
+    {"asset": "SN_Weapon_Cannon", "profile": "pitch_only", "weapon_class": "ModularBody"},
+    {"asset": "SN_Weapon_GunCarriage", "profile": "base_only", "weapon_class": "ModularBase"},
+    {"asset": "SN_Weapon_Turret", "profile": "yaw_pitch", "weapon_class": "ModularTurret", "anchors": 4},
+    {"asset": "SN_Weapon_Pedestal", "profile": "base_only", "weapon_class": "ModularMount", "anchors": 4}
+  ],
+  "extras_required": [
+    "assembly_spec",
+    "weapon_class",
+    "assembly_profile",
+    "socket",
+    "mount",
+    "pivot_yaw",
+    "pivot_pitch",
+    "recoil",
+    "muzzle",
+    "has_yaw",
+    "has_pitch",
+    "has_recoil",
+    "has_muzzle",
+    "yaw_axis",
+    "pitch_axis",
+    "recoil_axis",
+    "muzzle_count",
+    "base_footprint_x",
+    "base_footprint_y",
+    "envelope_x",
+    "envelope_y",
+    "height",
+    "swept_radius"
+  ],
+  "migration": [
+    "sn_weapon_batch1_generator.py / sn_weapon_batch2_generator.py：_pivot_specs 改名标准节点，新增 Muzzle/Recoil，炮身网格父级 PITCH→RECOIL，extras 升 v2",
+    "kit_batch1_generator.py：Cannon/GunCarriage/Turret/Pedestal 标准节点化；Deck socket 改 SN_Socket_Weapon_Port/Starboard",
+    "dryrun_weapon_batch1/2、dryrun_kit_batch1、verify_*_glb.py、kit_catalog.json 期望值同步",
+    "Blender 幂等重建 13 件并重导 GLB（weapons + kit），同步 Core",
+    "文档 WEAPON_SOCKET_CONTRACT.md / ASSET_MAP.md / KIT_ASSET_LIBRARY.md / 验收记录",
+    "独立 Verifier 只读复核节点、可选性、extras 与甲板 socket 装配"
+  ],
+  "notes": "现有资产尚未登记 Core manifest、未接运行时装配，故采用干净改名，不保留旧前缀 Pivot 别名。"
+}

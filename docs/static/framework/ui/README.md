@@ -32,11 +32,15 @@
 | `components/sn_sparkline.gd` | 市场价格历史迷你折线；只有两个以上真实样本才绘制。 | [查看](./components/sn_sparkline.gd.md) |
 | `components/sn_sparkline.tscn` | 框架源文件：sn_sparkline.tscn | 本页 |
 | `components/sn_stage_host.gd` | 通用 3D 舞台宿主（SubViewportContainer）：持有独占 SubViewport/World3D，加载并挂载一个 `LocationStage`，驱动 enter→bind 生命周期、舞台显隐与渲染停更，并转发 `portal_requested` / `fallback_requested`；同时是船厂 `SNShipView` 的渲染器后端。 | [查看](./components/sn_stage_host.gd.md) |
+| `components/sn_story_card.gd` | 新手剧情 / 教学系统的全屏剧情卡（阶段 4.5）。深色遮罩 + 居中剧情面板： | [查看](./components/sn_story_card.gd.md) |
+| `components/sn_story_objective.gd` | 新手剧情 / 教学系统的非阻塞目标条（阶段 4.5）：顶部居中的小面板，显示 | [查看](./components/sn_story_objective.gd.md) |
 | `components/sn_supply_card.gd` | 单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。 | [查看](./components/sn_supply_card.gd.md) |
 | `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
 | `components/sn_voyage_confirm.gd` | 海图内的出航确认弹窗（阶段 4.3.4 / U7）。以半透明遮罩 + 居中面板覆盖海图， | [查看](./components/sn_voyage_confirm.gd.md) |
 | `screens/flow/at_sea_screen.gd` | 航行演出页（海图系统阶段 3）：整幅海图 + 底部航程条。船只 icon 沿 | [查看](./screens/flow/at_sea_screen.gd.md) |
 | `screens/flow/at_sea_screen.tscn` | 框架源文件：at_sea_screen.tscn | 本页 |
+| `screens/flow/clue_log_screen.gd` | 线索列表页（阶段 4.4.4）。只读展示 `clue.list` 查询的输出：全部 active 线索 | [查看](./screens/flow/clue_log_screen.gd.md) |
+| `screens/flow/clue_log_screen.tscn` | 框架源文件：clue_log_screen.tscn | 本页 |
 | `screens/flow/event_screen.gd` | 航行事件流程场景：展示事件说明、当前资源和本次抽取的处理选项。 | [查看](./screens/flow/event_screen.gd.md) |
 | `screens/flow/event_screen.tscn` | 框架源文件：event_screen.tscn | 本页 |
 | `screens/flow/port_memory_screen.gd` | 港口记忆流程场景：只读展示上次到港时的市场和设施快照。 | [查看](./screens/flow/port_memory_screen.gd.md) |

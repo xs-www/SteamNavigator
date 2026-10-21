@@ -1,0 +1,521 @@
+{
+  "id": "sn_kit_batch2",
+  "title": "模型素材库批次 2（P1）：machinery_kit + cargo_kit + dock_kit",
+  "purpose": "在批次 1（武器套件 + 船体部件）之后继续补 P1 模块：机械（齿轮组/卷扬机/动力装置）、货物（货箱/煤斗/储罐/托盘）、码头（码头结构/栈桥/系缆设施）。10 件资产沿用同一套 Mount + 语义 socket + 根 extras 契约，可独立摆放或互相拼装，供后续搭港口、船舱与场景使用。",
+  "category": "kit",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-21 指定 P1 三组：machinery_kit 齿轮、卷扬机、动力装置；cargo_kit 货箱、煤斗、储罐、托盘；dock_kit 码头结构、栈桥、系缆设施。要求作为后续搭建的模型素材库。",
+  "style": {
+    "look": "与批次 1 同一套低模语言：铸铁/铁板 + 木材 + 黄铜机械件 + 深色玻璃；轮廓优先；共享贴图 SN_Tex_*，禁止纯色材质。码头件用石材；煤斗新增 SN_Tex_Coal 碎煤贴图。",
+    "palette": [
+      "SN_Tex_Iron",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Brass",
+      "SN_Tex_Glass_Dark",
+      "SN_Tex_Canvas_Shade",
+      "SN_Tex_Stone",
+      "SN_Tex_Coal"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*",
+      "SN_ShipPart_*",
+      "SN_PF_Root",
+      "SN_SF_Root",
+      "SN_Ironclad"
+    ],
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV",
+    "conventions": "几何由生成器参数表驱动；闭合件边界边/非流形边/退化面必须为 0；Mount/Socket 为空节点，不参与几何。",
+    "datums": "machinery/cargo 与 dock 系缆设施：根在底面/安装面中心，zmin=0；码头结构与栈桥：根在水线 z=0（栈桥桩可伸到水下，zmin=-1.30），+Y 朝水域。",
+    "material_rule": "新资产必须使用共享贴图材质 SN_Tex_*；煤斗/煤堆使用新增的 SN_Tex_Coal（512² 无缝碎煤贴图）。"
+  },
+  "kit_contract": {
+    "families": {
+      "machinery_kit": "机械可拼装件：齿轮组（动力分配）、卷扬机（拉索/起重）、动力装置（蒸汽机 + 飞轮输出）。",
+      "cargo_kit": "货物可拼装件：货箱（可堆叠）、煤斗（燃料转运）、储罐（液体/气体储存）、托盘（堆码底座）。",
+      "dock_kit": "码头可拼装件：码头结构（8.4×4.2 m 岸壁模块）、栈桥（8×2.6 m 木栈桥模块）、系缆设施（双柱缆桩 + 系缆环 + 绳圈）。"
+    },
+    "mount_frame": "每件资产根下提供 SN_<Asset>_Mount（+X 前向、Z 向上）。装配只对齐 Root/Mount。",
+    "machinery_chain": "动力装置 Shaft_Out（飞轮轴，+Y 轴向）→ 齿轮组 Shaft_In → 齿轮组 Shaft_Out / Crank；卷扬机 Drum_Pivot 接绳索，Rope_Out 为出绳点。",
+    "dock_chain": "码头结构 Module_Next/Prev 沿 X 平铺；Socket_Mooring_1/2 接收系缆设施；Socket_Jetty 接收栈桥；栈桥 Module_Next/Prev 继续沿 X 平铺。",
+    "console": "Root extras 写 kit_family / part_role / datum / mount_frame / base_footprint_x/y / envelope_x/y / height / tri_budget / bbox_target；模块化件另写 module_x/module_y。",
+    "catalog": "docs/design/KIT_ASSET_LIBRARY.md 增加批次 2 目录与装配配方；GLB 根节点 extras 保留机器可读字段。"
+  },
+  "items": [
+    {
+      "id": "sn_machinery_gearset_v1",
+      "asset": "SN_Machinery_GearSet",
+      "role": "齿轮组：铸铁底座 + 双侧机架 + 3 级齿轮（24/14/12 齿）+ 三根轴 + 轴承座 + 手摇曲柄",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Machinery_GearSet_Prototype",
+      "root": "SN_Machinery_GearSet_Root",
+      "prefix": "SN_Machinery_GearSet_",
+      "workbench_pos": [
+        0.0,
+        560.0,
+        0.0
+      ],
+      "family": "machinery_kit",
+      "part_role": "gear_set",
+      "sockets": [
+        "Mount",
+        "Shaft_In",
+        "Shaft_Out",
+        "Crank"
+      ],
+      "dimensions": {
+        "length": 1.9,
+        "width": 1.12,
+        "height": 1.06,
+        "tolerance": 0.1
+      },
+      "tri_budget": 2400,
+      "required_parts": [
+        "BasePlate",
+        "Frames",
+        "Gears",
+        "Shafts",
+        "Crank"
+      ],
+      "acceptance": [
+        "tri <= 2400",
+        "包围盒 1.90 x 1.12 x 1.06（±0.10）",
+        "zmin = 0",
+        "3 级齿轮啮合、轴穿过机架",
+        "Mount 在原点",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_machinery_winch_v1",
+      "asset": "SN_Machinery_Winch",
+      "role": "卷扬机：木铁底座 + 双侧机架 + 绳鼓（含缠绳）+ 棘轮/棘爪 + 刹车带 + 手摇曲柄 + 吊钩",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Machinery_Winch_Prototype",
+      "root": "SN_Machinery_Winch_Root",
+      "prefix": "SN_Machinery_Winch_",
+      "workbench_pos": [
+        3.0,
+        560.0,
+        0.0
+      ],
+      "family": "machinery_kit",
+      "part_role": "winch",
+      "sockets": [
+        "Mount",
+        "Drum_Pivot",
+        "Rope_Out",
+        "Brake"
+      ],
+      "dimensions": {
+        "length": 2.24,
+        "width": 1.82,
+        "height": 1.42,
+        "tolerance": 0.12
+      },
+      "tri_budget": 2600,
+      "required_parts": [
+        "Base",
+        "Frames",
+        "Drum",
+        "Ratchet",
+        "Crank"
+      ],
+      "acceptance": [
+        "tri <= 2600",
+        "包围盒 2.24 x 1.82 x 1.42（±0.12）",
+        "zmin = 0",
+        "Drum_Pivot 在鼓轴（0,0,0.95）、Rope_Out 在出绳点",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_machinery_powerunit_v1",
+      "asset": "SN_Machinery_PowerUnit",
+      "role": "动力装置：滑橇底座 + 卧式蒸汽机缸 + 活塞杆/十字头/连杆 + 飞轮 + 阀箱/手轮 + 蒸汽管/排气管 + 压力表 + 调速器",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Machinery_PowerUnit_Prototype",
+      "root": "SN_Machinery_PowerUnit_Root",
+      "prefix": "SN_Machinery_PowerUnit_",
+      "workbench_pos": [
+        8.5,
+        560.0,
+        0.0
+      ],
+      "family": "machinery_kit",
+      "part_role": "power_unit",
+      "sockets": [
+        "Mount",
+        "Shaft_Out",
+        "Steam_In",
+        "Exhaust_Out",
+        "Coupling"
+      ],
+      "dimensions": {
+        "length": 3.78,
+        "width": 1.44,
+        "height": 2.11,
+        "tolerance": 0.12
+      },
+      "tri_budget": 3600,
+      "required_parts": [
+        "Skid",
+        "Cylinder",
+        "Flywheel",
+        "ValveGear",
+        "Pipes"
+      ],
+      "acceptance": [
+        "tri <= 3600",
+        "包围盒 3.78 x 1.44 x 2.11（±0.12）",
+        "zmin = 0",
+        "Shaft_Out 在飞轮轴、飞轮中心 (1.25,0,0.95)",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_cargo_crate_v1",
+      "asset": "SN_Cargo_Crate",
+      "role": "货箱：板条木箱 + 铁包角/铁带 + 黄铜铭牌 + 提手",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Cargo_Crate_Prototype",
+      "root": "SN_Cargo_Crate_Root",
+      "prefix": "SN_Cargo_Crate_",
+      "workbench_pos": [
+        0.0,
+        580.0,
+        0.0
+      ],
+      "family": "cargo_kit",
+      "part_role": "crate",
+      "sockets": [
+        "Mount",
+        "Stack_Top",
+        "Lift_L",
+        "Lift_R"
+      ],
+      "dimensions": {
+        "length": 1.26,
+        "width": 1.19,
+        "height": 1.04,
+        "tolerance": 0.06
+      },
+      "tri_budget": 1000,
+      "required_parts": [
+        "Body",
+        "Lid",
+        "Corners",
+        "Handles"
+      ],
+      "acceptance": [
+        "tri <= 1000",
+        "包围盒 1.26 x 1.19 x 1.04（±0.06）",
+        "zmin = 0",
+        "Stack_Top 在箱顶 (0,0,1.035)",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_cargo_coalscuttle_v1",
+      "asset": "SN_Cargo_CoalScuttle",
+      "role": "煤斗：铁质收分煤斗 + 顶部碎煤堆 + 双轮 + 前支腿 + 拉手 + 出料口",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Cargo_CoalScuttle_Prototype",
+      "root": "SN_Cargo_CoalScuttle_Root",
+      "prefix": "SN_Cargo_CoalScuttle_",
+      "workbench_pos": [
+        2.0,
+        580.0,
+        0.0
+      ],
+      "family": "cargo_kit",
+      "part_role": "coal_scuttle",
+      "sockets": [
+        "Mount",
+        "Fill_Top",
+        "Chute"
+      ],
+      "dimensions": {
+        "length": 1.48,
+        "width": 1.14,
+        "height": 1.1,
+        "tolerance": 0.08
+      },
+      "tri_budget": 1500,
+      "required_parts": [
+        "Bin",
+        "Coal",
+        "Wheels",
+        "Handle",
+        "Chute"
+      ],
+      "acceptance": [
+        "tri <= 1500",
+        "包围盒 1.48 x 1.14 x 1.10（±0.08）",
+        "zmin = 0",
+        "Fill_Top 在煤斗上口 (0,0,0.95)",
+        "SN_Tex_Coal 用于煤堆",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_cargo_tank_v1",
+      "asset": "SN_Cargo_Tank",
+      "role": "储罐：卧式铆接储罐 + 双鞍座 + 3 道加强箍 + 人孔/舱盖 + 黄铜阀门 + 排气管 + 压力表",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Cargo_Tank_Prototype",
+      "root": "SN_Cargo_Tank_Root",
+      "prefix": "SN_Cargo_Tank_",
+      "workbench_pos": [
+        5.0,
+        580.0,
+        0.0
+      ],
+      "family": "cargo_kit",
+      "part_role": "tank",
+      "sockets": [
+        "Mount",
+        "Fill_Top",
+        "Outlet",
+        "Vent"
+      ],
+      "dimensions": {
+        "length": 3.37,
+        "width": 1.6,
+        "height": 1.95,
+        "tolerance": 0.12
+      },
+      "tri_budget": 2600,
+      "required_parts": [
+        "Tank",
+        "Saddles",
+        "Bands",
+        "Manhole",
+        "Valve"
+      ],
+      "acceptance": [
+        "tri <= 2600",
+        "包围盒 3.37 x 1.60 x 1.95（±0.12）",
+        "zmin = 0",
+        "Fill_Top 在人孔上方、Outlet 在 +X 端",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_cargo_pallet_v1",
+      "asset": "SN_Cargo_Pallet",
+      "role": "托盘：3 根纵梁 + 3 个垫块 + 7 条面板 + 铁包角",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Cargo_Pallet_Prototype",
+      "root": "SN_Cargo_Pallet_Root",
+      "prefix": "SN_Cargo_Pallet_",
+      "workbench_pos": [
+        7.0,
+        580.0,
+        0.0
+      ],
+      "family": "cargo_kit",
+      "part_role": "pallet",
+      "sockets": [
+        "Mount",
+        "Stack_Top"
+      ],
+      "dimensions": {
+        "length": 1.23,
+        "width": 1.02,
+        "height": 0.18,
+        "tolerance": 0.04
+      },
+      "tri_budget": 600,
+      "required_parts": [
+        "Bearers",
+        "Blocks",
+        "Deck",
+        "Straps"
+      ],
+      "acceptance": [
+        "tri <= 600",
+        "包围盒 1.23 x 1.02 x 0.18（±0.04）",
+        "zmin = 0",
+        "Stack_Top 在台面 (0,0,0.18)",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_dock_structure_v1",
+      "asset": "SN_Dock_Structure",
+      "role": "码头结构：8.4×4.2 m 岸壁模块（石砌墙面 + 顶面铺石 + 木压顶 + 木护舷 + 系缆环 + 爬梯）",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Dock_Structure_Prototype",
+      "root": "SN_Dock_Structure_Root",
+      "prefix": "SN_Dock_Structure_",
+      "workbench_pos": [
+        -6.0,
+        600.0,
+        0.0
+      ],
+      "family": "dock_kit",
+      "part_role": "dock_structure",
+      "sockets": [
+        "Mount",
+        "Module_Next",
+        "Module_Prev",
+        "Socket_Mooring_1",
+        "Socket_Mooring_2",
+        "Socket_Jetty"
+      ],
+      "dimensions": {
+        "length": 8.4,
+        "width": 4.47,
+        "height": 3.16,
+        "tolerance": 0.12
+      },
+      "tri_budget": 3200,
+      "required_parts": [
+        "QuayCore",
+        "StoneFace",
+        "Paving",
+        "TimberCap",
+        "Fenders",
+        "Ladder"
+      ],
+      "acceptance": [
+        "tri <= 3200",
+        "包围盒 8.40 x 4.47 x 3.16（±0.12）",
+        "根 = 水线 z=0、顶面 z=3.02",
+        "Module_Next/Prev 在 (±4.2,0,3.02)",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_dock_jetty_v1",
+      "asset": "SN_Dock_Jetty",
+      "role": "栈桥：8×2.6 m 木栈桥模块（木铺板 + 纵梁 + 8 根桩 + 横梁/斜撑 + 系缆板 + 爬梯）",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Dock_Jetty_Prototype",
+      "root": "SN_Dock_Jetty_Root",
+      "prefix": "SN_Dock_Jetty_",
+      "workbench_pos": [
+        2.0,
+        600.0,
+        0.0
+      ],
+      "family": "dock_kit",
+      "part_role": "jetty",
+      "sockets": [
+        "Mount",
+        "Module_Next",
+        "Module_Prev",
+        "Socket_Mooring",
+        "Ladder"
+      ],
+      "dimensions": {
+        "length": 8.03,
+        "width": 2.66,
+        "height": 2.8,
+        "tolerance": 0.12
+      },
+      "tri_budget": 3000,
+      "required_parts": [
+        "Deck",
+        "Stringers",
+        "Piles",
+        "Braces",
+        "Ladder"
+      ],
+      "acceptance": [
+        "tri <= 3000",
+        "包围盒 8.03 x 2.66 x 2.80（±0.12）",
+        "根 = 水线 z=0、桥面 z=1.30、桩到 z=-1.30",
+        "Module_Next/Prev 在 (±4.0,0,1.30)",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_dock_mooring_v1",
+      "asset": "SN_Dock_Mooring",
+      "role": "系缆设施：双柱缆桩 + 横档 + 系缆环 + 链条 + 绳圈 + 木护舷",
+      "generator": "tools/modeling/generators/kit_batch2_generator.py",
+      "collection": "SN_Dock_Mooring_Prototype",
+      "root": "SN_Dock_Mooring_Root",
+      "prefix": "SN_Dock_Mooring_",
+      "workbench_pos": [
+        9.0,
+        600.0,
+        0.0
+      ],
+      "family": "dock_kit",
+      "part_role": "mooring",
+      "sockets": [
+        "Mount",
+        "Bitt_Port",
+        "Bitt_Starboard",
+        "Ring",
+        "Rope_Tie"
+      ],
+      "dimensions": {
+        "length": 1.56,
+        "width": 1.15,
+        "height": 0.95,
+        "tolerance": 0.08
+      },
+      "tri_budget": 1400,
+      "required_parts": [
+        "Base",
+        "Bitts",
+        "Crossbar",
+        "Ring",
+        "Chain",
+        "RopeCoil"
+      ],
+      "acceptance": [
+        "tri <= 1400",
+        "包围盒 1.56 x 1.15 x 0.95（±0.08）",
+        "zmin = 0、Bitt_Port/Starboard 对称",
+        "Mount 在原点",
+        "网格健康四项全 0"
+      ]
+    }
+  ],
+  "dryrun": "python tools/modeling/generators/dryrun_kit_batch2.py",
+  "export": "python tools/modeling/generators/export_kit_batch2_glb.py（Lead 在人工验收后执行）",
+  "deliverables": {
+    "glb": "assets/models/{machinery,cargo,dock}/SN_{Machinery,Cargo,Dock}_*.glb",
+    "runtime_copy": "dev_mods/core/assets/models/{machinery,cargo,dock}/",
+    "preview": ".design/kits/preview/ + docs/design/screenshots/kits/",
+    "catalog": "docs/design/KIT_ASSET_LIBRARY.md + tools/modeling/kit_catalog.json"
+  },
+  "notes": "本批不登记 manifest、不接游戏逻辑；码头件根在水线，栈桥桩在水下（zmin=-1.30），装配时把 Root 放到水面高度。",
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "uv": {
+    "projection": "world-space box projection",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json"
+  }
+}

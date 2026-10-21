@@ -8,19 +8,18 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MAIN_SCENE` | L55 |
-| `OUT_DIR` | L56 |
-| `WINDOW` | L57 |
-| `SEED` | L58 |
-| `STEADY_BUILD` | L59 |
-| `STRATEGY_ID` | L60 |
-| `WATCHDOG_SECONDS` | L61 |
-| `TMP_PREFIX` | L62 |
-| `DRIVE_STEP` | L64 |
-| `MAX_DRIVE_SECONDS` | L65 |
-| `MAX_CLUE_ATTEMPTS` | L66 |
-| `WANTED_LEVELS` | L68 |
-| `INVESTIGATE_COUNT` | L71 |
+| `MAIN_SCENE` | L58 |
+| `OUT_DIR` | L59 |
+| `WINDOW` | L60 |
+| `SEED` | L61 |
+| `STEADY_BUILD` | L62 |
+| `STRATEGY_ID` | L63 |
+| `WATCHDOG_SECONDS` | L64 |
+| `TMP_PREFIX` | L65 |
+| `DRIVE_STEP` | L67 |
+| `MAX_DRIVE_SECONDS` | L68 |
+| `MAX_CLUE_ATTEMPTS` | L69 |
+| `WANTED_LEVELS` | L71 |
 | `SEA_CHART_SCREEN_SCRIPT` | L73 |
 | `SETTLEMENT_SCREEN_SCRIPT` | L74 |
 | `EVENT_SCREEN_SCRIPT` | L75 |
@@ -73,6 +72,9 @@
   仍 active、`summary.explore.result == "turned_back"`、命令日志里没有
   `not_exploring` 也没有第二次 `explore.settle`；继续路径会正常 `explore.settle`
   并保留 `alert_decided == "continue"`，重复回答返回 `alert_already_decided`。
+- 4.4.3：`clue.investigate` 有 Core 成功率（0.75）与成本，所以逐级升级改为
+  「重试直到目标等级」的循环（每次失败照扣 20 金 / 6h，但不升级）；升级次数以
+  `[EVIDENCE] ... attempts` 记录。
 - 先写 `res://tmp_exploration_*`，全部 8 张成功后才移入 `docs/`，失败不留半套。
 - 纯色/近纯色画面视为"读到未绘制纹理"，判失败；写完 PNG 会读回再验一次。
 - 120 s 看门狗兜底：脚本错误会让协程中断而不退出，避免窗口挂住。

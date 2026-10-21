@@ -1,6 +1,6 @@
 # `framework/tests/cases/test_exploration.gd`
 
-> 作用：探索系统（阶段 4.1）领域层无头测试：线索生成 / 固定 1 级 / 逐级调查
+> 作用：探索系统（阶段 4.1–4.4）领域层无头测试：线索生成 / 固定 1 级 / 逐级调查
 
 - 类型：GDScript 源文件
 
@@ -8,46 +8,57 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `SEED` | L25 |
-| `STRATEGY_ID` | L26 |
-| `test_acquire_always_starts_at_level_one_and_credibility_stays_in_source_ranges() -> void` | L35 |
-| `test_acquire_returns_empty_when_no_undiscovered_target() -> void` | L59 |
-| `test_acquire_search_zone_and_distance_range_follow_credibility() -> void` | L73 |
-| `test_clue_view_clips_secrets_by_level() -> void` | L101 |
-| `test_investigate_climbs_to_level_four_without_rerolling_the_target() -> void` | L141 |
-| `test_investigate_requires_a_run_a_port_and_an_active_clue() -> void` | L261 |
-| `test_chart_view_exposes_investigation_action_fields() -> void` | L313 |
-| `test_chart_view_blocks_investigation_at_sea() -> void` | L357 |
-| `test_chance_roll_boundaries_are_deterministic() -> void` | L378 |
-| `test_on_arrival_rumour_is_reproducible() -> void` | L397 |
-| `test_buy_requires_intel_facility() -> void` | L426 |
-| `test_buy_requires_money() -> void` | L436 |
-| `test_buy_charges_gold_and_adds_intel_clue() -> void` | L447 |
-| `test_buy_is_blocked_by_the_active_clue_cap() -> void` | L477 |
-| `test_explore_start_charges_only_wages_and_marks_at_sea() -> void` | L502 |
-| `test_explore_start_infeasible_does_not_charge() -> void` | L577 |
-| `test_explore_start_twice_fails_with_already_exploring() -> void` | L598 |
-| `test_explore_settle_success_discovers_target() -> void` | L614 |
-| `test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void` | L673 |
-| `test_failed_clue_can_be_sailed_again() -> void` | L746 |
-| `test_explore_settle_without_a_voyage_fails() -> void` | L780 |
-| `test_explore_settle_runs_arrival_services_and_autosaves() -> void` | L789 |
-| `test_explore_failure_settle_runs_arrival_services() -> void` | L823 |
-| `test_turn_back_runs_arrival_services_and_autosaves() -> void` | L852 |
-| `test_turn_back_returns_to_origin_and_keeps_clue_active() -> void` | L882 |
-| `test_continue_keeps_sailing_and_marks_the_alert() -> void` | L930 |
-| `test_alert_threshold_and_progress_come_from_the_rules() -> void` | L952 |
-| `test_continue_cannot_answer_the_alert_twice() -> void` | L1001 |
-| `test_chart_view_exposes_alert_state_while_exploring() -> void` | L1025 |
-| `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L1049 |
-| `test_rules_are_read_from_the_core_map_profile() -> void` | L1101 |
-| `test_fog_radii_are_world_size_relative_and_content_driven() -> void` | L1126 |
-| `test_game_state_backfills_the_clue_block_lazily() -> void` | L1158 |
-| `test_save_load_roundtrip_preserves_exploration_state() -> void` | L1174 |
+| `SEED` | L27 |
+| `STRATEGY_ID` | L28 |
+| `test_acquire_always_starts_at_level_one_and_credibility_stays_in_source_ranges() -> void` | L37 |
+| `test_acquire_returns_empty_when_no_undiscovered_target() -> void` | L61 |
+| `test_acquire_search_zone_and_distance_range_follow_credibility() -> void` | L75 |
+| `test_clue_view_clips_secrets_by_level() -> void` | L103 |
+| `test_investigate_climbs_to_level_four_without_rerolling_the_target() -> void` | L143 |
+| `test_investigate_failure_and_insufficient_money() -> void` | L260 |
+| `test_investigate_requires_a_run_a_port_and_an_active_clue() -> void` | L324 |
+| `test_chart_view_exposes_investigation_action_fields() -> void` | L377 |
+| `test_chart_view_blocks_investigation_at_sea() -> void` | L440 |
+| `test_chance_roll_boundaries_are_deterministic() -> void` | L461 |
+| `test_on_arrival_rumour_is_reproducible() -> void` | L480 |
+| `test_buy_requires_intel_facility() -> void` | L509 |
+| `test_buy_requires_money() -> void` | L519 |
+| `test_buy_charges_gold_and_adds_intel_clue() -> void` | L530 |
+| `test_buy_is_blocked_by_the_active_clue_cap() -> void` | L560 |
+| `test_explore_start_charges_only_wages_and_marks_at_sea() -> void` | L585 |
+| `test_explore_start_infeasible_does_not_charge() -> void` | L660 |
+| `test_explore_start_twice_fails_with_already_exploring() -> void` | L681 |
+| `test_explore_settle_success_discovers_target() -> void` | L697 |
+| `test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void` | L756 |
+| `test_failed_clue_can_be_sailed_again() -> void` | L829 |
+| `test_explore_settle_without_a_voyage_fails() -> void` | L863 |
+| `test_explore_settle_runs_arrival_services_and_autosaves() -> void` | L872 |
+| `test_explore_failure_settle_runs_arrival_services() -> void` | L906 |
+| `test_turn_back_runs_arrival_services_and_autosaves() -> void` | L935 |
+| `test_turn_back_returns_to_origin_and_keeps_clue_active() -> void` | L965 |
+| `test_continue_keeps_sailing_and_marks_the_alert() -> void` | L1013 |
+| `test_alert_threshold_and_progress_come_from_the_rules() -> void` | L1035 |
+| `test_continue_cannot_answer_the_alert_twice() -> void` | L1084 |
+| `test_chart_view_exposes_alert_state_while_exploring() -> void` | L1108 |
+| `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L1132 |
+| `test_rules_are_read_from_the_core_map_profile() -> void` | L1184 |
+| `test_fog_radii_are_world_size_relative_and_content_driven() -> void` | L1228 |
+| `test_game_state_backfills_the_clue_block_lazily() -> void` | L1260 |
+| `test_save_load_roundtrip_preserves_exploration_state() -> void` | L1276 |
+| `test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void` | L1324 |
+| `test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void` | L1393 |
+| `test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void` | L1433 |
+| `test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void` | L1492 |
+| `test_wait_clue_chance_math_and_command_acquisition() -> void` | L1543 |
+| `test_wait_prefers_goods_leads_when_a_market_is_known() -> void` | L1584 |
+| `test_contract_completion_hook_unlocks_a_clue() -> void` | L1609 |
+| `test_clue_travel_sails_to_the_goods_lead_harbour() -> void` | L1647 |
 
 （`clue.investigate`）/ 分级裁剪 / 命名流复现、`clue.buy` 门禁、`explore.start`
 扣费与在航标记、`explore.settle` 成功发现与失败漂流、`explore.decide` 掉头 / 继续、
-`sea_chart.view` 的线索 / 探索 / 购买视图，以及存档往返。
+`sea_chart.view` 的线索 / 探索 / 购买视图、4.4 货物行情线索（冻结快照 / 时效 /
+`clue.list` / 旧存档 normalize）、新来源（在港等待 / 完成委托）与 `clue.travel`，
+以及存档往返。
 
 ## 契约与约束
 - 每个用例用 `bootstrap_core()` + `run.start` 拿真实 Core 注册表与真实对局；

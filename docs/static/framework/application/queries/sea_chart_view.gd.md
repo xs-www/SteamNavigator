@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartViewQuery` | L1 |
-| `DEFAULT_MIN_VISION_RADIUS` | L38 |
-| `DEFAULT_PORT_REVEAL_RADIUS` | L39 |
-| `execute(params: Dictionary, context) -> Dictionary` | L42 |
+| `DEFAULT_MIN_VISION_RADIUS` | L43 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L44 |
+| `execute(params: Dictionary, context) -> Dictionary` | L47 |
 
 陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
 
@@ -36,6 +36,11 @@
   `investigation_hours`（来自 Core `exploration` 块，4.3 初始 0）、
   `can_investigate`（在港且 `level < 4`）、`next_level`（4 级为 0）与
   `next_level_key`（下一级披露文案键，4 级为空串）。裁剪规则不变。
+- 4.4 线索扩展：每条 clue 追加 `type` / `target_goods_id` / `goods`（按等级裁剪的
+  货物行情投影）/ `expires_at` / `remaining_hours` / `is_expired` 与
+  `investigation_success_chance`；`port_goods` 不合并探索估算（`estimated` 为空字典），
+  顶层追加 `expiring_clue_count` 供列表页入口角标；查询仍然不输出
+  `target_port_id` / `credibility` / 真实 `search_zone`。
 - 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
   煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
   几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：

@@ -12,8 +12,8 @@
 （材质名 / 纹理名 / tile_m / 粗糙度 / 金属度 / 调色板 / 均值目标都在 spec 里）。
 
 画家复用 `tools/art/gen_iron_harbor_trim_sheet.py` 的周期噪声与木材 / 石材 / 玻璃
-画家，保证与铁港建筑同一套低饱和手绘语言；金属 / 铸铁 / 锈红漆 / 黄铜 / 帆布
-是新增画家。全部图案由 wrap-safe 的周期噪声与整数周期结构生成，天然无缝。
+画家，保证与铁港建筑同一套低饱和手绘语言；金属 / 铸铁 / 锈红漆 / 黄铜 / 帆布 /
+碎煤是新增画家。全部图案由 wrap-safe 的周期噪声与整数周期结构生成，天然无缝。
 
 输出：
   docs/design/textures/shared_materials/tiles/<texture>.png        512² PNG-8，入库真源

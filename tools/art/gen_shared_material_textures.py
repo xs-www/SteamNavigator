@@ -9,8 +9,8 @@
 # （材质名 / 纹理名 / tile_m / 粗糙度 / 金属度 / 调色板 / 均值目标都在 spec 里）。
 #
 # 画家复用 `tools/art/gen_iron_harbor_trim_sheet.py` 的周期噪声与木材 / 石材 / 玻璃
-# 画家，保证与铁港建筑同一套低饱和手绘语言；金属 / 铸铁 / 锈红漆 / 黄铜 / 帆布
-# 是新增画家。全部图案由 wrap-safe 的周期噪声与整数周期结构生成，天然无缝。
+# 画家，保证与铁港建筑同一套低饱和手绘语言；金属 / 铸铁 / 锈红漆 / 黄铜 / 帆布 /
+# 碎煤是新增画家。全部图案由 wrap-safe 的周期噪声与整数周期结构生成，天然无缝。
 #
 # 输出：
 #   docs/design/textures/shared_materials/tiles/<texture>.png        512² PNG-8，入库真源
@@ -173,12 +173,28 @@ def _paint_canvas(spec, n, seed, rng):
     return col
 
 
+def _paint_coal(spec, n, seed, rng):
+    """碎煤堆：低明度块面 + 低洼灰尘 + 少量反光棱面。tile = 1.0 m。"""
+    p = spec["palette"]
+    base, alt, hi = ih._rgb(p["base"]), ih._rgb(p["alt"]), ih._rgb(p["hi"])
+
+    lump = ih._periodic_noise(rng, n, 6.0, 7.0)
+    fine = ih._periodic_noise(rng, n, 1.4)
+    col = ih._lerp(base, alt, np.clip(0.55 + 0.30 * lump, 0.0, 1.0))
+    # 小棱面高光（碎块反光），阈值偏高，保持整体低明度
+    facet = ih._periodic_noise(rng, n, 1.0, 3.0) > 1.15
+    col = np.where(facet[..., None], ih._lerp(col, hi, 0.22), col)
+    col = col * (1.0 + 0.035 * fine[..., None])
+    return col
+
+
 _CUSTOM_PAINTERS = {
     "metal": _paint_metal,
     "cast_iron": _paint_cast_iron,
     "painted_rust": _paint_painted_rust,
     "brass": _paint_brass,
     "canvas": _paint_canvas,
+    "coal": _paint_coal,
 }
 
 # 直接复用铁港建筑的画家（同一套低饱和手绘语言）

@@ -1,6 +1,8 @@
 # 物品建模半工作流（Modeling Dispatch Workflow）
 
 > 一句话：把「我要一个 X」变成一张标准工单，由 Lead 自动派发给建模子代理，子代理在 Blender 里参数化建模，独立质检子代理验收；人工只在**开工前**和**交付前**各点一次头。
+>
+> 管线边界：本工作流固定使用 **Blender MCP** 直接操作活体 Blender；**除非用户明确指定，否则不考虑 BMH**（`D:\桌面\sisi_apps\BMH` 仍在开发中），不要运行 `bmh` 命令，也不要把 BMH 当作默认建模管线。
 
 - 工单模板：[`tools/modeling/briefs/_template.json`](../../tools/modeling/briefs/_template.json)
 - 样板工单：[`tools/modeling/briefs/sn_ship_prototype.json`](../../tools/modeling/briefs/sn_ship_prototype.json)
@@ -48,7 +50,7 @@ DRAFT ──人工批准──▶ APPROVED ──派发──▶ BUILDING ──
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
 | `id` | ✓ | 唯一工单号，同时用于对象/文件命名 |
-| `category` | ✓ | `ship` / `prop` / `building` / `module` / `ui` |
+| `category` | ✓ | `ship` / `prop` / `building` / `module` / `weapon` / `ui` |
 | `style` | ✓ | 低模、flat shading、调色板、参考图 |
 | `dimensions` | ✓ | 长宽高 + 容差（米） |
 | `tri_budget` | ✓ | 三角面上限，防止子代理过度建模 |
@@ -182,6 +184,7 @@ docs/design/ASSET_MAP.md                              增加一行映射
 - 数据绑定：`dev_mods/core/content/*.json` 增加 `visual` 字段（资源路径或 visual_id），
   对应 schema 与 `ShipVisualLibrary` 一起改；
 - 2.5D 固定舞台的机位、socket、灯光与 2D 回退策略见 [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md)；本文件只负责资产生产与交付；
+- 武器/模块不规则形态的挂载契约（Mount 帧 / mount_class / base_footprint / envelope / anchors）见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md)；
 - 模组安全：当前只允许内容包提交 JSON / 图片 / 音频，若要支持模组自带 `.glb`，需单独评审白名单变更。
 
 ## 10. 已验证的能力与边界
@@ -332,6 +335,53 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 过程发现 | ① **`PivotSpec` 位置参数顺序是坑**：`(key, name, location, rotation=(0,0,0), size=1.2)`，多写一个位置参数就把 float 塞进 rotation；干跑已补契约检查，后续 pivot 类资产必须先过这条。② **多节点 GLB 的 bbox 不能直接累加 accessor min/max**：Pivot 子件的坐标是父级局部坐标，必须按 glTF 节点层级合成 TRS 再求世界包围盒，否则会把塔吊高度算成 30.5 m。③ 木制桅杆起重机按历史木质桅杆 / 后倾吊臂 / 拉索 / 手摇绞车设计，照片里的钢构塔吊只作为码头语言参考，不照搬。④ 新增三件已接入 Core manifest + 共享贴图，PortStage 槽位仍待接。⑤ **材质与模型分离**：材质 / 贴图 spec 与 `SN_Tex_*` 共享贴图材质库见 §12；旧纯色 `SN_*` 材质被大量旧对象共用，不能原地改，新资产用 `SN_Tex_*`；GLB 材质定义仍随文件内嵌（glTF 无外部材质引用），但贴图外部化为共享 URI，运行时按路径共享 `Texture2D` |
 | 预览与截图 | `.design/props/preview/crane_<asset>_{three_quarter,side}.png`（8 张，本地产物） |
 
+### 11.12 模型素材库批次 1（2026-10-21，武器套件 + 船体部件）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 人工给出两组 P0 素材：`weapon_kit` 火炮 / 炮架 / 炮塔 / 武器基座，`ship_parts` 甲板 / 桅杆 / 烟囱 / 货舱盖；目标是「后续搭建的模型素材库」，即模块化、可拼装，而不是 8 件孤立道具。工单 `briefs/sn_kit_batch1.json` 自包含尺寸 / 预算 / 接口清单 / 验收条件 |
+| 设计 | 先定**拼装契约**再建模：每件资产固定 `SN_<Asset>_Mount` + 语义接口空节点（Trunnion_L/R、Socket_*、Exhaust、Hinge、Collar…）；甲板是母模块，提供 5 个 socket；火炮是唯一「根 = 耳轴轴心」的子件，炮架耳轴 socket 高度 0.62 与之对齐；其余件根在底面中心 z=0 |
+| 生成器 | `kit_batch1_generator.py` 一份参数表产出 8 件（共用 `weapon_kit.py` + `ship_parts.core`）；`sn_kit_materials.py` 提供每件材质白名单；`gen_kit_catalog.py` 从纯几何导出 `tools/modeling/kit_catalog.json`（机器可读目录，不再手写尺寸表） |
+| 干跑 | `dryrun_kit_batch1.py` 一次校验 8 件：命名 / 父级 / tri / bbox / 基准面 / 网格健康 / 材质白名单 / 共享贴图 / Mount+socket 命名与坐标 / 左右对称 / 各件 datum 断言；**新增 mesh 名与 socket 名重名检查** |
+| 首次构建发现 | Builder 回报全绿，但场景对象里出现 3 个 `.001` 后缀：Cannon 的 `Breech`、Pedestal 的 `Collar`、Mast 的 `Top` 与同名 socket 冲突。干跑只查「parts 字典」，查不出 Blender 的对象命名空间冲突 → 修生成器（BreechBlock / CollarRing / Platform），并给干跑补上同名检查，重建后零 `.001` |
+| 构建 | Builder R1（8 件，11,316 tri）+ R2（命名修复后幂等重建）+ R3（Verifier 修复 + 桅顶瞭望台，11,964 tri）：对象/网格数、tri、bbox、zmin、材质、UV、root extras、网格健康四项全绿；非 kit 对象名 SHA-256 与基线一致；Camera=2 / Light=1；场景 476 objects / 351 mesh / 31 collections |
+| 独立 Verifier | 只读复核 8 件 + 拼装对齐 + 视觉 3/4 与正视。**3 项真缺陷**：① 炮塔 Yaw 子 socket 用根坐标挂在 z=0.22 的 Yaw 下 → 整体高 0.22 m；② 炮塔 Anchor_1..4 在四角 (±1.55,±1.55)，半径 2.19 > 基座 1.72，悬空 0.533 m；③ 甲板实际 22 条铺板，工单写 24 条。另报 P2：Heavy 炮塔放到原 weapon socket 会出甲板边缘 0.32/0.52 m |
+| 返工 R3 | 修 3 项失败 + P2：Yaw 子 socket 改局部坐标（world = +0.22）、Anchor 收到底座环 r=1.5/z=0.20、甲板改 24 条铺板、weapon socket 内移到 (±2.30,1.10)；干跑补「Yaw 子节点世界高度」「Anchor 到环半径」「deck socket 在甲板内且能承载 Heavy 炮塔」断言 |
+| 人工验收反馈 | 用户指出「桅杆的观望台不应该在最顶上吗」→ 把驻人平台从下桅头 7.9 m 移到桅顶 12.08–12.16 m，补三面半栏杆（-X 留登台梯口）、长梯（下端落到上横桁 z=10.40）+ 3 道支撑、4 根斜撑与黄铜单筒望远镜，新增 `SN_ShipPart_Mast_Lookout` 接口；下桅头只保留 trestle/crosstree 结构 |
+| 复检 R4 | 独立 Verifier 复检 3 件修复 + 桅顶瞭望台：**0 failures**；P2 观察「短梯下端悬空」→ 梯子下延到上横桁并加梯脚卡箍，桅杆 2640 → 2764 tri（预算 2700 → 2800），复检确认瞭望台最高点 12.706 ≤ 12.84 |
+| 归档 | 8 个 GLB（`assets/models/{weapons,ship_parts}/` + Core 副本）、共享贴图 10 张 ×2 目录、预览 lineup / 拼装图 / 单件图、[KIT_ASSET_LIBRARY.md](KIT_ASSET_LIBRARY.md)、[KIT_BATCH1_ACCEPTANCE.md](../archive/KIT_BATCH1_ACCEPTANCE.md) |
+| 过程发现 | ① **mesh 与 sockets 共享一个对象命名空间**：资产内部 mesh 名与接口空节点同名时 Blender 会静默加 `.001`，GLB 节点名也跟着变；接口名优先，mesh 让位，干跑必须检查。② 模块化资产的验收重点从「单件像不像」变成「接口对不对」：bbox/tri 只是下限，还要断言 socket 坐标、左右对称、父级顺序、跨件对齐（火炮耳轴 → 炮架座）。③ **父级空节点的子 socket 要写局部坐标**：同一份数值既是 world、又是 local 时，会整体偏移父级高度；mesh 有 origin 补偿但空节点没有。④ 素材库要同时交付**人读目录**与**机器目录**（KIT_ASSET_LIBRARY.md + kit_catalog.json），后续 Godot 侧装配直接读 JSON。 |
+
+### 11.13 模型素材库批次 2（2026-10-21，机械 / 货物 / 码头 P1）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 在批次 1 之后继续做 P1：`machinery_kit` 齿轮 / 卷扬机 / 动力装置，`cargo_kit` 货箱 / 煤斗 / 储罐 / 托盘，`dock_kit` 码头结构 / 栈桥 / 系缆设施；共 10 件，仍作为可拼装素材库。工单 `briefs/sn_kit_batch2.json` |
+| 共享材质扩展 | 煤斗需要新材质：在 spec 新增 `SN_Tex_Coal`（碎煤，512²，`kind=coal`，`tile_m=1.0`），生成器新增 `_paint_coal` 画家；重跑生成器后 11 张贴图全部确定性 / 无缝、旧 10 张字节不变；`runtime_dirs` 新增 machinery / cargo / dock 六个目录 |
+| 设计 | 机械：动力装置（卧式蒸汽机 + 飞轮）→ 齿轮组（开式机架 + 三级齿轮）→ 卷扬机（绳鼓 + 棘轮 + 曲柄）；货物：托盘/货箱可堆叠、煤斗带碎煤堆、储罐带人孔/阀门；码头：8.4×4.2 m 岸壁模块 + 8×2.6 m 栈桥（桩到水下 z=−1.30）+ 双柱缆桩，`Module_Next/Prev` 沿 X 平铺、`Socket_*` 接收系缆与栈桥 |
+| 干跑 | `dryrun_kit_batch2.py` 校验 10 件 + 新增 `SN_Tex_Coal` 存在性；抓出并修掉 mesh/socket 同名 4 处（Crank / Chute / Ladder / Ring）、煤斗材质白名单、储罐人孔零厚面、货箱 zmin=0.1、托盘/货箱/栈桥 bbox 偏差 |
+| 构建 | Builder R1 一次建 10 件：13,516 tri；10 集合 / 101 对象；非批次 2 对象名 + 位置 SHA-256 与基线一致；Camera=2 / Light=1；命名零 `.001`、零 mesh/socket 重名；网格健康四项全 0；UV / 贴图 / extras 全绿 |
+| 视觉反哺 | Builder 看 3/4 与正视后报：齿轮组正面被实心侧板挡死、系缆绳圈悬空 0.10 m 且穿底板、栈桥铺板 ±X 轻微不对称。Lead 改成开式机架（立柱 + 上下横梁 + 竖撑/轴承）、绳圈落到 base 顶面、铺板对称排布；再修码头爬梯朝向与 Pallet/Crate 叠放面（R2–R4） |
+| 独立 Verifier | R1（task-10）报 3 个 P1：Pallet 铜钉顶 0.215 与货箱底互穿 35 mm、Jetty 端梯朝向错误且插铺板、Mooring 木护舷悬空；R2（task-12）确认 3 项修复通过，新发现 Jetty `Ladder` socket 仍停旧位（错位 1.10 m）；R3（task-14）确认 socket 对齐、端梯 2 柱+6 横档+2 上支架贴铺板底、10 件全绿 → **passed=true / 0 failures** |
+| 最终结果 | 10 件 **13,680 tri / 预算 20,600**；49 mesh 健康四项 + wire 全 0；11 张共享贴图 512²；GLB 自检 10/10 ALL OK；名称回归 SHA-256 一致；无 `.001` / 无重名 |
+| 人工验收反馈 | 用户指出机械 lineup 第一件（PowerUnit）有浮空：飞轮无轴承支撑、调速器悬在汽缸上方。补飞轮贯穿轴 + 两侧轴承立柱落到横跨滑橇的木承梁（梁底 z=0）、调速器移到汽缸顶并加法兰底座；PowerUnit 1984→2260 tri，bbox 不变；Builder 射线自检两柱 5/5 命中承梁 |
+| 过程发现 | ① **活体 Blender 会缓存纯 Python 模块**：本次新增 `MAT_COAL` 后，同一 Blender 会话里的 `sn_kit_materials` / `sn_shared_materials` 仍是旧版，首次执行 ImportError；先 `importlib.reload`（或重启 Blender）再跑生成器即可。② 模块化零件要留「可读窗口」：实心机架在 3/4 视角挡住全部齿轮，改开式机架后齿轮传动一眼可读；③ 码头类资产用**水线 datum**（栈桥桩到 −1.30）比强制 zmin=0 更符合摆放语义，干跑需按件声明 zmin 范围。④ **堆叠面要按最高点定 socket**：托盘铜钉/角铁比铺板高 35 mm，用铺板面当 Stack_Top 会让货箱互穿；修复是把压平件压到台面而不是抬 socket。⑤ Verifier 的「接口与几何是否同源」检查非常值钱：端梯搬了位置但 socket 没搬，是纯数据缺陷，渲染图看不出来。 |
+| 归档 | 10 个 GLB（`assets/models/{machinery,cargo,dock}/` + Core 副本）、共享贴图 11 张 × 8 目录、预览 3 lineup + 2 拼装图 + 20 单件图、[KIT_ASSET_LIBRARY.md §9](KIT_ASSET_LIBRARY.md)、[KIT_BATCH2_ACCEPTANCE.md](../archive/KIT_BATCH2_ACCEPTANCE.md) |
+
+### 11.14 模型素材库批次 3（2026-10-21，建筑 / 环境 P2）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 用户指定 P2 两组：`architecture_kit` 仓库 / 工坊 / 酒馆 / 厂房，`environment_kit` 礁石 / 残骸 / 灯塔等；要求继续作为可拼装素材库。工单 `briefs/sn_kit_batch3.json`（8 件、按 4 m 网格平铺、环境件根在水线） |
+| 设计 | 建筑 = 「体量 + 立面节奏」：石基座 + 铁包木/石墙 + 双坡或锯齿顶 + 门/雨棚/招牌/烟囱，`Module_Next/Prev` 沿 X 平铺，工坊 `Drive_Shaft` 直接对 `PowerUnit` Shaft_Out；环境 = 水线 datum：礁石宽平顶 + 4.6 m 石砌灯塔基台（`Top` 落座）、横倾 13° 的断船壳（断桅穿甲板落龙骨）、灯塔（环廊 / 灯室 / 穹顶）、浮标（灯 / 钟 / 锚链）。新增根字段 `module_x/y` 与 `waterline` |
+| 干跑 | `dryrun_kit_batch3.py` 校验 8 件：命名 / 父级 / tri / bbox / 基准面（建筑 zmin=0、环境水线范围）/ 网格健康 / 材质白名单 / 11 张共享贴图 / socket 契约 / 建筑 module 字段 / 环境 waterline 字段；抓出并修掉 mesh/socket 同名 6 处（Chimney×2 / Gantry / Mast / Gallery / Bell / Chain）、礁石湿痕面拆分导致的非流形、礁石压顶覆盖不足、压舱石悬空 |
+| 构建 | Builder R1 一次建 8 件：15,214 tri；8 集合 / 91 对象；共享贴图 8/8 PASS；无 `.001` / 无重名；网格健康四项全 0；批次 1–2 的 577 对象 / 41 集合不变；Camera=2 / Light=1 |
+| Builder 几何复核 | 用 world-space BVHTree + raycast 做「无浮空」专项：**真缺陷**① 残骸断桅离最近部件 1.064 m（悬在船体开口上方）→ 断桅改为从龙骨起、加桅座横梁接两舷后 ↔Hull 0.003 / ↔Ribs 0.004 m；② 礁石 Top 平台 2.1×2.1 装不下 4.62×4.60 灯塔基座（外挑 1.3 m）→ 礁石改宽平顶 + 石鼓 + 压顶（circumradius 2.66）+ 4 块礁岩扶壁，16 采样点 0 gap / 0 外挑；③ 压舱石与船底 0.10–0.14 m 悬空 → 按船底内底平面逐颗定 z0，5/5 轻嵌 1 cm（并修掉「顺序标签错位 + 外皮误命中」两处测量根因，最终 gap −0.010 / 颗）；④ 礁石「蘑菇顶」观感 → 石鼓四周加 4 块扶壁并收压顶；用户再报「底部石头没有全部比底座大、边缘悬空」→ 石鼓改等径、外圈加 16 块密排礁岩裙、顶部盖过石鼓底沿（Reef 896→1944 tri），24 方位采样确认底座周边全部有岩石承托 |
+| 复检 | 独立 Verifier 只读验收 8 件 + 拼装（建筑街区、礁石+灯塔、残骸+浮标）：接口、bbox、tri、材质、UV、extras、落地/落座、无浮空；**passed=true / 0 failures**；随后导出 GLB 8/8 OK 与预览 8×2 + 2 lineup + 4 拼装图 |
+| 最终结果 | 8 件 **16,414 tri / 预算 23,200**；三批合计 **42,058 / 60,300**；42 mesh 健康四项全 0；GLB 8/8 ALL OK；无 `.001` / 无重名 |
+| 过程发现 | ① **网格名与 socket 名共享命名空间**的问题在批次 3 再次出现 6 处，干跑的同名检查必须保留；② **「无浮空」要按支撑面测量，不能只看 bbox zmin**：残骸断桅、压舱石、灯塔-礁石落座都是 bbox 正常但空间关系错；raycast/BVHTree 要在 Builder 侧固化为必检项；③ **测量参照面会骗人**：压舱石向下 raycast 可能穿过内底打到外皮，报出「虚大间隙」；应用内底上法线面 + 生成器纯几何回代互相验证，且**按生成器列表顺序**传递逐件偏移，避免标签排序错位；④ 环境件允许 zmin<0（水线 datum），干跑按件声明范围比强制 z=0 更符合摆放语义；⑤ 建筑 / 环境件尺寸大，预览要把 Root 临时抬到水线以上再渲染，否则水下部分被地面挡住。 |
+| 归档 | 8 个 GLB（`assets/models/{architecture,environment}/` + Core 副本）、共享贴图 11 张 × 4 目录、预览 2 lineup + 4 拼装图 + 16 单件图、[KIT_ASSET_LIBRARY.md §10](KIT_ASSET_LIBRARY.md)、[KIT_BATCH3_ACCEPTANCE.md](../archive/KIT_BATCH3_ACCEPTANCE.md) |
+
 ## 12. 共享贴图材质与 UV（新资产默认约定，2026-10-21 起）
 
 > 结论：**新资产不再用纯色代表材质**。材质 = 共享贴图（`SN_Tex_*`）+ spec 参数，
@@ -343,9 +393,9 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 环节 | 路径 | 说明 |
 | --- | --- | --- |
 | 材质 / 贴图 spec | `docs/design/textures/shared_materials/shared_materials.spec.json` | 材质名、纹理名、`tile_m`、roughness / metallic、调色板、贴图均值目标；改颜色的唯一入口 |
-| 贴图生成器 | `tools/art/gen_shared_material_textures.py` | 10 张 512² 无缝 sRGB 贴图、montage、stats、运行时副本；确定性可复现（复用铁港生成器的周期噪声 / 木材 / 石材 / 玻璃画家） |
+| 贴图生成器 | `tools/art/gen_shared_material_textures.py` | 11 张 512² 无缝 sRGB 贴图（批次 2 新增 `SN_Tex_Coal` 碎煤）、montage、stats、运行时副本；确定性可复现（复用铁港生成器的周期噪声 / 木材 / 石材 / 玻璃画家） |
 | 授权贴图 | `docs/design/textures/shared_materials/tiles/<texture>.png` | 入库真源；材质贴图以它为准（不采用 Blender 重编码字节） |
-| 共享贴图运行时副本 | `assets/models/props/shared_materials/`（开发态）与 `dev_mods/core/assets/models/props/shared_materials/`（发布） | GLB 用相对 URI `shared_materials/<texture>.png` 引用；`ContentAssetLoader` 按路径缓存成同一个 `Texture2D` |
+| 共享贴图运行时副本 | `assets/models/<category>/shared_materials/`（开发态）与 `dev_mods/core/assets/models/<category>/shared_materials/`（发布；示例：`props`、`weapons`、`ship_parts`、`machinery`、`cargo`、`dock`） | GLB 用相对 URI `shared_materials/<texture>.png` 引用；`ContentAssetLoader` 按路径缓存成同一个 `Texture2D`；新分类目录要同步写进 `shared_materials.spec.json` 的 `runtime_dirs` |
 | 材质库 | `tools/modeling/generators/sn_shared_materials.py` | spec → Blender 材质节点 / 世界空间盒式 UV / 验收；纯 Python 数据段可干跑 |
 | 资产侧材质视图 | `tools/modeling/generators/sn_crane_materials.py`（示例） | `MAT_*` 常量、每资产材质白名单、`colors_for()` 回退色 |
 
@@ -377,5 +427,6 @@ docs/design/ASSET_MAP.md                              增加一行映射
   解析成同一个 `Texture2D` 实例；多件资产因此共享贴图，`PortStage` 的材质签名合批可合并。
 - 验收：`verify_cranes_glb.py`（外部 URI、贴图字节与授权源一致、每个图元有 `TEXCOORD_0`、
   世界空间 bbox）+ `tools/godot/verify_crane_materials.gd`（4 个 GLB 的贴图实例共享、UV 存在）。
+- 工作台视口约定（2026-10-22）：**Solid 统一 `color_type = SINGLE` + `single_color = 0.55 灰`**，各 3D 视口 `shading.type = SOLID`，避免「有贴图的资产带色、旧的纯色资产发灰」混看；预览渲染脚本临时切 `TEXTURE` 出图，结束后恢复灰模（`render_kit_preview.py` 的 `_capture_stage_state` / `_restore_stage_state` 已覆盖）。
 - 旧资产迁移清单（后续）：31 件铁港道具、6 件港口设施、11 件模块、4 艘船 —— 都需要先补 UV
   再切 `SN_Tex_*` 并重导 GLB，不在本批范围内。

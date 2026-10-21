@@ -13,8 +13,8 @@
 | `available_builds(hub: RegistryHub) -> Array[ContentDefinition]` | L28 |
 | `default_map_profile(hub: RegistryHub) -> ContentDefinition` | L32 |
 | `create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionary` | L37 |
-| `create_run(context, build_id: String = "", requested_seed: int = 0) -> Dictionary` | L61 |
-| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L275 |
+| `create_run(context, build_id: String = "", requested_seed: int = 0, tutorial: bool = false) -> Dictionary` | L61 |
+| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L283 |
 
 ## 契约与约束
 

@@ -1,0 +1,137 @@
+{
+  "id": "sn_weapon_batch2",
+  "title": "舰载特殊武器三件套：舰载弩炮 / 载人箭塔 / 蒸汽鱼叉发射器",
+  "purpose": "继续补齐独立武器资产：三件不规则形态的舰载武器/载具，并给出“不规则形态如何拼进 socket”的模型侧契约（Mount 帧 + mount_class + footprint + anchors）。",
+  "category": "weapon",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-21 指定三件：舰载弩炮、载人箭塔、蒸汽鱼叉发射器，并要求考虑不规则形态如何拼进 socket。纯模型侧交付，不接游戏逻辑。",
+  "style": {
+    "look": "与铁甲舰炮列/武器批次 1 同一套低模语言：木结构 + 铁箍 + 黄铜机械件 + 帆布；共享贴图 SN_Tex_*，不用纯色代表材质；轮廓优先。",
+    "palette": [
+      "SN_Tex_Iron",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Brass",
+      "SN_Tex_Canvas_Shade"
+    ],
+    "notes": "弩炮/鱼叉按“可回转俯仰的甲板武器”处理；箭塔按“固定塔 + 底座拉索点”处理，不强行加 Yaw/Pitch。"
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*"
+    ],
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV",
+    "ground": "所有资产 zmin = 0，根空物体在底座贴地面中心",
+    "conventions": "几何由生成器参数表驱动；闭合件边界边/非流形边/退化面必须为 0；Mount/Anchor 为空节点，不参与几何。"
+  },
+  "socket_contract": {
+    "weapon_mount_frame": "每件资产在根下提供 SN_Weapon_<Name>_Mount 空节点，位置 = 底座中心 (0,0,0)，+X 为前向；装配时把整个 Root 对齐到船体 socket，而不是对齐某个 mesh。",
+    "hull_socket": "船体提供 SN_Socket_Weapon_<Class>_<Index> 空节点，原点在甲板安装面顶部中心，+X 朝炮口/前向；socket 只保证安装面、朝向与净空，不要求与武器上部轮廓同形。",
+    "mount_classes": {
+      "Light": {"collar_diameter_m": 1.1, "max_footprint_m": 1.6, "examples": "甲板速射炮、机关连发炮"},
+      "Medium": {"collar_diameter_m": 1.6, "max_footprint_m": 2.2, "examples": "重型舰炮、蒸汽鱼叉发射器"},
+      "Heavy": {"collar_diameter_m": 2.2, "max_footprint_m": 3.2, "examples": "舰载弩炮、曲射迫击炮"},
+      "Tower": {"mount_pad_m": [3.0, 3.0], "max_footprint_m": 3.8, "examples": "载人箭塔"},
+      "Side": {"description": "舷侧挂载，socket 预旋转 Z=-90°，炮口朝舷外", "examples": "侧弦炮列"}
+    },
+    "anchors": "每件资产提供 SN_Weapon_<Name>_Anchor_1..4；箭塔的 4 个拉索点用它。船体 socket 可在对应位置提供 SN_Socket_Anchor_* 子空节点，装配时把拉索末端/链环对孩子节点；没有锚点节点时保持模型自带的盘绳/链环，不强行拉索。",
+    "irregular_shapes": "不规则形态的集成只标准化三件事：① Mount 帧（底座中心/+X）；② 底座接口（collar 或方形 mount pad）；③ 净空包络（base_footprint + envelope + height + swept_radius）。上部塔身、弩臂、鱼叉等自由外伸，船体 socket 只校验底座落位、class 匹配与净空，不做形状匹配。",
+    "root_props": ["mount_class", "mount_frame", "base_footprint_x", "base_footprint_y", "envelope_x", "envelope_y", "height", "swept_radius", "anchor_count", "pivot_profile"],
+    "scale": "socket 或武器可带 uniform scale；capital-class 变体只放大 Mount 以上部分时，锚点与 footprint 同步放大，避免底座与甲板脱节。"
+  },
+  "items": [
+    {
+      "id": "sn_weapon_ballista_v1",
+      "asset": "SN_Weapon_Ballista",
+      "role": "舰载弩炮：回转底座 + 双弩臂 + 弩弦 + 绞盘 + 大型弩箭",
+      "generator": "tools/modeling/generators/sn_weapon_batch2_generator.py",
+      "collection": "SN_Weapon_Ballista_Prototype",
+      "root": "SN_Weapon_Ballista_Root",
+      "prefix": "SN_Weapon_Ballista_",
+      "workbench_pos": [0.0, 380.0, 0.0],
+      "mount_class": "Heavy",
+      "pivot_profile": "yaw_pitch",
+      "pivots": ["Yaw_Pivot", "Pitch_Pivot", "Mount", "Anchor_1..4"],
+      "dimensions": {"length": 5.0, "width": 3.0, "height": 2.2, "tolerance": 0.10},
+      "tri_budget": 4500,
+      "materials": ["SN_Tex_Iron", "SN_Tex_Metal", "SN_Tex_Iron_Red", "SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck", "SN_Tex_Brass", "SN_Tex_Canvas_Shade"],
+      "required_parts": ["重型甲板底座 + 黄铜安装环 + 4 地脚螺栓", "回转台 + 木/铁炮架 + 颊板", "双弩臂 + 扭力弹簧 + 黄铜箍", "弩弦 + 发射轨 + 大型弩箭（箭头/倒钩/箭羽）", "后部绞盘 + 齿轮 + 摇柄 + 手轮", "前部护盾 + 立柱 + 瞄具"],
+      "acceptance": ["对象 100% 以 SN_Weapon_Ballista_ 开头并位于指定集合", "三角面 <= 4500", "包围盒 5.00 x 3.00 x 2.20 m（±0.10）", "zmin = 0", "Yaw/Pitch/Mount/Anchor_1..4 存在且位置正确", "网格健康四项全 0", "3/4 视角可读出双弩臂 + 弩弦 + 大箭 + 绞盘"]
+    },
+    {
+      "id": "sn_weapon_arrowtower_v1",
+      "asset": "SN_Weapon_ArrowTower",
+      "role": "载人箭塔：固定方形塔、平台、栏杆、箭窗、梯子、箭袋与顶部帆布棚；4 个底座拉索点",
+      "generator": "tools/modeling/generators/sn_weapon_batch2_generator.py",
+      "collection": "SN_Weapon_ArrowTower_Prototype",
+      "root": "SN_Weapon_ArrowTower_Root",
+      "prefix": "SN_Weapon_ArrowTower_",
+      "workbench_pos": [0.0, 400.0, 0.0],
+      "mount_class": "Tower",
+      "pivot_profile": "fixed",
+      "pivots": ["Mount", "Anchor_1..4"],
+      "dimensions": {"length": 3.8, "width": 3.8, "height": 6.6, "tolerance": 0.12},
+      "tri_budget": 5500,
+      "materials": ["SN_Tex_Iron", "SN_Tex_Metal", "SN_Tex_Iron_Red", "SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck", "SN_Tex_Brass", "SN_Tex_Canvas_Shade"],
+      "required_parts": ["方形甲板底座 + 8 地脚螺栓 + 4 个锚链板", "四角塔柱 + 铁箍 + 横梁 + X 斜撑", "作战平台 + 支撑梁", "三面栏杆 + 箭窗板（竖向箭缝）", "侧梯", "顶部四角柱 + 帆布棚 + 黄铜顶饰/铜钟", "箭袋 + 箭 + 盾牌"],
+      "acceptance": ["对象 100% 以 SN_Weapon_ArrowTower_ 开头并位于指定集合", "三角面 <= 5500", "包围盒 3.80 x 3.80 x 6.60 m（±0.12）", "zmin = 0", "Mount + Anchor_1..4 存在且位置正确", "网格健康四项全 0", "3/4 视角可读出塔身 + 平台 + 栏杆 + 梯子 + 箭窗"]
+    },
+    {
+      "id": "sn_weapon_harpoonlauncher_v1",
+      "asset": "SN_Weapon_HarpoonLauncher",
+      "role": "蒸汽鱼叉发射器：回转底座 + 黄铜压力罐 + 发射轨 + 大型鱼叉 + 绞盘/链条",
+      "generator": "tools/modeling/generators/sn_weapon_batch2_generator.py",
+      "collection": "SN_Weapon_HarpoonLauncher_Prototype",
+      "root": "SN_Weapon_HarpoonLauncher_Root",
+      "prefix": "SN_Weapon_HarpoonLauncher_",
+      "workbench_pos": [0.0, 420.0, 0.0],
+      "mount_class": "Medium",
+      "pivot_profile": "yaw_pitch",
+      "pivots": ["Yaw_Pivot", "Pitch_Pivot", "Mount", "Anchor_1..4"],
+      "dimensions": {"length": 4.6, "width": 1.8, "height": 2.2, "tolerance": 0.10},
+      "tri_budget": 4500,
+      "materials": ["SN_Tex_Iron", "SN_Tex_Metal", "SN_Tex_Iron_Red", "SN_Tex_Wood_Dark", "SN_Tex_Brass", "SN_Tex_Canvas_Shade"],
+      "required_parts": ["甲板底座 + 黄铜安装环 + 4 地脚螺栓", "回转台 + 立柱 + 颊板", "黄铜压力罐 + 铁箍 + 阀门/压力表 + 蒸汽管", "发射轨 + 大型鱼叉（长杆/倒钩/尾环）", "后部绞盘 + 链条 + 摇柄", "瞄具 + 俯仰手轮"],
+      "acceptance": ["对象 100% 以 SN_Weapon_HarpoonLauncher_ 开头并位于指定集合", "三角面 <= 4500", "包围盒 4.60 x 1.80 x 2.20 m（±0.10）", "zmin = 0", "Yaw/Pitch/Mount/Anchor_1..4 存在且位置正确", "网格健康四项全 0", "3/4 视角可读出压力罐 + 鱼叉 + 倒钩 + 绞盘"]
+    }
+  ],
+  "dryrun": "python tools/modeling/generators/dryrun_weapon_batch2.py",
+  "export": "python tools/modeling/generators/export_weapon_batch2_glb.py（Lead 在人工验收后执行）",
+  "deliverables": {
+    "glb": "assets/models/weapons/SN_Weapon_{Ballista,ArrowTower,HarpoonLauncher}.glb",
+    "runtime_copy": "dev_mods/core/assets/models/weapons/",
+    "preview": ".design/weapons/preview/ + docs/design/screenshots/weapons/weapon_batch2_*.png",
+    "socket_contract": "docs/design/WEAPON_SOCKET_CONTRACT.md"
+  },
+  "notes": "本批不接游戏侧、不登记 manifest；Mount/Anchor 空节点是模型侧与未来 hull socket 的对接面。",
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "uv": {
+    "projection": "world-space box projection by dominant face normal",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json"
+  }
+}

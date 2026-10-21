@@ -1,0 +1,458 @@
+{
+  "id": "sn_kit_batch1",
+  "title": "模型素材库 P0：武器套件（火炮/炮架/炮塔/武器基座）+ 船体部件（甲板/桅杆/烟囱/货舱盖）",
+  "purpose": "建立可长期复用的模块化模型素材库：8 件可单独摆放、也可按 socket 契约互相拼装的低模资产，供后续搭船、搭港口场景与战斗演出使用。纯资产交付，不接游戏逻辑、不登记 manifest。",
+  "category": "kit",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-21 指定 P0 两组：weapon_kit（火炮、炮架、炮塔、武器基座）与 ship_parts（甲板、桅杆、烟囱、货舱盖），要求做成后续搭建用的模型素材库。",
+  "style": {
+    "look": "沿用铁甲舰/武器批次 1–2 的低模语言：木结构 + 铁板 + 黄铜机械件 + 深色玻璃；轮廓优先，四角 3/4 机位可辨认；共享贴图 SN_Tex_*，禁止纯色材质。",
+    "palette": [
+      "SN_Tex_Iron",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Brass",
+      "SN_Tex_Glass_Dark",
+      "SN_Tex_Canvas_Shade"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*",
+      "SN_PF_Root",
+      "SN_SF_Root",
+      "SN_Ironclad"
+    ],
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV",
+    "conventions": "几何由生成器参数表驱动；闭合件边界边/非流形边/退化面必须为 0；Mount/Socket 为空节点，不参与几何。",
+    "datums": "每件资产提供 SN_<Asset>_Mount 空节点作为装配挂点。地面类部件（炮架/炮塔/基座/甲板/桅杆/烟囱/货舱盖）Mount 在根 (0,0,0)，zmin=0；火炮是俯仰子件，根 = 耳轴轴心（Mount 在原点），炮架提供 SN_Weapon_GunCarriage_Trunnion_L/R 接收。",
+    "material_rule": "新资产必须使用共享贴图材质 SN_Tex_*，干跑与 GLB 自检都按白名单核对；贴图外部化为 shared_materials/<texture>.png。"
+  },
+  "kit_contract": {
+    "families": {
+      "weapon_kit": "舰载武器可拼装件：火炮（炮管总成）、炮架（轮式炮车）、炮塔（装甲回转炮塔）、武器基座（甲板基座/回转环）。",
+      "ship_parts": "船体可拼装件：甲板模块、桅杆总成、蒸汽烟囱、货舱盖。"
+    },
+    "mount_frame": "每件资产根下提供 SN_<Asset>_Mount（+X 前向、Z 向上）。装配只对齐 Root/Mount，不对齐具体 mesh。",
+    "deck_module": "甲板是母模块，提供 SN_ShipPart_Deck_Socket_Mast / _Socket_Funnel / _Socket_Hatch / _Socket_Weapon_Port / _Socket_Weapon_Starboard 空节点；子件 Root 直接落到 socket。",
+    "weapon_assembly": "火炮 Root → 炮架 Trunnion_L/R（火炮根 z=0.62 落在炮架耳轴高度）；炮塔/基座整件落到甲板或甲板 socket；所有武器件共享 mount_class / footprint / height 根属性。",
+    "sockets": "所有接口都是空节点，命名固定为 SN_<Asset>_<Role>（Mount / Trunnion_L / Trunnion_R / Socket_* / Exhaust / Hinge_* / Top / Collar）。",
+    "catalog": "docs/design/KIT_ASSET_LIBRARY.md 是素材库目录与装配配方；GLB 根节点 extras 写入 kit_family / part_role / mount_class / footprint / height 等机器可读字段。"
+  },
+  "items": [
+    {
+      "id": "sn_weapon_cannon_v1",
+      "asset": "SN_Weapon_Cannon",
+      "role": "火炮炮管总成：12 段收分炮管 + 加强箍 + 炮口箍 + 尾闩/尾环 + 耳轴 + 炮口准星",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_Weapon_Cannon_Prototype",
+      "root": "SN_Weapon_Cannon_Root",
+      "prefix": "SN_Weapon_Cannon_",
+      "workbench_pos": [
+        0.0,
+        440.0,
+        0.62
+      ],
+      "family": "weapon_kit",
+      "part_role": "cannon",
+      "root_datum": "trunnion axis (z=0 at Pitch_Pivot; barrel axis +0.10)",
+      "sockets": [
+        "Mount",
+        "Pitch_Pivot",
+        "Trunnion_L",
+        "Trunnion_R",
+        "Muzzle",
+        "Breech"
+      ],
+      "dimensions": {
+        "length": 4.0,
+        "width": 1.44,
+        "height": 0.82,
+        "tolerance": 0.12
+      },
+      "tri_budget": 1400,
+      "required_parts": [
+        "Barrel 炮管 + 5 道加强箍 + 炮口箍",
+        "Breech 尾体/尾环/尾钮",
+        "Trunnions 左右耳轴 + 耳轴盖",
+        "Sight 炮口准星 + 火门"
+      ],
+      "acceptance": [
+        "对象全部以 SN_Weapon_Cannon_ 开头且在同一集合",
+        "tri <= 1400",
+        "包围盒 4.00 x 1.44 x 0.82（±0.12，根 = 耳轴轴心，局部 zmin=-0.24）",
+        "Pitch_Pivot 位于原点、Mount 位于原点",
+        "Trunnion_L/R 在 z=0 对称",
+        "网格健康四项全 0",
+        "3/4 视角可读炮管收分、炮口箍、尾钮与耳轴"
+      ]
+    },
+    {
+      "id": "sn_weapon_gun_carriage_v1",
+      "asset": "SN_Weapon_GunCarriage",
+      "role": "炮架：四轮炮车（颊板/横梁/轮轴/辐条轮/耳轴座/俯仰螺杆/手轮/工具架）",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_Weapon_GunCarriage_Prototype",
+      "root": "SN_Weapon_GunCarriage_Root",
+      "prefix": "SN_Weapon_GunCarriage_",
+      "workbench_pos": [
+        5.0,
+        440.0,
+        0.0
+      ],
+      "family": "weapon_kit",
+      "part_role": "carriage",
+      "root_datum": "ground (z=0), trunnion sockets at z=0.62",
+      "sockets": [
+        "Mount",
+        "Trunnion_L",
+        "Trunnion_R",
+        "Yaw_Pivot"
+      ],
+      "dimensions": {
+        "length": 2.96,
+        "width": 1.79,
+        "height": 1.1,
+        "tolerance": 0.12
+      },
+      "tri_budget": 2800,
+      "required_parts": [
+        "4 辐条轮 + 轮轴 + 轴座",
+        "左右颊板 + 3 道横梁 + 铁包角",
+        "耳轴座/耳轴盖（z=0.62）",
+        "尾部俯仰螺杆 + 手轮 + 楔块",
+        "侧挂炮刷/推弹杆"
+      ],
+      "acceptance": [
+        "tri <= 2700",
+        "包围盒 2.96 x 1.79 x 1.10（±0.12）",
+        "zmin = 0",
+        "Trunnion_L/R 在 (±0.62,0.62) 对称、Mount 在原点",
+        "网格健康四项全 0",
+        "3/4 视角可读四轮/颊板/耳轴座/俯仰手轮"
+      ]
+    },
+    {
+      "id": "sn_weapon_turret_v1",
+      "asset": "SN_Weapon_Turret",
+      "role": "炮塔：装甲回转炮塔（铆接环座 + 收分塔身 + 炮口盾/炮管 + 顶部舱盖 + 潜望镜 + 观察缝）",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_Weapon_Turret_Prototype",
+      "root": "SN_Weapon_Turret_Root",
+      "prefix": "SN_Weapon_Turret_",
+      "workbench_pos": [
+        0.0,
+        458.0,
+        0.0
+      ],
+      "family": "weapon_kit",
+      "part_role": "turret",
+      "mount_class": "Heavy",
+      "root_datum": "deck surface (z=0), Yaw_Pivot at z=0.22; Anchor_1..4 on the base ring",
+      "sockets": [
+        "Mount",
+        "Yaw_Pivot",
+        "GunPort",
+        "Muzzle",
+        "Hatch",
+        "Anchor_1..4"
+      ],
+      "dimensions": {
+        "length": 5.12,
+        "width": 3.44,
+        "height": 3.04,
+        "tolerance": 0.12
+      },
+      "tri_budget": 3400,
+      "required_parts": [
+        "12 边铆接基座环 + 12 地脚螺栓",
+        "收分塔身 + 装甲板缝/铆钉排",
+        "炮口盾 + 炮管 + 炮口箍",
+        "顶部锥顶 + 舱盖 + 铰链/把手",
+        "潜望镜 + 观察缝 + 通风帽"
+      ],
+      "acceptance": [
+        "tri <= 3400",
+        "包围盒 5.12 x 3.44 x 3.04（±0.12）",
+        "zmin = 0",
+        "Yaw_Pivot 在 (0,0,0.20)、GunPort 在 (+X) 中轴",
+        "Mount/Anchor_1..4 存在",
+        "网格健康四项全 0",
+        "3/4 视角可读塔身收分、炮口盾、顶部舱盖"
+      ]
+    },
+    {
+      "id": "sn_weapon_pedestal_v1",
+      "asset": "SN_Weapon_Pedestal",
+      "role": "武器基座：甲板安装板 + 12 边收分基座 + 黄铜回转环 + 锁定销/黄油嘴",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_Weapon_Pedestal_Prototype",
+      "root": "SN_Weapon_Pedestal_Root",
+      "prefix": "SN_Weapon_Pedestal_",
+      "workbench_pos": [
+        6.0,
+        458.0,
+        0.0
+      ],
+      "family": "weapon_kit",
+      "part_role": "pedestal",
+      "mount_class": "Medium",
+      "root_datum": "deck surface (z=0), Collar top z=1.10, Yaw_Pivot z=1.18",
+      "sockets": [
+        "Mount",
+        "Collar",
+        "Yaw_Pivot",
+        "Anchor_1..4"
+      ],
+      "dimensions": {
+        "length": 1.9,
+        "width": 1.9,
+        "height": 1.2,
+        "tolerance": 0.1
+      },
+      "tri_budget": 1100,
+      "required_parts": [
+        "八角甲板安装板 + 8 地脚螺栓 + 4 加强肋",
+        "收分基座 + 2 道铁箍",
+        "黄铜回转环 + 回转轴承 + 锁定销",
+        "黄油嘴 + 检修盖板"
+      ],
+      "acceptance": [
+        "tri <= 1100",
+        "包围盒 1.90 x 1.90 x 1.20（±0.10）",
+        "zmin = 0",
+        "Collar/Yaw_Pivot 在 (0,0,1.18)",
+        "Mount/Anchor_1..4 存在",
+        "网格健康四项全 0",
+        "3/4 视角可读收分基座、黄铜环与四种地脚螺栓"
+      ]
+    },
+    {
+      "id": "sn_ship_part_deck_v1",
+      "asset": "SN_ShipPart_Deck",
+      "role": "甲板模块：8.4 x 6.0 m 铺板甲板段（24 条甲板条 + 边板 + 横梁 + 排水口 + 5 个装配 socket）",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_ShipPart_Deck_Prototype",
+      "root": "SN_ShipPart_Deck_Root",
+      "prefix": "SN_ShipPart_Deck_",
+      "workbench_pos": [
+        0.0,
+        476.0,
+        0.0
+      ],
+      "family": "ship_parts",
+      "part_role": "deck",
+      "root_datum": "underside z=0; deck surface z=0.33; weapon sockets at (±2.30, 1.10)",
+      "sockets": [
+        "Mount",
+        "Socket_Mast",
+        "Socket_Funnel",
+        "Socket_Hatch",
+        "Socket_Weapon_Port",
+        "Socket_Weapon_Starboard"
+      ],
+      "dimensions": {
+        "length": 8.4,
+        "width": 6.0,
+        "height": 0.36,
+        "tolerance": 0.1
+      },
+      "tri_budget": 1800,
+      "required_parts": [
+        "24 条甲板条 + 底板",
+        "四周边板/压条",
+        "3 道横梁",
+        "6 个铁质排水口",
+        "5 个装配 socket 空节点"
+      ],
+      "acceptance": [
+        "tri <= 1800",
+        "包围盒 8.40 x 6.00 x 0.36（±0.10）",
+        "zmin = 0、甲板面 z=0.33",
+        "5 个 Socket_* 在甲板面上且都在集合内",
+        "网格健康四项全 0",
+        "3/4 视角可读铺板分缝、边板与横梁"
+      ]
+    },
+    {
+      "id": "sn_ship_part_mast_v1",
+      "asset": "SN_ShipPart_Mast",
+      "role": "桅杆总成：下桅 + 桅顶瞭望台（栏杆/登台短梯/黄铜望远镜）+ 上桅 + 顶桅 + 上下横桁 + 桅帽 + 桅座/楔块 + 侧支索眼板",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_ShipPart_Mast_Prototype",
+      "root": "SN_ShipPart_Mast_Root",
+      "prefix": "SN_ShipPart_Mast_",
+      "workbench_pos": [
+        0.0,
+        500.0,
+        0.0
+      ],
+      "family": "ship_parts",
+      "part_role": "mast",
+      "root_datum": "deck surface (z=0), lookout platform at 12.16, masthead 12.84",
+      "sockets": [
+        "Mount",
+        "Top",
+        "Lookout",
+        "Yard_Lower_Mount",
+        "Yard_Upper_Mount",
+        "Deadeye_Port",
+        "Deadeye_Starboard"
+      ],
+      "dimensions": {
+        "length": 1.77,
+        "width": 6.2,
+        "height": 12.84,
+        "tolerance": 0.15
+      },
+      "tri_budget": 2800,
+      "required_parts": [
+        "下桅 + 4 道铁箍 + 桅座楔块",
+        "桅顶瞭望台（台面 z=12.16、栏杆、-X 登台长梯 + 3 道支撑、黄铜望远镜）",
+        "上桅 + 3 道铁箍 + 桅帽 + 顶桅 + 桅顶圆盘",
+        "上下两根横桁 + 吊环",
+        "左右各 3 个支索眼板/卸扣"
+      ],
+      "acceptance": [
+        "tri <= 2800",
+        "包围盒 1.77 x 6.20 x 12.84（±0.15）",
+        "zmin = 0",
+        "Top 在 (0,0,12.60)、Lookout 在 (0.50,0,12.16)、两根横桁 socket 在轴上",
+        "Mount 在原点",
+        "网格健康四项全 0",
+        "3/4 视角可读桅顶瞭望台/上桅收分/双横桁"
+      ]
+    },
+    {
+      "id": "sn_ship_part_funnel_v1",
+      "asset": "SN_ShipPart_Funnel",
+      "role": "蒸汽烟囱：底座法兰 + 后倾收分烟囱 + 3 道铁箍 + 黄铜顶箍 + 防雨帽 + 蒸汽管/阀轮 + 4 根拉索",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_ShipPart_Funnel_Prototype",
+      "root": "SN_ShipPart_Funnel_Root",
+      "prefix": "SN_ShipPart_Funnel_",
+      "workbench_pos": [
+        0.0,
+        522.0,
+        0.0
+      ],
+      "family": "ship_parts",
+      "part_role": "funnel",
+      "root_datum": "deck surface (z=0), exhaust at 4.55",
+      "sockets": [
+        "Mount",
+        "Exhaust",
+        "Steam_Inlet",
+        "Stay_1..4"
+      ],
+      "dimensions": {
+        "length": 2.4,
+        "width": 2.0,
+        "height": 4.66,
+        "tolerance": 0.12
+      },
+      "tri_budget": 1800,
+      "required_parts": [
+        "底座法兰 + 8 地脚螺栓 + 4 角撑",
+        "后倾 12 边收分烟囱 + 3 道铁箍 + 黄铜顶箍",
+        "防雨帽/挡檐",
+        "蒸汽管 + 阀轮 + 法兰",
+        "4 根拉索 + 花篮螺栓 + 甲板眼板"
+      ],
+      "acceptance": [
+        "tri <= 1800",
+        "包围盒 2.40 x 2.00 x 4.66（±0.12）",
+        "zmin = 0",
+        "Exhaust 在烟囱顶中心、Mount 在原点",
+        "网格健康四项全 0",
+        "3/4 视角可读后倾烟囱/顶箍/防雨帽与拉索"
+      ]
+    },
+    {
+      "id": "sn_ship_part_hatch_cover_v1",
+      "asset": "SN_ShipPart_HatchCover",
+      "role": "货舱盖：2.6 x 2.0 m 舱口围板 + 双开木盖板 + 铁包条 + 铰链 + 搭扣 + 内部格栅",
+      "generator": "tools/modeling/generators/kit_batch1_generator.py",
+      "collection": "SN_ShipPart_HatchCover_Prototype",
+      "root": "SN_ShipPart_HatchCover_Root",
+      "prefix": "SN_ShipPart_HatchCover_",
+      "workbench_pos": [
+        0.0,
+        543.0,
+        0.0
+      ],
+      "family": "ship_parts",
+      "part_role": "hatch_cover",
+      "root_datum": "deck surface (z=0), lid hinges at z=0.40",
+      "sockets": [
+        "Mount",
+        "Hinge_Fwd",
+        "Hinge_Aft",
+        "Opening_Center",
+        "Lid_Pivot_Fwd",
+        "Lid_Pivot_Aft"
+      ],
+      "dimensions": {
+        "length": 2.72,
+        "width": 2.0,
+        "height": 0.49,
+        "tolerance": 0.1
+      },
+      "tri_budget": 1400,
+      "required_parts": [
+        "舱口围板（四壁 + 顶沿 + 8 螺栓 + 4 角铁）",
+        "双开盖板（2 块 + 铁包条 + 提环）",
+        "4 个铰链 + 2 个搭扣",
+        "内部木格栅 8 条 + 2 横档"
+      ],
+      "acceptance": [
+        "tri <= 1400",
+        "包围盒 2.72 x 2.00 x 0.49（±0.10）",
+        "zmin = 0",
+        "Lid_Pivot_Fwd/Aft 在 (±1.30,0,0.40)、Hinge_Fwd/Aft 对称",
+        "Mount 在原点",
+        "网格健康四项全 0",
+        "3/4 视角可读围板/双开盖板/铰链搭扣"
+      ]
+    }
+  ],
+  "dryrun": "python tools/modeling/generators/dryrun_kit_batch1.py",
+  "export": "python tools/modeling/generators/export_kit_glb.py（Lead 在人工验收后执行）",
+  "deliverables": {
+    "glb": "assets/models/weapons/SN_Weapon_{Cannon,GunCarriage,Turret,Pedestal}.glb + assets/models/ship_parts/SN_ShipPart_{Deck,Mast,Funnel,HatchCover}.glb",
+    "runtime_copy": "dev_mods/core/assets/models/{weapons,ship_parts}/",
+    "preview": ".design/kits/preview/ + docs/design/screenshots/kits/",
+    "catalog": "docs/design/KIT_ASSET_LIBRARY.md + tools/modeling/kit_catalog.json"
+  },
+  "notes": "本批纯模型侧交付：不接游戏逻辑、不登记 manifest、不改现有武器批次 1–2 的资产。素材库契约见 docs/design/KIT_ASSET_LIBRARY.md。",
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "uv": {
+    "projection": "world-space box projection by dominant face normal",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json"
+  }
+}

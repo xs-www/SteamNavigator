@@ -15,6 +15,11 @@
 - 新增命令/查询必须经 `FrameworkApi` 注册，并补测试。
 - 数值改动先改 Core JSON（`dev_mods/core/content/`），不在框架里写死。
 
+## 3D 建模
+
+- 3D 资产/建模任务走 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md) + Blender MCP（`execute_blender_code` / `look`）链路。
+- **除非用户明确指定，否则不使用或考虑 BMH**（`D:\桌面\sisi_apps\BMH`，仍在开发中）：不运行 `bmh` 命令、不创建 BMH 任务、不安装其依赖，也不把 BMH 作为默认建模管线。
+
 ## 静态文档
 
 - 重要源码在文件前 120 行维护 `@static-doc` 注释块，不再为新文件向 `tools/static_docs_data.mjs` 的 `FILE_DOCS` 添加条目。

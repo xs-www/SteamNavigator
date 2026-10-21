@@ -9,18 +9,18 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNSeaChartPanel` | L1 |
-| `departure_requested (signal)` | L37 |
-| `purchase_clue_requested (signal)` | L39 |
-| `investigate_requested (signal)` | L41 |
-| `COMPASS_KEYS` | L44 |
-| `COMPASS_FALLBACK` | L46 |
-| `LEVEL_FALLBACK` | L50 |
-| `SOURCE_FALLBACK` | L53 |
-| `MAX_CLUE_LEVEL` | L56 |
-| `get_clue() -> Dictionary` | L98 |
-| `set_can_buy_clue(can_buy: Dictionary) -> void` | L104 |
-| `clear() -> void` | L108 |
-| `compass_key(angle: float) -> String` | L503 |
+| `departure_requested (signal)` | L44 |
+| `purchase_clue_requested (signal)` | L46 |
+| `investigate_requested (signal)` | L48 |
+| `COMPASS_KEYS` | L51 |
+| `COMPASS_FALLBACK` | L53 |
+| `LEVEL_FALLBACK` | L57 |
+| `SOURCE_FALLBACK` | L60 |
+| `MAX_CLUE_LEVEL` | L63 |
+| `get_clue() -> Dictionary` | L105 |
+| `set_can_buy_clue(can_buy: Dictionary) -> void` | L111 |
+| `clear() -> void` | L115 |
+| `compass_key(angle: float) -> String` | L632 |
 
 **航程预估**（距离 / 预计时间 / 煤水消耗 / 风险 / 是否已探索），并提供「启航」按钮
 （阶段 4.3.4 / U7 起只打开 Shell 的出航确认弹窗，不再跳转出航准备页）。
@@ -49,5 +49,12 @@
 - **逐级调查**（阶段 4.3.2 / U2）：线索区块显示「下一级：%s」预告（4 级显示已达最高），
   并多一个「调查线索」按钮，发出 `investigate_requested(clue_id)`。
   `can_investigate` 来自查询层（在港且 `level < 4`），面板只据它启用/禁用按钮。
+  4.4.3 起按钮上方显示 Core 的调查成本行（金币 / 小时 / 成功率），
+  `can_afford_investigation` 为假时成本行转警示色并禁用按钮。
+- **货物行情线索**（阶段 4.4）：`type = port_goods` 时不显示方向 / 航程区间 / 探索
+  出航按钮，改为类型标签、港口名、参考价区间（2 级起）、库存与供需（3 级起）、
+  精确买卖价（4 级）与剩余时效（`ui.clue.expiry`）；底部「前往该港」按钮发
+  `departure_requested("goods", clue_id)`（统一确认弹窗 → `clue.travel`）。等级文案
+  用 `ui.clue.goods.level.N`；面板仍不重算行情、不读 `credibility`。
 
 模块索引：[framework/ui](../README.md)

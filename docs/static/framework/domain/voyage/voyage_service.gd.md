@@ -9,12 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VoyageService` | L1 |
-| `OPPORTUNITY_CHANCE` | L57 |
-| `MAX_EVENT_DELAY_HOURS` | L58 |
-| `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L61 |
-| `choose_option(context, option_id: String) -> Dictionary` | L157 |
-| `settle_arrival_services(context, destination: String, arrival_time: float, voyage: Dictionary) -> Dictionary` | L363 |
-| `record_arrival_stats(state: GameState, contract_results: Array, injuries: int = 0) -> Dictionary` | L442 |
+| `OPPORTUNITY_CHANCE` | L59 |
+| `MAX_EVENT_DELAY_HOURS` | L60 |
+| `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L63 |
+| `choose_option(context, option_id: String) -> Dictionary` | L164 |
+| `settle_arrival_services(context, destination: String, arrival_time: float, voyage: Dictionary) -> Dictionary` | L370 |
+| `record_arrival_stats(state: GameState, contract_results: Array, injuries: int = 0) -> Dictionary` | L455 |
 
 小时一次性扣煤水）与失败回滚。
 
@@ -42,6 +42,8 @@
   格子留 EXPLORED），旧存档没有 `world_map` 时这些调用全部 no-op。
 - 4.1 起每次抵达还调用 `ClueService.on_arrival` 抽传闻线索；空结果（没抽中 /
   没有目标 / 上限已满）永不阻断或失败抵达。
+- 4.4 起 `settle_arrival_services` 先按抵达时间 sweep 到期货物线索（所有抵达路径
+  共用），把 `clue.expired` 事件并入到港事件；4.4.2 还会在这里接入完成委托解锁线索。
 
 ## 重点逻辑
 ### `start(context, destination_id, strategy_id)`
