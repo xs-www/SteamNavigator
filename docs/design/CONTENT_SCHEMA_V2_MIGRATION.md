@@ -133,17 +133,21 @@ G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案
 
 ### Phase B · 世界探索家族提升（阶段 0/1，2–4 周）
 
-目标：8 类 v2 草案从 `planned` 提升为 active，并由真实运行时消费。
+**执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)（Draft 1，含 9 类类型、引用/完整性规则、
+CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。**
+
+目标：8 类 v2 草案 + 新增 `map_configs`（1.0 `map_profiles` 的 v2 继任者）从 `planned`/草案提升为 active，
+并由真实运行时消费；1.0 老链路与旧档保持可用。
 
 | 任务 | 范围 | 说明 |
 | --- | --- | --- |
-| B0 | 前置 | 探索 4.1 提交；冻结其 1.0 `map_profile` 字段，后续只做迁移映射 |
-| B1 | 类型提升 | `content_types.json`：8 类从 `planned` 移入 `types`（`registry: true`、`kind: definition`、`default_file`、`capability`）；删除 `draft_types` / `draft_schemas` 中对应条目 |
-| B2 | 注册表与引用 | `RegistryHub` 增加 world / region / site / route / weather / faction / discovery 注册表；`CrossReferenceValidator` 增加 `id_ref` 规则（如 `region.weather_profile → weather_profiles`）；`CoreCompletenessChecker` 增加规则 |
-| B3 | 世界生成运行时 | 新 `WorldGenerator` 消费 `world_profiles / regions / sites / route_templates / weather_profiles / factions`；`start_profiles` 接 `RunFactory`/新战役入口；`campaign.world / codex / factions` 分区接线；新增 `world.view` / `codex.view` / `faction.view` 查询 |
-| B4 | core 内容 | `dev_mods/core/content/` 新增 8 个 v2 内容文件 + 本地化；`map_profile` 的探索参数迁入 v2 `map_config` |
-| B5 | 存档 | 新档把世界生成结果写入 `campaign.world`；旧档惰性补齐、世界不重排；按 D3 记录 `content_versions` |
-| B6 | 编辑器 / CLI / SDK | 草案分区回归正式分组；`types` 分组与 `capability` 更新；发布门禁要求 v2 core 校验通过 |
+| B0 | 前置 | 探索 4.1 提交；`schema-v2` rebase `main`；冻结其 1.0 `map_profile` 字段，后续只做迁移映射 |
+| B1 | 类型提升 | `content_types.json`：8 类从 `planned` 移入 `types` + 新增 `map_configs`；删除 `draft_types` / `draft_schemas` 中对应条目、清理 `planned`；新增 `schemas/v2/map_config.schema.json` 并微调 `world_profiles`/`start_profiles` |
+| B2 | 注册表与引用 | `RegistryHub` 按 `ContentTypes.all()` 自动生效；`CrossReferenceValidator` 增加 9 个 `_check_*` 与 `ref_inactive_type` 规则；`CoreCompletenessChecker` 增加规则 |
+| B3 | 世界生成运行时 | 新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询 |
+| B4 | core 内容 | `dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化；`map_profiles.exploration` 原样迁入 `map_configs.exploration` |
+| B5 | 存档 | 新档写 `campaign.setup.content_versions`；旧档惰性补齐、世界不重排（D3） |
+| B6 | 编辑器 / CLI / SDK | 草案分区消失、`capability_undeclared` 改为按 schemaVersion=2.0 判定、G8 判定改为“运行时是否支持”；发布门禁要求 v2 core 校验通过 |
 
 验收：v2 世界生成可开局；旧档可继续；1.0 模组在双读窗口内仍可加载；seed 回归（现有 seed + 新 v2 seed）；
 编辑器/CLI/SDK 全链零 error；`gen_content_types --check`、`gen_static_docs --check`。

@@ -8,6 +8,7 @@
 - 正式版路线图：[从 MVP 到持久模拟经营](docs/design/FULL_GAME_ROADMAP.md)
 - 实体契约 v2：[content_types 与 Schema 2.0 契约](docs/design/ENTITY_CONTRACT_V2.md)
 - Content Schema 2.0 迁移落地方案：[分层迁移与切片计划](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md)
+- 世界与战役运行时实现契约（Phase B）：[WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 - 模块实例与部件损耗：[SHIP_MODULE_INSTANCES.md](docs/specs/SHIP_MODULE_INSTANCES.md)
 - 战斗架构采纳边界：[战斗系统架构评审](docs/specs/COMBAT_ARCHITECTURE_REVIEW.md)
 - 迭代 1 实现契约：[MVP 闭环](docs/specs/ITERATION_1_MVP_LOOP.md)
