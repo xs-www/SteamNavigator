@@ -19,6 +19,7 @@ static func register_all(bus: CommandBus) -> void:
 	bus.register(&"explore.settle", Callable(ExploreCommands, "settle"))
 	bus.register(&"explore.decide", Callable(ExploreCommands, "decide"))
 	bus.register(&"clue.buy", Callable(ExploreCommands, "buy"))
+	bus.register(&"clue.investigate", Callable(ExploreCommands, "investigate"))
 	bus.register(&"port.wait", Callable(PortCommands, "wait"))
 	bus.register(&"ship.install_module", Callable(ShipCommands, "install_module"))
 	bus.register(&"ship.uninstall_module", Callable(ShipCommands, "uninstall_module"))

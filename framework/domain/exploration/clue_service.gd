@@ -1,8 +1,9 @@
 class_name ClueService
 extends RefCounted
 ## @static-doc
-## 作用：港口位置线索的领域服务——生成（抵达传闻 / 酒馆购买）、按等级裁剪的只读视图、
-## 线索生命周期（active → resolved；失败探索不再消耗线索）以及发现概率的规则计算。
+## 作用：港口位置线索的领域服务——生成（抵达传闻 / 酒馆购买）、逐级调查披露
+## （`investigate`，1→2→3→4）、按等级裁剪的只读视图、线索生命周期（active →
+## resolved；失败探索不再消耗线索）以及发现概率的规则计算。
 ##
 ## - 关键依赖：`GameState.data.clues`（惰性 ensure）、`WorldOps`、`MapOps`、
 ##   `ExplorationRules`、`ShipOps`、`VoyageCalculator`、`RngService.STREAM_EXPLORATION`
@@ -16,6 +17,14 @@ extends RefCounted
 ## - 随机全部走命名流 `RngService.STREAM_EXPLORATION`，key 规则见
 ##   `docs/design/EXPLORATION_SYSTEM.md` §4：传闻 `rumor:<port>:<time>`、
 ##   购买 `intel:<port>:<time>`。同 seed + 同状态必须复现。
+## - 线索**获得时固定为 level 1**（阶段 4.3.2 / U2 起不再用 `level_weights` 抽等级）；
+##   等级只由 `investigate` 逐级推进（1→2→3→4，上限 4）。`level_weights` 仍保留在
+##   Core / schema / `ExplorationRules.DEFAULTS` 中，留给后续线索系统（内容兼容）。
+## - 同一线索的 `target_port_id` / `credibility` / `search_zone` / 方向角 / 航程区间在
+##   获得时固定，调查只是**逐级披露**（方向 → 圆圈 → 名称），绝不重抽目标。
+## - `investigate` 门禁：有 run、线索在 active、在港（`is_at_port()`）、`level < 4`；
+##   成功只改 `level`。具体消耗由 Core 预留 `investigation_cost` / `investigation_hours`
+##   （4.3 初始 0，不做资源判定、不扣钱、不推进时间），只随返回体与查询暴露给后续迭代。
 ## - 查询视图裁剪：`level < 4` 不含 `name_key`、`level < 3` 不含 `circle`；**任何等级**
 ##   都不输出 `target_port_id`、`credibility` 与 `search_zone` 中心误差来源。
 ##   等级 1 不披露方向（`direction_angle` 固定 0），2 级披露方向，3/4 级再加圆圈。
@@ -169,7 +178,9 @@ static func acquire(context, source_key: String, rng: RandomNumberGenerator, tar
 	var reference_id := state.current_port_id()
 	var reference := world.get_port(reference_id)
 
-	var level := _pick_level(rng, _weights_for(rules, source_key))
+	# 阶段 4.3.2 / U2：获得时固定 1 级；逐级揭示交给 `investigate`。
+	# `level_weights` 不再参与获得等级（保留在内容 / schema 中供后续线索系统使用）。
+	var level := 1
 	var credibility := _pick_credibility(rng, rules, source_key)
 	var direction_angle := 0.0
 	if not reference.is_empty():
@@ -215,6 +226,55 @@ static func acquire(context, source_key: String, rng: RandomNumberGenerator, tar
 	active_list.append(clue)
 	state.push_notice("ui.notice.clue_acquired", {"source": String(clue["source_display_key"])})
 	return clue
+
+
+## 4.3.2 / U2：「调查线索」——在港把一条 active 线索推进一级（1→2→3→4，上限 4）。
+## 只改 `level`；`target_port_id` / `credibility` / `search_zone` / 方向与航程区间都在
+## 获得时固定，调查只负责逐级披露。具体消耗由 Core 预留
+## （`investigation_cost` / `investigation_hours`，4.3 初始 0）：本片不做资源判定、
+## 不扣钱、不推进时间，两个值只进返回体与查询，供后续线索系统迭代使用。
+## 成功返回 `{clue_id, level, next_level, cost, hours, view}`（`view` 为 `view_entry`）。
+static func investigate(context, clue_id: String) -> Dictionary:
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	var state: GameState = context.state
+	if clue_id.is_empty():
+		return Result.fail("unknown_clue", "ui.error.unknown_clue")
+	var clue := find_clue(state, clue_id)
+	if clue.is_empty():
+		# 区分「从未存在」与「已经解决 / 作废」：两者都不在 active，但提示不同。
+		var clues_data := state.ensure_clues()
+		if Array(clues_data.get("failed", [])).has(clue_id) \
+				or Array(clues_data.get("resolved", [])).has(clue_id):
+			return Result.fail(
+				"clue_not_active", "ui.error.clue_not_active", {"clue_id": clue_id}
+			)
+		return Result.fail("unknown_clue", "ui.error.unknown_clue", {"clue_id": clue_id})
+	if not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port", {"clue_id": clue_id})
+	var level := int(clue.get("level", 1))
+	if level >= NAME_MIN_LEVEL:
+		return Result.fail(
+			"clue_max_level",
+			"ui.error.clue_max_level",
+			{"clue_id": clue_id, "level": level}
+		)
+	var rules := ExplorationRules.read(state, context.registries)
+	clue["level"] = level + 1
+	var new_level := int(clue.get("level", level + 1))
+	var cost := int(rules.get("investigation_cost", 0))
+	var hours := float(rules.get("investigation_hours", 0.0))
+	return Result.ok(
+		{
+			"clue_id": clue_id,
+			"level": new_level,
+			"next_level": new_level + 1 if new_level < NAME_MIN_LEVEL else 0,
+			"cost": cost,
+			"hours": hours,
+			"view": view_entry(state, clue),
+		},
+		[clue_investigated_event(clue)]
+	)
 
 
 ## 4.3 / U3：一次失败的探索尝试。线索**不离开** active，只累加尝试次数与最近
@@ -296,6 +356,18 @@ static func clue_acquired_event(clue: Dictionary) -> Dictionary:
 	}
 
 
+## Domain event for "a clue was investigated one level further". Target port,
+## credibility and search zone stay out of the payload (only clue id + level).
+static func clue_investigated_event(clue: Dictionary) -> Dictionary:
+	return {
+		"type": "clue.investigated",
+		"payload": {
+			"clue_id": String(clue.get("id", "")),
+			"level": int(clue.get("level", 1)),
+		},
+	}
+
+
 static func _remove_active(state: GameState, clue_id: String) -> Dictionary:
 	if clue_id.is_empty():
 		return {}
@@ -306,30 +378,6 @@ static func _remove_active(state: GameState, clue_id: String) -> Dictionary:
 			active_list.remove_at(index)
 			return clue
 	return {}
-
-
-static func _pick_level(rng: RandomNumberGenerator, weights: Array) -> int:
-	var total := 0.0
-	for weight in weights:
-		total += maxf(0.0, float(weight))
-	if total <= 0.0:
-		return 1
-	var roll := rng.randf() * total
-	for index in weights.size():
-		roll -= maxf(0.0, float(weights[index]))
-		if roll <= 0.0:
-			return index + 1
-	# Only reachable through floating-point dust; fall back to the last positive level.
-	for index in range(weights.size() - 1, -1, -1):
-		if float(weights[index]) > 0.0:
-			return index + 1
-	return 1
-
-
-static func _weights_for(rules: Dictionary, source_key: String) -> Array:
-	var level_weights: Dictionary = rules.get("level_weights", {})
-	var weights: Variant = level_weights.get(source_key, [])
-	return weights if weights is Array else []
 
 
 static func _pick_credibility(rng: RandomNumberGenerator, rules: Dictionary, source_key: String) -> float:

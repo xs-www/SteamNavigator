@@ -2,7 +2,8 @@ class_name ExploreCommands
 extends RefCounted
 ## @static-doc
 ## 作用：探索系统的命令包装（`explore.start` / `explore.settle` / `explore.decide` /
-## `clue.buy`），把参数校验与领域服务的返回原样交给 CommandBus 的事务/事件流程。
+## `clue.buy` / `clue.investigate`），把参数校验与领域服务的返回原样交给 CommandBus
+## 的事务/事件流程。
 ##
 ## - 关键依赖：`ExploreVoyageService`、`ClueService`、`Result`
 ##
@@ -43,3 +44,14 @@ static func decide(params: Dictionary, context) -> Dictionary:
 
 static func buy(_params: Dictionary, context) -> Dictionary:
 	return ClueService.buy(context)
+
+
+## 4.3.2 / U2：`clue.investigate` —— 在港把一条线索推进一级（上限 4）。
+## 等级推进与门禁都在 `ClueService.investigate`，命令只做缺参校验。
+static func investigate(params: Dictionary, context) -> Dictionary:
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	var clue_id := String(params.get("clue_id", ""))
+	if clue_id.is_empty():
+		return Result.fail("unknown_clue", "ui.error.unknown_clue")
+	return ClueService.investigate(context, clue_id)

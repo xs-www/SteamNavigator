@@ -21,6 +21,10 @@ extends RefCounted
 ##   视图（不含 `target_port_id` / `credibility` / 真实 `search_zone`）再合并
 ##   `ExplorationCalculator.preview` 的展示估算；`explore` 只说明是否有探索航次及其
 ##   clue id；`can_buy_clue` 用与 `clue.buy` 相同的门禁算出是否可买与原因键。
+## - 4.3.2 / U2：每条 clue 追加调查入口字段——`investigation_cost` /
+##   `investigation_hours`（来自 Core `exploration` 块，4.3 初始 0）、
+##   `can_investigate`（在港且 `level < 4`）、`next_level`（4 级为 0）与
+##   `next_level_key`（下一级披露文案键，4 级为空串）。裁剪规则不变。
 ## - 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
 ##   煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
 ##   几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：
@@ -386,11 +390,23 @@ static func _empty_result() -> Dictionary:
 static func _clue_views(context, params: Dictionary) -> Array:
 	var state: GameState = context.state
 	var strategy_id := String(params.get("strategy_id", ""))
+	var rules := ExplorationRules.read(state, context.registries)
+	var investigation_cost := int(rules.get("investigation_cost", 0))
+	var investigation_hours := float(rules.get("investigation_hours", 0.0))
+	var at_port := state.is_at_port()
 	var views: Array = []
 	for entry in ClueService.view(state, context):
 		if not (entry is Dictionary):
 			continue
 		var clue_view: Dictionary = entry
+		var level := int(clue_view.get("level", 1))
+		var can_investigate := at_port and level < ClueService.NAME_MIN_LEVEL
+		var next_level := level + 1 if level < ClueService.NAME_MIN_LEVEL else 0
+		clue_view["investigation_cost"] = investigation_cost
+		clue_view["investigation_hours"] = investigation_hours
+		clue_view["can_investigate"] = can_investigate
+		clue_view["next_level"] = next_level
+		clue_view["next_level_key"] = "" if next_level == 0 else "ui.clue.level.%d" % next_level
 		clue_view["estimated"] = _clue_estimate(context, String(clue_view.get("id", "")), strategy_id)
 		views.append(clue_view)
 	return views

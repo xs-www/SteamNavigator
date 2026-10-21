@@ -277,6 +277,14 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "investigation_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "investigation_hours": {
+              "type": "number",
+              "minimum": 0
             }
           }
         }

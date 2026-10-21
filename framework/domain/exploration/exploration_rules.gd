@@ -31,6 +31,8 @@ const DEFAULTS := {
 	"fog_vision_ratio": 0.05,
 	"intel_clue_cost": 40,
 	"max_active_clues": 4,
+	# 4.3.2 起线索获得固定 1 级，`level_weights` 不再参与获得等级；保留在内容 / schema /
+	# DEFAULTS 中，留给后续线索系统迭代（内容兼容，不要删除）。
 	"level_weights": {
 		"rumor": [0.55, 0.35, 0.10, 0.00],
 		"intel": [0.00, 0.15, 0.45, 0.40],
@@ -53,6 +55,10 @@ const DEFAULTS := {
 	"alert_threshold": 0.5,
 	"alert_progress": 0.5,
 	"turnback_extra_ratio": 0.25,
+	# 4.3.2 / U2：线索调查的预留消耗（4.3 恒为 0，不做资源判定、不扣钱、不推进时间）。
+	# 具体数值留给后续线索系统迭代；`investigate` 只读取并回传给查询 / UI。
+	"investigation_cost": 0,
+	"investigation_hours": 0.0,
 }
 
 

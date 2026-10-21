@@ -1634,6 +1634,7 @@ func _screen_sea_chart(data: Dictionary) -> void:
 	screen.voyage_requested.connect(_on_sea_chart_voyage)
 	screen.explore_requested.connect(_on_explore_requested)
 	screen.purchase_clue_requested.connect(_on_purchase_clue_requested)
+	screen.investigate_requested.connect(_on_investigate_requested)
 	_root_box.add_child(screen)
 
 
@@ -1651,6 +1652,12 @@ func _on_explore_requested(clue_id: String) -> void:
 ## 查询重新执行即带出新的 `clues` 列表。
 func _on_purchase_clue_requested() -> void:
 	_run_command(&"clue.buy", {})
+
+
+## 海图面板「调查线索」（4.3.2）：`clue.investigate` 把该线索推进一级；成功后的
+## 状态栏提示与重建由 `_run_command` / `_handle_success` 负责。
+func _on_investigate_requested(clue_id: String) -> void:
+	_run_command(&"clue.investigate", {"clue_id": clue_id})
 
 
 func _toggle_sea_chart() -> void:
@@ -2519,6 +2526,8 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			_start_explore_presentation(data)
 		"clue.buy":
 			_handle_clue_bought(data)
+		"clue.investigate":
+			_handle_clue_investigated(data)
 		"event.choose_option":
 			if bool(data.get("failed", false)):
 				_presentation = null
@@ -2653,6 +2662,15 @@ func _handle_clue_bought(data: Dictionary) -> void:
 		source_key = "ui.clue.source." + String(clue.get("source_key", ""))
 	var source := _tr(source_key, "线索")
 	_set_status(_tr("ui.notice.clue_acquired", "获得线索：%s") % source, false)
+
+
+## `clue.investigate` 成功（4.3.2）：状态栏只报新的线索等级（不泄露目标港 / 可信度），
+## 海图由 `_run_command` 的常规 `_refresh()` 重建，等级裁剪后的线索层自然更新。
+func _handle_clue_investigated(data: Dictionary) -> void:
+	_set_status(
+		_tr("ui.notice.clue_investigated", "线索调查完成：已升至 %d 级") % int(data.get("level", 0)),
+		false
+	)
 
 
 func _full_stop_after_voyage(data: Dictionary) -> void:

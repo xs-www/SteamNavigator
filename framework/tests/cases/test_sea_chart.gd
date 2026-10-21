@@ -1268,3 +1268,101 @@ func test_sea_chart_screen_binds_clue_panel_and_forwards_signals() -> void:
 		return node is Button and String((node as Button).name) == "PurchaseClueButton"
 	), "the screen wires can_buy_clue into the panel")
 	screen.free()
+
+
+# ── Stage 4.3.2 / U2: clue investigation ──
+
+## 线索面板「调查线索」按钮 +「下一级」预告；4 级禁用并显示已达最高；在航禁用；
+## 整页（SeaChartScreen）把面板的 investigate_requested 原样转发给 Shell。
+func test_sea_chart_panel_investigation_button_and_screen_forwarding() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var tree := Engine.get_main_loop() as SceneTree
+	var panel := SNSeaChartPanel.new()
+	tree.root.add_child(panel)
+	var requested: Array = []
+	panel.investigate_requested.connect(func(clue_id: String) -> void: requested.append(clue_id))
+
+	var clue := {
+		"id": "clue:7",
+		"source_key": "intel",
+		"source_display_key": "ui.clue.source.intel",
+		"level": 1,
+		"reference_port_id": "port_a",
+		"direction_angle": 0.0,
+		"distance_min_hours": 4.0,
+		"distance_max_hours": 9.0,
+		"circle": null,
+		"name_key": "",
+		"investigation_cost": 0,
+		"investigation_hours": 0.0,
+		"can_investigate": true,
+		"next_level": 2,
+		"next_level_key": "ui.clue.level.2",
+	}
+	panel.bind_clue(clue, Callable(context, "translate"))
+	var texts := _label_texts(panel)
+	assert_true(_any_text_contains(texts,
+		context.translate("ui.clue.next_level") % context.translate("ui.clue.level.2")),
+		"the panel previews the next disclosure, got: %s" % str(texts))
+	var investigate := _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "InvestigateButton"
+	) as Button
+	assert_not_null(investigate, "the clue panel offers the investigate button")
+	if investigate != null:
+		assert_false(investigate.disabled, "a level-1 clue in port can be investigated")
+		investigate.pressed.emit()
+	assert_eq(requested, ["clue:7"], "the investigate button emits investigate_requested(clue_id)")
+
+	# 4 级：按钮禁用 + 已达最高等级文案，不再显示「下一级」。
+	var capped := clue.duplicate(true)
+	capped["level"] = 4
+	capped["can_investigate"] = false
+	capped["next_level"] = 0
+	capped["next_level_key"] = ""
+	panel.bind_clue(capped, Callable(context, "translate"))
+	texts = _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.max_level")),
+		"a level-4 clue reports the maximum level, got: %s" % str(texts))
+	investigate = _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "InvestigateButton"
+	) as Button
+	assert_not_null(investigate, "the investigate button stays visible at level 4")
+	if investigate != null:
+		assert_true(investigate.disabled, "a level-4 clue disables the investigate button")
+
+	# 在航（查询说 can_investigate=false）：按钮禁用但「下一级」预告仍在。
+	var at_sea := clue.duplicate(true)
+	at_sea["can_investigate"] = false
+	panel.bind_clue(at_sea, Callable(context, "translate"))
+	investigate = _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "InvestigateButton"
+	) as Button
+	assert_not_null(investigate, "the investigate button stays visible at sea")
+	if investigate != null:
+		assert_true(investigate.disabled, "at sea the investigate button is disabled")
+	assert_true(_any_text_contains(_label_texts(panel),
+		context.translate("ui.clue.next_level") % context.translate("ui.clue.level.2")),
+		"the next-disclosure preview survives being at sea")
+	panel.free()
+
+	# 整页接线：图上点线索 → 面板 → 调查按钮 → 屏幕 investigate_requested(clue_id)。
+	var vm: Dictionary = CLUE_VM.duplicate(true)
+	var screen: Control = SEA_CHART_SCREEN_SCRIPT.new()
+	tree.root.add_child(screen)
+	screen.bind(vm, Callable(context, "translate"))
+	var chart := _find_descendant(screen, func(node: Node) -> bool:
+		return node is SNSeaChartView
+	) as SNSeaChartView
+	assert_not_null(chart, "the screen mounts the chart view")
+	var forwarded: Array = []
+	screen.investigate_requested.connect(func(clue_id: String) -> void: forwarded.append(clue_id))
+	chart.clue_clicked.emit("clue:3")
+	var screen_button := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "InvestigateButton"
+	) as Button
+	assert_not_null(screen_button, "the screen's clue panel exposes the investigate button")
+	if screen_button != null:
+		screen_button.pressed.emit()
+	assert_eq(forwarded, ["clue:3"], "the screen forwards investigate_requested(clue_id)")
+	screen.free()

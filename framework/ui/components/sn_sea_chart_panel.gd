@@ -22,6 +22,9 @@ extends PanelContainer
 ##   `explore_requested(clue_id)`；`can_buy_clue.available` 时多一个购买按钮，发出
 ##   `purchase_clue_requested`，由 Shell 执行 `clue.buy` 并刷新海图。
 ##   面板仍不计算任何数值：预计值全部来自查询层的 `clue["estimated"]`。
+## - **逐级调查**（阶段 4.3.2 / U2）：线索区块显示「下一级：%s」预告（4 级显示已达最高），
+##   并多一个「调查线索」按钮，发出 `investigate_requested(clue_id)`。
+##   `can_investigate` 来自查询层（在港且 `level < 4`），面板只据它启用/禁用按钮。
 ## @end-static-doc
 
 signal voyage_requested(port_id: String)
@@ -29,6 +32,8 @@ signal voyage_requested(port_id: String)
 signal explore_requested(clue_id: String)
 ## 「购买线索」：由 SeaChartScreen 转发给 Shell 执行 `clue.buy`。
 signal purchase_clue_requested
+## 「调查线索」：由 SeaChartScreen 转发给 Shell 执行 `clue.investigate`（等级 +1）。
+signal investigate_requested(clue_id: String)
 
 ## 八方位键（世界弧度 0 = 屏幕 +X 东；图表 +Y 朝下 = 南）。
 const COMPASS_KEYS := ["E", "SE", "S", "SW", "W", "NW", "N", "NE"]
@@ -41,6 +46,9 @@ const LEVEL_FALLBACK := {
 	1: "模糊传闻", 2: "方位线索", 3: "距离线索", 4: "港口名称",
 }
 const SOURCE_FALLBACK := {"rumor": "传闻", "intel": "情报"}
+## 线索等级上限（1 存在 → 2 方向 → 3 距离 → 4 名称）。查询层也按这个上限裁剪；
+## 面板只在 fallback 时用它判断「下一级」与按钮是否可用。
+const MAX_CLUE_LEVEL := 4
 
 var _port_id: String = ""
 var _port_data: Dictionary = {}
@@ -299,6 +307,7 @@ func _build_clue_state() -> void:
 		level_label.add_theme_font_size_override("font_size", 13)
 		level_label.add_theme_color_override("font_color", Color("7fc8e8"))
 		vbox.add_child(level_label)
+		_append_next_level_row(vbox, level)
 
 	# 4.3 / U3：失败不消耗线索，面板提示已经尝试过几次（0 次不显示）。
 	var attempts := int(_clue.get("attempts", 0))
@@ -336,6 +345,8 @@ func _build_clue_state() -> void:
 	if estimated is Dictionary and not (estimated as Dictionary).is_empty():
 		vbox.add_child(HSeparator.new())
 		vbox.add_child(_clue_estimate_block(estimated as Dictionary))
+
+	_append_investigate_button(vbox, level)
 
 	var explore_button := Button.new()
 	explore_button.name = "ExploreButton"
@@ -407,6 +418,55 @@ func _clue_estimate_block(estimated: Dictionary) -> Control:
 		blocker_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(blocker_label)
 	return box
+
+
+## 4.3.2 / U2：「下一级」预告——下一级会披露什么（方向 → 圆圈 → 名称）；4 级显示
+## 已达最高。披露文案键由查询层给出（`next_level_key`），面板只负责本地化与排版。
+func _append_next_level_row(vbox: VBoxContainer, level: int) -> void:
+	if level <= 0:
+		return
+	var row := Label.new()
+	row.add_theme_font_size_override("font_size", 11)
+	if level >= MAX_CLUE_LEVEL:
+		row.text = _tr_or("ui.clue.max_level", "已达最高等级")
+		row.add_theme_color_override("font_color", Color("8fd694"))
+		vbox.add_child(row)
+		return
+	var next_level := int(_clue.get("next_level", level + 1))
+	if next_level <= 0 or next_level > MAX_CLUE_LEVEL:
+		next_level = mini(level + 1, MAX_CLUE_LEVEL)
+	var next_key := String(_clue.get("next_level_key", ""))
+	if next_key.is_empty():
+		next_key = "ui.clue.level.%d" % next_level
+	var next_text := _tr_or(next_key, String(LEVEL_FALLBACK.get(next_level, "线索")))
+	row.text = _tr_or("ui.clue.next_level", "下一级：%s") % next_text
+	row.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+	vbox.add_child(row)
+
+
+## 4.3.2 / U2：「调查线索」按钮。`can_investigate`（查询层：在港且 level<4）为假或
+## 已达 4 级时禁用；点击只发信号，等级推进在 `clue.investigate` 命令里完成。
+func _append_investigate_button(vbox: VBoxContainer, level: int) -> void:
+	if level <= 0:
+		return
+	var button := Button.new()
+	button.name = "InvestigateButton"
+	button.text = _tr_or("ui.button.investigate_clue", "调查线索")
+	button.add_theme_stylebox_override("normal", _button_style(Color(0.30, 0.26, 0.16)))
+	button.add_theme_stylebox_override("hover", _button_style(Color(0.38, 0.32, 0.20)))
+	button.add_theme_stylebox_override("pressed", _button_style(Color(0.24, 0.20, 0.13)))
+	var can_investigate := bool(
+		_clue.get("can_investigate", level < MAX_CLUE_LEVEL)
+	) and level < MAX_CLUE_LEVEL
+	button.disabled = not can_investigate
+	button.pressed.connect(_on_investigate_pressed)
+	vbox.add_child(button)
+
+
+func _on_investigate_pressed() -> void:
+	var clue_id := String(_clue.get("id", ""))
+	if not clue_id.is_empty():
+		investigate_requested.emit(clue_id)
 
 
 func _clue_row(text: String, color: Color) -> Label:
