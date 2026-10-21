@@ -194,10 +194,11 @@ Route (航线 = 两个港口之间的可航行路径)
   → 未发现 → 见 §5.3 探索失败处理
 ```
 
-**实现状态（4.1）**：`explore.start` / `explore.settle` 已按此流程落地，命令与字段形状见
+**实现状态（4.1 / 4.2）**：`explore.start` / `explore.settle` 已按此流程落地，命令与字段形状见
 [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) §4–§5。差异：发现判定在出发时抽定
 （`outcome_roll`，命名流 `explore:<clue_id>:<departure>`），抵达时才由 `explore.settle`
-应用结果；4.1 的搜索区就是航线终点，4.2 再补"进入搜索区后再判定"的过程感。
+应用结果；4.1 的搜索区就是航线终点。4.2 在航程 50% 处插入了资源告急决策
+（继续 / 掉头），"进入搜索区后再判定"的完整过程感仍留给阶段 5 与事件化海洋一起做。
 
 ### 5.2 探索演出差异
 
@@ -222,6 +223,13 @@ Route (航线 = 两个港口之间的可航行路径)
 - 此时玩家可选择：继续探索 / 掉头回最近已知港口
 - 正常港口间移动**不允许反悔**
 
+**实现状态（4.2）**：已落地。`explore.start` 出发时按 `alert_threshold` 预判并在
+`presentation.alert_progress`（Core JSON = 0.5）给出决策点；演出走到 `EVENT_WAIT`
+挂资源告急页（「继续探索 / 掉头返航」，`skip()` 不能替玩家决策）。继续 → 演出走完并
+自动 settle；掉头 → `explore.decide` 立即结算半程返航（回出发港、线索保留、额外煤水）、
+`VoyagePresentation.force_arrival()` 直接播入港，`ARRIVAL_READY` 用 returned 守卫跳过
+二次 settle。细节见 [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) §4–§6。
+
 ## 6. 事件系统
 
 ### 6.1 事件类型
@@ -238,6 +246,10 @@ Route (航线 = 两个港口之间的可航行路径)
 ### 6.2 资源告急事件
 
 探索航行中，某航行必备资源（煤/水/耐久）较出发前消耗一半时触发一次。玩家可选择继续或掉头。
+
+**实现状态（4.2）**：煤/水按 `alert_threshold`（Core JSON 0.5）在出发时预判，决策点由
+`alert_progress` 决定（默认航程 50%）；0 库存不会误报。耐久告急要等阶段 5 有敌对/环境
+事件造成途中损伤后再接（4.2 的探索途中没有耐久损耗来源）。
 
 ### 6.3 事件预加载
 
@@ -370,7 +382,8 @@ PortStage.VOYAGE_BEAT_SECONDS`，有测试守护），云层才不会在镜头�
 
 **剩余项（下一切片）**：
 - 事件触发时的 3D 场景与云层下降（当前事件页仍是 2D 页面，只有 2D 云层转场）。
-- `ExplorationFound` / `ResourceAlert` 分支属于阶段 4 与阶段 5，未实现。
+- `ResourceAlert` 已在 4.2 落地（告警页 + 继续/掉头 + `force_arrival()`）；
+  `ExplorationFound` 的"搜索完成后继续或入港"完整分支仍在阶段 5 与事件化海洋一起做。
 
 ### 8.3 玩家限制
 
@@ -536,8 +549,13 @@ GameState
   （扣耐久 / 煤水 / 时间）；结算页新增探索结果区块。
 - 查询：`sea_chart.view` 追加 `clues`（按等级裁剪，不泄露目标港 / 可信度）、
   `explore`（是否有探索航次）与 `can_buy_clue`（与 `clue.buy` 同一门禁）。
-- 剩余的 4.2：资源告急中途决策与掉头、探索后的委托 / 市场 / NPC 结算、
-  探索中事件化海洋（阶段 5 一起做）。
+- 剩余的 4.3：货物类线索与时效、在港等待/委托解锁线索、线索列表页；
+  探索中事件化海洋归阶段 5（与其共享事件暂停/恢复机制）。
+
+**4.2 已落地**：资源告急中途决策与掉头（`VoyagePresentation.force_arrival()` +
+告警页 + `explore.decide`）、探索入港复用普通抵达的到港服务
+（委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）。契约见
+[EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md)；测试 308 例全绿。
 
 ### 阶段 5：事件化海洋
 

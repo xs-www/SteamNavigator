@@ -9,6 +9,7 @@
 
 - 航海图系统正式版阶段 0–3：坐标空间世界生成、三重迷雾、海图 UI、航线预计算、真实对局孪生世界、航行演出（3D 离港 / 入港 + 云层转场 + 海图航行 + 事件中断）
 - 航海图系统阶段 4.1 探索：线索（抵达传闻 / 购买情报 + 分级与海图可视化）、`explore.start` / `explore.settle` 探索航次、搜索区判定与发现概率、失败漂流、发现后解锁港口与迷雾揭示、探索结算；数值配置在 `map_profiles` 的 `exploration` 块
+- 航海图系统阶段 4.2 资源告急：航程 50% 处停下让玩家选「继续探索 / 掉头返航」（跳过演出不能替玩家决策）；掉头经 `force_arrival()` 直接播入港；探索入港复用普通抵达的到港服务（委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）
 - 铁港建筑套件批次 A / B / C：5 栋 LOD1、外部共享贴图、三栋新原型（Boiler House / Workshop Row / Brick Tenement）、SN_Paddle_Steamer 视觉精修
 - SNBattleSim：独立 2D 舰队战斗规则试验台（固定船体、多武器、视野与战争迷雾、货船护航、自定义武器）
 - 设计文档按生命周期分层：`docs/design/`（Active）、`docs/specs/`（Finalized）、`docs/archive/`（Archived）及顶层索引

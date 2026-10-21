@@ -206,6 +206,60 @@ static func _complete_arrival(context) -> Dictionary:
 
 	# Craft orders that finished while the ship was under way are delivered to
 	# their owning port warehouse on arrival (the ship may be elsewhere).
+	var services := settle_arrival_services(context, destination, arrival_time, voyage)
+	var completed_orders: Array = services.get("completed_orders", [])
+	var contract_results: Array = services.get("contract_results", [])
+	var npc_events: Array = services.get("npc_events", [])
+	var debt_events: Array = services.get("debt_events", [])
+	var injuries := int(voyage.get("injuries", 0))
+	var stats := record_arrival_stats(state, contract_results, injuries)
+
+	state.data["voyage"] = null
+	context.pre_voyage_state = null
+	if newly_discovered:
+		state.push_notice("ui.notice.discovered_port", {"port": MapOps.port_display_key(state.world(), destination)})
+	state.push_notice("ui.notice.arrived", {"port": MapOps.port_display_key(state.world(), destination)})
+
+	# Stage 4.1: every arrival can produce a tavern rumour from the named exploration
+	# stream. This never blocks or fails the arrival — an empty result just means no clue.
+	var clue_result := ClueService.on_arrival(context)
+
+	var events: Array = []
+	if newly_discovered:
+		events.append({"type": "port.discovered", "payload": {"port_id": destination}})
+	events.append({"type": "port.arrived", "payload": {"port_id": destination, "arrival_time": arrival_time}})
+	events.append_array(services.get("events", []))
+	events.append_array(clue_result.get("events", []))
+
+	var summary := {
+		"destination": destination,
+		"arrival_time": arrival_time,
+		"delayed_hours": float(voyage.get("delay_hours", 0.0)),
+		"injuries": injuries,
+		"contracts": contract_results,
+		"market_events": npc_events,
+		"debt_events": debt_events,
+		"completed_orders": completed_orders,
+		"offers_refreshed": true,
+		"stats": stats.duplicate(true),
+		"events": events,
+	}
+	return summary
+
+
+## The arrival-side services every harbour entry runs, independent of how the ship got
+## there (normal voyage, exploration discovery, failure drift, turn-back). It handles the
+## systems that react to "the ship is in port now": craft orders, contract completion,
+## NPC market advance, market memory, overdue debt and the normal-offer pool. It does NOT
+## touch the current port / fog / notices / save flags — callers own those.
+##
+## `voyage` supplies `delay_hours` / `injuries` for contract and stat bookkeeping; an
+## exploration voyage passes a synthetic dictionary with zeros.
+static func settle_arrival_services(
+	context, destination: String, arrival_time: float, voyage: Dictionary
+) -> Dictionary:
+	var state: GameState = context.state
+	var hub: RegistryHub = context.registries
 	var completed_orders := CraftOps.settle_orders(state, hub)
 
 	var contract_results: Array = []
@@ -237,37 +291,12 @@ static func _complete_arrival(context) -> Dictionary:
 	)
 	MarketMemoryService.remember(state, destination)
 	var debt_events := DebtService.check_overdue(state)
-	var stats: Dictionary = state.stats()
-	stats["voyages"] = int(stats.get("voyages", 0)) + 1
-	if not contract_results.is_empty():
-		var any_on_time := false
-		for result in contract_results:
-			if bool(result.get("on_time", false)):
-				any_on_time = true
-		if any_on_time:
-			stats["on_time"] = int(stats.get("on_time", 0)) + 1
-	var injuries := int(voyage.get("injuries", 0))
-	if injuries > 0:
-		stats["accidents"] = int(stats.get("accidents", 0)) + 1
 
 	# Arrival refreshes the whole normal-offer pool. This never fails the
 	# arrival: an empty template set simply clears the pool.
 	var refreshed_offers := ContractOps.refresh_normal_offers(state, hub, context.rng, destination, arrival_time)
 
-	state.data["voyage"] = null
-	context.pre_voyage_state = null
-	if newly_discovered:
-		state.push_notice("ui.notice.discovered_port", {"port": MapOps.port_display_key(state.world(), destination)})
-	state.push_notice("ui.notice.arrived", {"port": MapOps.port_display_key(state.world(), destination)})
-
-	# Stage 4.1: every arrival can produce a tavern rumour from the named exploration
-	# stream. This never blocks or fails the arrival — an empty result just means no clue.
-	var clue_result := ClueService.on_arrival(context)
-
 	var events: Array = []
-	if newly_discovered:
-		events.append({"type": "port.discovered", "payload": {"port_id": destination}})
-	events.append({"type": "port.arrived", "payload": {"port_id": destination, "arrival_time": arrival_time}})
 	for order in completed_orders:
 		events.append({
 			"type": "ship.module_crafted",
@@ -280,10 +309,7 @@ static func _complete_arrival(context) -> Dictionary:
 			},
 		})
 	for contract_result in contract_results:
-		events.append({
-			"type": "contract.completed",
-			"payload": contract_result,
-		})
+		events.append({"type": "contract.completed", "payload": contract_result})
 		if not bool(contract_result.get("on_time", true)):
 			events.append({"type": "contract.late", "payload": contract_result})
 	events.append_array(npc_events)
@@ -296,22 +322,33 @@ static func _complete_arrival(context) -> Dictionary:
 			"game_time": arrival_time,
 		},
 	})
-	events.append_array(clue_result.get("events", []))
-
-	var summary := {
-		"destination": destination,
-		"arrival_time": arrival_time,
-		"delayed_hours": float(voyage.get("delay_hours", 0.0)),
-		"injuries": injuries,
-		"contracts": contract_results,
-		"market_events": npc_events,
-		"debt_events": debt_events,
+	return {
 		"completed_orders": completed_orders,
-		"offers_refreshed": true,
-		"stats": stats.duplicate(true),
+		"contract_results": contract_results,
+		"npc_events": npc_events,
+		"debt_events": debt_events,
+		"refreshed_offers": refreshed_offers,
 		"events": events,
 	}
-	return summary
+
+
+## Records one arrival in the run stats. Callers decide whether an exploration leg
+## counts as a voyage (it always does, but normal arrival also tracks injuries).
+static func record_arrival_stats(
+	state: GameState, contract_results: Array, injuries: int = 0
+) -> Dictionary:
+	var stats: Dictionary = state.stats()
+	stats["voyages"] = int(stats.get("voyages", 0)) + 1
+	if not contract_results.is_empty():
+		var any_on_time := false
+		for result in contract_results:
+			if bool(result.get("on_time", false)):
+				any_on_time = true
+		if any_on_time:
+			stats["on_time"] = int(stats.get("on_time", 0)) + 1
+	if injuries > 0:
+		stats["accidents"] = int(stats.get("accidents", 0)) + 1
+	return stats
 
 
 static func _generate_next_main_offer(context, sequence: int) -> void:

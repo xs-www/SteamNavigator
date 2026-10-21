@@ -1,28 +1,35 @@
 extends SceneTree
 ## @static-doc
-## 作用：探索系统（海图阶段 4.1）的真实渲染截图工具。窗口模式挂载真正的
-## `main.tscn`，用真实命令开一局（seed 20260421）、真实 `clue.buy` 买线索、
-## 真实 `explore.start` / `explore.settle` 走完整探索演出，按
+## 作用：探索系统（海图阶段 4.1 + 4.2 资源告急决策）的真实渲染截图工具。窗口模式
+## 挂载真正的 `main.tscn`，用真实命令开一局（seed 20260421）、真实 `clue.buy` 买线索、
+## 真实 `explore.start` / `explore.settle` / `explore.decide` 走完整探索演出，按
 ## `docs/design/EXPLORATION_SYSTEM.md` §6 的里程碑抓图：海图线索可视化
 ## （level 2 方向箭头 / level 3 虚线圆 / level 4 `？港名？` + 面板线索区块）、
 ## 探索演出（世界航线 + 到搜索区的虚线预测线 + `?` 终点 + 航程条 `？`）、
-## 结算页探索结果区块（发现 / 失败两条都拍）。
+## 路线资源告急决策页（继续 / 掉头）、以及结算页探索结果区块
+## （发现 / 失败漂流 / 掉头返航 / 告警后继续）。
 ##
 ## 用法（**必须窗口模式**，`--headless` 下视口纹理为空图）：
 ##   godot --path . --resolution 1440x900 --script res://tools/godot/capture_exploration.gd
 ##
 ## 输出（1440×900，写入 `docs/design/screenshots/exploration/`）：
-##   exploration_chart_clues.png    海图线索：方向箭头、虚线圆、`？港名？`，选中线索高亮 + 右侧面板线索区块
-##   exploration_chart_route.png    探索演出：世界航线 + 到 `?` 的虚线预测线 + 底部航程条目的地 `？`
-##   exploration_arrival.png        第一次探索（发现）抵达结算：探索结果区块
-##   exploration_result_found.png   另一次发现结算（不同港口）
-##   exploration_result_failed.png  失败漂流结算：额外煤水 / 耐久损失 / 线索作废
+##   exploration_chart_clues.png      海图线索：方向箭头、虚线圆、`？港名？`，选中线索高亮 + 右侧面板线索区块
+##   exploration_chart_route.png      探索演出：世界航线 + 到 `?` 的虚线预测线 + 底部航程条目的地 `？`
+##   exploration_arrival.png          第一次探索（发现）抵达结算：探索结果区块
+##   exploration_result_found.png     另一次发现结算（不同港口）
+##   exploration_result_failed.png    失败漂流结算：额外煤水 / 耐久损失 / 线索作废
+##   exploration_resource_alert.png   4.2 资源告急页：标题/描述/煤水耐久/继续探索/掉头返航
+##   exploration_turned_back.png      4.2 掉头返航结算：港口 / 额外损耗 / 线索保留
+##   exploration_alert_continue.png   4.2 告警后继续探索的结算（证明继续路径照常 settle）
 ##
 ## ## 契约与约束
 ## - 全程用真实领域入口：`run.start` / `clue.buy` / `ClueService.acquire`
 ##   （`RngService.STREAM_EXPLORATION` 命名流补充等级）/ 面板按钮 → `explore.start` →
-##   Shell 在 `ARRIVAL_READY` 自动 `explore.settle`。发现/失败只用契约 §2 的
-##   `outcome_roll`（出发时抽定，0 = 必发现、0.999 = 必失败）覆盖，不伪造结算结果。
+##   Shell 在 `ARRIVAL_READY` 自动 `explore.settle`；4.2 的告警选项通过真实
+##   `EventScreen` 按钮 → `explore.decide` → `VoyagePresentation.force_arrival()`。
+##   发现/失败只用契约 §2 的 `outcome_roll`（出发时抽定，0 = 必发现、0.999 = 必失败）
+##   覆盖，不伪造结算结果；告警用真实 `ExplorationCalculator.preview` 的
+##   `coal_required`，把出发煤量压到 `×1.05`（与 `test_voyage_flow.gd` 的告警前置一致）。
 ## - 开始港若是 iron_harbour（无情报站），照 `framework/tests/cases/test_exploration.gd`
 ##   的做法补一个 `intel` 设施，`clue.buy` 本身仍是真实命令。
 ## - **硬性断言**（不满足 exit 1 但已抓到的图照存）：`sea_chart.view.clues` 不含
@@ -30,7 +37,13 @@ extends SceneTree
 ##   `ui.*` 原始键名；探索中 `SNSeaChartView._unknown_destination` 非空、航程条目的地
 ##   显示 `？`、船 icon 沿航线切线；`explore.settle` 后成功当前港变为目标港 / 失败线索
 ##   进入 failed；结算 summary 含 `explore` 且结算页有 `ExploreBlock`。
-## - 先写 `res://tmp_exploration_*`，全部 5 张成功后才移入 `docs/`，失败不留半套。
+## - 4.2 追加：告警页处于 `EVENT_WAIT` 且 `_presentation.skip() == NONE`（决策不可被
+##   跳过）、文案全部本地化且不泄露目标港、`sea_chart.view.explore` 暴露
+##   `alert_needed/alert_progress/alert_decided`；掉头后 `current_port == origin`、线索
+##   仍 active、`summary.explore.result == "turned_back"`、命令日志里没有
+##   `not_exploring` 也没有第二次 `explore.settle`；继续路径会正常 `explore.settle`
+##   并保留 `alert_decided == "continue"`，重复回答返回 `alert_already_decided`。
+## - 先写 `res://tmp_exploration_*`，全部 8 张成功后才移入 `docs/`，失败不留半套。
 ## - 纯色/近纯色画面视为"读到未绘制纹理"，判失败；写完 PNG 会读回再验一次。
 ## - 120 s 看门狗兜底：脚本错误会让协程中断而不退出，避免窗口挂住。
 ## @end-static-doc
@@ -52,6 +65,7 @@ const WANTED_LEVELS := [2, 3, 4]
 
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
+const EVENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/event_screen.gd")
 
 const SHOTS := [
 	{"file": "exploration_chart_clues.png", "label": "海图线索（箭头 / 虚线圆 / ？港名？ + 选中面板）"},
@@ -59,6 +73,9 @@ const SHOTS := [
 	{"file": "exploration_arrival.png", "label": "探索抵达结算（发现）"},
 	{"file": "exploration_result_found.png", "label": "探索结算 · 发现"},
 	{"file": "exploration_result_failed.png", "label": "探索结算 · 失败漂流"},
+	{"file": "exploration_resource_alert.png", "label": "资源告急（继续探索 / 掉头返航）"},
+	{"file": "exploration_turned_back.png", "label": "探索结算 · 掉头返航"},
+	{"file": "exploration_alert_continue.png", "label": "告警后继续探索结算"},
 ]
 
 var _failures := 0
@@ -85,7 +102,7 @@ func _run() -> void:
 		_finish()
 		return
 	DisplayServer.window_set_size(WINDOW)
-	DisplayServer.window_set_title("Steam Navigator · exploration 4.1")
+	DisplayServer.window_set_title("Steam Navigator · exploration 4.1+4.2")
 	await process_frame
 
 	var context := _bootstrap()
@@ -169,6 +186,23 @@ func _run() -> void:
 	await _settle(8, 0.4)
 	_assert_settlement(shell, context, info_c, "discovered", "found")
 	await _capture(String(SHOTS[3]["file"]), String(SHOTS[3]["label"]))
+
+	# ── Run D (4.2 resource alert → turn back): force the Core alert, capture the
+	# decision page, press the real「掉头返航」button, then the turned-back settlement. ──
+	var alert_clue := _acquire_last_clue(context)
+	if alert_clue.is_empty():
+		_finish()
+		return
+	var alert_run := await _run_alert_turn_back(shell, context, alert_clue)
+	if not bool(alert_run.get("ok", false)):
+		_finish()
+		return
+
+	# ── Run E (4.2 alert → continue): the turned-back clue survived, so the same
+	# clue proves the continue path resumes the voyage and settles normally. ──
+	if not await _run_alert_continue(shell, context, String(alert_run.get("clue_id", ""))):
+		_finish()
+		return
 
 	_commit_shots()
 	_finish()
@@ -287,14 +321,14 @@ func _prepare_clues(context: AppContext) -> Dictionary:
 	}
 
 
-func _acquire_clue(context: AppContext, source: String) -> Dictionary:
+func _acquire_clue(context: AppContext, source: String, target_port_id: String = "") -> Dictionary:
 	_clue_serial += 1
 	# Same named stream the domain uses (`RngService.STREAM_EXPLORATION`); a unique
 	# key per call keeps the capture deterministic without touching any save file.
 	var rng := context.rng.make_stream(
 		RngService.STREAM_EXPLORATION, "capture:%s:%d" % [source, _clue_serial]
 	)
-	return ClueService.acquire(context, source, rng)
+	return ClueService.acquire(context, source, rng, target_port_id)
 
 
 func _preview(context: AppContext, clue_id: String) -> Dictionary:
@@ -665,11 +699,15 @@ func _start_exploration(
 		"outcome_roll": outcome_roll,
 		"presentation": presentation,
 		"preview": preview,
+		"alert_needed": bool(presentation.get("alert_needed", false)),
+		"alert_progress": float(presentation.get("alert_progress", 0.0)),
 	}
 	_assert_true(String(presentation.get("kind", "")) == "explore",
 		"explore.start returns an exploration presentation")
 	_assert_eq(String(presentation.get("clue_id", "")), clue_id,
 		"the presentation carries the clue id")
+	_assert_eq(bool(shell._presentation.has_event), bool(info["alert_needed"]),
+		"the presentation schedules a decision point exactly when the alert is needed")
 	_assert_eq(String(shell._presentation.phase_name()), "departure_3d",
 		"the 3D departure cut starts the exploration演出")
 	return info
@@ -828,6 +866,25 @@ func _assert_settlement(
 			"the resolved clue leaves the active log (%s)" % tag)
 		_assert_true(Array(state.ensure_clues().get("resolved", [])).has(clue_id),
 			"the clue is recorded as resolved (%s)" % tag)
+	elif expected == "turned_back":
+		# 4.2: the half-voyage return is a real harbour entry (same services as a
+		# normal arrival) but the clue stays active for another attempt.
+		_assert_eq(current, destination, "the turn-back lands in the origin harbour (%s)" % tag)
+		_assert_eq(destination, String(info.get("origin", "")),
+			"the turn-back destination is the departure harbour (%s)" % tag)
+		_assert_true(state.is_at_port(), "the ship is in port after the turn-back (%s)" % tag)
+		_assert_true(_active_has(context, clue_id),
+			"the clue stays active after turning back (%s)" % tag)
+		_assert_false(Array(state.ensure_clues().get("failed", [])).has(clue_id),
+			"a turned-back clue is not marked failed (%s)" % tag)
+		_assert_true(float(explore.get("extra_coal", 0.0)) > 0.0,
+			"turning back burns extra coal (%s)" % tag)
+		_assert_true(float(explore.get("extra_water", 0.0)) > 0.0,
+			"turning back burns extra water (%s)" % tag)
+		_assert_almost_eq(float(explore.get("durability_loss", 0.0)), 0.0, 0.0001,
+			"turning back costs no durability (%s)" % tag)
+		_assert_true(texts.has(String(context.translate("ui.explore.clue_retained"))),
+			"the settlement says the clue is retained (%s)" % tag)
 	else:
 		_assert_eq(current, destination, "the drift destination is where the ship ends up (%s)" % tag)
 		_assert_true(Array(state.ensure_clues().get("failed", [])).has(clue_id),
@@ -845,7 +902,427 @@ func _assert_settlement(
 		state.money(), float(state.ship().get("coal", 0.0)), float(state.ship().get("water", 0.0)),
 		float(state.ship().get("durability", 0.0)), float(summary.get("delayed_hours", 0.0)),
 	])
+	if expected == "turned_back":
+		print("[EVIDENCE] settlement %s explore extra_coal=%.2f extra_water=%.2f clue=%s active=%s" % [
+			tag, float(explore.get("extra_coal", 0.0)), float(explore.get("extra_water", 0.0)),
+			clue_id, str(_active_has(context, clue_id)),
+		])
 	return _failures == failures_before
+
+
+# ---------------------------------------------------------------------------
+# 4.2 resource alert: forced Core alert → decision page → turn back / continue
+# ---------------------------------------------------------------------------
+
+
+## The three 4.1 clues are spent by run C; this adds one last real clue for the
+## remaining undiscovered harbour so the 4.2 alert runs still have a target.
+func _acquire_last_clue(context: AppContext) -> Dictionary:
+	var state: GameState = context.state
+	var targets := ClueService.eligible_target_ids(state)
+	print("[EVIDENCE] 4.2 setup: current_port=%s undiscovered_targets=%s money=%d coal=%.1f water=%.1f" % [
+		state.current_port_id(), str(targets), state.money(),
+		float(state.ship().get("coal", 0.0)), float(state.ship().get("water", 0.0)),
+	])
+	_assert_false(targets.is_empty(), "an undiscovered target remains for the 4.2 alert runs")
+	if targets.is_empty():
+		return {}
+	var clue := _acquire_clue(context, "intel", String(targets[0]))
+	_assert_false(clue.is_empty(), "the 4.2 clue is created through ClueService.acquire")
+	if not clue.is_empty():
+		print("[EVIDENCE] 4.2 clue id=%s level=%d target=%s" % [
+			String(clue.get("id", "")), int(clue.get("level", 0)),
+			String(clue.get("target_port_id", "")),
+		])
+	return clue
+
+
+## Real-command style forced alert (mirrors `test_voyage_flow._request_alert_exploration`):
+## preview the real `coal_required`, then set the departure coal stock to
+## `required * 1.05` so `explore.start` consumes more than Core's `alert_threshold`.
+## Water shortages are fixed with the real `supply.buy_water` command — stock is never
+## invented, only the coal figure the test fixture also pins.
+func _force_resource_alert(context: AppContext, clue_id: String) -> Dictionary:
+	var state: GameState = context.state
+	var rules := ExplorationRules.read(state, context.registries)
+	var threshold := float(rules.get("alert_threshold", 0.5))
+	var preview := _preview(context, clue_id)
+	var attempts := 0
+	while attempts < 3:
+		attempts += 1
+		var needs_water := false
+		for blocker in preview.get("blockers", []):
+			if blocker is Dictionary \
+					and String((blocker as Dictionary).get("code", "")) == "insufficient_water":
+				needs_water = true
+		if needs_water:
+			var water_result := context.commands.execute(&"supply.buy_water", {"amount": 8})
+			print("[EVIDENCE] 4.2 top-up water ok=%s error=%s" % [
+				str(water_result.get("ok", false)), str(water_result.get("error_code", "")),
+			])
+			preview = _preview(context, clue_id)
+		var coal_required := float(preview.get("coal_required", 0.0))
+		_assert_true(coal_required > 0.0, "the forced-alert voyage has a real coal cost")
+		if coal_required <= 0.0:
+			return {}
+		state.ship()["coal"] = coal_required * 1.05
+		preview = _preview(context, clue_id)
+		_print_preview(clue_id, preview)
+		if bool(preview.get("feasible", false)):
+			break
+	_assert_true(bool(preview.get("feasible", false)),
+		"the forced-alert voyage is still feasible (coal %.2f, water %.2f)" % [
+			float(state.ship().get("coal", 0.0)), float(state.ship().get("water", 0.0)),
+		])
+	var coal_before := float(state.ship().get("coal", 0.0))
+	var coal_required := float(preview.get("coal_required", 0.0))
+	print("[EVIDENCE] 4.2 forced alert clue=%s coal=%.2f (required %.2f x1.05) threshold=%.2f consumed_share=%.3f water=%.2f" % [
+		clue_id, coal_before, coal_required, threshold, coal_required / maxf(0.001, coal_before),
+		float(state.ship().get("water", 0.0)),
+	])
+	_assert_true(coal_required >= coal_before * threshold,
+		"the departure stock makes the voyage consume >= alert_threshold of its coal")
+	return preview
+
+
+func _drive_to_alert(shell: Control) -> bool:
+	var reached := _drive_until(shell, func() -> bool:
+		return shell._presentation != null \
+			and String(shell._presentation.phase_name()) == "event_wait" \
+			and float(shell._presentation.veil) <= 0.001 \
+			and _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT).size() == 1,
+		MAX_DRIVE_SECONDS)
+	if not reached:
+		_fail("the exploration演出 never reached the resource-alert page")
+		return false
+	print("[EVIDENCE] alert reached phase=%s veil=%.3f has_event=%s progress=%.3f" % [
+		String(shell._presentation.phase_name()), float(shell._presentation.veil),
+		str(shell._presentation.has_event), float(shell._presentation.progress),
+	])
+	return true
+
+
+## The 4.2 decision page (contract S2): EventScreen mounted, `EVENT_WAIT`, localized
+## title/description/buttons, live ship numbers, no target leak, and `skip()` must not
+## answer or bypass the decision. With `capture` it also saves shot 6.
+func _assert_alert_page(
+	shell: Control, context: AppContext, info: Dictionary, capture: bool
+) -> Dictionary:
+	var failures_before := _failures
+	var screens := _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT)
+	_assert_eq(screens.size(), 1, "the resource-alert page is mounted")
+	if screens.is_empty():
+		return {}
+	_assert_eq(String(shell._presentation.phase_name()), "event_wait",
+		"the presentation waits at event_wait for the alert decision")
+	_assert_true(shell._presentation_on_alert(), "the shell reports the alert decision is open")
+	_assert_true(_nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT).is_empty(),
+		"the chart page is not mounted behind the alert")
+	_assert_true(shell._at_sea_screen == null, "the at-sea page is torn down while the alert is open")
+	var alert_screen: Variant = screens[0]
+	if alert_screen is Control:
+		_assert_true((alert_screen as Control).size.x > 100.0 and (alert_screen as Control).size.y > 0.0,
+			"the alert page has a real layout size (%s)" % str((alert_screen as Control).size))
+
+	# S2: the演出 must not answer or skip the decision on its own.
+	var skip_step: int = int(shell._presentation.skip())
+	_assert_eq(skip_step, int(VoyagePresentation.Step.NONE),
+		"the alert cannot be skipped away via presentation.skip()")
+	_assert_eq(String(shell._presentation.phase_name()), "event_wait",
+		"skip() leaves the alert decision open")
+
+	# Localized text, both choices, and the live ship/cargo row.
+	var texts := _label_texts(alert_screen)
+	var joined := "\n".join(texts)
+	print("[EVIDENCE] alert page labels: %s" % str(texts))
+	_assert_eq(joined.find("ui."), -1, "the alert page never renders raw ui.* localization keys")
+	var title := String(context.translate("ui.explore.alert.title"))
+	var description := String(context.translate("ui.explore.alert.description"))
+	var remaining_label := String(context.translate("ui.explore.alert.remaining"))
+	var continue_text := String(context.translate("ui.explore.alert.continue"))
+	var turn_back_text := String(context.translate("ui.explore.alert.turn_back"))
+	_assert_true(texts.has(title), "the alert page shows the localized title (%s)" % title)
+	_assert_true(texts.has(description), "the alert page explains the two choices")
+	_assert_true(joined.contains(remaining_label),
+		"the alert hint shows the remaining voyage instead of 'settles immediately'")
+	_assert_true(_button_by_text(alert_screen, continue_text) != null,
+		"the alert offers 'continue exploring' (%s)" % continue_text)
+	_assert_true(_button_by_text(alert_screen, turn_back_text) != null,
+		"the alert offers 'turn back' (%s)" % turn_back_text)
+	var view_data: Dictionary = {}
+	var port_result := context.queries.execute(&"port.view")
+	if bool(port_result.get("ok", false)):
+		var raw_view: Variant = port_result.get("data", null)
+		if raw_view is Dictionary:
+			view_data = raw_view as Dictionary
+	var ship_view: Dictionary = {}
+	if view_data.get("ship", null) is Dictionary:
+		ship_view = view_data["ship"] as Dictionary
+	var expected_stats := "耐久 %.1f / %.1f · 淡水 %.1f · 煤炭 %.1f · 金币 %d" % [
+		float(ship_view.get("durability", 0.0)), float(ship_view.get("max_durability", 0.0)),
+		float(ship_view.get("water", 0.0)), float(ship_view.get("coal", 0.0)),
+		int(view_data.get("money", 0)),
+	]
+	_assert_true(texts.has(expected_stats),
+		"the alert page prints the live ship/cargo numbers (%s): %s" % [expected_stats, str(texts)])
+
+	# S1 fields: Core JSON alert point, recorded in the voyage + the query surface.
+	var rules := ExplorationRules.read(context.state, context.registries)
+	var expected_alert := float(rules.get("alert_progress", 0.5))
+	var voyage: Variant = context.state.explore_voyage()
+	_assert_true(voyage is Dictionary, "the domain still owns the exploration voyage while the alert is open")
+	if voyage is Dictionary:
+		_assert_true(bool((voyage as Dictionary).get("alert_needed", false)),
+			"explore_voyage marks the resource alert")
+		_assert_eq(String((voyage as Dictionary).get("alert_decided", "")),
+			"", "the alert is still unanswered")
+	_assert_true(bool(shell._presentation_explore.get("alert_needed", false)),
+		"the presentation carries alert_needed")
+	_assert_almost_eq(float(shell._presentation_explore.get("alert_progress", -1.0)),
+		expected_alert, 0.0001, "alert_progress comes from Core JSON (%.3f)" % expected_alert)
+	_assert_true(shell._presentation.has_event, "the alert is a real mid-voyage decision point")
+	_assert_almost_eq(float(shell._presentation.event_progress), expected_alert, 0.0001,
+		"the presentation stops at alert_progress")
+	_assert_almost_eq(float(shell._presentation.progress), expected_alert, 0.001,
+		"the演出 progress sits at the alert point")
+	var chart_view := _chart_view(context)
+	var explore_state: Dictionary = {}
+	if chart_view.get("explore", null) is Dictionary:
+		explore_state = chart_view["explore"] as Dictionary
+	_assert_true(bool(explore_state.get("active", false)),
+		"sea_chart.view reports the active exploration")
+	_assert_true(bool(explore_state.get("alert_needed", false)),
+		"sea_chart.view exposes alert_needed")
+	_assert_almost_eq(float(explore_state.get("alert_progress", -1.0)), expected_alert, 0.0001,
+		"sea_chart.view exposes alert_progress")
+	_assert_eq(String(explore_state.get("alert_decided", "")), "",
+		"sea_chart.view exposes the unanswered alert")
+
+	# The target must stay unknown while the player decides.
+	var target := String(info.get("target", ""))
+	var target_name := _port_name(context, target)
+	_assert_false(joined.contains(target), "the alert page never prints the target port id (%s)" % target)
+	_assert_false(joined.contains(target_name),
+		"the alert page never prints the target harbour name (%s)" % target_name)
+	_assert_eq(String(shell._presentation_voyage.get("destination", "unset")), "",
+		"the presentation destination is still unknown during the alert")
+	var chrome_texts := _label_texts(shell._top_chrome)
+	var exploring_label := "%s → %s" % [
+		String(context.translate("ui.label.exploring")),
+		String(context.translate("ui.label.unknown_destination")),
+	]
+	_assert_true(chrome_texts.has(exploring_label),
+		"the top chrome stays '探索中 → ？' during the alert")
+	_assert_false(chrome_texts.has(target_name),
+		"the top chrome does not reveal the target harbour")
+
+	var coal := float(context.state.ship().get("coal", 0.0))
+	var water := float(context.state.ship().get("water", 0.0))
+	var remaining_hours := float(shell._presentation.remaining_hours())
+	print("[EVIDENCE] alert page: phase=%s progress=%.3f alert_progress=%.3f remaining=%.2fh coal=%.2f water=%.2f target_hidden=%s" % [
+		String(shell._presentation.phase_name()), float(shell._presentation.progress),
+		expected_alert, remaining_hours, coal, water,
+		str(not joined.contains(target_name) and not joined.contains(target)),
+	])
+	if capture:
+		await _capture(String(SHOTS[5]["file"]), String(SHOTS[5]["label"]))
+	return {
+		"ok": _failures == failures_before,
+		"coal": coal,
+		"water": water,
+		"current_port": String(context.state.current_port_id()),
+		"alert_progress": expected_alert,
+		"remaining_hours": remaining_hours,
+	}
+
+
+func _press_alert_option(shell: Control, context: AppContext, option_id: String) -> bool:
+	var screens := _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT)
+	if screens.is_empty():
+		_fail("the resource-alert page is not mounted before choosing %s" % option_id)
+		return false
+	var text := String(context.translate("ui.explore.alert." + option_id))
+	var button := _button_by_text(screens[0], text)
+	if button == null:
+		_fail("the resource-alert page has no %s button (%s)" % [option_id, text])
+		return false
+	print("[EVIDENCE] alert decision: pressing '%s'" % text)
+	button.pressed.emit()
+	return true
+
+
+## 4.2 · turn back: the real「掉头返航」button must settle the domain immediately
+## (`current_port == origin`, clue keeps active, extra coal/water burned), then the
+## shortened arrival cut lands on a `turned_back` settlement without a second settle.
+func _run_alert_turn_back(shell: Control, context: AppContext, clue: Dictionary) -> Dictionary:
+	var state: GameState = context.state
+	var clue_id := String(clue.get("id", ""))
+	var origin := state.current_port_id()
+	_force_resource_alert(context, clue_id)
+	var info := await _start_exploration(shell, context, clue_id, 0.0)
+	if not bool(info.get("ok", false)):
+		return {"ok": false}
+	_assert_true(bool(info.get("alert_needed", false)),
+		"pinning the departure coal to 1.05x makes explore.start raise the resource alert")
+	_assert_true(shell._presentation.has_event, "the alert run schedules the decision point")
+	var log_mark := context.commands.get_execution_log(200).size()
+	if not await _drive_to_alert(shell):
+		return {"ok": false}
+	await _settle(6, 0.3)
+	var alert := await _assert_alert_page(shell, context, info, true)
+	if not bool(alert.get("ok", false)):
+		return {"ok": false}
+	var coal_at_alert := float(alert.get("coal", 0.0))
+	var water_at_alert := float(alert.get("water", 0.0))
+	var destination_at_alert := String(shell._presentation_voyage.get("destination", ""))
+	if not _press_alert_option(shell, context, "turn_back"):
+		return {"ok": false}
+
+	# The decision settles the half-voyage return synchronously in the domain.
+	var current := state.current_port_id()
+	_assert_eq(current, origin, "turning back returns to the departure harbour")
+	_assert_true(state.is_at_port(), "the ship is back in port right after the decision")
+	_assert_true(state.explore_voyage() == null,
+		"the exploration voyage is settled by explore.decide(turn_back)")
+	_assert_eq(String(shell._presentation_voyage.get("destination", "")), origin,
+		"the presentation destination becomes the origin harbour")
+	_assert_true(bool(shell._presentation_explore.get("returned", false)),
+		"the shell records the turn-back so ARRIVAL_READY never re-settles")
+	_assert_eq(String(shell._presentation.phase_name()), "arrival_approach",
+		"the演出 skips the rest of the route and closes the arrival clouds")
+	var coal_after := float(state.ship().get("coal", 0.0))
+	var water_after := float(state.ship().get("water", 0.0))
+	_assert_true(coal_after < coal_at_alert, "turning back burns extra coal")
+	_assert_true(water_after < water_at_alert, "turning back burns extra water")
+	_assert_true(_active_has(context, clue_id), "the clue stays active for another attempt")
+	_assert_false(shell._status_is_error,
+		"the turn-back leaves no error in the status bar (%s)" % shell._status_message)
+	var early_explore: Dictionary = {}
+	if shell._presentation_summary.get("explore", null) is Dictionary:
+		early_explore = shell._presentation_summary["explore"] as Dictionary
+	_assert_eq(String(early_explore.get("result", "")), "turned_back",
+		"the domain summary reports turned_back immediately after the decision")
+	print("[EVIDENCE] decide(turn_back): destination '%s' -> '%s' (%s), coal %.2f -> %.2f, water %.2f -> %.2f, extra_coal=%.2f extra_water=%.2f clue_active=%s" % [
+		destination_at_alert, String(shell._presentation_voyage.get("destination", "")), origin,
+		coal_at_alert, coal_after, water_at_alert, water_after,
+		float(early_explore.get("extra_coal", 0.0)), float(early_explore.get("extra_water", 0.0)),
+		str(_active_has(context, clue_id)),
+	])
+
+	if not await _drive_to_settlement(shell):
+		return {"ok": false}
+	await _settle(8, 0.4)
+	_assert_log_since(context, log_mark, "turn_back", false)
+	_assert_settlement(shell, context, info, "turned_back", "turned_back")
+	await _capture(String(SHOTS[6]["file"]), String(SHOTS[6]["label"]))
+	return {"ok": true, "clue_id": clue_id, "origin": origin, "target": String(info.get("target", ""))}
+
+
+## 4.2 · continue: acknowledging the alert must not burn extra resources or reveal the
+## destination; the voyage resumes and settles through the normal `explore.settle`.
+func _run_alert_continue(shell: Control, context: AppContext, clue_id: String) -> bool:
+	var state: GameState = context.state
+	_force_resource_alert(context, clue_id)
+	var info := await _start_exploration(shell, context, clue_id, 0.0)
+	if not bool(info.get("ok", false)):
+		return false
+	_assert_true(bool(info.get("alert_needed", false)),
+		"the continue run really raises the resource alert")
+	var log_mark := context.commands.get_execution_log(200).size()
+	if not await _drive_to_alert(shell):
+		return false
+	await _settle(6, 0.3)
+	var alert := await _assert_alert_page(shell, context, info, false)
+	if not bool(alert.get("ok", false)):
+		return false
+	var coal_at_alert := float(alert.get("coal", 0.0))
+	var water_at_alert := float(alert.get("water", 0.0))
+	var destination_at_alert := String(shell._presentation_voyage.get("destination", ""))
+	if not _press_alert_option(shell, context, "continue"):
+		return false
+
+	# Continue only acknowledges: resources untouched, destination still unknown.
+	_assert_eq(String(shell._presentation.phase_name()), "event_resume",
+		"continuing resumes the演出 instead of settling it")
+	_assert_eq(String(shell._presentation_voyage.get("destination", "unset")), "",
+		"continuing keeps the destination unknown until arrival")
+	var coal_after := float(state.ship().get("coal", 0.0))
+	var water_after := float(state.ship().get("water", 0.0))
+	_assert_almost_eq(coal_after, coal_at_alert, 0.0001, "continuing does not burn extra coal")
+	_assert_almost_eq(water_after, water_at_alert, 0.0001, "continuing does not burn extra water")
+	var voyage: Variant = state.explore_voyage()
+	_assert_true(voyage is Dictionary, "the exploration keeps running after acknowledging the alert")
+	if voyage is Dictionary:
+		_assert_eq(String((voyage as Dictionary).get("alert_decided", "")), "continue",
+			"the alert decision is recorded in the domain")
+		_assert_almost_eq(float((voyage as Dictionary).get("alert_progress", 0.0)), 1.0, 0.0001,
+			"the acknowledged alert is marked complete")
+	var chart_explore: Dictionary = {}
+	var chart_view := _chart_view(context)
+	if chart_view.get("explore", null) is Dictionary:
+		chart_explore = chart_view["explore"] as Dictionary
+	_assert_eq(String(chart_explore.get("alert_decided", "")), "continue",
+		"sea_chart.view exposes the continue decision")
+	_assert_almost_eq(float(chart_explore.get("alert_progress", 0.0)), 1.0, 0.0001,
+		"sea_chart.view exposes the acknowledged progress")
+	# S1: a second answer is rejected by the real command bus (the voyage is still live).
+	var repeat := context.commands.execute(&"explore.decide", {"choice": "continue"})
+	_assert_false(bool(repeat.get("ok", true)), "a second continue answer is rejected")
+	_assert_eq(String(repeat.get("error_code", "")), "alert_already_decided",
+		"the repeat answer reports alert_already_decided")
+	print("[EVIDENCE] decide(continue): destination '%s' -> '%s', coal %.2f -> %.2f, water %.2f -> %.2f, remaining=%.2fh" % [
+		destination_at_alert, String(shell._presentation_voyage.get("destination", "")),
+		coal_at_alert, coal_after, water_at_alert, water_after,
+		float(alert.get("remaining_hours", 0.0)),
+	])
+
+	if not await _drive_to_settlement(shell):
+		return false
+	await _settle(8, 0.4)
+	_assert_log_since(context, log_mark, "alert_continue", true)
+	_assert_settlement(shell, context, info, "discovered", "alert_continue")
+	await _capture(String(SHOTS[7]["file"]), String(SHOTS[7]["label"]))
+	return true
+
+
+## Command-bus evidence for the 4.2 flows: `explore.decide` must run through the real
+## bus, the turn-back must never trigger a second `explore.settle` (that would report
+## `not_exploring`), and the continue path must still settle normally.
+func _assert_log_since(context: AppContext, mark: int, tag: String, expect_settle: bool) -> void:
+	var entries := _commands_since(context, mark)
+	var summary: Array[String] = []
+	var not_exploring := false
+	var decide_ok := false
+	var settle_ok := false
+	for entry in entries:
+		if not (entry is Dictionary):
+			continue
+		var record: Dictionary = entry
+		var command := String(record.get("command", ""))
+		var error_code := String(record.get("error_code", ""))
+		summary.append(command if error_code.is_empty() else "%s[%s]" % [command, error_code])
+		if error_code == "not_exploring":
+			not_exploring = true
+		if command == "explore.decide" and bool(record.get("ok", false)):
+			decide_ok = true
+		if command == "explore.settle" and bool(record.get("ok", false)):
+			settle_ok = true
+	print("[EVIDENCE] commands after %s: %s" % [tag, str(summary)])
+	_assert_true(decide_ok, "the decision runs through the real explore.decide command (%s)" % tag)
+	_assert_false(not_exploring, "no not_exploring error is raised during the %s path" % tag)
+	if expect_settle:
+		_assert_true(settle_ok, "the continue path still settles through explore.settle (%s)" % tag)
+	else:
+		_assert_false(settle_ok,
+			"the turn-back path never runs a second explore.settle (%s)" % tag)
+
+
+func _commands_since(context: AppContext, mark: int) -> Array:
+	var log := context.commands.get_execution_log(200)
+	var entries: Array = []
+	for index in range(mark, log.size()):
+		entries.append(log[index])
+	return entries
 
 
 # ---------------------------------------------------------------------------

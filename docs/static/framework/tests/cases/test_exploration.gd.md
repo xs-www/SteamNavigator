@@ -26,12 +26,18 @@
 | `test_explore_settle_success_discovers_target() -> void` | L350 |
 | `test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void` | L395 |
 | `test_explore_settle_without_a_voyage_fails() -> void` | L444 |
-| `test_turn_back_returns_to_origin_and_keeps_clue_active() -> void` | L453 |
-| `test_continue_keeps_sailing_and_marks_the_alert() -> void` | L497 |
-| `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L519 |
-| `test_rules_are_read_from_the_core_map_profile() -> void` | L571 |
-| `test_game_state_backfills_the_clue_block_lazily() -> void` | L586 |
-| `test_save_load_roundtrip_preserves_exploration_state() -> void` | L602 |
+| `test_explore_settle_runs_arrival_services_and_autosaves() -> void` | L453 |
+| `test_explore_failure_settle_runs_arrival_services() -> void` | L487 |
+| `test_turn_back_runs_arrival_services_and_autosaves() -> void` | L516 |
+| `test_turn_back_returns_to_origin_and_keeps_clue_active() -> void` | L546 |
+| `test_continue_keeps_sailing_and_marks_the_alert() -> void` | L590 |
+| `test_alert_threshold_and_progress_come_from_the_rules() -> void` | L612 |
+| `test_continue_cannot_answer_the_alert_twice() -> void` | L656 |
+| `test_chart_view_exposes_alert_state_while_exploring() -> void` | L680 |
+| `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L704 |
+| `test_rules_are_read_from_the_core_map_profile() -> void` | L756 |
+| `test_game_state_backfills_the_clue_block_lazily() -> void` | L771 |
+| `test_save_load_roundtrip_preserves_exploration_state() -> void` | L787 |
 
 `clue.buy` 门禁、`explore.start` 扣费与在航标记、`explore.settle` 成功发现与失败漂流、
 `explore.decide` 掉头 / 继续、`sea_chart.view` 的线索 / 探索 / 购买视图，以及存档往返。

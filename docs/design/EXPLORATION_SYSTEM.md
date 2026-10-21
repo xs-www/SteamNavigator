@@ -1,7 +1,7 @@
-# 探索系统（阶段 4）实现契约 — 4.1 首切片
+# 探索系统（阶段 4）实现契约 — 4.1 / 4.2
 
 > 作用：把 [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) §5/§7 的探索与线索规则
-> 落到可运行的第一切片。数值全部来自 Core JSON，框架只读规则。本文是实现契约，
+> 落到可运行的纵向切片。数值全部来自 Core JSON，框架只读规则。本文是实现契约，
 > 与设计文档冲突时以设计文档的玩法意图为准、以本文的字段/命令形状为准。
 
 ## 1. 范围
@@ -11,7 +11,10 @@
 搜索区判定与发现概率、失败（线索作废 + 漂流到最近已知港）、发现（解锁港口 + 迷雾揭示 + 入港）、
 探索演出接线与结算页。
 
-**4.2（下一轮，本文预留字段但不做 UI）**：资源告急事件、掉头/继续决策、探索中事件化海洋。
+**4.2 交付**：资源告急决策（航程 50% 处停下，继续 / 掉头两条真实路径）、
+`VoyagePresentation.force_arrival()`、到港服务复用（探索入港与普通抵达同一套
+委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）、告警状态进查询与演出。
+**仍不在 4.2**：探索中事件化海洋（归阶段 5）、货物类线索与时效（4.3）。
 
 ## 2. 数据（`GameState.data`，全部可 JSON 化，惰性 ensure，无需迁移）
 
@@ -45,7 +48,9 @@ data.explore_voyage = null | {
   distance: float, duration_hours: float,
   departure_time: float, arrival_time: float,
   coal_used: float, water_used: float, wages: int,
-  alert_needed: bool, alert_progress: float, alert_decided: String,
+  alert_needed: bool,             # 出发时按 alert_threshold 预判
+  alert_progress: float,          # 决策点比例（Core alert_progress，默认 0.5）；continue 后置 1.0
+  alert_decided: String,          # "" | "continue" | "turn_back"
   outcome_roll: float,            # 0..1，出发时用命名流抽定；成功 = roll < chance
   status: "outbound",
 }
@@ -54,6 +59,8 @@ data.voyage = { "kind": "explore", "status": "at_sea" }   # 仅作"在航"标记
 
 - 探索期间 `data.voyage` 非空 → 既有 `is_at_port()` / `port.view.at_sea` / 贸易门禁自动生效。
 - `explore.settle` / 掉头后同时清空 `explore_voyage` 与 `voyage`。
+- 4.2 起 `sea_chart.view.explore` 同时输出 `alert_needed / alert_progress / alert_decided`，
+  演出与顶栏据此决定何时停下；`alert_progress` 在 `continue` 后变为 1.0（已处理）。
 
 ## 3. 内容数值（Core JSON）
 
@@ -146,15 +153,16 @@ start(context, clue_id, strategy_id) -> Result.ok({
   presentation: {
     kind: "explore", origin, clue_id, zone,
     route_path, total_hours, strategy_id, departure_time, arrival_time,
-    alert_needed,
+    alert_needed, alert_progress,
   },
 }, events)
-decide(context, choice)          # 4.2；4.1 允许 continue（清 alert）与 turn_back（立即结算返航）
+decide(context, choice)          # choice: continue | turn_back（重复 continue 被拒）
 settle(context) -> Result.ok({
   result: "discovered" | "failed",
   destination: port_id,          # 演出入港用的港口（目标港或漂流港）
   summary: { explore: {...}, destination, arrival_time, delayed_hours, injuries,
-             contracts: [], ... },   # 兼容 settlement_screen 现有字段
+             contracts, market_events, debt_events, completed_orders,
+             offers_refreshed: true, ... },   # 4.2 起与普通抵达同形状
 }, events)
 ```
 
@@ -163,12 +171,14 @@ settle(context) -> Result.ok({
   preview.feasible；扣工资与煤水（`add_money`/`record_expense`、`ship.coal/water`）。
 - 写入 `explore_voyage` 与 `data.voyage` 标记；`at_sea` 标记不新增（用 `voyage` 判定）。
 - `outcome_roll` 用命名流抽定；`alert_needed = coal_used >= coal_before*alert_threshold
-  或 water_used >= water_before*alert_threshold`。
+  或 water_used >= water_before*alert_threshold`（0 库存守卫）；`alert_progress` 取
+  Core 的 `alert_progress`（决策点比例，默认 0.5），同时作为"已处理"标记：
+  `continue` 后置 1.0。
 - 事件：`explore.started`（payload: clue_id/origin/duration_hours/coal_used/water_used）。
 
-`settle`：
+`settle`（4.2 起）：
 - 未出发 / 没有 explore_voyage → `Result.fail("not_exploring", "ui.error.not_exploring")`。
-- 时间推进到 `arrival_time`；`stats.voyages += 1`。
+- 时间推进到 `arrival_time`（失败再加 `drift_hours`）。
 - 成功（`outcome_roll < discovery_chance`）：
   - `WorldOps.discover_port_id` + `WorldOps.mark_visited` + `FogOps.reveal_arrival`；
   - `current_port_id = target`；线索 → resolved；
@@ -177,13 +187,17 @@ settle(context) -> Result.ok({
   - 线索 → failed；漂流：耐久 `-= drift_durability_loss`（≥0）、煤水各 `-= drift_extra_*`（≥0）、
     时间 `+= drift_hours`；目的地 = 距搜索区最近的**已发现**港口（通常出发港）；
   - notices：`ui.notice.exploration_failed`；事件 `explore.finished`（result=failed）。
-- 成功/失败都给 `summary.explore = {result, port_id, port_name_key, clue_id,
-  search_center:{x,y}, extra_coal, extra_water, durability_loss}`，
+- 成功后调用 `VoyageService.settle_arrival_services()`：打造订单、委托完成（目标港匹配时）、
+  NPC 市场推进、市场记忆、逾期债务、普通委托刷新；`VoyageService.record_arrival_stats()`
+  记一次航次；结果带 `autosave=true`。成功/失败都给 `summary.explore = {result, port_id,
+  port_name_key, clue_id, search_center:{x,y}, extra_coal, extra_water, durability_loss}`，
   并清空 `explore_voyage` 与 `data.voyage` 标记。
 
+`decide("continue")`：只确认告警（不做别的状态变化），返回 `{continued: true, destination,
+remaining_hours}`；重复回答返回 `Result.fail("alert_already_decided", "ui.error.alert_already_decided")`。
 `decide("turn_back")`：额外消耗 `coal_used/water_used * turnback_extra_ratio`，时间前进
 半个航程，目的地 = 出发港，线索保持 active，返回 `{returned: true, destination, summary}`；
-`decide("continue")` 只标记 alert。4.1 的 Shell 不弹资源告急 UI（4.2 接）。
+同样跑 `settle_arrival_services()`（真实入港）、记一次航次并带 `autosave=true`。
 
 ## 5. 命令 / 查询
 
@@ -193,7 +207,7 @@ settle(context) -> Result.ok({
 |---|---|---|
 | `explore.start` | `{clue_id, strategy_id}` | 见 §4 |
 | `explore.settle` | `{}` | 演出抵达时由 Shell 调用 |
-| `explore.decide` | `{choice}` | 4.2 UI 用；4.1 先给 turn_back 留口 |
+| `explore.decide` | `{choice}` | `continue` / `turn_back`；重复 continue → `ui.error.alert_already_decided` |
 | `clue.buy` | `{}` | 当前港有 `intel` 设施时购买情报线索 |
 
 查询：
@@ -208,7 +222,8 @@ settle(context) -> Result.ok({
     estimated: {feasible, blockers, duration_hours, coal_required,
                 water_required, risk_score, discovery_chance},
   }]
-  explore: {active: bool, clue_id: String}
+  explore: {active: bool, clue_id: String,
+            alert_needed: bool, alert_progress: float, alert_decided: String}
   can_buy_clue: {available: bool, cost: int, reason_key: String}
   ```
   注意：`clues` 不含 target_port_id / credibility / search_zone 中心误差来源。
@@ -225,9 +240,20 @@ settle(context) -> Result.ok({
     `explore.start`（策略暂用 `core:strategy/standard`，4.2 再让玩家选）。
 - 探索演出：
   - Shell 保存命令返回的 `presentation`（`_presentation_explore`），沿用
-    `VoyagePresentation`（`event_at = -1`）；航行页
+    `VoyagePresentation`（`event_at = alert_needed ? alert_progress : -1`）；航行页
     `AtSeaScreen.bind` 收到 `unknown_destination: {x, y, label_key}` 时，
     海图画虚线航线 + `?` 终点标记，航程条右侧显示 `？`（`ui.label.unknown_destination`）。
+  - **资源告急（4.2）**：演出走到 `EVENT_WAIT` 时，`_rebuild_ui` 优先挂资源告急页
+    （复用 `EventScreen`，标题 `ui.explore.alert.title`、选项
+    `ui.explore.alert.continue` / `ui.explore.alert.turn_back`，船况来自 `state.ship()`）。
+    告警期间 `skip()` 仍返回 `NONE`（不能替玩家决策），顶栏保持「探索中 → ？」。
+    - `continue`：`explore.decide` → `_presentation.resolve_event()` → 演出继续到抵达，
+      `ARRIVAL_READY` 自动 `explore.settle`；
+    - `turn_back`：`explore.decide` 返回的 `destination/summary` 写入演出状态，
+      `_presentation_explore["returned"] = true` → `VoyagePresentation.force_arrival()`
+      （直接进入 ARRIVAL_APPROACH）→ 3D 入港 → 结算；`ARRIVAL_READY` 用 returned 守卫
+      跳过二次 settle；
+    - 决策失败：状态栏报 `_error_text`，告警页重新挂载。
   - `VoyagePresentation.Step.ARRIVAL_READY`：Shell 先跑 `explore.settle`，把
     `_presentation_voyage.destination` 换成 `result.destination`，
     `_presentation_summary = result.summary`，再 `_rebuild_ui()` + `_begin_stage_arrival()`。
@@ -252,24 +278,31 @@ ui.notice.exploration_found ("发现新港口：%s")
 ui.notice.exploration_failed ("探索失败，漂流到 %s")
 ui.notice.exploration_turned_back ("掉头返航：%s")
 ui.explore.result.discovered / .failed / .turned_back
+ui.explore.alert.title / .description / .continue / .turn_back / .remaining
+ui.explore.section_title / .destination / .extra_losses
+ui.explore.clue_resolved / .clue_failed / .clue_retained
 ui.error.not_at_port / .not_exploring / .unknown_clue / .clue_not_active
 ui.error.already_exploring / .insufficient_money / .no_exploration_target
+ui.error.alert_already_decided
 ```
 
 ## 8. 测试验收
 
-- 领域（新增 `framework/tests/cases/test_exploration.gd`，加入 `test_runner.SUITE_PATHS`）：
+- 领域（`framework/tests/cases/test_exploration.gd`，已在 `test_runner.SUITE_PATHS`）：
   线索等级/来源权重/可信度区间、无目标时不出线索、查询裁剪（不泄露 target/credibility）、
   抵达传闻按概率触发且命名流可复现、`clue.buy` 金币/设施/上限门禁、`explore.start`
   扣资源/写状态/在航门禁、`settle` 成功解锁港口 + 迷雾揭示 + current port + 线索 resolved、
   `settle` 失败线索 failed + 漂到最近已知港 + 耐久/煤水扣减、`decide("turn_back")` 回港且线索仍 active、
   存档 round-trip（`GameState.hash()` 前后一致）。
+- **4.2 增量**：告警阈值/决策点来自 Core JSON、presentation/query 暴露告警状态、重复 continue 被拒；
+  settle / failure / turn_back 都跑到港服务（委托完成、市场记忆、委托刷新、统计 +1）并带 `autosave` 标记。
 - UI：`test_sea_chart`（clues 出现在视图模型、图表几何、面板线索区块、探索信号）、
-  `test_voyage_flow`（海图点击线索 → 演出到 settle → 结算页显示探索结果；成功与失败各一条）、
-  `test_ui_shell`（`clue.buy` 按钮/入口）。
-- 回归：既有 264 例全部保持通过。
+  `test_voyage_flow`（海图点击线索 → 演出到 settle → 结算页显示探索结果；成功与失败各一条；
+  资源告急「继续」与「掉头」两条 E2E，含 `skip()` 不可用、无 double settle）、
+  `test_ui_shell`（`clue.buy` 按钮/入口）、`test_voyage_presentation`（force_arrival 从 AT_SEA / EVENT_WAIT）。
+- 回归：既有 264 例 + 4.1 的 34 例全部保持通过。
 
-## 9. 实现状态与验收截图（4.1）
+## 9. 实现状态与验收截图（4.1 / 4.2）
 
 **实现（2026-10-21）**
 
@@ -278,9 +311,10 @@ ui.error.already_exploring / .insufficient_money / .no_exploration_target
 | 规则 | `framework/domain/exploration/exploration_rules.gd`（读 `map_profiles.data.exploration`，`discovery_chance` / `roll_succeeds` 单一真源） |
 | 线索 | `framework/domain/exploration/clue_service.gd`（抵达传闻 / 购买情报 / 等级裁剪视图 / resolved·failed 生命周期） |
 | 预览 | `framework/domain/exploration/exploration_calculator.gd`（绕陆航线、航速/煤水/工资/风险/发现概率、blockers） |
-| 航次 | `framework/domain/exploration/explore_voyage_service.gd`（`start` / `settle` / `decide(continue, turn_back)`） |
+| 航次 | `framework/domain/exploration/explore_voyage_service.gd`（`start` / `settle` / `decide(continue, turn_back)`；4.2 起复用 `VoyageService.settle_arrival_services()` + 自动存档） |
+| 演出模型 | `framework/domain/voyage/voyage_presentation.gd`：4.2 新增 `force_arrival()`（告警掉头直接入港；`skip()` 语义不变） |
 | 命令/查询 | `framework/application/commands/explore_commands.gd`（`explore.start/settle/decide`、`clue.buy`）；`sea_chart.view` 追加 `clues/explore/can_buy_clue` |
-| UI | `sn_sea_chart_view` 线索层 + 未知终点、`sn_sea_chart_panel` 线索区块、`sea_chart_screen` 信号转发、`at_sea_screen` 探索终点、`settlement_screen` 探索结果块、`main.gd` Shell 接线 |
+| UI | `sn_sea_chart_view` 线索层 + 未知终点、`sn_sea_chart_panel` 线索区块、`sea_chart_screen` 信号转发、`at_sea_screen` 探索终点、`settlement_screen` 探索结果块、`main.gd` Shell 接线（4.2 资源告急页 + 继续/掉头） |
 | 内容/本地化 | `dev_mods/core/content/map_profiles.json` 的 `exploration` 块 + `schemas/map_profile.schema.json`；框架 `zh_CN/en` 的 `ui.clue.*` / `ui.explore.*` / `ui.button.*` 键 |
 
 **验收截图**（1440×900，`tools/godot/capture_exploration.gd` 窗口模式生成，两次运行证据逐字一致）
@@ -289,13 +323,16 @@ ui.error.already_exploring / .insufficient_money / .no_exploration_target
 |---|---|
 | [exploration_chart_clues.png](screenshots/exploration/exploration_chart_clues.png) | 海图线索层：level 2 参照港方向箭头、level 3 虚线圆、level 4 `？渔村？` + 选中高亮；右侧面板来源/等级/方位/航程区间/预计煤水风险/可出航性 |
 | [exploration_chart_route.png](screenshots/exploration/exploration_chart_route.png) | 探索航行：金色计划航线 + 到 `?` 终点的虚线预测线（`?` 被顶栏挡住时 clamp 到可见区）；顶栏「探索中 → ？」；底部航程条 `铁港 → ？` |
+| [exploration_resource_alert.png](screenshots/exploration/exploration_resource_alert.png) | **4.2 资源告急页**：航程 50% 停下，「资源告急」+ 煤/水/耐久 +「继续探索 / 掉头返航」，跳过演出不可用 |
+| [exploration_turned_back.png](screenshots/exploration/exploration_turned_back.png) | **4.2 掉头结算**：回出发港、线索保留、额外煤水损耗、结算显示「掉头返航」 |
+| [exploration_alert_continue.png](screenshots/exploration/exploration_alert_continue.png) | **4.2 继续路径**：同一线索告警后选「继续探索」→ 正常 settle 并发现新港口（目标港仍隐藏到结算） |
 | [exploration_result_found.png](screenshots/exploration/exploration_result_found.png) | 发现：结算页探索区块（发现新港口 / 抵达港口 / 线索已解决），原委托结算布局不变 |
 | [exploration_result_failed.png](screenshots/exploration/exploration_result_failed.png) | 失败：红色「探索失败」、漂流回铁港、额外煤水/耐久损耗、延误 6h、线索已作废 |
 | [exploration_arrival.png](screenshots/exploration/exploration_arrival.png) | 另一次真实发现的结算页（与 found 证据不同，验证不是同一帧） |
 
-**测试**：领域 `test_exploration` 22 例、UI 线索/演出/结算与 E2E 9 例、海图船形朝向与
-`?` 可见区 clamp 2 例；全套 **298 例通过 / 0 失败**。
+**测试**：领域 `test_exploration` 28 例、UI 线索/演出/结算/告警与 E2E 15 例、海图船形朝向与
+`?` 可见区 clamp 2 例、presentation force_arrival 2 例；全套 **308 例通过 / 0 失败**。
 
-**4.1 已知边界**：线索只做港口位置类（货物类 / 时效 / 调查方式留给后续）；资源告急事件
-与掉头/继续的 UI 接线留给 4.2（领域 `explore.decide` 已可用并有测试）；探索结算暂不跑
-委托 / 市场 / NPC 推进（与普通抵达的差别记录在 `explore_voyage_service.gd` 头注释）。
+**4.2 已知边界**：探索中的事件化海洋（敌对/环境/奖励）归阶段 5，与其共享事件暂停/恢复机制；
+货物类线索、`expires_at` 时效、在港等待/委托解锁线索留给 4.3；资源告急仅覆盖煤/水
+（4.2 探索途中没有耐久损耗来源，耐久告急等阶段 5 的敌对/环境事件接入后再补）。

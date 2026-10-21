@@ -20,6 +20,11 @@ extends RefCounted
 ## - **海图取景也在模型里**：`chart_zoom_scale()` 与云层同相给出取景倍数（云层刚散开
 ##   时近景，随云层散尽回到 1；入港前反向推近）。阶段 3 验收反馈 F2 要求"镜头还在
 ##   继续上升/下降"，所以不能由 UI 一次性 fit 到位——倍数由本类决定，海图只负责缩放。
+## - **掉头可以直接入港（4.2）**：`force_arrival()` 允许在途中（`AT_SEA` / 告警决策点 /
+##   事件云层）把 `progress` 推到 1 并进入与普通抵达相同的 `ARRIVAL_APPROACH →
+##   ARRIVAL_HARBOR → DONE` 段落；半程返航的领域结算由 `explore.decide(turn_back)`
+##   负责，状态机只跳过剩余航程。`EVENT_WAIT` 下 `skip()` 仍返回 `NONE`（不能替玩家
+##   回答告警），因此掉头必须由 Shell 在玩家选择后显式调用。
 ## @end-static-doc
 
 ## 演出阶段。名字与设计文档 §8.1 的状态机对应；与 3D 有关的两个额外阶段是
@@ -170,6 +175,27 @@ func begin_event_reveal() -> void:
 	if phase != Phase.EVENT_WAIT:
 		return
 	_start_veil(0.0)
+
+
+## 资源告急 · 掉头返航（4.2）：不再飞向搜索区，跳过剩余航程直接进入「云层盖住
+## 海图 → 3D 入港」。领域层的半程返航（回出发港、线索保留、额外煤水）已经由
+## `explore.decide(turn_back)` 结算，这里只让演出走完与普通抵达相同的入港段落，
+## 因此 `ARRIVAL_READY` 不需要再调用 `explore.settle`。
+##
+## 只允许在途中调用：`AT_SEA` / `EVENT_WAIT` / `EVENT_APPROACH` / `EVENT_RESUME`；
+## 未出航、已在入港或已结束的相位忽略。返回是否真的改变了相位。
+func force_arrival() -> bool:
+	match phase:
+		Phase.AT_SEA, Phase.EVENT_WAIT, Phase.EVENT_APPROACH, Phase.EVENT_RESUME:
+			progress = 1.0
+			# 剩余航程不再经过事件点：把事件槽标记为已消费，语义与正常抵达一致。
+			event_fired = true
+			phase = Phase.ARRIVAL_APPROACH
+			veil_direction = 1.0
+			_start_veil(1.0)
+			return true
+		_:
+			return false
 
 
 ## 推进演出。`delta` 是实时秒。返回本次推进跨过的里程碑。

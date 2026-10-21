@@ -17,6 +17,15 @@ extends Control
 ## zone centre the player cannot name yet. The chart page then draws a dashed
 ## prediction line to a `?` marker, and the arrival milestone runs `explore.settle`
 ## before cutting to the harbour (the destination only exists after that command).
+##
+## Phase 4.2 adds the resource-alert decision: when the exploration's Core rules
+## report `alert_needed`, the state machine stops at the alert's `alert_progress`
+## and `_rebuild_ui` mounts the alert page (reusing `EventScreen`) instead of the
+## chart. `continue` acknowledges it in the domain and resumes the voyage;
+## `turn_back` lets `explore.decide` settle a half-voyage return immediately, then
+## `VoyagePresentation.force_arrival()` plays the normal harbour cut without ever
+## calling `explore.settle` again (that is what `_presentation_explore["returned"]`
+## guards in `ARRIVAL_READY`).
 
 const UI_THEME := preload("res://assets/ui/theme/steam_navigator_theme.tres")
 ## Themed edge signboard (wood/iron/brass custom draw, plain Button semantics).
@@ -164,8 +173,9 @@ var _pending_transition: bool = false
 var _presentation: VoyagePresentation = null
 var _presentation_summary: Dictionary = {}
 ## 探索演出（阶段 4.1）：`explore.start` 命令返回的 `presentation`（origin / zone /
-## route_path / total_hours / …）。非空表示这次演出是探索，抵达摘要要由
-## `explore.settle` 现算，目的地直到结算后才存在。
+## route_path / total_hours / alert_needed / alert_progress / …）。非空表示这次演出是
+## 探索，抵达摘要要由 `explore.settle` 现算，目的地直到结算后才存在。4.2 的告警
+## 决策点也记在这里（`alert_*`；`returned = true` 表示已掉头并提前结算）。
 var _presentation_explore: Dictionary = {}
 ## Endpoints of the voyage being presented. Kept on the shell because the domain
 ## voyage record is already cleared when the arrival settles instantly.
@@ -331,6 +341,14 @@ func _rebuild_ui() -> void:
 		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_voyage_stage(data)
+		return
+	if _presentation_on_alert():
+		# 探索演出 · 资源告急（4.2）：海图已被云层盖住，事件页换成告警页。
+		# 必须在 `presenting` / `at_sea` 之前判断，否则会先挂出海图页。
+		_hide_port_stage()
+		_set_port_status_bar_visible(false)
+		_build_status_banner()
+		_screen_explore_alert(data)
 		return
 	if presenting:
 		_hide_port_stage()
@@ -1948,6 +1966,22 @@ func _presentation_on_stage() -> bool:
 	]
 
 
+## True while an exploration is stopped at the 4.2 resource-alert decision.
+## `EVENT_WAIT` is the same phase a normal risk event uses; only an exploration
+## presentation with a pending alert mounts the alert page instead of the event
+## screen / chart page.
+func _presentation_on_alert() -> bool:
+	if _presentation == null or _presentation_explore.is_empty():
+		return false
+	return _presentation.phase == VoyagePresentation.Phase.EVENT_WAIT
+
+
+## 探索演出是否已被「掉头返航」提前结算（`explore.decide(turn_back)` 已经把船送回
+## 出发港并写好 summary）。此时 `ARRIVAL_READY` 不能再调 `explore.settle`。
+func _explore_returned() -> bool:
+	return bool(_presentation_explore.get("returned", false))
+
+
 ## Full-window 3D cut. The stage is forced onto the harbour-authority shot even
 ## though no `STAGE_SCREENS` page is active, and the beat is kicked off *after*
 ## the stage has been (re)mounted so the high shot starts from a settled camera.
@@ -2012,10 +2046,13 @@ func _start_voyage_presentation(data: Dictionary) -> void:
 	_set_status("出航，航向 %s。" % _port_name(destination), false)
 
 
-## 探索演出（阶段 4.1）。`explore.start` 已经在领域层扣完资源并写好 `explore_voyage`，
-## 这里只保存它返回的 `presentation`（origin / zone / route_path / total_hours）并启动
-## 与普通航行相同的状态机：3D 离港 → 云层 → 海图。与普通航行的差别只有两点：
-## 目的地暂时为空（抵达时才由 `explore.settle` 决定），海图航线终点是搜索区中心。
+## 探索演出（阶段 4.1/4.2）。`explore.start` 已经在领域层扣完资源并写好
+## `explore_voyage`，这里保存它返回的 `presentation`（origin / zone / route_path /
+## total_hours / alert_needed / alert_progress）并启动与普通航行相同的状态机：
+## 3D 离港 → 云层 → 海图。与普通航行的差别：目的地暂时为空（抵达时才由
+## `explore.settle` 决定）、海图航线终点是搜索区中心、以及 4.2 的途中资源告急
+## 决策点（`alert_needed` 时事件位由 Core 的 `alert_progress` 决定，命中后停在
+## `EVENT_WAIT` 挂告警页）。
 func _start_explore_presentation(data: Dictionary) -> void:
 	var presentation: Dictionary = {}
 	if data.get("presentation", null) is Dictionary:
@@ -2029,7 +2066,13 @@ func _start_explore_presentation(data: Dictionary) -> void:
 		hours = float(preview.get("duration_hours", 0.0))
 	if hours <= 0.0:
 		hours = VoyagePresentation.FALLBACK_HOURS
+	# 4.2：告警决策点来自 Core JSON（`alert_progress`，默认 0.5）；不需要告急时
+	# 传 -1，状态机就按「没有途中事件」跑完整段航程。
+	var alert_needed := bool(presentation.get("alert_needed", false))
+	var alert_progress := float(presentation.get("alert_progress", VoyagePresentation.DEFAULT_EVENT_PROGRESS))
 	_presentation_explore = presentation
+	_presentation_explore["alert_needed"] = alert_needed
+	_presentation_explore["alert_progress"] = alert_progress
 	_presentation_voyage = {
 		"kind": "explore",
 		"origin": origin,
@@ -2043,8 +2086,7 @@ func _start_explore_presentation(data: Dictionary) -> void:
 	}
 	_presentation_summary = {}
 	_presentation = VoyagePresentation.new()
-	# 探索 4.1 没有途中的资源告急决策（留给 4.2），事件位固定 -1。
-	_presentation.plan(hours, -1.0)
+	_presentation.plan(hours, alert_progress if alert_needed else -1.0)
 	_presentation_origin_view = _last_port_view.duplicate(true)
 	_presentation.departure_3d_seconds = PortStage.VOYAGE_BEAT_SECONDS
 	_presentation.harbor_seconds = PortStage.VOYAGE_BEAT_SECONDS
@@ -2095,13 +2137,19 @@ func _tick_presentation(delta: float) -> void:
 		VoyagePresentation.Step.AT_SEA_STARTED:
 			_rebuild_ui()
 		VoyagePresentation.Step.EVENT_READY:
-			# The event decision is pushed to the player, then the veil clears over it.
+			# The decision is pushed to the player, then the veil clears over it.
+			# Exploration (4.2) mounts the resource-alert page instead of the chart
+			# / event page; normal voyages keep the regular event screen.
 			_rebuild_ui()
 			_presentation.begin_event_reveal()
 		VoyagePresentation.Step.ARRIVAL_READY:
 			# 探索演出：先把目的地结算出来（目标港 / 失败漂流港），再换成目的港的
 			# 3D 入港镜头——普通航行的目的地出发时就已经知道，探索要等这一拍。
-			if not _presentation_explore.is_empty() and not _settle_exploration():
+			# 掉头返航（4.2）已经在 `explore.decide(turn_back)` 里结算过，这里不能再
+			# settle：`explore_voyage` 已被清空，再调只会得到 `not_exploring`。
+			if not _presentation_explore.is_empty() \
+					and not _explore_returned() \
+					and not _settle_exploration():
 				# 结算失败（状态被外部改动 / 没有 explore_voyage）：退回出发港，
 				# 不把玩家留在"没有目的地的入港镜头"里。错误已由结算函数写进状态栏。
 				_presentation_explore = {}
@@ -2130,6 +2178,7 @@ func _finish_presentation() -> void:
 	_active_screen = "settlement" if not _settlement_summary.is_empty() else "overview"
 	_status_message = ""
 	_presentation = null
+	# 4.2：探索上下文（含 `returned` 掉头标记）随演出一起清掉；下一次探索重新写入。
 	_presentation_explore = {}
 	_at_sea_screen = null
 	_sync_cloud_veil(0.0)
@@ -2182,6 +2231,7 @@ func _begin_stage_arrival() -> void:
 func _reset_voyage_presentation() -> void:
 	_presentation = null
 	_presentation_summary = {}
+	# 4.2：探索上下文（含告警决策点与 `returned` 掉头标记）也一起清掉。
 	_presentation_explore = {}
 	_presentation_voyage = {}
 	_presentation_origin_view = {}
@@ -2223,6 +2273,87 @@ func _screen_event(data: Dictionary, event: Dictionary) -> void:
 	screen.bind({"event": event, "ship": data.get("ship", {}), "money": data.get("money", 0)}, Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
 	_root_box.add_child(screen)
+
+
+## 资源告急页（4.2）：复用事件页的版式（标题 / 描述 / 船况 / 两个选项），但选项由
+## `_on_explore_alert_choice` 处理——`continue` 只确认告警，`turn_back` 让领域立即
+## 结算半程返航，两者都不能走 `event.choose_option`。
+##
+## `event.hint_text` 覆盖事件页默认的「选择后会立即结算」：对 `continue` 那句话是
+## 错的，这里改显示本段剩余航程（全部用已有本地化键拼出，不新增文案）。
+func _screen_explore_alert(data: Dictionary) -> void:
+	var remaining := 0.0
+	if _presentation != null:
+		remaining = _presentation.remaining_hours()
+	var event := {
+		"event_id": "explore_resource_alert",
+		"name_key": "ui.explore.alert.title",
+		"description_key": "ui.explore.alert.description",
+		"hint_text": "%s %s %s" % [
+			_tr("ui.explore.alert.remaining", "剩余航程"),
+			_fmt(remaining),
+			_tr("unit.hours", "小时"),
+		],
+		"options": [
+			{"id": "continue", "name_key": "ui.explore.alert.continue"},
+			{"id": "turn_back", "name_key": "ui.explore.alert.turn_back"},
+		],
+	}
+	var ship: Dictionary = data.get("ship", {})
+	if ship.is_empty():
+		ship = _last_port_view.get("ship", {})
+	var screen: Variant = EVENT_SCREEN_SCENE.instantiate()
+	screen.bind({
+		"event": event,
+		"ship": ship,
+		"money": data.get("money", 0),
+	}, Callable(self, "_tr"))
+	screen.command_requested.connect(_on_explore_alert_choice)
+	_root_box.add_child(screen)
+
+
+## 资源告急的选择处理。两个选项都通过 `explore.decide` 在领域层落地；失败时把
+## 错误交给状态栏并重新挂告警页（不吞错、也不把玩家留在一张空页上）。
+func _on_explore_alert_choice(_command: StringName, params: Dictionary) -> void:
+	if _presentation == null or _presentation_explore.is_empty():
+		return
+	var choice := String(params.get("option_id", ""))
+	if choice != "continue" and choice != "turn_back":
+		return
+	var result := _context.commands.execute(&"explore.decide", {"choice": choice})
+	if not bool(result.get("ok", false)):
+		_set_status(_error_text(result), true)
+		_rebuild_ui()
+		return
+	if choice == "turn_back":
+		var data: Variant = result.get("data", null)
+		_handle_explore_turn_back(data if data is Dictionary else {})
+		return
+	# continue：告警确认，云层重新盖上后回海图继续最后半程（剩余航程仍照常结算）。
+	_set_status("%s…" % _tr("ui.label.exploring", "探索中"), false)
+	_presentation.resolve_event()
+	_rebuild_ui()
+
+
+## 掉头成功（`explore.decide(turn_back)` 已经在领域层回港并写好 summary）：
+## 演出放弃剩余航程，直接进入「云层盖住海图 → 3D 入港」。`returned` 标记让
+## `ARRIVAL_READY` 跳过 `explore.settle`——否则会对已经清空的探索航次报
+## `not_exploring`，也就是一次 double settle。
+func _handle_explore_turn_back(data: Dictionary) -> void:
+	var destination := String(data.get("destination", ""))
+	if not destination.is_empty():
+		_presentation_voyage["destination"] = destination
+	var summary: Variant = data.get("summary", null)
+	if summary is Dictionary:
+		_presentation_summary = summary
+	_presentation_explore["returned"] = true
+	_set_status(
+		_tr("ui.notice.exploration_turned_back", "掉头返航：%s") % _port_name(destination),
+		false
+	)
+	_presentation.force_arrival()
+	_sync_cloud_veil(0.0)
+	_rebuild_ui()
 
 
 ## ---------------------------------------------------------------------------

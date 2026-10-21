@@ -448,6 +448,99 @@ func test_explore_settle_without_a_voyage_fails() -> void:
 	assert_eq(String(result.get("error_code", "")), "not_exploring", "the failure names the missing voyage")
 
 
+## 4.2 S3：探索入港与普通抵达跑同一套到港服务（委托 / 市场记忆 / NPC / 债务 /
+## 委托刷新 / 统计 / 自动存档），而不是"只解锁一个港口"。
+func test_explore_settle_runs_arrival_services_and_autosaves() -> void:
+	var context := _start_run(SEED)
+	var clue := _acquire(context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var target := String(clue.get("target_port_id", ""))
+	var started := context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(started.get("ok", false)), "explore.start succeeds")
+	# 让主线委托的目的地正好是被发现的港口：探索发现也应该能完成委托。
+	context.state.data["contracts"]["main"]["destination"] = target
+	context.state.explore_voyage()["outcome_roll"] = 0.0
+	var voyages_before := int(context.state.stats().get("voyages", 0))
+	var result := context.commands.execute(&"explore.settle", {})
+	assert_true(bool(result.get("ok", false)), "explore.settle succeeds")
+	if not bool(result.get("ok", false)):
+		return
+	var summary: Dictionary = result.get("data", {}).get("summary", {})
+	assert_eq((summary.get("contracts", []) as Array).size() >= 1, true,
+		"the discovered harbour completes a contract that targets it")
+	assert_true(bool(summary.get("offers_refreshed", false)),
+		"the arrival refreshes the normal offer pool")
+	assert_true(MarketMemoryService.has_memory(context.state, target),
+		"the discovered harbour gets a market-memory snapshot")
+	assert_eq(int(context.state.stats().get("voyages", 0)), voyages_before + 1,
+		"the exploration leg is counted exactly once")
+	assert_true(bool(result.get("autosave", false)),
+		"the exploration settlement requests an autosave like a normal arrival")
+
+
+## 失败漂流到的也是真实港口，到港服务与统计同样要跑（委托是否完成由目的地匹配决定）。
+func test_explore_failure_settle_runs_arrival_services() -> void:
+	var context := _start_run(SEED)
+	var clue := _acquire(context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var started := context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(started.get("ok", false)), "explore.start succeeds")
+	context.state.explore_voyage()["outcome_roll"] = 0.999
+	var voyages_before := int(context.state.stats().get("voyages", 0))
+	var result := context.commands.execute(&"explore.settle", {})
+	assert_true(bool(result.get("ok", false)), "explore.settle succeeds")
+	if not bool(result.get("ok", false)):
+		return
+	var summary: Dictionary = result.get("data", {}).get("summary", {})
+	assert_eq(String((summary.get("explore", {}) as Dictionary).get("result", "")), "failed",
+		"a high roll fails the search")
+	assert_true(bool(summary.get("offers_refreshed", false)),
+		"the drift harbour still refreshes its offer pool")
+	assert_eq(int(context.state.stats().get("voyages", 0)), voyages_before + 1,
+		"a failed exploration still counts as one voyage")
+	assert_true(bool(result.get("autosave", false)),
+		"a failed exploration settlement is autosaved")
+
+
+## 掉头返航同样是真实入港：到港服务、统计与自动存档都要发生，只是没有发现。
+func test_turn_back_runs_arrival_services_and_autosaves() -> void:
+	var context := _start_run(SEED)
+	var clue := _acquire(context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var origin := context.state.current_port_id()
+	var started := context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(started.get("ok", false)), "explore.start succeeds")
+	var voyages_before := int(context.state.stats().get("voyages", 0))
+	var result := context.commands.execute(&"explore.decide", {"choice": "turn_back"})
+	assert_true(bool(result.get("ok", false)), "turning back succeeds")
+	if not bool(result.get("ok", false)):
+		return
+	var summary: Dictionary = result.get("data", {}).get("summary", {})
+	assert_true(bool(summary.get("offers_refreshed", false)),
+		"arriving back at the origin refreshes the offer pool")
+	assert_eq(int(context.state.stats().get("voyages", 0)), voyages_before + 1,
+		"the aborted exploration still counts as one voyage")
+	assert_true(MarketMemoryService.has_memory(context.state, origin),
+		"the origin harbour gets a market-memory snapshot on return")
+	assert_true(bool(result.get("autosave", false)),
+		"turning back requests an autosave like a normal arrival")
+
+
 # ── explore.decide ──
 
 func test_turn_back_returns_to_origin_and_keeps_clue_active() -> void:
@@ -514,8 +607,100 @@ func test_continue_keeps_sailing_and_marks_the_alert() -> void:
 		"the acknowledged alert is marked complete")
 
 
-# ── sea_chart.view ──
+## 4.2 资源告急：出发时按 Core 的 `alert_threshold` 判断，决策点比例来自
+## `alert_progress`；两者都进 `presentation`，Shell 用它在航程中途停下。
+func test_alert_threshold_and_progress_come_from_the_rules() -> void:
+	var normal_context := _start_run(SEED)
+	var normal_clue := _acquire(normal_context, "intel")
+	var normal_start := normal_context.commands.execute(&"explore.start", {
+		"clue_id": String(normal_clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(normal_start.get("ok", false)), "a full hold does not block departure")
+	var normal_voyage: Dictionary = normal_context.state.explore_voyage()
+	assert_false(bool(normal_voyage.get("alert_needed", true)),
+		"a well-stocked hold does not trigger the resource alert")
 
+	# 只留"刚够本程 + 5%"的煤：这一程必然烧掉出发存量的一半以上 → 触发告急。
+	var low_context := _start_run(SEED)
+	var clue := _acquire(low_context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var preview_result := ExplorationCalculator.preview(
+		low_context, String(clue.get("id", "")), STRATEGY_ID
+	)
+	assert_true(bool(preview_result.get("ok", false)), "the clue preview succeeds")
+	var coal_required := float((preview_result.get("data", {}) as Dictionary).get("coal_required", 0.0))
+	low_context.state.ship()["coal"] = coal_required * 1.05
+	var started := low_context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(started.get("ok", false)), "a half-empty hold still allows departure")
+	if not bool(started.get("ok", false)):
+		return
+	var voyage: Dictionary = low_context.state.explore_voyage()
+	var rules := ExplorationRules.read(low_context.state, low_context.registries)
+	assert_true(bool(voyage.get("alert_needed", false)),
+		"burning more than half of the departure coal raises the alert")
+	assert_almost_eq(float(voyage.get("alert_progress", 0.0)), float(rules["alert_progress"]), 0.0001,
+		"the decision point comes from the Core rule, not a hardcoded 0")
+	var presentation: Dictionary = (started.get("data", {}) as Dictionary).get("presentation", {})
+	assert_true(bool(presentation.get("alert_needed", false)), "the presentation carries the alert flag")
+	assert_almost_eq(float(presentation.get("alert_progress", 0.0)), float(rules["alert_progress"]), 0.0001,
+		"the presentation carries the decision point for the演出")
+
+
+## 决策只能回答一次：重复 continue 会给出明确的错误，而不是静默地再扣一次状态。
+func test_continue_cannot_answer_the_alert_twice() -> void:
+	var context := _start_run(SEED)
+	var clue := _acquire(context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var started := context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(started.get("ok", false)), "explore.start succeeds")
+	var first := context.commands.execute(&"explore.decide", {"choice": "continue"})
+	assert_true(bool(first.get("ok", false)), "the first answer is accepted")
+	assert_true(float(((first.get("data", {}) as Dictionary).get("remaining_hours", 0.0))) > 0.0,
+		"the continue result reports the remaining voyage")
+	var second := context.commands.execute(&"explore.decide", {"choice": "continue"})
+	assert_false(bool(second.get("ok", false)), "answering the alert twice is rejected")
+	assert_eq(String(second.get("error_code", "")), "alert_already_decided",
+		"the rejection names the duplicate answer")
+	assert_eq(String(second.get("message_key", "")), "ui.error.alert_already_decided",
+		"the rejection has a localized message key")
+
+
+## 海图查询在探索途中要暴露告警状态，海图/顶栏才能显示正确的阶段。
+func test_chart_view_exposes_alert_state_while_exploring() -> void:
+	var context := _start_run(SEED)
+	var clue := _acquire(context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var preview := ExplorationCalculator.preview(context, String(clue.get("id", "")), STRATEGY_ID)
+	var coal_required := float((preview.get("data", {}) as Dictionary).get("coal_required", 0.0))
+	context.state.ship()["coal"] = coal_required * 1.05
+	var started := context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(started.get("ok", false)), "explore.start succeeds")
+	var explore: Dictionary = _chart_vm(context).get("explore", {})
+	assert_true(bool(explore.get("active", false)), "the chart reports the active exploration")
+	assert_true(bool(explore.get("alert_needed", false)), "the chart reports the pending alert")
+	assert_true(float(explore.get("alert_progress", 0.0)) > 0.0
+		and float(explore.get("alert_progress", 0.0)) < 1.0,
+		"the chart reports the decision point before it is answered")
+	assert_eq(String(explore.get("alert_decided", "")), "", "nothing is decided yet")
+
+
+# ── sea_chart.view ──
 func test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void:
 	var context := _start_run(SEED)
 	var vm := _chart_vm(context)

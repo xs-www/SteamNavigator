@@ -416,8 +416,18 @@ static func _clue_estimate(context, clue_id: String, strategy_id: String) -> Dic
 static func _explore_state(state: GameState) -> Dictionary:
 	var voyage: Variant = state.explore_voyage()
 	if not (voyage is Dictionary):
-		return {"active": false, "clue_id": ""}
-	return {"active": true, "clue_id": String((voyage as Dictionary).get("clue_id", ""))}
+		return {
+			"active": false, "clue_id": "",
+			"alert_needed": false, "alert_progress": 0.0, "alert_decided": "",
+		}
+	return {
+		"active": true, "clue_id": String((voyage as Dictionary).get("clue_id", "")),
+		# 4.2 资源告急决策点：比例来自 Core JSON 的 `alert_progress`；`alert_decided`
+		# 非空表示玩家已经做过选择（continue 后 alert_progress 置 1.0）。
+		"alert_needed": bool((voyage as Dictionary).get("alert_needed", false)),
+		"alert_progress": float((voyage as Dictionary).get("alert_progress", 0.0)),
+		"alert_decided": String((voyage as Dictionary).get("alert_decided", "")),
+	}
 
 
 ## Why the buy button is (not) available, resolved with the same gates `clue.buy` uses so

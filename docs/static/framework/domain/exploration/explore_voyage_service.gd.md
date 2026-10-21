@@ -10,8 +10,8 @@
 | --- | --- |
 | `ExploreVoyageService` | L1 |
 | `start(context, clue_id: String, strategy_id: String) -> Dictionary` | L28 |
-| `decide(context, choice: String) -> Dictionary` | L136 |
-| `settle(context) -> Dictionary` | L210 |
+| `decide(context, choice: String) -> Dictionary` | L142 |
+| `settle(context) -> Dictionary` | L236 |
 
 资源告急决策（继续 / 掉头）、抵达结算（发现港口 + 迷雾揭示 / 失败漂流 + 线索作废）。
 

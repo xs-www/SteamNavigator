@@ -10,11 +10,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `EventScreen` | L1 |
-| `command_requested (signal)` | L5 |
-| `TEXT` | L7 |
-| `MUTED` | L8 |
-| `RED` | L9 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L13 |
+| `command_requested (signal)` | L10 |
+| `TEXT` | L12 |
+| `MUTED` | L13 |
+| `RED` | L14 |
+| `DEFAULT_HINT` | L16 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L20 |
 
 ## 契约与约束
 

@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-20T23:48:36.604Z",
-  "commit": "12ae8a0",
+  "generated_at": "2026-10-21T00:21:57.549Z",
+  "commit": "414baeb",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "51f48bdfdf2cd4c2e5f698b8f1675efcae2e9ceb11a2ac06c1f4f08ea9ec7305",
+      "sha256": "a3a71eaa42105fbd644dfa196ab9ff8ccc33caa2631e6e4e38f71392a8cabecc",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -1812,7 +1812,7 @@
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "f820b879c4b8c580fbde5fb1d9409637e4964220ce505592c436188692cc0390",
+      "sha256": "f587b8ecae69622c5a335bf6452f8322a1c8b7112bbe912c2f19808560354e81",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -2015,7 +2015,7 @@
     },
     {
       "source": "framework/domain/exploration/explore_voyage_service.gd",
-      "sha256": "4b9bcff0a6c261dc2c62cfaef515fd013d40c4a16d0ed8ab331b379b04d0cb64",
+      "sha256": "d4c780e8f1ab3950259934764d7b31967740cd6f7d2250a7c1be71868afff879",
       "doc": "docs/static/framework/domain/exploration/explore_voyage_service.gd.md",
       "status": "documented"
     },
@@ -2075,13 +2075,13 @@
     },
     {
       "source": "framework/domain/voyage/voyage_presentation.gd",
-      "sha256": "8ac5d5a1af19aeebfa97b3e13f5fede5ab29e6df5c778a6e4de3f224e1e9b64c",
+      "sha256": "216854662c0060433b94c7f96bbfb8f826351df53a314b36d2da34f319caf0a2",
       "doc": "docs/static/framework/domain/voyage/voyage_presentation.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/voyage/voyage_service.gd",
-      "sha256": "bdbcfb52d20c55934d5ecd639a5f9480bd6464c8aadc16b724f2fdea18417e4b",
+      "sha256": "57148928ef038ad637008b9baece4b21b4725aac11236bba9e34501a97cb49ff",
       "doc": "docs/static/framework/domain/voyage/voyage_service.gd.md",
       "status": "documented"
     },
@@ -2353,7 +2353,7 @@
     },
     {
       "source": "framework/tests/cases/test_exploration.gd",
-      "sha256": "a0033a24ab94897df484a3aac0b4dccfbb7db4b3bd731f92c3131e70fd62173a",
+      "sha256": "d1b7e0d81f04cb18675bd5392952f4361ebdbe6711f05e9208341dc8c4c9d563",
       "doc": "docs/static/framework/tests/cases/test_exploration.gd.md",
       "status": "documented"
     },
@@ -2532,14 +2532,14 @@
     },
     {
       "source": "framework/tests/cases/test_voyage_flow.gd",
-      "sha256": "7eff29bf0a0ee4b1848c8af58ed3a317859b0ce1bcf1658fd68f8466cabccaff",
+      "sha256": "38a3166f0929a2071ec550b33240e281d4d88470a8c261bb31e17dfe6502d05d",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/tests/cases/test_voyage_presentation.gd",
-      "sha256": "1306956930f67c481313f74c620f8d6d0ad7204bdfe6e101d6fa2b6f45751d25",
+      "sha256": "4dcd26d3b89e8e9dc59e177a25f54368ea93817bf43774cd1ca2c7e586991378",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2799,7 +2799,7 @@
     },
     {
       "source": "framework/ui/screens/flow/event_screen.gd",
-      "sha256": "f95a425b45c1430e3ee644fb8f3489423d300ce85f39c2e8150a5bc54655f798",
+      "sha256": "ce51118719d358456813ba9133a69f2a098c868cb79a9adb70c2f39350016299",
       "doc": "docs/static/framework/ui/screens/flow/event_screen.gd.md",
       "status": "documented"
     },
@@ -3007,7 +3007,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "2492b1aacd0c816aacf10e76272c59f1be90bade86456488ae3ce10f6485b998",
+      "sha256": "a846553dfc7e8afa5ede2066719a7fa017c5ef5e32091ea081c414c0b7371070",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -3341,7 +3341,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "59c6ea6794584d3bc6779d8c6f0e6a3f51eb6b5af2a542435e4cbe08c76f51ee",
+      "sha256": "250c7759657fc988b9829f05e40583540fe4f7b0d50467dfb86b748a19db821e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3385,7 +3385,7 @@
     },
     {
       "source": "tools/godot/capture_exploration.gd",
-      "sha256": "fbe4fbc2c31334516e78d26284b4781cc6b37fdfe960e4294f1d00e4d539bcea",
+      "sha256": "71448da7a52c711c2a2585fe8346e5fd174a253e1d633c522f0371e69b366e09",
       "doc": "docs/static/tools/godot/capture_exploration.gd.md",
       "status": "documented"
     },

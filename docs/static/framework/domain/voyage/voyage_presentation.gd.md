@@ -9,34 +9,35 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VoyagePresentation` | L1 |
-| `SECONDS_PER_GAME_HOUR` | L62 |
-| `MIN_PLAYBACK_SECONDS` | L63 |
-| `MAX_PLAYBACK_SECONDS` | L64 |
-| `VEIL_SECONDS` | L66 |
-| `DEPARTURE_3D_SECONDS` | L69 |
-| `HARBOR_SECONDS` | L70 |
-| `FALLBACK_HOURS` | L72 |
-| `DEFAULT_EVENT_PROGRESS` | L74 |
-| `CHART_NEAR_SCALE` | L78 |
-| `plan(hours: float, event_at: float = -1.0) -> void` | L108 |
-| `begin_departure() -> void` | L130 |
-| `finish_departure_beat() -> void` | L144 |
-| `skip_harbor_beat() -> void` | L152 |
-| `resolve_event() -> void` | L160 |
-| `begin_event_reveal() -> void` | L169 |
-| `tick(delta: float) -> Step` | L176 |
-| `skip() -> Step` | L218 |
-| `is_active() -> bool` | L244 |
-| `elapsed_hours() -> float` | L249 |
-| `remaining_hours() -> float` | L254 |
-| `hours_per_second() -> float` | L259 |
-| `chart_zoom_scale() -> float` | L268 |
-| `is_veiled() -> bool` | L279 |
-| `phase_name() -> String` | L283 |
-| `snapshot() -> Dictionary` | L288 |
-| `sample_polyline(points: PackedVector2Array, t: float) -> Vector2` | L307 |
-| `polyline_length(points: PackedVector2Array) -> float` | L325 |
-| `unpack_path(flat: Array) -> PackedVector2Array` | L336 |
+| `SECONDS_PER_GAME_HOUR` | L67 |
+| `MIN_PLAYBACK_SECONDS` | L68 |
+| `MAX_PLAYBACK_SECONDS` | L69 |
+| `VEIL_SECONDS` | L71 |
+| `DEPARTURE_3D_SECONDS` | L74 |
+| `HARBOR_SECONDS` | L75 |
+| `FALLBACK_HOURS` | L77 |
+| `DEFAULT_EVENT_PROGRESS` | L79 |
+| `CHART_NEAR_SCALE` | L83 |
+| `plan(hours: float, event_at: float = -1.0) -> void` | L113 |
+| `begin_departure() -> void` | L135 |
+| `finish_departure_beat() -> void` | L149 |
+| `skip_harbor_beat() -> void` | L157 |
+| `resolve_event() -> void` | L165 |
+| `begin_event_reveal() -> void` | L174 |
+| `force_arrival() -> bool` | L187 |
+| `tick(delta: float) -> Step` | L202 |
+| `skip() -> Step` | L244 |
+| `is_active() -> bool` | L270 |
+| `elapsed_hours() -> float` | L275 |
+| `remaining_hours() -> float` | L280 |
+| `hours_per_second() -> float` | L285 |
+| `chart_zoom_scale() -> float` | L294 |
+| `is_veiled() -> bool` | L305 |
+| `phase_name() -> String` | L309 |
+| `snapshot() -> Dictionary` | L314 |
+| `sample_polyline(points: PackedVector2Array, t: float) -> Vector2` | L333 |
+| `polyline_length(points: PackedVector2Array) -> float` | L351 |
+| `unpack_path(flat: Array) -> PackedVector2Array` | L362 |
 
 结算的航行，在界面上依次演成「出航云层 → 海图航行（时间加速）→ 事件中断 →
 抵达云层」。它不碰 `GameState`、不碰节点树，只输出阶段、进度和里程碑，
@@ -56,5 +57,10 @@
 - **海图取景也在模型里**：`chart_zoom_scale()` 与云层同相给出取景倍数（云层刚散开
   时近景，随云层散尽回到 1；入港前反向推近）。阶段 3 验收反馈 F2 要求"镜头还在
   继续上升/下降"，所以不能由 UI 一次性 fit 到位——倍数由本类决定，海图只负责缩放。
+- **掉头可以直接入港（4.2）**：`force_arrival()` 允许在途中（`AT_SEA` / 告警决策点 /
+  事件云层）把 `progress` 推到 1 并进入与普通抵达相同的 `ARRIVAL_APPROACH →
+  ARRIVAL_HARBOR → DONE` 段落；半程返航的领域结算由 `explore.decide(turn_back)`
+  负责，状态机只跳过剩余航程。`EVENT_WAIT` 下 `skip()` 仍返回 `NONE`（不能替玩家
+  回答告警），因此掉头必须由 Shell 在玩家选择后显式调用。
 
 模块索引：[framework/domain](../README.md)

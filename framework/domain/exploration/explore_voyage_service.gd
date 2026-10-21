@@ -98,7 +98,9 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 		"water_used": water_used,
 		"wages": wages,
 		"alert_needed": alert_needed,
-		"alert_progress": 0.0,
+		# 决策点在航程中的比例（来自 Core JSON 的 `alert_progress`，默认 0.5）。
+		# `alert_progress` 同时充当「已处理」标记：continue 后置 1.0（见 `decide`）。
+		"alert_progress": float(rules.get("alert_progress", 0.5)),
 		"alert_decided": "",
 		"outcome_roll": outcome_roll,
 		"status": "outbound",
@@ -127,12 +129,16 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 		"departure_time": departure_time,
 		"arrival_time": arrival_time,
 		"alert_needed": alert_needed,
+		"alert_progress": float(voyage["alert_progress"]),
 	}
 	return Result.ok({"preview": preview, "presentation": presentation}, events)
 
 
 ## 4.2 resource-alert decision. `continue` merely acknowledges the alert; `turn_back`
 ## immediately settles a half-voyage return to the origin harbour (clue stays active).
+## Answering `continue` twice is rejected instead of silently re-acknowledging; turning
+## back is also usable as an explicit abort (it clears `explore_voyage`, so a second call
+## fails with `not_exploring`).
 static func decide(context, choice: String) -> Dictionary:
 	var state: GameState = context.state
 	var voyage_value: Variant = state.explore_voyage()
@@ -141,11 +147,16 @@ static func decide(context, choice: String) -> Dictionary:
 	var voyage: Dictionary = voyage_value
 	match choice:
 		"continue":
+			if not String(voyage.get("alert_decided", "")).is_empty():
+				return Result.fail("alert_already_decided", "ui.error.alert_already_decided")
+			var at := float(voyage.get("alert_progress", 0.5))
+			var remaining := maxf(0.0, float(voyage.get("duration_hours", 0.0)) * (1.0 - at))
 			voyage["alert_decided"] = "continue"
 			voyage["alert_progress"] = 1.0
 			return Result.ok({
 				"continued": true,
 				"destination": String(voyage.get("target_port_id", "")),
+				"remaining_hours": remaining,
 			})
 		"turn_back":
 			return _turn_back(context, voyage)
@@ -180,7 +191,19 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 	state.set_explore_voyage(null)
 	state.data["voyage"] = null
 
-	var events: Array = [{
+	# 掉头也是一次真实的入港：到港服务（打造订单 / 委托 / NPC / 市场记忆 / 债务 /
+	# 委托刷新）与普通抵达一致地跑一遍，只是没有发现新港口。
+	var services := VoyageService.settle_arrival_services(context, origin, arrival_time, {
+		"destination": origin,
+		"arrival_time": arrival_time,
+		"delay_hours": 0.0,
+		"injuries": 0,
+	})
+	VoyageService.record_arrival_stats(state, services.get("contract_results", []), 0)
+
+	var events: Array = []
+	events.append_array(services.get("events", []))
+	events.append({
 		"type": "explore.finished",
 		"payload": {
 			"result": "turned_back",
@@ -188,7 +211,7 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 			"clue_id": clue_id,
 			"arrival_time": arrival_time,
 		},
-	}]
+	})
 	var summary := _summary(
 		state,
 		"turned_back",
@@ -200,9 +223,12 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 		water_deducted,
 		0.0,
 		0.0,
-		events
+		events,
+		services
 	)
-	return Result.ok({"returned": true, "destination": origin, "summary": summary}, events)
+	var result := Result.ok({"returned": true, "destination": origin, "summary": summary}, events)
+	result["autosave"] = true
+	return result
 
 
 ## Resolves the exploration voyage. `outcome_roll` was drawn at departure; here it is only
@@ -231,8 +257,6 @@ static func settle(context) -> Dictionary:
 
 	var arrival_time := maxf(float(voyage.get("arrival_time", state.now())), state.now())
 	state.set_now(arrival_time)
-	var stats := state.stats()
-	stats["voyages"] = int(stats.get("voyages", 0)) + 1
 
 	var result_code := "discovered" if success else "failed"
 	var destination := target_id
@@ -300,6 +324,16 @@ static func settle(context) -> Dictionary:
 
 	state.set_explore_voyage(null)
 	state.data["voyage"] = null
+	# 探索入港后与普通抵达一样跑一遍到港服务；失败漂流到的也是真实港口，所以同样
+	# 允许委托 / 市场 / 债务 / 委托刷新发生（是否完成委托由目的地匹配自然决定）。
+	var services := VoyageService.settle_arrival_services(context, destination, float(state.now()), {
+		"destination": destination,
+		"arrival_time": float(state.now()),
+		"delay_hours": delayed_hours,
+		"injuries": 0,
+	})
+	VoyageService.record_arrival_stats(state, services.get("contract_results", []), 0)
+	events.append_array(services.get("events", []))
 	var port_name_key := WorldOps.port_display_key(world, destination)
 	var summary := _summary(
 		state,
@@ -312,9 +346,12 @@ static func settle(context) -> Dictionary:
 		extra_water,
 		durability_loss,
 		delayed_hours,
-		events
+		events,
+		services
 	)
-	return Result.ok({"result": result_code, "destination": destination, "summary": summary}, events)
+	var result := Result.ok({"result": result_code, "destination": destination, "summary": summary}, events)
+	result["autosave"] = true
+	return result
 
 
 ## Records arrival in both the played map and the coordinate campaign partition.
@@ -363,18 +400,19 @@ static func _summary(
 	extra_water: float,
 	durability_loss: float,
 	delayed_hours: float,
-	events: Array
+	events: Array,
+	services: Dictionary = {}
 ) -> Dictionary:
 	return {
 		"destination": destination,
 		"arrival_time": state.now(),
 		"delayed_hours": delayed_hours,
 		"injuries": 0,
-		"contracts": [],
-		"market_events": [],
-		"debt_events": [],
-		"completed_orders": [],
-		"offers_refreshed": false,
+		"contracts": services.get("contract_results", []),
+		"market_events": services.get("npc_events", []),
+		"debt_events": services.get("debt_events", []),
+		"completed_orders": services.get("completed_orders", []),
+		"offers_refreshed": not services.is_empty(),
 		"stats": state.stats().duplicate(true),
 		"explore": {
 			"result": result_code,

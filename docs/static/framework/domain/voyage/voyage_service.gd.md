@@ -14,6 +14,8 @@
 | `MAX_EVENT_DELAY_HOURS` | L16 |
 | `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L19 |
 | `choose_option(context, option_id: String) -> Dictionary` | L104 |
+| `settle_arrival_services(context, destination: String, arrival_time: float, voyage: Dictionary) -> Dictionary` | L258 |
+| `record_arrival_stats(state: GameState, contract_results: Array, injuries: int = 0) -> Dictionary` | L337 |
 
 ## 契约与约束
 

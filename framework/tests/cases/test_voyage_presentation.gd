@@ -157,6 +157,63 @@ func test_skip_is_ignored_while_waiting_for_the_decision() -> void:
 	assert_eq(String(model.phase_name()), "event_wait", "the decision still waits for the player")
 
 
+## 4.2：掉头后不再飞向搜索区，直接从当前进度进入「云层盖住海图 → 3D 入港」，
+## 之后与普通抵达走完全相同的入港段落（`ARRIVAL_READY` → `ARRIVAL_HARBOR` → `DONE`）。
+func test_force_arrival_from_at_sea_finishes_the_presentation() -> void:
+	var model := VoyagePresentation.new()
+	model.plan(10.0, 0.4)
+	_enter_at_sea(model)
+	_drive(model, 0.5)
+	assert_true(model.progress < 1.0, "the ship is still mid-route before the turn-back")
+
+	assert_true(model.force_arrival(), "a mid-voyage turn-back can force the arrival")
+	assert_almost_eq(model.progress, 1.0, 0.0001, "the whole remaining route is skipped")
+	assert_eq(String(model.phase_name()), "arrival_approach", "the arrival clouds start closing")
+	assert_almost_eq(model.veil_direction, 1.0, 0.0001, "arrival uses the descend direction")
+	assert_true(model.event_fired, "the forced arrival consumes the pending event slot")
+	assert_false(model.force_arrival(), "a second call is a no-op once the arrival is playing")
+
+	var steps := _drive_until_step(model, VoyagePresentation.Step.ARRIVAL_READY, 6.0)
+	assert_true(steps.has(VoyagePresentation.Step.ARRIVAL_READY), "the clouds hand over to the harbour")
+	assert_almost_eq(model.veil, 1.0, 0.001, "the chart is covered when the harbour takes over")
+	assert_eq(String(model.phase_name()), "arrival_harbor", "the 3D port entry plays")
+	var finished := _drive_until_step(model, VoyagePresentation.Step.DONE, 10.0)
+	assert_true(finished.has(VoyagePresentation.Step.DONE), "the harbour beat ends the presentation")
+	assert_false(model.is_active(), "a forced arrival finishes like a normal one")
+	assert_almost_eq(model.veil, 0.0, 0.001, "the harbour is revealed after the beat")
+
+
+## 4.2：告急决策点（`EVENT_WAIT`）掉头。决策页不能被跳过，`force_arrival()` 让
+## 演出跳过剩余航程直接入港（领域已在 `explore.decide(turn_back)` 里结算返航）。
+func test_force_arrival_from_the_alert_decision_skips_the_route() -> void:
+	var model := VoyagePresentation.new()
+	model.plan(10.0, 0.4)
+	_enter_at_sea(model)
+	var steps := _drive(model, 20.0)
+	assert_true(steps.has(VoyagePresentation.Step.EVENT_READY), "the alert decision point is reached")
+	assert_eq(String(model.phase_name()), "event_wait", "the演出 waits for the decision")
+	var progress_at_alert := model.progress
+	assert_true(progress_at_alert > 0.0 and progress_at_alert < 1.0,
+		"the ship stopped partway at the alert")
+	assert_eq(model.skip(), VoyagePresentation.Step.NONE, "skip still cannot answer the alert")
+
+	assert_true(model.force_arrival(), "turning back at the alert forces the arrival")
+	assert_almost_eq(model.progress, 1.0, 0.0001, "the remaining route is skipped")
+	assert_eq(String(model.phase_name()), "arrival_approach", "the arrival clouds start closing")
+	assert_almost_eq(model.veil_direction, 1.0, 0.0001, "arrival uses the descend direction")
+
+	var arrival := _drive_until_step(model, VoyagePresentation.Step.ARRIVAL_READY, 6.0)
+	assert_true(arrival.has(VoyagePresentation.Step.ARRIVAL_READY), "the covered chart hands over to the harbour")
+	assert_almost_eq(model.veil, 1.0, 0.001, "the chart is covered when the harbour takes over")
+	assert_eq(String(model.phase_name()), "arrival_harbor", "the 3D port entry plays")
+	var finished := _drive_until_step(model, VoyagePresentation.Step.DONE, 10.0)
+	assert_true(finished.has(VoyagePresentation.Step.DONE), "the turn-back演出 ends on DONE")
+
+	# 其它相位下强制到达必须是无害的 no-op（不能把已结束的演出拉回来）。
+	assert_false(model.force_arrival(), "a finished presentation ignores force_arrival()")
+	assert_eq(String(model.phase_name()), "done", "the phase is unchanged after the ignored call")
+
+
 func test_snapshot_exposes_the_hud_fields() -> void:
 	var model := VoyagePresentation.new()
 	model.plan(8.0)

@@ -429,6 +429,146 @@ func test_explore_failure_drifts_back_and_scraps_the_clue() -> void:
 	_assert_settlement_shows_explore_result(shell, context, "ui.explore.result.failed")
 
 
+## 探索链路公共前置的 4.2 版本：把出发煤量压到「本程需求 × 1.05」，`explore.start`
+## 就会判定煤消耗超过出发存量的一半（Core `alert_threshold`）→ `alert_needed`，
+## 演出在 `alert_progress`（默认 0.5）处停下并挂出资源告急页。
+func _request_alert_exploration(
+	shell: Control, context: AppContext, clue: Dictionary, outcome_roll: float
+) -> Dictionary:
+	var clue_id := String(clue.get("id", ""))
+	var preview := ExplorationCalculator.preview(context, clue_id, STANDARD_STRATEGY)
+	assert_true(bool(preview.get("ok", false)), "the alert fixture previews the clue voyage")
+	if not bool(preview.get("ok", false)):
+		return {}
+	var preview_data: Dictionary = preview.get("data", {})
+	var coal_required := float(preview_data.get("coal_required", 0.0))
+	assert_true(coal_required > 0.0, "the clue voyage has a coal cost")
+	assert_true(float(preview_data.get("water_required", 0.0)) > 0.0,
+		"the clue voyage also burns water, so turning back can cost extra water")
+	context.state.ship()["coal"] = coal_required * 1.05
+	return _request_exploration(shell, context, clue_id, outcome_roll)
+
+
+## 4.2 资源告急 · 继续：探索演出停在告警页（不是海图页），发布本地化文案与两个
+## 选项；「继续探索」只确认告警，演出回到海图走完最后半程，抵达照常 `explore.settle`。
+func test_explore_resource_alert_continue_resumes_the_voyage() -> void:
+	var bundle := _mount(4321)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var clue := _acquire_fixture_clue(context)
+	var target := String(clue.get("target_port_id", ""))
+	var origin := String(context.state.current_port_id())
+	var presentation := _request_alert_exploration(shell, context, clue, 0.0)
+	assert_true(bool(presentation.get("alert_needed", false)),
+		"the fixture really raises the resource alert")
+	assert_true(shell._presentation.has_event, "the alert is a mid-voyage decision point")
+
+	assert_true(_drive_until(shell, func() -> bool:
+		return _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT).size() == 1, MAX_DRIVE_SECONDS),
+		"the exploration stops at the resource-alert page (status: %s)" % shell._status_message)
+	assert_eq(String(shell._presentation.phase_name()), "event_wait", "the演出 waits at the alert")
+	assert_true(_find_at_sea(shell) == null, "the chart page is not mounted while the alert is open")
+	var alert_screen: Control = _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT)[0]
+	var alert_texts := _label_texts(alert_screen)
+	assert_contains(alert_texts, context.translate("ui.explore.alert.title"),
+		"the alert page shows the localized title")
+	assert_contains(alert_texts, context.translate("ui.explore.alert.description"),
+		"the alert page explains the two choices")
+	assert_not_null(_button_by_text(alert_screen, context.translate("ui.explore.alert.continue")),
+		"the alert offers 'continue exploring'")
+	assert_not_null(_button_by_text(alert_screen, context.translate("ui.explore.alert.turn_back")),
+		"the alert offers 'turn back'")
+	# 「选择后会立即结算」对继续探索不成立：提示行要换成剩余航程。
+	assert_true(_label_text_contains(alert_screen, context.translate("ui.explore.alert.remaining")),
+		"the alert hint shows the remaining voyage instead of 'settles immediately'")
+	assert_eq(shell._presentation.skip(), VoyagePresentation.Step.NONE,
+		"the alert cannot be skipped away or answered by the演出")
+	# 顶栏在告警期间只能显示「探索中 → ？」，不能提前泄露目标港。
+	assert_eq(String(shell._presentation_voyage.get("destination", "unset")), "",
+		"the target harbour is still unknown while the alert is open")
+	var chrome_texts := _label_texts(shell._top_chrome)
+	var exploring_label := "%s → %s" % [
+		context.translate("ui.label.exploring"),
+		context.translate("ui.label.unknown_destination"),
+	]
+	assert_contains(chrome_texts, exploring_label, "the header stays 'exploring → ?' during the alert")
+	assert_false(chrome_texts.has(_port_name(context, target)),
+		"the alert header does not reveal the target harbour")
+
+	var continue_button := _button_by_text(alert_screen, context.translate("ui.explore.alert.continue"))
+	continue_button.pressed.emit()
+	assert_true(_drive_until(shell, func() -> bool: return shell._presentation == null, MAX_DRIVE_SECONDS),
+		"the voyage continues after acknowledging the alert")
+	assert_eq(String(shell._active_screen), "settlement", "continuing still reaches the settlement screen")
+	var explore_summary: Dictionary = shell._settlement_summary.get("explore", {})
+	assert_eq(String(explore_summary.get("result", "")), "discovered",
+		"roll 0 finds the harbour after continuing")
+	assert_eq(String(context.state.current_port_id()), target, "the ship enters the discovered harbour")
+	assert_true(shell._presentation_explore.is_empty(),
+		"the exploration context is cleared when the演出 ends")
+	assert_false(shell._status_is_error, "no error is left in the status bar: %s" % shell._status_message)
+	assert_true(not _has_logged_command(context, "explore.decide", "alert_already_decided"),
+		"acknowledging the alert once is accepted")
+
+
+## 4.2 资源告急 · 掉头：领域立刻结算半程返航（回出发港、线索保留、额外煤水），
+## 演出放弃剩余航程直接入港；`ARRIVAL_READY` 不能再 settle（否则 `not_exploring`）。
+func test_explore_resource_alert_turn_back_returns_to_the_origin() -> void:
+	var bundle := _mount(4321)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var clue := _acquire_fixture_clue(context)
+	var clue_id := String(clue.get("id", ""))
+	var origin := String(context.state.current_port_id())
+	var presentation := _request_alert_exploration(shell, context, clue, 0.0)
+	assert_true(bool(presentation.get("alert_needed", false)),
+		"the fixture really raises the resource alert")
+	assert_true(_drive_until(shell, func() -> bool:
+		return _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT).size() == 1, MAX_DRIVE_SECONDS),
+		"the exploration reaches the resource-alert page (status: %s)" % shell._status_message)
+	var alert_screen: Control = _nodes_with_script(shell._root_box, EVENT_SCREEN_SCRIPT)[0]
+	var coal_before := float(context.state.ship().get("coal", 0.0))
+	var water_before := float(context.state.ship().get("water", 0.0))
+	var turn_back_button := _button_by_text(alert_screen, context.translate("ui.explore.alert.turn_back"))
+	assert_not_null(turn_back_button, "the alert offers turning back")
+	if turn_back_button == null:
+		return
+	turn_back_button.pressed.emit()
+
+	# 决策立刻落到领域：回出发港、探索航次清空、线索保留、额外煤水已扣。
+	assert_eq(String(context.state.current_port_id()), origin, "turning back returns to the origin harbour")
+	assert_true(context.state.is_at_port(), "the ship is back in port")
+	assert_true(context.state.explore_voyage() == null, "the exploration voyage is settled immediately")
+	assert_eq(String(shell._presentation_voyage.get("destination", "")), origin,
+		"the presentation destination becomes the origin harbour")
+	assert_true(bool(shell._presentation_explore.get("returned", false)),
+		"the exploration context records the turn-back")
+	assert_eq(String(shell._presentation.phase_name()), "arrival_approach",
+		"the演出 skips the rest of the route and closes the arrival clouds")
+	assert_true(float(context.state.ship().get("coal", 0.0)) < coal_before,
+		"turning back burns extra coal")
+	assert_true(float(context.state.ship().get("water", 0.0)) < water_before,
+		"turning back burns extra water")
+	assert_true(_active_clue_ids(context).has(clue_id), "the clue stays active for another attempt")
+
+	assert_true(_drive_until(shell, func() -> bool: return shell._presentation == null, MAX_DRIVE_SECONDS),
+		"the return演出 finishes on its own")
+	assert_eq(String(shell._active_screen), "settlement", "turning back lands on the settlement screen")
+	var explore_summary: Dictionary = shell._settlement_summary.get("explore", {})
+	assert_eq(String(explore_summary.get("result", "")), "turned_back",
+		"the settlement summary reports the turn-back")
+	assert_eq(String(explore_summary.get("port_id", "")), origin,
+		"the settlement summary names the origin harbour")
+	_assert_settlement_shows_explore_result(shell, context, "ui.explore.result.turned_back")
+	assert_false(shell._status_is_error,
+		"turning back leaves no error in the status bar: %s" % shell._status_message)
+	# 掉头已在决策时结算：ARRIVAL_READY 不能再调 explore.settle（那会报 not_exploring）。
+	assert_false(_has_logged_command(context, "explore.settle", ""),
+		"a turn-back never runs explore.settle (it was already settled)")
+	assert_false(_has_logged_command(context, "", "not_exploring"),
+		"no not_exploring error is raised during the turn-back")
+
+
 ## 探索链路的公共前置：造一条指向最近未发现港的线索，打开海图、点线索、出航，
 ## 并把出发时抽定的 outcome_roll 覆盖成测试要的结果（0 = 必发现，0.999 = 必失败）。
 ## 返回 `explore.start` 的 presentation 块。
@@ -466,6 +606,29 @@ func _request_exploration(
 	if voyage is Dictionary:
 		(voyage as Dictionary)["outcome_roll"] = outcome_roll
 	return shell._presentation_explore.duplicate(true)
+
+
+## 命令执行日志里是否有匹配的记录：`command` 为空表示任意命令，`error_code` 为空
+## 表示任意结果。用来断言「掉头没有触发第二次 settle」这类副作用。
+func _has_logged_command(context: AppContext, command: String, error_code: String) -> bool:
+	for entry in context.commands.get_execution_log(200):
+		if not (entry is Dictionary):
+			continue
+		if not command.is_empty() \
+				and String((entry as Dictionary).get("command", "")) != command:
+			continue
+		if not error_code.is_empty() \
+				and String((entry as Dictionary).get("error_code", "")) != error_code:
+			continue
+		return true
+	return false
+
+
+func _active_clue_ids(context: AppContext) -> Array:
+	var ids: Array = []
+	for clue in ClueService.active(context.state):
+		ids.append(String((clue as Dictionary).get("id", "")))
+	return ids
 
 
 ## 造一条测试线索：补足金币，目标选最近的未发现港口（航线短、默认补给即可出航），
@@ -524,6 +687,13 @@ func _label_texts(root: Node, out: Array = []) -> Array:
 			out.append(String((child as Label).text))
 		_label_texts(child, out)
 	return out
+
+
+func _label_text_contains(root: Node, needle: String) -> bool:
+	for text in _label_texts(root):
+		if String(text).contains(needle):
+			return true
+	return false
 
 
 func _label_named(root: Node, label_name: String) -> Node:
