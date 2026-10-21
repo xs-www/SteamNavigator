@@ -37,6 +37,7 @@ static func create_instance(hub: RegistryHub, template: ContentDefinition, origi
 	var cargo_weight := 0.0
 	var passengers := 0
 	var cargo_entries: Array = []
+	var player_sourced := false
 	for raw_payload in data.get("payloads", []):
 		if not (raw_payload is Dictionary):
 			continue
@@ -50,7 +51,20 @@ static func create_instance(hub: RegistryHub, template: ContentDefinition, origi
 				var unit_weight := float(item_definition.data.get("unit_weight", 1.0)) if item_definition != null else 1.0
 				var amount := maxi(1, int(ceil(weight / maxf(0.1, unit_weight))))
 				cargo_weight += amount * unit_weight
-				cargo_entries.append({"item_id": item_id, "amount": amount})
+				var entry := {"item_id": item_id, "amount": amount}
+				# 4.5.2：`provider: player` = 玩家自备货物，接取时不装船、不占载重，
+				# 完成时从船上扣除；`provider: fuel` = 用船上的燃料舱交付（教学首航的
+				# 「运煤」），出航前由 VoyageService 校验是否备够。
+				match String(payload.get("provider", "")):
+					"player":
+						entry["player_sourced"] = true
+						player_sourced = true
+					"fuel":
+						entry["fuel_sourced"] = true
+						player_sourced = true
+					_:
+						pass
+				cargo_entries.append(entry)
 			"passenger":
 				var count_range: Array = payload.get("count_range", [1, 1])
 				passengers += _range_int(rng, count_range)
@@ -78,6 +92,7 @@ static func create_instance(hub: RegistryHub, template: ContentDefinition, origi
 		"accepted_at": now,
 		"cargo_weight": cargo_weight,
 		"cargo": cargo_entries,
+		"player_sourced": player_sourced,
 		"passengers": passengers,
 		"base_money": base_money,
 		"on_time_bonus": on_time_bonus,
@@ -91,11 +106,17 @@ static func create_instance(hub: RegistryHub, template: ContentDefinition, origi
 static func attach(state: GameState, hub: RegistryHub, instance: Dictionary) -> Dictionary:
 	var ship := state.ship()
 	var cargo_weight := 0.0
+	var supplied_entries: Array = []
 	for entry in instance.get("cargo", []):
+		# 4.5.2：玩家自备 / 燃料舱交付的货物不在接取时装船，因此也不占接取时的
+		# 载重 / 货舱校验。
+		if bool(entry.get("player_sourced", false)) or bool(entry.get("fuel_sourced", false)):
+			continue
 		var definition := ShipOps.item_definition(hub, String(entry.get("item_id", "")))
 		if definition == null:
 			return Result.fail("unknown_item", "ui.error.unknown_item")
 		cargo_weight += float(definition.data.get("unit_weight", 0.0)) * float(entry.get("amount", 0))
+		supplied_entries.append(entry)
 	var passengers := int(instance.get("passengers", 0))
 	if passengers > ShipOps.passenger_capacity(hub, ship):
 		return Result.fail("need_cabin", "ui.error.need_cabin", {"required": passengers})
@@ -105,10 +126,46 @@ static func attach(state: GameState, hub: RegistryHub, instance: Dictionary) -> 
 	if ShipOps.cargo_used(hub, ship) + cargo_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
 		return Result.fail("cargo_capacity", "ui.error.capacity")
 	var instance_id := String(instance.get("instance_id", ""))
-	for entry in instance.get("cargo", []):
+	for entry in supplied_entries:
 		ShipOps.add_cargo(ship, String(entry.get("item_id", "")), int(entry.get("amount", 0)), instance_id)
 	instance["status"] = "active"
-	return Result.ok({"instance_id": instance_id, "cargo_weight": cargo_weight, "passengers": passengers})
+	return Result.ok({
+		"instance_id": instance_id,
+		"cargo_weight": cargo_weight,
+		"passengers": passengers,
+		"player_sourced": bool(instance.get("player_sourced", false)),
+	})
+
+
+## 4.5.2：自备货物 / 燃料舱交付的缺口（空字典 = 已备齐）。出航前拦截 + 完成时
+## 燃料舱扣减都使用同一口径。
+static func missing_player_cargo(state: GameState, instance: Dictionary) -> Dictionary:
+	var available: Dictionary = {}
+	for stack in state.ship().get("cargo", []):
+		if not (stack is Dictionary):
+			continue
+		var item_id := String((stack as Dictionary).get("item_id", ""))
+		available[item_id] = int(available.get(item_id, 0)) + int((stack as Dictionary).get("amount", 0))
+	for entry in instance.get("cargo", []):
+		if not (entry is Dictionary):
+			continue
+		var item_id := String((entry as Dictionary).get("item_id", ""))
+		var required := int((entry as Dictionary).get("amount", 0))
+		if bool((entry as Dictionary).get("fuel_sourced", false)):
+			var fuel := float(state.ship().get("coal", 0.0))
+			if fuel < float(required):
+				return {"item_id": item_id, "required": required, "available": int(floor(fuel)), "source": "fuel"}
+			continue
+		if not bool((entry as Dictionary).get("player_sourced", false)):
+			continue
+		if int(available.get(item_id, 0)) < required:
+			return {
+				"item_id": item_id,
+				"required": required,
+				"available": int(available.get(item_id, 0)),
+				"source": "cargo",
+			}
+	return {}
 
 
 static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, arrival_time: float) -> Dictionary:
@@ -129,6 +186,10 @@ static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, a
 	player["unlocks"] = unlocks
 	var ship := state.ship()
 	for entry in instance.get("cargo", []):
+		if bool((entry as Dictionary).get("fuel_sourced", false)):
+			# 4.5.2：燃料舱交付 —— 直接从船上的煤舱扣除（教学首航的运煤委托）。
+			ship["coal"] = maxf(0.0, float(ship.get("coal", 0.0)) - float((entry as Dictionary).get("amount", 0)))
+			continue
 		ShipOps.remove_cargo(
 			ship,
 			String(entry.get("item_id", "")),

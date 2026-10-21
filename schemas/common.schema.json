@@ -163,6 +163,9 @@
         },
         "count_range": {
           "$ref": "#/$defs/range2"
+        },
+        "provider": {
+          "enum": ["player", "fuel"]
         }
       }
     },

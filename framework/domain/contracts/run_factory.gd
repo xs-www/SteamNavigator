@@ -153,24 +153,27 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0, 
 	MarketMemoryService.remember(state, state.current_port_id())
 	state.data["npcs"] = NpcTraderSimulator.create_initial(state, hub, rng, profile.data)
 
-	var main_offer := _generate_main_offer(state, hub, 1, rng)
-	if not main_offer.is_empty():
-		state.data["contracts"]["main_offer"] = main_offer
-		var accepted := ContractOps.accept_offer(state, hub, String(main_offer.get("instance_id", "")))
-		if not bool(accepted["ok"]):
-			return Result.fail("main_contract_unsatisfiable", "ui.error.main_contract_unsatisfiable", {
-				"error_code": accepted.get("error_code", ""),
-				"build_id": build.id,
-			})
-	else:
-		return Result.fail("no_main_contract", "ui.error.no_main_contract", {"sequence": 1})
+	# 4.5.2：教程局不自动接旧主线 main_01，由 Core story 的
+	# `grant_tutorial_contract` 效果创建「燃料舱运煤」教学委托（内容化）。
+	if not tutorial:
+		var main_offer := _generate_main_offer(state, hub, 1, rng)
+		if not main_offer.is_empty():
+			state.data["contracts"]["main_offer"] = main_offer
+			var accepted := ContractOps.accept_offer(state, hub, String(main_offer.get("instance_id", "")))
+			if not bool(accepted["ok"]):
+				return Result.fail("main_contract_unsatisfiable", "ui.error.main_contract_unsatisfiable", {
+					"error_code": accepted.get("error_code", ""),
+					"build_id": build.id,
+				})
+		else:
+			return Result.fail("no_main_contract", "ui.error.no_main_contract", {"sequence": 1})
 
 	ContractOps.generate_normal_offers(state, hub, rng, "initial:%s" % state.current_port_id())
 	state.push_notice("ui.notice.run_started", {"build": build.name_key})
 	if tutorial:
 		# Stage 4.5: new runs start with the Core-authored story flow enabled (or
 		# completed when the profile has no story), before the first UI rebuild.
-		StoryService.begin(state, hub)
+		StoryService.begin(state, hub, rng)
 	return Result.ok({
 		"state": state,
 		"rng": rng,

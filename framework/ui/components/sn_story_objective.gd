@@ -35,7 +35,7 @@ func bind(text_key: String, progress: int, target: int, translate: Callable = Ca
 	_label.name = "ObjectiveLabel"
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var objective := _loc(text_key, "", translate)
-	if target > 0:
+	if target > 1:
 		var template := _loc("ui.story.objective_progress", "目标：%s（%d/%d）", translate)
 		_label.text = template % [objective, clampi(progress, 0, target), target]
 	else:

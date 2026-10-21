@@ -1,4 +1,4 @@
-# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 Implemented（2026-10-22）
+# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 / 4.5.2 Implemented（2026-10-22）
 
 > 作用：把「当前阶段每局开局默认触发的新手剧情」落成可运行的纵向切片：剧情状态机、
 > 功能门禁、剧情卡 / 目标提示、脚本化委托与解锁、补给并市、酒馆、保底探索、船厂限制。
@@ -48,11 +48,13 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 | `depart` | 解锁 `chart`；目标「打开海图 → 出航 → 选快速航行」 | 确认弹窗默认策略由 Shell 记忆；剧情提示 | `cmd:voyage.start` |
 | `first_arrival` | 抵达第二港，结算页 | 完成第一主线、解锁邻港 | `ui:arrival_settled` |
 
-> **4.5.1 框架期实装说明**：现有 `main_01` 在开局会预装 8–12 单位委托货（占掉船的大
-> 部分载重），因此首段剧情暂以「买 2 煤」验证框架（Core JSON 目标 2）；4.5.2 把第一
-> 主线改成玩家自备 10 煤（不预装货）后，恢复 4 煤 / 2 水的限购与 10 煤交付数值。
-> 有目标（非 `confirm`）的阶段，剧情卡的「继续」只收起卡片、显示非阻塞目标条，不推进
-> 阶段；阶段仍由事件 / 计数推进。
+> **4.5.2 实装说明**：第一主线不再使用默认 `main_01` 的委托货箱，而由 Core story 的
+> `grant_tutorial_contract` 效果以 `main_01` 模板生成一个「燃料舱交付 10 煤」的实例
+> （`provider: fuel`，不可装船、不占载重，完成时从煤舱扣除；出航前 `VoyageService`
+> 校验煤舱是否 ≥ 10），时限用 `tutorial_express`（标准迟到、极速准时）。开场
+> `set_ship_fuel: 4` 把老船的煤舱清到 4，迫使玩家先补给。4.5.1 框架期的「2 煤」临时
+> 目标已撤销。有目标（非 `confirm`）的阶段，剧情卡的「继续」只收起卡片、显示非阻塞
+> 目标条，不推进阶段；阶段仍由事件 / 计数推进。
 
 ### 幕 1 · 第二港（4.5.3）
 
@@ -161,6 +163,7 @@ ui:screen_opened:<screen> # 可选
 
 ```text
 unlock_features / set_flag / clear_flag / discover_contract_destination
+grant_tutorial_contract / set_ship_fuel
 grant_clue {port: "next_unknown" | id, level: 1..4}
 set_market_items / set_market_price_bias / unlock_items
 guarantee_explore_success / unlock_modules / complete_story
@@ -223,7 +226,7 @@ guarantee_explore_success / unlock_modules / complete_story
 | 切片 | 内容 | 验收口径 | 状态 |
 |---|---|---|---|
 | **4.5.1 剧情框架 + 门禁 + 剧情卡** | ✅ 已实现：`GameState.ensure_story` / `StoryService`（配置读取、阶段推进、事件计数、解锁、效果分发、目标阶段收卡）；`story.view` / `advance` / `skip` / `observe` + 注册；Core `map_profiles.story` + Schema；Core/框架本地化；Shell 剧情卡 + 目标条 + feature 门禁 + 跳过确认（`run.start` 新增 `tutorial` 参数，Shell 新局传 true） | 新局自动进入第 0 阶段且只解锁配置的功能；导航 / 港口招牌 / `M` / 状态条海图入口按解锁过滤；剧情卡可继续 / 跳过；跳过解锁全部并揭示主委托目的港；旧存档无 `story` 时全开且不弹；`story.view` 不泄露内部 counters / flags；存档 round-trip 一致；全量 **352 例 0 failed**；截图 `docs/design/screenshots/story/tutorial_card.png` / `tutorial_objective.png` | ✅ |
-| **4.5.2 开局幕** | 固定教程构筑（新局隐藏选构筑）；`opening`→`depart` 各阶段；补给限购 / 解锁海图 / 关闭海图；第一主线改「自备 10 煤」并揭示邻港；限时委托（standard 迟到、express 准时） | 按 §3 幕 0 全流程可走通：补给购买触发阶段、限购后海图解锁、关闭海图恢复补给、买够后出航、抵达第二港完成主委托；跳过教程仍可正常出航；数值全部来自 Core | ⬜ |
+| **4.5.2 开局幕** | ✅ 已实现：教程新局隐藏选构筑（`new_game_screen` tutorial_mode + Shell 传默认教学船）；`opening`→`depart_brief` 全流程（获船叙事 / 补给 4 煤 2 水 / 补给受限 `lock_actions: supply.buy` / 海图解禁 / 关闭海图恢复补给 / 买够 10 煤 / 出航默认极速 / 抵达收尾）；燃料舱运煤教学委托（`grant_tutorial_contract` + `provider: fuel` + `set_ship_fuel`，出航前货物校验）；`tutorial_express` 限时 | 按 §3 幕 0 全流程可走通：补给购买触发阶段、限购命令被拦截且卡片显示原因、海图打开 / 关闭推进、买够出航、抵达第二港；标准速度迟到 / 极速准时；非教程局主线与 9 seed 通关回归不变；全量 **354 例 0 failed**；截图 `tutorial_supply_hold.png` / `tutorial_depart_fast.png` | ✅ |
 | **4.5.3 并市 + 第二主线** | 水煤进市场（补给区块 + `supply.buy_*`），删除补给页 / 导航 / 招牌；市场商品按 `unlocked_items` 过滤；第二主线（自备货物反向交付）与买卖计数；回到第一港卖货结案 | 补给页不存在；市场可买煤 / 水且扣款正确；市场仅显示解锁商品；第二主线可买货 → 出航 → 回港卖出 → 完成；旧存档 `supply` 页面消失但命令仍可用 | ⬜ |
 | **4.5.4 酒馆 / 线索 / 保底探索** | 酒馆页替换情报页（物价情报 + 港口线索，`tavern` 设施 / feature，旧 `intel` 兼容）；自动 / 购买线索；前两港价差；第三件货解锁；两条线索与保底探索成功、发现第三港 | 酒馆可买物价情报与港口线索；前两港同货价差 ≥ Core 配置且可盈利；第一条线索后第三件货出现在市场；第二条线索 L3 + 保底探索必成功并解锁第三港；跳过流程不触发保底 | ⬜ |
 | **4.5.5 船厂 / 客舱 / 旅客** | 新增 1 人小型客舱（Core 模块 + 本地化）；`shipyard.view` 按 `unlocked_modules` 过滤；第三主线旅客 1 人；卸货舱 / 装客舱引导 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成旅客委托；未解锁模块不可见不可买；剧情引导步骤可推进到完成 | ⬜ |
@@ -231,10 +234,9 @@ guarantee_explore_success / unlock_modules / complete_story
 
 ## 10. 数值建议（Core 可调，不写死框架）
 
-- 第一主线：自备 `10` 煤（契约 payload 8–12），水 2；补给首段限购 4 煤 / 2 水；
-  契约 deadline 调成 `standard` 迟到、`express` 准时（用 `tutorial_first` 公式或
-  固定小时数）。**4.5.1 框架期**因现有 `main_01` 预装 8–12 货重、船只剩余载重只有 2，
-  Core 剧情目标临时为 2 煤；4.5.2 改成玩家自备后恢复上述数值。
+- 第一主线：自备 `10` 煤（4.5.2 以 `provider: fuel` 从煤舱交付，完成时扣 10；开场
+  `set_ship_fuel = 4` 强制补给），水 2；补给首段目标 4 煤 / 2 水；契约时限用
+  `tutorial_express = max(6, distance / 13.5)`（标准迟到、极速准时）。
 - 第二主线：玩家自备 `6` 件指定货物（建议香料 / 纺织品，按 Core 商品表），前两港
   价差 ≥ 40%；市场此阶段仅 2 种货 + 水煤。
 - 酒馆：物价情报价沿用 `intel_cost`；港口线索免费自动 1 条（L1）+ 第二段免费 1 条

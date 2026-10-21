@@ -126,6 +126,8 @@ var _active_screen: String = "overview"
 var _menu_screen: String = "main"
 var _memory_port_id: String = ""
 var _selected_build: String = ""
+## 4.5.2：新开局走剧情时隐藏选构筑，使用默认教学船。
+var _tutorial_mode := false
 ## 上一次确认出航时选择的锅炉策略（Shell 记忆；无记忆时按 `strategy.standard`
 ## tag 解析）。4.3.4 起出航确认弹窗默认用它。
 var _selected_strategy: String = ""
@@ -568,8 +570,31 @@ func _observe_story(event: String, data: Dictionary = {}) -> bool:
 	if not bool(result.get("ok", false)):
 		return false
 	var after_view: Dictionary = result.get("data", {}).get("view", {})
-	return int(after_view.get("stage_index", before_stage)) != before_stage \
+	var advanced := int(after_view.get("stage_index", before_stage)) != before_stage \
 		or bool(after_view.get("completed", false)) != before_completed
+	if advanced and not after_view.is_empty():
+		# UI 事件（开 / 关海图）在重建中途观察；先同步 VM，调用方再按需 deferred 刷新。
+		_story_vm = after_view
+	return advanced
+
+
+## True when the current story stage temporarily locks an action (e.g. supply.buy
+## while the chart briefing is pending). The lock is content-driven via
+## `story.view.lock_actions`.
+func _story_action_locked(command: StringName) -> bool:
+	if not _story_active():
+		return false
+	var command_name := String(command)
+	for action in Array(_story_vm.get("lock_actions", [])):
+		var action_name := String(action)
+		if action_name.is_empty():
+			continue
+		# 命令命名同时使用 `.` 与 `_`（supply.buy_coal），锁动作按前缀匹配两者。
+		if command_name == action_name \
+				or command_name.begins_with(action_name + ".") \
+				or command_name.begins_with(action_name + "_"):
+			return true
+	return false
 
 
 ## ---------------------------------------------------------------------------
@@ -1023,11 +1048,24 @@ func _screen_main_menu(app: Dictionary) -> void:
 
 func _screen_new_game(app: Dictionary) -> void:
 	var vm := app.duplicate(true)
+	_tutorial_mode = _story_profile_available()
+	vm["tutorial_mode"] = _tutorial_mode
 	vm["selected_build"] = _selected_build
 	vm["seed_text"] = _seed_text
 	vm["warnings"] = app.get("report", {}).get("warnings", [])
 	_mount_menu_screen(NEW_GAME_SCREEN_SCENE, vm)
 	_build_status_banner()
+
+
+## 4.5.2：当前内容是否有启用的剧情（决定新开局隐藏构筑选择 / 传 tutorial）。
+func _story_profile_available() -> bool:
+	if _context == null:
+		return false
+	for profile in _context.registries.get_all(ContentTypes.MAP_PROFILE):
+		var raw: Variant = profile.data.get("story", null)
+		if raw is Dictionary and bool((raw as Dictionary).get("enabled", false)):
+			return true
+	return false
 
 
 func _screen_mods(app: Dictionary) -> void:
@@ -1754,7 +1792,17 @@ func _screen_supply(_data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = SUPPLY_SCREEN_SCENE.instantiate()
-	screen.bind(result["data"], Callable(self, "_tr"))
+	var view_model: Dictionary = result["data"]
+	# 4.5.2：补给限购时把原因挂到两张补给卡的 blockers 上（命令层同时拦截购买）。
+	if _story_action_locked(&"supply.buy_coal"):
+		var locked_text := _tr("ui.story.supply_locked", "补给暂时受限：先看完海图的目的港")
+		for kind in ["coal", "water"]:
+			var supply_view: Dictionary = view_model.get("%s_view" % kind, {})
+			var blockers: Array = Array(supply_view.get("blockers", [])).duplicate()
+			if not blockers.has(locked_text):
+				blockers.append(locked_text)
+			supply_view["blockers"] = blockers
+	screen.bind(view_model, Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
 	if _stage_backed_page():
 		_mount_dock_panel(screen)
@@ -1823,6 +1871,11 @@ func _chart_departure_strategy() -> String:
 	var pending := String(_chart_departure.get("strategy_id", ""))
 	if not pending.is_empty():
 		return pending
+	# 4.5.2：剧情阶段可以指定默认锅炉策略（如首航限时 → fast），按 tag 解析，
+	# 框架不写死 `core:*` ID。
+	var preferred := _story_preferred_strategy_id()
+	if not preferred.is_empty():
+		return preferred
 	if not _selected_strategy.is_empty():
 		return _selected_strategy
 	var fallback := _standard_strategy_id()
@@ -1831,6 +1884,21 @@ func _chart_departure_strategy() -> String:
 		if not strategies.is_empty():
 			fallback = String((strategies[0] as Dictionary).get("id", ""))
 	return fallback
+
+
+## Maps `story.view.preferred_strategy` (e.g. "fast") to a strategy id via the
+## `strategy.<name>` tag; empty when the content has no such strategy.
+func _story_preferred_strategy_id() -> String:
+	var preferred := String(_story_vm.get("preferred_strategy", ""))
+	if preferred.is_empty():
+		return ""
+	var wanted_tag := "strategy.%s" % preferred
+	for strategy in _last_port_view.get("strategies", []):
+		if not (strategy is Dictionary):
+			continue
+		if Array((strategy as Dictionary).get("tags", [])).has(wanted_tag):
+			return String((strategy as Dictionary).get("id", ""))
+	return ""
 
 
 ## 面板「启航 / 循此线索出航 / 前往该港」→ 打开统一确认弹窗（不立即出航）。
@@ -2911,8 +2979,10 @@ func _on_new_run() -> void:
 	_sea_chart_return = "overview"
 	_status_message = ""
 	# 4.5：生产环境的每一局新开局都进入新手剧情（领域 `run.start` 默认
-	# tutorial=false，只有 Shell 的「开始新航行」显式开启剧情）。
-	_run_command(&"run.start", {"build_id": _selected_build, "seed": seed, "tutorial": true})
+	# tutorial=false，只有 Shell 的「开始新航行」显式开启剧情）；剧情局使用默认
+	# 教学船（新航程页已隐藏构筑选择），不传玩家选择的构筑。
+	var build_id := "" if _tutorial_mode else _selected_build
+	_run_command(&"run.start", {"build_id": build_id, "seed": seed, "tutorial": true})
 
 
 func _on_continue() -> void:
@@ -2945,6 +3015,10 @@ func _on_continue() -> void:
 
 func _run_command(command: StringName, params: Dictionary) -> void:
 	if _context == null:
+		return
+	# 4.5.2：剧情阶段可以临时锁住某个动作（如补给限购），由 Core 阶段表声明。
+	if _story_action_locked(command):
+		_set_status(_tr("ui.story.supply_locked", "补给暂时受限：先看完海图的目的港"), true)
 		return
 	var result := _context.commands.execute(command, params)
 	if bool(result.get("ok", false)):

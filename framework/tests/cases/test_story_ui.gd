@@ -11,6 +11,7 @@ extends TestCase
 ## @end-static-doc
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
+const NEW_GAME_SCENE := "res://framework/ui/screens/menu/new_game_screen.tscn"
 const STEADY_BUILD := "core:starting_build/steady"
 
 
@@ -48,12 +49,42 @@ func test_continue_unlocks_supply_then_buying_advances_to_the_chart() -> void:
 	var objective_label := shell.find_child("ObjectiveLabel", true, false) as Label
 	assert_not_null(objective_label, "the objective renders its localized text")
 	assert_false(String(objective_label.text).is_empty(), "the objective text is translated")
-	# 2 coal is the Core-authored objective; the purchase is forwarded as a story event.
-	shell._run_command(&"supply.buy_coal", {"amount": 2})
-	assert_eq(String(shell._story_vm.get("stage_id", "")), "chart_brief", "2 coal advances to the chart briefing")
+	# 4.5.2：先买 4 煤 + 2 水 → 补给受限、解锁海图；看海图并关闭 → 恢复补给；
+	# 再买 6 煤 → 出航阶段（默认极速），全程仍锁海图以外的功能。
+	shell._run_command(&"supply.buy_coal", {"amount": 4})
+	shell._run_command(&"supply.buy_water", {"amount": 2})
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_hold", "4 coal + 2 water enter the supply hold")
 	assert_true((shell._story_vm.get("unlocked_features", []) as Array).has("chart"),
 		"the chart unlocks after provisioning")
-	assert_not_null(shell._story_card, "the chart briefing still has a card to read")
+	assert_true(Array(shell._story_vm.get("lock_actions", [])).has("supply.buy"),
+		"the supply hold locks buying")
+	var coal_before := float(shell._context.state.ship().get("coal", 0.0))
+	shell._run_command(&"supply.buy_coal", {"amount": 1})
+	assert_almost_eq(float(shell._context.state.ship().get("coal", 0.0)), coal_before, 0.001,
+		"the locked supply command does not change the bunkers")
+	var hold_dismiss := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(hold_dismiss, "the hold card can be dismissed")
+	hold_dismiss.pressed.emit()
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_hold", "dismissing does not advance the stage")
+	# 直接挂海图页（避免 await 页面淡入），打开 → 关闭分别推进剧情。
+	shell._active_screen = "sea_chart"
+	shell._refresh()
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "chart_brief", "opening the chart advances the story")
+	shell._on_sea_chart_closed()
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_finish", "closing the chart restores supplies")
+	# 关掉转场并回到稳定页面，继续测试补给恢复后的目标卡。
+	shell._transitioning = false
+	shell._pending_transition = false
+	shell._active_screen = "overview"
+	shell._refresh()
+	if shell._story_card != null:
+		var finish_dismiss := shell.find_child("ContinueButton", true, false) as Button
+		assert_not_null(finish_dismiss, "the finish card can be dismissed")
+		finish_dismiss.pressed.emit()
+	shell._run_command(&"supply.buy_coal", {"amount": 6})
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "depart_brief", "10 coal reaches the departure stage")
+	assert_eq(String(shell._story_vm.get("preferred_strategy", "")), "fast", "the departure stage prefers Fast")
+	assert_eq(shell._chart_departure_strategy(), "core:strategy/fast", "the departure dialog defaults to Fast")
 	_unmount(bundle)
 
 
@@ -81,6 +112,40 @@ func test_non_tutorial_shell_has_no_card_and_no_gating() -> void:
 	assert_eq(_nav_buttons(shell).size(), 7, "a non-tutorial run keeps every nav screen")
 	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
 	_unmount(bundle)
+
+
+func test_new_game_screen_hides_build_picker_in_tutorial_mode() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var scene: PackedScene = load(NEW_GAME_SCENE)
+	assert_not_null(scene, "the new-game scene loads")
+	var screen: Control = scene.instantiate()
+	var vm := {
+		"builds": [{"id": "core:starting_build/steady", "name_key": "build.core.steady.name"}],
+		"tutorial_mode": true,
+		"selected_build": "",
+		"seed_text": "",
+		"content_total": 1,
+		"registry_frozen": true,
+		"mods": [],
+	}
+	screen.bind(vm, Callable(context, "translate"))
+	assert_eq(_option_buttons(screen).size(), 0,
+		"the tutorial new-game form has no build picker")
+	var texts: Array = _label_texts(screen)
+	var has_note := false
+	for text in texts:
+		if String(text).contains("新手剧情") or String(text).contains("Tutorial run"):
+			has_note = true
+	assert_true(has_note, "the tutorial new-game form explains the fixed teaching ship")
+	screen.free()
+	# 非教程局仍保留构筑选择。
+	var normal: Control = scene.instantiate()
+	vm["tutorial_mode"] = false
+	normal.bind(vm, Callable(context, "translate"))
+	assert_eq(_option_buttons(normal).size(), 1,
+		"a non-tutorial new-game form keeps the build picker")
+	normal.free()
 
 
 # ── helpers ──
@@ -128,3 +193,19 @@ func _needs_supply_locked(shell: Control) -> bool:
 	var before := String(shell._active_screen)
 	shell._on_nav("supply")
 	return String(shell._active_screen) == before
+
+
+func _option_buttons(root_node: Node, out: Array = []) -> Array:
+	for child in root_node.get_children():
+		if child is OptionButton:
+			out.append(child)
+		_option_buttons(child, out)
+	return out
+
+
+func _label_texts(root_node: Node, out: Array = []) -> Array:
+	for child in root_node.get_children():
+		if child is Label:
+			out.append(String((child as Label).text))
+		_label_texts(child, out)
+	return out

@@ -544,6 +544,10 @@
             "type": "string"
           }
         },
+        "preferred_strategy": {
+          "type": "string",
+          "minLength": 1
+        },
         "effects": {
           "type": "array",
           "items": {

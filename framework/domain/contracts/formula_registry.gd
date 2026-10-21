@@ -14,6 +14,11 @@ static func ensure_defaults() -> void:
 	register("tutorial_first", func(params: Dictionary) -> float:
 		return 20.0 + float(params.get("distance", 100.0)) / 14.0 * 1.5
 	)
+	# 4.5.2：首航限时只够「快速航行」准时（标准速度会迟到，快速 ×1.28 可赶上）。
+	# 分母 13.5 给快速航速留约 7% 余量，同时仍明显短于标准航速。
+	register("tutorial_express", func(params: Dictionary) -> float:
+		return maxf(6.0, float(params.get("distance", 100.0)) / 13.5)
+	)
 	register("tutorial_trade", func(params: Dictionary) -> float:
 		return 26.0 + float(params.get("distance", 100.0)) / 14.0 * 1.6
 	)

@@ -567,5 +567,8 @@
   "ui.story.unlocked": "解锁：%s",
   "ui.error.story_inactive": "当前没有进行中的剧情",
   "ui.error.story_not_confirm": "这一步需要完成目标后自动推进",
-  "ui.error.missing_event": "缺少剧情事件参数"
+  "ui.error.missing_event": "缺少剧情事件参数",
+  "ui.error.missing_contract_cargo": "委托要求自备的货物还没装船，先买够再出航",
+  "ui.story.supply_locked": "补给暂时受限：先看完海图的目的港",
+  "ui.new_game.tutorial_note": "新手剧情：本局使用默认教学船，构筑选择已关闭"
 }

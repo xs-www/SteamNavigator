@@ -56,7 +56,7 @@ static func config(state: GameState, hub: RegistryHub) -> Dictionary:
 
 
 ## Initializes a fresh run's story state from Core JSON. Also used by `skip` fallback.
-static func begin(state: GameState, hub: RegistryHub) -> void:
+static func begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void:
 	var cfg := config(state, hub)
 	var story := state.ensure_story()
 	if cfg.is_empty() or not bool(cfg.get("enabled", false)):
@@ -77,7 +77,7 @@ static func begin(state: GameState, hub: RegistryHub) -> void:
 	story["unlocked_modules"] = Array(cfg.get("start_modules", [])).duplicate()
 	for feature in Array(cfg.get("start_unlocks", [])):
 		_unlock_feature(story, String(feature))
-	_enter_stage(state, hub, story, cfg, 0)
+	_enter_stage(state, hub, story, cfg, 0, [], rng)
 
 
 ## Read-only ViewModel consumed by the Shell (story card / objective / gating).
@@ -101,6 +101,7 @@ static func view(context) -> Dictionary:
 		"unlocked_items": Array(story.get("unlocked_items", [])).duplicate(),
 		"unlocked_modules": Array(story.get("unlocked_modules", [])).duplicate(),
 		"lock_actions": [],
+		"preferred_strategy": "",
 		"can_skip": bool(story.get("active", false)) and not bool(story.get("completed", true)),
 	}
 	# 未启用 / 已结束 / 旧存档：功能全开（Shell 不做门禁）。
@@ -131,6 +132,7 @@ static func view(context) -> Dictionary:
 			"target": int((objective as Dictionary).get("target", 0)),
 		}
 	result["lock_actions"] = Array(stage.get("lock_actions", [])).duplicate()
+	result["preferred_strategy"] = String(stage.get("preferred_strategy", ""))
 	return result
 
 
@@ -230,7 +232,7 @@ static func observe(context, event: String, data: Dictionary = {}) -> Dictionary
 
 static func _enter_stage(
 	state: GameState, hub: RegistryHub, story: Dictionary, cfg: Dictionary,
-	index: int, events: Array = []
+	index: int, events: Array = [], rng: RngService = null
 ) -> void:
 	var stages: Array = cfg.get("stages", [])
 	if index < 0 or index >= stages.size():
@@ -247,7 +249,7 @@ static func _enter_stage(
 		_unlock_list_entry(story, "unlocked_modules", String(module_id))
 	for effect in Array(stage.get("effects", [])):
 		if effect is Dictionary:
-			_apply_effect(state, hub, story, effect as Dictionary)
+			_apply_effect(state, hub, story, effect as Dictionary, rng)
 	events.append({
 		"type": EVENT_STAGE_ENTERED,
 		"payload": {
@@ -297,6 +299,12 @@ static func _conditions_met(story: Dictionary, conditions: Array, event: String,
 		var condition: Dictionary = raw
 		var expected_event := String(condition.get("event", ""))
 		if not expected_event.is_empty() and expected_event != event:
+			# 组合条件（如「4 煤 + 2 水」）按不同事件分别观测：当前事件不匹配时，
+			# 只要该条件的计数已达标（之前观测过），就视为已满足。
+			var done_counter := String(condition.get("counter", ""))
+			if not done_counter.is_empty() \
+					and int((story.get("counters", {}) as Dictionary).get(done_counter, 0)) >= int(condition.get("at_least", 1)):
+				continue
 			return false
 		var counter := String(condition.get("counter", ""))
 		if not counter.is_empty():
@@ -333,7 +341,7 @@ static func _objective_progress(stage: Dictionary, story: Dictionary) -> int:
 # ---------------------------------------------------------------------------
 
 
-static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary, effect: Dictionary) -> void:
+static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary, effect: Dictionary, rng: RngService = null) -> void:
 	var type := String(effect.get("type", ""))
 	match type:
 		"unlock_features":
@@ -349,6 +357,11 @@ static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary,
 			story["flags"] = clear_flags
 		"discover_contract_destination":
 			_discover_contract_destination(state, hub)
+		"grant_tutorial_contract":
+			_grant_tutorial_contract(state, hub, effect, rng)
+		"set_ship_fuel":
+			# 4.5.2 教学幕：老船几乎空舱，逼玩家先去补给页买煤。
+			state.ship()["coal"] = maxf(0.0, float(effect.get("amount", 0.0)))
 		"complete_story":
 			_complete(story, config(state, hub))
 		_:
@@ -367,6 +380,59 @@ static func _discover_contract_destination(state: GameState, _hub: RegistryHub) 
 		return
 	MapOps.discover(state, destination)
 	WorldOps.discover_port_id(state, destination)
+
+
+## 4.5.2：用 Core 指定的教学委托模板替换开局自动主线（燃料舱运煤）。内容决定
+## 模板 / 货物 / 数量 / 时限，框架只负责生成、接取与存入 `contracts.main`。
+static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect: Dictionary, rng: RngService) -> void:
+	if rng == null:
+		push_warning("StoryService: grant_tutorial_contract needs an RngService")
+		return
+	var template_id := String(effect.get("template_id", ""))
+	var template: ContentDefinition = hub.get_by_id(ContentTypes.CONTRACT, template_id)
+	if template == null:
+		push_warning("StoryService: unknown tutorial contract template '%s'" % template_id)
+		return
+	var offer := ContractOps.generate_offer(state, hub, template, rng, state.current_port_id())
+	if offer.is_empty():
+		push_warning("StoryService: cannot generate tutorial contract '%s'" % template_id)
+		return
+	# Core story 只覆盖「交付什么 / 怎么交付 / 时限 / 文案」，主线段落仍沿用现有
+	# main_01 模板（不新增一条并列主线，避免破坏 5 段主线计数与通关回归）。
+	var item_id := String(effect.get("cargo_item_id", ""))
+	var amount := int(effect.get("amount", 0))
+	if not item_id.is_empty() and amount > 0:
+		var provider := String(effect.get("provider", ""))
+		var entry := {"item_id": item_id, "amount": amount}
+		if provider == "player":
+			entry["player_sourced"] = true
+		elif provider == "fuel":
+			entry["fuel_sourced"] = true
+		var item_definition := ShipOps.item_definition(hub, item_id)
+		var unit_weight := float(item_definition.data.get("unit_weight", 1.0)) if item_definition != null else 1.0
+		offer["cargo"] = [entry]
+		offer["cargo_weight"] = float(amount) * unit_weight
+		offer["player_sourced"] = not provider.is_empty()
+		offer["name_key"] = String(effect.get("name_key", offer.get("name_key", "")))
+		offer["description_key"] = String(effect.get("description_key", offer.get("description_key", "")))
+		var formula_id := String(effect.get("deadline_formula", ""))
+		if not formula_id.is_empty():
+			var hours := FormulaRegistry.evaluate(formula_id, {
+				"distance": float(offer.get("distance", 0.0)),
+				"cargo_weight": float(offer.get("cargo_weight", 0.0)),
+				"passengers": 0,
+			})
+			if hours > 0.0:
+				offer["deadline"] = state.now() + hours
+	var attached := ContractOps.attach(state, hub, offer)
+	if not bool(attached.get("ok", false)):
+		push_warning("StoryService: cannot attach tutorial contract '%s': %s" % [
+			template_id, str(attached.get("error_code", "")),
+		])
+		return
+	var contracts: Dictionary = state.contracts()
+	contracts["main"] = offer
+	contracts["main_offer"] = null
 
 
 static func _unlock_feature(story: Dictionary, feature: String) -> bool:

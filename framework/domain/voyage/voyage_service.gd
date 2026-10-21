@@ -61,14 +61,19 @@ const MAX_EVENT_DELAY_HOURS := 72.0
 
 
 static func start(context, destination_id: String, strategy_id: String) -> Dictionary:
+	# 4.5.2：玩家自备 / 燃料舱交付的委托，未备齐时不允许出航（否则抵达后无法交付）。
+	# 先于可行性检查，避免「煤不够导致不可行」掩盖真正的自备货物缺口。
+	var state: GameState = context.state
+	var hub: RegistryHub = context.registries
+	var missing_cargo := _missing_player_cargo(state)
+	if not missing_cargo.is_empty():
+		return Result.fail("missing_contract_cargo", "ui.error.missing_contract_cargo", missing_cargo)
 	var preview_result := VoyageCalculator.preview(context, destination_id, strategy_id)
 	if not bool(preview_result["ok"]):
 		return preview_result
 	var preview: Dictionary = preview_result["data"]
 	if not bool(preview.get("feasible", false)):
 		return Result.fail("voyage_not_feasible", "ui.error.voyage_not_feasible", {"blockers": preview.get("blockers", [])})
-	var state: GameState = context.state
-	var hub: RegistryHub = context.registries
 	var ship := state.ship()
 
 	var retry_snapshot := state.clone()
@@ -587,6 +592,25 @@ static func _profile_data(context) -> Dictionary:
 	var profile_id := String(state.world().get("map_profile_id", ""))
 	var profile: ContentDefinition = context.registries.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
 	return profile.data if profile != null else {}
+
+
+## 4.5.2：主 / 普通委托里的玩家自备货物是否已全部装船。空字典 = 可以出航。
+static func _missing_player_cargo(state: GameState) -> Dictionary:
+	var contracts := state.contracts()
+	var candidates: Array = []
+	if contracts.get("main", null) is Dictionary:
+		candidates.append(contracts["main"])
+	for contract in contracts.get("active", []):
+		if contract is Dictionary:
+			candidates.append(contract)
+	for contract in candidates:
+		if not bool((contract as Dictionary).get("player_sourced", false)):
+			continue
+		var missing := ContractOps.missing_player_cargo(state, contract)
+		if not missing.is_empty():
+			missing["contract_id"] = String((contract as Dictionary).get("instance_id", ""))
+			return missing
+	return {}
 
 
 static func _with_autosave(result: Dictionary) -> Dictionary:

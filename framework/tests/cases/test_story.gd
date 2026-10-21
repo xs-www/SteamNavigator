@@ -70,24 +70,81 @@ func test_advance_unlocks_supply_and_shows_objective() -> void:
 	var objective: Variant = view.get("objective", null)
 	assert_not_null(objective, "the supply stage has a non-blocking objective")
 	if objective is Dictionary:
-		assert_eq(int((objective as Dictionary).get("target", 0)), 2, "the objective comes from Core JSON")
+		assert_eq(int((objective as Dictionary).get("target", 0)), 4, "the objective comes from Core JSON")
 		assert_eq(int((objective as Dictionary).get("progress", 0)), 0, "no coal has been bought yet")
 
 
-func test_observe_counts_events_and_advances_stories() -> void:
+## 4.5.2 幕 0：买齐 4 煤 + 2 水 → 补给受限 + 解锁海图；看海图 → 关闭 → 恢复补给；
+## 买够 10 煤 → 出航阶段（默认策略由剧情指定为 fast）。
+func test_observe_walks_the_first_voyage_act() -> void:
 	var context := _start_tutorial(SEED)
 	context.commands.execute(&"story.advance", {})
-	var bought := context.commands.execute(&"supply.buy_coal", {"amount": 2})
-	assert_true(bool(bought.get("ok", false)), "buying coal succeeds at the starting harbour: %s" % str(bought))
-	var observed := context.commands.execute(&"story.observe", {
-		"event": "cmd:supply.buy_coal",
-		"data": {"amount": 2},
-	})
-	assert_true(bool(observed.get("ok", false)), "the purchase observation succeeds: %s" % str(observed))
+	var coal := context.commands.execute(&"supply.buy_coal", {"amount": 4})
+	assert_true(bool(coal.get("ok", false)), "buying 4 coal succeeds: %s" % str(coal))
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 4}})
 	var view := _view(context)
-	assert_eq(String(view.get("stage_id", "")), "chart_brief", "2 coal advances the supply stage")
-	assert_true((view.get("unlocked_features", []) as Array).has("chart"), "the chart unlocks after provisioning")
-	assert_not_null(view.get("card", null), "the chart briefing shows its own card")
+	assert_eq(String(view.get("stage_id", "")), "supply_brief", "water is still required")
+	var water := context.commands.execute(&"supply.buy_water", {"amount": 2})
+	assert_true(bool(water.get("ok", false)), "buying 2 water succeeds: %s" % str(water))
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_water", "data": {"amount": 2}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "supply_hold", "4 coal + 2 water enter the supply hold")
+	assert_true((view.get("unlocked_features", []) as Array).has("chart"), "the chart unlocks on the hold")
+	assert_true(Array(view.get("lock_actions", [])).has("supply.buy"), "supply buying is locked")
+	assert_not_null(view.get("card", null), "the hold shows its story card")
+	context.commands.execute(&"story.observe", {"event": "ui:chart_opened", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "chart_brief", "opening the chart advances")
+	context.commands.execute(&"story.observe", {"event": "ui:chart_closed", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "supply_finish", "closing the chart restores supplies")
+	assert_false(Array(view.get("lock_actions", [])).has("supply.buy"), "supply buying is unlocked again")
+	var more_coal := context.commands.execute(&"supply.buy_coal", {"amount": 6})
+	assert_true(bool(more_coal.get("ok", false)), "buying the remaining coal succeeds: %s" % str(more_coal))
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 6}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "depart_brief", "10 coal total reaches the departure stage")
+	assert_eq(String(view.get("preferred_strategy", "")), "fast", "the departure stage prefers Fast")
+	assert_true(bool(view.get("active", false)), "the tutorial is still running")
+
+
+func test_main_contract_needs_player_supplied_coal_before_departure() -> void:
+	var context := _start_tutorial(SEED)
+	var main_contract: Variant = context.state.contracts().get("main", null)
+	assert_true(main_contract is Dictionary, "the tutorial auto-accepts the main contract")
+	if not (main_contract is Dictionary):
+		return
+	var contract: Dictionary = main_contract
+	assert_true(bool(contract.get("player_sourced", false)), "main_01 asks for player-supplied cargo")
+	var coal_entry := {}
+	for entry in contract.get("cargo", []):
+		if String((entry as Dictionary).get("item_id", "")) == "core:good/coal":
+			coal_entry = entry
+	assert_eq(int(coal_entry.get("amount", 0)), 10, "the contract requires 10 coal")
+	assert_true(bool(coal_entry.get("fuel_sourced", false)), "the coal entry is delivered from the bunkers")
+	var missing := ContractOps.missing_player_cargo(context.state, contract)
+	assert_false(missing.is_empty(), "the cargo is missing right after accepting")
+	var destination := String(contract.get("destination", ""))
+	var blocked := context.commands.execute(&"voyage.start", {
+		"destination_id": destination,
+		"strategy_id": "core:strategy/standard",
+	})
+	assert_eq(String(blocked.get("error_code", "")), "missing_contract_cargo",
+		"departure is blocked until the cargo is aboard")
+	var bought := context.commands.execute(&"supply.buy_coal", {"amount": 10})
+	assert_true(bool(bought.get("ok", false)), "buying 10 coal succeeds: %s" % str(bought))
+	assert_true(ContractOps.missing_player_cargo(context.state, contract).is_empty(),
+		"the self-supplied cargo is complete")
+	var standard_preview := VoyageCalculator.preview(context, destination, "core:strategy/standard")
+	var fast_preview := VoyageCalculator.preview(context, destination, "core:strategy/fast")
+	assert_true(bool(standard_preview.get("ok", false)), "the standard preview succeeds")
+	assert_true(bool(fast_preview.get("ok", false)), "the fast preview succeeds")
+	var deadline := float(contract.get("deadline", 0.0))
+	var now := context.state.now()
+	var standard_arrival := float(standard_preview["data"].get("arrival_time", now))
+	var fast_arrival := float(fast_preview["data"].get("arrival_time", now))
+	assert_true(standard_arrival > deadline, "standard speed arrives after the tutorial deadline")
+	assert_true(fast_arrival <= deadline, "fast speed arrives on time for the tutorial contract")
 
 
 func test_skip_unlocks_everything_and_keeps_the_run_playable() -> void:
@@ -112,11 +169,10 @@ func test_story_survives_a_save_load_roundtrip() -> void:
 		"save_directory": "user://test_saves/story_%d" % Time.get_ticks_usec(),
 	})
 	context.commands.execute(&"story.advance", {})
-	context.commands.execute(&"supply.buy_coal", {"amount": 2})
-	context.commands.execute(&"story.observe", {
-		"event": "cmd:supply.buy_coal",
-		"data": {"amount": 2},
-	})
+	context.commands.execute(&"supply.buy_coal", {"amount": 4})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 4}})
+	context.commands.execute(&"supply.buy_water", {"amount": 2})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_water", "data": {"amount": 2}})
 	var before := context.state.hash()
 	var saved := context.save.save_slot("manual", context.state, context.save_meta())
 	assert_true(bool(saved.get("ok", false)), "saving the story state succeeds: %s" % str(saved))
@@ -129,7 +185,7 @@ func test_story_survives_a_save_load_roundtrip() -> void:
 	assert_eq(loaded_state.hash(), before, "the story state hash is identical after loading")
 	context.state.replace_with(loaded_state)
 	var loaded_view := _view(context)
-	assert_eq(String(loaded_view.get("stage_id", "")), "chart_brief", "the story stage survives the round-trip")
+	assert_eq(String(loaded_view.get("stage_id", "")), "supply_hold", "the story stage survives the round-trip")
 	assert_true((loaded_view.get("unlocked_features", []) as Array).has("chart"),
 		"unlocked features survive the round-trip")
 

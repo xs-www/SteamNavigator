@@ -16,6 +16,7 @@ var _description: Label
 
 func bind(vm: Dictionary, translate: Callable) -> void:
 	_tr = translate; _builds = vm.get("builds", []); _selected_build = String(vm.get("selected_build", "")); _clear()
+	var tutorial_mode := bool(vm.get("tutorial_mode", false))
 	add_child(_heading("航程准备", _loc("ui.menu.new_game", "新航程"), "选择初始构筑与种子"))
 	var intro := _panel(); var intro_box := _content(intro)
 	intro_box.add_child(_label(_loc("ui.app.subtitle", ""), 15, MUTED))
@@ -24,13 +25,18 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	var mod_names := PackedStringArray(); for mod in vm.get("mods", []): mod_names.append("%s %s" % [mod.get("id", "?"), mod.get("version", "?")])
 	intro_box.add_child(_label("%s: %s" % [_loc("ui.label.mods", "Mods"), ", ".join(mod_names)], 14, TEXT)); add_child(intro)
 
-	var form := _panel(); var form_box := _content(form); form_box.add_child(_label(_loc("ui.label.build", "Starting build"), 15, BRASS))
-	var option := OptionButton.new(); option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for build in _builds:
-		option.add_item(_loc(String(build.get("name_key", "")), String(build.get("id", "")))); option.set_item_metadata(option.item_count - 1, String(build.get("id", "")))
-		if _selected_build.is_empty() or _selected_build == String(build.get("id", "")): option.select(option.item_count - 1); _selected_build = String(build.get("id", ""))
-	option.item_selected.connect(_on_build_selected.bind(option)); form_box.add_child(option)
-	_description = _label("", 13, MUTED); form_box.add_child(_description); _refresh_description()
+	var form := _panel(); var form_box := _content(form)
+	if tutorial_mode:
+		# 4.5.2 新手剧情：固定教学船，隐藏构筑选择。
+		form_box.add_child(_label(_loc("ui.new_game.tutorial_note", "新手剧情：本局使用默认教学船"), 14, BRASS))
+	else:
+		form_box.add_child(_label(_loc("ui.label.build", "Starting build"), 15, BRASS))
+		var option := OptionButton.new(); option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		for build in _builds:
+			option.add_item(_loc(String(build.get("name_key", "")), String(build.get("id", "")))); option.set_item_metadata(option.item_count - 1, String(build.get("id", "")))
+			if _selected_build.is_empty() or _selected_build == String(build.get("id", "")): option.select(option.item_count - 1); _selected_build = String(build.get("id", ""))
+		option.item_selected.connect(_on_build_selected.bind(option)); form_box.add_child(option)
+		_description = _label("", 13, MUTED); form_box.add_child(_description); _refresh_description()
 	var seed_row := HBoxContainer.new(); seed_row.add_child(_label(_loc("ui.label.seed", "Seed"), 14, TEXT))
 	_seed_input = LineEdit.new(); _seed_input.placeholder_text = "random"; _seed_input.text = String(vm.get("seed_text", "")); _seed_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL; seed_row.add_child(_seed_input); form_box.add_child(seed_row)
 	var buttons := HBoxContainer.new()
