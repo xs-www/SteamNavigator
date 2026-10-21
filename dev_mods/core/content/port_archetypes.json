@@ -45,7 +45,7 @@
             "buoy": "model.prop.buoy"
           }
         },
-        "facilities": ["exchange", "contracts", "supply", "shipyard"],
+        "facilities": ["exchange", "contracts", "supply", "shipyard", "tavern"],
         "market": [
           {"good": "core:good/iron_ore", "stock_range": [70, 130]},
           {"good": "core:good/timber", "stock_range": [80, 140]},
@@ -95,7 +95,7 @@
             "buoy": "model.prop.buoy"
           }
         },
-        "facilities": ["exchange", "contracts", "supply", "intel"],
+        "facilities": ["exchange", "contracts", "supply", "tavern"],
         "market": [
           {"good": "core:good/spices", "stock_range": [30, 70], "price_bias": 0.9},
           {"good": "core:good/textiles", "stock_range": [50, 110]},
@@ -143,7 +143,7 @@
             "buoy": "model.prop.buoy"
           }
         },
-        "facilities": ["exchange", "contracts", "supply", "shipyard", "intel"],
+        "facilities": ["exchange", "contracts", "supply", "shipyard", "tavern"],
         "market": [
           {"good": "core:good/brass", "stock_range": [40, 90]},
           {"good": "core:good/timber", "stock_range": [60, 120]},
@@ -242,7 +242,7 @@
             "buoy": "model.prop.buoy"
           }
         },
-        "facilities": ["exchange", "contracts", "supply", "intel"],
+        "facilities": ["exchange", "contracts", "supply", "tavern"],
         "market": [
           {"good": "core:good/glassware", "stock_range": [40, 90], "price_bias": 0.9},
           {"good": "core:good/brass", "stock_range": [35, 80]},

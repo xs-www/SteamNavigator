@@ -46,7 +46,7 @@
           "minItems": 2,
           "uniqueItems": true,
           "items": {
-            "enum": ["exchange", "contracts", "supply", "shipyard", "intel"]
+            "enum": ["exchange", "contracts", "supply", "shipyard", "tavern", "intel"]
           }
         },
         "banner_asset": {

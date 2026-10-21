@@ -168,7 +168,7 @@ func _ship_summary_panel(vm: Dictionary) -> Control:
 func _quick_actions_panel() -> Control:
 	var panel := _panel(); var box := _content(panel); box.add_child(_heading("快捷入口", "港口操作", "常用功能"))
 	# 4.3.4 / U7：出航准备页已删除，快捷入口改为打开海图（出航在海图弹窗确认）。
-	for action in [["market", "市场买卖"], ["contracts", "接取委托"], ["shipyard", "船只改造"], ["supply", "补给维修"], ["intel", "情报报告"], ["sea_chart", "打开海图"]]: box.add_child(_nav_button(String(action[1]), StringName(action[0])))
+	for action in [["market", "市场买卖"], ["contracts", "接取委托"], ["shipyard", "船只改造"], ["supply", "补给维修"], ["tavern", "酒馆情报"], ["sea_chart", "打开海图"]]: box.add_child(_nav_button(String(action[1]), StringName(action[0])))
 	box.add_child(_label(_loc("ui.button.wait", ""), 13, MUTED)); var wait_row := HBoxContainer.new(); wait_row.add_theme_constant_override("separation", 6)
 	for hours in [6, 12, 24]:
 		var button := Button.new(); button.text = "%d h" % hours; button.pressed.connect(_emit_wait.bind(hours)); wait_row.add_child(button)

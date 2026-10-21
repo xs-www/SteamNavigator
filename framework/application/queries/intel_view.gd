@@ -26,7 +26,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var current_port := state.current_port_id()
 	var snapshot := IntelService.get_snapshot(state)
 	var port_data := MapOps.port(world, current_port)
-	var has_intel_facility := MapOps.has_facility(port_data, "intel")
+	var has_tavern_facility := MapOps.has_tavern(port_data)
 	var profile := _profile(context)
 	var cost := int(profile.get("intel_cost", 25))
 	var has_report := not snapshot.is_empty()
@@ -72,8 +72,10 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"port_count": ports.size(),
 		"npc_count": npcs.size(),
 		"discovered_port_count": Array(world.get("discovered_ports", [])).size(),
-		"has_intel_facility": has_intel_facility,
-		"can_refresh": has_intel_facility and state.is_at_port() and state.money() >= cost,
+		"has_tavern_facility": has_tavern_facility,
+		# 4.5.4：旧字段名保留给旧调用方 / 存档 UI 测试，语义同 `has_tavern_facility`。
+		"has_intel_facility": has_tavern_facility,
+		"can_refresh": has_tavern_facility and state.is_at_port() and state.money() >= cost,
 		"cost": cost,
 		"money": state.money(),
 	})

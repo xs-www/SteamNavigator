@@ -549,21 +549,8 @@ static func _explore_state(state: GameState) -> Dictionary:
 
 ## Why the buy button is (not) available, resolved with the same gates `clue.buy` uses so
 ## the button never lies about a cost the command would refuse.
-static func _can_buy_clue(context, state: GameState) -> Dictionary:
-	var rules := ExplorationRules.read(state, context.registries)
-	var cost := int(rules.get("intel_clue_cost", 40))
-	if not state.is_at_port():
-		return {"available": false, "cost": cost, "reason_key": "ui.error.not_at_port"}
-	var port_data := MapOps.port(state.world(), state.current_port_id())
-	if not MapOps.has_facility(port_data, "intel"):
-		return {"available": false, "cost": cost, "reason_key": "ui.error.no_intel_facility"}
-	if ClueService.active_count(state) >= int(rules.get("max_active_clues", 4)):
-		return {"available": false, "cost": cost, "reason_key": "ui.notice.no_clue_available"}
-	if state.money() < cost:
-		return {"available": false, "cost": cost, "reason_key": "ui.error.insufficient_money"}
-	if ClueService.eligible_target_ids(state).is_empty():
-		return {"available": false, "cost": cost, "reason_key": "ui.error.no_exploration_target"}
-	return {"available": true, "cost": cost, "reason_key": ""}
+static func _can_buy_clue(context, _state: GameState) -> Dictionary:
+	return ClueService.buy_gate(context)
 
 
 static func _archetype_name(archetype: int) -> String:

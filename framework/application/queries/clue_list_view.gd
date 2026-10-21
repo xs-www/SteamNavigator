@@ -26,6 +26,26 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		return Result.ok(_empty_result())
 	var state: GameState = context.state
 	var rules := ExplorationRules.read(state, context.registries)
+	var clues := clue_rows(context)
+	var expired: Array = []
+	for raw in Array(state.ensure_clues().get("expired", [])):
+		if raw is Dictionary:
+			expired.append(_expired_entry(state, raw))
+	return Result.ok({
+		"has_run": true,
+		"now": state.now(),
+		"max_active": int(rules.get("max_active_clues", 4)),
+		"active_count": ClueService.active_count(state),
+		"clues": clues,
+		"expired": expired,
+	})
+
+
+## 4.5.4：active 线索的裁剪行 + 调查 / 出航可用性。酒馆页与线索列表页共用，
+## 保证两个入口看到的成本 / 等级 / 可调查状态完全一致。
+static func clue_rows(context) -> Array:
+	var state: GameState = context.state
+	var rules := ExplorationRules.read(state, context.registries)
 	var at_port := state.is_at_port()
 	var exploring := state.explore_voyage() is Dictionary
 	var clues: Array = []
@@ -50,18 +70,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			String(clue_view.get("type", ClueService.TYPE_PORT_LOCATION)), next_level
 		)
 		clues.append(clue_view)
-	var expired: Array = []
-	for raw in Array(state.ensure_clues().get("expired", [])):
-		if raw is Dictionary:
-			expired.append(_expired_entry(state, raw))
-	return Result.ok({
-		"has_run": true,
-		"now": state.now(),
-		"max_active": int(rules.get("max_active_clues", 4)),
-		"active_count": ClueService.active_count(state),
-		"clues": clues,
-		"expired": expired,
-	})
+	return clues
 
 
 ## 4.4：下一级披露的文案键——货物线索用行情等级表，港口位置线索用 4.3 的等级表。

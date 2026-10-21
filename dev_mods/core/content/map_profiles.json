@@ -291,6 +291,87 @@
                 "body_keys": ["story.core.chapter_wrap.body.1"]
               },
               "advance": {"mode": "confirm"}
+            },
+            {
+              "id": "tavern_open",
+              "dialogue": {
+                "title_key": "story.core.tavern_open.title",
+                "body_keys": ["story.core.tavern_open.body.1", "story.core.tavern_open.body.2"]
+              },
+              "unlock_features": ["clues", "tavern"],
+              "effects": [
+                {"type": "grant_clue", "port": "next_unknown", "level": 1, "source": "rumor"},
+                {"type": "set_market_price_bias", "item_ids": ["core:good/textiles", "core:good/spices"], "home_bias": 1.35, "other_bias": 0.7, "reset_stock": true, "make_buyable": true}
+              ],
+              "advance": {"mode": "confirm"}
+            },
+            {
+              "id": "tavern_intro",
+              "dialogue": {
+                "title_key": "story.core.tavern_intro.title",
+                "body_keys": ["story.core.tavern_intro.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.tavern_intro.objective",
+                "target": 1
+              },
+              "advance": {"event": "cmd:intel.refresh", "counter": "intel_refreshed", "at_least": 1}
+            },
+            {
+              "id": "third_good",
+              "dialogue": {
+                "title_key": "story.core.third_good.title",
+                "body_keys": ["story.core.third_good.body.1"]
+              },
+              "unlock_items": ["core:good/timber"],
+              "objective": {
+                "text_key": "story.core.third_good.objective",
+                "target": 1
+              },
+              "advance": {
+                "all": [
+                  {"event": "cmd:voyage.start", "counter": "act2_departures", "at_least": 1},
+                  {"event": "ui:arrival_settled", "counter": "act2_arrivals", "at_least": 1}
+                ]
+              }
+            },
+            {
+              "id": "second_clue",
+              "dialogue": {
+                "title_key": "story.core.second_clue.title",
+                "body_keys": ["story.core.second_clue.body.1", "story.core.second_clue.body.2"]
+              },
+              "effects": [
+                {"type": "grant_clue", "port": "next_unknown", "level": 3, "source": "rumor"},
+                {"type": "guarantee_explore_success"}
+              ],
+              "advance": {"mode": "confirm"}
+            },
+            {
+              "id": "explore_third",
+              "dialogue": {
+                "title_key": "story.core.explore_third.title",
+                "body_keys": ["story.core.explore_third.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.explore_third.objective",
+                "target": 1
+              },
+              "advance": {
+                "all": [
+                  {"event": "cmd:explore.start", "counter": "act2_explorations", "at_least": 1},
+                  {"event": "ui:arrival_settled", "counter": "act2_explore_arrivals", "at_least": 1}
+                ]
+              }
+            },
+            {
+              "id": "third_port",
+              "dialogue": {
+                "title_key": "story.core.third_port.title",
+                "body_keys": ["story.core.third_port.body.1"]
+              },
+              "unlock_features": ["shipyard"],
+              "advance": {"event": "ui:story_third_port_ack"}
             }
           ]
         }

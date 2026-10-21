@@ -55,17 +55,17 @@ func test_intel_view_exposes_snapshot_rows() -> void:
 	var intel_port := ""
 	for port_id in context.state.world().get("ports", {}).keys():
 		var port: Dictionary = context.state.world()["ports"][port_id]
-		if Array(port.get("facilities", [])).has("intel"):
+		if MapOps.has_tavern(port):
 			intel_port = String(port_id)
 			break
-	assert_true(not intel_port.is_empty(), "map contains an intel port")
+	assert_true(not intel_port.is_empty(), "map contains a tavern harbour")
 	context.state.world()["current_port_id"] = intel_port
 	var discovered: Array = context.state.world().get("discovered_ports", [])
 	if not discovered.has(intel_port):
 		discovered.append(intel_port)
 	context.state.world()["discovered_ports"] = discovered
 	var refresh := context.commands.execute(&"intel.refresh", {})
-	assert_true(bool(refresh["ok"]), "intel refresh succeeds: %s" % str(refresh))
+	assert_true(bool(refresh["ok"]), "price-intel refresh succeeds: %s" % str(refresh))
 	var report := context.queries.execute(&"intel.view")
 	var data: Dictionary = report["data"]
 	assert_true(bool(data["has_report"]), "report exists after refresh")
@@ -119,18 +119,25 @@ func _has_text_containing(texts: Array[String], needle: String) -> bool:
 	return false
 
 
-## Moves to an intel port and refreshes so the comparison matrix has a report.
+## Moves to a tavern harbour and refreshes so the comparison matrix has a report.
+## The start hub already has a tavern (4.5.4), so this also reveals one neighbour:
+## the matrix needs a second discovered port to compare against.
 func _refresh_intel(context: AppContext) -> String:
-	var intel_port := _facility_port(context, "intel")
+	var intel_port := _facility_port(context, "tavern")
 	if intel_port.is_empty():
 		return ""
 	context.state.world()["current_port_id"] = intel_port
 	var discovered: Array = context.state.world().get("discovered_ports", [])
 	if not discovered.has(intel_port):
 		discovered.append(intel_port)
+	if discovered.size() < 2:
+		for neighbour in MapOps.neighbors(context.state.world(), intel_port):
+			if not discovered.has(neighbour):
+				discovered.append(neighbour)
+				break
 	context.state.world()["discovered_ports"] = discovered
 	var refresh := context.commands.execute(&"intel.refresh", {})
-	assert_true(bool(refresh["ok"]), "intel refresh succeeds: %s" % str(refresh))
+	assert_true(bool(refresh["ok"]), "price-intel refresh succeeds: %s" % str(refresh))
 	return intel_port
 
 
@@ -139,7 +146,7 @@ func test_intel_view_builds_port_comparison_matrix() -> void:
 	var context: AppContext = boot["context"]
 	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 8383})
 	var intel_port := _refresh_intel(context)
-	assert_true(not intel_port.is_empty(), "map contains an intel port")
+	assert_true(not intel_port.is_empty(), "map contains a tavern harbour")
 	var result := context.queries.execute(&"intel.view")
 	assert_true(bool(result["ok"]), "intel view succeeds")
 	var data: Dictionary = result["data"]

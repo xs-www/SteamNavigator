@@ -33,7 +33,7 @@ const HARBOR_SIGN_SCRIPT := preload("res://framework/ui/components/sn_harbor_sig
 const MARKET_SCREEN_SCENE := preload("res://framework/ui/screens/port/market_screen.tscn")
 const CONTRACTS_SCREEN_SCENE := preload("res://framework/ui/screens/port/contracts_screen.tscn")
 const SUPPLY_SCREEN_SCENE := preload("res://framework/ui/screens/port/supply_screen.tscn")
-const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/intel_screen.tscn")
+const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/tavern_screen.tscn")
 const OVERVIEW_SCREEN_SCENE := preload("res://framework/ui/screens/port/overview_screen.tscn")
 const SHIPYARD_SCREEN_SCENE := preload("res://framework/ui/screens/port/shipyard_screen.tscn")
 const PORT_MEMORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/port_memory_screen.tscn")
@@ -61,8 +61,9 @@ const COLOR_GREEN := Color("76aa8c")
 const DEV_TEAM := "PlayThought Team"
 const GAME_VERSION_FALLBACK := "0.2.0"
 
-## 港口页面导航（4.3.4 / U7：出航准备页已删除；4.5.3：补给页并入市场）。
-const SCREENS := ["overview", "market", "contracts", "shipyard", "intel"]
+## 港口页面导航（4.3.4 / U7：出航准备页已删除；4.5.3：补给页并入市场；
+## 4.5.4：情报站页面被酒馆页替换）。
+const SCREENS := ["overview", "market", "contracts", "shipyard", "tavern"]
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
@@ -70,7 +71,9 @@ const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
 const PORT_STAGE_FACILITY_SCREENS := {
 	"exchange": &"market",
 	"contracts": &"contracts",
-	"intel": &"intel",
+	"tavern": &"tavern",
+	# 4.5.4：旧世界快照里仍可能带 `intel` 设施，兼容映射到酒馆页。
+	"intel": &"tavern",
 	"shipyard": &"shipyard",
 }
 ## Screens that share the one continuous 3D port stage. The pages map to adjacent
@@ -412,6 +415,9 @@ func _rebuild_ui() -> void:
 	# 4.5.3：旧存档 / 旧入口把 supply 视为市场页（补给区块在位）。
 	if _active_screen == "supply":
 		_active_screen = "market"
+	# 4.5.4：旧存档 / 旧入口把 intel 视为酒馆页。
+	if _active_screen == "intel":
+		_active_screen = "tavern"
 	if not SCREENS.has(_active_screen) \
 			and not ["port_memory", "settlement", "sea_chart", "clue_log"].has(_active_screen):
 		_active_screen = "overview"
@@ -425,8 +431,8 @@ func _rebuild_ui() -> void:
 			_screen_contracts(data)
 		"shipyard":
 			_screen_shipyard(data)
-		"intel":
-			_screen_intel(data)
+		"tavern":
+			_screen_tavern(data)
 		"sea_chart":
 			_screen_sea_chart(data)
 		"clue_log":
@@ -485,7 +491,9 @@ func _story_screen_feature(screen: String) -> String:
 			# 4.5.3 补给页已并入市场；旧入口重定向到市场。
 			return StoryService.FEATURE_MARKET
 		"intel":
-			# 4.5.4 起情报页会被酒馆替换；门禁键提前统一。
+			# 4.5.4：旧入口重定向到酒馆页；门禁键统一为 tavern。
+			return StoryService.FEATURE_TAVERN
+		"tavern":
 			return StoryService.FEATURE_TAVERN
 		_:
 			return ""
@@ -1837,11 +1845,11 @@ func _screen_supply(_data: Dictionary) -> void:
 
 
 ## ---------------------------------------------------------------------------
-## Intelligence
+## Tavern (4.5.4: replaces the old intelligence page)
 ## ---------------------------------------------------------------------------
 
-func _screen_intel(_data: Dictionary) -> void:
-	var result := _context.queries.execute(&"intel.view")
+func _screen_tavern(_data: Dictionary) -> void:
+	var result := _context.queries.execute(&"tavern.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
 		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
@@ -2116,6 +2124,9 @@ func _screen_clue_log(_data: Dictionary) -> void:
 
 
 func _on_clue_list_requested() -> void:
+	# 4.5.4：线索功能属于 `clues` feature（与酒馆同时解锁）；未解锁时入口不响应。
+	if not _story_feature_unlocked(StoryService.FEATURE_CLUES):
+		return
 	_active_screen = "clue_log"
 	_status_message = ""
 	_refresh()
@@ -3374,6 +3385,7 @@ func _facility_name(facility: String) -> String:
 		"contracts": "港务承运局",
 		"supply": "补给码头",
 		"shipyard": "造船厂",
+		"tavern": "酒馆",
 		"intel": "情报站",
 	}
 	return names.get(facility, facility)

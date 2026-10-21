@@ -271,7 +271,7 @@ func _check_port_archetypes() -> void:
 				_error("port_market_missing", "%s market references unknown item %s" % [archetype.id, item_id], archetype.id)
 		var tag_facility_pairs := {
 			"port.shipyard": "shipyard",
-			"port.intel": "intel",
+			"port.intel": "tavern",
 		}
 		for tag in tag_facility_pairs.keys():
 			if archetype.has_tag(tag) and not facilities.has(tag_facility_pairs[tag]):

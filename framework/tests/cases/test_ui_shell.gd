@@ -13,7 +13,7 @@ const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_tabl
 
 const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_screen.gd")
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
-const INTEL_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/intel_screen.gd")
+const TAVERN_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/tavern_screen.gd")
 const OVERVIEW_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/overview_screen.gd")
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
 const PORT_MEMORY_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/port_memory_screen.gd")
@@ -417,15 +417,15 @@ func test_market_supply_block_paints_the_lost_capacity_band() -> void:
 	_unmount(bundle)
 
 
-func test_intel_screen_renders_the_port_comparison_table() -> void:
+func test_tavern_screen_renders_price_intel_and_port_clues() -> void:
 	var bundle := _mount(5105)
 	var shell: Control = bundle["shell"]
 	var context: AppContext = bundle["context"]
 	context.commands.execute(&"intel.refresh")
-	_goto(shell, "intel")
-	assert_eq(_nodes_with_script(shell._root_box, INTEL_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted intel screen")
+	_goto(shell, "tavern")
+	assert_eq(_nodes_with_script(shell._root_box, TAVERN_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted tavern screen")
 	var tables := _nodes_with_script(shell._root_box, INTEL_TABLE_SCRIPT)
-	assert_eq(tables.size(), 1, "the intel screen renders one goods-by-port table")
+	assert_eq(tables.size(), 1, "the tavern screen renders one price-intel table")
 	var texts := _label_texts(tables[0])
 	assert_contains(texts, shell._tr("ui.label.goods", ""), "the table has a goods column")
 	assert_contains(texts, shell._tr("ui.label.unknown_port", ""), "unexplored ports keep their own masked column")
@@ -437,6 +437,15 @@ func test_intel_screen_renders_the_port_comparison_table() -> void:
 		if not bool(column["discovered"]):
 			undiscovered += 1
 	assert_true(undiscovered >= 1, "the chart has an unexplored port to mask")
+	# 4.5.4：酒馆页同时提供港口线索入口（购买 + 列表）。
+	var buy_button := _named_node(shell._root_box, "BuyClueButton") as Button
+	assert_not_null(buy_button, "the tavern renders the buy-clue entry")
+	var clues_before := ClueService.active(context.state).size()
+	if buy_button != null:
+		assert_false(buy_button.disabled, "buying a clue is available at a tavern with unknown harbours")
+		buy_button.emit_signal("pressed")
+	assert_eq(ClueService.active(context.state).size(), clues_before + 1,
+		"pressing the tavern buy entry runs the real clue.buy command")
 	_unmount(bundle)
 
 
@@ -601,7 +610,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
 	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
 	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	for screen in ["overview", "market", "contracts", "shipyard", "intel"]:
+	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
 		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
 	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
 		"4.3/U7: the voyage page is gone from the navigation")
@@ -648,7 +657,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 		# 4.5.3: the supply facility moved into the market page, so it gets no sign.
 		expected_signs -= 1
 	assert_eq(signs, expected_signs, "one edge sign per standalone facility plus the chart sign")
-	for facility in ["exchange", "contracts", "intel", "shipyard"]:
+	for facility in ["exchange", "contracts", "tavern", "shipyard"]:
 		var sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_%s" % facility)
 		if facilities.has(facility):
 			assert_not_null(sign, "the present %s facility gets an edge sign" % facility)
@@ -840,7 +849,7 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	assert_almost_eq(context.state.now(), time_before + 12.0, 0.001, "the bottom wait button advances game time by 12 hours")
 
 	# Leave and re-enter the overview: the strip follows the page.
-	_goto(shell, "intel")
+	_goto(shell, "tavern")
 	assert_false(bool(shell._port_status_bar.visible), "the status strip is overview-only")
 	if host != null:
 		assert_false(bool(host.visible), "the stage hides outside the overview")
@@ -965,10 +974,10 @@ func test_sea_chart_buys_an_intel_clue_from_the_panel() -> void:
 	# 玩家就是先把船开到这里再进海图页买）。
 	var intel_port := ""
 	for port in MapOps.ports(context.state.world()).values():
-		if port is Dictionary and MapOps.has_facility(port as Dictionary, "intel"):
+		if port is Dictionary and MapOps.has_tavern(port as Dictionary):
 			intel_port = String((port as Dictionary).get("id", ""))
 			break
-	assert_true(not intel_port.is_empty(), "the fixture map has a port with an intel office")
+	assert_true(not intel_port.is_empty(), "the fixture map has a harbour with a tavern")
 	if intel_port.is_empty():
 		_unmount(bundle)
 		return
@@ -985,7 +994,7 @@ func test_sea_chart_buys_an_intel_clue_from_the_panel() -> void:
 	var chart_screen: Control = screens[0]
 	var view_model: Dictionary = chart_screen._view_model
 	assert_true(bool((view_model.get("can_buy_clue", {}) as Dictionary).get("available", false)),
-		"the chart offers the buy entry at a port with an intel office: %s" % str(view_model.get("can_buy_clue", {})))
+		"the chart offers the buy entry at a harbour with a tavern: %s" % str(view_model.get("can_buy_clue", {})))
 	var purchase := _named_node(chart_screen, "PurchaseClueButton") as Button
 	assert_not_null(purchase, "the panel renders the purchase entry")
 	if purchase == null:

@@ -156,5 +156,22 @@
   "contract.core.tutorial_trade.name": "Main 2: The Textile Run",
   "contract.core.tutorial_trade.description": "Buy 8 textiles at the neighbouring market, deliver 6 back to Iron Harbour, and sell the other 2.",
   "story.core.chapter_wrap.title": "Second Voyage Complete",
-  "story.core.chapter_wrap.body.1": "The first two chapters are complete; the tavern and the third harbour's leads arrive in the next build. For now, explore freely."
+  "story.core.chapter_wrap.body.1": "The first two chapters are complete. The tavern by the quay has opened again: ask about prices, and listen to the sailors' rumours.",
+  "story.core.tavern_open.title": "The Tavern Opens",
+  "story.core.tavern_open.body.1": "Lights come on in the dockside tavern. The keeper slides a harbour rumour across the counter: someone has sighted a port that is not on the chart yet.",
+  "story.core.tavern_open.body.2": "The tavern offers two things: a price-intelligence refresh that shows the spread between two harbours, and port clues you can buy or investigate before sailing out.",
+  "story.core.tavern_intro.title": "Price Intelligence",
+  "story.core.tavern_intro.body.1": "Ask the keeper to refresh the price report. The same goods now command very different prices in your home harbour and the neighbouring one — buy low, sell high.",
+  "story.core.tavern_intro.objective": "Refresh the price report at the tavern (1/1)",
+  "story.core.third_good.title": "A Third Good",
+  "story.core.third_good.body.1": "Word from the tavern opens a new trade route: timber is now on the market. Load a cargo, leave port and complete one round trip to learn the route.",
+  "story.core.third_good.objective": "Depart with cargo and reach a harbour (one round trip)",
+  "story.core.second_clue.title": "A Firmer Lead",
+  "story.core.second_clue.body.1": "The keeper lowers his voice: the uncharted harbour lies in a firmer direction, and the voyage can be estimated. The search area will be marked on the chart.",
+  "story.core.second_clue.body.2": "Stock coal and water, then sail after this lead from the chart. This time the lead will not fail.",
+  "story.core.explore_third.title": "Follow the Lead",
+  "story.core.explore_third.body.1": "The search area is circled on the chart. Open the chart, choose \"sail after this clue\", and depart with enough supplies.",
+  "story.core.explore_third.objective": "Sail after the clue and find the third harbour (1/1)",
+  "story.core.third_port.title": "The Third Harbour",
+  "story.core.third_port.body.1": "The sea mist parts and a new harbour appears. The tavern's second lead has brought you here — the next chapter begins at this port."
 }

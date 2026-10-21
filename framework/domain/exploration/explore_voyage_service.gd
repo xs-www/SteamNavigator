@@ -23,6 +23,8 @@ extends RefCounted
 ##   仍只表示这笔额外损耗。
 ## - 发现结果在出发时用命名流 `explore:<clue_id>:<departure>` 抽定（`outcome_roll`），
 ##   结算只比较 `outcome_roll < discovery_chance`，同 seed 同状态可复现。
+## - 4.5.4：剧情线索可带 `guaranteed_explore_clue_id`（`StoryService` 写入）——结算
+##   时该线索无视 `outcome_roll` 直接成功，成功后消费 flag；其它线索 / 跳过教程不受影响。
 ## - 成功：坐标世界 `discover_port_id` + `mark_visited` + `FogOps.reveal_arrival`，抽象地图
 ##   同步发现 / 访问（贸易、市场、海图都读它），线索 resolved，进入目标港。
 ## - 失败（4.3 / U3）：线索**保留在 active**（只累加 `attempts` / `last_attempt_at`，
@@ -304,7 +306,10 @@ static func settle(context) -> Dictionary:
 	var clue := ClueService.find_clue(state, clue_id)
 	var credibility := float(clue.get("credibility", 0.0)) if not clue.is_empty() else 0.0
 	var chance := ExplorationRules.discovery_chance(rules, credibility)
-	var success := target_id != "" and float(voyage.get("outcome_roll", 1.0)) < chance
+	# 4.5.4：剧情第二条线索带「保底探索成功」；只对授予保底时的那条线索生效，
+	# 成功结算时消费掉，跳过教程 / 普通探索仍按 `outcome_roll` 判定。
+	var guaranteed := StoryService.guaranteed_explore_clue_id(state) == clue_id
+	var success := target_id != "" and (guaranteed or float(voyage.get("outcome_roll", 1.0)) < chance)
 	var world := WorldOps.world_map(state)
 	var fog_radii := ExplorationRules.fog_radii(state, hub, world)
 	# 实际航线是出发时算好、存进 explore_voyage 的扁平数组；沿途迷雾在抵达/漂流前
@@ -337,6 +342,8 @@ static func settle(context) -> Dictionary:
 		if not target_port.is_empty():
 			FogOps.reveal_arrival(state, world, target_port, fog_radii)
 		ClueService.mark_resolved(state, clue_id)
+		if guaranteed:
+			StoryService.consume_guaranteed_explore_success(state, clue_id)
 		state.push_notice(
 			"ui.notice.exploration_found",
 			{"port": WorldOps.port_display_key(world, destination)}

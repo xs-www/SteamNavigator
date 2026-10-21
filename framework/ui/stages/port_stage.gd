@@ -21,7 +21,8 @@ extends LocationStage
 ## `bind()` ViewModel (every field optional):
 ##   port.id               String  deterministic shoreline/street variation
 ##   port.size             String  "small" | "medium" | "large" -> 0.9/1.0/1.15
-##   port.facilities       Array[String], subset of FACILITY_ORDER
+##   port.facilities       Array[String], subset of FACILITY_ORDER (`intel` from old
+##                         saves is normalized to `tavern`)
 ##   port.banner_path      String  resolved L1 backdrop texture path
 ##   port.density          String  "sparse" | "normal" | "busy" street density
 ##   port.diorama          Dictionary  optional; `density` is read from here too
@@ -37,7 +38,7 @@ extends LocationStage
 ## Presentation only: no GameState, QueryBus or CommandBus; every path arrives
 ## pre-resolved in the ViewModel.
 
-const FACILITY_ORDER := ["exchange", "contracts", "supply", "intel", "shipyard"]
+const FACILITY_ORDER := ["exchange", "contracts", "supply", "tavern", "shipyard"]
 
 ## `port.size` -> uniform scale applied to the facility group parent.
 const SIZE_SCALE := {"small": 0.9, "medium": 1.0, "large": 1.15}
@@ -174,7 +175,7 @@ const SLOT_POSITIONS := {
 	"exchange": Vector3(-30.0, 0.0, -3.0),
 	"contracts": Vector3(-8.0, 0.0, -4.0),
 	"supply": Vector3(30.0, 0.0, -3.0),
-	"intel": Vector3(7.0, 0.0, -4.0),
+	"tavern": Vector3(7.0, 0.0, -4.0),
 	"shipyard": Vector3(14.5, 0.0, -4.5),
 }
 ## Shipyard may carry two pieces (dry dock + gantry); the second rides behind
@@ -186,7 +187,7 @@ const SIGN_COLORS := {
 	"exchange": Color(0.95, 0.63, 0.25),
 	"contracts": Color(0.84, 0.72, 0.42),
 	"supply": Color(0.34, 0.72, 0.66),
-	"intel": Color(0.38, 0.62, 0.90),
+	"tavern": Color(0.38, 0.62, 0.90),
 	"shipyard": Color(0.88, 0.38, 0.24),
 }
 
@@ -2354,7 +2355,8 @@ func _rebuild_facilities() -> void:
 	var present: Array = []
 	if raw is Array:
 		for item in raw:
-			var facility := String(item)
+			# 4.5.4：旧世界快照的 `intel` 设施归一成酒馆，复用同一个码头位置。
+			var facility := "tavern" if String(item) == "intel" else String(item)
 			if FACILITY_ORDER.has(facility) and not present.has(facility):
 				present.append(facility)
 	for facility in FACILITY_ORDER:
@@ -2430,8 +2432,8 @@ func _build_facility_billboard(facility: String, anchor: Node3D) -> void:
 			_billboard_contracts(anchor)
 		"supply":
 			_billboard_supply(anchor)
-		"intel":
-			_billboard_intel(anchor)
+		"tavern":
+			_billboard_tavern(anchor)
 		"shipyard":
 			_billboard_shipyard(anchor)
 		_:
@@ -2481,14 +2483,15 @@ func _billboard_supply(root: Node3D) -> void:
 	_add_crate(root, Vector3(3.1, 0.0, 1.6), 0.95)
 
 
-## Signal tower: thin tall tower, crossarm, aerial and a cool blue sign.
-func _billboard_intel(root: Node3D) -> void:
+## Tavern: signal tower silhouette reused as the tavern's rooftop beacon (4.5.4
+## keeps the old intel-station geometry but the sign colour / facility id migrate).
+func _billboard_tavern(root: Node3D) -> void:
 	_add_box(root, Vector3(2.9, 0.45, 2.9), Vector3(0.0, 0.22, 0.0), _material("stone"), Vector3.ZERO, "TowerBase")
 	_add_box(root, Vector3(1.9, 7.6, 1.9), Vector3(0.0, 4.25, 0.0), _material("metal"), Vector3.ZERO, "Tower")
 	_add_box(root, Vector3(3.9, 0.22, 0.22), Vector3(0.0, 7.55, 0.3), _material("iron"), Vector3.ZERO, "CrossArm")
 	_add_cylinder(root, 0.06, 0.08, 2.4, Vector3(0.0, 9.15, 0.3), _material("iron"), "Aerial")
 	_add_box(root, Vector3(0.34, 0.34, 0.34), Vector3(0.0, 8.0, 0.3), _make_unshaded(Color(1.0, 0.72, 0.38), 1.8), Vector3.ZERO, "SignalLamp")
-	_add_sign(root, _sign_color("intel"), Vector2(2.2, 0.75), Vector3(0.0, 5.1, 1.05))
+	_add_sign(root, _sign_color("tavern"), Vector2(2.2, 0.75), Vector3(0.0, 5.1, 1.05))
 	_add_barrel(root, Vector3(-2.0, 0.0, 1.4))
 
 

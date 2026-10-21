@@ -6,7 +6,7 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [ ] 阶段 4.5 新手剧情 / 教学系统（4.5.1 – 4.5.3 已实现，4.5.4 起继续）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条、开局幕、并市与第二主线已落地；剩余酒馆替换情报页、线索 / 保底探索、船厂限量、第三主线。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
+- [ ] 阶段 4.5 新手剧情 / 教学系统（4.5.1 – 4.5.4 已实现，4.5.5 起继续）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条、开局幕、并市与第二主线、酒馆 / 线索 / 保底探索已落地；剩余船厂限量与第三主线旅客、收尾截图/文档。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
 - [ ] 海图阶段 3 验收反馈 F1–F4：离港要"驶离"而不是平移；镜头俯角加大到竖直再拉升、云层后海图先铺满再回落；海图上的船必须沿航线移动，不能两点直线
 - [x] SNBattleSim 模组交换与 Agent CLI：`mods/` 散装目录及 ZIP 导入、游戏约定 `.snavmod.zip` 导出、状态/FSM 契约、AND/OR 条件、状态拖放、空白拉线建状态和 Delete 删除
 - [x] SNBattleSim 二轮易用性：Mod 蓝图舰体装配、五状态默认 FSM、工程目录持久化、目标高亮、全状态尝试开火与顶部入口分级
@@ -47,6 +47,7 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
 
 ## Recently Completed
+- [x] 新手剧情 4.5.4 · 酒馆 / 线索 / 保底探索（2026-10-22）：情报站页替换为酒馆页（设施 / feature `intel`→`tavern`，旧存档归一兼容）；`tavern.view` 合并物价情报 + 港口线索列表，酒馆可购买 / 调查线索；Core `grant_clue` / `set_market_price_bias` / `guarantee_explore_success` 效果 + 两根剧情线索（L1 → 同港 L3）；起始港与邻港纺织品 / 香料确定性价差且双向交易；第三种货木材解锁；`explore.settle` 对剧情 L3 线索无视 `outcome_roll` 直接成功（消费 flag，跳过不设保底），发现第三港并进入 `third_port` 占位阶段；测试 369 例，截图 `tutorial_tavern*.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png`
 - [x] Content Schema 2.0 迁移 Phase B 实现契约（2026-10-21）：[WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md) —— 8 类草案提升 + 新增 `map_configs`、9 类跨引用/完整性规则、CampaignFactory 流水线与状态形状、1.0→2.0 字段映射（含探索 `exploration` 原样迁移）、存档 `content_versions`、编辑器/CLI/G8 语义变化、B0–B6 落地顺序与 DoD
 - [x] 编辑器导出守卫（G8，2026-10-21）：`Store.draftContentFiles()` 识别草案内容；含草案的项目禁用「导出并覆盖到发布包 mods/」，ZIP / exports/ / 目录导出二次确认并提示游戏运行时不加载（避免玩家拿到 Degraded 启动）
 - [x] Content Schema 2.0 迁移 Phase A · 按类型版本解耦（2026-10-21）：16 个运行时类型各自声明 `schema_version`（1.0）、生成 `ContentTypes.SCHEMA_VERSIONS`、`ContentCompiler` 按类型校验并让 Patch 再校验走目标类型版本、新增 `test_content_versions` 6 例；编辑器/CLI 统一读类型 `schemaVersion`，1.0 行为不变

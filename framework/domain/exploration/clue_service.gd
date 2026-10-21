@@ -41,6 +41,8 @@ extends RefCounted
 ##   （阶段 4.3 / U3）——`mark_attempt_failed` 只累加 `attempts`、写
 ##   `last_attempt_at`，线索仍留在 active 且可再次 `explore.start`。旧存档 `failed`
 ##   列表只保留历史 id，不再写入新条目。
+## - 4.5.4：酒馆替代情报站——购买线索的设施判断统一走 `MapOps.has_tavern`（兼容
+##   旧存档的 `intel` 设施）；`buy_gate()` 给酒馆页与海图面板提供同一份可用性判定。
 ## @end-static-doc
 
 const SOURCE_RUMOR := "rumor"
@@ -292,7 +294,27 @@ static func _acquire_by_source(
 	return clue
 
 
-## Buys an intel clue at the current port (requires the `intel` facility).
+## 4.5.4：酒馆 / 海图共用的「购买线索」可用性判定，返回字段与 `clue.buy` 的
+## 拒绝原因一致，避免按钮显示一个命令会拒绝的价格。
+static func buy_gate(context) -> Dictionary:
+	var state: GameState = context.state
+	var rules := ExplorationRules.read(state, context.registries)
+	var cost := int(rules.get("intel_clue_cost", 40))
+	if not state.is_at_port():
+		return {"available": false, "cost": cost, "reason_key": "ui.error.not_at_port"}
+	var port_data := MapOps.port(state.world(), state.current_port_id())
+	if not MapOps.has_tavern(port_data):
+		return {"available": false, "cost": cost, "reason_key": "ui.error.no_intel_facility"}
+	if active_count(state) >= int(rules.get("max_active_clues", 4)):
+		return {"available": false, "cost": cost, "reason_key": "ui.notice.no_clue_available"}
+	if state.money() < cost:
+		return {"available": false, "cost": cost, "reason_key": "ui.error.insufficient_money"}
+	if eligible_target_ids(state).is_empty():
+		return {"available": false, "cost": cost, "reason_key": "ui.error.no_exploration_target"}
+	return {"available": true, "cost": cost, "reason_key": ""}
+
+
+## Buys an intel clue at the current port (requires the tavern / legacy intel facility).
 ## Money is only charged after a clue was actually created.
 static func buy(context) -> Dictionary:
 	if not context.has_run():
@@ -303,7 +325,7 @@ static func buy(context) -> Dictionary:
 	if not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port", {}, expired_events)
 	var port_data := MapOps.port(state.world(), state.current_port_id())
-	if not MapOps.has_facility(port_data, "intel"):
+	if not MapOps.has_tavern(port_data):
 		return Result.fail("no_intel_facility", "ui.error.no_intel_facility", {}, expired_events)
 	var rules := ExplorationRules.read(state, context.registries)
 	if active_count(state) >= int(rules.get("max_active_clues", 4)):

@@ -1,8 +1,10 @@
 extends TestCase
 ## @static-doc
-## 作用：新手剧情 / 教学系统（阶段 4.5.1）领域层无头测试：`run.start tutorial=true`
+## 作用：新手剧情 / 教学系统（阶段 4.5.1 – 4.5.4）领域层无头测试：`run.start tutorial=true`
 ## 初始化剧情、功能解锁 / 门禁 ViewModel、剧情卡继续、`story.observe` 事件计数推进、
-## `story.skip` 保底解锁与主委托目的港揭示、非教程局 / 旧存档不门禁、存档往返。
+## `story.skip` 保底解锁与主委托目的港揭示、非教程局 / 旧存档不门禁、存档往返；
+## 第二主线买卖回运；酒馆自动 / 购买线索、两港价差、第三件货、第二条 L3 线索与
+## 保底探索成功发现第三港。
 ##
 ## ## 契约与约束
 ## - 用真实 Core 注册表：剧情步骤 / 文案 / 解锁 / 数值必须来自
@@ -10,7 +12,7 @@ extends TestCase
 ## - `run.start` 的 `tutorial` 默认 false（测试 / 旧入口不弹剧情）；Shell 的
 ##   「开始新航行」显式传 true，生产局每局默认进入剧情。
 ## - 跳过 / 完成必须解锁配置里的全部功能并执行 `discover_contract_destination`，
-##   避免跳过教程后无目的港可出航。
+##   避免跳过教程后无目的港可出航；跳过不会设置保底探索 flag。
 ## @end-static-doc
 
 const SEED := 20260421
@@ -149,6 +151,10 @@ func test_second_mainline_buys_market_goods_and_returns_home() -> void:
 	})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "second_depart", "8 textiles complete the purchase objective")
+	# 回起始港：先移动当前港，再模拟 Shell 的抵达结算事件。
+	var home := String(context.state.story().get("home_port_id", ""))
+	context.state.world()["current_port_id"] = home
+	context.state.mark_port_visited(home)
 	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "back_first", "returning home enters the delivery stage")
@@ -163,7 +169,91 @@ func test_second_mainline_buys_market_goods_and_returns_home() -> void:
 	var wrapped := context.commands.execute(&"story.advance", {})
 	assert_true(bool(wrapped.get("ok", false)), "the chapter wrap can be confirmed")
 	view = _view(context)
-	assert_true(bool(view.get("completed", false)), "the 4.5.3 tutorial arc is completed")
+	assert_eq(String(view.get("stage_id", "")), "tavern_open", "4.5.4 continues into the tavern act")
+	assert_false(bool(view.get("completed", false)), "the tutorial keeps going after Act 1")
+
+
+## 4.5.4 第三幕：酒馆自动给第一条线索并拉开两港价差；刷新物价情报后解锁第三
+## 种货；跑一个来回拿到 L3 第二条线索 + 保底探索，发现第三港。
+func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
+	var context := _start_tutorial(SEED)
+	_walk_to_tavern(context)
+	var view := _view(context)
+	assert_eq(String(view.get("stage_id", "")), "tavern_open", "the tavern act starts at tavern_open")
+	var unlocked: Array = view.get("unlocked_features", [])
+	assert_true(unlocked.has("tavern"), "the tavern feature unlocks")
+	assert_true(unlocked.has("clues"), "the clue feature unlocks with the tavern")
+	var active_clues := ClueService.active(context.state)
+	assert_eq(active_clues.size(), 1, "the tavern automatically grants the first port clue")
+	var first_clue: Dictionary = active_clues[0] if not active_clues.is_empty() else {}
+	assert_eq(int(first_clue.get("level", 0)), 1, "the first tavern rumour starts at level 1")
+	assert_eq(String(first_clue.get("type", "")), ClueService.TYPE_PORT_LOCATION,
+		"the first clue points at an unknown harbour")
+	var target := String(first_clue.get("target_port_id", ""))
+	assert_false(target.is_empty(), "the story clue has a concrete target")
+	assert_eq(target, String((context.state.story().get("flags", {}) as Dictionary).get("story_target_port_id", "")),
+		"the target port is remembered for the second clue")
+	assert_false(Array(context.state.campaign_world().get("discovered_port_ids", [])).has(target),
+		"the clue target is still undiscovered when granted")
+	_assert_price_spread(context, target)
+	# 第一条线索后：酒馆刷新物价情报 → 第三种货上架。
+	var advanced := context.commands.execute(&"story.advance", {})
+	assert_true(bool(advanced.get("ok", false)), "the tavern card can be continued: %s" % str(advanced))
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "tavern_intro", "the tavern briefing follows its card")
+	var refresh := context.commands.execute(&"intel.refresh", {})
+	assert_true(bool(refresh.get("ok", false)), "refreshing price intel at the home tavern succeeds: %s" % str(refresh))
+	context.commands.execute(&"story.observe", {"event": "cmd:intel.refresh", "data": refresh.get("data", {})})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "third_good", "the price intel refresh unlocks the third good")
+	var unlocked_items: Array = view.get("unlocked_items", [])
+	assert_true(unlocked_items.has("core:good/timber"), "the third good is content-driven")
+	var port_view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var has_timber := false
+	for row in port_view.get("market", []):
+		if String((row as Dictionary).get("item_id", "")) == "core:good/timber":
+			has_timber = true
+	assert_true(has_timber, "the third good appears in the home market")
+	# 跑一个来回（离港 + 抵达）→ 第二条 L3 线索 + 保底探索成功。
+	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {"destination_id": target}})
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "second_clue", "one round trip reaches the second clue")
+	var clues := ClueService.active(context.state)
+	assert_eq(clues.size(), 2, "the second lead is a second clue entry")
+	var second_clue: Dictionary = clues[1] if clues.size() > 1 else {}
+	assert_eq(int(second_clue.get("level", 0)), 3, "the second lead reveals the direction (level 3)")
+	assert_eq(String(second_clue.get("target_port_id", "")), target,
+		"both story clues point at the same uncharted harbour")
+	var flags: Dictionary = context.state.story().get("flags", {})
+	assert_eq(String(flags.get("guaranteed_explore_clue_id", "")), String(second_clue.get("id", "")),
+		"the second clue arms the guaranteed exploration success")
+	context.commands.execute(&"story.advance", {})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "explore_third", "the card hands over to the exploration stage")
+	_sail_after_the_story_clue(context, second_clue, target)
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "third_port", "the guaranteed exploration reaches the third harbour")
+	assert_true((view.get("unlocked_features", []) as Array).has("shipyard"),
+		"the third harbour unlocks the shipyard for the next act")
+	assert_true(Array(context.state.campaign_world().get("discovered_port_ids", [])).has(target),
+		"the third port is discovered in the coordinate world")
+	assert_true(Array(context.state.world().get("discovered_ports", [])).has(target),
+		"the third port is discovered on the played map")
+	assert_eq(String(context.state.current_port_id()), target, "the ship arrives at the third harbour")
+	assert_eq(String((context.state.story().get("flags", {}) as Dictionary).get("guaranteed_explore_clue_id", "")), "",
+		"the guaranteed success flag is consumed by the successful settlement")
+	assert_false(bool(view.get("completed", false)), "the story stops at the third-port stub for stage 4.5.5")
+
+
+func test_skip_does_not_arm_the_guaranteed_exploration() -> void:
+	var context := _start_tutorial(SEED)
+	var skipped := context.commands.execute(&"story.skip", {})
+	assert_true(bool(skipped.get("ok", false)), "the tutorial can still be skipped: %s" % str(skipped))
+	var flags: Dictionary = context.state.story().get("flags", {})
+	assert_false(flags.has("guaranteed_explore_clue_id"),
+		"skipping never arms the story's guaranteed exploration success")
+	assert_true(bool(context.state.story().get("skipped", false)), "the skip is recorded")
 
 
 func test_main_contract_needs_player_supplied_coal_before_departure() -> void:
@@ -279,6 +369,82 @@ func _walk_to_second_port(context: AppContext) -> void:
 	var second_port := String(first_contract.get("destination", ""))
 	context.state.world()["current_port_id"] = second_port
 	context.state.mark_port_visited(second_port)
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+
+
+## 4.5.4：停在「酒馆开门」阶段。先按第二幕走完回港卖货，再确认 chapter_wrap。
+func _walk_to_tavern(context: AppContext) -> void:
+	_walk_to_second_port(context)
+	var bought := context.commands.execute(&"trade.buy", {"item_id": "core:good/textiles", "amount": 8})
+	assert_true(bool(bought.get("ok", false)), "buying the Act 1 cargo succeeds: %s" % str(bought))
+	context.commands.execute(&"story.observe", {
+		"event": "cmd:trade.buy",
+		"data": {"item_id": "core:good/textiles", "amount": 8},
+	})
+	var home := String(context.state.story().get("home_port_id", ""))
+	context.state.world()["current_port_id"] = home
+	context.state.mark_port_visited(home)
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+	var sold := context.commands.execute(&"trade.sell", {"item_id": "core:good/textiles", "amount": 2})
+	assert_true(bool(sold.get("ok", false)), "selling the leftover textiles succeeds: %s" % str(sold))
+	context.commands.execute(&"story.observe", {
+		"event": "cmd:trade.sell",
+		"data": {"item_id": "core:good/textiles", "amount": 2},
+	})
+	context.commands.execute(&"story.advance", {})
+
+
+## 4.5.4：起始港卖价高于第二港买价（Core `set_market_price_bias`），来回有利可图。
+func _assert_price_spread(context: AppContext, _story_target: String) -> void:
+	var home := String(context.state.story().get("home_port_id", ""))
+	var main: Variant = context.state.contracts().get("main", null)
+	assert_true(main is Dictionary, "the second mainline contract exists for the price check")
+	if not (main is Dictionary):
+		return
+	var other := String((main as Dictionary).get("origin", ""))
+	assert_false(other.is_empty() or other == home, "the Act 1 route has a distinct origin harbour")
+	for item_id in ["core:good/textiles", "core:good/spices"]:
+		var home_entry := MarketOps.entry_for(context.state, home, item_id)
+		var other_entry := MarketOps.entry_for(context.state, other, item_id)
+		assert_false(home_entry.is_empty() or other_entry.is_empty(),
+			"both tutorial goods trade in the two Act 1 harbours (%s)" % item_id)
+		if home_entry.is_empty() or other_entry.is_empty():
+			continue
+		var home_price := float(home_entry.get("price", 0.0))
+		var other_price := float(other_entry.get("price", 0.0))
+		assert_true(home_price > other_price * 1.2,
+			"the home harbour pays clearly more for %s (%.1f vs %.1f)" % [
+				item_id, home_price, other_price,
+			])
+		var sell_at_home := int(floor(home_price * MarketOps.DEFAULT_TRADE_MARGIN))
+		var buy_at_other := int(ceil(other_price))
+		assert_true(sell_at_home > buy_at_other,
+			"buying %s at the second harbour and selling at home is profitable" % item_id)
+
+
+## 4.5.4：备足补给后循剧情线索出航，把 outcome roll 固定成必失败值以证明「保底成功」。
+func _sail_after_the_story_clue(
+	context: AppContext, clue: Dictionary, target: String
+) -> void:
+	context.state.set_money(5000)
+	context.commands.execute(&"supply.buy_coal", {"amount": 30})
+	context.commands.execute(&"supply.buy_water", {"amount": 10})
+	var started := context.commands.execute(&"explore.start", {
+		"clue_id": String(clue.get("id", "")),
+		"strategy_id": "core:strategy/standard",
+	})
+	assert_true(bool(started.get("ok", false)), "sailing after the story clue succeeds: %s" % str(started))
+	context.commands.execute(&"story.observe", {"event": "cmd:explore.start", "data": started.get("data", {})})
+	var voyage: Variant = context.state.explore_voyage()
+	assert_true(voyage is Dictionary, "the exploration voyage is recorded")
+	if voyage is Dictionary:
+		(voyage as Dictionary)["outcome_roll"] = 1.0
+	var settled := context.commands.execute(&"explore.settle", {})
+	assert_true(bool(settled.get("ok", false)), "the exploration settles: %s" % str(settled))
+	assert_eq(String(settled.get("data", {}).get("result", "")), "discovered",
+		"the guaranteed exploration succeeds even with a failing outcome roll")
+	assert_eq(String(settled.get("data", {}).get("destination", "")), target,
+		"the guaranteed exploration reaches the clue target")
 	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
 
 

@@ -22,6 +22,8 @@ extends TestCase
 ##   用例断言出发库存不变、各路径的实际扣减与告警仍按出发库存预判。
 ## - 断言取值遵守契约 §3 的 Core 数值（40 金币、漂流 6h、额外煤水 4、耐久 8 等），
 ##   避免测试与内容 JSON 脱节。
+## - 4.5.4：购买线索的设施判断改走酒馆（`tavern`），测试显式移除 / 添加酒馆设施，
+##   不再依赖起始港「没有情报站」的旧假设。
 ## @end-static-doc
 
 const SEED := 20260421
@@ -506,19 +508,19 @@ func test_on_arrival_rumour_is_reproducible() -> void:
 
 # ── clue.buy gates ──
 
-func test_buy_requires_intel_facility() -> void:
+func test_buy_requires_tavern_facility() -> void:
 	var context := _start_run(SEED)
-	_remove_facility(context, "intel")
+	_remove_facility(context, "tavern")
 	var money_before := context.state.money()
 	var result := context.commands.execute(&"clue.buy", {})
-	assert_false(bool(result.get("ok", true)), "buying without an intel facility must fail")
+	assert_false(bool(result.get("ok", true)), "buying without a tavern must fail")
 	assert_eq(String(result.get("error_code", "")), "no_intel_facility", "the failure names the facility gate")
 	assert_eq(context.state.money(), money_before, "a refused purchase never charges money")
 
 
 func test_buy_requires_money() -> void:
 	var context := _start_run(SEED)
-	_add_facility(context, "intel")
+	_add_facility(context, "tavern")
 	context.state.set_money(0)
 	var result := context.commands.execute(&"clue.buy", {})
 	assert_false(bool(result.get("ok", true)), "buying with no money must fail")
@@ -531,7 +533,7 @@ func test_buy_charges_gold_and_adds_intel_clue() -> void:
 	var context := _start_run(SEED)
 	# The starting iron harbour has no intel station; put one there so the purchase gate
 	# (not the map layout) is what this test exercises.
-	_add_facility(context, "intel")
+	_add_facility(context, "tavern")
 	var rules := ExplorationRules.read(context.state, context.registries)
 	var cost := int(rules.get("intel_clue_cost", 40))
 	var money_before := context.state.money()
@@ -559,7 +561,7 @@ func test_buy_charges_gold_and_adds_intel_clue() -> void:
 
 func test_buy_is_blocked_by_the_active_clue_cap() -> void:
 	var context := _start_run(SEED)
-	_add_facility(context, "intel")
+	_add_facility(context, "tavern")
 	var rules := ExplorationRules.read(context.state, context.registries)
 	var cap := int(rules.get("max_active_clues", 4))
 	var target := _first_target(context)
@@ -1131,15 +1133,17 @@ func test_chart_view_exposes_alert_state_while_exploring() -> void:
 # ── sea_chart.view ──
 func test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void:
 	var context := _start_run(SEED)
+	# 4.5.4：起始港带酒馆；先移除以验证「没有酒馆就不能买线索」。
+	_remove_facility(context, "tavern")
 	var vm := _chart_vm(context)
 	var no_intel: Dictionary = vm.get("can_buy_clue", {})
-	assert_false(bool(no_intel.get("available", true)), "the iron start harbour has no intel station")
+	assert_false(bool(no_intel.get("available", true)), "a harbour without a tavern cannot sell clues")
 	assert_eq(String(no_intel.get("reason_key", "")), "ui.error.no_intel_facility",
 		"the buy reason names the missing facility")
-	_add_facility(context, "intel")
+	_add_facility(context, "tavern")
 	vm = _chart_vm(context)
 	var can_buy: Dictionary = vm.get("can_buy_clue", {})
-	assert_true(bool(can_buy.get("available", false)), "with an intel station the buy is available")
+	assert_true(bool(can_buy.get("available", false)), "with a tavern the buy is available")
 	assert_eq(int(can_buy.get("cost", 0)), 40, "the buy cost comes from the map profile")
 	assert_eq(String(can_buy.get("reason_key", "")), "", "an available buy has no reason key")
 	assert_eq((vm.get("clues", []) as Array).size(), 0, "a fresh run has no clues")

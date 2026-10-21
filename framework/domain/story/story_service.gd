@@ -16,8 +16,12 @@ extends RefCounted
 ## - 阶段推进：`mode=confirm` 由 `story.advance` 推进；条件型阶段在
 ##   `story.observe(event, data)` 中按 `event / counter / at_least / flag / all`
 ##   评估，可一次跨多个阶段。未知效果只 warning，不崩。
+## - 4.5.4 效果：`grant_clue`（目标 `next_unknown` 时确定性选最近的未发现港并记忆，
+##   第二次授予复用同一目标；等级 / 来源来自 Core）、`set_market_price_bias`
+##   （把指定商品在起始港 / 其它港的库存与价格 bias 归位，保证教学价差稳定）、
+##   `guarantee_explore_success`（只对刚授予的剧情线索生效，探索成功即消费）。
 ## - 跳过教程必须解锁 `skip_unlocks` 里的全部功能并执行
-##   `discover_contract_destination`，保证跳过不会卡死。
+##   `discover_contract_destination`，保证跳过不会卡死；跳过不会设置保底探索。
 ## - 查询（`story.view`）只输出公开字段；counters / flags 只暴露剧情效果需要的
 ##   `lock_actions` 语义，不泄露内部数值。
 ## @end-static-doc
@@ -388,10 +392,168 @@ static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary,
 		"set_ship_fuel":
 			# 4.5.2 教学幕：老船几乎空舱，逼玩家先去补给页买煤。
 			state.ship()["coal"] = maxf(0.0, float(effect.get("amount", 0.0)))
+		"grant_clue":
+			# 4.5.4：酒馆自动 / 剧情给线索。目标港与等级由 Core 声明；同一段剧情
+			# 的第二次授予复用第一次选定的目标港（`story_target_port_id`），
+			# 保证「第一条线索 → 第二条 L3 线索」指向同一座未发现港口。
+			_grant_clue(state, hub, story, effect, rng)
+		"set_market_price_bias":
+			# 4.5.4：把起始港 / 其它港的同两种货拉开价差，保证教学来回可盈利。
+			_set_market_price_bias(state, story, effect)
+		"guarantee_explore_success":
+			# 4.5.4：下一次「剧情线索」的探索结算必定成功（只对发线索时的那条
+			# 线索生效；跳过教程不会设置这个 flag）。
+			var guarantee_flags: Dictionary = story.get("flags", {})
+			guarantee_flags["guaranteed_explore_clue_id"] = String(
+				guarantee_flags.get("story_clue_id", "")
+			)
+			story["flags"] = guarantee_flags
 		"complete_story":
 			_complete(story, config(state, hub))
 		_:
 			push_warning("StoryService: unknown effect type '%s' (ignored)" % type)
+
+
+## 4.5.4：`grant_clue` —— 酒馆自动 / 剧情线索。`port: "next_unknown"` 时优先复用
+## 本段剧情已选定的 `story_target_port_id`，否则从 `ClueService.eligible_target_ids`
+## 里按「离当前港最近 + id」确定性选一座未发现港口；显式港口 id 直接使用。
+## `source` / `level` 也来自 Core，框架不认识内容 ID。
+static func _grant_clue(
+	state: GameState, hub: RegistryHub, story: Dictionary, effect: Dictionary,
+	rng: RngService
+) -> void:
+	if rng == null:
+		push_warning("StoryService: grant_clue needs an RngService")
+		return
+	var flags: Dictionary = story.get("flags", {})
+	var target := String(effect.get("port", "next_unknown"))
+	if target == "next_unknown":
+		target = String(flags.get("story_target_port_id", ""))
+		if target.is_empty():
+			target = _nearest_unknown_port(state)
+			if target.is_empty():
+				push_warning("StoryService: grant_clue has no unknown port target")
+				return
+			flags["story_target_port_id"] = target
+			story["flags"] = flags
+	if target.is_empty():
+		push_warning("StoryService: grant_clue needs a target port")
+		return
+	var source := String(effect.get("source", "rumor"))
+	var clue_stream: RandomNumberGenerator = rng.stream(
+		RngService.STREAM_EXPLORATION,
+		"story:%s:%d" % [target, int(story.get("stage_index", 0))]
+	)
+	var clue := ClueService.acquire(
+		_EffectContext.new(state, hub), source, clue_stream, target
+	)
+	if clue.is_empty():
+		push_warning("StoryService: cannot acquire story clue for '%s'" % target)
+		return
+	var level := clampi(int(effect.get("level", 1)), 1, ClueService.NAME_MIN_LEVEL)
+	clue["level"] = level
+	flags["story_clue_id"] = String(clue.get("id", ""))
+	story["flags"] = flags
+
+
+## The unknown coordinate-world harbour closest to the current port (ties broken by
+## id) so the story's rumour always points at a reproducible target.
+static func _nearest_unknown_port(state: GameState) -> String:
+	var world := WorldOps.world_map(state)
+	if world.is_empty():
+		return ""
+	var reference := world.get_port(state.current_port_id())
+	var candidates := ClueService.eligible_target_ids(state)
+	candidates.sort()
+	var best := ""
+	var best_distance := INF
+	for port_id in candidates:
+		var target := world.get_port(port_id)
+		if target.is_empty():
+			continue
+		var distance := (
+			reference.position.distance_to(target.position)
+			if not reference.is_empty()
+			else 0.0
+		)
+		if distance < best_distance - 0.0001:
+			best_distance = distance
+			best = port_id
+	return best
+
+
+## 4.5.4：同两种货在起始港与其它港之间拉开价格。`home_bias` 抬高起始港卖价，
+## `other_bias` 压低其它港买价；写入市场条目的 `price_bias` 后重算价格，后续
+## NPC / 玩家交易仍走正常定价。
+static func _set_market_price_bias(
+	state: GameState, story: Dictionary, effect: Dictionary
+) -> void:
+	var item_ids: Array = effect.get("item_ids", [])
+	if item_ids.is_empty():
+		return
+	var home := String(story.get("home_port_id", ""))
+	if home.is_empty():
+		home = state.current_port_id()
+	var home_bias := float(effect.get("home_bias", 1.0))
+	var other_bias := float(effect.get("other_bias", 1.0))
+	# 教学市场：把这两种货的库存归位到基准，价格只由 bias 决定，玩家看到的价差
+	# 不会因随机库存被抵消（试玩 / 回归都稳定可盈利）。起始港原本可能只是
+	# 「只收不卖」的卖货点（`buyable=false`），这里同时把它变成可双向交易，
+	# `price_bias` 才会作用在两端。
+	var reset_stock := bool(effect.get("reset_stock", false))
+	var make_buyable := bool(effect.get("make_buyable", false))
+	for raw_port_id in state.market().keys():
+		var port_id := String(raw_port_id)
+		var factor := home_bias if port_id == home else other_bias
+		if is_equal_approx(factor, 1.0) and not reset_stock and not make_buyable:
+			continue
+		var market: Dictionary = state.market()[port_id]
+		for raw_item_id in item_ids:
+			var item_id := String(raw_item_id)
+			var entry: Variant = market.get(item_id, null)
+			if not (entry is Dictionary):
+				continue
+			var market_entry: Dictionary = entry
+			if make_buyable:
+				market_entry["buyable"] = true
+			if reset_stock:
+				market_entry["stock"] = int(market_entry.get("base_stock", market_entry.get("stock", 1)))
+			market_entry["price_bias"] = float(market_entry.get("price_bias", 1.0)) * factor
+			MarketOps.recalc(market_entry)
+
+
+## 4.5.4：当前剧情线索若带「保底探索成功」，返回它的线索 id（否则空串）。
+static func guaranteed_explore_clue_id(state: GameState) -> String:
+	if state == null:
+		return ""
+	var story := state.ensure_story()
+	return String((story.get("flags", {}) as Dictionary).get("guaranteed_explore_clue_id", ""))
+
+
+## 4.5.4：探索成功结算时消费保底 flag。只对授予保底时的那条线索生效并清除，
+## 避免同一条 flag 影响后续普通探索。
+static func consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool:
+	if state == null or clue_id.is_empty():
+		return false
+	var story := state.ensure_story()
+	var flags: Dictionary = story.get("flags", {})
+	if String(flags.get("guaranteed_explore_clue_id", "")) != clue_id:
+		return false
+	flags.erase("guaranteed_explore_clue_id")
+	story["flags"] = flags
+	return true
+
+
+## 效果分发只拿到 state / hub；线索生成仍走 `ClueService` 的只读上下文依赖
+## （state + registries），不需要完整 AppContext。
+class _EffectContext:
+	extends RefCounted
+	var state: GameState
+	var registries: RegistryHub
+
+	func _init(p_state: GameState, p_registries: RegistryHub) -> void:
+		state = p_state
+		registries = p_registries
 
 
 ## Reveals the auto-accepted main contract destination on both the played and the

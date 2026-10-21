@@ -8,7 +8,7 @@ static func refresh(_params: Dictionary, context) -> Dictionary:
 	if not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
 	var port_data := MapOps.port(state.world(), state.current_port_id())
-	if not MapOps.has_facility(port_data, "intel"):
+	if not MapOps.has_tavern(port_data):
 		return Result.fail("no_intel_facility", "ui.error.no_intel_facility")
 	var profile := _profile(context)
 	var cost := int(profile.get("intel_cost", 25))

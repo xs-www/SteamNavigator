@@ -297,9 +297,9 @@ func test_stats_track_income_expense_and_profit() -> void:
 	assert_eq(int(stats["profit"]), contract_payout + revenue - wages - buy_total, "profit is income minus expense")
 
 	# Intelligence refresh is an expense.
-	assert_true(_move_to_facility(context, "intel"), "map has an intelligence port")
+	assert_true(_move_to_facility(context, "tavern"), "map has a tavern")
 	var intel := context.commands.execute(&"intel.refresh", {})
-	assert_true(bool(intel["ok"]), "intel refresh succeeds: %s" % str(intel))
+	assert_true(bool(intel["ok"]), "price-intel refresh succeeds: %s" % str(intel))
 	var intel_cost := int(intel["data"]["cost"])
 	stats = state.stats()
 	assert_eq(int(stats["expense"]), wages + buy_total + intel_cost, "intel refresh records an expense")

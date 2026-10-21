@@ -217,7 +217,7 @@ func _draw_emblem(rect: Rect2) -> void:
 				]),
 				GLYPH_COLOR
 			)
-		"intel":
+		"intel", "tavern":
 			draw_line(Vector2(center.x, center.y + 3.6), Vector2(center.x, center.y - 1.5), GLYPH_COLOR, 1.2)
 			draw_arc(center + Vector2(0.0, -3.4), 1.8, 0.0, TAU, 12, GLYPH_COLOR, 1.0, true)
 		"shipyard":
@@ -243,7 +243,7 @@ func _facility_color() -> Color:
 			return Color("5c4a24")
 		"supply":
 			return Color("1f5550")
-		"intel":
+		"intel", "tavern":
 			return Color("1f3d5c")
 		"shipyard":
 			return Color("5c2a1f")

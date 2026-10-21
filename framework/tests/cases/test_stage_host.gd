@@ -239,7 +239,7 @@ func test_ship_stage_3d_adapter_wraps_the_stage_host() -> void:
 
 # --- 6. PortStage ------------------------------------------------------------
 
-const PORT_FACILITIES := ["exchange", "shipyard", "intel"]
+const PORT_FACILITIES := ["exchange", "shipyard", "tavern"]
 const MARKET_STALL_MODEL := "res://assets/models/port/SN_Market_Stall.glb"
 const MISSING_FACILITY_MODEL := "res://assets/models/port/SN_Not_A_Model.glb"
 const VIEWPORT_SIZE := Vector2i(1440, 900)

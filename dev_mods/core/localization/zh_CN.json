@@ -156,5 +156,22 @@
   "contract.core.tutorial_trade.name": "第二主线：纺织品回运",
   "contract.core.tutorial_trade.description": "在邻港市场买 8 件纺织品，交付 6 件回铁港，余下 2 件可自行出售。",
   "story.core.chapter_wrap.title": "第二航结束",
-  "story.core.chapter_wrap.body.1": "第一、二段主线完成；酒馆与第三港线索将在下一版接入。现在可以自由探索。"
+  "story.core.chapter_wrap.body.1": "第一、二段主线完成。港口边的酒馆重新开门，去那里打听物价，也听听水手们的传闻。",
+  "story.core.tavern_open.title": "酒馆开门",
+  "story.core.tavern_open.body.1": "码头的酒馆重新亮起灯。老板把一份港口传闻推到你面前：有人在附近见过一座还没画进海图的港口。",
+  "story.core.tavern_open.body.2": "酒馆可以做两件事：刷新物价情报，看清两座港口之间的价差；购买或调查港口线索，循着线索出海探索。",
+  "story.core.tavern_intro.title": "物价情报",
+  "story.core.tavern_intro.body.1": "先让老板刷新一次物价情报。同一件货在起始港和邻港的价格已经被拉开——低买高卖，这一趟就不会白跑。",
+  "story.core.tavern_intro.objective": "在酒馆刷新一次物价情报（1/1）",
+  "story.core.third_good.title": "第三种货",
+  "story.core.third_good.body.1": "酒馆的消息带来新的商路，市场里多出了一种可交易的货物：木材。装一船货，离港跑一个来回，熟悉一下这条航线。",
+  "story.core.third_good.objective": "装货离港并抵达一座港口（1 个来回）",
+  "story.core.second_clue.title": "更确切的消息",
+  "story.core.second_clue.body.1": "老板压低声音：那座未标注的港口在更确切的方向上，航程也大致能估出来。海图上会标出搜索范围。",
+  "story.core.second_clue.body.2": "备好煤和水，从海图循这条线索出航。这一次，线索不会落空。",
+  "story.core.explore_third.title": "循线索出航",
+  "story.core.explore_third.body.1": "海图上已经圈出搜索区。打开海图，选「循此线索出航」，备足补给后出发。",
+  "story.core.explore_third.objective": "循线索出航并抵达第三港（1/1）",
+  "story.core.third_port.title": "第三港",
+  "story.core.third_port.body.1": "海雾散开，一座新的港口出现在眼前。酒馆的第二条线索把你带到了这里——接下来的故事，将从这座港口继续。"
 }

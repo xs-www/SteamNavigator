@@ -48,6 +48,12 @@ static func has_facility(port_data: Dictionary, facility: String) -> bool:
 	return Array(port_data.get("facilities", [])).has(facility)
 
 
+## 4.5.4：酒馆替代情报站。新内容写入 `tavern` 设施；旧存档 / 旧世界快照里的
+## `intel` 设施仍算数，查询与命令共用这一个兼容判断。
+static func has_tavern(port_data: Dictionary) -> bool:
+	return has_facility(port_data, "tavern") or has_facility(port_data, "intel")
+
+
 static func is_discovered(state: GameState, port_id: String) -> bool:
 	return Array(state.world().get("discovered_ports", [])).has(port_id)
 
