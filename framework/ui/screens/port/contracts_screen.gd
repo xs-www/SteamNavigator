@@ -138,7 +138,9 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 		plan.theme_type_variation = &"SNPrimaryButton"
 		plan.disabled = not bool(contract.get("destination_reachable", false))
 		plan.pressed.connect(func() -> void:
-			navigation_requested.emit(&"voyage", {"destination": destination})
+			# 4.3.4 / U7：出航准备页已删除，规划出航改为打开海图并预选目的港，
+			# 真正的出航在确认弹窗里完成。
+			navigation_requested.emit(&"sea_chart", {"destination": destination})
 		)
 		buttons.add_child(plan)
 	if buttons.get_child_count() > 0:

@@ -34,7 +34,6 @@ const MARKET_SCREEN_SCENE := preload("res://framework/ui/screens/port/market_scr
 const CONTRACTS_SCREEN_SCENE := preload("res://framework/ui/screens/port/contracts_screen.tscn")
 const SUPPLY_SCREEN_SCENE := preload("res://framework/ui/screens/port/supply_screen.tscn")
 const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/intel_screen.tscn")
-const VOYAGE_SCREEN_SCENE := preload("res://framework/ui/screens/port/voyage_screen.tscn")
 const OVERVIEW_SCREEN_SCENE := preload("res://framework/ui/screens/port/overview_screen.tscn")
 const SHIPYARD_SCREEN_SCENE := preload("res://framework/ui/screens/port/shipyard_screen.tscn")
 const PORT_MEMORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/port_memory_screen.tscn")
@@ -59,7 +58,8 @@ const COLOR_GREEN := Color("76aa8c")
 const DEV_TEAM := "PlayThought Team"
 const GAME_VERSION_FALLBACK := "0.2.0"
 
-const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]
+## 港口页面导航（4.3.4 / U7：出航准备页已删除；海图是独立切换页，出航在弹窗确认）。
+const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel"]
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
@@ -123,9 +123,15 @@ var _active_screen: String = "overview"
 var _menu_screen: String = "main"
 var _memory_port_id: String = ""
 var _selected_build: String = ""
-var _selected_destination: String = ""
+## 上一次确认出航时选择的锅炉策略（Shell 记忆；无记忆时按 `strategy.standard`
+## tag 解析）。4.3.4 起出航确认弹窗默认用它。
 var _selected_strategy: String = ""
-var _sea_chart_return: String = "voyage"
+var _sea_chart_return: String = "overview"
+## 海图出航确认弹窗（4.3.4 / U7）。空字典 = 弹窗关闭；否则
+## `{kind: "voyage"|"explore", target_id, strategy_id}`。仅 UI 会话状态，不进存档。
+var _chart_departure: Dictionary = {}
+## 「规划出航」等入口请求打开海图时预选的港口（消费一次后清空）。
+var _pending_chart_port: String = ""
 var _seed_text: String = ""
 var _status_message: String = ""
 var _status_is_error: bool = false
@@ -384,8 +390,6 @@ func _rebuild_ui() -> void:
 			_screen_supply(data)
 		"intel":
 			_screen_intel(data)
-		"voyage":
-			_screen_voyage(data)
 		"sea_chart":
 			_screen_sea_chart(data)
 		"port_memory":
@@ -738,11 +742,13 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 		detail_button.custom_minimum_size = Vector2(0, 32)
 		detail_button.add_theme_font_size_override("font_size", 13)
 		content.add_child(detail_button)
-	var depart_button := _button("%s ▶" % _tr("ui.nav.voyage", "Voyage"), _on_nav.bind("voyage"))
-	depart_button.theme_type_variation = &"SNPrimaryButton"
-	depart_button.custom_minimum_size = Vector2(0, 32)
-	depart_button.add_theme_font_size_override("font_size", 13)
-	content.add_child(depart_button)
+	# 4.3.4 / U7：出航准备页已删除，状态条只负责打开海图（出航在弹窗里确认）。
+	var chart_button := _button("%s ▶" % _tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
+	chart_button.name = "ChartButton"
+	chart_button.theme_type_variation = &"SNPrimaryButton"
+	chart_button.custom_minimum_size = Vector2(0, 32)
+	chart_button.add_theme_font_size_override("font_size", 13)
+	content.add_child(chart_button)
 	var wait_button := _button(
 		_tr("ui.button.wait_hours", "Wait %d h") % 12,
 		func() -> void: _run_command(&"port.wait", {"hours": 12})
@@ -1223,20 +1229,21 @@ func _layout_port_hotspots() -> void:
 	right.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["y"]) < float(b["y"]))
 	_layout_sign_column(left, false, top_safe, bottom_safe, layer_size)
 	_layout_sign_column(right, true, top_safe, bottom_safe, layer_size)
-	# Permanent voyage sign pinned to the bottom of the right column.
-	var voyage_sign := _port_sign(
-		"%s ▶" % _tr("ui.nav.voyage", "Voyage"),
-		_on_port_hotspot.bind("voyage"),
+	# Permanent chart sign pinned to the bottom of the right column (4.3.4 / U7:
+	# replaces the old voyage sign; departure is confirmed inside the chart).
+	var chart_sign := _port_sign(
+		"%s ▶" % _tr("ui.nav.sea_chart", "海图"),
+		_on_port_hotspot.bind("sea_chart"),
 		true,
-		"voyage",
+		"sea_chart",
 		-1
 	)
-	voyage_sign.name = "Hotspot_voyage"
-	voyage_sign.position = Vector2(
+	chart_sign.name = "Hotspot_sea_chart"
+	chart_sign.position = Vector2(
 		layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH,
 		bottom_safe - PORT_SIGN_HEIGHT
 	)
-	_port_hotspot_layer.add_child(voyage_sign)
+	_port_hotspot_layer.add_child(chart_sign)
 
 
 func _layout_sign_column(entries: Array, right_column: bool, top_safe: float, bottom_safe: float, layer_size: Vector2) -> void:
@@ -1312,8 +1319,9 @@ func _port_hud_bottom_safe(layer_size: Vector2) -> float:
 
 
 func _on_port_hotspot(facility: String) -> void:
-	if facility == "voyage":
-		_on_nav("voyage")
+	if facility == "sea_chart":
+		# 4.3.4 / U7：牌匾入口改为打开海图，出航在海图确认弹窗里完成。
+		_toggle_sea_chart()
 		return
 	var screen_id: StringName = PORT_STAGE_FACILITY_SCREENS.get(facility, &"")
 	if screen_id == &"":
@@ -1571,81 +1579,173 @@ func _screen_intel(_data: Dictionary) -> void:
 
 
 ## ---------------------------------------------------------------------------
-## Voyage planning
+## Nautical chart departures (4.3.4 / U7: the separate voyage page is gone)
 ## ---------------------------------------------------------------------------
 
-func _screen_voyage(data: Dictionary) -> void:
-	var destinations: Array = data.get("destinations", [])
-	var strategies: Array = data.get("strategies", [])
-	if not destinations.is_empty():
-		if _selected_destination.is_empty() or not _destination_exists(destinations, _selected_destination):
-			_selected_destination = String(destinations[0].get("port_id", ""))
-	if not strategies.is_empty() and _selected_strategy.is_empty():
-		_selected_strategy = _standard_strategy_id()
-		if _selected_strategy.is_empty():
-			_selected_strategy = String(strategies[0].get("id", ""))
-	var preview := _context.queries.execute(&"voyage.preview", {
-		"destination_id": _selected_destination,
-		"strategy_id": _selected_strategy,
-	}) if not destinations.is_empty() and not strategies.is_empty() else {"ok": false, "error_text": "没有可用航线或锅炉策略。"}
-	if not bool(preview.get("ok", false)):
-		preview["error_text"] = _error_text(preview)
-	var preview_data: Dictionary = preview.get("data", {})
-	var facilities := PackedStringArray()
-	for facility in preview_data.get("destination_facilities", []):
-		facilities.append(_facility_name(String(facility)))
-	var facility_text := "未知"
-	if bool(preview_data.get("destination_facilities_known", false)):
-		facility_text = ", ".join(facilities) if not facilities.is_empty() else "—"
-	var main_contract: Variant = data.get("contracts", {}).get("main", null)
-	var model := {
-		"destinations": destinations,
-		"strategies": strategies,
-		"selected_destination": _selected_destination,
-		"selected_strategy": _selected_strategy,
-		"preview": preview,
-		"current_port_name": _value_name(data.get("current_port", {}), ""),
-		"is_main_destination": main_contract is Dictionary and String(main_contract.get("destination", "")) == _selected_destination,
-		"facility_text": facility_text,
-	}
-	var screen: Variant = VOYAGE_SCREEN_SCENE.instantiate()
-	screen.bind(model, Callable(self, "_tr"))
-	screen.selection_changed.connect(_on_voyage_selection_changed)
-	screen.command_requested.connect(_run_command)
-	screen.navigation_requested.connect(_on_screen_navigation)
-	_root_box.add_child(screen)
-
-
-func _on_voyage_selection_changed(destination_id: String, strategy_id: String) -> void:
-	_selected_destination = destination_id
-	_selected_strategy = strategy_id
-	_refresh()
-
-
-## Full-window nautical chart: the query result is passed straight into the
-## screen; departures route through the voyage page so the boiler strategy is
-## still confirmed there before `voyage.start` fires.
+## Full-window nautical chart. The query runs with the remembered boiler strategy
+## so the panel estimates match the confirmation dialog; when a departure is
+## pending, the Shell adds the `departure` block the screen renders as a centered
+## confirmation overlay.
 func _screen_sea_chart(data: Dictionary) -> void:
-	var result := _context.queries.execute(&"sea_chart.view")
+	var strategy := _chart_departure_strategy()
+	var params := {} if strategy.is_empty() else {"strategy_id": strategy}
+	var result := _context.queries.execute(&"sea_chart.view", params)
 	var view_model: Dictionary = result.get("data", {}) if bool(result.get("ok", false)) else {}
+	if not _pending_chart_port.is_empty() and not view_model.is_empty():
+		view_model["preselect_port_id"] = _pending_chart_port
+		_pending_chart_port = ""
+	if not _chart_departure.is_empty() and not view_model.is_empty():
+		view_model["departure"] = _chart_departure_model(data, view_model)
 	var screen: Variant = SEA_CHART_SCREEN_SCENE.instantiate()
 	screen.bind(view_model, Callable(self, "_tr"))
 	screen.close_requested.connect(_on_sea_chart_closed)
-	screen.voyage_requested.connect(_on_sea_chart_voyage)
-	screen.explore_requested.connect(_on_explore_requested)
+	screen.departure_requested.connect(_on_chart_departure_requested)
+	screen.departure_confirmed.connect(_on_chart_departure_confirmed)
+	screen.departure_cancelled.connect(_on_chart_departure_cancelled)
+	screen.departure_strategy_changed.connect(_on_chart_departure_strategy_changed)
 	screen.purchase_clue_requested.connect(_on_purchase_clue_requested)
 	screen.investigate_requested.connect(_on_investigate_requested)
 	_root_box.add_child(screen)
 
 
-## 海图面板「循此线索出航」：跑 `explore.start`，成功即进入探索演出。
-## 策略沿用出航页当前选择；还没有选择时用标准锅炉（注册表按 tag 解析，框架不写死
-## `core:*` ID —— 与"框架无具体内容 ID"不变量一致）。
-func _on_explore_requested(clue_id: String) -> void:
-	var strategy := _selected_strategy
-	if strategy.is_empty():
-		strategy = _standard_strategy_id()
-	_run_command(&"explore.start", {"clue_id": clue_id, "strategy_id": strategy})
+## 确认弹窗当前策略：弹窗自己的选择 → Shell 记忆的上一次选择 → 按 `strategy.standard`
+## tag 解析（框架不写死 `core:*` ID）；都没有时退回内容里的第一个策略。
+func _chart_departure_strategy() -> String:
+	var pending := String(_chart_departure.get("strategy_id", ""))
+	if not pending.is_empty():
+		return pending
+	if not _selected_strategy.is_empty():
+		return _selected_strategy
+	var fallback := _standard_strategy_id()
+	if fallback.is_empty():
+		var strategies: Array = _last_port_view.get("strategies", [])
+		if not strategies.is_empty():
+			fallback = String((strategies[0] as Dictionary).get("id", ""))
+	return fallback
+
+
+## 面板「启航 / 循此线索出航」→ 打开统一确认弹窗（不立即出航）。
+func _on_chart_departure_requested(kind: String, target_id: String) -> void:
+	if kind != "voyage" and kind != "explore":
+		return
+	_chart_departure = {
+		"kind": kind,
+		"target_id": target_id,
+		"strategy_id": _chart_departure_strategy(),
+	}
+	_status_message = ""
+	_refresh()
+
+
+## 弹窗切换锅炉策略：记住这次选择，并用新策略重新查询预估（弹窗保持打开）。
+func _on_chart_departure_strategy_changed(strategy_id: String) -> void:
+	if _chart_departure.is_empty() or strategy_id.is_empty():
+		return
+	_chart_departure["strategy_id"] = strategy_id
+	_selected_strategy = strategy_id
+	_refresh()
+
+
+func _on_chart_departure_cancelled() -> void:
+	if _chart_departure.is_empty():
+		return
+	_chart_departure = {}
+	_refresh()
+
+
+## 弹窗「启航」：直接执行领域命令（`voyage.start` / `explore.start`），演出接管后续。
+func _on_chart_departure_confirmed(kind: String, target_id: String, strategy_id: String) -> void:
+	var chosen := strategy_id if not strategy_id.is_empty() else _chart_departure_strategy()
+	_selected_strategy = chosen
+	_chart_departure = {}
+	if kind == "explore":
+		_run_command(&"explore.start", {"clue_id": target_id, "strategy_id": chosen})
+	else:
+		_run_command(&"voyage.start", {"destination_id": target_id, "strategy_id": chosen})
+
+
+## Shell 侧组装弹窗数据（页面只渲染）：目标显示名、策略列表（已翻译）、
+## `voyage.preview` / 线索预估的可行性、耗时、煤水、风险与 blockers。
+## 名称与文案在这里本地化，弹窗不访问注册表 / 查询总线。
+func _chart_departure_model(data: Dictionary, chart_vm: Dictionary) -> Dictionary:
+	var kind := String(_chart_departure.get("kind", "voyage"))
+	var target_id := String(_chart_departure.get("target_id", ""))
+	var strategy_id := _chart_departure_strategy()
+	var strategies: Array = []
+	for strategy in data.get("strategies", []):
+		strategies.append({
+			"id": String(strategy.get("id", "")),
+			"name": _tr(String(strategy.get("name_key", "")), String(strategy.get("id", ""))),
+		})
+	var preview: Dictionary = {}
+	var target_name := ""
+	if kind == "explore":
+		var clue := _chart_clue_entry(chart_vm, target_id)
+		target_name = _chart_clue_target_name(clue)
+		var estimated: Variant = clue.get("estimated", null)
+		if estimated is Dictionary:
+			var estimate: Dictionary = estimated
+			preview = {
+				"feasible": bool(estimate.get("feasible", false)),
+				"blockers": estimate.get("blockers", []),
+				"duration_hours": float(estimate.get("duration_hours", 0.0)),
+				"coal_required": float(estimate.get("coal_required", 0.0)),
+				"water_required": float(estimate.get("water_required", 0.0)),
+				"risk_score": float(estimate.get("risk_score", 0.0)),
+				"discovery_chance": float(estimate.get("discovery_chance", 0.0)),
+			}
+		else:
+			preview = {"feasible": false, "blockers": [{"message_key": "ui.error.unknown_clue"}]}
+	else:
+		target_name = _port_name(target_id)
+		var result := _context.queries.execute(&"voyage.preview", {
+			"destination_id": target_id,
+			"strategy_id": strategy_id,
+		})
+		if bool(result.get("ok", false)):
+			var info: Dictionary = result.get("data", {})
+			preview = {
+				"feasible": bool(info.get("feasible", false)),
+				"blockers": info.get("blockers", []),
+				"distance": float(info.get("distance", 0.0)),
+				"duration_hours": float(info.get("duration_hours", 0.0)),
+				"coal_required": float(info.get("coal_required", 0.0)),
+				"water_required": float(info.get("water_required", 0.0)),
+				"risk_score": float(info.get("risk_score", -1.0)),
+				"risk_label": String(info.get("risk_label", "")),
+				# `voyage.preview` 的 `on_time` 在非委托航线上是 null；不能直接
+				# `bool(null)`（GDScript 只对 bool/数字做了 bool 构造）。
+				"on_time": info.get("on_time", true) != false,
+			}
+		else:
+			preview = {"feasible": false, "blockers": [{
+				"message_key": String(result.get("message_key", "ui.error.voyage_not_feasible")),
+			}]}
+	return {
+		"kind": kind,
+		"target_id": target_id,
+		"target_name": target_name,
+		"current_port_name": _value_name(data.get("current_port", {}), ""),
+		"strategy_id": strategy_id,
+		"strategies": strategies,
+		"preview": preview,
+	}
+
+
+## 线索视图条目（按 id）；没有时返回 `{}`（弹窗会显示不可行）。
+func _chart_clue_entry(chart_vm: Dictionary, clue_id: String) -> Dictionary:
+	for entry in chart_vm.get("clues", []):
+		if entry is Dictionary and String((entry as Dictionary).get("id", "")) == clue_id:
+			return entry
+	return {}
+
+
+## 线索目标显示名：level 4 展示港口名，否则展示 `？`（弹窗不泄露未披露的名称）。
+func _chart_clue_target_name(clue: Dictionary) -> String:
+	var name_key := String(clue.get("name_key", ""))
+	if not name_key.is_empty():
+		return _tr(name_key, name_key)
+	return _tr("ui.label.unknown_destination", "？")
 
 
 ## 海图面板「购买线索」：`clue.buy` 成功后 `_run_command` 会重建当前页（仍是海图页），
@@ -1664,6 +1764,8 @@ func _toggle_sea_chart() -> void:
 	if _active_screen == "sea_chart":
 		_on_sea_chart_closed()
 	else:
+		# 新开海图不带上一次的待确认弹窗。
+		_chart_departure = {}
 		_on_nav("sea_chart")
 
 
@@ -1682,15 +1784,12 @@ func _sea_chart_available() -> bool:
 
 
 func _on_sea_chart_closed() -> void:
+	_chart_departure = {}
 	var target := _sea_chart_return
+	# 4.3.4 起没有 voyage 页：关闭海图回到打开它的页面，否则回总览。
 	if not SCREENS.has(target):
-		target = "voyage"
+		target = "overview"
 	_on_nav(target)
-
-
-func _on_sea_chart_voyage(port_id: String) -> void:
-	_selected_destination = port_id
-	_on_nav("voyage")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1701,7 +1800,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_toggle_sea_chart()
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_ESCAPE and _active_screen == "sea_chart":
-		_on_sea_chart_closed()
+		# 确认弹窗打开时 Esc 只取消弹窗，不把整张海图关掉。
+		if not _chart_departure.is_empty():
+			_on_chart_departure_cancelled()
+		else:
+			_on_sea_chart_closed()
 		get_viewport().set_input_as_handled()
 
 
@@ -2428,7 +2531,10 @@ func _on_nav(screen: String) -> void:
 	var from := _active_screen
 	if screen == "sea_chart":
 		# Remember where the chart was opened from so closing returns there.
-		_sea_chart_return = from if SCREENS.has(from) else "voyage"
+		_sea_chart_return = from if SCREENS.has(from) else "overview"
+	elif not _chart_departure.is_empty():
+		# Navigating away from the chart abandons a pending departure confirmation.
+		_chart_departure = {}
 	if screen != "overview":
 		# The detail drawer only belongs to the overview main view.
 		_overview_detail = false
@@ -2447,17 +2553,19 @@ func _on_nav(screen: String) -> void:
 
 
 func _on_screen_navigation(screen_id: StringName, params: Dictionary) -> void:
-	if screen_id == &"voyage":
-		_selected_destination = String(params.get("destination", ""))
+	if screen_id == &"sea_chart":
+		# 委托「规划出航」等入口：打开海图时预选目的港（不直接出航）。
+		_pending_chart_port = String(params.get("destination", ""))
 	_on_nav(String(screen_id))
+
 
 func _on_new_run() -> void:
 	var seed := 0
 	if not _seed_text.strip_edges().is_empty() and _seed_text.strip_edges().is_valid_int():
 		seed = int(_seed_text.strip_edges())
-	_selected_destination = ""
 	_selected_strategy = ""
-	_sea_chart_return = "voyage"
+	_chart_departure = {}
+	_sea_chart_return = "overview"
 	_status_message = ""
 	_run_command(&"run.start", {"build_id": _selected_build, "seed": seed})
 
@@ -2478,9 +2586,9 @@ func _on_continue() -> void:
 	MarketOps.ensure_sell_only_entries(_context.registries, _context.state)
 	if not MarketMemoryService.has_memory(_context.state, _context.state.current_port_id()):
 		MarketMemoryService.remember(_context.state, _context.state.current_port_id())
-	_selected_destination = ""
 	_selected_strategy = ""
-	_sea_chart_return = "voyage"
+	_chart_departure = {}
+	_sea_chart_return = "overview"
 	_reset_voyage_presentation()
 	_active_screen = "overview"
 	_overview_detail = false
@@ -2513,8 +2621,8 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 	match String(command):
 		"run.start":
 			_active_screen = "overview"
-			_selected_destination = ""
 			_selected_strategy = ""
+			_chart_departure = {}
 			_victory_dismissed = false
 			_settlement_summary = {}
 			_reset_voyage_presentation()
@@ -2865,13 +2973,6 @@ func _neighbor_ids() -> Array[String]:
 
 func _is_neighbor(port_id: String) -> bool:
 	return _neighbor_ids().has(port_id)
-
-
-func _destination_exists(destinations: Array, port_id: String) -> bool:
-	for destination in destinations:
-		if String(destination.get("port_id", "")) == port_id:
-			return true
-	return false
 
 
 func _cargo_amount_on_ship(item_id: String) -> int:

@@ -690,6 +690,19 @@ func _request_exploration(
 		return {}
 	explore_button.pressed.emit()
 
+	# 4.3.4 / U7：面板按钮只打开统一的出航确认弹窗；确认后才发 explore.start。
+	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the chart page is rebuilt with the departure dialog")
+	if screens.is_empty():
+		return {}
+	screen = screens[0]
+	assert_true(bool(screen.is_departure_open()), "the explore request opens the confirmation dialog")
+	var confirm_button := _button_by_text(screen, context.translate("ui.button.start_voyage"))
+	assert_not_null(confirm_button, "the confirmation dialog offers the depart button")
+	if confirm_button == null:
+		return {}
+	confirm_button.pressed.emit()
+
 	assert_not_null(shell._presentation, "explore.start starts the presentation (status: %s)" % shell._status_message)
 	assert_true(not shell._presentation_explore.is_empty(), "the shell stores the exploration presentation")
 	var voyage: Variant = context.state.explore_voyage()

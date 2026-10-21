@@ -15,7 +15,6 @@ const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_sc
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
 const SUPPLY_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/supply_screen.gd")
 const INTEL_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/intel_screen.gd")
-const VOYAGE_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/voyage_screen.gd")
 const OVERVIEW_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/overview_screen.gd")
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
 const PORT_MEMORY_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/port_memory_screen.gd")
@@ -262,8 +261,8 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted market screen")
 	_goto(shell, "contracts")
 	assert_eq(_nodes_with_script(shell._root_box, CONTRACTS_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted contracts screen")
-	_goto(shell, "voyage")
-	assert_eq(_nodes_with_script(shell._root_box, VOYAGE_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted voyage screen")
+	_goto(shell, "sea_chart")
+	assert_eq(_nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT).size(), 1, "the chart page is the only departure route now")
 	shell._memory_port_id = String(view.get("current_port_id", ""))
 	_goto(shell, "port_memory")
 	assert_eq(_nodes_with_script(shell._root_box, PORT_MEMORY_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted port-memory screen")
@@ -602,8 +601,12 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
 	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
 	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	for screen in ["overview", "market", "contracts", "shipyard", "supply", "intel", "voyage"]:
+	for screen in ["overview", "market", "contracts", "shipyard", "supply", "intel"]:
 		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
+	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
+		"4.3/U7: the voyage page is gone from the navigation")
+	assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.sea_chart", "")),
+		"the chart toggle stays in the navigation")
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.log", "")), "the compact chrome keeps the diagnostics button")
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.refresh", "")), "the compact chrome keeps the refresh button")
 
@@ -628,7 +631,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	# 960x540 acceptance screenshot is the evidence for that layout.
 
 	# Edge signboards: fixed left/right columns, one per present facility plus
-	# the permanent voyage sign. Positions come from the camera projection, but
+	# the permanent chart sign (4.3/U7: replaces the old voyage sign). Positions come from the camera projection, but
 	# the controls themselves are pinned to the screen edges and drawn as themed
 	# wood/iron plates (the Button component keeps text/accessibility semantics).
 	host.stage_viewport().size = Vector2i(1440, 900)
@@ -640,7 +643,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	for child in shell._port_hotspot_layer.get_children():
 		if child is Button:
 			signs += 1
-	assert_eq(signs, facilities.size() + 1, "one edge sign per facility plus the voyage sign")
+	assert_eq(signs, facilities.size() + 1, "one edge sign per facility plus the chart sign")
 	for facility in ["exchange", "contracts", "supply", "intel", "shipyard"]:
 		var sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_%s" % facility)
 		if facilities.has(facility):
@@ -660,8 +663,11 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 					assert_true(String(button.text).begins_with("◀ "), "the right column points into the scene: %s" % String(button.text))
 		else:
 			assert_true(sign == null, "an absent %s facility gets no edge sign" % facility)
-	var voyage_sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_voyage")
-	assert_not_null(voyage_sign, "the voyage sign is always present at the bottom of the right column")
+	var chart_sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_sea_chart")
+	assert_not_null(chart_sign, "the chart sign is always present at the bottom of the right column")
+	if chart_sign is Button:
+		assert_true(String((chart_sign as Button).text).contains(shell._tr("ui.nav.sea_chart", "")),
+			"the permanent sign opens the chart, not a voyage page")
 	# A resize re-lays the sign columns without losing or duplicating signs.
 	host.stage_viewport().size = Vector2i(1280, 720)
 	shell._on_viewport_size_changed()
@@ -806,7 +812,7 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	assert_contains(bar_texts, context.translate("ui.label.damaged_modules", ""), "the strip shows damaged parts")
 	assert_contains(bar_texts, context.translate("ui.label.latest_notice", ""), "the strip shows the latest notice label")
 	assert_not_null(_button_by_text(bar, shell._tr("ui.button.overview_detail", "")), "the strip offers the detail overview button")
-	assert_not_null(_button_by_text(bar, "%s ▶" % shell._tr("ui.nav.voyage", "")), "the strip offers the depart button")
+	assert_not_null(_button_by_text(bar, "%s ▶" % shell._tr("ui.nav.sea_chart", "")), "the strip offers the chart button (departure is confirmed in the chart)")
 	var wait_text: String = shell._tr("ui.button.wait_hours", "") % 12
 	assert_not_null(_button_by_text(bar, wait_text), "the strip offers the 12-hour wait button")
 
@@ -851,20 +857,19 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 		assert_false(bool(host.visible), "the stage hides outside the overview")
 	_goto(shell, "overview")
 	assert_true(bool(shell._port_status_bar.visible), "returning to the overview restores the status strip")
-	var depart_button := _button_by_text(shell._port_status_bar, "%s ▶" % shell._tr("ui.nav.voyage", ""))
-	assert_not_null(depart_button, "the strip offers the depart button again")
-	if depart_button != null:
-		depart_button.emit_signal("pressed")
-	assert_eq(String(shell._active_screen), "voyage", "the bottom depart button opens the voyage page")
+	var chart_button := _button_by_text(shell._port_status_bar, "%s ▶" % shell._tr("ui.nav.sea_chart", ""))
+	assert_not_null(chart_button, "the strip offers the chart button again")
+	if chart_button != null:
+		chart_button.emit_signal("pressed")
+	assert_eq(String(shell._active_screen), "sea_chart", "the bottom chart button opens the chart")
 	_unmount(bundle)
 
 
-## Sea chart entry integration: `run.start` stores a coordinate-space twin
-## world keyed by the played map's port ids, so the full chart page binds the
-## real run without fixtures (the start harbour is discovered, visited and
-## current). The chrome toggle and M key flip the active screen,
-## voyage_requested routes into a preselected voyage page, and the voyage page
-## carries its own chart entry button.
+## Sea chart entry integration (4.3.4 / U7): `run.start` stores a coordinate-space
+## twin world keyed by the played map's port ids, so the full chart page binds the
+## real run. The chrome toggle and M key flip the active screen; the panel's
+## departure button opens the shared confirmation dialog (boiler strategy +
+## estimate + blockers), and only its confirm button fires `voyage.start`.
 ##
 ## Animated nav refreshes rebuild the page a few frames later, so content
 ## assertions run right after `_goto`/`_refresh()` (synchronous), and the
@@ -885,42 +890,78 @@ func test_sea_chart_entry_integration() -> void:
 	assert_true((chart_screen._view_model.get("ports", []) as Array).size() >= 1,
 		"the chart screen binds the query view model with the discovered ports")
 
-	# Departure routing: voyage_requested preselects the port on the voyage page,
-	# where the boiler strategy is still confirmed before voyage.start fires. The
-	# routed id must be a sailable MVP destination, so pick a neighbour of the
-	# current port — the twin world and the played map share port ids.
+	# Discover a neighbour so the chart shows the route and the panel's depart
+	# button: departure is confirmed in the chart now, not on a voyage page.
 	var current_port_id := String(context.state.current_port_id())
 	var port_id := String(MapOps.neighbors(context.state.world(), current_port_id)[0])
-	chart_screen.voyage_requested.emit(port_id)
-	assert_eq(String(shell._active_screen), "voyage", "voyage_requested routes to the voyage page")
-	assert_eq(String(shell._selected_destination), port_id, "the requested port is preselected")
+	var discovered: Array = context.state.campaign_world().get("discovered_port_ids", [])
+	if not discovered.has(port_id):
+		discovered.append(port_id)
+	_goto(shell, "sea_chart")
+	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	chart_screen = screens[0]
+	chart_screen._on_port_clicked(port_id)
+	var depart_button := _named_node(chart_screen, "DepartButton") as Button
+	assert_not_null(depart_button, "the selected harbour exposes the chart depart button")
+	if depart_button != null:
+		depart_button.emit_signal("pressed")
+	assert_true(not shell._chart_departure.is_empty(), "depart opens the confirmation dialog")
+	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the chart page is rebuilt with the dialog")
+	chart_screen = screens[0]
+	var confirm: Control = _named_node(chart_screen, "VoyageConfirm")
+	assert_not_null(confirm, "the chart renders the shared departure confirmation")
+	assert_true(chart_screen.is_departure_open(), "the screen reports the pending departure")
+	var strategy_picker := _named_node(chart_screen, "StrategyPicker") as OptionButton
+	assert_not_null(strategy_picker, "the dialog offers the boiler strategy switch")
+	if strategy_picker != null:
+		assert_eq(strategy_picker.item_count, (context.queries.execute(&"port.view")["data"].get("strategies", []) as Array).size(),
+			"the strategy picker lists every content strategy")
+		# Strategy changes reopen the dialog with new estimates and are remembered.
+		var second_strategy := String(strategy_picker.get_item_metadata(0))
+		strategy_picker.item_selected.emit(0)
+		assert_eq(String(shell._selected_strategy), second_strategy,
+			"switching the strategy is remembered by the shell")
+		screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+		chart_screen = screens[0]
+		assert_true(not shell._chart_departure.is_empty(), "the dialog stays open after a strategy change")
+	# Cancel closes the dialog without starting a voyage.
+	var cancel_button := _named_node(chart_screen, "CancelButton") as Button
+	assert_not_null(cancel_button, "the dialog offers cancel")
+	if cancel_button != null:
+		cancel_button.emit_signal("pressed")
+	assert_true(shell._chart_departure.is_empty(), "cancel closes the dialog")
+	assert_true(shell._presentation == null, "cancel does not start a voyage")
 
-	# The chrome toggle and M key flip the active screen synchronously; closing
-	# returns to the remembered page. The chart is open at this point, so the
-	# first M closes it — then the full open/close cycle runs from the voyage page.
-	var chart_button := _button_by_text(shell, shell._tr("ui.nav.sea_chart", ""))
-	assert_not_null(chart_button, "the compact chrome exposes the chart toggle")
-	chart_button.emit_signal("pressed")
-	assert_eq(String(shell._active_screen), "sea_chart", "the chrome toggle opens the chart page")
+	# Reopen and confirm: the shell fires the real `voyage.start`, which hands
+	# over to the voyage presentation.
+	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	chart_screen = screens[0]
+	chart_screen._on_port_clicked(port_id)
+	depart_button = _named_node(chart_screen, "DepartButton") as Button
+	if depart_button != null:
+		depart_button.emit_signal("pressed")
+	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	chart_screen = screens[0]
+	var confirm_button := _named_node(chart_screen, "ConfirmButton") as Button
+	assert_not_null(confirm_button, "the dialog offers the confirm button")
+	if confirm_button != null:
+		confirm_button.emit_signal("pressed")
+	assert_true(shell._chart_departure.is_empty(), "confirm closes the dialog")
+	assert_true(shell._presentation != null, "confirm starts the voyage presentation")
+
+	# M closes the running chart back to the opening page (the voyage itself is
+	# now command-driven and unaffected by navigation).
+	shell._presentation = null
+	shell._reset_voyage_presentation()
+	_goto(shell, "sea_chart")
 	var press_m := InputEventKey.new()
 	press_m.keycode = KEY_M
 	press_m.pressed = true
 	shell._unhandled_input(press_m)
-	assert_eq(String(shell._active_screen), "voyage", "M closes the open chart")
+	assert_eq(String(shell._active_screen), "overview", "M closes the chart back to the opening page")
 	shell._unhandled_input(press_m)
-	assert_eq(String(shell._active_screen), "sea_chart", "M opens the chart from the voyage page")
-	shell._unhandled_input(press_m)
-	assert_eq(String(shell._active_screen), "voyage", "M again returns to the remembered page")
-
-	# The animated refreshes above left a transition in flight; complete it in
-	# place so the voyage page can be mounted synchronously for its entry button.
-	shell._transitioning = false
-	shell._pending_transition = false
-	_goto(shell, "voyage")
-	var open_button := _button_by_text(shell, shell._tr("ui.button.sea_chart", ""))
-	assert_not_null(open_button, "the voyage page exposes the chart entry")
-	open_button.emit_signal("pressed")
-	assert_eq(String(shell._active_screen), "sea_chart", "the voyage chart entry opens the chart")
+	assert_eq(String(shell._active_screen), "sea_chart", "M opens the chart again")
 	_unmount(bundle)
 
 

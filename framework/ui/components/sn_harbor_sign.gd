@@ -247,7 +247,7 @@ func _facility_color() -> Color:
 			return Color("1f3d5c")
 		"shipyard":
 			return Color("5c2a1f")
-		"voyage":
+		"sea_chart", "voyage":
 			return Color("6b4a17")
 		_:
 			return COLOR_EMBLEM

@@ -1,28 +1,39 @@
 class_name SeaChartScreen
 extends VBoxContainer
 ## @static-doc
-## 作用：全屏航海图页（海图系统阶段 2 入口集成）：左侧 `SNSeaChartView` 铺满、
-## 右侧 `SNSeaChartPanel`（320 px）展示选中港口与航线，顶部章节标题 + 关闭按钮。
-## 数据只来自 `sea_chart.view`，经 `bind(view_model, translate)` 注入。
+## 作用：全屏航海图页（海图系统阶段 2 入口集成，4.3.4 / U7 重构出航流程）：
+## 左侧 `SNSeaChartView` 铺满、右侧 `SNSeaChartPanel`（320 px）展示选中港口/航线/线索，
+## 顶部章节标题 + 关闭按钮；出航时在页内叠加 `SNVoyageConfirm` 确认弹窗。
+## 数据只来自 `sea_chart.view`（外加 Shell 组合的 `departure` 块），经
+## `bind(view_model, translate)` 注入。
 ##
 ## ## 契约与约束
 ## - 图上点击港口：视图只改选中态，面板绑定该港与当前港之间的航线数据；
 ##   本页自身不查询、不执行命令。
-## - 面板「启航」冒泡为 `voyage_requested(port_id)`，由 Shell 路由到出航页并
-##   预选目的港（锅炉策略仍在出航页确认后才发 `voyage.start`）。
+## - 面板「启航」/「循此线索出航」统一冒泡为 `departure_requested(kind, target_id)`
+##   （kind = `voyage` | `explore`），由 Shell 打开确认弹窗（预估 + 锅炉策略切换 +
+##   取消 / 启航），确认后才执行 `voyage.start` / `explore.start`。出航准备页已删除。
+## - `view_model["departure"]` 非空时本页把确认弹窗绘制为居中遮罩层；弹窗的三个意图
+##   信号原样转发：`departure_confirmed(kind, target_id, strategy_id)` /
+##   `departure_cancelled` / `departure_strategy_changed(strategy_id)`。
 ## - `close_requested` 交给 Shell 决定返回页；`has_run=false` 时只显示提示文案。
 ## - 选中当前港时面板只显示港口信息（无航线区、无启航按钮）。
 ## - **线索**（探索系统 4.1）：图上点击线索 → 面板切到线索区块；面板的
-##   `explore_requested` / `purchase_clue_requested` 由本页原样转发给 Shell。
+##   `purchase_clue_requested` / `investigate_requested` 由本页原样转发给 Shell。
 ##   `can_buy_clue` 来自同一个 `sea_chart.view`，本页只负责塞给面板。
 ## - **逐级调查**（4.3.2 / U2）：面板 `investigate_requested(clue_id)` 由本页原样
 ##   转发为同名信号；Shell 执行 `clue.investigate` 后刷新海图。
 ## @end-static-doc
 
 signal close_requested
-signal voyage_requested(port_id: String)
-## 循线索出航：Shell 接 `explore.start`。
-signal explore_requested(clue_id: String)
+## 面板的出航入口（4.3.4 / U7）：`kind` = `voyage` | `explore`。
+signal departure_requested(kind: String, target_id: String)
+## 确认弹窗「启航」：Shell 直接执行 `voyage.start` / `explore.start`。
+signal departure_confirmed(kind: String, target_id: String, strategy_id: String)
+## 确认弹窗「取消」：Shell 关闭弹窗（弹窗自己的取消按钮不关页面）。
+signal departure_cancelled
+## 确认弹窗切换锅炉策略：Shell 用新策略重新查询并重开弹窗。
+signal departure_strategy_changed(strategy_id: String)
 ## 购买线索：Shell 接 `clue.buy`，成功后刷新海图。
 signal purchase_clue_requested
 ## 调查线索：Shell 接 `clue.investigate`，成功后刷新海图。
@@ -30,23 +41,48 @@ signal investigate_requested(clue_id: String)
 
 const COLOR_MUTED := Color("9fafa7")
 const PANEL_WIDTH := 320.0
+## 新组件按路径 preload，避免依赖编辑器生成的全局 class_name 缓存（无头测试与
+## 全新检出都能直接加载；不引用 `SNVoyageConfirm` 这个全局名）。
+const VOYAGE_CONFIRM_SCRIPT := preload("res://framework/ui/components/sn_voyage_confirm.gd")
 
 var _tr: Callable
 var _view_model: Dictionary = {}
+var _departure: Dictionary = {}
 var _chart: SNSeaChartView
 var _panel: SNSeaChartPanel
+## 无类型：确认弹窗只通过信号 / 方法动态交互，避免全局 class_name 缓存依赖。
+var _confirm = null
 
 
 func bind(view_model: Dictionary, translate: Callable) -> void:
 	_view_model = view_model
 	_tr = translate
+	_departure = view_model.get("departure", {}) if view_model.get("departure", null) is Dictionary else {}
 	_rebuild()
+
+
+func get_chart() -> SNSeaChartView:
+	return _chart
+
+
+func get_panel() -> SNSeaChartPanel:
+	return _panel
+
+
+## 当前是否存在待确认的出航弹窗（测试与 Shell 读这个而不是猜节点）。
+func is_departure_open() -> bool:
+	return not _departure.is_empty()
+
+
+func get_departure() -> Dictionary:
+	return _departure.duplicate(true)
 
 
 func _rebuild() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.free()
+	_confirm = null
 	add_child(_header())
 	if not bool(_view_model.get("has_run", false)):
 		var message := Label.new()
@@ -55,12 +91,18 @@ func _rebuild() -> void:
 		message.add_theme_color_override("font_color", COLOR_MUTED)
 		add_child(message)
 		return
+	# 图表与确认弹窗叠在同一个 body 里：弹窗用全窗锚点覆盖图表，而不是把页面挤成
+	# 三行（否则「弹窗」会变成把海图压扁的普通页面块）。
+	var body := Control.new()
+	body.name = "ChartBody"
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(body)
 	var row := HBoxContainer.new()
 	row.name = "ChartRow"
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 12)
-	add_child(row)
+	body.add_child(row)
 	_chart = SNSeaChartView.new()
 	_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_chart.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -70,8 +112,7 @@ func _rebuild() -> void:
 	_panel = SNSeaChartPanel.new()
 	_panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
 	_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_panel.voyage_requested.connect(voyage_requested.emit)
-	_panel.explore_requested.connect(explore_requested.emit)
+	_panel.departure_requested.connect(departure_requested.emit)
 	_panel.purchase_clue_requested.connect(purchase_clue_requested.emit)
 	_panel.investigate_requested.connect(investigate_requested.emit)
 	var can_buy: Variant = _view_model.get("can_buy_clue", {})
@@ -79,13 +120,36 @@ func _rebuild() -> void:
 		_panel.set_can_buy_clue(can_buy as Dictionary)
 	row.add_child(_panel)
 	_chart.bind(_view_model, _tr)
-	var initial := String(_view_model.get("current_port_id", ""))
+	# 预选港口（「规划出航」入口传入）优先；否则选当前港。
+	var initial := String(_view_model.get("preselect_port_id", ""))
+	if initial.is_empty():
+		initial = String(_view_model.get("current_port_id", ""))
 	var ports: Array = _view_model.get("ports", [])
 	if initial.is_empty() and not ports.is_empty():
 		initial = String((ports[0] as Dictionary).get("id", ""))
 	if not initial.is_empty():
 		_chart.select_port(initial)
 		_bind_panel(initial)
+	if not _departure.is_empty():
+		_add_confirm_overlay(body)
+
+
+## 4.3.4 / U7：统一出航确认弹窗。数据（目标名、预估、策略列表）都由 Shell 预翻译，
+## 本控件只负责显示并把意图转回给 Shell。
+func _add_confirm_overlay(body: Control) -> void:
+	_confirm = VOYAGE_CONFIRM_SCRIPT.new()
+	_confirm.name = "VoyageConfirm"
+	var kind := String(_departure.get("kind", "voyage"))
+	var target_id := String(_departure.get("target_id", ""))
+	_confirm.confirmed.connect(func(strategy_id: String) -> void:
+		departure_confirmed.emit(kind, target_id, strategy_id)
+	)
+	_confirm.cancelled.connect(func() -> void:
+		departure_cancelled.emit()
+	)
+	_confirm.strategy_changed.connect(departure_strategy_changed.emit)
+	body.add_child(_confirm)
+	_confirm.bind(_departure, _tr)
 
 
 func _header() -> Control:

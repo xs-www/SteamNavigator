@@ -841,10 +841,11 @@ func _presentation_vm() -> Dictionary:
 	}
 
 
-## The full-screen chart page (phase 2 entry integration) composes the real view
-## and panel: `bind()` feeds the query result through, clicking a port selects it
-## and fills the panel, and the panel's depart button bubbles up as
-## `voyage_requested(port_id)` for the Shell to route to the voyage page.
+## The full-screen chart page (phase 2 entry integration; 4.3.4 / U7 departure
+## flow) composes the real view and panel: `bind()` feeds the query result through,
+## clicking a port selects it and fills the panel, and the panel's depart button
+## bubbles up as `departure_requested("voyage", port_id)` for the Shell to open the
+## shared confirmation dialog (the voyage page is gone).
 func test_sea_chart_screen_binds_chart_and_panel() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
@@ -880,16 +881,98 @@ func test_sea_chart_screen_binds_chart_and_panel() -> void:
 	assert_eq(String(panel._port_data.get("id", "")), neighbor_id,
 		"the panel should bind the clicked port")
 
-	# The panel's depart button bubbles up as voyage_requested(port_id).
+	# The panel's depart button bubbles up as departure_requested("voyage", id).
 	var received: Array = []
-	screen.voyage_requested.connect(func(port_id: String) -> void: received.append(port_id))
+	screen.departure_requested.connect(func(kind: String, target_id: String) -> void:
+		received.append([kind, target_id])
+	)
 	var depart := _find_descendant(screen, func(node: Node) -> bool:
 		return node is Button and String((node as Button).text) == String(context.translate("ui.button.start_voyage"))
 	)
 	assert_not_null(depart, "a selected remote port should expose the depart button")
 	(depart as Button).pressed.emit()
-	assert_eq(received, [neighbor_id], "the depart button should emit voyage_requested(port_id)")
+	assert_eq(received, [["voyage", neighbor_id]],
+		"the depart button opens the shared departure dialog")
 
+	screen.free()
+
+
+## 4.3.4 / U7：`view_model["departure"]` 存在时海图页画出统一确认弹窗——预估行、
+## 锅炉策略切换、blockers 与取消/启航；确认时把 kind/target/strategy 交回 Shell。
+func test_sea_chart_screen_renders_the_departure_confirm_dialog() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var vm: Dictionary = CLUE_VM.duplicate(true)
+	var departure := {
+		"kind": "voyage",
+		"target_id": "port_b",
+		"target_name": "香料港",
+		"current_port_name": "铁港",
+		"strategy_id": "core:strategy/standard",
+		"strategies": [
+			{"id": "core:strategy/standard", "name": "标准"},
+			{"id": "core:strategy/economy", "name": "经济"},
+		],
+		"preview": {
+			"feasible": false,
+			"blockers": [{"code": "insufficient_coal", "message_key": "ui.error.coal"}],
+			"distance": 120.0,
+			"duration_hours": 8.0,
+			"coal_required": 20.0,
+			"water_required": 10.0,
+			"risk_score": 0.2,
+			"risk_label": "low",
+			"on_time": true,
+		},
+	}
+	vm["departure"] = departure
+	var screen: Control = SEA_CHART_SCREEN_SCRIPT.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(screen)
+	screen.bind(vm, Callable(context, "translate"))
+	assert_not_null(_find_descendant(screen, func(node: Node) -> bool:
+		return String(node.name) == "VoyageConfirm"
+	), "the chart renders the shared departure confirmation overlay")
+	var texts := _label_texts(screen)
+	assert_true(_any_text_contains(texts, context.translate("ui.confirm.title.voyage")),
+		"the dialog is titled as a departure confirmation")
+	assert_true(_any_text_contains(texts, context.translate("ui.error.coal")),
+		"infeasible departures list the blocker message key")
+	assert_true(_any_text_contains(texts, context.translate("ui.label.estimated_time")),
+		"the dialog shows the estimated duration")
+	var confirm := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "ConfirmButton"
+	) as Button
+	assert_not_null(confirm, "the dialog exposes a confirm button")
+	if confirm != null:
+		assert_true(confirm.disabled, "an infeasible departure cannot be confirmed")
+	var cancel := _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "CancelButton"
+	) as Button
+	assert_not_null(cancel, "the dialog exposes a cancel button")
+	var cancelled: Array = []
+	screen.departure_cancelled.connect(func() -> void: cancelled.append(true))
+	if cancel != null:
+		cancel.pressed.emit()
+	assert_eq(cancelled, [true], "cancel is forwarded to the shell")
+
+	# A feasible dialog confirms with the picked strategy.
+	vm["departure"]["preview"]["feasible"] = true
+	vm["departure"]["preview"]["blockers"] = []
+	screen.bind(vm, Callable(context, "translate"))
+	var confirmed: Array = []
+	screen.departure_confirmed.connect(func(kind: String, target_id: String, strategy_id: String) -> void:
+		confirmed.append([kind, target_id, strategy_id])
+	)
+	confirm = _find_descendant(screen, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "ConfirmButton"
+	) as Button
+	assert_not_null(confirm, "the feasible dialog exposes a confirm button")
+	if confirm != null:
+		assert_false(confirm.disabled, "a feasible departure can be confirmed")
+		confirm.pressed.emit()
+	assert_eq(confirmed, [["voyage", "port_b", "core:strategy/standard"]],
+		"confirm reports kind, target and strategy to the shell")
 	screen.free()
 
 
@@ -1150,7 +1233,9 @@ func test_sea_chart_panel_renders_clue_section() -> void:
 	panel.set_can_buy_clue({"available": true, "cost": 40, "reason_key": ""})
 	var explored: Array = []
 	var purchased: Array = []
-	panel.explore_requested.connect(func(clue_id: String) -> void: explored.append(clue_id))
+	panel.departure_requested.connect(func(kind: String, target_id: String) -> void:
+		explored.append([kind, target_id])
+	)
 	panel.purchase_clue_requested.connect(func() -> void: purchased.append(true))
 
 	var clue := {
@@ -1200,7 +1285,8 @@ func test_sea_chart_panel_renders_clue_section() -> void:
 	assert_not_null(explore_button, "an explore button is present")
 	if explore_button != null:
 		explore_button.pressed.emit()
-	assert_eq(explored, ["clue:1"], "the explore button emits explore_requested(clue_id)")
+	assert_eq(explored, [["explore", "clue:1"]],
+		"the explore button opens the shared departure dialog for the clue")
 	var purchase := _find_descendant(panel, func(node: Node) -> bool:
 		return node is Button and String((node as Button).name) == "PurchaseClueButton"
 	) as Button
@@ -1230,8 +1316,8 @@ func test_sea_chart_panel_renders_clue_section() -> void:
 	panel.free()
 
 
-## 整页接线：图上点线索 → 面板切到线索区块；线索的 explore_requested 由屏幕原样
-## 转发（Shell 再接 explore.start）。
+## 整页接线：图上点线索 → 面板切到线索区块；线索的出航入口由屏幕原样转发为
+## `departure_requested("explore", clue_id)`（Shell 再打开确认弹窗 / explore.start）。
 func test_sea_chart_screen_binds_clue_panel_and_forwards_signals() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
@@ -1252,16 +1338,19 @@ func test_sea_chart_screen_binds_clue_panel_and_forwards_signals() -> void:
 		"a chart clue click binds the clue into the panel")
 	assert_eq(chart.get_selected_clue(), "clue:3", "the chart keeps the clue selection")
 
-	# 面板出航按钮 → 屏幕 explore_requested(clue_id)。
+	# 面板出航按钮 → 屏幕 departure_requested("explore", clue_id)。
 	var forwarded: Array = []
-	screen.explore_requested.connect(func(clue_id: String) -> void: forwarded.append(clue_id))
+	screen.departure_requested.connect(func(kind: String, target_id: String) -> void:
+		forwarded.append([kind, target_id])
+	)
 	var button := _find_descendant(screen, func(node: Node) -> bool:
-		return node is Button and String((node as Button).text) == String(context.translate("ui.button.explore_clue"))
+		return node is Node and String(node.name) == "ExploreButton"
 	) as Button
 	assert_not_null(button, "the clue panel exposes its explore button")
 	if button != null:
 		button.pressed.emit()
-	assert_eq(forwarded, ["clue:3"], "the screen forwards explore_requested(clue_id)")
+	assert_eq(forwarded, [["explore", "clue:3"]],
+		"the screen forwards the clue departure request")
 
 	# 购买入口：屏幕把 view model 的 can_buy_clue 塞给面板。
 	assert_not_null(_find_descendant(screen, func(node: Node) -> bool:
