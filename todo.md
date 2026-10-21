@@ -6,7 +6,6 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [ ] 阶段 4.5 新手剧情 / 教学系统（4.5.1 – 4.5.5 已实现，4.5.6 收尾）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条、开局幕、并市与第二主线、酒馆 / 线索 / 保底探索、船厂客舱 / 第三主线旅客已落地；剩余收尾截图/文档与全量回归。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
 - [ ] 海图阶段 3 验收反馈 F1–F4：离港要"驶离"而不是平移；镜头俯角加大到竖直再拉升、云层后海图先铺满再回落；海图上的船必须沿航线移动，不能两点直线
 - [x] SNBattleSim 模组交换与 Agent CLI：`mods/` 散装目录及 ZIP 导入、游戏约定 `.snavmod.zip` 导出、状态/FSM 契约、AND/OR 条件、状态拖放、空白拉线建状态和 Delete 删除
 - [x] SNBattleSim 二轮易用性：Mod 蓝图舰体装配、五状态默认 FSM、工程目录持久化、目标高亮、全状态尝试开火与顶部入口分级
@@ -47,6 +46,7 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
 
 ## Recently Completed
+- [x] 阶段 4.5 新手剧情 / 教学系统（4.5.1–4.5.6，2026-10-22）：新开局默认五幕教学（获船→补给限购 / 海图首航→第二港市场与回运→酒馆线索 / 保底探索→第三港船厂客舱 / 旅客），剧情接管 `main_01..main_03` 并在第三段后交还沙盒；`data.story` 状态机 + Core JSON 剧情 / 文案 / 解锁、剧情卡 + 非阻塞目标条、功能门禁、跳过保底；补给并市、酒馆替换情报站、两港价差、第三种货、两根线索、保底探索、船厂按 `unlocked_modules` 过滤、1 人客舱与旅客主线全部落地；全量测试 0 failed，截图见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)。
 - [x] 新手剧情 4.5.5 · 船厂 / 客舱 / 旅客（2026-10-22）：新增 `core:cabin/small_cabin`（1 人，120 金 / 8 重量）；`StoryService.module_filter` + `shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库候选；第三港由 Core 补 `shipyard` 并用 `upgrade_hull` 换成带客舱位的中型船体；`refit_unload` 卸货舱 → `refit_cabin` 装客舱 → 自动接 `main_03` 1 名旅客委托（清空货箱、主线链推进 `main_04`）→ `story_complete` 解锁全部；`ContractOps.attach` 不再用空货箱校验货舱容量；截图 `tutorial_shipyard_cabin.png` / `tutorial_shipyard_refit.png` / `tutorial_passenger_contract.png`
 - [x] 新手剧情 4.5.4 · 酒馆 / 线索 / 保底探索（2026-10-22）：情报站页替换为酒馆页（设施 / feature `intel`→`tavern`，旧存档归一兼容）；`tavern.view` 合并物价情报 + 港口线索列表，酒馆可购买 / 调查线索；Core `grant_clue` / `set_market_price_bias` / `guarantee_explore_success` 效果 + 两根剧情线索（L1 → 同港 L3）；起始港与邻港纺织品 / 香料确定性价差且双向交易；第三种货木材解锁；`explore.settle` 对剧情 L3 线索无视 `outcome_roll` 直接成功（消费 flag，跳过不设保底），发现第三港并进入 `third_port` 占位阶段；测试 369 例，截图 `tutorial_tavern*.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png`
 - [x] Content Schema 2.0 迁移 Phase B 实现契约（2026-10-21）：[WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md) —— 8 类草案提升 + 新增 `map_configs`、9 类跨引用/完整性规则、CampaignFactory 流水线与状态形状、1.0→2.0 字段映射（含探索 `exploration` 原样迁移）、存档 `content_versions`、编辑器/CLI/G8 语义变化、B0–B6 落地顺序与 DoD

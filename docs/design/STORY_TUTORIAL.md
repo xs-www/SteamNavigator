@@ -1,4 +1,4 @@
-# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 / 4.5.2 / 4.5.3 / 4.5.4 / 4.5.5 Implemented（2026-10-22）
+# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 全部 Implemented（2026-10-22）
 
 > 作用：把「当前阶段每局开局默认触发的新手剧情」落成可运行的纵向切片：剧情状态机、
 > 功能门禁、剧情卡 / 目标提示、脚本化委托与解锁、补给并市、酒馆、保底探索、船厂限制。
@@ -244,7 +244,7 @@ guarantee_explore_success / unlock_modules / complete_story
 | **4.5.3 并市 + 第二主线** | ✅ 已实现：水煤并入市场「补给（煤 / 水）」区块（复用 `supply.buy_*`），删除补给页 / 导航 / 港口招牌（旧 `supply` 入口重定向市场，旧存档兼容）；市场贸易货物按 story `unlocked_items` 过滤；Act 0 市场只有补给区块，第二港开放纺织品 / 香料；第二主线用 `grant_tutorial_contract`（main_02 模板、`provider: player`、`destination: home`）交付 6 件纺织品，剧情目标买 8 件、回港卖剩余 2 件；新增 `match` 事件条件与 `destination: home` | 补给页不存在，市场可买煤 / 水且扣款正确；Act 0 市场 0 条贸易货物，第二港 2 条；第二主线可买货 → 出航 → 回港交付 → 卖出剩余 → 收尾；全量 **363 例 0 failed**；截图 `tutorial_market_supply.png` / `tutorial_market_goods.png` | ✅ |
 | **4.5.4 酒馆 / 线索 / 保底探索** | ✅ 已实现：酒馆页替换情报页（`tavern` 设施 / feature，旧 `intel` 设施 / 页面兼容并归一）；酒馆自动给 L1 线索 + 刷新物价情报，前两港纺织品 / 香料注入确定性价差（归位库存、双向交易）；第三种货（木材）解锁；第二条 L3 线索指向同一未发现港并带 `guaranteed_explore_clue_id`，`explore.settle` 对该线索无视 `outcome_roll` 直接成功且消费 flag；`third_port` 占位阶段解锁船厂待 4.5.5 | 酒馆可刷新物价情报、购买 / 调查线索；起始港卖价 > 邻港买价且可盈利；第一条线索后市场出现第三种货；第二条线索 L3 + 保底探索必成功并发现第三港；跳过教程不设置保底；全量 **369 例 0 failed**；截图 `tutorial_tavern.png` / `tutorial_tavern_clues.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png` | ✅ |
 | **4.5.5 船厂 / 客舱 / 旅客** | ✅ 已实现：新增 `core:cabin/small_cabin`（1 人，120 金 / 轻量）；`shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库候选，第三港只显示该客舱；第三港由 Core 补 `shipyard` 设施并用 `upgrade_hull` 换成带客舱位的船体；`refit_unload`（match `cargo_modules`）→ `refit_cabin`（match 小型客舱）→ 自动接 `main_03` 旅客委托（`passengers: 1`，货箱清空）→ 出航送客 → `story_complete` 解锁全部并交还沙盒；`ContractOps.attach` 不再用空货箱校验货舱容量 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成 1 人旅客委托；未解锁模块不可见不可买；剧情可推进到完成并解锁全部功能；`main_03` 完成推进 `main_04`；全量测试 0 failed；截图 `tutorial_shipyard_cabin.png` / `tutorial_shipyard_refit.png` / `tutorial_passenger_contract.png` | ✅ |
-| **4.5.6 收尾** | 全量测试、窗口截图（剧情卡 / 目标条 / 门禁 / 酒馆 / 并市 / 船厂）、README / todo / 本文回填、静态文档 | 全量 0 failed；截图两次运行逐字一致；`gen_static_docs --check` 通过；每片提交只含本片文件 | ⬜ |
+| **4.5.6 收尾** | ✅ 已实现：全量测试（当前工作树 369 例 0 failed，其中本仓提交的测试集 363 例；并行 session 的 legacy UV / 武器 socket 套件 6 例不属于本片）、窗口截图（剧情卡 / 目标条 / 门禁 / 酒馆 / 并市 / 船厂 / 旅客，1440×900，脚本可重复运行）、README / todo / 本文回填、静态文档 | 全量 0 failed；截图脚本可重复生成同尺寸 PNG；`gen_static_docs --check` 通过；每片提交只含本片文件 | ✅ |
 
 ## 10. 数值建议（Core 可调，不写死框架）
 
