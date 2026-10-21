@@ -7,8 +7,6 @@
 
 - [ ] 海图阶段 4.3 探索体验修正（8 条）：雾区比例改为最小世界尺寸相关量；线索获得固定 1 级并可逐级「调查」（具体消耗待线索系统迭代）；探索失败不消耗线索；演出随船照亮 + 途经迷雾持久化；航线仅在选中港口时显示；删除详细总览旧海图；移除出航准备页、出航确认（预估 + 锅炉策略，默认上次）移入海图弹窗；资源演出连续变化、结算一次落账。决策与分片见 [EXPLORATION_SYSTEM.md §10](docs/design/EXPLORATION_SYSTEM.md)
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [x] SNBattleSim 模组交换与 Agent CLI：`mods/` 散装目录及 ZIP 导入、游戏约定 `.snavmod.zip` 导出、状态/FSM 契约、AND/OR 条件、状态拖放、空白拉线建状态和 Delete 删除
-- [x] SNBattleSim 二轮易用性：Mod 蓝图舰体装配、五状态默认 FSM、工程目录持久化、目标高亮、全状态尝试开火与顶部入口分级
 
 ## Pending
 
@@ -42,23 +40,4 @@
 
 ## Recently Completed
 
-- [x] 共享贴图材质系统（2026-10-21）：`shared_materials` 10 张 512² 无缝贴图（spec + 生成器 + montage + stats，确定性可复现）；新增 `sn_shared_materials.py`（`SN_Tex_*` 材质 + 世界空间盒式 UV + 验收），四台起重机全部改用贴图材质，导出 GLB 时把内嵌贴图外部化为 `shared_materials/<texture>.png` 并同步 Core；`verify_cranes_glb.py` / `tools/godot/verify_crane_materials.gd` 验证外部 URI、UV 与跨 GLB 贴图实例共享；旧纯色 `SN_*` 材质保持不动，迁移约定写入 `MODELING_WORKFLOW` §12 与工单模板
-- [x] 港口起重机四件套（2026-10-21）：补全塔吊参数化生成器并重建（`SN_Harbor_Crane` 3912 tri / 33 节点，Core 副本同步）+ 新增大型龙门吊 `SN_Mega_Gantry`（9420 tri / 39.6×14.8×29.65 m，台车齿轮传动 / 40 m 桁架桥 / 双卷扬机械房 / 吊装集装箱）、木制桅杆起重机 `SN_Wooden_Mast_Crane`（1932 tri / 14.77×7×14.25 m）、手摇悬臂吊 `SN_Hand_Jib_Crane`（896 tri / 4.6×1.7×5.17 m）；共用 `crane_kit.py`，干跑 / 导出 / GLB 世界空间自检 / Godot 导入验收 4/4 PASS；工单 `sn_crane_batch1.json`，记录见 `docs/design/MODELING_WORKFLOW.md` §11.11
-- [x] 海图阶段 4.2（2026-10-21）：资源告急决策（航程 50% 停下，继续 / 掉头；跳过不能替玩家决策）、`VoyagePresentation.force_arrival()` 直接入港、`explore.decide` 幂等与错误码、探索入港复用普通抵达的到港服务（委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）、告警状态进 `sea_chart.view`、窗口截图与 308 例全量回归
-- [x] 海图阶段 4.1 探索系统（2026-10-21）：`ClueService`（抵达传闻 + 购买情报）、线索分级与海图可视化（方向箭头 / 虚线圆 / `？港名？`）、`explore.start`/`settle`/`decide`、搜索区判定与发现概率、失败漂流、发现后解锁港口与迷雾揭示、探索演出与结算；契约与截图见 `docs/design/EXPLORATION_SYSTEM.md`
-- [x] 海图阶段 3 实机验收反馈 F1–F4（2026-10-21）：离港先转艏再驶离（入港镜像 + 接缝朝向一致）；镜头俯角爬到 83° 并拉升到 165 m；云层后海图由近景（×2.8）拉远到稳态、入港前反向推近；航行页海图改全窗 cover 取景并铺满（小世界 ×9 不受手动缩放上限约束）；演出航线改由 `WorldMap.edges` 提供，船沿真实航线按弧长行进
-- [x] 设计文档按生命周期整理：`docs/design/`（Active）/ `docs/specs/`（Finalized）/ `docs/archive/`（Archived）+ 顶层索引（2026-10-21）
-- [x] SNBattleSim 独立 2D 舰队战斗规则试验台（固定船体、多武器、视野、护航、自定义武器）
-- [x] 铁港建筑套件批次 A/B/C：LOD1、外部共享贴图、三栋新原型、明轮蒸汽船视觉精修
-- [x] 海图阶段 3 航行演出：3D 离港 / 入港、云层转场、海图航行、事件中断与恢复
-- [x] 海图阶段 2：海图 UI、入口集成（`M` 键 / 导航 / 出航页）、航线预计算与绕行自适应
-- [x] 海图阶段 0–1：坐标空间世界生成、三重迷雾、真实对局孪生世界
-- [x] 2.5D 阶段 1 前七切片：船厂 3D 舞台、通用 StageHost、PortStage、主界面 HUD / 招牌 / 合批、连续港区三站位
-- [x] 内容资产全部随 `core` 模组加载（共享外部贴图 + 松散 / ZIP / 发布包三条路径实测）
-- [x] 静态文档迁移到源码 `@static-doc` / sidecar，生成器带 `--check`
-- [x] 模块实例与部件损耗、战役分区、Content Schema 2.0 草案与存档 1.x→2.0 迁移
-- [x] 迭代 2 MVP 反馈优化（打造订单与在港等待、补给比例条、情报对比表）
-- [x] 迭代 1 MVP 闭环（仓库 / 打造订单 / 委托刷新 / 通关判定）
-- [x] 船厂界面重构（图 2 / 图 3 三列布局、拖拽安装、分类记忆）
-- [x] SNModMaker 原生工作区 + Content CLI + 容器部署；Windows 导出包实机验收
-- [x] MVP 骨架：模组加载 / 依赖 / Schema / 注册表冻结 + 命令-查询总线（0.1.0-dev.2 初版）
+> 暂无。新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。

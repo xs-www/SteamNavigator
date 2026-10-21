@@ -3,7 +3,7 @@
 > 只记录有意义的功能与变更，不写逐条流水账；实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 [todo.md](todo.md) 的 `Recently Completed` 按版本归并到这里，并从 todo 移除。
 
-## [Unreleased]
+## [0.2.0-dev.2] — 2026-10-21
 
 ### Added
 
@@ -11,7 +11,9 @@
 - 航海图系统阶段 4.1 探索：线索（抵达传闻 / 购买情报 + 分级与海图可视化）、`explore.start` / `explore.settle` 探索航次、搜索区判定与发现概率、失败漂流、发现后解锁港口与迷雾揭示、探索结算；数值配置在 `map_profiles` 的 `exploration` 块
 - 航海图系统阶段 4.2 资源告急：航程 50% 处停下让玩家选「继续探索 / 掉头返航」（跳过演出不能替玩家决策）；掉头经 `force_arrival()` 直接播入港；探索入港复用普通抵达的到港服务（委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）
 - 铁港建筑套件批次 A / B / C：5 栋 LOD1、外部共享贴图、三栋新原型（Boiler House / Workshop Row / Brick Tenement）、SN_Paddle_Steamer 视觉精修
-- SNBattleSim：独立 2D 舰队战斗规则试验台（固定船体、多武器、视野与战争迷雾、货船护航、自定义武器）
+- 港口起重机四件套：塔吊参数化重建（`SN_Harbor_Crane`）、大型龙门吊（`SN_Mega_Gantry`）、木制桅杆起重机（`SN_Wooden_Mast_Crane`）、手摇悬臂吊（`SN_Hand_Jib_Crane`），共用 `crane_kit` 生成器
+- 共享贴图材质系统：10 张 512² 无缝 `SN_Tex_*` 贴图 + 世界空间盒式 UV，导出 GLB 时贴图外部化并与 Core 同步，四台起重机已切换（旧纯色 `SN_*` 材质待迁）
+- SNBattleSim：独立 2D 舰队战斗规则试验台（固定船体、多武器、视野与战争迷雾、货船护航、自定义武器；`mods/` 散装目录与 ZIP 交换、Agent CLI、状态机契约与默认五状态 FSM）
 - 设计文档按生命周期分层：`docs/design/`（Active）、`docs/specs/`（Finalized）、`docs/archive/`（Archived）及顶层索引
 
 ### Changed
