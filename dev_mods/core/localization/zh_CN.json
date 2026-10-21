@@ -173,5 +173,21 @@
   "story.core.explore_third.body.1": "海图上已经圈出搜索区。打开海图，选「循此线索出航」，备足补给后出发。",
   "story.core.explore_third.objective": "循线索出航并抵达第三港（1/1）",
   "story.core.third_port.title": "第三港",
-  "story.core.third_port.body.1": "海雾散开，一座新的港口出现在眼前。酒馆的第二条线索把你带到了这里——接下来的故事，将从这座港口继续。"
+  "story.core.third_port.body.1": "海雾散开，一座新的港口出现在眼前。酒馆的第二条线索把你带到了这里——接下来的故事，将从这座港口继续。",
+  "module.core.small_cabin.name": "小型客舱（1 人）",
+  "module.core.small_cabin.description": "第三港船厂为教学船准备的单人客舱：只能载 1 名旅客，重量轻，适合刚起步的船。",
+  "contract.core.tutorial_passenger.name": "第三主线：送 1 名旅客",
+  "contract.core.tutorial_passenger.description": "在第三港接上 1 名旅客，安全送到目的港。",
+  "story.core.third_port.body.2": "第三港的船厂愿意帮你把船改成能载客的配置：先换一艘带客舱位的船，再卸下货舱、装上小型客舱。",
+  "story.core.refit_unload.title": "卸货舱",
+  "story.core.refit_unload.body.1": "客舱要占位置，也占重量。去船厂把现在的货舱卸下来，放进港口仓库。",
+  "story.core.refit_unload.objective": "在船厂卸下 1 个货舱模块（1/1）",
+  "story.core.refit_cabin.title": "装客舱",
+  "story.core.refit_cabin.body.1": "船厂里现在只上架一种新模块：小型客舱（1 人）。买下并装到船上，旅客就有地方坐了。",
+  "story.core.refit_cabin.objective": "在船厂装上小型客舱（1/1）",
+  "story.core.passenger_run.title": "送客出航",
+  "story.core.passenger_run.body.1": "一位旅客要在第三港搭船去邻港。打开海图，送他抵达目的港，第三主线就完成了。",
+  "story.core.passenger_run.objective": "出航并送旅客抵达目的港（1/1）",
+  "story.core.story_complete.title": "教学结束",
+  "story.core.story_complete.body.1": "你已经学会了补给、贸易、线索探索和载客改装。接下来的航路交给你自己：继续完成剩余主线，或自由探索这片海。"
 }

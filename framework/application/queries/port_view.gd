@@ -318,7 +318,7 @@ static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant
 	copy["remaining_label"] = _format_remaining(remaining_hours)
 	var template_id := String(contract.get("template_id", ""))
 	var template := hub.get_by_id(ContentTypes.CONTRACT, template_id)
-	if template != null:
+	if String(copy.get("description_key", "")).is_empty() and template != null:
 		copy["description_key"] = template.description_key
 	var route := MapOps.route_between(world, origin, destination)
 	var distance := float(route.get("distance", 0.0))

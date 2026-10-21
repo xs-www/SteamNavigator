@@ -1,4 +1,4 @@
-# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 / 4.5.2 / 4.5.3 / 4.5.4 Implemented（2026-10-22）
+# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 / 4.5.2 / 4.5.3 / 4.5.4 / 4.5.5 Implemented（2026-10-22）
 
 > 作用：把「当前阶段每局开局默认触发的新手剧情」落成可运行的纵向切片：剧情状态机、
 > 功能门禁、剧情卡 / 目标提示、脚本化委托与解锁、补给并市、酒馆、保底探索、船厂限制。
@@ -84,10 +84,17 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 
 | 阶段 | 内容 | 系统动作 / 推进 |
 |---|---|---|
-| `third_port` | 剧情卡：第三主线「送 1 名旅客去某港」；解锁 `shipyard` | 船厂只上架「小型客舱（1 人）」；客舱模块不存在时先给一个占位条目 |
-| `refit` | 目标：卸下货舱 → 装上客舱 | `cmd:ship.uninstall_module` + `cmd:ship.install_module` |
-| `passenger_run` | 出航送客 | `cmd:voyage.start` → `ui:arrival_settled`；完成第三主线 |
-| `story_complete` | 剧情卡：教学结束，进入沙盒 | 解锁剩余功能；`data.story.completed=true` |
+| `third_port` | 剧情卡：第三港船厂可改造载客；解锁 `shipyard` | Core 补上 `shipyard` 设施；`upgrade_hull` 换成带客舱位的 `medium_standard`（旧船进仓库）；`unlock_modules = ["core:cabin/small_cabin"]`；船厂只显示 1 人小型客舱 |
+| `refit_unload` | 目标：卸下货舱 | `cmd:ship.uninstall_module`（match `cargo_modules`） |
+| `refit_cabin` | 目标：装上 1 人小型客舱 | `cmd:ship.install_module`（match `core:cabin/small_cabin`） |
+| `passenger_run` | 进入时自动接第三主线：送 1 名旅客（沿用 `main_03` 主线槽位，清空货箱改为 1 名旅客） | `grant_tutorial_contract`（`passengers: 1`）；`cmd:voyage.start` + `ui:arrival_settled` |
+| `story_complete` | 剧情卡：教学结束，进入沙盒 | 确认后 `data.story.completed=true`，解锁全部功能，`main_04` 继续由沙盒主线生成 |
+
+> **4.5.5 实装说明**：小型客舱是 Core 新内容（`core:cabin/small_cabin`，`passenger_capacity = 1`）。
+> 起始小船没有客舱位，所以第三港由 Core story 的 `upgrade_hull` 把船换成中型船体并补上
+> `shipyard` 设施；`shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库安装
+> 候选（当前已装模块仍可查看 / 卸下）。第三主线沿用 `main_03` 段以保证 5 段主线计数与
+> 通关回归，只把 payload 从货箱替换成 1 名旅客；完成时照常推进到 `main_04`。
 
 ## 4. 系统改造清单（按切片落地）
 
@@ -101,8 +108,9 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 4. **酒馆 / 线索 / 保底探索**（4.5.4）：✅ 酒馆页替换情报页（`tavern` 设施 /
    feature、旧存档 `intel` 兼容）；酒馆自动 + 购买线索；前两港价差注入（Core
    `set_market_price_bias`）；第三种货物解锁；第二条 L3 线索与保底探索成功。
-5. **船厂 / 客舱 / 旅客**（4.5.5）：新增 1 人小型客舱内容；`shipyard.view` 按 story
-   `unlocked_modules` 过滤；第三主线旅客委托与卸货舱 / 装客舱引导。
+5. **船厂 / 客舱 / 旅客**（4.5.5）：✅ 新增 1 人小型客舱内容；`shipyard.view` 按
+   story `unlocked_modules` 过滤购买 / 打造 / 仓库候选；第三主线旅客（沿用 `main_03`
+   段）与卸货舱 / 装客舱引导；第三港补船厂设施并换带客舱位的船体。
 6. **收尾**（4.5.6）：全量测试、窗口截图、README / todo / 本文、静态文档。
 
 ## 5. 数据模型（`GameState.data`，全部可 JSON 化，惰性 ensure，不改 `schema_version`）
@@ -235,7 +243,7 @@ guarantee_explore_success / unlock_modules / complete_story
 | **4.5.2 开局幕** | ✅ 已实现：教程新局隐藏选构筑（`new_game_screen` tutorial_mode + Shell 传默认教学船）；`opening`→`depart_brief` 全流程（获船叙事 / 补给 4 煤 2 水 / 补给受限 `lock_actions: supply.buy` / 海图解禁 / 关闭海图恢复补给 / 买够 10 煤 / 出航默认极速 / 抵达收尾）；燃料舱运煤教学委托（`grant_tutorial_contract` + `provider: fuel` + `set_ship_fuel`，出航前货物校验）；`tutorial_express` 限时 | 按 §3 幕 0 全流程可走通：补给购买触发阶段、限购命令被拦截且卡片显示原因、海图打开 / 关闭推进、买够出航、抵达第二港；标准速度迟到 / 极速准时；非教程局主线与 9 seed 通关回归不变；全量 **354 例 0 failed**；截图 `tutorial_supply_hold.png` / `tutorial_depart_fast.png` | ✅ |
 | **4.5.3 并市 + 第二主线** | ✅ 已实现：水煤并入市场「补给（煤 / 水）」区块（复用 `supply.buy_*`），删除补给页 / 导航 / 港口招牌（旧 `supply` 入口重定向市场，旧存档兼容）；市场贸易货物按 story `unlocked_items` 过滤；Act 0 市场只有补给区块，第二港开放纺织品 / 香料；第二主线用 `grant_tutorial_contract`（main_02 模板、`provider: player`、`destination: home`）交付 6 件纺织品，剧情目标买 8 件、回港卖剩余 2 件；新增 `match` 事件条件与 `destination: home` | 补给页不存在，市场可买煤 / 水且扣款正确；Act 0 市场 0 条贸易货物，第二港 2 条；第二主线可买货 → 出航 → 回港交付 → 卖出剩余 → 收尾；全量 **363 例 0 failed**；截图 `tutorial_market_supply.png` / `tutorial_market_goods.png` | ✅ |
 | **4.5.4 酒馆 / 线索 / 保底探索** | ✅ 已实现：酒馆页替换情报页（`tavern` 设施 / feature，旧 `intel` 设施 / 页面兼容并归一）；酒馆自动给 L1 线索 + 刷新物价情报，前两港纺织品 / 香料注入确定性价差（归位库存、双向交易）；第三种货（木材）解锁；第二条 L3 线索指向同一未发现港并带 `guaranteed_explore_clue_id`，`explore.settle` 对该线索无视 `outcome_roll` 直接成功且消费 flag；`third_port` 占位阶段解锁船厂待 4.5.5 | 酒馆可刷新物价情报、购买 / 调查线索；起始港卖价 > 邻港买价且可盈利；第一条线索后市场出现第三种货；第二条线索 L3 + 保底探索必成功并发现第三港；跳过教程不设置保底；全量 **369 例 0 failed**；截图 `tutorial_tavern.png` / `tutorial_tavern_clues.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png` | ✅ |
-| **4.5.5 船厂 / 客舱 / 旅客** | 新增 1 人小型客舱（Core 模块 + 本地化）；`shipyard.view` 按 `unlocked_modules` 过滤；第三主线旅客 1 人；卸货舱 / 装客舱引导 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成旅客委托；未解锁模块不可见不可买；剧情引导步骤可推进到完成 | ⬜ |
+| **4.5.5 船厂 / 客舱 / 旅客** | ✅ 已实现：新增 `core:cabin/small_cabin`（1 人，120 金 / 轻量）；`shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库候选，第三港只显示该客舱；第三港由 Core 补 `shipyard` 设施并用 `upgrade_hull` 换成带客舱位的船体；`refit_unload`（match `cargo_modules`）→ `refit_cabin`（match 小型客舱）→ 自动接 `main_03` 旅客委托（`passengers: 1`，货箱清空）→ 出航送客 → `story_complete` 解锁全部并交还沙盒；`ContractOps.attach` 不再用空货箱校验货舱容量 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成 1 人旅客委托；未解锁模块不可见不可买；剧情可推进到完成并解锁全部功能；`main_03` 完成推进 `main_04`；全量测试 0 failed；截图 `tutorial_shipyard_cabin.png` / `tutorial_shipyard_refit.png` / `tutorial_passenger_contract.png` | ✅ |
 | **4.5.6 收尾** | 全量测试、窗口截图（剧情卡 / 目标条 / 门禁 / 酒馆 / 并市 / 船厂）、README / todo / 本文回填、静态文档 | 全量 0 failed；截图两次运行逐字一致；`gen_static_docs --check` 通过；每片提交只含本片文件 | ⬜ |
 
 ## 10. 数值建议（Core 可调，不写死框架）
@@ -251,15 +259,18 @@ guarantee_explore_success / unlock_modules / complete_story
   卖价 ×1.35、其它港买价 ×0.7，并打开双向交易；保底探索只对第二条剧情线索生效
   （消费 `guaranteed_explore_clue_id`，跳过教程不设置）。
 - 第三种货：木材（`core:good/timber`，起始港可双向交易）。
-- 第三主线：1 名旅客；小型客舱 `passenger_capacity = 1`；船厂只上架该客舱。
+- 第三主线：1 名旅客；小型客舱 `core:cabin/small_cabin`（`passenger_capacity = 1`，
+  120 金 / 60 打造 / 8 重量）；第三港由 Core 补 `shipyard` 并换成 `medium_standard`
+  船体（旧船进仓库）；船厂只上架该客舱。沿用 `main_03` 主线槽位，完成后主线链
+  自动生成 `main_04`。
 - 解锁顺序：`overview`（始终）→ `supply` → `chart` → `clues/market/contracts` →
   `tavern` → `shipyard`。
 
 ## 11. 风险与未决
 
-- **主线链映射**：剧情接管 `main_01..main_03` 后，`main_04/05` 是否按原内容接续
-  （当前 5 段主线结构 / 9 seed 通关回归会受影响）。实现 4.5.3 前必须用测试锁定
-  「剧情第三幕完成 → 主线剩余段继续」或「主线在第三幕后结束」；默认按前者。
+- **主线链映射（4.5.5 已收口）**：剧情三段分别沿用 `main_01` / `main_02` / `main_03`
+  模板（第三段 payload 改成 1 名旅客），完成第三段后主线链自动推进 `main_04`，沙盒
+  继续剩余段；`main_04/05` 的 9 seed 通关回归由既有 `test_full_clear` 覆盖。
 - **并市回归**：移除补给页会影响 `test_ui_shell` / 补给页测试 / 导航断言；先保留
   `supply.*` 命令，页面与导航再删，测试同步改。
 - **酒馆替换情报页**：`intel` 设施 / `intel.view` / `clue.buy` 门禁需要迁移；旧存档

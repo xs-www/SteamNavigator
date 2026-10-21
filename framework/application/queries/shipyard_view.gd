@@ -4,6 +4,8 @@ extends RefCounted
 ## recipes, open craft orders, wait options and every purchasable module with the
 ## same blocker rules as ship.install_module / ship.craft_module. New arrays are
 ## always present so the UI can render them even without a run or outside a shipyard.
+## 4.5.5：剧情期间（`StoryService.module_filter`）购买 / 打造 / 仓库候选按 Core
+## `unlocked_modules` 裁剪；当前已装模块与当前槽位仍完整输出，保证可以卸下。
 
 static func execute(_params: Dictionary, context) -> Dictionary:
 	if not context.has_run():
@@ -26,10 +28,20 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var warehouse_data := _warehouse_data(hub, state, port_id, has_shipyard, at_port)
 	var craft_rows := _craft_rows(hub, state, at_port, has_shipyard)
 	var order_rows := _order_rows(hub, state, port_id)
+	# 4.5.5：剧情进行中时船厂只露出 Core `unlocked_modules`（第三港只卖小型客舱）；
+	# 已装模块 / 当前库存仍可卸下查看，其余购买 / 打造 / 仓库安装候选隐藏。
+	var module_filter := StoryService.module_filter(state, hub)
+	if bool(module_filter.get("active", false)):
+		var allowed: Array = module_filter.get("items", [])
+		warehouse_data["modules"] = _filter_module_rows(warehouse_data.get("modules", []), allowed)
+		craft_rows = _filter_module_rows(craft_rows, allowed)
 
 	var candidates: Array = []
 	for content_type in ShipOps.INSTALLABLE_TYPES:
 		for module in hub.get_all(content_type):
+			if bool(module_filter.get("active", false)) \
+					and not Array(module_filter.get("items", [])).has(module.id):
+				continue
 			var blockers := ShipOps.install_blockers(hub, state, module.id)
 			if not has_shipyard:
 				blockers.push_front("no_shipyard")
@@ -96,6 +108,15 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"wait_options": PortCommands.WAIT_OPTIONS.duplicate(),
 		"candidates": candidates,
 	})
+
+
+## Keeps only rows whose `module_id` is in the story's unlocked-module set.
+static func _filter_module_rows(rows: Array, allowed: Array) -> Array:
+	var result: Array = []
+	for row in rows:
+		if row is Dictionary and allowed.has(String((row as Dictionary).get("module_id", ""))):
+			result.append(row)
+	return result
 
 
 static func _empty_view() -> Dictionary:

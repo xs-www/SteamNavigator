@@ -1,10 +1,11 @@
 extends TestCase
 ## @static-doc
-## 作用：新手剧情 / 教学系统（阶段 4.5.1 – 4.5.4）领域层无头测试：`run.start tutorial=true`
+## 作用：新手剧情 / 教学系统（阶段 4.5.1 – 4.5.5）领域层无头测试：`run.start tutorial=true`
 ## 初始化剧情、功能解锁 / 门禁 ViewModel、剧情卡继续、`story.observe` 事件计数推进、
 ## `story.skip` 保底解锁与主委托目的港揭示、非教程局 / 旧存档不门禁、存档往返；
 ## 第二主线买卖回运；酒馆自动 / 购买线索、两港价差、第三件货、第二条 L3 线索与
-## 保底探索成功发现第三港。
+## 保底探索成功发现第三港；第三港换船、船厂只卖 1 人客舱、卸货舱 / 装客舱、
+## 第三主线旅客与教学完成。
 ##
 ## ## 契约与约束
 ## - 用真实 Core 注册表：剧情步骤 / 文案 / 解锁 / 数值必须来自
@@ -243,7 +244,69 @@ func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
 	assert_eq(String(context.state.current_port_id()), target, "the ship arrives at the third harbour")
 	assert_eq(String((context.state.story().get("flags", {}) as Dictionary).get("guaranteed_explore_clue_id", "")), "",
 		"the guaranteed success flag is consumed by the successful settlement")
-	assert_false(bool(view.get("completed", false)), "the story stops at the third-port stub for stage 4.5.5")
+	# 4.5.5：第三港换船 + 只上架 1 人客舱 → 卸货舱 → 装客舱 → 送 1 名旅客。
+	assert_eq(String(context.state.ship().get("hull_id", "")), "core:hull/medium_standard",
+		"the third-port shipyard retrofits a cabin-capable hull")
+	assert_true(MapOps.has_facility(MapOps.port(context.state.world(), target), "shipyard"),
+		"the third harbour gains a shipyard from the Core story")
+	assert_true((view.get("unlocked_modules", []) as Array).has("core:cabin/small_cabin"),
+		"the story unlocks the one-passenger cabin")
+	var yard: Dictionary = context.queries.execute(&"shipyard.view")["data"]
+	var cabin_only := true
+	for candidate in yard.get("candidates", []):
+		if String((candidate as Dictionary).get("module_id", "")) != "core:cabin/small_cabin":
+			cabin_only = false
+	assert_true(cabin_only, "the tutorial shipyard only lists the small cabin")
+	assert_eq((yard.get("candidates", []) as Array).size(), 1, "exactly one shipyard module is offered")
+	context.commands.execute(&"story.advance", {})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "refit_unload", "third-port card hands over to the refit")
+	var uninstalled := context.commands.execute(&"ship.uninstall_module", {
+		"module_id": "core:cargo_module/small_hold",
+	})
+	assert_true(bool(uninstalled.get("ok", false)), "unloading the cargo hold succeeds: %s" % str(uninstalled))
+	context.commands.execute(&"story.observe", {
+		"event": "cmd:ship.uninstall_module",
+		"data": uninstalled.get("data", {}),
+	})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "refit_cabin", "unloading the hold advances to the cabin step")
+	context.state.set_money(5000)
+	var installed := context.commands.execute(&"ship.install_module", {
+		"module_id": "core:cabin/small_cabin",
+	})
+	assert_true(bool(installed.get("ok", false)), "installing the small cabin succeeds: %s" % str(installed))
+	context.commands.execute(&"story.observe", {
+		"event": "cmd:ship.install_module",
+		"data": installed.get("data", {}),
+	})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "passenger_run", "the cabin advances to the passenger run")
+	var passenger_contract: Variant = context.state.contracts().get("main", null)
+	assert_true(passenger_contract is Dictionary, "the third mainline passenger contract is granted")
+	if passenger_contract is Dictionary:
+		assert_eq(String((passenger_contract as Dictionary).get("template_id", "")), "core:contract/main_03",
+			"the passenger mainline keeps the main_03 chain slot")
+		assert_eq(int((passenger_contract as Dictionary).get("passengers", 0)), 1,
+			"exactly one passenger is carried")
+		assert_true(((passenger_contract as Dictionary).get("cargo", []) as Array).is_empty(),
+			"the passenger mainline has no cargo payload")
+		assert_eq(int(ShipOps.passenger_capacity(context.registries, context.state.ship())), 1,
+			"the small cabin seats one passenger")
+	assert_eq(String(context.state.ship().get("passenger_cabin_id", "")), "core:cabin/small_cabin",
+		"the small cabin is fitted")
+	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {}})
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "story_complete", "delivering the passenger reaches the finale")
+	var finished := context.commands.execute(&"story.advance", {})
+	assert_true(bool(finished.get("ok", false)), "the tutorial finale can be confirmed")
+	view = _view(context)
+	assert_true(bool(view.get("completed", false)), "the tutorial is completed")
+	assert_eq((view.get("unlocked_features", []) as Array).size(), StoryService.FEATURES.size(),
+		"completing the tutorial unlocks every remaining feature")
+	assert_false(bool(StoryService.module_filter(context.state, context.registries).get("active", true)),
+		"the shipyard module filter turns off after the tutorial")
 
 
 func test_skip_does_not_arm_the_guaranteed_exploration() -> void:

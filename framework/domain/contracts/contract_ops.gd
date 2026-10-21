@@ -123,7 +123,9 @@ static func attach(state: GameState, hub: RegistryHub, instance: Dictionary) -> 
 	var added_weight := cargo_weight + float(passengers) * ShipOps.PASSENGER_WEIGHT
 	if ShipOps.total_weight(hub, state) + added_weight > ShipOps.max_weight(hub, ship) + 0.0001:
 		return Result.fail("weight_limit", "ui.error.weight")
-	if ShipOps.cargo_used(hub, ship) + cargo_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
+	# 乘客委托（4.5.5）不带货箱，不应因为船上已有的散货 / 货舱已卸下而拒绝接客。
+	if cargo_weight > 0.0 \
+			and ShipOps.cargo_used(hub, ship) + cargo_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
 		return Result.fail("cargo_capacity", "ui.error.capacity")
 	var instance_id := String(instance.get("instance_id", ""))
 	for entry in supplied_entries:

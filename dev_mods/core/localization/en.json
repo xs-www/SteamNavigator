@@ -173,5 +173,21 @@
   "story.core.explore_third.body.1": "The search area is circled on the chart. Open the chart, choose \"sail after this clue\", and depart with enough supplies.",
   "story.core.explore_third.objective": "Sail after the clue and find the third harbour (1/1)",
   "story.core.third_port.title": "The Third Harbour",
-  "story.core.third_port.body.1": "The sea mist parts and a new harbour appears. The tavern's second lead has brought you here — the next chapter begins at this port."
+  "story.core.third_port.body.1": "The sea mist parts and a new harbour appears. The tavern's second lead has brought you here — the next chapter begins at this port.",
+  "module.core.small_cabin.name": "Small Cabin (1 passenger)",
+  "module.core.small_cabin.description": "A one-passenger cabin the third harbour fits to your teaching ship: light, simple, and enough to start carrying travellers.",
+  "contract.core.tutorial_passenger.name": "Third Mainline: Carry One Passenger",
+  "contract.core.tutorial_passenger.description": "Pick up one passenger at the third harbour and deliver them safely to the destination.",
+  "story.core.third_port.body.2": "The shipyard here can refit your ship to carry passengers: first a hull with a cabin berth, then unload the cargo hold and fit a small cabin.",
+  "story.core.refit_unload.title": "Unload the Hold",
+  "story.core.refit_unload.body.1": "A cabin needs space and weight. Go to the shipyard and unload the current cargo hold into the port warehouse.",
+  "story.core.refit_unload.objective": "Unload one cargo module at the shipyard (1/1)",
+  "story.core.refit_cabin.title": "Fit the Cabin",
+  "story.core.refit_cabin.body.1": "The shipyard now lists one new module: the small one-passenger cabin. Buy and install it so your passenger has a berth.",
+  "story.core.refit_cabin.objective": "Install the small cabin at the shipyard (1/1)",
+  "story.core.passenger_run.title": "Carry the Passenger",
+  "story.core.passenger_run.body.1": "A traveller needs passage from the third harbour to a neighbouring port. Open the chart, deliver them, and the third mainline is complete.",
+  "story.core.passenger_run.objective": "Depart and deliver the passenger (1/1)",
+  "story.core.story_complete.title": "Tutorial Complete",
+  "story.core.story_complete.body.1": "You have learned provisioning, trade, clue exploration and passenger refits. The sea is yours now: finish the remaining mainline or explore freely."
 }

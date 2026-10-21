@@ -368,10 +368,77 @@
               "id": "third_port",
               "dialogue": {
                 "title_key": "story.core.third_port.title",
-                "body_keys": ["story.core.third_port.body.1"]
+                "body_keys": ["story.core.third_port.body.1", "story.core.third_port.body.2"]
               },
               "unlock_features": ["shipyard"],
-              "advance": {"event": "ui:story_third_port_ack"}
+              "unlock_modules": ["core:cabin/small_cabin"],
+              "effects": [
+                {"type": "add_facility", "facility": "shipyard"},
+                {"type": "upgrade_hull", "hull_id": "core:hull/medium_standard", "store_old": true}
+              ],
+              "advance": {"mode": "confirm"}
+            },
+            {
+              "id": "refit_unload",
+              "dialogue": {
+                "title_key": "story.core.refit_unload.title",
+                "body_keys": ["story.core.refit_unload.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.refit_unload.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "cmd:ship.uninstall_module",
+                "counter": "cargo_uninstalled",
+                "at_least": 1,
+                "match": {"content_type": "cargo_modules"}
+              }
+            },
+            {
+              "id": "refit_cabin",
+              "dialogue": {
+                "title_key": "story.core.refit_cabin.title",
+                "body_keys": ["story.core.refit_cabin.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.refit_cabin.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "cmd:ship.install_module",
+                "counter": "cabin_installed",
+                "at_least": 1,
+                "match": {"module_id": "core:cabin/small_cabin"}
+              }
+            },
+            {
+              "id": "passenger_run",
+              "dialogue": {
+                "title_key": "story.core.passenger_run.title",
+                "body_keys": ["story.core.passenger_run.body.1"]
+              },
+              "effects": [
+                {"type": "grant_tutorial_contract", "template_id": "core:contract/main_03", "passengers": 1, "deadline_formula": "tutorial_craft", "name_key": "contract.core.tutorial_passenger.name", "description_key": "contract.core.tutorial_passenger.description"}
+              ],
+              "objective": {
+                "text_key": "story.core.passenger_run.objective",
+                "target": 1
+              },
+              "advance": {
+                "all": [
+                  {"event": "cmd:voyage.start", "counter": "passenger_departures", "at_least": 1},
+                  {"event": "ui:arrival_settled", "counter": "passenger_arrivals", "at_least": 1}
+                ]
+              }
+            },
+            {
+              "id": "story_complete",
+              "dialogue": {
+                "title_key": "story.core.story_complete.title",
+                "body_keys": ["story.core.story_complete.body.1"]
+              },
+              "advance": {"mode": "confirm"}
             }
           ]
         }

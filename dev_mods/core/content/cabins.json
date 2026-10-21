@@ -17,6 +17,22 @@
 		"materials": [],
 		"passenger_capacity": 4
 	  }
+	},
+	{
+	  "id": "core:cabin/small_cabin",
+	  "name_key": "module.core.small_cabin.name",
+	  "description_key": "module.core.small_cabin.description",
+	  "tags": ["module.cabin", "module.passenger", "module.small"],
+	  "enabled": true,
+	  "data": {
+		"tier": 1,
+		"weight": 8.0,
+		"purchase_price": 120,
+		"craft_cost": 60,
+		"craft_time_hours": 2,
+		"materials": [],
+		"passenger_capacity": 1
+	  }
 	}
   ]
 }

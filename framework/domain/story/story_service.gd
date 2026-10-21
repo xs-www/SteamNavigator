@@ -20,6 +20,9 @@ extends RefCounted
 ##   第二次授予复用同一目标；等级 / 来源来自 Core）、`set_market_price_bias`
 ##   （把指定商品在起始港 / 其它港的库存与价格 bias 归位，保证教学价差稳定）、
 ##   `guarantee_explore_success`（只对刚授予的剧情线索生效，探索成功即消费）。
+## - 4.5.5 效果：`add_facility`（给当前港补设施，第三港保证有船厂）、`upgrade_hull`
+##   （换成 Core 指定、带客舱位的船体，旧船进仓库）；`module_filter()` 给船厂提供
+##   `unlocked_modules` 裁剪，剧情期间只露出教学模块。
 ## - 跳过教程必须解锁 `skip_unlocks` 里的全部功能并执行
 ##   `discover_contract_destination`，保证跳过不会卡死；跳过不会设置保底探索。
 ## - 查询（`story.view`）只输出公开字段；counters / flags 只暴露剧情效果需要的
@@ -150,6 +153,17 @@ static func market_filter(state: GameState, hub: RegistryHub) -> Dictionary:
 			or not bool(story.get("active", false)) or bool(story.get("completed", true)):
 		return {"active": false, "items": []}
 	return {"active": true, "items": Array(story.get("unlocked_items", [])).duplicate()}
+
+
+## 4.5.5：船厂模块裁剪。剧情进行中时只允许 `unlocked_modules` 里的模块出现在
+## 购买 / 打造 / 仓库安装候选中（当前已装模块仍然可卸下 / 查看）；非剧情局不过滤。
+static func module_filter(state: GameState, hub: RegistryHub) -> Dictionary:
+	var cfg := config(state, hub)
+	var story := state.ensure_story()
+	if cfg.is_empty() or not bool(cfg.get("enabled", false)) \
+			or not bool(story.get("active", false)) or bool(story.get("completed", true)):
+		return {"active": false, "items": []}
+	return {"active": true, "items": Array(story.get("unlocked_modules", [])).duplicate()}
 
 
 ## Player pressed "continue" on a story card (`mode=confirm` stages only).
@@ -408,6 +422,12 @@ static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary,
 				guarantee_flags.get("story_clue_id", "")
 			)
 			story["flags"] = guarantee_flags
+		"add_facility":
+			# 4.5.5：第三港由 Core 指定补上船厂设施（程序生成的原型可能没有）。
+			_add_port_facility(state, String(effect.get("facility", "")))
+		"upgrade_hull":
+			# 4.5.5：船厂替玩家换一艘带客舱位的船（旧船存入当前港仓库）。
+			_upgrade_hull(state, hub, effect)
 		"complete_story":
 			_complete(story, config(state, hub))
 		_:
@@ -556,6 +576,41 @@ class _EffectContext:
 		registries = p_registries
 
 
+## 4.5.5：把 Core 指定的设施补到当前港（第三港可能是没有船厂的渔村 / 香料港）。
+static func _add_port_facility(state: GameState, facility: String) -> void:
+	if facility.is_empty():
+		return
+	var port := MapOps.port(state.world(), state.current_port_id())
+	if port.is_empty():
+		return
+	var facilities: Array = Array(port.get("facilities", []))
+	if facilities.has(facility):
+		return
+	facilities.append(facility)
+	port["facilities"] = facilities
+
+
+## 4.5.5：剧情换船——保留已有货舱 / 锅炉等模块，把船体换成 Core 指定的、
+## 带客舱位的船体；旧船体存入当前港仓库，耐久重置为新船上限。
+static func _upgrade_hull(state: GameState, hub: RegistryHub, effect: Dictionary) -> void:
+	var hull_id := String(effect.get("hull_id", ""))
+	if hull_id.is_empty():
+		return
+	var hull: ContentDefinition = hub.get_by_id(ContentTypes.HULL, hull_id)
+	if hull == null:
+		push_warning("StoryService: unknown upgrade hull '%s'" % hull_id)
+		return
+	var ship := state.ship()
+	var old_hull_id := String(ship.get("hull_id", ""))
+	if old_hull_id == hull_id:
+		return
+	ship["hull_id"] = hull_id
+	ship["durability"] = ShipOps.durability_max(hub, ship)
+	if bool(effect.get("store_old", true)) and not old_hull_id.is_empty():
+		WarehouseOps.add_module(state, state.current_port_id(), old_hull_id, 1)
+	ShipModules.install_slot(ship, "hull")
+
+
 ## Reveals the auto-accepted main contract destination on both the played and the
 ## coordinate map. This is the guaranteed first-voyage affordance (and the skip
 ## safety net): the contract paper names the harbour.
@@ -612,17 +667,28 @@ static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect:
 		offer["cargo"] = [entry]
 		offer["cargo_weight"] = float(amount) * unit_weight
 		offer["player_sourced"] = not provider.is_empty()
-		offer["name_key"] = String(effect.get("name_key", offer.get("name_key", "")))
-		offer["description_key"] = String(effect.get("description_key", offer.get("description_key", "")))
-		var formula_id := String(effect.get("deadline_formula", ""))
-		if not formula_id.is_empty():
-			var hours := FormulaRegistry.evaluate(formula_id, {
-				"distance": float(offer.get("distance", 0.0)),
-				"cargo_weight": float(offer.get("cargo_weight", 0.0)),
-				"passengers": 0,
-			})
-			if hours > 0.0:
-				offer["deadline"] = state.now() + hours
+	# 4.5.5：第三主线仍是 main_03 段（保持 5 段主线计数），但内容改成送 1 名旅客：
+	# 清空模板的货箱、写入旅客人数。`passengers` 由 Core 给出，框架不写死 1。
+	if effect.has("passengers"):
+		offer["passengers"] = int(effect.get("passengers", 0))
+		offer["cargo"] = []
+		offer["cargo_weight"] = 0.0
+		offer["player_sourced"] = false
+	var name_key := String(effect.get("name_key", ""))
+	if not name_key.is_empty():
+		offer["name_key"] = name_key
+	var description_key := String(effect.get("description_key", ""))
+	if not description_key.is_empty():
+		offer["description_key"] = description_key
+	var formula_id := String(effect.get("deadline_formula", ""))
+	if not formula_id.is_empty():
+		var hours := FormulaRegistry.evaluate(formula_id, {
+			"distance": float(offer.get("distance", 0.0)),
+			"cargo_weight": float(offer.get("cargo_weight", 0.0)),
+			"passengers": int(offer.get("passengers", 0)),
+		})
+		if hours > 0.0:
+			offer["deadline"] = state.now() + hours
 	var attached := ContractOps.attach(state, hub, offer)
 	if not bool(attached.get("ok", false)):
 		push_warning("StoryService: cannot attach tutorial contract '%s': %s" % [
