@@ -14,6 +14,7 @@
 // - 新源码优先在前 120 行维护 `@static-doc`；不能写注释的格式使用 `docs/static_headers/<源码路径>.md`。
 // - 旧 `FILE_DOCS` 只作为迁移兼容层，优先级低于源码注释和 sidecar。
 // - 默认在临时目录完成构建后原子替换 `docs/static`；`--check` 只比较，不写工作区。
+// - 只收录仓库应有的源码（git 跟踪或未忽略）；`SNModMaker/mods` 等被 .gitignore 排除的本地工作区不进入 manifest，否则干净检出（CI）与本地生成结果不一致。
 // - GDScript 符号提取支持普通/静态函数、推断/显式类型常量、类与信号。
 // @end-static-doc
 
@@ -325,11 +326,33 @@ function fallbackRole(source) {
   return `源文件：${path.basename(source)}`;
 }
 
+// Sources that belong to the repository: tracked, plus untracked files that are
+// not git-ignored. Local workspaces (SNModMaker/mods, SNBattleSim/mods exports)
+// are generated artifacts, so hashing them would make CI's clean checkout look
+// stale even though nothing in git changed.
+let REPO_SOURCES = null;
+function repoSources() {
+  if (REPO_SOURCES) return REPO_SOURCES;
+  try {
+    REPO_SOURCES = new Set(
+      execSync("git ls-files -z --cached --others --exclude-standard", { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] })
+        .toString()
+        .split("\0")
+        .filter(Boolean),
+    );
+  } catch {
+    REPO_SOURCES = null;
+  }
+  return REPO_SOURCES;
+}
+
 function moduleSources(modulePath) {
   const absolute = path.join(ROOT, modulePath);
-  return walk(absolute)
+  const sources = walk(absolute)
     .map((full) => path.relative(ROOT, full).replaceAll("\\", "/"))
     .sort();
+  const repo = repoSources();
+  return repo ? sources.filter((source) => repo.has(source)) : sources;
 }
 
 function renderModuleReadme(docRoot, modulePath) {

@@ -23,65 +23,6 @@
 | `js/validate.js` | JSON Schema 子集校验器与 Steam Navigator 项目语义校验：ID、引用、本地化、补丁与清单一致性。 | [查看](./js/validate.js.md) |
 | `js/zip.js` | 零依赖 ZIP 读写：中央目录解析、CRC32、store / deflate-raw 压缩，以及 ZIP 体积与路径限制。 | [查看](./js/zip.js.md) |
 | `mods/README.md` | 磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。 | 本页 |
-| `mods/core/.snmodproj.json` | 源文件：.snmodproj.json | 本页 |
-| `mods/core/assets/icons/coal.png` | 源文件：coal.png | 本页 |
-| `mods/core/assets/icons/money.png` | 源文件：money.png | 本页 |
-| `mods/core/assets/icons/water.png` | 源文件：water.png | 本页 |
-| `mods/core/assets/models/SN_Barrel.glb` | 源文件：SN_Barrel.glb | 本页 |
-| `mods/core/assets/models/SN_Bell.glb` | 源文件：SN_Bell.glb | 本页 |
-| `mods/core/assets/models/SN_Boiler_Unit.glb` | 源文件：SN_Boiler_Unit.glb | 本页 |
-| `mods/core/assets/models/SN_Buoy.glb` | 源文件：SN_Buoy.glb | 本页 |
-| `mods/core/assets/models/SN_Capstan.glb` | 源文件：SN_Capstan.glb | 本页 |
-| `mods/core/assets/models/SN_Cargo_Net.glb` | 源文件：SN_Cargo_Net.glb | 本页 |
-| `mods/core/assets/models/SN_Chain_Coil.glb` | 源文件：SN_Chain_Coil.glb | 本页 |
-| `mods/core/assets/models/SN_Coal_Chute.glb` | 源文件：SN_Coal_Chute.glb | 本页 |
-| `mods/core/assets/models/SN_Coal_Pile.glb` | 源文件：SN_Coal_Pile.glb | 本页 |
-| `mods/core/assets/models/SN_Crate.glb` | 源文件：SN_Crate.glb | 本页 |
-| `mods/core/assets/models/SN_Dock_Fender.glb` | 源文件：SN_Dock_Fender.glb | 本页 |
-| `mods/core/assets/models/SN_Dock_Ladder.glb` | 源文件：SN_Dock_Ladder.glb | 本页 |
-| `mods/core/assets/models/SN_Dock_Stairs.glb` | 源文件：SN_Dock_Stairs.glb | 本页 |
-| `mods/core/assets/models/SN_Dock_Wall.glb` | 源文件：SN_Dock_Wall.glb | 本页 |
-| `mods/core/assets/models/SN_Fender_Ball.glb` | 源文件：SN_Fender_Ball.glb | 本页 |
-| `mods/core/assets/models/SN_Flag_Pole.glb` | 源文件：SN_Flag_Pole.glb | 本页 |
-| `mods/core/assets/models/SN_Gangway.glb` | 源文件：SN_Gangway.glb | 本页 |
-| `mods/core/assets/models/SN_Gas_Lamp.glb` | 源文件：SN_Gas_Lamp.glb | 本页 |
-| `mods/core/assets/models/SN_Gear_Crate.glb` | 源文件：SN_Gear_Crate.glb | 本页 |
-| `mods/core/assets/models/SN_Grab_Bucket.glb` | 源文件：SN_Grab_Bucket.glb | 本页 |
-| `mods/core/assets/models/SN_Handcart.glb` | 源文件：SN_Handcart.glb | 本页 |
-| `mods/core/assets/models/SN_Harbor_Crane.glb` | 源文件：SN_Harbor_Crane.glb | 本页 |
-| `mods/core/assets/models/SN_Ironclad.glb` | 源文件：SN_Ironclad.glb | 本页 |
-| `mods/core/assets/models/SN_Keel_Block.glb` | 源文件：SN_Keel_Block.glb | 本页 |
-| `mods/core/assets/models/SN_Mooring_Bollard.glb` | 源文件：SN_Mooring_Bollard.glb | 本页 |
-| `mods/core/assets/models/SN_Mooring_Rope.glb` | 源文件：SN_Mooring_Rope.glb | 本页 |
-| `mods/core/assets/models/SN_Ore_Pile.glb` | 源文件：SN_Ore_Pile.glb | 本页 |
-| `mods/core/assets/models/SN_Paddle_Freighter.glb` | 源文件：SN_Paddle_Freighter.glb | 本页 |
-| `mods/core/assets/models/SN_Paddle_Steamer.glb` | 源文件：SN_Paddle_Steamer.glb | 本页 |
-| `mods/core/assets/models/SN_Pallet.glb` | 源文件：SN_Pallet.glb | 本页 |
-| `mods/core/assets/models/SN_Plate_Stack.glb` | 源文件：SN_Plate_Stack.glb | 本页 |
-| `mods/core/assets/models/SN_Port_Sign.glb` | 源文件：SN_Port_Sign.glb | 本页 |
-| `mods/core/assets/models/SN_Sack_Pile.glb` | 源文件：SN_Sack_Pile.glb | 本页 |
-| `mods/core/assets/models/SN_Schooner_Fame.glb` | 源文件：SN_Schooner_Fame.glb | 本页 |
-| `mods/core/assets/models/SN_Ship_Prototype.glb` | 源文件：SN_Ship_Prototype.glb | 本页 |
-| `mods/core/assets/models/SN_Steam_Pipe.glb` | 源文件：SN_Steam_Pipe.glb | 本页 |
-| `mods/core/assets/models/SN_Timber_Stack.glb` | 源文件：SN_Timber_Stack.glb | 本页 |
-| `mods/core/content/boilers.json` | 源文件：boilers.json | 本页 |
-| `mods/core/content/cabins.json` | 源文件：cabins.json | 本页 |
-| `mods/core/content/cargo_modules.json` | 源文件：cargo_modules.json | 本页 |
-| `mods/core/content/contracts.json` | 源文件：contracts.json | 本页 |
-| `mods/core/content/events.json` | 源文件：events.json | 本页 |
-| `mods/core/content/goods.json` | 源文件：goods.json | 本页 |
-| `mods/core/content/hulls.json` | 源文件：hulls.json | 本页 |
-| `mods/core/content/map_profiles.json` | 源文件：map_profiles.json | 本页 |
-| `mods/core/content/materials.json` | 源文件：materials.json | 本页 |
-| `mods/core/content/navigation_modules.json` | 源文件：navigation_modules.json | 本页 |
-| `mods/core/content/port_archetypes.json` | 源文件：port_archetypes.json | 本页 |
-| `mods/core/content/roles.json` | 源文件：roles.json | 本页 |
-| `mods/core/content/safety_modules.json` | 源文件：safety_modules.json | 本页 |
-| `mods/core/content/starting_builds.json` | 源文件：starting_builds.json | 本页 |
-| `mods/core/content/strategies.json` | 源文件：strategies.json | 本页 |
-| `mods/core/localization/en.json` | 源文件：en.json | 本页 |
-| `mods/core/localization/zh_CN.json` | 源文件：zh_CN.json | 本页 |
-| `mods/core/manifest.json` | 源文件：manifest.json | 本页 |
 | `tests/browser-smoke.mjs` | Chrome DevTools Protocol 冒烟测试：新建项目、实体键事务、模块子分页与船体模块区、本地化、自定义资源选择器、ZIP、导入与撤销。 | [查看](./tests/browser-smoke.mjs.md) |
 | `tests/content-cli.test.mjs` | Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出。 | [查看](./tests/content-cli.test.mjs.md) |
 | `tests/run-tests.js` | Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析。 | [查看](./tests/run-tests.js.md) |
