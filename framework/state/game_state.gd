@@ -59,9 +59,24 @@ const CLUES_DEFAULTS := {
 	"expired": [],
 }
 
+## Stage 4.5 story / tutorial progress. Lazy: saves created before the tutorial
+## system get `active=false, completed=true` (no gating, no story cards), so no
+## `schema_version` bump is needed.
+const STORY_DEFAULTS := {
+	"flow_id": "",
+	"stage_index": -1,
+	"active": false,
+	"completed": true,
+	"skipped": false,
+	"seen": [],
+	"counters": {},
+	"flags": {},
+	"unlocked_features": [],
+	"unlocked_items": [],
+	"unlocked_modules": [],
+}
+
 var data: Dictionary = {}
-
-
 func _init(initial_data: Dictionary = {}) -> void:
 	data = initial_data
 
@@ -279,6 +294,25 @@ func ensure_clues() -> Dictionary:
 		if not clues_data.has(key):
 			clues_data[key] = GameState._copy_default(CLUES_DEFAULTS[key])
 	return clues_data
+
+
+## Story / tutorial progress. Missing in saves created before stage 4.5; backfilled
+## lazily as "already completed" so old saves keep every feature and never see the
+## tutorial card.
+func story() -> Dictionary:
+	return ensure_story()
+
+
+func ensure_story() -> Dictionary:
+	var current: Variant = data.get("story", null)
+	if not (current is Dictionary):
+		current = STORY_DEFAULTS.duplicate(true)
+		data["story"] = current
+	var story_data: Dictionary = current
+	for key in STORY_DEFAULTS.keys():
+		if not story_data.has(key):
+			story_data[key] = GameState._copy_default(STORY_DEFAULTS[key])
+	return story_data
 
 
 ## Active exploration voyage (pure data) or null when not exploring.

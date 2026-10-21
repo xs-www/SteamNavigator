@@ -554,5 +554,18 @@
   "ui.error.not_goods_clue": "That is not a market lead",
   "ui.error.no_travel_target": "That lead has no harbour to sail to",
   "ui.error.already_exploring": "Already on an exploration voyage",
-  "ui.error.no_exploration_target": "There is no exploration target nearby"
+  "ui.error.no_exploration_target": "There is no exploration target nearby",
+  "ui.story.eyebrow": "Harbour Office · Tutorial",
+  "ui.story.continue": "Continue",
+  "ui.story.skip": "Skip tutorial",
+  "ui.story.skip_confirm_title": "Skip the tutorial?",
+  "ui.story.skip_confirm_body": "This unlocks every feature and skips the story. You can keep playing normally.",
+  "ui.story.skip_confirm_yes": "Skip it",
+  "ui.story.skip_confirm_no": "Cancel",
+  "ui.story.objective": "Objective: %s",
+  "ui.story.objective_progress": "Objective: %s (%d/%d)",
+  "ui.story.unlocked": "Unlocked: %s",
+  "ui.error.story_inactive": "There is no story in progress",
+  "ui.error.story_not_confirm": "This step advances when its objective is met",
+  "ui.error.missing_event": "Missing story event parameter"
 }

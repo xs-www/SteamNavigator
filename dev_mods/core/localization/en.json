@@ -121,5 +121,19 @@
   "risk.strategy": "Boiler strategy",
   "risk.overload": "Near weight limit",
   "risk.low_durability": "Low hull durability",
-  "risk.equipment_crew": "Equipment and crew modifiers"
+  "risk.equipment_crew": "Equipment and crew modifiers",
+  "story.core.opening.title": "Day One — Iron Harbour",
+  "story.core.opening.body.1": "You wake on the Iron Harbour docks with no ship and no coin.",
+  "story.core.opening.body.2": "An old shipwright presses a rusty key into your hand: \"The boiler still burns. Get her supplies before she dies on you.\"",
+  "story.core.supply_brief.title": "Making Ready",
+  "story.core.supply_brief.body.1": "Open the Supply page and buy 2 coal and 2 fresh water. The harbour clerk will talk charts and papers once she is provisioned.",
+  "story.core.supply_brief.objective": "Buy 2 coal for the ship (Supply page)",
+  "story.core.chart_brief.title": "The Chart Unsealed",
+  "story.core.chart_brief.body.1": "The harbour clerk reads your contract and slaps a chart on the table. Your destination is already marked — open the chart and check the route.",
+  "story.core.chart_brief.objective": "Open the chart and review the destination",
+  "story.core.depart_brief.title": "First Voyage",
+  "story.core.depart_brief.body.1": "The contract is on a clock. Select the destination on the chart and confirm departure; with little time to spare, choose the Fast boiler strategy.",
+  "story.core.depart_brief.objective": "Depart from the chart for the destination",
+  "story.core.chapter_wrap.title": "First Voyage Complete",
+  "story.core.chapter_wrap.body.1": "You reached the neighbouring harbour. Chapter one of the tutorial ends here; later chapters arrive in the next build. For now, explore freely."
 }

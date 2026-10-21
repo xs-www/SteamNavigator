@@ -1,0 +1,130 @@
+extends TestCase
+## @static-doc
+## 作用：阶段 4.5.1 新手剧情 UI 冒烟测试：教程局挂出剧情卡 / 目标条、导航与海图入口
+## 按功能解锁过滤、剧情卡继续推进阶段、跳过教程的确认页与全解锁。
+##
+## ## 契约与约束
+## - 用真实 `main.tscn` 与真实 Core 内容；教程局通过 `run.start tutorial=true` 建立，
+##   非教程局用于对照（不弹卡、不门禁）。
+## - 只驱动 Shell 的公开信号 / 命令，不断言内部节点布局尺寸；卡片按钮按节点名
+##   `ContinueButton` / `SkipButton` / `SkipConfirmButton` 查找。
+## @end-static-doc
+
+const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
+const STEADY_BUILD := "core:starting_build/steady"
+
+
+func test_tutorial_shell_mounts_card_and_locks_features() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	assert_not_null(shell._story_card, "the tutorial mounts a story card")
+	assert_true(bool(shell._story_card_open), "the story card blocks the page")
+	var story_label := shell.find_child("StoryTitle", true, false) as Label
+	assert_not_null(story_label, "the card renders a localized title")
+	assert_false(String(story_label.text).is_empty(), "the title is translated, not a raw key")
+	var nav := _nav_buttons(shell)
+	assert_eq(nav.size(), 1, "the opening stage only exposes the overview nav button")
+	assert_true(_needs_supply_locked(shell), "supply is not reachable before the briefing")
+	var chart_button := shell.find_child("ChartButton", true, false)
+	assert_true(chart_button == null, "the chart entry stays hidden in the opening stage")
+	_unmount(bundle)
+
+
+func test_continue_unlocks_supply_then_buying_advances_to_the_chart() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	var continue_button := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(continue_button, "the opening card has a continue button")
+	continue_button.pressed.emit()
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_brief", "continue enters the supply briefing")
+	assert_true((shell._story_vm.get("unlocked_features", []) as Array).has("supply"),
+		"the supply nav unlocks")
+	assert_eq(_nav_buttons(shell).size(), 2, "overview + supply are now in the nav")
+	var dismiss := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(dismiss, "the objective briefing card can be dismissed")
+	dismiss.pressed.emit()
+	assert_true(shell._story_card == null, "dismissing the briefing hides the card")
+	assert_not_null(shell._story_objective, "the non-blocking objective appears after the briefing")
+	var objective_label := shell.find_child("ObjectiveLabel", true, false) as Label
+	assert_not_null(objective_label, "the objective renders its localized text")
+	assert_false(String(objective_label.text).is_empty(), "the objective text is translated")
+	# 2 coal is the Core-authored objective; the purchase is forwarded as a story event.
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "chart_brief", "2 coal advances to the chart briefing")
+	assert_true((shell._story_vm.get("unlocked_features", []) as Array).has("chart"),
+		"the chart unlocks after provisioning")
+	assert_not_null(shell._story_card, "the chart briefing still has a card to read")
+	_unmount(bundle)
+
+
+func test_skip_confirmation_unlocks_everything_and_removes_the_card() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	var skip_button := shell.find_child("SkipButton", true, false) as Button
+	assert_not_null(skip_button, "the card offers a skip button")
+	skip_button.pressed.emit()
+	var confirm_button := shell.find_child("SkipConfirmButton", true, false) as Button
+	assert_not_null(confirm_button, "skipping asks for confirmation first")
+	confirm_button.pressed.emit()
+	assert_true(bool(shell._story_vm.get("completed", false)), "the tutorial is completed")
+	assert_true(bool(shell._story_vm.get("skipped", false)), "the tutorial records that it was skipped")
+	assert_true(shell._story_card == null, "no card remains after skipping")
+	assert_eq(_nav_buttons(shell).size(), 7, "every nav screen is unlocked")
+	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
+	_unmount(bundle)
+
+
+func test_non_tutorial_shell_has_no_card_and_no_gating() -> void:
+	var bundle := _mount(false)
+	var shell: Control = bundle["shell"]
+	assert_true(shell._story_card == null, "a non-tutorial run has no story card")
+	assert_eq(_nav_buttons(shell).size(), 7, "a non-tutorial run keeps every nav screen")
+	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
+	_unmount(bundle)
+
+
+# ── helpers ──
+
+
+func _mount(tutorial: bool) -> Dictionary:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var started := context.commands.execute(&"run.start", {
+		"build_id": STEADY_BUILD,
+		"seed": 20260421,
+		"tutorial": tutorial,
+	})
+	assert_true(bool(started.get("ok", false)), "run.start succeeds in the story UI fixture: %s" % str(started))
+	var scene: PackedScene = load(MAIN_SCENE)
+	assert_not_null(scene, "the playable shell scene loads")
+	var shell: Control = scene.instantiate()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(shell)
+	assert_true(shell.is_inside_tree(), "the shell fixture is inside the scene tree")
+	return {"context": context, "shell": shell, "tree": tree}
+
+
+func _unmount(bundle: Dictionary) -> void:
+	var shell: Control = bundle["shell"]
+	if shell.get_parent() != null:
+		shell.get_parent().remove_child(shell)
+	shell.free()
+
+
+func _nav_buttons(shell: Control) -> Array:
+	var nav := shell.find_child("Nav", true, false)
+	if nav == null:
+		return []
+	var buttons: Array = []
+	for child in nav.get_children():
+		if child is Button:
+			buttons.append(child)
+	return buttons
+
+
+func _needs_supply_locked(shell: Control) -> bool:
+	# Supply is gated through the story VM; the nav must not expose a page that
+	# opens the supply screen while the feature is locked.
+	var before := String(shell._active_screen)
+	shell._on_nav("supply")
+	return String(shell._active_screen) == before

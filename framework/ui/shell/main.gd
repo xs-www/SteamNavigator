@@ -42,6 +42,8 @@ const AT_SEA_SCREEN_SCENE := preload("res://framework/ui/screens/flow/at_sea_scr
 const EVENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/event_screen.tscn")
 const SEA_CHART_SCREEN_SCENE := preload("res://framework/ui/screens/flow/sea_chart_screen.tscn")
 const CLUE_LOG_SCREEN_SCENE := preload("res://framework/ui/screens/flow/clue_log_screen.tscn")
+const STORY_CARD_SCRIPT := preload("res://framework/ui/components/sn_story_card.gd")
+const STORY_OBJECTIVE_SCRIPT := preload("res://framework/ui/components/sn_story_objective.gd")
 const VICTORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/victory_screen.tscn")
 const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_menu_screen.tscn")
 const NEW_GAME_SCREEN_SCENE := preload("res://framework/ui/screens/menu/new_game_screen.tscn")
@@ -135,6 +137,12 @@ var _chart_departure: Dictionary = {}
 var _pending_chart_port: String = ""
 ## 4.4.4：线索列表页点击条目后，回海图时要选中的线索 id（消费一次后清空）。
 var _pending_chart_clue: String = ""
+## 4.5 / U1：当前剧情 ViewModel、剧情卡 / 目标条图层与卡片打开状态（仅 UI 会话）。
+var _story_vm: Dictionary = {}
+var _story_layer: Control = null
+var _story_card: Control = null
+var _story_objective: Control = null
+var _story_card_open := false
 var _seed_text: String = ""
 var _status_message: String = ""
 var _status_is_error: bool = false
@@ -299,6 +307,8 @@ func _rebuild_ui() -> void:
 	if _context == null:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
+		_story_vm = {}
+		_update_story_layer()
 		_root_box.add_child(_label("Loading framework...", 20, COLOR_MUTED))
 		get_tree().create_timer(0.4).timeout.connect(_refresh)
 		return
@@ -316,6 +326,8 @@ func _rebuild_ui() -> void:
 	if not has_run:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
+		_story_vm = {}
+		_update_story_layer()
 		_build_menu(app)
 		return
 	var port_result := _context.queries.execute(&"port.view")
@@ -326,6 +338,10 @@ func _rebuild_ui() -> void:
 		return
 	var data: Dictionary = port_result["data"]
 	_last_port_view = data
+	# 4.5 / U1：剧情 ViewModel 同时驱动功能门禁、剧情卡与目标条。
+	var story_result := _context.queries.execute(&"story.view")
+	_story_vm = story_result.get("data", {}) if bool(story_result.get("ok", false)) else {}
+	_update_story_layer()
 	var at_sea := bool(data.get("at_sea", false))
 	# While the voyage presentation owns the screen the player is not actually in
 	# port: navigation stays hidden and the chart page is mounted instead.
@@ -413,6 +429,147 @@ func _rebuild_ui() -> void:
 		_:
 			_screen_overview(data)
 	_sync_port_stage(data)
+
+
+## ---------------------------------------------------------------------------
+## Stage 4.5 story layer + feature gating
+## ---------------------------------------------------------------------------
+
+
+func _story_active() -> bool:
+	if _story_vm.is_empty():
+		return false
+	return bool(_story_vm.get("enabled", false)) \
+		and bool(_story_vm.get("active", false)) \
+		and not bool(_story_vm.get("completed", true))
+
+
+## True when the feature is usable. No story / finished story / old saves = all open.
+func _story_feature_unlocked(feature: String) -> bool:
+	if feature.is_empty() or _story_vm.is_empty():
+		return true
+	if not bool(_story_vm.get("enabled", false)):
+		return true
+	if not bool(_story_vm.get("active", false)) or bool(_story_vm.get("completed", true)):
+		return true
+	return Array(_story_vm.get("unlocked_features", [])).has(feature)
+
+
+## Maps a nav screen to the framework feature the story unlocks.
+func _story_screen_feature(screen: String) -> String:
+	match screen:
+		"overview":
+			return StoryService.FEATURE_OVERVIEW
+		"market":
+			return StoryService.FEATURE_MARKET
+		"contracts":
+			return StoryService.FEATURE_CONTRACTS
+		"shipyard":
+			return StoryService.FEATURE_SHIPYARD
+		"supply":
+			return StoryService.FEATURE_SUPPLY
+		"intel":
+			# 4.5.4 起情报页会被酒馆替换；门禁键提前统一。
+			return StoryService.FEATURE_TAVERN
+		_:
+			return ""
+
+
+func _ensure_story_layer() -> Control:
+	if _story_layer != null and is_instance_valid(_story_layer):
+		return _story_layer
+	_story_layer = Control.new()
+	_story_layer.name = "StoryLayer"
+	_story_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_story_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_story_layer)
+	return _story_layer
+
+
+func _clear_story_layer() -> void:
+	_story_card = null
+	_story_objective = null
+	_story_card_open = false
+	if _story_layer == null or not is_instance_valid(_story_layer):
+		return
+	for child in _story_layer.get_children():
+		_story_layer.remove_child(child)
+		child.queue_free()
+	_story_layer.visible = false
+
+
+## Rebuilds the full-window story card / non-blocking objective from `story.view`.
+func _update_story_layer() -> void:
+	if not _story_active():
+		_clear_story_layer()
+		return
+	var layer := _ensure_story_layer()
+	for child in layer.get_children():
+		layer.remove_child(child)
+		child.queue_free()
+	_story_card = null
+	_story_objective = null
+	_story_card_open = false
+	var card: Variant = _story_vm.get("card", null)
+	if card is Dictionary:
+		var card_control: Control = STORY_CARD_SCRIPT.new()
+		card_control.name = "StoryCard"
+		layer.add_child(card_control)
+		card_control.bind(card as Dictionary, Callable(self, "_tr"))
+		card_control.advance_requested.connect(func() -> void:
+			_run_command(&"story.advance", {})
+		)
+		card_control.skip_requested.connect(func() -> void:
+			_run_command(&"story.skip", {})
+		)
+		_story_card = card_control
+		_story_card_open = true
+	var objective: Variant = _story_vm.get("objective", null)
+	if objective is Dictionary and _story_card == null:
+		var objective_control: Control = STORY_OBJECTIVE_SCRIPT.new()
+		objective_control.name = "StoryObjective"
+		layer.add_child(objective_control)
+		objective_control.bind(
+			String((objective as Dictionary).get("text_key", "")),
+			int((objective as Dictionary).get("progress", 0)),
+			int((objective as Dictionary).get("target", 0)),
+			Callable(self, "_tr")
+		)
+		_story_objective = objective_control
+		call_deferred("_place_story_objective")
+	layer.visible = true
+	if layer.get_parent() == self:
+		move_child(layer, get_child_count() - 1)
+
+
+## Centers the non-blocking objective under the top chrome once layout has settled.
+func _place_story_objective() -> void:
+	if _story_objective == null or not is_instance_valid(_story_objective):
+		return
+	if _story_layer == null or not is_instance_valid(_story_layer):
+		return
+	_story_objective.reset_size()
+	var width := _story_objective.size.x
+	var x := maxf(8.0, (_story_layer.size.x - width) * 0.5)
+	var y := _port_hud_top_safe() + 4.0
+	_story_objective.position = Vector2(x, y)
+
+
+## Forwards a successful command / UI event to the story state machine. Returns true
+## when the stage changed (caller should refresh the UI to pick up the new card).
+func _observe_story(event: String, data: Dictionary = {}) -> bool:
+	if _context == null or not _context.has_run() or not _story_active():
+		return false
+	var before_stage := int(_story_vm.get("stage_index", -1))
+	var before_completed := bool(_story_vm.get("completed", false))
+	var result := _context.commands.execute(
+		&"story.observe", {"event": event, "data": data}
+	)
+	if not bool(result.get("ok", false)):
+		return false
+	var after_view: Dictionary = result.get("data", {}).get("view", {})
+	return int(after_view.get("stage_index", before_stage)) != before_stage \
+		or bool(after_view.get("completed", false)) != before_completed
 
 
 ## ---------------------------------------------------------------------------
@@ -529,18 +686,21 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 	nav.add_theme_constant_override("separation", 2)
 	parent.add_child(nav)
 	for screen in SCREENS:
+		if not _story_feature_unlocked(_story_screen_feature(screen)):
+			continue
 		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
 		button.custom_minimum_size = Vector2(64, 36)
 		button.add_theme_font_size_override("font_size", 13)
 		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
 		nav.add_child(button)
 	# The nautical chart is a toggle, not a nav page: M opens/closes it and the
-	# button highlights only while the chart is up.
-	var chart_button := _button(_tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
-	chart_button.custom_minimum_size = Vector2(64, 36)
-	chart_button.add_theme_font_size_override("font_size", 13)
-	chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNGhostButton"
-	nav.add_child(chart_button)
+	# button highlights only while the chart is up. Gated by the story feature.
+	if _story_feature_unlocked(StoryService.FEATURE_CHART):
+		var chart_button := _button(_tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
+		chart_button.custom_minimum_size = Vector2(64, 36)
+		chart_button.add_theme_font_size_override("font_size", 13)
+		chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNGhostButton"
+		nav.add_child(chart_button)
 
 
 func _small_chrome_button(text: String, callback: Callable) -> Button:
@@ -771,19 +931,22 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 		detail_button.add_theme_font_size_override("font_size", 13)
 		content.add_child(detail_button)
 	# 4.3.4 / U7：出航准备页已删除，状态条只负责打开海图（出航在弹窗里确认）。
-	var chart_button := _button("%s ▶" % _tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
-	chart_button.name = "ChartButton"
-	chart_button.theme_type_variation = &"SNPrimaryButton"
-	chart_button.custom_minimum_size = Vector2(0, 32)
-	chart_button.add_theme_font_size_override("font_size", 13)
-	content.add_child(chart_button)
-	var wait_button := _button(
-		_tr("ui.button.wait_hours", "Wait %d h") % 12,
-		func() -> void: _run_command(&"port.wait", {"hours": 12})
-	)
-	wait_button.custom_minimum_size = Vector2(0, 32)
-	wait_button.add_theme_font_size_override("font_size", 13)
-	content.add_child(wait_button)
+	# 4.5: chart / wait entries are gated while the story is running.
+	if _story_feature_unlocked(StoryService.FEATURE_CHART):
+		var chart_button := _button("%s ▶" % _tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
+		chart_button.name = "ChartButton"
+		chart_button.theme_type_variation = &"SNPrimaryButton"
+		chart_button.custom_minimum_size = Vector2(0, 32)
+		chart_button.add_theme_font_size_override("font_size", 13)
+		content.add_child(chart_button)
+	if not _story_active():
+		var wait_button := _button(
+			_tr("ui.button.wait_hours", "Wait %d h") % 12,
+			func() -> void: _run_command(&"port.wait", {"hours": 12})
+		)
+		wait_button.custom_minimum_size = Vector2(0, 32)
+		wait_button.add_theme_font_size_override("font_size", 13)
+		content.add_child(wait_button)
 
 
 ## Last pushed notice rendered with the same template filling as the overview log.
@@ -1245,6 +1408,9 @@ func _layout_port_hotspots() -> void:
 		var facility := String(raw_facility)
 		if not PORT_STAGE_FACILITY_SCREENS.has(facility):
 			continue
+		var facility_screen := String(PORT_STAGE_FACILITY_SCREENS[facility])
+		if not _story_feature_unlocked(_story_screen_feature(facility_screen)):
+			continue
 		var normalized: Vector2 = stage.facility_screen_anchor(facility)
 		if normalized == Vector2.ZERO:
 			continue
@@ -1259,19 +1425,21 @@ func _layout_port_hotspots() -> void:
 	_layout_sign_column(right, true, top_safe, bottom_safe, layer_size)
 	# Permanent chart sign pinned to the bottom of the right column (4.3.4 / U7:
 	# replaces the old voyage sign; departure is confirmed inside the chart).
-	var chart_sign := _port_sign(
-		"%s ▶" % _tr("ui.nav.sea_chart", "海图"),
-		_on_port_hotspot.bind("sea_chart"),
-		true,
-		"sea_chart",
-		-1
-	)
-	chart_sign.name = "Hotspot_sea_chart"
-	chart_sign.position = Vector2(
-		layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH,
-		bottom_safe - PORT_SIGN_HEIGHT
-	)
-	_port_hotspot_layer.add_child(chart_sign)
+	# 4.5: hidden until the story unlocks the chart.
+	if _story_feature_unlocked(StoryService.FEATURE_CHART):
+		var chart_sign := _port_sign(
+			"%s ▶" % _tr("ui.nav.sea_chart", "海图"),
+			_on_port_hotspot.bind("sea_chart"),
+			true,
+			"sea_chart",
+			-1
+		)
+		chart_sign.name = "Hotspot_sea_chart"
+		chart_sign.position = Vector2(
+			layer_size.x - PORT_SIGN_MARGIN - PORT_SIGN_WIDTH,
+			bottom_safe - PORT_SIGN_HEIGHT
+		)
+		_port_hotspot_layer.add_child(chart_sign)
 
 
 func _layout_sign_column(entries: Array, right_column: bool, top_safe: float, bottom_safe: float, layer_size: Vector2) -> void:
@@ -1347,12 +1515,17 @@ func _port_hud_bottom_safe(layer_size: Vector2) -> float:
 
 
 func _on_port_hotspot(facility: String) -> void:
+	if _story_card_open:
+		return
 	if facility == "sea_chart":
 		# 4.3.4 / U7：牌匾入口改为打开海图，出航在海图确认弹窗里完成。
-		_toggle_sea_chart()
+		if _story_feature_unlocked(StoryService.FEATURE_CHART):
+			_toggle_sea_chart()
 		return
 	var screen_id: StringName = PORT_STAGE_FACILITY_SCREENS.get(facility, &"")
 	if screen_id == &"":
+		return
+	if not _story_feature_unlocked(_story_screen_feature(String(screen_id))):
 		return
 	_on_nav(String(screen_id))
 
@@ -1639,6 +1812,9 @@ func _screen_sea_chart(data: Dictionary) -> void:
 	screen.purchase_clue_requested.connect(_on_purchase_clue_requested)
 	screen.investigate_requested.connect(_on_investigate_requested)
 	_root_box.add_child(screen)
+	# 4.5：打开海图可能是剧情目标（chart_brief）；推进后下一帧刷新目标条。
+	if _observe_story("ui:chart_opened"):
+		call_deferred("_refresh")
 
 
 ## 确认弹窗当前策略：弹窗自己的选择 → Shell 记忆的上一次选择 → 按 `strategy.standard`
@@ -1817,6 +1993,11 @@ func _on_investigate_requested(clue_id: String) -> void:
 
 
 func _toggle_sea_chart() -> void:
+	if _story_card_open:
+		return
+	if _active_screen != "sea_chart" and _active_screen != "clue_log" \
+			and not _story_feature_unlocked(StoryService.FEATURE_CHART):
+		return
 	if _active_screen == "sea_chart":
 		_on_sea_chart_closed()
 	elif _active_screen == "clue_log":
@@ -1867,6 +2048,8 @@ func _on_clue_log_clue_selected(clue_id: String) -> void:
 func _sea_chart_available() -> bool:
 	if _context == null or not _context.has_run():
 		return false
+	if _story_card_open or not _story_feature_unlocked(StoryService.FEATURE_CHART):
+		return false
 	# No chart, no navigation while the voyage演出 owns the screen.
 	if _presentation != null:
 		return false
@@ -1878,6 +2061,8 @@ func _sea_chart_available() -> bool:
 
 func _on_sea_chart_closed() -> void:
 	_chart_departure = {}
+	# 4.5：关闭海图可能是剧情步骤（chart_brief → depart_brief）。
+	_observe_story("ui:chart_closed")
 	var target := _sea_chart_return
 	# 4.3.4 起没有 voyage 页：关闭海图回到打开它的页面，否则回总览。
 	if not SCREENS.has(target):
@@ -1888,6 +2073,10 @@ func _on_sea_chart_closed() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
 	if key_event == null or not key_event.pressed or key_event.echo:
+		return
+	# 4.5：剧情卡打开时暂停快捷键（卡片自带继续 / 跳过按钮）。
+	if _story_card_open:
+		get_viewport().set_input_as_handled()
 		return
 	if key_event.keycode == KEY_M and (_active_screen == "sea_chart" or _sea_chart_available()):
 		_toggle_sea_chart()
@@ -1913,6 +2102,9 @@ func _screen_settlement(data: Dictionary) -> void:
 	if _settlement_summary.is_empty():
 		_screen_overview(data)
 		return
+	# 4.5：抵达第二港是剧情阶段的推进点（第一航结束 / 后续幕）。
+	if _observe_story("ui:arrival_settled"):
+		call_deferred("_refresh")
 	var summary := _settlement_summary.duplicate(true)
 	var destination := String(summary.get("destination", ""))
 	var contracts: Array = summary.get("contracts", []).duplicate(true)
@@ -2670,6 +2862,8 @@ func _save_settings() -> void:
 
 
 func _on_nav(screen: String) -> void:
+	if screen != "sea_chart" and not _story_feature_unlocked(_story_screen_feature(screen)):
+		return
 	# Navigating away from the victory summary counts as "keep playing".
 	_victory_dismissed = true
 	var from := _active_screen
@@ -2697,7 +2891,11 @@ func _on_nav(screen: String) -> void:
 
 
 func _on_screen_navigation(screen_id: StringName, params: Dictionary) -> void:
+	if _story_card_open:
+		return
 	if screen_id == &"sea_chart":
+		if not _story_feature_unlocked(StoryService.FEATURE_CHART):
+			return
 		# 委托「规划出航」等入口：打开海图时预选目的港（不直接出航）。
 		_pending_chart_port = String(params.get("destination", ""))
 	_on_nav(String(screen_id))
@@ -2712,7 +2910,9 @@ func _on_new_run() -> void:
 	_pending_chart_clue = ""
 	_sea_chart_return = "overview"
 	_status_message = ""
-	_run_command(&"run.start", {"build_id": _selected_build, "seed": seed})
+	# 4.5：生产环境的每一局新开局都进入新手剧情（领域 `run.start` 默认
+	# tutorial=false，只有 Shell 的「开始新航行」显式开启剧情）。
+	_run_command(&"run.start", {"build_id": _selected_build, "seed": seed, "tutorial": true})
 
 
 func _on_continue() -> void:
@@ -2749,6 +2949,9 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 	var result := _context.commands.execute(command, params)
 	if bool(result.get("ok", false)):
 		_handle_success(command, result)
+		# 4.5：把成功命令转发给剧情状态机（剧情自身的命令不再回灌）。
+		if command != &"run.start" and not String(command).begins_with("story."):
+			_observe_story("cmd:%s" % String(command), result.get("data", {}))
 	else:
 		_set_status(_error_text(result), true)
 	# `voyage.start` / `event.choose_option` hand over to the cloud transition,
@@ -2767,6 +2970,8 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 	if command in [&"trade.buy", &"trade.sell", &"contract.accept", &"supply.buy_coal", &"supply.buy_water", &"ship.craft_module"]:
 		_play_pickup()
 	match String(command):
+		"story.advance", "story.skip", "story.observe":
+			pass
 		"run.start":
 			_active_screen = "overview"
 			_selected_strategy = ""

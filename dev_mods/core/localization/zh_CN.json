@@ -121,5 +121,19 @@
   "risk.strategy": "锅炉策略",
   "risk.overload": "接近载重上限",
   "risk.low_durability": "船体耐久偏低",
-  "risk.equipment_crew": "设备与船员修正"
+  "risk.equipment_crew": "设备与船员修正",
+  "story.core.opening.title": "第一日 · 铁港",
+  "story.core.opening.body.1": "你在铁港的码头醒来，身上没有船，也没有钱。",
+  "story.core.opening.body.2": "老船工把一艘旧船的钥匙塞进你手里：「锅炉还能烧。先去把补给备齐，别让它半路熄火。」",
+  "story.core.supply_brief.title": "备航",
+  "story.core.supply_brief.body.1": "打开补给页，先买 2 单位煤和 2 单位淡水。码头管事说，海图和报关手续等补给装好再谈。",
+  "story.core.supply_brief.objective": "为船购买 2 单位煤（补给页）",
+  "story.core.chart_brief.title": "海图解禁",
+  "story.core.chart_brief.body.1": "码头管事看过你的委托书，把一张海图拍在桌上。目的港已经标出来了——去海图确认航线。",
+  "story.core.chart_brief.objective": "打开海图并查看目的港",
+  "story.core.depart_brief.title": "第一航",
+  "story.core.depart_brief.body.1": "委托是限时的。在海图里选中目的港并确认出航；时间紧，建议在锅炉策略里选「快速」。",
+  "story.core.depart_brief.objective": "从海图出航前往目的港",
+  "story.core.chapter_wrap.title": "第一航结束",
+  "story.core.chapter_wrap.body.1": "你抵达了邻港。新手剧情第一章到此为止，后续章节会在下一版接入；现在可以自由探索。"
 }

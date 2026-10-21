@@ -58,7 +58,7 @@ static func create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionar
 	return ship
 
 
-static func create_run(context, build_id: String = "", requested_seed: int = 0) -> Dictionary:
+static func create_run(context, build_id: String = "", requested_seed: int = 0, tutorial: bool = false) -> Dictionary:
 	var hub: RegistryHub = context.registries
 	var build: ContentDefinition = null
 	if not build_id.is_empty():
@@ -167,12 +167,17 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 
 	ContractOps.generate_normal_offers(state, hub, rng, "initial:%s" % state.current_port_id())
 	state.push_notice("ui.notice.run_started", {"build": build.name_key})
+	if tutorial:
+		# Stage 4.5: new runs start with the Core-authored story flow enabled (or
+		# completed when the profile has no story), before the first UI rebuild.
+		StoryService.begin(state, hub)
 	return Result.ok({
 		"state": state,
 		"rng": rng,
 		"build": build,
 		"profile": profile,
 		"seed": seed_value,
+		"tutorial": tutorial,
 	})
 
 

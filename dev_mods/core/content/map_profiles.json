@@ -98,6 +98,88 @@
           "wait_clue_chance_per_block": 0.35,
           "wait_clue_max_chance": 0.85,
           "contract_clue_chance": 0.5
+        },
+        "story": {
+          "flow_id": "core:story/opening",
+          "enabled": true,
+          "skip_unlocks": [
+            "overview",
+            "supply",
+            "chart",
+            "market",
+            "contracts",
+            "clues",
+            "tavern",
+            "shipyard"
+          ],
+          "start_unlocks": [],
+          "start_items": [],
+          "start_modules": [],
+          "stages": [
+            {
+              "id": "opening",
+              "dialogue": {
+                "title_key": "story.core.opening.title",
+                "body_keys": [
+                  "story.core.opening.body.1",
+                  "story.core.opening.body.2"
+                ]
+              },
+              "unlock_features": ["overview"],
+              "effects": [{"type": "discover_contract_destination"}],
+              "advance": {"mode": "confirm"}
+            },
+            {
+              "id": "supply_brief",
+              "dialogue": {
+                "title_key": "story.core.supply_brief.title",
+                "body_keys": ["story.core.supply_brief.body.1"]
+              },
+              "unlock_features": ["supply"],
+              "objective": {
+                "text_key": "story.core.supply_brief.objective",
+                "target": 2
+              },
+              "advance": {
+                "event": "cmd:supply.buy_coal",
+                "counter": "coal_bought",
+                "at_least": 2
+              }
+            },
+            {
+              "id": "chart_brief",
+              "dialogue": {
+                "title_key": "story.core.chart_brief.title",
+                "body_keys": ["story.core.chart_brief.body.1"]
+              },
+              "unlock_features": ["chart"],
+              "objective": {
+                "text_key": "story.core.chart_brief.objective",
+                "target": 1
+              },
+              "advance": {"event": "ui:chart_opened"}
+            },
+            {
+              "id": "depart_brief",
+              "dialogue": {
+                "title_key": "story.core.depart_brief.title",
+                "body_keys": ["story.core.depart_brief.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.depart_brief.objective",
+                "target": 1
+              },
+              "advance": {"event": "ui:arrival_settled"}
+            },
+            {
+              "id": "chapter_wrap",
+              "dialogue": {
+                "title_key": "story.core.chapter_wrap.title",
+                "body_keys": ["story.core.chapter_wrap.body.1"]
+              },
+              "advance": {"mode": "confirm"}
+            }
+          ]
         }
       }
     }

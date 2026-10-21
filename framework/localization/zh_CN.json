@@ -554,5 +554,18 @@
   "ui.error.not_goods_clue": "这不是货物行情线索",
   "ui.error.no_travel_target": "这条线索没有可前往的港口",
   "ui.error.already_exploring": "已在探索航行中",
-  "ui.error.no_exploration_target": "附近没有值得探索的目标"
+  "ui.error.no_exploration_target": "附近没有值得探索的目标",
+  "ui.story.eyebrow": "航路局 · 新手教程",
+  "ui.story.continue": "继续",
+  "ui.story.skip": "跳过教程",
+  "ui.story.skip_confirm_title": "跳过新手教程？",
+  "ui.story.skip_confirm_body": "将直接解锁全部功能并跳过剧情；之后仍可正常游玩。",
+  "ui.story.skip_confirm_yes": "确定跳过",
+  "ui.story.skip_confirm_no": "取消",
+  "ui.story.objective": "目标：%s",
+  "ui.story.objective_progress": "目标：%s（%d/%d）",
+  "ui.story.unlocked": "解锁：%s",
+  "ui.error.story_inactive": "当前没有进行中的剧情",
+  "ui.error.story_not_confirm": "这一步需要完成目标后自动推进",
+  "ui.error.missing_event": "缺少剧情事件参数"
 }

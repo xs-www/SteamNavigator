@@ -6,7 +6,8 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		return Result.fail("run_already_started", "ui.error.run_already_started")
 	var build_id := String(params.get("build_id", ""))
 	var seed := int(params.get("seed", 0))
-	var created := RunFactory.create_run(context, build_id, seed)
+	var tutorial := bool(params.get("tutorial", false))
+	var created := RunFactory.create_run(context, build_id, seed, tutorial)
 	if not bool(created["ok"]):
 		return created
 	var new_state: GameState = created["data"]["state"]
