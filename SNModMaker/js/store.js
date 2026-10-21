@@ -298,6 +298,26 @@
     return list;
   }
 
+  /**
+   * Content files the game runtime will not load: Schema 2.0 draft types and
+   * any content file that declares schema_version "2.0". Export/deploy flows
+   * use this to warn (ZIP) or block (release-package deploy).
+   */
+  function draftContentFiles(project) {
+    if (!project || !Array.isArray(project.contentFiles)) return [];
+    const cat = catalog();
+    return project.contentFiles.filter((file) => {
+      if (!file) return false;
+      const info = cat && cat.BY_KEY ? cat.BY_KEY[file.content_type] : null;
+      if (info && info.draft) return true;
+      return String(file.schema_version == null ? '' : file.schema_version) === '2.0';
+    });
+  }
+
+  function hasDraftContent(project) {
+    return draftContentFiles(project).length > 0;
+  }
+
   function definitionIdSet(project) {
     const set = new Set();
     for (const item of allDefinitions(project)) {
@@ -974,6 +994,8 @@
     applyTemplate,
     ensureContentFile,
     allDefinitions,
+    draftContentFiles,
+    hasDraftContent,
     definitionKeys,
     definitionIdSet,
     uniqueLocalId,

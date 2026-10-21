@@ -131,28 +131,32 @@
 | `importFolder()` | L2730 |
 | `importFile()` | L2735 |
 | `importEntries(entries)` | L2740 |
-| `showExport()` | L2780 |
-| `exportZip()` | L2814 |
-| `exportZipToDisk()` | L2836 |
-| `deployGameMod()` | L2859 |
-| `exportProjectFile()` | L2885 |
-| `exportFolder()` | L2895 |
-| `showProjectLibrary()` | L2907 |
-| `openDiskProject(id)` | L2968 |
-| `openWorkspaceProject(id)` | L2987 |
-| `deleteDiskProject(id)` | L3005 |
-| `showCoreClone()` | L3024 |
-| `showAddLocale()` | L3055 |
-| `createLocale()` | L3070 |
-| `showAddLocaleKey()` | L3091 |
-| `createLocaleKey()` | L3103 |
-| `showHelp()` | L3120 |
-| `onDragEnter(event)` | L3162 |
-| `onDragOver(event)` | L3169 |
-| `onDragLeave()` | L3173 |
-| `onDrop(event)` | L3181 |
-| `runValidation()` | L3198 |
-| `copyText(text)` | L3204 |
+| `draftContentFiles()` | L2784 |
+| `draftContentLabel(files)` | L2788 |
+| `draftExportNotice(files)` | L2792 |
+| `confirmDraftExport(files, actionLabel)` | L2802 |
+| `showExport()` | L2812 |
+| `exportZip()` | L2855 |
+| `exportZipToDisk()` | L2878 |
+| `deployGameMod()` | L2902 |
+| `exportProjectFile()` | L2932 |
+| `exportFolder()` | L2942 |
+| `showProjectLibrary()` | L2955 |
+| `openDiskProject(id)` | L3016 |
+| `openWorkspaceProject(id)` | L3035 |
+| `deleteDiskProject(id)` | L3053 |
+| `showCoreClone()` | L3072 |
+| `showAddLocale()` | L3103 |
+| `createLocale()` | L3118 |
+| `showAddLocaleKey()` | L3139 |
+| `createLocaleKey()` | L3151 |
+| `showHelp()` | L3168 |
+| `onDragEnter(event)` | L3210 |
+| `onDragOver(event)` | L3217 |
+| `onDragLeave()` | L3221 |
+| `onDrop(event)` | L3229 |
+| `runValidation()` | L3246 |
+| `copyText(text)` | L3252 |
 
 ## 契约与约束
 

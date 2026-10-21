@@ -222,6 +222,31 @@ function warningsOf(result) {
     assert.equal(Catalog.schemaVersionFor('patches'), '1.0', 'patches are a runtime type at 1.0');
   });
 
+  await test('draft content is detected for the export and deploy guards', () => {
+    const project = freshProject();
+    assert.equal(Store.hasDraftContent(project), false, 'a 1.0-only project has no draft content');
+    assert.deepEqual(Store.draftContentFiles(project), []);
+
+    const added = Store.addDefinition(project, 'world_profiles', {});
+    assert.equal(Store.hasDraftContent(project), true, 'draft types must be detected');
+    const files = Store.draftContentFiles(project);
+    assert.deepEqual(files.map((file) => file.content_type), ['world_profiles']);
+    assert.equal(files[0].path, added.file.path);
+
+    // A runtime type whose file declares 2.0 (imported or malformed) is blocked too.
+    project.contentFiles.push({
+      path: 'content/legacy_2.json',
+      content_type: 'goods',
+      schema_version: '2.0',
+      definitions: [],
+    });
+    assert.equal(Store.hasDraftContent(project), true, 'schema_version 2.0 files must be detected');
+
+    const legacy = freshProject();
+    Store.addDefinition(legacy, 'boilers', {});
+    assert.equal(Store.hasDraftContent(legacy), false, 'runtime content stays exportable');
+  });
+
   await test('every draft type validates with zero errors using catalog defaults', () => {
     const project = freshProject();
     for (const info of Types.DRAFT_TYPES) {

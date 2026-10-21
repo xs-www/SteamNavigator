@@ -2777,12 +2777,59 @@
     }
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Schema 2.0 draft content export/deploy guards                       */
+  /* ------------------------------------------------------------------ */
+
+  function draftContentFiles() {
+    return state.project ? Store.draftContentFiles(state.project) : [];
+  }
+
+  function draftContentLabel(files) {
+    return files.map((file) => file.path).join('、');
+  }
+
+  function draftExportNotice(files) {
+    if (!files.length) return '';
+    return `<div class="notice warning" role="note">
+      <div>
+        <strong>包含 ${files.length} 个 Schema 2.0 草案内容文件：</strong>
+        <span>${UI.esc(draftContentLabel(files))}。游戏运行时只加载 Content Schema 1.0，这些内容不会生效；「导出并覆盖到发布包 mods/」已禁用。</span>
+      </div>
+    </div>`;
+  }
+
+  async function confirmDraftExport(files, actionLabel) {
+    if (!files.length) return true;
+    return UI.confirm({
+      title: '包含 Schema 2.0 草案内容',
+      message: `${actionLabel}包含 ${files.length} 个草案内容文件（${draftContentLabel(files)}）。游戏运行时只加载 Content Schema 1.0，这些内容不会生效。仍要继续吗？`,
+      confirmLabel: '仍然导出',
+      danger: true,
+    });
+  }
+
   function showExport() {
+    const drafts = draftContentFiles();
+    const deployOption = drafts.length
+      ? `<button type="button" class="import-option" disabled>
+          <span class="import-icon">GAME</span>
+          <span><strong>导出并覆盖到发布包 mods/</strong><small>项目包含 Schema 2.0 草案内容：游戏运行时不加载，不能部署到发布包；请先移除草案内容</small></span>
+        </button>`
+      : state.backend
+        ? `<button type="button" class="import-option" data-action="deploy-game-mod">
+          <span class="import-icon">GAME</span>
+          <span><strong>导出并覆盖到发布包 mods/</strong><small>写入 <code>${UI.esc(state.backend.gameModsDir || '../dist/build/windows/mods')}/&lt;id&gt;.snavmod.zip</code>，并清理该 ID 的旧版本包</small></span>
+        </button>`
+        : `<button type="button" class="import-option" disabled>
+          <span class="import-icon">GAME</span>
+          <span><strong>导出并覆盖到发布包 mods/</strong><small>需要本地服务：先运行 <code>node SNModMaker/tools/serve.mjs</code>，再从 http://127.0.0.1:8099/ 打开</small></span>
+        </button>`;
     UI.modal({
       title: '导出',
       subtitle: '发布用 ZIP，或保留一个可再次编辑的项目文件。',
       size: 'sm',
-      body: `<div class="import-options">
+      body: `${draftExportNotice(drafts)}<div class="import-options">
         <button type="button" class="import-option" data-action="export-zip">
           <span class="import-icon">ZIP</span>
           <span><strong>下载 .snavmod.zip</strong><small>mods/&lt;id&gt;/ 结构，可直接放入 mods 或 user://mods</small></span>
@@ -2791,13 +2838,7 @@
           <span class="import-icon">DIR</span>
           <span><strong>保存到 ${UI.esc(state.backend.exportsDir || 'exports')}/</strong><small>写入本地 <code>SNModMaker/${UI.esc(state.backend.exportsDir || 'exports')}/</code></small></span>
         </button>` : ''}
-        ${state.backend ? `<button type="button" class="import-option" data-action="deploy-game-mod">
-          <span class="import-icon">GAME</span>
-          <span><strong>导出并覆盖到发布包 mods/</strong><small>写入 <code>${UI.esc(state.backend.gameModsDir || '../dist/build/windows/mods')}/&lt;id&gt;.snavmod.zip</code>，并清理该 ID 的旧版本包</small></span>
-        </button>` : `<button type="button" class="import-option" disabled>
-          <span class="import-icon">GAME</span>
-          <span><strong>导出并覆盖到发布包 mods/</strong><small>需要本地服务：先运行 <code>node SNModMaker/tools/serve.mjs</code>，再从 http://127.0.0.1:8099/ 打开</small></span>
-        </button>`}
+        ${deployOption}
         <button type="button" class="import-option" data-action="export-project">
           <span class="import-icon">JSON</span>
           <span><strong>保存项目文件</strong><small>.snmodproj.json，包含所有内容、本地化与附件</small></span>
@@ -2821,6 +2862,7 @@
       });
       if (!ok) return;
     }
+    if (!(await confirmDraftExport(draftContentFiles(), '下载 .snavmod.zip '))) return;
     try {
       UI.setBusy(true, '正在打包 ZIP…');
       await saveNow();
@@ -2843,6 +2885,7 @@
       });
       if (!ok) return;
     }
+    if (!(await confirmDraftExport(draftContentFiles(), `保存到 ${state.backend.exportsDir || 'exports'}/ `))) return;
     try {
       UI.setBusy(true, '正在写入 exports/…');
       await saveNow({ disk: true });
@@ -2858,6 +2901,10 @@
 
   async function deployGameMod() {
     if (!state.project || !state.backend) return;
+    if (draftContentFiles().length) {
+      UI.toast('项目包含 Schema 2.0 草案内容，不能部署到发布包 mods/；游戏运行时不加载这类内容。', 'error', 6500);
+      return;
+    }
     const target = `${state.backend.gameModsDir}/${state.project.manifest.id}.snavmod.zip`;
     if (state.issues.counts.error) {
       const ok = await UI.confirm({
@@ -2894,6 +2941,7 @@
 
   async function exportFolder() {
     if (!state.project) return;
+    if (!(await confirmDraftExport(draftContentFiles(), '写入本地目录 '))) return;
     try {
       await saveNow();
       const result = await IO.exportFolder(state.project);

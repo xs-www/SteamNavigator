@@ -73,7 +73,7 @@
 | G5 | Core 没有 v2 世界内容 | 3.0 类型没有官方数据可用 |
 | G6 | Patch 版本语义未定义 | 跨版本补丁没有规则，容易静默错配 |
 | G7 | 存档 `content_schema` 单值 | 混合版本存档无法表达实际加载集合 |
-| G8 | 编辑器导出侧缺约束 | 草案内容可直接部署，玩家得到 Degraded 启动 |
+| G8 | 编辑器导出侧缺约束 | 草案内容可直接部署，玩家得到 Degraded 启动（**已修复**：含草案内容的项目禁用发布包部署，ZIP/目录导出二次确认） |
 
 ## 3. 迁移策略与决策
 
@@ -125,6 +125,8 @@
 | A7 | 文档 | `ENTITY_CONTRACT_V2.md` §14/§16 更新版本轴与阶段状态；本文件勾选 Phase A |
 
 实现记录：`ContentTypes.schema_version()` 成为运行时的唯一版本来源；`FrameworkInfo.CONTENT_SCHEMA` 降级为“基线/默认”（存档 header 与编辑器默认仍用它）；1.0 模组、补丁与存档行为不变，未来把 v2 类型提升 active 时只需在 `content_types.json` 把该类型 `schema_version` 改为 `"2.0"` 并提供对应 Schema 路径。
+
+G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案内容；编辑器对含草案的项目禁用「导出并覆盖到发布包 mods/」，ZIP / exports/ / 目录导出改为二次确认并提示“游戏运行时不加载”。
 
 验收：现有 Godot 全套 + Node 全套 + `gen_content_types --check` 全绿；1.0 项目加载行为零变化。
 回滚：单 commit revert，无数据迁移。
@@ -195,7 +197,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 第三方 1.0 模组失效 | 社区内容不可用 | 一个 minor 版本双读 + 明确 warning + 迁移工具 | 双读开关 |
 | Patch 跨版本错配 | 定义被错误修改 | D4 强校验 + `patch_schema_mismatch` | 单点回退 |
 | 存档版本记录变化 | 旧档读回失败 | D3 惰性补齐 + 迁移矩阵 | 保留 `content_schema` 单值兼容 |
-| 编辑器导出草案到游戏 | 玩家启动 Degraded | Phase A 顺手加导出阻断/确认（G8） | 编辑器单点回退 |
+| 编辑器导出草案到游戏 | 玩家启动 Degraded | 已实现导出守卫（G8）：发布包部署禁用、ZIP/目录导出二次确认 | 编辑器单点回退 |
 
 ## 8. 可派发任务包（供 Agent Teams / 多人协作）
 

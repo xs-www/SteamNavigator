@@ -135,6 +135,7 @@ DELETE /api/game-mods/<id>
 - 默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可覆盖（容器里设为 `0.0.0.0`），但服务没有鉴权，只应经宿主机端口映射 + `tailscale serve` 之类的可信通道访问。
 - 浏览器自动保存仍走 IndexedDB；磁盘写入是同一份项目的镜像，Ctrl+S 会立即刷新磁盘。
 - 导出菜单的“导出并覆盖到发布包 mods/”默认写入当前平台发布包的 `dist/build/<platform>/mods/<id>.snavmod.zip`（Windows 为 `dist/build/windows/mods/`）；若已存在其他平台的导出目录则优先使用当前平台，重复部署会覆盖稳定文件名，并清理同 ID 的旧 `<id>-<version>.snavmod.zip`，避免游戏加载重复模组。
+- 含 Schema 2.0 草案内容的项目：ZIP / 目录导出会二次确认并说明“游戏运行时不加载”，而“导出并覆盖到发布包 mods/”直接禁用（草案内容会让游戏启动进入 `Degraded` 且内容被丢弃），需先移除草案内容再部署。
 - 默认目标由 `tools/game_mods_dir.mjs` 解析：优先 `SNMODMAKER_GAME_MODS_DIR`，其次已有的 `dist/build/*`，最后回退到当前平台目录。若编辑的是另一个游戏安装目录，启动服务前把 `SNMODMAKER_GAME_MODS_DIR` 设为该游戏旁的 `mods/`；开发态调试（编辑器 F5 扫描的 `dist/mods`）也可显式指向 `dist/mods`。项目与普通导出目录仍可分别用 `SNMODMAKER_MODS_DIR`、`SNMODMAKER_EXPORTS_DIR` 调整。
 - 静态托管或 `file://` 打开时 `api/status` 不可用，界面会自动退化为浏览器存储。
 
@@ -431,7 +432,7 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 
 ## 已知边界
 
-- Content Schema 2.0 草案类型可以在编辑器与 CLI 中创建、编辑、校验和导出，但**运行时尚未接入**：游戏仍只加载 Content Schema 1.0，草案内容文件只用于设计与评审，校验会给出 `draft_content` 警告；草案模组的能力需在 `manifest.capabilities` 声明。
+- Content Schema 2.0 草案类型可以在编辑器与 CLI 中创建、编辑、校验和导出，但**运行时尚未接入**：游戏仍只加载 Content Schema 1.0，草案内容文件只用于设计与评审，校验会给出 `draft_content` 警告；草案模组的能力需在 `manifest.capabilities` 声明。含草案内容的项目无法部署到发布包 `mods/`（导出 ZIP 会二次确认）。
 - 不支持 `.csv` 本地化；导入时会被跳过并给出警告。
 - 不读取 Godot `.import` / `.uid`；资源以原始文件打包。
 - 模型缩略图只做基础单帧渲染：不解析贴图、Draco / KTX2、骨骼动画与变形目标；解析失败时保留 GLB 占位，不影响编辑和导出。

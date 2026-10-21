@@ -41,6 +41,7 @@
 
 ## Recently Completed
 
+- [x] 编辑器导出守卫（G8，2026-10-21）：`Store.draftContentFiles()` 识别草案内容；含草案的项目禁用「导出并覆盖到发布包 mods/」，ZIP / exports/ / 目录导出二次确认并提示游戏运行时不加载（避免玩家拿到 Degraded 启动）
 - [x] Content Schema 2.0 迁移 Phase A · 按类型版本解耦（2026-10-21）：16 个运行时类型各自声明 `schema_version`（1.0）、生成 `ContentTypes.SCHEMA_VERSIONS`、`ContentCompiler` 按类型校验并让 Patch 再校验走目标类型版本、新增 `test_content_versions` 6 例；编辑器/CLI 统一读类型 `schemaVersion`，1.0 行为不变
 - [x] SNModMaker / Content CLI 适配 Content Schema 2.0 草案（2026-10-21）：`content_types.json.draft_types` 单一真源、8 类草案类型可编辑 / 校验 / 导出（`schema_version: "2.0"`）、v2 跨文件 `$ref` 与 `schema_version_mismatch` / `draft_content` / `capability_undeclared` 告警，运行时仍只加载 1.0
 - [x] 设计文档按生命周期整理：`docs/design/`（Active）/ `docs/specs/`（Finalized）/ `docs/archive/`（Archived）+ 顶层索引（2026-10-21）
