@@ -38,6 +38,9 @@ extends RefCounted
 ##   `trace_route` 自行 no-op。
 ## - 结算 `summary.explore` 与 `settlement_screen` 现有字段兼容；领域事件
 ##   `explore.started` / `explore.finished` 随结果返回，由命令总线发布。
+## - 4.4：`start` 入口先 `ClueService.sweep_expired` 清理到期线索并把 `clue.expired`
+##   事件并入返回；过期线索不能再出航（`clue_expired`），避免 `port_goods` 线索被
+##   误当成探索目标。
 ## @end-static-doc
 
 
@@ -47,8 +50,11 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 		return Result.fail("no_run", "ui.error.no_run")
 	if state.explore_voyage() is Dictionary:
 		return Result.fail("already_exploring", "ui.error.already_exploring")
+	# 4.4：推进时间之前的时间点没有别的命令入口时也要清理过期线索（释放名额）。
+	var expired_ids := ClueService.sweep_expired(state)
+	var expired_events: Array = ClueService.expired_events_of(expired_ids)
 	if not state.is_at_port():
-		return Result.fail("not_at_port", "ui.error.not_at_port")
+		return Result.fail("not_at_port", "ui.error.not_at_port", {}, expired_events)
 	var clue := ClueService.find_clue(state, clue_id)
 	if clue.is_empty():
 		var clues_data := state.ensure_clues()
@@ -56,7 +62,11 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 			or Array(clues_data.get("resolved", [])).has(clue_id)
 		var code := "clue_not_active" if inactive else "unknown_clue"
 		var message_key := "ui.error.clue_not_active" if inactive else "ui.error.unknown_clue"
-		return Result.fail(code, message_key, {"clue_id": clue_id})
+		return Result.fail(code, message_key, {"clue_id": clue_id}, expired_events)
+	if ClueService.is_expired(clue, state.now()):
+		return Result.fail(
+			"clue_expired", "ui.error.clue_expired", {"clue_id": clue_id}, expired_events
+		)
 	var preview_result := ExplorationCalculator.preview(context, clue_id, strategy_id)
 	if not bool(preview_result.get("ok", false)):
 		return preview_result
@@ -132,7 +142,8 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 	state.set_explore_voyage(voyage)
 	state.data["voyage"] = {"kind": "explore", "status": "at_sea"}
 
-	var events: Array = [{
+	var events: Array = expired_events.duplicate()
+	events.append({
 		"type": "explore.started",
 		"payload": {
 			"clue_id": clue_id,
@@ -141,7 +152,7 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 			"coal_used": coal_used,
 			"water_used": water_used,
 		},
-	}]
+	})
 	var presentation := {
 		"kind": "explore",
 		"origin": String(voyage["origin"]),

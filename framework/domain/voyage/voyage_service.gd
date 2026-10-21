@@ -28,6 +28,8 @@ extends RefCounted
 ##   格子留 EXPLORED），旧存档没有 `world_map` 时这些调用全部 no-op。
 ## - 4.1 起每次抵达还调用 `ClueService.on_arrival` 抽传闻线索；空结果（没抽中 /
 ##   没有目标 / 上限已满）永不阻断或失败抵达。
+## - 4.4 起 `settle_arrival_services` 先按抵达时间 sweep 到期货物线索（所有抵达路径
+##   共用），把 `clue.expired` 事件并入到港事件；4.4.2 还会在这里接入完成委托解锁线索。
 ##
 ## ## 重点逻辑
 ## ### `start(context, destination_id, strategy_id)`
@@ -365,6 +367,8 @@ static func settle_arrival_services(
 ) -> Dictionary:
 	var state: GameState = context.state
 	var hub: RegistryHub = context.registries
+	# 4.4：入港时清理到期线索（所有抵达路径都走这里），释放 max_active_clues 名额。
+	var expired_ids := ClueService.sweep_expired(state, arrival_time)
 	var completed_orders := CraftOps.settle_orders(state, hub)
 
 	var contract_results: Array = []
@@ -419,6 +423,7 @@ static func settle_arrival_services(
 			events.append({"type": "contract.late", "payload": contract_result})
 	events.append_array(npc_events)
 	events.append_array(debt_events)
+	events.append_array(ClueService.expired_events_of(expired_ids))
 	events.append({
 		"type": "contract.offers_refreshed",
 		"payload": {

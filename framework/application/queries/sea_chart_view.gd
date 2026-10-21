@@ -25,6 +25,11 @@ extends RefCounted
 ##   `investigation_hours`（来自 Core `exploration` 块，4.3 初始 0）、
 ##   `can_investigate`（在港且 `level < 4`）、`next_level`（4 级为 0）与
 ##   `next_level_key`（下一级披露文案键，4 级为空串）。裁剪规则不变。
+## - 4.4 线索扩展：每条 clue 追加 `type` / `target_goods_id` / `goods`（按等级裁剪的
+##   货物行情投影）/ `expires_at` / `remaining_hours` / `is_expired` 与
+##   `investigation_success_chance`；`port_goods` 不合并探索估算（`estimated` 为空字典），
+##   顶层追加 `expiring_clue_count` 供列表页入口角标；查询仍然不输出
+##   `target_port_id` / `credibility` / 真实 `search_zone`。
 ## - 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
 ##   煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
 ##   几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：
@@ -212,6 +217,7 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		"discovered_count": discovered_ids.size(),
 		"visited_count": visited_ids.size(),
 		"clues": _clue_views(context, params),
+		"expiring_clue_count": _expiring_clue_count(state),
 		"explore": _explore_state(state),
 		"can_buy_clue": _can_buy_clue(context, state),
 	})
@@ -379,9 +385,19 @@ static func _empty_result() -> Dictionary:
 		"discovered_count": 0,
 		"visited_count": 0,
 		"clues": [],
+		"expiring_clue_count": 0,
 		"explore": {"active": false, "clue_id": ""},
 		"can_buy_clue": {"available": false, "cost": 0, "reason_key": ""},
 	}
+
+
+## 4.4：列表页入口角标用的计数——所有带时效且仍有效的线索。
+static func _expiring_clue_count(state: GameState) -> int:
+	var count := 0
+	for entry in ClueService.view(state):
+		if entry is Dictionary and float((entry as Dictionary).get("expires_at", 0.0)) > 0.0:
+			count += 1
+	return count
 
 
 ## Level-trimmed clue views (`ClueService.view`) plus the ship-specific estimate the
@@ -393,6 +409,9 @@ static func _clue_views(context, params: Dictionary) -> Array:
 	var rules := ExplorationRules.read(state, context.registries)
 	var investigation_cost := int(rules.get("investigation_cost", 0))
 	var investigation_hours := float(rules.get("investigation_hours", 0.0))
+	var investigation_chance := clampf(
+		float(rules.get("investigation_success_chance", 1.0)), 0.0, 1.0
+	)
 	var at_port := state.is_at_port()
 	var views: Array = []
 	for entry in ClueService.view(state, context):
@@ -404,10 +423,17 @@ static func _clue_views(context, params: Dictionary) -> Array:
 		var next_level := level + 1 if level < ClueService.NAME_MIN_LEVEL else 0
 		clue_view["investigation_cost"] = investigation_cost
 		clue_view["investigation_hours"] = investigation_hours
+		clue_view["investigation_success_chance"] = investigation_chance
 		clue_view["can_investigate"] = can_investigate
 		clue_view["next_level"] = next_level
 		clue_view["next_level_key"] = "" if next_level == 0 else "ui.clue.level.%d" % next_level
-		clue_view["estimated"] = _clue_estimate(context, String(clue_view.get("id", "")), strategy_id)
+		# 货物线索的目标是已发现港口，估算走普通航线而不是探索搜索区（4.4 后续片提供）。
+		if String(clue_view.get("type", ClueService.TYPE_PORT_LOCATION)) == ClueService.TYPE_PORT_GOODS:
+			clue_view["estimated"] = {}
+		else:
+			clue_view["estimated"] = _clue_estimate(
+				context, String(clue_view.get("id", "")), strategy_id
+			)
 		views.append(clue_view)
 	return views
 
@@ -466,7 +492,7 @@ static func _can_buy_clue(context, state: GameState) -> Dictionary:
 	var port_data := MapOps.port(state.world(), state.current_port_id())
 	if not MapOps.has_facility(port_data, "intel"):
 		return {"available": false, "cost": cost, "reason_key": "ui.error.no_intel_facility"}
-	if ClueService.active(state).size() >= int(rules.get("max_active_clues", 4)):
+	if ClueService.active_count(state) >= int(rules.get("max_active_clues", 4)):
 		return {"available": false, "cost": cost, "reason_key": "ui.notice.no_clue_available"}
 	if state.money() < cost:
 		return {"available": false, "cost": cost, "reason_key": "ui.error.insufficient_money"}

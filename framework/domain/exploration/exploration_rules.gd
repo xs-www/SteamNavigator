@@ -19,6 +19,10 @@ extends RefCounted
 ## - `fog_radii()` 是雾半径的单一真源：`radius = min(world.w, world.h) * ratio`
 ##   （阶段 4.3 起比例来自 Core，不再用固定世界单位）；世界缺失时退回 400 单位的
 ##   历史默认世界，保证旧存档 / 测试夹具仍有确定的雾。
+## - 4.4 起同一份规则还承载货物行情线索的时效（`goods_clue_expiry_hours`）、报价误差
+##   （`goods_clue_price_error_ratio`）、等待 / 委托解锁概率（`wait_clue_*` /
+##   `contract_clue_chance`）与 4.4.3 的调查成功率（`investigation_success_chance`），
+##   线索 / 查询 / UI 都只读这一份，不在框架里写死数字。
 ## @end-static-doc
 
 ## 防御兜底：数值与 `docs/design/EXPLORATION_SYSTEM.md` §3 的契约示例一致。
@@ -56,9 +60,32 @@ const DEFAULTS := {
 	"alert_progress": 0.5,
 	"turnback_extra_ratio": 0.25,
 	# 4.3.2 / U2：线索调查的预留消耗（4.3 恒为 0，不做资源判定、不扣钱、不推进时间）。
-	# 具体数值留给后续线索系统迭代；`investigate` 只读取并回传给查询 / UI。
+	# 4.4.3 起由 Core 填入真实数值（金币 / 在港小时 / 成功率）；0 / 0 / 1.0 表示保持 4.3 行为。
 	"investigation_cost": 0,
 	"investigation_hours": 0.0,
+	"investigation_success_chance": 1.0,
+	# 4.4：货物行情线索。行情在获得时冻结，按来源的有限时效（游戏小时）到期；
+	# 价格区间误差 = price_error_ratio × (1 - credibility)。
+	"goods_clue_expiry_hours": {
+		"rumor": 24.0,
+		"intel": 72.0,
+		"wait": 48.0,
+		"contract": 72.0,
+	},
+	"goods_clue_price_error_ratio": 0.15,
+	# 来源是否出货物线索（0 = 只出港口位置线索）；等待默认出行情、委托默认出港口。
+	"goods_clue_source_weights": {
+		"rumor": 0.0,
+		"intel": 0.0,
+		"wait": 1.0,
+		"contract": 0.0,
+	},
+	# 4.4.2：在港等待解锁线索——每 `wait_clue_hours_block` 小时一档，按档位复利，
+	# 概率封顶 `wait_clue_max_chance`；完成委托按 `contract_clue_chance` 抽取。
+	"wait_clue_hours_block": 6.0,
+	"wait_clue_chance_per_block": 0.35,
+	"wait_clue_max_chance": 0.85,
+	"contract_clue_chance": 0.5,
 }
 
 

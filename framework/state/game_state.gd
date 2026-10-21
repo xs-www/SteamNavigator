@@ -48,13 +48,15 @@ const STATS_DEFAULTS := {
 	"profit": 0,
 }
 
-## Port-location clue log (stage 4 exploration). Lazy: old saves simply get this block
-## backfilled on first access, so no `schema_version` bump is needed.
+## Clue log (stage 4 exploration). Lazy: old saves simply get this block backfilled on
+## first access, so no `schema_version` bump is needed. `expired` keeps the full
+## snapshot of timed-out goods clues (stage 4.4) so the list page can show history.
 const CLUES_DEFAULTS := {
 	"next_id": 1,
 	"active": [],
 	"failed": [],
 	"resolved": [],
+	"expired": [],
 }
 
 var data: Dictionary = {}

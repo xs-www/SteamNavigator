@@ -13,3 +13,4 @@ static func register_all(bus: QueryBus) -> void:
 	bus.register(&"port.memory", Callable(PortMemoryViewQuery, "execute"))
 	bus.register(&"victory.view", Callable(VictoryViewQuery, "execute"))
 	bus.register(&"sea_chart.view", Callable(SeaChartViewQuery, "execute"))
+	bus.register(&"clue.list", Callable(ClueListViewQuery, "execute"))

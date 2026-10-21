@@ -1,9 +1,10 @@
 extends TestCase
 ## @static-doc
-## 作用：探索系统（阶段 4.1）领域层无头测试：线索生成 / 固定 1 级 / 逐级调查
+## 作用：探索系统（阶段 4.1–4.4）领域层无头测试：线索生成 / 固定 1 级 / 逐级调查
 ## （`clue.investigate`）/ 分级裁剪 / 命名流复现、`clue.buy` 门禁、`explore.start`
 ## 扣费与在航标记、`explore.settle` 成功发现与失败漂流、`explore.decide` 掉头 / 继续、
-## `sea_chart.view` 的线索 / 探索 / 购买视图，以及存档往返。
+## `sea_chart.view` 的线索 / 探索 / 购买视图、4.4 货物行情线索（冻结快照 / 时效 /
+## `clue.list` / 旧存档 normalize），以及存档往返。
 ##
 ## ## 契约与约束
 ## - 每个用例用 `bootstrap_core()` + `run.start` 拿真实 Core 注册表与真实对局；
@@ -1119,6 +1120,24 @@ func test_rules_are_read_from_the_core_map_profile() -> void:
 	assert_eq(int(rules.get("investigation_cost", -1)), 0, "investigation cost is reserved at 0")
 	assert_almost_eq(float(rules.get("investigation_hours", -1.0)), 0.0, 0.0001,
 		"investigation hours are reserved at 0")
+	assert_almost_eq(float(rules.get("investigation_success_chance", -1.0)), 1.0, 0.0001,
+		"the investigation chance defaults to a guaranteed success until 4.4.3")
+	# 4.4.1：货物行情线索的时效 / 价格误差也来自 Core JSON。
+	var expiry: Dictionary = rules.get("goods_clue_expiry_hours", {})
+	assert_almost_eq(float(expiry.get("rumor", -1.0)), 24.0, 0.0001,
+		"rumour goods leads expire after 24 h")
+	assert_almost_eq(float(expiry.get("intel", -1.0)), 72.0, 0.0001,
+		"intel goods leads expire after 72 h")
+	assert_almost_eq(float(expiry.get("wait", -1.0)), 48.0, 0.0001,
+		"dockside goods leads expire after 48 h")
+	assert_almost_eq(float(expiry.get("contract", -1.0)), 72.0, 0.0001,
+		"contract goods leads expire after 72 h")
+	assert_almost_eq(float(rules.get("goods_clue_price_error_ratio", -1.0)), 0.15, 0.0001,
+		"the goods price error ratio comes from Core JSON")
+	assert_almost_eq(float(rules.get("wait_clue_chance_per_block", -1.0)), 0.35, 0.0001,
+		"the wait clue chance comes from Core JSON")
+	assert_almost_eq(float(rules.get("contract_clue_chance", -1.0)), 0.5, 0.0001,
+		"the contract clue chance comes from Core JSON")
 
 
 ## 4.3 / U1：雾半径 = 世界短边 × Core 比例，而不是固定世界单位。160 世界的泊位
@@ -1211,6 +1230,214 @@ func test_save_load_roundtrip_preserves_exploration_state() -> void:
 		"the at-sea marker survived the round-trip")
 
 
+# ── 4.4.1 goods clues / expiry / clue.list ──
+
+## 货物线索在获得时冻结行情快照、按来源表到期；视图按等级披露港口名 → 价格区间 →
+## 供需 / 库存 → 精确买卖价，且任何等级都不泄露 target_port_id / credibility。
+func test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void:
+	var context := _start_run(SEED)
+	var target_id := _discover_other_port(context)
+	assert_false(target_id.is_empty(), "a second discovered port is needed for a goods lead")
+	var clue := _acquire_goods(context, "intel")
+	assert_false(clue.is_empty(), "a goods clue should be acquirable")
+	if clue.is_empty():
+		return
+	assert_eq(String(clue.get("type", "")), ClueService.TYPE_PORT_GOODS,
+		"the clue type is port_goods")
+	var snapshot: Dictionary = clue.get("goods_snapshot", {})
+	assert_false(snapshot.is_empty(), "the market snapshot is frozen on the clue")
+	assert_eq(String(clue.get("target_port_id", "")), target_id,
+		"the goods clue targets an already discovered harbour")
+	var rules := ExplorationRules.read(context.state, context.registries)
+	var expiry_hours := float((rules.get("goods_clue_expiry_hours", {}) as Dictionary).get("intel", -1.0))
+	assert_almost_eq(float(clue.get("expires_at", 0.0)), context.state.now() + expiry_hours, 0.001,
+		"goods expiry = now + goods_clue_expiry_hours[source]")
+	var world := WorldOps.world_map(context.state)
+	var expected_name := WorldOps.port_display_key(world, target_id)
+	for level: int in [1, 2, 3, 4]:
+		clue["level"] = level
+		var view := ClueService.view_entry(context.state, clue)
+		assert_eq(String(view.get("type", "")), ClueService.TYPE_PORT_GOODS,
+			"level %d view keeps the goods type" % level)
+		assert_false(view.has("target_port_id"),
+			"level %d goods view must not leak target_port_id" % level)
+		assert_false(view.has("credibility"),
+			"level %d goods view must not leak credibility" % level)
+		assert_false(view.has("goods_snapshot"),
+			"level %d goods view must not leak the raw snapshot" % level)
+		assert_almost_eq(float(view.get("remaining_hours", -1.0)), expiry_hours, 0.001,
+			"level %d reports the remaining lifetime" % level)
+		var goods: Dictionary = view.get("goods", {})
+		assert_eq(String(goods.get("port_name_key", "")), expected_name,
+			"level %d names the port (goods clues target known harbours)" % level)
+		assert_eq(goods.has("buy_price_min"), level >= 2,
+			"level %d price-range disclosure" % level)
+		assert_eq(goods.has("stock"), level >= 3,
+			"level %d stock disclosure" % level)
+		assert_eq(goods.has("buy_price"), level >= 4,
+			"level %d exact-price disclosure" % level)
+		if level >= 4:
+			assert_eq(int(goods.get("buy_price", 0)), int(snapshot.get("buy_price", -1)),
+				"the exact buy price comes from the frozen snapshot")
+			assert_eq(int(goods.get("sell_price", 0)), int(snapshot.get("sell_price", -1)),
+				"the exact sell price comes from the frozen snapshot")
+	# sea_chart.view carries the new metadata and the list-entry counter.
+	var vm := _chart_vm(context)
+	var clues: Array = vm.get("clues", [])
+	assert_eq(clues.size(), 1, "the goods clue reaches the chart view")
+	if not clues.is_empty():
+		var entry: Dictionary = clues[0]
+		assert_eq(String(entry.get("type", "")), ClueService.TYPE_PORT_GOODS,
+			"the chart view reports the clue type")
+		assert_false(entry.has("target_port_id"), "the chart view never leaks the target port")
+		assert_false(entry.has("credibility"), "the chart view never leaks credibility")
+		assert_true(entry.get("goods", null) != null, "the chart view carries the goods projection")
+		assert_eq(bool(entry.get("estimated", {}) == {}), true,
+			"goods clues do not carry an exploration estimate")
+	assert_eq(int(vm.get("expiring_clue_count", -1)), 1,
+		"the chart reports one expiring clue")
+
+
+## 过期线索：查询先过滤（只读），命令路径 sweep 后进 expired 历史并释放 active 名额。
+func test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void:
+	var context := _start_run(SEED)
+	_discover_other_port(context)
+	var clue := _acquire_goods(context, "wait")
+	assert_false(clue.is_empty(), "a goods clue should be acquirable")
+	if clue.is_empty():
+		return
+	var clue_id := String(clue.get("id", ""))
+	# 存档时间是 0，先让时间前进再制造过期（`expires_at` 必须 > 0 才是「有时效」）。
+	# 命令提交会替换 context.state，因此命令之后要重新取活跃线索的引用。
+	context.commands.execute(&"port.wait", {"hours": 6})
+	clue = ClueService.find_clue(context.state, clue_id)
+	assert_false(clue.is_empty(), "the goods clue survives the wait")
+	clue["expires_at"] = context.state.now() - 1.0
+	assert_eq(ClueService.active_count(context.state), 0,
+		"an expired clue no longer counts toward max_active_clues")
+	assert_eq(ClueService.view(context.state).size(), 0,
+		"views filter expired clues before the sweep")
+	var waited := context.commands.execute(&"port.wait", {"hours": 6})
+	assert_true(bool(waited.get("ok", false)), "waiting in port succeeds")
+	assert_eq(ClueService.active(context.state).size(), 0,
+		"the command-path sweep removed the clue from active")
+	var expired: Array = context.state.ensure_clues().get("expired", [])
+	assert_eq(expired.size(), 1, "the full snapshot moved into the expired history")
+	if not expired.is_empty() and expired[0] is Dictionary:
+		var history: Dictionary = expired[0]
+		assert_eq(String(history.get("id", "")), String(clue.get("id", "")),
+			"the history keeps the clue id")
+		assert_eq(String(history.get("type", "")), ClueService.TYPE_PORT_GOODS,
+			"the history keeps the clue type")
+		assert_false(history.get("goods_snapshot", null) == null,
+			"the history keeps the frozen snapshot")
+	assert_true(_has_event(waited.get("events", []), "clue.expired"),
+		"the sweep emits clue.expired")
+	assert_true(_has_notice(context.state.recent_notices(), "ui.notice.clue_expired"),
+		"the sweep pushes a localized notice")
+
+
+## clue.list 只读查询：active 线索的裁剪视图 + 调查入口 + 可出航标记 + 过期折叠历史。
+func test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void:
+	var context := _start_run(SEED)
+	_discover_other_port(context)
+	var clue := _acquire_goods(context, "contract")
+	assert_false(clue.is_empty(), "a goods clue should be acquirable")
+	if clue.is_empty():
+		return
+	clue["level"] = 2
+	var listed := context.queries.execute(&"clue.list", {})
+	assert_true(bool(listed.get("ok", false)),
+		"clue.list is registered through the QueryBus: %s" % str(listed))
+	var data: Dictionary = listed.get("data", {})
+	assert_true(bool(data.get("has_run", false)), "the list reports a live run")
+	assert_eq(int(data.get("active_count", -1)), 1, "the list counts the active clue")
+	var clues: Array = data.get("clues", [])
+	assert_eq(clues.size(), 1, "the list carries the active clue")
+	if not clues.is_empty():
+		var entry: Dictionary = clues[0]
+		assert_false(entry.has("target_port_id"), "the list never leaks the target port")
+		assert_false(entry.has("credibility"), "the list never leaks credibility")
+		assert_true(bool(entry.get("can_investigate", false)),
+			"an in-port level-2 clue can be investigated")
+		assert_true(bool(entry.get("can_sail", false)),
+			"a goods clue for another discovered port can be sailed")
+		assert_almost_eq(float(entry.get("investigation_success_chance", -1.0)), 1.0, 0.0001,
+			"the investigation chance comes from Core")
+		var goods: Dictionary = entry.get("goods", {})
+		assert_true(goods.has("buy_price_min"), "level 2 discloses the price range")
+	# 过期 + 命令清理后，列表只剩历史折叠区。先是 0 时的存档，先推进时间制造过期。
+	# 命令提交会替换 context.state，所以每次命令后都重新取线索引用。
+	var clue_id := String(clue.get("id", ""))
+	context.commands.execute(&"port.wait", {"hours": 6})
+	clue = ClueService.find_clue(context.state, clue_id)
+	assert_false(clue.is_empty(), "the goods clue survives the wait")
+	clue["expires_at"] = context.state.now() - 1.0
+	context.commands.execute(&"port.wait", {"hours": 6})
+	var after_result := context.queries.execute(&"clue.list", {})
+	assert_true(bool(after_result.get("ok", false)), "clue.list still succeeds")
+	var after: Dictionary = after_result.get("data", {})
+	assert_eq((after.get("clues", []) as Array).size(), 0, "no active clues remain")
+	var expired: Array = after.get("expired", [])
+	assert_eq(expired.size(), 1, "the expired history is exposed to the list page")
+	if not expired.is_empty() and expired[0] is Dictionary:
+		var entry: Dictionary = expired[0]
+		assert_eq(String(entry.get("type", "")), ClueService.TYPE_PORT_GOODS,
+			"the expired entry keeps its type")
+		assert_false(entry.has("target_port_id"), "the expired entry never leaks the target port")
+		assert_false(String(entry.get("port_name_key", "")).is_empty(),
+			"the expired goods entry shows the (public) port name")
+
+
+## 旧存档线索惰性补齐 4.4 字段：type / target_goods_id / goods_snapshot /
+## expires_at / unlock_source，且不改 schema_version；港口位置线索视图保持 4.3 形状。
+func test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void:
+	var state := GameState.new()
+	state.data = {
+		"schema_version": "2.0",
+		"clues": {
+			"next_id": 2,
+			"active": [{
+				"id": "clue:1",
+				"source_key": "rumor",
+				"source_display_key": "ui.clue.source.rumor",
+				"target_port_id": "port_1",
+				"level": 1,
+				"reference_port_id": "port_0",
+				"direction_angle": 0.0,
+				"distance_min_hours": 0.0,
+				"distance_max_hours": 0.0,
+				"credibility": 0.4,
+				"search_zone": {"x": 0.0, "y": 0.0, "radius": 1.0},
+				"created_at": 0.0,
+				"attempts": 0,
+				"last_attempt_at": 0.0,
+			}],
+			"failed": [],
+			"resolved": [],
+		},
+	}
+	var clues: Array = ClueService.active(state)
+	assert_eq(clues.size(), 1, "the legacy clue is still active")
+	var clue: Dictionary = clues[0]
+	assert_eq(String(clue.get("type", "")), ClueService.TYPE_PORT_LOCATION,
+		"a legacy clue defaults to port_location")
+	assert_eq(String(clue.get("target_goods_id", "")), "", "no goods target on a legacy clue")
+	assert_true(clue.get("goods_snapshot", null) == null, "no goods snapshot on a legacy clue")
+	assert_almost_eq(float(clue.get("expires_at", -1.0)), 0.0, 0.0001,
+		"a legacy port clue never expires")
+	assert_eq(String(clue.get("unlock_source", "")), "", "no unlock source on a legacy clue")
+	assert_eq(state.schema_version(), "2.0", "normalization never bumps schema_version")
+	assert_eq((state.ensure_clues().get("expired", null) as Array).size(), 0,
+		"the expired history starts empty")
+	var view := ClueService.view_entry(state, clue)
+	assert_eq(String(view.get("type", "")), ClueService.TYPE_PORT_LOCATION,
+		"the legacy view keeps the port-location shape")
+	assert_true(view.get("goods", null) == null, "a port-location view has no goods block")
+	assert_almost_eq(float(view.get("remaining_hours", 0.0)), -1.0, 0.0001,
+		"port-location clues report no remaining lifetime")
+
+
 # ── Helpers ──
 
 func _start_run(seed_value: int, extra: Dictionary = {}) -> AppContext:
@@ -1227,6 +1454,28 @@ func _acquire(context: AppContext, source: String = "intel", target_port_id: Str
 	_stream_serial += 1
 	var rng := context.rng.make_stream(RngService.STREAM_EXPLORATION, "test:%d" % _stream_serial)
 	return ClueService.acquire(context, source, rng, target_port_id)
+
+
+## 4.4.1：建一条货物线索（真实服务 + 独立命名流）。
+func _acquire_goods(context: AppContext, source: String = "wait") -> Dictionary:
+	_stream_serial += 1
+	var rng := context.rng.make_stream(
+		RngService.STREAM_EXPLORATION, "test-goods:%d" % _stream_serial
+	)
+	return ClueService.acquire_goods(context, source, rng)
+
+
+## 4.4.1：货物线索只指向已发现港口，测试里先真实发现一个非当前港。
+func _discover_other_port(context: AppContext) -> String:
+	var world := WorldOps.world_map(context.state)
+	var current := context.state.current_port_id()
+	for port in world.ports:
+		if port.id == current:
+			continue
+		WorldOps.discover_port_id(context.state, port.id)
+		MapOps.discover(context.state, port.id)
+		return port.id
+	return ""
 
 
 func _chart_vm(context: AppContext) -> Dictionary:

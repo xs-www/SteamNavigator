@@ -1,9 +1,10 @@
-# 探索系统（阶段 4）实现契约 — 4.1 / 4.2 / 4.3
+# 探索系统（阶段 4）实现契约 — 4.1 / 4.2 / 4.3 / 4.4
 
 > 作用：把 [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) §5/§7 的探索与线索规则
 > 落到可运行的纵向切片。数值全部来自 Core JSON，框架只读规则。本文是实现契约，
 > 与设计文档冲突时以设计文档的玩法意图为准、以本文的字段/命令形状为准。
 > **4.3 探索体验修正已全部实现**（2026-10-21，U1–U8，分片 4.3.1–4.3.5 见 §10）。
+> **4.4 线索扩展**契约见 §11（2026-10-21）：4.4.1 已实现，4.4.2–4.4.5 按顺序推进。
 
 ## 1. 范围
 
@@ -516,3 +517,225 @@ ui.error.alert_already_decided
   「命令返回时库存不动、抵达拍才落账」，需要改航行演出状态机接线）。
 - 旧 `map_canvas` 已删除；`map.view` 仍被港口名查询使用，保留。
 - `level_weights` 目前保留但不再参与获得等级，等线索系统下一轮再决定复用或移除。
+
+## 11. 阶段 4.4 线索扩展（In Progress，2026-10-21）
+
+> 状态：**契约已确认，4.4.1 已实现**；4.4.2–4.4.5 按顺序落地，玩法决策见 §11.6。
+> 4.4 只做线索系统扩展，不碰阶段 5 事件化海洋、耐久告急与 en locale 收尾；
+> 数值全部进 Core JSON，框架不写死内容 ID / 可调数字。
+
+### 11.1 范围
+
+**4.4 交付**
+
+1. **`port_goods` 货物类线索**：指向已发现港口 + 一种该港可买货物，披露该港行情
+   （价格 / 供需 / 库存），按等级逐级披露，**有时效**；不参与 `explore.start`
+   的搜索区判定，走普通 `voyage.start` 前往。
+2. **`expires_at` 时效**：货物线索按游戏小时到期；到期后从 active 移入
+   `data.clues.expired`（保留历史），释放 `max_active_clues` 名额；查询侧同时过滤。
+3. **新来源**：在港等待（`port.wait`）解锁线索；完成委托（普通 / 主线）解锁线索。
+   两者都走命名随机流、受上限约束、可配置概率。
+4. **调查消耗真正落地**：`clue.investigate` 从「只涨等级」改成消耗金币 + 在港时间 +
+   成功率判定（数值来自 Core）；失败照扣成本但不升级、线索保留可再试。
+5. **线索列表页**：独立页面列出全部 active 线索（类型 / 来源 / 等级 / 剩余时效 /
+   可调查状态），可点击回到海图并选中；过期条目折叠灰显。
+
+**不在 4.4**：探索途中事件化海洋（阶段 5）、耐久告急、线索分享 / 交易、多人 / 成就、
+`level_weights` 复用、线索内容 JSON 化（仍由「世界 + 内容数据 + 规则」推导，
+框架不写死 `core:*` 内容 ID）。
+
+**不回归的 4.3 不变量**（4.4 每片验收都必须守住）
+
+- `sea_chart.view.clues` **任何类型、任何等级**都不含 `target_port_id`、
+  `credibility`、真实 `search_zone`；港口位置线索的分级裁剪不变
+  （level < 4 无 `name_key`，level < 3 无 `circle`，level 1 无方向）。
+- 线索获得固定 1 级，只能靠 `clue.investigate` 逐级推进（上限 4）；目标港 / 可信度 /
+  搜索区在获得时固定，调查只披露不重抽。
+- 探索失败不消耗线索（只记 `attempts` / `last_attempt_at`），线索保留且可再次出航；
+  失败漂流、逐级调查、雾半径比例、连续消耗、普通航线选中过滤全部保持。
+- 查询只读（`QueryBus` 克隆）、命令事务提交（失败不落状态、成功发领域事件）。
+
+### 11.2 数据模型（`GameState.data`，全部可 JSON 化，惰性 ensure，不改 `schema_version`）
+
+`Clue` 在 4.3 形状上追加（旧字段不删不改名）：
+
+```text
+Clue = {
+  ...§2 的 4.3 全部字段...,
+  type: "port_location" | "port_goods",
+  # port_goods 专用；港口位置线索恒为空串 / null
+  target_goods_id: String,             # 仅领域层知道完整快照；查询按等级裁剪
+  goods_snapshot: null | {             # 获得时冻结的行情快照，不随后市变化
+    port_id: String,
+    good_id: String,
+    buy_price: int,                    # 玩家在该港买入的单件价（回合后）
+    sell_price: int,                   # 玩家在该港卖出的单件价（floor(margin)）
+    stock: int,                        # 该港可买库存
+    demand: String,                    # "high" | "normal" | "low"，由价格偏离 base 推导
+    recorded_at: float,                # 快照时间
+    price_error_ratio: float,          # 获得时冻结的报价误差比例（来自 Core）
+  },
+  expires_at: float,                   # 游戏小时；0.0 = 永久（port_location 恒为 0）
+  source_key: "rumor" | "intel" | "wait" | "contract",
+  source_display_key: String,          # "ui.clue.source.<key>"
+  unlock_source: String,               # "wait:<hours>" / "contract:<instance_id>"，仅追溯用
+}
+data.clues = {
+  next_id, active, failed, resolved,
+  expired: [Clue],                     # 4.4：已过期线索的整条快照（历史，不占上限）
+}
+```
+
+- **惰性 ensure**：`GameState.ensure_clues()` 保持现有结构，另把 `expired` 缺省补 `[]`；
+  `ClueService.normalize_clue(clue)` 在读取 active 时把旧存档条目补齐
+  `type="port_location"` / `target_goods_id=""` / `goods_snapshot=null` /
+  `expires_at=0.0` / `unlock_source=""`。只补内存字典，不改 `schema_version`。
+- **到期清理**：`ClueService.sweep_expired(state, now)` 把 `expires_at > 0 且 <= now`
+  的 active 条目（连同 `goods_snapshot`）移入 `expired`，返回被清理的 id 数组。
+  只在**命令路径**调用（`port.wait`、`settle_arrival_services` 覆盖所有抵达路径、
+  `clue.buy` / `clue.investigate` / `explore.start` / `clue.list` 之外的入口），
+  查询侧只过滤不写状态。
+- **上限**：`max_active_clues` 只数「active 且未过期」；到期后立即释放名额。
+- `goods_snapshot` 的 `buy_price` / `sell_price` 使用与贸易查询相同的公式
+  （`round(price)` / `floor(price × trade_margin)`），`demand` 由 `price / base_price`
+  分档（≥1.15 high、≤0.9 low、其余 normal），`stock` 取市场条目 `stock`。
+- 候选目标（领域推导，不写死内容 ID）：**已发现、非当前港**的港口；货物候选 = 该港
+  `state.market()[port_id]` 里 `buyable=true` 且非补给商品的条目，按 item id 排序后
+  用命名流抽取；同一条 active 线索不重复指向同一 `(port_id, good_id)`。
+
+### 11.3 查询 / 命令形状
+
+**查询**（新增必须经 `QueryRegistry` → `FrameworkApi` 注册，并补测试）
+
+- `clue.list`（新增）：只读线索列表。
+
+  ```text
+  {
+    now: float, max_active: int, active_count: int,
+    clues: [{
+      id, type, source_key, source_display_key, level, next_level,
+      next_level_key, direction_angle, distance_min_hours, distance_max_hours,
+      circle: null | {x, y, radius}, name_key,            # 与 sea_chart 同裁剪
+      target_goods_id,                                    # port_goods 公开字段
+      goods: null | {                                     # 按等级裁剪的行情
+        port_name_key,                                    # 1 级起
+        buy_price_min, buy_price_max,                     # 2 级起（参考价区间）
+        sell_price_min, sell_price_max,
+        stock, demand,                                    # 3 级起
+        buy_price, sell_price,                            # 4 级（精确）
+      },
+      expires_at, remaining_hours, is_expired,            # port_location 恒 0 / -1
+      attempts, last_attempt_at,
+      investigation_cost, investigation_hours, investigation_success_chance,
+      can_investigate, can_sail,
+    }],
+    expired: [{id, type, level, source_key, source_display_key, expires_at,
+               target_goods_id, port_name_key}],
+  }
+  ```
+- `sea_chart.view.clues` 追加（**不删旧字段**）：`type`、`target_goods_id`、
+  `goods`（按等级裁剪，形状同上）、`expires_at`、`remaining_hours`、`is_expired`。
+  端口位置线索的 `goods` 恒为 `null`，其余字段与 4.3 完全一致（回归测试锁死）。
+- `sea_chart.view` 可选追加 `expiring_clue_count`（列表页入口角标用），不改变旧字段语义。
+
+**命令**（`command_registry.gd`；新增必须经 `FrameworkApi`）
+
+| 命令 | 参数 | 4.4 行为 |
+|---|---|---|
+| `clue.investigate` | `{clue_id}` | 扣 `investigation_cost` 金币、推进 `investigation_hours`、按 `investigation_success_chance` 判定；成功 `level+1`（事件 `clue.investigated`），失败不升级但扣成本（事件 `clue.investigation_failed`），线索保留 |
+| `clue.travel` | `{clue_id, strategy_id}` | 4.4.2 新增：对 `port_goods` 线索执行普通 `VoyageService.start` 前往其（已发现的）目标港；不泄露 target id，目标在领域层解析 |
+| `clue.buy` | `{}` | 不变；默认 `goods_clue_source_weights.intel = 0`，仍只出港口位置线索（权重 > 0 时按权重出 `port_goods`） |
+| `port.wait` | `{hours}` | 时间推进后调用 `ClueService.on_wait(context, hours)`；可能获得线索并附 `clue.acquired` 事件 / notice |
+| 抵达服务 | — | `VoyageService.settle_arrival_services` 在委托结算后调用 `ClueService.on_contract_completed(context, completed)`；可能获得线索 |
+
+`clue.investigate` 成功 / 失败返回体：
+
+```text
+{ success: bool, clue_id, level, next_level, cost, hours, success_chance,
+  charged: bool, roll: float,          # roll 0..1，仅用于测试复现（不进 UI）
+  view: {...} }                        # 成功时为升级后的 view_entry
+```
+
+**事件 / notice**
+
+```text
+clue.acquired          已存在（payload 仅 clue_id / source_key / level）
+clue.investigated      成功升级（payload 仍只有 clue_id / level）
+clue.investigation_failed  失败（payload clue_id / level / cost / hours）
+clue.expired           sweep 清理时批量发出（payload clue_ids / count）
+ui.notice.clue_expired / ui.notice.clue_investigation_failed / ui.notice.goods_clue_acquired
+```
+
+### 11.4 Core JSON 与 Schema
+
+`dev_mods/core/content/map_profiles.json` 的 `data.exploration` 追加（框架只读规则），
+并同步 `schemas/map_profile.schema.json`（`exploration` 是
+`additionalProperties: false`，每个新键都要声明；数值范围按语义给 `minimum/maximum`）：
+
+```json
+"investigation_cost": 20,
+"investigation_hours": 6.0,
+"investigation_success_chance": 0.75,
+"goods_clue_expiry_hours": {"rumor": 24.0, "intel": 72.0, "wait": 48.0, "contract": 72.0},
+"goods_clue_price_error_ratio": 0.15,
+"goods_clue_source_weights": {"rumor": 0.0, "intel": 0.0, "wait": 1.0, "contract": 0.0},
+"wait_clue_hours_block": 6.0,
+"wait_clue_chance_per_block": 0.35,
+"wait_clue_max_chance": 0.85,
+"contract_clue_chance": 0.5
+```
+
+- `goods_clue_source_weights` 决定哪个来源出货物线索（其余来源仍只出港口线索），
+  权重 0 表示不产出；缺失 / 非法时按框架兜底（`wait` 出货物、`contract` 出港口）。
+- `investigation_*` 三个键在 4.3 已预留；4.4 起 `cost > 0` / `hours > 0` /
+  `chance < 1` 才真正生效，`0 / 0 / 1.0` 表示保持 4.3 行为（内容可回退）。
+- 等待线索概率按档位复利：`1 - (1 - per_block) ^ (hours / block)`，
+  再与 `wait_clue_max_chance` 取小；等待小时数向下取整到档位。
+- 所有数值仍集中在 Core；`ExplorationRules.DEFAULTS` 同步键（防御兜底），
+  但正常内容必须覆盖。
+
+### 11.5 实施切片与验收口径
+
+| 切片 | 内容 | 验收口径 | 状态 |
+|---|---|---|---|
+| **4.4.1 数据模型 + 时效 + 查询裁剪** | `Clue` 扩展字段；`GameState.ensure_clues` 的 `expired` 与旧条目 normalize；`ClueService.sweep_expired` / `normalize_clue`；`sea_chart.view.clues` 追加字段（含 goods 分级裁剪）；`clue.list` 查询注册；`max_active_clues` 只数未过期 | 旧存档线索自动补齐且 `schema_version` 不变；`expires_at<=now` 只在命令路径清理并进 `expired`、名额释放；查询对任意类型/等级不含 `target_port_id`/`credibility`/真实 `search_zone`；port_location 视图与 4.3 逐字段一致；存档 round-trip 哈希一致 | ✅ 已实现 |
+| **4.4.2 新来源（在港等待 / 完成委托）** | `ClueService.on_wait` / `on_contract_completed`；`PortCommands.wait` 与 `VoyageService.settle_arrival_services` 接线；事件 / notice / 本地化；命名流 key `wait:<port>:<time>` / `contract:<port>:<instance>` | 等待概率 = `1-(1-p)^(hours/block)` 且封顶；委托完成按 `contract_clue_chance` 抽取；来源为 `wait`/`contract`、可信度落在对应区间；受 `max_active_clues` 约束、无可用目标时静默返回；同 seed 可复现；不阻断等待 / 抵达。 | ⬜ |
+| **4.4.3 调查消耗真正落地** | `ClueService.investigate` 扣金币 + 推进小时 + 成功率；在港时间效果与 `port.wait` 共用（打造订单 / NPC 市场 / 逾期债务）；`clue.investigate` 返回体与查询字段（`investigation_success_chance`） | 成功：金币 -cost、时间 +hours、level+1；失败：金币照扣、时间照进、level 不变、线索 active 可再试、事件 `clue.investigation_failed`；金币不足在扣费前 `Result.fail`；4 级再调查报错不变；`investigation_cost/hours/chance` 为 0/0/1 时行为与 4.3 一致 | ⬜ |
+| **4.4.4 线索列表页** | 新页面 `clue_log_screen`（场景 + 脚本）+ Shell 接线 + 海图入口按钮；列 active 线索（类型 / 来源 / 等级 / 剩余时效 / 可调查）/ 过期折叠区；点击条目回海图并选中；空态文案 | 页面只读 `clue.list`，不自行计算规则；剩余时效与 `expires_at` 一致、过期条目在折叠区；点击线索回到海图并选中该 id；无泄漏字段；本地化键中英同步；960×540 与 1440×900 不裁切 | ⬜ |
+| **4.4.5 测试 / 截图 / 文档收尾** | 全量测试（基线 325，0 failed）；`tools/godot/capture_exploration.gd` 扩展（或新增专用 capture）抓货物线索面板 / 线索列表页 / 时效倒计时 / 等待来源；§11 回填、§7 更新、README / todo；静态文档重生成 + `--check`；分片提交 | 全量 `Tests:` 0 failed；截图逐次运行证据一致并落 `docs/design/screenshots/exploration/`；`gen_static_docs.mjs --check` 通过；每片 commit 只含本片文件 | ⬜ |
+
+每片完成后的固定动作：实现 → 全量测试（0 failed）→ 相关窗口截图 → 更新本节 / 台账 →
+只提交本片文件。全部完成后统一重生成静态文档并报告并行未提交文件的影响。
+
+### 11.6 已确认决策（2026-10-21，全部选推荐项 A）
+
+用户已确认五项玩法细节，实现以下决策（数值全部进 Core JSON / Schema）：
+
+1. **`port_goods` 披露**：目标 = **已发现港口 + 货物**（同一 `(port, good)` 不重复
+   出现在 active）；1 级披露港口名与「有行情」、2 级参考价区间（买 / 卖各一组，
+   误差 = `goods_clue_price_error_ratio × (1 - credibility)`）、3 级加库存与供需档、
+   4 级精确买入 / 卖出价。**不走 `explore.start`**（目标是已发现港口，没有搜索区），
+   面板 / 列表页的「前往该港」走普通航线（`clue.travel`，4.4.2）。
+2. **时效**：游戏小时、按来源 `goods_clue_expiry_hours` = 传闻 24 / 等待 48 /
+   情报 72 / 委托 72；到期后由命令路径 `sweep_expired` 移出 active，**整条快照**
+   进 `data.clues.expired` 供列表页灰显历史，并释放 `max_active_clues` 名额。
+3. **新来源**：在港等待每 `wait_clue_hours_block = 6h` 一档、每档 35%（复利，
+   24h ≈ 87%，封顶 85%），优先出**货物线索**（没有货物候选时退回港口位置线索）；
+   每完成 1 份普通 / 主线委托按 `contract_clue_chance = 50%` 出**港口位置线索**。
+   两者都受 `max_active_clues` 与「无可用目标」约束，静默失败、不阻断原流程。
+4. **调查消耗**：每次 **20 金 + 在港 6 小时 + 75% 成功率**；失败照扣成本和时间、
+   不升级、线索保留可再试；三个数值全部来自 Core，可回退为 `0 / 0 / 1.0`
+   （4.3 行为）。
+5. **线索列表页**：海图页新增「线索列表」按钮打开独立页；列全部 active 线索
+   （类型 / 来源 / 等级 / 剩余时效 / 状态 / 可调查），点击条目回海图并选中；
+   过期线索折叠灰显。顶部导航不新增一级页面。
+
+### 11.7 实施台账（4.4，逐片回填）
+
+| 切片 | 主要文件 | 验证 |
+|---|---|---|
+| 4.4.1 | `GameState.CLUES_DEFAULTS.expired`、`ClueService`（`normalize_clue` / `is_expired` / `active_count` / `sweep_expired` / `acquire_goods` / `goods_candidates` / `_goods_view` / `expired_events_of`）、`SeaChartViewQuery`（`expiring_clue_count`、goods 跳过探索估算、active_count 上限）、`ClueListViewQuery`（新）+ `QueryRegistry`、`ExplorationRules.DEFAULTS`、Core `map_profiles.exploration` + `map_profile.schema.json`、`PortCommands.wait` / `VoyageService.settle_arrival_services` / `ExploreVoyageService.start` 的 sweep 接线、中英本地化 27 键 | `test_exploration` 5 例（行情冻结与分级裁剪、过期 sweep 与名额、clue.list 形状与历史、旧存档 normalize、Core 新键）；全套 329 例 / 0 失败 |
+| 4.4.2 | （待实现） | （待实现） |
+| 4.4.3 | （待实现） | （待实现） |
+| 4.4.4 | （待实现） | （待实现） |
+| 4.4.5 | （待实现） | （待实现） |

@@ -32,6 +32,8 @@ static func wait(params: Dictionary, context) -> Dictionary:
 
 	var position := state.current_port_id()
 	state.advance_time(float(hours))
+	# 4.4：等待推进时间后清理到期线索（释放 max_active_clues 名额）。
+	var expired_ids := ClueService.sweep_expired(state)
 	var completed_orders := CraftOps.settle_orders(state, hub)
 	var npc_events := NpcTraderSimulator.advance(
 		state,
@@ -67,6 +69,7 @@ static func wait(params: Dictionary, context) -> Dictionary:
 		})
 	events.append_array(npc_events)
 	events.append_array(debt_events)
+	events.append_array(ClueService.expired_events_of(expired_ids))
 
 	return Result.ok({
 		"hours": hours,

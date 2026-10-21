@@ -285,6 +285,85 @@
             "investigation_hours": {
               "type": "number",
               "minimum": 0
+            },
+            "investigation_success_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "goods_clue_expiry_hours": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rumor", "intel", "wait", "contract"],
+              "properties": {
+                "rumor": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "intel": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "wait": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "contract": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "goods_clue_price_error_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "goods_clue_source_weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rumor", "intel", "wait", "contract"],
+              "properties": {
+                "rumor": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "intel": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "wait": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "contract": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "wait_clue_hours_block": {
+              "type": "number",
+              "minimum": 1
+            },
+            "wait_clue_chance_per_block": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "wait_clue_max_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "contract_clue_chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           }
         }
