@@ -14,19 +14,22 @@ extends SceneTree
 ##
 ## 输出（1440×900，写入 `docs/design/screenshots/exploration/`）：
 ##   exploration_chart_clues.png      海图线索：方向箭头、虚线圆、`？港名？`，选中线索高亮 + 右侧面板线索区块
+##   exploration_chart_investigate.png 4.3.2：选中 2 级线索时的「调查线索」按钮 +「下一级：已知航程」预告
+##   exploration_depart_confirm.png   4.3.4：海图内出航确认弹窗（预估 / 锅炉策略 / 取消 / 启航）
 ##   exploration_chart_route.png      探索演出：世界航线 + 到 `?` 的虚线预测线 + 底部航程条目的地 `？`
 ##   exploration_arrival.png          第一次探索（发现）抵达结算：探索结果区块
 ##   exploration_result_found.png     另一次发现结算（不同港口）
 ##   exploration_result_failed.png    失败漂流结算：额外煤水 / 耐久损失 / 线索保留（4.3）
 ##   exploration_resource_alert.png   4.2 资源告急页：标题/描述/煤水耐久/继续探索/掉头返航
-##   exploration_turned_back.png      4.2 掉头返航结算：港口 / 额外损耗 / 线索保留
+##   exploration_turned_back.png      4.2 / 4.3.5 掉头返航结算：港口 / 额外损耗 / 线索保留
 ##   exploration_alert_continue.png   4.2 告警后继续探索的结算（证明继续路径照常 settle）
 ##
 ## ## 契约与约束
 ## - 全程用真实领域入口：`run.start` / `clue.buy` / `ClueService.acquire`
-##   （`RngService.STREAM_EXPLORATION` 命名流补充等级）/ 面板按钮 → `explore.start` →
-##   Shell 在 `ARRIVAL_READY` 自动 `explore.settle`；4.2 的告警选项通过真实
-##   `EventScreen` 按钮 → `explore.decide` → `VoyagePresentation.force_arrival()`。
+##   （`RngService.STREAM_EXPLORATION` 命名流）/ `clue.investigate`（4.3.2 逐级升级）/
+##   海图面板按钮 → 出航确认弹窗 → `explore.start` → Shell 在 `ARRIVAL_READY`
+##   自动 `explore.settle`；4.2 的告警选项通过真实 `EventScreen` 按钮 →
+##   `explore.decide` → `VoyagePresentation.force_arrival()`。
 ##   发现/失败只用契约 §2 的 `outcome_roll`（出发时抽定，0 = 必发现、0.999 = 必失败）
 ##   覆盖，不伪造结算结果；告警用真实 `ExplorationCalculator.preview` 的
 ##   `coal_required`，把出发煤量压到 `×1.05`（与 `test_voyage_flow.gd` 的告警前置一致）。
@@ -63,6 +66,9 @@ const MAX_DRIVE_SECONDS := 90.0
 const MAX_CLUE_ATTEMPTS := 120
 ## 一张海图要同时看到三种线索图形，所以线索集必须覆盖 2 / 3 / 4 级。
 const WANTED_LEVELS := [2, 3, 4]
+## 4.3.2 起线索获得时固定 1 级，图表要同时展示 2/3/4 级就必须走真实的
+## `clue.investigate` 逐级升级（调查次数 = 目标等级 - 1）。
+const INVESTIGATE_COUNT := {2: 1, 3: 2, 4: 3}
 
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
@@ -77,6 +83,8 @@ const SHOTS := [
 	{"file": "exploration_resource_alert.png", "label": "资源告急（继续探索 / 掉头返航）"},
 	{"file": "exploration_turned_back.png", "label": "探索结算 · 掉头返航"},
 	{"file": "exploration_alert_continue.png", "label": "告警后继续探索结算"},
+	{"file": "exploration_chart_investigate.png", "label": "4.3.2 线索逐级调查（下一级预告 + 调查按钮）"},
+	{"file": "exploration_depart_confirm.png", "label": "4.3.4 海图内出航确认弹窗（策略 + 预估）"},
 ]
 
 var _failures := 0
@@ -145,8 +153,36 @@ func _run() -> void:
 	_assert_chart_visuals(context, screen, selected)
 	await _capture(String(SHOTS[0]["file"]), String(SHOTS[0]["label"]))
 
-	# ── Run A (found): sail the level>=3 clue, shoot the at-sea route, then the arrival. ──
-	var info_a := await _start_exploration(shell, context, String(prepared["sail"]), 0.0)
+	# ── 4.3.2 shot: select the level-2 clue; the panel exposes the investigate
+	# button and the next-level preview (`ui.clue.next_level` + level 3 text).
+	var failed_id := String(prepared["failed"])
+	screen._on_clue_clicked(failed_id)
+	await _settle(6, 0.3)
+	var investigate: Button = _node_named(screen, "InvestigateButton") as Button
+	_assert_true(investigate != null, "the clue panel mounts the investigate button")
+	if investigate != null:
+		_assert_false(investigate.disabled, "a level-2 clue can still be investigated")
+	var investigate_texts := _label_texts(screen)
+	# 文案是模板填充后的「下一级：已知航程」，要按格式化后的字符串比较。
+	var next_level_text := String(context.translate("ui.clue.next_level")) \
+		% String(context.translate("ui.clue.level.3"))
+	_assert_true(_texts_contain(investigate_texts, next_level_text),
+		"the panel announces the next disclosure level (%s)" % next_level_text)
+	_assert_true(_texts_contain(investigate_texts, String(context.translate("ui.clue.level.3"))),
+		"the next level preview names level 3 (distance known)")
+	await _capture(String(SHOTS[8]["file"]), String(SHOTS[8]["label"]))
+
+	# ── 4.3.4 shot: the shared departure confirmation dialog, then confirm it and
+	# run A's (found) voyage from there. ──
+	var dialog_screen: Variant = await _request_departure(shell, context, String(prepared["sail"]))
+	if dialog_screen == null:
+		_finish()
+		return
+	_assert_departure_dialog(context, dialog_screen, String(prepared["sail"]))
+	await _capture(String(SHOTS[9]["file"]), String(SHOTS[9]["label"]))
+	var info_a := await _confirm_departure(
+		shell, context, dialog_screen, String(prepared["sail"]), 0.0
+	)
 	if not bool(info_a.get("ok", false)):
 		_finish()
 		return
@@ -161,7 +197,6 @@ func _run() -> void:
 	await _capture(String(SHOTS[2]["file"]), String(SHOTS[2]["label"]))
 
 	# ── Run B (failed): the level-2 (arrow) clue, forced failure + drift. ──
-	var failed_id := String(prepared["failed"])
 	_ensure_feasible(context, failed_id)
 	var info_b := await _start_exploration(shell, context, failed_id, 0.999)
 	if not bool(info_b.get("ok", false)):
@@ -189,8 +224,12 @@ func _run() -> void:
 	await _capture(String(SHOTS[3]["file"]), String(SHOTS[3]["label"]))
 
 	# ── Run D (4.2 resource alert → turn back): force the Core alert, capture the
-	# decision page, press the real「掉头返航」button, then the turned-back settlement. ──
-	var alert_clue := _acquire_last_clue(context)
+	# decision page, press the real「掉头返航」button, then the turned-back settlement.
+	# 4.3/U3 起失败线索保留在 active（其目标港仍被引用、无法再生成指向它的新线索），
+	# 所以 4.2 告警跑复用这条仍然有效的失败线索——这正是「失败后可再次出航」的真实路径。
+	var alert_clue := _domain_clue(context, failed_id)
+	if alert_clue.is_empty():
+		alert_clue = _acquire_last_clue(context)
 	if alert_clue.is_empty():
 		_finish()
 		return
@@ -214,8 +253,9 @@ func _run() -> void:
 # ---------------------------------------------------------------------------
 
 
-## Fills the clue log with one clue of each level so the chart can show all three
-## visual languages: 2 = direction arrow, 3 = dashed search circle, 4 = `？name？`.
+## Fills the clue log with one clue of each visual level (2 arrow / 3 dashed circle /
+## 4 `？name？`). 4.3.2 起线索获得时固定 1 级，所以这里先买/拿到三条 1 级线索，再走
+## 真实的 `clue.investigate` 分别升到 2 / 3 / 4 级（图表 shot 因此同时覆盖调查入口）。
 ## Returns `{ok, selected, sail, found, failed, levels}`.
 func _prepare_clues(context: AppContext) -> Dictionary:
 	var state: GameState = context.state
@@ -243,54 +283,55 @@ func _prepare_clues(context: AppContext) -> Dictionary:
 			])
 		else:
 			_fail("clue.buy #%d failed: %s" % [index + 1, str(result.get("error_code", ""))])
-	_evidence_clues(context, "after clue.buy")
+	# 第三条通过领域服务拿（与前两条一样真实写入 active；不依赖随机购买成功）。
+	var third := _acquire_clue(context, "intel")
+	if third.is_empty():
+		_fail("cannot acquire a third clue for the level fixture")
+		return {"ok": false}
+	_evidence_clues(context, "after clue acquisition")
 
-	var rules := ExplorationRules.read(state, context.registries)
-	var cap := int(rules.get("max_active_clues", 4))
-	# Keep at most one clue per wanted level; duplicates go through the real
-	# lifecycle (resolved) so the slot frees up for the missing level.
+	var active_ids: Array[String] = []
+	for clue in ClueService.active(state):
+		active_ids.append(String((clue as Dictionary).get("id", "")))
+	_assert_eq(active_ids.size(), 3, "the fixture starts with three level-1 clues")
+	if active_ids.size() < 3:
+		return {"ok": false}
+
+	# 4.3.2：每条线索获得时必为 1 级，调查只逐级披露（不重抽目标 / 可信度）。
 	var keep := {}
-	for clue in ClueService.active(state).duplicate():
-		var clue_id := String((clue as Dictionary).get("id", ""))
-		var level := int((clue as Dictionary).get("level", 0))
-		if WANTED_LEVELS.has(level) and not keep.has(level):
-			keep[level] = clue_id
-		else:
-			ClueService.mark_resolved(state, clue_id)
-			print("[EVIDENCE] resolved duplicate level-%d clue %s" % [level, clue_id])
-
-	var attempts := 0
-	while keep.size() < WANTED_LEVELS.size() and attempts < MAX_CLUE_ATTEMPTS:
-		attempts += 1
-		var wanted_level := -1
-		for level in WANTED_LEVELS:
-			if not keep.has(level):
-				wanted_level = level
-				break
-		if wanted_level < 0:
-			break
-		if ClueService.active(state).size() >= cap:
-			_fail("cannot free a clue slot while normalising the clue set")
-			break
-		var source := "rumor" if wanted_level == 2 else "intel"
-		var clue := _acquire_clue(context, source)
-		if clue.is_empty():
-			continue
-		var clue_id := String(clue.get("id", ""))
-		var level := int(clue.get("level", 0))
-		if level == wanted_level and not keep.has(level):
-			keep[level] = clue_id
-			print("[EVIDENCE] acquired level-%d %s clue %s (attempt %d)" % [
-				level, source, clue_id, attempts,
-			])
-		else:
-			ClueService.mark_resolved(state, clue_id)
+	var wanted_by_id := {
+		active_ids[0]: 4,
+		active_ids[1]: 3,
+		active_ids[2]: 2,
+	}
+	for clue_id in wanted_by_id.keys():
+		var target_level := int(wanted_by_id[clue_id])
+		_assert_eq(int(_domain_clue(context, String(clue_id)).get("level", 0)), 1,
+			"clue %s is acquired at level 1" % clue_id)
+		var fixed_target := String(_domain_clue(context, String(clue_id)).get("target_port_id", ""))
+		var fixed_credibility := float(_domain_clue(context, String(clue_id)).get("credibility", 0.0))
+		var fixed_zone: Dictionary = _domain_clue(context, String(clue_id)).get("search_zone", {})
+		for _step in INVESTIGATE_COUNT[target_level]:
+			var result := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+			_assert_true(bool(result.get("ok", false)),
+				"clue.investigate succeeds for %s: %s" % [clue_id, str(result.get("error_code", ""))])
+		var investigated := _domain_clue(context, String(clue_id))
+		_assert_eq(int(investigated.get("level", 0)), target_level,
+			"clue %s reaches level %d through investigation" % [clue_id, target_level])
+		_assert_eq(String(investigated.get("target_port_id", "")), fixed_target,
+			"investigation never re-rolls the target harbour")
+		_assert_almost_eq(float(investigated.get("credibility", 0.0)), fixed_credibility, 0.0001,
+			"investigation never re-rolls credibility")
+		_assert_eq(investigated.get("search_zone", {}), fixed_zone,
+			"investigation never re-rolls the search zone")
+		keep[target_level] = clue_id
+		print("[EVIDENCE] clue %s investigated to level %d" % [clue_id, target_level])
+	_evidence_clues(context, "normalised by investigation")
 
 	_assert_eq(keep.size(), WANTED_LEVELS.size(),
 		"the clue log covers levels 2 (arrow) / 3 (circle) / 4 (name)")
 	if keep.size() < WANTED_LEVELS.size():
 		return {"ok": false}
-	_evidence_clues(context, "normalised")
 
 	# The chart shot highlights the level-4 clue (dashed circle + `？name？`), the
 	# first exploration sails a level>=3 clue.
@@ -652,27 +693,73 @@ func _reference_screen_position(chart: SNSeaChartView, clue: Dictionary) -> Vari
 # ---------------------------------------------------------------------------
 
 
-## Opens the chart page, clicks a clue, presses the real panel button and forces the
-## departure-time discovery roll (contract §2). Returns the voyage evidence block.
-func _start_exploration(
-	shell: Control, context: AppContext, clue_id: String, outcome_roll: float
-) -> Dictionary:
-	var preview := _preview(context, clue_id)
+## 打开海图、点线索、按面板出航按钮 → 4.3.4 的统一确认弹窗。返回弹窗所在的屏幕
+## （Shell 会因打开弹窗同步重建海图页，旧 screen 实例作废）。
+func _request_departure(
+	shell: Control, context: AppContext, clue_id: String
+) -> Variant:
 	var screen: Variant = await _open_chart(shell)
 	if screen == null:
-		return {"ok": false}
+		return null
 	screen._on_clue_clicked(clue_id)
 	await _settle(4, 0.15)
 	var panel: SNSeaChartPanel = screen._panel
 	if panel == null or String(panel.get_clue().get("id", "")) != clue_id:
 		_fail("the clue panel did not bind %s before sailing" % clue_id)
-		return {"ok": false}
+		return null
 	var button := _button_by_text(screen, String(context.translate("ui.button.explore_clue")))
 	if button == null:
 		_fail("the clue panel has no explore button for %s" % clue_id)
-		return {"ok": false}
+		return null
 	_assert_false(button.disabled, "the explore button is enabled for %s" % clue_id)
 	button.pressed.emit()
+	await _settle(6, 0.3)
+	var screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	_assert_eq(screens.size(), 1, "the chart page is rebuilt with the departure dialog")
+	if screens.is_empty():
+		return null
+	var dialog_screen: Variant = screens[0]
+	_assert_true(bool(dialog_screen.is_departure_open()),
+		"the panel button opens the shared departure confirmation")
+	return dialog_screen
+
+
+## 4.3.4 确认弹窗的渲染/接线断言：标题、策略选择器（默认标准锅炉）与预估行。
+func _assert_departure_dialog(context: AppContext, screen: Variant, clue_id: String) -> void:
+	var texts := _label_texts(screen)
+	_assert_true(texts.has(String(context.translate("ui.confirm.title.explore"))),
+		"the explore dialog shows its localized title: %s" % str(texts))
+	_assert_true(_texts_contain(texts, String(context.translate("ui.label.estimated_time"))),
+		"the dialog shows the estimated duration")
+	var picker: OptionButton = _node_named(screen, "StrategyPicker") as OptionButton
+	_assert_true(picker != null, "the dialog exposes the boiler strategy picker")
+	if picker != null:
+		_assert_true(picker.item_count >= 2, "the picker lists every boiler strategy")
+		_assert_eq(String(picker.get_item_metadata(picker.selected)), STRATEGY_ID,
+			"the dialog defaults to the standard boiler strategy")
+	var confirm: Button = _node_named(screen, "ConfirmButton") as Button
+	_assert_true(confirm != null, "the dialog exposes the depart confirmation button")
+	if confirm != null:
+		_assert_false(confirm.disabled, "the feasible clue can be confirmed")
+	var cancel: Button = _node_named(screen, "CancelButton") as Button
+	_assert_true(cancel != null, "the dialog exposes cancel")
+	print("[EVIDENCE] departure dialog clue=%s strategy=%s confirm_disabled=%s texts=%s" % [
+		clue_id, String(picker.get_item_metadata(picker.selected)) if picker != null else "",
+		str(confirm.disabled) if confirm != null else "n/a", str(texts),
+	])
+
+
+## 在确认弹窗里按下「启航」，然后把出发时抽定的 outcome_roll 覆盖成测试要的结果
+## （0 = 必发现，0.999 = 必失败），返回 voyage evidence block。
+func _confirm_departure(
+	shell: Control, context: AppContext, screen: Variant, clue_id: String, outcome_roll: float
+) -> Dictionary:
+	var preview := _preview(context, clue_id)
+	var confirm: Button = _node_named(screen, "ConfirmButton") as Button
+	if confirm == null:
+		_fail("the departure dialog has no confirm button for %s" % clue_id)
+		return {"ok": false}
+	confirm.pressed.emit()
 	if shell._presentation == null:
 		_fail("explore.start did not hand over to the presentation (status: %s)" % shell._status_message)
 		return {"ok": false}
@@ -712,6 +799,16 @@ func _start_exploration(
 	_assert_eq(String(shell._presentation.phase_name()), "departure_3d",
 		"the 3D departure cut starts the exploration演出")
 	return info
+
+
+## 兼容旧调用点：打开海图 → 出航确认弹窗 → 确认 → explore.start。
+func _start_exploration(
+	shell: Control, context: AppContext, clue_id: String, outcome_roll: float
+) -> Dictionary:
+	var screen: Variant = await _request_departure(shell, context, clue_id)
+	if screen == null:
+		return {"ok": false}
+	return await _confirm_departure(shell, context, screen, clue_id, outcome_roll)
 
 
 func _capture_route(shell: Control, context: AppContext, info: Dictionary) -> bool:
@@ -884,7 +981,7 @@ func _assert_settlement(
 			"turning back burns extra water (%s)" % tag)
 		_assert_almost_eq(float(explore.get("durability_loss", 0.0)), 0.0, 0.0001,
 			"turning back costs no durability (%s)" % tag)
-		_assert_true(texts.has(String(context.translate("ui.explore.clue_retained"))),
+		_assert_true(_texts_contain(texts, String(context.translate("ui.explore.clue_retained"))),
 			"the settlement says the clue is retained (%s)" % tag)
 	else:
 		_assert_eq(current, destination, "the drift destination is where the ship ends up (%s)" % tag)
@@ -895,7 +992,7 @@ func _assert_settlement(
 			"a failed clue is not moved into the failed log (%s)" % tag)
 		_assert_true(int(explore.get("attempts", 0)) >= 1,
 			"the failed attempt is counted (%s)" % tag)
-		_assert_true(texts.has(String(context.translate("ui.explore.clue_retained"))),
+		_assert_true(_texts_contain(texts, String(context.translate("ui.explore.clue_retained"))),
 			"the settlement says the clue is retained (%s)" % tag)
 		_assert_true(float(explore.get("durability_loss", 0.0)) > 0.0,
 			"drifting costs durability (%s)" % tag)
@@ -1365,8 +1462,9 @@ func _active_has(context: AppContext, clue_id: String) -> bool:
 func _route_heading(route: PackedVector2Array, progress: float) -> float:
 	if route.size() < 2:
 		return 0.0
-	var backward := VoyagePresentation.sample_polyline(route, maxf(0.0, progress - 0.01))
-	var forward := VoyagePresentation.sample_polyline(route, minf(1.0, progress + 0.01))
+	# 与 `AtSeaScreen.HEADING_SAMPLE` 一致（0.004），否则弯道上的采样差会被误判为艏向偏差。
+	var backward := VoyagePresentation.sample_polyline(route, maxf(0.0, progress - 0.004))
+	var forward := VoyagePresentation.sample_polyline(route, minf(1.0, progress + 0.004))
 	return (forward - backward).angle()
 
 
@@ -1436,6 +1534,13 @@ func _node_named(root: Node, wanted: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _texts_contain(texts: Array, needle: String) -> bool:
+	for text in texts:
+		if String(text).contains(needle):
+			return true
+	return false
 
 
 func _label_texts(root: Node, out: Array = []) -> Array:

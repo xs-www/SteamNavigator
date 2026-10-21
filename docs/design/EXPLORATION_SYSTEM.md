@@ -1,9 +1,9 @@
-# 探索系统（阶段 4）实现契约 — 4.1 / 4.2（4.3 计划中）
+# 探索系统（阶段 4）实现契约 — 4.1 / 4.2 / 4.3
 
 > 作用：把 [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) §5/§7 的探索与线索规则
 > 落到可运行的纵向切片。数值全部来自 Core JSON，框架只读规则。本文是实现契约，
 > 与设计文档冲突时以设计文档的玩法意图为准、以本文的字段/命令形状为准。
-> **4.3 是已记录、尚未实现的体验修正计划**（见 §10）。
+> **4.3 探索体验修正已全部实现**（2026-10-21，U1–U8，分片 4.3.1–4.3.5 见 §10）。
 
 ## 1. 范围
 
@@ -15,7 +15,14 @@
 **4.2 交付**：资源告急决策（航程 50% 处停下，继续 / 掉头两条真实路径）、
 `VoyagePresentation.force_arrival()`、到港服务复用（探索入港与普通抵达同一套
 委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）、告警状态进查询与演出。
-**仍不在 4.2**：探索中事件化海洋（归阶段 5）、货物类线索与时效（4.3）。
+**4.3 交付（体验修正）**：雾半径改为最小世界尺寸 × Core 比例、双子世界尺寸内容化；
+失败探索不消耗线索（记 `attempts` / `last_attempt_at`，可再次出航）；线索获得固定 1 级
+并可在港逐级 `clue.investigate`（1→4，核心消耗字段预留 0）；演出中船周连续照亮与
+抵达 / 掉头沿途迷雾持久化；普通航线只在选中港口时显示；删除详细总览旧海图；删除
+出航准备页、出航确认（预估 + 锅炉策略切换，默认上次）移入海图弹窗；资源演出中连续
+显示、出发只扣工资、结算按实际航行小时一次性落账。
+**仍不在 4.3**：探索中事件化海洋（归阶段 5）、货物类线索与 `expires_at` 时效、
+调查的具体消耗数值（留待线索系统下一轮）。
 
 ## 2. 数据（`GameState.data`，全部可 JSON 化，惰性 ensure，无需迁移）
 
@@ -40,6 +47,8 @@ Clue = {
   credibility: float,            # 0..1，不直接显示
   search_zone: {x: float, y: float, radius: float},
   created_at: float,
+  attempts: int,                # 4.3/U3：失败尝试次数（失败不再消耗线索）
+  last_attempt_at: float,       # 最近一次失败尝试的结算时间
 }
 
 data.explore_voyage = null | {
@@ -48,14 +57,18 @@ data.explore_voyage = null | {
   route_path: [x0, y0, ...],      # 与 WorldMap.edges 同格式的扁平数组
   distance: float, duration_hours: float,
   departure_time: float, arrival_time: float,
-  coal_used: float, water_used: float, wages: int,
-  alert_needed: bool,             # 出发时按 alert_threshold 预判
+  # 4.3.5/U8 连续消耗：出发库存 + 每小时费率；出发不扣煤水，结算按实际小时扣
+  departure_coal: float, departure_water: float,
+  coal_rate: float, water_rate: float,
+  coal_used: float, water_used: float, wages: int,   # 计划值：告警 / 掉头比例 / 事件
+  alert_needed: bool,             # 出发时按 alert_threshold 预判（计划消耗 vs 出发库存）
   alert_progress: float,          # 决策点比例（Core alert_progress，默认 0.5）；continue 后置 1.0
   alert_decided: String,          # "" | "continue" | "turn_back"
   outcome_roll: float,            # 0..1，出发时用命名流抽定；成功 = roll < chance
   status: "outbound",
 }
 data.voyage = { "kind": "explore", "status": "at_sea" }   # 仅作"在航"标记
+data.fog = { grid, coastal_cells }                        # 4.3/U1：网格半径由内容比例推导
 ```
 
 - 探索期间 `data.voyage` 非空 → 既有 `is_at_port()` / `port.view.at_sea` / 贸易门禁自动生效。
@@ -65,13 +78,19 @@ data.voyage = { "kind": "explore", "status": "at_sea" }   # 仅作"在航"标记
 
 ## 3. 内容数值（Core JSON）
 
-`dev_mods/core/content/map_profiles.json` 的每个 profile `data` 增加 `exploration` 块，
-并同步扩展 `schemas/map_profile.schema.json`（`additionalProperties: false`，新增可选
-`exploration` 对象）。框架不得写死这些数字：
+`dev_mods/core/content/map_profiles.json` 的每个 profile `data` 增加 `exploration` 块与
+`twin_world_size`，并同步扩展 `schemas/map_profile.schema.json`
+（`additionalProperties: false`，新增可选 `exploration` 对象与顶层 `twin_world_size`）。
+框架不得写死这些数字：
 
 ```json
+"twin_world_size": 160.0,
 "exploration": {
   "rumor_clue_chance": 0.65,
+  "fog_port_reveal_ratio": 0.05,
+  "fog_vision_ratio": 0.05,
+  "investigation_cost": 0,
+  "investigation_hours": 0.0,
   "intel_clue_cost": 40,
   "max_active_clues": 4,
   "level_weights": {
@@ -103,6 +122,16 @@ data.voyage = { "kind": "explore", "status": "at_sea" }   # 仅作"在航"标记
 框架兜底常量（仅防御，不参与调参）。`distance_error_ratio` 表示的航程误差区间：
 `distance_min_hours = true_hours * (1 - ratio*(1-credibility))`，max 对称。
 
+**4.3 落地说明**
+
+- 雾半径 = `min(world.bounds.w, world.bounds.h) × fog_*_ratio`；160 世界下 reveal /
+  vision 都是 8，泊位揭示直径 16 = 世界的 10%（§10.3 验收口径；此前建议的
+  `0.075` 会让直径达到 15%，以验收为准取 `0.05`）。`RunFactory` 用
+  `twin_world_size` 缩放 160 单位手写布局。
+- `level_weights` 在 4.3.2 起**不再参与获得等级**（获得固定 1 级），字段保留给后续
+  线索系统；`investigation_cost` / `investigation_hours` 只作为预留接口暴露，本轮
+  不做资源判定、不扣钱、不推进时间。
+
 ## 4. 领域服务（`framework/domain/exploration/`）
 
 ### `ClueService`
@@ -113,18 +142,29 @@ active(state) -> Array[Dictionary]
 on_arrival(context) -> Dictionary           # 抵达后按 rumor_clue_chance 抽传闻线索
 buy(context) -> Dictionary                  # 花钱买情报线索（Result）
 acquire(context, source_key, rng, target_port_id="") -> Dictionary
-mark_failed(state, clue_id) -> bool
+investigate(context, clue_id) -> Result     # 4.3.2：在港把 active 线索推进一级（上限 4）
+mark_attempt_failed(state, clue_id, at_time=-1.0) -> int   # 4.3/U3：失败不消耗线索
 mark_resolved(state, clue_id) -> bool
 view(state, context) -> Array               # 只读视图，按等级裁剪字段
 ```
 
 - 目标：坐标世界里**未发现**、且未被其它活跃线索指向的港口；没有目标返回 `{}`（不报错）。
-- 等级：按 `level_weights[source_key]` 加权抽；可信度：`credibility_range[source_key]` 均匀抽。
+- **等级：获得时固定 1 级**（4.3.2/U2 起不再用 `level_weights` 抽）；只有
+  `investigate` 逐级推进 1→2→3→4。可信度仍按 `credibility_range[source_key]` 均匀抽。
 - 搜索区：真实港口位置 + 随机方向（命名流）× `(1 - credibility) * search_zone_noise`，
-  半径 `search_zone_radius`。
+  半径 `search_zone_radius`。目标港 / 可信度 / 搜索区 / 方向 / 航程区间在获得时固定，
+  调查只披露下一层，绝不重抽。
+- `investigate` 门禁：有 run、线索在 active、在港（`is_at_port()`）、`level < 4`；
+  成功只改 `level`，返回 `{clue_id, level, next_level, cost, hours, view}`，
+  `cost` / `hours` 来自 Core 预留字段（本轮不执行扣费）。
+- **失败不消耗线索**：`explore.settle` 失败只调用 `mark_attempt_failed` 累加
+  `attempts`、写 `last_attempt_at`，线索仍 active 且可再次 `explore.start`；旧存档
+  `failed` 列表仅兼容保留，不再新增。
 - 查询视图裁剪：`level < 4` 不含 `name_key`；`level < 3` 不含 `circle`；
   **任何等级都不含 `target_port_id` 与 `credibility`**。level 2 给 `direction_angle`，
-  level 3/4 给 `circle`，level 4 额外 `name_key`。
+  level 3/4 给 `circle`，level 4 额外 `name_key`；另输出 `attempts` /
+  `last_attempt_at` 与 4.3.2 调查入口字段（`investigation_cost` /
+  `investigation_hours` / `can_investigate` / `next_level` / `next_level_key`）。
 - 线索来源展示：`source_display_key = "ui.clue.source." + source_key`。
 
 ### `ExplorationCalculator`
@@ -169,25 +209,32 @@ settle(context) -> Result.ok({
 
 `start`：
 - 前置：有 run、在港（`is_at_port()`）、线索 active、没有 `explore_voyage`、
-  preview.feasible；扣工资与煤水（`add_money`/`record_expense`、`ship.coal/water`）。
+  preview.feasible；**只扣工资**（`add_money`/`record_expense`），煤水原样留在船上
+  （4.3.5/U8）。
 - 写入 `explore_voyage` 与 `data.voyage` 标记；`at_sea` 标记不新增（用 `voyage` 判定）。
+- 航次同时记录 `departure_coal/water` 与 `coal_rate/water_rate`（计划消耗 ÷ 计划时长）；
+  `presentation` 也带这四个字段供 Shell 演出中插值读数。
 - `outcome_roll` 用命名流抽定；`alert_needed = coal_used >= coal_before*alert_threshold
-  或 water_used >= water_before*alert_threshold`（0 库存守卫）；`alert_progress` 取
-  Core 的 `alert_progress`（决策点比例，默认 0.5），同时作为"已处理"标记：
-  `continue` 后置 1.0。
+  或 water_used >= water_before*alert_threshold`（0 库存守卫，用计划消耗 vs 出发库存）；
+  `alert_progress` 取 Core 的 `alert_progress`（决策点比例，默认 0.5），同时作为
+  "已处理"标记：`continue` 后置 1.0。
 - 事件：`explore.started`（payload: clue_id/origin/duration_hours/coal_used/water_used）。
 
-`settle`（4.2 起）：
+`settle`（4.2 / 4.3.5）：
 - 未出发 / 没有 explore_voyage → `Result.fail("not_exploring", "ui.error.not_exploring")`。
 - 时间推进到 `arrival_time`（失败再加 `drift_hours`）。
 - 成功（`outcome_roll < discovery_chance`）：
-  - `WorldOps.discover_port_id` + `WorldOps.mark_visited` + `FogOps.reveal_arrival`；
+  - 按 `rate × (arrival - departure)` 一次性扣煤水；`WorldOps.discover_port_id` +
+    `WorldOps.mark_visited` + `FogOps.trace_route` + `FogOps.reveal_arrival`；
   - `current_port_id = target`；线索 → resolved；
   - notices：`ui.notice.exploration_found`；事件 `explore.finished`（result=discovered）。
 - 失败：
-  - 线索 → failed；漂流：耐久 `-= drift_durability_loss`（≥0）、煤水各 `-= drift_extra_*`（≥0）、
-    时间 `+= drift_hours`；目的地 = 距搜索区最近的**已发现**港口（通常出发港）；
-  - notices：`ui.notice.exploration_failed`；事件 `explore.finished`（result=failed）。
+  - **线索保留在 active**（只 `mark_attempt_failed` 累加 `attempts` / 写 `last_attempt_at`）；
+  - 漂流：按 `rate × (duration + drift_hours)` 扣小时消耗，再扣 `drift_extra_coal/water`
+    额外损耗（钳位到剩余库存）；耐久 `-= drift_durability_loss`（≥0）；时间 `+= drift_hours`；
+    目的地 = 距搜索区最近的**已发现**港口（通常出发港）；
+  - notices：`ui.notice.exploration_failed`；事件 `explore.finished`（result=failed，
+    payload 带 `attempts`）。
 - 成功后调用 `VoyageService.settle_arrival_services()`：打造订单、委托完成（目标港匹配时）、
   NPC 市场推进、市场记忆、逾期债务、普通委托刷新；`VoyageService.record_arrival_stats()`
   记一次航次；结果带 `autosave=true`。成功/失败都给 `summary.explore = {result, port_id,
@@ -196,8 +243,9 @@ settle(context) -> Result.ok({
 
 `decide("continue")`：只确认告警（不做别的状态变化），返回 `{continued: true, destination,
 remaining_hours}`；重复回答返回 `Result.fail("alert_already_decided", "ui.error.alert_already_decided")`。
-`decide("turn_back")`：额外消耗 `coal_used/water_used * turnback_extra_ratio`，时间前进
-半个航程，目的地 = 出发港，线索保持 active，返回 `{returned: true, destination, summary}`；
+`decide("turn_back")`：先按 `rate × duration × 0.5` 扣实际半程，再额外消耗
+`coal_used/water_used * turnback_extra_ratio`（钳位到剩余库存），时间前进半个航程，
+目的地 = 出发港，线索保持 active，返回 `{returned: true, destination, summary}`；
 同样跑 `settle_arrival_services()`（真实入港）、记一次航次并带 `autosave=true`。
 
 ## 5. 命令 / 查询
@@ -210,6 +258,7 @@ remaining_hours}`；重复回答返回 `Result.fail("alert_already_decided", "ui
 | `explore.settle` | `{}` | 演出抵达时由 Shell 调用 |
 | `explore.decide` | `{choice}` | `continue` / `turn_back`；重复 continue → `ui.error.alert_already_decided` |
 | `clue.buy` | `{}` | 当前港有 `intel` 设施时购买情报线索 |
+| `clue.investigate` | `{clue_id}` | 4.3.2：在港把 active 线索推进一级（1→4）；成功事件 `clue.investigated`（payload 仅 `clue_id` / `level`） |
 
 查询：
 
@@ -220,9 +269,13 @@ remaining_hours}`；重复回答返回 `Result.fail("alert_already_decided", "ui
     direction_angle, distance_min_hours, distance_max_hours,
     circle: null | {x, y, radius},         # level >= 3
     name_key: "" | key,                     # level == 4
+    attempts, last_attempt_at,              # 4.3/U3：失败不消耗线索
+    investigation_cost, investigation_hours, can_investigate,
+    next_level, next_level_key,             # 4.3.2：调查入口与下一级预告
     estimated: {feasible, blockers, duration_hours, coal_required,
                 water_required, risk_score, discovery_chance},
   }]
+  fog_radii: {vision: float, port_reveal: float}   # 4.3/U1：世界单位，供演出软圆
   explore: {active: bool, clue_id: String,
             alert_needed: bool, alert_progress: float, alert_decided: String}
   can_buy_clue: {available: bool, cost: int, reason_key: String}
@@ -231,19 +284,40 @@ remaining_hours}`；重复回答返回 `Result.fail("alert_already_decided", "ui
 
 ## 6. 演出与 UI 接线
 
-- 海图页（M 键）：
+- 海图页（M 键 / 顶栏「海图」/ 状态条「海图 ▶」/ 港口「海图」招牌）：
   - `SNSeaChartView` 画线索：level 2 从参照港沿 `direction_angle` 画方向箭头；
     level 3 在 `circle` 画虚线圆；level 4 圆圈 + 文本 `？<港口名>？`。点击任一线索图形
-    发 `clue_clicked(id)`（新增信号），选中高亮。
-  - `SNSeaChartPanel` 增加线索区块：来源、等级文案、方向（8 方位）、航程区间、
-    预计航程/煤水/风险、可行性；「循此线索出航」按钮 → 屏幕发 `explore_requested(clue_id)`。
-  - `SeaChartScreen` 新增 `explore_requested(clue_id)`；Shell 接上后运行
-    `explore.start`（策略暂用 `core:strategy/standard`，4.2 再让玩家选）。
+    发 `clue_clicked(id)`，选中高亮。
+  - **普通航线只在选中港口时显示**（4.3/U5）：`visible_routes()` 只保留与
+    `_selected_port` 相邻的航线，未选中（含选中线索）时一条不画；演出模式只保留计划
+    航线。选中港口时面板照旧展示与当前港之间的航线预估。
+  - **演出随船照亮**（4.3/U4）：`SNSeaChartView.set_ship_vision(radius)` 在船周画软圆
+    （纯表现，`ship_vision_rings()` 控制衰减）；`AtSeaScreen` 用
+    `fog_radii.vision` 每帧推给海图。
+  - `SNSeaChartPanel` 线索区块：来源、等级文案、方向（8 方位）、航程区间、
+    `attempts`（失败尝试次数）、「下一级：%s」预告、「调查线索」按钮与
+    预计航程/煤水/风险/可行性。`investigate_requested` / `purchase_clue_requested`
+    由屏幕原样转发；「循此线索出航」不再直接出航，而是发
+    `departure_requested("explore", clue_id)` 打开确认弹窗。
+  - **出航确认弹窗**（4.3/U7，4.3.4）：港口面板「启航」与线索面板「循线索出航」
+    共用 `SNVoyageConfirm`（预估 / 发现概率 / 可行性 blockers / 锅炉策略切换 /
+    取消 / 启航）；Shell 用 `_chart_departure_model()` 组装数据，确认后才发
+    `voyage.start` / `explore.start`。出航准备页与旧「出航」导航项已删除。
 - 探索演出：
   - Shell 保存命令返回的 `presentation`（`_presentation_explore`），沿用
     `VoyagePresentation`（`event_at = alert_needed ? alert_progress : -1`）；航行页
     `AtSeaScreen.bind` 收到 `unknown_destination: {x, y, label_key}` 时，
     海图画虚线航线 + `?` 终点标记，航程条右侧显示 `？`（`ui.label.unknown_destination`）。
+  - **沿途迷雾持久化**（4.3/U4）：成功 / 失败漂流在 `reveal_arrival` 前对
+    `voyage.route_path` 调 `FogOps.trace_route()`；掉头只采样前半程（`end_progress=0.5`）；
+    普通航行抵达也按 `WorldOps.route_between` 的折线落账。沿海格子留 EXPLORED，
+    海洋格子按 §3.2 规则回黑雾；旧存档无 `world_map` 时 no-op。
+  - **连续消耗**（4.3/U8）：出发只扣工资；领域 `voyage` 记录
+    `departure_coal/water` 与 `coal_rate/water_rate`，`_complete_arrival` 按
+    `rate × (arrival - departure)` 一次性扣（事件延误计入）。探索成功按
+    `arrival - departure`，失败按 `duration + drift_hours`，掉头按 `duration × 0.5`
+    + 额外比例。演出顶栏煤 / 水 chip 用同一组字段逐帧插值（只改 Label 文本，
+    不写领域状态）；告警仍按「计划消耗 vs 出发库存」预判。
   - **资源告急（4.2）**：演出走到 `EVENT_WAIT` 时，`_rebuild_ui` 优先挂资源告急页
     （复用 `EventScreen`，标题 `ui.explore.alert.title`、选项
     `ui.explore.alert.continue` / `ui.explore.alert.turn_back`，船况来自 `state.ship()`）。
@@ -270,10 +344,19 @@ ui.clue.level.1 / .2 / .3 / .4
 ui.clue.direction.N/NE/E/SE/S/SW/W/NW
 ui.clue.distance_range ("约 %d–%d 小时航程")
 ui.clue.reliability_hint ("来源：%s")
+ui.clue.attempts ("已尝试 %d 次")
+ui.clue.next_level ("下一级：%s")
+ui.clue.max_level ("已达最高等级")
 ui.button.explore_clue ("循此线索出航")
+ui.button.investigate_clue ("调查线索")
 ui.label.unknown_destination ("？")
 ui.label.exploring ("探索中")
 ui.notice.clue_acquired ("获得线索：%s")
+ui.notice.clue_investigated ("线索调查完成：已升至 %d 级")
+ui.error.clue_max_level ("这条线索已经是最高等级")
+ui.confirm.title.voyage / .explore
+ui.confirm.route / .clue / .strategy / .blockers / .discovery_chance / .on_time / .hint
+ui.button.cancel ("取消")
 ui.notice.no_clue_available
 ui.notice.exploration_found ("发现新港口：%s")
 ui.notice.exploration_failed ("探索失败，漂流到 %s")
@@ -301,7 +384,16 @@ ui.error.alert_already_decided
   `test_voyage_flow`（海图点击线索 → 演出到 settle → 结算页显示探索结果；成功与失败各一条；
   资源告急「继续」与「掉头」两条 E2E，含 `skip()` 不可用、无 double settle）、
   `test_ui_shell`（`clue.buy` 按钮/入口）、`test_voyage_presentation`（force_arrival 从 AT_SEA / EVENT_WAIT）。
-- 回归：既有 264 例 + 4.1 的 34 例全部保持通过。
+- **4.3 增量**：
+  - 领域：雾半径 = 世界短边 × Core 比例（160 世界下 8/8、cell_size=2、泊位直径 ≤10%）、
+    双子世界尺寸来自 `twin_world_size`；失败线索仍在 active 且可再次出航、`attempts`
+    累加；线索获得必为 1 级、连续调查 3 次到 2/3/4 且 target/credibility/search_zone
+    不变、4 级再调查报错；`explore.start` 只扣工资、结算 / 失败 / 掉头按小时扣煤水的
+    精确公式；沿途迷雾落账。
+  - UI：`visible_routes()` 选中过滤；确认弹窗渲染/信号（策略默认 standard）；演出中
+    `get_ship_vision_radius() > 0`、海图 `has_ship_vision()`；顶栏煤 / 水文本随演出下降、
+    领域库存不变；`clue.investigate` 面板按钮/转发；详细总览无 `MapCanvas`。
+  - 回归：全套 **325 例通过 / 0 失败**（新增/改写 17 例）。
 
 ## 9. 实现状态与验收截图（4.1 / 4.2）
 
@@ -328,21 +420,24 @@ ui.error.alert_already_decided
 | [exploration_turned_back.png](screenshots/exploration/exploration_turned_back.png) | **4.2 掉头结算**：回出发港、线索保留、额外煤水损耗、结算显示「掉头返航」 |
 | [exploration_alert_continue.png](screenshots/exploration/exploration_alert_continue.png) | **4.2 继续路径**：同一线索告警后选「继续探索」→ 正常 settle 并发现新港口（目标港仍隐藏到结算） |
 | [exploration_result_found.png](screenshots/exploration/exploration_result_found.png) | 发现：结算页探索区块（发现新港口 / 抵达港口 / 线索已解决），原委托结算布局不变 |
-| [exploration_result_failed.png](screenshots/exploration/exploration_result_failed.png) | 失败：红色「探索失败」、漂流回铁港、额外煤水/耐久损耗、延误 6h、线索已作废 |
+| [exploration_result_failed.png](screenshots/exploration/exploration_result_failed.png) | 4.3 起失败：红色「探索失败」、漂流回铁港、额外煤水/耐久损耗、延误 6h、**线索保留（可再次出航）** |
 | [exploration_arrival.png](screenshots/exploration/exploration_arrival.png) | 另一次真实发现的结算页（与 found 证据不同，验证不是同一帧） |
+| [exploration_chart_investigate.png](screenshots/exploration/exploration_chart_investigate.png) | 4.3.2：选中 2 级线索，面板显示「下一级：已知航程」与「调查线索」按钮 |
+| [exploration_depart_confirm.png](screenshots/exploration/exploration_depart_confirm.png) | 4.3.4：海图内出航确认弹窗（预估 / 锅炉策略切换 / 取消 / 启航） |
 
-**测试**：领域 `test_exploration` 28 例、UI 线索/演出/结算/告警与 E2E 15 例、海图船形朝向与
-`?` 可见区 clamp 2 例、presentation force_arrival 2 例；全套 **308 例通过 / 0 失败**。
+**测试**：领域 `test_exploration`、UI 线索/演出/结算/告警与 E2E、海图几何、presentation；
+4.3 完成后全套 **325 例通过 / 0 失败**（4.3 新增/改写 17 例，明细见 §10.5）。
 
 **4.2 已知边界**：探索中的事件化海洋（敌对/环境/奖励）归阶段 5，与其共享事件暂停/恢复机制；
 货物类线索、`expires_at` 时效、在港等待/委托解锁线索留给 4.3；资源告急仅覆盖煤/水
 （4.2 探索途中没有耐久损耗来源，耐久告急等阶段 5 的敌对/环境事件接入后再补）。
 
-## 10. 4.3 探索体验修正（Planned，2026-10-21 记录）
+## 10. 4.3 探索体验修正（Implemented，2026-10-21）
 
-> 状态：**只记录需求与决策，未实现**。玩家实机体验后提出 8 条问题，逐条已定位根因；
-> 本节是实施清单与验收口径。实现时按 §10.3 的切片顺序推进，数值仍走 Core JSON
-> （`map_profiles` 的 `exploration` 块，schema 同步扩展），不触碰 Content Schema 2.0。
+> 状态：**4.3.1–4.3.5 已全部实现并验收**（2026-10-21，按 §10.3 顺序逐片提交全量测试）。
+> 玩家实机体验后提出 8 条问题，逐条已定位根因；本节保留实施清单与验收口径，
+> 数值走 Core JSON（`map_profiles` 的 `exploration` 块，schema 同步扩展），
+> 不触碰 Content Schema 2.0。实现台账见 §10.5。
 
 ### 10.1 反馈与根因
 
@@ -369,30 +464,55 @@ ui.error.alert_already_decided
    （不在航程中每帧写状态）。出发时只扣工资；抵达 / 失败漂流 / 掉头时按实际航行小时扣煤水
    （含事件延误小时）；资源告急阈值仍用"本段预计消耗 vs 出发库存"预判。
 4. **雾半径**：改为**最小世界尺寸相关量**——`radius = min(bounds.w, bounds.h) * ratio`，
-   比例放进 Core `map_profiles.exploration`（建议初始 `fog_port_reveal_ratio ≈ 0.075`、
-   `fog_vision_ratio ≈ 0.05`，160 世界下即 12 / 8）；`RunFactory` 的双子世界尺寸也从内容读取，
-   不再硬编码 160。迷雾网格 `cell_size = vision_radius / 4` 随之缩放。
+   比例放进 Core `map_profiles.exploration`；`RunFactory` 的双子世界尺寸也从内容读取
+   （`twin_world_size`），不再硬编码 160。迷雾网格 `cell_size = vision_radius / 4`
+   随之缩放。**实际取值**：`fog_port_reveal_ratio = fog_vision_ratio = 0.05`
+   （160 世界下 8 / 8，泊位揭示直径 16 = 世界 10%，满足 §10.3 验收）。
+   最初建议的 `0.075 / 0.05` 会让揭示直径达到 15%，与验收口径冲突，以验收为准取 0.05。
 5. **出航策略**：海图内的出航确认弹窗提供锅炉策略切换，**默认上一次选择**
    （Shell 记忆；无记忆时用 `strategy.standard` tag 解析，不写 `core:*` 字面量）；
    弹窗同时显示距离 / 预计时间 / 煤水 / 风险 / 可行性 blockers。
 
-### 10.3 实施切片（建议顺序）
+### 10.3 实施切片（按顺序完成）
 
-| 切片 | 内容 | 验收口径 | 估时 |
+| 切片 | 内容 | 验收口径 | 状态 |
 |---|---|---|---|
-| **4.3.1 海图观感与线索规则** | U1 雾比例 + 世界尺寸内容化；U3 失败不消耗线索（记 `attempts` / `last_attempt_at`，可再探索）；U5 航线仅在选中港口时显示；U6 删除详细总览旧海图 | 160 世界下泊位雾直径 ≤ 世界 10%；失败后线索仍在 active 且可再次出航；未选港口时海图无线（演出计划航线除外）；详细总览无 `map_canvas` | 1–1.5 天 |
-| **4.3.2 线索逐级升级** | U2 + `clue.investigate` 命令（等级 +1，上限 4）；面板「调查线索」与下一级预告；获得永远 1 级；Core 预留消耗字段（0） | 新线索必为 level 1；连续调查 3 次依次到 2/3/4；目标港/搜索区/可信度不变；查询仍按等级裁剪 | 1.5 天 |
-| **4.3.3 随船照亮** | U4 演出层 `SNSeaChartView.set_ship_vision()` 软圆；抵达/掉头时按实际航线采样 `FogOps.update_ship_vision` 持久化沿途迷雾 | 演出中船周有连续照亮；结算后存档里航线沿海岸为 EXPLORED；旧存档无 world_map 时 no-op | 1 天 |
-| **4.3.4 出航流程重构** | U7 删除 `voyage_screen` 与导航/招牌入口；海图港口面板「启航」+ 线索面板「循线索出航」统一打开确认弹窗（预估 + 策略切换 + 取消/启航）；确认后直接 `voyage.start` / `explore.start` | 导航无「出航」；从海图两处入口都能完成出航；策略默认上次选择且可切换；可行性 blockers 在弹窗内可见 | 1.5 天 |
-| **4.3.5 连续消耗** | U8 出发只扣工资；状态存 `departure_coal/water` + 每小时费率；顶栏按 `elapsed_hours` 连续刷新；结算/漂流/掉头按实际小时落账；事件延误补算 | 出发后船库不变；演出中读数随进度下降；抵达后扣减=实际小时×费率；掉头扣实际半程+额外；告警仍按预判触发；存档在结算后为最终值 | 2 天 |
+| **4.3.1 海图观感与线索规则** | U1 雾比例 + 世界尺寸内容化；U3 失败不消耗线索（记 `attempts` / `last_attempt_at`，可再探索）；U5 航线仅在选中港口时显示；U6 删除详细总览旧海图 | 160 世界下泊位雾直径 ≤ 世界 10%；失败后线索仍在 active 且可再次出航；未选港口时海图无线（演出计划航线除外）；详细总览无 `map_canvas` | ✅ 已实现 |
+| **4.3.2 线索逐级升级** | U2 + `clue.investigate` 命令（等级 +1，上限 4）；面板「调查线索」与下一级预告；获得永远 1 级；Core 预留消耗字段（0） | 新线索必为 level 1；连续调查 3 次依次到 2/3/4；目标港/搜索区/可信度不变；查询仍按等级裁剪 | ✅ 已实现 |
+| **4.3.3 随船照亮** | U4 演出层 `SNSeaChartView.set_ship_vision()` 软圆；抵达/掉头时按实际航线采样 `FogOps.trace_route` 持久化沿途迷雾 | 演出中船周有连续照亮；结算后存档里航线沿海岸为 EXPLORED；旧存档无 world_map 时 no-op | ✅ 已实现 |
+| **4.3.4 出航流程重构** | U7 删除 `voyage_screen` 与导航/招牌入口；海图港口面板「启航」+ 线索面板「循线索出航」统一打开确认弹窗（预估 + 策略切换 + 取消/启航）；确认后直接 `voyage.start` / `explore.start` | 导航无「出航」；从海图两处入口都能完成出航；策略默认上次选择且可切换；可行性 blockers 在弹窗内可见 | ✅ 已实现 |
+| **4.3.5 连续消耗** | U8 出发只扣工资；状态存 `departure_coal/water` + 每小时费率；顶栏按 `elapsed_hours` 连续刷新；结算/漂流/掉头按实际小时落账；事件延误补算 | 出发后船库不变；演出中读数随进度下降；抵达后扣减=实际小时×费率；掉头扣实际半程+额外；告警仍按预判触发；存档在结算后为最终值 | ✅ 已实现 |
 
 每片完成后跑全量测试 + 相关窗口截图；全部做完后更新本文 §10 状态、
 [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) 的对应段落、README/CHANGELOG/todo，并重生成静态文档。
 
+### 10.5 实现台账（2026-10-21）
+
+| 切片 | 主要文件 | 验证 |
+|---|---|---|
+| 4.3.1 | `ExplorationRules.fog_radii()`、`FogOps`（内容半径入参）、`RunFactory`（`twin_world_size` + 布局缩放）、`ClueService.mark_attempt_failed()`、`ExploreVoyageService` 失败分支、`SNSeaChartView.visible_routes()`、删除 `map_canvas.gd/.tscn` 与总览海图块 | `test_exploration` 雾比例/失败保留/再出航、`test_sea_chart` 选中过滤、`test_ui_shell` 无 MapCanvas |
+| 4.3.2 | `ClueService.investigate()` / `clue.investigated`、`clue.investigate` 命令、`sea_chart.view` 调查字段、面板「调查线索」+ 下一级预告、5 个本地化键 | 获得必为 1 级、3 次调查到 2/3/4、目标/可信度/搜索区不变、4 级报错、查询裁剪、存档往返 |
+| 4.3.3 | `SNSeaChartView.set_ship_vision()` / `ship_vision_rings()`、`AtSeaScreen` 每帧推半径、`FogOps.trace_route()`、探索 settle/turn_back 与普通抵达落账 | 软圆半径单调衰减、演出 `has_ship_vision()`、航线沿海 EXPLORED、legacy no-op |
+| 4.3.4 | 删除 `voyage_screen.gd/.tscn`；`SNVoyageConfirm`（新）、`SeaChartScreen` 叠层、面板统一 `departure_requested`、Shell `_chart_departure*` / `_chart_departure_model()`、导航/招牌/状态条改「海图」 | 导航无出航、两处入口打开弹窗、策略默认上次/可切换、blockers 可见、确认后启动演出 |
+| 4.3.5 | `VoyageService.start/_complete_arrival`（费率落账）、`ExploreVoyageService`（成功/失败/掉头按小时扣）、Shell `_update_presentation_resources()` / 具名煤水 chip | 出发只扣工资、顶栏读数连续下降、结算扣减=费率×实际小时、事件延误计费 |
+
+**实现中的决策偏差**
+
+- 雾比例取 `0.05 / 0.05`（不是原建议 0.075 / 0.05），以满足「160 世界泊位雾直径
+  ≤ 10%」的验收口径。
+- 掉头 / 漂流先按费率扣实际小时，再扣原有的额外损耗（`summary.extra_*` 仍只表示额外那笔）。
+- 无事件的普通航段沿用阶段 3 架构：`voyage.start` 内同步结算抵达（按实际小时扣款），
+  因此「出发后船库不变」只在有事件、演出真正中断的航段可观测；有事件航段已按
+  「出发只扣工资 → 演出插值读数 → 结算一次性落账」执行。
+
 ### 10.4 仍未定 / 后续迭代
 
-- 线索调查的具体消耗（金币/时间/成功率/上限）——等线索系统下一轮迭代定。
+- 线索调查的具体消耗（金币/时间/成功率/上限）——等线索系统下一轮迭代定；
+  4.3 已在 Core 预留 `investigation_cost` / `investigation_hours`（0）与命令/查询形状。
 - 货物类线索（`port_goods`）与 `expires_at` 时效、在港等待/完成委托解锁线索。
 - 耐久告急（需要阶段 5 的敌对/环境事件造成途中损伤）。
 - en locale 收尾（结算页/事件页既有硬编码中文）。
-- 旧 `map_canvas`/`map_view` 若在删除总览入口后无其它引用，可一并删除；实现时先查引用再删。
+- 无事件普通航段的结算时机（当前阶段 3 架构在 `voyage.start` 内同步抵达；若后续要让
+  「命令返回时库存不动、抵达拍才落账」，需要改航行演出状态机接线）。
+- 旧 `map_canvas` 已删除；`map.view` 仍被港口名查询使用，保留。
+- `level_weights` 目前保留但不再参与获得等级，等线索系统下一轮再决定复用或移除。

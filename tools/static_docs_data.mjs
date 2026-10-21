@@ -465,38 +465,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/domain/voyage/voyage_service.gd": {
-    role: "航行执行：校验预览、扣补给/工资、抽取事件、事件选择、抵达结算与失败回滚。",
-    dependencies: ["VoyageCalculator", "ShipOps", "MapOps", "ConditionEvaluator", "EffectExecutor", "ContractOps", "NpcTraderSimulator", "DebtService", "SaveService"],
-    contracts: [
-      "出航前把当前状态存入 `context.pre_voyage_state` 和 `pre_voyage` 存档槽。",
-      "风险事件概率对玩家隐藏；预览只暴露风险来源。事件最多提供 2 个加权抽样选项。",
-      "耐久归零或 `fail_voyage` 效果会把工作副本替换回出航前快照，并发布 voyage.failed。",
-      "抵达时统一推进时间、发现港口、结算打造订单（CraftOps.settle_orders，成品进下单港仓库并写入 summary.completed_orders）、结算主线/普通委托、推进 NPC、检查逾期、刷新普通委托池并自动存档。",
-      "工资通过 `state.record_expense()` 计入统计支出；委托收入在 ContractOps 结算时计入收入。",
-      "行动顺序固定：扣费/补给 → 生成 voyage → 选事件 → 若无事件立即抵达。"
-    ],
-    l2: {
-      "start(context, destination_id, strategy_id)": [
-        "先调用 VoyageCalculator 生成可复现预览；feasible=false 时不修改状态。",
-        "工资、煤、水全部扣除后写入 `voyage` 快照；事件基础延误已计入 arrival_time。",
-        "事件选项仅保存 ID；选择时重新从注册表读取效果，避免存档注入效果对象。"
-      ],
-      "choose_option(context, option_id)": [
-        "再次校验选项在本次抽样池中且条件成立，然后顺序执行效果。",
-        "effect flags.voyage_failed 为真时恢复出航前状态，返回 ok + failed，以便 UI 展示而非命令错误。",
-        "成功后调用 `_complete_arrival()`；autosave 只在成功抵达后发生。"
-      ],
-      "_complete_arrival(context)": [
-        "以 arrival_time 推进游戏时间并标记目的港 visited/discovered。",
-        "主线完成后 next_main_sequence+1，并生成下一段 main_offer；不自动接取。",
-        "普通 active 委托中目的港匹配者一起结算；其余保留。",
-        "调用 `ContractOps.refresh_normal_offers()` 整池刷新普通委托（键含港口/抵达时间/航次），summary.offers_refreshed=true 并发布 contract.offers_refreshed。",
-        "NPC 市场推进、债务逾期、统计与通知都在此统一处理。"
-      ]
-    }
-  },
-
   "framework/domain/voyage/voyage_calculator.gd": {
     role: "纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。",
     contracts: [
@@ -879,7 +847,7 @@ export const FILE_DOCS = {
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
       "主界面默认 `_overview_stage_mode=true`：全窗 3D 港口舞台是主视图，2D 详细总览收进 `_overview_detail` 抽屉（默认关闭）；两者都只是 UI 会话状态，不写存档。",
-      "紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 7 个导航按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。",
+      "紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 6 个导航按钮 + 海图切换按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。",
       "HUD 图标：`_stat_chip(..., icon_key)` 在标签左侧挂 22 px `TextureRect`；`_hud_icon()` 经 `AssetService.find_key()` 把 `icon.money/coal/water` 解析到任一内容包并缓存 `Texture2D`，缺 key/缺文件时退回纯文字 chip。金币在顶部 chrome，煤炭/淡水同时在顶部与底部状态条。",
       "窗口适配：工程为 `canvas_items` 拉伸（1440×900 基准）+ `expand` 宽高比，真实窗口的逻辑宽度恒 ≥1440（960×540 → 1600×900），因此 HUD 与招牌按同一份完整布局整体缩放，不设删信息/缩控件的 compact 分支；960×540 截图验证缩放后不裁切。",
       "设施招牌由 `SNHarborSign`（`sn_harbor_sign.gd`）承载：`_port_sign()` 调 `configure(text, primary, facility, arrow)` 写木板/铁框/黄铜铆钉/徽记/箭头/悬停光晕，`Button` 语义与 `text`/tooltip 保留；招牌固定 172×42、边距 20。",
@@ -888,16 +856,17 @@ export const FILE_DOCS = {
       "每个功能有独立界面，通过顶部导航切换；面板分别构建完整 ViewModel，不把所有信息挤在同一滚动页。",
       "每轮命令后整页重建；选项/目的地/构筑选择保存在 UI 成员。",
       "每个 PanelContainer 只允许一个 VBoxContainer 内容容器；面板子节点必须经 `_panel_add()` 添加，避免多子节点互相重叠。",
-      "海图点击已访问港口：当前港跳转市场，远程港打开只读港口记忆。",
-      "海图由独立 map_canvas.tscn 组件承载；Shell 只绑定 ports/routes/labels 并处理 port_clicked。",
-      "总览页由独立 overview_screen.tscn 承载；Shell 解析横幅资产、海图标签、委托摘要与通报文本，页面组合港口/目标/船只/快捷操作/财务面板并发出导航、海图点击或命令意图。",
+      "海图是独立的切换页（`M` 键 / 顶栏「海图」/ 状态条「海图 ▶」/ 港口招牌），不占用导航按钮；4.3.4 起出航准备页已删除，面板「启航」与线索「循线索出航」统一打开页内确认弹窗（预估 + 锅炉策略切换 + 取消/启航），确认后才执行 `voyage.start` / `explore.start`。",
+      "确认弹窗状态 `_chart_departure = {kind, target_id, strategy_id}` 只存在于 Shell 会话；`_chart_departure_strategy()` 依次取弹窗选择 → 上次确认的策略 → `strategy.standard` tag，策略切换后重新查询 `sea_chart.view` 并重开弹窗。",
+      "连续消耗（4.3.5 / U8）：出航确认后领域只扣工资；演出期间 `_presentation_voyage` 的 `departure_coal/water` 与 `coal_rate/water_rate` 驱动顶栏煤 / 水 chip 逐帧插值（`_update_presentation_resources()`，只改 Label 文本、不写 state），抵达 / 漂流 / 掉头时领域按实际航行小时一次性落账，重建后的 chrome 回到真实读数。",
+      "总览页由独立 overview_screen.tscn 承载；Shell 解析横幅资产、委托摘要与通报文本，页面组合港口/目标/船只/快捷操作/财务面板并发出导航或命令意图；4.3/U6 起详细总览不再挂旧线稿海图。",
       "启动主菜单使用全屏港口背景；进入游戏后保留顶部导航，并用共享 Theme 的徽标/章节标题/资源条构建信息层级。",
       "总览港口横幅通过 Core manifest 的 `banner.port.*` 资产键与 `banner_asset` 字段解析；无横幅港口退回普通面板。",
       "市场页由独立 market_screen.tscn 承载；Shell 组合 port.view 市场数据与 intel.view 趋势，页面发出 trade.buy/trade.sell 意图。",
-      "委托页由独立 contracts_screen.tscn 承载；Shell 补充直达性、解锁名称和已完成名称，页面发出 contract.accept 或 voyage 导航意图。",
+      "委托页由独立 contracts_screen.tscn 承载；Shell 补充直达性、解锁名称和已完成名称，页面发出 contract.accept 或打开海图（预选目的港）的导航意图。",
       "补给页由独立 supply_screen.tscn 承载；Shell 查询 supply.view、注入本地化回调并统一执行页面发出的 supply.* 命令。",
       "情报页由独立 intel_screen.tscn 承载；Shell 查询 intel.view，页面组合 SNIntelTable 并发出 intel.refresh 意图。",
-      "出航页由独立 voyage_screen.tscn 承载；Shell 保存目的港/策略选择并查询 voyage.preview，页面只展示预览并发出 selection_changed 或 voyage.start 意图。",
+      "海图出航确认：`_chart_departure_model()` 在 Shell 侧组装目标名、策略列表（已翻译）、`voyage.preview` / 线索预估与 blockers；`SNVoyageConfirm` 只渲染并发出 confirmed/cancelled/strategy_changed，Shell 随后直接执行 `voyage.start` / `explore.start`（4.3.4 / U7）。",
       "主菜单、新航程、模组列表与设置分别由 menu 目录下四个独立场景承载；Shell 组合启动 ViewModel，并统一处理导航、续玩、诊断、退出、新局与设置持久化意图。",
       "港口记忆、抵达结算、航行中、航行事件与通关总结均由 flow 目录独立场景承载；Shell 负责查询/名称解析与流程控制，场景只展示并发出导航、命令或流程意图。",
       "交易、委托接取和补给购买成功后播放 pickup_gold_00.wav。",
@@ -923,34 +892,34 @@ export const FILE_DOCS = {
       "连续港区：`STAGE_SCREENS = {overview→harbor, market→market, supply→supply}` 把页面映射到同一港区的三个相邻站位；`_stage_station` / `_stage_framing` 记录当前镜头站，overview 用 `stage` 构图，market/supply 用 `panel` 构图（右侧 640 px `DOCK_PANEL_WIDTH` 面板）。",
       "`_focus_stage_station(station, framing, immediate)` 只在舞台已挂载后调 `PortStage.focus_station()`；重设当前站位是 no-op，所以整页重建不会重启动画。`_stage_backed_page()` 判断当前页是否该用泊位面板（舞台场景可用时）。",
       "市场/补给页的泊位面板：`_mount_dock_panel(screen)` 建 `DockPanelRow`（左 expanding `StageWindow` + 右 `PanelContainer(DockPanel, SNPanel, ≥640 px)`），页面放进面板；舞台不可用时退回原来的全宽页面。",
-      "站位间导航不播放全屏淡出：`_on_nav()` 在 `from` 与目标都属于 `STAGE_SCREENS` 且场景可用时 `_refresh(false)`，让镜头平移与船体航行可见；离开到 contracts/intel/shipyard/voyage 等非舞台页仍走 `_refresh(true)` 淡入淡出。",
+      "站位间导航不播放全屏淡出：`_on_nav()` 在 `from` 与目标都属于 `STAGE_SCREENS` 且场景可用时 `_refresh(false)`，让镜头平移与船体航行可见；离开到 contracts/intel/shipyard 等非舞台页仍走 `_refresh(true)` 淡入淡出。",
       "舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。",
       "`_sync_port_stage(data)` 在 `has_run && !at_sea && 当前页属于 STAGE_SCREENS && （非 overview 或 _overview_stage_mode） && 场景可用` 时显示；overview 额外要求 3D 总览模式，market/supply 不受该开关影响。菜单/无 run/通关/在航/错误/非舞台页分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。",
       "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。",
-      "两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；规格 172×42 / margin 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「出航 ▶」招牌（`Hotspot_voyage`）。",
+      "两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；规格 172×42 / margin 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「海图 ▶」招牌（`Hotspot_sea_chart`，4.3.4 起替代旧出航招牌）。",
       "招牌控件是 `SNHarborSign`（自绘木板/铁框/黄铜铆钉/设施徽记/箭头/悬停光晕），`text` 与 `Button` 语义保留；`_port_sign()` 兼容组件缺失时回退普通 Ghost Button。",
       "招牌布局避让紧凑 chrome 与底部状态条：`_port_hud_top_safe()` 取 `_top_chrome` 底边、`_port_hud_bottom_safe()` 取状态条顶边；`_refresh_port_hotspots_soon()` 做两次 deferred（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。",
-      "底部状态条（`_port_status_bar`，`PORT_STATUS_BAR_HEIGHT=60`）只在 overview 显示：耐久/货舱/煤/水/受损模块 + 最新通告（沿用 `_notice_text` 模板填充）+「详细总览/返回主界面」+ 出航 + 等待 12 小时（`port.wait`）；显示时隐藏 footer 并增大 `PageMargin` 底部预留。",
+      "底部状态条（`_port_status_bar`，`PORT_STATUS_BAR_HEIGHT=60`）只在 overview 显示：耐久/货舱/煤/水/受损模块 + 最新通告（沿用 `_notice_text` 模板填充）+「详细总览/返回主界面」+「海图 ▶」+ 等待 12 小时（`port.wait`）；显示时隐藏 footer 并增大 `PageMargin` 底部预留。",
       "详细总览抽屉：`_on_overview_detail_toggle()` 切换 `_overview_detail`，抽屉用原 2D 面板（含 `_victory_plan`）覆盖在舞台上方；舞台宿主不销毁，招牌层隐藏，关闭后回到裸舞台；离开 stage、切到非 overview、重开/继续游戏与加载失败都会复位抽屉。",
       "2D 回退：chrome 上的「2D 总览」按钮切换 `_overview_stage_mode`；舞台加载失败 `_on_port_stage_fallback(reason)` 置 `_port_stage_load_failed`（本会话不再重试）、退出 stage 与抽屉、回退 2D、提示 `ui.error.port_stage_unavailable` 并 deferred refresh。",
     ],
     l2: {
       "_build_top_chrome(app, data, show_nav)": [
-        "一个半透明 `PanelContainer`（`_chrome_style()`：深青 0.84 + 黄铜底边）内放两行 `HBoxContainer`：第一行品牌/状态徽标/版本 + 港口·时间·金钱·声望 chip（金币带可选图标）+ 阶段切换（overview 且场景可用时才出现，「2D 总览/俯瞰港口」）+ 诊断/刷新；第二行剩余载重/货舱/煤/水/耐久/受损 chip（煤/水带图标）+ 7 个导航按钮。",
+        "一个半透明 `PanelContainer`（`_chrome_style()`：深青 0.84 + 黄铜底边）内放两行 `HBoxContainer`：第一行品牌/状态徽标/版本 + 港口·时间·金钱·声望 chip（金币带可选图标）+ 阶段切换（overview 且场景可用时才出现，「2D 总览/俯瞰港口」）+ 诊断/刷新；第二行剩余载重/货舱/煤/水/耐久/受损 chip（煤/水带图标）+ 6 个导航按钮 + 海图切换按钮。",
         "`show_nav=false`（在航）时不挂导航；最小高度由 chip 字号与 panel margin 决定，`test_ui_shell` 断言 ≤130 px。每个页面共用同一份 chrome，960×540 窗口由 canvas 拉伸整体缩放。"
       ],
       "_stat_chip() / _hud_icon()": [
-        "`_stat_chip(label, value, accent, label_size, value_size, icon_key)`：有图标时在文字列左侧加 22 px `TextureRect`（KEEP_ASPECT_CENTERED、不吃鼠标），否则只输出两行 Label。",
+        "`_stat_chip(label, value, accent, label_size, value_size, icon_key, chip_key)`：有图标时在文字列左侧加 22 px `TextureRect`（KEEP_ASPECT_CENTERED、不吃鼠标），否则只输出两行 Label；`chip_key` 非空时 chip 与数值 Label 分别命名为该 key / `Value`，供演出逐帧改读数（4.3.5 / U8 的煤 / 水 chip）。",
         "`_hud_icon(key)`：`AssetService.find_key(key)` → `has()` 校验 → `load_texture()`，结果（含 null）按 key 缓存；资产冻结后无需失效。"
       ],
       "_set_port_status_bar_visible(visible, data) / _refresh_port_status_bar(data)": [
         "状态条懒创建为全窗底部锚定的 `PanelContainer`（高 60、左右 20 边距、位于 fade 之下），只在 overview 显示；显示时隐藏 footer，并把 `PageMargin` 底部 margin 从 56 提到 84，避免遮住页面最后一行。",
-        "内容每次刷新重建：耐久/货舱/煤/水/受损 chip + 最新通告（`_latest_notice_text` → `_notice_text`）+「详细总览/返回主界面」（仅 stage 模式）+「出航 ▶」+「等待 12 小时」（`port.wait`）。"
+        "内容每次刷新重建：耐久/货舱/煤/水/受损 chip + 最新通告（`_latest_notice_text` → `_notice_text`）+「详细总览/返回主界面」（仅 stage 模式）+「海图 ▶」+「等待 12 小时」（`port.wait`）。"
       ],
       "_layout_port_hotspots() / _layout_sign_column() / _port_sign()": [
         "清空旧招牌后按 `facility_screen_anchor()` 把 present 设施分左右两列（x<0.5 / ≥0.5），同列按投影 y 排序，在两列各自的 safe 区内垂直居中均匀排布（172×42、gap 10）。",
-        "safe 区来自真实 HUD 高度：顶部 = `_top_chrome` 底边 + 8，底部 = 状态条顶边（未建时回退 48 px）；右列底部预留「出航」招牌位，`Hotspot_voyage` 固定在右下。",
-        "点击招牌走 `_on_port_hotspot`：voyage 直接 `_on_nav(\"voyage\")`，其余查 `PORT_STAGE_FACILITY_SCREENS` 后与顶部导航同一路径；抽屉打开或舞台不活跃时整层不生成招牌。"
+        "safe 区来自真实 HUD 高度：顶部 = `_top_chrome` 底边 + 8，底部 = 状态条顶边（未建时回退 48 px）；右列底部预留「海图」招牌位，`Hotspot_sea_chart` 固定在右下。",
+        "点击招牌走 `_on_port_hotspot`：sea_chart 切到海图页，其余查 `PORT_STAGE_FACILITY_SCREENS` 后与顶部导航同一路径；抽屉打开或舞台不活跃时整层不生成招牌。"
       ],
       "_sync_overview_detail_backdrop() / _place_overview_detail_backdrop()": [
         "抽屉用不透明 `ColorRect(COLOR_BG)` 盖住舞台（不盖 chrome/状态条），`mouse_filter=IGNORE` 不抢滚动；只通过 sibling index 调整保证它在 `PageMargin` 之下。",
@@ -1012,20 +981,20 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/screens/port/overview_screen.gd": {
-    role: "港口总览页面场景：组合港口横幅、海图、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。",
-    dependencies: ["MapCanvas", "SNResourceMeter", "SNBadge", "SNSectionHeader", "ClockService", "steam_navigator_theme.tres"],
+    role: "港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。",
+    dependencies: ["SNResourceMeter", "SNBadge", "SNSectionHeader", "ClockService", "steam_navigator_theme.tres"],
     contracts: [
-      "bind(vm, translate) 接收 Shell 组合后的 banner_path、map、current_port、contracts、victory、ship、debt 与 notice_texts，不访问 AppContext、QueryBus、注册表或资产服务。",
+      "bind(vm, translate) 接收 Shell 组合后的 banner_path、current_port、contracts、victory、ship、debt 与 notice_texts，不访问 AppContext、QueryBus、注册表或资产服务。",
       "港口横幅来自内容模组：页面优先用 `ContentAssetLoader.load_texture(banner_path)` 读原始 PNG，`ResourceLoader.exists` 为真时退回 `load()`；两种路径都失败则不渲染横幅。",
-      "地图点击只发出 map_port_clicked；功能入口只发出 navigation_requested；等待与借款只发出 command_requested。",
+      "功能入口只发出 navigation_requested（快捷入口用 `sea_chart` 打开海图）；等待与借款只发出 command_requested。",
       "航行记录使用 Shell 已安全填充并本地化的 notice_texts，页面不重复解释 GameState 通报参数。",
       "构筑胜利条件直接取 contracts 进度与 victory.conditions 展示，不在页面重新判断通关。",
       "目标清单等密集横向字段保持单行，避免右侧说明被压缩成逐字竖排并撑高卡片。",
-      "页面可重复 bind，每次清理旧节点；海图仍由独立 map_canvas.tscn 负责绘制。",
+      "页面可重复 bind，每次清理旧节点；不持有任何海图控件（4.3 / U6 删除旧总览海图，全屏海图页是唯一入口）。",
       "有两个意图信号：`stage_toggle_requested`（2D/3D 总览切换）与 `detail_toggle_requested`（详细总览抽屉开关）；舞台宿主、抽屉 backdrop、状态条与回退都在 Shell，页面不持有 SNStageHost。",
       "`bind(vm, translate)` 读 `stage_available/stage_mode/overview_detail`；当 `overview_detail && stage_available` 时先加 `_detail_header()`（「返回主界面」按钮 + `ui.hint.overview_detail` 提示），再 `_build_detail(vm)` 渲染原 2D 面板（含 victory plan），该路径是抽屉内容。",
       "stage_mode 且未开抽屉：只加 expanding spacer 后直接返回，让 Shell 的全窗 3D 舞台露出；2D 回退模式在 hero 前加 `_stage_control_row(false)`（`ui.button.port_stage`「俯瞰港口」，发 stage_toggle_requested），同时渲染完整 `_build_detail(vm)`。",
-      "`_build_detail(vm)` 只是原总览面板的入口重构，横幅/海图/左右面板/通告布局与数据契约不变；页面仍不访问 AppContext、QueryBus 或资产服务。"
+      "`_build_detail(vm)` 只是原总览面板的入口重构，横幅/左右面板/通告布局与数据契约不变（旧海图块已删除）；页面仍不访问 AppContext、QueryBus 或资产服务。"
     ]
   },
 
@@ -1160,27 +1129,6 @@ export const FILE_DOCS = {
       "有报告时展示生成时间、年龄、覆盖统计与快照提示；无报告和空矩阵均有明确空状态。",
       "刷新按钮只发出 intel.refresh command_requested；价格矩阵继续委托 SNIntelTable 渲染。",
       "NPC 预计到达时间只做 ClockService 格式化，不改变游戏时钟或情报快照。"
-    ]
-  },
-
-  "framework/ui/screens/port/voyage_screen.gd": {
-    role: "出航规划页面场景：选择目的港与锅炉策略，展示完整 voyage.preview 并发出出航意图。",
-    dependencies: ["SNSectionHeader", "ClockService", "steam_navigator_theme.tres"],
-    contracts: [
-      "bind(vm, translate) 接收 Shell 已查询的 preview；页面不调用 voyage.preview，不自行计算速度、消耗、风险或可行性。",
-      "选择变化发出 selection_changed(destination_id, strategy_id)，由 Shell 保存选择、重新查询并刷新预览。",
-      "出航按钮只在 preview.feasible 时可用，并发出 voyage.start command_requested，参数取当前绑定的目的港和策略。",
-      "阻断原因、风险来源、委托准时性与目的港设施均来自预览/组合模型，页面只格式化展示。"
-    ]
-  },
-
-  "framework/ui/components/map_canvas.gd": {
-    role: "海图绘制与港口点击组件：显示航路、经纬网、洋流、罗盘、图例及港口状态。",
-    contracts: [
-      "输入仅为 ports/routes/labels；点击已访问港口时发出 port_clicked(port_id)，不执行导航或查询。",
-      "航路使用三次贝塞尔曲线；每港以邻接港口位置平均方向作为唯一出港方向，并沿目的港出港切线入港。",
-      "当前港显示脉冲光晕，已访问/可航行/未知港使用不同但带文字图例的状态，不只依赖颜色。",
-      "布局按输入坐标缩放到控件尺寸；重绘和 hover 不修改世界或地图 ViewModel。"
     ]
   },
 
@@ -2135,7 +2083,7 @@ export const FILE_DOCS = {
       "覆盖信息条（当前港口 + 剩余载重/剩余舱容，反馈 5）、通关清单与两种提示分支（反馈 6）；期望值独立复算（RegistryHub 翻译 + ShipOps 重量/舱容 + printf），不使用被测 helper 自证。通关清单只在总览页渲染：船厂页断言不再出现 `ui.victory.plan_title`，改为出现「组件」分类入口。",
       "模块损耗可见性：健康船信息条不出现「部件」chip；对锅炉实例造成 50% 损耗后刷新，信息条出现「部件」chip 与「1 · 50%」，船厂船卡出现「受损部件」行与同一数值（期望文案来自 shell._tr 与实例状态，不用 UI helper 自证）。",
       "覆盖船厂下单按钮 → CraftOps 订单 → 在港等待按钮 → 时间推进与成品入下单港仓库（反馈 4，经由真实按钮 pressed 信号）；打造入口在改装态模块分类内，下单后重建的页面必须保持改装态与分类，24 小时等待按钮在「杂项」页签。",
-      "场景接线断言覆盖独立总览、市场、委托、船厂、补给、情报、出航页面及四个菜单页面；船厂流程从 ShipyardScreen 的真实按钮驱动。",
+      "场景接线断言覆盖独立总览、市场、委托、船厂、补给、情报、海图页面及四个菜单页面；船厂流程从 ShipyardScreen 的真实按钮驱动。",
       "流程场景接线覆盖港口记忆、抵达结算、航行中、航行事件与通关总结，逐一调用 Shell 构建入口并按脚本类型断言实例。",
       "依赖详细总览面板的旧用例（信息条、通关清单、航行记录）先在 `_overview_detail = true` 下 `_refresh()`，因为默认主视图是裸 3D 舞台；其余断言不改。",
       "覆盖设置/总览/市场/船厂/港口记忆密集字段禁用自动换行、市场与快照单元格最小宽度，以及情报矩阵固定元数据列、可扩展港口列、最小列宽和深色单元格背景。",
@@ -2143,11 +2091,11 @@ export const FILE_DOCS = {
       "覆盖「航行记录」：真实下单 + 等待后在 zh 与 en 两种 locale 下逐行断言通报无 `%s/%d` 残留、无裸键，并与**逐语言写死的期望句子**相等（模板槽位互换照样能渲染，只有字面期望能抓住「某一种语言的文案说反了」；en 只写错顺序时该用例会失败）。",
       "扫描 domain/application 源码里所有 `push_notice(\"…\")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。",
       "组件按路径 preload，不依赖编辑器全局类缓存。",
-      "`test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 7 个导航按钮、诊断/刷新按钮全部保留。",
+      "`test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 6 个导航按钮 + 海图切换、诊断/刷新按钮全部保留（4.3.4/U7 删除出航导航页）。",
       "HUD 图标：`AssetService.find_key(\"icon.money\")` / coal / water 均能解析且 `has()` 为真；chrome 里至少 3 个 `TextureRect` 且每个都有已加载纹理（缺资产时页面应退化为纯文字，不产生空纹理节点）。",
       "窗口缩放说明：`canvas_items + expand` 把 960×540 窗口映射为缩放后的 1600×900 逻辑画布，因此 chrome 保留全部 chip（含剩余载重/货舱），不设 compact 分支；960×540 验收截图是这条布局的证据。",
       "招牌组件：present 设施的 Button 必须 `has_method(\"configure\")`（SNHarborSign）、`custom_minimum_size == 172×42`，`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。",
-      "同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_voyage` 固定在右下）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market。",
+      "同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_sea_chart` 固定在右下，4.3.4 起替代出航招牌）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market。",
       "连续港区页面接线：切到 market 后宿主的 `PortStage` 实例不变（`host.current_stage()` 与切页前同一节点）、舞台保持可见、`_stage_station==market`/`_stage_framing==panel`、`PortStage.current_station()==market`；`_root_box` 下出现 `DockPanelRow` 与 ≥640 px 的 `DockPanel`，页面脚本仍恰好一个实例。headless 不推进帧，用例直接 `port_stage.advance_station()` 断言镜头落到 `station_camera_pose(market, panel)`、船落到 market 泊位。",
       "切到 supply 后仍是同一舞台实例，船从 market 泊位沿岸向东航行到 supply 泊位（两泊位相距 >40 m）；切到 contracts 等非舞台页时宿主隐藏；回到 overview 时舞台恢复并回到 harbor 站位。",
       "`test_overview_stage_falls_back_to_the_usable_2d_overview`：调 `_on_port_stage_fallback` 后 `_port_stage_load_failed` 记忆、stage 模式关闭、2D 地图挂载、显示 `ui.error.port_stage_unavailable`、导航仍可用。",
