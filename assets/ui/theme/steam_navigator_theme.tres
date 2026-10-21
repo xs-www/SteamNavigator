@@ -86,6 +86,56 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="GhostHover"]
+bg_color = Color(0.0901961, 0.27451, 0.290196, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.882353, 0.768627, 0.529412, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 3.0
+shadow_color = Color(0.772549, 0.603922, 0.329412, 0.16)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="GhostPressed"]
+bg_color = Color(0.027451, 0.101961, 0.113725, 1)
+border_width_left = 1
+border_width_top = 2
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.772549, 0.603922, 0.329412, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="GhostFocus"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.882353, 0.768627, 0.529412, 0.9)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 3.0
+
 [sub_resource type="StyleBoxFlat" id="LineEditFocus"]
 content_margin_left = 12.0
 content_margin_top = 9.0
@@ -410,10 +460,10 @@ SNEyebrowLabel/colors/font_color = Color(0.772549, 0.603922, 0.329412, 1)
 SNEyebrowLabel/font_sizes/font_size = 11
 SNGhostButton/base_type = &"Button"
 SNGhostButton/styles/disabled = SubResource("Empty")
-SNGhostButton/styles/focus = SubResource("ButtonFocus")
-SNGhostButton/styles/hover = SubResource("ButtonNormal")
+SNGhostButton/styles/focus = SubResource("GhostFocus")
+SNGhostButton/styles/hover = SubResource("GhostHover")
 SNGhostButton/styles/normal = SubResource("Empty")
-SNGhostButton/styles/pressed = SubResource("ButtonPressed")
+SNGhostButton/styles/pressed = SubResource("GhostPressed")
 SNInsetPanel/base_type = &"PanelContainer"
 SNInsetPanel/styles/panel = SubResource("PanelInset")
 SNPanel/base_type = &"PanelContainer"

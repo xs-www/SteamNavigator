@@ -50,6 +50,12 @@ func _build_once() -> void:
 	_detail_label = Label.new()
 	_detail_label.name = "Detail"
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# 右侧说明是次要信息：允许在窄宽度下收缩并用省略号截断，避免它把同一行的
+	# 按钮挤出可视区（4.4.4 海图顶栏「线索列表 / 返回」的回归）。
+	_detail_label.clip_text = true
+	_detail_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_detail_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_label.theme_type_variation = &"SNDetailLabel"
 	add_child(_detail_label)
 

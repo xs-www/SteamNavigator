@@ -1479,6 +1479,47 @@ func test_sea_chart_panel_investigation_button_and_screen_forwarding() -> void:
 	screen.free()
 
 
+## 4.4.4 修复回归：选中任意港口后，其相邻航线都显示距离标签（不再只限于与当前港
+## 相连的航线）；标签可见性由纯函数 `shows_route_distance` 决定。
+func test_route_distance_labels_follow_any_visible_route() -> void:
+	assert_true(SNSeaChartView.shows_route_distance(120.0, 1.0),
+		"a visible route with distance shows its label")
+	assert_false(SNSeaChartView.shows_route_distance(0.0, 1.0),
+		"zero-distance routes have no label")
+	assert_false(SNSeaChartView.shows_route_distance(120.0, 0.4),
+		"zoomed out below the threshold hides labels")
+	var routes := [
+		{"from": "a", "to": "b", "distance": 88.0},
+		{"from": "b", "to": "c", "distance": 120.0},
+	]
+	var visible := SNSeaChartView.visible_routes(routes, "b")
+	assert_eq(visible.size(), 2, "both routes adjacent to the selected port are visible")
+	for route in visible:
+		assert_true(SNSeaChartView.shows_route_distance(float((route as Dictionary).get("distance", 0.0)), 1.0),
+			"every visible route adjacent to the selected port is label-eligible")
+
+
+## 4.4.4 修复回归：Ghost 按钮各状态的 content margin 必须一致，否则 hover 时按钮
+## 变大、挤压海图顶栏并把「线索列表 / 返回」裁出可视区。
+func test_ghost_button_hover_does_not_change_layout_margins() -> void:
+	var theme: Theme = load("res://assets/ui/theme/steam_navigator_theme.tres")
+	assert_not_null(theme, "the shared theme loads")
+	if theme == null:
+		return
+	var reference: StyleBox = theme.get_stylebox("normal", "SNGhostButton")
+	assert_not_null(reference, "SNGhostButton has a normal style")
+	if reference == null:
+		return
+	for state: String in ["hover", "pressed", "focus", "disabled"]:
+		var style: StyleBox = theme.get_stylebox(state, "SNGhostButton")
+		assert_not_null(style, "SNGhostButton has a %s style" % state)
+		if style == null:
+			continue
+		for side: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+			assert_almost_eq(style.get_content_margin(side), reference.get_content_margin(side), 0.001,
+				"%s %s content margin matches normal (hover must not resize the button)" % [state, side])
+
+
 # ── Stage 4.4: goods market leads ──
 
 ## 货物行情线索的面板：类型 / 港口名 / 参考价 / 库存供需 / 精确行情 / 剩余时效，
@@ -1598,6 +1639,8 @@ func test_sea_chart_header_opens_clue_list_and_preselects_a_clue() -> void:
 	var requested: Array = []
 	screen.clue_list_requested.connect(func() -> void: requested.append(true))
 	screen.bind(vm, Callable(context, "translate"))
+	assert_true(screen.get_combined_minimum_size().x <= 1400.0,
+		"the chart page minimum width fits the 1440 base canvas (got %.1f)" % screen.get_combined_minimum_size().x)
 	var panel := _find_descendant(screen, func(node: Node) -> bool: return node is SNSeaChartPanel) as SNSeaChartPanel
 	assert_not_null(panel, "the screen mounts the clue panel")
 	if panel != null:

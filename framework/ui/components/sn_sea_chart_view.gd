@@ -38,6 +38,8 @@ extends Control
 ## - **航线只在选中港口时显示**（4.3 / U5）：普通航线只画与 `_selected_port` 相邻的
 ##   那些，未选中港口（包括选中线索）时一条都不画；演出模式下普通航线全部隐藏，只
 ##   保留 `_focus_points` 画出的计划航线。过滤逻辑在纯函数 `visible_routes()` 里。
+##   距离标签跟随**所有可见航线**（`shows_route_distance()`），选中非当前港时其相邻
+##   航线也能读到里程；与当前港相连的航线用金色，其余用暗色，避免误读为当前可选航线。
 ## - **探索演出终点**：`set_unknown_destination(world_pos, label_key)` 画一条从当前船位
 ##   到未知终点的虚线预测线 + `?` 标记（迷雾之上、船 icon 之下）；
 ##   `clear_unknown_destination()` 在演出结束时清掉。
@@ -720,6 +722,12 @@ static func visible_routes(routes: Array, selected_port: String) -> Array:
 	return visible
 
 
+## 距离标签的绘制条件：航线有距离且缩放足够大。选中任意港口后，其相邻的所有可见
+## 航线都满足（不再限于「与当前港相连」的航线）。纯函数，测试可直接断言。
+static func shows_route_distance(distance: float, zoom: float) -> bool:
+	return zoom > 0.4 and distance > 0.0
+
+
 func _draw_routes() -> void:
 	# 演出时普通航线全部让位给计划航线（`_focus_points`）；非演出时只画选中港
 	# 相邻的航线（U5：未选港口时海图无线）。
@@ -754,7 +762,9 @@ func _draw_routes() -> void:
 		draw_polyline(screen_path, color, line_width, true)
 		# Distance label at the arc-length midpoint, skipped when a port label would sit
 		# on top of it (index-based midpoints pile up next to the origin port).
-		if _zoom > 0.4 and distance > 0.0 and is_active:
+		# 选中任意港口后它相邻的航线都会显示距离；不再只给「与当前港相连」的航线画
+		# 距离（4.3/U5 的可见性过滤已保证未选港口时一条都不画）。
+		if shows_route_distance(distance, _zoom):
 			var midpoint := _path_midpoint(screen_path)
 			if not _near_any_port(midpoint, 46.0):
 				var text := "%d 海里" % int(roundf(distance))
@@ -763,9 +773,16 @@ func _draw_routes() -> void:
 					midpoint + Vector2(-text_width * 0.5 - 3, -7),
 					Vector2(text_width + 6, 13)
 				)
-				draw_rect(plate, Color(0.02, 0.08, 0.09, 0.7), true)
-				draw_string(font, midpoint + Vector2(-text_width * 0.5, 3), text,
-					HORIZONTAL_ALIGNMENT_LEFT, -1.0, 9, Color(0.9, 0.8, 0.58, 0.8))
+				draw_rect(
+					plate,
+					Color(0.02, 0.08, 0.09, 0.7) if is_active else Color(0.02, 0.08, 0.09, 0.45),
+					true
+				)
+				draw_string(
+					font, midpoint + Vector2(-text_width * 0.5, 3), text,
+					HORIZONTAL_ALIGNMENT_LEFT, -1.0, 9,
+					Color(0.9, 0.8, 0.58, 0.8) if is_active else Color(0.72, 0.8, 0.78, 0.6)
+				)
 	# 航行演出（含探索）的计划航线：`sea_chart.view` 的 routes 只含"两端都已发现"的
 	# 港口对，而演出走的是世界航线表（探索时终点甚至不是港口）。`_focus_points` 就是
 	# 这条计划航线，必须像已发现航线一样画成金色，否则玩家只能看到一条虚线预测线。
