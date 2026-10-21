@@ -1,6 +1,6 @@
 # `framework/ui/stages/shipyard_stage.gd`
 
-> 作用：船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。
+> 作用：船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB（切片 5 起 `ship.visual` 命中时改由 `ShipVisualAssembler` 装配船体 + rig_kit + 武器），并在 `_process` 做升沉/横摇。
 
 - 关键依赖：`LocationStage`、`StageKit`、`ContentAssetLoader`
 - 类型：GDScript 源文件
@@ -10,20 +10,23 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipyardStage` | L1 |
-| `MODEL_BY_TIER` | L15 |
-| `FALLBACK_MODEL` | L20 |
-| `BACKGROUND_COLOR` | L21 |
-| `WATER_COLOR` | L22 |
-| `CAMERA_DIRECTION` | L23 |
-| `CAMERA_FOV` | L24 |
-| `FRAMING_MARGIN` | L25 |
-| `BOB_AMPLITUDE` | L26 |
-| `BOB_SPEED` | L27 |
-| `enter(_payload: Dictionary = {}) -> void` | L47 |
-| `exit() -> void` | L51 |
-| `bind(view_model: Dictionary = {}) -> void` | L55 |
-| `has_ship() -> bool` | L62 |
-| `model_path() -> String` | L66 |
+| `MODEL_BY_TIER` | L21 |
+| `FALLBACK_MODEL` | L26 |
+| `BACKGROUND_COLOR` | L27 |
+| `WATER_COLOR` | L28 |
+| `CAMERA_DIRECTION` | L29 |
+| `CAMERA_FOV` | L30 |
+| `FRAMING_MARGIN` | L31 |
+| `BOB_AMPLITUDE` | L32 |
+| `BOB_SPEED` | L33 |
+| `enter(_payload: Dictionary = {}) -> void` | L55 |
+| `exit() -> void` | L59 |
+| `bind(view_model: Dictionary = {}) -> void` | L63 |
+| `has_ship() -> bool` | L70 |
+| `model_path() -> String` | L74 |
+| `assembly_report() -> Dictionary` | L80 |
+| `rig_report() -> Dictionary` | L85 |
+| `weapon_mounts() -> Array` | L92 |
 
 ## 契约与约束
 
@@ -32,6 +35,8 @@
 - 船体路径优先 `hull_model_path`；为空才按 `hull_tier` 回退 `assets/models/ships/*.glb`，该文件不存在再退 `SN_Ship_Prototype.glb`；加载失败时舞台保持空场景，船厂继续用 `SNShipView` 程序化占位。
 - 相机取景用 `StageKit.visual_aabb()` + 30° 长焦 FOV；水面泡沫环绑到当前船体包围盒（shore 推远、隐藏岸线泡沫）。
 - `enter()` 恢复 `_process`，`exit()` 停止；不可见时不写升沉，避免隐藏舞台继续运动。
+- 切片 5（ShipVisualAssembler）：`ship.visual` 计划（由 `ShipVisualPlan.resolve()` 生成）存在且 hull 路径可用时走 `ShipVisualAssembler.assemble()`，装配船体 GLB + rig_kit 套件 + 武器；装配失败 / 无计划回退原 `hull_model_path`→`hull_tier`→`SN_Ship_Prototype`→2D 占位链。
+- 新增只读 `assembly_report()` / `rig_report()` / `weapon_mounts()`；船厂舞台不做静态合批，武器 `ShipWeaponMount` 句柄保持有效。
 
 ## 重点逻辑
 

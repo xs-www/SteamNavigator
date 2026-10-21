@@ -86,59 +86,61 @@
 | `SKY_GLOW_COLOR` | L431 |
 | `MATERIAL_DEFAULTS` | L433 |
 | `LANDMARK_POS` | L445 |
-| `enter(payload: Dictionary = {}) -> void` | L574 |
-| `exit() -> void` | L586 |
-| `bind(view_model: Dictionary = {}) -> void` | L590 |
-| `has_visual() -> bool` | L611 |
-| `has_backdrop() -> bool` | L615 |
-| `loaded_banner_path() -> String` | L620 |
-| `facility_count() -> int` | L624 |
-| `filler_count() -> int` | L630 |
-| `facility_visual_kind(facility: String) -> String` | L636 |
-| `facility_anchors() -> Dictionary` | L641 |
-| `facility_screen_anchor(facility: String) -> Vector2` | L655 |
-| `has_ship() -> bool` | L668 |
-| `request_portal(facility: String) -> void` | L673 |
-| `hotspot_anchors() -> Dictionary` | L677 |
-| `foreground_frame() -> Node3D` | L684 |
-| `atmosphere_particle_systems() -> int` | L689 |
-| `atmosphere_layers() -> int` | L694 |
-| `skyline_building_count() -> int` | L699 |
-| `skyline_crane_count() -> int` | L704 |
-| `town_prop_count() -> int` | L710 |
-| `town_blockout_count() -> int` | L716 |
-| `town_density() -> String` | L723 |
-| `painted_backdrop_layer_count() -> int` | L730 |
-| `batch_stats() -> Dictionary` | L748 |
-| `ship_foam_bounds() -> AABB` | L771 |
-| `ship_visual_is_rigid(visual: Node) -> bool` | L780 |
-| `station_ids() -> Array[String]` | L833 |
-| `current_station() -> String` | L840 |
-| `current_station_framing() -> String` | L844 |
-| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L850 |
-| `station_ship_position(station_id: String) -> Vector3` | L863 |
-| `station_ship_yaw(station_id: String) -> float` | L868 |
-| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L877 |
-| `is_station_transitioning() -> bool` | L929 |
-| `camera_position() -> Vector3` | L935 |
-| `camera_target() -> Vector3` | L939 |
-| `ship_x() -> float` | L944 |
-| `station_ship_mooring_x() -> float` | L948 |
-| `station_prop_count() -> int` | L954 |
-| `camera_shift_x() -> float` | L959 |
-| `advance_station(delta: float) -> void` | L967 |
-| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1088 |
-| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1110 |
-| `advance_voyage(delta: float) -> void` | L1148 |
-| `reset_voyage() -> void` | L1238 |
-| `is_voyage_transitioning() -> bool` | L1258 |
-| `voyage_mode() -> String` | L1262 |
-| `is_voyage_holding_handoff() -> bool` | L1269 |
-| `voyage_progress() -> float` | L1274 |
-| `voyage_handoff_position() -> Vector3` | L1280 |
-| `ship_position() -> Vector3` | L1286 |
-| `ship_yaw() -> float` | L1294 |
-| `camera_pitch_deg() -> float` | L1301 |
+| `enter(payload: Dictionary = {}) -> void` | L575 |
+| `exit() -> void` | L587 |
+| `bind(view_model: Dictionary = {}) -> void` | L591 |
+| `has_visual() -> bool` | L612 |
+| `has_backdrop() -> bool` | L616 |
+| `loaded_banner_path() -> String` | L621 |
+| `facility_count() -> int` | L625 |
+| `filler_count() -> int` | L631 |
+| `facility_visual_kind(facility: String) -> String` | L637 |
+| `facility_anchors() -> Dictionary` | L642 |
+| `facility_screen_anchor(facility: String) -> Vector2` | L656 |
+| `has_ship() -> bool` | L669 |
+| `ship_assembly_report() -> Dictionary` | L677 |
+| `ship_rig_report() -> Dictionary` | L682 |
+| `request_portal(facility: String) -> void` | L688 |
+| `hotspot_anchors() -> Dictionary` | L692 |
+| `foreground_frame() -> Node3D` | L699 |
+| `atmosphere_particle_systems() -> int` | L704 |
+| `atmosphere_layers() -> int` | L709 |
+| `skyline_building_count() -> int` | L714 |
+| `skyline_crane_count() -> int` | L719 |
+| `town_prop_count() -> int` | L725 |
+| `town_blockout_count() -> int` | L731 |
+| `town_density() -> String` | L738 |
+| `painted_backdrop_layer_count() -> int` | L745 |
+| `batch_stats() -> Dictionary` | L763 |
+| `ship_foam_bounds() -> AABB` | L786 |
+| `ship_visual_is_rigid(visual: Node) -> bool` | L795 |
+| `station_ids() -> Array[String]` | L848 |
+| `current_station() -> String` | L855 |
+| `current_station_framing() -> String` | L859 |
+| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L865 |
+| `station_ship_position(station_id: String) -> Vector3` | L878 |
+| `station_ship_yaw(station_id: String) -> float` | L883 |
+| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L892 |
+| `is_station_transitioning() -> bool` | L944 |
+| `camera_position() -> Vector3` | L950 |
+| `camera_target() -> Vector3` | L954 |
+| `ship_x() -> float` | L959 |
+| `station_ship_mooring_x() -> float` | L963 |
+| `station_prop_count() -> int` | L969 |
+| `camera_shift_x() -> float` | L974 |
+| `advance_station(delta: float) -> void` | L982 |
+| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1103 |
+| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1125 |
+| `advance_voyage(delta: float) -> void` | L1163 |
+| `reset_voyage() -> void` | L1253 |
+| `is_voyage_transitioning() -> bool` | L1273 |
+| `voyage_mode() -> String` | L1277 |
+| `is_voyage_holding_handoff() -> bool` | L1284 |
+| `voyage_progress() -> float` | L1289 |
+| `voyage_handoff_position() -> Vector3` | L1295 |
+| `ship_position() -> Vector3` | L1301 |
+| `ship_yaw() -> float` | L1309 |
+| `camera_pitch_deg() -> float` | L1316 |
 
 ## 契约与约束
 
@@ -167,6 +169,8 @@
 - `facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。
 - 玩家船：`ship.hull_model_path` 优先，`hull_tier` 只作 dev 回退；船体在 `SHIP_SPAWN` 真尺度摆放，水面泡沫环按包围盒绑定并在 `_process` 做升沉/横摇。
 - `request_portal(facility)` 只发 `portal_requested`；`has_visual()` 恒 true（程序化舞台无资产也可绘制）。
+- 切片 5（ShipVisualAssembler）：`_rebuild_ship()` 优先按 `ship.visual` 调用 `ShipVisualAssembler.assemble(plan, _ship_root)` 装配玩家船（hull + rig_kit + 武器）；计划 hull 加载失败或无计划（旧存档 / 旧 ViewModel）走原 `hull_model_path`→`hull_tier` 回退链。
+- 装配后照旧 `ship_visual_is_rigid()` + `_batch_ship_visual()`（opaque 静态网格可烘进 `ShipBatches`）；新增只读 `ship_assembly_report()` / `ship_rig_report()`，合批后报告里的节点引用失效、字符串字段仍可读。
 - 表现层：不读 GameState / QueryBus / CommandBus；所有资产路径已在 ViewModel 中解析。
 
 ## 重点逻辑

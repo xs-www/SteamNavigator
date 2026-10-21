@@ -110,7 +110,7 @@
 - 站位间导航不播放全屏淡出：`_on_nav()` 在 `from` 与目标都属于 `STAGE_SCREENS` 且场景可用时 `_refresh(false)`，让镜头平移与船体航行可见；离开到 contracts/intel/shipyard 等非舞台页仍走 `_refresh(true)` 淡入淡出。
 - 舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。
 - `_sync_port_stage(data)` 在 `has_run && !at_sea && 当前页属于 STAGE_SCREENS && （非 overview 或 _overview_stage_mode） && 场景可用` 时显示；overview 额外要求 3D 总览模式，market/supply 不受该开关影响。菜单/无 run/通关/在航/错误/非舞台页分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。
-- `_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。
+- `_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 传 `hull_model_path/hull_tier` 与切片 5 的 `visual`（`ShipVisualPlan` 计划，旧存档无该键则不传）；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。
 - 两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；规格 172×42 / margin 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「海图 ▶」招牌（`Hotspot_sea_chart`，4.3.4 起替代旧出航招牌）。
 - 招牌控件是 `SNHarborSign`（自绘木板/铁框/黄铜铆钉/设施徽记/箭头/悬停光晕），`text` 与 `Button` 语义保留；`_port_sign()` 兼容组件缺失时回退普通 Ghost Button。
 - 招牌布局避让紧凑 chrome 与底部状态条：`_port_hud_top_safe()` 取 `_top_chrome` 底边、`_port_hud_bottom_safe()` 取状态条顶边；`_refresh_port_hotspots_soon()` 做两次 deferred（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。

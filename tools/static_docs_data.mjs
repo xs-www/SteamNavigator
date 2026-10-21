@@ -390,6 +390,7 @@ export const FILE_DOCS = {
       "stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。",
       "`current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。",
       "`ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。",
+      "切片 5：`ship.visual` = `ShipVisualPlan.resolve(hub, context.assets, ship)`，输出 hull / `rig_plan` / `weapon_loadout` 的物理路径供 PortStage 运行时装配；旧存档 / 旧调用方没有该键时舞台走原单船体路径。",
       "`current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从 `core:port_archetype/*` 的 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。",
       "`current_port.town_visuals` 由 `_resolved_town_visuals(context, source_mod, diorama)` 解析：把 `diorama.town` 的 slot → `model.prop.*` 资产键转成 `asset://<mod>/<key>` 并 `assets.resolve()` 成物理路径；缺键省略，PortStage 对缺失 slot 回退 blockout。"
     ]
@@ -415,6 +416,7 @@ export const FILE_DOCS = {
       "`ship.modules[]` 每行含 `effect`：模块 `data` 的深拷贝（模块缺失时 `{}`），供船厂页渲染效果行与槽位卡；can_uninstall/uninstall_blockers/weight/tier 仍由本查询给出。",
       "`ship.modules[]` 同时给出模块实例的 `slot/index/condition/disabled`；`ship.worst_module_condition`、`ship.disabled_modules`、`ship.module_damage_points` 供界面显示与维修预览。",
       "`ship.hull_model_key` 取船体定义的 `information.model`，`ship.hull_model_path` 通过 `context.assets` 解析成物理路径（松散模组或挂载 zip 内均可），供 3D 船厂舞台加载内容模组的原始 GLB。",
+      "切片 5：`ship.visual` = `ShipVisualPlan.resolve(hub, context.assets, ship)`（hull / `rig_plan` / `weapon_loadout` 路径），ShipyardStage 据此运行 `ShipVisualAssembler`；`_empty_view()` 也返回 `ShipVisualPlan.empty()`，UI 无需判空。",
       "`candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。",
       "已安装模块标记 installed；will_replace 返回会被移入当前港仓库的旧模块 ID（空串=无替换）。",
       "`unlock_template_id` 给出合同解锁来源（用于 UI 文案），实际锁定判断在 ShipOps.locked_by_contract。",
@@ -883,7 +885,7 @@ export const FILE_DOCS = {
       "站位间导航不播放全屏淡出：`_on_nav()` 在 `from` 与目标都属于 `STAGE_SCREENS` 且场景可用时 `_refresh(false)`，让镜头平移与船体航行可见；离开到 contracts/intel/shipyard 等非舞台页仍走 `_refresh(true)` 淡入淡出。",
       "舞台宿主 `_port_stage_host` 为全窗 `SNStageHost`，放在 `Background` 之上、所有 UI 之下；两侧招牌层 `_port_hotspot_layer` 放在 `PageMargin` 之后，层本身 `MOUSE_FILTER_IGNORE`，只有招牌按钮吃点击；详细抽屉打开时另有一个 `_overview_detail_backdrop` 盖住舞台。",
       "`_sync_port_stage(data)` 在 `has_run && !at_sea && 当前页属于 STAGE_SCREENS && （非 overview 或 _overview_stage_mode） && 场景可用` 时显示；overview 额外要求 3D 总览模式，market/supply 不受该开关影响。菜单/无 run/通关/在航/错误/非舞台页分支在 `_rebuild_ui()` 里由 `_hide_port_stage()` 隐藏并清空招牌。",
-      "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 只传 `hull_model_path/hull_tier`；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。",
+      "`_port_stage_payload(data)` 从 `current_port` 组装 `port.{id,size,facilities,banner_path}`，可选透传 `facility_visuals/town_visuals/diorama/palette/landmark_path` 与 `diorama.density`，ship 传 `hull_model_path/hull_tier` 与切片 5 的 `visual`（`ShipVisualPlan` 计划，旧存档无该键则不传）；`_port_banner_path()` 统一解析 `asset://<mod>/<banner_asset>`。",
       "两侧招牌用 `facility_screen_anchor()` 的投影 x 分列（<0.5 左、否则右），同列按投影 y 排序；规格 172×42 / margin 20，左列文字「设施 ▶」、右列「◀ 设施」指向场景；右侧底部固定一条「海图 ▶」招牌（`Hotspot_sea_chart`，4.3.4 起替代旧出航招牌）。",
       "招牌控件是 `SNHarborSign`（自绘木板/铁框/黄铜铆钉/设施徽记/箭头/悬停光晕），`text` 与 `Button` 语义保留；`_port_sign()` 兼容组件缺失时回退普通 Ghost Button。",
       "招牌布局避让紧凑 chrome 与底部状态条：`_port_hud_top_safe()` 取 `_top_chrome` 底边、`_port_hud_bottom_safe()` 取状态条顶边；`_refresh_port_hotspots_soon()` 做两次 deferred（等容器重排与 SubViewport 尺寸），视口 size_changed 时重排。",
@@ -1317,14 +1319,16 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/stages/shipyard_stage.gd": {
-    role: "船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。",
+    role: "船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB（切片 5 起 `ship.visual` 命中时改由 `ShipVisualAssembler` 装配船体 + rig_kit + 武器），并在 `_process` 做升沉/横摇。",
     dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
     contracts: [
       "`stage_id` 默认 `shipyard`（舞台场景再显式覆盖）。",
       "`bind()` 接受完整 ViewModel 或直接以 ship 字典作为根；内部深拷贝 `ship`，重复 bind 同一模型不重建船体。",
       "船体路径优先 `hull_model_path`；为空才按 `hull_tier` 回退 `assets/models/ships/*.glb`，该文件不存在再退 `SN_Ship_Prototype.glb`；加载失败时舞台保持空场景，船厂继续用 `SNShipView` 程序化占位。",
       "相机取景用 `StageKit.visual_aabb()` + 30° 长焦 FOV；水面泡沫环绑到当前船体包围盒（shore 推远、隐藏岸线泡沫）。",
-      "`enter()` 恢复 `_process`，`exit()` 停止；不可见时不写升沉，避免隐藏舞台继续运动。"
+      "`enter()` 恢复 `_process`，`exit()` 停止；不可见时不写升沉，避免隐藏舞台继续运动。",
+      "切片 5（ShipVisualAssembler）：`ship.visual` 计划（由 `ShipVisualPlan.resolve()` 生成）存在且 hull 路径可用时走 `ShipVisualAssembler.assemble()`，装配船体 GLB + rig_kit 套件 + 武器；装配失败 / 无计划回退原 `hull_model_path`→`hull_tier`→`SN_Ship_Prototype`→2D 占位链。",
+      "新增只读 `assembly_report()` / `rig_report()` / `weapon_mounts()`；船厂舞台不做静态合批，武器 `ShipWeaponMount` 句柄保持有效。",
     ],
     l2: {
       "_apply_model() / _rebuild_ship(path)": [
@@ -1366,6 +1370,8 @@ export const FILE_DOCS = {
       "`facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。",
       "玩家船：`ship.hull_model_path` 优先，`hull_tier` 只作 dev 回退；船体在 `SHIP_SPAWN` 真尺度摆放，水面泡沫环按包围盒绑定并在 `_process` 做升沉/横摇。",
       "`request_portal(facility)` 只发 `portal_requested`；`has_visual()` 恒 true（程序化舞台无资产也可绘制）。",
+      "切片 5（ShipVisualAssembler）：`_rebuild_ship()` 优先按 `ship.visual` 调用 `ShipVisualAssembler.assemble(plan, _ship_root)` 装配玩家船（hull + rig_kit + 武器）；计划 hull 加载失败或无计划（旧存档 / 旧 ViewModel）走原 `hull_model_path`→`hull_tier` 回退链。",
+      "装配后照旧 `ship_visual_is_rigid()` + `_batch_ship_visual()`（opaque 静态网格可烘进 `ShipBatches`）；新增只读 `ship_assembly_report()` / `ship_rig_report()`，合批后报告里的节点引用失效、字符串字段仍可读。",
       "表现层：不读 GameState / QueryBus / CommandBus；所有资产路径已在 ViewModel 中解析。"
     ],
     l2: {

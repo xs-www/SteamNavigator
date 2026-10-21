@@ -79,7 +79,11 @@
 | `stages/location_stage.gd` | 2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。 | [查看](./stages/location_stage.gd.md) |
 | `stages/port_stage.gd` | 固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 补给是同一港区里从左到右的三个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建。全程序化 + 内容模组 GLB，无外部框架贴图。 | [查看](./stages/port_stage.gd.md) |
 | `stages/port_stage.tscn` | 港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id="port"`。 | 本页 |
-| `stages/shipyard_stage.gd` | 船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB，并在 `_process` 做升沉/横摇。 | [查看](./stages/shipyard_stage.gd.md) |
+| `stages/ship_rig_assembly.gd` | rig_kit 运行时装配规则（契约 `rig-kit@1` / `rig-sockets@1` 的代码实现）：在船体 GLB 里按标准名找 `SN_Socket_Mast/Yard/Sail_*` 空节点，把套件 Root 的 `SN_Mount` 精确对齐到 socket，按内容名单隐藏被替换的烘焙节点，并给出可复现的节点快照。 | [查看](./stages/ship_rig_assembly.gd.md) |
+| `stages/ship_visual_assembler.gd` | `ShipVisualAssembler` —— 运行时把一条船拼成可见的整船：实例化船体 GLB，按船体 Root `SN_Socket_Mast/Yard/Sail_*` 挂 rig_kit 套件（并隐藏被替换的烘焙节点），再按 `SN_Socket_Weapon_*` 挂武器；返回装配根、可读报告与确定性快照，供船厂 / 港口 / 航行演出共用。 | [查看](./stages/ship_visual_assembler.gd.md) |
+| `stages/ship_weapon_assembly.gd` | 武器装配运行时（契约 `weapon-assembly@2` / `hull-sockets@1` 的代码实现）：从船体 GLB 找 `SN_Socket_Weapon_*`、从武器 GLB 读 Root extras、按 `weapon_class == socket_class` 硬门禁配对，把武器 `SN_Mount` 对齐到 socket、按 `mount_scale` 缩放，并交出可操控的 `ShipWeaponMount`。 | [查看](./stages/ship_weapon_assembly.gd.md) |
+| `stages/ship_weapon_mount.gd` | 一件「已装到船体安装点上的武器」的运行时句柄：持有 socket / 武器实例 / `SN_Mount`，按标准节点名暴露瞄准（yaw/pitch）、后坐（-X 平移）、炮口位置与净空复核，供战斗层、舞台层和 demo 使用。 | [查看](./stages/ship_weapon_mount.gd.md) |
+| `stages/shipyard_stage.gd` | 船厂 EXTERIOR 固定 3/4 机位船体舞台（首个切片的迁移目标）：自建环境/灯光/水面/相机，按 ViewModel 的 `hull_model_path`（旧 `hull_tier` 路径仅 dev 回退）挂载船体 GLB（切片 5 起 `ship.visual` 命中时改由 `ShipVisualAssembler` 装配船体 + rig_kit + 武器），并在 `_process` 做升沉/横摇。 | [查看](./stages/shipyard_stage.gd.md) |
 | `stages/shipyard_stage.tscn` | 船厂舞台场景：挂 `ShipyardStage` 脚本并显式设置 `stage_id="shipyard"`。 | 本页 |
 | `stages/stage_kit.gd` | 固定机位 2.5D 舞台的公共构建器：程序化天空/颜色环境、无阴影方向光、近/远水面材质、船体泡沫环、世界空间 AABB 与长焦取景。 | [查看](./stages/stage_kit.gd.md) |
 

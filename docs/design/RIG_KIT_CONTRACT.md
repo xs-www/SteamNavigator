@@ -207,8 +207,12 @@ Blender 构建顺序（Builder 执行，单写者）：
 
 ## 8. 已知边界 / 后续
 
-1. **运行时装配未接入**：`ShipVisualAssembler`（按 `rig_kit_catalog.json` 把 `SN_Rig_*`
-   装到船体 socket）仍是 todo 独立条目；本批只交付资产、socket 与目录。
+1. **运行时装配已接入（2026-10-22，切片 `ship-visual-assembly`）**：`ShipVisualAssembler`
+   按船体 Root `rig_sockets` + 内容 `hulls.json.data.rig_plan` 把 `SN_Rig_*` 套件的 `SN_Mount`
+   对齐到 ship socket，并按 `hide_nodes` 隐藏被替换的烘焙节点；Core 当前只对实测 1:1 吻合的
+   PF（`Mast_Steam` + `Yard`）与 SF（`Mast_Sail`）做替换，IC 单 mesh / PS 无 socket 保留烘焙帆索。
+   运行时**不读** `rig_kit_catalog.json`（机器目录不进发布包），装配决策以 GLB extras + 内容为准；
+   设计、回退与截图见 [SHIP_VISUAL_ASSEMBLY.md](SHIP_VISUAL_ASSEMBLY.md)。
 2. **帆面是静态低模**：无布料/顶点风动；后续可在 Godot 侧用顶点着色器或 `SoftBody`，
    模型侧保留 `SN_Socket_Sail_*` 四角挂点与单层拓扑。
 3. **帆船三角顶帆的 `Sail_Main` 点**：当前 `SN_Socket_Sail_Main` 用帆脚 tack 位置，
@@ -223,3 +227,4 @@ Blender 构建顺序（Builder 执行，单写者）：
 | 日期 | 变更 |
 | --- | --- |
 | 2026-10-22 | 建立契约：12 件套件 + 3 艘船参数化替换 + 22 个船体侧 socket；`rig_kit_catalog.json` v1.0 |
+| 2026-10-22 | 运行时装配接入：`ShipVisualPlan` / `ShipVisualAssembler` / `ShipRigAssembly` 从 ship socket 挂套件并隐藏烘焙件；Core 配置 PF/SF 1:1 替换（`hulls.json.data.rig_plan`）。见 [SHIP_VISUAL_ASSEMBLY.md](SHIP_VISUAL_ASSEMBLY.md) |
