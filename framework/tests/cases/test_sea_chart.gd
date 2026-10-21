@@ -3,7 +3,8 @@ class_name TestSeaChart
 ## @static-doc
 ## 作用：海图系统的无头测试——阶段 2 验证 `sea_chart.view` 的输出结构与陆地/港口/
 ## 航线/迷雾数据；阶段 4.1 追加线索可视化（视图几何、点击命中、面板线索区块、
-## 未知终点）和整页信号转发。
+## 未知终点）和整页信号转发；阶段 4.4 追加货物行情线索面板（类型 / 港口 / 分级行情 /
+## 时效 /「前往该港」）与「货物线索不画海图几何」。
 ##
 ## ## 契约与约束
 ## - 每个用例通过 `bootstrap_core()` 获得真实 Core 注册表，再用内联 `TEST_PROFILE`
@@ -1455,3 +1456,108 @@ func test_sea_chart_panel_investigation_button_and_screen_forwarding() -> void:
 		screen_button.pressed.emit()
 	assert_eq(forwarded, ["clue:3"], "the screen forwards investigate_requested(clue_id)")
 	screen.free()
+
+
+# ── Stage 4.4: goods market leads ──
+
+## 货物行情线索的面板：类型 / 港口名 / 参考价 / 库存供需 / 精确行情 / 剩余时效，
+## 「前往该港」发 `departure_requested("goods", clue_id)`，且不出现探索出航按钮。
+func test_sea_chart_panel_renders_goods_lead_and_offers_travel() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var tree := Engine.get_main_loop() as SceneTree
+	var panel := SNSeaChartPanel.new()
+	tree.root.add_child(panel)
+	var departures: Array = []
+	panel.departure_requested.connect(func(kind: String, target_id: String) -> void:
+		departures.append([kind, target_id])
+	)
+	var clue := {
+		"id": "clue:9",
+		"type": "port_goods",
+		"source_key": "wait",
+		"source_display_key": "ui.clue.source.wait",
+		"level": 4,
+		"target_goods_id": "core:good/spices",
+		"reference_port_id": "port_a",
+		"direction_angle": 0.0,
+		"distance_min_hours": 0.0,
+		"distance_max_hours": 0.0,
+		"circle": null,
+		"name_key": "",
+		"goods": {
+			"port_name_key": "port_name.core.spice_port",
+			"buy_price_min": 20, "buy_price_max": 24,
+			"sell_price_min": 18, "sell_price_max": 22,
+			"stock": 55, "demand": "high",
+			"buy_price": 22, "sell_price": 20,
+		},
+		"expires_at": 48.0,
+		"remaining_hours": 30.0,
+		"is_expired": false,
+		"can_investigate": false,
+		"next_level": 0,
+		"next_level_key": "",
+		"can_sail": true,
+		"estimated": {
+			"feasible": true,
+			"blockers": [],
+			"duration_hours": 8.0,
+			"coal_required": 6.0,
+			"water_required": 4.0,
+			"risk_score": 0.2,
+		},
+	}
+	panel.bind_clue(clue, Callable(context, "translate"))
+	var texts := _label_texts(panel)
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.type.port_goods")),
+		"the panel names the goods lead type, got: %s" % str(texts))
+	assert_true(_any_text_contains(
+		texts,
+		context.translate("ui.clue.goods.port") % context.translate("port_name.core.spice_port")
+	), "the panel shows the goods harbour, got: %s" % str(texts))
+	assert_true(_any_text_contains(
+		texts, context.translate("ui.clue.goods.price_exact") % [22, 20]
+	), "level 4 shows the exact market, got: %s" % str(texts))
+	assert_true(_any_text_contains(texts, context.translate("ui.clue.expiry") % 30),
+		"the panel shows the remaining lifetime, got: %s" % str(texts))
+	var sail := _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "SailButton"
+	) as Button
+	assert_not_null(sail, "the goods lead exposes the sail-to-port button")
+	if sail != null:
+		sail.pressed.emit()
+	assert_eq(departures, [["goods", "clue:9"]],
+		"the sail button opens the goods departure dialog")
+	var explore := _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "ExploreButton"
+	) as Button
+	assert_true(explore == null, "goods leads never offer the exploration button")
+	# 不可出航（查询 can_sail=false / preview 不可行）时按钮禁用。
+	var blocked := clue.duplicate(true)
+	blocked["can_sail"] = false
+	panel.bind_clue(blocked, Callable(context, "translate"))
+	sail = _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "SailButton"
+	) as Button
+	assert_not_null(sail, "the sail button stays visible when blocked")
+	if sail != null:
+		assert_true(sail.disabled, "an un-sailable goods lead disables the sail button")
+	panel.free()
+
+
+## 货物线索在海图上没有方向箭头 / 虚线圆（目标港已在图上，行情只在面板 / 列表页）。
+func test_goods_clue_has_no_chart_geometry() -> void:
+	var chart := SNSeaChartView.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(chart)
+	var geometry := chart.clue_screen_geometry({
+		"id": "clue:9",
+		"type": "port_goods",
+		"level": 4,
+		"circle": {"x": 100.0, "y": 100.0, "radius": 14.0},
+		"reference_port_id": "port_a",
+		"direction_angle": 0.0,
+	})
+	assert_true(geometry.is_empty(), "a goods lead draws nothing on the chart")
+	chart.free()

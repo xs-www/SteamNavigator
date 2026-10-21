@@ -313,15 +313,24 @@ Clue
 每次只披露下一层，不重抽目标港 / 搜索区 / 可信度。Core `exploration` 块预留
 `investigation_cost` / `investigation_hours`（初始 0，4.3 不做资源判定）。
 
+**实现状态（4.4）**：在港等待（`port.wait`）按 `wait_clue_hours_block` 档位复利抽线索
+（每档 `wait_clue_chance_per_block`，封顶 `wait_clue_max_chance`，默认优先出货物行情
+线索）；完成普通 / 主线委托按 `contract_clue_chance` 解锁港口位置线索。调查的真实消耗
+（金币 / 时间 / 成功率）在 4.4.3 落地，数值同样在 Core。
+
 ### 7.5 时效性
 
 - 港口位置类线索：**无时效**（港口坐标不变）
 - 港口货物/市场类线索：**有时效**（`expires_at`）
 
 **实现状态（4.1）**：港口位置类线索已落地（`ClueService`，抵达传闻 + 购买情报，等级 1–4，
-海图箭头/虚线圆/`？港名？`，查询按等级裁剪且不泄露目标港与可信度）。港口货物类线索、
-调查方式（花时间在港等待消息 / 完成委托解锁）、时效字段留给后续切片；`Clue` 数据里已保留
-`expires_at` 位。字段形状见 [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) §2、§4。
+海图箭头/虚线圆/`？港名？`，查询按等级裁剪且不泄露目标港与可信度）。
+**实现状态（4.4）**：港口货物类线索已落地（`port_goods`：已发现港口 + 货物，获得时冻结
+买价 / 卖价 / 库存 / 供需快照，按来源 24 / 48 / 72 游戏小时到期；1 级港口名 → 2 级参考价
+区间 → 3 级库存供需 → 4 级精确行情）。到期由命令路径 `sweep_expired` 移入
+`data.clues.expired` 历史并释放线索上限；「前往该港」走普通航线（`clue.travel`），
+不占用探索搜索区。字段与验收见 [EXPLORATION_SYSTEM.md §11](EXPLORATION_SYSTEM.md)。
+调查方式（花时间等待 / 完成委托解锁）见 §7.4；调查消耗 4.4.3 落地。
 
 ## 8. 航行演出
 

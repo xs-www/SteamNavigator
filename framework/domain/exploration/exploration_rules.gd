@@ -44,6 +44,9 @@ const DEFAULTS := {
 	"credibility_range": {
 		"rumor": [0.25, 0.55],
 		"intel": [0.60, 0.95],
+		# 4.4.2 新来源：码头消息 / 委托报酬介于两者之间。
+		"wait": [0.40, 0.70],
+		"contract": [0.55, 0.85],
 	},
 	"distance_error_ratio": 0.35,
 	"search_zone_radius": 14.0,

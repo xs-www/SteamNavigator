@@ -419,23 +419,74 @@ static func _clue_views(context, params: Dictionary) -> Array:
 			continue
 		var clue_view: Dictionary = entry
 		var level := int(clue_view.get("level", 1))
+		var clue := ClueService.find_clue(state, String(clue_view.get("id", "")))
 		var can_investigate := at_port and level < ClueService.NAME_MIN_LEVEL
 		var next_level := level + 1 if level < ClueService.NAME_MIN_LEVEL else 0
 		clue_view["investigation_cost"] = investigation_cost
 		clue_view["investigation_hours"] = investigation_hours
 		clue_view["investigation_success_chance"] = investigation_chance
 		clue_view["can_investigate"] = can_investigate
+		clue_view["can_sail"] = _clue_can_sail(state, clue, at_port)
 		clue_view["next_level"] = next_level
 		clue_view["next_level_key"] = "" if next_level == 0 else "ui.clue.level.%d" % next_level
-		# 货物线索的目标是已发现港口，估算走普通航线而不是探索搜索区（4.4 后续片提供）。
+		# 货物线索的目标是已发现港口，估算走普通航线（`clue.travel`）而不是探索搜索区。
 		if String(clue_view.get("type", ClueService.TYPE_PORT_LOCATION)) == ClueService.TYPE_PORT_GOODS:
-			clue_view["estimated"] = {}
+			clue_view["estimated"] = _goods_travel_estimate(context, clue, strategy_id)
 		else:
 			clue_view["estimated"] = _clue_estimate(
 				context, String(clue_view.get("id", "")), strategy_id
 			)
 		views.append(clue_view)
 	return views
+
+
+## 4.4.2：线索当前能否出航（在港、没有探索航次；货物线索不能去当前港）。
+static func _clue_can_sail(
+	state: GameState, clue: Dictionary, at_port: bool
+) -> bool:
+	if not at_port or state.explore_voyage() is Dictionary or clue.is_empty():
+		return false
+	if String(clue.get("type", ClueService.TYPE_PORT_LOCATION)) == ClueService.TYPE_PORT_GOODS:
+		return String(clue.get("target_port_id", "")) != state.current_port_id()
+	return true
+
+
+## 4.4.2：货物线索的「前往该港」预览 = 普通 `voyage.preview`（目标港在领域层解析，
+## 查询不输出 target id）；形状与海图航线的展示估算一致，供统一确认弹窗渲染。
+static func _goods_travel_estimate(
+	context, clue: Dictionary, strategy_id: String
+) -> Dictionary:
+	var state: GameState = context.state
+	var target_id := String(clue.get("target_port_id", ""))
+	if clue.is_empty() or target_id.is_empty() or target_id == state.current_port_id():
+		return {
+			"feasible": false,
+			"blockers": [{
+				"code": "no_travel_target",
+				"message_key": "ui.error.no_travel_target",
+			}],
+		}
+	var result := VoyageCalculator.preview(context, target_id, strategy_id)
+	if not bool(result.get("ok", false)):
+		return {
+			"feasible": false,
+			"blockers": [{
+				"code": String(result.get("error_code", "")),
+				"message_key": String(result.get("message_key", "ui.error.voyage_not_feasible")),
+			}],
+		}
+	var data: Dictionary = result.get("data", {})
+	return {
+		"feasible": bool(data.get("feasible", false)),
+		"blockers": data.get("blockers", []),
+		"distance": float(data.get("distance", 0.0)),
+		"duration_hours": float(data.get("duration_hours", 0.0)),
+		"coal_required": float(data.get("coal_required", 0.0)),
+		"water_required": float(data.get("water_required", 0.0)),
+		"risk_score": float(data.get("risk_score", -1.0)),
+		"risk_label": String(data.get("risk_label", "")),
+		"on_time": data.get("on_time", true) != false,
+	}
 
 
 static func _clue_estimate(context, clue_id: String, strategy_id: String) -> Dictionary:

@@ -4,7 +4,8 @@ extends TestCase
 ## （`clue.investigate`）/ 分级裁剪 / 命名流复现、`clue.buy` 门禁、`explore.start`
 ## 扣费与在航标记、`explore.settle` 成功发现与失败漂流、`explore.decide` 掉头 / 继续、
 ## `sea_chart.view` 的线索 / 探索 / 购买视图、4.4 货物行情线索（冻结快照 / 时效 /
-## `clue.list` / 旧存档 normalize），以及存档往返。
+## `clue.list` / 旧存档 normalize）、新来源（在港等待 / 完成委托）与 `clue.travel`，
+## 以及存档往返。
 ##
 ## ## 契约与约束
 ## - 每个用例用 `bootstrap_core()` + `run.start` 拿真实 Core 注册表与真实对局；
@@ -1292,13 +1293,17 @@ func test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void:
 		assert_false(entry.has("target_port_id"), "the chart view never leaks the target port")
 		assert_false(entry.has("credibility"), "the chart view never leaks credibility")
 		assert_true(entry.get("goods", null) != null, "the chart view carries the goods projection")
-		assert_eq(bool(entry.get("estimated", {}) == {}), true,
-			"goods clues do not carry an exploration estimate")
+		var estimated: Dictionary = entry.get("estimated", {})
+		assert_true(estimated.has("feasible"),
+			"goods clues carry a travel estimate for the shared confirm dialog")
+		assert_true(bool(entry.get("can_sail", false)),
+			"the chart view reports the goods lead can be sailed")
 	assert_eq(int(vm.get("expiring_clue_count", -1)), 1,
 		"the chart reports one expiring clue")
 
 
 ## 过期线索：查询先过滤（只读），命令路径 sweep 后进 expired 历史并释放 active 名额。
+## 等待本身也可能带来新线索，所以断言按「这条线索」而不是 active 总数进行。
 func test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void:
 	var context := _start_run(SEED)
 	_discover_other_port(context)
@@ -1313,19 +1318,20 @@ func test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void:
 	clue = ClueService.find_clue(context.state, clue_id)
 	assert_false(clue.is_empty(), "the goods clue survives the wait")
 	clue["expires_at"] = context.state.now() - 1.0
-	assert_eq(ClueService.active_count(context.state), 0,
-		"an expired clue no longer counts toward max_active_clues")
-	assert_eq(ClueService.view(context.state).size(), 0,
+	var views_before := ClueService.view(context.state)
+	assert_false(_clues_have_id(views_before, clue_id),
 		"views filter expired clues before the sweep")
+	assert_eq(ClueService.active_count(context.state), views_before.size(),
+		"an expired clue no longer counts toward max_active_clues")
 	var waited := context.commands.execute(&"port.wait", {"hours": 6})
 	assert_true(bool(waited.get("ok", false)), "waiting in port succeeds")
-	assert_eq(ClueService.active(context.state).size(), 0,
+	assert_true(ClueService.find_clue(context.state, clue_id).is_empty(),
 		"the command-path sweep removed the clue from active")
 	var expired: Array = context.state.ensure_clues().get("expired", [])
 	assert_eq(expired.size(), 1, "the full snapshot moved into the expired history")
 	if not expired.is_empty() and expired[0] is Dictionary:
 		var history: Dictionary = expired[0]
-		assert_eq(String(history.get("id", "")), String(clue.get("id", "")),
+		assert_eq(String(history.get("id", "")), clue_id,
 			"the history keeps the clue id")
 		assert_eq(String(history.get("type", "")), ClueService.TYPE_PORT_GOODS,
 			"the history keeps the clue type")
@@ -1377,7 +1383,8 @@ func test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void:
 	var after_result := context.queries.execute(&"clue.list", {})
 	assert_true(bool(after_result.get("ok", false)), "clue.list still succeeds")
 	var after: Dictionary = after_result.get("data", {})
-	assert_eq((after.get("clues", []) as Array).size(), 0, "no active clues remain")
+	assert_false(_clues_have_id(after.get("clues", []), clue_id),
+		"the expired clue is no longer listed as active")
 	var expired: Array = after.get("expired", [])
 	assert_eq(expired.size(), 1, "the expired history is exposed to the list page")
 	if not expired.is_empty() and expired[0] is Dictionary:
@@ -1438,6 +1445,168 @@ func test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void:
 		"port-location clues report no remaining lifetime")
 
 
+# ── 4.4.2 new sources / goods travel ──
+
+## 等待线索概率：`1-(1-p)^blocks` 封顶；真实 `port.wait` 会产出 source=wait 的线索，
+## 记录 unlock_source，可信度落在 Core 的 wait 区间。
+func test_wait_clue_chance_math_and_command_acquisition() -> void:
+	var context := _start_run(SEED)
+	var rules := ExplorationRules.read(context.state, context.registries)
+	assert_almost_eq(ClueService.wait_clue_chance(rules, 3), 0.0, 0.0001,
+		"a wait shorter than one block never yields a clue")
+	assert_almost_eq(ClueService.wait_clue_chance(rules, 6), 0.35, 0.0001,
+		"one 6h block is exactly the per-block chance")
+	assert_almost_eq(
+		ClueService.wait_clue_chance(rules, 24), 1.0 - pow(0.65, 4.0), 0.0001,
+		"24h compounds four blocks"
+	)
+	assert_almost_eq(ClueService.wait_clue_chance(rules, 240), 0.85, 0.0001,
+		"the chance is capped by wait_clue_max_chance")
+	var acquired: Dictionary = {}
+	var waited: Dictionary = {}
+	var last_events: Array = []
+	for _attempt in 8:
+		waited = context.commands.execute(&"port.wait", {"hours": 24})
+		last_events = waited.get("events", [])
+		assert_true(bool(waited.get("ok", false)), "waiting succeeds")
+		var clue_view: Dictionary = waited.get("data", {}).get("clue", {})
+		if not clue_view.is_empty():
+			acquired = ClueService.find_clue(context.state, String(clue_view.get("id", "")))
+			break
+	assert_false(acquired.is_empty(), "an 8x24h wait yields a dockside clue")
+	if acquired.is_empty():
+		return
+	assert_eq(String(acquired.get("source_key", "")), ClueService.SOURCE_WAIT,
+		"the clue names the wait source")
+	assert_true(String(acquired.get("unlock_source", "")).begins_with("wait:"),
+		"the unlock source records the wait length")
+	var wait_range: Array = (rules["credibility_range"] as Dictionary)["wait"]
+	var credibility := float(acquired.get("credibility", -1.0))
+	assert_true(credibility >= float(wait_range[0]) and credibility <= float(wait_range[1]),
+		"wait credibility stays in the Core range")
+	assert_true(_has_event(last_events, "clue.acquired"),
+		"the wait result carries the clue.acquired event")
+
+
+## 在港等待优先产出货物线索（Core 的 goods_clue_source_weights.wait = 1）；没有
+## 已发现港口时退回港口位置线索（前一个用例覆盖）。
+func test_wait_prefers_goods_leads_when_a_market_is_known() -> void:
+	var context := _start_run(SEED)
+	var target_id := _discover_other_port(context)
+	assert_false(target_id.is_empty(), "a second discovered port is needed")
+	var clue: Dictionary = {}
+	for _attempt in 8:
+		var waited := context.commands.execute(&"port.wait", {"hours": 24})
+		var clue_view: Dictionary = waited.get("data", {}).get("clue", {})
+		if not clue_view.is_empty():
+			clue = ClueService.find_clue(context.state, String(clue_view.get("id", "")))
+			break
+	assert_false(clue.is_empty(), "waiting yields a clue")
+	if clue.is_empty():
+		return
+	assert_eq(String(clue.get("type", "")), ClueService.TYPE_PORT_GOODS,
+		"a dockside lead prefers the known market")
+	assert_eq(String(clue.get("target_port_id", "")), target_id,
+		"the only other discovered port is the goods target")
+	assert_false(clue.get("goods_snapshot", null) == null, "the goods lead keeps its snapshot")
+	assert_true(float(clue.get("expires_at", 0.0)) > float(clue.get("created_at", 0.0)),
+		"the goods lead expires in the future")
+
+
+## 完成委托解锁线索：真实 `VoyageService.settle_arrival_services` 会调用
+## `ClueService.on_contract_completed`，事件里出现 clue.acquired，线索带 contract 来源。
+func test_contract_completion_hook_unlocks_a_clue() -> void:
+	var context := _start_run(SEED)
+	var destination := context.state.current_port_id()
+	var unlocked := false
+	var acquired_event := false
+	for index in 12:
+		context.state.data["contracts"]["active"] = [
+			_fake_contract(destination, "test-contract:%d" % index)
+		]
+		var services := VoyageService.settle_arrival_services(
+			context,
+			destination,
+			context.state.now(),
+			{"destination": destination, "arrival_time": context.state.now(), "delay_hours": 0.0, "injuries": 0}
+		)
+		if _has_event(services.get("events", []), "clue.acquired"):
+			acquired_event = true
+			unlocked = true
+			break
+	assert_true(unlocked, "at least one completed contract unlocks a clue")
+	assert_true(acquired_event, "the arrival services publish clue.acquired")
+	if not unlocked:
+		return
+	var active := ClueService.active(context.state)
+	var clue: Dictionary = active[active.size() - 1]
+	assert_eq(String(clue.get("source_key", "")), ClueService.SOURCE_CONTRACT,
+		"the clue names the contract source")
+	assert_true(String(clue.get("unlock_source", "")).begins_with("contract:"),
+		"the unlock source records the contract instance")
+	var rules := ExplorationRules.read(context.state, context.registries)
+	var contract_range: Array = (rules["credibility_range"] as Dictionary)["contract"]
+	var credibility := float(clue.get("credibility", -1.0))
+	assert_true(credibility >= float(contract_range[0]) and credibility <= float(contract_range[1]),
+		"contract credibility stays in the Core range")
+
+
+## 货物线索「前往该港」：`clue.travel` 在领域层解析目标港并走普通航线；线索保持
+## active（信息本身不会因为出航而失效）；港口位置线索 / 过期线索 / 在航都会被拒绝。
+func test_clue_travel_sails_to_the_goods_lead_harbour() -> void:
+	var context := _start_run(SEED)
+	var target_id := _discover_other_port(context)
+	var clue := _acquire_goods(context, "wait")
+	assert_false(clue.is_empty(), "a goods clue should exist")
+	if clue.is_empty():
+		return
+	var clue_id := String(clue.get("id", ""))
+	var result := context.commands.execute(&"clue.travel", {
+		"clue_id": clue_id,
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_true(bool(result.get("ok", false)),
+		"travelling on a goods lead succeeds: %s" % str(result))
+	if not bool(result.get("ok", false)):
+		return
+	var data: Dictionary = result.get("data", {})
+	var preview: Dictionary = data.get("preview", {})
+	assert_eq(String(preview.get("destination_id", "")), target_id,
+		"the domain resolves the goods lead target port for the voyage")
+	if bool(data.get("arrived", false)):
+		assert_eq(context.state.current_port_id(), target_id,
+			"an instant arrival lands at the goods harbour")
+	else:
+		assert_eq(
+			String((context.state.data.get("voyage", {}) as Dictionary).get("destination", "")),
+			target_id,
+			"an event voyage heads to the goods harbour"
+		)
+	assert_false(ClueService.find_clue(context.state, clue_id).is_empty(),
+		"the goods clue stays active while the ship sails")
+	# 港口位置线索不能走 clue.travel（目标不是已知港口）。
+	var port_clue := _acquire(context, "intel")
+	var not_goods := context.commands.execute(&"clue.travel", {
+		"clue_id": String(port_clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_false(bool(not_goods.get("ok", true)), "a port-location clue cannot use clue.travel")
+	assert_eq(String(not_goods.get("error_code", "")), "not_goods_clue",
+		"the failure names the clue type")
+	# 过期线索不能出航。
+	var fresh := _start_run(SEED)
+	_discover_other_port(fresh)
+	var fresh_clue := _acquire_goods(fresh, "wait")
+	fresh.commands.execute(&"port.wait", {"hours": 6})
+	fresh_clue = ClueService.find_clue(fresh.state, String(fresh_clue.get("id", "")))
+	fresh_clue["expires_at"] = fresh.state.now() - 1.0
+	var expired := fresh.commands.execute(&"clue.travel", {
+		"clue_id": String(fresh_clue.get("id", "")),
+		"strategy_id": STRATEGY_ID,
+	})
+	assert_false(bool(expired.get("ok", true)), "an expired goods clue cannot be sailed")
+
+
 # ── Helpers ──
 
 func _start_run(seed_value: int, extra: Dictionary = {}) -> AppContext:
@@ -1463,6 +1632,36 @@ func _acquire_goods(context: AppContext, source: String = "wait") -> Dictionary:
 		RngService.STREAM_EXPLORATION, "test-goods:%d" % _stream_serial
 	)
 	return ClueService.acquire_goods(context, source, rng)
+
+
+## 线索视图 / 列表数组里是否含指定 id（用于「过期后不再出现」这类按条目的断言）。
+func _clues_have_id(entries: Array, clue_id: String) -> bool:
+	for entry in entries:
+		if entry is Dictionary and String((entry as Dictionary).get("id", "")) == clue_id:
+			return true
+	return false
+
+
+## 4.4.2：构造一份「刚完成」的委托结果，用于验证到港服务的委托解锁线索钩子。
+func _fake_contract(destination: String, instance_id: String) -> Dictionary:
+	return {
+		"instance_id": instance_id,
+		"template_id": "test:contract/fake",
+		"kind": "normal",
+		"origin": destination,
+		"destination": destination,
+		"deadline": 999999.0,
+		"accepted_at": 0.0,
+		"cargo_weight": 0.0,
+		"cargo": [],
+		"passengers": 0,
+		"base_money": 100,
+		"on_time_bonus": 10,
+		"reputation": 1,
+		"unlock_ids": [],
+		"injuries": 0,
+		"status": "active",
+	}
 
 
 ## 4.4.1：货物线索只指向已发现港口，测试里先真实发现一个非当前港。

@@ -445,6 +445,7 @@
   "ui.button.cancel": "取消",
   "ui.confirm.title.voyage": "确认出航",
   "ui.confirm.title.explore": "循线索出航",
+  "ui.confirm.title.goods": "前往行情港口",
   "ui.confirm.route": "航线：%s → %s",
   "ui.confirm.clue": "线索：%s",
   "ui.confirm.strategy": "锅炉策略",
@@ -547,6 +548,8 @@
   "ui.error.clue_not_active": "线索已失效",
   "ui.error.clue_max_level": "这条线索已经是最高等级",
   "ui.error.clue_expired": "这条线索已经过期",
+  "ui.error.not_goods_clue": "这不是货物行情线索",
+  "ui.error.no_travel_target": "这条线索没有可前往的港口",
   "ui.error.already_exploring": "已在探索航行中",
   "ui.error.no_exploration_target": "附近没有值得探索的目标"
 }

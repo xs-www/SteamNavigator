@@ -7,6 +7,10 @@ extends RefCounted
 ## notice. Everything runs inside the CommandBus transaction, so a rejected wait
 ## leaves state untouched.
 ##
+## Stage 4.4: a wait also rolls the content-driven "dockside word" clue chance
+## (`ClueService.on_wait`, per-block compounding, capped) and sweeps timed-out
+## goods clues; `clue.acquired` / `clue.expired` events ride on the wait result.
+##
 ## The travel-time path (VoyageService) also settles orders after advancing time;
 ## port.wait is the player-facing way to make time pass without sailing.
 
@@ -47,6 +51,12 @@ static func wait(params: Dictionary, context) -> Dictionary:
 		"port": MapOps.port_display_key(state.world(), position),
 		"hours": hours,
 	})
+	# 4.4.2：在港等待可能换来一条线索（概率按档位复利，来自 Core）。
+	var clue_result := ClueService.on_wait(context, hours)
+	var clue: Dictionary = clue_result.get("clue", {})
+	var clue_view: Dictionary = {}
+	if not clue.is_empty():
+		clue_view = ClueService.view_entry(state, clue)
 
 	var events: Array = [{
 		"type": "port.waited",
@@ -70,6 +80,7 @@ static func wait(params: Dictionary, context) -> Dictionary:
 	events.append_array(npc_events)
 	events.append_array(debt_events)
 	events.append_array(ClueService.expired_events_of(expired_ids))
+	events.append_array(clue_result.get("events", []))
 
 	return Result.ok({
 		"hours": hours,
@@ -78,6 +89,7 @@ static func wait(params: Dictionary, context) -> Dictionary:
 		"completed_orders": completed_orders,
 		"npc_events": npc_events,
 		"debt_events": debt_events,
+		"clue": clue_view,
 	}, events)
 
 

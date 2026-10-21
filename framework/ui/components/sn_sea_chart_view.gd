@@ -45,6 +45,9 @@ extends Control
 ##   同心软圆（内亮外暗，无 shader / 新资产）。半径是世界单位、随 `_zoom` 缩放；
 ##   它只是表现，不写领域状态。图层在迷雾与已探索陆地剪影之上、航线/港口图标之下，
 ##   不遮挡船 icon 与线索。`ship_vision_rings()` 是纯函数，测试可直接断言衰减。
+## - **货物行情线索不画几何**（4.4）：`type = port_goods` 的目标是已发现港口、没有
+##   搜索区，`clue_screen_geometry()` 直接返回 `{}`，海图上不会出现方向箭头 / 虚线圆；
+##   行情通过右侧面板与线索列表页展示。
 ## @end-static-doc
 
 signal port_clicked(port_id: String)
@@ -960,7 +963,11 @@ func _draw_dashed_circle(center: Vector2, radius: float, color: Color, width: fl
 
 ## 一条线索在当前 zoom/offset 下的屏幕几何；不可画（参照港不在图上 / 等级 1）返回 `{}`。
 ## kind = "arrow" → `{start, end}`；kind = "circle" → `{center, radius}`。
+## 4.4：货物行情线索的目标是已发现港口、没有搜索区，因此不在图上画方向箭头 / 虚线圆
+## （行情在右侧面板与线索列表页展示）。
 func clue_screen_geometry(clue: Dictionary) -> Dictionary:
+	if String(clue.get("type", "port_location")) == "port_goods":
+		return {}
 	var level := int(clue.get("level", 0))
 	if level >= 3:
 		var circle: Variant = clue.get("circle", null)

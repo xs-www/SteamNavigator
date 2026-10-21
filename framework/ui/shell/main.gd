@@ -1646,9 +1646,9 @@ func _chart_departure_strategy() -> String:
 	return fallback
 
 
-## 面板「启航 / 循此线索出航」→ 打开统一确认弹窗（不立即出航）。
+## 面板「启航 / 循此线索出航 / 前往该港」→ 打开统一确认弹窗（不立即出航）。
 func _on_chart_departure_requested(kind: String, target_id: String) -> void:
-	if kind != "voyage" and kind != "explore":
+	if kind != "voyage" and kind != "explore" and kind != "goods":
 		return
 	_chart_departure = {
 		"kind": kind,
@@ -1675,13 +1675,17 @@ func _on_chart_departure_cancelled() -> void:
 	_refresh()
 
 
-## 弹窗「启航」：直接执行领域命令（`voyage.start` / `explore.start`），演出接管后续。
+## 弹窗「启航」：直接执行领域命令（`voyage.start` / `explore.start` / `clue.travel`），
+## 演出接管后续。
 func _on_chart_departure_confirmed(kind: String, target_id: String, strategy_id: String) -> void:
 	var chosen := strategy_id if not strategy_id.is_empty() else _chart_departure_strategy()
 	_selected_strategy = chosen
 	_chart_departure = {}
 	if kind == "explore":
 		_run_command(&"explore.start", {"clue_id": target_id, "strategy_id": chosen})
+	elif kind == "goods":
+		# 4.4.2：货物线索走普通航线；目标港由 `ClueService.travel` 在领域层解析。
+		_run_command(&"clue.travel", {"clue_id": target_id, "strategy_id": chosen})
 	else:
 		_run_command(&"voyage.start", {"destination_id": target_id, "strategy_id": chosen})
 
@@ -1701,21 +1705,23 @@ func _chart_departure_model(data: Dictionary, chart_vm: Dictionary) -> Dictionar
 		})
 	var preview: Dictionary = {}
 	var target_name := ""
-	if kind == "explore":
+	if kind == "explore" or kind == "goods":
 		var clue := _chart_clue_entry(chart_vm, target_id)
-		target_name = _chart_clue_target_name(clue)
+		if kind == "goods":
+			# 4.4.2：货物线索的目标港是已发现港口，名称来自裁剪后的行情视图
+			# （查询不输出 target_port_id）。
+			var goods: Variant = clue.get("goods", null)
+			target_name = ""
+			if goods is Dictionary:
+				var name_key := String((goods as Dictionary).get("port_name_key", ""))
+				target_name = _tr(name_key, name_key) if not name_key.is_empty() else ""
+			if target_name.is_empty():
+				target_name = _tr("ui.label.unknown_destination", "？")
+		else:
+			target_name = _chart_clue_target_name(clue)
 		var estimated: Variant = clue.get("estimated", null)
 		if estimated is Dictionary:
-			var estimate: Dictionary = estimated
-			preview = {
-				"feasible": bool(estimate.get("feasible", false)),
-				"blockers": estimate.get("blockers", []),
-				"duration_hours": float(estimate.get("duration_hours", 0.0)),
-				"coal_required": float(estimate.get("coal_required", 0.0)),
-				"water_required": float(estimate.get("water_required", 0.0)),
-				"risk_score": float(estimate.get("risk_score", 0.0)),
-				"discovery_chance": float(estimate.get("discovery_chance", 0.0)),
-			}
+			preview = _chart_preview_from_estimate(estimated as Dictionary)
 		else:
 			preview = {"feasible": false, "blockers": [{"message_key": "ui.error.unknown_clue"}]}
 	else:
@@ -1751,6 +1757,23 @@ func _chart_departure_model(data: Dictionary, chart_vm: Dictionary) -> Dictionar
 		"strategy_id": strategy_id,
 		"strategies": strategies,
 		"preview": preview,
+	}
+
+
+## 把查询层的 `estimated`（探索 / 货物线索共用形状）转成确认弹窗的 `preview`。
+## 弹窗只渲染这里给出的字段，不自行计算可行性。
+func _chart_preview_from_estimate(estimate: Dictionary) -> Dictionary:
+	return {
+		"feasible": bool(estimate.get("feasible", false)),
+		"blockers": estimate.get("blockers", []),
+		"distance": float(estimate.get("distance", 0.0)),
+		"duration_hours": float(estimate.get("duration_hours", 0.0)),
+		"coal_required": float(estimate.get("coal_required", 0.0)),
+		"water_required": float(estimate.get("water_required", 0.0)),
+		"risk_score": float(estimate.get("risk_score", 0.0)),
+		"risk_label": String(estimate.get("risk_label", "")),
+		"on_time": estimate.get("on_time", true) != false,
+		"discovery_chance": float(estimate.get("discovery_chance", 0.0)),
 	}
 
 
@@ -2677,9 +2700,11 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 	# `voyage.start` / `event.choose_option` hand over to the cloud transition,
 	# so the generic page fade would fight the veil — rebuild without animation.
 	var presentation_handoff := _presentation != null and command in [
-		&"voyage.start", &"event.choose_option", &"explore.start",
+		&"voyage.start", &"event.choose_option", &"explore.start", &"clue.travel",
 	]
-	var animate := command in [&"run.start", &"voyage.start", &"event.choose_option"] and not presentation_handoff
+	var animate := command in [
+		&"run.start", &"voyage.start", &"event.choose_option", &"clue.travel",
+	] and not presentation_handoff
 	_refresh(animate)
 
 
@@ -2696,7 +2721,7 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			_settlement_summary = {}
 			_reset_voyage_presentation()
 			_set_status("新航程开始 · 种子 %d" % int(data.get("seed", 0)), false)
-		"voyage.start":
+		"voyage.start", "clue.travel":
 			_handle_voyage_result(data)
 		"explore.start":
 			# 探索出航走同一套演出，只是目的地要等 `explore.settle`。

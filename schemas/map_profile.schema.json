@@ -211,6 +211,12 @@
                 },
                 "intel": {
                   "$ref": "common.schema.json#/$defs/range2"
+                },
+                "wait": {
+                  "$ref": "common.schema.json#/$defs/range2"
+                },
+                "contract": {
+                  "$ref": "common.schema.json#/$defs/range2"
                 }
               }
             },

@@ -196,6 +196,102 @@ static func on_arrival(context) -> Dictionary:
 	return {"clue": clue, "events": [clue_acquired_event(clue)]}
 
 
+## 4.4.2：在港等待解锁线索的概率（纯函数，供测试 / 查询复用）。按
+## `wait_clue_hours_block` 分档复利：`1 - (1 - per_block) ^ blocks`，封顶
+## `wait_clue_max_chance`；不足一档返回 0。
+static func wait_clue_chance(rules: Dictionary, hours: int) -> float:
+	var block := maxf(1.0, float(rules.get("wait_clue_hours_block", 6.0)))
+	var blocks := floorf(maxf(0.0, float(hours)) / block)
+	if blocks < 1.0:
+		return 0.0
+	var per_block := clampf(float(rules.get("wait_clue_chance_per_block", 0.35)), 0.0, 1.0)
+	var cap := clampf(float(rules.get("wait_clue_max_chance", 0.85)), 0.0, 1.0)
+	return clampf(1.0 - pow(1.0 - per_block, blocks), 0.0, cap)
+
+
+## 4.4.2：在港等待钩子（`port.wait` 调）。按档位复利概率抽一次，优先按来源权重出
+## 货物线索（没有货物候选时退回港口位置线索），失败静默返回 `{}`。
+static func on_wait(context, hours: int) -> Dictionary:
+	if not context.has_run():
+		return {}
+	var state: GameState = context.state
+	if not state.is_at_port() or state.explore_voyage() is Dictionary:
+		return {}
+	var rules := ExplorationRules.read(state, context.registries)
+	if active_count(state) >= int(rules.get("max_active_clues", 4)):
+		return {}
+	var chance := wait_clue_chance(rules, hours)
+	if chance <= 0.0:
+		return {}
+	var rng: RandomNumberGenerator = context.rng.stream(
+		RngService.STREAM_EXPLORATION,
+		"wait:%s:%.3f" % [state.current_port_id(), state.now()]
+	)
+	if not ExplorationRules.roll_succeeds(rng, chance):
+		return {}
+	var clue := _acquire_by_source(context, SOURCE_WAIT, rng, "wait:%d" % int(hours))
+	if clue.is_empty():
+		return {}
+	return {"clue": clue, "events": [clue_acquired_event(clue)]}
+
+
+## 4.4.2：完成委托钩子（到港服务调）。每份刚完成的委托独立抽一次
+## `contract_clue_chance`，成功则按来源权重出一条线索（默认出港口位置线索）。
+## 返回 `{clues, events}`；没有任何收获时返回 `{}`。
+static func on_contract_completed(context, completed: Array) -> Dictionary:
+	if not context.has_run() or completed.is_empty():
+		return {}
+	var state: GameState = context.state
+	var rules := ExplorationRules.read(state, context.registries)
+	var chance := clampf(float(rules.get("contract_clue_chance", 0.5)), 0.0, 1.0)
+	if chance <= 0.0:
+		return {}
+	var clues: Array = []
+	var events: Array = []
+	for raw in completed:
+		if not (raw is Dictionary):
+			continue
+		if active_count(state) >= int(rules.get("max_active_clues", 4)):
+			break
+		var instance_id := String((raw as Dictionary).get("instance_id", ""))
+		if instance_id.is_empty():
+			continue
+		var rng: RandomNumberGenerator = context.rng.stream(
+			RngService.STREAM_EXPLORATION,
+			"contract:%s:%s" % [state.current_port_id(), instance_id]
+		)
+		if not ExplorationRules.roll_succeeds(rng, chance):
+			continue
+		var clue := _acquire_by_source(
+			context, SOURCE_CONTRACT, rng, "contract:%s" % instance_id
+		)
+		if clue.is_empty():
+			continue
+		clues.append(clue)
+		events.append(clue_acquired_event(clue))
+	if clues.is_empty():
+		return {}
+	return {"clues": clues, "events": events}
+
+
+## 4.4.2：来源产出的线索类型由 `goods_clue_source_weights` 决定（权重 0 = 只出港口
+## 位置线索）；货物候选为空时自动退回港口位置线索。`unlock_source` 只做追溯记录。
+static func _acquire_by_source(
+	context, source_key: String, rng: RandomNumberGenerator, unlock_source: String
+) -> Dictionary:
+	var rules := ExplorationRules.read(context.state, context.registries)
+	var weights: Dictionary = rules.get("goods_clue_source_weights", {})
+	var goods_weight := clampf(float(weights.get(source_key, 0.0)), 0.0, 1.0)
+	var clue: Dictionary = {}
+	if goods_weight > 0.0 and rng.randf() < goods_weight:
+		clue = acquire_goods(context, source_key, rng)
+	if clue.is_empty():
+		clue = acquire(context, source_key, rng)
+	if not clue.is_empty() and not unlock_source.is_empty():
+		clue["unlock_source"] = unlock_source
+	return clue
+
+
 ## Buys an intel clue at the current port (requires the `intel` facility).
 ## Money is only charged after a clue was actually created.
 static func buy(context) -> Dictionary:
@@ -520,6 +616,56 @@ static func investigate(context, clue_id: String) -> Dictionary:
 		},
 		events
 	)
+
+
+## 4.4.2：货物线索的「前往该港」——在领域层解析目标港（查询永远不输出
+## `target_port_id`），然后复用 `VoyageService.start` 的普通航线（含预览 / 工资 /
+## 事件 / 演出），线索保持 active 直到自然过期或玩家不再使用。
+static func travel(context, clue_id: String, strategy_id: String) -> Dictionary:
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	var state: GameState = context.state
+	var expired := sweep_expired(state)
+	var expired_events := expired_events_of(expired)
+	if clue_id.is_empty():
+		return Result.fail("unknown_clue", "ui.error.unknown_clue", {}, expired_events)
+	var clue := find_clue(state, clue_id)
+	if clue.is_empty():
+		var clues_data := state.ensure_clues()
+		if Array(clues_data.get("failed", [])).has(clue_id) \
+				or Array(clues_data.get("resolved", [])).has(clue_id) \
+				or _expired_has(clues_data, clue_id):
+			return Result.fail(
+				"clue_not_active", "ui.error.clue_not_active", {"clue_id": clue_id},
+				expired_events
+			)
+		return Result.fail(
+			"unknown_clue", "ui.error.unknown_clue", {"clue_id": clue_id}, expired_events
+		)
+	if String(clue.get("type", TYPE_PORT_LOCATION)) != TYPE_PORT_GOODS:
+		return Result.fail(
+			"not_goods_clue", "ui.error.not_goods_clue", {"clue_id": clue_id}, expired_events
+		)
+	if is_expired(clue, state.now()):
+		return Result.fail(
+			"clue_expired", "ui.error.clue_expired", {"clue_id": clue_id}, expired_events
+		)
+	if state.explore_voyage() is Dictionary:
+		return Result.fail("already_exploring", "ui.error.already_exploring", {}, expired_events)
+	if not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port", {}, expired_events)
+	var target_id := String(clue.get("target_port_id", ""))
+	if target_id.is_empty() or target_id == state.current_port_id():
+		return Result.fail(
+			"no_travel_target", "ui.error.no_travel_target", {"clue_id": clue_id},
+			expired_events
+		)
+	var result := VoyageService.start(context, target_id, strategy_id)
+	if bool(result.get("ok", false)):
+		var events: Array = expired_events.duplicate()
+		events.append_array(result.get("events", []))
+		result["events"] = events
+	return result
 
 
 ## 4.3 / U3：一次失败的探索尝试。线索**不离开** active，只累加尝试次数与最近

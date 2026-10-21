@@ -29,10 +29,15 @@ extends PanelContainer
 ## - **逐级调查**（阶段 4.3.2 / U2）：线索区块显示「下一级：%s」预告（4 级显示已达最高），
 ##   并多一个「调查线索」按钮，发出 `investigate_requested(clue_id)`。
 ##   `can_investigate` 来自查询层（在港且 `level < 4`），面板只据它启用/禁用按钮。
+## - **货物行情线索**（阶段 4.4）：`type = port_goods` 时不显示方向 / 航程区间 / 探索
+##   出航按钮，改为类型标签、港口名、参考价区间（2 级起）、库存与供需（3 级起）、
+##   精确买卖价（4 级）与剩余时效（`ui.clue.expiry`）；底部「前往该港」按钮发
+##   `departure_requested("goods", clue_id)`（统一确认弹窗 → `clue.travel`）。等级文案
+##   用 `ui.clue.goods.level.N`；面板仍不重算行情、不读 `credibility`。
 ## @end-static-doc
 
-## 「启航」与「循此线索出航」共用的出航入口（4.3.4 / U7）：
-## `kind` = `"voyage" | "explore"`，`target_id` = 目的港 id 或线索 id。
+## 「启航 / 循此线索出航 / 前往该港」共用的出航入口（4.3.4 / U7、4.4.2）：
+## `kind` = `"voyage" | "explore" | "goods"`，`target_id` = 目的港 id / 线索 id。
 ## 由 SeaChartScreen 转发，Shell 打开确认弹窗后才真正执行出航命令。
 signal departure_requested(kind: String, target_id: String)
 ## 「购买线索」：由 SeaChartScreen 转发给 Shell 执行 `clue.buy`。
@@ -50,7 +55,7 @@ const COMPASS_FALLBACK := {
 const LEVEL_FALLBACK := {
 	1: "模糊传闻", 2: "方位线索", 3: "距离线索", 4: "港口名称",
 }
-const SOURCE_FALLBACK := {"rumor": "传闻", "intel": "情报"}
+const SOURCE_FALLBACK := {"rumor": "传闻", "intel": "情报", "wait": "码头消息", "contract": "委托报酬"}
 ## 线索等级上限（1 存在 → 2 方向 → 3 距离 → 4 名称）。查询层也按这个上限裁剪；
 ## 面板只在 fallback 时用它判断「下一级」与按钮是否可用。
 const MAX_CLUE_LEVEL := 4
@@ -290,6 +295,15 @@ func _build_clue_state() -> void:
 	header.add_theme_color_override("font_color", Color("e1c487"))
 	vbox.add_child(header)
 
+	# 4.4：线索类型（港口位置 / 货物行情）。类型是公开信息，不泄露目标。
+	var type := String(_clue.get("type", "port_location"))
+	var type_label := Label.new()
+	type_label.name = "ClueTypeLabel"
+	type_label.text = _tr_or("ui.clue.type.%s" % type, type)
+	type_label.add_theme_font_size_override("font_size", 12)
+	type_label.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+	vbox.add_child(type_label)
+
 	var source_key := String(_clue.get("source_key", ""))
 	var source_display_key := String(_clue.get("source_display_key", ""))
 	if source_display_key.is_empty() and not source_key.is_empty():
@@ -308,7 +322,7 @@ func _build_clue_state() -> void:
 	if level > 0:
 		var level_label := Label.new()
 		level_label.text = _tr_or(
-			"ui.clue.level.%d" % level, String(LEVEL_FALLBACK.get(level, "线索"))
+			_level_key(type, level), String(LEVEL_FALLBACK.get(level, "线索"))
 		)
 		level_label.add_theme_font_size_override("font_size", 13)
 		level_label.add_theme_color_override("font_color", Color("7fc8e8"))
@@ -323,6 +337,36 @@ func _build_clue_state() -> void:
 		attempts_label.add_theme_font_size_override("font_size", 11)
 		attempts_label.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
 		vbox.add_child(attempts_label)
+
+	# 4.4：货物行情线索的剩余时效（港口位置线索 expires_at == 0，不显示）。
+	var expires_at := float(_clue.get("expires_at", 0.0))
+	if expires_at > 0.0:
+		var expiry := Label.new()
+		expiry.name = "ExpiryLabel"
+		var expired := bool(_clue.get("is_expired", false))
+		var remaining := float(_clue.get("remaining_hours", 0.0))
+		expiry.text = (
+			_tr_or("ui.clue.expired", "已过期") if expired
+			else _tr_or("ui.clue.expiry", "剩 %d 小时") % int(ceilf(maxf(0.0, remaining)))
+		)
+		expiry.add_theme_font_size_override("font_size", 11)
+		expiry.add_theme_color_override(
+			"font_color", Color("e8967f") if expired else Color("d8c68f")
+		)
+		vbox.add_child(expiry)
+
+	var estimated: Variant = _clue.get("estimated", null)
+	if type == "port_goods":
+		var goods: Variant = _clue.get("goods", null)
+		if goods is Dictionary and not (goods as Dictionary).is_empty():
+			vbox.add_child(_goods_block(goods as Dictionary, level))
+		if estimated is Dictionary and not (estimated as Dictionary).is_empty():
+			vbox.add_child(HSeparator.new())
+			vbox.add_child(_clue_estimate_block(estimated as Dictionary))
+		_append_investigate_button(vbox, level)
+		_append_sail_button(vbox, estimated)
+		_append_purchase_button(vbox)
+		return
 
 	if _clue.has("direction_angle"):
 		var angle := float(_clue.get("direction_angle", 0.0))
@@ -347,7 +391,6 @@ func _build_clue_state() -> void:
 		range_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.78, 0.9))
 		vbox.add_child(range_label)
 
-	var estimated: Variant = _clue.get("estimated", null)
 	if estimated is Dictionary and not (estimated as Dictionary).is_empty():
 		vbox.add_child(HSeparator.new())
 		vbox.add_child(_clue_estimate_block(estimated as Dictionary))
@@ -366,6 +409,74 @@ func _build_clue_state() -> void:
 	explore_button.pressed.connect(_on_explore_pressed)
 	vbox.add_child(explore_button)
 	_append_purchase_button(vbox)
+
+
+## 4.4：货物行情区块——港口名 → 参考价区间 → 库存 / 供需 → 精确买卖价，对应
+## 查询层的等级裁剪；面板不重算行情、不读 credibility。
+func _goods_block(goods: Dictionary, level: int) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	var name_key := String(goods.get("port_name_key", ""))
+	if not name_key.is_empty():
+		box.add_child(_clue_row(
+			_tr_or("ui.clue.goods.port", "港口：%s") % _tr_or(name_key, name_key),
+			Color(0.78, 0.86, 0.84, 0.95)
+		))
+	if level >= ClueService.GOODS_PRICE_MIN_LEVEL:
+		box.add_child(_clue_row(
+			_tr_or("ui.clue.goods.price_range", "参考价：买入 %d–%d / 卖出 %d–%d") % [
+				int(goods.get("buy_price_min", 0)), int(goods.get("buy_price_max", 0)),
+				int(goods.get("sell_price_min", 0)), int(goods.get("sell_price_max", 0)),
+			],
+			Color(0.72, 0.82, 0.8, 0.92)
+		))
+	if level >= ClueService.GOODS_SUPPLY_MIN_LEVEL:
+		var demand := String(goods.get("demand", "normal"))
+		box.add_child(_clue_row(
+			_tr_or("ui.clue.goods.supply", "库存 %d · 需求%s") % [
+				int(goods.get("stock", 0)),
+				_tr_or("ui.clue.goods.demand." + demand, demand),
+			],
+			Color(0.65, 0.75, 0.73, 0.85)
+		))
+	if level >= ClueService.GOODS_EXACT_MIN_LEVEL:
+		box.add_child(_clue_row(
+			_tr_or("ui.clue.goods.price_exact", "行情：买入 %d / 卖出 %d") % [
+				int(goods.get("buy_price", 0)), int(goods.get("sell_price", 0)),
+			],
+			Color("8fd694")
+		))
+	return box
+
+
+## 4.4.2：货物线索的「前往该港」入口——打开统一出航确认弹窗（kind = goods），
+## 确认后由 Shell 执行 `clue.travel`（目标港在领域层解析）。
+func _append_sail_button(vbox: VBoxContainer, estimated: Variant) -> void:
+	var button := Button.new()
+	button.name = "SailButton"
+	button.text = _tr_or("ui.button.sail_to_port", "前往该港")
+	button.add_theme_stylebox_override("normal", _button_style(Color(0.25, 0.45, 0.42)))
+	button.add_theme_stylebox_override("hover", _button_style(Color(0.30, 0.52, 0.48)))
+	button.add_theme_stylebox_override("pressed", _button_style(Color(0.20, 0.38, 0.35)))
+	var can_sail := bool(_clue.get("can_sail", false))
+	if estimated is Dictionary and (estimated as Dictionary).has("feasible"):
+		can_sail = can_sail and bool((estimated as Dictionary).get("feasible", true))
+	button.disabled = not can_sail
+	button.pressed.connect(_on_sail_pressed)
+	vbox.add_child(button)
+
+
+func _on_sail_pressed() -> void:
+	var clue_id := String(_clue.get("id", ""))
+	if not clue_id.is_empty():
+		departure_requested.emit("goods", clue_id)
+
+
+## 线索等级文案键：货物线索用 `ui.clue.goods.level.N`，其它用 `ui.clue.level.N`。
+static func _level_key(type: String, level: int) -> String:
+	if type == "port_goods":
+		return "ui.clue.goods.level.%d" % level
+	return "ui.clue.level.%d" % level
 
 
 ## 线索预计值：航程 / 煤 / 水 / 风险 / 可行性；不可行时逐条列出 blockers 的文案键。
@@ -443,7 +554,7 @@ func _append_next_level_row(vbox: VBoxContainer, level: int) -> void:
 		next_level = mini(level + 1, MAX_CLUE_LEVEL)
 	var next_key := String(_clue.get("next_level_key", ""))
 	if next_key.is_empty():
-		next_key = "ui.clue.level.%d" % next_level
+		next_key = _level_key(String(_clue.get("type", "port_location")), next_level)
 	var next_text := _tr_or(next_key, String(LEVEL_FALLBACK.get(next_level, "线索")))
 	row.text = _tr_or("ui.clue.next_level", "下一级：%s") % next_text
 	row.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))

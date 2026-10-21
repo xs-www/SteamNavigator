@@ -400,6 +400,8 @@ static func settle_arrival_services(
 	)
 	MarketMemoryService.remember(state, destination)
 	var debt_events := DebtService.check_overdue(state)
+	# 4.4.2：完成委托解锁线索（每份刚完成的普通 / 主线委托按 Core 概率抽一次）。
+	var clue_result := ClueService.on_contract_completed(context, contract_results)
 
 	# Arrival refreshes the whole normal-offer pool. This never fails the
 	# arrival: an empty template set simply clears the pool.
@@ -424,6 +426,7 @@ static func settle_arrival_services(
 	events.append_array(npc_events)
 	events.append_array(debt_events)
 	events.append_array(ClueService.expired_events_of(expired_ids))
+	events.append_array(clue_result.get("events", []))
 	events.append({
 		"type": "contract.offers_refreshed",
 		"payload": {

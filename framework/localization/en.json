@@ -445,6 +445,7 @@
   "ui.button.cancel": "Cancel",
   "ui.confirm.title.voyage": "Confirm departure",
   "ui.confirm.title.explore": "Sail on the clue",
+  "ui.confirm.title.goods": "Sail to the market lead",
   "ui.confirm.route": "Route: %s → %s",
   "ui.confirm.clue": "Clue: %s",
   "ui.confirm.strategy": "Boiler strategy",
@@ -547,6 +548,8 @@
   "ui.error.clue_not_active": "That clue is no longer active",
   "ui.error.clue_max_level": "That clue is already at its highest level",
   "ui.error.clue_expired": "That clue has expired",
+  "ui.error.not_goods_clue": "That is not a market lead",
+  "ui.error.no_travel_target": "That lead has no harbour to sail to",
   "ui.error.already_exploring": "Already on an exploration voyage",
   "ui.error.no_exploration_target": "There is no exploration target nearby"
 }
