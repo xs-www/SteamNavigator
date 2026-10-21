@@ -36,8 +36,16 @@ func bind(text_key: String, progress: int, target: int, translate: Callable = Ca
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var objective := _loc(text_key, "", translate)
 	if target > 1:
-		var template := _loc("ui.story.objective_progress", "目标：%s（%d/%d）", translate)
-		_label.text = template % [objective, clampi(progress, 0, target), target]
+		var remaining := maxi(0, target - clampi(progress, 0, target))
+		var template := (
+			_loc("ui.story.objective_progress_remaining", "目标：%s（%d/%d，还差 %d）", translate)
+			if remaining > 0
+			else _loc("ui.story.objective_progress", "目标：%s（%d/%d）", translate)
+		)
+		var args: Array = [objective, clampi(progress, 0, target), target]
+		if remaining > 0:
+			args.append(remaining)
+		_label.text = template % args
 	else:
 		var template := _loc("ui.story.objective", "目标：%s", translate)
 		_label.text = template % objective

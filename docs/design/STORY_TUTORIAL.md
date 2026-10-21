@@ -44,7 +44,7 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 | `supply_intro` | 解锁 `supply`；目标「为船购买 4 煤 2 水」 | 补给页可用；引导目标条 | `cmd:supply.buy_coal` 累计 ≥ 4 且 `buy_water` ≥ 2 |
 | `supply_hold` | 剧情卡「补给受限」；解锁 `chart`；目标「打开海图」 | 补给购买暂时禁用（story flag）；海图入口出现 | `ui:chart_opened` |
 | `chart_brief` | 海图目标：目的港已标记；目标「关闭海图并继续补给」 | 剧情卡说明「快速航行」 | `ui:chart_closed` |
-| `supply_finish` | 补给恢复；目标「买够 10 煤」 | 限时委托提示（standard 迟到、express 准时） | 煤累计 ≥ 10 |
+| `supply_finish` | 补给恢复；目标「煤舱补到 10 煤」（进度从当前 8/10 起算，显示还差 2） | 限时委托提示（standard 迟到、express 准时） | 煤舱 ≥ 10 |
 | `depart` | 解锁 `chart`；目标「打开海图 → 出航 → 选快速航行」 | 确认弹窗默认策略由 Shell 记忆；剧情提示 | `cmd:voyage.start` |
 | `first_arrival` | 抵达第二港，结算页 | 完成第一主线、解锁邻港 | `ui:arrival_settled` |
 
@@ -249,7 +249,9 @@ guarantee_explore_success / unlock_modules / complete_story
 ## 10. 数值建议（Core 可调，不写死框架）
 
 - 第一主线：自备 `10` 煤（4.5.2 以 `provider: fuel` 从煤舱交付，完成时扣 10；开场
-  `set_ship_fuel = 4` 强制补给），水 2；补给首段目标 4 煤 / 2 水；契约时限用
+  `set_ship_fuel = 4` 强制补给），水 2；补给首段目标 4 煤 / 2 水；关闭海图后目标
+  改为「煤舱达到 10」（进入阶段用 `set_counter_from_ship` 从当前 8 煤起算，购买时用
+  `counter_from: stock` 跟随煤舱，目标条显示「8/10，还差 2」）。契约时限用
   `tutorial_express = max(6, distance / 13.5)`（标准迟到、极速准时）。
 - 第二主线：玩家自备 `8` 件纺织品（市场单价约 66，起始资金足够），委托交付 `6`
   件回起始港，余下 `2` 件在起始港市场卖出；Act 1 市场只开放纺织品 / 香料两种货物。

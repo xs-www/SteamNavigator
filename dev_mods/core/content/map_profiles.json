@@ -200,13 +200,17 @@
                 "title_key": "story.core.supply_finish.title",
                 "body_keys": ["story.core.supply_finish.body.1"]
               },
+              "effects": [
+                {"type": "set_counter_from_ship", "counter": "coal_aboard", "kind": "coal"}
+              ],
               "objective": {
                 "text_key": "story.core.supply_finish.objective",
                 "target": 10
               },
               "advance": {
                 "event": "cmd:supply.buy_coal",
-                "counter": "coal_bought",
+                "counter": "coal_aboard",
+                "counter_from": "stock",
                 "at_least": 10
               }
             },

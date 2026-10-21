@@ -87,7 +87,14 @@ func test_continue_unlocks_market_then_buying_advances_to_the_chart() -> void:
 		var finish_dismiss := shell.find_child("ContinueButton", true, false) as Button
 		assert_not_null(finish_dismiss, "the finish card can be dismissed")
 		finish_dismiss.pressed.emit()
-	shell._run_command(&"supply.buy_coal", {"amount": 6})
+	var finish_objective := shell.find_child("ObjectiveLabel", true, false) as Label
+	assert_not_null(finish_objective, "the finish stage shows its non-blocking objective")
+	if finish_objective != null:
+		assert_true(finish_objective.text.contains("8/10"),
+			"the objective reports the current bunker (8/10), got: %s" % finish_objective.text)
+		assert_true(finish_objective.text.contains("还差 2"),
+			"the objective tells the player exactly how much coal is still missing")
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
 	assert_eq(String(shell._story_vm.get("stage_id", "")), "depart_brief", "10 coal reaches the departure stage")
 	assert_eq(String(shell._story_vm.get("preferred_strategy", "")), "fast", "the departure stage prefers Fast")
 	assert_eq(shell._chart_departure_strategy(), "core:strategy/fast", "the departure dialog defaults to Fast")

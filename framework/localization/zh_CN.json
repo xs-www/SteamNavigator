@@ -585,5 +585,6 @@
   "ui.tavern.investigate": "调查（%d 金 / %d 时）",
   "ui.tavern.npc_title": "NPC 商船动向",
   "ui.tavern.npc_empty": "暂无覆盖到的 NPC 动向（未发现的目的港不会出现）。",
-  "ui.tavern.no_tavern": "当前港口没有酒馆。"
+  "ui.tavern.no_tavern": "当前港口没有酒馆。",
+  "ui.story.objective_progress_remaining": "目标：%s（%d/%d，还差 %d）"
 }

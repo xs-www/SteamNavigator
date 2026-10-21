@@ -100,7 +100,7 @@ func _run() -> void:
 	shell._active_screen = "overview"
 	shell._refresh()
 	_click_continue(shell)
-	shell._run_command(&"supply.buy_coal", {"amount": 6})
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
 	_click_continue(shell)
 	# 模拟抵达第二港（Shell 的到港事件在导航/结算后发出）。
 	var main_contract: Dictionary = context.state.contracts().get("main", {})

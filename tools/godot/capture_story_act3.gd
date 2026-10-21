@@ -195,7 +195,7 @@ func _walk_to_tavern(context: AppContext, shell: Control) -> void:
 	shell._active_screen = "overview"
 	shell._refresh()
 	_click_continue(shell)
-	shell._run_command(&"supply.buy_coal", {"amount": 6})
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
 	_click_continue(shell)
 	var main_contract: Dictionary = context.state.contracts().get("main", {})
 	var second_port := String(main_contract.get("destination", ""))

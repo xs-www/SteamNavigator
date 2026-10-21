@@ -23,6 +23,9 @@ extends RefCounted
 ## - 4.5.5 效果：`add_facility`（给当前港补设施，第三港保证有船厂）、`upgrade_hull`
 ##   （换成 Core 指定、带客舱位的船体，旧船进仓库）；`module_filter()` 给船厂提供
 ##   `unlocked_modules` 裁剪，剧情期间只露出教学模块。
+## - 4.5.6 引导：`set_counter_from_ship` 用船上现有资源初始化计数器，条件支持
+##   `counter_from` 直接读取命令返回的数值（如补给购买后的煤舱 `stock`），
+##   目标条据此显示真实进度与「还差 N」。
 ## - 跳过教程必须解锁 `skip_unlocks` 里的全部功能并执行
 ##   `discover_contract_destination`，保证跳过不会卡死；跳过不会设置保底探索。
 ## - 查询（`story.view`）只输出公开字段；counters / flags 只暴露剧情效果需要的
@@ -323,7 +326,13 @@ static func _conditions_met(story: Dictionary, conditions: Array, event: String,
 			continue
 		seen_counters[counter] = true
 		var counters: Dictionary = story.get("counters", {})
-		counters[counter] = int(counters.get(counter, 0)) + amount
+		# 4.5.6：`counter_from` 直接取命令返回的数值（例如补给购买后的煤舱
+		# `stock`），而不是累加本次数量——目标因此可以写成「煤舱达到 10」。
+		var value_field := String(condition.get("counter_from", ""))
+		if value_field.is_empty():
+			counters[counter] = int(counters.get(counter, 0)) + amount
+		else:
+			counters[counter] = int(data.get(value_field, counters.get(counter, 0)))
 		story["counters"] = counters
 	for raw in conditions:
 		if not (raw is Dictionary):
@@ -428,6 +437,9 @@ static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary,
 		"upgrade_hull":
 			# 4.5.5：船厂替玩家换一艘带客舱位的船（旧船存入当前港仓库）。
 			_upgrade_hull(state, hub, effect)
+		"set_counter_from_ship":
+			# 4.5.6 引导修正：用船上现有资源初始化计数器（如开图后「煤舱 8/10」）。
+			_set_counter_from_ship(state, story, effect)
 		"complete_story":
 			_complete(story, config(state, hub))
 		_:
@@ -609,6 +621,20 @@ static func _upgrade_hull(state: GameState, hub: RegistryHub, effect: Dictionary
 	if bool(effect.get("store_old", true)) and not old_hull_id.is_empty():
 		WarehouseOps.add_module(state, state.current_port_id(), old_hull_id, 1)
 	ShipModules.install_slot(ship, "hull")
+
+
+## 4.5.6：用船上现有资源初始化剧情计数器（`kind` 如 `coal` / `water`），让
+## 「煤舱补到 10」这类目标从进入阶段起就显示真实进度（8/10），而不是 0/10。
+static func _set_counter_from_ship(state: GameState, story: Dictionary, effect: Dictionary) -> void:
+	var counter := String(effect.get("counter", ""))
+	if counter.is_empty():
+		return
+	var kind := String(effect.get("kind", ""))
+	if kind.is_empty():
+		return
+	var counters: Dictionary = story.get("counters", {})
+	counters[counter] = int(float(state.ship().get(kind, 0.0)))
+	story["counters"] = counters
 
 
 ## Reveals the auto-accepted main contract destination on both the played and the

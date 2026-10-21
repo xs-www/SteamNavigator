@@ -585,5 +585,6 @@
   "ui.tavern.investigate": "Investigate (%d gold / %d h)",
   "ui.tavern.npc_title": "NPC Ship Movements",
   "ui.tavern.npc_empty": "No NPC movement is covered yet (unexplored destinations stay hidden).",
-  "ui.tavern.no_tavern": "This harbour has no tavern."
+  "ui.tavern.no_tavern": "This harbour has no tavern.",
+  "ui.story.objective_progress_remaining": "Objective: %s (%d/%d, %d left)"
 }

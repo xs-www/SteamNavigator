@@ -28,6 +28,7 @@ const WATCHDOG_SECONDS := 120.0
 
 const SHOTS := [
 	{"file": "tutorial_supply_hold.png", "label": "补给受限 + 目标条（海图已解锁）"},
+	{"file": "tutorial_supply_remaining.png", "label": "关图后：煤舱 8/10，还差 2"},
 	{"file": "tutorial_depart_fast.png", "label": "首航出航确认（默认极速）"},
 ]
 
@@ -106,7 +107,14 @@ func _run() -> void:
 	shell._active_screen = "overview"
 	shell._refresh()
 	_shell_click_continue(shell)
-	shell._run_command(&"supply.buy_coal", {"amount": 6})
+	await _settle(4, 0.2)
+	var finish_label := shell.find_child("ObjectiveLabel", true, false) as Label
+	if finish_label == null or not finish_label.text.contains("还差 2"):
+		_fail("the supply objective should show the remaining 2 coal, got: %s" % (
+			finish_label.text if finish_label != null else "<none>"
+		))
+	await _capture("tutorial_supply_remaining.png", "关图后煤舱进度与还差数量")
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
 	if String(shell._story_vm.get("stage_id", "")) != "depart_brief":
 		_fail("expected depart_brief, got %s" % str(shell._story_vm))
 		_finish()

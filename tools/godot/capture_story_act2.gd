@@ -149,7 +149,7 @@ func _walk_to_tavern(context: AppContext, shell: Control) -> void:
 	shell._active_screen = "overview"
 	shell._refresh()
 	_click_continue(shell)
-	shell._run_command(&"supply.buy_coal", {"amount": 6})
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
 	_click_continue(shell)
 	# 第二港：抵达后购买 8 件纺织品。
 	var main_contract: Dictionary = context.state.contracts().get("main", {})

@@ -106,9 +106,16 @@ func test_observe_walks_the_first_voyage_act() -> void:
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "supply_finish", "closing the chart restores supplies")
 	assert_false(Array(view.get("lock_actions", [])).has("supply.buy"), "supply buying is unlocked again")
-	var more_coal := context.commands.execute(&"supply.buy_coal", {"amount": 6})
+	var finish_objective: Variant = view.get("objective", null)
+	assert_not_null(finish_objective, "the finish stage shows its objective")
+	if finish_objective is Dictionary:
+		assert_eq(int((finish_objective as Dictionary).get("progress", 0)), 8,
+			"the objective starts from the current bunkers (4 opening + 4 bought)")
+		assert_eq(int((finish_objective as Dictionary).get("target", 0)), 10,
+			"the objective asks for a 10-coal bunker")
+	var more_coal := context.commands.execute(&"supply.buy_coal", {"amount": 2})
 	assert_true(bool(more_coal.get("ok", false)), "buying the remaining coal succeeds: %s" % str(more_coal))
-	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 6}})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": more_coal.get("data", {})})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "depart_brief", "10 coal total reaches the departure stage")
 	assert_eq(String(view.get("preferred_strategy", "")), "fast", "the departure stage prefers Fast")
@@ -424,8 +431,8 @@ func _walk_to_second_port(context: AppContext) -> void:
 	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_water", "data": {"amount": 2}})
 	context.commands.execute(&"story.observe", {"event": "ui:chart_opened", "data": {}})
 	context.commands.execute(&"story.observe", {"event": "ui:chart_closed", "data": {}})
-	context.commands.execute(&"supply.buy_coal", {"amount": 6})
-	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 6}})
+	var finish_coal := context.commands.execute(&"supply.buy_coal", {"amount": 2})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": finish_coal.get("data", {})})
 	# 模拟抵达第二港：Shell 在到港后才会发 `ui:arrival_settled`，此时当前港已是
 	# 第二港，第二主线才会以它为起点生成。
 	var first_contract: Dictionary = context.state.contracts().get("main", {})

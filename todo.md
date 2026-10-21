@@ -46,6 +46,7 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
 
 ## Recently Completed
+- [x] 新手剧情补给引导修正（2026-10-22）：关闭海图后的「煤舱补到 10」目标改为跟踪真实煤舱（进入阶段 8/10，购买时 `counter_from: stock`），目标条显示「8/10，还差 2」，不再要求玩家自己算要买多少；新增 `tutorial_supply_remaining.png` 截图
 - [x] 阶段 4.5 新手剧情 / 教学系统（4.5.1–4.5.6，2026-10-22）：新开局默认五幕教学（获船→补给限购 / 海图首航→第二港市场与回运→酒馆线索 / 保底探索→第三港船厂客舱 / 旅客），剧情接管 `main_01..main_03` 并在第三段后交还沙盒；`data.story` 状态机 + Core JSON 剧情 / 文案 / 解锁、剧情卡 + 非阻塞目标条、功能门禁、跳过保底；补给并市、酒馆替换情报站、两港价差、第三种货、两根线索、保底探索、船厂按 `unlocked_modules` 过滤、1 人客舱与旅客主线全部落地；全量测试 0 failed，截图见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)。
 - [x] 新手剧情 4.5.5 · 船厂 / 客舱 / 旅客（2026-10-22）：新增 `core:cabin/small_cabin`（1 人，120 金 / 8 重量）；`StoryService.module_filter` + `shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库候选；第三港由 Core 补 `shipyard` 并用 `upgrade_hull` 换成带客舱位的中型船体；`refit_unload` 卸货舱 → `refit_cabin` 装客舱 → 自动接 `main_03` 1 名旅客委托（清空货箱、主线链推进 `main_04`）→ `story_complete` 解锁全部；`ContractOps.attach` 不再用空货箱校验货舱容量；截图 `tutorial_shipyard_cabin.png` / `tutorial_shipyard_refit.png` / `tutorial_passenger_contract.png`
 - [x] 新手剧情 4.5.4 · 酒馆 / 线索 / 保底探索（2026-10-22）：情报站页替换为酒馆页（设施 / feature `intel`→`tavern`，旧存档归一兼容）；`tavern.view` 合并物价情报 + 港口线索列表，酒馆可购买 / 调查线索；Core `grant_clue` / `set_market_price_bias` / `guarantee_explore_success` 效果 + 两根剧情线索（L1 → 同港 L3）；起始港与邻港纺织品 / 香料确定性价差且双向交易；第三种货木材解锁；`explore.settle` 对剧情 L3 线索无视 `outcome_roll` 直接成功（消费 flag，跳过不设保底），发现第三港并进入 `third_port` 占位阶段；测试 369 例，截图 `tutorial_tavern*.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png`

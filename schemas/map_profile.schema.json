@@ -516,6 +516,10 @@
               "type": "string",
               "minLength": 1
             },
+            "counter_from": {
+              "type": "string",
+              "minLength": 1
+            },
             "at_least": {
               "type": "integer",
               "minimum": 1
@@ -575,6 +579,10 @@
           "minLength": 1
         },
         "counter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "counter_from": {
           "type": "string",
           "minLength": 1
         },
