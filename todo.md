@@ -6,7 +6,6 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [ ] 海图阶段 4.4 线索扩展（4.4.1–4.4.4 已实现，4.4.5 收尾）：`port_goods` 货物行情线索（已发现港口 + 货物 + 冻结行情 + 分级披露）、`expires_at` 时效与过期历史、`clue.list` 只读查询、旧存档惰性 normalize、在港等待 / 完成委托解锁来源、货物线索「前往该港」（`clue.travel` + 统一确认弹窗 + 普通航行演出）、调查消耗落地（20 金 / 6h / 75%，失败可再试）、线索列表页（active 卡片 + 过期折叠 + 点击回海图选中）；下一步全量测试 / 截图 / 静态文档收尾。契约见 [EXPLORATION_SYSTEM.md §11](docs/design/EXPLORATION_SYSTEM.md)
 
 ## Pending
 
@@ -23,7 +22,6 @@
 
 ### 海图 / 探索
 
-- [ ] 阶段 4.4 线索扩展：`port_goods` 货物类线索与 `expires_at` 时效、在港等待 / 完成委托解锁线索、线索列表页、调查消耗数值落地（4.4.1 已完成，见 In Progress）
 - [ ] 阶段 5 事件化海洋：航行事件预生成与预加载、事件类型（敌对 / 环境 / 奖励 / 秘境）、3D 场景触发与决策、安全航行结算（含探索途中事件与耐久告急）
 - [ ] 阶段 6 固定未知岛屿与基地建设：勘探、设施建造、公开港口
 - [ ] 可选：航线表体积优化（path 抽稀 / 压缩，当前 38 条边 82 KB）
@@ -42,5 +40,6 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- [x] 海图阶段 4.4 线索扩展（5 片全部实现，全套 338 例通过）：`port_goods` 货物行情线索（已发现港口 + 货物 + 冻结行情快照，分级披露港口名 → 参考价区间 → 库存供需 → 精确买卖价）；`expires_at` 时效（传闻 24 / 等待 48 / 情报 72 / 委托 72 游戏小时）与命令路径 sweep，过期进 `data.clues.expired` 历史并释放线索上限；新增 `clue.list` 只读查询与 `sea_chart.view` 类型 / 时效 / 可出航字段（仍不泄露 target_port_id / credibility / 真实 search_zone）；在港等待按档位复利、完成委托按概率解锁线索；货物线索「前往该港」走统一确认弹窗 → `clue.travel` 普通航线；调查消耗落地（20 金 + 在港 6h + 75% 成功率，失败照扣成本但不升级、可再试）；海图顶栏「线索列表」独立页（active 卡片 + 过期折叠 + 点击回海图选中）。旧存档惰性 normalize、不改 schema_version。契约与验收截图见 [EXPLORATION_SYSTEM.md §11](docs/design/EXPLORATION_SYSTEM.md)。
 - [x] 海图阶段 4.3 探索体验修正（5 片全部实现，全套 325 例通过）：雾半径改为 `min(世界短边) × Core 比例` 且双子世界尺寸内容化；线索获得固定 1 级 + 在港逐级 `clue.investigate`（1→4，消耗字段预留 0）；探索失败不消耗线索（记 `attempts`，可立即再次出航）；演出随船照亮 + 抵达/掉头沿途迷雾持久化；普通航线仅在选中港口时显示；删除详细总览旧海图；删除出航准备页、出航确认（预估 + 锅炉策略，默认上次）移入海图弹窗；资源演出连续读数、出发只扣工资、结算按实际航行小时一次落账。契约与实现台账见 [EXPLORATION_SYSTEM.md §10](docs/design/EXPLORATION_SYSTEM.md)，截图见 [exploration/](docs/design/screenshots/exploration/)。
 - [x] 武器独立建模批次 1：5 件舰载武器（`SN_Weapon_DeckGun` / `HeavyCannon` / `Mortar` / `Repeater` / `Broadside`），9,704 tri、共享贴图、Yaw/Pitch Pivot、GLB + Core 资产副本 + 单件/lineup 预览；纯资产交付，未登记 manifest、未接战斗逻辑。工单 [sn_weapon_batch1.json](tools/modeling/briefs/sn_weapon_batch1.json)，验收 [WEAPON_BATCH1_ACCEPTANCE.md](docs/archive/WEAPON_BATCH1_ACCEPTANCE.md)，映射 [ASSET_MAP.md](docs/design/ASSET_MAP.md#3d-舰载武器五件套2026-10-21)。

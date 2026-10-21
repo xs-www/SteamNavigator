@@ -764,3 +764,22 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_voyage_p
   策略切换，默认上次选择）移入海图弹窗；详细总览删除旧海图。
 - §8.1：资源在演出中按航行时间连续显示（顶栏煤 / 水插值），领域在结算时一次性落账；
   出发只扣工资，抵达 / 漂流 / 掉头按实际航行小时扣款。
+
+## 17. 阶段 4.4 线索扩展（Implemented，2026-10-21）
+
+线索系统扩展按 4.4.1–4.4.5 五片全部实现；完整数据形状、命令 / 查询、Core JSON 字段、
+分片验收与截图见 [EXPLORATION_SYSTEM.md §11](EXPLORATION_SYSTEM.md)。
+
+- §7.1 / §7.5：`Clue` 增加 `type` / `target_goods_id` / `goods_snapshot` / `expires_at` /
+  `unlock_source`（旧存档惰性 normalize）；新增 `port_goods` 货物行情线索——目标是
+  **已发现、非当前港**的港口，获得时冻结买价 / 卖价 / 库存 / 供需，按来源
+  24 / 48 / 72 游戏小时到期；到期由命令路径 `sweep_expired` 移入
+  `data.clues.expired` 历史并释放线索上限。
+- §7.2 / §7.4：货物线索分级 = 港口名 → 参考价区间 → 库存供需 → 精确行情；「前往该港」
+  走普通航线（`clue.travel`，目标港在领域层解析，查询仍不泄露 target id）。在港等待
+  按档位复利出线索、完成委托按概率解锁线索；调查消耗 20 金 / 6h / 75%。
+- §9：海图顶栏新增「线索列表」入口，独立页展示 active 线索卡片与过期折叠历史，
+  点击回到海图并选中该线索（货物线索没有海图几何也能打开）。
+- 验收：全套 **338 例 / 0 失败**；截图见
+  [exploration/](screenshots/exploration/) 的 `clue_goods_lead` / `clue_goods_depart` /
+  `clue_investigate_cost` / `clue_investigate_result` / `clue_log`（两次运行逐字一致）。

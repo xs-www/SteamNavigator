@@ -109,6 +109,7 @@ func _run() -> void:
 	screen._on_clue_clicked(clue_id)
 	await _settle(6, 0.3)
 	_assert_goods_panel(context, screen, prepared)
+	_freeze_chart(screen)
 	await _capture(String(SHOTS[0]["file"]), String(SHOTS[0]["label"]))
 
 	# ── Shot 2: the shared departure confirmation dialog for the goods lead. ──
@@ -128,6 +129,7 @@ func _run() -> void:
 	_assert_true(bool(dialog_screen.is_departure_open()),
 		"the goods lead opens the shared departure confirmation")
 	_assert_departure_dialog(context, dialog_screen)
+	_freeze_chart(dialog_screen)
 	await _capture(String(SHOTS[1]["file"]), String(SHOTS[1]["label"]))
 
 	# ── 4.4.3: investigation cost + result. Cancel the dialog, acquire a second
@@ -153,8 +155,12 @@ func _run() -> void:
 	second_screen._on_clue_clicked(second_id)
 	await _settle(6, 0.3)
 	_assert_investigation_cost(context, second_screen)
+	_freeze_chart(second_screen)
 	await _capture(String(SHOTS[2]["file"]), String(SHOTS[2]["label"]))
 	await _assert_investigation_result(context, shell, second_screen, second_id)
+	var rebuilt_screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
+	if not rebuilt_screens.is_empty():
+		_freeze_chart(rebuilt_screens[0])
 	await _capture(String(SHOTS[3]["file"]), String(SHOTS[3]["label"]))
 
 	# 等待来源证据放在截图之后：连续等待会推进时间，可能让行情线索自然过期。
@@ -481,6 +487,19 @@ func _open_chart(shell: Control) -> Variant:
 	if screens.is_empty():
 		return null
 	return screens[0]
+
+
+## 截图确定性：海图的当前港脉冲 / 罗盘使用真实时间 `_time`，两次运行相位不同会让
+## PNG 不一致。截图前停掉视图的 `_process` 并把相位固定，再重绘一帧。
+func _freeze_chart(screen: Variant) -> void:
+	if screen == null or not screen.has_method("get_chart"):
+		return
+	var chart: Variant = screen.get_chart()
+	if chart == null:
+		return
+	chart.set_process(false)
+	chart._time = 1.2345
+	chart.queue_redraw()
 
 
 func _force_chinese_locale(shell: Control, context: AppContext) -> void:
