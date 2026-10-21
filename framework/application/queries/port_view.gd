@@ -238,6 +238,7 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 		"modules": modules,
 		"hull_model_key": String(hull.information.get("model", "")) if hull != null else "",
 		"hull_model_path": _asset_path(context, hull.asset_uri("model")) if hull != null else "",
+		"visual": ShipVisualPlan.resolve(hub, context.assets, ship),
 		"transit_modules": transit_entries,
 		"transit_weight": WarehouseOps.transit_module_weight(hub, ship),
 		"cargo": cargo,

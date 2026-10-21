@@ -559,6 +559,7 @@ var _ship_meshes_after := 0
 var _ship_surfaces_before := 0
 var _ship_surfaces_after := 0
 var _ship_fallback := false
+var _ship_assembly_report: Dictionary = {}
 var _signature := ""
 var _enter_payload: Dictionary = {}
 var _time := 0.0
@@ -667,6 +668,20 @@ func facility_screen_anchor(facility: String) -> Vector2:
 
 func has_ship() -> bool:
 	return _ship_root != null and is_instance_valid(_ship_root) and _ship_root.get_child_count() > 0
+
+
+## Assembler report captured when the player hull was mounted (`{}` on the
+## legacy single-hull path). Rig / weapon node references inside it are baked
+## into `ShipBatches` by `_batch_ship_visual()`, so this is a snapshot: use the
+## string fields (`rig.mode`, `weapons.mounted[].asset`, ...) after batching.
+func ship_assembly_report() -> Dictionary:
+	return _ship_assembly_report.duplicate(true)
+
+
+## Rig verdict of the mounted player hull (`mode` / `mounted` / `hidden` / ...).
+func ship_rig_report() -> Dictionary:
+	var rig: Variant = _ship_assembly_report.get("rig", {})
+	return (rig as Dictionary).duplicate(true) if rig is Dictionary else {}
 
 
 ## Emits the player intent; the host / page decides where it leads.
@@ -3183,17 +3198,52 @@ func _transforms_aabb(mesh: Mesh, transforms: Array[Transform3D]) -> AABB:
 # --- L5 player ship ---------------------------------------------------------
 
 func _rebuild_ship(ship: Dictionary) -> void:
+	# Stage 5: the ship ViewModel may carry a resolved visual plan (hull + rig
+	# kit + weapons). Old ViewModels / saves have no `visual` block and keep the
+	# legacy single-hull path below.
+	var plan_value: Variant = ship.get("visual", null)
+	if plan_value is Dictionary and not (plan_value as Dictionary).is_empty():
+		if _rebuild_ship_from_plan(plan_value as Dictionary):
+			return
 	var path := String(ship.get("hull_model_path", ""))
 	if path.is_empty():
 		path = _fallback_path_for_tier(int(ship.get("hull_tier", 1)))
+	_ship_assembly_report = {}
 	var visual := _instantiate_visual(path)
 	if visual == null:
 		_disable_boat_foam()
 		return
+	_ship_root = _place_player_ship_root()
+	_ship_root.add_child(visual)
+	_finish_ship_visual(visual)
+
+
+## Assembles the player ship through `ShipVisualAssembler` (hull GLB + rig_kit
+## parts + weapons). Returns `false` when the planned hull cannot be
+## instantiated so the caller can fall back to the legacy hull path.
+func _rebuild_ship_from_plan(plan: Dictionary) -> bool:
+	var root := _place_player_ship_root()
+	_ship_root = root
+	var result := ShipVisualAssembler.assemble(plan, root)
+	var visual_value: Variant = result.get("visual", null)
+	if not (visual_value is Node3D):
+		_content.remove_child(root)
+		root.queue_free()
+		_ship_root = null
+		_ship_assembly_report = {}
+		return false
+	var report_value: Variant = result.get("report", {})
+	_ship_assembly_report = report_value if report_value is Dictionary else {}
+	_finish_ship_visual(visual_value as Node3D)
+	return true
+
+
+## Creates the `PlayerShip` root at the current station berth (shared by the
+## legacy and assembler paths). A rebuild keeps the current station: the hull is
+## rebuilt at its berth, not teleported back to the harbour reference shot.
+func _place_player_ship_root() -> Node3D:
 	var root := Node3D.new()
 	root.name = "PlayerShip"
-	# A rebuild keeps the current station: the hull is rebuilt at its berth, not
-	# teleported back to the harbour reference shot.
 	_ship_x = _ship_moor_x
 	_ship_z = _ship_moor_z
 	_ship_yaw = _ship_moor_yaw
@@ -3202,16 +3252,19 @@ func _rebuild_ship(ship: Dictionary) -> void:
 	root.scale = Vector3.ONE * SHIP_SCALE
 	root.rotation = Vector3(0.0, _ship_yaw, 0.0)
 	_content.add_child(root)
-	_ship_root = root
-	root.add_child(visual)
-	var bounds := StageKit.visual_aabb(root)
+	return root
+
+
+## Foam bounds + rigid batching for a hull already mounted under `_ship_root`.
+func _finish_ship_visual(visual: Node3D) -> void:
+	var bounds := StageKit.visual_aabb(_ship_root)
 	# The foam ring is configured from the *un-batched* hull, then the hull is
 	# rigidly baked into ship-local draw batches. The batches stay children of
 	# `_ship_root`, so the station transit / bob / turn keeps moving the whole
 	# ship. The centre offset is stored in ship-local space so the foam can follow
 	# the hull between berths.
 	_ship_bounds = bounds
-	_ship_bounds_offset = bounds.get_center() - root.position
+	_ship_bounds_offset = bounds.get_center() - _ship_root.position
 	if _water_material != null:
 		StageKit.configure_boat_foam(_water_material, bounds)
 		_water_material.set_shader_parameter("boat_yaw", _ship_yaw)

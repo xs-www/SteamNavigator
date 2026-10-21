@@ -8,6 +8,12 @@ extends LocationStage
 ## available the stage stays empty and the shipyard keeps `SNShipView`'s
 ## procedural placeholder.
 ##
+## Stage 5 (ShipVisualAssembler): when the ship ViewModel carries a resolved
+## `visual` plan the stage assembles hull + rig kit + weapons through
+## `ShipVisualAssembler`; a failed plan falls back to the legacy
+## `hull_model_path` / tier / prototype chain, so old saves and missing content
+## keep the previous single-hull behaviour.
+##
 ## This file is the migration of the first 2.5D slice: environment, lights,
 ## water, camera framing and bobbing live here, while `SNStageHost` owns the
 ## viewport / lifecycle.
@@ -32,6 +38,8 @@ var _water_material: ShaderMaterial
 var _model_path := ""
 var _ship_view: Dictionary = {}
 var _time := 0.0
+var _plan_signature := ""
+var _assembly_report: Dictionary = {}
 
 
 func _ready() -> void:
@@ -65,6 +73,28 @@ func has_ship() -> bool:
 
 func model_path() -> String:
 	return _model_path
+
+
+## Assembler report of the current ship (`{}` for the legacy single-hull path):
+## `hull_asset` / `fallback` / `rig` / `weapons` / `triangles`.
+func assembly_report() -> Dictionary:
+	return _assembly_report.duplicate(true)
+
+
+## Rig assembly verdict (`mode` = replace/baked, `mounted`, `skipped`, `hidden`).
+func rig_report() -> Dictionary:
+	var rig: Variant = _assembly_report.get("rig", {})
+	return (rig as Dictionary).duplicate(true) if rig is Dictionary else {}
+
+
+## Weapon mount handles of the current ship (empty on the legacy path). The
+## stage does not batch hulls, so these stay valid for the ship's lifetime.
+func weapon_mounts() -> Array:
+	var weapons: Variant = _assembly_report.get("weapons", {})
+	if not (weapons is Dictionary):
+		return []
+	var mounts: Variant = (weapons as Dictionary).get("mounts", [])
+	return mounts if mounts is Array else []
 
 
 # --- Construction ------------------------------------------------------------
@@ -108,6 +138,17 @@ func _add_camera() -> void:
 # --- Ship visual -------------------------------------------------------------
 
 func _apply_model() -> void:
+	# Prefer the resolved visual plan (hull + rig kit + weapons). The legacy
+	# path is kept for old ViewModels / saves without a `visual` block.
+	var plan_value: Variant = _ship_view.get("visual", null)
+	if plan_value is Dictionary:
+		var plan: Dictionary = plan_value
+		var hull_value: Variant = plan.get("hull", {})
+		if hull_value is Dictionary:
+			var hull_plan: Dictionary = hull_value
+			if not String(hull_plan.get("model_path", "")).is_empty():
+				_rebuild_ship_from_plan(plan)
+				return
 	# The shipyard view resolves the hull definition's `information.model` asset
 	# key to a physical path inside the mounted content mod. The tier mapping is
 	# only a fallback for dev builds that still carry PCK models.
@@ -124,16 +165,43 @@ func _fallback_path_for_tier(tier: int) -> String:
 	return FALLBACK_MODEL
 
 
+func _rebuild_ship_from_plan(plan: Dictionary) -> void:
+	var signature := str(plan)
+	if signature == _plan_signature and has_ship():
+		return
+	_plan_signature = signature
+	_clear_ship_root()
+	_ship_root = Node3D.new()
+	_ship_root.name = "Ship"
+	add_child(_ship_root)
+	var result := ShipVisualAssembler.assemble(plan, _ship_root)
+	var visual_value: Variant = result.get("visual", null)
+	if not (visual_value is Node3D):
+		# The planned hull could not be instantiated: fall back to the legacy
+		# tier / prototype chain so the stage still shows a ship.
+		_plan_signature = ""
+		_assembly_report = {}
+		_clear_ship_root()
+		_rebuild_ship(_fallback_path_for_tier(int(_ship_view.get("hull_tier", 1))))
+		return
+	var visual: Node3D = visual_value
+	var report_value: Variant = result.get("report", {})
+	var report: Dictionary = report_value if report_value is Dictionary else {}
+	_assembly_report = report
+	_model_path = String(report.get("hull_path", ""))
+	_frame_ship(visual)
+
+
 func _rebuild_ship(path: String) -> void:
 	if path == _model_path and has_ship():
 		return
-	if _ship_root != null:
-		remove_child(_ship_root)
-		_ship_root.queue_free()
+	_clear_ship_root()
 	_ship_root = Node3D.new()
 	_ship_root.name = "Ship"
 	add_child(_ship_root)
 	_model_path = path
+	_plan_signature = ""
+	_assembly_report = {}
 	var visual := ContentAssetLoader.instantiate_model(path)
 	if visual == null and ResourceLoader.exists(path):
 		var packed := load(path) as PackedScene
@@ -141,6 +209,19 @@ func _rebuild_ship(path: String) -> void:
 	if visual == null:
 		return
 	_ship_root.add_child(visual)
+	_frame_ship(visual)
+
+
+func _clear_ship_root() -> void:
+	if _ship_root == null:
+		return
+	if _ship_root.get_parent() == self:
+		remove_child(_ship_root)
+	_ship_root.queue_free()
+	_ship_root = null
+
+
+func _frame_ship(visual: Node3D) -> void:
 	var bounds := StageKit.visual_aabb(visual)
 	StageKit.frame_camera(_camera, bounds, CAMERA_DIRECTION, CAMERA_FOV, FRAMING_MARGIN)
 	StageKit.configure_boat_foam(_water_material, bounds)

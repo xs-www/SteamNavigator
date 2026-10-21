@@ -71,10 +71,73 @@
             },
             "size_tag": {
               "enum": ["small", "medium", "large"]
+            },
+            "rig_plan": {
+              "$ref": "#/$defs/rig_plan"
             }
           }
         }
       ]
+    },
+    "rig_plan": {
+      "description": "运行时帆索装配计划（ShipVisualAssembler）：声明该船体用哪套 rig_kit 部件替换烘焙帆索。GLB 里的 SN_Socket_Mast/Yard/Sail_* 空节点仍是安装点唯一真源；本字段只决定装哪些资产、隐藏哪些烘焙节点。缺省 = 保留 GLB 内烘焙帆索（rig_mode=baked）。",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "description": "帆型 / 蒸汽船配置，用于报告与套件族选择（sail = 帆船桅，steam = 蒸汽船桅）。",
+          "enum": ["sail", "steam"]
+        },
+        "mount_kinds": {
+          "description": "要填充的船体 socket 类型；缺省 [mast]。yard/sail 只在套件尺寸与烘焙件吻合时才声明。",
+          "type": "array",
+          "items": {
+            "enum": ["mast", "yard", "sail"]
+          },
+          "uniqueItems": true,
+          "maxItems": 3
+        },
+        "hide_nodes": {
+          "description": "装配前隐藏（并从渲染中移除）的烘焙节点名，覆盖被 kit 替换的桅 / 桁；不写则保留原船，避免双层帆索。",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_]+$"
+          },
+          "maxItems": 64
+        },
+        "mast_asset": {
+          "description": "桅杆套件资源键（如 model.rig.mast_sail / model.rig.mast_steam）。",
+          "type": "string",
+          "pattern": "^[a-z0-9_.]+$"
+        },
+        "yard_asset": {
+          "description": "横桁 / 斜桁套件资源键。",
+          "type": "string",
+          "pattern": "^[a-z0-9_.]+$"
+        },
+        "sail_asset": {
+          "description": "帆面套件资源键。",
+          "type": "string",
+          "pattern": "^[a-z0-9_.]+$"
+        },
+        "per_mast_assets": {
+          "description": "每个桅点额外挂的索具套件资源键（侧支索 / 前后支索 / 动索）。",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_.]+$"
+          },
+          "maxItems": 8
+        },
+        "yaw_deg": {
+          "description": "挂件整体绕 socket 局部 +Y 的附加旋转（度），用于让套件轴向与烘焙布局对齐。",
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      }
     }
   }
 }

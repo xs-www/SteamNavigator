@@ -52,7 +52,13 @@
         "cargo_slots": 2,
         "cabin_slots": 1,
         "base_risk": 0.02,
-        "size_tag": "medium"
+        "size_tag": "medium",
+        "rig_plan": {
+          "kind": "sail",
+          "mount_kinds": ["mast"],
+          "hide_nodes": ["SN_SF_Mast_Fore", "SN_SF_Mast_Main"],
+          "mast_asset": "model.rig.mast_sail"
+        }
       }
     },
     {
@@ -81,7 +87,14 @@
         "cargo_slots": 3,
         "cabin_slots": 1,
         "base_risk": 0.02,
-        "size_tag": "large"
+        "size_tag": "large",
+        "rig_plan": {
+          "kind": "steam",
+          "mount_kinds": ["mast", "yard"],
+          "hide_nodes": ["SN_PF_Mast_Fore", "SN_PF_Mast_Main", "SN_PF_Yards"],
+          "mast_asset": "model.rig.mast_steam",
+          "yard_asset": "model.rig.yard"
+        }
       }
     },
     {

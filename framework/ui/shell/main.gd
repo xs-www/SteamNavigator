@@ -1443,12 +1443,18 @@ func _port_stage_payload(data: Dictionary) -> Dictionary:
 		port_payload["palette"] = (port["palette"] as Dictionary).duplicate(true)
 	if not String(port.get("landmark_path", "")).is_empty():
 		port_payload["landmark_path"] = String(port.get("landmark_path", ""))
+	var ship_payload := {
+		"hull_model_path": String(ship.get("hull_model_path", "")),
+		"hull_tier": int(ship.get("hull_tier", 1)),
+	}
+	# Stage 5: forward the resolved visual plan (hull + rig kit + weapon slots)
+	# so PortStage can assemble the player ship; absent on old saves / VMs.
+	var visual: Variant = ship.get("visual", null)
+	if visual is Dictionary:
+		ship_payload["visual"] = (visual as Dictionary).duplicate(true)
 	return {
 		"port": port_payload,
-		"ship": {
-			"hull_model_path": String(ship.get("hull_model_path", "")),
-			"hull_tier": int(ship.get("hull_tier", 1)),
-		},
+		"ship": ship_payload,
 	}
 
 

@@ -46,6 +46,8 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_legacy_uv_assets_b.gd",
 	"res://framework/tests/cases/test_ship_weapon_sockets.gd",
 	"res://framework/tests/cases/test_rig_kit.gd",
+	"res://framework/tests/cases/test_ship_weapon_assembly.gd",
+	"res://framework/tests/cases/test_ship_visual_assembler.gd",
 	"res://framework/tests/cases/test_no_core_ids.gd",
 	"res://framework/tests/cases/test_stage_host.gd",
 	"res://framework/tests/cases/test_world_generator.gd",
