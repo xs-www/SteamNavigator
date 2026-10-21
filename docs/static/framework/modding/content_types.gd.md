@@ -26,16 +26,18 @@
 | `EVENT` | L23 |
 | `PATCH` | L24 |
 | `SCHEMA_PATHS` | L26 |
-| `SINGULAR` | L45 |
-| `MODULE_TYPES` | L64 |
-| `all() -> Array[StringName]` | L67 |
-| `registry_types() -> Array[StringName]` | L76 |
-| `is_known(content_type: StringName) -> bool` | L82 |
-| `is_module(content_type: StringName) -> bool` | L86 |
-| `is_patch(content_type: StringName) -> bool` | L90 |
-| `schema_path(content_type: StringName) -> String` | L94 |
-| `singular(content_type: StringName) -> String` | L98 |
-| `from_singular(singular_name: String) -> StringName` | L102 |
+| `SCHEMA_VERSIONS` | L45 |
+| `SINGULAR` | L64 |
+| `MODULE_TYPES` | L83 |
+| `all() -> Array[StringName]` | L86 |
+| `registry_types() -> Array[StringName]` | L95 |
+| `is_known(content_type: StringName) -> bool` | L101 |
+| `is_module(content_type: StringName) -> bool` | L105 |
+| `is_patch(content_type: StringName) -> bool` | L109 |
+| `schema_path(content_type: StringName) -> String` | L113 |
+| `schema_version(content_type: StringName) -> String` | L117 |
+| `singular(content_type: StringName) -> String` | L121 |
+| `from_singular(singular_name: String) -> StringName` | L125 |
 
 ## 契约与约束
 

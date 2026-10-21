@@ -7,6 +7,8 @@
 - 正式版方向：[持久模拟经营战役](docs/specs/PERSISTENT_CAMPAIGN_ARCHITECTURE.md)
 - 正式版路线图：[从 MVP 到持久模拟经营](docs/design/FULL_GAME_ROADMAP.md)
 - 实体契约 v2：[content_types 与 Schema 2.0 契约](docs/design/ENTITY_CONTRACT_V2.md)
+- Content Schema 2.0 迁移落地方案：[分层迁移与切片计划](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md)
+- 世界与战役运行时实现契约（Phase B）：[WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 - 模块实例与部件损耗：[SHIP_MODULE_INSTANCES.md](docs/specs/SHIP_MODULE_INSTANCES.md)
 - 战斗架构采纳边界：[战斗系统架构评审](docs/specs/COMBAT_ARCHITECTURE_REVIEW.md)
 - 迭代 1 实现契约：[MVP 闭环](docs/specs/ITERATION_1_MVP_LOOP.md)
@@ -61,7 +63,7 @@
 - **2.5D 城镇建筑升级 · 批次 A（5 栋 LOD1 + 共享贴图 + 檐口修复）**：5 栋铁港建筑（长仓库 / 短仓库 / 港务办公楼 / 货棚 / 酒馆）交付 LOD1：**6 564 tri**（LOD0 的 21.85%，逐栋 ≤35%），LOD1↔LOD0 包围盒逐轴 0.000 m、轴心落地、网格健康全 0；`Warehouse_Short` LOD0 檐口顶皮与墙线 **−3.543 cm → 0.000 cm**（仅 8 个屋面顶点）。10 个建筑 GLB 改为「GLB + 外部共享贴图」：11 张 `iron_harbor_shared` PNG 与手写 trim tile 逐字节一致，`ContentAssetLoader` 按 URI 共享 `Texture2D`，PortStage 舞台分析面 **91→73**、draw calls preview **89→71**（≤75 目标）、静态批次 59→41；5 栋模型+纹理 **4.17 MB**（≤4.5 MB），松散 / `.snavmod.zip` / 发布包三路径实测。LOD1 仅交付资产（未接运行时切换，`model.prop.*_lod1` 已登记）。验收见 [IRON_HARBOR_ARCHITECTURE_BATCH_A.md](docs/archive/IRON_HARBOR_ARCHITECTURE_BATCH_A.md)，分项见 [LOD1 构建](docs/archive/IRON_HARBOR_ARCHITECTURE_LOD1_BUILD.md) / [独立验收](docs/archive/IRON_HARBOR_ARCHITECTURE_LOD1_VERIFY.md) / [共享贴图](docs/archive/IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md)。截图：[LOD1 全栋对比](docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD1_vs_LOD0_street_3q_1280x800.png) / [PortStage LOD0 1440×900](docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD0_port_stage_1440x900.png) / [LOD1 960×540](docs/design/screenshots/iron_harbor_architecture/SN_HT_Warehouse_Long_LOD1_port_stage_960x540.png)。
 - **3D 港口样片（独立场景）**：`dev_scenes/harbor/` 复用 `assets/models` 的 1795 双桅纵帆船 `SN_Schooner_Fame`（黑船身 + 赭黄腰线 + 双桅斜桁帆，用户要求无星条旗） / 塔吊 / 码头道具搭一个固定机位小港口，自写 Godot 水面着色器（顶点波浪 + 噪声法线 + 菲涅耳天空反射 + 太阳耀斑 + 岸线/船体泡沫 + 远水雾色），船体随与着色器同源的波浪起伏。**不接入主场景**，仅供水面观感与构图验证；说明见 [dev_scenes/harbor/README.md](dev_scenes/harbor/README.md)，预览见 [港口样片截图](docs/design/screenshots/harbor_diorama_schooner.png) 与 [纵帆船近景](docs/design/screenshots/harbor_diorama_schooner_detail.png)。
 - SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
-- [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`；实体资源使用主题化可搜索选择器，船体可在独立模块区配置槽位。
+- [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`；实体资源使用主题化可搜索选择器，船体可在独立模块区配置槽位；已适配 Content Schema 2.0 草案（8 类世界 / 战役类型可编辑、校验并导出 `schema_version: "2.0"`，运行时仍只加载 1.0）。
 - [SNBattleSim](SNBattleSim/README.md)：独立 2D 舰队战斗规则试验台，验证固定三船体、多武器、视野、炮击、货船护航和自定义武器。
 
 尚未完成、但已留出扩展位置的内容见 [todo.md](todo.md)。
@@ -285,7 +287,7 @@ node SNModMaker/tools/serve.mjs
 - 全屏航海图页已接入 Shell（M 键 / 导航「海图」/ 状态条「海图 ▶」/ 港口招牌；出航确认在页内弹窗），且 `run.start` 会生成与对局地图同 ID 的坐标空间孪生世界（`state.data["world_map"]`），海图在真实对局直接出图：起港已发现/访问/当前并揭示迷雾，抵达自动记录访问并揭示泊位与沿途迷雾。孪生世界的连通图是自身 MST 图，与抽象地图航线不完全一致（出航仍按抽象地图邻居可航行）；阶段 3 航行演出已把这些航线画出来（船只沿海图航线行进），但出航判定仍走抽象地图，二者的统一留待后续阶段。旧存档（无 `world_map`）海图显示无数据提示，按需重开新局。
 - 存档已支持 save schema 1.x → 2.0 迁移（回填 campaign 元数据与分区，state/content schema 分离）；模块实例表 `ship.module_instances` 与 campaign 分区均由惰性 ensure 补齐；声明式 ID 别名迁移仍未实现，新字段继续通过惰性 ensure 补齐。
 - 模块 condition 目前只影响失效标记与维修费用，尚未改变航速/容量等派生属性；统一 Module 迁移（definition_id 移入实例）与战斗期性能影响在后续阶段。
-- Content Schema 2.0 目前只有 `schemas/v2` 草案（`common` + start/world/region/site/route/weather/faction/discovery），尚未接入运行时加载；现有内容仍使用 Schema 1.0。
+- Content Schema 2.0 目前只有 `schemas/v2` 草案（`common` + start/world/region/site/route/weather/faction/discovery），**运行时**尚未接入加载（现有内容仍使用 Schema 1.0）；SNModMaker 与 Content CLI 已可创建、编辑、校验并导出这些草案类型（内容文件写 `schema_version: "2.0"`，编辑器侧栏标注「运行时不加载」，草案文件在校验中给 `draft_content` 警告）。
 - 无头退出时 Godot 会报告静态注册表/脚本的 ObjectDB 泄漏警告；测试退出码仍为 0，不影响运行。
 
 ## 文档与协作

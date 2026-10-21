@@ -1,6 +1,6 @@
 # `SNModMaker/js/validate.js`
 
-> 作用：JSON Schema 子集校验器与 Steam Navigator 项目语义校验：ID、引用、本地化、补丁与清单一致性。
+> 作用：JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁与清单一致性。
 
 - 关键依赖：`schema-bundle.js`、`catalog.js`、`core-index.js（可选外部引用检查）`
 - 类型：浏览器经典脚本
@@ -9,43 +9,51 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MAX_ERRORS` | L15 |
-| `MAX_DEPTH` | L16 |
-| `SEMVER_RE` | L17 |
-| `MOD_ID_RE` | L18 |
-| `ID_REF_RE` | L19 |
-| `ASSET_URI_RE` | L20 |
-| `ASSET_EXTENSIONS` | L21 |
-| `FORBIDDEN_EXTENSIONS` | L22 |
-| `REF_TYPE_BY_FIELD` | L25 |
-| `schemas()` | L41 |
-| `catalog()` | L45 |
-| `pointerEscape(text)` | L49 |
-| `pointerUnescape(text)` | L53 |
-| `joinPointer(base, key)` | L57 |
-| `resolveRef(ref, baseFile)` | L61 |
-| `deref(schema, file, seen)` | L84 |
-| `flattenObject(schema, file, seen)` | L110 |
-| `typeOf(value)` | L138 |
-| `matchesType(value, type)` | L144 |
-| `validateSchema(instance, schema, file)` | L151 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L155 |
-| `parseSemver(text)` | L315 |
-| `versionRangeError(text)` | L326 |
-| `safePath(path)` | L343 |
-| `extensionOf(path)` | L353 |
-| `isForbiddenPath(path)` | L359 |
-| `walkStrings(value, path, callback, depth)` | L363 |
-| `referencedIdType(id)` | L378 |
-| `expectedRefType(path)` | L383 |
-| `validateProject(project, options)` | L393 |
-| `finish(issues)` | L721 |
-| `byDefinition(issues)` | L730 |
-| `SNValidate (global)` | L743 |
+| `MAX_ERRORS` | L19 |
+| `MAX_DEPTH` | L20 |
+| `SEMVER_RE` | L21 |
+| `MOD_ID_RE` | L22 |
+| `ID_REF_RE` | L23 |
+| `ASSET_URI_RE` | L24 |
+| `ASSET_EXTENSIONS` | L25 |
+| `FORBIDDEN_EXTENSIONS` | L26 |
+| `SUPPORTED_SCHEMA_VERSIONS` | L29 |
+| `DEFAULT_SCHEMA_VERSION` | L30 |
+| `REF_TYPE_BY_FIELD` | L32 |
+| `schemas()` | L48 |
+| `catalog()` | L52 |
+| `schemaVersionFor(typeKeyOrFile)` | L62 |
+| `normalizeSchemaPath(file)` | L73 |
+| `pointerEscape(text)` | L83 |
+| `pointerUnescape(text)` | L87 |
+| `joinPointer(base, key)` | L91 |
+| `resolveRef(ref, baseFile)` | L104 |
+| `deref(schema, file, seen)` | L136 |
+| `flattenObject(schema, file, seen)` | L162 |
+| `typeOf(value)` | L190 |
+| `matchesType(value, type)` | L196 |
+| `validateSchema(instance, schema, file)` | L203 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L207 |
+| `parseSemver(text)` | L367 |
+| `versionRangeError(text)` | L378 |
+| `safePath(path)` | L395 |
+| `extensionOf(path)` | L405 |
+| `isForbiddenPath(path)` | L411 |
+| `walkStrings(value, path, callback, depth)` | L415 |
+| `referencedIdType(id)` | L430 |
+| `expectedRefType(path)` | L435 |
+| `validateProject(project, options)` | L445 |
+| `finish(issues)` | L796 |
+| `byDefinition(issues)` | L805 |
+| `SNValidate (global)` | L818 |
 
 ## 契约与约束
 
 - Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。
+- `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
+- `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（草案 2.0），最后回退 1.0。
+- 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
+- 草案内容文件每文件一条 `draft_content` 警告；草案 capability 未写入 `manifest.capabilities` 时按 capability 去重报 `capability_undeclared`；草案跨引用跳过 `ref_core_unknown`。
 - 错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。
 - 语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。
 - 实体 information.texture/model 支持当前模组裸资源键与完整 asset:// URI；当前模组和 Core 引用必须存在且格式匹配。
@@ -64,9 +72,10 @@
 
 ### `validateProject(project)`
 
-- 先跑 Manifest Schema 与内容文件 Schema，再检查命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。
+- 先跑 Manifest Schema 与内容文件 Schema，再检查 schema_version、命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。
+- 草案实例缺省版本按类型取 2.0，避免 v2 Schema 的 `schema_version` const 误报。
 - 资源裸键按当前模组 manifest.assets 解析；asset://core/<key> 使用嵌入 Core 索引校验，其他外部模组 URI 在无法读取其清单时给出未验证提示。
-- 引用本模组缺失为 error；Core 缺失为 warning；其他命名空间只提示外部引用。
+- 引用本模组缺失为 error；Core 缺失为 warning（草案文件跳过）；其他命名空间只提示外部引用。
 - 结果包含 counts 与 stats（定义/文件/语言/资源数量）。
 
 模块索引：[SNModMaker](../README.md)

@@ -10,5 +10,6 @@
 - `[hidden] { display: none !important; }` 支撑视图与过滤逻辑。
 - 资源候选菜单使用编辑器主题、绝对定位和滚动上限；船体模块卡在窄屏断点退化为单列。
 - 断点 1240 / 1000 / 800 / 760 / 560：编辑区单列、侧栏图标化、顶栏换行与操作压缩。
+- Schema 2.0 草案分区与徽标（`side-group-draft` / `side-draft-tag` / `draft-badge` / `draft-notice` / `mini-badge.draft`）复用既有暗色变量，不引入新字体或配色体系。
 
 模块索引：[SNModMaker](../README.md)

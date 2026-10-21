@@ -8,8 +8,11 @@
  *
  * Run from the repository root:
  *
- *   node --test SNModMaker/tests/content-cli.test.mjs
+ *   node SNModMaker/tests/content-cli.test.mjs
+ *   # or: node --test SNModMaker/tests/content-cli.test.mjs
  *
+ * Covers the 16 runtime Content Schema 1.0 types and the 8 Schema 2.0 draft
+ * types (draft:true / schema_version 2.0, draft_content warning, v2 $refs).
  * All write operations happen inside fs.mkdtempSync(os.tmpdir()) fixtures. The
  * repository's dev_mods/core is only ever read (a few tests hash its JSON files
  * before and after to prove that).
@@ -374,7 +377,9 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 16, 'content_types.json currently declares 16 runtime types');
+  assert.equal(json.types.length, 24, '16 runtime types + 8 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 16, 'activeTypes counts runtime Content Schema 1.0 types');
+  assert.equal(json.draftTypes, 8, 'draftTypes counts Content Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
   for (const key of ['goods', 'materials', 'hulls', 'boilers', 'events', 'contracts', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
@@ -386,11 +391,29 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(goods.en, 'Goods');
   assert.equal(goods.file, 'content/goods.json');
   assert.equal(goods.schema, 'good.schema.json');
+  assert.equal(goods.schema_version, '1.0');
   assert.ok(goods.group, 'goods.group must be present');
   assert.ok(goods.summary, 'goods.summary must be present');
+  assert.ok(!goods.draft, 'runtime types are not marked draft');
   const patches = json.types.find((entry) => entry.key === 'patches');
   assert.equal(patches.file, 'content/patches.json');
   assert.equal(patches.schema, 'patch.schema.json');
+
+  const drafts = json.types.filter((entry) => entry.draft);
+  assert.equal(drafts.length, 8, 'all 8 draft types are listed with draft:true');
+  const world = drafts.find((entry) => entry.key === 'world_profiles');
+  assert.ok(world, 'world_profiles must be listed');
+  assert.equal(world.singular, 'world_profile');
+  assert.equal(world.keyPrefix, 'world');
+  assert.equal(world.file, 'content/world_profiles.json');
+  assert.equal(world.schema, 'v2/world_profile.schema.json');
+  assert.equal(world.schema_version, '2.0');
+  assert.equal(world.capability, 'content.world.v1');
+  for (const draft of drafts) {
+    assert.equal(draft.schema_version, '2.0', `${draft.key} must list schema_version 2.0`);
+    assert.match(draft.schema, /^v2\/.+\.schema\.json$/, `${draft.key} must point at the v2 schema bundle entry`);
+    assert.ok(draft.capability, `${draft.key} must expose its capability`);
+  }
 });
 
 test('describe goods --json reports id pattern, keys, fields, defaults and skeleton', (t) => {
@@ -463,6 +486,164 @@ test('describe patches --json reports the patch target/operations skeleton and n
   assert.equal(json.skeleton.requires.version, '>=1.0.0 <2.0.0');
   assert.ok(Array.isArray(json.skeleton.operations));
   assert.deepEqual(json.skeleton.operations[0], { op: 'replace', path: '/data/purchase_price', value: 380 });
+});
+
+test('describe world_profiles --json reports the Schema 2.0 draft contract', (t) => {
+  const result = jsonRun(['describe', 'world_profiles']);
+  assertStatus(result, 0, 'describe world_profiles');
+  const json = mustJson(result, 'describe world_profiles');
+  assert.equal(json.ok, true);
+  assert.equal(json.command, 'describe');
+  assert.equal(json.type.key, 'world_profiles');
+  assert.equal(json.type.singular, 'world_profile');
+  assert.equal(json.type.keyPrefix, 'world');
+  assert.equal(json.type.file, 'content/world_profiles.json');
+  assert.equal(json.type.schema, 'v2/world_profile.schema.json');
+  assert.equal(json.type.draft, true, 'draft types must be marked');
+  assert.equal(json.type.schema_version, '2.0');
+  assert.equal(json.type.capability, 'content.world.v1');
+  assert.equal(json.id.singular, 'world_profile');
+  assert.equal(json.id.example, 'my_mod:world_profile/tea');
+  assert.equal(json.keys.base, 'world.my_mod.tea');
+
+  const regionCount = json.fields.find((field) => field.path === 'data.region_count');
+  assert.ok(regionCount, `fields must contain data.region_count: ${JSON.stringify(json.fields)}`);
+  assert.equal(regionCount.type, 'integer');
+  assert.equal(regionCount.required, true);
+  assert.equal(regionCount.minimum, 1);
+  assert.equal(regionCount.maximum, 64);
+  const weather = json.fields.find((field) => field.path === 'data.weather_profile');
+  assert.ok(weather, 'fields must contain data.weather_profile');
+  assert.match(String(weather.$ref), /id_ref/, 'the v2 common id_ref $ref must be preserved in the field table');
+
+  assert.equal(json.defaults.region_count, 3);
+  assert.equal(json.defaults.port_count, 8);
+  assert.equal(json.defaults.weather_profile, 'core:weather_profile/temperate');
+  assert.equal(json.skeleton.id, 'my_mod:world_profile/tea');
+  assert.equal(json.skeleton.name_key, 'world.my_mod.tea.name');
+  assert.equal(json.skeleton.data.region_count, 3);
+});
+
+test('add --type world_profiles writes a Schema 2.0 content file and warns about draft content', (t) => {
+  const mod = createMod(t);
+  const result = jsonRun([
+    'add', '--mod', mod, '--type', 'world_profiles', '--id', 'first_world',
+    '--name-zh', '首个世界', '--name-en', 'First World',
+  ]);
+  const json = mustJson(result, 'add world_profiles');
+  assertStatus(result, 0, 'add world_profiles');
+  assert.equal(json.ok, true);
+  assert.equal(json.issues.newErrors, 0, `add must not introduce errors: ${JSON.stringify(json.issues.list)}`);
+  const changedPaths = json.changes.map((change) => change.path);
+  assert.ok(changedPaths.includes('content/world_profiles.json'), `changes must mention the draft content file: ${JSON.stringify(changedPaths)}`);
+  assert.ok(changedPaths.includes('manifest.json'), 'the new content file must be declared in manifest.content');
+
+  const file = contentFileOfType(mod, 'world_profiles');
+  assert.equal(file.payload.schema_version, '2.0');
+  assert.equal(file.payload.content_type, 'world_profiles');
+  assert.equal(file.payload.definitions.length, 1);
+  const definition = file.payload.definitions[0];
+  assert.equal(definition.id, 'test_mod:world_profile/first_world');
+  assert.equal(definition.name_key, 'world.test_mod.first_world.name');
+  assert.equal(definition.data.region_count, 3);
+  assert.equal(definition.data.weather_profile, 'core:weather_profile/temperate');
+  assert.ok(manifestOf(mod).content.includes('content/world_profiles.json'));
+  assert.equal(localeOf(mod, 'zh_CN')['world.test_mod.first_world.name'], '首个世界');
+  assert.equal(localeOf(mod, 'en')['world.test_mod.first_world.name'], 'First World');
+  // 1.0 content keeps its envelope in the same project.
+  assert.equal(goodsFileOf(mod).payload.schema_version, '1.0');
+
+  const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
+  assert.ok(warningCodes.includes('draft_content'), `draft content must warn: ${JSON.stringify(json.issues.list)}`);
+  assert.ok(warningCodes.includes('capability_undeclared'), `undeclared capability must warn: ${JSON.stringify(json.issues.list)}`);
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate draft mod');
+  const validateJson = mustJson(validateResult, 'validate draft mod');
+  assert.equal(validateJson.issues.errors, 0, `draft content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
+  assert.ok(validateJson.issues.list.some((issue) => issue.code === 'draft_content'));
+
+  const strictResult = jsonRun(['validate', '--mod', mod, '--strict']);
+  assertStatus(strictResult, 1, 'draft warnings make --strict fail');
+});
+
+test('add blocks new Schema 2.0 errors and writes nothing', (t) => {
+  const mod = createMod(t);
+  const before = snapshotDir(mod);
+  const result = jsonRun([
+    'add', '--mod', mod, '--type', 'world_profiles', '--id', 'bad_world',
+    '--name-zh', '坏世界', '--name-en', 'Bad World',
+    '--data', 'data.port_count=0',
+  ]);
+  const json = mustFailJson(result, 'add invalid draft');
+  assertStatus(result, 1, 'add invalid draft');
+  assert.equal(json.error.code, 'validation', `schema errors from the v2 bundle must block the write: ${JSON.stringify(json.error)}`);
+  assert.deepEqual(snapshotDir(mod), before, 'a blocked draft add must not write anything');
+});
+
+test('validate reports schema_version_mismatch for a 1.0 draft content file', (t) => {
+  const mod = createMod(t);
+  const addResult = jsonRun([
+    'add', '--mod', mod, '--type', 'world_profiles', '--id', 'first_world',
+    '--name-zh', '首个世界', '--name-en', 'First World',
+  ]);
+  assertStatus(addResult, 0, 'add draft before mismatch');
+
+  const file = contentFileOfType(mod, 'world_profiles');
+  const payload = readJson(file.abs);
+  payload.schema_version = '1.0';
+  writeJson(file.abs, payload);
+
+  const result = jsonRun(['validate', '--mod', mod]);
+  const json = mustJson(result, 'validate draft mismatch');
+  assertStatus(result, 1, 'validate draft mismatch');
+  assert.equal(json.ok, false);
+  assert.ok(
+    json.issues.list.some((issue) => issue.code === 'schema_version_mismatch'),
+    `expected schema_version_mismatch: ${JSON.stringify(json.issues.list)}`
+  );
+});
+
+test('list --type world_profiles lists a draft definition', (t) => {
+  const mod = createMod(t);
+  const addResult = jsonRun([
+    'add', '--mod', mod, '--type', 'world_profiles', '--id', 'first_world',
+    '--name-zh', '首个世界', '--name-en', 'First World',
+  ]);
+  assertStatus(addResult, 0, 'add draft before list');
+  const result = jsonRun(['list', '--mod', mod, '--type', 'world_profiles']);
+  assertStatus(result, 0, 'list drafts');
+  const json = mustJson(result, 'list drafts');
+  const rows = listRows(json, 'list drafts');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].id, 'test_mod:world_profile/first_world');
+  assert.equal(rows[0].type, 'world_profiles');
+  assert.equal(rows[0].file, 'content/world_profiles.json');
+  assert.equal(rows[0].name_zh, '首个世界');
+});
+
+test('set on a draft definition keeps the 2.0 envelope and rewrites one line', (t) => {
+  const mod = createMod(t);
+  const addResult = jsonRun([
+    'add', '--mod', mod, '--type', 'world_profiles', '--id', 'first_world',
+    '--name-zh', '首个世界', '--name-en', 'First World',
+  ]);
+  assertStatus(addResult, 0, 'add draft before set');
+  const file = contentFileOfType(mod, 'world_profiles');
+  const before = readText(file.abs);
+  const result = jsonRun(['set', '--mod', mod, 'test_mod:world_profile/first_world', 'data.region_count=5']);
+  const json = mustJson(result, 'set draft');
+  assertStatus(result, 0, 'set draft');
+  assert.equal(json.ok, true);
+  assert.equal(json.issues.newErrors, 0);
+  const after = readText(file.abs);
+  assert.equal(changedLineIndexes(before, after).length, 1, 'set must touch exactly one line');
+  const payload = JSON.parse(after);
+  assert.equal(payload.schema_version, '2.0');
+  assert.equal(payload.definitions[0].data.region_count, 5);
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate after set draft');
+  assert.equal(mustJson(validateResult, 'validate after set draft').issues.errors, 0);
 });
 
 test('list --mod dev_mods/core --json lists every core definition and leaves core untouched', (t) => {

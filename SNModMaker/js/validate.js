@@ -3,8 +3,12 @@
  *
  * Two layers:
  *   1. A JSON Schema subset validator over the embedded canonical schemas.
- *   2. Steam Navigator semantic rules (namespace, localization coverage,
- *      cross-references, patch safety) that a schema cannot express.
+ *      This includes the Content Schema 2.0 draft schemas under schemas/v2/;
+ *      their $refs are resolved relative to the referencing schema file.
+ *   2. Steam Navigator semantic rules (schema_version, namespace, localization
+ *      coverage, cross-references, patch safety) that a schema cannot express.
+ *      Draft (2.0) content is editable in the Mod Maker but is NOT loaded by
+ *      the Content Schema 1.0 runtime, so it gets a per-file draft warning.
  *
  * Results use the same shape as the Godot validator where practical:
  * { path, keyword, message } plus a UI navigation hint.
@@ -21,6 +25,9 @@
   const ASSET_EXTENSIONS = ['.png', '.webp', '.svg', '.ogg', '.wav', '.glb'];
   const FORBIDDEN_EXTENSIONS = ['.gd', '.gdshader', '.cs', '.dll', '.so', '.dylib', '.exe', '.bat',
     '.cmd', '.ps1', '.sh', '.pck', '.tscn', '.tres', '.import'];
+  /* Content Schema versions the Mod Maker understands. The runtime only loads 1.0. */
+  const SUPPORTED_SCHEMA_VERSIONS = ['1.0', '2.0'];
+  const DEFAULT_SCHEMA_VERSION = '1.0';
 
   const REF_TYPE_BY_FIELD = {
     hull: ['hull'],
@@ -46,6 +53,33 @@
     return root.SNCatalog || { BY_KEY: {}, BY_SINGULAR: {} };
   }
 
+  /**
+   * Content Schema version for a content file or a content type key.
+   *
+   * Order: an explicit `file.schema_version`, then the type's catalog
+   * `schemaVersion` (draft types are 2.0), then the legacy 1.0 default.
+   */
+  function schemaVersionFor(typeKeyOrFile) {
+    if (typeKeyOrFile && typeof typeKeyOrFile === 'object') {
+      const explicit = typeKeyOrFile.schema_version;
+      if (explicit) return String(explicit);
+      return schemaVersionFor(typeKeyOrFile.content_type);
+    }
+    const info = catalog().BY_KEY[String(typeKeyOrFile == null ? '' : typeKeyOrFile)];
+    if (info && info.schemaVersion) return String(info.schemaVersion);
+    return DEFAULT_SCHEMA_VERSION;
+  }
+
+  function normalizeSchemaPath(file) {
+    const parts = [];
+    for (const segment of String(file).split('/')) {
+      if (!segment || segment === '.') continue;
+      if (segment === '..') parts.pop();
+      else parts.push(segment);
+    }
+    return parts.join('/');
+  }
+
   function pointerEscape(text) {
     return String(text).replace(/~/g, '~0').replace(/\//g, '~1');
   }
@@ -58,12 +92,30 @@
     return `${base}/${pointerEscape(key)}`;
   }
 
+  /**
+   * Resolve a $ref against the file it appears in.
+   *
+   * A bare file name is a sibling of the referencing schema, so
+   * 'common.schema.json' inside 'v2/start_profile.schema.json' resolves to
+   * 'v2/common.schema.json'. A file part that already contains a directory is
+   * kept relative to the schemas/ root. Top-level schemas (basename baseFile)
+   * keep resolving exactly as before.
+   */
   function resolveRef(ref, baseFile) {
     if (typeof ref !== 'string') return null;
     const hash = ref.indexOf('#');
     const filePart = hash >= 0 ? ref.slice(0, hash) : ref;
     const pointerPart = hash >= 0 ? ref.slice(hash + 1) : '';
-    const file = filePart ? filePart.replace(/^.*\//, '') : baseFile;
+    let file = baseFile;
+    if (filePart) {
+      const clean = filePart.replace(/^\.\//, '');
+      if (clean.includes('/')) {
+        file = normalizeSchemaPath(clean);
+      } else {
+        const directory = baseFile ? String(baseFile).replace(/[^/]*$/, '') : '';
+        file = normalizeSchemaPath(directory + clean);
+      }
+    }
     const schemaRoot = schemas()[file];
     if (!schemaRoot) return null;
     let node = schemaRoot;
@@ -517,9 +569,29 @@
       const info = catalog().BY_KEY[file.content_type];
       const typeKey = info ? info.key : file.content_type;
       const baseView = { name: 'content', type: typeKey, file: file.path };
+      const declaredVersion = file.schema_version == null ? '' : String(file.schema_version);
+      if (declaredVersion && !SUPPORTED_SCHEMA_VERSIONS.includes(declaredVersion)) {
+        add('error', 'schema_version_unsupported',
+          `内容文件 ${file.path} 的 schema_version 不受支持：${declaredVersion}（只支持 1.0 / 2.0）`, baseView);
+      }
       if (!info) {
         add('error', 'unknown_content_type', `未知的内容类型：${file.content_type}`, baseView);
         continue;
+      }
+      const expectedVersion = schemaVersionFor(info.key);
+      if (declaredVersion && SUPPORTED_SCHEMA_VERSIONS.includes(declaredVersion) && declaredVersion !== expectedVersion) {
+        add('error', 'schema_version_mismatch',
+          `内容文件 ${file.path} 的 schema_version 是 ${declaredVersion}，但类型 ${info.key} 期望 ${expectedVersion}`, baseView);
+      }
+      if (info.draft) {
+        add('warning', 'draft_content',
+          `草案内容文件：${file.path}（当前游戏运行时 Content Schema 1.0 不加载）`, baseView);
+        const declaredCapabilities = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
+        if (info.capability && !declaredCapabilities.includes(info.capability)) {
+          add('warning', 'capability_undeclared',
+            `草案内容使用了 capability，但未写入 manifest.capabilities：${info.capability}`,
+            { name: 'overview', field: 'capabilities' });
+        }
       }
       const schema = schemas()[info.schema];
       if (!schema) {
@@ -527,7 +599,7 @@
         continue;
       }
       const instance = {
-        schema_version: file.schema_version || '1.0',
+        schema_version: file.schema_version || expectedVersion,
         content_type: file.content_type,
         definitions: Array.isArray(file.definitions) ? file.definitions : [],
       };
@@ -675,6 +747,9 @@
     }
 
     for (const file of contentFiles) {
+      const fileInfo = catalog().BY_KEY[file.content_type];
+      /* Draft (2.0) types reference planned types that Core does not ship yet. */
+      const draftFile = !!(fileInfo && fileInfo.draft);
       file.definitions.forEach((definition, index) => {
         if (!definition || typeof definition !== 'object' || file.content_type === 'patches') return;
         const view = { name: 'content', type: file.content_type, file: file.path, index };
@@ -692,7 +767,7 @@
             }
           } else if (namespace === 'core') {
             usesCore = true;
-            if (core && !core.definitions.some((item) => item.id === value)) {
+            if (!draftFile && core && !core.definitions.some((item) => item.id === value)) {
               add('warning', 'ref_core_unknown', `Core 中找不到引用的定义：${value}`, view);
             }
           }
@@ -744,6 +819,7 @@
     validateSchema,
     validateProject,
     byDefinition,
+    schemaVersionFor,
     versionRangeError,
     parseSemver,
     safePath,
@@ -754,5 +830,6 @@
     resolveRef,
     ID_REF_RE,
     MOD_ID_RE,
+    SUPPORTED_SCHEMA_VERSIONS,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

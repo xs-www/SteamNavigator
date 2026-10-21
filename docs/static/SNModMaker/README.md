@@ -14,13 +14,13 @@
 | `exports/README.md` | 本地导出目录说明：ZIP 命名与忽略规则。 | 本页 |
 | `index.html` | 模组制作器的静态外壳：顶栏、导航/工作区/检视器布局，以及模态框、Toast、拖放与忙碌层宿主。 | [查看](./index.html.md) |
 | `js/app.js` | 应用控制器：视图状态、事件委托、表单写回、撤销/重做、自动保存、导入导出与 Modal 流程。 | [查看](./js/app.js.md) |
-| `js/catalog.js` | 字段标签、默认值、标签建议、条件/效果词汇与新建模板；内容类型列表来自生成的 content-types.js。 | [查看](./js/catalog.js.md) |
+| `js/catalog.js` | 字段标签、默认值、标签建议、条件/效果词汇与新建模板；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`）。 | [查看](./js/catalog.js.md) |
 | `js/glb.js` | 最小 GLB（glTF 2.0 二进制）解析器，为资源卡片提供场景节点、三角形网格、法线与材质基色。 | [查看](./js/glb.js.md) |
 | `js/io.js` | 浏览器 I/O：IndexedDB 项目库、文件/文件夹/ZIP 导入、下载、目录导出与本地游戏模组部署 API。 | [查看](./js/io.js.md) |
 | `js/model_thumb.js` | 用共享 WebGL 上下文把 GLB 渲染成自动取景的 PNG 缩略图，并按键缓存结果。 | [查看](./js/model_thumb.js.md) |
 | `js/store.js` | 项目模型与纯数据操作：模板、定义增删改复制、Manifest 同步、导入导出映射与 Core 克隆。 | [查看](./js/store.js.md) |
 | `js/ui.js` | Schema 驱动的表单渲染与通用 UI 组件：字段控件、数组/条件/效果编辑器、自定义资源选择器、船体模块区、模态框与 Toast。 | [查看](./js/ui.js.md) |
-| `js/validate.js` | JSON Schema 子集校验器与 Steam Navigator 项目语义校验：ID、引用、本地化、补丁与清单一致性。 | [查看](./js/validate.js.md) |
+| `js/validate.js` | JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁与清单一致性。 | [查看](./js/validate.js.md) |
 | `js/zip.js` | 零依赖 ZIP 读写：中央目录解析、CRC32、store / deflate-raw 压缩，以及 ZIP 体积与路径限制。 | [查看](./js/zip.js.md) |
 | `mods/README.md` | 磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。 | 本页 |
 | `tests/browser-smoke.mjs` | Chrome DevTools Protocol 冒烟测试：新建项目、实体键事务、模块子分页与船体模块区、本地化、自定义资源选择器、ZIP、导入与撤销。 | [查看](./tests/browser-smoke.mjs.md) |
@@ -28,12 +28,12 @@
 | `tests/run-tests.js` | Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析。 | [查看](./tests/run-tests.js.md) |
 | `tests/server-smoke.mjs` | 本地服务磁盘 API 冒烟测试：在隔离临时目录验证游戏模组部署、覆盖、枚举、删除与旧版本清理。 | [查看](./tests/server-smoke.mjs.md) |
 | `tests/workspace-smoke.mjs` | 原生工作区冒烟测试：用 `/api/workspace/<id>` 打开 dev_mods/<id>，验证删除定义、新增内容文件、删除本地化、资产不被改写与禁止整体删除。 | [查看](./tests/workspace-smoke.mjs.md) |
-| `tools/content.mjs` | SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验。 | [查看](./tools/content.mjs.md) |
+| `tools/content.mjs` | SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 16 个运行时类型与 8 个 Schema 2.0 草案类型。 | [查看](./tools/content.mjs.md) |
 | `tools/content_json.mjs` | 保源 JSON 源文本编辑器（纯函数、无 fs）：解析带 start / end 的节点树，只替换目标节点附近的文本切片，让 CLI 增删改内容时既有字节、缩进与 BOM 保持不变。 | [查看](./tools/content_json.mjs.md) |
 | `tools/game_mods_dir.mjs` | 解析编辑器「导出并覆盖到发布包 mods/」的默认目标目录。 | [查看](./tools/game_mods_dir.mjs.md) |
 | `tools/serve.mjs` | 零依赖本地静态服务器 + 磁盘 API：项目工作区、原生模组工作区（dev_mods 原地编辑）、普通导出与发布包模组覆盖部署。 | [查看](./tools/serve.mjs.md) |
 | `tools/sync-core-index.mjs` | 从 `dev_mods/core` 生成 `js/core-index.js`：Manifest、内容文件、双语本地化与定义索引。 | [查看](./tools/sync-core-index.mjs.md) |
-| `tools/sync-schemas.mjs` | 把 `schemas/*.schema.json` 打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。 | [查看](./tools/sync-schemas.mjs.md) |
+| `tools/sync-schemas.mjs` | 把 `schemas/` 下全部 `*.schema.json`（含 `v2/` 草案）递归打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。 | [查看](./tools/sync-schemas.mjs.md) |
 
 ## 模块契约
 

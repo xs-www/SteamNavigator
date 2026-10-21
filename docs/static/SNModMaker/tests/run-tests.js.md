@@ -8,12 +8,13 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI` | L28 |
-| `GLB` | L30 |
-| `test(name, fn)` | L36 |
-| `freshProject()` | L49 |
-| `errorsOf(result)` | L53 |
-| `warningsOf(result)` | L57 |
+| `UI` | L29 |
+| `GLB` | L31 |
+| `schemaFilesOnDisk()` | L34 |
+| `test(name, fn)` | L53 |
+| `freshProject()` | L66 |
+| `errorsOf(result)` | L70 |
+| `warningsOf(result)` | L74 |
 
 ## 契约与约束
 

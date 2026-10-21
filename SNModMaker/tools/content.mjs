@@ -34,13 +34,48 @@ const Validate = globalThis.SNValidate;
 const Catalog = globalThis.SNCatalog;
 const Types = globalThis.SNContentTypes;
 
+/* 草案类型来自生成的 content-types.js（DRAFT_TYPES），与运行时类型共用编辑链路，
+ * 但游戏运行时 Content Schema 1.0 不加载它们。 */
+function draftTypes() {
+  if (Types && Array.isArray(Types.DRAFT_TYPES)) return Types.DRAFT_TYPES;
+  if (Catalog && Array.isArray(Catalog.DRAFT_TYPES)) return Catalog.DRAFT_TYPES;
+  return [];
+}
+
+function allTypeInfos() {
+  return [...Catalog.TYPES, ...draftTypes()];
+}
+
+function findTypeInfo(typeKey) {
+  if (!typeKey) return null;
+  return Catalog.BY_KEY[typeKey] || draftTypes().find((info) => info.key === typeKey) || null;
+}
+
+function knownTypeKeys() {
+  return allTypeInfos().map((info) => info.key);
+}
+
+/** 内容文件/类型期望的 schema 版本：优先复用 validate.js 的推导，缺失时回退。 */
+function schemaVersionFor(target) {
+  if (Validate && typeof Validate.schemaVersionFor === 'function') {
+    const version = Validate.schemaVersionFor(target);
+    if (version) return version;
+  }
+  if (target && typeof target === 'object') {
+    if (typeof target.schema_version === 'string' && target.schema_version) return target.schema_version;
+    return schemaVersionFor(target.content_type);
+  }
+  const info = findTypeInfo(String(target || ''));
+  return (info && (info.schemaVersion || info.schema_version)) || '1.0';
+}
+
 const USAGE = `SNModMaker 内容 CLI（v1）
 
 用法：
   node SNModMaker/tools/content.mjs <command> [options]
 
 命令：
-  types                                   列出全部内容类型
+  types                                   列出全部内容类型（含 Schema 2.0 草案）
   describe <type>                         查看类型的 ID / 键 / 字段 / 默认值与骨架
   list --mod <dir> [--type <key>]         列出模组内的全部定义
   add --mod <dir> --type <key> --id <local_id> [选项]
@@ -68,6 +103,12 @@ add 选项：
 
 通用选项：--json  --quiet  --help/-h
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
+
+Schema 2.0 草案（world_profiles / regions / sites / route_templates / weather_profiles /
+factions / discoveries / start_profiles）可以像 1.0 类型一样 list / add / set / describe /
+validate，内容文件写 schema_version "2.0"；但游戏运行时仍只加载 Content Schema 1.0，
+草案内容不会在游戏里生效（校验会给出 draft_content 警告）。草案模组使用 capability 时
+还需在 manifest.capabilities 声明对应能力。
 `;
 
 /* ------------------------------------------------------------------ */
@@ -482,7 +523,7 @@ function planAppendDefinition(load, project, file, definition, index, writes, de
     text = CJ.insertArrayItem(oldText, definitions, definition, CJ.formatStyled);
   } else {
     const payload = {
-      schema_version: file.schema_version || '1.0',
+      schema_version: schemaVersionFor(file),
       content_type: file.content_type,
       definitions: file.definitions,
     };
@@ -871,7 +912,7 @@ function buildData(typeKey, ctx) {
 function findLocalIdConflict(project, info, localId, exclude) {
   for (const item of Store.allDefinitions(project)) {
     if (exclude && item.definition === exclude) continue;
-    const itemInfo = Catalog.BY_KEY[item.file.content_type];
+    const itemInfo = findTypeInfo(item.file.content_type);
     if (item.file.content_type !== info.key && (!itemInfo || itemInfo.keyPrefix !== info.keyPrefix)) continue;
     if (typeof item.definition.id === 'string' && Store.localPart(item.definition.id) === localId) return item;
   }
@@ -1023,7 +1064,7 @@ function editDefinitionText(load, file, index, assignments, expectedDefinitions)
     text = applyAssignmentToText(text, definitionNode, assignment);
   }
   const expected = {
-    schema_version: file.schema_version || '1.0',
+    schema_version: schemaVersionFor(file),
     content_type: file.content_type,
     definitions: expectedDefinitions,
   };
@@ -1160,7 +1201,7 @@ function describeFields(info) {
 }
 
 function describePayload(typeKey) {
-  const info = Catalog.BY_KEY[typeKey];
+  const info = findTypeInfo(typeKey);
   const defaults = Catalog.DEFAULTS[typeKey];
   const defaultsValue = defaults ? defaults() : null;
   const keyPrefix = info.keyPrefix;
@@ -1182,15 +1223,20 @@ function describePayload(typeKey) {
       data: deepClone(defaultsValue),
     };
   }
-  let typeRow = {
+  const typeRow = {
     key: info.key,
     singular: info.singular,
     keyPrefix: info.keyPrefix,
     label: info.label,
     file: info.file,
     schema: info.schema,
+    schema_version: schemaVersionFor(info.key),
   };
   if (info.special) typeRow.special = true;
+  if (info.draft) {
+    typeRow.draft = true;
+    if (info.capability) typeRow.capability = info.capability;
+  }
   return {
     ok: true,
     command: 'describe',
@@ -1218,7 +1264,7 @@ function describePayload(typeKey) {
 /* ------------------------------------------------------------------ */
 
 function commandTypes(ctx) {
-  const types = Types.TYPES.map((type) => {
+  const types = allTypeInfos().map((type) => {
     const row = {
       key: type.key,
       singular: type.singular,
@@ -1229,33 +1275,57 @@ function commandTypes(ctx) {
       schema: type.schema,
       group: type.group,
       summary: type.summary,
+      schema_version: schemaVersionFor(type.key),
     };
     if (type.special) row.special = true;
+    if (type.draft) {
+      row.draft = true;
+      if (type.capability) row.capability = type.capability;
+    }
     return row;
   });
-  const payload = { ok: true, command: 'types', types };
+  const active = types.filter((type) => !type.draft);
+  const drafts = types.filter((type) => type.draft);
+  const payload = { ok: true, command: 'types', types, activeTypes: active.length, draftTypes: drafts.length };
   if (ctx.json) return respond(ctx, payload, '', 0);
   const width = Math.max(...types.map((type) => type.key.length));
-  const lines = types.map((type) => `${type.key.padEnd(width)}  ${type.label.padEnd(8)} ${type.singular.padEnd(20)} ${type.file}`);
-  return respond(ctx, payload, `内容类型（${types.length}）：\n${lines.join('\n')}`, 0);
+  const formatRow = (type) => {
+    const marker = type.draft ? `  [draft ${type.schema_version}]` : '';
+    return `${type.key.padEnd(width)}  ${type.label.padEnd(8)} ${type.singular.padEnd(20)} ${type.file}${marker}`;
+  };
+  const lines = [
+    `运行时内容类型（${active.length}）：`,
+    ...active.map(formatRow),
+  ];
+  if (drafts.length) {
+    lines.push(
+      '',
+      `Schema 2.0 草案类型（${drafts.length}）：编辑器 / CLI 可编辑，游戏运行时 Content Schema 1.0 不加载`,
+      ...drafts.map(formatRow),
+    );
+  }
+  return respond(ctx, payload, lines.join('\n'), 0);
 }
 
 function commandDescribe(ctx) {
   const typeKey = ctx.positional[1];
   if (!typeKey) throw usageError('缺少 <type>，例如 describe goods');
-  if (!Catalog.BY_KEY[typeKey]) {
-    throw usageError(`未知内容类型 "${typeKey}"。可用类型：${Catalog.TYPES.map((type) => type.key).join(', ')}`);
+  const info = findTypeInfo(typeKey);
+  if (!info) {
+    throw usageError(`未知内容类型 "${typeKey}"。可用类型：${knownTypeKeys().join(', ')}`);
   }
   const payload = describePayload(typeKey);
-  const info = Catalog.BY_KEY[typeKey];
   const fieldLines = payload.fields.map((field) => {
     const constraints = ['enum', 'const', 'pattern', 'minimum', 'maximum', 'minLength', 'maxLength',
       'minItems', 'maxItems', 'uniqueItems'].filter((key) => field[key] !== undefined)
       .map((key) => `${key}=${JSON.stringify(field[key])}`);
     return `  ${field.path.padEnd(36)} ${String(field.type).padEnd(9)} ${field.required ? 'required' : '        '} ${constraints.join(' ')}`;
   });
+  const subtitle = info.draft
+    ? `  草案 Schema ${payload.type.schema_version}（运行时 Content Schema 1.0 不加载）`
+    : '';
   const human = [
-    `类型：${info.key}（${info.label}）  文件：${info.file}  Schema：${info.schema}`,
+    `类型：${info.key}（${info.label}）  文件：${info.file}  Schema：${info.schema}${subtitle}`,
     `ID 模式：${payload.id.pattern}`,
     `键：${payload.keys.base}.name / ${payload.keys.base}.description`,
     `骨架：`,
@@ -1270,8 +1340,8 @@ function commandDescribe(ctx) {
 function commandList(ctx) {
   const modArg = requireFlag(ctx, 'mod', '松散模组根目录');
   const typeFilter = flagValue(ctx, 'type');
-  if (typeFilter !== undefined && !Catalog.BY_KEY[typeFilter]) {
-    throw usageError(`未知内容类型 "${typeFilter}"。可用类型：${Catalog.TYPES.map((type) => type.key).join(', ')}`);
+  if (typeFilter !== undefined && !findTypeInfo(typeFilter)) {
+    throw usageError(`未知内容类型 "${typeFilter}"。可用类型：${knownTypeKeys().join(', ')}`);
   }
   const load = loadMod(ctx, modArg);
   const rows = [];
@@ -1304,7 +1374,7 @@ function commandList(ctx) {
   }
   const lines = [];
   for (const [typeKey, groupRows] of groups) {
-    const info = Catalog.BY_KEY[typeKey];
+    const info = findTypeInfo(typeKey);
     lines.push(`[${typeKey}] ${info ? info.label : ''} (${groupRows.length})`);
     for (const row of groupRows) {
       const id = row.target ? `${row.id || '(patch)'} → ${row.target}` : row.id;
@@ -1318,8 +1388,8 @@ function commandList(ctx) {
 function commandAdd(ctx) {
   const modArg = requireFlag(ctx, 'mod', '松散模组根目录');
   const typeKey = requireFlag(ctx, 'type');
-  const info = Catalog.BY_KEY[typeKey];
-  if (!info) throw usageError(`未知内容类型 "${typeKey}"。可用类型：${Catalog.TYPES.map((type) => type.key).join(', ')}`);
+  const info = findTypeInfo(typeKey);
+  if (!info) throw usageError(`未知内容类型 "${typeKey}"。可用类型：${knownTypeKeys().join(', ')}`);
   const isPatch = typeKey === 'patches';
   const rawLocalId = flagValue(ctx, 'id');
   if (rawLocalId === undefined) {
@@ -1386,7 +1456,7 @@ function commandAdd(ctx) {
       if (load.files.has(filePath)) {
         throw usageError(`--file ${filePath} 存在于磁盘但未被 manifest.content 声明，无法安全保源写入`);
       }
-      project.contentFiles.push({ path: filePath, content_type: typeKey, schema_version: '1.0', definitions: [] });
+      project.contentFiles.push({ path: filePath, content_type: typeKey, schema_version: schemaVersionFor(typeKey), definitions: [] });
       Store.syncManifest(project);
     }
   }
@@ -1474,7 +1544,7 @@ function commandSet(ctx) {
     text = editDefinitionText(load, found.file, found.index, assignments, found.file.definitions);
   } else {
     const payload = {
-      schema_version: found.file.schema_version || '1.0',
+      schema_version: schemaVersionFor(found.file),
       content_type: found.file.content_type,
       definitions: found.file.definitions,
     };
@@ -1625,7 +1695,7 @@ function commandClone(ctx) {
   const result = Store.cloneCoreDefinition(project, fromId);
   if (!result) throw new CliError('not_found', `Core 索引中找不到定义 ${fromId}`);
   const typeKey = result.file.content_type;
-  const info = Catalog.BY_KEY[typeKey];
+  const info = findTypeInfo(typeKey);
   if (!info) throw new CliError('internal', `Core 定义 ${fromId} 的类型 ${typeKey} 未注册`);
   const modId = project.manifest.id;
   const idFlag = flagValue(ctx, 'id');

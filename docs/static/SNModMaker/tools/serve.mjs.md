@@ -8,36 +8,38 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MODS_DIR` | L41 |
-| `EXPORTS_DIR` | L42 |
-| `GAME_MODS_DIR` | L43 |
-| `MAX_BODY` | L44 |
-| `MIME` | L46 |
-| `sendJson(response, status, body)` | L60 |
-| `readBody(request)` | L71 |
-| `safeRelative(value)` | L91 |
-| `projectDir(id)` | L99 |
-| `projectFile(id)` | L103 |
-| `WORKSPACE_ROOT` | L111 |
-| `DEFAULT_WORKSPACE_ROOT` | L114 |
-| `MIME_BY_EXT` | L116 |
-| `workspaceDir(id)` | L128 |
-| `workspaceIds()` | L132 |
-| `countWorkspaceDefinitions(manifest)` | L145 |
-| `listWorkspaces()` | L158 |
-| `readWorkspaceProject(id)` | L182 |
-| `runNodeTool(args, timeoutMs = 30000)` | L235 |
-| `validateWorkspace(id)` | L252 |
-| `syncCoreIndex()` | L280 |
-| `saveWorkspaceProject(id, project, files, options)` | L290 |
-| `listProjects()` | L341 |
-| `saveProject(id, payload)` | L372 |
-| `listExports()` | L407 |
-| `safeExportName(value)` | L419 |
-| `gameModName(id)` | L425 |
-| `listGameMods()` | L429 |
-| `deployGameMod(id, body)` | L440 |
-| `handleApi(request, response, url)` | L462 |
+| `DRAFT_SCHEMA_VERSIONS` | L35 |
+| `schemaVersionForContentType(contentType)` | L49 |
+| `MODS_DIR` | L62 |
+| `EXPORTS_DIR` | L63 |
+| `GAME_MODS_DIR` | L64 |
+| `MAX_BODY` | L65 |
+| `MIME` | L67 |
+| `sendJson(response, status, body)` | L81 |
+| `readBody(request)` | L92 |
+| `safeRelative(value)` | L112 |
+| `projectDir(id)` | L120 |
+| `projectFile(id)` | L124 |
+| `WORKSPACE_ROOT` | L132 |
+| `DEFAULT_WORKSPACE_ROOT` | L135 |
+| `MIME_BY_EXT` | L137 |
+| `workspaceDir(id)` | L149 |
+| `workspaceIds()` | L153 |
+| `countWorkspaceDefinitions(manifest)` | L166 |
+| `listWorkspaces()` | L179 |
+| `readWorkspaceProject(id)` | L203 |
+| `runNodeTool(args, timeoutMs = 30000)` | L257 |
+| `validateWorkspace(id)` | L274 |
+| `syncCoreIndex()` | L302 |
+| `saveWorkspaceProject(id, project, files, options)` | L312 |
+| `listProjects()` | L363 |
+| `saveProject(id, payload)` | L394 |
+| `listExports()` | L429 |
+| `safeExportName(value)` | L441 |
+| `gameModName(id)` | L447 |
+| `listGameMods()` | L451 |
+| `deployGameMod(id, body)` | L462 |
+| `handleApi(request, response, url)` | L484 |
 
 ## 契约与约束
 
@@ -45,6 +47,7 @@
 - 默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。
 - API：status、projects、workspace、exports 与 game-mods；请求体上限 128 MB。
 - `/api/workspace/<id>` 直接读写 `dev_mods/<id>`：打开时返回 manifest/content/localization 与资产键占位（不含二进制），保存时只写文本文件并删掉 manifest 不再声明的 content/localization 文件；资产目录永远不动。
+- 工作区内容文件缺失 `schema_version` 时按 `content_type` 推导（Schema 2.0 草案 2.0，未知类型回退 1.0）。
 - 工作区保存允许删除/新增定义与内容文件；`/api/workspace/<id>` DELETE 被拒绝，避免误删整个原生模组。
 - 游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。
 - 项目先写临时目录再替换，文件路径拒绝绝对路径、`..`、盘符与超过 16 层。

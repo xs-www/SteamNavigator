@@ -3,7 +3,7 @@
 在浏览器里可视化创建、编辑和打包《Steam Navigator》的内容模组：
 
 - 读取仓库内 **官方 JSON Schema**，按类型生成表单；
-- 编辑 Manifest、15 类内容、显式补丁、本地化与资源；
+- 编辑 Manifest、15 类运行时内容、8 类 Content Schema 2.0 草案类型、显式补丁、本地化与资源；
 - 实时校验 ID 命名空间、字段约束、跨引用、本地化覆盖与补丁安全；
 - 导入松散目录 / `.snavmod.zip` / 项目文件；
 - 导出 `mods/<id>/` 结构的 `.snavmod.zip`、项目文件，或直接写入本地目录；
@@ -70,9 +70,27 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 | 航行事件 | `events` | `event` | 选项、条件与效果 |
 | 显式补丁 | `patches` | — | 修改其他模组 |
 
+#### Schema 2.0 草案
+
+以下 8 类 Content Schema 2.0 草案类型同样可以在编辑器与 Content CLI 中创建、编辑和校验，内容文件写 `schema_version: "2.0"`。它们**尚未接入游戏运行时**：运行时仍只加载 Content Schema 1.0，草案内容不会生效，校验会给出 `draft_content` 警告。
+
+| 类型 | `content_type` | 说明 |
+| --- | --- | --- |
+| 世界配置 | `world_profiles` | 区域 / 地点 / 港口 / 遗迹 / 基地 / 阵营数量 |
+| 区域 | `regions` | 区域类型、规模、密度、敌对度、天气与阵营 |
+| 地点 | `sites` | 遗迹 / 基地点 / 资源 / 残骸 / 地标 / 遭遇 |
+| 航道模板 | `route_templates` | 距离、风险、耗时区间、双向与遭遇表 |
+| 天气配置 | `weather_profiles` | 气候带、雾 / 风暴 / 浮冰概率与修正 |
+| 阵营 | `factions` | 声望、阈值、巡逻强度、偏好商品、活动区域 |
+| 图鉴发现 | `discoveries` | 图鉴条目类型、稀有度、权重与解锁引用 |
+| 起始档案 | `start_profiles` | 世界配置、起始构筑、难度、起始港口与货物 |
+
+草案类型使用 `schemas/v2/` 下的 Schema（含 `v2/common.schema.json` 的共享定义与跨文件 `$ref`）。草案模组若使用 capability，还需在 `manifest.capabilities` 声明对应能力（例如 `content.world.v1`），否则校验给出 `capability_undeclared` 警告。
+
 ### 编辑器
 
-- **表单驱动**：字段、枚举、数字范围、必填项与数组结构来自 `schemas/*.schema.json`，与 Godot 加载链共用同一套约束。
+- **表单驱动**：字段、枚举、数字范围、必填项与数组结构来自 `schemas/` 的 JSON Schema，与 Godot 加载链共用同一套约束。
+- **Schema 2.0 草案类型**：侧栏「Schema 2.0 草案 / 运行时不加载」分区列出 8 类草案（带 draft 标记，悬停提示运行时 1.0 不加载）；表单、默认值、引用与校验走同一套 v2 Schema，内容文件自动写 `schema_version: "2.0"`。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
 - **引用选择**：船体、锅炉、商品、材料等字段带 Core + 当前项目的 ID 候选；显示中文名。
 - **复制与派生**：复制当前定义，或从 Core 复制一条完整定义并自动改写 ID、本地化键与翻译；官方贴图/模型会保留为 `asset://core/...` 引用，不会被误认成当前模组资产。
@@ -117,6 +135,7 @@ DELETE /api/game-mods/<id>
 - 默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可覆盖（容器里设为 `0.0.0.0`），但服务没有鉴权，只应经宿主机端口映射 + `tailscale serve` 之类的可信通道访问。
 - 浏览器自动保存仍走 IndexedDB；磁盘写入是同一份项目的镜像，Ctrl+S 会立即刷新磁盘。
 - 导出菜单的“导出并覆盖到发布包 mods/”默认写入当前平台发布包的 `dist/build/<platform>/mods/<id>.snavmod.zip`（Windows 为 `dist/build/windows/mods/`）；若已存在其他平台的导出目录则优先使用当前平台，重复部署会覆盖稳定文件名，并清理同 ID 的旧 `<id>-<version>.snavmod.zip`，避免游戏加载重复模组。
+- 含 Schema 2.0 草案内容的项目：ZIP / 目录导出会二次确认并说明“游戏运行时不加载”，而“导出并覆盖到发布包 mods/”直接禁用（草案内容会让游戏启动进入 `Degraded` 且内容被丢弃），需先移除草案内容再部署。
 - 默认目标由 `tools/game_mods_dir.mjs` 解析：优先 `SNMODMAKER_GAME_MODS_DIR`，其次已有的 `dist/build/*`，最后回退到当前平台目录。若编辑的是另一个游戏安装目录，启动服务前把 `SNMODMAKER_GAME_MODS_DIR` 设为该游戏旁的 `mods/`；开发态调试（编辑器 F5 扫描的 `dist/mods`）也可显式指向 `dist/mods`。项目与普通导出目录仍可分别用 `SNMODMAKER_MODS_DIR`、`SNMODMAKER_EXPORTS_DIR` 调整。
 - 静态托管或 `file://` 打开时 `api/status` 不可用，界面会自动退化为浏览器存储。
 
@@ -176,6 +195,8 @@ tailscale serve --bg --set-path /snmodmaker http://127.0.0.1:8099
 ## 命令行（agent 无头工作流）
 
 除网页编辑器外，`tools/content.mjs` 提供同一套内容模型的命令行入口：按 Schema 增删改定义、补本地化、读取类型说明、校验既有模组。它面向 agent、CI 与批量维护脚本，不启动浏览器，也不引入额外依赖（Node.js ≥ 18，ESM）。
+
+CLI 与编辑器使用同一份类型清单：`types` 会同时列出 16 个运行时类型与 8 个 Schema 2.0 草案类型（草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。
 
 所有命令都从**仓库根**执行，`--mod` 指向仓库内的松散模组目录（例如 `dev_mods/core` 或 `SNModMaker/mods/<id>`，必须含 `manifest.json`）；所有写入都会留在该目录内。
 
@@ -277,10 +298,16 @@ node SNModMaker/tools/content.mjs validate --mod dev_mods/core --godot
    `type` / `enum` / `const` / `pattern` / `minLength` / `maxLength` / `minimum` / `maximum` /
    `exclusiveMinimum` / `exclusiveMaximum` / `required` / `properties` / `additionalProperties` /
    `items` / `minItems` / `maxItems` / `uniqueItems` / `allOf` / `anyOf` / `oneOf` / `not` /
-   本地与 `common.schema.json` 引用。
-2. **Steam Navigator 语义**
+   本地与 `common.schema.json` 引用；`schemas/v2/` 的草案 Schema 按基准文件所在目录解析
+   `common.schema.json` 等跨文件 `$ref`。
+2. **Schema 版本**：每个内容类型在 `content_types.json` 声明自己的 `schema_version`，生成到编辑器的 `schemaVersion` 字段
+   （运行时类型 1.0、草案类型 2.0）；声明版本与类型不符报 `schema_version_mismatch`，不是 1.0 / 2.0 报
+   `schema_version_unsupported`。运行时同样按类型校验版本，不再有全局单一门禁。
+3. **Steam Navigator 语义**
    Manifest ID / SemVer / 依赖范围、内容与本地化清单一致性、ID 命名空间与类型段、跨文件重复 ID、
    本模组引用是否存在、Core 引用是否存在、本地化键缺失/空值、补丁目标与操作安全、资源扩展名与大小。
+   草案内容文件另给 `draft_content` 警告（运行时 1.0 不加载），使用 `capability` 但未写入
+   `manifest.capabilities` 时给 `capability_undeclared` 警告。
 
 网页端**不会**执行 Godot 的领域规则、Core 完整性检查、真实注册表冻结或脚本/资源包安全检查。导出前仍建议用 SDK 再跑一次：
 
@@ -296,9 +323,9 @@ godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examp
 SNModMaker/
 ├── index.html                  应用外壳
 ├── css/app.css                 暗色工业主题，无外部字体
-├── js/schema-bundle.js         自动生成：/schemas/*.schema.json
+├── js/schema-bundle.js         自动生成：/schemas/ 下全部 Schema（含 v2/ 草案）
 ├── js/core-index.js            自动生成：Core 定义、名称与翻译索引
-├── js/content-types.js         自动生成：内容类型清单（来自 content_types.json）
+├── js/content-types.js         自动生成：内容类型清单（含 DRAFT_TYPES，来自 content_types.json）
 ├── js/catalog.js               字段标签、默认值、条件/效果词汇
 ├── js/zip.js                   ZIP 读写（store / deflate-raw，CRC32）
 ├── js/validate.js              Schema 子集与项目语义校验
@@ -354,11 +381,13 @@ node tools/gen_content_types.mjs --check
 
 ### 重新生成 Schema 包
 
-修改 `/schemas/*.schema.json` 后：
+修改 `/schemas/` 下的 Schema（含 `schemas/v2/` 草案）后：
 
 ```powershell
 node SNModMaker/tools/sync-schemas.mjs
 ```
+
+生成物覆盖 27 个 Schema：18 个顶层运行时 Schema + 9 个 `v2/`（`v2/common.schema.json` 与 8 个草案）。
 
 ### 重新生成 Core 索引
 
@@ -373,8 +402,11 @@ Core 索引提供引用候选、中文名、跨引用检查与「从 Core 复制
 ### 测试
 
 ```powershell
-# 纯逻辑：Schema、校验、项目模型、导入导出、ZIP、全部内容类型表单
+# 纯逻辑：Schema（含 v2 草案）、校验、项目模型、导入导出、ZIP、全部内容类型表单
 node SNModMaker/tests/run-tests.js
+
+# Content CLI 集成测试：真实子进程调用 content.mjs，覆盖 1.0 与草案类型
+node SNModMaker/tests/content-cli.test.mjs
 
 # 本地服务：隔离临时目录中验证项目 API 与游戏模组覆盖部署
 node SNModMaker/tests/server-smoke.mjs
@@ -385,7 +417,7 @@ node SNModMaker/tools/serve.mjs
 node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-smoke.png"
 ```
 
-当前基线：**33 个 Node 用例 + 1 个本地服务用例 + 16 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
+当前基线：**39 个 Node 用例 + 47 个 Content CLI 用例 + 1 个本地服务用例 + 16 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
 
 ### 代码约定
 
@@ -393,12 +425,14 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 - `tools/*.mjs` 是 Node ESM 工具（本地服务、生成脚本与 Content CLI），不参与网页打包，也不要在 `index.html` 中引用。
 - 不引入第三方库、字体或 CDN；图标使用内联 SVG / CSS。
 - 新增内容类型时需要同步：`schemas/`、`ContentTypes`、`catalog.js`（标签 / 默认值 / key 前缀）、以及 `store.js` 使用这些默认值的模板/克隆逻辑。
+- Schema 2.0 草案类型登记在 `content_types.json` 的 `draft_schemas` / `draft_types`，Schema 放在 `schemas/v2/`；生成后由 `SNContentTypes.DRAFT_TYPES` 驱动编辑器与 CLI，运行时类型清单（`TYPES`）保持不变，直到对应运行时系统落地。
 - 所有用户文本与属性值都经过 `esc` / `attr` 转义；导入的 ZIP 有路径、条目数、解压体积与 CRC 限制。
 
 ---
 
 ## 已知边界
 
+- Content Schema 2.0 草案类型可以在编辑器与 CLI 中创建、编辑、校验和导出，但**运行时尚未接入**：游戏仍只加载 Content Schema 1.0，草案内容文件只用于设计与评审，校验会给出 `draft_content` 警告；草案模组的能力需在 `manifest.capabilities` 声明。含草案内容的项目无法部署到发布包 `mods/`（导出 ZIP 会二次确认）。
 - 不支持 `.csv` 本地化；导入时会被跳过并给出警告。
 - 不读取 Godot `.import` / `.uid`；资源以原始文件打包。
 - 模型缩略图只做基础单帧渲染：不解析贴图、Draco / KTX2、骨骼动画与变形目标；解析失败时保留 GLB 占位，不影响编辑和导出。

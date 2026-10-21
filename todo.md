@@ -7,6 +7,9 @@
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
 - [ ] 阶段 4.5 新手剧情 / 教学系统（4.5.1 / 4.5.2 已实现，4.5.3 起继续）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条、开局幕（获船 / 补给限购 / 海图 / 首航）已落地；剩余补给并市、酒馆替换情报页、船厂限量、第二 / 第三主线与保底探索。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
+- [ ] 海图阶段 3 验收反馈 F1–F4：离港要"驶离"而不是平移；镜头俯角加大到竖直再拉升、云层后海图先铺满再回落；海图上的船必须沿航线移动，不能两点直线
+- [x] SNBattleSim 模组交换与 Agent CLI：`mods/` 散装目录及 ZIP 导入、游戏约定 `.snavmod.zip` 导出、状态/FSM 契约、AND/OR 条件、状态拖放、空白拉线建状态和 Delete 删除
+- [x] SNBattleSim 二轮易用性：Mod 蓝图舰体装配、五状态默认 FSM、工程目录持久化、目标高亮、全状态尝试开火与顶部入口分级
 
 ## Pending
 
@@ -22,12 +25,16 @@
 - [ ] 旧资产 UV 迁移：31 件铁港道具 / 6 件港口设施 / 11 件模块 / 4 艘船补 UV 并切换 `SN_Tex_*` 共享贴图材质（新资产已默认贴图；旧纯色 `SN_*` 逐批退役）
 - [ ] 船体部件库 `rig_kit`（桅杆 / 斜桁 / 帆面 / 索具参数化）与运行时可替换部件（`SN_Socket_*` + `parts_manifest.json` + `ShipVisualAssembler`）
 - [ ] 模型素材库接入：kit 批次 1–3 的 26 件资产登记 Core `model.kit.*` / `model.weapon.*` 资源键，接 `ShipVisualAssembler` / 场景装配的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
+- [ ] Content Schema 2.0 迁移（分层）：Phase A 已落地；Phase B 实现契约已就绪（9 类类型 + CampaignFactory + 1.0→2.0 映射），待隔壁探索 4.1 提交后开工；之后 C 实体合并 → D 其余系统 → E 冻结 1.0。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)（待拍板 D2–D3、D7–D12）
+- [ ] 3D 资产收尾：帆船 / 塔吊 / 明轮 / 模块的 Godot 导入与目标机位验收、塔吊参数化生成器、水面性能低配档位与第二港口变体
 
 ### 海图 / 探索
 
 - [ ] 阶段 5 事件化海洋：航行事件预生成与预加载、事件类型（敌对 / 环境 / 奖励 / 秘境）、3D 场景触发与决策、安全航行结算（含探索途中事件与耐久告急）
 - [ ] 阶段 6 固定未知岛屿与基地建设：勘探、设施建造、公开港口
 - [ ] 可选：航线表体积优化（path 抽稀 / 压缩，当前 38 条边 82 KB）
+- [ ] 阶段 4 探索系统：`Clue` / `ClueService`、`explore_voyage.start`、搜索区判定与发现概率、资源告急与探索失败处理、线索可视化
+- [ ] 阶段 5 事件化海洋：航行事件预生成与预加载、事件类型（敌对 / 环境 / 奖励 / 秘境）、3D 场景触发与决策、安全航行结算
 
 ### 正式版路线图
 
@@ -40,6 +47,25 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
 
 ## Recently Completed
+- [x] Content Schema 2.0 迁移 Phase B 实现契约（2026-10-21）：[WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md) —— 8 类草案提升 + 新增 `map_configs`、9 类跨引用/完整性规则、CampaignFactory 流水线与状态形状、1.0→2.0 字段映射（含探索 `exploration` 原样迁移）、存档 `content_versions`、编辑器/CLI/G8 语义变化、B0–B6 落地顺序与 DoD
+- [x] 编辑器导出守卫（G8，2026-10-21）：`Store.draftContentFiles()` 识别草案内容；含草案的项目禁用「导出并覆盖到发布包 mods/」，ZIP / exports/ / 目录导出二次确认并提示游戏运行时不加载（避免玩家拿到 Degraded 启动）
+- [x] Content Schema 2.0 迁移 Phase A · 按类型版本解耦（2026-10-21）：16 个运行时类型各自声明 `schema_version`（1.0）、生成 `ContentTypes.SCHEMA_VERSIONS`、`ContentCompiler` 按类型校验并让 Patch 再校验走目标类型版本、新增 `test_content_versions` 6 例；编辑器/CLI 统一读类型 `schemaVersion`，1.0 行为不变
+- [x] SNModMaker / Content CLI 适配 Content Schema 2.0 草案（2026-10-21）：`content_types.json.draft_types` 单一真源、8 类草案类型可编辑 / 校验 / 导出（`schema_version: "2.0"`）、v2 跨文件 `$ref` 与 `schema_version_mismatch` / `draft_content` / `capability_undeclared` 告警，运行时仍只加载 1.0
+- [x] 设计文档按生命周期整理：`docs/design/`（Active）/ `docs/specs/`（Finalized）/ `docs/archive/`（Archived）+ 顶层索引（2026-10-21）
+- [x] SNBattleSim 独立 2D 舰队战斗规则试验台（固定船体、多武器、视野、护航、自定义武器）
+- [x] 铁港建筑套件批次 A/B/C：LOD1、外部共享贴图、三栋新原型、明轮蒸汽船视觉精修
+- [x] 海图阶段 3 航行演出：3D 离港 / 入港、云层转场、海图航行、事件中断与恢复
+- [x] 海图阶段 2：海图 UI、入口集成（`M` 键 / 导航 / 出航页）、航线预计算与绕行自适应
+- [x] 海图阶段 0–1：坐标空间世界生成、三重迷雾、真实对局孪生世界
+- [x] 2.5D 阶段 1 前七切片：船厂 3D 舞台、通用 StageHost、PortStage、主界面 HUD / 招牌 / 合批、连续港区三站位
+- [x] 内容资产全部随 `core` 模组加载（共享外部贴图 + 松散 / ZIP / 发布包三条路径实测）
+- [x] 静态文档迁移到源码 `@static-doc` / sidecar，生成器带 `--check`
+- [x] 模块实例与部件损耗、战役分区、Content Schema 2.0 草案与存档 1.x→2.0 迁移
+- [x] 迭代 2 MVP 反馈优化（打造订单与在港等待、补给比例条、情报对比表）
+- [x] 迭代 1 MVP 闭环（仓库 / 打造订单 / 委托刷新 / 通关判定）
+- [x] 船厂界面重构（图 2 / 图 3 三列布局、拖拽安装、分类记忆）
+- [x] SNModMaker 原生工作区 + Content CLI + 容器部署；Windows 导出包实机验收
+- [x] MVP 骨架：模组加载 / 依赖 / Schema / 注册表冻结 + 命令-查询总线（0.1.0-dev.2 初版）
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 

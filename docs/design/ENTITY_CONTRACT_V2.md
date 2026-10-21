@@ -157,7 +157,11 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 - `schemas/v2/weather_profile.schema.json`：`weather_profiles` 草案，包含气候带、雾/风暴/浮冰概率、能见度、风险/航速/煤耗修正与季节集合。
 - `schemas/v2/faction.schema.json`：`factions` 草案，包含阵营类型、初始声望、敌对/友好阈值、巡逻强度、偏好商品、活动区域标签、委托族与敌对阵营。
 - `schemas/v2/discovery.schema.json`：`discoveries` 草案，包含图鉴条目类型（遗迹/房间/遗物/物种/蓝图/传闻）、稀有度、权重、可重复、来源站点/区域类型、前置标签与解锁引用。
-- `content_types.json.draft_schemas` 登记草案类型；它们仍在 `planned` 中，**不会进入 ContentTypes / 注册表**。
+- `content_types.json.draft_schemas` 登记草案 Schema 文件，`draft_types` 携带编辑器元数据（key / singular / key_prefix / label / group / default_file / `schema_version: "2.0"` / capability）。
+- 生成器把草案导出为 `SNContentTypes.DRAFT_TYPES`；编辑器 catalog 的 `BY_KEY` / `DEFAULTS` 与侧栏「Schema 2.0 草案 / 运行时不加载」分区覆盖草案类型，Content CLI 的 `types` / `describe` / `list` / `add` / `set` / `validate` 同样支持草案，并把落盘内容文件的 `schema_version` 按类型推导为 `2.0`。
+- `schema-bundle.js` 递归收录 `schemas/` 的 27 个文件（18 个顶层 + 9 个 `v2/`，含 `v2/common.schema.json`）；校验器按基准文件所在目录解析 `common.schema.json` 等跨文件 `$ref`，`v2` 草案的 required / pattern 因此生效。
+- 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；草案文件声明 1.0 或 1.0 类型声明 2.0 报 `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；每个草案内容文件给一条 `draft_content` 警告，使用 capability 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
+- **运行时仍未接入**：`TYPES`（框架 `ContentTypes`、编辑器运行时目录、注册表、加载链）保持 16 类 Content Schema 1.0，草案内容不会加载，导出/重新导入保留 2.0 与 1.0 混排只为编辑器与评审服务。
 
 约束：
 
@@ -246,6 +250,7 @@ scan → manifest / dependency resolve → schema compile
 | Save Schema | 战役存档结构 |
 
 - Content Schema 主版本变化必须提供迁移器与旧档只读兼容。
+- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。已落地 Phase A：全部 active 类型仍为 `1.0`，v2 类型在提升 active 时单独声明 `2.0`。
 - 新系统通过 capability 暴露（`content.world.v1`、`content.combat.v1`…）；模组使用新能力必须声明。
 - `v2_target` 只用于规划 Item/Module/Quest 等迁移，不代表当前可加载类型。
 
@@ -254,6 +259,8 @@ scan → manifest / dependency resolve → schema compile
 - 通用实体编辑：元数据、Schema 表单、枚举/数值、引用选择、ID 唯一性、未知字段、路径定位。
 - 专用视图：装配、世界/区域、起始场景、委托、事件、战斗遭遇、生产链、遗迹房间；只编辑数据。
 - 编辑器不能实现独立校验规则；必须与运行时/SDK 共用同一规则来源。
+- Schema 2.0 草案：编辑器可创建、编辑、校验草案类型（侧栏「Schema 2.0 草案 / 运行时不加载」分区，类型标 draft），内容文件按类型写 `schema_version: "2.0"`；导出与重新导入保持 2.0 / 1.0 混排。运行时仍只加载 1.0，草案内容只产生 `draft_content` 警告，不进入注册表。
+- 草案能力：内容使用 capability 但未写入 `manifest.capabilities` 时「校验」面板给出 `capability_undeclared` 警告；声明后消除。
 - 导出前：静态校验零 `error`，并调用 `sdk/validate.gd` 做真实加载校验。
 - 每次 Schema / `content_types.json` 变更后重新生成编辑器 bundle，并在 CI 检查是否过期。
 
@@ -265,6 +272,9 @@ scan → manifest / dependency resolve → schema compile
 4. **新系统类型**：世界、舰队、战斗、基地、自动贸易、遗迹按纵向切片逐个加入 Schema 2.0。
 5. **可选合并**：Item / Module / Quest 等重命名与合并，单独做 ID 别名与内容迁移。
 6. **清理**：旧格式停止生成，保留迁移工具与弃用提示。
+
+阶段 3–6 的可执行切片、文件触点、兼容性矩阵与验收见
+[CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md)。
 
 ## 17. 验收标准
 

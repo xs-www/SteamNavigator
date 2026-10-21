@@ -17,6 +17,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_registry.gd",
 	"res://framework/tests/cases/test_mod_loading.gd",
 	"res://framework/tests/cases/test_patches.gd",
+	"res://framework/tests/cases/test_content_versions.gd",
 	"res://framework/tests/cases/test_rng.gd",
 	"res://framework/tests/cases/test_market_trade.gd",
 	"res://framework/tests/cases/test_market_memory.gd",

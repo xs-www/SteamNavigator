@@ -14,5 +14,7 @@
 - [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) — 近期开发计划、优先级与验收标准
 - [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md) — 正式版路线图（草案，随里程碑更新）
 - [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md) — 实体契约 v2（Draft 1，Schema 2.0 目标）
+- [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md) — Content Schema 2.0 迁移落地方案（按类型版本 + 纵向切片，Draft 1）
+- [WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md) — 世界与战役内容 Schema 2.0 运行时实现契约（Phase B，Draft 1）
 - [MODELING_WORKFLOW.md](MODELING_WORKFLOW.md) — 建模半工作流与工单 / 验收流程
 - [UI_PROTOTYPE.md](UI_PROTOTYPE.md) — `.design` 美术与交互原型说明
