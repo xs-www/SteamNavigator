@@ -1,24 +1,31 @@
 # -*- coding: utf-8 -*-
 # @static-doc
-# 作用：四台起重机 GLB 的结构自检（纯 Python，不进 Blender）。
+# 作用：四台起重机 GLB 的结构与共享贴图自检（纯 Python，不进 Blender）。
 #
 # 解析 glTF 2.0 二进制（GLB），核对节点数 / 网格数 / 图元 / 三角面 / 材质名 /
-# doubleSided / **世界空间** glTF Y-up 包围盒（按节点层级合成 TRS，能正确覆盖
-# 挂在 Pivot 下的部件），专抓「改了场景忘了重导 GLB」「轴心/轴向错误」
-# 「材质被改成单面」。用法：
+# doubleSided / **世界空间** glTF Y-up 包围盒（按节点层级合成 TRS），以及
+# **贴图是否已外部化**：每个材质必须引用 `shared_materials/<texture>.png`，
+# 文件存在且与 `docs/design/textures/shared_materials/tiles/` 的授权源字节
+# 逐字节一致；每个图元必须有 `TEXCOORD_0`（UV 箱投影已烘焙）。
 #
+# 用法：
 #     python tools/modeling/generators/verify_cranes_glb.py
 #     python tools/modeling/generators/verify_cranes_glb.py <GLB 目录或单文件>
 #
 # 通过标准：每件 ALL OK，否则返回非 0 退出码。
 # @end-static-doc
 
+import hashlib
 import json
 import os
 import struct
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+import sn_shared_materials as smat
+
 WORKDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 DEFAULT_DIR = os.path.join(WORKDIR, "assets", "models", "props")
 
@@ -26,26 +33,36 @@ DEFAULT_DIR = os.path.join(WORKDIR, "assets", "models", "props")
 EXPECTED = {
     "SN_Harbor_Crane": (
         33, 31, 3912, (26.50, 6.30, 21.47),
-        {"SN_Metal", "SN_Wood", "SN_Wood_Dark", "SN_Stone"},
+        {"SN_Tex_Metal", "SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Stone"},
     ),
     "SN_Mega_Gantry": (
         20, 19, 9420, (39.60, 14.80, 29.65),
-        {"SN_Metal", "SN_Iron", "SN_Iron_Red", "SN_Wood_Dark", "SN_Brass",
-         "SN_Stone", "SN_Glass_Dark"},
+        {"SN_Tex_Metal", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Wood_Dark",
+         "SN_Tex_Brass", "SN_Tex_Stone", "SN_Tex_Glass_Dark"},
     ),
     "SN_Wooden_Mast_Crane": (
         11, 10, 1932, (14.77, 7.00, 14.25),
-        {"SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Stone",
-         "SN_Brass", "SN_Canvas_Shade"},
+        {"SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck", "SN_Tex_Metal",
+         "SN_Tex_Stone", "SN_Tex_Brass", "SN_Tex_Canvas_Shade"},
     ),
     "SN_Hand_Jib_Crane": (
         7, 6, 896, (4.60, 1.70, 5.17),
-        {"SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Stone", "SN_Brass",
-         "SN_Canvas_Shade"},
+        {"SN_Tex_Metal", "SN_Tex_Iron", "SN_Tex_Wood_Dark", "SN_Tex_Stone",
+         "SN_Tex_Brass", "SN_Tex_Canvas_Shade"},
     ),
 }
 
 SIZE_TOL = 0.05
+TEX_URI_PREFIX = "shared_materials/"
+TILE_SHA = {}
+
+
+def _sha_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 # ---------------------------------------------------------------- 4x4 矩阵
@@ -134,13 +151,18 @@ def gltf_stats(path):
     nodes = gltf.get("nodes", [])
     meshes = gltf.get("meshes", [])
     materials = gltf.get("materials", [])
+    images = gltf.get("images", [])
 
     tris = 0
     prims = 0
+    prims_without_uv = 0
     for mesh in meshes:
         for prim in mesh.get("primitives", []):
             prims += 1
-            pos_idx = prim.get("attributes", {}).get("POSITION")
+            attrs = prim.get("attributes", {})
+            if "TEXCOORD_0" not in attrs:
+                prims_without_uv += 1
+            pos_idx = attrs.get("POSITION")
             if pos_idx is None:
                 continue
             acc = accessors[pos_idx]
@@ -187,6 +209,32 @@ def gltf_stats(path):
     for root in scene_roots:
         walk(root, _identity())
 
+    image_entries = []
+    base_dir = os.path.dirname(os.path.abspath(path))
+    for image in images:
+        entry = {"name": image.get("name"), "mime": image.get("mimeType")}
+        if "uri" in image:
+            entry["uri"] = image["uri"]
+            resolved = os.path.join(base_dir, image["uri"])
+            entry["resolved"] = resolved
+            entry["exists"] = os.path.exists(resolved)
+            entry["sha256"] = _sha_file(resolved) if entry["exists"] else None
+        else:
+            entry["embedded"] = True
+        image_entries.append(entry)
+
+    texture_uris = []
+    for material in materials:
+        pbr = material.get("pbrMetallicRoughness", {})
+        texture = pbr.get("baseColorTexture", {})
+        texture_index = texture.get("index")
+        uri = None
+        if texture_index is not None:
+            source = gltf.get("textures", [])[int(texture_index)].get("source")
+            if source is not None:
+                uri = image_entries[int(source)].get("uri")
+        texture_uris.append(uri)
+
     return {
         "nodes": len(nodes),
         "meshes": len(meshes),
@@ -199,7 +247,18 @@ def gltf_stats(path):
         "bbox_min": [round(v, 4) for v in bbox_min],
         "bbox_max": [round(v, 4) for v in bbox_max],
         "size_yup": [round(bbox_max[i] - bbox_min[i], 4) for i in range(3)],
+        "images": image_entries,
+        "texture_uris": texture_uris,
+        "prims_without_uv": prims_without_uv,
     }
+
+
+def _tile_sha():
+    if not TILE_SHA:
+        for name, report in smat.texture_report().items():
+            path = os.path.join(WORKDIR, report["file"])
+            TILE_SHA[name] = _sha_file(path)
+    return TILE_SHA
 
 
 def main():
@@ -210,10 +269,10 @@ def main():
     else:
         files = [target]
     failures = []
-    print("%-24s %5s %5s %6s %-6s %-30s %-26s %s" % (
+    print("%-24s %5s %5s %6s %-6s %-28s %-22s %s" % (
         "glb", "nodes", "mesh", "tris", "prims", "size(Y-up x,y,z)",
-        "materials", "flags"))
-    print("-" * 128)
+        "textures", "flags"))
+    print("-" * 136)
     for path in files:
         name = os.path.splitext(os.path.basename(path))[0]
         s = gltf_stats(path)
@@ -241,14 +300,42 @@ def main():
             flags.append("has-camera")
         if abs(s["bbox_min"][1]) > SIZE_TOL:
             flags.append("groundY=%.3f" % s["bbox_min"][1])
+        if s["prims_without_uv"]:
+            flags.append("prims_without_uv=%d" % s["prims_without_uv"])
+
+        images = s["images"]
+        if not images:
+            flags.append("no-images")
+        if any(image.get("embedded") for image in images):
+            flags.append("embedded-images")
+        tile_shas = _tile_sha()
+        bad_uris = []
+        bad_bytes = []
+        for image in images:
+            uri = image.get("uri") or ""
+            if not uri.startswith(TEX_URI_PREFIX) or not image["exists"]:
+                bad_uris.append(uri or image.get("name"))
+                continue
+            texture = os.path.splitext(os.path.basename(uri))[0]
+            material = next((m for m, r in smat.texture_report().items()
+                             if r["texture"] == texture), None)
+            if material is None or tile_shas.get(material) != image["sha256"]:
+                bad_bytes.append(uri)
+        if bad_uris:
+            flags.append("bad-uri=%s" % ",".join(bad_uris[:3]))
+        if bad_bytes:
+            flags.append("texture-bytes-mismatch=%s" % ",".join(bad_bytes[:3]))
+        if any(uri is None for uri in s["texture_uris"]):
+            flags.append("material-without-texture")
+
         if flags:
             failures.append((name, flags))
-        print("%-24s %5d %5d %6d %6d %-30s %-26s %s" % (
+        print("%-24s %5d %5d %6d %6d %-28s %-22s %s" % (
             name, s["nodes"], s["meshes"], s["tris"], s["primitives"],
             "%.2f,%.2f,%.2f" % tuple(s["size_yup"]),
-            ",".join(s["materials"])[:25],
+            "%d external" % len(images),
             ", ".join(flags) if flags else "ok"))
-    print("-" * 128)
+    print("-" * 136)
     print("files = %d, failures = %d" % (len(files), len(failures)))
     if failures:
         for name, flags in failures:

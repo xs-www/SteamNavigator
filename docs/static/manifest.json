@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-21T00:40:44.218Z",
-  "commit": "ab1185c",
+  "generated_at": "2026-10-21T00:55:27.789Z",
+  "commit": "eec3fe7",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 626,
-    "documented": 249,
-    "grouped": 377
+    "sources": 642,
+    "documented": 252,
+    "grouped": 390
   },
   "files": [
     {
@@ -1267,6 +1267,13 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/props/SN_Hand_Jib_Crane.glb",
+      "sha256": "51d15bf53a52201a4000459899dc2de58da7e8788f13ef9fde1e430581fd2310",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/props/SN_Handcart.glb",
       "sha256": "5828cf33b78a46f7e1c07ace60482cd4477b0d1793c750044a559fb3f1e9b3e3",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -1275,7 +1282,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Harbor_Crane.glb",
-      "sha256": "abdebfa74a7d49d17356bbf1cbe0794b50acf4b4301faad772a7135fcc7e63ec",
+      "sha256": "0540730fa9559e44e8e670f4fc2d42e209a44c59fdb5ff6c69c3f41798d139e3",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1283,6 +1290,13 @@
     {
       "source": "dev_mods/core/assets/models/props/SN_Keel_Block.glb",
       "sha256": "ee4c9c413c11c39931348a576c0b0db99678d9addac71bd007d43322dcab3717",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/SN_Mega_Gantry.glb",
+      "sha256": "88400efaef867b4ea88c9739dde14cb1df81248e147a984a29aabb7c26f64eae",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1346,6 +1360,13 @@
     {
       "source": "dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
       "sha256": "84b51b586f188869d139e59583e472110276681b1a9f470bf55a53f4b3bceb81",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/SN_Wooden_Mast_Crane.glb",
+      "sha256": "e91cb749dbd9551a9cebe54d21731188e26d1d82d12b6bdcd931efbc0db751f1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1430,6 +1451,76 @@
     {
       "source": "dev_mods/core/assets/models/props/iron_harbor_shared/wood_plank_weathered.png",
       "sha256": "546feb6ebed0ef2f13c0d5badfba13dedfa64176ff8768809feafdb15834f420",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/props/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1597,7 +1688,7 @@
     },
     {
       "source": "dev_mods/core/manifest.json",
-      "sha256": "ed75a4f4d9f9bda059dd7d459b537ab9ae47361ecfc6d5de281bd1b40caf4c58",
+      "sha256": "9ab802f450f53a20c19a2aa6685f72c061d5321579d0fb30dbcd1b4a44cdc517",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2393,7 +2484,7 @@
     },
     {
       "source": "framework/tests/cases/test_mod_loading.gd",
-      "sha256": "a183edacd6bbe9cba9005acb4645ea141880495ec847d901b5f264da14aa24c7",
+      "sha256": "ad882c485578f0b56c495b03ae3d825bc15f00208ea0a829b9b862ff6ac7db9d",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -3341,7 +3432,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "8c7c768b9e12b2d344df8021dfa4a4b0b1d86fe9dadcc741ae3bc7aba4c14854",
+      "sha256": "5b2c9f3763896cbf886fc3c2ae367974e55fa450fab8001b4288d446ed458dda",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3350,6 +3441,12 @@
       "source": "tools/art/gen_iron_harbor_trim_sheet.py",
       "sha256": "ace8c3b4ee9bd5b170dff48977279297bccd198002641a3e2421d618d0f64d38",
       "doc": "docs/static/tools/art/gen_iron_harbor_trim_sheet.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/art/gen_shared_material_textures.py",
+      "sha256": "aa576af3fe2ee0832916162815cf931071386aee46ecab7d482577d507f128fb",
+      "doc": "docs/static/tools/art/gen_shared_material_textures.py.md",
       "status": "documented"
     },
     {
@@ -3432,6 +3529,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/godot/verify_crane_materials.gd",
+      "sha256": "29d5a2fbd7d38dbbce324862835618069b51a949bbafd57ca5a9693c7cb9128f",
+      "doc": "docs/static/tools/godot/verify_crane_materials.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/godot/verify_cranes.gd",
       "sha256": "09149bffdd78f02eda30775a29cb06d3d5d95f956f63824105d6ef3f03fe6c12",
       "doc": "docs/static/tools/godot/verify_cranes.gd.md",
@@ -3477,14 +3580,14 @@
     },
     {
       "source": "tools/modeling/briefs/_template.json",
-      "sha256": "6acc369508355fc3284e5bfb019e90cb63f0f23ecfc10e127c2428fd2eefa062",
+      "sha256": "4414390072b57559b94ec6ff673b3cc433ba51e3390f04b210a4267a63c9bcc7",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
     },
     {
       "source": "tools/modeling/briefs/sn_crane_batch1.json",
-      "sha256": "6451a521890a4174d08ebed67e4da0fead60a7ef06dcb88aad8c1ab8e05d9ef5",
+      "sha256": "8137c6c868339a3e5f492362e75d1f4a2cfa85f00d82986bf9257501613f12ad",
       "doc": "docs/static/tools/modeling/briefs/sn_crane_batch1.json.md",
       "status": "documented"
     },
@@ -3620,7 +3723,7 @@
     },
     {
       "source": "tools/modeling/generators/dryrun_cranes.py",
-      "sha256": "d1839687128f2996e8c3c14ee54d6b7db8ef38821a5695a2da4940aa0161c17d",
+      "sha256": "56e5c815099f0b7ed857cf743159e17eb9e596ee2e4dd10b48ede62fc603ef05",
       "doc": "docs/static/tools/modeling/generators/dryrun_cranes.py.md",
       "status": "documented"
     },
@@ -3679,7 +3782,7 @@
     },
     {
       "source": "tools/modeling/generators/export_cranes_glb.py",
-      "sha256": "79a31a570f2256b4640668c652bc690b7d4df89997616739b36a8cd69f38be9b",
+      "sha256": "a97c528a872f87eb095619ca57bdd4ce56fcc69ec287fd3270ec90307aba2d25",
       "doc": "docs/static/tools/modeling/generators/export_cranes_glb.py.md",
       "status": "documented"
     },
@@ -3758,7 +3861,7 @@
     },
     {
       "source": "tools/modeling/generators/glb_shared_textures.py",
-      "sha256": "9fcb8a1aaa462f36438fa23b8a72137a6c3f093101f424b6ccaf31d23f2c3446",
+      "sha256": "a66938696dc2ffab843811082ac54c8e090985161ddde560fddbab264f28e8e7",
       "doc": "docs/static/tools/modeling/generators/glb_shared_textures.py.md",
       "status": "documented"
     },
@@ -3881,19 +3984,19 @@
     },
     {
       "source": "tools/modeling/generators/sn_crane_materials.py",
-      "sha256": "18d19c4ded9353fe42522c89fd9b2b2f75ecc6d209cf477546e74054af87ff79",
+      "sha256": "4285148cef57df89a9aac6629fdb292bb6b5230daa8f4157d108024cd758aa04",
       "doc": "docs/static/tools/modeling/generators/sn_crane_materials.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
-      "sha256": "3d197baa31c68dd5bc073e8c3f531fcbfd46063c0a5bf13db68bcb2df98161b6",
+      "sha256": "25f660c038197152ee1b6af0d2fea697ee84aeb3b72039b9d3e5094ea0b65c01",
       "doc": "docs/static/tools/modeling/generators/sn_hand_jib_crane_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_harbor_crane_generator.py",
-      "sha256": "04ca69ceb3375ba7f5d0d8ff77020e055e6cf9a96734f831094a2aa85b45d415",
+      "sha256": "ca45a33f2de513f6bd9e7573c122294dfc00eb4a5a0e23e844c9d3ac28f3e975",
       "doc": "docs/static/tools/modeling/generators/sn_harbor_crane_generator.py.md",
       "status": "documented"
     },
@@ -3994,7 +4097,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_mega_gantry_generator.py",
-      "sha256": "cbe37824bee6531e27818cb299a14c560e1befe8e167680468c9d8a584df0f07",
+      "sha256": "aa54ac3e669869df68213f77d5dae741d50eaf885c4170b167aac7c9b8b20953",
       "doc": "docs/static/tools/modeling/generators/sn_mega_gantry_generator.py.md",
       "status": "documented"
     },
@@ -4033,6 +4136,12 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/sn_shared_materials.py",
+      "sha256": "9e2827e5face66abcfadce4c4927e4d3e87f5dc07af0249d2fb4147ede64de7e",
+      "doc": "docs/static/tools/modeling/generators/sn_shared_materials.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_ship_modules_generator.py",
       "sha256": "dd8afe8dd95ad3d9b82e8c325b12bfb2696a3fec9d0bf9224868fbc55a9292c3",
       "doc": "docs/static/tools/README.md",
@@ -4041,13 +4150,13 @@
     },
     {
       "source": "tools/modeling/generators/sn_wooden_mast_crane_generator.py",
-      "sha256": "a63dccdebbcdff222b9fad44fcea073295a7f7bcd18390598506cc96528023ae",
+      "sha256": "1b19235ee259c3c6f475eb4ab3de65684b8886c45afbd52c30b73c70f1924d9f",
       "doc": "docs/static/tools/modeling/generators/sn_wooden_mast_crane_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/verify_cranes_glb.py",
-      "sha256": "0fb34b843c97eb6954e74cae3af681149536dbe4aaf2462c118702600f754a70",
+      "sha256": "dbd4059d9cf19c20cf1075e2ad4db0f7c431d12706e068b74a933e0fc4a409d5",
       "doc": "docs/static/tools/modeling/generators/verify_cranes_glb.py.md",
       "status": "documented"
     },

@@ -23,6 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 import sn_crane_materials as cmat
+import sn_shared_materials as smat
 
 CASES = [
     dict(module="sn_harbor_crane_generator.py", label="SN_Harbor_Crane",
@@ -100,6 +101,7 @@ def check_case(case):
     cfg = mod.build_config()
     pivot_names = {p.name for p in cfg.pivots}
     materials = set(getattr(mod, "MATERIALS", ()))
+    texture_facts = smat.texture_report()
     failures = []
     if not materials:
         failures.append(("MATERIALS", ["generator has no MATERIALS set"]))
@@ -113,6 +115,13 @@ def check_case(case):
                 spec = tuple(getattr(mod, "COLORS", {}).get(name, ()))
                 if spec and spec != tuple(cmat.PALETTE[name]):
                     failures.append((name, ["material spec drift vs shared palette"]))
+                tex = texture_facts.get(name)
+                if tex is None:
+                    failures.append((name, ["material missing from texture library"]))
+                elif not tex["exists"]:
+                    failures.append((name, ["texture file missing: %s" % tex["file"]]))
+                elif tex["tile_m"] <= 0.0:
+                    failures.append((name, ["bad tile_m"]))
     # PivotSpec 契约：rotation 必须是三元组、location 必须与 origins 一致
     # （双重减原点 / 把 float 传进 rotation 的 P0 都靠这两条在干跑阶段拦住）。
     for spec in cfg.pivots:
@@ -215,13 +224,49 @@ def check_case(case):
     return True
 
 
+def check_texture_library():
+    """共享材质贴图库：10 张 tile 存在、tile_m/px_per_m 合理、运行时副本一致。"""
+    facts = smat.texture_report()
+    specs = smat.material_specs()
+    failures = []
+    print("%-22s %-12s %8s %7s %8s %s" % (
+        "material", "texture", "bytes", "tile_m", "px/m", "flags"))
+    print("-" * 84)
+    for name in sorted(specs):
+        entry = facts[name]
+        flags = []
+        if not entry["exists"]:
+            flags.append("MISSING")
+        if entry["tile_m"] <= 0.0:
+            flags.append("bad tile_m")
+        if not entry["uri"].startswith("shared_materials/"):
+            flags.append("bad uri")
+        if flags:
+            failures.append((name, flags))
+        print("%-22s %-12s %8s %7.2f %8.1f %s" % (
+            name, entry["texture"],
+            entry["bytes"] if entry["bytes"] is not None else "-",
+            entry["tile_m"], entry["px_per_m"],
+            ", ".join(flags) if flags else "ok"))
+    print("-" * 84)
+    print("texture library: %d materials / %d bytes" % (
+        len(specs), sum(v["bytes"] or 0 for v in facts.values())))
+    return failures
+
+
 def main():
     only = sys.argv[1] if len(sys.argv) > 1 else None
     cases = [c for c in CASES if only is None or c["module"] == only]
     if not cases:
         print("no case matches %r" % only)
         return 2
-    ok = True
+    print("=" * 96)
+    texture_failures = check_texture_library()
+    ok = not texture_failures
+    if texture_failures:
+        print("\nTEXTURE FAILURES:")
+        for name, flags in texture_failures:
+            print("  %s: %s" % (name, ", ".join(flags)))
     for case in cases:
         ok = check_case(case) and ok
     print("\n" + ("ALL CRANES OK" if ok else "CRANE DRYRUN FAILED"))

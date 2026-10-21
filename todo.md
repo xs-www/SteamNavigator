@@ -19,7 +19,8 @@
 - [ ] 存档：声明式 ID 别名与数据迁移执行器；出航失败回滚的存档路径端到端测试
 - [ ] SDK / 发布：模组管理 UI（启用 / 禁用 / 优先级）、发布签名与固定哈希校验
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
-- [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 Core manifest 资源键、PortStage 槽位与目标机位复核（塔吊已沿用既有键并更新 GLB）
+- [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
+- [ ] 旧资产 UV 迁移：31 件铁港道具 / 6 件港口设施 / 11 件模块 / 4 艘船补 UV 并切换 `SN_Tex_*` 共享贴图材质（新资产已默认贴图；旧纯色 `SN_*` 逐批退役）
 - [ ] 船体部件库 `rig_kit`（桅杆 / 斜桁 / 帆面 / 索具参数化）与运行时可替换部件（`SN_Socket_*` + `parts_manifest.json` + `ShipVisualAssembler`）
 
 ### 海图 / 探索
@@ -41,6 +42,7 @@
 
 ## Recently Completed
 
+- [x] 共享贴图材质系统（2026-10-21）：`shared_materials` 10 张 512² 无缝贴图（spec + 生成器 + montage + stats，确定性可复现）；新增 `sn_shared_materials.py`（`SN_Tex_*` 材质 + 世界空间盒式 UV + 验收），四台起重机全部改用贴图材质，导出 GLB 时把内嵌贴图外部化为 `shared_materials/<texture>.png` 并同步 Core；`verify_cranes_glb.py` / `tools/godot/verify_crane_materials.gd` 验证外部 URI、UV 与跨 GLB 贴图实例共享；旧纯色 `SN_*` 材质保持不动，迁移约定写入 `MODELING_WORKFLOW` §12 与工单模板
 - [x] 港口起重机四件套（2026-10-21）：补全塔吊参数化生成器并重建（`SN_Harbor_Crane` 3912 tri / 33 节点，Core 副本同步）+ 新增大型龙门吊 `SN_Mega_Gantry`（9420 tri / 39.6×14.8×29.65 m，台车齿轮传动 / 40 m 桁架桥 / 双卷扬机械房 / 吊装集装箱）、木制桅杆起重机 `SN_Wooden_Mast_Crane`（1932 tri / 14.77×7×14.25 m）、手摇悬臂吊 `SN_Hand_Jib_Crane`（896 tri / 4.6×1.7×5.17 m）；共用 `crane_kit.py`，干跑 / 导出 / GLB 世界空间自检 / Godot 导入验收 4/4 PASS；工单 `sn_crane_batch1.json`，记录见 `docs/design/MODELING_WORKFLOW.md` §11.11
 - [x] 海图阶段 4.2（2026-10-21）：资源告急决策（航程 50% 停下，继续 / 掉头；跳过不能替玩家决策）、`VoyagePresentation.force_arrival()` 直接入港、`explore.decide` 幂等与错误码、探索入港复用普通抵达的到港服务（委托 / 市场记忆 / NPC / 债务 / 委托刷新 / 统计 / 自动存档）、告警状态进 `sea_chart.view`、窗口截图与 308 例全量回归
 - [x] 海图阶段 4.1 探索系统（2026-10-21）：`ClueService`（抵达传闻 + 购买情报）、线索分级与海图可视化（方向箭头 / 虚线圆 / `？港名？`）、`explore.start`/`settle`/`decide`、搜索区判定与发现概率、失败漂流、发现后解锁港口与迷雾揭示、探索演出与结算；契约与截图见 `docs/design/EXPLORATION_SYSTEM.md`

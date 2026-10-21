@@ -4,10 +4,10 @@
   "purpose": "这个物品在游戏里用来做什么（一句话）",
   "category": "prop",
   "style": {
-    "look": "low-poly / flat shaded / 单层色块，无贴图",
-    "palette": ["wood", "metal", "canvas"],
+    "look": "low-poly / flat shaded / 共享贴图材质（SN_Tex_* + shared_materials/<texture>.png），不再用纯色代表材质",
+    "palette": ["SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Metal"],
     "reference_images": [],
-    "notes": "参考现有 SN_Ship_Prototype 的比例与材质节奏"
+    "notes": "贴图与材质真源见 docs/design/textures/shared_materials/shared_materials.spec.json；新增材质必须先加 spec 与贴图，不允许在生成器里硬编码颜色"
   },
   "dimensions": {
     "length": 2.0,
@@ -18,7 +18,13 @@
   },
   "tri_budget": 1500,
   "required_parts": ["body", "lid", "metal_bands"],
-  "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Metal"],
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "materials": ["SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Metal"],
+  "uv": {
+    "projection": "world-space box projection by dominant face normal",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json (per material)"
+  },
   "naming": {
     "prefix": "SN_",
     "collection": "SN_<Name>_Prototype"
@@ -42,7 +48,8 @@
   "deliverables": {
     "blend": ".design/<category>/SN_<Name>.blend",
     "glb": "assets/models/<category>/SN_<Name>.glb",
-    "generator": ".design/<category>/sn_<name>_generator.py",
+    "shared_textures": "assets/models/<category>/shared_materials/ + dev_mods/core/assets/models/<category>/shared_materials/",
+    "generator": "tools/modeling/generators/sn_<name>_generator.py",
     "screenshots": ["three_quarter", "side", "top"]
   },
   "acceptance": [
@@ -50,8 +57,10 @@
     "三角面数 <= tri_budget",
     "无孤立点 / 退化面 / 材质槽越界",
     "包围盒符合 dimensions，误差在 tolerance 内",
+    "每个材质槽绑定 512² 共享贴图（SN_Tex_*），UV 完整（len(uv) == len(loops)），无纯色材质",
+    "导出 GLB 的 images[].uri 指向 shared_materials/<texture>.png，且共享 PNG 与授权 tile 逐字节一致",
     "斜上方 3/4 视角能辨认轮廓",
-    "场景中原有对象未被删除或修改"
+    "场景中原有对象未被删除或修改；旧纯色材质 SN_* 不被原地改写"
   ],
-  "notes": "工单必须自包含：子代理不共享主会话上下文"
+  "notes": "工单必须自包含：子代理不共享主会话上下文。材质/贴图/UV 契约见 docs/design/MODELING_WORKFLOW.md §12"
 }

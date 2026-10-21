@@ -1,0 +1,388 @@
+{
+  "id": "shared_materials_v1",
+  "schema": "steam-navigator/shared-material-textures@1",
+  "role": "通用共享材质贴图库：每张 512²、无缝平铺的 sRGB 贴图对应一个 SN_* 材质；模型只按材质名引用，贴图作为外部共享 PNG 随 core 模组发布，多件资产在 Godot 里共享同一个 Texture2D。",
+  "tile_px": 512,
+  "px_per_m": 256,
+  "color_space": "sRGB",
+  "seamless": true,
+  "quantize_colors": 96,
+  "art_direction": "低饱和维多利亚工业港：金属以拉丝/铸造麻点为主，锈红漆面有磨损露金属，木材顺纹带轻微色阶，石材错缝砌块，黄铜有氧化与高光，帆布是粗织纹，玻璃深色带一条柔和高光带。整体中低对比，避免高频噪点；贴图均值贴近原纯色调色板，换贴图后明度层级不变。 材质名使用 SN_Tex_* 前缀：旧资产的 SN_* 纯色材质保持不动，新资产共用贴图材质；旧资产完成 UV 迁移后再逐批切换。",
+  "outputs": {
+    "tiles": "docs/design/textures/shared_materials/tiles",
+    "montage": "docs/design/textures/shared_materials/shared_materials_montage.png",
+    "stats": "docs/design/textures/shared_materials/shared_materials.stats.json"
+  },
+  "runtime_dirs": [
+    "assets/models/props/shared_materials",
+    "dev_mods/core/assets/models/props/shared_materials"
+  ],
+  "uri_prefix": "shared_materials",
+  "materials": [
+    {
+      "name": "SN_Tex_Metal",
+      "texture": "metal",
+      "tile_m": 2.0,
+      "roughness": 0.36,
+      "metallic": 0.9,
+      "kind": "metal",
+      "detail": "brushed",
+      "mean_rgb": [
+        105,
+        108,
+        115
+      ],
+      "palette": {
+        "base": [
+          104,
+          108,
+          116
+        ],
+        "alt": [
+          92,
+          96,
+          104
+        ],
+        "hi": [
+          138,
+          142,
+          150
+        ],
+        "grime": [
+          78,
+          82,
+          90
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Iron",
+      "texture": "iron",
+      "tile_m": 2.0,
+      "roughness": 0.52,
+      "metallic": 0.62,
+      "kind": "cast_iron",
+      "detail": "pitted",
+      "mean_rgb": [
+        71,
+        74,
+        79
+      ],
+      "palette": {
+        "base": [
+          70,
+          73,
+          78
+        ],
+        "alt": [
+          60,
+          63,
+          68
+        ],
+        "hi": [
+          96,
+          100,
+          105
+        ],
+        "pit": [
+          44,
+          46,
+          50
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Iron_Red",
+      "texture": "iron_red",
+      "tile_m": 2.0,
+      "roughness": 0.62,
+      "metallic": 0.1,
+      "kind": "painted_rust",
+      "detail": "worn",
+      "mean_rgb": [
+        118,
+        56,
+        43
+      ],
+      "palette": {
+        "base": [
+          122,
+          52,
+          40
+        ],
+        "alt": [
+          108,
+          45,
+          35
+        ],
+        "seam": [
+          78,
+          34,
+          28
+        ],
+        "rust": [
+          96,
+          58,
+          38
+        ],
+        "metal": [
+          120,
+          118,
+          112
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Wood",
+      "texture": "wood",
+      "tile_m": 2.0,
+      "roughness": 0.7,
+      "metallic": 0.0,
+      "kind": "wood",
+      "detail": "",
+      "mean_rgb": [
+        125,
+        84,
+        54
+      ],
+      "palette": {
+        "plank": [
+          116,
+          84,
+          56
+        ],
+        "plank_alt": [
+          104,
+          74,
+          48
+        ],
+        "gap": [
+          58,
+          40,
+          26
+        ],
+        "grain": [
+          88,
+          62,
+          40
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Wood_Dark",
+      "texture": "wood_dark",
+      "tile_m": 2.0,
+      "roughness": 0.64,
+      "metallic": 0.0,
+      "kind": "wood",
+      "detail": "",
+      "mean_rgb": [
+        58,
+        40,
+        26
+      ],
+      "palette": {
+        "plank": [
+          52,
+          37,
+          26
+        ],
+        "plank_alt": [
+          44,
+          31,
+          22
+        ],
+        "gap": [
+          26,
+          18,
+          12
+        ],
+        "grain": [
+          40,
+          28,
+          19
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Wood_Deck",
+      "texture": "wood_deck",
+      "tile_m": 2.0,
+      "roughness": 0.76,
+      "metallic": 0.0,
+      "kind": "wood",
+      "detail": "greyed",
+      "mean_rgb": [
+        149,
+        113,
+        77
+      ],
+      "palette": {
+        "plank": [
+          140,
+          108,
+          74
+        ],
+        "plank_alt": [
+          128,
+          98,
+          66
+        ],
+        "gap": [
+          68,
+          48,
+          32
+        ],
+        "grain": [
+          112,
+          84,
+          56
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Stone",
+      "texture": "stone",
+      "tile_m": 2.0,
+      "roughness": 0.9,
+      "metallic": 0.0,
+      "kind": "stone",
+      "detail": "damp streaks",
+      "mean_rgb": [
+        134,
+        132,
+        127
+      ],
+      "palette": {
+        "block": [
+          136,
+          132,
+          124
+        ],
+        "block_alt": [
+          122,
+          118,
+          110
+        ],
+        "joint": [
+          98,
+          94,
+          86
+        ],
+        "damp": [
+          108,
+          104,
+          94
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Brass",
+      "texture": "brass",
+      "tile_m": 1.0,
+      "roughness": 0.28,
+      "metallic": 0.85,
+      "kind": "brass",
+      "detail": "tarnished",
+      "mean_rgb": [
+        174,
+        143,
+        77
+      ],
+      "palette": {
+        "base": [
+          172,
+          140,
+          78
+        ],
+        "alt": [
+          152,
+          120,
+          64
+        ],
+        "hi": [
+          204,
+          180,
+          120
+        ],
+        "tarnish": [
+          120,
+          96,
+          52
+        ],
+        "patina": [
+          86,
+          102,
+          78
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Canvas_Shade",
+      "texture": "canvas",
+      "tile_m": 0.5,
+      "roughness": 0.92,
+      "metallic": 0.0,
+      "kind": "canvas",
+      "detail": "coarse weave",
+      "mean_rgb": [
+        194,
+        188,
+        172
+      ],
+      "palette": {
+        "base": [
+          192,
+          186,
+          170
+        ],
+        "alt": [
+          176,
+          170,
+          154
+        ],
+        "weave": [
+          208,
+          202,
+          186
+        ],
+        "stain": [
+          150,
+          144,
+          128
+        ]
+      }
+    },
+    {
+      "name": "SN_Tex_Glass_Dark",
+      "texture": "glass_dark",
+      "tile_m": 2.0,
+      "roughness": 0.25,
+      "metallic": 0.35,
+      "kind": "glass",
+      "detail": "",
+      "mean_rgb": [
+        50,
+        58,
+        64
+      ],
+      "palette": {
+        "glass": [
+          30,
+          40,
+          46
+        ],
+        "reflect": [
+          70,
+          92,
+          98
+        ],
+        "grime": [
+          44,
+          52,
+          56
+        ]
+      }
+    }
+  ]
+}

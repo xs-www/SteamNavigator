@@ -210,18 +210,23 @@ def _image_cell_name(document, image, payload):
 # --------------------------------------------------------------------------- #
 
 def externalize_glb(src, dst, shared_dir=SHARED_DIR, uri_prefix=DEFAULT_URI_PREFIX,
-                    tiles_dir=TILES_DIR, write_pngs=True):
+                    tiles_dir=TILES_DIR, write_pngs=True, prefer_authored=False):
     """Rewrite ``src`` so its embedded images become shared external URIs.
 
+    ``prefer_authored=True`` ships the authored tile bytes (from ``tiles_dir``)
+    instead of the bytes re-encoded by the exporter, so a shared PNG stays
+    byte-identical to the source texture even when Blender re-encodes it.
+
     Returns a report dict; writes ``dst`` (may equal ``src`` for an in-place
-    rewrite) and the shared PNGs once (byte-identical to the authored tiles).
+    rewrite) and the shared PNGs once.
     """
     document, bin_chunk = read_glb(src)
+    size_before = os.path.getsize(src)
     images = document.get("images", [])
     if not images:
         return {"ok": True, "src": src, "dst": dst, "images": [],
-                "note": "no images", "bytes_before": os.path.getsize(src),
-                "bytes_after": os.path.getsize(src)}
+                "note": "no images", "bytes_before": size_before,
+                "bytes_after": size_before}
 
     used_before = _used_buffer_views(document)
     external = []
@@ -240,25 +245,26 @@ def externalize_glb(src, dst, shared_dir=SHARED_DIR, uri_prefix=DEFAULT_URI_PREF
         tile_path = os.path.join(tiles_dir, png_name)
         payload_hash = sha256_bytes(payload)
         tile_hash = sha256_file(tile_path)
+        shipped = payload
+        authored = False
+        if prefer_authored and os.path.isfile(tile_path):
+            with open(tile_path, "rb") as handle:
+                shipped = handle.read()
+            authored = True
+        shipped_hash = sha256_bytes(shipped)
         if write_pngs:
             os.makedirs(shared_dir, exist_ok=True)
-            if tile_hash == payload_hash and os.path.exists(tile_path):
-                if sha256_file(png_path) != payload_hash:
-                    with open(tile_path, "rb") as handle:
-                        data = handle.read()
-                    with open(png_path, "wb") as handle:
-                        handle.write(data)
-            else:
-                # Embedded bytes and authored tile differ (or the tile is
-                # missing): ship the exact bytes that were exported, and flag it.
+            if sha256_file(png_path) != shipped_hash:
                 with open(png_path, "wb") as handle:
-                    handle.write(payload)
+                    handle.write(shipped)
         png_reports.append({
             "cell": cell,
             "png": os.path.relpath(png_path, REPO_ROOT),
-            "bytes": len(payload),
-            "sha256": payload_hash,
+            "bytes": len(shipped),
+            "sha256": shipped_hash,
+            "exported_sha256": payload_hash,
             "tile_matches": tile_hash == payload_hash,
+            "authored": authored,
             "written": write_pngs,
         })
         shared_files[cell] = png_path
@@ -268,7 +274,8 @@ def externalize_glb(src, dst, shared_dir=SHARED_DIR, uri_prefix=DEFAULT_URI_PREF
         external.append({"index": index, "name": cell, "uri": uri,
                          "already_external": False, "buffer_view": view_index,
                          "bytes": len(payload), "sha256": payload_hash,
-                         "tile_matches": tile_hash == payload_hash})
+                         "tile_matches": tile_hash == payload_hash,
+                         "authored": authored})
 
     # Rebuild the BIN chunk from the bufferViews the accessors actually use.
     remap = {}
@@ -294,9 +301,9 @@ def externalize_glb(src, dst, shared_dir=SHARED_DIR, uri_prefix=DEFAULT_URI_PREF
         "ok": True,
         "src": os.path.relpath(src, REPO_ROOT),
         "dst": os.path.relpath(dst, REPO_ROOT),
-        "bytes_before": os.path.getsize(src),
+        "bytes_before": size_before,
         "bytes_after": bytes_after,
-        "bytes_saved": os.path.getsize(src) - bytes_after,
+        "bytes_saved": size_before - bytes_after,
         "images": external,
         "pngs": png_reports,
         "buffer_views_before": len(document.get("bufferViews", [])),

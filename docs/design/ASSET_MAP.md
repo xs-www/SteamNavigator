@@ -97,22 +97,50 @@
 ## 3D 港口起重机四件套（2026-10-21）
 
 同一批交付四台起重机（塔吊为补全生成器后的重建）。全部由参数化生成器驱动、纯 Python 干跑，
-工作台集合独立；除塔吊外**暂未接入 Core manifest / PortStage**（接入时需同步 manifest 资源键、
-校验测试与舞台槽位）。
+工作台集合独立；**四件均已接入 Core manifest**（`model.prop.harbor_crane` 沿用，
+`model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane` 新增），
+PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN_Tex_*` 共享贴图材质
+（贴图 URI `shared_materials/<texture>.png`，见下节）。
 
 | 资产 | 运行时 GLB | 集合 / 摆位 | 尺寸 L×W×H (m) | tri | 材质数 | 结构要点 |
 | --- | --- | --- | --- | ---: | ---: | --- |
 | `SN_Harbor_Crane` | `assets/models/props/SN_Harbor_Crane.glb`（Core 副本同路径） | `SN_Harbor_Crane_Prototype` / (0, 16, 0) | 26.50 × 6.30 × 21.47 | **3912** | 4 | 石基座 + 收分格构塔 + 回转环 / 平台 + 20.1 m 桁架主臂 + 6 m 配重臂 + 3 块石配重 + A 字塔头 / 6 拉杆 + 司机室 + 主卷扬（卷筒 / 电机 / 齿轮组 / 制动盘）+ 小车 + 吊钩组；回转 Pivot `SN_Crane_Slew_Pivot`（z=17.3），吊钩最低 4.42 m |
-| `SN_Mega_Gantry` | `assets/models/props/SN_Mega_Gantry.glb` | `SN_Mega_Gantry_Prototype` / (-20, 260, 0) | 39.60 × 14.80 × 29.65 | **9420** | 7 | 地面双轨 + 枕木、4 台带齿轮传动的台车、4 条收分格构腿 + 两条顶梁 + 40 m 主桁架桥（走台 / 小车轨 / 栏杆）、小车卷扬、桥端机械房（双卷筒 / 电机 / 齿轮箱 / 齿轮组 / 传动轴 / 制动盘）、4 根起升钢缆 + 双钩横担 + 吊装集装箱、爬梯 / 平台 |
-| `SN_Wooden_Mast_Crane` | `assets/models/props/SN_Wooden_Mast_Crane.glb` | `SN_Wooden_Mast_Crane_Prototype` / (30, 260, 0) | 14.77 × 7.00 × 14.25 | **1932** | 7 | 石台基 + 木梁底盘 + 方木桅杆（8 道铁箍 / 四向斜撑）、后倾木吊臂（双颊板 / 铁箍 / 端部滑轮）、桅顶四根后拉索 + 石锚、A 字木架手摇绞车（卷筒 / 棘轮 / 摇柄 / 二级齿轮）、吊钩组、爬梯、甲板盘绳 / 木箱 / 木料堆 |
+| `SN_Mega_Gantry` | `assets/models/props/SN_Mega_Gantry.glb` | `SN_Mega_Gantry_Prototype` / (-20, 260, 0) | 39.60 × 14.80 × 29.65 | **9420** | 6 | 地面双轨 + 枕木、4 台带齿轮传动的台车、4 条收分格构腿 + 两条顶梁 + 40 m 主桁架桥（走台 / 小车轨 / 栏杆）、小车卷扬、桥端机械房（双卷筒 / 电机 / 齿轮箱 / 齿轮组 / 传动轴 / 制动盘）、4 根起升钢缆 + 双钩横担 + 吊装集装箱、爬梯 / 平台 |
+| `SN_Wooden_Mast_Crane` | `assets/models/props/SN_Wooden_Mast_Crane.glb` | `SN_Wooden_Mast_Crane_Prototype` / (30, 260, 0) | 14.77 × 7.00 × 14.25 | **1932** | 6 | 石台基 + 木梁底盘 + 方木桅杆（8 道铁箍 / 四向斜撑）、后倾木吊臂（双颊板 / 铁箍 / 端部滑轮）、桅顶四根后拉索 + 石锚、A 字木架手摇绞车（卷筒 / 棘轮 / 摇柄 / 二级齿轮）、吊钩组、爬梯、甲板盘绳 / 木箱 / 木料堆 |
 | `SN_Hand_Jib_Crane` | `assets/models/props/SN_Hand_Jib_Crane.glb` | `SN_Hand_Jib_Crane_Prototype` / (55, 260, 0) | 4.60 × 1.70 × 5.17 | **896** | 6 | 石基座 + 木垫板 + 地脚螺栓、立柱（法兰 / 柱帽 / 铁箍）、悬臂 + 拉杆 + 斜撑 + 端部滑轮、手摇绞车（卷筒 / 棘轮 / 摇柄）、吊钩组、踏步 / 铭牌 |
 
 - 共用部件库：`tools/modeling/generators/crane_kit.py`（桁架臂 / 格构柱 / 梯子 / 栏杆 / 车轮 / 卷筒 / 滑轮 / 齿轮 / 钢缆 / 吊钩组 / 手摇绞车 / 木料堆，纯 Python，不 import bpy）。
-- 共享材质库：`tools/modeling/generators/sn_crane_materials.py`（10 个 `SN_*` 材质的线性色 / 粗糙度 / 金属度 + 每件资产的材质白名单；生成器只引用 `MAT_*` 常量与 `colors_for()`，不各自维护材质，改色只改这一处）。
+- 共享贴图材质库：`tools/modeling/generators/sn_shared_materials.py`（读 spec、建 `SN_Tex_*` 材质节点、世界空间盒式 UV、验收）；资产侧视图 `sn_crane_materials.py`（`MAT_*` 常量 + 每资产材质白名单 + `colors_for()` 回退）。
 - 生成器：`sn_harbor_crane_generator.py`、`sn_mega_gantry_generator.py`、`sn_wooden_mast_crane_generator.py`、`sn_hand_jib_crane_generator.py`；工单 `tools/modeling/briefs/sn_crane_batch1.json`。
-- 干跑 / 导出 / 自检 / 预览：`dryrun_cranes.py`、`export_cranes_glb.py`、`verify_cranes_glb.py`（世界空间包围盒按节点 TRS 合成）、`render_cranes_preview.py`；Godot 侧导入验收 `tools/godot/verify_cranes.gd`（4/4 PASS）。
+- 干跑 / 导出 / 自检 / 预览：`dryrun_cranes.py`（含贴图库与材质白名单校验）、`export_cranes_glb.py`（导出后把贴图外部化为共享 URI 并同步 Core）、`verify_cranes_glb.py`（世界空间 bbox、外部 URI、贴图字节、`TEXCOORD_0`）、`render_cranes_preview.py`。
+- Godot 验收：`tools/godot/verify_cranes.gd`（尺寸 / tri / 材质 / 贴地）与 `tools/godot/verify_crane_materials.gd`（外部 URI、UV、跨 GLB 贴图实例共享）。
 - 轴向：Blender +X 为臂架伸出方向、+Z 向上；glTF 转 Y-up 后进入 Godot 尺寸为 (Blender X, Blender Z, Blender Y)。
 - 预览截图（本地产物，`.design` 被 gitignore）：`.design/props/preview/crane_*.png`。
+
+### 共享材质贴图库（`shared_materials`，2026-10-21）
+
+> 约定：**新资产不再用纯色代表材质**。材质 = 贴图 + spec 参数；贴图是外部共享 PNG，
+> 模型只保留几何与 UV。旧资产（船 / 道具 / 建筑）的纯色 `SN_*` 材质保持不动，
+> 按“补 UV → 切 `SN_Tex_*` → 重导 GLB”逐批迁移。
+
+| 材质 | 贴图 | tile_m | 粗糙度 / 金属度 | 用途 |
+| --- | --- | ---: | --- | --- |
+| `SN_Tex_Metal` | `metal.png` | 2.0 | 0.36 / 0.90 | 钢构、桁架、机械件 |
+| `SN_Tex_Iron` | `iron.png` | 2.0 | 0.52 / 0.62 | 铸铁、台车、车轮 |
+| `SN_Tex_Iron_Red` | `iron_red.png` | 2.0 | 0.62 / 0.10 | 锈红漆面、机械房、吊具 |
+| `SN_Tex_Wood` | `wood.png` | 2.0 | 0.70 / 0.00 | 木结构、桅杆、吊臂 |
+| `SN_Tex_Wood_Dark` | `wood_dark.png` | 2.0 | 0.64 / 0.00 | 深色木、卷筒、走台 |
+| `SN_Tex_Wood_Deck` | `wood_deck.png` | 2.0 | 0.76 / 0.00 | 甲板、平台铺板 |
+| `SN_Tex_Stone` | `stone.png` | 2.0 | 0.90 / 0.00 | 石基座、配重、地锚 |
+| `SN_Tex_Brass` | `brass.png` | 1.0 | 0.28 / 0.85 | 黄铜件、铭牌、轴承 |
+| `SN_Tex_Canvas_Shade` | `canvas.png` | 0.5 | 0.92 / 0.00 | 帆布、绳索 |
+| `SN_Tex_Glass_Dark` | `glass_dark.png` | 2.0 | 0.25 / 0.35 | 深色玻璃窗 |
+
+- 真源：`docs/design/textures/shared_materials/shared_materials.spec.json`；贴图生成器 `tools/art/gen_shared_material_textures.py`（10 张 512² 无缝贴图 + montage + stats，确定性可复现）。
+- 授权贴图：`docs/design/textures/shared_materials/tiles/<texture>.png`；评审 montage：`docs/design/textures/shared_materials/shared_materials_montage.png`。
+- 运行时副本：`assets/models/props/shared_materials/`（开发态）与 `dev_mods/core/assets/models/props/shared_materials/`（发布）；GLB `images[].uri` = `shared_materials/<texture>.png`。
+- 运行时共享：`ContentAssetLoader` 按路径缓存 `Texture2D`，四台起重机与后续资产共用同一贴图实例；`PortStage` 按材质签名合批。
+- 契约与迁移细节：`docs/design/MODELING_WORKFLOW.md` §12。
 
 ## 3D 资产：舷侧炮铁甲舰（SN_Ironclad）
 
@@ -291,7 +319,7 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 | `model.material.sealing_compound` | `assets/models/materials/SN_Barrel.glb` | 密封剂 |
 | `banner.port.iron_harbor` | `assets/ports/iron_harbor_banner.png` | 铁港；作为贴图 |
 
-淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **75 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节）。
+淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **78 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；以及起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`）。
 
 ## 为什么这样分
 

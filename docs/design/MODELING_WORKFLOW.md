@@ -53,7 +53,7 @@ DRAFT ──人工批准──▶ APPROVED ──派发──▶ BUILDING ──
 | `dimensions` | ✓ | 长宽高 + 容差（米） |
 | `tri_budget` | ✓ | 三角面上限，防止子代理过度建模 |
 | `required_parts` | ✓ | 必须包含的部件清单（验收依据） |
-| `materials` | ✓ | 材质名与数量（3–5 个，禁止贴图） |
+| `materials` | ✓ | 材质名与数量（3–5 个；**新资产必须使用共享贴图材质**：`SN_Tex_*` + `shared_materials/<texture>.png` + `tile_m`，禁止用纯色代表材质；spec 见 §12） |
 | `naming` | ✓ | `SN_` 前缀 + 集合名 |
 | `transform` | ✓ | 轴心（地面/水线/中心）、前向轴、单位 |
 | `hierarchy` | ✓ | 根空物体、需要动画的 Pivot |
@@ -152,7 +152,7 @@ Lead 按顺序执行：
 | 网格健康 | bmesh | 无孤立点、退化面、材质槽越界；闭合件非流形边 = 0 |
 | 尺寸 | 世界包围盒 | 与 `dimensions` 误差 ≤ `tolerance` |
 | 轴心/朝向 | 矩阵分解 | 轴心符合 `transform.pivot`，前向 +X |
-| 材质 | 材质槽 | 与工单一致，数量 3–5，单层曲面双面 |
+| 材质 | 材质槽 / UV | 与共享材质 spec 一致，全部槽绑定 512² 共享贴图；UV 完整（`len(uv) == len(loops)`）；单层曲面双面 |
 | 回归 | 对象快照 | 原有对象未被删除/移动 |
 | 视觉 | `look` 3/4 截图 | 轮廓可辨认、比例合理 |
 
@@ -162,6 +162,10 @@ Lead 按顺序执行：
 .design/<category>/SN_<Name>.blend                    源文件（gitignore，本地）
 tools/modeling/generators/sn_<name>_generator.py      参数化生成脚本（入库，可重建）
 assets/models/<category>/SN_<Name>.glb                运行时资产（进 res://）
+docs/design/textures/shared_materials/tiles/*.png     共享材质贴图授权源（入库）
+assets/models/<category>/shared_materials/*.png       共享贴图开发态副本（GLB 相对 URI）
+dev_mods/core/assets/models/<category>/SN_<Name>.glb  Core 模组运行时副本
+dev_mods/core/assets/models/<category>/shared_materials/*.png  Core 模组共享贴图
 docs/design/ASSET_MAP.md                              增加一行映射
 ```
 
@@ -319,10 +323,59 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 环节 | 实际结果 |
 | --- | --- |
 | 需求 | 人工指定四种：塔吊（补全此前缺失的生成器）、大型龙门吊（巨型钢结构 + 复杂传动）、木制桅杆起重机（参考图：黑白港口照片的钢构 / 码头语言）、手摇悬臂吊。工单 `briefs/sn_crane_batch1.json` 自包含尺寸 / 预算 / 必含件 / 验收 |
-| 生成器与部件库 | 新增 `crane_kit.py`（桁架臂 / 格构柱 / 梯子 / 栏杆 / 车轮 / 卷筒 / 滑轮 / 齿轮 / 钢缆 / 吊钩组 / 手摇绞车，纯 Python 复用 `ship_parts.core`）+ **共享材质库 `sn_crane_materials.py`**（10 个 `SN_*` 材质的线性色 / 粗糙度 / 金属度 + 每件资产的材质白名单；生成器只引用 `MAT_*` 常量与 `colors_for()`，不各自维护材质）+ 4 个生成器；装配统一走 `ship_parts.assembly.build_collection()` |
+| 生成器与部件库 | 新增 `crane_kit.py`（桁架臂 / 格构柱 / 梯子 / 栏杆 / 车轮 / 卷筒 / 滑轮 / 齿轮 / 钢缆 / 吊钩组 / 手摇绞车，纯 Python 复用 `ship_parts.core`）+ **共享贴图材质库 `sn_shared_materials.py`**（spec → `SN_Tex_*` 材质节点 / 世界空间盒式 UV / 验收，见 §12）+ 资产侧视图 `sn_crane_materials.py`（`MAT_*` 常量 / 每资产白名单 / 回退色）+ 4 个生成器；装配统一走 `ship_parts.assembly.build_collection()`，随后 `apply_collection()` 写材质与 UV |
 | 干跑 | `dryrun_cranes.py` 一次校验四件：前缀 / 父级 / 预算 / bbox / 边界边 / 非流形边 / 退化面 / 材质白名单 / zmin=0 / 必含对象；新增 **PivotSpec 契约检查**（`rotation` 必须三元组、`location` 必须等于 `origins` 对应值） |
 | Builder R0 | 第一轮在生成器 1/4 处失败：`PivotSpec(..., (0,0,PIVOT_Z), 1.4)` 把 `size` 当成 `rotation` 传进去，`rotation_euler` 收到 float 报 ValueError。Builder 按规则停止并回报 traceback，未手工修补；Lead 改成 `size=1.4` 后重跑 |
 | Builder R1 | 四件一次执行成功：塔吊 33 对象 / 3912 tri；龙门吊 20 / 9420 tri；木制桅杆 11 / 1932 tri；手摇悬臂 7 / 896 tri。只读自检：网格健康四项全 0、四件 zmin=0、塔吊 Pivot 挂 21 个旋转件、吊钩最低点 4.42 m（3–6 m 内）、其它 11 个集合对象数逐一不变、场景 261→298 与公式一致、无新增相机灯光 |
 | 导出与自检 | `export_cranes_glb.py` 逐件根节点归零导出并保存工作台（旧塔吊 GLB 已备份到 `.design/props/backup_glb/`，并同步 `dev_mods/core` 副本）；`verify_cranes_glb.py` 4/4 通过（**世界空间** bbox 按节点 TRS 合成）；`tools/godot/verify_cranes.gd` 4/4 PASS（尺寸 / tri / 材质 / 贴地） |
-| 过程发现 | ① **`PivotSpec` 位置参数顺序是坑**：`(key, name, location, rotation=(0,0,0), size=1.2)`，多写一个位置参数就把 float 塞进 rotation；干跑已补契约检查，后续 pivot 类资产必须先过这条。② **多节点 GLB 的 bbox 不能直接累加 accessor min/max**：Pivot 子件的坐标是父级局部坐标，必须按 glTF 节点层级合成 TRS 再求世界包围盒，否则会把塔吊高度算成 30.5 m。③ 木制桅杆起重机按历史木质桅杆 / 后倾吊臂 / 拉索 / 手摇绞车设计，照片里的钢构塔吊只作为码头语言参考，不照搬。④ 新增三件暂未接 Core manifest / PortStage，接入是独立工作项。⑤ **材质与模型分离**：材质名 / 参数 / 每资产白名单集中到 `sn_crane_materials.py`，生成器只引用 `MAT_*` 与 `colors_for()`；干跑会核对生成器 `COLORS` 与共享库逐项一致，防止各生成器各自建材质后参数漂移。GLB 侧材质定义仍随文件内嵌（glTF 没有外部材质引用），跨文件共享靠 Blender 的共享 datablock + Godot 侧 `PortStage` 的按材质签名合批 |
+| 共享贴图轮（R2，2026-10-21） | 按人工“不再用纯色代表材质”的要求：新增 `shared_materials` 10 张 512² 无缝贴图（spec + 生成器 + montage + stats）、`sn_shared_materials.py`（`SN_Tex_*` 材质 / 世界空间盒式 UV / 验收）与 `verify_crane_materials.gd`；四台起重机全部加 UV 并改用 `SN_Tex_*` 材质，导出时把内嵌贴图外部化为 `shared_materials/<texture>.png`（授权源字节）并同步 Core；`verify_cranes_glb.py` 4/4、Godot 材质验收 4/4（10 个共享 Texture2D 实例、0 失败）；旧纯色 `SN_*` 材质保持不动 |
+| 过程发现 | ① **`PivotSpec` 位置参数顺序是坑**：`(key, name, location, rotation=(0,0,0), size=1.2)`，多写一个位置参数就把 float 塞进 rotation；干跑已补契约检查，后续 pivot 类资产必须先过这条。② **多节点 GLB 的 bbox 不能直接累加 accessor min/max**：Pivot 子件的坐标是父级局部坐标，必须按 glTF 节点层级合成 TRS 再求世界包围盒，否则会把塔吊高度算成 30.5 m。③ 木制桅杆起重机按历史木质桅杆 / 后倾吊臂 / 拉索 / 手摇绞车设计，照片里的钢构塔吊只作为码头语言参考，不照搬。④ 新增三件已接入 Core manifest + 共享贴图，PortStage 槽位仍待接。⑤ **材质与模型分离**：材质 / 贴图 spec 与 `SN_Tex_*` 共享贴图材质库见 §12；旧纯色 `SN_*` 材质被大量旧对象共用，不能原地改，新资产用 `SN_Tex_*`；GLB 材质定义仍随文件内嵌（glTF 无外部材质引用），但贴图外部化为共享 URI，运行时按路径共享 `Texture2D` |
 | 预览与截图 | `.design/props/preview/crane_<asset>_{three_quarter,side}.png`（8 张，本地产物） |
+
+## 12. 共享贴图材质与 UV（新资产默认约定，2026-10-21 起）
+
+> 结论：**新资产不再用纯色代表材质**。材质 = 共享贴图（`SN_Tex_*`）+ spec 参数，
+> 贴图作为外部共享 PNG 随 core 模组发布；模型只保留几何与 UV。
+> 本节是 `sn_crane_batch1` 的实践沉淀，后续道具 / 船舶 / 设施都按此执行。
+
+### 12.1 资产真源与文件
+
+| 环节 | 路径 | 说明 |
+| --- | --- | --- |
+| 材质 / 贴图 spec | `docs/design/textures/shared_materials/shared_materials.spec.json` | 材质名、纹理名、`tile_m`、roughness / metallic、调色板、贴图均值目标；改颜色的唯一入口 |
+| 贴图生成器 | `tools/art/gen_shared_material_textures.py` | 10 张 512² 无缝 sRGB 贴图、montage、stats、运行时副本；确定性可复现（复用铁港生成器的周期噪声 / 木材 / 石材 / 玻璃画家） |
+| 授权贴图 | `docs/design/textures/shared_materials/tiles/<texture>.png` | 入库真源；材质贴图以它为准（不采用 Blender 重编码字节） |
+| 共享贴图运行时副本 | `assets/models/props/shared_materials/`（开发态）与 `dev_mods/core/assets/models/props/shared_materials/`（发布） | GLB 用相对 URI `shared_materials/<texture>.png` 引用；`ContentAssetLoader` 按路径缓存成同一个 `Texture2D` |
+| 材质库 | `tools/modeling/generators/sn_shared_materials.py` | spec → Blender 材质节点 / 世界空间盒式 UV / 验收；纯 Python 数据段可干跑 |
+| 资产侧材质视图 | `tools/modeling/generators/sn_crane_materials.py`（示例） | `MAT_*` 常量、每资产材质白名单、`colors_for()` 回退色 |
+
+### 12.2 命名与旧资产兼容
+
+- 新贴图材质统一用 **`SN_Tex_*`**（`SN_Tex_Metal` / `SN_Tex_Wood` / …）。
+- 旧资产的纯色材质（`SN_Metal` / `SN_Wood` / …）被 160+ 个既有对象共用，**不允许原地改成贴图**；
+  否则没有 UV 的旧网格会变成单色采样。旧资产按“加 UV → 切换材质名 → 重导 GLB”逐批迁移，
+  迁移前保持 `SN_*` 纯色。
+- 干跑/自检按 `ASSET_MATERIALS` 白名单核对，禁止新资产偷偷退回纯色材质。
+
+### 12.3 UV 与材质绑定（Blender）
+
+- 盒式投影：按面法线主轴选 UV 轴（X 面 → (Y,Z)，Y 面 → (X,Z)，Z 面 → (X,Y)），
+  `uv = 世界坐标 / tile_m`，采样器 REPEAT；因此任意大面连续平铺、无需手工展 UV。
+- UV 层名固定 `UVMap`；每个 mesh 的 `len(uv) == len(loops)`。
+- 节点：Image Texture（sRGB / Linear / REPEAT）→ Principled Base Color；
+  Roughness / Metallic 来自 spec；背面剔除关闭。
+- 生成器入口：`build_all()` 在 `assembly.build_collection()` 之后调用
+  `sn_shared_materials.apply_collection()`；`report()` 调 `verify_collection()` 自检。
+- 每个对象保留自己的 Pivot / 根层级；UV 用世界坐标，不因父级平移而改变图案尺度。
+
+### 12.4 导出、运行时与验收
+
+- 导出后调用 `glb_shared_textures.externalize_glb(..., prefer_authored=True)`：
+  GLB 的 `images[].uri` 改为 `shared_materials/<texture>.png`，共享 PNG 用授权源字节写出，
+  BIN 里不再重复图片字节；GLB 与贴图同时同步到 `dev_mods/core/assets/models/props/`。
+- 运行时：`ContentAssetLoader.load_scene()` 的 `_apply_shared_textures()` 把外部 URI
+  解析成同一个 `Texture2D` 实例；多件资产因此共享贴图，`PortStage` 的材质签名合批可合并。
+- 验收：`verify_cranes_glb.py`（外部 URI、贴图字节与授权源一致、每个图元有 `TEXCOORD_0`、
+  世界空间 bbox）+ `tools/godot/verify_crane_materials.gd`（4 个 GLB 的贴图实例共享、UV 存在）。
+- 旧资产迁移清单（后续）：31 件铁港道具、6 件港口设施、11 件模块、4 艘船 —— 都需要先补 UV
+  再切 `SN_Tex_*` 并重导 GLB，不在本批范围内。

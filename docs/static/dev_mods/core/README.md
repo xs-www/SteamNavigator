@@ -74,9 +74,11 @@
 | `assets/models/props/SN_HT_Warehouse_Short_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Workshop_Row.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_HT_Workshop_Row_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_Hand_Jib_Crane.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Handcart.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Harbor_Crane.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Keel_Block.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_Mega_Gantry.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Mooring_Bollard.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Mooring_Rope.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Ore_Pile.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -86,6 +88,7 @@
 | `assets/models/props/SN_Sack_Pile.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Steam_Pipe.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/SN_Timber_Stack.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/SN_Wooden_Mast_Crane.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/brick_wall.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/brick_wall_soot.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -98,6 +101,16 @@
 | `assets/models/props/iron_harbor_shared/stone_base_dirty.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/wood_plank.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/iron_harbor_shared/wood_plank_weathered.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/metal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/stone.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/wood.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/wood_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/wood_deck.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/SN_Ironclad.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/SN_Paddle_Freighter.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/SN_Paddle_Steamer.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

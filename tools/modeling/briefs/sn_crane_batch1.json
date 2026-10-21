@@ -6,14 +6,38 @@
   "approved_by_human": true,
   "approved_note": "用户 2026-10-21 指定四种类型：塔吊（补全缺失生成器）、大型龙门吊（巨型钢结构 + 复杂传动）、木制桅杆起重机（参考图 1 的港口/码头氛围）、手摇悬臂吊。尺寸与预算由 Lead 按 2.5D 舞台机位拟定，人工在交付预览时复核。",
   "style": {
-    "look": "与铁港道具/港区设施同一套低模 flat-shaded 语言；无贴图，只用语料库材质；轮廓优先。",
-    "palette": ["SN_Metal", "SN_Iron", "SN_Iron_Red", "SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Stone", "SN_Brass", "SN_Canvas_Shade", "SN_Glass_Dark"],
-    "reference_images": ["image 1（黑白港口照片：格构钢吊机、双吊臂、铆接机械房、码头轨道与圆木堆；用于钢构与码头的语言参考）"],
-    "notes": "钢构吊机用格构桁架 + 铆接机械房 + 可读齿轮/卷筒/钢缆；木制桅杆起重机按历史港口木质吊（方木桅杆 + 后倾木吊臂 + 桅顶拉索 + 手摇绞车）处理，不照搬照片里的钢构塔吊。"
+    "look": "与铁港道具/港区设施同一套低模语言；材质使用共享贴图 SN_Tex_*（shared_materials/<texture>.png），不再用纯色代表材质；轮廓优先。",
+    "palette": [
+      "SN_Tex_Metal",
+      "SN_Tex_Iron",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Stone",
+      "SN_Tex_Brass",
+      "SN_Tex_Canvas_Shade",
+      "SN_Tex_Glass_Dark"
+    ],
+    "reference_images": [
+      "image 1（黑白港口照片：格构钢吊机、双吊臂、铆接机械房、码头轨道与圆木堆；用于钢构与码头的语言参考）"
+    ],
+    "notes": "钢构吊机用格构桁架 + 铆接机械房 + 可读齿轮/卷筒/钢缆；木制桅杆起重机按历史港口木质吊（方木桅杆 + 后倾木吊臂 + 桅顶拉索 + 手摇绞车）处理，不照搬照片里的钢构塔吊。 材质/贴图/UV 真源见 docs/design/textures/shared_materials/ 与 MODELING_WORKFLOW §12。"
   },
   "scene_rules": {
     "single_writer": true,
-    "do_not_modify": ["Camera", "DBG2_CAM", "Light", "SN_Ship_Root", "SN_Harbor_Town", "SN_Iron_Harbor_Architecture", "SN_IronHarbor_Props", "SN_Ship_Modules", "SN_Port_Facilities", "SN_Schooner_Fame_Prototype"],
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Schooner_Fame_Prototype"
+    ],
     "no_delete": true,
     "no_save": true,
     "no_export": true,
@@ -25,7 +49,7 @@
     "units": "1 unit = 1 m",
     "up_axis": "+Z",
     "forward_axis": "+X（臂架伸出方向）",
-    "shading": "flat shading，无贴图",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV；禁止用纯色材质交付",
     "ground": "所有资产 zmin = 0，轴心在底面中心 / 轨道面中心",
     "conventions": "几何由生成器参数表驱动；禁止在 .blend 里手工补点；闭合件边界边 / 非流形边 / 退化面必须为 0。"
   },
@@ -38,11 +62,25 @@
       "collection": "SN_Harbor_Crane_Prototype",
       "root": "SN_Crane_Root",
       "prefix": "SN_Crane_",
-      "workbench_pos": [0.0, 16.0, 0.0],
+      "workbench_pos": [
+        0.0,
+        16.0,
+        0.0
+      ],
       "pivot": "SN_Crane_Slew_Pivot（根局部 z=17.3，绕 Z 回转）",
-      "dimensions": {"length": 26.5, "width": 6.3, "height": 21.47, "tolerance": 0.8},
+      "dimensions": {
+        "length": 26.5,
+        "width": 6.3,
+        "height": 21.47,
+        "tolerance": 0.8
+      },
       "tri_budget": 4000,
-      "materials": ["SN_Metal", "SN_Wood", "SN_Wood_Dark", "SN_Stone"],
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Stone"
+      ],
       "required_parts": [
         "石砌基座 + 压顶 + 四角铁板 + 隅石",
         "收分格构塔身（4 弦 / 横框 / 斜撑 / 爬梯）",
@@ -59,7 +97,8 @@
         "generator": "tools/modeling/generators/sn_harbor_crane_generator.py",
         "glb": "assets/models/props/SN_Harbor_Crane.glb",
         "runtime_copy": "dev_mods/core/assets/models/props/SN_Harbor_Crane.glb",
-        "preview": ".design/props/preview/crane_harbor_crane_{three_quarter,side}.png"
+        "preview": ".design/props/preview/crane_harbor_crane_{three_quarter,side}.png",
+        "shared_textures": "assets/models/props/shared_materials/ + dev_mods/core/assets/models/props/shared_materials/"
       },
       "acceptance": [
         "对象 100% 以 SN_Crane_ 开头并位于 SN_Harbor_Crane_Prototype，只含 1 个回转 Pivot",
@@ -67,8 +106,12 @@
         "网格健康：边界边 / 非流形边 / 退化面 / 材质槽越界全 0",
         "主臂水平（与地面夹角 <= 1°）且从回转中心伸出 >= 19.5 m",
         "吊钩钢丝绳竖直，吊钩最低点离地 3–6 m",
-        "3/4 视角能读出高塔 + 长水平臂 + 配重 + 塔头拉杆"
-      ]
+        "3/4 视角能读出高塔 + 长水平臂 + 配重 + 塔头拉杆",
+        "每个材质槽绑定 512² 共享贴图（SN_Tex_*），UV 完整（len(uv) == len(loops)）",
+        "GLB images[].uri 指向 shared_materials/<texture>.png，共享 PNG 与授权 tile 逐字节一致"
+      ],
+      "texture_set": "shared_materials",
+      "uv": "world-space box projection (UVMap)"
     },
     {
       "id": "sn_prop_mega_gantry_v1",
@@ -78,10 +121,26 @@
       "collection": "SN_Mega_Gantry_Prototype",
       "root": "SN_MG_Root",
       "prefix": "SN_MG_",
-      "workbench_pos": [-20.0, 260.0, 0.0],
-      "dimensions": {"length": 39.6, "width": 14.8, "height": 29.65, "tolerance": 1.0},
+      "workbench_pos": [
+        -20.0,
+        260.0,
+        0.0
+      ],
+      "dimensions": {
+        "length": 39.6,
+        "width": 14.8,
+        "height": 29.65,
+        "tolerance": 1.0
+      },
       "tri_budget": 12000,
-      "materials": ["SN_Metal", "SN_Iron", "SN_Iron_Red", "SN_Wood_Dark", "SN_Brass", "SN_Stone", "SN_Glass_Dark"],
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Brass",
+        "SN_Tex_Glass_Dark"
+      ],
       "required_parts": [
         "地面双轨 + 枕木",
         "4 台台车（各 2 轮 / 车架 / 齿轮 / 电机 / 传动轴）",
@@ -97,7 +156,8 @@
       "deliverables": {
         "generator": "tools/modeling/generators/sn_mega_gantry_generator.py",
         "glb": "assets/models/props/SN_Mega_Gantry.glb",
-        "preview": ".design/props/preview/crane_mega_gantry_{three_quarter,side}.png"
+        "preview": ".design/props/preview/crane_mega_gantry_{three_quarter,side}.png",
+        "shared_textures": "assets/models/props/shared_materials/ + dev_mods/core/assets/models/props/shared_materials/"
       },
       "acceptance": [
         "对象 100% 以 SN_MG_ 开头并位于 SN_Mega_Gantry_Prototype",
@@ -105,8 +165,12 @@
         "网格健康四项全 0；材质只用白名单",
         "主桥水平、跨度 >= 36 m；4 条腿落地；轮/轨贴合",
         "固定 3/4 视角可读出：巨型格构腿 + 长桥 + 机械房 + 卷扬齿轮 + 吊装集装箱",
-        "机械房外侧至少 6 个可辨认的传动件（卷筒 / 齿轮 / 电机 / 轴 / 制动盘 / 轴承座）"
-      ]
+        "机械房外侧至少 6 个可辨认的传动件（卷筒 / 齿轮 / 电机 / 轴 / 制动盘 / 轴承座）",
+        "每个材质槽绑定 512² 共享贴图（SN_Tex_*），UV 完整（len(uv) == len(loops)）",
+        "GLB images[].uri 指向 shared_materials/<texture>.png，共享 PNG 与授权 tile 逐字节一致"
+      ],
+      "texture_set": "shared_materials",
+      "uv": "world-space box projection (UVMap)"
     },
     {
       "id": "sn_prop_wooden_mast_crane_v1",
@@ -116,10 +180,26 @@
       "collection": "SN_Wooden_Mast_Crane_Prototype",
       "root": "SN_WM_Root",
       "prefix": "SN_WM_",
-      "workbench_pos": [30.0, 260.0, 0.0],
-      "dimensions": {"length": 14.77, "width": 7.0, "height": 14.25, "tolerance": 0.8},
+      "workbench_pos": [
+        30.0,
+        260.0,
+        0.0
+      ],
+      "dimensions": {
+        "length": 14.77,
+        "width": 7.0,
+        "height": 14.25,
+        "tolerance": 0.8
+      },
       "tri_budget": 4000,
-      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Stone", "SN_Brass", "SN_Canvas_Shade"],
+      "materials": [
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone",
+        "SN_Tex_Canvas_Shade"
+      ],
       "required_parts": [
         "石砌台基 + 木梁底盘 + 木甲板",
         "方形木桅杆（8 道铁箍 / 桅顶帽 / 四向斜撑）",
@@ -134,15 +214,20 @@
       "deliverables": {
         "generator": "tools/modeling/generators/sn_wooden_mast_crane_generator.py",
         "glb": "assets/models/props/SN_Wooden_Mast_Crane.glb",
-        "preview": ".design/props/preview/crane_wooden_mast_crane_{three_quarter,side}.png"
+        "preview": ".design/props/preview/crane_wooden_mast_crane_{three_quarter,side}.png",
+        "shared_textures": "assets/models/props/shared_materials/ + dev_mods/core/assets/models/props/shared_materials/"
       },
       "acceptance": [
         "对象 100% 以 SN_WM_ 开头并位于 SN_Wooden_Mast_Crane_Prototype",
         "三角面 <= 4000，包围盒误差 <= 0.8 m，zmin = 0",
         "网格健康四项全 0；木构件与铁箍/拉索材质分区清楚",
         "固定 3/4 视角可读出：方木桅杆 + 后倾木吊臂 + 拉索 + 手摇绞车",
-        "所有拉索两端真实落在桅顶 / 地锚上，无悬空"
-      ]
+        "所有拉索两端真实落在桅顶 / 地锚上，无悬空",
+        "每个材质槽绑定 512² 共享贴图（SN_Tex_*），UV 完整（len(uv) == len(loops)）",
+        "GLB images[].uri 指向 shared_materials/<texture>.png，共享 PNG 与授权 tile 逐字节一致"
+      ],
+      "texture_set": "shared_materials",
+      "uv": "world-space box projection (UVMap)"
     },
     {
       "id": "sn_prop_hand_jib_crane_v1",
@@ -152,10 +237,26 @@
       "collection": "SN_Hand_Jib_Crane_Prototype",
       "root": "SN_HJ_Root",
       "prefix": "SN_HJ_",
-      "workbench_pos": [55.0, 260.0, 0.0],
-      "dimensions": {"length": 4.6, "width": 1.7, "height": 5.17, "tolerance": 0.5},
+      "workbench_pos": [
+        55.0,
+        260.0,
+        0.0
+      ],
+      "dimensions": {
+        "length": 4.6,
+        "width": 1.7,
+        "height": 5.17,
+        "tolerance": 0.5
+      },
       "tri_budget": 1500,
-      "materials": ["SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Stone", "SN_Brass", "SN_Canvas_Shade"],
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Stone",
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade"
+      ],
       "required_parts": [
         "石砌基座 + 木垫板 + 4 颗地脚螺栓",
         "立柱（柱脚法兰 / 柱帽 / 中部铁箍）",
@@ -167,17 +268,28 @@
       "deliverables": {
         "generator": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
         "glb": "assets/models/props/SN_Hand_Jib_Crane.glb",
-        "preview": ".design/props/preview/crane_hand_jib_crane_{three_quarter,side}.png"
+        "preview": ".design/props/preview/crane_hand_jib_crane_{three_quarter,side}.png",
+        "shared_textures": "assets/models/props/shared_materials/ + dev_mods/core/assets/models/props/shared_materials/"
       },
       "acceptance": [
         "对象 100% 以 SN_HJ_ 开头并位于 SN_Hand_Jib_Crane_Prototype",
         "三角面 <= 1500，包围盒误差 <= 0.5 m，zmin = 0",
         "网格健康四项全 0",
-        "固定 3/4 视角可读出：立柱 + 悬臂 + 拉杆 + 手摇绞车 + 吊钩"
-      ]
+        "固定 3/4 视角可读出：立柱 + 悬臂 + 拉杆 + 手摇绞车 + 吊钩",
+        "每个材质槽绑定 512² 共享贴图（SN_Tex_*），UV 完整（len(uv) == len(loops)）",
+        "GLB images[].uri 指向 shared_materials/<texture>.png，共享 PNG 与授权 tile 逐字节一致"
+      ],
+      "texture_set": "shared_materials",
+      "uv": "world-space box projection (UVMap)"
     }
   ],
   "dryrun": "python tools/modeling/generators/dryrun_cranes.py",
   "export": "python tools/modeling/generators/export_cranes_glb.py（Lead 在人工验收后执行）",
-  "notes": "新增三件暂不接入 Core manifest / PortStage；塔吊沿用既有 model.prop.harbor_crane 资产键，重建后需同步 dev_mods 副本。"
+  "notes": "新增三件已接 Core manifest（model.prop.*）与共享贴图；材质名 SN_Tex_* 与旧纯色 SN_* 并存，旧资产待 UV 迁移后逐批切换。",
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "uv": {
+    "projection": "world-space box projection by dominant face normal",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json"
+  }
 }

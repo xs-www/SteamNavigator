@@ -205,12 +205,32 @@ def build_config(origin=WORKBENCH_POS):
 def build_all(origin=WORKBENCH_POS):
     """在 Blender 中幂等重建手摇悬臂吊（只清理本前缀对象 / 本集合）。"""
     from ship_parts import assembly
-    return assembly.build_collection(build_all_geometry(), build_config(origin))
+    import sn_shared_materials as shared
+    collection = assembly.build_collection(build_all_geometry(), build_config(origin))
+    materials = shared.apply_collection(collection)
+    if materials["failures"]:
+        raise RuntimeError("shared material apply failed: %r" % materials["failures"])
+    print("TEXTURED %s: %d 对象 / %d 材质 / UV loops=%d" % (
+        collection.name, materials["objects"], len(materials["materials"]),
+        materials["uv_loops"]))
+    return collection
 
 
 def report(verbose=True):
+    import bpy
     from ship_parts import assembly
-    return assembly.report(build_config(), verbose=verbose)
+    import sn_shared_materials as shared
+    info = assembly.report(build_config(), verbose=verbose)
+    verification = shared.verify_collection(bpy.data.collections[COLLECTION])
+    print("共享贴图验收: %s (%d 网格, 失败 %d)" % (
+        "PASS" if verification["ok"] else "FAIL",
+        verification["meshes"], len(verification["failures"])))
+    for failure in verification["failures"]:
+        print("  - " + failure)
+    info["textures"] = verification
+    if not verification["ok"]:
+        raise RuntimeError("shared material verification failed")
+    return info
 
 
 if __name__ == "__main__":
