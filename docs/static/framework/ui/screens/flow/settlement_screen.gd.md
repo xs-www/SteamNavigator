@@ -9,19 +9,20 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SettlementScreen` | L1 |
-| `navigation_requested (signal)` | L15 |
-| `TEXT` | L17 |
-| `MUTED` | L18 |
-| `BRASS` | L19 |
-| `RED` | L20 |
-| `GREEN` | L21 |
-| `EXPLORE_RESULT_FALLBACK` | L23 |
-| `EXPLORE_CLUE_STATUS_FALLBACK` | L28 |
-| `EXPLORE_CLUE_STATUS_KEY` | L34 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L42 |
+| `navigation_requested (signal)` | L16 |
+| `TEXT` | L18 |
+| `MUTED` | L19 |
+| `BRASS` | L20 |
+| `RED` | L21 |
+| `GREEN` | L22 |
+| `EXPLORE_RESULT_FALLBACK` | L24 |
+| `EXPLORE_CLUE_STATUS_FALLBACK` | L29 |
+| `EXPLORE_CLUE_STATUS_KEY` | L35 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L43 |
 
-并在 `summary.explore` 存在时追加**探索结果**区块（探索系统 4.1）：结果
+并在 `summary.explore` 存在时追加**探索结果**区块（探索系统 4.1 / 4.3）：结果
 （发现 / 失败漂流 / 掉头返航）、港口名、额外煤水与耐久损失、线索状态说明。
+4.3 起失败不再作废线索：失败结果显示「线索保留 + 已尝试次数」。
 
 ## 契约与约束
 - 只读 `bind(vm)` 里的 summary / ship / money；不查询后端、不发命令。

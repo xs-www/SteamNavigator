@@ -37,16 +37,19 @@
 | `test_presentation_framing_gives_way_to_a_long_route() -> void` | L753 |
 | `test_presentation_framing_ignores_the_manual_zoom_cap() -> void` | L776 |
 | `test_ship_icon_points_along_its_heading() -> void` | L803 |
-| `test_sea_chart_screen_binds_chart_and_panel() -> void` | L848 |
-| `CLUE_VM` | L908 |
-| `test_clue_geometry_helpers_and_hit_test() -> void` | L953 |
-| `test_clue_compass_key_conversion() -> void` | L989 |
-| `test_clue_view_geometry_and_selection() -> void` | L1000 |
-| `test_clue_name_text_localizes_and_falls_back() -> void` | L1053 |
-| `test_unknown_destination_roundtrip() -> void` | L1070 |
-| `test_unknown_destination_marker_is_clamped_below_the_hud() -> void` | L1088 |
-| `test_sea_chart_panel_renders_clue_section() -> void` | L1110 |
-| `test_sea_chart_screen_binds_clue_panel_and_forwards_signals() -> void` | L1201 |
+| `test_sea_chart_screen_binds_chart_and_panel() -> void` | L849 |
+| `test_sea_chart_screen_renders_the_departure_confirm_dialog() -> void` | L902 |
+| `test_routes_are_only_visible_for_the_selected_port() -> void` | L992 |
+| `CLUE_VM` | L1025 |
+| `test_clue_geometry_helpers_and_hit_test() -> void` | L1070 |
+| `test_clue_compass_key_conversion() -> void` | L1106 |
+| `test_clue_view_geometry_and_selection() -> void` | L1117 |
+| `test_clue_name_text_localizes_and_falls_back() -> void` | L1170 |
+| `test_unknown_destination_roundtrip() -> void` | L1187 |
+| `test_unknown_destination_marker_is_clamped_below_the_hud() -> void` | L1205 |
+| `test_sea_chart_panel_renders_clue_section() -> void` | L1227 |
+| `test_sea_chart_screen_binds_clue_panel_and_forwards_signals() -> void` | L1321 |
+| `test_sea_chart_panel_investigation_button_and_screen_forwarding() -> void` | L1366 |
 
 航线/迷雾数据；阶段 4.1 追加线索可视化（视图几何、点击命中、面板线索区块、
 未知终点）和整页信号转发。

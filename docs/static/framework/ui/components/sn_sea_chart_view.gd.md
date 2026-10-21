@@ -9,78 +9,88 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNSeaChartView` | L1 |
-| `port_clicked (signal)` | L43 |
-| `port_hovered (signal)` | L44 |
-| `clue_clicked (signal)` | L46 |
-| `COLOR_WATER` | L49 |
-| `COLOR_CHART_MARGIN` | L51 |
-| `COLOR_CHART_FRAME` | L52 |
-| `COLOR_WATER_DEEP` | L53 |
-| `COLOR_WATER_SHALLOW` | L54 |
-| `COLOR_GRID_MINOR` | L55 |
-| `COLOR_GRID_MAJOR` | L56 |
-| `COLOR_LAND_FILL` | L57 |
-| `COLOR_LAND_OUTLINE` | L58 |
-| `COLOR_LAND_EXPLORED` | L60 |
-| `COLOR_LAND_EXPLORED_OUTLINE` | L61 |
-| `COLOR_LAND_SILHOUETTE` | L63 |
-| `COLOR_LAND_SILHOUETTE_OUTLINE` | L64 |
-| `COLOR_FOG_BLACK` | L65 |
-| `COLOR_FOG_EXPLORED` | L66 |
-| `COLOR_ROUTE_ACTIVE` | L67 |
-| `COLOR_ROUTE_EXPLORED` | L68 |
-| `COLOR_ROUTE_UNKNOWN` | L69 |
-| `COLOR_PORT_CURRENT` | L70 |
-| `COLOR_PORT_VISITED` | L71 |
-| `COLOR_PORT_DISCOVERED` | L72 |
-| `COLOR_PORT_UNKNOWN` | L73 |
-| `COLOR_SHIP` | L74 |
-| `COLOR_BRASS` | L75 |
-| `COLOR_INK` | L76 |
-| `COLOR_CLUE` | L79 |
-| `COLOR_CLUE_SELECTED` | L80 |
-| `COLOR_CLUE_GLOW` | L81 |
-| `CLUE_HIT_TOLERANCE` | L83 |
-| `CLUE_ARROW_LENGTH` | L86 |
-| `CLUE_CIRCLE_SEGMENTS` | L88 |
-| `CLUE_DASH_RATIO` | L89 |
-| `ZOOM_MIN` | L92 |
-| `ZOOM_MAX` | L93 |
-| `ZOOM_STEP` | L94 |
-| `PRESENTATION_MARGIN` | L98 |
-| `PRESENTATION_ZOOM_MAX` | L101 |
-| `get_selected_port() -> String` | L200 |
-| `select_port(port_id: String) -> void` | L204 |
-| `get_selected_clue() -> String` | L215 |
-| `select_clue(clue_id: String) -> void` | L220 |
-| `get_clues() -> Array` | L228 |
-| `clue_by_id(clue_id: String) -> Dictionary` | L234 |
-| `set_ship_position(world_position: Vector2) -> void` | L244 |
-| `set_ship_pose(world_position: Vector2, heading: float) -> void` | L251 |
-| `get_ship_heading() -> float` | L259 |
-| `has_ship_heading() -> bool` | L263 |
-| `clear_ship_position() -> void` | L267 |
-| `has_ship_position() -> bool` | L272 |
-| `set_unknown_destination(world_pos: Vector2, label_key: String, top_inset: float = 0.0) -> void` | L280 |
-| `clear_unknown_destination() -> void` | L293 |
-| `has_unknown_destination() -> bool` | L300 |
-| `get_unknown_destination() -> Dictionary` | L304 |
-| `is_presentation_mode() -> bool` | L321 |
-| `set_frame_scale(scale: float) -> void` | L329 |
-| `get_frame_scale() -> float` | L338 |
-| `get_base_zoom() -> float` | L343 |
-| `get_base_center() -> Vector2` | L348 |
-| `center_on_port(port_id: String) -> void` | L356 |
-| `get_zoom() -> float` | L368 |
-| `exit_direction(port_data: Dictionary) -> Vector2` | L374 |
-| `world_to_screen(world_pos: Vector2) -> Vector2` | L476 |
-| `screen_to_world(screen_pos: Vector2) -> Vector2` | L480 |
-| `clamp_marker_to_view(target: Vector2, view_size: Vector2, top_inset: float) -> Vector2` | L856 |
-| `clue_screen_geometry(clue: Dictionary) -> Dictionary` | L902 |
-| `clue_hit_test(screen_position: Vector2, geometry: Dictionary) -> bool` | L951 |
-| `clue_arrow_endpoint(port_world: Vector2, angle: float, length: float) -> Vector2` | L972 |
-| `clue_circle_screen(center_world: Vector2, radius_world: float, zoom: float, offset: Vector2) -> Dictionary` | L980 |
-| `ship_icon_shape(radius: float) -> PackedVector2Array` | L1185 |
+| `port_clicked (signal)` | L50 |
+| `port_hovered (signal)` | L51 |
+| `clue_clicked (signal)` | L53 |
+| `COLOR_WATER` | L56 |
+| `COLOR_CHART_MARGIN` | L58 |
+| `COLOR_CHART_FRAME` | L59 |
+| `COLOR_WATER_DEEP` | L60 |
+| `COLOR_WATER_SHALLOW` | L61 |
+| `COLOR_GRID_MINOR` | L62 |
+| `COLOR_GRID_MAJOR` | L63 |
+| `COLOR_LAND_FILL` | L64 |
+| `COLOR_LAND_OUTLINE` | L65 |
+| `COLOR_LAND_EXPLORED` | L67 |
+| `COLOR_LAND_EXPLORED_OUTLINE` | L68 |
+| `COLOR_LAND_SILHOUETTE` | L70 |
+| `COLOR_LAND_SILHOUETTE_OUTLINE` | L71 |
+| `COLOR_FOG_BLACK` | L72 |
+| `COLOR_FOG_EXPLORED` | L73 |
+| `COLOR_ROUTE_ACTIVE` | L74 |
+| `COLOR_ROUTE_EXPLORED` | L75 |
+| `COLOR_ROUTE_UNKNOWN` | L76 |
+| `COLOR_PORT_CURRENT` | L77 |
+| `COLOR_PORT_VISITED` | L78 |
+| `COLOR_PORT_DISCOVERED` | L79 |
+| `COLOR_PORT_UNKNOWN` | L80 |
+| `COLOR_SHIP` | L81 |
+| `COLOR_SHIP_VISION` | L83 |
+| `SHIP_VISION_RINGS` | L84 |
+| `SHIP_VISION_MAX_ALPHA` | L85 |
+| `SHIP_VISION_CORE_ALPHA` | L86 |
+| `COLOR_BRASS` | L87 |
+| `COLOR_INK` | L88 |
+| `COLOR_CLUE` | L91 |
+| `COLOR_CLUE_SELECTED` | L92 |
+| `COLOR_CLUE_GLOW` | L93 |
+| `CLUE_HIT_TOLERANCE` | L95 |
+| `CLUE_ARROW_LENGTH` | L98 |
+| `CLUE_CIRCLE_SEGMENTS` | L100 |
+| `CLUE_DASH_RATIO` | L101 |
+| `ZOOM_MIN` | L104 |
+| `ZOOM_MAX` | L105 |
+| `ZOOM_STEP` | L106 |
+| `PRESENTATION_MARGIN` | L110 |
+| `PRESENTATION_ZOOM_MAX` | L113 |
+| `get_selected_port() -> String` | L215 |
+| `select_port(port_id: String) -> void` | L219 |
+| `get_selected_clue() -> String` | L230 |
+| `select_clue(clue_id: String) -> void` | L235 |
+| `get_clues() -> Array` | L243 |
+| `clue_by_id(clue_id: String) -> Dictionary` | L249 |
+| `set_ship_position(world_position: Vector2) -> void` | L259 |
+| `set_ship_pose(world_position: Vector2, heading: float) -> void` | L266 |
+| `get_ship_heading() -> float` | L274 |
+| `has_ship_heading() -> bool` | L278 |
+| `clear_ship_position() -> void` | L282 |
+| `has_ship_position() -> bool` | L287 |
+| `set_ship_vision(world_radius: float) -> void` | L293 |
+| `get_ship_vision() -> float` | L299 |
+| `has_ship_vision() -> bool` | L303 |
+| `clear_ship_vision() -> void` | L307 |
+| `set_unknown_destination(world_pos: Vector2, label_key: String, top_inset: float = 0.0) -> void` | L318 |
+| `clear_unknown_destination() -> void` | L331 |
+| `has_unknown_destination() -> bool` | L338 |
+| `get_unknown_destination() -> Dictionary` | L342 |
+| `is_presentation_mode() -> bool` | L359 |
+| `set_frame_scale(scale: float) -> void` | L367 |
+| `get_frame_scale() -> float` | L376 |
+| `get_base_zoom() -> float` | L381 |
+| `get_base_center() -> Vector2` | L386 |
+| `center_on_port(port_id: String) -> void` | L394 |
+| `get_zoom() -> float` | L406 |
+| `exit_direction(port_data: Dictionary) -> Vector2` | L412 |
+| `world_to_screen(world_pos: Vector2) -> Vector2` | L514 |
+| `screen_to_world(screen_pos: Vector2) -> Vector2` | L518 |
+| `visible_routes(routes: Array, selected_port: String) -> Array` | L706 |
+| `clamp_marker_to_view(target: Vector2, view_size: Vector2, top_inset: float) -> Vector2` | L917 |
+| `clue_screen_geometry(clue: Dictionary) -> Dictionary` | L963 |
+| `clue_hit_test(screen_position: Vector2, geometry: Dictionary) -> bool` | L1012 |
+| `clue_arrow_endpoint(port_world: Vector2, angle: float, length: float) -> Vector2` | L1033 |
+| `clue_circle_screen(center_world: Vector2, radius_world: float, zoom: float, offset: Vector2) -> Dictionary` | L1041 |
+| `ship_vision_rings(radius_world: float, steps: int = SHIP_VISION_RINGS) -> Array` | L1228 |
+| `ship_icon_shape(radius: float) -> PackedVector2Array` | L1291 |
 
 陆地、航线、港口图标、迷雾、船只标记、罗盘、图例与缩放指示。
 
@@ -115,8 +125,15 @@
   高亮；`select_clue()` / `get_selected_clue()` 供外部同步选中态，选中港口会清掉线索
   选中。几何换算全部走静态纯函数（`clue_arrow_endpoint` / `clue_circle_screen` /
   `clue_hit_test`），无头测试不渲染也能断言。
+- **航线只在选中港口时显示**（4.3 / U5）：普通航线只画与 `_selected_port` 相邻的
+  那些，未选中港口（包括选中线索）时一条都不画；演出模式下普通航线全部隐藏，只
+  保留 `_focus_points` 画出的计划航线。过滤逻辑在纯函数 `visible_routes()` 里。
 - **探索演出终点**：`set_unknown_destination(world_pos, label_key)` 画一条从当前船位
   到未知终点的虚线预测线 + `?` 标记（迷雾之上、船 icon 之下）；
   `clear_unknown_destination()` 在演出结束时清掉。
+- **随船照亮**（4.3.3 / U4）：`set_ship_vision(world_radius)` 在船位周围画多层
+  同心软圆（内亮外暗，无 shader / 新资产）。半径是世界单位、随 `_zoom` 缩放；
+  它只是表现，不写领域状态。图层在迷雾与已探索陆地剪影之上、航线/港口图标之下，
+  不遮挡船 icon 与线索。`ship_vision_rings()` 是纯函数，测试可直接断言衰减。
 
 模块索引：[framework/ui](../README.md)

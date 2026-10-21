@@ -18,10 +18,10 @@
 | `events/condition_op_registry.gd` | 白名单条件操作码及其只读判定实现。 | [查看](./events/condition_op_registry.gd.md) |
 | `events/effect_executor.gd` | 顺序执行效果列表，失败即中止并返回带索引的错误。 | [查看](./events/effect_executor.gd.md) |
 | `events/effect_op_registry.gd` | 白名单效果操作码及其纯实现（货币、补给、货物、船只与模块、委托、情报、通知）。 | [查看](./events/effect_op_registry.gd.md) |
-| `exploration/clue_service.gd` | 港口位置线索的领域服务——生成（抵达传闻 / 酒馆购买）、按等级裁剪的只读视图、 | [查看](./exploration/clue_service.gd.md) |
+| `exploration/clue_service.gd` | 港口位置线索的领域服务——生成（抵达传闻 / 酒馆购买）、逐级调查披露 | [查看](./exploration/clue_service.gd.md) |
 | `exploration/exploration_calculator.gd` | 把「一条线索的搜索区 + 当前船况 + 锅炉策略 + 探索规则」折算成探索出航预览 | [查看](./exploration/exploration_calculator.gd.md) |
 | `exploration/exploration_rules.gd` | 读取并合并探索系统规则（`map_profiles` 定义的 `data.exploration`）， | [查看](./exploration/exploration_rules.gd.md) |
-| `exploration/explore_voyage_service.gd` | 探索航次的领域执行——出航（扣工资与煤水、写探索航次与在航标记、抽定发现 roll）、 | [查看](./exploration/explore_voyage_service.gd.md) |
+| `exploration/explore_voyage_service.gd` | 探索航次的领域执行——出航（只扣工资、记录出发库存与每小时煤水费率、写探索 | [查看](./exploration/explore_voyage_service.gd.md) |
 | `map/map_generator.gd` | 程序生成 4–5 港口连通分支网络，并验证 MVP 硬约束。 | [查看](./map/map_generator.gd.md) |
 | `map/map_ops.gd` | GameState.world 上的港口/航线查询、设施可见性、发现与 BFS。 | [查看](./map/map_ops.gd.md) |
 | `run/victory_service.gd` | 通关判定与服务：主线全部完成 + 造船厂内组装最低可运行大型船（大型船体 + 锅炉 + ≥1 货舱）。 | [查看](./run/victory_service.gd.md) |
@@ -32,7 +32,7 @@
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |
 | `voyage/voyage_estimator.gd` | 把「一条航线 + 当前船况 + 锅炉策略 + 航行规则」折算成海图右侧面板需要的 | [查看](./voyage/voyage_estimator.gd.md) |
 | `voyage/voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**纯状态机**：把一次已经由 `voyage.start` | [查看](./voyage/voyage_presentation.gd.md) |
-| `voyage/voyage_service.gd` | 航行执行：校验预览、扣补给/工资、抽取事件、事件选择、抵达结算与失败回滚。 | [查看](./voyage/voyage_service.gd.md) |
+| `voyage/voyage_service.gd` | 航行执行：校验预览、出发扣工资、抽取事件、事件选择、抵达结算（按实际航行 | [查看](./voyage/voyage_service.gd.md) |
 | `world/fog_grid.gd` | 战争迷雾网格，维护未探索、已探索海岸与当前可见三种状态。 | [查看](./world/fog_grid.gd.md) |
 | `world/fog_ops.gd` | 战争迷雾高层操作，把 FogGrid 与 WorldMap、GameState 接合。 | [查看](./world/fog_ops.gd.md) |
 | `world/land_generator.gd` | 程序化生成陆地多边形，支持大陆、大岛、小岛和环礁。 | [查看](./world/land_generator.gd.md) |

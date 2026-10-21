@@ -9,12 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `RunFactory` | L1 |
-| `default_build(hub: RegistryHub) -> ContentDefinition` | L17 |
-| `available_builds(hub: RegistryHub) -> Array[ContentDefinition]` | L22 |
-| `default_map_profile(hub: RegistryHub) -> ContentDefinition` | L26 |
-| `create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionary` | L31 |
-| `create_run(context, build_id: String = "", requested_seed: int = 0) -> Dictionary` | L55 |
-| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L256 |
+| `default_build(hub: RegistryHub) -> ContentDefinition` | L23 |
+| `available_builds(hub: RegistryHub) -> Array[ContentDefinition]` | L28 |
+| `default_map_profile(hub: RegistryHub) -> ContentDefinition` | L32 |
+| `create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionary` | L37 |
+| `create_run(context, build_id: String = "", requested_seed: int = 0) -> Dictionary` | L61 |
+| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L275 |
 
 ## 契约与约束
 

@@ -9,22 +9,23 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AtSeaScreen` | L1 |
-| `skip_requested (signal)` | L26 |
-| `COLOR_TEXT` | L28 |
-| `COLOR_MUTED` | L29 |
-| `COLOR_TEAL` | L30 |
-| `COLOR_BRASS` | L31 |
-| `HEADING_SAMPLE` | L34 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L57 |
-| `set_presentation(snapshot: Dictionary) -> void` | L77 |
-| `get_chart() -> SNSeaChartView` | L101 |
-| `get_route_path() -> PackedVector2Array` | L107 |
-| `get_world_route_path() -> PackedVector2Array` | L112 |
-| `get_unknown_destination() -> Dictionary` | L117 |
-| `get_progress() -> float` | L122 |
-| `get_ship_world_position() -> Vector2` | L127 |
-| `get_ship_heading() -> float` | L133 |
-| `unpack_route_path(raw: Variant) -> PackedVector2Array` | L222 |
+| `skip_requested (signal)` | L30 |
+| `COLOR_TEXT` | L32 |
+| `COLOR_MUTED` | L33 |
+| `COLOR_TEAL` | L34 |
+| `COLOR_BRASS` | L35 |
+| `HEADING_SAMPLE` | L38 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L64 |
+| `set_presentation(snapshot: Dictionary) -> void` | L85 |
+| `get_chart() -> SNSeaChartView` | L110 |
+| `get_route_path() -> PackedVector2Array` | L116 |
+| `get_world_route_path() -> PackedVector2Array` | L121 |
+| `get_unknown_destination() -> Dictionary` | L126 |
+| `get_progress() -> float` | L131 |
+| `get_ship_world_position() -> Vector2` | L136 |
+| `get_ship_heading() -> float` | L142 |
+| `get_ship_vision_radius() -> float` | L147 |
+| `unpack_route_path(raw: Variant) -> PackedVector2Array` | L247 |
 
 **世界航线表里的真实航线**（Shell 通过 `route_path` 传入）按弧长行进，航程条
 显示进度、预计抵达时间、时间倍率，并提供「跳过演出」。
@@ -44,6 +45,10 @@
 - **探索演出**（探索系统 4.1）：`bind()` 收到 `unknown_destination: {x, y, label_key}`
   时把未知终点交给海图（虚线预测线 + `?` 标记），航程条右侧目的地显示 `？`
   （`label_key`，通常 `ui.label.unknown_destination`），起点仍显示港口名。
+- **随船照亮**（4.3.3 / U4）：演出视野半径取 `sea_chart.view` 的
+  `fog_radii.vision`（与领域同源，由 Core 比例推导），`bind()` 重建海图后与每次
+  `set_presentation()` 都推给 `SNSeaChartView.set_ship_vision()`。纯表现：本页
+  不查询后端、不写领域状态。
 - `skip_requested` 只表达意图；跳过后事件仍由 Shell 推给玩家。
 
 模块索引：[framework/ui](../../README.md)

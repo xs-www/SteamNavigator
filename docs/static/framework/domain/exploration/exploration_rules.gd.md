@@ -9,14 +9,16 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ExplorationRules` | L1 |
-| `DEFAULTS` | L22 |
-| `read(state: GameState, hub: RegistryHub) -> Dictionary` | L52 |
-| `discovery_chance(rules: Dictionary, credibility: float) -> float` | L71 |
-| `roll_succeeds(rng: RandomNumberGenerator, chance: float) -> bool` | L78 |
+| `DEFAULTS` | L26 |
+| `read(state: GameState, hub: RegistryHub) -> Dictionary` | L66 |
+| `fog_radii(state: GameState, hub: RegistryHub, world: WorldMap = null) -> Dictionary` | L85 |
+| `discovery_chance(rules: Dictionary, credibility: float) -> float` | L100 |
+| `roll_succeeds(rng: RandomNumberGenerator, chance: float) -> bool` | L107 |
 
-把 Core JSON 的数值与框架兜底常量统一成一份纯数据字典，供线索、探索预览与结算共享。
+把 Core JSON 的数值与框架兜底常量统一成一份纯数据字典，供线索、探索预览、结算与
+战争迷雾半径共享。
 
-- 关键依赖：`ContentTypes.MAP_PROFILE`、`GameState.world()`、`RegistryHub`
+- 关键依赖：`ContentTypes.MAP_PROFILE`、`GameState.world()`、`RegistryHub`、`WorldMap`
 
 ## 契约与约束
 - 规则只来自当前 `map_profile_id` 对应 `map_profiles` 定义的 `data.exploration`；
@@ -27,5 +29,8 @@
 - 读取无副作用、不缓存：注册表冻结后内容不变，重复读取开销可忽略。
 - `discovery_chance` / `roll_succeeds` 是规则数学的单一真源：线索服务、探索预览与
   结算都调用这里，避免「展示概率」和「实际判定」用两套公式。
+- `fog_radii()` 是雾半径的单一真源：`radius = min(world.w, world.h) * ratio`
+  （阶段 4.3 起比例来自 Core，不再用固定世界单位）；世界缺失时退回 400 单位的
+  历史默认世界，保证旧存档 / 测试夹具仍有确定的雾。
 
 模块索引：[framework/domain](../README.md)
