@@ -12,13 +12,15 @@
 | `MarketScreen` | L1 |
 | `command_requested (signal)` | L14 |
 | `SPARKLINE_SCENE` | L16 |
-| `COLOR_TEXT` | L17 |
-| `COLOR_MUTED` | L18 |
-| `COLOR_TEAL` | L19 |
-| `COLOR_RED` | L20 |
-| `COLOR_GREEN` | L21 |
-| `ENTRY_SEPARATION` | L23 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L28 |
+| `SUPPLY_CARD_SCENE` | L17 |
+| `COLOR_TEXT` | L18 |
+| `COLOR_MUTED` | L19 |
+| `COLOR_TEAL` | L20 |
+| `COLOR_BRASS` | L21 |
+| `COLOR_RED` | L22 |
+| `COLOR_GREEN` | L23 |
+| `ENTRY_SEPARATION` | L25 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L30 |
 
 ## 契约与约束
 

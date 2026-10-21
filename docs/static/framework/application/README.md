@@ -33,6 +33,8 @@
 | `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前/随船运输模块、已装模块效果、港口仓库、打造配方与所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
 | `queries/story_view.gd` | 新手剧情 / 教学系统的只读查询（`story.view`）。输出剧情卡、目标条、功能 / | [查看](./queries/story_view.gd.md) |
 | `queries/supply_view.gd` | 补给界面 ViewModel：煤水价/库存、载重余量、可补上限、预计续航与维修报价。 | [查看](./queries/supply_view.gd.md) |
+| `queries/task_view.gd` | 任务追踪聚合查询（`task.view`，阶段 4.6 Phase A）。只读地把剧情当前目标、 | [查看](./queries/task_view.gd.md) |
+| `queries/tavern_view.gd` | 酒馆页（`tavern.view`）的只读查询——把原「情报站」的物价情报矩阵 | [查看](./queries/tavern_view.gd.md) |
 | `queries/victory_view.gd` | 通关页 ViewModel：是否通关、通关时间与完整 run summary。 | [查看](./queries/victory_view.gd.md) |
 | `queries/voyage_preview.gd` | 出航预览查询包装。 | 本页 |
 | `query_bus.gd` | 只读查询执行器：给处理器临时克隆的 GameState，返回 ViewModel。 | [查看](./query_bus.gd.md) |

@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ExploreVoyageService` | L1 |
-| `start(context, clue_id: String, strategy_id: String) -> Dictionary` | L47 |
-| `decide(context, choice: String) -> Dictionary` | L182 |
-| `settle(context) -> Dictionary` | L288 |
+| `start(context, clue_id: String, strategy_id: String) -> Dictionary` | L49 |
+| `decide(context, choice: String) -> Dictionary` | L184 |
+| `settle(context) -> Dictionary` | L290 |
 
 航次与在航标记、抽定发现 roll）、资源告急决策（继续 / 掉头）、抵达结算（发现港口 +
 迷雾揭示 / 失败漂流 + 线索保留，按实际航行小时一次性扣煤水）。
@@ -34,6 +34,8 @@
   仍只表示这笔额外损耗。
 - 发现结果在出发时用命名流 `explore:<clue_id>:<departure>` 抽定（`outcome_roll`），
   结算只比较 `outcome_roll < discovery_chance`，同 seed 同状态可复现。
+- 4.5.4：剧情线索可带 `guaranteed_explore_clue_id`（`StoryService` 写入）——结算
+  时该线索无视 `outcome_roll` 直接成功，成功后消费 flag；其它线索 / 跳过教程不受影响。
 - 成功：坐标世界 `discover_port_id` + `mark_visited` + `FogOps.reveal_arrival`，抽象地图
   同步发现 / 访问（贸易、市场、海图都读它），线索 resolved，进入目标港。
 - 失败（4.3 / U3）：线索**保留在 active**（只累加 `attempts` / `last_attempt_at`，

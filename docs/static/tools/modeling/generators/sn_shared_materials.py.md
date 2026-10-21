@@ -12,9 +12,11 @@
 随 core 模组发布，多件资产在 Godot 里共享同一个 `Texture2D`。
 
 约定：
-- 1 unit = 1 m；每个材质有 `tile_m`（一张贴图覆盖多少米），UV 用世界坐标 / tile_m，
+- 1 unit = 1 m；每个材质有 `tile_m`（一张贴图覆盖多少米），UV 用坐标 / tile_m，
   采样器 REPEAT，因此任意大面都连续平铺、没有接缝。
 - UV 投影按面法线主轴的盒式投影：X 面用 (Y,Z)、Y 面用 (X,Z)、Z 面用 (X,Y)。
+  坐标空间可选：多节点拼装件用 `space="world"`（默认，跨子件连续），
+  单 mesh 道具 / 设施用 `space="local"`（UV 相位不随工作台布局位置变化）。
 - Blender 材质节点：Image Texture(sRGB, Linear, REPEAT) → Principled Base Color；
   Roughness / Metallic 来自 spec；背面剔除关闭（低模薄板双面）。
 - bpy 只在函数内部 import；纯数据段可被 dryrun / 工具直接加载。

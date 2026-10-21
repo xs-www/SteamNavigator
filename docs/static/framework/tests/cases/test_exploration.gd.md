@@ -8,51 +8,51 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `SEED` | L27 |
-| `STRATEGY_ID` | L28 |
-| `test_acquire_always_starts_at_level_one_and_credibility_stays_in_source_ranges() -> void` | L37 |
-| `test_acquire_returns_empty_when_no_undiscovered_target() -> void` | L61 |
-| `test_acquire_search_zone_and_distance_range_follow_credibility() -> void` | L75 |
-| `test_clue_view_clips_secrets_by_level() -> void` | L103 |
-| `test_investigate_climbs_to_level_four_without_rerolling_the_target() -> void` | L143 |
-| `test_investigate_failure_and_insufficient_money() -> void` | L260 |
-| `test_investigate_requires_a_run_a_port_and_an_active_clue() -> void` | L324 |
-| `test_chart_view_exposes_investigation_action_fields() -> void` | L377 |
-| `test_chart_view_blocks_investigation_at_sea() -> void` | L440 |
-| `test_chance_roll_boundaries_are_deterministic() -> void` | L461 |
-| `test_on_arrival_rumour_is_reproducible() -> void` | L480 |
-| `test_buy_requires_intel_facility() -> void` | L509 |
-| `test_buy_requires_money() -> void` | L519 |
-| `test_buy_charges_gold_and_adds_intel_clue() -> void` | L530 |
-| `test_buy_is_blocked_by_the_active_clue_cap() -> void` | L560 |
-| `test_explore_start_charges_only_wages_and_marks_at_sea() -> void` | L585 |
-| `test_explore_start_infeasible_does_not_charge() -> void` | L660 |
-| `test_explore_start_twice_fails_with_already_exploring() -> void` | L681 |
-| `test_explore_settle_success_discovers_target() -> void` | L697 |
-| `test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void` | L756 |
-| `test_failed_clue_can_be_sailed_again() -> void` | L829 |
-| `test_explore_settle_without_a_voyage_fails() -> void` | L863 |
-| `test_explore_settle_runs_arrival_services_and_autosaves() -> void` | L872 |
-| `test_explore_failure_settle_runs_arrival_services() -> void` | L906 |
-| `test_turn_back_runs_arrival_services_and_autosaves() -> void` | L935 |
-| `test_turn_back_returns_to_origin_and_keeps_clue_active() -> void` | L965 |
-| `test_continue_keeps_sailing_and_marks_the_alert() -> void` | L1013 |
-| `test_alert_threshold_and_progress_come_from_the_rules() -> void` | L1035 |
-| `test_continue_cannot_answer_the_alert_twice() -> void` | L1084 |
-| `test_chart_view_exposes_alert_state_while_exploring() -> void` | L1108 |
-| `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L1132 |
-| `test_rules_are_read_from_the_core_map_profile() -> void` | L1184 |
-| `test_fog_radii_are_world_size_relative_and_content_driven() -> void` | L1228 |
-| `test_game_state_backfills_the_clue_block_lazily() -> void` | L1260 |
-| `test_save_load_roundtrip_preserves_exploration_state() -> void` | L1276 |
-| `test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void` | L1324 |
-| `test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void` | L1393 |
-| `test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void` | L1433 |
-| `test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void` | L1492 |
-| `test_wait_clue_chance_math_and_command_acquisition() -> void` | L1543 |
-| `test_wait_prefers_goods_leads_when_a_market_is_known() -> void` | L1584 |
-| `test_contract_completion_hook_unlocks_a_clue() -> void` | L1609 |
-| `test_clue_travel_sails_to_the_goods_lead_harbour() -> void` | L1647 |
+| `SEED` | L29 |
+| `STRATEGY_ID` | L30 |
+| `test_acquire_always_starts_at_level_one_and_credibility_stays_in_source_ranges() -> void` | L39 |
+| `test_acquire_returns_empty_when_no_undiscovered_target() -> void` | L63 |
+| `test_acquire_search_zone_and_distance_range_follow_credibility() -> void` | L77 |
+| `test_clue_view_clips_secrets_by_level() -> void` | L105 |
+| `test_investigate_climbs_to_level_four_without_rerolling_the_target() -> void` | L145 |
+| `test_investigate_failure_and_insufficient_money() -> void` | L262 |
+| `test_investigate_requires_a_run_a_port_and_an_active_clue() -> void` | L326 |
+| `test_chart_view_exposes_investigation_action_fields() -> void` | L379 |
+| `test_chart_view_blocks_investigation_at_sea() -> void` | L442 |
+| `test_chance_roll_boundaries_are_deterministic() -> void` | L463 |
+| `test_on_arrival_rumour_is_reproducible() -> void` | L482 |
+| `test_buy_requires_tavern_facility() -> void` | L511 |
+| `test_buy_requires_money() -> void` | L521 |
+| `test_buy_charges_gold_and_adds_intel_clue() -> void` | L532 |
+| `test_buy_is_blocked_by_the_active_clue_cap() -> void` | L562 |
+| `test_explore_start_charges_only_wages_and_marks_at_sea() -> void` | L587 |
+| `test_explore_start_infeasible_does_not_charge() -> void` | L662 |
+| `test_explore_start_twice_fails_with_already_exploring() -> void` | L683 |
+| `test_explore_settle_success_discovers_target() -> void` | L699 |
+| `test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void` | L758 |
+| `test_failed_clue_can_be_sailed_again() -> void` | L831 |
+| `test_explore_settle_without_a_voyage_fails() -> void` | L865 |
+| `test_explore_settle_runs_arrival_services_and_autosaves() -> void` | L874 |
+| `test_explore_failure_settle_runs_arrival_services() -> void` | L908 |
+| `test_turn_back_runs_arrival_services_and_autosaves() -> void` | L937 |
+| `test_turn_back_returns_to_origin_and_keeps_clue_active() -> void` | L967 |
+| `test_continue_keeps_sailing_and_marks_the_alert() -> void` | L1015 |
+| `test_alert_threshold_and_progress_come_from_the_rules() -> void` | L1037 |
+| `test_continue_cannot_answer_the_alert_twice() -> void` | L1086 |
+| `test_chart_view_exposes_alert_state_while_exploring() -> void` | L1110 |
+| `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L1134 |
+| `test_rules_are_read_from_the_core_map_profile() -> void` | L1188 |
+| `test_fog_radii_are_world_size_relative_and_content_driven() -> void` | L1232 |
+| `test_game_state_backfills_the_clue_block_lazily() -> void` | L1264 |
+| `test_save_load_roundtrip_preserves_exploration_state() -> void` | L1280 |
+| `test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void` | L1328 |
+| `test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void` | L1397 |
+| `test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void` | L1437 |
+| `test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void` | L1496 |
+| `test_wait_clue_chance_math_and_command_acquisition() -> void` | L1547 |
+| `test_wait_prefers_goods_leads_when_a_market_is_known() -> void` | L1588 |
+| `test_contract_completion_hook_unlocks_a_clue() -> void` | L1613 |
+| `test_clue_travel_sails_to_the_goods_lead_harbour() -> void` | L1651 |
 
 （`clue.investigate`）/ 分级裁剪 / 命名流复现、`clue.buy` 门禁、`explore.start`
 扣费与在航标记、`explore.settle` 成功发现与失败漂流、`explore.decide` 掉头 / 继续、
@@ -75,5 +75,7 @@
   用例断言出发库存不变、各路径的实际扣减与告警仍按出发库存预判。
 - 断言取值遵守契约 §3 的 Core 数值（40 金币、漂流 6h、额外煤水 4、耐久 8 等），
   避免测试与内容 JSON 脱节。
+- 4.5.4：购买线索的设施判断改走酒馆（`tavern`），测试显式移除 / 添加酒馆设施，
+  不再依赖起始港「没有情报站」的旧假设。
 
 模块索引：[framework/tests](../README.md)

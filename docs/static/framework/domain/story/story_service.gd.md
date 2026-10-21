@@ -9,24 +9,28 @@
 | 符号 | 位置 |
 | --- | --- |
 | `StoryService` | L1 |
-| `FEATURE_OVERVIEW` | L26 |
-| `FEATURE_SUPPLY` | L27 |
-| `FEATURE_CHART` | L28 |
-| `FEATURE_MARKET` | L29 |
-| `FEATURE_CONTRACTS` | L30 |
-| `FEATURE_CLUES` | L31 |
-| `FEATURE_TAVERN` | L32 |
-| `FEATURE_SHIPYARD` | L33 |
-| `FEATURES` | L34 |
-| `EVENT_STAGE_ENTERED` | L39 |
-| `EVENT_COMPLETED` | L40 |
-| `EVENT_FEATURE_UNLOCKED` | L41 |
-| `config(state: GameState, hub: RegistryHub) -> Dictionary` | L45 |
-| `begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void` | L59 |
-| `view(context) -> Dictionary` | L84 |
-| `advance(context) -> Dictionary` | L140 |
-| `skip(context) -> Dictionary` | L168 |
-| `observe(context, event: String, data: Dictionary = {}) -> Dictionary` | L195 |
+| `FEATURE_OVERVIEW` | L36 |
+| `FEATURE_SUPPLY` | L37 |
+| `FEATURE_CHART` | L38 |
+| `FEATURE_MARKET` | L39 |
+| `FEATURE_CONTRACTS` | L40 |
+| `FEATURE_CLUES` | L41 |
+| `FEATURE_TAVERN` | L42 |
+| `FEATURE_SHIPYARD` | L43 |
+| `FEATURES` | L44 |
+| `EVENT_STAGE_ENTERED` | L49 |
+| `EVENT_COMPLETED` | L50 |
+| `EVENT_FEATURE_UNLOCKED` | L51 |
+| `config(state: GameState, hub: RegistryHub) -> Dictionary` | L55 |
+| `begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void` | L69 |
+| `view(context) -> Dictionary` | L95 |
+| `market_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L152 |
+| `module_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L163 |
+| `advance(context) -> Dictionary` | L173 |
+| `skip(context) -> Dictionary` | L201 |
+| `observe(context, event: String, data: Dictionary = {}) -> Dictionary` | L228 |
+| `guaranteed_explore_clue_id(state: GameState) -> String` | L558 |
+| `consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool` | L567 |
 
 `data.story`（Core JSON）阶段表，维护 `GameState.data.story` 的进度、事件计数、
 标志、功能 / 商品 / 模块解锁，并分发「发现委托目的港」等剧情效果。
@@ -42,8 +46,18 @@
 - 阶段推进：`mode=confirm` 由 `story.advance` 推进；条件型阶段在
   `story.observe(event, data)` 中按 `event / counter / at_least / flag / all`
   评估，可一次跨多个阶段。未知效果只 warning，不崩。
+- 4.5.4 效果：`grant_clue`（目标 `next_unknown` 时确定性选最近的未发现港并记忆，
+  第二次授予复用同一目标；等级 / 来源来自 Core）、`set_market_price_bias`
+  （把指定商品在起始港 / 其它港的库存与价格 bias 归位，保证教学价差稳定）、
+  `guarantee_explore_success`（只对刚授予的剧情线索生效，探索成功即消费）。
+- 4.5.5 效果：`add_facility`（给当前港补设施，第三港保证有船厂）、`upgrade_hull`
+  （换成 Core 指定、带客舱位的船体，旧船进仓库）；`module_filter()` 给船厂提供
+  `unlocked_modules` 裁剪，剧情期间只露出教学模块。
+- 4.5.6 引导：`set_counter_from_ship` 用船上现有资源初始化计数器，条件支持
+  `counter_from` 直接读取命令返回的数值（如补给购买后的煤舱 `stock`），
+  目标条据此显示真实进度与「还差 N」。
 - 跳过教程必须解锁 `skip_unlocks` 里的全部功能并执行
-  `discover_contract_destination`，保证跳过不会卡死。
+  `discover_contract_destination`，保证跳过不会卡死；跳过不会设置保底探索。
 - 查询（`story.view`）只输出公开字段；counters / flags 只暴露剧情效果需要的
   `lock_actions` 语义，不泄露内部数值。
 

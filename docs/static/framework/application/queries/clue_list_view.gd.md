@@ -10,6 +10,7 @@
 | --- | --- |
 | `ClueListViewQuery` | L1 |
 | `execute(_params: Dictionary, context) -> Dictionary` | L24 |
+| `clue_rows(context) -> Array` | L46 |
 
 （与 `sea_chart.view` 同一套 `ClueService.view_entry` 裁剪）、调查入口字段、
 可出航标记，以及最近过期线索的折叠历史（`data.clues.expired`）。

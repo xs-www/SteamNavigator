@@ -13,16 +13,16 @@
 | `next_serial(state: GameState) -> int` | L28 |
 | `create_instance(hub: RegistryHub, template: ContentDefinition, origin: String, destination: String, now: float, distance: float, serial: int, rng: RandomNumberGenerator) -> Dictionary` | L35 |
 | `attach(state: GameState, hub: RegistryHub, instance: Dictionary) -> Dictionary` | L106 |
-| `missing_player_cargo(state: GameState, instance: Dictionary) -> Dictionary` | L142 |
-| `complete(state: GameState, hub: RegistryHub, instance: Dictionary, arrival_time: float) -> Dictionary` | L171 |
-| `find_template_by_sequence(hub: RegistryHub, sequence: int) -> ContentDefinition` | L223 |
-| `templates_by_kind(hub: RegistryHub, kind: String) -> Array[ContentDefinition]` | L230 |
-| `active_limit(state: GameState) -> int` | L240 |
-| `generate_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, key: String) -> Array` | L248 |
-| `refresh_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, port_id: String, arrival_time: float) -> Array` | L278 |
-| `generate_offer(state: GameState, hub: RegistryHub, template: ContentDefinition, rng_service: RngService, origin: String) -> Dictionary` | L284 |
-| `accept_offer(state: GameState, hub: RegistryHub, instance_id: String) -> Dictionary` | L313 |
-| `accepts_passengers(template: ContentDefinition) -> bool` | L340 |
+| `missing_player_cargo(state: GameState, instance: Dictionary) -> Dictionary` | L144 |
+| `complete(state: GameState, hub: RegistryHub, instance: Dictionary, arrival_time: float) -> Dictionary` | L173 |
+| `find_template_by_sequence(hub: RegistryHub, sequence: int) -> ContentDefinition` | L225 |
+| `templates_by_kind(hub: RegistryHub, kind: String) -> Array[ContentDefinition]` | L232 |
+| `active_limit(state: GameState) -> int` | L242 |
+| `generate_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, key: String) -> Array` | L250 |
+| `refresh_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, port_id: String, arrival_time: float) -> Array` | L280 |
+| `generate_offer(state: GameState, hub: RegistryHub, template: ContentDefinition, rng_service: RngService, origin: String) -> Dictionary` | L286 |
+| `accept_offer(state: GameState, hub: RegistryHub, instance_id: String) -> Dictionary` | L315 |
+| `accepts_passengers(template: ContentDefinition) -> bool` | L342 |
 
 ## 契约与约束
 

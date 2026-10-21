@@ -14,36 +14,35 @@
 | `INTEL_TABLE_SCRIPT` | L12 |
 | `MARKET_SCREEN_SCRIPT` | L14 |
 | `CONTRACTS_SCREEN_SCRIPT` | L15 |
-| `SUPPLY_SCREEN_SCRIPT` | L16 |
-| `INTEL_SCREEN_SCRIPT` | L17 |
-| `OVERVIEW_SCREEN_SCRIPT` | L18 |
-| `SHIPYARD_SCREEN_SCRIPT` | L19 |
-| `PORT_MEMORY_SCREEN_SCRIPT` | L20 |
-| `SETTLEMENT_SCREEN_SCRIPT` | L21 |
-| `AT_SEA_SCREEN_SCRIPT` | L22 |
-| `EVENT_SCREEN_SCRIPT` | L23 |
-| `SEA_CHART_SCREEN_SCRIPT` | L24 |
-| `VICTORY_SCREEN_SCRIPT` | L25 |
-| `MAIN_MENU_SCREEN_SCRIPT` | L26 |
-| `NEW_GAME_SCREEN_SCRIPT` | L27 |
-| `MODS_SCREEN_SCRIPT` | L28 |
-| `SETTINGS_SCREEN_SCRIPT` | L29 |
-| `STEADY_BUILD` | L30 |
-| `LITERAL_EXPECTED_NOTICE_KEYS` | L36 |
-| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L170 |
-| `test_damaged_module_is_visible_in_the_shell() -> void` | L206 |
-| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L225 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L294 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L340 |
-| `test_supply_screen_paints_the_lost_capacity_band() -> void` | L390 |
-| `test_intel_screen_renders_the_port_comparison_table() -> void` | L420 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L467 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L525 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L558 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L777 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L797 |
-| `test_sea_chart_entry_integration() -> void` | L877 |
-| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L970 |
+| `TAVERN_SCREEN_SCRIPT` | L16 |
+| `OVERVIEW_SCREEN_SCRIPT` | L17 |
+| `SHIPYARD_SCREEN_SCRIPT` | L18 |
+| `PORT_MEMORY_SCREEN_SCRIPT` | L19 |
+| `SETTLEMENT_SCREEN_SCRIPT` | L20 |
+| `AT_SEA_SCREEN_SCRIPT` | L21 |
+| `EVENT_SCREEN_SCRIPT` | L22 |
+| `SEA_CHART_SCREEN_SCRIPT` | L23 |
+| `VICTORY_SCREEN_SCRIPT` | L24 |
+| `MAIN_MENU_SCREEN_SCRIPT` | L25 |
+| `NEW_GAME_SCREEN_SCRIPT` | L26 |
+| `MODS_SCREEN_SCRIPT` | L27 |
+| `SETTINGS_SCREEN_SCRIPT` | L28 |
+| `STEADY_BUILD` | L29 |
+| `LITERAL_EXPECTED_NOTICE_KEYS` | L35 |
+| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L169 |
+| `test_damaged_module_is_visible_in_the_shell() -> void` | L205 |
+| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L224 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L293 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L339 |
+| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L389 |
+| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L420 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L476 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L534 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L567 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L775 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L795 |
+| `test_sea_chart_entry_integration() -> void` | L875 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L968 |
 
 ## 契约与约束
 

@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-21T14:38:44.061Z",
-  "commit": "ab05477",
+  "generated_at": "2026-10-21T23:12:31.703Z",
+  "commit": "81a59eb",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 742,
-    "documented": 294,
-    "grouped": 448
+    "sources": 836,
+    "documented": 326,
+    "grouped": 510
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "87cd5527fc722a6091550af3fd50c140b8cbc9223503999f1480d9555896e69d",
+      "sha256": "9724aeb601d1f4fffb8ccf21192e2f2b2f0bb7d3834691728a384da96e3faec6",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -939,266 +939,420 @@
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Boiler_Efficient.glb",
-      "sha256": "0489d10c01be59ec21d5716857845f388dc46bac9acbd3a43d39565918832d7a",
+      "sha256": "ca7601ebc47f023eaa1969fce85636e3ff64d0ea0b04513d8b45c7bd0f95630f",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Boiler_Performance.glb",
-      "sha256": "e7e84a644fb10da17ac98eeb7c2168849ec17030a914a29d1eb5d6c4ac1a5792",
+      "sha256": "ee954873d682ec389a5601fa0fb527f9346559fa69576f3e55cdcfb64ff99d99",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Boiler_Standard.glb",
-      "sha256": "21c69e7d7f694904204d94d4b76ace39bb73f8596571ad1bf07a460235f49c4c",
+      "sha256": "c6afaf26354ec5eb7165aa33da5e867aeda681ec299eb4d0402b61593b77f67c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Boiler_Unit.glb",
-      "sha256": "e9328c7e1f9c0f1a2815ded34db3083ec76533e185dde473866cb363f9da7d3b",
+      "sha256": "53551ee692220e3570f7d10e8607d31ebf1713f26b975ac2a9d8a1a5d3801305",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Cabin_Passenger.glb",
-      "sha256": "e2510dc5eff83051c6b5851b1e6a3c1444afa2103a95dfeefa727973cdca8749",
+      "sha256": "2025fd74a1f507f5be31d580ae0aedf14b777f7e89f0cafdac4e683312e03017",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Cargo_Large_Hold.glb",
-      "sha256": "518129fe13972c2d15670727280e2c36f87298d2f3f6c9160fcc43423c359c93",
+      "sha256": "c2d1564b4eaf729dda7a6bc9f1221a03d9699a4e0629aca3b0486a09887a71b1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Cargo_Medium_Hold.glb",
-      "sha256": "ea82f4ab563d47e1d46d0d160a4ff551191d6e2560c70b8c42af53a087ec952f",
+      "sha256": "fa0bed4ba4fdc92c2d0d8d28c9bbe81c4b871e05d1f2e5ca2d1cfe049da742c8",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Cargo_Small_Hold.glb",
-      "sha256": "ea8c705018618d92e8e56c4fd46fda2e4c5b1325f6c6ae02a51923fea7963971",
+      "sha256": "14f70837d987691b1d64cc7c299fbe944d2fdb4333372340d1f9e4f9ef786450",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Nav_Chart_Room.glb",
-      "sha256": "669b7d8e5d0ea11d039d50156fcdcfb62065612c6469d1b87453f8f8ed0bff3b",
+      "sha256": "b7061ec04ef46b292eae7a9a9521c9e1588219d82bbfa9f042c958ea588d9fbe",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Nav_Spyglass.glb",
-      "sha256": "e56db1f90c4ad1bb13117b64e640464709afd9c27f77ebd415f9e092df923cbf",
+      "sha256": "05c1a542165eff3628f33ff6cfa8aa54bde9a1f8b61dffa7a75e49c61ccae469",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Safety_Lifeboat.glb",
-      "sha256": "ba0883768e70dda4bfd7907a22d531a8578207dd7bbb7b29c278c006ed33b053",
+      "sha256": "98800815bc0eaf87361d42d6032bfb7e8b8f8e5fe5bedfcf3ce721659667e28a",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/modules/SN_Safety_Valve.glb",
-      "sha256": "e10f328d198caf9833a8f00bd9c3d7a9c70a78ec49176117d0b7a46a5ece4a85",
+      "sha256": "1af3d871377cd81b3dff789207c4b90933ba839f47f9d6d2d92c77546adbd29e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/coal.png",
+      "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/port/SN_Dry_Dock.glb",
-      "sha256": "2336dcf0592ceef1a37ec4fbec05182844df09e778a3cdec2682fa6b95dd02c7",
+      "sha256": "21659cc3a4d58e2c1ada08a34209a51d76efbf0dc185455783928285ea88815b",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/port/SN_Market_Stall.glb",
-      "sha256": "1c4ba847dca2b27f14b60b2f38d73d31d2edbe137796f71a2678af9c58c4fa54",
+      "sha256": "6eb34508fab8f6b87d15ca23a8f766dd59e13257163cab8eb0b95b75deb337b9",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/port/SN_Notice_Board.glb",
-      "sha256": "1a61f15ae0bf411562f53f7279ebac0d8cf71c52dc4135348fe7499d0908bb79",
+      "sha256": "18ebb2a215c4c1020f7fa668881d99ff5fb69c63f9ccab84dc0d91a9aa98f0cc",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/port/SN_Shipyard_Gantry.glb",
-      "sha256": "8f996e3e86637d3f364d2b81d0b16033049be07872b1a090a64a9516b5b874ef",
+      "sha256": "f86d148749a83ab7fb8ed5d18894d8df872b7352726f645cc9ba1cabe5bd8172",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/port/SN_Signal_Tower.glb",
-      "sha256": "754cb94e2282e1d261645cc5206a71da61d48b6e7adc39ce1b7e049513484344",
+      "sha256": "41d6dd0fb5c0be7d9d79b39591db6cd713c128127b9dae102651e303ce3c77d0",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/port/SN_Water_Tank.glb",
-      "sha256": "660290be5bc36821c1afbfad8dbbdb327da934645147d95815ad61c0b1cd9b46",
+      "sha256": "42feee7eada5dca4330e36de4988a91585f54b18b0fcae0f141aa264620e9717",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/coal.png",
+      "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Barrel.glb",
-      "sha256": "4decffd45139a653a119639fbeda3bee1b8952e9e7c12ce556d7788911b56322",
+      "sha256": "1d6872f1ac6609955c04c32fbbb1cf613e31fe944cc15bbc3832380df975f171",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Bell.glb",
-      "sha256": "b2d4bc2c8add34a925bee409cdea914279f4a5e7e704bfbbc0e4ff7d12b57814",
+      "sha256": "ceec616b0c7abbb6187e8d87c8ba4f6d4450d09d35119c004529af15d7ca4962",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Boiler_Unit.glb",
-      "sha256": "e9328c7e1f9c0f1a2815ded34db3083ec76533e185dde473866cb363f9da7d3b",
+      "sha256": "53551ee692220e3570f7d10e8607d31ebf1713f26b975ac2a9d8a1a5d3801305",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Buoy.glb",
-      "sha256": "000e26fbbd29f2621652dd57704750cf7a70be18c03fe98213293c4c44f3d372",
+      "sha256": "ee0c7b41d748fcf2315c82cd00dd0ef5fbecef789c1ef1efd8165d289b40c6cc",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Capstan.glb",
-      "sha256": "3fd809be0ff624c2933929ee2148d3fc046cd13ce9da4feaf95045b1e0c63da5",
+      "sha256": "28291e3227e982f8858b14c8bcb81a1076db70271f7bc7aa25a7863a07e3680c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Cargo_Net.glb",
-      "sha256": "b16e7e3242fe5e2ee8d14d77e86f11755bcf27e99162f6d473cd1fc9a1502b2b",
+      "sha256": "986f3ebb150a0434fce5120c94410cc55e435bbd59f5d5c9f6c2beae9991c1de",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Chain_Coil.glb",
-      "sha256": "db5fdcab699f18cf760fc4e3562f5841e9266fce9281fdf4fc801bd6305c4c60",
+      "sha256": "3262e00c8d937f93bb4ecd73221c1d889a5d284adb02be250195076ef9b75ffb",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Coal_Chute.glb",
-      "sha256": "f9414c4114613cd96ac910b255fd3e3d850792f4175c9434759edb45c93ea1c1",
+      "sha256": "ec57ed280b114514bb1223981a42352b3bb6c43536a9293f3d0d92c9ce9a6187",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Coal_Pile.glb",
-      "sha256": "289667359901250cc4ae4146fdb1dfde55ceac620ae650269bc5f641010c01bc",
+      "sha256": "d9c7091b91ab519913c90d0ec475c2300a6bbb0ef22133c57dbb3e9911798a5d",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Crate.glb",
-      "sha256": "e96fbb9781973bd9e27ab3d2db6a8b12513dd00932f3ba2ed658c0eaa3b89844",
+      "sha256": "d3117bc86509a6b15c37dacca75dd164c85dfdec8bfcd5c51ea7183ced14beb0",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Dock_Fender.glb",
-      "sha256": "a5016c8e4e50eca44e13aed2b176f19c9376e09fe18cc57c4014b72b05bc4309",
+      "sha256": "5e5a4d62a85a6200801d0272a2b1f208e2147e9dbf39dc31fc668b2eb9ad43c6",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Dock_Ladder.glb",
-      "sha256": "e7ba5b4df4ffe5b709b65c05e9d5f89b6a732600e27726d64abc200f0852a756",
+      "sha256": "d7a4084a4ccc94bc6c7a7482f992f897cc42e21b949ef8cd2f44edfaa83f0ff4",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Dock_Stairs.glb",
-      "sha256": "035a7202317da30fc43da85d0a9067f36c32a310c70dbbdeec4e04463c35026f",
+      "sha256": "7bd89e73d2ff6e10c18c0ed43145eeff6b74e7aa601cc6b3167181800c20a8a6",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Dock_Wall.glb",
-      "sha256": "06239c827837672d763a8e98efda410f3efcea22e80b90dbe4e728462db1becd",
+      "sha256": "8f6ed71545f28f5d8915c4226ffa2f078fd06dd4c0ff178d3f43531073607661",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Fender_Ball.glb",
-      "sha256": "075703229e7214775697d960ff0a93d3bb0a439fdeb1361deb8bb7bb0c363638",
+      "sha256": "9bd163894bfbb073b10c5e95272fe3077ca13731640a5e914219fe88f5043ebe",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Flag_Pole.glb",
-      "sha256": "6a251941d5119cece6a7dc9886a1bfa80bb6496ed78218fb7e4c70fc2efe0385",
+      "sha256": "62c9c7ae395f6afbceac76e34d9fc252d73ea3239805a7896e8994ff58fef256",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Gangway.glb",
-      "sha256": "07cc019dbcbba167bc2a5c2f12346eda0459fc9ccf1ea97db5661720b9ff040c",
+      "sha256": "4e2f7a79fac583328c4f427502bb4fa10c4c8d7c169d7f98a1534c2c18d5508f",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Gas_Lamp.glb",
-      "sha256": "e2339232e15151c9ca863c5fbc55155775c3860d607275ca3295271dda5eb768",
+      "sha256": "23deffe3c557a5f2e0ea000a3854cb197f9995f7173927fba9fb51c1b9921219",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Gear_Crate.glb",
-      "sha256": "a9882f6b361dfe2a41193ee0c12a02981ab33ef17177345354aebe30c535af35",
+      "sha256": "c076b26c7ee416184208d5e218f579cab80b11ed1cf4be606a8cb1ade25dad12",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Grab_Bucket.glb",
-      "sha256": "fff07c1fb5c20da609d9f8718832d8d9b7f90b3217ed716aca15dcda1b1ca3ed",
+      "sha256": "18527ad9071b2df26ca83e209c5e9b776fc960bfe18859ebf7b02b39b7a632d8",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1233,7 +1387,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Cargo_Lighter.glb",
-      "sha256": "bdb4b7b16c32010948f853d5da9c033ecb09e9c79951858c7fb4b7ff22b6bb98",
+      "sha256": "6b43c20c9b45d6f23bd17090b514b301a912d60b9736c30f9157c61b10ed5c7d",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1254,21 +1408,21 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Dock_Worker_A.glb",
-      "sha256": "86a738593d6c4d43704acd7895297d893003135831999e950382cd99402f68ef",
+      "sha256": "88d87d3147b8a0fba57b7b277b2894b16c05d696ebfe683cafbd5296e9400d09",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Dock_Worker_B.glb",
-      "sha256": "27578c7295d2d420b810f4a3672e1d44cfa2619e35a528cfd842f7c1278d8e1b",
+      "sha256": "ec400a3a4bd1ace54636d6ab106e51567bb65b3403fd61a6a5ec0c01a58f7391",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Fence_Row.glb",
-      "sha256": "55fd6ae3e8b6561767845f0291f9436d052b78a4a055d378f8937790ce5602da",
+      "sha256": "65cefc95e03546e54af3dae369a7ce914384f13ff1bddc9525840ade23bee761",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1289,7 +1443,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_HT_Rowboat.glb",
-      "sha256": "87abf2b286e44db03d1415746eee91ea8a86f6e51f3eb5f6e2b339fe3673f8b9",
+      "sha256": "32ecc464602985f6fa0e164811b19f5206f2da5a30b0ab662bf2ec0fdaaf8ce0",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1359,7 +1513,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Handcart.glb",
-      "sha256": "5828cf33b78a46f7e1c07ace60482cd4477b0d1793c750044a559fb3f1e9b3e3",
+      "sha256": "9d427b6e561e9635e2af94de2fb4aea44ae9d03f066cadbfc55d57528aa765f9",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1373,7 +1527,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Keel_Block.glb",
-      "sha256": "ee4c9c413c11c39931348a576c0b0db99678d9addac71bd007d43322dcab3717",
+      "sha256": "0a53348254aaea42b4aded2d3d99a5fb9ac099f488de8a58211690eb122fdadc",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1387,63 +1541,63 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Mooring_Bollard.glb",
-      "sha256": "e964c78d6d59863b7b0dd556e1a45b070349044270486f74ff2f5fe490b737c1",
+      "sha256": "232a76b41ca0c689f2efcbd7bb66e90e3dabb131bc9495ba9f06b6be3965192f",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Mooring_Rope.glb",
-      "sha256": "2db9bb46b49e294ce4abc45f2b2d45a01421a2a4192e7cfc72e4908a67248f37",
+      "sha256": "3c1bb50817ddad5a0d9541455874447d997d8c6dfaa939ebba3fd29c29b73e61",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Ore_Pile.glb",
-      "sha256": "f2ca726b0a881466bc6045d598d156eb18f15e5436ea082eb6c513235fd3ab73",
+      "sha256": "f3a5cb504d1bc6712841d51566258a4127fd688424859c6fef6f94456401dc64",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Pallet.glb",
-      "sha256": "f7955a1112070d1146ef86c9747c5f6f78f6e484852bf8cd0ea65f148d00780a",
+      "sha256": "b9c2097ee35544d0dd78bbe2034614629b1630bdb1eeadc2d9c1f1e16d6f350e",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Plate_Stack.glb",
-      "sha256": "dad559535a789a613e16d1b0800ebc6fc0b68585dae5090444e0ca399826a420",
+      "sha256": "1df4577477a39244b9de6f5f8794d2c018bcf0357d4fba3a6564c11d5e844354",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Port_Sign.glb",
-      "sha256": "02cd963275884ddb366b78d17bbd0e8f594f48b3ef7e9054719df93d77e816f6",
+      "sha256": "c4aaf323cfd22cee33fc2ba44794ca5d65b2ff5ae0a496b08a5a60f7151eff3b",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Sack_Pile.glb",
-      "sha256": "1230c21d4c157f2d0fbaf97f986b375f4e25405419e9d107a9f32784f3a9f71c",
+      "sha256": "26722e4be3b62c2089809ff8c839afcfd3bb33e803ddc2c1d9c86c67b42466f1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Steam_Pipe.glb",
-      "sha256": "9fb8a51fb6cdb27ab69292762b39b457fb2aa7506b2af0a417f61a494f87ea23",
+      "sha256": "95f170a3c2795745f3195304d0681b1d46b58283e781610182c96a329c00bd0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Timber_Stack.glb",
-      "sha256": "84b51b586f188869d139e59583e472110276681b1a9f470bf55a53f4b3bceb81",
+      "sha256": "63192a64902329dcf4031fb971b39434bde67f9fb0cd10fa282ed49743fb2ec1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1617,6 +1771,167 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Boom.glb",
+      "sha256": "ff98c170cae16cd5fe77b7f349818407056d625edd0f375374ef2f19e857e0ab",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Bowsprit.glb",
+      "sha256": "167880dd403e58e56ac07f578830fb2919b999649839cd9c5571b1d73b908047",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Gaff.glb",
+      "sha256": "8384112c7968298771f45a25a2f01b2f5d4ba47333a450fef743ee374df44272",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Mast_Sail.glb",
+      "sha256": "3d120f009b7f067619c999902826d5f53a526e13fe70f0636f3dbefad29250f3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Mast_Steam.glb",
+      "sha256": "c585c962c2c907787e79f263f0f7232e00eb68851eab1ee1359bca26dbedc95b",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Running.glb",
+      "sha256": "1bceb95914c3b0155a9cb0761f1d5035e93e94813406cf7290b23cb291d4b15d",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Sail_Gaff.glb",
+      "sha256": "763e9de1a8cbf205f32df0a339b9df1e14f613ccfe9e4c29833ef16ad696a81d",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Sail_Jib.glb",
+      "sha256": "1f140a40f4527f186c98eece2cef531114a37e66b9e8eb49a13893fdc5b53aee",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Sail_Square.glb",
+      "sha256": "abb6be11d3aa257150c1ce2ba846371443190fc58520a996e3fc7d018fa0ec0b",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Shrouds.glb",
+      "sha256": "0530fe04cfdd2b132c05e28ce941ee11d04b87bf28bd5eab3bf7043a0684a500",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Stays.glb",
+      "sha256": "1bc21be7f72fdd403c777dd6e72b0ff22600758f42d5ab5e53c7de2f946d4834",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/SN_Rig_Yard.glb",
+      "sha256": "6753f15b5c0aeb014a22f7bd6bd82681995860896d965d1ebf435e1daf997dff",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/coal.png",
+      "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Deck.glb",
       "sha256": "36a8e5cd526ea9683757ab39c0989c83c00b2079d6f6b4606544ce153b735f5c",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -1723,28 +2038,28 @@
     },
     {
       "source": "dev_mods/core/assets/models/ships/SN_Ironclad.glb",
-      "sha256": "715a8427a2a5c48754df9268089db48c274f6a35400c904eb5f4fc66df36d2fe",
+      "sha256": "7caf532529e8fe28142d762c3993a09d2d55093334e57ed293fcce6b3beadf9e",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/ships/SN_Paddle_Freighter.glb",
-      "sha256": "5e9a68ed573e677aee3fdacc4416b2f0d683e2008d775543ecdacc15e77df5cf",
+      "sha256": "f4a49c457539b0861a1b9323a5c4ffe8f7f61f0e99ccd27709b10ecdff5bde70",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/ships/SN_Paddle_Steamer.glb",
-      "sha256": "cefec2b7aa2da660d08f758aacbc21a68c3c42894521b1d07be80fdb7ee9d6d3",
+      "sha256": "d5225d8e05de43d41d41c7654d5d961aa2b4b84cb11b2269131bc7c57a6f7cea",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/models/ships/SN_Schooner_Fame.glb",
-      "sha256": "6af119fd1f3673180ca519688bf3d95b6b020faa9350b2834828ce234a48cf07",
+      "sha256": "ac80c083dd63b8b3256086154679aa186456e10a62929228e9f88a6d9e27d5be",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1752,6 +2067,83 @@
     {
       "source": "dev_mods/core/assets/models/ships/SN_Ship_Prototype.glb",
       "sha256": "722286efd26a69f79294796ec4802d0543e89844185941057ab8e96cc47d7a54",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/coal.png",
+      "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1933,7 +2325,7 @@
     },
     {
       "source": "dev_mods/core/content/cabins.json",
-      "sha256": "60aa2319adf8df24d2827ba8fd67b0a65916a3de71b9fd326e56f96aa59a6064",
+      "sha256": "8abc2fab4e984ff9a1f696f656ce22391da273b82495f21af6c4ff784ebf64b7",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1975,7 +2367,7 @@
     },
     {
       "source": "dev_mods/core/content/map_profiles.json",
-      "sha256": "bb58790dcb9d3ea3e94f01221c66a38d7f74b538eef74221c2823186ff959147",
+      "sha256": "25a2cd195a469d1228fb96c9ba6fbc5882ba383041f2a6e37ed2b69c685f8b0d",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1996,7 +2388,7 @@
     },
     {
       "source": "dev_mods/core/content/port_archetypes.json",
-      "sha256": "8dac1b9c10a49612df3161f2c66e69758e097a9136247db152d4c4963f74c1b0",
+      "sha256": "28a4d5a48f9ca86cac23fbb8b94e85e3799ebb1a3c99c27e1a98b06659e7df36",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2031,14 +2423,14 @@
     },
     {
       "source": "dev_mods/core/localization/en.json",
-      "sha256": "1aab6ab0c4a273fb32d53346e95bcfefca09bbd54cc61c54f81beda16329b66a",
+      "sha256": "f48705d482d899266d4bc663f1d171b011d65ce87b4f241d6019634bc22e621f",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/localization/zh_CN.json",
-      "sha256": "7c748f7975500b7bb7126317927249d1c6ac794e0568ff56b9fa5c1fe4eaa666",
+      "sha256": "887ea2a0fd2d731e780020ff45a1e70606c0182f0340c4ab1b653afe651044de",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2155,7 +2547,7 @@
     },
     {
       "source": "framework/application/commands/intel_commands.gd",
-      "sha256": "8e2071e195f0e6dd7ec035ea2272739cf9c18f762a7dcea26ae2800c34c56bc5",
+      "sha256": "15cd2fa24769174540c132181d23871bfabb4fc7bc85b8cd53844afc33b6ee6d",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -2234,13 +2626,13 @@
     },
     {
       "source": "framework/application/queries/clue_list_view.gd",
-      "sha256": "8f7619f02d5424094b06e50bbbf28c5694c081f931ec6682e786c400256b64d2",
+      "sha256": "09791e1dc2aa6dfc57f6f97c569dd15fb7b317311cf9b33d5b4ed3643cfe44ed",
       "doc": "docs/static/framework/application/queries/clue_list_view.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/application/queries/intel_view.gd",
-      "sha256": "a94ce1ea91b651af98b6cc0a059fafa6f488f383cbd33974f12d84f8fd968155",
+      "sha256": "4a596eb4075380997429931592ef239b814723304b48068b56f055e1edd0094d",
       "doc": "docs/static/framework/application/queries/intel_view.gd.md",
       "status": "documented"
     },
@@ -2259,26 +2651,26 @@
     },
     {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "c8587090007cdfa03a687145fad8d827f7e53d23988d26babefb28f0e98cc251",
+      "sha256": "be6ffdaa824ea493d419a4bb6795fb5217cc6e8281b9b797a69f73c387d56ef3",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/application/queries/query_registry.gd",
-      "sha256": "235021b8a3222dda3dec4876760d0dd297094fe6d753c510cf452371b3e9156a",
+      "sha256": "bf707f12b1d3c290e697051e4af54d46a24c1dd597311853d8a3c88271a2194b",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "a7700817edf32b280e692a9163fb9dfe41e4ff3d67eb57297d828f1ea6f8a1fe",
+      "sha256": "c4996fc37b17e964ba916d0308af790e66c10dd94e699b51b1dec5ea48a57990",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/application/queries/shipyard_view.gd",
-      "sha256": "83eb1e0017b3656cbedbaeab7e600dd29d3f26311f947237ac1e8761cf1795c3",
+      "sha256": "bb2e607dc2067cd1353e3682431e7fe10ddb7f630c48a6b5b1c215058c1668f7",
       "doc": "docs/static/framework/application/queries/shipyard_view.gd.md",
       "status": "documented"
     },
@@ -2292,6 +2684,18 @@
       "source": "framework/application/queries/supply_view.gd",
       "sha256": "d92fa11617f35e62048d9928a8cb17acb4f4447a246423c45e89f34a8cddf9e8",
       "doc": "docs/static/framework/application/queries/supply_view.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/queries/task_view.gd",
+      "sha256": "62c5bbebb9bc367d4f68838c76d39c1ee5cbfed04e4269cce8b317a1f9bf5b3f",
+      "doc": "docs/static/framework/application/queries/task_view.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/application/queries/tavern_view.gd",
+      "sha256": "b93c81f836dd21ae8ed9ac4e78e92c7fa4ab17d46993bc8ae0fc4462865c54d4",
+      "doc": "docs/static/framework/application/queries/tavern_view.gd.md",
       "status": "documented"
     },
     {
@@ -2391,7 +2795,7 @@
     },
     {
       "source": "framework/domain/contracts/contract_ops.gd",
-      "sha256": "7e260cad456f33684183f5825888cc3a459c5b658b7e5e01a30bad77394a603a",
+      "sha256": "4980d2202edf18c680cd7a47477885bd45b85cb5b376664eeaeebe9dd5c16e0d",
       "doc": "docs/static/framework/domain/contracts/contract_ops.gd.md",
       "status": "documented"
     },
@@ -2463,7 +2867,7 @@
     },
     {
       "source": "framework/domain/exploration/clue_service.gd",
-      "sha256": "87e2dbeee03b8a026673e2eeebf712c23e8a08ae83a99465fb37bcb587f797b7",
+      "sha256": "4f47ee34427fb2113b21b057e291a7f396442e6a44a3b60a43603925ae9b706a",
       "doc": "docs/static/framework/domain/exploration/clue_service.gd.md",
       "status": "documented"
     },
@@ -2481,7 +2885,7 @@
     },
     {
       "source": "framework/domain/exploration/explore_voyage_service.gd",
-      "sha256": "e51aa751633549494434b6c755dbb48928d87c0e3d23eb2fbc694dfb049600d6",
+      "sha256": "5f5c81cd1572fcdf173ac4821b8cd9209c0dd842f5b431c11650e826c1eaae13",
       "doc": "docs/static/framework/domain/exploration/explore_voyage_service.gd.md",
       "status": "documented"
     },
@@ -2493,7 +2897,7 @@
     },
     {
       "source": "framework/domain/map/map_ops.gd",
-      "sha256": "8ef65c29a5f1707acff6655adc456bc1db1d6c147a1f20d3e2b78396e7e5b1e1",
+      "sha256": "70fa996423e67429ba5a255e4e4725538fb3043b19bd3e5b7a941b9dcbec0151",
       "doc": "docs/static/framework/domain/map/map_ops.gd.md",
       "status": "documented"
     },
@@ -2535,7 +2939,7 @@
     },
     {
       "source": "framework/domain/story/story_service.gd",
-      "sha256": "956ef5757d0e48e8820bb83528023e79e5740d2207887fca6935a22a7cc516ec",
+      "sha256": "bfd1d569b2ed9144c0bb721b90a5e73993ba6c2da6004c79140279b24acb9567",
       "doc": "docs/static/framework/domain/story/story_service.gd.md",
       "status": "documented"
     },
@@ -2643,7 +3047,7 @@
     },
     {
       "source": "framework/modding/cross_reference_validator.gd",
-      "sha256": "aea681b7154c45dd6ea3bf8885248dd5f5df8d7443811897599b1820f38408b1",
+      "sha256": "a8e89ff39b9127a6fb120073f3bdab5874badae7a460a6f1d8877bd1d3cdc7e8",
       "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
       "status": "documented"
     },
@@ -2780,7 +3184,7 @@
     },
     {
       "source": "framework/state/game_state.gd",
-      "sha256": "71ec808e171d1b97a73811bd542a9ee73499c1b4982e32b35d93b73f290c5ad7",
+      "sha256": "92781d3adc07b6e345090f2a697e5732d8ed48aa3c8414873d864101ffeb1b65",
       "doc": "docs/static/framework/state/game_state.gd.md",
       "status": "documented"
     },
@@ -2792,7 +3196,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_asset_loader.gd",
-      "sha256": "5346692c95aa19ba8f36a6e1ecf88bbae9c240f5ee391eb2a20c0358573ee06c",
+      "sha256": "d8b9927e20fdbb02fc5fb0c4882460d47dd04ae788bba1b3aed2031851473e00",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2838,7 +3242,7 @@
     },
     {
       "source": "framework/tests/cases/test_exploration.gd",
-      "sha256": "29261b5c8d1942751976b20e924af6ce29b3bde168b2e58f623ba8cb4b123dcc",
+      "sha256": "48f523f95b317623753a9d1ee298df4fc9244727ce2d161adc7fbe00c9a10e8d",
       "doc": "docs/static/framework/tests/cases/test_exploration.gd.md",
       "status": "documented"
     },
@@ -2854,6 +3258,20 @@
       "sha256": "fa8cdcffcf9a0f176a729399fe369b5a68163fb55c727698d27be07aff4e4fd7",
       "doc": "docs/static/framework/tests/cases/test_full_clear.gd.md",
       "status": "documented"
+    },
+    {
+      "source": "framework/tests/cases/test_legacy_uv_assets.gd",
+      "sha256": "7cd74de60520af8972cab82614f21dd0d895057b0b27ae838ee205316c4ec3c4",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_legacy_uv_assets_b.gd",
+      "sha256": "2822c69d8d5b85063cb81ddd13f6f8202f800c52da57d430c611040996a12445",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/tests/cases/test_map_constraints.gd",
@@ -2900,6 +3318,13 @@
     {
       "source": "framework/tests/cases/test_registry.gd",
       "sha256": "02ee5078031c1d82cb20dc00397acaa5f9b59a755b92a5ee8a09947527c8319f",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_rig_kit.gd",
+      "sha256": "887295a8cb76c49f400e5d3d79064ac733d65fa5e9899606630745eb5eebb8b2",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -2978,6 +3403,13 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_ship_weapon_sockets.gd",
+      "sha256": "4807c22db6b0d83a98f6fe7aa7a0929d2d0dd7406de1f1031f9f1f029afac876",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
       "source": "framework/tests/cases/test_shipyard_refit.gd",
       "sha256": "30560c8c991aea7f41b159192daf66b254ae95ececa12e78a5fd2437c88bb3e2",
       "doc": "docs/static/framework/tests/cases/test_shipyard_refit.gd.md",
@@ -2985,19 +3417,19 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "acc5dbb07450ed4984d9137d51af73d931a4c8c45d62b1c9a494cbb3c46706a7",
+      "sha256": "32dabee62cb37238a4d658954ffbced09dcb63dd4bf9948adf54aaf992d9ac8f",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_story.gd",
-      "sha256": "72c7f59e6c7f475ce80b3c52d47f2ba5035250d62abf66730785a707106697bd",
+      "sha256": "d745fd3c45331891e7d814213645cefaa00e96fc45f1eface2e19b7a30e91c6c",
       "doc": "docs/static/framework/tests/cases/test_story.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_story_ui.gd",
-      "sha256": "125d62f68a676f9517a48a8ccb7eaea4fdc5a3415141185d9e7152261b7cb8be",
+      "sha256": "96417c94eb08983f29bd9ba2a7a81e8d54e009a27f4541481563cc54813d21de",
       "doc": "docs/static/framework/tests/cases/test_story_ui.gd.md",
       "status": "documented"
     },
@@ -3009,21 +3441,27 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_task_view.gd",
+      "sha256": "a82b33f29720efd3348fd803766d4c4967202420ea9143ca58beb19876e2e63c",
+      "doc": "docs/static/framework/tests/cases/test_task_view.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "e593b08c6847c0511cc1b2a11b26086842fd3dee4be0baf0295d7511090f5afb",
+      "sha256": "eac0add4677ceb27ad0f71755fae825f5d046021e46aa1f1e6fedc1061b1f8ae",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_ui_views.gd",
-      "sha256": "ba40378c2452864f08767f289fc6e9ea91d7d6266b408a4224aaa3103cc29240",
+      "sha256": "37050972b890feae4edc0f4452ee6f8b6f26f75205a8cc643e2a624e3d2799dc",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/tests/cases/test_victory.gd",
-      "sha256": "8383cbe54890e4468df78b9a52d8fc6d001d13bc13c2837bfd485c0f1a35b6ca",
+      "sha256": "767578ea53d2ae4efd2301ee09cb36a7276d3e9d0880aff0a88d2527d5241b25",
       "doc": "docs/static/framework/tests/cases/test_victory.gd.md",
       "status": "documented"
     },
@@ -3084,7 +3522,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "3ff152fe42059961cb4c27a5907d1ba0554a6d9dc47a436dc3a7f7fda96f84eb",
+      "sha256": "f33219b7f3179abbcee0b3f2ac48d5feb409f4660da379d1aa8c8e446e6b599c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -3130,7 +3568,7 @@
     },
     {
       "source": "framework/ui/components/sn_harbor_sign.gd",
-      "sha256": "9438333e251ef658042bd0a129754ac41412fba7833ad9eabd3eca013a22695d",
+      "sha256": "2b557707a5437d234c13fd8f351e06367bac16e424e128eabe4a5265e9cb71ad",
       "doc": "docs/static/framework/ui/components/sn_harbor_sign.gd.md",
       "status": "documented"
     },
@@ -3263,7 +3701,7 @@
     },
     {
       "source": "framework/ui/components/sn_story_objective.gd",
-      "sha256": "44b5c636d1d1830259b0d06c14a0ab6fe9a05f156168f4b1949a3bb43188c35f",
+      "sha256": "d8bf0b36ebff53d7f06f610a51991f08731db8131ab075f6a5b717d533af3229",
       "doc": "docs/static/framework/ui/components/sn_story_objective.gd.md",
       "status": "documented"
     },
@@ -3279,6 +3717,12 @@
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/components/sn_task_tracker.gd",
+      "sha256": "d4911d80963d9c86d07d44787d63fe09f176e4d49cdb52787dd99126e06aa096",
+      "doc": "docs/static/framework/ui/components/sn_task_tracker.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_voyage_confirm.gd",
@@ -3431,7 +3875,7 @@
     },
     {
       "source": "framework/ui/screens/port/contracts_screen.gd",
-      "sha256": "a7db0db5868a993d473aefaecbb48e2a91f97d87ae3b33a2560ef9aca327ba94",
+      "sha256": "71bf2717c6d328e32c61d4a64a77858ae14333142aac9f079e24a1c4edb78c3b",
       "doc": "docs/static/framework/ui/screens/port/contracts_screen.gd.md",
       "status": "documented"
     },
@@ -3443,21 +3887,8 @@
       "group": "docs/static/framework/ui/README.md"
     },
     {
-      "source": "framework/ui/screens/port/intel_screen.gd",
-      "sha256": "afbace4a6ad02e734d4a0b20fdc8879c9c5444cee3b91cdcefd1dc6ea7c3bf00",
-      "doc": "docs/static/framework/ui/screens/port/intel_screen.gd.md",
-      "status": "documented"
-    },
-    {
-      "source": "framework/ui/screens/port/intel_screen.tscn",
-      "sha256": "8e7b22073455cbbab88308b5b8258b23f8d84aa0082f2e62172716139df5c1cf",
-      "doc": "docs/static/framework/ui/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/ui/README.md"
-    },
-    {
       "source": "framework/ui/screens/port/market_screen.gd",
-      "sha256": "d4863587bb58c00115b59a8c20c643b8f3a3f2c970579e0f7104c6807b3d3fca",
+      "sha256": "ca985eca7e8a84e548e205085367009fffe64833a83ddd515f71b3b95eb227cb",
       "doc": "docs/static/framework/ui/screens/port/market_screen.gd.md",
       "status": "documented"
     },
@@ -3470,7 +3901,7 @@
     },
     {
       "source": "framework/ui/screens/port/overview_screen.gd",
-      "sha256": "8d7179f34beadfb9317f7c590e1fc51bcc9336d22b7625fefeade80144f10d68",
+      "sha256": "93cecbf6f9291a3d86cbd7ca25cdede8fb8c5c47f91532f17eb5c825680908cf",
       "doc": "docs/static/framework/ui/screens/port/overview_screen.gd.md",
       "status": "documented"
     },
@@ -3496,7 +3927,7 @@
     },
     {
       "source": "framework/ui/screens/port/supply_screen.gd",
-      "sha256": "929535cb2f7a89fdffd8e215f007e5b02a1a352bde2db6f201fa434737d89df1",
+      "sha256": "c71843fd54a3fd02fd3f7e4f8f9a99ee07ab83d7366a9a3470842ebb1bfbcd1e",
       "doc": "docs/static/framework/ui/screens/port/supply_screen.gd.md",
       "status": "documented"
     },
@@ -3508,8 +3939,21 @@
       "group": "docs/static/framework/ui/README.md"
     },
     {
+      "source": "framework/ui/screens/port/tavern_screen.gd",
+      "sha256": "2cdf300ac0a0cebfffe64819a0d0621b8ae142cb1a0c7cd0ce725af8ed9a3e6d",
+      "doc": "docs/static/framework/ui/screens/port/tavern_screen.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/screens/port/tavern_screen.tscn",
+      "sha256": "98a6a4f6128210ef95e1f8d77d181af4b34da92e9d010860893acf010f2934bf",
+      "doc": "docs/static/framework/ui/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/ui/README.md"
+    },
+    {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "f62210e834700512d881817408cc7a06408a988268d7c763631cda695fc975be",
+      "sha256": "f6da9f8b1ab05e4f4b4b29fbd65f8abad9f8bcae77933251ae79f5a825b5ef1c",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -3541,7 +3985,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "22e8ab90a417442708d9f34b3da25f06037c35fe5c4106bcdbb3085e9df5b38a",
+      "sha256": "4cab81dea9c4dcaeb76880ef387f69e4e4c29a3b543437018dc2b13ae07fc26d",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -3642,7 +4086,7 @@
     },
     {
       "source": "schemas/map_profile.schema.json",
-      "sha256": "5d60311114544c2e45ca2f0e0258b179750c14a7070105ffaa5fc511e62ca61f",
+      "sha256": "9dc1d74cf09b8a46ca9c9cdc7fe4f2e68fcd870e560ce95a72189d8ba5ef5fc7",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -3670,7 +4114,7 @@
     },
     {
       "source": "schemas/port_archetype.schema.json",
-      "sha256": "26c1f4fa4387cda2ef7e4261ae642447a83b352ad747c11b7ce8ff8e09b04444",
+      "sha256": "01a390fb2cf26fc1ac1eb5a1a61f75fe1deb91f41371f2d5981fd81e6d8b3314",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -3843,7 +4287,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "dba672f61717806211ed8663586a4f875d3bb9c3b206a28e107df4aaea0e439f",
+      "sha256": "72ad8ba93379e580a7cb624ae688ce94b1b230b68d516014e9e98725b1ab310a",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3929,14 +4373,38 @@
     },
     {
       "source": "tools/godot/capture_story_act0.gd",
-      "sha256": "a18e0999bd9fe52a06c90f1b3b872287c0adbc1ff83cc370bdf4ad62f499ae84",
+      "sha256": "f4105c4d0cca6a32ed7aa389a9a335efed3b5da52f356734c3ba15a569502c3a",
       "doc": "docs/static/tools/godot/capture_story_act0.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_story_act1.gd",
+      "sha256": "5927adc813755b301f81389b75d909e7c9c041e64168d9c6900c8c88358e7327",
+      "doc": "docs/static/tools/godot/capture_story_act1.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_story_act2.gd",
+      "sha256": "f4b7339f23bac1c816c424cab0c669509ea4b093594b3d7ec8853cb9a3a7a790",
+      "doc": "docs/static/tools/godot/capture_story_act2.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_story_act3.gd",
+      "sha256": "e2a68f64311a69a062f506a7d909f76a5ce35dc91435a9851dc16e9d6b99ffd2",
+      "doc": "docs/static/tools/godot/capture_story_act3.gd.md",
       "status": "documented"
     },
     {
       "source": "tools/godot/capture_story_tutorial.gd",
       "sha256": "e4c13413599ff8f295251d3c3160ec94b5a2086744b38cddf9176ebb18472368",
       "doc": "docs/static/tools/godot/capture_story_tutorial.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_task_tracker.gd",
+      "sha256": "90eab1fe960444e3dcedfe50d517539a52e8f104147dc5da730ae310ee7be7b0",
+      "doc": "docs/static/tools/godot/capture_task_tracker.gd.md",
       "status": "documented"
     },
     {
@@ -3976,14 +4444,26 @@
       "status": "documented"
     },
     {
+      "source": "tools/godot/verify_legacy_uv_materials.gd",
+      "sha256": "a9a6a63a793c9376a5ffe3cc0231a321b30ce49b5a2659e91f940a33b75e0027",
+      "doc": "docs/static/tools/godot/verify_legacy_uv_materials.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/verify_legacy_uv_materials_b.gd",
+      "sha256": "42c28c2d03f22bf6889b6b7bf7961c2d1c1e10dac687853d690a5f8e6c84dee9",
+      "doc": "docs/static/tools/godot/verify_legacy_uv_materials_b.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/godot/verify_port_facilities.gd",
-      "sha256": "f4ae0527310518068cd3b930619ef834371aaf06afbaaf69059bad2a5d3441f6",
+      "sha256": "ab007ab710aa8f93c82a639538402f616c71675333b8b13eedfec31398c575d3",
       "doc": "docs/static/tools/godot/verify_port_facilities.gd.md",
       "status": "documented"
     },
     {
       "source": "tools/godot/verify_props.gd",
-      "sha256": "c37d8ce009bfcd38372deee6e9d410b237eaec417a284e5ade9b3f062b66af62",
+      "sha256": "293bc51f2e772453226d3147415d0a35f9be36525dbc89d49b45262341204888",
       "doc": "docs/static/tools/godot/verify_props.gd.md",
       "status": "documented"
     },
@@ -4117,6 +4597,13 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/briefs/sn_rig_kit_batch1.json",
+      "sha256": "dd25641b06a1bc90f7d6cb961644a6053fd21336d68ef1d9b3de51963ae0d627",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/briefs/sn_schooner_fame.json",
       "sha256": "870b6d79732949bcd4c2c44af1f9356946be4cbad49eaaf725984473a7cd1d68",
       "doc": "docs/static/tools/README.md",
@@ -4224,6 +4711,18 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/dryrun_legacy_uv.py",
+      "sha256": "e0e4735fde894ab09243dc4e3d8d85a6e8866bffdfea953655dcde8fc4984a15",
+      "doc": "docs/static/tools/modeling/generators/dryrun_legacy_uv.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/dryrun_legacy_uv_b.py",
+      "sha256": "537064707deb8d5e293be86f045a18e7f5bf1b49c4bcee6a153de9f37978a8b2",
+      "doc": "docs/static/tools/modeling/generators/dryrun_legacy_uv_b.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/dryrun_lod1_batch_a.py",
       "sha256": "25a01c250591c9fdcdd05449a30209b515858d50ea44e4cfa6d6bf923f8fd2e7",
       "doc": "docs/static/tools/modeling/generators/dryrun_lod1_batch_a.py.md",
@@ -4253,6 +4752,12 @@
       "source": "tools/modeling/generators/dryrun_prototypes_lod1.py",
       "sha256": "8f763127b57603d36ee7789980d756201125e683c97623ab51f6916b4104e6b5",
       "doc": "docs/static/tools/modeling/generators/dryrun_prototypes_lod1.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/dryrun_rig_kit.py",
+      "sha256": "ea223f079246ea1f532cc4f4a0f0b1e3280e4f31d87e66a683a8d21e5050effb",
+      "doc": "docs/static/tools/modeling/generators/dryrun_rig_kit.py.md",
       "status": "documented"
     },
     {
@@ -4331,6 +4836,18 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/export_legacy_uv_b_glb.py",
+      "sha256": "6b3dd6f15d6c3809737f7f3ce68b590ee31fc0c00aa083e5961692e60541dbdf",
+      "doc": "docs/static/tools/modeling/generators/export_legacy_uv_b_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/export_legacy_uv_glb.py",
+      "sha256": "04619da27afb38064b965762f8712f844c25c99a63f9c8b6ea0aadd9bb084935",
+      "doc": "docs/static/tools/modeling/generators/export_legacy_uv_glb.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/export_modules_glb.py",
       "sha256": "75d409b6fe2cc18f495785ef94a5e6fedd56d3b8522c2901f34db4f01b521f74",
       "doc": "docs/static/tools/README.md",
@@ -4359,6 +4876,12 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/export_rig_kit_glb.py",
+      "sha256": "d4393de93d836de43e4c9c73c72b53b5848ddc5c651cefec5cc36f67eab1e086",
+      "doc": "docs/static/tools/modeling/generators/export_rig_kit_glb.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/export_schooner_fame_glb.py",
       "sha256": "2e6d79591ca43443c01e9e0c4e1cc0da6c729c1b075b9123f221ca7d76516e8a",
       "doc": "docs/static/tools/README.md",
@@ -4371,6 +4894,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/export_ship_weapon_sockets_glb.py",
+      "sha256": "c82ec495107dd6749b456309b9e8dfc2d9295377cf5ebe9a628e96261577afb2",
+      "doc": "docs/static/tools/modeling/generators/export_ship_weapon_sockets_glb.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/export_town_glb.py",
@@ -4397,9 +4926,33 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/gen_rig_kit_catalog.py",
+      "sha256": "ae5bce5c8168feaf9259bb8eb52d62944e33f4f4e047dde86975cccd4680f789",
+      "doc": "docs/static/tools/modeling/generators/gen_rig_kit_catalog.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/glb_rig_kit.py",
+      "sha256": "f11c07ac094480348708cd3c2714c0ee220e1412acf5a1b9429804c4b33a0e61",
+      "doc": "docs/static/tools/modeling/generators/glb_rig_kit.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/glb_shared_textures.py",
       "sha256": "a66938696dc2ffab843811082ac54c8e090985161ddde560fddbab264f28e8e7",
       "doc": "docs/static/tools/modeling/generators/glb_shared_textures.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/glb_ship_rig_sockets.py",
+      "sha256": "02531af1ff35d2c6128a998fbee90fbe76508487ded19f605964abf1d93c1bc0",
+      "doc": "docs/static/tools/modeling/generators/glb_ship_rig_sockets.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/glb_ship_sockets.py",
+      "sha256": "8a4046b7651b4dba6112627dda29a264425273e8e9bbc391b69bcc9b7495886e",
+      "doc": "docs/static/tools/modeling/generators/glb_ship_sockets.py.md",
       "status": "documented"
     },
     {
@@ -4515,6 +5068,24 @@
       "source": "tools/modeling/generators/render_weapon_preview.py",
       "sha256": "8782f4855186c057fc7f3809da105ad3df6f94f5c1af47560733fd549d13a137",
       "doc": "docs/static/tools/modeling/generators/render_weapon_preview.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/rig_kit.py",
+      "sha256": "c468374cced8fafd7f1c9b89dcf93b0cef5800e4d4400e5b35a139204b5cc75d",
+      "doc": "docs/static/tools/modeling/generators/rig_kit.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/rig_kit_baseline.py",
+      "sha256": "8963eff8e25c14c446cae9f87d4317dc368cc56fbe65bcd8935af244b7772678",
+      "doc": "docs/static/tools/modeling/generators/rig_kit_baseline.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "sha256": "9b4cca29014f3fa3217c7762afa6e835a67d85c8940fa17a07f1a27566c29c3f",
+      "doc": "docs/static/tools/modeling/generators/rig_kit_batch1_generator.py.md",
       "status": "documented"
     },
     {
@@ -4681,7 +5252,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_ironclad_generator.py",
-      "sha256": "b3d4a6b096e7f001cbacac803ea96c20806a61aac0f94d88e3eb18339bb3ba9d",
+      "sha256": "b2e05c7d0612462c1540f75e362881deffb8665979f7b7a9549df703eae7976f",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -4690,6 +5261,12 @@
       "source": "tools/modeling/generators/sn_kit_materials.py",
       "sha256": "fb65f25b26fbd529d33410880b637b780bfab5f0229141cee394cecdd566ad59",
       "doc": "docs/static/tools/modeling/generators/sn_kit_materials.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/sn_legacy_uv_migration.py",
+      "sha256": "459fed09b3524bb59b0451077912520643f4c167d74b235258ca6721f85eb8a7",
+      "doc": "docs/static/tools/modeling/generators/sn_legacy_uv_migration.py.md",
       "status": "documented"
     },
     {
@@ -4707,7 +5284,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_paddle_freighter_generator.py",
-      "sha256": "bf97b9c499ad22dc15a7f543a5946d5210a5b0e04fb0189934f0c02f16641542",
+      "sha256": "80bb5130701eb2f54b59876decf805d313f057c46f09f2d3511771dfc554d30e",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -4726,15 +5303,21 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/sn_rig_materials.py",
+      "sha256": "be9945d0879bd2cadc43703ab8d3b0edf5072b620d0b8415dba15322986f7dc0",
+      "doc": "docs/static/tools/modeling/generators/sn_rig_materials.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_schooner_fame_generator.py",
-      "sha256": "7b301f22789bb02b6024e6e0c196ab250ee511568602eee3d6fb18ec5c8f8894",
+      "sha256": "f8896f73ab6f4b576d1c8cbdf32e4936148eaa4813b69934926945df93741033",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
     },
     {
       "source": "tools/modeling/generators/sn_shared_materials.py",
-      "sha256": "9e2827e5face66abcfadce4c4927e4d3e87f5dc07af0249d2fb4147ede64de7e",
+      "sha256": "bad615afc2392ba01ecd0b088df4c82ece1d0b6782975c31c36d7672e31afa95",
       "doc": "docs/static/tools/modeling/generators/sn_shared_materials.py.md",
       "status": "documented"
     },
@@ -4744,6 +5327,18 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/sn_ship_rig_sockets.py",
+      "sha256": "dece7d57c4d938072f4ff64b95886be71f870401fc4ee30eb66e02f6b0fd1eb1",
+      "doc": "docs/static/tools/modeling/generators/sn_ship_rig_sockets.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/sn_ship_weapon_sockets.py",
+      "sha256": "21de7d5f085c751385486fb81f89c04991210d100d553b1d7aeb466aa7e311c0",
+      "doc": "docs/static/tools/modeling/generators/sn_ship_weapon_sockets.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_weapon_batch1_generator.py",
@@ -4813,6 +5408,18 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/verify_legacy_uv_b_glb.py",
+      "sha256": "1c1ef602707184f507bded3048a62397a2bf3ae6a30b74d737e653aef86fe3a1",
+      "doc": "docs/static/tools/modeling/generators/verify_legacy_uv_b_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/verify_legacy_uv_glb.py",
+      "sha256": "8de17f4243b6455b480fd72293d6524487e816c381c56f4abf8d75c77e5df10c",
+      "doc": "docs/static/tools/modeling/generators/verify_legacy_uv_glb.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/verify_modules_glb.py",
       "sha256": "330d12612a7ca83bc71eecc421d65b46308491efe587322acd78b1130c46e9ac",
       "doc": "docs/static/tools/README.md",
@@ -4841,6 +5448,12 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/verify_rig_kit_glb.py",
+      "sha256": "bd3fc92611b04a2f3557005dc7ae9d913d013a7c1b19b701ddd4e1a48b6e4e93",
+      "doc": "docs/static/tools/modeling/generators/verify_rig_kit_glb.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/verify_schooner_fame_glb.py",
       "sha256": "fc2ae37f7c404b3a1a4e46c4a16ec09edd700ba95c3baed53a875e48057a246f",
       "doc": "docs/static/tools/README.md",
@@ -4853,6 +5466,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/verify_ship_weapon_sockets_glb.py",
+      "sha256": "42d666894a64bba4f054c6e4a08f05093b66ace55bcfdde6a0f91a5d10561792",
+      "doc": "docs/static/tools/modeling/generators/verify_ship_weapon_sockets_glb.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/verify_weapon_batch2_glb.py",
@@ -4875,6 +5494,13 @@
     {
       "source": "tools/modeling/kit_catalog.json",
       "sha256": "0703369771c3684cba60e45b50f6d0a12e941b60dacfa08ebef64d13ac229448",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/rig_kit_catalog.json",
+      "sha256": "b3e3fc23a846a0145d49944d561e68cff45c901b4be091b222f7135a6f91a986",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

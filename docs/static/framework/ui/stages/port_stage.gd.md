@@ -10,135 +10,135 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PortStage` | L1 |
-| `FACILITY_ORDER` | L40 |
-| `SIZE_SCALE` | L43 |
-| `DOCK_TOP` | L45 |
-| `DOCK_SIZE` | L50 |
-| `DOCK_CENTER` | L51 |
-| `DECK_SIZE` | L52 |
-| `SHORE_SIZE` | L58 |
-| `SHORE_CENTER` | L59 |
-| `SHORE_TOP` | L60 |
-| `CAMERA_POS` | L62 |
-| `CAMERA_TARGET` | L63 |
-| `CAMERA_FOV` | L64 |
-| `SHIP_SPAWN` | L69 |
-| `SHIP_YAW_DEG` | L70 |
-| `SHIP_SCALE` | L71 |
-| `BOB_AMPLITUDE` | L72 |
-| `BOB_SPEED` | L73 |
-| `STATION_ORDER` | L88 |
-| `DEFAULT_STATION` | L89 |
-| `STATION_FRAMINGS` | L90 |
-| `STATIONS` | L91 |
-| `PANEL_FRAMING_SHIFT_X` | L118 |
-| `CAMERA_PAN_SECONDS` | L121 |
-| `SHIP_TRANSIT_SPEED` | L122 |
-| `SHIP_TURN_SPEED` | L123 |
-| `SEA_HANDOFF` | L140 |
-| `DEPART_CAMERA` | L146 |
-| `DEPART_CAMERA_TARGET` | L147 |
-| `DEPART_CAMERA_FOV` | L148 |
-| `VOYAGE_BEAT_SECONDS` | L152 |
-| `VOYAGE_TURN_FRACTION` | L157 |
-| `VOYAGE_MOOR_TURN_FRACTION` | L160 |
-| `MODEL_BY_TIER` | L162 |
-| `FALLBACK_MODEL` | L167 |
-| `SLOT_POSITIONS` | L173 |
-| `SHIPYARD_PIECE_OFFSETS` | L182 |
-| `SIGN_YAW_DEG` | L184 |
-| `SIGN_COLORS` | L185 |
-| `SKY_TOP` | L193 |
-| `SKY_HORIZON` | L194 |
-| `SKY_GROUND_HORIZON` | L197 |
-| `SKY_GROUND_BOTTOM` | L198 |
-| `FOG_COLOR` | L199 |
-| `AMBIENT_COLOR` | L200 |
-| `BACKDROP_SIZE` | L204 |
-| `BACKDROP_POSITION` | L205 |
-| `NEAR_WATER_SIZE` | L206 |
-| `FAR_WATER_SIZE` | L207 |
-| `SKY_CARD_DEPTH` | L212 |
-| `SKY_CARD_SCREEN_CENTER` | L213 |
-| `SKY_CARD_SCREEN_SIZE` | L214 |
-| `SKYLINE_BUILDINGS_BY_SIZE` | L218 |
-| `SKYLINE_CRANES_BY_SIZE` | L219 |
-| `DENSITY_BY_SIZE` | L235 |
-| `DENSITY_ORDER` | L236 |
-| `TOWN_COUNTS` | L237 |
-| `TOWN_QUAY_ORDER` | L254 |
-| `TOWN_GROUND_Y` | L261 |
-| `TOWN_PLAZA_SIZE` | L262 |
-| `TOWN_PLAZA_CENTER` | L263 |
-| `TOWN_SLOTS` | L271 |
-| `TOWN_FENCE_X` | L279 |
-| `TOWN_WORKER_SLOTS` | L283 |
-| `TOWN_DECOR_SLOTS` | L296 |
-| `TOWN_BOAT_SLOTS` | L310 |
-| `TOWN_QUAY_SLOTS` | L320 |
-| `STATION_PROP_COUNTS` | L372 |
-| `STATION_PROPS` | L373 |
-| `TOWN_BLOCKOUT_SIZES` | L416 |
-| `FOREGROUND_COLOR` | L426 |
-| `FOG_BAND_COLOR` | L427 |
-| `FOG_BAND_ALPHA` | L428 |
-| `ATMOSPHERE_PARTICLE_AMOUNT` | L429 |
-| `SKY_GLOW_COLOR` | L430 |
-| `MATERIAL_DEFAULTS` | L432 |
-| `LANDMARK_POS` | L444 |
-| `enter(payload: Dictionary = {}) -> void` | L573 |
-| `exit() -> void` | L585 |
-| `bind(view_model: Dictionary = {}) -> void` | L589 |
-| `has_visual() -> bool` | L610 |
-| `has_backdrop() -> bool` | L614 |
-| `loaded_banner_path() -> String` | L619 |
-| `facility_count() -> int` | L623 |
-| `filler_count() -> int` | L629 |
-| `facility_visual_kind(facility: String) -> String` | L635 |
-| `facility_anchors() -> Dictionary` | L640 |
-| `facility_screen_anchor(facility: String) -> Vector2` | L654 |
-| `has_ship() -> bool` | L667 |
-| `request_portal(facility: String) -> void` | L672 |
-| `hotspot_anchors() -> Dictionary` | L676 |
-| `foreground_frame() -> Node3D` | L683 |
-| `atmosphere_particle_systems() -> int` | L688 |
-| `atmosphere_layers() -> int` | L693 |
-| `skyline_building_count() -> int` | L698 |
-| `skyline_crane_count() -> int` | L703 |
-| `town_prop_count() -> int` | L709 |
-| `town_blockout_count() -> int` | L715 |
-| `town_density() -> String` | L722 |
-| `painted_backdrop_layer_count() -> int` | L729 |
-| `batch_stats() -> Dictionary` | L747 |
-| `ship_foam_bounds() -> AABB` | L770 |
-| `ship_visual_is_rigid(visual: Node) -> bool` | L779 |
-| `station_ids() -> Array[String]` | L832 |
-| `current_station() -> String` | L839 |
-| `current_station_framing() -> String` | L843 |
-| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L849 |
-| `station_ship_position(station_id: String) -> Vector3` | L862 |
-| `station_ship_yaw(station_id: String) -> float` | L867 |
-| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L876 |
-| `is_station_transitioning() -> bool` | L928 |
-| `camera_position() -> Vector3` | L934 |
-| `camera_target() -> Vector3` | L938 |
-| `ship_x() -> float` | L943 |
-| `station_ship_mooring_x() -> float` | L947 |
-| `station_prop_count() -> int` | L953 |
-| `camera_shift_x() -> float` | L958 |
-| `advance_station(delta: float) -> void` | L966 |
-| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1087 |
-| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1109 |
-| `advance_voyage(delta: float) -> void` | L1147 |
-| `reset_voyage() -> void` | L1237 |
-| `is_voyage_transitioning() -> bool` | L1257 |
-| `voyage_mode() -> String` | L1261 |
-| `is_voyage_holding_handoff() -> bool` | L1268 |
-| `voyage_progress() -> float` | L1273 |
-| `voyage_handoff_position() -> Vector3` | L1279 |
-| `ship_position() -> Vector3` | L1285 |
-| `ship_yaw() -> float` | L1293 |
-| `camera_pitch_deg() -> float` | L1300 |
+| `FACILITY_ORDER` | L41 |
+| `SIZE_SCALE` | L44 |
+| `DOCK_TOP` | L46 |
+| `DOCK_SIZE` | L51 |
+| `DOCK_CENTER` | L52 |
+| `DECK_SIZE` | L53 |
+| `SHORE_SIZE` | L59 |
+| `SHORE_CENTER` | L60 |
+| `SHORE_TOP` | L61 |
+| `CAMERA_POS` | L63 |
+| `CAMERA_TARGET` | L64 |
+| `CAMERA_FOV` | L65 |
+| `SHIP_SPAWN` | L70 |
+| `SHIP_YAW_DEG` | L71 |
+| `SHIP_SCALE` | L72 |
+| `BOB_AMPLITUDE` | L73 |
+| `BOB_SPEED` | L74 |
+| `STATION_ORDER` | L89 |
+| `DEFAULT_STATION` | L90 |
+| `STATION_FRAMINGS` | L91 |
+| `STATIONS` | L92 |
+| `PANEL_FRAMING_SHIFT_X` | L119 |
+| `CAMERA_PAN_SECONDS` | L122 |
+| `SHIP_TRANSIT_SPEED` | L123 |
+| `SHIP_TURN_SPEED` | L124 |
+| `SEA_HANDOFF` | L141 |
+| `DEPART_CAMERA` | L147 |
+| `DEPART_CAMERA_TARGET` | L148 |
+| `DEPART_CAMERA_FOV` | L149 |
+| `VOYAGE_BEAT_SECONDS` | L153 |
+| `VOYAGE_TURN_FRACTION` | L158 |
+| `VOYAGE_MOOR_TURN_FRACTION` | L161 |
+| `MODEL_BY_TIER` | L163 |
+| `FALLBACK_MODEL` | L168 |
+| `SLOT_POSITIONS` | L174 |
+| `SHIPYARD_PIECE_OFFSETS` | L183 |
+| `SIGN_YAW_DEG` | L185 |
+| `SIGN_COLORS` | L186 |
+| `SKY_TOP` | L194 |
+| `SKY_HORIZON` | L195 |
+| `SKY_GROUND_HORIZON` | L198 |
+| `SKY_GROUND_BOTTOM` | L199 |
+| `FOG_COLOR` | L200 |
+| `AMBIENT_COLOR` | L201 |
+| `BACKDROP_SIZE` | L205 |
+| `BACKDROP_POSITION` | L206 |
+| `NEAR_WATER_SIZE` | L207 |
+| `FAR_WATER_SIZE` | L208 |
+| `SKY_CARD_DEPTH` | L213 |
+| `SKY_CARD_SCREEN_CENTER` | L214 |
+| `SKY_CARD_SCREEN_SIZE` | L215 |
+| `SKYLINE_BUILDINGS_BY_SIZE` | L219 |
+| `SKYLINE_CRANES_BY_SIZE` | L220 |
+| `DENSITY_BY_SIZE` | L236 |
+| `DENSITY_ORDER` | L237 |
+| `TOWN_COUNTS` | L238 |
+| `TOWN_QUAY_ORDER` | L255 |
+| `TOWN_GROUND_Y` | L262 |
+| `TOWN_PLAZA_SIZE` | L263 |
+| `TOWN_PLAZA_CENTER` | L264 |
+| `TOWN_SLOTS` | L272 |
+| `TOWN_FENCE_X` | L280 |
+| `TOWN_WORKER_SLOTS` | L284 |
+| `TOWN_DECOR_SLOTS` | L297 |
+| `TOWN_BOAT_SLOTS` | L311 |
+| `TOWN_QUAY_SLOTS` | L321 |
+| `STATION_PROP_COUNTS` | L373 |
+| `STATION_PROPS` | L374 |
+| `TOWN_BLOCKOUT_SIZES` | L417 |
+| `FOREGROUND_COLOR` | L427 |
+| `FOG_BAND_COLOR` | L428 |
+| `FOG_BAND_ALPHA` | L429 |
+| `ATMOSPHERE_PARTICLE_AMOUNT` | L430 |
+| `SKY_GLOW_COLOR` | L431 |
+| `MATERIAL_DEFAULTS` | L433 |
+| `LANDMARK_POS` | L445 |
+| `enter(payload: Dictionary = {}) -> void` | L574 |
+| `exit() -> void` | L586 |
+| `bind(view_model: Dictionary = {}) -> void` | L590 |
+| `has_visual() -> bool` | L611 |
+| `has_backdrop() -> bool` | L615 |
+| `loaded_banner_path() -> String` | L620 |
+| `facility_count() -> int` | L624 |
+| `filler_count() -> int` | L630 |
+| `facility_visual_kind(facility: String) -> String` | L636 |
+| `facility_anchors() -> Dictionary` | L641 |
+| `facility_screen_anchor(facility: String) -> Vector2` | L655 |
+| `has_ship() -> bool` | L668 |
+| `request_portal(facility: String) -> void` | L673 |
+| `hotspot_anchors() -> Dictionary` | L677 |
+| `foreground_frame() -> Node3D` | L684 |
+| `atmosphere_particle_systems() -> int` | L689 |
+| `atmosphere_layers() -> int` | L694 |
+| `skyline_building_count() -> int` | L699 |
+| `skyline_crane_count() -> int` | L704 |
+| `town_prop_count() -> int` | L710 |
+| `town_blockout_count() -> int` | L716 |
+| `town_density() -> String` | L723 |
+| `painted_backdrop_layer_count() -> int` | L730 |
+| `batch_stats() -> Dictionary` | L748 |
+| `ship_foam_bounds() -> AABB` | L771 |
+| `ship_visual_is_rigid(visual: Node) -> bool` | L780 |
+| `station_ids() -> Array[String]` | L833 |
+| `current_station() -> String` | L840 |
+| `current_station_framing() -> String` | L844 |
+| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L850 |
+| `station_ship_position(station_id: String) -> Vector3` | L863 |
+| `station_ship_yaw(station_id: String) -> float` | L868 |
+| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L877 |
+| `is_station_transitioning() -> bool` | L929 |
+| `camera_position() -> Vector3` | L935 |
+| `camera_target() -> Vector3` | L939 |
+| `ship_x() -> float` | L944 |
+| `station_ship_mooring_x() -> float` | L948 |
+| `station_prop_count() -> int` | L954 |
+| `camera_shift_x() -> float` | L959 |
+| `advance_station(delta: float) -> void` | L967 |
+| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1088 |
+| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1110 |
+| `advance_voyage(delta: float) -> void` | L1148 |
+| `reset_voyage() -> void` | L1238 |
+| `is_voyage_transitioning() -> bool` | L1258 |
+| `voyage_mode() -> String` | L1262 |
+| `is_voyage_holding_handoff() -> bool` | L1269 |
+| `voyage_progress() -> float` | L1274 |
+| `voyage_handoff_position() -> Vector3` | L1280 |
+| `ship_position() -> Vector3` | L1286 |
+| `ship_yaw() -> float` | L1294 |
+| `camera_pitch_deg() -> float` | L1301 |
 
 ## 契约与约束
 

@@ -9,48 +9,49 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ClueService` | L1 |
-| `SOURCE_RUMOR` | L46 |
-| `SOURCE_INTEL` | L47 |
-| `SOURCE_WAIT` | L48 |
-| `SOURCE_CONTRACT` | L49 |
-| `SOURCES` | L50 |
-| `TYPE_PORT_LOCATION` | L53 |
-| `TYPE_PORT_GOODS` | L54 |
-| `TYPES` | L55 |
-| `DIRECTION_MIN_LEVEL` | L58 |
-| `CIRCLE_MIN_LEVEL` | L59 |
-| `NAME_MIN_LEVEL` | L60 |
-| `GOODS_PRICE_MIN_LEVEL` | L62 |
-| `GOODS_SUPPLY_MIN_LEVEL` | L63 |
-| `GOODS_EXACT_MIN_LEVEL` | L64 |
-| `FALLBACK_GOODS_EXPIRY_HOURS` | L66 |
-| `clues(state: GameState) -> Dictionary` | L70 |
-| `active(state: GameState) -> Array` | L76 |
-| `normalize_clue(clue: Dictionary) -> Dictionary` | L85 |
-| `is_expired(clue: Dictionary, at_time: float) -> bool` | L102 |
-| `active_count(state: GameState, at_time: float = -1.0) -> int` | L109 |
-| `sweep_expired(state: GameState, at_time: float = -1.0) -> Array[String]` | L122 |
-| `find_clue(state: GameState, clue_id: String) -> Dictionary` | L147 |
-| `eligible_target_ids(state: GameState) -> Array[String]` | L158 |
-| `on_arrival(context) -> Dictionary` | L178 |
-| `wait_clue_chance(rules: Dictionary, hours: int) -> float` | L202 |
-| `on_wait(context, hours: int) -> Dictionary` | L214 |
-| `on_contract_completed(context, completed: Array) -> Dictionary` | L241 |
-| `buy(context) -> Dictionary` | L297 |
-| `acquire(context, source_key: String, rng: RandomNumberGenerator, target_port_id: String = "") -> Dictionary` | L349 |
-| `acquire_goods(context, source_key: String, rng: RandomNumberGenerator) -> Dictionary` | L433 |
-| `goods_candidates(context) -> Array` | L513 |
-| `investigate(context, clue_id: String) -> Dictionary` | L565 |
-| `travel(context, clue_id: String, strategy_id: String) -> Dictionary` | L693 |
-| `mark_attempt_failed(state: GameState, clue_id: String, at_time: float = -1.0) -> int` | L743 |
-| `mark_resolved(state: GameState, clue_id: String) -> bool` | L753 |
-| `view(state: GameState, _context = null) -> Array` | L767 |
-| `view_entry(state: GameState, clue: Dictionary) -> Dictionary` | L780 |
-| `clue_acquired_event(clue: Dictionary) -> Dictionary` | L867 |
-| `clue_investigated_event(clue: Dictionary) -> Dictionary` | L880 |
-| `clue_investigation_failed_event(clue: Dictionary, cost: int, hours: float) -> Dictionary` | L892 |
-| `clue_expired_event(clue_ids: Array[String]) -> Dictionary` | L907 |
-| `expired_events_of(clue_ids: Array[String]) -> Array` | L915 |
+| `SOURCE_RUMOR` | L48 |
+| `SOURCE_INTEL` | L49 |
+| `SOURCE_WAIT` | L50 |
+| `SOURCE_CONTRACT` | L51 |
+| `SOURCES` | L52 |
+| `TYPE_PORT_LOCATION` | L55 |
+| `TYPE_PORT_GOODS` | L56 |
+| `TYPES` | L57 |
+| `DIRECTION_MIN_LEVEL` | L60 |
+| `CIRCLE_MIN_LEVEL` | L61 |
+| `NAME_MIN_LEVEL` | L62 |
+| `GOODS_PRICE_MIN_LEVEL` | L64 |
+| `GOODS_SUPPLY_MIN_LEVEL` | L65 |
+| `GOODS_EXACT_MIN_LEVEL` | L66 |
+| `FALLBACK_GOODS_EXPIRY_HOURS` | L68 |
+| `clues(state: GameState) -> Dictionary` | L72 |
+| `active(state: GameState) -> Array` | L78 |
+| `normalize_clue(clue: Dictionary) -> Dictionary` | L87 |
+| `is_expired(clue: Dictionary, at_time: float) -> bool` | L104 |
+| `active_count(state: GameState, at_time: float = -1.0) -> int` | L111 |
+| `sweep_expired(state: GameState, at_time: float = -1.0) -> Array[String]` | L124 |
+| `find_clue(state: GameState, clue_id: String) -> Dictionary` | L149 |
+| `eligible_target_ids(state: GameState) -> Array[String]` | L160 |
+| `on_arrival(context) -> Dictionary` | L180 |
+| `wait_clue_chance(rules: Dictionary, hours: int) -> float` | L204 |
+| `on_wait(context, hours: int) -> Dictionary` | L216 |
+| `on_contract_completed(context, completed: Array) -> Dictionary` | L243 |
+| `buy_gate(context) -> Dictionary` | L299 |
+| `buy(context) -> Dictionary` | L319 |
+| `acquire(context, source_key: String, rng: RandomNumberGenerator, target_port_id: String = "") -> Dictionary` | L371 |
+| `acquire_goods(context, source_key: String, rng: RandomNumberGenerator) -> Dictionary` | L455 |
+| `goods_candidates(context) -> Array` | L535 |
+| `investigate(context, clue_id: String) -> Dictionary` | L587 |
+| `travel(context, clue_id: String, strategy_id: String) -> Dictionary` | L715 |
+| `mark_attempt_failed(state: GameState, clue_id: String, at_time: float = -1.0) -> int` | L765 |
+| `mark_resolved(state: GameState, clue_id: String) -> bool` | L775 |
+| `view(state: GameState, _context = null) -> Array` | L789 |
+| `view_entry(state: GameState, clue: Dictionary) -> Dictionary` | L802 |
+| `clue_acquired_event(clue: Dictionary) -> Dictionary` | L889 |
+| `clue_investigated_event(clue: Dictionary) -> Dictionary` | L902 |
+| `clue_investigation_failed_event(clue: Dictionary, cost: int, hours: float) -> Dictionary` | L914 |
+| `clue_expired_event(clue_ids: Array[String]) -> Dictionary` | L929 |
+| `expired_events_of(clue_ids: Array[String]) -> Array` | L937 |
 
 （`port_goods`：已发现港口 + 货物 + 冻结行情快照 + 到期时间）的生成、逐级调查披露
 （`investigate`，1→2→3→4）、时效清理、按等级裁剪的只读视图、线索生命周期
@@ -91,5 +92,7 @@
   （阶段 4.3 / U3）——`mark_attempt_failed` 只累加 `attempts`、写
   `last_attempt_at`，线索仍留在 active 且可再次 `explore.start`。旧存档 `failed`
   列表只保留历史 id，不再写入新条目。
+- 4.5.4：酒馆替代情报站——购买线索的设施判断统一走 `MapOps.has_tavern`（兼容
+  旧存档的 `intel` 设施）；`buy_gate()` 给酒馆页与海图面板提供同一份可用性判定。
 
 模块索引：[framework/domain](../README.md)
