@@ -10,7 +10,7 @@ const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const METER_SCRIPT := preload("res://framework/ui/components/sn_resource_meter.gd")
 const CARD_SCRIPT := preload("res://framework/ui/components/sn_supply_card.gd")
 const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_table.gd")
-const MAP_CANVAS_SCRIPT := preload("res://framework/ui/components/map_canvas.gd")
+
 const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_screen.gd")
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
 const SUPPLY_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/supply_screen.gd")
@@ -235,7 +235,8 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 	var ship: Dictionary = view["ship"]
 	var texts := _label_texts(shell._root_box)
 	assert_eq(_nodes_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted overview screen")
-	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "overview instantiates the extracted map scene")
+	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
+		"4.3/U6: the overview no longer instantiates the old map canvas")
 	assert_false(bool(view["at_sea"]), "the fixture starts in port")
 	# Expected values are recomputed from the domain (port definition + ShipOps),
 	# not from the shell helpers that produced them.
@@ -756,7 +757,8 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 		toggle.emit_signal("pressed")
 	assert_false(bool(shell._overview_stage_mode), "the 2D overview can be selected")
 	assert_false(bool(host.visible), "the 2D overview hides the stage host")
-	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "the 2D overview shows the detailed map layout")
+	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
+		"4.3/U6: the 2D overview no longer renders the old line-art chart")
 	var stage_button := _button_by_text(shell._root_box, shell._tr("ui.button.port_stage", ""))
 	assert_not_null(stage_button, "the 2D page offers the way back to the 3D stage")
 	if stage_button != null:
@@ -778,7 +780,8 @@ func test_overview_stage_falls_back_to_the_usable_2d_overview() -> void:
 	assert_false(bool(shell._port_stage_available()), "a failed stage is not retried")
 	if shell._port_stage_host != null:
 		assert_false(bool(shell._port_stage_host.visible), "the failed stage host is hidden")
-	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "the fallback page is the usable 2D overview")
+	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
+		"4.3/U6: the fallback 2D overview has no old chart panel either")
 	assert_contains(_label_texts(shell._root_box), shell._tr("ui.error.port_stage_unavailable", ""), "the fallback explains what happened")
 	assert_not_null(_button_by_text(shell._root_box, shell._tr("ui.nav.market", "")), "navigation keeps working after the fallback")
 	_unmount(bundle)
@@ -812,7 +815,8 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	if detail_button != null:
 		detail_button.emit_signal("pressed")
 	assert_true(bool(shell._overview_detail), "the detail drawer opens")
-	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 1, "the drawer shows the map")
+	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
+		"4.3/U6: the detail drawer no longer shows the old chart")
 	assert_contains(_label_texts(shell._root_box), context.translate("ui.victory.plan_title", ""), "the drawer keeps the victory plan")
 	var host: SNStageHost = shell._port_stage_host
 	assert_not_null(host, "the stage host stays mounted behind the drawer")
@@ -827,7 +831,8 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	if back_button != null:
 		back_button.emit_signal("pressed")
 	assert_false(bool(shell._overview_detail), "the detail drawer closes")
-	assert_eq(_nodes_with_script(shell._root_box, MAP_CANVAS_SCRIPT).size(), 0, "the main view is the bare stage again")
+	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
+		"the main view is the bare stage again (no old chart anywhere)")
 	if shell._overview_detail_backdrop != null:
 		assert_false(shell._overview_detail_backdrop.visible, "the backdrop hides with the drawer")
 
@@ -929,15 +934,18 @@ func test_sea_chart_buys_an_intel_clue_from_the_panel() -> void:
 	# 买线索需要情报站：把当前港设到地图上任意一个有 intel 设施的港口（真实对局里
 	# 玩家就是先把船开到这里再进海图页买）。
 	var intel_port := ""
-	for port in MapOps.ports(context.state.world()):
-		if MapOps.has_facility(port, "intel"):
+	for port in MapOps.ports(context.state.world()).values():
+		if port is Dictionary and MapOps.has_facility(port as Dictionary, "intel"):
 			intel_port = String((port as Dictionary).get("id", ""))
 			break
 	assert_true(not intel_port.is_empty(), "the fixture map has a port with an intel office")
 	if intel_port.is_empty():
 		_unmount(bundle)
 		return
-	context.state.data["current_port_id"] = intel_port
+	# `GameState.current_port_id()` 读抽象地图的 current_port_id；`WorldOps` 的
+	# data 路径是给旧代码 / 演出用的镜像，两处都写才能让查询与面板看到新港口。
+	context.state.world()["current_port_id"] = intel_port
+	WorldOps.set_current_port(context.state, intel_port)
 	_goto(shell, "sea_chart")
 	var screens := _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
 	assert_eq(screens.size(), 1, "the chart page mounts")

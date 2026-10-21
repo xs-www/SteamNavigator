@@ -472,6 +472,7 @@
   "ui.clue.direction.NW": "西北",
   "ui.clue.distance_range": "约 %d–%d 小时航程",
   "ui.clue.reliability_hint": "来源：%s",
+  "ui.clue.attempts": "已尝试 %d 次",
   "ui.clue.feasible": "可以出航",
   "ui.clue.infeasible": "无法出航",
   "ui.label.direction": "方向",

@@ -12,6 +12,12 @@ extends RefCounted
 ## it via `sea_chart.view`; twin generation failure only degrades the chart to
 ## its "no data" hint and never fails the run. `_initialize_world_fog()` seeds
 ## the persistent fog (coastal band + start-port lamp flower + ship vision).
+##
+## Stage 4.3 (U1): the twin world size comes from the map profile's
+## `twin_world_size` (Core content) instead of a hardcoded 160, and the
+## hand-authored 160-unit layout is scaled uniformly to it. Fog radii are
+## `min(bounds.w, bounds.h) × Core ratio` via `ExplorationRules.fog_radii()`,
+## so the fog-to-world proportion no longer depends on the world size.
 
 
 static func default_build(hub: RegistryHub) -> ContentDefinition:
@@ -137,10 +143,10 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 	# (port_0..N), so `sea_chart.view`, discovery progress and fog stay coherent
 	# with the map that is actually played. Generation failure only degrades the
 	# nautical chart to its "no data" hint — it never fails the run.
-	var world_map_result := WorldGenerator.generate(_coordinate_world_profile(world), hub, rng, ship)
+	var world_map_result := WorldGenerator.generate(_coordinate_world_profile(world, profile), hub, rng, ship)
 	if bool(world_map_result.get("ok", false)):
 		state.data["world_map"] = world_map_result["world_map"]
-		_initialize_world_fog(state, starting_port_id)
+		_initialize_world_fog(state, starting_port_id, hub)
 	ContractOps.ensure_structure(state)
 	WarehouseOps.ensure_structure(state)
 	_initialize_markets(state, hub, profile, rng)
@@ -175,7 +181,12 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0) 
 ## keeps the same port ids (`port_0..N`) and the same archetype/name per id.
 ## The twin's connectivity is its own MST chart graph — voyage routing still
 ## follows the abstract map until the voyage演出 unifies the two worlds.
-static func _coordinate_world_profile(mvp_world: Dictionary) -> Dictionary:
+##
+## The layout below is authored in a 160-unit world. `twin_world_size` (Core
+## `map_profiles.data`) scales every centre/radius uniformly, so the same chart
+## composition works at any world size (and the fog ratio stays meaningful).
+static func _coordinate_world_profile(mvp_world: Dictionary, profile: ContentDefinition) -> Dictionary:
+	var world_size := clampf(float(profile.data.get("twin_world_size", 160.0)), 64.0, 1024.0)
 	var layout := [
 		{"id": "twin_continent", "region_id": "start_coast", "archetype": "continent", "cx": 44.0, "cy": 82.0, "rx": 19.0, "ry": 30.0},
 		{"id": "twin_island_east", "region_id": "start_coast", "archetype": "large_island", "cx": 108.0, "cy": 46.0, "rx": 15.0, "ry": 11.0},
@@ -183,6 +194,10 @@ static func _coordinate_world_profile(mvp_world: Dictionary) -> Dictionary:
 		{"id": "twin_islet_north", "region_id": "ocean_1", "archetype": "small_island", "cx": 66.0, "cy": 20.0, "rx": 7.0, "ry": 5.0},
 		{"id": "twin_islet_west", "region_id": "ocean_1", "archetype": "small_island", "cx": 18.0, "cy": 132.0, "rx": 6.0, "ry": 4.5},
 	]
+	var layout_scale := world_size / 160.0
+	for land_def in layout:
+		for key in ["cx", "cy", "rx", "ry"]:
+			(land_def as Dictionary)[key] = float((land_def as Dictionary)[key]) * layout_scale
 	var ports: Dictionary = mvp_world.get("ports", {})
 	var ids: Array = ports.keys()
 	ids.sort_custom(func(a, b) -> bool:
@@ -200,7 +215,7 @@ static func _coordinate_world_profile(mvp_world: Dictionary) -> Dictionary:
 			"is_start": i == 0,
 		})
 	return {
-		"world_size": 160.0,
+		"world_size": world_size,
 		"min_ports": ids.size(),
 		"max_land_coverage": 0.45,
 		"required_facility_tags": ["port.shipyard", "port.intel"],
@@ -215,16 +230,20 @@ static func _coordinate_world_profile(mvp_world: Dictionary) -> Dictionary:
 
 
 ## Seeds the twin world's fog: coastal band marked, the starting harbour
-## revealed (lamp flower) and ship vision applied at the berth.
-static func _initialize_world_fog(state: GameState, start_port_id: String) -> void:
+## revealed (lamp flower) and ship vision applied at the berth. Radii follow the
+## content fog ratios (`ExplorationRules.fog_radii`), not fixed world units.
+static func _initialize_world_fog(state: GameState, start_port_id: String, hub: RegistryHub) -> void:
 	var world := WorldOps.world_map(state)
 	var start_port := world.get_port(start_port_id)
 	if start_port.is_empty():
 		return
-	var fog := FogOps.create_fog_grid(world, FogOps.DEFAULT_MIN_VISION_RADIUS)
+	var radii := ExplorationRules.fog_radii(state, hub, world)
+	var vision_radius := float(radii.get("vision", FogOps.DEFAULT_MIN_VISION_RADIUS))
+	var reveal_radius := float(radii.get("port_reveal", FogOps.DEFAULT_PORT_REVEAL_RADIUS))
+	var fog := FogOps.create_fog_grid(world, vision_radius)
 	var coastal := FogOps.mark_coastal_cells(fog, world)
-	FogOps.reveal_port(fog, start_port, FogOps.DEFAULT_PORT_REVEAL_RADIUS)
-	FogOps.update_ship_vision(fog, start_port.position, FogOps.DEFAULT_MIN_VISION_RADIUS, coastal)
+	FogOps.reveal_port(fog, start_port, reveal_radius)
+	FogOps.update_ship_vision(fog, start_port.position, vision_radius, coastal)
 	FogOps.save_fog_state(state, fog, coastal)
 
 

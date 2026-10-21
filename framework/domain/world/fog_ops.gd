@@ -9,14 +9,17 @@ extends RefCounted
 ## - `reveal_port` 使用 `FogGrid.reveal_circle` 揭示已发现港口周边。
 ## - `save_fog_state` / `load_fog_state` 持久化迷雾网格与海岸单元集合。
 ## - `reveal_arrival` 是抵达钩子：揭示泊位并应用船视，首次调用时惰性建网格。
+## - 半径不再由框架写死：调用方从 `ExplorationRules.fog_radii()`（`min(世界短边) ×
+##   Core ratio`）取 `{vision, port_reveal}` 传入。下面的 `DEFAULT_*` 只作为
+##   旧调用 / 测试夹具的防御兜底，正常内容路径必须传 `radii`。
 ## - `get_visibility_at` / `is_position_visible` 是只读查询。
 ## @end-static-doc
 
 ## 海岸带宽度（迷雾格子数）。设计文档 §3.2 规定“距海岸线 N 个格子内”，
 ## 因此这里以格数为准，换算成本地距离时乘以 `cell_size`。
 const COASTAL_CELLS := 2
-## 领域层默认视野/港口揭示半径。`sea_chart.view` 查询与运行时初始化共用，
-## 避免领域代码反向依赖应用层查询取常量。
+## 防御兜底半径（400 单位世界、约 0.05 比例）。正常调用由内容比例推导后传入，
+## 这两个常量只服务旧调用点与不依赖内容的单元测试。
 const DEFAULT_MIN_VISION_RADIUS := 20.0
 const DEFAULT_PORT_REVEAL_RADIUS := 24.0
 
@@ -138,13 +141,23 @@ static func reveal_all_coastal(fog: FogGrid, world: WorldMap) -> int:
 ## Arrival hook for the coordinate-space world: reveal the port circle (lamp
 ## flower) and apply ship vision at the berth. Creates the persistent fog state
 ## on first use, so callers do not need to care whether fog was initialized yet.
-static func reveal_arrival(state: GameState, world: WorldMap, port: WorldPort) -> void:
+##
+## `radii` comes from `ExplorationRules.fog_radii()` (`vision` / `port_reveal`,
+## world units). Empty / partial dictionaries fall back to the legacy constants;
+## the fallback only protects old callers and fixtures, not the tuned content path.
+static func reveal_arrival(
+	state: GameState, world: WorldMap, port: WorldPort, radii: Dictionary = {}
+) -> void:
+	var vision_radius := float(radii.get("vision", DEFAULT_MIN_VISION_RADIUS))
+	var reveal_radius := float(radii.get("port_reveal", DEFAULT_PORT_REVEAL_RADIUS))
 	var fog_state := load_fog_state(state)
 	var fog: FogGrid = fog_state.get("fog", FogGrid.new())
 	var coastal: Dictionary = fog_state.get("coastal_cells", {})
+	# 首次建网格时用内容推导的视野半径；旧存档已有网格则保留其 cell_size（迷雾
+	# 分辨率属于存档数据，不随内容调整重算）。
 	if fog.is_empty():
-		fog = create_fog_grid(world, DEFAULT_MIN_VISION_RADIUS)
+		fog = create_fog_grid(world, vision_radius)
 		coastal = mark_coastal_cells(fog, world)
-	reveal_port(fog, port, DEFAULT_PORT_REVEAL_RADIUS)
-	update_ship_vision(fog, port.position, DEFAULT_MIN_VISION_RADIUS, coastal)
+	reveal_port(fog, port, reveal_radius)
+	update_ship_vision(fog, port.position, vision_radius, coastal)
 	save_fog_state(state, fog, coastal)

@@ -2,7 +2,7 @@ class_name ClueService
 extends RefCounted
 ## @static-doc
 ## 作用：港口位置线索的领域服务——生成（抵达传闻 / 酒馆购买）、按等级裁剪的只读视图、
-## 线索生命周期（active → resolved / failed）以及发现概率的规则计算。
+## 线索生命周期（active → resolved；失败探索不再消耗线索）以及发现概率的规则计算。
 ##
 ## - 关键依赖：`GameState.data.clues`（惰性 ensure）、`WorldOps`、`MapOps`、
 ##   `ExplorationRules`、`ShipOps`、`VoyageCalculator`、`RngService.STREAM_EXPLORATION`
@@ -20,7 +20,12 @@ extends RefCounted
 ##   都不输出 `target_port_id`、`credibility` 与 `search_zone` 中心误差来源。
 ##   等级 1 不披露方向（`direction_angle` 固定 0），2 级披露方向，3/4 级再加圆圈。
 ## - `on_arrival` / `buy` 永远不阻断抵达 / 出航流程：抽不到线索时只返回空结果。
-## - 线索不会被删除：失效进 `failed`，发现进 `resolved`，两者都保留 id 供 UI 提示。
+## - 线索不会被删除：发现进 `resolved` 并移出 active；**探索失败不消耗线索**
+##   （阶段 4.3 / U3）——`mark_attempt_failed` 只累加 `attempts`、写
+##   `last_attempt_at`，线索仍留在 active 且可再次 `explore.start`。旧存档 `failed`
+##   列表只保留历史 id，不再写入新条目。
+## - 每条线索在获得时固定 `attempts: 0` / `last_attempt_at: 0.0`；查询视图原样
+##   输出这两个字段，UI 据此提示「已尝试 N 次」。
 ## @end-static-doc
 
 const SOURCE_RUMOR := "rumor"
@@ -202,6 +207,9 @@ static func acquire(context, source_key: String, rng: RandomNumberGenerator, tar
 			"radius": radius,
 		},
 		"created_at": state.now(),
+		# 4.3 / U3：失败探索只记录尝试，不消耗线索。
+		"attempts": 0,
+		"last_attempt_at": 0.0,
 	}
 	clues_data["next_id"] = int(clues_data.get("next_id", 1)) + 1
 	active_list.append(clue)
@@ -209,15 +217,17 @@ static func acquire(context, source_key: String, rng: RandomNumberGenerator, tar
 	return clue
 
 
-static func mark_failed(state: GameState, clue_id: String) -> bool:
-	var removed := _remove_active(state, clue_id)
-	if removed.is_empty():
-		return false
-	var clues_data := state.ensure_clues()
-	var failed: Array = clues_data.get("failed", [])
-	if not failed.has(clue_id):
-		failed.append(clue_id)
-	return true
+## 4.3 / U3：一次失败的探索尝试。线索**不离开** active，只累加尝试次数与最近
+## 尝试时间（供 UI 提示与将来线索系统迭代使用）。返回累计尝试次数；线索不在
+## active（旧存档 / 已解决）时返回 0 且不写状态。
+static func mark_attempt_failed(state: GameState, clue_id: String, at_time: float = -1.0) -> int:
+	var clue := find_clue(state, clue_id)
+	if clue.is_empty():
+		return 0
+	var attempts := int(clue.get("attempts", 0)) + 1
+	clue["attempts"] = attempts
+	clue["last_attempt_at"] = float(state.now() if at_time < 0.0 else at_time)
+	return attempts
 
 
 static func mark_resolved(state: GameState, clue_id: String) -> bool:
@@ -269,6 +279,8 @@ static func view_entry(state: GameState, clue: Dictionary) -> Dictionary:
 		"distance_max_hours": float(clue.get("distance_max_hours", 0.0)),
 		"circle": circle,
 		"name_key": name_key,
+		"attempts": int(clue.get("attempts", 0)),
+		"last_attempt_at": float(clue.get("last_attempt_at", 0.0)),
 	}
 
 

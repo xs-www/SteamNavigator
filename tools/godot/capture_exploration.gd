@@ -17,7 +17,7 @@ extends SceneTree
 ##   exploration_chart_route.png      探索演出：世界航线 + 到 `?` 的虚线预测线 + 底部航程条目的地 `？`
 ##   exploration_arrival.png          第一次探索（发现）抵达结算：探索结果区块
 ##   exploration_result_found.png     另一次发现结算（不同港口）
-##   exploration_result_failed.png    失败漂流结算：额外煤水 / 耐久损失 / 线索作废
+##   exploration_result_failed.png    失败漂流结算：额外煤水 / 耐久损失 / 线索保留（4.3）
 ##   exploration_resource_alert.png   4.2 资源告急页：标题/描述/煤水耐久/继续探索/掉头返航
 ##   exploration_turned_back.png      4.2 掉头返航结算：港口 / 额外损耗 / 线索保留
 ##   exploration_alert_continue.png   4.2 告警后继续探索的结算（证明继续路径照常 settle）
@@ -35,8 +35,9 @@ extends SceneTree
 ## - **硬性断言**（不满足 exit 1 但已抓到的图照存）：`sea_chart.view.clues` 不含
 ##   `target_port_id` / `credibility` / 真实 `search_zone`；面板线索文本非空且不含
 ##   `ui.*` 原始键名；探索中 `SNSeaChartView._unknown_destination` 非空、航程条目的地
-##   显示 `？`、船 icon 沿航线切线；`explore.settle` 后成功当前港变为目标港 / 失败线索
-##   进入 failed；结算 summary 含 `explore` 且结算页有 `ExploreBlock`。
+##   显示 `？`、船 icon 沿航线切线；`explore.settle` 后成功当前港变为目标港 / 失败
+##   线索仍 active（4.3/U3，只记 attempts）、`failed` 列表不新增；结算 summary 含
+##   `explore` 且结算页有 `ExploreBlock`。
 ## - 4.2 追加：告警页处于 `EVENT_WAIT` 且 `_presentation.skip() == NONE`（决策不可被
 ##   跳过）、文案全部本地化且不泄露目标港、`sea_chart.view.explore` 暴露
 ##   `alert_needed/alert_progress/alert_decided`；掉头后 `current_port == origin`、线索
@@ -887,10 +888,15 @@ func _assert_settlement(
 			"the settlement says the clue is retained (%s)" % tag)
 	else:
 		_assert_eq(current, destination, "the drift destination is where the ship ends up (%s)" % tag)
-		_assert_true(Array(state.ensure_clues().get("failed", [])).has(clue_id),
-			"the failed clue is kept in the failed log (%s)" % tag)
-		_assert_false(_active_has(context, clue_id),
-			"the failed clue leaves the active log (%s)" % tag)
+		# 4.3 / U3：失败不消耗线索——仍在 active、只记录尝试、结算页说「线索保留」。
+		_assert_true(_active_has(context, clue_id),
+			"a failed clue stays active (%s)" % tag)
+		_assert_false(Array(state.ensure_clues().get("failed", [])).has(clue_id),
+			"a failed clue is not moved into the failed log (%s)" % tag)
+		_assert_true(int(explore.get("attempts", 0)) >= 1,
+			"the failed attempt is counted (%s)" % tag)
+		_assert_true(texts.has(String(context.translate("ui.explore.clue_retained"))),
+			"the settlement says the clue is retained (%s)" % tag)
 		_assert_true(float(explore.get("durability_loss", 0.0)) > 0.0,
 			"drifting costs durability (%s)" % tag)
 		_assert_true(float(explore.get("extra_coal", 0.0)) >= 0.0,

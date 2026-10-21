@@ -420,12 +420,21 @@ func test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void:
 		"drifting falls back to the nearest discovered harbour (the origin)")
 	assert_eq(context.state.current_port_id(), origin, "the ship drifted back into the origin harbour")
 	assert_true(context.state.is_at_port(), "the ship is at a port again")
-	assert_true(_failed_has(context, clue_id), "the clue is marked failed but kept")
-	assert_false(_active_has(context, clue_id), "the failed clue is no longer active")
+	# 4.3 / U3：失败不消耗线索 —— 仍在 active，只记录尝试次数与时间。
+	assert_true(_active_has(context, clue_id), "a failed clue stays in the active log")
+	assert_false(_failed_has(context, clue_id), "a failed clue is not moved into the failed list")
+	var kept_clue := ClueService.find_clue(context.state, clue_id)
+	assert_eq(int(kept_clue.get("attempts", 0)), 1, "the failed attempt is counted")
+	assert_almost_eq(float(kept_clue.get("last_attempt_at", 0.0)), arrival_time + 6.0, 0.0001,
+		"the attempt time is the drift arrival time")
+	var view_entry := ClueService.view_entry(context.state, kept_clue)
+	assert_eq(int(view_entry.get("attempts", 0)), 1, "the clue view exposes the attempt count")
 	assert_true(context.state.explore_voyage() == null, "explore_voyage is cleared")
 	var summary: Dictionary = data.get("summary", {})
 	var explore_summary: Dictionary = summary.get("explore", {})
 	assert_eq(String(explore_summary.get("result", "")), "failed", "summary.explore reports the failure")
+	assert_eq(int(explore_summary.get("attempts", 0)), 1, "summary.explore reports the attempt count")
+	assert_true(bool(explore_summary.get("clue_retained", false)), "summary marks the clue as retained")
 	assert_almost_eq(float(explore_summary.get("durability_loss", 0.0)), 8.0, 0.0001,
 		"drifting costs the rule's durability loss")
 	assert_almost_eq(float(context.state.ship().get("durability", 0.0)), durability_before - 8.0, 0.0001,
@@ -439,6 +448,41 @@ func test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void:
 	assert_almost_eq(float(summary.get("delayed_hours", 0.0)), 6.0, 0.0001, "summary reports the delay")
 	assert_true(_has_notice(context.state.recent_notices(6), "ui.notice.exploration_failed"),
 		"the failure is announced")
+
+
+## 4.3 / U3：失败后线索仍 active，可立即按同一条线索再次出航（不必重新买情报）。
+func test_failed_clue_can_be_sailed_again() -> void:
+	var context := _start_run(SEED)
+	var clue := _acquire(context, "intel")
+	assert_false(clue.is_empty(), "clue should exist")
+	if clue.is_empty():
+		return
+	var clue_id := String(clue.get("id", ""))
+	var preview := ExplorationCalculator.preview(context, clue_id, STRATEGY_ID)
+	var preview_data: Dictionary = preview.get("data", {})
+	var need_coal := float(preview_data.get("coal_required", 0.0))
+	var need_water := float(preview_data.get("water_required", 0.0))
+	var first := context.commands.execute(&"explore.start", {"clue_id": clue_id, "strategy_id": STRATEGY_ID})
+	assert_true(bool(first.get("ok", false)), "the first exploration starts")
+	context.state.explore_voyage()["outcome_roll"] = 0.999
+	var failed := context.commands.execute(&"explore.settle", {})
+	assert_eq(String(failed.get("data", {}).get("result", "")), "failed", "the first attempt fails")
+	# 失败后补回刚好够本程的煤水（不要超重），让第二次出航只验证「线索仍可用」
+	# 而不是补给 / 载重门禁。
+	context.state.ship()["coal"] = need_coal + 0.1
+	context.state.ship()["water"] = need_water + 0.1
+	var second := context.commands.execute(&"explore.start", {"clue_id": clue_id, "strategy_id": STRATEGY_ID})
+	assert_true(bool(second.get("ok", false)),
+		"a failed clue can be sailed again: %s" % str(second))
+	if not bool(second.get("ok", false)):
+		return
+	context.state.explore_voyage()["outcome_roll"] = 0.999
+	var failed_again := context.commands.execute(&"explore.settle", {})
+	assert_eq(String(failed_again.get("data", {}).get("result", "")), "failed", "the retry fails too")
+	var kept := ClueService.find_clue(context.state, clue_id)
+	assert_false(kept.is_empty(), "the clue survives a second failure")
+	assert_eq(int(kept.get("attempts", 0)), 2, "both attempts are recorded")
+	assert_false(_failed_has(context, clue_id), "retries never move the clue into the failed list")
 
 
 func test_explore_settle_without_a_voyage_fails() -> void:
@@ -762,10 +806,48 @@ func test_rules_are_read_from_the_core_map_profile() -> void:
 	assert_eq(int(rules.get("max_active_clues", 0)), 4, "the clue cap comes from Core JSON")
 	assert_almost_eq(float(rules.get("search_zone_radius", 0.0)), 14.0, 0.0001, "zone radius from Core JSON")
 	assert_almost_eq(float(rules.get("turnback_extra_ratio", 0.0)), 0.25, 0.0001, "turn-back ratio from Core JSON")
+	assert_almost_eq(float(rules.get("fog_port_reveal_ratio", -1.0)), 0.05, 0.0001,
+		"port-reveal fog ratio comes from Core JSON")
+	assert_almost_eq(float(rules.get("fog_vision_ratio", -1.0)), 0.05, 0.0001,
+		"ship-vision fog ratio comes from Core JSON")
 	var intel_weights: Array = (rules.get("level_weights", {}) as Dictionary).get("intel", [])
 	assert_eq(intel_weights.size(), 4, "level weights are the four-level vector")
 	assert_almost_eq(float(intel_weights[3]) if intel_weights.size() >= 4 else -1.0, 0.40, 0.0001,
 		"intel has a 40% chance of a level-4 name clue")
+
+
+## 4.3 / U1：雾半径 = 世界短边 × Core 比例，而不是固定世界单位。160 世界的泊位
+## 揭示直径必须 ≤ 世界 10%（0.05 × 160 × 2 = 16 = 10%）；旧常量 20/24 不再参与内容路径。
+func test_fog_radii_are_world_size_relative_and_content_driven() -> void:
+	var context := _start_run(SEED)
+	var world := WorldOps.world_map(context.state)
+	assert_false(world.is_empty(), "the run generates the coordinate twin world")
+	var world_side := minf(world.bounds.size.x, world.bounds.size.y)
+	var profile := context.registries.get_by_id(ContentTypes.MAP_PROFILE, context.state.world().get("map_profile_id", ""))
+	assert_not_null(profile, "the run's map profile resolves")
+	assert_almost_eq(float(profile.data.get("twin_world_size", 0.0)), world_side, 0.0001,
+		"the twin world size comes from Core content, not a framework constant")
+	assert_almost_eq(world_side, 160.0, 0.0001, "the core profile currently asks for a 160-unit twin world")
+	var radii := ExplorationRules.fog_radii(context.state, context.registries, world)
+	var vision_radius := float(radii.get("vision", -1.0))
+	var reveal_radius := float(radii.get("port_reveal", -1.0))
+	assert_almost_eq(vision_radius, world_side * 0.05, 0.0001, "vision radius = world side × Core ratio")
+	assert_almost_eq(reveal_radius, world_side * 0.05, 0.0001, "berth reveal radius = world side × Core ratio")
+	assert_true(reveal_radius * 2.0 <= world_side * 0.10 + 0.0001,
+		"the berth fog diameter stays within 10% of the world side")
+	# 迷雾网格分辨率随视野半径缩放：cell_size = vision / 4。
+	var fog_state := FogOps.load_fog_state(context.state)
+	var fog: FogGrid = fog_state.get("fog", FogGrid.new())
+	assert_false(fog.is_empty(), "the run seeds a fog grid")
+	assert_almost_eq(fog.cell_size, vision_radius / 4.0, 0.0001,
+		"the fog cell size scales with the content vision radius")
+	# 查询层输出同一份半径，UI 软圆与领域揭示不会各算一套。
+	var vm := _chart_vm(context)
+	var vm_radii: Dictionary = vm.get("fog_radii", {})
+	assert_almost_eq(float(vm_radii.get("vision", 0.0)), vision_radius, 0.0001,
+		"sea_chart.view exports the same vision radius")
+	assert_almost_eq(float(vm_radii.get("port_reveal", 0.0)), reveal_radius, 0.0001,
+		"sea_chart.view exports the same port-reveal radius")
 
 
 func test_game_state_backfills_the_clue_block_lazily() -> void:

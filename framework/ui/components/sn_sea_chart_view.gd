@@ -35,6 +35,9 @@ extends Control
 ##   高亮；`select_clue()` / `get_selected_clue()` 供外部同步选中态，选中港口会清掉线索
 ##   选中。几何换算全部走静态纯函数（`clue_arrow_endpoint` / `clue_circle_screen` /
 ##   `clue_hit_test`），无头测试不渲染也能断言。
+## - **航线只在选中港口时显示**（4.3 / U5）：普通航线只画与 `_selected_port` 相邻的
+##   那些，未选中港口（包括选中线索）时一条都不画；演出模式下普通航线全部隐藏，只
+##   保留 `_focus_points` 画出的计划航线。过滤逻辑在纯函数 `visible_routes()` 里。
 ## - **探索演出终点**：`set_unknown_destination(world_pos, label_key)` 画一条从当前船位
 ##   到未知终点的虚线预测线 + `?` 标记（迷雾之上、船 icon 之下）；
 ##   `clear_unknown_destination()` 在演出结束时清掉。
@@ -659,8 +662,28 @@ func _is_landmass_explored(lm: Dictionary, fog_data: Dictionary) -> bool:
 	return float(revealed) / float(samples) >= EXPLORED_COAST_RATIO
 
 
+## 4.3 / U5：普通航线只在选中港口时显示。选中港口 → 只画与它相邻的航线；未选中
+## （或选中了线索）→ 一条普通航线都不画；演出计划航线由 `_focus_points` 单独画，
+## 不经过这个过滤。该函数是纯函数，无头测试可直接断言。
+static func visible_routes(routes: Array, selected_port: String) -> Array:
+	var visible: Array = []
+	if selected_port.is_empty():
+		return visible
+	for route in routes:
+		if not (route is Dictionary):
+			continue
+		var from_id := String((route as Dictionary).get("from", ""))
+		var to_id := String((route as Dictionary).get("to", ""))
+		if from_id == selected_port or to_id == selected_port:
+			visible.append(route)
+	return visible
+
+
 func _draw_routes() -> void:
-	var routes: Array = view_model.get("routes", [])
+	# 演出时普通航线全部让位给计划航线（`_focus_points`）；非演出时只画选中港
+	# 相邻的航线（U5：未选港口时海图无线）。
+	var routes: Array = [] if _presentation_mode \
+		else visible_routes(view_model.get("routes", []), _selected_port)
 	var current_port := String(view_model.get("current_port_id", ""))
 	var font := get_theme_default_font()
 	for route in routes:

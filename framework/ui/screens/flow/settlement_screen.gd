@@ -2,8 +2,9 @@ class_name SettlementScreen
 extends VBoxContainer
 ## @static-doc
 ## 作用：抵达结算页。展示委托收入 / 准时 / 延误、船况资源、交付明细与旅客受伤，
-## 并在 `summary.explore` 存在时追加**探索结果**区块（探索系统 4.1）：结果
+## 并在 `summary.explore` 存在时追加**探索结果**区块（探索系统 4.1 / 4.3）：结果
 ## （发现 / 失败漂流 / 掉头返航）、港口名、额外煤水与耐久损失、线索状态说明。
+## 4.3 起失败不再作废线索：失败结果显示「线索保留 + 已尝试次数」。
 ##
 ## ## 契约与约束
 ## - 只读 `bind(vm)` 里的 summary / ship / money；不查询后端、不发命令。
@@ -27,13 +28,13 @@ const EXPLORE_RESULT_FALLBACK := {
 }
 const EXPLORE_CLUE_STATUS_FALLBACK := {
 	"discovered": "线索已解决：目标港口已标入海图。",
-	"failed": "线索已作废：这次探索没能找到它的目标。",
+	"failed": "线索保留：这次没找到，仍可按此线索再次出航。",
 	"turned_back": "线索保留：仍可按此线索再次出航。",
 }
-## 结果 → 线索状态键。发现即解决；失败即作废；返航保留原文线索。
+## 结果 → 线索状态键。发现即解决；失败 / 返航都保留线索（4.3 / U3：失败不消耗）。
 const EXPLORE_CLUE_STATUS_KEY := {
 	"discovered": "ui.explore.clue_resolved",
-	"failed": "ui.explore.clue_failed",
+	"failed": "ui.explore.clue_retained",
 	"turned_back": "ui.explore.clue_retained",
 }
 var _tr: Callable
@@ -111,6 +112,11 @@ func _explore_block(explore: Dictionary, destination_name: String) -> Control:
 	if not clue_status.is_empty():
 		var status_key := String(EXPLORE_CLUE_STATUS_KEY.get(result, ""))
 		clue_status = _loc(status_key, clue_status)
+		var attempts := int(explore.get("attempts", 0))
+		if attempts > 0:
+			clue_status += " · " + (
+				_loc("ui.clue.attempts", "已尝试 %d 次") % attempts
+			)
 		section.add_child(_label(clue_status, 12, MUTED))
 	return section
 

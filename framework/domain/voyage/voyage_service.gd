@@ -175,15 +175,16 @@ static func choose_option(context, option_id: String) -> Dictionary:
 
 
 ## Reveals the destination berth's fog in the coordinate-space twin world.
-## No-op when the run predates the chart integration (no `world_map`).
-static func _reveal_world_fog(state: GameState, destination: String) -> void:
+## No-op when the run predates the chart integration (no `world_map`). Radii
+## come from the content fog ratios so every world size keeps the same look.
+static func _reveal_world_fog(state: GameState, destination: String, hub: RegistryHub) -> void:
 	var world := WorldOps.world_map(state)
 	if world.ports.is_empty():
 		return
 	var port := world.get_port(destination)
 	if port.is_empty():
 		return
-	FogOps.reveal_arrival(state, world, port)
+	FogOps.reveal_arrival(state, world, port, ExplorationRules.fog_radii(state, hub, world))
 
 
 static func _complete_arrival(context) -> Dictionary:
@@ -202,7 +203,7 @@ static func _complete_arrival(context) -> Dictionary:
 	# played map: record the visit in the campaign partition and reveal the
 	# berth's fog. Without `world_map` (legacy saves) both calls are no-ops.
 	WorldOps.mark_visited(state, destination)
-	_reveal_world_fog(state, destination)
+	_reveal_world_fog(state, destination, hub)
 
 	# Craft orders that finished while the ship was under way are delivered to
 	# their owning port warehouse on arrival (the ship may be elsewhere).

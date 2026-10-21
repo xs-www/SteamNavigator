@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://framework/ui/components/map_canvas.gd" id="1"]
-
-[node name="MapCanvas" type="Control"]
-custom_minimum_size = Vector2(0, 250)
-size_flags_horizontal = 3
-mouse_filter = 0
-script = ExtResource("1")

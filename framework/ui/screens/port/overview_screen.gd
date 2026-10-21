@@ -4,7 +4,6 @@ extends VBoxContainer
 
 signal navigation_requested(screen_id: StringName, params: Dictionary)
 signal command_requested(command: StringName, params: Dictionary)
-signal map_port_clicked(port_id: String)
 ## Requested when the player switches between the 2D overview and the 3D port
 ## stage. The Shell owns the stage host; the page only expresses intent.
 signal stage_toggle_requested
@@ -12,7 +11,6 @@ signal stage_toggle_requested
 ## shown over the 3D stage.
 signal detail_toggle_requested
 
-const MAP_CANVAS_SCENE := preload("res://framework/ui/components/map_canvas.tscn")
 const TEXT := Color("ece1c5")
 const MUTED := Color("9fafa7")
 const BRASS := Color("e1c487")
@@ -47,12 +45,12 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	_build_detail(vm)
 
 
-## The existing detailed overview panels: map, port, objectives + victory plan,
-## ship, quick actions, finances and the notice log.
+## The existing detailed overview panels: port, objectives + victory plan, ship,
+## quick actions, finances and the notice log. The old line-art map was removed in
+## phase 4.3 / U6 — the full-screen chart is the single chart entry.
 func _build_detail(vm: Dictionary) -> void:
 	var hero := _port_hero(vm)
 	if hero != null: add_child(hero)
-	add_child(_map_panel(vm.get("map", {})))
 	var columns := HBoxContainer.new(); columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL; add_child(columns)
 	var left := VBoxContainer.new(); left.size_flags_horizontal = Control.SIZE_EXPAND_FILL; left.size_flags_stretch_ratio = 1.7; columns.add_child(left)
 	var right := VBoxContainer.new(); right.size_flags_horizontal = Control.SIZE_EXPAND_FILL; right.size_flags_stretch_ratio = 1.0; right.custom_minimum_size = Vector2(400, 0); columns.add_child(right)
@@ -109,15 +107,6 @@ func _port_hero(vm: Dictionary) -> Control:
 	var facility_row := HBoxContainer.new(); facility_row.add_theme_constant_override("separation", 6)
 	for facility in vm.get("facility_labels", []): facility_row.add_child(_badge(String(facility)))
 	column.add_child(facility_row); return hero
-
-
-func _map_panel(map_data: Dictionary) -> Control:
-	var panel := _panel(); var box := _content(panel)
-	var error_text := String(map_data.get("error_text", ""))
-	if not error_text.is_empty(): box.add_child(_label(error_text, 14, RED)); return panel
-	box.add_child(_heading("航路局", "北部海图", "%d 个已访问港口 · 点击港口查看记忆" % int(map_data.get("discovered", 0))))
-	var canvas: Variant = MAP_CANVAS_SCENE.instantiate(); canvas.ports = map_data.get("ports", []); canvas.routes = map_data.get("routes", []); canvas.labels = map_data.get("labels", {}); canvas.mouse_filter = Control.MOUSE_FILTER_STOP; canvas.port_clicked.connect(func(port_id: String): map_port_clicked.emit(port_id)); box.add_child(canvas)
-	return panel
 
 
 func _port_panel(vm: Dictionary) -> Control:

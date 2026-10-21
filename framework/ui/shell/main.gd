@@ -863,7 +863,6 @@ func _screen_overview(data: Dictionary) -> void:
 	screen.bind(_overview_model(data), Callable(self, "_tr"))
 	screen.navigation_requested.connect(_on_screen_navigation)
 	screen.command_requested.connect(_run_command)
-	screen.map_port_clicked.connect(_on_map_port_clicked)
 	screen.stage_toggle_requested.connect(_on_overview_stage_toggle)
 	screen.detail_toggle_requested.connect(_on_overview_detail_toggle)
 	_root_box.add_child(screen)
@@ -883,20 +882,8 @@ func _overview_model(data: Dictionary) -> Dictionary:
 	model["stage_available"] = _port_stage_available()
 	model["stage_mode"] = _overview_stage_mode and _port_stage_available()
 	model["overview_detail"] = _overview_detail
-	var map_result := _context.queries.execute(&"map.view")
-	if bool(map_result.get("ok", false)):
-		var map_data: Dictionary = map_result["data"].duplicate(true)
-		var labels := {}
-		var discovered := 0
-		for map_port in map_data.get("ports", []):
-			labels[String(map_port.get("id", ""))] = _tr(String(map_port.get("name_key", "")), String(map_port.get("id", "")))
-			if bool(map_port.get("visited", false)):
-				discovered += 1
-		map_data["labels"] = labels
-		map_data["discovered"] = discovered
-		model["map"] = map_data
-	else:
-		model["map"] = {"error_text": _error_text(map_result)}
+	# 4.3 / U6：详细总览不再挂旧线稿海图（`map_canvas` 已删除），全屏海图页是唯一
+	# 海图入口；`map.view` 仍供港口名等其它查询使用，但不再进入总览模型。
 	var contracts: Dictionary = model.get("contracts", {}).duplicate(true)
 	for key in ["main", "main_offer"]:
 		if contracts.get(key, null) is Dictionary:
@@ -2456,16 +2443,6 @@ func _on_screen_navigation(screen_id: StringName, params: Dictionary) -> void:
 	if screen_id == &"voyage":
 		_selected_destination = String(params.get("destination", ""))
 	_on_nav(String(screen_id))
-
-func _on_map_port_clicked(port_id: String) -> void:
-	if port_id == String(_last_port_view.get("current_port_id", "")):
-		_active_screen = "market"
-	else:
-		_memory_port_id = port_id
-		_active_screen = "port_memory"
-	_status_message = ""
-	_refresh(true)
-
 
 func _on_new_run() -> void:
 	var seed := 0

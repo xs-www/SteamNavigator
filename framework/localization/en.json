@@ -472,6 +472,7 @@
   "ui.clue.direction.NW": "North-west",
   "ui.clue.distance_range": "About %d–%d hours of sailing",
   "ui.clue.reliability_hint": "Source: %s",
+  "ui.clue.attempts": "Tried %d time(s)",
   "ui.clue.feasible": "Ready to sail",
   "ui.clue.infeasible": "Cannot sail",
   "ui.label.direction": "Direction",

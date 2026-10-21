@@ -403,8 +403,8 @@ func test_explore_clue_discovers_a_port_through_the_presentation() -> void:
 	_assert_settlement_shows_explore_result(shell, context, "ui.explore.result.discovered")
 
 
-## 探索演出 · 失败：发现 roll 高于概率 → 线索作废、漂流到最近的己知港（出发港），
-## 结算页说明失败与额外损耗；演出同样走完整套流程。
+## 探索演出 · 失败：发现 roll 高于概率 → 线索**保留**（4.3 / U3）、漂流到最近的
+## 己知港（出发港），结算页说明失败、线索保留与额外损耗；演出同样走完整套流程。
 func test_explore_failure_drifts_back_and_scraps_the_clue() -> void:
 	var bundle := _mount(4321)
 	var shell: Control = bundle["shell"]
@@ -421,12 +421,22 @@ func test_explore_failure_drifts_back_and_scraps_the_clue() -> void:
 	assert_eq(String(explore_summary.get("port_id", "")), origin,
 		"the drift destination is the nearest discovered harbour (the origin)")
 	assert_eq(String(context.state.current_port_id()), origin, "the ship drifts back into the origin harbour")
-	assert_true(ClueService.active(context.state).is_empty(), "a failed clue leaves the active list")
-	assert_true(Array(context.state.ensure_clues().get("failed", [])).has(String(clue.get("id", ""))),
-		"the clue is recorded as failed instead of being deleted")
+	# 4.3 / U3：失败不消耗线索 —— 仍在 active，failed 列表不再新增，可再次出航。
+	assert_eq(ClueService.active(context.state).size(), 1, "a failed clue stays in the active log")
+	assert_true(ClueService.find_clue(context.state, String(clue.get("id", ""))).get("attempts", 0) == 1,
+		"the failed attempt is recorded")
+	assert_false(Array(context.state.ensure_clues().get("failed", [])).has(String(clue.get("id", ""))),
+		"the failed clue is not moved into the failed list")
 	assert_true(float(explore_summary.get("durability_loss", 0.0)) > 0.0,
 		"drifting costs durability")
+	assert_true(bool(explore_summary.get("clue_retained", false)),
+		"the summary tells the settlement screen the clue is kept")
 	_assert_settlement_shows_explore_result(shell, context, "ui.explore.result.failed")
+	var settlement_texts := _label_texts(shell._root_box)
+	assert_true(_label_text_contains(shell._root_box, context.translate("ui.explore.clue_retained")),
+		"the settlement screen says the clue was kept, not discarded")
+	assert_false(settlement_texts.has(context.translate("ui.explore.clue_failed")),
+		"the settlement screen no longer claims the clue was discarded")
 
 
 ## 探索链路公共前置的 4.2 版本：把出发煤量压到「本程需求 × 1.05」，`explore.start`

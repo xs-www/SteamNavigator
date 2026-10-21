@@ -903,6 +903,40 @@ func _find_descendant(root: Node, predicate: Callable) -> Node:
 	return null
 
 
+# ── Stage 4.3: routes are only drawn for the selected harbour (U5) ──
+
+## 4.3 / U5：普通航线只在选中港口时显示；未选中（含选中线索）时一条都不画。
+func test_routes_are_only_visible_for_the_selected_port() -> void:
+	var routes := [
+		{"from": "port_a", "to": "port_b"},
+		{"from": "port_b", "to": "port_c"},
+		{"from": "port_c", "to": "port_a"},
+	]
+	assert_eq(SNSeaChartView.visible_routes(routes, "").size(), 0,
+		"no selected harbour means no ordinary routes")
+	assert_eq(SNSeaChartView.visible_routes(routes, "port_a").size(), 2,
+		"selecting a harbour keeps only its incident routes")
+	var selected := SNSeaChartView.visible_routes(routes, "port_b")
+	assert_eq(selected.size(), 2, "port_b has two incident routes")
+	for route in selected:
+		assert_true(String((route as Dictionary).get("from", "")) == "port_b"
+			or String((route as Dictionary).get("to", "")) == "port_b",
+			"every kept route touches the selected harbour")
+	assert_eq(SNSeaChartView.visible_routes(routes, "port_missing").size(), 0,
+		"an unknown selected id matches nothing")
+	# 线索与港口选中互斥：选中线索清掉港口选中后，普通航线随之隐藏。
+	var view := SNSeaChartView.new()
+	view.bind(CLUE_VM)
+	view.select_port("port_a")
+	assert_eq(SNSeaChartView.visible_routes(routes, view.get_selected_port()).size(), 2,
+		"a selected harbour exposes its routes")
+	view.select_clue("clue:1")
+	assert_eq(view.get_selected_port(), "", "selecting a clue clears the harbour selection")
+	assert_eq(SNSeaChartView.visible_routes(routes, view.get_selected_port()).size(), 0,
+		"with a clue selected no ordinary routes are drawn")
+	view.free()
+
+
 # ── Exploration phase 4.1: clues / unknown destination ──
 
 const CLUE_VM := {

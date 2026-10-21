@@ -155,6 +155,11 @@
         "default_starting_build": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },
+        "twin_world_size": {
+          "type": "number",
+          "minimum": 64,
+          "maximum": 1024
+        },
         "exploration": {
           "type": "object",
           "additionalProperties": false,
@@ -163,6 +168,16 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "fog_port_reveal_ratio": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 0.5
+            },
+            "fog_vision_ratio": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 0.5
             },
             "intel_clue_cost": {
               "type": "number",

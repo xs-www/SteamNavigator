@@ -300,6 +300,15 @@ func _build_clue_state() -> void:
 		level_label.add_theme_color_override("font_color", Color("7fc8e8"))
 		vbox.add_child(level_label)
 
+	# 4.3 / U3：失败不消耗线索，面板提示已经尝试过几次（0 次不显示）。
+	var attempts := int(_clue.get("attempts", 0))
+	if attempts > 0:
+		var attempts_label := Label.new()
+		attempts_label.text = _tr_or("ui.clue.attempts", "已尝试 %d 次") % attempts
+		attempts_label.add_theme_font_size_override("font_size", 11)
+		attempts_label.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+		vbox.add_child(attempts_label)
+
 	if _clue.has("direction_angle"):
 		var angle := float(_clue.get("direction_angle", 0.0))
 		var compass := compass_key(angle)

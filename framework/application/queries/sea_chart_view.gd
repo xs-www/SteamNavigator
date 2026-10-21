@@ -13,6 +13,9 @@ extends RefCounted
 ## - 航线读取 `WorldMap.edges`（生成期预计算的只读表）；旧存档没有该表时回退到
 ##   现场计算（`_compute_routes`），这条回退路径不改状态。
 ## - 迷雾网格按 `max(width, height)/80` 步长降采样，便于 UI 渲染。
+## - 迷雾半径（4.3 / U1）来自内容比例：`min(world.w, world.h) × fog_*_ratio`
+##   （`ExplorationRules.fog_radii`），输出 `fog_radii` 供 UI 软圆与演出使用；
+##   旧存档没有迷雾网格时按同一半径惰性建一份只读网格。
 ## - 船只坐标取当前港口或 `voyage.ship_position`（在航时）。
 ## - 探索系统（阶段 4.1）追加三组只读数据：`clues` 是 `ClueService.view` 的等级裁剪
 ##   视图（不含 `target_port_id` / `credibility` / 真实 `search_zone`）再合并
@@ -26,8 +29,8 @@ extends RefCounted
 ##   不能假装安全。
 ## @end-static-doc
 
-## Radii are owned by FogOps (domain); the query aliases them so the UI-facing
-## defaults stay addressable here without domain code depending on this layer.
+## Legacy fallbacks only (fixtures without content rules); the real radii come
+## from `ExplorationRules.fog_radii()` so the UI never owns a fixed world-unit fog.
 const DEFAULT_MIN_VISION_RADIUS := FogOps.DEFAULT_MIN_VISION_RADIUS
 const DEFAULT_PORT_REVEAL_RADIUS := FogOps.DEFAULT_PORT_REVEAL_RADIUS
 
@@ -46,6 +49,8 @@ static func execute(params: Dictionary, context) -> Dictionary:
 	var campaign_world := state.campaign_world()
 	var discovered_ids: Array = campaign_world.get("discovered_port_ids", [])
 	var visited_ids: Array = campaign_world.get("visited_port_ids", [])
+	var hub: RegistryHub = context.registries
+	var fog_radii := ExplorationRules.fog_radii(state, hub, world)
 
 	# Fog state: read directly from GameState.data to avoid FogOps class resolution issues
 	var fog := FogGrid.new()
@@ -59,9 +64,10 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		if coastal is Dictionary:
 			coastal_cell_count = (coastal as Dictionary).size()
 
-	# If no fog grid exists yet, create a default one for the UI
+	# If no fog grid exists yet, create a default one for the UI using the content
+	# fog radius (4.3 / U1), not a fixed 20-unit radius.
 	if fog.is_empty():
-		fog = FogGrid.new(world.bounds, DEFAULT_MIN_VISION_RADIUS)
+		fog = FogGrid.new(world.bounds, float(fog_radii.get("vision", DEFAULT_MIN_VISION_RADIUS)))
 
 	# Build landmass data (only those near explored areas)
 	var landmasses_data: Array = []
@@ -75,7 +81,6 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		})
 
 	# Build port data with discovery levels
-	var hub: RegistryHub = context.registries
 	var ports_data: Array = []
 	for port in world.ports:
 		var is_discovered := discovered_ids.has(port.id)
@@ -193,6 +198,7 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		"ports": ports_data,
 		"routes": routes_data,
 		"fog": fog_grid_data,
+		"fog_radii": fog_radii,
 		"coastal_cell_count": coastal_cell_count,
 		"current_port_id": current_port,
 		"ship_position": ship_pos,
@@ -356,6 +362,10 @@ static func _empty_result() -> Dictionary:
 		"ports": [],
 		"routes": [],
 		"fog": {},
+		"fog_radii": {
+			"vision": DEFAULT_MIN_VISION_RADIUS,
+			"port_reveal": DEFAULT_PORT_REVEAL_RADIUS,
+		},
 		"coastal_cell_count": 0,
 		"current_port_id": "",
 		"ship_position": {"x": 0.0, "y": 0.0},

@@ -2,7 +2,7 @@ class_name ExploreVoyageService
 extends RefCounted
 ## @static-doc
 ## 作用：探索航次的领域执行——出航（扣工资与煤水、写探索航次与在航标记、抽定发现 roll）、
-## 资源告急决策（继续 / 掉头）、抵达结算（发现港口 + 迷雾揭示 / 失败漂流 + 线索作废）。
+## 资源告急决策（继续 / 掉头）、抵达结算（发现港口 + 迷雾揭示 / 失败漂流 + 线索保留）。
 ##
 ## - 关键依赖：`ClueService`、`ExplorationCalculator`、`ExplorationRules`、`WorldOps`、
 ##   `FogOps`、`MapOps`、`ShipOps`、`RngService.STREAM_EXPLORATION`
@@ -16,8 +16,10 @@ extends RefCounted
 ##   结算只比较 `outcome_roll < discovery_chance`，同 seed 同状态可复现。
 ## - 成功：坐标世界 `discover_port_id` + `mark_visited` + `FogOps.reveal_arrival`，抽象地图
 ##   同步发现 / 访问（贸易、市场、海图都读它），线索 resolved，进入目标港。
-## - 失败：线索 failed（不删除），漂到**距搜索区最近的已发现港**并按其入港处理（记录访问
-##   + 揭示泊位），耐久 / 煤 / 水按规则扣减且不为负，时间加 `drift_hours`。
+## - 失败（4.3 / U3）：线索**保留在 active**（只累加 `attempts` / `last_attempt_at`，
+##   可再次 `start`），漂到**距搜索区最近的已发现港**并按其入港处理（记录访问 +
+##   揭示泊位），耐久 / 煤 / 水按规则扣减且不为负，时间加 `drift_hours`。结算摘要
+##   的 `explore.attempts` 报告累计尝试次数，`settlement_screen` 据此显示「线索保留」。
 ## - 掉头：额外消耗 `coal_used/water_used * turnback_extra_ratio`，时间前进半个航程，
 ##   回出发港，线索保持 active。
 ## - 结算 `summary.explore` 与 `settlement_screen` 现有字段兼容；领域事件
@@ -223,6 +225,7 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 		water_deducted,
 		0.0,
 		0.0,
+		0,
 		events,
 		services
 	)
@@ -254,6 +257,7 @@ static func settle(context) -> Dictionary:
 	var chance := ExplorationRules.discovery_chance(rules, credibility)
 	var success := target_id != "" and float(voyage.get("outcome_roll", 1.0)) < chance
 	var world := WorldOps.world_map(state)
+	var fog_radii := ExplorationRules.fog_radii(state, hub, world)
 
 	var arrival_time := maxf(float(voyage.get("arrival_time", state.now())), state.now())
 	state.set_now(arrival_time)
@@ -264,6 +268,7 @@ static func settle(context) -> Dictionary:
 	var extra_water := 0.0
 	var durability_loss := 0.0
 	var delayed_hours := 0.0
+	var attempts := int(clue.get("attempts", 0)) if not clue.is_empty() else 0
 	var events: Array = []
 
 	if success:
@@ -273,7 +278,7 @@ static func settle(context) -> Dictionary:
 		var newly_discovered := WorldOps.discover_port_id(state, destination)
 		_enter_port(state, destination, true)
 		if not target_port.is_empty():
-			FogOps.reveal_arrival(state, world, target_port)
+			FogOps.reveal_arrival(state, world, target_port, fog_radii)
 		ClueService.mark_resolved(state, clue_id)
 		state.push_notice(
 			"ui.notice.exploration_found",
@@ -306,8 +311,9 @@ static func settle(context) -> Dictionary:
 		if not world.is_empty():
 			var drift_port := world.get_port(destination)
 			if not drift_port.is_empty():
-				FogOps.reveal_arrival(state, world, drift_port)
-		ClueService.mark_failed(state, clue_id)
+				FogOps.reveal_arrival(state, world, drift_port, fog_radii)
+		# 4.3 / U3：失败不消耗线索——留在 active、记录尝试，玩家可再次出航。
+		attempts = ClueService.mark_attempt_failed(state, clue_id, float(state.now()))
 		state.push_notice(
 			"ui.notice.exploration_failed",
 			{"port": WorldOps.port_display_key(world, destination)}
@@ -319,6 +325,7 @@ static func settle(context) -> Dictionary:
 				"destination": destination,
 				"clue_id": clue_id,
 				"arrival_time": float(state.now()),
+				"attempts": attempts,
 			},
 		})
 
@@ -346,6 +353,7 @@ static func settle(context) -> Dictionary:
 		extra_water,
 		durability_loss,
 		delayed_hours,
+		attempts,
 		events,
 		services
 	)
@@ -400,6 +408,7 @@ static func _summary(
 	extra_water: float,
 	durability_loss: float,
 	delayed_hours: float,
+	attempts: int,
 	events: Array,
 	services: Dictionary = {}
 ) -> Dictionary:
@@ -426,6 +435,9 @@ static func _summary(
 			"extra_coal": extra_coal,
 			"extra_water": extra_water,
 			"durability_loss": durability_loss,
+			# 4.3 / U3：失败后线索保留，摘要报告累计尝试次数供结算页说明。
+			"attempts": attempts,
+			"clue_retained": result_code == "failed",
 		},
 		"events": events,
 	}
