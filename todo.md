@@ -6,6 +6,7 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
+- [ ] 阶段 4.5 新手剧情 / 教学系统（契约已确认，4.5.1 起实现）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条；补给并市、酒馆替换情报页、船厂限量。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
 
 ## Pending
 

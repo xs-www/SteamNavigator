@@ -6,6 +6,7 @@
 - [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md) — 2.5D 固定舞台升级方案（阶段 1 持续落地中）
 - [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) — 正式版航海图系统设计；阶段 1–3 已实现，后续阶段仍在本文件迭代
 - [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) — 海图阶段 4 探索系统实现契约（4.1/4.2 已实现；4.3 体验修正的 8 条反馈、决策与分片计划见 §10，待实现）
+- [STORY_TUTORIAL.md](STORY_TUTORIAL.md) — 阶段 4.5 新手剧情 / 教学系统实现契约（Planned，2026-10-22：五幕剧情、剧情状态机、功能门禁、并市 / 酒馆 / 保底探索 / 船厂分片）
 - [ASSET_MAP.md](ASSET_MAP.md) — 美术 / 音频资产映射与来源（随批次持续更新）
 - [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) — 近期开发计划、优先级与验收标准
 - [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md) — 正式版路线图（草案，随里程碑更新）

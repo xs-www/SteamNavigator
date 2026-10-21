@@ -14,6 +14,7 @@
 - 设计文档生命周期（Active / Finalized / Archived）：[docs/README.md](docs/README.md) — 已定稿生效契约见 [docs/specs/](docs/specs/README.md)，历史归档见 [docs/archive/](docs/archive/README.md)
 - 静态代码文档：[docs/static/README.md](docs/static/README.md)
 - 探索系统（阶段 4）实现契约：[docs/design/EXPLORATION_SYSTEM.md](docs/design/EXPLORATION_SYSTEM.md)
+- 新手剧情 / 教学系统（阶段 4.5）实现契约：[docs/design/STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
 - 美术/音频资产映射：[docs/design/ASSET_MAP.md](docs/design/ASSET_MAP.md)
 - 物品建模半工作流（派发给子代理）：[docs/design/MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md)
 - UI 原型与落地说明：[docs/design/UI_PROTOTYPE.md](docs/design/UI_PROTOTYPE.md)
