@@ -6,6 +6,11 @@ extends TestCase
 ## navigation disappears, and that the settlement screen is what the player ends
 ## on. Frame stepping is manual (`shell._process(dt)`), which keeps the演出
 ## deterministic in a headless run.
+##
+## 4.3.3 / U4 additionally asserts the ship is lit on the chart during the演出
+## (`AtSeaScreen.get_ship_vision_radius()` / `SNSeaChartView.has_ship_vision()`)
+## and that arriving — normal voyage or exploration settle — persists the fog met
+## along the route into `GameState.data["fog"]`.
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const EVENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/event_screen.gd")
@@ -117,6 +122,19 @@ func test_at_sea_ship_advances_along_the_route() -> void:
 	assert_false(at_sea.get_ship_world_position().is_equal_approx(first_position),
 		"the ship icon moves along the route instead of sitting at the origin")
 	assert_true(at_sea.get_chart().has_ship_position(), "the chart receives the animated ship position")
+	# 4.3.3 / U4：演出中船周有连续照亮（纯表现），半径来自 sea_chart.view 的
+	# fog_radii.vision，与领域迷雾同源。
+	assert_true(at_sea.get_ship_vision_radius() > 0.0,
+		"the normal voyage lights the chart around the ship (radius %.2f)" % at_sea.get_ship_vision_radius())
+	assert_true(at_sea.get_chart().has_ship_vision(), "the chart draws the soft glow around the ship")
+	var chart_radii: Variant = at_sea.get_chart().view_model.get("fog_radii", {})
+	if chart_radii is Dictionary:
+		assert_almost_eq(
+			at_sea.get_ship_vision_radius(),
+			float((chart_radii as Dictionary).get("vision", 0.0)),
+			0.0001,
+			"the演出 glow radius is the view model's content-derived vision radius"
+		)
 
 	# 船 icon 朝向移动方向：任意进度的艏向 = 航线在该处的切线方向，海图收到的
 	# heading 与航行页算出的完全一致（转弯时船头跟着航线转）。
@@ -355,6 +373,10 @@ func test_explore_clue_discovers_a_port_through_the_presentation() -> void:
 	var at_sea = _find_at_sea(shell)
 	assert_true(at_sea.get_chart().has_unknown_destination(),
 		"the chart draws the unknown destination marker during an exploration")
+	# 4.3.3 / U4：探索演出同样在船周照亮。
+	assert_true(at_sea.get_ship_vision_radius() > 0.0,
+		"the exploration演出 lights the chart around the ship (radius %.2f)" % at_sea.get_ship_vision_radius())
+	assert_true(at_sea.get_chart().has_ship_vision(), "the chart draws the soft glow during an exploration")
 	var unknown: Dictionary = at_sea.get_unknown_destination()
 	assert_eq(String(unknown.get("label_key", "")), "ui.label.unknown_destination",
 		"the ? marker is localized")
@@ -437,6 +459,65 @@ func test_explore_failure_drifts_back_and_scraps_the_clue() -> void:
 		"the settlement screen says the clue was kept, not discarded")
 	assert_false(settlement_texts.has(context.translate("ui.explore.clue_failed")),
 		"the settlement screen no longer claims the clue was discarded")
+
+
+## 4.3.3 / U4：探索结算是把实际航线沿途的迷雾写进存档（不是只在演出层画软圆）。
+## 出发（`explore.start`）不落账；抵达 `explore.settle` 后存档里的 EXPLORED 格子
+## 一定比出发前多，且海图网格仍是同一份（`state.data["fog"]`）。
+func test_explore_settle_persists_fog_along_the_sailed_route() -> void:
+	var bundle := _mount(4321)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var clue := _acquire_fixture_clue(context)
+	var explored_before := _fog_explored_count(context)
+	_request_exploration(shell, context, String(clue.get("id", "")), 0.0)
+	# 出发只点亮演出软圆：领域迷雾此刻还没变。
+	assert_eq(_fog_explored_count(context), explored_before,
+		"starting an exploration must not persist route fog yet (the演出 is presentation-only)")
+	assert_true(_drive_until(shell, func() -> bool: return _find_at_sea(shell) != null, 8.0),
+		"the chart page mounts")
+	var route: PackedVector2Array = _find_at_sea(shell).get_route_path()
+	assert_true(route.size() >= 2, "the exploration has a real route polyline")
+	assert_true(_drive_until(shell, func() -> bool: return shell._presentation == null, MAX_DRIVE_SECONDS),
+		"the exploration settles")
+	var explored_after := _fog_explored_count(context)
+	assert_true(explored_after > explored_before,
+		"settling the exploration persists route/berth fog (EXPLORED %d → %d)" % [
+			explored_before, explored_after,
+		])
+	var loaded := FogOps.load_fog_state(context.state)
+	assert_false(loaded.is_empty(), "the arrival leaves a persisted fog grid in the save")
+
+
+## 4.3.3 / U4：普通航行抵达同样把沿途迷雾写进存档（不只是探索专属）。
+func test_normal_voyage_arrival_persists_fog_along_the_route() -> void:
+	var bundle := _mount(4321)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var explored_before := _fog_explored_count(context)
+	var destination := _start_voyage(shell, context)
+	assert_true(_drive_until(shell, func() -> bool: return shell._presentation == null, MAX_DRIVE_SECONDS),
+		"the voyage finishes on its own")
+	assert_eq(String(shell._active_screen), "settlement", "arrival lands on the settlement screen")
+	assert_eq(String(context.state.current_port_id()), destination, "the ship is in the destination harbour")
+	var explored_after := _fog_explored_count(context)
+	assert_true(explored_after > explored_before,
+		"the normal voyage's arrival persists route/berth fog (EXPLORED %d → %d)" % [
+			explored_before, explored_after,
+		])
+	var loaded := FogOps.load_fog_state(context.state)
+	assert_false(loaded.is_empty(), "a normal arrival leaves a persisted fog grid in the save")
+
+
+## 存档迷雾里 EXPLORED 格子的数量；没有迷雾（legacy 存档 / 未初始化）时返回 0。
+func _fog_explored_count(context: AppContext) -> int:
+	var loaded := FogOps.load_fog_state(context.state)
+	if loaded.is_empty():
+		return 0
+	var fog: FogGrid = loaded.get("fog", FogGrid.new())
+	if fog.is_empty():
+		return 0
+	return int(fog.count_cells_by_state()[FogGrid.CellState.EXPLORED])
 
 
 ## 探索链路公共前置的 4.2 版本：把出发煤量压到「本程需求 × 1.05」，`explore.start`

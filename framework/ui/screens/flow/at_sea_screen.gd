@@ -20,6 +20,10 @@ extends VBoxContainer
 ## - **探索演出**（探索系统 4.1）：`bind()` 收到 `unknown_destination: {x, y, label_key}`
 ##   时把未知终点交给海图（虚线预测线 + `?` 标记），航程条右侧目的地显示 `？`
 ##   （`label_key`，通常 `ui.label.unknown_destination`），起点仍显示港口名。
+## - **随船照亮**（4.3.3 / U4）：演出视野半径取 `sea_chart.view` 的
+##   `fog_radii.vision`（与领域同源，由 Core 比例推导），`bind()` 重建海图后与每次
+##   `set_presentation()` 都推给 `SNSeaChartView.set_ship_vision()`。纯表现：本页
+##   不查询后端、不写领域状态。
 ## - `skip_requested` 只表达意图；跳过后事件仍由 Shell 推给玩家。
 ## @end-static-doc
 
@@ -46,6 +50,9 @@ var _path: PackedVector2Array = PackedVector2Array()
 var _progress: float = 0.0
 ## 上一次算出的船艏向（世界弧度）。路径退化或相邻采样重合时沿用它，避免 icon 抖。
 var _last_heading: float = 0.0
+## 演出随船照亮半径（世界单位）。来自海图视图模型的 `fog_radii.vision`，
+## 只影响画在船周的多层软圆，不写领域状态。
+var _ship_vision_radius: float = 0.0
 var _chart: SNSeaChartView
 var _progress_bar: ProgressBar
 var _clock_label: Label
@@ -64,6 +71,7 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	var unknown: Variant = vm.get("unknown_destination", null)
 	_unknown_destination = unknown if unknown is Dictionary else {}
 	_route_path = unpack_route_path(vm.get("route_path", null))
+	_ship_vision_radius = _model_ship_vision_radius()
 	_path = _resolve_path()
 	_rebuild()
 	# 探索演出：把未知终点画到海图上（虚线预测线 + `?`）。必须在 `_rebuild()` 之后，
@@ -95,6 +103,7 @@ func set_presentation(snapshot: Dictionary) -> void:
 			_format_rate(rate),
 		]
 	_chart.set_ship_pose(_position_at(_progress), _heading_at(_progress))
+	_chart.set_ship_vision(_ship_vision_radius)
 	_chart.set_frame_scale(float(snapshot.get("chart_zoom_scale", 1.0)))
 
 
@@ -134,6 +143,11 @@ func get_ship_heading() -> float:
 	return _heading_at(_progress)
 
 
+## 演出随船照亮半径（世界单位）；0 表示这局没有可用的迷雾半径数据。
+func get_ship_vision_radius() -> float:
+	return _ship_vision_radius
+
+
 func _rebuild() -> void:
 	for child in get_children():
 		remove_child(child)
@@ -147,9 +161,20 @@ func _rebuild() -> void:
 	_chart.bind(_view_model, _tr)
 	# 航行页的海图是"铺满窗口的海"，不是港口里那张带边距的图表（验收反馈 F3）。
 	_chart.set_presentation_mode(true, _path)
+	# 重建会换掉海图实例，随船照亮要重新推给它（剧本每帧还会再推一次）。
+	_chart.set_ship_vision(_ship_vision_radius)
 	_apply_unknown_destination()
 	add_child(_chart)
 	add_child(_build_strip())
+
+
+## 演出照亮半径（世界单位）：只读 `sea_chart.view` 的 `fog_radii.vision`（与领域
+## 同源、已按内容比例推导），页面不查询后端、也不写任何状态。
+func _model_ship_vision_radius() -> float:
+	var radii: Variant = _view_model.get("fog_radii", null)
+	if not (radii is Dictionary):
+		return 0.0
+	return maxf(0.0, float((radii as Dictionary).get("vision", 0.0)))
 
 
 ## 把未知终点交给海图：探索演出画虚线预测线 + `?`，普通航行清掉。

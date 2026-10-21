@@ -22,6 +22,10 @@ extends RefCounted
 ##   的 `explore.attempts` 报告累计尝试次数，`settlement_screen` 据此显示「线索保留」。
 ## - 掉头：额外消耗 `coal_used/water_used * turnback_extra_ratio`，时间前进半个航程，
 ##   回出发港，线索保持 active。
+## - 迷雾沿途落账（4.3.3 / U4）：成功与失败漂流都在 `reveal_arrival` 之前对
+##   `voyage.route_path` 调用 `FogOps.trace_route`，把实际航线的沿海格子留成
+##   EXPLORED；掉头只采样去程前半段（`end_progress = 0.5`）。旧存档没有坐标世界时
+##   `trace_route` 自行 no-op。
 ## - 结算 `summary.explore` 与 `settlement_screen` 现有字段兼容；领域事件
 ##   `explore.started` / `explore.finished` 随结果返回，由命令总线发布。
 ## @end-static-doc
@@ -182,10 +186,18 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 	var duration := float(voyage.get("duration_hours", 0.0))
 	var arrival_time := maxf(state.now(), departure_time + duration * 0.5)
 	state.set_now(arrival_time)
+	var world := WorldOps.world_map(state)
+	# 掉头只走了去程的前半段：按 `end_progress = 0.5` 落账沿途迷雾（再入港前）。
+	FogOps.trace_route(
+		state,
+		world,
+		_route_polyline(voyage.get("route_path", [])),
+		ExplorationRules.fog_radii(state, context.registries, world),
+		0.5
+	)
 	var origin := String(voyage.get("origin", state.current_port_id()))
 	_enter_port(state, origin, true)
 
-	var world := WorldOps.world_map(state)
 	var port_name_key := WorldOps.port_display_key(world, origin)
 	var clue_id := String(voyage.get("clue_id", ""))
 	var zone: Dictionary = voyage.get("zone", {})
@@ -258,6 +270,9 @@ static func settle(context) -> Dictionary:
 	var success := target_id != "" and float(voyage.get("outcome_roll", 1.0)) < chance
 	var world := WorldOps.world_map(state)
 	var fog_radii := ExplorationRules.fog_radii(state, hub, world)
+	# 实际航线是出发时算好、存进 explore_voyage 的扁平数组；沿途迷雾在抵达/漂流前
+	# 一次性落账（4.3.3 / U4），港口路灯花仍由下面的 `reveal_arrival` 负责。
+	var route_path := _route_polyline(voyage.get("route_path", []))
 
 	var arrival_time := maxf(float(voyage.get("arrival_time", state.now())), state.now())
 	state.set_now(arrival_time)
@@ -277,6 +292,7 @@ static func settle(context) -> Dictionary:
 		# the visit in the coordinate campaign partition.
 		var newly_discovered := WorldOps.discover_port_id(state, destination)
 		_enter_port(state, destination, true)
+		FogOps.trace_route(state, world, route_path, fog_radii)
 		if not target_port.is_empty():
 			FogOps.reveal_arrival(state, world, target_port, fog_radii)
 		ClueService.mark_resolved(state, clue_id)
@@ -309,6 +325,8 @@ static func settle(context) -> Dictionary:
 		state.set_now(arrival_time + delayed_hours)
 		_enter_port(state, destination, true)
 		if not world.is_empty():
+			# 失败也真的走完了这条航线：沿途迷雾照常落账，再揭示漂流港的泊位。
+			FogOps.trace_route(state, world, route_path, fog_radii)
 			var drift_port := world.get_port(destination)
 			if not drift_port.is_empty():
 				FogOps.reveal_arrival(state, world, drift_port, fog_radii)
@@ -360,6 +378,16 @@ static func settle(context) -> Dictionary:
 	var result := Result.ok({"result": result_code, "destination": destination, "summary": summary}, events)
 	result["autosave"] = true
 	return result
+
+
+## `explore_voyage.route_path` 是 `WorldMap.edges` 同款扁平数组 `[x0,y0,…]`；
+## 转成折线交给 `FogOps.trace_route`。空/非法输入返回空折线（trace 自行 no-op）。
+static func _route_polyline(raw: Variant) -> PackedVector2Array:
+	if raw is PackedVector2Array:
+		return raw
+	if raw is Array:
+		return VoyagePresentation.unpack_path(raw as Array)
+	return PackedVector2Array()
 
 
 ## Records arrival in both the played map and the coordinate campaign partition.

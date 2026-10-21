@@ -5,6 +5,10 @@ class_name TestFogSystem
 ## Covers: FogGrid initialization, coordinate conversion, reveal_circle,
 ## update_ship_vision, coastal cell detection, alpha interpolation,
 ## serialization roundtrip, and FogOps integration.
+## 4.3.3 / U4 adds the route trace tests: `FogOps.trace_route` keeps coastal
+## cells EXPLORED along the sailed polyline, reverts ocean cells to BLACK,
+## honours `end_progress`, and no-ops without a world / with a single point;
+## `SNSeaChartView.ship_vision_rings` is asserted as a monotonically fading glow.
 
 const TEST_WORLD_SIZE := 400.0
 const TEST_VISION_RADIUS := 32.0
@@ -359,3 +363,123 @@ func test_no_fog_state_means_everything_visible() -> void:
 	# Without fog data, everything should be visible
 	assert_almost_eq(FogOps.get_visibility_at(state, Vector2(50.0, 50.0)), 0.0, 0.001, "no fog should mean fully visible")
 	assert_true(FogOps.is_position_visible(state, Vector2(50.0, 50.0)), "no fog should mean everything visible")
+
+
+# ── 4.3.3 (U4): 沿航线持久化沿途迷雾 ──
+
+## `trace_route` 沿折线采样船视：沿海格子留成 EXPLORED（设计文档 §3.2 的永久
+## 灰雾），海洋格子离开后回到 BLACK；迷雾网格写进 GameState（存档落账）。
+func test_trace_route_persists_coastal_cells_and_keeps_ocean_black() -> void:
+	var world := _coastal_fixture_world()
+	var state := GameState.new()
+	# 航线贴着南岸（y=33，离岸 3 单位）东西向走；视野半径 8 → 格子 2 单位。
+	var path := PackedVector2Array([Vector2(8.0, 33.0), Vector2(32.0, 33.0)])
+	FogOps.trace_route(state, world, path, {"vision": 8.0})
+
+	var loaded := FogOps.load_fog_state(state)
+	assert_false(loaded.is_empty(), "tracing a route must persist a fog grid")
+	if loaded.is_empty():
+		return
+	var fog: FogGrid = loaded["fog"]
+	# 靠岸格（离 polygon y=30 的边 1 单位）→ EXPLORED。
+	var coast := fog.world_to_grid(Vector2(21.0, 31.0))
+	assert_eq(fog.get_cell(coast.x, coast.y)["state"], FogGrid.CellState.EXPLORED,
+		"cells along the coastline must stay EXPLORED after the ship passes")
+	# 航线正下方但远离海岸的格子曾经可见，离开后按规则回 BLACK。
+	var ocean := fog.world_to_grid(Vector2(21.0, 39.0))
+	assert_eq(fog.get_cell(ocean.x, ocean.y)["state"], FogGrid.CellState.BLACK,
+		"ocean cells away from the coast revert to BLACK")
+	# 航线没到过的海域仍是 BLACK。
+	var untouched := fog.world_to_grid(Vector2(80.0, 80.0))
+	assert_eq(fog.get_cell(untouched.x, untouched.y)["state"], FogGrid.CellState.BLACK,
+		"cells the route never passed stay BLACK")
+
+
+## `end_progress` 只走前段：0.5 时后半程沿岸仍未知，走完整条航线后才变 EXPLORED。
+func test_trace_route_end_progress_stops_before_the_second_half() -> void:
+	var world := _second_half_coast_fixture_world()
+	var state := GameState.new()
+	var path := PackedVector2Array([Vector2(10.0, 78.0), Vector2(90.0, 78.0)])
+	# Cell centre (79,77) is 2 units off the south coast — inside the coastal band —
+	# and outside the final sample's vision so it settles at EXPLORED, not VISIBLE.
+	var coast := Vector2(78.0, 76.0)
+
+	FogOps.trace_route(state, world, path, {"vision": 8.0}, 0.5)
+	var half := FogOps.load_fog_state(state)
+	assert_false(half.is_empty(), "a half route still initialises the fog grid")
+	if not half.is_empty():
+		var fog: FogGrid = half["fog"]
+		var cell := fog.world_to_grid(coast)
+		assert_eq(fog.get_cell(cell.x, cell.y)["state"], FogGrid.CellState.BLACK,
+			"end_progress=0.5 must not reveal the second half of the route")
+
+	FogOps.trace_route(state, world, path, {"vision": 8.0}, 1.0)
+	var full := FogOps.load_fog_state(state)
+	assert_false(full.is_empty(), "the full route keeps the fog grid")
+	if not full.is_empty():
+		var fog: FogGrid = full["fog"]
+		var cell := fog.world_to_grid(coast)
+		assert_eq(fog.get_cell(cell.x, cell.y)["state"], FogGrid.CellState.EXPLORED,
+			"the full route reveals the coastal cells it passes in its second half")
+
+
+## 旧存档没有坐标世界 / 路径不足两点时 no-op：不创建迷雾、不写状态。
+func test_trace_route_is_noop_without_world_or_polyline() -> void:
+	var state := GameState.new()
+	FogOps.trace_route(
+		state, WorldMap.new(), PackedVector2Array([Vector2(0.0, 0.0), Vector2(10.0, 10.0)]),
+		{"vision": 8.0}
+	)
+	assert_true(FogOps.load_fog_state(state).is_empty(),
+		"a legacy save without world_map must not create fog")
+
+	var world := _coastal_fixture_world()
+	FogOps.trace_route(state, world, PackedVector2Array([Vector2(20.0, 20.0)]), {"vision": 8.0})
+	assert_true(FogOps.load_fog_state(state).is_empty(),
+		"a single-point path must not create fog")
+
+
+## 演出软圆的分层纯函数：半径向外单调增大，alpha 单调衰减到 0。
+func test_ship_vision_rings_decay_monotonically_to_zero() -> void:
+	var rings := SNSeaChartView.ship_vision_rings(8.0, 5)
+	assert_eq(rings.size(), 5, "the soft glow has one ring per step")
+	var previous_radius := 0.0
+	var previous_alpha := 1.0
+	for entry in rings:
+		var radius := float(entry["radius"])
+		var alpha := float(entry["alpha"])
+		assert_true(radius > previous_radius, "ring radii grow outwards monotonically")
+		assert_true(radius <= 8.0 + 0.0001,
+			"no ring may exceed the world-radius passed in (got %f)" % radius)
+		assert_true(alpha < previous_alpha, "ring alpha decays monotonically outwards")
+		previous_radius = radius
+		previous_alpha = alpha
+	assert_almost_eq(previous_radius, 8.0, 0.0001, "the outermost ring reaches the full radius")
+	assert_almost_eq(previous_alpha, 0.0, 0.0001, "the outermost ring fades to zero")
+	assert_true(SNSeaChartView.ship_vision_rings(0.0).is_empty(),
+		"no radius means no glow rings at all")
+
+
+## 100×100 世界、一座 (10,10)–(30,30) 的方形岛；南岸 y=30 外侧就是浅海。
+func _coastal_fixture_world() -> WorldMap:
+	var world := WorldMap.new()
+	world.bounds = Rect2(Vector2.ZERO, Vector2(100.0, 100.0))
+	var landmass := Landmass.new()
+	landmass.polygon = PackedVector2Array([
+		Vector2(10.0, 10.0), Vector2(30.0, 10.0), Vector2(30.0, 30.0), Vector2(10.0, 30.0),
+	])
+	world.landmasses.append(landmass)
+	return world
+
+
+## 100×100 世界、一座 (75,60)–(95,75) 的方形岛：长航线 0–50% 完全在开阔海面，
+## 50% 之后才贴近它的南岸，用来验证 `end_progress`。
+func _second_half_coast_fixture_world() -> WorldMap:
+	var world := WorldMap.new()
+	world.bounds = Rect2(Vector2.ZERO, Vector2(100.0, 100.0))
+	var landmass := Landmass.new()
+	landmass.polygon = PackedVector2Array([
+		Vector2(75.0, 60.0), Vector2(95.0, 60.0), Vector2(95.0, 75.0), Vector2(75.0, 75.0),
+	])
+	world.landmasses.append(landmass)
+	return world

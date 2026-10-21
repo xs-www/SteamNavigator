@@ -1,16 +1,47 @@
 class_name VoyageService
 extends RefCounted
-## Voyage execution: supplies, risk event, event choice, arrival settlement.
+## @static-doc
+## 作用：航行执行：校验预览、扣补给/工资、抽取事件、事件选择、抵达结算与失败回滚。
 ##
-## Arrival also keeps the coordinate-space twin world (`state.data["world_map"]`,
-## the nautical chart's data source) in step: `_complete_arrival` records the
-## visit via `WorldOps.mark_visited` and reveals the berth's fog through
-## `FogOps.reveal_arrival` (`_reveal_world_fog`). Absent `world_map` — legacy
-## saves — both are no-ops.
+## - 关键依赖：`VoyageCalculator`、`ShipOps`、`MapOps`、`ConditionEvaluator`、
+##   `EffectExecutor`、`ContractOps`、`NpcTraderSimulator`、`DebtService`、`SaveService`、
+##   `WorldOps` / `FogOps` / `ExplorationRules`（坐标世界与迷雾）
 ##
-## Stage 4.1: `_complete_arrival` also calls `ClueService.on_arrival(context)` so a
-## tavern rumour can be rolled on every arrival. It is purely additive: an empty
-## result (no roll / no target / clue cap) never blocks or fails the arrival.
+## ## 契约与约束
+## - 出航前把当前状态存入 `context.pre_voyage_state` 和 `pre_voyage` 存档槽。
+## - 风险事件概率对玩家隐藏；预览只暴露风险来源。事件最多提供 2 个加权抽样选项。
+## - 耐久归零或 `fail_voyage` 效果会把工作副本替换回出航前快照，并发布 voyage.failed。
+## - 抵达时统一推进时间、发现港口、结算打造订单（`CraftOps.settle_orders`，成品进
+##   下单港仓库并写入 `summary.completed_orders`）、结算主线/普通委托、推进 NPC、
+##   检查逾期、刷新普通委托池并自动存档。
+## - 工资通过 `state.record_expense()` 计入统计支出；委托收入在 ContractOps 结算时计入收入。
+## - 行动顺序固定：扣费/补给 → 生成 voyage → 选事件 → 若无事件立即抵达。
+## - 坐标世界（海图数据源）与抽象地图同步：`_complete_arrival` 记录访问并揭示泊位；
+##   4.3.3 / U4 起在揭示前先 `_trace_voyage_fog` 沿实际航线把沿途迷雾落账（沿海
+##   格子留 EXPLORED），旧存档没有 `world_map` 时这些调用全部 no-op。
+## - 4.1 起每次抵达还调用 `ClueService.on_arrival` 抽传闻线索；空结果（没抽中 /
+##   没有目标 / 上限已满）永不阻断或失败抵达。
+##
+## ## 重点逻辑
+## ### `start(context, destination_id, strategy_id)`
+## - 先调用 VoyageCalculator 生成可复现预览；feasible=false 时不修改状态。
+## - 工资、煤、水全部扣除后写入 `voyage` 快照；事件基础延误已计入 arrival_time。
+## - 事件选项仅保存 ID；选择时重新从注册表读取效果，避免存档注入效果对象。
+##
+## ### `choose_option(context, option_id)`
+## - 再次校验选项在本次抽样池中且条件成立，然后顺序执行效果。
+## - effect flags.voyage_failed 为真时恢复出航前状态，返回 ok + failed，以便 UI 展示。
+## - 成功后调用 `_complete_arrival()`；autosave 只在成功抵达后发生。
+##
+## ### `_complete_arrival(context)`
+## - 以 arrival_time 推进游戏时间并标记目的港 visited/discovered。
+## - `_trace_voyage_fog` 先从 `WorldMap.edges`（缺失时 `RouteCalculator` 的
+##   `bezier_path`，再缺就两港直线）采样沿途迷雾，`_reveal_world_fog` 再揭示泊位。
+## - 主线完成后 next_main_sequence+1，并生成下一段 main_offer；不自动接取。
+## - 普通 active 委托中目的港匹配者一起结算；其余保留。
+## - 调用 `ContractOps.refresh_normal_offers()` 整池刷新普通委托，summary.offers_refreshed=true。
+## - NPC 市场推进、债务逾期、统计与通知都在此统一处理。
+## @end-static-doc
 
 const OPPORTUNITY_CHANCE := 0.12
 const MAX_EVENT_DELAY_HOURS := 72.0
@@ -187,6 +218,42 @@ static func _reveal_world_fog(state: GameState, destination: String, hub: Regist
 	FogOps.reveal_arrival(state, world, port, ExplorationRules.fog_radii(state, hub, world))
 
 
+## Persists the fog met along a normal voyage (4.3.3 / U4): read the actual route
+## polyline between `voyage.origin` and `voyage.destination` from the coordinate
+## world's route table and sample it through `FogOps.trace_route` before the berth
+## reveal. Legacy worlds (no `world_map`) and voyages without a route are no-ops.
+static func _trace_voyage_fog(state: GameState, voyage: Dictionary, hub: RegistryHub) -> void:
+	var world := WorldOps.world_map(state)
+	if world.is_empty():
+		return
+	var origin := world.get_port(String(voyage.get("origin", "")))
+	var destination := world.get_port(String(voyage.get("destination", "")))
+	if origin.is_empty() or destination.is_empty():
+		return
+	FogOps.trace_route(
+		state,
+		world,
+		_route_path_between(world, origin, destination),
+		ExplorationRules.fog_radii(state, hub, world)
+	)
+
+
+## Worldwide route polyline between two harbours. The stored table uses `path`, the
+## on-the-fly `RouteCalculator` fallback uses `bezier_path`; a world with no edge for
+## the pair (legacy save / disconnected) falls back to the two-port straight line.
+static func _route_path_between(
+	world: WorldMap, from_port: WorldPort, to_port: WorldPort
+) -> PackedVector2Array:
+	var route := WorldOps.route_between(world, from_port, to_port)
+	for key in ["path", "bezier_path"]:
+		var raw: Variant = route.get(key, null)
+		if raw is PackedVector2Array and (raw as PackedVector2Array).size() >= 2:
+			return raw
+		if raw is Array and not (raw as Array).is_empty():
+			return VoyagePresentation.unpack_path(raw as Array)
+	return PackedVector2Array([from_port.position, to_port.position])
+
+
 static func _complete_arrival(context) -> Dictionary:
 	var state: GameState = context.state
 	var hub: RegistryHub = context.registries
@@ -200,9 +267,11 @@ static func _complete_arrival(context) -> Dictionary:
 	MapOps.discover(state, destination, true)
 	var newly_discovered := not was_discovered
 	# Keep the coordinate-space twin world (nautical chart) in step with the
-	# played map: record the visit in the campaign partition and reveal the
-	# berth's fog. Without `world_map` (legacy saves) both calls are no-ops.
+	# played map: record the visit in the campaign partition, persist the fog met
+	# along the actual route, then reveal the berth. Without `world_map` (legacy
+	# saves) all three calls are no-ops.
 	WorldOps.mark_visited(state, destination)
+	_trace_voyage_fog(state, voyage, hub)
 	_reveal_world_fog(state, destination, hub)
 
 	# Craft orders that finished while the ship was under way are delivered to

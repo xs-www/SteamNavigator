@@ -41,6 +41,10 @@ extends Control
 ## - **探索演出终点**：`set_unknown_destination(world_pos, label_key)` 画一条从当前船位
 ##   到未知终点的虚线预测线 + `?` 标记（迷雾之上、船 icon 之下）；
 ##   `clear_unknown_destination()` 在演出结束时清掉。
+## - **随船照亮**（4.3.3 / U4）：`set_ship_vision(world_radius)` 在船位周围画多层
+##   同心软圆（内亮外暗，无 shader / 新资产）。半径是世界单位、随 `_zoom` 缩放；
+##   它只是表现，不写领域状态。图层在迷雾与已探索陆地剪影之上、航线/港口图标之下，
+##   不遮挡船 icon 与线索。`ship_vision_rings()` 是纯函数，测试可直接断言衰减。
 ## @end-static-doc
 
 signal port_clicked(port_id: String)
@@ -75,6 +79,11 @@ const COLOR_PORT_VISITED := Color("7fc8e8")
 const COLOR_PORT_DISCOVERED := Color("8fd694")
 const COLOR_PORT_UNKNOWN := Color(0.46, 0.54, 0.58)
 const COLOR_SHIP := Color(0.95, 0.85, 0.45)
+## 随船照亮的暖光（4.3.3 / U4）：多层同心软圆叠加，中心最亮、边缘衰减到 0。
+const COLOR_SHIP_VISION := Color(0.95, 0.87, 0.58)
+const SHIP_VISION_RINGS := 6
+const SHIP_VISION_MAX_ALPHA := 0.16
+const SHIP_VISION_CORE_ALPHA := 0.16
 const COLOR_BRASS := Color("e1c487")
 const COLOR_INK := Color("d7e3ea")
 ## 线索图形用黄铜色系：普通 = 半透明，选中 = 亮黄铜。与港口图标的蓝绿/金色区分开，
@@ -138,6 +147,9 @@ var _ship_override: Variant = null
 ## is actually moving; saves without route data keep the last known heading.
 var _ship_heading: float = 0.0
 var _has_ship_heading: bool = false
+## 随船照亮半径（世界单位，0 = 关闭）。航行页每帧从 `fog_radii.vision` 推入；
+## 纯表现数据，不进领域状态。
+var _ship_vision_radius: float = 0.0
 ## 航行演出取景模式：cover 铺满 + 航线包围盒保底（验收反馈 F3）。
 var _presentation_mode: bool = false
 ## 演出取景倍数：1 = 稳态取景，>1 = 近景（验收反馈 F2）。
@@ -274,6 +286,29 @@ func clear_ship_position() -> void:
 
 func has_ship_position() -> bool:
 	return _ship_override != null
+
+
+## 演出中的随船照亮（4.3.3 / U4）：在船位周围画多层同心软圆，半径 `world_radius`
+## 是世界单位（随 `_zoom` 缩放）。它只是表现，不写领域状态；0 表示关闭。
+func set_ship_vision(world_radius: float) -> void:
+	_ship_vision_radius = maxf(0.0, world_radius)
+	queue_redraw()
+
+
+## 当前随船照亮半径（世界单位）；0 = 没有照亮。
+func get_ship_vision() -> float:
+	return _ship_vision_radius
+
+
+func has_ship_vision() -> bool:
+	return _ship_vision_radius > 0.0
+
+
+func clear_ship_vision() -> void:
+	if _ship_vision_radius <= 0.0:
+		return
+	_ship_vision_radius = 0.0
+	queue_redraw()
 
 
 ## 探索演出的未知终点：世界坐标 + 本地化标签键（通常 `ui.label.unknown_destination`）。
@@ -494,11 +529,11 @@ func _process(delta: float) -> void:
 	if view_model.is_empty():
 		return
 	_time += delta
-	# Only redraw when needed (current port pulse, ship movement, clue pulse)
+	# Only redraw when needed (current port pulse, ship movement, clue pulse, soft vision)
 	var at_sea := bool(view_model.get("at_sea", false)) or _ship_override != null
 	var current_port := String(view_model.get("current_port_id", ""))
 	var has_animated_markers := not get_clues().is_empty() or has_unknown_destination()
-	if at_sea or not current_port.is_empty() or has_animated_markers:
+	if at_sea or not current_port.is_empty() or has_animated_markers or _ship_vision_radius > 0.0:
 		queue_redraw()
 
 
@@ -516,6 +551,9 @@ func _draw() -> void:
 	# Charted islands keep a dim silhouette above the grey fog so the landmass reads
 	# as a whole instead of a coastal fringe.
 	_draw_landmasses(true)
+	# 随船照亮在迷雾/陆地剪影之上、航线与港口图标之下：它照亮地形，但不遮挡
+	# 航线、港口与线索这些“玩家已知信息”。
+	_draw_ship_vision()
 	_draw_routes()
 	# 线索与未知终点都在迷雾之上：它们是"玩家已经拿到的情报"，不是地形。船 icon
 	# 最后画，演出的船始终压在预测线与 ? 标记之上。
@@ -1157,6 +1195,51 @@ func _draw_ports() -> void:
 			var text_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
 			draw_string(font, screen_pos + Vector2(-text_size.x * 0.5, r + 14),
 				label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, COLOR_BRASS)
+
+
+## 随船照亮的同心软圆（4.3.3 / U4）。外圈先画、内圈后画，中心叠加出最亮的暖光，
+## 边缘平滑衰减到没有；不引入 shader 或新资产。
+func _draw_ship_vision() -> void:
+	if _ship_vision_radius <= 0.0:
+		return
+	var center := world_to_screen(_current_ship_world())
+	var pixel_radius := _ship_vision_radius * _zoom
+	if pixel_radius < 1.0:
+		return
+	var rings := ship_vision_rings(_ship_vision_radius, SHIP_VISION_RINGS)
+	for index in range(rings.size() - 1, -1, -1):
+		var ring: Dictionary = rings[index]
+		var radius_px := float(ring.get("radius", 0.0)) * _zoom
+		var alpha := float(ring.get("alpha", 0.0))
+		if radius_px < 0.5 or alpha <= 0.0:
+			continue
+		draw_circle(center, radius_px, Color(
+			COLOR_SHIP_VISION.r, COLOR_SHIP_VISION.g, COLOR_SHIP_VISION.b, alpha
+		))
+	# 核心的一点亮：船正下方始终像被提灯照着，软圆中心不会留出一个空斑。
+	draw_circle(center, maxf(2.0, pixel_radius * 0.22),
+		Color(COLOR_SHIP_VISION.r, COLOR_SHIP_VISION.g, COLOR_SHIP_VISION.b,
+			SHIP_VISION_CORE_ALPHA))
+
+
+## 软圆的同心环（纯函数）：返回 `[{radius, alpha}, ...]`，半径从
+## `radius_world / steps` 单调增长到 `radius_world`，alpha 单调衰减、最后一环为 0。
+## 供 `_draw_ship_vision()` 使用，也便于无头测试不渲染就断言衰减形状。
+static func ship_vision_rings(
+	radius_world: float, steps: int = SHIP_VISION_RINGS
+) -> Array:
+	var rings: Array = []
+	var radius := maxf(0.0, radius_world)
+	if radius <= 0.0:
+		return rings
+	var count := maxi(2, steps)
+	for index in count:
+		var fraction := float(index + 1) / float(count)
+		rings.append({
+			"radius": radius * fraction,
+			"alpha": SHIP_VISION_MAX_ALPHA * pow(1.0 - fraction, 1.5),
+		})
+	return rings
 
 
 func _draw_ship() -> void:

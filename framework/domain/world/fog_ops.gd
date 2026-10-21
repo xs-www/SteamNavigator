@@ -9,6 +9,9 @@ extends RefCounted
 ## - `reveal_port` 使用 `FogGrid.reveal_circle` 揭示已发现港口周边。
 ## - `save_fog_state` / `load_fog_state` 持久化迷雾网格与海岸单元集合。
 ## - `reveal_arrival` 是抵达钩子：揭示泊位并应用船视，首次调用时惰性建网格。
+## - `trace_route`（4.3.3 / U4）是航程落账钩子：沿实际航线按步长采样船视，把沿海
+##   格子留成 EXPLORED；它**不揭示港口**，路灯花由调用方随后 `reveal_arrival` 完成。
+##   旧存档没有坐标世界（空 `WorldMap`）或路径少于 2 点时整段 no-op。
 ## - 半径不再由框架写死：调用方从 `ExplorationRules.fog_radii()`（`min(世界短边) ×
 ##   Core ratio`）取 `{vision, port_reveal}` 传入。下面的 `DEFAULT_*` 只作为
 ##   旧调用 / 测试夹具的防御兜底，正常内容路径必须传 `radii`。
@@ -161,3 +164,72 @@ static func reveal_arrival(
 	reveal_port(fog, port, reveal_radius)
 	update_ship_vision(fog, port.position, vision_radius, coastal)
 	save_fog_state(state, fog, coastal)
+
+
+## 沿航线持久化沿途迷雾（4.3.3 / U4）：在折线上按步长逐点调用
+## `update_ship_vision`，于是沿海格子被“路过”后留成 EXPLORED，海洋格子随后回到
+## BLACK（§3.2 的离开即回黑雾规则）；最后只保留终点处的一小片 VISIBLE。
+##
+## - 旧存档没有坐标世界（空 `WorldMap`）或路径少于 2 点时直接 no-op，不创建迷雾。
+## - 首次调用会像 `reveal_arrival` 一样惰性建网格（用内容推导的 vision 半径）；
+##   旧存档已有网格则保留其 `cell_size`。
+## - `end_progress` 控制只走前段（0.5 = 掉头半程），默认走完整条航线。
+## - **不揭示港口**：路灯花由调用方随后 `reveal_arrival` 完成，避免重复职责。
+## - 步长取 `vision * 0.5` 且不小于 `cell_size`，保证连续照亮不漏格。
+static func trace_route(
+	state: GameState,
+	world: WorldMap,
+	path: PackedVector2Array,
+	radii: Dictionary,
+	end_progress: float = 1.0
+) -> void:
+	if state == null or world == null or world.is_empty() or path.size() < 2:
+		return
+	var vision_radius := maxf(1.0, float(radii.get("vision", DEFAULT_MIN_VISION_RADIUS)))
+	var fog_state := load_fog_state(state)
+	var fog: FogGrid = fog_state.get("fog", FogGrid.new())
+	var coastal: Dictionary = fog_state.get("coastal_cells", {})
+	if fog.is_empty():
+		fog = create_fog_grid(world, vision_radius)
+		coastal = mark_coastal_cells(fog, world)
+	var step := maxf(fog.cell_size, vision_radius * 0.5)
+	for sample in _sample_route(path, step, end_progress):
+		update_ship_vision(fog, sample, vision_radius, coastal)
+	save_fog_state(state, fog, coastal)
+
+
+## 折线上按弧长均匀采样，返回从起点到 `end_progress * 总长` 的全部采样点（含两端）。
+## 纯函数、不建网格，`trace_route` 与测试可以分别验证「走多远」与「留下什么」。
+static func _sample_route(
+	path: PackedVector2Array, step: float, end_progress: float
+) -> PackedVector2Array:
+	var samples := PackedVector2Array()
+	if path.size() < 2:
+		return samples
+	var total := 0.0
+	for index in range(1, path.size()):
+		total += path[index - 1].distance_to(path[index])
+	var limit := total * clampf(end_progress, 0.0, 1.0)
+	if limit <= 0.0:
+		samples.append(path[0])
+		return samples
+	var along := 0.0
+	var stride := maxf(0.001, step)
+	while along < limit:
+		samples.append(_point_at_distance(path, along))
+		along += stride
+	samples.append(_point_at_distance(path, limit))
+	return samples
+
+
+## 折线上距起点 `distance` 的世界点；超出总长时返回终点。
+static func _point_at_distance(path: PackedVector2Array, distance: float) -> Vector2:
+	var remaining := maxf(0.0, distance)
+	for index in range(1, path.size()):
+		var segment := path[index - 1].distance_to(path[index])
+		if segment <= 0.0001:
+			continue
+		if remaining <= segment:
+			return path[index - 1].lerp(path[index], remaining / segment)
+		remaining -= segment
+	return path[path.size() - 1]
