@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-21T04:11:25.775Z",
-  "commit": "b1a5b42",
+  "generated_at": "2026-10-21T04:12:18.011Z",
+  "commit": "34d2dd7",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -1978,7 +1978,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_asset_loader.gd",
-      "sha256": "db5bef65f3a90e90ee4b2a6efe0ee568f173dc4cfbd68aaa5812d0f571a4e108",
+      "sha256": "5346692c95aa19ba8f36a6e1ecf88bbae9c240f5ee391eb2a20c0358573ee06c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -3049,7 +3049,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "46bb860df51b859e8bc7d06750a97d2e37814d0974d252a1e85261eb7b97d240",
+      "sha256": "841521e15b9374385d5a39ca0e1024fb1bf1c61f0c4eef900bb9f100d5e1f793",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -3220,7 +3220,7 @@
     },
     {
       "source": "tools/modeling/briefs/sn_ironclad_broadside.json",
-      "sha256": "45abbc287f50d54a203d5097856cd2653f1144a7f5f2f21b1e8d72e410ce93b0",
+      "sha256": "d90c9ea6af010b5aa4d1b678e305b15b64dd061363f9ab32d15903e8a27a21c7",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3529,7 +3529,7 @@
     },
     {
       "source": "tools/modeling/generators/ship_parts/core.py",
-      "sha256": "db33800080dea7ad015ea93dd8603a071aa69f8a92c7e77ee4f5eab97c56f2c1",
+      "sha256": "3e2fbec8d6ce6c7e7a2bf2bfcbaab4da0b13dc254bce9ee3b1765603ecf376da",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -3633,13 +3633,13 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_kit_batch2.py",
-      "sha256": "2367b31a496d9f8eade7bc687e5e0603a8163c2b93aab489e03f331b720b3249",
+      "sha256": "7d3c36f6c81fa70c2cd0105448c4c41845cf691b913538feb98f8e8f945febcd",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_kit_batch2.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_materials.py",
-      "sha256": "a4c1751787ff6ef6065672fe06bebfa9f30ee93f29aedcc500afcb6edef1ae40",
+      "sha256": "1204c1dfe54351d82dd6bf287c5965ee4636071cacf6607cbe7bfb6e8e732d61",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_materials.py.md",
       "status": "documented"
     },
@@ -3651,13 +3651,13 @@
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_tavern_generator.py",
-      "sha256": "1861463ce444c63ce138ffa23ea3457529ca6f25f700d3a094ad105c9fabdfdf",
+      "sha256": "4c28f6260d981d945852db7b92c12afc2e55ec9e527231bd81e5ac1e2f655603",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_tavern_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py",
-      "sha256": "e21e5bbeaabe3c96a0c2190f174be462da94321f516e81c06ebd5187393ffdb4",
+      "sha256": "0abaf3d4e1da3eb47786600d7807c92346747d558f673ced0621ad458245acc8",
       "doc": "docs/static/tools/modeling/generators/sn_iron_harbor_warehouse_short_generator.py.md",
       "status": "documented"
     },
@@ -3703,7 +3703,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_schooner_fame_generator.py",
-      "sha256": "d24cd324a932a90838f252b88939a5cdf7d819ee24b620f1a8c6cc0f3e2f54fc",
+      "sha256": "7b301f22789bb02b6024e6e0c196ab250ee511568602eee3d6fb18ec5c8f8894",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

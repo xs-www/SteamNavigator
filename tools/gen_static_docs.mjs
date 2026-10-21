@@ -15,6 +15,7 @@
 // - 旧 `FILE_DOCS` 只作为迁移兼容层，优先级低于源码注释和 sidecar。
 // - 默认在临时目录完成构建后原子替换 `docs/static`；`--check` 只比较，不写工作区。
 // - 只收录仓库应有的源码（git 跟踪或未忽略）；`SNModMaker/mods` 等被 .gitignore 排除的本地工作区不进入 manifest，否则干净检出（CI）与本地生成结果不一致。
+// - 文本源文件按 LF 计算 SHA-256（二进制按原始字节）：Windows 工具可能写出 CRLF 工作副本，而 git 提交的文本是 LF。
 // - GDScript 符号提取支持普通/静态函数、推断/显式类型常量、类与信号。
 // @end-static-doc
 
@@ -97,7 +98,14 @@ function read(relativePath) {
 }
 
 function sha256(relativePath) {
-  return crypto.createHash("sha256").update(fs.readFileSync(path.join(ROOT, relativePath))).digest("hex");
+  const buffer = fs.readFileSync(path.join(ROOT, relativePath));
+  // Git stores text as LF while Windows tooling may write CRLF working copies;
+  // hash text as LF so the manifest does not depend on the local checkout, and
+  // keep binary bytes (they contain NULs) exactly as they are.
+  const content = buffer.includes(0)
+    ? buffer
+    : Buffer.from(buffer.toString("utf8").replaceAll("\r\n", "\n"), "utf8");
+  return crypto.createHash("sha256").update(content).digest("hex");
 }
 
 function lineAt(text, index) {
