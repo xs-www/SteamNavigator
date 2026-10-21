@@ -44,6 +44,7 @@ const SEA_CHART_SCREEN_SCENE := preload("res://framework/ui/screens/flow/sea_cha
 const CLUE_LOG_SCREEN_SCENE := preload("res://framework/ui/screens/flow/clue_log_screen.tscn")
 const STORY_CARD_SCRIPT := preload("res://framework/ui/components/sn_story_card.gd")
 const STORY_OBJECTIVE_SCRIPT := preload("res://framework/ui/components/sn_story_objective.gd")
+const TASK_TRACKER_SCRIPT := preload("res://framework/ui/components/sn_task_tracker.gd")
 const VICTORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/victory_screen.tscn")
 const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_menu_screen.tscn")
 const NEW_GAME_SCREEN_SCENE := preload("res://framework/ui/screens/menu/new_game_screen.tscn")
@@ -142,9 +143,12 @@ var _pending_chart_port: String = ""
 var _pending_chart_clue: String = ""
 ## 4.5 / U1：当前剧情 ViewModel、剧情卡 / 目标条图层与卡片打开状态（仅 UI 会话）。
 var _story_vm: Dictionary = {}
+## 4.6 Phase A：任务追踪聚合 ViewModel（`task.view`）。
+var _task_vm: Dictionary = {}
 var _story_layer: Control = null
 var _story_card: Control = null
 var _story_objective: Control = null
+var _task_tracker: Control = null
 var _story_card_open := false
 var _seed_text: String = ""
 var _status_message: String = ""
@@ -311,6 +315,7 @@ func _rebuild_ui() -> void:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
 		_story_vm = {}
+		_task_vm = {}
 		_update_story_layer()
 		_root_box.add_child(_label("Loading framework...", 20, COLOR_MUTED))
 		get_tree().create_timer(0.4).timeout.connect(_refresh)
@@ -330,6 +335,7 @@ func _rebuild_ui() -> void:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
 		_story_vm = {}
+		_task_vm = {}
 		_update_story_layer()
 		_build_menu(app)
 		return
@@ -344,6 +350,9 @@ func _rebuild_ui() -> void:
 	# 4.5 / U1：剧情 ViewModel 同时驱动功能门禁、剧情卡与目标条。
 	var story_result := _context.queries.execute(&"story.view")
 	_story_vm = story_result.get("data", {}) if bool(story_result.get("ok", false)) else {}
+	# 4.6 Phase A：任务追踪聚合（剧情目标 / 主线 / 已接委托）。
+	var task_result := _context.queries.execute(&"task.view")
+	_task_vm = task_result.get("data", {}) if bool(task_result.get("ok", false)) else {}
 	_update_story_layer()
 	var at_sea := bool(data.get("at_sea", false))
 	# While the voyage presentation owns the screen the player is not actually in
@@ -367,8 +376,10 @@ func _rebuild_ui() -> void:
 		chrome_data["voyage"] = _presentation_voyage
 	_build_top_chrome(app, chrome_data, not at_sea and _presentation == null)
 	# 4.5.3：目标条浮在页面顶部，给它留出高度，避免盖住市场 / 海图等页面的标题。
-	if _story_active() and _story_vm.get("objective", null) is Dictionary \
-			and not (_story_vm.get("card", null) is Dictionary) \
+	# 4.6：剧情目标或任务追踪条都可能占用这一行。
+	if ((_story_active() and _story_vm.get("objective", null) is Dictionary \
+			and not (_story_vm.get("card", null) is Dictionary)) \
+			or _task_tracker != null) \
 			and not at_sea and _presentation == null:
 		var story_spacer := Control.new()
 		story_spacer.name = "StoryObjectiveSpacer"
@@ -513,6 +524,7 @@ func _ensure_story_layer() -> Control:
 func _clear_story_layer() -> void:
 	_story_card = null
 	_story_objective = null
+	_task_tracker = null
 	_story_card_open = false
 	if _story_layer == null or not is_instance_valid(_story_layer):
 		return
@@ -522,10 +534,34 @@ func _clear_story_layer() -> void:
 	_story_layer.visible = false
 
 
-## Rebuilds the full-window story card / non-blocking objective from `story.view`.
+## The highest-priority aggregated task (`task.view.active_task`), or `{}`.
+func _active_task() -> Dictionary:
+	var task: Variant = _task_vm.get("active_task", null)
+	return task if task is Dictionary else {}
+
+
+## Rebuilds the full-window story card and the non-blocking HUD strip. The strip
+## shows the story objective while a story objective exists; otherwise it falls back
+## to the aggregated task tracker (main / normal contract steps) so the player still
+## knows what to do after the tutorial.
 func _update_story_layer() -> void:
+	var task := _active_task()
 	if not _story_active():
-		_clear_story_layer()
+		if task.is_empty():
+			_clear_story_layer()
+			return
+		var layer := _ensure_story_layer()
+		for child in layer.get_children():
+			layer.remove_child(child)
+			child.queue_free()
+		_story_card = null
+		_story_objective = null
+		_task_tracker = null
+		_story_card_open = false
+		_mount_task_tracker(layer, task)
+		layer.visible = true
+		if layer.get_parent() == self:
+			move_child(layer, get_child_count() - 1)
 		return
 	var layer := _ensure_story_layer()
 	for child in layer.get_children():
@@ -533,6 +569,7 @@ func _update_story_layer() -> void:
 		child.queue_free()
 	_story_card = null
 	_story_objective = null
+	_task_tracker = null
 	_story_card_open = false
 	var card: Variant = _story_vm.get("card", null)
 	if card is Dictionary:
@@ -561,22 +598,38 @@ func _update_story_layer() -> void:
 		)
 		_story_objective = objective_control
 		call_deferred("_place_story_objective")
+	elif _story_card == null and not task.is_empty() and String(task.get("kind", "")) != "story":
+		# 剧情没有目标时（转场卡 / 结束）交给统一任务追踪条。
+		_mount_task_tracker(layer, task)
 	layer.visible = true
 	if layer.get_parent() == self:
 		move_child(layer, get_child_count() - 1)
 
 
-## Centers the non-blocking objective under the top chrome once layout has settled.
+func _mount_task_tracker(layer: Control, task: Dictionary) -> void:
+	var tracker: Control = TASK_TRACKER_SCRIPT.new()
+	tracker.name = "TaskTracker"
+	layer.add_child(tracker)
+	tracker.bind(task, int(_task_vm.get("task_count", 1)), Callable(self, "_tr"))
+	_task_tracker = tracker
+	call_deferred("_place_story_objective")
+
+
+## Centers the non-blocking story objective / task tracker under the top chrome once
+## layout has settled.
 func _place_story_objective() -> void:
-	if _story_objective == null or not is_instance_valid(_story_objective):
+	var control: Control = _story_objective
+	if control == null or not is_instance_valid(control):
+		control = _task_tracker
+	if control == null or not is_instance_valid(control):
 		return
 	if _story_layer == null or not is_instance_valid(_story_layer):
 		return
-	_story_objective.reset_size()
-	var width := _story_objective.size.x
+	control.reset_size()
+	var width := control.size.x
 	var x := maxf(8.0, (_story_layer.size.x - width) * 0.5)
 	var y := _port_hud_top_safe() + 4.0
-	_story_objective.position = Vector2(x, y)
+	control.position = Vector2(x, y)
 
 
 ## Forwards a successful command / UI event to the story state machine. Returns true
@@ -1730,7 +1783,12 @@ func _contracts_screen_model(data: Dictionary) -> Dictionary:
 	var completed_names: Array = []
 	for contract_id in contracts.get("completed", []):
 		completed_names.append(_definition_name(String(contract_id)))
-	return {"contracts": contracts, "completed_names": completed_names}
+	return {
+		"contracts": contracts,
+		"completed_names": completed_names,
+		"tasks": Array(_task_vm.get("tasks", [])).duplicate(true),
+		"active_task_id": String(_task_vm.get("active_task_id", "")),
+	}
 
 
 func _enrich_contract_for_screen(contract: Dictionary) -> Dictionary:

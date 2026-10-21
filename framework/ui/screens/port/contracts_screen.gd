@@ -21,6 +21,9 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 	_tr = translate
 	_clear()
 	add_child(_heading("海事局委托处", "委托与航线", "主线只能同时进行一个；普通委托持有上限随声誉提高。"))
+	var tasks: Array = view_model.get("tasks", [])
+	if not tasks.is_empty():
+		add_child(_task_panel(tasks, String(view_model.get("active_task_id", ""))))
 	var contracts: Dictionary = view_model.get("contracts", {})
 	add_child(_holding_panel(contracts))
 	var main_contract: Variant = contracts.get("main", null)
@@ -54,6 +57,84 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 	var completed_names: Array = view_model.get("completed_names", [])
 	if not completed_names.is_empty():
 		add_child(_completed_panel(completed_names))
+
+
+## 4.6 Phase A：任务追踪聚合面板——列出剧情 / 主线 / 已接委托与各自步骤，
+## 完成步骤打勾、当前步骤高亮。完整列表留在本页，HUD 只显示最高优先级任务。
+func _task_panel(tasks: Array, active_task_id: String) -> Control:
+	var panel := _panel(&"SNPanel")
+	var content := _panel_content(panel)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 10)
+	header.add_child(_task_label(_loc("ui.task.title", "任务追踪"), 17, COLOR_BRASS))
+	header.add_child(_badge("%d" % tasks.size(), SNBadge.Tone.NEUTRAL))
+	content.add_child(header)
+	for raw_task in tasks:
+		if not (raw_task is Dictionary):
+			continue
+		var task: Dictionary = raw_task
+		var row := VBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		var title_row := HBoxContainer.new()
+		title_row.add_theme_constant_override("separation", 8)
+		var category := _loc(String(task.get("category_key", "")), "")
+		if not category.is_empty():
+			title_row.add_child(_badge(category, SNBadge.Tone.WARNING))
+		var title_key := String(task.get("title_key", ""))
+		var title := _loc(title_key, title_key)
+		title_row.add_child(_task_label(title, 15, COLOR_TEXT if String(task.get("id", "")) == active_task_id else COLOR_MUTED))
+		var remaining := float(task.get("remaining_hours", -1.0))
+		if remaining >= 0.0:
+			title_row.add_child(_task_label(_loc("ui.task.remaining", "剩余 %d 小时") % int(ceil(remaining)), 12, COLOR_MUTED))
+		row.add_child(title_row)
+		for raw_step in Array(task.get("steps", [])):
+			if not (raw_step is Dictionary):
+				continue
+			var step: Dictionary = raw_step
+			var prefix := "✓  " if bool(step.get("done", false)) else "·  "
+			var color := COLOR_TEAL if bool(step.get("done", false)) else COLOR_TEXT
+			row.add_child(_task_label(prefix + _task_step_text(step), 13, color))
+		content.add_child(row)
+	return panel
+
+
+func _task_label(text: String, font_size: int, color: Color) -> Label:
+	var label := _label(text, font_size, color)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	return label
+
+
+func _task_step_text(step: Dictionary) -> String:
+	var kind := String(step.get("kind", ""))
+	var progress := int(step.get("progress", 0))
+	var target := int(step.get("target", 0))
+	match kind:
+		"objective":
+			var objective := _loc(String(step.get("text_key", "")), "")
+			if target <= 1:
+				return objective
+			var remaining := maxi(0, target - progress)
+			if remaining > 0:
+				return (_loc("ui.task.step_progress_remaining", "%s（%d/%d，还差 %d）") % [
+					objective, progress, target, remaining,
+				])
+			return _loc("ui.task.step_progress", "%s（%d/%d）") % [objective, progress, target]
+		"accept":
+			return _loc("ui.task.step.accept", "接取主线委托")
+		"load":
+			var item := _loc(String(step.get("item_name_key", "")), "")
+			var template := _loc(
+				"ui.task.step.load_fuel" if bool(step.get("fuel_sourced", false)) else "ui.task.step.load",
+				"备货：%s（%d/%d）"
+			)
+			return template % [item, progress, target]
+		"passenger":
+			return _loc("ui.task.step.passenger", "接旅客（%d/%d）") % [progress, target]
+		"sail":
+			return _loc("ui.task.step.sail", "前往：%s") % _loc(String(step.get("destination_name_key", "")), "")
+		"deliver":
+			return _loc("ui.task.step.deliver", "抵达 %s 后自动交付") % _loc(String(step.get("destination_name_key", "")), "")
+	return ""
 
 
 func _holding_panel(contracts: Dictionary) -> Control:

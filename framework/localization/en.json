@@ -586,5 +586,20 @@
   "ui.tavern.npc_title": "NPC Ship Movements",
   "ui.tavern.npc_empty": "No NPC movement is covered yet (unexplored destinations stay hidden).",
   "ui.tavern.no_tavern": "This harbour has no tavern.",
-  "ui.story.objective_progress_remaining": "Objective: %s (%d/%d, %d left)"
+  "ui.story.objective_progress_remaining": "Objective: %s (%d/%d, %d left)",
+  "ui.task.title": "Task Tracker",
+  "ui.task.kind.story": "Story Goal",
+  "ui.task.kind.main": "Main Contract",
+  "ui.task.kind.contract": "Contract",
+  "ui.task.kind.main_offer": "Main Offer",
+  "ui.task.step.accept": "Accept the main contract",
+  "ui.task.step.load": "Load %s (%d/%d)",
+  "ui.task.step.load_fuel": "Bunkers %s (%d/%d)",
+  "ui.task.step.passenger": "Carry passengers (%d/%d)",
+  "ui.task.step.sail": "Sail to %s",
+  "ui.task.step.deliver": "Auto-deliver after reaching %s",
+  "ui.task.step_progress": "%s (%d/%d)",
+  "ui.task.step_progress_remaining": "%s (%d/%d, %d left)",
+  "ui.task.more": "%d more task(s)",
+  "ui.task.remaining": "%d h left"
 }

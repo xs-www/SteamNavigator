@@ -51,6 +51,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_voyage_flow.gd",
 	"res://framework/tests/cases/test_exploration.gd",
 	"res://framework/tests/cases/test_story.gd",
+	"res://framework/tests/cases/test_task_view.gd",
 	"res://framework/tests/cases/test_story_ui.gd",
 ]
 

@@ -124,7 +124,31 @@ func test_non_tutorial_shell_has_no_card_and_no_gating() -> void:
 	assert_true(shell._story_card == null, "a non-tutorial run has no story card")
 	assert_eq(_nav_buttons(shell).size(), 6, "a non-tutorial run keeps every nav screen")
 	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
+	# 4.6 Phase A：没有剧情时 HUD 显示主线任务追踪，而不是剧情目标条。
+	var tracker := shell.find_child("TaskTracker", true, false)
+	assert_not_null(tracker, "the HUD shows the aggregated task tracker")
+	assert_true(shell.find_child("StoryObjective", true, false) == null, "no story objective is shown")
+	var step_label := shell.find_child("TaskStep", true, false) as Label
+	assert_not_null(step_label, "the tracker renders its current step")
+	if step_label != null:
+		assert_true(step_label.text.contains("前往") or step_label.text.contains("Sail"),
+			"the automatically loaded main cargo shows the sail step, got: %s" % step_label.text)
+	# 委托页顶部有完整的任务追踪面板与步骤。
+	shell._transitioning = false
+	shell._pending_transition = false
+	shell._active_screen = "contracts"
+	shell._refresh()
+	var texts := _label_texts(shell)
+	assert_true(_has_text(texts, "任务追踪") or _has_text(texts, "Task Tracker"),
+		"the contracts page hosts the task tracker panel")
 	_unmount(bundle)
+
+
+func _has_text(texts: Array, needle: String) -> bool:
+	for text in texts:
+		if String(text).contains(needle):
+			return true
+	return false
 
 
 func test_new_game_screen_hides_build_picker_in_tutorial_mode() -> void:

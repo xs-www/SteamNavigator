@@ -586,5 +586,20 @@
   "ui.tavern.npc_title": "NPC 商船动向",
   "ui.tavern.npc_empty": "暂无覆盖到的 NPC 动向（未发现的目的港不会出现）。",
   "ui.tavern.no_tavern": "当前港口没有酒馆。",
-  "ui.story.objective_progress_remaining": "目标：%s（%d/%d，还差 %d）"
+  "ui.story.objective_progress_remaining": "目标：%s（%d/%d，还差 %d）",
+  "ui.task.title": "任务追踪",
+  "ui.task.kind.story": "剧情目标",
+  "ui.task.kind.main": "主线委托",
+  "ui.task.kind.contract": "委托",
+  "ui.task.kind.main_offer": "待接主线",
+  "ui.task.step.accept": "接取主线委托",
+  "ui.task.step.load": "备货：%s（%d/%d）",
+  "ui.task.step.load_fuel": "煤舱：%s（%d/%d）",
+  "ui.task.step.passenger": "接旅客（%d/%d）",
+  "ui.task.step.sail": "前往：%s",
+  "ui.task.step.deliver": "抵达 %s 后自动交付",
+  "ui.task.step_progress": "%s（%d/%d）",
+  "ui.task.step_progress_remaining": "%s（%d/%d，还差 %d）",
+  "ui.task.more": "另有 %d 个任务",
+  "ui.task.remaining": "剩余 %d 小时"
 }
