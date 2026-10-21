@@ -1,0 +1,183 @@
+{
+  "id": "sn_crane_batch1",
+  "title": "港口起重机四件套：塔吊补全 / 大型龙门吊 / 木制桅杆起重机 / 手摇悬臂吊",
+  "purpose": "为 2.5D 固定机位港口舞台补充可辨认、可复用的起重机类锚点道具；补齐最早两件资产的参数化真源。",
+  "category": "prop",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-21 指定四种类型：塔吊（补全缺失生成器）、大型龙门吊（巨型钢结构 + 复杂传动）、木制桅杆起重机（参考图 1 的港口/码头氛围）、手摇悬臂吊。尺寸与预算由 Lead 按 2.5D 舞台机位拟定，人工在交付预览时复核。",
+  "style": {
+    "look": "与铁港道具/港区设施同一套低模 flat-shaded 语言；无贴图，只用语料库材质；轮廓优先。",
+    "palette": ["SN_Metal", "SN_Iron", "SN_Iron_Red", "SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Stone", "SN_Brass", "SN_Canvas_Shade", "SN_Glass_Dark"],
+    "reference_images": ["image 1（黑白港口照片：格构钢吊机、双吊臂、铆接机械房、码头轨道与圆木堆；用于钢构与码头的语言参考）"],
+    "notes": "钢构吊机用格构桁架 + 铆接机械房 + 可读齿轮/卷筒/钢缆；木制桅杆起重机按历史港口木质吊（方木桅杆 + 后倾木吊臂 + 桅顶拉索 + 手摇绞车）处理，不照搬照片里的钢构塔吊。"
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "DBG2_CAM", "Light", "SN_Ship_Root", "SN_Harbor_Town", "SN_Iron_Harbor_Architecture", "SN_IronHarbor_Props", "SN_Ship_Modules", "SN_Port_Facilities", "SN_Schooner_Fame_Prototype"],
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X（臂架伸出方向）",
+    "shading": "flat shading，无贴图",
+    "ground": "所有资产 zmin = 0，轴心在底面中心 / 轨道面中心",
+    "conventions": "几何由生成器参数表驱动；禁止在 .blend 里手工补点；闭合件边界边 / 非流形边 / 退化面必须为 0。"
+  },
+  "items": [
+    {
+      "id": "sn_prop_harbor_crane_v2_1",
+      "asset": "SN_Harbor_Crane",
+      "role": "补全缺失的参数化生成器，并按同一设计重建（锤头式塔吊）",
+      "generator": "tools/modeling/generators/sn_harbor_crane_generator.py",
+      "collection": "SN_Harbor_Crane_Prototype",
+      "root": "SN_Crane_Root",
+      "prefix": "SN_Crane_",
+      "workbench_pos": [0.0, 16.0, 0.0],
+      "pivot": "SN_Crane_Slew_Pivot（根局部 z=17.3，绕 Z 回转）",
+      "dimensions": {"length": 26.5, "width": 6.3, "height": 21.47, "tolerance": 0.8},
+      "tri_budget": 4000,
+      "materials": ["SN_Metal", "SN_Wood", "SN_Wood_Dark", "SN_Stone"],
+      "required_parts": [
+        "石砌基座 + 压顶 + 四角铁板 + 隅石",
+        "收分格构塔身（4 弦 / 横框 / 斜撑 / 爬梯）",
+        "回转环 + 回转平台",
+        "20 m 水平桁架主臂（弦杆 / 斜腹杆 / 横框 / 臂根 / 臂尖）",
+        "6 m 配重臂 + 端板 + 工作平台 + 3 块石配重 + 吊挂",
+        "A 字塔头 + 塔顶块 + 6 根拉杆",
+        "司机室 + 金属顶板",
+        "主卷扬机组（卷筒 / 电机 / 齿轮箱 / 齿轮组 / 制动盘 / 传动轴）",
+        "小车（车架 / 4 轮 / 起升滑轮）",
+        "吊钩钢丝绳 + 吊钩组"
+      ],
+      "deliverables": {
+        "generator": "tools/modeling/generators/sn_harbor_crane_generator.py",
+        "glb": "assets/models/props/SN_Harbor_Crane.glb",
+        "runtime_copy": "dev_mods/core/assets/models/props/SN_Harbor_Crane.glb",
+        "preview": ".design/props/preview/crane_harbor_crane_{three_quarter,side}.png"
+      },
+      "acceptance": [
+        "对象 100% 以 SN_Crane_ 开头并位于 SN_Harbor_Crane_Prototype，只含 1 个回转 Pivot",
+        "三角面 <= 4000，包围盒误差 <= 0.8 m，zmin = 0",
+        "网格健康：边界边 / 非流形边 / 退化面 / 材质槽越界全 0",
+        "主臂水平（与地面夹角 <= 1°）且从回转中心伸出 >= 19.5 m",
+        "吊钩钢丝绳竖直，吊钩最低点离地 3–6 m",
+        "3/4 视角能读出高塔 + 长水平臂 + 配重 + 塔头拉杆"
+      ]
+    },
+    {
+      "id": "sn_prop_mega_gantry_v1",
+      "asset": "SN_Mega_Gantry",
+      "role": "大型龙门吊：巨型钢结构 + 可读复杂传动",
+      "generator": "tools/modeling/generators/sn_mega_gantry_generator.py",
+      "collection": "SN_Mega_Gantry_Prototype",
+      "root": "SN_MG_Root",
+      "prefix": "SN_MG_",
+      "workbench_pos": [-20.0, 260.0, 0.0],
+      "dimensions": {"length": 39.6, "width": 14.8, "height": 29.65, "tolerance": 1.0},
+      "tri_budget": 12000,
+      "materials": ["SN_Metal", "SN_Iron", "SN_Iron_Red", "SN_Wood_Dark", "SN_Brass", "SN_Stone", "SN_Glass_Dark"],
+      "required_parts": [
+        "地面双轨 + 枕木",
+        "4 台台车（各 2 轮 / 车架 / 齿轮 / 电机 / 传动轴）",
+        "4 条收分格构腿（弦 / 横框 / 斜撑）",
+        "两条顶部格构横梁（顺桥向）",
+        "40 m 主桁架桥（弦 / 斜腹杆 / 横框）+ 桥面走台 + 小车行走轨 + 两侧栏杆",
+        "小车（车架 / 4 轮 / 卷筒 / 电机 / 齿轮 / 起升滑轮）",
+        "桥端机械房（墙体 / 屋顶 / 窗 / 门 / 排气筒 / 通风帽 / 铭牌）",
+        "双卷扬机组（2 卷筒 / 电机 / 齿轮箱 / 齿轮组 / 传动轴 / 制动盘 / 轴承座）",
+        "4 根起升钢缆 + 双钩横担 + 吊装中的集装箱",
+        "爬梯 / 检修平台 / 栏杆"
+      ],
+      "deliverables": {
+        "generator": "tools/modeling/generators/sn_mega_gantry_generator.py",
+        "glb": "assets/models/props/SN_Mega_Gantry.glb",
+        "preview": ".design/props/preview/crane_mega_gantry_{three_quarter,side}.png"
+      },
+      "acceptance": [
+        "对象 100% 以 SN_MG_ 开头并位于 SN_Mega_Gantry_Prototype",
+        "三角面 <= 12000，包围盒误差 <= 1.0 m，zmin = 0",
+        "网格健康四项全 0；材质只用白名单",
+        "主桥水平、跨度 >= 36 m；4 条腿落地；轮/轨贴合",
+        "固定 3/4 视角可读出：巨型格构腿 + 长桥 + 机械房 + 卷扬齿轮 + 吊装集装箱",
+        "机械房外侧至少 6 个可辨认的传动件（卷筒 / 齿轮 / 电机 / 轴 / 制动盘 / 轴承座）"
+      ]
+    },
+    {
+      "id": "sn_prop_wooden_mast_crane_v1",
+      "asset": "SN_Wooden_Mast_Crane",
+      "role": "历史木制桅杆起重机（港口吊）",
+      "generator": "tools/modeling/generators/sn_wooden_mast_crane_generator.py",
+      "collection": "SN_Wooden_Mast_Crane_Prototype",
+      "root": "SN_WM_Root",
+      "prefix": "SN_WM_",
+      "workbench_pos": [30.0, 260.0, 0.0],
+      "dimensions": {"length": 14.77, "width": 7.0, "height": 14.25, "tolerance": 0.8},
+      "tri_budget": 4000,
+      "materials": ["SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Stone", "SN_Brass", "SN_Canvas_Shade"],
+      "required_parts": [
+        "石砌台基 + 木梁底盘 + 木甲板",
+        "方形木桅杆（8 道铁箍 / 桅顶帽 / 四向斜撑）",
+        "后倾木吊臂（主梁 / 双颊板 / 3 道铁箍 / 根部座 / 端部滑轮）",
+        "桅顶四根后拉索 + 地面石锚",
+        "吊臂俯仰滑车组",
+        "A 字木架手摇绞车（卷筒 / 棘轮 / 摇柄 / 第二级齿轮 / 绳索）",
+        "吊钩组",
+        "桅杆爬梯",
+        "甲板细节（盘绳 / 木箱 / 系缆桩 / 木料堆）"
+      ],
+      "deliverables": {
+        "generator": "tools/modeling/generators/sn_wooden_mast_crane_generator.py",
+        "glb": "assets/models/props/SN_Wooden_Mast_Crane.glb",
+        "preview": ".design/props/preview/crane_wooden_mast_crane_{three_quarter,side}.png"
+      },
+      "acceptance": [
+        "对象 100% 以 SN_WM_ 开头并位于 SN_Wooden_Mast_Crane_Prototype",
+        "三角面 <= 4000，包围盒误差 <= 0.8 m，zmin = 0",
+        "网格健康四项全 0；木构件与铁箍/拉索材质分区清楚",
+        "固定 3/4 视角可读出：方木桅杆 + 后倾木吊臂 + 拉索 + 手摇绞车",
+        "所有拉索两端真实落在桅顶 / 地锚上，无悬空"
+      ]
+    },
+    {
+      "id": "sn_prop_hand_jib_crane_v1",
+      "asset": "SN_Hand_Jib_Crane",
+      "role": "手摇悬臂吊（码头小型回转吊）",
+      "generator": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
+      "collection": "SN_Hand_Jib_Crane_Prototype",
+      "root": "SN_HJ_Root",
+      "prefix": "SN_HJ_",
+      "workbench_pos": [55.0, 260.0, 0.0],
+      "dimensions": {"length": 4.6, "width": 1.7, "height": 5.17, "tolerance": 0.5},
+      "tri_budget": 1500,
+      "materials": ["SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Stone", "SN_Brass", "SN_Canvas_Shade"],
+      "required_parts": [
+        "石砌基座 + 木垫板 + 4 颗地脚螺栓",
+        "立柱（柱脚法兰 / 柱帽 / 中部铁箍）",
+        "收分悬臂 + 拉杆 + 斜撑 + 端部滑轮",
+        "手摇绞车（卷筒 / 棘轮 / 摇柄 / 轴承座）",
+        "导向绳索 + 吊钩组",
+        "立柱踏步 + 空白铭牌"
+      ],
+      "deliverables": {
+        "generator": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
+        "glb": "assets/models/props/SN_Hand_Jib_Crane.glb",
+        "preview": ".design/props/preview/crane_hand_jib_crane_{three_quarter,side}.png"
+      },
+      "acceptance": [
+        "对象 100% 以 SN_HJ_ 开头并位于 SN_Hand_Jib_Crane_Prototype",
+        "三角面 <= 1500，包围盒误差 <= 0.5 m，zmin = 0",
+        "网格健康四项全 0",
+        "固定 3/4 视角可读出：立柱 + 悬臂 + 拉杆 + 手摇绞车 + 吊钩"
+      ]
+    }
+  ],
+  "dryrun": "python tools/modeling/generators/dryrun_cranes.py",
+  "export": "python tools/modeling/generators/export_cranes_glb.py（Lead 在人工验收后执行）",
+  "notes": "新增三件暂不接入 Core manifest / PortStage；塔吊沿用既有 model.prop.harbor_crane 资产键，重建后需同步 dev_mods 副本。"
+}

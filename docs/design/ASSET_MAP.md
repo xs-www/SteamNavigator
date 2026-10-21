@@ -40,7 +40,7 @@
 | `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend` | `assets/models/ships/SN_Ironclad.glb` | 舷侧炮铁甲舰：**60.14 × 18.00 × 28.64 m**（水线轴心，z -4.2..24.44）、**8830 三角面**、单 mesh / 8 材质；装甲带 + 板缝、每舷 6 门英雄化舷侧炮（炮门 1.9×1.9 m / 炮管 Ø0.88→0.72 m / 外露 1.55 m）+ 2 门艏 pivot 炮、2.2 m 装甲带（外凸 380 mm）与 120 mm 板缝、中央装甲炮房 + 指挥塔、双后倾烟囱、三桅横桁收帆 + 艏斜桁基座、锚吊架、撞角艏、艉廊、螺旋桨/舵；单节点 GLB、工作台摆位 (0, 90, 0) |
 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合）+ `.design/ships/SN_Paddle_Steamer.blend` | `assets/models/ships/SN_Paddle_Steamer.glb` | 小型澳洲明轮蒸汽客船（参考 PS Enterprise）：**24.56 × 8.74 × 10.47 m**（LOA 24.0 m，水线轴心 z=0）、**11764 三角面**、35 对象（32 mesh + 3 empty）、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`，复用 5）；白漆双层船身 + 暗红水线/舷缘压条 + 深色船底、两舷 10 桨叶明轮（14 段双轮缘 / 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑）+ 10 道水平格栅轮罩、前驾驶室（双侧 ENTERPRISE 文字铭牌）、后部白色立柱雨棚游步甲板、黑烟囱 + 黄铜箍/红顶圈、锅炉围罩 + 黄铜蒸汽管、艏旗杆澳洲旗、艉部弧形低平台 + 舵；**不含蒸汽几何**（留给游戏内 VFX）；根节点 `SN_PS_Root` 工作台摆位 (45, 0, 0) |
 | `.design/SN_Asset_Workbench.blend`（`SN_Schooner_Fame_Prototype` 集合）+ `.design/ships/SN_Schooner_Fame.blend` | `assets/models/ships/SN_Schooner_Fame.glb` | 1795 年 Salem 双桅纵帆船 **SN_Schooner_Fame**：**33.44 × 6.88 × 26.82 m**（船体 LOA 24.4 m，总长含艏斜桁/艏三角帆）、**13174 三角面**、32 对象（29 mesh + 3 empty）、12 材质（新增 `SN_Hull_Black` / `SN_Ochre` / `SN_Canvas_Shade` / `SN_Flag_Red`，复用 8）；18 站放样黑船身 + 赭黄上舷带 + 黑腰板/压顶、艉楼甲板；双桅后倾（Fore −2.5° / Main −3.2°，轴距 6.4 m）、前桅斜桁帆 + 方顶帆、主桅大斜桁帆 + 三角顶帆、两面艏三角帆（jib + fore staysail）、舷侧绳梯（shrouds + ratlines）/支索/动索、艉廊 3 蓝窗 + 双灯 + FAME 铭牌、舱口格栅/绞盘/起锚机/舵轮/罗经柜/锚/钟/木桶/盘绳/fife rails/短梯/艏饰；**无星条旗**（用户 2026-10-19 要求移除，仅保留主桅顶红白长旒）；帆腹镜像朝 −Y（Godot +Z 相机侧）；根节点 `SN_SF_Root` 水线轴心、工作台摆位 (0, −70, 0) |
-| `.design/SN_Asset_Workbench.blend` | `assets/models/props/SN_Harbor_Crane.glb` | 工作台主场景（帆船 36 对象 + 塔吊 34 对象 + 相机/灯光）；锤头式塔吊 3420 三角面、34 节点、4 材质（木 / 深木 / 金属 / 石材），主臂 20 m 水平、总高 21.5 m，场景摆放 (0, 16, 0) |
+| `.design/SN_Asset_Workbench.blend` | `assets/models/props/SN_Harbor_Crane.glb` + `dev_mods/core/assets/models/props/SN_Harbor_Crane.glb` | 工作台主场景（全场景 298 对象；塔吊集合 33 对象）；锤头式塔吊重建为**参数化生成器产物**：**3912 三角面**、33 节点（31 mesh + 根空物体 + 回转 Pivot）、4 材质（木 / 深木 / 金属 / 石材），主臂 20.1 m 水平、总高 21.47 m，吊钩最低点 4.42 m，场景摆放 (0, 16, 0)。Core 资产键 `model.prop.harbor_crane` 不变，GLB 已同步 `dev_mods` 副本 |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港码头第一批小部件：石砌岸壁 `SN_Dock_Wall` / 木护舷 `SN_Dock_Fender` / 系缆桩 `SN_Mooring_Bollard` / 木箱 `SN_Crate` / 木桶 `SN_Barrel` / 矿石堆 `SN_Ore_Pile`；P0 整改后合计 **1360 三角面**，材质 `SN_Ore` 已改为锈红铁矿色 |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第二批） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港第二批：煤气灯 `SN_Gas_Lamp` / 船岸跳板 `SN_Gangway` / 双瓣抓斗 `SN_Grab_Bucket` / 煤堆 `SN_Coal_Pile` / 码头爬梯 `SN_Dock_Ladder` / 钢板堆 `SN_Plate_Stack`；合计 **1214 三角面**，新增材质 `SN_Coal`（base 0.020/0.019/0.018、rough 0.95、metallic 0） |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第三批） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港第三批（堆场 / 管线）：木料堆 `SN_Timber_Stack` / 麻袋堆 `SN_Sack_Pile` / 蒸汽管段 `SN_Steam_Pipe` / 缆绳卷 `SN_Mooring_Rope` / 吊货网 `SN_Cargo_Net` / 托盘 `SN_Pallet`；合计 **1024 三角面**，不新增材质 |
@@ -93,6 +93,25 @@
 - 轴心：船体中部水线，1 unit = 1 m，可直接按水面高度摆放。
 - 帆为单层平面，材质必须双面（glTF 已标 `doubleSided`）；其余单层曲面（甲板 / 舷墙 / 腰板）也保持双面，后续可按材质开启背面剔除。
 - `.blend` 按本文件第 5 行决策留在 `.design/`（gitignore，不进构建）；只有 `.glb` 进入运行时资源。
+
+## 3D 港口起重机四件套（2026-10-21）
+
+同一批交付四台起重机（塔吊为补全生成器后的重建）。全部由参数化生成器驱动、纯 Python 干跑，
+工作台集合独立；除塔吊外**暂未接入 Core manifest / PortStage**（接入时需同步 manifest 资源键、
+校验测试与舞台槽位）。
+
+| 资产 | 运行时 GLB | 集合 / 摆位 | 尺寸 L×W×H (m) | tri | 材质数 | 结构要点 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Harbor_Crane` | `assets/models/props/SN_Harbor_Crane.glb`（Core 副本同路径） | `SN_Harbor_Crane_Prototype` / (0, 16, 0) | 26.50 × 6.30 × 21.47 | **3912** | 4 | 石基座 + 收分格构塔 + 回转环 / 平台 + 20.1 m 桁架主臂 + 6 m 配重臂 + 3 块石配重 + A 字塔头 / 6 拉杆 + 司机室 + 主卷扬（卷筒 / 电机 / 齿轮组 / 制动盘）+ 小车 + 吊钩组；回转 Pivot `SN_Crane_Slew_Pivot`（z=17.3），吊钩最低 4.42 m |
+| `SN_Mega_Gantry` | `assets/models/props/SN_Mega_Gantry.glb` | `SN_Mega_Gantry_Prototype` / (-20, 260, 0) | 39.60 × 14.80 × 29.65 | **9420** | 7 | 地面双轨 + 枕木、4 台带齿轮传动的台车、4 条收分格构腿 + 两条顶梁 + 40 m 主桁架桥（走台 / 小车轨 / 栏杆）、小车卷扬、桥端机械房（双卷筒 / 电机 / 齿轮箱 / 齿轮组 / 传动轴 / 制动盘）、4 根起升钢缆 + 双钩横担 + 吊装集装箱、爬梯 / 平台 |
+| `SN_Wooden_Mast_Crane` | `assets/models/props/SN_Wooden_Mast_Crane.glb` | `SN_Wooden_Mast_Crane_Prototype` / (30, 260, 0) | 14.77 × 7.00 × 14.25 | **1932** | 7 | 石台基 + 木梁底盘 + 方木桅杆（8 道铁箍 / 四向斜撑）、后倾木吊臂（双颊板 / 铁箍 / 端部滑轮）、桅顶四根后拉索 + 石锚、A 字木架手摇绞车（卷筒 / 棘轮 / 摇柄 / 二级齿轮）、吊钩组、爬梯、甲板盘绳 / 木箱 / 木料堆 |
+| `SN_Hand_Jib_Crane` | `assets/models/props/SN_Hand_Jib_Crane.glb` | `SN_Hand_Jib_Crane_Prototype` / (55, 260, 0) | 4.60 × 1.70 × 5.17 | **896** | 6 | 石基座 + 木垫板 + 地脚螺栓、立柱（法兰 / 柱帽 / 铁箍）、悬臂 + 拉杆 + 斜撑 + 端部滑轮、手摇绞车（卷筒 / 棘轮 / 摇柄）、吊钩组、踏步 / 铭牌 |
+
+- 共用部件库：`tools/modeling/generators/crane_kit.py`（桁架臂 / 格构柱 / 梯子 / 栏杆 / 车轮 / 卷筒 / 滑轮 / 齿轮 / 钢缆 / 吊钩组 / 手摇绞车 / 木料堆，纯 Python，不 import bpy）。
+- 生成器：`sn_harbor_crane_generator.py`、`sn_mega_gantry_generator.py`、`sn_wooden_mast_crane_generator.py`、`sn_hand_jib_crane_generator.py`；工单 `tools/modeling/briefs/sn_crane_batch1.json`。
+- 干跑 / 导出 / 自检 / 预览：`dryrun_cranes.py`、`export_cranes_glb.py`、`verify_cranes_glb.py`（世界空间包围盒按节点 TRS 合成）、`render_cranes_preview.py`；Godot 侧导入验收 `tools/godot/verify_cranes.gd`（4/4 PASS）。
+- 轴向：Blender +X 为臂架伸出方向、+Z 向上；glTF 转 Y-up 后进入 Godot 尺寸为 (Blender X, Blender Z, Blender Y)。
+- 预览截图（本地产物，`.design` 被 gitignore）：`.design/props/preview/crane_*.png`。
 
 ## 3D 资产：舷侧炮铁甲舰（SN_Ironclad）
 

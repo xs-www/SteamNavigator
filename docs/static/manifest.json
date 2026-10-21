@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-21T00:21:57.549Z",
-  "commit": "414baeb",
+  "generated_at": "2026-10-21T00:34:37.499Z",
+  "commit": "99f9a08",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 614,
-    "documented": 237,
+    "sources": 625,
+    "documented": 248,
     "grouped": 377
   },
   "files": [
@@ -1275,7 +1275,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/props/SN_Harbor_Crane.glb",
-      "sha256": "78e3563b6f20330f29e046ebc26bfbe4114510bdf887478d4e22f3dc1d42a586",
+      "sha256": "abdebfa74a7d49d17356bbf1cbe0794b50acf4b4301faad772a7135fcc7e63ec",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3341,7 +3341,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "250c7759657fc988b9829f05e40583540fe4f7b0d50467dfb86b748a19db821e",
+      "sha256": "8c7c768b9e12b2d344df8021dfa4a4b0b1d86fe9dadcc741ae3bc7aba4c14854",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3432,6 +3432,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/godot/verify_cranes.gd",
+      "sha256": "09149bffdd78f02eda30775a29cb06d3d5d95f956f63824105d6ef3f03fe6c12",
+      "doc": "docs/static/tools/godot/verify_cranes.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/godot/verify_harbor_diorama.gd",
       "sha256": "4879b93dbfecca641aeec54c6285543a5586a8e971b835ca101a932de5e9b610",
       "doc": "docs/static/tools/godot/verify_harbor_diorama.gd.md",
@@ -3475,6 +3481,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/briefs/sn_crane_batch1.json",
+      "sha256": "6451a521890a4174d08ebed67e4da0fead60a7ef06dcb88aad8c1ab8e05d9ef5",
+      "doc": "docs/static/tools/modeling/briefs/sn_crane_batch1.json.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/briefs/sn_harbor_crane.json",
@@ -3594,11 +3606,23 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/crane_kit.py",
+      "sha256": "145cf6667a158d1a33ef4d0c9a911252b86e8b756962027cc44ca82a5bb22908",
+      "doc": "docs/static/tools/modeling/generators/crane_kit.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/dryrun_batch2.py",
       "sha256": "a2d1596fca419f37df18e7fb425d94f093f1a62586c2b1a25a10873da460cad9",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/dryrun_cranes.py",
+      "sha256": "a1797016527f8c71fcc93d85967601a6d9de17b57746a66895616e017dda0f2e",
+      "doc": "docs/static/tools/modeling/generators/dryrun_cranes.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/dryrun_ironclad.py",
@@ -3652,6 +3676,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/export_cranes_glb.py",
+      "sha256": "79a31a570f2256b4640668c652bc690b7d4df89997616739b36a8cd69f38be9b",
+      "doc": "docs/static/tools/modeling/generators/export_cranes_glb.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/export_iron_harbor_architecture_glb.py",
@@ -3745,6 +3775,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/render_cranes_preview.py",
+      "sha256": "d61fa12b01a201d3a413b3c60d7e3bbb7a592fb9143b89edc7ec58238ba727fd",
+      "doc": "docs/static/tools/modeling/generators/render_cranes_preview.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/render_iron_harbor_architecture_preview.py",
@@ -3844,6 +3880,18 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
+      "sha256": "214818a64f120a325e1bd59ad9d80b5c88bdd4fa35671356115191564b1a65f7",
+      "doc": "docs/static/tools/modeling/generators/sn_hand_jib_crane_generator.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/sn_harbor_crane_generator.py",
+      "sha256": "6a4a12ff0dd8654cf307134fdc423cb8750f28314858ad98e143b53dde6d043f",
+      "doc": "docs/static/tools/modeling/generators/sn_harbor_crane_generator.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_harbor_town_generator.py",
       "sha256": "3ae27d95f7f2ecf47e6868e170815d720db1cd4964df49440a54c9e57d0c3c2e",
       "doc": "docs/static/tools/modeling/generators/sn_harbor_town_generator.py.md",
@@ -3939,6 +3987,12 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/sn_mega_gantry_generator.py",
+      "sha256": "01e39dc0bb92bfff67fa756b5deb4d77213829d008fc68274e6d37e2e02d653b",
+      "doc": "docs/static/tools/modeling/generators/sn_mega_gantry_generator.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_mooring_bollard_generator.py",
       "sha256": "01edf9195d77d066e467f03ef16c31c2dbf7a88324f16d4fce14490bed88e8e0",
       "doc": "docs/static/tools/README.md",
@@ -3978,6 +4032,18 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/sn_wooden_mast_crane_generator.py",
+      "sha256": "9c36202b231bae5f07ff926a1b7f4d8ff6ee2506c6a9a424fb8697b27622bc00",
+      "doc": "docs/static/tools/modeling/generators/sn_wooden_mast_crane_generator.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/verify_cranes_glb.py",
+      "sha256": "0fb34b843c97eb6954e74cae3af681149536dbe4aaf2462c118702600f754a70",
+      "doc": "docs/static/tools/modeling/generators/verify_cranes_glb.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/verify_iron_harbor_architecture_lod_glb.py",

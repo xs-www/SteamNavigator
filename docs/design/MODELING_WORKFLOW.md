@@ -313,3 +313,16 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 验收 | 重构后纯 Python digest **0 差异**；dryrun `ALL OK`、12994 tri、bbox/材质/命名不变；Builder 重建后 Blender 逐对象 world/local/polys digest **0 差异**（32 对象 / 29 mesh / 3 empty / 13174 tri；196 个既有对象零漂移）；`importlib` 加载与无 `__file__` 时 `bpy.data.filepath` 回退均已验证 |
 | 契约 | 单位米、+X 船首/+Z 向上；部件函数只收位置/尺寸/材质名，不 import 船型站表；`Part` 不含 bpy；`PartSpec(name, part, parent, origin, sockets, tags)` 预留给后续运行时可替换件 |
 | 后续 | ① 把 masts/sails/rigging 抽成 `rig_kit`（参数化桅距/帆装）；② 增加第二艘船型验证复用；③ 等 2.5D 舞台立项后，再从同一份部件源码导出独立 GLB + `SN_Socket_*` + `parts_manifest.json`，不在生成器里维护第二套几何 |
+
+### 11.11 港口起重机四件套（2026-10-21，塔吊生成器补全 + 三件新起重机）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 人工指定四种：塔吊（补全此前缺失的生成器）、大型龙门吊（巨型钢结构 + 复杂传动）、木制桅杆起重机（参考图：黑白港口照片的钢构 / 码头语言）、手摇悬臂吊。工单 `briefs/sn_crane_batch1.json` 自包含尺寸 / 预算 / 必含件 / 验收 |
+| 生成器与部件库 | 新增 `crane_kit.py`（桁架臂 / 格构柱 / 梯子 / 栏杆 / 车轮 / 卷筒 / 滑轮 / 齿轮 / 钢缆 / 吊钩组 / 手摇绞车，纯 Python 复用 `ship_parts.core`）+ 4 个生成器；装配统一走 `ship_parts.assembly.build_collection()` |
+| 干跑 | `dryrun_cranes.py` 一次校验四件：前缀 / 父级 / 预算 / bbox / 边界边 / 非流形边 / 退化面 / 材质白名单 / zmin=0 / 必含对象；新增 **PivotSpec 契约检查**（`rotation` 必须三元组、`location` 必须等于 `origins` 对应值） |
+| Builder R0 | 第一轮在生成器 1/4 处失败：`PivotSpec(..., (0,0,PIVOT_Z), 1.4)` 把 `size` 当成 `rotation` 传进去，`rotation_euler` 收到 float 报 ValueError。Builder 按规则停止并回报 traceback，未手工修补；Lead 改成 `size=1.4` 后重跑 |
+| Builder R1 | 四件一次执行成功：塔吊 33 对象 / 3912 tri；龙门吊 20 / 9420 tri；木制桅杆 11 / 1932 tri；手摇悬臂 7 / 896 tri。只读自检：网格健康四项全 0、四件 zmin=0、塔吊 Pivot 挂 21 个旋转件、吊钩最低点 4.42 m（3–6 m 内）、其它 11 个集合对象数逐一不变、场景 261→298 与公式一致、无新增相机灯光 |
+| 导出与自检 | `export_cranes_glb.py` 逐件根节点归零导出并保存工作台（旧塔吊 GLB 已备份到 `.design/props/backup_glb/`，并同步 `dev_mods/core` 副本）；`verify_cranes_glb.py` 4/4 通过（**世界空间** bbox 按节点 TRS 合成）；`tools/godot/verify_cranes.gd` 4/4 PASS（尺寸 / tri / 材质 / 贴地） |
+| 过程发现 | ① **`PivotSpec` 位置参数顺序是坑**：`(key, name, location, rotation=(0,0,0), size=1.2)`，多写一个位置参数就把 float 塞进 rotation；干跑已补契约检查，后续 pivot 类资产必须先过这条。② **多节点 GLB 的 bbox 不能直接累加 accessor min/max**：Pivot 子件的坐标是父级局部坐标，必须按 glTF 节点层级合成 TRS 再求世界包围盒，否则会把塔吊高度算成 30.5 m。③ 木制桅杆起重机按历史木质桅杆 / 后倾吊臂 / 拉索 / 手摇绞车设计，照片里的钢构塔吊只作为码头语言参考，不照搬。④ 新增三件暂未接 Core manifest / PortStage，接入是独立工作项 |
+| 预览与截图 | `.design/props/preview/crane_<asset>_{three_quarter,side}.png`（8 张，本地产物） |
