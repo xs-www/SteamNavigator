@@ -426,9 +426,14 @@ static func _clue_views(context, params: Dictionary) -> Array:
 		clue_view["investigation_hours"] = investigation_hours
 		clue_view["investigation_success_chance"] = investigation_chance
 		clue_view["can_investigate"] = can_investigate
+		clue_view["can_afford_investigation"] = (
+			investigation_cost <= 0 or state.money() >= investigation_cost
+		)
 		clue_view["can_sail"] = _clue_can_sail(state, clue, at_port)
 		clue_view["next_level"] = next_level
-		clue_view["next_level_key"] = "" if next_level == 0 else "ui.clue.level.%d" % next_level
+		clue_view["next_level_key"] = _next_level_key(
+			String(clue_view.get("type", ClueService.TYPE_PORT_LOCATION)), next_level
+		)
 		# 货物线索的目标是已发现港口，估算走普通航线（`clue.travel`）而不是探索搜索区。
 		if String(clue_view.get("type", ClueService.TYPE_PORT_LOCATION)) == ClueService.TYPE_PORT_GOODS:
 			clue_view["estimated"] = _goods_travel_estimate(context, clue, strategy_id)
@@ -438,6 +443,15 @@ static func _clue_views(context, params: Dictionary) -> Array:
 			)
 		views.append(clue_view)
 	return views
+
+
+## 4.4：下一级披露的文案键——货物线索用行情等级表，港口位置线索用 4.3 的等级表。
+static func _next_level_key(type: String, next_level: int) -> String:
+	if next_level <= 0:
+		return ""
+	if type == ClueService.TYPE_PORT_GOODS:
+		return "ui.clue.goods.level.%d" % next_level
+	return "ui.clue.level.%d" % next_level
 
 
 ## 4.4.2：线索当前能否出航（在港、没有探索航次；货物线索不能去当前港）。

@@ -137,7 +137,13 @@ static func discovery_chance(rules: Dictionary, credibility: float) -> float:
 static func roll_succeeds(rng: RandomNumberGenerator, chance: float) -> bool:
 	if rng == null:
 		return false
-	return rng.randf() < clampf(chance, 0.0, 1.0)
+	return roll_hits(rng.randf(), chance)
+
+
+## Same rule for callers that need the roll value itself (investigation returns it for
+## deterministic tests): success iff `roll < chance`, chance clamped to 0..1.
+static func roll_hits(roll: float, chance: float) -> bool:
+	return roll < clampf(chance, 0.0, 1.0)
 
 
 ## Two-level merge: only keys that exist in `DEFAULTS` are accepted, nested dictionaries

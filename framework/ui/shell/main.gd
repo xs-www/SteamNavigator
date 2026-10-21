@@ -2866,9 +2866,19 @@ func _handle_clue_bought(data: Dictionary) -> void:
 	_set_status(_tr("ui.notice.clue_acquired", "获得线索：%s") % source, false)
 
 
-## `clue.investigate` 成功（4.3.2）：状态栏只报新的线索等级（不泄露目标港 / 可信度），
+## `clue.investigate`（4.3.2 / 4.4.3）：成功只报新的线索等级（不泄露目标港 / 可信度）；
+## 4.4.3 起可能因成功率判定失败或工时耗尽时效，分别给出可重试 / 已过期的状态提示。
 ## 海图由 `_run_command` 的常规 `_refresh()` 重建，等级裁剪后的线索层自然更新。
 func _handle_clue_investigated(data: Dictionary) -> void:
+	if bool(data.get("expired", false)):
+		_set_status(_tr("ui.error.clue_expired", "这条线索已经过期"), true)
+		return
+	if not bool(data.get("success", true)):
+		_set_status(
+			_tr("ui.notice.clue_investigation_failed", "调查没有结果：线索未升级，可以再试"),
+			true
+		)
+		return
 	_set_status(
 		_tr("ui.notice.clue_investigated", "线索调查完成：已升至 %d 级") % int(data.get("level", 0)),
 		false

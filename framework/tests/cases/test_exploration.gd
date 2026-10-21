@@ -137,9 +137,9 @@ func test_clue_view_clips_secrets_by_level() -> void:
 
 # ── Clue investigation (4.3.2 / U2) ──
 
-## 获得必为 1 级；连续调查 3 次依次到 2/3/4；每次调查只披露、不重抽目标港 / 搜索区 /
-## 可信度 / 方向 / 航程区间，也不扣钱 / 不推进时间；4 级后再调查返回明确错误；
-## 查询裁剪逐级正确（方向 >=2、圆圈 >=3、名称 ==4）。
+## 获得必为 1 级；逐级调查（按 Core 成功率，可能失败）最终到 4；每次尝试扣 Core
+## 金币 + 在港小时，成功才升级、失败保留线索；目标港 / 搜索区 / 可信度 / 方向 /
+## 航程区间全程不变；4 级后再调查返回明确错误；查询裁剪逐级正确。
 func test_investigate_climbs_to_level_four_without_rerolling_the_target() -> void:
 	var context := _start_run(SEED)
 	var clue := _acquire(context, "intel")
@@ -158,37 +158,51 @@ func test_investigate_climbs_to_level_four_without_rerolling_the_target() -> voi
 	var zone_y := float(zone.get("y", 0.0))
 	var zone_radius := float(zone.get("radius", 0.0))
 	var rules := ExplorationRules.read(context.state, context.registries)
-	var money_before := context.state.money()
-	var time_before := context.state.now()
+	var cost := int(rules.get("investigation_cost", 0))
+	var hours := float(rules.get("investigation_hours", 0.0))
+	var chance := float(rules.get("investigation_success_chance", 1.0))
 	assert_eq(int(clue.get("level", 0)), 1, "a new clue starts at level 1")
-	for expected_level: int in [2, 3, 4]:
+	assert_true(cost > 0, "4.4.3 Core charges gold for an investigation")
+	assert_true(hours > 0.0, "4.4.3 Core spends port hours on an investigation")
+	var attempts := 0
+	var failures := 0
+	while int(ClueService.find_clue(context.state, clue_id).get("level", 1)) < 4 and attempts < 24:
+		attempts += 1
+		var level_before := int(ClueService.find_clue(context.state, clue_id).get("level", 1))
+		var money_before := context.state.money()
+		var time_before := context.state.now()
 		var result := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
 		assert_true(bool(result.get("ok", false)),
-			"investigating to level %d succeeds: %s" % [expected_level, str(result)])
+			"the attempt succeeds mechanically: %s" % str(result))
 		if not bool(result.get("ok", false)):
 			return
 		var data: Dictionary = result.get("data", {})
-		assert_eq(int(data.get("level", 0)), expected_level,
-			"the command reports level %d" % expected_level)
-		var expected_next := expected_level + 1 if expected_level < 4 else 0
-		assert_eq(int(data.get("next_level", -1)), expected_next,
-			"the command reports the next disclosure level")
-		assert_eq(int(data.get("cost", -1)), int(rules.get("investigation_cost", 0)),
-			"the investigation cost comes from the Core rules")
-		assert_almost_eq(float(data.get("hours", -1.0)),
-			float(rules.get("investigation_hours", 0.0)), 0.0001,
-			"the investigation hours come from the Core rules")
-		var view: Dictionary = data.get("view", {})
-		assert_eq(int(view.get("level", 0)), expected_level,
-			"the returned view is trimmed to the new level")
-		assert_false(view.has("target_port_id"), "the view never leaks the target")
-		assert_false(view.has("credibility"), "the view never leaks credibility")
-		assert_false(view.has("search_zone"), "the view never leaks the search zone")
-		# 命令在事务克隆上执行，成功后提交会替换状态；每次重新取线索再断言字段固定。
+		assert_eq(int(data.get("cost", -1)), cost, "the attempt reports the Core cost")
+		assert_almost_eq(float(data.get("hours", -1.0)), hours, 0.0001,
+			"the attempt reports the Core hours")
+		assert_almost_eq(float(data.get("success_chance", -1.0)), chance, 0.0001,
+			"the attempt reports the Core success chance")
+		assert_true(bool(data.get("charged", false)), "a priced attempt is charged")
+		assert_eq(context.state.money(), money_before - cost,
+			"every attempt charges the Core cost")
+		assert_almost_eq(context.state.now(), time_before + hours, 0.0001,
+			"every attempt spends the Core hours")
 		var current := ClueService.find_clue(context.state, clue_id)
-		assert_false(current.is_empty(), "the clue stays active after investigating")
+		assert_false(current.is_empty(), "the clue stays active after the attempt")
 		if current.is_empty():
 			return
+		var success := bool(data.get("success", false))
+		var new_level := int(current.get("level", 0))
+		if success:
+			assert_eq(new_level, level_before + 1, "success advances exactly one level")
+			assert_eq(int(data.get("level", 0)), new_level, "the command reports the new level")
+			assert_true(_has_event(result.get("events", []), "clue.investigated"),
+				"success emits clue.investigated")
+		else:
+			failures += 1
+			assert_eq(new_level, level_before, "failure never changes the level")
+			assert_true(_has_event(result.get("events", []), "clue.investigation_failed"),
+				"failure emits clue.investigation_failed")
 		assert_eq(String(current.get("target_port_id", "")), target,
 			"the target port never changes")
 		assert_eq(String(current.get("reference_port_id", "")), reference,
@@ -208,46 +222,28 @@ func test_investigate_climbs_to_level_four_without_rerolling_the_target() -> voi
 			"the distance range stays fixed")
 		assert_almost_eq(float(current.get("distance_max_hours", 0.0)), max_hours, 0.0001,
 			"the distance range stays fixed")
-		assert_eq(int(current.get("level", 0)), expected_level,
-			"only the level changed")
-		# 4.3 不做资源判定：金币 / 时间都不动。
-		assert_eq(context.state.money(), money_before, "4.3 investigations never charge money")
-		assert_almost_eq(context.state.now(), time_before, 0.0001,
-			"4.3 investigations never advance time")
-		# 领域事件只带 clue_id + level（不含目标港 / credibility / search_zone）。
-		var events: Array = result.get("events", [])
-		assert_true(_has_event(events, "clue.investigated"), "investigating emits clue.investigated")
-		for event in events:
-			if not (event is Dictionary):
-				continue
-			if String((event as Dictionary).get("type", "")) != "clue.investigated":
-				continue
-			var payload: Dictionary = (event as Dictionary).get("payload", {})
-			assert_eq(String(payload.get("clue_id", "")), clue_id, "the event names the clue")
-			assert_eq(int(payload.get("level", 0)), expected_level,
-				"the event reports the new level")
-			assert_eq(payload.size(), 2, "the event payload is only clue_id + level")
-		# 查询按新等级披露。
-		var entries: Array = _chart_vm(context).get("clues", [])
-		assert_eq(entries.size(), 1, "the investigated clue is still on the chart")
-		if entries.is_empty():
-			continue
-		var entry: Dictionary = entries[0]
-		assert_eq(int(entry.get("level", 0)), expected_level, "the chart reports the new level")
-		assert_false(entry.has("target_port_id"), "the chart view never leaks the target")
-		assert_false(entry.has("credibility"), "the chart view never leaks credibility")
-		assert_false(entry.has("search_zone"), "the chart view never leaks the true search zone")
-		assert_almost_eq(float(entry.get("direction_angle", 0.0)), direction, 0.0001,
-			"level %d keeps disclosing the fixed direction" % expected_level)
-		assert_eq(entry.get("circle", null) != null, expected_level >= 3,
-			"level %d circle disclosure" % expected_level)
-		if expected_level >= 4:
-			assert_eq(String(entry.get("name_key", "")),
-				WorldOps.port_display_key(WorldOps.world_map(context.state), target),
-				"level 4 discloses the target name key")
-		else:
-			assert_eq(String(entry.get("name_key", "")), "",
-				"level %d must not disclose the name" % expected_level)
+		# 查询按当前等级披露（每次成功升级都检查裁剪）。
+		if success:
+			var entries: Array = _chart_vm(context).get("clues", [])
+			assert_eq(entries.size(), 1, "the investigated clue is still on the chart")
+			if not entries.is_empty():
+				var entry: Dictionary = entries[0]
+				assert_eq(int(entry.get("level", 0)), new_level,
+					"the chart reports the new level")
+				assert_false(entry.has("target_port_id"), "the chart view never leaks the target")
+				assert_false(entry.has("credibility"), "the chart view never leaks credibility")
+				assert_false(entry.has("search_zone"), "the chart view never leaks the true search zone")
+				assert_eq(entry.get("circle", null) != null, new_level >= 3,
+					"level %d circle disclosure" % new_level)
+				if new_level >= 4:
+					assert_eq(String(entry.get("name_key", "")),
+						WorldOps.port_display_key(WorldOps.world_map(context.state), target),
+						"level 4 discloses the target name key")
+				else:
+					assert_eq(String(entry.get("name_key", "")), "",
+						"level %d must not disclose the name" % new_level)
+	assert_eq(int(ClueService.find_clue(context.state, clue_id).get("level", 0)), 4,
+		"enough attempts reach level 4 (failures=%d)" % failures)
 	# 4 级后再调查被明确拒绝，等级不再变化。
 	var capped := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
 	assert_false(bool(capped.get("ok", true)), "investigating at level 4 fails")
@@ -257,6 +253,71 @@ func test_investigate_climbs_to_level_four_without_rerolling_the_target() -> voi
 		"the level-cap failure has a localized key")
 	assert_eq(int(ClueService.find_clue(context.state, clue_id).get("level", 0)), 4,
 		"the level stays capped at 4")
+
+
+## 4.4.3：金币不足在扣费 / 推进时间之前失败；成功率判定失败时照扣成本与工时、
+## 等级不变、线索保留可再试，并发 `clue.investigation_failed` 事件与本地化 notice。
+func test_investigate_failure_and_insufficient_money() -> void:
+	var broke := _start_run(SEED)
+	var broke_clue := _acquire(broke, "intel")
+	assert_false(broke_clue.is_empty(), "a clue exists for the money gate")
+	if broke_clue.is_empty():
+		return
+	var rules := ExplorationRules.read(broke.state, broke.registries)
+	var cost := int(rules.get("investigation_cost", 0))
+	broke.state.set_money(maxi(0, cost - 1))
+	var broke_result := broke.commands.execute(&"clue.investigate", {
+		"clue_id": String(broke_clue.get("id", "")),
+	})
+	assert_false(bool(broke_result.get("ok", true)), "an unaffordable investigation fails")
+	assert_eq(String(broke_result.get("error_code", "")), "insufficient_money",
+		"the failure names the money gate")
+	assert_eq(broke.state.money(), maxi(0, cost - 1), "a refused investigation charges nothing")
+	assert_eq(int(ClueService.find_clue(broke.state, String(broke_clue.get("id", ""))).get("level", 0)), 1,
+		"a refused investigation never changes the level")
+
+	# 成功率判定失败路径：在高金币下反复调查直到出现一次失败（确定性 seed）。
+	var context := _start_run(SEED)
+	context.state.set_money(10000)
+	var clue := _acquire(context, "intel")
+	var clue_id := String(clue.get("id", ""))
+	var seen_failure := false
+	for _attempt in 24:
+		var current := ClueService.find_clue(context.state, clue_id)
+		if current.is_empty() or int(current.get("level", 1)) >= 4:
+			ClueService.mark_resolved(context.state, clue_id)
+			var next := _acquire(context, "intel")
+			if next.is_empty():
+				break
+			clue_id = String(next.get("id", ""))
+			current = ClueService.find_clue(context.state, clue_id)
+		var level_before := int(current.get("level", 1))
+		var money_before := context.state.money()
+		var time_before := context.state.now()
+		var result := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+		assert_true(bool(result.get("ok", false)),
+			"the stochastic attempt still executes: %s" % str(result))
+		if not bool(result.get("ok", false)):
+			return
+		var data: Dictionary = result.get("data", {})
+		if bool(data.get("success", false)):
+			continue
+		seen_failure = true
+		assert_eq(int(ClueService.find_clue(context.state, clue_id).get("level", 0)), level_before,
+			"a failed investigation never changes the level")
+		assert_eq(context.state.money(), money_before - cost,
+			"a failed investigation still charges the Core cost")
+		assert_almost_eq(context.state.now(), time_before + float(data.get("hours", 0.0)), 0.0001,
+			"a failed investigation still spends the Core hours")
+		assert_true(_has_event(result.get("events", []), "clue.investigation_failed"),
+			"a failed investigation emits clue.investigation_failed")
+		assert_false(_has_event(result.get("events", []), "clue.investigated"),
+			"a failed investigation emits no success event")
+		assert_true(_has_notice(
+			context.state.recent_notices(), "ui.notice.clue_investigation_failed"
+		), "a failed investigation pushes a localized notice")
+		break
+	assert_true(seen_failure, "the named stream eventually produces a failed investigation")
 
 
 ## 门禁：无 run / 未知线索 / 已解决线索 / 不在港 都失败，且失败不改变等级。
@@ -310,10 +371,12 @@ func test_investigate_requires_a_run_a_port_and_an_active_clue() -> void:
 		"a refused investigation never changes the level")
 
 
-## 查询暴露调查入口字段：成本 / 工时来自 Core（0）、在港且 <4 时 can_investigate、
+## 查询暴露调查入口字段：成本 / 工时 / 成功率来自 Core（4.4.3：20 金 / 6h / 75%）、
+## 在港且 <4 时 can_investigate、买不起时 can_afford_investigation=false；
 ## next_level / next_level_key 指向下一级披露；4 级时 next_level=0、key 为空；在航禁调查。
 func test_chart_view_exposes_investigation_action_fields() -> void:
 	var context := _start_run(SEED)
+	context.state.set_money(20000)
 	var clue := _acquire(context, "intel")
 	assert_false(clue.is_empty(), "clue should exist")
 	if clue.is_empty():
@@ -330,26 +393,44 @@ func test_chart_view_exposes_investigation_action_fields() -> void:
 	assert_almost_eq(float(entry.get("investigation_hours", -1.0)),
 		float(rules.get("investigation_hours", 0.0)), 0.0001,
 		"the investigation hours come from the Core rules")
+	assert_almost_eq(float(entry.get("investigation_success_chance", -1.0)),
+		float(rules.get("investigation_success_chance", 1.0)), 0.0001,
+		"the investigation success chance comes from the Core rules")
+	assert_true(bool(entry.get("can_afford_investigation", false)),
+		"a starting purse can afford the Core investigation cost")
 	assert_true(bool(entry.get("can_investigate", false)),
 		"a level-1 clue in port can be investigated")
 	assert_eq(int(entry.get("next_level", -1)), 2, "the next disclosure level is 2")
 	assert_eq(String(entry.get("next_level_key", "")), "ui.clue.level.2",
 		"the next disclosure key names level 2")
 
-	# 调查到 3 级后：can_investigate 仍真，next_level = 4。
-	context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
-	context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+	# 调查到 3 级后：can_investigate 仍真，next_level = 4。调查有成功率，循环重试。
+	var level := 1
+	var attempts := 0
+	while level < 3 and attempts < 24:
+		attempts += 1
+		context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+		level = int(ClueService.find_clue(context.state, clue_id).get("level", 1))
+	assert_eq(level, 3, "enough attempts reach level 3")
+	context.state.set_money(0)
 	entry = _first_clue_entry(context)
-	assert_eq(int(entry.get("level", 0)), 3, "two investigations reach level 3")
+	assert_false(bool(entry.get("can_afford_investigation", true)),
+		"an empty purse reports the affordability gate")
+	context.state.set_money(900)
+	entry = _first_clue_entry(context)
 	assert_true(bool(entry.get("can_investigate", false)), "level 3 can still be investigated")
 	assert_eq(int(entry.get("next_level", -1)), 4, "the next disclosure level is 4")
 	assert_eq(String(entry.get("next_level_key", "")), "ui.clue.level.4",
 		"the next disclosure key names level 4")
 
-	# 4 级：再无可披露的下一级。
-	context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+	# 4 级：再无可披露的下一级。继续重试直到成功升到 4。
+	attempts = 0
+	while level < 4 and attempts < 24:
+		attempts += 1
+		context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+		level = int(ClueService.find_clue(context.state, clue_id).get("level", 1))
+	assert_eq(level, 4, "enough attempts reach level 4")
 	entry = _first_clue_entry(context)
-	assert_eq(int(entry.get("level", 0)), 4, "three investigations reach level 4")
 	assert_false(bool(entry.get("can_investigate", true)), "level 4 cannot be investigated further")
 	assert_eq(int(entry.get("next_level", -1)), 0, "level 4 reports next_level 0")
 	assert_eq(String(entry.get("next_level_key", "")), "", "level 4 has no next disclosure key")
@@ -1117,12 +1198,13 @@ func test_rules_are_read_from_the_core_map_profile() -> void:
 	assert_eq(intel_weights.size(), 4, "level weights are still the four-level vector")
 	assert_almost_eq(float(intel_weights[3]) if intel_weights.size() >= 4 else -1.0, 0.40, 0.0001,
 		"level_weights stay in Core for the future clue system")
-	# 4.3.2 / U2：调查消耗在 Core 里预留但为 0（本片不做资源判定、不扣钱、不推进时间）。
-	assert_eq(int(rules.get("investigation_cost", -1)), 0, "investigation cost is reserved at 0")
-	assert_almost_eq(float(rules.get("investigation_hours", -1.0)), 0.0, 0.0001,
-		"investigation hours are reserved at 0")
-	assert_almost_eq(float(rules.get("investigation_success_chance", -1.0)), 1.0, 0.0001,
-		"the investigation chance defaults to a guaranteed success until 4.4.3")
+	# 4.4.3：调查消耗真正生效（金币 / 在港小时 / 成功率都来自 Core JSON）。
+	assert_eq(int(rules.get("investigation_cost", -1)), 20,
+		"investigation cost comes from Core JSON")
+	assert_almost_eq(float(rules.get("investigation_hours", -1.0)), 6.0, 0.0001,
+		"investigation hours come from Core JSON")
+	assert_almost_eq(float(rules.get("investigation_success_chance", -1.0)), 0.75, 0.0001,
+		"investigation success chance comes from Core JSON")
 	# 4.4.1：货物行情线索的时效 / 价格误差也来自 Core JSON。
 	var expiry: Dictionary = rules.get("goods_clue_expiry_hours", {})
 	assert_almost_eq(float(expiry.get("rumor", -1.0)), 24.0, 0.0001,
@@ -1200,11 +1282,15 @@ func test_save_load_roundtrip_preserves_exploration_state() -> void:
 	if clue.is_empty():
 		return
 	var clue_id := String(clue.get("id", ""))
-	# 4.3.2 / U2：调查两级后存档，等级必须随线索一起持久化（不只保留 active 状态）。
-	for expected_level in [2, 3]:
-		var investigated := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
-		assert_true(bool(investigated.get("ok", false)),
-			"the clue investigates to level %d before saving: %s" % [expected_level, str(investigated)])
+	# 4.4.3：调查有成功率与消耗；重试直到 3 级再存档，等级必须随线索一起持久化
+	#（不只保留 active 状态）。
+	var attempts := 0
+	var level := 1
+	while level < 3 and attempts < 24:
+		attempts += 1
+		context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
+		level = int(ClueService.find_clue(context.state, clue_id).get("level", 1))
+	assert_eq(level, 3, "the clue reaches level 3 before saving")
 	var started := context.commands.execute(&"explore.start", {
 		"clue_id": clue_id,
 		"strategy_id": STRATEGY_ID,
@@ -1368,8 +1454,13 @@ func test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void:
 			"an in-port level-2 clue can be investigated")
 		assert_true(bool(entry.get("can_sail", false)),
 			"a goods clue for another discovered port can be sailed")
-		assert_almost_eq(float(entry.get("investigation_success_chance", -1.0)), 1.0, 0.0001,
-			"the investigation chance comes from Core")
+		var rules := ExplorationRules.read(context.state, context.registries)
+		assert_almost_eq(
+			float(entry.get("investigation_success_chance", -1.0)),
+			float(rules.get("investigation_success_chance", 1.0)),
+			0.0001,
+			"the investigation chance comes from Core"
+		)
 		var goods: Dictionary = entry.get("goods", {})
 		assert_true(goods.has("buy_price_min"), "level 2 discloses the price range")
 	# 过期 + 命令清理后，列表只剩历史折叠区。先是 0 时的存档，先推进时间制造过期。

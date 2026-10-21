@@ -316,7 +316,8 @@ Clue
 **实现状态（4.4）**：在港等待（`port.wait`）按 `wait_clue_hours_block` 档位复利抽线索
 （每档 `wait_clue_chance_per_block`，封顶 `wait_clue_max_chance`，默认优先出货物行情
 线索）；完成普通 / 主线委托按 `contract_clue_chance` 解锁港口位置线索。调查的真实消耗
-（金币 / 时间 / 成功率）在 4.4.3 落地，数值同样在 Core。
+已落地（4.4.3：每次 20 金 + 在港 6 小时 + 75% 成功率，失败照扣成本但不升级、可再试；
+数值来自 Core `exploration`）。
 
 ### 7.5 时效性
 

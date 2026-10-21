@@ -78,9 +78,9 @@
           "alert_threshold": 0.5,
           "alert_progress": 0.5,
           "turnback_extra_ratio": 0.25,
-          "investigation_cost": 0,
-          "investigation_hours": 0.0,
-          "investigation_success_chance": 1.0,
+          "investigation_cost": 20,
+          "investigation_hours": 6.0,
+          "investigation_success_chance": 0.75,
           "goods_clue_expiry_hours": {
             "rumor": 24.0,
             "intel": 72.0,

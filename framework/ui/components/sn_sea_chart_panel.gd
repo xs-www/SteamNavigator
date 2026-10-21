@@ -29,6 +29,8 @@ extends PanelContainer
 ## - **逐级调查**（阶段 4.3.2 / U2）：线索区块显示「下一级：%s」预告（4 级显示已达最高），
 ##   并多一个「调查线索」按钮，发出 `investigate_requested(clue_id)`。
 ##   `can_investigate` 来自查询层（在港且 `level < 4`），面板只据它启用/禁用按钮。
+##   4.4.3 起按钮上方显示 Core 的调查成本行（金币 / 小时 / 成功率），
+##   `can_afford_investigation` 为假时成本行转警示色并禁用按钮。
 ## - **货物行情线索**（阶段 4.4）：`type = port_goods` 时不显示方向 / 航程区间 / 探索
 ##   出航按钮，改为类型标签、港口名、参考价区间（2 级起）、库存与供需（3 级起）、
 ##   精确买卖价（4 级）与剩余时效（`ui.clue.expiry`）；底部「前往该港」按钮发
@@ -566,6 +568,22 @@ func _append_next_level_row(vbox: VBoxContainer, level: int) -> void:
 func _append_investigate_button(vbox: VBoxContainer, level: int) -> void:
 	if level <= 0:
 		return
+	# 4.4.3：调查消耗真正生效——显示 Core 给出的金币 / 工时 / 成功率，买不起时说明。
+	var cost := int(_clue.get("investigation_cost", 0))
+	var hours := float(_clue.get("investigation_hours", 0.0))
+	var chance := clampf(float(_clue.get("investigation_success_chance", 1.0)), 0.0, 1.0)
+	var can_afford := bool(_clue.get("can_afford_investigation", true))
+	if cost > 0 or hours > 0.0 or chance < 1.0:
+		var detail := Label.new()
+		detail.name = "InvestigateCostLabel"
+		detail.text = _tr_or(
+			"ui.clue.investigate_cost", "调查：%d 金 · %d 小时 · 成功率 %d%%"
+		) % [cost, int(roundf(maxf(0.0, hours))), int(roundf(chance * 100.0))]
+		detail.add_theme_font_size_override("font_size", 11)
+		detail.add_theme_color_override(
+			"font_color", Color("e8967f") if not can_afford else Color(0.62, 0.72, 0.69, 0.9)
+		)
+		vbox.add_child(detail)
 	var button := Button.new()
 	button.name = "InvestigateButton"
 	button.text = _tr_or("ui.button.investigate_clue", "调查线索")
@@ -574,7 +592,7 @@ func _append_investigate_button(vbox: VBoxContainer, level: int) -> void:
 	button.add_theme_stylebox_override("pressed", _button_style(Color(0.24, 0.20, 0.13)))
 	var can_investigate := bool(
 		_clue.get("can_investigate", level < MAX_CLUE_LEVEL)
-	) and level < MAX_CLUE_LEVEL
+	) and level < MAX_CLUE_LEVEL and can_afford
 	button.disabled = not can_investigate
 	button.pressed.connect(_on_investigate_pressed)
 	vbox.add_child(button)

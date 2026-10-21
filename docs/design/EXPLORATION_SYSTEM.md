@@ -4,7 +4,7 @@
 > 落到可运行的纵向切片。数值全部来自 Core JSON，框架只读规则。本文是实现契约，
 > 与设计文档冲突时以设计文档的玩法意图为准、以本文的字段/命令形状为准。
 > **4.3 探索体验修正已全部实现**（2026-10-21，U1–U8，分片 4.3.1–4.3.5 见 §10）。
-> **4.4 线索扩展**契约见 §11（2026-10-21）：4.4.1–4.4.2 已实现，4.4.3–4.4.5 按顺序推进。
+> **4.4 线索扩展**契约见 §11（2026-10-21）：4.4.1–4.4.3 已实现，4.4.4–4.4.5 按顺序推进。
 
 ## 1. 范围
 
@@ -520,7 +520,7 @@ ui.error.alert_already_decided
 
 ## 11. 阶段 4.4 线索扩展（In Progress，2026-10-21）
 
-> 状态：**契约已确认，4.4.1–4.4.2 已实现**；4.4.3–4.4.5 按顺序落地，玩法决策见 §11.6。
+> 状态：**契约已确认，4.4.1–4.4.3 已实现**；4.4.4–4.4.5 按顺序落地，玩法决策见 §11.6。
 > 4.4 只做线索系统扩展，不碰阶段 5 事件化海洋、耐久告急与 en locale 收尾；
 > 数值全部进 Core JSON，框架不写死内容 ID / 可调数字。
 
@@ -700,7 +700,7 @@ ui.notice.clue_expired / ui.notice.clue_investigation_failed / ui.notice.goods_c
 |---|---|---|---|
 | **4.4.1 数据模型 + 时效 + 查询裁剪** | `Clue` 扩展字段；`GameState.ensure_clues` 的 `expired` 与旧条目 normalize；`ClueService.sweep_expired` / `normalize_clue`；`sea_chart.view.clues` 追加字段（含 goods 分级裁剪）；`clue.list` 查询注册；`max_active_clues` 只数未过期 | 旧存档线索自动补齐且 `schema_version` 不变；`expires_at<=now` 只在命令路径清理并进 `expired`、名额释放；查询对任意类型/等级不含 `target_port_id`/`credibility`/真实 `search_zone`；port_location 视图与 4.3 逐字段一致；存档 round-trip 哈希一致 | ✅ 已实现 |
 | **4.4.2 新来源（在港等待 / 完成委托）** | `ClueService.on_wait` / `on_contract_completed` / `wait_clue_chance` / `acquire_goods` 来源权重 / `travel`；`PortCommands.wait` 与 `VoyageService.settle_arrival_services` 接线；`clue.travel` 命令 + 海图面板货物区块 /「前往该港」/ 统一确认弹窗（kind=goods）；事件 / notice / 本地化 | 等待概率 = `1-(1-p)^(hours/block)` 且封顶；委托完成按 `contract_clue_chance` 抽取；来源为 `wait`/`contract`、可信度落在对应区间；受 `max_active_clues` 约束、无可用目标时静默返回；同 seed 可复现；不阻断等待 / 抵达；`clue.travel` 在领域层解析目标港并走普通航线，查询仍不泄露 target id；货物线索面板显示分级行情 / 时效 / 前往按钮 | ✅ 已实现 |
-| **4.4.3 调查消耗真正落地** | `ClueService.investigate` 扣金币 + 推进小时 + 成功率；在港时间效果与 `port.wait` 共用（打造订单 / NPC 市场 / 逾期债务）；`clue.investigate` 返回体与查询字段（`investigation_success_chance`） | 成功：金币 -cost、时间 +hours、level+1；失败：金币照扣、时间照进、level 不变、线索 active 可再试、事件 `clue.investigation_failed`；金币不足在扣费前 `Result.fail`；4 级再调查报错不变；`investigation_cost/hours/chance` 为 0/0/1 时行为与 4.3 一致 | ⬜ |
+| **4.4.3 调查消耗真正落地** | `ClueService.investigate` 扣金币 + 推进小时 + 成功率；在港时间效果抽到新领域服务 `PortTimeService.spend`，与 `port.wait` 共用（打造订单 / NPC 市场 / 逾期债务）；`clue.investigate` 返回体与查询字段（`investigation_success_chance` / `can_afford_investigation`）；面板显示成本 / 工时 / 成功率 | 成功：金币 -cost、时间 +hours、level+1；失败：金币照扣、时间照进、level 不变、线索 active 可再试、事件 `clue.investigation_failed`；金币不足在扣费前 `Result.fail`；工时内线索到期返回 `expired` 且不发升级事件；4 级再调查报错不变；`investigation_cost/hours/chance` 为 0/0/1 时行为与 4.3 一致 | ✅ 已实现 |
 | **4.4.4 线索列表页** | 新页面 `clue_log_screen`（场景 + 脚本）+ Shell 接线 + 海图入口按钮；列 active 线索（类型 / 来源 / 等级 / 剩余时效 / 可调查）/ 过期折叠区；点击条目回海图并选中；空态文案 | 页面只读 `clue.list`，不自行计算规则；剩余时效与 `expires_at` 一致、过期条目在折叠区；点击线索回到海图并选中该 id；无泄漏字段；本地化键中英同步；960×540 与 1440×900 不裁切 | ⬜ |
 | **4.4.5 测试 / 截图 / 文档收尾** | 全量测试（基线 325，0 failed）；`tools/godot/capture_exploration.gd` 扩展（或新增专用 capture）抓货物线索面板 / 线索列表页 / 时效倒计时 / 等待来源；§11 回填、§7 更新、README / todo；静态文档重生成 + `--check`；分片提交 | 全量 `Tests:` 0 failed；截图逐次运行证据一致并落 `docs/design/screenshots/exploration/`；`gen_static_docs.mjs --check` 通过；每片 commit 只含本片文件 | ⬜ |
 
@@ -736,6 +736,6 @@ ui.notice.clue_expired / ui.notice.clue_investigation_failed / ui.notice.goods_c
 |---|---|---|
 | 4.4.1 | `GameState.CLUES_DEFAULTS.expired`、`ClueService`（`normalize_clue` / `is_expired` / `active_count` / `sweep_expired` / `acquire_goods` / `goods_candidates` / `_goods_view` / `expired_events_of`）、`SeaChartViewQuery`（`expiring_clue_count`、goods 跳过探索估算、active_count 上限）、`ClueListViewQuery`（新）+ `QueryRegistry`、`ExplorationRules.DEFAULTS`、Core `map_profiles.exploration` + `map_profile.schema.json`、`PortCommands.wait` / `VoyageService.settle_arrival_services` / `ExploreVoyageService.start` 的 sweep 接线、中英本地化 27 键 | `test_exploration` 5 例（行情冻结与分级裁剪、过期 sweep 与名额、clue.list 形状与历史、旧存档 normalize、Core 新键）；全套 329 例 / 0 失败 |
 | 4.4.2 | `ClueService`（`wait_clue_chance` / `on_wait` / `on_contract_completed` / `_acquire_by_source` / `travel`）、`PortCommands.wait`、`VoyageService.settle_arrival_services`、`ExploreCommands.travel` + `CommandRegistry`、`SeaChartViewQuery`（货物 travel 估算 / `can_sail`）、`SNSeaChartPanel`（货物区块 / 时效 / `SailButton`）、`SNSeaChartView`（货物线索不画几何）、`main.gd`（`kind=goods` 确认弹窗 + `clue.travel` 演出接线）、Core/`Schema` 的 `wait`/`contract` 可信度区间 | `test_exploration` 4 例（等待概率与真实获取、等待优先货物、委托完成钩子、`clue.travel` 成功与三类拒绝）；`test_sea_chart` 2 例（货物面板 / 无几何）；`capture_clue_expansion.gd` 两张截图；全套 335 例 / 0 失败 |
-| 4.4.3 | （待实现） | （待实现） |
+| 4.4.3 | `PortTimeService`（新，`port.wait` 与调查共用时间结算）、`ClueService.investigate`（扣费 / 工时 / 成功率 / 失败事件 / 工时内过期）、`ExplorationRules.roll_hits`、`PortCommands.wait` 重构、`sea_chart.view` + `clue.list` 的 `can_afford_investigation` / 调查成功率、`SNSeaChartPanel` 成本行与买不起禁用、Shell 调查失败状态、Core `investigation_*` = 20 / 6h / 0.75 | `test_exploration` 新增失败 / 金币不足用例并改写升级 / 查询 / 存档用例；`test_sea_chart` 成本显示与禁用；`capture_clue_expansion.gd` 两张 4.4.3 截图；全套 336 例 / 0 失败 |
 | 4.4.4 | （待实现） | （待实现） |
 | 4.4.5 | （待实现） | （待实现） |

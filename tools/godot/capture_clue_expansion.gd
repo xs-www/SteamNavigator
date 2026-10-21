@@ -41,6 +41,8 @@ const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_ch
 const SHOTS := [
 	{"file": "clue_goods_lead.png", "label": "货物行情线索面板（分级行情 + 剩余时效 + 前往该港）"},
 	{"file": "clue_goods_depart.png", "label": "货物线索的「前往该港」统一确认弹窗"},
+	{"file": "clue_investigate_cost.png", "label": "4.4.3 调查消耗：20 金 / 6 小时 / 成功率 75%"},
+	{"file": "clue_investigate_result.png", "label": "4.4.3 调查结果状态栏（成功升级 / 失败可重试）"},
 ]
 
 var _failures := 0
@@ -126,6 +128,33 @@ func _run() -> void:
 	_assert_departure_dialog(context, dialog_screen)
 	await _capture(String(SHOTS[1]["file"]), String(SHOTS[1]["label"]))
 
+	# ── 4.4.3: investigation cost + result. Cancel the dialog, acquire a second
+	# level-1 goods lead, then investigate it through the real panel button. ──
+	var cancel: Button = _node_named(dialog_screen, "CancelButton") as Button
+	if cancel != null:
+		cancel.pressed.emit()
+	await _settle(6, 0.3)
+	var second := ClueService.acquire_goods(
+		context,
+		ClueService.SOURCE_INTEL,
+		context.rng.make_stream(RngService.STREAM_EXPLORATION, "capture:goods:investigate")
+	)
+	if second.is_empty():
+		_fail("cannot acquire a second goods lead for the investigation shot")
+		_finish()
+		return
+	var second_id := String(second.get("id", ""))
+	var second_screen: Variant = await _open_chart(shell)
+	if second_screen == null:
+		_finish()
+		return
+	second_screen._on_clue_clicked(second_id)
+	await _settle(6, 0.3)
+	_assert_investigation_cost(context, second_screen)
+	await _capture(String(SHOTS[2]["file"]), String(SHOTS[2]["label"]))
+	await _assert_investigation_result(context, shell, second_screen, second_id)
+	await _capture(String(SHOTS[3]["file"]), String(SHOTS[3]["label"]))
+
 	# 等待来源证据放在截图之后：连续等待会推进时间，可能让行情线索自然过期。
 	_assert_wait_source_evidence(context)
 
@@ -150,20 +179,28 @@ func _prepare_goods_clue(context: AppContext) -> Dictionary:
 	var target_id := String(neighbors[0])
 	WorldOps.discover_port_id(state, target_id)
 	MapOps.discover(state, target_id)
-	var rng := context.rng.make_stream(RngService.STREAM_EXPLORATION, "capture:goods:%d" % Time.get_ticks_usec())
+	var rng := context.rng.make_stream(RngService.STREAM_EXPLORATION, "capture:goods")
 	var clue := ClueService.acquire_goods(context, ClueService.SOURCE_WAIT, rng)
 	if clue.is_empty():
 		_fail("the real service could not create a goods clue")
 		return {"ok": false}
 	var clue_id := String(clue.get("id", ""))
-	# 4.3.2 起获得固定 1 级；走真实命令升到 4 级（4.4.2 调查消耗尚未落地，代价 0）。
-	for _index in 3:
+	# 4.3.2 起获得固定 1 级；走真实命令升到 4 级。4.4.3 起调查有成功率（75%）与
+	# 20 金 / 6h 成本，所以重试直到 4 级（失败照扣成本但不升级）。
+	var attempts := 0
+	while int(ClueService.find_clue(context.state, clue_id).get("level", 1)) < 4 \
+			and attempts < 24:
+		attempts += 1
 		var investigated := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
 		_assert_true(bool(investigated.get("ok", false)),
 			"clue.investigate advances the goods lead: %s" % str(investigated))
+	print("[EVIDENCE] goods clue reached level 4 in %d investigation attempt(s)" % attempts)
 	clue = ClueService.find_clue(context.state, clue_id)
 	if clue.is_empty():
 		_fail("the goods clue vanished after investigation")
+		return {"ok": false}
+	if int(clue.get("level", 0)) < 4:
+		_fail("the goods clue did not reach level 4")
 		return {"ok": false}
 	var snapshot: Dictionary = clue.get("goods_snapshot", {})
 	print("[EVIDENCE] goods clue id=%s target=%s good=%s level=%d source=%s expires_at=%.1f snapshot=%s" % [
@@ -289,6 +326,62 @@ func _assert_departure_dialog(context: AppContext, screen: Variant) -> void:
 	_assert_true(confirm != null, "the goods dialog exposes the depart confirmation button")
 	if confirm != null:
 		_assert_false(confirm.disabled, "the feasible goods lead can be confirmed")
+
+
+## 4.4.3 面板：调查成本 / 工时 / 成功率来自 Core（20 金 / 6h / 75%），按钮可用。
+func _assert_investigation_cost(context: AppContext, screen: Variant) -> void:
+	var texts := _label_texts(screen)
+	var expected := String(context.translate("ui.clue.investigate_cost")) % [20, 6, 75]
+	_assert_true(_texts_contain(texts, expected),
+		"the level-1 lead shows the Core investigation cost (%s): %s" % [expected, str(texts)])
+	var button: Button = _node_named(screen, "InvestigateButton") as Button
+	_assert_true(button != null, "the level-1 lead exposes the investigate button")
+	if button != null:
+		_assert_false(button.disabled, "the affordable investigation button is enabled")
+
+
+## 通过真实面板按钮执行 `clue.investigate`：无论成功 / 失败，钱与时间都按 Core 落账，
+## 状态栏给出对应本地化结果（成功升级 / 失败可重试），线索保持 active。
+func _assert_investigation_result(
+	context: AppContext, shell: Control, screen: Variant, clue_id: String
+) -> void:
+	var button: Button = _node_named(screen, "InvestigateButton") as Button
+	if button == null:
+		_fail("no investigate button for the cost shot")
+		return
+	var money_before := context.state.money()
+	var time_before := context.state.now()
+	var level_before := int(ClueService.find_clue(context.state, clue_id).get("level", 1))
+	button.pressed.emit()
+	await _settle(8, 0.35)
+	var clue := ClueService.find_clue(context.state, clue_id)
+	_assert_false(clue.is_empty(), "the investigated clue stays active")
+	if clue.is_empty():
+		return
+	var level_after := int(clue.get("level", 1))
+	var success := level_after == level_before + 1
+	_assert_eq(context.state.money(), money_before - 20,
+		"the investigation charged the Core 20 gold")
+	_assert_almost_eq(context.state.now(), time_before + 6.0, 0.0001,
+		"the investigation spent the Core 6 hours")
+	var expected_status := ""
+	if success:
+		expected_status = String(context.translate("ui.notice.clue_investigated")) % level_after
+		_assert_true(String(shell._status_message).contains(expected_status),
+			"the status reports the successful investigation (%s): %s" % [
+				expected_status, String(shell._status_message)
+			])
+	else:
+		expected_status = String(context.translate("ui.notice.clue_investigation_failed"))
+		_assert_true(String(shell._status_message).contains(expected_status),
+			"the status reports the failed attempt (%s): %s" % [
+				expected_status, String(shell._status_message)
+			])
+		_assert_eq(level_after, level_before, "a failed attempt never advances the level")
+	print("[EVIDENCE] investigation clue=%s level %d -> %d success=%s money=%d time=%.1f status=%s" % [
+		clue_id, level_before, level_after, str(success), context.state.money(),
+		context.state.now(), String(shell._status_message),
+	])
 
 
 # ---------------------------------------------------------------------------
@@ -455,6 +548,13 @@ func _assert_eq(actual: Variant, expected: Variant, message: String) -> void:
 		print("[PASS] " + message)
 	else:
 		_fail("%s (got %s, expected %s)" % [message, str(actual), str(expected)])
+
+
+func _assert_almost_eq(actual: float, expected: float, tolerance: float, message: String) -> void:
+	if absf(actual - expected) <= tolerance:
+		print("[PASS] " + message)
+	else:
+		_fail("%s (got %.6f, expected %.6f +- %.6f)" % [message, actual, expected, tolerance])
 
 
 func _fail(message: String) -> void:

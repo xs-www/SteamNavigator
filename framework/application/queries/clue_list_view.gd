@@ -40,8 +40,15 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		clue_view["investigation_success_chance"] = clampf(
 			float(rules.get("investigation_success_chance", 1.0)), 0.0, 1.0
 		)
+		var cost := int(clue_view["investigation_cost"])
+		clue_view["can_afford_investigation"] = cost <= 0 or state.money() >= cost
 		clue_view["can_investigate"] = at_port and level < ClueService.NAME_MIN_LEVEL
 		clue_view["can_sail"] = _can_sail(state, clue, at_port, exploring)
+		var next_level := level + 1 if level < ClueService.NAME_MIN_LEVEL else 0
+		clue_view["next_level"] = next_level
+		clue_view["next_level_key"] = _next_level_key(
+			String(clue_view.get("type", ClueService.TYPE_PORT_LOCATION)), next_level
+		)
 		clues.append(clue_view)
 	var expired: Array = []
 	for raw in Array(state.ensure_clues().get("expired", [])):
@@ -55,6 +62,15 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"clues": clues,
 		"expired": expired,
 	})
+
+
+## 4.4：下一级披露的文案键——货物线索用行情等级表，港口位置线索用 4.3 的等级表。
+static func _next_level_key(type: String, next_level: int) -> String:
+	if next_level <= 0:
+		return ""
+	if type == ClueService.TYPE_PORT_GOODS:
+		return "ui.clue.goods.level.%d" % next_level
+	return "ui.clue.level.%d" % next_level
 
 
 static func _can_sail(

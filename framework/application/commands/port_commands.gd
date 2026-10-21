@@ -21,7 +21,6 @@ const WAIT_OPTIONS := [6, 12, 24]
 
 static func wait(params: Dictionary, context) -> Dictionary:
 	var state: GameState = context.state
-	var hub: RegistryHub = context.registries
 	if not context.has_run():
 		return Result.fail("no_run", "ui.error.no_run")
 	if not state.is_at_port():
@@ -35,18 +34,14 @@ static func wait(params: Dictionary, context) -> Dictionary:
 		})
 
 	var position := state.current_port_id()
-	state.advance_time(float(hours))
+	# 4.4.3：时间推进 / 打造订单 / NPC 市场 / 逾期债务统一走 PortTimeService，
+	# 与「调查线索」的在港工时消耗共用同一套规则。
+	var spent := PortTimeService.spend(context, float(hours))
 	# 4.4：等待推进时间后清理到期线索（释放 max_active_clues 名额）。
 	var expired_ids := ClueService.sweep_expired(state)
-	var completed_orders := CraftOps.settle_orders(state, hub)
-	var npc_events := NpcTraderSimulator.advance(
-		state,
-		hub,
-		context.rng,
-		state.now(),
-		_profile_data(context)
-	)
-	var debt_events := DebtService.check_overdue(state)
+	var completed_orders: Array = spent.get("completed_orders", [])
+	var npc_events: Array = spent.get("npc_events", [])
+	var debt_events: Array = spent.get("debt_events", [])
 	state.push_notice("ui.notice.waited", {
 		"port": MapOps.port_display_key(state.world(), position),
 		"hours": hours,
@@ -91,10 +86,3 @@ static func wait(params: Dictionary, context) -> Dictionary:
 		"debt_events": debt_events,
 		"clue": clue_view,
 	}, events)
-
-
-static func _profile_data(context) -> Dictionary:
-	var state: GameState = context.state
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	var profile: ContentDefinition = context.registries.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	return profile.data if profile != null else {}

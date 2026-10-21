@@ -1404,6 +1404,26 @@ func test_sea_chart_panel_investigation_button_and_screen_forwarding() -> void:
 		investigate.pressed.emit()
 	assert_eq(requested, ["clue:7"], "the investigate button emits investigate_requested(clue_id)")
 
+	# 4.4.3：显示调查成本 / 工时 / 成功率；买不起时按钮禁用。
+	var priced := clue.duplicate(true)
+	priced["investigation_cost"] = 20
+	priced["investigation_hours"] = 6.0
+	priced["investigation_success_chance"] = 0.75
+	priced["can_afford_investigation"] = true
+	panel.bind_clue(priced, Callable(context, "translate"))
+	var cost_text := String(context.translate("ui.clue.investigate_cost")) % [20, 6, 75]
+	assert_true(_any_text_contains(_label_texts(panel), cost_text),
+		"the panel shows the Core investigation cost, got: %s" % str(_label_texts(panel)))
+	var broke := priced.duplicate(true)
+	broke["can_afford_investigation"] = false
+	panel.bind_clue(broke, Callable(context, "translate"))
+	investigate = _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Button).name) == "InvestigateButton"
+	) as Button
+	assert_not_null(investigate, "the investigate button stays visible when unaffordable")
+	if investigate != null:
+		assert_true(investigate.disabled, "an unaffordable investigation is disabled")
+
 	# 4 级：按钮禁用 + 已达最高等级文案，不再显示「下一级」。
 	var capped := clue.duplicate(true)
 	capped["level"] = 4

@@ -556,10 +556,12 @@ static func goods_candidates(context) -> Array:
 	return candidates
 
 
-## 4.4.3：[占位] 调查消耗在下一片落地；这里保持 4.3「只涨等级」的行为。
-## 4.3.2 / U2：「调查线索」——在港把一条 active 线索推进一级（1→2→3→4，上限 4）。
-## `target_port_id` / `credibility` / 搜索区 / 行情快照都在获得时固定，调查只负责逐级
-## 披露。成功返回 `{clue_id, level, next_level, cost, hours, view}`。
+## 4.4.3：「调查线索」——在港把一条 active 线索推进一级（1→2→3→4，上限 4）。
+## 每次尝试消耗 Core 的 `investigation_cost` 金币、`investigation_hours` 在港小时
+## （走 `PortTimeService`，与等待同一套订单 / NPC / 债务结算），再按
+## `investigation_success_chance` 判定：成功 `level + 1`，失败照扣成本但不升级，
+## 线索保留可再试。目标港 / credibility / 搜索区 / 行情快照在获得时固定，调查只披露。
+## `cost / hours / chance` 为 0 / 0 / 1 时行为与 4.3 一致。
 static func investigate(context, clue_id: String) -> Dictionary:
 	if not context.has_run():
 		return Result.fail("no_run", "ui.error.no_run")
@@ -599,19 +601,86 @@ static func investigate(context, clue_id: String) -> Dictionary:
 			expired_events
 		)
 	var rules := ExplorationRules.read(state, context.registries)
-	clue["level"] = level + 1
-	var new_level := int(clue.get("level", level + 1))
 	var cost := int(rules.get("investigation_cost", 0))
 	var hours := float(rules.get("investigation_hours", 0.0))
+	var chance := clampf(float(rules.get("investigation_success_chance", 1.0)), 0.0, 1.0)
+	# 金币不足：在扣费 / 推进时间之前失败，命令事务不会落账。
+	if cost > 0 and state.money() < cost:
+		return Result.fail(
+			"insufficient_money",
+			"ui.error.insufficient_money",
+			{"required": cost, "money": state.money(), "clue_id": clue_id},
+			expired_events
+		)
 	var events: Array = expired_events.duplicate()
-	events.append(clue_investigated_event(clue))
+	if cost > 0:
+		state.add_money(-cost)
+		state.record_expense(cost)
+	if hours > 0.0:
+		var spent := PortTimeService.spend(context, hours)
+		for order in spent.get("completed_orders", []):
+			events.append({
+				"type": "ship.module_crafted",
+				"payload": {
+					"order_id": String((order as Dictionary).get("order_id", "")),
+					"module_id": String((order as Dictionary).get("module_id", "")),
+					"content_type": String((order as Dictionary).get("content_type", "")),
+					"port_id": String((order as Dictionary).get("port_id", "")),
+					"warehouse_qty": int((order as Dictionary).get("warehouse_qty", 0)),
+				},
+			})
+		events.append_array(spent.get("npc_events", []))
+		events.append_array(spent.get("debt_events", []))
+		# 工时可能让线索本身到期：先 sweep 再判定，避免对已失效线索升级。
+		events.append_array(expired_events_of(sweep_expired(state)))
+		clue = find_clue(state, clue_id)
+		if clue.is_empty():
+			return Result.ok(
+				{
+					"success": false,
+					"expired": true,
+					"clue_id": clue_id,
+					"level": 0,
+					"next_level": 0,
+					"cost": cost,
+					"hours": hours,
+					"success_chance": chance,
+					"charged": cost > 0,
+					"view": {},
+				},
+				events
+			)
+	var rng: RandomNumberGenerator = context.rng.stream(
+		RngService.STREAM_EXPLORATION,
+		"investigate:%s:%d:%.3f" % [clue_id, level, state.now()]
+	)
+	var roll := rng.randf()
+	var success := ExplorationRules.roll_hits(roll, chance)
+	# `rule_roll` 仅供测试复现：同 seed + 同 key 的判定与 `roll_succeeds` 一致。
+	var new_level := level
+	if success:
+		clue["level"] = level + 1
+		new_level = int(clue.get("level", level + 1))
+		events.append(clue_investigated_event(clue))
+	else:
+		state.push_notice("ui.notice.clue_investigation_failed", {
+			"level": level,
+			"cost": cost,
+			"hours": hours,
+		})
+		events.append(clue_investigation_failed_event(clue, cost, hours))
 	return Result.ok(
 		{
+			"success": success,
+			"expired": false,
 			"clue_id": clue_id,
 			"level": new_level,
 			"next_level": new_level + 1 if new_level < NAME_MIN_LEVEL else 0,
 			"cost": cost,
 			"hours": hours,
+			"success_chance": chance,
+			"charged": cost > 0,
+			"roll": roll,
 			"view": view_entry(state, clue),
 		},
 		events
@@ -814,6 +883,22 @@ static func clue_investigated_event(clue: Dictionary) -> Dictionary:
 		"payload": {
 			"clue_id": String(clue.get("id", "")),
 			"level": int(clue.get("level", 1)),
+		},
+	}
+
+
+## Domain event for a failed investigation attempt: the cost was charged, the level did
+## not change, and the clue stays active for another try.
+static func clue_investigation_failed_event(
+	clue: Dictionary, cost: int, hours: float
+) -> Dictionary:
+	return {
+		"type": "clue.investigation_failed",
+		"payload": {
+			"clue_id": String(clue.get("id", "")),
+			"level": int(clue.get("level", 1)),
+			"cost": cost,
+			"hours": hours,
 		},
 	}
 

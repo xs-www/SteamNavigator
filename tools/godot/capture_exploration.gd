@@ -47,6 +47,9 @@ extends SceneTree
 ##   仍 active、`summary.explore.result == "turned_back"`、命令日志里没有
 ##   `not_exploring` 也没有第二次 `explore.settle`；继续路径会正常 `explore.settle`
 ##   并保留 `alert_decided == "continue"`，重复回答返回 `alert_already_decided`。
+## - 4.4.3：`clue.investigate` 有 Core 成功率（0.75）与成本，所以逐级升级改为
+##   「重试直到目标等级」的循环（每次失败照扣 20 金 / 6h，但不升级）；升级次数以
+##   `[EVIDENCE] ... attempts` 记录。
 ## - 先写 `res://tmp_exploration_*`，全部 8 张成功后才移入 `docs/`，失败不留半套。
 ## - 纯色/近纯色画面视为"读到未绘制纹理"，判失败；写完 PNG 会读回再验一次。
 ## - 120 s 看门狗兜底：脚本错误会让协程中断而不退出，避免窗口挂住。
@@ -66,9 +69,6 @@ const MAX_DRIVE_SECONDS := 90.0
 const MAX_CLUE_ATTEMPTS := 120
 ## 一张海图要同时看到三种线索图形，所以线索集必须覆盖 2 / 3 / 4 级。
 const WANTED_LEVELS := [2, 3, 4]
-## 4.3.2 起线索获得时固定 1 级，图表要同时展示 2/3/4 级就必须走真实的
-## `clue.investigate` 逐级升级（调查次数 = 目标等级 - 1）。
-const INVESTIGATE_COUNT := {2: 1, 3: 2, 4: 3}
 
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
@@ -311,10 +311,17 @@ func _prepare_clues(context: AppContext) -> Dictionary:
 		var fixed_target := String(_domain_clue(context, String(clue_id)).get("target_port_id", ""))
 		var fixed_credibility := float(_domain_clue(context, String(clue_id)).get("credibility", 0.0))
 		var fixed_zone: Dictionary = _domain_clue(context, String(clue_id)).get("search_zone", {})
-		for _step in INVESTIGATE_COUNT[target_level]:
+		# 4.4.3：调查有成功率（Core 0.75），失败照扣成本但不升级；重试直到目标等级。
+		var attempts := 0
+		while int(_domain_clue(context, String(clue_id)).get("level", 1)) < target_level \
+				and attempts < 24:
+			attempts += 1
 			var result := context.commands.execute(&"clue.investigate", {"clue_id": clue_id})
 			_assert_true(bool(result.get("ok", false)),
 				"clue.investigate succeeds for %s: %s" % [clue_id, str(result.get("error_code", ""))])
+		print("[EVIDENCE] clue %s reached level %d in %d investigation attempt(s)" % [
+			clue_id, target_level, attempts,
+		])
 		var investigated := _domain_clue(context, String(clue_id))
 		_assert_eq(int(investigated.get("level", 0)), target_level,
 			"clue %s reaches level %d through investigation" % [clue_id, target_level])
