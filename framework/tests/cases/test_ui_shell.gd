@@ -13,7 +13,6 @@ const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_tabl
 
 const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_screen.gd")
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
-const SUPPLY_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/supply_screen.gd")
 const INTEL_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/intel_screen.gd")
 const OVERVIEW_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/overview_screen.gd")
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
@@ -387,22 +386,23 @@ func test_shipyard_order_and_port_wait_make_time_move() -> void:
 	_unmount(bundle)
 
 
-func test_supply_screen_paints_the_lost_capacity_band() -> void:
+func test_market_supply_block_paints_the_lost_capacity_band() -> void:
 	var bundle := _mount(5104)
 	var shell: Control = bundle["shell"]
 	var context: AppContext = bundle["context"]
 	context.state.ship()["coal"] = 0.0
 	context.state.ship()["water"] = 0.0
-	_goto(shell, "supply")
-	assert_eq(_nodes_with_script(shell._root_box, SUPPLY_SCREEN_SCRIPT).size(), 1, "the shell instantiates the extracted supply screen")
+	_goto(shell, "market")
+	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the shell mounts the market page")
+	assert_true(shell.find_child("MarketSupply", true, false) != null, "the market page hosts the supply block")
 	var water_label: String = shell._tr("ui.label.water", "")
 	var water_meter := _meter_of_supply_card(shell._root_box, water_label)
-	assert_not_null(water_meter, "the supply screen renders a water meter")
+	assert_not_null(water_meter, "the market supply block renders a water meter")
 	assert_almost_eq(float(water_meter.loss_value), 0.0, 0.001, "nothing is lost while both tanks are empty")
 	var before: Dictionary = context.queries.execute(&"supply.view")["data"]["water_view"]
 	var bought := context.commands.execute(&"supply.buy_coal", {"amount": 10})
 	assert_true(bool(bought.get("ok", false)), "buying coal succeeds: %s" % str(bought))
-	_goto(shell, "supply")
+	_goto(shell, "market")
 	water_meter = _meter_of_supply_card(shell._root_box, water_label)
 	var after: Dictionary = context.queries.execute(&"supply.view")["data"]["water_view"]
 	assert_eq(int(after["cap_loss"]), 10, "loading coal takes ten units off the water ceiling")
@@ -601,7 +601,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
 	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
 	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	for screen in ["overview", "market", "contracts", "shipyard", "supply", "intel"]:
+	for screen in ["overview", "market", "contracts", "shipyard", "intel"]:
 		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
 	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
 		"4.3/U7: the voyage page is gone from the navigation")
@@ -643,8 +643,12 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	for child in shell._port_hotspot_layer.get_children():
 		if child is Button:
 			signs += 1
-	assert_eq(signs, facilities.size() + 1, "one edge sign per facility plus the chart sign")
-	for facility in ["exchange", "contracts", "supply", "intel", "shipyard"]:
+	var expected_signs := facilities.size() + 1
+	if facilities.has("supply"):
+		# 4.5.3: the supply facility moved into the market page, so it gets no sign.
+		expected_signs -= 1
+	assert_eq(signs, expected_signs, "one edge sign per standalone facility plus the chart sign")
+	for facility in ["exchange", "contracts", "intel", "shipyard"]:
 		var sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_%s" % facility)
 		if facilities.has(facility):
 			assert_not_null(sign, "the present %s facility gets an edge sign" % facility)
@@ -676,7 +680,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	for child in shell._port_hotspot_layer.get_children():
 		if child is Button:
 			resized_signs += 1
-	assert_eq(resized_signs, facilities.size() + 1, "resizing the window re-lays the edge signs")
+	assert_eq(resized_signs, expected_signs, "resizing the window re-lays the edge signs")
 	var exchange_sign: Variant = shell._port_hotspot_layer.get_node_or_null("Hotspot_exchange")
 	if exchange_sign is Button:
 		(exchange_sign as Button).emit_signal("pressed")
@@ -687,9 +691,9 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	shell._pending_transition = false
 	shell._fade_layer.visible = false
 
-	# Adjacent-station pages: overview / market / supply share the same mounted
-	# district. Switching pages pans the camera and sails the hull, so the stage
-	# stays visible, the page becomes a dock panel and nothing is rebuilt.
+	# Adjacent-station pages: overview / market share the same mounted district.
+	# Switching pages pans the camera and sails the hull, so the stage stays
+	# visible, the page becomes a dock panel and nothing is rebuilt.
 	var stage_instance := host.current_stage()
 	_goto(shell, "market")
 	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the market page is mounted")
@@ -727,26 +731,11 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	var market_berth := port_stage.station_ship_position("market").x
 	assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the hull moors at the market berth")
 
-	# Supply is the adjacent station on the other side: same instance, same page
-	# shell, only camera + hull move.
+	# 4.5.3: supply lives inside the market page, not as an adjacent station page;
+	# navigating to the old `supply` id is redirected to the market.
 	_goto(shell, "supply")
-	assert_eq(_nodes_with_script(shell._root_box, SUPPLY_SCREEN_SCRIPT).size(), 1, "the supply page is mounted")
-	assert_true(bool(host.visible), "the supply page keeps the shared 3D district visible")
-	assert_eq(host.current_stage(), stage_instance, "the supply page reuses the mounted stage instance")
-	assert_eq(String(shell._stage_station), "supply", "the shell points the stage at the supply station")
-	assert_eq(String(port_stage.current_station()), "supply", "the PortStage focuses the supply station")
-	assert_true(
-		port_stage.station_ship_position("supply").x - market_berth > 40.0,
-		"the two stations are tens of metres apart along the quay"
-	)
-	port_stage.advance_station(12.0)
-	assert_false(port_stage.is_station_transitioning(), "the supply station transition settles")
-	assert_almost_eq(
-		port_stage.ship_x(),
-		port_stage.station_ship_position("supply").x,
-		0.3,
-		"the hull sails east to the supply berth"
-	)
+	assert_eq(String(shell._active_screen), "market", "the legacy supply id redirects to the market")
+	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the market page is mounted")
 
 	# Pages that are not stage-backed still hide the district and show the fade.
 	_goto(shell, "contracts")

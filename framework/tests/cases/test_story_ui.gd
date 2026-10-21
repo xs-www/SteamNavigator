@@ -31,16 +31,16 @@ func test_tutorial_shell_mounts_card_and_locks_features() -> void:
 	_unmount(bundle)
 
 
-func test_continue_unlocks_supply_then_buying_advances_to_the_chart() -> void:
+func test_continue_unlocks_market_then_buying_advances_to_the_chart() -> void:
 	var bundle := _mount(true)
 	var shell: Control = bundle["shell"]
 	var continue_button := shell.find_child("ContinueButton", true, false) as Button
 	assert_not_null(continue_button, "the opening card has a continue button")
 	continue_button.pressed.emit()
 	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_brief", "continue enters the supply briefing")
-	assert_true((shell._story_vm.get("unlocked_features", []) as Array).has("supply"),
-		"the supply nav unlocks")
-	assert_eq(_nav_buttons(shell).size(), 2, "overview + supply are now in the nav")
+	assert_true((shell._story_vm.get("unlocked_features", []) as Array).has("market"),
+		"the market nav unlocks")
+	assert_eq(_nav_buttons(shell).size(), 2, "overview + market are now in the nav")
 	var dismiss := shell.find_child("ContinueButton", true, false) as Button
 	assert_not_null(dismiss, "the objective briefing card can be dismissed")
 	dismiss.pressed.emit()
@@ -49,6 +49,12 @@ func test_continue_unlocks_supply_then_buying_advances_to_the_chart() -> void:
 	var objective_label := shell.find_child("ObjectiveLabel", true, false) as Label
 	assert_not_null(objective_label, "the objective renders its localized text")
 	assert_false(String(objective_label.text).is_empty(), "the objective text is translated")
+	# 4.5.3：补给区块就在市场页里。
+	shell._active_screen = "market"
+	shell._refresh()
+	var supply_block := shell.find_child("MarketSupply", true, false)
+	assert_not_null(supply_block, "the market page hosts the supply section")
+	assert_true(supply_block.get_child_count() >= 2, "the supply section renders coal and water cards")
 	# 4.5.2：先买 4 煤 + 2 水 → 补给受限、解锁海图；看海图并关闭 → 恢复补给；
 	# 再买 6 煤 → 出航阶段（默认极速），全程仍锁海图以外的功能。
 	shell._run_command(&"supply.buy_coal", {"amount": 4})
@@ -100,7 +106,7 @@ func test_skip_confirmation_unlocks_everything_and_removes_the_card() -> void:
 	assert_true(bool(shell._story_vm.get("completed", false)), "the tutorial is completed")
 	assert_true(bool(shell._story_vm.get("skipped", false)), "the tutorial records that it was skipped")
 	assert_true(shell._story_card == null, "no card remains after skipping")
-	assert_eq(_nav_buttons(shell).size(), 7, "every nav screen is unlocked")
+	assert_eq(_nav_buttons(shell).size(), 6, "every nav screen is unlocked")
 	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
 	_unmount(bundle)
 
@@ -109,7 +115,7 @@ func test_non_tutorial_shell_has_no_card_and_no_gating() -> void:
 	var bundle := _mount(false)
 	var shell: Control = bundle["shell"]
 	assert_true(shell._story_card == null, "a non-tutorial run has no story card")
-	assert_eq(_nav_buttons(shell).size(), 7, "a non-tutorial run keeps every nav screen")
+	assert_eq(_nav_buttons(shell).size(), 6, "a non-tutorial run keeps every nav screen")
 	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
 	_unmount(bundle)
 
@@ -188,10 +194,10 @@ func _nav_buttons(shell: Control) -> Array:
 
 
 func _needs_supply_locked(shell: Control) -> bool:
-	# Supply is gated through the story VM; the nav must not expose a page that
-	# opens the supply screen while the feature is locked.
+	# The market page (which now hosts supplies) is gated through the story VM;
+	# the nav must not expose it while the feature is locked.
 	var before := String(shell._active_screen)
-	shell._on_nav("supply")
+	shell._on_nav("market")
 	return String(shell._active_screen) == before
 
 

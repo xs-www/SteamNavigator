@@ -1,4 +1,4 @@
-# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 / 4.5.2 Implemented（2026-10-22）
+# 新手剧情 / 教学系统（阶段 4.5）实现契约 — 4.5.1 / 4.5.2 / 4.5.3 Implemented（2026-10-22）
 
 > 作用：把「当前阶段每局开局默认触发的新手剧情」落成可运行的纵向切片：剧情状态机、
 > 功能门禁、剧情卡 / 目标提示、脚本化委托与解锁、补给并市、酒馆、保底探索、船厂限制。
@@ -60,10 +60,10 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 
 | 阶段 | 内容 | 系统动作 / 推进 |
 |---|---|---|
-| `second_port` | 剧情卡：第三港 1 级线索；解锁 `clues`、`market`、`contracts`；第二个主线「买 6 件货送回第一港」 | 自动获得一条第三港 L1 线索；市场开启（仅 2 种货 + 水煤） |
-| `second_buy` | 目标：在市场买够 6 件并出航回第一港 | `cmd:trade.buy` 累计 ≥ 6 且 `cmd:voyage.start` |
-| `back_first` | 抵达第一港；剧情卡：卖掉货物、完成第二主线 | `cmd:trade.sell` 累计 ≥ 6 / 委托完成 |
-| `tavern_open` | 剧情卡：酒馆开店（物价情报 + 港口线索）；解锁 `tavern`；自动给第一条线索 | `story.advance` |
+| `second_port` | 剧情卡：解锁 `market`、`contracts`；第二主线「买 8 件纺织品，送 6 件回铁港」 | 市场只开放纺织品 / 香料两种贸易货物 + 补给区块；`grant_tutorial_contract`（main_02 模板，`provider: player`，`destination: home`，交付 6 件） |
+| `second_depart` | 目标：买 8 件纺织品后出航回铁港 | `cmd:trade.buy`（match 纺织品）累计 ≥ 8 → 目标「回铁港」 |
+| `back_first` | 抵达铁港；委托自动交付 6 件，剧情引导卖出剩余 2 件 | `cmd:trade.sell`（match 纺织品）累计 ≥ 2 |
+| `tavern_open` | 4.5.4 起：酒馆开店（物价情报 + 港口线索）；解锁 `tavern`；自动给第一条线索 | `story.advance` |
 
 ### 幕 2 · 酒馆与线索（4.5.4）
 
@@ -227,7 +227,7 @@ guarantee_explore_success / unlock_modules / complete_story
 |---|---|---|---|
 | **4.5.1 剧情框架 + 门禁 + 剧情卡** | ✅ 已实现：`GameState.ensure_story` / `StoryService`（配置读取、阶段推进、事件计数、解锁、效果分发、目标阶段收卡）；`story.view` / `advance` / `skip` / `observe` + 注册；Core `map_profiles.story` + Schema；Core/框架本地化；Shell 剧情卡 + 目标条 + feature 门禁 + 跳过确认（`run.start` 新增 `tutorial` 参数，Shell 新局传 true） | 新局自动进入第 0 阶段且只解锁配置的功能；导航 / 港口招牌 / `M` / 状态条海图入口按解锁过滤；剧情卡可继续 / 跳过；跳过解锁全部并揭示主委托目的港；旧存档无 `story` 时全开且不弹；`story.view` 不泄露内部 counters / flags；存档 round-trip 一致；全量 **352 例 0 failed**；截图 `docs/design/screenshots/story/tutorial_card.png` / `tutorial_objective.png` | ✅ |
 | **4.5.2 开局幕** | ✅ 已实现：教程新局隐藏选构筑（`new_game_screen` tutorial_mode + Shell 传默认教学船）；`opening`→`depart_brief` 全流程（获船叙事 / 补给 4 煤 2 水 / 补给受限 `lock_actions: supply.buy` / 海图解禁 / 关闭海图恢复补给 / 买够 10 煤 / 出航默认极速 / 抵达收尾）；燃料舱运煤教学委托（`grant_tutorial_contract` + `provider: fuel` + `set_ship_fuel`，出航前货物校验）；`tutorial_express` 限时 | 按 §3 幕 0 全流程可走通：补给购买触发阶段、限购命令被拦截且卡片显示原因、海图打开 / 关闭推进、买够出航、抵达第二港；标准速度迟到 / 极速准时；非教程局主线与 9 seed 通关回归不变；全量 **354 例 0 failed**；截图 `tutorial_supply_hold.png` / `tutorial_depart_fast.png` | ✅ |
-| **4.5.3 并市 + 第二主线** | 水煤进市场（补给区块 + `supply.buy_*`），删除补给页 / 导航 / 招牌；市场商品按 `unlocked_items` 过滤；第二主线（自备货物反向交付）与买卖计数；回到第一港卖货结案 | 补给页不存在；市场可买煤 / 水且扣款正确；市场仅显示解锁商品；第二主线可买货 → 出航 → 回港卖出 → 完成；旧存档 `supply` 页面消失但命令仍可用 | ⬜ |
+| **4.5.3 并市 + 第二主线** | ✅ 已实现：水煤并入市场「补给（煤 / 水）」区块（复用 `supply.buy_*`），删除补给页 / 导航 / 港口招牌（旧 `supply` 入口重定向市场，旧存档兼容）；市场贸易货物按 story `unlocked_items` 过滤；Act 0 市场只有补给区块，第二港开放纺织品 / 香料；第二主线用 `grant_tutorial_contract`（main_02 模板、`provider: player`、`destination: home`）交付 6 件纺织品，剧情目标买 8 件、回港卖剩余 2 件；新增 `match` 事件条件与 `destination: home` | 补给页不存在，市场可买煤 / 水且扣款正确；Act 0 市场 0 条贸易货物，第二港 2 条；第二主线可买货 → 出航 → 回港交付 → 卖出剩余 → 收尾；全量 **363 例 0 failed**；截图 `tutorial_market_supply.png` / `tutorial_market_goods.png` | ✅ |
 | **4.5.4 酒馆 / 线索 / 保底探索** | 酒馆页替换情报页（物价情报 + 港口线索，`tavern` 设施 / feature，旧 `intel` 兼容）；自动 / 购买线索；前两港价差；第三件货解锁；两条线索与保底探索成功、发现第三港 | 酒馆可买物价情报与港口线索；前两港同货价差 ≥ Core 配置且可盈利；第一条线索后第三件货出现在市场；第二条线索 L3 + 保底探索必成功并解锁第三港；跳过流程不触发保底 | ⬜ |
 | **4.5.5 船厂 / 客舱 / 旅客** | 新增 1 人小型客舱（Core 模块 + 本地化）；`shipyard.view` 按 `unlocked_modules` 过滤；第三主线旅客 1 人；卸货舱 / 装客舱引导 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成旅客委托；未解锁模块不可见不可买；剧情引导步骤可推进到完成 | ⬜ |
 | **4.5.6 收尾** | 全量测试、窗口截图（剧情卡 / 目标条 / 门禁 / 酒馆 / 并市 / 船厂）、README / todo / 本文回填、静态文档 | 全量 0 failed；截图两次运行逐字一致；`gen_static_docs --check` 通过；每片提交只含本片文件 | ⬜ |
@@ -237,8 +237,8 @@ guarantee_explore_success / unlock_modules / complete_story
 - 第一主线：自备 `10` 煤（4.5.2 以 `provider: fuel` 从煤舱交付，完成时扣 10；开场
   `set_ship_fuel = 4` 强制补给），水 2；补给首段目标 4 煤 / 2 水；契约时限用
   `tutorial_express = max(6, distance / 13.5)`（标准迟到、极速准时）。
-- 第二主线：玩家自备 `6` 件指定货物（建议香料 / 纺织品，按 Core 商品表），前两港
-  价差 ≥ 40%；市场此阶段仅 2 种货 + 水煤。
+- 第二主线：玩家自备 `8` 件纺织品（市场单价约 66，起始资金足够），委托交付 `6`
+  件回起始港，余下 `2` 件在起始港市场卖出；Act 1 市场只开放纺织品 / 香料两种货物。
 - 酒馆：物价情报价沿用 `intel_cost`；港口线索免费自动 1 条（L1）+ 第二段免费 1 条
   （L3）；保底探索无视 `outcome_roll` 直接成功。
 - 第三主线：1 名旅客；小型客舱 `passenger_capacity = 1`；船厂只上架该客舱。

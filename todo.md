@@ -6,7 +6,7 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [ ] 阶段 4.5 新手剧情 / 教学系统（4.5.1 / 4.5.2 已实现，4.5.3 起继续）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条、开局幕（获船 / 补给限购 / 海图 / 首航）已落地；剩余补给并市、酒馆替换情报页、船厂限量、第二 / 第三主线与保底探索。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
+- [ ] 阶段 4.5 新手剧情 / 教学系统（4.5.1 – 4.5.3 已实现，4.5.4 起继续）：新开局默认触发五幕剧情（无船→获船→补给限购→海图与首航→第二港线索/市场→酒馆与保底探索→第三港船厂/客舱/旅客）；框架 `data.story` + `story.view/advance/skip/observe` + Core JSON 剧情步骤 + 功能门禁 + 剧情卡/目标条、开局幕、并市与第二主线已落地；剩余酒馆替换情报页、线索 / 保底探索、船厂限量、第三主线。契约见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)
 - [ ] 海图阶段 3 验收反馈 F1–F4：离港要"驶离"而不是平移；镜头俯角加大到竖直再拉升、云层后海图先铺满再回落；海图上的船必须沿航线移动，不能两点直线
 - [x] SNBattleSim 模组交换与 Agent CLI：`mods/` 散装目录及 ZIP 导入、游戏约定 `.snavmod.zip` 导出、状态/FSM 契约、AND/OR 条件、状态拖放、空白拉线建状态和 Delete 删除
 - [x] SNBattleSim 二轮易用性：Mod 蓝图舰体装配、五状态默认 FSM、工程目录持久化、目标高亮、全状态尝试开火与顶部入口分级
@@ -69,6 +69,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- [x] 新手剧情阶段 4.5.3 并市 + 第二主线（全套 363 例通过）：补给页删除、煤 / 水并入市场「补给（煤 / 水）」区块（复用 `supply.buy_*`，导航 / 招牌移除，旧 `supply` 入口与存档重定向市场）；市场贸易货物按 story `unlocked_items` 过滤（Act 0 0 条，第二港开放纺织品 / 香料）；第二主线 `grant_tutorial_contract`（main_02、`provider: player`、`destination: home`）交付 6 件纺织品，剧情目标买 8 件、回港卖剩余 2 件；新增事件 `match` 条件与非确认阶段收卡。截图 [市场补给区块](docs/design/screenshots/story/tutorial_market_supply.png) / [第二港市场](docs/design/screenshots/story/tutorial_market_goods.png)。契约见 [STORY_TUTORIAL.md §9](docs/design/STORY_TUTORIAL.md)。
 - [x] 新手剧情阶段 4.5.2 开局幕（全套 354 例通过）：教程新航程页隐藏构筑选择、默认教学船；获船叙事 → 补给 4 煤 2 水 → 补给受限（`lock_actions: supply.buy`，卡片显示原因、命令层拦截）→ 海图解禁 → 关闭海图恢复补给 → 买够 10 煤 → 海图出航默认极速；第一主线由 Core story `grant_tutorial_contract` 以 `main_01` 模板生成「燃料舱交付 10 煤」实例（`provider: fuel`、出航前校验、完成扣煤舱），`set_ship_fuel` 把开场煤舱压到 4，`tutorial_express` 保证标准迟到 / 极速准时；非教程局主线与 9 seed 通关回归不变。窗口截图 [补给受限](docs/design/screenshots/story/tutorial_supply_hold.png) / [首航默认极速](docs/design/screenshots/story/tutorial_depart_fast.png)。契约见 [STORY_TUTORIAL.md §9](docs/design/STORY_TUTORIAL.md)。
 - [x] 新手剧情阶段 4.5.1 框架 + 门禁 + 剧情卡（全套 352 例通过）：`GameState.ensure_story` / `StoryService` 状态机（Core `map_profiles.story` 阶段表、事件计数、功能 / 商品 / 模块解锁、`discover_contract_destination` 效果）；`story.view` / `story.advance` / `story.skip` / `story.observe`（FrameworkApi 注册，Shell 转发 `cmd:*` / `ui:*`）；全屏剧情卡（继续 / 跳过 + 跳过确认）、非阻塞目标条、导航 / 港口招牌 / `M` / 状态条海图入口按 Feature 门禁；`run.start tutorial=true`（Shell 新局传 true）；旧存档惰性 ensure 全开；跳过保底解锁并揭示主委托目的港；窗口截图 [剧情卡](docs/design/screenshots/story/tutorial_card.png) / [目标条](docs/design/screenshots/story/tutorial_objective.png)。契约见 [STORY_TUTORIAL.md §9](docs/design/STORY_TUTORIAL.md)。
 - [x] 武器装配规范 v2（可拼接武器系统）：8 件舰载武器 + kit 的 Cannon/GunCarriage/Turret/Pedestal + 甲板 socket 统一为 `SN_Socket_Weapon` / `SN_Mount` / `SN_Pivot_Yaw` / `SN_Pivot_Pitch` / `SN_Recoil` / `SN_Muzzle`；BLEND 内前缀唯一、GLB 导出后归一化标准名；13 件重建并重导，weapon/kit GLB 自检 16/16 通过。契约 [WEAPON_SOCKET_CONTRACT.md](docs/design/WEAPON_SOCKET_CONTRACT.md)，工单 [weapon_assembly_v2.json](tools/modeling/briefs/weapon_assembly_v2.json)。

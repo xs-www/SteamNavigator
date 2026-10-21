@@ -148,6 +148,8 @@ func _blocker_labels(blockers: Array) -> Array:
 				labels.append(_loc("ui.error.weight", ""))
 			"insufficient_money":
 				labels.append(_loc("ui.error.money", ""))
+			"story_locked":
+				labels.append(_loc("ui.story.supply_locked", ""))
 			_:
 				labels.append(String(blocker))
 	return labels

@@ -570,5 +570,6 @@
   "ui.error.missing_event": "Missing story event parameter",
   "ui.error.missing_contract_cargo": "The contract's self-supplied cargo is not aboard yet — buy it before departure",
   "ui.story.supply_locked": "Supplies are on hold: read the chart destination first",
+  "ui.market.supply_section": "Supplies (coal / water)",
   "ui.new_game.tutorial_note": "Tutorial run: the default teaching ship is used; build selection is disabled"
 }

@@ -14,9 +14,11 @@ extends VBoxContainer
 signal command_requested(command: StringName, params: Dictionary)
 
 const SPARKLINE_SCENE := preload("res://framework/ui/components/sn_sparkline.tscn")
+const SUPPLY_CARD_SCENE := preload("res://framework/ui/components/sn_supply_card.tscn")
 const COLOR_TEXT := Color("ece1c5")
 const COLOR_MUTED := Color("9fafa7")
 const COLOR_TEAL := Color("76aaa7")
+const COLOR_BRASS := Color("e1c487")
 const COLOR_RED := Color("c36b53")
 const COLOR_GREEN := Color("76aa8c")
 ## Vertical gap between two commodity entries (design: 6-8 px).
@@ -36,6 +38,57 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 	))
 	add_child(_summary_panel(view_model))
 	add_child(_market_list(view_model))
+	add_child(_supply_block(view_model))
+
+
+## 4.5.3：补给并市 —— 市场页上方的煤 / 水区块，复用 `supply.buy_*` 命令。
+func _supply_block(view_model: Dictionary) -> Control:
+	var supply: Dictionary = view_model.get("supply", {})
+	var block := VBoxContainer.new()
+	block.name = "MarketSupply"
+	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	block.add_theme_constant_override("separation", 7)
+	if supply.is_empty():
+		return block
+	var title := _label(_loc("ui.market.supply_section", "补给（煤 / 水）"), 15, COLOR_BRASS)
+	block.add_child(title)
+	for kind in ["coal", "water"]:
+		var data: Dictionary = supply.get("%s_view" % kind, {})
+		if data.is_empty():
+			continue
+		var card: Variant = SUPPLY_CARD_SCENE.instantiate()
+		card.custom_minimum_size = Vector2(0, 0)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.bind(
+			data,
+			_loc("ui.label.%s" % kind, kind),
+			_supply_blocker_labels(data.get("blockers", [])),
+			_tr
+		)
+		card.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+			command_requested.emit(command, params)
+		)
+		block.add_child(card)
+	return block
+
+
+func _supply_blocker_labels(blockers: Array) -> Array:
+	var labels: Array = []
+	for blocker in blockers:
+		match String(blocker):
+			"story_locked":
+				labels.append(_loc("ui.story.supply_locked", ""))
+			"no_supply":
+				labels.append(_loc("ui.error.no_supply", ""))
+			"no_stock":
+				labels.append(_loc("ui.error.insufficient_stock", ""))
+			"weight_limit":
+				labels.append(_loc("ui.error.weight", ""))
+			"insufficient_money":
+				labels.append(_loc("ui.error.money", ""))
+			_:
+				labels.append(String(blocker))
+	return labels
 
 
 func _summary_panel(view_model: Dictionary) -> Control:

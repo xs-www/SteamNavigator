@@ -68,6 +68,7 @@ const STORY_DEFAULTS := {
 	"active": false,
 	"completed": true,
 	"skipped": false,
+	"home_port_id": "",
 	"seen": [],
 	"counters": {},
 	"flags": {},

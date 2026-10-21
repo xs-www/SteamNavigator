@@ -28,12 +28,18 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 
 	var market_rows: Array = []
 	var market := MarketOps.market_for(state, current_port)
+	var story_filter := StoryService.market_filter(state, hub)
 	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 	var item_ids: Array = market.keys()
 	item_ids.sort()
 	for item_id in item_ids:
 		var entry: Dictionary = market[item_id]
 		if bool(entry.get("is_supply", false)):
+			continue
+		# 4.5.3：剧情进行中时市场只露出 Core story `unlocked_items` 里的贸易货物；
+		# 水煤走市场页的补给区块，不在这里。
+		if bool(story_filter.get("active", false)) \
+				and not Array(story_filter.get("items", [])).has(String(item_id)):
 			continue
 		var definition := ShipOps.item_definition(hub, String(item_id))
 		if definition == null:

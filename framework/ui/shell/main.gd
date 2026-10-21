@@ -61,8 +61,8 @@ const COLOR_GREEN := Color("76aa8c")
 const DEV_TEAM := "PlayThought Team"
 const GAME_VERSION_FALLBACK := "0.2.0"
 
-## 港口页面导航（4.3.4 / U7：出航准备页已删除；海图是独立切换页，出航在弹窗确认）。
-const SCREENS := ["overview", "market", "contracts", "shipyard", "supply", "intel"]
+## 港口页面导航（4.3.4 / U7：出航准备页已删除；4.5.3：补给页并入市场）。
+const SCREENS := ["overview", "market", "contracts", "shipyard", "intel"]
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
@@ -70,7 +70,6 @@ const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
 const PORT_STAGE_FACILITY_SCREENS := {
 	"exchange": &"market",
 	"contracts": &"contracts",
-	"supply": &"supply",
 	"intel": &"intel",
 	"shipyard": &"shipyard",
 }
@@ -82,7 +81,6 @@ const PORT_STAGE_FACILITY_SCREENS := {
 const STAGE_SCREENS := {
 	"overview": "harbor",
 	"market": "market",
-	"supply": "supply",
 }
 ## Width of the dock information panel on the market / supply pages. The stage
 ## keeps the left part of the window, the panel floats over the right side.
@@ -365,6 +363,14 @@ func _rebuild_ui() -> void:
 		chrome_data["current_port_id"] = String(_presentation_voyage.get("origin", data.get("current_port_id", "")))
 		chrome_data["voyage"] = _presentation_voyage
 	_build_top_chrome(app, chrome_data, not at_sea and _presentation == null)
+	# 4.5.3：目标条浮在页面顶部，给它留出高度，避免盖住市场 / 海图等页面的标题。
+	if _story_active() and _story_vm.get("objective", null) is Dictionary \
+			and not (_story_vm.get("card", null) is Dictionary) \
+			and not at_sea and _presentation == null:
+		var story_spacer := Control.new()
+		story_spacer.name = "StoryObjectiveSpacer"
+		story_spacer.custom_minimum_size = Vector2(0, 46)
+		_root_box.add_child(story_spacer)
 	if victory_active:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
@@ -403,6 +409,9 @@ func _rebuild_ui() -> void:
 		return
 
 	_build_status_banner()
+	# 4.5.3：旧存档 / 旧入口把 supply 视为市场页（补给区块在位）。
+	if _active_screen == "supply":
+		_active_screen = "market"
 	if not SCREENS.has(_active_screen) \
 			and not ["port_memory", "settlement", "sea_chart", "clue_log"].has(_active_screen):
 		_active_screen = "overview"
@@ -416,8 +425,6 @@ func _rebuild_ui() -> void:
 			_screen_contracts(data)
 		"shipyard":
 			_screen_shipyard(data)
-		"supply":
-			_screen_supply(data)
 		"intel":
 			_screen_intel(data)
 		"sea_chart":
@@ -454,7 +461,13 @@ func _story_feature_unlocked(feature: String) -> bool:
 		return true
 	if not bool(_story_vm.get("active", false)) or bool(_story_vm.get("completed", true)):
 		return true
-	return Array(_story_vm.get("unlocked_features", [])).has(feature)
+	var unlocked := Array(_story_vm.get("unlocked_features", []))
+	if unlocked.has(feature):
+		return true
+	# 4.5.3：补给页并入市场；旧存活的 mid-tutorial 存档可能只解锁过 supply。
+	if feature == StoryService.FEATURE_MARKET and unlocked.has(StoryService.FEATURE_SUPPLY):
+		return true
+	return false
 
 
 ## Maps a nav screen to the framework feature the story unlocks.
@@ -469,7 +482,8 @@ func _story_screen_feature(screen: String) -> String:
 		"shipyard":
 			return StoryService.FEATURE_SHIPYARD
 		"supply":
-			return StoryService.FEATURE_SUPPLY
+			# 4.5.3 补给页已并入市场；旧入口重定向到市场。
+			return StoryService.FEATURE_MARKET
 		"intel":
 			# 4.5.4 起情报页会被酒馆替换；门禁键提前统一。
 			return StoryService.FEATURE_TAVERN
@@ -1617,14 +1631,27 @@ func _format_slots(template: String) -> PackedStringArray:
 
 func _screen_market(data: Dictionary) -> void:
 	var screen: Variant = MARKET_SCREEN_SCENE.instantiate()
-	var model := {
+	var market_model := {
 		"current_port": data.get("current_port", {}),
 		"money": data.get("money", 0),
 		"ship": data.get("ship", {}),
 		"market": data.get("market", []),
 		"trends": _market_trends(),
 	}
-	screen.bind(model, Callable(self, "_tr"))
+	# 4.5.3：补给并市 —— 市场 VM 附带 supply.view 的煤 / 水区块（购买仍走
+	# `supply.buy_*`，不复制价格 / 库存逻辑）。
+	var supply_result := _context.queries.execute(&"supply.view")
+	if bool(supply_result.get("ok", false)):
+		var supply_model: Dictionary = supply_result["data"].duplicate(true)
+		if _story_action_locked(&"supply.buy_coal"):
+			for kind in ["coal", "water"]:
+				var kind_view: Dictionary = supply_model.get("%s_view" % kind, {})
+				var blockers: Array = Array(kind_view.get("blockers", [])).duplicate()
+				if not blockers.has("story_locked"):
+					blockers.append("story_locked")
+				kind_view["blockers"] = blockers
+		market_model["supply"] = supply_model
+	screen.bind(market_model, Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
 	if _stage_backed_page():
 		_mount_dock_panel(screen)
@@ -1795,12 +1822,11 @@ func _screen_supply(_data: Dictionary) -> void:
 	var view_model: Dictionary = result["data"]
 	# 4.5.2：补给限购时把原因挂到两张补给卡的 blockers 上（命令层同时拦截购买）。
 	if _story_action_locked(&"supply.buy_coal"):
-		var locked_text := _tr("ui.story.supply_locked", "补给暂时受限：先看完海图的目的港")
 		for kind in ["coal", "water"]:
 			var supply_view: Dictionary = view_model.get("%s_view" % kind, {})
 			var blockers: Array = Array(supply_view.get("blockers", [])).duplicate()
-			if not blockers.has(locked_text):
-				blockers.append(locked_text)
+			if not blockers.has("story_locked"):
+				blockers.append("story_locked")
 			supply_view["blockers"] = blockers
 	screen.bind(view_model, Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
@@ -2930,6 +2956,9 @@ func _save_settings() -> void:
 
 
 func _on_nav(screen: String) -> void:
+	# 4.5.3：补给页并入市场，旧导航 / 旧存档里的 supply 入口统一重定向。
+	if screen == "supply":
+		screen = "market"
 	if screen != "sea_chart" and not _story_feature_unlocked(_story_screen_feature(screen)):
 		return
 	# Navigating away from the victory summary counts as "keep playing".

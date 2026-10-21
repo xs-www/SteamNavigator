@@ -148,7 +148,7 @@
                 "title_key": "story.core.supply_brief.title",
                 "body_keys": ["story.core.supply_brief.body.1"]
               },
-              "unlock_features": ["supply"],
+              "unlock_features": ["market"],
               "objective": {
                 "text_key": "story.core.supply_brief.objective",
                 "target": 4
@@ -222,6 +222,67 @@
                 "target": 1
               },
               "advance": {"event": "ui:arrival_settled"}
+            },
+            {
+              "id": "second_port",
+              "dialogue": {
+                "title_key": "story.core.second_port.title",
+                "body_keys": ["story.core.second_port.body.1"]
+              },
+              "unlock_features": ["market", "contracts"],
+              "unlock_items": ["core:good/spices", "core:good/textiles"],
+              "effects": [
+                {
+                  "type": "grant_tutorial_contract",
+                  "template_id": "core:contract/main_02",
+                  "cargo_item_id": "core:good/textiles",
+                  "amount": 6,
+                  "provider": "player",
+                  "destination": "home",
+                  "deadline_formula": "tutorial_trade",
+                  "name_key": "contract.core.tutorial_trade.name",
+                  "description_key": "contract.core.tutorial_trade.description"
+                }
+              ],
+              "objective": {
+                "text_key": "story.core.second_port.objective",
+                "target": 8
+              },
+              "advance": {
+                "event": "cmd:trade.buy",
+                "counter": "textiles_bought",
+                "at_least": 8,
+                "match": {"item_id": "core:good/textiles"}
+              }
+            },
+            {
+              "id": "second_depart",
+              "dialogue": {
+                "title_key": "story.core.second_depart.title",
+                "body_keys": ["story.core.second_depart.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.second_depart.objective",
+                "target": 1
+              },
+              "advance": {"event": "ui:arrival_settled"}
+            },
+            {
+              "id": "back_first",
+              "dialogue": {
+                "title_key": "story.core.back_first.title",
+                "body_keys": ["story.core.back_first.body.1"]
+              },
+              "objective": {
+                "text_key": "story.core.back_first.objective",
+                "target": 2
+              },
+              "advance": {
+                "event": "cmd:trade.sell",
+                "counter": "textiles_sold",
+                "at_least": 2,
+                "match": {"item_id": "core:good/textiles"}
+              }
             },
             {
               "id": "chapter_wrap",

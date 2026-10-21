@@ -69,6 +69,7 @@ static func begin(state: GameState, hub: RegistryHub, rng: RngService = null) ->
 	story["active"] = true
 	story["completed"] = false
 	story["skipped"] = false
+	story["home_port_id"] = state.current_port_id()
 	story["seen"] = []
 	story["counters"] = {}
 	story["flags"] = {}
@@ -136,6 +137,17 @@ static func view(context) -> Dictionary:
 	return result
 
 
+## 4.5.3：市场商品裁剪。剧情进行中时只允许 `unlocked_items` 中的贸易货物出现
+## （水煤走补给区块，不在 `market` 行里）；非剧情局返回 `active=false`（不过滤）。
+static func market_filter(state: GameState, hub: RegistryHub) -> Dictionary:
+	var cfg := config(state, hub)
+	var story := state.ensure_story()
+	if cfg.is_empty() or not bool(cfg.get("enabled", false)) \
+			or not bool(story.get("active", false)) or bool(story.get("completed", true)):
+		return {"active": false, "items": []}
+	return {"active": true, "items": Array(story.get("unlocked_items", [])).duplicate()}
+
+
 ## Player pressed "continue" on a story card (`mode=confirm` stages only).
 static func advance(context) -> Dictionary:
 	var state: GameState = context.state
@@ -157,7 +169,7 @@ static func advance(context) -> Dictionary:
 		return Result.ok({"view": view(context)}, [])
 	var events: Array = []
 	_mark_seen(story, stage)
-	_enter_stage(state, hub, story, cfg, index + 1, events)
+	_enter_stage(state, hub, story, cfg, index + 1, events, context.rng)
 	var result := Result.ok({"view": view(context)}, events)
 	if bool(story.get("completed", false)):
 		result["autosave"] = true
@@ -218,7 +230,7 @@ static func observe(context, event: String, data: Dictionary = {}) -> Dictionary
 	if not _conditions_met(story, conditions, event, data):
 		return Result.ok({"view": view(context)})
 	_mark_seen(story, stage)
-	_enter_stage(state, hub, story, cfg, index + 1, events)
+	_enter_stage(state, hub, story, cfg, index + 1, events, context.rng)
 	var result := Result.ok({"view": view(context)}, events)
 	if bool(story.get("completed", false)):
 		result["autosave"] = true
@@ -286,6 +298,8 @@ static func _conditions_met(story: Dictionary, conditions: Array, event: String,
 		var condition: Dictionary = raw
 		if String(condition.get("event", "")) != event:
 			continue
+		if not _condition_matches_data(condition, data):
+			continue
 		var counter := String(condition.get("counter", ""))
 		if counter.is_empty() or seen_counters.has(counter):
 			continue
@@ -298,8 +312,10 @@ static func _conditions_met(story: Dictionary, conditions: Array, event: String,
 			return false
 		var condition: Dictionary = raw
 		var expected_event := String(condition.get("event", ""))
-		if not expected_event.is_empty() and expected_event != event:
-			# 组合条件（如「4 煤 + 2 水」）按不同事件分别观测：当前事件不匹配时，
+		var event_matches := expected_event.is_empty() or expected_event == event
+		var data_matches := _condition_matches_data(condition, data)
+		if not event_matches or not data_matches:
+			# 组合条件（如「4 煤 + 2 水」）按不同事件分别观测：当前事件 / 数据不匹配时，
 			# 只要该条件的计数已达标（之前观测过），就视为已满足。
 			var done_counter := String(condition.get("counter", ""))
 			if not done_counter.is_empty() \
@@ -316,6 +332,16 @@ static func _conditions_met(story: Dictionary, conditions: Array, event: String,
 			return false
 		var not_flag := String(condition.get("not_flag", ""))
 		if not not_flag.is_empty() and bool((story.get("flags", {}) as Dictionary).get(not_flag, false)):
+			return false
+	return true
+
+
+static func _condition_matches_data(condition: Dictionary, data: Dictionary) -> bool:
+	var expected: Variant = condition.get("match", null)
+	if not (expected is Dictionary):
+		return true
+	for key in (expected as Dictionary).keys():
+		if String(data.get(key, "")) != String((expected as Dictionary)[key]):
 			return false
 	return true
 
@@ -397,6 +423,17 @@ static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect:
 	if offer.is_empty():
 		push_warning("StoryService: cannot generate tutorial contract '%s'" % template_id)
 		return
+	# 4.5.3：第二主线需要「送回起始港」。`destination: home` 用剧情开始时记录的
+	# 起始港 id 覆盖随机目的地，距离 / 时限随之重算。
+	var destination := String(effect.get("destination", ""))
+	if destination == "home":
+		var home := String(state.ensure_story().get("home_port_id", ""))
+		if home.is_empty():
+			home = state.current_port_id()
+		var home_distance := MapOps.distance_between(state.world(), state.current_port_id(), home)
+		if home_distance > 0.0:
+			offer["destination"] = home
+			offer["distance"] = home_distance
 	# Core story 只覆盖「交付什么 / 怎么交付 / 时限 / 文案」，主线段落仍沿用现有
 	# main_01 模板（不新增一条并列主线，避免破坏 5 段主线计数与通关回归）。
 	var item_id := String(effect.get("cargo_item_id", ""))

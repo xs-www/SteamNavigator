@@ -60,18 +60,22 @@ func test_non_tutorial_run_is_not_gated() -> void:
 	assert_true(view.get("card", null) == null, "no story card is shown")
 
 
-func test_advance_unlocks_supply_and_shows_objective() -> void:
+func test_advance_unlocks_market_and_shows_objective() -> void:
 	var context := _start_tutorial(SEED)
 	var advanced := context.commands.execute(&"story.advance", {})
 	assert_true(bool(advanced.get("ok", false)), "the opening card can be continued: %s" % str(advanced))
 	var view := _view(context)
 	assert_eq(String(view.get("stage_id", "")), "supply_brief", "the next stage is the supply briefing")
-	assert_true((view.get("unlocked_features", []) as Array).has("supply"), "supply is unlocked")
+	assert_true((view.get("unlocked_features", []) as Array).has("market"), "the market is unlocked")
 	var objective: Variant = view.get("objective", null)
 	assert_not_null(objective, "the supply stage has a non-blocking objective")
 	if objective is Dictionary:
 		assert_eq(int((objective as Dictionary).get("target", 0)), 4, "the objective comes from Core JSON")
 		assert_eq(int((objective as Dictionary).get("progress", 0)), 0, "no coal has been bought yet")
+	# 4.5.3：补给并入市场；Act 0 市场只有补给区块，没有贸易货物。
+	var port_view: Dictionary = context.queries.execute(&"port.view")["data"]
+	assert_eq((port_view.get("market", []) as Array).size(), 0,
+		"the Act 0 market exposes no trade goods yet")
 
 
 ## 4.5.2 幕 0：买齐 4 煤 + 2 水 → 补给受限 + 解锁海图；看海图 → 关闭 → 恢复补给；
@@ -106,6 +110,60 @@ func test_observe_walks_the_first_voyage_act() -> void:
 	assert_eq(String(view.get("stage_id", "")), "depart_brief", "10 coal total reaches the departure stage")
 	assert_eq(String(view.get("preferred_strategy", "")), "fast", "the departure stage prefers Fast")
 	assert_true(bool(view.get("active", false)), "the tutorial is still running")
+
+
+## 4.5.3 第二幕：第二港市场只开放 2 种贸易货物；第二主线把 6 件纺织品送回起始港，
+## 余下 2 件在起始港卖出后教学第二章收尾。
+func test_second_mainline_buys_market_goods_and_returns_home() -> void:
+	var context := _start_tutorial(SEED)
+	_walk_to_second_port(context)
+	var view := _view(context)
+	assert_eq(String(view.get("stage_id", "")), "second_port", "arrival enters the second-port act")
+	var unlocked_features: Array = view.get("unlocked_features", [])
+	assert_true(unlocked_features.has("market"), "the market is available")
+	assert_true(unlocked_features.has("contracts"), "the contracts page is unlocked")
+	var unlocked_items: Array = view.get("unlocked_items", [])
+	assert_true(unlocked_items.has("core:good/spices") and unlocked_items.has("core:good/textiles"),
+		"Act 1 unlocks exactly the two tutorial goods")
+	var main_contract: Variant = context.state.contracts().get("main", null)
+	assert_true(main_contract is Dictionary, "the second mainline contract exists")
+	if not (main_contract is Dictionary):
+		return
+	var contract: Dictionary = main_contract
+	assert_eq(String(contract.get("template_id", "")), "core:contract/main_02", "main_02 template drives Act 1")
+	assert_eq(String(contract.get("destination", "")), String(context.state.story().get("home_port_id", "")),
+		"the second mainline returns to the starting harbour")
+	var goods_entry := {}
+	for entry in contract.get("cargo", []):
+		if String((entry as Dictionary).get("item_id", "")) == "core:good/textiles":
+			goods_entry = entry
+	assert_eq(int(goods_entry.get("amount", 0)), 6, "six textiles are delivered")
+	assert_true(bool(goods_entry.get("player_sourced", false)), "the goods are bought by the player")
+	var port_view: Dictionary = context.queries.execute(&"port.view")["data"]
+	assert_eq((port_view.get("market", []) as Array).size(), 2, "only the two unlocked goods are on the market")
+	var bought := context.commands.execute(&"trade.buy", {"item_id": "core:good/textiles", "amount": 8})
+	assert_true(bool(bought.get("ok", false)), "buying 8 textiles succeeds: %s" % str(bought))
+	context.commands.execute(&"story.observe", {
+		"event": "cmd:trade.buy",
+		"data": {"item_id": "core:good/textiles", "amount": 8},
+	})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "second_depart", "8 textiles complete the purchase objective")
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "back_first", "returning home enters the delivery stage")
+	var sold := context.commands.execute(&"trade.sell", {"item_id": "core:good/textiles", "amount": 2})
+	assert_true(bool(sold.get("ok", false)), "selling the remaining goods succeeds: %s" % str(sold))
+	context.commands.execute(&"story.observe", {
+		"event": "cmd:trade.sell",
+		"data": {"item_id": "core:good/textiles", "amount": 2},
+	})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "chapter_wrap", "selling the leftovers wraps the chapter")
+	var wrapped := context.commands.execute(&"story.advance", {})
+	assert_true(bool(wrapped.get("ok", false)), "the chapter wrap can be confirmed")
+	view = _view(context)
+	assert_true(bool(view.get("completed", false)), "the 4.5.3 tutorial arc is completed")
 
 
 func test_main_contract_needs_player_supplied_coal_before_departure() -> void:
@@ -202,6 +260,26 @@ func test_old_save_without_story_block_stays_open() -> void:
 
 
 # ── helpers ──
+
+
+## Advances the 4.5.2 first act through its Core-authored stages up to the second port.
+func _walk_to_second_port(context: AppContext) -> void:
+	context.commands.execute(&"story.advance", {})
+	context.commands.execute(&"supply.buy_coal", {"amount": 4})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 4}})
+	context.commands.execute(&"supply.buy_water", {"amount": 2})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_water", "data": {"amount": 2}})
+	context.commands.execute(&"story.observe", {"event": "ui:chart_opened", "data": {}})
+	context.commands.execute(&"story.observe", {"event": "ui:chart_closed", "data": {}})
+	context.commands.execute(&"supply.buy_coal", {"amount": 6})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 6}})
+	# 模拟抵达第二港：Shell 在到港后才会发 `ui:arrival_settled`，此时当前港已是
+	# 第二港，第二主线才会以它为起点生成。
+	var first_contract: Dictionary = context.state.contracts().get("main", {})
+	var second_port := String(first_contract.get("destination", ""))
+	context.state.world()["current_port_id"] = second_port
+	context.state.mark_port_visited(second_port)
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
 
 
 func _start_run(seed_value: int, extra: Dictionary = {}) -> AppContext:

@@ -534,6 +534,9 @@
               "items": {
                 "$ref": "#/$defs/story_condition"
               }
+            },
+            "match": {
+              "$ref": "#/$defs/story_match"
             }
           }
         },
@@ -586,7 +589,16 @@
         "not_flag": {
           "type": "string",
           "minLength": 1
+        },
+        "match": {
+          "$ref": "#/$defs/story_match"
         }
+      }
+    },
+    "story_match": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
       }
     }
   }
