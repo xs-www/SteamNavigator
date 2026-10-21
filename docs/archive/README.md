@@ -12,6 +12,10 @@
 
 ## 建模交付与验收（已完成，仅追溯）
 
+- [船体帆索部件库 M0-4 验收（rig_kit 12 件 + 3 艘船参数化 + 22 个帆索 socket，2026-10-22）](RIG_KIT_ACCEPTANCE.md)
+- [船侧武器安装点 M0-3 验收（4 艘可玩船 · 14 个 SN_Socket_Weapon* 空节点，2026-10-22）](SHIP_WEAPON_SOCKETS_ACCEPTANCE.md)
+- [旧资产 UV 迁移 A 验收（31 件铁港道具 + 6 件港口设施，2026-10-22）](LEGACY_UV_MIGRATION_A_ACCEPTANCE.md)
+- [旧资产 UV 迁移 B 验收（船模块 / 4 艘船 / 旧小镇，2026-10-22）](LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)
 - [建模资产第一轮验收报告（2026-10-19）](MODELING_ACCEPTANCE_2026-10-19.md)
 - [下一批 3D 建模与资产优化需求 v1](MODELING_REQUIREMENTS_NEXT_BATCH.md) — A/B/C 三批均已交付
 - [铁港建筑套件 · 阶段 1](IRON_HARBOR_ARCHITECTURE_PHASE1.md) / [M1 材质轮](IRON_HARBOR_ARCHITECTURE_M1.md) / [第二批 M2](IRON_HARBOR_ARCHITECTURE_BATCH2.md) / [共享外部贴图](IRON_HARBOR_ARCHITECTURE_SHARED_TEXTURES.md)

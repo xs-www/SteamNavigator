@@ -34,18 +34,27 @@
 
 | 来源（本地源文件） | 运行时路径 | 说明 |
 | --- | --- | --- |
-| `.design/ships/SN_Ship_Prototype.blend` | `assets/models/ships/SN_Ship_Prototype.glb` | 低多边形帆船原型；2608 三角面、36 节点、5 种材质（木 / 深木 / 甲板木 / 帆布 / 金属） |
+| `.design/ships/SN_Ship_Prototype.blend` | `assets/models/ships/SN_Ship_Prototype.glb` | 低多边形帆船原型；2608 三角面、36 节点、5 种材质（木 / 深木 / 甲板木 / 帆布 / 金属）；**遗留纯色资产（`model.ship.prototype` 键），未纳入批次 B** |
 | `.design/ships/sn_ship_prototype_generator.py` | — | 帆船参数化生成脚本；改 `STATIONS` / `MASTS` 表即可生成不同吨位船体 |
-| `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Freighter_Prototype` 集合）+ `.design/ships/SN_Paddle_Freighter.blend` | `assets/models/ships/SN_Paddle_Freighter.glb` | 大型明轮蒸汽货轮：**59.53 × 14.10 × 19.52 m**（船体 LOA 55 m，总长含艏斜桁）、**12200 三角面**、46 对象（39 mesh + 7 empty）、6 材质（`SN_Iron_Hull` / `SN_Iron_Red` / `SN_Brass` 新增，复用 `SN_Wood` / `SN_Wood_Deck` / `SN_Metal`）。双明轮（14 桨叶 / 每侧 8 辐条 / 16 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 斜撑）、半包轮罩箱板（-6°..186° + 中央观察窗 + 黄铜包边 / 铭牌，端封 r_in 2.75 避让轮扫掠、内板窗 2.30 避让蒸汽管）、双后倾烟囱、锅炉机舱围罩 + 蒸汽管、桥楼 + 驾驶室、4 货舱口 + 4 吊杆、双桅横桁 + 艏斜桁、艏楼 / 艉楼侧封板、吊艇架救生艇、舵轮 / 旗；根节点 `SN_PF_Root` 水线轴心、工作台摆位 (-45, 0, 0)；2 个明轮 Pivot + 4 个 `SN_Socket_*` |
-| `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend` | `assets/models/ships/SN_Ironclad.glb` | 舷侧炮铁甲舰：**60.14 × 18.00 × 28.64 m**（水线轴心，z -4.2..24.44）、**8830 三角面**、单 mesh / 8 材质；装甲带 + 板缝、每舷 6 门英雄化舷侧炮（炮门 1.9×1.9 m / 炮管 Ø0.88→0.72 m / 外露 1.55 m）+ 2 门艏 pivot 炮、2.2 m 装甲带（外凸 380 mm）与 120 mm 板缝、中央装甲炮房 + 指挥塔、双后倾烟囱、三桅横桁收帆 + 艏斜桁基座、锚吊架、撞角艏、艉廊、螺旋桨/舵；单节点 GLB、工作台摆位 (0, 90, 0) |
-| `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合）+ `.design/ships/SN_Paddle_Steamer.blend` | `assets/models/ships/SN_Paddle_Steamer.glb` | 小型澳洲明轮蒸汽客船（参考 PS Enterprise）：**24.56 × 8.74 × 10.47 m**（LOA 24.0 m，水线轴心 z=0）、**11764 三角面**、35 对象（32 mesh + 3 empty）、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`，复用 5）；白漆双层船身 + 暗红水线/舷缘压条 + 深色船底、两舷 10 桨叶明轮（14 段双轮缘 / 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑）+ 10 道水平格栅轮罩、前驾驶室（双侧 ENTERPRISE 文字铭牌）、后部白色立柱雨棚游步甲板、黑烟囱 + 黄铜箍/红顶圈、锅炉围罩 + 黄铜蒸汽管、艏旗杆澳洲旗、艉部弧形低平台 + 舵；**不含蒸汽几何**（留给游戏内 VFX）；根节点 `SN_PS_Root` 工作台摆位 (45, 0, 0) |
-| `.design/SN_Asset_Workbench.blend`（`SN_Schooner_Fame_Prototype` 集合）+ `.design/ships/SN_Schooner_Fame.blend` | `assets/models/ships/SN_Schooner_Fame.glb` | 1795 年 Salem 双桅纵帆船 **SN_Schooner_Fame**：**33.44 × 6.88 × 26.82 m**（船体 LOA 24.4 m，总长含艏斜桁/艏三角帆）、**13174 三角面**、32 对象（29 mesh + 3 empty）、12 材质（新增 `SN_Hull_Black` / `SN_Ochre` / `SN_Canvas_Shade` / `SN_Flag_Red`，复用 8）；18 站放样黑船身 + 赭黄上舷带 + 黑腰板/压顶、艉楼甲板；双桅后倾（Fore −2.5° / Main −3.2°，轴距 6.4 m）、前桅斜桁帆 + 方顶帆、主桅大斜桁帆 + 三角顶帆、两面艏三角帆（jib + fore staysail）、舷侧绳梯（shrouds + ratlines）/支索/动索、艉廊 3 蓝窗 + 双灯 + FAME 铭牌、舱口格栅/绞盘/起锚机/舵轮/罗经柜/锚/钟/木桶/盘绳/fife rails/短梯/艏饰；**无星条旗**（用户 2026-10-19 要求移除，仅保留主桅顶红白长旒）；帆腹镜像朝 −Y（Godot +Z 相机侧）；根节点 `SN_SF_Root` 水线轴心、工作台摆位 (0, −70, 0) |
+| `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Freighter_Prototype` 集合）+ `.design/ships/SN_Paddle_Freighter.blend` | `assets/models/ships/SN_Paddle_Freighter.glb` | 大型明轮蒸汽货轮：**59.53 × 14.10 × 19.52 m**（船体 LOA 55 m，总长含艏斜桁）、**12200 三角面**、**56 节点（39 mesh + 17 empty，含 4 个武器 socket + 6 个帆索 socket）**、6 材质（`SN_Iron_Hull` / `SN_Iron_Red` / `SN_Brass` 新增，复用 `SN_Wood` / `SN_Wood_Deck` / `SN_Metal`）。双明轮（14 桨叶 / 每侧 8 辐条 / 16 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 斜撑）、半包轮罩箱板（-6°..186° + 中央观察窗 + 黄铜包边 / 铭牌，端封 r_in 2.75 避让轮扫掠、内板窗 2.30 避让蒸汽管）、双后倾烟囱、锅炉机舱围罩 + 蒸汽管、桥楼 + 驾驶室、4 货舱口 + 4 吊杆、双桅横桁 + 艏斜桁、艏楼 / 艉楼侧封板、吊艇架救生艇、舵轮 / 旗；根节点 `SN_PF_Root` 水线轴心、工作台摆位 (-45, 0, 0)；2 个明轮 Pivot + 4 个 `SN_Socket_*`；**4 个武器 socket**（`_Port_1/2` + `_Starboard_1/2`：Side×2 / Light×2）；**6 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main`） |
+| `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend` | `assets/models/ships/SN_Ironclad.glb` | 舷侧炮铁甲舰：**60.14 × 18.00 × 28.64 m**（水线轴心，z -4.2..24.44）、**8830 三角面**、**14 节点（1 mesh + 4 个武器 socket + 9 个帆索 socket）** / 8 材质；装甲带 + 板缝、每舷 6 门英雄化舷侧炮（炮门 1.9×1.9 m / 炮管 Ø0.88→0.72 m / 外露 1.55 m）+ 2 门艏 pivot 炮、2.2 m 装甲带（外凸 380 mm）与 120 mm 板缝、中央装甲炮房 + 指挥塔、双后倾烟囱、三桅横桁收帆 + 艏斜桁基座、锚吊架、撞角艏、艉廊、螺旋桨/舵；单节点 GLB、工作台摆位 (0, 90, 0)；**4 个武器 socket**（`_Port_1/2` + `_Starboard_1/2`：Heavy×2 / Medium×2）；**9 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main/Mizzen`） |
+| `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合）+ `.design/ships/SN_Paddle_Steamer.blend` | `assets/models/ships/SN_Paddle_Steamer.glb` | 小型澳洲明轮蒸汽客船（参考 PS Enterprise）：**24.56 × 8.74 × 10.47 m**（LOA 24.0 m，水线轴心 z=0）、**11764 三角面**、**38 节点（32 mesh + 6 empty，含 3 个武器 socket）**、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`，复用 5）；白漆双层船身 + 暗红水线/舷缘压条 + 深色船底、两舷 10 桨叶明轮（14 段双轮缘 / 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑）+ 10 道水平格栅轮罩、前驾驶室（双侧 ENTERPRISE 文字铭牌）、后部白色立柱雨棚游步甲板、黑烟囱 + 黄铜箍/红顶圈、锅炉围罩 + 黄铜蒸汽管、艏旗杆澳洲旗、艉部弧形低平台 + 舵；**不含蒸汽几何**（留给游戏内 VFX）；根节点 `SN_PS_Root` 工作台摆位 (45, 0, 0)；**3 个武器 socket**（`_Port_1` / `_Starboard_1` / `_Stern`：Light×2 / Medium×1） |
+| `.design/SN_Asset_Workbench.blend`（`SN_Schooner_Fame_Prototype` 集合）+ `.design/ships/SN_Schooner_Fame.blend` | `assets/models/ships/SN_Schooner_Fame.glb` | 1795 年 Salem 双桅纵帆船 **SN_Schooner_Fame**：**33.44 × 6.88 × 26.82 m**（船体 LOA 24.4 m，总长含艏斜桁/艏三角帆）、**13174 三角面**、**42 节点（29 mesh + 13 empty，含 3 个武器 socket + 7 个帆索 socket）**、12 材质（新增 `SN_Hull_Black` / `SN_Ochre` / `SN_Canvas_Shade` / `SN_Flag_Red`，复用 8）；18 站放样黑船身 + 赭黄上舷带 + 黑腰板/压顶、艉楼甲板；双桅后倾（Fore −2.5° / Main −3.2°，轴距 6.4 m）、前桅斜桁帆 + 方顶帆、主桅大斜桁帆 + 三角顶帆、两面艏三角帆（jib + fore staysail）、舷侧绳梯（shrouds + ratlines）/支索/动索、艉廊 3 蓝窗 + 双灯 + FAME 铭牌、舱口格栅/绞盘/起锚机/舵轮/罗经柜/锚/钟/木桶/盘绳/fife rails/短梯/艏饰；**无星条旗**（用户 2026-10-19 要求移除，仅保留主桅顶红白长旒）；帆腹镜像朝 −Y（Godot +Z 相机侧）；根节点 `SN_SF_Root` 水线轴心、工作台摆位 (0, −70, 0)；**3 个武器 socket**（`_Port_1` / `_Starboard_1` / `_Bow`：Light×2 / Medium×1）；**7 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main` + `SN_Socket_Sail_Jib`） |
 | `.design/SN_Asset_Workbench.blend` | `assets/models/props/SN_Harbor_Crane.glb` + `dev_mods/core/assets/models/props/SN_Harbor_Crane.glb` | 工作台主场景（全场景 298 对象；塔吊集合 33 对象）；锤头式塔吊重建为**参数化生成器产物**：**3912 三角面**、33 节点（31 mesh + 根空物体 + 回转 Pivot）、4 材质（木 / 深木 / 金属 / 石材），主臂 20.1 m 水平、总高 21.47 m，吊钩最低点 4.42 m，场景摆放 (0, 16, 0)。Core 资产键 `model.prop.harbor_crane` 不变，GLB 已同步 `dev_mods` 副本 |
+
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港码头第一批小部件：石砌岸壁 `SN_Dock_Wall` / 木护舷 `SN_Dock_Fender` / 系缆桩 `SN_Mooring_Bollard` / 木箱 `SN_Crate` / 木桶 `SN_Barrel` / 矿石堆 `SN_Ore_Pile`；P0 整改后合计 **1360 三角面**，材质 `SN_Ore` 已改为锈红铁矿色 |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第二批） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港第二批：煤气灯 `SN_Gas_Lamp` / 船岸跳板 `SN_Gangway` / 双瓣抓斗 `SN_Grab_Bucket` / 煤堆 `SN_Coal_Pile` / 码头爬梯 `SN_Dock_Ladder` / 钢板堆 `SN_Plate_Stack`；合计 **1214 三角面**，新增材质 `SN_Coal`（base 0.020/0.019/0.018、rough 0.95、metallic 0） |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第三批） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港第三批（堆场 / 管线）：木料堆 `SN_Timber_Stack` / 麻袋堆 `SN_Sack_Pile` / 蒸汽管段 `SN_Steam_Pipe` / 缆绳卷 `SN_Mooring_Rope` / 吊货网 `SN_Cargo_Net` / 托盘 `SN_Pallet`；合计 **1024 三角面**，不新增材质 |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第四批） | `assets/models/props/` 下 6 个独立 `.glb` | 铁港第四批（机械 / 水上件）：浮标 `SN_Buoy` / 锚链堆 `SN_Chain_Coil` / 手动绞盘 `SN_Capstan` / 平板手推车 `SN_Handcart` / 圆形碰垫 `SN_Fender_Ball` / 精密齿轮箱 `SN_Gear_Crate`；合计 **1452 三角面**，不新增材质。齿轮箱对应 Core 的 `precision_gear` 商品，可作市场货台道具 |
 | `.design/SN_Asset_Workbench.blend`（`SN_IronHarbor_Props` 集合，第五批） | `assets/models/props/` 下 7 个独立 `.glb` | 铁港第五批（结构 / 标识 / 动力）：码头石阶 `SN_Dock_Stairs` / 港口牌 `SN_Port_Sign` / 港口钟 `SN_Bell` / 旗杆 `SN_Flag_Pole` / 煤溜槽 `SN_Coal_Chute` / 锅炉机组 `SN_Boiler_Unit` / 龙骨墩 `SN_Keel_Block`；合计 **1232 三角面**，不新增材质。锅炉与煤溜槽是同批最重的两件 |
+
+> **2026-10-22 · 旧资产 UV 迁移 B（4 艘可玩船）**：`SN_Ironclad` / `SN_Paddle_Freighter` / `SN_Paddle_Steamer` / `SN_Schooner_Fame` 全部补 UV（多节点船体用根节点局部空间盒式投影）、切换 `SN_Tex_*` 共享贴图材质并重导 GLB；tri / 节点 / 网格数不变（合计 45 968 tri），详见 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)。`SN_Ship_Prototype` 是遗留原型，仍是旧纯色材质，不在本批。
+
+> **2026-10-22 · 船侧武器安装点 M0-3（4 艘可玩船）**：4 艘船各 2–4 个 `SN_Socket_Weapon*` 空节点（PF 4 / PS 3 / SF 3 / IC 4，合计 **14 个**），**无几何改动**（45 968 tri、mesh 数不变）；BLEND 内带 `SN_PF_` / `SN_PS_` / `SN_SF_` / `SN_IC_` 前缀，GLB 导出后归一化为标准名；节点 extras 写 `socket_class` / `clearance_r` / `clearance_x` / `clearance_y` / `clearance_h` / `mount_scale` / `socket_index`，Root 写 `weapon_sockets` 列表。GLB 节点数 PF 46→50 / PS 35→38 / SF 32→35 / IC 1→5。契约见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) §8；脚本 `sn_ship_weapon_sockets.py` / `glb_ship_sockets.py` / `export_ship_weapon_sockets_glb.py` / `verify_ship_weapon_sockets_glb.py`（4/4 ALL OK），验收 [SHIP_WEAPON_SOCKETS_ACCEPTANCE.md](../archive/SHIP_WEAPON_SOCKETS_ACCEPTANCE.md)。
+
+> **2026-10-22 · 船体帆索部件库 rig_kit M0-4（3 艘船 + 12 件套件）**：新增 `tools/modeling/generators/rig_kit.py`（桅杆 / 横桁 / 斜桁 / 帆杠 / 艏斜桁 / 帆面 / 索具的参数化部件库）与 12 件独立 `SN_Rig_*` GLB（**3,774 tri / 7,050 预算**，`assets/models/rig/` + Core 副本）；PF / SF / IC 的帆索改为调用同一份部件库生成，**逐对象顶点/面 digest 与重构前 0 差异**（PF 12,200 / IC 8,830 tri、mesh 数不变；SF 纯帆索基线 28 对象 / 12,994 tri，整船场景含既有 `SN_SF_Nameplate` 为 29 / 13,174；`rig_kit_baseline.py --compare` 3/3 SAME）。3 艘船各新增 `SN_Socket_Mast/Yard/Sail_*` 空节点（PF 6 / SF 7 / IC 9，合计 **22 个**，零几何），GLB 节点 PF 50→56 / SF 35→42 / IC 5→14，Root 写 `rig_sockets` 列表。契约 [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)、机器目录 [rig_kit_catalog.json](../../tools/modeling/rig_kit_catalog.json)、验收 [RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md)。
+
+> **2026-10-22 · 旧资产 UV 迁移 A（M0-1，已完成）**：以上 31 件铁港道具全部补 `UVMap`（局部空间盒式投影，`len(uv) == len(loops)`）、材质槽从旧纯色 `SN_*` 切换为 `SN_Tex_*` 共享贴图材质（实际 7 个），并重导 GLB（`images[].uri = shared_materials/<texture>.png`，Core 副本同步）；三角面与尺寸完全不变（合计 **6 282 tri**）。旧 `SN_Ore` 按锈红铁矿色映射到 `SN_Tex_Iron_Red`，`SN_Canvas` → `SN_Tex_Canvas_Shade`。迁移脚本 / 映射 / 验收见 [LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md)。
 | `tools/modeling/generators/sn_iron_harbor_batch5_generator.py` | — | 第五批参数化生成器（自带几何工具函数，单文件可执行） |
 | `tools/modeling/generators/sn_iron_harbor_batch4_generator.py` | — | 第四批参数化生成器（自带几何工具函数，单文件可执行） |
 | `tools/modeling/generators/sn_iron_harbor_batch3_generator.py` | — | 第三批参数化生成器（自带几何工具函数，单文件可执行） |
@@ -57,12 +66,27 @@
 | `tools/modeling/generators/p0_finalize.py` | — | P0 归档脚本：备份旧 GLB → 清临时对象 → 导出 → 保存工作台 |
 | `tools/modeling/generators/export_props_glb.py` | — | 道具 GLB 导出：逐件把 `location` 临时归零、只导出选中对象、导出后还原；单节点 / 轴心在底面中心 |
 | `tools/modeling/briefs/sn_paddle_freighter.json` | — | 明轮货轮工单（人工选定明轮船型 + 船长 55 m，二次追加「明轮补轮缘/辐条/桨叶 + 轮罩半包」；14000 tri 预算、6 材质、15 对零交面 + 明轮 8 旋转角 0 穿模验收） |
-| `tools/modeling/generators/sn_paddle_freighter_generator.py` | — | 明轮货轮参数化生成器（`STATIONS` / `PROFILE` / `PADDLE` / `PADDLE_BOX` / `FUNNELS` / `MASTS` / `HATCHES` / `BOOMS` / `DECKHOUSE` 参数表；纯几何函数 + Blender 装配 + `report()`） |
+| `tools/modeling/generators/sn_paddle_freighter_generator.py` | — | 明轮货轮参数化生成器（`STATIONS` / `PROFILE` / `PADDLE` / `PADDLE_BOX` / `FUNNELS` / `MASTS` / `HATCHES` / `BOOMS` / `DECKHOUSE` 参数表；纯几何函数 + Blender 装配 + `report()`；M0-4 起桅杆/横桁/艏斜桁/索具委托 `rig_kit`，只保留船型布局） |
 | `tools/modeling/generators/dryrun_ship.py` | — | 船舶生成器纯 Python 干跑：tri / 包围盒 / 边界边 / 非流形边 / 退化面 / 命名 / 父级键 / 明轮 Pivot 归属 |
 | `tools/modeling/generators/export_ship_glb.py` | — | 船舶归档：备份旧 GLB → 保存工作台 → 根节点归零导出 GLB → `bpy.data.libraries.write` 船体快照 → 还原根节点 |
 | `tools/modeling/generators/verify_ship_glb.py` | — | GLB 结构自检：节点 / 网格 / 材质 doubleSided / 三角面 / 世界包围盒（Y-up） |
 | `tools/modeling/briefs/sn_ironclad_broadside.json` | — | 舷侧炮铁甲舰工单（60 m 级、12000 tri、8 材质、水线轴心、纯展示资产） |
-| `tools/modeling/generators/sn_ironclad_generator.py` | — | 铁甲舰参数化生成器（`STATIONS` / `GUN_X` / `MASTS` / `FUNNELS` 参数表；船体放样 + 装甲带 + 炮列 + 炮房/烟囱 + 三桅 + 甲板件，单 mesh 装配 + `report()`） |
+| `tools/modeling/generators/sn_ironclad_generator.py` | — | 铁甲舰参数化生成器（`STATIONS` / `GUN_X` / `MASTS` / `FUNNELS` 参数表；船体放样 + 装甲带 + 炮列 + 炮房/烟囱 + 甲板件，单 mesh 装配 + `report()`；M0-4 起三桅与索具委托 `rig_kit.ironclad_masts/rigging`） |
+| `tools/modeling/generators/sn_ship_weapon_sockets.py` | — | M0-3 船侧武器 socket 规格真源 + Blender 就地补齐/实测/自检：`SHIPS` 表、`DECK_Z_EXPECTED`、`validate_spec()`、`apply_all()`、`verify_all()`；`--check` 可纯 Python 干跑 |
+| `tools/modeling/generators/glb_ship_sockets.py` | — | socket GLB 后处理：BLEND 前缀名 → `SN_Socket_Weapon_*`，并写 Root `weapon_sockets` / `weapon_socket_count` / `socket_spec` |
+| `tools/modeling/generators/export_ship_weapon_sockets_glb.py` | — | 4 艘船 GLB 重导：外部共享贴图、旧 GLB 备份、Core 副本同步、socket 名称归一化 |
+| `tools/modeling/generators/verify_ship_weapon_sockets_glb.py` | — | 船体 socket GLB 独立验收：几何不变量 + 武器/帆索 socket 父子/translation/朝向/extras + Root extras（4/4 ALL OK） |
+| `tools/modeling/generators/rig_kit.py` | — | **M0-4 船体帆索部件库**（纯 Python）：`RigBuilder` 适配器 + 通用积木（rope/spar/jaws/block）+ 帆面曲面/帆缝/帆缘绳 + 帆船/蒸汽船/铁甲舰部件函数；3 艘船与 12 件套件共用同一份几何 |
+| `tools/modeling/generators/rig_kit_batch1_generator.py` | — | 12 件 `SN_Rig_*` 套件生成器：套件布局参数、`SN_Mount` + `SN_Socket_*` 接口、Root extras、Blender 装配 + `report()` |
+| `tools/modeling/generators/sn_rig_materials.py` | — | rig_kit 12 件套件的共享贴图材质白名单 / 回退色 |
+| `tools/modeling/generators/dryrun_rig_kit.py` | — | rig_kit 纯 Python 干跑：命名 / tri / bbox / z 基准 / 材质白名单 / 网格健康（帆面允许边界边）/ Mount+Socket 契约 |
+| `tools/modeling/generators/gen_rig_kit_catalog.py` | — | 从套件与船侧 socket 真源导出 `tools/modeling/rig_kit_catalog.json` |
+| `tools/modeling/generators/sn_ship_rig_sockets.py` | — | M0-4 帆索 socket 规格真源：3 艘船 22 个 `SN_Socket_Mast/Yard/Sail_*`、`apply_all()` / `verify_all()`（零几何） |
+| `tools/modeling/generators/glb_ship_rig_sockets.py` | — | 船体帆索 socket GLB 后处理：BLEND 前缀 → `SN_Socket_*` + Root `rig_sockets` 列表 |
+| `tools/modeling/generators/glb_rig_kit.py` | — | 套件 GLB 后处理：接口节点归一化（`SN_Mount` / `SN_Socket_*`）+ Root `rig_sockets` |
+| `tools/modeling/generators/export_rig_kit_glb.py` | — | 12 件套件 GLB 导出：根归零、共享贴图外部化、接口归一化、Core 同步 |
+| `tools/modeling/generators/verify_rig_kit_glb.py` | — | 12 件套件 GLB 独立验收（12/12 ALL OK） |
+| `tools/modeling/generators/rig_kit_baseline.py` | — | 3 艘船重构前后的逐对象几何基线（`--capture` / `--compare`，digest 0 差异） |
 | `tools/modeling/generators/dryrun_ironclad.py` | — | 铁甲舰纯 Python 干跑：tri / 包围盒（水线轴心）/ z 范围 / 边界边 / 非流形边 / 退化面 / 孤立点 / 材质 |
 | `tools/modeling/generators/render_ironclad_preview.py` | — | 铁甲舰预览渲染：3/4 / 正侧 / 舰艏 / 舰艉 3/4 四视角 |
 | `tools/modeling/generators/export_ironclad_glb.py` | — | 铁甲舰归档：备份旧 GLB → 轴心归零导出 → `bpy.data.libraries.write` 单对象快照 |
@@ -76,14 +100,14 @@
 | `tools/modeling/generators/export_paddle_steamer_glb.py` | — | 明轮蒸汽船 GLB 归档：备份旧 GLB → 保存工作台 → 轴心归零导出 → `libraries.write` 快照 → 还原摆位 |
 | `tools/modeling/generators/verify_paddle_steamer_glb.py` | — | 明轮蒸汽船 GLB 结构自检：35 节点 / 32 网格 / 8 doubleSided 材质 / 11764 tri / Y-up bbox / 水线 −1.32，并拒绝蒸汽节点 |
 | `tools/modeling/briefs/sn_schooner_fame.json` | — | 1795 双桅纵帆船工单：船体 LOA 24.4 m / 总长 33.44 m / 总高 26.82 m、≤18000 tri、12 材质；双桅后倾 / 斜桁帆 / 方顶帆 / 艏三角帆 / 完整索具 / 艉廊 FAME 铭牌；用户明确不要星条旗，只保留红白长旒 |
-| `tools/modeling/generators/sn_schooner_fame_generator.py` | — | 纵帆船参数化生成器（`STATIONS` / `PROFILE` / `MASTS` / `FORE_SAIL` / `MAIN_SAIL` / `FORE_TOPSAIL` / `MAIN_TOPSAIL` 参数表；18 站放样 + 斜桁帆曲面 + 三角帆 + 索具 + 甲板属具 + 艉廊 + 文字铭牌 + `report()`） |
+| `tools/modeling/generators/sn_schooner_fame_generator.py` | — | 纵帆船参数化生成器（`STATIONS` / `PROFILE` / `MASTS` / `FORE_SAIL` / `MAIN_SAIL` / `FORE_TOPSAIL` / `MAIN_TOPSAIL` 参数表；18 站放样 + 甲板属具 + 艉廊 + 文字铭牌 + `report()`；M0-4 起桅杆/斜桁/帆/索具委托 `rig_kit`，只保留船型布局） |
 | `tools/modeling/generators/ship_parts/` | — | **可复用船体部件库 v1**：`core`（Part/基本体/PartSpec）/ `deck`（舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯）/ `bow`（艏斜桁/jibboom/艏饰）/ `stern`（艉廊/艉窗/艉灯）/ `assembly`（集合/材质/Pivot/文字/report）/ `palette`；生成器只保留船型布局，重构后纵帆船逐对象 digest 不变 |
 | `tools/modeling/generators/ship_parts/README.md` | — | 部件库契约：分层、`PartSpec`、新增部件步骤、坐标/材质约定、输出不变的验收口径 |
 | `tools/modeling/generators/dryrun_schooner_fame.py` | — | 纵帆船纯 Python 干跑：对 FORE/MAIN 子件施加 Pivot 世界变换后核对 tri / bbox / 边界边 / 非流形 / 退化 / 孤立点 / 材质 / 命名 / 父级，并断言两桅轴距 6.4 m、后倾与主桅更高 |
 | `tools/modeling/generators/export_schooner_fame_glb.py` | — | 纵帆船 GLB 归档：备份旧 GLB → 保存工作台 → 根节点归零导出 → `libraries.write` 快照 → 还原 (0, −70, 0) |
 | `tools/modeling/generators/verify_schooner_fame_glb.py` | — | 纵帆船 GLB 结构自检：32 节点 / 29 网格 / 12 doubleSided 材质 / 13174 tri / Y-up bbox 33.44×26.85×6.88 / 水线轴心 −2.74 |
 | `tools/modeling/generators/render_schooner_fame_preview.py` | — | 纵帆船预览渲染：3/4、正侧、艏 3/4、艉 3/4、俯视 5 张；临时相机/太阳/水面，渲后还原场景 |
-| `tools/godot/verify_props.gd` | — | GLB 导入验收（只读）：核对 Godot 侧包围盒、三角面与材质名，专抓"改了 .blend 忘了重导 GLB" |
+| `tools/godot/verify_props.gd` | — | GLB 导入验收（只读）：核对 Godot 侧包围盒、三角面、贴地与 `SN_Tex_*` 材质名，专抓"改了 .blend 忘了重导 GLB"或旧纯色材质回流 |
 | `tools/modeling/briefs/sn_iron_harbor_batch1.json` | — | 铁港第一批批量工单（6 件一次派发）；系缆桩尺寸在 P0 整改中改为 0.62 × 0.62 × 0.70 |
 | `tools/modeling/briefs/sn_iron_harbor_batch2.json` | — | 铁港第二批批量工单（6 件，y=30 一排，预算 1900 tri） |
 
@@ -120,8 +144,9 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 ### 共享材质贴图库（`shared_materials`，2026-10-21）
 
 > 约定：**新资产不再用纯色代表材质**。材质 = 贴图 + spec 参数；贴图是外部共享 PNG，
-> 模型只保留几何与 UV。旧资产（船 / 道具 / 建筑）的纯色 `SN_*` 材质保持不动，
-> 按“补 UV → 切 `SN_Tex_*` → 重导 GLB”逐批迁移。
+> 模型只保留几何与 UV。旧资产的纯色 `SN_*` 材质按“补 UV → 切 `SN_Tex_*` → 重导 GLB”
+> 逐批迁移：**2026-10-22 已完成批次 A（31 件铁港道具 + 6 件港口设施）与批次 B（船模块 /
+> 4 艘船 / 旧小镇剩余 5 件）**；仅 `SN_Ship_Prototype` 遗留键仍是旧纯色。
 
 | 材质 | 贴图 | tile_m | 粗糙度 / 金属度 | 用途 |
 | --- | --- | ---: | --- | --- |
@@ -139,9 +164,45 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 
 - 真源：`docs/design/textures/shared_materials/shared_materials.spec.json`；贴图生成器 `tools/art/gen_shared_material_textures.py`（11 张 512² 无缝贴图 + montage + stats，确定性可复现）。
 - 授权贴图：`docs/design/textures/shared_materials/tiles/<texture>.png`；评审 montage：`docs/design/textures/shared_materials/shared_materials_montage.png`。
-- 运行时副本：`assets/models/{props,weapons,ship_parts,machinery,cargo,dock}/shared_materials/`（开发态）与对应 `dev_mods/core/assets/models/.../shared_materials/`（发布）；GLB `images[].uri` = `shared_materials/<texture>.png`。
-- 运行时共享：`ContentAssetLoader` 按路径缓存 `Texture2D`，四台起重机与后续资产共用同一贴图实例；`PortStage` 按材质签名合批。
-- 契约与迁移细节：`docs/design/MODELING_WORKFLOW.md` §12。
+- 运行时副本：`assets/models/{props,port,modules,ships,weapons,ship_parts,machinery,cargo,dock,rig}/shared_materials/`（开发态）与对应 `dev_mods/core/assets/models/.../shared_materials/`（发布，共 24 个 `runtime_dirs`）；GLB `images[].uri` = `shared_materials/<texture>.png`。
+- 运行时共享：`ContentAssetLoader` 按路径缓存 `Texture2D`，四台起重机、31 件铁港道具、6 件港口设施、12 件船模块与 4 艘船等资产共用同一贴图实例；`PortStage` 按材质签名合批。
+- 契约与迁移细节：`docs/design/MODELING_WORKFLOW.md` §12；批次 A/B 的迁移映射、脚本与验收见 [LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md) / [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)。
+
+### 旧资产 UV 迁移 A（31 件铁港道具 + 6 件港口设施，2026-10-22）
+
+按 backlog M0-1 完成：**只改材质与 UV，不改几何 / 轴心 / 对象变换**。37 件合计 **11 278 tri**（props 6 282 / port 4 996，与迁移前逐件一致），UV loops **24 188**，材质槽全部为 `SN_Tex_*`（props 7 种 / port 7 种，共 14 个运行时共享贴图实例；props 与 port 各持一份 `shared_materials/` 副本）。
+
+| 旧纯色材质 | 共享贴图材质 | 说明 |
+| --- | --- | --- |
+| `SN_Wood` / `SN_Wood_Dark` / `SN_Wood_Deck` | `SN_Tex_Wood` / `SN_Tex_Wood_Dark` / `SN_Tex_Wood_Deck` | 一对一 |
+| `SN_Metal` / `SN_Iron` / `SN_Iron_Red` / `SN_Brass` | 同名 `SN_Tex_*` | 一对一 |
+| `SN_Stone` | `SN_Tex_Stone` | 石阶 / 岸壁 / 干船坞石壁 |
+| `SN_Canvas` / `SN_Canvas_Shade` | `SN_Tex_Canvas_Shade` | 两类旧帆布合并到唯一贴图 |
+| `SN_Coal` | `SN_Tex_Coal` | 煤堆 |
+| `SN_Ore` | `SN_Tex_Iron_Red` | 锈红铁矿色与 iron_red 均值一致，不新增贴图 |
+
+- 迁移脚本：`tools/modeling/generators/sn_legacy_uv_migration.py`（材质映射 + 局部空间盒式 UV + 几何签名对比）；`dryrun_legacy_uv.py` 纯 Python 预检。
+- 导出：`tools/modeling/generators/export_legacy_uv_glb.py`（逐件归零导出、`glb_shared_textures.externalize_glb(prefer_authored=True)`、旧 GLB 备份 `.design/legacy_uv/backup_glb/`、Core 副本同步、共享贴图运行时副本补齐 11 张）。
+- 验收：`verify_legacy_uv_glb.py`（37/37：tri/尺寸与迁移前一致、每图元 TEXCOORD_0、材质 `SN_Tex_*`、外部 PNG 与授权 tile 逐字节一致）；`tools/godot/verify_legacy_uv_materials.gd`（37/37、14 个共享贴图实例、0 失败）；`framework/tests/cases/test_legacy_uv_assets.gd` 2 例守护。
+
+### 旧资产 UV 迁移 B（船模块 / 4 艘船 / 旧小镇，2026-10-22）
+
+按 backlog M0-2 完成：**只改材质与 UV，不改几何 / 轴心 / 对象变换**。实际重导 **21 个 GLB**（12 船模块含占位副本 + 4 艘可玩船 + 5 件旧小镇道具），合计 **55 256 tri**（modules 7 492 / ships 45 968 / town 1 796，与迁移前逐件一致）、UV loops **111 564**、118 个 mesh 对象、10 个 `SN_Tex_*` 材质；Godot 运行时 21 件 / **24 个共享贴图实例** / 0 失败。
+
+| 旧纯色材质 | 共享贴图材质 | 说明 |
+| --- | --- | --- |
+| `SN_Iron_Hull` / `SN_Hull_Black` | `SN_Tex_Iron` | 铁船体 / 纵帆船黑船身（铸铁贴图比深木更接近原黑） |
+| `SN_Ochre` | `SN_Tex_Wood_Deck` | 赭黄腰线 |
+| `SN_White` / `SN_PS_UpperWhite` | `SN_Tex_Canvas_Shade` | 无纯白贴图，映射到最接近的浅色帆布（二级白层次合并） |
+| `SN_Flag_Red` / `SN_Flag_White` / `SN_Flag_Blue` | `SN_Tex_Iron_Red` / `SN_Tex_Canvas_Shade` / `SN_Tex_Glass_Dark` | 旗帜 |
+| 其余 `SN_Wood*` / `SN_Metal` / `SN_Brass` / `SN_Stone` / `SN_Canvas*` / `SN_Iron_Red` | 同名 `SN_Tex_*` | 与批次 A 一致 |
+
+- 迁移脚本：`sn_legacy_uv_migration.py` 的 `migrate_all_b()`；单 mesh 用 `space="local"`，多节点船体用 `space="root"`（新增支持，跨子件连续、不烘入工作台摆位）。
+- 导出：`export_legacy_uv_b_glb.py`；`dryrun_legacy_uv_b.py` 预检；`verify_legacy_uv_b_glb.py` 21/21 验收；`tools/godot/verify_legacy_uv_materials_b.gd` 运行时验收；`test_legacy_uv_assets_b.gd` 2 例守护。
+- 旧小镇：backlog 的 10 件中，**5 栋旧建筑已在建筑套件批次升级为 `SN_Town_*` trim-sheet LOD0**（运行时 GLB 已替换，本次不重做）；本次迁移剩余 **5 件**旧纯色道具（Fence_Row / Dock_Worker_A/B / Rowboat / Cargo_Lighter）。
+- `SN_Ship_Prototype`（`model.ship.prototype` 遗留键）不在 4 艘可玩船内，仍是旧纯色资产，留待后续清理批次。
+- 验收细节见 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)。
+
 
 ## 3D 资产：舷侧炮铁甲舰（SN_Ironclad）
 
@@ -153,7 +214,7 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | 三角面 | **8830 / 12000** |
 | 材质 | Iron_Hull / Iron_Red / Wood_Deck / Wood / Wood_Dark / Metal / Brass / Canvas（复用既有调色板，不新增） |
 | 结构 | 17 站放样铁壳 + 撞角艏；**英雄化装甲带**（2.2 m 高、外凸 380 mm、120 mm 竖向板缝/黄铜压条）；**每舷 6 门英雄化舷侧炮**（炮门 1.9×1.9 m、炮管 Ø0.88→0.72 m、外露 1.55 m、炮口箍 Ø1.0 m、上翻炮门盖、前外张 12°）+ 2 门放大艏 pivot 炮；中央装甲炮房 + 指挥塔 + 艏驾驶台；双后倾烟囱 + 通风筒 + 天窗；三桅横桁（收帆卷）+ 艏斜桁 + 支索/侧支索；舷墙 + 黄铜压条；舱口格栅/绞盘/舵轮/罗经柜/小艇/锚（吊架）/螺旋桨/舵/艉廊/旗 |
-| 运行时 GLB | `assets/models/ships/SN_Ironclad.glb`（单节点 / 8 图元 / 约 468 KB / glTF Y-up，轴心水线中心） |
+| 运行时 GLB | `assets/models/ships/SN_Ironclad.glb`（14 节点 = 1 mesh + 4 武器 socket + 9 帆索 socket 空节点 / 8 图元 / 8830 tri / 596.7 KB / sha256 `7caf532529e8` / glTF Y-up，轴心水线中心） |
 | 源文件 | `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend`（单对象快照） |
 | 工单/脚本 | `briefs/sn_ironclad_broadside.json`、`sn_ironclad_generator.py`、`dryrun_ironclad.py`、`check_ironclad_connectivity.py`、`render_ironclad_preview.py`、`export_ironclad_glb.py`、`verify_ironclad_glb.py` |
 | 截图 | `docs/design/screenshots/ironclad_{three_quarter,broadside,bow,bow_closeup,guns_closeup,stage_ortho}.png` |
@@ -171,7 +232,7 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | 材质 | `SN_White` / `SN_Iron_Hull` / `SN_Iron_Red` / `SN_Wood_Deck` / `SN_Metal` / `SN_Brass` / `SN_Flag_Blue` / `SN_Flag_White`（新增 3 个，复用 5 个；批次 C 后为 9 槽，新增仅本船使用的 `SN_PS_UpperWhite`） |
 | 结构 | 16 站放样白漆船身 + 深色水线以下船底 + 暗红压条；两舷 10 桨叶明轮（14 段双轮缘 / 每侧 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑 / 曲柄销）+ 梯形格栅轮罩（10 道水平格栅 + 深色内衬 + 暗红顶沿 + 黄铜铭牌）+ 明轮台走台/栏杆；主甲板客舱（白墙 + 玻璃窗 + 黄铜窗台 + 木门）、游步甲板 + 白色立柱雨棚 + 前后栏杆；前驾驶室（三面窗 + 顶板 + 双侧 `ENTERPRISE` 文字铭牌 + 黄铜钟）；锅炉围罩 + 黑烟囱（黄铜箍 / 暗红顶圈）+ 黄铜蒸汽管；艏旗杆 + 澳洲旗（蓝底 / 白十字 / 红星 / 南十字星）、艏部锚/绞盘/系缆桩、艉部弧形低平台 + 栏杆 + 舵/舵柄 + 救生圈/卷缆 |
 | 蒸汽 | **不建模**：烟囱蒸汽由游戏内粒子/VFX 渲染（用户 2026-10-19 明确要求） |
-| 运行时 GLB | `dev_mods/core/assets/models/ships/SN_Paddle_Steamer.glb`（35 节点 / 32 网格 / 11764 tri / 9 材质 doubleSided / 633.3 KB / sha256 `cefec2b7aa2d` / glTF Y-up，轴心水线 z=0） |
+| 运行时 GLB | `dev_mods/core/assets/models/ships/SN_Paddle_Steamer.glb`（38 节点 = 32 mesh + 6 empty，含 **3 个武器 socket** / 32 网格 / 11764 tri / 9 材质 doubleSided / 815.8 KB / sha256 `d5225d8e05de` / glTF Y-up，轴心水线 z=0） |
 | 源文件 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合，工作台 196 对象）+ `.design/ships/SN_Paddle_Steamer.blend`（35 对象独立快照） |
 | 工单/脚本 | `briefs/sn_ship_paddle_steamer.json`、`sn_paddle_steamer_generator.py`、`dryrun_paddle_steamer.py`、`render_paddle_steamer_preview.py`、`verify_paddle_steamer_scene.py`、`export_paddle_steamer_glb.py`、`verify_paddle_steamer_glb.py` |
 | 截图 | before `paddle_steamer_{three_quarter,broadside,bow,stern_quarter,top}.png`；after `paddle_steamer_*_batchc.png`；Godot 实机 `docs/design/screenshots/paddle_steamer_c/shipyard_paddle_steamer_{1440x900,960x540}.png` |
@@ -198,6 +259,8 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | `core:cabin/passenger_cabin` | `assets/models/modules/SN_Cabin_Passenger.glb` | 3.40 × 2.40 × 2.55 | 792 | Wood_Deck / Wood / Wood_Dark / Metal / Brass / Iron_Hull |
 
 > 本批只交付 Blender 源场景 + GLB，**尚未接入 Core 内容键**：三种锅炉仍共用 `model.module.boiler`，货舱 / 导航 / 安全 / 客舱没有模型键。接入时需要同时改 `dev_mods/core/content/*.json` 的 `information.model`、manifest 的资源声明与校验测试。
+>
+> **2026-10-22 迁移 B（M0-2）**：11 件专用模块 + `modules/SN_Boiler_Unit` 占位副本（manifest `model.module.boiler` 引用）共 **12 个 GLB** 已补 `UVMap` / 切换 `SN_Tex_*` 共享贴图；合计 **7 492 tri** 不变、Core 副本同步。表中"主要材质"为迁移前旧名，迁移后的对应关系见上文「旧资产 UV 迁移 B」小节。
 
 - 工单：`tools/modeling/briefs/sn_ship_modules_batch1.json`
 - 生成器：`tools/modeling/generators/sn_ship_modules_generator.py`（参数表驱动，改数值即可重建）
@@ -223,7 +286,7 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | `shipyard` 船厂 | `assets/models/port/SN_Dry_Dock.glb` | 18.00 × 8.00 × 2.60 | 516 | Stone / Metal / Wood_Dark |
 
 - 结构要点：市场棚（4 柱前倾帆布顶 + 柜台 + 空图标招牌 + 2 挂灯 + 货架/木箱）；告示板（2 柱 + 木框 + 后挡板 + 6 张空白纸 + 深色小披檐 + 侧挂灯托架，纸面朝 −Y 相机侧、整体后仰 5°）；水箱（石基座 + 16 边筒身 + 锥顶 + 3 道铁箍 + 32 颗铆钉 + 弯管/阀 + 侧爬梯 + 液位计 + 空白黄铜铭牌）；信号塔（4 收分腿 + X 斜撑 + 平台栏杆 + 旗语桅杆 + 2 摆臂 + 灯室 + 旗绳 + 工具柜 + 斜爬梯）；龙门吊（2 组 A 形腿 + 箱形主梁下沿净高 9.00 m + 第 3/4 跨小车/吊钩滑轮组 + 2 钢缆 + 横纵斜撑 + 侧爬梯 + 操作平台）；干船坞（坞底 + 每侧 3 级收分坞壁 + 2 条滑道轨 + 5 组龙骨墩（间距 3 m，骑轨）+ 排水沟 + 两侧各 6 级石阶）。
-- 材质：只用调色板；本批新增 `SN_Iron`（氧化铁，base 0.072/0.076/0.084、rough 0.52、metallic 0.62，仅被水箱/信号塔/龙门吊引用）。`SN_Wood_Deck` / `SN_Canvas_Shade` 本批未使用。
+- 材质：只用调色板；本批新增 `SN_Iron`（氧化铁，base 0.072/0.076/0.084、rough 0.52、metallic 0.62，仅被水箱/信号塔/龙门吊引用）。`SN_Wood_Deck` / `SN_Canvas_Shade` 本批未使用。**2026-10-22 迁移 A 后**：6 件全部补 `UVMap` 并切换 `SN_Tex_*` 共享贴图材质（Stone / Metal / Iron / Wood / Wood_Dark / Canvas_Shade / Brass），GLB 外部贴图 URI + Core 副本已同步，tri 与尺寸不变（合计 **4 996 tri**），见 [LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md)。
 - 工作台：`.design/SN_Asset_Workbench.blend` → `SN_Port_Facilities` 集合（场景 234 对象 / 213 mesh / 19 材质）；暂存排原定 y=60，因与 `SN_Ship_Modules` 冲突改为 **y=75**（x = 10 / 18 / 26 / 36 / −8 / −30），工单已记 `layout_revision`。
 - 源快照：`.design/port/SN_<Name>.blend`（6 个，单件、轴心归零）；GLB 备份在 `.design/port/backup_glb/`；实测数据 `.design/port/report.json`。
 - 工单 / 规划：`tools/modeling/briefs/sn_port_facilities_batch1.json`、`PORT_FACILITIES_PLAN.md`
@@ -239,6 +302,8 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 ## 3D 港口街景（铁港建筑套件 LOD0 + 批次 A LOD1）
 
 主界面港口舞台的「码头广场 + 仓库街区」背景 kit。第一批 10 件低模道具（围栏/工人/小船等）仍在工作台 `SN_Harbor_Town` 集合（y=110），运行时为 `dev_mods/core/assets/models/props/SN_HT_*.glb`；其中 **5 栋建筑已在铁港建筑套件（M1 + 批次 B + 批次 A）升级为带共享 trim sheet 贴图的 LOD0，并新增 5 件 LOD1**，随 core 模组发布（发布包 PCK 排除 `assets/models/*`，内容只从 `.snavmod.zip` / 松散目录读取）。
+
+> **2026-10-22 迁移 B**：旧小镇剩余 **5 件旧纯色道具**（`SN_HT_Fence_Row` / `Dock_Worker_A` / `Dock_Worker_B` / `Rowboat` / `Cargo_Lighter`）已补 `UVMap` / 切换 `SN_Tex_*` 共享贴图并重导 GLB（合计 **1 796 tri** 不变）；5 栋建筑早在建筑套件批次已用 `SN_Town_*` 图集 + UV 完成，本次只核验、未重做。详见 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)。
 
 ### 建筑资产（批次 A 终态）
 
@@ -374,6 +439,35 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 - 源/工具：工单 `tools/modeling/briefs/sn_kit_batch1.json`；生成器 `kit_batch1_generator.py`；部件库 `weapon_kit.py`；材质视图 `sn_kit_materials.py`；干跑 `dryrun_kit_batch1.py`；导出 `export_kit_glb.py`；GLB 自检 `verify_kit_glb.py`；预览 `render_kit_preview.py`；目录导出 `gen_kit_catalog.py`。
 - 验收图：`docs/design/screenshots/kits/kit_weapon_lineup.png` / `kit_ship_parts_lineup.png` / `kit_assembly_gun.png` / `kit_assembly_deck.png` / `kit_assembly_deck_detail.png` 与 8 件 × {3/4, 侧视}。
 - 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH1_ACCEPTANCE.md](../archive/KIT_BATCH1_ACCEPTANCE.md)。
+
+## 船体帆索部件库 rig_kit（M0-4，2026-10-22）
+
+12 件独立套件，几何全部来自 `rig_kit.py`（与 PF/SF/IC 共用同一份源码）。每件 Root 下
+唯一 `SN_Mount` + 语义 `SN_Socket_*`；GLB 导出后接口名归一化为标准名，Root extras 写
+`rig_sockets` / `rig_socket_count` / `rig_socket_spec`。契约见
+[RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)，机器目录
+[rig_kit_catalog.json](../../tools/modeling/rig_kit_catalog.json)。
+
+| 资产 | 运行时 GLB | 集合 | 尺寸 X×Y×Z (m) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Rig_Mast_Sail` | `assets/models/rig/SN_Rig_Mast_Sail.glb` | `SN_Rig_Mast_Sail_Prototype` | 1.87 × 2.90 × 21.50 | **448** | 4 | 甲板 z=0；Mount + Yard_Lower/Upper + Sail_Head/Tack + Deadeye_Port/Starboard |
+| `SN_Rig_Mast_Steam` | `assets/models/rig/SN_Rig_Mast_Steam.glb` | `SN_Rig_Mast_Steam_Prototype` | 0.72 × 0.72 × 11.18 | **144** | 2 | 甲板 z=0；Mount + Yard + Stay_Fore/Aft |
+| `SN_Rig_Yard` | `assets/models/rig/SN_Rig_Yard.glb` | `SN_Rig_Yard_Prototype` | 0.48 × 6.94 × 0.48 | **72** | 3 | 桁中心原点、沿 Y；Mount + Sail + Brace_Port/Starboard |
+| `SN_Rig_Gaff` | `assets/models/rig/SN_Rig_Gaff.glb` | `SN_Rig_Gaff_Prototype` | 5.46 × 0.50 × 2.06 | **72** | 2 | 夹钳原点；Mount + Sail_Peak + Halyard |
+| `SN_Rig_Boom` | `assets/models/rig/SN_Rig_Boom.glb` | `SN_Rig_Boom_Prototype` | 6.24 × 0.50 × 0.52 | **72** | 2 | tack 原点；Mount + Sail_Clew + Sheet |
+| `SN_Rig_Bowsprit` | `assets/models/rig/SN_Rig_Bowsprit.glb` | `SN_Rig_Bowsprit_Prototype` | 4.52 × 0.52 × 2.65 | **72** | 3 | 甲板 z=0；Mount + Jib_Tack + Stay_Fore |
+| `SN_Rig_Sail_Gaff` | `assets/models/rig/SN_Rig_Sail_Gaff.glb` | `SN_Rig_Sail_Gaff_Prototype` | 5.98 × 0.64 × 8.24 | **756** | 2 | tack 原点；Mount + Sail_Head/Peak/Clew（单层双面） |
+| `SN_Rig_Sail_Square` | `assets/models/rig/SN_Rig_Sail_Square.glb` | `SN_Rig_Sail_Square_Prototype` | 0.62 × 6.04 × 5.64 | **624** | 2 | 帆脚中心；Mount + Yard + Sheet_Port/Starboard（单层双面） |
+| `SN_Rig_Sail_Jib` | `assets/models/rig/SN_Rig_Sail_Jib.glb` | `SN_Rig_Sail_Jib_Prototype` | 5.04 × 0.47 × 7.24 | **578** | 2 | tack 原点；Mount + Sail_Head/Clew（单层双面） |
+| `SN_Rig_Shrouds` | `assets/models/rig/SN_Rig_Shrouds.glb` | `SN_Rig_Shrouds_Prototype` | 2.59 × 2.55 × 7.26 | **568** | 2 | 链板 z=0；Mount + Mast_Top + Chainplate_Port/Starboard |
+| `SN_Rig_Stays` | `assets/models/rig/SN_Rig_Stays.glb` | `SN_Rig_Stays_Prototype` | 9.00 × 2.94 × 7.26 | **188** | 3 | 甲板眼板 z=0；Mount + Mast_Top + Bowsprit_Tip |
+| `SN_Rig_Running` | `assets/models/rig/SN_Rig_Running.glb` | `SN_Rig_Running_Prototype` | 5.09 × 6.83 × 7.22 | **180** | 2 | 甲板羊角 z=0；Mount + Mast_Top + Sail_Clew |
+
+12 件合计 **3,774 三角面**（预算 7,050）；桅/桁/索具为闭合壳体，三种帆面是单层开放曲面
+（`doubleSided`，干跑允许边界边）；GLB 合计 308.3 KB，共享贴图
+`assets/models/rig/shared_materials/`（11 张）+ Core 副本。
+- 源/工具：工单 `tools/modeling/briefs/sn_rig_kit_batch1.json`；库 `rig_kit.py`；生成器 `rig_kit_batch1_generator.py`；干跑 `dryrun_rig_kit.py`；导出 `export_rig_kit_glb.py`；GLB 自检 `verify_rig_kit_glb.py`；目录 `gen_rig_kit_catalog.py`。
+- 本批纯资产 + 船侧 socket 契约：不接运行时 `ShipVisualAssembler`，不登记 Core manifest 键；验收见 [RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md)。
 
 ## 模型素材库批次 2：机械 / 货物 / 码头（2026-10-21）
 

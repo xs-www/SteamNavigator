@@ -1,0 +1,1310 @@
+{
+  "schema": "steam-navigator/rig-kit-catalog@1",
+  "version": "1.0",
+  "units": "metres",
+  "axes": {
+    "up": "+Z",
+    "forward": "+X"
+  },
+  "contract": "docs/design/RIG_KIT_CONTRACT.md",
+  "brief": "tools/modeling/briefs/sn_rig_kit_batch1.json",
+  "source_generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+  "source_library": "tools/modeling/generators/rig_kit.py",
+  "socket_standard": {
+    "mount": "SN_Mount",
+    "mast": "SN_Socket_Mast_*",
+    "yard": "SN_Socket_Yard_*",
+    "sail": "SN_Socket_Sail_*",
+    "spec": "rig-sockets@1"
+  },
+  "totals": {
+    "assets": 12,
+    "tri_count": 3774,
+    "tri_budget": 7050,
+    "rig_sockets": 22
+  },
+  "assets": {
+    "SN_Rig_Mast_Sail": {
+      "asset": "SN_Rig_Mast_Sail",
+      "family": "rig_kit",
+      "role": "mast_sail",
+      "type": "sail-plan mast assembly",
+      "collection": "SN_Rig_Mast_Sail_Prototype",
+      "root": "SN_Rig_Mast_Sail_Root",
+      "prefix": "SN_Rig_Mast_Sail_",
+      "glb": "assets/models/rig/SN_Rig_Mast_Sail.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Mast_Sail.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "deck base at z=0; +Z mast up",
+      "closed": true,
+      "footprint_kind": "deck_pad",
+      "base_footprint": [
+        0.62,
+        0.62
+      ],
+      "bbox": [
+        1.87,
+        2.9,
+        21.5
+      ],
+      "z_range": [
+        0.0,
+        21.5
+      ],
+      "tri_count": 448,
+      "tri_budget": 700,
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Mast_Sail_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Yard_Lower",
+          "blend_name": "SN_Rig_Mast_Sail_Socket_Yard_Lower",
+          "local": [
+            0.0,
+            0.0,
+            10.3
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Yard_Upper",
+          "blend_name": "SN_Rig_Mast_Sail_Socket_Yard_Upper",
+          "local": [
+            0.0,
+            0.0,
+            16.5
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Head",
+          "blend_name": "SN_Rig_Mast_Sail_Socket_Sail_Head",
+          "local": [
+            0.0,
+            0.0,
+            10.6
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Tack",
+          "blend_name": "SN_Rig_Mast_Sail_Socket_Sail_Tack",
+          "local": [
+            0.0,
+            0.0,
+            0.5
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Deadeye_Port",
+          "blend_name": "SN_Rig_Mast_Sail_Socket_Deadeye_Port",
+          "local": [
+            0.0,
+            0.66,
+            1.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Deadeye_Starboard",
+          "blend_name": "SN_Rig_Mast_Sail_Socket_Deadeye_Starboard",
+          "local": [
+            0.0,
+            -0.66,
+            1.2
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "mast_class": "Sail",
+        "rig_spec": "rig-kit@1",
+        "mast_height": 21.3
+      }
+    },
+    "SN_Rig_Mast_Steam": {
+      "asset": "SN_Rig_Mast_Steam",
+      "family": "rig_kit",
+      "role": "mast_steam",
+      "type": "steam-plan mast assembly",
+      "collection": "SN_Rig_Mast_Steam_Prototype",
+      "root": "SN_Rig_Mast_Steam_Root",
+      "prefix": "SN_Rig_Mast_Steam_",
+      "glb": "assets/models/rig/SN_Rig_Mast_Steam.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Mast_Steam.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "deck base at z=0; +Z mast up",
+      "closed": true,
+      "footprint_kind": "deck_pad",
+      "base_footprint": [
+        0.72,
+        0.6
+      ],
+      "bbox": [
+        0.72,
+        0.72,
+        11.18
+      ],
+      "z_range": [
+        0.0,
+        11.18
+      ],
+      "tri_count": 144,
+      "tri_budget": 300,
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Wood"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Mast_Steam_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Yard",
+          "blend_name": "SN_Rig_Mast_Steam_Socket_Yard",
+          "local": [
+            0.0,
+            0.0,
+            8.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Stay_Fore",
+          "blend_name": "SN_Rig_Mast_Steam_Socket_Stay_Fore",
+          "local": [
+            0.0,
+            0.0,
+            10.8
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Stay_Aft",
+          "blend_name": "SN_Rig_Mast_Steam_Socket_Stay_Aft",
+          "local": [
+            0.0,
+            0.0,
+            10.8
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "mast_class": "Steam",
+        "rig_spec": "rig-kit@1",
+        "mast_height": 11.0
+      }
+    },
+    "SN_Rig_Yard": {
+      "asset": "SN_Rig_Yard",
+      "family": "rig_kit",
+      "role": "yard",
+      "type": "square yard with furled sail",
+      "collection": "SN_Rig_Yard_Prototype",
+      "root": "SN_Rig_Yard_Root",
+      "prefix": "SN_Rig_Yard_",
+      "glb": "assets/models/rig/SN_Rig_Yard.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Yard.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "yard centre at (0,0,0); spar along Y",
+      "closed": true,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        0.48,
+        6.94,
+        0.48
+      ],
+      "z_range": [
+        -0.33,
+        0.15
+      ],
+      "tri_count": 72,
+      "tri_budget": 300,
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Deck"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Yard_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail",
+          "blend_name": "SN_Rig_Yard_Socket_Sail",
+          "local": [
+            0.0,
+            0.0,
+            -0.09
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Brace_Port",
+          "blend_name": "SN_Rig_Yard_Socket_Brace_Port",
+          "local": [
+            0.0,
+            3.4,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Brace_Starboard",
+          "blend_name": "SN_Rig_Yard_Socket_Brace_Starboard",
+          "local": [
+            0.0,
+            -3.4,
+            0.0
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "yard_length": 6.8,
+        "sail_area_m2": 0.0,
+        "stowed": true
+      }
+    },
+    "SN_Rig_Gaff": {
+      "asset": "SN_Rig_Gaff",
+      "family": "rig_kit",
+      "role": "gaff",
+      "type": "gaff spar with jaws and brass bands",
+      "collection": "SN_Rig_Gaff_Prototype",
+      "root": "SN_Rig_Gaff_Root",
+      "prefix": "SN_Rig_Gaff_",
+      "glb": "assets/models/rig/SN_Rig_Gaff.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Gaff.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "heel/jaws at origin; peak toward +X",
+      "closed": true,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        5.46,
+        0.5,
+        2.06
+      ],
+      "z_range": [
+        -0.11,
+        1.947
+      ],
+      "tri_count": 72,
+      "tri_budget": 250,
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Gaff_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Peak",
+          "blend_name": "SN_Rig_Gaff_Socket_Sail_Peak",
+          "local": [
+            5.2,
+            0.0,
+            1.9
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Halyard",
+          "blend_name": "SN_Rig_Gaff_Socket_Halyard",
+          "local": [
+            0.6,
+            0.0,
+            0.15
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "spar_length": 5.54
+      }
+    },
+    "SN_Rig_Boom": {
+      "asset": "SN_Rig_Boom",
+      "family": "rig_kit",
+      "role": "boom",
+      "type": "boom spar with jaws and brass bands",
+      "collection": "SN_Rig_Boom_Prototype",
+      "root": "SN_Rig_Boom_Root",
+      "prefix": "SN_Rig_Boom_",
+      "glb": "assets/models/rig/SN_Rig_Boom.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Boom.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "tack/jaws at origin; clew toward +X",
+      "closed": true,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        6.24,
+        0.5,
+        0.52
+      ],
+      "z_range": [
+        -0.406,
+        0.11
+      ],
+      "tri_count": 72,
+      "tri_budget": 250,
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Boom_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Clew",
+          "blend_name": "SN_Rig_Boom_Socket_Sail_Clew",
+          "local": [
+            6.0,
+            0.0,
+            -0.35
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sheet",
+          "blend_name": "SN_Rig_Boom_Socket_Sheet",
+          "local": [
+            6.0,
+            0.0,
+            -0.35
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "spar_length": 6.01
+      }
+    },
+    "SN_Rig_Bowsprit": {
+      "asset": "SN_Rig_Bowsprit",
+      "family": "rig_kit",
+      "role": "bowsprit",
+      "type": "bowsprit with gammon and iron cap",
+      "collection": "SN_Rig_Bowsprit_Prototype",
+      "root": "SN_Rig_Bowsprit_Root",
+      "prefix": "SN_Rig_Bowsprit_",
+      "glb": "assets/models/rig/SN_Rig_Bowsprit.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Bowsprit.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "deck mount at z=0; spar rises toward +X",
+      "closed": true,
+      "footprint_kind": "deck_pad",
+      "base_footprint": [
+        0.45,
+        0.6
+      ],
+      "bbox": [
+        4.52,
+        0.52,
+        2.65
+      ],
+      "z_range": [
+        0.0,
+        2.645
+      ],
+      "tri_count": 72,
+      "tri_budget": 250,
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Bowsprit_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Jib_Tack",
+          "blend_name": "SN_Rig_Bowsprit_Socket_Jib_Tack",
+          "local": [
+            4.4,
+            0.0,
+            2.55
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Stay_Fore",
+          "blend_name": "SN_Rig_Bowsprit_Socket_Stay_Fore",
+          "local": [
+            4.4,
+            0.0,
+            2.55
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "bowsprit_length": 4.4
+      }
+    },
+    "SN_Rig_Sail_Gaff": {
+      "asset": "SN_Rig_Sail_Gaff",
+      "family": "rig_kit",
+      "role": "sail_gaff",
+      "type": "gaff sail (single-layer cloth, double-sided)",
+      "collection": "SN_Rig_Sail_Gaff_Prototype",
+      "root": "SN_Rig_Sail_Gaff_Root",
+      "prefix": "SN_Rig_Sail_Gaff_",
+      "glb": "assets/models/rig/SN_Rig_Sail_Gaff.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Sail_Gaff.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "tack at origin; head/throat toward +Z, clew toward -X",
+      "closed": false,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        5.98,
+        0.64,
+        8.24
+      ],
+      "z_range": [
+        -0.021,
+        8.219
+      ],
+      "tri_count": 756,
+      "tri_budget": 1000,
+      "materials": [
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Sail_Gaff_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Head",
+          "blend_name": "SN_Rig_Sail_Gaff_Socket_Sail_Head",
+          "local": [
+            0.0,
+            0.0,
+            5.8
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Peak",
+          "blend_name": "SN_Rig_Sail_Gaff_Socket_Sail_Peak",
+          "local": [
+            -5.8,
+            0.0,
+            8.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Clew",
+          "blend_name": "SN_Rig_Sail_Gaff_Socket_Sail_Clew",
+          "local": [
+            -5.2,
+            0.0,
+            0.7
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "sail_area_m2": 40.6,
+        "cloth": "single_layer_static"
+      }
+    },
+    "SN_Rig_Sail_Square": {
+      "asset": "SN_Rig_Sail_Square",
+      "family": "rig_kit",
+      "role": "sail_square",
+      "type": "square sail (single-layer cloth, double-sided)",
+      "collection": "SN_Rig_Sail_Square_Prototype",
+      "root": "SN_Rig_Sail_Square_Root",
+      "prefix": "SN_Rig_Sail_Square_",
+      "glb": "assets/models/rig/SN_Rig_Sail_Square.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Sail_Square.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "foot centre at origin; head toward +Z, span along Y",
+      "closed": false,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        0.62,
+        6.04,
+        5.64
+      ],
+      "z_range": [
+        -0.021,
+        5.621
+      ],
+      "tri_count": 624,
+      "tri_budget": 900,
+      "materials": [
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Sail_Square_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Yard",
+          "blend_name": "SN_Rig_Sail_Square_Socket_Yard",
+          "local": [
+            0.0,
+            0.0,
+            5.6
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sheet_Port",
+          "blend_name": "SN_Rig_Sail_Square_Socket_Sheet_Port",
+          "local": [
+            0.0,
+            2.6,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sheet_Starboard",
+          "blend_name": "SN_Rig_Sail_Square_Socket_Sheet_Starboard",
+          "local": [
+            0.0,
+            -2.6,
+            0.0
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "sail_area_m2": 32.0,
+        "cloth": "single_layer_static"
+      }
+    },
+    "SN_Rig_Sail_Jib": {
+      "asset": "SN_Rig_Sail_Jib",
+      "family": "rig_kit",
+      "role": "sail_jib",
+      "type": "jib / headsail (single-layer, double-sided)",
+      "collection": "SN_Rig_Sail_Jib_Prototype",
+      "root": "SN_Rig_Sail_Jib_Root",
+      "prefix": "SN_Rig_Sail_Jib_",
+      "glb": "assets/models/rig/SN_Rig_Sail_Jib.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Sail_Jib.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "tack at origin; head toward +Z, clew toward +X",
+      "closed": false,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        5.04,
+        0.47,
+        7.24
+      ],
+      "z_range": [
+        -0.02,
+        7.215
+      ],
+      "tri_count": 578,
+      "tri_budget": 800,
+      "materials": [
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Sail_Jib_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Head",
+          "blend_name": "SN_Rig_Sail_Jib_Socket_Sail_Head",
+          "local": [
+            0.0,
+            0.0,
+            7.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Clew",
+          "blend_name": "SN_Rig_Sail_Jib_Socket_Sail_Clew",
+          "local": [
+            5.0,
+            0.0,
+            1.2
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "sail_area_m2": 18.0,
+        "cloth": "single_layer_static"
+      }
+    },
+    "SN_Rig_Shrouds": {
+      "asset": "SN_Rig_Shrouds",
+      "family": "rig_kit",
+      "role": "shrouds",
+      "type": "shroud ladders with ratlines and chainplates",
+      "collection": "SN_Rig_Shrouds_Prototype",
+      "root": "SN_Rig_Shrouds_Root",
+      "prefix": "SN_Rig_Shrouds_",
+      "glb": "assets/models/rig/SN_Rig_Shrouds.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Shrouds.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "deck chainplate feet at z=0; mast top toward +Z",
+      "closed": true,
+      "footprint_kind": "deck_pad",
+      "base_footprint": [
+        2.4,
+        2.6
+      ],
+      "bbox": [
+        2.59,
+        2.55,
+        7.26
+      ],
+      "z_range": [
+        -0.052,
+        7.207
+      ],
+      "tri_count": 568,
+      "tri_budget": 1400,
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Shrouds_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Mast_Top",
+          "blend_name": "SN_Rig_Shrouds_Socket_Mast_Top",
+          "local": [
+            0.0,
+            0.0,
+            7.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Chainplate_Port",
+          "blend_name": "SN_Rig_Shrouds_Socket_Chainplate_Port",
+          "local": [
+            0.0,
+            1.2,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Chainplate_Starboard",
+          "blend_name": "SN_Rig_Shrouds_Socket_Chainplate_Starboard",
+          "local": [
+            0.0,
+            -1.2,
+            0.0
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "shroud_rows": 9,
+        "shrouds_per_side": 4
+      }
+    },
+    "SN_Rig_Stays": {
+      "asset": "SN_Rig_Stays",
+      "family": "rig_kit",
+      "role": "stays",
+      "type": "fore/back stays with turnbuckles",
+      "collection": "SN_Rig_Stays_Prototype",
+      "root": "SN_Rig_Stays_Root",
+      "prefix": "SN_Rig_Stays_",
+      "glb": "assets/models/rig/SN_Rig_Stays.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Stays.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "mast-top eye at (0,0,7.2); lower ends at deck",
+      "closed": true,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        9.0,
+        2.94,
+        7.26
+      ],
+      "z_range": [
+        0.0,
+        7.26
+      ],
+      "tri_count": 188,
+      "tri_budget": 400,
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Stays_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Mast_Top",
+          "blend_name": "SN_Rig_Stays_Socket_Mast_Top",
+          "local": [
+            0.0,
+            0.0,
+            7.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Bowsprit_Tip",
+          "blend_name": "SN_Rig_Stays_Socket_Bowsprit_Tip",
+          "local": [
+            4.6,
+            0.0,
+            0.6
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "stay_count": 4
+      }
+    },
+    "SN_Rig_Running": {
+      "asset": "SN_Rig_Running",
+      "family": "rig_kit",
+      "role": "running",
+      "type": "running rigging with blocks",
+      "collection": "SN_Rig_Running_Prototype",
+      "root": "SN_Rig_Running_Root",
+      "prefix": "SN_Rig_Running_",
+      "glb": "assets/models/rig/SN_Rig_Running.glb",
+      "core_glb": "dev_mods/core/assets/models/rig/SN_Rig_Running.glb",
+      "shared_materials": "assets/models/rig/shared_materials",
+      "datum": "mast-top eye at (0,0,7.2); falls toward deck",
+      "closed": true,
+      "footprint_kind": "none",
+      "base_footprint": [
+        0.0,
+        0.0
+      ],
+      "bbox": [
+        5.09,
+        6.83,
+        7.22
+      ],
+      "z_range": [
+        0.0,
+        7.224
+      ],
+      "tri_count": 180,
+      "tri_budget": 500,
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ],
+      "sockets": [
+        {
+          "name": "SN_Mount",
+          "blend_name": "SN_Rig_Running_Mount",
+          "local": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Mast_Top",
+          "blend_name": "SN_Rig_Running_Socket_Mast_Top",
+          "local": [
+            0.0,
+            0.0,
+            7.2
+          ],
+          "parent": "Root"
+        },
+        {
+          "name": "SN_Socket_Sail_Clew",
+          "blend_name": "SN_Rig_Running_Socket_Sail_Clew",
+          "local": [
+            -5.0,
+            0.0,
+            6.4
+          ],
+          "parent": "Root"
+        }
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "line_count": 5,
+        "block_count": 3
+      }
+    }
+  },
+  "ships": {
+    "SN_Paddle_Freighter": {
+      "collection": "SN_Paddle_Freighter_Prototype",
+      "root": "SN_PF_Root",
+      "root_type": "EMPTY",
+      "mesh_baseline": [
+        39,
+        12200
+      ],
+      "rig_sockets": [
+        {
+          "name": "SN_Socket_Mast_Fore",
+          "kind": "mast",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            22.8,
+            0.0,
+            4.4
+          ],
+          "height": 11.2,
+          "deck_z": 4.4
+        },
+        {
+          "name": "SN_Socket_Yard_Fore",
+          "kind": "yard",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            23.1,
+            0.0,
+            12.8
+          ],
+          "yard_z": 12.8,
+          "yard_length": 6.8,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Sail_Fore",
+          "kind": "sail",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            23.1,
+            0.0,
+            12.71
+          ],
+          "yard_z": 12.71,
+          "sail_area_m2": 0.0,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Mast_Main",
+          "kind": "mast",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -23.8,
+            0.0,
+            4.1
+          ],
+          "height": 12.5,
+          "deck_z": 4.1
+        },
+        {
+          "name": "SN_Socket_Yard_Main",
+          "kind": "yard",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -23.5,
+            0.0,
+            13.6
+          ],
+          "yard_z": 13.6,
+          "yard_length": 7.4,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Sail_Main",
+          "kind": "sail",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -23.5,
+            0.0,
+            13.51
+          ],
+          "yard_z": 13.51,
+          "sail_area_m2": 0.0,
+          "stowed": true
+        }
+      ]
+    },
+    "SN_Schooner_Fame": {
+      "collection": "SN_Schooner_Fame_Prototype",
+      "root": "SN_SF_Root",
+      "root_type": "EMPTY",
+      "mesh_baseline": [
+        29,
+        13174
+      ],
+      "rig_sockets": [
+        {
+          "name": "SN_Socket_Mast_Fore",
+          "kind": "mast",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            4.6,
+            0.0,
+            2.575455
+          ],
+          "height": 20.4,
+          "deck_z": 2.575
+        },
+        {
+          "name": "SN_Socket_Mast_Main",
+          "kind": "mast",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -1.8,
+            0.0,
+            2.608462
+          ],
+          "height": 21.3,
+          "deck_z": 2.608
+        },
+        {
+          "name": "SN_Socket_Yard_Fore",
+          "kind": "yard",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            3.945273,
+            0.0,
+            17.571168
+          ],
+          "yard_z": 17.571,
+          "yard_length": 6.8,
+          "stowed": false
+        },
+        {
+          "name": "SN_Socket_Yard_Main",
+          "kind": "yard",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -2.327513,
+            0.0,
+            12.043727
+          ],
+          "yard_z": 12.044,
+          "yard_length": 8.05,
+          "stowed": false
+        },
+        {
+          "name": "SN_Socket_Sail_Fore",
+          "kind": "sail",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            4.53239,
+            0.0,
+            4.123979
+          ],
+          "yard_z": 4.124,
+          "sail_area_m2": 38.0,
+          "stowed": false
+        },
+        {
+          "name": "SN_Socket_Sail_Main",
+          "kind": "sail",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -1.886523,
+            0.0,
+            4.156045
+          ],
+          "yard_z": 4.156,
+          "sail_area_m2": 62.0,
+          "stowed": false
+        },
+        {
+          "name": "SN_Socket_Sail_Jib",
+          "kind": "sail",
+          "mast_key": "Jib",
+          "socket_index": 2,
+          "local": [
+            5.55,
+            0.0,
+            4.2
+          ],
+          "yard_z": 4.2,
+          "sail_area_m2": 20.0,
+          "stowed": false
+        }
+      ]
+    },
+    "SN_Ironclad": {
+      "collection": "SN_Ironclad_Prototype",
+      "root": "SN_Ironclad",
+      "root_type": "MESH",
+      "mesh_baseline": [
+        1,
+        8830
+      ],
+      "rig_sockets": [
+        {
+          "name": "SN_Socket_Mast_Fore",
+          "kind": "mast",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            15.0,
+            0.0,
+            4.6
+          ],
+          "height": 18.4,
+          "deck_z": 4.6
+        },
+        {
+          "name": "SN_Socket_Yard_Fore",
+          "kind": "yard",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            15.0,
+            0.0,
+            13.8
+          ],
+          "yard_z": 13.8,
+          "yard_length": 18.0,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Sail_Fore",
+          "kind": "sail",
+          "mast_key": "Fore",
+          "socket_index": 0,
+          "local": [
+            15.0,
+            0.0,
+            13.54
+          ],
+          "yard_z": 13.54,
+          "sail_area_m2": 0.0,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Mast_Main",
+          "kind": "mast",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -10.0,
+            0.0,
+            4.6
+          ],
+          "height": 19.6,
+          "deck_z": 4.6
+        },
+        {
+          "name": "SN_Socket_Yard_Main",
+          "kind": "yard",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -10.0,
+            0.0,
+            14.4
+          ],
+          "yard_z": 14.4,
+          "yard_length": 16.0,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Sail_Main",
+          "kind": "sail",
+          "mast_key": "Main",
+          "socket_index": 1,
+          "local": [
+            -10.0,
+            0.0,
+            14.14
+          ],
+          "yard_z": 14.14,
+          "sail_area_m2": 0.0,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Mast_Mizzen",
+          "kind": "mast",
+          "mast_key": "Mizzen",
+          "socket_index": 2,
+          "local": [
+            -20.0,
+            0.0,
+            4.6
+          ],
+          "height": 15.9,
+          "deck_z": 4.6
+        },
+        {
+          "name": "SN_Socket_Yard_Mizzen",
+          "kind": "yard",
+          "mast_key": "Mizzen",
+          "socket_index": 2,
+          "local": [
+            -20.0,
+            0.0,
+            12.6
+          ],
+          "yard_z": 12.6,
+          "yard_length": 12.0,
+          "stowed": true
+        },
+        {
+          "name": "SN_Socket_Sail_Mizzen",
+          "kind": "sail",
+          "mast_key": "Mizzen",
+          "socket_index": 2,
+          "local": [
+            -20.0,
+            0.0,
+            12.34
+          ],
+          "yard_z": 12.34,
+          "sail_area_m2": 0.0,
+          "stowed": true
+        }
+      ]
+    }
+  }
+}

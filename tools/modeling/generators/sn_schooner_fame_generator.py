@@ -93,6 +93,9 @@ from ship_parts.palette import (  # noqa: E402
 )
 from ship_parts import deck as deck_kit, bow as bow_kit, stern as stern_kit, assembly  # noqa: E402
 
+import rig_kit  # noqa: E402
+from ship_parts import core as _rig_core  # noqa: E402
+
 # ============================================================
 # 参数区
 # ============================================================
@@ -657,50 +660,12 @@ def mast_to_world(key, p):
 
 
 def build_masts_local():
-    """两根桅杆（局部坐标，父级 Pivot 负责后倾）。"""
+    """两根桅杆（局部坐标，父级 Pivot 负责后倾）；几何来自 rig_kit.schooner_mast。"""
     parts = {}
     for key, cfg in MASTS.items():
         part = Part()
-        lower, top, gal = cfg["lower"], cfg["top"], cfg["gallant"]
-        rl = cfg["r_lower"]
-        rt = cfg["r_top"]
-        rg = cfg["r_gal"]
-        part.add(taper_cyl((0, 0, -0.85), (0, 0, lower), rl[0], rl[1], 8), MAT_WOOD)
-        part.add(taper_cyl((0, 0, lower - 1.15), (0, 0, top - 0.95),
-                           rt[0], rt[1], 8), MAT_WOOD)
-        part.add(taper_cyl((0, 0, top - 1.30), (0, 0, gal), rg[0], rg[1], 6),
-                 MAT_WOOD)
-        # 桅帽 / 顶桅帽
-        part.add(box((-0.58, -0.30, lower - 0.13), (0.58, 0.30, lower + 0.13)),
-                 MAT_WOOD_DARK)
-        part.add(box((-0.46, -0.24, top - 0.12), (0.46, 0.24, top + 0.12)),
-                 MAT_WOOD_DARK)
-        # 桅顶平台（top）
-        plat = [(-0.95, -0.82), (0.72, -0.82), (0.92, 0.0),
-                (0.72, 0.82), (-0.95, 0.82)]
-        part.add(prism_xy(plat, lower - 0.17, lower - 0.09), MAT_WOOD_DARK)
-        # 横担（crosstrees）
-        part.add(box((-0.30, -1.45, top - 0.05), (0.30, 1.45, top + 0.09)),
-                 MAT_WOOD_DARK)
-        part.add(box((-0.18, -1.15, top + 0.09), (0.18, 1.15, top + 0.15)),
-                 MAT_WOOD)
-        # 桅箍（帆箍 / 铁箍）
-        n_hoops = 7
-        for i in range(n_hoops):
-            z = 1.00 + (lower - 2.00) * i / (n_hoops - 1)
-            t = (z + 0.85) / (lower + 0.85)
-            r = rl[0] + (rl[1] - rl[0]) * t + 0.035
-            part.add(taper_cyl((0, 0, z - 0.035), (0, 0, z + 0.035), r, r, 8),
-                     MAT_WOOD_DARK)
-        # 顶桅箍
-        for z in (top - 0.55, top - 1.05):
-            part.add(taper_cyl((0, 0, z - 0.03), (0, 0, z + 0.03), rt[1] + 0.03,
-                               rt[1] + 0.03, 8), MAT_METAL)
-        # 桅顶滑轮 / 顶珠
-        part.add(taper_cyl((0, 0, gal - 0.12), (0, 0, gal + 0.06), 0.13, 0.10, 8),
-                 MAT_WOOD_DARK)
-        part.add(taper_cyl((0, 0, gal + 0.06), (0, 0, gal + 0.20), 0.075, 0.035, 8),
-                 MAT_BRASS)
+        b = rig_kit.builder(part, _rig_core)
+        rig_kit.schooner_mast(b, cfg)
         parts[key] = part
     return parts
 
@@ -718,155 +683,6 @@ def build_mast_pennant_staff():
 # 帆面
 # ============================================================
 
-def _quad_surface(tack, throat, peak, clew, camber, roach):
-    """斜桁帆曲面：tack 前下 / throat 前上 / peak 后上 / clew 后下。"""
-    fwd = vsub(clew, tack)
-    fwd_h = vnorm((fwd[0], 0.0, fwd[2])) if vlen(fwd) > 1e-6 else (1.0, 0.0, 0.0)
-
-    def surface(u, v):
-        foot = lerp3(tack, clew, u)
-        head = lerp3(throat, peak, u)
-        p = lerp3(foot, head, v)
-        aft = roach * (u ** 2) * math.sin(math.pi * v)
-        p = (p[0] + fwd_h[0] * aft, p[1], p[2] + fwd_h[2] * aft)
-        cam = camber * math.sin(math.pi * u) * math.sin(math.pi * (0.12 + 0.88 * v))
-        return (p[0], p[1] + cam, p[2])
-
-    return surface
-
-
-def _tri_surface(head, tack, clew, camber, roach):
-    """三角帆曲面：head 顶点 / tack 前下 / clew 后下。"""
-    fwd = vsub(clew, tack)
-    fwd_h = vnorm((fwd[0], 0.0, fwd[2])) if vlen(fwd) > 1e-6 else (1.0, 0.0, 0.0)
-
-    def surface(u, v):
-        luff = lerp3(tack, head, v)
-        leech = lerp3(clew, head, v)
-        p = lerp3(luff, leech, u)
-        aft = roach * (u ** 2) * math.sin(math.pi * v)
-        p = (p[0] + fwd_h[0] * aft, p[1], p[2] + fwd_h[2] * aft)
-        cam = camber * math.sin(math.pi * u) * math.sin(math.pi * v) * (1.0 - 0.30 * v)
-        return (p[0], p[1] + cam, p[2])
-
-    return surface
-
-
-def _square_surface(x_base, z_head, z_foot, half_head, half_foot, camber):
-    def surface(u, v):
-        half = half_head + (half_foot - half_head) * v
-        y = u * half
-        z = z_head + (z_foot - z_head) * v + 0.13 * math.sin(
-            math.pi * (u + 1.0) * 0.5) * (v ** 2)
-        x = x_base + camber * math.sin(math.pi * (u + 1.0) * 0.5) * math.sin(
-            math.pi * v * 0.92)
-        return (x, y, z)
-
-    return surface
-
-
-def _bolt_rope(part, points, r=0.021):
-    part.add(polyline_tube(points, [r] * len(points), 4), MAT_WOOD_DARK)
-
-
-def _sail_seams(part, surface, u0, u1, n, v_values, dv=0.022,
-                y_off=0.020, material=MAT_CANVAS_SHADE):
-    """帆缝 / 缩帆带：贴合曲面的窄条（u0..u1 映射到曲面 u 参数）。"""
-    for vs in v_values:
-        verts, faces = [], []
-        for i in range(n):
-            a = u0 + (u1 - u0) * i / float(n)
-            b = u0 + (u1 - u0) * (i + 1) / float(n)
-            p00 = surface(a, vs)
-            p10 = surface(b, vs)
-            p11 = surface(b, min(1.0, vs + dv))
-            p01 = surface(a, min(1.0, vs + dv))
-            base = len(verts)
-            for p in (p00, p10, p11, p01):
-                verts.append((p[0], p[1] + y_off, p[2]))
-            faces.append((base, base + 1, base + 2, base + 3))
-        part.add((verts, faces), material)
-
-
-def build_sail_quad(part, tack, throat, peak, clew, camber, roach,
-                    nu=10, nv=8, seams=(0.16, 0.32, 0.48, 0.64, 0.80)):
-    surf = _quad_surface(tack, throat, peak, clew, camber, roach)
-    verts, faces = [], []
-    for j in range(nv + 1):
-        v = j / float(nv)
-        for i in range(nu + 1):
-            verts.append(surf(i / float(nu), v))
-    for j in range(nv):
-        for i in range(nu):
-            a = j * (nu + 1) + i
-            b = a + nu + 1
-            faces.append((a, b, b + 1, a + 1))
-    part.add((verts, faces), MAT_CANVAS)
-    _sail_seams(part, surf, 0.0, 1.0, nu, seams)
-    # 主缩帆带：更宽更深的一道
-    _sail_seams(part, surf, 0.0, 1.0, nu, (0.895,), dv=0.040, y_off=0.028)
-    # 帆缘绳（luff / foot / head / leech）
-    luff = [surf(0.0, k / 7.0) for k in range(8)]
-    foot = [surf(k / 8.0, 0.0) for k in range(9)]
-    head = [surf(k / 8.0, 1.0) for k in range(9)]
-    leech = [surf(1.0, k / 8.0) for k in range(9)]
-    _bolt_rope(part, luff)
-    _bolt_rope(part, foot)
-    _bolt_rope(part, head)
-    _bolt_rope(part, leech)
-    return part
-
-
-def build_sail_tri(part, head, tack, clew, camber, roach,
-                   nu=8, nv=8, seams=(0.16, 0.32, 0.48, 0.64, 0.80)):
-    surf = _tri_surface(head, tack, clew, camber, roach)
-    verts, faces = [], []
-    for j in range(nv):
-        v = j / float(nv)
-        for i in range(nu + 1):
-            verts.append(surf(i / float(nu), v))
-    for j in range(nv - 1):
-        for i in range(nu):
-            a = j * (nu + 1) + i
-            b = a + nu + 1
-            faces.append((a, b, b + 1, a + 1))
-    apex = len(verts)
-    verts.append(surf(0.5, 1.0))
-    last = (nv - 1) * (nu + 1)
-    for i in range(nu):
-        faces.append((last + i, last + i + 1, apex))
-    part.add((verts, faces), MAT_CANVAS)
-    # 三角帆的帆缝按高度横向铺
-    _sail_seams(part, surf, 0.0, 1.0, nu, seams)
-    _bolt_rope(part, [surf(0.0, k / 8.0) for k in range(9)])
-    _bolt_rope(part, [surf(k / 8.0, 0.0) for k in range(9)])
-    _bolt_rope(part, [surf(1.0, k / 8.0) for k in range(9)])
-    return part
-
-
-def build_sail_square(part, x_base, z_head, z_foot, half_head, half_foot,
-                      camber, nu=10, nv=6):
-    surf = _square_surface(x_base, z_head, z_foot, half_head, half_foot, camber)
-    verts, faces = [], []
-    for j in range(nv + 1):
-        v = j / float(nv)
-        for i in range(nu + 1):
-            u = -1.0 + 2.0 * i / nu
-            verts.append(surf(u, v))
-    for j in range(nv):
-        for i in range(nu):
-            a = j * (nu + 1) + i
-            b = a + nu + 1
-            faces.append((a, b, b + 1, a + 1))
-    part.add((verts, faces), MAT_CANVAS)
-    _sail_seams(part, surf, -1.0, 1.0, nu, (0.30, 0.58), dv=0.028)
-    _bolt_rope(part, [surf(-1.0 + 2.0 * k / 8.0, 0.0) for k in range(9)])
-    _bolt_rope(part, [surf(-1.0 + 2.0 * k / 8.0, 1.0) for k in range(9)])
-    _bolt_rope(part, [surf(-1.0, k / 8.0) for k in range(9)])
-    _bolt_rope(part, [surf(1.0, k / 8.0) for k in range(9)])
-    return part
-
-
 # ============================================================
 # 桁 / 帆（桅杆局部坐标）
 # ============================================================
@@ -882,95 +698,78 @@ MAIN_TOPSAIL = dict(throat=(0.0, 0.10, 9.50), peak=(-8.05, 0.10, 12.75),
 
 
 def build_spars_local():
-    """桅杆局部坐标的斜桁 / 帆桁 / 方顶帆桁。"""
+    """桅杆局部坐标的斜桁 / 帆桁 / 方顶帆桁（几何来自 rig_kit.schooner_spars）。"""
     parts = {}
-    # 前桅：斜桁帆的 gaff + boom + 方顶帆的 yard
-    part = Part()
-    part.add(taper_cyl((FORE_SAIL["throat"][0], 0.0, FORE_SAIL["throat"][2]),
-                       (FORE_SAIL["peak"][0], 0.0, FORE_SAIL["peak"][2]),
-                       0.075, 0.052, 6), MAT_WOOD_DARK)
-    part.add(taper_cyl((FORE_SAIL["tack"][0], 0.0, FORE_SAIL["tack"][2]),
-                       (FORE_SAIL["clew"][0], 0.0, FORE_SAIL["clew"][2]),
-                       0.090, 0.060, 6), MAT_WOOD_DARK)
-    # 桅杆夹钳（jaws）
-    for zc in (FORE_SAIL["tack"][2], FORE_SAIL["throat"][2]):
-        part.add(box((-0.22, -0.24, zc - 0.10), (0.22, 0.24, zc + 0.10)),
-                 MAT_WOOD_DARK)
-    # 斜桁 / 帆杠端部黄铜箍
-    for p, r in ((FORE_SAIL["peak"], 0.060), (FORE_SAIL["clew"], 0.070)):
-        part.add(taper_cyl((p[0] + 0.14, 0.0, p[2] - 0.01),
-                           (p[0] + 0.02, 0.0, p[2]), r + 0.02, r + 0.02, 6),
-                 MAT_BRASS)
-    # 方顶帆的 yard
-    ts = FORE_TOPSAIL
-    part.add(taper_cyl((ts["x"], -ts["half_head"] - 0.30, ts["z_head"] + 0.16),
-                       (ts["x"], ts["half_head"] + 0.30, ts["z_head"] + 0.16),
-                       0.095, 0.095, 6), MAT_WOOD_DARK)
-    for ys in (-ts["half_head"], ts["half_head"]):
-        part.add(taper_cyl((ts["x"], ys - 0.06, ts["z_head"] + 0.13),
-                           (ts["x"], ys + 0.06, ts["z_head"] + 0.13),
-                           0.13, 0.13, 6), MAT_BRASS)
-    parts["Fore"] = part
-
-    # 主桅：大斜桁帆的 gaff + boom
-    part = Part()
-    part.add(taper_cyl((MAIN_SAIL["throat"][0], 0.0, MAIN_SAIL["throat"][2]),
-                       (MAIN_SAIL["peak"][0], 0.0, MAIN_SAIL["peak"][2]),
-                       0.085, 0.058, 6), MAT_WOOD_DARK)
-    part.add(taper_cyl((MAIN_SAIL["tack"][0], 0.0, MAIN_SAIL["tack"][2]),
-                       (MAIN_SAIL["clew"][0], 0.0, MAIN_SAIL["clew"][2]),
-                       0.100, 0.065, 6), MAT_WOOD_DARK)
-    for zc in (MAIN_SAIL["tack"][2], MAIN_SAIL["throat"][2]):
-        part.add(box((-0.24, -0.25, zc - 0.11), (0.24, 0.25, zc + 0.11)),
-                 MAT_WOOD_DARK)
-    for p, r in ((MAIN_SAIL["peak"], 0.066), (MAIN_SAIL["clew"], 0.075)):
-        part.add(taper_cyl((p[0] + 0.15, 0.0, p[2] - 0.01),
-                           (p[0] + 0.02, 0.0, p[2]), r + 0.02, r + 0.02, 6),
-                 MAT_BRASS)
-    parts["Main"] = part
+    fore_gaff = dict(
+        throat=(FORE_SAIL["throat"][0], 0.0, FORE_SAIL["throat"][2]),
+        peak=(FORE_SAIL["peak"][0], 0.0, FORE_SAIL["peak"][2]),
+        r0=0.075, r1=0.052)
+    fore_boom = dict(
+        tack=(FORE_SAIL["tack"][0], 0.0, FORE_SAIL["tack"][2]),
+        clew=(FORE_SAIL["clew"][0], 0.0, FORE_SAIL["clew"][2]),
+        r0=0.090, r1=0.060)
+    main_gaff = dict(
+        throat=(MAIN_SAIL["throat"][0], 0.0, MAIN_SAIL["throat"][2]),
+        peak=(MAIN_SAIL["peak"][0], 0.0, MAIN_SAIL["peak"][2]),
+        r0=0.085, r1=0.058)
+    main_boom = dict(
+        tack=(MAIN_SAIL["tack"][0], 0.0, MAIN_SAIL["tack"][2]),
+        clew=(MAIN_SAIL["clew"][0], 0.0, MAIN_SAIL["clew"][2]),
+        r0=0.100, r1=0.065)
+    specs = {
+        "Fore": dict(gaff=fore_gaff, boom=fore_boom,
+                     jaws_z=(FORE_SAIL["tack"][2], FORE_SAIL["throat"][2]),
+                     peak_band=0.060, clew_band=0.070, topsail=FORE_TOPSAIL,
+                     jaws=(0.22, 0.24, 0.10), band_dx=(0.14, 0.02)),
+        "Main": dict(gaff=main_gaff, boom=main_boom,
+                     jaws_z=(MAIN_SAIL["tack"][2], MAIN_SAIL["throat"][2]),
+                     peak_band=0.066, clew_band=0.075, topsail=None,
+                     jaws=(0.24, 0.25, 0.11), band_dx=(0.15, 0.02)),
+    }
+    for key, spec in specs.items():
+        part = Part()
+        b = rig_kit.builder(part, _rig_core)
+        rig_kit.schooner_spars(b, spec["gaff"], spec["boom"], spec["jaws_z"],
+                               spec["peak_band"], spec["clew_band"],
+                               topsail=spec["topsail"], jaws=spec["jaws"],
+                               band_dx=spec["band_dx"])
+        parts[key] = part
     return parts
 
 
 def build_sails_local():
-    """桅杆局部坐标的帆：前桅斜桁帆 + 方顶帆；主桅大斜桁帆 + 三角顶帆。"""
+    """桅杆局部坐标的帆（几何来自 rig_kit 的 gaff_sail / square_sail / tri_sail）。"""
     parts = {}
-    # 前桅斜桁帆
+    # 前桅斜桁帆 + 方顶帆
     part = Part()
-    build_sail_quad(part, FORE_SAIL["tack"], FORE_SAIL["throat"],
-                    FORE_SAIL["peak"], FORE_SAIL["clew"], 0.60, 0.42)
-    # 前桅方顶帆
+    b = rig_kit.builder(part, _rig_core)
+    rig_kit.gaff_sail(b, FORE_SAIL["tack"], FORE_SAIL["throat"],
+                      FORE_SAIL["peak"], FORE_SAIL["clew"], 0.60, 0.42)
     ts = FORE_TOPSAIL
-    build_sail_square(part, ts["x"], ts["z_head"], ts["z_foot"],
-                      ts["half_head"], ts["half_foot"], ts["camber"])
+    rig_kit.square_sail(b, ts["x"], ts["z_head"], ts["z_foot"],
+                        ts["half_head"], ts["half_foot"], ts["camber"])
     parts["Fore"] = part
-    # 主桅大斜桁帆
+    # 主桅大斜桁帆 + 三角顶帆
     part = Part()
-    build_sail_quad(part, MAIN_SAIL["tack"], MAIN_SAIL["throat"],
-                    MAIN_SAIL["peak"], MAIN_SAIL["clew"], 0.76, 0.48)
-    # 主桅三角顶帆
+    b = rig_kit.builder(part, _rig_core)
+    rig_kit.gaff_sail(b, MAIN_SAIL["tack"], MAIN_SAIL["throat"],
+                      MAIN_SAIL["peak"], MAIN_SAIL["clew"], 0.76, 0.48)
     mt = MAIN_TOPSAIL
-    build_sail_tri(part, mt["head"], mt["throat"], mt["peak"], 0.50, 0.26)
+    rig_kit.tri_sail(b, mt["head"], mt["throat"], mt["peak"], 0.50, 0.26)
     parts["Main"] = part
     return parts
 
 
 def build_headsails_world():
-    """艏三角帆：大 jib（艏斜桁延伸杆 -> 前桅顶）+ fore staysail。"""
+    """艏三角帆：大 jib（艏斜桁延伸杆 -> 前桅顶）+ fore staysail（rig_kit）。"""
     part = Part()
-    jib_head = mast_world("Fore", MASTS["Fore"]["top"] - 0.20)
-    jib_tack = (JIBBOOM["tip"][0] - 0.10, 0.0, JIBBOOM["tip"][2] - 0.10)
-    jib_clew = (5.55, 0.0, 4.20)
-    build_sail_tri(part, (jib_head[0], 0.10, jib_head[2]),
-                   (jib_tack[0], 0.10, jib_tack[2]),
-                   (jib_clew[0], 0.10, jib_clew[2]), 0.62, 0.34,
-                   nu=9, nv=9, seams=(0.16, 0.32, 0.48, 0.64, 0.80))
-    stay_head = mast_world("Fore", MASTS["Fore"]["lower"] - 0.55)
-    stay_tack = (13.10, 0.0, 4.10)
-    stay_clew = (8.25, 0.0, 4.00)
-    build_sail_tri(part, (stay_head[0], 0.08, stay_head[2]),
-                   (stay_tack[0], 0.08, stay_tack[2]),
-                   (stay_clew[0], 0.08, stay_clew[2]), 0.40, 0.22,
-                   nu=7, nv=7, seams=(0.20, 0.40, 0.60, 0.80))
+    b = rig_kit.builder(part, _rig_core)
+    rig_kit.schooner_headsails(b, {
+        "mast_world": mast_world,
+        "fore_top": MASTS["Fore"]["top"],
+        "fore_lower": MASTS["Fore"]["lower"],
+        "jibboom_tip": JIBBOOM["tip"],
+    })
     return part
 
 
@@ -979,161 +778,37 @@ def build_headsails_world():
 # ============================================================
 
 def build_standing_rigging_world():
+    """帆船静索（几何来自 rig_kit.schooner_standing_rigging）。"""
     part = Part()
-    for key in ("Fore", "Main"):
-        cfg = MASTS[key]
-        lower = cfg["lower"]
-        top = cfg["top"]
-        gal = cfg["gallant"]
-        mast_x = cfg["x"]
-        for side in (1, -1):
-            top_pt = mast_world(key, lower - 0.45)
-            # 下桅侧支索（4 根 / 舷）+ 绳梯
-            anchors = []
-            for i in range(4):
-                xx = mast_x - 1.02 + i * 0.68
-                yy = DECK_W_FRAC * half_beam_at(xx) + 0.34
-                az = deck_z_at(xx) + 0.02
-                anchor = (xx, side * yy, az)
-                anchors.append(anchor)
-                p_top = (top_pt[0] + (i - 1.5) * 0.055, side * 0.12,
-                         top_pt[2])
-                part.add(taper_cyl(p_top, anchor, 0.034, 0.034, 4),
-                         MAT_WOOD_DARK)
-                part.add(taper_cyl((xx, side * (yy - 0.075), az + 0.03),
-                                   (xx, side * (yy + 0.075), az + 0.03),
-                                   0.095, 0.095, 6), MAT_WOOD_DARK)
-            for row in range(9):
-                t = 0.16 + 0.68 * row / 8.0
-                a = lerp3((top_pt[0] - 0.083, side * 0.12, top_pt[2]),
-                          anchors[0], t)
-                b = lerp3((top_pt[0] + 0.083, side * 0.12, top_pt[2]),
-                          anchors[3], t)
-                part.add(bar_between(a, b, 0.028), MAT_WOOD_DARK)
-            # 顶桅侧支索（3 根 / 舷）+ 绳梯
-            top2 = mast_world(key, top - 0.35)
-            for i in range(3):
-                xx = mast_x - 0.72 + i * 0.72
-                anchor = (xx, side * (0.62 + 0.10 * i),
-                          deck_z_at(mast_x) + lower - 0.10)
-                p_top = (top2[0], side * (0.10 + 0.06 * i), top2[2])
-                part.add(taper_cyl(p_top, anchor, 0.028, 0.028, 4),
-                         MAT_WOOD_DARK)
-            for row in range(5):
-                t = 0.18 + 0.58 * row / 4.0
-                a = lerp3((top2[0], side * 0.10, top2[2]),
-                          (mast_x - 0.72, side * 0.62,
-                           deck_z_at(mast_x) + lower - 0.10), t)
-                b = lerp3((top2[0], side * 0.22, top2[2]),
-                          (mast_x + 0.72, side * 0.82,
-                           deck_z_at(mast_x) + lower - 0.10), t)
-                part.add(bar_between(a, b, 0.024), MAT_WOOD_DARK)
-            # 顶桅后支索（2 根 / 舷）
-            top_back = mast_world(key, top - 0.55)
-            for i, xx in enumerate((-9.60, -8.60)):
-                yy = DECK_W_FRAC * half_beam_at(xx) + 0.30
-                anchor = (xx, side * yy, deck_z_at(xx) + 0.15)
-                p_top = (top_back[0], side * (0.05 + 0.05 * i), top_back[2])
-                part.add(taper_cyl(p_top, anchor, 0.024, 0.024, 4),
-                         MAT_WOOD_DARK)
-            # 上桅后支索（2 根 / 舷）
-            back_top = mast_world(key, gal - 0.20)
-            for i, xx in enumerate((-10.40, -9.40)):
-                yy = DECK_W_FRAC * half_beam_at(xx) + 0.25
-                anchor = (xx, side * yy, deck_z_at(xx) + 0.10)
-                p_top = (back_top[0], side * (0.05 + 0.05 * i), back_top[2])
-                part.add(taper_cyl(p_top, anchor, 0.026, 0.026, 4),
-                         MAT_WOOD_DARK)
-    # 前后支索 / 艏支索
-    fore_gal = mast_world("Fore", MASTS["Fore"]["gallant"] - 0.25)
-    fore_top = mast_world("Fore", MASTS["Fore"]["top"] - 0.25)
-    main_gal = mast_world("Main", MASTS["Main"]["gallant"] - 0.25)
-    main_top = mast_world("Main", MASTS["Main"]["top"] - 0.30)
-    stem_head = (12.44, 0.0, 3.30)
-    jib_tip = (JIBBOOM["tip"][0], 0.0, JIBBOOM["tip"][2])
-    fore_lower = mast_world("Fore", MASTS["Fore"]["lower"] - 0.30)
-    main_lower = mast_world("Main", MASTS["Main"]["lower"] - 0.30)
-    part.add(taper_cyl(fore_gal, stem_head, 0.044, 0.044, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_top, jib_tip, 0.038, 0.038, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(main_gal, (FORE_X, 0.0, FORE_DECK_Z + 10.0),
-                       0.044, 0.044, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(main_top, (FORE_X, 0.0, FORE_DECK_Z + 10.0),
-                       0.038, 0.038, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(main_lower, fore_lower, 0.040, 0.040, 4), MAT_WOOD_DARK)
-    # 艏斜桁下拉索 / 系固索
-    bow_tip = (BOWSPRIT["tip"][0], 0.0, BOWSPRIT["tip"][2])
-    part.add(taper_cyl(jib_tip, (12.62, 0.0, 0.55), 0.032, 0.032, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(bow_tip, (12.62, 0.0, 0.55), 0.030, 0.030, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_gal, bow_tip, 0.032, 0.032, 4), MAT_WOOD_DARK)
+    b = rig_kit.builder(part, _rig_core)
+    rig_kit.schooner_standing_rigging(b, {
+        "masts": MASTS,
+        "mast_world": mast_world,
+        "deck_z_at": deck_z_at,
+        "half_beam_at": half_beam_at,
+        "deck_w_frac": DECK_W_FRAC,
+        "jibboom_tip": JIBBOOM["tip"],
+        "bowsprit_tip": BOWSPRIT["tip"],
+        "fore_x": FORE_X,
+        "fore_deck_z": FORE_DECK_Z,
+    })
     return part
 
 
 def build_running_rigging_world():
+    """帆船动索（几何来自 rig_kit.schooner_running_rigging）。"""
     part = Part()
-    # 前桅斜桁帆：halyard / peak halyard / topping lift
-    fore_mast_top = mast_world("Fore", MASTS["Fore"]["top"] + 0.10)
-    fore_throat = mast_to_world("Fore", FORE_SAIL["throat"])
-    fore_peak = mast_to_world("Fore", FORE_SAIL["peak"])
-    fore_clew = mast_to_world("Fore", FORE_SAIL["clew"])
-    part.add(taper_cyl(fore_mast_top, fore_throat, 0.026, 0.026, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_mast_top, fore_peak, 0.024, 0.024, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_mast_top, fore_clew, 0.024, 0.024, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_clew, (MAIN_X + 0.55, 0.55, deck_surface_z(-1.2) + 0.30),
-                       0.024, 0.024, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_throat, (FORE_X + 1.10, 1.55,
-                                    deck_surface_z(FORE_X + 1.1) + 0.35),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
-    # 主桅大斜桁帆
-    main_mast_top = mast_world("Main", MASTS["Main"]["top"] + 0.10)
-    main_throat = mast_to_world("Main", MAIN_SAIL["throat"])
-    main_peak = mast_to_world("Main", MAIN_SAIL["peak"])
-    main_clew = mast_to_world("Main", MAIN_SAIL["clew"])
-    part.add(taper_cyl(main_mast_top, main_throat, 0.026, 0.026, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(main_mast_top, main_peak, 0.024, 0.024, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(main_mast_top, main_clew, 0.024, 0.024, 4),
-             MAT_WOOD_DARK)
-    part.add(taper_cyl(main_clew, (-11.40, 0.60, deck_surface_z(-11.2) + 0.35),
-                       0.024, 0.024, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(main_throat, (-6.20, -1.35, deck_surface_z(-6.2) + 0.35),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
-    # 方顶帆转帆索 / 升降索
-    ts = FORE_TOPSAIL
-    yard_l = mast_to_world("Fore", (ts["x"], -ts["half_head"] - 0.28,
-                                    ts["z_head"] + 0.16))
-    yard_r = mast_to_world("Fore", (ts["x"], ts["half_head"] + 0.28,
-                                    ts["z_head"] + 0.16))
-    part.add(taper_cyl(yard_l, (-10.90, -2.20, deck_surface_z(-10.8) + 0.45),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(yard_r, (-10.90, 2.20, deck_surface_z(-10.8) + 0.45),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(fore_mast_top, mast_to_world(
-        "Fore", (ts["x"], 0.0, ts["z_head"] + 0.16)), 0.022, 0.022, 4),
-        MAT_WOOD_DARK)
-    for p in (yard_l, yard_r):
-        part.add(box((p[0] - 0.08, p[1] - 0.06, p[2] - 0.08),
-                     (p[0] + 0.08, p[1] + 0.06, p[2] + 0.08)), MAT_METAL)
-    # 艏三角帆的帆脚索
-    jib_clew = (5.55, 0.10, 4.20)
-    part.add(taper_cyl((jib_clew[0], 0.10, jib_clew[2]),
-                       (7.20, 2.40, deck_surface_z(7.0) + 0.35),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl((jib_clew[0], 0.10, jib_clew[2]),
-                       (7.20, -2.40, deck_surface_z(7.0) + 0.35),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
-    # 主桅三角顶帆的帆脚索 / 升降索
-    part.add(taper_cyl(mast_world("Main", MAIN_TOPSAIL["head"][2] - 0.15),
-                       mast_world("Main", MAIN_TOPSAIL["throat"][2]),
-                       0.024, 0.024, 4), MAT_WOOD_DARK)
-    part.add(taper_cyl(mast_world("Main", MAIN_TOPSAIL["peak"][2]),
-                       (-10.30, 1.85, deck_surface_z(-10.2) + 0.40),
-                       0.022, 0.022, 4), MAT_WOOD_DARK)
+    b = rig_kit.builder(part, _rig_core)
+    rig_kit.schooner_running_rigging(b, {
+        "masts": MASTS,
+        "mast_world": mast_world,
+        "mast_to_world": mast_to_world,
+        "deck_surface_z": deck_surface_z,
+        "sails": {"Fore": FORE_SAIL, "Main": MAIN_SAIL},
+        "topsails": {"Fore": FORE_TOPSAIL, "Main": MAIN_TOPSAIL},
+        "fore_x": FORE_X,
+        "main_x": MAIN_X,
+    })
     return part
 
 

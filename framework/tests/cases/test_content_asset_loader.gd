@@ -92,9 +92,12 @@ func test_shared_texture_instances_across_buildings() -> void:
 
 func test_glb_without_images_keeps_legacy_path() -> void:
 	ContentAssetLoader.clear_cache()
-	var path := PROPS_DIR + "/SN_HT_Fence_Row.glb"
+	# SN_HT_Fence_Row was migrated to external shared textures by legacy UV
+	# migration B (2026-10-22); the ship prototype is now the remaining
+	# texture-less content GLB, so it carries the legacy-path guard.
+	var path := "res://dev_mods/core/assets/models/ships/SN_Ship_Prototype.glb"
 	var uris := ContentAssetLoader.material_image_uris(path)
-	assert_eq(uris.size(), 2, "texture-less GLB still reports its materials")
+	assert_eq(uris.size(), 5, "texture-less GLB still reports its materials")
 	for uri in uris:
 		assert_eq(uri, "", "texture-less GLB reports no external image uri")
 	var scene := ContentAssetLoader.load_scene(path)

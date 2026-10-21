@@ -1,0 +1,740 @@
+{
+  "id": "sn_rig_kit_batch1",
+  "title": "M0-4 船体部件库 rig_kit：12 件 SN_Rig_* 帆索套件 + 3 艘船参数化替换",
+  "purpose": "把 3 艘船焊死的桅杆 / 横桁 / 斜桁 / 帆杠 / 艏斜桁 / 帆面 / 索具收敛成参数化部件库；独立交付 12 件可拼装 SN_Rig_* 资产，并让 PF/SF/IC 从同一份 rig_kit 源码生成（几何逐位不变）。",
+  "category": "kit",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-22 选择 A：套件 + 3 艘船改用部件库（逐对象几何 digest 不变）；运行时 ShipVisualAssembler 本批不实现，只交付 assets + manifest + 契约。",
+  "style": {
+    "look": "沿用船体低模语言：木桅/木桁 + 铁箍/黄铜件 + 帆布单层双面；轮廓优先，3/4 视角可辨认。",
+    "palette": [
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron",
+      "SN_Tex_Brass",
+      "SN_Tex_Canvas_Shade"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*",
+      "SN_ShipPart_*",
+      "SN_Machinery_*",
+      "SN_Cargo_*",
+      "SN_Dock_*",
+      "SN_Arch_*",
+      "SN_Env_*"
+    ],
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 盒式 UV",
+    "conventions": "几何由 rig_kit.py 参数表驱动；桅/桁/索具为闭合件，帆面为单层双面；Mount/Socket 为空节点，不参与几何。",
+    "material_rule": "只用共享贴图材质 SN_Tex_*；干跑与 GLB 自检按白名单核对。",
+    "socket_rule": "BLEND 内接口名带资产前缀；GLB 导出后归一化为 SN_Mount / SN_Socket_Mast|Yard|Sail_*，Root extras 写 rig_sockets 名单。"
+  },
+  "rig_contract": {
+    "family": "rig_kit",
+    "parts_library": "tools/modeling/generators/rig_kit.py",
+    "socket_standard": "SN_Mount + SN_Socket_Mast|Yard|Sail_*（后缀按资产角色）",
+    "ship_sockets": "sn_ship_rig_sockets.py：PF 6 / SF 7 / IC 9（PS 无帆索不建点）",
+    "geometry_invariant": "3 艘船重构前后逐对象 verts/faces/tri digest 0 差异（rig_kit_baseline.py）"
+  },
+  "items": [
+    {
+      "id": "sn_sn_rig_mast_sail_v1",
+      "asset": "SN_Rig_Mast_Sail",
+      "family": "rig_kit",
+      "role": "mast_sail",
+      "description": "sail-plan mast assembly",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Mast_Sail_Prototype",
+      "root": "SN_Rig_Mast_Sail_Root",
+      "prefix": "SN_Rig_Mast_Sail_",
+      "workbench_pos": [
+        0.0,
+        566.0,
+        0.0
+      ],
+      "datum": "deck base at z=0; +Z mast up",
+      "closed": true,
+      "dimensions": {
+        "x": 1.87,
+        "y": 2.9,
+        "z": 21.5,
+        "tolerance": 0.1
+      },
+      "z_range": [
+        0.0,
+        21.5
+      ],
+      "tri_budget": 700,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Yard_Lower",
+        "SN_Socket_Yard_Upper",
+        "SN_Socket_Sail_Head",
+        "SN_Socket_Sail_Tack",
+        "SN_Socket_Deadeye_Port",
+        "SN_Socket_Deadeye_Starboard"
+      ],
+      "required_parts": [
+        "下桅/顶桅/上桅收分",
+        "桅帽 + 桅顶平台",
+        "横担",
+        "7 道帆箍 + 2 道顶桅铁箍",
+        "桅顶滑轮 + 黄铜顶珠"
+      ],
+      "extras": {
+        "mast_class": "Sail",
+        "rig_spec": "rig-kit@1",
+        "mast_height": 21.3
+      },
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_mast_steam_v1",
+      "asset": "SN_Rig_Mast_Steam",
+      "family": "rig_kit",
+      "role": "mast_steam",
+      "description": "steam-plan mast assembly",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Mast_Steam_Prototype",
+      "root": "SN_Rig_Mast_Steam_Root",
+      "prefix": "SN_Rig_Mast_Steam_",
+      "workbench_pos": [
+        6.0,
+        566.0,
+        0.0
+      ],
+      "datum": "deck base at z=0; +Z mast up",
+      "closed": true,
+      "dimensions": {
+        "x": 0.72,
+        "y": 0.72,
+        "z": 11.18,
+        "tolerance": 0.1
+      },
+      "z_range": [
+        0.0,
+        11.18
+      ],
+      "tri_budget": 300,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Yard",
+        "SN_Socket_Stay_Fore",
+        "SN_Socket_Stay_Aft"
+      ],
+      "required_parts": [
+        "下桅 + 上桅",
+        "桅帽",
+        "2 道铁箍",
+        "桅顶桅冠"
+      ],
+      "extras": {
+        "mast_class": "Steam",
+        "rig_spec": "rig-kit@1",
+        "mast_height": 11.0
+      },
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Wood"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_yard_v1",
+      "asset": "SN_Rig_Yard",
+      "family": "rig_kit",
+      "role": "yard",
+      "description": "square yard with furled sail",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Yard_Prototype",
+      "root": "SN_Rig_Yard_Root",
+      "prefix": "SN_Rig_Yard_",
+      "workbench_pos": [
+        12.0,
+        566.0,
+        0.0
+      ],
+      "datum": "yard centre at (0,0,0); spar along Y",
+      "closed": true,
+      "dimensions": {
+        "x": 0.48,
+        "y": 6.94,
+        "z": 0.48,
+        "tolerance": 0.1
+      },
+      "z_range": [
+        -0.33,
+        0.15
+      ],
+      "tri_budget": 300,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Sail",
+        "SN_Socket_Brace_Port",
+        "SN_Socket_Brace_Starboard"
+      ],
+      "required_parts": [
+        "横桁",
+        "收帆卷",
+        "两端铁帽"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "yard_length": 6.8,
+        "sail_area_m2": 0.0,
+        "stowed": true
+      },
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Deck"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_gaff_v1",
+      "asset": "SN_Rig_Gaff",
+      "family": "rig_kit",
+      "role": "gaff",
+      "description": "gaff spar with jaws and brass bands",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Gaff_Prototype",
+      "root": "SN_Rig_Gaff_Root",
+      "prefix": "SN_Rig_Gaff_",
+      "workbench_pos": [
+        -3.0,
+        590.0,
+        0.0
+      ],
+      "datum": "heel/jaws at origin; peak toward +X",
+      "closed": true,
+      "dimensions": {
+        "x": 5.46,
+        "y": 0.5,
+        "z": 2.06,
+        "tolerance": 0.08
+      },
+      "z_range": [
+        -0.11,
+        1.947
+      ],
+      "tri_budget": 250,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Sail_Peak",
+        "SN_Socket_Halyard"
+      ],
+      "required_parts": [
+        "斜桁收分",
+        "桅杆夹钳",
+        "黄铜箍"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "spar_length": 5.54
+      },
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_boom_v1",
+      "asset": "SN_Rig_Boom",
+      "family": "rig_kit",
+      "role": "boom",
+      "description": "boom spar with jaws and brass bands",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Boom_Prototype",
+      "root": "SN_Rig_Boom_Root",
+      "prefix": "SN_Rig_Boom_",
+      "workbench_pos": [
+        4.0,
+        590.0,
+        0.0
+      ],
+      "datum": "tack/jaws at origin; clew toward +X",
+      "closed": true,
+      "dimensions": {
+        "x": 6.24,
+        "y": 0.5,
+        "z": 0.52,
+        "tolerance": 0.08
+      },
+      "z_range": [
+        -0.406,
+        0.11
+      ],
+      "tri_budget": 250,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Sail_Clew",
+        "SN_Socket_Sheet"
+      ],
+      "required_parts": [
+        "帆杠收分",
+        "桅杆夹钳",
+        "黄铜箍"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "spar_length": 6.01
+      },
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_bowsprit_v1",
+      "asset": "SN_Rig_Bowsprit",
+      "family": "rig_kit",
+      "role": "bowsprit",
+      "description": "bowsprit with gammon and iron cap",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Bowsprit_Prototype",
+      "root": "SN_Rig_Bowsprit_Root",
+      "prefix": "SN_Rig_Bowsprit_",
+      "workbench_pos": [
+        12.0,
+        590.0,
+        0.0
+      ],
+      "datum": "deck mount at z=0; spar rises toward +X",
+      "closed": true,
+      "dimensions": {
+        "x": 4.52,
+        "y": 0.52,
+        "z": 2.65,
+        "tolerance": 0.08
+      },
+      "z_range": [
+        0.0,
+        2.645
+      ],
+      "tri_budget": 250,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Jib_Tack",
+        "SN_Socket_Stay_Fore"
+      ],
+      "required_parts": [
+        "艏斜桁收分",
+        "绑扎铁箱",
+        "端部铁帽",
+        "甲板安装块（z=0 承托）"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "bowsprit_length": 4.4
+      },
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_sail_gaff_v1",
+      "asset": "SN_Rig_Sail_Gaff",
+      "family": "rig_kit",
+      "role": "sail_gaff",
+      "description": "gaff sail (single-layer cloth, double-sided)",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Sail_Gaff_Prototype",
+      "root": "SN_Rig_Sail_Gaff_Root",
+      "prefix": "SN_Rig_Sail_Gaff_",
+      "workbench_pos": [
+        -3.0,
+        604.0,
+        0.0
+      ],
+      "datum": "tack at origin; head/throat toward +Z, clew toward -X",
+      "closed": false,
+      "dimensions": {
+        "x": 5.98,
+        "y": 0.64,
+        "z": 8.24,
+        "tolerance": 0.15
+      },
+      "z_range": [
+        -0.021,
+        8.219
+      ],
+      "tri_budget": 1000,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Sail_Head",
+        "SN_Socket_Sail_Peak",
+        "SN_Socket_Sail_Clew"
+      ],
+      "required_parts": [
+        "斜桁帆曲面 + 帆腹",
+        "5 道帆缝 + 主缩帆带",
+        "4 条帆缘绳"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "sail_area_m2": 40.6,
+        "cloth": "single_layer_static"
+      },
+      "materials": [
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_sail_square_v1",
+      "asset": "SN_Rig_Sail_Square",
+      "family": "rig_kit",
+      "role": "sail_square",
+      "description": "square sail (single-layer cloth, double-sided)",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Sail_Square_Prototype",
+      "root": "SN_Rig_Sail_Square_Root",
+      "prefix": "SN_Rig_Sail_Square_",
+      "workbench_pos": [
+        6.0,
+        604.0,
+        0.0
+      ],
+      "datum": "foot centre at origin; head toward +Z, span along Y",
+      "closed": false,
+      "dimensions": {
+        "x": 0.62,
+        "y": 6.04,
+        "z": 5.64,
+        "tolerance": 0.15
+      },
+      "z_range": [
+        -0.021,
+        5.621
+      ],
+      "tri_budget": 900,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Yard",
+        "SN_Socket_Sheet_Port",
+        "SN_Socket_Sheet_Starboard"
+      ],
+      "required_parts": [
+        "方帆曲面 + 帆腹",
+        "2 道帆缝",
+        "4 条帆缘绳"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "sail_area_m2": 32.0,
+        "cloth": "single_layer_static"
+      },
+      "materials": [
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_sail_jib_v1",
+      "asset": "SN_Rig_Sail_Jib",
+      "family": "rig_kit",
+      "role": "sail_jib",
+      "description": "jib / headsail (single-layer, double-sided)",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Sail_Jib_Prototype",
+      "root": "SN_Rig_Sail_Jib_Root",
+      "prefix": "SN_Rig_Sail_Jib_",
+      "workbench_pos": [
+        14.0,
+        604.0,
+        0.0
+      ],
+      "datum": "tack at origin; head toward +Z, clew toward +X",
+      "closed": false,
+      "dimensions": {
+        "x": 5.04,
+        "y": 0.47,
+        "z": 7.24,
+        "tolerance": 0.15
+      },
+      "z_range": [
+        -0.02,
+        7.215
+      ],
+      "tri_budget": 800,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Sail_Head",
+        "SN_Socket_Sail_Clew"
+      ],
+      "required_parts": [
+        "三角帆曲面 + 帆腹",
+        "5 道帆缝",
+        "3 条帆缘绳"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "sail_area_m2": 18.0,
+        "cloth": "single_layer_static"
+      },
+      "materials": [
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_shrouds_v1",
+      "asset": "SN_Rig_Shrouds",
+      "family": "rig_kit",
+      "role": "shrouds",
+      "description": "shroud ladders with ratlines and chainplates",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Shrouds_Prototype",
+      "root": "SN_Rig_Shrouds_Root",
+      "prefix": "SN_Rig_Shrouds_",
+      "workbench_pos": [
+        0.0,
+        618.0,
+        0.0
+      ],
+      "datum": "deck chainplate feet at z=0; mast top toward +Z",
+      "closed": true,
+      "dimensions": {
+        "x": 2.59,
+        "y": 2.55,
+        "z": 7.26,
+        "tolerance": 0.15
+      },
+      "z_range": [
+        -0.052,
+        7.207
+      ],
+      "tri_budget": 1400,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Mast_Top",
+        "SN_Socket_Chainplate_Port",
+        "SN_Socket_Chainplate_Starboard"
+      ],
+      "required_parts": [
+        "左右各 4 根侧支索",
+        "9 道绳梯横档",
+        "8 块甲板铁链板"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "shroud_rows": 9,
+        "shrouds_per_side": 4
+      },
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_stays_v1",
+      "asset": "SN_Rig_Stays",
+      "family": "rig_kit",
+      "role": "stays",
+      "description": "fore/back stays with turnbuckles",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Stays_Prototype",
+      "root": "SN_Rig_Stays_Root",
+      "prefix": "SN_Rig_Stays_",
+      "workbench_pos": [
+        8.0,
+        618.0,
+        0.0
+      ],
+      "datum": "mast-top eye at (0,0,7.2); lower ends at deck",
+      "closed": true,
+      "dimensions": {
+        "x": 9.0,
+        "y": 2.94,
+        "z": 7.26,
+        "tolerance": 0.15
+      },
+      "z_range": [
+        0.0,
+        7.26
+      ],
+      "tri_budget": 400,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Mast_Top",
+        "SN_Socket_Bowsprit_Tip"
+      ],
+      "required_parts": [
+        "4 根前后支索",
+        "桅顶眼板",
+        "4 套花篮螺栓",
+        "4 块甲板眼板（z=0）"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "stay_count": 4
+      },
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ]
+    },
+    {
+      "id": "sn_sn_rig_running_v1",
+      "asset": "SN_Rig_Running",
+      "family": "rig_kit",
+      "role": "running",
+      "description": "running rigging with blocks",
+      "generator": "tools/modeling/generators/rig_kit_batch1_generator.py",
+      "lib": "tools/modeling/generators/rig_kit.py",
+      "collection": "SN_Rig_Running_Prototype",
+      "root": "SN_Rig_Running_Root",
+      "prefix": "SN_Rig_Running_",
+      "workbench_pos": [
+        16.0,
+        618.0,
+        0.0
+      ],
+      "datum": "mast-top eye at (0,0,7.2); falls toward deck",
+      "closed": true,
+      "dimensions": {
+        "x": 5.09,
+        "y": 6.83,
+        "z": 7.22,
+        "tolerance": 0.15
+      },
+      "z_range": [
+        0.0,
+        7.224
+      ],
+      "tri_budget": 500,
+      "sockets": [
+        "SN_Mount",
+        "SN_Socket_Mast_Top",
+        "SN_Socket_Sail_Clew"
+      ],
+      "required_parts": [
+        "5 根动索",
+        "3 组滑车",
+        "2 个甲板羊角（z=0）"
+      ],
+      "extras": {
+        "rig_spec": "rig-kit@1",
+        "line_count": 5,
+        "block_count": 3
+      },
+      "materials": [
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark"
+      ]
+    }
+  ],
+  "ships": [
+    {
+      "asset": "SN_Paddle_Freighter",
+      "collection": "SN_Paddle_Freighter_Prototype",
+      "root": "SN_PF_Root",
+      "refactor": [
+        "build_mast → rig_kit.steamer_mast",
+        "build_yards → rig_kit.steamer_yard",
+        "build_bowsprit → rig_kit.steamer_bowsprit",
+        "build_rigging → rig_kit.steamer_rigging"
+      ],
+      "rig_sockets": 6,
+      "mesh_baseline": [
+        39,
+        12200
+      ]
+    },
+    {
+      "asset": "SN_Schooner_Fame",
+      "collection": "SN_Schooner_Fame_Prototype",
+      "root": "SN_SF_Root",
+      "refactor": [
+        "build_masts_local → rig_kit.schooner_mast",
+        "build_spars_local → rig_kit.schooner_spars",
+        "build_sails_local → gaff_sail/square_sail/tri_sail",
+        "build_headsails_world → schooner_headsails",
+        "build_standing_rigging_world → schooner_standing_rigging",
+        "build_running_rigging_world → schooner_running_rigging"
+      ],
+      "rig_sockets": 7,
+      "mesh_baseline": [
+        29,
+        13174
+      ]
+    },
+    {
+      "asset": "SN_Ironclad",
+      "collection": "SN_Ironclad_Prototype",
+      "root": "SN_Ironclad",
+      "refactor": [
+        "build_masts → rig_kit.ironclad_masts",
+        "build_rigging → rig_kit.ironclad_rigging"
+      ],
+      "rig_sockets": 9,
+      "mesh_baseline": [
+        1,
+        8830
+      ]
+    }
+  ],
+  "dryrun": "python tools/modeling/generators/dryrun_rig_kit.py",
+  "baseline": "python tools/modeling/generators/rig_kit_baseline.py --compare",
+  "build": "Blender: runpy.run_path(rig_kit_batch1_generator.py) → build_all_assets(); report()",
+  "export": "Blender: runpy.run_path(export_rig_kit_glb.py)（人工验收后由 Lead 执行）",
+  "deliverables": {
+    "glb": "assets/models/rig/SN_Rig_*.glb + dev_mods/core/assets/models/rig/",
+    "shared_textures": "assets/models/rig/shared_materials/ + dev_mods/core/.../rig/shared_materials/",
+    "catalog": "tools/modeling/rig_kit_catalog.json + docs/design/RIG_KIT_CONTRACT.md",
+    "ships_glb": "assets/models/ships/*.glb（3 艘重导 + rig sockets）"
+  },
+  "acceptance": [
+    "12 件对象命名 100% 以各自前缀开头、在指定集合内、无 .001 / 无重名",
+    "每件 tri <= 预算；总 tri 在 6–8k 目标区间内（实际按低模取 3774）",
+    "闭合件边界边/非流形边/孤立点/退化面 = 0；帆面允许边界边但必须双面材质",
+    "包围盒与工单 ±tol 一致、z 基准与 datum 一致",
+    "每件材质全部在共享贴图白名单内、每图元有 UV、GLB images[] 外部化且字节等于授权 tile",
+    "SN_Mount 唯一、SN_Socket_* 齐全；Root extras 含 rig_sockets/rig_socket_count/rig_socket_spec 与套件字段",
+    "3 艘船重建后逐对象几何 digest 与基线 0 差异；新增 rig socket 空节点 22 个且零几何",
+    "GLB 自检 12/12 + 船舶 4/4；Godot 资产测试通过；全量测试回归通过"
+  ]
+}

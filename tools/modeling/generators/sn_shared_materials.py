@@ -9,9 +9,11 @@
 # 随 core 模组发布，多件资产在 Godot 里共享同一个 `Texture2D`。
 #
 # 约定：
-# - 1 unit = 1 m；每个材质有 `tile_m`（一张贴图覆盖多少米），UV 用世界坐标 / tile_m，
+# - 1 unit = 1 m；每个材质有 `tile_m`（一张贴图覆盖多少米），UV 用坐标 / tile_m，
 #   采样器 REPEAT，因此任意大面都连续平铺、没有接缝。
 # - UV 投影按面法线主轴的盒式投影：X 面用 (Y,Z)、Y 面用 (X,Z)、Z 面用 (X,Y)。
+#   坐标空间可选：多节点拼装件用 `space="world"`（默认，跨子件连续），
+#   单 mesh 道具 / 设施用 `space="local"`（UV 相位不随工作台布局位置变化）。
 # - Blender 材质节点：Image Texture(sRGB, Linear, REPEAT) → Principled Base Color；
 #   Roughness / Metallic 来自 spec；背面剔除关闭（低模薄板双面）。
 # - bpy 只在函数内部 import；纯数据段可被 dryrun / 工具直接加载。
@@ -172,8 +174,15 @@ def _project_axes(normal):
     return 0, 1
 
 
-def apply_to_object(obj, specs=None):
-    """给一个 mesh 对象重建材质槽并写世界空间盒式 UV（几何不变）。"""
+def apply_to_object(obj, specs=None, space="world", root=None):
+    """给一个 mesh 对象重建材质槽并写盒式 UV（几何不变）。
+
+    ``space``:
+    - ``"world"``（默认）：世界坐标连续平铺，用于多节点拼装件；
+    - ``"local"``：mesh 自身局部坐标，UV 相位不随工作台布局位置变化（单 mesh 道具 / 设施）；
+    - ``"root"``：以 ``root.matrix_world.inverted() @ obj.matrix_world`` 为坐标空间，
+      用于多节点船体等"根节点局部"资产（跨子件连续，但不烘入工作台摆位）。
+    """
     import bpy
 
     specs = specs or material_specs()
@@ -184,11 +193,13 @@ def apply_to_object(obj, specs=None):
     slot_names = [m.name for m in mesh.materials if m is not None]
     face_materials = [slot_names[p.material_index] if slot_names else None
                       for p in mesh.polygons]
-    # 只保留**实际被面使用**的材质，避免把 spec 里全部材质塞进每个 mesh。
+    # 只保留**实际被面使用**的材质，避免把 spec 里全部材质塞进每个 mesh；
+    # 多个旧材质可能映射到同一个 SN_Tex_*（例如 SN_Canvas / SN_Canvas_Shade），
+    # 这里按首次出现顺序去重，防止同名材质槽出现两次。
     used = {name for name in face_materials if name in specs}
-    wanted = [name for name in slot_names if name in used]
-    for name in sorted(used):
-        if name not in wanted:
+    wanted = []
+    for name in slot_names + sorted(used):
+        if name in used and name not in wanted:
             wanted.append(name)
     if not wanted:
         return {"ok": False, "error": "no shared material slots", "object": obj.name}
@@ -212,7 +223,16 @@ def apply_to_object(obj, specs=None):
 
     uv_layer = mesh.uv_layers.get(UV_LAYER) or mesh.uv_layers.new(name=UV_LAYER)
     uv_layer.active = True
-    world = obj.matrix_world
+    if space == "world":
+        matrix = obj.matrix_world
+    elif space == "local":
+        matrix = None
+    elif space == "root":
+        if root is None:
+            raise ValueError("space='root' requires a root object")
+        matrix = root.matrix_world.inverted() @ obj.matrix_world
+    else:
+        raise ValueError("unknown UV space %r" % (space,))
     u_min = v_min = float("inf")
     u_max = v_max = float("-inf")
     for poly in mesh.polygons:
@@ -220,7 +240,9 @@ def apply_to_object(obj, specs=None):
         tile = float(specs[name]["tile_m"])
         ua, va = _project_axes(poly.normal)
         for li in range(poly.loop_start, poly.loop_start + poly.loop_total):
-            co = world @ mesh.vertices[mesh.loops[li].vertex_index].co
+            co = mesh.vertices[mesh.loops[li].vertex_index].co
+            if matrix is not None:
+                co = matrix @ co
             u, v = co[ua] / tile, co[va] / tile
             uv_layer.data[li].uv = (u, v)
             u_min, u_max = min(u_min, u), max(u_max, u)
@@ -234,6 +256,7 @@ def apply_to_object(obj, specs=None):
         "object": obj.name,
         "geometry_unchanged": before == after,
         "uv_layer": uv_layer.name,
+        "uv_space": space,
         "uv_loops": len(mesh.loops),
         "uv_range_u": [round(u_min, 3), round(u_max, 3)],
         "uv_range_v": [round(v_min, 3), round(v_max, 3)],
@@ -242,7 +265,7 @@ def apply_to_object(obj, specs=None):
     }
 
 
-def apply_collection(collection):
+def apply_collection(collection, space="world", root=None):
     """给集合内所有 mesh 应用共享贴图材质 + UV；返回汇总报告。"""
     build_materials()
     specs = material_specs()
@@ -251,7 +274,7 @@ def apply_collection(collection):
     for obj in collection.objects:
         if obj.type != "MESH":
             continue
-        report = apply_to_object(obj, specs=specs)
+        report = apply_to_object(obj, specs=specs, space=space, root=root)
         if report.get("ok"):
             reports.append(report)
         else:

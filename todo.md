@@ -19,11 +19,11 @@
 - [ ] 高频决策页第二轮：市场数量步进 / 即时成本、持久 `ScreenHost` 与局部数据刷新
 - [ ] 存档：声明式 ID 别名与数据迁移执行器；出航失败回滚的存档路径端到端测试
 - [ ] SDK / 发布：模组管理 UI（启用 / 禁用 / 优先级）、发布签名与固定哈希校验
-- [ ] 建模需求 Backlog：按 [MODELING_BACKLOG.md](docs/design/MODELING_BACKLOG.md) 的批次顺序推进（下一批建议：旧资产 UV 迁移 A → 船侧武器 socket + rig_kit）
+- [ ] 建模需求 Backlog：按 [MODELING_BACKLOG.md](docs/design/MODELING_BACKLOG.md) 的批次顺序推进（M0-3 船侧武器 socket、M0-4 `rig_kit` 均已完成；下一批建议：LOD1 基础套件（M0-5））
+- [ ] 遗留清理：`SN_Ship_Prototype`（`model.ship.prototype` 遗留键）仍是旧纯色 `SN_*`，可随船体资产批次一起迁移或删除遗留键
+- [ ] 运行时可替换部件：`ShipVisualAssembler` 按 `SN_Socket_Weapon/Mast/Yard/Sail` + `rig_kit_catalog.json` / `weapon` 目录装配，战斗层与舞台接入（建模侧资产/接口已交付）
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
-- [ ] 旧资产 UV 迁移：31 件铁港道具 / 6 件港口设施 / 11 件模块 / 4 艘船补 UV 并切换 `SN_Tex_*` 共享贴图材质（新资产已默认贴图；旧纯色 `SN_*` 逐批退役）
-- [ ] 船体部件库 `rig_kit`（桅杆 / 斜桁 / 帆面 / 索具参数化）与运行时可替换部件（`SN_Socket_*` + `parts_manifest.json` + `ShipVisualAssembler`）
 - [ ] 模型素材库接入：kit 批次 1–3 的 26 件资产登记 Core `model.kit.*` / `model.weapon.*` 资源键，接 `ShipVisualAssembler` / 场景装配的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
 - [ ] Content Schema 2.0 迁移（分层）：Phase A 已落地；Phase B 实现契约已就绪（9 类类型 + CampaignFactory + 1.0→2.0 映射），待隔壁探索 4.1 提交后开工；之后 C 实体合并 → D 其余系统 → E 冻结 1.0。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)（待拍板 D2–D3、D7–D12）
 - [ ] 3D 资产收尾：帆船 / 塔吊 / 明轮 / 模块的 Godot 导入与目标机位验收、塔吊参数化生成器、水面性能低配档位与第二港口变体
@@ -47,6 +47,9 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
 
 ## Recently Completed
+- [x] 船体帆索部件库 M0-4 `rig_kit`（2026-10-22）：新增参数化部件库 `rig_kit.py`（桅杆 / 横桁 / 斜桁 / 帆杠 / 艏斜桁 / 帆面 / 索具）与 **12 件独立 `SN_Rig_*` 套件**（**3,774 tri / 7,050 预算**，`assets/models/rig/` + Core 副本）；PF / SF / IC 三艘船的帆索改由同一份部件库生成，**逐对象几何 digest 0 差异**（PF 12,200 / IC 8,830 tri、mesh 数不变；SF 纯帆索基线 28 对象 / 12,994 tri，整船含既有 `SN_SF_Nameplate` 为 29 / 13,174）；3 艘船新增 **22 个** `SN_Socket_Mast/Yard/Sail_*` 空节点（PF 6 / SF 7 / IC 9，零几何），GLB 节点 PF 50→56 / SF 35→42 / IC 5→14；GLB 12/12 + 船舶 4/4 + 批次 B 21 files 0 failures + Godot 新增 3 例。契约 [RIG_KIT_CONTRACT.md](docs/design/RIG_KIT_CONTRACT.md)、目录 [rig_kit_catalog.json](tools/modeling/rig_kit_catalog.json)、验收 [RIG_KIT_ACCEPTANCE.md](docs/archive/RIG_KIT_ACCEPTANCE.md)
+- [x] 船侧武器安装点 M0-3（2026-10-22）：4 艘可玩船（明轮货轮 / 明轮客船 / 纵帆船 / 铁甲舰）各就地补 2–4 个 `SN_Socket_Weapon*` 空节点，共 **14 个**（class 混编 Side / Light / Medium / Heavy），**零几何改动**（45,968 tri / mesh 数不变）；BLEND 前缀名 → GLB 标准名归一化，节点 extras 写 `socket_class / clearance_r / clearance_x / clearance_y / clearance_h / mount_scale / socket_index`，Root 写 `weapon_sockets` 列表；GLB 4/4 自检 + 批次 B 21 files 0 failures + Godot 资产/socket 测试 11/11。脚本 `sn_ship_weapon_sockets.py` / `glb_ship_sockets.py` / `export_ship_weapon_sockets_glb.py` / `verify_ship_weapon_sockets_glb.py`，契约 [WEAPON_SOCKET_CONTRACT.md](docs/design/WEAPON_SOCKET_CONTRACT.md)，验收 [SHIP_WEAPON_SOCKETS_ACCEPTANCE.md](docs/archive/SHIP_WEAPON_SOCKETS_ACCEPTANCE.md)
+- [x] 旧资产 UV 迁移 B（2026-10-22）：船模块 12 GLB（含 `modules/SN_Boiler_Unit` 占位副本）+ 4 艘可玩船 + 旧小镇剩余 5 件补 UV、切 10 种 `SN_Tex_*` 共享贴图、重导 GLB；**55,256 tri / 118 网格与迁移前逐件一致**（多节点船体用根节点局部空间 UV），21/21 GLB 自检 + Godot 21 件 / 24 个共享贴图实例 / 0 失败。旧小镇 5 栋建筑此前已由建筑套件升级为 `SN_Town_*`；`SN_Ship_Prototype` 遗留键除外。脚本 `sn_legacy_uv_migration.py`（`migrate_all_b`）/ `dryrun_legacy_uv_b.py` / `export_legacy_uv_b_glb.py` / `verify_legacy_uv_b_glb.py`，验收 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](docs/archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)
 - [x] 任务追踪聚合 4.6 Phase A（2026-10-22）：只读 `task.view` 聚合剧情目标 / 待接主线 / 已接主线与普通委托；委托步骤推导（接取 / 备货 / 接客 / 前往 / 抵达交付，燃料按煤舱、自备货物按船上数量、普通货箱接取即装船）；HUD 任务追踪条（剧情结束后自动接替目标条）+ 委托页任务面板；任务不复制状态；测试 +5，截图 `task_tracker_hud.png` / `task_tracker_contracts.png`
 - [x] 新手剧情补给引导修正（2026-10-22）：关闭海图后的「煤舱补到 10」目标改为跟踪真实煤舱（进入阶段 8/10，购买时 `counter_from: stock`），目标条显示「8/10，还差 2」，不再要求玩家自己算要买多少；新增 `tutorial_supply_remaining.png` 截图
 - [x] 阶段 4.5 新手剧情 / 教学系统（4.5.1–4.5.6，2026-10-22）：新开局默认五幕教学（获船→补给限购 / 海图首航→第二港市场与回运→酒馆线索 / 保底探索→第三港船厂客舱 / 旅客），剧情接管 `main_01..main_03` 并在第三段后交还沙盒；`data.story` 状态机 + Core JSON 剧情 / 文案 / 解锁、剧情卡 + 非阻塞目标条、功能门禁、跳过保底；补给并市、酒馆替换情报站、两港价差、第三种货、两根线索、保底探索、船厂按 `unlocked_modules` 过滤、1 人客舱与旅客主线全部落地；全量测试 0 failed，截图见 [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)。

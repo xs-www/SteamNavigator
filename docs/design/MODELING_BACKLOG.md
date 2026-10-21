@@ -1,7 +1,7 @@
 # 建模需求 Backlog（3D 资产）
 
 > 状态：Active（2026-10-22）
-> 盘点基线：模型素材库 kit 26 件（批次 1–3，42,058 tri）、舰载武器 8 件（16,996 tri，装配规范 v2）、船 4 艘 + 原型、铁港建筑 16 栋（8 LOD0 + 8 LOD1）、起重机 4 台、旧道具 31 / 港口设施 6 / 船模块 11 / 旧小镇 10。
+> 盘点基线：模型素材库 kit 26 件（批次 1–3，42,058 tri）、**船体帆索 rig_kit 12 件（3,774 tri，M0-4）**、舰载武器 8 件（16,996 tri，装配规范 v2）、船 4 艘 + 原型、铁港建筑 16 栋（8 LOD0 + 8 LOD1）、起重机 4 台、**旧道具 31 + 港口设施 6（批次 A 已迁移）**、旧船模块 11 + 4 艘可玩船 + 旧小镇 10（批次 B 已迁移，实际重导 21 个 GLB；`SN_Ship_Prototype` 遗留键除外）。
 > 相关：[KIT_ASSET_LIBRARY.md](KIT_ASSET_LIBRARY.md) · [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) · [ASSET_MAP.md](ASSET_MAP.md) · [MODELING_WORKFLOW.md](MODELING_WORKFLOW.md)
 
 本文件只列**建模/资产侧**待办，不包含玩法、UI、运行时装配代码；接入类任务见 [todo.md](../../todo.md)。
@@ -11,16 +11,18 @@
 - kit 批次 1–3：weapon_kit / ship_parts / machinery / cargo / dock / architecture / environment，共 26 件，42,058 tri，`kit_catalog.json` 含 13 条装配配方；
 - 舰载武器 8 件 + kit 武器部件 + 甲板 socket，已统一为武器装配规范 v2（`SN_Socket_Weapon` / `SN_Mount` / `SN_Pivot_Yaw` / `SN_Pivot_Pitch` / `SN_Recoil` / `SN_Muzzle`）；
 - 共享贴图 11 张（`SN_Tex_*`），GLB 全部外部 URI，BLEND 工作台 Solid 统一灰模；
-- 旧铁港建筑 16 栋已带 `SN_TEX_*` 图集贴图；旧道具 / 设施 / 模块 / 船仍是纯色 `SN_*`。
+- 旧铁港建筑 16 栋已带 `SN_TEX_*` 图集贴图；
+- **旧资产 UV 迁移 A（2026-10-22）**：31 件铁港道具 + 6 件港口设施补 UV、切 `SN_Tex_*`、重导 GLB；37 件 11,278 tri 不变、24,188 UV loops、9 个共享材质、Godot 37/37 通过（见 [LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md)）；
+- **旧资产 UV 迁移 B（2026-10-22）**：船模块 12 GLB（含占位副本）+ 4 艘可玩船 + 旧小镇剩余 5 件补 UV、切 `SN_Tex_*`、重导 GLB；**55,256 tri / 118 网格不变、111,564 UV loops、10 个共享材质、Godot 21/21 / 24 共享贴图实例通过**（见 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)）；旧小镇 5 栋建筑此前已由建筑套件升级为 `SN_Town_*`，`SN_Ship_Prototype` 遗留键仍是旧纯色。
 
 ## 2. P0：接入前的硬缺口
 
 | ID | 任务 | 内容 | 量 / 预算 | 依赖与说明 |
 | --- | --- | --- | --- | --- |
-| M0-1 | 旧资产 UV 迁移 A | 31 件铁港道具 + 6 件港口设施：补 UV、切 `SN_Tex_*`、重导 GLB | 37 件，tri 基本不变 | 纯材质/UV 改造，不改几何；完成后旧纯色 `SN_*` 从港区退场 |
-| M0-2 | 旧资产 UV 迁移 B | 11 件船模块 + 4 艘船 + 旧小镇 10 件 | 25 件 | 船体 UV 工作量大，单独一批；含舷侧、甲板、帆面分区 |
-| M0-3 | 船侧武器安装点 | 4 艘船各加 2–4 个 `SN_Socket_Weapon*` 空节点 + `socket_class / clearance_r / clearance_h` extras | 4 件，无几何 | 配合武器 v2；不要求整块甲板，空节点即可 |
-| M0-4 | `rig_kit` 船体部件库 | 桅杆 / 斜桁 / 帆面 / 索具参数化，接口 `SN_Socket_Mast/Yard/Sail` | 8–12 件，约 6–8k tri | 替换现有船体上焊死的帆索；接 `ShipVisualAssembler` |
+| ~~M0-1~~ | ~~旧资产 UV 迁移 A~~ | ~~31 件铁港道具 + 6 件港口设施：补 UV、切 `SN_Tex_*`、重导 GLB~~ | ~~37 件，tri 基本不变~~ | **✅ 2026-10-22 完成**：tri 11,278 不变，9 材质，Godot 37/37 / 14 共享贴图实例，旧纯色 `SN_*` 已从港区退场 |
+| ~~M0-2~~ | ~~旧资产 UV 迁移 B~~ | ~~11 件船模块 + 4 艘船 + 旧小镇 10 件~~ | ~~25 件~~ | **✅ 2026-10-22 完成**：实际重导 **21 个 GLB**（12 模块含占位副本 + 4 艘可玩船 + 旧小镇剩余 5 件）；5 栋旧小镇建筑此前已由建筑套件升级为 `SN_Town_*`；55,256 tri / 118 网格不变、111,564 UV loops、Godot 21/21 / 24 共享贴图实例 |
+| ~~M0-3~~ | ~~船侧武器安装点~~ | ~~4 艘船各加 2–4 个 `SN_Socket_Weapon*` 空节点 + `socket_class / clearance_r / clearance_h` extras~~ | ~~4 件，无几何~~ | **✅ 2026-10-22 完成**：4 艘船共 **14 个空节点**（PF 4 / PS 3 / SF 3 / IC 4），BLEND 前缀名 → GLB 标准名归一化；extras 增加 `clearance_x / clearance_y / socket_index / socket_spec`，Root 写 `weapon_sockets` 列表；几何逐船不变（45,968 tri），GLB 4/4 + Godot 运行时 11/11；契约见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md#L156) |
+| M0-4 | `rig_kit` 船体部件库 | 桅杆 / 斜桁 / 帆面 / 索具参数化，接口 `SN_Socket_Mast/Yard/Sail` | 8–12 件，约 6–8k tri | **✅ 2026-10-22 完成**：12 件 `SN_Rig_*` 套件 **3,774 tri**（预算 7,050），PF/SF/IC 帆索改由 `rig_kit.py` 参数化生成、**逐对象几何 digest 0 差异**；3 艘船新增 **22 个** `SN_Socket_Mast/Yard/Sail_*` 空节点（PF 6 / SF 7 / IC 9，零几何）；运行时 `ShipVisualAssembler` 仍待接。契约 [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)，验收 [RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md) |
 | M0-5 | LOD1 基础套件 | kit 26 件 + 船 4 艘 + 铁港建筑 16 栋的远景低模 | 约 40 件 | 2.5D 舞台远景与低配档必需；LOD2 billboard 后续 |
 
 ## 3. P1：2.5D 舞台 / 基地 / 事件内容
@@ -46,10 +48,10 @@
 
 ## 5. 建议批次顺序
 
-1. **批次 4**：M0-1 旧资产 UV 迁移 A（37 件道具/设施）——收益最大、风险最低。
-2. **批次 5**：M0-3 船侧武器 socket + M0-4 `rig_kit`——把武器 v2 与船体部件接起来。
-3. **批次 6**：M0-5 LOD1 + M2-1 `combat_kit` 敌舰。
-4. **批次 7**：M1-1 architecture_kit 扩展 + M1-2 `base_kit` + M1-3 `interior_kit`。
+1. ~~**批次 4**：M0-1 旧资产 UV 迁移 A（37 件道具/设施）~~ —— **✅ 2026-10-22 完成**。
+2. **批次 5**：~~M0-3 船侧武器 socket~~（**✅ 2026-10-22 完成**）+ ~~M0-4 `rig_kit`~~（**✅ 2026-10-22 完成**）——武器 v2 与船体部件接口已就位，下一步接运行时装配。
+3. ~~**批次 6**：M0-2 旧资产 UV 迁移 B（21 个 GLB）~~ —— **✅ 2026-10-22 完成**；M0-5 LOD1 仍在队列。
+4. **批次 7**：M2-1 `combat_kit` 敌舰 + M1-1 architecture_kit 扩展 + M1-2 `base_kit` + M1-3 `interior_kit`。
 5. **批次 8**：M1-4 environment_kit v2 + M2-3 `ruins_kit` + M2-2 `sea_monster`。
 
 ## 6. 跨批次统一要求
@@ -63,6 +65,9 @@
 ## 7. 待决
 
 1. 第二港口风格：同铁港图集换色，还是新建一套材质/图集？
-2. `rig_kit` 帆面是布面网格还是 Godot 侧布料/顶点动画？模型侧只交付参数化挂点与低模帆面。
+2. ~~`rig_kit` 帆面是布面网格还是 Godot 侧布料/顶点动画？~~ —— **2026-10-22 已决**：模型侧交付**静态低模布面**（帆腹/帆缝/帆缘绳、单层双面）+ `SN_Socket_Sail_*` 挂点；风动/布料留 Godot 侧后续实现。
 3. 敌舰是否复用玩家船体骨架（省预算）还是独立轮廓（可读性更好）？
 4. 内景切面是否统一 1 m 墙厚 / 固定机位套装，还是按场景单独构图？
+5. **武器底座占地字段（M0-3 验收 F1）**：武器批次 1 的 `base_footprint_x/y` 当前等于整机 bbox（= `envelope`），
+   不能当底座占地用；需要给武器 extras 补真实 `mount_pad_x` / `mount_pad_y`（底座/平台网格 bbox）并重导 5 件，
+   回归 `verify_weapon_glb.py`；在此之前 §8.3 的底座判据以网格实测为准（见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) §7.5）。

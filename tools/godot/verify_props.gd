@@ -100,6 +100,10 @@ func _check(name: String) -> int:
 	if mat_names.is_empty():
 		ok = false
 		notes.append("没有材质")
+	for m in mat_names:
+		if not String(m).begins_with("SN_Tex_"):
+			ok = false
+			notes.append("材质不是 SN_Tex_*：%s" % m)
 
 	if int(acc["tris"]) != int(expected[1]):
 		ok = false

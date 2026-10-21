@@ -24,8 +24,8 @@ const EXPECTED := {
 }
 
 const PALETTE := [
-	"SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal", "SN_Iron",
-	"SN_Brass", "SN_Stone", "SN_Canvas", "SN_Canvas_Shade",
+	"SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck", "SN_Tex_Metal",
+	"SN_Tex_Iron", "SN_Tex_Brass", "SN_Tex_Stone", "SN_Tex_Canvas_Shade",
 ]
 
 

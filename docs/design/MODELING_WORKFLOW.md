@@ -319,7 +319,7 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 基线锁 | 重构前保存两份基线：纯 Python 逐对象 verts/faces/tris/material/parent digest（`.design/schooner_baseline_geometry.json`）与 Blender 世界坐标/局部坐标/面材质 digest（`.design/schooner_blender_baseline.json`） |
 | 验收 | 重构后纯 Python digest **0 差异**；dryrun `ALL OK`、12994 tri、bbox/材质/命名不变；Builder 重建后 Blender 逐对象 world/local/polys digest **0 差异**（32 对象 / 29 mesh / 3 empty / 13174 tri；196 个既有对象零漂移）；`importlib` 加载与无 `__file__` 时 `bpy.data.filepath` 回退均已验证 |
 | 契约 | 单位米、+X 船首/+Z 向上；部件函数只收位置/尺寸/材质名，不 import 船型站表；`Part` 不含 bpy；`PartSpec(name, part, parent, origin, sockets, tags)` 预留给后续运行时可替换件 |
-| 后续 | ① 把 masts/sails/rigging 抽成 `rig_kit`（参数化桅距/帆装）；② 增加第二艘船型验证复用；③ 等 2.5D 舞台立项后，再从同一份部件源码导出独立 GLB + `SN_Socket_*` + `parts_manifest.json`，不在生成器里维护第二套几何 |
+| 后续 | ① ~~把 masts/sails/rigging 抽成 `rig_kit`~~ —— **✅ M0-4 已完成**（2026-10-22，见 §11.18）；② 增加第二艘船型验证复用（M0-4 已用 PF/SF/IC 三型验证）；③ 等 2.5D 舞台立项后，再从同一份部件源码导出独立 GLB + `SN_Socket_*` + `parts_manifest.json`，不在生成器里维护第二套几何 |
 
 ### 11.11 港口起重机四件套（2026-10-21，塔吊生成器补全 + 三件新起重机）
 
@@ -382,6 +382,69 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 过程发现 | ① **网格名与 socket 名共享命名空间**的问题在批次 3 再次出现 6 处，干跑的同名检查必须保留；② **「无浮空」要按支撑面测量，不能只看 bbox zmin**：残骸断桅、压舱石、灯塔-礁石落座都是 bbox 正常但空间关系错；raycast/BVHTree 要在 Builder 侧固化为必检项；③ **测量参照面会骗人**：压舱石向下 raycast 可能穿过内底打到外皮，报出「虚大间隙」；应用内底上法线面 + 生成器纯几何回代互相验证，且**按生成器列表顺序**传递逐件偏移，避免标签排序错位；④ 环境件允许 zmin<0（水线 datum），干跑按件声明范围比强制 z=0 更符合摆放语义；⑤ 建筑 / 环境件尺寸大，预览要把 Root 临时抬到水线以上再渲染，否则水下部分被地面挡住。 |
 | 归档 | 8 个 GLB（`assets/models/{architecture,environment}/` + Core 副本）、共享贴图 11 张 × 4 目录、预览 2 lineup + 4 拼装图 + 16 单件图、[KIT_ASSET_LIBRARY.md §10](KIT_ASSET_LIBRARY.md)、[KIT_BATCH3_ACCEPTANCE.md](../archive/KIT_BATCH3_ACCEPTANCE.md) |
 
+### 11.15 旧资产 UV 迁移 A（2026-10-22，31 件铁港道具 + 6 件港口设施）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M0-1：31 件铁港道具 + 6 件港口设施**补 UV、切 `SN_Tex_*`、重导 GLB**；纯材质/UV 改造，不改几何，完成后旧纯色 `SN_*` 从港区退场 |
+| 基线 | 先跑 `capture_baseline.py` 记录 37 个旧 GLB：**11 278 tri**（props 6 282 / port 4 996）、80 个图元全部无 `TEXCOORD_0`、9 个旧纯色材质、0 内嵌贴图；tri / 尺寸作为迁移后回归硬约束 |
+| 映射 | 9 个旧材质 → `SN_Tex_*`：Wood / Wood_Dark / Metal / Iron / Iron_Red / Brass / Stone 一对一；`SN_Canvas` 与 `SN_Canvas_Shade` 合并到唯一 `SN_Tex_Canvas_Shade`；`SN_Coal → SN_Tex_Coal`；**`SN_Ore → SN_Tex_Iron_Red`**（旧 ORE_BASE 0.155/0.038/0.024 线性 ≈ iron_red 均值 118/56/43，避免为一种材质新增贴图） |
+| 生成器 | `sn_legacy_uv_migration.py`（纯数据映射 + Blender 侧迁移/验收）：先按槽位把旧材质换成 `SN_Tex_*`（面索引不变），再调 `sn_shared_materials.apply_to_object(space="local")` 写 `UVMap`；每个对象迁移前后做**几何签名对比**（顶点坐标 + 面顶点索引 + tri + 对象变换 SHA-256）与面材质计数对比，任一变化即失败 |
+| 共享材质库扩展 | `sn_shared_materials.apply_to_object()` 新增 `space` 参数（`world` 默认不变，`local` 用于单 mesh 道具/设施，UV 相位不随工作台布局位置变化），并去重"多个旧材质映射到同一 `SN_Tex_*`"产生的重复槽位 |
+| 迁移结果 | 37/37 OK：**11 278 tri 不变、24 188 UV loops、9 个共享材质**；几何签名 / 三角面 / 对象变换全部逐位一致，面材质计数按映射守恒；旧纯色材质槽 0 残留 |
+| 导出 | `export_legacy_uv_glb.py`：逐件归零导出 → `glb_shared_textures.externalize_glb(prefer_authored=True)` 把贴图变 `shared_materials/<texture>.png` 外部 URI → 旧 GLB 备份 `.design/legacy_uv/backup_glb/` → 同步 `dev_mods/core` 副本 → props / port 各补齐 11 张共享贴图运行时副本 → 保存工作台 |
+| 验收 | `verify_legacy_uv_glb.py` **37/37 ALL OK**（tri、图元数、世界尺寸、贴地、材质名、doubleSided、每图元 UV、外部 PNG 与授权 tile 逐字节一致、无内嵌图）；Godot `verify_legacy_uv_materials.gd` **37 件 / 14 个共享贴图实例 / 0 失败**；`verify_props.gd` 31/31、`verify_port_facilities.gd` 6/6、`verify_crane_materials.gd` 回归 4/4；新增 `test_legacy_uv_assets.gd` 2 例守护外部贴图 + 类别内实例共享 |
+| 交付 | 37 个 GLB（`assets/models/{props,port}/` + Core 副本）、4 个 `shared_materials/` 目录各 11 张 PNG、迁移/预检/导出/验收 4 个脚本、Godot 运行时验收脚本、[LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md) |
+| 过程发现 | ① **活体 Blender 会缓存纯 Python 模块**：改完 `sn_shared_materials` 后首次执行仍用旧签名报 `unexpected keyword argument 'space'`，`migrate_all()` 里先 `importlib.reload` 再跑；② 单 mesh 资产用**局部空间** UV，世界空间会把工作台布局位置（每批 y=24/30/…）烘进 UV 相位，资产挪位后图案会整体漂移；③ 旧 GLB 本来**没有贴图**（纯色材质），"外部化"不是把已有图拿出来，而是首次导出时由共享材质生成内嵌图再替换为外部 URI，因此 `prefer_authored=True` 才能保证 PNG 与授权 tile 逐字节一致；④ 同一类别内共享 `shared_materials/` 才能让 `ContentAssetLoader` 复用 `Texture2D`（props / port 各自一份，跨类别仍不共享）；⑤ 迁移脚本对已迁移对象幂等（再次执行只重写 UV），方便返工时重跑 |
+
+
+### 11.16 旧资产 UV 迁移 B（2026-10-22，船模块 / 4 艘船 / 旧小镇）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M0-2：11 件船模块 + 4 艘船 + 旧小镇 10 件补 UV、切 `SN_Tex_*`、重导 GLB |
+| 范围修正 | 旧小镇 10 件中 5 栋建筑已在建筑套件批次升级为 `SN_Town_*` trim-sheet LOD0（运行时 GLB 已替换），本次只处理剩余 5 件旧纯色道具；另把 manifest `model.module.boiler` 引用的 `modules/SN_Boiler_Unit` 占位副本一并迁移 → **实际重导 21 个 GLB** |
+| 基线 | `.design/legacy_uv_b/baseline.json`：**55 256 tri**（modules 7 492 / ships 45 968 / town 1 796）、118 网格、334 图元（331 无 UV）、18 个旧材质、0 内嵌贴图 |
+| 映射 | 18 旧材质 → 10 个 `SN_Tex_*`：`SN_Iron_Hull` / `SN_Hull_Black` → `SN_Tex_Iron`（黑船身保留深色读感）；`SN_Ochre` → `SN_Tex_Wood_Deck`；`SN_White` / `SN_PS_UpperWhite` → `SN_Tex_Canvas_Shade`；`SN_Flag_Red/White/Blue` → `SN_Tex_Iron_Red` / `SN_Tex_Canvas_Shade` / `SN_Tex_Glass_Dark`；其余同名映射；**不新增贴图** |
+| UV 空间 | 单 mesh（模块 / 旧小镇 / 铁甲舰）用 `space="local"`；多节点船体新增 `space="root"`（`root.matrix_world.inverted() @ obj.matrix_world`），跨子件连续、不烘入工作台摆位（±45 / −70 / 90） |
+| 迁移结果 | 21/21 OK：**55 256 tri / 118 网格 / 对象变换全部与基线一致**，UV loops **111 564**；面材质计数按映射守恒，旧槽 0 残留；`SN_Schooner_Fame` 图元 73→70（3 处 `SN_Canvas` + `SN_Canvas_Shade` 合并，tri 不变） |
+| 导出 | `export_legacy_uv_b_glb.py`：单 mesh 逐件归零导出；船体根节点归零后整集合导出（`export_extras=True` 保留 Root extras）；旧 GLB 备份 + Core 同步；仅更新 5 件旧小镇 GLB（不覆盖 5 栋升级建筑） |
+| 共享贴图目录 | `shared_materials.spec.json` 的 `runtime_dirs` 补 `port`（批次 A 遗留）/ `modules` / `ships`，共 **22 个目录**；重跑贴图生成器后 11 张 tile 字节不变、deterministic / seam_ok |
+| 验收 | `verify_legacy_uv_b_glb.py` **21/21 ALL OK**；Godot `verify_legacy_uv_materials_b.gd` **21 件 / 24 个共享贴图实例 / 0 失败**；批次 A / 道具 / 设施 / 起重机回归全绿；`test_legacy_uv_assets_b.gd` 2 例守护 |
+| 交付 | 21 个 GLB（`assets/models/{modules,ships}` + Core 副本 + 5 件 town core props）、4 个新 `shared_materials/` 目录、4 个迁移/预检/导出/验收脚本、Godot 验收脚本、[LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md) |
+| 过程发现 | ① 多节点资产必须用根节点局部空间 UV：world 烘摆位、local 让子件图案互相错位；② 多旧材质映射到同一 `SN_Tex_*` 时同 mesh 槽位合并、glTF 图元数下降，验收应以 tri / 节点 / 网格为几何不变量；③ 旧小镇 5 栋建筑已被建筑套件取代，不能按旧 backlog 字面重导，否则会把升级后的 GLB 覆盖回旧模型；④ `modules/SN_Boiler_Unit` 是 props 锅炉的占位副本，对象住在 `SN_IronHarbor_Props`；⑤ 纯白 / 彩旗没有对应贴图，按"不新增贴图"映射到最接近的共享材质（明轮客船二级白层次合并） |
+
+
+
+
+### 11.17 船侧武器安装点 M0-3（2026-10-22，4 艘船 14 个空节点）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M0-3：4 艘可玩船各加 2–4 个 `SN_Socket_Weapon*` 空节点 + `socket_class / clearance_*` extras；**不要求整块甲板，空节点即可，禁止动几何** |
+| 设计 | 先定净空口径再选点：安装面以上 0.12 m 做 16 向水平射线得 `clearance_r`，socket 局部 ±X / ±Y 得 `clearance_x/y`，向上射线得 `clearance_h`（露天封顶 20 m）；侧舷点 rotZ ±90° 让 +X 指向舷外、local Y 沿船体纵轴，炮列按 `clearance_y` 判长度。声明值一律**低于实测 0.05 m**，脚本断言实测 ≥ 声明，不达标直接抛错 |
+| 选点 | 用 16 向扫描 + 甲板 down-ray 逐点比较，避开舱口/烟囱/舱室/舵轮柜/救生艇吊架：PF 前侧舷 2 + 后侧舷 2（Side + Light），PS 艏甲板 2（Light）+ 艉上层甲板 1（Medium），SF 艉楼 2（Light）+ 艏 1（Medium），IC 炮房前 2（Heavy）+ 后甲板 2（Medium）。z 取该点甲板实测高度（同船不同点 1.91–4.60 m） |
+| 生成器 | `sn_ship_weapon_sockets.py`：纯 Python `SHIPS` 规格表 + `DECK_Z_EXPECTED`、`validate_spec()`（2–4 个/船、命名、class、镜像、clearance 上限）、Blender 侧 `apply_all()`（幂等重建只删本前缀空节点、实测/断言/写 extras/Root extras、逐集合 mesh/tri/材质/对象名快照比对）与 `verify_all()` 只读复核；`--check` 可纯 Python 干跑 |
+| 构建 | Builder 子代理原样执行一次：4/4 `passed=true`、`failures=[]`、`removed=[]`（未删既有对象）；场景 objects 693→707（+14 全为 EMPTY）、mesh 445 不变；几何快照 PF 39/12200、PS 32/11764、SF 29/13174、IC 1/8830 前后一致 |
+| 导出 | `export_ship_weapon_sockets_glb.py`：4 个 GLB 重新导出（铁甲舰改为 `export_extras=True` 并连同 socket 子空节点一起导出）、共享贴图外部化、旧 GLB 备份 `.design/ship_sockets/backup_glb/`、同步 Core 副本；导出后 `glb_ship_sockets.standardize()` 把 `SN_PF_Socket_Weapon_*` 归一化为 `SN_Socket_Weapon_*` 并写 Root `weapon_sockets` 列表。GLB 节点数 46→50 / 35→38 / 32→35 / 1→5 |
+| 验收 | `verify_ship_weapon_sockets_glb.py` **4/4 ALL OK**（节点/网格/图元/tri/世界尺寸/材质/UV/外部贴图字节/Core 一致 + socket 父子/translation=(x, deck_z, −y)/朝向/extras）；批次 B `verify_legacy_uv_b_glb.py` 21 files 0 failures；新增 Godot `test_ship_weapon_sockets.gd` 2 例（运行时空节点 + GLB JSON extras）；**独立 Verifier 只读复核**：BIN chunk 与 pre-socket 备份逐字节相同（只多 14 个空节点）、14/14 射线命中甲板、translation/朝向/贴图三方哈希全通过；全量 headless 套件 **369 passed / 0 failed** |
+| 过程发现 | ① 甲板不是平面：同船不同安装点甲板高度差 0.45 m（PS 艏 1.91 vs 艉上层 3.42），socket z 必须逐点 down-ray 实测，不能按船写一个常量；② “净空”要分径向/纵轴/横向三个数：只给 `clearance_r` 会把 8 m 长的舷炮列判死（径向被舷墙压到 0.75 m），`clearance_x/y` 才能表达排布方向；③ Godot 的 `Array.has(int)` 对 JSON 解析出的 float（`0` vs `0.0`）返回 false，测试里要 `int()` 后建索引表再判断；④ 4 艘船同工作台时标准节点名会撞全局命名空间，必须沿用武器 v2 的「BLEND 前缀 → GLB 后处理归一化」；⑤ **活体 Blender 会缓存纯 Python 模块**：改完 `sn_ship_weapon_sockets.py`（新增 Root extras）后同一会话里 `import` 仍拿到旧版，`apply` 结果缺字段；修法是 `importlib.reload` 或先 `sys.modules.pop` 再 `runpy`（与 §11.13 的教训同源）；⑥ 独立 Verifier 抓到契约层真缺陷 F1：武器批次 1 的 `base_footprint`=整机 bbox，按字面判据会误杀小船 Light/Heavy 点——资产改了、契约没对齐，仍算不通过（见 §8.3 / §7.5） |
+| 交付 | 4 个 GLB（`assets/models/ships/` + Core 副本）、`sn_ship_weapon_sockets.py` / `glb_ship_sockets.py` / `export_ship_weapon_sockets_glb.py` / `verify_ship_weapon_sockets_glb.py`、Godot 测试、[WEAPON_SOCKET_CONTRACT.md §8](WEAPON_SOCKET_CONTRACT.md#L156) |
+
+### 11.18 船体帆索部件库 rig_kit M0-4（2026-10-22，12 件套件 + 3 艘船参数化替换）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M0-4：桅杆 / 斜桁 / 帆面 / 索具参数化，接口 `SN_Socket_Mast/Yard/Sail`，8–12 件约 6–8k tri，“替换现有船体上焊死的帆索”；用户 2026-10-22 选 **A（套件 + 3 艘船改用部件库，逐对象几何 digest 不变）**，运行时 `ShipVisualAssembler` 本批不实现 |
+| 设计 | 先定“部件库 = 几何组合 + 船型布局分离”：`rig_kit.py` 提供 `RigBuilder`（统一 `add(vf, material)`，兼容 SF/PF 的 `add(vf, mat)` 与铁甲舰的 `add(verts, faces, mat)`，基本体由调用方模块提供以保逐位一致）、通用积木、帆面曲面/帆缝/帆缘绳、三型船的部件函数；船型生成器只保留桅位/后倾/帆角/锚点；独立套件用同一批函数 + 套件参数生成 |
+| 部件库与套件 | `rig_kit.py` + `rig_kit_batch1_generator.py`（12 件：帆船桅 / 蒸汽桅 / 横桁 / 斜桁 / 帆杠 / 艏斜桁 / 斜桁帆 / 方帆 / 艏三角帆 / 侧支索 / 支索 / 动索，共 **3,774 tri / 7,050 预算**）+ `sn_rig_materials.py`（材质白名单）+ `dryrun_rig_kit.py`（命名/tri/bbox/z 基准/材质/网格健康/Mount+Socket） |
+| 船体替换 | PF `build_mast/yards/bowsprit/rigging`、SF 六个帆索函数、IC `build_masts/rigging` 改为调用 `rig_kit`；新增 `rig_kit_baseline.py`（纯 Python 逐对象 verts/faces/tri/材质/bbox/SHA-256 基线）作硬门禁：重构前后 **3/3 SAME**（PF 39/12,200、SF 28/12,994、IC 1/8,830） |
+| socket | `sn_ship_rig_sockets.py` 只补空节点：PF 6 / SF 7 / IC 9 = **22 个** `SN_Socket_Mast/Yard/Sail_*`，坐标直接取 3 艘船参数表（不射线）；`glb_ship_rig_sockets.py` 与 `glb_rig_kit.py` 把 BLEND 前缀名归一化，并把名单写进 Root `rig_sockets`（Blender IDProperty 不支持字符串数组） |
+| 构建 | Builder 一次通过：12 集合 / 12 mesh + 57 empty / 3,774 tri；3 艘船重建命中基线；武器 socket 14 个 re-apply；rig socket 22 个 `geometry_unchanged=True`；批次 B 材质/UV 迁移 4 艘船 101 mesh 全绿；场景 707→798 objects、445→457 mesh、259→338 empty、相机灯光不变 |
+| 导出与验收 | `export_rig_kit_glb.py` 12 件（308.3 KB）+ `export_ship_weapon_sockets_glb.py` 4 艘；`verify_rig_kit_glb.py` **12/12 ALL OK**、`verify_ship_weapon_sockets_glb.py` **4/4**（PF 56 / PS 38 / SF 42 / IC 14 节点）、`verify_legacy_uv_b_glb.py` 21 files 0 failures；`gen_rig_kit_catalog.py` 出机器目录；Godot 新增 `test_rig_kit.gd` 3 例 + 武器/批次 B 套件回归全绿 |
+| 过程发现 | ① **帆面曲面归一化要逐位复刻**：最初把 `vnorm((fwd.x,0,fwd.z))` 写成“先按 3D 长度除再归一化”，最后几位不同，导致 `SN_SF_Sails_Main` digest 变化；改成单次 2D 归一化后 3/3 一致——重构类工作必须用 digest 对比，不能靠肉眼；② 3 艘船 Part/基本体实现不同（SF 用 `ship_parts.core`、PF 自带同构副本、IC 的 `taper_cyl` 相位与 `Part.add` 签名都不同），所以 `RigBuilder` 只统一“追加接口”，基本体由各船模块注入；③ **新建 socket 脚本要限定自己的前缀**：铁甲舰若用 `SN_` 当前缀，会把 `SN_Rig_*_Socket_*` 套件接口当船体 socket 删掉，改成 `SN_IC_`；④ GLB 后处理只处理 Mast/Yard/Sail 三类节点，不能把 M0-3 武器 socket 与 PF 旧通用 socket（Engine/Cabin/…）算进“规格外”；⑤ 运行时装配仍缺 `ShipVisualAssembler`，本批只交付资产/接口/目录，避免把建模批次与 GDScript 装配混在一起；⑥ 独立 QA 抓到 3 类真实缺陷并已修：Bowsprit/Stays/Running 的 datum 离地（补甲板接触几何，zmin→0、total 3,690→3,774）、SF `rig_yard_z` 取桅局部 z 与 PF/IC 语义不一致（统一取船体 z）、契约键名/计数/接口名前缀不一致（纯文档）；详见 [RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md) §8 |
+| 交付 | 12 个 GLB（`assets/models/rig/` + Core 副本 + 共享贴图）、4 艘船 GLB 重导、`rig_kit.py` / 生成器 / 干跑 / 基线 / socket / GLB 归一化 / 导出 / 自检 / 目录脚本、Godot 测试、[RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)、[RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md) |
+
 ## 12. 共享贴图材质与 UV（新资产默认约定，2026-10-21 起）
 
 > 结论：**新资产不再用纯色代表材质**。材质 = 共享贴图（`SN_Tex_*`）+ spec 参数，
@@ -404,19 +467,25 @@ docs/design/ASSET_MAP.md                              增加一行映射
 - 新贴图材质统一用 **`SN_Tex_*`**（`SN_Tex_Metal` / `SN_Tex_Wood` / …）。
 - 旧资产的纯色材质（`SN_Metal` / `SN_Wood` / …）被 160+ 个既有对象共用，**不允许原地改成贴图**；
   否则没有 UV 的旧网格会变成单色采样。旧资产按“加 UV → 切换材质名 → 重导 GLB”逐批迁移，
-  迁移前保持 `SN_*` 纯色。
+  迁移前保持 `SN_*` 纯色。**批次 A（31 件铁港道具 + 6 件港口设施）已完成**，
+  映射与脚本见 §11.15；**批次 B（船模块 / 4 艘船 / 旧小镇剩余道具）也已完成**
+  （2026-10-22，实际重导 21 个 GLB，§11.16）；仅 `SN_Ship_Prototype` 这一遗留原型键仍是旧纯色。
 - 干跑/自检按 `ASSET_MATERIALS` 白名单核对，禁止新资产偷偷退回纯色材质。
 
 ### 12.3 UV 与材质绑定（Blender）
 
 - 盒式投影：按面法线主轴选 UV 轴（X 面 → (Y,Z)，Y 面 → (X,Z)，Z 面 → (X,Y)），
-  `uv = 世界坐标 / tile_m`，采样器 REPEAT；因此任意大面连续平铺、无需手工展 UV。
+  `uv = 坐标 / tile_m`，采样器 REPEAT；因此任意大面连续平铺、无需手工展 UV。
+- 坐标空间：
+  - `space="world"`（默认）：世界坐标，跨子件连续（起重机等）；
+  - `space="local"`：mesh 自身局部坐标，UV 相位不随工作台布局位置变化（单 mesh 道具 / 设施 / 模块 / 旧小镇）；
+  - `space="root"`：`root.matrix_world.inverted() @ obj.matrix_world`，多节点船体专用（跨子件连续、不烘入工作台摆位，批次 B 起）。
 - UV 层名固定 `UVMap`；每个 mesh 的 `len(uv) == len(loops)`。
 - 节点：Image Texture（sRGB / Linear / REPEAT）→ Principled Base Color；
   Roughness / Metallic 来自 spec；背面剔除关闭。
 - 生成器入口：`build_all()` 在 `assembly.build_collection()` 之后调用
   `sn_shared_materials.apply_collection()`；`report()` 调 `verify_collection()` 自检。
-- 每个对象保留自己的 Pivot / 根层级；UV 用世界坐标，不因父级平移而改变图案尺度。
+- 每个对象保留自己的 Pivot / 根层级；世界空间 UV 不因父级平移而改变图案尺度。
 
 ### 12.4 导出、运行时与验收
 
@@ -425,8 +494,10 @@ docs/design/ASSET_MAP.md                              增加一行映射
   BIN 里不再重复图片字节；GLB 与贴图同时同步到 `dev_mods/core/assets/models/props/`。
 - 运行时：`ContentAssetLoader.load_scene()` 的 `_apply_shared_textures()` 把外部 URI
   解析成同一个 `Texture2D` 实例；多件资产因此共享贴图，`PortStage` 的材质签名合批可合并。
-- 验收：`verify_cranes_glb.py`（外部 URI、贴图字节与授权源一致、每个图元有 `TEXCOORD_0`、
-  世界空间 bbox）+ `tools/godot/verify_crane_materials.gd`（4 个 GLB 的贴图实例共享、UV 存在）。
+- 验收：`verify_cranes_glb.py` / `verify_legacy_uv_glb.py`（外部 URI、贴图字节与授权源一致、
+  每个图元有 `TEXCOORD_0`、世界空间 bbox）+ `tools/godot/verify_crane_materials.gd` /
+  `tools/godot/verify_legacy_uv_materials.gd`（贴图实例共享、UV 存在）。
 - 工作台视口约定（2026-10-22）：**Solid 统一 `color_type = SINGLE` + `single_color = 0.55 灰`**，各 3D 视口 `shading.type = SOLID`，避免「有贴图的资产带色、旧的纯色资产发灰」混看；预览渲染脚本临时切 `TEXTURE` 出图，结束后恢复灰模（`render_kit_preview.py` 的 `_capture_stage_state` / `_restore_stage_state` 已覆盖）。
-- 旧资产迁移清单（后续）：31 件铁港道具、6 件港口设施、11 件模块、4 艘船 —— 都需要先补 UV
-  再切 `SN_Tex_*` 并重导 GLB，不在本批范围内。
+- 旧资产迁移状态：**批次 A（31 件铁港道具 + 6 件港口设施）已完成（2026-10-22，§11.15）**；
+  **批次 B（11 件船模块 + 4 艘船 + 旧小镇剩余 5 件，实际重导 21 个 GLB）也已完成（§11.16）**。
+  仅 `SN_Ship_Prototype`（`model.ship.prototype` 遗留键）仍是旧纯色，留待后续清理批次。

@@ -23,6 +23,17 @@ Blender 内：import runpy; runpy.run_path(<本文件>, run_name="__main__")
 """
 
 import math
+import os
+import sys
+
+try:
+    _HERE = os.path.dirname(os.path.abspath(__file__))
+except NameError:  # Blender Text Editor / 无 __file__ 时回退
+    _HERE = os.getcwd()
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+
+import rig_kit  # noqa: E402
 
 COLLECTION = "SN_Ironclad_Prototype"
 OBJECT = "SN_Ironclad"
@@ -552,78 +563,16 @@ def build_superstructure(m):
 # --------------------------------------------------------------------------- #
 
 def build_masts(m):
-    for spec in MASTS:
-        x = spec["x"]
-        # 下桅 + 上桅 + 桅顶球
-        m.add(*taper_cyl((x, 0.0, DECK_Z), (x, 0.0, spec["lower_top"]), 0.40, 0.24, 8), WOOD)
-        m.add(*taper_cyl((x, 0.0, spec["lower_top"] - 0.3), (x, 0.0, spec["top_top"]), 0.17, 0.085, 8), WOOD)
-        m.add(*translate(revolved([(spec["top_top"] - 0.06, 0.10), (spec["top_top"] + 0.12, 0.10),
-                                   (spec["top_top"] + 0.24, 0.0)], 8), x, 0.0, 0.0), BRASS)
-        m.add(*translate(revolved([(spec["lower_top"] - 0.45, 0.30), (spec["lower_top"] - 0.30, 0.30)], 8),
-                         x, 0.0, 0.0), MET)
-        # 横桁 + 收帆（帆布卷）+ 桁端铜帽
-        for z, half in spec["yards"]:
-            m.add(*taper_cyl((x, -half, z), (x, half, z), 0.075, 0.075, 8), WOOD)
-            m.add(*taper_cyl((x, -half, z), (x, -half + 0.55, z), 0.11, 0.11, 8), WOOD)
-            m.add(*taper_cyl((x, half - 0.55, z), (x, half, z), 0.11, 0.11, 8), WOOD)
-            m.add(*taper_cyl((x, -0.66 * half, z - 0.26), (x, 0.66 * half, z - 0.26),
-                             0.20, 0.20, 8), CANVAS)
-        # 桅顶旗（主桅）
-        if spec["top_top"] > 23.5:
-            _flag(m, x, -0.02, 2.0, spec["top_top"] - 0.95, spec["top_top"] - 0.50)
-
-    # 艏斜桁承座：甲板楔形基座托住 gammoning 箱，艏柱顶延伸座托住副斜桁鞍座
-    bottom = [(24.2, -0.75, DECK_Z), (25.6, -0.75, DECK_Z),
-              (25.6, 0.75, DECK_Z), (24.2, 0.75, DECK_Z)]
-    top = [(24.6, -0.32, 6.0), (25.2, -0.32, 6.0),
-           (25.2, 0.32, 6.0), (24.6, 0.32, 6.0)]
-    m.add(*hexa(bottom, top), IRON)
-    m.add(*box((26.9, -0.30, 4.95), (27.9, 0.30, 7.05)), IRON)
-    m.add(*box((24.4, -0.42, 5.9), (25.4, 0.42, 6.6)), IRON)   # 绑扎块（落在基座顶 6.0 上）
-    m.add(*taper_cyl((25.0, 0.0, 6.2), (31.5, 0.0, 8.6), 0.30, 0.10, 8), WOOD)
-    m.add(*taper_cyl((27.5, 0.0, 7.45), (30.4, 0.0, 8.9), 0.14, 0.09, 6), WOOD)
-    m.add(*box((27.2, -0.24, 6.9), (27.9, 0.24, 7.7)), MET)     # 副斜桁鞍座（落在艏柱顶座上）
-
-    # 锚吊架 + 吊链（让舷侧锚读作吊挂而不是穿过舷墙）
-    for s in (-1.0, 1.0):
-        b = beam_deck(23.0)
-        ya, yb = sorted((s * (b - 0.30), s * (b + 0.35)))
-        m.add(*box((22.75, ya, 5.05), (23.25, yb, 5.35)), WOOD)
-        m.add(*taper_cyl((23.0, s * (b - 0.10), 5.32),
-                         (23.0, s * (b - 0.10), 6.22), 0.045, 0.045, 5), MET)
+    """三桅 + 横桁 + 收帆 + 艏斜桁承座 + 锚吊架（几何来自 rig_kit.ironclad_masts）。"""
+    b = rig_kit.builder(m, sys.modules[__name__], legacy=True)
+    rig_kit.ironclad_masts(b, MASTS, {"deck_z": DECK_Z, "beam_deck": beam_deck})
 
 
 def build_rigging(m):
-    fore = MASTS[0]
-    main = MASTS[1]
-    mizzen = MASTS[2]
-    bow_tip = (31.5, 0.0, 8.6)
-    fore_top = (fore["x"], 0.0, fore["top_top"])
-    main_top = (main["x"], 0.0, main["top_top"])
-    mizzen_top = (mizzen["x"], 0.0, mizzen["top_top"])
-    # 前后支索
-    lines = [
-        (bow_tip, fore_top), (fore_top, main_top), (main_top, mizzen_top),
-        (mizzen_top, (-27.5, 0.0, 5.4)),
-        ((25.5, 0.0, 6.0), (fore["x"], 0.0, fore["top_top"] - 1.2)),
-        ((24.5, 0.0, 5.6), (fore["x"], 0.0, fore["top_top"] - 3.0)),
-    ]
-    # 侧支索：每桅 3 根/侧 到舷墙
-    for spec in MASTS:
-        x = spec["x"]
-        b = beam_deck(x)
-        for s in (-1.0, 1.0):
-            for dx in (-1.6, 0.0, 1.6):
-                top = (x, 0.0, spec["lower_top"] - 0.35)
-                foot = (x + dx, s * (b - 0.10), 5.48)
-                lines.append((top, foot))
-    for p0, p1 in lines:
-        m.add(*strut(p0, p1, 0.032), MET)
+    """静索 / 侧支索（几何来自 rig_kit.ironclad_rigging）。"""
+    b = rig_kit.builder(m, sys.modules[__name__], legacy=True)
+    rig_kit.ironclad_rigging(b, MASTS, {"beam_deck": beam_deck})
 
-
-# --------------------------------------------------------------------------- #
-# 6. 舷墙 + 黄铜压条
-# --------------------------------------------------------------------------- #
 
 def build_bulwark(m):
     xs = [x for x in STATIONS if -25.0 <= x <= 26.0]

@@ -135,7 +135,7 @@ Pedestal  Root → Deck Root + Socket_Weapon_Starboard # z +0.33
 ## 8. 已知边界
 
 - 本批不登记 Core manifest、不接运行时换装 / `ShipVisualAssembler`；socket 是模型侧契约，运行时装配留到后续阶段。
-- 桅杆只做桅身 / 桅顶瞭望台 / 横桁 / 眼板，不含帆面与索具（留给后续 `rig_kit`）；烟囱不含蒸汽几何（VFX 在 Godot 侧做）。
+- 桅杆只做桅身 / 桅顶瞭望台 / 横桁 / 眼板，不含帆面与索具（已由 M0-4 `rig_kit` 交付 12 件 `SN_Rig_*`：桅杆 / 横桁 / 斜桁 / 帆杠 / 艏斜桁 / 三种帆面 / 侧支索 / 支索 / 动索，见 [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)）；烟囱不含蒸汽几何（VFX 在 Godot 侧做）。
 - 火炮不带底座（根 = 耳轴），单独导入时轴心在地面以上；独立摆放需要一个承托件或把它放进炮架 / 炮塔。
 - 旧纯色材质 `SN_*` 资产未迁移；本批全部是 `SN_Tex_*` 共享贴图。
 

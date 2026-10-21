@@ -42,6 +42,10 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_campaign_state.gd",
 	"res://framework/tests/cases/test_zip_pack.gd",
 	"res://framework/tests/cases/test_content_asset_loader.gd",
+	"res://framework/tests/cases/test_legacy_uv_assets.gd",
+	"res://framework/tests/cases/test_legacy_uv_assets_b.gd",
+	"res://framework/tests/cases/test_ship_weapon_sockets.gd",
+	"res://framework/tests/cases/test_rig_kit.gd",
 	"res://framework/tests/cases/test_no_core_ids.gd",
 	"res://framework/tests/cases/test_stage_host.gd",
 	"res://framework/tests/cases/test_world_generator.gd",
@@ -58,14 +62,25 @@ const SUITE_PATHS := [
 var _started := false
 
 
+func _suite_filter() -> String:
+	## 可选单套件过滤：`-- --suite=<名字片段>`（用于只跑资产 / 单一子系统套件）。
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--suite="):
+			return arg.split("=", 1)[1]
+	return ""
+
+
 func _process(_delta: float) -> bool:
 	if _started:
 		return true
 	_started = true
 	var total := 0
 	var failed := 0
+	var filter := _suite_filter()
 	var started_at := Time.get_ticks_msec()
 	for suite_path in SUITE_PATHS:
+		if filter != "" and not String(suite_path).get_file().get_basename().contains(filter):
+			continue
 		var script: Script = load(suite_path)
 		if script == null or not script.can_instantiate():
 			printerr("cannot load suite: %s" % suite_path)

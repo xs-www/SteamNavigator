@@ -26,6 +26,17 @@ Blender 内：import runpy; runpy.run_path(<本文件>, run_name="__main__")
 """
 
 import math
+import os
+import sys
+
+try:
+    _HERE = os.path.dirname(os.path.abspath(__file__))
+except NameError:  # Blender Text Editor / 无 __file__ 时回退
+    _HERE = os.getcwd()
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+
+import rig_kit  # noqa: E402
 
 # ============================================================
 # 参数区
@@ -1095,77 +1106,53 @@ def build_deckhouse():
 # ============================================================
 
 def build_mast(m):
-    x, z0, z_low, z_top = m["x"], m["z0"], m["z_low"], m["z_top"]
+    """蒸汽货轮桅杆（几何来自 rig_kit.steamer_mast）。"""
     part = Part()
-    part.add(taper_cyl((x, 0, z0), (x, 0, z_low), 0.36, 0.22, 8), MAT_WOOD)
-    part.add(taper_cyl((x, 0, z_low - 0.18), (x, 0, z_top), 0.17, 0.08, 8), MAT_WOOD)
-    part.add(box((x - 0.26, -0.30, z_low - 0.12), (x + 0.26, 0.30, z_low + 0.08)),
-             MAT_WOOD)
-    for frac in (0.30, 0.62):
-        z = z0 + (z_low - z0) * frac
-        r = 0.36 + (0.22 - 0.36) * frac + 0.03
-        part.add(taper_cyl((x, 0, z - 0.07), (x, 0, z + 0.07), r, r, 8), MAT_METAL)
-    part.add(taper_cyl((x, 0, z_top - 0.02), (x, 0, z_top + 0.18), 0.10, 0.04, 6),
-             MAT_METAL)
+    b = rig_kit.builder(part, sys.modules[__name__])
+    rig_kit.steamer_mast(b, m)
     return part
 
 
 def build_yards():
+    """蒸汽货轮横桁 + 收帆卷（几何来自 rig_kit.steamer_yard）。"""
     part = Part()
-    for m in MASTS:
-        z, W = m["yard_z"], m["yard_w"]
-        x = m["x"] + 0.30
-        part.add(taper_cyl((x, -W * 0.5, z), (x, W * 0.5, z), 0.13, 0.10, 6), MAT_WOOD)
-        part.add(taper_cyl((x - 0.08, -m["sail_w"] * 0.5, z - 0.09),
-                           (x - 0.08, m["sail_w"] * 0.5, z - 0.09), 0.24, 0.24, 8),
-                 MAT_DECK)
-        for sy in (-1, 1):
-            part.add(box((x - 0.08, sy * W * 0.5 - 0.07, z - 0.07),
-                         (x + 0.10, sy * W * 0.5 + 0.07, z + 0.07)), MAT_METAL)
+    b = rig_kit.builder(part, sys.modules[__name__])
+    for mast in MASTS:
+        rig_kit.steamer_yard(b, mast)
     return part
 
 
 def build_bowsprit():
-    b = BOWSPRIT
+    """蒸汽货轮艏斜桁（几何来自 rig_kit.steamer_bowsprit）。"""
     part = Part()
-    part.add(taper_cyl((b["x0"], 0, b["z0"]), (b["x1"], 0, b["z1"]), b["r0"], b["r1"], 8),
-             MAT_WOOD)
-    part.add(box((27.15, -0.24, 3.10), (27.55, 0.24, 4.05)), MAT_IRON)
-    part.add(taper_cyl((b["x1"], 0, b["z1"] - 0.03), (b["x1"] - 0.35, 0, b["z1"] - 0.03),
-                       0.13, 0.13, 6), MAT_METAL)
+    b = rig_kit.builder(part, sys.modules[__name__])
+    rig_kit.steamer_bowsprit(b, {
+        "x0": BOWSPRIT["x0"], "z0": BOWSPRIT["z0"],
+        "x1": BOWSPRIT["x1"], "z1": BOWSPRIT["z1"],
+        "r0": BOWSPRIT["r0"], "r1": BOWSPRIT["r1"],
+        "gammon_lo": (27.15, -0.24, 3.10),
+        "gammon_hi": (27.55, 0.24, 4.05),
+    })
     return part
 
 
 def build_rigging():
-    fore, main = MASTS[0], MASTS[1]
-    lines = [
-        ((fore["x"], 0.0, fore["z_top"] - 0.10), (30.80, 0.0, 5.02)),
-        ((fore["x"], 0.0, fore["z_top"] - 0.15), (main["x"], 0.0, main["z_top"] - 0.20)),
-        ((30.80, 0.0, 5.02), (27.70, 0.0, 1.15)),
-    ]
-    for side in (1, -1):
-        lines += [
-            ((fore["x"], side * 0.22, fore["z_top"] - 0.70),
-             (23.45, side * 2.25, 5.58)),
-            ((fore["x"], side * 0.22, fore["z_top"] - 0.70),
-             (21.85, side * 2.35, 5.58)),
-            ((fore["x"] + 0.30, side * 3.40, fore["yard_z"]),
-             (fore["x"], side * 0.10, fore["z_top"] - 0.05)),
-            ((main["x"], side * 0.22, main["z_top"] - 0.70),
-             (-24.95, side * 2.95, 5.30)),
-            ((main["x"], side * 0.22, main["z_top"] - 0.70),
-             (-22.70, side * 3.05, 5.30)),
-            ((main["x"], side * 0.22, main["z_top"] - 0.20),
-             (-27.25, side * 1.05, 5.40)),
-        ]
-    for _n, hx, hy, hz, tx, ty, tz, _r0, _r1 in BOOMS:
-        mast = fore if _n == "Fore" else main
-        for side in (1, -1):
-            lines.append(((tx, side * ty, tz),
-                          (mast["x"], side * 0.22, mast["z_top"] - 0.80)))
+    """蒸汽货轮索具（几何来自 rig_kit.steamer_rigging；锚点为本船布局）。"""
     part = Part()
-    for p0, p1 in lines:
-        part.add(taper_cyl(p0, p1, 0.038, 0.038, 4), MAT_METAL)
+    b = rig_kit.builder(part, sys.modules[__name__])
+    rig_kit.steamer_rigging(b, {
+        "masts": MASTS,
+        "booms": BOOMS,
+        "anchors": {
+            "fore_head": (30.80, 0.0, 5.02),
+            "stem": (27.70, 0.0, 1.15),
+            "fore_shroud_a": (23.45, 2.25, 5.58),
+            "fore_shroud_b": (21.85, 2.35, 5.58),
+            "main_shroud_a": (-24.95, 2.95, 5.30),
+            "main_shroud_b": (-22.70, 3.05, 5.30),
+            "main_truck": (-27.25, 1.05, 5.40),
+        },
+    })
     return part
 
 
