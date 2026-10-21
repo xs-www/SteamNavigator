@@ -168,6 +168,11 @@ var _port_status_bar: PanelContainer = null
 ## Resolved optional HUD icon textures (key -> Texture2D or null). Assets are
 ## frozen after bootstrap, so the cache never needs invalidation.
 var _hud_icon_cache: Dictionary = {}
+## 4.3.5 / U8：演出期间顶栏「煤 / 水」读数 Label。`_tick_presentation` 每帧只改这两
+## 个 Label 的文本（出发库存 - 费率 × 已航行小时），不写领域状态、不重建页面；
+## `_rebuild_ui` 清空引用，重建后的 chrome 回到真实 state 读数。
+var _hud_coal_value: Label = null
+var _hud_water_value: Label = null
 @onready var _page_margin: MarginContainer = $PageMargin
 @onready var _fade_layer: ColorRect = $TransitionLayer
 var _transitioning: bool = false
@@ -285,6 +290,9 @@ func _rebuild_ui() -> void:
 		child.queue_free()
 	_top_chrome = null
 	_at_sea_screen = null
+	# 4.3.5 / U8：顶栏读数 Label 随页面重建一起失效，避免演出继续写已释放的节点。
+	_hud_coal_value = null
+	_hud_water_value = null
 	if _context == null:
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
@@ -474,8 +482,8 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 			_fmt(float(ship.get("free_cargo_capacity", 0.0))),
 			_fmt(float(ship.get("cargo_capacity", 0.0))),
 		], COLOR_TEAL, ""],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS, HUD_ICON_KEYS["coal"]],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL, HUD_ICON_KEYS["water"]],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS, HUD_ICON_KEYS["coal"], "CoalChip"],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL, HUD_ICON_KEYS["water"], "WaterChip"],
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
 			_fmt(float(ship.get("durability", 0.0))),
 			_fmt(float(ship.get("max_durability", 0.0))),
@@ -491,7 +499,14 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 			"",
 		])
 	for stat in detail_stats:
-		row2.add_child(_stat_chip(stat[0], stat[1], stat[2], 10, 16, String(stat[3])))
+		var chip_key := String(stat[4]) if stat.size() > 4 else ""
+		var stat_chip := _stat_chip(stat[0], stat[1], stat[2], 10, 16, String(stat[3]), chip_key)
+		row2.add_child(stat_chip)
+		# 4.3.5 / U8：演出中只有煤 / 水读数需要逐帧插值，保存它们的数值 Label。
+		if chip_key == "CoalChip":
+			_hud_coal_value = stat_chip.find_child("Value", true, false) as Label
+		elif chip_key == "WaterChip":
+			_hud_water_value = stat_chip.find_child("Value", true, false) as Label
 	var bottom_spacer := Control.new()
 	bottom_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row2.add_child(bottom_spacer)
@@ -584,8 +599,12 @@ func _current_port_label(data: Dictionary) -> String:
 	return _tr(String(port.get("name_key", "")), String(port.get("id", "")))
 
 
-func _stat_chip(label_text: String, value_text: String, accent: Color, label_size: int = 9, value_size: int = 14, icon_key: String = "") -> Control:
+## One compact HUD stat. `chip_key`（4.3.5 / U8）只给需要逐帧改读数的 chip（煤 / 水）
+## 一个稳定名字，并把数值 Label 命名为 `Value`，Shell 据此保存引用。
+func _stat_chip(label_text: String, value_text: String, accent: Color, label_size: int = 9, value_size: int = 14, icon_key: String = "", chip_key: String = "") -> Control:
 	var chip := HBoxContainer.new()
+	if not chip_key.is_empty():
+		chip.name = chip_key
 	chip.add_theme_constant_override("separation", 6)
 	var icon := _hud_icon(icon_key)
 	if icon != null:
@@ -602,7 +621,10 @@ func _stat_chip(label_text: String, value_text: String, accent: Color, label_siz
 	column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	column.add_theme_constant_override("separation", 0)
 	column.add_child(_label(label_text, label_size, COLOR_MUTED))
-	column.add_child(_label(value_text, value_size, accent))
+	var value_label := _label(value_text, value_size, accent)
+	if not chip_key.is_empty():
+		value_label.name = "Value"
+	column.add_child(value_label)
 	chip.add_child(column)
 	return chip
 
@@ -2115,6 +2137,11 @@ func _start_voyage_presentation(data: Dictionary) -> void:
 				- float((voyage as Dictionary).get("departure_time", 0.0))
 	if hours <= 0.0:
 		hours = VoyagePresentation.FALLBACK_HOURS
+	# 4.3.5 / U8：演出中顶栏读数的出发库存与每小时费率。费率与领域 `voyage` 同一口径：
+	# 计划消耗 ÷ 计划时长（预览缺失时才退回演出时长）。
+	var rate_hours := maxf(0.0, float(preview.get("duration_hours", 0.0)))
+	if rate_hours <= 0.0:
+		rate_hours = hours
 	_presentation_voyage = {
 		"origin": origin,
 		"destination": destination,
@@ -2122,6 +2149,10 @@ func _start_voyage_presentation(data: Dictionary) -> void:
 		"arrival_time": float(preview.get("arrival_time", _context.state.now() + hours)),
 		"distance": float(preview.get("distance", 0.0)),
 		"strategy_id": String(preview.get("strategy_id", "")),
+		"departure_coal": float(preview.get("coal_available", 0.0)),
+		"departure_water": float(preview.get("water_available", 0.0)),
+		"coal_rate": float(preview.get("coal_required", 0.0)) / rate_hours if rate_hours > 0.0 else 0.0,
+		"water_rate": float(preview.get("water_required", 0.0)) / rate_hours if rate_hours > 0.0 else 0.0,
 	}
 	_presentation_summary = {}
 	var summary: Variant = data.get("summary", null)
@@ -2180,6 +2211,11 @@ func _start_explore_presentation(data: Dictionary) -> void:
 		"arrival_time": float(presentation.get("arrival_time", _context.state.now() + hours)),
 		"distance": float(preview.get("distance", 0.0)),
 		"strategy_id": String(presentation.get("strategy_id", _selected_strategy)),
+		# 4.3.5 / U8：探索出航的顶栏连续读数（领域 presentation 已带出发库存与费率）。
+		"departure_coal": float(presentation.get("departure_coal", 0.0)),
+		"departure_water": float(presentation.get("departure_water", 0.0)),
+		"coal_rate": float(presentation.get("coal_rate", 0.0)),
+		"water_rate": float(presentation.get("water_rate", 0.0)),
 	}
 	_presentation_summary = {}
 	_presentation = VoyagePresentation.new()
@@ -2266,6 +2302,39 @@ func _tick_presentation(delta: float) -> void:
 			_finish_presentation()
 		_:
 			pass
+	# 4.3.5 / U8：顶栏煤 / 水读数随已航行小时连续下降。只改 Label 文本，
+	# 不写领域状态、不重建页面（`_presentation` 结束时本调用自然变成 no-op）。
+	_update_presentation_resources()
+
+
+## 4.3.5 / U8：演出中的顶栏资源读数 = `出发库存 - 每小时费率 × 已航行小时`，钳位到 0。
+## 纯表现：领域状态在整个演出期间不变，实际扣款只在结算时一次性发生；`_rebuild_ui`
+## 重建 chrome 后 Label 回到真实 state（事件延误 / 漂流 / 掉头的实际扣款由此生效）。
+func _update_presentation_resources() -> void:
+	if _presentation == null:
+		return
+	var elapsed := _presentation.elapsed_hours()
+	_update_hud_resource(
+		_hud_coal_value,
+		float(_presentation_voyage.get("departure_coal", 0.0)),
+		float(_presentation_voyage.get("coal_rate", 0.0)),
+		elapsed
+	)
+	_update_hud_resource(
+		_hud_water_value,
+		float(_presentation_voyage.get("departure_water", 0.0)),
+		float(_presentation_voyage.get("water_rate", 0.0)),
+		elapsed
+	)
+
+
+func _update_hud_resource(
+	label: Label, departure: float, rate: float, elapsed_hours: float
+) -> void:
+	if label == null or not is_instance_valid(label):
+		return
+	var remaining := maxf(0.0, departure - maxf(0.0, rate) * maxf(0.0, elapsed_hours))
+	label.text = _fmt(remaining)
 
 
 ## Ends the presentation on the settlement screen (or the overview when the

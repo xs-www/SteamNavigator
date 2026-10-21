@@ -1,7 +1,8 @@
 class_name VoyageService
 extends RefCounted
 ## @static-doc
-## 作用：航行执行：校验预览、扣补给/工资、抽取事件、事件选择、抵达结算与失败回滚。
+## 作用：航行执行：校验预览、出发扣工资、抽取事件、事件选择、抵达结算（按实际航行
+## 小时一次性扣煤水）与失败回滚。
 ##
 ## - 关键依赖：`VoyageCalculator`、`ShipOps`、`MapOps`、`ConditionEvaluator`、
 ##   `EffectExecutor`、`ContractOps`、`NpcTraderSimulator`、`DebtService`、`SaveService`、
@@ -15,7 +16,13 @@ extends RefCounted
 ##   下单港仓库并写入 `summary.completed_orders`）、结算主线/普通委托、推进 NPC、
 ##   检查逾期、刷新普通委托池并自动存档。
 ## - 工资通过 `state.record_expense()` 计入统计支出；委托收入在 ContractOps 结算时计入收入。
-## - 行动顺序固定：扣费/补给 → 生成 voyage → 选事件 → 若无事件立即抵达。
+## - 行动顺序固定：扣工资 → 生成 voyage（存出发库存与每小时煤水费率）→ 选事件 →
+##   若无事件立即抵达结算。
+## - 连续消耗（阶段 4.3.5 / U8）：出发**不扣**煤水，只扣工资；`voyage` 快照记录
+##   `departure_coal` / `departure_water` 与 `coal_rate` / `water_rate`（每小时消耗 =
+##   预览计划消耗 ÷ 计划时长）。`_complete_arrival` 按 `elapsed = arrival_time -
+##   departure_time`（已含事件延误）一次性扣 `rate × elapsed`，演出期间顶栏只做插值
+##   读数、不写领域状态。事件 payload 仍报计划消耗，语义不变。
 ## - 坐标世界（海图数据源）与抽象地图同步：`_complete_arrival` 记录访问并揭示泊位；
 ##   4.3.3 / U4 起在揭示前先 `_trace_voyage_fog` 沿实际航线把沿途迷雾落账（沿海
 ##   格子留 EXPLORED），旧存档没有 `world_map` 时这些调用全部 no-op。
@@ -25,7 +32,8 @@ extends RefCounted
 ## ## 重点逻辑
 ## ### `start(context, destination_id, strategy_id)`
 ## - 先调用 VoyageCalculator 生成可复现预览；feasible=false 时不修改状态。
-## - 工资、煤、水全部扣除后写入 `voyage` 快照；事件基础延误已计入 arrival_time。
+## - 只扣工资后写入 `voyage` 快照（含出发煤水库存与每小时费率）；事件基础延误已计入
+##   arrival_time。煤水的实际扣除发生在抵达结算，不在出发时。
 ## - 事件选项仅保存 ID；选择时重新从注册表读取效果，避免存档注入效果对象。
 ##
 ## ### `choose_option(context, option_id)`
@@ -34,6 +42,9 @@ extends RefCounted
 ## - 成功后调用 `_complete_arrival()`；autosave 只在成功抵达后发生。
 ##
 ## ### `_complete_arrival(context)`
+## - 先按 `rate × (arrival_time - departure_time)` 扣煤水（事件 `add_delay_hours`
+##   会推后 arrival_time，因此延误小时也计费；钳位到 0），summary 附
+##   `coal_used_actual` / `water_used_actual` 供 UI / 测试读取。
 ## - 以 arrival_time 推进游戏时间并标记目的港 visited/discovered。
 ## - `_trace_voyage_fog` 先从 `WorldMap.edges`（缺失时 `RouteCalculator` 的
 ##   `bezier_path`，再缺就两港直线）采样沿途迷雾，`_reveal_world_fog` 再揭示泊位。
@@ -67,8 +78,13 @@ static func start(context, destination_id: String, strategy_id: String) -> Dicti
 	if wages > 0:
 		state.add_money(-wages)
 		state.record_expense(wages)
-	ship["coal"] = maxf(0.0, float(ship.get("coal", 0.0)) - float(preview.get("coal_required", 0.0)))
-	ship["water"] = maxf(0.0, float(ship.get("water", 0.0)) - float(preview.get("water_required", 0.0)))
+	# 4.3.5 / U8：出发只扣工资。煤水库存原样留在船上，演出中顶栏按费率插值读数；
+	# 实际扣款统一在 `_complete_arrival` 按实际航行小时一次性落账。
+	var departure_coal := float(ship.get("coal", 0.0))
+	var departure_water := float(ship.get("water", 0.0))
+	var planned_hours := maxf(0.0, float(preview.get("duration_hours", 0.0)))
+	var coal_rate := float(preview.get("coal_required", 0.0)) / planned_hours if planned_hours > 0.0 else 0.0
+	var water_rate := float(preview.get("water_required", 0.0)) / planned_hours if planned_hours > 0.0 else 0.0
 
 	var departure_time := state.now()
 	var arrival_time := float(preview.get("arrival_time", departure_time))
@@ -84,6 +100,12 @@ static func start(context, destination_id: String, strategy_id: String) -> Dicti
 		"injuries": 0,
 		"event": null,
 		"status": "at_sea",
+		# 连续消耗（4.3.5）：出发库存与每小时煤水费率。结算时用
+		# `rate × (arrival_time - departure_time)` 一次性扣款。
+		"departure_coal": departure_coal,
+		"departure_water": departure_water,
+		"coal_rate": coal_rate,
+		"water_rate": water_rate,
 	}
 	state.data["voyage"] = voyage
 
@@ -274,6 +296,16 @@ static func _complete_arrival(context) -> Dictionary:
 	_trace_voyage_fog(state, voyage, hub)
 	_reveal_world_fog(state, destination, hub)
 
+	# 4.3.5 / U8：整段航程的煤水按实际航行小时一次性落账。出发时没有扣过煤水，
+	# 这里是唯一的扣款点；事件延误 / 事件效果都会推后 `arrival_time`，因此一并计费。
+	var departure_time := float(voyage.get("departure_time", arrival_time))
+	var elapsed_hours := maxf(0.0, arrival_time - departure_time)
+	var ship := state.ship()
+	var coal_used_actual := maxf(0.0, float(voyage.get("coal_rate", 0.0)) * elapsed_hours)
+	var water_used_actual := maxf(0.0, float(voyage.get("water_rate", 0.0)) * elapsed_hours)
+	ship["coal"] = maxf(0.0, float(ship.get("coal", 0.0)) - coal_used_actual)
+	ship["water"] = maxf(0.0, float(ship.get("water", 0.0)) - water_used_actual)
+
 	# Craft orders that finished while the ship was under way are delivered to
 	# their owning port warehouse on arrival (the ship may be elsewhere).
 	var services := settle_arrival_services(context, destination, arrival_time, voyage)
@@ -312,6 +344,9 @@ static func _complete_arrival(context) -> Dictionary:
 		"completed_orders": completed_orders,
 		"offers_refreshed": true,
 		"stats": stats.duplicate(true),
+		# 4.3.5 / U8：实际落账的煤水（= 每小时费率 × 实际航行小时，含事件延误）。
+		"coal_used_actual": coal_used_actual,
+		"water_used_actual": water_used_actual,
 		"events": events,
 	}
 	return summary

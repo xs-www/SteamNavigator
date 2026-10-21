@@ -236,6 +236,143 @@ func test_skip_finishes_the_voyage_early() -> void:
 		"skipping must not take the full remaining voyage time (%d frames)" % frames)
 
 
+# ── 4.3.5 / U8: continuous consumption ──
+
+## 普通航行（无途中事件）：`voyage.start` 同步结算抵达，但扣款只按实际航行小时
+## `rate × duration`；演出期间顶栏读数从出发库存连续下降，而领域状态在整个演出
+## 中保持不变（不在航程中逐帧写状态），演出结束后的 chrome 回到真实 state 读数。
+func test_normal_voyage_charges_fuel_by_the_hour_at_arrival() -> void:
+	var bundle := _mount(4321)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var destination := _first_destination(context)
+	var preview_result := context.commands.execute(&"voyage.preview", {
+		"destination_id": destination,
+		"strategy_id": STANDARD_STRATEGY,
+	})
+	assert_true(bool(preview_result.get("ok", false)), "the voyage previews")
+	var preview: Dictionary = preview_result.get("data", {})
+	var coal_before := float(context.state.ship().get("coal", 0.0))
+	var water_before := float(context.state.ship().get("water", 0.0))
+	var hours := maxf(0.0001, float(preview.get("duration_hours", 0.0)))
+	var coal_rate := float(preview.get("coal_required", 0.0)) / hours
+	var water_rate := float(preview.get("water_required", 0.0)) / hours
+
+	shell._run_command(&"voyage.start", {"destination_id": destination, "strategy_id": STANDARD_STRATEGY})
+	assert_not_null(shell._presentation, "the voyage hands over to the演出")
+	assert_false(shell._presentation.has_event, "the fixture voyage has no event")
+	# 领域结算（同步发生）按实际小时扣款：rate × duration，而不是预览整包扣除。
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)),
+		maxf(0.0, coal_before - coal_rate * hours), 0.02,
+		"arrival charges coal = hourly rate × actual hours")
+	assert_almost_eq(float(context.state.ship().get("water", 0.0)),
+		maxf(0.0, water_before - water_rate * hours), 0.02,
+		"arrival charges water = hourly rate × actual hours")
+	var summary: Dictionary = shell._presentation_summary
+	if summary.is_empty():
+		summary = shell._settlement_summary
+	assert_almost_eq(float(summary.get("coal_used_actual", -1.0)), coal_rate * hours, 0.02,
+		"the summary reports the actual coal consumed")
+	var settled_coal := float(context.state.ship().get("coal", 0.0))
+
+	# 演出中：顶栏读数从出发库存连续下降，但领域库存不变（只改 Label 文本）。
+	assert_true(_drive_until(shell, func() -> bool: return _find_at_sea(shell) != null, 8.0),
+		"the chart page mounts")
+	_drive_until(shell, func() -> bool: return shell._presentation.veil <= 0.001, 4.0)
+	var first_text := _hud_coal_text(shell)
+	assert_false(first_text.is_empty(), "the chrome exposes a coal value label during the演出")
+	_drive_seconds(shell, 0.6)
+	var second_text := _hud_coal_text(shell)
+	assert_true(second_text.to_float() < first_text.to_float(),
+		"the coal readout falls continuously with the voyage (%s → %s)" % [first_text, second_text])
+	assert_true(_hud_water_text(shell).to_float() > 0.0, "the water readout is a live number")
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)), settled_coal, 0.0001,
+		"the domain stock does not change during the演出 (presentation-only readout)")
+	assert_true(_drive_until(shell, func() -> bool: return shell._presentation == null, MAX_DRIVE_SECONDS),
+		"the演出 finishes on its own")
+	assert_eq(_hud_coal_text(shell), shell._fmt(float(context.state.ship().get("coal", 0.0))),
+		"after the演出 the chrome reads the settled domain stock again")
+
+
+## 普通航行（有途中事件 + 延误）：`voyage.start` 只扣工资（事件让航次仍在途中），
+## 演出中读数下降但库存不动；事件结算按实际小时扣款，事件延误小时一并计费。
+func test_event_delay_is_included_in_the_fuel_charged_on_arrival() -> void:
+	var bundle := _mount(4321)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var destination := _first_destination(context)
+	var forced := _force_delayed_event_context(context, destination)
+	assert_false(forced.is_empty(), "the fixture finds an event with a delayed option")
+	if forced.is_empty():
+		return
+	var preview_result := context.commands.execute(&"voyage.preview", {
+		"destination_id": destination,
+		"strategy_id": STANDARD_STRATEGY,
+	})
+	assert_true(bool(preview_result.get("ok", false)), "the voyage previews")
+	var preview: Dictionary = preview_result.get("data", {})
+	var coal_before := float(context.state.ship().get("coal", 0.0))
+	var water_before := float(context.state.ship().get("water", 0.0))
+	var money_before := context.state.money()
+	var wages := int(preview.get("crew_wages", 0))
+
+	shell._run_command(&"voyage.start", {"destination_id": destination, "strategy_id": STANDARD_STRATEGY})
+	assert_not_null(shell._presentation, "the event leg hands over to the演出")
+	var voyage: Variant = context.state.data.get("voyage", null)
+	assert_true(voyage is Dictionary, "an event leg keeps the voyage in flight until the decision")
+	if not (voyage is Dictionary):
+		return
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)), coal_before, 0.0001,
+		"departure only charges wages: coal stays on board")
+	assert_almost_eq(float(context.state.ship().get("water", 0.0)), water_before, 0.0001,
+		"departure only charges wages: water stays on board")
+	assert_eq(context.state.money(), money_before - wages, "the crew wages are still paid at departure")
+	var departure_time := float((voyage as Dictionary).get("departure_time", 0.0))
+	var base_duration := float((voyage as Dictionary).get("base_duration",
+		float((voyage as Dictionary).get("arrival_time", 0.0)) - departure_time))
+	var coal_rate := float((voyage as Dictionary).get("coal_rate", 0.0))
+	var water_rate := float((voyage as Dictionary).get("water_rate", 0.0))
+	assert_almost_eq(float((voyage as Dictionary).get("departure_coal", -1.0)), coal_before, 0.0001,
+		"the voyage records the departure coal stock")
+	assert_almost_eq(coal_rate, float(preview.get("coal_required", 0.0))
+		/ maxf(0.0001, float(preview.get("duration_hours", 0.0))), 0.0001,
+		"the hourly coal rate is the planned burn / planned hours")
+
+	# 演出中读数下降，但领域库存不动。
+	assert_true(_drive_until(shell, func() -> bool: return _find_at_sea(shell) != null, 8.0),
+		"the chart page mounts")
+	_drive_until(shell, func() -> bool: return shell._presentation.veil <= 0.001, 4.0)
+	var first_text := _hud_coal_text(shell)
+	_drive_seconds(shell, 0.5)
+	assert_true(_hud_coal_text(shell).to_float() < first_text.to_float(),
+		"the coal readout falls before the event decision")
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)), coal_before, 0.0001,
+		"the domain stock stays untouched while the演出 runs")
+
+	# 选一个带 `add_delay_hours` 的选项：结算按「计划时长 + 延误」计费。
+	assert_true(_drive_until(shell, func() -> bool:
+		return String(shell._presentation.phase_name()) == "event_wait", MAX_DRIVE_SECONDS),
+		"the演出 stops at the event decision")
+	shell._run_command(&"event.choose_option", {"option_id": String(forced.get("option_id", ""))})
+	assert_true(_drive_until(shell, func() -> bool: return shell._presentation == null, MAX_DRIVE_SECONDS),
+		"the remaining leg plays out after the decision")
+	assert_eq(String(shell._active_screen), "settlement", "the voyage settles after the event")
+	var summary: Dictionary = shell._settlement_summary
+	var delay_hours := float(summary.get("delayed_hours", 0.0))
+	assert_true(delay_hours > 0.0, "the chosen option really delays the voyage")
+	var actual_hours := float(summary.get("arrival_time", 0.0)) - departure_time
+	assert_almost_eq(actual_hours, base_duration + delay_hours, 0.001,
+		"the actual voyage hours include the event delay")
+	assert_almost_eq(float(summary.get("coal_used_actual", -1.0)), coal_rate * actual_hours, 0.02,
+		"the arrival charge covers the actual hours, event delay included")
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)),
+		maxf(0.0, coal_before - coal_rate * actual_hours), 0.02,
+		"arrival deducts coal for the delayed actual hours")
+	assert_almost_eq(float(context.state.ship().get("water", 0.0)),
+		maxf(0.0, water_before - water_rate * actual_hours), 0.02,
+		"arrival deducts water for the delayed actual hours")
+
+
 func test_event_decision_pauses_then_resumes_the_voyage() -> void:
 	var bundle := _mount(4321)
 	var shell: Control = bundle["shell"]
@@ -877,6 +1014,65 @@ func _force_event_context(context: AppContext, destination: String) -> Dictionar
 		context.rng = RngService.new(seed_value)
 		return picked
 	return {}
+
+
+## Finds a deterministic seed whose risk roll produces an event **and offers a delayed
+## option** (`add_delay_hours`), so the 4.3.5 hourly charge can be checked against a
+## non-zero event delay. Returns `{event, option_id}` (empty when no seed qualifies).
+func _force_delayed_event_context(context: AppContext, destination: String) -> Dictionary:
+	var preview := context.commands.execute(&"voyage.preview", {
+		"destination_id": destination,
+		"strategy_id": STANDARD_STRATEGY,
+	})
+	if not bool(preview.get("ok", false)):
+		return {}
+	var preview_data: Dictionary = preview.get("data", {})
+	for seed_value in range(1, 400):
+		context.rng = RngService.new(seed_value)
+		var picked := VoyageService._pick_event(context, preview_data, destination)
+		if picked.is_empty():
+			continue
+		var option_id := _offered_delay_option(context, picked)
+		if option_id.is_empty():
+			continue
+		context.rng = RngService.new(seed_value)
+		return {"event": picked, "option_id": option_id}
+	return {}
+
+
+## The first offered option whose effects contain `add_delay_hours` (empty when none).
+func _offered_delay_option(context: AppContext, event: Dictionary) -> String:
+	var template := context.registries.get_by_id(
+		ContentTypes.EVENT, String(event.get("event_id", ""))
+	)
+	if template == null:
+		return ""
+	var offered: Array = event.get("option_ids", [])
+	for option in template.data.get("options", []):
+		if not (option is Dictionary):
+			continue
+		var option_id := String((option as Dictionary).get("id", ""))
+		if not offered.has(option_id):
+			continue
+		for effect in (option as Dictionary).get("effects", []):
+			if effect is Dictionary and String((effect as Dictionary).get("op", "")) == "add_delay_hours":
+				return option_id
+	return ""
+
+
+## 顶栏煤 / 水读数的当前文本（Label 会随页面重建被替换，所以每次重新取引用）。
+func _hud_coal_text(shell: Control) -> String:
+	return _hud_resource_text(shell._hud_coal_value)
+
+
+func _hud_water_text(shell: Control) -> String:
+	return _hud_resource_text(shell._hud_water_value)
+
+
+func _hud_resource_text(label: Variant) -> String:
+	if not (label is Label) or not is_instance_valid(label):
+		return ""
+	return String((label as Label).text)
 
 
 func _find_at_sea(shell: Control) -> AtSeaScreen:

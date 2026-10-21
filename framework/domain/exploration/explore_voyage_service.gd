@@ -1,8 +1,9 @@
 class_name ExploreVoyageService
 extends RefCounted
 ## @static-doc
-## 作用：探索航次的领域执行——出航（扣工资与煤水、写探索航次与在航标记、抽定发现 roll）、
-## 资源告急决策（继续 / 掉头）、抵达结算（发现港口 + 迷雾揭示 / 失败漂流 + 线索保留）。
+## 作用：探索航次的领域执行——出航（只扣工资、记录出发库存与每小时煤水费率、写探索
+## 航次与在航标记、抽定发现 roll）、资源告急决策（继续 / 掉头）、抵达结算（发现港口 +
+## 迷雾揭示 / 失败漂流 + 线索保留，按实际航行小时一次性扣煤水）。
 ##
 ## - 关键依赖：`ClueService`、`ExplorationCalculator`、`ExplorationRules`、`WorldOps`、
 ##   `FogOps`、`MapOps`、`ShipOps`、`RngService.STREAM_EXPLORATION`
@@ -12,6 +13,14 @@ extends RefCounted
 ##   `is_at_port()` / `port.view.at_sea` / 贸易门禁自动生效；`settle` 与掉头都会同时清空
 ##   `data.explore_voyage` 与 `data.voyage`。
 ## - `start` 在任何扣费之前先跑完整预览：不可行直接失败，**不得扣资源**。
+## - 连续消耗（阶段 4.3.5 / U8）：出发**只扣工资**，煤水库存原样留在船上；航次记录
+##   `departure_coal` / `departure_water` 与 `coal_rate` / `water_rate`
+##   （= 计划消耗 ÷ 计划时长），`presentation` 也带这四个字段供 Shell 插值读数。
+##   实际扣款只在结算时按实际航行小时一次性发生：
+##   成功 `elapsed = arrival - departure`；失败 `duration + drift_hours`；掉头
+##   `duration × 0.5`。漂流 / 掉头的额外损耗（`drift_extra_*` / 计划消耗 × 比例）
+##   在小时扣款之后再扣，钳位到剩余库存；`summary.explore.extra_coal/water`
+##   仍只表示这笔额外损耗。
 ## - 发现结果在出发时用命名流 `explore:<clue_id>:<departure>` 抽定（`outcome_roll`），
 ##   结算只比较 `outcome_roll < discovery_chance`，同 seed 同状态可复现。
 ## - 成功：坐标世界 `discover_port_id` + `mark_visited` + `FogOps.reveal_arrival`，抽象地图
@@ -20,7 +29,8 @@ extends RefCounted
 ##   可再次 `start`），漂到**距搜索区最近的已发现港**并按其入港处理（记录访问 +
 ##   揭示泊位），耐久 / 煤 / 水按规则扣减且不为负，时间加 `drift_hours`。结算摘要
 ##   的 `explore.attempts` 报告累计尝试次数，`settlement_screen` 据此显示「线索保留」。
-## - 掉头：额外消耗 `coal_used/water_used * turnback_extra_ratio`，时间前进半个航程，
+## - 掉头：先按每小时费率扣实际半程（`duration × 0.5`），再额外消耗
+##   `coal_used/water_used * turnback_extra_ratio`（钳位到剩余库存），时间前进半个航程，
 ##   回出发港，线索保持 active。
 ## - 迷雾沿途落账（4.3.3 / U4）：成功与失败漂流都在 `reveal_arrival` 之前对
 ##   `voyage.route_path` 调用 `FogOps.trace_route`，把实际航线的沿海格子留成
@@ -68,8 +78,11 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 	var water_used := float(preview.get("water_required", 0.0))
 	var coal_before := float(ship.get("coal", 0.0))
 	var water_before := float(ship.get("water", 0.0))
-	ship["coal"] = maxf(0.0, coal_before - coal_used)
-	ship["water"] = maxf(0.0, water_before - water_used)
+	# 4.3.5 / U8：出发只扣工资，煤水原样留在船上；这里的计划消耗只用于告警预判、
+	# 掉头额外比例与演出插值，真实扣款在结算时按实际航行小时一次性发生。
+	var planned_hours := maxf(0.0, float(preview.get("duration_hours", 0.0)))
+	var coal_rate := coal_used / planned_hours if planned_hours > 0.0 else 0.0
+	var water_rate := water_used / planned_hours if planned_hours > 0.0 else 0.0
 
 	var threshold := float(rules.get("alert_threshold", 0.5))
 	# A zero starting stock must not count as "already half consumed".
@@ -102,6 +115,11 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 		"arrival_time": arrival_time,
 		"coal_used": coal_used,
 		"water_used": water_used,
+		# 连续消耗（4.3.5 / U8）：出发库存与每小时费率；结算按实际小时扣款。
+		"departure_coal": coal_before,
+		"departure_water": water_before,
+		"coal_rate": coal_rate,
+		"water_rate": water_rate,
 		"wages": wages,
 		"alert_needed": alert_needed,
 		# 决策点在航程中的比例（来自 Core JSON 的 `alert_progress`，默认 0.5）。
@@ -134,6 +152,11 @@ static func start(context, clue_id: String, strategy_id: String) -> Dictionary:
 		"strategy_id": String(voyage["strategy_id"]),
 		"departure_time": departure_time,
 		"arrival_time": arrival_time,
+		# 4.3.5 / U8：Shell 用这四个字段在演出中插值顶栏读数（不写领域状态）。
+		"departure_coal": coal_before,
+		"departure_water": water_before,
+		"coal_rate": coal_rate,
+		"water_rate": water_rate,
 		"alert_needed": alert_needed,
 		"alert_progress": float(voyage["alert_progress"]),
 	}
@@ -174,6 +197,10 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 	var state: GameState = context.state
 	var rules := ExplorationRules.read(state, context.registries)
 	var ship := state.ship()
+	var duration := float(voyage.get("duration_hours", 0.0))
+	# 4.3.5 / U8：掉了头只实际走了半程——先按费率扣这半程，再扣掉头额外比例
+	# （额外那笔钳位到小时扣款后的剩余库存）。
+	_consume_hourly(state, voyage, duration * 0.5)
 	var ratio := float(rules.get("turnback_extra_ratio", 0.25))
 	var extra_coal := maxf(0.0, float(voyage.get("coal_used", 0.0)) * ratio)
 	var extra_water := maxf(0.0, float(voyage.get("water_used", 0.0)) * ratio)
@@ -183,7 +210,6 @@ static func _turn_back(context, voyage: Dictionary) -> Dictionary:
 	ship["water"] = maxf(0.0, float(ship.get("water", 0.0)) - extra_water)
 
 	var departure_time := float(voyage.get("departure_time", state.now()))
-	var duration := float(voyage.get("duration_hours", 0.0))
 	var arrival_time := maxf(state.now(), departure_time + duration * 0.5)
 	state.set_now(arrival_time)
 	var world := WorldOps.world_map(state)
@@ -276,6 +302,8 @@ static func settle(context) -> Dictionary:
 
 	var arrival_time := maxf(float(voyage.get("arrival_time", state.now())), state.now())
 	state.set_now(arrival_time)
+	var departure_time := float(voyage.get("departure_time", arrival_time))
+	var duration := float(voyage.get("duration_hours", 0.0))
 
 	var result_code := "discovered" if success else "failed"
 	var destination := target_id
@@ -287,6 +315,8 @@ static func settle(context) -> Dictionary:
 	var events: Array = []
 
 	if success:
+		# 4.3.5 / U8：成功走完整段——按实际航行小时（arrival - departure）扣煤水。
+		_consume_hourly(state, voyage, maxf(0.0, arrival_time - departure_time))
 		var target_port := world.get_port(destination)
 		# `_enter_port` syncs the played map (trade / market / chart read it) and records
 		# the visit in the coordinate campaign partition.
@@ -314,6 +344,10 @@ static func settle(context) -> Dictionary:
 	else:
 		destination = _nearest_discovered_port(state, world, center, origin)
 		var ship := state.ship()
+		delayed_hours = float(rules.get("drift_hours", 6.0))
+		# 4.3.5 / U8：失败也真的航行了 `duration + drift_hours` —— 先按费率扣小时消耗，
+		# 再扣漂流额外损耗（在小时扣款之后的剩余库存上钳位）。
+		_consume_hourly(state, voyage, duration + delayed_hours)
 		var durability_before := float(ship.get("durability", 0.0))
 		durability_loss = minf(float(rules.get("drift_durability_loss", 8.0)), durability_before)
 		ship["durability"] = maxf(0.0, durability_before - durability_loss)
@@ -321,7 +355,6 @@ static func settle(context) -> Dictionary:
 		ship["coal"] = maxf(0.0, float(ship.get("coal", 0.0)) - extra_coal)
 		extra_water = minf(float(rules.get("drift_extra_water", 4.0)), float(ship.get("water", 0.0)))
 		ship["water"] = maxf(0.0, float(ship.get("water", 0.0)) - extra_water)
-		delayed_hours = float(rules.get("drift_hours", 6.0))
 		state.set_now(arrival_time + delayed_hours)
 		_enter_port(state, destination, true)
 		if not world.is_empty():
@@ -388,6 +421,21 @@ static func _route_polyline(raw: Variant) -> PackedVector2Array:
 	if raw is Array:
 		return VoyagePresentation.unpack_path(raw as Array)
 	return PackedVector2Array()
+
+
+## 4.3.5 / U8：按 `voyage.coal_rate/water_rate × elapsed_hours` 一次性扣煤水，
+## 钳位到 0。`elapsed_hours` 由调用方按实际航行小时给出（含延误 / 漂流 / 半程）。
+## 返回名义消耗 `{coal, water}`（未做库存钳位），供 UI / 测试使用。
+static func _consume_hourly(
+	state: GameState, voyage: Dictionary, elapsed_hours: float
+) -> Dictionary:
+	var ship := state.ship()
+	var hours := maxf(0.0, elapsed_hours)
+	var coal_used := maxf(0.0, float(voyage.get("coal_rate", 0.0)) * hours)
+	var water_used := maxf(0.0, float(voyage.get("water_rate", 0.0)) * hours)
+	ship["coal"] = maxf(0.0, float(ship.get("coal", 0.0)) - coal_used)
+	ship["water"] = maxf(0.0, float(ship.get("water", 0.0)) - water_used)
+	return {"coal": coal_used, "water": water_used}
 
 
 ## Records arrival in both the played map and the coordinate campaign partition.

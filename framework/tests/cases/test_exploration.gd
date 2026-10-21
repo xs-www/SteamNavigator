@@ -14,6 +14,10 @@ extends TestCase
 ##   测试逐次记录这些字段并断言不变。
 ## - 概率用例直接验证 `ExplorationRules.roll_succeeds` 的 0 / 1 边界与固定 seed 复现；
 ##   发现 / 未发现用出发时抽定的 `outcome_roll`（契约 §2）强制，而不是依赖真实随机。
+## - 4.3.5 / U8：探索出航只扣工资，煤水库存留在船上（`departure_coal/water` +
+##   `coal_rate/water_rate` 记入航次与 presentation）；结算按实际航行小时一次性扣款
+##   （成功 arrival-departure、失败 duration+drift、掉头 duration/2，额外损耗另计）。
+##   用例断言出发库存不变、各路径的实际扣减与告警仍按出发库存预判。
 ## - 断言取值遵守契约 §3 的 Core 数值（40 金币、漂流 6h、额外煤水 4、耐久 8 等），
 ##   避免测试与内容 JSON 脱节。
 ## @end-static-doc
@@ -494,7 +498,8 @@ func test_buy_is_blocked_by_the_active_clue_cap() -> void:
 
 # ── explore.start ──
 
-func test_explore_start_deducts_resources_and_marks_at_sea() -> void:
+## 4.3.5 / U8：出发只扣工资——煤水库存原样留在船上，航次记录出发库存与每小时费率。
+func test_explore_start_charges_only_wages_and_marks_at_sea() -> void:
 	var context := _start_run(SEED)
 	var clue := _acquire(context, "intel")
 	assert_false(clue.is_empty(), "clue should exist")
@@ -524,20 +529,25 @@ func test_explore_start_deducts_resources_and_marks_at_sea() -> void:
 	assert_true(route_path.size() >= 4 and route_path.size() % 2 == 0,
 		"the route is a flat [x0,y0,...] path")
 	assert_eq(typeof(presentation.get("alert_needed")), TYPE_BOOL, "alert_needed is a boolean")
+	# 4.3.5 / U8：presentation 带出发库存与每小时费率，供 Shell 演出中插值读数。
+	var presentation_hours := maxf(0.0001, float(presentation.get("total_hours", 0.0)))
+	assert_almost_eq(float(presentation.get("departure_coal", -1.0)), coal_before, 0.0001,
+		"presentation carries the departure coal stock")
+	assert_almost_eq(float(presentation.get("departure_water", -1.0)), water_before, 0.0001,
+		"presentation carries the departure water stock")
+	assert_almost_eq(float(presentation.get("coal_rate", -1.0)),
+		float(result_preview.get("coal_required", 0.0)) / presentation_hours, 0.0001,
+		"the presentation coal rate is the planned burn per hour")
+	assert_almost_eq(float(presentation.get("water_rate", -1.0)),
+		float(result_preview.get("water_required", 0.0)) / presentation_hours, 0.0001,
+		"the presentation water rate is the planned burn per hour")
 	assert_eq(context.state.money(), money_before - int(result_preview.get("crew_wages", 0)),
-		"wages are deducted")
-	assert_almost_eq(
-		float(context.state.ship().get("coal", 0.0)),
-		maxf(0.0, coal_before - float(result_preview.get("coal_required", 0.0))),
-		0.0001,
-		"coal is consumed by the preview amount"
-	)
-	assert_almost_eq(
-		float(context.state.ship().get("water", 0.0)),
-		maxf(0.0, water_before - float(result_preview.get("water_required", 0.0))),
-		0.0001,
-		"water is consumed by the preview amount"
-	)
+		"wages are the only departure charge")
+	# 4.3.5 / U8：出发不扣煤水（演出中顶栏插值，结算时按实际小时落账）。
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)), coal_before, 0.0001,
+		"coal stays on board when the voyage starts")
+	assert_almost_eq(float(context.state.ship().get("water", 0.0)), water_before, 0.0001,
+		"water stays on board when the voyage starts")
 	assert_false(context.state.is_at_port(), "the ship is no longer in port")
 	var voyage_marker: Variant = context.state.data.get("voyage", null)
 	assert_true(voyage_marker is Dictionary, "data.voyage carries the at-sea marker")
@@ -549,6 +559,18 @@ func test_explore_start_deducts_resources_and_marks_at_sea() -> void:
 		assert_eq(String((explore_voyage as Dictionary).get("status", "")), "outbound", "the voyage is outbound")
 		var roll := float((explore_voyage as Dictionary).get("outcome_roll", -1.0))
 		assert_true(roll >= 0.0 and roll < 1.0, "the discovery roll is fixed in [0, 1)")
+		# 4.3.5 / U8：航次快照记录出发库存与每小时费率（结算按实际小时扣款）。
+		assert_almost_eq(float((explore_voyage as Dictionary).get("departure_coal", -1.0)),
+			coal_before, 0.0001, "the voyage records the departure coal stock")
+		assert_almost_eq(float((explore_voyage as Dictionary).get("departure_water", -1.0)),
+			water_before, 0.0001, "the voyage records the departure water stock")
+		var voyage_hours := maxf(0.0001, float((explore_voyage as Dictionary).get("duration_hours", 0.0)))
+		assert_almost_eq(float((explore_voyage as Dictionary).get("coal_rate", -1.0)),
+			float(result_preview.get("coal_required", 0.0)) / voyage_hours, 0.0001,
+			"the voyage coal rate comes from the preview burn / duration")
+		assert_almost_eq(float((explore_voyage as Dictionary).get("water_rate", -1.0)),
+			float(result_preview.get("water_required", 0.0)) / voyage_hours, 0.0001,
+			"the voyage water rate comes from the preview burn / duration")
 	assert_true(_has_event(result.get("events", []), "explore.started"), "explore.started is emitted")
 
 
@@ -604,6 +626,13 @@ func test_explore_settle_success_discovers_target() -> void:
 		return
 	var voyage: Dictionary = context.state.explore_voyage()
 	voyage["outcome_roll"] = 0.0
+	# 4.3.5 / U8：出发不扣煤水，结算时按 `rate × 实际航行小时` 一次性扣。
+	var coal_at_departure := float(context.state.ship().get("coal", 0.0))
+	var water_at_departure := float(context.state.ship().get("water", 0.0))
+	var coal_rate := float(voyage.get("coal_rate", 0.0))
+	var water_rate := float(voyage.get("water_rate", 0.0))
+	var voyage_hours := maxf(0.0, float(voyage.get("arrival_time", 0.0))
+		- float(voyage.get("departure_time", 0.0)))
 	var voyages_before := int(context.state.stats().get("voyages", 0))
 	var result := context.commands.execute(&"explore.settle", {})
 	assert_true(bool(result.get("ok", false)), "explore.settle succeeds: %s" % str(result))
@@ -625,6 +654,13 @@ func test_explore_settle_success_discovers_target() -> void:
 	assert_true(context.state.explore_voyage() == null, "explore_voyage is cleared")
 	assert_true(context.state.data.get("voyage", null) == null, "the at-sea marker is cleared")
 	assert_eq(int(context.state.stats().get("voyages", 0)), voyages_before + 1, "one voyage was counted")
+	# 4.3.5 / U8：抵达按实际航行小时扣煤水（出发时没扣过）。
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)),
+		maxf(0.0, coal_at_departure - coal_rate * voyage_hours), 0.0001,
+		"arrival deducts coal = hourly rate × actual hours")
+	assert_almost_eq(float(context.state.ship().get("water", 0.0)),
+		maxf(0.0, water_at_departure - water_rate * voyage_hours), 0.0001,
+		"arrival deducts water = hourly rate × actual hours")
 	var summary: Dictionary = data.get("summary", {})
 	var explore_summary: Dictionary = summary.get("explore", {})
 	assert_eq(String(explore_summary.get("result", "")), "discovered", "summary.explore reports the discovery")
@@ -652,6 +688,9 @@ func test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void:
 	var durability_before := float(context.state.ship().get("durability", 0.0))
 	var coal_before := float(context.state.ship().get("coal", 0.0))
 	var water_before := float(context.state.ship().get("water", 0.0))
+	var coal_rate := float(voyage.get("coal_rate", 0.0))
+	var water_rate := float(voyage.get("water_rate", 0.0))
+	var duration := float(voyage.get("duration_hours", 0.0))
 	var result := context.commands.execute(&"explore.settle", {})
 	assert_true(bool(result.get("ok", false)), "settle still succeeds as a command")
 	if not bool(result.get("ok", false)):
@@ -685,6 +724,17 @@ func test_explore_settle_failure_drifts_to_nearest_discovered_port() -> void:
 		"drift coal is the rule value, clamped to the stock")
 	assert_almost_eq(float(explore_summary.get("extra_water", 0.0)), minf(4.0, water_before), 0.0001,
 		"drift water is the rule value, clamped to the stock")
+	# 4.3.5 / U8：失败也真的航行了 `duration + drift_hours`，先按费率扣小时消耗，
+	# 再扣漂流额外损耗（额外那笔在小时扣款后的剩余库存上钳位）。
+	var drift_hours := 6.0
+	var coal_after_hourly := maxf(0.0, coal_before - coal_rate * (duration + drift_hours))
+	var water_after_hourly := maxf(0.0, water_before - water_rate * (duration + drift_hours))
+	assert_almost_eq(float(context.state.ship().get("coal", 0.0)),
+		maxf(0.0, coal_after_hourly - float(explore_summary.get("extra_coal", 0.0))), 0.0001,
+		"failure deducts hourly coal for the whole attempt plus the drift extra")
+	assert_almost_eq(float(context.state.ship().get("water", 0.0)),
+		maxf(0.0, water_after_hourly - float(explore_summary.get("extra_water", 0.0))), 0.0001,
+		"failure deducts hourly water for the whole attempt plus the drift extra")
 	assert_almost_eq(float(summary.get("arrival_time", 0.0)), arrival_time + 6.0, 0.0001,
 		"drifting adds the rule's extra hours")
 	assert_almost_eq(float(summary.get("delayed_hours", 0.0)), 6.0, 0.0001, "summary reports the delay")
@@ -842,8 +892,9 @@ func test_turn_back_returns_to_origin_and_keeps_clue_active() -> void:
 	if not bool(started.get("ok", false)):
 		return
 	var voyage: Dictionary = context.state.explore_voyage()
-	var coal_after_start := float(context.state.ship().get("coal", 0.0))
-	var water_after_start := float(context.state.ship().get("water", 0.0))
+	# 4.3.5 / U8：出发不扣煤水，这里的库存就是出发库存；掉头在结算时一次性扣款。
+	var coal_at_departure := float(context.state.ship().get("coal", 0.0))
+	var water_at_departure := float(context.state.ship().get("water", 0.0))
 	var departure_time := float(voyage.get("departure_time", 0.0))
 	var duration := float(voyage.get("duration_hours", 0.0))
 	var result := context.commands.execute(&"explore.decide", {"choice": "turn_back"})
@@ -858,12 +909,15 @@ func test_turn_back_returns_to_origin_and_keeps_clue_active() -> void:
 	assert_true(context.state.explore_voyage() == null, "explore_voyage is cleared")
 	assert_true(context.state.data.get("voyage", null) == null, "the at-sea marker is cleared")
 	assert_true(_active_has(context, clue_id), "the clue stays active after turning back")
+	# 4.3.5 / U8：掉头 = 实际半程小时消耗 + 计划消耗 × turnback_extra_ratio。
+	var coal_after_half := maxf(0.0, coal_at_departure - float(voyage.get("coal_rate", 0.0)) * duration * 0.5)
+	var water_after_half := maxf(0.0, water_at_departure - float(voyage.get("water_rate", 0.0)) * duration * 0.5)
 	assert_almost_eq(float(context.state.ship().get("coal", 0.0)),
-		maxf(0.0, coal_after_start - float(voyage.get("coal_used", 0.0)) * 0.25), 0.0001,
-		"turning back burns 25% of the voyage coal again")
+		maxf(0.0, coal_after_half - float(voyage.get("coal_used", 0.0)) * 0.25), 0.0001,
+		"turning back deducts the actual half-voyage burn plus the extra ratio")
 	assert_almost_eq(float(context.state.ship().get("water", 0.0)),
-		maxf(0.0, water_after_start - float(voyage.get("water_used", 0.0)) * 0.25), 0.0001,
-		"turning back burns 25% of the voyage water again")
+		maxf(0.0, water_after_half - float(voyage.get("water_used", 0.0)) * 0.25), 0.0001,
+		"turning back deducts the actual half-voyage water burn plus the extra ratio")
 	assert_true(context.state.now() >= departure_time + duration * 0.5 - 0.0001,
 		"the clock advances half the voyage")
 	var summary: Dictionary = data.get("summary", {})
@@ -930,6 +984,11 @@ func test_alert_threshold_and_progress_come_from_the_rules() -> void:
 	var rules := ExplorationRules.read(low_context.state, low_context.registries)
 	assert_true(bool(voyage.get("alert_needed", false)),
 		"burning more than half of the departure coal raises the alert")
+	# 4.3.5 / U8：告警仍按「本段预计消耗 vs 出发库存」预判；出发时煤水没有被扣掉。
+	assert_almost_eq(float(low_context.state.ship().get("coal", 0.0)), coal_required * 1.05, 0.0001,
+		"the alert is decided from the departure stock, which stays on board")
+	assert_almost_eq(float(voyage.get("departure_coal", -1.0)), coal_required * 1.05, 0.0001,
+		"the voyage records that departure stock for the演出 readout")
 	assert_almost_eq(float(voyage.get("alert_progress", 0.0)), float(rules["alert_progress"]), 0.0001,
 		"the decision point comes from the Core rule, not a hardcoded 0")
 	var presentation: Dictionary = (started.get("data", {}) as Dictionary).get("presentation", {})
