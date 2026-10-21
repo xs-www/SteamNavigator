@@ -20,33 +20,29 @@ import types
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+import sn_crane_materials as cmat
 
 CASES = [
     dict(module="sn_harbor_crane_generator.py", label="SN_Harbor_Crane",
          prefix="SN_Crane_", parents={"ROOT", "SLEW"},
          budget=4000, bbox=(26.5, 6.3, 21.47), tol=0.8,
-         materials={"SN_Metal", "SN_Wood", "SN_Wood_Dark", "SN_Stone"},
          required={"SN_Crane_Slew_Pivot", "SN_Crane_Jib_Chords",
                    "SN_Crane_Tower_Braces", "SN_Crane_Hook_Block"}),
     dict(module="sn_mega_gantry_generator.py", label="SN_Mega_Gantry",
          prefix="SN_MG_", parents={"ROOT"},
          budget=12000, bbox=(39.6, 14.8, 29.65), tol=1.0,
-         materials={"SN_Metal", "SN_Iron", "SN_Iron_Red", "SN_Wood_Dark",
-                    "SN_Brass", "SN_Stone", "SN_Glass_Dark"},
          required={"SN_MG_Legs_Chords", "SN_MG_Bridge_Lattice",
                    "SN_MG_Hoist_Winches", "SN_MG_Spreader_Load"}),
     dict(module="sn_wooden_mast_crane_generator.py", label="SN_Wooden_Mast_Crane",
          prefix="SN_WM_", parents={"ROOT"},
          budget=4000, bbox=(14.77, 7.0, 14.25), tol=0.8,
-         materials={"SN_Wood", "SN_Wood_Dark", "SN_Wood_Deck", "SN_Metal",
-                    "SN_Stone", "SN_Brass", "SN_Canvas_Shade"},
          required={"SN_WM_Mast", "SN_WM_Jib", "SN_WM_Stays", "SN_WM_Winch",
                    "SN_WM_Hook"}),
     dict(module="sn_hand_jib_crane_generator.py", label="SN_Hand_Jib_Crane",
          prefix="SN_HJ_", parents={"ROOT"},
          budget=1500, bbox=(4.6, 1.7, 5.17), tol=0.5,
-         materials={"SN_Metal", "SN_Iron", "SN_Wood_Dark", "SN_Stone",
-                    "SN_Brass", "SN_Canvas_Shade"},
          required={"SN_HJ_Post", "SN_HJ_Jib", "SN_HJ_Winch", "SN_HJ_Rope_Hook"}),
 ]
 
@@ -103,7 +99,20 @@ def check_case(case):
     parts = mod.build_all_geometry()
     cfg = mod.build_config()
     pivot_names = {p.name for p in cfg.pivots}
+    materials = set(getattr(mod, "MATERIALS", ()))
     failures = []
+    if not materials:
+        failures.append(("MATERIALS", ["generator has no MATERIALS set"]))
+    else:
+        if set(getattr(mod, "COLORS", {})) != materials:
+            failures.append(("MATERIALS", ["COLORS/MATERIALS mismatch"]))
+        for name in sorted(materials):
+            if name not in cmat.PALETTE:
+                failures.append((name, ["material missing from shared palette"]))
+            else:
+                spec = tuple(getattr(mod, "COLORS", {}).get(name, ()))
+                if spec and spec != tuple(cmat.PALETTE[name]):
+                    failures.append((name, ["material spec drift vs shared palette"]))
     # PivotSpec 契约：rotation 必须是三元组、location 必须与 origins 一致
     # （双重减原点 / 把 float 传进 rotation 的 P0 都靠这两条在干跑阶段拦住）。
     for spec in cfg.pivots:
@@ -161,7 +170,7 @@ def check_case(case):
             flags.append("nonmanifold=%d" % nonman)
         if degen:
             flags.append("degenerate=%d" % degen)
-        bad_mats = set(mats) - case["materials"]
+        bad_mats = set(mats) - materials
         if bad_mats:
             flags.append("mat=%s" % ",".join(sorted(bad_mats)))
         if flags:
@@ -193,9 +202,9 @@ def check_case(case):
     for name in case["required"]:
         if name not in parts and name not in pivot_names:
             failures.append((name, ["missing required object"]))
-    if not case["materials"] >= used_mats:
+    if not materials >= used_mats:
         failures.append(("MATS", ["undeclared: %s" % (
-            ",".join(sorted(used_mats - case["materials"])),)]))
+            ",".join(sorted(used_mats - materials)),)]))
 
     if failures:
         print("\nFAILURES:")

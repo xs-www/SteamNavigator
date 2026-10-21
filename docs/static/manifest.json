@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-21T00:34:37.499Z",
-  "commit": "99f9a08",
+  "generated_at": "2026-10-21T00:40:44.218Z",
+  "commit": "ab1185c",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 625,
-    "documented": 248,
+    "sources": 626,
+    "documented": 249,
     "grouped": 377
   },
   "files": [
@@ -3620,7 +3620,7 @@
     },
     {
       "source": "tools/modeling/generators/dryrun_cranes.py",
-      "sha256": "a1797016527f8c71fcc93d85967601a6d9de17b57746a66895616e017dda0f2e",
+      "sha256": "d1839687128f2996e8c3c14ee54d6b7db8ef38821a5695a2da4940aa0161c17d",
       "doc": "docs/static/tools/modeling/generators/dryrun_cranes.py.md",
       "status": "documented"
     },
@@ -3880,14 +3880,20 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/sn_crane_materials.py",
+      "sha256": "18d19c4ded9353fe42522c89fd9b2b2f75ecc6d209cf477546e74054af87ff79",
+      "doc": "docs/static/tools/modeling/generators/sn_crane_materials.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
-      "sha256": "214818a64f120a325e1bd59ad9d80b5c88bdd4fa35671356115191564b1a65f7",
+      "sha256": "3d197baa31c68dd5bc073e8c3f531fcbfd46063c0a5bf13db68bcb2df98161b6",
       "doc": "docs/static/tools/modeling/generators/sn_hand_jib_crane_generator.py.md",
       "status": "documented"
     },
     {
       "source": "tools/modeling/generators/sn_harbor_crane_generator.py",
-      "sha256": "6a4a12ff0dd8654cf307134fdc423cb8750f28314858ad98e143b53dde6d043f",
+      "sha256": "04ca69ceb3375ba7f5d0d8ff77020e055e6cf9a96734f831094a2aa85b45d415",
       "doc": "docs/static/tools/modeling/generators/sn_harbor_crane_generator.py.md",
       "status": "documented"
     },
@@ -3988,7 +3994,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_mega_gantry_generator.py",
-      "sha256": "01e39dc0bb92bfff67fa756b5deb4d77213829d008fc68274e6d37e2e02d653b",
+      "sha256": "cbe37824bee6531e27818cb299a14c560e1befe8e167680468c9d8a584df0f07",
       "doc": "docs/static/tools/modeling/generators/sn_mega_gantry_generator.py.md",
       "status": "documented"
     },
@@ -4035,7 +4041,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_wooden_mast_crane_generator.py",
-      "sha256": "9c36202b231bae5f07ff926a1b7f4d8ff6ee2506c6a9a424fb8697b27622bc00",
+      "sha256": "a63dccdebbcdff222b9fad44fcea073295a7f7bcd18390598506cc96528023ae",
       "doc": "docs/static/tools/modeling/generators/sn_wooden_mast_crane_generator.py.md",
       "status": "documented"
     },

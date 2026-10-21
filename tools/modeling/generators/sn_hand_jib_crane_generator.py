@@ -68,22 +68,15 @@ TRI_BUDGET = 1500
 BBOX_TARGET = (4.6, 1.7, 5.17)
 BBOX_TOL = 0.5
 
-MAT_METAL = "SN_Metal"
-MAT_IRON = "SN_Iron"
-MAT_WOOD_DARK = "SN_Wood_Dark"
-MAT_STONE = "SN_Stone"
-MAT_BRASS = "SN_Brass"
-MAT_ROPE = "SN_Canvas_Shade"
-
-COLORS = {
-    MAT_METAL: ((0.140, 0.150, 0.170), 0.36, 0.90),
-    MAT_IRON: ((0.072, 0.076, 0.084), 0.52, 0.62),
-    MAT_WOOD_DARK: ((0.042, 0.019, 0.008), 0.64, 0.00),
-    MAT_STONE: ((0.235, 0.228, 0.208), 0.90, 0.00),
-    MAT_BRASS: ((0.420, 0.270, 0.075), 0.28, 0.85),
-    MAT_ROPE: ((0.540, 0.500, 0.410), 0.92, 0.00),
-}
-REUSE_COLORS = dict(COLORS)
+from sn_crane_materials import (
+    MAT_METAL, MAT_IRON, MAT_WOOD_DARK, MAT_STONE, MAT_BRASS, MAT_CANVAS_SHADE,
+    ASSET_MATERIALS, colors_for,
+)
+# 绳索沿用共享的帆布阴影色，不新增材质
+MAT_ROPE = MAT_CANVAS_SHADE
+COLORS = colors_for('SN_Hand_Jib_Crane')
+REUSE_COLORS = COLORS
+MATERIALS = ASSET_MATERIALS['SN_Hand_Jib_Crane']
 
 POST_TOP = 4.55
 JIB_TIP = (3.30, 0.0, 5.05)

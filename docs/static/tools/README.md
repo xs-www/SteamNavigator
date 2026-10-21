@@ -87,6 +87,7 @@
 | `modeling/generators/ship_parts/deck.py` | 可复用甲板属具构建器：舱口/天窗/绞盘/起锚机/舵轮/罗经柜/钟/木桶/盘绳/缆柱/水桶/fife rail/短梯；位置与甲板高度由调用方传入。 | 本页 |
 | `modeling/generators/ship_parts/palette.py` | 跨船共享材质名常量（木/深木/甲板木/帆布/金属/黄铜/旗帜色）；船体主色由各船生成器定义。 | 本页 |
 | `modeling/generators/ship_parts/stern.py` | 可复用艉部构件：艉廊/3 艉窗/檐口/双艉灯；x0/x1/窗位/灯位/主色由调用方传入。 | 本页 |
+| `modeling/generators/sn_crane_materials.py` | 起重机四件套的**共享材质库**（纯 Python，不 import bpy）：材质名 → 线性色 / | [查看](./modeling/generators/sn_crane_materials.py.md) |
 | `modeling/generators/sn_hand_jib_crane_generator.py` | SN_Hand_Jib_Crane 手摇悬臂吊（码头小型回转吊）的参数化生成器。 | [查看](./modeling/generators/sn_hand_jib_crane_generator.py.md) |
 | `modeling/generators/sn_harbor_crane_generator.py` | SN_Harbor_Crane 锤头式塔吊的参数化生成器（补全此前缺失的几何真源）。 | [查看](./modeling/generators/sn_harbor_crane_generator.py.md) |
 | `modeling/generators/sn_harbor_town_generator.py` | 港口街景第一批 10 件的参数化几何唯一真源：顶部 `ITEMS` 参数表（名称/布局/tri 预算/目标包围盒）+ 各 `build_*` 纯几何函数，负责在 Blender 集合 `SN_Harbor_Town` 重建 10 件 `SN_HT_*` 单 mesh 对象。 | [查看](./modeling/generators/sn_harbor_town_generator.py.md) |

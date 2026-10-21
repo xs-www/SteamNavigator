@@ -69,24 +69,14 @@ TRI_BUDGET = 12000
 BBOX_TARGET = (39.6, 14.8, 29.65)
 BBOX_TOL = 1.0
 
-MAT_METAL = "SN_Metal"
-MAT_IRON = "SN_Iron"
-MAT_RED = "SN_Iron_Red"
-MAT_WOOD = "SN_Wood_Dark"
-MAT_BRASS = "SN_Brass"
-MAT_STONE = "SN_Stone"
-MAT_GLASS = "SN_Glass_Dark"
-
-COLORS = {
-    MAT_METAL: ((0.140, 0.150, 0.170), 0.36, 0.90),
-    MAT_IRON: ((0.072, 0.076, 0.084), 0.52, 0.62),
-    MAT_RED: ((0.190, 0.035, 0.022), 0.62, 0.10),
-    MAT_WOOD: ((0.042, 0.019, 0.008), 0.64, 0.00),
-    MAT_BRASS: ((0.420, 0.270, 0.075), 0.28, 0.85),
-    MAT_STONE: ((0.235, 0.228, 0.208), 0.90, 0.00),
-    MAT_GLASS: ((0.032, 0.042, 0.052), 0.25, 0.35),
-}
-REUSE_COLORS = dict(COLORS)
+from sn_crane_materials import (
+    MAT_METAL, MAT_IRON, MAT_IRON_RED, MAT_WOOD_DARK, MAT_BRASS, MAT_STONE, MAT_GLASS_DARK,
+    ASSET_MATERIALS, colors_for,
+)
+MAT_GLASS = MAT_GLASS_DARK
+COLORS = colors_for('SN_Mega_Gantry')
+REUSE_COLORS = COLORS
+MATERIALS = ASSET_MATERIALS['SN_Mega_Gantry']
 
 RAIL_Y = 6.0
 LEG_X = 18.0
@@ -108,7 +98,7 @@ def _tracks():
     for i in range(-9, 10):
         x = i * 2.1
         ck.add_box(part, (x - 0.9, -RAIL_Y - 0.55, 0.0),
-                   (x + 0.9, RAIL_Y + 0.55, 0.10), MAT_WOOD)
+                   (x + 0.9, RAIL_Y + 0.55, 0.10), MAT_WOOD_DARK)
     return part
 
 
@@ -127,7 +117,7 @@ def _bogie(x, y):
     ck.add_cyl(part, (x - 0.55, y + 0.62, 0.95), (x + 0.45, y + 0.62, 0.95),
                0.17, 0.17, MAT_METAL, 8)
     ck.add_box(part, (x - 0.70, y + 0.40, 0.68), (x - 0.10, y + 0.84, 1.22),
-               MAT_RED)
+               MAT_IRON_RED)
     return part
 
 
@@ -178,7 +168,7 @@ def _bridge():
 def _walkway():
     part = Part()
     top = BRIDGE_Z + BRIDGE_HALF_H
-    ck.add_box(part, (-19.20, -0.85, top), (19.20, 0.85, top + 0.12), MAT_WOOD)
+    ck.add_box(part, (-19.20, -0.85, top), (19.20, 0.85, top + 0.12), MAT_WOOD_DARK)
     # 小车行走轨（双轨）
     for y in (-1.10, 1.10):
         ck.add_box(part, (-19.50, y - 0.09, top), (19.50, y + 0.09, top + 0.20),
@@ -200,12 +190,12 @@ def _machinery_house():
         ck.add_box(part, (x - 0.55, 1.84, top + 1.20), (x + 0.55, 1.90, top + 2.10),
                    MAT_GLASS)
     ck.add_box(part, (-14.60, -1.90, top, ), (-13.20, -1.84, top + 1.90),
-               MAT_RED)
+               MAT_IRON_RED)
     # 排气筒 / 通风帽
     ck.add_cyl(part, (-11.00, -0.90, top + 2.80), (-11.00, -0.90, top + 4.30),
                0.22, 0.22, MAT_IRON, 8)
     ck.add_cyl(part, (-11.00, -0.90, top + 4.30), (-11.00, -0.90, top + 4.55),
-               0.30, 0.30, MAT_RED, 8)
+               0.30, 0.30, MAT_IRON_RED, 8)
     ck.add_box(part, (-15.00, -1.40, top + 2.80), (-14.20, -0.60, top + 3.20),
                MAT_IRON)
     # 铭牌（空白）
@@ -220,7 +210,7 @@ def _hoist_winches():
     base_z = top + 0.55
     for x in (-14.20, -12.30):
         ck.drum(part, (x, -2.65, base_z), (0.0, 1.0, 0.0),
-                0.52, 1.40, MAT_WOOD, 10)
+                0.52, 1.40, MAT_WOOD_DARK, 10)
         ck.gear(part, (x, -3.48, base_z), (0.0, 1.0, 0.0),
                 0.44, 0.10, 12, MAT_METAL)
         ck.add_cyl(part, (x, -3.48, base_z), (x, -2.65, base_z),
@@ -229,7 +219,7 @@ def _hoist_winches():
         ck.add_cyl(part, (x - 1.55, -2.65, base_z), (x - 0.95, -2.65, base_z),
                    0.24, 0.24, MAT_IRON, 8)
         ck.add_box(part, (x - 1.70, -2.95, base_z - 0.32),
-                   (x - 1.40, -2.35, base_z + 0.32), MAT_RED)
+                   (x - 1.40, -2.35, base_z + 0.32), MAT_IRON_RED)
         # 轴承座
         ck.add_box(part, (x - 0.28, -3.78, base_z - 0.55),
                    (x + 0.28, -3.18, base_z - 0.25), MAT_METAL)
@@ -250,14 +240,14 @@ def _trolley():
     ck.add_box(part, (TROLLEY_X - 1.90, -1.10, top), (TROLLEY_X + 1.90, 1.10,
                                                       top + 1.05), MAT_METAL)
     ck.add_box(part, (TROLLEY_X - 1.60, -1.40, top + 1.05),
-               (TROLLEY_X + 1.60, 1.40, top + 1.30), MAT_WOOD)
+               (TROLLEY_X + 1.60, 1.40, top + 1.30), MAT_WOOD_DARK)
     for sx in (-1.3, 1.3):
         for sy in (-1.0, 1.0):
             ck.wheel(part, (TROLLEY_X + sx, sy * 1.10, top + 0.20),
                      (0.0, 1.0, 0.0), 0.22, 0.14, MAT_METAL, 8)
     # 小车卷筒 + 电机
     ck.drum(part, (TROLLEY_X - 0.75, 0.0, top + 0.65), (1.0, 0.0, 0.0),
-            0.34, 1.20, MAT_WOOD, 10)
+            0.34, 1.20, MAT_WOOD_DARK, 10)
     ck.add_cyl(part, (TROLLEY_X + 0.55, 0.0, top + 0.65),
                (TROLLEY_X + 1.15, 0.0, top + 0.65), 0.22, 0.22, MAT_IRON, 8)
     ck.gear(part, (TROLLEY_X - 0.75, 0.62, top + 0.65), (0.0, 1.0, 0.0),
@@ -282,7 +272,7 @@ def _hoist_cables():
 def _spreader():
     part = Part()
     ck.add_box(part, (TROLLEY_X - 3.90, -0.62, SPREADER_Z),
-               (TROLLEY_X + 3.90, 0.62, SPREADER_Z + 0.60), MAT_RED)
+               (TROLLEY_X + 3.90, 0.62, SPREADER_Z + 0.60), MAT_IRON_RED)
     for sx in (-3.60, 3.60):
         ck.add_box(part, (TROLLEY_X + sx - 0.45, -0.75, SPREADER_Z + 0.60),
                    (TROLLEY_X + sx + 0.45, 0.75, SPREADER_Z + 0.85), MAT_METAL)
@@ -292,7 +282,7 @@ def _spreader():
                       MAT_METAL, MAT_METAL, rope_top=None)
     # 吊装中的集装箱
     ck.add_box(part, (TROLLEY_X - 3.05, -1.22, 2.60),
-               (TROLLEY_X + 3.05, 1.22, 5.20), MAT_RED)
+               (TROLLEY_X + 3.05, 1.22, 5.20), MAT_IRON_RED)
     for x in (TROLLEY_X - 3.05, TROLLEY_X + 3.05):
         for y in (-1.22, 1.22):
             ck.add_box(part, (x - 0.06, y - 0.06, 2.60), (x + 0.06, y + 0.06, 5.20),
@@ -311,7 +301,7 @@ def _ladders_platforms():
     for sx in (-1.0, 1.0):
         for sy in (-1.0, 1.0):
             ck.platform(part, sx * LEG_X, sy * RAIL_Y, LEG_TOP,
-                        2.80, 2.80, 0.16, MAT_WOOD)
+                        2.80, 2.80, 0.16, MAT_WOOD_DARK)
     for sx in (-1.0, 1.0):
         y = RAIL_Y + 1.35
         ck.railing(part, [(sx * LEG_X - 1.35, y, LEG_TOP + 0.16),

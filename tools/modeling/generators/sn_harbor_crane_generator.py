@@ -68,18 +68,13 @@ TRI_BUDGET = 4000
 BBOX_TARGET = (26.5, 6.3, 21.47)     # 长度 / 宽度 / 高度（含主臂 / 塔头）
 BBOX_TOL = 0.8
 
-MAT_METAL = "SN_Metal"
-MAT_WOOD = "SN_Wood"
-MAT_WOOD_DARK = "SN_Wood_Dark"
-MAT_STONE = "SN_Stone"
-
-COLORS = {
-    MAT_METAL: ((0.140, 0.150, 0.170), 0.36, 0.90),
-    MAT_WOOD: ((0.200, 0.088, 0.035), 0.70, 0.00),
-    MAT_WOOD_DARK: ((0.042, 0.019, 0.008), 0.64, 0.00),
-    MAT_STONE: ((0.235, 0.228, 0.208), 0.90, 0.00),
-}
-REUSE_COLORS = dict(COLORS)
+from sn_crane_materials import (
+    MAT_METAL, MAT_STONE, MAT_WOOD, MAT_WOOD_DARK,
+    ASSET_MATERIALS, colors_for,
+)
+COLORS = colors_for('SN_Harbor_Crane')
+REUSE_COLORS = COLORS
+MATERIALS = ASSET_MATERIALS['SN_Harbor_Crane']
 
 # 关键标高（根局部）
 BASE_TOP = 1.2

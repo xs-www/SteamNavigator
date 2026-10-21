@@ -70,24 +70,15 @@ TRI_BUDGET = 4000
 BBOX_TARGET = (14.77, 7.0, 14.25)
 BBOX_TOL = 0.8
 
-MAT_WOOD = "SN_Wood"
-MAT_WOOD_DARK = "SN_Wood_Dark"
-MAT_WOOD_DECK = "SN_Wood_Deck"
-MAT_METAL = "SN_Metal"
-MAT_STONE = "SN_Stone"
-MAT_BRASS = "SN_Brass"
-MAT_ROPE = "SN_Canvas_Shade"
-
-COLORS = {
-    MAT_WOOD: ((0.200, 0.088, 0.035), 0.70, 0.00),
-    MAT_WOOD_DARK: ((0.042, 0.019, 0.008), 0.64, 0.00),
-    MAT_WOOD_DECK: ((0.300, 0.165, 0.072), 0.76, 0.00),
-    MAT_METAL: ((0.140, 0.150, 0.170), 0.36, 0.90),
-    MAT_STONE: ((0.235, 0.228, 0.208), 0.90, 0.00),
-    MAT_BRASS: ((0.420, 0.270, 0.075), 0.28, 0.85),
-    MAT_ROPE: ((0.540, 0.500, 0.410), 0.92, 0.00),
-}
-REUSE_COLORS = dict(COLORS)
+from sn_crane_materials import (
+    MAT_WOOD, MAT_WOOD_DARK, MAT_WOOD_DECK, MAT_METAL, MAT_STONE, MAT_BRASS,
+    MAT_CANVAS_SHADE, ASSET_MATERIALS, colors_for,
+)
+# 绳索沿用共享的帆布阴影色，不新增材质
+MAT_ROPE = MAT_CANVAS_SHADE
+COLORS = colors_for('SN_Wooden_Mast_Crane')
+REUSE_COLORS = COLORS
+MATERIALS = ASSET_MATERIALS['SN_Wooden_Mast_Crane']
 
 DECK_Z = 1.38
 MAST_TOP = 14.10

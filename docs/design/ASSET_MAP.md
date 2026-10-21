@@ -108,6 +108,7 @@
 | `SN_Hand_Jib_Crane` | `assets/models/props/SN_Hand_Jib_Crane.glb` | `SN_Hand_Jib_Crane_Prototype` / (55, 260, 0) | 4.60 × 1.70 × 5.17 | **896** | 6 | 石基座 + 木垫板 + 地脚螺栓、立柱（法兰 / 柱帽 / 铁箍）、悬臂 + 拉杆 + 斜撑 + 端部滑轮、手摇绞车（卷筒 / 棘轮 / 摇柄）、吊钩组、踏步 / 铭牌 |
 
 - 共用部件库：`tools/modeling/generators/crane_kit.py`（桁架臂 / 格构柱 / 梯子 / 栏杆 / 车轮 / 卷筒 / 滑轮 / 齿轮 / 钢缆 / 吊钩组 / 手摇绞车 / 木料堆，纯 Python，不 import bpy）。
+- 共享材质库：`tools/modeling/generators/sn_crane_materials.py`（10 个 `SN_*` 材质的线性色 / 粗糙度 / 金属度 + 每件资产的材质白名单；生成器只引用 `MAT_*` 常量与 `colors_for()`，不各自维护材质，改色只改这一处）。
 - 生成器：`sn_harbor_crane_generator.py`、`sn_mega_gantry_generator.py`、`sn_wooden_mast_crane_generator.py`、`sn_hand_jib_crane_generator.py`；工单 `tools/modeling/briefs/sn_crane_batch1.json`。
 - 干跑 / 导出 / 自检 / 预览：`dryrun_cranes.py`、`export_cranes_glb.py`、`verify_cranes_glb.py`（世界空间包围盒按节点 TRS 合成）、`render_cranes_preview.py`；Godot 侧导入验收 `tools/godot/verify_cranes.gd`（4/4 PASS）。
 - 轴向：Blender +X 为臂架伸出方向、+Z 向上；glTF 转 Y-up 后进入 Godot 尺寸为 (Blender X, Blender Z, Blender Y)。
