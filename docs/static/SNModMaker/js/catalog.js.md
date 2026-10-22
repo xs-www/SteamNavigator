@@ -23,27 +23,27 @@
 | `REF_LABELS` | L379 |
 | `TYPE_FIELD_HINTS` | L386 |
 | `DEFAULTS` | L390 |
-| `TAG_SUGGESTIONS` | L664 |
-| `CONDITION_OPS` | L690 |
-| `CONDITION_FIELDS` | L696 |
-| `EFFECT_OPS` | L712 |
-| `EFFECT_FIELDS` | L720 |
-| `MODIFIER_STATS` | L744 |
-| `DEADLINE_FORMULAS` | L748 |
-| `GENERATORS` | L753 |
-| `FACILITIES` | L754 |
-| `WEAPON_PRESETS` | L766 |
-| `TEMPLATES` | L871 |
-| `FIELD_ENUM_LABELS` | L918 |
-| `enumOptions(typeKey, field, values)` | L962 |
-| `KEY_PREFIX` | L969 |
-| `SNCatalog (global)` | L971 |
+| `TAG_SUGGESTIONS` | L766 |
+| `CONDITION_OPS` | L792 |
+| `CONDITION_FIELDS` | L798 |
+| `EFFECT_OPS` | L814 |
+| `EFFECT_FIELDS` | L822 |
+| `MODIFIER_STATS` | L846 |
+| `DEADLINE_FORMULAS` | L850 |
+| `GENERATORS` | L855 |
+| `FACILITIES` | L856 |
+| `WEAPON_PRESETS` | L868 |
+| `TEMPLATES` | L973 |
+| `FIELD_ENUM_LABELS` | L1020 |
+| `enumOptions(typeKey, field, values)` | L1064 |
+| `KEY_PREFIX` | L1071 |
+| `SNCatalog (global)` | L1073 |
 
 ## 契约与约束
 
-- `BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型与 Schema 2.0 草案类型；`schemaVersionFor()` 返回类型期望版本（草案 2.0，其余 1.0）。
-- `TYPES` 仍只含可加载的 Content Schema 1.0 类型，`DRAFT_TYPES` 与 `ALL_TYPES` 供编辑器侧栏、默认值与校验使用。
-- `DEFAULTS` 生成的定义必须能通过对应 Schema；9 个草案类型的默认值必须补齐 `schemas/v2/*` 的必需字段。
+- `BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型（1.0 与 Phase B 的 2.0）与剩余 Schema 2.0 草案类型；`schemaVersionFor()` 返回类型期望版本。
+- `TYPES` 含 25 个可加载类型（1.0 16 类 + Phase B 提升的 9 类），`DRAFT_TYPES` 只剩 `weapons`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。
+- `DEFAULTS` 生成的定义必须能通过对应 Schema；Phase B 9 类 2.0 类型（含 `map_configs` 的 31 键 exploration）与 `weapons` 草案的默认值都在此维护。
 - `weapons` 草案的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。
 - `WEAPON_PRESETS` 是「舰载武器包」模板的 5 件成品数据（deck_gun / heavy_cannon / mortar / repeater / broadside）：战斗数值对齐 SNBattleSim，装配字段对齐 GLB Root extras，经济字段项目补齐，`model` 为 `model.weapon.*`；`TEMPLATES` 的 `weapons` 条目（显示名「舰载武器包」）驱动新建模组对话框与 CLI `new --template weapons`。
 - `keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。

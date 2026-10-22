@@ -22,22 +22,31 @@
 | `PORT_ARCHETYPE` | L19 |
 | `MAP_PROFILE` | L20 |
 | `STARTING_BUILD` | L21 |
-| `CONTRACT` | L22 |
-| `EVENT` | L23 |
-| `PATCH` | L24 |
-| `SCHEMA_PATHS` | L26 |
-| `SCHEMA_VERSIONS` | L45 |
-| `SINGULAR` | L64 |
-| `MODULE_TYPES` | L83 |
-| `all() -> Array[StringName]` | L86 |
-| `registry_types() -> Array[StringName]` | L95 |
-| `is_known(content_type: StringName) -> bool` | L101 |
-| `is_module(content_type: StringName) -> bool` | L105 |
-| `is_patch(content_type: StringName) -> bool` | L109 |
-| `schema_path(content_type: StringName) -> String` | L113 |
-| `schema_version(content_type: StringName) -> String` | L117 |
-| `singular(content_type: StringName) -> String` | L121 |
-| `from_singular(singular_name: String) -> StringName` | L125 |
+| `WORLD_PROFILE` | L22 |
+| `REGION` | L23 |
+| `SITE` | L24 |
+| `ROUTE_TEMPLATE` | L25 |
+| `WEATHER_PROFILE` | L26 |
+| `FACTION` | L27 |
+| `DISCOVERY` | L28 |
+| `START_PROFILE` | L29 |
+| `MAP_CONFIG` | L30 |
+| `CONTRACT` | L31 |
+| `EVENT` | L32 |
+| `PATCH` | L33 |
+| `SCHEMA_PATHS` | L35 |
+| `SCHEMA_VERSIONS` | L63 |
+| `SINGULAR` | L91 |
+| `MODULE_TYPES` | L119 |
+| `all() -> Array[StringName]` | L122 |
+| `registry_types() -> Array[StringName]` | L133 |
+| `is_known(content_type: StringName) -> bool` | L139 |
+| `is_module(content_type: StringName) -> bool` | L143 |
+| `is_patch(content_type: StringName) -> bool` | L147 |
+| `schema_path(content_type: StringName) -> String` | L151 |
+| `schema_version(content_type: StringName) -> String` | L155 |
+| `singular(content_type: StringName) -> String` | L159 |
+| `from_singular(singular_name: String) -> StringName` | L163 |
 
 ## 契约与约束
 

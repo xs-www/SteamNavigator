@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T04:24:51.337Z",
-  "commit": "c3f07a6",
+  "generated_at": "2026-10-22T04:46:22.951Z",
+  "commit": "46b8898",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 896,
-    "documented": 354,
+    "sources": 897,
+    "documented": 355,
     "grouped": 542
   },
   "files": [
@@ -214,7 +214,7 @@
     },
     {
       "source": "SNModMaker/js/catalog.js",
-      "sha256": "a02868954dfcbcc753e551c68e37cb13018c086e2b15defd82e02dfd104d5f8c",
+      "sha256": "f6a03aa33c6f7eec3f6edd64e62a09c29d2b876f547b0da29c26b994165c1808",
       "doc": "docs/static/SNModMaker/js/catalog.js.md",
       "status": "documented"
     },
@@ -275,13 +275,13 @@
     },
     {
       "source": "SNModMaker/tests/content-cli.test.mjs",
-      "sha256": "a5361551a2abc676a2722093d0b5cfcf4cf4f9855387bcb1b43f88a6a17f7192",
+      "sha256": "d0767934ee6751d8758858307d575c7aaa4037f7fdd6604fac8dc9ee31fa81cb",
       "doc": "docs/static/SNModMaker/tests/content-cli.test.mjs.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "b27a0b68bc2408181697f95d4707cf9ed097c88f0846e08f55ad5e3f3cb5d986",
+      "sha256": "acc9a9ffecb063bbb92b4c3babb60b6ee63082ca0225e2adbbab951e1c59f7cc",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -359,7 +359,7 @@
     },
     {
       "source": "content_types.json",
-      "sha256": "371c4482374386c48ee1508067ce3de34c0ad8ae297da7a6def0ce8ec4931d9e",
+      "sha256": "2cce95d76cee9242784730fb8182713c7018eab4135fbf20b4b5c9ee8d1d05e8",
       "doc": "docs/static/content_types.json.md",
       "status": "documented"
     },
@@ -3252,7 +3252,7 @@
     },
     {
       "source": "framework/modding/content_types.gd",
-      "sha256": "72a0051e281d06ef56bf5b65ba92157c42142c907a0c7fad6396f5ec20b7f234",
+      "sha256": "8c86b31e811d8323101cd8d788b14bec5077381e489319249d008a71249a657d",
       "doc": "docs/static/framework/modding/content_types.gd.md",
       "status": "documented"
     },
@@ -3432,10 +3432,9 @@
     },
     {
       "source": "framework/tests/cases/test_content_versions.gd",
-      "sha256": "61dfff587d7f8bb8a424b3816e9d1cf5b0ebfd73a315c76652077b83794fc697",
-      "doc": "docs/static/framework/tests/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/tests/README.md"
+      "sha256": "6edf43f527418799c495cd28f24963c29c30201a2c5a57f34ec231871102c8b7",
+      "doc": "docs/static/framework/tests/cases/test_content_versions.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_contract_flow.gd",
@@ -3587,7 +3586,7 @@
     },
     {
       "source": "framework/tests/cases/test_schema_v2_drafts.gd",
-      "sha256": "3b9722c8fa150ec4f277dd3979ee3372b2fb205371d971c73c4995b3e65db367",
+      "sha256": "c048ed58fdc84715b31c71b7b6bde5ffac53bc5a59410ce1ff48777a324be4c3",
       "doc": "docs/static/framework/tests/cases/test_schema_v2_drafts.gd.md",
       "status": "documented"
     },
@@ -4446,6 +4445,13 @@
       "group": "docs/static/schemas/README.md"
     },
     {
+      "source": "schemas/v2/map_config.schema.json",
+      "sha256": "47c23fdbcd946d64b0824b5add36b5554cda51500a5a525b9a2fae924b468ab9",
+      "doc": "docs/static/schemas/README.md",
+      "status": "grouped",
+      "group": "docs/static/schemas/README.md"
+    },
+    {
       "source": "schemas/v2/region.schema.json",
       "sha256": "bbca16db9a155206a1b77a6da9e224fead11183c37a660ce1df4069aaa75a088",
       "doc": "docs/static/schemas/README.md",
@@ -4468,7 +4474,7 @@
     },
     {
       "source": "schemas/v2/start_profile.schema.json",
-      "sha256": "9e9a2c2b42932b9c3db72910750094da71476cb4d1d25967e8ad10c5f474fc88",
+      "sha256": "93c0002db8a7df37c613656b80458403a6fdc0605e56d626f759d27eee776f48",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4489,7 +4495,7 @@
     },
     {
       "source": "schemas/v2/world_profile.schema.json",
-      "sha256": "cdc12b099d30bf27e4bef6cc8b67fe5ced4c94098ef88b7a34abb705d7ee6dc3",
+      "sha256": "3a9e7bb0caf97d8ac8c406cd8cdf12eb923331670a45d2968458a58646e92792",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4571,7 +4577,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "6e14ccbe5a2b34dc55ed47b3360c48ae10fc4aee4aa44f4205b8dca74669d6f4",
+      "sha256": "80493d2402bfa8dd8a4fbad606b496462db7c4d268659eb3a0d51a39057adb57",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -4609,7 +4615,7 @@
     },
     {
       "source": "tools/gen_content_types.mjs",
-      "sha256": "2941af451234cc351fcfde618e9737352192522edfd2ceadbda431af56d6f77a",
+      "sha256": "e4a324300db3ad20c4cde2c144c27f01463b934d1ad278acd73856a99bf090e6",
       "doc": "docs/static/tools/gen_content_types.mjs.md",
       "status": "documented"
     },
@@ -5906,7 +5912,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "89b58c2026666183ee329109574eb54f5251bcefb14d3f8fb55ac60aeefbfdb2",
+      "sha256": "656f0c0ac5bcd7765679e73038a2e04e03803a61f93acfd4dd9a985f6655bed7",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
