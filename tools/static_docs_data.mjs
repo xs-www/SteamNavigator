@@ -704,35 +704,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/services/save_service.gd": {
-    role: "JSON 存档槽：模组头、状态、临时文件校验后替换、兼容性检查与旧档迁移入口。",
-    contracts: [
-      "新存档写 save_schema 2.0、state_schema 2.0 与 content_schema 1.0；写入前克隆状态并补齐 campaign，不修改实时状态。",
-      "写入快照与加载结果都会调用 `ShipModules.ensure()` 对齐模块实例表；旧档缺表时按满状态补齐，实例 id 与 condition 随存档往返。",
-      "写入 `.tmp` 并重新解析校验；旧文件先改名为 `.bak`，最终替换失败会回滚。",
-      "槽位名限制 `^[a-z][a-z0-9_]{1,31}$`；自动存档与出航前快照为独立槽。",
-      "缺失存档所需模组拒绝加载；版本/哈希漂移只警告。",
-      "加载时统一交给 `SaveMigrations.migrate()`；1.x 归档迁移为 2.0 并回填 campaign 元数据。"
-    ],
-    l2: {
-      "load_slot(slot)": [
-        "解析后先迁移 save payload，再校验 state；不支持的 save_schema 返回结构化错误。",
-        "返回 GameState、header、meta、migrated 与 migration_warnings；调用方负责模组兼容性校验。"
-      ]
-    }
-  },
-
-  "framework/services/save_migrations.gd": {
-    role: "存档 payload 版本迁移：当前 save schema 2.0，支持 1.x → 2.0 并回填持久战役元数据。",
-    contracts: [
-      "`save_schema` 描述 payload 包装，`state_schema` 描述 GameState 数据；2.0 之前旧档的 content_schema 实际存放 state schema。",
-      "1.x → 2.0 只做兼容增量：保留既有 run/world/ship 字段，补 campaign、schema_version、state_schema 与 content_schema。",
-      "campaign id 从 seed 确定性生成；created_at 优先沿用 payload/run 时间；playtime 取 game_time。",
-      "缺失的 campaign 分区（world/codex/factions）由 `GameState.ensure_campaign_sections` 回填，并逐段写入 warnings。",
-      "未知主版本直接拒绝；迁移结果携带 warnings 供 UI/日志显示。"
-    ]
-  },
-
   "framework/services/settings_service.gd": {
     role: "持久化 UI 设置：编辑器读 `res://config/config.json`；发布版优先读写 exe 同级 `config/config.json`，不可写时回退 `user://config/config.json`。",
     contracts: [
@@ -2053,15 +2024,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/tests/cases/test_save_migration.gd": {
-    role: "存档 Schema 2.0 迁移测试：v1 payload 加载为持久战役状态，v2 往返不迁移，缺失 campaign 回填，未知版本拒绝。",
-    contracts: [
-      "手写 1.0 payload 验证 save_schema → 2.0、state schema → 2.0、campaign/id/created_at/playtime 回填与 migrated_from 记录。",
-      "验证 v2 写入/读取的 save_schema、state_schema、content_schema 与 state hash 往返一致。",
-      "验证缺 campaign 的 2.0 payload 惰性补齐并产生 warning；3.0 等未知版本返回结构化错误。"
-    ]
-  },
-
   "framework/tests/cases/test_campaign_state.gd": {
     role: "CampaignState 分区测试：分区惰性补齐、探索进度只追加 id、阵营声望夹取，以及分区随存档往返。",
     contracts: [
@@ -2548,7 +2510,7 @@ export const MODULES = {
       "测试源码可以引用 `core:*` ID；`test_no_core_ids.gd` 只扫描非测试框架代码。",
       "`test_full_clear.gd` 通过公开命令/查询脚本化跑完五段主线并组装大型船，覆盖 9 个 seed。",
       "`test_content_types_manifest.gd` 守护 `content_types.json` 与 `ContentTypes` / Schema 文件的一致性。",
-      "`test_save_migration.gd` 守护 save schema 1.x → 2.0 迁移、campaign 元数据与分区回填。",
+      "`test_save_migration.gd` 守护 save schema 1.x → 2.0 迁移、campaign 元数据/分区回填与 B5 `content_versions` 快照/推断/漂移。",
       "`test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。",
       "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
       "`test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",

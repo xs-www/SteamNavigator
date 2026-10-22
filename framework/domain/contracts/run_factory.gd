@@ -132,6 +132,11 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0, 
 		"victory": null,
 	}
 	state.ensure_campaign()
+	var setup: Dictionary = state.campaign_setup()
+	if (setup.get("content_versions", {}) as Dictionary).is_empty():
+		# D3: every new run snapshots the per-type content schema versions, so a
+		# later load can report drift without guessing. 1.0 runs snapshot 1.0.
+		setup["content_versions"] = ContentTypes.SCHEMA_VERSIONS.duplicate(true)
 	var world_progress := state.campaign_world()
 	world_progress["generated"] = true
 	var starting_port_id := state.current_port_id()

@@ -1,5 +1,17 @@
 extends TestCase
-## Save Schema 2.0 migration: v1 payloads load as persistent campaign states.
+## @static-doc
+## 作用：存档 Schema 2.0 迁移与内容版本表（B5）测试：v1 payload 升级、v2 往返、
+## `campaign.setup.content_versions` 快照/推断/漂移警告，以及旧档不重排世界。
+##
+## ## 契约与约束
+## - 1.0 payload 加载后 save_schema/state_schema → 2.0，campaign 元数据/分区回填，
+##   `content_versions` 推断 `starting_builds/map_profiles → 1.0` 并用当前注册表补齐。
+## - v2 缺失 `content_versions` 时加载补齐并产生 warning；已有版本与运行时不一致时
+##   只产生 `content version drift` warning，存档仍可读。
+## - 新存档必须写全 `ContentTypes.SCHEMA_VERSIONS` 快照；v2 战役的
+##   `map_config_id` / `world_profile_id` / `start_profile_id` 与空 `map_profile_id` 往返保持。
+## - 同一存档多次加载 world/hash 不变（不重新生成世界）；3.0 等未知版本拒绝。
+## @end-static-doc
 
 func _directory() -> String:
 	return "user://test_saves/migration_%d" % Time.get_ticks_usec()
@@ -37,9 +49,13 @@ func _legacy_payload() -> Dictionary:
 				"seed": 4242,
 				"game_time": 12.5,
 				"started_at": "2026-01-01T00:00:00",
+				"starting_build": "core:starting_build/steady",
 			},
 			"player": {"money": 500},
-			"world": {"current_port_id": "core:port_archetype/iron_harbor"},
+			"world": {
+				"current_port_id": "core:port_archetype/iron_harbor",
+				"map_profile_id": "core:map_profile/standard",
+			},
 			"ship": {"hull_id": "core:hull/small_efficient"},
 		},
 	}
@@ -61,6 +77,10 @@ func test_v1_save_migrates_to_v2_campaign() -> void:
 	assert_false(bool(state.campaign_world().get("generated", true)), "a migrated run has no generated world yet")
 	assert_true(state.ship().has("module_instances"), "legacy ship gets a module instance table on load")
 	assert_false(ShipModules.has_slot(state.ship(), "boiler"), "a legacy ship without a boiler has no boiler instance")
+	var versions: Dictionary = state.campaign_setup().get("content_versions", {})
+	assert_eq(String(versions.get("starting_builds", "")), "1.0", "legacy starting build is recorded as 1.0")
+	assert_eq(String(versions.get("map_profiles", "")), "1.0", "legacy map profile is recorded as 1.0")
+	assert_eq(String(versions.get("world_profiles", "")), "2.0", "missing types are filled from the current registry")
 	var header: Dictionary = loaded["header"]
 	assert_eq(String(header.get("save_schema", "")), "2.0", "migrated header uses save schema 2.0")
 	assert_eq(String(header.get("migrated_from", "")), "1.0", "header records the source schema")
@@ -85,6 +105,7 @@ func test_v2_save_round_trips_campaign_without_migration() -> void:
 		"player": {"money": 10},
 	})
 	state.ensure_campaign()
+	SaveMigrations.prepare_for_save(state.data)
 	var saved := service.save_slot("modern", state, {"mods": []})
 	assert_true(bool(saved["ok"]), "v2 save writes: %s" % String(saved.get("error", "")))
 	var loaded := service.load_slot("modern")
@@ -113,6 +134,113 @@ func test_missing_campaign_is_backfilled_in_v2_payload() -> void:
 	var state: GameState = loaded["state"]
 	assert_eq(String(state.campaign().get("id", "")), "campaign_4242", "campaign backfilled from seed")
 	assert_true(Array(loaded.get("migration_warnings", [])).size() > 0, "backfill reports a warning")
+	_cleanup(directory)
+
+
+func test_new_save_snapshots_content_versions() -> void:
+	var directory := _directory()
+	var service := SaveService.new(null, directory)
+	var state := GameState.from_dict({
+		"schema_version": "2.0",
+		"campaign": {"id": "campaign_7"},
+		"run": {"seed": 7, "starting_build": "core:starting_build/steady", "map_profile": "core:map_profile/standard"},
+		"player": {"money": 10},
+	})
+	state.ensure_campaign()
+	var saved := service.save_slot("snapshot", state)
+	assert_true(bool(saved["ok"]), "save writes: %s" % String(saved.get("error", "")))
+	var parsed := JsonUtils.parse_file(directory + "/snapshot.json")
+	assert_true(bool(parsed["ok"]), "save file parses")
+	var versions: Dictionary = parsed["value"]["state"]["campaign"]["setup"]["content_versions"]
+	for type_key in ContentTypes.SCHEMA_VERSIONS.keys():
+		assert_eq(
+			String(versions.get(String(type_key), "")),
+			String(ContentTypes.SCHEMA_VERSIONS[type_key]),
+			"saved content_versions snapshots %s" % type_key
+		)
+	_cleanup(directory)
+
+
+func test_v2_save_without_content_versions_is_backfilled() -> void:
+	var directory := _directory()
+	var service := SaveService.new(null, directory)
+	var payload := _legacy_payload()
+	payload["save_schema"] = "2.0"
+	payload["state"]["schema_version"] = "2.0"
+	payload["state"]["campaign"] = {"id": "campaign_4242"}
+	_write_payload(directory, "partial_versions", payload)
+	var loaded := service.load_slot("partial_versions")
+	assert_true(bool(loaded["ok"]), "v2 payload without content_versions loads")
+	var versions: Dictionary = loaded["state"].campaign_setup().get("content_versions", {})
+	assert_eq(String(versions.get("starting_builds", "")), "1.0", "backfill infers the legacy starting build")
+	assert_eq(String(versions.get("map_profiles", "")), "1.0", "backfill infers the legacy map profile")
+	assert_true(
+		Array(loaded.get("migration_warnings", [])).size() > 0,
+		"content_versions backfill reports a warning"
+	)
+	_cleanup(directory)
+
+
+func test_content_version_drift_warns_without_reordering_the_world() -> void:
+	var directory := _directory()
+	var service := SaveService.new(null, directory)
+	var payload := _legacy_payload()
+	payload["save_schema"] = "2.0"
+	payload["state"]["schema_version"] = "2.0"
+	payload["state"]["campaign"] = {
+		"id": "campaign_4242",
+		"setup": {"content_versions": {"goods": "0.9"}},
+	}
+	_write_payload(directory, "drift", payload)
+	var first := service.load_slot("drift")
+	var second := service.load_slot("drift")
+	assert_true(bool(first["ok"]), "a save with drifted content versions still loads")
+	assert_true(bool(second["ok"]), "the same save loads again")
+	var warnings: Array = first.get("migration_warnings", [])
+	var has_drift := false
+	for warning in warnings:
+		if String(warning).contains("content version drift") and String(warning).contains("goods"):
+			has_drift = true
+	assert_true(has_drift, "drift is reported as a warning: %s" % str(warnings))
+	assert_eq(
+		String(first["state"].world().get("current_port_id", "")),
+		String(second["state"].world().get("current_port_id", "")),
+		"loading a drifted save never re-generates the world"
+	)
+	_cleanup(directory)
+
+
+func test_v2_campaign_save_round_trips_content_versions_and_ids() -> void:
+	var directory := _directory()
+	var service := SaveService.new(null, directory)
+	var state := GameState.from_dict({
+		"schema_version": "2.0",
+		"campaign": {"id": "campaign_11"},
+		"run": {"seed": 11, "starting_build": "core:starting_build/steady"},
+		"player": {"money": 10},
+		"world": {
+			"current_port_id": "port_0",
+			"start_profile_id": "core:start_profile/standard",
+			"world_profile_id": "core:world_profile/default_world",
+			"map_config_id": "core:map_config/standard",
+			"map_profile_id": "",
+		},
+	})
+	state.ensure_campaign()
+	state.campaign_setup()["start_profile_id"] = "core:start_profile/standard"
+	state.campaign_setup()["world_profile_id"] = "core:world_profile/default_world"
+	state.campaign_setup()["map_config_id"] = "core:map_config/standard"
+	SaveMigrations.prepare_for_save(state.data)
+	var saved := service.save_slot("v2_roundtrip", state)
+	assert_true(bool(saved["ok"]), "v2 save writes")
+	var loaded := service.load_slot("v2_roundtrip")
+	assert_true(bool(loaded["ok"]), "v2 save loads")
+	var loaded_state: GameState = loaded["state"]
+	assert_eq(String(loaded_state.world().get("map_config_id", "")), "core:map_config/standard", "map config id persists")
+	assert_eq(String(loaded_state.world().get("map_profile_id", "x")), "", "v2 campaigns keep map_profile_id empty")
+	var versions: Dictionary = loaded_state.campaign_setup().get("content_versions", {})
+	assert_eq(String(versions.get("map_configs", "")), "2.0", "v2 content versions persist")
+	assert_eq(loaded_state.hash(), state.hash(), "v2 campaign state hash round-trips")
 	_cleanup(directory)
 
 
