@@ -52,7 +52,7 @@
 
 - 建模 M2-1 `combat_kit` 敌舰（批次 9）：4 艘敌舰 = **3 类敌人**（Light ×2 / Medium / Heavy），海盗单桅 `SN_Enemy_Pirate_Sloop` / 武装商船 `SN_Enemy_Merchant_Armed` / 铁甲舰变体 `SN_Enemy_Ironclad_Raider` / 小型炮艇 `SN_Enemy_Gunboat`，**31,324 / 32,400 tri**、55 mesh（GLB 节点合计 86）+ **16 武器 socket + 8 炮门 socket**、9 张共享贴图（无新增，新增 `assets/models/combat/` 类别目录 + Core 副本）。复用现有船体站表放样 + `rig_kit` / `ship_parts`，**不烘炮**（甲板 socket `hull-sockets@1`、炮门 socket `hull-gunports@1`，复用 `SN_Weapon_CasemateGun`）；4/4 GLB 自检 ALL OK、独立 Verifier 只读验收 0 failures、Godot 用例守护（4 GLB 加载 / tri 锁定 / socket 契约）；预览 8 单件 + 1 lineup。运行时武器挂载与敌人内容 Schema 留后续。
 
-- UI 风格化视觉基线：完成“风格化港务工坊 × 船长航海账册”视觉母版与完整 UI Kit 展示页，覆盖手绘港务 HUD、悬挂页签、按钮状态、钢铁/仪表/羊皮纸/蓝图面板、市场行、委托卡、出航确认、资源条、圆形仪表与通用图标；实现契约与切片清单见 [UI_VISUAL_BASELINE.md](docs/design/UI_VISUAL_BASELINE.md)。
+- UI 视觉基准 V1：图二确认为约束性的 `SN Visual Baseline V1`，图一保留为非生产承诺的 `UI Kit Concept V1`；生产视觉收敛为黄铜钢板、羊皮纸、蓝图、布旗四个材质族，并冻结基础尺寸、九宫格、安全文字区、字体、颜色、交互状态、动效与边框治理。见 [UI_VISUAL_BASELINE.md](docs/design/UI_VISUAL_BASELINE.md) / [UI_FOUNDATION_SPEC_V1.md](docs/design/UI_FOUNDATION_SPEC_V1.md)。
 
 - SNModMaker / SNBattleSim Windows 一键启动：两个子目录新增可双击的 `start.bat`，自动检测 Node.js；缺失时优先用 winget 安装最新 LTS，并以 nodejs.org 官方 MSI 作为回退，随后启动本地服务并打开浏览器。
 

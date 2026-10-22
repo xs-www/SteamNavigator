@@ -22,3 +22,5 @@
 - [WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md) — 世界与战役内容 Schema 2.0 运行时实现契约（Phase B，Draft 2；B0–B6 已完成）
 - [MODELING_WORKFLOW.md](MODELING_WORKFLOW.md) — 建模半工作流与工单 / 验收流程
 - [UI_PROTOTYPE.md](UI_PROTOTYPE.md) — `.design` 美术与交互原型说明
+- [UI_VISUAL_BASELINE.md](UI_VISUAL_BASELINE.md) — SN Visual Baseline V1 与非约束性的 UI Kit Concept V1
+- [UI_FOUNDATION_SPEC_V1.md](UI_FOUNDATION_SPEC_V1.md) — 四类材质、基础尺寸、九宫格、安全区、字体、颜色、状态与动效生产前置规范
