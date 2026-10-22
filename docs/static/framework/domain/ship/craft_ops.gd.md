@@ -22,9 +22,9 @@
 | `ensure_orders(state: GameState) -> void` | L92 |
 | `orders(state: GameState) -> Array` | L110 |
 | `material_plan(state: GameState, hub: RegistryHub, port_id: String, module_id: String) -> Array` | L116 |
-| `craft_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]` | L139 |
-| `craft(state: GameState, hub: RegistryHub, module_id: String) -> Dictionary` | L164 |
-| `settle_orders(state: GameState, hub: RegistryHub) -> Array` | L250 |
+| `craft_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]` | L143 |
+| `craft(state: GameState, hub: RegistryHub, module_id: String) -> Dictionary` | L168 |
+| `settle_orders(state: GameState, hub: RegistryHub) -> Array` | L254 |
 
 ## 契约与约束
 

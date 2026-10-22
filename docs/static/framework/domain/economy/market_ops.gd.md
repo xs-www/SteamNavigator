@@ -21,15 +21,15 @@
 | `market_for(state: GameState, port_id: String) -> Dictionary` | L72 |
 | `entry_for(state: GameState, port_id: String, item_id: String) -> Dictionary` | L76 |
 | `initialize_port_market(hub: RegistryHub, archetype: ContentDefinition, rng: RandomNumberGenerator) -> Dictionary` | L80 |
-| `supply_kind_for(definition: ContentDefinition) -> String` | L123 |
-| `supply_entry_for(state: GameState, port_id: String, kind: String) -> Dictionary` | L131 |
-| `ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void` | L139 |
-| `buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary` | L164 |
-| `sell(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary` | L210 |
-| `buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind: String, amount: int, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary` | L241 |
-| `repair_cost(hub: RegistryHub, state: GameState, repair_per_point: float) -> Dictionary` | L281 |
-| `repair(state: GameState, hub: RegistryHub, port_id: String, repair_per_point: float) -> Dictionary` | L299 |
-| `total_market_value(state: GameState) -> float` | L326 |
+| `supply_kind_for(definition: ContentDefinition) -> String` | L122 |
+| `supply_entry_for(state: GameState, port_id: String, kind: String) -> Dictionary` | L130 |
+| `ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void` | L138 |
+| `buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary` | L162 |
+| `sell(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary` | L208 |
+| `buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind: String, amount: int, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary` | L239 |
+| `repair_cost(hub: RegistryHub, state: GameState, repair_per_point: float) -> Dictionary` | L279 |
+| `repair(state: GameState, hub: RegistryHub, port_id: String, repair_per_point: float) -> Dictionary` | L297 |
+| `total_market_value(state: GameState) -> float` | L324 |
 
 ## 契约与约束
 

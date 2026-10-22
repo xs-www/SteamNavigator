@@ -41,17 +41,17 @@
 | `acquire(context, source_key: String, rng: RandomNumberGenerator, target_port_id: String = "") -> Dictionary` | L371 |
 | `acquire_goods(context, source_key: String, rng: RandomNumberGenerator) -> Dictionary` | L455 |
 | `goods_candidates(context) -> Array` | L535 |
-| `investigate(context, clue_id: String) -> Dictionary` | L587 |
-| `travel(context, clue_id: String, strategy_id: String) -> Dictionary` | L715 |
-| `mark_attempt_failed(state: GameState, clue_id: String, at_time: float = -1.0) -> int` | L765 |
-| `mark_resolved(state: GameState, clue_id: String) -> bool` | L775 |
-| `view(state: GameState, _context = null) -> Array` | L789 |
-| `view_entry(state: GameState, clue: Dictionary) -> Dictionary` | L802 |
-| `clue_acquired_event(clue: Dictionary) -> Dictionary` | L889 |
-| `clue_investigated_event(clue: Dictionary) -> Dictionary` | L902 |
-| `clue_investigation_failed_event(clue: Dictionary, cost: int, hours: float) -> Dictionary` | L914 |
-| `clue_expired_event(clue_ids: Array[String]) -> Dictionary` | L929 |
-| `expired_events_of(clue_ids: Array[String]) -> Array` | L937 |
+| `investigate(context, clue_id: String) -> Dictionary` | L589 |
+| `travel(context, clue_id: String, strategy_id: String) -> Dictionary` | L717 |
+| `mark_attempt_failed(state: GameState, clue_id: String, at_time: float = -1.0) -> int` | L767 |
+| `mark_resolved(state: GameState, clue_id: String) -> bool` | L777 |
+| `view(state: GameState, _context = null) -> Array` | L791 |
+| `view_entry(state: GameState, clue: Dictionary) -> Dictionary` | L804 |
+| `clue_acquired_event(clue: Dictionary) -> Dictionary` | L891 |
+| `clue_investigated_event(clue: Dictionary) -> Dictionary` | L904 |
+| `clue_investigation_failed_event(clue: Dictionary, cost: int, hours: float) -> Dictionary` | L916 |
+| `clue_expired_event(clue_ids: Array[String]) -> Dictionary` | L931 |
+| `expired_events_of(clue_ids: Array[String]) -> Array` | L939 |
 
 （`port_goods`：已发现港口 + 货物 + 冻结行情快照 + 到期时间）的生成、逐级调查披露
 （`investigate`，1→2→3→4）、时效清理、按等级裁剪的只读视图、线索生命周期

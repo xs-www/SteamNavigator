@@ -12,7 +12,8 @@
 | `test_manifest_matches_content_types() -> void` | L20 |
 | `test_manifest_entries_are_unique_and_complete() -> void` | L63 |
 | `test_merged_modules_and_hulls_are_active_2_0() -> void` | L108 |
-| `test_planned_types_do_not_shadow_active_types() -> void` | L125 |
+| `test_merged_items_are_active_2_0() -> void` | L125 |
+| `test_planned_types_do_not_shadow_active_types() -> void` | L143 |
 
 ## 契约与约束
 

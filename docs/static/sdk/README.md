@@ -12,7 +12,7 @@
 | `examples/example_boilers/manifest.json` | 第三方锅炉示例，验证公共内容接口。 | 本页 |
 | `pack_mod.gd` | 把松散模组目录打包为 `mods/<id>/...` 的 `.snavmod.zip`。 | [查看](./pack_mod.gd.md) |
 | `templates/mod_template/README.md` | 模组模板：Manifest、商品、双语本地化与说明。 | 本页 |
-| `templates/mod_template/content/goods.json` | 模组模板：Manifest、商品、双语本地化与说明。 | 本页 |
+| `templates/mod_template/content/items.json` | 模组模板：Manifest、商品、双语本地化与说明。 | 本页 |
 | `templates/mod_template/localization/en.json` | 模组模板：Manifest、商品、双语本地化与说明。 | 本页 |
 | `templates/mod_template/localization/zh_CN.json` | 模组模板：Manifest、商品、双语本地化与说明。 | 本页 |
 | `templates/mod_template/manifest.json` | 模组模板：Manifest、商品、双语本地化与说明。 | 本页 |

@@ -9,7 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MOD_ID` | L39 |
-| `GOODS_FILE` | L40 |
+| `ITEMS_FILE` | L40 |
 | `STORY_PACK_DIR` | L43 |
 | `runCli(args)` | L49 |
 | `jsonRun(args)` | L67 |
@@ -18,18 +18,18 @@
 | `mustFailJson(result, label)` | L97 |
 | `assertUsageError(result, label)` | L109 |
 | `tempRoot(t)` | L119 |
-| `createMod(t, { id = MOD_ID, name = '测试模组', template = 'goods', extra = [] } = {})` | L130 |
+| `createMod(t, { id = MOD_ID, name = '测试模组', template = 'items', extra = [] } = {})` | L130 |
 | `readText(file)` | L140 |
 | `readJson(file)` | L144 |
 | `writeJson(file, value)` | L152 |
 | `manifestOf(mod)` | L156 |
 | `contentFilesOf(mod)` | L160 |
 | `contentFileOfType(mod, typeKey)` | L168 |
-| `goodsFileOf(mod)` | L174 |
+| `itemsFileOf(mod)` | L174 |
 | `definitionsOf(mod)` | L178 |
 | `definitionById(mod, id)` | L188 |
 | `localeOf(mod, locale)` | L194 |
-| `addGood(mod, id, extra = [])` | L201 |
+| `addItem(mod, id, extra = [])` | L201 |
 | `sha256File(file)` | L218 |
 | `snapshotDir(dir, { onlyJson = false } = {})` | L226 |
 | `assertDirUnchanged(before, dir, label, options)` | L242 |
