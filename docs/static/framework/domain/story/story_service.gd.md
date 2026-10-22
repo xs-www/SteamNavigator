@@ -1,6 +1,6 @@
 # `framework/domain/story/story_service.gd`
 
-> 作用：新手剧情 / 教学系统的领域状态机。读取当前场景定义（v2 `map_configs`，
+> 作用：新手剧情 / 教学系统的领域状态机。读取当前场景定义（`map_configs`，
 
 - 类型：GDScript 源文件
 
@@ -32,7 +32,7 @@
 | `guaranteed_explore_clue_id(state: GameState) -> String` | L555 |
 | `consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool` | L564 |
 
-旧档回退 `map_profiles`）的 `data.story`（Core JSON）阶段表，维护
+C4 起 `map_profiles` 退役）的 `data.story`（Core JSON）阶段表，维护
 `GameState.data.story` 的进度、事件计数、标志、功能 / 商品 / 模块解锁，并分发
 「发现委托目的港」等剧情效果。
 

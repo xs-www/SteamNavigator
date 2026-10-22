@@ -15,7 +15,7 @@
 | `START_PROFILE_MISSING_BUILD` | L27 |
 | `WORLD_PROFILE_ID` | L28 |
 | `MAP_CONFIG_ID` | L29 |
-| `STARTING_BUILD_ID` | L30 |
+| `STARTING_SCENARIO_ID` | L30 |
 | `SITES_PER_REGION` | L31 |
 | `REGION_COUNT` | L32 |
 | `FACTION_COUNT` | L33 |
@@ -26,19 +26,19 @@
 | `synthetic_map_config_id() -> String` | L70 |
 | `synthetic_world_profile_id() -> String` | L74 |
 | `test_create_campaign_returns_full_state_shape() -> void` | L351 |
-| `test_same_seed_is_fully_deterministic() -> void` | L423 |
-| `test_different_seed_changes_the_generated_world() -> void` | L431 |
-| `test_region_site_and_route_references_are_consistent() -> void` | L440 |
-| `test_missing_map_config_falls_back_to_available_map_config() -> void` | L513 |
-| `test_missing_start_profile_returns_structured_error() -> void` | L522 |
-| `test_missing_world_profile_returns_structured_error() -> void` | L535 |
-| `test_missing_map_config_or_build_reference_returns_structured_error() -> void` | L542 |
-| `test_tutorial_branch_initializes_story_state() -> void` | L552 |
-| `test_faction_reputation_and_attitude_are_derived_from_content() -> void` | L563 |
+| `test_same_seed_is_fully_deterministic() -> void` | L422 |
+| `test_different_seed_changes_the_generated_world() -> void` | L430 |
+| `test_region_site_and_route_references_are_consistent() -> void` | L439 |
+| `test_missing_map_config_falls_back_to_available_map_config() -> void` | L512 |
+| `test_missing_start_profile_returns_structured_error() -> void` | L521 |
+| `test_missing_world_profile_returns_structured_error() -> void` | L534 |
+| `test_missing_map_config_or_build_reference_returns_structured_error() -> void` | L541 |
+| `test_tutorial_branch_initializes_story_state() -> void` | L551 |
+| `test_faction_reputation_and_attitude_are_derived_from_content() -> void` | L562 |
 
 `bootstrap_core()` 的 1.0 基线 + 合成 2.0 定义驱动 `CampaignFactory.create_campaign`，
 覆盖完整 state 形状、同 seed 确定性、不同 seed 差异、区域/地点/航路一致性、
-map_config 缺省回退与 start_profile / world_profile / map_config / starting_build
+map_config 缺省回退与 start_profile / world_profile / map_config / starting_scenario
 缺失的结构化错误、教程分支 StoryService.begin、阵营声望与态度派生。
 
 ## 契约与约束

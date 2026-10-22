@@ -14,7 +14,7 @@
 | `commands/intel_commands.gd` | 情报刷新命令：设施、费用、快照。 | 本页 |
 | `commands/port_commands.gd` | 港口停留用例：在本港消耗时间，让打造订单、NPC 市场与债务期限一起推进。 | [查看](./commands/port_commands.gd.md) |
 | `commands/quest_commands.gd` | 抽象任务（Quest）的命令包装（C3）：`quest.start`（接取内容任务）、 | [查看](./commands/quest_commands.gd.md) |
-| `commands/run_start.gd` | `run.start` 命令入口（Phase B B3）。保持 1.0 路径原样：无 `start_profile` | [查看](./commands/run_start.gd.md) |
+| `commands/run_start.gd` | `run.start` 命令入口（C4 起所有开局统一走 CampaignFactory）。无 | [查看](./commands/run_start.gd.md) |
 | `commands/ship_commands.gd` | 船厂用例：购买/仓库/随船运输三种来源安装模块（含替换）、卸下模块、打造模块，并在安装成功后检查通关。 | [查看](./commands/ship_commands.gd.md) |
 | `commands/story_commands.gd` | 新手剧情 / 教学系统的命令包装：`story.advance`（剧情卡继续）、 | [查看](./commands/story_commands.gd.md) |
 | `commands/supply_commands.gd` | 按市场价购买煤水与维修命令包装。 | 本页 |

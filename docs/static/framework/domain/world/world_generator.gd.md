@@ -36,7 +36,7 @@
 - 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图、计算
   出航角，最后调 `_build_route_edges` 预计算航线表。
 ### `formal_profile(definition)`
-- 把内容层世界 profile（`map_profiles` 定义）转成生成器 profile：五个区域
+- 把内容层世界 profile 转成生成器 profile：五个区域
   （起始沿岸 / 中部沿岸 ×2 / 远洋 / 外洋）、十一块陆地（1 大陆 + 5 大岛 + 3 小岛 +
   2 环礁）、港口槽位按 `port_count_range` 取前 N 个，名称键来自 `port_name_keys`、
   原型按 `archetypes` 轮转。它是 §12 验收项「15-20 港口合理分布在陆地海岸线上」

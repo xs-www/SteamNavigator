@@ -10,22 +10,22 @@
 | --- | --- |
 | `TEST_MOD` | L23 |
 | `TEST_FILE` | L24 |
-| `test_world_profiles_weather_profile_reference() -> void` | L137 |
-| `test_regions_weather_and_faction_references() -> void` | L163 |
-| `test_sites_planned_references_are_warnings_only() -> void` | L194 |
-| `test_route_template_planned_encounter_table_is_warning_only() -> void` | L210 |
-| `test_weather_profiles_have_no_outgoing_references() -> void` | L225 |
-| `test_factions_trade_goods_and_rival_references() -> void` | L233 |
-| `test_faction_self_rival_is_reference_self() -> void` | L254 |
-| `test_faction_missing_trade_good_and_rival_are_errors() -> void` | L271 |
-| `test_faction_contract_family_is_inactive_type_warning() -> void` | L289 |
-| `test_discoveries_unlock_ids_reference_checks() -> void` | L307 |
-| `test_start_profile_valid_without_optional_map_config() -> void` | L334 |
-| `test_start_profile_missing_hard_references_are_errors() -> void` | L359 |
-| `test_map_config_valid_with_matching_world_profile() -> void` | L378 |
-| `test_map_config_archetype_count_below_world_port_count_is_error() -> void` | L415 |
-| `test_map_config_count_check_skips_missing_world_profile() -> void` | L449 |
-| `test_map_config_missing_archetype_and_default_build_are_errors() -> void` | L478 |
+| `test_world_profiles_weather_profile_reference() -> void` | L138 |
+| `test_regions_weather_and_faction_references() -> void` | L164 |
+| `test_sites_planned_references_are_warnings_only() -> void` | L195 |
+| `test_route_template_planned_encounter_table_is_warning_only() -> void` | L211 |
+| `test_weather_profiles_have_no_outgoing_references() -> void` | L226 |
+| `test_factions_trade_goods_and_rival_references() -> void` | L234 |
+| `test_faction_self_rival_is_reference_self() -> void` | L255 |
+| `test_faction_missing_trade_good_and_rival_are_errors() -> void` | L272 |
+| `test_faction_contract_family_is_inactive_type_warning() -> void` | L290 |
+| `test_discoveries_unlock_ids_reference_checks() -> void` | L308 |
+| `test_start_profile_valid_without_optional_map_config() -> void` | L335 |
+| `test_start_profile_missing_hard_references_are_errors() -> void` | L360 |
+| `test_map_config_valid_with_matching_world_profile() -> void` | L379 |
+| `test_map_config_archetype_count_below_world_port_count_is_error() -> void` | L416 |
+| `test_map_config_count_check_skips_missing_world_profile() -> void` | L450 |
+| `test_map_config_missing_archetype_and_default_starting_scenario_are_errors() -> void` | L479 |
 
 复制出的临时 `RegistryHub` 注册合成定义，驱动 `CrossReferenceValidator.validate()`，
 覆盖硬引用缺失 error、planned 目标 `ref_inactive_type` warning、阵营自指
@@ -33,12 +33,12 @@
 
 ## 契约与约束
 - 测试不假设 Core 已有 v2 内容（B4 才落盘）；所有 9 类定义都是合成 ID（`test:*`）。
-  基线只借用已存在的 1.0 定义（contracts / events / starting_builds / port_archetypes 等）
+  基线只借用已存在的定义（contracts / events / starting_scenarios / port_templates 等）
   让 `validate()` 的既有检查保持干净，从而能对合成定义的 error / warning 做精确断言。
 - 硬引用缺失（`reference_missing`）：world_profiles.weather_profile、regions 的
   weather_profile / factions[]、factions.trade_goods / rival_factions、discoveries.unlock_ids、
-  start_profiles 的 world_profile / starting_build / starting_contract / starting_cargo[].item /
-  map_config、map_configs 的 archetypes / default_starting_build。
+  start_profiles 的 world_profile / starting_scenario / starting_contract / starting_cargo[].item /
+  map_config、map_configs 的 archetypes / default_starting_scenario。
 - sites 的 ruin_archetype / encounter_table / loot_table、route_templates.encounter_table、
   factions.contract_family 指向 planned 类型：只出 `ref_inactive_type` warning，不出 error。
 - factions.rival_factions 允许同类型引用，但指向自身报 `reference_self`。

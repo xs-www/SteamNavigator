@@ -10,11 +10,11 @@
 | 符号 | 位置 |
 | --- | --- |
 | `NewGameScreen` | L1 |
-| `action_requested (signal)` | L5 |
-| `TEXT` | L7 |
-| `MUTED` | L8 |
-| `BRASS` | L9 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L17 |
+| `action_requested (signal)` | L6 |
+| `TEXT` | L8 |
+| `MUTED` | L9 |
+| `BRASS` | L10 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L18 |
 
 ## 契约与约束
 

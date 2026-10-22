@@ -19,8 +19,8 @@
 ## 契约与约束
 - `save_schema`/`state_schema` 当前 2.0；1.x 只做兼容增量，保留 run/world/ship 字段。
 - D3：新档由 `prepare_for_save()` 从 `ContentTypes.SCHEMA_VERSIONS` 快照全部类型版本；
-  旧档缺表时先推断 `starting_builds / map_profiles → 1.0`（v2 另记 `map_configs → 2.0`），
-  再用当前注册表补齐缺失类型，并写一条 `content_versions inferred` warning。
+  旧档缺表时用当前注册表补齐缺失类型（C4 起 `starting_scenarios` / `map_configs` 均为
+  2.0，`map_profiles` 已退役，不再做 1.0 类型推断）。
 - 存档里已记录的版本与当前运行时不符时只写 `content version drift: <type> save=... current=...`
   warning；存档仍可读，不重排世界、不重新随机。
 - 缺失的 campaign 分区由 `GameState.ensure_campaign_sections` 逐段回填并写入 warnings；

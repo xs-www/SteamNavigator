@@ -28,7 +28,7 @@ weather_profiles / factions / discoveries / start_profiles / map_configs）的�
 - `map_configs.archetypes` 数量必须 ≥ 引用它的 `start_profiles.world_profile.port_count`；
   找不到对应 world_profile 时跳过（缺失本身已由 start_profiles 检查报错）。
 - 既有检查与错误码保持不变；空的 v2 Core 内容基线不受影响。
-- C1：5 类模块合并为 `modules` 后，`starting_builds` 的 boiler / cargo_modules /
+- C1：5 类模块合并为 `modules` 后，`starting_scenarios` 的 boiler / cargo_modules /
   navigation_module / safety_module / passenger_cabin 按 `data.v2_category`
   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。

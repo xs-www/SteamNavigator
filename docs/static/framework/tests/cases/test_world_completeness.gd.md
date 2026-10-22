@@ -31,7 +31,7 @@
 | `test_suggested_content_is_warning_only() -> void` | L137 |
 | `test_map_config_needs_at_least_port_count_archetypes() -> void` | L153 |
 | `test_start_region_tags_must_match_a_region() -> void` | L161 |
-| `test_start_profile_must_resolve_starting_build() -> void` | L169 |
+| `test_start_profile_must_resolve_starting_scenario() -> void` | L169 |
 | `test_phase_b_capabilities_are_whitelisted() -> void` | L178 |
 
 1.0 合成基线 + 注入的 2.0 世界/战役定义驱动 `CoreCompletenessChecker.check()`，覆盖
@@ -45,7 +45,7 @@ presence gate、5 个硬性数量下限、4 个建议 warning、start_profile �
   weather_profiles / regions 各 ≥1。
 - 建议 warning（`content_count_recommended`）：route_templates / factions / sites / discoveries 各 ≥1。
 - 组合规则：start_profile 必须解析 world_profile + map_config（缺省引用回退到唯一 map config）+
-  starting_build；start_region_tags 至少匹配一个 regions.region_tags；map config 的
+  starting_scenario；start_region_tags 至少匹配一个 regions.region_tags；map config 的
   archetypes 数量 ≥ world_profile.port_count。
 - `content.world.v1` / `content.campaign.v1` 在 `AppContext.KNOWN_CAPABILITIES` 中，声明它们的
   manifest 不会被 dependency_resolver 以 unsupported capability 禁用。

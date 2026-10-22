@@ -41,7 +41,7 @@
 | `test_continue_cannot_answer_the_alert_twice() -> void` | L1086 |
 | `test_chart_view_exposes_alert_state_while_exploring() -> void` | L1110 |
 | `test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void` | L1134 |
-| `test_rules_are_read_from_the_core_map_profile() -> void` | L1188 |
+| `test_rules_are_read_from_the_core_map_config() -> void` | L1188 |
 | `test_fog_radii_are_world_size_relative_and_content_driven() -> void` | L1232 |
 | `test_game_state_backfills_the_clue_block_lazily() -> void` | L1264 |
 | `test_save_load_roundtrip_preserves_exploration_state() -> void` | L1280 |

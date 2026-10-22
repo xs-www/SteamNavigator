@@ -14,35 +14,34 @@
 | `MODULE` | L11 |
 | `ROLE` | L12 |
 | `STRATEGY` | L13 |
-| `PORT_ARCHETYPE` | L14 |
-| `MAP_PROFILE` | L15 |
-| `STARTING_BUILD` | L16 |
-| `WORLD_PROFILE` | L17 |
-| `REGION` | L18 |
-| `SITE` | L19 |
-| `ROUTE_TEMPLATE` | L20 |
-| `WEATHER_PROFILE` | L21 |
-| `FACTION` | L22 |
-| `DISCOVERY` | L23 |
-| `START_PROFILE` | L24 |
-| `MAP_CONFIG` | L25 |
-| `CONTRACT` | L26 |
-| `QUEST` | L27 |
-| `EVENT` | L28 |
-| `PATCH` | L29 |
-| `SCHEMA_PATHS` | L31 |
-| `SCHEMA_VERSIONS` | L55 |
-| `SINGULAR` | L79 |
-| `MODULE_TYPES` | L103 |
-| `all() -> Array[StringName]` | L106 |
-| `registry_types() -> Array[StringName]` | L116 |
-| `is_known(content_type: StringName) -> bool` | L122 |
-| `is_module(content_type: StringName) -> bool` | L126 |
-| `is_patch(content_type: StringName) -> bool` | L130 |
-| `schema_path(content_type: StringName) -> String` | L134 |
-| `schema_version(content_type: StringName) -> String` | L138 |
-| `singular(content_type: StringName) -> String` | L142 |
-| `from_singular(singular_name: String) -> StringName` | L146 |
+| `PORT_TEMPLATE` | L14 |
+| `STARTING_SCENARIO` | L15 |
+| `WORLD_PROFILE` | L16 |
+| `REGION` | L17 |
+| `SITE` | L18 |
+| `ROUTE_TEMPLATE` | L19 |
+| `WEATHER_PROFILE` | L20 |
+| `FACTION` | L21 |
+| `DISCOVERY` | L22 |
+| `START_PROFILE` | L23 |
+| `MAP_CONFIG` | L24 |
+| `CONTRACT` | L25 |
+| `QUEST` | L26 |
+| `EVENT` | L27 |
+| `PATCH` | L28 |
+| `SCHEMA_PATHS` | L30 |
+| `SCHEMA_VERSIONS` | L53 |
+| `SINGULAR` | L76 |
+| `MODULE_TYPES` | L99 |
+| `all() -> Array[StringName]` | L102 |
+| `registry_types() -> Array[StringName]` | L112 |
+| `is_known(content_type: StringName) -> bool` | L118 |
+| `is_module(content_type: StringName) -> bool` | L122 |
+| `is_patch(content_type: StringName) -> bool` | L126 |
+| `schema_path(content_type: StringName) -> String` | L130 |
+| `schema_version(content_type: StringName) -> String` | L134 |
+| `singular(content_type: StringName) -> String` | L138 |
+| `from_singular(singular_name: String) -> StringName` | L142 |
 
 ## 契约与约束
 

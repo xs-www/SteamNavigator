@@ -1,6 +1,6 @@
 # `framework/domain/contracts/run_factory.gd`
 
-> 作用：新局工厂：选构筑/地图配置、生成船只与市场、NPC、仓库/运输/统计/通关结构、初始主线与普通委托。
+> 作用：开局装配的共享 helper（C4 起不再持有 1.0 `map_profiles` 几何路径）。提供
 
 - 类型：GDScript 源文件
 
@@ -9,32 +9,25 @@
 | 符号 | 位置 |
 | --- | --- |
 | `RunFactory` | L1 |
-| `default_build(hub: RegistryHub) -> ContentDefinition` | L23 |
-| `available_builds(hub: RegistryHub) -> Array[ContentDefinition]` | L28 |
-| `default_map_profile(hub: RegistryHub) -> ContentDefinition` | L32 |
-| `create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionary` | L37 |
-| `create_run(context, build_id: String = "", requested_seed: int = 0, tutorial: bool = false) -> Dictionary` | L61 |
-| `initialize_markets(state: GameState, hub: RegistryHub, _scenario: ContentDefinition, rng: RngService) -> void` | L272 |
-| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L302 |
+| `available_scenarios(hub: RegistryHub) -> Array[ContentDefinition]` | L23 |
+| `default_starting_scenario(hub: RegistryHub) -> ContentDefinition` | L28 |
+| `starting_scenario_summaries(hub: RegistryHub) -> Array[Dictionary]` | L39 |
+| `create_ship(hub: RegistryHub, scenario: ContentDefinition) -> Dictionary` | L55 |
+| `initialize_markets(state: GameState, hub: RegistryHub, _scenario: ContentDefinition, rng: RngService) -> void` | L155 |
+
+`starting_scenarios` 读取与摘要、飞船构造（`create_ship`）、市场初始化
+（`initialize_markets`）以及战役工厂复用的孪生世界布局 / 迷雾 / 主线委托 / 种子 helper。
 
 ## 契约与约束
-
-- 框架不引用具体 core ID：默认构筑/地图配置取该类型第一个注册定义。
-- 创建顺序：船 → 地图 → 玩家/状态 → 仓库/运输/统计/通关字段 → 市场 → NPC → 主线 1 → 普通 offer。
-- 状态写入后调用 `GameState.ensure_campaign()` 建立 campaign 分区，并把 `campaign.world.generated` 置为 true、起始港记入 `visited_port_ids`。
-- 主线 1 自动装载并接取；后续主线由 VoyageService 生成 offer。
-- 普通委托初始池与抵达刷新共用 ContractOps.generate_normal_offers，初始键为 `initial:<port>`。
-- 生成失败返回结构化 Result，不写入 AppContext。
-
-## 重点逻辑
-
-### `create_run(context, build_id, requested_seed)`
-
-- 本地 RngService 由 seed 派生，成功后才由 run.start 写回 context，失败不污染现有随机流。
-- 地图生成依赖初始船只属性（起始补给可达性检查）。
-- 调用 WarehouseOps.ensure_structure 初始化每港仓库与 ship.transit_modules；写入 stats 默认值与 victory=null。
-- 初始债务按 build.loan 写入 player.debt，之后由收入自动偿还。
-- `create_ship()` 在返回前调用 `ShipModules.ensure()`：按槽位顺序分配 module_1..N 实例 id 与满状态 condition，保证同 seed 同构筑的存档哈希一致。
-- 战役分区（world/codex/factions）通过 `ensure_campaign_sections` 惰性补齐，探索进度只追加 id。
+- **入口**：`run.start` 无 `start_profile` 时统一走
+  `CampaignFactory.create_default_campaign()`（默认 start profile +
+  `starting_scenarios` 选择）；本类不再提供 `create_run()`。
+- 框架永不写死具体 `core:*` 内容 ID：场景 / 世界 / 地图调参全部按注册表类型解析。
+- `create_ship(hub, scenario)` 的字段名保持扁平槽位（hull / boiler / cargo_modules /
+  navigation_module / safety_module / passenger_cabin / engineer / navigator）。
+- `_coordinate_world_profile()` 的 `twin_world_size` 来自 `map_configs.data`（C4 起
+  `map_profiles` 退役），迷雾比例来自 `ExplorationRules.fog_radii()`。
+- 本类不使用 RNG 之外的外部状态；`_random_seed()` 只供 CampaignFactory 在
+  `seed == 0` 时使用。
 
 模块索引：[framework/domain](../README.md)

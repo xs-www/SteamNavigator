@@ -10,8 +10,7 @@
 | --- | --- |
 | `MapGenerator` | L1 |
 | `MAX_ATTEMPTS` | L11 |
-| `generate(profile: ContentDefinition, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L14 |
-| `generate_spec(spec: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L35 |
+| `generate_spec(spec: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L23 |
 
 ## 契约与约束
 

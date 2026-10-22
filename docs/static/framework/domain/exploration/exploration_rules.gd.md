@@ -1,6 +1,6 @@
 # `framework/domain/exploration/exploration_rules.gd`
 
-> 作用：读取并合并探索系统规则（v2 `map_configs` / 1.0 `map_profiles` 定义的
+> 作用：读取并合并探索系统规则（`map_configs` 定义的
 
 - 类型：GDScript 源文件
 
@@ -23,7 +23,7 @@
 
 ## 契约与约束
 - 规则只来自当前场景定义（`ContentRefs` 解析：v2 `map_configs` 优先，旧档
-  `map_profiles` 回退）的 `data.exploration`；框架不写死可调数值。`DEFAULTS` 只用于
+  `data.exploration`；框架不写死可调数值。`DEFAULTS` 只用于
   旧存档 / 内容缺字段的**防御兜底**，不参与调参；正常内容必须覆盖全部键。
 - 合并只覆盖 `DEFAULTS` 里已知的键，未知键被忽略；`level_weights` /
   `credibility_range` 这类两级结构逐来源子键合并，缺一个来源不影响另一个。
