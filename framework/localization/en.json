@@ -600,5 +600,17 @@
   "ui.task.step_progress": "%s (%d/%d)",
   "ui.task.step_progress_remaining": "%s (%d/%d, %d left)",
   "ui.task.more": "%d more task(s)",
-  "ui.task.remaining": "%d h left"
+  "ui.task.remaining": "%d h left",
+  "ui.label.crafting_material": "Crafting material",
+  "ui.item.category.ore": "Ore",
+  "ui.item.category.metal": "Metal",
+  "ui.item.category.textile": "Textile",
+  "ui.item.category.luxury": "Luxury",
+  "ui.item.category.wood": "Wood",
+  "ui.item.category.craft": "Craft goods",
+  "ui.item.category.contract": "Contract cargo",
+  "ui.item.category.supply": "Supply",
+  "ui.item.category.plate": "Plate",
+  "ui.item.category.mechanism": "Mechanism",
+  "ui.item.category.compound": "Compound"
 }

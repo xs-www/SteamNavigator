@@ -41,7 +41,7 @@
 
 | 事实 | 证据 |
 | --- | --- |
-| 内容版本按类型：16 个 active 类型版本都是 `1.0`，草案是 `2.0`（当前 9 类草案：world/campaign 家族 8 类 + `weapons`；Phase B 只提升前者） | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
+| 内容版本按类型：**当前（C2 后）20 个 active 类型 = 12 类 `2.0` + 8 类 `1.0`（含 `patches`）**，另有 3 类 `2.0` 草案（`weapons` / `story_arcs` / `story_levels`）；Phase B 只提升了世界/战役 9 类 | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
 | 运行时加载：`ContentCompiler` 按类型版本校验 envelope；Patch 再校验走目标类型版本 | `framework/modding/content_compiler.gd` |
 | 开局链路：`run.start(build_id, seed, tutorial)` → `RunFactory.create_run` → `create_ship` → `MapGenerator.generate(map_profile)` → `WorldGenerator.generate(_coordinate_world_profile(world))`（孪生海图世界）→ markets / npcs / main contract；`tutorial=true` 时 `StoryService.begin` 从 `map_profiles.data.story` 启动教程 | `framework/application/commands/run_start.gd`、`framework/domain/contracts/run_factory.gd`、`framework/domain/story/story_service.gd` |
 | 抽象地图输入：`port_count_range / archetypes / start_archetype_tags / required_facility_tags / required_facility_max_edges / port_name_keys / edge_count_range / distance_range / route_risk_range` | `framework/domain/map/map_generator.gd` |
@@ -126,7 +126,7 @@
 - `difficulty`（easy/standard/hard）只影响起始数值与 UI 展示，不改变世界生成；具体倍率由 `start_profiles.starting_money`
   等字段显式表达（不在框架写死）。
 - `starting_build` 继续引用 **1.0 `starting_builds`**（Phase C/D 再合并为 `starting_scenarios`）。
-- `starting_contract` / `starting_cargo.item` 继续引用 1.0 `contracts` / `goods|materials`。
+- `starting_contract` / `starting_cargo.item` 继续引用 1.0 `contracts` 与 **`items`**（C2 起 goods/materials 已合并为 `items`）。
 
 ### 4.3 `world_profiles` 微调
 
@@ -157,7 +157,7 @@
 | `sites.ruin_archetype` | `ruin_archetypes`（planned） | 软 → `ref_inactive_type` | Phase D 激活后升级 |
 | `sites.encounter_table` / `sites.loot_table` | planned | 软 | 同上 |
 | `route_templates.encounter_table` | planned | 软 | 同上 |
-| `factions.trade_goods[]` | `goods` / `materials` | 硬 | 复用 `_item_exists` |
+| `factions.trade_goods[]` | `items` | 硬 | 复用 `_item_exists`（C2 合并后的物品类型） |
 | `factions.contract_family` | planned | 软 | |
 | `factions.rival_factions[]` | `factions` | 硬（存在时） | 自引用允许，不可自指 |
 | `discoveries.unlock_ids[]` | 任意 active 定义 | 硬 | 目标不存在 → error |
@@ -166,7 +166,7 @@
 | `start_profiles.map_config` | `map_configs` | 软（core 必有） | 第三方可省略 |
 | `start_profiles.starting_build` | `starting_builds`（1.0） | 硬 | |
 | `start_profiles.starting_contract` | `contracts`（1.0） | 硬（存在时） | |
-| `start_profiles.starting_cargo[].item` | `goods` / `materials` | 硬 | |
+| `start_profiles.starting_cargo[].item` | `items` | 硬 | C2 起 goods/materials 合并为 `items` |
 | `map_configs.archetypes[]` | `port_archetypes`（1.0） | 硬 | 数量 ≥ `world_profiles.port_count` |
 | `map_configs.default_starting_build` | `starting_builds`（1.0） | 硬（存在时） | |
 

@@ -600,5 +600,17 @@
   "ui.task.step_progress": "%s（%d/%d）",
   "ui.task.step_progress_remaining": "%s（%d/%d，还差 %d）",
   "ui.task.more": "另有 %d 个任务",
-  "ui.task.remaining": "剩余 %d 小时"
+  "ui.task.remaining": "剩余 %d 小时",
+  "ui.label.crafting_material": "打造材料",
+  "ui.item.category.ore": "矿石",
+  "ui.item.category.metal": "金属",
+  "ui.item.category.textile": "纺织品",
+  "ui.item.category.luxury": "奢侈品",
+  "ui.item.category.wood": "木材",
+  "ui.item.category.craft": "工艺品",
+  "ui.item.category.contract": "委托货物",
+  "ui.item.category.supply": "补给",
+  "ui.item.category.plate": "板材",
+  "ui.item.category.mechanism": "机械件",
+  "ui.item.category.compound": "密封材料"
 }

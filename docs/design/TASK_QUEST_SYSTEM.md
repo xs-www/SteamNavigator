@@ -142,7 +142,7 @@ Step = {
 
 ```json
 {"event": "cmd:trade.buy", "counter": "textiles_bought", "at_least": 6,
- "match": {"item_id": "core:good/textiles"}}
+ "match": {"item_id": "core:item/textiles"}}
 ```
 
 支持类型：`deliver_cargo` / `carry_passenger` / `visit_port` / `discover_port` /

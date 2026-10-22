@@ -2,7 +2,7 @@ class_name LocalizationService
 extends RefCounted
 ## Locale tables merged from framework base files and content mods.
 ##
-## Keys are global (`good.core.coal.name`) and later mods override earlier
+## Keys are global (`item.core.coal.name`) and later mods override earlier
 ## values for the same locale with a warning. Missing keys fall back to the
 ## fallback locale and finally to the key itself, so UI never crashes.
 

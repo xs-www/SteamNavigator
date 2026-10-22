@@ -77,8 +77,8 @@
 - **architecture_kit 扩展 M1-1（批次 4：可围合基地 6 件，2026-10-22）**：新增 `SN_Arch_Perimeter_Wall` / `Gate` / `Road` / `Loading_Platform` / `Warehouse_Variant` / `Workshop_Annex`，**12 584 / 16 800 tri**、39 mesh、37 socket、82 节点、117 图元，**6/6 GLB 自检 ALL OK**；全部地面件 zmin=0、4 m 网格 `Module_Next/Prev` 平铺，可把批次 3 的 4 栋建筑围成基地；大门门扇净间隙 0.05、吊闸不碰门顶，装卸平台月台面 1.25 m + 5 级楼梯 + 外挑吊货梁，仓库变体 14 级外楼梯上 3.48 m 上层侧门，工坊扩建 `Drive_Shaft` 接工坊 + 送煤槽/烟囱。材质沿用 11 张共享贴图（无新增）；独立 Verifier 只读验收 **0 failures**；Godot 运行时用例 2 例、全量 headless **425 / 425**；`kit_catalog.json` v1.4（32 件 / 54 642 tri、4 条基地装配配方）。目录见 [KIT_ASSET_LIBRARY.md §12](docs/design/KIT_ASSET_LIBRARY.md)，预览 [lineup](docs/design/screenshots/kits/kit_architecture_extension_lineup.png) / [基地拼装](docs/design/screenshots/kits/kit_architecture_extension_assembly.png)。
 - **旧资产 UV 迁移 A（31 件铁港道具 + 6 件港口设施，2026-10-22）**：按 backlog M0-1 给 37 件旧纯色资产补 `UVMap`（局部空间盒式投影，24 188 UV loops）、把 9 个旧 `SN_*` 材质切换为 9 个 `SN_Tex_*` 共享贴图材质、重导 GLB（`images[].uri = shared_materials/<texture>.png` + Core 副本）。**几何逐位不变：11 278 tri（props 6 282 / port 4 996）与迁移前逐件一致**；37/37 GLB 自检、Godot 运行时 37 件 / 14 个共享 `Texture2D` 实例 / 0 失败，旧纯色材质从港区退场。脚本 / 映射 / 验收见 [LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](docs/archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md)。
 - **3D 港口样片（独立场景）**：`dev_scenes/harbor/` 复用 `assets/models` 的 1795 双桅纵帆船 `SN_Schooner_Fame`（黑船身 + 赭黄腰线 + 双桅斜桁帆，用户要求无星条旗） / 塔吊 / 码头道具搭一个固定机位小港口，自写 Godot 水面着色器（顶点波浪 + 噪声法线 + 菲涅耳天空反射 + 太阳耀斑 + 岸线/船体泡沫 + 远水雾色），船体随与着色器同源的波浪起伏。**不接入主场景**，仅供水面观感与构图验证；说明见 [dev_scenes/harbor/README.md](dev_scenes/harbor/README.md)，预览见 [港口样片截图](docs/design/screenshots/harbor_diorama_schooner.png) 与 [纵帆船近景](docs/design/screenshots/harbor_diorama_schooner_detail.png)。
-- SDK：模组打包、无头校验、模组模板与一个第三方锅炉示例。
-- [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`；实体资源使用主题化可搜索选择器，船体可在独立模块区配置槽位；已适配 Content Schema 2.0（**20 类运行时类型 + 3 类草案**：7 类 1.0 与 12 类 2.0；模块已合并为 `modules`（`v2_category`）、`hulls` 升 2.0、goods/materials 合并为 `items`（`crafting_material`），9 类世界/战役类型由运行时加载，`weapons` 与剧情 `story_arcs` / `story_levels` 仍为草案、运行时暂不加载），新建模组可选「**舰载武器包**」模板
+- SDK：模组打包（含 `--release` 正式发布校验）、无头校验（`--mode=runtime|draft`）、模组模板与 1.0 / 混合 / 草案示例。
+- [SNModMaker](SNModMaker/README.md)：零依赖网页端模组制作器，可视化编辑、校验并打包 `.snavmod.zip`；实体资源使用主题化可搜索选择器，船体可在独立模块区配置槽位；已适配 Content Schema 2.0（**20 类运行时类型 + 3 类草案**：7 类 1.0 + 12 类 2.0 + 显式补丁；模块已合并为 `modules`（`v2_category`）、`hulls` 升 2.0、goods/materials 合并为 `items`（`crafting_material`），9 类世界/战役类型由运行时加载，`weapons` 与剧情 `story_arcs` / `story_levels` 仍为草案、运行时暂不加载），新建模组可选「**舰载武器包**」模板
 - [SNBattleSim](SNBattleSim/README.md)：独立 2D 舰队战斗规则试验台，验证固定三船体、多武器、视野、炮击、货船护航和自定义武器。
 
 尚未完成、但已留出扩展位置的内容见 [todo.md](todo.md)。
@@ -122,6 +122,8 @@ Tests: 100 passed, 0 failed, 100 total
 pwsh ./tools/pack_core.ps1
 # 或
 godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/core --out=dist/mods
+# 正式发布前强制 Runtime 校验（草案/错误会拒绝打包）
+godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/core --out=dist/mods --release
 ```
 
 产物：`dist/mods/core-1.0.0.snavmod.zip`（包内路径为 `mods/core/...`）。
@@ -160,8 +162,14 @@ SteamNavigator/
 ### 校验第三方模组
 
 ```powershell
+# 默认 runtime：按内容类型版本加载，未激活的草案内容会被拒绝
 godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examples/example_boilers
+
+# draft：静态 Schema 校验草案/混合模组（不能用于发布）
+godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/templates/draft_weapons_pack --mode=draft
 ```
+
+示例：`sdk/examples/example_roles_1_0`（1.0）、`example_mixed_roles_items`（1.0 + 已激活 2.0）、`sdk/templates/draft_weapons_pack`（草案，仅 draft）。
 
 ## 架构概览
 
@@ -283,7 +291,7 @@ node SNModMaker/tools/serve.mjs
 ```
 
 - 修改其他模组的定义必须使用显式 `patches` 文件；同路径冲突会阻止启动，不会静默决定胜负。
-- 详见 `sdk/templates/mod_template/`、`sdk/examples/example_boilers/` 与 `schemas/`。
+- 详见 `sdk/templates/mod_template/`、`sdk/examples/example_roles_1_0/`、`sdk/examples/example_mixed_roles_items/`、`sdk/templates/draft_weapons_pack/` 与 `schemas/`。
 
 ## 本地化
 
@@ -304,7 +312,7 @@ node SNModMaker/tools/serve.mjs
 - 存档已支持 save schema 1.x → 2.0 迁移（回填 campaign 元数据与分区，state/content schema 分离）；模块实例表 `ship.module_instances` 与 campaign 分区均由惰性 ensure 补齐；声明式 ID 别名迁移仍未实现，新字段继续通过惰性 ensure 补齐。
 - 模块 condition 目前只影响失效标记与维修费用，尚未改变航速/容量等派生属性；统一 Module 迁移（definition_id 移入实例）与战斗期性能影响在后续阶段。
 - **Content Schema 2.0 Phase B 已落地**：8 类世界/战役类型（world_profiles / regions / sites / route_templates / weather_profiles / factions / discoveries / start_profiles）与新增 `map_configs` 已提升 active，运行时按类型版本加载 1.0/2.0 内容；`run.start` 支持可选 `start_profile`，由 `CampaignFactory` 装配区域/地点/航路/阵营/图鉴并写入 `campaign.setup/content_versions`；`map_configs` 的 31 键 exploration 与 story 从 1.0 `map_profile` 原样迁移；旧档继续按 `map_profile` 读取，`weapons` / `story_arcs` / `story_levels` 仍是编辑器草案。**「运行时不加载」不是静默忽略**：未注册类型 / 版本不符仍按 mod error 拒绝，Core 必需包会让启动进入 `Degraded`。
-- **剧情模式 S1 数据契约已落地**：新增 `schemas/v2/story_arc.schema.json` / `story_level.schema.json`（内嵌固定地图 `map.fixed`、共享 story_stage DSL、叙事 brief / beats / debrief、难度旋钮、checkpoint 重试、仅成就类奖励），`content_types.json` 把 `story_arcs` / `story_levels` 登记为 Schema 2.0 草案（capability `content.story.v1`，schema bundle 31 个）；SNModMaker / Content CLI 可编辑与校验（`draft_content` 警告、`story_pack_off_whitelist` 白名单、篇章 / 关卡语义），示例包见 `sdk/templates/story_pack_iron_tide/`；运行时加载链（S2）与后续 UI / 档案 / SNStoryMaker 仍在路线图中，草案见 [STORY_MODE.md](docs/design/STORY_MODE.md)。
+- **剧情模式 S1 数据契约已落地**：新增 `schemas/v2/story_arc.schema.json` / `story_level.schema.json`（内嵌固定地图 `map.fixed`、共享 story_stage DSL、叙事 brief / beats / debrief、难度旋钮、checkpoint 重试、仅成就类奖励），`content_types.json` 把 `story_arcs` / `story_levels` 登记为 Schema 2.0 草案（capability `content.story.v1`，schema bundle 26 个）；SNModMaker / Content CLI 可编辑与校验（`draft_content` 警告、`story_pack_off_whitelist` 白名单、篇章 / 关卡语义），示例包见 `sdk/templates/story_pack_iron_tide/`；运行时加载链（S2）与后续 UI / 档案 / SNStoryMaker 仍在路线图中，草案见 [STORY_MODE.md](docs/design/STORY_MODE.md)。
 - 无头退出时 Godot 会报告静态注册表/脚本的 ObjectDB 泄漏警告；测试退出码仍为 0，不影响运行。
 
 ## 文档与协作

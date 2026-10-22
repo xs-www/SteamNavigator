@@ -4,10 +4,10 @@
  *
  * The Mod Maker must stay usable from file:// with zero network access, so the
  * schemas are embedded as a plain script instead of being fetched at runtime.
- * The bundle includes the Content Schema 2.0 draft schemas under /schemas/v2
- * (editor support only; the runtime stays on Content Schema 1.0). Every key is
- * the schema's posix path relative to /schemas, so the top-level schemas keep
- * their basenames ("good.schema.json") and drafts are "v2/<name>.schema.json".
+ * The bundle includes both the remaining Content Schema 1.0 top-level schemas
+ * and the Content Schema 2.0 runtime/draft schemas under /schemas/v2. Every key
+ * is the schema's posix path relative to /schemas, so the top-level schemas keep
+ * their basenames ("role.schema.json") and v2 schemas are "v2/<name>.schema.json".
  * Run this script after any schema change:
  *
  *   node SNModMaker/tools/sync-schemas.mjs
@@ -48,7 +48,7 @@ for (const file of files) {
 const header = [
   '/*',
   ' * AUTO-GENERATED FILE - do not edit by hand.',
-  ' * Source: /schemas (Content Schema 1.0 top-level + 2.0 draft under v2/)',
+  ' * Source: /schemas (Content Schema 1.0 top-level + 2.0 runtime/draft under v2/)',
   ' * Regenerate: node SNModMaker/tools/sync-schemas.mjs',
   ' */',
   '(function (root) {',

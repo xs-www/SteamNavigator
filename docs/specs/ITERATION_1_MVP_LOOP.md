@@ -168,7 +168,7 @@ has_run, achieved, achieved_at, achieved_at_label, summary{...见 3.4}
   - medium_standard 220、large_efficient 520、large_performance 680
   - boiler/performance 180；cargo/medium_hold 160、large_hold 320；nav/chart_room 140；safety/safety_valve 130；cabin/passenger_cabin 100（客舱只有 tier1，可省略）
   - 允许内容模组覆盖；数值只写在 JSON。
-- `port_archetypes.json`：两个造船厂港口（iron_harbor、free_town）市场加入 `core:material/precision_gear`（限量库存 10–25），保证大型船材料在当局地图可获得。
+- `port_archetypes.json`：两个造船厂港口（iron_harbor、free_town）市场加入 `core:item/precision_gear`（限量库存 10–25），保证大型船材料在当局地图可获得。
 - 不变更 schema（`module_common` 已允许 `materials/craft_time_hours/craft_cost`）。
 
 ## 7. UI（`framework/ui/shell/main.gd`）

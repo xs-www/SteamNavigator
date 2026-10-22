@@ -99,10 +99,11 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 34, `expected 18 top-level + 16 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 34, `expected 34 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 26, `expected 10 top-level + 16 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 26, `expected 26 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
-    assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
+    assert.ok(globalThis.SN_SCHEMAS['role.schema.json'], 'remaining 1.0 runtime schemas stay embedded');
+    assert.equal(globalThis.SN_SCHEMAS['good.schema.json'], undefined, 'the dead 1.0 goods schema was removed (C2)');
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
     assert.ok(globalThis.SN_SCHEMAS['v2/item.schema.json'], 'v2/item is the C2 merged item schema');
@@ -600,7 +601,7 @@ function warningsOf(result) {
   await test('weapon form renders combat, assembly and economy fields with readable enums', () => {
     const project = freshProject();
     const added = Store.addDefinition(project, 'weapons', {});
-    added.definition.data.materials = [{ id: 'core:material/boiler_plate', amount: 2 }];
+    added.definition.data.materials = [{ id: 'core:item/boiler_plate', amount: 2 }];
     const html = UI.renderDefinitionForm({
       project,
       typeKey: 'weapons',

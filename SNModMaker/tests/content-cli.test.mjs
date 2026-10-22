@@ -1651,7 +1651,7 @@ test('add keeps a minimal diff: old definitions and localization lines are untou
 test('add blocks new validation errors (exit 1) and writes nothing', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
-  // good.schema.json requires data.unit_weight >= 1.
+  // v2/item.schema.json requires data.unit_weight >= 1.
   const result = jsonRun([
     'add', '--mod', mod, '--type', 'items', '--id', 'bad_weight',
     '--name-zh', '非法重量', '--name-en', 'Bad Weight',
