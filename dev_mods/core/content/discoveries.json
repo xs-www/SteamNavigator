@@ -1,0 +1,117 @@
+{
+  "schema_version": "2.0",
+  "content_type": "discoveries",
+  "definitions": [
+    {
+      "id": "core:discovery/blueprint_medium_hull",
+      "name_key": "discovery.core.blueprint_medium_hull.name",
+      "description_key": "discovery.core.blueprint_medium_hull.description",
+      "tags": ["discovery.blueprint"],
+      "enabled": true,
+      "data": {
+        "kind": "blueprint",
+        "rarity": "rare",
+        "weight": 8,
+        "repeatable": false,
+        "source_site_kinds": ["ruin"],
+        "region_kinds": ["coastal", "archipelago"],
+        "unlock_ids": ["core:hull/medium_standard"]
+      }
+    },
+    {
+      "id": "core:discovery/blueprint_standard_boiler",
+      "name_key": "discovery.core.blueprint_standard_boiler.name",
+      "description_key": "discovery.core.blueprint_standard_boiler.description",
+      "tags": ["discovery.blueprint"],
+      "enabled": true,
+      "data": {
+        "kind": "blueprint",
+        "rarity": "uncommon",
+        "weight": 15,
+        "repeatable": false,
+        "source_site_kinds": ["ruin", "wreck"],
+        "region_kinds": ["coastal", "industrial"],
+        "unlock_ids": ["core:boiler/standard"]
+      }
+    },
+    {
+      "id": "core:discovery/blueprint_small_cabin",
+      "name_key": "discovery.core.blueprint_small_cabin.name",
+      "description_key": "discovery.core.blueprint_small_cabin.description",
+      "tags": ["discovery.blueprint"],
+      "enabled": true,
+      "data": {
+        "kind": "blueprint",
+        "rarity": "uncommon",
+        "weight": 14,
+        "repeatable": false,
+        "source_site_kinds": ["ruin", "wreck"],
+        "region_kinds": ["coastal"],
+        "unlock_ids": ["core:cabin/small_cabin"]
+      }
+    },
+    {
+      "id": "core:discovery/relic_brass_sextant",
+      "name_key": "discovery.core.relic_brass_sextant.name",
+      "description_key": "discovery.core.relic_brass_sextant.description",
+      "tags": ["discovery.relic"],
+      "enabled": true,
+      "data": {
+        "kind": "relic",
+        "rarity": "rare",
+        "weight": 10,
+        "repeatable": false,
+        "source_site_kinds": ["ruin", "landmark"],
+        "region_kinds": ["archipelago", "open_sea"],
+        "unlock_ids": ["core:role/navigator_basic"]
+      }
+    },
+    {
+      "id": "core:discovery/relic_glass_prism",
+      "name_key": "discovery.core.relic_glass_prism.name",
+      "description_key": "discovery.core.relic_glass_prism.description",
+      "tags": ["discovery.relic"],
+      "enabled": true,
+      "data": {
+        "kind": "relic",
+        "rarity": "uncommon",
+        "weight": 18,
+        "repeatable": true,
+        "source_site_kinds": ["wreck", "encounter"],
+        "region_kinds": ["coastal", "industrial"],
+        "unlock_ids": ["core:good/glassware"]
+      }
+    },
+    {
+      "id": "core:discovery/lore_lost_fleet",
+      "name_key": "discovery.core.lore_lost_fleet.name",
+      "description_key": "discovery.core.lore_lost_fleet.description",
+      "tags": ["discovery.lore"],
+      "enabled": true,
+      "data": {
+        "kind": "lore",
+        "rarity": "common",
+        "weight": 25,
+        "repeatable": true,
+        "source_site_kinds": ["landmark", "encounter"],
+        "region_kinds": ["archipelago", "open_sea"]
+      }
+    },
+    {
+      "id": "core:discovery/lore_harbor_ledger",
+      "name_key": "discovery.core.lore_harbor_ledger.name",
+      "description_key": "discovery.core.lore_harbor_ledger.description",
+      "tags": ["discovery.lore"],
+      "enabled": true,
+      "data": {
+        "kind": "lore",
+        "rarity": "common",
+        "weight": 22,
+        "repeatable": true,
+        "source_site_kinds": ["encounter"],
+        "region_kinds": ["coastal", "industrial"],
+        "unlock_ids": ["core:strategy/economic"]
+      }
+    }
+  ]
+}

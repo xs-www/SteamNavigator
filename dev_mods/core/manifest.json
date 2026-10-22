@@ -25,7 +25,16 @@
     "content/map_profiles.json",
     "content/starting_builds.json",
     "content/contracts.json",
-    "content/events.json"
+    "content/events.json",
+    "content/world_profiles.json",
+    "content/map_configs.json",
+    "content/regions.json",
+    "content/sites.json",
+    "content/route_templates.json",
+    "content/weather_profiles.json",
+    "content/factions.json",
+    "content/discoveries.json",
+    "content/start_profiles.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -161,6 +170,8 @@
   "description": "Official MVP content: ports, goods, ships, contracts and events.",
   "capabilities": [
     "content.contract.passenger.v1",
-    "content.event.choice_pool.v1"
+    "content.event.choice_pool.v1",
+    "content.world.v1",
+    "content.campaign.v1"
   ]
 }

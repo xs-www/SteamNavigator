@@ -5,9 +5,9 @@ extends TestCase
 ## presence gate、5 个硬性数量下限、4 个建议 warning、start_profile 组合解析与 capability 白名单。
 ##
 ## ## 契约与约束
-## - v2 规则只在 **Core 自己** 发布至少一个 `world_profiles` 定义时启用（B4 之后）；当前 Core
-##   没有 v2 内容时 `bootstrap_core()` 基线必须保持 `ok`，第三方单独提供的 v2 world profile
-##   也不能让 Core 完整性规则变红。
+## - v2 规则只在 **Core 自己** 发布至少一个 `world_profiles` 定义时启用。B4 落盘后
+##   `dev_mods/core/content/world_profiles.json` 存在，Core 基线用例因此改为「gate 打开且零
+##   error」；「gate 关闭」的语义仍由 `_full_hub([ContentTypes.WORLD_PROFILE])` 的合成用例覆盖。
 ## - 硬性 error（`content_count`）：world_profiles / map_configs / start_profiles /
 ##   weather_profiles / regions 各 ≥1。
 ## - 建议 warning（`content_count_recommended`）：route_templates / factions / sites / discoveries 各 ≥1。
@@ -29,17 +29,44 @@ const STANDARD_BOILER_ID := "core:boiler/standard"
 const STANDARD_CARGO_ID := "core:cargo_module/standard"
 
 
-func test_bootstrapped_core_baseline_is_ok_without_phase_b() -> void:
+func test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void:
+	# B4 ships the nine Schema 2.0 core content files, so the Phase B presence gate is open
+	# on the real core mod: bootstrap must stay `ok` with no completeness/combination error.
 	var boot := bootstrap_core()
 	var report: StartupReport = boot["report"]
 	var context: AppContext = boot["context"]
-	assert_eq(report.status_name(), "ok", "Core-only bootstrap is OK: %s" % report.format_text())
-	assert_true(report.errors.is_empty(), "gate closed on the current Core: no completeness error: %s" % report.format_text())
+	assert_eq(report.status_name(), "ok", "Core-only bootstrap is OK after B4: %s" % report.format_text())
+	assert_true(report.errors.is_empty(), "B4 Core satisfies the Phase B completeness gate: %s" % report.format_text())
 	assert_eq(
 		context.registries.get_all(ContentTypes.WORLD_PROFILE).size(),
-		0,
-		"current Core ships no v2 world profiles (B4 pending); the gate must stay closed"
+		1,
+		"B4 ships core:world_profile/default_world, which opens the Phase B gate"
 	)
+	for content_type in [
+		ContentTypes.MAP_CONFIG,
+		ContentTypes.START_PROFILE,
+		ContentTypes.WEATHER_PROFILE,
+		ContentTypes.REGION,
+	]:
+		assert_true(
+			context.registries.get_all(content_type).size() >= 1,
+			"B4 Core ships at least one '%s' definition" % content_type
+		)
+	for forbidden_code in [
+		"content_count",
+		"no_resolvable_start_profile",
+		"start_profile_world_profile_missing",
+		"start_profile_map_config_missing",
+		"start_profile_starting_build_missing",
+		"map_config_archetypes_short",
+		"start_region_unmatched",
+	]:
+		for error in report.errors:
+			assert_ne(
+				String(error.get("code", "")),
+				forbidden_code,
+				"B4 Core raises no '%s' error" % forbidden_code
+			)
 
 
 func test_gate_is_off_without_world_profiles() -> void:

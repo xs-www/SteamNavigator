@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-21T23:40:13.448Z",
+    "generated_at": "2026-10-22T05:36:25.180Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -34,7 +34,16 @@
         "content/map_profiles.json",
         "content/starting_builds.json",
         "content/contracts.json",
-        "content/events.json"
+        "content/events.json",
+        "content/world_profiles.json",
+        "content/map_configs.json",
+        "content/regions.json",
+        "content/sites.json",
+        "content/route_templates.json",
+        "content/weather_profiles.json",
+        "content/factions.json",
+        "content/discoveries.json",
+        "content/start_profiles.json"
       ],
       "localization": [
         "localization/zh_CN.json",
@@ -170,7 +179,9 @@
       "description": "Official MVP content: ports, goods, ships, contracts and events.",
       "capabilities": [
         "content.contract.passenger.v1",
-        "content.event.choice_pool.v1"
+        "content.event.choice_pool.v1",
+        "content.world.v1",
+        "content.campaign.v1"
       ]
     },
     "contentFiles": {
@@ -673,7 +684,18 @@
                     4.2
                   ]
                 }
-              ]
+              ],
+              "rig_plan": {
+                "kind": "sail",
+                "mount_kinds": [
+                  "mast"
+                ],
+                "hide_nodes": [
+                  "SN_SF_Mast_Fore",
+                  "SN_SF_Mast_Main"
+                ],
+                "mast_asset": "model.rig.mast_sail"
+              }
             }
           },
           {
@@ -846,7 +868,21 @@
                     13.51
                   ]
                 }
-              ]
+              ],
+              "rig_plan": {
+                "kind": "steam",
+                "mount_kinds": [
+                  "mast",
+                  "yard"
+                ],
+                "hide_nodes": [
+                  "SN_PF_Mast_Fore",
+                  "SN_PF_Mast_Main",
+                  "SN_PF_Yards"
+                ],
+                "mast_asset": "model.rig.mast_steam",
+                "yard_asset": "model.rig.yard"
+              }
             }
           },
           {
@@ -3309,6 +3345,1407 @@
             }
           }
         ]
+      },
+      "content/world_profiles.json": {
+        "schema_version": "2.0",
+        "content_type": "world_profiles",
+        "definitions": [
+          {
+            "id": "core:world_profile/default_world",
+            "name_key": "world.core.default_world.name",
+            "description_key": "world.core.default_world.description",
+            "tags": [
+              "world.default",
+              "world.temperate"
+            ],
+            "enabled": true,
+            "data": {
+              "region_count": 5,
+              "sites_per_region": 6,
+              "port_count": 5,
+              "ruin_density": 0.2,
+              "base_site_count": 2,
+              "faction_count": 3,
+              "weather_profile": "core:weather_profile/temperate",
+              "edge_density": 0.2,
+              "start_region_tags": [
+                "region.start"
+              ]
+            }
+          }
+        ]
+      },
+      "content/map_configs.json": {
+        "schema_version": "2.0",
+        "content_type": "map_configs",
+        "definitions": [
+          {
+            "id": "core:map_config/standard",
+            "name_key": "map_config.core.standard.name",
+            "description_key": "map_config.core.standard.description",
+            "tags": [
+              "map.standard",
+              "map.mvp"
+            ],
+            "enabled": true,
+            "data": {
+              "archetypes": [
+                "core:port_archetype/iron_harbor",
+                "core:port_archetype/spice_port",
+                "core:port_archetype/free_town",
+                "core:port_archetype/fishing_village",
+                "core:port_archetype/glass_port"
+              ],
+              "port_name_keys": [
+                "port_name.core.iron_harbor",
+                "port_name.core.spice_port",
+                "port_name.core.free_town",
+                "port_name.core.fishing_village",
+                "port_name.core.glass_port",
+                "port_name.core.mist_cove"
+              ],
+              "start_archetype_tags": [
+                "port.hub"
+              ],
+              "required_facility_tags": [
+                "port.shipyard",
+                "port.intel"
+              ],
+              "required_facility_max_edges": 2,
+              "npc_count_range": [
+                2,
+                3
+              ],
+              "npc_cargo_range": [
+                8,
+                24
+              ],
+              "supply_prices": {
+                "coal": 4,
+                "water": 2,
+                "repair_per_point": 6
+              },
+              "loan": {
+                "limit": 400,
+                "interest_rate": 0.1,
+                "term_hours": 96
+              },
+              "intel_cost": 25,
+              "trade_margin": 0.95,
+              "player_trade_impact": 0.35,
+              "default_starting_build": "core:starting_build/steady",
+              "twin_world_size": 160,
+              "exploration": {
+                "rumor_clue_chance": 0.65,
+                "fog_port_reveal_ratio": 0.05,
+                "fog_vision_ratio": 0.05,
+                "intel_clue_cost": 40,
+                "max_active_clues": 4,
+                "level_weights": {
+                  "rumor": [
+                    0.55,
+                    0.35,
+                    0.1,
+                    0
+                  ],
+                  "intel": [
+                    0,
+                    0.15,
+                    0.45,
+                    0.4
+                  ]
+                },
+                "credibility_range": {
+                  "rumor": [
+                    0.25,
+                    0.55
+                  ],
+                  "intel": [
+                    0.6,
+                    0.95
+                  ],
+                  "wait": [
+                    0.4,
+                    0.7
+                  ],
+                  "contract": [
+                    0.55,
+                    0.85
+                  ]
+                },
+                "distance_error_ratio": 0.35,
+                "search_zone_radius": 14,
+                "search_zone_noise": 12,
+                "discovery_chance_base": 0.2,
+                "discovery_chance_per_credibility": 0.7,
+                "risk_base": 0.08,
+                "risk_per_unreliability": 0.12,
+                "drift_durability_loss": 8,
+                "drift_extra_coal": 4,
+                "drift_extra_water": 4,
+                "drift_hours": 6,
+                "alert_threshold": 0.5,
+                "alert_progress": 0.5,
+                "turnback_extra_ratio": 0.25,
+                "investigation_cost": 20,
+                "investigation_hours": 6,
+                "investigation_success_chance": 0.75,
+                "goods_clue_expiry_hours": {
+                  "rumor": 24,
+                  "intel": 72,
+                  "wait": 48,
+                  "contract": 72
+                },
+                "goods_clue_price_error_ratio": 0.15,
+                "goods_clue_source_weights": {
+                  "rumor": 0,
+                  "intel": 0,
+                  "wait": 1,
+                  "contract": 0
+                },
+                "wait_clue_hours_block": 6,
+                "wait_clue_chance_per_block": 0.35,
+                "wait_clue_max_chance": 0.85,
+                "contract_clue_chance": 0.5
+              },
+              "story": {
+                "flow_id": "core:story/opening",
+                "enabled": true,
+                "skip_unlocks": [
+                  "overview",
+                  "supply",
+                  "chart",
+                  "market",
+                  "contracts",
+                  "clues",
+                  "tavern",
+                  "shipyard"
+                ],
+                "start_unlocks": [],
+                "start_items": [],
+                "start_modules": [],
+                "stages": [
+                  {
+                    "id": "opening",
+                    "dialogue": {
+                      "title_key": "story.core.opening.title",
+                      "body_keys": [
+                        "story.core.opening.body.1",
+                        "story.core.opening.body.2"
+                      ]
+                    },
+                    "unlock_features": [
+                      "overview"
+                    ],
+                    "effects": [
+                      {
+                        "type": "set_ship_fuel",
+                        "amount": 4
+                      },
+                      {
+                        "type": "grant_tutorial_contract",
+                        "template_id": "core:contract/main_01",
+                        "cargo_item_id": "core:good/coal",
+                        "amount": 10,
+                        "provider": "fuel",
+                        "deadline_formula": "tutorial_express",
+                        "name_key": "contract.core.tutorial_coal.name",
+                        "description_key": "contract.core.tutorial_coal.description"
+                      },
+                      {
+                        "type": "discover_contract_destination"
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "supply_brief",
+                    "dialogue": {
+                      "title_key": "story.core.supply_brief.title",
+                      "body_keys": [
+                        "story.core.supply_brief.body.1"
+                      ]
+                    },
+                    "unlock_features": [
+                      "market"
+                    ],
+                    "objective": {
+                      "text_key": "story.core.supply_brief.objective",
+                      "target": 4
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:supply.buy_coal",
+                          "counter": "coal_bought",
+                          "at_least": 4
+                        },
+                        {
+                          "event": "cmd:supply.buy_water",
+                          "counter": "water_bought",
+                          "at_least": 2
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "supply_hold",
+                    "dialogue": {
+                      "title_key": "story.core.supply_hold.title",
+                      "body_keys": [
+                        "story.core.supply_hold.body.1"
+                      ]
+                    },
+                    "unlock_features": [
+                      "chart"
+                    ],
+                    "lock_actions": [
+                      "supply.buy"
+                    ],
+                    "objective": {
+                      "text_key": "story.core.supply_hold.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:chart_opened"
+                    }
+                  },
+                  {
+                    "id": "chart_brief",
+                    "dialogue": {
+                      "title_key": "story.core.chart_brief.title",
+                      "body_keys": [
+                        "story.core.chart_brief.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.chart_brief.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:chart_closed"
+                    }
+                  },
+                  {
+                    "id": "supply_finish",
+                    "dialogue": {
+                      "title_key": "story.core.supply_finish.title",
+                      "body_keys": [
+                        "story.core.supply_finish.body.1"
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "set_counter_from_ship",
+                        "counter": "coal_aboard",
+                        "kind": "coal"
+                      }
+                    ],
+                    "objective": {
+                      "text_key": "story.core.supply_finish.objective",
+                      "target": 10
+                    },
+                    "advance": {
+                      "event": "cmd:supply.buy_coal",
+                      "counter": "coal_aboard",
+                      "counter_from": "stock",
+                      "at_least": 10
+                    }
+                  },
+                  {
+                    "id": "depart_brief",
+                    "dialogue": {
+                      "title_key": "story.core.depart_brief.title",
+                      "body_keys": [
+                        "story.core.depart_brief.body.1"
+                      ]
+                    },
+                    "preferred_strategy": "fast",
+                    "objective": {
+                      "text_key": "story.core.depart_brief.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:arrival_settled"
+                    }
+                  },
+                  {
+                    "id": "second_port",
+                    "dialogue": {
+                      "title_key": "story.core.second_port.title",
+                      "body_keys": [
+                        "story.core.second_port.body.1"
+                      ]
+                    },
+                    "unlock_features": [
+                      "market",
+                      "contracts"
+                    ],
+                    "unlock_items": [
+                      "core:good/spices",
+                      "core:good/textiles"
+                    ],
+                    "effects": [
+                      {
+                        "type": "grant_tutorial_contract",
+                        "template_id": "core:contract/main_02",
+                        "cargo_item_id": "core:good/textiles",
+                        "amount": 6,
+                        "provider": "player",
+                        "destination": "home",
+                        "deadline_formula": "tutorial_trade",
+                        "name_key": "contract.core.tutorial_trade.name",
+                        "description_key": "contract.core.tutorial_trade.description"
+                      }
+                    ],
+                    "objective": {
+                      "text_key": "story.core.second_port.objective",
+                      "target": 8
+                    },
+                    "advance": {
+                      "event": "cmd:trade.buy",
+                      "counter": "textiles_bought",
+                      "at_least": 8,
+                      "match": {
+                        "item_id": "core:good/textiles"
+                      }
+                    }
+                  },
+                  {
+                    "id": "second_depart",
+                    "dialogue": {
+                      "title_key": "story.core.second_depart.title",
+                      "body_keys": [
+                        "story.core.second_depart.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.second_depart.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:arrival_settled"
+                    }
+                  },
+                  {
+                    "id": "back_first",
+                    "dialogue": {
+                      "title_key": "story.core.back_first.title",
+                      "body_keys": [
+                        "story.core.back_first.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.back_first.objective",
+                      "target": 2
+                    },
+                    "advance": {
+                      "event": "cmd:trade.sell",
+                      "counter": "textiles_sold",
+                      "at_least": 2,
+                      "match": {
+                        "item_id": "core:good/textiles"
+                      }
+                    }
+                  },
+                  {
+                    "id": "chapter_wrap",
+                    "dialogue": {
+                      "title_key": "story.core.chapter_wrap.title",
+                      "body_keys": [
+                        "story.core.chapter_wrap.body.1"
+                      ]
+                    },
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "tavern_open",
+                    "dialogue": {
+                      "title_key": "story.core.tavern_open.title",
+                      "body_keys": [
+                        "story.core.tavern_open.body.1",
+                        "story.core.tavern_open.body.2"
+                      ]
+                    },
+                    "unlock_features": [
+                      "clues",
+                      "tavern"
+                    ],
+                    "effects": [
+                      {
+                        "type": "grant_clue",
+                        "port": "next_unknown",
+                        "level": 1,
+                        "source": "rumor"
+                      },
+                      {
+                        "type": "set_market_price_bias",
+                        "item_ids": [
+                          "core:good/textiles",
+                          "core:good/spices"
+                        ],
+                        "home_bias": 1.35,
+                        "other_bias": 0.7,
+                        "reset_stock": true,
+                        "make_buyable": true
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "tavern_intro",
+                    "dialogue": {
+                      "title_key": "story.core.tavern_intro.title",
+                      "body_keys": [
+                        "story.core.tavern_intro.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.tavern_intro.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "cmd:intel.refresh",
+                      "counter": "intel_refreshed",
+                      "at_least": 1
+                    }
+                  },
+                  {
+                    "id": "third_good",
+                    "dialogue": {
+                      "title_key": "story.core.third_good.title",
+                      "body_keys": [
+                        "story.core.third_good.body.1"
+                      ]
+                    },
+                    "unlock_items": [
+                      "core:good/timber"
+                    ],
+                    "objective": {
+                      "text_key": "story.core.third_good.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:voyage.start",
+                          "counter": "act2_departures",
+                          "at_least": 1
+                        },
+                        {
+                          "event": "ui:arrival_settled",
+                          "counter": "act2_arrivals",
+                          "at_least": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "second_clue",
+                    "dialogue": {
+                      "title_key": "story.core.second_clue.title",
+                      "body_keys": [
+                        "story.core.second_clue.body.1",
+                        "story.core.second_clue.body.2"
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "grant_clue",
+                        "port": "next_unknown",
+                        "level": 3,
+                        "source": "rumor"
+                      },
+                      {
+                        "type": "guarantee_explore_success"
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "explore_third",
+                    "dialogue": {
+                      "title_key": "story.core.explore_third.title",
+                      "body_keys": [
+                        "story.core.explore_third.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.explore_third.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:explore.start",
+                          "counter": "act2_explorations",
+                          "at_least": 1
+                        },
+                        {
+                          "event": "ui:arrival_settled",
+                          "counter": "act2_explore_arrivals",
+                          "at_least": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "third_port",
+                    "dialogue": {
+                      "title_key": "story.core.third_port.title",
+                      "body_keys": [
+                        "story.core.third_port.body.1",
+                        "story.core.third_port.body.2"
+                      ]
+                    },
+                    "unlock_features": [
+                      "shipyard"
+                    ],
+                    "unlock_modules": [
+                      "core:cabin/small_cabin"
+                    ],
+                    "effects": [
+                      {
+                        "type": "add_facility",
+                        "facility": "shipyard"
+                      },
+                      {
+                        "type": "upgrade_hull",
+                        "hull_id": "core:hull/medium_standard",
+                        "store_old": true
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "refit_unload",
+                    "dialogue": {
+                      "title_key": "story.core.refit_unload.title",
+                      "body_keys": [
+                        "story.core.refit_unload.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.refit_unload.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "cmd:ship.uninstall_module",
+                      "counter": "cargo_uninstalled",
+                      "at_least": 1,
+                      "match": {
+                        "content_type": "cargo_modules"
+                      }
+                    }
+                  },
+                  {
+                    "id": "refit_cabin",
+                    "dialogue": {
+                      "title_key": "story.core.refit_cabin.title",
+                      "body_keys": [
+                        "story.core.refit_cabin.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.refit_cabin.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "cmd:ship.install_module",
+                      "counter": "cabin_installed",
+                      "at_least": 1,
+                      "match": {
+                        "module_id": "core:cabin/small_cabin"
+                      }
+                    }
+                  },
+                  {
+                    "id": "passenger_run",
+                    "dialogue": {
+                      "title_key": "story.core.passenger_run.title",
+                      "body_keys": [
+                        "story.core.passenger_run.body.1"
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "grant_tutorial_contract",
+                        "template_id": "core:contract/main_03",
+                        "passengers": 1,
+                        "deadline_formula": "tutorial_craft",
+                        "name_key": "contract.core.tutorial_passenger.name",
+                        "description_key": "contract.core.tutorial_passenger.description"
+                      }
+                    ],
+                    "objective": {
+                      "text_key": "story.core.passenger_run.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:voyage.start",
+                          "counter": "passenger_departures",
+                          "at_least": 1
+                        },
+                        {
+                          "event": "ui:arrival_settled",
+                          "counter": "passenger_arrivals",
+                          "at_least": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "story_complete",
+                    "dialogue": {
+                      "title_key": "story.core.story_complete.title",
+                      "body_keys": [
+                        "story.core.story_complete.body.1"
+                      ]
+                    },
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "content/regions.json": {
+        "schema_version": "2.0",
+        "content_type": "regions",
+        "definitions": [
+          {
+            "id": "core:region/start_haven",
+            "name_key": "region.core.start_haven.name",
+            "description_key": "region.core.start_haven.description",
+            "tags": [
+              "region.start",
+              "region.safe"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "coastal",
+              "size": "medium",
+              "port_density": 0.6,
+              "site_density": 0.4,
+              "hostile_density": 0.05,
+              "weather_profile": "core:weather_profile/temperate",
+              "factions": [
+                "core:faction/merchant_guild"
+              ],
+              "region_tags": [
+                "region.start",
+                "region.coastal"
+              ]
+            }
+          },
+          {
+            "id": "core:region/trade_coast",
+            "name_key": "region.core.trade_coast.name",
+            "description_key": "region.core.trade_coast.description",
+            "tags": [
+              "region.trade"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "coastal",
+              "size": "medium",
+              "port_density": 0.5,
+              "site_density": 0.5,
+              "hostile_density": 0.15,
+              "weather_profile": "core:weather_profile/temperate",
+              "factions": [
+                "core:faction/merchant_guild"
+              ],
+              "region_tags": [
+                "region.coastal",
+                "region.trade"
+              ]
+            }
+          },
+          {
+            "id": "core:region/shiver_archipelago",
+            "name_key": "region.core.shiver_archipelago.name",
+            "description_key": "region.core.shiver_archipelago.description",
+            "tags": [
+              "region.wild"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "archipelago",
+              "size": "large",
+              "port_density": 0.3,
+              "site_density": 0.7,
+              "hostile_density": 0.3,
+              "weather_profile": "core:weather_profile/temperate",
+              "factions": [
+                "core:faction/pirates"
+              ],
+              "region_tags": [
+                "region.archipelago"
+              ]
+            }
+          },
+          {
+            "id": "core:region/open_sea",
+            "name_key": "region.core.open_sea.name",
+            "description_key": "region.core.open_sea.description",
+            "tags": [
+              "region.deep"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "open_sea",
+              "size": "large",
+              "port_density": 0.15,
+              "site_density": 0.45,
+              "hostile_density": 0.4,
+              "weather_profile": "core:weather_profile/storm_belt",
+              "factions": [
+                "core:faction/pirates"
+              ],
+              "region_tags": [
+                "region.open_sea"
+              ]
+            }
+          },
+          {
+            "id": "core:region/industrial_belt",
+            "name_key": "region.core.industrial_belt.name",
+            "description_key": "region.core.industrial_belt.description",
+            "tags": [
+              "region.industry"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "industrial",
+              "size": "medium",
+              "port_density": 0.55,
+              "site_density": 0.35,
+              "hostile_density": 0.1,
+              "weather_profile": "core:weather_profile/temperate",
+              "factions": [
+                "core:faction/royal_navy"
+              ],
+              "region_tags": [
+                "region.industrial",
+                "region.coastal"
+              ]
+            }
+          }
+        ]
+      },
+      "content/sites.json": {
+        "schema_version": "2.0",
+        "content_type": "sites",
+        "definitions": [
+          {
+            "id": "core:site/sunken_ruin",
+            "name_key": "site.core.sunken_ruin.name",
+            "description_key": "site.core.sunken_ruin.description",
+            "tags": [
+              "site.ruin"
+            ],
+            "enabled": true,
+            "data": {
+              "site_kind": "ruin",
+              "weight": 30,
+              "region_kinds": [
+                "coastal",
+                "archipelago"
+              ],
+              "repeatable": false
+            }
+          },
+          {
+            "id": "core:site/old_wreck",
+            "name_key": "site.core.old_wreck.name",
+            "description_key": "site.core.old_wreck.description",
+            "tags": [
+              "site.wreck"
+            ],
+            "enabled": true,
+            "data": {
+              "site_kind": "wreck",
+              "weight": 25,
+              "region_kinds": [
+                "coastal",
+                "open_sea"
+              ],
+              "repeatable": false
+            }
+          },
+          {
+            "id": "core:site/sea_landmark",
+            "name_key": "site.core.sea_landmark.name",
+            "description_key": "site.core.sea_landmark.description",
+            "tags": [
+              "site.landmark"
+            ],
+            "enabled": true,
+            "data": {
+              "site_kind": "landmark",
+              "weight": 20,
+              "region_kinds": [
+                "coastal",
+                "archipelago",
+                "open_sea"
+              ],
+              "repeatable": true
+            }
+          },
+          {
+            "id": "core:site/pirate_encounter",
+            "name_key": "site.core.pirate_encounter.name",
+            "description_key": "site.core.pirate_encounter.description",
+            "tags": [
+              "site.encounter",
+              "site.hostile"
+            ],
+            "enabled": true,
+            "data": {
+              "site_kind": "encounter",
+              "weight": 18,
+              "region_kinds": [
+                "archipelago",
+                "open_sea"
+              ],
+              "repeatable": true
+            }
+          },
+          {
+            "id": "core:site/base_camp",
+            "name_key": "site.core.base_camp.name",
+            "description_key": "site.core.base_camp.description",
+            "tags": [
+              "site.base"
+            ],
+            "enabled": true,
+            "data": {
+              "site_kind": "base_site",
+              "weight": 8,
+              "region_kinds": [
+                "coastal",
+                "industrial"
+              ],
+              "repeatable": false
+            }
+          },
+          {
+            "id": "core:site/ore_shoal",
+            "name_key": "site.core.ore_shoal.name",
+            "description_key": "site.core.ore_shoal.description",
+            "tags": [
+              "site.resource"
+            ],
+            "enabled": true,
+            "data": {
+              "site_kind": "resource",
+              "weight": 22,
+              "region_kinds": [
+                "coastal",
+                "industrial"
+              ],
+              "repeatable": true
+            }
+          }
+        ]
+      },
+      "content/route_templates.json": {
+        "schema_version": "2.0",
+        "content_type": "route_templates",
+        "definitions": [
+          {
+            "id": "core:route_template/coastal_lane",
+            "name_key": "route_template.core.coastal_lane.name",
+            "description_key": "route_template.core.coastal_lane.description",
+            "tags": [
+              "route.safe"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "sea_lane",
+              "distance_range": [
+                90,
+                180
+              ],
+              "risk_range": [
+                0.01,
+                0.04
+              ],
+              "travel_time_range": [
+                8,
+                20
+              ],
+              "bidirectional": true,
+              "region_kinds": [
+                "coastal",
+                "industrial"
+              ]
+            }
+          },
+          {
+            "id": "core:route_template/archipelago_trade",
+            "name_key": "route_template.core.archipelago_trade.name",
+            "description_key": "route_template.core.archipelago_trade.description",
+            "tags": [
+              "route.trade"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "trade_route",
+              "distance_range": [
+                120,
+                220
+              ],
+              "risk_range": [
+                0.02,
+                0.06
+              ],
+              "travel_time_range": [
+                10,
+                26
+              ],
+              "bidirectional": true,
+              "region_kinds": [
+                "coastal",
+                "archipelago"
+              ]
+            }
+          },
+          {
+            "id": "core:route_template/storm_shortcut",
+            "name_key": "route_template.core.storm_shortcut.name",
+            "description_key": "route_template.core.storm_shortcut.description",
+            "tags": [
+              "route.risky",
+              "route.fast"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "hazardous_shortcut",
+              "distance_range": [
+                60,
+                120
+              ],
+              "risk_range": [
+                0.06,
+                0.14
+              ],
+              "travel_time_range": [
+                4,
+                10
+              ],
+              "bidirectional": true,
+              "region_kinds": [
+                "archipelago",
+                "open_sea"
+              ]
+            }
+          }
+        ]
+      },
+      "content/weather_profiles.json": {
+        "schema_version": "2.0",
+        "content_type": "weather_profiles",
+        "definitions": [
+          {
+            "id": "core:weather_profile/temperate",
+            "name_key": "weather.core.temperate.name",
+            "description_key": "weather.core.temperate.description",
+            "tags": [
+              "weather.temperate"
+            ],
+            "enabled": true,
+            "data": {
+              "climate": "temperate",
+              "fog_chance": 0.15,
+              "storm_chance": 0.1,
+              "ice_chance": 0,
+              "base_visibility": 0.9,
+              "risk_modifier": 0,
+              "speed_modifier": 0,
+              "coal_drain_modifier": 1,
+              "seasons": [
+                "spring",
+                "summer",
+                "autumn",
+                "winter"
+              ]
+            }
+          },
+          {
+            "id": "core:weather_profile/storm_belt",
+            "name_key": "weather.core.storm_belt.name",
+            "description_key": "weather.core.storm_belt.description",
+            "tags": [
+              "weather.storm",
+              "weather.hazardous"
+            ],
+            "enabled": true,
+            "data": {
+              "climate": "storm_belt",
+              "fog_chance": 0.2,
+              "storm_chance": 0.45,
+              "ice_chance": 0.05,
+              "base_visibility": 0.6,
+              "risk_modifier": 0.2,
+              "speed_modifier": -0.1,
+              "coal_drain_modifier": 1.2,
+              "seasons": [
+                "autumn",
+                "winter"
+              ]
+            }
+          }
+        ]
+      },
+      "content/factions.json": {
+        "schema_version": "2.0",
+        "content_type": "factions",
+        "definitions": [
+          {
+            "id": "core:faction/merchant_guild",
+            "name_key": "faction.core.merchant_guild.name",
+            "description_key": "faction.core.merchant_guild.description",
+            "tags": [
+              "faction.trade"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "merchant_guild",
+              "starting_reputation": 10,
+              "attitude_thresholds": {
+                "hostile_below": -20,
+                "friendly_at": 25
+              },
+              "patrol_strength": 1,
+              "trade_goods": [
+                "core:good/spices",
+                "core:good/textiles",
+                "core:good/glassware"
+              ],
+              "home_region_tags": [
+                "region.start",
+                "region.coastal"
+              ],
+              "rival_factions": [
+                "core:faction/pirates"
+              ]
+            }
+          },
+          {
+            "id": "core:faction/royal_navy",
+            "name_key": "faction.core.royal_navy.name",
+            "description_key": "faction.core.royal_navy.description",
+            "tags": [
+              "faction.naval"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "naval",
+              "starting_reputation": 0,
+              "attitude_thresholds": {
+                "hostile_below": -30,
+                "friendly_at": 30
+              },
+              "patrol_strength": 3,
+              "trade_goods": [
+                "core:good/brass",
+                "core:material/boiler_plate",
+                "core:material/sealing_compound"
+              ],
+              "home_region_tags": [
+                "region.coastal",
+                "region.industrial"
+              ],
+              "rival_factions": [
+                "core:faction/pirates"
+              ]
+            }
+          },
+          {
+            "id": "core:faction/pirates",
+            "name_key": "faction.core.pirates.name",
+            "description_key": "faction.core.pirates.description",
+            "tags": [
+              "faction.hostile",
+              "faction.outlaw"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "pirates",
+              "starting_reputation": -30,
+              "attitude_thresholds": {
+                "hostile_below": -10,
+                "friendly_at": 40
+              },
+              "patrol_strength": 2,
+              "trade_goods": [
+                "core:good/coal",
+                "core:material/precision_gear"
+              ],
+              "home_region_tags": [
+                "region.archipelago",
+                "region.open_sea"
+              ],
+              "rival_factions": [
+                "core:faction/merchant_guild",
+                "core:faction/royal_navy"
+              ]
+            }
+          }
+        ]
+      },
+      "content/discoveries.json": {
+        "schema_version": "2.0",
+        "content_type": "discoveries",
+        "definitions": [
+          {
+            "id": "core:discovery/blueprint_medium_hull",
+            "name_key": "discovery.core.blueprint_medium_hull.name",
+            "description_key": "discovery.core.blueprint_medium_hull.description",
+            "tags": [
+              "discovery.blueprint"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "blueprint",
+              "rarity": "rare",
+              "weight": 8,
+              "repeatable": false,
+              "source_site_kinds": [
+                "ruin"
+              ],
+              "region_kinds": [
+                "coastal",
+                "archipelago"
+              ],
+              "unlock_ids": [
+                "core:hull/medium_standard"
+              ]
+            }
+          },
+          {
+            "id": "core:discovery/blueprint_standard_boiler",
+            "name_key": "discovery.core.blueprint_standard_boiler.name",
+            "description_key": "discovery.core.blueprint_standard_boiler.description",
+            "tags": [
+              "discovery.blueprint"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "blueprint",
+              "rarity": "uncommon",
+              "weight": 15,
+              "repeatable": false,
+              "source_site_kinds": [
+                "ruin",
+                "wreck"
+              ],
+              "region_kinds": [
+                "coastal",
+                "industrial"
+              ],
+              "unlock_ids": [
+                "core:boiler/standard"
+              ]
+            }
+          },
+          {
+            "id": "core:discovery/blueprint_small_cabin",
+            "name_key": "discovery.core.blueprint_small_cabin.name",
+            "description_key": "discovery.core.blueprint_small_cabin.description",
+            "tags": [
+              "discovery.blueprint"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "blueprint",
+              "rarity": "uncommon",
+              "weight": 14,
+              "repeatable": false,
+              "source_site_kinds": [
+                "ruin",
+                "wreck"
+              ],
+              "region_kinds": [
+                "coastal"
+              ],
+              "unlock_ids": [
+                "core:cabin/small_cabin"
+              ]
+            }
+          },
+          {
+            "id": "core:discovery/relic_brass_sextant",
+            "name_key": "discovery.core.relic_brass_sextant.name",
+            "description_key": "discovery.core.relic_brass_sextant.description",
+            "tags": [
+              "discovery.relic"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "relic",
+              "rarity": "rare",
+              "weight": 10,
+              "repeatable": false,
+              "source_site_kinds": [
+                "ruin",
+                "landmark"
+              ],
+              "region_kinds": [
+                "archipelago",
+                "open_sea"
+              ],
+              "unlock_ids": [
+                "core:role/navigator_basic"
+              ]
+            }
+          },
+          {
+            "id": "core:discovery/relic_glass_prism",
+            "name_key": "discovery.core.relic_glass_prism.name",
+            "description_key": "discovery.core.relic_glass_prism.description",
+            "tags": [
+              "discovery.relic"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "relic",
+              "rarity": "uncommon",
+              "weight": 18,
+              "repeatable": true,
+              "source_site_kinds": [
+                "wreck",
+                "encounter"
+              ],
+              "region_kinds": [
+                "coastal",
+                "industrial"
+              ],
+              "unlock_ids": [
+                "core:good/glassware"
+              ]
+            }
+          },
+          {
+            "id": "core:discovery/lore_lost_fleet",
+            "name_key": "discovery.core.lore_lost_fleet.name",
+            "description_key": "discovery.core.lore_lost_fleet.description",
+            "tags": [
+              "discovery.lore"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "lore",
+              "rarity": "common",
+              "weight": 25,
+              "repeatable": true,
+              "source_site_kinds": [
+                "landmark",
+                "encounter"
+              ],
+              "region_kinds": [
+                "archipelago",
+                "open_sea"
+              ]
+            }
+          },
+          {
+            "id": "core:discovery/lore_harbor_ledger",
+            "name_key": "discovery.core.lore_harbor_ledger.name",
+            "description_key": "discovery.core.lore_harbor_ledger.description",
+            "tags": [
+              "discovery.lore"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "lore",
+              "rarity": "common",
+              "weight": 22,
+              "repeatable": true,
+              "source_site_kinds": [
+                "encounter"
+              ],
+              "region_kinds": [
+                "coastal",
+                "industrial"
+              ],
+              "unlock_ids": [
+                "core:strategy/economic"
+              ]
+            }
+          }
+        ]
+      },
+      "content/start_profiles.json": {
+        "schema_version": "2.0",
+        "content_type": "start_profiles",
+        "definitions": [
+          {
+            "id": "core:start_profile/standard",
+            "name_key": "start_profile.core.standard.name",
+            "description_key": "start_profile.core.standard.description",
+            "tags": [
+              "start.standard"
+            ],
+            "enabled": true,
+            "data": {
+              "world_profile": "core:world_profile/default_world",
+              "map_config": "core:map_config/standard",
+              "starting_build": "core:starting_build/steady",
+              "difficulty": "standard",
+              "starting_port_tags": [
+                "port.hub"
+              ],
+              "starting_money": 900,
+              "starting_reputation": 0,
+              "notes_key": "start_profile.core.standard.notes"
+            }
+          },
+          {
+            "id": "core:start_profile/hard",
+            "name_key": "start_profile.core.hard.name",
+            "description_key": "start_profile.core.hard.description",
+            "tags": [
+              "start.hard"
+            ],
+            "enabled": true,
+            "data": {
+              "world_profile": "core:world_profile/default_world",
+              "map_config": "core:map_config/standard",
+              "starting_build": "core:starting_build/swift",
+              "difficulty": "hard",
+              "starting_port_tags": [
+                "port.trade"
+              ],
+              "starting_money": 400,
+              "starting_reputation": 0,
+              "starting_cargo": [
+                {
+                  "item": "core:good/coal",
+                  "amount": 8
+                }
+              ],
+              "notes_key": "start_profile.core.hard.notes"
+            }
+          }
+        ]
       }
     },
     "localization": {
@@ -3503,7 +4940,69 @@
         "story.core.passenger_run.body.1": "一位旅客要在第三港搭船去邻港。打开海图，送他抵达目的港，第三主线就完成了。",
         "story.core.passenger_run.objective": "出航并送旅客抵达目的港（1/1）",
         "story.core.story_complete.title": "教学结束",
-        "story.core.story_complete.body.1": "你已经学会了补给、贸易、线索探索和载客改装。接下来的航路交给你自己：继续完成剩余主线，或自由探索这片海。"
+        "story.core.story_complete.body.1": "你已经学会了补给、贸易、线索探索和载客改装。接下来的航路交给你自己：继续完成剩余主线，或自由探索这片海。",
+        "world.core.default_world.name": "默认海域",
+        "world.core.default_world.description": "五区域温带战役：起始海岸、贸易海岸、群岛、外海与工业带。",
+        "map_config.core.standard.name": "标准场景配置",
+        "map_config.core.standard.description": "标准海图：5 个港口、造船厂与情报站、31 项探索规则与完整教程剧情。",
+        "region.core.start_haven.name": "起始港湾",
+        "region.core.start_haven.description": "战役起点的安全海岸，设施齐备、风险最低。",
+        "region.core.trade_coast.name": "贸易海岸",
+        "region.core.trade_coast.description": "商路密集的沿海区域，商船与市场都很活跃。",
+        "region.core.shiver_archipelago.name": "群岛海域",
+        "region.core.shiver_archipelago.description": "岛链与浅滩交错，遗迹与残骸多，航行风险偏高。",
+        "region.core.open_sea.name": "外海",
+        "region.core.open_sea.description": "开阔深水区，风暴频繁，海盗与未知遭遇出没。",
+        "region.core.industrial_belt.name": "工业带",
+        "region.core.industrial_belt.description": "钢铁与煤烟笼罩的工业化海岸，造船与材料贸易的中心。",
+        "site.core.sunken_ruin.name": "沉没遗迹",
+        "site.core.sunken_ruin.description": "半沉于水下的旧时代建筑，藏有蓝图与遗物。",
+        "site.core.old_wreck.name": "古老残骸",
+        "site.core.old_wreck.description": "搁浅多年的沉船，仍有可回收的货物与图纸。",
+        "site.core.sea_landmark.name": "海上地标",
+        "site.core.sea_landmark.description": "航路旁的醒目地标，可用于定位并安全通行。",
+        "site.core.pirate_encounter.name": "海盗遭遇",
+        "site.core.pirate_encounter.description": "海盗船队出没的海域，可能爆发战斗或谈判。",
+        "site.core.base_camp.name": "基地营地",
+        "site.core.base_camp.description": "可供建立前哨的避风锚地。",
+        "site.core.ore_shoal.name": "矿脉浅滩",
+        "site.core.ore_shoal.description": "浅海下的矿石露头，可反复采集。",
+        "route_template.core.coastal_lane.name": "沿海航道",
+        "route_template.core.coastal_lane.description": "沿大陆架航行的安全常规航线。",
+        "route_template.core.archipelago_trade.name": "群岛商路",
+        "route_template.core.archipelago_trade.description": "穿越岛屿之间的贸易航线，利润与风险都更高。",
+        "route_template.core.storm_shortcut.name": "风暴捷径",
+        "route_template.core.storm_shortcut.description": "穿过风暴带的危险近路，能省下大量航时。",
+        "weather.core.temperate.name": "温带气候",
+        "weather.core.temperate.description": "四季分明、雾与风暴都较温和的气候带。",
+        "weather.core.storm_belt.name": "风暴带",
+        "weather.core.storm_belt.description": "常年强风巨浪，风险与煤耗显著上升。",
+        "faction.core.merchant_guild.name": "商人公会",
+        "faction.core.merchant_guild.description": "控制香料、纺织品与玻璃器皿贸易的沿海商会。",
+        "faction.core.royal_navy.name": "皇家海军",
+        "faction.core.royal_navy.description": "巡逻工业带与海岸航线的正规舰队，重视秩序。",
+        "faction.core.pirates.name": "海盗团",
+        "faction.core.pirates.description": "盘踞外海与群岛的亡命之徒，与商会和海军敌对。",
+        "discovery.core.blueprint_medium_hull.name": "中型船体蓝图",
+        "discovery.core.blueprint_medium_hull.description": "记载中型船体结构的古老图纸。",
+        "discovery.core.blueprint_standard_boiler.name": "标准锅炉蓝图",
+        "discovery.core.blueprint_standard_boiler.description": "一套完整可用的标准锅炉图纸。",
+        "discovery.core.blueprint_small_cabin.name": "小型客舱蓝图",
+        "discovery.core.blueprint_small_cabin.description": "客舱改造所需的图纸。",
+        "discovery.core.relic_brass_sextant.name": "黄铜六分仪",
+        "discovery.core.relic_brass_sextant.description": "仍能使用的精密航海仪器。",
+        "discovery.core.relic_glass_prism.name": "玻璃棱镜",
+        "discovery.core.relic_glass_prism.description": "工艺精湛的玻璃棱镜，可用作高价货物。",
+        "discovery.core.lore_lost_fleet.name": "失踪舰队的传闻",
+        "discovery.core.lore_lost_fleet.description": "关于一支消失在外海的舰队的零散记录。",
+        "discovery.core.lore_harbor_ledger.name": "港口旧账本",
+        "discovery.core.lore_harbor_ledger.description": "记录着旧日价格与商路的手写账本。",
+        "start_profile.core.standard.name": "标准开局",
+        "start_profile.core.standard.description": "标准难度：稳健构筑、充足资金，适合首次游玩。",
+        "start_profile.core.standard.notes": "起始港为枢纽港；推荐先完成教程主线。",
+        "start_profile.core.hard.name": "硬核开局",
+        "start_profile.core.hard.description": "高难度：高性能构筑与有限资金，容错很低。",
+        "start_profile.core.hard.notes": "起始港为贸易港；补给更贵、失败代价更高。"
       },
       "en": {
         "good.core.iron_ore.name": "Iron Ore",
@@ -3696,7 +5195,69 @@
         "story.core.passenger_run.body.1": "A traveller needs passage from the third harbour to a neighbouring port. Open the chart, deliver them, and the third mainline is complete.",
         "story.core.passenger_run.objective": "Depart and deliver the passenger (1/1)",
         "story.core.story_complete.title": "Tutorial Complete",
-        "story.core.story_complete.body.1": "You have learned provisioning, trade, clue exploration and passenger refits. The sea is yours now: finish the remaining mainline or explore freely."
+        "story.core.story_complete.body.1": "You have learned provisioning, trade, clue exploration and passenger refits. The sea is yours now: finish the remaining mainline or explore freely.",
+        "world.core.default_world.name": "Default Waters",
+        "world.core.default_world.description": "A five-region temperate campaign: starting coast, trade coast, archipelago, open sea and industrial belt.",
+        "map_config.core.standard.name": "Standard Scenario",
+        "map_config.core.standard.description": "The standard chart: five ports, a shipyard and intel office, 31 exploration rules and the full tutorial story.",
+        "region.core.start_haven.name": "Haven Coast",
+        "region.core.start_haven.description": "The safe starting coast of the campaign, with full facilities and the lowest risk.",
+        "region.core.trade_coast.name": "Trade Coast",
+        "region.core.trade_coast.description": "A busy coastal belt with dense sea lanes, active merchants and markets.",
+        "region.core.shiver_archipelago.name": "Shiver Archipelago",
+        "region.core.shiver_archipelago.description": "Interleaved islands and shoals, rich in ruins and wrecks and riskier to sail.",
+        "region.core.open_sea.name": "Open Sea",
+        "region.core.open_sea.description": "Wide deep water with frequent storms, pirates and unknown encounters.",
+        "region.core.industrial_belt.name": "Industrial Belt",
+        "region.core.industrial_belt.description": "A smoggy industrialised coast, the centre of shipbuilding and material trade.",
+        "site.core.sunken_ruin.name": "Sunken Ruin",
+        "site.core.sunken_ruin.description": "Half-submerged ruins of an older age, hiding blueprints and relics.",
+        "site.core.old_wreck.name": "Old Wreck",
+        "site.core.old_wreck.description": "A long-grounded hulk that still yields salvage and drawings.",
+        "site.core.sea_landmark.name": "Sea Landmark",
+        "site.core.sea_landmark.description": "A striking landmark beside the route, useful for positioning and safe passage.",
+        "site.core.pirate_encounter.name": "Pirate Encounter",
+        "site.core.pirate_encounter.description": "Waters patrolled by pirate flotillas; fight or bargain.",
+        "site.core.base_camp.name": "Base Camp",
+        "site.core.base_camp.description": "A sheltered anchorage suitable for an outpost.",
+        "site.core.ore_shoal.name": "Ore Shoal",
+        "site.core.ore_shoal.description": "A shallow ore outcrop that can be harvested repeatedly.",
+        "route_template.core.coastal_lane.name": "Coastal Lane",
+        "route_template.core.coastal_lane.description": "A safe routine route along the continental shelf.",
+        "route_template.core.archipelago_trade.name": "Archipelago Trade Route",
+        "route_template.core.archipelago_trade.description": "A trading route weaving between islands, with better profit and more risk.",
+        "route_template.core.storm_shortcut.name": "Storm Shortcut",
+        "route_template.core.storm_shortcut.description": "A dangerous shortcut through the storm belt that saves a lot of travel time.",
+        "weather.core.temperate.name": "Temperate Climate",
+        "weather.core.temperate.description": "Four distinct seasons with mild fog and storm chances.",
+        "weather.core.storm_belt.name": "Storm Belt",
+        "weather.core.storm_belt.description": "Constant gales and heavy seas; risk and coal burn rise sharply.",
+        "faction.core.merchant_guild.name": "Merchant Guild",
+        "faction.core.merchant_guild.description": "A coastal trade guild controlling spices, textiles and glassware.",
+        "faction.core.royal_navy.name": "Royal Navy",
+        "faction.core.royal_navy.description": "A regular fleet patrolling the industrial belt and coastal lanes, valuing order.",
+        "faction.core.pirates.name": "Pirate Crew",
+        "faction.core.pirates.description": "Outlaws holding the open sea and archipelago, hostile to guild and navy.",
+        "discovery.core.blueprint_medium_hull.name": "Medium Hull Blueprint",
+        "discovery.core.blueprint_medium_hull.description": "An old drawing of a medium hull's structure.",
+        "discovery.core.blueprint_standard_boiler.name": "Standard Boiler Blueprint",
+        "discovery.core.blueprint_standard_boiler.description": "A complete, usable drawing of the standard boiler.",
+        "discovery.core.blueprint_small_cabin.name": "Small Cabin Blueprint",
+        "discovery.core.blueprint_small_cabin.description": "The drawing needed for a passenger cabin refit.",
+        "discovery.core.relic_brass_sextant.name": "Brass Sextant",
+        "discovery.core.relic_brass_sextant.description": "A precise navigational instrument that still works.",
+        "discovery.core.relic_glass_prism.name": "Glass Prism",
+        "discovery.core.relic_glass_prism.description": "A finely cut glass prism worth trading as luxury cargo.",
+        "discovery.core.lore_lost_fleet.name": "Tale of the Lost Fleet",
+        "discovery.core.lore_lost_fleet.description": "Fragmented records of a fleet lost in the open sea.",
+        "discovery.core.lore_harbor_ledger.name": "Old Harbor Ledger",
+        "discovery.core.lore_harbor_ledger.description": "A handwritten ledger of past prices and trade routes.",
+        "start_profile.core.standard.name": "Standard Start",
+        "start_profile.core.standard.description": "Standard difficulty: a steady build and ample funds for a first voyage.",
+        "start_profile.core.standard.notes": "Starts at a hub port; finishing the tutorial mainline is recommended.",
+        "start_profile.core.hard.name": "Hard Start",
+        "start_profile.core.hard.description": "Hard difficulty: a fast build with limited funds and little room for error.",
+        "start_profile.core.hard.notes": "Starts at a trade port; supplies cost more and mistakes hurt."
       }
     },
     "definitions": [
@@ -4357,7 +5918,18 @@
                   4.2
                 ]
               }
-            ]
+            ],
+            "rig_plan": {
+              "kind": "sail",
+              "mount_kinds": [
+                "mast"
+              ],
+              "hide_nodes": [
+                "SN_SF_Mast_Fore",
+                "SN_SF_Mast_Main"
+              ],
+              "mast_asset": "model.rig.mast_sail"
+            }
           }
         }
       },
@@ -4544,7 +6116,21 @@
                   13.51
                 ]
               }
-            ]
+            ],
+            "rig_plan": {
+              "kind": "steam",
+              "mount_kinds": [
+                "mast",
+                "yard"
+              ],
+              "hide_nodes": [
+                "SN_PF_Mast_Fore",
+                "SN_PF_Mast_Main",
+                "SN_PF_Yards"
+              ],
+              "mast_asset": "model.rig.mast_steam",
+              "yard_asset": "model.rig.yard"
+            }
           }
         }
       },
@@ -7393,6 +8979,1690 @@
                 ]
               }
             ]
+          }
+        }
+      },
+      {
+        "id": "core:world_profile/default_world",
+        "content_type": "world_profiles",
+        "file": "content/world_profiles.json",
+        "name_key": "world.core.default_world.name",
+        "name_zh": "默认海域",
+        "name_en": "Default Waters",
+        "tags": [
+          "world.default",
+          "world.temperate"
+        ],
+        "definition": {
+          "id": "core:world_profile/default_world",
+          "name_key": "world.core.default_world.name",
+          "description_key": "world.core.default_world.description",
+          "tags": [
+            "world.default",
+            "world.temperate"
+          ],
+          "enabled": true,
+          "data": {
+            "region_count": 5,
+            "sites_per_region": 6,
+            "port_count": 5,
+            "ruin_density": 0.2,
+            "base_site_count": 2,
+            "faction_count": 3,
+            "weather_profile": "core:weather_profile/temperate",
+            "edge_density": 0.2,
+            "start_region_tags": [
+              "region.start"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:map_config/standard",
+        "content_type": "map_configs",
+        "file": "content/map_configs.json",
+        "name_key": "map_config.core.standard.name",
+        "name_zh": "标准场景配置",
+        "name_en": "Standard Scenario",
+        "tags": [
+          "map.standard",
+          "map.mvp"
+        ],
+        "definition": {
+          "id": "core:map_config/standard",
+          "name_key": "map_config.core.standard.name",
+          "description_key": "map_config.core.standard.description",
+          "tags": [
+            "map.standard",
+            "map.mvp"
+          ],
+          "enabled": true,
+          "data": {
+            "archetypes": [
+              "core:port_archetype/iron_harbor",
+              "core:port_archetype/spice_port",
+              "core:port_archetype/free_town",
+              "core:port_archetype/fishing_village",
+              "core:port_archetype/glass_port"
+            ],
+            "port_name_keys": [
+              "port_name.core.iron_harbor",
+              "port_name.core.spice_port",
+              "port_name.core.free_town",
+              "port_name.core.fishing_village",
+              "port_name.core.glass_port",
+              "port_name.core.mist_cove"
+            ],
+            "start_archetype_tags": [
+              "port.hub"
+            ],
+            "required_facility_tags": [
+              "port.shipyard",
+              "port.intel"
+            ],
+            "required_facility_max_edges": 2,
+            "npc_count_range": [
+              2,
+              3
+            ],
+            "npc_cargo_range": [
+              8,
+              24
+            ],
+            "supply_prices": {
+              "coal": 4,
+              "water": 2,
+              "repair_per_point": 6
+            },
+            "loan": {
+              "limit": 400,
+              "interest_rate": 0.1,
+              "term_hours": 96
+            },
+            "intel_cost": 25,
+            "trade_margin": 0.95,
+            "player_trade_impact": 0.35,
+            "default_starting_build": "core:starting_build/steady",
+            "twin_world_size": 160,
+            "exploration": {
+              "rumor_clue_chance": 0.65,
+              "fog_port_reveal_ratio": 0.05,
+              "fog_vision_ratio": 0.05,
+              "intel_clue_cost": 40,
+              "max_active_clues": 4,
+              "level_weights": {
+                "rumor": [
+                  0.55,
+                  0.35,
+                  0.1,
+                  0
+                ],
+                "intel": [
+                  0,
+                  0.15,
+                  0.45,
+                  0.4
+                ]
+              },
+              "credibility_range": {
+                "rumor": [
+                  0.25,
+                  0.55
+                ],
+                "intel": [
+                  0.6,
+                  0.95
+                ],
+                "wait": [
+                  0.4,
+                  0.7
+                ],
+                "contract": [
+                  0.55,
+                  0.85
+                ]
+              },
+              "distance_error_ratio": 0.35,
+              "search_zone_radius": 14,
+              "search_zone_noise": 12,
+              "discovery_chance_base": 0.2,
+              "discovery_chance_per_credibility": 0.7,
+              "risk_base": 0.08,
+              "risk_per_unreliability": 0.12,
+              "drift_durability_loss": 8,
+              "drift_extra_coal": 4,
+              "drift_extra_water": 4,
+              "drift_hours": 6,
+              "alert_threshold": 0.5,
+              "alert_progress": 0.5,
+              "turnback_extra_ratio": 0.25,
+              "investigation_cost": 20,
+              "investigation_hours": 6,
+              "investigation_success_chance": 0.75,
+              "goods_clue_expiry_hours": {
+                "rumor": 24,
+                "intel": 72,
+                "wait": 48,
+                "contract": 72
+              },
+              "goods_clue_price_error_ratio": 0.15,
+              "goods_clue_source_weights": {
+                "rumor": 0,
+                "intel": 0,
+                "wait": 1,
+                "contract": 0
+              },
+              "wait_clue_hours_block": 6,
+              "wait_clue_chance_per_block": 0.35,
+              "wait_clue_max_chance": 0.85,
+              "contract_clue_chance": 0.5
+            },
+            "story": {
+              "flow_id": "core:story/opening",
+              "enabled": true,
+              "skip_unlocks": [
+                "overview",
+                "supply",
+                "chart",
+                "market",
+                "contracts",
+                "clues",
+                "tavern",
+                "shipyard"
+              ],
+              "start_unlocks": [],
+              "start_items": [],
+              "start_modules": [],
+              "stages": [
+                {
+                  "id": "opening",
+                  "dialogue": {
+                    "title_key": "story.core.opening.title",
+                    "body_keys": [
+                      "story.core.opening.body.1",
+                      "story.core.opening.body.2"
+                    ]
+                  },
+                  "unlock_features": [
+                    "overview"
+                  ],
+                  "effects": [
+                    {
+                      "type": "set_ship_fuel",
+                      "amount": 4
+                    },
+                    {
+                      "type": "grant_tutorial_contract",
+                      "template_id": "core:contract/main_01",
+                      "cargo_item_id": "core:good/coal",
+                      "amount": 10,
+                      "provider": "fuel",
+                      "deadline_formula": "tutorial_express",
+                      "name_key": "contract.core.tutorial_coal.name",
+                      "description_key": "contract.core.tutorial_coal.description"
+                    },
+                    {
+                      "type": "discover_contract_destination"
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "supply_brief",
+                  "dialogue": {
+                    "title_key": "story.core.supply_brief.title",
+                    "body_keys": [
+                      "story.core.supply_brief.body.1"
+                    ]
+                  },
+                  "unlock_features": [
+                    "market"
+                  ],
+                  "objective": {
+                    "text_key": "story.core.supply_brief.objective",
+                    "target": 4
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:supply.buy_coal",
+                        "counter": "coal_bought",
+                        "at_least": 4
+                      },
+                      {
+                        "event": "cmd:supply.buy_water",
+                        "counter": "water_bought",
+                        "at_least": 2
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "supply_hold",
+                  "dialogue": {
+                    "title_key": "story.core.supply_hold.title",
+                    "body_keys": [
+                      "story.core.supply_hold.body.1"
+                    ]
+                  },
+                  "unlock_features": [
+                    "chart"
+                  ],
+                  "lock_actions": [
+                    "supply.buy"
+                  ],
+                  "objective": {
+                    "text_key": "story.core.supply_hold.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:chart_opened"
+                  }
+                },
+                {
+                  "id": "chart_brief",
+                  "dialogue": {
+                    "title_key": "story.core.chart_brief.title",
+                    "body_keys": [
+                      "story.core.chart_brief.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.chart_brief.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:chart_closed"
+                  }
+                },
+                {
+                  "id": "supply_finish",
+                  "dialogue": {
+                    "title_key": "story.core.supply_finish.title",
+                    "body_keys": [
+                      "story.core.supply_finish.body.1"
+                    ]
+                  },
+                  "effects": [
+                    {
+                      "type": "set_counter_from_ship",
+                      "counter": "coal_aboard",
+                      "kind": "coal"
+                    }
+                  ],
+                  "objective": {
+                    "text_key": "story.core.supply_finish.objective",
+                    "target": 10
+                  },
+                  "advance": {
+                    "event": "cmd:supply.buy_coal",
+                    "counter": "coal_aboard",
+                    "counter_from": "stock",
+                    "at_least": 10
+                  }
+                },
+                {
+                  "id": "depart_brief",
+                  "dialogue": {
+                    "title_key": "story.core.depart_brief.title",
+                    "body_keys": [
+                      "story.core.depart_brief.body.1"
+                    ]
+                  },
+                  "preferred_strategy": "fast",
+                  "objective": {
+                    "text_key": "story.core.depart_brief.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:arrival_settled"
+                  }
+                },
+                {
+                  "id": "second_port",
+                  "dialogue": {
+                    "title_key": "story.core.second_port.title",
+                    "body_keys": [
+                      "story.core.second_port.body.1"
+                    ]
+                  },
+                  "unlock_features": [
+                    "market",
+                    "contracts"
+                  ],
+                  "unlock_items": [
+                    "core:good/spices",
+                    "core:good/textiles"
+                  ],
+                  "effects": [
+                    {
+                      "type": "grant_tutorial_contract",
+                      "template_id": "core:contract/main_02",
+                      "cargo_item_id": "core:good/textiles",
+                      "amount": 6,
+                      "provider": "player",
+                      "destination": "home",
+                      "deadline_formula": "tutorial_trade",
+                      "name_key": "contract.core.tutorial_trade.name",
+                      "description_key": "contract.core.tutorial_trade.description"
+                    }
+                  ],
+                  "objective": {
+                    "text_key": "story.core.second_port.objective",
+                    "target": 8
+                  },
+                  "advance": {
+                    "event": "cmd:trade.buy",
+                    "counter": "textiles_bought",
+                    "at_least": 8,
+                    "match": {
+                      "item_id": "core:good/textiles"
+                    }
+                  }
+                },
+                {
+                  "id": "second_depart",
+                  "dialogue": {
+                    "title_key": "story.core.second_depart.title",
+                    "body_keys": [
+                      "story.core.second_depart.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.second_depart.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:arrival_settled"
+                  }
+                },
+                {
+                  "id": "back_first",
+                  "dialogue": {
+                    "title_key": "story.core.back_first.title",
+                    "body_keys": [
+                      "story.core.back_first.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.back_first.objective",
+                    "target": 2
+                  },
+                  "advance": {
+                    "event": "cmd:trade.sell",
+                    "counter": "textiles_sold",
+                    "at_least": 2,
+                    "match": {
+                      "item_id": "core:good/textiles"
+                    }
+                  }
+                },
+                {
+                  "id": "chapter_wrap",
+                  "dialogue": {
+                    "title_key": "story.core.chapter_wrap.title",
+                    "body_keys": [
+                      "story.core.chapter_wrap.body.1"
+                    ]
+                  },
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "tavern_open",
+                  "dialogue": {
+                    "title_key": "story.core.tavern_open.title",
+                    "body_keys": [
+                      "story.core.tavern_open.body.1",
+                      "story.core.tavern_open.body.2"
+                    ]
+                  },
+                  "unlock_features": [
+                    "clues",
+                    "tavern"
+                  ],
+                  "effects": [
+                    {
+                      "type": "grant_clue",
+                      "port": "next_unknown",
+                      "level": 1,
+                      "source": "rumor"
+                    },
+                    {
+                      "type": "set_market_price_bias",
+                      "item_ids": [
+                        "core:good/textiles",
+                        "core:good/spices"
+                      ],
+                      "home_bias": 1.35,
+                      "other_bias": 0.7,
+                      "reset_stock": true,
+                      "make_buyable": true
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "tavern_intro",
+                  "dialogue": {
+                    "title_key": "story.core.tavern_intro.title",
+                    "body_keys": [
+                      "story.core.tavern_intro.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.tavern_intro.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "cmd:intel.refresh",
+                    "counter": "intel_refreshed",
+                    "at_least": 1
+                  }
+                },
+                {
+                  "id": "third_good",
+                  "dialogue": {
+                    "title_key": "story.core.third_good.title",
+                    "body_keys": [
+                      "story.core.third_good.body.1"
+                    ]
+                  },
+                  "unlock_items": [
+                    "core:good/timber"
+                  ],
+                  "objective": {
+                    "text_key": "story.core.third_good.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:voyage.start",
+                        "counter": "act2_departures",
+                        "at_least": 1
+                      },
+                      {
+                        "event": "ui:arrival_settled",
+                        "counter": "act2_arrivals",
+                        "at_least": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "second_clue",
+                  "dialogue": {
+                    "title_key": "story.core.second_clue.title",
+                    "body_keys": [
+                      "story.core.second_clue.body.1",
+                      "story.core.second_clue.body.2"
+                    ]
+                  },
+                  "effects": [
+                    {
+                      "type": "grant_clue",
+                      "port": "next_unknown",
+                      "level": 3,
+                      "source": "rumor"
+                    },
+                    {
+                      "type": "guarantee_explore_success"
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "explore_third",
+                  "dialogue": {
+                    "title_key": "story.core.explore_third.title",
+                    "body_keys": [
+                      "story.core.explore_third.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.explore_third.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:explore.start",
+                        "counter": "act2_explorations",
+                        "at_least": 1
+                      },
+                      {
+                        "event": "ui:arrival_settled",
+                        "counter": "act2_explore_arrivals",
+                        "at_least": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "third_port",
+                  "dialogue": {
+                    "title_key": "story.core.third_port.title",
+                    "body_keys": [
+                      "story.core.third_port.body.1",
+                      "story.core.third_port.body.2"
+                    ]
+                  },
+                  "unlock_features": [
+                    "shipyard"
+                  ],
+                  "unlock_modules": [
+                    "core:cabin/small_cabin"
+                  ],
+                  "effects": [
+                    {
+                      "type": "add_facility",
+                      "facility": "shipyard"
+                    },
+                    {
+                      "type": "upgrade_hull",
+                      "hull_id": "core:hull/medium_standard",
+                      "store_old": true
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "refit_unload",
+                  "dialogue": {
+                    "title_key": "story.core.refit_unload.title",
+                    "body_keys": [
+                      "story.core.refit_unload.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.refit_unload.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "cmd:ship.uninstall_module",
+                    "counter": "cargo_uninstalled",
+                    "at_least": 1,
+                    "match": {
+                      "content_type": "cargo_modules"
+                    }
+                  }
+                },
+                {
+                  "id": "refit_cabin",
+                  "dialogue": {
+                    "title_key": "story.core.refit_cabin.title",
+                    "body_keys": [
+                      "story.core.refit_cabin.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.refit_cabin.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "cmd:ship.install_module",
+                    "counter": "cabin_installed",
+                    "at_least": 1,
+                    "match": {
+                      "module_id": "core:cabin/small_cabin"
+                    }
+                  }
+                },
+                {
+                  "id": "passenger_run",
+                  "dialogue": {
+                    "title_key": "story.core.passenger_run.title",
+                    "body_keys": [
+                      "story.core.passenger_run.body.1"
+                    ]
+                  },
+                  "effects": [
+                    {
+                      "type": "grant_tutorial_contract",
+                      "template_id": "core:contract/main_03",
+                      "passengers": 1,
+                      "deadline_formula": "tutorial_craft",
+                      "name_key": "contract.core.tutorial_passenger.name",
+                      "description_key": "contract.core.tutorial_passenger.description"
+                    }
+                  ],
+                  "objective": {
+                    "text_key": "story.core.passenger_run.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:voyage.start",
+                        "counter": "passenger_departures",
+                        "at_least": 1
+                      },
+                      {
+                        "event": "ui:arrival_settled",
+                        "counter": "passenger_arrivals",
+                        "at_least": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "story_complete",
+                  "dialogue": {
+                    "title_key": "story.core.story_complete.title",
+                    "body_keys": [
+                      "story.core.story_complete.body.1"
+                    ]
+                  },
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "core:region/start_haven",
+        "content_type": "regions",
+        "file": "content/regions.json",
+        "name_key": "region.core.start_haven.name",
+        "name_zh": "起始港湾",
+        "name_en": "Haven Coast",
+        "tags": [
+          "region.start",
+          "region.safe"
+        ],
+        "definition": {
+          "id": "core:region/start_haven",
+          "name_key": "region.core.start_haven.name",
+          "description_key": "region.core.start_haven.description",
+          "tags": [
+            "region.start",
+            "region.safe"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "coastal",
+            "size": "medium",
+            "port_density": 0.6,
+            "site_density": 0.4,
+            "hostile_density": 0.05,
+            "weather_profile": "core:weather_profile/temperate",
+            "factions": [
+              "core:faction/merchant_guild"
+            ],
+            "region_tags": [
+              "region.start",
+              "region.coastal"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:region/trade_coast",
+        "content_type": "regions",
+        "file": "content/regions.json",
+        "name_key": "region.core.trade_coast.name",
+        "name_zh": "贸易海岸",
+        "name_en": "Trade Coast",
+        "tags": [
+          "region.trade"
+        ],
+        "definition": {
+          "id": "core:region/trade_coast",
+          "name_key": "region.core.trade_coast.name",
+          "description_key": "region.core.trade_coast.description",
+          "tags": [
+            "region.trade"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "coastal",
+            "size": "medium",
+            "port_density": 0.5,
+            "site_density": 0.5,
+            "hostile_density": 0.15,
+            "weather_profile": "core:weather_profile/temperate",
+            "factions": [
+              "core:faction/merchant_guild"
+            ],
+            "region_tags": [
+              "region.coastal",
+              "region.trade"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:region/shiver_archipelago",
+        "content_type": "regions",
+        "file": "content/regions.json",
+        "name_key": "region.core.shiver_archipelago.name",
+        "name_zh": "群岛海域",
+        "name_en": "Shiver Archipelago",
+        "tags": [
+          "region.wild"
+        ],
+        "definition": {
+          "id": "core:region/shiver_archipelago",
+          "name_key": "region.core.shiver_archipelago.name",
+          "description_key": "region.core.shiver_archipelago.description",
+          "tags": [
+            "region.wild"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "archipelago",
+            "size": "large",
+            "port_density": 0.3,
+            "site_density": 0.7,
+            "hostile_density": 0.3,
+            "weather_profile": "core:weather_profile/temperate",
+            "factions": [
+              "core:faction/pirates"
+            ],
+            "region_tags": [
+              "region.archipelago"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:region/open_sea",
+        "content_type": "regions",
+        "file": "content/regions.json",
+        "name_key": "region.core.open_sea.name",
+        "name_zh": "外海",
+        "name_en": "Open Sea",
+        "tags": [
+          "region.deep"
+        ],
+        "definition": {
+          "id": "core:region/open_sea",
+          "name_key": "region.core.open_sea.name",
+          "description_key": "region.core.open_sea.description",
+          "tags": [
+            "region.deep"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "open_sea",
+            "size": "large",
+            "port_density": 0.15,
+            "site_density": 0.45,
+            "hostile_density": 0.4,
+            "weather_profile": "core:weather_profile/storm_belt",
+            "factions": [
+              "core:faction/pirates"
+            ],
+            "region_tags": [
+              "region.open_sea"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:region/industrial_belt",
+        "content_type": "regions",
+        "file": "content/regions.json",
+        "name_key": "region.core.industrial_belt.name",
+        "name_zh": "工业带",
+        "name_en": "Industrial Belt",
+        "tags": [
+          "region.industry"
+        ],
+        "definition": {
+          "id": "core:region/industrial_belt",
+          "name_key": "region.core.industrial_belt.name",
+          "description_key": "region.core.industrial_belt.description",
+          "tags": [
+            "region.industry"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "industrial",
+            "size": "medium",
+            "port_density": 0.55,
+            "site_density": 0.35,
+            "hostile_density": 0.1,
+            "weather_profile": "core:weather_profile/temperate",
+            "factions": [
+              "core:faction/royal_navy"
+            ],
+            "region_tags": [
+              "region.industrial",
+              "region.coastal"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:site/sunken_ruin",
+        "content_type": "sites",
+        "file": "content/sites.json",
+        "name_key": "site.core.sunken_ruin.name",
+        "name_zh": "沉没遗迹",
+        "name_en": "Sunken Ruin",
+        "tags": [
+          "site.ruin"
+        ],
+        "definition": {
+          "id": "core:site/sunken_ruin",
+          "name_key": "site.core.sunken_ruin.name",
+          "description_key": "site.core.sunken_ruin.description",
+          "tags": [
+            "site.ruin"
+          ],
+          "enabled": true,
+          "data": {
+            "site_kind": "ruin",
+            "weight": 30,
+            "region_kinds": [
+              "coastal",
+              "archipelago"
+            ],
+            "repeatable": false
+          }
+        }
+      },
+      {
+        "id": "core:site/old_wreck",
+        "content_type": "sites",
+        "file": "content/sites.json",
+        "name_key": "site.core.old_wreck.name",
+        "name_zh": "古老残骸",
+        "name_en": "Old Wreck",
+        "tags": [
+          "site.wreck"
+        ],
+        "definition": {
+          "id": "core:site/old_wreck",
+          "name_key": "site.core.old_wreck.name",
+          "description_key": "site.core.old_wreck.description",
+          "tags": [
+            "site.wreck"
+          ],
+          "enabled": true,
+          "data": {
+            "site_kind": "wreck",
+            "weight": 25,
+            "region_kinds": [
+              "coastal",
+              "open_sea"
+            ],
+            "repeatable": false
+          }
+        }
+      },
+      {
+        "id": "core:site/sea_landmark",
+        "content_type": "sites",
+        "file": "content/sites.json",
+        "name_key": "site.core.sea_landmark.name",
+        "name_zh": "海上地标",
+        "name_en": "Sea Landmark",
+        "tags": [
+          "site.landmark"
+        ],
+        "definition": {
+          "id": "core:site/sea_landmark",
+          "name_key": "site.core.sea_landmark.name",
+          "description_key": "site.core.sea_landmark.description",
+          "tags": [
+            "site.landmark"
+          ],
+          "enabled": true,
+          "data": {
+            "site_kind": "landmark",
+            "weight": 20,
+            "region_kinds": [
+              "coastal",
+              "archipelago",
+              "open_sea"
+            ],
+            "repeatable": true
+          }
+        }
+      },
+      {
+        "id": "core:site/pirate_encounter",
+        "content_type": "sites",
+        "file": "content/sites.json",
+        "name_key": "site.core.pirate_encounter.name",
+        "name_zh": "海盗遭遇",
+        "name_en": "Pirate Encounter",
+        "tags": [
+          "site.encounter",
+          "site.hostile"
+        ],
+        "definition": {
+          "id": "core:site/pirate_encounter",
+          "name_key": "site.core.pirate_encounter.name",
+          "description_key": "site.core.pirate_encounter.description",
+          "tags": [
+            "site.encounter",
+            "site.hostile"
+          ],
+          "enabled": true,
+          "data": {
+            "site_kind": "encounter",
+            "weight": 18,
+            "region_kinds": [
+              "archipelago",
+              "open_sea"
+            ],
+            "repeatable": true
+          }
+        }
+      },
+      {
+        "id": "core:site/base_camp",
+        "content_type": "sites",
+        "file": "content/sites.json",
+        "name_key": "site.core.base_camp.name",
+        "name_zh": "基地营地",
+        "name_en": "Base Camp",
+        "tags": [
+          "site.base"
+        ],
+        "definition": {
+          "id": "core:site/base_camp",
+          "name_key": "site.core.base_camp.name",
+          "description_key": "site.core.base_camp.description",
+          "tags": [
+            "site.base"
+          ],
+          "enabled": true,
+          "data": {
+            "site_kind": "base_site",
+            "weight": 8,
+            "region_kinds": [
+              "coastal",
+              "industrial"
+            ],
+            "repeatable": false
+          }
+        }
+      },
+      {
+        "id": "core:site/ore_shoal",
+        "content_type": "sites",
+        "file": "content/sites.json",
+        "name_key": "site.core.ore_shoal.name",
+        "name_zh": "矿脉浅滩",
+        "name_en": "Ore Shoal",
+        "tags": [
+          "site.resource"
+        ],
+        "definition": {
+          "id": "core:site/ore_shoal",
+          "name_key": "site.core.ore_shoal.name",
+          "description_key": "site.core.ore_shoal.description",
+          "tags": [
+            "site.resource"
+          ],
+          "enabled": true,
+          "data": {
+            "site_kind": "resource",
+            "weight": 22,
+            "region_kinds": [
+              "coastal",
+              "industrial"
+            ],
+            "repeatable": true
+          }
+        }
+      },
+      {
+        "id": "core:route_template/coastal_lane",
+        "content_type": "route_templates",
+        "file": "content/route_templates.json",
+        "name_key": "route_template.core.coastal_lane.name",
+        "name_zh": "沿海航道",
+        "name_en": "Coastal Lane",
+        "tags": [
+          "route.safe"
+        ],
+        "definition": {
+          "id": "core:route_template/coastal_lane",
+          "name_key": "route_template.core.coastal_lane.name",
+          "description_key": "route_template.core.coastal_lane.description",
+          "tags": [
+            "route.safe"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "sea_lane",
+            "distance_range": [
+              90,
+              180
+            ],
+            "risk_range": [
+              0.01,
+              0.04
+            ],
+            "travel_time_range": [
+              8,
+              20
+            ],
+            "bidirectional": true,
+            "region_kinds": [
+              "coastal",
+              "industrial"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:route_template/archipelago_trade",
+        "content_type": "route_templates",
+        "file": "content/route_templates.json",
+        "name_key": "route_template.core.archipelago_trade.name",
+        "name_zh": "群岛商路",
+        "name_en": "Archipelago Trade Route",
+        "tags": [
+          "route.trade"
+        ],
+        "definition": {
+          "id": "core:route_template/archipelago_trade",
+          "name_key": "route_template.core.archipelago_trade.name",
+          "description_key": "route_template.core.archipelago_trade.description",
+          "tags": [
+            "route.trade"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "trade_route",
+            "distance_range": [
+              120,
+              220
+            ],
+            "risk_range": [
+              0.02,
+              0.06
+            ],
+            "travel_time_range": [
+              10,
+              26
+            ],
+            "bidirectional": true,
+            "region_kinds": [
+              "coastal",
+              "archipelago"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:route_template/storm_shortcut",
+        "content_type": "route_templates",
+        "file": "content/route_templates.json",
+        "name_key": "route_template.core.storm_shortcut.name",
+        "name_zh": "风暴捷径",
+        "name_en": "Storm Shortcut",
+        "tags": [
+          "route.risky",
+          "route.fast"
+        ],
+        "definition": {
+          "id": "core:route_template/storm_shortcut",
+          "name_key": "route_template.core.storm_shortcut.name",
+          "description_key": "route_template.core.storm_shortcut.description",
+          "tags": [
+            "route.risky",
+            "route.fast"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "hazardous_shortcut",
+            "distance_range": [
+              60,
+              120
+            ],
+            "risk_range": [
+              0.06,
+              0.14
+            ],
+            "travel_time_range": [
+              4,
+              10
+            ],
+            "bidirectional": true,
+            "region_kinds": [
+              "archipelago",
+              "open_sea"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:weather_profile/temperate",
+        "content_type": "weather_profiles",
+        "file": "content/weather_profiles.json",
+        "name_key": "weather.core.temperate.name",
+        "name_zh": "温带气候",
+        "name_en": "Temperate Climate",
+        "tags": [
+          "weather.temperate"
+        ],
+        "definition": {
+          "id": "core:weather_profile/temperate",
+          "name_key": "weather.core.temperate.name",
+          "description_key": "weather.core.temperate.description",
+          "tags": [
+            "weather.temperate"
+          ],
+          "enabled": true,
+          "data": {
+            "climate": "temperate",
+            "fog_chance": 0.15,
+            "storm_chance": 0.1,
+            "ice_chance": 0,
+            "base_visibility": 0.9,
+            "risk_modifier": 0,
+            "speed_modifier": 0,
+            "coal_drain_modifier": 1,
+            "seasons": [
+              "spring",
+              "summer",
+              "autumn",
+              "winter"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:weather_profile/storm_belt",
+        "content_type": "weather_profiles",
+        "file": "content/weather_profiles.json",
+        "name_key": "weather.core.storm_belt.name",
+        "name_zh": "风暴带",
+        "name_en": "Storm Belt",
+        "tags": [
+          "weather.storm",
+          "weather.hazardous"
+        ],
+        "definition": {
+          "id": "core:weather_profile/storm_belt",
+          "name_key": "weather.core.storm_belt.name",
+          "description_key": "weather.core.storm_belt.description",
+          "tags": [
+            "weather.storm",
+            "weather.hazardous"
+          ],
+          "enabled": true,
+          "data": {
+            "climate": "storm_belt",
+            "fog_chance": 0.2,
+            "storm_chance": 0.45,
+            "ice_chance": 0.05,
+            "base_visibility": 0.6,
+            "risk_modifier": 0.2,
+            "speed_modifier": -0.1,
+            "coal_drain_modifier": 1.2,
+            "seasons": [
+              "autumn",
+              "winter"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:faction/merchant_guild",
+        "content_type": "factions",
+        "file": "content/factions.json",
+        "name_key": "faction.core.merchant_guild.name",
+        "name_zh": "商人公会",
+        "name_en": "Merchant Guild",
+        "tags": [
+          "faction.trade"
+        ],
+        "definition": {
+          "id": "core:faction/merchant_guild",
+          "name_key": "faction.core.merchant_guild.name",
+          "description_key": "faction.core.merchant_guild.description",
+          "tags": [
+            "faction.trade"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "merchant_guild",
+            "starting_reputation": 10,
+            "attitude_thresholds": {
+              "hostile_below": -20,
+              "friendly_at": 25
+            },
+            "patrol_strength": 1,
+            "trade_goods": [
+              "core:good/spices",
+              "core:good/textiles",
+              "core:good/glassware"
+            ],
+            "home_region_tags": [
+              "region.start",
+              "region.coastal"
+            ],
+            "rival_factions": [
+              "core:faction/pirates"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:faction/royal_navy",
+        "content_type": "factions",
+        "file": "content/factions.json",
+        "name_key": "faction.core.royal_navy.name",
+        "name_zh": "皇家海军",
+        "name_en": "Royal Navy",
+        "tags": [
+          "faction.naval"
+        ],
+        "definition": {
+          "id": "core:faction/royal_navy",
+          "name_key": "faction.core.royal_navy.name",
+          "description_key": "faction.core.royal_navy.description",
+          "tags": [
+            "faction.naval"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "naval",
+            "starting_reputation": 0,
+            "attitude_thresholds": {
+              "hostile_below": -30,
+              "friendly_at": 30
+            },
+            "patrol_strength": 3,
+            "trade_goods": [
+              "core:good/brass",
+              "core:material/boiler_plate",
+              "core:material/sealing_compound"
+            ],
+            "home_region_tags": [
+              "region.coastal",
+              "region.industrial"
+            ],
+            "rival_factions": [
+              "core:faction/pirates"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:faction/pirates",
+        "content_type": "factions",
+        "file": "content/factions.json",
+        "name_key": "faction.core.pirates.name",
+        "name_zh": "海盗团",
+        "name_en": "Pirate Crew",
+        "tags": [
+          "faction.hostile",
+          "faction.outlaw"
+        ],
+        "definition": {
+          "id": "core:faction/pirates",
+          "name_key": "faction.core.pirates.name",
+          "description_key": "faction.core.pirates.description",
+          "tags": [
+            "faction.hostile",
+            "faction.outlaw"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "pirates",
+            "starting_reputation": -30,
+            "attitude_thresholds": {
+              "hostile_below": -10,
+              "friendly_at": 40
+            },
+            "patrol_strength": 2,
+            "trade_goods": [
+              "core:good/coal",
+              "core:material/precision_gear"
+            ],
+            "home_region_tags": [
+              "region.archipelago",
+              "region.open_sea"
+            ],
+            "rival_factions": [
+              "core:faction/merchant_guild",
+              "core:faction/royal_navy"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/blueprint_medium_hull",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.blueprint_medium_hull.name",
+        "name_zh": "中型船体蓝图",
+        "name_en": "Medium Hull Blueprint",
+        "tags": [
+          "discovery.blueprint"
+        ],
+        "definition": {
+          "id": "core:discovery/blueprint_medium_hull",
+          "name_key": "discovery.core.blueprint_medium_hull.name",
+          "description_key": "discovery.core.blueprint_medium_hull.description",
+          "tags": [
+            "discovery.blueprint"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "blueprint",
+            "rarity": "rare",
+            "weight": 8,
+            "repeatable": false,
+            "source_site_kinds": [
+              "ruin"
+            ],
+            "region_kinds": [
+              "coastal",
+              "archipelago"
+            ],
+            "unlock_ids": [
+              "core:hull/medium_standard"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/blueprint_standard_boiler",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.blueprint_standard_boiler.name",
+        "name_zh": "标准锅炉蓝图",
+        "name_en": "Standard Boiler Blueprint",
+        "tags": [
+          "discovery.blueprint"
+        ],
+        "definition": {
+          "id": "core:discovery/blueprint_standard_boiler",
+          "name_key": "discovery.core.blueprint_standard_boiler.name",
+          "description_key": "discovery.core.blueprint_standard_boiler.description",
+          "tags": [
+            "discovery.blueprint"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "blueprint",
+            "rarity": "uncommon",
+            "weight": 15,
+            "repeatable": false,
+            "source_site_kinds": [
+              "ruin",
+              "wreck"
+            ],
+            "region_kinds": [
+              "coastal",
+              "industrial"
+            ],
+            "unlock_ids": [
+              "core:boiler/standard"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/blueprint_small_cabin",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.blueprint_small_cabin.name",
+        "name_zh": "小型客舱蓝图",
+        "name_en": "Small Cabin Blueprint",
+        "tags": [
+          "discovery.blueprint"
+        ],
+        "definition": {
+          "id": "core:discovery/blueprint_small_cabin",
+          "name_key": "discovery.core.blueprint_small_cabin.name",
+          "description_key": "discovery.core.blueprint_small_cabin.description",
+          "tags": [
+            "discovery.blueprint"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "blueprint",
+            "rarity": "uncommon",
+            "weight": 14,
+            "repeatable": false,
+            "source_site_kinds": [
+              "ruin",
+              "wreck"
+            ],
+            "region_kinds": [
+              "coastal"
+            ],
+            "unlock_ids": [
+              "core:cabin/small_cabin"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/relic_brass_sextant",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.relic_brass_sextant.name",
+        "name_zh": "黄铜六分仪",
+        "name_en": "Brass Sextant",
+        "tags": [
+          "discovery.relic"
+        ],
+        "definition": {
+          "id": "core:discovery/relic_brass_sextant",
+          "name_key": "discovery.core.relic_brass_sextant.name",
+          "description_key": "discovery.core.relic_brass_sextant.description",
+          "tags": [
+            "discovery.relic"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "relic",
+            "rarity": "rare",
+            "weight": 10,
+            "repeatable": false,
+            "source_site_kinds": [
+              "ruin",
+              "landmark"
+            ],
+            "region_kinds": [
+              "archipelago",
+              "open_sea"
+            ],
+            "unlock_ids": [
+              "core:role/navigator_basic"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/relic_glass_prism",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.relic_glass_prism.name",
+        "name_zh": "玻璃棱镜",
+        "name_en": "Glass Prism",
+        "tags": [
+          "discovery.relic"
+        ],
+        "definition": {
+          "id": "core:discovery/relic_glass_prism",
+          "name_key": "discovery.core.relic_glass_prism.name",
+          "description_key": "discovery.core.relic_glass_prism.description",
+          "tags": [
+            "discovery.relic"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "relic",
+            "rarity": "uncommon",
+            "weight": 18,
+            "repeatable": true,
+            "source_site_kinds": [
+              "wreck",
+              "encounter"
+            ],
+            "region_kinds": [
+              "coastal",
+              "industrial"
+            ],
+            "unlock_ids": [
+              "core:good/glassware"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/lore_lost_fleet",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.lore_lost_fleet.name",
+        "name_zh": "失踪舰队的传闻",
+        "name_en": "Tale of the Lost Fleet",
+        "tags": [
+          "discovery.lore"
+        ],
+        "definition": {
+          "id": "core:discovery/lore_lost_fleet",
+          "name_key": "discovery.core.lore_lost_fleet.name",
+          "description_key": "discovery.core.lore_lost_fleet.description",
+          "tags": [
+            "discovery.lore"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "lore",
+            "rarity": "common",
+            "weight": 25,
+            "repeatable": true,
+            "source_site_kinds": [
+              "landmark",
+              "encounter"
+            ],
+            "region_kinds": [
+              "archipelago",
+              "open_sea"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:discovery/lore_harbor_ledger",
+        "content_type": "discoveries",
+        "file": "content/discoveries.json",
+        "name_key": "discovery.core.lore_harbor_ledger.name",
+        "name_zh": "港口旧账本",
+        "name_en": "Old Harbor Ledger",
+        "tags": [
+          "discovery.lore"
+        ],
+        "definition": {
+          "id": "core:discovery/lore_harbor_ledger",
+          "name_key": "discovery.core.lore_harbor_ledger.name",
+          "description_key": "discovery.core.lore_harbor_ledger.description",
+          "tags": [
+            "discovery.lore"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "lore",
+            "rarity": "common",
+            "weight": 22,
+            "repeatable": true,
+            "source_site_kinds": [
+              "encounter"
+            ],
+            "region_kinds": [
+              "coastal",
+              "industrial"
+            ],
+            "unlock_ids": [
+              "core:strategy/economic"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:start_profile/standard",
+        "content_type": "start_profiles",
+        "file": "content/start_profiles.json",
+        "name_key": "start_profile.core.standard.name",
+        "name_zh": "标准开局",
+        "name_en": "Standard Start",
+        "tags": [
+          "start.standard"
+        ],
+        "definition": {
+          "id": "core:start_profile/standard",
+          "name_key": "start_profile.core.standard.name",
+          "description_key": "start_profile.core.standard.description",
+          "tags": [
+            "start.standard"
+          ],
+          "enabled": true,
+          "data": {
+            "world_profile": "core:world_profile/default_world",
+            "map_config": "core:map_config/standard",
+            "starting_build": "core:starting_build/steady",
+            "difficulty": "standard",
+            "starting_port_tags": [
+              "port.hub"
+            ],
+            "starting_money": 900,
+            "starting_reputation": 0,
+            "notes_key": "start_profile.core.standard.notes"
+          }
+        }
+      },
+      {
+        "id": "core:start_profile/hard",
+        "content_type": "start_profiles",
+        "file": "content/start_profiles.json",
+        "name_key": "start_profile.core.hard.name",
+        "name_zh": "硬核开局",
+        "name_en": "Hard Start",
+        "tags": [
+          "start.hard"
+        ],
+        "definition": {
+          "id": "core:start_profile/hard",
+          "name_key": "start_profile.core.hard.name",
+          "description_key": "start_profile.core.hard.description",
+          "tags": [
+            "start.hard"
+          ],
+          "enabled": true,
+          "data": {
+            "world_profile": "core:world_profile/default_world",
+            "map_config": "core:map_config/standard",
+            "starting_build": "core:starting_build/swift",
+            "difficulty": "hard",
+            "starting_port_tags": [
+              "port.trade"
+            ],
+            "starting_money": 400,
+            "starting_reputation": 0,
+            "starting_cargo": [
+              {
+                "item": "core:good/coal",
+                "amount": 8
+              }
+            ],
+            "notes_key": "start_profile.core.hard.notes"
           }
         }
       }

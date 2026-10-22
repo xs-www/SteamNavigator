@@ -946,9 +946,11 @@ function warningsOf(result) {
     });
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
-    assert.equal(result.project.contentFiles.length, 15);
-    // Every asset declared by the core manifest must be imported (icons, banner, entity GLBs).
+    // Derive the expected count from the manifest so new core content does not require
+    // touching this test (B4 added the nine Schema 2.0 world/campaign files).
     const coreManifest = JSON.parse(fs.readFileSync(path.join(coreRoot, 'manifest.json'), 'utf8'));
+    assert.equal(result.project.contentFiles.length, coreManifest.content.length);
+    // Every asset declared by the core manifest must be imported (icons, banner, entity GLBs).
     assert.equal(
       result.project.assets.length,
       Object.keys(coreManifest.assets || {}).length,

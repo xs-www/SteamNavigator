@@ -1,0 +1,43 @@
+{
+  "schema_version": "2.0",
+  "content_type": "start_profiles",
+  "definitions": [
+    {
+      "id": "core:start_profile/standard",
+      "name_key": "start_profile.core.standard.name",
+      "description_key": "start_profile.core.standard.description",
+      "tags": ["start.standard"],
+      "enabled": true,
+      "data": {
+        "world_profile": "core:world_profile/default_world",
+        "map_config": "core:map_config/standard",
+        "starting_build": "core:starting_build/steady",
+        "difficulty": "standard",
+        "starting_port_tags": ["port.hub"],
+        "starting_money": 900,
+        "starting_reputation": 0,
+        "notes_key": "start_profile.core.standard.notes"
+      }
+    },
+    {
+      "id": "core:start_profile/hard",
+      "name_key": "start_profile.core.hard.name",
+      "description_key": "start_profile.core.hard.description",
+      "tags": ["start.hard"],
+      "enabled": true,
+      "data": {
+        "world_profile": "core:world_profile/default_world",
+        "map_config": "core:map_config/standard",
+        "starting_build": "core:starting_build/swift",
+        "difficulty": "hard",
+        "starting_port_tags": ["port.trade"],
+        "starting_money": 400,
+        "starting_reputation": 0,
+        "starting_cargo": [
+          {"item": "core:good/coal", "amount": 8}
+        ],
+        "notes_key": "start_profile.core.hard.notes"
+      }
+    }
+  ]
+}

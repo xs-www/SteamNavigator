@@ -626,9 +626,11 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
 
   const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
   assert.ok(!warningCodes.includes('draft_content'), `a promoted type must not warn as draft: ${JSON.stringify(json.issues.list)}`);
+  // B4 landed the Core world content (`core:weather_profile/temperate` etc.), so the starter
+  // reference resolves and must no longer warn as `ref_core_unknown`.
   assert.ok(
-    warningCodes.includes('ref_core_unknown'),
-    `the starter references Core world content that lands in B4: ${JSON.stringify(json.issues.list)}`
+    !warningCodes.includes('ref_core_unknown'),
+    `Core world content is shipped by B4, so no unknown Core reference may remain: ${JSON.stringify(json.issues.list)}`
   );
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
@@ -638,7 +640,7 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
   assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'draft_content'));
 
   const strictResult = jsonRun(['validate', '--mod', mod, '--strict']);
-  assertStatus(strictResult, 1, 'the pending Core reference warning makes --strict fail until B4 lands');
+  assertStatus(strictResult, 0, 'B4 Core content resolves every reference, so --strict passes');
 });
 
 test('add --type weapons writes a Schema 2.0 content file that validates cleanly', (t) => {

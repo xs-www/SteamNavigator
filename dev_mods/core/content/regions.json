@@ -1,0 +1,91 @@
+{
+  "schema_version": "2.0",
+  "content_type": "regions",
+  "definitions": [
+    {
+      "id": "core:region/start_haven",
+      "name_key": "region.core.start_haven.name",
+      "description_key": "region.core.start_haven.description",
+      "tags": ["region.start", "region.safe"],
+      "enabled": true,
+      "data": {
+        "kind": "coastal",
+        "size": "medium",
+        "port_density": 0.6,
+        "site_density": 0.4,
+        "hostile_density": 0.05,
+        "weather_profile": "core:weather_profile/temperate",
+        "factions": ["core:faction/merchant_guild"],
+        "region_tags": ["region.start", "region.coastal"]
+      }
+    },
+    {
+      "id": "core:region/trade_coast",
+      "name_key": "region.core.trade_coast.name",
+      "description_key": "region.core.trade_coast.description",
+      "tags": ["region.trade"],
+      "enabled": true,
+      "data": {
+        "kind": "coastal",
+        "size": "medium",
+        "port_density": 0.5,
+        "site_density": 0.5,
+        "hostile_density": 0.15,
+        "weather_profile": "core:weather_profile/temperate",
+        "factions": ["core:faction/merchant_guild"],
+        "region_tags": ["region.coastal", "region.trade"]
+      }
+    },
+    {
+      "id": "core:region/shiver_archipelago",
+      "name_key": "region.core.shiver_archipelago.name",
+      "description_key": "region.core.shiver_archipelago.description",
+      "tags": ["region.wild"],
+      "enabled": true,
+      "data": {
+        "kind": "archipelago",
+        "size": "large",
+        "port_density": 0.3,
+        "site_density": 0.7,
+        "hostile_density": 0.3,
+        "weather_profile": "core:weather_profile/temperate",
+        "factions": ["core:faction/pirates"],
+        "region_tags": ["region.archipelago"]
+      }
+    },
+    {
+      "id": "core:region/open_sea",
+      "name_key": "region.core.open_sea.name",
+      "description_key": "region.core.open_sea.description",
+      "tags": ["region.deep"],
+      "enabled": true,
+      "data": {
+        "kind": "open_sea",
+        "size": "large",
+        "port_density": 0.15,
+        "site_density": 0.45,
+        "hostile_density": 0.4,
+        "weather_profile": "core:weather_profile/storm_belt",
+        "factions": ["core:faction/pirates"],
+        "region_tags": ["region.open_sea"]
+      }
+    },
+    {
+      "id": "core:region/industrial_belt",
+      "name_key": "region.core.industrial_belt.name",
+      "description_key": "region.core.industrial_belt.description",
+      "tags": ["region.industry"],
+      "enabled": true,
+      "data": {
+        "kind": "industrial",
+        "size": "medium",
+        "port_density": 0.55,
+        "site_density": 0.35,
+        "hostile_density": 0.1,
+        "weather_profile": "core:weather_profile/temperate",
+        "factions": ["core:faction/royal_navy"],
+        "region_tags": ["region.industrial", "region.coastal"]
+      }
+    }
+  ]
+}
