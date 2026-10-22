@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 # @static-doc
-# 作用：从批次 1/2/3 生成器的纯几何数据生成机器可读的模型素材库目录
+# 作用：从批次 1/2/3/4 生成器的纯几何数据生成机器可读的模型素材库目录
 # `tools/modeling/kit_catalog.json`（资产 / 尺寸 / tri / 材质 / socket 接口 / 装配
 # 配方），并把 M0-5 的 LOD1 计划（`lod1_kit_ships_plan.json`）合并成逐件 `lod1` 块与
 # 顶层 `lod1` 汇总（路径 / LOD1 tri / 比例 / 上限 / 字节 / bbox）。
+#
+# 批次 4（M1-1 architecture_kit 扩展）加入 6 件可围合建筑件；配方新增「可围合基地」
+# 「道路平铺」「工坊扩建接动力」「仓库变体装卸」四条。
+# 批次 5（M1-2 base_kit）加入 5 件生产建筑（锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 /
+# 防御塔）；配方新增「木料生产链」「冶炼-铸造链」「堆场入库」「防御塔炮位」四条。
 #
 # 用法：
 #     python tools/modeling/generators/gen_kit_catalog.py
@@ -23,11 +28,13 @@ if HERE not in sys.path:
 import kit_batch1_generator as gen1  # noqa: E402
 import kit_batch2_generator as gen2  # noqa: E402
 import kit_batch3_generator as gen3  # noqa: E402
+import kit_batch4_generator as gen4  # noqa: E402
+import kit_batch5_generator as gen5  # noqa: E402
 
 WORKDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 OUT = os.path.join(WORKDIR, "tools", "modeling", "kit_catalog.json")
 LOD1_PLAN = os.path.join(WORKDIR, "tools", "modeling", "lod1_kit_ships_plan.json")
-GENERATORS = [gen1, gen2, gen3]
+GENERATORS = [gen1, gen2, gen3, gen4, gen5]
 
 CATEGORY = {
     "weapon_kit": "weapons",
@@ -37,6 +44,7 @@ CATEGORY = {
     "dock_kit": "dock",
     "architecture_kit": "architecture",
     "environment_kit": "environment",
+    "base_kit": "base",
 }
 
 RECIPES = [
@@ -150,6 +158,77 @@ RECIPES = [
                 "对应的飞轮轴位置（把 PowerUnit 的 Shaft_Out 对准该点）。",
         "result": "建筑外墙飞轮与蒸汽动力装置同轴，形成工坊动力接口。",
     },
+    # ---- 批次 4（M1-1 architecture_kit 扩展）
+    {
+        "id": "enclosed_base",
+        "title": "可围合基地：围墙 + 大门 + 道路",
+        "parts": ["SN_Arch_Road", "SN_Arch_Perimeter_Wall", "SN_Arch_Gate"],
+        "rule": "道路 Root 放地面（8x8 平铺）；围墙 Module_Next/Prev 按 ±4.0 m 首尾相接；"
+                "大门 Gateway 朝外、Module_Next/Prev 接围墙两端（墙顶 z=3.90 对齐）；"
+                "围墙 Wall_Top 可再叠垛口装饰。",
+        "result": "任意长宽的基地边界，门洞净宽 3.7 m、净高 3.8 m（见 preview 拼装图）。",
+    },
+    {
+        "id": "base_road_grid",
+        "title": "道路四向平铺",
+        "parts": ["SN_Arch_Road"],
+        "rule": "单块 8x8 m；Module_Next/Prev 沿 X、Module_Left/Right 沿 Y，间距 8 m；"
+                "顶面 z=0.29，道路边缘路缘带在 ±Y 两侧（沿 Y 相接时作街口/路缘线）。",
+        "result": "基地主干道与广场铺装；凹凸面全部贴地，无需额外地基。",
+    },
+    {
+        "id": "annex_power_link",
+        "title": "工坊扩建接工坊动力",
+        "parts": ["SN_Arch_Workshop_Annex", "SN_Arch_Workshop"],
+        "rule": "扩建放在工坊 −Y 侧（module 6x4 对齐）；扩建 Drive_Shaft (+Y 墙, z=1.45) "
+                "与工坊 Drive_Shaft (−Y 墙, z=1.45) 同轴；Chimney 朝向天空、Coal_Hatch 临煤场。",
+        "result": "锅炉房扩建，烟囱与送煤槽成型，传动轴把动力送回工坊飞轮。",
+    },
+    {
+        "id": "warehouse_loading",
+        "title": "仓库变体装卸位",
+        "parts": ["SN_Arch_Warehouse_Variant", "SN_Arch_Loading_Platform"],
+        "rule": "仓库变体 +X 山墙装载门（Door_Front, z=0）对接装卸平台 Dock_Edge "
+                "(z=1.25) 或月台；平台 Hoist 吊索在临水/临轨边外挑；"
+                "仓库外楼梯 14 级通上层侧门（z=3.48）。",
+        "result": "山墙吊货门 + 月台吊货梁 + 上层外楼梯的完整装卸节点。",
+    },
+    # ---- 批次 5（M1-2 base_kit 生产建筑）
+    {
+        "id": "timber_chain",
+        "title": "木料生产链：锯木厂 + 动力装置",
+        "parts": ["SN_Base_Sawmill", "SN_Machinery_PowerUnit"],
+        "rule": "锯木厂 Root 放地面；PowerUnit 的 Shaft_Out 对准锯木厂 Drive_Shaft "
+                "(0, 3.20, 1.45)；原木从 Log_Input 上料，木料在 Timber_Output 出料。",
+        "result": "蒸汽动力驱动的锯木厂，原木坡道 + 锯盘 + 木料堆成型。",
+    },
+    {
+        "id": "smelt_foundry_chain",
+        "title": "冶炼 → 铸造：冶炼炉 + 铸造车间",
+        "parts": ["SN_Base_Smelter", "SN_Base_Foundry"],
+        "rule": "冶炼炉 Molten_Out (3.40, 0, 0.70) 与铸造车间 Molten_In (-3.40, 0, 1.10) "
+                "按 4 m 网格对齐（铁水沟可跨接）；冶炼炉 Coal_Input / Ore_Input 接料仓；"
+                "铸造车间 Hoist 为行车吊点、Pour_Point 为浇注位。",
+        "result": "从矿石到铸件的完整冶炼-铸造链，冲天炉/行车/浇包/模具区可读。",
+    },
+    {
+        "id": "stockyard_intake",
+        "title": "堆场入库：仓库堆场 + 货物套件",
+        "parts": ["SN_Base_Stockyard", "SN_Cargo_Crate", "SN_Cargo_Pallet",
+                  "SN_Cargo_Tank"],
+        "rule": "堆场 Root 放地面；Gate_In 朝道路；Scale 为地磅台面（z=0.18）；"
+                "Gantry Hoist 为吊装点，Storage 为堆场中心；货物 Root 落在堆场铺面上。",
+        "result": "带围栏、堆垛、龙门吊、地磅与门卫亭的基地入库/堆存节点。",
+    },
+    {
+        "id": "defense_tower_gun",
+        "title": "防御塔炮位：防御塔 + 武器基座",
+        "parts": ["SN_Base_Defense_Tower", "SN_Weapon_Pedestal"],
+        "rule": "防御塔 Root 放地面；Weapon_Mount 在炮位平台中心（0, 0, 9.20）；"
+                "武器基座 Root 对齐 Weapon_Mount，Searchlight/Flag 为附属接口；"
+                "Magazine 为弹药库、Ladder_Foot 为登塔落点。",
+        "result": "基地防御节点：炮位平台 + 弹药库 + 探照灯 + 旗杆 + 登塔梯。",
+    },
 ]
 
 
@@ -259,18 +338,22 @@ def main():
         assets[asset]["lod1"] = entry
     catalog = {
         "schema": "steam-navigator/model-kit-catalog@1",
-        "version": "1.3",
+        "version": "1.5",
         "units": "metres",
         "axes": {"up": "+Z", "forward": "+X"},
         "source_generators": [
             "tools/modeling/generators/kit_batch1_generator.py",
             "tools/modeling/generators/kit_batch2_generator.py",
             "tools/modeling/generators/kit_batch3_generator.py",
+            "tools/modeling/generators/kit_batch4_generator.py",
+            "tools/modeling/generators/kit_batch5_generator.py",
         ],
         "briefs": [
             "tools/modeling/briefs/sn_kit_batch1.json",
             "tools/modeling/briefs/sn_kit_batch2.json",
             "tools/modeling/briefs/sn_kit_batch3.json",
+            "tools/modeling/briefs/sn_kit_batch4_architecture_extension.json",
+            "tools/modeling/briefs/sn_kit_batch5_base_kit.json",
         ],
         "contract": "docs/design/KIT_ASSET_LIBRARY.md",
         "lod1_generator": "tools/modeling/generators/sn_lod1_kit_ships_generator.py",
@@ -281,8 +364,9 @@ def main():
             "machinery_kit": "机械可拼装件：齿轮组 / 卷扬机 / 动力装置",
             "cargo_kit": "货物可拼装件：货箱 / 煤斗 / 储罐 / 托盘",
             "dock_kit": "码头可拼装件：码头结构 / 栈桥 / 系缆设施",
-            "architecture_kit": "建筑可拼装件：仓库 / 工坊 / 酒馆 / 厂房",
+            "architecture_kit": "建筑可拼装件：仓库 / 工坊 / 酒馆 / 厂房 + 围墙 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建（批次 4）",
             "environment_kit": "环境可拼装件：礁石 / 沉船残骸 / 灯塔 / 航标浮标",
+            "base_kit": "基地生产建筑：锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔（批次 5）",
         },
         "total_tri": sum(entry["tri_count"] for entry in assets.values()),
         "total_lod1_tri": lod1_summary["lod1_tri"] if lod1_summary else 0,

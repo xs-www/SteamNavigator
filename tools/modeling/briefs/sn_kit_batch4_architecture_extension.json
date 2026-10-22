@@ -1,0 +1,287 @@
+{
+  "id": "sn_kit_batch4_architecture_extension",
+  "title": "模型素材库批次 4（M1-1）：architecture_kit 扩展（可围合基地 + 舞台建筑件）",
+  "purpose": "backlog M1-1：阶段 3 基地建设需要可围合、可拼装的建筑模块。批次 3 只交付了 4 栋独立建筑（仓库 / 工坊 / 酒馆 / 厂房），本批补 6 件：围墙段 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建。全部沿用批次 1–3 的 Mount + 语义 socket + 根 extras 契约，沿 X 平铺在 4 m 网格上，可把 4 栋既有建筑围成基地，也可直接用作港口/舞台建筑。",
+  "category": "kit",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-22 在开启 backlog 批次 7 时选择：本批只做 M1-1 architecture_kit 扩展（6 件）；base_kit / interior_kit 后续批次再做。内景切面约定（开放面 +X、固定机位 socket）已记录，供后续 M1-3 使用。",
+  "style": {
+    "look": "与 kit 批次 1–3 同一套低模铁港语言：石基座 + 铆接铁板 + 铁包木 + 黄铜机械件 + 深色玻璃；轮廓优先、flat shading、共享贴图 SN_Tex_*，禁止纯色材质。围墙/大门/道路是‘可围合的军事-工业边界’，装卸平台/仓库变体/工坊扩建是‘生产性立面’。",
+    "palette": [
+      "SN_Tex_Iron",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Brass",
+      "SN_Tex_Glass_Dark",
+      "SN_Tex_Canvas_Shade",
+      "SN_Tex_Stone"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*",
+      "SN_ShipPart_*",
+      "SN_Machinery_*",
+      "SN_Cargo_*",
+      "SN_Dock_*",
+      "SN_Arch_Warehouse",
+      "SN_Arch_Workshop",
+      "SN_Arch_Tavern",
+      "SN_Arch_Factory",
+      "SN_Env_*",
+      "SN_Rig_*",
+      "SN_PF_Root",
+      "SN_SF_Root",
+      "SN_Ironclad"
+    ],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV",
+    "conventions": "几何由生成器参数表驱动（不允许手工摆点）；闭合件边界边 / 非流形边 / 退化面必须为 0；Mount / Socket 为空节点，不参与几何；mesh 名不得与 socket 名重名。",
+    "datums": "全部为地面建筑件：根在体量底面中心（zmin=0），+X 为正立面（门 / 雨棚 / 临水边）。围墙/大门/道路/装卸平台/仓库变体/工坊扩建的 Module_Next/Module_Prev 沿 X 平铺，间距 = 体量 module_x。",
+    "grid": "4 m 网格：围墙段 module_x=8、大门 module_x=8、道路 8x8 双向可平铺、装卸平台 8x6、仓库变体 10x7、工坊扩建 6x4。",
+    "material_rule": "新资产必须使用共享贴图材质 SN_Tex_*；本批不新增贴图（沿用既有 11 张共享贴图）。",
+    "workbench": "本批 6 件统一摆在工作台 y=640 行，x = 30 / 48 / 68 / 86 / 108 / 128，z=0。"
+  },
+  "kit_contract": {
+    "families": {
+      "architecture_kit": "建筑可拼装件：围墙段（可围合）、大门（门楼 + 双扇门 + 吊闸）、道路（8x8 石铺 + 排水）、装卸平台（月台 + 雨棚 + 吊货梁 + 楼梯）、仓库变体（石砌下层 + 木构上层 + 山墙吊货门）、工坊扩建（锅炉房 + 烟囱 + 传动轴接口）"
+    },
+    "mount_frame": "每件资产根下提供 SN_<Asset>_Mount（+X 前向、Z 向上）。装配只对齐 Root / Mount。",
+    "architecture_chain": "围墙 Gate 接口位于门洞中心地面；大门 Module_Next/Prev 与围墙段同高对齐（墙顶 z 与垛口接口一致）；道路 Module_Next/Prev + Module_Left/Right 四向平铺；装卸平台 Dock_Edge 为临水/临轨边、Hoist 为吊货梁吊点、Stair_Foot 为楼梯落点；仓库变体 Door_Front / Hoist / Sign 沿用批次 3 仓库语义；工坊扩建 Drive_Shaft 在 +Y 墙外，可与批次 3 工坊的 Drive_Shaft（-Y 墙面）对接，Chimney 为烟柱 VFX 点、Coal_Hatch 为送煤口。",
+    "console": "Root extras 写 asset / version / units / kit_family / part_role / forward / up / datum / mount_frame / base_footprint_x/y / envelope_x/y / height / tri_budget / bbox_target / collection / type / module_x / module_y，另写 module_grid=4.0、enclosure=true（围墙/大门）或 production=false；不写 waterline（全部地面件）。",
+    "catalog": "交付后更新 docs/design/KIT_ASSET_LIBRARY.md、tools/modeling/kit_catalog.json、docs/design/ASSET_MAP.md 与 backlog 状态。",
+    "godot": "GLB 落 assets/models/architecture/ + dev_mods/core 副本；shared_materials 目录已存在（architecture），无需新增 runtime_dirs。"
+  },
+  "deliverables": {
+    "generator": "tools/modeling/generators/kit_batch4_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_kit_batch4.py",
+    "export": "tools/modeling/generators/export_kit_batch4_glb.py",
+    "verify": "tools/modeling/generators/verify_kit_batch4_glb.py",
+    "glb": "assets/models/architecture/SN_Arch_*.glb + dev_mods/core/assets/models/architecture/ 副本",
+    "shared_textures": "assets/models/architecture/shared_materials/（已存在）",
+    "screenshots": [".design/architecture/preview/batch4_lineup.png", ".design/architecture/preview/batch4_<asset>_three_quarter.png"]
+  },
+  "items": [
+    {
+      "id": "sn_arch_perimeter_wall_v1",
+      "asset": "SN_Arch_Perimeter_Wall",
+      "role": "围墙段：石基座 + 铆接铁板墙体 + 端部立柱 + 石压顶/铁披檐 + 三处射击孔 + 外挑黄铜壁灯；8 m 平铺模块",
+      "collection": "SN_Arch_Perimeter_Wall_Prototype",
+      "root": "SN_Arch_Perimeter_Wall_Root",
+      "prefix": "SN_Arch_Perimeter_Wall_",
+      "workbench_pos": [30.0, 640.0, 0.0],
+      "family": "architecture_kit",
+      "part_role": "perimeter_wall",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Wall_Top", "Lantern"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [4.0, 0.0, 0.0],
+        "Module_Prev": [-4.0, 0.0, 0.0],
+        "Wall_Top": [0.0, 0.0, 3.90],
+        "Lantern": [3.35, -0.60, 2.52]
+      },
+      "dimensions": {"length": 8.30, "width": 1.44, "height": 3.90, "tolerance": 0.15},
+      "tri_budget": 1600,
+      "required_parts": ["Plinth", "Posts", "WallBody", "Coping", "Slits", "Lamp"],
+      "acceptance": [
+        "tri <= 1600",
+        "包围盒 8.30 x 1.30 x 3.95（±0.15）",
+        "zmin = 0（石基座落地）",
+        "Module_Next/Prev 在 (±4.0, 0, 0)",
+        "Wall_Top 在墙顶中心，Lantern 在 -Y 外侧壁灯位置",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_gate_v1",
+      "asset": "SN_Arch_Gate",
+      "role": "大门/门楼：双侧石基座铁包柱 + 铆接门楣 + 双扇铁木大门（带铰链 socket）+ 抬起的吊闸格栅 + 垛口压顶 + 两盏门灯 + 石铺门槛",
+      "collection": "SN_Arch_Gate_Prototype",
+      "root": "SN_Arch_Gate_Root",
+      "prefix": "SN_Arch_Gate_",
+      "workbench_pos": [48.0, 640.0, 0.0],
+      "family": "architecture_kit",
+      "part_role": "gate",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Gateway", "Door_Hinge_L", "Door_Hinge_R", "Hoist", "Sign"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [4.0, 0.0, 0.0],
+        "Module_Prev": [-4.0, 0.0, 0.0],
+        "Gateway": [0.0, 0.0, 0.0],
+        "Door_Hinge_L": [-1.75, 0.0, 0.0],
+        "Door_Hinge_R": [1.75, 0.0, 0.0],
+        "Hoist": [0.0, 0.0, 4.55],
+        "Sign": [0.0, -0.78, 4.35]
+      },
+      "dimensions": {"length": 8.40, "width": 2.30, "height": 5.34, "tolerance": 0.20},
+      "tri_budget": 3400,
+      "required_parts": ["Plinth", "Piers", "Lintel", "Doors", "Portcullis", "Threshold", "Lamps"],
+      "acceptance": [
+        "tri <= 3400",
+        "包围盒 8.40 x 2.30 x 5.40（±0.20）",
+        "zmin = 0；门洞净宽 >= 3.4 m、净高 >= 3.4 m",
+        "Gateway 在门洞中心地面、Door_Hinge_L/R 在门轴处",
+        "门扇关闭时与门洞两侧立柱净间隙 0.02–0.10 m；抬起吊闸最低点高于门扇顶（不互穿）",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_road_v1",
+      "asset": "SN_Arch_Road",
+      "role": "道路段：8x8 石板铺装 + 双侧排水沟（铁篦子）+ 路缘条石 + 铆钉/铁桩点缀；四向可平铺",
+      "collection": "SN_Arch_Road_Prototype",
+      "root": "SN_Arch_Road_Root",
+      "prefix": "SN_Arch_Road_",
+      "workbench_pos": [68.0, 640.0, 0.0],
+      "family": "architecture_kit",
+      "part_role": "road",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Module_Left", "Module_Right"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [4.0, 0.0, 0.06],
+        "Module_Prev": [-4.0, 0.0, 0.06],
+        "Module_Left": [0.0, 4.0, 0.06],
+        "Module_Right": [0.0, -4.0, 0.06]
+      },
+      "dimensions": {"length": 8.00, "width": 8.00, "height": 0.29, "tolerance": 0.10},
+      "tri_budget": 1500,
+      "required_parts": ["Base", "Paving", "Gutters", "Kerbs", "Studs"],
+      "acceptance": [
+        "tri <= 1500",
+        "包围盒 8.00 x 8.00 x 0.20（±0.10）",
+        "zmin = 0（基座落地）；顶面 y=0 截面平整（相邻瓦片无台阶：边界高差 <= 0.02 m）",
+        "四向 socket 在 (±4,0,0.06)/(0,±4,0.06)",
+        "闭合件网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_loading_platform_v1",
+      "asset": "SN_Arch_Loading_Platform",
+      "role": "装卸平台：1.25 m 石砌月台 + 木铺面 + 临水侧护舷与系缆桩 + 四柱铁雨棚 + 外挑吊货梁（滑轮/吊索/吊钩）+ 陆侧木楼梯与扶手",
+      "collection": "SN_Arch_Loading_Platform_Prototype",
+      "root": "SN_Arch_Loading_Platform_Root",
+      "prefix": "SN_Arch_Loading_Platform_",
+      "workbench_pos": [86.0, 640.0, 0.0],
+      "family": "architecture_kit",
+      "part_role": "loading_platform",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Hoist", "Dock_Edge", "Stair_Foot"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [4.0, 0.0, 0.0],
+        "Module_Prev": [-4.0, 0.0, 0.0],
+        "Hoist": [5.00, 0.0, 4.72],
+        "Dock_Edge": [4.00, 0.0, 1.25],
+        "Stair_Foot": [-5.70, 0.0, 0.0]
+      },
+      "dimensions": {"length": 10.95, "width": 6.20, "height": 5.25, "tolerance": 0.20},
+      "tri_budget": 3400,
+      "required_parts": ["Plinth", "Deck", "Canopy", "HoistBeam", "Stairs", "Bollards"],
+      "acceptance": [
+        "tri <= 3400",
+        "包围盒 9.00 x 6.20 x 5.50（±0.20）",
+        "zmin = 0；月台行走面（木铺面）标高 1.25 m（±0.02）且水平",
+        "Stair_Foot 在楼梯最下级踏面前缘、Dock_Edge 在临水边中线、Hoist 在吊索悬点",
+        "楼梯 1.25 m 高差完整落地（首末踏步无悬空、最后一级踏面接月台面）",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_warehouse_variant_v1",
+      "asset": "SN_Arch_Warehouse_Variant",
+      "role": "仓库变体：石砌下层 + 木构/铁撑上层 + 山墙朝向 +X 的双坡铁皮顶 + 山墙吊货门与外挑吊梁 + 铁框高窗 + 侧向木外楼梯 + 招牌；区别于批次 3 铁包木仓库",
+      "collection": "SN_Arch_Warehouse_Variant_Prototype",
+      "root": "SN_Arch_Warehouse_Variant_Root",
+      "prefix": "SN_Arch_Warehouse_Variant_",
+      "workbench_pos": [108.0, 640.0, 0.0],
+      "family": "architecture_kit",
+      "part_role": "warehouse_variant",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Door_Front", "Hoist", "Sign", "Stair_Foot"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [5.0, 0.0, 0.0],
+        "Module_Prev": [-5.0, 0.0, 0.0],
+        "Door_Front": [5.0, 0.0, 0.0],
+        "Hoist": [6.10, 0.0, 6.10],
+        "Sign": [5.05, 2.25, 5.15],
+        "Stair_Foot": [-5.00, -4.06, 0.0]
+      },
+      "dimensions": {"length": 11.80, "width": 8.46, "height": 8.55, "tolerance": 0.25},
+      "tri_budget": 4600,
+      "required_parts": ["Plinth", "StoneWalls", "UpperWalls", "GableRoof", "LoadingDoors", "HoistBeam", "ExternalStair", "Windows"],
+      "acceptance": [
+        "tri <= 4600",
+        "包围盒 11.80 x 8.46 x 8.55（±0.25）",
+        "zmin = 0；下层石墙顶 / 上层分界 3.40 m（±0.05）",
+        "Door_Front 在 +X 山墙门洞中心、Hoist 在山墙吊梁悬点、Stair_Foot 在楼梯落地",
+        "外楼梯 14 级从地面连续到上层平台 z=3.48（最后一级踏面 3.48±0.05），平台接 -Y 墙上层侧门，踏步无悬空",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_arch_workshop_annex_v1",
+      "asset": "SN_Arch_Workshop_Annex",
+      "role": "工坊扩建：锅炉房体量 + 双坡铁皮顶 + 石砌烟囱（带箍/帽/汽管）+ +Y 外墙传动轴与轴承座（对接批次 3 工坊 Drive_Shaft）+ 斜置送煤槽与煤堆 + 压力表与蒸汽管",
+      "collection": "SN_Arch_Workshop_Annex_Prototype",
+      "root": "SN_Arch_Workshop_Annex_Root",
+      "prefix": "SN_Arch_Workshop_Annex_",
+      "workbench_pos": [128.0, 640.0, 0.0],
+      "family": "architecture_kit",
+      "part_role": "workshop_annex",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Drive_Shaft", "Chimney", "Coal_Hatch"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [3.0, 0.0, 0.0],
+        "Module_Prev": [-3.0, 0.0, 0.0],
+        "Drive_Shaft": [0.0, 2.55, 1.45],
+        "Chimney": [1.30, -1.00, 7.15],
+        "Coal_Hatch": [-0.55, -2.05, 2.10]
+      },
+      "dimensions": {"length": 6.61, "width": 5.74, "height": 7.15, "tolerance": 0.20},
+      "tri_budget": 2900,
+      "required_parts": ["Plinth", "Walls", "Roof", "Smokestack", "DriveShaft", "CoalChute", "Gauge"],
+      "acceptance": [
+        "tri <= 2900",
+        "包围盒 6.80 x 4.90 x 7.30（±0.20）",
+        "zmin = 0；Drive_Shaft 在 +Y 墙外 z=1.45（±0.02），轴端外伸 >= 0.45 m",
+        "Chimney 在烟囱顶部中心，Coal_Hatch 在送煤口中心",
+        "送煤槽低端落地（z=0，无悬空），槽体与墙面相交不穿窗",
+        "网格健康四项全 0"
+      ]
+    }
+  ],
+  "acceptance_global": [
+    "6 件全部命名以 SN_ 开头并住在各自 *_Prototype 集合，无 .001 后缀、无 mesh/socket 重名",
+    "每件 tri <= 各自 tri_budget，合计 <= 16800",
+    "每件世界包围盒符合 dimensions（误差 <= tolerance），zmin = 0",
+    "每件网格健康四项全 0（边界边 / 非流形边 / 退化面 / 孤立点）",
+    "每个 mesh 有 UVMap 且 len(uv) == len(loops)，材质全部 SN_Tex_* 共享贴图无纯色",
+    "Mount 在原点；全部 socket 坐标与工单一致、父级为 ROOT",
+    "场景原有对象（含批次 1–3 kit 与 4 艘船）数量/名称/位置不变；Camera=2、Light=1",
+    "dryrun 通过 + Blender report 通过 + 独立 Verifier 只读复核通过"
+  ],
+  "notes": "本工单自包含；材质/贴图/UV 契约见 docs/design/MODELING_WORKFLOW.md §12；建模工作台 .design/SN_Asset_Workbench.blend；生成器复用 kit_batch3_generator 的 _face_box/_slab/_window/_door/_gable_roof/_chimney 等立面工具函数。"
+}

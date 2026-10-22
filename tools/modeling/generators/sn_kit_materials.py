@@ -122,6 +122,52 @@ ASSET_MATERIALS = {
         MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_WOOD, MAT_WOOD_DARK,
         MAT_WOOD_DECK, MAT_BRASS, MAT_GLASS_DARK, MAT_METAL, MAT_CANVAS_SHADE,
     }),
+    "SN_Arch_Perimeter_Wall": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD_DARK,
+        MAT_BRASS, MAT_GLASS_DARK,
+    }),
+    "SN_Arch_Gate": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD_DARK,
+        MAT_BRASS, MAT_GLASS_DARK,
+    }),
+    "SN_Arch_Road": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD_DARK,
+        MAT_BRASS,
+    }),
+    "SN_Arch_Loading_Platform": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD_DARK,
+        MAT_WOOD_DECK, MAT_BRASS, MAT_CANVAS_SHADE,
+    }),
+    "SN_Arch_Warehouse_Variant": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD,
+        MAT_WOOD_DARK, MAT_BRASS, MAT_GLASS_DARK, MAT_CANVAS_SHADE,
+    }),
+    "SN_Arch_Workshop_Annex": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD,
+        MAT_WOOD_DARK, MAT_BRASS, MAT_GLASS_DARK, MAT_COAL,
+    }),
+    # ---- base kit（批次 5）
+    "SN_Base_Sawmill": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD,
+        MAT_WOOD_DARK, MAT_WOOD_DECK, MAT_BRASS, MAT_CANVAS_SHADE,
+    }),
+    "SN_Base_Smelter": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_BRASS,
+        MAT_COAL, MAT_CANVAS_SHADE, MAT_WOOD_DARK,
+    }),
+    "SN_Base_Foundry": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD,
+        MAT_WOOD_DARK, MAT_BRASS, MAT_GLASS_DARK, MAT_CANVAS_SHADE,
+    }),
+    "SN_Base_Stockyard": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD,
+        MAT_WOOD_DARK, MAT_WOOD_DECK, MAT_BRASS, MAT_GLASS_DARK,
+        MAT_COAL, MAT_CANVAS_SHADE,
+    }),
+    "SN_Base_Defense_Tower": frozenset({
+        MAT_STONE, MAT_IRON, MAT_IRON_RED, MAT_METAL, MAT_WOOD_DARK,
+        MAT_BRASS, MAT_GLASS_DARK, MAT_CANVAS_SHADE,
+    }),
     # ---- environment kit（批次 3）
     "SN_Env_Reef": frozenset({
         MAT_STONE, MAT_WOOD_DARK, MAT_IRON, MAT_METAL,

@@ -1,0 +1,265 @@
+{
+  "id": "sn_kit_batch5_base_kit",
+  "title": "模型素材库批次 5（M1-2）：base_kit 生产建筑（基地生产链）",
+  "purpose": "backlog M1-2：阶段 3 基地建设需要可生产、可拼装的生产建筑。本批 5 件：锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔，与 machinery_kit（动力装置 / 齿轮组 / 卷扬机）和 cargo_kit 拼装成生产链；沿用批次 1–4 的 Root + Mount + 语义 socket + Root extras 契约，4 m 网格沿 X 平铺，全部地面件。",
+  "category": "kit",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-22 在批次 4（M1-1）交付后明确指示「先做 M1-2」；范围按 backlog M1-2 的 5 件：锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔。",
+  "style": {
+    "look": "与 kit 批次 1–4 同一套低模铁港语言：石基座 + 铆接铁板 + 铁包木 + 黄铜机械件 + 深色玻璃；轮廓优先、flat shading、共享贴图 SN_Tex_*，禁止纯色材质。生产建筑强调『可读的生产链』：进料口 / 加工机具 / 出料口 / 动力轴 / 烟囱五段一眼可辨。",
+    "palette": [
+      "SN_Tex_Iron",
+      "SN_Tex_Metal",
+      "SN_Tex_Iron_Red",
+      "SN_Tex_Wood",
+      "SN_Tex_Wood_Dark",
+      "SN_Tex_Wood_Deck",
+      "SN_Tex_Brass",
+      "SN_Tex_Glass_Dark",
+      "SN_Tex_Canvas_Shade",
+      "SN_Tex_Stone",
+      "SN_Tex_Coal"
+    ]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": [
+      "Camera",
+      "DBG2_CAM",
+      "Light",
+      "SN_Ship_Root",
+      "SN_Harbor_Town",
+      "SN_Iron_Harbor_Architecture",
+      "SN_IronHarbor_Props",
+      "SN_Ship_Modules",
+      "SN_Port_Facilities",
+      "SN_Weapon_*",
+      "SN_ShipPart_*",
+      "SN_Machinery_*",
+      "SN_Cargo_*",
+      "SN_Dock_*",
+      "SN_Arch_*",
+      "SN_Env_*",
+      "SN_Rig_*",
+      "SN_PF_Root",
+      "SN_SF_Root",
+      "SN_Ironclad"
+    ],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "no_text": true,
+    "scene": ".design/SN_Asset_Workbench.blend"
+  },
+  "common": {
+    "units": "1 unit = 1 m",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "shading": "flat shading；共享贴图材质（SN_Tex_*）+ 世界空间盒式 UV",
+    "conventions": "几何由生成器参数表驱动（不允许手工摆点）；闭合件边界边 / 非流形边 / 退化面必须为 0；Mount / Socket 为空节点，不参与几何；mesh 名不得与 socket 名重名。",
+    "datums": "全部为地面建筑件：根在体量底面中心（zmin=0），+X 为正立面（进料 / 出料 / 门）。Module_Next/Module_Prev 沿 X 平铺，间距 = module_x。",
+    "grid": "4 m 网格：锯木厂 8×6、冶炼炉 8×6、铸造车间 12×8、仓库堆场 12×10、防御塔 6×6。",
+    "material_rule": "新资产必须使用共享贴图材质 SN_Tex_*；本批不新增贴图（沿用既有 11 张共享贴图，含 SN_Tex_Coal）。",
+    "workbench": "本批 5 件统一摆在工作台 y=660 行，x = 30 / 50 / 74 / 100 / 122，z=0。"
+  },
+  "kit_contract": {
+    "families": {
+      "base_kit": "基地生产建筑：锯木厂（原木滑道 + 锯盘 + 传送轴）、冶炼炉（高炉 + 热风炉 + 上料斜桥）、铸造车间（厂房 + 冲天炉 + 行车/浇包 + 模具区）、仓库堆场（围栏 + 堆垛 + 龙门吊 + 地磅）、防御塔（石塔 + 炮位平台 + 弹药库 + 探照灯）"
+    },
+    "mount_frame": "每件资产根下提供 SN_<Asset>_Mount（+X 前向、Z 向上）。装配只对齐 Root / Mount。",
+    "production_chain": "锯木厂 Drive_Shaft 接 machinery_kit PowerUnit 飞轮轴、Log_Input 收原木、Timber_Output 出木料；冶炼炉 Coal_Input / Ore_Input 进料、Molten_Out 出铁水、Chimney 接烟柱 VFX、Blower_Shaft 接动力；铸造车间 Door_Front 进料、Cupola 冲天炉、Hoist 行车吊点、Pour_Point 浇注位、Molten_In 接铁水；仓库堆场 Gate_In 入口、Hoist 龙门吊、Scale 地磅、Storage 堆场中心；防御塔 Weapon_Mount 炮位、Searchlight 探照灯、Flag 旗杆、Magazine 弹药库、Ladder_Foot 登塔梯。",
+    "console": "Root extras 写 asset / version / units / kit_family / part_role / forward / up / datum / mount_frame / base_footprint_x/y / envelope_x/y / height / tri_budget / bbox_target / collection / type / module_x / module_y / module_grid=4.0 / production=true（防御塔 production=false）；不写 waterline（全部地面件）。",
+    "catalog": "交付后更新 docs/design/KIT_ASSET_LIBRARY.md、tools/modeling/kit_catalog.json、docs/design/ASSET_MAP.md 与 backlog 状态。",
+    "godot": "GLB 落 assets/models/base/（新类别目录）+ dev_mods/core 副本；shared_materials.spec.json 的 runtime_dirs 追加 base 与 dev_mods 两份（11 张共享贴图）。"
+  },
+  "deliverables": {
+    "generator": "tools/modeling/generators/kit_batch5_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_kit_batch5.py",
+    "export": "tools/modeling/generators/export_kit_batch5_glb.py",
+    "verify": "tools/modeling/generators/verify_kit_batch5_glb.py",
+    "glb": "assets/models/base/SN_Base_*.glb + dev_mods/core/assets/models/base/ 副本",
+    "shared_textures": "assets/models/base/shared_materials/ + dev_mods/core 副本",
+    "screenshots": [".design/kits/preview/kit_base_lineup.png", ".design/kits/preview/kit_base_assembly.png"]
+  },
+  "items": [
+    {
+      "id": "sn_base_sawmill_v1",
+      "asset": "SN_Base_Sawmill",
+      "role": "锯木厂：石基座 + 半开放锯棚（后墙铁板 + 前开敞立柱）+ 双坡铁皮顶 + 立式大锯盘（护罩/齿圈/主轴轴承）+ 进料辊道与原木坡道 + 出料木料堆 + 排屑槽 + +Y 外墙传送轴与皮带轮",
+      "collection": "SN_Base_Sawmill_Prototype",
+      "root": "SN_Base_Sawmill_Root",
+      "prefix": "SN_Base_Sawmill_",
+      "workbench_pos": [30.0, 660.0, 0.0],
+      "family": "base_kit",
+      "part_role": "sawmill",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Drive_Shaft", "Log_Input", "Timber_Output"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [4.0, 0.0, 0.0],
+        "Module_Prev": [-4.0, 0.0, 0.0],
+        "Drive_Shaft": [0.0, 3.2, 1.45],
+        "Log_Input": [6.8, 2.0, 0.0],
+        "Timber_Output": [5.6, -2.0, 0.6]
+      },
+      "dimensions": {"length": 11.30, "width": 7.54, "height": 6.05, "tolerance": 0.25},
+      "tri_budget": 3800,
+      "required_parts": ["Plinth", "Walls", "Roof", "SawBlade", "Carriage", "LogRamp", "TimberStack", "DriveShaft"],
+      "acceptance": [
+        "tri <= 3800",
+        "包围盒 11.30 x 7.54 x 6.05（±0.25）",
+        "zmin = 0；锯盘轴心 z=1.9±0.05、盘面在 YZ 平面（法线 ±Y）",
+        "Log_Input 在进料辊道端头、Timber_Output 在出料堆端头、Drive_Shaft 在 +Y 墙外 z=1.45",
+        "锯棚正立面 +X 开敞（无连续前墙），立柱与屋顶连续、无悬空",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_base_smelter_v1",
+      "role": "冶炼炉：石砌收分高炉（铁箍 + 风口 + 出渣口）+ 顶部上料平台与围栏 + 斜桥上料斗 + 双热风炉（铁筒/管道/阀门）+ 矿料与焦炭料仓 + 高烟囱；+X 出铁口与铁水沟",
+      "asset": "SN_Base_Smelter",
+      "collection": "SN_Base_Smelter_Prototype",
+      "root": "SN_Base_Smelter_Root",
+      "prefix": "SN_Base_Smelter_",
+      "workbench_pos": [50.0, 660.0, 0.0],
+      "family": "base_kit",
+      "part_role": "smelter",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Coal_Input", "Ore_Input", "Molten_Out", "Blower_Shaft", "Chimney"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [4.0, 0.0, 0.0],
+        "Module_Prev": [-4.0, 0.0, 0.0],
+        "Coal_Input": [-4.35, 2.40, 1.0],
+        "Ore_Input": [-4.35, -2.40, 1.0],
+        "Molten_Out": [3.4, 0.0, 0.7],
+        "Blower_Shaft": [0.0, 3.4, 1.25],
+        "Chimney": [1.8, -1.6, 11.40]
+      },
+      "dimensions": {"length": 9.10, "width": 7.72, "height": 11.40, "tolerance": 0.30},
+      "tri_budget": 4000,
+      "required_parts": ["Plinth", "Furnace", "Bands", "ChargingPlatform", "Stoves", "Bins", "SkipHoist", "Stack"],
+      "acceptance": [
+        "tri <= 4000",
+        "包围盒 9.10 x 7.72 x 11.40（±0.30）",
+        "zmin = 0；高炉轴线在原点 ±0.05、炉体收分（顶径 < 底径）",
+        "ChargingPlatform 台面 z=7.05±0.10（底板 6.90）、围栏连续；上料斜桥从地面连续到平台（低端 z=0）",
+        "Chimney 在烟囱顶、Molten_Out 在 +X 出铁口/铁水沟端、Coal_Input / Ore_Input 在料仓支腿内侧",
+        "热风炉与炉体之间管道实际相接（无悬空）；烟囱经上升管接炉顶、立在上料平台旁",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_base_foundry_v1",
+      "asset": "SN_Base_Foundry",
+      "role": "铸造车间：石基座 + 铁包木厂房（前立面双滑门 + 采光顶）+ 冲天炉（炉筒/加料门/风口）+ 纵向行车梁与吊钩浇包 + 浇注坑与铁水沟 + 砂箱/模具台 + 砂料仓与工具架",
+      "collection": "SN_Base_Foundry_Prototype",
+      "root": "SN_Base_Foundry_Root",
+      "prefix": "SN_Base_Foundry_",
+      "workbench_pos": [74.0, 660.0, 0.0],
+      "family": "base_kit",
+      "part_role": "foundry",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Door_Front", "Hoist", "Molten_In", "Pour_Point", "Chimney"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [6.0, 0.0, 0.0],
+        "Module_Prev": [-6.0, 0.0, 0.0],
+        "Door_Front": [6.0, 0.0, 0.0],
+        "Hoist": [3.6, 0.0, 6.10],
+        "Molten_In": [-3.4, 0.0, 1.10],
+        "Pour_Point": [1.6, 0.0, 1.10],
+        "Chimney": [-3.6, -2.4, 9.15]
+      },
+      "dimensions": {"length": 12.95, "width": 8.55, "height": 9.15, "tolerance": 0.30},
+      "tri_budget": 4600,
+      "required_parts": ["Plinth", "Walls", "Roof", "SlidingDoors", "Cupola", "CraneRail", "Ladle", "MoldFloor", "Stack"],
+      "acceptance": [
+        "tri <= 4600",
+        "包围盒 12.95 x 8.55 x 9.15（±0.30）",
+        "zmin = 0；Door_Front 在 +X 前立面门洞中心地面",
+        "Hoist 在行车梁/吊钩悬点（z>=5.8）；浇包吊在吊钩下、最低点 z>=1.5 且不碰模具台（台面 1.46）",
+        "冲天炉在车间内/侧跨、Chimney 在烟囱顶；Molten_In 接冲天炉出铁口、Pour_Point 在浇注坑上方",
+        "前立面双滑门与门轨连续、无悬空",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_base_stockyard_v1",
+      "asset": "SN_Base_Stockyard",
+      "role": "仓库堆场：石铺堆场 + 三面铁围栏与 +X 大门 + 原木/木箱/煤堆/矿石堆分区堆垛 + 龙门吊（A 形腿/横梁/吊钩）+ 地磅与读数表 + 角落门卫小亭 + 照明灯柱",
+      "collection": "SN_Base_Stockyard_Prototype",
+      "root": "SN_Base_Stockyard_Root",
+      "prefix": "SN_Base_Stockyard_",
+      "workbench_pos": [100.0, 660.0, 0.0],
+      "family": "base_kit",
+      "part_role": "stockyard",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Gate_In", "Hoist", "Scale", "Storage"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [6.0, 0.0, 0.0],
+        "Module_Prev": [-6.0, 0.0, 0.0],
+        "Gate_In": [6.0, 0.0, 0.0],
+        "Hoist": [-2.0, 0.0, 5.55],
+        "Scale": [4.2, 0.0, 0.30],
+        "Storage": [0.0, -2.6, 0.0]
+      },
+      "dimensions": {"length": 13.20, "width": 11.10, "height": 6.20, "tolerance": 0.30},
+      "tri_budget": 3600,
+      "required_parts": ["Base", "Fence", "Gate", "Stacks", "Gantry", "Weighbridge", "Hut"],
+      "acceptance": [
+        "tri <= 3600",
+        "包围盒 13.20 x 11.10 x 6.20（±0.30）",
+        "zmin = 0（铺场 / 围栏 / 堆垛 / 吊架全部落地或落在铺场上）",
+        "Gate_In 在 +X 大门中心地面、Scale 在地磅台面（z=0.30）、Hoist 在龙门吊横梁吊点",
+        "围栏沿 -X/-Y/+Y 三面连续、+X 留门洞；龙门吊双腿落地、横梁水平",
+        "堆垛之间不互穿、堆顶低于龙门吊横梁",
+        "网格健康四项全 0"
+      ]
+    },
+    {
+      "id": "sn_base_defense_tower_v1",
+      "asset": "SN_Base_Defense_Tower",
+      "role": "防御塔：石砌收分塔身（铁箍/射孔/角扶壁）+ 顶部炮位平台与垛口（中央武器安装点 + 探照灯 + 旗杆）+ 底层铁门与弹药库 + 外部铁梯/护笼登塔",
+      "collection": "SN_Base_Defense_Tower_Prototype",
+      "root": "SN_Base_Defense_Tower_Root",
+      "prefix": "SN_Base_Defense_Tower_",
+      "workbench_pos": [122.0, 660.0, 0.0],
+      "family": "base_kit",
+      "part_role": "defense_tower",
+      "sockets": ["Mount", "Module_Next", "Module_Prev", "Weapon_Mount", "Searchlight", "Flag", "Magazine", "Ladder_Foot"],
+      "socket_locations": {
+        "Mount": [0.0, 0.0, 0.0],
+        "Module_Next": [3.0, 0.0, 0.0],
+        "Module_Prev": [-3.0, 0.0, 0.0],
+        "Weapon_Mount": [0.0, 0.0, 9.20],
+        "Searchlight": [1.6, 0.0, 9.60],
+        "Flag": [0.0, 0.0, 12.20],
+        "Magazine": [-2.0, -2.4, 0.0],
+        "Ladder_Foot": [0.0, -3.05, 0.0]
+      },
+      "dimensions": {"length": 7.50, "width": 7.27, "height": 12.25, "tolerance": 0.30},
+      "tri_budget": 3400,
+      "required_parts": ["Plinth", "Tower", "Parapet", "WeaponPlatform", "PowderStore", "Ladder", "Flagpole"],
+      "acceptance": [
+        "tri <= 3400",
+        "包围盒 7.50 x 7.30 x 12.25（±0.30）",
+        "zmin = 0；塔身收分（顶面 < 底面）、炮位平台面 z=9.20±0.05",
+        "Weapon_Mount 在平台中心、Searchlight 在平台边缘探照灯座、Flag 在旗杆顶",
+        "Ladder_Foot 在登塔梯地面落点、梯子从地面连续到平台并有登台过桥（无悬空段）",
+        "Magazine 弹库落在塔基旁地面、与塔身相接",
+        "网格健康四项全 0"
+      ]
+    }
+  ],
+  "acceptance_global": [
+    "5 件全部命名以 SN_Base_ 开头并住在各自 *_Prototype 集合，无 .001 后缀、无 mesh/socket 重名",
+    "每件 tri <= 各自 tri_budget，合计 <= 19000",
+    "每件世界包围盒符合 dimensions（误差 <= tolerance），zmin = 0",
+    "每件网格健康四项全 0（边界边 / 非流形边 / 退化面 / 孤立点）",
+    "每个 mesh 有 UVMap 且 len(uv) == len(loops)，材质全部 SN_Tex_* 共享贴图无纯色",
+    "Mount 在原点；全部 socket 坐标与工单一致、父级为 ROOT",
+    "场景原有对象（批次 1–4 kit / 4 艘船 / 铁港建筑）数量、名称、位置不变；Camera=2、Light=1",
+    "dryrun 通过 + Blender report 通过 + 独立 Verifier 只读复核通过"
+  ],
+  "notes": "本工单自包含；材质/贴图/UV 契约见 docs/design/MODELING_WORKFLOW.md §12；建模工作台 .design/SN_Asset_Workbench.blend；生成器复用 kit_batch3_generator 的立面工具与 kit_batch4_generator 的 _box / _lamp 等。base 是新类别目录，需同步 shared_materials runtime_dirs。"
+}
