@@ -63,33 +63,33 @@
 | `deepMerge(base, extra)` | L897 |
 | `MODULE_CATEGORY_VALUES` | L909 |
 | `requestedModuleCategory(ctx)` | L911 |
-| `buildData(typeKey, ctx)` | L932 |
-| `findLocalIdConflict(project, info, localId, exclude)` | L956 |
-| `validateLocalId(localId)` | L966 |
-| `collectStrings(value, output, depth = 0)` | L973 |
-| `applyValueAssignment(definition, assignment)` | L993 |
-| `nestValue(segments, value)` | L1023 |
-| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1039 |
-| `applyAssignmentToText(text, definitionNode, assignment)` | L1071 |
-| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1098 |
-| `describeFields(info)` | L1146 |
-| `collectObject(node, file)` | L1158 |
-| `inferType(target, raw)` | L1186 |
-| `expand(pathText, node, isRequired, file, depth)` | L1209 |
-| `describePayload(typeKey)` | L1247 |
-| `commandTypes(ctx)` | L1308 |
-| `commandDescribe(ctx)` | L1353 |
-| `commandList(ctx)` | L1385 |
-| `commandAdd(ctx)` | L1433 |
-| `commandSet(ctx)` | L1561 |
-| `commandLoc(ctx)` | L1617 |
-| `commandRm(ctx)` | L1669 |
-| `commandClone(ctx)` | L1739 |
-| `commandValidate(ctx)` | L1798 |
-| `commandNew(ctx)` | L1862 |
-| `COMMANDS` | L1959 |
-| `handleError(ctx, error)` | L1972 |
-| `main(argv)` | L1990 |
+| `buildData(typeKey, ctx, owner)` | L932 |
+| `findLocalIdConflict(project, info, localId, exclude)` | L960 |
+| `validateLocalId(localId)` | L970 |
+| `collectStrings(value, output, depth = 0)` | L977 |
+| `applyValueAssignment(definition, assignment)` | L997 |
+| `nestValue(segments, value)` | L1027 |
+| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1043 |
+| `applyAssignmentToText(text, definitionNode, assignment)` | L1075 |
+| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1102 |
+| `describeFields(info)` | L1150 |
+| `collectObject(node, file)` | L1162 |
+| `inferType(target, raw)` | L1190 |
+| `expand(pathText, node, isRequired, file, depth)` | L1213 |
+| `describePayload(typeKey)` | L1251 |
+| `commandTypes(ctx)` | L1312 |
+| `commandDescribe(ctx)` | L1357 |
+| `commandList(ctx)` | L1389 |
+| `commandAdd(ctx)` | L1437 |
+| `commandSet(ctx)` | L1565 |
+| `commandLoc(ctx)` | L1621 |
+| `commandRm(ctx)` | L1673 |
+| `commandClone(ctx)` | L1743 |
+| `commandValidate(ctx)` | L1802 |
+| `commandNew(ctx)` | L1866 |
+| `COMMANDS` | L1963 |
+| `handleError(ctx, error)` | L1976 |
+| `main(argv)` | L1994 |
 
 ## 契约与约束
 

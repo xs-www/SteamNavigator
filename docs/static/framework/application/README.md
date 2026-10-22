@@ -13,6 +13,7 @@
 | `commands/explore_commands.gd` | 探索系统的命令包装（`explore.start` / `explore.settle` / `explore.decide` / | [查看](./commands/explore_commands.gd.md) |
 | `commands/intel_commands.gd` | 情报刷新命令：设施、费用、快照。 | 本页 |
 | `commands/port_commands.gd` | 港口停留用例：在本港消耗时间，让打造订单、NPC 市场与债务期限一起推进。 | [查看](./commands/port_commands.gd.md) |
+| `commands/quest_commands.gd` | 抽象任务（Quest）的命令包装（C3）：`quest.start`（接取内容任务）、 | [查看](./commands/quest_commands.gd.md) |
 | `commands/run_start.gd` | `run.start` 命令入口（Phase B B3）。保持 1.0 路径原样：无 `start_profile` | [查看](./commands/run_start.gd.md) |
 | `commands/ship_commands.gd` | 船厂用例：购买/仓库/随船运输三种来源安装模块（含替换）、卸下模块、打造模块，并在安装成功后检查通关。 | [查看](./commands/ship_commands.gd.md) |
 | `commands/story_commands.gd` | 新手剧情 / 教学系统的命令包装：`story.advance`（剧情卡继续）、 | [查看](./commands/story_commands.gd.md) |
@@ -34,7 +35,7 @@
 | `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前/随船运输模块、已装模块效果、港口仓库、打造配方与所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
 | `queries/story_view.gd` | 新手剧情 / 教学系统的只读查询（`story.view`）。输出剧情卡、目标条、功能 / | [查看](./queries/story_view.gd.md) |
 | `queries/supply_view.gd` | 补给界面 ViewModel：煤水价/库存、载重余量、可补上限、预计续航与维修报价。 | [查看](./queries/supply_view.gd.md) |
-| `queries/task_view.gd` | 任务追踪聚合查询（`task.view`，阶段 4.6 Phase A）。只读地把剧情当前目标、 | [查看](./queries/task_view.gd.md) |
+| `queries/task_view.gd` | 任务追踪聚合查询（`task.view`，阶段 4.6 Phase A / C3 Phase B）。只读地把剧情 | [查看](./queries/task_view.gd.md) |
 | `queries/tavern_view.gd` | 酒馆页（`tavern.view`）的只读查询——把原「情报站」的物价情报矩阵 | [查看](./queries/tavern_view.gd.md) |
 | `queries/victory_view.gd` | 通关页 ViewModel：是否通关、通关时间与完整 run summary。 | [查看](./queries/victory_view.gd.md) |
 | `queries/voyage_preview.gd` | 出航预览查询包装。 | 本页 |

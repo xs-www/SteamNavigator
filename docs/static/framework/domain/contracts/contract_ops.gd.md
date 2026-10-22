@@ -15,14 +15,14 @@
 | `attach(state: GameState, hub: RegistryHub, instance: Dictionary) -> Dictionary` | L106 |
 | `missing_player_cargo(state: GameState, instance: Dictionary) -> Dictionary` | L144 |
 | `complete(state: GameState, hub: RegistryHub, instance: Dictionary, arrival_time: float) -> Dictionary` | L173 |
-| `find_template_by_sequence(hub: RegistryHub, sequence: int) -> ContentDefinition` | L225 |
-| `templates_by_kind(hub: RegistryHub, kind: String) -> Array[ContentDefinition]` | L232 |
-| `active_limit(state: GameState) -> int` | L242 |
-| `generate_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, key: String) -> Array` | L250 |
-| `refresh_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, port_id: String, arrival_time: float) -> Array` | L280 |
-| `generate_offer(state: GameState, hub: RegistryHub, template: ContentDefinition, rng_service: RngService, origin: String) -> Dictionary` | L286 |
-| `accept_offer(state: GameState, hub: RegistryHub, instance_id: String) -> Dictionary` | L315 |
-| `accepts_passengers(template: ContentDefinition) -> bool` | L342 |
+| `find_template_by_sequence(hub: RegistryHub, sequence: int) -> ContentDefinition` | L227 |
+| `templates_by_kind(hub: RegistryHub, kind: String) -> Array[ContentDefinition]` | L234 |
+| `active_limit(state: GameState) -> int` | L244 |
+| `generate_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, key: String) -> Array` | L252 |
+| `refresh_normal_offers(state: GameState, hub: RegistryHub, rng_service: RngService, port_id: String, arrival_time: float) -> Array` | L282 |
+| `generate_offer(state: GameState, hub: RegistryHub, template: ContentDefinition, rng_service: RngService, origin: String) -> Dictionary` | L288 |
+| `accept_offer(state: GameState, hub: RegistryHub, instance_id: String) -> Dictionary` | L317 |
+| `accepts_passengers(template: ContentDefinition) -> bool` | L347 |
 
 ## 契约与约束
 

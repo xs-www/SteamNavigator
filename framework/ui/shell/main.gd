@@ -632,25 +632,44 @@ func _place_story_objective() -> void:
 	control.position = Vector2(x, y)
 
 
-## Forwards a successful command / UI event to the story state machine. Returns true
-## when the stage changed (caller should refresh the UI to pick up the new card).
+## Forwards a successful command / UI event to the story state machine and the quest
+## progress tracker. Returns true when either moved (caller should refresh the UI).
 func _observe_story(event: String, data: Dictionary = {}) -> bool:
-	if _context == null or not _context.has_run() or not _story_active():
+	if _context == null or not _context.has_run():
 		return false
-	var before_stage := int(_story_vm.get("stage_index", -1))
-	var before_completed := bool(_story_vm.get("completed", false))
+	var story_advanced := false
+	if _story_active():
+		var before_stage := int(_story_vm.get("stage_index", -1))
+		var before_completed := bool(_story_vm.get("completed", false))
+		var result := _context.commands.execute(
+			&"story.observe", {"event": event, "data": data}
+		)
+		if bool(result.get("ok", false)):
+			var after_view: Dictionary = result.get("data", {}).get("view", {})
+			story_advanced = int(after_view.get("stage_index", before_stage)) != before_stage \
+				or bool(after_view.get("completed", false)) != before_completed
+			if story_advanced and not after_view.is_empty():
+				# UI 事件（开 / 关海图）在重建中途观察；先同步 VM，调用方再按需 deferred 刷新。
+				_story_vm = after_view
+	return _observe_quests(event, data) or story_advanced
+
+
+## C3：Quest 目标复用同一套 `cmd:*` / `ui:*` 事件流，与 story 是否 active 无关。
+## `active`（跨 stage / 完成）与 `progressed`（counter 变化）都需要刷新任务条。
+func _observe_quests(event: String, data: Dictionary = {}) -> bool:
+	if _context == null or not _context.has_run():
+		return false
+	if not _context.commands.has(&"quest.observe"):
+		return false
+	if not QuestService.has_active_content(_context.state):
+		return false
 	var result := _context.commands.execute(
-		&"story.observe", {"event": event, "data": data}
+		&"quest.observe", {"event": event, "data": data}
 	)
 	if not bool(result.get("ok", false)):
 		return false
-	var after_view: Dictionary = result.get("data", {}).get("view", {})
-	var advanced := int(after_view.get("stage_index", before_stage)) != before_stage \
-		or bool(after_view.get("completed", false)) != before_completed
-	if advanced and not after_view.is_empty():
-		# UI 事件（开 / 关海图）在重建中途观察；先同步 VM，调用方再按需 deferred 刷新。
-		_story_vm = after_view
-	return advanced
+	var payload: Dictionary = result.get("data", {})
+	return bool(payload.get("advanced", false)) or bool(payload.get("progressed", false))
 
 
 ## True when the current story stage temporarily locks an action (e.g. supply.buy

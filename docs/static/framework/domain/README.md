@@ -33,6 +33,8 @@
 | `map/map_generator.gd` | 程序生成 4–5 港口连通分支网络，并验证 MVP 硬约束。 | [查看](./map/map_generator.gd.md) |
 | `map/map_ops.gd` | GameState.world 上的港口/航线查询、设施可见性、发现与 BFS。 | [查看](./map/map_ops.gd.md) |
 | `port/port_time_service.gd` | 在港时间推进的统一领域入口。推进游戏时间，并让打造订单、NPC 市场模拟与 | [查看](./port/port_time_service.gd.md) |
+| `quest/quest_ops.gd` | `data.quests` 持久任务状态的纯数据操作层（C3）。负责惰性 ensure、实例字段 | [查看](./quest/quest_ops.gd.md) |
+| `quest/quest_service.gd` | 抽象任务（Quest）状态机（C3）。把 `quests` 2.0 内容定义（stage 链 + 目标 DSL） | [查看](./quest/quest_service.gd.md) |
 | `run/victory_service.gd` | 通关判定与服务：主线全部完成 + 造船厂内组装最低可运行大型船（大型船体 + 锅炉 + ≥1 货舱）。 | [查看](./run/victory_service.gd.md) |
 | `ship/craft_ops.gd` | 模块打造：读取模块 JSON 配方、规划材料来源、仓库优先消耗、扣费并生成带工时的打造订单，时间到位后把成品写入下单港仓库。 | [查看](./ship/craft_ops.gd.md) |
 | `ship/module_ops.gd` | Content Schema 2.0 统一模块类型 `modules` 的分类访问器：按 `data.v2_category` | [查看](./ship/module_ops.gd.md) |

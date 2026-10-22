@@ -15,6 +15,12 @@ func test_save_and_load_state_hash() -> void:
 	assert_true(bool(loaded["ok"]), "load succeeds")
 	var loaded_state: GameState = loaded["state"]
 	assert_eq(loaded_state.hash(), before, "state hash is identical after load")
+	assert_eq(QuestOps.instances(loaded_state).size(), QuestOps.instances(context.state).size(),
+		"quest instances round-trip through the save")
+	var main_contract: Variant = context.state.contracts().get("main", null)
+	if main_contract is Dictionary:
+		assert_false(QuestOps.find_by_contract(loaded_state, String((main_contract as Dictionary).get("instance_id", ""))).is_empty(),
+			"the accepted contract's quest tracking instance survives load")
 	var header: Dictionary = loaded["header"]
 	assert_eq(String(header["save_schema"]), "2.0", "save schema is recorded")
 	assert_eq(String(header["state_schema"]), "2.0", "state schema is recorded")

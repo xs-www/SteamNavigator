@@ -26,6 +26,8 @@ func test_supply_view_and_purchases() -> void:
 	assert_true(coal_stock_before >= 10, "port has coal stock")
 	var coal := context.commands.execute(&"supply.buy_coal", {"amount": 10})
 	assert_true(bool(coal["ok"]), "buying coal succeeds: %s" % str(coal))
+	assert_eq(String(coal["data"].get("item_id", "")), "core:item/coal",
+		"the supply payload exposes the resolved item id for quest/event match")
 	assert_almost_eq(float(context.state.ship()["coal"]), 10.0, 0.001, "coal is added")
 	var after_coal_result := context.queries.execute(&"supply.view")
 	var after_coal: Dictionary = after_coal_result["data"]
@@ -33,6 +35,8 @@ func test_supply_view_and_purchases() -> void:
 	assert_true(float(after_coal["coal_price"]) >= coal_price_before, "coal price rises as port stock falls")
 	var water := context.commands.execute(&"supply.buy_water", {"amount": 10})
 	assert_true(bool(water["ok"]), "buying water succeeds: %s" % str(water))
+	assert_eq(String(water["data"].get("item_id", "")), "core:item/water",
+		"the water payload exposes the resolved item id for quest/event match")
 	assert_almost_eq(float(context.state.ship()["water"]), 10.0, 0.001, "water is added")
 
 

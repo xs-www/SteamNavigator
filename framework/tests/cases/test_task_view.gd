@@ -122,6 +122,30 @@ func test_active_contract_is_tracked_but_the_offer_pool_is_not() -> void:
 	assert_true(kinds.has("contract"), "the normal contract is tracked as a contract task")
 
 
+func test_content_quest_is_tracked_between_story_and_contracts() -> void:
+	var context := _start_run()
+	var started := context.commands.execute(&"quest.start", {"quest_id": "core:quest/first_voyage_guide"})
+	assert_true(bool(started.get("ok", false)), "the guide quest starts: %s" % str(started))
+	var data := _task_view(context)
+	var tasks: Array = data.get("tasks", [])
+	assert_eq(tasks.size(), 2, "the quest joins the accepted main contract")
+	var quest_task := _task(data, "quest")
+	assert_false(quest_task.is_empty(), "task.view exposes the content quest")
+	assert_eq(int(quest_task.get("priority", 0)), 250, "quest priority sits between story and main")
+	assert_eq(String(quest_task.get("category_key", "")), "quest.tracking.guide", "the quest category is content-keyed")
+	assert_eq(int(quest_task.get("stage_index", -1)), 0, "the quest exposes its current stage")
+	var current: Dictionary = quest_task.get("current_step", {})
+	assert_eq(String(current.get("kind", "")), "objective", "quest steps reuse the objective step kind")
+	assert_eq(int(current.get("target", 0)), 4, "the objective target comes from quest content")
+	assert_false(String(current.get("text_key", "")).is_empty(), "the objective text key is preserved")
+	# contract 来源实例不重复渲染：任务列表里仍只有主委托这一条委托任务。
+	var contract_tasks := 0
+	for task in tasks:
+		if String((task as Dictionary).get("kind", "")) == "main":
+			contract_tasks += 1
+	assert_eq(contract_tasks, 1, "contract-source quest instances do not double-render the contract")
+
+
 # ── helpers ──
 
 

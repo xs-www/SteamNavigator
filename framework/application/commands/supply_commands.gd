@@ -20,6 +20,11 @@ static func _buy_supply(kind: String, params: Dictionary, context) -> Dictionary
 	var result := MarketOps.buy_supply(state, context.registries, port_id, kind, amount, impact)
 	if bool(result["ok"]):
 		MarketMemoryService.remember(state, port_id)
+		# Quest / event 匹配用：payload 暴露补给 item 的解析 id（按内容标签查注册表，
+		# 不写死 core id），目标才能写成 `match: {item_id: ...}`。
+		var supply_items: Array = context.registries.query(ContentTypes.ITEM, ["supply." + kind])
+		if not supply_items.is_empty():
+			result["data"]["item_id"] = supply_items[0].id
 		result["events"] = [{
 			"type": "supply.purchased",
 			"payload": {"kind": kind, "amount": amount, "total": result["data"].get("total", 0)},

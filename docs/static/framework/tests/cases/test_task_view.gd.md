@@ -15,6 +15,7 @@
 | `test_main_contract_derives_load_sail_and_deliver_steps() -> void` | L48 |
 | `test_story_objective_is_the_highest_priority_task() -> void` | L80 |
 | `test_active_contract_is_tracked_but_the_offer_pool_is_not() -> void` | L95 |
+| `test_content_quest_is_tracked_between_story_and_contracts() -> void` | L125 |
 
 已接主线的 Task 形状、委托步骤（接取 / 备货 / 前往 / 交付）与优先级排序。
 

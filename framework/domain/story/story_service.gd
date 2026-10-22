@@ -721,6 +721,8 @@ static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect:
 	var contracts: Dictionary = state.contracts()
 	contracts["main"] = offer
 	contracts["main_offer"] = null
+	# C3：剧情直接挂上的教学委托也生成 Quest 追踪实例（与 accept_offer 一致）。
+	QuestService.track_contract(state, offer)
 
 
 static func _unlock_feature(story: Dictionary, feature: String) -> bool:

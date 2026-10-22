@@ -20,42 +20,42 @@
 | `SUPPORTED_SCHEMA_VERSIONS` | L33 |
 | `DEFAULT_SCHEMA_VERSION` | L34 |
 | `REF_TYPE_BY_FIELD` | L36 |
-| `schemas()` | L55 |
-| `catalog()` | L59 |
-| `schemaVersionFor(typeKeyOrFile)` | L70 |
-| `normalizeSchemaPath(file)` | L81 |
-| `pointerEscape(text)` | L91 |
-| `pointerUnescape(text)` | L95 |
-| `joinPointer(base, key)` | L99 |
-| `resolveRef(ref, baseFile)` | L112 |
-| `deref(schema, file, seen)` | L144 |
-| `flattenObject(schema, file, seen)` | L170 |
-| `typeOf(value)` | L198 |
-| `matchesType(value, type)` | L204 |
-| `validateSchema(instance, schema, file)` | L211 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L215 |
-| `parseSemver(text)` | L375 |
-| `versionRangeError(text)` | L386 |
-| `safePath(path)` | L403 |
-| `extensionOf(path)` | L413 |
-| `isForbiddenPath(path)` | L419 |
-| `walkStrings(value, path, callback, depth)` | L423 |
-| `referencedIdType(id)` | L438 |
-| `expectedRefType(path)` | L443 |
-| `LOCAL_IDENTIFIER_FIELDS` | L458 |
-| `SOCKET_CLASSES` | L463 |
-| `RIG_SOCKET_KINDS` | L464 |
-| `checkWeaponSemantics(definition, view, add)` | L467 |
-| `checkHullSocketSemantics(definition, view, add)` | L501 |
-| `STORY_TYPES` | L585 |
-| `storyFieldView(view, field)` | L587 |
-| `checkStoryArcSemantics(definition, view, add)` | L592 |
-| `checkStoryLevelSemantics(definition, view, add)` | L636 |
-| `checkStoryPack(contentFiles, add)` | L744 |
-| `validateProject(project, options)` | L785 |
-| `finish(issues)` | L1156 |
-| `byDefinition(issues)` | L1165 |
-| `SNValidate (global)` | L1178 |
+| `schemas()` | L56 |
+| `catalog()` | L60 |
+| `schemaVersionFor(typeKeyOrFile)` | L71 |
+| `normalizeSchemaPath(file)` | L82 |
+| `pointerEscape(text)` | L92 |
+| `pointerUnescape(text)` | L96 |
+| `joinPointer(base, key)` | L100 |
+| `resolveRef(ref, baseFile)` | L113 |
+| `deref(schema, file, seen)` | L145 |
+| `flattenObject(schema, file, seen)` | L171 |
+| `typeOf(value)` | L199 |
+| `matchesType(value, type)` | L205 |
+| `validateSchema(instance, schema, file)` | L212 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L216 |
+| `parseSemver(text)` | L376 |
+| `versionRangeError(text)` | L387 |
+| `safePath(path)` | L404 |
+| `extensionOf(path)` | L414 |
+| `isForbiddenPath(path)` | L420 |
+| `walkStrings(value, path, callback, depth)` | L424 |
+| `referencedIdType(id)` | L439 |
+| `expectedRefType(path)` | L444 |
+| `LOCAL_IDENTIFIER_FIELDS` | L459 |
+| `SOCKET_CLASSES` | L464 |
+| `RIG_SOCKET_KINDS` | L465 |
+| `checkWeaponSemantics(definition, view, add)` | L468 |
+| `checkHullSocketSemantics(definition, view, add)` | L502 |
+| `STORY_TYPES` | L586 |
+| `storyFieldView(view, field)` | L588 |
+| `checkStoryArcSemantics(definition, view, add)` | L593 |
+| `checkStoryLevelSemantics(definition, view, add)` | L637 |
+| `checkStoryPack(contentFiles, add)` | L745 |
+| `validateProject(project, options)` | L786 |
+| `finish(issues)` | L1157 |
+| `byDefinition(issues)` | L1166 |
+| `SNValidate (global)` | L1179 |
 
 ## 契约与约束
 

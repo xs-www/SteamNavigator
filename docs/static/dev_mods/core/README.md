@@ -363,6 +363,7 @@
 | `content/map_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/port_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/quests.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/regions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/roles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/route_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

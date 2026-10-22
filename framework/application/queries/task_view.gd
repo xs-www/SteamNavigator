@@ -1,23 +1,30 @@
 class_name TaskViewQuery
 extends RefCounted
 ## @static-doc
-## 作用：任务追踪聚合查询（`task.view`，阶段 4.6 Phase A）。只读地把剧情当前目标、
-## 主线委托、已接普通委托聚合成统一的 Task 列表，并把委托拆成「备货 / 接客 / 前往 /
-## 抵达交付」步骤，供 HUD 任务条与委托页任务面板显示。
+## 作用：任务追踪聚合查询（`task.view`，阶段 4.6 Phase A / C3 Phase B）。只读地把剧情
+## 当前目标、内容 Quest 实例、主线委托、已接普通委托聚合成统一的 Task 列表，并把委托
+## 拆成「备货 / 接客 / 前往 / 抵达交付」步骤、把 Quest 拆成当前 stage 的 objective 步骤，
+## 供 HUD 任务条与委托页任务面板显示。
 ##
-## - 关键依赖：`StoryViewQuery`（仅取 objective 字段）、`GameState.contracts()`、
+## - 关键依赖：`StoryViewQuery`（仅取 objective 字段）、`QuestOps`（只读实例）、
+##   `QuestService.instance_view()`、`GameState.contracts()`、
 ##   `ShipOps.cargo_amount` / `ShipOps.passenger_capacity`、`MapOps`
 ##
 ## ## 契约与约束
-## - 只读：不写状态、不发事件；任务与步骤全部从当前状态派生。
-## - 只聚合「剧情目标 + 已接委托 + 待接主线」；普通可接委托池不进入任务列表。
+## - 只读：不写状态、不发事件、不创建 `data.quests` 块；任务与步骤全部从当前状态派生。
+## - 只聚合「剧情目标 + 已接委托 + 待接主线 + active content Quest」；普通可接委托池与
+##   `hidden` Quest 不进入任务列表。
+## - **contract 来源的 Quest 实例不重复渲染**：委托任务仍由 `data.contracts` 推导，Quest
+##   只贡献 content 来源任务，避免同一委托出现两条任务。
 ## - 目标名 / 货物名只输出内容 key（`*_name_key`），框架不写死内容 ID。
 ## - 不输出 `player_sourced` 等内部 payload 字段；步骤只暴露 UI 需要的
 ##   `kind / done / progress / target / 名称 key`。
-## - 排序：剧情 300 > 主线 200 > 待接主线 150 > 普通委托 100；同优先级按 id。
+## - 排序：剧情 300 > Quest 250 > 主线 200 > 待接主线 150 > 普通委托 100；同优先级先比
+##   Quest 的 `tracking.priority`（降序），再按 id。
 ## @end-static-doc
 
 const KIND_STORY := "story"
+const KIND_QUEST := "quest"
 const KIND_MAIN := "main"
 const KIND_MAIN_OFFER := "main_offer"
 const KIND_CONTRACT := "contract"
@@ -39,6 +46,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var story_task := _story_task(context)
 	if not story_task.is_empty():
 		tasks.append(story_task)
+	tasks.append_array(_quest_tasks(state, hub))
 	var contracts: Dictionary = state.contracts()
 	var main_contract: Variant = contracts.get("main", null)
 	if main_contract is Dictionary:
@@ -56,6 +64,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	tasks.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a.get("priority", 0)) != int(b.get("priority", 0)):
 			return int(a.get("priority", 0)) > int(b.get("priority", 0))
+		if int(a.get("tracking_priority", 0)) != int(b.get("tracking_priority", 0)):
+			return int(a.get("tracking_priority", 0)) > int(b.get("tracking_priority", 0))
 		return String(a.get("id", "")) < String(b.get("id", ""))
 	)
 	return Result.ok({
@@ -113,6 +123,41 @@ static func _story_task(context) -> Dictionary:
 			"text_key": String(objective_data.get("text_key", "")),
 		},
 	}
+
+
+## Active content Quest instances as Task rows (contract-source instances are skipped:
+## their委托任务 is already derived from `data.contracts`).
+static func _quest_tasks(state: GameState, hub: RegistryHub) -> Array:
+	var result: Array = []
+	for raw_instance in QuestOps.instances(state):
+		if not (raw_instance is Dictionary):
+			continue
+		var instance: Dictionary = raw_instance
+		if not QuestOps.is_active_content(instance):
+			continue
+		var view := QuestService.instance_view(state, hub, instance)
+		if bool(view.get("hidden", false)):
+			continue
+		var current_step_view: Variant = view.get("current_step", null)
+		result.append({
+			"id": "quest:%s" % String(view.get("instance_id", "")),
+			"kind": KIND_QUEST,
+			"category_key": String(view.get("category_key", QuestService.TASK_CATEGORY_KEY)),
+			"title_key": String(view.get("title_key", "")),
+			"destination_id": "",
+			"destination_name_key": "",
+			"deadline": 0.0,
+			"remaining_hours": -1.0,
+			"priority": int(view.get("priority", QuestService.TASK_PRIORITY)),
+			"tracking_priority": int(view.get("tracking_priority", 0)),
+			"quest_id": String(view.get("quest_id", "")),
+			"stage_index": int(view.get("stage_index", 0)),
+			"stage_count": int(view.get("stage_count", 0)),
+			"steps": Array(view.get("steps", [])).duplicate(true),
+			"current_step_index": int(view.get("current_step_index", -1)),
+			"current_step": (current_step_view as Dictionary).duplicate(true) if current_step_view is Dictionary else null,
+		})
+	return result
 
 
 ## 待接主线的任务只有一步「接取主线委托」。

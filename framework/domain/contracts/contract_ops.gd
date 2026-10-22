@@ -200,6 +200,8 @@ static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, a
 		)
 	instance["status"] = "completed"
 	instance["completed_at"] = arrival_time
+	# C3：委托完成同步标记它生成的 Quest 追踪实例（Quest 不复制委托 payload）。
+	QuestService.complete_contract_by_instance(state, String(instance.get("instance_id", "")), arrival_time)
 	state.record_income(payout)
 	var template_id := String(instance.get("template_id", ""))
 	var completed: Array = state.contracts().get("completed", [])
@@ -322,6 +324,8 @@ static func accept_offer(state: GameState, hub: RegistryHub, instance_id: String
 			return attach_result
 		contracts["main"] = main_offer
 		contracts["main_offer"] = null
+		# C3：接取委托即生成 Quest 追踪实例（只引用 contract 实例，不复制 payload）。
+		QuestService.track_contract(state, main_offer)
 		return Result.ok({"contract": main_offer, "slot": "main"})
 	for index in range(contracts.get("offers", []).size()):
 		var offer: Dictionary = contracts["offers"][index]
@@ -335,6 +339,7 @@ static func accept_offer(state: GameState, hub: RegistryHub, instance_id: String
 			return attach_result
 		contracts["offers"].remove_at(index)
 		contracts["active"].append(offer)
+		QuestService.track_contract(state, offer)
 		return Result.ok({"contract": offer, "slot": "active"})
 	return Result.fail("contract_not_found", "ui.error.contract_not_found", {"instance_id": instance_id})
 

@@ -29,6 +29,12 @@ func test_main_chain_offer_and_accept() -> void:
 	assert_eq(int(context.state.contracts()["main"].get("sequence", 0)), 2, "main slot now holds sequence 2")
 	assert_eq(context.state.contracts().get("main_offer", null), null, "main offer is cleared after acceptance")
 	assert_true(ShipOps.cargo_amount(context.state.ship(), "core:item/contract_freight", true) > 0, "contract cargo is loaded")
+	# C3：接取委托即生成 Quest 追踪实例；上一段主线的实例在完成时已标记 completed。
+	var tracking := QuestOps.find_by_contract(context.state, String(offer["instance_id"]))
+	assert_false(tracking.is_empty(), "accepting a contract creates its quest tracking instance")
+	assert_eq(String(tracking.get("status", "")), QuestOps.STATUS_ACTIVE, "the new tracking instance is active")
+	var first_contracts := Array(context.state.contracts().get("completed", []))
+	assert_contains(first_contracts, "core:contract/main_01", "the first main contract completed")
 
 
 func test_contract_cargo_cannot_be_sold() -> void:
