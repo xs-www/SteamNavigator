@@ -19,6 +19,7 @@
 | `godot/capture_port_stage.gd` | PortStage 真实渲染截图（窗口模式 1440×900）：加载 `port_stage_preview.tscn`，依次抓 `preview`（harbor/stage）、`sparse`、`market` 站位、`supply` 站位与 `harbor` 的 panel 构图共 5 张，输出到 `docs/design/screenshots/port_stage/`。 | [查看](./godot/capture_port_stage.gd.md) |
 | `godot/capture_port_stage_res.gd` | 铁港建筑验收的 PortStage 实机截图（分辨率参数化）：加载 `port_stage_preview.tscn`，把窗口设到命令行给定尺寸后抓一张 PNG，并顺带打印内容 GLB 的材质/贴图自证行；第三个参数可切换 LOD0/LOD1 标签与 tri 期望，用于 LOD1 临时入舞台的 960×540 可读性证据。 | [查看](./godot/capture_port_stage_res.gd.md) |
 | `godot/capture_sea_chart.gd` | 海图系统（阶段 2）的真实渲染截图工具，窗口 1440×900 挂载 | [查看](./godot/capture_sea_chart.gd.md) |
+| `godot/capture_ship_assembly.gd` | `ShipVisualAssembler` 的实机截图工具（窗口化 1440×900）：用真实 Core 内容解析 4 艘船的视觉装配计划，在真实 `ShipyardStage` / `PortStage` 场景里逐张抓图（船厂 4 艘 + 装配近景 + 港口停泊 + 航行离港 + 航行入港），每张都自检 hull / rig / 武器装配数量后才写盘。 | [查看](./godot/capture_ship_assembly.gd.md) |
 | `godot/capture_story_act0.gd` | 阶段 4.5.2「开局幕」真实渲染截图工具（窗口模式）。走完整教学首段： | [查看](./godot/capture_story_act0.gd.md) |
 | `godot/capture_story_act1.gd` | 阶段 4.5.3「市场并市 + 第二主线」真实渲染截图工具（窗口模式）。走完教学首段， | [查看](./godot/capture_story_act1.gd.md) |
 | `godot/capture_story_act2.gd` | 阶段 4.5.4「酒馆 / 线索 / 保底探索」真实渲染截图工具（窗口模式）。走完教学 | [查看](./godot/capture_story_act2.gd.md) |

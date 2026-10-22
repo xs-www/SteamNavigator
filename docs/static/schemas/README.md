@@ -13,7 +13,7 @@
 | `contract.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |
 | `event.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |
 | `good.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |
-| `hull.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |
+| `hull.schema.json` | hull 内容类型（`schemas/hull.schema.json`）的 1.0 JSON Schema 契约：船体定义 = `common.schema.json#/$defs/module_common` + 船体字段（速度 / 载重 / 耐久 / 槽位 / size_tag），2026-10-22 新增 `$defs/rig_plan` 运行时帆索装配计划。 | [查看](./hull.schema.json.md) |
 | `manifest.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |
 | `map_profile.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |
 | `material.schema.json` | JSON Schema 文件（Manifest/common/15 类内容）。 | 本页 |

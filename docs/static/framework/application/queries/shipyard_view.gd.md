@@ -17,6 +17,7 @@
 - `ship.modules[]` 每行含 `effect`：模块 `data` 的深拷贝（模块缺失时 `{}`），供船厂页渲染效果行与槽位卡；can_uninstall/uninstall_blockers/weight/tier 仍由本查询给出。
 - `ship.modules[]` 同时给出模块实例的 `slot/index/condition/disabled`；`ship.worst_module_condition`、`ship.disabled_modules`、`ship.module_damage_points` 供界面显示与维修预览。
 - `ship.hull_model_key` 取船体定义的 `information.model`，`ship.hull_model_path` 通过 `context.assets` 解析成物理路径（松散模组或挂载 zip 内均可），供 3D 船厂舞台加载内容模组的原始 GLB。
+- 切片 5：`ship.visual` = `ShipVisualPlan.resolve(hub, context.assets, ship)`（hull / `rig_plan` / `weapon_loadout` 路径），ShipyardStage 据此运行 `ShipVisualAssembler`；`_empty_view()` 也返回 `ShipVisualPlan.empty()`，UI 无需判空。
 - `candidates[].blockers` 给出全部失败码；`can_install` 为 false 时 UI 禁用按钮。
 - 已安装模块标记 installed；will_replace 返回会被移入当前港仓库的旧模块 ID（空串=无替换）。
 - `unlock_template_id` 给出合同解锁来源（用于 UI 文案），实际锁定判断在 ShipOps.locked_by_contract。

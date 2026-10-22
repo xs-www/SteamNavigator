@@ -2,6 +2,7 @@
 
 > 状态：武器侧 v2 已执行（2026-10-22）；船体侧安装点 M0-3 已执行（4 艘可玩船 14 个 socket，见 §8）；
 > 炮门 socket + 穿壳炮 casemate gun 已执行（铁甲舰 12 个炮门，见 §9）
+> 运行时装配已接入 `ShipVisualAssembler`（2026-10-22，见 §10 与 [SHIP_VISUAL_ASSEMBLY.md](SHIP_VISUAL_ASSEMBLY.md)）
 > 适用：舰载武器批次 1–2（8 件）、model kit 的武器部件（`SN_Weapon_Cannon/GunCarriage/Turret/Pedestal`）、船体 / 甲板安装点
 > 旧版（按资产前缀命名 Pivot）见 git 历史；本文件替代 v1 作为唯一接口真源。
 
@@ -236,7 +237,7 @@ Hull / Compartment                船体 / 舱段
 
 ### 8.5 边界
 
-- 运行时 `ShipVisualAssembler` 尚未接入，本表只交付 socket 契约与资产；装配/战斗层按 §5 fallback 取名即可；
+- 运行时装配已接入（2026-10-22，切片 `ship-visual-assembly`）：见 §10；装配/战斗层按 §5 fallback 取名即可；
 - 小船的甲板本身拥挤（PS/SF 的 `clearance_r` 只有 1.0–1.2 m），这是资产真实净空，不是测量误差；
   需要更宽炮位的武器请走模块化甲板批次（`rig_kit` 已于 M0-4 交付桅帆索部件与 `SN_Socket_Mast/Yard/Sail_*`，
   见 [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)），而不是抬高这里的声明值；
@@ -360,3 +361,29 @@ Root extras：`gun_port_sockets`（按 `socket_index` 顺序的名字数组）�
 - `SN_Ironclad_LOD1.glb` 仍是拆炮前的旧件（LOD 切换未接线），重建 LOD1 列为后续项；
 - 内容侧镜像（`hull.schema.json` 的 `gun_port_sockets`）本轮**未做**，运行时仍以 GLB 节点 extras 为准。
 
+## 10. 运行时装配（`ShipVisualAssembler`，2026-10-22）
+
+**状态：已实现。** `framework/ui/stages/ship_weapon_assembly.gd`（`ShipWeaponAssembly`）+
+`ship_weapon_mount.gd`（`ShipWeaponMount`）是 §5 fallback 链的代码实现，由
+`ShipVisualAssembler` 在整船装配时调用：
+
+```text
+hull GLB → ShipWeaponAssembly.find_sockets()        # SN_Socket_Weapon_*，按 socket_index 排序
+weapon GLB → find_weapon_root() / weapon_info()     # Root extras（assembly_spec = weapon-assembly@2）
+         → rejection_reason()                       # class 硬门禁 / Modular 拒绝 / 缺 extras
+         → mount(socket, weapon)                    # SN_Mount 对齐 socket + mount_scale
+         → ShipWeaponMount                          # aim / recoil / muzzle / clearance_report
+```
+
+- **输入**：`ShipVisualPlan` 把 ViewModel 的 `ship.weapon_loadout`（`[{socket, asset}]` 或
+  `{socket: asset}`）解析成 `{socket, asset_path}`；资源键来自 Core manifest `model.weapon.*`，
+  由 `AssetService.find_key()` 解析，不写死资产路径。
+- **逐件尽力**：单件缺 socket / 缺 GLB / class 不匹配 / `Modular` 只跳过并记录
+  `weapons.skipped[{socket, reason}]`，不影响 rig 与其它武器；class 是唯一硬门禁。
+- **报告**：`weapons.mounted[{socket, asset, class, profile, fits}]` + `weapons.mounts`（`ShipWeaponMount`）。
+- **舞台**：船厂 / 港口 / 航行演出共用同一入口；船厂舞台不做合批，`ShipWeaponMount` 句柄保持有效；
+  港口舞台把整船烘进 `ShipBatches`，合批后句柄失效（战斗层接入时需要不合批旁路）。
+- **内容边界**：`weapons` content type 仍是 Schema 2.0 草案，`state.ship` 尚无已装武器，因此游戏内
+  loadout 当前为空；截图工具注入的预览 loadout 只作为装配证据。
+- 契约 §7 待决 5（`base_footprint` F1）在运行时按 §8.3 用底座网格实测规避，`clearance_report()`
+  不读 `base_footprint_*`。

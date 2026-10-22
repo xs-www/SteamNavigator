@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T00:23:51.602Z",
-  "commit": "912d424",
+  "generated_at": "2026-10-22T00:40:12.172Z",
+  "commit": "d530aa0",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 887,
-    "documented": 344,
-    "grouped": 543
+    "sources": 895,
+    "documented": 353,
+    "grouped": 542
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "b3627bb50bd1655e83d984304ed4634c308deba9bd16e713dbd9c828b52470fd",
+      "sha256": "41ede1cb6e398ba274886fe2114ef3c341681655982cb2697ada6e0c05aa9e32",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2577,7 +2577,7 @@
     },
     {
       "source": "dev_mods/core/content/hulls.json",
-      "sha256": "d3599fdc48bcfde402ef01bc05b402f3af3ae290d23a39ae24bfa68d91645a9b",
+      "sha256": "a5158cf257f9ba94d2c819ab1f63147af02d4b2f44315d17a426110ab66c4ed2",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2868,7 +2868,7 @@
     },
     {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "be6ffdaa824ea493d419a4bb6795fb5217cc6e8281b9b797a69f73c387d56ef3",
+      "sha256": "206cd332c76ba962f914f01946b28a14d608174c210ad48f8cf3c279a47c2dc9",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
@@ -2887,7 +2887,7 @@
     },
     {
       "source": "framework/application/queries/shipyard_view.gd",
-      "sha256": "bb2e607dc2067cd1353e3682431e7fe10ddb7f630c48a6b5b1c215058c1668f7",
+      "sha256": "653466a57ee2e9dfba2f527875ff35d1d1198c26b756bf412edef485dd508bb9",
       "doc": "docs/static/framework/application/queries/shipyard_view.gd.md",
       "status": "documented"
     },
@@ -3400,6 +3400,12 @@
       "status": "documented"
     },
     {
+      "source": "framework/services/ship_visual_plan.gd",
+      "sha256": "51a29f6840ac7c130d3554f901257e1716cd5246f2c6dc47f560995a76900768",
+      "doc": "docs/static/framework/services/ship_visual_plan.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/state/game_state.gd",
       "sha256": "92781d3adc07b6e345090f2a697e5732d8ed48aa3c8414873d864101ffeb1b65",
       "doc": "docs/static/framework/state/game_state.gd.md",
@@ -3639,6 +3645,18 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_ship_visual_assembler.gd",
+      "sha256": "8a068c8f8296ffb7fb5be9fde97dc108fdfd5a1eace7e99a083bf680f7add8a5",
+      "doc": "docs/static/framework/tests/cases/test_ship_visual_assembler.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/tests/cases/test_ship_weapon_assembly.gd",
+      "sha256": "7c8fa1725d2c50370478f9c5dd401c61491e9a42390e1c59fe1152aa8a545b6c",
+      "doc": "docs/static/framework/tests/cases/test_ship_weapon_assembly.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_ship_weapon_sockets.gd",
       "sha256": "4807c22db6b0d83a98f6fe7aa7a0929d2d0dd7406de1f1031f9f1f029afac876",
       "doc": "docs/static/framework/tests/README.md",
@@ -3758,7 +3776,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "26f861b1f9c539caba636b17dae3d286f1c9bf22dfbe8f8c5a283d92363ce39e",
+      "sha256": "41bde81cfb2692a3ac6b622e1982790b95c8280f3acbb0f5ae258782a982e652",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -4189,7 +4207,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "f6da9f8b1ab05e4f4b4b29fbd65f8abad9f8bcae77933251ae79f5a825b5ef1c",
+      "sha256": "2410e18bbe60187e235fd04af6f4d4fc7baea15af01d7c71c57a02bff7a37587",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -4221,7 +4239,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "4cab81dea9c4dcaeb76880ef387f69e4e4c29a3b543437018dc2b13ae07fc26d",
+      "sha256": "4f509fe1c3e926188907c6c26191c3fe3b58241a78ae19eb89c5509e51dc84cc",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -4233,8 +4251,32 @@
       "group": "docs/static/framework/ui/README.md"
     },
     {
+      "source": "framework/ui/stages/ship_rig_assembly.gd",
+      "sha256": "de9f5cc855cec32a407ebcccf47e31ecd02ec47c15aea83a7a2815069cf7b617",
+      "doc": "docs/static/framework/ui/stages/ship_rig_assembly.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/stages/ship_visual_assembler.gd",
+      "sha256": "b5b362f2bb8408bf5f6055ba34f9c5fc0133593232e3e35a7d0b74540cbb9ff3",
+      "doc": "docs/static/framework/ui/stages/ship_visual_assembler.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/stages/ship_weapon_assembly.gd",
+      "sha256": "0ba948b932396659be90e25cee78217d1371b8dce0d92e0945913a4c4d22afd0",
+      "doc": "docs/static/framework/ui/stages/ship_weapon_assembly.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/stages/ship_weapon_mount.gd",
+      "sha256": "dfd941c298c040391eb8e37456757b0981a375907d7792a969618596f45710cb",
+      "doc": "docs/static/framework/ui/stages/ship_weapon_mount.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/ui/stages/shipyard_stage.gd",
-      "sha256": "7cf401872bf956498f33db831aba22a6d1b442a57a6378611cd5672a9f92ae38",
+      "sha256": "2368d63ecf6edce43d3f1b82b2601d9354690b82bb302bd6d79e2b149d538f03",
       "doc": "docs/static/framework/ui/stages/shipyard_stage.gd.md",
       "status": "documented"
     },
@@ -4308,10 +4350,9 @@
     },
     {
       "source": "schemas/hull.schema.json",
-      "sha256": "28e4d32db7fe174746e9c85f94d5fc0182e0655d154e65cc106a477483344411",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
+      "sha256": "fc422ade2f94ca24a787049306de445ac5b42f669f39c30b338439e1dcd5d7f2",
+      "doc": "docs/static/schemas/hull.schema.json.md",
+      "status": "documented"
     },
     {
       "source": "schemas/manifest.schema.json",
@@ -4530,7 +4571,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "ac9358a50e30b1745624707ddbd7dfaa57a938e0967fd186ac6da282bd148f1f",
+      "sha256": "1a65e70fe566859caa7bc284c4737328f3f8c8b553dc48364e71794c0d8bb328",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -4612,6 +4653,12 @@
       "source": "tools/godot/capture_sea_chart.gd",
       "sha256": "43989a7904ab8c45389fbc787ce35ca9b86aeeab3a3f05b339d81f9740fdaf89",
       "doc": "docs/static/tools/godot/capture_sea_chart.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/capture_ship_assembly.gd",
+      "sha256": "a5ec2c9433ca50c0c13da5ae03d57fe66d78409585a985bfbd1b7c5d7ae6ccd5",
+      "doc": "docs/static/tools/godot/capture_ship_assembly.gd.md",
       "status": "documented"
     },
     {
@@ -5853,7 +5900,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "6d92c44de8b33be12323ac8513c9cd08d4f689b319c8974336217d119229221c",
+      "sha256": "89b58c2026666183ee329109574eb54f5251bcefb14d3f8fb55ac60aeefbfdb2",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
