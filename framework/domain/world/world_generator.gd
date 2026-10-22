@@ -20,7 +20,7 @@ extends RefCounted
 ## - 读取 profile，依次生成区域和陆地、放置港口、验证必需设施、构建连通图、计算
 ##   出航角，最后调 `_build_route_edges` 预计算航线表。
 ## ### `formal_profile(definition)`
-## - 把内容层世界 profile（`map_profiles` 定义）转成生成器 profile：五个区域
+## - 把内容层世界 profile 转成生成器 profile：五个区域
 ##   （起始沿岸 / 中部沿岸 ×2 / 远洋 / 外洋）、十一块陆地（1 大陆 + 5 大岛 + 3 小岛 +
 ##   2 环礁）、港口槽位按 `port_count_range` 取前 N 个，名称键来自 `port_name_keys`、
 ##   原型按 `archetypes` 轮转。它是 §12 验收项「15-20 港口合理分布在陆地海岸线上」
@@ -86,7 +86,7 @@ static func generate(profile: Dictionary, hub: RegistryHub, rng_service: RngServ
 	return {"ok": false, "reason": last_reason, "attempts": MAX_ATTEMPTS, "world_map": {}}
 
 
-## Turns one `map_profiles` definition into a generator profile. The content
+## Turns one content definition into a generator profile. The content
 ## definition stays the single source of truth for the port count / name keys /
 ## archetypes; this only lays those ports out on the formal landmass skeleton.
 static func formal_profile(definition: ContentDefinition) -> Dictionary:
@@ -284,7 +284,7 @@ static func _place_ports_on_coastlines(world: WorldMap, port_defs: Array, hub: R
 			if not port.tags.has(String(tag)):
 				port.tags.append(String(tag))
 
-		var archetype := hub.get_by_id(ContentTypes.PORT_ARCHETYPE, port.archetype_id)
+		var archetype := hub.get_by_id(ContentTypes.PORT_TEMPLATE, port.archetype_id)
 		if archetype != null:
 			port.description_key = archetype.description_key
 			port.source_mod = archetype.source_mod

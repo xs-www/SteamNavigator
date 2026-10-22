@@ -14,7 +14,7 @@ const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyar
 const SHIP_VIEW_SCRIPT := preload("res://framework/ui/components/sn_ship_view.gd")
 const SLOT_TARGET_SCRIPT := preload("res://framework/ui/components/sn_slot_target.gd")
 const PART_ROW_SCRIPT := preload("res://framework/ui/components/sn_part_row.gd")
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const MODE_EXTERIOR := 0
 const MODE_CUTAWAY := 1
 const SHIP_THUMB_SIZE := Vector2(210, 118)
@@ -36,7 +36,7 @@ func _mount(seed_value: int) -> Dictionary:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var started := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": seed_value,
 	})
 	assert_true(bool(started.get("ok", false)), "run.start succeeds in the refit fixture: %s" % str(started))

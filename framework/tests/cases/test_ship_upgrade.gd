@@ -9,7 +9,7 @@ const MEDIUM_UNLOCKS := ["core:hull/medium_standard", "core:module/medium_hold"]
 func test_cabin_and_cargo_upgrade() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 9090})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 9090})
 	var port := MapOps.port(context.state.world(), context.state.current_port_id())
 	assert_true(MapOps.has_facility(port, "shipyard"), "starting hub has a shipyard")
 	context.state.set_money(6000)
@@ -39,7 +39,7 @@ func test_cabin_and_cargo_upgrade() -> void:
 func test_small_hull_rejects_cabin() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 9191})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 9191})
 	context.state.set_money(6000)
 	var cabin := context.commands.execute(&"ship.install_module", {"module_id": "core:module/passenger_cabin"})
 	assert_false(bool(cabin["ok"]), "small hull has no cabin slot")

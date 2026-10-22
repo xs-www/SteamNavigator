@@ -17,7 +17,7 @@ extends TestCase
 ## @end-static-doc
 
 const SEED := 20260421
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const GUIDE_QUEST := "core:quest/first_voyage_guide"
 
 
@@ -35,7 +35,7 @@ func test_quests_block_is_lazy_and_survives_save() -> void:
 	assert_eq(int((fresh.data["quests"] as Dictionary).get("schema_version", 0)), 1, "quests block version is 1")
 	assert_eq(fresh.schema_version(), GameState.SCHEMA_VERSION, "adding quests never bumps state schema")
 
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": SEED})
 	assert_true(bool(started.get("ok", false)), "run starts: %s" % str(started))
 	# C3 auto_start: core's first-voyage guide is already active right after the run starts.
 	var auto_instance := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
@@ -55,7 +55,7 @@ func test_quests_block_is_lazy_and_survives_save() -> void:
 func test_old_state_without_quests_has_no_quest_tasks() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": SEED})
 	assert_true(bool(started.get("ok", false)), "run starts")
 	# Simulate an old save: drop the block entirely.
 	context.state.data.erase("quests")
@@ -208,7 +208,7 @@ func test_prerequisites_and_repeatable() -> void:
 		}],
 	})
 	context.registries = _hub_with(context.registries, [alpha, beta, flagged, repeating])
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": SEED})
 	assert_true(bool(started.get("ok", false)), "run starts on the synthetic hub: %s" % str(started))
 
 	var beta_result := context.commands.execute(&"quest.start", {"quest_id": "test:quest/beta"})
@@ -327,7 +327,7 @@ func test_one_observe_adds_a_shared_counter_once() -> void:
 		}],
 	})
 	context.registries = _hub_with(context.registries, [dedupe])
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": SEED})
 	assert_true(bool(started.get("ok", false)), "run starts on the synthetic hub: %s" % str(started))
 	var quest_start := context.commands.execute(&"quest.start", {"quest_id": "test:quest/dedupe"})
 	assert_true(bool(quest_start.get("ok", false)), "dedupe quest starts: %s" % str(quest_start))
@@ -512,7 +512,7 @@ func _start_run() -> AppContext:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var result := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": SEED,
 	})
 	assert_true(bool(result.get("ok", false)), "run.start should succeed: %s" % str(result))

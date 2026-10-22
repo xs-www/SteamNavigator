@@ -17,7 +17,7 @@ extends RefCounted
 ## - `map_configs.archetypes` 数量必须 ≥ 引用它的 `start_profiles.world_profile.port_count`；
 ##   找不到对应 world_profile 时跳过（缺失本身已由 start_profiles 检查报错）。
 ## - 既有检查与错误码保持不变；空的 v2 Core 内容基线不受影响。
-## - C1：5 类模块合并为 `modules` 后，`starting_builds` 的 boiler / cargo_modules /
+## - C1：5 类模块合并为 `modules` 后，`starting_scenarios` 的 boiler / cargo_modules /
 ##   navigation_module / safety_module / passenger_cabin 按 `data.v2_category`
 ##   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
 ##   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。
@@ -81,11 +81,10 @@ func validate(hub: RegistryHub) -> Dictionary:
 	warnings.clear()
 	_hub = hub
 	_check_modules()
-	_check_starting_builds()
+	_check_starting_scenarios()
 	_check_contracts()
 	_check_events()
-	_check_port_archetypes()
-	_check_map_profiles()
+	_check_port_templates()
 	_check_world_profiles()
 	_check_regions()
 	_check_sites()
@@ -155,8 +154,8 @@ func _check_module_category(definition: ContentDefinition) -> void:
 			)
 
 
-func _check_starting_builds() -> void:
-	for build in _hub.get_all(ContentTypes.STARTING_BUILD):
+func _check_starting_scenarios() -> void:
+	for build in _hub.get_all(ContentTypes.STARTING_SCENARIO):
 		var hull := _require(ContentTypes.HULL, String(build.data.get("hull", "")), build.id, "hull")
 		_require_module(String(build.data.get("boiler", "")), "boiler", build.id, "boiler")
 		var cargo_modules: Array = build.data.get("cargo_modules", [])
@@ -173,14 +172,14 @@ func _check_starting_builds() -> void:
 		if hull != null:
 			if cargo_modules.size() > int(hull.data.get("cargo_slots", 0)):
 				_error(
-					"starting_build_slots",
+					"starting_scenario_slots",
 					"%s has %d cargo modules but hull only allows %d" % [
 						build.id, cargo_modules.size(), int(hull.data.get("cargo_slots", 0))
 					],
 					build.id
 				)
 			if not String(build.data.get("passenger_cabin", "")).is_empty() and int(hull.data.get("cabin_slots", 0)) < 1:
-				_error("starting_build_cabin", "%s has a cabin but hull has no cabin slot" % build.id, build.id)
+				_error("starting_scenario_cabin", "%s has a cabin but hull has no cabin slot" % build.id, build.id)
 
 
 func _check_role(build: ContentDefinition, field: String, expected_kind: String) -> void:
@@ -236,7 +235,7 @@ func _check_contracts() -> void:
 		if minimum_edges > maximum_edges:
 			_error("contract_edges", "%s has min_route_edges > max_route_edges" % contract.id, contract.id)
 		for tag in constraints.get("required_port_tags", []):
-			if not _any_archetype_tag(String(tag)):
+			if not _any_port_template_tag(String(tag)):
 				_error("contract_port_tag_missing", "%s requires port tag '%s' but no archetype has it" % [contract.id, tag], contract.id)
 	for sequence in range(1, 6):
 		if not sequences.has(sequence):
@@ -342,7 +341,7 @@ func _check_condition_recursive(node: Dictionary, owner: String, state: Dictiona
 				_error("condition_contract_missing", "%s condition references unknown contract %s" % [owner, contract_id], owner)
 		"port_has_tag":
 			var tag := String(node.get("tag", ""))
-			if not _any_archetype_tag(tag):
+			if not _any_port_template_tag(tag):
 				_warn("condition_port_tag_unused", "%s condition uses port tag '%s' not present in any archetype" % [owner, tag], owner)
 
 
@@ -372,8 +371,8 @@ func _check_effect(effect: Variant, owner: String) -> void:
 				_error("effect_notice_key", "%s emit_notice is missing text_key" % owner, owner)
 
 
-func _check_port_archetypes() -> void:
-	for archetype in _hub.get_all(ContentTypes.PORT_ARCHETYPE):
+func _check_port_templates() -> void:
+	for archetype in _hub.get_all(ContentTypes.PORT_TEMPLATE):
 		var facilities: Array = archetype.data.get("facilities", [])
 		for required_facility in ["exchange", "contracts"]:
 			if not facilities.has(required_facility):
@@ -391,31 +390,6 @@ func _check_port_archetypes() -> void:
 		for tag in tag_facility_pairs.keys():
 			if archetype.has_tag(tag) and not facilities.has(tag_facility_pairs[tag]):
 				_warn("port_tag_facility", "%s has tag %s but no %s facility" % [archetype.id, tag, tag_facility_pairs[tag]], archetype.id)
-
-
-func _check_map_profiles() -> void:
-	for profile in _hub.get_all(ContentTypes.MAP_PROFILE):
-		var data: Dictionary = profile.data
-		var archetypes: Array = data.get("archetypes", [])
-		for archetype_id in archetypes:
-			if _hub.get_by_id(ContentTypes.PORT_ARCHETYPE, String(archetype_id)) == null:
-				_error("map_archetype_missing", "%s references missing archetype %s" % [profile.id, archetype_id], profile.id)
-		var port_count_range: Array = data.get("port_count_range", [4, 5])
-		var maximum_ports := int(port_count_range[1]) if port_count_range.size() > 1 else int(port_count_range[0])
-		if archetypes.size() < maximum_ports:
-			_error("map_archetype_count", "%s needs at least %d archetypes" % [profile.id, maximum_ports], profile.id)
-		var name_keys: Array = data.get("port_name_keys", [])
-		if name_keys.size() < maximum_ports:
-			_error("map_name_keys", "%s needs at least %d port name keys" % [profile.id, maximum_ports], profile.id)
-		for tag in data.get("required_facility_tags", []):
-			if not _any_archetype_tag(String(tag)):
-				_error("map_facility_missing", "%s requires port tag '%s' not present in any archetype" % [profile.id, tag], profile.id)
-		var default_build := String(data.get("default_starting_build", ""))
-		if not default_build.is_empty() and _hub.get_by_id(ContentTypes.STARTING_BUILD, default_build) == null:
-			_error("map_default_build", "%s references missing starting build %s" % [profile.id, default_build], profile.id)
-		var npc_range: Array = data.get("npc_count_range", [2, 3])
-		if int(npc_range[0]) < 2 or int(npc_range[1]) > 3:
-			_warn("map_npc_count", "%s NPC count range should stay within 2-3 for MVP" % profile.id, profile.id)
 
 
 func _check_world_profiles() -> void:
@@ -581,7 +555,7 @@ func _check_start_profiles() -> void:
 	for start_profile in _hub.get_all(ContentTypes.START_PROFILE):
 		var data: Dictionary = start_profile.data
 		_require(ContentTypes.WORLD_PROFILE, String(data.get("world_profile", "")), start_profile.id, "world_profile")
-		_require(ContentTypes.STARTING_BUILD, String(data.get("starting_build", "")), start_profile.id, "starting_build")
+		_require(ContentTypes.STARTING_SCENARIO, String(data.get("starting_scenario", "")), start_profile.id, "starting_scenario")
 		var map_config_id := String(data.get("map_config", ""))
 		if not map_config_id.is_empty():
 			# Soft reference: third-party mods may omit it (runtime falls back to the core map config);
@@ -601,10 +575,28 @@ func _check_map_configs() -> void:
 		var data: Dictionary = map_config.data
 		var archetypes: Array = data.get("archetypes", [])
 		for archetype_id in archetypes:
-			_require(ContentTypes.PORT_ARCHETYPE, String(archetype_id), map_config.id, "archetypes")
-		var default_build := String(data.get("default_starting_build", ""))
-		if not default_build.is_empty():
-			_require(ContentTypes.STARTING_BUILD, default_build, map_config.id, "default_starting_build")
+			_require(ContentTypes.PORT_TEMPLATE, String(archetype_id), map_config.id, "archetypes")
+		# C4: map_profiles retired; its name-key / facility / npc checks moved here.
+		var name_keys: Array = data.get("port_name_keys", [])
+		if name_keys.size() < archetypes.size():
+			_error(
+				"map_name_keys",
+				"%s declares %d port name keys for %d archetypes" % [map_config.id, name_keys.size(), archetypes.size()],
+				map_config.id
+			)
+		for tag in data.get("required_facility_tags", []):
+			if not _any_port_template_tag(String(tag)):
+				_error(
+					"map_facility_missing",
+					"%s requires port tag '%s' not present in any port template" % [map_config.id, tag],
+					map_config.id
+				)
+		var npc_range: Array = data.get("npc_count_range", [2, 3])
+		if npc_range.size() >= 2 and (int(npc_range[0]) < 2 or int(npc_range[1]) > 3):
+			_warn("map_npc_count", "%s NPC count range should stay within 2-3 for MVP" % map_config.id, map_config.id)
+		var default_starting_scenario := String(data.get("default_starting_scenario", ""))
+		if not default_starting_scenario.is_empty():
+			_require(ContentTypes.STARTING_SCENARIO, default_starting_scenario, map_config.id, "default_starting_scenario")
 		for start_profile in _hub.get_all(ContentTypes.START_PROFILE):
 			if String(start_profile.data.get("map_config", "")) != map_config.id:
 				continue
@@ -698,8 +690,8 @@ func _definition_exists(definition_id: String) -> bool:
 	return false
 
 
-func _any_archetype_tag(tag: String) -> bool:
-	for archetype in _hub.get_all(ContentTypes.PORT_ARCHETYPE):
+func _any_port_template_tag(tag: String) -> bool:
+	for archetype in _hub.get_all(ContentTypes.PORT_TEMPLATE):
 		if archetype.has_tag(tag):
 			return true
 	return false

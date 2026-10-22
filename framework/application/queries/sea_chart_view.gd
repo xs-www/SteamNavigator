@@ -101,7 +101,7 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		# Display keys so the chart/panel never render a raw content id.
 		var archetype_name_key := ""
 		var archetype_definition := hub.get_by_id(
-			ContentTypes.PORT_ARCHETYPE, port.archetype_id
+			ContentTypes.PORT_TEMPLATE, port.archetype_id
 		)
 		if archetype_definition != null:
 			archetype_name_key = archetype_definition.name_key

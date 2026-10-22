@@ -41,24 +41,24 @@ const TEST_PROFILE := {
 	# 18 ports: 6 on the home continent (dense starting coast), 3 around the
 	# mid-coast islands, 3 in the open ocean, 4 on the small islands, 2 atolls.
 	"ports": [
-		{"archetype_id": "port_archetype_1", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.10, "name_key": "port.iron_harbor", "is_start": true, "required_tags": ["port.shipyard"]},
-		{"archetype_id": "port_archetype_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.24, "name_key": "port.spice_harbor"},
-		{"archetype_id": "port_archetype_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.38, "name_key": "port.free_town"},
-		{"archetype_id": "port_archetype_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.52, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
-		{"archetype_id": "port_archetype_5", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.68, "name_key": "port.iron_port"},
-		{"archetype_id": "port_archetype_6", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.84, "name_key": "port.glass_port"},
-		{"archetype_id": "port_archetype_7", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.20, "name_key": "port.south_station"},
-		{"archetype_id": "port_archetype_8", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.55, "name_key": "port.north_outpost"},
-		{"archetype_id": "port_archetype_9", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.88, "name_key": "port.ice_wind"},
-		{"archetype_id": "port_archetype_10", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.25, "name_key": "port.coral_station"},
-		{"archetype_id": "port_archetype_11", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.72, "name_key": "port.fog_lighthouse"},
-		{"archetype_id": "port_archetype_12", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.40, "name_key": "port.south_wind_port"},
-		{"archetype_id": "port_archetype_13", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.18, "name_key": "port.glass_atoll_port"},
-		{"archetype_id": "port_archetype_14", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.50, "name_key": "port.mist_cove"},
-		{"archetype_id": "port_archetype_15", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.85, "name_key": "port.bone_harbor"},
-		{"archetype_id": "port_archetype_16", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.35, "name_key": "port.reef_haven"},
-		{"archetype_id": "port_archetype_17", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.50, "name_key": "port.atoll_haven"},
-		{"archetype_id": "port_archetype_18", "region_id": "ocean_1", "landmass_id": "moon_atoll", "coast_t": 0.50, "name_key": "port.moon_haven"},
+		{"archetype_id": "port_template_1", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.10, "name_key": "port.iron_harbor", "is_start": true, "required_tags": ["port.shipyard"]},
+		{"archetype_id": "port_template_2", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.24, "name_key": "port.spice_harbor"},
+		{"archetype_id": "port_template_3", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.38, "name_key": "port.free_town"},
+		{"archetype_id": "port_template_4", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.52, "name_key": "port.fishing_village", "required_tags": ["port.intelligence"]},
+		{"archetype_id": "port_template_5", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.68, "name_key": "port.iron_port"},
+		{"archetype_id": "port_template_6", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.84, "name_key": "port.glass_port"},
+		{"archetype_id": "port_template_7", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.20, "name_key": "port.south_station"},
+		{"archetype_id": "port_template_8", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.55, "name_key": "port.north_outpost"},
+		{"archetype_id": "port_template_9", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.88, "name_key": "port.ice_wind"},
+		{"archetype_id": "port_template_10", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.25, "name_key": "port.coral_station"},
+		{"archetype_id": "port_template_11", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.72, "name_key": "port.fog_lighthouse"},
+		{"archetype_id": "port_template_12", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.40, "name_key": "port.south_wind_port"},
+		{"archetype_id": "port_template_13", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.18, "name_key": "port.glass_atoll_port"},
+		{"archetype_id": "port_template_14", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.50, "name_key": "port.mist_cove"},
+		{"archetype_id": "port_template_15", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.85, "name_key": "port.bone_harbor"},
+		{"archetype_id": "port_template_16", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.35, "name_key": "port.reef_haven"},
+		{"archetype_id": "port_template_17", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.50, "name_key": "port.atoll_haven"},
+		{"archetype_id": "port_template_18", "region_id": "ocean_1", "landmass_id": "moon_atoll", "coast_t": 0.50, "name_key": "port.moon_haven"},
 	],
 }
 
@@ -161,18 +161,18 @@ func test_formal_profile_matches_design_bounds() -> void:
 	var spec := {
 		"port_count_range": [WorldGenerator.MIN_PORTS, WorldGenerator.MAX_PORTS],
 		"archetypes": [
-			"core:port_archetype/iron_harbor",
-			"core:port_archetype/spice_port",
-			"core:port_archetype/free_town",
-			"core:port_archetype/fishing_village",
-			"core:port_archetype/glass_port",
+			"core:port_template/iron_harbor",
+			"core:port_template/spice_port",
+			"core:port_template/free_town",
+			"core:port_template/fishing_village",
+			"core:port_template/glass_port",
 		],
 		"port_name_keys": ["port_name.core.iron_harbor", "port_name.core.mist_cove"],
 		"required_facility_tags": ["port.shipyard", "port.intel"],
 		"required_facility_max_edges": 2,
 	}
 	var profile := ContentDefinition.new()
-	profile.content_type = ContentTypes.MAP_PROFILE
+	profile.content_type = ContentTypes.MAP_CONFIG
 	profile.id = "test:map_profile/nautical"
 	profile.name_key = "test.map_profile.nautical.name"
 	profile.data = spec.duplicate(true)

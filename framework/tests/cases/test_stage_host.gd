@@ -550,7 +550,7 @@ const TOWN_DENSITY_COUNTS := {"sparse": 28, "normal": 47, "busy": 63}
 ## Station-dressing props per density tier (3 adjacent stations x prefix size).
 const STATION_DENSITY_COUNTS := {"sparse": 15, "normal": 24, "busy": 33}
 const TOWN_MISSING_MODEL := "res://dev_mods/core/assets/models/props/SN_Does_Not_Exist.glb"
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 
 
 func test_port_stage_town_kit_mounts_full_streetscape() -> void:
@@ -719,7 +719,7 @@ func test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void:
 func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": 13013})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 13013})
 	assert_true(bool(started.get("ok", false)), "run.start succeeds in the port-view fixture: %s" % str(started))
 	var result := context.queries.execute(&"port.view")
 	assert_true(bool(result.get("ok", false)), "port.view answers after run.start: %s" % str(result))

@@ -127,7 +127,7 @@ var _settings_applied: bool = false
 var _active_screen: String = "overview"
 var _menu_screen: String = "main"
 var _memory_port_id: String = ""
-var _selected_build: String = ""
+var _selected_scenario: String = ""
 ## 4.5.2：新开局走剧情时隐藏选构筑，使用默认教学船。
 var _tutorial_mode := false
 ## 上一次确认出航时选择的锅炉策略（Shell 记忆；无记忆时按 `strategy.standard`
@@ -1144,24 +1144,22 @@ func _screen_new_game(app: Dictionary) -> void:
 	var vm := app.duplicate(true)
 	_tutorial_mode = _story_profile_available()
 	vm["tutorial_mode"] = _tutorial_mode
-	vm["selected_build"] = _selected_build
+	vm["selected_scenario"] = _selected_scenario
 	vm["seed_text"] = _seed_text
 	vm["warnings"] = app.get("report", {}).get("warnings", [])
 	_mount_menu_screen(NEW_GAME_SCREEN_SCENE, vm)
 	_build_status_banner()
 
 
-## 4.5.2：当前内容是否有启用的剧情（决定新开局隐藏构筑选择 / 传 tutorial）。
-## Phase B：v2 剧情随 `map_configs.story` 迁移（D13），所以 1.0 `map_profiles`
-## 与 v2 `map_configs` 都要检查；这是菜单期查询，没有 run state 可交给 ContentRefs。
+## 4.5.2：当前内容是否有启用的剧情（决定新开局隐藏场景选择 / 传 tutorial）。
+## C4：剧情随 `map_configs.story` 提供；菜单期没有 run state，直接遍历 map configs。
 func _story_profile_available() -> bool:
 	if _context == null:
 		return false
-	for content_type in [ContentTypes.MAP_PROFILE, ContentTypes.MAP_CONFIG]:
-		for profile in _context.registries.get_all(content_type):
-			var raw: Variant = profile.data.get("story", null)
-			if raw is Dictionary and bool((raw as Dictionary).get("enabled", false)):
-				return true
+	for profile in _context.registries.get_all(ContentTypes.MAP_CONFIG):
+		var raw: Variant = profile.data.get("story", null)
+		if raw is Dictionary and bool((raw as Dictionary).get("enabled", false)):
+			return true
 	return false
 
 
@@ -3015,7 +3013,7 @@ func _on_menu_action(action: StringName, params: Dictionary) -> void:
 		&"toggle_autosave":
 			_on_toggle_autosave()
 		&"start_run":
-			_selected_build = String(params.get("build_id", ""))
+			_selected_scenario = String(params.get("starting_scenario", ""))
 			_seed_text = String(params.get("seed_text", ""))
 			_on_new_run()
 
@@ -3104,11 +3102,9 @@ func _on_new_run() -> void:
 	_pending_chart_clue = ""
 	_sea_chart_return = "overview"
 	_status_message = ""
-	# 4.5：生产环境的每一局新开局都进入新手剧情（领域 `run.start` 默认
-	# tutorial=false，只有 Shell 的「开始新航行」显式开启剧情）；剧情局使用默认
-	# 教学船（新航程页已隐藏构筑选择），不传玩家选择的构筑。
-	var build_id := "" if _tutorial_mode else _selected_build
-	_run_command(&"run.start", {"build_id": build_id, "seed": seed, "tutorial": true})
+	# 教学局使用默认起始场景（新航程页已隐藏场景选择），不传玩家选择。
+	var scenario_id := "" if _tutorial_mode else _selected_scenario
+	_run_command(&"run.start", {"starting_scenario": scenario_id, "seed": seed, "tutorial": true})
 
 
 func _on_continue() -> void:

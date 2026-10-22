@@ -1185,11 +1185,11 @@ func test_sea_chart_view_exposes_clues_explore_and_buy_state() -> void:
 
 # ── Rules / save round-trip ──
 
-func test_rules_are_read_from_the_core_map_profile() -> void:
+func test_rules_are_read_from_the_core_map_config() -> void:
 	var context := _start_run(SEED)
 	var rules := ExplorationRules.read(context.state, context.registries)
 	assert_almost_eq(float(rules.get("rumor_clue_chance", -1.0)), 0.65, 0.0001,
-		"rumour chance comes from dev_mods/core/content/map_profiles.json")
+		"rumour chance comes from dev_mods/core/content/map_configs.json")
 	assert_eq(int(rules.get("intel_clue_cost", 0)), 40, "intel clue cost comes from Core JSON")
 	assert_eq(int(rules.get("max_active_clues", 0)), 4, "the clue cap comes from Core JSON")
 	assert_almost_eq(float(rules.get("search_zone_radius", 0.0)), 14.0, 0.0001, "zone radius from Core JSON")
@@ -1234,8 +1234,8 @@ func test_fog_radii_are_world_size_relative_and_content_driven() -> void:
 	var world := WorldOps.world_map(context.state)
 	assert_false(world.is_empty(), "the run generates the coordinate twin world")
 	var world_side := minf(world.bounds.size.x, world.bounds.size.y)
-	var profile := context.registries.get_by_id(ContentTypes.MAP_PROFILE, context.state.world().get("map_profile_id", ""))
-	assert_not_null(profile, "the run's map profile resolves")
+	var profile := context.registries.get_by_id(ContentTypes.MAP_CONFIG, context.state.world().get("map_config_id", ""))
+	assert_not_null(profile, "the run's map config resolves")
 	assert_almost_eq(float(profile.data.get("twin_world_size", 0.0)), world_side, 0.0001,
 		"the twin world size comes from Core content, not a framework constant")
 	assert_almost_eq(world_side, 160.0, 0.0001, "the core profile currently asks for a 160-unit twin world")
@@ -1707,7 +1707,7 @@ func test_clue_travel_sails_to_the_goods_lead_harbour() -> void:
 func _start_run(seed_value: int, extra: Dictionary = {}) -> AppContext:
 	var boot := bootstrap_core(extra)
 	var context: AppContext = boot["context"]
-	var result := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": seed_value})
+	var result := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": seed_value})
 	assert_true(bool(result.get("ok", false)), "run.start should succeed: %s" % str(result))
 	return context
 

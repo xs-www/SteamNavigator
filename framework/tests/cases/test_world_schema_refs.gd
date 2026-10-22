@@ -7,12 +7,12 @@ extends TestCase
 ##
 ## ## 契约与约束
 ## - 测试不假设 Core 已有 v2 内容（B4 才落盘）；所有 9 类定义都是合成 ID（`test:*`）。
-##   基线只借用已存在的 1.0 定义（contracts / events / starting_builds / port_archetypes 等）
+##   基线只借用已存在的定义（contracts / events / starting_scenarios / port_templates 等）
 ##   让 `validate()` 的既有检查保持干净，从而能对合成定义的 error / warning 做精确断言。
 ## - 硬引用缺失（`reference_missing`）：world_profiles.weather_profile、regions 的
 ##   weather_profile / factions[]、factions.trade_goods / rival_factions、discoveries.unlock_ids、
-##   start_profiles 的 world_profile / starting_build / starting_contract / starting_cargo[].item /
-##   map_config、map_configs 的 archetypes / default_starting_build。
+##   start_profiles 的 world_profile / starting_scenario / starting_contract / starting_cargo[].item /
+##   map_config、map_configs 的 archetypes / default_starting_scenario。
 ## - sites 的 ruin_archetype / encounter_table / loot_table、route_templates.encounter_table、
 ##   factions.contract_family 指向 planned 类型：只出 `ref_inactive_type` warning，不出 error。
 ## - factions.rival_factions 允许同类型引用，但指向自身报 `reference_self`。
@@ -45,11 +45,12 @@ func _new_hub() -> RegistryHub:
 	return hub
 
 
-func _define(hub: RegistryHub, content_type: StringName, definition_id: String, data: Dictionary) -> ContentDefinition:
+func _define(hub: RegistryHub, content_type: StringName, definition_id: String, data: Dictionary, tags: Array = []) -> ContentDefinition:
 	var raw := {
 		"id": definition_id,
 		"name_key": "test.%s.name" % definition_id.get_slice("/", 1),
 		"enabled": true,
+		"tags": tags,
 		"data": data,
 	}
 	var definition := ContentDefinition.from_raw(raw, content_type, TEST_MOD, TEST_FILE)
@@ -111,15 +112,15 @@ func _faction(hub: RegistryHub, definition_id: String = "test:faction/guild") ->
 	})
 
 
-func _port_archetype(hub: RegistryHub, definition_id: String) -> void:
-	_define(hub, ContentTypes.PORT_ARCHETYPE, definition_id, {
+func _port_template(hub: RegistryHub, definition_id: String) -> void:
+	_define(hub, ContentTypes.PORT_TEMPLATE, definition_id, {
 		"size": "small",
 		"facilities": ["exchange", "contracts"],
 		"market": [],
-	})
+	}, ["port.exchange"])
 
 
-func _starting_build(hub: RegistryHub, definition_id: String = "test:starting_build/standard") -> void:
+func _starting_scenario(hub: RegistryHub, definition_id: String = "test:starting_scenario/standard") -> void:
 	_define(hub, ContentTypes.HULL, "test:hull/small", {"cargo_slots": 1, "cabin_slots": 0})
 	_define(hub, ContentTypes.MODULE, "test:module/basic_boiler", {
 		"v2_category": "boiler", "speed_mul": 1.0, "coal_rate": 0.3, "water_rate": 0.2,
@@ -127,7 +128,7 @@ func _starting_build(hub: RegistryHub, definition_id: String = "test:starting_bu
 	_define(hub, ContentTypes.MODULE, "test:module/basic_hold", {
 		"v2_category": "cargo", "capacity": 10.0,
 	})
-	_define(hub, ContentTypes.STARTING_BUILD, definition_id, {
+	_define(hub, ContentTypes.STARTING_SCENARIO, definition_id, {
 		"hull": "test:hull/small",
 		"boiler": "test:module/basic_boiler",
 		"cargo_modules": ["test:module/basic_hold"],
@@ -334,7 +335,7 @@ func test_discoveries_unlock_ids_reference_checks() -> void:
 func test_start_profile_valid_without_optional_map_config() -> void:
 	var hub := _new_hub()
 	_define(hub, ContentTypes.ITEM, "test:item/supplies", {"base_price": 10})
-	_starting_build(hub)
+	_starting_scenario(hub)
 	_define(hub, ContentTypes.WORLD_PROFILE, "test:world/start", {
 		"region_count": 2,
 		"sites_per_region": 2,
@@ -343,7 +344,7 @@ func test_start_profile_valid_without_optional_map_config() -> void:
 	})
 	_define(hub, ContentTypes.START_PROFILE, "test:start_profile/third_party", {
 		"world_profile": "test:world/start",
-		"starting_build": "test:starting_build/standard",
+		"starting_scenario": "test:starting_scenario/standard",
 		"difficulty": "standard",
 		"starting_port_tags": ["port.exchange"],
 		"starting_cargo": [{"item": "test:item/supplies", "amount": 2}],
@@ -360,7 +361,7 @@ func test_start_profile_missing_hard_references_are_errors() -> void:
 	var hub := _new_hub()
 	_define(hub, ContentTypes.START_PROFILE, "test:start_profile/broken", {
 		"world_profile": "test:world/absent",
-		"starting_build": "test:starting_build/absent",
+		"starting_scenario": "test:starting_scenario/absent",
 		"difficulty": "easy",
 		"starting_port_tags": ["port.exchange"],
 		"starting_cargo": [{"item": "test:item/absent", "amount": 1}],
@@ -371,15 +372,15 @@ func test_start_profile_missing_hard_references_are_errors() -> void:
 	assert_eq(
 		_count_code(_errors_for(result, "test:start_profile/broken"), "reference_missing"),
 		5,
-		"world_profile / starting_build / starting_cargo item / starting_contract / map_config each report reference_missing"
+		"world_profile / starting_scenario / starting_cargo item / starting_contract / map_config each report reference_missing"
 	)
 
 
 func test_map_config_valid_with_matching_world_profile() -> void:
 	var hub := _new_hub()
-	_starting_build(hub)
+	_starting_scenario(hub)
 	for index in range(1, 5):
-		_port_archetype(hub, "test:port_archetype/port_%d" % index)
+		_port_template(hub, "test:port_template/port_%d" % index)
 	_define(hub, ContentTypes.WORLD_PROFILE, "test:world/four_ports", {
 		"region_count": 2,
 		"sites_per_region": 2,
@@ -388,19 +389,19 @@ func test_map_config_valid_with_matching_world_profile() -> void:
 	})
 	_define(hub, ContentTypes.MAP_CONFIG, "test:map_config/standard", {
 		"archetypes": [
-			"test:port_archetype/port_1",
-			"test:port_archetype/port_2",
-			"test:port_archetype/port_3",
-			"test:port_archetype/port_4",
+			"test:port_template/port_1",
+			"test:port_template/port_2",
+			"test:port_template/port_3",
+			"test:port_template/port_4",
 		],
 		"port_name_keys": ["test.port.one", "test.port.two", "test.port.three", "test.port.four"],
 		"required_facility_tags": ["port.exchange"],
-		"default_starting_build": "test:starting_build/standard",
+		"default_starting_scenario": "test:starting_scenario/standard",
 	})
 	_define(hub, ContentTypes.START_PROFILE, "test:start_profile/standard", {
 		"world_profile": "test:world/four_ports",
 		"map_config": "test:map_config/standard",
-		"starting_build": "test:starting_build/standard",
+		"starting_scenario": "test:starting_scenario/standard",
 		"difficulty": "standard",
 		"starting_port_tags": ["port.exchange"],
 	})
@@ -414,9 +415,9 @@ func test_map_config_valid_with_matching_world_profile() -> void:
 
 func test_map_config_archetype_count_below_world_port_count_is_error() -> void:
 	var hub := _new_hub()
-	_starting_build(hub)
+	_starting_scenario(hub)
 	for index in range(1, 5):
-		_port_archetype(hub, "test:port_archetype/port_%d" % index)
+		_port_template(hub, "test:port_template/port_%d" % index)
 	_define(hub, ContentTypes.WORLD_PROFILE, "test:world/six_ports", {
 		"region_count": 2,
 		"sites_per_region": 2,
@@ -425,10 +426,10 @@ func test_map_config_archetype_count_below_world_port_count_is_error() -> void:
 	})
 	_define(hub, ContentTypes.MAP_CONFIG, "test:map_config/too_few", {
 		"archetypes": [
-			"test:port_archetype/port_1",
-			"test:port_archetype/port_2",
-			"test:port_archetype/port_3",
-			"test:port_archetype/port_4",
+			"test:port_template/port_1",
+			"test:port_template/port_2",
+			"test:port_template/port_3",
+			"test:port_template/port_4",
 		],
 		"port_name_keys": ["test.port.one", "test.port.two", "test.port.three", "test.port.four"],
 		"required_facility_tags": ["port.exchange"],
@@ -436,7 +437,7 @@ func test_map_config_archetype_count_below_world_port_count_is_error() -> void:
 	_define(hub, ContentTypes.START_PROFILE, "test:start_profile/six_ports", {
 		"world_profile": "test:world/six_ports",
 		"map_config": "test:map_config/too_few",
-		"starting_build": "test:starting_build/standard",
+		"starting_scenario": "test:starting_scenario/standard",
 		"difficulty": "standard",
 		"starting_port_tags": ["port.exchange"],
 	})
@@ -449,13 +450,13 @@ func test_map_config_archetype_count_below_world_port_count_is_error() -> void:
 func test_map_config_count_check_skips_missing_world_profile() -> void:
 	var hub := _new_hub()
 	for index in range(1, 5):
-		_port_archetype(hub, "test:port_archetype/port_%d" % index)
+		_port_template(hub, "test:port_template/port_%d" % index)
 	_define(hub, ContentTypes.MAP_CONFIG, "test:map_config/orphan", {
 		"archetypes": [
-			"test:port_archetype/port_1",
-			"test:port_archetype/port_2",
-			"test:port_archetype/port_3",
-			"test:port_archetype/port_4",
+			"test:port_template/port_1",
+			"test:port_template/port_2",
+			"test:port_template/port_3",
+			"test:port_template/port_4",
 		],
 		"port_name_keys": ["test.port.one", "test.port.two", "test.port.three", "test.port.four"],
 		"required_facility_tags": ["port.exchange"],
@@ -463,7 +464,7 @@ func test_map_config_count_check_skips_missing_world_profile() -> void:
 	_define(hub, ContentTypes.START_PROFILE, "test:start_profile/orphan", {
 		"world_profile": "test:world/absent",
 		"map_config": "test:map_config/orphan",
-		"starting_build": "test:starting_build/absent",
+		"starting_scenario": "test:starting_scenario/absent",
 		"difficulty": "standard",
 		"starting_port_tags": ["port.exchange"],
 	})
@@ -475,17 +476,17 @@ func test_map_config_count_check_skips_missing_world_profile() -> void:
 	)
 
 
-func test_map_config_missing_archetype_and_default_build_are_errors() -> void:
+func test_map_config_missing_archetype_and_default_starting_scenario_are_errors() -> void:
 	var hub := _new_hub()
 	_define(hub, ContentTypes.MAP_CONFIG, "test:map_config/broken", {
-		"archetypes": ["test:port_archetype/absent"],
+		"archetypes": ["test:port_template/absent"],
 		"port_name_keys": ["test.port.one"],
 		"required_facility_tags": ["port.exchange"],
-		"default_starting_build": "test:starting_build/absent",
+		"default_starting_scenario": "test:starting_scenario/absent",
 	})
 	var result := _result(hub)
 	assert_eq(
 		_count_code(_errors_for(result, "test:map_config/broken"), "reference_missing"),
 		2,
-		"missing archetype and default_starting_build are two reference_missing errors"
+		"missing archetype and default_starting_scenario are two reference_missing errors"
 	)

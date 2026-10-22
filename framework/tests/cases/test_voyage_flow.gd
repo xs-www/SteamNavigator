@@ -16,7 +16,7 @@ const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const EVENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/event_screen.gd")
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const STANDARD_STRATEGY := "core:strategy/standard"
 const STEP_SECONDS := 0.1
 ## Upper bound on simulated seconds per phase; a stuck演出 fails here instead of
@@ -968,7 +968,7 @@ func _port_name(context: AppContext, port_id: String) -> String:
 func _mount(seed_value: int) -> Dictionary:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": seed_value})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": seed_value})
 	assert_true(bool(started.get("ok", false)), "run.start succeeds in the voyage fixture: %s" % str(started))
 	var scene: PackedScene = load(MAIN_SCENE)
 	assert_not_null(scene, "the shell scene loads")

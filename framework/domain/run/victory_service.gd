@@ -90,8 +90,8 @@ static func summary(hub: RegistryHub, state: GameState) -> Dictionary:
 	var income := int(stats.get("income", 0))
 	var expense := int(stats.get("expense", 0))
 	var run_data: Dictionary = state.run()
-	var starting_build := String(run_data.get("starting_build", ""))
-	var build := hub.get_by_id(ContentTypes.STARTING_BUILD, starting_build)
+	var starting_scenario := String(run_data.get("starting_scenario", ""))
+	var build := hub.get_by_id(ContentTypes.STARTING_SCENARIO, starting_scenario)
 	var hull_id := String(ship.get("hull_id", ""))
 	var hull := hub.get_by_id(ContentTypes.HULL, hull_id)
 	var modules: Array = []
@@ -104,8 +104,8 @@ static func summary(hub: RegistryHub, state: GameState) -> Dictionary:
 		})
 	return {
 		"seed": state.seed(),
-		"starting_build": starting_build,
-		"starting_build_name_key": build.name_key if build != null else starting_build,
+		"starting_scenario": starting_scenario,
+		"starting_scenario_name_key": build.name_key if build != null else starting_scenario,
 		"game_time": state.now(),
 		"voyages": voyages,
 		"on_time": on_time,

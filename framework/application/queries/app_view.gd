@@ -1,14 +1,16 @@
 class_name AppViewQuery
 extends RefCounted
+## App / menu ViewModel. C4: the starting picker lists `starting_scenarios`
+## (the retired `starting_scenarios`).
 
 static func execute(_params: Dictionary, context) -> Dictionary:
 	var report: StartupReport = context.report
-	var builds: Array = RunFactory.starting_build_summaries(context.registries)
+	var scenarios: Array = RunFactory.starting_scenario_summaries(context.registries)
 	var run_summary: Variant = null
 	if context.has_run():
 		run_summary = {
 			"seed": context.state.seed(),
-			"build_id": String(context.state.run().get("starting_build", "")),
+			"starting_scenario_id": String(context.state.run().get("starting_scenario", "")),
 			"game_time": context.state.now(),
 			"money": context.state.money(),
 			"current_port_id": context.state.current_port_id(),
@@ -25,7 +27,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		"content_counts": context.registries.counts(),
 		"content_total": context.content_total(),
 		"registry_frozen": context.registries.is_frozen(),
-		"builds": builds,
+		"scenarios": scenarios,
 		"has_run": context.has_run(),
 		"run_summary": run_summary,
 		"autosave_available": context.save.has_slot(SaveService.AUTOSAVE_SLOT),

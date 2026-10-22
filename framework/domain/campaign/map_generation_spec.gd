@@ -3,10 +3,10 @@ extends RefCounted
 ## @static-doc
 ## 作用：把 Content Schema 2.0 的 `world_profiles` / `map_configs` / `route_templates`
 ## 适配成 `MapGenerator.generate_spec()` 的输入字典，让 v2 战役复用 1.0 抽象海图生成器
-## 而无需给生成器塞一个假的 `map_profiles` 定义。
+## 而无需给生成器塞一个已退役的 map-profile 定义。
 ##
 ## ## 契约与约束
-## - 输出键与 1.0 `map_profile.data` 的生成字段同名：`port_count_range / archetypes /
+## - 输出键沿用历史生成字段：`port_count_range / archetypes /
 ##   port_name_keys / start_archetype_tags / required_facility_tags /
 ##   required_facility_max_edges / edge_count_range / distance_range / route_risk_range`，
 ##   因此 `MapGenerator` 的 `_build_graph` / `_try_generate` 逻辑与旧路径完全一致。

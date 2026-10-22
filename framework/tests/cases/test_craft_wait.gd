@@ -3,7 +3,7 @@ extends TestCase
 ## settlement while waiting in port and across a voyage, validation errors and
 ## old-save backfill. See docs/specs/ITERATION_1_MVP_LOOP.md §3.2, §4 and §9.
 
-const BUILD := "core:starting_build/steady"
+const BUILD := "core:starting_scenario/steady"
 const STRATEGY := "core:strategy/standard"
 const CONTRACT_FREIGHT := "core:item/contract_freight"
 const TIER1_MODULES := [
@@ -25,7 +25,7 @@ const CHART_ROOM := "core:module/chart_room"
 func _start(seed_value: int, money: int = 5000) -> AppContext:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": BUILD, "seed": seed_value})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": BUILD, "seed": seed_value})
 	assert_true(bool(started.get("ok", false)), "run starts (seed %d): %s" % [seed_value, str(started)])
 	context.state.set_money(money)
 	var contracts: Dictionary = context.state.contracts()

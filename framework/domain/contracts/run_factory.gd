@@ -1,41 +1,59 @@
 class_name RunFactory
 extends RefCounted
-## Creates a fresh run from a starting build and a map profile.
+## @static-doc
+## 作用：开局装配的共享 helper（C4 起不再持有 1.0 `map_profiles` 几何路径）。提供
+## `starting_scenarios` 读取与摘要、飞船构造（`create_ship`）、市场初始化
+## （`initialize_markets`）以及战役工厂复用的孪生世界布局 / 迷雾 / 主线委托 / 种子 helper。
 ##
-## The framework never names concrete `core:*` IDs. It picks the first
-## registered starting build / map profile / contract by type and data rules.
-##
-## After the abstract map, `create_run` also generates a coordinate-space twin
-## world (`state.data["world_map"]`) from `_coordinate_world_profile()`: one
-## landmass per port, port i on landmass i, so the twin keeps the abstract
-## map's port ids (`port_0..N`), archetypes and names. The nautical chart reads
-## it via `sea_chart.view`; twin generation failure only degrades the chart to
-## its "no data" hint and never fails the run. `_initialize_world_fog()` seeds
-## the persistent fog (coastal band + start-port lamp flower + ship vision).
-##
-## Stage 4.3 (U1): the twin world size comes from the map profile's
-## `twin_world_size` (Core content) instead of a hardcoded 160, and the
-## hand-authored 160-unit layout is scaled uniformly to it. Fog radii are
-## `min(bounds.w, bounds.h) × Core ratio` via `ExplorationRules.fog_radii()`,
-## so the fog-to-world proportion no longer depends on the world size.
+## ## 契约与约束
+## - **入口**：`run.start` 无 `start_profile` 时统一走
+##   `CampaignFactory.create_default_campaign()`（默认 start profile +
+##   `starting_scenarios` 选择）；本类不再提供 `create_run()`。
+## - 框架永不写死具体 `core:*` 内容 ID：场景 / 世界 / 地图调参全部按注册表类型解析。
+## - `create_ship(hub, scenario)` 的字段名保持扁平槽位（hull / boiler / cargo_modules /
+##   navigation_module / safety_module / passenger_cabin / engineer / navigator）。
+## - `_coordinate_world_profile()` 的 `twin_world_size` 来自 `map_configs.data`（C4 起
+##   `map_profiles` 退役），迷雾比例来自 `ExplorationRules.fog_radii()`。
+## - 本类不使用 RNG 之外的外部状态；`_random_seed()` 只供 CampaignFactory 在
+##   `seed == 0` 时使用。
+## @end-static-doc
 
 
-static func default_build(hub: RegistryHub) -> ContentDefinition:
-	var builds := hub.get_all(ContentTypes.STARTING_BUILD)
-	return builds[0] if not builds.is_empty() else null
+## All registered `starting_scenarios`, in registry order.
+static func available_scenarios(hub: RegistryHub) -> Array[ContentDefinition]:
+	return hub.get_all(ContentTypes.STARTING_SCENARIO)
 
 
-static func available_builds(hub: RegistryHub) -> Array[ContentDefinition]:
-	return hub.get_all(ContentTypes.STARTING_BUILD)
+## Lowest-id starting scenario (deterministic default), or null.
+static func default_starting_scenario(hub: RegistryHub) -> ContentDefinition:
+	var scenarios := available_scenarios(hub)
+	if scenarios.is_empty():
+		return null
+	scenarios.sort_custom(func(left: ContentDefinition, right: ContentDefinition) -> bool:
+		return left.id < right.id
+	)
+	return scenarios[0]
 
 
-static func default_map_profile(hub: RegistryHub) -> ContentDefinition:
-	var profiles := hub.get_all(ContentTypes.MAP_PROFILE)
-	return profiles[0] if not profiles.is_empty() else null
+## Menu-facing summaries for the starting-scenario picker.
+static func starting_scenario_summaries(hub: RegistryHub) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for scenario in available_scenarios(hub):
+		result.append({
+			"id": scenario.id,
+			"name_key": scenario.name_key,
+			"description_key": scenario.description_key,
+			"money": int(scenario.data.get("money", 0)),
+			"hull": String(scenario.data.get("hull", "")),
+			"boiler": String(scenario.data.get("boiler", "")),
+			"coal": float(scenario.data.get("coal", 0.0)),
+			"water": float(scenario.data.get("water", 0.0)),
+		})
+	return result
 
 
-static func create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionary:
-	var data: Dictionary = build.data
+static func create_ship(hub: RegistryHub, scenario: ContentDefinition) -> Dictionary:
+	var data: Dictionary = scenario.data
 	var hull_id := String(data.get("hull", ""))
 	var hull := hub.get_by_id(ContentTypes.HULL, hull_id)
 	var max_durability := float(hull.data.get("max_durability", 100.0)) if hull != null else 100.0
@@ -58,140 +76,6 @@ static func create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionar
 	return ship
 
 
-static func create_run(context, build_id: String = "", requested_seed: int = 0, tutorial: bool = false) -> Dictionary:
-	var hub: RegistryHub = context.registries
-	var build: ContentDefinition = null
-	if not build_id.is_empty():
-		build = hub.get_by_id(ContentTypes.STARTING_BUILD, build_id)
-	if build == null:
-		build = default_build(hub)
-	if build == null:
-		return Result.fail("no_starting_build", "ui.error.no_starting_build")
-	var profile := default_map_profile(hub)
-	if profile == null:
-		return Result.fail("no_map_profile", "ui.error.no_map_profile")
-	var seed_value := requested_seed if requested_seed != 0 else _random_seed()
-	var rng := RngService.new(seed_value)
-
-	var ship := create_ship(hub, build)
-	var validation := ShipOps.validate_configuration(hub, ship)
-	if not bool(validation["ok"]):
-		return Result.fail("invalid_starting_build", "ui.error.invalid_starting_build", {"errors": validation["errors"]})
-
-	var map_result := MapGenerator.generate(profile, hub, rng, ship)
-	if not bool(map_result["ok"]):
-		return Result.fail("map_generation_failed", "ui.error.map_generation_failed", {"reason": map_result.get("reason", "")})
-	var world: Dictionary = map_result["world"]
-
-	var build_data: Dictionary = build.data
-	var player := {
-		"money": int(build_data.get("money", 0)),
-		"reputation": int(build_data.get("reputation", 0)),
-		"unlocks": [],
-		"debt": null,
-	}
-	if build_data.get("loan", null) is Dictionary:
-		var loan: Dictionary = build_data["loan"]
-		var principal := float(loan.get("principal", 0.0))
-		player["debt"] = {
-			"principal": principal,
-			"interest_rate": float(loan.get("interest_rate", 0.1)),
-			"remaining": principal * (1.0 + float(loan.get("interest_rate", 0.1))),
-			"borrowed_at": 0.0,
-			"due_time": float(loan.get("term_hours", 96.0)),
-			"overdue": false,
-		}
-	var state := GameState.new()
-	state.data = {
-		"schema_version": GameState.SCHEMA_VERSION,
-		"campaign": {
-			"id": "campaign_%d" % seed_value,
-			"name": "Steam Navigator",
-			"created_at": Time.get_datetime_string_from_system(true),
-			"difficulty": "standard",
-			"status": "active",
-			"playtime_hours": 0.0,
-		},
-		"run": {
-			"seed": seed_value,
-			"game_time": 0.0,
-			"started_at": Time.get_datetime_string_from_system(true),
-			"starting_build": build.id,
-			"map_profile": profile.id,
-		},
-		"player": player,
-		"world": world,
-		"ship": ship,
-		"contracts": {},
-		"market": {},
-		"port_memory": {},
-		"npcs": [],
-		"intelligence": {},
-		"notices": [],
-		"stats": GameState.STATS_DEFAULTS.duplicate(true),
-		"victory": null,
-	}
-	state.ensure_campaign()
-	var setup: Dictionary = state.campaign_setup()
-	if (setup.get("content_versions", {}) as Dictionary).is_empty():
-		# D3: every new run snapshots the per-type content schema versions, so a
-		# later load can report drift without guessing. 1.0 runs snapshot 1.0.
-		setup["content_versions"] = ContentTypes.SCHEMA_VERSIONS.duplicate(true)
-	var world_progress := state.campaign_world()
-	world_progress["generated"] = true
-	var starting_port_id := state.current_port_id()
-	if not starting_port_id.is_empty():
-		WorldOps.set_current_port(state, starting_port_id)
-		WorldOps.discover_port_id(state, starting_port_id)
-		state.mark_port_visited(starting_port_id)
-	# Coordinate-space twin of the abstract map, keyed by the same port ids
-	# (port_0..N), so `sea_chart.view`, discovery progress and fog stay coherent
-	# with the map that is actually played. Generation failure only degrades the
-	# nautical chart to its "no data" hint — it never fails the run.
-	var world_map_result := WorldGenerator.generate(_coordinate_world_profile(world, profile), hub, rng, ship)
-	if bool(world_map_result.get("ok", false)):
-		state.data["world_map"] = world_map_result["world_map"]
-		_initialize_world_fog(state, starting_port_id, hub)
-	ContractOps.ensure_structure(state)
-	WarehouseOps.ensure_structure(state)
-	initialize_markets(state, hub, profile, rng)
-	MarketMemoryService.remember(state, state.current_port_id())
-	state.data["npcs"] = NpcTraderSimulator.create_initial(state, hub, rng, profile.data)
-
-	# 4.5.2：教程局不自动接旧主线 main_01，由 Core story 的
-	# `grant_tutorial_contract` 效果创建「燃料舱运煤」教学委托（内容化）。
-	if not tutorial:
-		var main_offer := _generate_main_offer(state, hub, 1, rng)
-		if not main_offer.is_empty():
-			state.data["contracts"]["main_offer"] = main_offer
-			var accepted := ContractOps.accept_offer(state, hub, String(main_offer.get("instance_id", "")))
-			if not bool(accepted["ok"]):
-				return Result.fail("main_contract_unsatisfiable", "ui.error.main_contract_unsatisfiable", {
-					"error_code": accepted.get("error_code", ""),
-					"build_id": build.id,
-				})
-		else:
-			return Result.fail("no_main_contract", "ui.error.no_main_contract", {"sequence": 1})
-
-	ContractOps.generate_normal_offers(state, hub, rng, "initial:%s" % state.current_port_id())
-	state.push_notice("ui.notice.run_started", {"build": build.name_key})
-	if tutorial:
-		# Stage 4.5: new runs start with the Core-authored story flow enabled (or
-		# completed when the profile has no story), before the first UI rebuild.
-		StoryService.begin(state, hub, rng)
-	# C3: `auto_start` content quests are picked up at the end of run initialisation
-	# (idempotent, content-driven; core ships the first-voyage guide here).
-	QuestService.auto_start_state(state, hub)
-	return Result.ok({
-		"state": state,
-		"rng": rng,
-		"build": build,
-		"profile": profile,
-		"seed": seed_value,
-		"tutorial": tutorial,
-	})
-
-
 ## Builds the coordinate-world profile from the generated abstract map: one
 ## compact landmass per port, port i placed on landmass i, so the twin world
 ## keeps the same port ids (`port_0..N`) and the same archetype/name per id.
@@ -199,10 +83,10 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0, 
 ## follows the abstract map until the voyage演出 unifies the two worlds.
 ##
 ## The layout below is authored in a 160-unit world. `twin_world_size` (Core
-## `map_profiles.data`) scales every centre/radius uniformly, so the same chart
+## `map_configs.data`) scales every centre/radius uniformly, so the same chart
 ## composition works at any world size (and the fog ratio stays meaningful).
-static func _coordinate_world_profile(mvp_world: Dictionary, profile: ContentDefinition) -> Dictionary:
-	var world_size := clampf(float(profile.data.get("twin_world_size", 160.0)), 64.0, 1024.0)
+static func _coordinate_world_profile(mvp_world: Dictionary, map_config: ContentDefinition) -> Dictionary:
+	var world_size := clampf(float(map_config.data.get("twin_world_size", 160.0)), 64.0, 1024.0)
 	var layout := [
 		{"id": "twin_continent", "region_id": "start_coast", "archetype": "continent", "cx": 44.0, "cy": 82.0, "rx": 19.0, "ry": 30.0},
 		{"id": "twin_island_east", "region_id": "start_coast", "archetype": "large_island", "cx": 108.0, "cy": 46.0, "rx": 15.0, "ry": 11.0},
@@ -263,29 +147,23 @@ static func _initialize_world_fog(state: GameState, start_port_id: String, hub: 
 	FogOps.save_fog_state(state, fog, coastal)
 
 
-## Initializes every port market from the generated world's port archetypes.
-## Shared by the 1.0 path (`create_run`, scenario = the `map_profiles` definition)
-## and the v2 campaign path (`CampaignFactory`, scenario = the `map_configs`
-## definition). Market pricing only depends on the port archetype + RNG, so both
-## paths produce the same markets for the same generation seed; `scenario` is
-## accepted now so a future per-scenario market tweak has one entry point.
+## Initializes every port market from the generated world's port templates
+## (`port_templates`, C4). Market pricing only depends on the template + RNG, so
+## the same generation seed yields the same markets. `scenario` (the resolved
+## `map_configs` definition) is accepted so a future per-scenario market tweak has
+## one entry point.
 static func initialize_markets(state: GameState, hub: RegistryHub, _scenario: ContentDefinition, rng: RngService) -> void:
 	var markets := {}
 	var ports: Dictionary = state.world().get("ports", {})
 	for raw_port_id in ports.keys():
 		var port_id := String(raw_port_id)
 		var port_data: Dictionary = ports[port_id]
-		var archetype := hub.get_by_id(ContentTypes.PORT_ARCHETYPE, String(port_data.get("archetype_id", "")))
-		if archetype == null:
+		var port_template := hub.get_by_id(ContentTypes.PORT_TEMPLATE, String(port_data.get("archetype_id", "")))
+		if port_template == null:
 			continue
 		var port_rng := rng.stream(RngService.STREAM_GOODS_GENERATION, port_id)
-		markets[port_id] = MarketOps.initialize_port_market(hub, archetype, port_rng)
+		markets[port_id] = MarketOps.initialize_port_market(hub, port_template, port_rng)
 	state.data["market"] = markets
-
-
-## Backwards-compatible alias for the pre-B3 private name.
-static func _initialize_markets(state: GameState, hub: RegistryHub, profile: ContentDefinition, rng: RngService) -> void:
-	initialize_markets(state, hub, profile, rng)
 
 
 static func _generate_main_offer(state: GameState, hub: RegistryHub, sequence: int, rng: RngService) -> Dictionary:
@@ -297,19 +175,3 @@ static func _generate_main_offer(state: GameState, hub: RegistryHub, sequence: i
 
 static func _random_seed() -> int:
 	return int(Time.get_unix_time_from_system()) ^ int(Time.get_ticks_usec())
-
-
-static func starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for build in available_builds(hub):
-		result.append({
-			"id": build.id,
-			"name_key": build.name_key,
-			"description_key": build.description_key,
-			"money": int(build.data.get("money", 0)),
-			"hull": String(build.data.get("hull", "")),
-			"boiler": String(build.data.get("boiler", "")),
-			"coal": float(build.data.get("coal", 0.0)),
-			"water": float(build.data.get("water", 0.0)),
-		})
-	return result

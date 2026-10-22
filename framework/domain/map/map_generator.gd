@@ -11,37 +11,25 @@ extends RefCounted
 const MAX_ATTEMPTS := 60
 
 
-static func generate(profile: ContentDefinition, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary:
-	var profile_data: Dictionary = profile.data
-	var rng := rng_service.stream(RngService.STREAM_MAP_GENERATION, "map")
-	for attempt in MAX_ATTEMPTS:
-		var result := _try_generate(profile.id, profile_data, hub, rng, ship, attempt)
-		if bool(result.get("ok", false)):
-			return result
-	return {"ok": false, "reason": "map generation failed after %d attempts" % MAX_ATTEMPTS, "world": {}}
-
-
-## Schema-2.0 entry point: identical constraints and world shape as `generate()`,
-## but the generator input is a plain spec dictionary instead of a `map_profiles`
-## definition. `CampaignFactory` builds it through `MapGenerationSpec`.
+## Schema-2.0 entry point: identical constraints and world shape as the retired
+## 1.0 `generate()`, but the generator input is a plain spec dictionary instead of a
+## `map_profiles` definition. `CampaignFactory` builds it through `MapGenerationSpec`.
 ##
-## Recognised spec keys mirror the 1.0 `map_profile.data` generation fields:
+## Recognised spec keys mirror the retired 1.0 generation fields:
 ## `port_count_range / archetypes / port_name_keys / start_archetype_tags /
 ## required_facility_tags / required_facility_max_edges / edge_count_range /
-## distance_range / route_risk_range`. Missing optional keys fall back exactly as
-## in the 1.0 path. The generated world keeps `map_profile_id: ""` so the v2
-## campaign can write its own ids; geometry randomness still uses
-## `STREAM_MAP_GENERATION / "map"` (same as `generate`).
+## distance_range / route_risk_range`. Missing optional keys keep the historical
+## defaults. Geometry randomness uses `STREAM_MAP_GENERATION / "map"`.
 static func generate_spec(spec: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary:
 	var rng := rng_service.stream(RngService.STREAM_MAP_GENERATION, "map")
 	for attempt in MAX_ATTEMPTS:
-		var result := _try_generate("", spec, hub, rng, ship, attempt)
+		var result := _try_generate(spec, hub, rng, ship, attempt)
 		if bool(result.get("ok", false)):
 			return result
 	return {"ok": false, "reason": "map generation failed after %d attempts" % MAX_ATTEMPTS, "world": {}}
 
 
-static func _try_generate(profile_id: String, profile_data: Dictionary, hub: RegistryHub, rng: RandomNumberGenerator, ship: Dictionary, attempt: int) -> Dictionary:
+static func _try_generate(profile_data: Dictionary, hub: RegistryHub, rng: RandomNumberGenerator, ship: Dictionary, attempt: int) -> Dictionary:
 	var port_range: Array = profile_data.get("port_count_range", [4, 5])
 	var port_count := rng.randi_range(int(port_range[0]), int(port_range[1]))
 	var archetype_ids: Array = profile_data.get("archetypes", [])
@@ -49,7 +37,7 @@ static func _try_generate(profile_id: String, profile_data: Dictionary, hub: Reg
 		return {"ok": false, "reason": "not enough archetypes"}
 	var archetypes: Array[ContentDefinition] = []
 	for archetype_id in archetype_ids:
-		var definition := hub.get_by_id(ContentTypes.PORT_ARCHETYPE, String(archetype_id))
+		var definition := hub.get_by_id(ContentTypes.PORT_TEMPLATE, String(archetype_id))
 		if definition != null:
 			archetypes.append(definition)
 	if archetypes.size() < port_count:
@@ -98,13 +86,13 @@ static func _try_generate(profile_id: String, profile_data: Dictionary, hub: Reg
 		if assigned.has(node):
 			continue
 		var picked := remaining[rng.randi_range(0, remaining.size() - 1)]
-		assigned[node] = hub.get_by_id(ContentTypes.PORT_ARCHETYPE, picked)
+		assigned[node] = hub.get_by_id(ContentTypes.PORT_TEMPLATE, picked)
 
 	var name_keys: Array = profile_data.get("port_name_keys", [])
 	var ports := {}
 	for node in range(port_count):
 		var archetype: ContentDefinition = assigned[node]
-		var name_key := String(name_keys[node]) if node < name_keys.size() else "%s.port.%d" % [profile_id, node]
+		var name_key := String(name_keys[node]) if node < name_keys.size() else "port.name.%d" % node
 		var angle := (TAU * float(node) / float(port_count)) + rng.randf_range(-0.25, 0.25)
 		var radius := 250.0 + rng.randf_range(-35.0, 35.0)
 		ports["port_%d" % node] = {
@@ -126,7 +114,6 @@ static func _try_generate(profile_id: String, profile_data: Dictionary, hub: Reg
 		}
 
 	var world := {
-		"map_profile_id": profile_id,
 		"ports": ports,
 		"routes": graph["routes"],
 		"discovered_ports": ["port_0"],

@@ -12,8 +12,8 @@ extends RefCounted
 ## ## 契约与约束
 ## - `save_schema`/`state_schema` 当前 2.0；1.x 只做兼容增量，保留 run/world/ship 字段。
 ## - D3：新档由 `prepare_for_save()` 从 `ContentTypes.SCHEMA_VERSIONS` 快照全部类型版本；
-##   旧档缺表时先推断 `starting_builds / map_profiles → 1.0`（v2 另记 `map_configs → 2.0`），
-##   再用当前注册表补齐缺失类型，并写一条 `content_versions inferred` warning。
+##   旧档缺表时用当前注册表补齐缺失类型（C4 起 `starting_scenarios` / `map_configs` 均为
+##   2.0，`map_profiles` 已退役，不再做 1.0 类型推断）。
 ## - 存档里已记录的版本与当前运行时不符时只写 `content version drift: <type> save=... current=...`
 ##   warning；存档仍可读，不重排世界、不重新随机。
 ## - 缺失的 campaign 分区由 `GameState.ensure_campaign_sections` 逐段回填并写入 warnings；
@@ -111,14 +111,13 @@ static func _ensure_campaign(state: Dictionary, payload: Dictionary, warnings: A
 ## The live state is not mutated: SaveService calls this on its clone.
 static func prepare_for_save(state: Dictionary) -> void:
 	var warnings: Array[String] = []
-	_ensure_content_versions(state, warnings, false)
+	_ensure_content_versions(state, warnings)
 
 
-## Fills `campaign.setup.content_versions` (D3): legacy saves get inferred
-## `starting_builds/map_profiles -> 1.0`, missing types are completed from the
-## current registry, and recorded versions that differ from the runtime produce
-## a drift warning without blocking the load or re-generating the world.
-static func _ensure_content_versions(state: Dictionary, warnings: Array[String], infer_legacy: bool = true) -> void:
+## Fills `campaign.setup.content_versions` (D3): missing types are completed from the
+## current registry, and recorded versions that differ from the runtime produce a
+## drift warning without blocking the load or re-generating the world.
+static func _ensure_content_versions(state: Dictionary, warnings: Array[String]) -> void:
 	var campaign_value: Variant = state.get("campaign", null)
 	if not (campaign_value is Dictionary):
 		return
@@ -129,27 +128,10 @@ static func _ensure_content_versions(state: Dictionary, warnings: Array[String],
 	var setup: Dictionary = setup_value
 	var versions_value: Variant = setup.get("content_versions", null)
 	var versions: Dictionary = versions_value.duplicate(true) if versions_value is Dictionary else {}
-	var inferred := false
-	if versions.is_empty() and infer_legacy:
-		var run_value: Variant = state.get("run", {})
-		var run: Dictionary = run_value if run_value is Dictionary else {}
-		var world_value: Variant = state.get("world", {})
-		var world: Dictionary = world_value if world_value is Dictionary else {}
-		if not String(run.get("starting_build", setup.get("starting_build_id", ""))).is_empty():
-			versions["starting_builds"] = "1.0"
-		var map_profile_id := String(world.get("map_profile_id", run.get("map_profile_id", run.get("map_profile", ""))))
-		if not map_profile_id.is_empty():
-			versions["map_profiles"] = "1.0"
-		var map_config_id := String(world.get("map_config_id", ""))
-		if not map_config_id.is_empty():
-			versions["map_configs"] = "2.0"
-		inferred = true
 	for type_key in ContentTypes.SCHEMA_VERSIONS.keys():
 		var key := String(type_key)
 		if not versions.has(key):
 			versions[key] = String(ContentTypes.SCHEMA_VERSIONS[type_key])
-	if inferred:
-		warnings.append("campaign.setup.content_versions inferred")
 	for key in versions.keys():
 		var content_type := StringName(String(key))
 		var current := String(ContentTypes.SCHEMA_VERSIONS.get(content_type, ""))

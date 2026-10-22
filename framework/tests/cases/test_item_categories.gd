@@ -70,7 +70,7 @@ func test_market_covers_every_item_kind() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var hub: RegistryHub = context.registries
-	var archetype := hub.get_by_id(ContentTypes.PORT_ARCHETYPE, "core:port_archetype/iron_harbor")
+	var archetype := hub.get_by_id(ContentTypes.PORT_TEMPLATE, "core:port_template/iron_harbor")
 	assert_not_null(archetype, "core port archetype resolves")
 	var rng := RngService.new(7).make_stream(RngService.STREAM_GOODS_GENERATION, "port_0")
 	var market := MarketOps.initialize_port_market(hub, archetype, rng)
@@ -95,7 +95,7 @@ func test_market_covers_every_item_kind() -> void:
 func test_item_views_expose_category_fields() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 6161})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6161})
 	assert_true(bool(started.get("ok", false)), "run starts: %s" % str(started))
 	var port := context.queries.execute(&"port.view")
 	assert_true(bool(port.get("ok", false)), "port.view answers: %s" % str(port))
@@ -141,7 +141,7 @@ func test_item_views_expose_category_fields() -> void:
 func test_goods_clues_skip_crafting_only_materials() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7171})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7171})
 	assert_true(bool(started.get("ok", false)), "run starts: %s" % str(started))
 	var world := WorldOps.world_map(context.state)
 	var current := context.state.current_port_id()

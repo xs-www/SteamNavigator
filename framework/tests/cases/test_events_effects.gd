@@ -13,7 +13,7 @@ func _eval_context(context: AppContext) -> Dictionary:
 func test_conditions() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 6060})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6060})
 	var eval := _eval_context(context)
 	assert_true(bool(ConditionEvaluator.evaluate({"op": "money_gte", "value": 0}, eval)["value"]), "money condition passes")
 	assert_false(bool(ConditionEvaluator.evaluate({"op": "money_gte", "value": 9999999}, eval)["value"]), "money condition fails")
@@ -28,7 +28,7 @@ func test_conditions() -> void:
 func test_effects_apply_in_order() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 6161})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6161})
 	var state := context.state
 	state.data["voyage"] = {
 		"origin": state.current_port_id(),
@@ -64,7 +64,7 @@ func test_effects_apply_in_order() -> void:
 func test_failed_effect_reports_error() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 6262})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6262})
 	var water_before := float(context.state.ship()["water"])
 	var execution := {
 		"state": context.state,
@@ -82,7 +82,7 @@ func test_failed_effect_reports_error() -> void:
 func test_event_content_and_sampling() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 6363})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6363})
 	var risk_event := context.registries.get_by_id(ContentTypes.EVENT, "core:event/boiler_overheat")
 	assert_not_null(risk_event, "risk event exists")
 	assert_eq(Array(risk_event.data["options"]).size(), 5, "risk event has five options")

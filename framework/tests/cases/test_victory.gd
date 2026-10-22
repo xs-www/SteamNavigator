@@ -2,15 +2,15 @@ extends TestCase
 ## Victory determination, summary completeness, and run statistics.
 ## Owned by loop-systems; see docs/specs/ITERATION_1_MVP_LOOP.md §3.4 / §3.8 / §5.3 / §8.
 
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const STANDARD_STRATEGY := "core:strategy/standard"
 const LARGE_HULL := "core:hull/large_efficient"
 const SMALL_HULL := "core:hull/small_efficient"
 
 const SUMMARY_KEYS := [
 	"seed",
-	"starting_build",
-	"starting_build_name_key",
+	"starting_scenario",
+	"starting_scenario_name_key",
 	"game_time",
 	"voyages",
 	"on_time",
@@ -32,7 +32,7 @@ const SUMMARY_KEYS := [
 
 
 func _start_run(context: AppContext, seed_value: int) -> void:
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": seed_value})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": seed_value})
 	assert_true(bool(started["ok"]), "run starts: %s" % str(started))
 
 
@@ -173,8 +173,8 @@ func test_victory_awards_once_with_complete_summary() -> void:
 	for key in SUMMARY_KEYS:
 		assert_true(summary.has(key), "summary includes %s" % key)
 	assert_eq(int(summary["seed"]), 9092, "summary carries the seed")
-	assert_eq(String(summary["starting_build"]), STEADY_BUILD, "summary carries the starting build id")
-	assert_true(not String(summary["starting_build_name_key"]).is_empty(), "summary carries the build name key")
+	assert_eq(String(summary["starting_scenario"]), STEADY_BUILD, "summary carries the starting build id")
+	assert_true(not String(summary["starting_scenario_name_key"]).is_empty(), "summary carries the build name key")
 	assert_almost_eq(float(summary["game_time"]), state.now(), 0.0001, "summary carries game time")
 	assert_eq(int(summary["voyages"]), 0, "no voyage has happened yet")
 	assert_almost_eq(float(summary["on_time_rate"]), 0.0, 0.0001, "on-time rate is zero without voyages")

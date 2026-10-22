@@ -42,7 +42,7 @@ func _valid_envelope() -> Dictionary:
 				"data": {
 					"world_profile": "core:world_profile/default",
 					"map_config": "core:map_config/standard",
-					"starting_build": "core:starting_build/steady",
+					"starting_scenario": "core:starting_scenario/steady",
 					"difficulty": "standard",
 					"starting_port_tags": ["industrial"],
 					"starting_money": 1000,
@@ -228,10 +228,10 @@ func _map_config_file(data: Dictionary) -> Dictionary:
 func _valid_map_config_data() -> Dictionary:
 	return {
 		"archetypes": [
-			"core:port_archetype/iron_harbor",
-			"core:port_archetype/spice_port",
-			"core:port_archetype/free_town",
-			"core:port_archetype/fishing_village",
+			"core:port_template/iron_harbor",
+			"core:port_template/spice_port",
+			"core:port_template/free_town",
+			"core:port_template/fishing_village",
 		],
 		"port_name_keys": [
 			"port_name.core.iron_harbor",
@@ -249,7 +249,7 @@ func _valid_map_config_data() -> Dictionary:
 		"intel_cost": 40,
 		"trade_margin": 0.9,
 		"player_trade_impact": 0.35,
-		"default_starting_build": "core:starting_build/steady",
+		"default_starting_scenario": "core:starting_scenario/steady",
 		"twin_world_size": 160,
 		"exploration": {
 			"rumor_clue_chance": 0.65,
@@ -392,7 +392,7 @@ func _valid_story_level_file() -> Dictionary:
 					},
 				},
 				"start": {
-					"starting_build": "core:starting_build/steady",
+					"starting_build": "core:starting_scenario/steady",
 					"port_id": "port_0",
 					"money": 200,
 					"ship_fuel": 4,

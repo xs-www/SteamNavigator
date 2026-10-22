@@ -4,7 +4,7 @@ extends TestCase
 func test_supply_view_and_purchases() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 9191})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 9191})
 	context.state.ship()["coal"] = 0.0
 	context.state.ship()["water"] = 0.0
 	var view := context.queries.execute(&"supply.view")
@@ -43,7 +43,7 @@ func test_supply_view_and_purchases() -> void:
 func test_supply_capacity_loss_tracks_the_other_tank() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 9191})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 9191})
 	context.state.ship()["coal"] = 0.0
 	context.state.ship()["water"] = 0.0
 	var before: Dictionary = context.queries.execute(&"supply.view")["data"]
@@ -116,7 +116,7 @@ func test_supply_capacity_loss_tracks_the_other_tank() -> void:
 func test_supply_bars_stay_flat_while_the_other_tank_is_loaded() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 9191})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 9191})
 	context.state.ship()["coal"] = 0.0
 	context.state.ship()["water"] = 5.0
 	var before: Dictionary = context.queries.execute(&"supply.view")["data"]

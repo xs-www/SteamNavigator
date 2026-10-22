@@ -14,7 +14,7 @@ extends TestCase
 ## - 合成 fixture 只用 `modules` 定义 + `v2_category`，不依赖旧 1.0 模块类型。
 ## @end-static-doc
 
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const STEADY_HULL := "core:hull/small_efficient"
 const SPYGLASS := "core:module/spyglass"
 const CHART_ROOM := "core:module/chart_room"
@@ -29,7 +29,7 @@ func _run_fixture(seed_value: int = 6401) -> Dictionary:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var started := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": seed_value,
 	})
 	assert_true(bool(started.get("ok", false)), "run.start succeeds for the module category fixture: %s" % str(started))

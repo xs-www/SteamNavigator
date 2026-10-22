@@ -11,7 +11,7 @@ extends TestCase
 ## @end-static-doc
 
 const SEED := 20260421
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 
 
 func test_task_view_without_a_run_is_empty() -> void:
@@ -177,7 +177,7 @@ func _start_run() -> AppContext:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var result := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": SEED,
 	})
 	assert_true(bool(result.get("ok", false)), "run.start should succeed: %s" % str(result))
@@ -188,7 +188,7 @@ func _start_tutorial() -> AppContext:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var result := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": SEED,
 		"tutorial": true,
 	})

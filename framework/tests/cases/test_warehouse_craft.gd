@@ -12,7 +12,7 @@ const LARGE_UNLOCKS := ["core:hull/large_efficient", "core:hull/large_performanc
 func _start(seed_value: int, money: int = 5000) -> AppContext:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": seed_value})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": seed_value})
 	assert_true(bool(started.get("ok", false)), "run starts (seed %d): %s" % [seed_value, str(started)])
 	context.state.set_money(money)
 	_clear_active_contract(context)

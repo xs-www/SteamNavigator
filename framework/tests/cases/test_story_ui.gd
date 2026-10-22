@@ -12,7 +12,7 @@ extends TestCase
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const NEW_GAME_SCENE := "res://framework/ui/screens/menu/new_game_screen.tscn"
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 
 
 func test_tutorial_shell_mounts_card_and_locks_features() -> void:
@@ -163,9 +163,9 @@ func test_new_game_screen_hides_build_picker_in_tutorial_mode() -> void:
 	assert_not_null(scene, "the new-game scene loads")
 	var screen: Control = scene.instantiate()
 	var vm := {
-		"builds": [{"id": "core:starting_build/steady", "name_key": "build.core.steady.name"}],
+		"scenarios": [{"id": "core:starting_scenario/steady", "name_key": "build.core.steady.name"}],
 		"tutorial_mode": true,
-		"selected_build": "",
+		"selected_scenario": "",
 		"seed_text": "",
 		"content_total": 1,
 		"registry_frozen": true,
@@ -197,7 +197,7 @@ func _mount(tutorial: bool) -> Dictionary:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var started := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": 20260421,
 		"tutorial": tutorial,
 	})

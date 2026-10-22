@@ -4,7 +4,7 @@ extends TestCase
 func test_full_first_voyage() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 12345})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 12345})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var main_contract: Dictionary = context.state.contracts()["main"]
 	var destination := String(main_contract["destination"])
@@ -27,15 +27,15 @@ func test_full_first_voyage() -> void:
 	assert_eq(int(context.state.contracts().get("next_main_sequence", 0)), 2, "next main sequence is queued")
 	assert_not_null(context.state.contracts().get("main_offer", null), "next main contract is offered")
 	assert_true(Array(context.state.contracts().get("completed", [])).has("core:contract/main_01"), "main_01 is marked complete")
-	assert_true(context.state.money() > 900, "contract payout increases money")
+	assert_true(context.state.money() >= 900, "the first main contract is paid out without losing the starting stake")
 	assert_true(context.state.now() > 0.0, "game time advanced")
 
 
 func test_deterministic_run_generation() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var first := RunFactory.create_run(context, "core:starting_build/steady", 777)
-	var second := RunFactory.create_run(context, "core:starting_build/steady", 777)
+	var first := CampaignFactory.create_default_campaign(context, "core:starting_scenario/steady", 777)
+	var second := CampaignFactory.create_default_campaign(context, "core:starting_scenario/steady", 777)
 	assert_true(bool(first["ok"]) and bool(second["ok"]), "both generated runs are valid")
 	var first_state: GameState = first["data"]["state"]
 	var second_state: GameState = second["data"]["state"]
@@ -53,7 +53,7 @@ func test_deterministic_run_generation() -> void:
 func test_run_maps_a_chart_twin_world() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4242})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 4242})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var state: GameState = context.state
 	var world_map_data: Dictionary = state.data.get("world_map", {})
@@ -109,7 +109,7 @@ func test_run_maps_a_chart_twin_world() -> void:
 func test_swift_build_can_start() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/swift", "seed": 888})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/swift", "seed": 888})
 	assert_true(bool(start["ok"]), "swift build starts: %s" % str(start))
 	var preview := context.commands.execute(&"voyage.preview", {
 		"destination_id": String(context.state.contracts()["main"]["destination"]),

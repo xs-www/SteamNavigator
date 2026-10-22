@@ -15,7 +15,7 @@ func _candidate(rows: Array, module_id: String) -> Dictionary:
 func test_shipyard_view_reports_slots_and_blockers() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 8181})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 8181})
 	var result := context.queries.execute(&"shipyard.view")
 	assert_true(bool(result["ok"]), "shipyard view succeeds")
 	var data: Dictionary = result["data"]
@@ -48,7 +48,7 @@ func test_shipyard_view_reports_slots_and_blockers() -> void:
 func test_intel_view_exposes_snapshot_rows() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 8282})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 8282})
 	var empty := context.queries.execute(&"intel.view")
 	assert_true(bool(empty["ok"]), "intel view succeeds")
 	assert_false(bool(empty["data"]["has_report"]), "no report before refreshing")
@@ -144,7 +144,7 @@ func _refresh_intel(context: AppContext) -> String:
 func test_intel_view_builds_port_comparison_matrix() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 8383})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 8383})
 	var intel_port := _refresh_intel(context)
 	assert_true(not intel_port.is_empty(), "map contains a tavern harbour")
 	var result := context.queries.execute(&"intel.view")
@@ -242,7 +242,7 @@ func test_intel_view_builds_port_comparison_matrix() -> void:
 func test_intel_view_matrix_without_report() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 8484})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 8484})
 	var result := context.queries.execute(&"intel.view")
 	assert_true(bool(result["ok"]), "intel view succeeds without a report")
 	var data: Dictionary = result["data"]

@@ -9,16 +9,17 @@ extends RefCounted
 ##
 ## ## 契约与约束
 ## - 要求 core 存在、required=true 且进入加载顺序。
-## - 1.0 基线：最低数量（3 船体、≥2 boiler 模块、≥1 cargo 模块、3 策略、4 港口原型、
-##   5 主线、2 事件、2 岗位、≥1 quest 等）、必需标签、主线 sequence 1–5、至少一套可解析为
-##   hull + boiler 模块 + cargo 模块的初始构筑。模块数量按统一 `modules` 类型的
-##   `data.v2_category` 切片计数；utility / cabin 不设硬下限。
+## - 1.0 基线：最低数量（3 船体、≥2 boiler 模块、≥1 cargo 模块、3 策略、4 港口原型
+##   （`port_templates`）、≥1 起始场景（`starting_scenarios`）、5 主线、2 事件、2 岗位、
+##   ≥1 quest 等）、必需标签、主线 sequence 1–5、至少一套可解析为
+##   hull + boiler 模块 + cargo 模块的初始场景。模块数量按统一 `modules` 类型的
+##   `data.v2_category` 切片计数；utility / cabin 不设硬下限。`map_profiles` 已退役，
+##   地图调参完整性由 `map_configs` 规则承担。
 ## - Phase B 规则用 presence gate：**Core 来源**的 `world_profiles` 至少 1 条才启用，保证 B4
 ##   之前 Core 没有 v2 内容时基线不红，第三方单独提供的 v2 世界内容也不会触发 Core 规则。
 ## - 硬性：world_profiles / map_configs / start_profiles / weather_profiles / regions 各 ≥1。
 ## - 建议（warning）：route_templates / factions / sites / discoveries 各 ≥1。
-## - 组合：至少一个 start_profile 解析 world_profile + map_config + starting_build；
-##   start_region_tags 命中至少一个 regions.region_tags；map_config.archetypes 数量 ≥
+## - 组合：至少一个 start_profile 解析 world_profile + map_config + starting_scenario；##   start_region_tags 命中至少一个 regions.region_tags；map_config.archetypes 数量 ≥
 ##   对应 world_profile.port_count。
 ## @end-static-doc
 
@@ -39,9 +40,8 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_module_category_count(hub, "boiler", 2, "boilers", errors)
 	_require_module_category_count(hub, "cargo", 1, "cargo modules", errors)
 	_require_count(hub, ContentTypes.STRATEGY, 3, "boiler strategies", errors)
-	_require_count(hub, ContentTypes.PORT_ARCHETYPE, 4, "port archetypes", errors)
-	_require_count(hub, ContentTypes.MAP_PROFILE, 1, "map profiles", errors)
-	_require_count(hub, ContentTypes.STARTING_BUILD, 1, "starting builds", errors)
+	_require_count(hub, ContentTypes.PORT_TEMPLATE, 4, "port templates", errors)
+	_require_count(hub, ContentTypes.STARTING_SCENARIO, 1, "starting scenarios", errors)
 	_require_count(hub, ContentTypes.CONTRACT, 5, "contracts", errors)
 	# C3: the abstraction quest layer ships at least one core quest (guide/system).
 	_require_count(hub, ContentTypes.QUEST, 1, "quests", errors)
@@ -69,7 +69,7 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 			errors.append({"code": "main_sequence_missing", "message": "main contract sequence %d is missing" % sequence})
 
 	var ships: Array = []
-	for build in hub.get_all(ContentTypes.STARTING_BUILD):
+	for build in hub.get_all(ContentTypes.STARTING_SCENARIO):
 		var hull := hub.get_by_id(ContentTypes.HULL, String(build.data.get("hull", "")))
 		var boiler_id := String(build.data.get("boiler", ""))
 		var boiler := ModuleOps.get_by_id(hub, boiler_id)
@@ -84,11 +84,11 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 			ships.append(build.id)
 		else:
 			warnings.append({
-				"code": "starting_build_incomplete",
-				"message": "starting build '%s' does not resolve to hull + boiler + cargo" % build.id,
+				"code": "starting_scenario_incomplete",
+				"message": "starting scenario '%s' does not resolve to hull + boiler + cargo" % build.id,
 			})
 	if ships.is_empty():
-		errors.append({"code": "no_runnable_starting_build", "message": "no starting build resolves to a runnable ship"})
+		errors.append({"code": "no_runnable_starting_scenario", "message": "no starting scenario resolves to a runnable ship"})
 
 	for content_type in [ContentTypes.HULL, ContentTypes.MODULE]:
 		for module in hub.get_all(content_type):
@@ -188,11 +188,11 @@ static func _check_phase_b_combinations(hub: RegistryHub, errors: Array[Dictiona
 				"message": "start profile '%s' declares no resolvable map config" % start_profile.id,
 			})
 			continue
-		var starting_build_id := String(start_profile.data.get("starting_build", ""))
-		if not hub.contains(ContentTypes.STARTING_BUILD, starting_build_id):
+		var starting_scenario_id := String(start_profile.data.get("starting_scenario", ""))
+		if not hub.contains(ContentTypes.STARTING_SCENARIO, starting_scenario_id):
 			errors.append({
-				"code": "start_profile_starting_build_missing",
-				"message": "start profile '%s' references missing starting build '%s'" % [start_profile.id, starting_build_id],
+				"code": "start_profile_starting_scenario_missing",
+				"message": "start profile '%s' references missing starting scenario '%s'" % [start_profile.id, starting_scenario_id],
 			})
 			continue
 		resolved.append({
@@ -203,7 +203,7 @@ static func _check_phase_b_combinations(hub: RegistryHub, errors: Array[Dictiona
 	if resolved.is_empty():
 		errors.append({
 			"code": "no_resolvable_start_profile",
-			"message": "no start profile resolves to world_profile + map_config + starting_build",
+			"message": "no start profile resolves to world_profile + map_config + starting_scenario",
 		})
 		return
 

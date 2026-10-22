@@ -46,10 +46,10 @@ func test_registry_accessible_after_freeze() -> void:
 	assert_true(context.assets.has(hull.asset_uri("model")), "Core hull model URI resolves")
 
 
-func test_starting_builds_are_runnable() -> void:
+func test_starting_scenarios_are_runnable() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	for build in RunFactory.available_builds(context.registries):
+	for build in RunFactory.available_scenarios(context.registries):
 		var ship := RunFactory.create_ship(context.registries, build)
 		var validation := ShipOps.validate_configuration(context.registries, ship)
 		assert_true(bool(validation["ok"]), "starting build %s is valid: %s" % [build.id, validation["errors"]])

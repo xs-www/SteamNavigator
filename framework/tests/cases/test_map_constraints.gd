@@ -6,7 +6,7 @@ func test_many_seeds_meet_map_constraints() -> void:
 	var context: AppContext = boot["context"]
 	var failures: Array[String] = []
 	for seed_value in range(1, 31):
-		var generated := RunFactory.create_run(context, "core:starting_build/steady", seed_value)
+		var generated := CampaignFactory.create_default_campaign(context, "core:starting_scenario/steady", seed_value)
 		if not bool(generated["ok"]):
 			failures.append("seed %d: run generation failed (%s)" % [seed_value, generated.get("error_code", "")])
 			continue

@@ -3,7 +3,7 @@ extends TestCase
 ## 作用：Phase B B3-A 战役世界装配测试（WORLD_SCHEMA_V2_RUNTIME §6.2/§6.3/§6.4）：用
 ## `bootstrap_core()` 的 1.0 基线 + 合成 2.0 定义驱动 `CampaignFactory.create_campaign`，
 ## 覆盖完整 state 形状、同 seed 确定性、不同 seed 差异、区域/地点/航路一致性、
-## map_config 缺省回退与 start_profile / world_profile / map_config / starting_build
+## map_config 缺省回退与 start_profile / world_profile / map_config / starting_scenario
 ## 缺失的结构化错误、教程分支 StoryService.begin、阵营声望与态度派生。
 ##
 ## ## 契约与约束
@@ -27,7 +27,7 @@ const START_PROFILE_MISSING_MAP_CONFIG := "test:start_profile/missing_map_config
 const START_PROFILE_MISSING_BUILD := "test:start_profile/missing_build"
 const WORLD_PROFILE_ID := "test:world_profile/default"
 const MAP_CONFIG_ID := "test:map_config/standard"
-const STARTING_BUILD_ID := "core:starting_build/steady"
+const STARTING_SCENARIO_ID := "core:starting_scenario/steady"
 const SITES_PER_REGION := 2
 const REGION_COUNT := 5
 const FACTION_COUNT := 3
@@ -132,11 +132,11 @@ func _register_synthetic_contents(hub: RegistryHub) -> void:
 	# facilities) plus twin world size. No core ids beyond the 1.0 archetypes.
 	_define(hub, ContentTypes.MAP_CONFIG, MAP_CONFIG_ID, [], {
 		"archetypes": [
-			"core:port_archetype/iron_harbor",
-			"core:port_archetype/spice_port",
-			"core:port_archetype/free_town",
-			"core:port_archetype/fishing_village",
-			"core:port_archetype/glass_port",
+			"core:port_template/iron_harbor",
+			"core:port_template/spice_port",
+			"core:port_template/free_town",
+			"core:port_template/fishing_village",
+			"core:port_template/glass_port",
 		],
 		"port_name_keys": ["test.port.alpha", "test.port.beta", "test.port.gamma", "test.port.delta", "test.port.epsilon"],
 		"start_archetype_tags": [],
@@ -176,7 +176,7 @@ func _register_synthetic_contents(hub: RegistryHub) -> void:
 		"map_config": "test:map_config/missing",
 	})
 	_start_profile(hub, START_PROFILE_MISSING_BUILD, {
-		"starting_build": "core:starting_build/missing",
+		"starting_scenario": "core:starting_scenario/missing",
 	})
 
 
@@ -184,7 +184,7 @@ func _start_profile(hub: RegistryHub, definition_id: String, overrides: Dictiona
 	var data := {
 		"world_profile": WORLD_PROFILE_ID,
 		"map_config": MAP_CONFIG_ID,
-		"starting_build": STARTING_BUILD_ID,
+		"starting_scenario": STARTING_SCENARIO_ID,
 		"difficulty": "standard",
 		"starting_port_tags": [],
 		"starting_money": 900,
@@ -357,19 +357,18 @@ func test_create_campaign_returns_full_state_shape() -> void:
 	assert_eq(int(data.get("seed", 0)), 12345, "requested seed is used verbatim")
 	var state := _state(result)
 
-	# Legacy run fields + explicit empty map_profile_id (v2 path).
+	# Legacy-compatible run fields (map_profiles retired in C4).
 	var run: Dictionary = state.run()
 	assert_eq(int(run.get("seed", 0)), 12345, "run.seed is written")
-	assert_eq(String(run.get("starting_build", "")), STARTING_BUILD_ID, "run.starting_build is written")
+	assert_eq(String(run.get("starting_scenario", "")), STARTING_SCENARIO_ID, "run.starting_scenario is written")
 	assert_true(run.has("started_at"), "run.started_at is kept for the legacy shape")
-	assert_eq(String(run.get("map_profile_id", "unset")), "", "v2 run leaves map_profile_id empty")
 
 	# state.world: generated map + v2 ids.
 	var world: Dictionary = state.world()
 	assert_eq(String(world.get("start_profile_id", "")), START_PROFILE_ID, "world.start_profile_id")
 	assert_eq(String(world.get("world_profile_id", "")), WORLD_PROFILE_ID, "world.world_profile_id")
 	assert_eq(String(world.get("map_config_id", "")), MAP_CONFIG_ID, "world.map_config_id")
-	assert_eq(String(world.get("map_profile_id", "unset")), "", "world.map_profile_id is empty on the v2 path")
+	assert_false(world.has("map_profile_id"), "world has no retired map_profile_id")
 	assert_eq((world.get("ports", {}) as Dictionary).size(), PORT_COUNT, "world has the world profile's port count")
 
 	# campaign.setup + content version snapshot.
@@ -377,7 +376,7 @@ func test_create_campaign_returns_full_state_shape() -> void:
 	assert_eq(String(setup.get("start_profile_id", "")), START_PROFILE_ID, "setup.start_profile_id")
 	assert_eq(String(setup.get("world_profile_id", "")), WORLD_PROFILE_ID, "setup.world_profile_id")
 	assert_eq(String(setup.get("map_config_id", "")), MAP_CONFIG_ID, "setup.map_config_id")
-	assert_eq(String(setup.get("starting_build_id", "")), STARTING_BUILD_ID, "setup.starting_build_id")
+	assert_eq(String(setup.get("starting_scenario_id", "")), STARTING_SCENARIO_ID, "setup.starting_scenario_id")
 	assert_eq(String(setup.get("difficulty", "")), "standard", "setup.difficulty")
 	assert_eq(int(setup.get("seed", 0)), 12345, "setup.seed")
 	var versions: Dictionary = setup.get("content_versions", {})
@@ -546,7 +545,7 @@ func test_missing_map_config_or_build_reference_returns_structured_error() -> vo
 
 	var missing_build := _create(8181, START_PROFILE_MISSING_BUILD)
 	assert_false(bool(missing_build.get("ok", true)), "missing starting build fails")
-	assert_eq(String(missing_build.get("error_code", "")), "no_starting_build", "error code is no_starting_build")
+	assert_eq(String(missing_build.get("error_code", "")), "no_starting_scenario", "error code is no_starting_scenario")
 
 
 func test_tutorial_branch_initializes_story_state() -> void:

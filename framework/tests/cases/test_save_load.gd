@@ -6,7 +6,7 @@ func test_save_and_load_state_hash() -> void:
 		"save_directory": "user://test_saves/save_%d" % Time.get_ticks_usec(),
 	})
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7171})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7171})
 	var before := context.state.hash()
 	var saved := context.save.save_slot("manual", context.state, context.save_meta())
 	assert_true(bool(saved["ok"]), "save succeeds: %s" % str(saved))
@@ -39,7 +39,7 @@ func test_second_save_replaces_first() -> void:
 		"save_directory": "user://test_saves/save_%d" % Time.get_ticks_usec(),
 	})
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7272})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7272})
 	context.save.save_slot("manual", context.state, context.save_meta())
 	var first_loaded: GameState = context.save.load_slot("manual")["state"]
 	var first_hash := first_loaded.hash()

@@ -11,7 +11,7 @@ func _first_trade_row(view: Dictionary) -> Dictionary:
 func test_trade_buy_and_sell() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	assert_true(bool(context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 111})["ok"]), "run starts")
+	assert_true(bool(context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 111})["ok"]), "run starts")
 	var view := context.queries.execute(&"port.view")
 	var row := _first_trade_row(view["data"])
 	assert_true(not row.is_empty(), "found an affordable light market row")
@@ -36,7 +36,7 @@ func test_trade_buy_and_sell() -> void:
 func test_failed_trade_rolls_back() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 222})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 222})
 	var before := context.state.hash()
 	var result := context.commands.execute(&"trade.buy", {"item_id": "core:item/iron_ore", "amount": 999999})
 	assert_false(bool(result["ok"]), "oversized purchase fails")
@@ -46,7 +46,7 @@ func test_failed_trade_rolls_back() -> void:
 func test_price_moves_with_stock() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 333})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 333})
 	var view := context.queries.execute(&"port.view")
 	for row in view["data"]["market"]:
 		if int(row["stock"]) >= 10:
@@ -63,7 +63,7 @@ func test_price_moves_with_stock() -> void:
 func test_player_trade_price_impact_is_damped() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 3434})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 3434})
 	context.state.ship()["coal"] = 0.0
 	context.state.ship()["water"] = 0.0
 	var view := context.queries.execute(&"port.view")

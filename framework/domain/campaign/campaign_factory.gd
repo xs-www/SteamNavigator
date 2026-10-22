@@ -1,22 +1,27 @@
 class_name CampaignFactory
 extends RefCounted
 ## @static-doc
-## 作用：v2 战役开局装配（WORLD_SCHEMA_V2_RUNTIME §6.2）。从 `start_profiles` 定义解析
-## 世界构成 / 场景调参 / 起始构筑，复用 `MapGenerator` 生成抽象海图、`WorldGenerator`
-## 生成孪生坐标世界，再用 Region/Site/Route/Faction/Discovery 装配器把 2.0 世界内容实例化
-## 进 `GameState`。返回与 `RunFactory.create_run` 同形的结果包，供 `run.start` 直接替换状态。
+## 作用：战役开局装配（WORLD_SCHEMA_V2_RUNTIME §6.2）。从 `start_profiles` 定义解析
+## 世界构成 / 场景调参 / 起始场景（`starting_scenarios`），复用 `MapGenerator` 生成抽象
+## 海图、`WorldGenerator` 生成孪生坐标世界，再用 Region/Site/Route/Faction/Discovery
+## 装配器把 2.0 世界内容实例化进 `GameState`。`run.start` 的默认入口
+## （`create_default_campaign`）也走这里，C4 起不再存在 1.0 `RunFactory.create_run` 几何路径。
 ##
 ## ## 契约与约束
-## - **入口**：`create_campaign(context, start_profile_id, requested_seed=0, tutorial=false)`。
-##   仅由 `run.start` 显式携带 `start_profile` 时调用；1.0 路径完全不经过本类。
-## - **返回**：`Result.ok({state, rng, start_profile, world_profile, map_config, seed})`；
-##   失败使用 `Result.fail(error_code, message_key, data)`，与 RunFactory 同形。
-## - **状态形状**（§6.3）：
-##   `data.run = {seed, game_time, started_at, starting_build, map_profile_id:""}`；
+## - **入口**：
+##   - `create_campaign(context, start_profile_id, requested_seed=0, tutorial=false,
+##     starting_scenario_id="")`：显式 start profile；第五参可覆盖起始场景。
+##   - `create_default_campaign(context, starting_scenario_id="", requested_seed=0,
+##     tutorial=false)`：`run.start` 无 `start_profile` 时使用，取注册表中 id 最小的
+##     `start_profiles` 定义（Core 声明的标准起始档案，按 `start.standard` tag 选择）。
+## - **返回**：`Result.ok({state, rng, start_profile, starting_scenario, world_profile,
+##   map_config, seed})`；失败使用 `Result.fail(error_code, message_key, data)`。
+## - **状态形状**：
+##   `data.run = {seed, game_time, started_at, starting_scenario}`；
 ##   `data.campaign.setup = {start_profile_id, world_profile_id, map_config_id,
-##   starting_build_id, difficulty, seed, content_versions}`；
+##   starting_scenario_id, difficulty, seed, content_versions}`；
 ##   `state.world` = MapGenerator 世界 + `start_profile_id / world_profile_id /
-##   map_config_id`（`map_profile_id` 显式留空）；
+##   map_config_id / starting_scenario_id`（`map_profiles` 已退役，无 map_profile_id）；
 ##   `data.campaign.world = {profile_id, generated, regions[], sites[],
 ##   visited_region_ids, discovered_site_ids, visited_port_ids}`；
 ##   `data.campaign.codex / factions` 由装配器写入；`data.world_map` 为孪生海图世界。
@@ -35,12 +40,16 @@ extends RefCounted
 const DEFAULT_DIFFICULTY := "standard"
 
 
-## Creates a full v2 campaign state. Returns a `Result` envelope.
+## Creates a full campaign state. Returns a `Result` envelope.
+## `starting_scenario_id` (optional) overrides the scenario referenced by the start
+## profile — used by the `run.start` default entry so a caller can pick a scenario
+## without crafting a dedicated start profile.
 static func create_campaign(
 	context,
 	start_profile_id: String,
 	requested_seed: int = 0,
-	tutorial: bool = false
+	tutorial: bool = false,
+	starting_scenario_id: String = ""
 ) -> Dictionary:
 	var hub: RegistryHub = context.registries
 	var start_profile := _resolve_definition(hub, ContentTypes.START_PROFILE, start_profile_id)
@@ -65,26 +74,28 @@ static func create_campaign(
 			% [start_profile.id, map_config.id]
 		)
 
-	var starting_build_id := String(start_profile.data.get("starting_build", ""))
-	var build := _resolve_definition(hub, ContentTypes.STARTING_BUILD, starting_build_id)
-	if build == null:
-		return Result.fail("no_starting_build", "ui.error.no_starting_build", {
+	var resolved_scenario_id := starting_scenario_id
+	if resolved_scenario_id.is_empty():
+		resolved_scenario_id = String(start_profile.data.get("starting_scenario", ""))
+	var scenario := _resolve_definition(hub, ContentTypes.STARTING_SCENARIO, resolved_scenario_id)
+	if scenario == null:
+		return Result.fail("no_starting_scenario", "ui.error.no_starting_scenario", {
 			"start_profile_id": start_profile.id,
-			"starting_build_id": starting_build_id,
+			"starting_scenario_id": resolved_scenario_id,
 		})
 
 	var seed_value := requested_seed if requested_seed != 0 else RunFactory._random_seed()
 	var rng := RngService.new(seed_value)
 
-	var ship := RunFactory.create_ship(hub, build)
+	var ship := RunFactory.create_ship(hub, scenario)
 	var ship_validation := ShipOps.validate_configuration(hub, ship)
 	if not bool(ship_validation.get("ok", false)):
-		return Result.fail("invalid_starting_build", "ui.error.invalid_starting_build", {
+		return Result.fail("invalid_starting_scenario", "ui.error.invalid_starting_scenario", {
 			"errors": ship_validation.get("errors", []),
 		})
 
-	# 1) Abstract map geometry: v2 world profile + map config adapted to the 1.0
-	#    generator input shape (old MapGenerator.generate is untouched).
+	# 1) Abstract map geometry: world profile + map config adapted to the generator
+	#    input shape (map_profiles retired; MapGenerationSpec is the only adapter).
 	var spec := MapGenerationSpec.build(
 		world_profile, map_config, _sorted_definitions(hub.get_all(ContentTypes.ROUTE_TEMPLATE)), start_profile
 	)
@@ -97,7 +108,7 @@ static func create_campaign(
 
 	# 2) State skeleton + campaign identity. The ids go in before any service
 	#    reads the scenario through ContentRefs (markets / story / exploration).
-	var state := _create_state(build, ship, world, seed_value, start_profile, world_profile, map_config)
+	var state := _create_state(scenario, ship, world, seed_value, start_profile, world_profile, map_config)
 	var campaign := state.campaign()
 	var campaign_world := state.campaign_world()
 	var starting_port_id := state.current_port_id()
@@ -161,7 +172,7 @@ static func create_campaign(
 	#    playable abstract map, so the chart / fog / exploration stay coherent.
 	_generate_twin_world(state, world, map_config, hub, rng, ship, starting_port_id)
 
-	# 9) Economy / contracts / notices, mirroring RunFactory.create_run.
+	# 9) Economy / contracts / notices, mirroring the pre-C4 run pipeline.
 	ContractOps.ensure_structure(state)
 	WarehouseOps.ensure_structure(state)
 	RunFactory.initialize_markets(state, hub, map_config, rng)
@@ -180,7 +191,7 @@ static func create_campaign(
 				"start_profile_id": start_profile.id,
 			})
 	ContractOps.generate_normal_offers(state, hub, rng, "initial:%s" % state.current_port_id())
-	state.push_notice("ui.notice.run_started", {"build": build.name_key})
+	state.push_notice("ui.notice.run_started", {"scenario": scenario.name_key})
 	if tutorial:
 		# StoryService resolves `map_configs.story` through ContentRefs; missing or
 		# disabled story keeps the "tutorial completed, all features unlocked" fallback.
@@ -192,16 +203,52 @@ static func create_campaign(
 		"state": state,
 		"rng": rng,
 		"start_profile": start_profile,
+		"starting_scenario": scenario,
 		"world_profile": world_profile,
 		"map_config": map_config,
 		"seed": seed_value,
 	})
 
 
-## Builds the run's GameState skeleton with the §6.3 shape: legacy `run` fields,
-## `campaign.setup` / `content_versions`, the generated world + v2 ids.
+## Default `run.start` entry (no explicit `start_profile`): picks the content-declared
+## standard start profile (`start.standard` tag; difficulty fallback; then lowest id)
+## and optionally overrides its `starting_scenario` (the old starting-build selection
+## becomes a scenario pick).
+static func create_default_campaign(
+	context,
+	starting_scenario_id: String = "",
+	requested_seed: int = 0,
+	tutorial: bool = false
+) -> Dictionary:
+	var hub: RegistryHub = context.registries
+	var start_profile := default_start_profile(hub)
+	if start_profile == null:
+		return Result.fail("no_start_profile", "ui.error.no_start_profile")
+	return create_campaign(context, start_profile.id, requested_seed, tutorial, starting_scenario_id)
+
+
+## Default start profile: prefer the Core-declared `start.standard` tag, then
+## `difficulty == "standard"`, then the lowest id (deterministic, never a content id
+## literal in framework code).
+static func default_start_profile(hub: RegistryHub) -> ContentDefinition:
+	if hub == null:
+		return null
+	var profiles := _sorted_definitions(hub.get_all(ContentTypes.START_PROFILE))
+	if profiles.is_empty():
+		return null
+	for profile in profiles:
+		if (profile as ContentDefinition).has_tag("start.standard"):
+			return profile
+	for profile in profiles:
+		if String((profile as ContentDefinition).data.get("difficulty", "")) == DEFAULT_DIFFICULTY:
+			return profile
+	return profiles[0]
+
+
+## Builds the run's GameState skeleton: `campaign.setup` / `content_versions`,
+## the generated world + v2 ids (no retired `map_profiles` fields).
 static func _create_state(
-	build: ContentDefinition,
+	scenario: ContentDefinition,
 	ship: Dictionary,
 	world: Dictionary,
 	seed_value: int,
@@ -211,10 +258,10 @@ static func _create_state(
 ) -> GameState:
 	var started_at := Time.get_datetime_string_from_system(true)
 	var difficulty := String(start_profile.data.get("difficulty", DEFAULT_DIFFICULTY))
-	world["map_profile_id"] = ""
 	world["start_profile_id"] = start_profile.id
 	world["world_profile_id"] = world_profile.id
 	world["map_config_id"] = map_config.id
+	world["starting_scenario_id"] = scenario.id
 
 	var campaign_defaults: Dictionary = GameState.CAMPAIGN_DEFAULTS.duplicate(true)
 	campaign_defaults["id"] = "campaign_%d" % seed_value
@@ -229,10 +276,9 @@ static func _create_state(
 			"seed": seed_value,
 			"game_time": 0.0,
 			"started_at": started_at,
-			"starting_build": build.id,
-			"map_profile_id": "",
+			"starting_scenario": scenario.id,
 		},
-		"player": _create_player(build, start_profile),
+		"player": _create_player(scenario, start_profile),
 		"world": world,
 		"ship": ship.duplicate(true),
 		"contracts": {},
@@ -254,7 +300,7 @@ static func _create_state(
 		"start_profile_id": start_profile.id,
 		"world_profile_id": world_profile.id,
 		"map_config_id": map_config.id,
-		"starting_build_id": build.id,
+		"starting_scenario_id": scenario.id,
 		"difficulty": difficulty,
 		"seed": seed_value,
 		"content_versions": _content_versions_snapshot(),
@@ -267,11 +313,11 @@ static func _create_state(
 	return state
 
 
-## Player block: start profile overrides the build's money / reputation; debt is
-## still expressed by the 1.0 starting build's optional `loan` block (Phase C will
-## merge scenarios). The scenario `map_config.loan` keeps driving the bank commands.
-static func _create_player(build: ContentDefinition, start_profile: ContentDefinition) -> Dictionary:
-	var build_data: Dictionary = build.data
+## Player block: start profile overrides the scenario's money / reputation; debt is
+## expressed by the starting scenario's optional `loan` block. The scenario
+## `map_config.loan` keeps driving the bank commands.
+static func _create_player(scenario: ContentDefinition, start_profile: ContentDefinition) -> Dictionary:
+	var build_data: Dictionary = scenario.data
 	var profile_data: Dictionary = start_profile.data
 	var player := {
 		"money": int(profile_data.get("starting_money", build_data.get("money", 0))),

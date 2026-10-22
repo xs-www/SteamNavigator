@@ -32,7 +32,7 @@ func _legacy_ship() -> Dictionary:
 func test_new_run_creates_module_instances() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7101})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7101})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var ship := context.state.ship()
 	var table := ShipModules.instances(ship)
@@ -106,7 +106,7 @@ func test_install_slot_resets_condition() -> void:
 func test_damage_module_effect_opcode() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7202})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7202})
 	assert_true(EffectOpRegistry.has("damage_module"), "damage_module is a registered effect op")
 	var execution := {
 		"state": context.state,
@@ -129,7 +129,7 @@ func test_damage_module_effect_opcode() -> void:
 func test_repair_cost_includes_module_damage() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7303})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7303})
 	var hub: RegistryHub = context.registries
 	var ship := context.state.ship()
 	var baseline := MarketOps.repair_cost(hub, context.state, 6.0)
@@ -145,7 +145,7 @@ func test_conditions_survive_save_load() -> void:
 	var directory := _directory()
 	var boot := bootstrap_core({"save_directory": directory})
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 7404})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7404})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	ShipModules.damage(context.state.ship(), "boiler", 0, 0.45)
 	var instance_id := String(ShipModules.instances(context.state.ship())["boiler"]["instance_id"])

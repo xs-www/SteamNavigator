@@ -2,7 +2,7 @@ extends TestCase
 ## Normal contract pool refresh and holding limit.
 ## Owned by loop-systems; see docs/specs/ITERATION_1_MVP_LOOP.md §3.5 / §5.2 / §8.
 
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const STANDARD_STRATEGY := "core:strategy/standard"
 
 
@@ -68,7 +68,7 @@ func _travel(context: AppContext, destination: String) -> Dictionary:
 func test_initial_offers_and_port_view_limit_fields() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": 12345})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 12345})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var view := context.queries.execute(&"port.view")
 	assert_true(bool(view["ok"]), "port view succeeds")
@@ -103,7 +103,7 @@ func test_initial_offers_and_port_view_limit_fields() -> void:
 func test_active_limit_formula_and_accept_rejection() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": 4242})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 4242})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var expectations := {0: 1, 1: 1, 2: 2, 3: 2, 4: 3, 10: 6}
 	for reputation in expectations.keys():
@@ -142,7 +142,7 @@ func test_active_limit_formula_and_accept_rejection() -> void:
 func test_arrival_refreshes_normal_offer_pool() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": 12345})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 12345})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var before_ids := _offer_ids(context.state.contracts().get("offers", []))
 	var before_signature := _offer_signature(context.state.contracts().get("offers", []))
@@ -180,8 +180,8 @@ func test_refresh_is_deterministic_for_same_seed() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var hub: RegistryHub = context.registries
-	var first_run := RunFactory.create_run(context, STEADY_BUILD, 777)
-	var second_run := RunFactory.create_run(context, STEADY_BUILD, 777)
+	var first_run := CampaignFactory.create_default_campaign(context, STEADY_BUILD, 777)
+	var second_run := CampaignFactory.create_default_campaign(context, STEADY_BUILD, 777)
 	assert_true(bool(first_run["ok"]) and bool(second_run["ok"]), "both runs generate")
 	var first_state: GameState = first_run["data"]["state"]
 	var second_state: GameState = second_run["data"]["state"]

@@ -71,7 +71,7 @@ func test_campaign_sections_round_trip_through_save() -> void:
 	var directory := _directory()
 	var boot := bootstrap_core({"save_directory": directory})
 	var context: AppContext = boot["context"]
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 5150})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 5150})
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	assert_true(bool(context.state.campaign_world().get("generated", false)), "a new run marks the world generated")
 	context.state.mark_region_visited("core:region/north")

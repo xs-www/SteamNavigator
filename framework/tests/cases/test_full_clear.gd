@@ -7,7 +7,7 @@ extends TestCase
 ## Bot efficiency is intentionally modest: the MVP target is 9-12 voyages for a
 ## human, the bot is allowed a few extra normal contracts as a money buffer.
 
-const BUILD := "core:starting_build/steady"
+const BUILD := "core:starting_scenario/steady"
 const STRATEGY := "core:strategy/standard"
 const MEDIUM_HULL := "core:hull/medium_standard"
 const LARGE_HULL := "core:hull/large_efficient"
@@ -35,7 +35,7 @@ func test_full_clear_multiple_seeds() -> void:
 func _play_full_clear(seed: int) -> AppContext:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started: Dictionary = context.commands.execute(&"run.start", {"build_id": BUILD, "seed": seed})
+	var started: Dictionary = context.commands.execute(&"run.start", {"starting_scenario": BUILD, "seed": seed})
 	assert_true(bool(started.get("ok", false)), "seed %d: run starts: %s" % [seed, str(started)])
 	if not bool(started.get("ok", false)):
 		return null
@@ -88,7 +88,7 @@ func _assert_victory(context: AppContext, detailed: bool) -> void:
 	var summary: Dictionary = victory.get("summary", {})
 	if detailed:
 		for field in [
-			"seed", "starting_build", "game_time", "voyages", "on_time",
+			"seed", "starting_scenario", "game_time", "voyages", "on_time",
 			"on_time_rate", "accidents", "income", "expense", "profit",
 			"money", "debt_remaining", "durability", "max_durability",
 			"hull_id", "hull_name_key", "modules",

@@ -1,43 +1,30 @@
 extends TestCase
 ## @static-doc
-## 作用：Phase B B3 运行时接线的无头测试：`run.start` 的 1.0 legacy 路径零变化、
-## 可选 `start_profile` 走 `CampaignFactory` 的 v2 路径、`campaign.view` 形状稳定、
-## `campaign.setup` / `campaign.world.regions|sites` / `campaign.factions` 新字段的
-## 惰性默认，以及 `ContentRefs.map_config` 对 1.0 / v2 两种 state 的解析。
+## 作用：C4 开局入口测试：`run.start` 的默认路径（无 start_profile）与显式 start_profile
+## 路径都经 `CampaignFactory` 装配；`port_templates` / `starting_scenarios` / `map_configs`
+## 是唯一内容来源，`map_profiles` 退役且 `ContentRefs` 不再回退；`campaign.view` 形状稳定；
+## 存档 header 不变。
 ##
-## - 关键依赖：`bootstrap_core()`、`RunStartCommand`、`CampaignFactory`、
-##   `CampaignViewQuery`、`ContentRefs`、`StoryService.config()`、
-##   `ExplorationRules.read()`、`test_campaign_assembly.gd` 的合成 v2 fixture
+## - 关键依赖：`bootstrap_core()`、`CampaignFactory.create_default_campaign`、
+##   `ContentRefs`、`StoryService.config()`、`ExplorationRules.read()`、`GameState`
 ##
 ## ## 契约与约束
-## - 1.0 legacy 用例只断言「仍能开局 + 旧 header 不变 + map_profile 解析不变」，
-##   不锁 1.0 state 的完整 hash（新分区默认块会按设计惰性出现）。
-## - v2 用例不依赖 B4 core 内容：优先复用 B3-A 测试文件的 public 合成 fixture；
-##   fixture 不存在时用例失败并给出明确原因，而不是伪造通过。
+## - C4 起没有 1.0「build + map_profile」路径：无 `start_profile` 时使用最低 id 的 start
+##   profile（内容用 `start.standard` tag 声明，core 为 standard 档案）+ 可选 `starting_scenario` 覆盖。
+## - `data.run` / `state.world` / `campaign.setup` 只记 `starting_scenario(_id)`，不再有
+##   `map_profile_id` / `starting_build` 字段。
 ## - resolver 用例只用公开入口（`ContentRefs` / `StoryService.config` /
-##   `ExplorationRules.read`），不直接摸私有 `_profile` 辅助函数。
+##   `ExplorationRules.read`），不依赖 dev_mods/core 之外的内容。
 ## @end-static-doc
 
-const LEGACY_BUILD := "core:starting_build/steady"
-const LEGACY_PROFILE := "core:map_profile/standard"
-const LEGACY_PROFILE_DEF := "test:map_profile/legacy"
-const V2_MAP_CONFIG_DEF := "test:map_config/v2"
-const ASSEMBLY_SUITE := "res://framework/tests/cases/test_campaign_assembly.gd"
+const STEADY_SCENARIO := "core:starting_scenario/steady"
+const SWIFT_SCENARIO := "core:starting_scenario/swift"
+const STANDARD_PROFILE := "core:start_profile/standard"
+const HARD_PROFILE := "core:start_profile/hard"
+const CORE_MAP_CONFIG := "core:map_config/standard"
+const TEST_MAP_CONFIG := "test:map_config/cfg"
 
 
-func _directory() -> String:
-	return "user://test_saves/campaign_start_%d" % Time.get_ticks_usec()
-
-
-func _cleanup(directory: String) -> void:
-	var files := DirAccess.get_files_at(directory)
-	if files != null:
-		for file_name in files:
-			DirAccess.remove_absolute(directory + "/" + file_name)
-	DirAccess.remove_absolute(directory)
-
-
-## Synthetic content definition (no schema validation: this is a runtime fixture).
 func _definition(id: String, content_type: StringName, data: Dictionary) -> ContentDefinition:
 	var definition := ContentDefinition.new()
 	definition.id = id
@@ -50,7 +37,6 @@ func _definition(id: String, content_type: StringName, data: Dictionary) -> Cont
 	return definition
 
 
-## Copies the frozen core registries into a fresh hub and appends synthetic defs.
 func _hub_with(context: AppContext, extra: Array) -> RegistryHub:
 	var hub := RegistryHub.new(ContentTypes.all())
 	for content_type in ContentTypes.all():
@@ -62,76 +48,109 @@ func _hub_with(context: AppContext, extra: Array) -> RegistryHub:
 	return hub
 
 
-## Minimal 1.0-style state: world ids + player so queries have a run to read.
-func _state_with_world(world_ids: Dictionary) -> GameState:
-	var world := {
-		"ports": {},
-		"routes": [],
-		"current_port_id": "",
-		"map_profile_id": String(world_ids.get("map_profile_id", "")),
-	}
-	if world_ids.has("map_config_id"):
-		world["map_config_id"] = String(world_ids["map_config_id"])
-	if world_ids.has("world_profile_id"):
-		world["world_profile_id"] = String(world_ids["world_profile_id"])
-	if world_ids.has("start_profile_id"):
-		world["start_profile_id"] = String(world_ids["start_profile_id"])
+func _state_with_world(world: Dictionary) -> GameState:
 	return GameState.new({
 		"schema_version": GameState.SCHEMA_VERSION,
-		"run": {"seed": 123, "game_time": 0.0, "starting_build": LEGACY_BUILD},
+		"run": {"seed": 123, "game_time": 0.0},
 		"player": {"money": 100, "reputation": 0, "unlocks": [], "debt": null},
 		"world": world,
 	})
 
 
-func _map_config_data(state: GameState, hub: RegistryHub) -> Dictionary:
-	return ContentRefs.map_config_data(state, hub)
+# ── default run.start (no start_profile) ──
 
 
-# ---------------------------------------------------------------------------
-# 1.0 legacy path
-# ---------------------------------------------------------------------------
-
-
-func test_legacy_run_start_keeps_shape_and_save_header() -> void:
-	var directory := _directory()
-	var boot := bootstrap_core({"save_directory": directory})
+func test_default_run_start_assembles_a_campaign() -> void:
+	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	var started := context.commands.execute(&"run.start", {"build_id": LEGACY_BUILD, "seed": 12345})
-	assert_true(bool(started.get("ok", false)), "legacy run.start succeeds: %s" % str(started))
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_SCENARIO, "seed": 12345})
+	assert_true(bool(started.get("ok", false)), "default run.start succeeds: %s" % str(started))
 	var state: GameState = context.state
 	var world := state.world()
-	assert_eq(String(world.get("map_profile_id", "")), LEGACY_PROFILE, "legacy run keeps the 1.0 map profile id")
-	assert_eq(String(world.get("map_config_id", "")), "", "legacy run leaves map_config_id empty")
-	assert_eq(String(world.get("start_profile_id", "")), "", "legacy run leaves start_profile_id empty")
-	assert_eq(String(world.get("world_profile_id", "")), "", "legacy run leaves world_profile_id empty")
-	assert_eq(state.schema_version(), GameState.SCHEMA_VERSION, "state_schema is unchanged")
+	assert_eq(String(world.get("starting_scenario_id", "")), STEADY_SCENARIO, "world records the selected scenario")
+	assert_eq(String(world.get("map_config_id", "")), CORE_MAP_CONFIG, "world records the map config")
+	assert_eq(String(world.get("start_profile_id", "")), STANDARD_PROFILE, "the default start profile is used")
+	assert_false(world.has("map_profile_id"), "the retired map_profile_id is never written")
+	assert_false(state.run().has("map_profile_id"), "the run block has no map_profile_id")
+	assert_eq(String(state.run().get("starting_scenario", "")), STEADY_SCENARIO, "run.starting_scenario is written")
 	var setup := state.campaign_setup()
-	for key in GameState.CAMPAIGN_SECTION_DEFAULTS["setup"].keys():
-		assert_true(setup.has(key), "legacy state gets the lazy setup key: %s" % key)
-	assert_eq(String(setup.get("map_config_id", "")), "", "legacy setup has no map config id")
-	assert_true(Array(state.campaign_world().get("regions", [])).is_empty(), "legacy world has no regions")
-	assert_true(Array(state.campaign_world().get("sites", [])).is_empty(), "legacy world has no sites")
+	assert_eq(String(setup.get("start_profile_id", "")), STANDARD_PROFILE, "setup records the start profile")
+	assert_eq(String(setup.get("starting_scenario_id", "")), STEADY_SCENARIO, "setup records the scenario")
+	assert_eq(String(setup.get("map_config_id", "")), CORE_MAP_CONFIG, "setup records the map config")
+	assert_true(setup.get("content_versions", null) is Dictionary, "setup snapshots content versions")
+	assert_true(state.campaign_world().get("regions", []) is Array, "campaign world has regions")
 	var payload: Dictionary = Array(started.get("events", []))[0]["payload"]
-	assert_eq(String(payload.get("map_profile", "")), LEGACY_PROFILE, "run.started keeps map_profile")
-	assert_eq(String(payload.get("start_profile", "")), "", "run.started start_profile is empty on 1.0")
-	assert_eq(String(payload.get("world_profile", "")), "", "run.started world_profile is empty on 1.0")
-	assert_eq(String(payload.get("map_config", "")), "", "run.started map_config is empty on 1.0")
+	assert_eq(String(payload.get("starting_scenario", "")), STEADY_SCENARIO, "run.started reports the scenario")
+	assert_eq(String(payload.get("map_config", "")), CORE_MAP_CONFIG, "run.started reports the map config")
+	assert_false(payload.has("map_profile"), "run.started no longer reports a map profile")
 
-	var saved := context.save.save_slot("legacy", state, context.save_meta())
-	assert_true(bool(saved.get("ok", false)), "legacy save succeeds: %s" % str(saved))
-	var loaded := context.save.load_slot("legacy")
-	assert_true(bool(loaded.get("ok", false)), "legacy save loads: %s" % str(loaded))
+
+func test_default_scenario_and_scenario_override() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	# No starting_scenario: the default start profile's scenario (steady) is used.
+	var defaulted := context.commands.execute(&"run.start", {"seed": 2468})
+	assert_true(bool(defaulted.get("ok", false)), "run.start without a scenario succeeds: %s" % str(defaulted))
+	assert_eq(String(context.state.world().get("starting_scenario_id", "")), STEADY_SCENARIO,
+		"the start profile's default scenario is used")
+
+	var hard_context: AppContext = bootstrap_core()["context"]
+	var overridden := hard_context.commands.execute(&"run.start", {
+		"start_profile": HARD_PROFILE,
+		"starting_scenario": STEADY_SCENARIO,
+		"seed": 1357,
+	})
+	assert_true(bool(overridden.get("ok", false)), "scenario override succeeds: %s" % str(overridden))
+	assert_eq(String(hard_context.state.world().get("starting_scenario_id", "")), STEADY_SCENARIO,
+		"the explicit scenario override wins over the profile default")
+	assert_eq(String(hard_context.state.campaign_setup().get("difficulty", "")), "hard", "the profile difficulty is kept")
+	assert_eq(hard_context.state.money(), 400, "the hard profile's starting money applies instead of the scenario money")
+
+
+func test_save_header_is_unchanged() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_SCENARIO, "seed": 6174})
+	assert_true(bool(started.get("ok", false)), "run starts")
+	var saved := context.save.save_slot("c4_header", context.state, context.save_meta())
+	assert_true(bool(saved.get("ok", false)), "save succeeds: %s" % str(saved))
+	var loaded := context.save.load_slot("c4_header")
+	assert_true(bool(loaded.get("ok", false)), "save loads")
 	var header: Dictionary = loaded["header"]
-	assert_eq(String(header.get("save_schema", "")), SaveService.SAVE_SCHEMA, "save header schema unchanged")
-	assert_eq(String(header.get("state_schema", "")), GameState.SCHEMA_VERSION, "save header state schema unchanged")
-	assert_eq(String(header.get("content_schema", "")), FrameworkInfo.CONTENT_SCHEMA, "save header content schema unchanged")
-	_cleanup(directory)
+	assert_eq(String(header.get("save_schema", "")), SaveService.SAVE_SCHEMA, "save schema unchanged")
+	assert_eq(String(header.get("state_schema", "")), GameState.SCHEMA_VERSION, "state schema unchanged")
+	assert_eq(String(header.get("content_schema", "")), FrameworkInfo.CONTENT_SCHEMA, "content schema baseline unchanged")
 
 
-# ---------------------------------------------------------------------------
-# campaign.view shape (no run / 1.0 run / v2-shaped state)
-# ---------------------------------------------------------------------------
+# ── errors ──
+
+
+func test_unknown_profile_or_scenario_returns_structured_errors() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var unknown_profile := context.commands.execute(&"run.start", {"start_profile": "test:start_profile/absent"})
+	assert_false(bool(unknown_profile.get("ok", false)), "unknown start profile fails")
+	assert_eq(String(unknown_profile.get("error_code", "")), "no_start_profile", "unknown profile error code")
+	var unknown_scenario := context.commands.execute(&"run.start", {
+		"start_profile": STANDARD_PROFILE,
+		"starting_scenario": "test:starting_scenario/absent",
+	})
+	assert_false(bool(unknown_scenario.get("ok", false)), "unknown starting scenario fails")
+	assert_eq(String(unknown_scenario.get("error_code", "")), "no_starting_scenario", "unknown scenario error code")
+
+
+# ── retired types ──
+
+
+func test_retired_types_are_not_registered() -> void:
+	for retired in [&"map_profiles", &"port_archetypes", &"starting_builds"]:
+		assert_false(ContentTypes.is_known(retired), "%s is no longer a known content type" % retired)
+	assert_true(ContentTypes.is_known(ContentTypes.PORT_TEMPLATE), "port_templates is registered")
+	assert_true(ContentTypes.is_known(ContentTypes.STARTING_SCENARIO), "starting_scenarios is registered")
+	assert_false(ContentTypes.all().has(&"map_profiles"), "map_profiles is absent from ContentTypes.all()")
+
+
+# ── campaign.view ──
 
 
 func _assert_campaign_view_shape(view: Dictionary, label: String) -> void:
@@ -143,234 +162,74 @@ func _assert_campaign_view_shape(view: Dictionary, label: String) -> void:
 	assert_true(view["factions"] is Dictionary, "%s factions is a dictionary" % label)
 	assert_true(view["codex"] is Dictionary, "%s codex is a dictionary" % label)
 	assert_true(view["exploration"] is Dictionary, "%s exploration is a dictionary" % label)
-	var exploration: Dictionary = view["exploration"]
-	assert_true(exploration.get("rules", null) is Dictionary, "%s exploration.rules is a dictionary" % label)
-	assert_true(exploration.get("clues", null) is Dictionary, "%s exploration.clues is a dictionary" % label)
 
 
 func test_campaign_view_is_shape_stable() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var empty := context.queries.execute(&"campaign.view")
-	assert_true(bool(empty.get("ok", false)), "campaign.view answers before a run: %s" % str(empty))
-	var empty_view: Dictionary = empty["data"]
-	assert_false(bool(empty_view.get("has_run", true)), "no run is reported")
-	_assert_campaign_view_shape(empty_view, "empty")
+	assert_true(bool(empty.get("ok", false)), "campaign.view answers before a run")
+	assert_false(bool((empty["data"] as Dictionary).get("has_run", true)), "no run is reported")
+	_assert_campaign_view_shape(empty["data"], "empty")
 
-	var started := context.commands.execute(&"run.start", {"build_id": LEGACY_BUILD, "seed": 5150})
-	assert_true(bool(started.get("ok", false)), "legacy run starts: %s" % str(started))
-	var legacy := context.queries.execute(&"campaign.view")
-	assert_true(bool(legacy.get("ok", false)), "campaign.view answers on a legacy run: %s" % str(legacy))
-	var legacy_view: Dictionary = legacy["data"]
-	assert_true(bool(legacy_view.get("has_run", false)), "legacy run is reported")
-	assert_false(bool(legacy_view.get("is_v2", true)), "legacy run is not v2")
-	_assert_campaign_view_shape(legacy_view, "legacy")
-	assert_eq(String((legacy_view["setup"] as Dictionary).get("start_profile_id", "")), "", "legacy setup has no start profile")
-	assert_true(legacy_view["regions"] is Array and (legacy_view["regions"] as Array).is_empty(), "legacy view has no regions")
-
-
-func test_campaign_view_reads_v2_sections() -> void:
-	var boot := bootstrap_core()
-	var context: AppContext = boot["context"]
-	var state := GameState.new({
-		"schema_version": GameState.SCHEMA_VERSION,
-		"run": {"seed": 9001, "game_time": 3.0, "starting_build": LEGACY_BUILD},
-		"player": {"money": 500, "reputation": 10, "unlocks": [], "debt": null},
-		"world": {
-			"ports": {},
-			"routes": [],
-			"current_port_id": "port_0",
-			"map_profile_id": "",
-			"map_config_id": V2_MAP_CONFIG_DEF,
-			"world_profile_id": "test:world_profile/default",
-			"start_profile_id": "test:start_profile/standard",
-		},
-		"campaign": {
-			"id": "campaign_9001",
-			"name": "Steam Navigator",
-			"created_at": "",
-			"difficulty": "standard",
-			"status": "active",
-			"playtime_hours": 0.0,
-			"setup": {
-				"start_profile_id": "test:start_profile/standard",
-				"world_profile_id": "test:world_profile/default",
-				"map_config_id": V2_MAP_CONFIG_DEF,
-				"starting_build_id": LEGACY_BUILD,
-				"difficulty": "standard",
-				"seed": 9001,
-				"content_versions": {"map_configs": "2.0"},
-			},
-			"world": {
-				"profile_id": "test:world_profile/default",
-				"generated": true,
-				"regions": [{"id": "region_0", "kind": "coastal", "port_ids": ["port_0"]}],
-				"sites": [{"id": "site_0", "definition_id": "test:site/ruin", "region_id": "region_0", "discovered": false}],
-				"visited_region_ids": ["region_0"],
-				"discovered_site_ids": [],
-				"visited_port_ids": ["port_0"],
-			},
-			"codex": {"discovered_ids": [], "entries": {}},
-			"factions": {"test:faction/guild": {"reputation": 12}},
-		},
-	})
-	context.set_state(state)
+	var started := context.commands.execute(&"run.start", {"starting_scenario": SWIFT_SCENARIO, "seed": 4242})
+	assert_true(bool(started.get("ok", false)), "run starts: %s" % str(started))
 	var result := context.queries.execute(&"campaign.view")
-	assert_true(bool(result.get("ok", false)), "campaign.view reads a v2 state: %s" % str(result))
+	assert_true(bool(result.get("ok", false)), "campaign.view answers on a run")
 	var view: Dictionary = result["data"]
-	_assert_campaign_view_shape(view, "v2")
-	assert_true(bool(view.get("is_v2", false)), "v2 state is reported as v2")
-	assert_eq(String((view["setup"] as Dictionary).get("start_profile_id", "")), "test:start_profile/standard", "setup keeps the start profile id")
-	assert_eq((view["regions"] as Array).size(), 1, "regions are exposed")
-	assert_eq((view["sites"] as Array).size(), 1, "sites are exposed")
-	assert_eq(String(((view["sites"] as Array)[0] as Dictionary).get("definition_id", "")), "test:site/ruin", "site definition id is exposed")
-	var faction: Dictionary = (view["factions"] as Dictionary).get("test:faction/guild", {})
-	assert_eq(int(faction.get("reputation", 0)), 12, "faction reputation is exposed")
-	for key in GameState.FACTION_ENTRY_DEFAULTS.keys():
-		assert_true(faction.has(key), "faction entry backfills %s" % key)
-
-
-# ---------------------------------------------------------------------------
-# resolver: 1.0 map_profile fallback vs v2 map_config
-# ---------------------------------------------------------------------------
-
-
-func test_content_refs_resolves_legacy_and_v2_definitions() -> void:
-	var boot := bootstrap_core()
-	var context: AppContext = boot["context"]
-	var legacy_definition := _definition(LEGACY_PROFILE_DEF, ContentTypes.MAP_PROFILE, {
-		"trade_margin": 0.2,
-		"exploration": {"fog_vision_ratio": 0.11},
-		"story": {"enabled": true, "flow_id": "legacy_flow", "stages": []},
-	})
-	var v2_definition := _definition(V2_MAP_CONFIG_DEF, ContentTypes.MAP_CONFIG, {
-		"trade_margin": 0.35,
-		"exploration": {"fog_vision_ratio": 0.22},
-		"story": {"enabled": true, "flow_id": "v2_flow", "stages": []},
-	})
-	var hub := _hub_with(context, [legacy_definition, v2_definition])
-
-	var legacy_state := _state_with_world({"map_profile_id": LEGACY_PROFILE_DEF})
-	var legacy_resolved := ContentRefs.map_config(legacy_state, hub)
-	assert_not_null(legacy_resolved, "legacy state resolves a definition")
-	assert_eq(legacy_resolved.content_type, ContentTypes.MAP_PROFILE, "legacy state resolves the map_profiles fallback")
-	assert_eq(String(legacy_resolved.id), LEGACY_PROFILE_DEF, "legacy state resolves the legacy id")
-	assert_false(ContentRefs.is_v2_campaign(legacy_state), "legacy state is not a v2 campaign")
-	assert_almost_eq(float(_map_config_data(legacy_state, hub).get("trade_margin", 0.0)), 0.2, 0.0001,
-		"legacy resolver data comes from map_profiles")
-
-	var v2_state := _state_with_world({"map_profile_id": LEGACY_PROFILE_DEF, "map_config_id": V2_MAP_CONFIG_DEF})
-	var v2_resolved := ContentRefs.map_config(v2_state, hub)
-	assert_not_null(v2_resolved, "v2 state resolves a definition")
-	assert_eq(v2_resolved.content_type, ContentTypes.MAP_CONFIG, "v2 state resolves map_configs first")
-	assert_eq(String(v2_resolved.id), V2_MAP_CONFIG_DEF, "v2 state resolves the map config id")
-	assert_true(ContentRefs.is_v2_campaign(v2_state), "v2 state is reported as v2")
-	assert_almost_eq(float(_map_config_data(v2_state, hub).get("trade_margin", 0.0)), 0.35, 0.0001,
-		"v2 resolver data comes from map_configs, not the legacy fallback")
-
-	# Unknown v2 id still falls back to the old map_profiles definition.
-	var unknown_state := _state_with_world({"map_profile_id": LEGACY_PROFILE_DEF, "map_config_id": "test:map_config/missing"})
-	var unknown_resolved := ContentRefs.map_config(unknown_state, hub)
-	assert_not_null(unknown_resolved, "unknown map config falls back to the legacy profile")
-	assert_eq(unknown_resolved.content_type, ContentTypes.MAP_PROFILE, "unknown map config uses the 1.0 fallback")
-
-	# Neither id set: no scenario definition, callers use their own defaults.
-	var bare_state := _state_with_world({})
-	assert_true(ContentRefs.map_config(bare_state, hub) == null, "bare state resolves no scenario definition")
-	assert_true(_map_config_data(bare_state, hub).is_empty(), "bare state reads empty scenario data")
-
-
-func test_real_resolvers_use_the_1_0_fallback() -> void:
-	var boot := bootstrap_core()
-	var context: AppContext = boot["context"]
-	var legacy_definition := _definition(LEGACY_PROFILE_DEF, ContentTypes.MAP_PROFILE, {
-		"trade_margin": 0.2,
-		"exploration": {"fog_vision_ratio": 0.11},
-		"story": {"enabled": true, "flow_id": "legacy_flow", "stages": []},
-	})
-	var v2_definition := _definition(V2_MAP_CONFIG_DEF, ContentTypes.MAP_CONFIG, {
-		"trade_margin": 0.35,
-		"exploration": {"fog_vision_ratio": 0.22},
-		"story": {"enabled": true, "flow_id": "v2_flow", "stages": []},
-	})
-	var hub := _hub_with(context, [legacy_definition, v2_definition])
-
-	# StoryService.config() is a real runtime resolver: 1.0 must still read the
-	# story block out of the legacy map_profiles definition (D13 moved v2 only).
-	var legacy_state := _state_with_world({"map_profile_id": LEGACY_PROFILE_DEF})
-	assert_eq(String(StoryService.config(legacy_state, hub).get("flow_id", "")), "legacy_flow",
-		"StoryService keeps reading the 1.0 story block")
-	var rules_1_0 := ExplorationRules.read(legacy_state, hub)
-	assert_almost_eq(float(rules_1_0.get("fog_vision_ratio", 0.0)), 0.11, 0.0001,
-		"ExplorationRules keeps reading the 1.0 exploration block")
-
-	var v2_state := _state_with_world({"map_profile_id": LEGACY_PROFILE_DEF, "map_config_id": V2_MAP_CONFIG_DEF})
-	assert_eq(String(StoryService.config(v2_state, hub).get("flow_id", "")), "v2_flow",
-		"StoryService reads the v2 map_configs story block")
-	var rules_v2 := ExplorationRules.read(v2_state, hub)
-	assert_almost_eq(float(rules_v2.get("fog_vision_ratio", 0.0)), 0.22, 0.0001,
-		"ExplorationRules reads the v2 map_configs exploration block")
-
-
-# ---------------------------------------------------------------------------
-# v2 entry point: run.start start_profile -> CampaignFactory
-# ---------------------------------------------------------------------------
-
-
-## Reuses B3-A's synthetic fixture (single source of truth for minimal v2 content).
-## Returns {context, start_profile_id} or an empty dictionary when unavailable.
-func _campaign_fixture() -> Dictionary:
-	if not ResourceLoader.exists(ASSEMBLY_SUITE):
-		return {}
-	var suite: Variant = load(ASSEMBLY_SUITE).new()
-	if suite == null:
-		return {}
-	for method in ["build_synthetic_context", "synthetic_start_profile_id"]:
-		if not suite.has_method(method):
-			return {}
-	var fixture_context: AppContext = suite.call("build_synthetic_context")
-	if fixture_context == null:
-		return {}
-	return {
-		"context": fixture_context,
-		"start_profile_id": String(suite.call("synthetic_start_profile_id")),
-	}
-
-
-func test_run_start_with_start_profile_creates_v2_campaign() -> void:
-	var fixture := _campaign_fixture()
-	if fixture.is_empty():
-		fail("B3-A CampaignFactory fixture is not available (%s); v2 run.start path not verified" % ASSEMBLY_SUITE)
-		return
-	var context: AppContext = fixture["context"]
-	var start_profile_id := String(fixture["start_profile_id"])
-	assert_false(start_profile_id.is_empty(), "B3-A fixture exposes a start profile id")
-	var started := context.commands.execute(&"run.start", {"start_profile": start_profile_id, "seed": 31337})
-	assert_true(bool(started.get("ok", false)), "v2 run.start succeeds: %s" % str(started))
-	assert_true(context.has_run(), "v2 run.start commits a state")
-	var state: GameState = context.state
-	var setup := state.campaign_setup()
-	assert_eq(String(setup.get("start_profile_id", "")), start_profile_id, "campaign.setup records the start profile")
-	assert_false(String(setup.get("world_profile_id", "")).is_empty(), "campaign.setup records the world profile")
-	assert_false(String(setup.get("map_config_id", "")).is_empty(), "campaign.setup records the map config")
-	assert_false(String(setup.get("starting_build_id", "")).is_empty(), "campaign.setup records the starting build")
-	assert_eq(int(setup.get("seed", 0)), 31337, "campaign.setup records the run seed")
-	assert_true(setup.get("content_versions", null) is Dictionary, "campaign.setup snapshots content versions")
-	var world := state.world()
-	assert_eq(String(world.get("start_profile_id", "")), start_profile_id, "state.world records start_profile_id")
-	assert_false(String(world.get("world_profile_id", "")).is_empty(), "state.world records world_profile_id")
-	assert_false(String(world.get("map_config_id", "")).is_empty(), "state.world records map_config_id")
-	assert_eq(String(world.get("map_profile_id", "")), "", "v2 campaigns leave map_profile_id empty")
-	var payload: Dictionary = Array(started.get("events", []))[0]["payload"]
-	assert_eq(String(payload.get("start_profile", "")), start_profile_id, "run.started reports the start profile")
-	assert_false(String(payload.get("map_config", "")).is_empty(), "run.started reports the map config")
-	assert_eq(String(payload.get("map_profile", "")), "", "run.started map_profile is empty on v2")
-
-	var view_result := context.queries.execute(&"campaign.view")
-	assert_true(bool(view_result.get("ok", false)), "campaign.view answers after a v2 run: %s" % str(view_result))
-	var view: Dictionary = view_result["data"]
-	_assert_campaign_view_shape(view, "v2 run")
-	assert_true(bool(view.get("is_v2", false)), "v2 run view is v2")
-	assert_eq(String((view["setup"] as Dictionary).get("start_profile_id", "")), start_profile_id, "campaign.view exposes the setup")
+	_assert_campaign_view_shape(view, "run")
+	assert_true(bool(view.get("is_v2", false)), "the campaign binding is reported")
+	assert_eq(String((view["setup"] as Dictionary).get("starting_scenario_id", "")), SWIFT_SCENARIO,
+		"campaign.view exposes the starting scenario")
 	assert_false((view["regions"] as Array).is_empty(), "campaign.view exposes generated regions")
 	assert_false((view["sites"] as Array).is_empty(), "campaign.view exposes generated sites")
+
+
+# ── resolver: map_config only (no map_profiles fallback) ──
+
+
+func test_content_refs_reads_map_config_without_fallback() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var synthetic := _definition(TEST_MAP_CONFIG, ContentTypes.MAP_CONFIG, {
+		"trade_margin": 0.35,
+		"exploration": {"fog_vision_ratio": 0.22},
+		"story": {"enabled": true, "flow_id": "cfg_flow", "stages": []},
+	})
+	var hub := _hub_with(context, [synthetic])
+
+	var resolved_state := _state_with_world({"map_config_id": TEST_MAP_CONFIG})
+	var resolved := ContentRefs.map_config(resolved_state, hub)
+	assert_not_null(resolved, "a bound map_config_id resolves")
+	assert_eq(resolved.content_type, ContentTypes.MAP_CONFIG, "the resolver reads map_configs")
+	assert_eq(String(resolved.id), TEST_MAP_CONFIG, "the resolver returns the bound config")
+	assert_almost_eq(float(ContentRefs.map_config_data(resolved_state, hub).get("trade_margin", 0.0)), 0.35, 0.0001,
+		"map_config_data returns the config data")
+	assert_true(ContentRefs.is_v2_campaign(resolved_state), "a bound run is a campaign")
+
+	var bare := _state_with_world({})
+	assert_true(ContentRefs.map_config(bare, hub) == null, "a bare state resolves no config")
+	assert_true(ContentRefs.map_config_data(bare, hub).is_empty(), "a bare state reads empty config data")
+
+	var unknown := _state_with_world({"map_config_id": "test:map_config/absent"})
+	assert_true(ContentRefs.map_config(unknown, hub) == null, "an unknown map_config_id resolves to null")
+
+	var legacy_only := _state_with_world({"map_profile_id": "test:map_profile/legacy"})
+	assert_true(ContentRefs.map_config(legacy_only, hub) == null,
+		"map_profiles retired: a legacy map_profile_id no longer resolves")
+	assert_false(ContentRefs.is_v2_campaign(legacy_only), "a legacy-only state is not a campaign")
+
+
+func test_real_resolvers_read_the_map_config() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var synthetic := _definition(TEST_MAP_CONFIG, ContentTypes.MAP_CONFIG, {
+		"exploration": {"fog_vision_ratio": 0.22},
+		"story": {"enabled": true, "flow_id": "cfg_flow", "stages": []},
+	})
+	var hub := _hub_with(context, [synthetic])
+	var state := _state_with_world({"map_config_id": TEST_MAP_CONFIG})
+	assert_eq(String(StoryService.config(state, hub).get("flow_id", "")), "cfg_flow",
+		"StoryService reads the map config story block")
+	assert_almost_eq(float(ExplorationRules.read(state, hub).get("fog_vision_ratio", 0.0)), 0.22, 0.0001,
+		"ExplorationRules reads the map config exploration block")

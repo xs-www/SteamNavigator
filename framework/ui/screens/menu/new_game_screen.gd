@@ -1,6 +1,7 @@
 class_name NewGameScreen
 extends VBoxContainer
 ## New-voyage form. It owns local form state and emits a start intent.
+## C4: the picker lists `starting_scenarios` (retired `starting_builds`).
 
 signal action_requested(action: StringName, params: Dictionary)
 
@@ -8,16 +9,16 @@ const TEXT := Color("ece1c5")
 const MUTED := Color("9fafa7")
 const BRASS := Color("e1c487")
 var _tr: Callable
-var _builds: Array = []
-var _selected_build := ""
+var _scenarios: Array = []
+var _selected_scenario := ""
 var _seed_input: LineEdit
 var _description: Label
 
 
 func bind(vm: Dictionary, translate: Callable) -> void:
-	_tr = translate; _builds = vm.get("builds", []); _selected_build = String(vm.get("selected_build", "")); _clear()
+	_tr = translate; _scenarios = vm.get("scenarios", []); _selected_scenario = String(vm.get("selected_scenario", "")); _clear()
 	var tutorial_mode := bool(vm.get("tutorial_mode", false))
-	add_child(_heading("航程准备", _loc("ui.menu.new_game", "新航程"), "选择初始构筑与种子"))
+	add_child(_heading("航程准备", _loc("ui.menu.new_game", "新航程"), "选择起始场景与种子"))
 	var intro := _panel(); var intro_box := _content(intro)
 	intro_box.add_child(_label(_loc("ui.app.subtitle", ""), 15, MUTED))
 	intro_box.add_child(_label("%s: %d" % [_loc("ui.label.content", "Content"), int(vm.get("content_total", 0))], 14, TEXT))
@@ -27,15 +28,15 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 
 	var form := _panel(); var form_box := _content(form)
 	if tutorial_mode:
-		# 4.5.2 新手剧情：固定教学船，隐藏构筑选择。
+		# 4.5.2 新手剧情：固定教学场景，隐藏场景选择。
 		form_box.add_child(_label(_loc("ui.new_game.tutorial_note", "新手剧情：本局使用默认教学船"), 14, BRASS))
 	else:
-		form_box.add_child(_label(_loc("ui.label.build", "Starting build"), 15, BRASS))
+		form_box.add_child(_label(_loc("ui.label.starting_scenario", "起始场景"), 15, BRASS))
 		var option := OptionButton.new(); option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		for build in _builds:
-			option.add_item(_loc(String(build.get("name_key", "")), String(build.get("id", "")))); option.set_item_metadata(option.item_count - 1, String(build.get("id", "")))
-			if _selected_build.is_empty() or _selected_build == String(build.get("id", "")): option.select(option.item_count - 1); _selected_build = String(build.get("id", ""))
-		option.item_selected.connect(_on_build_selected.bind(option)); form_box.add_child(option)
+		for scenario in _scenarios:
+			option.add_item(_loc(String(scenario.get("name_key", "")), String(scenario.get("id", "")))); option.set_item_metadata(option.item_count - 1, String(scenario.get("id", "")))
+			if _selected_scenario.is_empty() or _selected_scenario == String(scenario.get("id", "")): option.select(option.item_count - 1); _selected_scenario = String(scenario.get("id", ""))
+		option.item_selected.connect(_on_scenario_selected.bind(option)); form_box.add_child(option)
 		_description = _label("", 13, MUTED); form_box.add_child(_description); _refresh_description()
 	var seed_row := HBoxContainer.new(); seed_row.add_child(_label(_loc("ui.label.seed", "Seed"), 14, TEXT))
 	_seed_input = LineEdit.new(); _seed_input.placeholder_text = "random"; _seed_input.text = String(vm.get("seed_text", "")); _seed_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL; seed_row.add_child(_seed_input); form_box.add_child(seed_row)
@@ -50,15 +51,15 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 		add_child(warning_panel)
 
 
-func _on_build_selected(_index: int, option: OptionButton) -> void:
-	_selected_build = String(option.get_item_metadata(option.selected)); _refresh_description()
+func _on_scenario_selected(_index: int, option: OptionButton) -> void:
+	_selected_scenario = String(option.get_item_metadata(option.selected)); _refresh_description()
 func _refresh_description() -> void:
 	if _description == null: return
 	_description.text = ""
-	for build in _builds:
-		if String(build.get("id", "")) == _selected_build: _description.text = _loc(String(build.get("description_key", "")), ""); return
+	for scenario in _scenarios:
+		if String(scenario.get("id", "")) == _selected_scenario: _description.text = _loc(String(scenario.get("description_key", "")), ""); return
 func _start() -> void:
-	action_requested.emit(&"start_run", {"build_id": _selected_build, "seed_text": _seed_input.text})
+	action_requested.emit(&"start_run", {"starting_scenario": _selected_scenario, "seed_text": _seed_input.text})
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new(); panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL; return panel
 func _content(panel: PanelContainer) -> VBoxContainer:

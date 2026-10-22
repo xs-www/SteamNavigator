@@ -12,7 +12,7 @@ extends TestCase
 ##   weather_profiles / regions 各 ≥1。
 ## - 建议 warning（`content_count_recommended`）：route_templates / factions / sites / discoveries 各 ≥1。
 ## - 组合规则：start_profile 必须解析 world_profile + map_config（缺省引用回退到唯一 map config）+
-##   starting_build；start_region_tags 至少匹配一个 regions.region_tags；map config 的
+##   starting_scenario；start_region_tags 至少匹配一个 regions.region_tags；map config 的
 ##   archetypes 数量 ≥ world_profile.port_count。
 ## - `content.world.v1` / `content.campaign.v1` 在 `AppContext.KNOWN_CAPABILITIES` 中，声明它们的
 ##   manifest 不会被 dependency_resolver 以 unsupported capability 禁用。
@@ -23,7 +23,7 @@ const MAP_CONFIG_ID := "core:map_config/standard"
 const REGION_ID := "core:region/coastal"
 const WEATHER_PROFILE_ID := "core:weather_profile/temperate"
 const START_PROFILE_ID := "core:start_profile/standard"
-const STARTING_BUILD_ID := "core:starting_build/standard"
+const STARTING_BUILD_ID := "core:starting_scenario/standard"
 const STANDARD_HULL_ID := "core:hull/standard"
 const STANDARD_BOILER_ID := "core:module/standard_boiler"
 const SECOND_BOILER_ID := "core:module/second_boiler"
@@ -58,7 +58,7 @@ func test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void:
 		"no_resolvable_start_profile",
 		"start_profile_world_profile_missing",
 		"start_profile_map_config_missing",
-		"start_profile_starting_build_missing",
+		"start_profile_starting_scenario_missing",
 		"map_config_archetypes_short",
 		"start_region_unmatched",
 	]:
@@ -166,11 +166,11 @@ func test_start_region_tags_must_match_a_region() -> void:
 	)
 
 
-func test_start_profile_must_resolve_starting_build() -> void:
-	var result := _check(_full_hub([], 5, ["region.start"], "core:starting_build/missing"))
+func test_start_profile_must_resolve_starting_scenario() -> void:
+	var result := _check(_full_hub([], 5, ["region.start"], "core:starting_scenario/missing"))
 	assert_true(
-		_has_error(result, "start_profile_starting_build_missing"),
-		"start profile with a dangling starting_build is reported"
+		_has_error(result, "start_profile_starting_scenario_missing"),
+		"start profile with a dangling starting_scenario is reported"
 	)
 	assert_true(_has_error(result, "no_resolvable_start_profile"), "a dangling build leaves no resolvable start profile")
 
@@ -218,7 +218,7 @@ func _full_hub(
 	skip: Array = [],
 	archetype_count: int = 5,
 	region_tags: Array = ["region.start"],
-	starting_build_id: String = STARTING_BUILD_ID
+	starting_scenario_id: String = STARTING_BUILD_ID
 ) -> RegistryHub:
 	var hub := _baseline_hub(skip)
 	if not skip.has(ContentTypes.WEATHER_PROFILE):
@@ -246,7 +246,7 @@ func _full_hub(
 	if not skip.has(ContentTypes.MAP_CONFIG):
 		var archetypes: Array = []
 		for index in range(archetype_count):
-			archetypes.append("core:port_archetype/type_%d" % index)
+			archetypes.append("core:port_template/type_%d" % index)
 		_register(hub, ContentTypes.MAP_CONFIG, MAP_CONFIG_ID, [], {
 			"archetypes": archetypes,
 			"port_name_keys": ["port.name.alpha", "port.name.beta", "port.name.gamma", "port.name.delta"],
@@ -256,7 +256,7 @@ func _full_hub(
 		_register(hub, ContentTypes.START_PROFILE, START_PROFILE_ID, [], {
 			"world_profile": WORLD_PROFILE_ID,
 			"map_config": MAP_CONFIG_ID,
-			"starting_build": starting_build_id,
+			"starting_scenario": starting_scenario_id,
 			"difficulty": "standard",
 			"starting_port_tags": ["port.start"],
 		})
@@ -293,9 +293,8 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 	_register(hub, ContentTypes.STRATEGY, "core:strategy/standard", ["strategy.standard"])
 	_register(hub, ContentTypes.STRATEGY, "core:strategy/fast", ["strategy.fast"])
 	for index in range(4):
-		_register(hub, ContentTypes.PORT_ARCHETYPE, "core:port_archetype/type_%d" % index)
-	_register(hub, ContentTypes.MAP_PROFILE, "core:map_profile/standard")
-	_register(hub, ContentTypes.STARTING_BUILD, STARTING_BUILD_ID, [], {
+		_register(hub, ContentTypes.PORT_TEMPLATE, "core:port_template/type_%d" % index)
+	_register(hub, ContentTypes.STARTING_SCENARIO, STARTING_BUILD_ID, [], {
 		"hull": STANDARD_HULL_ID,
 		"boiler": STANDARD_BOILER_ID,
 		"cargo_modules": [STANDARD_CARGO_ID],

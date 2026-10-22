@@ -26,7 +26,7 @@ const MAIN_MENU_SCREEN_SCRIPT := preload("res://framework/ui/screens/menu/main_m
 const NEW_GAME_SCREEN_SCRIPT := preload("res://framework/ui/screens/menu/new_game_screen.gd")
 const MODS_SCREEN_SCRIPT := preload("res://framework/ui/screens/menu/mods_screen.gd")
 const SETTINGS_SCREEN_SCRIPT := preload("res://framework/ui/screens/menu/settings_screen.gd")
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 
 ## Notices whose rendered sentence is spelled out (per language) in
 ## `test_notice_log_renders_filled_localized_text`: every notice with more than
@@ -43,7 +43,7 @@ func _mount(seed_value: int) -> Dictionary:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var started := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": seed_value,
 	})
 	assert_true(bool(started.get("ok", false)), "run.start succeeds in the shell fixture: %s" % str(started))
@@ -487,7 +487,7 @@ func test_notice_log_renders_filled_localized_text() -> void:
 			break
 	assert_true(not recipe.is_empty(), "a money-only recipe is available for the order")
 	var module_id := String(recipe["module_id"])
-	var module_key := String(ShipOps.find_module(context.registries, module_id).name_key)
+	var module_key := String(ShipOps.find_installable(context.registries, module_id).name_key)
 	var port_key := String(yard["port_name_key"])
 	var cost := int(recipe["craft_cost"])
 	assert_true(context.commands.execute(&"ship.craft_module", {"module_id": module_id}).get("ok", false), "the order is placed")
@@ -527,7 +527,7 @@ func _assert_notice_log(log_texts: Array, context: AppContext, port_key: String,
 	assert_contains(log_texts, expected_order, "the log orders the port, module, hours and gold (%s)" % ("en" if english else "zh"))
 	assert_contains(log_texts, expected_completed, "the log reports the finished module before its port (%s)" % ("en" if english else "zh"))
 	assert_contains(log_texts, expected_wait, "the log waits at the port for the hours (%s)" % ("en" if english else "zh"))
-	var build_name := context.translate(String(context.registries.get_by_id(ContentTypes.STARTING_BUILD, STEADY_BUILD).name_key), "")
+	var build_name := context.translate(String(context.registries.get_by_id(ContentTypes.STARTING_SCENARIO, STEADY_BUILD).name_key), "")
 	assert_true(_log_line_with(log_texts, [build_name]) != "", "the opening notice names the chosen build: %s" % str(log_texts))
 
 

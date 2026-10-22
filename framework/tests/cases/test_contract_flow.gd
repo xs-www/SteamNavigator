@@ -4,7 +4,7 @@ extends TestCase
 func test_main_chain_offer_and_accept() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4242})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 4242})
 	var port_result := context.queries.execute(&"port.view")
 	var main_view: Dictionary = port_result["data"]["contracts"]["main"]
 	assert_true(not main_view.is_empty(), "current main contract is exposed")
@@ -40,6 +40,6 @@ func test_main_chain_offer_and_accept() -> void:
 func test_contract_cargo_cannot_be_sold() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 5252})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 5252})
 	var result := context.commands.execute(&"trade.sell", {"item_id": "core:item/contract_freight", "amount": 1})
 	assert_false(bool(result["ok"]), "contract cargo cannot be sold")

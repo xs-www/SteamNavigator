@@ -14,7 +14,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	var context := AppContext.get_active()
-	var start := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 12345})
+	var start := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 12345})
 	print("run.start -> ", start)
 	print("commands: ", context.commands.names())
 	var view := context.queries.execute(&"port.view")

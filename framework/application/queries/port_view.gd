@@ -15,7 +15,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	# the archetype definition so the stage still gets its town kit.
 	if diorama.is_empty():
 		var archetype := hub.get_by_id(
-			ContentTypes.PORT_ARCHETYPE,
+			ContentTypes.PORT_TEMPLATE,
 			String(port_data.get("archetype_id", ""))
 		)
 		if archetype != null:

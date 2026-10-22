@@ -7,8 +7,9 @@ extends TestCase
 ## - 每个 runtime 类型都必须有非空 schema_version；Phase B 的 9 类
 ##   （world_profiles / regions / sites / route_templates / weather_profiles /
 ##   factions / discoveries / start_profiles / map_configs）、C1 合并后的
-##   `modules` + `hulls`、C2 合并后的 `items` 与 C3 新增的 `quests` 为 2.0，
-##   其余运行时类型与 patches 仍为 1.0。
+##   `modules` + `hulls`、C2 合并后的 `items`、C3 新增的 `quests` 与 C4 的
+##   `port_templates` / `starting_scenarios` 为 2.0，其余运行时类型与 patches 仍为 1.0；
+##   `map_profiles` / `port_archetypes` / `starting_builds` 在 C4 退役。
 ## - `content_types.json.draft_schemas` 是 `weapons` + 剧情模式 `story_arcs` /
 ##   `story_levels`，草案不得进入 `ContentTypes`。
 ## - 1.0 内容的 envelope 仍走 1.0 校验；`items` 声明 1.0 必须报 `unsupported_schema`
@@ -150,6 +151,15 @@ func test_every_runtime_type_declares_its_content_schema_version() -> void:
 	assert_eq(ContentTypes.schema_path(ContentTypes.ITEM), "res://schemas/v2/item.schema.json", "items schema path")
 	assert_eq(ContentTypes.schema_version(ContentTypes.QUEST), "2.0", "quests is an active Schema 2.0 type (C3)")
 	assert_eq(ContentTypes.schema_path(ContentTypes.QUEST), "res://schemas/v2/quest.schema.json", "quests schema path")
+	assert_eq(ContentTypes.schema_version(ContentTypes.PORT_TEMPLATE), "2.0", "port_templates is a Schema 2.0 type (C4)")
+	assert_eq(ContentTypes.schema_path(ContentTypes.PORT_TEMPLATE), "res://schemas/v2/port_template.schema.json",
+		"port_templates schema path")
+	assert_eq(ContentTypes.schema_version(ContentTypes.STARTING_SCENARIO), "2.0",
+		"starting_scenarios is a Schema 2.0 type (C4)")
+	assert_eq(ContentTypes.schema_path(ContentTypes.STARTING_SCENARIO), "res://schemas/v2/starting_scenario.schema.json",
+		"starting_scenarios schema path")
+	for retired in [&"map_profiles", &"port_archetypes", &"starting_builds"]:
+		assert_false(ContentTypes.is_known(retired), "%s is retired in C4" % retired)
 	assert_eq(ContentTypes.schema_version(ContentTypes.HULL), "2.0", "hulls is a Schema 2.0 type after C1")
 	assert_eq(ContentTypes.schema_version(ContentTypes.MODULE), "2.0", "the merged modules type is Schema 2.0")
 	assert_eq(ContentTypes.schema_path(ContentTypes.MODULE), "res://schemas/v2/module.schema.json", "modules schema path")

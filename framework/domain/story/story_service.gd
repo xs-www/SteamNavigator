@@ -1,8 +1,8 @@
 class_name StoryService
 extends RefCounted
 ## @static-doc
-## 作用：新手剧情 / 教学系统的领域状态机。读取当前场景定义（v2 `map_configs`，
-## 旧档回退 `map_profiles`）的 `data.story`（Core JSON）阶段表，维护
+## 作用：新手剧情 / 教学系统的领域状态机。读取当前场景定义（`map_configs`，
+## C4 起 `map_profiles` 退役）的 `data.story`（Core JSON）阶段表，维护
 ## `GameState.data.story` 的进度、事件计数、标志、功能 / 商品 / 模块解锁，并分发
 ## 「发现委托目的港」等剧情效果。
 ##
@@ -53,7 +53,7 @@ const EVENT_FEATURE_UNLOCKED := "story.feature_unlocked"
 
 
 ## Reads the story block of the current scenario definition (`map_configs` for
-## v2 campaigns, legacy `map_profiles` fallback via `ContentRefs`; `{}` when the
+## campaigns via `ContentRefs` (map_configs); `{}` when the
 ## definition has none). D13: the tutorial flow moved into `map_configs.story`.
 static func config(state: GameState, hub: RegistryHub) -> Dictionary:
 	if state == null or hub == null:
@@ -690,6 +690,10 @@ static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect:
 		offer["cargo"] = [entry]
 		offer["cargo_weight"] = float(amount) * unit_weight
 		offer["player_sourced"] = not provider.is_empty()
+		if provider == "player":
+			# C4：程序生成地图不再保证目的港的 archetype 商品表包含教学货物；
+			# 「玩家自备」的剧情委托必须保证当前港能买到该货，否则教程会卡死。
+			_ensure_tutorial_cargo_tradeable(state, item_id)
 	# 4.5.5：第三主线仍是 main_03 段（保持 5 段主线计数），但内容改成送 1 名旅客：
 	# 清空模板的货箱、写入旅客人数。`passengers` 由 Core 给出，框架不写死 1。
 	if effect.has("passengers"):
@@ -723,6 +727,22 @@ static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect:
 	contracts["main_offer"] = null
 	# C3：剧情直接挂上的教学委托也生成 Quest 追踪实例（与 accept_offer 一致）。
 	QuestService.track_contract(state, offer)
+
+
+## 教学委托的「玩家自备」货物在当前港必须可买：程序生成地图的港口商品表可能不含
+## 该货（旧 1.0 地图碰巧命中）；把它在现有市场条目上改为可买并补足基准库存。
+static func _ensure_tutorial_cargo_tradeable(state: GameState, item_id: String) -> void:
+	if item_id.is_empty():
+		return
+	var market := MarketOps.market_for(state, state.current_port_id())
+	var entry: Variant = market.get(item_id, null)
+	if not (entry is Dictionary):
+		return
+	var market_entry: Dictionary = entry
+	market_entry["buyable"] = true
+	if int(market_entry.get("stock", 0)) <= 0:
+		market_entry["stock"] = maxi(1, int(market_entry.get("base_stock", 1)))
+	MarketOps.recalc(market_entry)
 
 
 static func _unlock_feature(story: Dictionary, feature: String) -> bool:

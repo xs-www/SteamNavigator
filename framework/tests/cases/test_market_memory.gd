@@ -11,7 +11,7 @@ func _row(rows: Array, item_id: String) -> Dictionary:
 func test_sell_any_good_but_buy_only_listed() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4343})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 4343})
 	var view := context.queries.execute(&"port.view")
 	var sell_only := {}
 	for row in view["data"]["market"]:
@@ -35,7 +35,7 @@ func test_sell_any_good_but_buy_only_listed() -> void:
 func test_cargo_average_cost_tracks_purchases() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4444})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 4444})
 	var view := context.queries.execute(&"port.view")
 	var hub: RegistryHub = context.registries
 	var weight_headroom := ShipOps.max_weight(hub, context.state.ship()) - ShipOps.total_weight(hub, context.state)
@@ -75,7 +75,7 @@ func test_cargo_average_cost_tracks_purchases() -> void:
 func test_port_memory_is_last_visit_snapshot() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 4545})
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 4545})
 	var start_port := context.state.current_port_id()
 	var memory := context.queries.execute(&"port.memory", {"port_id": start_port})
 	assert_true(bool(memory["ok"]), "port memory query succeeds")

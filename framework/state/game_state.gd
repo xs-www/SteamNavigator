@@ -30,7 +30,7 @@ const CAMPAIGN_SECTION_DEFAULTS := {
 		"start_profile_id": "",
 		"world_profile_id": "",
 		"map_config_id": "",
-		"starting_build_id": "",
+		"starting_scenario_id": "",
 		"difficulty": "standard",
 		"seed": 0,
 		"content_versions": {},

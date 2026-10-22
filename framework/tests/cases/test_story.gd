@@ -17,7 +17,7 @@ extends TestCase
 ## @end-static-doc
 
 const SEED := 20260421
-const BUILD_ID := "core:starting_build/steady"
+const BUILD_ID := "core:starting_scenario/steady"
 
 
 func test_tutorial_run_starts_story_and_locks_features() -> void:
@@ -521,7 +521,7 @@ func _sail_after_the_story_clue(
 func _start_run(seed_value: int, extra: Dictionary = {}) -> AppContext:
 	var boot := bootstrap_core(extra)
 	var context: AppContext = boot["context"]
-	var result := context.commands.execute(&"run.start", {"build_id": BUILD_ID, "seed": seed_value})
+	var result := context.commands.execute(&"run.start", {"starting_scenario": BUILD_ID, "seed": seed_value})
 	assert_true(bool(result.get("ok", false)), "run.start should succeed: %s" % str(result))
 	return context
 
@@ -530,7 +530,7 @@ func _start_tutorial(seed_value: int, extra: Dictionary = {}) -> AppContext:
 	var boot := bootstrap_core(extra)
 	var context: AppContext = boot["context"]
 	var result := context.commands.execute(&"run.start", {
-		"build_id": BUILD_ID,
+		"starting_scenario": BUILD_ID,
 		"seed": seed_value,
 		"tutorial": true,
 	})
