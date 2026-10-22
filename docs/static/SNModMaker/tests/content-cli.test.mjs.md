@@ -8,39 +8,39 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MOD_ID` | L37 |
-| `GOODS_FILE` | L38 |
-| `STORY_PACK_DIR` | L41 |
-| `runCli(args)` | L47 |
-| `jsonRun(args)` | L65 |
-| `mustJson(result, label = 'CLI')` | L70 |
-| `assertStatus(result, expected, label)` | L86 |
-| `mustFailJson(result, label)` | L95 |
-| `assertUsageError(result, label)` | L107 |
-| `tempRoot(t)` | L117 |
-| `createMod(t, { id = MOD_ID, name = '测试模组', template = 'goods', extra = [] } = {})` | L128 |
-| `readText(file)` | L138 |
-| `readJson(file)` | L142 |
-| `writeJson(file, value)` | L150 |
-| `manifestOf(mod)` | L154 |
-| `contentFilesOf(mod)` | L158 |
-| `contentFileOfType(mod, typeKey)` | L166 |
-| `goodsFileOf(mod)` | L172 |
-| `definitionsOf(mod)` | L176 |
-| `definitionById(mod, id)` | L186 |
-| `localeOf(mod, locale)` | L192 |
-| `addGood(mod, id, extra = [])` | L199 |
-| `sha256File(file)` | L216 |
-| `snapshotDir(dir, { onlyJson = false } = {})` | L224 |
-| `assertDirUnchanged(before, dir, label, options)` | L240 |
-| `copyDir(source, target)` | L245 |
-| `assertLinesPreservedInOrder(beforeText, afterText, label)` | L261 |
-| `extractDefinitionSlices(text)` | L284 |
-| `changedLineIndexes(beforeText, afterText)` | L324 |
-| `isDefinitionRow(value)` | L340 |
-| `collectRowArrays(value, out = [])` | L344 |
-| `listRows(json, label)` | L356 |
-| `expectedCoreDefinitionCount()` | L371 |
+| `MOD_ID` | L39 |
+| `GOODS_FILE` | L40 |
+| `STORY_PACK_DIR` | L43 |
+| `runCli(args)` | L49 |
+| `jsonRun(args)` | L67 |
+| `mustJson(result, label = 'CLI')` | L72 |
+| `assertStatus(result, expected, label)` | L88 |
+| `mustFailJson(result, label)` | L97 |
+| `assertUsageError(result, label)` | L109 |
+| `tempRoot(t)` | L119 |
+| `createMod(t, { id = MOD_ID, name = '测试模组', template = 'goods', extra = [] } = {})` | L130 |
+| `readText(file)` | L140 |
+| `readJson(file)` | L144 |
+| `writeJson(file, value)` | L152 |
+| `manifestOf(mod)` | L156 |
+| `contentFilesOf(mod)` | L160 |
+| `contentFileOfType(mod, typeKey)` | L168 |
+| `goodsFileOf(mod)` | L174 |
+| `definitionsOf(mod)` | L178 |
+| `definitionById(mod, id)` | L188 |
+| `localeOf(mod, locale)` | L194 |
+| `addGood(mod, id, extra = [])` | L201 |
+| `sha256File(file)` | L218 |
+| `snapshotDir(dir, { onlyJson = false } = {})` | L226 |
+| `assertDirUnchanged(before, dir, label, options)` | L242 |
+| `copyDir(source, target)` | L247 |
+| `assertLinesPreservedInOrder(beforeText, afterText, label)` | L263 |
+| `extractDefinitionSlices(text)` | L286 |
+| `changedLineIndexes(beforeText, afterText)` | L326 |
+| `isDefinitionRow(value)` | L342 |
+| `collectRowArrays(value, out = [])` | L346 |
+| `listRows(json, label)` | L358 |
+| `expectedCoreDefinitionCount()` | L373 |
 
 ## 契约与约束
 

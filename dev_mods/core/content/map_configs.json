@@ -1,0 +1,649 @@
+{
+  "schema_version": "2.0",
+  "content_type": "map_configs",
+  "definitions": [
+    {
+      "id": "core:map_config/standard",
+      "name_key": "map_config.core.standard.name",
+      "description_key": "map_config.core.standard.description",
+      "tags": [
+        "map.standard",
+        "map.mvp"
+      ],
+      "enabled": true,
+      "data": {
+        "archetypes": [
+          "core:port_archetype/iron_harbor",
+          "core:port_archetype/spice_port",
+          "core:port_archetype/free_town",
+          "core:port_archetype/fishing_village",
+          "core:port_archetype/glass_port"
+        ],
+        "port_name_keys": [
+          "port_name.core.iron_harbor",
+          "port_name.core.spice_port",
+          "port_name.core.free_town",
+          "port_name.core.fishing_village",
+          "port_name.core.glass_port",
+          "port_name.core.mist_cove"
+        ],
+        "start_archetype_tags": [
+          "port.hub"
+        ],
+        "required_facility_tags": [
+          "port.shipyard",
+          "port.intel"
+        ],
+        "required_facility_max_edges": 2,
+        "npc_count_range": [
+          2,
+          3
+        ],
+        "npc_cargo_range": [
+          8,
+          24
+        ],
+        "supply_prices": {
+          "coal": 4,
+          "water": 2,
+          "repair_per_point": 6
+        },
+        "loan": {
+          "limit": 400,
+          "interest_rate": 0.1,
+          "term_hours": 96
+        },
+        "intel_cost": 25,
+        "trade_margin": 0.95,
+        "player_trade_impact": 0.35,
+        "default_starting_build": "core:starting_build/steady",
+        "twin_world_size": 160,
+        "exploration": {
+          "rumor_clue_chance": 0.65,
+          "fog_port_reveal_ratio": 0.05,
+          "fog_vision_ratio": 0.05,
+          "intel_clue_cost": 40,
+          "max_active_clues": 4,
+          "level_weights": {
+            "rumor": [
+              0.55,
+              0.35,
+              0.1,
+              0
+            ],
+            "intel": [
+              0,
+              0.15,
+              0.45,
+              0.4
+            ]
+          },
+          "credibility_range": {
+            "rumor": [
+              0.25,
+              0.55
+            ],
+            "intel": [
+              0.6,
+              0.95
+            ],
+            "wait": [
+              0.4,
+              0.7
+            ],
+            "contract": [
+              0.55,
+              0.85
+            ]
+          },
+          "distance_error_ratio": 0.35,
+          "search_zone_radius": 14,
+          "search_zone_noise": 12,
+          "discovery_chance_base": 0.2,
+          "discovery_chance_per_credibility": 0.7,
+          "risk_base": 0.08,
+          "risk_per_unreliability": 0.12,
+          "drift_durability_loss": 8,
+          "drift_extra_coal": 4,
+          "drift_extra_water": 4,
+          "drift_hours": 6,
+          "alert_threshold": 0.5,
+          "alert_progress": 0.5,
+          "turnback_extra_ratio": 0.25,
+          "investigation_cost": 20,
+          "investigation_hours": 6,
+          "investigation_success_chance": 0.75,
+          "goods_clue_expiry_hours": {
+            "rumor": 24,
+            "intel": 72,
+            "wait": 48,
+            "contract": 72
+          },
+          "goods_clue_price_error_ratio": 0.15,
+          "goods_clue_source_weights": {
+            "rumor": 0,
+            "intel": 0,
+            "wait": 1,
+            "contract": 0
+          },
+          "wait_clue_hours_block": 6,
+          "wait_clue_chance_per_block": 0.35,
+          "wait_clue_max_chance": 0.85,
+          "contract_clue_chance": 0.5
+        },
+        "story": {
+          "flow_id": "core:story/opening",
+          "enabled": true,
+          "skip_unlocks": [
+            "overview",
+            "supply",
+            "chart",
+            "market",
+            "contracts",
+            "clues",
+            "tavern",
+            "shipyard"
+          ],
+          "start_unlocks": [],
+          "start_items": [],
+          "start_modules": [],
+          "stages": [
+            {
+              "id": "opening",
+              "dialogue": {
+                "title_key": "story.core.opening.title",
+                "body_keys": [
+                  "story.core.opening.body.1",
+                  "story.core.opening.body.2"
+                ]
+              },
+              "unlock_features": [
+                "overview"
+              ],
+              "effects": [
+                {
+                  "type": "set_ship_fuel",
+                  "amount": 4
+                },
+                {
+                  "type": "grant_tutorial_contract",
+                  "template_id": "core:contract/main_01",
+                  "cargo_item_id": "core:good/coal",
+                  "amount": 10,
+                  "provider": "fuel",
+                  "deadline_formula": "tutorial_express",
+                  "name_key": "contract.core.tutorial_coal.name",
+                  "description_key": "contract.core.tutorial_coal.description"
+                },
+                {
+                  "type": "discover_contract_destination"
+                }
+              ],
+              "advance": {
+                "mode": "confirm"
+              }
+            },
+            {
+              "id": "supply_brief",
+              "dialogue": {
+                "title_key": "story.core.supply_brief.title",
+                "body_keys": [
+                  "story.core.supply_brief.body.1"
+                ]
+              },
+              "unlock_features": [
+                "market"
+              ],
+              "objective": {
+                "text_key": "story.core.supply_brief.objective",
+                "target": 4
+              },
+              "advance": {
+                "all": [
+                  {
+                    "event": "cmd:supply.buy_coal",
+                    "counter": "coal_bought",
+                    "at_least": 4
+                  },
+                  {
+                    "event": "cmd:supply.buy_water",
+                    "counter": "water_bought",
+                    "at_least": 2
+                  }
+                ]
+              }
+            },
+            {
+              "id": "supply_hold",
+              "dialogue": {
+                "title_key": "story.core.supply_hold.title",
+                "body_keys": [
+                  "story.core.supply_hold.body.1"
+                ]
+              },
+              "unlock_features": [
+                "chart"
+              ],
+              "lock_actions": [
+                "supply.buy"
+              ],
+              "objective": {
+                "text_key": "story.core.supply_hold.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "ui:chart_opened"
+              }
+            },
+            {
+              "id": "chart_brief",
+              "dialogue": {
+                "title_key": "story.core.chart_brief.title",
+                "body_keys": [
+                  "story.core.chart_brief.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.chart_brief.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "ui:chart_closed"
+              }
+            },
+            {
+              "id": "supply_finish",
+              "dialogue": {
+                "title_key": "story.core.supply_finish.title",
+                "body_keys": [
+                  "story.core.supply_finish.body.1"
+                ]
+              },
+              "effects": [
+                {
+                  "type": "set_counter_from_ship",
+                  "counter": "coal_aboard",
+                  "kind": "coal"
+                }
+              ],
+              "objective": {
+                "text_key": "story.core.supply_finish.objective",
+                "target": 10
+              },
+              "advance": {
+                "event": "cmd:supply.buy_coal",
+                "counter": "coal_aboard",
+                "counter_from": "stock",
+                "at_least": 10
+              }
+            },
+            {
+              "id": "depart_brief",
+              "dialogue": {
+                "title_key": "story.core.depart_brief.title",
+                "body_keys": [
+                  "story.core.depart_brief.body.1"
+                ]
+              },
+              "preferred_strategy": "fast",
+              "objective": {
+                "text_key": "story.core.depart_brief.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "ui:arrival_settled"
+              }
+            },
+            {
+              "id": "second_port",
+              "dialogue": {
+                "title_key": "story.core.second_port.title",
+                "body_keys": [
+                  "story.core.second_port.body.1"
+                ]
+              },
+              "unlock_features": [
+                "market",
+                "contracts"
+              ],
+              "unlock_items": [
+                "core:good/spices",
+                "core:good/textiles"
+              ],
+              "effects": [
+                {
+                  "type": "grant_tutorial_contract",
+                  "template_id": "core:contract/main_02",
+                  "cargo_item_id": "core:good/textiles",
+                  "amount": 6,
+                  "provider": "player",
+                  "destination": "home",
+                  "deadline_formula": "tutorial_trade",
+                  "name_key": "contract.core.tutorial_trade.name",
+                  "description_key": "contract.core.tutorial_trade.description"
+                }
+              ],
+              "objective": {
+                "text_key": "story.core.second_port.objective",
+                "target": 8
+              },
+              "advance": {
+                "event": "cmd:trade.buy",
+                "counter": "textiles_bought",
+                "at_least": 8,
+                "match": {
+                  "item_id": "core:good/textiles"
+                }
+              }
+            },
+            {
+              "id": "second_depart",
+              "dialogue": {
+                "title_key": "story.core.second_depart.title",
+                "body_keys": [
+                  "story.core.second_depart.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.second_depart.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "ui:arrival_settled"
+              }
+            },
+            {
+              "id": "back_first",
+              "dialogue": {
+                "title_key": "story.core.back_first.title",
+                "body_keys": [
+                  "story.core.back_first.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.back_first.objective",
+                "target": 2
+              },
+              "advance": {
+                "event": "cmd:trade.sell",
+                "counter": "textiles_sold",
+                "at_least": 2,
+                "match": {
+                  "item_id": "core:good/textiles"
+                }
+              }
+            },
+            {
+              "id": "chapter_wrap",
+              "dialogue": {
+                "title_key": "story.core.chapter_wrap.title",
+                "body_keys": [
+                  "story.core.chapter_wrap.body.1"
+                ]
+              },
+              "advance": {
+                "mode": "confirm"
+              }
+            },
+            {
+              "id": "tavern_open",
+              "dialogue": {
+                "title_key": "story.core.tavern_open.title",
+                "body_keys": [
+                  "story.core.tavern_open.body.1",
+                  "story.core.tavern_open.body.2"
+                ]
+              },
+              "unlock_features": [
+                "clues",
+                "tavern"
+              ],
+              "effects": [
+                {
+                  "type": "grant_clue",
+                  "port": "next_unknown",
+                  "level": 1,
+                  "source": "rumor"
+                },
+                {
+                  "type": "set_market_price_bias",
+                  "item_ids": [
+                    "core:good/textiles",
+                    "core:good/spices"
+                  ],
+                  "home_bias": 1.35,
+                  "other_bias": 0.7,
+                  "reset_stock": true,
+                  "make_buyable": true
+                }
+              ],
+              "advance": {
+                "mode": "confirm"
+              }
+            },
+            {
+              "id": "tavern_intro",
+              "dialogue": {
+                "title_key": "story.core.tavern_intro.title",
+                "body_keys": [
+                  "story.core.tavern_intro.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.tavern_intro.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "cmd:intel.refresh",
+                "counter": "intel_refreshed",
+                "at_least": 1
+              }
+            },
+            {
+              "id": "third_good",
+              "dialogue": {
+                "title_key": "story.core.third_good.title",
+                "body_keys": [
+                  "story.core.third_good.body.1"
+                ]
+              },
+              "unlock_items": [
+                "core:good/timber"
+              ],
+              "objective": {
+                "text_key": "story.core.third_good.objective",
+                "target": 1
+              },
+              "advance": {
+                "all": [
+                  {
+                    "event": "cmd:voyage.start",
+                    "counter": "act2_departures",
+                    "at_least": 1
+                  },
+                  {
+                    "event": "ui:arrival_settled",
+                    "counter": "act2_arrivals",
+                    "at_least": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "second_clue",
+              "dialogue": {
+                "title_key": "story.core.second_clue.title",
+                "body_keys": [
+                  "story.core.second_clue.body.1",
+                  "story.core.second_clue.body.2"
+                ]
+              },
+              "effects": [
+                {
+                  "type": "grant_clue",
+                  "port": "next_unknown",
+                  "level": 3,
+                  "source": "rumor"
+                },
+                {
+                  "type": "guarantee_explore_success"
+                }
+              ],
+              "advance": {
+                "mode": "confirm"
+              }
+            },
+            {
+              "id": "explore_third",
+              "dialogue": {
+                "title_key": "story.core.explore_third.title",
+                "body_keys": [
+                  "story.core.explore_third.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.explore_third.objective",
+                "target": 1
+              },
+              "advance": {
+                "all": [
+                  {
+                    "event": "cmd:explore.start",
+                    "counter": "act2_explorations",
+                    "at_least": 1
+                  },
+                  {
+                    "event": "ui:arrival_settled",
+                    "counter": "act2_explore_arrivals",
+                    "at_least": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "third_port",
+              "dialogue": {
+                "title_key": "story.core.third_port.title",
+                "body_keys": [
+                  "story.core.third_port.body.1",
+                  "story.core.third_port.body.2"
+                ]
+              },
+              "unlock_features": [
+                "shipyard"
+              ],
+              "unlock_modules": [
+                "core:cabin/small_cabin"
+              ],
+              "effects": [
+                {
+                  "type": "add_facility",
+                  "facility": "shipyard"
+                },
+                {
+                  "type": "upgrade_hull",
+                  "hull_id": "core:hull/medium_standard",
+                  "store_old": true
+                }
+              ],
+              "advance": {
+                "mode": "confirm"
+              }
+            },
+            {
+              "id": "refit_unload",
+              "dialogue": {
+                "title_key": "story.core.refit_unload.title",
+                "body_keys": [
+                  "story.core.refit_unload.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.refit_unload.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "cmd:ship.uninstall_module",
+                "counter": "cargo_uninstalled",
+                "at_least": 1,
+                "match": {
+                  "content_type": "cargo_modules"
+                }
+              }
+            },
+            {
+              "id": "refit_cabin",
+              "dialogue": {
+                "title_key": "story.core.refit_cabin.title",
+                "body_keys": [
+                  "story.core.refit_cabin.body.1"
+                ]
+              },
+              "objective": {
+                "text_key": "story.core.refit_cabin.objective",
+                "target": 1
+              },
+              "advance": {
+                "event": "cmd:ship.install_module",
+                "counter": "cabin_installed",
+                "at_least": 1,
+                "match": {
+                  "module_id": "core:cabin/small_cabin"
+                }
+              }
+            },
+            {
+              "id": "passenger_run",
+              "dialogue": {
+                "title_key": "story.core.passenger_run.title",
+                "body_keys": [
+                  "story.core.passenger_run.body.1"
+                ]
+              },
+              "effects": [
+                {
+                  "type": "grant_tutorial_contract",
+                  "template_id": "core:contract/main_03",
+                  "passengers": 1,
+                  "deadline_formula": "tutorial_craft",
+                  "name_key": "contract.core.tutorial_passenger.name",
+                  "description_key": "contract.core.tutorial_passenger.description"
+                }
+              ],
+              "objective": {
+                "text_key": "story.core.passenger_run.objective",
+                "target": 1
+              },
+              "advance": {
+                "all": [
+                  {
+                    "event": "cmd:voyage.start",
+                    "counter": "passenger_departures",
+                    "at_least": 1
+                  },
+                  {
+                    "event": "ui:arrival_settled",
+                    "counter": "passenger_arrivals",
+                    "at_least": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "story_complete",
+              "dialogue": {
+                "title_key": "story.core.story_complete.title",
+                "body_keys": [
+                  "story.core.story_complete.body.1"
+                ]
+              },
+              "advance": {
+                "mode": "confirm"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

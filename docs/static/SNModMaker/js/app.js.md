@@ -132,10 +132,10 @@
 | `importFolder()` | L2762 |
 | `importFile()` | L2767 |
 | `importEntries(entries)` | L2772 |
-| `draftContentFiles()` | L2816 |
-| `draftContentLabel(files)` | L2820 |
-| `draftExportNotice(files)` | L2824 |
-| `confirmDraftExport(files, actionLabel)` | L2834 |
+| `unsupportedContentFiles()` | L2816 |
+| `unsupportedContentLabel(files)` | L2820 |
+| `unsupportedExportNotice(files)` | L2824 |
+| `confirmUnsupportedExport(files, actionLabel)` | L2834 |
 | `showExport()` | L2844 |
 | `exportZip()` | L2887 |
 | `exportZipToDisk()` | L2910 |
@@ -172,7 +172,7 @@
 - 自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。
 - 检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。
 - 项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。
-- 导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量。
+- 导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（`weapons` 草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。Phase B 提升的 2.0 运行时类型可直接部署。
 - 没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。
 - 资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。
 - Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。

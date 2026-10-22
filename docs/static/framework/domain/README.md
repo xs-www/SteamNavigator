@@ -6,6 +6,14 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
+| `campaign/assembly_utils.gd` | CampaignFactory 世界装配链路（区域 / 地点 / 航路 / 阵营 / 图鉴）共用的 | [查看](./campaign/assembly_utils.gd.md) |
+| `campaign/campaign_factory.gd` | v2 战役开局装配（WORLD_SCHEMA_V2_RUNTIME §6.2）。从 `start_profiles` 定义解析 | [查看](./campaign/campaign_factory.gd.md) |
+| `campaign/discovery_assembler.gd` | v2 战役的图鉴装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 9）。按 | [查看](./campaign/discovery_assembler.gd.md) |
+| `campaign/faction_assembler.gd` | v2 战役的阵营装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 8）。按 | [查看](./campaign/faction_assembler.gd.md) |
+| `campaign/map_generation_spec.gd` | 把 Content Schema 2.0 的 `world_profiles` / `map_configs` / `route_templates` | [查看](./campaign/map_generation_spec.gd.md) |
+| `campaign/region_assembler.gd` | v2 战役的区域装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 5）。按 | [查看](./campaign/region_assembler.gd.md) |
+| `campaign/route_assembler.gd` | v2 战役的航路装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 7）。为抽象海图的每条边 | [查看](./campaign/route_assembler.gd.md) |
+| `campaign/site_assembler.gd` | v2 战役的地点装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 6）。每个区域按 | [查看](./campaign/site_assembler.gd.md) |
 | `contracts/contract_ops.gd` | 委托实例生成、装载、交付结算、接取规则、普通委托池生成与抵达刷新。 | [查看](./contracts/contract_ops.gd.md) |
 | `contracts/formula_registry.gd` | 框架拥有的安全期限公式注册表，供委托数据引用。 | [查看](./contracts/formula_registry.gd.md) |
 | `contracts/run_factory.gd` | 新局工厂：选构筑/地图配置、生成船只与市场、NPC、仓库/运输/统计/通关结构、初始主线与普通委托。 | [查看](./contracts/run_factory.gd.md) |
@@ -20,7 +28,7 @@
 | `events/effect_op_registry.gd` | 白名单效果操作码及其纯实现（货币、补给、货物、船只与模块、委托、情报、通知）。 | [查看](./events/effect_op_registry.gd.md) |
 | `exploration/clue_service.gd` | 线索的领域服务——港口位置线索（抵达传闻 / 情报站购买）与货物行情线索 | [查看](./exploration/clue_service.gd.md) |
 | `exploration/exploration_calculator.gd` | 把「一条线索的搜索区 + 当前船况 + 锅炉策略 + 探索规则」折算成探索出航预览 | [查看](./exploration/exploration_calculator.gd.md) |
-| `exploration/exploration_rules.gd` | 读取并合并探索系统规则（`map_profiles` 定义的 `data.exploration`）， | [查看](./exploration/exploration_rules.gd.md) |
+| `exploration/exploration_rules.gd` | 读取并合并探索系统规则（v2 `map_configs` / 1.0 `map_profiles` 定义的 | [查看](./exploration/exploration_rules.gd.md) |
 | `exploration/explore_voyage_service.gd` | 探索航次的领域执行——出航（只扣工资、记录出发库存与每小时煤水费率、写探索 | [查看](./exploration/explore_voyage_service.gd.md) |
 | `map/map_generator.gd` | 程序生成 4–5 港口连通分支网络，并验证 MVP 硬约束。 | [查看](./map/map_generator.gd.md) |
 | `map/map_ops.gd` | GameState.world 上的港口/航线查询、设施可见性、发现与 BFS。 | [查看](./map/map_ops.gd.md) |
@@ -30,7 +38,7 @@
 | `ship/ship_modules.gd` | 船舶模块实例层：为每个已装模块维护稳定 instance_id 与 0..1 condition，对齐扁平槽位键，并作为损伤/维修/存档的唯一写入口。 | [查看](./ship/ship_modules.gd.md) |
 | `ship/ship_ops.gd` | 船只组合的纯函数：模块/货物/煤水/旅客/随船运输重量、容量、槽位、安装/卸下规则与派生属性。 | [查看](./ship/ship_ops.gd.md) |
 | `ship/warehouse_ops.gd` | 港口仓库与随船运输：每港独立保存模块/材料，transit 模块计入重量但不占货舱。 | [查看](./ship/warehouse_ops.gd.md) |
-| `story/story_service.gd` | 新手剧情 / 教学系统的领域状态机。读取当前 map profile 的 | [查看](./story/story_service.gd.md) |
+| `story/story_service.gd` | 新手剧情 / 教学系统的领域状态机。读取当前场景定义（v2 `map_configs`， | [查看](./story/story_service.gd.md) |
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |
 | `voyage/voyage_estimator.gd` | 把「一条航线 + 当前船况 + 锅炉策略 + 航行规则」折算成海图右侧面板需要的 | [查看](./voyage/voyage_estimator.gd.md) |
 | `voyage/voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**纯状态机**：把一次已经由 `voyage.start` | [查看](./voyage/voyage_presentation.gd.md) |

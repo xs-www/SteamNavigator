@@ -132,6 +132,11 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0, 
 		"victory": null,
 	}
 	state.ensure_campaign()
+	var setup: Dictionary = state.campaign_setup()
+	if (setup.get("content_versions", {}) as Dictionary).is_empty():
+		# D3: every new run snapshots the per-type content schema versions, so a
+		# later load can report drift without guessing. 1.0 runs snapshot 1.0.
+		setup["content_versions"] = ContentTypes.SCHEMA_VERSIONS.duplicate(true)
 	var world_progress := state.campaign_world()
 	world_progress["generated"] = true
 	var starting_port_id := state.current_port_id()
@@ -149,7 +154,7 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0, 
 		_initialize_world_fog(state, starting_port_id, hub)
 	ContractOps.ensure_structure(state)
 	WarehouseOps.ensure_structure(state)
-	_initialize_markets(state, hub, profile, rng)
+	initialize_markets(state, hub, profile, rng)
 	MarketMemoryService.remember(state, state.current_port_id())
 	state.data["npcs"] = NpcTraderSimulator.create_initial(state, hub, rng, profile.data)
 
@@ -255,7 +260,13 @@ static func _initialize_world_fog(state: GameState, start_port_id: String, hub: 
 	FogOps.save_fog_state(state, fog, coastal)
 
 
-static func _initialize_markets(state: GameState, hub: RegistryHub, profile: ContentDefinition, rng: RngService) -> void:
+## Initializes every port market from the generated world's port archetypes.
+## Shared by the 1.0 path (`create_run`, scenario = the `map_profiles` definition)
+## and the v2 campaign path (`CampaignFactory`, scenario = the `map_configs`
+## definition). Market pricing only depends on the port archetype + RNG, so both
+## paths produce the same markets for the same generation seed; `scenario` is
+## accepted now so a future per-scenario market tweak has one entry point.
+static func initialize_markets(state: GameState, hub: RegistryHub, _scenario: ContentDefinition, rng: RngService) -> void:
 	var markets := {}
 	var ports: Dictionary = state.world().get("ports", {})
 	for raw_port_id in ports.keys():
@@ -267,6 +278,11 @@ static func _initialize_markets(state: GameState, hub: RegistryHub, profile: Con
 		var port_rng := rng.stream(RngService.STREAM_GOODS_GENERATION, port_id)
 		markets[port_id] = MarketOps.initialize_port_market(hub, archetype, port_rng)
 	state.data["market"] = markets
+
+
+## Backwards-compatible alias for the pre-B3 private name.
+static func _initialize_markets(state: GameState, hub: RegistryHub, profile: ContentDefinition, rng: RngService) -> void:
+	initialize_markets(state, hub, profile, rng)
 
 
 static func _generate_main_offer(state: GameState, hub: RegistryHub, sequence: int, rng: RngService) -> Dictionary:

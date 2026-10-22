@@ -21,6 +21,8 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_content_versions.gd",
 	"res://framework/tests/cases/test_world_schema_refs.gd",
 	"res://framework/tests/cases/test_world_completeness.gd",
+	"res://framework/tests/cases/test_campaign_assembly.gd",
+	"res://framework/tests/cases/test_campaign_start.gd",
 	"res://framework/tests/cases/test_rng.gd",
 	"res://framework/tests/cases/test_market_trade.gd",
 	"res://framework/tests/cases/test_market_memory.gd",

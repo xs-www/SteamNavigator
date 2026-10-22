@@ -73,6 +73,16 @@ jobs:
           set -euo pipefail
           node tools/gen_static_docs.mjs --check
 
+      # The editor and Content CLI share the same validation engine as the game;
+      # keep their suites in the release gate so content-type promotions cannot
+      # silently drift from the deploy guard / capability semantics.
+      - name: Run SNModMaker and Content CLI tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node SNModMaker/tests/run-tests.js
+          node --test SNModMaker/tests/content-cli.test.mjs
+
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB).
       - name: Validate core content

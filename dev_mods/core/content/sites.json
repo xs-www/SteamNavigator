@@ -1,0 +1,84 @@
+{
+  "schema_version": "2.0",
+  "content_type": "sites",
+  "definitions": [
+    {
+      "id": "core:site/sunken_ruin",
+      "name_key": "site.core.sunken_ruin.name",
+      "description_key": "site.core.sunken_ruin.description",
+      "tags": ["site.ruin"],
+      "enabled": true,
+      "data": {
+        "site_kind": "ruin",
+        "weight": 30,
+        "region_kinds": ["coastal", "archipelago"],
+        "repeatable": false
+      }
+    },
+    {
+      "id": "core:site/old_wreck",
+      "name_key": "site.core.old_wreck.name",
+      "description_key": "site.core.old_wreck.description",
+      "tags": ["site.wreck"],
+      "enabled": true,
+      "data": {
+        "site_kind": "wreck",
+        "weight": 25,
+        "region_kinds": ["coastal", "open_sea"],
+        "repeatable": false
+      }
+    },
+    {
+      "id": "core:site/sea_landmark",
+      "name_key": "site.core.sea_landmark.name",
+      "description_key": "site.core.sea_landmark.description",
+      "tags": ["site.landmark"],
+      "enabled": true,
+      "data": {
+        "site_kind": "landmark",
+        "weight": 20,
+        "region_kinds": ["coastal", "archipelago", "open_sea"],
+        "repeatable": true
+      }
+    },
+    {
+      "id": "core:site/pirate_encounter",
+      "name_key": "site.core.pirate_encounter.name",
+      "description_key": "site.core.pirate_encounter.description",
+      "tags": ["site.encounter", "site.hostile"],
+      "enabled": true,
+      "data": {
+        "site_kind": "encounter",
+        "weight": 18,
+        "region_kinds": ["archipelago", "open_sea"],
+        "repeatable": true
+      }
+    },
+    {
+      "id": "core:site/base_camp",
+      "name_key": "site.core.base_camp.name",
+      "description_key": "site.core.base_camp.description",
+      "tags": ["site.base"],
+      "enabled": true,
+      "data": {
+        "site_kind": "base_site",
+        "weight": 8,
+        "region_kinds": ["coastal", "industrial"],
+        "repeatable": false
+      }
+    },
+    {
+      "id": "core:site/ore_shoal",
+      "name_key": "site.core.ore_shoal.name",
+      "description_key": "site.core.ore_shoal.description",
+      "tags": ["site.resource"],
+      "enabled": true,
+      "data": {
+        "site_kind": "resource",
+        "weight": 22,
+        "region_kinds": ["coastal", "industrial"],
+        "repeatable": true
+      }
+    }
+  ]
+}

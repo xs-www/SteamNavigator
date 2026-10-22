@@ -3,12 +3,15 @@
  *
  * Two layers:
  *   1. A JSON Schema subset validator over the embedded canonical schemas.
- *      This includes the Content Schema 2.0 draft schemas under schemas/v2/;
+ *      This includes the Schema 2.0 runtime and draft schemas under schemas/v2/;
  *      their $refs are resolved relative to the referencing schema file.
  *   2. Steam Navigator semantic rules (schema_version, namespace, localization
  *      coverage, cross-references, patch safety) that a schema cannot express.
- *      Draft (2.0) content is editable in the Mod Maker but is NOT loaded by
- *      the Content Schema 1.0 runtime, so it gets a per-file draft warning.
+ *      Schema 2.0 is versioned per type: promoted runtime types are loaded by
+ *      the game, while draft types (weapons and the Story Mode arcs/levels)
+ *      are editable here but not loaded, so each draft file gets one
+ *      draft_content warning. Every Schema 2.0 type additionally requires its
+ *      capability in manifest.capabilities.
  *
  * Results use the same shape as the Godot validator where practical:
  * { path, keyword, message } plus a UI navigation hint.
@@ -25,7 +28,8 @@
   const ASSET_EXTENSIONS = ['.png', '.webp', '.svg', '.ogg', '.wav', '.glb'];
   const FORBIDDEN_EXTENSIONS = ['.gd', '.gdshader', '.cs', '.dll', '.so', '.dylib', '.exe', '.bat',
     '.cmd', '.ps1', '.sh', '.pck', '.tscn', '.tres', '.import'];
-  /* Content Schema versions the Mod Maker understands. The runtime only loads 1.0. */
+  /* Content Schema versions the Mod Maker understands. The runtime loads each
+   * type at its own version (1.0 or 2.0); this list only guards the envelope. */
   const SUPPORTED_SCHEMA_VERSIONS = ['1.0', '2.0'];
   const DEFAULT_SCHEMA_VERSION = '1.0';
 
@@ -60,7 +64,8 @@
    * Content Schema version for a content file or a content type key.
    *
    * Order: an explicit `file.schema_version`, then the type's catalog
-   * `schemaVersion` (draft types are 2.0), then the legacy 1.0 default.
+   * `schemaVersion` (Schema 2.0 for the promoted world/campaign family and the
+   * weapons / story draft types), then the legacy 1.0 default.
    */
   function schemaVersionFor(typeKeyOrFile) {
     if (typeKeyOrFile && typeof typeKeyOrFile === 'object') {
@@ -900,6 +905,9 @@
       }
     }
 
+    /* One capability_undeclared warning per capability, not per content file:
+     * the whole world family shares content.world.v1. */
+    const reportedCapabilities = new Set();
     for (const file of contentFiles) {
       const info = catalog().BY_KEY[file.content_type];
       const typeKey = info ? info.key : file.content_type;
@@ -920,11 +928,18 @@
       }
       if (info.draft) {
         add('warning', 'draft_content',
-          `草案内容文件：${file.path}（当前游戏运行时 Content Schema 1.0 不加载）`, baseView);
+          `草案内容文件：${file.path}（当前游戏运行时不加载草案类型）`, baseView);
+      }
+      /* Capability requirements follow the type's schema version, not the draft
+       * marker: Phase B promoted these types into the runtime, so the draft flag
+       * is gone but the capability is still required. */
+      const isSchema20Type = String(info.schemaVersion) === '2.0';
+      if (isSchema20Type && info.capability) {
         const declaredCapabilities = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
-        if (info.capability && !declaredCapabilities.includes(info.capability)) {
+        if (!declaredCapabilities.includes(info.capability) && !reportedCapabilities.has(info.capability)) {
+          reportedCapabilities.add(info.capability);
           add('warning', 'capability_undeclared',
-            `草案内容使用了 capability，但未写入 manifest.capabilities：${info.capability}`,
+            `Schema 2.0 内容使用了 capability，但未写入 manifest.capabilities：${info.capability}`,
             { name: 'overview', field: 'capabilities' });
         }
       }

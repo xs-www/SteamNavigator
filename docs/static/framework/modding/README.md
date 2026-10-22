@@ -7,6 +7,7 @@
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `content_compiler.gd` | 内容编译：解析内容文件、按类型 Schema 校验、注册定义、应用显式 Patch，最后冻结注册表。 | [查看](./content_compiler.gd.md) |
+| `content_refs.gd` | 跨内容 Schema 版本的“这次 run 使用哪份场景调参”解析器。v2 战役读 | [查看](./content_refs.gd.md) |
 | `content_types.gd` | 内容类型常量、Schema 路径、单数类型名与模块类型集合；由 tools/gen_content_types.mjs 从 content_types.json 生成。 | [查看](./content_types.gd.md) |
 | `core_completeness_checker.gd` | 检查官方 core 包是否提供 MVP 所需的最少内容与构筑，并在 Core 自己发布 Content | [查看](./core_completeness_checker.gd.md) |
 | `cross_reference_validator.gd` | Schema 之后的语义校验：材料、构筑、委托奖励、事件条件/效果、港口市场与地图配置， | [查看](./cross_reference_validator.gd.md) |

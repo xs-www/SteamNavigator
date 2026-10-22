@@ -962,17 +962,13 @@ static func _goods_name_key(context, good_id: String) -> String:
 	return definition.name_key if definition != null else good_id
 
 
-## Trade margin of the current map profile (same value `trade.buy` / `trade.sell` use).
+## Trade margin of the current scenario definition (same value `trade.buy` /
+## `trade.sell` use; v2 `map_configs` with legacy `map_profiles` fallback).
 static func _trade_margin(context) -> float:
-	var state: GameState = context.state
-	var hub: RegistryHub = context.registries
-	if hub == null:
+	var data := ContentRefs.map_config_data(context.state, context.registries)
+	if data.is_empty():
 		return MarketOps.DEFAULT_TRADE_MARGIN
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	var profile: ContentDefinition = hub.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	if profile == null:
-		return MarketOps.DEFAULT_TRADE_MARGIN
-	return float(profile.data.get("trade_margin", MarketOps.DEFAULT_TRADE_MARGIN))
+	return float(data.get("trade_margin", MarketOps.DEFAULT_TRADE_MARGIN))
 
 
 ## Lifetime of a goods clue by source, from `goods_clue_expiry_hours` (0 disables expiry).

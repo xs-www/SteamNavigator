@@ -1,0 +1,42 @@
+{
+  "schema_version": "2.0",
+  "content_type": "weather_profiles",
+  "definitions": [
+    {
+      "id": "core:weather_profile/temperate",
+      "name_key": "weather.core.temperate.name",
+      "description_key": "weather.core.temperate.description",
+      "tags": ["weather.temperate"],
+      "enabled": true,
+      "data": {
+        "climate": "temperate",
+        "fog_chance": 0.15,
+        "storm_chance": 0.1,
+        "ice_chance": 0.0,
+        "base_visibility": 0.9,
+        "risk_modifier": 0.0,
+        "speed_modifier": 0.0,
+        "coal_drain_modifier": 1.0,
+        "seasons": ["spring", "summer", "autumn", "winter"]
+      }
+    },
+    {
+      "id": "core:weather_profile/storm_belt",
+      "name_key": "weather.core.storm_belt.name",
+      "description_key": "weather.core.storm_belt.description",
+      "tags": ["weather.storm", "weather.hazardous"],
+      "enabled": true,
+      "data": {
+        "climate": "storm_belt",
+        "fog_chance": 0.2,
+        "storm_chance": 0.45,
+        "ice_chance": 0.05,
+        "base_visibility": 0.6,
+        "risk_modifier": 0.2,
+        "speed_modifier": -0.1,
+        "coal_drain_modifier": 1.2,
+        "seasons": ["autumn", "winter"]
+      }
+    }
+  ]
+}

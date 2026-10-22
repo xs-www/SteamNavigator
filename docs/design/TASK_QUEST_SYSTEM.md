@@ -1,8 +1,9 @@
 # 任务追踪与任务系统设计（阶段 4.6）
 
 > 状态：Phase A（任务追踪聚合）Implemented；Phase B（正式 Quest 内容类型）Planned。
-> 本文同时是 `task.view` 的实现契约。正式任务系统在 Phase B 落地前不改存档结构、
-> 不新增内容类型。
+> 2026-10-22 决策：**委托（Contract）与任务（Quest）彻底解耦**——Contract 只负责运输请求，
+> Quest 负责剧情演出、游戏指引与除运输请求外的一切系统需求；Quest 采用持久 `data.quests` +
+> `QuestService`。Story 暂时保留，后续剧情模式开发时由 Quest 自动上位替代其功能。
 
 ## 1. 目标与范围
 
@@ -17,9 +18,12 @@
 - HUD 顶部任务条显示优先级最高的任务；委托页顶部显示全部任务与步骤；
 - 不写状态、不改存档、不新增业务命令。
 
-**Phase B（后续正式任务系统）**：新增内容驱动 Quest（任务链），支持酒馆悬赏、
-港务告示、连环任务、条件解锁；委托继续作为「一单生意」的经济实例，Quest 负责
-「一串目标」；两者通过引用组合，不互相取代。
+**Phase B（正式任务系统）**：
+- 新增内容驱动的 **Quest**（抽象引导层），服务剧情演出、游戏指引与一切非运输类系统需求；
+- **Contract 保持独立**：仍是「一单运输生意」的经济实例（payload / 目的地 / 时限 / 报酬）；
+- **解耦但联动**：委托被接取后生成一个 Quest 实例写入 `data.quests`，由任务层追踪；
+  Quest 定义不复制 Contract 的 payload/目的地/结算；
+- `task.view` 统一聚合 Quest 实例 + 已接 Contract（Contract 作为 Quest 下的任务项展示）。
 
 **不做**：本切片不做任务接受 / 放弃 / 追踪切换命令，不做分支、时限奖励、每日刷新；
 这些属于 Phase B。
@@ -30,8 +34,8 @@
 |---|---|---|
 | 委托 Contract | 一单生意的 payload / 目的地 / 时限 / 报酬 / 接取与结算 | `data.contracts.main`、`main_offer`、`active`、`offers` |
 | 剧情 Story | 新手教学的固定阶段 / 文本 / 解锁 / 目标 | `data.story` |
-| 任务追踪 Task（本切片） | **只读**聚合与步骤推导，供 HUD / 页面展示 | 无（派生自上面两者） |
-| Quest（Phase B） | 内容定义的目标链 / 前置 / 奖励 / 发布者 | 新增 `data.quests`（惰性 ensure） |
+| 任务追踪 Task | 只读聚合与步骤推导，供 HUD / 页面展示；Phase B 起改为聚合 Quest + 已接 Contract | 派生自 `data.quests` / `data.story` / `contracts` |
+| Quest（Phase B） | 抽象引导：剧情演出、游戏指引、非运输类系统需求；委托接取后生成 Quest 实例 | `data.quests`（惰性 ensure） |
 
 关键原则：**任务追踪不复制状态**。委托或剧情一变化，`task.view` 重新推导即可；
 不要为追踪器写入 `active_task_id` 之类的存档字段，除非 Phase B 需要玩家手动追踪。
@@ -120,12 +124,19 @@ Step = {
 
 ## 4. Phase B：正式 Quest 系统（待实现）
 
+> 2026-10-22 拍板：Contract 与 Quest **不合并**；Quest 是抽象引导层，Contract 仍是运输请求。
+> 委托接取后由 `QuestService` **生成 Quest 实例写入 `data.quests`**（解耦联动），不复制 Contract 的
+> payload / 目的地 / 时限 / 结算字段。Story 暂时保留；后续剧情模式开发时由 Quest 自动上位替代
+> Story 的演出/目标功能。
+
 ### 4.1 内容类型
 
-建议新增两个内容类型（名称待定）：
+新增单一 `quests` 内容类型（2.0），定义抽象目标链：
 
-- `quest_chains`：任务链，含 `stages`（顺序目标）、前置条件、发布者、奖励；
-- `quests`：单任务定义（可选，若任务链足够可先只做 chain）。
+- `kind`：`story`（剧情演出）/ `guide`（游戏指引）/ `system`（非运输类系统需求）；
+- `stages`：顺序目标，复用剧情条件模型（事件 + counter + 阈值 + match）；
+- 前置条件、发布者/来源、仅成就/解锁类奖励（经济奖励优先通过 Contract 发放）；
+- 可选的 `spawn_contract`：Quest 触发生成运输请求（Contract），但 Quest 自身不承载运输结算。
 
 单个目标（Objective）复用剧情条件模型：
 
@@ -141,14 +152,14 @@ Step = {
 
 ### 4.2 与现有系统的关系
 
-- **Contract 不变**：Quest 可以 `accept_contract` / 引用 `contract_template`，
-  但委托实例仍由 `ContractOps` 生成与结算；
-- **Story 不变**：剧情阶段可以 `start_quest` / `complete_quest`，把教学目标交给
-  Quest 系统统一追踪；
-- **Task 追踪器不变**：`task.view` 在 Phase B 增加 `kind:"quest"` 的任务来源，
+- **Contract 独立**：接受委托时生成 Quest 实例（`data.quests`，`kind:"contract"` 或引用型），
+  只存 `contract_instance_id` 作为追踪引用；payload/目的地/时限/结算仍由 `ContractOps` 负责；
+- **Story 暂时保留**：剧情阶段可以 `start_quest` / `complete_quest`，把教学目标交给 Quest 统一追踪；
+  后续剧情模式上线时由 Quest 取代 Story 的演出与目标能力；
+- **Task 追踪器**：`task.view` 增加 `kind:"quest"` 来源，并聚合 Quest 实例下的 Contract 任务项；
   HUD / 任务页无需重写；
-- **存档**：`data.quests` 惰性 ensure（旧存档无块 → 无任务），不改 `schema_version`；
-  任务实例只存 `quest_id / stage_index / counters / flags`，内容仍在 Core JSON。
+- **存档**：`data.quests` 惰性 ensure（旧存档无块 → 无任务），任务实例只存
+  `quest_id / stage_index / counters / flags / contract_instance_id`，内容仍在 Core JSON。
 
 ### 4.3 UI
 

@@ -34,8 +34,9 @@ const Validate = globalThis.SNValidate;
 const Catalog = globalThis.SNCatalog;
 const Types = globalThis.SNContentTypes;
 
-/* 草案类型来自生成的 content-types.js（DRAFT_TYPES），与运行时类型共用编辑链路，
- * 但游戏运行时 Content Schema 1.0 不加载它们。 */
+/* Schema 2.0 类型来自生成的 content-types.js：运行时类型（TYPES，含 Content Schema
+ * 1.0 与已接入运行时的 2.0 类型）与剩余草案类型（DRAFT_TYPES，游戏运行时不加载）
+ * 共用同一套编辑与校验链路；两者都由 Schema 版本与 capability 区分。 */
 function draftTypes() {
   if (Types && Array.isArray(Types.DRAFT_TYPES)) return Types.DRAFT_TYPES;
   if (Catalog && Array.isArray(Catalog.DRAFT_TYPES)) return Catalog.DRAFT_TYPES;
@@ -75,7 +76,7 @@ const USAGE = `SNModMaker 内容 CLI（v1）
   node SNModMaker/tools/content.mjs <command> [options]
 
 命令：
-  types                                   列出全部内容类型（含 Schema 2.0 草案）
+  types                                   列出全部内容类型（运行时 25 类 + Schema 2.0 草案）
   describe <type>                         查看类型的 ID / 键 / 字段 / 默认值与骨架
   list --mod <dir> [--type <key>]         列出模组内的全部定义
   add --mod <dir> --type <key> --id <local_id> [选项]
@@ -105,14 +106,19 @@ add 选项：
 通用选项：--json  --quiet  --help/-h
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
 
-Schema 2.0 草案（weapons / story_arcs / story_levels）可以像 1.0 类型一样 list / add / set /
-describe / validate，内容文件写 schema_version "2.0"；但游戏运行时仍只加载 Content
-Schema 1.0，草案内容不会在游戏里生效（校验会给出 draft_content 警告）。草案模组使用
-capability 时还需在 manifest.capabilities 声明对应能力（weapons → content.combat.v1，
-剧情 → content.story.v1）。剧情包是白名单模组：同一包里出现故事内容之外的类型会报
-story_pack_off_whitelist。
+Schema 2.0 运行时类型（world_profiles / map_configs / regions / sites / route_templates /
+weather_profiles / factions / discoveries / start_profiles）已接入游戏运行时，可以像 1.0
+类型一样 list / add / set / describe / validate，内容文件写 schema_version "2.0"。
+CLI 不会自动声明 capability：内容使用 Schema 2.0 但未在 manifest.capabilities 声明对应
+能力时，校验给出 capability_undeclared 警告（按类型去重，每个 capability 一条）。
 
-新建项目时用 --draft 直接创建 Schema 2.0 草案项目（每类生成一个 content 文件、
+剩余 Schema 2.0 草案类型（weapons / story_arcs / story_levels）同样可编辑、可校验，
+内容文件写 schema_version "2.0"；但游戏运行时不加载，校验给出 draft_content 警告。
+草案模组使用 capability 时还需在 manifest.capabilities 声明对应能力（weapons →
+content.combat.v1，剧情 → content.story.v1）。剧情包是白名单模组：同一包里出现故事
+内容之外的类型会报 story_pack_off_whitelist。
+
+新建项目时用 --draft 直接创建纯 Schema 2.0 草案项目（每类生成一个 content 文件、
 schema_version "2.0" 与起始定义，并把 capability 写入 manifest；不与 --template 同时
 指定时不会附带 1.0 商品起始定义）：
   node SNModMaker/tools/content.mjs new --mod my_weapon_mod --id my_weapon_mod \\
@@ -1243,10 +1249,8 @@ function describePayload(typeKey) {
     schema_version: schemaVersionFor(info.key),
   };
   if (info.special) typeRow.special = true;
-  if (info.draft) {
-    typeRow.draft = true;
-    if (info.capability) typeRow.capability = info.capability;
-  }
+  if (info.draft) typeRow.draft = true;
+  if (info.capability) typeRow.capability = info.capability;
   return {
     ok: true,
     command: 'describe',
@@ -1288,29 +1292,30 @@ function commandTypes(ctx) {
       schema_version: schemaVersionFor(type.key),
     };
     if (type.special) row.special = true;
-    if (type.draft) {
-      row.draft = true;
-      if (type.capability) row.capability = type.capability;
-    }
+    if (type.draft) row.draft = true;
+    if (type.capability) row.capability = type.capability;
     return row;
   });
   const active = types.filter((type) => !type.draft);
   const drafts = types.filter((type) => type.draft);
+  const runtimeV2 = active.filter((type) => type.schema_version === '2.0');
   const payload = { ok: true, command: 'types', types, activeTypes: active.length, draftTypes: drafts.length };
   if (ctx.json) return respond(ctx, payload, '', 0);
   const width = Math.max(...types.map((type) => type.key.length));
   const formatRow = (type) => {
-    const marker = type.draft ? `  [draft ${type.schema_version}]` : '';
+    let marker = '';
+    if (type.draft) marker = `  [draft ${type.schema_version}]`;
+    else if (type.schema_version === '2.0') marker = `  [runtime ${type.schema_version}]`;
     return `${type.key.padEnd(width)}  ${type.label.padEnd(8)} ${type.singular.padEnd(20)} ${type.file}${marker}`;
   };
   const lines = [
-    `运行时内容类型（${active.length}）：`,
+    `运行时内容类型（${active.length}；其中 ${runtimeV2.length} 类为运行时 Schema 2.0）：`,
     ...active.map(formatRow),
   ];
   if (drafts.length) {
     lines.push(
       '',
-      `Schema 2.0 草案类型（${drafts.length}）：编辑器 / CLI 可编辑，游戏运行时 Content Schema 1.0 不加载`,
+      `Schema 2.0 草案类型（${drafts.length}）：编辑器 / CLI 可编辑，游戏运行时不加载`,
       ...drafts.map(formatRow),
     );
   }
@@ -1331,9 +1336,11 @@ function commandDescribe(ctx) {
       .map((key) => `${key}=${JSON.stringify(field[key])}`);
     return `  ${field.path.padEnd(36)} ${String(field.type).padEnd(9)} ${field.required ? 'required' : '        '} ${constraints.join(' ')}`;
   });
+  const version = payload.type.schema_version;
+  const capabilityNote = payload.type.capability ? `，capability ${payload.type.capability}` : '';
   const subtitle = info.draft
-    ? `  草案 Schema ${payload.type.schema_version}（运行时 Content Schema 1.0 不加载）`
-    : '';
+    ? `  草案 Schema ${version}（游戏运行时不加载${capabilityNote}）`
+    : (version === '2.0' ? `  运行时 Schema ${version}（已接入运行时${capabilityNote}）` : '');
   const human = [
     `类型：${info.key}（${info.label}）  文件：${info.file}  Schema：${info.schema}${subtitle}`,
     `ID 模式：${payload.id.pattern}`,

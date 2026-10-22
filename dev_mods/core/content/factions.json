@@ -1,0 +1,63 @@
+{
+  "schema_version": "2.0",
+  "content_type": "factions",
+  "definitions": [
+    {
+      "id": "core:faction/merchant_guild",
+      "name_key": "faction.core.merchant_guild.name",
+      "description_key": "faction.core.merchant_guild.description",
+      "tags": ["faction.trade"],
+      "enabled": true,
+      "data": {
+        "kind": "merchant_guild",
+        "starting_reputation": 10,
+        "attitude_thresholds": {
+          "hostile_below": -20,
+          "friendly_at": 25
+        },
+        "patrol_strength": 1,
+        "trade_goods": ["core:good/spices", "core:good/textiles", "core:good/glassware"],
+        "home_region_tags": ["region.start", "region.coastal"],
+        "rival_factions": ["core:faction/pirates"]
+      }
+    },
+    {
+      "id": "core:faction/royal_navy",
+      "name_key": "faction.core.royal_navy.name",
+      "description_key": "faction.core.royal_navy.description",
+      "tags": ["faction.naval"],
+      "enabled": true,
+      "data": {
+        "kind": "naval",
+        "starting_reputation": 0,
+        "attitude_thresholds": {
+          "hostile_below": -30,
+          "friendly_at": 30
+        },
+        "patrol_strength": 3,
+        "trade_goods": ["core:good/brass", "core:material/boiler_plate", "core:material/sealing_compound"],
+        "home_region_tags": ["region.coastal", "region.industrial"],
+        "rival_factions": ["core:faction/pirates"]
+      }
+    },
+    {
+      "id": "core:faction/pirates",
+      "name_key": "faction.core.pirates.name",
+      "description_key": "faction.core.pirates.description",
+      "tags": ["faction.hostile", "faction.outlaw"],
+      "enabled": true,
+      "data": {
+        "kind": "pirates",
+        "starting_reputation": -30,
+        "attitude_thresholds": {
+          "hostile_below": -10,
+          "friendly_at": 40
+        },
+        "patrol_strength": 2,
+        "trade_goods": ["core:good/coal", "core:material/precision_gear"],
+        "home_region_tags": ["region.archipelago", "region.open_sea"],
+        "rival_factions": ["core:faction/merchant_guild", "core:faction/royal_navy"]
+      }
+    }
+  ]
+}

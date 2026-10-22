@@ -9,53 +9,53 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MAX_ERRORS` | L19 |
-| `MAX_DEPTH` | L20 |
-| `SEMVER_RE` | L21 |
-| `MOD_ID_RE` | L22 |
-| `ID_REF_RE` | L23 |
-| `ASSET_URI_RE` | L24 |
-| `ASSET_EXTENSIONS` | L25 |
-| `FORBIDDEN_EXTENSIONS` | L26 |
-| `SUPPORTED_SCHEMA_VERSIONS` | L29 |
-| `DEFAULT_SCHEMA_VERSION` | L30 |
-| `REF_TYPE_BY_FIELD` | L32 |
-| `schemas()` | L51 |
-| `catalog()` | L55 |
-| `schemaVersionFor(typeKeyOrFile)` | L65 |
-| `normalizeSchemaPath(file)` | L76 |
-| `pointerEscape(text)` | L86 |
-| `pointerUnescape(text)` | L90 |
-| `joinPointer(base, key)` | L94 |
-| `resolveRef(ref, baseFile)` | L107 |
-| `deref(schema, file, seen)` | L139 |
-| `flattenObject(schema, file, seen)` | L165 |
-| `typeOf(value)` | L193 |
-| `matchesType(value, type)` | L199 |
-| `validateSchema(instance, schema, file)` | L206 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L210 |
-| `parseSemver(text)` | L370 |
-| `versionRangeError(text)` | L381 |
-| `safePath(path)` | L398 |
-| `extensionOf(path)` | L408 |
-| `isForbiddenPath(path)` | L414 |
-| `walkStrings(value, path, callback, depth)` | L418 |
-| `referencedIdType(id)` | L433 |
-| `expectedRefType(path)` | L438 |
-| `LOCAL_IDENTIFIER_FIELDS` | L453 |
-| `SOCKET_CLASSES` | L458 |
-| `RIG_SOCKET_KINDS` | L459 |
-| `checkWeaponSemantics(definition, view, add)` | L462 |
-| `checkHullSocketSemantics(definition, view, add)` | L496 |
-| `STORY_TYPES` | L580 |
-| `storyFieldView(view, field)` | L582 |
-| `checkStoryArcSemantics(definition, view, add)` | L587 |
-| `checkStoryLevelSemantics(definition, view, add)` | L631 |
-| `checkStoryPack(contentFiles, add)` | L739 |
-| `validateProject(project, options)` | L780 |
-| `finish(issues)` | L1141 |
-| `byDefinition(issues)` | L1150 |
-| `SNValidate (global)` | L1163 |
+| `MAX_ERRORS` | L22 |
+| `MAX_DEPTH` | L23 |
+| `SEMVER_RE` | L24 |
+| `MOD_ID_RE` | L25 |
+| `ID_REF_RE` | L26 |
+| `ASSET_URI_RE` | L27 |
+| `ASSET_EXTENSIONS` | L28 |
+| `FORBIDDEN_EXTENSIONS` | L29 |
+| `SUPPORTED_SCHEMA_VERSIONS` | L33 |
+| `DEFAULT_SCHEMA_VERSION` | L34 |
+| `REF_TYPE_BY_FIELD` | L36 |
+| `schemas()` | L55 |
+| `catalog()` | L59 |
+| `schemaVersionFor(typeKeyOrFile)` | L70 |
+| `normalizeSchemaPath(file)` | L81 |
+| `pointerEscape(text)` | L91 |
+| `pointerUnescape(text)` | L95 |
+| `joinPointer(base, key)` | L99 |
+| `resolveRef(ref, baseFile)` | L112 |
+| `deref(schema, file, seen)` | L144 |
+| `flattenObject(schema, file, seen)` | L170 |
+| `typeOf(value)` | L198 |
+| `matchesType(value, type)` | L204 |
+| `validateSchema(instance, schema, file)` | L211 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L215 |
+| `parseSemver(text)` | L375 |
+| `versionRangeError(text)` | L386 |
+| `safePath(path)` | L403 |
+| `extensionOf(path)` | L413 |
+| `isForbiddenPath(path)` | L419 |
+| `walkStrings(value, path, callback, depth)` | L423 |
+| `referencedIdType(id)` | L438 |
+| `expectedRefType(path)` | L443 |
+| `LOCAL_IDENTIFIER_FIELDS` | L458 |
+| `SOCKET_CLASSES` | L463 |
+| `RIG_SOCKET_KINDS` | L464 |
+| `checkWeaponSemantics(definition, view, add)` | L467 |
+| `checkHullSocketSemantics(definition, view, add)` | L501 |
+| `STORY_TYPES` | L585 |
+| `storyFieldView(view, field)` | L587 |
+| `checkStoryArcSemantics(definition, view, add)` | L592 |
+| `checkStoryLevelSemantics(definition, view, add)` | L636 |
+| `checkStoryPack(contentFiles, add)` | L744 |
+| `validateProject(project, options)` | L785 |
+| `finish(issues)` | L1156 |
+| `byDefinition(issues)` | L1165 |
+| `SNValidate (global)` | L1178 |
 
 ## 契约与约束
 
@@ -63,7 +63,7 @@
 - `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
 - `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons / story_arcs / story_levels 草案 2.0），最后回退 1.0。
 - 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
-- `draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。
+- `draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（Phase B 9 类 + 草案族），同一 capability 每次校验只报一条。
 - `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
 - `REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_build` → starting_build，与已有的 hull / good 等字段共用 `ref_type` 提示。
 - 武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。

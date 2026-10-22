@@ -355,29 +355,46 @@ function warningsOf(result) {
     assert.equal(Catalog.schemaVersionFor('patches'), '1.0', 'patches are a runtime type at 1.0');
   });
 
-  await test('draft content is detected for the export and deploy guards', () => {
+  await test('runtime support: promoted 2.0 types deploy while drafts and mismatches are blocked', () => {
     const project = freshProject();
-    assert.equal(Store.hasDraftContent(project), false, 'a 1.0-only project has no draft content');
-    assert.deepEqual(Store.draftContentFiles(project), []);
+    assert.equal(Store.hasDraftContent(project), false, 'a 1.0-only project is fully loadable');
+    assert.deepEqual(Store.unsupportedContentFiles(project), []);
+    assert.equal(Store.runtimeSupportsFile(project.contentFiles[0]), true);
 
-    const added = Store.addDefinition(project, 'world_profiles', {});
-    assert.equal(Store.hasDraftContent(project), true, 'draft types must be detected');
-    const files = Store.draftContentFiles(project);
-    assert.deepEqual(files.map((file) => file.content_type), ['world_profiles']);
-    assert.equal(files[0].path, added.file.path);
+    // Phase B promoted the world/campaign family into the runtime: those 2.0
+    // files deploy/export like any other content and need no second confirmation.
+    const promoted = Store.addDefinition(project, 'world_profiles', {});
+    assert.equal(Store.runtimeSupportsFile(promoted.file), true, 'promoted 2.0 types are runtime types');
+    assert.equal(Store.hasDraftContent(project), false, 'a promoted 2.0 type is not "draft content"');
+    assert.deepEqual(Store.unsupportedContentFiles(project), []);
 
-    // A runtime type whose file declares 2.0 (imported or malformed) is blocked too.
-    project.contentFiles.push({
-      path: 'content/legacy_2.json',
-      content_type: 'goods',
-      schema_version: '2.0',
-      definitions: [],
-    });
-    assert.equal(Store.hasDraftContent(project), true, 'schema_version 2.0 files must be detected');
+    // weapons is still a Schema 2.0 draft: it blocks the release-package deploy.
+    const weapons = Store.addDefinition(project, 'weapons', {});
+    let unsupported = Store.unsupportedContentFiles(project);
+    assert.deepEqual(unsupported.map((file) => file.content_type), ['weapons']);
+    assert.equal(unsupported[0].path, weapons.file.path);
+    assert.equal(Store.hasDraftContent(project), true);
+    assert.equal(Store.runtimeSupportsFile(weapons.file), false);
+    // Compatibility aliases still expose the same list.
+    assert.deepEqual(Store.draftContentFiles(project), unsupported);
 
+    // A 1.0 runtime type whose file declares 2.0 (imported or malformed) cannot load either.
+    const versionMismatch = { path: 'content/goods_2.json', content_type: 'goods', schema_version: '2.0', definitions: [] };
+    project.contentFiles.push(versionMismatch);
+    assert.equal(Store.runtimeSupportsFile(versionMismatch), false);
+    assert.ok(Store.unsupportedContentFiles(project).includes(versionMismatch));
+
+    // Unknown content types are not loadable by the runtime.
+    const unknown = { path: 'content/future.json', content_type: 'future_things', schema_version: '1.0', definitions: [] };
+    project.contentFiles.push(unknown);
+    assert.equal(Store.runtimeSupportsFile(unknown), false);
+    assert.equal(Store.unsupportedContentFiles(project).length, 3);
+
+    // Plain 1.0 runtime content stays supported/exportable.
     const legacy = freshProject();
     Store.addDefinition(legacy, 'boilers', {});
-    assert.equal(Store.hasDraftContent(legacy), false, 'runtime content stays exportable');
+    assert.equal(Store.hasDraftContent(legacy), false, 'runtime 1.0 content stays exportable');
+    assert.equal(Store.runtimeSupportsFile(legacy.contentFiles.find((file) => file.content_type === 'boilers')), true);
   });
 
   await test('every draft type validates with zero errors using catalog defaults', () => {
@@ -757,22 +774,27 @@ function warningsOf(result) {
     assert.equal(errorsOf(result).length, 0, JSON.stringify(errorsOf(result), null, 2));
   });
 
-  await test('draft warnings: one draft_content per file and capability_undeclared per capability', () => {
-    const project = freshProject();
-    Store.addDefinition(project, 'weapons', {});
-    let result = Validate.validateProject(project);
+  await test('capability warnings: one per Schema 2.0 capability across files, cleared by manifest', () => {
+    // weapons draft: one draft_content plus one capability_undeclared.
+    const draftProject = freshProject();
+    Store.addDefinition(draftProject, 'weapons', {});
+    let result = Validate.validateProject(draftProject);
 
     const draftWarnings = warningsOf(result).filter((issue) => issue.code === 'draft_content');
     assert.equal(draftWarnings.length, 1, 'the weapons file gets exactly one draft_content warning');
     assert.equal(draftWarnings[0].view && draftWarnings[0].view.file, 'content/weapons.json');
-    assert.match(draftWarnings[0].message, /Content Schema 1\.0/);
+    assert.match(draftWarnings[0].message, /草案类型/);
 
-    const capabilityWarnings = warningsOf(result).filter((issue) => issue.code === 'capability_undeclared');
+    let capabilityWarnings = warningsOf(result).filter((issue) => issue.code === 'capability_undeclared');
     assert.equal(capabilityWarnings.length, 1, 'the weapons capability warns once');
     assert.ok(capabilityWarnings[0].message.includes('content.combat.v1'));
+    assert.match(
+      capabilityWarnings[0].message,
+      /^Schema 2\.0 内容使用了 capability，但未写入 manifest\.capabilities：/
+    );
 
-    project.manifest.capabilities = ['content.combat.v1'];
-    result = Validate.validateProject(project);
+    draftProject.manifest.capabilities = ['content.combat.v1'];
+    result = Validate.validateProject(draftProject);
     assert.equal(
       warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
       0,
@@ -781,17 +803,34 @@ function warningsOf(result) {
     assert.equal(
       warningsOf(result).filter((issue) => issue.code === 'draft_content').length,
       1,
-      'draft_content remains because the runtime still does not load draft content'
+      'draft_content remains because the runtime still does not load the weapons draft'
     );
 
-    // Phase B promoted types are runtime types: they must not warn as drafts.
+    // Phase B promoted types are runtime types, but Schema 2.0 still requires a
+    // capability. The shared world family must warn once for content.world.v1,
+    // not once per content file.
     const promoted = freshProject();
-    Store.addDefinition(promoted, 'world_profiles', {});
-    const promotedWarnings = warningsOf(Validate.validateProject(promoted));
+    for (const typeKey of ['world_profiles', 'regions', 'sites', 'map_configs', 'start_profiles']) {
+      Store.addDefinition(promoted, typeKey, {});
+    }
+    result = Validate.validateProject(promoted);
+    const promotedWarnings = warningsOf(result);
     assert.equal(
       promotedWarnings.filter((issue) => issue.code === 'draft_content').length,
       0,
       'a promoted Schema 2.0 type is not draft content'
+    );
+    capabilityWarnings = promotedWarnings.filter((issue) => issue.code === 'capability_undeclared');
+    assert.equal(capabilityWarnings.length, 2, 'one warning per missing capability, not per content file');
+    assert.ok(capabilityWarnings.some((issue) => issue.message.endsWith('content.world.v1')), 'the world family warns once');
+    assert.ok(capabilityWarnings.some((issue) => issue.message.endsWith('content.campaign.v1')), 'start_profiles warns for content.campaign.v1');
+
+    promoted.manifest.capabilities = ['content.world.v1', 'content.campaign.v1'];
+    result = Validate.validateProject(promoted);
+    assert.equal(
+      warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
+      0,
+      'declaring both capabilities silences the promoted-type warnings'
     );
   });
 
@@ -1089,9 +1128,11 @@ function warningsOf(result) {
     });
     const result = Store.fromFiles(walk(coreRoot));
     assert.equal(result.project.manifest.id, 'core');
-    assert.equal(result.project.contentFiles.length, 15);
-    // Every asset declared by the core manifest must be imported (icons, banner, entity GLBs).
+    // Derive the expected count from the manifest so new core content does not require
+    // touching this test (B4 added the nine Schema 2.0 world/campaign files).
     const coreManifest = JSON.parse(fs.readFileSync(path.join(coreRoot, 'manifest.json'), 'utf8'));
+    assert.equal(result.project.contentFiles.length, coreManifest.content.length);
+    // Every asset declared by the core manifest must be imported (icons, banner, entity GLBs).
     assert.equal(
       result.project.assets.length,
       Object.keys(coreManifest.assets || {}).length,

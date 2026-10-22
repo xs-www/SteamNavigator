@@ -658,8 +658,8 @@
   }
 
   function draftSchemaFootText() {
-    if (!Cat.DRAFT_TYPES || !Cat.DRAFT_TYPES.length) return 'Schema 1.0 / API 1.0';
-    return 'Schema 1.0 运行时 + 2.0 草案 / API 1.0';
+    if (!Cat.DRAFT_TYPES || !Cat.DRAFT_TYPES.length) return 'Schema 1.0 / 2.0 / API 1.0';
+    return 'Schema 1.0 / 2.0 运行时 + 草案 / API 1.0';
   }
 
   function renderDraftSideGroup(counts, typeIssues) {
@@ -1021,7 +1021,7 @@
             ${info.draft ? `<div class="draft-notice" role="note">
               <span class="draft-dot"></span>
               <span><strong>Schema 2.0 草案 · 当前游戏运行时不加载。</strong>
-              导出内容使用 <code>schema_version: "2.0"</code>，可用于起草、编辑与校验；游戏运行时仍只加载 Content Schema 1.0。</span>
+              导出内容使用 <code>schema_version: "2.0"</code>，可用于起草、编辑与校验；已提升为运行时类型的 2.0 内容（世界 / 战役）不受影响，草案内容不会被游戏加载。</span>
             </div>` : ''}
           </div>
         </div>
@@ -1323,7 +1323,7 @@
           <li>本地化键覆盖情况、空翻译与未引用键。</li>
           <li>补丁目标、来源版本与操作安全性。</li>
         </ul>
-        ${Cat.DRAFT_TYPES && Cat.DRAFT_TYPES.length ? '<p class="muted-sm">Schema 2.0 草案类型（世界生成与起始档案）按 <code>schemas/v2</code> 校验；导出会写 <code>schema_version: "2.0"</code>，但当前游戏运行时只加载 1.0，这类文件不会生效。</p>' : ''}
+        ${Cat.DRAFT_TYPES && Cat.DRAFT_TYPES.length ? '<p class="muted-sm">Schema 2.0 草案类型（舰载武器 / 剧情篇章 / 剧情关卡）按 <code>schemas/v2</code> 校验；导出会写 <code>schema_version: "2.0"</code>，但游戏运行时不会加载草案类型，这类文件不会生效。已提升为运行时类型的 2.0 内容（世界 / 战役）不受影响。</p>' : ''}
         <p class="muted-sm">导出时不会自动修复任何问题；校验结果与 Godot 的加载校验保持同一套 Schema，但网页端不会运行领域规则或 Core 完整性检查。</p>
       </section>
     </div>`;
@@ -2810,43 +2810,43 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Schema 2.0 draft content export/deploy guards                       */
+  /* Runtime-unsupported content export/deploy guards                    */
   /* ------------------------------------------------------------------ */
 
-  function draftContentFiles() {
-    return state.project ? Store.draftContentFiles(state.project) : [];
+  function unsupportedContentFiles() {
+    return state.project ? Store.unsupportedContentFiles(state.project) : [];
   }
 
-  function draftContentLabel(files) {
+  function unsupportedContentLabel(files) {
     return files.map((file) => file.path).join('、');
   }
 
-  function draftExportNotice(files) {
+  function unsupportedExportNotice(files) {
     if (!files.length) return '';
     return `<div class="notice warning" role="note">
       <div>
-        <strong>包含 ${files.length} 个 Schema 2.0 草案内容文件：</strong>
-        <span>${UI.esc(draftContentLabel(files))}。游戏运行时只加载 Content Schema 1.0，这些内容不会生效；「导出并覆盖到发布包 mods/」已禁用。</span>
+        <strong>包含 ${files.length} 个当前运行时不支持的内容文件：</strong>
+        <span>${UI.esc(unsupportedContentLabel(files))}。这些内容（草案类型或 schema_version 与类型不符）不会被游戏加载；「导出并覆盖到发布包 mods/」已禁用。</span>
       </div>
     </div>`;
   }
 
-  async function confirmDraftExport(files, actionLabel) {
+  async function confirmUnsupportedExport(files, actionLabel) {
     if (!files.length) return true;
     return UI.confirm({
-      title: '包含 Schema 2.0 草案内容',
-      message: `${actionLabel}包含 ${files.length} 个草案内容文件（${draftContentLabel(files)}）。游戏运行时只加载 Content Schema 1.0，这些内容不会生效。仍要继续吗？`,
+      title: '包含当前运行时不支持的内容',
+      message: `${actionLabel}包含 ${files.length} 个当前运行时不支持的内容文件（${unsupportedContentLabel(files)}）。这些内容（草案类型或 schema_version 与类型不符）不会被游戏加载。仍要继续吗？`,
       confirmLabel: '仍然导出',
       danger: true,
     });
   }
 
   function showExport() {
-    const drafts = draftContentFiles();
-    const deployOption = drafts.length
+    const unsupported = unsupportedContentFiles();
+    const deployOption = unsupported.length
       ? `<button type="button" class="import-option" disabled>
           <span class="import-icon">GAME</span>
-          <span><strong>导出并覆盖到发布包 mods/</strong><small>项目包含 Schema 2.0 草案内容：游戏运行时不加载，不能部署到发布包；请先移除草案内容</small></span>
+          <span><strong>导出并覆盖到发布包 mods/</strong><small>项目包含当前运行时不支持的内容（草案或版本不匹配）：游戏无法加载，不能部署到发布包；请先移除或修正这些内容</small></span>
         </button>`
       : state.backend
         ? `<button type="button" class="import-option" data-action="deploy-game-mod">
@@ -2861,7 +2861,7 @@
       title: '导出',
       subtitle: '发布用 ZIP，或保留一个可再次编辑的项目文件。',
       size: 'sm',
-      body: `${draftExportNotice(drafts)}<div class="import-options">
+      body: `${unsupportedExportNotice(unsupported)}<div class="import-options">
         <button type="button" class="import-option" data-action="export-zip">
           <span class="import-icon">ZIP</span>
           <span><strong>下载 .snavmod.zip</strong><small>mods/&lt;id&gt;/ 结构，可直接放入 mods 或 user://mods</small></span>
@@ -2894,7 +2894,7 @@
       });
       if (!ok) return;
     }
-    if (!(await confirmDraftExport(draftContentFiles(), '下载 .snavmod.zip '))) return;
+    if (!(await confirmUnsupportedExport(unsupportedContentFiles(), '下载 .snavmod.zip '))) return;
     try {
       UI.setBusy(true, '正在打包 ZIP…');
       await saveNow();
@@ -2917,7 +2917,7 @@
       });
       if (!ok) return;
     }
-    if (!(await confirmDraftExport(draftContentFiles(), `保存到 ${state.backend.exportsDir || 'exports'}/ `))) return;
+    if (!(await confirmUnsupportedExport(unsupportedContentFiles(), `保存到 ${state.backend.exportsDir || 'exports'}/ `))) return;
     try {
       UI.setBusy(true, '正在写入 exports/…');
       await saveNow({ disk: true });
@@ -2933,8 +2933,8 @@
 
   async function deployGameMod() {
     if (!state.project || !state.backend) return;
-    if (draftContentFiles().length) {
-      UI.toast('项目包含 Schema 2.0 草案内容，不能部署到发布包 mods/；游戏运行时不加载这类内容。', 'error', 6500);
+    if (unsupportedContentFiles().length) {
+      UI.toast('项目包含当前运行时不支持的内容（草案或版本不匹配），不能部署到发布包 mods/。', 'error', 6500);
       return;
     }
     const target = `${state.backend.gameModsDir}/${state.project.manifest.id}.snavmod.zip`;
@@ -2973,7 +2973,7 @@
 
   async function exportFolder() {
     if (!state.project) return;
-    if (!(await confirmDraftExport(draftContentFiles(), '写入本地目录 '))) return;
+    if (!(await confirmUnsupportedExport(unsupportedContentFiles(), '写入本地目录 '))) return;
     try {
       await saveNow();
       const result = await IO.exportFolder(state.project);

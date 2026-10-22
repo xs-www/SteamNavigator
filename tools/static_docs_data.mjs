@@ -704,35 +704,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/services/save_service.gd": {
-    role: "JSON 存档槽：模组头、状态、临时文件校验后替换、兼容性检查与旧档迁移入口。",
-    contracts: [
-      "新存档写 save_schema 2.0、state_schema 2.0 与 content_schema 1.0；写入前克隆状态并补齐 campaign，不修改实时状态。",
-      "写入快照与加载结果都会调用 `ShipModules.ensure()` 对齐模块实例表；旧档缺表时按满状态补齐，实例 id 与 condition 随存档往返。",
-      "写入 `.tmp` 并重新解析校验；旧文件先改名为 `.bak`，最终替换失败会回滚。",
-      "槽位名限制 `^[a-z][a-z0-9_]{1,31}$`；自动存档与出航前快照为独立槽。",
-      "缺失存档所需模组拒绝加载；版本/哈希漂移只警告。",
-      "加载时统一交给 `SaveMigrations.migrate()`；1.x 归档迁移为 2.0 并回填 campaign 元数据。"
-    ],
-    l2: {
-      "load_slot(slot)": [
-        "解析后先迁移 save payload，再校验 state；不支持的 save_schema 返回结构化错误。",
-        "返回 GameState、header、meta、migrated 与 migration_warnings；调用方负责模组兼容性校验。"
-      ]
-    }
-  },
-
-  "framework/services/save_migrations.gd": {
-    role: "存档 payload 版本迁移：当前 save schema 2.0，支持 1.x → 2.0 并回填持久战役元数据。",
-    contracts: [
-      "`save_schema` 描述 payload 包装，`state_schema` 描述 GameState 数据；2.0 之前旧档的 content_schema 实际存放 state schema。",
-      "1.x → 2.0 只做兼容增量：保留既有 run/world/ship 字段，补 campaign、schema_version、state_schema 与 content_schema。",
-      "campaign id 从 seed 确定性生成；created_at 优先沿用 payload/run 时间；playtime 取 game_time。",
-      "缺失的 campaign 分区（world/codex/factions）由 `GameState.ensure_campaign_sections` 回填，并逐段写入 warnings。",
-      "未知主版本直接拒绝；迁移结果携带 warnings 供 UI/日志显示。"
-    ]
-  },
-
   "framework/services/settings_service.gd": {
     role: "持久化 UI 设置：编辑器读 `res://config/config.json`；发布版优先读写 exe 同级 `config/config.json`，不可写时回退 `user://config/config.json`。",
     contracts: [
@@ -1483,7 +1454,7 @@ export const FILE_DOCS = {
       "单一真源是 `content_types.json`；生成物 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js` 禁止手改。",
       "生成前校验格式版本、key/singular/schema 唯一、分组与 v2 模块分类引用、Schema 文件存在、Patch 数量、planned 不覆盖 active、draft_schemas 只指向 planned 类型。",
       "`draft_types` 必须与 `draft_schemas` 键集合完全一致，且不得自带 schema 路径；生成器校验 singular/abbr/color/default_file 唯一、group 已声明、`schema_version` 等于对应 Schema 的 const、capability 等于该类型所属 planned system 的 capability。",
-      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（含 Phase B 的 9 类 2.0 类型）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`。",
+      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（含 Phase B 的 9 类 2.0 类型）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`；编辑器 `TYPES` 条目同时输出 `capability` 供 2.0 capability 校验。",
       "`--check` 不写文件，生成物缺失或过期时以退出码 1 结束，供 CI/发布门禁使用。"
     ]
   },
@@ -1580,7 +1551,7 @@ export const FILE_DOCS = {
       "`resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。",
       "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons / story_arcs / story_levels 草案 2.0），最后回退 1.0。",
       "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
-      "`draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。",
+      "`draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（Phase B 9 类 + 草案族），同一 capability 每次校验只报一条。",
       "`LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。",
       "`REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_build` → starting_build，与已有的 hull / good 等字段共用 `ref_type` 提示。",
       "武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。",
@@ -1626,6 +1597,7 @@ export const FILE_DOCS = {
     contracts: [
       "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
       "`schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与草案 weapons / story_arcs / story_levels 写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。",
+      "`runtimeSupportsFile()` / `unsupportedContentFiles()` 判断当前运行时能否加载：未知类型、草案类型（`weapons` / `story_arcs` / `story_levels`）、`schema_version` 与类型期望版本不符 → 不支持；Phase B 提升的 2.0 类型受支持。`draftContentFiles` / `hasDraftContent` 保留为兼容 alias，供 G8 导出守卫使用。",
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
@@ -1747,7 +1719,7 @@ export const FILE_DOCS = {
       "自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。",
       "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
       "项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。",
-      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量。",
+      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（`weapons` 草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。Phase B 提升的 2.0 运行时类型可直接部署。",
       "没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。",
       "资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。",
       "Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。"
@@ -1826,12 +1798,12 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 25 个运行时类型与 3 个 Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 25 个运行时类型（其中 9 类为 Phase B 的 Schema 2.0）与 3 个 Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与 3 个草案（`weapons` / `story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。",
+      "`types` 同时列出 25 个运行时类型（其中 9 类为 Phase B Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`weapons` / `story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
       "`new --draft <content_type>` 只接受真实草案（`weapons` / `story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。",
       "`validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 草案定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
@@ -2068,15 +2040,6 @@ export const FILE_DOCS = {
       "校验类型 key / singular / schema 唯一，分组、capability、aliases、default_file 字段完整，planned 类型不覆盖 active。",
       "校验 `v2_module_categories` 唯一且被类型引用；导航/安全必须同属 `utility`，且不存在独立的 active utility 类型。",
       "过渡期测试替代生成器；生成器接入后保留为回归测试。"
-    ]
-  },
-
-  "framework/tests/cases/test_save_migration.gd": {
-    role: "存档 Schema 2.0 迁移测试：v1 payload 加载为持久战役状态，v2 往返不迁移，缺失 campaign 回填，未知版本拒绝。",
-    contracts: [
-      "手写 1.0 payload 验证 save_schema → 2.0、state schema → 2.0、campaign/id/created_at/playtime 回填与 migrated_from 记录。",
-      "验证 v2 写入/读取的 save_schema、state_schema、content_schema 与 state hash 往返一致。",
-      "验证缺 campaign 的 2.0 payload 惰性补齐并产生 warning；3.0 等未知版本返回结构化错误。"
     ]
   },
 
@@ -2566,13 +2529,15 @@ export const MODULES = {
       "测试源码可以引用 `core:*` ID；`test_no_core_ids.gd` 只扫描非测试框架代码。",
       "`test_full_clear.gd` 通过公开命令/查询脚本化跑完五段主线并组装大型船，覆盖 9 个 seed。",
       "`test_content_types_manifest.gd` 守护 `content_types.json` 与 `ContentTypes` / Schema 文件的一致性。",
-      "`test_save_migration.gd` 守护 save schema 1.x → 2.0 迁移、campaign 元数据与分区回填。",
+      "`test_save_migration.gd` 守护 save schema 1.x → 2.0 迁移、campaign 元数据/分区回填与 B5 `content_versions` 快照/推断/漂移。",
       "`test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。",
       "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
       "`test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
       "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema 与 `map_configs`（31 键 exploration），确认 9 类 active、只有 `weapons` 仍为草案。",
       "`test_world_schema_refs.gd` 覆盖 Phase B 9 类引用规则：硬引用缺失 error、planned 目标仅 `ref_inactive_type` warning、faction 自指、map_config archetype 数量组合规则。",
       "`test_world_completeness.gd` 覆盖 Core Phase B 完整性：presence gate（仅 Core 自带 world_profiles 时启用）、五项硬性数量、四项建议 warning 与 start_profile / region / map_config 组合规则。",
+      "`test_campaign_assembly.gd` 用合成 v2 定义验证 `CampaignFactory` 世界装配：state 形状、同 seed 确定性、区域/地点/航路引用一致性、map_config 回退与结构化错误。",
+      "`test_campaign_start.gd` 覆盖 `run.start start_profile=` 端到端、`campaign.view` 形状、`ContentRefs` 1.0↔v2 解析与 resolver 旧档回退。",
       "`test_schema_v2_weapons.gd` 守护 `weapons` 草案（合法 direct / broadside 与非法必填 / 枚举 / 范围 / 颜色 / 材料 ID）、草案登记与 hull `weapon_sockets` / `rig_sockets` 镜像（含 Core 14 个武器 socket + 22 个帆索 socket）。",
       "`test_world_generator.gd` 守护坐标空间世界生成：同 seed 可复现、港口锚定海岸线、最小间距、连通性、出航角度、必需设施位置与序列化往返。"
     ]

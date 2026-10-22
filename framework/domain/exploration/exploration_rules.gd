@@ -1,16 +1,16 @@
 class_name ExplorationRules
 extends RefCounted
 ## @static-doc
-## 作用：读取并合并探索系统规则（`map_profiles` 定义的 `data.exploration`），
-## 把 Core JSON 的数值与框架兜底常量统一成一份纯数据字典，供线索、探索预览、结算与
-## 战争迷雾半径共享。
+## 作用：读取并合并探索系统规则（v2 `map_configs` / 1.0 `map_profiles` 定义的
+## `data.exploration`），把 Core JSON 的数值与框架兜底常量统一成一份纯数据字典，供
+## 线索、探索预览、结算与战争迷雾半径共享。
 ##
-## - 关键依赖：`ContentTypes.MAP_PROFILE`、`GameState.world()`、`RegistryHub`、`WorldMap`
+## - 关键依赖：`ContentRefs.map_config_data()`、`GameState.world()`、`RegistryHub`、`WorldMap`
 ##
 ## ## 契约与约束
-## - 规则只来自当前 `map_profile_id` 对应 `map_profiles` 定义的 `data.exploration`；
-##   框架不写死可调数值。`DEFAULTS` 只用于旧存档 / 内容缺字段的**防御兜底**，不参与调参；
-##   正常内容（core 的 `standard` profile）必须覆盖全部键。
+## - 规则只来自当前场景定义（`ContentRefs` 解析：v2 `map_configs` 优先，旧档
+##   `map_profiles` 回退）的 `data.exploration`；框架不写死可调数值。`DEFAULTS` 只用于
+##   旧存档 / 内容缺字段的**防御兜底**，不参与调参；正常内容必须覆盖全部键。
 ## - 合并只覆盖 `DEFAULTS` 里已知的键，未知键被忽略；`level_weights` /
 ##   `credibility_range` 这类两级结构逐来源子键合并，缺一个来源不影响另一个。
 ## - 读取无副作用、不缓存：注册表冻结后内容不变，重复读取开销可忽略。
@@ -92,18 +92,17 @@ const DEFAULTS := {
 }
 
 
-## Returns the merged exploration rule dictionary for the current run's map profile.
+## Returns the merged exploration rule dictionary for the current run's
+## scenario definition (`map_configs` for v2 campaigns, legacy `map_profiles`
+## fallback handled by `ContentRefs`).
 static func read(state: GameState, hub: RegistryHub) -> Dictionary:
 	var rules: Dictionary = DEFAULTS.duplicate(true)
 	if state == null:
 		return rules
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	if profile_id.is_empty() or hub == null:
+	var data := ContentRefs.map_config_data(state, hub)
+	if data.is_empty():
 		return rules
-	var profile: ContentDefinition = hub.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	if profile == null:
-		return rules
-	var raw: Variant = profile.data.get("exploration", null)
+	var raw: Variant = data.get("exploration", null)
 	if not (raw is Dictionary):
 		return rules
 	_merge(rules, raw as Dictionary)

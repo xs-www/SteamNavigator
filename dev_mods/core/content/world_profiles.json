@@ -1,0 +1,24 @@
+{
+  "schema_version": "2.0",
+  "content_type": "world_profiles",
+  "definitions": [
+    {
+      "id": "core:world_profile/default_world",
+      "name_key": "world.core.default_world.name",
+      "description_key": "world.core.default_world.description",
+      "tags": ["world.default", "world.temperate"],
+      "enabled": true,
+      "data": {
+        "region_count": 5,
+        "sites_per_region": 6,
+        "port_count": 5,
+        "ruin_density": 0.2,
+        "base_site_count": 2,
+        "faction_count": 3,
+        "weather_profile": "core:weather_profile/temperate",
+        "edge_density": 0.2,
+        "start_region_tags": ["region.start"]
+      }
+    }
+  ]
+}

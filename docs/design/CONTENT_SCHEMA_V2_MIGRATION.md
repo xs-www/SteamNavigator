@@ -133,12 +133,14 @@ G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案
 
 ### Phase B · 世界探索家族提升（阶段 0/1，2–4 周）
 
-**状态：B0–B2 已完成（2026-10-22）；B3 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
+**状态：B0–B6 已完成（2026-10-22），Phase B 收尾。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
 （Draft 2，含 9 类类型、引用/完整性规则、CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。
 B0 证据：探索 4.1 与 Phase A 均已在 `main`（无需 rebase）；契约已按 4.2–4.5 的 `map_profile` 现状刷新
 （`exploration` 31 键、`twin_world_size`、`story`、15 处读取点）；Godot 419/419、生成物检查、SDK core 校验、
 Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 类、编辑器 26 项、schema bundle 29 个），
-`map_configs` 覆盖 31 键 exploration + `story`，框架/编辑器测试与 CLI 全绿。
+`map_configs` 覆盖 31 键 exploration + `story`，框架/编辑器测试与 CLI 全绿。B2–B4 证据：9 个跨引用检查 + Core
+完整性 gate；`CampaignFactory` + `run.start start_profile` + `campaign.view` + 12 处 resolver；Core 9 个 v2 内容文件
+（82 definitions，SDK `status: ok`）；Godot 全量 468/468、Node 50/50、CLI 57/57。
 
 目标：8 类 v2 草案 + 新增 `map_configs`（1.0 `map_profiles` 的 v2 继任者）从 `planned`/草案提升为 active，
 并由真实运行时消费；1.0 老链路与旧档保持可用。
@@ -148,10 +150,10 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 | B0 | 前置 | 探索 4.1 提交；`schema-v2` rebase `main`；冻结其 1.0 `map_profile` 字段，后续只做迁移映射 |
 | B1 | 类型提升 | ✅ 已完成（2026-10-22）：8 类从 `planned` 移入 `types` + 新增 `map_configs`；删除对应 `draft_types` / `draft_schemas` 条目、清理 `planned`；新增 `schemas/v2/map_config.schema.json` 并微调 `world_profiles`/`start_profiles` |
 | B2 | 注册表与引用 | ✅ 已完成（2026-10-22）：`RegistryHub` 按 `ContentTypes.all()` 自动生效；`CrossReferenceValidator` 增加 9 个 `_check_*` 与 `ref_inactive_type` 规则（目标激活后自动升级硬校验）；`CoreCompletenessChecker` 增加 Phase B 规则（Core presence gate）；`FrameworkInfo.CAPABILITIES` 增加 `content.world.v1` / `content.campaign.v1` |
-| B3 | 世界生成运行时 | 新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询 |
-| B4 | core 内容 | `dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化；`map_profiles.exploration` 原样迁入 `map_configs.exploration` |
-| B5 | 存档 | 新档写 `campaign.setup.content_versions`；旧档惰性补齐、世界不重排（D3） |
-| B6 | 编辑器 / CLI / SDK | 草案分区消失、`capability_undeclared` 改为按 schemaVersion=2.0 判定、G8 判定改为“运行时是否支持”；发布门禁要求 v2 core 校验通过 |
+| B3 | 世界生成运行时 | ✅ 已完成（2026-10-22）：新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询；`ContentRefs` 统一 12 处 resolver |
+| B4 | core 内容 | ✅ 已完成（2026-10-22）：`dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化（各 +62 键）；`map_profiles.exploration` 31 键与 `story` 原样迁入 `map_configs` |
+| B5 | 存档 | ✅ 已完成（2026-10-22）：新档由 `prepare_for_save()` 写 `campaign.setup.content_versions`；旧档推断 `starting_builds/map_profiles → 1.0` 并用注册表补齐；版本漂移只 warning、不重排世界 |
+| B6 | 编辑器 / CLI / SDK | ✅ 已完成（2026-10-22）：草案分区只剩 `weapons`；`capability_undeclared` 按 schemaVersion=2.0 判定并按 capability 去重；G8 改为“运行时不支持”（草案/未知类型/版本不符拦截，提升类型可部署）；CLI 标 runtime 2.0、`new --draft` 仅 weapons；release workflow 加入 Node 两套件 |
 
 验收：v2 世界生成可开局；旧档可继续；1.0 模组在双读窗口内仍可加载；seed 回归（现有 seed + 新 v2 seed）；
 编辑器/CLI/SDK 全链零 error；`gen_content_types --check`、`gen_static_docs --check`。
@@ -159,21 +161,44 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 
 ### Phase C · 实体合并（Module / Item / Quest，1–2 周）
 
+> **开发期策略（2026-10-22 拍板）**：开发器没有第三方模组，直接全量升级 core 到 Schema 2.0 并保证运行即可；
+> 每次迭代后不保留旧存档 / 旧内容模型兼容。C-D2 的旧/新类型并存仅是分步开发手段，不是兼容窗口；每个实体
+> 合并完成后即可删除旧 1.0 类型与旧内容定义，旧档直接作废（B5 的迁移矩阵不作为 C/D 门禁）。
+>
+> **C1 设计决策（2026-10-22）**：
+> - 5 类模块（boilers/cargo/navigation/safety/cabins）合并为 `module` 2.0，`v2_category` 取
+>   `boiler/cargo/utility/cabin`（`crew` 预留）；**hulls 不并入**，保留独立 `hull` 2.0；
+> - 运行时新增 category-aware `ModuleOps`/`ModuleCatalog` 访问器；ship 存档继续使用扁平槽位
+>   （`boiler` / `cargo_modules` / `navigation_module` / `safety_module` / `passenger_cabin`），不重写槽位结构；
+> - `module.schema.json` 用 `v2_category` + 字段超集；项目 SchemaValidator 不支持 if/then，
+>   category 专属必填由语义校验器负责；编辑器使用分类页签与每类默认值；
+> - capability 使用 `content.modules.v1`；完整性检查按 category 计数；
+> - 不做 ID 别名 / 旧存档迁移；core 内容直接改为新类型。
+
 | 顺序 | 合并 | 迁移方式 |
 | --- | --- | --- |
-| C1 | 6 类模块 → `module` + `v2_category`（`boiler/cargo/utility/cabin/crew`） | 保留旧内容类型与 ID 别名一个版本；导航/安全归入 `utility` |
-| C2 | goods + materials → `item`（`crafting_material` 标志） | ID 别名（`core:good/x` ↔ `core:item/x`）+ 本地化键迁移 |
-| C3 | contracts → `quest`（生成器字段分离） | 别名 + 存档 ID 迁移 |
+| C1 | 5 类模块（boilers/cargo/navigation/safety/cabins）→ `module` + `v2_category`（`boiler/cargo/utility/cabin`，`crew` 预留）；**hulls 独立为 `hull` 2.0** | 不保留旧类型/ID 别名；core 内容直接改为新类型；导航与安全归 `utility` |
+| C2 | goods + materials → `item`（`crafting_material` 标志） | 直接重命名 core 内容与引用；不做 ID 别名 |
+| C3 | **委托与任务解耦**：`contracts` 保持独立（运输请求）；新增 `quests` 2.0（抽象引导：剧情演出、游戏指引、非运输类系统需求），持久 `data.quests` + QuestService；委托接取后生成 quest 实例写入 `data.quests` 以供追踪；task.view 聚合 quests + accepted contracts | 不合并 contracts/quests；story 暂时保留，后续剧情模式开发时由 quests 上位替代 |
+
+### Phase C4 · 残留 1.0 类型 2.0 化（新增切片）
+
+C1–C3 之后，依次处理剩余 1.0 定义类型：`hulls`（随 C1 的 `hull`）、`port_archetypes → port_templates`、
+`map_profiles`（退役，`map_configs` 取代）、`starting_builds → starting_scenarios`、`events → voyage_events`、
+`roles → crew_roles`（fleet 前）、`strategies → boiler_strategies`（或并入 module 预设）、`patches → patch 2.0`、
+**`contracts → contracts 2.0`**。目标：C4 结束时 `ContentTypes` 只剩 2.0 定义类型 + patch 2.0。
 
 ### Phase D · 其余系统类型（逐系统）
 
 fleet / combat / base / auto_trade / ruins 每个系统按同一模板走：
 Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → 运行时纵向切片 → 存档分区 → 编辑器/CLI/文档。
+开发期同样不承诺旧档兼容；建议先补最小 tick/模拟框架切片（D0），再按 combat → fleet → base → auto_trade → ruins。
 
 ### Phase E · 冻结 1.0（1 周）
 
-- 停止生成 1.0 内容；双读窗口结束，遇到 1.0 内容给出明确迁移错误。
-- 提供 `sdk/migrate_content.gd`（或 CLI）把 1.0 模组迁移到 2.0。
+- 停止生成 1.0 内容；删除 1.0 读路径，遇到 1.0 内容给出明确“需要 2.0”的错误。
+- 开发期已拍板不保留旧档/旧模型兼容，因此不再提供面向玩家的 1.0→2.0 存档/内容迁移工具；如发布前确需，
+  另行评估。
 - 发布门禁要求 Content Schema 2.0；更新 `README`、`CHANGELOG`、`ENTITY_CONTRACT_V2` 状态为 Finalized。
 
 ## 5. 兼容性矩阵（目标态）
@@ -185,6 +210,9 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 混合版本模组（1.0 + 2.0 类型） | 允许编辑器编辑 | 允许（按类型校验） | 要求全 2.0 |
 | 1.x 旧存档 | 正常 | 正常（惰性补齐） | 正常（迁移矩阵覆盖） |
 | v2 世界存档读入 1.0 运行时 | 不适用 | 拒绝并保留只读提示 | — |
+
+> **开发期（C/D）例外（2026-10-22 拍板）**：开发器没有第三方模组，每次迭代后旧存档 / 旧内容模型直接作废，
+> 不要求跨迭代兼容；上表的 1.0 兼容列只描述已发布 MVP 的历史行为，不是 C/D 的门禁。
 
 ## 6. 测试与门禁
 
@@ -229,7 +257,10 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase B · B0：探索 4.1 / Phase A 合入 main；契约刷新到 Draft 2；基线门禁全绿（2026-10-22）。
 - [x] Phase B · B1：9 类 2.0 类型 active + `map_configs` Schema；编辑器 / CLI / 测试同步；生成物全绿（2026-10-22）。
 - [x] Phase B · B2：9 类跨引用规则 + `ref_inactive_type`、Core Phase B 完整性（presence gate）、capability 白名单（2026-10-22）。
-- [ ] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过。
+- [x] Phase B · B3：`CampaignFactory` 世界装配 + `run.start start_profile` + `campaign.view` + `ContentRefs` resolver 改造（2026-10-22）。
+- [x] Phase B · B4：Core 9 个 v2 内容文件 + 本地化 + manifest capabilities（82 definitions，SDK `status: ok`）（2026-10-22）。
+- [x] Phase B · B5：保存快照 `campaign.setup.content_versions`；旧档推断/补齐 + 漂移 warning；存档矩阵测试（2026-10-22）。
+- [x] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过（B6 收尾，2026-10-22）。
 - [ ] Phase C：实体合并后旧 ID 别名可用一个版本；存档 ID 迁移可回读。
 - [ ] Phase E：1.0 生成停止；迁移工具可用；文档状态更新为 Finalized。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。

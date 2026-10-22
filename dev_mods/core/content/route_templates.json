@@ -1,0 +1,51 @@
+{
+  "schema_version": "2.0",
+  "content_type": "route_templates",
+  "definitions": [
+    {
+      "id": "core:route_template/coastal_lane",
+      "name_key": "route_template.core.coastal_lane.name",
+      "description_key": "route_template.core.coastal_lane.description",
+      "tags": ["route.safe"],
+      "enabled": true,
+      "data": {
+        "kind": "sea_lane",
+        "distance_range": [90, 180],
+        "risk_range": [0.01, 0.04],
+        "travel_time_range": [8.0, 20.0],
+        "bidirectional": true,
+        "region_kinds": ["coastal", "industrial"]
+      }
+    },
+    {
+      "id": "core:route_template/archipelago_trade",
+      "name_key": "route_template.core.archipelago_trade.name",
+      "description_key": "route_template.core.archipelago_trade.description",
+      "tags": ["route.trade"],
+      "enabled": true,
+      "data": {
+        "kind": "trade_route",
+        "distance_range": [120, 220],
+        "risk_range": [0.02, 0.06],
+        "travel_time_range": [10.0, 26.0],
+        "bidirectional": true,
+        "region_kinds": ["coastal", "archipelago"]
+      }
+    },
+    {
+      "id": "core:route_template/storm_shortcut",
+      "name_key": "route_template.core.storm_shortcut.name",
+      "description_key": "route_template.core.storm_shortcut.description",
+      "tags": ["route.risky", "route.fast"],
+      "enabled": true,
+      "data": {
+        "kind": "hazardous_shortcut",
+        "distance_range": [60, 120],
+        "risk_range": [0.06, 0.14],
+        "travel_time_range": [4.0, 10.0],
+        "bidirectional": true,
+        "region_kinds": ["archipelago", "open_sea"]
+      }
+    }
+  ]
+}

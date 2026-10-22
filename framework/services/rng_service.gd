@@ -16,6 +16,9 @@ const STREAM_EVENT_OPTIONS := &"event_options"
 ## Exploration clues / discovery rolls. Kept separate from voyage streams so adding a
 ## rumour roll can never shift normal voyage outcomes for the same seed.
 const STREAM_EXPLORATION := &"exploration"
+## Phase B campaign world assembly (regions / sites / routes / factions / discoveries).
+## Separate from map generation so v2 world detail rolls cannot shift the 1.0 map.
+const STREAM_CAMPAIGN_WORLD := &"campaign_world"
 
 const STREAM_NAMES := [
 	STREAM_MAP_GENERATION,
@@ -26,6 +29,7 @@ const STREAM_NAMES := [
 	STREAM_VOYAGE_EVENT,
 	STREAM_EVENT_OPTIONS,
 	STREAM_EXPLORATION,
+	STREAM_CAMPAIGN_WORLD,
 ]
 
 var base_seed: int = 0
