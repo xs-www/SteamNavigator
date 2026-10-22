@@ -16,80 +16,80 @@
 | `knownTypeKeys()` | L55 |
 | `schemaVersionFor(target)` | L60 |
 | `USAGE` | L73 |
-| `BOOLEAN_FLAGS` | L145 |
-| `parseArgv(argv)` | L150 |
-| `flagTrue(ctx, name)` | L193 |
-| `flagValue(ctx, name)` | L200 |
-| `flagValues(ctx, name)` | L210 |
-| `requireFlag(ctx, name, label)` | L216 |
-| `jsonEqual(a, b)` | L230 |
-| `isPlainObject(value)` | L234 |
-| `sha256(buffer)` | L238 |
-| `splitLines(text)` | L242 |
-| `unifiedDiff(oldText, newText, context = 3)` | L250 |
-| `printJson(payload)` | L317 |
-| `stripChanges(changes)` | L321 |
-| `changeLines(changes)` | L329 |
-| `issueSummary(after, newIssues)` | L336 |
-| `buildStats(project)` | L350 |
-| `respond(ctx, payload, humanText, exitCode = 0)` | L358 |
-| `issueKey(issue)` | L370 |
-| `newIssuesBetween(baseline, after)` | L374 |
-| `listFilesRecursive(root)` | L383 |
-| `loadMod(ctx, modArg)` | L399 |
-| `fileText(load, rel)` | L424 |
-| `resolveInside(root, relative)` | L431 |
-| `validateContentFilePath(filePath)` | L444 |
-| `atomicWrite(absolute, buffer)` | L454 |
-| `collectChanges(load, writes, deletes, wouldWrite)` | L472 |
-| `verifyBaseline(load, writes, deletes)` | L501 |
-| `commitChanges(load, writes, deletes)` | L512 |
-| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L526 |
-| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L556 |
-| `planLocaleChanges(load, project, writes, localeNames)` | L575 |
-| `patchManifestText(originalText, manifest)` | L609 |
-| `planManifest(load, project, writes)` | L639 |
-| `runSyncCoreIndex(ctx)` | L651 |
-| `runNodeTests(ctx)` | L663 |
-| `finalizeWrite(ctx, options)` | L679 |
-| `parseDataPath(input)` | L753 |
-| `resolveTokenFile(reference)` | L798 |
-| `readTextFile(reference)` | L810 |
-| `parseValueToken(raw)` | L816 |
-| `parseJsonOrFile(raw, label)` | L841 |
-| `parseAssignmentSpec(raw)` | L851 |
-| `setByPath(target, pathSegments, value)` | L873 |
-| `getByPath(target, pathSegments)` | L887 |
-| `deepMerge(base, extra)` | L896 |
-| `MODULE_CATEGORY_VALUES` | L908 |
-| `requestedModuleCategory(ctx)` | L910 |
-| `buildData(typeKey, ctx)` | L931 |
-| `findLocalIdConflict(project, info, localId, exclude)` | L955 |
-| `validateLocalId(localId)` | L965 |
-| `collectStrings(value, output, depth = 0)` | L972 |
-| `applyValueAssignment(definition, assignment)` | L992 |
-| `nestValue(segments, value)` | L1022 |
-| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1038 |
-| `applyAssignmentToText(text, definitionNode, assignment)` | L1070 |
-| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1097 |
-| `describeFields(info)` | L1145 |
-| `collectObject(node, file)` | L1157 |
-| `inferType(target, raw)` | L1185 |
-| `expand(pathText, node, isRequired, file, depth)` | L1208 |
-| `describePayload(typeKey)` | L1246 |
-| `commandTypes(ctx)` | L1307 |
-| `commandDescribe(ctx)` | L1352 |
-| `commandList(ctx)` | L1384 |
-| `commandAdd(ctx)` | L1432 |
-| `commandSet(ctx)` | L1560 |
-| `commandLoc(ctx)` | L1616 |
-| `commandRm(ctx)` | L1668 |
-| `commandClone(ctx)` | L1738 |
-| `commandValidate(ctx)` | L1797 |
-| `commandNew(ctx)` | L1861 |
-| `COMMANDS` | L1958 |
-| `handleError(ctx, error)` | L1971 |
-| `main(argv)` | L1989 |
+| `BOOLEAN_FLAGS` | L146 |
+| `parseArgv(argv)` | L151 |
+| `flagTrue(ctx, name)` | L194 |
+| `flagValue(ctx, name)` | L201 |
+| `flagValues(ctx, name)` | L211 |
+| `requireFlag(ctx, name, label)` | L217 |
+| `jsonEqual(a, b)` | L231 |
+| `isPlainObject(value)` | L235 |
+| `sha256(buffer)` | L239 |
+| `splitLines(text)` | L243 |
+| `unifiedDiff(oldText, newText, context = 3)` | L251 |
+| `printJson(payload)` | L318 |
+| `stripChanges(changes)` | L322 |
+| `changeLines(changes)` | L330 |
+| `issueSummary(after, newIssues)` | L337 |
+| `buildStats(project)` | L351 |
+| `respond(ctx, payload, humanText, exitCode = 0)` | L359 |
+| `issueKey(issue)` | L371 |
+| `newIssuesBetween(baseline, after)` | L375 |
+| `listFilesRecursive(root)` | L384 |
+| `loadMod(ctx, modArg)` | L400 |
+| `fileText(load, rel)` | L425 |
+| `resolveInside(root, relative)` | L432 |
+| `validateContentFilePath(filePath)` | L445 |
+| `atomicWrite(absolute, buffer)` | L455 |
+| `collectChanges(load, writes, deletes, wouldWrite)` | L473 |
+| `verifyBaseline(load, writes, deletes)` | L502 |
+| `commitChanges(load, writes, deletes)` | L513 |
+| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L527 |
+| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L557 |
+| `planLocaleChanges(load, project, writes, localeNames)` | L576 |
+| `patchManifestText(originalText, manifest)` | L610 |
+| `planManifest(load, project, writes)` | L640 |
+| `runSyncCoreIndex(ctx)` | L652 |
+| `runNodeTests(ctx)` | L664 |
+| `finalizeWrite(ctx, options)` | L680 |
+| `parseDataPath(input)` | L754 |
+| `resolveTokenFile(reference)` | L799 |
+| `readTextFile(reference)` | L811 |
+| `parseValueToken(raw)` | L817 |
+| `parseJsonOrFile(raw, label)` | L842 |
+| `parseAssignmentSpec(raw)` | L852 |
+| `setByPath(target, pathSegments, value)` | L874 |
+| `getByPath(target, pathSegments)` | L888 |
+| `deepMerge(base, extra)` | L897 |
+| `MODULE_CATEGORY_VALUES` | L909 |
+| `requestedModuleCategory(ctx)` | L911 |
+| `buildData(typeKey, ctx)` | L932 |
+| `findLocalIdConflict(project, info, localId, exclude)` | L956 |
+| `validateLocalId(localId)` | L966 |
+| `collectStrings(value, output, depth = 0)` | L973 |
+| `applyValueAssignment(definition, assignment)` | L993 |
+| `nestValue(segments, value)` | L1023 |
+| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1039 |
+| `applyAssignmentToText(text, definitionNode, assignment)` | L1071 |
+| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1098 |
+| `describeFields(info)` | L1146 |
+| `collectObject(node, file)` | L1158 |
+| `inferType(target, raw)` | L1186 |
+| `expand(pathText, node, isRequired, file, depth)` | L1209 |
+| `describePayload(typeKey)` | L1247 |
+| `commandTypes(ctx)` | L1308 |
+| `commandDescribe(ctx)` | L1353 |
+| `commandList(ctx)` | L1385 |
+| `commandAdd(ctx)` | L1433 |
+| `commandSet(ctx)` | L1561 |
+| `commandLoc(ctx)` | L1617 |
+| `commandRm(ctx)` | L1669 |
+| `commandClone(ctx)` | L1739 |
+| `commandValidate(ctx)` | L1798 |
+| `commandNew(ctx)` | L1862 |
+| `COMMANDS` | L1959 |
+| `handleError(ctx, error)` | L1972 |
+| `main(argv)` | L1990 |
 
 ## 契约与约束
 

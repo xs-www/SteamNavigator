@@ -1,25 +1,25 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T12:08:18.579Z",
-  "commit": "13a8b2e",
+  "generated_at": "2026-10-22T12:40:08.519Z",
+  "commit": "27b1f8c",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 994,
-    "documented": 397,
-    "grouped": 597
+    "sources": 1002,
+    "documented": 399,
+    "grouped": 603
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "90f1316dfd68a48655614833fdef325aa7abb2b1d6521af2d592b24e4d430556",
+      "sha256": "ccbb80214e13623321273a7cc613489f44e613883ce9650ba3c3ee03b14f1208",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
     {
       "source": "README.md",
-      "sha256": "dd91cc48f11933ec7593c291705b83d4d2e6377366ef884b27c0ccf2ea42ce69",
+      "sha256": "8b17eb29167e83aba5d1f63682674ed832d06aa74e8d6eca14931438653b1a41",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -181,7 +181,7 @@
     },
     {
       "source": "SNModMaker/README.md",
-      "sha256": "a51f5ae2961bf2c9297955e5d08dc65961d1250a098f61e4dfcf8e9906d452f4",
+      "sha256": "ff1a3f1baa633afe31fdbe55ae164b55721251bc570a102c4f2eea9e30354a1b",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -287,13 +287,13 @@
     },
     {
       "source": "SNModMaker/tests/content-cli.test.mjs",
-      "sha256": "d86cf737d84c7baec76d9701328f3f9a67982506533ed258d46d20c67bbb4aed",
+      "sha256": "795e2ee1d53418fbec8b9dc7bcde4938c8a07610b029d7c72c988df9d62ad272",
       "doc": "docs/static/SNModMaker/tests/content-cli.test.mjs.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "483623225c36404184f79e6d65475162091d010f05411924e1bc87cbdc5243c2",
+      "sha256": "eb630100ba8c3c64b50d5d37f3320419837aefa2fb42b326df67638386869271",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -311,7 +311,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "3919914daee3a7840179609f55ac0d4c67451041faab24b48edf87021852f980",
+      "sha256": "2271ecead50f5cc4e9ac91068ec9817780d9d99b856a9a838804713fa9a50c93",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -341,7 +341,7 @@
     },
     {
       "source": "SNModMaker/tools/sync-schemas.mjs",
-      "sha256": "5f9cfbaea642f307b5f291067eaefd943d3bf6cc555b82e293cd33d592280b26",
+      "sha256": "3306b1cdb304a05b8c669d82e31299fdd1d100a162d27acedd718bd2aa9a87ef",
       "doc": "docs/static/SNModMaker/tools/sync-schemas.mjs.md",
       "status": "documented"
     },
@@ -3729,7 +3729,7 @@
     },
     {
       "source": "framework/services/localization_service.gd",
-      "sha256": "64ecd7fca842b9b791bdcebf7c106a57b416a90b6bb7627a8892e9cf5db28258",
+      "sha256": "ea15e0d577c2c6fe7fb8b80627e2364fa50f5f3223ec37aecdc6d92fa387533f",
       "doc": "docs/static/framework/services/localization_service.gd.md",
       "status": "documented"
     },
@@ -4012,6 +4012,12 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_sdk_validation.gd",
+      "sha256": "e51cf428233412f4a3c2b8a05c971e70d0a68e2773df153a6dfded01d11cbe99",
+      "doc": "docs/static/framework/tests/cases/test_sdk_validation.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_sea_chart.gd",
       "sha256": "e746efb8da2f255d8d1ee6320178010ef58504145ca7150b3ba178e33996788a",
       "doc": "docs/static/framework/tests/cases/test_sea_chart.gd.md",
@@ -4195,7 +4201,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "29a5e0041876eff4ff3d0875dc9d779cdaa39be8ce0f5afb6bdfb48270fef088",
+      "sha256": "ea753f49a0daf690cb0e4ab88d4fd928f807e4bc4496354d91a91ff68a96b9e9",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -4719,27 +4725,6 @@
       "status": "documented"
     },
     {
-      "source": "schemas/boiler.schema.json",
-      "sha256": "10c59882990cd6278d95c7236c4b74b2f9cd4f138ec72f04a21a61d144697e8d",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
-      "source": "schemas/cabin.schema.json",
-      "sha256": "c377667a3fe68ac9caa01bcd8f34cf3f32e060febcb09b5c7fbf02c0ee4ae513",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
-      "source": "schemas/cargo_module.schema.json",
-      "sha256": "d97024345ac74b6214ce6ad00311855e08330e18668bff88403dccf07983dac1",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
       "source": "schemas/common.schema.json",
       "sha256": "f904ae8cbc8c50c77bd5ae2a475d0ead79ca532d717cc1a32e48479311fb4cab",
       "doc": "docs/static/schemas/README.md",
@@ -4761,19 +4746,6 @@
       "group": "docs/static/schemas/README.md"
     },
     {
-      "source": "schemas/good.schema.json",
-      "sha256": "9aa844b7118f2bc74748946145125a1cf619415a258a1043d3894e3436d74ad1",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
-      "source": "schemas/hull.schema.json",
-      "sha256": "fc422ade2f94ca24a787049306de445ac5b42f669f39c30b338439e1dcd5d7f2",
-      "doc": "docs/static/schemas/hull.schema.json.md",
-      "status": "documented"
-    },
-    {
       "source": "schemas/manifest.schema.json",
       "sha256": "7650bc60a3485476f8c3bbb9b1198663a77503ca603f35663e37aa3715a30216",
       "doc": "docs/static/schemas/README.md",
@@ -4783,20 +4755,6 @@
     {
       "source": "schemas/map_profile.schema.json",
       "sha256": "9dc1d74cf09b8a46ca9c9cdc7fe4f2e68fcd870e560ce95a72189d8ba5ef5fc7",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
-      "source": "schemas/material.schema.json",
-      "sha256": "9a401070392a6d7eea359c828d03e66f6741940f8461e8f46387e1ad019f1c06",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
-      "source": "schemas/navigation_module.schema.json",
-      "sha256": "32ea293c407d64611b9dd6d9fe16c5e934d0b45488305c8fd299e6081f72b5e1",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4818,13 +4776,6 @@
     {
       "source": "schemas/role.schema.json",
       "sha256": "461878c66aa45d44e956125a8fbb2e560115db94411a2e40f252376e1223a01f",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
-    },
-    {
-      "source": "schemas/safety_module.schema.json",
-      "sha256": "aed25b7572325f5f3533d5ee5213ffaae8320db3acab3e3210ae13d088cc1a65",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4867,9 +4818,8 @@
     {
       "source": "schemas/v2/hull.schema.json",
       "sha256": "c9a55b00c51e42b87f3f4323d4c5f43e9afd05271d8a37543cc8dedc7a595698",
-      "doc": "docs/static/schemas/README.md",
-      "status": "grouped",
-      "group": "docs/static/schemas/README.md"
+      "doc": "docs/static/schemas/v2/hull.schema.json.md",
+      "status": "documented"
     },
     {
       "source": "schemas/v2/item.schema.json",
@@ -4954,6 +4904,13 @@
       "group": "docs/static/schemas/README.md"
     },
     {
+      "source": "sdk/README.md",
+      "sha256": "7223d380dd442c94806b2e932baa7c6e24e2b986df7d507605081f0716ef4720",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
       "source": "sdk/examples/example_boilers/content/modules.json",
       "sha256": "5b9200771e9ea981059193a9d3591fbba4ee297246997b17f547505c3f925197",
       "doc": "docs/static/sdk/README.md",
@@ -4982,14 +4939,105 @@
       "group": "docs/static/sdk/README.md"
     },
     {
+      "source": "sdk/examples/example_mixed_roles_items/content/items.json",
+      "sha256": "9323a040d4ac5835a5a27bd9c9470f79e96ebcea2faf10da74d9902f4fbfcdf8",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_mixed_roles_items/content/roles.json",
+      "sha256": "2dcdd992e75ad56ea260f81f01d23d8cfed0d9ee6bf99c50d362601e07856c84",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_mixed_roles_items/localization/en.json",
+      "sha256": "ff0e9b9db04ad0367d1a1cc2a78b81e6b397eb46e4f6a9fa6764ba151be369b5",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_mixed_roles_items/localization/zh_CN.json",
+      "sha256": "1feb5f18b137024e8ad8c3aac3d7bfc85d15b988e351cbc13588f44f4185e502",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_mixed_roles_items/manifest.json",
+      "sha256": "cb1cfd26835ebf4cc79dde7c2a43c2d09ce35af683104a1754f10340d23148a8",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_roles_1_0/content/roles.json",
+      "sha256": "2cfe540361507b9d832a062fe894f760562b157a5c0bb82bf60a9818f91bb610",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_roles_1_0/localization/en.json",
+      "sha256": "a0d9a07e830598b9aad084cb418107b60db73794c1ffa74d7a551e0af83ae5cd",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_roles_1_0/localization/zh_CN.json",
+      "sha256": "9214b033ae8b227af039fc9dfb808657091eaa2ee1d46c0c2ba3d02eda98825a",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/examples/example_roles_1_0/manifest.json",
+      "sha256": "6032772907749ecbd7806cb9d853c9624699a5c2cc7529e4197fad46437a8fe3",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
       "source": "sdk/pack_mod.gd",
-      "sha256": "95f4968bdd781078cfe955e6c01f71286716f6a697d0fa9ff106c52f37470c79",
+      "sha256": "1205c5513da5b17eac59447ceceffd8cbc26ca4ea6343b6c8e5d8b0f9285b8f0",
       "doc": "docs/static/sdk/pack_mod.gd.md",
       "status": "documented"
     },
     {
+      "source": "sdk/templates/draft_weapons_pack/content/weapons.json",
+      "sha256": "be11b64dbd9e4f65f5453c2ba2ec22176f90708a3ca8dc5f6463b4bb75c02e83",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/draft_weapons_pack/localization/en.json",
+      "sha256": "71b8df43b614322d723763711f3ddfc360de561ce30134b0949fdc697dde6eb3",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/draft_weapons_pack/localization/zh_CN.json",
+      "sha256": "739303780b45d78c977d763c9bebc3ab3142399555f872f72d60f5c281a2f495",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/draft_weapons_pack/manifest.json",
+      "sha256": "8210c37fc9ce5d166dff95e912fb03069f1785c7a78cacf07fe43102743a959d",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
       "source": "sdk/templates/mod_template/README.md",
-      "sha256": "a349b8d4d6457847dcca07468414cf5d180d6cf9383323d4e53855b8c8867786",
+      "sha256": "66e3f14e80e40c1606eabfb2d59ba9efaaf40a15de21ce0576aba4e30782892f",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
@@ -5024,7 +5072,7 @@
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/README.md",
-      "sha256": "24a51245869d3da447834596e227078d1010f2bdbcdd7d37a7053e77261aa525",
+      "sha256": "e08f0e9bc21eb790ffc85b4540a6493f542241aa64483f545eacf5c6547e53ee",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
@@ -5066,13 +5114,19 @@
     },
     {
       "source": "sdk/validate.gd",
-      "sha256": "eae9025ea76c0b8b699b50b2df460e7ab1746626ee766d686c2946d89b5a690c",
+      "sha256": "567a17cefab26d370ae8b9888e3afb52cd14cf5447fd6430609b9ece963b5a58",
       "doc": "docs/static/sdk/validate.gd.md",
       "status": "documented"
     },
     {
+      "source": "sdk/validation_core.gd",
+      "sha256": "22a9176926b05e2aa1246c19d08c7dcd072c708c3b278d4f518928d1f01a5e7e",
+      "doc": "docs/static/sdk/validation_core.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "todo.md",
-      "sha256": "2dcbe38e57c3d210de9a0b1ac53612ffbe1e8170aa3940107b58eec42c30338b",
+      "sha256": "1a68b548bea24228f9e4f5f0b39b5745ef9f55646a8bf51978dd906333a59913",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6549,7 +6603,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "b6e5bef74b3e50c04405a79590c2f4b5ff75e817632a01096b42f1a9d5aed64b",
+      "sha256": "54b2cf4313e27464566be6ff1b7e02f41422aab2297fca107fc478395a9d7995",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
