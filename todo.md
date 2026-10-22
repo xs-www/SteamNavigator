@@ -50,6 +50,8 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- SN SDK Schema 2.0 兼容（2026-10-22）：`sdk/validate.gd` 新增 `--mode=runtime|draft`（默认 runtime 保持旧调用兼容；runtime 显式拒绝未激活草案并输出结构化 `inactive_content_type`，draft 对草案 / 混合模组做静态 Schema 校验）；`sdk/pack_mod.gd --release` 打包前跑真实 runtime 校验、草案或 error 时拒绝且 `.snavmod.zip` 结构不变；新增 `sdk/validation_core.gd` 共享实现（扫描根去重，`--mod-root=dev_mods/core` 不再重复加载 core），类型 / 版本只读 `content_types.json`；示例补 1.0 `example_roles_1_0`、混合 `example_mixed_roles_items` 与草案模板 `draft_weapons_pack`；新增 `framework/tests/cases/test_sdk_validation.gd`（11 用例）并更新 release workflow 的 runtime / draft / 发布拦截门禁。验证：SDK 套件 11/11、Godot 全量 507/507、`gen_content_types --check` 全绿（`docs/static` 待 Lead 统一生成）。
+
 - 建模 M2-1 `combat_kit` 敌舰（批次 9）：4 艘敌舰 = **3 类敌人**（Light ×2 / Medium / Heavy），海盗单桅 `SN_Enemy_Pirate_Sloop` / 武装商船 `SN_Enemy_Merchant_Armed` / 铁甲舰变体 `SN_Enemy_Ironclad_Raider` / 小型炮艇 `SN_Enemy_Gunboat`，**31,324 / 32,400 tri**、55 mesh（GLB 节点合计 86）+ **16 武器 socket + 8 炮门 socket**、9 张共享贴图（无新增，新增 `assets/models/combat/` 类别目录 + Core 副本）。复用现有船体站表放样 + `rig_kit` / `ship_parts`，**不烘炮**（甲板 socket `hull-sockets@1`、炮门 socket `hull-gunports@1`，复用 `SN_Weapon_CasemateGun`）；4/4 GLB 自检 ALL OK、独立 Verifier 只读验收 0 failures、Godot 用例守护（4 GLB 加载 / tri 锁定 / socket 契约）；预览 8 单件 + 1 lineup。运行时武器挂载与敌人内容 Schema 留后续。
 
 - UI 视觉基准 V1：图二确认为约束性的 `SN Visual Baseline V1`，图一保留为非生产承诺的 `UI Kit Concept V1`；生产视觉收敛为黄铜钢板、羊皮纸、蓝图、布旗四个材质族，并冻结基础尺寸、九宫格、安全文字区、字体、颜色、交互状态、动效与边框治理。见 [UI_VISUAL_BASELINE.md](docs/design/UI_VISUAL_BASELINE.md) / [UI_FOUNDATION_SPEC_V1.md](docs/design/UI_FOUNDATION_SPEC_V1.md)。

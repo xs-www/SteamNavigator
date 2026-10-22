@@ -1,0 +1,22 @@
+{
+  "schema_version": "2.0",
+  "content_type": "items",
+  "definitions": [
+    {
+      "id": "example_mixed_roles_items:item/sealed_tea",
+      "name_key": "item.example_mixed_roles_items.sealed_tea.name",
+      "description_key": "item.example_mixed_roles_items.sealed_tea.description",
+      "tags": ["good.trade", "good.consumer"],
+      "enabled": true,
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 0.8,
+        "base_price": 95,
+        "base_stock": 60,
+        "price_elasticity": 0.16,
+        "spawn_weight": 0.5,
+        "category": "beverage"
+      }
+    }
+  ]
+}

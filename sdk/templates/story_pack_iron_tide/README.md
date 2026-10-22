@@ -25,13 +25,23 @@
 - 奖励只记录成就 / 图鉴（`rewards.achievements` / `codex_entries`），不写金钱与物品，
   保证剧情包不会影响自由模式进度。
 
-## 校验
+## 校验（draft）
+
+剧情内容类型（`story_arcs` / `story_levels`）仍是 Schema 2.0 草案，运行时不会加载；用 SDK 的
+draft 模式做静态 Schema 校验：
 
 ```powershell
-node SNModMaker/tools/content.mjs validate --mod sdk/templates/story_pack_iron_tide
+godot --headless --path . --script res://sdk/validate.gd -- \
+  --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
 ```
 
-期望：0 error（草案内容会有 `draft_content` warning，属预期）。
+期望退出码 0、0 error。注意：
+
+- 用 `--mode=runtime`（默认）校验本包会按预期失败，错误码 `inactive_content_type`；
+- `sdk/pack_mod.gd --release` 会拒绝打包本包：草案内容不可发布。
+
+SNModMaker / Content CLI 仍可用 `node SNModMaker/tools/content.mjs validate --mod sdk/templates/story_pack_iron_tide`
+做编辑器侧校验（草案会给出 `draft_content` warning，属预期）。
 
 ## 编辑
 

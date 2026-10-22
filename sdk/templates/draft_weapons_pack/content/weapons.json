@@ -1,0 +1,43 @@
+{
+  "schema_version": "2.0",
+  "content_type": "weapons",
+  "definitions": [
+    {
+      "id": "draft_weapons_pack:weapon/deck_gun",
+      "name_key": "weapon.draft_weapons_pack.deck_gun.name",
+      "description_key": "weapon.draft_weapons_pack.deck_gun.description",
+      "tags": ["weapon.direct", "weapon.light"],
+      "enabled": true,
+      "data": {
+        "kind": "direct",
+        "damage": 12,
+        "range": 245,
+        "min_range": 0,
+        "cooldown": 1.65,
+        "accuracy": 0.72,
+        "projectile_speed": 360,
+        "splash": 0,
+        "arc_deg": 260,
+        "salvo": 1,
+        "color": "#ffd37a",
+        "weapon_class": "Light",
+        "assembly_profile": "yaw_pitch",
+        "has_yaw": true,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "muzzle_count": 1,
+        "envelope_x": 2.815,
+        "envelope_y": 1.41,
+        "height": 1.613,
+        "mount_scale": 1,
+        "tier": 1,
+        "weight": 9,
+        "purchase_price": 380,
+        "craft_cost": 170,
+        "craft_time_hours": 4,
+        "materials": []
+      }
+    }
+  ]
+}

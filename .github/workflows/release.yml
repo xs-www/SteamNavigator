@@ -84,12 +84,41 @@ jobs:
           node --test SNModMaker/tests/content-cli.test.mjs
 
       # Fails the release when the loose core mod is missing a declared
-      # content file, localization file or asset (for example an untracked GLB).
-      - name: Validate core content
+      # content file, localization file or asset (for example an untracked GLB),
+      # and rejects any draft content the runtime does not load.
+      - name: Validate core content (runtime)
         shell: bash
         run: |
           set -euo pipefail
-          godot --headless --path . --script res://sdk/validate.gd
+          godot --headless --path . --script res://sdk/validate.gd -- --mode=runtime
+
+      # SDK compatibility gate: 1.0 and mixed 1.0 + 2.0 examples must load in the
+      # real runtime; draft-only types may be schema-checked with --mode=draft but
+      # must never be treated as publishable.
+      - name: Validate SDK examples (runtime + draft)
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/examples/example_roles_1_0 --mode=runtime
+          godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/examples/example_mixed_roles_items --mode=runtime
+          godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/templates/draft_weapons_pack --mode=draft
+          godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
+
+      # Release packing must refuse content the runtime cannot activate; the
+      # command is expected to fail (exit 1) and leave dist/mods untouched.
+      - name: Release packing rejects draft content
+        shell: bash
+        run: |
+          set -euo pipefail
+          if godot --headless --path . --script res://sdk/pack_mod.gd -- \
+              --source=sdk/templates/draft_weapons_pack --out=dist/mods --release; then
+            echo "draft content must not pass --release packing" >&2
+            exit 1
+          fi
 
       - name: Export Windows and Linux
         shell: bash
@@ -104,8 +133,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/mods
+          # --release validates the loose core through the real Bootstrap before
+          # writing the pack, so a degraded core can never ship.
           godot --headless --path . --script res://sdk/pack_mod.gd -- \
-            --source=dev_mods/core --out=dist/mods
+            --source=dev_mods/core --out=dist/mods --release
 
       # Standard portable layout: the executable sits next to mods/ and config/.
       - name: Stage portable release layout

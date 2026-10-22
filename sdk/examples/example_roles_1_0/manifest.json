@@ -1,0 +1,27 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_roles_1_0",
+  "name": "Example 1.0 Roles",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 20,
+  "required": false,
+  "dependencies": [
+    {"id": "core", "version": ">=1.0.0 <2.0.0"}
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/roles.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": ["Steam Navigator Team"],
+  "license": "CC-BY-4.0",
+  "description": "A third-party mod that stays on Content Schema 1.0 and uses the still-active roles type. SDK runtime validation accepts it; draft validation accepts it too.",
+  "capabilities": []
+}

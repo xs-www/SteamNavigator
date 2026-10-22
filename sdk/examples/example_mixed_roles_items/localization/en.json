@@ -1,0 +1,6 @@
+{
+  "role.example_mixed_roles_items.navigator_veteran.name": "Veteran Navigator",
+  "role.example_mixed_roles_items.navigator_veteran.description": "A Content Schema 1.0 crew role that shares this mixed-version mod with 2.0 items.",
+  "item.example_mixed_roles_items.sealed_tea.name": "Sealed Tea",
+  "item.example_mixed_roles_items.sealed_tea.description": "A Content Schema 2.0 trade item in the mixed-version example."
+}

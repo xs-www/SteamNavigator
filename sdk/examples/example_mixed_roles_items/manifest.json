@@ -1,0 +1,28 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_mixed_roles_items",
+  "name": "Example Mixed Versions",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 20,
+  "required": false,
+  "dependencies": [
+    {"id": "core", "version": ">=1.0.0 <2.0.0"}
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/roles.json",
+    "content/items.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": ["Steam Navigator Team"],
+  "license": "CC-BY-4.0",
+  "description": "A mixed-version mod: roles stays on Content Schema 1.0 while the active items type uses Content Schema 2.0. Both are accepted by runtime validation.",
+  "capabilities": ["content.items.v1"]
+}
