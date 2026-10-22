@@ -20,6 +20,7 @@ const ROLES_EXAMPLE := "sdk/examples/example_crew_roles"
 const MIXED_EXAMPLE := "sdk/examples/example_mixed_crew_roles_items"
 const WEAPONS_EXAMPLE := "sdk/examples/example_weapons"
 const STORY_TEMPLATE := "sdk/templates/story_pack_iron_tide"
+const AI_DRAFT_TEMPLATE := "sdk/templates/draft_combat_ai_profile"
 
 
 # ---------------------------------------------------------------------------
@@ -347,6 +348,14 @@ func test_draft_mode_validates_draft_story_and_mixed_mods() -> void:
 	var story_json := _json_of(story, "draft story template")
 	assert_true(int(_counts(story_json).get("story_arcs", 0)) >= 1, "story arcs are counted in draft mode")
 	assert_true(int(_counts(story_json).get("story_levels", 0)) >= 1, "story levels are counted in draft mode")
+
+	var ai := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
+		"--mod-root=%s" % AI_DRAFT_TEMPLATE, "--mode=draft", "--json",
+	]))
+	assert_eq(int(ai["exit"]), 0, "the combat AI draft template must pass draft validation")
+	var ai_json := _json_of(ai, "draft combat AI template")
+	assert_eq(String(ai_json.get("mode", "")), "draft", "explicit draft mode")
+	assert_true(int(_counts(ai_json).get("combat_ai_profiles", 0)) >= 1, "combat AI profiles are counted in draft mode")
 
 	var mixed := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s" % MIXED_EXAMPLE, "--mode=draft", "--json",

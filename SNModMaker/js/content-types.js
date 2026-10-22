@@ -504,6 +504,22 @@
       schemaVersion: "2.0",
       capability: "content.story.v1",
     },
+    {
+      key: "combat_ai_profiles",
+      singular: "combat_ai_profile",
+      keyPrefix: "combat_ai_profile",
+      label: "战斗 AI 状态机",
+      en: "Combat AI profiles",
+      abbr: "AI",
+      color: "#b86a8f",
+      group: "战斗",
+      file: "content/combat_ai_profiles.json",
+      schema: "v2/combat_ai_profile.schema.json",
+      summary: "战斗 AI 决策内容（schema 先行草案）：FSM 节点/转移/条件与目标优先级/交战距离参数，枚举与上限对齐 SNBattleSim，运行时不加载。",
+      draft: true,
+      schemaVersion: "2.0",
+      capability: "content.combat.v1",
+    },
   ];
 
   root.SNContentTypes = { GROUPS, TYPES, DRAFT_TYPES };

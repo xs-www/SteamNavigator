@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T22:05:07.960Z",
+    "generated_at": "2026-10-22T22:43:06.274Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -182,7 +182,8 @@
         "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb"
       },
       "authors": [
-        "Steam Navigator Team"
+        "Steam Navigator Team",
+        "Xiao Si swx"
       ],
       "license": "Proprietary",
       "description": "Official MVP content: ports, items, ships, contracts and events.",

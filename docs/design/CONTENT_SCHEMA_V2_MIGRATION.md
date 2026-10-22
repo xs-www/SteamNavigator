@@ -56,8 +56,8 @@
 ### 2.2 内容 Schema 与草案
 
 - `schemas/` 共 **35 个 Schema**：**2 个顶层**（`common` / `manifest`）+ **33 个 `schemas/v2/`**
-  （`common` + 30 类 active 2.0 + 2 类草案）。不存在 1.0 内容 Schema。
-- 2 类草案（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑）：
+  （`common` + 30 类 active 2.0 + 3 类草案）。不存在 1.0 内容 Schema。
+- 3 类草案（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑）：
   `story_arcs`、`story_levels`，运行时暂不加载。
 - v2 **未覆盖**：无；所有 active 类型（含 `patches`）均使用 2.0 Schema，仅剩 2 类剧情草案待后续系统接入。
 - 旧模型清理（C1–C4）：合并完成后即删除旧类型、旧内容文件与旧 1.0 Schema（goods/materials、
@@ -81,7 +81,7 @@
   `draft_content` / `capability_undeclared`；G8 导出守卫按“当前运行时不支持”判定（草案 / 未注册 /
   版本不符拦截，运行时 2.0 类型可部署）。
 - Content CLI：`types` 输出 30 个运行时类型（全部标 runtime 2.0）与 2 个草案；
-  `--draft` 只接受剩余草案类型；写出的内容文件按类型版本写 `schema_version: "2.0"`（CLI 测试 63）。
+  `--draft` 只接受剩余草案类型；写出的内容文件按类型版本写 `schema_version: "2.0"`（CLI 测试 64；D-AI 新增 `combat_ai_profiles` schema 先行草案，CLI/编辑器可编辑，运行时不加载）。
 - SDK `sdk/validate.gd` 走真实 `Bootstrap`（运行时语义）；`sdk/examples/example_weapons` 是 D1 的 runtime 2.0 示例，
   `sdk/examples/example_fleet` 是 D2 的 fleet 4 类型示例；发布 workflow 含 Godot 测试、`gen_content_types --check`、`gen_static_docs --check` 与 core 校验。
 - 实体合并后旧档 / 旧内容模型在开发期**直接作废**（见 §4 Phase C 的开发期策略），不提供迁移器。
@@ -313,6 +313,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] **Phase D0/D1 完成快照**：26 个 active 类型全部 2.0（25 定义 + patch）；schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）；Godot **566/566**、Node **58/58**、CLI **63/63**、SDK `status: ok`（2026-10-23）。
 - [x] Phase D · D2：fleet 4 类 active 2.0 + Core 4 个舰队内容文件 + `FleetOps` / `FleetService` / `fleet.*` 命令与 `fleet.view`；SDK `example_fleet`（2026-10-23）。
 - [x] **Phase D0/D1/D2 完成快照**：30 个 active 类型全部 2.0（29 定义 + patch）；schema bundle 35（2 顶层 + 33 v2）、编辑器 32（30 runtime + 2 draft）、Core 29 内容文件 / 114 定义；Godot **578/578**、Node **59/59**、CLI **63/63**、SDK `status: ok`（2026-10-23）。
+- [x] **D-AI schema 先行**：新增 draft `combat_ai_profiles`（FSM 节点/转移/条件，对齐 SNBattleSim FSM 契约；运行时不加载）；schema bundle 36（2 顶层 + 34 v2）、编辑器 33（30 runtime + 3 draft）、Node **60/60**、CLI **64/64**。
 - [ ] Phase D 其余：base / auto_trade / ruins 系统类型与运行时切片。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。

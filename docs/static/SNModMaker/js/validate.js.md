@@ -46,19 +46,20 @@
 | `SOCKET_CLASSES` | L473 |
 | `RIG_SOCKET_KINDS` | L474 |
 | `checkWeaponSemantics(definition, view, add)` | L477 |
-| `checkLootTableSemantics(definition, view, add)` | L511 |
-| `checkHullSocketSemantics(definition, view, add)` | L527 |
-| `QUEST_EVENT_RE` | L609 |
-| `checkQuestSemantics(definition, view, add)` | L612 |
-| `STORY_TYPES` | L642 |
-| `storyFieldView(view, field)` | L644 |
-| `checkStoryArcSemantics(definition, view, add)` | L649 |
-| `checkStoryLevelSemantics(definition, view, add)` | L693 |
-| `checkStoryPack(contentFiles, add)` | L801 |
-| `validateProject(project, options)` | L842 |
-| `finish(issues)` | L1215 |
-| `byDefinition(issues)` | L1224 |
-| `SNValidate (global)` | L1237 |
+| `checkCombatAIProfileSemantics(definition, view, add)` | L511 |
+| `checkLootTableSemantics(definition, view, add)` | L543 |
+| `checkHullSocketSemantics(definition, view, add)` | L559 |
+| `QUEST_EVENT_RE` | L641 |
+| `checkQuestSemantics(definition, view, add)` | L644 |
+| `STORY_TYPES` | L674 |
+| `storyFieldView(view, field)` | L676 |
+| `checkStoryArcSemantics(definition, view, add)` | L681 |
+| `checkStoryLevelSemantics(definition, view, add)` | L725 |
+| `checkStoryPack(contentFiles, add)` | L833 |
+| `validateProject(project, options)` | L874 |
+| `finish(issues)` | L1248 |
+| `byDefinition(issues)` | L1257 |
+| `SNValidate (global)` | L1270 |
 
 ## 契约与约束
 

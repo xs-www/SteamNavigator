@@ -28,8 +28,9 @@
 | `test_map_config_v2_schema_accepts_all_exploration_keys() -> void` | L305 |
 | `test_map_config_v2_schema_rejects_invalid_data() -> void` | L313 |
 | `test_phase_b_types_are_active_and_drafts_are_editor_only() -> void` | L324 |
-| `test_story_schemas_accept_valid_arc_and_level() -> void` | L439 |
-| `test_story_schemas_reject_invalid_data() -> void` | L447 |
+| `test_combat_ai_profile_schema_accepts_valid_and_rejects_invalid() -> void` | L350 |
+| `test_story_schemas_accept_valid_arc_and_level() -> void` | L487 |
+| `test_story_schemas_reject_invalid_data() -> void` | L495 |
 
 Phase B 9 类 + Phase D1 战斗类型 `weapons` 已提升 active，剧情 `story_arcs` /
 `story_levels` 仍是草案，`map_configs` 覆盖 31 键 exploration。

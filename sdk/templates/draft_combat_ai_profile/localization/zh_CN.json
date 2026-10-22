@@ -1,0 +1,4 @@
+{
+  "combat_ai_profile.draft_combat_ai_profile.escort_ai.name": "护航 AI",
+  "combat_ai_profile.draft_combat_ai_profile.escort_ai.description": "护航型战斗 AI：优先货船目标、保护编队，受威胁时规避与撤离。"
+}

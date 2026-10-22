@@ -2,6 +2,8 @@
 
 本约定用于战斗模拟器试验数据和后续正式战斗系统之间的交接。模拟器沿用 Steam Navigator 的模组目录外壳，但下列 `battle_*` 内容类型属于 `content.combat.simulator.v1`，在正式战斗 Schema 接入前不由 Godot 主流程加载。
 
+> **正式内容类型（D-AI，schema 先行）**：FSM 决策已登记为 Content Schema 2.0 **草案**类型 `combat_ai_profiles`（Schema：[schemas/v2/combat_ai_profile.schema.json](../../schemas/v2/combat_ai_profile.schema.json)，编辑器 / CLI 可编辑、可 draft 校验，**运行时不加载**、不写 Core）。其 `data` 的 `target_priority` / `preferred_range` / `initial` / `nodes[].runtime_action` / `transitions[].conditions` 与本契约的 `tactic` / `fsm` 数据对齐；`battle_state_machines` 仍是模拟器导入格式，待战斗运行时接入时再迁移。
+
 ## 目录与 Manifest
 
 模组可以是 `SNBattleSim/mods/<mod_id>/` 散装目录：

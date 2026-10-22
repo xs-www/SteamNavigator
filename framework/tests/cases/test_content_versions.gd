@@ -213,8 +213,8 @@ func test_v2_draft_types_are_not_runtime_types() -> void:
 	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
 	var manifest: Dictionary = parsed["value"]
 	var drafts: Dictionary = manifest.get("draft_schemas", {})
-	assert_eq(drafts.size(), 2, "the two Story Mode types are the remaining Schema 2.0 draft types")
-	for expected in ["story_arcs", "story_levels"]:
+	assert_eq(drafts.size(), 3, "the Story Mode types plus the combat AI profile are the Schema 2.0 draft types")
+	for expected in ["story_arcs", "story_levels", "combat_ai_profiles"]:
 		assert_true(drafts.has(expected), "%s is a draft schema" % expected)
 		assert_true(FileAccess.file_exists("res://" + String(drafts[expected])), "%s draft schema exists" % expected)
 	for draft_type in drafts.keys():

@@ -373,6 +373,13 @@
     'formations.slots': '阵型槽位',
     'fleet_doctrines.engagement': '交战策略',
     'fleet_doctrines.retreat': '撤退策略',
+    'combat_ai_profiles.target_priority': '目标优先级',
+    'combat_ai_profiles.preferred_range': '偏好交战距离',
+    'combat_ai_profiles.initial': '初始节点',
+    'combat_ai_profiles.nodes': '状态节点',
+    'combat_ai_profiles.transitions': '状态转移',
+    'combat_ai_profiles.runtime_action': '运行动作',
+    'combat_ai_profiles.conditions': '转移条件',
     'patch.target': '目标定义',
     'patch.operations': '补丁操作',
     'patch.requires': '来源约束',
@@ -1005,6 +1012,22 @@
       supply_policy: 'standard',
       formation: 'core:formation/line_abreast',
     }),
+    /* 战斗 AI 状态机（2.0 草案，schema 先行）：FSM 节点/转移 + 目标优先级/交战距离。 */
+    combat_ai_profiles: () => ({
+      target_priority: 'nearest',
+      preferred_range: 0.7,
+      initial: 'cruise',
+      nodes: [
+        { id: 'cruise', runtime_action: 'cruise', x: 0.2, y: 0.4 },
+        { id: 'approach', runtime_action: 'approach', x: 0.45, y: 0.4 },
+        { id: 'engage', runtime_action: 'engage', x: 0.7, y: 0.4 },
+      ],
+      transitions: [
+        { from: 'cruise', to: 'approach', logic: 'all', conditions: ['has_target'] },
+        { from: 'approach', to: 'engage', logic: 'all', conditions: ['enemy_in_range', 'weapon_ready'] },
+        { from: 'engage', to: 'cruise', logic: 'any', conditions: ['no_target', 'enemy_out_of_range'] },
+      ],
+    }),
     /* 剧情篇章（Schema 2.0 草案）。留空 levels 是合法的：先写世界观，再补关卡。 */
     story_arcs: () => ({
       protagonist_id: 'protagonist',
@@ -1129,6 +1152,7 @@
     captains: ['captain.merchant', 'captain.raider', 'captain.scout', 'captain.fleet'],
     formations: ['formation.battle', 'formation.escort', 'formation.screen'],
     fleet_doctrines: ['doctrine.escort', 'doctrine.raider', 'doctrine.patrol'],
+    combat_ai_profiles: ['combat_ai.patrol', 'combat_ai.escort', 'combat_ai.raider'],
     /* Story Mode draft tags. */
     story_arcs: ['story.canon', 'story.arc'],
     story_levels: ['story.level', 'story.tutorial', 'story.trade', 'story.combat'],
@@ -1373,6 +1397,25 @@
   /* Readable option labels for enum fields whose raw values are identifiers.
    * Keyed "<typeKey>.<field>"; unlisted enum values fall back to the raw value. */
   const FIELD_ENUM_LABELS = {
+    /* D-AI: battle simulator FSM vocabulary (FSM_MOD_CONTRACT). */
+    'combat_ai_profiles.target_priority': {
+      nearest: '最近目标 nearest', cargo: '货船优先 cargo', weakest: '最弱目标 weakest',
+    },
+    'combat_ai_profiles.runtime_action': {
+      recon: '侦察 recon', cruise: '巡航 cruise', approach: '接近 approach', flank: '迂回 flank',
+      evade: '规避 evade', maneuver: '机动 maneuver', withdraw: '脱离 withdraw', flee: '逃跑 flee',
+      engage: '交火 engage', focus: '集火 focus',
+    },
+    'combat_ai_profiles.logic': { all: '全部满足 all', any: '任一满足 any' },
+    'combat_ai_profiles.conditions': {
+      cargo_threatened: '货船受威胁 cargo_threatened', no_target: '无目标 no_target', visible_target: '可见目标 visible_target',
+      last_known_target: '最后已知目标 last_known_target', withdraw_trigger: '触发脱离 withdraw_trigger',
+      withdraw_recovered: '脱离恢复 withdraw_recovered', enemy_in_range: '敌人在射程内 enemy_in_range',
+      enemy_out_of_range: '敌人超出射程 enemy_out_of_range', weapon_ready: '武器就绪 weapon_ready',
+      broadside_ready: '舷炮就绪 broadside_ready', commander_present: '指挥官在场 commander_present',
+      hull_below: '耐久低于阈值 hull_below', has_target: '存在目标 has_target', target_far: '目标过远 target_far',
+      target_band: '目标在交战带 target_band', always: '始终 always',
+    },
     /* C3: quest kinds. */
     'quests.kind': {
       story: '剧情演出 story',

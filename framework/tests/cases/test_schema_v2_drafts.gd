@@ -340,11 +340,59 @@ func test_phase_b_types_are_active_and_drafts_are_editor_only() -> void:
 		assert_true(FileAccess.file_exists("res://" + String(entry.get("schema", ""))), "%s schema exists" % type_name)
 
 	var drafts: Dictionary = data.get("draft_schemas", {})
-	assert_eq(drafts.size(), 2, "only the two Story Mode schemas remain drafts")
-	for draft_name in ["story_arcs", "story_levels"]:
+	assert_eq(drafts.size(), 3, "the Story Mode schemas plus the combat AI profile remain drafts")
+	for draft_name in ["story_arcs", "story_levels", "combat_ai_profiles"]:
 		assert_true(drafts.has(draft_name), "%s remains editor-only" % draft_name)
 		assert_true(FileAccess.file_exists("res://" + String(drafts[draft_name])), "%s schema exists" % draft_name)
 		assert_false(ContentTypes.is_known(StringName(draft_name)), "%s is not a runtime type" % draft_name)
+
+
+func test_combat_ai_profile_schema_accepts_valid_and_rejects_invalid() -> void:
+	var validator := SchemaValidator.new()
+	var schema_path := "res://schemas/v2/combat_ai_profile.schema.json"
+	var valid := {
+		"schema_version": "2.0",
+		"content_type": "combat_ai_profiles",
+		"definitions": [{
+			"id": "test:combat_ai_profile/escort",
+			"name_key": "combat_ai_profile.test.escort.name",
+			"enabled": true,
+			"data": {
+				"target_priority": "cargo",
+				"preferred_range": 0.72,
+				"initial": "cruise",
+				"nodes": [
+					{"id": "cruise", "runtime_action": "cruise"},
+					{"id": "engage", "runtime_action": "engage"},
+				],
+				"transitions": [{
+					"from": "cruise", "to": "engage", "logic": "all",
+					"conditions": ["has_target", "weapon_ready"],
+				}],
+			},
+		}],
+	}
+	var errors := validator.validate_file(valid, schema_path)
+	assert_empty(errors, "a valid combat AI profile passes schema validation: %s" % str(errors))
+
+	var invalid := valid.duplicate(true)
+	invalid["definitions"][0]["data"]["nodes"][0]["runtime_action"] = "dance"
+	errors = validator.validate_file(invalid, schema_path)
+	assert_true(errors.size() > 0, "unknown runtime_action is rejected")
+	assert_true(str(errors).contains("runtime_action"), "runtime_action enum error is reported")
+
+	invalid = valid.duplicate(true)
+	invalid["definitions"][0]["data"]["transitions"][0]["conditions"] = ["unknown_condition"]
+	errors = validator.validate_file(invalid, schema_path)
+	assert_true(errors.size() > 0, "unknown condition enum is rejected")
+
+	invalid = valid.duplicate(true)
+	var too_many_nodes: Array = []
+	for index in range(21):
+		too_many_nodes.append({"id": "node_%d" % index, "runtime_action": "cruise"})
+	invalid["definitions"][0]["data"]["nodes"] = too_many_nodes
+	errors = validator.validate_file(invalid, schema_path)
+	assert_true(errors.size() > 0, "more than 20 nodes is rejected")
 
 
 func _valid_story_arc_file() -> Dictionary:

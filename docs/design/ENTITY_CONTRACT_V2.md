@@ -169,14 +169,14 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
   modifiers）并保留 `size_tag`、`weapon_sockets` / `rig_sockets` 镜像与 `rig_plan`。
 - `modules` 用 `v2_category` + 字段超集；项目 SchemaValidator 不支持 if/then，category 专属必填由语义校验器
   （`ModuleOps` / 跨引用 / 完整性）负责。
-- **2 类草案**（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑，运行时暂不加载）：
+- **3 类草案**（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑，运行时暂不加载）：
   - `v2/story_arc.schema.json` / `v2/story_level.schema.json`（`story_arcs` / `story_levels`）：剧情模式 S1
     数据契约；契约见 [STORY_MODE.md](STORY_MODE.md)。
   - `weapons` 已于 D1 提升为 active（连同 5 个战斗类型），不再属于草案。
 - `content_types.json.types[]` 为每个 active 类型声明 `schema` 与 `schema_version`；草案在
   `draft_schemas` / `draft_types` 登记，各自带 `schema_version: "2.0"` 与 capability。
 - `schema-bundle.js` 递归收录 `schemas/` 共 **35 个**文件（**2 个顶层**：`common` / `manifest` + **33 个 `v2/`**：
-  `v2/common`、30 类 active 2.0、剧情 2 个草案）；校验器按基准文件所在目录解析
+  `v2/common`、30 类 active 2.0、3 个草案）；校验器按基准文件所在目录解析
   `common.schema.json` 等跨文件 `$ref`。
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；声明版本与类型不符报
   `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；草案内容给 `draft_content` 警告；
@@ -279,7 +279,7 @@ scan → manifest / dependency resolve → schema compile
 - 通用实体编辑：元数据、Schema 表单、枚举/数值、引用选择、ID 唯一性、未知字段、路径定位。
 - 专用视图：装配、世界/区域、起始场景、委托、事件、战斗遭遇、生产链、遗迹房间；只编辑数据。
 - 编辑器不能实现独立校验规则；必须与运行时/SDK 共用同一规则来源。
-- Schema 2.0 运行时类型：30 类已按 v2 Schema 正常编辑 / 校验 / 导出并部署；2 类剧情草案（`story_arcs` / `story_levels`）在侧栏「Schema 2.0 草案 / 运行时不加载」分区标 draft，内容文件按类型写
+- Schema 2.0 运行时类型：30 类已按 v2 Schema 正常编辑 / 校验 / 导出并部署；3 类草案（剧情 `story_arcs` / `story_levels` + `combat_ai_profiles`）在侧栏「Schema 2.0 草案 / 运行时不加载」分区标 draft，内容文件按类型写
   `schema_version: "2.0"`，运行时暂不加载。
 - 草案与能力：内容使用 capability 但未写入 `manifest.capabilities` 时「校验」面板给出
   `capability_undeclared` 警告（按 `schemaVersion = 2.0` 判定）；声明后消除。G8 导出守卫按

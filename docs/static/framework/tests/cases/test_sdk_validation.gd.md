@@ -14,18 +14,19 @@
 | `MIXED_EXAMPLE` | L20 |
 | `WEAPONS_EXAMPLE` | L21 |
 | `STORY_TEMPLATE` | L22 |
-| `test_default_mode_is_runtime_and_validates_core() -> void` | L229 |
-| `test_mod_root_core_does_not_duplicate_the_default_scan_root() -> void` | L239 |
-| `test_runtime_cross_reference_errors_keep_structured_metadata() -> void` | L256 |
-| `test_runtime_accepts_mixed_version_mods() -> void` | L283 |
-| `test_runtime_rejects_unactivated_draft_content() -> void` | L313 |
-| `test_draft_mode_validates_draft_story_and_mixed_mods() -> void` | L333 |
-| `test_draft_mode_reports_schema_and_per_type_version_errors() -> void` | L358 |
-| `test_patch_envelope_is_checked_against_the_patches_type_version() -> void` | L396 |
-| `test_unknown_mode_is_a_usage_error() -> void` | L430 |
-| `test_pack_release_rejects_draft_content_and_plain_pack_allows_it() -> void` | L440 |
-| `test_pack_release_rejects_validation_errors() -> void` | L471 |
-| `test_pack_release_keeps_the_snavmod_zip_layout() -> void` | L488 |
+| `AI_DRAFT_TEMPLATE` | L23 |
+| `test_default_mode_is_runtime_and_validates_core() -> void` | L230 |
+| `test_mod_root_core_does_not_duplicate_the_default_scan_root() -> void` | L240 |
+| `test_runtime_cross_reference_errors_keep_structured_metadata() -> void` | L257 |
+| `test_runtime_accepts_mixed_version_mods() -> void` | L284 |
+| `test_runtime_rejects_unactivated_draft_content() -> void` | L314 |
+| `test_draft_mode_validates_draft_story_and_mixed_mods() -> void` | L334 |
+| `test_draft_mode_reports_schema_and_per_type_version_errors() -> void` | L367 |
+| `test_patch_envelope_is_checked_against_the_patches_type_version() -> void` | L405 |
+| `test_unknown_mode_is_a_usage_error() -> void` | L439 |
+| `test_pack_release_rejects_draft_content_and_plain_pack_allows_it() -> void` | L449 |
+| `test_pack_release_rejects_validation_errors() -> void` | L480 |
+| `test_pack_release_keeps_the_snavmod_zip_layout() -> void` | L497 |
 
 覆盖 runtime / draft 两种模式、草案拒绝、退出码与 JSON 输出形状。
 

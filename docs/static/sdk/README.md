@@ -32,6 +32,10 @@
 | `examples/example_weapons/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_weapons/manifest.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `pack_mod.gd` | 把松散模组目录打包成 `<mod_id>-<version>.snavmod.zip`；`--release` 在打包前强制跑一遍真实 runtime 校验。 | [查看](./pack_mod.gd.md) |
+| `templates/draft_combat_ai_profile/content/combat_ai_profiles.json` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |
+| `templates/draft_combat_ai_profile/localization/en.json` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |
+| `templates/draft_combat_ai_profile/localization/zh_CN.json` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |
+| `templates/draft_combat_ai_profile/manifest.json` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |
 | `templates/mod_template/README.md` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |
 | `templates/mod_template/content/items.json` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |
 | `templates/mod_template/localization/en.json` | 模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。 | 本页 |

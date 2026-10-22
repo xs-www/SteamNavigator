@@ -1,0 +1,119 @@
+{
+  "schema_version": "2.0",
+  "content_type": "combat_ai_profiles",
+  "definitions": [
+    {
+      "id": "draft_combat_ai_profile:combat_ai_profile/escort_ai",
+      "name_key": "combat_ai_profile.draft_combat_ai_profile.escort_ai.name",
+      "description_key": "combat_ai_profile.draft_combat_ai_profile.escort_ai.description",
+      "tags": [
+        "combat_ai.escort"
+      ],
+      "enabled": true,
+      "data": {
+        "target_priority": "cargo",
+        "preferred_range": 0.72,
+        "initial": "cruise",
+        "nodes": [
+          {
+            "id": "cruise",
+            "runtime_action": "cruise",
+            "x": 0.15,
+            "y": 0.3
+          },
+          {
+            "id": "approach",
+            "runtime_action": "approach",
+            "x": 0.4,
+            "y": 0.3
+          },
+          {
+            "id": "engage",
+            "runtime_action": "engage",
+            "x": 0.65,
+            "y": 0.3
+          },
+          {
+            "id": "withdraw",
+            "runtime_action": "withdraw",
+            "x": 0.6,
+            "y": 0.7
+          },
+          {
+            "id": "evade",
+            "runtime_action": "evade",
+            "x": 0.3,
+            "y": 0.7
+          }
+        ],
+        "transitions": [
+          {
+            "from": "cruise",
+            "to": "evade",
+            "logic": "all",
+            "conditions": [
+              "cargo_threatened"
+            ]
+          },
+          {
+            "from": "cruise",
+            "to": "approach",
+            "logic": "all",
+            "conditions": [
+              "has_target"
+            ]
+          },
+          {
+            "from": "approach",
+            "to": "engage",
+            "logic": "all",
+            "conditions": [
+              "enemy_in_range",
+              "weapon_ready"
+            ]
+          },
+          {
+            "from": "approach",
+            "to": "withdraw",
+            "logic": "any",
+            "conditions": [
+              "withdraw_trigger"
+            ]
+          },
+          {
+            "from": "engage",
+            "to": "evade",
+            "logic": "all",
+            "conditions": [
+              "cargo_threatened"
+            ]
+          },
+          {
+            "from": "engage",
+            "to": "withdraw",
+            "logic": "all",
+            "conditions": [
+              "withdraw_trigger"
+            ]
+          },
+          {
+            "from": "withdraw",
+            "to": "cruise",
+            "logic": "all",
+            "conditions": [
+              "no_target"
+            ]
+          },
+          {
+            "from": "evade",
+            "to": "cruise",
+            "logic": "all",
+            "conditions": [
+              "no_target"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

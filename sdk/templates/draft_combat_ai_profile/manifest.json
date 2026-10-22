@@ -1,0 +1,34 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "draft_combat_ai_profile",
+  "name": "Draft Combat AI Profile",
+  "version": "0.1.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 10,
+  "required": false,
+  "dependencies": [
+    {
+      "id": "core",
+      "version": ">=1.0.0 <2.0.0"
+    }
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/combat_ai_profiles.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": [
+    "Steam Navigator Team"
+  ],
+  "license": "CC-BY-4.0",
+  "description": "Schema-first Content Schema 2.0 draft example for combat_ai_profiles (FSM decisions). The runtime does not load this type yet; validate it with --mode=draft and do not pack it for release.",
+  "capabilities": [
+    "content.combat.v1"
+  ]
+}

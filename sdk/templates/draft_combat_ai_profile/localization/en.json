@@ -1,0 +1,4 @@
+{
+  "combat_ai_profile.draft_combat_ai_profile.escort_ai.name": "Escort AI",
+  "combat_ai_profile.draft_combat_ai_profile.escort_ai.description": "An escort combat AI: prefers cargo targets, protects the fleet and evades/withdraws when threatened."
+}

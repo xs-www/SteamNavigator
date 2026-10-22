@@ -65,6 +65,7 @@ Core 从 `dev_mods` 加载，第三方模组先复制到 `user://` 隔离目录�
 | `templates/mod_template/` | 2.0 | 最小 `items` 2.0 模组模板。 |
 | `examples/example_weapons/` | 2.0 | 已激活的 `weapons` 2.0 示例：五件 Battle Sim 武器 + Core 模型键；runtime 校验通过。 |
 | `examples/example_fleet/` | 2.0 | 已激活的 `fleet` 4 类型 2.0 示例（ship_archetypes / captains / formations / fleet_doctrines）；runtime 校验通过。 |
+| `templates/draft_combat_ai_profile/` | 2.0 草案 | `combat_ai_profiles`（FSM 战斗 AI）草案示例：schema 先行、运行时不加载，**只能** `--mode=draft` 校验、不可发布。 |
 | `templates/story_pack_iron_tide/` | 2.0 草案 | `story_arcs` / `story_levels` 剧情包草案示例，同样只能 draft 校验、不可发布。 |
 
 > `sdk/examples/` 是开发态可被 runtime 扫描的目录，**不要**把草案内容放进 `examples/`；草案示例统一放在

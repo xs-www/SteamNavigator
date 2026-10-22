@@ -173,7 +173,8 @@
     "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb"
   },
   "authors": [
-    "Steam Navigator Team"
+    "Steam Navigator Team",
+    "Xiao Si swx"
   ],
   "license": "Proprietary",
   "description": "Official MVP content: ports, items, ships, contracts and events.",

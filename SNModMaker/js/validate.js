@@ -507,6 +507,38 @@
     }
   }
 
+    /** D-AI: FSM graph integrity (initial / transition endpoints / duplicate nodes). */
+  function checkCombatAIProfileSemantics(definition, view, add) {
+    const data = definition && definition.data;
+    if (!data || typeof data !== 'object') return;
+    const nodes = Array.isArray(data.nodes) ? data.nodes : [];
+    const nodeIds = new Set();
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      const id = typeof node.id === 'string' ? node.id : '';
+      if (!id) continue;
+      if (nodeIds.has(id)) {
+        add('error', 'combat_ai_node_duplicate', `FSM 节点 id 重复：${id}`, view);
+      } else {
+        nodeIds.add(id);
+      }
+    }
+    const initial = typeof data.initial === 'string' ? data.initial : '';
+    if (initial && !nodeIds.has(initial)) {
+      add('error', 'combat_ai_initial_unknown', `初始节点 ${initial} 不在 nodes 中。`, view);
+    }
+    const transitions = Array.isArray(data.transitions) ? data.transitions : [];
+    for (const transition of transitions) {
+      if (!transition || typeof transition !== 'object') continue;
+      for (const endpoint of ['from', 'to']) {
+        const value = typeof transition[endpoint] === 'string' ? transition[endpoint] : '';
+        if (value && !nodeIds.has(value)) {
+          add('error', 'combat_ai_transition_node_unknown', `转移 ${endpoint}=${value} 引用了不存在的节点。`, view);
+        }
+      }
+    }
+  }
+
   /** D1 loot tables: entry.kind selects the registry its entry.id must resolve in. */
   function checkLootTableSemantics(definition, view, add) {
     const data = definition && definition.data;
@@ -1093,6 +1125,7 @@
 
         if (info.key === 'weapons') checkWeaponSemantics(definition, view, add);
         if (info.key === 'loot_tables') checkLootTableSemantics(definition, view, add);
+        if (info.key === 'combat_ai_profiles') checkCombatAIProfileSemantics(definition, view, add);
         if (info.key === 'hulls') checkHullSocketSemantics(definition, view, add);
         if (info.key === 'quests') checkQuestSemantics(definition, view, add);
         if (info.key === 'story_arcs') checkStoryArcSemantics(definition, view, add);

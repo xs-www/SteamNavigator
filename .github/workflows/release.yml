@@ -109,6 +109,8 @@ jobs:
             --mod-root=sdk/examples/example_fleet --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
+          godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/templates/draft_combat_ai_profile --mode=draft
 
       # Release packing must refuse content the runtime cannot activate; the
       # command is expected to fail (exit 1) and leave dist/mods untouched.

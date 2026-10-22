@@ -395,9 +395,9 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 32, '30 runtime types + 2 Schema 2.0 draft types are editable');
+  assert.equal(json.types.length, 33, '30 runtime types + 3 Schema 2.0 draft types are editable');
   assert.equal(json.activeTypes, 30, 'activeTypes counts runtime types at both 1.0 and 2.0');
-  assert.equal(json.draftTypes, 2, 'draftTypes counts the Schema 2.0 draft types');
+  assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
   for (const key of ['items', 'hulls', 'modules', 'crew_roles', 'boiler_strategies', 'voyage_events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'weapons', 'damage_types', 'combat_abilities', 'enemy_archetypes', 'encounter_tables', 'loot_tables',
     'ship_archetypes', 'captains', 'formations', 'fleet_doctrines', 'patches']) {
@@ -429,8 +429,8 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(patches.schema, 'v2/patch.schema.json');
 
   const drafts = json.types.filter((entry) => entry.draft);
-  assert.equal(drafts.length, 2, 'the two Story Mode drafts are listed with draft:true');
-  assert.deepEqual(drafts.map((entry) => entry.key), ['story_arcs', 'story_levels']);
+  assert.equal(drafts.length, 3, 'the Story Mode drafts plus the combat AI profile are listed with draft:true');
+  assert.deepEqual(drafts.map((entry) => entry.key), ['story_arcs', 'story_levels', 'combat_ai_profiles']);
   const world = json.types.find((entry) => entry.key === 'world_profiles');
   assert.ok(world, 'world_profiles must be listed as an active type');
   assert.equal(world.singular, 'world_profile');
@@ -616,6 +616,11 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
   assert.match(
     stdout,
+    /^combat_ai_profiles\s+战斗 AI 状态机\s+combat_ai_profile\s+content\/combat_ai_profiles\.json  \[draft 2\.0\]$/m,
+    `combat_ai_profiles is listed as a draft type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
     /^contracts\s+委托\s+contract\s+content\/contracts\.json  \[runtime 2\.0\]$/m,
     `contracts is promoted to Schema 2.0:\n${stdout}`
   );
@@ -626,7 +631,7 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
   assert.match(
     stdout,
-    /Schema 2\.0 草案类型（2）：编辑器 \/ CLI 可编辑，游戏运行时不加载/,
+    /Schema 2\.0 草案类型（3）：编辑器 \/ CLI 可编辑，游戏运行时不加载/,
     `the draft section must describe the three remaining draft types:\n${stdout}`
   );
   assert.match(
@@ -1039,6 +1044,38 @@ test('add --type weapons writes a Schema 2.0 content file that validates cleanly
   assertStatus(validateResult, 0, 'validate weapons mod');
   const validateJson = mustJson(validateResult, 'validate weapons mod');
   assert.equal(validateJson.issues.errors, 0, `weapon content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
+});
+
+test('new --draft combat_ai_profiles creates a schema-first draft project', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'ai_mod');
+  const describeResult = jsonRun(['describe', 'combat_ai_profiles']);
+  assertStatus(describeResult, 0, 'describe combat_ai_profiles');
+  const described = mustJson(describeResult, 'describe combat_ai_profiles');
+  assert.equal(described.type.draft, true, 'the AI profile is a draft type');
+  assert.equal(described.type.schema, 'v2/combat_ai_profile.schema.json');
+  assert.equal(described.type.capability, 'content.combat.v1');
+  assert.equal(described.defaults.initial, 'cruise');
+  assert.ok(described.fields.some((field) => field.path === 'data.nodes[]'), 'nodes are editable');
+  assert.ok(described.fields.some((field) => field.path === 'data.transitions[]'), 'transitions are editable');
+
+  const result = jsonRun(['new', '--mod', mod, '--id', 'ai_mod', '--name', 'AI 包', '--draft', 'combat_ai_profiles']);
+  assertStatus(result, 0, 'new --draft combat_ai_profiles');
+  const json = mustJson(result, 'new --draft combat_ai_profiles');
+  assert.deepEqual(manifestOf(mod).content, ['content/combat_ai_profiles.json']);
+  assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1'], 'the draft capability is declared automatically');
+  const file = contentFileOfType(mod, 'combat_ai_profiles');
+  assert.equal(file.payload.schema_version, '2.0');
+  assert.equal(file.payload.content_type, 'combat_ai_profiles');
+  assert.equal(file.payload.definitions.length, 1);
+  const definition = file.payload.definitions[0];
+  assert.equal(definition.id, 'ai_mod:combat_ai_profile/combat_ai_profile_starter');
+  assert.equal(definition.data.initial, 'cruise');
+  assert.ok(definition.data.nodes.length >= 2, 'starter FSM has nodes');
+  assert.ok(definition.data.transitions.length >= 1, 'starter FSM has transitions');
+  assert.ok(json.issues.list.some((issue) => issue.code === 'draft_content'), 'draft content warns');
+  assert.ok(!json.issues.list.some((issue) => issue.code === 'capability_undeclared'), 'the capability is declared');
+  assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
 });
 
 test('validate accepts the shipped Story Mode example pack', () => {

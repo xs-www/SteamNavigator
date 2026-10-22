@@ -99,8 +99,8 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 35, `expected 2 top-level + 33 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 35, `expected 35 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 36, `expected 2 top-level + 34 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 36, `expected 36 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.equal(globalThis.SN_SCHEMAS['contract.schema.json'], undefined, 'the 1.0 contract schema was removed (C4-D)');
     assert.equal(globalThis.SN_SCHEMAS['patch.schema.json'], undefined, 'the 1.0 patch schema was removed (C4-D)');
@@ -351,8 +351,8 @@ function warningsOf(result) {
   });
 
   await test('draft types are generated with schema 2.0 and registered in the catalog', () => {
-    assert.equal(Types.DRAFT_TYPES.length, 2, 'the two Story Mode types are the remaining Schema 2.0 draft types');
-    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['story_arcs', 'story_levels']);
+    assert.equal(Types.DRAFT_TYPES.length, 3, 'the Story Mode types plus the combat AI profile are Schema 2.0 draft types');
+    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['story_arcs', 'story_levels', 'combat_ai_profiles']);
     for (const info of Types.DRAFT_TYPES) {
       assert.equal(info.draft, true, `${info.key} must be marked draft`);
       assert.equal(info.schemaVersion, '2.0', `${info.key} must declare schema 2.0`);
@@ -437,6 +437,7 @@ function warningsOf(result) {
     /* D1 promoted weapons; the remaining drafts are the Story Mode family. */
     const families = [
       { drafts: ['story_arcs', 'story_levels'], types: ['story_arcs', 'story_levels'] },
+      { drafts: ['combat_ai_profiles'], types: ['combat_ai_profiles'] },
     ];
     for (const family of families) {
       const project = Store.createProject({
@@ -505,7 +506,9 @@ function warningsOf(result) {
     const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
     assert.equal(manifest.draft_schemas.weapons, undefined, 'weapons leaves draft_schemas');
     assert.ok(!(manifest.draft_types || []).some((type) => type.key === 'weapons'), 'weapons leaves draft_types');
-    assert.ok(!(manifest.planned || []).some((system) => system.capability === 'content.combat.v1'), 'planned.combat is fully promoted');
+    const combatPlanned = (manifest.planned || []).find((system) => system.capability === 'content.combat.v1');
+    assert.ok(combatPlanned, 'planned.combat keeps the schema-first AI profile draft');
+    assert.deepEqual(combatPlanned.types, ['combat_ai_profiles'], 'only the draft AI profile stays planned under combat');
     const combatKeys = ['weapons', 'damage_types', 'combat_abilities', 'enemy_archetypes', 'encounter_tables', 'loot_tables'];
     for (const key of combatKeys) {
       const entry = Types.TYPES.find((type) => type.key === key);
@@ -1292,6 +1295,34 @@ function warningsOf(result) {
       if (doctrine.data.formation) assert.ok(formations.includes(doctrine.data.formation), `${doctrine.id} binds ${doctrine.data.formation}`);
     }
     assert.ok(archetypes.includes('core:ship_archetype/flagship_ironclad'), 'Core ships a flagship archetype');
+  });
+
+  await test('combat AI profiles validate defaults and check FSM graph endpoints', () => {
+    const project = Store.createProject({ id: 'ai_draft_mod', name: 'AI Draft', template: null, drafts: ['combat_ai_profiles'] });
+    const file = project.contentFiles.find((item) => item.content_type === 'combat_ai_profiles');
+    assert.ok(file, 'the draft project creates the AI profile content file');
+    assert.equal(file.schema_version, '2.0');
+    assert.deepEqual(project.manifest.capabilities, ['content.combat.v1']);
+    const definition = file.definitions[0];
+    assert.equal(definition.data.initial, 'cruise');
+    assert.ok(definition.data.nodes.length >= 2);
+    let result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+    assert.ok(warningsOf(result).some((issue) => issue.code === 'draft_content'), 'the AI profile is draft content');
+
+    definition.data.initial = 'ghost';
+    result = Validate.validateProject(project);
+    assert.ok(errorsOf(result).some((issue) => issue.code === 'combat_ai_initial_unknown'), 'unknown initial node is rejected');
+
+    definition.data.initial = 'cruise';
+    definition.data.transitions[0].to = 'ghost';
+    result = Validate.validateProject(project);
+    assert.ok(errorsOf(result).some((issue) => issue.code === 'combat_ai_transition_node_unknown'), 'unknown transition endpoint is rejected');
+
+    definition.data.transitions[0].to = 'approach';
+    definition.data.nodes.push({ id: 'cruise', runtime_action: 'cruise' });
+    result = Validate.validateProject(project);
+    assert.ok(errorsOf(result).some((issue) => issue.code === 'combat_ai_node_duplicate'), 'duplicate node ids are rejected');
   });
 
   await test('entity localization rename commits once and removes old keys', () => {
