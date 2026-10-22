@@ -14,12 +14,12 @@
     "content/items.json",
     "content/hulls.json",
     "content/modules.json",
-    "content/roles.json",
-    "content/strategies.json",
+    "content/crew_roles.json",
+    "content/boiler_strategies.json",
     "content/port_templates.json",
     "content/starting_scenarios.json",
     "content/contracts.json",
-    "content/events.json",
+    "content/voyage_events.json",
     "content/quests.json",
     "content/world_profiles.json",
     "content/map_configs.json",
@@ -165,6 +165,8 @@
   "description": "Official MVP content: ports, items, ships, contracts and events.",
   "capabilities": [
     "content.contract.passenger.v1",
+    "content.boiler_strategies.v1",
+    "content.crew_roles.v1",
     "content.event.choice_pool.v1",
     "content.items.v1",
     "content.hulls.v1",
@@ -172,6 +174,7 @@
     "content.port_templates.v1",
     "content.quests.v1",
     "content.starting_scenarios.v1",
+    "content.voyage_events.v1",
     "content.world.v1",
     "content.campaign.v1"
   ]

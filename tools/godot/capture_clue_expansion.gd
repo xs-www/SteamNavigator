@@ -32,7 +32,7 @@ const OUT_DIR := "res://docs/design/screenshots/exploration"
 const WINDOW := Vector2i(1440, 900)
 const SEED := 20260421
 const STEADY_BUILD := "core:starting_scenario/steady"
-const STRATEGY_ID := "core:strategy/standard"
+const STRATEGY_ID := "core:boiler_strategy/standard"
 const WATCHDOG_SECONDS := 120.0
 const TMP_PREFIX := "res://tmp_clue_expansion_"
 

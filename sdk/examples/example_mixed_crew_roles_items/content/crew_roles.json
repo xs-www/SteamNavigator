@@ -1,0 +1,33 @@
+{
+  "schema_version": "2.0",
+  "content_type": "crew_roles",
+  "definitions": [
+    {
+      "id": "example_mixed_crew_roles_items:crew_role/navigator_veteran",
+      "name_key": "crew_role.example_mixed_crew_roles_items.navigator_veteran.name",
+      "description_key": "crew_role.example_mixed_crew_roles_items.navigator_veteran.description",
+      "tags": [
+        "role.navigator",
+        "role.crew"
+      ],
+      "enabled": true,
+      "data": {
+        "kind": "navigator",
+        "wage_per_voyage": 48,
+        "hire_cost": 140,
+        "modifiers": [
+          {
+            "stat": "risk",
+            "op": "add",
+            "value": -0.025
+          },
+          {
+            "stat": "speed",
+            "op": "mul",
+            "value": 1.04
+          }
+        ]
+      }
+    }
+  ]
+}

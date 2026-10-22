@@ -1,0 +1,65 @@
+{
+  "schema_version": "2.0",
+  "content_type": "crew_roles",
+  "definitions": [
+    {
+      "id": "core:crew_role/engineer_basic",
+      "name_key": "crew_role.core.engineer_basic.name",
+      "description_key": "crew_role.core.engineer_basic.description",
+      "tags": [
+        "role.engineer",
+        "role.crew"
+      ],
+      "enabled": true,
+      "data": {
+        "kind": "engineer",
+        "wage_per_voyage": 40,
+        "hire_cost": 100,
+        "modifiers": [
+          {
+            "stat": "risk",
+            "op": "add",
+            "value": -0.015
+          },
+          {
+            "stat": "repair_cost",
+            "op": "mul",
+            "value": 0.85
+          },
+          {
+            "stat": "damage",
+            "op": "mul",
+            "value": 0.95
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:crew_role/navigator_basic",
+      "name_key": "crew_role.core.navigator_basic.name",
+      "description_key": "crew_role.core.navigator_basic.description",
+      "tags": [
+        "role.navigator",
+        "role.crew"
+      ],
+      "enabled": true,
+      "data": {
+        "kind": "navigator",
+        "wage_per_voyage": 35,
+        "hire_cost": 100,
+        "modifiers": [
+          {
+            "stat": "risk",
+            "op": "add",
+            "value": -0.02
+          },
+          {
+            "stat": "speed",
+            "op": "mul",
+            "value": 1.03
+          }
+        ]
+      }
+    }
+  ]
+}

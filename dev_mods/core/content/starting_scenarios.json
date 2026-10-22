@@ -21,8 +21,8 @@
         ],
         "navigation_module": "core:module/spyglass",
         "safety_module": "core:module/lifeboat",
-        "engineer": "core:role/engineer_basic",
-        "navigator": "core:role/navigator_basic",
+        "engineer": "core:crew_role/engineer_basic",
+        "navigator": "core:crew_role/navigator_basic",
         "coal": 26,
         "water": 18,
         "durability_ratio": 1
@@ -46,7 +46,7 @@
           "core:module/small_hold"
         ],
         "navigation_module": "core:module/spyglass",
-        "navigator": "core:role/navigator_basic",
+        "navigator": "core:crew_role/navigator_basic",
         "coal": 20,
         "water": 14,
         "durability_ratio": 0.9

@@ -9,8 +9,8 @@ extends RefCounted
 const ITEM := &"items"
 const HULL := &"hulls"
 const MODULE := &"modules"
-const ROLE := &"roles"
-const STRATEGY := &"strategies"
+const CREW_ROLE := &"crew_roles"
+const BOILER_STRATEGY := &"boiler_strategies"
 const PORT_TEMPLATE := &"port_templates"
 const STARTING_SCENARIO := &"starting_scenarios"
 const WORLD_PROFILE := &"world_profiles"
@@ -24,15 +24,15 @@ const START_PROFILE := &"start_profiles"
 const MAP_CONFIG := &"map_configs"
 const CONTRACT := &"contracts"
 const QUEST := &"quests"
-const EVENT := &"events"
+const VOYAGE_EVENT := &"voyage_events"
 const PATCH := &"patches"
 
 const SCHEMA_PATHS := {
 	ITEM: "res://schemas/v2/item.schema.json",
 	HULL: "res://schemas/v2/hull.schema.json",
 	MODULE: "res://schemas/v2/module.schema.json",
-	ROLE: "res://schemas/role.schema.json",
-	STRATEGY: "res://schemas/strategy.schema.json",
+	CREW_ROLE: "res://schemas/v2/crew_role.schema.json",
+	BOILER_STRATEGY: "res://schemas/v2/boiler_strategy.schema.json",
 	PORT_TEMPLATE: "res://schemas/v2/port_template.schema.json",
 	STARTING_SCENARIO: "res://schemas/v2/starting_scenario.schema.json",
 	WORLD_PROFILE: "res://schemas/v2/world_profile.schema.json",
@@ -46,7 +46,7 @@ const SCHEMA_PATHS := {
 	MAP_CONFIG: "res://schemas/v2/map_config.schema.json",
 	CONTRACT: "res://schemas/contract.schema.json",
 	QUEST: "res://schemas/v2/quest.schema.json",
-	EVENT: "res://schemas/event.schema.json",
+	VOYAGE_EVENT: "res://schemas/v2/voyage_event.schema.json",
 	PATCH: "res://schemas/patch.schema.json",
 }
 
@@ -54,8 +54,8 @@ const SCHEMA_VERSIONS := {
 	ITEM: "2.0",
 	HULL: "2.0",
 	MODULE: "2.0",
-	ROLE: "1.0",
-	STRATEGY: "1.0",
+	CREW_ROLE: "2.0",
+	BOILER_STRATEGY: "2.0",
 	PORT_TEMPLATE: "2.0",
 	STARTING_SCENARIO: "2.0",
 	WORLD_PROFILE: "2.0",
@@ -69,7 +69,7 @@ const SCHEMA_VERSIONS := {
 	MAP_CONFIG: "2.0",
 	CONTRACT: "1.0",
 	QUEST: "2.0",
-	EVENT: "1.0",
+	VOYAGE_EVENT: "2.0",
 	PATCH: "1.0",
 }
 
@@ -77,8 +77,8 @@ const SINGULAR := {
 	ITEM: "item",
 	HULL: "hull",
 	MODULE: "module",
-	ROLE: "role",
-	STRATEGY: "strategy",
+	CREW_ROLE: "crew_role",
+	BOILER_STRATEGY: "boiler_strategy",
 	PORT_TEMPLATE: "port_template",
 	STARTING_SCENARIO: "starting_scenario",
 	WORLD_PROFILE: "world_profile",
@@ -92,7 +92,7 @@ const SINGULAR := {
 	MAP_CONFIG: "map_config",
 	CONTRACT: "contract",
 	QUEST: "quest",
-	EVENT: "event",
+	VOYAGE_EVENT: "voyage_event",
 	PATCH: "patch",
 }
 
@@ -101,10 +101,10 @@ const MODULE_TYPES := [HULL, MODULE]
 
 static func all() -> Array[StringName]:
 	var types: Array[StringName] = [
-		ITEM, HULL, MODULE, ROLE, STRATEGY,
+		ITEM, HULL, MODULE, CREW_ROLE, BOILER_STRATEGY,
 		PORT_TEMPLATE, STARTING_SCENARIO, WORLD_PROFILE, REGION, SITE,
 		ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY, START_PROFILE,
-		MAP_CONFIG, CONTRACT, QUEST, EVENT,
+		MAP_CONFIG, CONTRACT, QUEST, VOYAGE_EVENT,
 	]
 	return types
 

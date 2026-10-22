@@ -3,7 +3,7 @@
 在浏览器里可视化创建、编辑和打包《Steam Navigator》的内容模组：
 
 - 读取仓库内**官方 JSON Schema**，按类型生成表单；
-- 编辑 Manifest、20 类运行时类型（4 类 1.0 + 15 类 2.0 + 显式补丁）、3 类 Content Schema 2.0 草案类型（`weapons`、`story_arcs`、`story_levels`）、本地化与资源；
+- 编辑 Manifest、20 类运行时类型（1 类 1.0 + 18 类 2.0 + 显式补丁）、3 类 Content Schema 2.0 草案类型（`weapons`、`story_arcs`、`story_levels`）、本地化与资源；
 - 实时校验 ID 命名空间、字段约束、跨引用、本地化覆盖与补丁安全；
 - 导入松散目录 / `.snavmod.zip` / 项目文件；导出同结构 ZIP、项目文件或写入本地目录；
 - 无头命令行 `tools/content.mjs`：给 agent / CI / 批量脚本按 Schema 增删改定义、补本地化并校验。

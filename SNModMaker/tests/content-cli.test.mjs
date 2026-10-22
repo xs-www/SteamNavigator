@@ -399,10 +399,10 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.activeTypes, 20, 'activeTypes counts runtime types at both 1.0 and 2.0');
   assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
-  for (const key of ['items', 'hulls', 'modules', 'events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'patches']) {
+  for (const key of ['items', 'hulls', 'modules', 'crew_roles', 'boiler_strategies', 'voyage_events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
   }
-  for (const retiredType of ['map_profiles', 'port_archetypes', 'starting_builds']) {
+  for (const retiredType of ['map_profiles', 'port_archetypes', 'starting_builds', 'events', 'roles', 'strategies']) {
     assert.ok(!keys.includes(retiredType), `C4 retired the ${retiredType} content type`);
   }
   for (const legacyModuleType of ['boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins']) {
@@ -453,11 +453,14 @@ test('types --json lists every content type with presentation metadata', (t) => 
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules', 'port_templates', 'quests', 'regions',
-      'route_templates', 'sites', 'start_profiles', 'starting_scenarios', 'weather_profiles', 'world_profiles'],
-    'exactly the fifteen Schema 2.0 runtime rows are active'
+    ['boiler_strategies', 'crew_roles', 'discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules',
+      'port_templates', 'quests', 'regions', 'route_templates', 'sites', 'start_profiles', 'starting_scenarios',
+      'voyage_events', 'weather_profiles', 'world_profiles'],
+    'exactly the eighteen Schema 2.0 runtime rows are active'
   );
   const runtimeCapabilities = {
+    boiler_strategies: 'content.boiler_strategies.v1',
+    crew_roles: 'content.crew_roles.v1',
     hulls: 'content.hulls.v1',
     items: 'content.items.v1',
     modules: 'content.modules.v1',
@@ -465,6 +468,7 @@ test('types --json lists every content type with presentation metadata', (t) => 
     quests: 'content.quests.v1',
     starting_scenarios: 'content.starting_scenarios.v1',
     start_profiles: 'content.campaign.v1',
+    voyage_events: 'content.voyage_events.v1',
   };
   for (const runtime of runtimeV2) {
     assert.equal(runtime.schema, `v2/${runtime.singular}.schema.json`,
@@ -530,12 +534,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（20；其中 15 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 20 active types, 15 of them Schema 2.0:\n${stdout}`
+    /运行时内容类型（20；其中 18 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 20 active types, 18 of them Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    15,
+    18,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
   );
   assert.match(
@@ -547,6 +551,21 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
     stdout,
     /^starting_scenarios\s+起始场景\s+starting_scenario\s+content\/starting_scenarios\.json  \[runtime 2\.0\]$/m,
     `starting_scenarios must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^voyage_events\s+航行事件\s+voyage_event\s+content\/voyage_events\.json  \[runtime 2\.0\]$/m,
+    `voyage_events must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^crew_roles\s+船员岗位\s+crew_role\s+content\/crew_roles\.json  \[runtime 2\.0\]$/m,
+    `crew_roles must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^boiler_strategies\s+锅炉策略\s+boiler_strategy\s+content\/boiler_strategies\.json  \[runtime 2\.0\]$/m,
+    `boiler_strategies must be shown as a runtime Schema 2.0 type:\n${stdout}`
   );
   assert.match(
     stdout,
@@ -575,7 +594,7 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
   assert.match(
     stdout,
-    /^roles\s+船员岗位\s+role\s+content\/roles\.json$/m,
+    /^contracts\s+委托\s+contract\s+content\/contracts\.json$/m,
     `1.0 runtime rows stay unmarked:\n${stdout}`
   );
   assert.match(
@@ -1991,12 +2010,12 @@ test('rm of the only definition in a content file deletes that file and its mani
   assert.deepEqual(manifestOf(mod).content, [
     'content/items.json',
     'content/modules.json',
-    'content/events.json',
+    'content/voyage_events.json',
     'content/contracts.json',
   ]);
   const otherFilesBefore = {
     'content/modules.json': sha256File(path.join(mod, 'content/modules.json')),
-    'content/events.json': sha256File(path.join(mod, 'content/events.json')),
+    'content/voyage_events.json': sha256File(path.join(mod, 'content/voyage_events.json')),
     'content/contracts.json': sha256File(path.join(mod, 'content/contracts.json')),
   };
 
@@ -2008,7 +2027,7 @@ test('rm of the only definition in a content file deletes that file and its mani
   assert.ok(!fs.existsSync(path.join(mod, 'content', 'items.json')), 'emptied content file must be deleted');
   assert.deepEqual(manifestOf(mod).content, [
     'content/modules.json',
-    'content/events.json',
+    'content/voyage_events.json',
     'content/contracts.json',
   ], 'manifest.content must drop the deleted file');
   for (const [rel, hash] of Object.entries(otherFilesBefore)) {

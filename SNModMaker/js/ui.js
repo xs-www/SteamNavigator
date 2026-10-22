@@ -192,8 +192,8 @@
     navigation_module: ['module'],
     safety_module: ['module'],
     passenger_cabin: ['module'],
-    engineer: ['role'],
-    navigator: ['role'],
+    engineer: ['crew_role'],
+    navigator: ['crew_role'],
     default_starting_build: ['starting_scenario'],
     default_starting_scenario: ['starting_scenario'],
     archetypes: ['port_template'],
@@ -600,7 +600,7 @@
   }
 
   function conditionField(field, value, path) {
-    const labelText = label('events', field);
+    const labelText = label('voyage_events', field);
     if (['value', 'amount'].includes(field)) {
       return `<div class="field compact"><label class="field-label">${esc(labelText)}</label><input class="input mono" type="number" step="any" value="${value == null ? '' : attr(value)}" data-field="${attr(path)}" data-parse="number"></div>`;
     }
@@ -630,12 +630,12 @@
 
   function effectField(field, value, path) {
     if (['amount'].includes(field)) {
-      return `<input class="input mono narrow" type="number" step="any" value="${value == null ? '' : attr(value)}" data-field="${attr(path)}" data-parse="number" placeholder="${esc(label('events', field))}">`;
+      return `<input class="input mono narrow" type="number" step="any" value="${value == null ? '' : attr(value)}" data-field="${attr(path)}" data-parse="number" placeholder="${esc(label('voyage_events', field))}">`;
     }
     if (field === 'text_key') {
       return `<input class="input mono" type="text" value="${attr(value || '')}" data-field="${attr(path)}" data-parse="text" placeholder="notice.<mod>.<event>.<option>">`;
     }
-    return `<input class="input mono" type="text" list="dl-all-ids" value="${attr(value || '')}" data-field="${attr(path)}" data-parse="text" placeholder="${esc(label('events', field))}" spellcheck="false">`;
+    return `<input class="input mono" type="text" list="dl-all-ids" value="${attr(value || '')}" data-field="${attr(path)}" data-parse="text" placeholder="${esc(label('voyage_events', field))}" spellcheck="false">`;
   }
 
   /* ------------------------------------------------------------------ */

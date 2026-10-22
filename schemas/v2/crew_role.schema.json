@@ -1,16 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://steam-navigator.local/schema/role-1.json",
-  "title": "Steam Navigator crew role content file",
+  "$id": "https://steam-navigator.local/schema/crew-role-2.json",
+  "title": "Steam Navigator crew role content file (Content Schema 2.0)",
+  "description": "Crew role definitions (C4): kind, per-voyage wage, hire cost and stat modifiers. Successor of the 1.0 `roles` content type; the data block is unchanged, the type, id segment and default file are renamed to crew_roles / core:crew_role/* / content/crew_roles.json.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
   "properties": {
     "schema_version": {
-      "enum": ["1.0"]
+      "const": "2.0"
     },
     "content_type": {
-      "const": "roles"
+      "const": "crew_roles"
     },
     "definitions": {
       "type": "array",
@@ -24,7 +25,7 @@
             "type": "object",
             "properties": {
               "data": {
-                "$ref": "#/$defs/role_data"
+                "$ref": "#/$defs/crew_role_data"
               }
             }
           }
@@ -33,7 +34,7 @@
     }
   },
   "$defs": {
-    "role_data": {
+    "crew_role_data": {
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "wage_per_voyage"],

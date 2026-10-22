@@ -1,16 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://steam-navigator.local/schema/strategy-1.json",
-  "title": "Steam Navigator boiler strategy content file",
+  "$id": "https://steam-navigator.local/schema/boiler-strategy-2.json",
+  "title": "Steam Navigator boiler strategy content file (Content Schema 2.0)",
+  "description": "Boiler propulsion strategy definitions (C4): speed / coal / water multipliers and risk adjustment. Successor of the 1.0 `strategies` content type; the data block is unchanged, the type, id segment and default file are renamed to boiler_strategies / core:boiler_strategy/* / content/boiler_strategies.json.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
   "properties": {
     "schema_version": {
-      "enum": ["1.0"]
+      "const": "2.0"
     },
     "content_type": {
-      "const": "strategies"
+      "const": "boiler_strategies"
     },
     "definitions": {
       "type": "array",
@@ -24,7 +25,7 @@
             "type": "object",
             "properties": {
               "data": {
-                "$ref": "#/$defs/strategy_data"
+                "$ref": "#/$defs/boiler_strategy_data"
               }
             }
           }
@@ -33,7 +34,7 @@
     }
   },
   "$defs": {
-    "strategy_data": {
+    "boiler_strategy_data": {
       "type": "object",
       "additionalProperties": false,
       "required": ["speed_mul", "coal_mul", "water_mul", "risk_add"],

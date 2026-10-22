@@ -124,7 +124,7 @@ func _run() -> void:
 
 	shell._run_command(&"voyage.start", {
 		"destination_id": destination,
-		"strategy_id": "core:strategy/standard",
+		"strategy_id": "core:boiler_strategy/standard",
 	})
 
 	var departed_yaw := 0.0

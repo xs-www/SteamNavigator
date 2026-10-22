@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T14:39:52.813Z",
+    "generated_at": "2026-10-22T15:37:17.734Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -23,12 +23,12 @@
         "content/items.json",
         "content/hulls.json",
         "content/modules.json",
-        "content/roles.json",
-        "content/strategies.json",
+        "content/crew_roles.json",
+        "content/boiler_strategies.json",
         "content/port_templates.json",
         "content/starting_scenarios.json",
         "content/contracts.json",
-        "content/events.json",
+        "content/voyage_events.json",
         "content/quests.json",
         "content/world_profiles.json",
         "content/map_configs.json",
@@ -174,6 +174,8 @@
       "description": "Official MVP content: ports, items, ships, contracts and events.",
       "capabilities": [
         "content.contract.passenger.v1",
+        "content.boiler_strategies.v1",
+        "content.crew_roles.v1",
         "content.event.choice_pool.v1",
         "content.items.v1",
         "content.hulls.v1",
@@ -181,6 +183,7 @@
         "content.port_templates.v1",
         "content.quests.v1",
         "content.starting_scenarios.v1",
+        "content.voyage_events.v1",
         "content.world.v1",
         "content.campaign.v1"
       ]
@@ -1420,14 +1423,14 @@
           }
         ]
       },
-      "content/roles.json": {
-        "schema_version": "1.0",
-        "content_type": "roles",
+      "content/crew_roles.json": {
+        "schema_version": "2.0",
+        "content_type": "crew_roles",
         "definitions": [
           {
-            "id": "core:role/engineer_basic",
-            "name_key": "role.core.engineer_basic.name",
-            "description_key": "role.core.engineer_basic.description",
+            "id": "core:crew_role/engineer_basic",
+            "name_key": "crew_role.core.engineer_basic.name",
+            "description_key": "crew_role.core.engineer_basic.description",
             "tags": [
               "role.engineer",
               "role.crew"
@@ -1457,9 +1460,9 @@
             }
           },
           {
-            "id": "core:role/navigator_basic",
-            "name_key": "role.core.navigator_basic.name",
-            "description_key": "role.core.navigator_basic.description",
+            "id": "core:crew_role/navigator_basic",
+            "name_key": "crew_role.core.navigator_basic.name",
+            "description_key": "crew_role.core.navigator_basic.description",
             "tags": [
               "role.navigator",
               "role.crew"
@@ -1485,14 +1488,14 @@
           }
         ]
       },
-      "content/strategies.json": {
-        "schema_version": "1.0",
-        "content_type": "strategies",
+      "content/boiler_strategies.json": {
+        "schema_version": "2.0",
+        "content_type": "boiler_strategies",
         "definitions": [
           {
-            "id": "core:strategy/economic",
-            "name_key": "strategy.core.economic.name",
-            "description_key": "strategy.core.economic.description",
+            "id": "core:boiler_strategy/economic",
+            "name_key": "boiler_strategy.core.economic.name",
+            "description_key": "boiler_strategy.core.economic.description",
             "tags": [
               "strategy.economy",
               "strategy.slow"
@@ -1506,9 +1509,9 @@
             }
           },
           {
-            "id": "core:strategy/standard",
-            "name_key": "strategy.core.standard.name",
-            "description_key": "strategy.core.standard.description",
+            "id": "core:boiler_strategy/standard",
+            "name_key": "boiler_strategy.core.standard.name",
+            "description_key": "boiler_strategy.core.standard.description",
             "tags": [
               "strategy.standard",
               "strategy.balanced"
@@ -1522,9 +1525,9 @@
             }
           },
           {
-            "id": "core:strategy/fast",
-            "name_key": "strategy.core.fast.name",
-            "description_key": "strategy.core.fast.description",
+            "id": "core:boiler_strategy/fast",
+            "name_key": "boiler_strategy.core.fast.name",
+            "description_key": "boiler_strategy.core.fast.description",
             "tags": [
               "strategy.fast",
               "strategy.risky"
@@ -2015,8 +2018,8 @@
               ],
               "navigation_module": "core:module/spyglass",
               "safety_module": "core:module/lifeboat",
-              "engineer": "core:role/engineer_basic",
-              "navigator": "core:role/navigator_basic",
+              "engineer": "core:crew_role/engineer_basic",
+              "navigator": "core:crew_role/navigator_basic",
               "coal": 26,
               "water": 18,
               "durability_ratio": 1
@@ -2040,7 +2043,7 @@
                 "core:module/small_hold"
               ],
               "navigation_module": "core:module/spyglass",
-              "navigator": "core:role/navigator_basic",
+              "navigator": "core:crew_role/navigator_basic",
               "coal": 20,
               "water": 14,
               "durability_ratio": 0.9
@@ -2489,14 +2492,14 @@
           }
         ]
       },
-      "content/events.json": {
-        "schema_version": "1.0",
-        "content_type": "events",
+      "content/voyage_events.json": {
+        "schema_version": "2.0",
+        "content_type": "voyage_events",
         "definitions": [
           {
-            "id": "core:event/boiler_overheat",
-            "name_key": "event.core.boiler_overheat.name",
-            "description_key": "event.core.boiler_overheat.description",
+            "id": "core:voyage_event/boiler_overheat",
+            "name_key": "voyage_event.core.boiler_overheat.name",
+            "description_key": "voyage_event.core.boiler_overheat.description",
             "tags": [
               "event.risk",
               "event.mechanical"
@@ -2510,7 +2513,7 @@
               "options": [
                 {
                   "id": "water_cooling",
-                  "name_key": "event.core.boiler_overheat.water_cooling",
+                  "name_key": "voyage_event.core.boiler_overheat.water_cooling",
                   "weight": 1,
                   "effects": [
                     {
@@ -2534,7 +2537,7 @@
                 },
                 {
                   "id": "stop_repair",
-                  "name_key": "event.core.boiler_overheat.stop_repair",
+                  "name_key": "voyage_event.core.boiler_overheat.stop_repair",
                   "weight": 1,
                   "effects": [
                     {
@@ -2553,7 +2556,7 @@
                 },
                 {
                   "id": "paid_repair",
-                  "name_key": "event.core.boiler_overheat.paid_repair",
+                  "name_key": "voyage_event.core.boiler_overheat.paid_repair",
                   "weight": 1,
                   "condition": {
                     "op": "money_gte",
@@ -2580,7 +2583,7 @@
                 },
                 {
                   "id": "force_continue",
-                  "name_key": "event.core.boiler_overheat.force_continue",
+                  "name_key": "voyage_event.core.boiler_overheat.force_continue",
                   "weight": 1,
                   "effects": [
                     {
@@ -2604,7 +2607,7 @@
                 },
                 {
                   "id": "jettison_cargo",
-                  "name_key": "event.core.boiler_overheat.jettison_cargo",
+                  "name_key": "voyage_event.core.boiler_overheat.jettison_cargo",
                   "weight": 1,
                   "effects": [
                     {
@@ -2621,9 +2624,9 @@
             }
           },
           {
-            "id": "core:event/merchant_intel",
-            "name_key": "event.core.merchant_intel.name",
-            "description_key": "event.core.merchant_intel.description",
+            "id": "core:voyage_event/merchant_intel",
+            "name_key": "voyage_event.core.merchant_intel.name",
+            "description_key": "voyage_event.core.merchant_intel.description",
             "tags": [
               "event.opportunity",
               "event.merchant"
@@ -2637,7 +2640,7 @@
               "options": [
                 {
                   "id": "buy_intel",
-                  "name_key": "event.core.merchant_intel.buy_intel",
+                  "name_key": "voyage_event.core.merchant_intel.buy_intel",
                   "weight": 1,
                   "condition": {
                     "op": "money_gte",
@@ -2659,7 +2662,7 @@
                 },
                 {
                   "id": "decline",
-                  "name_key": "event.core.merchant_intel.decline",
+                  "name_key": "voyage_event.core.merchant_intel.decline",
                   "weight": 1,
                   "effects": [
                     {
@@ -4073,7 +4076,7 @@
                 "open_sea"
               ],
               "unlock_ids": [
-                "core:role/navigator_basic"
+                "core:crew_role/navigator_basic"
               ]
             }
           },
@@ -4147,7 +4150,7 @@
                 "industrial"
               ],
               "unlock_ids": [
-                "core:strategy/economic"
+                "core:boiler_strategy/economic"
               ]
             }
           }
@@ -4264,16 +4267,16 @@
         "module.core.safety_valve.description": "显著降低锅炉事故风险与维修费用。",
         "module.core.passenger_cabin.name": "固定客舱",
         "module.core.passenger_cabin.description": "可搭载 4 名旅客，占用船体客舱槽。",
-        "role.core.engineer_basic.name": "工程师",
-        "role.core.engineer_basic.description": "降低故障风险与维修费用，每次航行领取工资。",
-        "role.core.navigator_basic.name": "领航员",
-        "role.core.navigator_basic.description": "降低迷航风险并略微提升航速。",
-        "strategy.core.economic.name": "经济",
-        "strategy.core.economic.description": "降低航速与补给消耗，适合长途与补给紧张。",
-        "strategy.core.standard.name": "标准",
-        "strategy.core.standard.description": "速度、补给与风险的平衡方案。",
-        "strategy.core.fast.name": "极速",
-        "strategy.core.fast.description": "显著提高航速，但煤水消耗与风险更高。",
+        "crew_role.core.engineer_basic.name": "工程师",
+        "crew_role.core.engineer_basic.description": "降低故障风险与维修费用，每次航行领取工资。",
+        "crew_role.core.navigator_basic.name": "领航员",
+        "crew_role.core.navigator_basic.description": "降低迷航风险并略微提升航速。",
+        "boiler_strategy.core.economic.name": "经济",
+        "boiler_strategy.core.economic.description": "降低航速与补给消耗，适合长途与补给紧张。",
+        "boiler_strategy.core.standard.name": "标准",
+        "boiler_strategy.core.standard.description": "速度、补给与风险的平衡方案。",
+        "boiler_strategy.core.fast.name": "极速",
+        "boiler_strategy.core.fast.description": "显著提高航速，但煤水消耗与风险更高。",
         "port_template.core.iron_harbor.name": "铁港",
         "port_template.core.iron_harbor.description": "工业港口，拥有造船厂，铁矿石与钢板供应充足。",
         "port_template.core.spice_port.name": "香料港",
@@ -4318,17 +4321,17 @@
         "contract.core.normal_passenger.description": "少量旅客的短途运输。",
         "contract.core.normal_urgent.name": "紧急货运",
         "contract.core.normal_urgent.description": "期限紧张，但准时奖金可观。",
-        "event.core.boiler_overheat.name": "锅炉过热",
-        "event.core.boiler_overheat.description": "压力表指针越过红线，锅炉发出尖锐的鸣响。",
-        "event.core.boiler_overheat.water_cooling": "消耗淡水紧急降温",
-        "event.core.boiler_overheat.stop_repair": "停船检修",
-        "event.core.boiler_overheat.paid_repair": "支付加班费抢修",
-        "event.core.boiler_overheat.force_continue": "强行继续",
-        "event.core.boiler_overheat.jettison_cargo": "抛弃部分普通货物",
-        "event.core.merchant_intel.name": "偶遇商船",
-        "event.core.merchant_intel.description": "一艘商船靠近，表示愿意出售刚获得的市场情报。",
-        "event.core.merchant_intel.buy_intel": "支付 60 金币购买情报",
-        "event.core.merchant_intel.decline": "婉拒并继续航行",
+        "voyage_event.core.boiler_overheat.name": "锅炉过热",
+        "voyage_event.core.boiler_overheat.description": "压力表指针越过红线，锅炉发出尖锐的鸣响。",
+        "voyage_event.core.boiler_overheat.water_cooling": "消耗淡水紧急降温",
+        "voyage_event.core.boiler_overheat.stop_repair": "停船检修",
+        "voyage_event.core.boiler_overheat.paid_repair": "支付加班费抢修",
+        "voyage_event.core.boiler_overheat.force_continue": "强行继续",
+        "voyage_event.core.boiler_overheat.jettison_cargo": "抛弃部分普通货物",
+        "voyage_event.core.merchant_intel.name": "偶遇商船",
+        "voyage_event.core.merchant_intel.description": "一艘商船靠近，表示愿意出售刚获得的市场情报。",
+        "voyage_event.core.merchant_intel.buy_intel": "支付 60 金币购买情报",
+        "voyage_event.core.merchant_intel.decline": "婉拒并继续航行",
         "notice.core.overheat.cooled": "淡水喷入锅炉，压力暂时回落。",
         "notice.core.overheat.repaired": "船停在平静海面完成检修，航程被延误。",
         "notice.core.overheat.paid": "船员加班抢修，锅炉恢复稳定。",
@@ -4545,16 +4548,16 @@
         "module.core.safety_valve.description": "Sharply reduces boiler risk and repair cost.",
         "module.core.passenger_cabin.name": "Fixed Passenger Cabin",
         "module.core.passenger_cabin.description": "Carries 4 passengers and uses the hull's cabin slot.",
-        "role.core.engineer_basic.name": "Engineer",
-        "role.core.engineer_basic.description": "Reduces breakdown risk and repair cost. Paid per voyage.",
-        "role.core.navigator_basic.name": "Navigator",
-        "role.core.navigator_basic.description": "Reduces navigation risk and slightly increases speed.",
-        "strategy.core.economic.name": "Economic",
-        "strategy.core.economic.description": "Slower but thrifty. For long hauls and tight supplies.",
-        "strategy.core.standard.name": "Standard",
-        "strategy.core.standard.description": "A balanced mix of speed, supplies and risk.",
-        "strategy.core.fast.name": "Full Speed",
-        "strategy.core.fast.description": "Much faster, but burns coal and water and raises risk.",
+        "crew_role.core.engineer_basic.name": "Engineer",
+        "crew_role.core.engineer_basic.description": "Reduces breakdown risk and repair cost. Paid per voyage.",
+        "crew_role.core.navigator_basic.name": "Navigator",
+        "crew_role.core.navigator_basic.description": "Reduces navigation risk and slightly increases speed.",
+        "boiler_strategy.core.economic.name": "Economic",
+        "boiler_strategy.core.economic.description": "Slower but thrifty. For long hauls and tight supplies.",
+        "boiler_strategy.core.standard.name": "Standard",
+        "boiler_strategy.core.standard.description": "A balanced mix of speed, supplies and risk.",
+        "boiler_strategy.core.fast.name": "Full Speed",
+        "boiler_strategy.core.fast.description": "Much faster, but burns coal and water and raises risk.",
         "port_template.core.iron_harbor.name": "Iron Harbor",
         "port_template.core.iron_harbor.description": "Industrial port with a shipyard and plenty of ore and plate.",
         "port_template.core.spice_port.name": "Spice Port",
@@ -4599,17 +4602,17 @@
         "contract.core.normal_passenger.description": "A few passengers on a short route.",
         "contract.core.normal_urgent.name": "Urgent Cargo",
         "contract.core.normal_urgent.description": "Tight deadline, attractive on-time bonus.",
-        "event.core.boiler_overheat.name": "Boiler Overheat",
-        "event.core.boiler_overheat.description": "The pressure gauge crosses the red line and the boiler shrieks.",
-        "event.core.boiler_overheat.water_cooling": "Use fresh water for emergency cooling",
-        "event.core.boiler_overheat.stop_repair": "Stop and repair",
-        "event.core.boiler_overheat.paid_repair": "Pay overtime for an emergency repair",
-        "event.core.boiler_overheat.force_continue": "Press on regardless",
-        "event.core.boiler_overheat.jettison_cargo": "Jettison some ordinary cargo",
-        "event.core.merchant_intel.name": "Merchant Encounter",
-        "event.core.merchant_intel.description": "A merchant ship offers freshly gathered market intelligence.",
-        "event.core.merchant_intel.buy_intel": "Pay 60 gold for the report",
-        "event.core.merchant_intel.decline": "Decline and sail on",
+        "voyage_event.core.boiler_overheat.name": "Boiler Overheat",
+        "voyage_event.core.boiler_overheat.description": "The pressure gauge crosses the red line and the boiler shrieks.",
+        "voyage_event.core.boiler_overheat.water_cooling": "Use fresh water for emergency cooling",
+        "voyage_event.core.boiler_overheat.stop_repair": "Stop and repair",
+        "voyage_event.core.boiler_overheat.paid_repair": "Pay overtime for an emergency repair",
+        "voyage_event.core.boiler_overheat.force_continue": "Press on regardless",
+        "voyage_event.core.boiler_overheat.jettison_cargo": "Jettison some ordinary cargo",
+        "voyage_event.core.merchant_intel.name": "Merchant Encounter",
+        "voyage_event.core.merchant_intel.description": "A merchant ship offers freshly gathered market intelligence.",
+        "voyage_event.core.merchant_intel.buy_intel": "Pay 60 gold for the report",
+        "voyage_event.core.merchant_intel.decline": "Decline and sail on",
         "notice.core.overheat.cooled": "Water floods the boiler and pressure falls back.",
         "notice.core.overheat.repaired": "The ship stops in calm water for repairs. The voyage is delayed.",
         "notice.core.overheat.paid": "The crew works overtime and the boiler stabilises.",
@@ -6342,10 +6345,10 @@
         }
       },
       {
-        "id": "core:role/engineer_basic",
-        "content_type": "roles",
-        "file": "content/roles.json",
-        "name_key": "role.core.engineer_basic.name",
+        "id": "core:crew_role/engineer_basic",
+        "content_type": "crew_roles",
+        "file": "content/crew_roles.json",
+        "name_key": "crew_role.core.engineer_basic.name",
         "name_zh": "工程师",
         "name_en": "Engineer",
         "tags": [
@@ -6353,9 +6356,9 @@
           "role.crew"
         ],
         "definition": {
-          "id": "core:role/engineer_basic",
-          "name_key": "role.core.engineer_basic.name",
-          "description_key": "role.core.engineer_basic.description",
+          "id": "core:crew_role/engineer_basic",
+          "name_key": "crew_role.core.engineer_basic.name",
+          "description_key": "crew_role.core.engineer_basic.description",
           "tags": [
             "role.engineer",
             "role.crew"
@@ -6386,10 +6389,10 @@
         }
       },
       {
-        "id": "core:role/navigator_basic",
-        "content_type": "roles",
-        "file": "content/roles.json",
-        "name_key": "role.core.navigator_basic.name",
+        "id": "core:crew_role/navigator_basic",
+        "content_type": "crew_roles",
+        "file": "content/crew_roles.json",
+        "name_key": "crew_role.core.navigator_basic.name",
         "name_zh": "领航员",
         "name_en": "Navigator",
         "tags": [
@@ -6397,9 +6400,9 @@
           "role.crew"
         ],
         "definition": {
-          "id": "core:role/navigator_basic",
-          "name_key": "role.core.navigator_basic.name",
-          "description_key": "role.core.navigator_basic.description",
+          "id": "core:crew_role/navigator_basic",
+          "name_key": "crew_role.core.navigator_basic.name",
+          "description_key": "crew_role.core.navigator_basic.description",
           "tags": [
             "role.navigator",
             "role.crew"
@@ -6425,10 +6428,10 @@
         }
       },
       {
-        "id": "core:strategy/economic",
-        "content_type": "strategies",
-        "file": "content/strategies.json",
-        "name_key": "strategy.core.economic.name",
+        "id": "core:boiler_strategy/economic",
+        "content_type": "boiler_strategies",
+        "file": "content/boiler_strategies.json",
+        "name_key": "boiler_strategy.core.economic.name",
         "name_zh": "经济",
         "name_en": "Economic",
         "tags": [
@@ -6436,9 +6439,9 @@
           "strategy.slow"
         ],
         "definition": {
-          "id": "core:strategy/economic",
-          "name_key": "strategy.core.economic.name",
-          "description_key": "strategy.core.economic.description",
+          "id": "core:boiler_strategy/economic",
+          "name_key": "boiler_strategy.core.economic.name",
+          "description_key": "boiler_strategy.core.economic.description",
           "tags": [
             "strategy.economy",
             "strategy.slow"
@@ -6453,10 +6456,10 @@
         }
       },
       {
-        "id": "core:strategy/standard",
-        "content_type": "strategies",
-        "file": "content/strategies.json",
-        "name_key": "strategy.core.standard.name",
+        "id": "core:boiler_strategy/standard",
+        "content_type": "boiler_strategies",
+        "file": "content/boiler_strategies.json",
+        "name_key": "boiler_strategy.core.standard.name",
         "name_zh": "标准",
         "name_en": "Standard",
         "tags": [
@@ -6464,9 +6467,9 @@
           "strategy.balanced"
         ],
         "definition": {
-          "id": "core:strategy/standard",
-          "name_key": "strategy.core.standard.name",
-          "description_key": "strategy.core.standard.description",
+          "id": "core:boiler_strategy/standard",
+          "name_key": "boiler_strategy.core.standard.name",
+          "description_key": "boiler_strategy.core.standard.description",
           "tags": [
             "strategy.standard",
             "strategy.balanced"
@@ -6481,10 +6484,10 @@
         }
       },
       {
-        "id": "core:strategy/fast",
-        "content_type": "strategies",
-        "file": "content/strategies.json",
-        "name_key": "strategy.core.fast.name",
+        "id": "core:boiler_strategy/fast",
+        "content_type": "boiler_strategies",
+        "file": "content/boiler_strategies.json",
+        "name_key": "boiler_strategy.core.fast.name",
         "name_zh": "极速",
         "name_en": "Full Speed",
         "tags": [
@@ -6492,9 +6495,9 @@
           "strategy.risky"
         ],
         "definition": {
-          "id": "core:strategy/fast",
-          "name_key": "strategy.core.fast.name",
-          "description_key": "strategy.core.fast.description",
+          "id": "core:boiler_strategy/fast",
+          "name_key": "boiler_strategy.core.fast.name",
+          "description_key": "boiler_strategy.core.fast.description",
           "tags": [
             "strategy.fast",
             "strategy.risky"
@@ -7048,8 +7051,8 @@
             ],
             "navigation_module": "core:module/spyglass",
             "safety_module": "core:module/lifeboat",
-            "engineer": "core:role/engineer_basic",
-            "navigator": "core:role/navigator_basic",
+            "engineer": "core:crew_role/engineer_basic",
+            "navigator": "core:crew_role/navigator_basic",
             "coal": 26,
             "water": 18,
             "durability_ratio": 1
@@ -7085,7 +7088,7 @@
               "core:module/small_hold"
             ],
             "navigation_module": "core:module/spyglass",
-            "navigator": "core:role/navigator_basic",
+            "navigator": "core:crew_role/navigator_basic",
             "coal": 20,
             "water": 14,
             "durability_ratio": 0.9
@@ -7643,10 +7646,10 @@
         }
       },
       {
-        "id": "core:event/boiler_overheat",
-        "content_type": "events",
-        "file": "content/events.json",
-        "name_key": "event.core.boiler_overheat.name",
+        "id": "core:voyage_event/boiler_overheat",
+        "content_type": "voyage_events",
+        "file": "content/voyage_events.json",
+        "name_key": "voyage_event.core.boiler_overheat.name",
         "name_zh": "锅炉过热",
         "name_en": "Boiler Overheat",
         "tags": [
@@ -7654,9 +7657,9 @@
           "event.mechanical"
         ],
         "definition": {
-          "id": "core:event/boiler_overheat",
-          "name_key": "event.core.boiler_overheat.name",
-          "description_key": "event.core.boiler_overheat.description",
+          "id": "core:voyage_event/boiler_overheat",
+          "name_key": "voyage_event.core.boiler_overheat.name",
+          "description_key": "voyage_event.core.boiler_overheat.description",
           "tags": [
             "event.risk",
             "event.mechanical"
@@ -7670,7 +7673,7 @@
             "options": [
               {
                 "id": "water_cooling",
-                "name_key": "event.core.boiler_overheat.water_cooling",
+                "name_key": "voyage_event.core.boiler_overheat.water_cooling",
                 "weight": 1,
                 "effects": [
                   {
@@ -7694,7 +7697,7 @@
               },
               {
                 "id": "stop_repair",
-                "name_key": "event.core.boiler_overheat.stop_repair",
+                "name_key": "voyage_event.core.boiler_overheat.stop_repair",
                 "weight": 1,
                 "effects": [
                   {
@@ -7713,7 +7716,7 @@
               },
               {
                 "id": "paid_repair",
-                "name_key": "event.core.boiler_overheat.paid_repair",
+                "name_key": "voyage_event.core.boiler_overheat.paid_repair",
                 "weight": 1,
                 "condition": {
                   "op": "money_gte",
@@ -7740,7 +7743,7 @@
               },
               {
                 "id": "force_continue",
-                "name_key": "event.core.boiler_overheat.force_continue",
+                "name_key": "voyage_event.core.boiler_overheat.force_continue",
                 "weight": 1,
                 "effects": [
                   {
@@ -7764,7 +7767,7 @@
               },
               {
                 "id": "jettison_cargo",
-                "name_key": "event.core.boiler_overheat.jettison_cargo",
+                "name_key": "voyage_event.core.boiler_overheat.jettison_cargo",
                 "weight": 1,
                 "effects": [
                   {
@@ -7782,10 +7785,10 @@
         }
       },
       {
-        "id": "core:event/merchant_intel",
-        "content_type": "events",
-        "file": "content/events.json",
-        "name_key": "event.core.merchant_intel.name",
+        "id": "core:voyage_event/merchant_intel",
+        "content_type": "voyage_events",
+        "file": "content/voyage_events.json",
+        "name_key": "voyage_event.core.merchant_intel.name",
         "name_zh": "偶遇商船",
         "name_en": "Merchant Encounter",
         "tags": [
@@ -7793,9 +7796,9 @@
           "event.merchant"
         ],
         "definition": {
-          "id": "core:event/merchant_intel",
-          "name_key": "event.core.merchant_intel.name",
-          "description_key": "event.core.merchant_intel.description",
+          "id": "core:voyage_event/merchant_intel",
+          "name_key": "voyage_event.core.merchant_intel.name",
+          "description_key": "voyage_event.core.merchant_intel.description",
           "tags": [
             "event.opportunity",
             "event.merchant"
@@ -7809,7 +7812,7 @@
             "options": [
               {
                 "id": "buy_intel",
-                "name_key": "event.core.merchant_intel.buy_intel",
+                "name_key": "voyage_event.core.merchant_intel.buy_intel",
                 "weight": 1,
                 "condition": {
                   "op": "money_gte",
@@ -7831,7 +7834,7 @@
               },
               {
                 "id": "decline",
-                "name_key": "event.core.merchant_intel.decline",
+                "name_key": "voyage_event.core.merchant_intel.decline",
                 "weight": 1,
                 "effects": [
                   {
@@ -9497,7 +9500,7 @@
               "open_sea"
             ],
             "unlock_ids": [
-              "core:role/navigator_basic"
+              "core:crew_role/navigator_basic"
             ]
           }
         }
@@ -9604,7 +9607,7 @@
               "industrial"
             ],
             "unlock_ids": [
-              "core:strategy/economic"
+              "core:boiler_strategy/economic"
             ]
           }
         }

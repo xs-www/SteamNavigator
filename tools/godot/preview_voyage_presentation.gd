@@ -21,7 +21,7 @@ extends SceneTree
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const WINDOW := Vector2i(1440, 900)
 const STEADY_BUILD := "core:starting_scenario/steady"
-const STANDARD_STRATEGY := "core:strategy/standard"
+const STANDARD_STRATEGY := "core:boiler_strategy/standard"
 const SETTLE_SECONDS := 0.8
 const CYCLE_GAP_SECONDS := 2.2
 const CYCLE_TIMEOUT_SECONDS := 45.0

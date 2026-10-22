@@ -1,6 +1,0 @@
-{
-  "role.example_mixed_roles_items.navigator_veteran.name": "老练领航员",
-  "role.example_mixed_roles_items.navigator_veteran.description": "Content Schema 1.0 岗位，与 2.0 items 共存在同一个混合版本模组里。",
-  "item.example_mixed_roles_items.sealed_tea.name": "密封茶叶",
-  "item.example_mixed_roles_items.sealed_tea.description": "Content Schema 2.0 商品：混合版本示例中的贸易货物。"
-}

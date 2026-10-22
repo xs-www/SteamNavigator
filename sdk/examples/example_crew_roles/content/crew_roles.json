@@ -1,0 +1,38 @@
+{
+  "schema_version": "2.0",
+  "content_type": "crew_roles",
+  "definitions": [
+    {
+      "id": "example_crew_roles:crew_role/senior_engineer",
+      "name_key": "crew_role.example_crew_roles.senior_engineer.name",
+      "description_key": "crew_role.example_crew_roles.senior_engineer.description",
+      "tags": [
+        "role.engineer",
+        "role.crew"
+      ],
+      "enabled": true,
+      "data": {
+        "kind": "engineer",
+        "wage_per_voyage": 55,
+        "hire_cost": 160,
+        "modifiers": [
+          {
+            "stat": "risk",
+            "op": "add",
+            "value": -0.02
+          },
+          {
+            "stat": "repair_cost",
+            "op": "mul",
+            "value": 0.8
+          },
+          {
+            "stat": "damage",
+            "op": "mul",
+            "value": 0.92
+          }
+        ]
+      }
+    }
+  ]
+}

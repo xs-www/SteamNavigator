@@ -1,16 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://steam-navigator.local/schema/event-1.json",
-  "title": "Steam Navigator voyage event content file",
+  "$id": "https://steam-navigator.local/schema/voyage-event-2.json",
+  "title": "Steam Navigator voyage event content file (Content Schema 2.0)",
+  "description": "Voyage events that fire during travel (C4): trigger, category, weight, optional condition and player options with effects. Successor of the 1.0 `events` content type; the data block is unchanged, the type, id segment and default file are renamed to voyage_events / core:voyage_event/* / content/voyage_events.json.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
   "properties": {
     "schema_version": {
-      "enum": ["1.0"]
+      "const": "2.0"
     },
     "content_type": {
-      "const": "events"
+      "const": "voyage_events"
     },
     "definitions": {
       "type": "array",
@@ -24,7 +25,7 @@
             "type": "object",
             "properties": {
               "data": {
-                "$ref": "#/$defs/event_data"
+                "$ref": "#/$defs/voyage_event_data"
               }
             }
           }
@@ -63,7 +64,7 @@
         }
       }
     },
-    "event_data": {
+    "voyage_event_data": {
       "type": "object",
       "additionalProperties": false,
       "required": ["trigger", "category", "options"],

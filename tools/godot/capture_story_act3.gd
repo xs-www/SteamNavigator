@@ -103,7 +103,7 @@ func _run() -> void:
 	context.commands.execute(&"supply.buy_water", {"amount": 10})
 	var explore_started := context.commands.execute(&"explore.start", {
 		"clue_id": String(second_clue.get("id", "")),
-		"strategy_id": "core:strategy/standard",
+		"strategy_id": "core:boiler_strategy/standard",
 	})
 	if not bool(explore_started.get("ok", false)):
 		_fail("explore.start failed: %s" % str(explore_started))

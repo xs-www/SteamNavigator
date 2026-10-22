@@ -99,14 +99,20 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 26, `expected 7 top-level + 19 v2 schemas, got ${keys.length}`);
+    assert.equal(keys.length, 26, `expected 4 top-level + 22 v2 schemas, got ${keys.length}`);
     assert.equal(files.length, 26, `expected 26 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
-    assert.ok(globalThis.SN_SCHEMAS['role.schema.json'], 'remaining 1.0 runtime schemas stay embedded');
+    assert.ok(globalThis.SN_SCHEMAS['contract.schema.json'], 'the remaining 1.0 runtime schema stays embedded');
     assert.equal(globalThis.SN_SCHEMAS['good.schema.json'], undefined, 'the dead 1.0 goods schema was removed (C2)');
     assert.equal(globalThis.SN_SCHEMAS['map_profile.schema.json'], undefined, 'the retired 1.0 map_profile schema was removed (C4)');
     assert.equal(globalThis.SN_SCHEMAS['port_archetype.schema.json'], undefined, 'the 1.0 port_archetype schema was removed (C4)');
     assert.equal(globalThis.SN_SCHEMAS['starting_build.schema.json'], undefined, 'the 1.0 starting_build schema was removed (C4)');
+    assert.equal(globalThis.SN_SCHEMAS['event.schema.json'], undefined, 'the 1.0 event schema was removed (C4-C)');
+    assert.equal(globalThis.SN_SCHEMAS['role.schema.json'], undefined, 'the 1.0 role schema was removed (C4-C)');
+    assert.equal(globalThis.SN_SCHEMAS['strategy.schema.json'], undefined, 'the 1.0 strategy schema was removed (C4-C)');
+    assert.ok(globalThis.SN_SCHEMAS['v2/voyage_event.schema.json'], 'v2/voyage_event is the C4-C event schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/crew_role.schema.json'], 'v2/crew_role is the C4-C crew role schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/boiler_strategy.schema.json'], 'v2/boiler_strategy is the C4-C boiler strategy schema');
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/port_template.schema.json'], 'v2/port_template is the C4 port template schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/starting_scenario.schema.json'], 'v2/starting_scenario is the C4 starting scenario schema');
@@ -298,7 +304,7 @@ function warningsOf(result) {
       assert.ok(html.length > 400, `${info.key} form too small`);
       assert.ok(html.includes('data-field='), `${info.key} form has no inputs`);
       assert.ok(!html.includes('undefined'), `${info.key} form contains undefined`);
-      if (info.key === 'events') {
+      if (info.key === 'voyage_events') {
         assert.ok(html.includes('option-card'), 'event options use the option editor');
         assert.ok(html.includes('effect-row'), 'event effects use the effect editor');
         assert.ok(html.includes('condition-empty'), 'event conditions use the condition editor');
@@ -307,7 +313,7 @@ function warningsOf(result) {
       if (info.key === 'modules') {
         assert.ok(html.includes('item-card slim'), 'module materials use the material editor');
       }
-      if (info.key === 'roles') {
+      if (info.key === 'crew_roles') {
         assert.ok(html.includes('dl-stats'), 'role modifiers use the stat editor');
       }
       if (info.key === 'hulls') {
@@ -343,9 +349,9 @@ function warningsOf(result) {
       assert.equal(Validate.schemaVersionFor(info.key), '2.0', `${info.key} version by key`);
       assert.equal(Validate.schemaVersionFor({ content_type: info.key }), '2.0', `${info.key} version by file`);
     }
-    // 1.0 types keep their version without regression (roles is still 1.0).
-    assert.equal(Validate.schemaVersionFor('roles'), '1.0');
-    assert.equal(Validate.schemaVersionFor({ content_type: 'roles', schema_version: '1.0' }), '1.0');
+    // 1.0 types keep their version without regression (contracts is the last 1.0 definition type).
+    assert.equal(Validate.schemaVersionFor('contracts'), '1.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '1.0' }), '1.0');
     assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to 1.0');
   });
 
@@ -354,7 +360,7 @@ function warningsOf(result) {
     const promoted = new Set([
       'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
       'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules', 'items', 'quests',
-      'port_templates', 'starting_scenarios',
+      'port_templates', 'starting_scenarios', 'voyage_events', 'crew_roles', 'boiler_strategies',
     ]);
     for (const info of Types.TYPES) {
       const expected = promoted.has(info.key) ? '2.0' : '1.0';
@@ -364,7 +370,7 @@ function warningsOf(result) {
       assert.equal(Validate.schemaVersionFor({ content_type: info.key }), expected, `${info.key} version by file`);
     }
     // An explicit file version still wins so a wrong version is reported by validation.
-    assert.equal(Validate.schemaVersionFor({ content_type: 'roles', schema_version: '2.0' }), '2.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '2.0' }), '2.0');
     assert.equal(Catalog.schemaVersionFor('patches'), '1.0', 'patches are a runtime type at 1.0');
   });
 
@@ -392,7 +398,7 @@ function warningsOf(result) {
     assert.deepEqual(Store.draftContentFiles(project), unsupported);
 
     // A 1.0 runtime type whose file declares 2.0 (imported or malformed) cannot load either.
-    const versionMismatch = { path: 'content/roles_2.json', content_type: 'roles', schema_version: '2.0', definitions: [] };
+    const versionMismatch = { path: 'content/contracts_2.json', content_type: 'contracts', schema_version: '2.0', definitions: [] };
     project.contentFiles.push(versionMismatch);
     assert.equal(Store.runtimeSupportsFile(versionMismatch), false);
     assert.ok(Store.unsupportedContentFiles(project).includes(versionMismatch));
@@ -405,9 +411,9 @@ function warningsOf(result) {
 
     // Plain 1.0 runtime content stays supported/exportable.
     const legacy = freshProject();
-    Store.addDefinition(legacy, 'roles', {});
+    Store.addDefinition(legacy, 'contracts', {});
     assert.equal(Store.hasDraftContent(legacy), false, 'runtime 1.0 content stays exportable');
-    assert.equal(Store.runtimeSupportsFile(legacy.contentFiles.find((file) => file.content_type === 'roles')), true);
+    assert.equal(Store.runtimeSupportsFile(legacy.contentFiles.find((file) => file.content_type === 'contracts')), true);
   });
 
   await test('every draft type validates with zero errors using catalog defaults', () => {
@@ -777,15 +783,15 @@ function warningsOf(result) {
     );
     itemsFile.schema_version = '2.0';
 
-    // The remaining 1.0 types (roles) keep 1.0.
-    const rolesFile = Store.addDefinition(project, 'roles', {}).file;
-    rolesFile.schema_version = '2.0';
+    // The remaining 1.0 type (contracts) keeps 1.0.
+    const contractsFile = Store.addDefinition(project, 'contracts', {}).file;
+    contractsFile.schema_version = '2.0';
     result = Validate.validateProject(project);
     assert.ok(
       errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
       'a 1.0 type declaring 2.0 must report schema_version_mismatch'
     );
-    rolesFile.schema_version = '1.0';
+    contractsFile.schema_version = '1.0';
 
     draftFile.schema_version = '3.0';
     result = Validate.validateProject(project);
@@ -1079,6 +1085,92 @@ function warningsOf(result) {
     }
   });
 
+  await test('C4-C promotes voyage events, crew roles and boiler strategies to 2.0', () => {
+    const coreRoot = path.resolve(__dirname, '..', '..', 'dev_mods', 'core');
+    const typeKeys = Types.TYPES.map((info) => info.key);
+    for (const retired of ['events', 'roles', 'strategies']) {
+      assert.ok(!typeKeys.includes(retired), `${retired} must not be a runtime type after C4-C`);
+      assert.equal(
+        fs.existsSync(path.join(coreRoot, 'content', `${retired}.json`)),
+        false,
+        `${retired}.json must be deleted from core`
+      );
+      assert.ok(!Catalog.DEFAULTS[retired], `${retired} must not keep editor defaults`);
+    }
+    // contracts is the only remaining 1.0 definition type (+ the patch type).
+    const legacyDefinitions = Types.TYPES
+      .filter((info) => info.key !== 'patches' && info.schemaVersion === '1.0')
+      .map((info) => info.key);
+    assert.deepEqual(legacyDefinitions, ['contracts'], 'contracts stays the only 1.0 definition type');
+
+    const fixtures = [
+      ['voyage_events', 'v2/voyage_event.schema.json', 'core:voyage_event/', 'voyage_event.core.', 2],
+      ['crew_roles', 'v2/crew_role.schema.json', 'core:crew_role/', 'crew_role.core.', 2],
+      ['boiler_strategies', 'v2/boiler_strategy.schema.json', 'core:boiler_strategy/', 'boiler_strategy.core.', 3],
+    ];
+    for (const [contentType, schemaPath, idPrefix, keyPrefix, count] of fixtures) {
+      const payload = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', `${contentType}.json`), 'utf8'));
+      assert.equal(payload.schema_version, '2.0');
+      assert.equal(payload.content_type, contentType);
+      assert.equal(payload.definitions.length, count);
+      for (const definition of payload.definitions) {
+        assert.ok(definition.id.startsWith(idPrefix), `${definition.id} uses the new id segment`);
+        assert.ok(definition.name_key.startsWith(keyPrefix), `${definition.name_key} uses the new key prefix`);
+      }
+      assert.deepEqual(
+        Validate.validateSchema(payload, globalThis.SN_SCHEMAS[schemaPath], schemaPath),
+        [],
+        `core ${contentType}.json satisfies ${schemaPath}`
+      );
+    }
+
+    // Old tags are preserved: they drive runtime fallbacks and completeness checks.
+    const strategies = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'boiler_strategies.json'), 'utf8'));
+    const strategyTags = new Set(strategies.definitions.flatMap((definition) => definition.tags || []));
+    for (const tag of ['strategy.economy', 'strategy.standard', 'strategy.fast']) {
+      assert.ok(strategyTags.has(tag), `boiler strategies keep the '${tag}' tag`);
+    }
+    const roles = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'crew_roles.json'), 'utf8'));
+    const roleTags = new Set(roles.definitions.flatMap((definition) => definition.tags || []));
+    for (const tag of ['role.engineer', 'role.navigator']) {
+      assert.ok(roleTags.has(tag), `crew roles keep the '${tag}' tag`);
+    }
+
+    // Cross references move to the new ids.
+    const scenarios = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'starting_scenarios.json'), 'utf8'));
+    for (const definition of scenarios.definitions) {
+      for (const slot of ['engineer', 'navigator']) {
+        const value = definition.data[slot];
+        if (value !== undefined) assert.match(value, /^core:crew_role\//, `${slot} points at crew_roles`);
+      }
+    }
+    const discoveries = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'discoveries.json'), 'utf8'));
+    const unlocks = discoveries.definitions.flatMap((definition) => (definition.data || {}).unlock_ids || []);
+    assert.ok(!unlocks.some((id) => id.startsWith('core:role/') || id.startsWith('core:strategy/')));
+    assert.ok(unlocks.some((id) => id.startsWith('core:crew_role/')), 'discoveries unlock crew roles');
+    assert.ok(unlocks.some((id) => id.startsWith('core:boiler_strategy/')), 'discoveries unlock boiler strategies');
+
+    // No core content or localization file may still point at the retired types.
+    const forbidden = ['core:event/', 'core:role/', 'core:strategy/'];
+    for (const entry of fs.readdirSync(path.join(coreRoot, 'content'))) {
+      if (!entry.endsWith('.json')) continue;
+      const text = fs.readFileSync(path.join(coreRoot, 'content', entry), 'utf8');
+      for (const needle of forbidden) {
+        assert.ok(!text.includes(needle), `${entry} must not reference ${needle}`);
+      }
+    }
+    for (const locale of ['zh_CN', 'en']) {
+      const entries = JSON.parse(fs.readFileSync(path.join(coreRoot, 'localization', `${locale}.json`), 'utf8'));
+      for (const key of Object.keys(entries)) {
+        assert.ok(!key.startsWith('event.core.') && !key.startsWith('role.core.') && !key.startsWith('strategy.core.'),
+          `${locale} must not keep the retired key ${key}`);
+      }
+      assert.ok(entries['voyage_event.core.boiler_overheat.name'], `${locale} has the new voyage event key`);
+      assert.ok(entries['crew_role.core.engineer_basic.name'], `${locale} has the new crew role key`);
+      assert.ok(entries['boiler_strategy.core.standard.name'], `${locale} has the new boiler strategy key`);
+    }
+  });
+
   await test('entity localization rename commits once and removes old keys', () => {
     const project = freshProject();
     const definition = project.contentFiles[0].definitions[0];
@@ -1098,13 +1190,13 @@ function warningsOf(result) {
     assert.equal(zh.entries[`${oldBase}.name`], undefined);
     assert.equal(en.entries[`${oldBase}.description`], undefined);
 
-    const event = Store.addDefinition(project, 'events', { localId: 'fog' });
-    const oldOptionKey = event.definition.data.options[0].name_key;
-    event.definition.id = 'test_mod:event/thick_fog';
-    Store.commitDefinitionLocalization(project, event.definition, 'events', 'event.test_mod.fog', 'event.test_mod.thick_fog', {});
-    assert.equal(event.definition.data.options[0].name_key, oldOptionKey.replace('event.test_mod.fog', 'event.test_mod.thick_fog'));
+    const voyageEvent = Store.addDefinition(project, 'voyage_events', { localId: 'fog' });
+    const oldOptionKey = voyageEvent.definition.data.options[0].name_key;
+    voyageEvent.definition.id = 'test_mod:voyage_event/thick_fog';
+    Store.commitDefinitionLocalization(project, voyageEvent.definition, 'voyage_events', 'voyage_event.test_mod.fog', 'voyage_event.test_mod.thick_fog', {});
+    assert.equal(voyageEvent.definition.data.options[0].name_key, oldOptionKey.replace('voyage_event.test_mod.fog', 'voyage_event.test_mod.thick_fog'));
     assert.equal(zh.entries[oldOptionKey], undefined);
-    assert.ok(zh.entries[event.definition.data.options[0].name_key]);
+    assert.ok(zh.entries[voyageEvent.definition.data.options[0].name_key]);
   });
 
   await test('entity texture and GLB model references validate against assets', () => {
@@ -1268,9 +1360,9 @@ function warningsOf(result) {
     assert.equal(new TextDecoder().decode(back[0].data), raw);
   });
 
-  await test('default event definitions get readable option names', () => {
+  await test('default voyage event definitions get readable option names', () => {
     const project = freshProject();
-    const added = Store.addDefinition(project, 'events', {});
+    const added = Store.addDefinition(project, 'voyage_events', {});
     const keys = Store.collectDefinitionKeys(added.definition);
     const zh = Store.getLoc(project, 'zh_CN');
     const en = Store.getLoc(project, 'en');
@@ -1278,8 +1370,8 @@ function warningsOf(result) {
       assert.ok(zh.entries[key], `missing zh translation ${key}`);
       assert.ok(en.entries[key], `missing en translation ${key}`);
     }
-    assert.ok(keys.has('event.test_mod.new_item.endure'));
-    assert.equal(zh.entries['event.test_mod.new_item.endure'], '硬撑过去');
+    assert.ok(keys.has('voyage_event.test_mod.new_item.endure'));
+    assert.equal(zh.entries['voyage_event.test_mod.new_item.endure'], '硬撑过去');
   });
 
   await test('export/import round-trip preserves manifest, content, locales and assets', async () => {
@@ -1364,7 +1456,7 @@ function warningsOf(result) {
 
   await test('condition group rendering is recursive', () => {
     const project = freshProject();
-    const added = Store.addDefinition(project, 'events', {});
+    const added = Store.addDefinition(project, 'voyage_events', {});
     added.definition.data.options[0].condition = {
       all: [
         { op: 'money_gte', value: 10 },
@@ -1373,7 +1465,7 @@ function warningsOf(result) {
       ],
     };
     const html = UI.renderDefinitionForm({
-      project, typeKey: 'events', definition: added.definition, file: added.file, index: added.index, schemaFile: 'event.schema.json',
+      project, typeKey: 'voyage_events', definition: added.definition, file: added.file, index: added.index, schemaFile: 'v2/voyage_event.schema.json',
     });
     assert.ok(html.includes('全部满足 (all)'));
     assert.ok(html.includes('任一满足 (any)'));
@@ -1395,14 +1487,14 @@ function warningsOf(result) {
 
   await test('field delete helpers handle array conditions', () => {
     const project = freshProject();
-    const added = Store.addDefinition(project, 'events', {});
+    const added = Store.addDefinition(project, 'voyage_events', {});
     const definition = added.definition;
     assert.equal(definition.data.options.length, 2);
     definition.data.options[0].condition = { all: [{ op: 'money_gte', value: 10 }, { op: 'has_module', id: 'core:boiler/small_efficient' }] };
     const result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
     const html = UI.renderDefinitionForm({
-      project, typeKey: 'events', definition, file: added.file, index: added.index, schemaFile: 'event.schema.json',
+      project, typeKey: 'voyage_events', definition, file: added.file, index: added.index, schemaFile: 'v2/voyage_event.schema.json',
     });
     assert.ok(html.includes('condition-box'));
     assert.ok(html.includes('全部满足'));

@@ -215,7 +215,7 @@
       return;
     }
     if (key === 'event') {
-      addDefinition(project, 'events', {
+      addDefinition(project, 'voyage_events', {
         localId: 'drifting_wreck',
         nameZh: '风暴后的漂流物',
         nameEn: 'Wreck After the Storm',

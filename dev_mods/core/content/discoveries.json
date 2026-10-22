@@ -63,7 +63,7 @@
         "repeatable": false,
         "source_site_kinds": ["ruin", "landmark"],
         "region_kinds": ["archipelago", "open_sea"],
-        "unlock_ids": ["core:role/navigator_basic"]
+        "unlock_ids": ["core:crew_role/navigator_basic"]
       }
     },
     {
@@ -110,7 +110,7 @@
         "repeatable": true,
         "source_site_kinds": ["encounter"],
         "region_kinds": ["coastal", "industrial"],
-        "unlock_ids": ["core:strategy/economic"]
+        "unlock_ids": ["core:boiler_strategy/economic"]
       }
     }
   ]

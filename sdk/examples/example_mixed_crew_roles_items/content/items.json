@@ -3,9 +3,9 @@
   "content_type": "items",
   "definitions": [
     {
-      "id": "example_mixed_roles_items:item/sealed_tea",
-      "name_key": "item.example_mixed_roles_items.sealed_tea.name",
-      "description_key": "item.example_mixed_roles_items.sealed_tea.description",
+      "id": "example_mixed_crew_roles_items:item/sealed_tea",
+      "name_key": "item.example_mixed_crew_roles_items.sealed_tea.name",
+      "description_key": "item.example_mixed_crew_roles_items.sealed_tea.description",
       "tags": ["good.trade", "good.consumer"],
       "enabled": true,
       "data": {

@@ -470,126 +470,6 @@
         }
       }
     },
-    "event.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/event-1.json",
-      "title": "Steam Navigator voyage event content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "events"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "common.schema.json#/$defs/definition"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "$ref": "#/$defs/event_data"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "$defs": {
-        "option_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "name_key",
-            "effects"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "pattern": "^[a-z][a-z0-9_]*$"
-            },
-            "name_key": {
-              "type": "string",
-              "minLength": 1
-            },
-            "weight": {
-              "type": "number",
-              "minimum": 0
-            },
-            "condition": {
-              "$ref": "common.schema.json#/$defs/condition_node"
-            },
-            "effects": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 16,
-              "items": {
-                "$ref": "common.schema.json#/$defs/effect"
-              }
-            }
-          }
-        },
-        "event_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "trigger",
-            "category",
-            "options"
-          ],
-          "properties": {
-            "trigger": {
-              "enum": [
-                "voyage_risk",
-                "voyage_opportunity"
-              ]
-            },
-            "category": {
-              "enum": [
-                "mechanical",
-                "merchant"
-              ]
-            },
-            "weight": {
-              "type": "number",
-              "minimum": 0,
-              "exclusiveMinimum": 0
-            },
-            "base_delay_hours": {
-              "type": "number",
-              "minimum": 0
-            },
-            "condition": {
-              "$ref": "common.schema.json#/$defs/condition_node"
-            },
-            "options": {
-              "type": "array",
-              "minItems": 2,
-              "maxItems": 8,
-              "items": {
-                "$ref": "#/$defs/option_data"
-              }
-            }
-          }
-        }
-      }
-    },
     "manifest.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/mod-manifest-1.json",
@@ -817,10 +697,11 @@
         }
       }
     },
-    "role.schema.json": {
+    "v2/boiler_strategy.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/role-1.json",
-      "title": "Steam Navigator crew role content file",
+      "$id": "https://steam-navigator.local/schema/boiler-strategy-2.json",
+      "title": "Steam Navigator boiler strategy content file (Content Schema 2.0)",
+      "description": "Boiler propulsion strategy definitions (C4): speed / coal / water multipliers and risk adjustment. Successor of the 1.0 `strategies` content type; the data block is unchanged, the type, id segment and default file are renamed to boiler_strategies / core:boiler_strategy/* / content/boiler_strategies.json.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -830,12 +711,10 @@
       ],
       "properties": {
         "schema_version": {
-          "enum": [
-            "1.0"
-          ]
+          "const": "2.0"
         },
         "content_type": {
-          "const": "roles"
+          "const": "boiler_strategies"
         },
         "definitions": {
           "type": "array",
@@ -849,7 +728,7 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "$ref": "#/$defs/role_data"
+                    "$ref": "#/$defs/boiler_strategy_data"
                   }
                 }
               }
@@ -858,80 +737,7 @@
         }
       },
       "$defs": {
-        "role_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "wage_per_voyage"
-          ],
-          "properties": {
-            "kind": {
-              "enum": [
-                "engineer",
-                "navigator"
-              ]
-            },
-            "wage_per_voyage": {
-              "type": "number",
-              "minimum": 0
-            },
-            "hire_cost": {
-              "type": "number",
-              "minimum": 0
-            },
-            "modifiers": {
-              "type": "array",
-              "items": {
-                "$ref": "common.schema.json#/$defs/modifier"
-              }
-            }
-          }
-        }
-      }
-    },
-    "strategy.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/strategy-1.json",
-      "title": "Steam Navigator boiler strategy content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "strategies"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "common.schema.json#/$defs/definition"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "$ref": "#/$defs/strategy_data"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "$defs": {
-        "strategy_data": {
+        "boiler_strategy_data": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -1277,6 +1083,220 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
+          }
+        },
+        "modifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "stat",
+            "op",
+            "value"
+          ],
+          "properties": {
+            "stat": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "op": {
+              "enum": [
+                "add",
+                "mul",
+                "set"
+              ]
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        "condition_node": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "all": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/condition_node"
+              }
+            },
+            "any": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/condition_node"
+              }
+            },
+            "not": {
+              "$ref": "#/$defs/condition_node"
+            },
+            "op": {
+              "enum": [
+                "money_gte",
+                "reputation_gte",
+                "debt_lte",
+                "at_port",
+                "port_has_tag",
+                "has_item",
+                "has_module",
+                "has_module_tag",
+                "has_role",
+                "contract_completed",
+                "port_discovered",
+                "ship_tier_gte",
+                "durability_gte"
+              ]
+            },
+            "value": {},
+            "tag": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "item_id": {
+              "type": "string"
+            },
+            "port_id": {
+              "type": "string"
+            },
+            "role_kind": {
+              "type": "string"
+            }
+          }
+        },
+        "effect": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "op"
+          ],
+          "properties": {
+            "op": {
+              "enum": [
+                "add_money",
+                "remove_money",
+                "add_reputation",
+                "remove_reputation",
+                "add_item",
+                "remove_item",
+                "add_coal",
+                "remove_coal",
+                "add_water",
+                "remove_water",
+                "damage_ship",
+                "repair_ship",
+                "damage_module",
+                "add_delay_hours",
+                "damage_cargo",
+                "injure_passenger",
+                "unlock_definition",
+                "complete_contract",
+                "fail_voyage",
+                "reveal_port_facilities",
+                "update_intelligence",
+                "emit_notice"
+              ]
+            },
+            "amount": {
+              "type": "number"
+            },
+            "id": {
+              "type": "string"
+            },
+            "item_id": {
+              "type": "string"
+            },
+            "contract_id": {
+              "type": "string"
+            },
+            "port_id": {
+              "type": "string"
+            },
+            "text_key": {
+              "type": "string"
+            },
+            "slot": {
+              "type": "string",
+              "pattern": "^(boiler|navigation|safety|cabin|cargo)$"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "v2/crew_role.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/crew-role-2.json",
+      "title": "Steam Navigator crew role content file (Content Schema 2.0)",
+      "description": "Crew role definitions (C4): kind, per-voyage wage, hire cost and stat modifiers. Successor of the 1.0 `roles` content type; the data block is unchanged, the type, id segment and default file are renamed to crew_roles / core:crew_role/* / content/crew_roles.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "crew_roles"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/crew_role_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "crew_role_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "wage_per_voyage"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "engineer",
+                "navigator"
+              ]
+            },
+            "wage_per_voyage": {
+              "type": "number",
+              "minimum": 0
+            },
+            "hire_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "modifiers": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/modifier"
+              }
+            }
           }
         }
       }
@@ -4195,6 +4215,125 @@
             },
             "fail": {
               "$ref": "#/$defs/level_fail"
+            }
+          }
+        }
+      }
+    },
+    "v2/voyage_event.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/voyage-event-2.json",
+      "title": "Steam Navigator voyage event content file (Content Schema 2.0)",
+      "description": "Voyage events that fire during travel (C4): trigger, category, weight, optional condition and player options with effects. Successor of the 1.0 `events` content type; the data block is unchanged, the type, id segment and default file are renamed to voyage_events / core:voyage_event/* / content/voyage_events.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "voyage_events"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/voyage_event_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "option_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name_key",
+            "effects"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "name_key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "weight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "condition": {
+              "$ref": "common.schema.json#/$defs/condition_node"
+            },
+            "effects": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "$ref": "common.schema.json#/$defs/effect"
+              }
+            }
+          }
+        },
+        "voyage_event_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "trigger",
+            "category",
+            "options"
+          ],
+          "properties": {
+            "trigger": {
+              "enum": [
+                "voyage_risk",
+                "voyage_opportunity"
+              ]
+            },
+            "category": {
+              "enum": [
+                "mechanical",
+                "merchant"
+              ]
+            },
+            "weight": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMinimum": 0
+            },
+            "base_delay_hours": {
+              "type": "number",
+              "minimum": 0
+            },
+            "condition": {
+              "$ref": "common.schema.json#/$defs/condition_node"
+            },
+            "options": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/option_data"
+              }
             }
           }
         }

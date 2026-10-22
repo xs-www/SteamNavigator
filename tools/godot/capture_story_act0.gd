@@ -15,7 +15,7 @@ extends SceneTree
 ## - 全程用真实 Shell / 真实命令推进（`story.advance`、`supply.buy_*`、海图开关、
 ##   出航确认模型），不伪造渲染数据。
 ## - 硬性断言：补给页确实被限购（煤舱不变）、目标阶段为 supply_hold / depart_brief、
-##   出航确认策略为 `core:strategy/fast`；失败返回非零退出码。
+##   出航确认策略为 `core:boiler_strategy/fast`；失败返回非零退出码。
 ## - 强制 zh_CN、窗口 1440×900、`_settings_applied = true`，避免设置异步覆盖。
 ## @end-static-doc
 
@@ -126,7 +126,7 @@ func _run() -> void:
 	shell._active_screen = "sea_chart"
 	shell._refresh()
 	shell._on_chart_departure_requested("voyage", destination)
-	if String(shell._chart_departure.get("strategy_id", "")) != "core:strategy/fast":
+	if String(shell._chart_departure.get("strategy_id", "")) != "core:boiler_strategy/fast":
 		_fail("departure dialog did not default to Fast: %s" % str(shell._chart_departure))
 		_finish()
 		return

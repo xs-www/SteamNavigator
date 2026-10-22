@@ -1,0 +1,54 @@
+{
+  "schema_version": "2.0",
+  "content_type": "boiler_strategies",
+  "definitions": [
+    {
+      "id": "core:boiler_strategy/economic",
+      "name_key": "boiler_strategy.core.economic.name",
+      "description_key": "boiler_strategy.core.economic.description",
+      "tags": [
+        "strategy.economy",
+        "strategy.slow"
+      ],
+      "enabled": true,
+      "data": {
+        "speed_mul": 0.8,
+        "coal_mul": 0.68,
+        "water_mul": 0.78,
+        "risk_add": -0.01
+      }
+    },
+    {
+      "id": "core:boiler_strategy/standard",
+      "name_key": "boiler_strategy.core.standard.name",
+      "description_key": "boiler_strategy.core.standard.description",
+      "tags": [
+        "strategy.standard",
+        "strategy.balanced"
+      ],
+      "enabled": true,
+      "data": {
+        "speed_mul": 1,
+        "coal_mul": 1,
+        "water_mul": 1,
+        "risk_add": 0
+      }
+    },
+    {
+      "id": "core:boiler_strategy/fast",
+      "name_key": "boiler_strategy.core.fast.name",
+      "description_key": "boiler_strategy.core.fast.description",
+      "tags": [
+        "strategy.fast",
+        "strategy.risky"
+      ],
+      "enabled": true,
+      "data": {
+        "speed_mul": 1.28,
+        "coal_mul": 1.8,
+        "water_mul": 1.6,
+        "risk_add": 0.06
+      }
+    }
+  ]
+}

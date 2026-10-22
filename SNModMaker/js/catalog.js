@@ -355,7 +355,7 @@
     'items.tier': '材料等级',
     'items.category': '物品分类',
     'contracts.sequence': '主线序号',
-    'events.weight': '出现权重',
+    'voyage_events.weight': '出现权重',
     'port_templates.size': '港口规模',
     'starting_scenarios.money': '初始金钱',
     'starting_scenarios.reputation': '初始声望',
@@ -644,13 +644,13 @@
       if (category === 'crew') return { ...base, weight: 5, purchase_price: 320 };
       return { ...base, weight: 8, purchase_price: 420, speed_mul: 1.0, coal_rate: 0.4, water_rate: 0.28 };
     },
-    roles: () => ({
+    crew_roles: () => ({
       kind: 'engineer',
       wage_per_voyage: 30,
       hire_cost: 120,
       modifiers: [{ stat: 'speed', op: 'mul', value: 1.02 }],
     }),
-    strategies: () => ({
+    boiler_strategies: () => ({
       speed_mul: 1.0,
       coal_mul: 1.0,
       water_mul: 1.0,
@@ -695,7 +695,7 @@
         unlock_ids: [],
       },
     }),
-    events: () => ({
+    voyage_events: () => ({
       trigger: 'voyage_risk',
       category: 'mechanical',
       weight: 1.0,
@@ -1024,11 +1024,11 @@
     items: ['good.trade', 'good.bulk', 'good.luxury', 'good.shipbuilding', 'good.supply', 'material.shipbuilding'],
     hulls: ['module.hull', 'module.small', 'module.medium', 'module.large', 'module.efficient'],
     modules: ['module.boiler', 'module.small', 'module.efficient', 'module.navigation', 'module.safety'],
-    roles: ['role.engineer', 'role.navigator'],
-    strategies: ['strategy.economic', 'strategy.standard', 'strategy.fast'],
+    crew_roles: ['role.engineer', 'role.navigator'],
+    boiler_strategies: ['strategy.economy', 'strategy.standard', 'strategy.fast'],
     contracts: ['contract.main', 'contract.normal', 'contract.cargo', 'contract.passenger'],
     quests: ['quest.guide', 'quest.story', 'quest.system'],
-    events: ['event.risk', 'event.opportunity', 'event.mechanical', 'event.merchant'],
+    voyage_events: ['event.risk', 'event.opportunity', 'event.mechanical', 'event.merchant'],
     port_templates: ['port.shipyard', 'port.market', 'port.intel', 'port.start'],
     /* Schema 2.0 draft tag suggestions. */
     world_profiles: ['world.standard', 'world.large'],
@@ -1255,7 +1255,7 @@
       key: 'event',
       name: '事件包',
       description: '一个双选项航行事件，演示条件、效果与本地化。',
-      type: 'events',
+      type: 'voyage_events',
       deps: true,
     },
     {

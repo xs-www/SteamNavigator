@@ -13,7 +13,7 @@
   const V = root.SNValidate;
   const IO = root.SNIO;
   const Cat = root.SNCatalog;
-  const MODULE_PAGE_TYPES = ['hulls', 'modules', 'roles', 'strategies'];
+  const MODULE_PAGE_TYPES = ['hulls', 'modules', 'crew_roles', 'boiler_strategies'];
 
   const state = {
     project: null,

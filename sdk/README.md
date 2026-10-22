@@ -59,9 +59,9 @@ Core 从 `dev_mods` 加载，第三方模组先复制到 `user://` 隔离目录�
 
 | 路径 | 版本 | 说明 |
 | --- | --- | --- |
-| `examples/example_roles_1_0/` | 1.0 | 使用仍为 1.0 的 `roles`；runtime 与 draft 校验都应通过。 |
+| `examples/example_crew_roles/` | 2.0 | 已激活的 `crew_roles` 2.0 示例；runtime 与 draft 校验都应通过。 |
 | `examples/example_boilers/` | 2.0 | 已激活的 `modules` 2.0 示例。 |
-| `examples/example_mixed_roles_items/` | 1.0 + 2.0 | 混合版本：`roles` 1.0 与 `items` 2.0 共存；runtime 加载通过。 |
+| `examples/example_mixed_crew_roles_items/` | 2.0 + 2.0 | `crew_roles` + `items` 两个 active 2.0 类型共存；runtime 加载通过。 |
 | `templates/mod_template/` | 2.0 | 最小 `items` 2.0 模组模板。 |
 | `templates/draft_weapons_pack/` | 2.0 草案 | `weapons` 草案示例：**只能** `--mode=draft` 校验，`--release` 打包必然被拒绝。 |
 | `templates/story_pack_iron_tide/` | 2.0 草案 | `story_arcs` / `story_levels` 剧情包草案示例，同样只能 draft 校验、不可发布。 |
