@@ -28,7 +28,7 @@
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
 - [ ] 模型素材库接入：kit 批次 1–5 其余 33 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记；批次 4 新增 6 件可围合建筑件、批次 5 新增 5 件基地生产建筑），接 `ShipVisualAssembler` / 基地舞台 / PortStage 的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C · C1–C2 已完成**（C1：5 类模块→`modules` 2.0 + `hulls` 2.0；C2：goods+materials→`items` 2.0（`crafting_material`），core 12 items；active 20、编辑器 23（20 runtime + 3 draft））。下一步 **C3 quest/contract 解耦**（quests 2.0 + `data.quests` + QuestService，委托接取生成 quest 实例），之后 C4 残留类型 2.0 化 → D 其余系统 → E 冻结 1.0。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
+- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C · C1–C3 已完成**（C1：5 类模块→`modules` 2.0 + `hulls` 2.0；C2：goods+materials→`items` 2.0（`crafting_material`）；C3：`quests` 2.0 + 持久 `data.quests` + QuestService，委托接取生成追踪实例；active 21、编辑器 24（21 runtime + 3 draft））。下一步 **C4 残留类型 2.0 化**（port_archetypes/map_profiles/starting_builds/events/roles/strategies/patches/contracts），之后 D 其余系统 → E 冻结 1.0。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 
 ### 海图 / 探索
 
@@ -50,6 +50,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- Content Schema 2.0 Phase C · C3（委托/任务解耦）：新增 `quests` active 2.0（kind story/guide/system、stages/objectives 复用剧情 DSL、tracking/prerequisites；无运输 payload）；core `quests.json` 2 条；新增 `QuestOps`/`QuestService` 与 `data.quests` 持久实例（惰性 ensure），委托 `accept_offer`/教程主线挂接生成追踪实例、完成关闭；`task.view` 增加 `kind:"quest"` 聚合（contract 实例不重复渲染），Shell 转发 `cmd:*`/`ui:*` 给 quest.observe；`content.quests.v1` capability 与 `quest.start|complete|observe` 命令。验证：Godot **518/518**、Node **54/54**、CLI **62/62**、SDK `status: ok`。
 - README 瘦身（2026-10-22）：根 README 从 323 行压到 115 行、SNModMaker README 从 479 行压到 63 行；详细进度拆到 `docs/design/PROJECT_STATUS.md`、Core 内容基线拆到 `docs/design/CORE_CONTENT.md`、实现边界拆到 `docs/design/KNOWN_LIMITS.md`，SNModMaker 使用/开发细节拆到 `SNModMaker/docs/{USER_GUIDE,DEVELOPMENT}.md`；README 改为「按需读取」索引。
 
 - SN SDK Schema 2.0 兼容（2026-10-22）：`sdk/validate.gd` 新增 `--mode=runtime|draft`（默认 runtime 保持旧调用兼容；runtime 显式拒绝未激活草案并输出结构化 `inactive_content_type`，draft 对草案 / 混合模组做静态 Schema 校验）；`sdk/pack_mod.gd --release` 打包前跑真实 runtime 校验、草案或 error 时拒绝且 `.snavmod.zip` 结构不变；新增 `sdk/validation_core.gd` 共享实现（扫描根去重，`--mod-root=dev_mods/core` 不再重复加载 core），类型 / 版本只读 `content_types.json`；示例补 1.0 `example_roles_1_0`、混合 `example_mixed_roles_items` 与草案模板 `draft_weapons_pack`；新增 `framework/tests/cases/test_sdk_validation.gd`（11 用例）并更新 release workflow 的 runtime / draft / 发布拦截门禁。验证：SDK 套件 11/11、Godot 全量 507/507、`gen_content_types --check` 全绿（`docs/static` 待 Lead 统一生成）。

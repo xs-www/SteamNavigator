@@ -1,6 +1,6 @@
 # 任务追踪与任务系统设计（阶段 4.6）
 
-> 状态：Phase A（任务追踪聚合）Implemented；Phase B（正式 Quest 内容类型）Planned。
+> 状态：Phase A（任务追踪聚合）Implemented；Phase B（正式 Quest 内容类型，C3）Implemented（2026-10-22）。
 > 2026-10-22 决策：**委托（Contract）与任务（Quest）彻底解耦**——Contract 只负责运输请求，
 > Quest 负责剧情演出、游戏指引与除运输请求外的一切系统需求；Quest 采用持久 `data.quests` +
 > `QuestService`。Story 暂时保留，后续剧情模式开发时由 Quest 自动上位替代其功能。
@@ -122,21 +122,28 @@ Step = {
 - 目的地名 / 货物名一律通过注册表 key 输出，框架不写死内容 ID。
 - 旧存档没有 `data.story` 时只显示委托任务；没有委托时 `tasks=[]`。
 
-## 4. Phase B：正式 Quest 系统（待实现）
+## 4. Phase B：正式 Quest 系统（C3 已实现）
 
 > 2026-10-22 拍板：Contract 与 Quest **不合并**；Quest 是抽象引导层，Contract 仍是运输请求。
 > 委托接取后由 `QuestService` **生成 Quest 实例写入 `data.quests`**（解耦联动），不复制 Contract 的
 > payload / 目的地 / 时限 / 结算字段。Story 暂时保留；后续剧情模式开发时由 Quest 自动上位替代
 > Story 的演出/目标功能。
+>
+> **实现（2026-10-22）**：`quests` 2.0 + `QuestOps` / `QuestService` + `quest.start|complete|observe`
+> 命令；`data.quests = {schema_version:1, instances:[{instance_id, source:"content"|"contract",
+> quest_id, contract_instance_id, stage_index, counters, flags, status, started_at, completed_at}]}`
+> （惰性 ensure，旧档无块 = 无任务）。委托 `accept_offer` / 教程直接挂主线时 `track_contract`，
+> 完成时关闭实例；task.view 增加 `kind:"quest"`（priority 250，contract 来源实例不重复渲染）。
+> `auto_start` 仅存储/校验，开局自动接取与失败/放弃钩子留给后续切片。
 
 ### 4.1 内容类型
 
-新增单一 `quests` 内容类型（2.0），定义抽象目标链：
+`quests`（2.0，capacity `content.quests.v1`）定义抽象目标链，字段以实现为准：
 
 - `kind`：`story`（剧情演出）/ `guide`（游戏指引）/ `system`（非运输类系统需求）；
-- `stages`：顺序目标，复用剧情条件模型（事件 + counter + 阈值 + match）；
-- 前置条件、发布者/来源、仅成就/解锁类奖励（经济奖励优先通过 Contract 发放）；
-- 可选的 `spawn_contract`：Quest 触发生成运输请求（Contract），但 Quest 自身不承载运输结算。
+- `stages`：顺序目标，复用剧情条件模型（事件 + counter + 阈值 + match），每 stage 有 `id` / `title_key` / `objectives`；
+- 可选 `auto_start` / `repeatable` / `prerequisites{quests_completed,flags}` / `tracking{label_key,priority,hidden}`；
+- **不包含**运输 payload、目的地、时限与经济奖励；这些仍由 Contract / 后续奖励系统负责。
 
 单个目标（Objective）复用剧情条件模型：
 

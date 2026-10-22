@@ -82,7 +82,7 @@
 
 | 编号 | 差距 | 影响 |
 | --- | --- | --- |
-| G9 | Phase C3 未开工：`contracts` / `quests` 仍耦合，quests 2.0 尚未定义 | 任务系统仍由委托 + story 派生 |
+| G9 | ✅ Phase C3 已解耦：`contracts` 保持运输请求，`quests` 2.0 + `data.quests` + QuestService 负责抽象引导 | 委托接取生成追踪实例；task.view 聚合 |
 | G10 | Phase C4：7 个 1.0 定义类型 + `patch` 仍是 1.0 | 距离“全 2.0”还差这些类型的 Schema 提升 |
 | G11 | Phase D：fleet / combat / base / auto_trade / ruins 类型仍是 planned | 无运行时读者 |
 | G12 | Phase E：1.0 生成与读取尚未冻结 | 发布门禁尚未强制 Content Schema 2.0 |
@@ -97,7 +97,7 @@
 
 | 方案 | 需要做的事 | 代价 / 风险 | 结论 |
 | --- | --- | --- | --- |
-| A. 全量 bump：20 类运行时类型一次性变 2.0 | 补写剩余 7 类定义类型 + patch 的 v2 Schema（当前 12 类已 2.0）+ 迁移全部 core 内容 + 改编译器/注册表/补丁/交叉校验 | 玩法零变化、回归面最大；与在途探索/海图/实体合并工作直接冲突 | ❌ 不推荐 |
+| A. 全量 bump：21 类运行时类型一次性变 2.0 | 补写剩余 7 类定义类型 + patch 的 v2 Schema（当前 13 类已 2.0）+ 迁移全部 core 内容 + 改编译器/注册表/补丁/交叉校验 | 玩法零变化、回归面最大；与在途探索/海图/实体合并工作直接冲突 | ❌ 不推荐 |
 | B. 分层统一：按类型版本 + 纵向切片 | 先让编译器支持“每个类型自己的版本”，再逐家族提升 | 每阶段可发布、可回滚；Phase A/B/C1/C2 已按此落地 | ✅ 推荐 |
 
 ### 3.2 决策清单（已拍板）
@@ -176,7 +176,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 
 ### Phase C · 实体合并（Module / Item / Quest，1–2 周）
 
-**状态：C1–C2 已完成（2026-10-22）；C3 待开工。** C1 证据：5 类模块合并为 `modules` 2.0（12 条 core 定义，`core:module/*`）、hulls 升 2.0、`ModuleOps` 运行时与船厂分类 UI 落地；Godot 491/491。C2 证据：goods + materials 合并为 `items` 2.0（12 条 core 定义，`core:item/*`，`crafting_material` 标志），全量引用/本地化/编辑器/运行时统一到 ITEM；Godot **508/508**、Node **53/53**、CLI **61/61**、SDK `status: ok`。
+**状态：C1–C3 已完成（2026-10-22）；C4 待开工。** C1 证据：5 类模块合并为 `modules` 2.0（12 条 core 定义，`core:module/*`）、hulls 升 2.0、`ModuleOps` 运行时与船厂分类 UI 落地；Godot 491/491。C2 证据：goods + materials 合并为 `items` 2.0（12 条 core 定义，`core:item/*`，`crafting_material` 标志），全量引用/本地化/编辑器/运行时统一到 ITEM。C3 证据：新增 `quests` 2.0（`core:quest/*` 2 条）+ 持久 `data.quests` + QuestService，委托接取生成追踪实例、task.view 聚合；当前 active 21（13×2.0 + 7×1.0 定义 + patch）。验证：Godot **518/518**、Node **54/54**、CLI **62/62**、SDK `status: ok`。
 
 > **开发期策略（2026-10-22 拍板）**：开发器没有第三方模组，直接全量升级 core 到 Schema 2.0 并保证运行即可；
 > 每次迭代后不保留旧存档 / 旧内容模型兼容。C-D2 的旧/新类型并存仅是分步开发手段，不是兼容窗口；每个实体
@@ -196,7 +196,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 | --- | --- | --- |
 | C1 | **✅ 已完成（2026-10-22）**：5 类模块（boilers/cargo/navigation/safety/cabins）→ `modules` + `v2_category`（`boiler/cargo/utility/cabin`，`crew` 预留）；**hulls 独立为 `hull` 2.0**；`ModuleOps`/船厂分类 UI/完整性按 category；core 直接改新 ID，无别名 | 不保留旧类型/ID 别名；core 内容直接改为新类型；导航与安全归 `utility` |
 | C2 | **✅ 已完成（2026-10-22）**：goods + materials → `items` 2.0（`data.crafting_material` 标志、字段并集）；core 12 条 `core:item/*`，全量引用/本地化/编辑器/SDK example/运行时统一到 ITEM | 直接重命名 core 内容与引用；不做 ID 别名 |
-| C3 | **委托与任务解耦**：`contracts` 保持独立（运输请求）；新增 `quests` 2.0（抽象引导：剧情演出、游戏指引、非运输类系统需求），持久 `data.quests` + QuestService；委托接取后生成 quest 实例写入 `data.quests` 以供追踪；task.view 聚合 quests + accepted contracts | 不合并 contracts/quests；story 暂时保留，后续剧情模式开发时由 quests 上位替代 |
+| C3 | **✅ 已完成（2026-10-22）**：委托与任务解耦——`contracts` 保持独立（运输请求）；新增 `quests` 2.0（抽象引导：剧情演出、游戏指引、非运输类系统需求），持久 `data.quests` + QuestService；委托接取后生成 quest 实例写入 `data.quests` 以供追踪；task.view 聚合 quests + accepted contracts | 不合并 contracts/quests；story 暂时保留，后续剧情模式开发时由 quests 上位替代 |
 
 ### Phase C4 · 残留 1.0 类型 2.0 化（新增切片）
 
@@ -286,7 +286,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase C · C1：5 类模块 → `modules` 2.0、`hulls` 升 2.0；ModuleOps / 船厂分类 UI / 完整性按 category（2026-10-22）。
 - [x] Phase C · C2：goods + materials → `items` 2.0（`crafting_material`）；全量引用 / 本地化 / 编辑器 / SDK example / 运行时统一（2026-10-22）。
 - [x] Phase C · 开发期兼容：**不要求**旧 ID 别名与存档 ID 迁移；合并后直接删除旧类型 / 旧内容，旧档作废（2026-10-22 拍板）。
-- [ ] Phase C · C3：contracts / quests 解耦 + `quests` 2.0 + QuestService（待开工）。
+- [x] Phase C · C3：contracts / quests 解耦 + `quests` 2.0 + QuestService（已完成，2026-10-22）。
 - [ ] Phase C4：其余 7 个 1.0 定义类型 + `patches` 升 2.0。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。
