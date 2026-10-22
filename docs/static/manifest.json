@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T04:46:22.951Z",
-  "commit": "46b8898",
+  "generated_at": "2026-10-22T05:10:59.554Z",
+  "commit": "33d9c66",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 897,
-    "documented": 355,
+    "sources": 899,
+    "documented": 357,
     "grouped": 542
   },
   "files": [
@@ -2974,7 +2974,7 @@
     },
     {
       "source": "framework/core/framework_info.gd",
-      "sha256": "f03c344bd0e23ef61876da24f1d8b65232d2897228f640ce632231d6e33d4fc0",
+      "sha256": "cae48fd756d7f06add04dadaaebde1b92b88ecbf9ad766d6009b1d1c12d98c9a",
       "doc": "docs/static/framework/core/README.md",
       "status": "grouped",
       "group": "docs/static/framework/core/README.md"
@@ -3258,13 +3258,13 @@
     },
     {
       "source": "framework/modding/core_completeness_checker.gd",
-      "sha256": "5bb940f25e2a486307dd192bb25628ebb28dce69c3ce309c37fca4df5fed09e2",
+      "sha256": "c80d068788ebd79b467080ea9001caba38c196999894275b3028661d552e1a96",
       "doc": "docs/static/framework/modding/core_completeness_checker.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/modding/cross_reference_validator.gd",
-      "sha256": "a8e89ff39b9127a6fb120073f3bdab5874badae7a460a6f1d8877bd1d3cdc7e8",
+      "sha256": "54b3ce9493906bec14844400c5620b0a58c4ebec0aa5852540ba023084af233a",
       "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
       "status": "documented"
     },
@@ -3432,7 +3432,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_versions.gd",
-      "sha256": "6edf43f527418799c495cd28f24963c29c30201a2c5a57f34ec231871102c8b7",
+      "sha256": "8295f9f3488b43d18a793ef7793a4c48d9c03c344825c0c6c00d2d3be21ef568",
       "doc": "docs/static/framework/tests/cases/test_content_versions.gd.md",
       "status": "documented"
     },
@@ -3739,11 +3739,23 @@
       "status": "documented"
     },
     {
+      "source": "framework/tests/cases/test_world_completeness.gd",
+      "sha256": "cea3aaecb8300d2642883543b012360f910ec0abd8fb031191d09b2e73bcd9fa",
+      "doc": "docs/static/framework/tests/cases/test_world_completeness.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_world_generator.gd",
       "sha256": "5c5820167641e56114273f887acf6eab3dee1b326f402c57f4754f528194d226",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_world_schema_refs.gd",
+      "sha256": "e19328d9278d8f0ba8de0ff432b2a575b6617be307a1a4456c01dedeed3f37e0",
+      "doc": "docs/static/framework/tests/cases/test_world_schema_refs.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_zip_pack.gd",
@@ -3775,7 +3787,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "41bde81cfb2692a3ac6b622e1982790b95c8280f3acbb0f5ae258782a982e652",
+      "sha256": "1d441ec9d870ab435c5eb8e7430e8d982c1b8a7f94c4fef724beefd56bdd067b",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -4577,7 +4589,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "80493d2402bfa8dd8a4fbad606b496462db7c4d268659eb3a0d51a39057adb57",
+      "sha256": "31694f1d6ca4f16971b7083766746fb00ba2bcf730d7790e1652cf9e77e0ee93",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -5912,7 +5924,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "656f0c0ac5bcd7765679e73038a2e04e03803a61f93acfd4dd9a985f6655bed7",
+      "sha256": "03bc03680918e30113dbafc893171a68d21a9a10623992c8743976bac7c07161",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

@@ -8,8 +8,8 @@
 | --- | --- | --- |
 | `content_compiler.gd` | 内容编译：解析内容文件、按类型 Schema 校验、注册定义、应用显式 Patch，最后冻结注册表。 | [查看](./content_compiler.gd.md) |
 | `content_types.gd` | 内容类型常量、Schema 路径、单数类型名与模块类型集合；由 tools/gen_content_types.mjs 从 content_types.json 生成。 | [查看](./content_types.gd.md) |
-| `core_completeness_checker.gd` | 检查官方 core 包是否提供 MVP 所需的最少内容与构筑。 | [查看](./core_completeness_checker.gd.md) |
-| `cross_reference_validator.gd` | Schema 之后的语义校验：材料、构筑、委托奖励、事件条件/效果、港口市场与地图配置的引用完整性。 | [查看](./cross_reference_validator.gd.md) |
+| `core_completeness_checker.gd` | 检查官方 core 包是否提供 MVP 所需的最少内容与构筑，并在 Core 自己发布 Content | [查看](./core_completeness_checker.gd.md) |
+| `cross_reference_validator.gd` | Schema 之后的语义校验：材料、构筑、委托奖励、事件条件/效果、港口市场与地图配置， | [查看](./cross_reference_validator.gd.md) |
 | `dependency_resolver.gd` | 校验模组健康度、冲突、能力、依赖版本，并生成确定性拓扑加载顺序。 | [查看](./dependency_resolver.gd.md) |
 | `dir_mod_source.gd` | 松散目录来源：递归列文件、读文本/字节、资源前缀。 | 本页 |
 | `mod_loader.gd` | 模组生命周期总控：扫描 → 依赖解析 → 挂载 → 编译 → 交叉校验 → Core 完整性 → 冻结。 | [查看](./mod_loader.gd.md) |
