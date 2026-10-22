@@ -37,7 +37,7 @@
 | `.design/ships/SN_Ship_Prototype.blend` | `assets/models/ships/SN_Ship_Prototype.glb` | 低多边形帆船原型；2608 三角面、36 节点、5 种材质（木 / 深木 / 甲板木 / 帆布 / 金属）；**遗留纯色资产（`model.ship.prototype` 键），未纳入批次 B** |
 | `.design/ships/sn_ship_prototype_generator.py` | — | 帆船参数化生成脚本；改 `STATIONS` / `MASTS` 表即可生成不同吨位船体 |
 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Freighter_Prototype` 集合）+ `.design/ships/SN_Paddle_Freighter.blend` | `assets/models/ships/SN_Paddle_Freighter.glb` | 大型明轮蒸汽货轮：**59.53 × 14.10 × 19.52 m**（船体 LOA 55 m，总长含艏斜桁）、**12200 三角面**、**56 节点（39 mesh + 17 empty，含 4 个武器 socket + 6 个帆索 socket）**、6 材质（`SN_Iron_Hull` / `SN_Iron_Red` / `SN_Brass` 新增，复用 `SN_Wood` / `SN_Wood_Deck` / `SN_Metal`）。双明轮（14 桨叶 / 每侧 8 辐条 / 16 段双轮缘 + 内加强环 + 黄铜轮缘条 + 4 斜撑）、半包轮罩箱板（-6°..186° + 中央观察窗 + 黄铜包边 / 铭牌，端封 r_in 2.75 避让轮扫掠、内板窗 2.30 避让蒸汽管）、双后倾烟囱、锅炉机舱围罩 + 蒸汽管、桥楼 + 驾驶室、4 货舱口 + 4 吊杆、双桅横桁 + 艏斜桁、艏楼 / 艉楼侧封板、吊艇架救生艇、舵轮 / 旗；根节点 `SN_PF_Root` 水线轴心、工作台摆位 (-45, 0, 0)；2 个明轮 Pivot + 4 个 `SN_Socket_*`；**4 个武器 socket**（`_Port_1/2` + `_Starboard_1/2`：Side×2 / Light×2）；**6 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main`） |
-| `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend` | `assets/models/ships/SN_Ironclad.glb` | 舷侧炮铁甲舰：**60.14 × 18.00 × 28.64 m**（水线轴心，z -4.2..24.44）、**8830 三角面**、**14 节点（1 mesh + 4 个武器 socket + 9 个帆索 socket）** / 8 材质；装甲带 + 板缝、每舷 6 门英雄化舷侧炮（炮门 1.9×1.9 m / 炮管 Ø0.88→0.72 m / 外露 1.55 m）+ 2 门艏 pivot 炮、2.2 m 装甲带（外凸 380 mm）与 120 mm 板缝、中央装甲炮房 + 指挥塔、双后倾烟囱、三桅横桁收帆 + 艏斜桁基座、锚吊架、撞角艏、艉廊、螺旋桨/舵；单节点 GLB、工作台摆位 (0, 90, 0)；**4 个武器 socket**（`_Port_1/2` + `_Starboard_1/2`：Heavy×2 / Medium×2）；**9 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main/Mizzen`） |
+| `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend` | `assets/models/ships/SN_Ironclad.glb` | 舷侧炮铁甲舰：**60.14 × 18.00 × 28.64 m**（水线轴心，z -4.2..24.44）、**8158 三角面**、**26 节点（1 mesh + 4 个武器 socket + 9 个帆索 socket + 12 个炮门 socket）** / 8 材质；装甲带 + 板缝、每舷 6 个空炮门（1.9×1.9 m 框 + 深色炮口板 + 上翻门盖；炮管 Ø0.88→0.72 / 外露 1.5407 m 自 2026-10-22 起是独立模块 `SN_Weapon_CasemateGun`）+ 2 门艏 pivot 炮、2.2 m 装甲带（外凸 380 mm）与 120 mm 板缝、中央装甲炮房 + 指挥塔、双后倾烟囱、三桅横桁收帆 + 艏斜桁基座、锚吊架、撞角艏、艉廊、螺旋桨/舵；单节点 GLB、工作台摆位 (0, 90, 0)；**4 个武器 socket**（`_Port_1/2` + `_Starboard_1/2`：Heavy×2 / Medium×2）；**9 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main/Mizzen`）；**12 个炮门 socket**（`SN_Socket_GunPort_Port/Starboard_1..6`） |
 | `.design/SN_Asset_Workbench.blend`（`SN_Paddle_Steamer_Prototype` 集合）+ `.design/ships/SN_Paddle_Steamer.blend` | `assets/models/ships/SN_Paddle_Steamer.glb` | 小型澳洲明轮蒸汽客船（参考 PS Enterprise）：**24.56 × 8.74 × 10.47 m**（LOA 24.0 m，水线轴心 z=0）、**11764 三角面**、**38 节点（32 mesh + 6 empty，含 3 个武器 socket）**、8 材质（新增 `SN_White` / `SN_Flag_Blue` / `SN_Flag_White`，复用 5）；白漆双层船身 + 暗红水线/舷缘压条 + 深色船底、两舷 10 桨叶明轮（14 段双轮缘 / 8 辐条 / 内加强环 / 黄铜轮缘条 / 4 斜撑）+ 10 道水平格栅轮罩、前驾驶室（双侧 ENTERPRISE 文字铭牌）、后部白色立柱雨棚游步甲板、黑烟囱 + 黄铜箍/红顶圈、锅炉围罩 + 黄铜蒸汽管、艏旗杆澳洲旗、艉部弧形低平台 + 舵；**不含蒸汽几何**（留给游戏内 VFX）；根节点 `SN_PS_Root` 工作台摆位 (45, 0, 0)；**3 个武器 socket**（`_Port_1` / `_Starboard_1` / `_Stern`：Light×2 / Medium×1） |
 | `.design/SN_Asset_Workbench.blend`（`SN_Schooner_Fame_Prototype` 集合）+ `.design/ships/SN_Schooner_Fame.blend` | `assets/models/ships/SN_Schooner_Fame.glb` | 1795 年 Salem 双桅纵帆船 **SN_Schooner_Fame**：**33.44 × 6.88 × 26.82 m**（船体 LOA 24.4 m，总长含艏斜桁/艏三角帆）、**13174 三角面**、**42 节点（29 mesh + 13 empty，含 3 个武器 socket + 7 个帆索 socket）**、12 材质（新增 `SN_Hull_Black` / `SN_Ochre` / `SN_Canvas_Shade` / `SN_Flag_Red`，复用 8）；18 站放样黑船身 + 赭黄上舷带 + 黑腰板/压顶、艉楼甲板；双桅后倾（Fore −2.5° / Main −3.2°，轴距 6.4 m）、前桅斜桁帆 + 方顶帆、主桅大斜桁帆 + 三角顶帆、两面艏三角帆（jib + fore staysail）、舷侧绳梯（shrouds + ratlines）/支索/动索、艉廊 3 蓝窗 + 双灯 + FAME 铭牌、舱口格栅/绞盘/起锚机/舵轮/罗经柜/锚/钟/木桶/盘绳/fife rails/短梯/艏饰；**无星条旗**（用户 2026-10-19 要求移除，仅保留主桅顶红白长旒）；帆腹镜像朝 −Y（Godot +Z 相机侧）；根节点 `SN_SF_Root` 水线轴心、工作台摆位 (0, −70, 0)；**3 个武器 socket**（`_Port_1` / `_Starboard_1` / `_Bow`：Light×2 / Medium×1）；**7 个帆索 socket**（`SN_Socket_Mast/Yard/Sail × Fore/Main` + `SN_Socket_Sail_Jib`） |
 | `.design/SN_Asset_Workbench.blend` | `assets/models/props/SN_Harbor_Crane.glb` + `dev_mods/core/assets/models/props/SN_Harbor_Crane.glb` | 工作台主场景（全场景 298 对象；塔吊集合 33 对象）；锤头式塔吊重建为**参数化生成器产物**：**3912 三角面**、33 节点（31 mesh + 根空物体 + 回转 Pivot）、4 材质（木 / 深木 / 金属 / 石材），主臂 20.1 m 水平、总高 21.47 m，吊钩最低点 4.42 m，场景摆放 (0, 16, 0)。Core 资产键 `model.prop.harbor_crane` 不变，GLB 已同步 `dev_mods` 副本 |
@@ -90,7 +90,7 @@
 | `tools/modeling/generators/dryrun_ironclad.py` | — | 铁甲舰纯 Python 干跑：tri / 包围盒（水线轴心）/ z 范围 / 边界边 / 非流形边 / 退化面 / 孤立点 / 材质 |
 | `tools/modeling/generators/render_ironclad_preview.py` | — | 铁甲舰预览渲染：3/4 / 正侧 / 舰艏 / 舰艉 3/4 四视角 |
 | `tools/modeling/generators/export_ironclad_glb.py` | — | 铁甲舰归档：备份旧 GLB → 轴心归零导出 → `bpy.data.libraries.write` 单对象快照 |
-| `tools/modeling/generators/verify_ironclad_glb.py` | — | 铁甲舰 GLB 结构自检：单节点 / 8 图元 / 8830 tri / 材质 / Y-up 包围盒 / z 范围 |
+| `tools/modeling/generators/verify_ironclad_glb.py` | — | 铁甲舰 GLB 结构自检：26 节点 / 8 图元 / 8158 tri / 材质 / Y-up 包围盒 / z 范围 |
 | `tools/modeling/generators/check_ironclad_connectivity.py` | — | 铁甲舰连通性检查（只读）：拆连通岛 + BVH 三角面相交/最近距离，抓 `revolved()` 忘 translate、小艇漏偏移等"悬空/错位" |
 | `tools/modeling/briefs/sn_ship_paddle_steamer.json` | — | 小型明轮蒸汽船工单（24.4×8.7×10.5 m、12000 tri、8 材质、明轮 10 桨叶 / 10 道格栅、ENTERPRISE 铭牌；明确蒸汽不建模，明轮 8 旋转角零穿模） |
 | `tools/modeling/generators/sn_paddle_steamer_generator.py` | — | 明轮蒸汽船参数化生成器（`STATIONS` / `PROFILE` / `PADDLE` / `PADDLE_BOX` / `WHEELHOUSE` / `CANOPY` / `FLAG` 参数表；纯几何 + Blender 装配 + 文字铭牌 + `report()`） |
@@ -211,13 +211,13 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 | 项 | 数值 |
 | --- | --- |
 | 包围盒 | **60.14 × 18.00 × 28.64 m**（LOA 含艏斜桁与艉廊；z -4.20 .. 24.44） |
-| 三角面 | **8830 / 12000** |
+| 三角面 | **8158 / 12000**（2026-10-22 casemate 模块化：12 门炮管 + 炮口箍拆出为独立模块，−672 tri） |
 | 材质 | Iron_Hull / Iron_Red / Wood_Deck / Wood / Wood_Dark / Metal / Brass / Canvas（复用既有调色板，不新增） |
-| 结构 | 17 站放样铁壳 + 撞角艏；**英雄化装甲带**（2.2 m 高、外凸 380 mm、120 mm 竖向板缝/黄铜压条）；**每舷 6 门英雄化舷侧炮**（炮门 1.9×1.9 m、炮管 Ø0.88→0.72 m、外露 1.55 m、炮口箍 Ø1.0 m、上翻炮门盖、前外张 12°）+ 2 门放大艏 pivot 炮；中央装甲炮房 + 指挥塔 + 艏驾驶台；双后倾烟囱 + 通风筒 + 天窗；三桅横桁（收帆卷）+ 艏斜桁 + 支索/侧支索；舷墙 + 黄铜压条；舱口格栅/绞盘/舵轮/罗经柜/小艇/锚（吊架）/螺旋桨/舵/艉廊/旗 |
-| 运行时 GLB | `assets/models/ships/SN_Ironclad.glb`（14 节点 = 1 mesh + 4 武器 socket + 9 帆索 socket 空节点 / 8 图元 / 8830 tri / 596.7 KB / sha256 `7caf532529e8` / glTF Y-up，轴心水线中心） |
+| 结构 | 17 站放样铁壳 + 撞角艏；**英雄化装甲带**（2.2 m 高、外凸 380 mm、120 mm 竖向板缝/黄铜压条）；**每舷 6 个空炮门**（炮门 1.9×1.9 m 框 + 深色炮口板 + 上翻炮门盖；炮管/炮口箍自 2026-10-22 起是独立模块 `SN_Weapon_CasemateGun`，经 `SN_Socket_GunPort_*` 挂载，见 [WEAPON_SOCKET_CONTRACT.md §9](WEAPON_SOCKET_CONTRACT.md)）+ 2 门放大艏 pivot 炮；中央装甲炮房 + 指挥塔 + 艏驾驶台；双后倾烟囱 + 通风筒 + 天窗；三桅横桁（收帆卷）+ 艏斜桁 + 支索/侧支索；舷墙 + 黄铜压条；舱口格栅/绞盘/舵轮/罗经柜/小艇/锚（吊架）/螺旋桨/舵/艉廊/旗 |
+| 运行时 GLB | `assets/models/ships/SN_Ironclad.glb`（**26 节点 = 1 mesh + 4 武器 socket + 9 帆索 socket + 12 炮门 socket 空节点 / 8 图元 / 8158 tri / 573.3 KB / glTF Y-up，轴心水线中心；Root extras 另写 `weapon_sockets` / `rig_sockets` / `gun_port_sockets` 三套名单） |
 | 源文件 | `.design/SN_Asset_Workbench.blend`（`SN_Ironclad_Prototype` 集合）+ `.design/ships/SN_Ironclad.blend`（单对象快照） |
-| 工单/脚本 | `briefs/sn_ironclad_broadside.json`、`sn_ironclad_generator.py`、`dryrun_ironclad.py`、`check_ironclad_connectivity.py`、`render_ironclad_preview.py`、`export_ironclad_glb.py`、`verify_ironclad_glb.py` |
-| 截图 | `docs/design/screenshots/ironclad_{three_quarter,broadside,bow,bow_closeup,guns_closeup,stage_ortho}.png` |
+| 工单/脚本 | `briefs/sn_ironclad_broadside.json`、`sn_ironclad_generator.py`、`dryrun_ironclad.py`、`check_ironclad_connectivity.py`、`render_ironclad_preview.py`、`export_ironclad_glb.py`、`verify_ironclad_glb.py`；casemate 批次：`apply_casemate_assets.py`、`export_casemate_glb.py`、`verify_casemate_glb.py`、`render_casemate_preview.py`、`sn_ship_gun_ports.py`、`glb_gun_ports.py` |
+| 截图 | `docs/design/screenshots/ironclad_{three_quarter,broadside,bow,bow_closeup,guns_closeup,stage_ortho}.png`；casemate 批次：`ironclad_casemate_{three_quarter,guns_closeup,empty_closeup}.png` |
 
 > 纯展示资产：核心玩法仍使用现有 4 种船体；若将来把铁甲舰作为第 5 种船体或港口战舰接入，需要补内容 JSON、manifest 资源键、本地化与测试。
 
@@ -334,6 +334,7 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 - 复用同一套共享 trim sheet；新增共享 tile 仅 `brick_wall_soot`（12 张共享 PNG，2.03 MB）；新原型 6 GLB 合计 1.96 MB；8 栋建筑模型+纹理 6.27 MB，core zip 6.65 MB。
 - 组合接线：`iron_harbor` = WR + BH（warehouse_long/tavern 槽）；`spice_port` = WR + BT（warehouse_long/harbor_office 槽）；其余三港保持旧 5 栋。组合截图见 `docs/design/screenshots/iron_harbor_architecture/…_combo_{a,b,old}_port_stage_{1440x900,1280x720,960x540}.png`。
 - 实测：combo_a 75 376 tri / 72 draws / 42 batches；combo_b 72 144 tri / 71 draws / 41 batches（松散与 ZIP 一致）。报告：[IRON_HARBOR_ARCHITECTURE_BATCH_B.md](../archive/IRON_HARBOR_ARCHITECTURE_BATCH_B.md)。
+- **LOD1 收口（2026-10-22）**：铁港建筑 LOD1 至此为 **8 栋建筑 × (LOD0 + LOD1) = 16 个 GLB**（批次 A 5 栋 + 批次 B 3 栋），本套件不再扩栋；backlog M0-5 剩余的 **30 件**（kit 26 + 4 艘可玩船）见下方 [LOD1 基础套件](#lod1-基础套件m0-52026-10-22)。
 
 ### 舞台装配与性能（批次 A 实测）
 
@@ -413,6 +414,37 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 - 本批同样不登记 manifest、不接游戏侧；Mount/Anchor 是给未来 hull socket / assembler 用的。
 
 > 2026-10-22：武器装配规范升级 v2（`SN_Socket_Weapon` / `SN_Mount` / `SN_Pivot_Yaw` / `SN_Pivot_Pitch` / `SN_Recoil` / `SN_Muzzle`），8 件舰载武器 + kit 武器部件 + 甲板 socket 已重建并重导 GLB，详见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md)。
+
+## 3D 舰载武器：穿壳炮 casemate gun 模块（2026-10-22）
+
+把铁甲舰舷侧“从船壳里伸出来”的炮从船体网格拆成独立、可复用的模块：船体只保留炮门
+（框 + 深色炮口板 + 上翻门盖），炮管 + 炮口箍成为一件独立 GLB，经 12 个
+`SN_Socket_GunPort_*` 挂到铁甲舰上；换炮 / 空载 / 装到别的船都走同一套 socket 契约。
+契约见 [WEAPON_SOCKET_CONTRACT.md §9](WEAPON_SOCKET_CONTRACT.md)，验收见
+[CASEMATE_GUN_ACCEPTANCE.md](../archive/CASEMATE_GUN_ACCEPTANCE.md)。
+
+| 资产 | 运行时 GLB | 集合 / 摆位 | 尺寸 L×W×H (m) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Weapon_CasemateGun` | `assets/models/weapons/SN_Weapon_CasemateGun.glb` | `SN_Weapon_CasemateGun_Prototype` / (0, 430, 0) | 2.4907 × 1.00 × 1.00 | **108** | 3 | 根 = **炮门平面中心**（`+X` = 炮膛轴线 / 舷外）；`port_pitch`：Mount → Pivot_Pitch（耳轴 x=−0.15）→ Recoil → Muzzle；炮管 56 tri + 门内炮尾/双耳轴 52 tri |
+
+- 轴心与甲板武器不同：**原点在炮门平面中心**，局部 `x ≥ 0` 是门外可见段（外露 1.5407 m），
+  `x < 0` 是藏在船壳里的炮尾 / 耳轴（0.95 m），后坐与 ±6…12° 俯仰都不会让隐藏段露出来。
+- 几何与拆炮前的烘焙炮管**逐顶点重合**（`dryrun_casemate_gun.py` 对 12 个炮门断言，误差 0）；
+  因此铁甲舰装炮后的读感与拆炮前一致，但炮管现在可换、可空载、可由战斗/装配层驱动俯仰与后坐。
+- 材质：`SN_Tex_Metal` / `SN_Tex_Brass` / `SN_Tex_Iron`（3 槽，外部共享贴图）。
+- 关键 extras：`assembly_profile=port_pitch`、`has_yaw=false`、`port_class=Medium`、
+  `port_w/port_h=1.9/1.9`、`muzzle_protrusion=1.5407`、`breech_depth=0.95`、
+  `trunnion_offset=0.15`、`elev_min/max_deg=-6/12`。
+- 源/工具：`sn_casemate_gun_generator.py`、`dryrun_casemate_gun.py`、`sn_ship_gun_ports.py`、
+  `glb_gun_ports.py`、`apply_casemate_assets.py`、`export_casemate_glb.py`、
+  `verify_casemate_glb.py`、`render_casemate_preview.py`。
+- 预览：[单件 3/4](screenshots/weapons/casemate_gun_three_quarter.png) /
+  [单件正侧](screenshots/weapons/casemate_gun_side.png) /
+  [装舰 3/4](screenshots/ironclad_casemate_three_quarter.png) /
+  [炮列近景](screenshots/ironclad_casemate_guns_closeup.png) /
+  [空炮门近景](screenshots/ironclad_casemate_empty_closeup.png)。
+- 本批不登记 Core manifest 键（与武器批次 1/2 一致）；其它 3 艘船没有炮门开口，
+  要给它们装穿壳炮需要先做「炮门舱段 / port cassette」适配件（后续批次）。
 
 ## 模型素材库批次 1：武器套件 + 船体部件（2026-10-21）
 
@@ -520,6 +552,54 @@ Mount + 语义 socket + 根 extras（建筑另写 `module_x/y`，环境件另写
 - 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH3_ACCEPTANCE.md](../archive/KIT_BATCH3_ACCEPTANCE.md)。
 - 共享贴图：`assets/models/{architecture,environment}/shared_materials/` + `dev_mods/core/.../shared_materials/`；`shared_materials.spec.json` 的 `runtime_dirs` 已扩到 16 个目录（11 张贴图、本批无新增）。
 
+## LOD1 基础套件（M0-5，2026-10-22）
+
+backlog `M0-5` 的剩余 **30 件**远景低模：kit 26 件 + 4 艘可玩船。全部由 LOD0 在工作台里派生（`Decimate(collapse)` + 小件保留 + 单 mesh 合并 + 包围盒逐轴钉死 + 盒式 UV 重投影），每件是单根节点 / 单 mesh 的 `SN_<Asset>_LOD1`，贴图走各类别已有的 `shared_materials/<texture>.png` 外部 URI。铁港建筑 8 个 LOD1（8 栋 × LOD0/LOD1 = 16 个 GLB）已在前序批次交付，见上节。派生契约 / 工具链见 [KIT_ASSET_LIBRARY.md §11](KIT_ASSET_LIBRARY.md)，验收见 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md)。
+
+| 资产 | 类别 | LOD0 tri | LOD1 tri | 比例 | LOD1 GLB |
+| --- | --- | ---: | ---: | ---: | --- |
+| `SN_Weapon_Cannon` | weapons | 1 156 | 336 | 29.07 % | `assets/models/weapons/SN_Weapon_Cannon_LOD1.glb` |
+| `SN_Weapon_GunCarriage` | weapons | 2 256 | 596 | 26.42 % | `assets/models/weapons/SN_Weapon_GunCarriage_LOD1.glb` |
+| `SN_Weapon_Turret` | weapons | 1 904 | 482 | 25.32 % | `assets/models/weapons/SN_Weapon_Turret_LOD1.glb` |
+| `SN_Weapon_Pedestal` | weapons | 940 | 246 | 26.17 % | `assets/models/weapons/SN_Weapon_Pedestal_LOD1.glb` |
+| `SN_ShipPart_Deck` | ship_parts | 576 | 142 | 24.65 % | `assets/models/ship_parts/SN_ShipPart_Deck_LOD1.glb` |
+| `SN_ShipPart_Mast` | ship_parts | 2 764 | 780 | 28.22 % | `assets/models/ship_parts/SN_ShipPart_Mast_LOD1.glb` |
+| `SN_ShipPart_Funnel` | ship_parts | 1 528 | 392 | 25.65 % | `assets/models/ship_parts/SN_ShipPart_Funnel_LOD1.glb` |
+| `SN_ShipPart_HatchCover` | ship_parts | 840 | 210 | 25.00 % | `assets/models/ship_parts/SN_ShipPart_HatchCover_LOD1.glb` |
+| `SN_Machinery_GearSet` | machinery | 2 020 | 494 | 24.46 % | `assets/models/machinery/SN_Machinery_GearSet_LOD1.glb` |
+| `SN_Machinery_Winch` | machinery | 1 776 | 498 | 28.04 % | `assets/models/machinery/SN_Machinery_Winch_LOD1.glb` |
+| `SN_Machinery_PowerUnit` | machinery | 2 260 | 618 | 27.35 % | `assets/models/machinery/SN_Machinery_PowerUnit_LOD1.glb` |
+| `SN_Cargo_Crate` | cargo | 672 | 150 | 22.32 % | `assets/models/cargo/SN_Cargo_Crate_LOD1.glb` |
+| `SN_Cargo_CoalScuttle` | cargo | 588 | 146 | 24.83 % | `assets/models/cargo/SN_Cargo_CoalScuttle_LOD1.glb` |
+| `SN_Cargo_Tank` | cargo | 1 820 | 462 | 25.38 % | `assets/models/cargo/SN_Cargo_Tank_LOD1.glb` |
+| `SN_Cargo_Pallet` | cargo | 316 | 84 | 26.58 % | `assets/models/cargo/SN_Cargo_Pallet_LOD1.glb` |
+| `SN_Dock_Structure` | dock | 1 628 | 434 | 26.66 % | `assets/models/dock/SN_Dock_Structure_LOD1.glb` |
+| `SN_Dock_Jetty` | dock | 1 660 | 468 | 28.19 % | `assets/models/dock/SN_Dock_Jetty_LOD1.glb` |
+| `SN_Dock_Mooring` | dock | 940 | 286 | 30.43 % | `assets/models/dock/SN_Dock_Mooring_LOD1.glb` |
+| `SN_Arch_Warehouse` | architecture | 2 704 | 626 | 23.15 % | `assets/models/architecture/SN_Arch_Warehouse_LOD1.glb` |
+| `SN_Arch_Workshop` | architecture | 1 996 | 444 | 22.24 % | `assets/models/architecture/SN_Arch_Workshop_LOD1.glb` |
+| `SN_Arch_Tavern` | architecture | 2 884 | 600 | 20.80 % | `assets/models/architecture/SN_Arch_Tavern_LOD1.glb` |
+| `SN_Arch_Factory` | architecture | 3 020 | 768 | 25.43 % | `assets/models/architecture/SN_Arch_Factory_LOD1.glb` |
+| `SN_Env_Reef` | environment | 1 944 | 556 | 28.60 % | `assets/models/environment/SN_Env_Reef_LOD1.glb` |
+| `SN_Env_Wreck` | environment | 1 046 | 268 | 25.62 % | `assets/models/environment/SN_Env_Wreck_LOD1.glb` |
+| `SN_Env_Lighthouse` | environment | 1 952 | 482 | 24.69 % | `assets/models/environment/SN_Env_Lighthouse_LOD1.glb` |
+| `SN_Env_Buoy` | environment | 868 | 256 | 29.49 % | `assets/models/environment/SN_Env_Buoy_LOD1.glb` |
+| `SN_Paddle_Freighter` | ships | 12 200 | 2 507 | 20.55 % | `assets/models/ships/SN_Paddle_Freighter_LOD1.glb` |
+| `SN_Paddle_Steamer` | ships | 11 764 | 2 379 | 20.22 % | `assets/models/ships/SN_Paddle_Steamer_LOD1.glb` |
+| `SN_Schooner_Fame` | ships | 13 174 | 2 484 | 18.86 % | `assets/models/ships/SN_Schooner_Fame_LOD1.glb` |
+| `SN_Ironclad` | ships | 8 158 | 1 656 | 20.30 % | `assets/models/ships/SN_Ironclad_LOD1.glb` |
+| **kit 小计（26 件）** | — | **42 058** | **10 824** | **25.7 %** | 上限 = LOD0 × 35 % |
+| **船小计（4 件）** | — | **45 296** | **9 026** | **19.9 %** | 上限 = LOD0 × 30 % |
+| **合计（30 件）** | — | **87 354** | **19 850** | **22.7 %** | 外部共享贴图（LOD0 含 2026-10-22 casemate 批次铁甲舰 −672 tri） |
+
+- 共享贴图：30 个 GLB 的 `images[].uri` 全部指向 `assets/models/<category>/shared_materials/<texture>.png`（8 个类别目录 × 11 张，另有 `dev_mods/core/...` 副本）；175 个 image 引用全部与授权 tile 逐字节一致，无新增贴图。
+- 结构：30/30 单根节点 `<Asset>_LOD1`、单 mesh、每个 primitive 带 UV、材质是 LOD0 `SN_Tex_*` 集合的子集；LOD0↔LOD1 世界包围盒逐轴 0.000 m（复算最大 1×10⁻⁶ m）。**LOD1 不保留 socket / pivot / 层级**——远景不参与装配，装配契约只属于 LOD0。
+- 登记：船的 4 个 LOD1 进 Core manifest（`model.ship.{ironclad,paddle_freighter,paddle_steamer,schooner_fame}_lod1`）；kit 26 件的 LOD1 同 kit LOD0 一样**不登记 manifest**，登记在 [kit_catalog.json](../../tools/modeling/kit_catalog.json) v1.3 的逐件 `lod1` 块与顶层 `lod1` 段（26 件 / 10 824 tri / 1 236 344 B）。
+- **运行时 LOD 切换未接线**：与批次 A 同一口径，只交付可被质量档位使用的资产；切换阈值、低配回退与 LOD2 / impostor 留给 backlog `M2-5` 与 [todo.md](../../todo.md)。
+- 验收证据：结构验收 30/30（单根节点 / 单 mesh / UV / 材质 / bbox / 外部贴图）；Godot 运行时探针 `tools/godot/verify_lod1_kit_ships.gd` **30 件 / 67 个共享贴图实例 / 0 失败**，全量无头测试 **391 passed / 0 failed**（新增 `framework/tests/cases/test_lod1_assets.gd` 3 例）。详见 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md)。
+- 机器计划：`tools/modeling/lod1_kit_ships_plan.json`（30 件 tri / 比例 / 上限 / 路径 / bbox / 材质 / 字节 / sha256 + 总账）。构建 / 预览在工作台 `SN_LOD1_Kit_Ships` 集合（y=780），本批未重存 `.design/SN_Asset_Workbench.blend`。
+- 预览：8 张类别 lineup（1440×620）[weapons](screenshots/lod1/LOD1_lineup_weapons_1440x620.png) / [ship_parts](screenshots/lod1/LOD1_lineup_ship_parts_1440x620.png) / [machinery](screenshots/lod1/LOD1_lineup_machinery_1440x620.png) / [cargo](screenshots/lod1/LOD1_lineup_cargo_1440x620.png) / [dock](screenshots/lod1/LOD1_lineup_dock_1440x620.png) / [architecture](screenshots/lod1/LOD1_lineup_architecture_1440x620.png) / [environment](screenshots/lod1/LOD1_lineup_environment_1440x620.png) / [ships](screenshots/lod1/LOD1_lineup_ships_1440x620.png)；30 张 LOD0 vs LOD1 同机位对比在 `docs/design/screenshots/lod1/SN_<Asset>_LOD0_vs_LOD1_three_quarter_1024x640.png`。
+
 ## Core 实体资源映射
 
 Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB 从全局展示资产复制到 Core 包内，使松散 Core 与独立 `.snavmod.zip` 都能自行解析。全局副本继续供开发场景直接引用。
@@ -537,7 +617,7 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 | `model.material.sealing_compound` | `assets/models/materials/SN_Barrel.glb` | 密封剂 |
 | `banner.port.iron_harbor` | `assets/ports/iron_harbor_banner.png` | 铁港；作为贴图 |
 
-淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **78 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；以及起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`）。
+淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **121 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`；M0-5 新增 4 个船体 LOD1 键 `model.ship.*_lod1`，kit 26 件 LOD1 登记在 [kit_catalog.json](../../tools/modeling/kit_catalog.json) 而非 manifest）。
 
 ## 为什么这样分
 

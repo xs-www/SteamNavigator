@@ -445,6 +445,20 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 过程发现 | ① **帆面曲面归一化要逐位复刻**：最初把 `vnorm((fwd.x,0,fwd.z))` 写成“先按 3D 长度除再归一化”，最后几位不同，导致 `SN_SF_Sails_Main` digest 变化；改成单次 2D 归一化后 3/3 一致——重构类工作必须用 digest 对比，不能靠肉眼；② 3 艘船 Part/基本体实现不同（SF 用 `ship_parts.core`、PF 自带同构副本、IC 的 `taper_cyl` 相位与 `Part.add` 签名都不同），所以 `RigBuilder` 只统一“追加接口”，基本体由各船模块注入；③ **新建 socket 脚本要限定自己的前缀**：铁甲舰若用 `SN_` 当前缀，会把 `SN_Rig_*_Socket_*` 套件接口当船体 socket 删掉，改成 `SN_IC_`；④ GLB 后处理只处理 Mast/Yard/Sail 三类节点，不能把 M0-3 武器 socket 与 PF 旧通用 socket（Engine/Cabin/…）算进“规格外”；⑤ 运行时装配仍缺 `ShipVisualAssembler`，本批只交付资产/接口/目录，避免把建模批次与 GDScript 装配混在一起；⑥ 独立 QA 抓到 3 类真实缺陷并已修：Bowsprit/Stays/Running 的 datum 离地（补甲板接触几何，zmin→0、total 3,690→3,774）、SF `rig_yard_z` 取桅局部 z 与 PF/IC 语义不一致（统一取船体 z）、契约键名/计数/接口名前缀不一致（纯文档）；详见 [RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md) §8 |
 | 交付 | 12 个 GLB（`assets/models/rig/` + Core 副本 + 共享贴图）、4 艘船 GLB 重导、`rig_kit.py` / 生成器 / 干跑 / 基线 / socket / GLB 归一化 / 导出 / 自检 / 目录脚本、Godot 测试、[RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)、[RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md) |
 
+### 11.19 穿壳炮 casemate gun 模块化 M0-6（2026-10-22，12 门舷侧炮拆出 + 铁甲舰空炮门）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 用户要求“把铁甲舰舷侧从船身中间伸出来的炮做成独立模型，并能模块化挂到各种船上；接受当前铁甲舰侧弦变空” |
+| 设计 | 先定**第二种安装基准**：甲板 socket 原点在甲板面，炮门 socket 原点在**炮门平面中心**、`+X` = 炮膛轴线（含 12.13° 外张 + 1.72° 上抬）；模块根 = 炮门平面中心，`port_pitch`（Mount→Pitch→Recoil→Muzzle，无 Yaw）；船体保留炮门框 / 深色炮口板 / 上翻门盖，深色板兼任门内隐藏段遮挡面。炮门参数（`GUN_X` / `GUN_Z0..1` / `GUN_LENGTH` / `gun_port_pose()`）留在 `sn_ironclad_generator.py` 作唯一真源，socket 与炮模块都从它推导 |
+| 几何门禁 | 不整船重建（会丢 legacy UV 迁移 B 的共享贴图 / UV / 两批 socket）。先在 Blender 里证明“现存网格 = 生成器 `with_barrels=True` 变体”（顶点按索引容差 1e-4、面按索引比顶点集合 + 材质），再按面索引删 480 面 / 672 tri；删后校验顶点 5 133 / 面 4 624 / tri 8 158、逐材质面数等于 `with_barrels=False` 变体、原 384 个炮管顶点 1 mm 容差零残留；网格健康四项全 0 |
+| 模块 | `SN_Weapon_CasemateGun`（108 tri：炮管 56 = 2×28，门内炮尾 12 + 双耳轴 40）；装到 12 个炮门与拆炮前烘焙炮管**逐顶点重合，误差 0.00e+00**（`dryrun_casemate_gun.py` 断言，逐门比对顶点集合 + 最近点偏差） |
+| socket | `sn_ship_gun_ports.py`：12 个端口规格由 `gun_port_pose()` 生成（不手填），节点 extras 写 `port_class / port_w / port_h / sill_z / deck_z / inboard_depth / outboard_clearance / lid / lid_hinge_z / elev_* / traverse_deg`；实测门内纵深 4.266–8.000 m、舷外 8.000 m，声明 1.10 / 6.00（声明不得高于实测，脚本断言）；`glb_gun_ports.py` 归一化名字并写 Root `gun_port_sockets` |
+| 导出 | `export_casemate_glb.py`：模块导出 + 贴图外部化 + `glb_weapon_nodes.standardize`；铁甲舰单 mesh 归零导出（`export_extras=True`）→ 外部化 → 武器 socket → 帆索 socket → 炮门 socket 归一化 → Core 副本；旧 GLB 备份到 `.design/ship_sockets/backup_glb/` |
+| 验收 | `verify_casemate_glb.py` **两个交付物 ALL OK**；`verify_ship_weapon_sockets_glb.py` 4/4（IC 26 节点 / 8 158 tri）；`verify_legacy_uv_b_glb.py` 21 files 0 failures；`verify_ironclad_glb.py`、`verify_lod1_kit_ships_glb.py`（IC LOD0 8 158 / LOD1 1 656 = 0.203）、`verify_weapon_glb.py` 5/5 全绿；Godot 新增 `test_ship_gun_ports.gd` 3 例，`test_lod1_assets.gd` LOD0 总 tri 常量 45 968 → 45 296 |
+| 过程发现 | ① **活体 Blender 缓存纯 Python 模块**：材质白名单模块是旧版 → 新键 `KeyError`；落盘脚本必须对 `sn_weapon_materials` 也 `importlib.reload`（同 §11.13 / §11.17）；② `mesh.materials` 是 Material 集合不是 slot 集合，`slot.material` 会 AttributeError；③ **毫米量化仍会在 float32 边界翻边**：按 `round(x,3)` 比对坐标有 17 个面误报漂移，最终改用**按索引比对**（顶点容差 + 面顶点集合 + 材质），不依赖量化；④ **预览近景相机用了船体局部坐标**：炮门中心是局部坐标，船体对象在工作台摆位 (0,90,0)，直接把局部坐标当世界坐标会把镜头对到 90 m 外空气里，渲染出纯背景；⑤ GLB 验收的 4×4 单位阵 1.0 在索引 0/5/10/**15**，漏 15 会把单位阵判失败（验收脚本自身缺陷）；⑥ 其它 3 艘船没有炮门开口，不能直接挂穿壳炮，需 port cassette（backlog M1-0） |
+| 交付 | 1 个模块 GLB + 重导铁甲舰 GLB（+ Core 副本）、8 个工具脚本（生成 / 干跑 / 端口 / 归一化 / 落盘 / 导出 / 验收 / 预览）、5 张预览图、Godot 守护测试、[WEAPON_SOCKET_CONTRACT.md §9](WEAPON_SOCKET_CONTRACT.md)、[CASEMATE_GUN_ACCEPTANCE.md](../archive/CASEMATE_GUN_ACCEPTANCE.md) |
+
 ## 12. 共享贴图材质与 UV（新资产默认约定，2026-10-21 起）
 
 > 结论：**新资产不再用纯色代表材质**。材质 = 共享贴图（`SN_Tex_*`）+ spec 参数，

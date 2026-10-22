@@ -1,7 +1,7 @@
 # 建模需求 Backlog（3D 资产）
 
 > 状态：Active（2026-10-22）
-> 盘点基线：模型素材库 kit 26 件（批次 1–3，42,058 tri）、**船体帆索 rig_kit 12 件（3,774 tri，M0-4）**、舰载武器 8 件（16,996 tri，装配规范 v2）、船 4 艘 + 原型、铁港建筑 16 栋（8 LOD0 + 8 LOD1）、起重机 4 台、**旧道具 31 + 港口设施 6（批次 A 已迁移）**、旧船模块 11 + 4 艘可玩船 + 旧小镇 10（批次 B 已迁移，实际重导 21 个 GLB；`SN_Ship_Prototype` 遗留键除外）。
+> 盘点基线：模型素材库 kit 26 件（批次 1–3，42,058 tri）+ **kit LOD1 26 件 + 船 LOD1 4 件（19,850 tri，M0-5）**、**船体帆索 rig_kit 12 件（3,774 tri，M0-4）**、舰载武器 8 件（16,996 tri，装配规范 v2）、船 4 艘 + 原型、铁港建筑 8 栋（8 LOD0 + 8 LOD1，共 16 个 GLB）、起重机 4 台、**旧道具 31 + 港口设施 6（批次 A 已迁移）**、旧船模块 11 + 4 艘可玩船 + 旧小镇 10（批次 B 已迁移，实际重导 21 个 GLB；`SN_Ship_Prototype` 遗留键除外）。
 > 相关：[KIT_ASSET_LIBRARY.md](KIT_ASSET_LIBRARY.md) · [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) · [ASSET_MAP.md](ASSET_MAP.md) · [MODELING_WORKFLOW.md](MODELING_WORKFLOW.md)
 
 本文件只列**建模/资产侧**待办，不包含玩法、UI、运行时装配代码；接入类任务见 [todo.md](../../todo.md)。
@@ -14,6 +14,8 @@
 - 旧铁港建筑 16 栋已带 `SN_TEX_*` 图集贴图；
 - **旧资产 UV 迁移 A（2026-10-22）**：31 件铁港道具 + 6 件港口设施补 UV、切 `SN_Tex_*`、重导 GLB；37 件 11,278 tri 不变、24,188 UV loops、9 个共享材质、Godot 37/37 通过（见 [LEGACY_UV_MIGRATION_A_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_A_ACCEPTANCE.md)）；
 - **旧资产 UV 迁移 B（2026-10-22）**：船模块 12 GLB（含占位副本）+ 4 艘可玩船 + 旧小镇剩余 5 件补 UV、切 `SN_Tex_*`、重导 GLB；**55,256 tri / 118 网格不变、111,564 UV loops、10 个共享材质、Godot 21/21 / 24 共享贴图实例通过**（见 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)）；旧小镇 5 栋建筑此前已由建筑套件升级为 `SN_Town_*`，`SN_Ship_Prototype` 遗留键仍是旧纯色。
+- **穿壳炮 casemate gun 模块化 M0-6（2026-10-22）**：铁甲舰 12 门舷侧炮拆成独立模块 `SN_Weapon_CasemateGun`（108 tri，根 = 炮门平面中心，`port_pitch`），船体侧新增 12 个 `SN_Socket_GunPort_*`，船体重导为空炮门版（8 830 → 8 158 tri）；模块装回去与烘焙炮管逐顶点重合。见 [CASEMATE_GUN_ACCEPTANCE.md](../archive/CASEMATE_GUN_ACCEPTANCE.md)。
+- **LOD1 基础套件 M0-5（2026-10-22）**：kit 26 件 + 4 艘可玩船各补 LOD1，**30 件 19,850 / 88,026 = 22.6%**（铁甲舰 LOD0 随后由 M0-6 casemate 批次 −672 tri，30 件合计现为 87,354 / 22.7%）（kit 10,824 / 42,058 = 25.7% ≤35%、船 9,026 / 45,968 = 19.6% ≤30%）；LOD0↔LOD1 世界包围盒逐轴 0.000 m，30/30 单根节点 / 单 mesh / UV 完整 / 外部共享贴图；铁港建筑 8 个 LOD1（8 栋 × LOD0/LOD1 = 16 个 GLB）此前已交付。见 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md)。
 
 ## 2. P0：接入前的硬缺口
 
@@ -23,7 +25,7 @@
 | ~~M0-2~~ | ~~旧资产 UV 迁移 B~~ | ~~11 件船模块 + 4 艘船 + 旧小镇 10 件~~ | ~~25 件~~ | **✅ 2026-10-22 完成**：实际重导 **21 个 GLB**（12 模块含占位副本 + 4 艘可玩船 + 旧小镇剩余 5 件）；5 栋旧小镇建筑此前已由建筑套件升级为 `SN_Town_*`；55,256 tri / 118 网格不变、111,564 UV loops、Godot 21/21 / 24 共享贴图实例 |
 | ~~M0-3~~ | ~~船侧武器安装点~~ | ~~4 艘船各加 2–4 个 `SN_Socket_Weapon*` 空节点 + `socket_class / clearance_r / clearance_h` extras~~ | ~~4 件，无几何~~ | **✅ 2026-10-22 完成**：4 艘船共 **14 个空节点**（PF 4 / PS 3 / SF 3 / IC 4），BLEND 前缀名 → GLB 标准名归一化；extras 增加 `clearance_x / clearance_y / socket_index / socket_spec`，Root 写 `weapon_sockets` 列表；几何逐船不变（45,968 tri），GLB 4/4 + Godot 运行时 11/11；契约见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md#L156) |
 | M0-4 | `rig_kit` 船体部件库 | 桅杆 / 斜桁 / 帆面 / 索具参数化，接口 `SN_Socket_Mast/Yard/Sail` | 8–12 件，约 6–8k tri | **✅ 2026-10-22 完成**：12 件 `SN_Rig_*` 套件 **3,774 tri**（预算 7,050），PF/SF/IC 帆索改由 `rig_kit.py` 参数化生成、**逐对象几何 digest 0 差异**；3 艘船新增 **22 个** `SN_Socket_Mast/Yard/Sail_*` 空节点（PF 6 / SF 7 / IC 9，零几何）；运行时 `ShipVisualAssembler` 仍待接。契约 [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)，验收 [RIG_KIT_ACCEPTANCE.md](../archive/RIG_KIT_ACCEPTANCE.md) |
-| M0-5 | LOD1 基础套件 | kit 26 件 + 船 4 艘 + 铁港建筑 16 栋的远景低模 | 约 40 件 | 2.5D 舞台远景与低配档必需；LOD2 billboard 后续 |
+| ~~M0-6~~ | ~~炮门 socket + 穿壳炮模块化~~ | ~~铁甲舰 12 门舷侧炮拆成独立模块 + 船体 12 个 `SN_Socket_GunPort_*`~~ | ~~1 件模块 + 12 socket~~ | **✅ 2026-10-22 完成**：模块 **108 tri / 7 节点 / 3 材质**，船体 **8 830 → 8 158 tri**、26 节点；模块装到 12 个炮门与拆炮前烘焙炮管**误差 0**；新契约 §9、Godot `test_ship_gun_ports.gd` 3 例。其它 3 艘船要挂穿壳炮需先做 port cassette |\n| M0-5 | LOD1 基础套件 | kit 26 件 + 船 4 艘 + 铁港建筑 8 栋（8 LOD0 + 8 LOD1）的远景低模 | 约 38 个 LOD1 | **✅ 2026-10-22 完成**：kit 26 + 船 4 共 **30 件 LOD1 = 19,850 / 88,026 tri（22.6%）**（kit 25.7% / 船 19.6%）；铁甲舰 LOD0 随后由 M0-6 casemate 批次 −672 tri，现口径 30 件 **87,354 / 22.7%**、船 **45,296 / 19.9%**，LOD1 资产未变，LOD0↔LOD1 bbox 逐轴 0.000 m、30/30 单根节点 / 单 mesh / UV 完整 / 外部共享贴图、8 类 `shared_materials`；建筑 8 个 LOD1（8 栋 × LOD0/LOD1 = 16 个 GLB）已在批次 A/B 交付；机器计划 `tools/modeling/lod1_kit_ships_plan.json`；Godot 运行时 **30 件 / 67 个共享贴图实例 / 0 失败**、全量 **391 passed / 0 failed**（新增 `test_lod1_assets.gd` 3 例）。**运行时 LOD 切换未接线**，LOD2 / impostor 见 M2-5。验收 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md) |
 
 ## 3. P1：2.5D 舞台 / 基地 / 事件内容
 
@@ -34,7 +36,7 @@
 | M1-3 | `interior_kit` 切面内景 | 酒馆 / 船长室 / 仓库 / 办公室固定机位内景 | 委托 / 情报页舞台化；低模切面，不做可走室内 |
 | M1-4 | environment_kit v2 | 悬崖 / 沙滩 / 小岛 / 植被 / 残骸变体 / 浮标变体 / 冰山 / 漩涡 | 事件化海洋与探索；需新增贴图（草 / 苔 / 沙 / 冰） |
 | M1-5 | 港口变体 | 第二港口建筑组、市场摊、信号塔、干船坞 | 旧 `SN_Port_Facilities` 先迁移，再补新设施 |
-| M1-6 | 战斗残骸 / 损伤状态 | 断桅 / 破帆 / 船体破洞 / 燃烧残骸 | 可替换 mesh；战斗结算与事件舞台使用 |
+| M1-0 | port cassette 炮门舱段 | 舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口的适配模块（Light/Medium/Heavy 口径） | 让 `SN_Weapon_CasemateGun` 能装到没有炮门的船；同时解决空炮门“暗腔”读感。依赖本批 §9 契约 |\n| M1-6 | 战斗残骸 / 损伤状态 | 断桅 / 破帆 / 船体破洞 / 燃烧残骸 | 可替换 mesh；战斗结算与事件舞台使用 |
 
 ## 4. P2：探索 / 敌人 / 内容量
 
@@ -50,9 +52,11 @@
 
 1. ~~**批次 4**：M0-1 旧资产 UV 迁移 A（37 件道具/设施）~~ —— **✅ 2026-10-22 完成**。
 2. **批次 5**：~~M0-3 船侧武器 socket~~（**✅ 2026-10-22 完成**）+ ~~M0-4 `rig_kit`~~（**✅ 2026-10-22 完成**）——武器 v2 与船体部件接口已就位，下一步接运行时装配。
-3. ~~**批次 6**：M0-2 旧资产 UV 迁移 B（21 个 GLB）~~ —— **✅ 2026-10-22 完成**；M0-5 LOD1 仍在队列。
-4. **批次 7**：M2-1 `combat_kit` 敌舰 + M1-1 architecture_kit 扩展 + M1-2 `base_kit` + M1-3 `interior_kit`。
-5. **批次 8**：M1-4 environment_kit v2 + M2-3 `ruins_kit` + M2-2 `sea_monster`。
+3. ~~**批次 6**：M0-2 旧资产 UV 迁移 B（21 个 GLB）~~ —— **✅ 2026-10-22 完成**。
+4. ~~**批次 6b**：M0-5 LOD1 基础套件（kit 26 + 船 4 = 30 件；建筑 8 个 LOD1 / 16 个 GLB 已在批次 A/B 交付）~~ —— **✅ 2026-10-22 完成**；M0 系列（M0-1 ~ M0-5）全部收口，下一步接运行时 LOD 切换 / 质量档位与 M2-5。
+5. ~~**批次 6c**：M0-6 炮门 socket + 穿壳炮模块化~~ —— **✅ 2026-10-22 完成**；M0 系列（M0-1 ~ M0-6）全部收口。
+6. **批次 7（下一批）**：M2-1 `combat_kit` 敌舰 + M1-1 architecture_kit 扩展 + M1-2 `base_kit` + M1-3 `interior_kit`（按阶段 2/3 的优先级取 M2-1 或 M1-1/M1-2/M1-3）。
+7. **批次 8**：M1-4 environment_kit v2 + M2-3 `ruins_kit` + M2-2 `sea_monster`。
 
 ## 6. 跨批次统一要求
 

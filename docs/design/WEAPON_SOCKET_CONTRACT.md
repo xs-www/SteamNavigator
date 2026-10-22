@@ -1,6 +1,7 @@
 # 武器装配规范 v2（可拼接舰载武器）
 
-> 状态：武器侧 v2 已执行（2026-10-22）；船体侧安装点 M0-3 已执行（4 艘可玩船 14 个 socket，见 §8）
+> 状态：武器侧 v2 已执行（2026-10-22）；船体侧安装点 M0-3 已执行（4 艘可玩船 14 个 socket，见 §8）；
+> 炮门 socket + 穿壳炮 casemate gun 已执行（铁甲舰 12 个炮门，见 §9）
 > 适用：舰载武器批次 1–2（8 件）、model kit 的武器部件（`SN_Weapon_Cannon/GunCarriage/Turret/Pedestal`）、船体 / 甲板安装点
 > 旧版（按资产前缀命名 Pivot）见 git 历史；本文件替代 v1 作为唯一接口真源。
 
@@ -52,6 +53,7 @@ Hull / Compartment                船体 / 舱段
 | `yaw_pitch_multi` | Mount + Yaw + Pitch_1..N + Recoil_1..N + Muzzle_1..N | 多联装 / 侧舷炮列（若需要整列回转） |
 | `yaw_only` | Mount + Yaw（+ Muzzle） | 仅回转、炮身固定的塔炮 |
 | `base_only` | Mount + Yaw（+ Trunnion 接口） | 炮架 / 炮塔底座 / 基座（等待 Body） |
+| `port_pitch` | Mount + Pitch + Recoil + Muzzle（**无 Yaw**） | 穿船壳炮（casemate gun）§9 |
 
 ## 4. 现有资产映射（v2 目标）
 
@@ -69,6 +71,7 @@ Hull / Compartment                船体 / 舱段
 | `SN_Weapon_GunCarriage`（kit 炮架） | base_only | ✅ | ✅ | — | — | — | — |
 | `SN_Weapon_Turret`（kit 炮塔） | yaw_only | ✅ | ✅ | — | — | ✅ | 4 |
 | `SN_Weapon_Pedestal`（kit 基座） | base_only | ✅ | ✅ | — | — | — | 4 |
+| `SN_Weapon_CasemateGun`（穿壳炮） | port_pitch | ✅ | — | ✅ | ✅ | ✅ | — |
 | `SN_ShipPart_Deck` | — | — | — | — | — | — | `SN_Socket_Weapon_Port/Starboard` |
 
 ## 5. Root extras（机器可读）
@@ -121,6 +124,8 @@ Hull / Compartment                船体 / 舱段
 ```
 
 船体 Root extras 额外写：`weapon_sockets`（按 socket_index 顺序的标准节点名数组）、`weapon_socket_count`、`socket_spec`。
+
+> **内容侧镜像（2026-10-22）**：`schemas/hull.schema.json` 的 `hull_data` 已新增可选 `weapon_sockets` / `rig_sockets` 数组，字段与本节 GLB extras 同口径；Core `dev_mods/core/content/hulls.json` 已回填 4 艘船（14 个武器 socket + 22 个帆索 socket）。该镜像供编辑器查看 / 编辑 / 校验，以及后续数据驱动装配使用；**运行时装配现阶段仍以 GLB 节点 extras 为准**（`ShipVisualAssembler` 未接入）。字段口径、镜像与 GLB 的坐标 / 索引差异见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) §6。
 
 装配 fallback：
 
@@ -186,7 +191,8 @@ Hull / Compartment                船体 / 舱段
 - Root extras：`weapon_sockets`（按 socket_index 顺序的名字数组）、`weapon_socket_count`、`socket_spec`
   （Blender IDProperty 不支持字符串数组，`weapon_sockets` 由 GLB 后处理写入；Blender 侧只保留计数与 spec）；
   铁甲舰是单 mesh Root，另由 `sn_ship_weapon_sockets.py` 的 `root_extras` 补齐
-  `asset / version / units / pivot / forward_axis`，与其他 3 艘多节点船体的 Root extras 对齐（2026-10-22 验收后补）。
+  `asset / version / units / pivot / forward_axis`，与其他 3 艘多节点船体的 Root extras 对齐（2026-10-22 验收后补）；
+- 内容侧镜像：`hull_data.weapon_sockets` / `rig_sockets` 已回填 4 艘船（14 + 22，字段同本节 extras），运行时仍读 GLB，见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) §6。
 
 ### 8.3 净空（clearance）口径
 
@@ -235,3 +241,122 @@ Hull / Compartment                船体 / 舱段
   需要更宽炮位的武器请走模块化甲板批次（`rig_kit` 已于 M0-4 交付桅帆索部件与 `SN_Socket_Mast/Yard/Sail_*`，
   见 [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)），而不是抬高这里的声明值；
 - socket 只保证安装面、朝向与净空，不提供碰撞体、炮门动画或索具避让。
+
+## 9. 炮门 socket 与穿壳炮 casemate gun（2026-10-22）
+
+**状态：已执行。** 铁甲舰 12 门舷侧炮从船体网格里拆成独立模块 `SN_Weapon_CasemateGun`，
+船体侧改为 12 个 `SN_Socket_GunPort_*`；船体保留炮门框 / 深色炮口板 / 上翻炮门盖，
+炮管与炮口箍由模块供给。GLB：`SN_Ironclad.glb` **26 节点 / 1 mesh / 8158 tri**（拆炮前 8830），
+`SN_Weapon_CasemateGun.glb` **7 节点 / 2 mesh / 108 tri**。
+
+### 9.1 为什么是第二套 socket（不复用 `SN_Socket_Weapon`）
+
+| | `SN_Socket_Weapon`（甲板） | `SN_Socket_GunPort`（炮门） |
+| --- | --- | --- |
+| 原点 | 甲板安装面（down-ray 实测 deck top） | **炮门平面中心**（炮膛轴线 ∩ 船壳面） |
+| `+X` | 炮口 / 前向；侧舷点 rotZ ±90° 指向舷外 | **炮膛轴线**（含船型的外张角与上抬角） |
+| 可见件 | 整机（底座 / 炮架 / 炮盾 / 炮管） | 只有门外炮管；炮架 / 炮尾藏在船壳内 |
+| 净空字段 | `clearance_r/x/y/h`（安装面以上） | `inboard_depth` / `outboard_clearance`（门内 / 舷外） |
+
+两种基准无法用同一个节点名表达：混用会让 §8.3 的甲板净空判据整体错位。
+因此炮门 socket 独立命名、独立 Root 名单（`gun_port_sockets`），甲板 socket 保持不变。
+
+### 9.2 节点契约
+
+| 节点 | 所属 | 轴 / 原点 | 说明 |
+| --- | --- | --- | --- |
+| `SN_Socket_GunPort_Port_1..6` / `_Starboard_1..6` | Hull | 原点 = 炮门平面中心；`+X` = 炮膛轴线（舷外） | 船体提供的炮门安装点；当前只有铁甲舰有 |
+| `SN_Mount` | Weapon | = Root（炮门平面中心） | 模块安装帧 |
+| `SN_Pivot_Pitch` | Weapon | 绕 Y；`x = -0.15`（门内耳轴） | 俯仰；无 Yaw |
+| `SN_Recoil` | Weapon | 沿 -X | 后坐平移 |
+| `SN_Muzzle` | Weapon | 炮口端面中心 | VFX / 命中点 |
+
+端口节点 extras（`socket_spec = "hull-gunports@1"`）：
+
+```json
+{
+  "socket_spec": "hull-gunports@1",
+  "socket_index": 1,
+  "side_index": 1,
+  "port_class": "Medium",
+  "port_w": 1.9,
+  "port_h": 1.9,
+  "sill_z": 1.3,
+  "deck_z": 4.6,
+  "inboard_depth": 1.1,
+  "outboard_clearance": 6.0,
+  "lid": "top",
+  "lid_hinge_z": 3.4,
+  "elev_min_deg": -6.0,
+  "elev_max_deg": 12.0,
+  "traverse_deg": 0.0,
+  "mount_scale": 1.0,
+  "note": "人类可读备注，装配忽略"
+}
+```
+
+- `sill_z` 是炮门下沿高度、`deck_z` 是该点甲板高度（铁甲舰均为 4.60），**不要**拿甲板 socket 的 z 口径套用；
+- `inboard_depth`：从炮门平面内侧 0.20 m 沿 -X 射线量到的门内自由纵深（封顶 8 m）；铁甲舰实测 4.265–8.000 m，声明 1.10 m；
+- `outboard_clearance`：从门外 0.15 m 沿 +X 量到的舷外自由距离（封顶 8 m）；铁甲舰实测 8.000 m，声明 6.0 m；
+- 声明值一律不高于实测值（`sn_ship_gun_ports.apply_ship()` 内断言，不达标直接抛错）。
+
+Root extras：`gun_port_sockets`（按 `socket_index` 顺序的名字数组）、`gun_port_socket_count`、
+`gun_port_socket_spec`；与既有 `weapon_sockets` / `rig_sockets` 并列，互不覆盖。
+
+### 9.3 装配 profile 与匹配规则
+
+`port_pitch` = `Mount + Pitch + Recoil + Muzzle`（固定舷炮，无 Yaw）。
+装配时按以下顺序判适配：
+
+1. `weapon_class == port_class`（硬门禁，`SN_Weapon_CasemateGun` 声明 `Medium`）；
+2. 武器 `port_w / port_h`（需要的最小开口）≤ 端口 `port_w / port_h`；
+3. 武器 `breech_depth` ≤ 端口 `inboard_depth`（否则炮尾会从船壳内侧穿出）；
+4. 武器 `elev_min/max_deg` ⊆ 端口 `elev_*`；
+5. 炮管允许越出舷外，`envelope_x` 不计入净空；`outboard_clearance` 只约束锚架 / 撞角 / 艏斜桁这类可预见遮挡。
+
+模块 Root extras 关键字段：`assembly_profile = port_pitch`、`has_yaw = false`、
+`port_class = Medium`、`port_w/port_h = 1.9/1.9`、`muzzle_protrusion = 1.5407`、
+`breech_depth = 0.95`、`trunnion_offset = 0.15`、`elev_min_deg = -6`、`elev_max_deg = 12`。
+
+### 9.4 铁甲舰 12 个炮门（船体局部坐标，m）
+
+| 端口 | x | y | z | rot_z | rot_y |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `_Port_1` | −17.414 | 5.073 | 2.262 | +77.869° | −1.720° |
+| `_Port_2` | −10.414 | 5.838 | 2.262 | +77.869° | −1.720° |
+| `_Port_3` | −3.414 | 6.178 | 2.262 | +77.869° | −1.720° |
+| `_Port_4` | 3.586 | 6.165 | 2.262 | +77.869° | −1.720° |
+| `_Port_5` | 10.586 | 5.722 | 2.262 | +77.869° | −1.720° |
+| `_Port_6` | 17.586 | 4.736 | 2.262 | +77.869° | −1.720° |
+| `_Starboard_1..6` | 同上 | 取负 | 同上 | −77.869° | −1.720° |
+
+- 坐标由 `sn_ironclad_generator.gun_port_pose()` 从同一组炮门参数推导（不是手填），
+  因此船体重建后 socket 不会漂；
+- `rot_z = ±77.869°` 对应烘焙炮管的 12.13° 前外张，`rot_y = −1.720°` 对应 1.72° 上抬；
+  模块本体不带外张角，换到别的船时由该船的炮门朝向决定；
+- 12 个端口由 `sn_ship_gun_ports.py` 写入、`glb_gun_ports.py` 归一化并写 Root 名单。
+
+### 9.5 交付与验收链路
+
+| 环节 | 文件 |
+| --- | --- |
+| 模块参数化生成 + 装配 extras | `tools/modeling/generators/sn_casemate_gun_generator.py`（`port_pitch`） |
+| 模块乾跑 + “装上去与烘焙炮管逐点重合”断言 | `tools/modeling/generators/dryrun_casemate_gun.py` |
+| 炮门规格 + Blender 就地补齐 / 实测 / 自检 | `tools/modeling/generators/sn_ship_gun_ports.py`（`--check` 纯 Python） |
+| GLB 后处理（前缀名归一化 + Root 名单） | `tools/modeling/generators/glb_gun_ports.py` |
+| Blender 落盘（几何门禁 → 删炮管 → 建模块 → 三套 socket） | `tools/modeling/generators/apply_casemate_assets.py` |
+| 导出（模块 + 空炮门铁甲舰 + Core 副本） | `tools/modeling/generators/export_casemate_glb.py` |
+| GLB 独立验收（两个交付物） | `tools/modeling/generators/verify_casemate_glb.py` |
+| Godot 运行时守护 | `framework/tests/cases/test_ship_gun_ports.gd` |
+| 验收记录 | [CASEMATE_GUN_ACCEPTANCE.md](../archive/CASEMATE_GUN_ACCEPTANCE.md) |
+
+### 9.6 边界
+
+- **只有铁甲舰有炮门**。明轮货轮 / 明轮客船 / 纵帆船的船壳没有开口，直接挂炮门模块会让
+  炮管从完好的船壳板里长出来；给它们装穿壳炮需要先做「炮门舱段 / port cassette」适配件
+  （在船侧给出开口 + 暗腔，再套用本节的 socket 契约），列为后续批次；
+- 炮门 socket 不提供碰撞体、炮门开合动画与索具避让；炮门盖在资产里是固定打开的；
+- 空载读感 = 炮门框 + 木制深色炮口板 + 开着的门盖；深色板同时是模块门内隐藏段的遮挡面；
+- `SN_Ironclad_LOD1.glb` 仍是拆炮前的旧件（LOD 切换未接线），重建 LOD1 列为后续项；
+- 内容侧镜像（`hull.schema.json` 的 `gun_port_sockets`）本轮**未做**，运行时仍以 GLB 节点 extras 为准。
+

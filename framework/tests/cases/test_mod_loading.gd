@@ -25,7 +25,15 @@ func test_registry_accessible_after_freeze() -> void:
 	assert_true(context.commands.has(&"run.start"), "run.start command is registered")
 	assert_true(context.queries.has(&"port.view"), "port.view query is registered")
 	assert_true(context.localization.has_key("good.core.iron_ore.name"), "localization loaded")
-	assert_eq(context.assets.count(), 89, "all Core image and model assets are registered (incl. batch-A/B LOD1 building keys and the three crane props)")
+	var manifest_parsed := JsonUtils.parse_file("res://dev_mods/core/manifest.json")
+	assert_true(bool(manifest_parsed.get("ok", false)), "core manifest parses")
+	if bool(manifest_parsed.get("ok", false)):
+		var declared_assets: Dictionary = manifest_parsed["value"].get("assets", {})
+		assert_eq(
+			context.assets.count(),
+			declared_assets.size(),
+			"every Core manifest asset is registered (image, model and shared-texture keys)"
+		)
 	var coal := context.registries.get_by_id(ContentTypes.GOOD, "core:good/coal")
 	assert_eq(String(coal.information.get("texture", "")), "icon.coal", "Core goods expose parsed texture information")
 	assert_eq(coal.asset_uri("model"), "asset://core/model.good.coal", "Core goods expose namespaced model URIs")

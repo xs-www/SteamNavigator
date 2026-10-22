@@ -139,6 +139,11 @@
 `rig_stowed`。`rig_yard_z` 统一为**船体坐标 z**（与 socket `local[2]` 相同；SF 后倾船的
 桅局部高度不写在该字段），`rig_height` 是桅顶相对甲板的高度。
 
+> **内容侧镜像（2026-10-22）**：`schemas/hull.schema.json` 的 `hull_data` 已新增可选
+> `rig_sockets` 数组（字段同本节 extras，`mast_key` 在内容侧写作 `mast_id`），Core
+> `dev_mods/core/content/hulls.json` 已回填 22 个；供编辑器编辑与后续数据驱动装配，运行时
+> 现阶段仍读 GLB extras。口径差异见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) §6。
+
 ## 5. 装配关系
 
 ```text
@@ -214,7 +219,7 @@ Blender 构建顺序（Builder 执行，单写者）：
 3. **帆船三角顶帆的 `Sail_Main` 点**：当前 `SN_Socket_Sail_Main` 用帆脚 tack 位置，
    主桅上还有三角顶帆（未单独建点），需要逐面装配时再细分 `SN_Socket_Sail_Main_Top`。
 4. **明轮客船无帆索**：不建 rig socket；`SN_Socket_Mast` 族只覆盖 PF/SF/IC。
-5. **LOD**：12 件套件暂无 LOD1；远景低模属 backlog M0-5。
+5. **LOD**：4 艘可玩船（含其帆索几何）已随 M0-5 交付 LOD1（单 mesh、无 socket / pivot，远景不参与装配）；12 件独立 `SN_Rig_*` 套件仍无 LOD1——它们作为近景装配件交付，远景由整船 LOD1 承担（验收见 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md)）。
 6. **武器底座字段 F1** 与 rig_kit 无关，仍按 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) §7.5
    以网格实测为准。
 
