@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T20:04:09.097Z",
+    "generated_at": "2026-10-22T22:05:07.960Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -44,7 +44,11 @@
         "content/combat_abilities.json",
         "content/enemy_archetypes.json",
         "content/encounter_tables.json",
-        "content/loot_tables.json"
+        "content/loot_tables.json",
+        "content/ship_archetypes.json",
+        "content/captains.json",
+        "content/formations.json",
+        "content/fleet_doctrines.json"
       ],
       "localization": [
         "localization/zh_CN.json",
@@ -197,7 +201,8 @@
         "content.voyage_events.v1",
         "content.world.v1",
         "content.campaign.v1",
-        "content.combat.v1"
+        "content.combat.v1",
+        "content.fleet.v1"
       ]
     },
     "contentFiles": {
@@ -4933,6 +4938,421 @@
             }
           }
         ]
+      },
+      "content/ship_archetypes.json": {
+        "schema_version": "2.0",
+        "content_type": "ship_archetypes",
+        "definitions": [
+          {
+            "id": "core:ship_archetype/flagship_ironclad",
+            "name_key": "ship_archetype.core.flagship_ironclad.name",
+            "description_key": "ship_archetype.core.flagship_ironclad.description",
+            "tags": [
+              "ship_archetype.fleet",
+              "ship_archetype.flagship"
+            ],
+            "enabled": true,
+            "data": {
+              "hull_ref": "core:hull/large_performance",
+              "crew_capacity": 40,
+              "cargo_capacity": 160,
+              "base_speed": 17,
+              "upkeep": 120,
+              "default_modules": [
+                {
+                  "slot": "boiler",
+                  "module": "core:module/performance"
+                },
+                {
+                  "slot": "cargo",
+                  "module": "core:module/large_hold"
+                },
+                {
+                  "slot": "navigation",
+                  "module": "core:module/chart_room"
+                },
+                {
+                  "slot": "safety",
+                  "module": "core:module/safety_valve"
+                },
+                {
+                  "slot": "cabin",
+                  "module": "core:module/passenger_cabin"
+                }
+              ],
+              "weapon_sockets": [
+                {
+                  "socket": "SN_Socket_Weapon_Port_1",
+                  "class": "Heavy",
+                  "weapon": "core:weapon/heavy_cannon"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Starboard_1",
+                  "class": "Heavy",
+                  "weapon": "core:weapon/heavy_cannon"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Port_2",
+                  "class": "Medium",
+                  "weapon": "core:weapon/repeater"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Starboard_2",
+                  "class": "Medium",
+                  "weapon": "core:weapon/repeater"
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:ship_archetype/freight_hauler",
+            "name_key": "ship_archetype.core.freight_hauler.name",
+            "description_key": "ship_archetype.core.freight_hauler.description",
+            "tags": [
+              "ship_archetype.fleet",
+              "ship_archetype.freight"
+            ],
+            "enabled": true,
+            "data": {
+              "hull_ref": "core:hull/medium_standard",
+              "crew_capacity": 18,
+              "cargo_capacity": 165,
+              "base_speed": 15,
+              "upkeep": 45,
+              "default_modules": [
+                {
+                  "slot": "boiler",
+                  "module": "core:module/standard"
+                },
+                {
+                  "slot": "cargo",
+                  "module": "core:module/medium_hold"
+                },
+                {
+                  "slot": "navigation",
+                  "module": "core:module/spyglass"
+                },
+                {
+                  "slot": "safety",
+                  "module": "core:module/lifeboat"
+                },
+                {
+                  "slot": "cabin",
+                  "module": "core:module/small_cabin"
+                }
+              ],
+              "weapon_sockets": [
+                {
+                  "socket": "SN_Socket_Weapon_Port_1",
+                  "class": "Light",
+                  "weapon": "core:weapon/deck_gun"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Starboard_1",
+                  "class": "Light",
+                  "weapon": "core:weapon/deck_gun"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Bow",
+                  "class": "Medium",
+                  "weapon": "core:weapon/repeater"
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:ship_archetype/courier_sloop",
+            "name_key": "ship_archetype.core.courier_sloop.name",
+            "description_key": "ship_archetype.core.courier_sloop.description",
+            "tags": [
+              "ship_archetype.fleet",
+              "ship_archetype.courier"
+            ],
+            "enabled": true,
+            "data": {
+              "hull_ref": "core:hull/small_efficient",
+              "crew_capacity": 8,
+              "cargo_capacity": 60,
+              "base_speed": 14,
+              "upkeep": 20,
+              "default_modules": [
+                {
+                  "slot": "boiler",
+                  "module": "core:module/small_efficient"
+                },
+                {
+                  "slot": "cargo",
+                  "module": "core:module/small_hold"
+                },
+                {
+                  "slot": "navigation",
+                  "module": "core:module/spyglass"
+                },
+                {
+                  "slot": "safety",
+                  "module": "core:module/lifeboat"
+                }
+              ],
+              "weapon_sockets": [
+                {
+                  "socket": "SN_Socket_Weapon_Port_1",
+                  "class": "Light",
+                  "weapon": "core:weapon/deck_gun"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Starboard_1",
+                  "class": "Light",
+                  "weapon": "core:weapon/deck_gun"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Stern",
+                  "class": "Medium",
+                  "weapon": "core:weapon/repeater"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/captains.json": {
+        "schema_version": "2.0",
+        "content_type": "captains",
+        "definitions": [
+          {
+            "id": "core:captain/elena_voss",
+            "name_key": "captain.core.elena_voss.name",
+            "description_key": "captain.core.elena_voss.description",
+            "tags": [
+              "captain.merchant",
+              "captain.fleet"
+            ],
+            "enabled": true,
+            "data": {
+              "skills": {
+                "navigation": 72,
+                "gunnery": 58,
+                "engineering": 64,
+                "leadership": 78
+              },
+              "traits": [
+                "captain.drillmaster",
+                "captain.calm"
+              ],
+              "wage_per_voyage": 85,
+              "loyalty": 70,
+              "commandable_archetypes": [
+                "core:ship_archetype/flagship_ironclad",
+                "core:ship_archetype/freight_hauler"
+              ]
+            }
+          },
+          {
+            "id": "core:captain/marcus_reed",
+            "name_key": "captain.core.marcus_reed.name",
+            "description_key": "captain.core.marcus_reed.description",
+            "tags": [
+              "captain.raider",
+              "captain.fleet"
+            ],
+            "enabled": true,
+            "data": {
+              "skills": {
+                "navigation": 64,
+                "gunnery": 76,
+                "engineering": 55,
+                "leadership": 62
+              },
+              "traits": [
+                "captain.gunslinger"
+              ],
+              "wage_per_voyage": 70,
+              "loyalty": 60,
+              "commandable_archetypes": [
+                "core:ship_archetype/freight_hauler",
+                "core:ship_archetype/courier_sloop"
+              ]
+            }
+          },
+          {
+            "id": "core:captain/yuki_sato",
+            "name_key": "captain.core.yuki_sato.name",
+            "description_key": "captain.core.yuki_sato.description",
+            "tags": [
+              "captain.scout",
+              "captain.fleet"
+            ],
+            "enabled": true,
+            "data": {
+              "skills": {
+                "navigation": 80,
+                "gunnery": 45,
+                "engineering": 70,
+                "leadership": 66
+              },
+              "traits": [
+                "captain.scout"
+              ],
+              "wage_per_voyage": 65,
+              "loyalty": 65,
+              "commandable_archetypes": [
+                "core:ship_archetype/courier_sloop",
+                "core:ship_archetype/freight_hauler"
+              ]
+            }
+          }
+        ]
+      },
+      "content/formations.json": {
+        "schema_version": "2.0",
+        "content_type": "formations",
+        "definitions": [
+          {
+            "id": "core:formation/line_abreast",
+            "name_key": "formation.core.line_abreast.name",
+            "description_key": "formation.core.line_abreast.description",
+            "tags": [
+              "formation.battle"
+            ],
+            "enabled": true,
+            "data": {
+              "max_ships": 5,
+              "slots": [
+                {
+                  "id": "flagship",
+                  "role": "flagship",
+                  "offset": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "id": "center",
+                  "role": "line",
+                  "offset": {
+                    "x": -10,
+                    "y": 0
+                  }
+                },
+                {
+                  "id": "left",
+                  "role": "line",
+                  "offset": {
+                    "x": -20,
+                    "y": 18
+                  }
+                },
+                {
+                  "id": "right",
+                  "role": "line",
+                  "offset": {
+                    "x": -20,
+                    "y": -18
+                  }
+                }
+              ],
+              "bonuses": [
+                {
+                  "stat": "damage",
+                  "op": "mul",
+                  "value": 1.05
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:formation/escort_screen",
+            "name_key": "formation.core.escort_screen.name",
+            "description_key": "formation.core.escort_screen.description",
+            "tags": [
+              "formation.escort"
+            ],
+            "enabled": true,
+            "data": {
+              "max_ships": 4,
+              "slots": [
+                {
+                  "id": "flagship",
+                  "role": "flagship",
+                  "offset": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "id": "screen_left",
+                  "role": "screen",
+                  "offset": {
+                    "x": -12,
+                    "y": 18
+                  }
+                },
+                {
+                  "id": "screen_right",
+                  "role": "screen",
+                  "offset": {
+                    "x": -12,
+                    "y": -18
+                  }
+                },
+                {
+                  "id": "rear",
+                  "role": "reserve",
+                  "offset": {
+                    "x": -24,
+                    "y": 0
+                  }
+                }
+              ],
+              "bonuses": [
+                {
+                  "stat": "risk",
+                  "op": "add",
+                  "value": -0.02
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/fleet_doctrines.json": {
+        "schema_version": "2.0",
+        "content_type": "fleet_doctrines",
+        "definitions": [
+          {
+            "id": "core:fleet_doctrine/merchant_escort",
+            "name_key": "fleet_doctrine.core.merchant_escort.name",
+            "description_key": "fleet_doctrine.core.merchant_escort.description",
+            "tags": [
+              "doctrine.escort"
+            ],
+            "enabled": true,
+            "data": {
+              "engagement": "defensive",
+              "retreat": "when_cargo_threatened",
+              "escort": "convoy",
+              "target_priority": "cargo",
+              "supply_policy": "conservative",
+              "formation": "core:formation/escort_screen"
+            }
+          },
+          {
+            "id": "core:fleet_doctrine/raider_hunt",
+            "name_key": "fleet_doctrine.core.raider_hunt.name",
+            "description_key": "fleet_doctrine.core.raider_hunt.description",
+            "tags": [
+              "doctrine.raider"
+            ],
+            "enabled": true,
+            "data": {
+              "engagement": "aggressive",
+              "retreat": "when_damaged",
+              "escort": "patrol",
+              "target_priority": "weakest",
+              "supply_policy": "aggressive",
+              "formation": "core:formation/line_abreast"
+            }
+          }
+        ]
       }
     },
     "localization": {
@@ -5255,7 +5675,27 @@
         "loot_table.core.pirate_wreck.name": "海盗残骸",
         "loot_table.core.pirate_wreck.description": "海盗船残骸中的常见物资与少量现金。",
         "loot_table.core.iron_wreck.name": "铁甲残骸",
-        "loot_table.core.iron_wreck.description": "铁甲舰残骸中的优质材料与较丰厚赏金。"
+        "loot_table.core.iron_wreck.description": "铁甲舰残骸中的优质材料与较丰厚赏金。",
+        "ship_archetype.core.flagship_ironclad.name": "铁甲旗舰",
+        "ship_archetype.core.flagship_ironclad.description": "大型高性能船体改造的旗舰：重炮双联装、厚甲与充足船员，是舰队的核心。",
+        "ship_archetype.core.freight_hauler.name": "货运商船",
+        "ship_archetype.core.freight_hauler.description": "中型标准船体的货船：货舱大、维护费低，适合商队运输。",
+        "ship_archetype.core.courier_sloop.name": "快信单桅船",
+        "ship_archetype.core.courier_sloop.description": "小型高效船体的快船：航速高、维护便宜，适合侦察与传令。",
+        "captain.core.elena_voss.name": "艾莲娜·沃斯",
+        "captain.core.elena_voss.description": "商队出身的舰队指挥官：领导与导航出色，擅长组织护航与编队。",
+        "captain.core.marcus_reed.name": "马库斯·里德",
+        "captain.core.marcus_reed.description": "前私掠船长：炮术精湛、行事果决，适合突击与猎袭任务。",
+        "captain.core.yuki_sato.name": "佐藤雪",
+        "captain.core.yuki_sato.description": "远洋侦察专家：导航与工程见长，擅长带领快船脱离险境。",
+        "formation.core.line_abreast.name": "横队阵型",
+        "formation.core.line_abreast.description": "舰队横向展开，旗舰居中指挥，侧翼包夹时全队伤害略有提升。",
+        "formation.core.escort_screen.name": "护航环阵",
+        "formation.core.escort_screen.description": "护航舰分布两翼与后方，把商船护卫在中央，降低全队风险。",
+        "fleet_doctrine.core.merchant_escort.name": "商队护航",
+        "fleet_doctrine.core.merchant_escort.description": "防御优先的护航战术：保护货船、节约补给，遇险时优先撤离。",
+        "fleet_doctrine.core.raider_hunt.name": "猎袭战术",
+        "fleet_doctrine.core.raider_hunt.description": "激进猎杀战术：优先击溃最弱目标，主动交战并积极补给。"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -5576,7 +6016,27 @@
         "loot_table.core.pirate_wreck.name": "Pirate Wreck",
         "loot_table.core.pirate_wreck.description": "Common supplies and a little cash from a pirate wreck.",
         "loot_table.core.iron_wreck.name": "Iron Wreck",
-        "loot_table.core.iron_wreck.description": "Quality materials and a larger bounty from an ironclad wreck."
+        "loot_table.core.iron_wreck.description": "Quality materials and a larger bounty from an ironclad wreck.",
+        "ship_archetype.core.flagship_ironclad.name": "Ironclad Flagship",
+        "ship_archetype.core.flagship_ironclad.description": "A large performance hull rebuilt as a flagship: twin heavy guns, thick armour and a full crew.",
+        "ship_archetype.core.freight_hauler.name": "Freight Hauler",
+        "ship_archetype.core.freight_hauler.description": "A medium standard hull freighter with large holds and low upkeep, built for convoy duty.",
+        "ship_archetype.core.courier_sloop.name": "Courier Sloop",
+        "ship_archetype.core.courier_sloop.description": "A small efficient hull courier: fast and cheap to run, ideal for scouting and dispatches.",
+        "captain.core.elena_voss.name": "Elena Voss",
+        "captain.core.elena_voss.description": "A fleet commander from the merchant service: strong leadership and navigation, an expert at convoy organisation.",
+        "captain.core.marcus_reed.name": "Marcus Reed",
+        "captain.core.marcus_reed.description": "A former privateer captain: superb gunnery and decisive, suited to raiding and strike missions.",
+        "captain.core.yuki_sato.name": "Yuki Sato",
+        "captain.core.yuki_sato.description": "An ocean-scouting specialist: navigation and engineering first, skilled at getting fast ships out of trouble.",
+        "formation.core.line_abreast.name": "Line Abreast",
+        "formation.core.line_abreast.description": "The fleet spreads abeam with the flagship in the centre; flanking pressure raises fleet damage slightly.",
+        "formation.core.escort_screen.name": "Escort Screen",
+        "formation.core.escort_screen.description": "Escorts screen the flanks and rear around the convoy, lowering fleet risk.",
+        "fleet_doctrine.core.merchant_escort.name": "Merchant Escort",
+        "fleet_doctrine.core.merchant_escort.description": "A defensive convoy doctrine: protect the freighters, conserve supplies and disengage when threatened.",
+        "fleet_doctrine.core.raider_hunt.name": "Raider Hunt",
+        "fleet_doctrine.core.raider_hunt.description": "An aggressive hunting doctrine: break the weakest target, engage eagerly and resupply aggressively."
       }
     },
     "definitions": [
@@ -11399,6 +11859,513 @@
                 ]
               }
             ]
+          }
+        }
+      },
+      {
+        "id": "core:ship_archetype/flagship_ironclad",
+        "content_type": "ship_archetypes",
+        "file": "content/ship_archetypes.json",
+        "name_key": "ship_archetype.core.flagship_ironclad.name",
+        "name_zh": "铁甲旗舰",
+        "name_en": "Ironclad Flagship",
+        "tags": [
+          "ship_archetype.fleet",
+          "ship_archetype.flagship"
+        ],
+        "definition": {
+          "id": "core:ship_archetype/flagship_ironclad",
+          "name_key": "ship_archetype.core.flagship_ironclad.name",
+          "description_key": "ship_archetype.core.flagship_ironclad.description",
+          "tags": [
+            "ship_archetype.fleet",
+            "ship_archetype.flagship"
+          ],
+          "enabled": true,
+          "data": {
+            "hull_ref": "core:hull/large_performance",
+            "crew_capacity": 40,
+            "cargo_capacity": 160,
+            "base_speed": 17,
+            "upkeep": 120,
+            "default_modules": [
+              {
+                "slot": "boiler",
+                "module": "core:module/performance"
+              },
+              {
+                "slot": "cargo",
+                "module": "core:module/large_hold"
+              },
+              {
+                "slot": "navigation",
+                "module": "core:module/chart_room"
+              },
+              {
+                "slot": "safety",
+                "module": "core:module/safety_valve"
+              },
+              {
+                "slot": "cabin",
+                "module": "core:module/passenger_cabin"
+              }
+            ],
+            "weapon_sockets": [
+              {
+                "socket": "SN_Socket_Weapon_Port_1",
+                "class": "Heavy",
+                "weapon": "core:weapon/heavy_cannon"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Starboard_1",
+                "class": "Heavy",
+                "weapon": "core:weapon/heavy_cannon"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Port_2",
+                "class": "Medium",
+                "weapon": "core:weapon/repeater"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Starboard_2",
+                "class": "Medium",
+                "weapon": "core:weapon/repeater"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:ship_archetype/freight_hauler",
+        "content_type": "ship_archetypes",
+        "file": "content/ship_archetypes.json",
+        "name_key": "ship_archetype.core.freight_hauler.name",
+        "name_zh": "货运商船",
+        "name_en": "Freight Hauler",
+        "tags": [
+          "ship_archetype.fleet",
+          "ship_archetype.freight"
+        ],
+        "definition": {
+          "id": "core:ship_archetype/freight_hauler",
+          "name_key": "ship_archetype.core.freight_hauler.name",
+          "description_key": "ship_archetype.core.freight_hauler.description",
+          "tags": [
+            "ship_archetype.fleet",
+            "ship_archetype.freight"
+          ],
+          "enabled": true,
+          "data": {
+            "hull_ref": "core:hull/medium_standard",
+            "crew_capacity": 18,
+            "cargo_capacity": 165,
+            "base_speed": 15,
+            "upkeep": 45,
+            "default_modules": [
+              {
+                "slot": "boiler",
+                "module": "core:module/standard"
+              },
+              {
+                "slot": "cargo",
+                "module": "core:module/medium_hold"
+              },
+              {
+                "slot": "navigation",
+                "module": "core:module/spyglass"
+              },
+              {
+                "slot": "safety",
+                "module": "core:module/lifeboat"
+              },
+              {
+                "slot": "cabin",
+                "module": "core:module/small_cabin"
+              }
+            ],
+            "weapon_sockets": [
+              {
+                "socket": "SN_Socket_Weapon_Port_1",
+                "class": "Light",
+                "weapon": "core:weapon/deck_gun"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Starboard_1",
+                "class": "Light",
+                "weapon": "core:weapon/deck_gun"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Bow",
+                "class": "Medium",
+                "weapon": "core:weapon/repeater"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:ship_archetype/courier_sloop",
+        "content_type": "ship_archetypes",
+        "file": "content/ship_archetypes.json",
+        "name_key": "ship_archetype.core.courier_sloop.name",
+        "name_zh": "快信单桅船",
+        "name_en": "Courier Sloop",
+        "tags": [
+          "ship_archetype.fleet",
+          "ship_archetype.courier"
+        ],
+        "definition": {
+          "id": "core:ship_archetype/courier_sloop",
+          "name_key": "ship_archetype.core.courier_sloop.name",
+          "description_key": "ship_archetype.core.courier_sloop.description",
+          "tags": [
+            "ship_archetype.fleet",
+            "ship_archetype.courier"
+          ],
+          "enabled": true,
+          "data": {
+            "hull_ref": "core:hull/small_efficient",
+            "crew_capacity": 8,
+            "cargo_capacity": 60,
+            "base_speed": 14,
+            "upkeep": 20,
+            "default_modules": [
+              {
+                "slot": "boiler",
+                "module": "core:module/small_efficient"
+              },
+              {
+                "slot": "cargo",
+                "module": "core:module/small_hold"
+              },
+              {
+                "slot": "navigation",
+                "module": "core:module/spyglass"
+              },
+              {
+                "slot": "safety",
+                "module": "core:module/lifeboat"
+              }
+            ],
+            "weapon_sockets": [
+              {
+                "socket": "SN_Socket_Weapon_Port_1",
+                "class": "Light",
+                "weapon": "core:weapon/deck_gun"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Starboard_1",
+                "class": "Light",
+                "weapon": "core:weapon/deck_gun"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Stern",
+                "class": "Medium",
+                "weapon": "core:weapon/repeater"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:captain/elena_voss",
+        "content_type": "captains",
+        "file": "content/captains.json",
+        "name_key": "captain.core.elena_voss.name",
+        "name_zh": "艾莲娜·沃斯",
+        "name_en": "Elena Voss",
+        "tags": [
+          "captain.merchant",
+          "captain.fleet"
+        ],
+        "definition": {
+          "id": "core:captain/elena_voss",
+          "name_key": "captain.core.elena_voss.name",
+          "description_key": "captain.core.elena_voss.description",
+          "tags": [
+            "captain.merchant",
+            "captain.fleet"
+          ],
+          "enabled": true,
+          "data": {
+            "skills": {
+              "navigation": 72,
+              "gunnery": 58,
+              "engineering": 64,
+              "leadership": 78
+            },
+            "traits": [
+              "captain.drillmaster",
+              "captain.calm"
+            ],
+            "wage_per_voyage": 85,
+            "loyalty": 70,
+            "commandable_archetypes": [
+              "core:ship_archetype/flagship_ironclad",
+              "core:ship_archetype/freight_hauler"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:captain/marcus_reed",
+        "content_type": "captains",
+        "file": "content/captains.json",
+        "name_key": "captain.core.marcus_reed.name",
+        "name_zh": "马库斯·里德",
+        "name_en": "Marcus Reed",
+        "tags": [
+          "captain.raider",
+          "captain.fleet"
+        ],
+        "definition": {
+          "id": "core:captain/marcus_reed",
+          "name_key": "captain.core.marcus_reed.name",
+          "description_key": "captain.core.marcus_reed.description",
+          "tags": [
+            "captain.raider",
+            "captain.fleet"
+          ],
+          "enabled": true,
+          "data": {
+            "skills": {
+              "navigation": 64,
+              "gunnery": 76,
+              "engineering": 55,
+              "leadership": 62
+            },
+            "traits": [
+              "captain.gunslinger"
+            ],
+            "wage_per_voyage": 70,
+            "loyalty": 60,
+            "commandable_archetypes": [
+              "core:ship_archetype/freight_hauler",
+              "core:ship_archetype/courier_sloop"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:captain/yuki_sato",
+        "content_type": "captains",
+        "file": "content/captains.json",
+        "name_key": "captain.core.yuki_sato.name",
+        "name_zh": "佐藤雪",
+        "name_en": "Yuki Sato",
+        "tags": [
+          "captain.scout",
+          "captain.fleet"
+        ],
+        "definition": {
+          "id": "core:captain/yuki_sato",
+          "name_key": "captain.core.yuki_sato.name",
+          "description_key": "captain.core.yuki_sato.description",
+          "tags": [
+            "captain.scout",
+            "captain.fleet"
+          ],
+          "enabled": true,
+          "data": {
+            "skills": {
+              "navigation": 80,
+              "gunnery": 45,
+              "engineering": 70,
+              "leadership": 66
+            },
+            "traits": [
+              "captain.scout"
+            ],
+            "wage_per_voyage": 65,
+            "loyalty": 65,
+            "commandable_archetypes": [
+              "core:ship_archetype/courier_sloop",
+              "core:ship_archetype/freight_hauler"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:formation/line_abreast",
+        "content_type": "formations",
+        "file": "content/formations.json",
+        "name_key": "formation.core.line_abreast.name",
+        "name_zh": "横队阵型",
+        "name_en": "Line Abreast",
+        "tags": [
+          "formation.battle"
+        ],
+        "definition": {
+          "id": "core:formation/line_abreast",
+          "name_key": "formation.core.line_abreast.name",
+          "description_key": "formation.core.line_abreast.description",
+          "tags": [
+            "formation.battle"
+          ],
+          "enabled": true,
+          "data": {
+            "max_ships": 5,
+            "slots": [
+              {
+                "id": "flagship",
+                "role": "flagship",
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                }
+              },
+              {
+                "id": "center",
+                "role": "line",
+                "offset": {
+                  "x": -10,
+                  "y": 0
+                }
+              },
+              {
+                "id": "left",
+                "role": "line",
+                "offset": {
+                  "x": -20,
+                  "y": 18
+                }
+              },
+              {
+                "id": "right",
+                "role": "line",
+                "offset": {
+                  "x": -20,
+                  "y": -18
+                }
+              }
+            ],
+            "bonuses": [
+              {
+                "stat": "damage",
+                "op": "mul",
+                "value": 1.05
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:formation/escort_screen",
+        "content_type": "formations",
+        "file": "content/formations.json",
+        "name_key": "formation.core.escort_screen.name",
+        "name_zh": "护航环阵",
+        "name_en": "Escort Screen",
+        "tags": [
+          "formation.escort"
+        ],
+        "definition": {
+          "id": "core:formation/escort_screen",
+          "name_key": "formation.core.escort_screen.name",
+          "description_key": "formation.core.escort_screen.description",
+          "tags": [
+            "formation.escort"
+          ],
+          "enabled": true,
+          "data": {
+            "max_ships": 4,
+            "slots": [
+              {
+                "id": "flagship",
+                "role": "flagship",
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                }
+              },
+              {
+                "id": "screen_left",
+                "role": "screen",
+                "offset": {
+                  "x": -12,
+                  "y": 18
+                }
+              },
+              {
+                "id": "screen_right",
+                "role": "screen",
+                "offset": {
+                  "x": -12,
+                  "y": -18
+                }
+              },
+              {
+                "id": "rear",
+                "role": "reserve",
+                "offset": {
+                  "x": -24,
+                  "y": 0
+                }
+              }
+            ],
+            "bonuses": [
+              {
+                "stat": "risk",
+                "op": "add",
+                "value": -0.02
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:fleet_doctrine/merchant_escort",
+        "content_type": "fleet_doctrines",
+        "file": "content/fleet_doctrines.json",
+        "name_key": "fleet_doctrine.core.merchant_escort.name",
+        "name_zh": "商队护航",
+        "name_en": "Merchant Escort",
+        "tags": [
+          "doctrine.escort"
+        ],
+        "definition": {
+          "id": "core:fleet_doctrine/merchant_escort",
+          "name_key": "fleet_doctrine.core.merchant_escort.name",
+          "description_key": "fleet_doctrine.core.merchant_escort.description",
+          "tags": [
+            "doctrine.escort"
+          ],
+          "enabled": true,
+          "data": {
+            "engagement": "defensive",
+            "retreat": "when_cargo_threatened",
+            "escort": "convoy",
+            "target_priority": "cargo",
+            "supply_policy": "conservative",
+            "formation": "core:formation/escort_screen"
+          }
+        }
+      },
+      {
+        "id": "core:fleet_doctrine/raider_hunt",
+        "content_type": "fleet_doctrines",
+        "file": "content/fleet_doctrines.json",
+        "name_key": "fleet_doctrine.core.raider_hunt.name",
+        "name_zh": "猎袭战术",
+        "name_en": "Raider Hunt",
+        "tags": [
+          "doctrine.raider"
+        ],
+        "definition": {
+          "id": "core:fleet_doctrine/raider_hunt",
+          "name_key": "fleet_doctrine.core.raider_hunt.name",
+          "description_key": "fleet_doctrine.core.raider_hunt.description",
+          "tags": [
+            "doctrine.raider"
+          ],
+          "enabled": true,
+          "data": {
+            "engagement": "aggressive",
+            "retreat": "when_damaged",
+            "escort": "patrol",
+            "target_priority": "weakest",
+            "supply_policy": "aggressive",
+            "formation": "core:formation/line_abreast"
           }
         }
       }

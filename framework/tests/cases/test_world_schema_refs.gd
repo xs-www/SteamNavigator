@@ -596,3 +596,45 @@ func test_combat_references_are_checked() -> void:
 			if String(hit.get("message", "")).contains(field):
 				matched = true
 		assert_true(matched, "%s error names field %s: %s" % [owner, field, str(hits)])
+
+func test_fleet_references_are_checked() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/broken", {
+		"hull_ref": "test:hull/missing",
+		"crew_capacity": 8,
+		"cargo_capacity": 60,
+		"base_speed": 14,
+		"upkeep": 20,
+		"default_modules": [{"slot": "boiler", "module": "test:module/missing"}],
+		"weapon_sockets": [{"socket": "SN_Socket_Weapon_Port_1", "class": "Light", "weapon": "test:weapon/missing"}],
+	})
+	_define(hub, ContentTypes.CAPTAIN, "test:captain/broken", {
+		"skills": {"navigation": 60, "gunnery": 60, "engineering": 60, "leadership": 60},
+		"wage_per_voyage": 50,
+		"loyalty": 60,
+		"commandable_archetypes": ["test:ship_archetype/missing"],
+	})
+	_define(hub, ContentTypes.FLEET_DOCTRINE, "test:fleet_doctrine/broken", {
+		"engagement": "balanced",
+		"retreat": "when_damaged",
+		"target_priority": "nearest",
+		"supply_policy": "standard",
+		"formation": "test:formation/missing",
+	})
+	var result := _result(hub)
+	for expectation in [
+		["test:ship_archetype/broken", "hull_ref"],
+		["test:ship_archetype/broken", "default_modules.module"],
+		["test:ship_archetype/broken", "weapon_sockets.weapon"],
+		["test:captain/broken", "commandable_archetypes"],
+		["test:fleet_doctrine/broken", "formation"],
+	]:
+		var owner := String(expectation[0])
+		var field := String(expectation[1])
+		var hits := _errors_for(result, owner)
+		assert_contains(_codes(hits), "reference_missing", "%s.%s reports reference_missing: %s" % [owner, field, str(hits)])
+		var matched := false
+		for hit in hits:
+			if String(hit.get("message", "")).contains(field):
+				matched = true
+		assert_true(matched, "%s error names field %s: %s" % [owner, field, str(hits)])

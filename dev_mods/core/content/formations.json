@@ -1,0 +1,112 @@
+{
+  "schema_version": "2.0",
+  "content_type": "formations",
+  "definitions": [
+    {
+      "id": "core:formation/line_abreast",
+      "name_key": "formation.core.line_abreast.name",
+      "description_key": "formation.core.line_abreast.description",
+      "tags": [
+        "formation.battle"
+      ],
+      "enabled": true,
+      "data": {
+        "max_ships": 5,
+        "slots": [
+          {
+            "id": "flagship",
+            "role": "flagship",
+            "offset": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "center",
+            "role": "line",
+            "offset": {
+              "x": -10,
+              "y": 0
+            }
+          },
+          {
+            "id": "left",
+            "role": "line",
+            "offset": {
+              "x": -20,
+              "y": 18
+            }
+          },
+          {
+            "id": "right",
+            "role": "line",
+            "offset": {
+              "x": -20,
+              "y": -18
+            }
+          }
+        ],
+        "bonuses": [
+          {
+            "stat": "damage",
+            "op": "mul",
+            "value": 1.05
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:formation/escort_screen",
+      "name_key": "formation.core.escort_screen.name",
+      "description_key": "formation.core.escort_screen.description",
+      "tags": [
+        "formation.escort"
+      ],
+      "enabled": true,
+      "data": {
+        "max_ships": 4,
+        "slots": [
+          {
+            "id": "flagship",
+            "role": "flagship",
+            "offset": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "screen_left",
+            "role": "screen",
+            "offset": {
+              "x": -12,
+              "y": 18
+            }
+          },
+          {
+            "id": "screen_right",
+            "role": "screen",
+            "offset": {
+              "x": -12,
+              "y": -18
+            }
+          },
+          {
+            "id": "rear",
+            "role": "reserve",
+            "offset": {
+              "x": -24,
+              "y": 0
+            }
+          }
+        ],
+        "bonuses": [
+          {
+            "stat": "risk",
+            "op": "add",
+            "value": -0.02
+          }
+        ]
+      }
+    }
+  ]
+}

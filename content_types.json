@@ -54,6 +54,11 @@
       "label_en": "Combat"
     },
     {
+      "id": "fleet",
+      "label_zh": "舰队",
+      "label_en": "Fleet"
+    },
+    {
       "id": "world_generation",
       "label_zh": "世界生成",
       "label_en": "World Generation"
@@ -617,19 +622,89 @@
       "v2_target": null,
       "aliases": [],
       "module": false
+    },
+    {
+      "key": "ship_archetypes",
+      "singular": "ship_archetype",
+      "key_prefix": "ship_archetype",
+      "label_zh": "船型原型",
+      "label_en": "Ship archetypes",
+      "abbr": "SA",
+      "color": "#6a8fb8",
+      "group": "fleet",
+      "schema": "schemas/v2/ship_archetype.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/ship_archetypes.json",
+      "summary_zh": "舰队船型原型：hull 引用 + 船员/货舱容量、基础航速与维护费，默认模块与炮位映射复用 hulls / modules / weapons。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.fleet.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "captains",
+      "singular": "captain",
+      "key_prefix": "captain",
+      "label_zh": "船长",
+      "label_en": "Captains",
+      "abbr": "CP",
+      "color": "#b8a06a",
+      "group": "fleet",
+      "schema": "schemas/v2/captain.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/captains.json",
+      "summary_zh": "舰队船长：导航/炮术/工程/领导技能、特质、工资与初始忠诚，以及可指挥的 ship_archetypes 列表。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.fleet.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "formations",
+      "singular": "formation",
+      "key_prefix": "formation",
+      "label_zh": "阵型",
+      "label_en": "Formations",
+      "abbr": "FM",
+      "color": "#8fa0b8",
+      "group": "fleet",
+      "schema": "schemas/v2/formation.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/formations.json",
+      "summary_zh": "舰队阵型：带 id 的槽位（旗舰/战线/护卫/侧翼/预备）、相对坐标、槽位目标偏好与全队属性加成。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.fleet.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "fleet_doctrines",
+      "singular": "fleet_doctrine",
+      "key_prefix": "fleet_doctrine",
+      "label_zh": "编队战术",
+      "label_en": "Fleet doctrines",
+      "abbr": "FD",
+      "color": "#7a9a7a",
+      "group": "fleet",
+      "schema": "schemas/v2/fleet_doctrine.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/fleet_doctrines.json",
+      "summary_zh": "编队战术：交战/撤退策略、护航角色、目标优先级与补给策略，可绑定默认阵型。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.fleet.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
     }
   ],
   "planned": [
-    {
-      "system": "fleet",
-      "capability": "content.fleet.v1",
-      "types": [
-        "ship_archetypes",
-        "captains",
-        "formations",
-        "fleet_doctrines"
-      ]
-    },
     {
       "system": "base",
       "capability": "content.base.v1",

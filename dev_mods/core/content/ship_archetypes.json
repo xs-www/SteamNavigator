@@ -1,0 +1,175 @@
+{
+  "schema_version": "2.0",
+  "content_type": "ship_archetypes",
+  "definitions": [
+    {
+      "id": "core:ship_archetype/flagship_ironclad",
+      "name_key": "ship_archetype.core.flagship_ironclad.name",
+      "description_key": "ship_archetype.core.flagship_ironclad.description",
+      "tags": [
+        "ship_archetype.fleet",
+        "ship_archetype.flagship"
+      ],
+      "enabled": true,
+      "data": {
+        "hull_ref": "core:hull/large_performance",
+        "crew_capacity": 40,
+        "cargo_capacity": 160,
+        "base_speed": 17,
+        "upkeep": 120,
+        "default_modules": [
+          {
+            "slot": "boiler",
+            "module": "core:module/performance"
+          },
+          {
+            "slot": "cargo",
+            "module": "core:module/large_hold"
+          },
+          {
+            "slot": "navigation",
+            "module": "core:module/chart_room"
+          },
+          {
+            "slot": "safety",
+            "module": "core:module/safety_valve"
+          },
+          {
+            "slot": "cabin",
+            "module": "core:module/passenger_cabin"
+          }
+        ],
+        "weapon_sockets": [
+          {
+            "socket": "SN_Socket_Weapon_Port_1",
+            "class": "Heavy",
+            "weapon": "core:weapon/heavy_cannon"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Starboard_1",
+            "class": "Heavy",
+            "weapon": "core:weapon/heavy_cannon"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Port_2",
+            "class": "Medium",
+            "weapon": "core:weapon/repeater"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Starboard_2",
+            "class": "Medium",
+            "weapon": "core:weapon/repeater"
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:ship_archetype/freight_hauler",
+      "name_key": "ship_archetype.core.freight_hauler.name",
+      "description_key": "ship_archetype.core.freight_hauler.description",
+      "tags": [
+        "ship_archetype.fleet",
+        "ship_archetype.freight"
+      ],
+      "enabled": true,
+      "data": {
+        "hull_ref": "core:hull/medium_standard",
+        "crew_capacity": 18,
+        "cargo_capacity": 165,
+        "base_speed": 15,
+        "upkeep": 45,
+        "default_modules": [
+          {
+            "slot": "boiler",
+            "module": "core:module/standard"
+          },
+          {
+            "slot": "cargo",
+            "module": "core:module/medium_hold"
+          },
+          {
+            "slot": "navigation",
+            "module": "core:module/spyglass"
+          },
+          {
+            "slot": "safety",
+            "module": "core:module/lifeboat"
+          },
+          {
+            "slot": "cabin",
+            "module": "core:module/small_cabin"
+          }
+        ],
+        "weapon_sockets": [
+          {
+            "socket": "SN_Socket_Weapon_Port_1",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Starboard_1",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Bow",
+            "class": "Medium",
+            "weapon": "core:weapon/repeater"
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:ship_archetype/courier_sloop",
+      "name_key": "ship_archetype.core.courier_sloop.name",
+      "description_key": "ship_archetype.core.courier_sloop.description",
+      "tags": [
+        "ship_archetype.fleet",
+        "ship_archetype.courier"
+      ],
+      "enabled": true,
+      "data": {
+        "hull_ref": "core:hull/small_efficient",
+        "crew_capacity": 8,
+        "cargo_capacity": 60,
+        "base_speed": 14,
+        "upkeep": 20,
+        "default_modules": [
+          {
+            "slot": "boiler",
+            "module": "core:module/small_efficient"
+          },
+          {
+            "slot": "cargo",
+            "module": "core:module/small_hold"
+          },
+          {
+            "slot": "navigation",
+            "module": "core:module/spyglass"
+          },
+          {
+            "slot": "safety",
+            "module": "core:module/lifeboat"
+          }
+        ],
+        "weapon_sockets": [
+          {
+            "socket": "SN_Socket_Weapon_Port_1",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Starboard_1",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Stern",
+            "class": "Medium",
+            "weapon": "core:weapon/repeater"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "ship_archetype.example_fleet.scout_cutter.name": "Scout Cutter",
+  "ship_archetype.example_fleet.scout_cutter.description": "A small efficient hull scout: cheap, fast and armed with a single deck gun.",
+  "captain.example_fleet.scout_ash.name": "Ash",
+  "captain.example_fleet.scout_ash.description": "A young scout captain with excellent navigation who prefers to avoid battle.",
+  "formation.example_fleet.skirmish.name": "Skirmish",
+  "formation.example_fleet.skirmish.description": "Wings spread with the flagship in the centre, suited to scouting and harassment.",
+  "fleet_doctrine.example_fleet.scout_screen.name": "Scout Screen",
+  "fleet_doctrine.example_fleet.scout_screen.description": "An evasive patrol doctrine: keep ships alive, conserve supplies and avoid stand-up fights."
+}

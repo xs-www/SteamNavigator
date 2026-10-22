@@ -99,8 +99,8 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 31, `expected 2 top-level + 29 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 31, `expected 31 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 35, `expected 2 top-level + 33 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 35, `expected 35 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.equal(globalThis.SN_SCHEMAS['contract.schema.json'], undefined, 'the 1.0 contract schema was removed (C4-D)');
     assert.equal(globalThis.SN_SCHEMAS['patch.schema.json'], undefined, 'the 1.0 patch schema was removed (C4-D)');
@@ -132,6 +132,10 @@ function warningsOf(result) {
     assert.ok(globalThis.SN_SCHEMAS['v2/enemy_archetype.schema.json'], 'v2/enemy_archetype is the D1 enemy-archetype schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/encounter_table.schema.json'], 'v2/encounter_table is the D1 encounter-table schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/loot_table.schema.json'], 'v2/loot_table is the D1 loot-table schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/ship_archetype.schema.json'], 'v2/ship_archetype is the D2 fleet schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/captain.schema.json'], 'v2/captain is the D2 captain schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/formation.schema.json'], 'v2/formation is the D2 formation schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/fleet_doctrine.schema.json'], 'v2/fleet_doctrine is the D2 doctrine schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_arc.schema.json'], 'v2/story_arc is the Story Mode arc draft schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_level.schema.json'], 'v2/story_level is the Story Mode level draft schema');
   });
@@ -366,7 +370,7 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 26, 'content_types.json exposes 26 runtime types (25 definitions + patches); D1 promoted the six combat types');
+    assert.equal(Types.TYPES.length, 30, 'content_types.json exposes 30 runtime types (29 definitions + patches); D2 promoted the four fleet types');
     // C4-D: every runtime type (definitions and patches) is Content Schema 2.0.
     for (const info of Types.TYPES) {
       const expected = '2.0';
@@ -1240,6 +1244,54 @@ function warningsOf(result) {
     const patchedDefinition = patchPayload.definitions[0];
     assert.equal(typeof patchedDefinition.target, 'string', 'patch target stays a full "mod:type/id" string');
     assert.equal(patchedDefinition.requires.version, '>=1.0.0 <2.0.0', 'patch keeps the source-version requirement');
+  });
+
+  await test('D2 promotes the four fleet types with core content', () => {
+    const coreRoot = path.resolve(__dirname, '..', '..', 'dev_mods', 'core');
+    const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
+    assert.ok(!(manifest.planned || []).some((system) => system.capability === 'content.fleet.v1'), 'planned.fleet is fully promoted');
+    const fleet = [
+      ['ship_archetypes', 'v2/ship_archetype.schema.json', 'core:ship_archetype/', 'ship_archetype.core.', 3],
+      ['captains', 'v2/captain.schema.json', 'core:captain/', 'captain.core.', 3],
+      ['formations', 'v2/formation.schema.json', 'core:formation/', 'formation.core.', 2],
+      ['fleet_doctrines', 'v2/fleet_doctrine.schema.json', 'core:fleet_doctrine/', 'fleet_doctrine.core.', 2],
+    ];
+    for (const [contentType, schemaFile, idPrefix, keyPrefix, count] of fleet) {
+      const info = Types.TYPES.find((entry) => entry.key === contentType);
+      assert.ok(info, `${contentType} must be an active runtime type`);
+      assert.equal(info.schemaVersion, '2.0');
+      assert.equal(info.capability, 'content.fleet.v1');
+      assert.equal(info.group, '舰队');
+      const payload = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', `${contentType}.json`), 'utf8'));
+      assert.equal(payload.schema_version, '2.0');
+      assert.equal(payload.content_type, contentType);
+      assert.equal(payload.definitions.length, count);
+      for (const definition of payload.definitions) {
+        assert.ok(definition.id.startsWith(idPrefix), `${definition.id} uses the fleet id segment`);
+        assert.ok(definition.name_key.startsWith(keyPrefix), `${definition.name_key} uses the fleet key prefix`);
+      }
+      assert.deepEqual(
+        Validate.validateSchema(payload, globalThis.SN_SCHEMAS[schemaFile], schemaFile),
+        [],
+        `core ${contentType}.json satisfies ${schemaFile}`
+      );
+    }
+    const coreManifest = JSON.parse(fs.readFileSync(path.join(coreRoot, 'manifest.json'), 'utf8'));
+    assert.ok(coreManifest.capabilities.includes('content.fleet.v1'));
+    // Cross-content sanity: captains command existing archetypes, doctrines bind existing formations.
+    const archetypes = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'ship_archetypes.json'), 'utf8')).definitions.map((d) => d.id);
+    const captains = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'captains.json'), 'utf8')).definitions;
+    for (const captain of captains) {
+      for (const archetype of captain.data.commandable_archetypes) {
+        assert.ok(archetypes.includes(archetype), `${captain.id} commands ${archetype}`);
+      }
+    }
+    const formations = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'formations.json'), 'utf8')).definitions.map((d) => d.id);
+    const doctrines = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'fleet_doctrines.json'), 'utf8')).definitions;
+    for (const doctrine of doctrines) {
+      if (doctrine.data.formation) assert.ok(formations.includes(doctrine.data.formation), `${doctrine.id} binds ${doctrine.data.formation}`);
+    }
+    assert.ok(archetypes.includes('core:ship_archetype/flagship_ironclad'), 'Core ships a flagship archetype');
   });
 
   await test('entity localization rename commits once and removes old keys', () => {

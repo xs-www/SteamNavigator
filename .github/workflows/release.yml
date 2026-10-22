@@ -106,6 +106,8 @@ jobs:
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/examples/example_weapons --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/examples/example_fleet --mode=runtime
+          godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
 
       # Release packing must refuse content the runtime cannot activate; the

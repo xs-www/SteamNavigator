@@ -563,6 +563,122 @@
         }
       }
     },
+    "v2/captain.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/captain-2.json",
+      "title": "Steam Navigator captain content file (Content Schema 2.0)",
+      "description": "Fleet captains (D2): skills, traits, wage and starting loyalty, plus the hull classes they may command. IDs use core:captain/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "captains"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/captain_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "captain_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "skills",
+            "wage_per_voyage",
+            "loyalty",
+            "commandable_archetypes"
+          ],
+          "properties": {
+            "skills": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "navigation",
+                "gunnery",
+                "engineering",
+                "leadership"
+              ],
+              "properties": {
+                "navigation": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "gunnery": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "engineering": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "leadership": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            },
+            "traits": {
+              "description": "Free-form trait tags (e.g. captain.drillmaster); runtime may map known tags to modifiers.",
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "wage_per_voyage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "loyalty": {
+              "description": "Initial loyalty 0–100.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "commandable_archetypes": {
+              "description": "Ship archetypes this captain may command (ship_archetypes).",
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    },
     "v2/combat_ability.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/combat-ability-2.json",
@@ -1890,6 +2006,233 @@
               "uniqueItems": true,
               "items": {
                 "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/fleet_doctrine.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/fleet-doctrine-2.json",
+      "title": "Steam Navigator fleet doctrine content file (Content Schema 2.0)",
+      "description": "Fleet doctrines (D2): engagement / retreat behaviour, escort role, target priority and resupply policy, with an optional default formation. IDs use core:fleet_doctrine/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "fleet_doctrines"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/fleet_doctrine_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "fleet_doctrine_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "engagement",
+            "retreat",
+            "target_priority",
+            "supply_policy"
+          ],
+          "properties": {
+            "engagement": {
+              "enum": [
+                "aggressive",
+                "balanced",
+                "defensive",
+                "evasive"
+              ]
+            },
+            "retreat": {
+              "enum": [
+                "never",
+                "when_damaged",
+                "when_outnumbered",
+                "when_cargo_threatened"
+              ]
+            },
+            "escort": {
+              "description": "Convoy role: none / convoy escort / patrol / screen.",
+              "enum": [
+                "none",
+                "convoy",
+                "patrol",
+                "screen"
+              ]
+            },
+            "target_priority": {
+              "enum": [
+                "nearest",
+                "cargo",
+                "weakest"
+              ]
+            },
+            "supply_policy": {
+              "enum": [
+                "conservative",
+                "standard",
+                "aggressive"
+              ]
+            },
+            "formation": {
+              "description": "Optional default formation reference.",
+              "$ref": "common.schema.json#/$defs/id_ref"
+            }
+          }
+        }
+      }
+    },
+    "v2/formation.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/formation-2.json",
+      "title": "Steam Navigator formation content file (Content Schema 2.0)",
+      "description": "Fleet formations (D2): named slots with chart offsets and roles, an optional per-slot target preference, and formation-wide stat bonuses. IDs use core:formation/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "formations"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/formation_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "formation_offset": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "description": "Relative chart offset along the fleet heading.",
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "y": {
+              "description": "Relative lateral chart offset.",
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            }
+          }
+        },
+        "formation_slot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "role",
+            "offset"
+          ],
+          "properties": {
+            "id": {
+              "description": "Stable slot id referenced by data.fleet ships (e.g. flagship / left / right).",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,31}$"
+            },
+            "role": {
+              "enum": [
+                "flagship",
+                "line",
+                "screen",
+                "flank",
+                "reserve"
+              ]
+            },
+            "offset": {
+              "$ref": "#/$defs/formation_offset"
+            },
+            "target_priority": {
+              "description": "Optional per-slot target preference (overrides the doctrine).",
+              "enum": [
+                "nearest",
+                "cargo",
+                "weakest"
+              ]
+            }
+          }
+        },
+        "formation_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "slots"
+          ],
+          "properties": {
+            "max_ships": {
+              "description": "Optional ship count cap; defaults to slots length.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "slots": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 6,
+              "items": {
+                "$ref": "#/$defs/formation_slot"
+              }
+            },
+            "bonuses": {
+              "description": "Formation-wide modifiers (stat / op / value, same DSL as modules).",
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/modifier"
               }
             }
           }
@@ -3763,6 +4106,148 @@
             },
             "encounter_table": {
               "$ref": "common.schema.json#/$defs/id_ref"
+            }
+          }
+        }
+      }
+    },
+    "v2/ship_archetype.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/ship-archetype-2.json",
+      "title": "Steam Navigator ship archetype content file (Content Schema 2.0)",
+      "description": "Fleet ship archetypes (D2): a hull plus its crew/cargo budget, base speed and upkeep, with default modules and weapon sockets mapped onto the existing hull/module/weapon content. IDs use core:ship_archetype/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "ship_archetypes"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/ship_archetype_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "ship_archetype_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hull_ref",
+            "crew_capacity",
+            "cargo_capacity",
+            "base_speed",
+            "upkeep"
+          ],
+          "properties": {
+            "hull_ref": {
+              "description": "Hull definition reference (hulls).",
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "crew_capacity": {
+              "description": "Maximum crew slots, captains included.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "cargo_capacity": {
+              "description": "Cargo capacity in weight units; must fit the hull's cargo slots.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "base_speed": {
+              "description": "Fleet-map base speed (matches the hull/simulator speed scale).",
+              "type": "number",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "upkeep": {
+              "description": "Per-voyage upkeep in money.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "default_modules": {
+              "description": "Optional default loadout; each entry maps one hull slot to a module.",
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "slot",
+                  "module"
+                ],
+                "properties": {
+                  "slot": {
+                    "enum": [
+                      "boiler",
+                      "cargo",
+                      "navigation",
+                      "safety",
+                      "cabin"
+                    ]
+                  },
+                  "module": {
+                    "$ref": "common.schema.json#/$defs/id_ref"
+                  }
+                }
+              }
+            },
+            "weapon_sockets": {
+              "description": "Optional mapping of hull weapon sockets to their class and default weapon.",
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "socket",
+                  "class"
+                ],
+                "properties": {
+                  "socket": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "class": {
+                    "enum": [
+                      "Light",
+                      "Medium",
+                      "Heavy",
+                      "Tower",
+                      "Side"
+                    ]
+                  },
+                  "weapon": {
+                    "$ref": "common.schema.json#/$defs/id_ref"
+                  }
+                }
+              }
             }
           }
         }

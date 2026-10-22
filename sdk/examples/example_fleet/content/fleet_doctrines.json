@@ -1,0 +1,23 @@
+{
+  "schema_version": "2.0",
+  "content_type": "fleet_doctrines",
+  "definitions": [
+    {
+      "id": "example_fleet:fleet_doctrine/scout_screen",
+      "name_key": "fleet_doctrine.example_fleet.scout_screen.name",
+      "description_key": "fleet_doctrine.example_fleet.scout_screen.description",
+      "tags": [
+        "doctrine.patrol"
+      ],
+      "enabled": true,
+      "data": {
+        "engagement": "evasive",
+        "retreat": "when_damaged",
+        "escort": "patrol",
+        "target_priority": "nearest",
+        "supply_policy": "conservative",
+        "formation": "example_fleet:formation/skirmish"
+      }
+    }
+  ]
+}

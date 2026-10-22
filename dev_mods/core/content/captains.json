@@ -1,0 +1,88 @@
+{
+  "schema_version": "2.0",
+  "content_type": "captains",
+  "definitions": [
+    {
+      "id": "core:captain/elena_voss",
+      "name_key": "captain.core.elena_voss.name",
+      "description_key": "captain.core.elena_voss.description",
+      "tags": [
+        "captain.merchant",
+        "captain.fleet"
+      ],
+      "enabled": true,
+      "data": {
+        "skills": {
+          "navigation": 72,
+          "gunnery": 58,
+          "engineering": 64,
+          "leadership": 78
+        },
+        "traits": [
+          "captain.drillmaster",
+          "captain.calm"
+        ],
+        "wage_per_voyage": 85,
+        "loyalty": 70,
+        "commandable_archetypes": [
+          "core:ship_archetype/flagship_ironclad",
+          "core:ship_archetype/freight_hauler"
+        ]
+      }
+    },
+    {
+      "id": "core:captain/marcus_reed",
+      "name_key": "captain.core.marcus_reed.name",
+      "description_key": "captain.core.marcus_reed.description",
+      "tags": [
+        "captain.raider",
+        "captain.fleet"
+      ],
+      "enabled": true,
+      "data": {
+        "skills": {
+          "navigation": 64,
+          "gunnery": 76,
+          "engineering": 55,
+          "leadership": 62
+        },
+        "traits": [
+          "captain.gunslinger"
+        ],
+        "wage_per_voyage": 70,
+        "loyalty": 60,
+        "commandable_archetypes": [
+          "core:ship_archetype/freight_hauler",
+          "core:ship_archetype/courier_sloop"
+        ]
+      }
+    },
+    {
+      "id": "core:captain/yuki_sato",
+      "name_key": "captain.core.yuki_sato.name",
+      "description_key": "captain.core.yuki_sato.description",
+      "tags": [
+        "captain.scout",
+        "captain.fleet"
+      ],
+      "enabled": true,
+      "data": {
+        "skills": {
+          "navigation": 80,
+          "gunnery": 45,
+          "engineering": 70,
+          "leadership": 66
+        },
+        "traits": [
+          "captain.scout"
+        ],
+        "wage_per_voyage": 65,
+        "loyalty": 65,
+        "commandable_archetypes": [
+          "core:ship_archetype/courier_sloop",
+          "core:ship_archetype/freight_hauler"
+        ]
+      }
+    }
+  ]
+}

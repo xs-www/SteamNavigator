@@ -204,6 +204,11 @@
     combat_ability: ['combat_ability'],
     loot_table: ['loot_table'],
     enemy_archetype: ['enemy_archetype'],
+    hull_ref: ['hull'],
+    module: ['module'],
+    weapon: ['weapon'],
+    formation: ['formation'],
+    commandable_archetypes: ['ship_archetype'],
     quests_completed: ['quest'],
   };
 

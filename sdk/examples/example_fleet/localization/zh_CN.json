@@ -1,0 +1,10 @@
+{
+  "ship_archetype.example_fleet.scout_cutter.name": "侦察快艇",
+  "ship_archetype.example_fleet.scout_cutter.description": "小型高效船体的侦察艇：便宜、快速，只带一门甲板炮。",
+  "captain.example_fleet.scout_ash.name": "艾什",
+  "captain.example_fleet.scout_ash.description": "年轻的侦察船长：导航出色，擅长规避战斗。",
+  "formation.example_fleet.skirmish.name": "散兵阵",
+  "formation.example_fleet.skirmish.description": "两翼散开、旗舰居中，适合侦察与骚扰。",
+  "fleet_doctrine.example_fleet.scout_screen.name": "侦察警戒",
+  "fleet_doctrine.example_fleet.scout_screen.description": "规避为主的巡逻战术：保船、省补给，避免正面交战。"
+}

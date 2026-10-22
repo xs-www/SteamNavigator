@@ -1,0 +1,31 @@
+{
+  "schema_version": "2.0",
+  "content_type": "captains",
+  "definitions": [
+    {
+      "id": "example_fleet:captain/scout_ash",
+      "name_key": "captain.example_fleet.scout_ash.name",
+      "description_key": "captain.example_fleet.scout_ash.description",
+      "tags": [
+        "captain.scout"
+      ],
+      "enabled": true,
+      "data": {
+        "skills": {
+          "navigation": 70,
+          "gunnery": 40,
+          "engineering": 55,
+          "leadership": 50
+        },
+        "traits": [
+          "captain.scout"
+        ],
+        "wage_per_voyage": 40,
+        "loyalty": 60,
+        "commandable_archetypes": [
+          "example_fleet:ship_archetype/scout_cutter"
+        ]
+      }
+    }
+  ]
+}

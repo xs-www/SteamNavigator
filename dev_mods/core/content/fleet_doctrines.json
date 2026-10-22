@@ -1,0 +1,40 @@
+{
+  "schema_version": "2.0",
+  "content_type": "fleet_doctrines",
+  "definitions": [
+    {
+      "id": "core:fleet_doctrine/merchant_escort",
+      "name_key": "fleet_doctrine.core.merchant_escort.name",
+      "description_key": "fleet_doctrine.core.merchant_escort.description",
+      "tags": [
+        "doctrine.escort"
+      ],
+      "enabled": true,
+      "data": {
+        "engagement": "defensive",
+        "retreat": "when_cargo_threatened",
+        "escort": "convoy",
+        "target_priority": "cargo",
+        "supply_policy": "conservative",
+        "formation": "core:formation/escort_screen"
+      }
+    },
+    {
+      "id": "core:fleet_doctrine/raider_hunt",
+      "name_key": "fleet_doctrine.core.raider_hunt.name",
+      "description_key": "fleet_doctrine.core.raider_hunt.description",
+      "tags": [
+        "doctrine.raider"
+      ],
+      "enabled": true,
+      "data": {
+        "engagement": "aggressive",
+        "retreat": "when_damaged",
+        "escort": "patrol",
+        "target_priority": "weakest",
+        "supply_policy": "aggressive",
+        "formation": "core:formation/line_abreast"
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/captain-2.json",
+  "title": "Steam Navigator captain content file (Content Schema 2.0)",
+  "description": "Fleet captains (D2): skills, traits, wage and starting loyalty, plus the hull classes they may command. IDs use core:captain/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "captains"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/captain_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "captain_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skills", "wage_per_voyage", "loyalty", "commandable_archetypes"],
+      "properties": {
+        "skills": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["navigation", "gunnery", "engineering", "leadership"],
+          "properties": {
+            "navigation": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "gunnery": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "engineering": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "leadership": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "traits": {
+          "description": "Free-form trait tags (e.g. captain.drillmaster); runtime may map known tags to modifiers.",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "wage_per_voyage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "loyalty": {
+          "description": "Initial loyalty 0–100.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "commandable_archetypes": {
+          "description": "Ship archetypes this captain may command (ship_archetypes).",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        }
+      }
+    }
+  }
+}

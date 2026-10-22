@@ -28,4 +28,5 @@ const CAPABILITIES := [
 	"content.modules.v1",
 	"content.hulls.v1",
 	"content.combat.v1",
+	"content.fleet.v1",
 ]

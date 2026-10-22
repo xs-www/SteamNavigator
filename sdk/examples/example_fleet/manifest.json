@@ -1,0 +1,37 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_fleet",
+  "name": "Example Fleet",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 10,
+  "required": false,
+  "dependencies": [
+    {
+      "id": "core",
+      "version": ">=1.0.0 <2.0.0"
+    }
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/ship_archetypes.json",
+    "content/captains.json",
+    "content/formations.json",
+    "content/fleet_doctrines.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": [
+    "Steam Navigator Team"
+  ],
+  "license": "CC-BY-4.0",
+  "description": "Active Content Schema 2.0 fleet example: one ship archetype, captain, formation and doctrine built on Core hulls/modules/weapons.",
+  "capabilities": [
+    "content.fleet.v1"
+  ]
+}

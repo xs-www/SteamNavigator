@@ -60,6 +60,11 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_core_count(hub, ContentTypes.ENEMY_ARCHETYPE, 4, "enemy archetypes", errors)
 	_require_core_count(hub, ContentTypes.ENCOUNTER_TABLE, 1, "encounter tables", errors)
 	_require_core_count(hub, ContentTypes.LOOT_TABLE, 1, "loot tables", errors)
+	# D2 fleet family minimums.
+	_require_core_count(hub, ContentTypes.SHIP_ARCHETYPE, 1, "ship archetypes", errors)
+	_require_core_count(hub, ContentTypes.CAPTAIN, 1, "captains", errors)
+	_require_core_count(hub, ContentTypes.FORMATION, 1, "formations", errors)
+	_require_core_count(hub, ContentTypes.FLEET_DOCTRINE, 1, "fleet doctrines", errors)
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
 		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():

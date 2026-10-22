@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/ship-archetype-2.json",
+  "title": "Steam Navigator ship archetype content file (Content Schema 2.0)",
+  "description": "Fleet ship archetypes (D2): a hull plus its crew/cargo budget, base speed and upkeep, with default modules and weapon sockets mapped onto the existing hull/module/weapon content. IDs use core:ship_archetype/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "ship_archetypes"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/ship_archetype_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "ship_archetype_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hull_ref", "crew_capacity", "cargo_capacity", "base_speed", "upkeep"],
+      "properties": {
+        "hull_ref": {
+          "description": "Hull definition reference (hulls).",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "crew_capacity": {
+          "description": "Maximum crew slots, captains included.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "cargo_capacity": {
+          "description": "Cargo capacity in weight units; must fit the hull's cargo slots.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "base_speed": {
+          "description": "Fleet-map base speed (matches the hull/simulator speed scale).",
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "upkeep": {
+          "description": "Per-voyage upkeep in money.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "default_modules": {
+          "description": "Optional default loadout; each entry maps one hull slot to a module.",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slot", "module"],
+            "properties": {
+              "slot": {
+                "enum": ["boiler", "cargo", "navigation", "safety", "cabin"]
+              },
+              "module": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        },
+        "weapon_sockets": {
+          "description": "Optional mapping of hull weapon sockets to their class and default weapon.",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["socket", "class"],
+            "properties": {
+              "socket": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "class": {
+                "enum": ["Light", "Medium", "Heavy", "Tower", "Side"]
+              },
+              "weapon": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

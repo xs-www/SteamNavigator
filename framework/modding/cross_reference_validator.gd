@@ -87,6 +87,7 @@ func validate(hub: RegistryHub) -> Dictionary:
 	_hub = hub
 	_check_modules()
 	_check_combat()
+	_check_fleet()
 	_check_starting_scenarios()
 	_check_contracts()
 	_check_events()
@@ -174,6 +175,42 @@ func _weapon_class_exists(socket_class: String) -> bool:
 		if weapon_class == socket_class or mount_class == socket_class:
 			return true
 	return false
+
+
+func _check_fleet() -> void:
+	## D2 fleet content: archetype hull/module/weapon refs, captain commandables,
+	## doctrine formations. Slot -> module category mapping mirrors modules.v2_category.
+	var slot_categories := {
+		"boiler": "boiler",
+		"cargo": "cargo",
+		"navigation": "utility",
+		"safety": "utility",
+		"cabin": "cabin",
+	}
+	for archetype in _hub.get_all(ContentTypes.SHIP_ARCHETYPE):
+		_require(ContentTypes.HULL, String(archetype.data.get("hull_ref", "")), archetype.id, "hull_ref")
+		for entry in archetype.data.get("default_modules", []):
+			if not (entry is Dictionary):
+				continue
+			var slot := String(entry.get("slot", ""))
+			var category := String(slot_categories.get(slot, ""))
+			var module_id := String(entry.get("module", ""))
+			if category.is_empty():
+				_error("fleet_slot_unknown", "%s uses unknown module slot '%s'" % [archetype.id, slot], archetype.id)
+			else:
+				_require_module(module_id, category, archetype.id, "default_modules.module")
+		for entry in archetype.data.get("weapon_sockets", []):
+			if entry is Dictionary:
+				var weapon_id := String(entry.get("weapon", ""))
+				if not weapon_id.is_empty():
+					_require(ContentTypes.WEAPON, weapon_id, archetype.id, "weapon_sockets.weapon")
+	for captain in _hub.get_all(ContentTypes.CAPTAIN):
+		for archetype_id in captain.data.get("commandable_archetypes", []):
+			_require(ContentTypes.SHIP_ARCHETYPE, String(archetype_id), captain.id, "commandable_archetypes")
+	for doctrine in _hub.get_all(ContentTypes.FLEET_DOCTRINE):
+		var formation_id := String(doctrine.data.get("formation", ""))
+		if not formation_id.is_empty():
+			_require(ContentTypes.FORMATION, formation_id, doctrine.id, "formation")
 
 
 func _check_modules() -> void:

@@ -1,0 +1,39 @@
+{
+  "schema_version": "2.0",
+  "content_type": "ship_archetypes",
+  "definitions": [
+    {
+      "id": "example_fleet:ship_archetype/scout_cutter",
+      "name_key": "ship_archetype.example_fleet.scout_cutter.name",
+      "description_key": "ship_archetype.example_fleet.scout_cutter.description",
+      "tags": [
+        "ship_archetype.fleet"
+      ],
+      "enabled": true,
+      "data": {
+        "hull_ref": "core:hull/small_efficient",
+        "crew_capacity": 6,
+        "cargo_capacity": 40,
+        "base_speed": 14,
+        "upkeep": 15,
+        "default_modules": [
+          {
+            "slot": "boiler",
+            "module": "core:module/small_efficient"
+          },
+          {
+            "slot": "navigation",
+            "module": "core:module/spyglass"
+          }
+        ],
+        "weapon_sockets": [
+          {
+            "socket": "SN_Socket_Weapon_Port_1",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          }
+        ]
+      }
+    }
+  ]
+}

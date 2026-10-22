@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/fleet-doctrine-2.json",
+  "title": "Steam Navigator fleet doctrine content file (Content Schema 2.0)",
+  "description": "Fleet doctrines (D2): engagement / retreat behaviour, escort role, target priority and resupply policy, with an optional default formation. IDs use core:fleet_doctrine/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "fleet_doctrines"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/fleet_doctrine_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "fleet_doctrine_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engagement", "retreat", "target_priority", "supply_policy"],
+      "properties": {
+        "engagement": {
+          "enum": ["aggressive", "balanced", "defensive", "evasive"]
+        },
+        "retreat": {
+          "enum": ["never", "when_damaged", "when_outnumbered", "when_cargo_threatened"]
+        },
+        "escort": {
+          "description": "Convoy role: none / convoy escort / patrol / screen.",
+          "enum": ["none", "convoy", "patrol", "screen"]
+        },
+        "target_priority": {
+          "enum": ["nearest", "cargo", "weakest"]
+        },
+        "supply_policy": {
+          "enum": ["conservative", "standard", "aggressive"]
+        },
+        "formation": {
+          "description": "Optional default formation reference.",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        }
+      }
+    }
+  }
+}

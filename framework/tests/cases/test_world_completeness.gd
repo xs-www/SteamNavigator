@@ -26,6 +26,9 @@ const REGION_ID := "core:region/coastal"
 const WEATHER_PROFILE_ID := "core:weather_profile/temperate"
 const START_PROFILE_ID := "core:start_profile/standard"
 const STARTING_BUILD_ID := "core:starting_scenario/standard"
+const SHIP_ARCHETYPE_ID := "core:ship_archetype/line"
+const FORMATION_ID := "core:formation/line"
+const FLEET_DOCTRINE_ID := "core:fleet_doctrine/standard"
 const STANDARD_HULL_ID := "core:hull/standard"
 const STANDARD_BOILER_ID := "core:module/standard_boiler"
 const SECOND_BOILER_ID := "core:module/second_boiler"
@@ -123,6 +126,13 @@ func test_complete_phase_b_content_has_no_errors() -> void:
 	var result := _check(_full_hub())
 	assert_true(result["errors"].is_empty(), "complete v2 combination is clean: %s" % str(result["errors"]))
 	assert_true(result["warnings"].is_empty(), "complete v2 combination has no suggestion warnings: %s" % str(result["warnings"]))
+
+
+func test_core_requires_fleet_content_counts() -> void:
+	var result := _check(_full_hub([ContentTypes.SHIP_ARCHETYPE]))
+	assert_true(_has_error_message(result, "ship archetypes"), "missing ship archetypes raise content_count")
+	result = _check(_full_hub([ContentTypes.CAPTAIN]))
+	assert_true(_has_error_message(result, "captains"), "missing captains raise content_count")
 
 
 func test_core_requires_combat_content_counts() -> void:
@@ -370,6 +380,32 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 		_register(hub, ContentTypes.LOOT_TABLE, "core:loot_table/wreck", [], {"entries": []})
 	if not skip.has(ContentTypes.ENCOUNTER_TABLE):
 		_register(hub, ContentTypes.ENCOUNTER_TABLE, "core:encounter_table/patrol", [], {"entries": []})
+	if not skip.has(ContentTypes.SHIP_ARCHETYPE):
+		_register(hub, ContentTypes.SHIP_ARCHETYPE, SHIP_ARCHETYPE_ID, [], {
+			"hull_ref": STANDARD_HULL_ID,
+			"crew_capacity": 8,
+			"cargo_capacity": 60,
+			"base_speed": 14,
+			"upkeep": 20,
+		})
+	if not skip.has(ContentTypes.CAPTAIN):
+		_register(hub, ContentTypes.CAPTAIN, "core:captain/line", [], {
+			"skills": {"navigation": 60, "gunnery": 60, "engineering": 60, "leadership": 60},
+			"wage_per_voyage": 50,
+			"loyalty": 60,
+			"commandable_archetypes": [SHIP_ARCHETYPE_ID],
+		})
+	if not skip.has(ContentTypes.FORMATION):
+		_register(hub, ContentTypes.FORMATION, FORMATION_ID, [], {
+			"slots": [{"id": "flagship", "role": "flagship", "offset": {"x": 0, "y": 0}}],
+		})
+	if not skip.has(ContentTypes.FLEET_DOCTRINE):
+		_register(hub, ContentTypes.FLEET_DOCTRINE, FLEET_DOCTRINE_ID, [], {
+			"engagement": "balanced",
+			"retreat": "when_damaged",
+			"target_priority": "nearest",
+			"supply_policy": "standard",
+		})
 	if not skip.has(ContentTypes.ENEMY_ARCHETYPE):
 		for index in range(4):
 			_register(hub, ContentTypes.ENEMY_ARCHETYPE, "core:enemy_archetype/enemy_%d" % index)

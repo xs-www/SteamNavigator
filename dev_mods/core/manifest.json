@@ -35,7 +35,11 @@
     "content/combat_abilities.json",
     "content/enemy_archetypes.json",
     "content/encounter_tables.json",
-    "content/loot_tables.json"
+    "content/loot_tables.json",
+    "content/ship_archetypes.json",
+    "content/captains.json",
+    "content/formations.json",
+    "content/fleet_doctrines.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -188,6 +192,7 @@
     "content.voyage_events.v1",
     "content.world.v1",
     "content.campaign.v1",
-    "content.combat.v1"
+    "content.combat.v1",
+    "content.fleet.v1"
   ]
 }

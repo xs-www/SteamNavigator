@@ -21,3 +21,4 @@ static func register_all(bus: QueryBus) -> void:
 	bus.register(&"sim.view", Callable(SimViewQuery, "execute"))
 	bus.register(&"combat.view", Callable(CombatViewQuery, "execute"))
 	bus.register(&"combat.log", Callable(CombatLogQuery, "execute"))
+	bus.register(&"fleet.view", Callable(FleetViewQuery, "execute"))

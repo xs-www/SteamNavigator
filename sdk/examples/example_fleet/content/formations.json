@@ -1,0 +1,51 @@
+{
+  "schema_version": "2.0",
+  "content_type": "formations",
+  "definitions": [
+    {
+      "id": "example_fleet:formation/skirmish",
+      "name_key": "formation.example_fleet.skirmish.name",
+      "description_key": "formation.example_fleet.skirmish.description",
+      "tags": [
+        "formation.screen"
+      ],
+      "enabled": true,
+      "data": {
+        "max_ships": 3,
+        "slots": [
+          {
+            "id": "flagship",
+            "role": "flagship",
+            "offset": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "left",
+            "role": "screen",
+            "offset": {
+              "x": -10,
+              "y": 10
+            }
+          },
+          {
+            "id": "right",
+            "role": "screen",
+            "offset": {
+              "x": -10,
+              "y": -10
+            }
+          }
+        ],
+        "bonuses": [
+          {
+            "stat": "risk",
+            "op": "add",
+            "value": -0.01
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -40,3 +40,8 @@ static func register_all(bus: CommandBus) -> void:
 	bus.register(&"sim.set_speed", Callable(SimCommands, "set_speed"))
 	bus.register(&"sim.advance", Callable(SimCommands, "advance"))
 	bus.register(&"combat.resolve", Callable(CombatCommands, "resolve"))
+	bus.register(&"fleet.assign_captain", Callable(FleetCommands, "assign_captain"))
+	bus.register(&"fleet.set_formation", Callable(FleetCommands, "set_formation"))
+	bus.register(&"fleet.set_doctrine", Callable(FleetCommands, "set_doctrine"))
+	bus.register(&"fleet.add_ship", Callable(FleetCommands, "add_ship"))
+	bus.register(&"fleet.remove_ship", Callable(FleetCommands, "remove_ship"))

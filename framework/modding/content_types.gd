@@ -32,6 +32,10 @@ const COMBAT_ABILITY := &"combat_abilities"
 const ENEMY_ARCHETYPE := &"enemy_archetypes"
 const ENCOUNTER_TABLE := &"encounter_tables"
 const LOOT_TABLE := &"loot_tables"
+const SHIP_ARCHETYPE := &"ship_archetypes"
+const CAPTAIN := &"captains"
+const FORMATION := &"formations"
+const FLEET_DOCTRINE := &"fleet_doctrines"
 
 const SCHEMA_PATHS := {
 	ITEM: "res://schemas/v2/item.schema.json",
@@ -60,6 +64,10 @@ const SCHEMA_PATHS := {
 	ENEMY_ARCHETYPE: "res://schemas/v2/enemy_archetype.schema.json",
 	ENCOUNTER_TABLE: "res://schemas/v2/encounter_table.schema.json",
 	LOOT_TABLE: "res://schemas/v2/loot_table.schema.json",
+	SHIP_ARCHETYPE: "res://schemas/v2/ship_archetype.schema.json",
+	CAPTAIN: "res://schemas/v2/captain.schema.json",
+	FORMATION: "res://schemas/v2/formation.schema.json",
+	FLEET_DOCTRINE: "res://schemas/v2/fleet_doctrine.schema.json",
 }
 
 const SCHEMA_VERSIONS := {
@@ -89,6 +97,10 @@ const SCHEMA_VERSIONS := {
 	ENEMY_ARCHETYPE: "2.0",
 	ENCOUNTER_TABLE: "2.0",
 	LOOT_TABLE: "2.0",
+	SHIP_ARCHETYPE: "2.0",
+	CAPTAIN: "2.0",
+	FORMATION: "2.0",
+	FLEET_DOCTRINE: "2.0",
 }
 
 const SINGULAR := {
@@ -118,6 +130,10 @@ const SINGULAR := {
 	ENEMY_ARCHETYPE: "enemy_archetype",
 	ENCOUNTER_TABLE: "encounter_table",
 	LOOT_TABLE: "loot_table",
+	SHIP_ARCHETYPE: "ship_archetype",
+	CAPTAIN: "captain",
+	FORMATION: "formation",
+	FLEET_DOCTRINE: "fleet_doctrine",
 }
 
 const MODULE_TYPES := [HULL, MODULE]
@@ -130,6 +146,7 @@ static func all() -> Array[StringName]:
 		ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY, START_PROFILE,
 		MAP_CONFIG, CONTRACT, QUEST, VOYAGE_EVENT, WEAPON,
 		DAMAGE_TYPE, COMBAT_ABILITY, ENEMY_ARCHETYPE, ENCOUNTER_TABLE, LOOT_TABLE,
+		SHIP_ARCHETYPE, CAPTAIN, FORMATION, FLEET_DOCTRINE,
 	]
 	return types
 
