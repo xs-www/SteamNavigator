@@ -84,7 +84,7 @@
    `schema`、`schema_version: "2.0"`、`v2_target`/`aliases` 按需）。
 2. `planned` 中删除已提升的类型：`world_exploration` 系统 7 个类型全部提升 → 删除该 system 条目；
    `campaign` 系统删除 `start_profiles`，保留 `difficulty_profiles` / `simulation_profiles`。
-3. `draft_schemas` / `draft_types` 中删除已提升的 8 条（提升后 `SNContentTypes.DRAFT_TYPES` 只剩 `weapons`，编辑器草案分区仍保留 1 条，不消失）。
+3. `draft_schemas` / `draft_types` 中删除已提升的 8 条（历史：B1 时点提升后 `SNContentTypes.DRAFT_TYPES` 只剩 `weapons`；D1 起 `weapons` 已 active，草案只剩 2 类剧情）。
 4. `map_configs` 不进 `planned`（直接 active）。
 5. `content_schema` 基线保持 `"1.0"`（存档 header 语义见 §7）。
 
@@ -366,7 +366,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 
 | 面 | 变更 |
 | --- | --- |
-| 编辑器类型目录 | `TYPES` 16 → 25；提升的 8 类从 `DRAFT_TYPES` 移除，草案分区只剩 `weapons`（战斗，不属 Phase B）；9 类显示版本 2.0 |
+| 编辑器类型目录 | （历史，B1 时点）`TYPES` 16 → 25；提升的 8 类从 `DRAFT_TYPES` 移除，草案分区只剩 `weapons`（战斗，不属 Phase B）；9 类显示版本 2.0；D1 起 weapons 亦 active，当前 26 runtime + 2 剧情 draft |
 | 校验语义 | `draft_content` 只对草案类型提示（提升后不再出现）；`capability_undeclared` 改为“schemaVersion=2.0 且未声明 capability” |
 | 导出守卫（G8） | 判定从「draft **或** schema_version 2.0」改为「**当前运行时不支持**」：`info.draft` 或未知类型/版本不可加载；提升后的 9 类允许部署 |
 | CLI | `types` 运行时组新增 9 类（`schema_version: "2.0"`）；`describe` 显示 v2 Schema；`add/new` 写 2.0 envelope；`validate` 走新引用规则 |

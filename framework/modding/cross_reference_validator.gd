@@ -29,6 +29,11 @@ extends RefCounted
 ##   **设计理由**：命令 / UI 事件名是字符串总线（`CommandBus` / Shell 观测），没有可枚举的
 ##   运行时注册表交给内容校验器，因此这里只做格式硬校验；未知但格式合法的事件名属于
 ##   「内容作者拼写」问题，无法在不引入注册表快照的前提下可靠判定，故不误报。
+## - D1：`enemy_archetypes.weapon_sockets[]` 的每个 class 必须至少有一把可安装的
+##   weapon（`weapon_class` 或 `mount_class` 命中），否则报
+##   `enemy_weapon_class_missing`（message / 记录带 mod / file / entity / path）。
+##   运行时对未解析 class 只 skip 该 socket，如果校验器不报错，内容错误会把「武装敌舰」
+##   静默变成「无武装敌舰」。
 ## @end-static-doc
 
 ## Planned target types referenced by active Phase B schemas. They have no runtime
@@ -104,7 +109,8 @@ func validate(hub: RegistryHub) -> Dictionary:
 
 func _check_combat() -> void:
 	## D1 combat content: weapon damage types / craft materials, enemy AI + loot refs,
-	## encounter enemy refs and loot-table entries. Enum vocabularies stay in Schema.
+	## enemy socket-class resolvability, encounter enemy refs and loot-table entries.
+	## Enum vocabularies stay in Schema.
 	for weapon in _hub.get_all(ContentTypes.WEAPON):
 		var damage_type := String(weapon.data.get("damage_type", ""))
 		if not damage_type.is_empty():
@@ -119,6 +125,26 @@ func _check_combat() -> void:
 		var loot_table := String(archetype.data.get("loot_table", ""))
 		if not loot_table.is_empty():
 			_require(ContentTypes.LOOT_TABLE, loot_table, archetype.id, "loot_table")
+		# Every socket class must resolve to at least one weapon definition; the
+		# runtime skips unmapped sockets, so an unresolved class would silently
+		# turn an armed enemy into an unarmed one. Schema-level enum values are not
+		# enough: content can add a class before any weapon exists for it.
+		var sockets: Array = Array(archetype.data.get("weapon_sockets", []))
+		for index in sockets.size():
+			var socket_class := String(sockets[index])
+			if _weapon_class_exists(socket_class):
+				continue
+			errors.append({
+				"code": "enemy_weapon_class_missing",
+				"message": "%s (mod '%s', file '%s') weapon_sockets[%d] class '%s' has no matching weapon definition" % [
+					archetype.id, archetype.source_mod, archetype.source_file, index, socket_class
+				],
+				"definition_id": archetype.id,
+				"mod": archetype.source_mod,
+				"file": archetype.source_file,
+				"entity": socket_class,
+				"path": "data.weapon_sockets[%d]" % index,
+			})
 	for table in _hub.get_all(ContentTypes.ENCOUNTER_TABLE):
 		for entry in table.data.get("entries", []):
 			if entry is Dictionary:
@@ -134,6 +160,20 @@ func _check_combat() -> void:
 			elif kind == "module":
 				expected = ContentTypes.MODULE
 			_require(expected, String(entry.get("id", "")), loot_table.id, "entries.id")
+
+
+## True when at least one weapon can mount the given socket class, using the same
+## rule as `CombatOps._default_weapon_for_socket` (weapon_class or mount_class).
+func _weapon_class_exists(socket_class: String) -> bool:
+	if socket_class.is_empty():
+		return false
+	for weapon in _hub.get_all(ContentTypes.WEAPON):
+		var data: Dictionary = weapon.data
+		var weapon_class := String(data.get("weapon_class", ""))
+		var mount_class := String(data.get("mount_class", weapon_class))
+		if weapon_class == socket_class or mount_class == socket_class:
+			return true
+	return false
 
 
 func _check_modules() -> void:

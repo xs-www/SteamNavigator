@@ -383,8 +383,7 @@ weapon GLB → find_weapon_root() / weapon_info()     # Root extras（assembly_s
 - **报告**：`weapons.mounted[{socket, asset, class, profile, fits}]` + `weapons.mounts`（`ShipWeaponMount`）。
 - **舞台**：船厂 / 港口 / 航行演出共用同一入口；船厂舞台不做合批，`ShipWeaponMount` 句柄保持有效；
   港口舞台把整船烘进 `ShipBatches`，合批后句柄失效（战斗层接入时需要不合批旁路）。
-- **内容边界**：`weapons` content type 仍是 Schema 2.0 草案，`state.ship` 尚无已装武器，因此游戏内
-  loadout 当前为空；截图工具注入的预览 loadout 只作为装配证据。
+- **内容边界**：`weapons` 已是 D1 active 2.0 内容类型，战斗结算会从船体 socket + 武器内容解析默认武器；但游戏内尚无武器购买 / 装配入口，`ship.weapon_loadout` 仍主要由预览注入，视觉装配仍以 GLB Root extras 为准。
 - 契约 §7 待决 5（`base_footprint` F1）在运行时按 §8.3 用底座网格实测规避，`clearance_report()`
   不读 `base_footprint_*`。
 
@@ -414,5 +413,5 @@ weapon GLB → find_weapon_root() / weapon_info()     # Root extras（assembly_s
   `sn_enemy_gun_ports.py`、`glb_enemy_sockets.py`（BLEND 前缀 → GLB 标准名 + Root 名单）、
   `export_combat_kit_glb.py`、`verify_combat_kit_glb.py`；验收见
   [COMBAT_KIT_ACCEPTANCE.md](../archive/COMBAT_KIT_ACCEPTANCE.md)。
-- 边界：敌人内容 Schema（`enemy_archetypes` / `encounter_tables`）仍为 planned；本批只交付
-  资产 / socket / 目录，不接 Core manifest 与运行时 AI。
+- 边界：D1 起敌人内容 Schema（`enemy_archetypes` / `encounter_tables`）已 active 2.0 并由 `CombatOps` 消费；本批只交付
+  资产 / socket / 目录，敌舰视觉装配与 AI 仍在后续切片。

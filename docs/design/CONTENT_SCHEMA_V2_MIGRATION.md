@@ -174,7 +174,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 | B3 | 世界生成运行时 | ✅ 已完成（2026-10-22）：新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询；`ContentRefs` 统一 12 处 resolver |
 | B4 | core 内容 | ✅ 已完成（2026-10-22）：`dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化（各 +62 键）；`map_profiles.exploration` 31 键与 `story` 原样迁入 `map_configs` |
 | B5 | 存档 | ✅ 已完成（2026-10-22）：新档由 `prepare_for_save()` 写 `campaign.setup.content_versions`；旧档推断 `starting_builds/map_profiles → 1.0` 并用注册表补齐；版本漂移只 warning、不重排世界 |
-| B6 | 编辑器 / CLI / SDK | ✅ 已完成（2026-10-22）：草案分区只剩 `weapons`；`capability_undeclared` 按 schemaVersion=2.0 判定并按 capability 去重；G8 改为“运行时不支持”（草案/未知类型/版本不符拦截，提升类型可部署）；CLI 标 runtime 2.0、`new --draft` 仅 weapons；release workflow 加入 Node 两套件 |
+| B6 | 编辑器 / CLI / SDK | ✅ 已完成（2026-10-22；历史记录）：当时草案分区只剩 `weapons`；`capability_undeclared` 按 schemaVersion=2.0 判定并按 capability 去重；G8 改为“运行时不支持”（草案/未知类型/版本不符拦截，提升类型可部署）；CLI 标 runtime 2.0；release workflow 加入 Node 两套件。D1 起 `weapons` 已 active，草案只剩剧情 2 类 |
 
 验收：v2 世界生成可开局；旧档可继续；1.0 模组在双读窗口内仍可加载；seed 回归（现有 seed + 新 v2 seed）；
 编辑器/CLI/SDK 全链零 error；`gen_content_types --check`、`gen_static_docs --check`。

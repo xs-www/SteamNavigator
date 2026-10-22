@@ -48,7 +48,7 @@
 ## 4. 中期：玩法主线（P2，阶段 1 → 2）
 
 1. **模块 condition 进入派生属性**（0.5 天）：受损锅炉/导航/安全/货舱/客舱按状态降低速度、载重、风险与容量；补回归测试。
-2. **战斗内容 Schema 2.0 草案**（1 天）：`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`，保持 `planned`；有效/无效样本测试。
+2. **战斗内容 Schema 2.0（历史计划，D1 已完成）**（1 天）：`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 均已 active 2.0；有效/无效样本测试随 D1 落地。
 3. **自动结算原型**（2–3 天）：`CombatResolver` 纯函数 + `combat.resolve` 命令 + 单船 vs 单船；战利品进仓库/市场；失败接现有维修与债务。
 4. **世界探索运行时**（阶段 1 主线，3–5 天）：把 `regions/sites/route_templates/world_profiles/start_profiles` 从 `planned` 提升 active；接世界生成、`campaign.world` 探索进度、海图迷雾与低细节远方模拟。
 

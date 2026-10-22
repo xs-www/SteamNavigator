@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T20:43:19.448Z",
-  "commit": "21b35d3",
+  "generated_at": "2026-10-22T21:20:05.827Z",
+  "commit": "e8392f7",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -3456,7 +3456,7 @@
     },
     {
       "source": "framework/domain/combat/combat_ops.gd",
-      "sha256": "0b74e5b238411b605b16c30663bc22a1b9473d456ba3432e3d15be96e662dca4",
+      "sha256": "725516a0026349484325e8824512ae8f900dcebee3f18fdb832639e47f895fda",
       "doc": "docs/static/framework/domain/combat/combat_ops.gd.md",
       "status": "documented"
     },
@@ -3750,13 +3750,13 @@
     },
     {
       "source": "framework/modding/core_completeness_checker.gd",
-      "sha256": "9ad9e799bd5da03a60b210985961544173e7c31fec5fce0fd2b8abb760d0c5cc",
+      "sha256": "fa99106b1b7cc07178aae3579237e93ef258d6d56dbf8a6ea478ad87607bc9a8",
       "doc": "docs/static/framework/modding/core_completeness_checker.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/modding/cross_reference_validator.gd",
-      "sha256": "bc18c7f38c577239187df5070295db119539cf881edb90d8db484a42fa797ab1",
+      "sha256": "0cd188699c66ed7ebc84468292916bc7c8ed858bd47e4081f48aff44b2add18d",
       "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
       "status": "documented"
     },
@@ -3937,7 +3937,7 @@
     },
     {
       "source": "framework/tests/cases/test_combat.gd",
-      "sha256": "275528448aecc41a47b83c0a2d20caf4d59a32ead142833bf722373299715d55",
+      "sha256": "071bea9e4d660fe23ab7f00b6e4ee42e1644b26c77e4c5db3166b9d32f5e3b0d",
       "doc": "docs/static/framework/tests/cases/test_combat.gd.md",
       "status": "documented"
     },
@@ -4300,7 +4300,7 @@
     },
     {
       "source": "framework/tests/cases/test_world_completeness.gd",
-      "sha256": "828a7b6f8109e3a5e1c6ca4cfa95512bc472317f5549e98152226bac559f6ce4",
+      "sha256": "d1eb21df9505c1a696b9118c837c42631e6624141cb4c1007443f0f9a8200180",
       "doc": "docs/static/framework/tests/cases/test_world_completeness.gd.md",
       "status": "documented"
     },
@@ -4313,7 +4313,7 @@
     },
     {
       "source": "framework/tests/cases/test_world_schema_refs.gd",
-      "sha256": "2d70e56e629638a66c0aab181dffa407b9148ee1cdbfa2e49850e612647f5aae",
+      "sha256": "d35736288e92fdf340b12b42e92688876caa88523e3abc47d2d76327e01b3702",
       "doc": "docs/static/framework/tests/cases/test_world_schema_refs.gd.md",
       "status": "documented"
     },

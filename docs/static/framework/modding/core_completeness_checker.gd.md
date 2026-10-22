@@ -9,7 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CoreCompletenessChecker` | L1 |
-| `check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary` | L26 |
+| `check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary` | L29 |
 
 Schema 2.0 世界内容后追加 Phase B 完整性规则（WORLD_SCHEMA_V2_RUNTIME §5.2）。
 
@@ -27,5 +27,8 @@ Schema 2.0 世界内容后追加 Phase B 完整性规则（WORLD_SCHEMA_V2_RUNTI
 - 建议（warning）：route_templates / factions / sites / discoveries 各 ≥1。
 - 组合：至少一个 start_profile 解析 world_profile + map_config + starting_scenario；##   start_region_tags 命中至少一个 regions.region_tags；map_config.archetypes 数量 ≥
   对应 world_profile.port_count。
+- D1 战斗家族（weapons / damage_types / combat_abilities / enemy_archetypes /
+  encounter_tables / loot_tables）的最低数量只统计 `source_mod == "core"` 的定义，
+  第三方单独提供的战斗内容不能替代 Core 自己的完整性门槛。
 
 模块索引：[framework/modding](./README.md)

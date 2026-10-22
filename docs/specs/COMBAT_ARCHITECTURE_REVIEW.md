@@ -58,16 +58,16 @@
 | 依赖 | 现状 | 为什么阻塞战斗 |
 | --- | --- | --- |
 | Module 实例化（id + condition + 失效状态） | **已落地第一步**：`ship.module_instances` 提供 instance_id 与 condition，`damage_module` 可损坏部件、维修按部件计价；定义 ID 仍在扁平槽位键上 | 持久伤害已有落脚点；下一步把定义 ID 移入实例并让 condition 影响能力 |
-| 战斗内容类型 Schema 2.0 | `weapons` 已有 Schema 2.0 草案（运行时不加载，见 [WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）；`damage_types` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 仍 planned、无 Schema | 自动结算需要武器/敌人/遭遇表/掉落表数据 |
+| 战斗内容类型 Schema 2.0 | D1 已完成：`weapons`（active 2.0，见 [WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）+ `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 全部 active 2.0，Core 已有内容 | 自动结算所需的武器/敌人/遭遇表/掉落表数据已具备 |
 | 遭遇生成来源 | 世界探索家族 Schema 已有草案，运行时未接入 | 战斗需要有“在哪打、和谁打”的数据来源 |
 | 结算与经济接入 | 市场/仓库/统计已存在 | 战利品与维修费用必须走既有事务 |
 | 失败恢复 | 债务/维修已有，失败语义未定义 | 草案 §16 的失败语义需要先拍板 |
 
-## 7. 对 `content_types.json` planned 战斗类型的调整建议
+## 7. 战斗内容类型落地状态（D1）
 
-manifest 仍为 `planned`（运行时类型清单不变）；`weapons` 已以 Content Schema 2.0 草案落地（运行时不加载），其余战斗类型仍无 Schema。下列记录目标字段方向，避免将来按旧草案误建：
+`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 已全部从 `planned` 提升为 active 2.0，Core 已有对应内容文件与运行时读者。下列字段方向按 D1 实际实现记录：
 
-- `weapons`：**已落地 2.0 草案**，字段为 `kind`（direct / artillery / broadside）、`damage`、`range` / `min_range`、`cooldown`、`accuracy`、`projectile_speed`、`splash`、`arc_deg`、`salvo`、`color` + 装配（`weapon_class` / `mount_class` / `assembly_profile` / `has_*` / `muzzle_count` / `envelope_*` / `height` / `mount_scale`）+ 经济（`tier` / `weight` / `purchase_price` / `craft_*` / `materials`）；仍缺 `ammo` / `coal` 消耗与 `module_category` 约束，留待运行时接入。
+- `weapons`：**active 2.0**，字段为 `kind`（direct / artillery / broadside）、`damage`、`damage_type`（可选引用 `damage_types`）、`range` / `min_range`、`cooldown`、`accuracy`、`projectile_speed`、`splash`、`arc_deg`、`salvo`、`color` + 装配（`weapon_class` / `mount_class` / `assembly_profile` / `has_*` / `muzzle_count` / `envelope_*` / `height` / `mount_scale`）+ 经济（`tier` / `weight` / `purchase_price` / `craft_*` / `materials`）；`ammo` / `coal` 消耗与 `module_category` 约束仍未建模，留待后续切片。
 - `damage_types`：作为注册表内容类型（`kinetic` / `explosive` / `fire` / `shock`…），被武器与防御引用；不做大型相克矩阵。
 - `combat_abilities`：能力/行为参数（接近、保距、撤退），与操作码分离：能力是数据，执行是框架。
 - `enemy_archetypes`：船体/模块组合 + AI 档案 + 掉落表引用。
@@ -77,8 +77,8 @@ manifest 仍为 `planned`（运行时类型清单不变）；`weapons` 已以 Co
 ## 8. 下一步（阶段 2a）
 
 1. ~~Module 实例化迁移（船舶存档结构 + 兼容旧档）~~ 已完成第一步：[SHIP_MODULE_INSTANCES.md](SHIP_MODULE_INSTANCES.md)（实例 id + condition + damage_module + 维修计价 + UI 状态徽标）。
-2. ~~战斗内容 Schema 2.0 草案（`weapons` / `enemy_archetypes` / `encounter_tables` / `loot_tables`）~~：`weapons` 草案与编辑器支持已完成（[WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）；`enemy_archetypes` / `encounter_tables` / `loot_tables` 继续 planned。
-3. `CombatResolver` 纯函数层 + 自动结算命令 + 测试矩阵（先无 UI、无场景）。
+2. ~~战斗内容 Schema 2.0（`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`）~~：D1 已全部提升 active 2.0 并落 Core 内容（[WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）。
+3. ~~`CombatResolver` 纯函数层 + 自动结算命令 + 测试矩阵~~：D1 已由 `CombatOps` / `CombatService` / `combat.resolve|view|log` 与 `test_combat.gd` 落地；遭遇自动触发与战利品经济接入仍待做。
 4. 遭遇生成接入世界探索（区域/地点/航线），战利品进仓库与市场。
 5. 模块 condition 接入派生属性（速度/容量/安全修正），再做统一 Module 迁移。
 6. 以上稳定后再评估半自动/实时战术层；届时以外部草案 §8/§9 为基线。

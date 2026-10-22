@@ -15,7 +15,8 @@ extends RefCounted
 ##   `combat` 命名流）。武器按解析顺序开火、敌舰按生成顺序行动；同 seed + 同初始
 ##   耐久 + 同内容 = 完全相同的结果（日志与战利品都一致）。
 ## - **抽象回合制**：1 回合 = 1 战斗秒；武器按 `cooldown` 就绪，双方同回合同时开火。
-##   没有空间/弹道模型（D1 明确不做战术层），射程只用于玩家默认武器的启发式选择。
+##   没有空间/弹道模型（D1 明确不做战术层）；`range` / `min_range` 只写入 weapon
+##   row view，不参与武器选择或命中判定。
 ## - **伤害公式**：`effective = damage × (1 − armor × (1 − armor_pierce))`；
 ##   `damage_types.armor_pierce` 是唯一穿甲来源；`status_effect != none` 的命中会给
 ##   目标挂 3 秒持续伤害（burn 1.0 / shock 0.5 / flood 1.5 每回合，忽略护甲）。
@@ -33,8 +34,12 @@ extends RefCounted
 ## - **结局**：`victory`（敌舰全灭）/ `enemy_retreated`（敌舰全部脱离）/ `retreated`
 ##   （玩家耐久比例 ≤ `PLAYER_RETREAT_RATIO` 主动脱离）/ `defeat`（玩家 HP ≤ 0）。
 ##   只有 `victory` 对**已击沉**敌舰 roll 战利品；撤退/击沉玩家不发奖励。
-## - 内容缺失（未知武器 class、未知 loot_table、非法条目）只跳过并记录 reason，
-##   不静默编造数值；调用方（CombatService）把空结果转成结构化错误。
+## - **内容缺失诊断（D1-FIX）**：未知 weapon class 的 socket 会被 skip，但同一份
+##   `battle.diagnostics[]` 会记录 `{side, index?, socket, socket_class,
+##   reason:"weapon_class_missing"}`；未知 loot_table / loot entry 也记录
+##   `reason:"loot_table_missing"` / `"loot_entry_missing"`。敌我双方规则一致；
+##   `player.view.unmounted_sockets` / `enemy.view.unmounted_sockets` 提供同源视图。
+##   校验器（CrossReferenceValidator）在内容层把这些 class 缺口升级为 error。
 ## @end-static-doc
 
 ## 战斗随机流名（RngService 的命名流；D1 新增，不影响其他流）。
@@ -97,14 +102,33 @@ static func resolve(
 		"log": [],
 		"log_truncated": false,
 		"loot": _empty_loot(),
+		"diagnostics": [],
 	}
 	battle["player"]["weapons"] = player["weapon_rows"]
 	battle["player"]["hit_points"] = player["hp"]
 	battle["player"]["hit_points_after"] = player["hp"]
 	battle["player"]["damage_taken"] = 0.0
 	battle["player"]["retreated"] = false
+	if not (player["view"]["unmounted_sockets"] as Array).is_empty():
+		for missing in player["view"]["unmounted_sockets"]:
+			(battle["diagnostics"] as Array).append({
+				"side": "player",
+				"socket": String((missing as Dictionary).get("socket", "")),
+				"socket_class": String((missing as Dictionary).get("socket_class", "")),
+				"reason": "weapon_class_missing",
+			})
 	for enemy in enemies:
 		battle["enemies"].append(enemy["view"])
+		if (enemy["view"]["unmounted_sockets"] as Array).is_empty():
+			continue
+		for missing in enemy["view"]["unmounted_sockets"]:
+			(battle["diagnostics"] as Array).append({
+				"side": "enemy",
+				"index": int(enemy["index"]),
+				"socket": "",
+				"socket_class": String((missing as Dictionary).get("socket_class", "")),
+				"reason": "weapon_class_missing",
+			})
 
 	_run_battle(hub, battle, player, enemies, rng)
 	battle["rounds"] = int(battle["rounds"])
@@ -112,7 +136,10 @@ static func resolve(
 		float(battle["player"]["hit_points_after"]), float(battle["player"]["durability_before"])
 	)
 	if String(battle["outcome"]) == "victory":
-		battle["loot"] = _roll_loot(hub, enemies, rng)
+		var loot_result := _roll_loot(hub, enemies, rng)
+		battle["loot"] = loot_result["loot"]
+		for diagnostic in loot_result["diagnostics"]:
+			(battle["diagnostics"] as Array).append(diagnostic)
 	return {"ok": true, "reason": "", "battle": battle}
 
 
@@ -147,6 +174,7 @@ static func encounter_summaries(hub: RegistryHub) -> Array:
 ## `ship.weapons` list wins when it contains resolvable weapon ids; otherwise every
 ## hull socket class maps to the alphabetically-first weapon definition that fits
 ## the socket class. Returns rows `{socket, weapon_id, weapon_class, damage}`.
+## `range` is reported for UI only and never selects or gates a shot.
 static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 	if hull == null:
@@ -169,8 +197,11 @@ static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 	return rows
 
 
-## Hull sockets that have no matching weapon definition are reported so content
-## errors surface in the battle record instead of silently disappearing.
+## Hull sockets skipped because no weapon definition fits their class. Reported in
+## the battle record (`player.view.unmounted_sockets`) and via the view query, so a
+## content gap is visible instead of silently removing armament; the same shape is
+## used for enemy sockets. D1: unknown socket class (no weapon with matching
+## `weapon_class` / `mount_class`) is skipped at runtime and recorded here.
 static func unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array:
 	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 	if hull == null:
@@ -179,11 +210,16 @@ static func unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array:
 	var missing: Array = []
 	for socket in hull.data.get("weapon_sockets", []):
 		var socket_entry: Dictionary = socket
+		var socket_name := String(socket_entry.get("name", ""))
 		var socket_class := String(socket_entry.get("socket_class", ""))
-		if explicit.has(String(socket_entry.get("name", ""))):
+		if explicit.has(socket_name):
 			continue
 		if _default_weapon_for_socket(hub, socket_class) == null:
-			missing.append({"socket": String(socket_entry.get("name", "")), "socket_class": socket_class})
+			missing.append({
+				"socket": socket_name,
+				"socket_class": socket_class,
+				"reason": "weapon_class_missing",
+			})
 	return missing
 
 
@@ -245,6 +281,7 @@ static func _player_combatant(hub: RegistryHub, ship: Dictionary) -> Dictionary:
 			"hit_points": hp,
 			"hit_points_after": hp,
 			"armor": PLAYER_ARMOR,
+			"unmounted_sockets": unmounted_sockets(hub, ship),
 		},
 		"weapon_rows": weapon_rows,
 	}
@@ -282,10 +319,17 @@ static func _enemy_combatant(hub: RegistryHub, archetype: ContentDefinition, abi
 	var data: Dictionary = archetype.data
 	var hull_points := maxf(1.0, float(data.get("hull_points", 1.0)))
 	var weapons: Array = []
-	for raw_class in Array(data.get("weapon_sockets", [])):
-		var socket_class := String(raw_class)
+	var unmounted: Array = []
+	var sockets: Array = Array(data.get("weapon_sockets", []))
+	for socket_index in sockets.size():
+		var socket_class := String(sockets[socket_index])
 		var definition := _default_weapon_for_socket(hub, socket_class)
 		if definition == null:
+			unmounted.append({
+				"socket": "socket_%d" % socket_index,
+				"socket_class": socket_class,
+				"reason": "weapon_class_missing",
+			})
 			continue
 		weapons.append(_weapon_state(definition))
 	var ability_id := ability.id if ability != null else ""
@@ -316,6 +360,7 @@ static func _enemy_combatant(hub: RegistryHub, archetype: ContentDefinition, abi
 			"hull_points_after": hull_points,
 			"armor": clampf(float(data.get("armor", 0.0)), 0.0, 0.8),
 			"weapon_ids": _weapon_ids(weapons),
+			"unmounted_sockets": unmounted,
 			"sunk": false,
 			"retreated": false,
 			"damage_taken": 0.0,
@@ -625,8 +670,11 @@ static func _empty_loot() -> Dictionary:
 ## Rolls loot for every sunk enemy in spawn order. Each enemy's archetype
 ## `loot_table` yields an optional money range plus `LOOT_ROLLS_PER_TABLE` weighted
 ## entry picks. Weapon drops become salvage money (no weapon inventory slot yet).
+## Returns `{loot, diagnostics}`: unknown tables / entries are skipped but recorded
+## (`loot_table_missing` / `loot_entry_missing`) instead of disappearing silently.
 static func _roll_loot(hub: RegistryHub, enemies: Array, rng: RandomNumberGenerator) -> Dictionary:
 	var loot := _empty_loot()
+	var diagnostics: Array = []
 	var item_totals := {}
 	var module_totals := {}
 	for enemy in enemies:
@@ -638,6 +686,12 @@ static func _roll_loot(hub: RegistryHub, enemies: Array, rng: RandomNumberGenera
 			continue
 		var table := hub.get_by_id(ContentTypes.LOOT_TABLE, table_id)
 		if table == null:
+			diagnostics.append({
+				"side": "loot",
+				"enemy_index": int(enemy["index"]),
+				"reason": "loot_table_missing",
+				"loot_table": table_id,
+			})
 			continue
 		var data: Dictionary = table.data
 		var money_range: Array = Array(data.get("money_range", []))
@@ -668,9 +722,13 @@ static func _roll_loot(hub: RegistryHub, enemies: Array, rng: RandomNumberGenera
 				"item":
 					if hub.get_by_id(ContentTypes.ITEM, id) != null:
 						item_totals[id] = int(item_totals.get(id, 0)) + amount
+					else:
+						diagnostics.append(_loot_entry_diagnostic(enemy, kind, id))
 				"module":
 					if hub.get_by_id(ContentTypes.MODULE, id) != null:
 						module_totals[id] = int(module_totals.get(id, 0)) + amount
+					else:
+						diagnostics.append(_loot_entry_diagnostic(enemy, kind, id))
 				"weapon":
 					var weapon := hub.get_by_id(ContentTypes.WEAPON, id)
 					if weapon != null:
@@ -678,11 +736,25 @@ static func _roll_loot(hub: RegistryHub, enemies: Array, rng: RandomNumberGenera
 						var salvage_money := int(round(price * WEAPON_SALVAGE_RATIO * float(amount)))
 						loot["money"] = int(loot["money"]) + salvage_money
 						(loot["salvage"] as Array).append({"weapon_id": id, "amount": amount, "money": salvage_money})
+					else:
+						diagnostics.append(_loot_entry_diagnostic(enemy, kind, id))
+				_:
+					diagnostics.append(_loot_entry_diagnostic(enemy, kind, id))
 	for item_id in item_totals.keys():
 		(loot["items"] as Array).append({"item_id": String(item_id), "amount": int(item_totals[item_id])})
 	for module_id in module_totals.keys():
 		(loot["modules"] as Array).append({"module_id": String(module_id), "amount": int(module_totals[module_id])})
-	return loot
+	return {"loot": loot, "diagnostics": diagnostics}
+
+
+static func _loot_entry_diagnostic(enemy: Dictionary, kind: String, id: String) -> Dictionary:
+	return {
+		"side": "loot",
+		"enemy_index": int(enemy["index"]),
+		"reason": "loot_entry_missing",
+		"kind": kind,
+		"id": id,
+	}
 
 
 ## ---------------------------------------------------------------------------

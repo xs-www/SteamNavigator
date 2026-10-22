@@ -1,13 +1,13 @@
-# 武器内容 Schema 2.0 草案（`weapons`）
+# 武器内容 Schema 2.0（`weapons`，D1 active）
 
-> 状态：**草案**（2026-10-22），编辑器可编辑 / 校验 / 导出，**运行时不加载**
+> 状态：**active 2.0（2026-10-23 D1 提升）**，运行时按类型注册表加载，`CombatOps` / `CombatService` 已消费；编辑器 / CLI / SDK / Core 全链可用
 > Schema：[schemas/v2/weapon.schema.json](../../schemas/v2/weapon.schema.json) · 类型登记：[content_types.json](../../content_types.json)
 > 上游契约：[WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md)（装配 v2）· [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)（帆索 socket）· [SHIP_WEAPON_SOCKETS_ACCEPTANCE.md](../archive/SHIP_WEAPON_SOCKETS_ACCEPTANCE.md)（14 个武器 socket 实测值）
-> 数据侧：[hull.schema.json](../../schemas/v2/hull.schema.json) · [hulls.json](../../dev_mods/core/content/hulls.json) · [runtime manifest](../../dev_mods/core/manifest.json) · 战斗规则真源：[SNBattleSim/js/catalog.mjs](../../SNBattleSim/js/catalog.mjs) · 编辑器：[SNModMaker/README.md](../../SNModMaker/README.md)
+> 数据侧：[hull.schema.json](../../schemas/v2/hull.schema.json) · [hulls.json](../../dev_mods/core/content/hulls.json) · [weapons.json](../../dev_mods/core/content/weapons.json) · [runtime manifest](../../dev_mods/core/manifest.json) · 战斗规则真源：[SNBattleSim/js/catalog.mjs](../../SNBattleSim/js/catalog.mjs) · 运行时：[CombatOps](../../framework/domain/combat/combat_ops.gd) / [CombatService](../../framework/domain/combat/combat_service.gd)
 
 ## 1. 定位
 
-`weapons` 是 Content Schema 2.0 的**战斗内容草案类型**，把一个舰载武器拆成三组数据：
+`weapons` 是 Content Schema 2.0 的**战斗内容运行时类型**（D1），把一个舰载武器拆成三组数据：
 
 | 组 | 回答的问题 | 对齐的真源 |
 | --- | --- | --- |
@@ -17,17 +17,17 @@
 
 边界：
 
-- **运行时不加载**：`content_types.json` 里它同时是 `draft_schemas` 与 `draft_types` 条目，但仍在 `planned` 的 `combat.system`（capability `content.combat.v1`）下；`ContentTypes.all()` / `registry_types()` 不含 `weapons`，启动链不会读取 `content/weapons.json`。
-- **GLB 仍是当前装配事实**：武器 12 件 GLB 的 Root extras 与船体 4 个 GLB 的 socket extras 是现阶段唯一被资产/验收链消费的机器可读装配数据；`hull_data.weapon_sockets` / `rig_sockets` 是它的**内容侧镜像**（供编辑器与后续数据驱动装配，见 §6）。
-- **不负责**：命中判定、弹道模拟、弹药/煤耗、AI 与战斗结算；`damage_types / combat_abilities / enemy_archetypes / encounter_tables / loot_tables` 仍是 roadmap，未建 Schema。
+- **运行时已加载**：`weapons` 在 `content_types.json.types` 中（`schema_version: "2.0"`，capability `content.combat.v1`），`ContentCompiler` 会校验并注册 `content/weapons.json`；D1 的 `CombatOps.player_weapon_rows()` 用 `hull_data.weapon_sockets` 与武器内容解析玩家武器，`combat.resolve` 据此结算。
+- **GLB 仍是当前视觉装配事实**：武器 12 件 GLB 的 Root extras 与船体 4 个 GLB 的 socket extras 仍是 `ShipVisualAssembler` 的视觉装配来源；`hull_data.weapon_sockets` / `rig_sockets` 是内容侧镜像（战斗结算已读武器 socket，视觉装配切换留后续）。
+- **D1 战斗规则已实现**：自动结算（抽象回合、伤害/护甲/穿甲、状态、撤退、战利品）已由 `CombatOps` / `CombatService` 落地；**不负责**实时战术、空间/弹道、部位伤害与弹药/煤耗（后续切片）。
+- 其余战斗类型 `damage_types / combat_abilities / enemy_archetypes / encounter_tables / loot_tables` 已随 D1 一并 active 2.0，不再是 roadmap。
 
-### 1.1 编辑器模板「舰载武器包」（当前落点）
+### 1.1 编辑器模板「舰载武器包」
 
-用户要求把战斗模拟器 5 件内置武器「先加到编辑器、不同步 Core」，落地方式是**编辑器起始模板**，而不是 Core 内容：
+模板保留为新建项目的快捷方式；D1 起 Core `dev_mods/core/content/weapons.json` 已内置同 5 件武器：
 
 - 入口：新建模组对话框选「舰载武器包」（`TEMPLATES.weapons`）；或 `node SNModMaker/tools/content.mjs new --mod <dir> --id <id> --name <name> --template weapons`。
-- 产物：`store.applyTemplate('weapons')` 一次生成 **5 条 `weapons` 草案定义**到 `content/weapons.json`（`schema_version: "2.0"`），每条 `information.model = asset://core/model.weapon.<local_id>`，并把 capability `content.combat.v1` 去重写入 `manifest.capabilities`。
-- 与 `--draft weapons` 的区别：`--draft weapons` 仍是**单条**起始定义（通用默认值）；`--template weapons` 是 5 件成品包。
+- 产物：`store.applyTemplate('weapons')` 一次生成 **5 条 `weapons` 定义**到 `content/weapons.json`（`schema_version: "2.0"`），每条 `information.model = asset://core/model.weapon.<local_id>`，并把 capability `content.combat.v1` 去重写入 `manifest.capabilities`。
 - 数据来源：战斗数值照 `SNBattleSim/js/catalog.mjs` 的 `BUILTIN_WEAPONS`；装配字段照各 GLB Root extras（`weapon-assembly@2`）；经济字段为本项目补齐（模拟器无经济概念）；模型引用 Core 的 `model.weapon.*` 资源键（§7）。
 
 | local_id | 名称 | `model` 键 | `weapon_class` | `assembly_profile` |
@@ -46,7 +46,7 @@
 | `repeater` | 2 | 11 | 620 | 260 / 6 | timber×2、boiler_plate×1 |
 | `broadside` | 2 | 22 | 820 | 340 / 7 | timber×4、boiler_plate×2 |
 
-> **为什么不能直接写进 Core**：运行时按类型注册表加载内容，`weapons` 仍是 `planned` 的未注册类型，2.0 envelope 也不被 `ContentCompiler` 接受；Core 里一旦出现这类内容会按 **mod error 拒绝，而不是静默忽略**。`core` 是必需包，Core 报错会让启动进入 `Degraded` 并丢弃内容。所以 5 件武器先停留在编辑器模板 / 项目中，等 `weapons` 提升为运行时类型（§10）后再进 Core。
+> **Core 已落盘**：D1 起 `dev_mods/core/content/weapons.json` 已含这 5 件武器（`core:weapon/*`），运行时正常校验并注册；「舰载武器包」模板仍保留给新项目复制同款起点。
 
 ## 2. 文件外壳与类型登记
 
@@ -84,11 +84,11 @@
 | `group` | `ships_modules`（编辑器归入「船只与模块」） |
 | `default_file` | `content/weapons.json` |
 | `schema_version` | `2.0`（与 Schema `const` 一致） |
-| `capability` | `content.combat.v1`（草案模组若要声明能力，需写进 `manifest.capabilities`，否则编辑器给 `capability_undeclared` 警告） |
+| `capability` | `content.combat.v1`（active 类型；使用该内容需在 `manifest.capabilities` 声明，否则编辑器给 `capability_undeclared` 警告） |
 
 ## 3. `data` 字段（三组）
 
-必填 15 项：战斗 10 + 装配 2（`weapon_class`、`assembly_profile`）+ 经济 3（`tier`、`weight`、`purchase_price`）。
+必填 15 项：战斗 10 + 装配 2（`weapon_class`、`assembly_profile`）+ 经济 3（`tier`、`weight`、`purchase_price`）；可选 `damage_type` 引用 `damage_types`（缺省时运行时按普通动能命中处理）。
 
 ### 3.1 战斗
 
@@ -104,6 +104,7 @@
 | `splash` | number 0–100 | ✅ | 溅射半径（米），0 = 单体 |
 | `arc_deg` | number 30–360 | ✅ | 射界 / 炮口覆盖角（度） |
 | `salvo` | integer 1–8 | ✅ | 单次开火弹药数（多联装/炮列） |
+| `damage_type` | `id_ref` → `damage_types` | — | D1 伤害类型引用；缺省按普通动能命中，`damage_types.armor_pierce` 决定穿甲 |
 | `color` | string `^#[0-9a-fA-F]{6}$` | — | 弹道 / 炮口特效基色 |
 
 ### 3.2 装配
@@ -139,7 +140,7 @@
 | `purchase_price` | number ≥0 | ✅ | 购买价 |
 | `craft_cost` | number ≥0 | — | 打造费（金币） |
 | `craft_time_hours` | number ≥0 | — | 打造工时（小时） |
-| `materials` | array of `{ id, amount }` | — | `id` 为定义 ID（`id_ref`），`amount ≥ 0.1`；与 1.0 `common.schema.json` 的 `craft_material` 同形，运行时 `CraftOps` 可直接消费 |
+| `materials` | array of `{ id, amount }` | — | `id` 为定义 ID（`id_ref`），`amount ≥ 0.1`；与 `craft_material` 同形，运行时 `CraftOps` 可直接消费 |
 
 > `materials` 元素与 v1 的 `craft_material` 一致（`id` + `amount`），不是 `item`；三条经济字段与 `module_common` 同名同义。
 
@@ -205,7 +206,7 @@
 
 ## 6. 船体安装点：GLB extras ↔ 内容镜像
 
-`schemas/v2/hull.schema.json`（active 2.0）在 `hull_data` 新增两个**可选**数组；Core `hulls.json` 已回填，因此这段数据**会随运行时 hulls 一起被 Schema 校验**，但尚无运行时消费者：
+`schemas/v2/hull.schema.json`（active 2.0）在 `hull_data` 新增两个**可选**数组；Core `hulls.json` 已回填并随运行时校验。D1 的 `CombatOps.player_weapon_rows()` / `unmounted_sockets()` 已消费 `weapon_sockets`；`rig_sockets` 仍主要供视觉装配与后续数据驱动使用：
 
 | 数组 | 每项必填 | 可选字段 |
 | --- | --- | --- |
@@ -259,7 +260,7 @@
 
 ## 7. Core 资源键
 
-`dev_mods/core/manifest.json` 已登记 **12 个 `model.weapon.*` + 12 个 `model.rig.*` + 4 个 `model.ship_part.*`**，全部指向 `assets/models/{weapons,rig,ship_parts}/SN_*.glb`（Core 本地副本存在，GLB 外贴图走 `shared_materials/`）。运行时目前**不引用**这些键：登记目的是让编辑器资源选择器给出候选、`manifest.assets` 通过资源存在性校验，并为 `ShipVisualAssembler` 预留接线。
+`dev_mods/core/manifest.json` 已登记 **12 个 `model.weapon.*` + 12 个 `model.rig.*` + 4 个 `model.ship_part.*`**，全部指向 `assets/models/{weapons,rig,ship_parts}/SN_*.glb`（Core 本地副本存在，GLB 外贴图走 `shared_materials/`）。战斗结算不读这些键；`ShipVisualAssembler` 通过 manifest 解析 `model.weapon.*` 加载视觉 GLB（当前游戏内 loadout 主要来自截图预览注入，等待 player 装配入口），编辑器资源选择器同样使用这些候选键。
 
 武器 12 件（8 件完整武器 + 4 件 kit 部件；class/profile 取自各 GLB Root extras）：
 
@@ -289,7 +290,7 @@
 ### 8.1 新建 / 编辑武器
 
 0. 想一次拿到 5 件：新建模组时选「舰载武器包」模板（或 CLI `new --template weapons`），生成结果见 §1.1；已有项目也可逐件「新增定义」。
-1. 左侧「船只与模块」分组里选「舰载武器」（带 `DRAFT` 标记 / 2.0 徽标；分组来自 `content_types.json` 的 `ships_modules`），点「新增定义」。
+1. 左侧「船只与模块」分组里选「舰载武器」（运行时 2.0 类型，带 2.0 徽标；分组来自 `content_types.json` 的 `ships_modules`），点「新增定义」。
 2. 侧栏会新建 `content/weapons.json` 并写 `schema_version: "2.0"`；表单按三组给出战斗 / 装配 / 经济字段，`kind`、`weapon_class`、`assembly_profile` 为带中文标签的枚举，`color` 以文本填写 `#RRGGBB`。
 3. 「视觉资源」里选模型：候选来自 `manifest.assets` 的 `model.weapon.*`（§7）；也可直接输入资源键。
 4. 补齐 `zh_CN` / `en` 文案，点「保存条目」提交多语言键事务。
@@ -299,18 +300,18 @@
 
 1. 打开「船体」定义；船体专属模块区之外新增 `weapon_sockets` / `rig_sockets` 表格（数组控件）。
 2. 每行可增删，编辑 `name` / `socket_class`（或 `socket_kind`、`mast_id`）/ `socket_index` / `position` 三元数组 / `clearance_*` / `mount_scale` / `note`；重复的 `name` / `socket_index`、未知 class/kind、缺失必填会就地提示（Schema + 编辑器语义校验）。
-3. 保存后 `hulls.json` 里就是普通 1.0 内容字段；运行时 Schema 校验通过，但装配仍读 GLB extras，直到 `ShipVisualAssembler` 接入。
+3. 保存后 `hulls.json` 里就是普通 2.0 内容字段；运行时 Schema 校验通过，但视觉装配仍读 GLB extras，直到 `ShipVisualAssembler` 接入。
 
 ### 8.3 校验 / 导出行为
 
-- 草案文件固定 `schema_version: "2.0"`，版本不符报 `schema_version_mismatch`；每份草案内容文件给一条 `draft_content` 警告（运行时不加载）；使用 `capability` 未写进 `manifest.capabilities` 时按 capability 去重报 `capability_undeclared`。
-- ZIP / 目录导出会二次确认「游戏运行时不加载」；「导出并覆盖到发布包 mods/」对含草案内容的项目**禁用**（草案会让启动进入 `Degraded`）。
-- Content CLI（agent / CI）同一套类型清单：可直接从零新建武器草案项目（写 `content/weapons.json`，`schema_version: "2.0"`，并自动在 `manifest.capabilities` 声明 `content.combat.v1`）：
+- 内容文件固定 `schema_version: "2.0"`，版本不符报 `schema_version_mismatch`；`weapons` 是 active 类型，不再产生 `draft_content` 警告；使用 `capability` 未写进 `manifest.capabilities` 时按 capability 去重报 `capability_undeclared`。
+- ZIP / 目录导出与「导出并覆盖到发布包 mods/」对 `weapons` 内容正常放行（运行时支持）；只有剧情草案 / 未知类型 / 版本不符会被拦截。
+- Content CLI（agent / CI）同一套类型清单：可直接从零新建武器项目（写 `content/weapons.json`，`schema_version: "2.0"`，并自动在 `manifest.capabilities` 声明 `content.combat.v1`）：
   ```powershell
   node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_weapons --id my_weapons `
-    --name "我的武器包" --draft weapons
+    --name "我的武器包" --template weapons
   ```
-  `--draft` 可重复（如 `--draft world_profiles --draft regions`），与 `--template goods` 叠加时同时生成 1.0 模板与草案内容；`describe weapons` 看字段与骨架，`add --type weapons` 往既有项目再加一条，`validate --mod dev_mods/core --json` 复核 Core 导入。编辑器对 `map_configs.data.story.flow_id` 的假阳性引用错误已修复，Core 导入 **0 error**（warning 允许）。
+  `--draft` 只接受剩余剧情草案类型；`describe weapons` 看字段与骨架，`add --type weapons` 往既有项目再加一条，`validate --mod dev_mods/core --json` 复核 Core 导入。编辑器对 `map_configs.data.story.flow_id` 的假阳性引用错误已修复，Core 导入 **0 error**（warning 允许）。
 
 ## 9. 校验规则
 
@@ -321,20 +322,20 @@
 | Schema | `schema_version`/`content_type` const；`data` 必填 15 项；`enum`（kind / weapon_class / mount_class / assembly_profile）；数值 min/max；`color` `#RRGGBB`；`materials[].id` 为定义 ID 且 `amount ≥ 0.1`；`additionalProperties: false` 拒绝未知字段（如把模拟器 `mass` 直接写进 data） | error |
 | 编辑器语义（草稿） | `min_range < range`；`assembly_profile` 与 `has_yaw/has_pitch` 一致（`yaw_pitch*` 需两者为 true，`pitch_only` 需 has_pitch 且非 has_yaw，`fixed` 不应带 pivot，`base_only`/`yaw_only` 不要求 muzzle）；`muzzle_count > 1` 时 `has_muzzle` 必须 true；`weapon_class = Modular` 提示「kit 部件不可直接挂载」 | error / warning |
 | 编辑器语义（船体） | `weapon_sockets` / `rig_sockets` 内 `name` 重复、`socket_index` 重复 → error；名称前缀不符合 `SN_Socket_Weapon` / `SN_Socket_` → warning；`socket_class` / `socket_kind` 不在枚举 → warning（Schema 本身已报 enum error）；帆索点缺 `mast_id` → warning | error / warning |
-| Godot 回归 | `framework/tests/cases/test_schema_v2_weapons.gd`：合法 direct / broadside 样例零错误；缺必填、越界、非法枚举、非法颜色、非法材料 ID、未知字段被拒；`weapons` 在 `draft_schemas` / `draft_types` / `planned` 且不在 `ContentTypes.all()`；hull socket 镜像非法条目被拒、旧 hull 内容仍合法、Core 14 + 22 个镜像通过校验 | 测试 |
+| Godot 回归 | `framework/tests/cases/test_schema_v2_weapons.gd`：合法 direct / broadside 样例零错误；缺必填、越界、非法枚举、非法颜色、非法材料 ID、未知字段被拒；`weapons` 在 `content_types.json.types`、`ContentTypes.all()` 中且为 active 2.0；hull socket 镜像非法条目被拒、旧 hull 内容仍合法、Core 14 + 22 个镜像通过校验；`test_combat.gd` 覆盖武器引用 / 伤害类型 / 默认武器解析 | 测试 |
 
-## 10. 接入运行时需要做什么
+## 10. D1 运行时接入现状
 
-1. **类型提升**：`content_types.json` 把 `weapons` 从 `draft_schemas`/`draft_types`/`planned` 移入 `types`（写 `schema`、`kind: definition`、`capability`），跑 `node tools/gen_content_types.mjs`；`ContentTypes.registry_types()` 才会含它，`ContentCompiler` 才会加载 `content/weapons.json`。
-2. **版本策略**：运行时目前只认 1.0 envelope；要么让 `ContentCompiler` 支持 2.0（按类型 `schema_version`），要么把武器降成 1.0 Schema（`section`/`data` 结构不同，前者更符合既有 Phase A 方向）。
-3. **读取路径**：注册 `weapon` 注册表 → `WeaponRegistry`；`ShipVisualAssembler` 改为「内容定装配（class/profile/muzzle/尺寸）+ GLB 定节点」，替换现在读 GLB Root extras 的做法；船体 socket 优先读内容镜像（`hull_data.weapon_sockets/rig_sockets`），GLB extras 只做资产一致性校验。
-4. **战斗结算**：把 SNBattleSim 的 `kind` 行为（direct / artillery / broadside）、`normalizeWeapon` 的 clamp、命中/溅射/齐射/冷却规则搬进领域服务；`weight` 接入载重，`tier/purchase_price/craft_*` 接入船厂与打造。
-5. **内容落地**：新增 `dev_mods/core/content/weapons.json`（先做 5 件内置武器与批次 1 五件资产的 1:1 映射，再补批次 2 三件特殊武器与 4 件 kit 部件），补 `information.model` 指向 §7 的键；补本地化；补 manifest 的 `content` 条目。⚠ 这一步必须在第 1–2 步完成之后：在此之前 2.0 `weapons` 写进 Core 会被运行时按 mod error 拒绝（Core 必需包 → 启动 `Degraded`），不是静默忽略；当前 5 件武器的正确落点是编辑器「舰载武器包」模板（§1.1）。
-6. **契约补齐**：`yaw_limit_deg` / `pitch_limit_deg`、真实 `mount_pad_x/y`、`swept_radius`、`anchor_count` 等资产已产但内容未建模的字段，要在 Schema 与 GLB extras 之间做一次对齐（见 §11）。
+1. **类型提升（已完成）**：`weapons` 已在 `content_types.json.types`（`schema` / `kind: definition` / `capability` / `schema_version: "2.0"`），`ContentTypes` 与 `ContentCompiler` 会加载 `content/weapons.json`。
+2. **版本策略（已完成）**：运行时按类型 `schema_version` 接收 2.0，`weapons` envelope 固定 2.0。
+3. **内容落地（已完成）**：`dev_mods/core/content/weapons.json` 已含 5 件 `core:weapon/*`（5 件内置武器的 1:1 映射），`information.model` 指向 `model.weapon.*`、本地化与 manifest `content` 条目已补齐。
+4. **读取路径（已完成）**：`RegistryHub` 的 `ContentTypes.WEAPON` 注册表由 `CombatOps.player_weapon_rows()` / `_weapon_state()` 消费；船体 `hull_data.weapon_sockets` 决定玩家可用炮位，显式 `ship.weapon_loadout` 优先、否则按 socket class 选字母序第一件武器；`combat.resolve` 与 `combat.view` / `combat.log` 已注册。
+5. **战斗结算（已完成）**：`CombatOps` 实现抽象回合、伤害/护甲/穿甲、状态效果、撤退、战利品 roll 与确定性随机流；`CombatService` 负责 `data.combat` 落盘与耐久/战利品事务。尚未接：空间/弹道、部位伤害、弹药/煤耗、航行遭遇自动触发。
+6. **视觉装配（部分完成）**：`ShipVisualAssembler` 仍以 GLB Root extras 为装配事实；后续切片再切到「内容定装配 + GLB 定节点」，并补齐 `yaw_limit_deg` / `pitch_limit_deg` / `mount_pad_*` / `swept_radius` / `anchor_count` 等资产已产但内容未建模字段。
 
 ## 11. 已知边界 / 待对齐
 
-1. **草案不加载**：内容文件、编辑器表单、CLI 全部可用，但运行时不读；不要据此认为武器数据已生效。
+1. **内容已生效，但玩家负重/装配入口未接**：战斗自动结算会从 `hull.weapon_sockets` + 武器内容解析默认武器；游戏内尚无「购买武器 / 装配到 socket」的 UI 与持久 loadout，`ship.weapon_loadout` 仍主要由预览注入。武器经济字段（`tier/purchase_price/craft_*`）尚未接入船厂。
 2. **Weapon socket `socket_index` 偏移**：GLB extras 从 1 起，内容镜像从 0 起（4 艘船均如此）。转换公式：`content_index = glb_socket_index - 1`；接入运行时前建议二选一并写死。
 3. **铁甲舰 rig socket 顺序**：GLB 按桅序交错编号（`Mast_Fore 0 / Yard_Fore 1 / Sail_Fore 2 / Mast_Main 3 …`），内容镜像按 kind 分组（`Mast_Fore 0 / Mast_Main 1 / Mast_Mizzen 2 / Yard_* 3–5 / Sail_* 6–8`）；PF / SF 两边一致。运行时若按 `socket_index` 配对，必须先统一。
 4. **`mast_key` vs `mast_id`**：GLB 用大写 `Fore/Main/Mizzen`，内容用小写；大小写不敏感比较或转换后再用。

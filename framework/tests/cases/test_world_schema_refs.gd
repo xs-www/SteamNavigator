@@ -1,9 +1,10 @@
 extends TestCase
 ## @static-doc
-## 作用：Phase B 世界/战役 9 类内容的跨引用校验测试：用真实 Core 基线（`bootstrap_core()`）
-## 复制出的临时 `RegistryHub` 注册合成定义，驱动 `CrossReferenceValidator.validate()`，
-## 覆盖硬引用缺失 error、planned 目标 `ref_inactive_type` warning、阵营自指
-## `reference_self` 与 `map_configs.archetypes` 数量组合规则。
+## 作用：Phase B 世界/战役 9 类 + Phase D1 战斗内容的跨引用校验测试：用真实 Core 基线
+## （`bootstrap_core()`）复制出的临时 `RegistryHub` 注册合成定义，驱动
+## `CrossReferenceValidator.validate()`，覆盖硬引用缺失 error、planned 目标
+## `ref_inactive_type` warning、阵营自指 `reference_self`、`map_configs.archetypes` 数量
+## 组合规则，以及 enemy `weapon_sockets[]` class 的可解析性（`enemy_weapon_class_missing`）。
 ##
 ## ## 契约与约束
 ## - 测试不假设 Core 已有 v2 内容（B4 才落盘）；所有 9 类定义都是合成 ID（`test:*`）。
@@ -18,6 +19,10 @@ extends TestCase
 ## - factions.rival_factions 允许同类型引用，但指向自身报 `reference_self`。
 ## - `map_configs.archetypes` 数量 < 引用它的 start_profile.world_profile.port_count 时报
 ##   `map_config_archetype_count`；world_profile 不存在时跳过该组合检查。
+## - D1 战斗：`enemy_archetypes.weapon_sockets[]` 每个 class 必须有可安装的 weapon
+##   （`weapon_class` / `mount_class` 命中），否则 `enemy_weapon_class_missing`
+##   error（记录含 mod / file / entity / path）；core 当前 Light/Medium/Heavy/Side 均有
+##   武器，因此 Core 校验零 error。
 ## @end-static-doc
 
 const TEST_MOD := "test"
@@ -491,6 +496,64 @@ func test_map_config_missing_archetype_and_default_starting_scenario_are_errors(
 		2,
 		"missing archetype and default_starting_scenario are two reference_missing errors"
 	)
+
+func test_enemy_weapon_socket_class_must_resolve_to_a_weapon() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.ENEMY_ARCHETYPE, "test:enemy_archetype/unmounted_socket", {
+		"enemy_class": "Light",
+		"hull_points": 100,
+		"armor": 0.0,
+		"max_speed": 10,
+		"turn_rate_deg": 30,
+		# Core ships Light / Medium / Heavy / Side weapons but no Tower weapon.
+		"weapon_sockets": ["Tower"],
+		"combat_ability": "core:combat_ability/aggressive",
+		"loot_table": "core:loot_table/pirate_wreck",
+	})
+	var result := _result(hub)
+	var hits := _errors_for(result, "test:enemy_archetype/unmounted_socket")
+	assert_eq(
+		_count_code(hits, "enemy_weapon_class_missing"),
+		1,
+		"a socket class without a matching weapon raises enemy_weapon_class_missing: %s" % str(hits)
+	)
+	var error: Dictionary = hits[0]
+	assert_eq(String(error.get("mod", "")), TEST_MOD, "error carries the owning mod")
+	assert_eq(String(error.get("file", "")), TEST_FILE, "error carries the source file")
+	assert_eq(String(error.get("entity", "")), "Tower", "error carries the unresolved socket class")
+	assert_eq(String(error.get("path", "")), "data.weapon_sockets[0]", "error carries the socket path")
+
+
+func test_enemy_weapon_sockets_that_resolve_are_clean() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.ENEMY_ARCHETYPE, "test:enemy_archetype/armed", {
+		"enemy_class": "Light",
+		"hull_points": 100,
+		"armor": 0.0,
+		"max_speed": 10,
+		"turn_rate_deg": 30,
+		"weapon_sockets": ["Light", "Medium", "Heavy", "Side"],
+		"combat_ability": "core:combat_ability/aggressive",
+		"loot_table": "core:loot_table/pirate_wreck",
+	})
+	var result := _result(hub)
+	assert_eq(
+		_count_code(_errors_for(result, "test:enemy_archetype/armed"), "enemy_weapon_class_missing"),
+		0,
+		"socket classes with matching core weapons raise no error"
+	)
+
+
+func test_core_combat_socket_classes_resolve() -> void:
+	var boot := bootstrap_core()
+	var result := CrossReferenceValidator.new().validate(boot["context"].registries)
+	assert_eq(
+		_count_code(result["errors"], "enemy_weapon_class_missing"),
+		0,
+		"core enemy archetypes only use socket classes that ship weapons"
+	)
+	assert_empty(result["errors"], "core content has no cross-reference errors: %s" % str(result["errors"]))
+
 
 func test_combat_references_are_checked() -> void:
 	var hub := _new_hub()

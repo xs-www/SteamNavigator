@@ -46,7 +46,7 @@ S1 已交付（2026-10-22），实现先于游戏侧能力：
 | 可导入的示例数据包（1 篇章 + 2 关卡 + 中英文本） | `sdk/templates/story_pack_iron_tide/` |
 | 校验命令 | `node SNModMaker/tools/content.mjs validate --mod sdk/templates/story_pack_iron_tide`（0 error / 2 个预期 `draft_content` warning） |
 
-- **不改游戏运行时**：`ContentCompiler` 只加载 1.0，剧情包因 `schema_version` 不匹配不会进入注册表（与 `weapons` 草案同一流程）。
+- **不改游戏运行时**：`ContentCompiler` 按每个 active 类型的 `schema_version` 加载，剧情包因类型仍是 draft 不会进入注册表（与其它 2.0 草案类型同一流程）。
 - S2 起才做加载链与 `story_mode.*`；S1 的验收是「数据包能写、能校验、能 round-trip」，不是「能进游戏玩」。
 
 ## 1. 模式边界
@@ -436,7 +436,7 @@ mods/<pack_id>/
 | `story_levels` | 剧情关卡 | 单关固定地图、初始状态、任务线、叙事、难度、checkpoint、奖励、失败策略 | `content.story.v1` |
 
 - 两者以 `schema_version: "2.0"` 进 `content_types.json` 的 `draft_schemas` / `draft_types`，
-  运行时暂不加载（与 `weapons` 草案同一流程）；S1 已完成登记，实现阶段再提升为 active。
+  运行时暂不加载（与其它 2.0 草案类型同一流程）；S1 已完成登记，实现阶段再提升为 active。
 - **固定地图内嵌在关卡数据里**（`story_levels.data.map.fixed`，见 D2）：港口 / 航道 / 坐标由
   关卡自己拥有，不进自由模式的 `map_configs` 生成池；`map.map_config` 只是**可选引用**，
   用于复用 Core 的经济 / 探索参数，地形始终以 `fixed` 为准。

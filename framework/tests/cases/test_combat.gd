@@ -14,11 +14,15 @@ extends TestCase
 ## - **不把持久 id/时间写进数值断言**：battle 的 `id / at_time` 由服务写入，测试只比较
 ##   同 seed 下的完整结果（两次都在 game_time 0 / 首场，因此仍然可逐字段比较）。
 ## - **旧档**：没有 `data.combat` 的 state 上查询不创建该块、命令结算后才惰性创建。
+## - **D1-FIX 诊断**：未知 weapon class 的 socket 跳过时写入 `battle.diagnostics`
+##   （敌我一致，side/index/socket/socket_class/reason），未知 loot_table / loot entry
+##   同样记录 reason；battle 仍可结算，内容层缺口由 CrossReferenceValidator 报 error。
 ## @end-static-doc
 
 const HULL_SINGLE := "test:hull/single"
 const HULL_DUAL := "test:hull/dual"
 const HULL_GUNNER := "test:hull/gunner"
+const HULL_TOWER := "test:hull/tower"
 const WEAPON_LIGHT := "test:weapon/light_gun"
 const WEAPON_PIERCER := "test:weapon/piercer"
 const WEAPON_BURNER := "test:weapon/burner"
@@ -34,6 +38,7 @@ const ENEMY_CRUSHER := "test:enemy/crusher"
 const ENEMY_TANK := "test:enemy/tank"
 const ENEMY_LOOTBAG := "test:enemy/lootbag"
 const ENEMY_ARMORY := "test:enemy/armory"
+const ENEMY_BAD_LOOT := "test:enemy/bad_loot"
 const ENCOUNTER_SCRAP := "test:encounter/scrap"
 const ENCOUNTER_ARMORED := "test:encounter/armored"
 const ENCOUNTER_FLEEING := "test:encounter/fleeing"
@@ -97,6 +102,12 @@ func _hub() -> RegistryHub:
 		"max_weight": 200,
 		"weapon_sockets": [{"name": "S1", "socket_class": "Medium", "socket_index": 0}],
 	})
+	# No synthetic weapon declares the Tower class: every socket below is unmounted.
+	_define(hub, ContentTypes.HULL, HULL_TOWER, {
+		"max_durability": 100,
+		"max_weight": 200,
+		"weapon_sockets": [{"name": "S1", "socket_class": "Tower", "socket_index": 0}],
+	})
 	_damage_type(hub, "test:damage_type/kinetic", 0.1, "none")
 	_damage_type(hub, "test:damage_type/piercing", 1.0, "none")
 	_damage_type(hub, "test:damage_type/fire", 0.0, "burn")
@@ -117,6 +128,7 @@ func _hub() -> RegistryHub:
 	_enemy(hub, ENEMY_TANK, 28.0, 0.0, "Tower", "test:ability/berserk", LOOT_SCRAP)
 	_enemy(hub, ENEMY_LOOTBAG, 20.0, 0.0, "Tower", "test:ability/berserk", LOOT_MODULE)
 	_enemy(hub, ENEMY_ARMORY, 20.0, 0.0, "Tower", "test:ability/berserk", LOOT_WEAPON)
+	_enemy(hub, ENEMY_BAD_LOOT, 20.0, 0.0, "Tower", "test:ability/berserk", "test:loot/missing")
 	_encounter(hub, ENCOUNTER_SCRAP, ENEMY_WEAK)
 	_encounter(hub, ENCOUNTER_ARMORED, ENEMY_ARMORED)
 	_encounter(hub, ENCOUNTER_FLEEING, ENEMY_FLEEING)
@@ -130,6 +142,7 @@ func _hub() -> RegistryHub:
 	})
 	_encounter(hub, "test:encounter/module", ENEMY_LOOTBAG)
 	_encounter(hub, "test:encounter/weapon", ENEMY_ARMORY)
+	_encounter(hub, "test:encounter/bad_loot", ENEMY_BAD_LOOT)
 	_loot(hub, LOOT_SCRAP, [10, 10], [{"kind": "item", "id": ITEM_SCRAP, "weight": 1, "amount_range": [2, 2]}])
 	_loot(hub, LOOT_MODULE, [], [{"kind": "module", "id": MODULE_CRATE, "weight": 1, "amount_range": [1, 1]}])
 	_loot(hub, LOOT_WEAPON, [], [{"kind": "weapon", "id": WEAPON_MEDIUM, "weight": 1, "amount_range": [1, 1]}])
@@ -466,7 +479,7 @@ func test_player_weapon_rows_from_hull_sockets() -> void:
 	assert_eq(String(explicit_rows[1]["weapon_id"]), WEAPON_MEDIUM, "explicit loadout overrides the default weapon")
 	var view: Dictionary = CombatViewQuery.execute({}, _context(_state(hub, HULL_DUAL))).get("data", {})
 	assert_eq((view["player"]["weapons"] as Array).size(), 2, "combat.view exposes the player armament")
-	assert_eq((view["encounters"] as Array).size(), 9, "combat.view lists every encounter table")
+	assert_eq((view["encounters"] as Array).size(), 10, "combat.view lists every encounter table")
 
 
 func test_multi_enemy_encounter_targets_sequentially() -> void:
@@ -553,6 +566,54 @@ func test_combat_commands_and_queries_are_registered() -> void:
 	var log := context.queries.execute(&"combat.log", {"limit": 5})
 	assert_eq(int(log["data"]["total"]), 1, "the resolved encounter is in the persisted log")
 	assert_eq((log["data"]["battles"] as Array).size(), 1, "combat.log returns the battle summary")
+
+
+func test_missing_weapon_class_is_reported_for_both_sides() -> void:
+	var hub := _hub()
+	# Player hull has a Tower socket; enemy weak also has a Tower socket. Neither side
+	# has a Tower weapon, so both skips must be visible in the battle record.
+	var state := _state(hub, HULL_TOWER)
+	var result := CombatService.resolve(hub, state, ENCOUNTER_SCRAP, 101)
+	assert_true(bool(result.get("ok", false)), "battle still resolves with unmounted sockets")
+	var battle: Dictionary = result["data"]["battle"]
+	var diagnostics: Array = battle.get("diagnostics", [])
+	assert_eq(diagnostics.size(), 2, "one player skip + one enemy skip are reported")
+	var player_diag: Dictionary = {}
+	var enemy_diag: Dictionary = {}
+	for entry in diagnostics:
+		var row: Dictionary = entry
+		if String(row.get("side", "")) == "player":
+			player_diag = row
+		elif String(row.get("side", "")) == "enemy":
+			enemy_diag = row
+	assert_eq(String(player_diag.get("socket_class", "")), "Tower", "player skip names the socket class")
+	assert_eq(String(player_diag.get("socket", "")), "S1", "player skip names the socket")
+	assert_eq(String(player_diag.get("reason", "")), "weapon_class_missing", "player skip carries a reason")
+	assert_eq(String(enemy_diag.get("socket_class", "")), "Tower", "enemy skip names the socket class")
+	assert_eq(String(enemy_diag.get("reason", "")), "weapon_class_missing", "enemy skip carries the same reason")
+	assert_eq((battle["player"]["unmounted_sockets"] as Array).size(), 1, "player view lists the unmounted socket")
+	assert_eq((battle["enemies"][0]["unmounted_sockets"] as Array).size(), 1, "enemy view lists the unmounted socket")
+	var view: Dictionary = CombatViewQuery.execute({}, _context(state)).get("data", {})
+	assert_eq((view["player"]["unmounted_sockets"] as Array).size(), 1, "combat.view exposes unmounted player sockets")
+	assert_eq(String(view["player"]["unmounted_sockets"][0]["reason"]), "weapon_class_missing", "view carries the reason")
+
+
+func test_missing_loot_table_is_reported_in_battle_diagnostics() -> void:
+	var hub := _hub()
+	var state := _state(hub, HULL_SINGLE, _single_gun_loadout(WEAPON_LIGHT))
+	var result := CombatService.resolve(hub, state, "test:encounter/bad_loot", 111)
+	assert_true(bool(result.get("ok", false)), "battle resolves even when the loot table is missing")
+	var battle: Dictionary = result["data"]["battle"]
+	assert_eq(String(battle["outcome"]), "victory", "unarmed enemy is sunk")
+	var loot_diag := {}
+	for entry in battle.get("diagnostics", []):
+		var row: Dictionary = entry
+		if String(row.get("side", "")) == "loot":
+			loot_diag = row
+	assert_false(loot_diag.is_empty(), "missing loot table produces a diagnostic")
+	assert_eq(String(loot_diag.get("reason", "")), "loot_table_missing", "diagnostic reason is loot_table_missing")
+	assert_eq(String(loot_diag.get("loot_table", "")), "test:loot/missing", "diagnostic names the missing table")
+	assert_eq(int((battle["loot"] as Dictionary).get("money", -1)), 0, "no loot is fabricated")
 
 
 ## ---------------------------------------------------------------------------

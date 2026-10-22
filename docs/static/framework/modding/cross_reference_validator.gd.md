@@ -9,12 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CrossReferenceValidator` | L1 |
-| `PLANNED_REF_TYPES` | L39 |
-| `MODULE_CATEGORIES` | L49 |
-| `MODULE_CATEGORY_REQUIRED_FIELDS` | L50 |
-| `UTILITY_TAG_FIELDS` | L56 |
-| `QUEST_MATCH_REFERENCE_TYPES` | L65 |
-| `validate(hub: RegistryHub) -> Dictionary` | L79 |
+| `PLANNED_REF_TYPES` | L44 |
+| `MODULE_CATEGORIES` | L54 |
+| `MODULE_CATEGORY_REQUIRED_FIELDS` | L55 |
+| `UTILITY_TAG_FIELDS` | L61 |
+| `QUEST_MATCH_REFERENCE_TYPES` | L70 |
+| `validate(hub: RegistryHub) -> Dictionary` | L84 |
 
 以及 Phase B 世界/战役 9 类（world_profiles / regions / sites / route_templates /
 weather_profiles / factions / discoveries / start_profiles / map_configs）的引用完整性。
@@ -40,5 +40,10 @@ weather_profiles / factions / discoveries / start_profiles / map_configs）的�
   **设计理由**：命令 / UI 事件名是字符串总线（`CommandBus` / Shell 观测），没有可枚举的
   运行时注册表交给内容校验器，因此这里只做格式硬校验；未知但格式合法的事件名属于
   「内容作者拼写」问题，无法在不引入注册表快照的前提下可靠判定，故不误报。
+- D1：`enemy_archetypes.weapon_sockets[]` 的每个 class 必须至少有一把可安装的
+  weapon（`weapon_class` 或 `mount_class` 命中），否则报
+  `enemy_weapon_class_missing`（message / 记录带 mod / file / entity / path）。
+  运行时对未解析 class 只 skip 该 socket，如果校验器不报错，内容错误会把「武装敌舰」
+  静默变成「无武装敌舰」。
 
 模块索引：[framework/modding](./README.md)

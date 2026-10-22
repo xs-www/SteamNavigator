@@ -21,6 +21,9 @@ extends RefCounted
 ## - 建议（warning）：route_templates / factions / sites / discoveries 各 ≥1。
 ## - 组合：至少一个 start_profile 解析 world_profile + map_config + starting_scenario；##   start_region_tags 命中至少一个 regions.region_tags；map_config.archetypes 数量 ≥
 ##   对应 world_profile.port_count。
+## - D1 战斗家族（weapons / damage_types / combat_abilities / enemy_archetypes /
+##   encounter_tables / loot_tables）的最低数量只统计 `source_mod == "core"` 的定义，
+##   第三方单独提供的战斗内容不能替代 Core 自己的完整性门槛。
 ## @end-static-doc
 
 static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary:
@@ -48,13 +51,15 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_count(hub, ContentTypes.VOYAGE_EVENT, 2, "voyage events", errors)
 	_require_count(hub, ContentTypes.CREW_ROLE, 2, "crew roles", errors)
 	# D1 combat family: at least one weapon/damage type/ability/table, and the four
-	# shipped combat_kit enemy archetypes.
-	_require_count(hub, ContentTypes.WEAPON, 1, "weapons", errors)
-	_require_count(hub, ContentTypes.DAMAGE_TYPE, 1, "damage types", errors)
-	_require_count(hub, ContentTypes.COMBAT_ABILITY, 1, "combat abilities", errors)
-	_require_count(hub, ContentTypes.ENEMY_ARCHETYPE, 4, "enemy archetypes", errors)
-	_require_count(hub, ContentTypes.ENCOUNTER_TABLE, 1, "encounter tables", errors)
-	_require_count(hub, ContentTypes.LOOT_TABLE, 1, "loot tables", errors)
+	# shipped combat_kit enemy archetypes. Counts only definitions owned by the core
+	# pack (same source-filter discipline as the Phase B presence gate): a third-party
+	# mod shipping combat content must not satisfy Core's own completeness gate.
+	_require_core_count(hub, ContentTypes.WEAPON, 1, "weapons", errors)
+	_require_core_count(hub, ContentTypes.DAMAGE_TYPE, 1, "damage types", errors)
+	_require_core_count(hub, ContentTypes.COMBAT_ABILITY, 1, "combat abilities", errors)
+	_require_core_count(hub, ContentTypes.ENEMY_ARCHETYPE, 4, "enemy archetypes", errors)
+	_require_core_count(hub, ContentTypes.ENCOUNTER_TABLE, 1, "encounter tables", errors)
+	_require_core_count(hub, ContentTypes.LOOT_TABLE, 1, "loot tables", errors)
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
 		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():
@@ -117,6 +122,26 @@ static func _require_count(hub: RegistryHub, content_type: StringName, minimum: 
 			"message": "core must declare at least %d %s (found %d)" % [
 				minimum, label, hub.get_all(content_type).size()
 			],
+		})
+
+
+## Number of definitions of `content_type` shipped by the `core` pack itself.
+static func _core_count(hub: RegistryHub, content_type: StringName) -> int:
+	var count := 0
+	for definition in hub.get_all(content_type):
+		if definition.source_mod == "core":
+			count += 1
+	return count
+
+
+## Like `_require_count`, but ignores third-party definitions: these minimums are
+## about what the official pack must provide, not what is globally available.
+static func _require_core_count(hub: RegistryHub, content_type: StringName, minimum: int, label: String, errors: Array[Dictionary]) -> void:
+	var found := _core_count(hub, content_type)
+	if found < minimum:
+		errors.append({
+			"code": "content_count",
+			"message": "core must declare at least %d %s (found %d)" % [minimum, label, found],
 		})
 
 

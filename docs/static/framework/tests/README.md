@@ -69,7 +69,7 @@
 | `cases/test_warehouse_craft.gd` | 迭代 1 船只系统测试：仓库存取、transit 重量、材料打造、免费安装、替换/卸下、合同解锁与失败原子性。 | [查看](./cases/test_warehouse_craft.gd.md) |
 | `cases/test_world_completeness.gd` | Phase B Core 完整性规则（WORLD_SCHEMA_V2_RUNTIME §5.2/§5.3）测试：用最小可运行的 | [查看](./cases/test_world_completeness.gd.md) |
 | `cases/test_world_generator.gd` | 坐标空间世界生成器测试：同 seed 可复现、不同 seed 不同世界、10-20 港口、锚定海岸线、最小间距、陆地多边形、覆盖率、连通性、出航角度、起点港口、必需设施位置与序列化往返（12 个测试用例）。 | 本页 |
-| `cases/test_world_schema_refs.gd` | Phase B 世界/战役 9 类内容的跨引用校验测试：用真实 Core 基线（`bootstrap_core()`） | [查看](./cases/test_world_schema_refs.gd.md) |
+| `cases/test_world_schema_refs.gd` | Phase B 世界/战役 9 类 + Phase D1 战斗内容的跨引用校验测试：用真实 Core 基线 | [查看](./cases/test_world_schema_refs.gd.md) |
 | `cases/test_zip_pack.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `smoke_load.gd` | 手动冒烟：加载 Core 并打印启动报告。 | 本页 |
 | `smoke_play.gd` | 手动冒烟：开局、预览、出航、事件选择。 | 本页 |

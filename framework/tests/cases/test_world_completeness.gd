@@ -9,7 +9,9 @@ extends TestCase
 ##   `dev_mods/core/content/world_profiles.json` 存在，Core 基线用例因此改为「gate 打开且零
 ##   error」；「gate 关闭」的语义仍由 `_full_hub([ContentTypes.WORLD_PROFILE])` 的合成用例覆盖。
 ## - 硬性 error（`content_count`）：world_profiles / map_configs / start_profiles /
-##   weather_profiles / regions 各 ≥1。
+##   weather_profiles / regions 各 ≥1；D1 战斗家族（weapons / damage_types /
+##   combat_abilities / enemy_archetypes / encounter_tables / loot_tables）的最低数量
+##   只统计 `source_mod == "core"` 的定义，第三方内容不能替代 Core 的门槛。
 ## - 建议 warning（`content_count_recommended`）：route_templates / factions / sites / discoveries 各 ≥1。
 ## - 组合规则：start_profile 必须解析 world_profile + map_config（缺省引用回退到唯一 map config）+
 ##   starting_scenario；start_region_tags 至少匹配一个 regions.region_tags；map config 的
@@ -128,6 +130,48 @@ func test_core_requires_combat_content_counts() -> void:
 	assert_true(_has_error_message(result, "enemy archetypes"), "missing enemy archetypes raise content_count")
 	result = _check(_full_hub([ContentTypes.WEAPON]))
 	assert_true(_has_error_message(result, "weapons"), "missing weapons raise content_count")
+
+
+func test_combat_counts_ignore_third_party_content() -> void:
+	# A third-party pack shipping combat content must not satisfy Core's own minimums
+	# (same source-filter discipline as the Phase B presence gate).
+	var hub := _full_hub([
+		ContentTypes.WEAPON,
+		ContentTypes.DAMAGE_TYPE,
+		ContentTypes.COMBAT_ABILITY,
+		ContentTypes.ENEMY_ARCHETYPE,
+		ContentTypes.ENCOUNTER_TABLE,
+		ContentTypes.LOOT_TABLE,
+	])
+	_register(hub, ContentTypes.WEAPON, "thirdparty:weapon/deck_gun", [], {}, "thirdparty")
+	_register(hub, ContentTypes.DAMAGE_TYPE, "thirdparty:damage_type/kinetic", [], {"color": "#ffffff"}, "thirdparty")
+	_register(hub, ContentTypes.COMBAT_ABILITY, "thirdparty:combat_ability/aggressive", [], {"action": "engage"}, "thirdparty")
+	for index in range(4):
+		_register(hub, ContentTypes.ENEMY_ARCHETYPE, "thirdparty:enemy_archetype/enemy_%d" % index, [], {}, "thirdparty")
+	_register(hub, ContentTypes.ENCOUNTER_TABLE, "thirdparty:encounter_table/patrol", [], {"entries": []}, "thirdparty")
+	_register(hub, ContentTypes.LOOT_TABLE, "thirdparty:loot_table/wreck", [], {"entries": []}, "thirdparty")
+	var result := _check(hub)
+	for label in [
+		"weapons", "damage types", "combat abilities", "enemy archetypes",
+		"encounter tables", "loot tables",
+	]:
+		assert_true(
+			_has_error_message(result, label),
+			"third-party-only %s do not satisfy the core minimum" % label
+		)
+
+
+func test_core_combat_content_satisfies_core_counts() -> void:
+	var result := _check(_full_hub())
+	for label in [
+		"weapons", "damage types", "combat abilities", "enemy archetypes",
+		"encounter tables", "loot tables",
+	]:
+		assert_false(
+			_has_error_message(result, label),
+			"core-owned combat content satisfies '%s'" % label
+		)
+	assert_true(result["errors"].is_empty(), "core combat content leaves the completeness check clean: %s" % str(result["errors"]))
 
 
 func test_core_requires_at_least_one_quest() -> void:
