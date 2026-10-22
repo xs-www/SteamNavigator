@@ -27,7 +27,7 @@
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
 - [ ] 模型素材库接入：kit 批次 1–3 其余 22 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记），接 `ShipVisualAssembler` / 场景装配的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A 已落地；Phase B 实现契约已就绪（9 类类型 + CampaignFactory + 1.0→2.0 映射），待隔壁探索 4.1 提交后开工；之后 C 实体合并 → D 其余系统 → E 冻结 1.0。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)（待拍板 D2–D3、D7–D12）
+- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B **B0 已收尾**（探索 4.1–4.5 与 Phase A 均已在 main；契约升 [Draft 2](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)，补 31 键 `exploration`、`twin_world_size`、`story`、15 处读取点；SNModMaker schema bundle 已重同步）。下一步 **B1 类型提升**（9 类 active + `map_configs`，待拍板 D2–D3、D7–D13）；之后 C 实体合并 → D 其余系统 → E 冻结 1.0。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md)
 
 ### 海图 / 探索
 
@@ -48,3 +48,5 @@
 ## Recently Completed
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
+
+- Content Schema 2.0 Phase B · B0：执行契约刷新到 [Draft 2](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)（按 4.1–4.5 的 `map_profile` 现状补 31 键 `exploration`、`twin_world_size`、`story`、15 处生产读取点，新增 D13 教程 story 归属）；同步迁移方案状态；重新同步 SNModMaker 嵌入式 schema bundle（Node 恢复 50/50）。基线证据：Godot 419/419、`gen_content_types --check`、`gen_static_docs --check`、SDK core 校验全绿。

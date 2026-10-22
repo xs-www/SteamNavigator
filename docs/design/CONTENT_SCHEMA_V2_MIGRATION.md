@@ -133,8 +133,11 @@ G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案
 
 ### Phase B · 世界探索家族提升（阶段 0/1，2–4 周）
 
-**执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)（Draft 1，含 9 类类型、引用/完整性规则、
-CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。**
+**状态：B0 已收尾（2026-10-22）；B1 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
+（Draft 2，含 9 类类型、引用/完整性规则、CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。
+B0 证据：探索 4.1 与 Phase A 均已在 `main`（无需 rebase）；契约已按 4.2–4.5 的 `map_profile` 现状刷新
+（`exploration` 31 键、`twin_world_size`、`story`、15 处读取点）；Godot 419/419、生成物检查、SDK core 校验、
+Node 50/50 全绿。
 
 目标：8 类 v2 草案 + 新增 `map_configs`（1.0 `map_profiles` 的 v2 继任者）从 `planned`/草案提升为 active，
 并由真实运行时消费；1.0 老链路与旧档保持可用。
@@ -222,6 +225,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 ## 9. 验收标准（Definition of Done）
 
 - [x] Phase A：1.0 全量测试绿；版本表生成物最新；Patch 按目标类型版本校验（2026-10-21）。
+- [x] Phase B · B0：探索 4.1 / Phase A 合入 main；契约刷新到 Draft 2；基线门禁全绿（2026-10-22）。
 - [ ] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过。
 - [ ] Phase C：实体合并后旧 ID 别名可用一个版本；存档 ID 迁移可回读。
 - [ ] Phase E：1.0 生成停止；迁移工具可用；文档状态更新为 Finalized。
@@ -230,5 +234,6 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 ## 10. 待确认
 
 - D1–D6（§3.2）需要拍板，尤其 D2 双读窗口长度与 D3 存档版本记录形状。
+- Phase B 契约 §12 的 D2 / D3 / D7–D13 需要拍板；D13（v2 战役的教程 `story` 来源）是 B0 刷新时新发现的问题。
 - Phase B 是否与世界探索运行时同一个发布版本（建议：类型提升与运行时同版本）。
 - 是否把「编辑器禁止把草案内容部署到发布包」作为 Phase A 的前置小修（建议是）。
