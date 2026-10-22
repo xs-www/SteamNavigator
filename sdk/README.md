@@ -22,7 +22,7 @@ godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examp
 
 # 草案 / 混合模组的静态 Schema 校验：不启动运行时
 godot --headless --path . --script res://sdk/validate.gd -- \
-  --mod-root=sdk/templates/draft_weapons_pack --mode=draft --json
+  --mod-root=sdk/examples/example_weapons --mode=runtime --json
 
 # 只校验 Core
 godot --headless --path . --script res://sdk/validate.gd -- --mode=runtime
@@ -63,7 +63,7 @@ Core 从 `dev_mods` 加载，第三方模组先复制到 `user://` 隔离目录�
 | `examples/example_boilers/` | 2.0 | 已激活的 `modules` 2.0 示例。 |
 | `examples/example_mixed_crew_roles_items/` | 2.0 + 2.0 | `crew_roles` + `items` 两个 active 2.0 类型共存；runtime 加载通过。 |
 | `templates/mod_template/` | 2.0 | 最小 `items` 2.0 模组模板。 |
-| `templates/draft_weapons_pack/` | 2.0 草案 | `weapons` 草案示例：**只能** `--mode=draft` 校验，`--release` 打包必然被拒绝。 |
+| `examples/example_weapons/` | 2.0 | 已激活的 `weapons` 2.0 示例：五件 Battle Sim 武器 + Core 模型键；runtime 校验通过。 |
 | `templates/story_pack_iron_tide/` | 2.0 草案 | `story_arcs` / `story_levels` 剧情包草案示例，同样只能 draft 校验、不可发布。 |
 
 > `sdk/examples/` 是开发态可被 runtime 扫描的目录，**不要**把草案内容放进 `examples/`；草案示例统一放在

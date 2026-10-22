@@ -3,10 +3,13 @@
   "content_type": "weapons",
   "definitions": [
     {
-      "id": "draft_weapons_pack:weapon/deck_gun",
-      "name_key": "weapon.draft_weapons_pack.deck_gun.name",
-      "description_key": "weapon.draft_weapons_pack.deck_gun.description",
-      "tags": ["weapon.direct", "weapon.light"],
+      "id": "example_weapons:weapon/deck_gun",
+      "name_key": "weapon.example_weapons.deck_gun.name",
+      "description_key": "weapon.example_weapons.deck_gun.description",
+      "tags": [
+        "weapon.direct",
+        "weapon.light"
+      ],
       "enabled": true,
       "data": {
         "kind": "direct",
@@ -36,7 +39,8 @@
         "purchase_price": 380,
         "craft_cost": 170,
         "craft_time_hours": 4,
-        "materials": []
+        "materials": [],
+        "damage_type": "core:damage_type/kinetic"
       }
     }
   ]

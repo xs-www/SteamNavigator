@@ -47,6 +47,14 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_count(hub, ContentTypes.QUEST, 1, "quests", errors)
 	_require_count(hub, ContentTypes.VOYAGE_EVENT, 2, "voyage events", errors)
 	_require_count(hub, ContentTypes.CREW_ROLE, 2, "crew roles", errors)
+	# D1 combat family: at least one weapon/damage type/ability/table, and the four
+	# shipped combat_kit enemy archetypes.
+	_require_count(hub, ContentTypes.WEAPON, 1, "weapons", errors)
+	_require_count(hub, ContentTypes.DAMAGE_TYPE, 1, "damage types", errors)
+	_require_count(hub, ContentTypes.COMBAT_ABILITY, 1, "combat abilities", errors)
+	_require_count(hub, ContentTypes.ENEMY_ARCHETYPE, 4, "enemy archetypes", errors)
+	_require_count(hub, ContentTypes.ENCOUNTER_TABLE, 1, "encounter tables", errors)
+	_require_count(hub, ContentTypes.LOOT_TABLE, 1, "loot tables", errors)
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
 		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():

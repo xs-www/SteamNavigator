@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/weapon-2.json",
-  "title": "Steam Navigator weapon content file (Schema 2.0 draft)",
-  "description": "Ship-mounted weapon definitions (Content Schema 2.0 draft). The combat block mirrors the S-N Battle Simulator weapon catalogue, the assembly block mirrors docs/design/WEAPON_SOCKET_CONTRACT.md (weapon-assembly@2), and the economy block follows the runtime module shape so a future runtime can consume the same definitions. The Godot runtime does not load Schema 2.0 content yet.",
+  "title": "Steam Navigator weapon content file (Content Schema 2.0)",
+  "description": "Ship-mounted weapon definitions (Content Schema 2.0 runtime type since D1). The combat block mirrors the S-N Battle Simulator weapon catalogue, the assembly block mirrors docs/design/WEAPON_SOCKET_CONTRACT.md (weapon-assembly@2), and the economy block follows the runtime module shape.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
@@ -95,6 +95,10 @@
           "type": "number",
           "minimum": 0.25,
           "maximum": 20
+        },
+        "damage_type": {
+          "description": "Optional damage_types reference (D1); the runtime falls back to a plain kinetic hit when omitted.",
+          "$ref": "common.schema.json#/$defs/id_ref"
         },
         "accuracy": {
           "type": "number",

@@ -29,7 +29,13 @@
     "content/weather_profiles.json",
     "content/factions.json",
     "content/discoveries.json",
-    "content/start_profiles.json"
+    "content/start_profiles.json",
+    "content/damage_types.json",
+    "content/weapons.json",
+    "content/combat_abilities.json",
+    "content/enemy_archetypes.json",
+    "content/encounter_tables.json",
+    "content/loot_tables.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -156,7 +162,11 @@
     "model.weapon.mortar": "assets/models/weapons/SN_Weapon_Mortar.glb",
     "model.weapon.pedestal": "assets/models/weapons/SN_Weapon_Pedestal.glb",
     "model.weapon.repeater": "assets/models/weapons/SN_Weapon_Repeater.glb",
-    "model.weapon.turret": "assets/models/weapons/SN_Weapon_Turret.glb"
+    "model.weapon.turret": "assets/models/weapons/SN_Weapon_Turret.glb",
+    "model.enemy.pirate_sloop": "assets/models/combat/SN_Enemy_Pirate_Sloop.glb",
+    "model.enemy.gunboat": "assets/models/combat/SN_Enemy_Gunboat.glb",
+    "model.enemy.armed_merchantman": "assets/models/combat/SN_Enemy_Merchant_Armed.glb",
+    "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb"
   },
   "authors": [
     "Steam Navigator Team"
@@ -177,6 +187,7 @@
     "content.starting_scenarios.v1",
     "content.voyage_events.v1",
     "content.world.v1",
-    "content.campaign.v1"
+    "content.campaign.v1",
+    "content.combat.v1"
   ]
 }

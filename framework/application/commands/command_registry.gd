@@ -35,3 +35,8 @@ static func register_all(bus: CommandBus) -> void:
 	bus.register(&"warehouse.take_module", Callable(WarehouseCommands, "take_module"))
 	bus.register(&"warehouse.store_materials", Callable(WarehouseCommands, "store_materials"))
 	bus.register(&"warehouse.take_materials", Callable(WarehouseCommands, "take_materials"))
+	bus.register(&"sim.pause", Callable(SimCommands, "pause"))
+	bus.register(&"sim.resume", Callable(SimCommands, "resume"))
+	bus.register(&"sim.set_speed", Callable(SimCommands, "set_speed"))
+	bus.register(&"sim.advance", Callable(SimCommands, "advance"))
+	bus.register(&"combat.resolve", Callable(CombatCommands, "resolve"))

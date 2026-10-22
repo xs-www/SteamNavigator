@@ -48,6 +48,8 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_save_load.gd",
 	"res://framework/tests/cases/test_save_migration.gd",
 	"res://framework/tests/cases/test_campaign_state.gd",
+	"res://framework/tests/cases/test_simulation.gd",
+	"res://framework/tests/cases/test_combat.gd",
 	"res://framework/tests/cases/test_zip_pack.gd",
 	"res://framework/tests/cases/test_content_asset_loader.gd",
 	"res://framework/tests/cases/test_legacy_uv_assets.gd",

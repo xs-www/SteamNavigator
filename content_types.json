@@ -4,25 +4,10 @@
   "content_schema": "1.0",
   "description": "Single source for content type keys, schema paths, per-type schema_version, registry kind and editor presentation metadata. Every active type declares its own 'schema_version' (Content Schema 1.0 or 2.0) and the framework validates content files against the version of their type; 'content_schema' is only the baseline/default used by header fields and editor defaults. Entries under 'planned' are roadmap only and have no schema yet. 'draft_schemas' maps the remaining Content Schema 2.0 draft types to their schema files; 'draft_types' carries their editor metadata. Draft types are editable in SNModMaker but not loadable by the runtime yet. 'v2_module_categories' records the target module taxonomy; it is not a runtime type list.",
   "draft_schemas": {
-    "weapons": "schemas/v2/weapon.schema.json",
     "story_arcs": "schemas/v2/story_arc.schema.json",
     "story_levels": "schemas/v2/story_level.schema.json"
   },
   "draft_types": [
-    {
-      "key": "weapons",
-      "singular": "weapon",
-      "key_prefix": "weapon",
-      "label_zh": "舰载武器",
-      "label_en": "Weapons",
-      "abbr": "WN",
-      "color": "#e2685e",
-      "group": "ships_modules",
-      "default_file": "content/weapons.json",
-      "schema_version": "2.0",
-      "capability": "content.combat.v1",
-      "summary_zh": "舰载武器：战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型资源键；船体侧安装点决定可装 class。"
-    },
     {
       "key": "story_arcs",
       "singular": "story_arc",
@@ -62,6 +47,11 @@
       "id": "ships_modules",
       "label_zh": "船只与模块",
       "label_en": "Ships & Modules"
+    },
+    {
+      "id": "combat",
+      "label_zh": "战斗",
+      "label_en": "Combat"
     },
     {
       "id": "world_generation",
@@ -507,6 +497,126 @@
       "v2_target": null,
       "aliases": [],
       "module": false
+    },
+    {
+      "key": "weapons",
+      "singular": "weapon",
+      "key_prefix": "weapon",
+      "label_zh": "舰载武器",
+      "label_en": "Weapons",
+      "abbr": "WN",
+      "color": "#e2685e",
+      "group": "combat",
+      "schema": "schemas/v2/weapon.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/weapons.json",
+      "summary_zh": "舰载武器：战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型资源键；船体侧安装点决定可装 class（D1 起为运行时类型）。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.combat.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "damage_types",
+      "singular": "damage_type",
+      "key_prefix": "damage_type",
+      "label_zh": "伤害类型",
+      "label_en": "Damage types",
+      "abbr": "DT",
+      "color": "#d06a6a",
+      "group": "combat",
+      "schema": "schemas/v2/damage_type.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/damage_types.json",
+      "summary_zh": "伤害类型注册表（动能 / 爆炸 / 燃烧 / 电击）：被武器与防御引用，不做相克矩阵，只用 armor_pierce 与状态效果。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.combat.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "combat_abilities",
+      "singular": "combat_ability",
+      "key_prefix": "combat_ability",
+      "label_zh": "战斗能力",
+      "label_en": "Combat abilities",
+      "abbr": "CA",
+      "color": "#c98f6a",
+      "group": "combat",
+      "schema": "schemas/v2/combat_ability.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/combat_abilities.json",
+      "summary_zh": "战斗能力 / AI 行为参数：选取 SNBattleSim FSM 动作并调校目标优先级与距离阈值；能力是数据，执行由框架负责。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.combat.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "enemy_archetypes",
+      "singular": "enemy_archetype",
+      "key_prefix": "enemy_archetype",
+      "label_zh": "敌舰原型",
+      "label_en": "Enemy archetypes",
+      "abbr": "EA",
+      "color": "#8f6a6a",
+      "group": "combat",
+      "schema": "schemas/v2/enemy_archetype.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/enemy_archetypes.json",
+      "summary_zh": "敌舰原型：combat_kit 敌舰 class / 炮位、血量 / 装甲 / 航速、AI 能力与掉落表引用；information.model 指向 SN_Enemy_* GLB 资源键。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.combat.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "encounter_tables",
+      "singular": "encounter_table",
+      "key_prefix": "encounter_table",
+      "label_zh": "遭遇表",
+      "label_en": "Encounter tables",
+      "abbr": "ET",
+      "color": "#6a8f8f",
+      "group": "combat",
+      "schema": "schemas/v2/encounter_table.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/encounter_tables.json",
+      "summary_zh": "遭遇表：按权重抽取敌舰原型与数量区间，附带场景类型与危险度；抽样由运行时执行。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.combat.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "loot_tables",
+      "singular": "loot_table",
+      "key_prefix": "loot_table",
+      "label_zh": "掉落表",
+      "label_en": "Loot tables",
+      "abbr": "LT",
+      "color": "#8f8f6a",
+      "group": "combat",
+      "schema": "schemas/v2/loot_table.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/loot_tables.json",
+      "summary_zh": "掉落表：按权重掉落 item / weapon / module 与金钱区间，战后由运行时抽取。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.combat.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
     }
   ],
   "planned": [
@@ -518,18 +628,6 @@
         "captains",
         "formations",
         "fleet_doctrines"
-      ]
-    },
-    {
-      "system": "combat",
-      "capability": "content.combat.v1",
-      "types": [
-        "weapons",
-        "damage_types",
-        "combat_abilities",
-        "enemy_archetypes",
-        "encounter_tables",
-        "loot_tables"
       ]
     },
     {

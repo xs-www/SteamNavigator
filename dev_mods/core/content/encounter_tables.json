@@ -1,0 +1,84 @@
+{
+  "schema_version": "2.0",
+  "content_type": "encounter_tables",
+  "definitions": [
+    {
+      "id": "core:encounter_table/coastal_patrol",
+      "name_key": "encounter_table.core.coastal_patrol.name",
+      "description_key": "encounter_table.core.coastal_patrol.description",
+      "tags": [
+        "encounter.patrol"
+      ],
+      "enabled": true,
+      "data": {
+        "kind": "patrol",
+        "danger": 3,
+        "entries": [
+          {
+            "enemy_archetype": "core:enemy_archetype/pirate_sloop",
+            "weight": 3,
+            "count_range": [
+              1,
+              2
+            ]
+          },
+          {
+            "enemy_archetype": "core:enemy_archetype/gunboat",
+            "weight": 2,
+            "count_range": [
+              1,
+              1
+            ]
+          },
+          {
+            "enemy_archetype": "core:enemy_archetype/armed_merchantman",
+            "weight": 1,
+            "count_range": [
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:encounter_table/iron_convoy",
+      "name_key": "encounter_table.core.iron_convoy.name",
+      "description_key": "encounter_table.core.iron_convoy.description",
+      "tags": [
+        "encounter.convoy"
+      ],
+      "enabled": true,
+      "data": {
+        "kind": "convoy",
+        "danger": 6,
+        "entries": [
+          {
+            "enemy_archetype": "core:enemy_archetype/ironclad_raider",
+            "weight": 2,
+            "count_range": [
+              1,
+              1
+            ]
+          },
+          {
+            "enemy_archetype": "core:enemy_archetype/gunboat",
+            "weight": 2,
+            "count_range": [
+              1,
+              2
+            ]
+          },
+          {
+            "enemy_archetype": "core:enemy_archetype/armed_merchantman",
+            "weight": 1,
+            "count_range": [
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -357,6 +357,15 @@
     'port_templates.size': '港口规模',
     'starting_scenarios.money': '初始金钱',
     'starting_scenarios.reputation': '初始声望',
+    'weapons.damage_type': '伤害类型',
+    'damage_types.color': '显示颜色',
+    'damage_types.armor_pierce': '穿甲比例',
+    'combat_abilities.action': '主行为动作',
+    'combat_abilities.target_priority': '目标优先级',
+    'enemy_archetypes.enemy_class': '敌舰级别',
+    'enemy_archetypes.hull_points': '船体耐久',
+    'encounter_tables.danger': '危险度',
+    'loot_tables.money_range': '金钱区间',
     'patch.target': '目标定义',
     'patch.operations': '补丁操作',
     'patch.requires': '来源约束',
@@ -894,6 +903,7 @@
      * direct / 12 伤害 / 245 m / 1.65 s / 0.72 命中 / 360 弹速 / yaw_pitch 轻型炮。 */
     weapons: () => ({
       kind: 'direct',
+      damage_type: 'core:damage_type/kinetic',
       damage: 12,
       range: 245,
       min_range: 0,
@@ -921,6 +931,40 @@
       craft_cost: 170,
       craft_time_hours: 4,
       materials: [],
+    }),
+    damage_types: () => ({
+      color: '#ffd37a',
+      armor_pierce: 0.1,
+      status_effect: 'none',
+    }),
+    combat_abilities: () => ({
+      action: 'engage',
+      target_priority: 'nearest',
+      preferred_range: 0.7,
+      engage_speed: 0.6,
+    }),
+    enemy_archetypes: () => ({
+      enemy_class: 'Light',
+      hull_points: 150,
+      armor: 0.1,
+      max_speed: 12,
+      turn_rate_deg: 45,
+      weapon_sockets: ['Light'],
+      combat_ability: 'core:combat_ability/defensive',
+      loot_table: 'core:loot_table/pirate_wreck',
+    }),
+    encounter_tables: () => ({
+      kind: 'patrol',
+      danger: 3,
+      entries: [
+        { enemy_archetype: 'core:enemy_archetype/pirate_sloop', weight: 1, count_range: [1, 1] },
+      ],
+    }),
+    loot_tables: () => ({
+      money_range: [20, 60],
+      entries: [
+        { kind: 'item', id: 'core:item/timber', weight: 1, amount_range: [1, 1] },
+      ],
     }),
     /* 剧情篇章（Schema 2.0 草案）。留空 levels 是合法的：先写世界观，再补关卡。 */
     story_arcs: () => ({
@@ -1036,7 +1080,12 @@
     factions: ['faction.guild', 'faction.naval', 'faction.pirates'],
     discoveries: ['discovery.relic', 'discovery.blueprint', 'discovery.lore'],
     start_profiles: ['start.standard', 'start.hard'],
-    weapons: ['weapon.direct', 'weapon.light', 'weapon.mounted', 'weapon.craftable'],
+    weapons: ['weapon.direct', 'weapon.light', 'weapon.medium', 'weapon.heavy', 'weapon.artillery', 'weapon.side'],
+    damage_types: ['damage.kinetic', 'damage.explosive', 'damage.fire', 'damage.shock'],
+    combat_abilities: ['ability.aggressive', 'ability.defensive', 'ability.raider', 'ability.escort'],
+    enemy_archetypes: ['enemy.light', 'enemy.medium', 'enemy.heavy', 'enemy.pirate', 'enemy.navy'],
+    encounter_tables: ['encounter.patrol', 'encounter.ambush', 'encounter.convoy', 'encounter.blockade'],
+    loot_tables: ['loot.pirate', 'loot.iron', 'loot.relic'],
     /* Story Mode draft tags. */
     story_arcs: ['story.canon', 'story.arc'],
     story_levels: ['story.level', 'story.tutorial', 'story.trade', 'story.combat'],
@@ -1138,7 +1187,7 @@
       tags: ['weapon.direct', 'weapon.light'],
       model: 'model.weapon.deck_gun',
       data: {
-        kind: 'direct', damage: 12, range: 245, min_range: 0, cooldown: 1.65, accuracy: 0.72,
+        kind: 'direct', damage_type: 'core:damage_type/kinetic', damage: 12, range: 245, min_range: 0, cooldown: 1.65, accuracy: 0.72,
         projectile_speed: 360, splash: 0, arc_deg: 260, salvo: 1, color: '#ffd37a',
         weapon_class: 'Light', assembly_profile: 'yaw_pitch',
         has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
@@ -1155,7 +1204,7 @@
       tags: ['weapon.direct', 'weapon.heavy'],
       model: 'model.weapon.heavy_cannon',
       data: {
-        kind: 'direct', damage: 30, range: 355, min_range: 35, cooldown: 4.2, accuracy: 0.61,
+        kind: 'direct', damage_type: 'core:damage_type/kinetic', damage: 30, range: 355, min_range: 35, cooldown: 4.2, accuracy: 0.61,
         projectile_speed: 285, splash: 8, arc_deg: 150, salvo: 1, color: '#ff9a63',
         weapon_class: 'Heavy', assembly_profile: 'yaw_pitch',
         has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
@@ -1177,7 +1226,7 @@
       tags: ['weapon.artillery', 'weapon.heavy'],
       model: 'model.weapon.mortar',
       data: {
-        kind: 'artillery', damage: 24, range: 430, min_range: 105, cooldown: 5.1, accuracy: 0.58,
+        kind: 'artillery', damage_type: 'core:damage_type/explosive', damage: 24, range: 430, min_range: 105, cooldown: 5.1, accuracy: 0.58,
         projectile_speed: 175, splash: 34, arc_deg: 360, salvo: 1, color: '#f3c8ff',
         weapon_class: 'Heavy', assembly_profile: 'yaw_pitch',
         has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
@@ -1198,7 +1247,7 @@
       tags: ['weapon.direct', 'weapon.medium'],
       model: 'model.weapon.repeater',
       data: {
-        kind: 'direct', damage: 7, range: 185, min_range: 0, cooldown: 0.72, accuracy: 0.76,
+        kind: 'direct', damage_type: 'core:damage_type/kinetic', damage: 7, range: 185, min_range: 0, cooldown: 0.72, accuracy: 0.76,
         projectile_speed: 430, splash: 0, arc_deg: 300, salvo: 1, color: '#fff0a4',
         weapon_class: 'Medium', assembly_profile: 'yaw_pitch',
         has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
@@ -1219,7 +1268,7 @@
       tags: ['weapon.broadside', 'weapon.side'],
       model: 'model.weapon.broadside',
       data: {
-        kind: 'broadside', damage: 8, range: 285, min_range: 20, cooldown: 5.4, accuracy: 0.64,
+        kind: 'broadside', damage_type: 'core:damage_type/kinetic', damage: 8, range: 285, min_range: 20, cooldown: 5.4, accuracy: 0.64,
         projectile_speed: 330, splash: 0, arc_deg: 76, salvo: 4, color: '#ffcf87',
         weapon_class: 'Side', assembly_profile: 'pitch_only',
         has_yaw: false, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 4,

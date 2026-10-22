@@ -1,17 +1,17 @@
 extends TestCase
 ## @static-doc
-## 作用：Content Schema 2.0 草案武器类型（`weapons`）与船体安装点镜像（hull_data 的
-## `weapon_sockets` / `rig_sockets`）测试：SchemaValidator 合法 / 非法文件、草案类型
-## 登记（content_types.json）与 Core 船体镜像回归。
+## 作用：Content Schema 2.0 运行时武器类型（`weapons`，D1 起 active）与船体安装点镜像
+## （hull_data 的 `weapon_sockets` / `rig_sockets`）测试：SchemaValidator 合法 / 非法
+## 文件、运行时类型登记（content_types.json / ContentTypes）与 Core 船体镜像回归。
 ##
 ## ## 契约与约束
 ## - `schemas/v2/weapon.schema.json`：战斗字段对齐 SNBattleSim（direct / artillery /
 ##   broadside），装配字段对齐 WEAPON_SOCKET_CONTRACT；合法 direct 与
 ##   broadside + yaw_pitch_multi 定义零错误，缺必填 / 越界 / 非法枚举 / 非法颜色 /
 ##   非法材料 ID 必须报错。
-## - weapons 同时登记在 `draft_schemas`（Schema 2.0）与 `draft_types`（编辑元数据），
-##   并且仍在 `planned` 的 `content.combat.v1` 下；运行时 `ContentTypes.all()` /
-##   `registry_types()` 不得包含它（草案不加载）。
+## - `weapons` 自 Phase D1 起是 active 2.0 运行时类型：在 `content_types.json.types`、
+##   `ContentTypes.all() / registry_types()` 中，`ContentTypes.schema_path()` 指向 v2
+##   weapon schema；不再登记 `draft_schemas` / `draft_types` / `planned`。
 ## - `schemas/v2/hull.schema.json`（hulls 2.0）的 socket 镜像字段非法（class / kind /
 ##   缺失 name / 越界 clearance / position 长度错误）必须被拒；不含 socket 字段的 hull
 ##   内容保持合法；Core 已回填的 14 个 weapon socket + 22 个 rig socket 必须通过校验。
@@ -331,14 +331,24 @@ func test_weapon_v2_schema_rejects_wrong_envelope() -> void:
 	)
 
 
-func test_weapon_draft_type_matches_schema() -> void:
+func test_weapon_type_matches_schema() -> void:
 	var manifest := _parse_json(CONTENT_TYPES)
-	var drafts: Dictionary = manifest.get("draft_schemas", {})
+	var active_types: Dictionary = {}
+	for entry in manifest.get("types", []):
+		if entry is Dictionary:
+			active_types[String(entry.get("key", ""))] = entry
+	assert_true(active_types.has("weapons"), "weapons is an active runtime type")
+	if not active_types.has("weapons"):
+		return
+	var weapon_entry: Dictionary = active_types["weapons"]
 	assert_eq(
-		String(drafts.get("weapons", "")),
+		String(weapon_entry.get("schema", "")),
 		"schemas/v2/weapon.schema.json",
 		"weapons points at the weapon schema"
 	)
+	assert_eq(String(weapon_entry.get("schema_version", "")), "2.0", "weapons declares 2.0")
+	assert_eq(String(ContentTypes.schema_path(ContentTypes.WEAPON)), WEAPON_SCHEMA, "runtime schema path is the weapon schema")
+	assert_eq(ContentTypes.schema_version(ContentTypes.WEAPON), "2.0", "runtime version is 2.0")
 	assert_true(FileAccess.file_exists(WEAPON_SCHEMA), "weapon schema file exists")
 
 	var schema := _parse_json(WEAPON_SCHEMA)
@@ -349,38 +359,27 @@ func test_weapon_draft_type_matches_schema() -> void:
 	assert_eq(String(schema_version_property.get("const", "")), "2.0", "weapon schema pins schema_version 2.0")
 	assert_eq(String(content_type_property.get("const", "")), "weapons", "weapon schema pins content_type weapons")
 
-	var weapon_entry := {}
-	for entry in manifest.get("draft_types", []):
-		if entry is Dictionary and String(entry.get("key", "")) == "weapons":
-			weapon_entry = entry
-			break
-	assert_false(weapon_entry.is_empty(), "weapons is registered in draft_types")
-	if weapon_entry.is_empty():
-		return
 	assert_eq(String(weapon_entry.get("singular", "")), "weapon", "weapons singular")
 	assert_eq(String(weapon_entry.get("key_prefix", "")), "weapon", "weapons key prefix")
-	assert_eq(String(weapon_entry.get("group", "")), "ships_modules", "weapons group is ships_modules")
+	assert_eq(String(weapon_entry.get("group", "")), "combat", "weapons group is combat")
 	assert_eq(String(weapon_entry.get("default_file", "")), "content/weapons.json", "weapons default file")
 	assert_eq(String(weapon_entry.get("capability", "")), "content.combat.v1", "weapons capability")
 	assert_eq(
 		String(weapon_entry.get("schema_version", "")),
 		String(schema_version_property.get("const", "")),
-		"draft type schema_version matches the schema const"
+		"runtime type schema_version matches the schema const"
 	)
 
 
-func test_weapon_draft_type_is_planned_but_not_runtime() -> void:
+func test_weapon_type_is_active_runtime() -> void:
 	var manifest := _parse_json(CONTENT_TYPES)
-	var combat_types: Array = []
 	for system in manifest.get("planned", []):
 		if system is Dictionary and String(system.get("capability", "")) == "content.combat.v1":
-			for type_name in system.get("types", []):
-				combat_types.append(String(type_name))
-	assert_contains(combat_types, "weapons", "weapons stays planned under content.combat.v1")
-
-	assert_false(ContentTypes.all().has(&"weapons"), "weapons is not in ContentTypes.all()")
-	assert_false(ContentTypes.registry_types().has(&"weapons"), "weapons is not in registry_types()")
-	assert_false(ContentTypes.is_known(&"weapons"), "weapons has no runtime schema mapping")
+			fail("content.combat.v1 must not stay planned now that its types are active")
+	assert_true(ContentTypes.all().has(ContentTypes.WEAPON), "weapons is in ContentTypes.all()")
+	assert_true(ContentTypes.registry_types().has(ContentTypes.WEAPON), "weapons has a runtime registry")
+	assert_true(ContentTypes.is_known(ContentTypes.WEAPON), "weapons has a runtime schema mapping")
+	assert_eq(ContentTypes.schema_version(ContentTypes.WEAPON), "2.0", "weapons runtime version is 2.0")
 
 
 func test_hull_schema_accepts_socket_mirror_fields() -> void:

@@ -200,6 +200,10 @@
     materials: ['item'],
     item_id: ['item'],
     starting_scenario: ['starting_scenario'],
+    damage_type: ['damage_type'],
+    combat_ability: ['combat_ability'],
+    loot_table: ['loot_table'],
+    enemy_archetype: ['enemy_archetype'],
     quests_completed: ['quest'],
   };
 

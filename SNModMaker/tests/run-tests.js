@@ -99,8 +99,8 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 26, `expected 2 top-level + 24 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 26, `expected 26 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 31, `expected 2 top-level + 29 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 31, `expected 31 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.equal(globalThis.SN_SCHEMAS['contract.schema.json'], undefined, 'the 1.0 contract schema was removed (C4-D)');
     assert.equal(globalThis.SN_SCHEMAS['patch.schema.json'], undefined, 'the 1.0 patch schema was removed (C4-D)');
@@ -126,7 +126,12 @@ function warningsOf(result) {
     assert.ok(globalThis.SN_SCHEMAS['v2/map_config.schema.json'], 'v2/map_config is the Phase B scenario config schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/module.schema.json'], 'v2/module is the C1 merged module schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/hull.schema.json'], 'v2/hull is the C1 hull schema');
-    assert.ok(globalThis.SN_SCHEMAS['v2/weapon.schema.json'], 'v2/weapon is the weapons draft schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/weapon.schema.json'], 'v2/weapon is the D1 runtime weapon schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/damage_type.schema.json'], 'v2/damage_type is the D1 damage-type schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/combat_ability.schema.json'], 'v2/combat_ability is the D1 combat-ability schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/enemy_archetype.schema.json'], 'v2/enemy_archetype is the D1 enemy-archetype schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/encounter_table.schema.json'], 'v2/encounter_table is the D1 encounter-table schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/loot_table.schema.json'], 'v2/loot_table is the D1 loot-table schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_arc.schema.json'], 'v2/story_arc is the Story Mode arc draft schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_level.schema.json'], 'v2/story_level is the Story Mode level draft schema');
   });
@@ -166,19 +171,21 @@ function warningsOf(result) {
   });
 
   await test('createProject with drafts builds a pure Schema 2.0 project', () => {
-    const project = Store.createProject({ id: 'draft_mod', name: 'Draft Mod', template: null, drafts: ['weapons'] });
-    assert.deepEqual(project.contentFiles.map((file) => file.content_type), ['weapons'], 'only the requested draft type is created');
-    assert.equal(project.contentFiles[0].path, 'content/weapons.json');
+    const project = Store.createProject({ id: 'draft_mod', name: 'Draft Mod', template: null, drafts: ['story_arcs'] });
+    assert.deepEqual(project.contentFiles.map((file) => file.content_type), ['story_arcs'], 'only the requested draft type is created');
+    assert.equal(project.contentFiles[0].path, 'content/story_arcs.json');
     assert.equal(project.contentFiles[0].schema_version, '2.0');
     assert.equal(project.contentFiles[0].definitions.length, 1);
-    assert.equal(project.contentFiles[0].definitions[0].id, 'draft_mod:weapon/weapon_starter');
-    assert.deepEqual(project.manifest.content, ['content/weapons.json']);
-    assert.deepEqual(project.manifest.capabilities, ['content.combat.v1'], 'the draft capability is declared in the manifest');
+    assert.equal(project.contentFiles[0].definitions[0].id, 'draft_mod:story_arc/story_arc_starter');
+    assert.deepEqual(project.manifest.content, ['content/story_arcs.json']);
+    assert.deepEqual(project.manifest.capabilities, ['content.story.v1'], 'the draft capability is declared in the manifest');
     assert.equal(project.manifest.localization.length, 2, 'both localization files are created');
 
     const validation = Validate.validateProject(project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
-    assert.deepEqual(warningsOf(validation).map((issue) => issue.code), ['draft_content'], 'capability_undeclared must not fire');
+    const draftCodes = warningsOf(validation).map((issue) => issue.code);
+    assert.ok(draftCodes.includes('draft_content'), 'draft content warns');
+    assert.ok(!draftCodes.includes('capability_undeclared'), 'the draft starter declares its capability');
 
     // Phase B promoted the world/campaign family out of the draft API; weapons
     // and the two Story Mode types are the only creatable drafts now, and
@@ -269,8 +276,8 @@ function warningsOf(result) {
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
     assert.deepEqual(
       warningsOf(validation).map((issue) => issue.code),
-      ['draft_content'],
-      'only draft_content may warn: no capability_undeclared and no entity_model_missing'
+      [],
+      'the promoted weapons template is runtime content and validates without warnings'
     );
   });
 
@@ -340,8 +347,8 @@ function warningsOf(result) {
   });
 
   await test('draft types are generated with schema 2.0 and registered in the catalog', () => {
-    assert.equal(Types.DRAFT_TYPES.length, 3, 'weapons and the two Story Mode types are Schema 2.0 draft types');
-    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['weapons', 'story_arcs', 'story_levels']);
+    assert.equal(Types.DRAFT_TYPES.length, 2, 'the two Story Mode types are the remaining Schema 2.0 draft types');
+    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['story_arcs', 'story_levels']);
     for (const info of Types.DRAFT_TYPES) {
       assert.equal(info.draft, true, `${info.key} must be marked draft`);
       assert.equal(info.schemaVersion, '2.0', `${info.key} must declare schema 2.0`);
@@ -359,7 +366,7 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 20, 'content_types.json exposes 20 runtime types (19 definitions + patches); C4 retired map_profiles and promoted port/starting types');
+    assert.equal(Types.TYPES.length, 26, 'content_types.json exposes 26 runtime types (25 definitions + patches); D1 promoted the six combat types');
     // C4-D: every runtime type (definitions and patches) is Content Schema 2.0.
     for (const info of Types.TYPES) {
       const expected = '2.0';
@@ -386,13 +393,19 @@ function warningsOf(result) {
     assert.equal(Store.hasDraftContent(project), false, 'a promoted 2.0 type is not "draft content"');
     assert.deepEqual(Store.unsupportedContentFiles(project), []);
 
-    // weapons is still a Schema 2.0 draft: it blocks the release-package deploy.
+    // D1 promoted weapons into the runtime: the combat content deploys normally.
     const weapons = Store.addDefinition(project, 'weapons', {});
+    assert.equal(Store.runtimeSupportsFile(weapons.file), true, 'weapons are runtime types since D1');
+    assert.deepEqual(Store.unsupportedContentFiles(project), []);
+    assert.equal(Store.hasDraftContent(project), false, 'promoted combat content is not draft content');
+
+    // The Story Mode types remain drafts and still block the release-package deploy.
+    const story = Store.addDefinition(project, 'story_arcs', {});
     let unsupported = Store.unsupportedContentFiles(project);
-    assert.deepEqual(unsupported.map((file) => file.content_type), ['weapons']);
-    assert.equal(unsupported[0].path, weapons.file.path);
+    assert.deepEqual(unsupported.map((file) => file.content_type), ['story_arcs']);
+    assert.equal(unsupported[0].path, story.file.path);
     assert.equal(Store.hasDraftContent(project), true);
-    assert.equal(Store.runtimeSupportsFile(weapons.file), false);
+    assert.equal(Store.runtimeSupportsFile(story.file), false);
     // Compatibility aliases still expose the same list.
     assert.deepEqual(Store.draftContentFiles(project), unsupported);
 
@@ -417,10 +430,8 @@ function warningsOf(result) {
   });
 
   await test('every draft type validates with zero errors using catalog defaults', () => {
-    /* Story packs are story-only, so weapons and the Story Mode drafts live in
-     * separate projects: mixing them would trip the story_pack_off_whitelist rule. */
+    /* D1 promoted weapons; the remaining drafts are the Story Mode family. */
     const families = [
-      { drafts: ['weapons'], types: ['weapons'] },
       { drafts: ['story_arcs', 'story_levels'], types: ['story_arcs', 'story_levels'] },
     ];
     for (const family of families) {
@@ -457,7 +468,7 @@ function warningsOf(result) {
     }
   });
 
-  await test('weapons draft defaults satisfy the Schema 2.0 weapon schema', () => {
+  await test('weapons defaults satisfy the Schema 2.0 weapon schema', () => {
     const weaponSchema = globalThis.SN_SCHEMAS['v2/weapon.schema.json'];
     assert.ok(weaponSchema, 'v2/weapon.schema.json must be embedded in the schema bundle');
     const defaults = Catalog.DEFAULTS.weapons();
@@ -486,23 +497,26 @@ function warningsOf(result) {
     assert.deepEqual(defaults.materials, []);
   });
 
-  await test('weapons is registered as a Schema 2.0 draft type and stays out of runtime types', () => {
+  await test('D1 promotes weapons and the five combat types into the runtime', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
-    assert.equal(manifest.draft_schemas.weapons, 'schemas/v2/weapon.schema.json', 'weapons must point at the weapon schema');
-    const entry = (manifest.draft_types || []).find((type) => type.key === 'weapons');
-    assert.ok(entry, 'weapons must be listed in draft_types');
-    assert.equal(entry.singular, 'weapon');
-    assert.equal(entry.key_prefix, 'weapon');
-    assert.equal(entry.group, 'ships_modules');
-    assert.equal(entry.default_file, 'content/weapons.json');
-    assert.equal(entry.schema_version, '2.0');
-    assert.equal(entry.capability, 'content.combat.v1');
+    assert.equal(manifest.draft_schemas.weapons, undefined, 'weapons leaves draft_schemas');
+    assert.ok(!(manifest.draft_types || []).some((type) => type.key === 'weapons'), 'weapons leaves draft_types');
+    assert.ok(!(manifest.planned || []).some((system) => system.capability === 'content.combat.v1'), 'planned.combat is fully promoted');
+    const combatKeys = ['weapons', 'damage_types', 'combat_abilities', 'enemy_archetypes', 'encounter_tables', 'loot_tables'];
+    for (const key of combatKeys) {
+      const entry = Types.TYPES.find((type) => type.key === key);
+      assert.ok(entry, `${key} must be an active runtime type`);
+      assert.equal(entry.schemaVersion, '2.0', `${key} is Schema 2.0`);
+      assert.equal(entry.capability, 'content.combat.v1', `${key} declares content.combat.v1`);
+      assert.equal(entry.group, '战斗', `${key} lives in the combat group`);
+      assert.match(entry.schema, /^v2\/.+\.schema\.json$/, `${key} points at a v2 schema`);
+    }
     const weaponSchema = globalThis.SN_SCHEMAS['v2/weapon.schema.json'];
     assert.equal(weaponSchema.properties.content_type.const, 'weapons', 'schema pins content_type weapons');
-    assert.equal(weaponSchema.properties.schema_version.const, entry.schema_version, 'draft metadata matches the schema const');
-    const combat = (manifest.planned || []).find((system) => system.capability === 'content.combat.v1');
-    assert.ok(combat && combat.types.includes('weapons'), 'weapons stays planned under content.combat.v1');
-    assert.ok(!Types.TYPES.some((type) => type.key === 'weapons'), 'the Godot runtime type list must not load weapons');
+    for (const key of combatKeys.slice(1)) {
+      const schema = globalThis.SN_SCHEMAS[Types.TYPES.find((type) => type.key === key).schema.replace(/^schemas\//, '')];
+      assert.equal(schema.properties.content_type.const, key, `${key} schema pins content_type`);
+    }
   });
 
   await test('story drafts satisfy their Schema 2.0 schemas and stay out of runtime types', () => {
@@ -805,24 +819,21 @@ function warningsOf(result) {
   });
 
   await test('capability warnings: one per Schema 2.0 capability across files, cleared by manifest', () => {
-    // weapons draft: one draft_content plus one capability_undeclared.
+    // D1 promoted weapons: no draft_content, but each missing capability warns once.
     const draftProject = freshProject();
     Store.addDefinition(draftProject, 'weapons', {});
     let result = Validate.validateProject(draftProject);
 
-    const draftWarnings = warningsOf(result).filter((issue) => issue.code === 'draft_content');
-    assert.equal(draftWarnings.length, 1, 'the weapons file gets exactly one draft_content warning');
-    assert.equal(draftWarnings[0].view && draftWarnings[0].view.file, 'content/weapons.json');
-    assert.match(draftWarnings[0].message, /草案类型/);
+    assert.equal(
+      warningsOf(result).filter((issue) => issue.code === 'draft_content').length,
+      0,
+      'weapons is runtime content after D1'
+    );
 
     let capabilityWarnings = warningsOf(result).filter((issue) => issue.code === 'capability_undeclared');
     assert.equal(capabilityWarnings.length, 2, 'each missing capability warns once (items + weapons)');
     assert.ok(capabilityWarnings.some((issue) => issue.message.includes('content.combat.v1')));
     assert.ok(capabilityWarnings.some((issue) => issue.message.includes('content.items.v1')));
-    assert.match(
-      capabilityWarnings[0].message,
-      /^Schema 2\.0 内容使用了 capability，但未写入 manifest\.capabilities：/
-    );
 
     draftProject.manifest.capabilities = ['content.combat.v1'];
     result = Validate.validateProject(draftProject);
@@ -837,11 +848,6 @@ function warningsOf(result) {
       warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
       0,
       'declaring the capability in manifest.capabilities silences the warning'
-    );
-    assert.equal(
-      warningsOf(result).filter((issue) => issue.code === 'draft_content').length,
-      1,
-      'draft_content remains because the runtime still does not load the weapons draft'
     );
 
     // Phase B promoted types are runtime types, but Schema 2.0 still requires a

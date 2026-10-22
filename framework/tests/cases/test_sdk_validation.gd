@@ -18,7 +18,7 @@ const VALIDATE_SCRIPT := "res://sdk/validate.gd"
 const PACK_SCRIPT := "res://sdk/pack_mod.gd"
 const ROLES_EXAMPLE := "sdk/examples/example_crew_roles"
 const MIXED_EXAMPLE := "sdk/examples/example_mixed_crew_roles_items"
-const DRAFT_WEAPONS_TEMPLATE := "sdk/templates/draft_weapons_pack"
+const WEAPONS_EXAMPLE := "sdk/examples/example_weapons"
 const STORY_TEMPLATE := "sdk/templates/story_pack_iron_tide"
 
 
@@ -263,7 +263,8 @@ func test_runtime_accepts_mixed_version_mods() -> void:
 
 func test_runtime_rejects_unactivated_draft_content() -> void:
 	var root := _temp_root("runtime_draft")
-	_write_mod(root, "sdk_draft_mod", {"content/weapons.json": _weapon_envelope("sdk_draft_mod")})
+	var story_arc: Dictionary = JsonUtils.parse_file("res://sdk/templates/story_pack_iron_tide/content/story_arcs.json")["value"]
+	_write_mod(root, "sdk_draft_mod", {"content/story_arcs.json": story_arc}, ["content.story.v1"])
 	var result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s/sdk_draft_mod" % root, "--mode=runtime", "--json",
 	]))
@@ -273,22 +274,22 @@ func test_runtime_rejects_unactivated_draft_content() -> void:
 	var issue := _error_with_code(json, "inactive_content_type")
 	assert_true(not issue.is_empty(), "the draft rejection needs an explicit inactive_content_type error")
 	assert_eq(String(issue.get("mod", "")), "sdk_draft_mod", "the structured error carries the mod id")
-	assert_eq(String(issue.get("file", "")), "content/weapons.json", "the structured error carries the content file")
+	assert_eq(String(issue.get("file", "")), "content/story_arcs.json", "the structured error carries the content file")
 	assert_eq(String(issue.get("path", "")), "/content_type", "the structured error carries the JSON pointer")
-	assert_true(String(issue.get("message", "")).contains("weapons"), "the message names the draft content type")
+	assert_true(String(issue.get("message", "")).contains("story_arcs"), "the message names the draft content type")
 	assert_false(_error_codes(json).has("unknown_content_type"), "the generic compiler error is replaced by the explicit draft error")
 	_clean(root)
 
 
 func test_draft_mode_validates_draft_story_and_mixed_mods() -> void:
 	var weapons := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
-		"--mod-root=%s" % DRAFT_WEAPONS_TEMPLATE, "--mode=draft", "--json",
+		"--mod-root=%s" % WEAPONS_EXAMPLE, "--mode=runtime", "--json",
 	]))
-	assert_eq(int(weapons["exit"]), 0, "the weapons draft template must pass draft validation")
-	var weapons_json := _json_of(weapons, "draft weapons template")
-	assert_eq(String(weapons_json.get("mode", "")), "draft", "explicit draft mode")
-	assert_empty(weapons_json.get("errors", []), "draft validation must not error on a valid draft mod")
-	assert_true(int(_counts(weapons_json).get("weapons", 0)) >= 1, "draft validation counts weapons definitions")
+	assert_eq(int(weapons["exit"]), 0, "the promoted weapons example must pass runtime validation")
+	var weapons_json := _json_of(weapons, "runtime weapons example")
+	assert_eq(String(weapons_json.get("mode", "")), "runtime", "explicit runtime mode")
+	assert_empty(weapons_json.get("errors", []), "runtime validation must not error on a valid weapons mod")
+	assert_true(int(_counts(weapons_json).get("weapons", 0)) >= 1, "runtime validation counts weapons definitions")
 
 	var story := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s" % STORY_TEMPLATE, "--mode=draft", "--json",
@@ -389,7 +390,8 @@ func test_unknown_mode_is_a_usage_error() -> void:
 
 func test_pack_release_rejects_draft_content_and_plain_pack_allows_it() -> void:
 	var root := _temp_root("pack_draft")
-	_write_mod(root, "sdk_pack_draft", {"content/weapons.json": _weapon_envelope("sdk_pack_draft")}, ["content.combat.v1"])
+	var story_arc: Dictionary = JsonUtils.parse_file("res://sdk/templates/story_pack_iron_tide/content/story_arcs.json")["value"]
+	_write_mod(root, "sdk_pack_draft", {"content/story_arcs.json": story_arc}, ["content.story.v1"])
 	var out := "user://sdk_test_pack_draft_out"
 	SdkValidationCore.cleanup_stage(out)
 	var release := _run_sdk(PACK_SCRIPT, PackedStringArray([

@@ -26,6 +26,12 @@ const CONTRACT := &"contracts"
 const QUEST := &"quests"
 const VOYAGE_EVENT := &"voyage_events"
 const PATCH := &"patches"
+const WEAPON := &"weapons"
+const DAMAGE_TYPE := &"damage_types"
+const COMBAT_ABILITY := &"combat_abilities"
+const ENEMY_ARCHETYPE := &"enemy_archetypes"
+const ENCOUNTER_TABLE := &"encounter_tables"
+const LOOT_TABLE := &"loot_tables"
 
 const SCHEMA_PATHS := {
 	ITEM: "res://schemas/v2/item.schema.json",
@@ -48,6 +54,12 @@ const SCHEMA_PATHS := {
 	QUEST: "res://schemas/v2/quest.schema.json",
 	VOYAGE_EVENT: "res://schemas/v2/voyage_event.schema.json",
 	PATCH: "res://schemas/v2/patch.schema.json",
+	WEAPON: "res://schemas/v2/weapon.schema.json",
+	DAMAGE_TYPE: "res://schemas/v2/damage_type.schema.json",
+	COMBAT_ABILITY: "res://schemas/v2/combat_ability.schema.json",
+	ENEMY_ARCHETYPE: "res://schemas/v2/enemy_archetype.schema.json",
+	ENCOUNTER_TABLE: "res://schemas/v2/encounter_table.schema.json",
+	LOOT_TABLE: "res://schemas/v2/loot_table.schema.json",
 }
 
 const SCHEMA_VERSIONS := {
@@ -71,6 +83,12 @@ const SCHEMA_VERSIONS := {
 	QUEST: "2.0",
 	VOYAGE_EVENT: "2.0",
 	PATCH: "2.0",
+	WEAPON: "2.0",
+	DAMAGE_TYPE: "2.0",
+	COMBAT_ABILITY: "2.0",
+	ENEMY_ARCHETYPE: "2.0",
+	ENCOUNTER_TABLE: "2.0",
+	LOOT_TABLE: "2.0",
 }
 
 const SINGULAR := {
@@ -94,6 +112,12 @@ const SINGULAR := {
 	QUEST: "quest",
 	VOYAGE_EVENT: "voyage_event",
 	PATCH: "patch",
+	WEAPON: "weapon",
+	DAMAGE_TYPE: "damage_type",
+	COMBAT_ABILITY: "combat_ability",
+	ENEMY_ARCHETYPE: "enemy_archetype",
+	ENCOUNTER_TABLE: "encounter_table",
+	LOOT_TABLE: "loot_table",
 }
 
 const MODULE_TYPES := [HULL, MODULE]
@@ -104,7 +128,8 @@ static func all() -> Array[StringName]:
 		ITEM, HULL, MODULE, CREW_ROLE, BOILER_STRATEGY,
 		PORT_TEMPLATE, STARTING_SCENARIO, WORLD_PROFILE, REGION, SITE,
 		ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY, START_PROFILE,
-		MAP_CONFIG, CONTRACT, QUEST, VOYAGE_EVENT,
+		MAP_CONFIG, CONTRACT, QUEST, VOYAGE_EVENT, WEAPON,
+		DAMAGE_TYPE, COMBAT_ABILITY, ENEMY_ARCHETYPE, ENCOUNTER_TABLE, LOOT_TABLE,
 	]
 	return types
 

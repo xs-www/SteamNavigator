@@ -123,6 +123,13 @@ func test_complete_phase_b_content_has_no_errors() -> void:
 	assert_true(result["warnings"].is_empty(), "complete v2 combination has no suggestion warnings: %s" % str(result["warnings"]))
 
 
+func test_core_requires_combat_content_counts() -> void:
+	var result := _check(_full_hub([ContentTypes.ENEMY_ARCHETYPE]))
+	assert_true(_has_error_message(result, "enemy archetypes"), "missing enemy archetypes raise content_count")
+	result = _check(_full_hub([ContentTypes.WEAPON]))
+	assert_true(_has_error_message(result, "weapons"), "missing weapons raise content_count")
+
+
 func test_core_requires_at_least_one_quest() -> void:
 	var result := _check(_full_hub([ContentTypes.QUEST]))
 	assert_true(_has_error(result, "content_count"), "missing quests raise content_count")
@@ -308,6 +315,20 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 	_register(hub, ContentTypes.VOYAGE_EVENT, "core:voyage_event/quiet")
 	_register(hub, ContentTypes.CREW_ROLE, "core:crew_role/engineer", ["role.engineer"])
 	_register(hub, ContentTypes.CREW_ROLE, "core:crew_role/navigator", ["role.navigator"])
+	# D1 combat minimums (skippable so the missing-content rules stay testable).
+	if not skip.has(ContentTypes.DAMAGE_TYPE):
+		_register(hub, ContentTypes.DAMAGE_TYPE, "core:damage_type/kinetic", [], {"color": "#ffd37a"})
+	if not skip.has(ContentTypes.COMBAT_ABILITY):
+		_register(hub, ContentTypes.COMBAT_ABILITY, "core:combat_ability/aggressive", [], {"action": "engage"})
+	if not skip.has(ContentTypes.WEAPON):
+		_register(hub, ContentTypes.WEAPON, "core:weapon/deck_gun")
+	if not skip.has(ContentTypes.LOOT_TABLE):
+		_register(hub, ContentTypes.LOOT_TABLE, "core:loot_table/wreck", [], {"entries": []})
+	if not skip.has(ContentTypes.ENCOUNTER_TABLE):
+		_register(hub, ContentTypes.ENCOUNTER_TABLE, "core:encounter_table/patrol", [], {"entries": []})
+	if not skip.has(ContentTypes.ENEMY_ARCHETYPE):
+		for index in range(4):
+			_register(hub, ContentTypes.ENEMY_ARCHETYPE, "core:enemy_archetype/enemy_%d" % index)
 	if not skip.has(ContentTypes.QUEST):
 		_register(hub, ContentTypes.QUEST, "core:quest/guide", ["quest.guide"], {
 			"kind": "guide",

@@ -81,6 +81,7 @@ func validate(hub: RegistryHub) -> Dictionary:
 	warnings.clear()
 	_hub = hub
 	_check_modules()
+	_check_combat()
 	_check_starting_scenarios()
 	_check_contracts()
 	_check_events()
@@ -99,6 +100,40 @@ func validate(hub: RegistryHub) -> Dictionary:
 		"errors": errors.duplicate(true),
 		"warnings": warnings.duplicate(true),
 	}
+
+
+func _check_combat() -> void:
+	## D1 combat content: weapon damage types / craft materials, enemy AI + loot refs,
+	## encounter enemy refs and loot-table entries. Enum vocabularies stay in Schema.
+	for weapon in _hub.get_all(ContentTypes.WEAPON):
+		var damage_type := String(weapon.data.get("damage_type", ""))
+		if not damage_type.is_empty():
+			_require(ContentTypes.DAMAGE_TYPE, damage_type, weapon.id, "damage_type")
+		for material in weapon.data.get("materials", []):
+			if material is Dictionary:
+				_require_item(String(material.get("id", "")), weapon.id, "materials")
+	for archetype in _hub.get_all(ContentTypes.ENEMY_ARCHETYPE):
+		var ability := String(archetype.data.get("combat_ability", ""))
+		if not ability.is_empty():
+			_require(ContentTypes.COMBAT_ABILITY, ability, archetype.id, "combat_ability")
+		var loot_table := String(archetype.data.get("loot_table", ""))
+		if not loot_table.is_empty():
+			_require(ContentTypes.LOOT_TABLE, loot_table, archetype.id, "loot_table")
+	for table in _hub.get_all(ContentTypes.ENCOUNTER_TABLE):
+		for entry in table.data.get("entries", []):
+			if entry is Dictionary:
+				_require(ContentTypes.ENEMY_ARCHETYPE, String(entry.get("enemy_archetype", "")), table.id, "entries.enemy_archetype")
+	for loot_table in _hub.get_all(ContentTypes.LOOT_TABLE):
+		for entry in loot_table.data.get("entries", []):
+			if not (entry is Dictionary):
+				continue
+			var kind := String(entry.get("kind", ""))
+			var expected := ContentTypes.ITEM
+			if kind == "weapon":
+				expected = ContentTypes.WEAPON
+			elif kind == "module":
+				expected = ContentTypes.MODULE
+			_require(expected, String(entry.get("id", "")), loot_table.id, "entries.id")
 
 
 func _check_modules() -> void:

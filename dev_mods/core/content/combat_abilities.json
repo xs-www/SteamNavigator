@@ -1,0 +1,74 @@
+{
+  "schema_version": "2.0",
+  "content_type": "combat_abilities",
+  "definitions": [
+    {
+      "id": "core:combat_ability/aggressive",
+      "name_key": "combat_ability.core.aggressive.name",
+      "description_key": "combat_ability.core.aggressive.description",
+      "tags": [
+        "ability.aggressive"
+      ],
+      "enabled": true,
+      "data": {
+        "action": "engage",
+        "target_priority": "weakest",
+        "preferred_range": 0.55,
+        "approach_threshold": 1.1,
+        "engage_speed": 0.85,
+        "cargo_behavior": "ignore"
+      }
+    },
+    {
+      "id": "core:combat_ability/defensive",
+      "name_key": "combat_ability.core.defensive.name",
+      "description_key": "combat_ability.core.defensive.description",
+      "tags": [
+        "ability.defensive"
+      ],
+      "enabled": true,
+      "data": {
+        "action": "evade",
+        "target_priority": "nearest",
+        "preferred_range": 0.8,
+        "withdraw_threshold": 0.75,
+        "retreat_hull": 0.35,
+        "cargo_behavior": "defend"
+      }
+    },
+    {
+      "id": "core:combat_ability/raider",
+      "name_key": "combat_ability.core.raider.name",
+      "description_key": "combat_ability.core.raider.description",
+      "tags": [
+        "ability.raider"
+      ],
+      "enabled": true,
+      "data": {
+        "action": "approach",
+        "target_priority": "cargo",
+        "preferred_range": 0.45,
+        "approach_threshold": 1.25,
+        "withdraw_threshold": 0.6,
+        "engage_speed": 0.9,
+        "cargo_behavior": "flee"
+      }
+    },
+    {
+      "id": "core:combat_ability/escort",
+      "name_key": "combat_ability.core.escort.name",
+      "description_key": "combat_ability.core.escort.description",
+      "tags": [
+        "ability.escort"
+      ],
+      "enabled": true,
+      "data": {
+        "action": "flank",
+        "target_priority": "cargo",
+        "preferred_range": 0.7,
+        "engage_speed": 0.6,
+        "cargo_behavior": "defend"
+      }
+    }
+  ]
+}

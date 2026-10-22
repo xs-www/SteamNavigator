@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/loot-table-2.json",
+  "title": "Steam Navigator loot table content file (Content Schema 2.0)",
+  "description": "Weighted loot tables (D1): item / weapon / module drops plus an optional money range, rolled by the runtime after a victory. IDs use core:loot_table/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "loot_tables"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/loot_table_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "loot_table_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {
+        "money_range": {
+          "description": "Optional money reward range (same units as other content money fields).",
+          "$ref": "common.schema.json#/$defs/range2"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "id", "weight"],
+            "properties": {
+              "kind": {
+                "description": "Which content family the drop references; id is resolved in that registry.",
+                "enum": ["item", "weapon", "module"]
+              },
+              "id": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              },
+              "weight": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "amount_range": {
+                "$ref": "common.schema.json#/$defs/range2"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": "2.0",
+  "content_type": "damage_types",
+  "definitions": [
+    {
+      "id": "core:damage_type/kinetic",
+      "name_key": "damage_type.core.kinetic.name",
+      "description_key": "damage_type.core.kinetic.description",
+      "tags": [
+        "damage.kinetic"
+      ],
+      "enabled": true,
+      "data": {
+        "color": "#ffd37a",
+        "armor_pierce": 0.1,
+        "status_effect": "none"
+      }
+    },
+    {
+      "id": "core:damage_type/explosive",
+      "name_key": "damage_type.core.explosive.name",
+      "description_key": "damage_type.core.explosive.description",
+      "tags": [
+        "damage.explosive"
+      ],
+      "enabled": true,
+      "data": {
+        "color": "#ff9a63",
+        "armor_pierce": 0.35,
+        "status_effect": "none"
+      }
+    },
+    {
+      "id": "core:damage_type/fire",
+      "name_key": "damage_type.core.fire.name",
+      "description_key": "damage_type.core.fire.description",
+      "tags": [
+        "damage.fire"
+      ],
+      "enabled": true,
+      "data": {
+        "color": "#ff6a3d",
+        "armor_pierce": 0,
+        "status_effect": "burn"
+      }
+    },
+    {
+      "id": "core:damage_type/shock",
+      "name_key": "damage_type.core.shock.name",
+      "description_key": "damage_type.core.shock.description",
+      "tags": [
+        "damage.shock"
+      ],
+      "enabled": true,
+      "data": {
+        "color": "#8fe3ff",
+        "armor_pierce": 0.2,
+        "status_effect": "shock"
+      }
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "schema_version": "2.0",
+  "content_type": "enemy_archetypes",
+  "definitions": [
+    {
+      "id": "core:enemy_archetype/pirate_sloop",
+      "name_key": "enemy_archetype.core.pirate_sloop.name",
+      "description_key": "enemy_archetype.core.pirate_sloop.description",
+      "tags": [
+        "enemy.light",
+        "enemy.pirate"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.enemy.pirate_sloop"
+      },
+      "data": {
+        "enemy_class": "Light",
+        "hull_points": 140,
+        "armor": 0.05,
+        "max_speed": 16,
+        "turn_rate_deg": 70,
+        "weapon_sockets": [
+          "Light",
+          "Light",
+          "Light"
+        ],
+        "combat_ability": "core:combat_ability/raider",
+        "loot_table": "core:loot_table/pirate_wreck",
+        "encounter_tags": [
+          "encounter.patrol",
+          "encounter.ambush"
+        ]
+      }
+    },
+    {
+      "id": "core:enemy_archetype/gunboat",
+      "name_key": "enemy_archetype.core.gunboat.name",
+      "description_key": "enemy_archetype.core.gunboat.description",
+      "tags": [
+        "enemy.light",
+        "enemy.navy"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.enemy.gunboat"
+      },
+      "data": {
+        "enemy_class": "Light",
+        "hull_points": 180,
+        "armor": 0.15,
+        "max_speed": 13,
+        "turn_rate_deg": 55,
+        "weapon_sockets": [
+          "Heavy",
+          "Light",
+          "Light"
+        ],
+        "combat_ability": "core:combat_ability/aggressive",
+        "loot_table": "core:loot_table/pirate_wreck",
+        "encounter_tags": [
+          "encounter.patrol"
+        ]
+      }
+    },
+    {
+      "id": "core:enemy_archetype/armed_merchantman",
+      "name_key": "enemy_archetype.core.armed_merchantman.name",
+      "description_key": "enemy_archetype.core.armed_merchantman.description",
+      "tags": [
+        "enemy.medium",
+        "enemy.merchant"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.enemy.armed_merchantman"
+      },
+      "data": {
+        "enemy_class": "Medium",
+        "hull_points": 320,
+        "armor": 0.2,
+        "max_speed": 9,
+        "turn_rate_deg": 35,
+        "weapon_sockets": [
+          "Medium",
+          "Medium",
+          "Medium",
+          "Medium",
+          "Medium",
+          "Medium"
+        ],
+        "combat_ability": "core:combat_ability/defensive",
+        "loot_table": "core:loot_table/pirate_wreck",
+        "encounter_tags": [
+          "encounter.convoy"
+        ]
+      }
+    },
+    {
+      "id": "core:enemy_archetype/ironclad_raider",
+      "name_key": "enemy_archetype.core.ironclad_raider.name",
+      "description_key": "enemy_archetype.core.ironclad_raider.description",
+      "tags": [
+        "enemy.heavy",
+        "enemy.pirate"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.enemy.ironclad_raider"
+      },
+      "data": {
+        "enemy_class": "Heavy",
+        "hull_points": 520,
+        "armor": 0.45,
+        "max_speed": 7,
+        "turn_rate_deg": 22,
+        "weapon_sockets": [
+          "Heavy",
+          "Heavy",
+          "Medium",
+          "Medium"
+        ],
+        "combat_ability": "core:combat_ability/aggressive",
+        "loot_table": "core:loot_table/iron_wreck",
+        "encounter_tags": [
+          "encounter.convoy",
+          "encounter.blockade"
+        ]
+      }
+    }
+  ]
+}

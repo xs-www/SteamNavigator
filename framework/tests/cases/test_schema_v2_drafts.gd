@@ -1,8 +1,8 @@
 extends TestCase
 ## @static-doc
 ## 作用：Content Schema 2.0 世界/战役/剧情 Schema 测试：SchemaValidator 合法 / 非法样本，
-## Phase B 9 类提升 active，`weapons` + 剧情 `story_arcs` / `story_levels` 仍是草案，
-## `map_configs` 覆盖 31 键 exploration。
+## Phase B 9 类 + Phase D1 战斗类型 `weapons` 已提升 active，剧情 `story_arcs` /
+## `story_levels` 仍是草案，`map_configs` 覆盖 31 键 exploration。
 ##
 ## ## 契约与约束
 ## - start_profile / world_profile / region / site / route_template / weather_profile /
@@ -11,8 +11,9 @@ extends TestCase
 ## - `map_configs.exploration` 必须完整覆盖 31 键（4.1 的 19 键 + 4.2–4.5 的 12 键），
 ##   `twin_world_size` 范围 64–1024，`story` 走 story_flow 子 Schema；剧情关卡复用
 ##   `common.schema.json#/$defs/story_stage`，其 checkpoint / presentation 为关卡层新增字段。
-## - Phase B 的 9 类必须出现在 `content_types.json.types`、schema_version 为 2.0、
-##   Schema 文件存在且进入 `ContentTypes`；`draft_schemas` 是 weapons + 2 类剧情。
+## - Phase B 的 9 类与 Phase D1 的 `weapons` 必须出现在 `content_types.json.types`、
+##   schema_version 为 2.0、Schema 文件存在且进入 `ContentTypes`；`draft_schemas` 只剩
+##   2 类剧情（story_arcs / story_levels）。
 ## @end-static-doc
 
 const START_PROFILE_SCHEMA := "res://schemas/v2/start_profile.schema.json"
@@ -327,7 +328,10 @@ func test_phase_b_types_are_active_and_drafts_are_editor_only() -> void:
 	var active_types: Dictionary = {}
 	for entry in data.get("types", []):
 		active_types[String(entry.get("key", ""))] = entry
-	var promoted := ["world_profiles", "regions", "sites", "route_templates", "weather_profiles", "factions", "discoveries", "start_profiles", "map_configs"]
+	var promoted := [
+		"world_profiles", "regions", "sites", "route_templates", "weather_profiles",
+		"factions", "discoveries", "start_profiles", "map_configs", "weapons",
+	]
 	for type_name in promoted:
 		assert_true(active_types.has(type_name), "%s is active" % type_name)
 		var entry: Dictionary = active_types[type_name]
@@ -336,8 +340,8 @@ func test_phase_b_types_are_active_and_drafts_are_editor_only() -> void:
 		assert_true(FileAccess.file_exists("res://" + String(entry.get("schema", ""))), "%s schema exists" % type_name)
 
 	var drafts: Dictionary = data.get("draft_schemas", {})
-	assert_eq(drafts.size(), 3, "weapons and the two Story Mode schemas remain drafts")
-	for draft_name in ["weapons", "story_arcs", "story_levels"]:
+	assert_eq(drafts.size(), 2, "only the two Story Mode schemas remain drafts")
+	for draft_name in ["story_arcs", "story_levels"]:
 		assert_true(drafts.has(draft_name), "%s remains editor-only" % draft_name)
 		assert_true(FileAccess.file_exists("res://" + String(drafts[draft_name])), "%s schema exists" % draft_name)
 		assert_false(ContentTypes.is_known(StringName(draft_name)), "%s is not a runtime type" % draft_name)

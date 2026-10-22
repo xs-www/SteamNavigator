@@ -395,11 +395,11 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 23, '20 runtime types + 3 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 20, 'activeTypes counts runtime types at both 1.0 and 2.0');
-  assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
+  assert.equal(json.types.length, 28, '26 runtime types + 2 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 26, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.draftTypes, 2, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
-  for (const key of ['items', 'hulls', 'modules', 'crew_roles', 'boiler_strategies', 'voyage_events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'patches']) {
+  for (const key of ['items', 'hulls', 'modules', 'crew_roles', 'boiler_strategies', 'voyage_events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'weapons', 'damage_types', 'combat_abilities', 'enemy_archetypes', 'encounter_tables', 'loot_tables', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
   }
   for (const retiredType of ['map_profiles', 'port_archetypes', 'starting_builds', 'events', 'roles', 'strategies']) {
@@ -428,8 +428,8 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(patches.schema, 'v2/patch.schema.json');
 
   const drafts = json.types.filter((entry) => entry.draft);
-  assert.equal(drafts.length, 3, 'weapons and the two Story Mode drafts are listed with draft:true');
-  assert.deepEqual(drafts.map((entry) => entry.key), ['weapons', 'story_arcs', 'story_levels']);
+  assert.equal(drafts.length, 2, 'the two Story Mode drafts are listed with draft:true');
+  assert.deepEqual(drafts.map((entry) => entry.key), ['story_arcs', 'story_levels']);
   const world = json.types.find((entry) => entry.key === 'world_profiles');
   assert.ok(world, 'world_profiles must be listed as an active type');
   assert.equal(world.singular, 'world_profile');
@@ -453,10 +453,11 @@ test('types --json lists every content type with presentation metadata', (t) => 
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['boiler_strategies', 'contracts', 'crew_roles', 'discoveries', 'factions', 'hulls', 'items', 'map_configs',
-      'modules', 'patches', 'port_templates', 'quests', 'regions', 'route_templates', 'sites', 'start_profiles',
-      'starting_scenarios', 'voyage_events', 'weather_profiles', 'world_profiles'],
-    'every runtime row is Schema 2.0 after C4-D'
+    ['boiler_strategies', 'combat_abilities', 'contracts', 'crew_roles', 'damage_types', 'discoveries', 'encounter_tables',
+      'enemy_archetypes', 'factions', 'hulls', 'items', 'loot_tables', 'map_configs', 'modules', 'patches', 'port_templates',
+      'quests', 'regions', 'route_templates', 'sites', 'start_profiles', 'starting_scenarios', 'voyage_events', 'weapons',
+      'weather_profiles', 'world_profiles'],
+    'every runtime row is Schema 2.0 after D1'
   );
   const runtimeCapabilities = {
     boiler_strategies: 'content.boiler_strategies.v1',
@@ -471,6 +472,12 @@ test('types --json lists every content type with presentation metadata', (t) => 
     starting_scenarios: 'content.starting_scenarios.v1',
     start_profiles: 'content.campaign.v1',
     voyage_events: 'content.voyage_events.v1',
+    weapons: 'content.combat.v1',
+    damage_types: 'content.combat.v1',
+    combat_abilities: 'content.combat.v1',
+    enemy_archetypes: 'content.combat.v1',
+    encounter_tables: 'content.combat.v1',
+    loot_tables: 'content.combat.v1',
   };
   for (const runtime of runtimeV2) {
     assert.equal(runtime.schema, `v2/${runtime.singular}.schema.json`,
@@ -507,14 +514,22 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(quests.capability, 'content.quests.v1');
   assert.equal(quests.group, json.types.find((entry) => entry.key === 'contracts').group, 'C3 quests join the narrative/events group');
   assert.ok(!quests.draft, 'C3 promoted quests to a runtime type');
-  const weapons = drafts.find((entry) => entry.key === 'weapons');
-  assert.ok(weapons, 'weapons must be listed as a draft type');
+  const weapons = json.types.find((entry) => entry.key === 'weapons');
+  assert.ok(weapons, 'weapons must be listed as an active type after D1');
   assert.equal(weapons.singular, 'weapon');
   assert.equal(weapons.keyPrefix, 'weapon');
   assert.equal(weapons.file, 'content/weapons.json');
   assert.equal(weapons.schema, 'v2/weapon.schema.json');
   assert.equal(weapons.schema_version, '2.0');
   assert.equal(weapons.capability, 'content.combat.v1');
+  assert.ok(!weapons.draft, 'D1 promoted weapons to a runtime type');
+  for (const combatKey of ['damage_types', 'combat_abilities', 'enemy_archetypes', 'encounter_tables', 'loot_tables']) {
+    const combat = json.types.find((entry) => entry.key === combatKey);
+    assert.ok(combat, `${combatKey} must be listed as an active type`);
+    assert.equal(combat.capability, 'content.combat.v1');
+    assert.equal(combat.schema_version, '2.0');
+    assert.ok(!combat.draft);
+  }
   for (const key of ['story_arcs', 'story_levels']) {
     const story = drafts.find((entry) => entry.key === key);
     assert.ok(story, `${key} must be listed as a draft type`);
@@ -536,12 +551,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（20；其中 20 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 20 active types, all 20 at Schema 2.0:\n${stdout}`
+    /运行时内容类型（26；其中 26 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 26 active types, all 26 at Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    20,
+    26,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
   );
   assert.match(
@@ -606,14 +621,27 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
   assert.match(
     stdout,
-    /Schema 2\.0 草案类型（3）：编辑器 \/ CLI 可编辑，游戏运行时不加载/,
+    /Schema 2\.0 草案类型（2）：编辑器 \/ CLI 可编辑，游戏运行时不加载/,
     `the draft section must describe the three remaining draft types:\n${stdout}`
   );
   assert.match(
     stdout,
-    /^weapons\s+舰载武器\s+weapon\s+content\/weapons\.json  \[draft 2\.0\]$/m,
-    `weapons keeps a draft marker:\n${stdout}`
+    /^weapons\s+舰载武器\s+weapon\s+content\/weapons\.json  \[runtime 2\.0\]$/m,
+    `weapons is a runtime type after D1:\n${stdout}`
   );
+  for (const [key, label, singular] of [
+    ['damage_types', '伤害类型', 'damage_type'],
+    ['combat_abilities', '战斗能力', 'combat_ability'],
+    ['enemy_archetypes', '敌舰原型', 'enemy_archetype'],
+    ['encounter_tables', '遭遇表', 'encounter_table'],
+    ['loot_tables', '掉落表', 'loot_table'],
+  ]) {
+    assert.match(
+      stdout,
+      new RegExp(`^${key}\\s+${label}\\s+${singular}\\s+content/${key}\\.json  \\[runtime 2\\.0\\]$`, 'm'),
+      `${key} must be listed as a runtime Schema 2.0 type:\n${stdout}`
+    );
+  }
   for (const [key, label, singular, schema] of [
     ['story_arcs', '剧情篇章', 'story_arc', 'content/story_arcs.json'],
     ['story_levels', '剧情关卡', 'story_level', 'content/story_levels.json'],
@@ -821,7 +849,7 @@ test('describe weapons --json reports the Schema 2.0 weapon contract', (t) => {
   assert.equal(json.type.keyPrefix, 'weapon');
   assert.equal(json.type.file, 'content/weapons.json');
   assert.equal(json.type.schema, 'v2/weapon.schema.json');
-  assert.equal(json.type.draft, true, 'draft types must be marked');
+  assert.ok(!json.type.draft, 'weapons is a runtime type after D1');
   assert.equal(json.type.schema_version, '2.0');
   assert.equal(json.type.capability, 'content.combat.v1');
   assert.equal(json.id.singular, 'weapon');
@@ -869,13 +897,12 @@ test('describe weapons --json reports the Schema 2.0 weapon contract', (t) => {
   assert.equal(json.skeleton.data.kind, 'direct');
   assert.ok(json.suggestions.tags.includes('weapon.direct'), 'weapon tag suggestions are exposed');
 
-  // Human output: the remaining weapon type is still a draft the runtime does not load.
+  // Human output: the promoted weapon type is now a runtime type.
   const humanResult = runCli(['describe', 'weapons']);
   assertStatus(humanResult, 0, 'describe weapons human');
   const human = String(humanResult.stdout);
-  assert.match(human, /草案 Schema 2\.0/, `the weapon draft must stay marked as a draft:\n${human}`);
-  assert.match(human, /游戏运行时不加载/, 'the draft subtitle must explain that the runtime does not load it');
-  assert.match(human, /capability content\.combat\.v1/, 'the draft subtitle must expose its capability');
+  assert.match(human, /运行时 Schema 2\.0（已接入运行时/, `the weapon type must be marked as runtime:\n${human}`);
+  assert.match(human, /capability content\.combat\.v1/, 'the runtime subtitle must expose its capability');
 });
 
 test('add --type world_profiles writes a Schema 2.0 content file as a runtime type', (t) => {
@@ -997,7 +1024,7 @@ test('add --type weapons writes a Schema 2.0 content file that validates cleanly
   assert.equal(localeOf(mod, 'en')['weapon.test_mod.deck_gun.name'], 'Deck Rapid Gun');
 
   const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
-  assert.ok(warningCodes.includes('draft_content'), `draft content must warn: ${JSON.stringify(json.issues.list)}`);
+  assert.ok(!warningCodes.includes('draft_content'), `a runtime weapon must not warn as draft: ${JSON.stringify(json.issues.list)}`);
   assert.ok(warningCodes.includes('capability_undeclared'), `undeclared capability must warn: ${JSON.stringify(json.issues.list)}`);
   const undeclared = json.issues.list.find((issue) => issue.code === 'capability_undeclared');
   assert.match(String(undeclared.message), /content\.combat\.v1/, 'the weapon capability must be named');
@@ -1284,21 +1311,21 @@ test('new --json creates a valid mod (manifest, content, both locales) that vali
   assert.equal(validateJson.issues.errors, 0, `new mod must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
 });
 
-test('new --draft weapons creates a pure Schema 2.0 draft project', (t) => {
+test('new --draft story_arcs creates a pure Schema 2.0 draft project', (t) => {
   const root = tempRoot(t);
-  const mod = path.join(root, 'weapon_mod');
+  const mod = path.join(root, 'story_mod');
   const result = jsonRun([
-    'new', '--mod', mod, '--id', 'weapon_mod', '--name', '武器包', '--draft', 'weapons',
+    'new', '--mod', mod, '--id', 'story_mod', '--name', '剧情包', '--draft', 'story_arcs',
   ]);
-  const json = mustJson(result, 'new --draft weapons');
-  assertStatus(result, 0, 'new --draft weapons');
+  const json = mustJson(result, 'new --draft story_arcs');
+  assertStatus(result, 0, 'new --draft story_arcs');
   assert.equal(json.ok, true);
   assert.equal(json.command, 'new');
 
   // Pure draft project: manifest + one 2.0 content file + two locales, no 1.0 starter.
   const changedPaths = json.changes.map((change) => change.path).sort();
   assert.deepEqual(changedPaths, [
-    'content/weapons.json',
+    'content/story_arcs.json',
     'localization/en.json',
     'localization/zh_CN.json',
     'manifest.json',
@@ -1307,42 +1334,38 @@ test('new --draft weapons creates a pure Schema 2.0 draft project', (t) => {
     assert.equal(change.action, 'create', `new --draft change must be create: ${JSON.stringify(change)}`);
   }
   assert.ok(!fs.existsSync(path.join(mod, ITEMS_FILE)), 'pure draft projects must not create content/items.json');
-  assert.deepEqual(manifestOf(mod).content, ['content/weapons.json'], 'only the draft content file is declared');
+  assert.deepEqual(manifestOf(mod).content, ['content/story_arcs.json'], 'only the draft content file is declared');
   assert.deepEqual(manifestOf(mod).localization, ['localization/zh_CN.json', 'localization/en.json']);
-  assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1'], 'the weapons capability is declared automatically');
+  assert.deepEqual(manifestOf(mod).capabilities, ['content.story.v1'], 'the story capability is declared automatically');
 
-  const file = contentFileOfType(mod, 'weapons');
+  const file = contentFileOfType(mod, 'story_arcs');
   assert.equal(file.payload.schema_version, '2.0');
-  assert.equal(file.payload.content_type, 'weapons');
+  assert.equal(file.payload.content_type, 'story_arcs');
   assert.equal(file.payload.definitions.length, 1, 'exactly one starter definition is written');
   const definition = file.payload.definitions[0];
-  assert.equal(definition.id, 'weapon_mod:weapon/weapon_starter');
-  assert.equal(definition.name_key, 'weapon.weapon_mod.weapon_starter.name');
+  assert.equal(definition.id, 'story_mod:story_arc/story_arc_starter');
+  assert.equal(definition.name_key, 'story_arc.story_mod.story_arc_starter.name');
   assert.equal(definition.enabled, true);
-  assert.equal(definition.data.kind, 'direct', 'the starter uses the weapons draft defaults');
-  assert.equal(definition.data.weapon_class, 'Light');
-  assert.equal(definition.data.damage, 12);
-  assert.ok(localeOf(mod, 'zh_CN')['weapon.weapon_mod.weapon_starter.name'], 'zh_CN has the starter name');
-  assert.equal(localeOf(mod, 'en')['weapon.weapon_mod.weapon_starter.name'], 'Starter Weapons');
+  assert.equal(definition.data.protagonist_id, 'protagonist', 'the starter uses the story arc draft defaults');
+  assert.ok(localeOf(mod, 'zh_CN')['story_arc.story_mod.story_arc_starter.name'], 'zh_CN has the starter name');
+  assert.equal(localeOf(mod, 'en')['story_arc.story_mod.story_arc_starter.name'], 'Starter Story arcs');
   assert.equal(json.stats.definitions, 1);
   assert.equal(json.stats.contentFiles, 1);
   assert.equal(json.stats.locales, 2);
 
-  // Only draft_content warns: the capability is already in the manifest.
+  // Draft warnings only: the capability is already in the manifest.
   assert.equal(json.issues.errors, 0, `pure draft project must have no errors: ${JSON.stringify(json.issues.list)}`);
-  assert.deepEqual(
-    json.issues.list.map((issue) => issue.code),
-    ['draft_content'],
-    `only draft_content may warn: ${JSON.stringify(json.issues.list)}`
+  assert.ok(
+    json.issues.list.some((issue) => issue.code === 'draft_content'),
+    `draft_content must warn: ${JSON.stringify(json.issues.list)}`
   );
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate pure draft project');
   const validateJson = mustJson(validateResult, 'validate pure draft project');
   assert.equal(validateJson.issues.errors, 0, `pure draft project validates with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
-  assert.deepEqual(
-    validateJson.issues.list.map((issue) => issue.code),
-    ['draft_content'],
+  assert.ok(
+    !validateJson.issues.list.some((issue) => issue.code === 'capability_undeclared'),
     `capability_undeclared must not fire for --draft projects: ${JSON.stringify(validateJson.issues.list)}`
   );
 });
@@ -1357,7 +1380,7 @@ test('new --draft rejects promoted runtime types and only offers real drafts', (
   const json = assertUsageError(result, 'new --draft world_profiles');
   assert.equal(json.command, 'new');
   assert.match(String(json.error.message), /未知 Schema 2\.0 草案类型/, `promoted types are no longer drafts: ${json.error.message}`);
-  assert.ok(String(json.error.message).includes('weapons'), 'the usage error lists weapons as a draft');
+  assert.ok(!String(json.error.message).includes('weapons'), 'weapons is no longer offered as a draft');
   assert.ok(String(json.error.message).includes('story_arcs'), 'the usage error lists the Story Mode drafts');
   assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
 });
@@ -1406,36 +1429,20 @@ test('new --draft rejects unknown draft types with a usage error listing the ava
   assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
 });
 
-test('new --template items --draft weapons layers 2.0 template and draft content', (t) => {
+test('new --template items --draft story_arcs rejects the mixed story pack', (t) => {
   const root = tempRoot(t);
   const mod = path.join(root, 'mix_mod');
   const result = jsonRun([
     'new', '--mod', mod, '--id', 'mix_mod', '--name', 'Mix Mod',
-    '--template', 'items', '--draft', 'weapons',
+    '--template', 'items', '--draft', 'story_arcs',
   ]);
-  const json = mustJson(result, 'new template + draft');
-  assertStatus(result, 0, 'new template + draft');
-  assert.equal(json.ok, true);
-  assert.deepEqual(
-    manifestOf(mod).content,
-    ['content/items.json', 'content/weapons.json'],
-    'template content and draft content coexist'
-  );
-  assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1']);
-  assert.equal(contentFileOfType(mod, 'items').payload.schema_version, '2.0', 'merged items content is 2.0');
-  assert.equal(contentFileOfType(mod, 'weapons').payload.schema_version, '2.0', 'draft content is 2.0');
-  assert.equal(json.stats.contentFiles, 2);
-  assert.equal(json.stats.definitions, 2);
-  assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
-  assert.deepEqual(
-    json.issues.list.map((issue) => issue.code).sort(),
-    ['capability_undeclared', 'draft_content'],
-    'the undeclared items capability and the weapons draft both warn'
-  );
-
-  const validateResult = jsonRun(['validate', '--mod', mod]);
-  assertStatus(validateResult, 0, 'validate template + draft project');
-  assert.equal(mustJson(validateResult, 'validate template + draft project').issues.errors, 0);
+  const json = mustJson(result, 'new template + story draft');
+  assertStatus(result, 1, 'new template + story draft is rejected');
+  assert.equal(json.ok, false);
+  assert.equal(json.error.code, 'validation');
+  const codes = json.issues.list.map((issue) => issue.code);
+  assert.ok(codes.includes('story_pack_off_whitelist'), `story packs reject free-mode items: ${JSON.stringify(json.issues.list)}`);
+  assert.ok(fs.existsSync(path.join(mod, 'content/story_arcs.json')), 'the rejected project files are still reported for inspection');
 });
 
 test('new --draft --dry-run reports would-create changes and writes nothing', (t) => {
@@ -1443,7 +1450,7 @@ test('new --draft --dry-run reports would-create changes and writes nothing', (t
   const mod = path.join(root, 'dry_draft_mod');
   const result = jsonRun([
     'new', '--mod', mod, '--id', 'dry_draft_mod', '--name', 'Dry Draft',
-    '--draft', 'weapons', '--dry-run',
+    '--draft', 'story_arcs', '--dry-run',
   ]);
   const json = mustJson(result, 'new --draft --dry-run');
   assertStatus(result, 0, 'new --draft --dry-run');
@@ -1453,13 +1460,13 @@ test('new --draft --dry-run reports would-create changes and writes nothing', (t
     assert.equal(change.action, 'would-create', `dry-run change action must be would-create: ${JSON.stringify(change)}`);
   }
   assert.ok(
-    json.changes.some((change) => change.path === 'content/weapons.json'),
-    `dry-run must plan content/weapons.json: ${JSON.stringify(json.changes.map((change) => change.path))}`
+    json.changes.some((change) => change.path === 'content/story_arcs.json'),
+    `dry-run must plan content/story_arcs.json: ${JSON.stringify(json.changes.map((change) => change.path))}`
   );
   assert.ok(!fs.existsSync(mod), '--dry-run must not create the target directory');
 });
 
-test('new --template weapons creates the five-weapon draft pack', (t) => {
+test('new --template weapons creates the five-weapon runtime pack', (t) => {
   const root = tempRoot(t);
   const mod = path.join(root, 'weapon_pack');
   const result = jsonRun([
@@ -1522,13 +1529,13 @@ test('new --template weapons creates the five-weapon draft pack', (t) => {
   assert.equal(json.stats.contentFiles, 1);
   assert.equal(json.stats.locales, 2);
   assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
-  assert.deepEqual(json.issues.list.map((issue) => issue.code), ['draft_content']);
+  assert.deepEqual(json.issues.list.map((issue) => issue.code), [], 'the promoted weapons template has no warnings');
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate weapons template project');
   const validateJson = mustJson(validateResult, 'validate weapons template project');
   assert.equal(validateJson.issues.errors, 0, JSON.stringify(validateJson.issues.list));
-  assert.deepEqual(validateJson.issues.list.map((issue) => issue.code), ['draft_content']);
+  assert.deepEqual(validateJson.issues.list.map((issue) => issue.code), []);
   assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'capability_undeclared'));
   assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'entity_model_missing'));
 });

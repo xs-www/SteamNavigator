@@ -192,7 +192,7 @@ func test_regions_weather_and_faction_references() -> void:
 	)
 
 
-func test_sites_planned_references_are_warnings_only() -> void:
+func test_sites_promoted_and_planned_references() -> void:
 	var hub := _new_hub()
 	_define(hub, ContentTypes.SITE, "test:site/ruin", {
 		"site_kind": "ruin",
@@ -202,13 +202,14 @@ func test_sites_planned_references_are_warnings_only() -> void:
 		"loot_table": "test:loot_table/ruins",
 	})
 	var result := _result(hub)
+	var errors := _errors_for(result, "test:site/ruin")
 	var warnings := _warnings_for(result, "test:site/ruin")
-	assert_empty(_errors_for(result, "test:site/ruin"), "planned site references never produce an error")
-	assert_eq(_count_code(warnings, "ref_inactive_type"), 3, "three planned site references warn ref_inactive_type")
-	assert_empty(_codes(_warnings_for(result, "test:site/ruin")).filter(func(code): return code != "ref_inactive_type"), "site warnings are only ref_inactive_type")
+	assert_eq(_count_code(errors, "reference_missing"), 2, "D1 promoted encounter/loot tables become hard references")
+	assert_eq(_count_code(warnings, "ref_inactive_type"), 1, "ruin_archetype is still a planned reference")
+	assert_empty(_codes(warnings).filter(func(code): return code != "ref_inactive_type"), "site warnings are only ref_inactive_type")
 
 
-func test_route_template_planned_encounter_table_is_warning_only() -> void:
+func test_route_template_promoted_encounter_table_is_an_error() -> void:
 	var hub := _new_hub()
 	_define(hub, ContentTypes.ROUTE_TEMPLATE, "test:route_template/sea_lane", {
 		"kind": "sea_lane",
@@ -218,9 +219,9 @@ func test_route_template_planned_encounter_table_is_warning_only() -> void:
 		"encounter_table": "test:encounter_table/sea_lane",
 	})
 	var result := _result(hub)
-	assert_empty(_errors_for(result, "test:route_template/sea_lane"), "planned encounter_table never produces an error")
-	var warnings := _warnings_for(result, "test:route_template/sea_lane")
-	assert_eq(_codes(warnings), ["ref_inactive_type"], "route template only warns ref_inactive_type")
+	var errors := _errors_for(result, "test:route_template/sea_lane")
+	assert_eq(_count_code(errors, "reference_missing"), 1, "D1 promoted encounter_table is a hard reference")
+	assert_empty(_warnings_for(result, "test:route_template/sea_lane"), "no ref_inactive_type for an active type")
 
 
 func test_weather_profiles_have_no_outgoing_references() -> void:
@@ -490,3 +491,45 @@ func test_map_config_missing_archetype_and_default_starting_scenario_are_errors(
 		2,
 		"missing archetype and default_starting_scenario are two reference_missing errors"
 	)
+
+func test_combat_references_are_checked() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.WEAPON, "test:weapon/broken", {
+		"damage_type": "test:damage_type/missing",
+		"materials": [{"id": "test:item/missing", "amount": 1}],
+	})
+	_define(hub, ContentTypes.ENEMY_ARCHETYPE, "test:enemy_archetype/broken", {
+		"enemy_class": "Light",
+		"hull_points": 100,
+		"armor": 0.0,
+		"max_speed": 10,
+		"turn_rate_deg": 30,
+		"weapon_sockets": ["Light"],
+		"combat_ability": "test:combat_ability/missing",
+		"loot_table": "test:loot_table/missing",
+	})
+	_define(hub, ContentTypes.ENCOUNTER_TABLE, "test:encounter_table/broken", {
+		"entries": [{"enemy_archetype": "test:enemy_archetype/missing", "weight": 1}],
+	})
+	_define(hub, ContentTypes.LOOT_TABLE, "test:loot_table/broken", {
+		"entries": [{"kind": "weapon", "id": "test:item/not_a_weapon", "weight": 1}],
+	})
+	var result := _result(hub)
+	var expectations := [
+		["test:weapon/broken", "damage_type"],
+		["test:weapon/broken", "materials"],
+		["test:enemy_archetype/broken", "combat_ability"],
+		["test:enemy_archetype/broken", "loot_table"],
+		["test:encounter_table/broken", "entries.enemy_archetype"],
+		["test:loot_table/broken", "entries.id"],
+	]
+	for expectation in expectations:
+		var owner := String(expectation[0])
+		var field := String(expectation[1])
+		var hits := _errors_for(result, owner)
+		assert_contains(_codes(hits), "reference_missing", "%s.%s reports reference_missing: %s" % [owner, field, str(hits)])
+		var matched := false
+		for hit in hits:
+			if String(hit.get("message", "")).contains(field):
+				matched = true
+		assert_true(matched, "%s error names field %s: %s" % [owner, field, str(hits)])

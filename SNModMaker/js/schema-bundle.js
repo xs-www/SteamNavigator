@@ -563,6 +563,118 @@
         }
       }
     },
+    "v2/combat_ability.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/combat-ability-2.json",
+      "title": "Steam Navigator combat ability content file (Content Schema 2.0)",
+      "description": "Combat ability / AI behavior parameters (D1). Abilities are data, not scripts: they pick one S-N Battle Simulator FSM action and tune the tactic thresholds the runtime AI consumes. IDs use core:combat_ability/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "combat_abilities"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/combat_ability_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "combat_ability_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action"
+          ],
+          "properties": {
+            "action": {
+              "description": "Primary FSM action (SNBattleSim FSM_ACTIONS): recon / cruise / approach / flank / evade / maneuver / withdraw / flee / engage / focus.",
+              "enum": [
+                "recon",
+                "cruise",
+                "approach",
+                "flank",
+                "evade",
+                "maneuver",
+                "withdraw",
+                "flee",
+                "engage",
+                "focus"
+              ]
+            },
+            "target_priority": {
+              "description": "Which enemy the AI prefers (SNBattleSim tactic.targetPriority).",
+              "enum": [
+                "nearest",
+                "cargo",
+                "weakest"
+              ]
+            },
+            "preferred_range": {
+              "description": "Preferred engagement range as a 0–1 fraction of weapon range (tactic.preferredRange).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "approach_threshold": {
+              "description": "Approach when the target is farther than this multiple of preferred range (tactic.approachThreshold).",
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 3
+            },
+            "withdraw_threshold": {
+              "description": "Withdraw when the target is closer than this multiple (tactic.withdrawThreshold).",
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 3
+            },
+            "retreat_hull": {
+              "description": "Hull ratio below which the ability retreats (tactic.retreatHull).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "engage_speed": {
+              "description": "Throttle fraction used while engaging (tactic.engageSpeed).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "cargo_behavior": {
+              "description": "How a convoy escort reacts when its cargo is threatened.",
+              "enum": [
+                "flee",
+                "ignore",
+                "defend"
+              ]
+            }
+          }
+        }
+      }
+    },
     "v2/common.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/common-2.json",
@@ -1268,6 +1380,78 @@
         }
       }
     },
+    "v2/damage_type.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/damage-type-2.json",
+      "title": "Steam Navigator damage type content file (Content Schema 2.0)",
+      "description": "Combat damage types (D1): small registry entries referenced by weapons and defences. The registry deliberately has no damage-type interaction matrix; runtime consumers apply armor_pierce and status metadata. IDs use core:damage_type/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "damage_types"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/damage_type_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "damage_type_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "color"
+          ],
+          "properties": {
+            "color": {
+              "description": "Hit / effect tint (#RRGGBB), shared by weapons that reference this damage type.",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "armor_pierce": {
+              "description": "0–1 share of the damage that ignores target armor; the registry keeps this scalar instead of a damage x armor matrix.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0
+            },
+            "status_effect": {
+              "description": "Optional status applied by hits of this type; empty means no status.",
+              "enum": [
+                "none",
+                "burn",
+                "shock",
+                "flood"
+              ]
+            }
+          }
+        }
+      }
+    },
     "v2/discovery.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/discovery-2.json",
@@ -1378,6 +1562,217 @@
               "uniqueItems": true,
               "items": {
                 "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/encounter_table.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/encounter-table-2.json",
+      "title": "Steam Navigator encounter table content file (Content Schema 2.0)",
+      "description": "Weighted encounter tables (D1): which enemy archetypes appear, in what counts and relative weights. Tables are content, the weighted roll belongs to the runtime. IDs use core:encounter_table/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "encounter_tables"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/encounter_table_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "encounter_table_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "description": "Encounter context: patrol / ambush / convoy / blockade / ruin.",
+              "enum": [
+                "patrol",
+                "ambush",
+                "convoy",
+                "blockade",
+                "ruin"
+              ]
+            },
+            "danger": {
+              "description": "0–10 designer-facing danger score (UI / encounter selection).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "enemy_archetype",
+                  "weight"
+                ],
+                "properties": {
+                  "enemy_archetype": {
+                    "$ref": "common.schema.json#/$defs/id_ref"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "count_range": {
+                    "$ref": "common.schema.json#/$defs/range2"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/enemy_archetype.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/enemy-archetype-2.json",
+      "title": "Steam Navigator enemy archetype content file (Content Schema 2.0)",
+      "description": "Enemy ship archetypes (D1). Stats mirror the tooling/combat_kit catalogue (enemy_class / weapon_sockets from the shipped SN_Enemy_* GLBs), the AI profile references a combat_ability, and loot references a loot_table. The definition's information.model points at the combat_kit GLB asset key. IDs use core:enemy_archetype/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "enemy_archetypes"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/enemy_archetype_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "enemy_archetype_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enemy_class",
+            "hull_points",
+            "armor",
+            "max_speed",
+            "turn_rate_deg",
+            "weapon_sockets",
+            "combat_ability"
+          ],
+          "properties": {
+            "enemy_class": {
+              "description": "Combat kit class (tools/modeling/combat_kit_catalog.json enemy_classes).",
+              "enum": [
+                "Light",
+                "Medium",
+                "Heavy"
+              ]
+            },
+            "hull_points": {
+              "description": "Enemy hull hit points before armor mitigation.",
+              "type": "number",
+              "minimum": 20,
+              "maximum": 2000
+            },
+            "armor": {
+              "description": "0–0.8 flat damage reduction fraction.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.8
+            },
+            "max_speed": {
+              "description": "Top speed in combat simulation units (SNBattleSim ship tuning).",
+              "type": "number",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "turn_rate_deg": {
+              "description": "Hull turn rate in degrees per second.",
+              "type": "number",
+              "minimum": 5,
+              "maximum": 180
+            },
+            "weapon_sockets": {
+              "description": "Ordered socket classes copied from the combat_kit GLB weapon_sockets (SN_Socket_Weapon_*); the runtime mounts weapons whose weapon_class fits.",
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "enum": [
+                  "Light",
+                  "Medium",
+                  "Heavy",
+                  "Tower",
+                  "Side"
+                ]
+              }
+            },
+            "combat_ability": {
+              "description": "AI profile reference (combat_abilities).",
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "loot_table": {
+              "description": "Optional loot table reference (loot_tables).",
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "encounter_tags": {
+              "description": "Optional tags that encounter tables use to bias this archetype.",
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             }
           }
@@ -2002,6 +2397,95 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 3
+            }
+          }
+        }
+      }
+    },
+    "v2/loot_table.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/loot-table-2.json",
+      "title": "Steam Navigator loot table content file (Content Schema 2.0)",
+      "description": "Weighted loot tables (D1): item / weapon / module drops plus an optional money range, rolled by the runtime after a victory. IDs use core:loot_table/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "loot_tables"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/loot_table_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "loot_table_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entries"
+          ],
+          "properties": {
+            "money_range": {
+              "description": "Optional money reward range (same units as other content money fields).",
+              "$ref": "common.schema.json#/$defs/range2"
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "weight"
+                ],
+                "properties": {
+                  "kind": {
+                    "description": "Which content family the drop references; id is resolved in that registry.",
+                    "enum": [
+                      "item",
+                      "weapon",
+                      "module"
+                    ]
+                  },
+                  "id": {
+                    "$ref": "common.schema.json#/$defs/id_ref"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "amount_range": {
+                    "$ref": "common.schema.json#/$defs/range2"
+                  }
+                }
+              }
             }
           }
         }
@@ -4398,8 +4882,8 @@
     "v2/weapon.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/weapon-2.json",
-      "title": "Steam Navigator weapon content file (Schema 2.0 draft)",
-      "description": "Ship-mounted weapon definitions (Content Schema 2.0 draft). The combat block mirrors the S-N Battle Simulator weapon catalogue, the assembly block mirrors docs/design/WEAPON_SOCKET_CONTRACT.md (weapon-assembly@2), and the economy block follows the runtime module shape so a future runtime can consume the same definitions. The Godot runtime does not load Schema 2.0 content yet.",
+      "title": "Steam Navigator weapon content file (Content Schema 2.0)",
+      "description": "Ship-mounted weapon definitions (Content Schema 2.0 runtime type since D1). The combat block mirrors the S-N Battle Simulator weapon catalogue, the assembly block mirrors docs/design/WEAPON_SOCKET_CONTRACT.md (weapon-assembly@2), and the economy block follows the runtime module shape.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -4503,6 +4987,10 @@
               "type": "number",
               "minimum": 0.25,
               "maximum": 20
+            },
+            "damage_type": {
+              "description": "Optional damage_types reference (D1); the runtime falls back to a plain kinetic hit when omitted.",
+              "$ref": "common.schema.json#/$defs/id_ref"
             },
             "accuracy": {
               "type": "number",

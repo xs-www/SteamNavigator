@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0",
+  "content_type": "loot_tables",
+  "definitions": [
+    {
+      "id": "core:loot_table/pirate_wreck",
+      "name_key": "loot_table.core.pirate_wreck.name",
+      "description_key": "loot_table.core.pirate_wreck.description",
+      "tags": [
+        "loot.pirate"
+      ],
+      "enabled": true,
+      "data": {
+        "money_range": [
+          40,
+          90
+        ],
+        "entries": [
+          {
+            "kind": "item",
+            "id": "core:item/timber",
+            "weight": 3,
+            "amount_range": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "item",
+            "id": "core:item/coal",
+            "weight": 2,
+            "amount_range": [
+              2,
+              4
+            ]
+          },
+          {
+            "kind": "weapon",
+            "id": "core:weapon/repeater",
+            "weight": 1,
+            "amount_range": [
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:loot_table/iron_wreck",
+      "name_key": "loot_table.core.iron_wreck.name",
+      "description_key": "loot_table.core.iron_wreck.description",
+      "tags": [
+        "loot.iron"
+      ],
+      "enabled": true,
+      "data": {
+        "money_range": [
+          120,
+          240
+        ],
+        "entries": [
+          {
+            "kind": "item",
+            "id": "core:item/boiler_plate",
+            "weight": 3,
+            "amount_range": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "item",
+            "id": "core:item/precision_gear",
+            "weight": 1,
+            "amount_range": [
+              1,
+              1
+            ]
+          },
+          {
+            "kind": "module",
+            "id": "core:module/small_efficient",
+            "weight": 1,
+            "amount_range": [
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

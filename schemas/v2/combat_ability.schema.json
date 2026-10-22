@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/combat-ability-2.json",
+  "title": "Steam Navigator combat ability content file (Content Schema 2.0)",
+  "description": "Combat ability / AI behavior parameters (D1). Abilities are data, not scripts: they pick one S-N Battle Simulator FSM action and tune the tactic thresholds the runtime AI consumes. IDs use core:combat_ability/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "combat_abilities"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/combat_ability_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "combat_ability_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "description": "Primary FSM action (SNBattleSim FSM_ACTIONS): recon / cruise / approach / flank / evade / maneuver / withdraw / flee / engage / focus.",
+          "enum": ["recon", "cruise", "approach", "flank", "evade", "maneuver", "withdraw", "flee", "engage", "focus"]
+        },
+        "target_priority": {
+          "description": "Which enemy the AI prefers (SNBattleSim tactic.targetPriority).",
+          "enum": ["nearest", "cargo", "weakest"]
+        },
+        "preferred_range": {
+          "description": "Preferred engagement range as a 0–1 fraction of weapon range (tactic.preferredRange).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "approach_threshold": {
+          "description": "Approach when the target is farther than this multiple of preferred range (tactic.approachThreshold).",
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3
+        },
+        "withdraw_threshold": {
+          "description": "Withdraw when the target is closer than this multiple (tactic.withdrawThreshold).",
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3
+        },
+        "retreat_hull": {
+          "description": "Hull ratio below which the ability retreats (tactic.retreatHull).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "engage_speed": {
+          "description": "Throttle fraction used while engaging (tactic.engageSpeed).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cargo_behavior": {
+          "description": "How a convoy escort reacts when its cargo is threatened.",
+          "enum": ["flee", "ignore", "defend"]
+        }
+      }
+    }
+  }
+}

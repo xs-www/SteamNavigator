@@ -51,6 +51,10 @@
     quests_completed: ['quest'],
     map_config: ['map_config'],
     starting_scenario: ['starting_scenario'],
+    damage_type: ['damage_type'],
+    combat_ability: ['combat_ability'],
+    loot_table: ['loot_table'],
+    enemy_archetype: ['enemy_archetype'],
   };
 
   function schemas() {
@@ -495,6 +499,22 @@
     }
     if (data.weapon_class === 'Modular') {
       add('warning', 'weapon_class_modular', 'weapon_class = Modular 是 kit 部件，不是完整武器，不能直接挂到船体安装点。', view);
+    }
+  }
+
+  /** D1 loot tables: entry.kind selects the registry its entry.id must resolve in. */
+  function checkLootTableSemantics(definition, view, add) {
+    const data = definition && definition.data;
+    if (!data || !Array.isArray(data.entries)) return;
+    const expectedByKind = { item: 'item', weapon: 'weapon', module: 'module' };
+    for (const entry of data.entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      const expected = expectedByKind[String(entry.kind || '')];
+      if (!expected || typeof entry.id !== 'string' || !entry.id) continue;
+      const actual = referencedIdType(entry.id);
+      if (actual && actual !== expected) {
+        add('warning', 'loot_kind_mismatch', `掉落项 kind=${entry.kind} 期望引用 ${expected} 类型，但 ${entry.id} 属于 ${actual}。`, view);
+      }
     }
   }
 
@@ -1067,6 +1087,7 @@
         }
 
         if (info.key === 'weapons') checkWeaponSemantics(definition, view, add);
+        if (info.key === 'loot_tables') checkLootTableSemantics(definition, view, add);
         if (info.key === 'hulls') checkHullSocketSemantics(definition, view, add);
         if (info.key === 'quests') checkQuestSemantics(definition, view, add);
         if (info.key === 'story_arcs') checkStoryArcSemantics(definition, view, add);

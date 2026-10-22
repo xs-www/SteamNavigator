@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T16:30:41.412Z",
+    "generated_at": "2026-10-22T20:04:09.097Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -38,7 +38,13 @@
         "content/weather_profiles.json",
         "content/factions.json",
         "content/discoveries.json",
-        "content/start_profiles.json"
+        "content/start_profiles.json",
+        "content/damage_types.json",
+        "content/weapons.json",
+        "content/combat_abilities.json",
+        "content/enemy_archetypes.json",
+        "content/encounter_tables.json",
+        "content/loot_tables.json"
       ],
       "localization": [
         "localization/zh_CN.json",
@@ -165,7 +171,11 @@
         "model.weapon.mortar": "assets/models/weapons/SN_Weapon_Mortar.glb",
         "model.weapon.pedestal": "assets/models/weapons/SN_Weapon_Pedestal.glb",
         "model.weapon.repeater": "assets/models/weapons/SN_Weapon_Repeater.glb",
-        "model.weapon.turret": "assets/models/weapons/SN_Weapon_Turret.glb"
+        "model.weapon.turret": "assets/models/weapons/SN_Weapon_Turret.glb",
+        "model.enemy.pirate_sloop": "assets/models/combat/SN_Enemy_Pirate_Sloop.glb",
+        "model.enemy.gunboat": "assets/models/combat/SN_Enemy_Gunboat.glb",
+        "model.enemy.armed_merchantman": "assets/models/combat/SN_Enemy_Merchant_Armed.glb",
+        "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb"
       },
       "authors": [
         "Steam Navigator Team"
@@ -186,7 +196,8 @@
         "content.starting_scenarios.v1",
         "content.voyage_events.v1",
         "content.world.v1",
-        "content.campaign.v1"
+        "content.campaign.v1",
+        "content.combat.v1"
       ]
     },
     "contentFiles": {
@@ -4210,6 +4221,718 @@
             }
           }
         ]
+      },
+      "content/damage_types.json": {
+        "schema_version": "2.0",
+        "content_type": "damage_types",
+        "definitions": [
+          {
+            "id": "core:damage_type/kinetic",
+            "name_key": "damage_type.core.kinetic.name",
+            "description_key": "damage_type.core.kinetic.description",
+            "tags": [
+              "damage.kinetic"
+            ],
+            "enabled": true,
+            "data": {
+              "color": "#ffd37a",
+              "armor_pierce": 0.1,
+              "status_effect": "none"
+            }
+          },
+          {
+            "id": "core:damage_type/explosive",
+            "name_key": "damage_type.core.explosive.name",
+            "description_key": "damage_type.core.explosive.description",
+            "tags": [
+              "damage.explosive"
+            ],
+            "enabled": true,
+            "data": {
+              "color": "#ff9a63",
+              "armor_pierce": 0.35,
+              "status_effect": "none"
+            }
+          },
+          {
+            "id": "core:damage_type/fire",
+            "name_key": "damage_type.core.fire.name",
+            "description_key": "damage_type.core.fire.description",
+            "tags": [
+              "damage.fire"
+            ],
+            "enabled": true,
+            "data": {
+              "color": "#ff6a3d",
+              "armor_pierce": 0,
+              "status_effect": "burn"
+            }
+          },
+          {
+            "id": "core:damage_type/shock",
+            "name_key": "damage_type.core.shock.name",
+            "description_key": "damage_type.core.shock.description",
+            "tags": [
+              "damage.shock"
+            ],
+            "enabled": true,
+            "data": {
+              "color": "#8fe3ff",
+              "armor_pierce": 0.2,
+              "status_effect": "shock"
+            }
+          }
+        ]
+      },
+      "content/weapons.json": {
+        "schema_version": "2.0",
+        "content_type": "weapons",
+        "definitions": [
+          {
+            "id": "core:weapon/deck_gun",
+            "name_key": "weapon.core.deck_gun.name",
+            "description_key": "weapon.core.deck_gun.description",
+            "tags": [
+              "weapon.direct",
+              "weapon.light"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.weapon.deck_gun"
+            },
+            "data": {
+              "kind": "direct",
+              "damage": 12,
+              "range": 245,
+              "min_range": 0,
+              "cooldown": 1.65,
+              "accuracy": 0.72,
+              "projectile_speed": 360,
+              "splash": 0,
+              "arc_deg": 260,
+              "salvo": 1,
+              "color": "#ffd37a",
+              "weapon_class": "Light",
+              "assembly_profile": "yaw_pitch",
+              "has_yaw": true,
+              "has_pitch": true,
+              "has_recoil": true,
+              "has_muzzle": true,
+              "muzzle_count": 1,
+              "envelope_x": 2.8,
+              "envelope_y": 1.4,
+              "height": 1.6,
+              "mount_scale": 1,
+              "tier": 1,
+              "weight": 9,
+              "purchase_price": 380,
+              "craft_cost": 170,
+              "craft_time_hours": 4,
+              "materials": [],
+              "damage_type": "core:damage_type/kinetic"
+            }
+          },
+          {
+            "id": "core:weapon/heavy_cannon",
+            "name_key": "weapon.core.heavy_cannon.name",
+            "description_key": "weapon.core.heavy_cannon.description",
+            "tags": [
+              "weapon.direct",
+              "weapon.heavy"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.weapon.heavy_cannon"
+            },
+            "data": {
+              "kind": "direct",
+              "damage": 30,
+              "range": 355,
+              "min_range": 35,
+              "cooldown": 4.2,
+              "accuracy": 0.61,
+              "projectile_speed": 285,
+              "splash": 8,
+              "arc_deg": 150,
+              "salvo": 1,
+              "color": "#ff9a63",
+              "weapon_class": "Heavy",
+              "assembly_profile": "yaw_pitch",
+              "has_yaw": true,
+              "has_pitch": true,
+              "has_recoil": true,
+              "has_muzzle": true,
+              "muzzle_count": 1,
+              "envelope_x": 4.8,
+              "envelope_y": 2.2,
+              "height": 2.2,
+              "mount_scale": 1,
+              "tier": 3,
+              "weight": 20,
+              "purchase_price": 1200,
+              "craft_cost": 520,
+              "craft_time_hours": 10,
+              "materials": [
+                {
+                  "id": "core:item/timber",
+                  "amount": 6
+                },
+                {
+                  "id": "core:item/boiler_plate",
+                  "amount": 3
+                },
+                {
+                  "id": "core:item/precision_gear",
+                  "amount": 1
+                }
+              ],
+              "damage_type": "core:damage_type/kinetic"
+            }
+          },
+          {
+            "id": "core:weapon/mortar",
+            "name_key": "weapon.core.mortar.name",
+            "description_key": "weapon.core.mortar.description",
+            "tags": [
+              "weapon.artillery",
+              "weapon.heavy"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.weapon.mortar"
+            },
+            "data": {
+              "kind": "artillery",
+              "damage": 24,
+              "range": 430,
+              "min_range": 105,
+              "cooldown": 5.1,
+              "accuracy": 0.58,
+              "projectile_speed": 175,
+              "splash": 34,
+              "arc_deg": 360,
+              "salvo": 1,
+              "color": "#f3c8ff",
+              "weapon_class": "Heavy",
+              "assembly_profile": "yaw_pitch",
+              "has_yaw": true,
+              "has_pitch": true,
+              "has_recoil": true,
+              "has_muzzle": true,
+              "muzzle_count": 1,
+              "envelope_x": 3.2,
+              "envelope_y": 2.2,
+              "height": 2.6,
+              "mount_scale": 1,
+              "tier": 3,
+              "weight": 16,
+              "purchase_price": 1100,
+              "craft_cost": 470,
+              "craft_time_hours": 9,
+              "materials": [
+                {
+                  "id": "core:item/timber",
+                  "amount": 5
+                },
+                {
+                  "id": "core:item/boiler_plate",
+                  "amount": 3
+                }
+              ],
+              "damage_type": "core:damage_type/explosive"
+            }
+          },
+          {
+            "id": "core:weapon/repeater",
+            "name_key": "weapon.core.repeater.name",
+            "description_key": "weapon.core.repeater.description",
+            "tags": [
+              "weapon.direct",
+              "weapon.medium"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.weapon.repeater"
+            },
+            "data": {
+              "kind": "direct",
+              "damage": 7,
+              "range": 185,
+              "min_range": 0,
+              "cooldown": 0.72,
+              "accuracy": 0.76,
+              "projectile_speed": 430,
+              "splash": 0,
+              "arc_deg": 300,
+              "salvo": 1,
+              "color": "#fff0a4",
+              "weapon_class": "Medium",
+              "assembly_profile": "yaw_pitch",
+              "has_yaw": true,
+              "has_pitch": true,
+              "has_recoil": true,
+              "has_muzzle": true,
+              "muzzle_count": 1,
+              "envelope_x": 2.8,
+              "envelope_y": 1.6,
+              "height": 1.8,
+              "mount_scale": 1,
+              "tier": 2,
+              "weight": 11,
+              "purchase_price": 620,
+              "craft_cost": 260,
+              "craft_time_hours": 6,
+              "materials": [
+                {
+                  "id": "core:item/timber",
+                  "amount": 2
+                },
+                {
+                  "id": "core:item/boiler_plate",
+                  "amount": 1
+                }
+              ],
+              "damage_type": "core:damage_type/kinetic"
+            }
+          },
+          {
+            "id": "core:weapon/broadside",
+            "name_key": "weapon.core.broadside.name",
+            "description_key": "weapon.core.broadside.description",
+            "tags": [
+              "weapon.broadside",
+              "weapon.side"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.weapon.broadside"
+            },
+            "data": {
+              "kind": "broadside",
+              "damage": 8,
+              "range": 285,
+              "min_range": 20,
+              "cooldown": 5.4,
+              "accuracy": 0.64,
+              "projectile_speed": 330,
+              "splash": 0,
+              "arc_deg": 76,
+              "salvo": 4,
+              "color": "#ffcf87",
+              "weapon_class": "Side",
+              "assembly_profile": "pitch_only",
+              "has_yaw": false,
+              "has_pitch": true,
+              "has_recoil": true,
+              "has_muzzle": true,
+              "muzzle_count": 4,
+              "envelope_x": 2.2,
+              "envelope_y": 8,
+              "height": 2,
+              "mount_scale": 1,
+              "tier": 2,
+              "weight": 22,
+              "purchase_price": 820,
+              "craft_cost": 340,
+              "craft_time_hours": 7,
+              "materials": [
+                {
+                  "id": "core:item/timber",
+                  "amount": 4
+                },
+                {
+                  "id": "core:item/boiler_plate",
+                  "amount": 2
+                }
+              ],
+              "damage_type": "core:damage_type/kinetic"
+            }
+          }
+        ]
+      },
+      "content/combat_abilities.json": {
+        "schema_version": "2.0",
+        "content_type": "combat_abilities",
+        "definitions": [
+          {
+            "id": "core:combat_ability/aggressive",
+            "name_key": "combat_ability.core.aggressive.name",
+            "description_key": "combat_ability.core.aggressive.description",
+            "tags": [
+              "ability.aggressive"
+            ],
+            "enabled": true,
+            "data": {
+              "action": "engage",
+              "target_priority": "weakest",
+              "preferred_range": 0.55,
+              "approach_threshold": 1.1,
+              "engage_speed": 0.85,
+              "cargo_behavior": "ignore"
+            }
+          },
+          {
+            "id": "core:combat_ability/defensive",
+            "name_key": "combat_ability.core.defensive.name",
+            "description_key": "combat_ability.core.defensive.description",
+            "tags": [
+              "ability.defensive"
+            ],
+            "enabled": true,
+            "data": {
+              "action": "evade",
+              "target_priority": "nearest",
+              "preferred_range": 0.8,
+              "withdraw_threshold": 0.75,
+              "retreat_hull": 0.35,
+              "cargo_behavior": "defend"
+            }
+          },
+          {
+            "id": "core:combat_ability/raider",
+            "name_key": "combat_ability.core.raider.name",
+            "description_key": "combat_ability.core.raider.description",
+            "tags": [
+              "ability.raider"
+            ],
+            "enabled": true,
+            "data": {
+              "action": "approach",
+              "target_priority": "cargo",
+              "preferred_range": 0.45,
+              "approach_threshold": 1.25,
+              "withdraw_threshold": 0.6,
+              "engage_speed": 0.9,
+              "cargo_behavior": "flee"
+            }
+          },
+          {
+            "id": "core:combat_ability/escort",
+            "name_key": "combat_ability.core.escort.name",
+            "description_key": "combat_ability.core.escort.description",
+            "tags": [
+              "ability.escort"
+            ],
+            "enabled": true,
+            "data": {
+              "action": "flank",
+              "target_priority": "cargo",
+              "preferred_range": 0.7,
+              "engage_speed": 0.6,
+              "cargo_behavior": "defend"
+            }
+          }
+        ]
+      },
+      "content/enemy_archetypes.json": {
+        "schema_version": "2.0",
+        "content_type": "enemy_archetypes",
+        "definitions": [
+          {
+            "id": "core:enemy_archetype/pirate_sloop",
+            "name_key": "enemy_archetype.core.pirate_sloop.name",
+            "description_key": "enemy_archetype.core.pirate_sloop.description",
+            "tags": [
+              "enemy.light",
+              "enemy.pirate"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.enemy.pirate_sloop"
+            },
+            "data": {
+              "enemy_class": "Light",
+              "hull_points": 140,
+              "armor": 0.05,
+              "max_speed": 16,
+              "turn_rate_deg": 70,
+              "weapon_sockets": [
+                "Light",
+                "Light",
+                "Light"
+              ],
+              "combat_ability": "core:combat_ability/raider",
+              "loot_table": "core:loot_table/pirate_wreck",
+              "encounter_tags": [
+                "encounter.patrol",
+                "encounter.ambush"
+              ]
+            }
+          },
+          {
+            "id": "core:enemy_archetype/gunboat",
+            "name_key": "enemy_archetype.core.gunboat.name",
+            "description_key": "enemy_archetype.core.gunboat.description",
+            "tags": [
+              "enemy.light",
+              "enemy.navy"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.enemy.gunboat"
+            },
+            "data": {
+              "enemy_class": "Light",
+              "hull_points": 180,
+              "armor": 0.15,
+              "max_speed": 13,
+              "turn_rate_deg": 55,
+              "weapon_sockets": [
+                "Heavy",
+                "Light",
+                "Light"
+              ],
+              "combat_ability": "core:combat_ability/aggressive",
+              "loot_table": "core:loot_table/pirate_wreck",
+              "encounter_tags": [
+                "encounter.patrol"
+              ]
+            }
+          },
+          {
+            "id": "core:enemy_archetype/armed_merchantman",
+            "name_key": "enemy_archetype.core.armed_merchantman.name",
+            "description_key": "enemy_archetype.core.armed_merchantman.description",
+            "tags": [
+              "enemy.medium",
+              "enemy.merchant"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.enemy.armed_merchantman"
+            },
+            "data": {
+              "enemy_class": "Medium",
+              "hull_points": 320,
+              "armor": 0.2,
+              "max_speed": 9,
+              "turn_rate_deg": 35,
+              "weapon_sockets": [
+                "Medium",
+                "Medium",
+                "Medium",
+                "Medium",
+                "Medium",
+                "Medium"
+              ],
+              "combat_ability": "core:combat_ability/defensive",
+              "loot_table": "core:loot_table/pirate_wreck",
+              "encounter_tags": [
+                "encounter.convoy"
+              ]
+            }
+          },
+          {
+            "id": "core:enemy_archetype/ironclad_raider",
+            "name_key": "enemy_archetype.core.ironclad_raider.name",
+            "description_key": "enemy_archetype.core.ironclad_raider.description",
+            "tags": [
+              "enemy.heavy",
+              "enemy.pirate"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "model.enemy.ironclad_raider"
+            },
+            "data": {
+              "enemy_class": "Heavy",
+              "hull_points": 520,
+              "armor": 0.45,
+              "max_speed": 7,
+              "turn_rate_deg": 22,
+              "weapon_sockets": [
+                "Heavy",
+                "Heavy",
+                "Medium",
+                "Medium"
+              ],
+              "combat_ability": "core:combat_ability/aggressive",
+              "loot_table": "core:loot_table/iron_wreck",
+              "encounter_tags": [
+                "encounter.convoy",
+                "encounter.blockade"
+              ]
+            }
+          }
+        ]
+      },
+      "content/encounter_tables.json": {
+        "schema_version": "2.0",
+        "content_type": "encounter_tables",
+        "definitions": [
+          {
+            "id": "core:encounter_table/coastal_patrol",
+            "name_key": "encounter_table.core.coastal_patrol.name",
+            "description_key": "encounter_table.core.coastal_patrol.description",
+            "tags": [
+              "encounter.patrol"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "patrol",
+              "danger": 3,
+              "entries": [
+                {
+                  "enemy_archetype": "core:enemy_archetype/pirate_sloop",
+                  "weight": 3,
+                  "count_range": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "enemy_archetype": "core:enemy_archetype/gunboat",
+                  "weight": 2,
+                  "count_range": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "enemy_archetype": "core:enemy_archetype/armed_merchantman",
+                  "weight": 1,
+                  "count_range": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:encounter_table/iron_convoy",
+            "name_key": "encounter_table.core.iron_convoy.name",
+            "description_key": "encounter_table.core.iron_convoy.description",
+            "tags": [
+              "encounter.convoy"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "convoy",
+              "danger": 6,
+              "entries": [
+                {
+                  "enemy_archetype": "core:enemy_archetype/ironclad_raider",
+                  "weight": 2,
+                  "count_range": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "enemy_archetype": "core:enemy_archetype/gunboat",
+                  "weight": 2,
+                  "count_range": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "enemy_archetype": "core:enemy_archetype/armed_merchantman",
+                  "weight": 1,
+                  "count_range": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/loot_tables.json": {
+        "schema_version": "2.0",
+        "content_type": "loot_tables",
+        "definitions": [
+          {
+            "id": "core:loot_table/pirate_wreck",
+            "name_key": "loot_table.core.pirate_wreck.name",
+            "description_key": "loot_table.core.pirate_wreck.description",
+            "tags": [
+              "loot.pirate"
+            ],
+            "enabled": true,
+            "data": {
+              "money_range": [
+                40,
+                90
+              ],
+              "entries": [
+                {
+                  "kind": "item",
+                  "id": "core:item/timber",
+                  "weight": 3,
+                  "amount_range": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "kind": "item",
+                  "id": "core:item/coal",
+                  "weight": 2,
+                  "amount_range": [
+                    2,
+                    4
+                  ]
+                },
+                {
+                  "kind": "weapon",
+                  "id": "core:weapon/repeater",
+                  "weight": 1,
+                  "amount_range": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:loot_table/iron_wreck",
+            "name_key": "loot_table.core.iron_wreck.name",
+            "description_key": "loot_table.core.iron_wreck.description",
+            "tags": [
+              "loot.iron"
+            ],
+            "enabled": true,
+            "data": {
+              "money_range": [
+                120,
+                240
+              ],
+              "entries": [
+                {
+                  "kind": "item",
+                  "id": "core:item/boiler_plate",
+                  "weight": 3,
+                  "amount_range": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "kind": "item",
+                  "id": "core:item/precision_gear",
+                  "weight": 1,
+                  "amount_range": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "module",
+                  "id": "core:module/small_efficient",
+                  "weight": 1,
+                  "amount_range": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       }
     },
     "localization": {
@@ -4490,7 +5213,49 @@
         "quest.core.shipyard_refit.objective.uninstall": "卸下 1 个货舱模块",
         "quest.core.shipyard_refit.stage.install.title": "安装客舱",
         "quest.core.shipyard_refit.stage.install.description": "把小型客舱装到船体的客舱槽位。",
-        "quest.core.shipyard_refit.objective.install": "安装小型客舱"
+        "quest.core.shipyard_refit.objective.install": "安装小型客舱",
+        "damage_type.core.kinetic.name": "动能",
+        "damage_type.core.kinetic.description": "实心弹与破片造成的冲击伤害；大部分舰炮的主要伤害类型。",
+        "damage_type.core.explosive.name": "爆炸",
+        "damage_type.core.explosive.description": "爆炸冲击与破片；对装甲的穿透略高，适合曲射火炮。",
+        "damage_type.core.fire.name": "燃烧",
+        "damage_type.core.fire.description": "高温火焰，命中后可能追加燃烧状态。",
+        "damage_type.core.shock.name": "电击",
+        "damage_type.core.shock.description": "电流与震荡伤害，命中后可能追加电击状态。",
+        "weapon.core.deck_gun.name": "甲板速射炮",
+        "weapon.core.deck_gun.description": "轻型甲板速射炮：射速快、射程适中，是最通用的舰载火炮。",
+        "weapon.core.heavy_cannon.name": "重型舰炮",
+        "weapon.core.heavy_cannon.description": "重型舰炮：单发伤害高、射程远，但装填慢、需要重级安装点。",
+        "weapon.core.mortar.name": "曲射迫击炮",
+        "weapon.core.mortar.description": "曲射迫击炮：高抛弹道、射程最远且带大范围溅射，近距离无法开火。",
+        "weapon.core.repeater.name": "机关连发炮",
+        "weapon.core.repeater.description": "机关连发炮：射速极快、射程短，适合压制近距离目标。",
+        "weapon.core.broadside.name": "侧弦炮列",
+        "weapon.core.broadside.description": "侧弦炮列：四门短舰炮共用一个舷侧安装点，齐射后装填较慢。",
+        "combat_ability.core.aggressive.name": "激进交战",
+        "combat_ability.core.aggressive.description": "优先扑向最弱目标，保持中近距离持续火力。",
+        "combat_ability.core.defensive.name": "防御规避",
+        "combat_ability.core.defensive.description": "装甲受损时优先规避脱离，保护货舱与船员。",
+        "combat_ability.core.raider.name": "劫掠突袭",
+        "combat_ability.core.raider.description": "优先追击货船，抢在护航舰反应前接近并登船。",
+        "combat_ability.core.escort.name": "护航机动",
+        "combat_ability.core.escort.description": "侧向迂回，拦截威胁货船的敌人。",
+        "enemy_archetype.core.pirate_sloop.name": "海盗单桅船",
+        "enemy_archetype.core.pirate_sloop.description": "轻快海盗船：装甲薄、速度高，成群袭扰商路。",
+        "enemy_archetype.core.gunboat.name": "炮艇",
+        "enemy_archetype.core.gunboat.description": "轻装炮艇：船首重炮、两舷轻炮，是巡逻队的核心。",
+        "enemy_archetype.core.armed_merchantman.name": "武装商船",
+        "enemy_archetype.core.armed_merchantman.description": "重载商船：装甲一般、货舱宽大，护航时以防御机动脱离战斗。",
+        "enemy_archetype.core.ironclad_raider.name": "铁甲袭击者",
+        "enemy_archetype.core.ironclad_raider.description": "重甲袭击者：装甲厚、血量高，炮位以重炮为主，正面交战极难击沉。",
+        "encounter_table.core.coastal_patrol.name": "近海巡逻",
+        "encounter_table.core.coastal_patrol.description": "近海常见的小规模巡逻遭遇：海盗船与炮艇混合。",
+        "encounter_table.core.iron_convoy.name": "铁甲护航队",
+        "encounter_table.core.iron_convoy.description": "高危险度护航队：铁甲袭击者率领炮艇掩护商船。",
+        "loot_table.core.pirate_wreck.name": "海盗残骸",
+        "loot_table.core.pirate_wreck.description": "海盗船残骸中的常见物资与少量现金。",
+        "loot_table.core.iron_wreck.name": "铁甲残骸",
+        "loot_table.core.iron_wreck.description": "铁甲舰残骸中的优质材料与较丰厚赏金。"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -4769,7 +5534,49 @@
         "quest.core.shipyard_refit.objective.uninstall": "Uninstall one cargo module",
         "quest.core.shipyard_refit.stage.install.title": "Install the cabin",
         "quest.core.shipyard_refit.stage.install.description": "Fit the small cabin into the hull's cabin slot.",
-        "quest.core.shipyard_refit.objective.install": "Install the small cabin"
+        "quest.core.shipyard_refit.objective.install": "Install the small cabin",
+        "damage_type.core.kinetic.name": "Kinetic",
+        "damage_type.core.kinetic.description": "Solid shot and fragmentation impact; the main damage type of most naval guns.",
+        "damage_type.core.explosive.name": "Explosive",
+        "damage_type.core.explosive.description": "Blast and fragmentation with better armour penetration; suited to curved-fire artillery.",
+        "damage_type.core.fire.name": "Fire",
+        "damage_type.core.fire.description": "High-temperature flame that can apply a burn status on hit.",
+        "damage_type.core.shock.name": "Shock",
+        "damage_type.core.shock.description": "Electrical and concussive damage that can apply a shock status on hit.",
+        "weapon.core.deck_gun.name": "Deck Rapid Gun",
+        "weapon.core.deck_gun.description": "A light deck gun with a fast reload and mid-range reach; the workhorse of any hull.",
+        "weapon.core.heavy_cannon.name": "Heavy Naval Cannon",
+        "weapon.core.heavy_cannon.description": "A heavy cannon: high damage and long reach, but slow to reload and needs a Heavy socket.",
+        "weapon.core.mortar.name": "Curved Mortar",
+        "weapon.core.mortar.description": "A curved-fire mortar: longest reach with heavy splash, but it cannot fire at close range.",
+        "weapon.core.repeater.name": "Steam Repeater",
+        "weapon.core.repeater.description": "A steam repeater: extremely fast fire rate but short reach, built for close-range pressure.",
+        "weapon.core.broadside.name": "Broadside Battery",
+        "weapon.core.broadside.description": "A broadside battery: four short guns on one Side socket, slow to reload after a salvo.",
+        "combat_ability.core.aggressive.name": "Aggressive Engage",
+        "combat_ability.core.aggressive.description": "Presses the weakest target and keeps sustained fire at medium-close range.",
+        "combat_ability.core.defensive.name": "Defensive Evade",
+        "combat_ability.core.defensive.description": "Breaks off to evade once armour is hurt, protecting cargo and crew.",
+        "combat_ability.core.raider.name": "Raider Rush",
+        "combat_ability.core.raider.description": "Chases cargo ships and closes before escorts can react.",
+        "combat_ability.core.escort.name": "Escort Flank",
+        "combat_ability.core.escort.description": "Flanks around to intercept enemies threatening the convoy.",
+        "enemy_archetype.core.pirate_sloop.name": "Pirate Sloop",
+        "enemy_archetype.core.pirate_sloop.description": "A fast, lightly armoured pirate sloop that harasses trade lanes in packs.",
+        "enemy_archetype.core.gunboat.name": "Gunboat",
+        "enemy_archetype.core.gunboat.description": "A light gunboat with a bow heavy gun and light broadside guns; a patrol workhorse.",
+        "enemy_archetype.core.armed_merchantman.name": "Armed Merchantman",
+        "enemy_archetype.core.armed_merchantman.description": "A heavy merchantman with broad cargo holds; it uses defensive manoeuvres to break off combat.",
+        "enemy_archetype.core.ironclad_raider.name": "Ironclad Raider",
+        "enemy_archetype.core.ironclad_raider.description": "A heavily armoured raider with thick plating and heavy gun ports; brutal in a stand-up fight.",
+        "encounter_table.core.coastal_patrol.name": "Coastal Patrol",
+        "encounter_table.core.coastal_patrol.description": "A common small coastal patrol mixing pirate sloops and gunboats.",
+        "encounter_table.core.iron_convoy.name": "Iron Convoy",
+        "encounter_table.core.iron_convoy.description": "A high-danger convoy led by an ironclad raider with gunboat escorts.",
+        "loot_table.core.pirate_wreck.name": "Pirate Wreck",
+        "loot_table.core.pirate_wreck.description": "Common supplies and a little cash from a pirate wreck.",
+        "loot_table.core.iron_wreck.name": "Iron Wreck",
+        "loot_table.core.iron_wreck.description": "Quality materials and a larger bounty from an ironclad wreck."
       }
     },
     "definitions": [
@@ -9676,6 +10483,922 @@
               }
             ],
             "notes_key": "start_profile.core.hard.notes"
+          }
+        }
+      },
+      {
+        "id": "core:damage_type/kinetic",
+        "content_type": "damage_types",
+        "file": "content/damage_types.json",
+        "name_key": "damage_type.core.kinetic.name",
+        "name_zh": "动能",
+        "name_en": "Kinetic",
+        "tags": [
+          "damage.kinetic"
+        ],
+        "definition": {
+          "id": "core:damage_type/kinetic",
+          "name_key": "damage_type.core.kinetic.name",
+          "description_key": "damage_type.core.kinetic.description",
+          "tags": [
+            "damage.kinetic"
+          ],
+          "enabled": true,
+          "data": {
+            "color": "#ffd37a",
+            "armor_pierce": 0.1,
+            "status_effect": "none"
+          }
+        }
+      },
+      {
+        "id": "core:damage_type/explosive",
+        "content_type": "damage_types",
+        "file": "content/damage_types.json",
+        "name_key": "damage_type.core.explosive.name",
+        "name_zh": "爆炸",
+        "name_en": "Explosive",
+        "tags": [
+          "damage.explosive"
+        ],
+        "definition": {
+          "id": "core:damage_type/explosive",
+          "name_key": "damage_type.core.explosive.name",
+          "description_key": "damage_type.core.explosive.description",
+          "tags": [
+            "damage.explosive"
+          ],
+          "enabled": true,
+          "data": {
+            "color": "#ff9a63",
+            "armor_pierce": 0.35,
+            "status_effect": "none"
+          }
+        }
+      },
+      {
+        "id": "core:damage_type/fire",
+        "content_type": "damage_types",
+        "file": "content/damage_types.json",
+        "name_key": "damage_type.core.fire.name",
+        "name_zh": "燃烧",
+        "name_en": "Fire",
+        "tags": [
+          "damage.fire"
+        ],
+        "definition": {
+          "id": "core:damage_type/fire",
+          "name_key": "damage_type.core.fire.name",
+          "description_key": "damage_type.core.fire.description",
+          "tags": [
+            "damage.fire"
+          ],
+          "enabled": true,
+          "data": {
+            "color": "#ff6a3d",
+            "armor_pierce": 0,
+            "status_effect": "burn"
+          }
+        }
+      },
+      {
+        "id": "core:damage_type/shock",
+        "content_type": "damage_types",
+        "file": "content/damage_types.json",
+        "name_key": "damage_type.core.shock.name",
+        "name_zh": "电击",
+        "name_en": "Shock",
+        "tags": [
+          "damage.shock"
+        ],
+        "definition": {
+          "id": "core:damage_type/shock",
+          "name_key": "damage_type.core.shock.name",
+          "description_key": "damage_type.core.shock.description",
+          "tags": [
+            "damage.shock"
+          ],
+          "enabled": true,
+          "data": {
+            "color": "#8fe3ff",
+            "armor_pierce": 0.2,
+            "status_effect": "shock"
+          }
+        }
+      },
+      {
+        "id": "core:weapon/deck_gun",
+        "content_type": "weapons",
+        "file": "content/weapons.json",
+        "name_key": "weapon.core.deck_gun.name",
+        "name_zh": "甲板速射炮",
+        "name_en": "Deck Rapid Gun",
+        "tags": [
+          "weapon.direct",
+          "weapon.light"
+        ],
+        "definition": {
+          "id": "core:weapon/deck_gun",
+          "name_key": "weapon.core.deck_gun.name",
+          "description_key": "weapon.core.deck_gun.description",
+          "tags": [
+            "weapon.direct",
+            "weapon.light"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.weapon.deck_gun"
+          },
+          "data": {
+            "kind": "direct",
+            "damage": 12,
+            "range": 245,
+            "min_range": 0,
+            "cooldown": 1.65,
+            "accuracy": 0.72,
+            "projectile_speed": 360,
+            "splash": 0,
+            "arc_deg": 260,
+            "salvo": 1,
+            "color": "#ffd37a",
+            "weapon_class": "Light",
+            "assembly_profile": "yaw_pitch",
+            "has_yaw": true,
+            "has_pitch": true,
+            "has_recoil": true,
+            "has_muzzle": true,
+            "muzzle_count": 1,
+            "envelope_x": 2.8,
+            "envelope_y": 1.4,
+            "height": 1.6,
+            "mount_scale": 1,
+            "tier": 1,
+            "weight": 9,
+            "purchase_price": 380,
+            "craft_cost": 170,
+            "craft_time_hours": 4,
+            "materials": [],
+            "damage_type": "core:damage_type/kinetic"
+          }
+        }
+      },
+      {
+        "id": "core:weapon/heavy_cannon",
+        "content_type": "weapons",
+        "file": "content/weapons.json",
+        "name_key": "weapon.core.heavy_cannon.name",
+        "name_zh": "重型舰炮",
+        "name_en": "Heavy Naval Cannon",
+        "tags": [
+          "weapon.direct",
+          "weapon.heavy"
+        ],
+        "definition": {
+          "id": "core:weapon/heavy_cannon",
+          "name_key": "weapon.core.heavy_cannon.name",
+          "description_key": "weapon.core.heavy_cannon.description",
+          "tags": [
+            "weapon.direct",
+            "weapon.heavy"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.weapon.heavy_cannon"
+          },
+          "data": {
+            "kind": "direct",
+            "damage": 30,
+            "range": 355,
+            "min_range": 35,
+            "cooldown": 4.2,
+            "accuracy": 0.61,
+            "projectile_speed": 285,
+            "splash": 8,
+            "arc_deg": 150,
+            "salvo": 1,
+            "color": "#ff9a63",
+            "weapon_class": "Heavy",
+            "assembly_profile": "yaw_pitch",
+            "has_yaw": true,
+            "has_pitch": true,
+            "has_recoil": true,
+            "has_muzzle": true,
+            "muzzle_count": 1,
+            "envelope_x": 4.8,
+            "envelope_y": 2.2,
+            "height": 2.2,
+            "mount_scale": 1,
+            "tier": 3,
+            "weight": 20,
+            "purchase_price": 1200,
+            "craft_cost": 520,
+            "craft_time_hours": 10,
+            "materials": [
+              {
+                "id": "core:item/timber",
+                "amount": 6
+              },
+              {
+                "id": "core:item/boiler_plate",
+                "amount": 3
+              },
+              {
+                "id": "core:item/precision_gear",
+                "amount": 1
+              }
+            ],
+            "damage_type": "core:damage_type/kinetic"
+          }
+        }
+      },
+      {
+        "id": "core:weapon/mortar",
+        "content_type": "weapons",
+        "file": "content/weapons.json",
+        "name_key": "weapon.core.mortar.name",
+        "name_zh": "曲射迫击炮",
+        "name_en": "Curved Mortar",
+        "tags": [
+          "weapon.artillery",
+          "weapon.heavy"
+        ],
+        "definition": {
+          "id": "core:weapon/mortar",
+          "name_key": "weapon.core.mortar.name",
+          "description_key": "weapon.core.mortar.description",
+          "tags": [
+            "weapon.artillery",
+            "weapon.heavy"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.weapon.mortar"
+          },
+          "data": {
+            "kind": "artillery",
+            "damage": 24,
+            "range": 430,
+            "min_range": 105,
+            "cooldown": 5.1,
+            "accuracy": 0.58,
+            "projectile_speed": 175,
+            "splash": 34,
+            "arc_deg": 360,
+            "salvo": 1,
+            "color": "#f3c8ff",
+            "weapon_class": "Heavy",
+            "assembly_profile": "yaw_pitch",
+            "has_yaw": true,
+            "has_pitch": true,
+            "has_recoil": true,
+            "has_muzzle": true,
+            "muzzle_count": 1,
+            "envelope_x": 3.2,
+            "envelope_y": 2.2,
+            "height": 2.6,
+            "mount_scale": 1,
+            "tier": 3,
+            "weight": 16,
+            "purchase_price": 1100,
+            "craft_cost": 470,
+            "craft_time_hours": 9,
+            "materials": [
+              {
+                "id": "core:item/timber",
+                "amount": 5
+              },
+              {
+                "id": "core:item/boiler_plate",
+                "amount": 3
+              }
+            ],
+            "damage_type": "core:damage_type/explosive"
+          }
+        }
+      },
+      {
+        "id": "core:weapon/repeater",
+        "content_type": "weapons",
+        "file": "content/weapons.json",
+        "name_key": "weapon.core.repeater.name",
+        "name_zh": "机关连发炮",
+        "name_en": "Steam Repeater",
+        "tags": [
+          "weapon.direct",
+          "weapon.medium"
+        ],
+        "definition": {
+          "id": "core:weapon/repeater",
+          "name_key": "weapon.core.repeater.name",
+          "description_key": "weapon.core.repeater.description",
+          "tags": [
+            "weapon.direct",
+            "weapon.medium"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.weapon.repeater"
+          },
+          "data": {
+            "kind": "direct",
+            "damage": 7,
+            "range": 185,
+            "min_range": 0,
+            "cooldown": 0.72,
+            "accuracy": 0.76,
+            "projectile_speed": 430,
+            "splash": 0,
+            "arc_deg": 300,
+            "salvo": 1,
+            "color": "#fff0a4",
+            "weapon_class": "Medium",
+            "assembly_profile": "yaw_pitch",
+            "has_yaw": true,
+            "has_pitch": true,
+            "has_recoil": true,
+            "has_muzzle": true,
+            "muzzle_count": 1,
+            "envelope_x": 2.8,
+            "envelope_y": 1.6,
+            "height": 1.8,
+            "mount_scale": 1,
+            "tier": 2,
+            "weight": 11,
+            "purchase_price": 620,
+            "craft_cost": 260,
+            "craft_time_hours": 6,
+            "materials": [
+              {
+                "id": "core:item/timber",
+                "amount": 2
+              },
+              {
+                "id": "core:item/boiler_plate",
+                "amount": 1
+              }
+            ],
+            "damage_type": "core:damage_type/kinetic"
+          }
+        }
+      },
+      {
+        "id": "core:weapon/broadside",
+        "content_type": "weapons",
+        "file": "content/weapons.json",
+        "name_key": "weapon.core.broadside.name",
+        "name_zh": "侧弦炮列",
+        "name_en": "Broadside Battery",
+        "tags": [
+          "weapon.broadside",
+          "weapon.side"
+        ],
+        "definition": {
+          "id": "core:weapon/broadside",
+          "name_key": "weapon.core.broadside.name",
+          "description_key": "weapon.core.broadside.description",
+          "tags": [
+            "weapon.broadside",
+            "weapon.side"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.weapon.broadside"
+          },
+          "data": {
+            "kind": "broadside",
+            "damage": 8,
+            "range": 285,
+            "min_range": 20,
+            "cooldown": 5.4,
+            "accuracy": 0.64,
+            "projectile_speed": 330,
+            "splash": 0,
+            "arc_deg": 76,
+            "salvo": 4,
+            "color": "#ffcf87",
+            "weapon_class": "Side",
+            "assembly_profile": "pitch_only",
+            "has_yaw": false,
+            "has_pitch": true,
+            "has_recoil": true,
+            "has_muzzle": true,
+            "muzzle_count": 4,
+            "envelope_x": 2.2,
+            "envelope_y": 8,
+            "height": 2,
+            "mount_scale": 1,
+            "tier": 2,
+            "weight": 22,
+            "purchase_price": 820,
+            "craft_cost": 340,
+            "craft_time_hours": 7,
+            "materials": [
+              {
+                "id": "core:item/timber",
+                "amount": 4
+              },
+              {
+                "id": "core:item/boiler_plate",
+                "amount": 2
+              }
+            ],
+            "damage_type": "core:damage_type/kinetic"
+          }
+        }
+      },
+      {
+        "id": "core:combat_ability/aggressive",
+        "content_type": "combat_abilities",
+        "file": "content/combat_abilities.json",
+        "name_key": "combat_ability.core.aggressive.name",
+        "name_zh": "激进交战",
+        "name_en": "Aggressive Engage",
+        "tags": [
+          "ability.aggressive"
+        ],
+        "definition": {
+          "id": "core:combat_ability/aggressive",
+          "name_key": "combat_ability.core.aggressive.name",
+          "description_key": "combat_ability.core.aggressive.description",
+          "tags": [
+            "ability.aggressive"
+          ],
+          "enabled": true,
+          "data": {
+            "action": "engage",
+            "target_priority": "weakest",
+            "preferred_range": 0.55,
+            "approach_threshold": 1.1,
+            "engage_speed": 0.85,
+            "cargo_behavior": "ignore"
+          }
+        }
+      },
+      {
+        "id": "core:combat_ability/defensive",
+        "content_type": "combat_abilities",
+        "file": "content/combat_abilities.json",
+        "name_key": "combat_ability.core.defensive.name",
+        "name_zh": "防御规避",
+        "name_en": "Defensive Evade",
+        "tags": [
+          "ability.defensive"
+        ],
+        "definition": {
+          "id": "core:combat_ability/defensive",
+          "name_key": "combat_ability.core.defensive.name",
+          "description_key": "combat_ability.core.defensive.description",
+          "tags": [
+            "ability.defensive"
+          ],
+          "enabled": true,
+          "data": {
+            "action": "evade",
+            "target_priority": "nearest",
+            "preferred_range": 0.8,
+            "withdraw_threshold": 0.75,
+            "retreat_hull": 0.35,
+            "cargo_behavior": "defend"
+          }
+        }
+      },
+      {
+        "id": "core:combat_ability/raider",
+        "content_type": "combat_abilities",
+        "file": "content/combat_abilities.json",
+        "name_key": "combat_ability.core.raider.name",
+        "name_zh": "劫掠突袭",
+        "name_en": "Raider Rush",
+        "tags": [
+          "ability.raider"
+        ],
+        "definition": {
+          "id": "core:combat_ability/raider",
+          "name_key": "combat_ability.core.raider.name",
+          "description_key": "combat_ability.core.raider.description",
+          "tags": [
+            "ability.raider"
+          ],
+          "enabled": true,
+          "data": {
+            "action": "approach",
+            "target_priority": "cargo",
+            "preferred_range": 0.45,
+            "approach_threshold": 1.25,
+            "withdraw_threshold": 0.6,
+            "engage_speed": 0.9,
+            "cargo_behavior": "flee"
+          }
+        }
+      },
+      {
+        "id": "core:combat_ability/escort",
+        "content_type": "combat_abilities",
+        "file": "content/combat_abilities.json",
+        "name_key": "combat_ability.core.escort.name",
+        "name_zh": "护航机动",
+        "name_en": "Escort Flank",
+        "tags": [
+          "ability.escort"
+        ],
+        "definition": {
+          "id": "core:combat_ability/escort",
+          "name_key": "combat_ability.core.escort.name",
+          "description_key": "combat_ability.core.escort.description",
+          "tags": [
+            "ability.escort"
+          ],
+          "enabled": true,
+          "data": {
+            "action": "flank",
+            "target_priority": "cargo",
+            "preferred_range": 0.7,
+            "engage_speed": 0.6,
+            "cargo_behavior": "defend"
+          }
+        }
+      },
+      {
+        "id": "core:enemy_archetype/pirate_sloop",
+        "content_type": "enemy_archetypes",
+        "file": "content/enemy_archetypes.json",
+        "name_key": "enemy_archetype.core.pirate_sloop.name",
+        "name_zh": "海盗单桅船",
+        "name_en": "Pirate Sloop",
+        "tags": [
+          "enemy.light",
+          "enemy.pirate"
+        ],
+        "definition": {
+          "id": "core:enemy_archetype/pirate_sloop",
+          "name_key": "enemy_archetype.core.pirate_sloop.name",
+          "description_key": "enemy_archetype.core.pirate_sloop.description",
+          "tags": [
+            "enemy.light",
+            "enemy.pirate"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.enemy.pirate_sloop"
+          },
+          "data": {
+            "enemy_class": "Light",
+            "hull_points": 140,
+            "armor": 0.05,
+            "max_speed": 16,
+            "turn_rate_deg": 70,
+            "weapon_sockets": [
+              "Light",
+              "Light",
+              "Light"
+            ],
+            "combat_ability": "core:combat_ability/raider",
+            "loot_table": "core:loot_table/pirate_wreck",
+            "encounter_tags": [
+              "encounter.patrol",
+              "encounter.ambush"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:enemy_archetype/gunboat",
+        "content_type": "enemy_archetypes",
+        "file": "content/enemy_archetypes.json",
+        "name_key": "enemy_archetype.core.gunboat.name",
+        "name_zh": "炮艇",
+        "name_en": "Gunboat",
+        "tags": [
+          "enemy.light",
+          "enemy.navy"
+        ],
+        "definition": {
+          "id": "core:enemy_archetype/gunboat",
+          "name_key": "enemy_archetype.core.gunboat.name",
+          "description_key": "enemy_archetype.core.gunboat.description",
+          "tags": [
+            "enemy.light",
+            "enemy.navy"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.enemy.gunboat"
+          },
+          "data": {
+            "enemy_class": "Light",
+            "hull_points": 180,
+            "armor": 0.15,
+            "max_speed": 13,
+            "turn_rate_deg": 55,
+            "weapon_sockets": [
+              "Heavy",
+              "Light",
+              "Light"
+            ],
+            "combat_ability": "core:combat_ability/aggressive",
+            "loot_table": "core:loot_table/pirate_wreck",
+            "encounter_tags": [
+              "encounter.patrol"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:enemy_archetype/armed_merchantman",
+        "content_type": "enemy_archetypes",
+        "file": "content/enemy_archetypes.json",
+        "name_key": "enemy_archetype.core.armed_merchantman.name",
+        "name_zh": "武装商船",
+        "name_en": "Armed Merchantman",
+        "tags": [
+          "enemy.medium",
+          "enemy.merchant"
+        ],
+        "definition": {
+          "id": "core:enemy_archetype/armed_merchantman",
+          "name_key": "enemy_archetype.core.armed_merchantman.name",
+          "description_key": "enemy_archetype.core.armed_merchantman.description",
+          "tags": [
+            "enemy.medium",
+            "enemy.merchant"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.enemy.armed_merchantman"
+          },
+          "data": {
+            "enemy_class": "Medium",
+            "hull_points": 320,
+            "armor": 0.2,
+            "max_speed": 9,
+            "turn_rate_deg": 35,
+            "weapon_sockets": [
+              "Medium",
+              "Medium",
+              "Medium",
+              "Medium",
+              "Medium",
+              "Medium"
+            ],
+            "combat_ability": "core:combat_ability/defensive",
+            "loot_table": "core:loot_table/pirate_wreck",
+            "encounter_tags": [
+              "encounter.convoy"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:enemy_archetype/ironclad_raider",
+        "content_type": "enemy_archetypes",
+        "file": "content/enemy_archetypes.json",
+        "name_key": "enemy_archetype.core.ironclad_raider.name",
+        "name_zh": "铁甲袭击者",
+        "name_en": "Ironclad Raider",
+        "tags": [
+          "enemy.heavy",
+          "enemy.pirate"
+        ],
+        "definition": {
+          "id": "core:enemy_archetype/ironclad_raider",
+          "name_key": "enemy_archetype.core.ironclad_raider.name",
+          "description_key": "enemy_archetype.core.ironclad_raider.description",
+          "tags": [
+            "enemy.heavy",
+            "enemy.pirate"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "model.enemy.ironclad_raider"
+          },
+          "data": {
+            "enemy_class": "Heavy",
+            "hull_points": 520,
+            "armor": 0.45,
+            "max_speed": 7,
+            "turn_rate_deg": 22,
+            "weapon_sockets": [
+              "Heavy",
+              "Heavy",
+              "Medium",
+              "Medium"
+            ],
+            "combat_ability": "core:combat_ability/aggressive",
+            "loot_table": "core:loot_table/iron_wreck",
+            "encounter_tags": [
+              "encounter.convoy",
+              "encounter.blockade"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:encounter_table/coastal_patrol",
+        "content_type": "encounter_tables",
+        "file": "content/encounter_tables.json",
+        "name_key": "encounter_table.core.coastal_patrol.name",
+        "name_zh": "近海巡逻",
+        "name_en": "Coastal Patrol",
+        "tags": [
+          "encounter.patrol"
+        ],
+        "definition": {
+          "id": "core:encounter_table/coastal_patrol",
+          "name_key": "encounter_table.core.coastal_patrol.name",
+          "description_key": "encounter_table.core.coastal_patrol.description",
+          "tags": [
+            "encounter.patrol"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "patrol",
+            "danger": 3,
+            "entries": [
+              {
+                "enemy_archetype": "core:enemy_archetype/pirate_sloop",
+                "weight": 3,
+                "count_range": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "enemy_archetype": "core:enemy_archetype/gunboat",
+                "weight": 2,
+                "count_range": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "enemy_archetype": "core:enemy_archetype/armed_merchantman",
+                "weight": 1,
+                "count_range": [
+                  1,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:encounter_table/iron_convoy",
+        "content_type": "encounter_tables",
+        "file": "content/encounter_tables.json",
+        "name_key": "encounter_table.core.iron_convoy.name",
+        "name_zh": "铁甲护航队",
+        "name_en": "Iron Convoy",
+        "tags": [
+          "encounter.convoy"
+        ],
+        "definition": {
+          "id": "core:encounter_table/iron_convoy",
+          "name_key": "encounter_table.core.iron_convoy.name",
+          "description_key": "encounter_table.core.iron_convoy.description",
+          "tags": [
+            "encounter.convoy"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "convoy",
+            "danger": 6,
+            "entries": [
+              {
+                "enemy_archetype": "core:enemy_archetype/ironclad_raider",
+                "weight": 2,
+                "count_range": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "enemy_archetype": "core:enemy_archetype/gunboat",
+                "weight": 2,
+                "count_range": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "enemy_archetype": "core:enemy_archetype/armed_merchantman",
+                "weight": 1,
+                "count_range": [
+                  1,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:loot_table/pirate_wreck",
+        "content_type": "loot_tables",
+        "file": "content/loot_tables.json",
+        "name_key": "loot_table.core.pirate_wreck.name",
+        "name_zh": "海盗残骸",
+        "name_en": "Pirate Wreck",
+        "tags": [
+          "loot.pirate"
+        ],
+        "definition": {
+          "id": "core:loot_table/pirate_wreck",
+          "name_key": "loot_table.core.pirate_wreck.name",
+          "description_key": "loot_table.core.pirate_wreck.description",
+          "tags": [
+            "loot.pirate"
+          ],
+          "enabled": true,
+          "data": {
+            "money_range": [
+              40,
+              90
+            ],
+            "entries": [
+              {
+                "kind": "item",
+                "id": "core:item/timber",
+                "weight": 3,
+                "amount_range": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "item",
+                "id": "core:item/coal",
+                "weight": 2,
+                "amount_range": [
+                  2,
+                  4
+                ]
+              },
+              {
+                "kind": "weapon",
+                "id": "core:weapon/repeater",
+                "weight": 1,
+                "amount_range": [
+                  1,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:loot_table/iron_wreck",
+        "content_type": "loot_tables",
+        "file": "content/loot_tables.json",
+        "name_key": "loot_table.core.iron_wreck.name",
+        "name_zh": "铁甲残骸",
+        "name_en": "Iron Wreck",
+        "tags": [
+          "loot.iron"
+        ],
+        "definition": {
+          "id": "core:loot_table/iron_wreck",
+          "name_key": "loot_table.core.iron_wreck.name",
+          "description_key": "loot_table.core.iron_wreck.description",
+          "tags": [
+            "loot.iron"
+          ],
+          "enabled": true,
+          "data": {
+            "money_range": [
+              120,
+              240
+            ],
+            "entries": [
+              {
+                "kind": "item",
+                "id": "core:item/boiler_plate",
+                "weight": 3,
+                "amount_range": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "item",
+                "id": "core:item/precision_gear",
+                "weight": 1,
+                "amount_range": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "module",
+                "id": "core:module/small_efficient",
+                "weight": 1,
+                "amount_range": [
+                  1,
+                  1
+                ]
+              }
+            ]
           }
         }
       }

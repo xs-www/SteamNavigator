@@ -104,7 +104,7 @@ jobs:
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/examples/example_mixed_crew_roles_items --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
-            --mod-root=sdk/templates/draft_weapons_pack --mode=draft
+            --mod-root=sdk/examples/example_weapons --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
 
@@ -115,7 +115,7 @@ jobs:
         run: |
           set -euo pipefail
           if godot --headless --path . --script res://sdk/pack_mod.gd -- \
-              --source=sdk/templates/draft_weapons_pack --out=dist/mods --release; then
+              --source=sdk/templates/story_pack_iron_tide --out=dist/mods --release; then
             echo "draft content must not pass --release packing" >&2
             exit 1
           fi

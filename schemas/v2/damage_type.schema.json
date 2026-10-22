@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/damage-type-2.json",
+  "title": "Steam Navigator damage type content file (Content Schema 2.0)",
+  "description": "Combat damage types (D1): small registry entries referenced by weapons and defences. The registry deliberately has no damage-type interaction matrix; runtime consumers apply armor_pierce and status metadata. IDs use core:damage_type/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "damage_types"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/damage_type_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "damage_type_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["color"],
+      "properties": {
+        "color": {
+          "description": "Hit / effect tint (#RRGGBB), shared by weapons that reference this damage type.",
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "armor_pierce": {
+          "description": "0–1 share of the damage that ignores target armor; the registry keeps this scalar instead of a damage x armor matrix.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        },
+        "status_effect": {
+          "description": "Optional status applied by hits of this type; empty means no status.",
+          "enum": ["none", "burn", "shock", "flood"]
+        }
+      }
+    }
+  }
+}

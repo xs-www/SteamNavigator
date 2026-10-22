@@ -213,14 +213,16 @@ func test_v2_draft_types_are_not_runtime_types() -> void:
 	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
 	var manifest: Dictionary = parsed["value"]
 	var drafts: Dictionary = manifest.get("draft_schemas", {})
-	assert_eq(drafts.size(), 3, "weapons and the two Story Mode types are Schema 2.0 draft types")
-	for expected in ["weapons", "story_arcs", "story_levels"]:
+	assert_eq(drafts.size(), 2, "the two Story Mode types are the remaining Schema 2.0 draft types")
+	for expected in ["story_arcs", "story_levels"]:
 		assert_true(drafts.has(expected), "%s is a draft schema" % expected)
 		assert_true(FileAccess.file_exists("res://" + String(drafts[expected])), "%s draft schema exists" % expected)
 	for draft_type in drafts.keys():
 		var content_type := StringName(String(draft_type))
 		assert_false(ContentTypes.is_known(content_type), "%s is not a runtime content type" % draft_type)
 		assert_eq(ContentTypes.schema_version(content_type), "", "%s has no runtime schema version" % draft_type)
+	assert_true(ContentTypes.is_known(ContentTypes.WEAPON), "D1 promoted weapons into the runtime")
+	assert_eq(ContentTypes.schema_version(ContentTypes.WEAPON), "2.0", "weapons is Schema 2.0")
 
 
 func test_promoted_world_profile_content_compiles_and_registers() -> void:

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/enemy-archetype-2.json",
+  "title": "Steam Navigator enemy archetype content file (Content Schema 2.0)",
+  "description": "Enemy ship archetypes (D1). Stats mirror the tooling/combat_kit catalogue (enemy_class / weapon_sockets from the shipped SN_Enemy_* GLBs), the AI profile references a combat_ability, and loot references a loot_table. The definition's information.model points at the combat_kit GLB asset key. IDs use core:enemy_archetype/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "enemy_archetypes"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/enemy_archetype_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "enemy_archetype_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enemy_class", "hull_points", "armor", "max_speed", "turn_rate_deg", "weapon_sockets", "combat_ability"],
+      "properties": {
+        "enemy_class": {
+          "description": "Combat kit class (tools/modeling/combat_kit_catalog.json enemy_classes).",
+          "enum": ["Light", "Medium", "Heavy"]
+        },
+        "hull_points": {
+          "description": "Enemy hull hit points before armor mitigation.",
+          "type": "number",
+          "minimum": 20,
+          "maximum": 2000
+        },
+        "armor": {
+          "description": "0–0.8 flat damage reduction fraction.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.8
+        },
+        "max_speed": {
+          "description": "Top speed in combat simulation units (SNBattleSim ship tuning).",
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "turn_rate_deg": {
+          "description": "Hull turn rate in degrees per second.",
+          "type": "number",
+          "minimum": 5,
+          "maximum": 180
+        },
+        "weapon_sockets": {
+          "description": "Ordered socket classes copied from the combat_kit GLB weapon_sockets (SN_Socket_Weapon_*); the runtime mounts weapons whose weapon_class fits.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "enum": ["Light", "Medium", "Heavy", "Tower", "Side"]
+          }
+        },
+        "combat_ability": {
+          "description": "AI profile reference (combat_abilities).",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "loot_table": {
+          "description": "Optional loot table reference (loot_tables).",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "encounter_tags": {
+          "description": "Optional tags that encounter tables use to bias this archetype.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "schema_version": "2.0",
+  "content_type": "weapons",
+  "definitions": [
+    {
+      "id": "core:weapon/deck_gun",
+      "name_key": "weapon.core.deck_gun.name",
+      "description_key": "weapon.core.deck_gun.description",
+      "tags": [
+        "weapon.direct",
+        "weapon.light"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.weapon.deck_gun"
+      },
+      "data": {
+        "kind": "direct",
+        "damage": 12,
+        "range": 245,
+        "min_range": 0,
+        "cooldown": 1.65,
+        "accuracy": 0.72,
+        "projectile_speed": 360,
+        "splash": 0,
+        "arc_deg": 260,
+        "salvo": 1,
+        "color": "#ffd37a",
+        "weapon_class": "Light",
+        "assembly_profile": "yaw_pitch",
+        "has_yaw": true,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "muzzle_count": 1,
+        "envelope_x": 2.8,
+        "envelope_y": 1.4,
+        "height": 1.6,
+        "mount_scale": 1,
+        "tier": 1,
+        "weight": 9,
+        "purchase_price": 380,
+        "craft_cost": 170,
+        "craft_time_hours": 4,
+        "materials": [],
+        "damage_type": "core:damage_type/kinetic"
+      }
+    },
+    {
+      "id": "core:weapon/heavy_cannon",
+      "name_key": "weapon.core.heavy_cannon.name",
+      "description_key": "weapon.core.heavy_cannon.description",
+      "tags": [
+        "weapon.direct",
+        "weapon.heavy"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.weapon.heavy_cannon"
+      },
+      "data": {
+        "kind": "direct",
+        "damage": 30,
+        "range": 355,
+        "min_range": 35,
+        "cooldown": 4.2,
+        "accuracy": 0.61,
+        "projectile_speed": 285,
+        "splash": 8,
+        "arc_deg": 150,
+        "salvo": 1,
+        "color": "#ff9a63",
+        "weapon_class": "Heavy",
+        "assembly_profile": "yaw_pitch",
+        "has_yaw": true,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "muzzle_count": 1,
+        "envelope_x": 4.8,
+        "envelope_y": 2.2,
+        "height": 2.2,
+        "mount_scale": 1,
+        "tier": 3,
+        "weight": 20,
+        "purchase_price": 1200,
+        "craft_cost": 520,
+        "craft_time_hours": 10,
+        "materials": [
+          {
+            "id": "core:item/timber",
+            "amount": 6
+          },
+          {
+            "id": "core:item/boiler_plate",
+            "amount": 3
+          },
+          {
+            "id": "core:item/precision_gear",
+            "amount": 1
+          }
+        ],
+        "damage_type": "core:damage_type/kinetic"
+      }
+    },
+    {
+      "id": "core:weapon/mortar",
+      "name_key": "weapon.core.mortar.name",
+      "description_key": "weapon.core.mortar.description",
+      "tags": [
+        "weapon.artillery",
+        "weapon.heavy"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.weapon.mortar"
+      },
+      "data": {
+        "kind": "artillery",
+        "damage": 24,
+        "range": 430,
+        "min_range": 105,
+        "cooldown": 5.1,
+        "accuracy": 0.58,
+        "projectile_speed": 175,
+        "splash": 34,
+        "arc_deg": 360,
+        "salvo": 1,
+        "color": "#f3c8ff",
+        "weapon_class": "Heavy",
+        "assembly_profile": "yaw_pitch",
+        "has_yaw": true,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "muzzle_count": 1,
+        "envelope_x": 3.2,
+        "envelope_y": 2.2,
+        "height": 2.6,
+        "mount_scale": 1,
+        "tier": 3,
+        "weight": 16,
+        "purchase_price": 1100,
+        "craft_cost": 470,
+        "craft_time_hours": 9,
+        "materials": [
+          {
+            "id": "core:item/timber",
+            "amount": 5
+          },
+          {
+            "id": "core:item/boiler_plate",
+            "amount": 3
+          }
+        ],
+        "damage_type": "core:damage_type/explosive"
+      }
+    },
+    {
+      "id": "core:weapon/repeater",
+      "name_key": "weapon.core.repeater.name",
+      "description_key": "weapon.core.repeater.description",
+      "tags": [
+        "weapon.direct",
+        "weapon.medium"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.weapon.repeater"
+      },
+      "data": {
+        "kind": "direct",
+        "damage": 7,
+        "range": 185,
+        "min_range": 0,
+        "cooldown": 0.72,
+        "accuracy": 0.76,
+        "projectile_speed": 430,
+        "splash": 0,
+        "arc_deg": 300,
+        "salvo": 1,
+        "color": "#fff0a4",
+        "weapon_class": "Medium",
+        "assembly_profile": "yaw_pitch",
+        "has_yaw": true,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "muzzle_count": 1,
+        "envelope_x": 2.8,
+        "envelope_y": 1.6,
+        "height": 1.8,
+        "mount_scale": 1,
+        "tier": 2,
+        "weight": 11,
+        "purchase_price": 620,
+        "craft_cost": 260,
+        "craft_time_hours": 6,
+        "materials": [
+          {
+            "id": "core:item/timber",
+            "amount": 2
+          },
+          {
+            "id": "core:item/boiler_plate",
+            "amount": 1
+          }
+        ],
+        "damage_type": "core:damage_type/kinetic"
+      }
+    },
+    {
+      "id": "core:weapon/broadside",
+      "name_key": "weapon.core.broadside.name",
+      "description_key": "weapon.core.broadside.description",
+      "tags": [
+        "weapon.broadside",
+        "weapon.side"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.weapon.broadside"
+      },
+      "data": {
+        "kind": "broadside",
+        "damage": 8,
+        "range": 285,
+        "min_range": 20,
+        "cooldown": 5.4,
+        "accuracy": 0.64,
+        "projectile_speed": 330,
+        "splash": 0,
+        "arc_deg": 76,
+        "salvo": 4,
+        "color": "#ffcf87",
+        "weapon_class": "Side",
+        "assembly_profile": "pitch_only",
+        "has_yaw": false,
+        "has_pitch": true,
+        "has_recoil": true,
+        "has_muzzle": true,
+        "muzzle_count": 4,
+        "envelope_x": 2.2,
+        "envelope_y": 8,
+        "height": 2,
+        "mount_scale": 1,
+        "tier": 2,
+        "weight": 22,
+        "purchase_price": 820,
+        "craft_cost": 340,
+        "craft_time_hours": 7,
+        "materials": [
+          {
+            "id": "core:item/timber",
+            "amount": 4
+          },
+          {
+            "id": "core:item/boiler_plate",
+            "amount": 2
+          }
+        ],
+        "damage_type": "core:damage_type/kinetic"
+      }
+    }
+  ]
+}
