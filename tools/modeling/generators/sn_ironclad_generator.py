@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # @static-doc
 # 作用：舷侧炮铁甲舰 `SN_Ironclad` 的参数化生成脚本（纯 Python 几何 + Blender 装配入口），
-# 同时是**炮门几何参数**唯一真源：`GUN_X` / `GUN_Z0..1` / `GUN_LENGTH` / `gun_port_pose()`，
+# 同时是**炮门几何参数**唯一真源：`GUN_X` / `GUN_Z0..1` / `GUN_LENGTH` / `gun_port_pose()` /
+# `hull_surface_y()`（17 站放样的站间线性壳面；炮门框 / 暗板 / 门盖逐角取它贴壳，2026-10-22 修复），
 # 供 `sn_ship_gun_ports.py`（船体 socket）与 `sn_casemate_gun_generator.py`（独立炮模块）复用。
 #
 # 工单：tools/modeling/briefs/sn_ironclad_broadside.json
@@ -308,6 +309,38 @@ def side_y_at(x, z):
     return w + (b * 1.02 - w) * t
 
 
+def hull_surface_y(x, z):
+    """**放样网格实际表面**在 (x, z) 处的半宽（站间线性插值）。
+
+    `side_y_at()` 是平滑的解析近似，而 `build_hull()` 的船壳是 17 站放样：
+    两站之间按顶点线性插值。炮门框 / 暗板 / 门盖必须用这个函数取角点，
+    否则平面件会沿炮门宽度离开壳面（实测最差 0.24 m，2026-10-22 修复）。
+    """
+    index = 0
+    for k in range(len(STATIONS) - 1):
+        if STATIONS[k] <= x <= STATIONS[k + 1]:
+            index = k
+            break
+    x0, x1 = STATIONS[index], STATIONS[index + 1]
+    t = (x - x0) / (x1 - x0) if x1 > x0 else 0.0
+    rows = []
+    for point0, point1 in zip(section(x0), section(x1)):
+        y = point0[1] * (1.0 - t) + point1[1] * t
+        zz = point0[2] * (1.0 - t) + point1[2] * t
+        if y >= 0.0:
+            rows.append((zz, y))
+    rows.sort()
+    if z <= rows[0][0]:
+        return rows[0][1]
+    if z >= rows[-1][0]:
+        return rows[-1][1]
+    for (za, ya), (zb, yb) in zip(rows, rows[1:]):
+        if za <= z <= zb:
+            u = (z - za) / (zb - za) if zb > za else 0.0
+            return ya * (1.0 - u) + yb * u
+    return rows[-1][1]
+
+
 def gun_bore_dir(side):
     """炮膛轴线方向（船体局部；side=+1 为 +Y 左舷 / -1 为右舷）。"""
     dx, dy, dz = GUN_TOE_OUT, float(side) * 0.977, GUN_RISE
@@ -323,7 +356,7 @@ def gun_port_pose(x, side):
     - `rot_z_deg` / `rot_y_deg`：把模块局部 +X 转到轴线的 Blender XYZ 欧拉角（先 Z 后 Y）；
     - `plane_offset` / `protrusion`：炮门平面在烘焙炮管上的位置 / 门外的外露长度。
     """
-    y_mid = side_y_at(x, GUN_Z_MID)
+    y_mid = hull_surface_y(x, GUN_Z_MID)
     dx, dy, dz = gun_bore_dir(side)
     p0 = (x, side * (y_mid - GUN_INBOARD), GUN_Z_MID)
     t = GUN_INBOARD / abs(dy)  # 沿轴线从炮尾走到船壳面的距离
@@ -427,44 +460,31 @@ def build_guns(m, with_barrels=True):
     z_mid = GUN_Z_MID
     frame = GUN_PORT_FRAME
     port_half = GUN_PORT_HALF
+    lid_half = 1.10
     for x in GUN_X:
-        y_lo = side_y_at(x, z_lo)
-        y_hi = side_y_at(x, z_hi)
-        y_top = side_y_at(x, z_hi + frame)
-        y_bot = side_y_at(x, z_lo - frame)
-        y_mid = side_y_at(x, z_mid)
         for s in (-1.0, 1.0):
-            def ystrip(z0, z1, yi0, yi1):
-                bot = [(x - port_half - frame, s * yi0, z0), (x + port_half + frame, s * yi0, z0),
-                       (x + port_half + frame, s * (yi0 + 0.12), z0), (x - port_half - frame, s * (yi0 + 0.12), z0)]
-                top = [(x - port_half - frame, s * yi1, z1), (x + port_half + frame, s * yi1, z1),
-                       (x + port_half + frame, s * (yi1 + 0.12), z1), (x - port_half - frame, s * (yi1 + 0.12), z1)]
-                m.add(*hexa(bot, top), MET)
+            def slab(x_lo, x_hi, za, zb, off_in, off_out, material):
+                """贴着放样壳面的闭合薄板：四个角都取 hull_surface_y(x, z)。"""
 
-            def xstrip(za, zb, yia, yib):
-                for xa, xb in ((x - port_half - frame, x - port_half), (x + port_half, x + port_half + frame)):
-                    bot = [(xa, s * yia, za), (xb, s * yia, za),
-                           (xb, s * (yia + 0.12), za), (xa, s * (yia + 0.12), za)]
-                    top = [(xa, s * yib, zb), (xb, s * yib, zb),
-                           (xb, s * (yib + 0.12), zb), (xa, s * (yib + 0.12), zb)]
-                    m.add(*hexa(bot, top), MET)
+                def corner(xx, zz, off):
+                    return (xx, s * (hull_surface_y(xx, zz) + off), zz)
 
-            # 炮门框（四条边，贴着船壳斜面，金属色与铁壳拉开）
-            ystrip(z_hi, z_hi + frame, y_hi, y_top)
-            ystrip(z_lo - frame, z_lo, y_bot, y_lo)
-            xstrip(z_lo, z_hi, y_lo, y_hi)
-            # 深色炮口板（贴着斜面，略凹）：空炮门时它就是“炮门里的暗腔”遮挡面
-            bot = [(x - port_half, s * (y_lo - 0.05), z_lo),
-                   (x + port_half, s * (y_lo - 0.05), z_lo),
-                   (x + port_half, s * (y_lo + 0.06), z_lo),
-                   (x - port_half, s * (y_lo + 0.06), z_lo)]
-            top = [(x - port_half, s * (y_hi - 0.05), z_hi),
-                   (x + port_half, s * (y_hi - 0.05), z_hi),
-                   (x + port_half, s * (y_hi + 0.06), z_hi),
-                   (x - port_half, s * (y_hi + 0.06), z_hi)]
-            m.add(*hexa(bot, top), DARK)
+                bottom = [corner(x_lo, za, off_in), corner(x_hi, za, off_in),
+                          corner(x_hi, za, off_out), corner(x_lo, za, off_out)]
+                top = [corner(x_lo, zb, off_in), corner(x_hi, zb, off_in),
+                       corner(x_hi, zb, off_out), corner(x_lo, zb, off_out)]
+                m.add(*hexa(bottom, top), material)
+
+            # 炮门框：四条边逐角贴壳面（上下两条沿 x 宽、左右两条窄）
+            slab(x - port_half - frame, x + port_half + frame, z_hi, z_hi + frame, 0.0, 0.12, MET)
+            slab(x - port_half - frame, x + port_half + frame, z_lo - frame, z_lo, 0.0, 0.12, MET)
+            slab(x - port_half - frame, x - port_half, z_lo, z_hi, 0.0, 0.12, MET)
+            slab(x + port_half, x + port_half + frame, z_lo, z_hi, 0.0, 0.12, MET)
+            # 深色炮口板（贴着壳面，略凹）：空炮门时它就是“炮门里的暗腔”遮挡面
+            slab(x - port_half, x + port_half, z_lo, z_hi, -0.05, 0.06, DARK)
             if with_barrels:
                 # 炮管（前外张 + 上抬，让固定 3/4 机位能看到管长）+ 黄铜炮口箍
+                y_mid = hull_surface_y(x, z_mid)
                 dx, dy, dz = gun_bore_dir(s)
                 p0 = (x, s * (y_mid - GUN_INBOARD), z_mid)
                 p1 = (p0[0] + dx * GUN_LENGTH, p0[1] + dy * GUN_LENGTH,
@@ -474,14 +494,19 @@ def build_guns(m, with_barrels=True):
                       p0[1] + dy * GUN_MUZZLE_BAND_FROM,
                       p0[2] + dz * GUN_MUZZLE_BAND_FROM)
                 m.add(*taper_cyl(m0, p1, GUN_MUZZLE_BAND_R, GUN_MUZZLE_BAND_R, 8), BRASS)
-            # 上翻炮门盖（更大，强化"炮列"读感）
+            # 上翻炮门盖：内缘逐 x 贴壳面，外缘 +0.75 m 并抬起
             zin0, zin1 = z_hi + frame - 0.02, z_hi + frame + 0.08
             zout0, zout1 = z_hi + frame + 0.62, z_hi + frame + 0.72
-            y_in, y_out = s * y_hi, s * (y_hi + 0.75)
-            bottom = [(x - 1.10, y_in, zin0), (x + 1.10, y_in, zin0),
-                      (x + 1.10, y_out, zout0), (x - 1.10, y_out, zout0)]
-            top = [(x - 1.10, y_in, zin1), (x + 1.10, y_in, zin1),
-                   (x + 1.10, y_out, zout1), (x - 1.10, y_out, zout1)]
+            yin0_l = hull_surface_y(x - lid_half, zin0)
+            yin0_r = hull_surface_y(x + lid_half, zin0)
+            yin1_l = hull_surface_y(x - lid_half, zin1)
+            yin1_r = hull_surface_y(x + lid_half, zin1)
+            bottom = [(x - lid_half, s * yin0_l, zin0), (x + lid_half, s * yin0_r, zin0),
+                      (x + lid_half, s * (yin0_r + 0.75), zout0),
+                      (x - lid_half, s * (yin0_l + 0.75), zout0)]
+            top = [(x - lid_half, s * yin1_l, zin1), (x + lid_half, s * yin1_r, zin1),
+                   (x + lid_half, s * (yin1_r + 0.75), zout1),
+                   (x - lid_half, s * (yin1_l + 0.75), zout1)]
             m.add(*hexa(bottom, top), IRON)
 
 

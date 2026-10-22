@@ -443,6 +443,7 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
   [装舰 3/4](screenshots/ironclad_casemate_three_quarter.png) /
   [炮列近景](screenshots/ironclad_casemate_guns_closeup.png) /
   [空炮门近景](screenshots/ironclad_casemate_empty_closeup.png)。
+- 炮门框 / 深色炮口板 / 上翻门盖**逐角取放样壳面**（`hull_surface_y()`，2026-10-22 修复：边缘间隙 0.241 m → 0，tri 不变），空载近景不再浮边；炮门 socket 中心随之落在壳面上。
 - 本批不登记 Core manifest 键（与武器批次 1/2 一致）；其它 3 艘船没有炮门开口，
   要给它们装穿壳炮需要先做「炮门舱段 / port cassette」适配件（后续批次）。
 

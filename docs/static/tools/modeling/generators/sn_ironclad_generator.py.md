@@ -4,7 +4,8 @@
 
 - 类型：项目配置/数据文件
 
-同时是**炮门几何参数**唯一真源：`GUN_X` / `GUN_Z0..1` / `GUN_LENGTH` / `gun_port_pose()`，
+同时是**炮门几何参数**唯一真源：`GUN_X` / `GUN_Z0..1` / `GUN_LENGTH` / `gun_port_pose()` /
+`hull_surface_y()`（17 站放样的站间线性壳面；炮门框 / 暗板 / 门盖逐角取它贴壳，2026-10-22 修复），
 供 `sn_ship_gun_ports.py`（船体 socket）与 `sn_casemate_gun_generator.py`（独立炮模块）复用。
 
 工单：tools/modeling/briefs/sn_ironclad_broadside.json

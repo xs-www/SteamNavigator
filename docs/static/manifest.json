@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T00:40:12.172Z",
-  "commit": "d530aa0",
+  "generated_at": "2026-10-22T00:51:21.943Z",
+  "commit": "2264bd8",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 895,
-    "documented": 353,
+    "sources": 896,
+    "documented": 354,
     "grouped": 542
   },
   "files": [
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "41ede1cb6e398ba274886fe2114ef3c341681655982cb2697ada6e0c05aa9e32",
+      "sha256": "986077f8351f20535a4957ca16c3401c8b390690df1adc9280cd72deaf00986a",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -2192,7 +2192,7 @@
     },
     {
       "source": "dev_mods/core/assets/models/ships/SN_Ironclad.glb",
-      "sha256": "7891e22669a42cdf7b5d2518f2f83fb933ad71b82abb7f2346d3b3d8702589ac",
+      "sha256": "6c6e801aafbdc2e1713a1c08b2698c0ad2acdaab02e9d5515316fdd7eb7d4820",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -4571,7 +4571,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "1a65e70fe566859caa7bc284c4737328f3f8c8b553dc48364e71794c0d8bb328",
+      "sha256": "9407a3b1d06dea5ca1ffcf73fb505aeacb36b8fd5653b4a2965b5a804945c3d2",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -5332,6 +5332,12 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/generators/rebuild_ironclad_ports.py",
+      "sha256": "03e56313db5c79d11192c5a272b0913b3bf64ce3d7949922eed41ec13b47557c",
+      "doc": "docs/static/tools/modeling/generators/rebuild_ironclad_ports.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/render_casemate_preview.py",
       "sha256": "5d3aad5b866a7e40f700b51a2b681b0cd119a5f77254bf6303dd59b24dba7d81",
       "doc": "docs/static/tools/modeling/generators/render_casemate_preview.py.md",
@@ -5608,7 +5614,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_ironclad_generator.py",
-      "sha256": "9b128cb16d129fa7f3c6ff86dffa3ef4f3e43bbcadaa4a163e0ec80f5be005fe",
+      "sha256": "0d60f70445a30bac7a5366fbba9cee815d9bcb074fe097c8b447463aba5341a7",
       "doc": "docs/static/tools/modeling/generators/sn_ironclad_generator.py.md",
       "status": "documented"
     },

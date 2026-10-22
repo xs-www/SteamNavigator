@@ -246,7 +246,7 @@ Hull / Compartment                船体 / 舱段
 ## 9. 炮门 socket 与穿壳炮 casemate gun（2026-10-22）
 
 **状态：已执行。** 铁甲舰 12 门舷侧炮从船体网格里拆成独立模块 `SN_Weapon_CasemateGun`，
-船体侧改为 12 个 `SN_Socket_GunPort_*`；船体保留炮门框 / 深色炮口板 / 上翻炮门盖，
+船体侧改为 12 个 `SN_Socket_GunPort_*`；船体保留炮门框 / 深色炮口板 / 上翻炮门盖（三者逐角取 `hull_surface_y()`，贴合 17 站放样壳面），
 炮管与炮口箍由模块供给。GLB：`SN_Ironclad.glb` **26 节点 / 1 mesh / 8158 tri**（拆炮前 8830），
 `SN_Weapon_CasemateGun.glb` **7 节点 / 2 mesh / 108 tri**。
 
@@ -297,7 +297,7 @@ Hull / Compartment                船体 / 舱段
 ```
 
 - `sill_z` 是炮门下沿高度、`deck_z` 是该点甲板高度（铁甲舰均为 4.60），**不要**拿甲板 socket 的 z 口径套用；
-- `inboard_depth`：从炮门平面内侧 0.20 m 沿 -X 射线量到的门内自由纵深（封顶 8 m）；铁甲舰实测 4.265–8.000 m，声明 1.10 m；
+- `inboard_depth`：从炮门平面内侧 0.20 m 沿 -X 射线量到的门内自由纵深（封顶 8 m）；铁甲舰实测 4.245–8.000 m，声明 1.10 m；
 - `outboard_clearance`：从门外 0.15 m 沿 +X 量到的舷外自由距离（封顶 8 m）；铁甲舰实测 8.000 m，声明 6.0 m；
 - 声明值一律不高于实测值（`sn_ship_gun_ports.apply_ship()` 内断言，不达标直接抛错）。
 
@@ -323,12 +323,12 @@ Root extras：`gun_port_sockets`（按 `socket_index` 顺序的名字数组）�
 
 | 端口 | x | y | z | rot_z | rot_y |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `_Port_1` | −17.414 | 5.073 | 2.262 | +77.869° | −1.720° |
-| `_Port_2` | −10.414 | 5.838 | 2.262 | +77.869° | −1.720° |
-| `_Port_3` | −3.414 | 6.178 | 2.262 | +77.869° | −1.720° |
-| `_Port_4` | 3.586 | 6.165 | 2.262 | +77.869° | −1.720° |
-| `_Port_5` | 10.586 | 5.722 | 2.262 | +77.869° | −1.720° |
-| `_Port_6` | 17.586 | 4.736 | 2.262 | +77.869° | −1.720° |
+| `_Port_1` | −17.414 | 5.051 | 2.262 | +77.869° | −1.720° |
+| `_Port_2` | −10.414 | 5.825 | 2.262 | +77.869° | −1.720° |
+| `_Port_3` | −3.414 | 6.168 | 2.262 | +77.869° | −1.720° |
+| `_Port_4` | 3.586 | 6.152 | 2.262 | +77.869° | −1.720° |
+| `_Port_5` | 10.586 | 5.706 | 2.262 | +77.869° | −1.720° |
+| `_Port_6` | 17.586 | 4.711 | 2.262 | +77.869° | −1.720° |
 | `_Starboard_1..6` | 同上 | 取负 | 同上 | −77.869° | −1.720° |
 
 - 坐标由 `sn_ironclad_generator.gun_port_pose()` 从同一组炮门参数推导（不是手填），
@@ -346,6 +346,7 @@ Root extras：`gun_port_sockets`（按 `socket_index` 顺序的名字数组）�
 | 炮门规格 + Blender 就地补齐 / 实测 / 自检 | `tools/modeling/generators/sn_ship_gun_ports.py`（`--check` 纯 Python） |
 | GLB 后处理（前缀名归一化 + Root 名单） | `tools/modeling/generators/glb_gun_ports.py` |
 | Blender 落盘（几何门禁 → 删炮管 → 建模块 → 三套 socket） | `tools/modeling/generators/apply_casemate_assets.py` |
+| 炮门贴合壳面重建（一次性修复，2026-10-22） | `tools/modeling/generators/rebuild_ironclad_ports.py` |
 | 导出（模块 + 空炮门铁甲舰 + Core 副本） | `tools/modeling/generators/export_casemate_glb.py` |
 | GLB 独立验收（两个交付物） | `tools/modeling/generators/verify_casemate_glb.py` |
 | Godot 运行时守护 | `framework/tests/cases/test_ship_gun_ports.gd` |

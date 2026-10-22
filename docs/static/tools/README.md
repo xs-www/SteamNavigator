@@ -125,6 +125,7 @@
 | `modeling/generators/kit_batch3_generator.py` | 模型素材库批次 3（P2：建筑 / 环境）的参数化生成器与 Blender 装配入口。 | [查看](./modeling/generators/kit_batch3_generator.py.md) |
 | `modeling/generators/p0_finalize.py` | P0 归档：备份旧 GLB → 清临时对象 → 导出 → 保存工作台。 | 本页 |
 | `modeling/generators/p0_rework_2026-10-19.py` | 第一批 P0 整改：重建系缆桩 → SN_Ore 改锈红 → 三段岸壁拼接测试。 | 本页 |
+| `modeling/generators/rebuild_ironclad_ports.py` | 炮门贴合船壳弧度的**重建脚本**（Blender 内跑一次，2026-10-22 修复批次）—— | [查看](./modeling/generators/rebuild_ironclad_ports.py.md) |
 | `modeling/generators/render_casemate_preview.py` | casemate gun 模块化的**预览渲染**（Lead 验收截图，非游戏资产，Blender 内执行）： | [查看](./modeling/generators/render_casemate_preview.py.md) |
 | `modeling/generators/render_cranes_preview.py` | 四台起重机的预览渲染（Lead 验收截图，非游戏资产）。 | [查看](./modeling/generators/render_cranes_preview.py.md) |
 | `modeling/generators/render_iron_harbor_architecture_preview.py` | 铁港建筑套件验收截图：临时相机 + 三盏太阳 + 地面 + 世界背景，只对 `SN_HT_Warehouse_Long_LOD0` 出图，渲染后还原可见性/相机/引擎/分辨率/世界并删除临时对象，不保存 .blend、不导出 GLB。 | [查看](./modeling/generators/render_iron_harbor_architecture_preview.py.md) |
