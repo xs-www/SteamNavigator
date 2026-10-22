@@ -6,7 +6,7 @@ extends RefCounted
 ## 共用，避免两套时间语义。
 ##
 ## - 关键依赖：`GameState.advance_time`、`CraftOps.settle_orders`、
-##   `NpcTraderSimulator.advance`、`DebtService.check_overdue`、`ContentTypes.MAP_PROFILE`
+##   `NpcTraderSimulator.advance`、`DebtService.check_overdue`、`ContentRefs.map_config_data`
 ##
 ## ## 契约与约束
 ## - 只在命令 path 中调用（CommandBus 事务内）；`hours <= 0` 时只做订单 / NPC / 债务
@@ -43,7 +43,4 @@ static func spend(context, hours: float) -> Dictionary:
 
 
 static func _profile_data(context) -> Dictionary:
-	var state: GameState = context.state
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	var profile: ContentDefinition = context.registries.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	return profile.data if profile != null else {}
+	return ContentRefs.map_config_data(context.state, context.registries)

@@ -1,11 +1,12 @@
 class_name StoryService
 extends RefCounted
 ## @static-doc
-## 作用：新手剧情 / 教学系统的领域状态机。读取当前 map profile 的
-## `data.story`（Core JSON）阶段表，维护 `GameState.data.story` 的进度、事件计数、
-## 标志、功能 / 商品 / 模块解锁，并分发「发现委托目的港」等剧情效果。
+## 作用：新手剧情 / 教学系统的领域状态机。读取当前场景定义（v2 `map_configs`，
+## 旧档回退 `map_profiles`）的 `data.story`（Core JSON）阶段表，维护
+## `GameState.data.story` 的进度、事件计数、标志、功能 / 商品 / 模块解锁，并分发
+## 「发现委托目的港」等剧情效果。
 ##
-## - 关键依赖：`GameState.ensure_story()`、`ContentTypes.MAP_PROFILE`、`WorldOps`、
+## - 关键依赖：`GameState.ensure_story()`、`ContentRefs.map_config_data()`、`WorldOps`、
 ##   `MapOps`、`GameState.contracts()`
 ##
 ## ## 契约与约束
@@ -51,17 +52,13 @@ const EVENT_COMPLETED := "story.completed"
 const EVENT_FEATURE_UNLOCKED := "story.feature_unlocked"
 
 
-## Reads the story block of the current map profile (`{}` when the profile has none).
+## Reads the story block of the current scenario definition (`map_configs` for
+## v2 campaigns, legacy `map_profiles` fallback via `ContentRefs`; `{}` when the
+## definition has none). D13: the tutorial flow moved into `map_configs.story`.
 static func config(state: GameState, hub: RegistryHub) -> Dictionary:
 	if state == null or hub == null:
 		return {}
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	if profile_id.is_empty():
-		return {}
-	var profile: ContentDefinition = hub.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	if profile == null:
-		return {}
-	var raw: Variant = profile.data.get("story", null)
+	var raw: Variant = ContentRefs.map_config_data(state, hub).get("story", null)
 	return raw if raw is Dictionary else {}
 
 

@@ -44,7 +44,4 @@ static func repair(params: Dictionary, context) -> Dictionary:
 
 
 static func _profile(context) -> Dictionary:
-	var state: GameState = context.state
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	var profile: ContentDefinition = context.registries.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	return profile.data if profile != null else {}
+	return ContentRefs.map_config_data(context.state, context.registries)

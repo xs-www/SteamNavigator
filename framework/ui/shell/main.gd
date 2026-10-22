@@ -1133,13 +1133,16 @@ func _screen_new_game(app: Dictionary) -> void:
 
 
 ## 4.5.2：当前内容是否有启用的剧情（决定新开局隐藏构筑选择 / 传 tutorial）。
+## Phase B：v2 剧情随 `map_configs.story` 迁移（D13），所以 1.0 `map_profiles`
+## 与 v2 `map_configs` 都要检查；这是菜单期查询，没有 run state 可交给 ContentRefs。
 func _story_profile_available() -> bool:
 	if _context == null:
 		return false
-	for profile in _context.registries.get_all(ContentTypes.MAP_PROFILE):
-		var raw: Variant = profile.data.get("story", null)
-		if raw is Dictionary and bool((raw as Dictionary).get("enabled", false)):
-			return true
+	for content_type in [ContentTypes.MAP_PROFILE, ContentTypes.MAP_CONFIG]:
+		for profile in _context.registries.get_all(content_type):
+			var raw: Variant = profile.data.get("story", null)
+			if raw is Dictionary and bool((raw as Dictionary).get("enabled", false)):
+				return true
 	return false
 
 

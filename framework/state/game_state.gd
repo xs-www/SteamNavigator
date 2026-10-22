@@ -24,9 +24,24 @@ const CAMPAIGN_DEFAULTS := {
 ## content definitions. The top-level `world` block keeps the generated map
 ## layout; `campaign.world` is the exploration progress layered over it.
 const CAMPAIGN_SECTION_DEFAULTS := {
+	## Identity of the v2 campaign that produced this state. The 1.0 path keeps
+	## the ids empty; old saves get the block lazily with empty ids.
+	"setup": {
+		"start_profile_id": "",
+		"world_profile_id": "",
+		"map_config_id": "",
+		"starting_build_id": "",
+		"difficulty": "standard",
+		"seed": 0,
+		"content_versions": {},
+	},
 	"world": {
 		"profile_id": "",
 		"generated": false,
+		## v2 world assembly output. A 1.0 run leaves both lists empty; existing
+		## saves keep their visited/discovered progress untouched.
+		"regions": [],
+		"sites": [],
 		"visited_region_ids": [],
 		"discovered_site_ids": [],
 		"visited_port_ids": [],
@@ -36,6 +51,16 @@ const CAMPAIGN_SECTION_DEFAULTS := {
 		"entries": {},
 	},
 	"factions": {},
+}
+
+## Per-faction entry shape stored under `campaign.factions.<faction_id>`.
+## Entries are created lazily; `attitude/discovered/met_at` are backfilled on
+## existing 1.0 entries without rewriting the world.
+const FACTION_ENTRY_DEFAULTS := {
+	"reputation": 0,
+	"attitude": "neutral",
+	"discovered": false,
+	"met_at": 0.0,
 }
 
 ## Default run statistics. `profit` is always derived as `income - expense`.
@@ -149,6 +174,16 @@ static func ensure_campaign_sections(campaign: Dictionary, warnings: Array = [])
 			if not section.has(key):
 				section[key] = _copy_default(defaults[key])
 				warnings.append("campaign.%s.%s backfilled" % [section_key, key])
+		if section_key == "factions":
+			for faction_id in section.keys():
+				var entry: Variant = section[faction_id]
+				if not (entry is Dictionary):
+					entry = {}
+					section[faction_id] = entry
+				for key in FACTION_ENTRY_DEFAULTS.keys():
+					if not (entry as Dictionary).has(key):
+						(entry as Dictionary)[key] = _copy_default(FACTION_ENTRY_DEFAULTS[key])
+						warnings.append("campaign.factions.%s.%s backfilled" % [faction_id, key])
 
 
 static func _copy_default(value: Variant) -> Variant:
@@ -164,6 +199,12 @@ func campaign_world() -> Dictionary:
 	return ensure_campaign().get("world", {})
 
 
+## v2 campaign identity block (start/world/map config ids, difficulty, seed,
+## content versions). Lazy: 1.0 states get empty ids instead of a migration.
+func campaign_setup() -> Dictionary:
+	return ensure_campaign().get("setup", {})
+
+
 func campaign_codex() -> Dictionary:
 	return ensure_campaign().get("codex", {})
 
@@ -172,6 +213,19 @@ func campaign_codex() -> Dictionary:
 ## with at least `reputation`.
 func campaign_factions() -> Dictionary:
 	return ensure_campaign().get("factions", {})
+
+
+## Returns one faction's runtime entry, creating it with neutral defaults
+## (`reputation/attitude/discovered/met_at`) on first access.
+func campaign_faction(faction_id: String) -> Dictionary:
+	if faction_id.is_empty():
+		return {}
+	var factions := campaign_factions()
+	var current: Variant = factions.get(faction_id, null)
+	if not (current is Dictionary):
+		current = FACTION_ENTRY_DEFAULTS.duplicate(true)
+		factions[faction_id] = current
+	return current
 
 
 func mark_region_visited(region_id: String) -> bool:
@@ -210,11 +264,7 @@ func is_codex_discovered(discovery_id: String) -> bool:
 func set_faction_reputation(faction_id: String, value: int) -> void:
 	if faction_id.is_empty():
 		return
-	var factions := campaign_factions()
-	var current: Variant = factions.get(faction_id, null)
-	var entry: Dictionary = current if current is Dictionary else {}
-	entry["reputation"] = clampi(value, -100, 100)
-	factions[faction_id] = entry
+	campaign_faction(faction_id)["reputation"] = clampi(value, -100, 100)
 
 
 func faction_reputation(faction_id: String) -> int:

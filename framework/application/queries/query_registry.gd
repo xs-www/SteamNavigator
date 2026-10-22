@@ -17,3 +17,4 @@ static func register_all(bus: QueryBus) -> void:
 	bus.register(&"clue.list", Callable(ClueListViewQuery, "execute"))
 	bus.register(&"story.view", Callable(StoryViewQuery, "execute"))
 	bus.register(&"task.view", Callable(TaskViewQuery, "execute"))
+	bus.register(&"campaign.view", Callable(CampaignViewQuery, "execute"))

@@ -588,10 +588,7 @@ static func _eval_context(context, target_port_id: String) -> Dictionary:
 
 
 static func _profile_data(context) -> Dictionary:
-	var state: GameState = context.state
-	var profile_id := String(state.world().get("map_profile_id", ""))
-	var profile: ContentDefinition = context.registries.get_by_id(ContentTypes.MAP_PROFILE, profile_id)
-	return profile.data if profile != null else {}
+	return ContentRefs.map_config_data(context.state, context.registries)
 
 
 ## 4.5.2：主 / 普通委托里的玩家自备货物是否已全部装船。空字典 = 可以出航。
