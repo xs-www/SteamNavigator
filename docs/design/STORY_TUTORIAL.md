@@ -29,7 +29,7 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
    `intel.refresh` / `clue.buy`；设施标签由 `intel` 改为 `tavern`（Core 内容）。
 5. **呈现 / 内容**：全屏剧情卡（标题 + 多段文本 + 继续 / 跳过整段教程 / 日志回看）
    + 非阻塞目标提示；步骤、文案、解锁、数值全部进 Core JSON
-   （`map_profiles.data.story` + Schema），框架只跑状态机与门禁。
+   （`map_configs.data.story` + Schema），框架只跑状态机与门禁。
 
 ## 3. 剧情流程（五幕）
 
@@ -185,14 +185,13 @@ guarantee_explore_success / unlock_modules / complete_story
 
 ## 7. Core JSON 与 Schema
 
-`dev_mods/core/content/map_profiles.json` 的 `data` 增加 `story` 块，并同步
-`schemas/map_profile.schema.json`（`additionalProperties: false`，新增键全部声明）：
+`dev_mods/core/content/map_configs.json` 的 `data` 增加 `story` 块，并同步
+`schemas/v2/map_config.schema.json`（`additionalProperties: false`，新增键全部声明）：
 
 ```json
 "story": {
   "flow_id": "core:story/opening",
   "enabled": true,
-  "tutorial_build_id": "core:starting_build/steady",
   "skip_unlocks": ["supply", "chart", "market", "contracts", "clues", "tavern", "shipyard"],
   "stages": [
     {
@@ -239,7 +238,7 @@ guarantee_explore_success / unlock_modules / complete_story
 
 | 切片 | 内容 | 验收口径 | 状态 |
 |---|---|---|---|
-| **4.5.1 剧情框架 + 门禁 + 剧情卡** | ✅ 已实现：`GameState.ensure_story` / `StoryService`（配置读取、阶段推进、事件计数、解锁、效果分发、目标阶段收卡）；`story.view` / `advance` / `skip` / `observe` + 注册；Core `map_profiles.story` + Schema；Core/框架本地化；Shell 剧情卡 + 目标条 + feature 门禁 + 跳过确认（`run.start` 新增 `tutorial` 参数，Shell 新局传 true） | 新局自动进入第 0 阶段且只解锁配置的功能；导航 / 港口招牌 / `M` / 状态条海图入口按解锁过滤；剧情卡可继续 / 跳过；跳过解锁全部并揭示主委托目的港；旧存档无 `story` 时全开且不弹；`story.view` 不泄露内部 counters / flags；存档 round-trip 一致；全量 **352 例 0 failed**；截图 `docs/design/screenshots/story/tutorial_card.png` / `tutorial_objective.png` | ✅ |
+| **4.5.1 剧情框架 + 门禁 + 剧情卡** | ✅ 已实现：`GameState.ensure_story` / `StoryService`（配置读取、阶段推进、事件计数、解锁、效果分发、目标阶段收卡）；`story.view` / `advance` / `skip` / `observe` + 注册；Core `map_configs.story` + Schema；Core/框架本地化；Shell 剧情卡 + 目标条 + feature 门禁 + 跳过确认（`run.start` 新增 `tutorial` 参数，Shell 新局传 true） | 新局自动进入第 0 阶段且只解锁配置的功能；导航 / 港口招牌 / `M` / 状态条海图入口按解锁过滤；剧情卡可继续 / 跳过；跳过解锁全部并揭示主委托目的港；旧存档无 `story` 时全开且不弹；`story.view` 不泄露内部 counters / flags；存档 round-trip 一致；全量 **352 例 0 failed**；截图 `docs/design/screenshots/story/tutorial_card.png` / `tutorial_objective.png` | ✅ |
 | **4.5.2 开局幕** | ✅ 已实现：教程新局隐藏选构筑（`new_game_screen` tutorial_mode + Shell 传默认教学船）；`opening`→`depart_brief` 全流程（获船叙事 / 补给 4 煤 2 水 / 补给受限 `lock_actions: supply.buy` / 海图解禁 / 关闭海图恢复补给 / 买够 10 煤 / 出航默认极速 / 抵达收尾）；燃料舱运煤教学委托（`grant_tutorial_contract` + `provider: fuel` + `set_ship_fuel`，出航前货物校验）；`tutorial_express` 限时 | 按 §3 幕 0 全流程可走通：补给购买触发阶段、限购命令被拦截且卡片显示原因、海图打开 / 关闭推进、买够出航、抵达第二港；标准速度迟到 / 极速准时；非教程局主线与 9 seed 通关回归不变；全量 **354 例 0 failed**；截图 `tutorial_supply_hold.png` / `tutorial_depart_fast.png` | ✅ |
 | **4.5.3 并市 + 第二主线** | ✅ 已实现：水煤并入市场「补给（煤 / 水）」区块（复用 `supply.buy_*`），删除补给页 / 导航 / 港口招牌（旧 `supply` 入口重定向市场，旧存档兼容）；市场贸易货物按 story `unlocked_items` 过滤；Act 0 市场只有补给区块，第二港开放纺织品 / 香料；第二主线用 `grant_tutorial_contract`（main_02 模板、`provider: player`、`destination: home`）交付 6 件纺织品，剧情目标买 8 件、回港卖剩余 2 件；新增 `match` 事件条件与 `destination: home` | 补给页不存在，市场可买煤 / 水且扣款正确；Act 0 市场 0 条贸易货物，第二港 2 条；第二主线可买货 → 出航 → 回港交付 → 卖出剩余 → 收尾；全量 **363 例 0 failed**；截图 `tutorial_market_supply.png` / `tutorial_market_goods.png` | ✅ |
 | **4.5.4 酒馆 / 线索 / 保底探索** | ✅ 已实现：酒馆页替换情报页（`tavern` 设施 / feature，旧 `intel` 设施 / 页面兼容并归一）；酒馆自动给 L1 线索 + 刷新物价情报，前两港纺织品 / 香料注入确定性价差（归位库存、双向交易）；第三种货（木材）解锁；第二条 L3 线索指向同一未发现港并带 `guaranteed_explore_clue_id`，`explore.settle` 对该线索无视 `outcome_roll` 直接成功且消费 flag；`third_port` 占位阶段解锁船厂待 4.5.5 | 酒馆可刷新物价情报、购买 / 调查线索；起始港卖价 > 邻港买价且可盈利；第一条线索后市场出现第三种货；第二条线索 L3 + 保底探索必成功并发现第三港；跳过教程不设置保底；全量 **369 例 0 failed**；截图 `tutorial_tavern.png` / `tutorial_tavern_clues.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png` | ✅ |

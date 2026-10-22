@@ -79,8 +79,6 @@
   "port_name.core.fishing_village": "Fishing Village",
   "port_name.core.glass_port": "Glass Port",
   "port_name.core.mist_cove": "Mist Cove",
-  "map_profile.core.standard.name": "Standard Chart",
-  "map_profile.core.standard.description": "A 4-5 port branch network with a shipyard and intelligence station.",
   "starting_scenario.core.steady.name": "Steady and Thrifty",
   "starting_scenario.core.steady.description": "Efficient boiler and generous supplies. Low risk, easy to learn.",
   "starting_scenario.core.swift.name": "Swift and Bold",

@@ -79,8 +79,8 @@ data.fog = { grid, coastal_cells }                        # 4.3/U1：网格半�
 
 ## 3. 内容数值（Core JSON）
 
-`dev_mods/core/content/map_profiles.json` 的每个 profile `data` 增加 `exploration` 块与
-`twin_world_size`，并同步扩展 `schemas/map_profile.schema.json`
+`dev_mods/core/content/map_configs.json` 的每个 profile `data` 增加 `exploration` 块与
+`twin_world_size`，并同步扩展 `schemas/v2/map_config.schema.json`
 （`additionalProperties: false`，新增可选 `exploration` 对象与顶层 `twin_world_size`）。
 框架不得写死这些数字：
 
@@ -119,7 +119,7 @@ data.fog = { grid, coastal_cells }                        # 4.3/U1：网格半�
 }
 ```
 
-规则读取顺序：当前 `map_profile_id` 的 `exploration` → 缺字段用同文件 `data` 里的
+规则读取顺序：当前 `map_config_id` 的 `exploration`（`map_configs.data.exploration`）→ 缺字段用同文件 `data` 里的
 框架兜底常量（仅防御，不参与调参）。`distance_error_ratio` 表示的航程误差区间：
 `distance_min_hours = true_hours * (1 - ratio*(1-credibility))`，max 对称。
 
@@ -402,14 +402,14 @@ ui.error.alert_already_decided
 
 | 层 | 文件 |
 |---|---|
-| 规则 | `framework/domain/exploration/exploration_rules.gd`（读 `map_profiles.data.exploration`，`discovery_chance` / `roll_succeeds` 单一真源） |
+| 规则 | `framework/domain/exploration/exploration_rules.gd`（读 `map_configs.data.exploration`，`discovery_chance` / `roll_succeeds` 单一真源） |
 | 线索 | `framework/domain/exploration/clue_service.gd`（抵达传闻 / 购买情报 / 等级裁剪视图 / resolved·failed 生命周期） |
 | 预览 | `framework/domain/exploration/exploration_calculator.gd`（绕陆航线、航速/煤水/工资/风险/发现概率、blockers） |
 | 航次 | `framework/domain/exploration/explore_voyage_service.gd`（`start` / `settle` / `decide(continue, turn_back)`；4.2 起复用 `VoyageService.settle_arrival_services()` + 自动存档） |
 | 演出模型 | `framework/domain/voyage/voyage_presentation.gd`：4.2 新增 `force_arrival()`（告警掉头直接入港；`skip()` 语义不变） |
 | 命令/查询 | `framework/application/commands/explore_commands.gd`（`explore.start/settle/decide`、`clue.buy`）；`sea_chart.view` 追加 `clues/explore/can_buy_clue` |
 | UI | `sn_sea_chart_view` 线索层 + 未知终点、`sn_sea_chart_panel` 线索区块、`sea_chart_screen` 信号转发、`at_sea_screen` 探索终点、`settlement_screen` 探索结果块、`main.gd` Shell 接线（4.2 资源告急页 + 继续/掉头） |
-| 内容/本地化 | `dev_mods/core/content/map_profiles.json` 的 `exploration` 块 + `schemas/map_profile.schema.json`；框架 `zh_CN/en` 的 `ui.clue.*` / `ui.explore.*` / `ui.button.*` 键 |
+| 内容/本地化 | `dev_mods/core/content/map_configs.json` 的 `exploration` 块 + `schemas/v2/map_config.schema.json`；框架 `zh_CN/en` 的 `ui.clue.*` / `ui.explore.*` / `ui.button.*` 键 |
 
 **验收截图**（1440×900，`tools/godot/capture_exploration.gd` 窗口模式生成，两次运行证据逐字一致）
 
@@ -437,7 +437,7 @@ ui.error.alert_already_decided
 
 > 状态：**4.3.1–4.3.5 已全部实现并验收**（2026-10-21，按 §10.3 顺序逐片提交全量测试）。
 > 玩家实机体验后提出 8 条问题，逐条已定位根因；本节保留实施清单与验收口径，
-> 数值走 Core JSON（`map_profiles` 的 `exploration` 块，schema 同步扩展），
+> 数值走 Core JSON（`map_configs` 的 `exploration` 块，schema 同步扩展），
 > 不触碰 Content Schema 2.0。实现台账见 §10.5。
 
 ### 10.1 反馈与根因
@@ -465,7 +465,7 @@ ui.error.alert_already_decided
    （不在航程中每帧写状态）。出发时只扣工资；抵达 / 失败漂流 / 掉头时按实际航行小时扣煤水
    （含事件延误小时）；资源告急阈值仍用"本段预计消耗 vs 出发库存"预判。
 4. **雾半径**：改为**最小世界尺寸相关量**——`radius = min(bounds.w, bounds.h) * ratio`，
-   比例放进 Core `map_profiles.exploration`；`RunFactory` 的双子世界尺寸也从内容读取
+   比例放进 Core `map_configs.exploration`；`CampaignFactory` 的双子世界尺寸也从内容读取
    （`twin_world_size`），不再硬编码 160。迷雾网格 `cell_size = vision_radius / 4`
    随之缩放。**实际取值**：`fog_port_reveal_ratio = fog_vision_ratio = 0.05`
    （160 世界下 8 / 8，泊位揭示直径 16 = 世界 10%，满足 §10.3 验收）。
@@ -668,8 +668,8 @@ ui.notice.clue_expired / ui.notice.clue_investigation_failed / ui.notice.goods_c
 
 ### 11.4 Core JSON 与 Schema
 
-`dev_mods/core/content/map_profiles.json` 的 `data.exploration` 追加（框架只读规则），
-并同步 `schemas/map_profile.schema.json`（`exploration` 是
+`dev_mods/core/content/map_configs.json` 的 `data.exploration` 追加（框架只读规则），
+并同步 `schemas/v2/map_config.schema.json`（`exploration` 是
 `additionalProperties: false`，每个新键都要声明；数值范围按语义给 `minimum/maximum`）：
 
 ```json
@@ -734,7 +734,7 @@ ui.notice.clue_expired / ui.notice.clue_investigation_failed / ui.notice.goods_c
 
 | 切片 | 主要文件 | 验证 |
 |---|---|---|
-| 4.4.1 | `GameState.CLUES_DEFAULTS.expired`、`ClueService`（`normalize_clue` / `is_expired` / `active_count` / `sweep_expired` / `acquire_goods` / `goods_candidates` / `_goods_view` / `expired_events_of`）、`SeaChartViewQuery`（`expiring_clue_count`、goods 跳过探索估算、active_count 上限）、`ClueListViewQuery`（新）+ `QueryRegistry`、`ExplorationRules.DEFAULTS`、Core `map_profiles.exploration` + `map_profile.schema.json`、`PortCommands.wait` / `VoyageService.settle_arrival_services` / `ExploreVoyageService.start` 的 sweep 接线、中英本地化 27 键 | `test_exploration` 5 例（行情冻结与分级裁剪、过期 sweep 与名额、clue.list 形状与历史、旧存档 normalize、Core 新键）；全套 329 例 / 0 失败 |
+| 4.4.1 | `GameState.CLUES_DEFAULTS.expired`、`ClueService`（`normalize_clue` / `is_expired` / `active_count` / `sweep_expired` / `acquire_goods` / `goods_candidates` / `_goods_view` / `expired_events_of`）、`SeaChartViewQuery`（`expiring_clue_count`、goods 跳过探索估算、active_count 上限）、`ClueListViewQuery`（新）+ `QueryRegistry`、`ExplorationRules.DEFAULTS`、Core `map_configs.exploration` + `v2/map_config.schema.json`、`PortCommands.wait` / `VoyageService.settle_arrival_services` / `ExploreVoyageService.start` 的 sweep 接线、中英本地化 27 键 | `test_exploration` 5 例（行情冻结与分级裁剪、过期 sweep 与名额、clue.list 形状与历史、旧存档 normalize、Core 新键）；全套 329 例 / 0 失败 |
 | 4.4.2 | `ClueService`（`wait_clue_chance` / `on_wait` / `on_contract_completed` / `_acquire_by_source` / `travel`）、`PortCommands.wait`、`VoyageService.settle_arrival_services`、`ExploreCommands.travel` + `CommandRegistry`、`SeaChartViewQuery`（货物 travel 估算 / `can_sail`）、`SNSeaChartPanel`（货物区块 / 时效 / `SailButton`）、`SNSeaChartView`（货物线索不画几何）、`main.gd`（`kind=goods` 确认弹窗 + `clue.travel` 演出接线）、Core/`Schema` 的 `wait`/`contract` 可信度区间 | `test_exploration` 4 例（等待概率与真实获取、等待优先货物、委托完成钩子、`clue.travel` 成功与三类拒绝）；`test_sea_chart` 2 例（货物面板 / 无几何）；`capture_clue_expansion.gd` 两张截图；全套 335 例 / 0 失败 |
 | 4.4.3 | `PortTimeService`（新，`port.wait` 与调查共用时间结算）、`ClueService.investigate`（扣费 / 工时 / 成功率 / 失败事件 / 工时内过期）、`ExplorationRules.roll_hits`、`PortCommands.wait` 重构、`sea_chart.view` + `clue.list` 的 `can_afford_investigation` / 调查成功率、`SNSeaChartPanel` 成本行与买不起禁用、Shell 调查失败状态、Core `investigation_*` = 20 / 6h / 0.75 | `test_exploration` 新增失败 / 金币不足用例并改写升级 / 查询 / 存档用例；`test_sea_chart` 成本显示与禁用；`capture_clue_expansion.gd` 两张 4.4.3 截图；全套 336 例 / 0 失败 |
 | 4.4.4 | `clue_log_screen.gd/.tscn`（新）、`SeaChartScreen`（`clue_list_requested` + 顶栏按钮 + `preselect_clue_id`）、`main.gd`（`clue_log` flow 子页 / 查询接线 / 列表→海图选中 / M、Esc 返回）、中英本地化 `ui.clue.list.back` | `test_sea_chart` 新增 2 例（顶栏入口 + 预选线索、列表页 active/过期/点击/空态）；`capture_clue_expansion.gd` 列表页截图 + 回海图选中 round-trip；全套 338 例 / 0 失败 |

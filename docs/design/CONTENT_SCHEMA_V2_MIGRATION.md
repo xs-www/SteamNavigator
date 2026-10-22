@@ -111,7 +111,7 @@
 | D1 | 版本粒度 | **按内容类型声明版本**；C4 后 20 类 active 全部为 2.0（0 个 1.0 runtime），保留一个基线常量只用于编辑器默认与提示 |
 | D2 | 1.0 兼容窗口 | 原计划一个 minor 双读；**开发期（C/D，2026-10-22）拍板不要求旧档 / 旧内容兼容**，每次迭代后旧模型直接作废，发布前按 Phase E 重新评估 |
 | D3 | 存档内容版本记录 | `content_schema` 保留为基线；新增 `content_versions`（类型 → 版本）惰性补齐，加载时按实际注册表推导 |
-| D4 | Patch 版本 | Patch 的 `schema_version` 必须等于**目标类型**版本；不符报 `patch_schema_mismatch`，不做隐式转换 |
+| D4 | Patch 版本 | Patch envelope 固定 `schema_version: "2.0"`；不符时由 `patches` 2.0 的 envelope 校验以 `unsupported_schema` 拦截（不再有单独的 patch 目标版本错误码），不做隐式转换 |
 | D5 | 实体合并时机 | 独立于世界探索家族，单独一个阶段（Module → Item → Quest）；**开发期直接改 core ID、不保留别名/不写迁移器**（发布前若需兼容另评估） |
 | D6 | planned → active 门槛 | ①运行时读者 ②注册表与引用规则 ③Core 完整性规则 ④core 内容 ⑤编辑器/CLI ⑥测试 ⑦文档；缺一不提升 |
 
@@ -262,7 +262,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | --- | --- | --- | --- |
 | 与在途探索/海图工作冲突（最大） | `map_profile` 字段互相覆盖 | 先等探索 4.1 落定；B 阶段做字段映射 | 回退 Phase B 运行时，类型保留草案 |
 | 第三方 1.0 模组失效 | 社区内容不可用 | **开发期不承诺兼容**（旧内容模型随合并作废）；发布前按 Phase E 重新评估双读 / 迁移工具 | 发布前决策 |
-| Patch 跨版本错配 | 定义被错误修改 | D4 强校验 + `patch_schema_mismatch` | 单点回退 |
+| Patch 跨版本错配 | 定义被错误修改 | D4 强校验：`patches` 2.0 envelope 不符由 `unsupported_schema` 拦截 | 单点回退 |
 | 存档版本记录变化 | 旧档读回失败 | D3 惰性补齐 + 迁移矩阵；**C/D 开发期旧档直接作废** | 保留 `content_schema` 单值兼容 |
 | 编辑器导出草案到游戏 | 玩家启动 Degraded | 已实现导出守卫（G8）：发布包部署禁用、ZIP/目录导出二次确认 | 编辑器单点回退 |
 

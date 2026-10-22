@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/start-profile-2.json",
-  "title": "Steam Navigator start profile content file (Schema 2.0 draft)",
+  "title": "Steam Navigator start profile content file (Content Schema 2.0)",
   "description": "Persistent campaign start profile: world profile, starting scenario, difficulty, port tags and optional cargo/contract. C4 replaced the 1.0 `starting_build` reference with a `starting_scenario` reference.",
   "type": "object",
   "additionalProperties": false,

@@ -368,7 +368,7 @@ await check('patch editor exposes target and operations', async () => {
   await cdp.eval("document.querySelector('.content-view [data-action=\"add-definition\"]').click()");
   await waitFor(cdp, "!!document.querySelector('#definition-editor [data-field=\"target\"]')", 4000, 'patch target field');
   const target = await cdp.eval("document.querySelector('#definition-editor [data-field=\"target\"]')?.value");
-  if (target !== 'core:boiler/small_efficient') throw new Error(`unexpected patch target: ${target}`);
+  if (target !== 'core:module/small_efficient') throw new Error(`unexpected patch target: ${target}`);
   const hasOperation = await cdp.eval("!!document.querySelector('#definition-editor [data-field=\"operations.0.path\"]')");
   if (!hasOperation) throw new Error('patch operation editor missing');
 });

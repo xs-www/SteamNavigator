@@ -4,10 +4,11 @@
  *
  * The Mod Maker must stay usable from file:// with zero network access, so the
  * schemas are embedded as a plain script instead of being fetched at runtime.
- * The bundle includes both the remaining Content Schema 1.0 top-level schemas
- * and the Content Schema 2.0 runtime/draft schemas under /schemas/v2. Every key
- * is the schema's posix path relative to /schemas, so the top-level schemas keep
- * their basenames ("role.schema.json") and v2 schemas are "v2/<name>.schema.json".
+ * The bundle includes the infrastructure schemas (manifest/common) and every
+ * active Content Schema 2.0 schema under /schemas/v2 (C4-D: no 1.0 content types
+ * remain). Every key is the schema's posix path relative to /schemas, so the
+ * top-level schemas keep their basenames ("manifest.schema.json") and v2
+ * schemas are "v2/<name>.schema.json".
  * Run this script after any schema change:
  *
  *   node SNModMaker/tools/sync-schemas.mjs

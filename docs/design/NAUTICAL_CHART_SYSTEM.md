@@ -82,8 +82,8 @@ WorldMap (一次性生成，seed 可复现)
 - 港口数不足时生成直接失败（`too few ports: N < 15`），不会静默返回一张小图。
   失败信息直接回传最后一次尝试的原因（不再吞成「failed after 60 attempts」），
   验收时能一眼看出是卡在哪条约束上。
-- 正式 profile：`WorldGenerator.formal_profile(definition)` 把内容层 `map_profiles`
-  定义（`port_count_range` / `archetypes` / `port_name_keys` / `required_facility_tags`）
+- 正式 profile：`WorldGenerator.formal_profile(definition)` 把内容层 `world_profiles` + `map_configs`
+  定义（`port_count` / `archetypes` / `port_name_keys` / `required_facility_tags`）
   展开成生成器 profile——5 个区域（起始沿岸 / 中部沿岸 ×2 / 远洋 / 外洋）、11 块陆地
   （1 块大陆 + 5 块大岛 + 3 块小岛 + 2 座环礁）、按 `FORMAL_PORT_SLOTS` 排好的港口槽位
   （起始大陆 6 港、大岛 2–3 港、小岛与环礁各 1 港）。槽位而不是「随机撒点」是刻意的：
@@ -558,7 +558,7 @@ GameState
 
 实现状态（**4.1 首切片已落地**，契约见 [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md)）：
 
-- 领域：`framework/domain/exploration/` 四个文件——`ExplorationRules`（读 `map_profiles` 的
+- 领域：`framework/domain/exploration/` 四个文件——`ExplorationRules`（读 `map_configs` 的
   `exploration` 块，发现概率/判定的单一真源）、`ClueService`（抵达传闻 / 购买情报、
   等级裁剪视图、active → resolved / failed）、`ExplorationCalculator`（探索预览）、
   `ExploreVoyageService`（`start` / `settle` / `decide`）。
@@ -752,9 +752,9 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_voyage_p
 已回填到本文的段落：
 
 - §3 迷雾系统：雾半径改为**最小世界尺寸相关量**——`radius = min(bounds.w, bounds.h)
-  × Core ratio`（`map_profiles.exploration.fog_port_reveal_ratio` /
-  `fog_vision_ratio`，160 世界下 8 / 8）；`RunFactory` 双子世界尺寸从
-  `map_profiles.data.twin_world_size` 读取，不再硬编码 160。
+  × Core ratio`（`map_configs.exploration.fog_port_reveal_ratio` /
+  `fog_vision_ratio`，160 世界下 8 / 8）；`CampaignFactory` 双子世界尺寸从
+  `map_configs.data.twin_world_size` 读取，不再硬编码 160。
 - §5.2 / §5.3 / §5.4：失败探索不消耗线索（保留 active、记 `attempts`）；演出层增加
   船周连续照亮（纯表现），抵达 / 掉头时按实际航线采样 `FogOps.trace_route` 持久化
   沿途迷雾。

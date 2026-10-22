@@ -9,7 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `writeJson(file, value)` | L20 |
-| `waitForServer()` | L69 |
+| `waitForServer()` | L82 |
 
 ## 契约与约束
 

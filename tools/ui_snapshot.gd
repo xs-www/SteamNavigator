@@ -19,7 +19,7 @@ extends SceneTree
 ##   --seed=5201                     固定种子
 ##   --out-dir=res://docs/design/screenshots
 ##   --window=1440x900               窗口/截图尺寸
-##   --category=cargo_modules,misc   改装态额外按分类各截一张
+##   --category=cargo,misc           改装态额外按分类各截一张（hulls/boiler/cargo/utility/cabin/misc）
 ##   --damage=boiler:0.5[,cargo:0.4] 先损坏指定模块实例，再额外截取受损状态的
 ##                                   船厂正常态 / 改装态 / 补给维修页
 ##   --overview-stage                额外切到总览页并截取主界面（3D 港口舞台 +
@@ -66,8 +66,8 @@ var _failures: Array[String] = []
 var _seed := DEFAULT_SEED
 var _out_dir := DEFAULT_OUT_DIR
 var _window := DEFAULT_WINDOW
-## 额外截图的分类（--category=cargo_modules,misc）。
-var _categories: Array[String] = ["cargo_modules", "misc"]
+## 额外截图的分类（--category=cargo,misc；C1 分类：hulls/boiler/cargo/utility/cabin/misc）。
+var _categories: Array[String] = ["cargo", "misc"]
 var _skip_refit := false
 ## 是否额外截取总览页的 3D 港口舞台。
 var _overview_stage := false
@@ -185,7 +185,7 @@ func _run() -> void:
 
 	if damaged:
 		if not _skip_refit:
-			screen.set_category("boilers")
+			screen.set_category("boiler")
 			await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
 			await _capture(_path("shipyard_refit_damaged.png"))
 		shell._active_screen = "supply"
@@ -420,15 +420,8 @@ func _is_visible_category(shell: Control, screen: Control, category: String) -> 
 
 ## 截图文件名用的分类短名。
 func _category_short(category: String) -> String:
-	match category:
-		"cargo_modules":
-			return "cargo"
-		"navigation_modules":
-			return "navigation"
-		"safety_modules":
-			return "safety"
-		_:
-			return category
+	# C1 categories (hulls/boiler/cargo/utility/cabin/misc) are already the short names.
+	return category
 
 
 func _labels(root: Node, out: Array = []) -> Array:

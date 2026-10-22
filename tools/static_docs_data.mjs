@@ -373,7 +373,7 @@ export const FILE_DOCS = {
       "`current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。",
       "`ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。",
       "切片 5：`ship.visual` = `ShipVisualPlan.resolve(hub, context.assets, ship)`，输出 hull / `rig_plan` / `weapon_loadout` 的物理路径供 PortStage 运行时装配；旧存档 / 旧调用方没有该键时舞台走原单船体路径。",
-      "`current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从 `core:port_archetype/*` 的 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。",
+      "`current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从 `core:port_template/*` 的 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。",
       "`current_port.town_visuals` 由 `_resolved_town_visuals(context, source_mod, diorama)` 解析：把 `diorama.town` 的 slot → `model.prop.*` 资产键转成 `asset://<mod>/<key>` 并 `assets.resolve()` 成物理路径；缺键省略，PortStage 对缺失 slot 回退 blockout。"
     ]
   },
@@ -2280,7 +2280,7 @@ export const FILE_DOCS = {
     role: "`tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。",
     contracts: [
       "引擎解析顺序：`-GodotBin` > `$env:GODOT_BIN` > 本机默认路径；找不到直接抛错。",
-      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo_modules,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图；`-OverviewDetail` 再透传 `--overview-detail` 并追加 `overview_detail.png`（隐含 `-OverviewStage`，同样校验新鲜度）。",
+      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图；`-OverviewDetail` 再透传 `--overview-detail` 并追加 `overview_detail.png`（隐含 `-OverviewStage`，同样校验新鲜度）。",
       "检查每张期望截图存在且比本次运行新，旧图/缺图把退出码改为 1；完整日志写入 `.godot-ui-snapshot.log`。",
       "脚本保持 ASCII，兼容 Windows PowerShell 5.1 解析。"
     ]

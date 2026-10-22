@@ -31,7 +31,7 @@
 
 ## 契约与约束
 - 用真实 Core 注册表：剧情步骤 / 文案 / 解锁 / 数值必须来自
-  `dev_mods/core/content/map_profiles.json` 的 `story` 块，测试不写死框架步骤。
+  `dev_mods/core/content/map_configs.json` 的 `story` 块，测试不写死框架步骤。
 - `run.start` 的 `tutorial` 默认 false（测试 / 旧入口不弹剧情）；Shell 的
   「开始新航行」显式传 true，生产局每局默认进入剧情。
 - 跳过 / 完成必须解锁配置里的全部功能并执行 `discover_contract_destination`，

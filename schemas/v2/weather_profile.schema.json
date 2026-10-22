@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/weather-profile-2.json",
-  "title": "Steam Navigator weather profile content file (Schema 2.0 draft)",
+  "title": "Steam Navigator weather profile content file (Content Schema 2.0)",
   "description": "Climate band prototype: fog/storm/ice chances and voyage modifiers applied while a ship travels through a region.",
   "type": "object",
   "additionalProperties": false,

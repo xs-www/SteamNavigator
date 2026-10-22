@@ -29,7 +29,7 @@ writeJson(path.join(coreDir, 'manifest.json'), {
   api_version: '1.0',
   type: 'content',
   required: true,
-  content: ['content/items.json', 'content/events.json'],
+  content: ['content/items.json', 'content/voyage_events.json'],
   localization: ['localization/zh_CN.json'],
   assets: { 'model.test': 'assets/models/SN_Test.glb' },
   dependencies: [],
@@ -42,10 +42,23 @@ writeJson(path.join(coreDir, 'content/items.json'), {
     { id: 'core:item/drop', name_key: 'item.drop.name', enabled: true, data: { crafting_material: false, unit_weight: 1, base_price: 20, base_stock: 10, price_elasticity: 0.1 } },
   ],
 });
-writeJson(path.join(coreDir, 'content/events.json'), {
-  schema_version: '1.0',
-  content_type: 'events',
-  definitions: [{ id: 'core:event/old', name_key: 'event.old.name', enabled: true, data: { trigger: 'voyage_risk', category: 'mechanical', options: [] } }],
+writeJson(path.join(coreDir, 'content/voyage_events.json'), {
+  schema_version: '2.0',
+  content_type: 'voyage_events',
+  definitions: [{
+    id: 'core:voyage_event/old',
+    name_key: 'voyage_event.old.name',
+    enabled: true,
+    data: {
+      trigger: 'voyage_risk',
+      category: 'mechanical',
+      weight: 1,
+      options: [
+        { id: 'hold_course', name_key: 'voyage_event.old.hold_course', weight: 1, effects: [{ op: 'add_delay_hours', amount: 1 }] },
+        { id: 'slow_down', name_key: 'voyage_event.old.slow_down', weight: 1, effects: [{ op: 'remove_water', amount: 1 }] },
+      ],
+    },
+  }],
 });
 writeJson(path.join(coreDir, 'localization/zh_CN.json'), { 'item.keep.name': '保留', 'item.drop.name': '删除' });
 fs.mkdirSync(path.join(coreDir, 'assets/models'), { recursive: true });
@@ -108,13 +121,13 @@ try {
   const items = project.contentFiles.find((file) => file.content_type === 'items');
   items.definitions = items.definitions.filter((definition) => definition.id !== 'core:item/drop');
   items.definitions.push({ id: 'core:item/new', name_key: 'item.new.name', enabled: true, data: { crafting_material: true, unit_weight: 2, base_price: 30, base_stock: 10, price_elasticity: 0.1 } });
-  project.contentFiles.push({ path: 'content/roles.json', content_type: 'roles', schema_version: '1.0', definitions: [{ id: 'core:role/new', name_key: 'role.new.name', enabled: true, data: { kind: 'engineer', wage_per_voyage: 10, hire_cost: 50 } }] });
-  project.manifest.content.push('content/roles.json');
+  project.contentFiles.push({ path: 'content/crew_roles.json', content_type: 'crew_roles', schema_version: '2.0', definitions: [{ id: 'core:crew_role/new', name_key: 'crew_role.new.name', enabled: true, data: { kind: 'engineer', wage_per_voyage: 10, hire_cost: 50 } }] });
+  project.manifest.content.push('content/crew_roles.json');
 
   const files = [
     { path: 'manifest.json', encoding: 'utf8', data: `${JSON.stringify(project.manifest, null, 2)}\n` },
     { path: items.path, encoding: 'utf8', data: `${JSON.stringify({ schema_version: '2.0', content_type: 'items', definitions: items.definitions }, null, 2)}\n` },
-    { path: 'content/roles.json', encoding: 'utf8', data: `${JSON.stringify({ schema_version: '1.0', content_type: 'roles', definitions: project.contentFiles.find((file) => file.content_type === 'roles').definitions }, null, 2)}\n` },
+    { path: 'content/crew_roles.json', encoding: 'utf8', data: `${JSON.stringify({ schema_version: '2.0', content_type: 'crew_roles', definitions: project.contentFiles.find((file) => file.content_type === 'crew_roles').definitions }, null, 2)}\n` },
   ];
   const saved = await api('/api/workspace/core', {
     method: 'PUT',
@@ -135,7 +148,7 @@ try {
 
   const itemsOnDisk = JSON.parse(fs.readFileSync(path.join(coreDir, 'content/items.json'), 'utf8'));
   assert.deepEqual(itemsOnDisk.definitions.map((definition) => definition.id), ['core:item/keep', 'core:item/new']);
-  assert.ok(fs.existsSync(path.join(coreDir, 'content/roles.json')), 'new content file is written');
+  assert.ok(fs.existsSync(path.join(coreDir, 'content/crew_roles.json')), 'new content file is written');
   assert.equal(fs.readFileSync(path.join(coreDir, 'assets/models/SN_Test.glb'), 'utf8'), 'raw-glb-bytes', 'assets are never rewritten');
 
   // Removing a declared localization file from the manifest deletes it on disk.

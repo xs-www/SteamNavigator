@@ -965,7 +965,7 @@ static func _goods_name_key(context, good_id: String) -> String:
 
 
 ## Trade margin of the current scenario definition (same value `trade.buy` /
-## `trade.sell` use; v2 `map_configs` with legacy `map_profiles` fallback).
+## `trade.sell` use; resolved from `map_configs` (map_profiles retired in C4)).
 static func _trade_margin(context) -> float:
 	var data := ContentRefs.map_config_data(context.state, context.registries)
 	if data.is_empty():

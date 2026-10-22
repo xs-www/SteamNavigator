@@ -1271,7 +1271,7 @@
     "v2/discovery.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/discovery-2.json",
-      "title": "Steam Navigator discovery content file (Schema 2.0 draft)",
+      "title": "Steam Navigator discovery content file (Content Schema 2.0)",
       "description": "Codex entry prototype: what a site/ruin reveals, its rarity, spawn weight and the ids it unlocks.",
       "type": "object",
       "additionalProperties": false,
@@ -1387,7 +1387,7 @@
     "v2/faction.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/faction-2.json",
-      "title": "Steam Navigator faction content file (Schema 2.0 draft)",
+      "title": "Steam Navigator faction content file (Content Schema 2.0)",
       "description": "Persistent faction prototype: attitude thresholds, trade affinity, patrol presence and rivalries.",
       "type": "object",
       "additionalProperties": false,
@@ -3098,7 +3098,7 @@
     "v2/region.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/region-2.json",
-      "title": "Steam Navigator region content file (Schema 2.0 draft)",
+      "title": "Steam Navigator region content file (Content Schema 2.0)",
       "description": "World region prototype: kind, size, density budgets, weather and faction presence.",
       "type": "object",
       "additionalProperties": false,
@@ -3198,7 +3198,7 @@
     "v2/route_template.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/route-template-2.json",
-      "title": "Steam Navigator route template content file (Schema 2.0 draft)",
+      "title": "Steam Navigator route template content file (Content Schema 2.0)",
       "description": "Generated sea route prototype: distance, risk, travel time, region affinity and optional encounters.",
       "type": "object",
       "additionalProperties": false,
@@ -3287,7 +3287,7 @@
     "v2/site.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/site-2.json",
-      "title": "Steam Navigator site content file (Schema 2.0 draft)",
+      "title": "Steam Navigator site content file (Content Schema 2.0)",
       "description": "Discoverable world site prototype (ruins, base sites, resources, wrecks, landmarks, encounters).",
       "type": "object",
       "additionalProperties": false,
@@ -3378,7 +3378,7 @@
     "v2/start_profile.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/start-profile-2.json",
-      "title": "Steam Navigator start profile content file (Schema 2.0 draft)",
+      "title": "Steam Navigator start profile content file (Content Schema 2.0)",
       "description": "Persistent campaign start profile: world profile, starting scenario, difficulty, port tags and optional cargo/contract. C4 replaced the 1.0 `starting_build` reference with a `starting_scenario` reference.",
       "type": "object",
       "additionalProperties": false,
@@ -4644,7 +4644,7 @@
     "v2/weather_profile.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/weather-profile-2.json",
-      "title": "Steam Navigator weather profile content file (Schema 2.0 draft)",
+      "title": "Steam Navigator weather profile content file (Content Schema 2.0)",
       "description": "Climate band prototype: fog/storm/ice chances and voyage modifiers applied while a ship travels through a region.",
       "type": "object",
       "additionalProperties": false,
@@ -4754,7 +4754,7 @@
     "v2/world_profile.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/world-profile-2.json",
-      "title": "Steam Navigator world profile content file (Schema 2.0 draft)",
+      "title": "Steam Navigator world profile content file (Content Schema 2.0)",
       "description": "Persistent world generation profile for regions, sites, ports, ruins, bases and factions.",
       "type": "object",
       "additionalProperties": false,

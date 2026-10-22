@@ -1525,7 +1525,7 @@ function warningsOf(result) {
     added.definition.data.options[0].condition = {
       all: [
         { op: 'money_gte', value: 10 },
-        { any: [{ op: 'at_port', port_id: '' }, { op: 'has_module', id: 'core:boiler/small_efficient' }] },
+        { any: [{ op: 'at_port', port_id: '' }, { op: 'has_module', id: 'core:module/small_efficient' }] },
         { not: { op: 'has_item', item_id: 'core:item/tea', amount: 1 } },
       ],
     };
@@ -1555,7 +1555,7 @@ function warningsOf(result) {
     const added = Store.addDefinition(project, 'voyage_events', {});
     const definition = added.definition;
     assert.equal(definition.data.options.length, 2);
-    definition.data.options[0].condition = { all: [{ op: 'money_gte', value: 10 }, { op: 'has_module', id: 'core:boiler/small_efficient' }] };
+    definition.data.options[0].condition = { all: [{ op: 'money_gte', value: 10 }, { op: 'has_module', id: 'core:module/small_efficient' }] };
     const result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
     const html = UI.renderDefinitionForm({

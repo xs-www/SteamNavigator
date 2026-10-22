@@ -44,18 +44,18 @@
 | --- | --- |
 | 内容版本按类型：**当前（C4 后）20 个 active 类型全部为 `2.0`（19 定义 + `patches`，0 个 1.0 runtime）**，另有 3 类 `2.0` 草案（`weapons` / `story_arcs` / `story_levels`）；Phase B 只提升了世界/战役 9 类（C1–C4 另补 hulls/modules/items/quests 与其余类型改名） | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
 | 运行时加载：`ContentCompiler` 按类型版本校验 envelope；Patch 再校验走目标类型版本 | `framework/modding/content_compiler.gd` |
-| 开局链路：`run.start(build_id, seed, tutorial)` → `RunFactory.create_run` → `create_ship` → `MapGenerator.generate(map_profile)` → `WorldGenerator.generate(_coordinate_world_profile(world))`（孪生海图世界）→ markets / npcs / main contract；`tutorial=true` 时 `StoryService.begin` 从 `map_profiles.data.story` 启动教程 | `framework/application/commands/run_start.gd`、`framework/domain/contracts/run_factory.gd`、`framework/domain/story/story_service.gd` |
+| （历史，Phase B 前）开局链路：`run.start(build_id, seed, tutorial)` → `RunFactory.create_run` → `create_ship` → `MapGenerator.generate(map_profile)` → `WorldGenerator.generate(_coordinate_world_profile(world))`（孪生海图世界）→ markets / npcs / main contract；`tutorial=true` 时 `StoryService.begin` 从 `map_profiles.data.story` 启动教程；C4 起统一走 `CampaignFactory` / `map_configs` | `framework/application/commands/run_start.gd`、`framework/domain/contracts/run_factory.gd`、`framework/domain/story/story_service.gd` |
 | 抽象地图输入：`port_count_range / archetypes / start_archetype_tags / required_facility_tags / required_facility_max_edges / port_name_keys / edge_count_range / distance_range / route_risk_range` | `framework/domain/map/map_generator.gd` |
-| 孪生世界：固定 5 块陆地布局、`min_ports = 抽象港口数`、world_map 预计算航线（`WorldMap.edges`）；世界边长由 `map_profiles.data.twin_world_size` 缩放（默认 160，clamp 64–1024）；旧档无 `world_map` 时海图降级 | `run_factory.gd::_coordinate_world_profile`、`framework/domain/world/world_generator.gd` |
-| 经济 / NPC / 探索 / 教程来自 `map_profile.data`：market 用 port archetype，`npc_*`、`loan`、`supply_prices`、`intel_cost`、`trade_margin`、`player_trade_impact`，以及 `twin_world_size`（4.3）、`exploration`（31 键）、`story`（4.5 教程流） | `run_factory.gd`、`framework/domain/economy/*`、`framework/domain/exploration/exploration_rules.gd`、`framework/domain/story/story_service.gd` |
+| （历史，Phase B 前）孪生世界：固定 5 块陆地布局、`min_ports = 抽象港口数`、world_map 预计算航线（`WorldMap.edges`）；世界边长由 `map_profiles.data.twin_world_size` 缩放（默认 160，clamp 64–1024）；C4 起读 `map_configs.data.twin_world_size` | `run_factory.gd::_coordinate_world_profile`、`framework/domain/world/world_generator.gd` |
+| 经济 / NPC / 探索 / 教程来自 `map_configs.data`：market 用 port template，`npc_*`、`loan`、`supply_prices`、`intel_cost`、`trade_margin`、`player_trade_impact`，以及 `twin_world_size`（4.3）、`exploration`（31 键）、`story`（4.5 教程流） | `run_factory.gd`、`framework/domain/economy/*`、`framework/domain/exploration/exploration_rules.gd`、`framework/domain/story/story_service.gd` |
 | 随机流：`map_generation / goods_generation / npc_trade / contract_generation / voyage_risk / voyage_event / event_options`（探索 4.1 另有 `exploration`） | `framework/services/rng_service.gd` |
 | 存档 header：`save_schema=2.0 / state_schema=2.0 / content_schema=FrameworkInfo.CONTENT_SCHEMA(1.0)`；1.x→2.0 迁移器已存在 | `framework/services/save_service.gd`、`save_migrations.gd` |
 | Campaign 分区：`campaign.world / codex / factions` + 探索 4.1 的 `data.clues`（惰性 ensure）；剧情 4.5 的 `data.story` 是独立惰性块（不在 `campaign` 下） | `framework/state/game_state.gd` |
 | 注册表：`RegistryHub` 按 `ContentTypes.all()` 建通用注册表（`get_all / get_by_id / query / freeze_all`） | `framework/modding/registries/registry_hub.gd` |
-| 跨引用：按类型写 `_check_*`（如 `_check_map_profiles`），缺失硬引用 `_error`、软约束 `_warn` | `framework/modding/cross_reference_validator.gd` |
+| （历史）跨引用：按类型写 `_check_*`（如 `_check_map_profiles`），缺失硬引用 `_error`、软约束 `_warn`；C4 起对应检查为 `_check_port_templates` / `_check_map_configs` | `framework/modding/cross_reference_validator.gd` |
 | Core 完整性：`CoreCompletenessChecker._require_count` 逐类型下限 + 标签规则 | `framework/modding/core_completeness_checker.gd` |
-| 1.0 `map_profile`：**20 个 data 字段**（17 个原有 + `twin_world_size` + `exploration` + `story`；`exploration` 31 键、`story` 为 `story_flow` 对象） | `schemas/map_profile.schema.json`、`dev_mods/core/content/map_profiles.json` |
-| 读取 `ContentTypes.MAP_PROFILE` 的运行时位置：**15 处生产 + 2 处测试**。生产：`run_factory`、`voyage_service`、`intel_view`、`supply_view`、`intel_commands`、`debt_commands`、`trade_commands`、`supply_commands`、`port_time_service`、`clue_service`、`exploration_rules`、`story_service`、`main.gd`、`cross_reference_validator`、`core_completeness_checker` | 见 §6.5 的 resolver 改造清单；测试：`test_exploration` / `test_world_generator` |
+| （历史，1.0 基线）`map_profile`：**20 个 data 字段**（17 个原有 + `twin_world_size` + `exploration` + `story`；`exploration` 31 键、`story` 为 `story_flow` 对象）；C4 起该类型已退役，`map_configs` 为唯一场景配置 | `schemas/v2/map_config.schema.json`、`dev_mods/core/content/map_configs.json` |
+| （历史，Phase B 前）读取 `ContentTypes.MAP_PROFILE` 的运行时位置：**15 处生产 + 2 处测试**；C4 起 `MAP_PROFILE` 类型已删除，全部读取改走 `ContentRefs.map_config` | 见 §6.5 的 resolver 改造清单；测试：`test_exploration` / `test_world_generator` |
 
 > **Draft 1 → Draft 2 差异（B0 刷新，2026-10-22）**：Draft 1 基于探索 4.1 快照（`exploration` 19 键、14 处读取）。
 > 之后 `main` 落地 4.2–4.5：`exploration` 扩到 31 键（雾比例、调查、货物行情线索、等待 / 委托线索）、新增
@@ -272,9 +272,9 @@ data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
 
 ### 6.5 1.0 兼容
 
-- 1.0 路径（`run.start` 无 `start_profile`）不经过 `CampaignFactory`，行为与回归不变。
-- `ContentTypes.MAP_PROFILE` 的 **15 处生产读取（+2 处测试）**统一改成 `ContentRefs.map_config(state, hub)`：
-  v2 战役读 `MAP_CONFIG`，旧档读 `MAP_PROFILE`；`map_profile_id` 为空时返回 null 并走现有兜底。
+- （历史）1.0 路径（`run.start` 无 `start_profile`）不经过 `CampaignFactory`；C4 起 1.0 路径与 `map_profiles` 已删除。
+- （已完成）`ContentTypes.MAP_PROFILE` 的 **15 处生产读取（+2 处测试）**统一改成 `ContentRefs.map_config(state, hub)`：
+  当前只读 `MAP_CONFIG`；C4 起 `MAP_PROFILE` 类型已删除，`ContentRefs` 不再有 1.0 回退。
   - 列表：`run_factory`、`voyage_service`、`intel_view`、`supply_view`、`intel_commands`、`debt_commands`、
     `trade_commands`、`supply_commands`、`port_time_service`、`clue_service`、`exploration_rules`、`story_service`、
     `main.gd`、`cross_reference_validator`、`core_completeness_checker`。

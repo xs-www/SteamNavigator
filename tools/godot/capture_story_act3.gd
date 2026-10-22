@@ -15,7 +15,7 @@ extends SceneTree
 ## ## 契约与约束
 ## - 全程用真实 Shell / 真实命令推进；探索出航 / 结算用领域命令并补发 Shell 的
 ##   `cmd:explore.start` / `ui:arrival_settled` 观测，不伪造渲染数据。
-## - 硬性断言：第三港船厂候选只有 `core:cabin/small_cabin`；客舱安装后
+## - 硬性断言：第三港船厂候选只有 `core:module/small_cabin`；客舱安装后
 ##   `passenger_capacity = 1`；第三主线 `main_03` 含 1 名旅客且无货箱。
 ## @end-static-doc
 
@@ -25,8 +25,8 @@ const WINDOW := Vector2i(1440, 900)
 const SEED := 20260421
 const STEADY_BUILD := "core:starting_scenario/steady"
 const WATCHDOG_SECONDS := 240.0
-const CARGO_HOLD := "core:cargo_module/small_hold"
-const SMALL_CABIN := "core:cabin/small_cabin"
+const CARGO_HOLD := "core:module/small_hold"
+const SMALL_CABIN := "core:module/small_cabin"
 
 const SHOTS := [
 	{"file": "tutorial_shipyard_cabin.png", "label": "第三港船厂：只上架小型客舱"},
@@ -132,7 +132,7 @@ func _run() -> void:
 	shell._active_screen = "shipyard"
 	shell._refresh()
 	await _settle(8, 0.5)
-	_select_shipyard_category(shell, "cabins")
+	_select_shipyard_category(shell, "cabin")
 	await _settle(6, 0.35)
 	var yard: Dictionary = context.queries.execute(&"shipyard.view")["data"]
 	var candidates: Array = yard.get("candidates", [])
@@ -149,7 +149,7 @@ func _run() -> void:
 	shell._active_screen = "shipyard"
 	shell._refresh()
 	await _settle(8, 0.5)
-	_select_shipyard_category(shell, "cabins")
+	_select_shipyard_category(shell, "cabin")
 	await _settle(6, 0.35)
 	if String(context.state.ship().get("passenger_cabin_id", "")) != SMALL_CABIN:
 		_fail("the small cabin is not installed")

@@ -8,7 +8,7 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `collectSchemas(directory)` | L24 |
+| `collectSchemas(directory)` | L25 |
 
 ## 契约与约束
 

@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T15:55:50.375Z",
+    "generated_at": "2026-10-22T16:30:41.412Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -2005,8 +2005,8 @@
             "name_key": "starting_scenario.core.steady.name",
             "description_key": "starting_scenario.core.steady.description",
             "tags": [
-              "starting_build.efficient",
-              "starting_build.safe"
+              "starting_scenario.efficient",
+              "starting_scenario.safe"
             ],
             "enabled": true,
             "data": {
@@ -2031,8 +2031,8 @@
             "name_key": "starting_scenario.core.swift.name",
             "description_key": "starting_scenario.core.swift.description",
             "tags": [
-              "starting_build.performance",
-              "starting_build.risky"
+              "starting_scenario.performance",
+              "starting_scenario.risky"
             ],
             "enabled": true,
             "data": {
@@ -4294,8 +4294,6 @@
         "port_name.core.fishing_village": "渔村",
         "port_name.core.glass_port": "玻璃港",
         "port_name.core.mist_cove": "雾湾",
-        "map_profile.core.standard.name": "标准海图",
-        "map_profile.core.standard.description": "4–5 个港口的分支网络，包含造船厂与情报站。",
         "starting_scenario.core.steady.name": "低耗稳健型",
         "starting_scenario.core.steady.description": "效率型锅炉与较充足补给，风险低，适合学习。",
         "starting_scenario.core.swift.name": "高速冒险型",
@@ -4575,8 +4573,6 @@
         "port_name.core.fishing_village": "Fishing Village",
         "port_name.core.glass_port": "Glass Port",
         "port_name.core.mist_cove": "Mist Cove",
-        "map_profile.core.standard.name": "Standard Chart",
-        "map_profile.core.standard.description": "A 4-5 port branch network with a shipyard and intelligence station.",
         "starting_scenario.core.steady.name": "Steady and Thrifty",
         "starting_scenario.core.steady.description": "Efficient boiler and generous supplies. Low risk, easy to learn.",
         "starting_scenario.core.swift.name": "Swift and Bold",
@@ -7030,16 +7026,16 @@
         "name_zh": "低耗稳健型",
         "name_en": "Steady and Thrifty",
         "tags": [
-          "starting_build.efficient",
-          "starting_build.safe"
+          "starting_scenario.efficient",
+          "starting_scenario.safe"
         ],
         "definition": {
           "id": "core:starting_scenario/steady",
           "name_key": "starting_scenario.core.steady.name",
           "description_key": "starting_scenario.core.steady.description",
           "tags": [
-            "starting_build.efficient",
-            "starting_build.safe"
+            "starting_scenario.efficient",
+            "starting_scenario.safe"
           ],
           "enabled": true,
           "data": {
@@ -7068,16 +7064,16 @@
         "name_zh": "高速冒险型",
         "name_en": "Swift and Bold",
         "tags": [
-          "starting_build.performance",
-          "starting_build.risky"
+          "starting_scenario.performance",
+          "starting_scenario.risky"
         ],
         "definition": {
           "id": "core:starting_scenario/swift",
           "name_key": "starting_scenario.core.swift.name",
           "description_key": "starting_scenario.core.swift.description",
           "tags": [
-            "starting_build.performance",
-            "starting_build.risky"
+            "starting_scenario.performance",
+            "starting_scenario.risky"
           ],
           "enabled": true,
           "data": {

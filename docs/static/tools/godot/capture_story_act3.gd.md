@@ -33,7 +33,7 @@
 ## 契约与约束
 - 全程用真实 Shell / 真实命令推进；探索出航 / 结算用领域命令并补发 Shell 的
   `cmd:explore.start` / `ui:arrival_settled` 观测，不伪造渲染数据。
-- 硬性断言：第三港船厂候选只有 `core:cabin/small_cabin`；客舱安装后
+- 硬性断言：第三港船厂候选只有 `core:module/small_cabin`；客舱安装后
   `passenger_capacity = 1`；第三主线 `main_03` 含 1 名旅客且无货箱。
 
 模块索引：[tools](../README.md)

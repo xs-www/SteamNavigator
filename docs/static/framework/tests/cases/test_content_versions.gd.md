@@ -32,8 +32,8 @@
   `strategies` 已退役；C4-D 后不再有 1.0 active 类型。
 - `content_types.json.draft_schemas` 是 `weapons` + 剧情模式 `story_arcs` /
   `story_levels`，草案不得进入 `ContentTypes`。
-- 1.0 内容的 envelope 仍走 1.0 校验；`items` 声明 1.0 必须报 `unsupported_schema`
-  （C2 合并后 items 是 active 2.0 类型）。
+- 所有 active 类型的 envelope 必须声明 2.0；任何声明 1.0 的内容（如 `items`）
+  都会报 `unsupported_schema`（C4-D 后无 1.0 active 类型）。
 - 一个 2.0 `world_profiles` 内容模组必须通过 ContentCompiler、进入注册表，
   且不产生 fatal / degraded 启动状态。
 

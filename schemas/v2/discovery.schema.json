@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/discovery-2.json",
-  "title": "Steam Navigator discovery content file (Schema 2.0 draft)",
+  "title": "Steam Navigator discovery content file (Content Schema 2.0)",
   "description": "Codex entry prototype: what a site/ruin reveals, its rarity, spawn weight and the ids it unlocks.",
   "type": "object",
   "additionalProperties": false,

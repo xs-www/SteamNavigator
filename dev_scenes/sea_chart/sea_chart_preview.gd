@@ -55,23 +55,23 @@ const PREVIEW_PROFILE := {
 	# name keys, so the remaining preview ports use `port_name.preview.*` keys that
 	# PREVIEW_NAMES resolves — a content gap worth filling before the real chart ships.
 	"ports": [
-		{"archetype_id": "core:port_archetype/iron_harbor", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.25, "name_key": "port_name.core.iron_harbor", "is_start": true},
-		{"archetype_id": "core:port_archetype/spice_port", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.45, "name_key": "port_name.core.spice_port"},
-		{"archetype_id": "core:port_archetype/free_town", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.62, "name_key": "port_name.core.free_town"},
-		{"archetype_id": "core:port_archetype/fishing_village", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.82, "name_key": "port_name.core.fishing_village"},
-		{"archetype_id": "core:port_archetype/glass_port", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.5, "name_key": "port_name.core.glass_port"},
-		{"archetype_id": "core:port_archetype/spice_port", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.3, "name_key": "port_name.core.mist_cove"},
-		{"archetype_id": "core:port_archetype/glass_port", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.72, "name_key": "port_name.preview.copper_cove"},
-		{"archetype_id": "core:port_archetype/iron_harbor", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.25, "name_key": "port_name.preview.salt_rock"},
-		{"archetype_id": "core:port_archetype/fishing_village", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.78, "name_key": "port_name.preview.whale_reach"},
-		{"archetype_id": "core:port_archetype/fishing_village", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.5, "name_key": "port_name.preview.coral_station"},
-		{"archetype_id": "core:port_archetype/glass_port", "region_id": "ocean_1", "landmass_id": "fog_reef", "coast_t": 0.5, "name_key": "port_name.preview.fog_lighthouse"},
-		{"archetype_id": "core:port_archetype/free_town", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.5, "name_key": "port_name.preview.south_wind_port"},
-		{"archetype_id": "core:port_archetype/spice_port", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.5, "name_key": "port_name.preview.glass_atoll_port"},
+		{"archetype_id": "core:port_template/iron_harbor", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.25, "name_key": "port_name.core.iron_harbor", "is_start": true},
+		{"archetype_id": "core:port_template/spice_port", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.45, "name_key": "port_name.core.spice_port"},
+		{"archetype_id": "core:port_template/free_town", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.62, "name_key": "port_name.core.free_town"},
+		{"archetype_id": "core:port_template/fishing_village", "region_id": "start_coast", "landmass_id": "continent_west", "coast_t": 0.82, "name_key": "port_name.core.fishing_village"},
+		{"archetype_id": "core:port_template/glass_port", "region_id": "mid_coast_1", "landmass_id": "iron_island", "coast_t": 0.5, "name_key": "port_name.core.glass_port"},
+		{"archetype_id": "core:port_template/spice_port", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.3, "name_key": "port_name.core.mist_cove"},
+		{"archetype_id": "core:port_template/glass_port", "region_id": "mid_coast_2", "landmass_id": "spice_islands", "coast_t": 0.72, "name_key": "port_name.preview.copper_cove"},
+		{"archetype_id": "core:port_template/iron_harbor", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.25, "name_key": "port_name.preview.salt_rock"},
+		{"archetype_id": "core:port_template/fishing_village", "region_id": "ocean_1", "landmass_id": "north_island", "coast_t": 0.78, "name_key": "port_name.preview.whale_reach"},
+		{"archetype_id": "core:port_template/fishing_village", "region_id": "start_coast", "landmass_id": "coral_reef", "coast_t": 0.5, "name_key": "port_name.preview.coral_station"},
+		{"archetype_id": "core:port_template/glass_port", "region_id": "ocean_1", "landmass_id": "fog_reef", "coast_t": 0.5, "name_key": "port_name.preview.fog_lighthouse"},
+		{"archetype_id": "core:port_template/free_town", "region_id": "mid_coast_2", "landmass_id": "south_wind", "coast_t": 0.5, "name_key": "port_name.preview.south_wind_port"},
+		{"archetype_id": "core:port_template/spice_port", "region_id": "start_coast", "landmass_id": "glass_atoll", "coast_t": 0.5, "name_key": "port_name.preview.glass_atoll_port"},
 		# Two more berths on the outer reefs, so the preview actually exercises the
 		# 15-harbour acceptance floor instead of a smaller hand-made map.
-		{"archetype_id": "core:port_archetype/spice_port", "region_id": "ocean_1", "landmass_id": "bone_reef", "coast_t": 0.5, "name_key": "port_name.preview.bone_harbor"},
-		{"archetype_id": "core:port_archetype/glass_port", "region_id": "ocean_1", "landmass_id": "far_reef", "coast_t": 0.5, "name_key": "port_name.preview.far_reef_port"},
+		{"archetype_id": "core:port_template/spice_port", "region_id": "ocean_1", "landmass_id": "bone_reef", "coast_t": 0.5, "name_key": "port_name.preview.bone_harbor"},
+		{"archetype_id": "core:port_template/glass_port", "region_id": "ocean_1", "landmass_id": "far_reef", "coast_t": 0.5, "name_key": "port_name.preview.far_reef_port"},
 	],
 }
 
@@ -146,7 +146,7 @@ func _bootstrap() -> void:
 	# Real run: supplies the ship, the clock and the abstract-map routes that the
 	# chart's estimate is derived from (see `VoyageEstimator`). Failure is not
 	# fatal — the panel then shows geometry only, exactly like a legacy save.
-	var run := RunFactory.create_run(_context, "core:starting_build/steady", SEED)
+	var run := CampaignFactory.create_default_campaign(_context, "core:starting_scenario/steady", SEED)
 	if bool(run.get("ok", false)):
 		var run_state = (run.get("data", {}) as Dictionary).get("state", null)
 		if run_state is GameState:

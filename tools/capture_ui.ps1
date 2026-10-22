@@ -6,7 +6,7 @@
     Runs res://tools/ui_snapshot.gd in windowed mode (never --headless: the
     viewport texture is empty without a real renderer) with a 1440x900 window:
       - bootstraps Core exactly like framework/tests/test_case.gd;
-      - run.start {build_id=core:starting_build/steady, seed=5201};
+      - run.start {starting_scenario=core:starting_scenario/steady, seed=5201};
       - mounts main.tscn, switches to the shipyard screen, saves
         docs/design/screenshots/shipyard_normal.png;
       - presses the refit button to enter the cutaway, then saves
@@ -31,7 +31,7 @@ param(
     [string]$GodotBin = $env:GODOT_BIN,
     [int]$Seed = 5201,
     [string]$OutDir = "res://docs/design/screenshots",
-    [string]$Categories = "cargo_modules,misc",
+    [string]$Categories = "cargo,misc",
     [string]$Damage = "",
     [switch]$SkipRefit,
     [switch]$OverviewStage,
@@ -99,12 +99,8 @@ if (-not $SkipRefit) {
     foreach ($category in ($Categories -split ",")) {
         $category = $category.Trim()
         if ([string]::IsNullOrWhiteSpace($category) -or $category -eq "hulls") { continue }
-        $short = switch ($category) {
-            "cargo_modules" { "cargo" }
-            "navigation_modules" { "navigation" }
-            "safety_modules" { "safety" }
-            default { $category }
-        }
+        # C1 categories (hulls/boiler/cargo/utility/cabin/misc) already match file short names.
+        $short = $category
         $expected += "shipyard_refit_$short.png"
     }
 }

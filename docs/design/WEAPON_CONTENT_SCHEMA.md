@@ -310,7 +310,7 @@
   node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_weapons --id my_weapons `
     --name "我的武器包" --draft weapons
   ```
-  `--draft` 可重复（如 `--draft world_profiles --draft regions`），与 `--template goods` 叠加时同时生成 1.0 模板与草案内容；`describe weapons` 看字段与骨架，`add --type weapons` 往既有项目再加一条，`validate --mod dev_mods/core --json` 复核 Core 导入。编辑器对 `map_profiles.data.story.flow_id` 的假阳性引用错误已修复，Core 导入 **0 error**（warning 允许）。
+  `--draft` 可重复（如 `--draft world_profiles --draft regions`），与 `--template goods` 叠加时同时生成 1.0 模板与草案内容；`describe weapons` 看字段与骨架，`add --type weapons` 往既有项目再加一条，`validate --mod dev_mods/core --json` 复核 Core 导入。编辑器对 `map_configs.data.story.flow_id` 的假阳性引用错误已修复，Core 导入 **0 error**（warning 允许）。
 
 ## 9. 校验规则
 

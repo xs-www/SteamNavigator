@@ -200,7 +200,7 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 
 ## 9. 显式 Patch
 
-- 补丁文件使用 `content_type: "patches"`，每项声明 `target`、`source_version`、操作列表。
+- 补丁文件使用 `content_type: "patches"`，每项声明 `target`、可选的 `requires {mod, version}`、操作列表。
 - 目标必须存在且启用；同一目标路径冲突必须报错，不按加载顺序决定胜负。
 - Patch 只修改数据，不执行代码；不支持新增内容类型或绕过 Schema。
 - 补丁后的定义仍要经过 Schema、跨引用与完整性校验。

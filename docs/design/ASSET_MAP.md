@@ -275,17 +275,17 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 
 | Core 模块实体 | 运行时 GLB | 尺寸 L×W×H (m) | tri | 主要材质 |
 | --- | --- | ---: | ---: | --- |
-| `core:boiler/small_efficient` | `assets/models/modules/SN_Boiler_Efficient.glb` | 1.81 × 1.60 × 2.60 | 540 | Wood_Dark / Metal / Iron_Hull / Brass |
-| `core:boiler/standard` | `assets/models/modules/SN_Boiler_Standard.glb` | 2.82 × 1.90 × 2.62 | 860 | Wood_Dark / Metal / Iron_Hull / Brass |
-| `core:boiler/performance` | `assets/models/modules/SN_Boiler_Performance.glb` | 3.40 × 2.11 × 2.94 | 1152 | Wood_Dark / Metal / Iron_Hull / Brass |
-| `core:cargo_module/small_hold` | `assets/models/modules/SN_Cargo_Small_Hold.glb` | 2.40 × 2.00 × 1.80 | 456 | Wood / Wood_Dark / Metal / Brass |
-| `core:cargo_module/medium_hold` | `assets/models/modules/SN_Cargo_Medium_Hold.glb` | 3.20 × 2.40 × 2.20 | 492 | Wood / Wood_Dark / Metal / Brass |
-| `core:cargo_module/large_hold` | `assets/models/modules/SN_Cargo_Large_Hold.glb` | 4.01 × 2.81 × 2.60 | 672 | Wood / Wood_Dark / Metal / Brass |
-| `core:navigation_module/spyglass` | `assets/models/modules/SN_Nav_Spyglass.glb` | 1.38 × 0.80 × 1.75 | 328 | Brass / Metal / Wood_Dark / Wood |
-| `core:navigation_module/chart_room` | `assets/models/modules/SN_Nav_Chart_Room.glb` | 2.80 × 2.20 × 2.60 | 636 | Wood / Wood_Dark / Metal / Brass / Iron_Hull |
-| `core:safety_module/lifeboat` | `assets/models/modules/SN_Safety_Lifeboat.glb` | 4.20 × 1.50 × 1.10 | 660 | Wood / Wood_Dark / Canvas / Brass |
-| `core:safety_module/safety_valve` | `assets/models/modules/SN_Safety_Valve.glb` | 1.49 × 1.26 × 1.84 | 428 | Metal / Iron_Hull / Brass |
-| `core:cabin/passenger_cabin` | `assets/models/modules/SN_Cabin_Passenger.glb` | 3.40 × 2.40 × 2.55 | 792 | Wood_Deck / Wood / Wood_Dark / Metal / Brass / Iron_Hull |
+| `core:module/small_efficient` | `assets/models/modules/SN_Boiler_Efficient.glb` | 1.81 × 1.60 × 2.60 | 540 | Wood_Dark / Metal / Iron_Hull / Brass |
+| `core:module/standard` | `assets/models/modules/SN_Boiler_Standard.glb` | 2.82 × 1.90 × 2.62 | 860 | Wood_Dark / Metal / Iron_Hull / Brass |
+| `core:module/performance` | `assets/models/modules/SN_Boiler_Performance.glb` | 3.40 × 2.11 × 2.94 | 1152 | Wood_Dark / Metal / Iron_Hull / Brass |
+| `core:module/small_hold` | `assets/models/modules/SN_Cargo_Small_Hold.glb` | 2.40 × 2.00 × 1.80 | 456 | Wood / Wood_Dark / Metal / Brass |
+| `core:module/medium_hold` | `assets/models/modules/SN_Cargo_Medium_Hold.glb` | 3.20 × 2.40 × 2.20 | 492 | Wood / Wood_Dark / Metal / Brass |
+| `core:module/large_hold` | `assets/models/modules/SN_Cargo_Large_Hold.glb` | 4.01 × 2.81 × 2.60 | 672 | Wood / Wood_Dark / Metal / Brass |
+| `core:module/spyglass` | `assets/models/modules/SN_Nav_Spyglass.glb` | 1.38 × 0.80 × 1.75 | 328 | Brass / Metal / Wood_Dark / Wood |
+| `core:module/chart_room` | `assets/models/modules/SN_Nav_Chart_Room.glb` | 2.80 × 2.20 × 2.60 | 636 | Wood / Wood_Dark / Metal / Brass / Iron_Hull |
+| `core:module/lifeboat` | `assets/models/modules/SN_Safety_Lifeboat.glb` | 4.20 × 1.50 × 1.10 | 660 | Wood / Wood_Dark / Canvas / Brass |
+| `core:module/safety_valve` | `assets/models/modules/SN_Safety_Valve.glb` | 1.49 × 1.26 × 1.84 | 428 | Metal / Iron_Hull / Brass |
+| `core:module/passenger_cabin` | `assets/models/modules/SN_Cabin_Passenger.glb` | 3.40 × 2.40 × 2.55 | 792 | Wood_Deck / Wood / Wood_Dark / Metal / Brass / Iron_Hull |
 
 > 本批只交付 Blender 源场景 + GLB，**尚未接入 Core 内容键**：三种锅炉仍共用 `model.module.boiler`，货舱 / 导航 / 安全 / 客舱没有模型键。接入时需要同时改 `dev_mods/core/content/*.json` 的 `information.model`、manifest 的资源声明与校验测试。
 >
