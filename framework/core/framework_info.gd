@@ -23,6 +23,8 @@ const CAPABILITIES := [
 	"content.voyage_events.v1",
 	"content.crew_roles.v1",
 	"content.boiler_strategies.v1",
+	"content.contracts.v1",
+	"content.patches.v1",
 	"content.modules.v1",
 	"content.hulls.v1",
 ]

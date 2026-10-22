@@ -242,7 +242,7 @@ func test_runtime_accepts_mixed_version_mods() -> void:
 	assert_contains(_mod_ids(one_json), "example_crew_roles", "the 2.0 example mod must be loaded")
 	assert_true(int(_counts(one_json).get("crew_roles", 0)) >= 3, "the example crew role must be registered next to core")
 
-	# Mixed-version coverage: every active type is 2.0, while the patch/contract 1.0 baseline stays covered below.
+	# Mixed-type coverage: every active type is 2.0; contract/patch 2.0 semantics are covered below.
 	var mixed := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s" % MIXED_EXAMPLE, "--mode=runtime", "--json",
 	]))
@@ -343,35 +343,35 @@ func test_draft_mode_reports_schema_and_per_type_version_errors() -> void:
 	_clean(version_root)
 
 
-func test_patch_envelope_is_checked_against_the_target_type_version() -> void:
+func test_patch_envelope_is_checked_against_the_patches_type_version() -> void:
 	var root := _temp_root("patch_target_version")
 	_write_mod(root, "sdk_patch_mod", {
-		"content/patches.json": _patch_envelope("1.0", [
+		"content/patches.json": _patch_envelope("2.0", [
 			{"target": "core:crew_role/engineer_basic", "operations": [{"op": "replace", "path": "/data/wage_per_voyage", "value": 45}]},
 			{"target": "core:item/iron_ore", "operations": [{"op": "replace", "path": "/data/base_price", "value": 45}]},
 		]),
-	})
+	}, ["content.patches.v1"])
 	var result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s/sdk_patch_mod" % root, "--mode=runtime", "--json",
 	]))
-	assert_eq(int(result["exit"]), 0, "a 1.0 patch envelope may target 2.0 content (patches is the only 1.0 type)")
+	assert_eq(int(result["exit"]), 0, "a 2.0 patch envelope may target 2.0 content")
 	var json := _json_of(result, "patch target version")
-	assert_empty(json.get("errors", []), "patch re-validation uses the target type version, not the patch envelope version")
+	assert_empty(json.get("errors", []), "patch re-validation uses the target type schema with the patch's own 2.0 version")
 
-	# The patch envelope itself must stay on the patches type version (1.0).
+	# The patch envelope itself must be on the patches type version (2.0).
 	var bad_root := _temp_root("patch_bad_envelope")
 	_write_mod(bad_root, "sdk_patch_bad", {
-		"content/patches.json": _patch_envelope("2.0", [
+		"content/patches.json": _patch_envelope("1.0", [
 			{"target": "core:crew_role/engineer_basic", "operations": [{"op": "replace", "path": "/data/wage_per_voyage", "value": 45}]},
 		]),
-	})
+	}, ["content.patches.v1"])
 	var bad_result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s/sdk_patch_bad" % bad_root, "--mode=runtime", "--json",
 	]))
-	assert_eq(int(bad_result["exit"]), 1, "a patch file with the wrong envelope version must be rejected")
+	assert_eq(int(bad_result["exit"]), 1, "a patch file with a 1.0 envelope must be rejected")
 	assert_true(
 		_error_codes(_json_of(bad_result, "patch bad envelope")).has("unsupported_schema"),
-		"patches expects Content Schema 1.0, so 2.0 is unsupported_schema"
+		"patches expects Content Schema 2.0, so 1.0 is unsupported_schema"
 	)
 	_clean(root)
 	_clean(bad_root)

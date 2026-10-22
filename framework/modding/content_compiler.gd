@@ -9,11 +9,11 @@ extends RefCounted
 ##
 ## ## 契约与约束
 ## - 内容版本按内容类型声明：每个内容文件的 `schema_version` 必须等于
-##   `ContentTypes.schema_version(content_type)`；期望版本为空时回退
-##   `FrameworkInfo.CONTENT_SCHEMA`。未知类型仍按 `unknown_content_type` 拒绝。
-## - Phase A 只把全局版本比较改为按类型比较，1.0 内容行为完全不变；Schema 2.0
-##   草案类型尚未提升 active，仍不会进入加载链。
-## - Patch 的再校验用**目标定义类型**的版本构造 envelope，避免借用全局基线版本。
+##   `ContentTypes.schema_version(content_type)`。C4-D 起所有 active 类型（含
+##   `contracts` 与 `patches`）都是 2.0，不再回退全局 1.0 基线；未知类型仍按
+##   `unknown_content_type` 拒绝。
+## - Patch 的再校验用**目标定义类型**的版本构造 envelope（目标类型当前均为
+##   2.0），没有「目标 1.0 → 用 1.0 envelope」的 fallback。
 ## @end-static-doc
 
 const MAX_CONTENT_FILE_BYTES := 8 * 1024 * 1024
@@ -339,12 +339,10 @@ func _apply_patch(entry: Dictionary) -> void:
 		_logger.info("content patch applied", {"target": target_id, "mod": mod_id, "file": file})
 
 
-## Expected content schema version for a type. `ContentTypes` declares one per
-## active type (Phase A); the framework baseline is only a defensive fallback
-## for types registered before the per-type version table existed.
+## Expected content schema version for a type: always the per-type declaration in
+## `ContentTypes`. C4-D removed the global-baseline fallback (no 1.0 active types).
 func _expected_content_schema_version(content_type: StringName) -> String:
-	var declared := ContentTypes.schema_version(content_type)
-	return declared if not declared.is_empty() else FrameworkInfo.CONTENT_SCHEMA
+	return ContentTypes.schema_version(content_type)
 
 
 func _validate_definition(content_type: StringName, raw_definition: Dictionary) -> Array[Dictionary]:

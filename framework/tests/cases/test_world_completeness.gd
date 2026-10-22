@@ -271,7 +271,7 @@ func _full_hub(
 	return hub
 
 
-## Minimal 1.0 content the legacy baseline checks need; keeps every legacy rule
+## Minimal 2.0 content the baseline checks need; keeps every rule
 ## satisfied so v2 assertions are not polluted by legacy errors. `skip` may remove
 ## a baseline type so a missing-content rule can be exercised.
 func _baseline_hub(skip: Array = []) -> RegistryHub:

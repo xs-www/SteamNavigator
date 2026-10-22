@@ -21,10 +21,11 @@ func _make_patch_mod(root: String, mod_id: String, price: int, texture_key: Stri
 		"required": false,
 		"dependencies": [{"id": "core", "version": ">=1.0.0 <2.0.0"}],
 		"content": ["content/patches.json"],
+		"capabilities": ["content.patches.v1"],
 	}
 	_write_file(mod_root + "/manifest.json", JsonUtils.canonical_stringify(manifest, "  "))
 	var patches := {
-		"schema_version": "1.0",
+		"schema_version": "2.0",
 		"content_type": "patches",
 		"definitions": [{
 			"target": "core:item/iron_ore",

@@ -9,9 +9,9 @@ extends TestCase
 ##   factions / discoveries / start_profiles / map_configs）、C1 合并后的
 ##   `modules` + `hulls`、C2 合并后的 `items`、C3 新增的 `quests`、C4 的
 ##   `port_templates` / `starting_scenarios` 与 C4-C 的 `voyage_events` /
-##   `crew_roles` / `boiler_strategies` 为 2.0，其余运行时类型与 patches 仍为 1.0；
+##   `crew_roles` / `boiler_strategies` 与 C4-D 的 `contracts` / `patches` 为 2.0；
 ##   `map_profiles` / `port_archetypes` / `starting_builds` / `events` / `roles` /
-##   `strategies` 已退役。
+##   `strategies` 已退役；C4-D 后不再有 1.0 active 类型。
 ## - `content_types.json.draft_schemas` 是 `weapons` + 剧情模式 `story_arcs` /
 ##   `story_levels`，草案不得进入 `ContentTypes`。
 ## - 1.0 内容的 envelope 仍走 1.0 校验；`items` 声明 1.0 必须报 `unsupported_schema`
@@ -176,7 +176,15 @@ func test_every_runtime_type_declares_its_content_schema_version() -> void:
 	assert_eq(ContentTypes.schema_version(ContentTypes.MODULE), "2.0", "the merged modules type is Schema 2.0")
 	assert_eq(ContentTypes.schema_path(ContentTypes.MODULE), "res://schemas/v2/module.schema.json", "modules schema path")
 	assert_eq(ContentTypes.schema_path(ContentTypes.HULL), "res://schemas/v2/hull.schema.json", "hulls schema path")
-	assert_eq(ContentTypes.schema_version(ContentTypes.PATCH), "1.0", "patch type stays on content schema 1.0")
+	assert_eq(ContentTypes.schema_version(ContentTypes.CONTRACT), "2.0", "contracts is a Schema 2.0 type (C4-D)")
+	assert_eq(ContentTypes.schema_path(ContentTypes.CONTRACT), "res://schemas/v2/contract.schema.json", "contracts schema path")
+	assert_eq(ContentTypes.schema_version(ContentTypes.PATCH), "2.0", "patches is a Schema 2.0 type (C4-D)")
+	assert_eq(ContentTypes.schema_path(ContentTypes.PATCH), "res://schemas/v2/patch.schema.json", "patches schema path")
+	# C4-D closed the last 1.0 types: every declared runtime type is now 2.0.
+	for content_type in ContentTypes.registry_types():
+		assert_eq(ContentTypes.schema_version(content_type), "2.0", "%s has no 1.0 fallback" % content_type)
+	for content_type in ContentTypes.SCHEMA_VERSIONS.keys():
+		assert_eq(String(ContentTypes.SCHEMA_VERSIONS[content_type]), "2.0", "%s declares 2.0" % content_type)
 
 
 func test_phase_b_world_family_is_active_with_2_0_schemas() -> void:
