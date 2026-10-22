@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T21:20:05.827Z",
-  "commit": "e8392f7",
+  "generated_at": "2026-10-22T21:59:53.212Z",
+  "commit": "000251c",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -3092,7 +3092,7 @@
     },
     {
       "source": "framework/application/commands/combat_commands.gd",
-      "sha256": "1279fecff2c6b062e43f4b24cbc66f0eb10cc6dfa4367da2d2e509a099ba940b",
+      "sha256": "654d4756586b5fa44a1f88dec89fc39c9b2d7f4ff3228c355e8da5e53083a01f",
       "doc": "docs/static/framework/application/commands/combat_commands.gd.md",
       "status": "documented"
     },
@@ -3456,13 +3456,13 @@
     },
     {
       "source": "framework/domain/combat/combat_ops.gd",
-      "sha256": "725516a0026349484325e8824512ae8f900dcebee3f18fdb832639e47f895fda",
+      "sha256": "eef653d97e2676c1a909eb5c5558c83e8bbc8bd0b7397adc74ccb9c71b076b7b",
       "doc": "docs/static/framework/domain/combat/combat_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/combat/combat_service.gd",
-      "sha256": "89b93dee83c8f13e6851f2dd5e81489609949433c3c1a1e8b439306fa1582a46",
+      "sha256": "6bbc32fa63573bf93d484fab9c18bc15bba8c42f763e64c4621e223a15cf138b",
       "doc": "docs/static/framework/domain/combat/combat_service.gd.md",
       "status": "documented"
     },
@@ -3775,7 +3775,7 @@
     },
     {
       "source": "framework/modding/mod_loader.gd",
-      "sha256": "63b100fc26fd4ea15ac520f273e340499a0ad4be7b6d1011943e6ba87dca9c5e",
+      "sha256": "187bba9a8b55d94a45ed14d7256e64730d69d34f596f12c8ab3e667e6441dc37",
       "doc": "docs/static/framework/modding/mod_loader.gd.md",
       "status": "documented"
     },
@@ -3869,7 +3869,7 @@
     },
     {
       "source": "framework/services/rng_service.gd",
-      "sha256": "6277722b73c5e4c67f6d54889d25d0ae063b2a96fa73b79631d29750bdb6f412",
+      "sha256": "37c371d27c0efafe369e8b83a097eadd61867af8ef836aa051c182d3ddcfa165",
       "doc": "docs/static/framework/services/rng_service.gd.md",
       "status": "documented"
     },
@@ -3937,7 +3937,7 @@
     },
     {
       "source": "framework/tests/cases/test_combat.gd",
-      "sha256": "071bea9e4d660fe23ab7f00b6e4ee42e1644b26c77e4c5db3166b9d32f5e3b0d",
+      "sha256": "3a2ab238e23cceb1cdc93244e74adbcd0bd9afff9fcaf48f03db09a61d8cc380",
       "doc": "docs/static/framework/tests/cases/test_combat.gd.md",
       "status": "documented"
     },
@@ -4153,7 +4153,7 @@
     },
     {
       "source": "framework/tests/cases/test_sdk_validation.gd",
-      "sha256": "c4dda89e6fffef9eab91ab713f1097f77ce6678501fabcaef8c0aa3c8f20899c",
+      "sha256": "741866ead979e504f903212ccdb5b776c7890e96168a616c971e68c9fbe96200",
       "doc": "docs/static/framework/tests/cases/test_sdk_validation.gd.md",
       "status": "documented"
     },
@@ -5307,7 +5307,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "ffc48a2a13b2f3b3a7c0abd6ef7a90ec852eef31f80c464a15ea92234e0af5d7",
+      "sha256": "58486c3daacd6c97fd70b482cc7337b90b2256f9dd37eb7f9c27f9fc0ad1a718",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"

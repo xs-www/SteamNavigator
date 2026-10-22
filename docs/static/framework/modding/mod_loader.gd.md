@@ -12,10 +12,10 @@
 | `ModLoader` | L1 |
 | `_init(log: AppLogger = null) -> void` | L11 |
 | `load_mods(config: Dictionary) -> StartupReport` | L15 |
-| `registry_hub() -> RegistryHub` | L121 |
-| `localization_service() -> LocalizationService` | L125 |
-| `asset_service() -> AssetService` | L129 |
-| `bind_context(context) -> void` | L138 |
+| `registry_hub() -> RegistryHub` | L123 |
+| `localization_service() -> LocalizationService` | L127 |
+| `asset_service() -> AssetService` | L131 |
+| `bind_context(context) -> void` | L140 |
 
 ## 契约与约束
 

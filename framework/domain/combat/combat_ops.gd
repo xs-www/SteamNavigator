@@ -36,14 +36,16 @@ extends RefCounted
 ##   只有 `victory` 对**已击沉**敌舰 roll 战利品；撤退/击沉玩家不发奖励。
 ## - **内容缺失诊断（D1-FIX）**：未知 weapon class 的 socket 会被 skip，但同一份
 ##   `battle.diagnostics[]` 会记录 `{side, index?, socket, socket_class,
-##   reason:"weapon_class_missing"}`；未知 loot_table / loot entry 也记录
+##   reason:"weapon_class_missing"}`；显式 `weapon_loadout` 的 weapon class 与 socket
+##   class 不匹配同样 skip 并记 `reason:"weapon_class_mismatch"`（与视觉装配的 class
+##   门禁一致，不回退默认武器）；未知 loot_table / loot entry 也记录
 ##   `reason:"loot_table_missing"` / `"loot_entry_missing"`。敌我双方规则一致；
 ##   `player.view.unmounted_sockets` / `enemy.view.unmounted_sockets` 提供同源视图。
-##   校验器（CrossReferenceValidator）在内容层把这些 class 缺口升级为 error。
+##   校验器（CrossReferenceValidator）在内容层把 archetype class 缺口升级为 error。
 ## @end-static-doc
 
-## 战斗随机流名（RngService 的命名流；D1 新增，不影响其他流）。
-const STREAM_COMBAT := &"combat"
+## 战斗随机流名（`RngService.STREAM_COMBAT`；D1 新增，不影响其他流）。
+const STREAM_COMBAT := RngService.STREAM_COMBAT
 ## 一次自动结算的最大回合数（1 回合 = 1 战斗秒）。超过即按当前状态判终局。
 const MAX_ROUNDS := 180
 ## 玩家结构耐久 → 战斗 HP 的倍率（见文件头「玩家战斗耐久池」）。
@@ -111,12 +113,16 @@ static func resolve(
 	battle["player"]["retreated"] = false
 	if not (player["view"]["unmounted_sockets"] as Array).is_empty():
 		for missing in player["view"]["unmounted_sockets"]:
-			(battle["diagnostics"] as Array).append({
+			var missing_entry: Dictionary = missing
+			var diagnostic := {
 				"side": "player",
-				"socket": String((missing as Dictionary).get("socket", "")),
-				"socket_class": String((missing as Dictionary).get("socket_class", "")),
-				"reason": "weapon_class_missing",
-			})
+				"socket": String(missing_entry.get("socket", "")),
+				"socket_class": String(missing_entry.get("socket_class", "")),
+				"reason": String(missing_entry.get("reason", "weapon_class_missing")),
+			}
+			if missing_entry.has("weapon_id"):
+				diagnostic["weapon_id"] = String(missing_entry["weapon_id"])
+			(battle["diagnostics"] as Array).append(diagnostic)
 	for enemy in enemies:
 		battle["enemies"].append(enemy["view"])
 		if (enemy["view"]["unmounted_sockets"] as Array).is_empty():
@@ -127,7 +133,7 @@ static func resolve(
 				"index": int(enemy["index"]),
 				"socket": "",
 				"socket_class": String((missing as Dictionary).get("socket_class", "")),
-				"reason": "weapon_class_missing",
+				"reason": String((missing as Dictionary).get("reason", "weapon_class_missing")),
 			})
 
 	_run_battle(hub, battle, player, enemies, rng)
@@ -171,9 +177,10 @@ static func encounter_summaries(hub: RegistryHub) -> Array:
 
 
 ## Resolves the player's armament: an explicit `ship.weapon_loadout` /
-## `ship.weapons` list wins when it contains resolvable weapon ids; otherwise every
-## hull socket class maps to the alphabetically-first weapon definition that fits
-## the socket class. Returns rows `{socket, weapon_id, weapon_class, damage}`.
+## `ship.weapons` list wins when it contains resolvable weapon ids whose class fits
+## the hull socket; otherwise every hull socket class maps to the
+## alphabetically-first weapon definition that fits the socket class. Returns rows
+## `{socket, weapon_id, weapon_class, damage}`.
 ## `range` is reported for UI only and never selects or gates a shot.
 static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
@@ -187,9 +194,16 @@ static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 		var socket_name := String(socket_entry.get("name", ""))
 		var socket_class := String(socket_entry.get("socket_class", ""))
 		var weapon: ContentDefinition = null
-		if not explicit.is_empty():
-			weapon = explicit.get(socket_name, null)
-		if weapon == null:
+		if explicit.has(socket_name):
+			# Explicit loadout is an author/player intent: the socket-class gate is
+			# hard here (same rule as visual assembly). A mismatched weapon is skipped
+			# without falling back to a default, and `unmounted_sockets` reports it.
+			var explicit_weapon: ContentDefinition = explicit[socket_name]
+			if _weapon_fits_class(explicit_weapon, socket_class):
+				weapon = explicit_weapon
+			else:
+				continue
+		else:
 			weapon = _default_weapon_for_socket(hub, socket_class)
 		if weapon == null:
 			continue
@@ -197,11 +211,12 @@ static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 	return rows
 
 
-## Hull sockets skipped because no weapon definition fits their class. Reported in
-## the battle record (`player.view.unmounted_sockets`) and via the view query, so a
-## content gap is visible instead of silently removing armament; the same shape is
-## used for enemy sockets. D1: unknown socket class (no weapon with matching
-## `weapon_class` / `mount_class`) is skipped at runtime and recorded here.
+## Hull sockets skipped because no usable weapon fits their class: either no weapon
+## definition exists for the class (`weapon_class_missing`) or the explicit
+## `weapon_loadout` entry names a weapon whose `weapon_class` / `mount_class` does not
+## fit the socket (`weapon_class_mismatch`). Reported in the battle record and via
+## the view query, so a content/loadout gap is visible instead of silently removing
+## armament; the same shape is used for enemy sockets.
 static func unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array:
 	var hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 	if hull == null:
@@ -213,6 +228,15 @@ static func unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array:
 		var socket_name := String(socket_entry.get("name", ""))
 		var socket_class := String(socket_entry.get("socket_class", ""))
 		if explicit.has(socket_name):
+			var explicit_weapon: ContentDefinition = explicit[socket_name]
+			if _weapon_fits_class(explicit_weapon, socket_class):
+				continue
+			missing.append({
+				"socket": socket_name,
+				"socket_class": socket_class,
+				"weapon_id": explicit_weapon.id,
+				"reason": "weapon_class_mismatch",
+			})
 			continue
 		if _default_weapon_for_socket(hub, socket_class) == null:
 			missing.append({
@@ -221,6 +245,16 @@ static func unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array:
 				"reason": "weapon_class_missing",
 			})
 	return missing
+
+
+## True when the weapon's class (or mount class) equals the hull socket class.
+static func _weapon_fits_class(weapon: ContentDefinition, socket_class: String) -> bool:
+	if weapon == null or socket_class.is_empty():
+		return false
+	var data: Dictionary = weapon.data
+	var weapon_class := String(data.get("weapon_class", ""))
+	var mount_class := String(data.get("mount_class", weapon_class))
+	return weapon_class == socket_class or mount_class == socket_class
 
 
 ## True when the damage type's status effect should be applied by hits.

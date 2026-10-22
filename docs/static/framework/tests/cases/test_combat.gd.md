@@ -8,55 +8,59 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `HULL_SINGLE` | L22 |
-| `HULL_DUAL` | L23 |
-| `HULL_GUNNER` | L24 |
-| `HULL_TOWER` | L25 |
-| `WEAPON_LIGHT` | L26 |
-| `WEAPON_PIERCER` | L27 |
-| `WEAPON_BURNER` | L28 |
-| `WEAPON_PLAIN_BURNER` | L29 |
-| `WEAPON_MEDIUM` | L30 |
-| `WEAPON_CRUSHER` | L31 |
-| `WEAPON_HEAVY_BURST` | L32 |
-| `ENEMY_WEAK` | L33 |
-| `ENEMY_ARMORED` | L34 |
-| `ENEMY_FLEEING` | L35 |
-| `ENEMY_GUNSHIP` | L36 |
-| `ENEMY_CRUSHER` | L37 |
-| `ENEMY_TANK` | L38 |
-| `ENEMY_LOOTBAG` | L39 |
-| `ENEMY_ARMORY` | L40 |
-| `ENEMY_BAD_LOOT` | L41 |
-| `ENCOUNTER_SCRAP` | L42 |
-| `ENCOUNTER_ARMORED` | L43 |
-| `ENCOUNTER_FLEEING` | L44 |
-| `ENCOUNTER_GUNSHIP` | L45 |
-| `ENCOUNTER_CRUSHER` | L46 |
-| `ENCOUNTER_TANK` | L47 |
-| `LOOT_SCRAP` | L48 |
-| `LOOT_MODULE` | L49 |
-| `LOOT_WEAPON` | L50 |
-| `PORT_ID` | L51 |
-| `ITEM_SCRAP` | L52 |
-| `MODULE_CRATE` | L53 |
-| `test_resolve_victory_applies_loot_and_durability() -> void` | L293 |
-| `test_same_seed_is_deterministic() -> void` | L319 |
-| `test_armor_and_damage_type_pierce() -> void` | L333 |
-| `test_status_effect_adds_damage_over_time() -> void` | L352 |
-| `test_player_retreats_below_threshold() -> void` | L371 |
-| `test_player_defeat_sets_minimum_durability() -> void` | L385 |
-| `test_enemy_retreat_gives_no_loot() -> void` | L397 |
-| `test_loot_modules_and_weapon_salvage_apply() -> void` | L409 |
-| `test_old_state_queries_are_read_only_and_command_creates_block() -> void` | L434 |
-| `test_command_errors_are_structured() -> void` | L454 |
-| `test_player_weapon_rows_from_hull_sockets() -> void` | L468 |
-| `test_multi_enemy_encounter_targets_sequentially() -> void` | L485 |
-| `test_battle_record_is_save_safe() -> void` | L508 |
-| `test_core_content_resolves() -> void` | L528 |
-| `test_combat_commands_and_queries_are_registered() -> void` | L547 |
-| `test_missing_weapon_class_is_reported_for_both_sides() -> void` | L571 |
-| `test_missing_loot_table_is_reported_in_battle_diagnostics() -> void` | L601 |
+| `HULL_SINGLE` | L25 |
+| `HULL_DUAL` | L26 |
+| `HULL_GUNNER` | L27 |
+| `HULL_TOWER` | L28 |
+| `WEAPON_LIGHT` | L29 |
+| `WEAPON_PIERCER` | L30 |
+| `WEAPON_BURNER` | L31 |
+| `WEAPON_PLAIN_BURNER` | L32 |
+| `WEAPON_MEDIUM` | L33 |
+| `WEAPON_CRUSHER` | L34 |
+| `WEAPON_HEAVY_BURST` | L35 |
+| `ENEMY_WEAK` | L36 |
+| `ENEMY_ARMORED` | L37 |
+| `ENEMY_FLEEING` | L38 |
+| `ENEMY_GUNSHIP` | L39 |
+| `ENEMY_CRUSHER` | L40 |
+| `ENEMY_TANK` | L41 |
+| `ENEMY_LOOTBAG` | L42 |
+| `ENEMY_ARMORY` | L43 |
+| `ENEMY_BAD_LOOT` | L44 |
+| `ENCOUNTER_SCRAP` | L45 |
+| `ENCOUNTER_ARMORED` | L46 |
+| `ENCOUNTER_FLEEING` | L47 |
+| `ENCOUNTER_GUNSHIP` | L48 |
+| `ENCOUNTER_CRUSHER` | L49 |
+| `ENCOUNTER_TANK` | L50 |
+| `LOOT_SCRAP` | L51 |
+| `LOOT_MODULE` | L52 |
+| `LOOT_WEAPON` | L53 |
+| `PORT_ID` | L54 |
+| `ITEM_SCRAP` | L55 |
+| `MODULE_CRATE` | L56 |
+| `test_resolve_victory_applies_loot_and_durability() -> void` | L296 |
+| `test_same_seed_is_deterministic() -> void` | L322 |
+| `test_armor_and_damage_type_pierce() -> void` | L336 |
+| `test_status_effect_adds_damage_over_time() -> void` | L355 |
+| `test_player_retreats_below_threshold() -> void` | L374 |
+| `test_player_defeat_sets_minimum_durability() -> void` | L388 |
+| `test_enemy_retreat_gives_no_loot() -> void` | L400 |
+| `test_loot_modules_and_weapon_salvage_apply() -> void` | L412 |
+| `test_old_state_queries_are_read_only_and_command_creates_block() -> void` | L437 |
+| `test_command_errors_are_structured() -> void` | L457 |
+| `test_player_weapon_rows_from_hull_sockets() -> void` | L471 |
+| `test_multi_enemy_encounter_targets_sequentially() -> void` | L488 |
+| `test_battle_record_is_save_safe() -> void` | L511 |
+| `test_core_content_resolves() -> void` | L531 |
+| `test_combat_commands_and_queries_are_registered() -> void` | L550 |
+| `test_missing_weapon_class_is_reported_for_both_sides() -> void` | L574 |
+| `test_missing_loot_table_is_reported_in_battle_diagnostics() -> void` | L604 |
+| `test_explicit_loadout_enforces_socket_class() -> void` | L622 |
+| `test_settlement_key_makes_resolve_idempotent() -> void` | L645 |
+| `test_settlement_keys_are_pruned_with_the_battle_log() -> void` | L681 |
+| `test_combat_stream_is_registered() -> void` | L695 |
 
 敌人原型 / 遭遇表 / 掉落表 / hull）驱动 `CombatOps`（纯规则）、`CombatService`
 （落盘 / 战利品 / 惰性 `data.combat`）、`CombatCommands.resolve` 与
@@ -74,5 +78,8 @@
 - **D1-FIX 诊断**：未知 weapon class 的 socket 跳过时写入 `battle.diagnostics`
   （敌我一致，side/index/socket/socket_class/reason），未知 loot_table / loot entry
   同样记录 reason；battle 仍可结算，内容层缺口由 CrossReferenceValidator 报 error。
+- **D1-FIX2**：显式 `weapon_loadout` 受 socket class 门禁（不匹配 `weapon_class_mismatch`
+  且不回退默认武器）；`combat.resolve` 的可选 `encounter_id` 是结算幂等键，重复调用
+  返回 `already_settled` 且不发奖/不追加/不发事件；`RngService.STREAM_NAMES` 含 combat。
 
 模块索引：[framework/tests](../README.md)

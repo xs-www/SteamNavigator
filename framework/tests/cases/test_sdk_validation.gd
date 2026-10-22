@@ -173,6 +173,28 @@ func _weapon_envelope(mod_id: String, damage: int = 12) -> Dictionary:
 	}
 
 
+func _enemy_envelope(mod_id: String, socket_class: String) -> Dictionary:
+	return {
+		"schema_version": "2.0",
+		"content_type": "enemy_archetypes",
+		"definitions": [{
+			"id": "%s:enemy_archetype/test_enemy" % mod_id,
+			"name_key": "enemy_archetype.%s.test_enemy.name" % mod_id,
+			"tags": ["enemy.light"],
+			"enabled": true,
+			"data": {
+				"enemy_class": "Light",
+				"hull_points": 120,
+				"armor": 0.05,
+				"max_speed": 12,
+				"turn_rate_deg": 45,
+				"weapon_sockets": [socket_class],
+				"combat_ability": "core:combat_ability/aggressive",
+			},
+		}],
+	}
+
+
 func _item_envelope(mod_id: String, schema_version: String = "2.0", base_price: int = 10) -> Dictionary:
 	return {
 		"schema_version": schema_version,
@@ -229,6 +251,33 @@ func test_mod_root_core_does_not_duplicate_the_default_scan_root() -> void:
 		assert_false(_error_codes(json).has("duplicate_mod_id"), "core must not be scanned twice")
 		var scanned: Array = json.get("scanned_roots", [])
 		assert_eq(scanned.size(), 1, "only the deduplicated core root is scanned")
+
+
+func test_runtime_cross_reference_errors_keep_structured_metadata() -> void:
+	# A cross-reference error must reach StartupReport (and the SDK `--json` payload)
+	# with mod/file/entity/path intact, not just the message text.
+	var root := _temp_root("cross_ref_metadata")
+	_write_mod(
+		root,
+		"sdk_bad_enemy",
+		{"content/enemy_archetypes.json": _enemy_envelope("sdk_bad_enemy", "Tower")},
+		["content.combat.v1"]
+	)
+	var result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
+		"--mod-root=%s/sdk_bad_enemy" % root, "--mode=runtime", "--json",
+	]))
+	assert_eq(int(result["exit"]), 1, "unresolved enemy socket class fails runtime validation")
+	var json := _json_of(result, "cross-reference metadata")
+	var issue := _error_with_code(json, "enemy_weapon_class_missing")
+	assert_false(issue.is_empty(), "the unresolved class raises enemy_weapon_class_missing: %s" % str(json.get("errors", [])))
+	assert_eq(String(issue.get("mod", "")), "sdk_bad_enemy", "the error keeps the owning mod")
+	assert_eq(String(issue.get("file", "")), "content/enemy_archetypes.json", "the error keeps the source file")
+	assert_eq(String(issue.get("entity", "")), "Tower", "the error keeps the unresolved socket class")
+	assert_eq(String(issue.get("path", "")), "data.weapon_sockets[0]", "the error keeps the JSON path")
+	assert_eq(String(issue.get("definition_id", "")), "sdk_bad_enemy:enemy_archetype/test_enemy",
+		"the error keeps the definition id")
+	assert_eq(String(issue.get("severity", "")), "error", "third-party cross-reference errors are non-fatal")
+	_clean(root)
 
 
 func test_runtime_accepts_mixed_version_mods() -> void:

@@ -89,10 +89,12 @@ func load_mods(config: Dictionary) -> StartupReport:
 	var cross_result := cross_reference.validate(registry_hub())
 	for error in cross_result["errors"]:
 		var is_core := String(error.get("definition_id", "")).begins_with("core:")
-		report.add_error(String(error.get("code", "cross_reference")), String(error.get("message", "")), {
-			"severity": "fatal" if is_core else "error",
-			"definition_id": error.get("definition_id", ""),
-		})
+		# Keep the validator's structured metadata (mod / file / entity / path) so
+		# StartupReport consumers and the SDK `--json` output can point at the exact
+		# definition/field instead of only the message text.
+		var error_fields: Dictionary = (error as Dictionary).duplicate(true)
+		error_fields["severity"] = "fatal" if is_core else "error"
+		report.add_error(String(error.get("code", "cross_reference")), String(error.get("message", "")), error_fields)
 	for warning in cross_result["warnings"]:
 		report.add_warning(String(warning.get("code", "cross_reference")), String(warning.get("message", "")), warning)
 

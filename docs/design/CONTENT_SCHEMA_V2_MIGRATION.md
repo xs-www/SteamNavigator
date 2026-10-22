@@ -307,7 +307,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] **Phase C 完成**：20 个 active 类型全部 2.0（0 个 1.0 runtime）；Godot 527/527、Node 58/58、CLI 63/63、SDK `status: ok`（2026-10-23）。
 - [x] Phase D · D0：模拟时钟 / `sim.pause|resume|set_speed|advance` + `sim.view`，`data.sim` 固定 1h 步长（2026-10-23）。
 - [x] Phase D · D1：combat 6 类 active 2.0 + Core 6 个战斗内容文件 + `CombatOps` / `CombatService` / `combat.resolve|view|log`（2026-10-23）。
-- [x] **Phase D0/D1 完成快照**：26 个 active 类型全部 2.0（25 定义 + patch）；schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）；Godot **554/554**、Node **58/58**、CLI **63/63**、SDK `status: ok`（2026-10-23）。
+- [x] **Phase D0/D1 完成快照**：26 个 active 类型全部 2.0（25 定义 + patch）；schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）；Godot **566/566**、Node **58/58**、CLI **63/63**、SDK `status: ok`（2026-10-23）。
 - [ ] Phase D 其余：fleet / base / auto_trade / ruins 系统类型与运行时切片。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。

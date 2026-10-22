@@ -17,6 +17,9 @@ extends TestCase
 ## - **D1-FIX 诊断**：未知 weapon class 的 socket 跳过时写入 `battle.diagnostics`
 ##   （敌我一致，side/index/socket/socket_class/reason），未知 loot_table / loot entry
 ##   同样记录 reason；battle 仍可结算，内容层缺口由 CrossReferenceValidator 报 error。
+## - **D1-FIX2**：显式 `weapon_loadout` 受 socket class 门禁（不匹配 `weapon_class_mismatch`
+##   且不回退默认武器）；`combat.resolve` 的可选 `encounter_id` 是结算幂等键，重复调用
+##   返回 `already_settled` 且不发奖/不追加/不发事件；`RngService.STREAM_NAMES` 含 combat。
 ## @end-static-doc
 
 const HULL_SINGLE := "test:hull/single"
@@ -614,6 +617,88 @@ func test_missing_loot_table_is_reported_in_battle_diagnostics() -> void:
 	assert_eq(String(loot_diag.get("reason", "")), "loot_table_missing", "diagnostic reason is loot_table_missing")
 	assert_eq(String(loot_diag.get("loot_table", "")), "test:loot/missing", "diagnostic names the missing table")
 	assert_eq(int((battle["loot"] as Dictionary).get("money", -1)), 0, "no loot is fabricated")
+
+
+func test_explicit_loadout_enforces_socket_class() -> void:
+	var hub := _hub()
+	# Light socket + Medium weapon in the explicit loadout: the class gate must skip it
+	# (no silent fallback to the default Light weapon) and record a mismatch diagnostic.
+	var state := _state(hub, HULL_SINGLE, _single_gun_loadout(WEAPON_BURNER))
+	var result := CombatService.resolve(hub, state, ENCOUNTER_SCRAP, 121)
+	assert_true(bool(result.get("ok", false)), "battle still resolves with a mismatched loadout")
+	var battle: Dictionary = result["data"]["battle"]
+	assert_true((battle["player"]["weapons"] as Array).is_empty(), "mismatched explicit weapon is not mounted")
+	var mismatch := {}
+	for entry in battle.get("diagnostics", []):
+		var row: Dictionary = entry
+		if String(row.get("side", "")) == "player" and String(row.get("reason", "")) == "weapon_class_mismatch":
+			mismatch = row
+	assert_false(mismatch.is_empty(), "explicit class mismatch is recorded")
+	assert_eq(String(mismatch.get("socket", "")), "S1", "mismatch names the socket")
+	assert_eq(String(mismatch.get("socket_class", "")), "Light", "mismatch names the socket class")
+	assert_eq(String(mismatch.get("weapon_id", "")), WEAPON_BURNER, "mismatch names the rejected weapon")
+	var view: Dictionary = CombatViewQuery.execute({}, _context(state)).get("data", {})
+	assert_eq(String(view["player"]["unmounted_sockets"][0]["reason"]), "weapon_class_mismatch",
+		"combat.view exposes the mismatch reason")
+
+
+func test_settlement_key_makes_resolve_idempotent() -> void:
+	var hub := _hub()
+	var state := _state(hub, HULL_SINGLE, _single_gun_loadout(WEAPON_LIGHT))
+	var context := _context(state)
+	var first := CombatCommands.resolve({
+		"encounter_table_id": ENCOUNTER_SCRAP,
+		"seed": 131,
+		"encounter_id": "encounter_alpha",
+	}, context)
+	assert_true(bool(first.get("ok", false)), "first settlement succeeds: %s" % first)
+	assert_false(bool(first["data"].get("already_settled", true)), "first settlement is not a replay")
+	assert_true(bool(first.get("autosave", false)), "first settlement requests an autosave")
+	assert_eq((first.get("events", []) as Array).size(), 1, "first settlement publishes combat.resolved")
+	var battle_id := String(first["data"]["battle"].get("id", ""))
+	assert_eq(String(first["data"]["battle"].get("settlement_key", "")), "encounter_alpha", "key is persisted on the battle")
+	var money_after_first := int(state.money())
+	var second := CombatCommands.resolve({
+		"encounter_table_id": ENCOUNTER_SCRAP,
+		"seed": 131,
+		"encounter_id": "encounter_alpha",
+	}, context)
+	assert_true(bool(second.get("ok", false)), "replayed settlement succeeds")
+	assert_true(bool(second["data"].get("already_settled", false)), "same key replays the settled battle")
+	assert_eq(String(second["data"]["battle"].get("id", "")), battle_id, "replay returns the existing battle id")
+	assert_eq(int(state.money()), money_after_first, "replay does not pay loot twice")
+	assert_eq(CombatService.battle_records(state).size(), 1, "replay does not append a battle record")
+	assert_eq((second.get("events", []) as Array).size(), 0, "replay publishes no event")
+	assert_false(bool(second.get("autosave", false)), "replay does not request an autosave")
+	assert_eq(int((second["data"]["loot_applied"] as Dictionary).get("money", 0)),
+		int((first["data"]["loot_applied"] as Dictionary).get("money", 0)), "replay reports the original payout")
+	# Empty key keeps the "every call is a new battle" semantics.
+	var fresh := CombatService.resolve(hub, state, ENCOUNTER_SCRAP, 131, "")
+	assert_eq(String(fresh["data"]["battle"].get("id", "")), "battle_2", "no key starts a new battle")
+	assert_eq(CombatService.battle_records(state).size(), 2, "unkeyed battles are all appended")
+
+
+func test_settlement_keys_are_pruned_with_the_battle_log() -> void:
+	var hub := _hub()
+	var state := _state(hub, HULL_SINGLE, _single_gun_loadout(WEAPON_LIGHT))
+	for index in CombatService.MAX_BATTLES + 1:
+		var resolved := CombatService.resolve(hub, state, ENCOUNTER_SCRAP, 141, "enc_%d" % index)
+		assert_true(bool(resolved.get("ok", false)), "keyed battle %d resolves" % index)
+	var combat: Dictionary = CombatService.ensure_state(state)
+	assert_eq((combat["battles"] as Array).size(), CombatService.MAX_BATTLES, "battle log stays capped")
+	assert_eq((combat["settlements"] as Dictionary).size(), CombatService.MAX_BATTLES, "dropped battles release their keys")
+	var replayed := CombatService.resolve(hub, state, ENCOUNTER_SCRAP, 141, "enc_0")
+	assert_false(bool(replayed["data"].get("already_settled", true)),
+		"a key whose battle was trimmed is settled fresh instead of replaying")
+
+
+func test_combat_stream_is_registered() -> void:
+	assert_contains(RngService.STREAM_NAMES, RngService.STREAM_COMBAT, "combat stream is registered")
+	assert_eq(CombatOps.STREAM_COMBAT, RngService.STREAM_COMBAT, "CombatOps uses the registered stream name")
+	var names := {}
+	for name in RngService.STREAM_NAMES:
+		names[String(name)] = true
+	assert_eq(names.size(), RngService.STREAM_NAMES.size(), "stream names stay unique")
 
 
 ## ---------------------------------------------------------------------------

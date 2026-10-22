@@ -9,24 +9,24 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CombatOps` | L1 |
-| `STREAM_COMBAT` | L46 |
-| `MAX_ROUNDS` | L48 |
-| `PLAYER_HIT_POINTS_PER_DURABILITY` | L50 |
-| `PLAYER_ARMOR` | L52 |
-| `PLAYER_RETREAT_RATIO` | L54 |
-| `MIN_DURABILITY_AFTER_DEFEAT` | L56 |
-| `STATUS_DURATION_ROUNDS` | L58 |
-| `STATUS_DAMAGE_PER_ROUND` | L60 |
-| `LOOT_ROLLS_PER_TABLE` | L66 |
-| `WEAPON_SALVAGE_RATIO` | L68 |
-| `MAX_LOG_ENTRIES` | L70 |
-| `resolve(hub: RegistryHub,, ship: Dictionary,, encounter_table: ContentDefinition,, seed_value: int) -> Dictionary` | L76 |
-| `battle_view(battle: Dictionary) -> Dictionary` | L148 |
-| `encounter_summaries(hub: RegistryHub) -> Array` | L153 |
-| `player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array` | L178 |
-| `unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array` | L205 |
-| `status_of(hub: RegistryHub, weapon: ContentDefinition) -> String` | L227 |
-| `armor_pierce_of(hub: RegistryHub, weapon: ContentDefinition) -> float` | L238 |
+| `STREAM_COMBAT` | L48 |
+| `MAX_ROUNDS` | L50 |
+| `PLAYER_HIT_POINTS_PER_DURABILITY` | L52 |
+| `PLAYER_ARMOR` | L54 |
+| `PLAYER_RETREAT_RATIO` | L56 |
+| `MIN_DURABILITY_AFTER_DEFEAT` | L58 |
+| `STATUS_DURATION_ROUNDS` | L60 |
+| `STATUS_DAMAGE_PER_ROUND` | L62 |
+| `LOOT_ROLLS_PER_TABLE` | L68 |
+| `WEAPON_SALVAGE_RATIO` | L70 |
+| `MAX_LOG_ENTRIES` | L72 |
+| `resolve(hub: RegistryHub,, ship: Dictionary,, encounter_table: ContentDefinition,, seed_value: int) -> Dictionary` | L78 |
+| `battle_view(battle: Dictionary) -> Dictionary` | L154 |
+| `encounter_summaries(hub: RegistryHub) -> Array` | L159 |
+| `player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array` | L185 |
+| `unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array` | L220 |
+| `status_of(hub: RegistryHub, weapon: ContentDefinition) -> String` | L261 |
+| `armor_pierce_of(hub: RegistryHub, weapon: ContentDefinition) -> float` | L272 |
 
 武器/伤害类型/敌人原型/能力数据」解析成一次确定性、无状态副作用的自动战斗，输出
 回合日志、双方耐久变化、击沉 / 撤退结论与战利品 roll。
@@ -62,9 +62,11 @@ enemy_archetypes / loot_tables）、`ShipOps.durability_max`、`RngService`。
   只有 `victory` 对**已击沉**敌舰 roll 战利品；撤退/击沉玩家不发奖励。
 - **内容缺失诊断（D1-FIX）**：未知 weapon class 的 socket 会被 skip，但同一份
   `battle.diagnostics[]` 会记录 `{side, index?, socket, socket_class,
-  reason:"weapon_class_missing"}`；未知 loot_table / loot entry 也记录
+  reason:"weapon_class_missing"}`；显式 `weapon_loadout` 的 weapon class 与 socket
+  class 不匹配同样 skip 并记 `reason:"weapon_class_mismatch"`（与视觉装配的 class
+  门禁一致，不回退默认武器）；未知 loot_table / loot entry 也记录
   `reason:"loot_table_missing"` / `"loot_entry_missing"`。敌我双方规则一致；
   `player.view.unmounted_sockets` / `enemy.view.unmounted_sockets` 提供同源视图。
-  校验器（CrossReferenceValidator）在内容层把这些 class 缺口升级为 error。
+  校验器（CrossReferenceValidator）在内容层把 archetype class 缺口升级为 error。
 
 模块索引：[framework/domain](../README.md)

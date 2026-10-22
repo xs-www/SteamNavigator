@@ -16,6 +16,10 @@ extends RefCounted
 ## - **一次遭遇一次结算**：结算成功才写状态；`data.combat` 记录每场战斗的 JSON 快照
 ##   （含回合日志，最多 `CombatOps.MAX_LOG_ENTRIES` 条）；最多保留 `MAX_BATTLES` 场，
 ##   超出从最旧开始丢弃。旧档没有该块时惰性补齐，不改 `schema_version`。
+## - **结算幂等（可选 settlement key）**：`resolve(..., settlement_key)` 用
+##   `data.combat.settlements`（key → battle id）保证同一 key 只结算一次；重复调用返回
+##   已有 battle（`data.already_settled=true`），不发奖、不追加记录、不推进序号。key 为空
+##   时保持旧语义（每次调用都是新战斗）；被 `MAX_BATTLES` 淘汰的战斗会同时清理其 key。
 ## - **耐久语义**：战后把 `player.durability_after` 写回 `ship.durability`（0–100）；
 ##   击沉落到 `CombatOps.MIN_DURABILITY_AFTER_DEFEAT`，维修入口沿用现有港口维修。
 ## - **战利品发放**：`victory` 才发放。金钱 → `player.money` + `stats.income`；item →
@@ -36,6 +40,8 @@ const DEFAULT_STATE := {
 	"schema_version": SCHEMA_VERSION,
 	"next_battle_id": 1,
 	"battles": [],
+	## settlement key → battle id, for caller-provided encounter/settlement ids.
+	"settlements": {},
 }
 
 
@@ -50,6 +56,8 @@ static func ensure_state(state: GameState) -> Dictionary:
 	var combat: Dictionary = current
 	if not (combat.get("battles", null) is Array):
 		combat["battles"] = []
+	if not (combat.get("settlements", null) is Dictionary):
+		combat["settlements"] = {}
 	combat["schema_version"] = SCHEMA_VERSION
 	var next_id := int(combat.get("next_battle_id", 1))
 	var battles: Array = combat["battles"]
@@ -65,11 +73,18 @@ static func ensure_state(state: GameState) -> Dictionary:
 ## Resolves one encounter and applies its consequences to `state`.
 ## Returns the same `{ok, error_code, message_key, data, events}` envelope shape as
 ## other domain entry points; `data.battle` is the persisted battle view.
+##
+## `settlement_key` is optional caller-provided idempotency key (the command exposes
+## it as `encounter_id`): when a battle with the same key was already persisted this
+## call returns that existing record with `data.already_settled = true`, applies no
+## loot, appends no record and does not advance `next_battle_id`. An empty key keeps
+## the previous "every call is a new battle" behaviour.
 static func resolve(
 	hub: RegistryHub,
 	state: GameState,
 	encounter_table_id: String = "",
-	requested_seed: int = 0
+	requested_seed: int = 0,
+	settlement_key: String = ""
 ) -> Dictionary:
 	if state == null or state.is_empty():
 		return Result.fail("no_run", "ui.error.no_run")
@@ -78,6 +93,17 @@ static func resolve(
 	var ship := state.ship()
 	if ship.is_empty():
 		return Result.fail("no_ship", "ui.error.no_ship")
+	# Replay path is read-only: it must not create/repair `data.combat`, so a
+	# failed command keeps the state untouched.
+	if not settlement_key.is_empty():
+		var settled := _settled_battle_from_state(state, settlement_key)
+		if not settled.is_empty():
+			return Result.ok({
+				"battle": CombatOps.battle_view(settled),
+				"durability": float(ship.get("durability", 0.0)),
+				"loot_applied": (settled.get("loot_applied", {}) as Dictionary).duplicate(true),
+				"already_settled": true,
+			})
 	var encounter := _resolve_encounter(hub, encounter_table_id)
 	if encounter == null:
 		return Result.fail("unknown_encounter", "ui.error.combat_unknown_encounter", {
@@ -99,6 +125,8 @@ static func resolve(
 	battle["sequence"] = battle_number
 	battle["at_time"] = state.now()
 	battle["port_id"] = state.current_port_id()
+	if not settlement_key.is_empty():
+		battle["settlement_key"] = settlement_key
 
 	var player_view: Dictionary = battle["player"]
 	ship["durability"] = clampf(
@@ -112,13 +140,59 @@ static func resolve(
 	var battles: Array = combat["battles"]
 	battles.append(battle)
 	while battles.size() > MAX_BATTLES:
-		battles.pop_front()
+		var dropped: Variant = battles.pop_front()
+		_drop_settlement(combat, dropped)
 	combat["next_battle_id"] = battle_number + 1
+	if not settlement_key.is_empty():
+		(combat["settlements"] as Dictionary)[settlement_key] = String(battle["id"])
 	return Result.ok({
 		"battle": CombatOps.battle_view(battle),
 		"durability": float(ship["durability"]),
 		"loot_applied": applied,
+		"already_settled": false,
 	})
+
+
+## Returns the persisted battle for a settlement key, or `{}` when the key is new
+## (or its battle record has been trimmed out of the log). `prune_missing=false` is
+## used by the read-only replay path so a failed/replayed command never mutates state.
+static func _settled_battle(combat: Dictionary, settlement_key: String, prune_missing: bool = true) -> Dictionary:
+	var settlements: Variant = combat.get("settlements", null)
+	if not (settlements is Dictionary):
+		return {}
+	var battle_id := String((settlements as Dictionary).get(settlement_key, ""))
+	if battle_id.is_empty():
+		return {}
+	for battle in combat.get("battles", []):
+		if battle is Dictionary and String((battle as Dictionary).get("id", "")) == battle_id:
+			return battle
+	if prune_missing:
+		(settlements as Dictionary).erase(settlement_key)
+	return {}
+
+
+## Read-only variant used by the replay path: never creates or repairs the block.
+static func _settled_battle_from_state(state: GameState, settlement_key: String) -> Dictionary:
+	var current: Variant = state.data.get(COMBAT_KEY, null)
+	if not (current is Dictionary):
+		return {}
+	return _settled_battle(current, settlement_key, false)
+
+
+## Removes settlement keys that pointed at a battle record dropped from the log.
+static func _drop_settlement(combat: Dictionary, dropped_battle: Variant) -> void:
+	if not (dropped_battle is Dictionary):
+		return
+	var settlements: Variant = combat.get("settlements", null)
+	if not (settlements is Dictionary):
+		return
+	var dropped_id := String((dropped_battle as Dictionary).get("id", ""))
+	if dropped_id.is_empty():
+		return
+	var keys: Array = (settlements as Dictionary).keys()
+	for key in keys:
+		if String((settlements as Dictionary)[key]) == dropped_id:
+			(settlements as Dictionary).erase(key)
 
 
 ## Read-only view for `combat.view`: current ship armament, available encounter
@@ -190,6 +264,7 @@ static func _battle_summary(battle: Dictionary) -> Dictionary:
 	return {
 		"id": String(battle.get("id", "")),
 		"sequence": int(battle.get("sequence", 0)),
+		"settlement_key": String(battle.get("settlement_key", "")),
 		"at_time": float(battle.get("at_time", 0.0)),
 		"port_id": String(battle.get("port_id", "")),
 		"encounter_table_id": String(battle.get("encounter_table_id", "")),

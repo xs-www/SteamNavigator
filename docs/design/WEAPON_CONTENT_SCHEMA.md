@@ -81,7 +81,7 @@
 | --- | --- |
 | `key` / `singular` / `key_prefix` | `weapons` / `weapon` / `weapon` |
 | 标签 | 舰载武器（en: Weapons），缩写 `WN`，色 `#e2685e` |
-| `group` | `ships_modules`（编辑器归入「船只与模块」） |
+| `group` | `combat`（编辑器归入「战斗」分组；`content_types.json` 的 group 定义） |
 | `default_file` | `content/weapons.json` |
 | `schema_version` | `2.0`（与 Schema `const` 一致） |
 | `capability` | `content.combat.v1`（active 类型；使用该内容需在 `manifest.capabilities` 声明，否则编辑器给 `capability_undeclared` 警告） |
@@ -290,7 +290,7 @@
 ### 8.1 新建 / 编辑武器
 
 0. 想一次拿到 5 件：新建模组时选「舰载武器包」模板（或 CLI `new --template weapons`），生成结果见 §1.1；已有项目也可逐件「新增定义」。
-1. 左侧「船只与模块」分组里选「舰载武器」（运行时 2.0 类型，带 2.0 徽标；分组来自 `content_types.json` 的 `ships_modules`），点「新增定义」。
+1. 左侧「战斗」分组里选「舰载武器」（运行时 2.0 类型，带 2.0 徽标；分组来自 `content_types.json` 的 `combat`），点「新增定义」。
 2. 侧栏会新建 `content/weapons.json` 并写 `schema_version: "2.0"`；表单按三组给出战斗 / 装配 / 经济字段，`kind`、`weapon_class`、`assembly_profile` 为带中文标签的枚举，`color` 以文本填写 `#RRGGBB`。
 3. 「视觉资源」里选模型：候选来自 `manifest.assets` 的 `model.weapon.*`（§7）；也可直接输入资源键。
 4. 补齐 `zh_CN` / `en` 文案，点「保存条目」提交多语言键事务。
@@ -330,7 +330,7 @@
 2. **版本策略（已完成）**：运行时按类型 `schema_version` 接收 2.0，`weapons` envelope 固定 2.0。
 3. **内容落地（已完成）**：`dev_mods/core/content/weapons.json` 已含 5 件 `core:weapon/*`（5 件内置武器的 1:1 映射），`information.model` 指向 `model.weapon.*`、本地化与 manifest `content` 条目已补齐。
 4. **读取路径（已完成）**：`RegistryHub` 的 `ContentTypes.WEAPON` 注册表由 `CombatOps.player_weapon_rows()` / `_weapon_state()` 消费；船体 `hull_data.weapon_sockets` 决定玩家可用炮位，显式 `ship.weapon_loadout` 优先、否则按 socket class 选字母序第一件武器；`combat.resolve` 与 `combat.view` / `combat.log` 已注册。
-5. **战斗结算（已完成）**：`CombatOps` 实现抽象回合、伤害/护甲/穿甲、状态效果、撤退、战利品 roll 与确定性随机流；`CombatService` 负责 `data.combat` 落盘与耐久/战利品事务。尚未接：空间/弹道、部位伤害、弹药/煤耗、航行遭遇自动触发。
+5. **战斗结算（已完成）**：`CombatOps` 实现抽象回合、伤害/护甲/穿甲、状态效果、撤退、战利品 roll 与确定性随机流；`CombatService` 负责 `data.combat` 落盘与耐久/战利品事务（money → `player.money + stats.income`、item → 船上 cargo、module → 当前港 warehouse、weapon 掉落折成 salvage 金钱；市场出售与经济平衡未接）。战斗视图记录 unmounted sockets 与 loot diagnostics，跨引用校验要求敌舰每个 weapon socket class 能解析到武器。尚未接：空间/弹道、部位伤害、弹药/煤耗、航行遭遇自动触发。
 6. **视觉装配（部分完成）**：`ShipVisualAssembler` 仍以 GLB Root extras 为装配事实；后续切片再切到「内容定装配 + GLB 定节点」，并补齐 `yaw_limit_deg` / `pitch_limit_deg` / `mount_pad_*` / `swept_radius` / `anchor_count` 等资产已产但内容未建模字段。
 
 ## 11. 已知边界 / 待对齐

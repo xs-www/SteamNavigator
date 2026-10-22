@@ -9,16 +9,16 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CombatService` | L1 |
-| `COMBAT_KEY` | L31 |
-| `SCHEMA_VERSION` | L32 |
-| `MAX_BATTLES` | L34 |
-| `DEFAULT_STATE` | L35 |
-| `ensure_state(state: GameState) -> Dictionary` | L43 |
-| `resolve(hub: RegistryHub,, state: GameState,, encounter_table_id: String = "",, requested_seed: int = 0) -> Dictionary` | L68 |
-| `view(state: GameState, hub: RegistryHub) -> Dictionary` | L126 |
-| `last_battle(state: GameState) -> Dictionary` | L154 |
-| `battle_records(state: GameState) -> Array` | L162 |
-| `log_rows(state: GameState, limit: int = 20) -> Array` | L173 |
+| `COMBAT_KEY` | L35 |
+| `SCHEMA_VERSION` | L36 |
+| `MAX_BATTLES` | L38 |
+| `DEFAULT_STATE` | L39 |
+| `ensure_state(state: GameState) -> Dictionary` | L49 |
+| `resolve(hub: RegistryHub,, state: GameState,, encounter_table_id: String = "",, requested_seed: int = 0,, settlement_key: String = "") -> Dictionary` | L82 |
+| `view(state: GameState, hub: RegistryHub) -> Dictionary` | L200 |
+| `last_battle(state: GameState) -> Dictionary` | L228 |
+| `battle_records(state: GameState) -> Array` | L236 |
+| `log_rows(state: GameState, limit: int = 20) -> Array` | L247 |
 
 把结果落到 `GameState`（结构耐久、战利品、`data.combat` 惰性战斗记录），并给命令 /
 查询提供稳定的 view 形状。命令 `combat.resolve` 与查询 `combat.view` / `combat.log`
@@ -34,6 +34,10 @@
 - **一次遭遇一次结算**：结算成功才写状态；`data.combat` 记录每场战斗的 JSON 快照
   （含回合日志，最多 `CombatOps.MAX_LOG_ENTRIES` 条）；最多保留 `MAX_BATTLES` 场，
   超出从最旧开始丢弃。旧档没有该块时惰性补齐，不改 `schema_version`。
+- **结算幂等（可选 settlement key）**：`resolve(..., settlement_key)` 用
+  `data.combat.settlements`（key → battle id）保证同一 key 只结算一次；重复调用返回
+  已有 battle（`data.already_settled=true`），不发奖、不追加记录、不推进序号。key 为空
+  时保持旧语义（每次调用都是新战斗）；被 `MAX_BATTLES` 淘汰的战斗会同时清理其 key。
 - **耐久语义**：战后把 `player.durability_after` 写回 `ship.durability`（0–100）；
   击沉落到 `CombatOps.MIN_DURABILITY_AFTER_DEFEAT`，维修入口沿用现有港口维修。
 - **战利品发放**：`victory` 才发放。金钱 → `player.money` + `stats.income`；item →

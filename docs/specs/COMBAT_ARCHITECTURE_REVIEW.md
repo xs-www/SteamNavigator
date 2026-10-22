@@ -78,7 +78,7 @@
 
 1. ~~Module 实例化迁移（船舶存档结构 + 兼容旧档）~~ 已完成第一步：[SHIP_MODULE_INSTANCES.md](SHIP_MODULE_INSTANCES.md)（实例 id + condition + damage_module + 维修计价 + UI 状态徽标）。
 2. ~~战斗内容 Schema 2.0（`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`）~~：D1 已全部提升 active 2.0 并落 Core 内容（[WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）。
-3. ~~`CombatResolver` 纯函数层 + 自动结算命令 + 测试矩阵~~：D1 已由 `CombatOps` / `CombatService` / `combat.resolve|view|log` 与 `test_combat.gd` 落地；遭遇自动触发与战利品经济接入仍待做。
+3. ~~`CombatResolver` 纯函数层 + 自动结算命令 + 测试矩阵~~：D1 已由 `CombatOps` / `CombatService` / `combat.resolve|view|log` 与 `test_combat.gd` 落地；战利品经济已接入 **money / cargo / port warehouse**（`player.money + stats.income`、`ShipOps.add_cargo`、`WarehouseOps.add_module`），市场出售与经济平衡尚未接；遭遇自动触发仍待做。
 4. 遭遇生成接入世界探索（区域/地点/航线），战利品进仓库与市场。
 5. 模块 condition 接入派生属性（速度/容量/安全修正），再做统一 Module 迁移。
 6. 以上稳定后再评估半自动/实时战术层；届时以外部草案 §8/§9 为基线。

@@ -19,6 +19,8 @@ const STREAM_EXPLORATION := &"exploration"
 ## Phase B campaign world assembly (regions / sites / routes / factions / discoveries).
 ## Separate from map generation so v2 world detail rolls cannot shift the 1.0 map.
 const STREAM_CAMPAIGN_WORLD := &"campaign_world"
+## Phase D1 combat auto-resolve (weapon hits / encounter composition / loot rolls).
+const STREAM_COMBAT := &"combat"
 
 const STREAM_NAMES := [
 	STREAM_MAP_GENERATION,
@@ -30,6 +32,7 @@ const STREAM_NAMES := [
 	STREAM_EVENT_OPTIONS,
 	STREAM_EXPLORATION,
 	STREAM_CAMPAIGN_WORLD,
+	STREAM_COMBAT,
 ]
 
 var base_seed: int = 0
