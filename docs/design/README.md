@@ -3,6 +3,9 @@
 > 进行中的方案、草案与长期维护的参考文档；结论确定后按生命周期迁出（定稿 → [docs/specs/](../specs/)，废弃 → [docs/archive/](../archive/)）。
 > 目录索引：[docs/README.md](../README.md)
 
+- [PROJECT_STATUS.md](PROJECT_STATUS.md) — 当前实现状态与最近交付的详细清单（从 README 拆出，按需读取）
+- [CORE_CONTENT.md](CORE_CONTENT.md) — MVP Core 内容与数值概览（真源仍是 `dev_mods/core/content/`）
+- [KNOWN_LIMITS.md](KNOWN_LIMITS.md) — 已知边界与暂缓项（判断需求是否已实现前先读）
 - [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md) — 2.5D 固定舞台升级方案（阶段 1 持续落地中）
 - [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) — 正式版航海图系统设计；阶段 1–3 已实现，后续阶段仍在本文件迭代
 - [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) — 海图阶段 4 探索系统实现契约（4.1/4.2 已实现；4.3 体验修正的 8 条反馈、决策与分片计划见 §10，待实现）
