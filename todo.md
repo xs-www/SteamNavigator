@@ -50,7 +50,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
-- README 瘦身（2026-10-22）：README 从 323 行压到入门导航；详细进度拆到 `docs/design/PROJECT_STATUS.md`、Core 内容基线拆到 `docs/design/CORE_CONTENT.md`、实现边界拆到 `docs/design/KNOWN_LIMITS.md`，README 改为「按需读取」索引（状态/契约/静态文档/模组/SDK）。
+- README 瘦身（2026-10-22）：根 README 从 323 行压到 115 行、SNModMaker README 从 479 行压到 63 行；详细进度拆到 `docs/design/PROJECT_STATUS.md`、Core 内容基线拆到 `docs/design/CORE_CONTENT.md`、实现边界拆到 `docs/design/KNOWN_LIMITS.md`，SNModMaker 使用/开发细节拆到 `SNModMaker/docs/{USER_GUIDE,DEVELOPMENT}.md`；README 改为「按需读取」索引。
 
 - SN SDK Schema 2.0 兼容（2026-10-22）：`sdk/validate.gd` 新增 `--mode=runtime|draft`（默认 runtime 保持旧调用兼容；runtime 显式拒绝未激活草案并输出结构化 `inactive_content_type`，draft 对草案 / 混合模组做静态 Schema 校验）；`sdk/pack_mod.gd --release` 打包前跑真实 runtime 校验、草案或 error 时拒绝且 `.snavmod.zip` 结构不变；新增 `sdk/validation_core.gd` 共享实现（扫描根去重，`--mod-root=dev_mods/core` 不再重复加载 core），类型 / 版本只读 `content_types.json`；示例补 1.0 `example_roles_1_0`、混合 `example_mixed_roles_items` 与草案模板 `draft_weapons_pack`；新增 `framework/tests/cases/test_sdk_validation.gd`（11 用例）并更新 release workflow 的 runtime / draft / 发布拦截门禁。验证：SDK 套件 11/11、Godot 全量 507/507、`gen_content_types --check` 全绿（`docs/static` 待 Lead 统一生成）。
 

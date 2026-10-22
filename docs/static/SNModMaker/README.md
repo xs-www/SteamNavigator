@@ -11,6 +11,8 @@
 | `README.md` | 使用说明、数据流、开发约定与已知边界。 | 本页 |
 | `WORKSPACE.md` | 原生工作区使用说明：启动本地服务、在编辑器里直接编辑 dev_mods/core、保存边界与发布前校验。 | 本页 |
 | `css/app.css` | 暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、内容/多语言编辑器、模态框与 Toast。 | [查看](./css/app.css.md) |
+| `docs/DEVELOPMENT.md` | 源文件：DEVELOPMENT.md | 本页 |
+| `docs/USER_GUIDE.md` | 源文件：USER_GUIDE.md | 本页 |
 | `exports/README.md` | 本地导出目录说明：ZIP 命名与忽略规则。 | 本页 |
 | `index.html` | 模组制作器的静态外壳：顶栏、导航/工作区/检视器布局，以及模态框、Toast、拖放与忙碌层宿主。 | [查看](./index.html.md) |
 | `js/app.js` | 应用控制器：视图状态、事件委托、表单写回、撤销/重做、自动保存、导入导出与 Modal 流程。 | [查看](./js/app.js.md) |

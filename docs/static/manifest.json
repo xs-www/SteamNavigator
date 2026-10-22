@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T12:44:52.289Z",
-  "commit": "786ae34",
+  "generated_at": "2026-10-22T12:51:25.810Z",
+  "commit": "095b74f",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1002,
+    "sources": 1004,
     "documented": 399,
-    "grouped": 603
+    "grouped": 605
   },
   "files": [
     {
@@ -181,7 +181,7 @@
     },
     {
       "source": "SNModMaker/README.md",
-      "sha256": "ff1a3f1baa633afe31fdbe55ae164b55721251bc570a102c4f2eea9e30354a1b",
+      "sha256": "0abe668c99861734fb75888baf607ddc95bcb556f7c9706df933f941e4b0aec5",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -198,6 +198,20 @@
       "sha256": "4a35db3423031b2d25ab9424b41dccff95a49a63e0d0bd892e56232098ae579b",
       "doc": "docs/static/SNModMaker/css/app.css.md",
       "status": "documented"
+    },
+    {
+      "source": "SNModMaker/docs/DEVELOPMENT.md",
+      "sha256": "17b93f1043cabf8aee484f75b3a18c72875e2b40744b59567e4d1ddf607c7c28",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
+      "source": "SNModMaker/docs/USER_GUIDE.md",
+      "sha256": "f1efe4374aa4d9a59004c4fdc29228f9ea8c6e9adf409dc86d310e22651f92f4",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
     },
     {
       "source": "SNModMaker/exports/README.md",
@@ -5126,7 +5140,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "ad234e7ba8f0a350cd3f794182c5ff03ccee98787b56d6a3919ededd7902acf8",
+      "sha256": "29e978420addd5e1f22bcec3eb628493e21f7ca582c7e1a3999117d4ca7d82d1",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
