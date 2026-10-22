@@ -240,6 +240,35 @@ PortStage 槽位接线仍待做。材质不再用纯色：四件全部使用 `SN
 
 > 纯展示资产：若将来作为第 5 种船体 / 内河客运场景接入，需要补 Core 内容 JSON、manifest 资源键、本地化、Godot 导入验收与 2.5D 舞台目标机位试装。明轮几何挂在 `SN_PS_Paddle_*_Pivot` 下，可直接绕 Y 轴做旋转动画；蒸汽建议在 Godot 侧用烟囱顶 `SN_PS_Funnel` 作为发射点做粒子。
 
+## 3D 资产：combat_kit 敌舰（M2-1，2026-10-22）
+
+阶段 2 自动战斗的 **3 类敌人**。4 艘敌舰复用现有船体骨架（同一套「横剖面站 + 剖面轮廓」放样）
+与 `rig_kit` / `ship_parts` 部件库，**不新增贴图、不烘炮**；甲板炮位按
+[WEAPON_SOCKET_CONTRACT.md §8](WEAPON_SOCKET_CONTRACT.md) 给空节点，铁甲舰变体舷侧炮门按
+[§9](WEAPON_SOCKET_CONTRACT.md) 给空节点并复用 `SN_Weapon_CasemateGun`。机器目录见
+[`combat_kit_catalog.json`](../../tools/modeling/combat_kit_catalog.json)。
+
+| 资产 | 敌人类别 | 运行时 GLB | 包围盒 x×y×z（m） | tri | 节点（mesh + empty + socket） | 武器 socket / 炮门 |
+| --- | --- | --- | --- | ---: | --- | --- |
+| `SN_Enemy_Pirate_Sloop` | Light | `assets/models/combat/SN_Enemy_Pirate_Sloop.glb` | 29.08 × 6.32 × 24.18 | 8 678 | 20（15 + 2 + 3） | 3 / 0 |
+| `SN_Enemy_Merchant_Armed` | Medium | `assets/models/combat/SN_Enemy_Merchant_Armed.glb` | 40.77 × 9.40 × 28.77 | 11 746 | 27（18 + 3 + 6） | 6 / 0 |
+| `SN_Enemy_Ironclad_Raider` | Heavy | `assets/models/combat/SN_Enemy_Ironclad_Raider.glb` | 44.83 × 14.73 × 21.09 | 7 440 | 25（12 + 1 + 4 + 8） | 4 / 8 |
+| `SN_Enemy_Gunboat` | Light | `assets/models/combat/SN_Enemy_Gunboat.glb` | 16.90 × 4.73 × 10.07 | 3 460 | 14（10 + 1 + 3） | 3 / 0 |
+| **合计** | 3 类 | 4 个 GLB / 2 235 780 B | | **31 324 / 32 400** | 86 | **16 / 8** |
+
+| 项 | 数值 |
+| --- | --- |
+| 材质 | 9 张既有共享贴图（Wood / Wood_Dark / Wood_Deck / Metal / Brass / Iron / Iron_Red / Canvas_Shade / Glass_Dark），**无新增**；`assets/models/combat/shared_materials/` 与 Core 副本各 11 张 PNG，每艘 GLB 外部引用 8 张 |
+| 结构 | 海盗单桅（22.5 m 船体、单桅后倾 + 大斜桁帆 + 方顶帆 + 两面艏三角帆、艉楼 + 三艉窗、黑旗 + 红长旒）；武装商船（34 m 宽体、双桅各两面方帆、艉楼 + 艉旗、两舷 2×2 中型炮位 + 艏/艉炮位）；铁甲舰变体（44 m 低干舷、2.2 m 外凸装甲带 + 撞角 + 螺旋桨、中央斜壁炮房 + 指挥塔 + **单**后倾烟囱、单蒸汽桅收帆横桁、每舷 4 空炮门）；小型炮艇（16 m 铁壳、艏部 U 形装甲炮盾 + 中央炮口、单烟囱 + 小驾驶室 + 短信号桅） |
+| 轴心 / 摆位 | 水线中心（+X 船首、+Z 向上、吃水为负 z）；工作台 4 艘并排于 y=-110 空走廊，导出时根节点归零 |
+| 源文件 | `.design/SN_Asset_Workbench.blend` 的 4 个 `SN_Enemy_*_Prototype` 集合 |
+| 工单/脚本 | `briefs/sn_combat_kit_batch1.json`、`combat_kit_generator.py`、`dryrun_combat_kit.py`、`sn_enemy_weapon_sockets.py`、`sn_enemy_gun_ports.py`、`glb_enemy_sockets.py`、`export_combat_kit_glb.py`、`verify_combat_kit_glb.py`、`render_combat_kit_preview.py`、`gen_combat_kit_catalog.py`；Godot 用例 `test_combat_kit_assets.gd` |
+| 截图 | `docs/design/screenshots/combat/combat_lineup.png`；单件 3/4 + side 在 `.design/combat/preview/`（本地产物） |
+| 验收 | [COMBAT_KIT_ACCEPTANCE.md](../archive/COMBAT_KIT_ACCEPTANCE.md) |
+
+> 本批只交付资产 / socket / 目录；敌人内容 Schema（`enemy_archetypes`）、运行时遭遇表与 AI
+> 留后续。LOD1 未做。
+
 ## 3D 船舶模块（11 件）
 
 `SN_Ship_Modules` 集合把 Core 里除船体外的全部模块实体做成独立可摆放的 3D 件：锅炉 3、货舱 3、导航 2、安全 2、客舱 1，合计 **7016 三角面**。每件一个 mesh 对象、3–6 个既有调色板材质槽、原点在底面中心（1 unit = 1 m，+X 为前向），导出为 `assets/models/modules/` 下的独立 `.glb`（单节点 / glTF Y-up），可直接按槽位摆到船体或舞台 socket 上。
@@ -552,6 +581,56 @@ Mount + 语义 socket + 根 extras（建筑另写 `module_x/y`，环境件另写
 - 验收图：`docs/design/screenshots/kits/kit_architecture_lineup.png` / `kit_environment_lineup.png` / `kit_assembly_town.png` / `kit_assembly_town_detail.png` / `kit_assembly_coast.png` / `kit_assembly_coast_detail.png` 与 8 件 × {3/4, 侧视}。
 - 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH3_ACCEPTANCE.md](../archive/KIT_BATCH3_ACCEPTANCE.md)。
 - 共享贴图：`assets/models/{architecture,environment}/shared_materials/` + `dev_mods/core/.../shared_materials/`；`shared_materials.spec.json` 的 `runtime_dirs` 已扩到 16 个目录（11 张贴图、本批无新增）。
+
+## 模型素材库批次 4：architecture_kit 扩展 / 可围合基地（M1-1，2026-10-22）
+
+backlog `M1-1` 的 6 件「可围合 + 生产性立面」建筑扩展件：围墙段 / 大门 / 道路 / 装卸平台 /
+仓库变体 / 工坊扩建。沿用批次 1–3 的 Mount + 语义 socket + 根 extras 契约，4 m 网格沿 X 平铺，
+可把批次 3 的 4 栋建筑围成基地，也可单独作港口/舞台建筑。完整目录、接口与装配配方见
+[KIT_ASSET_LIBRARY.md §12](KIT_ASSET_LIBRARY.md)；工单
+`tools/modeling/briefs/sn_kit_batch4_architecture_extension.json`。
+
+| 资产 | 运行时 GLB | 集合 | 尺寸 X×Y×Z (m) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Arch_Perimeter_Wall` | `assets/models/architecture/SN_Arch_Perimeter_Wall.glb` | `SN_Arch_Perimeter_Wall_Prototype` | 8.36 × 3.90 × 1.46 | **1 436** | 7 | 地面 z=0；Module ±4 + Wall_Top + Lantern |
+| `SN_Arch_Gate` | `assets/models/architecture/SN_Arch_Gate.glb` | `SN_Arch_Gate_Prototype` | 8.40 × 5.34 × 2.30 | **2 112** | 7 | 地面 z=0；Gateway + Door_Hinge_L/R + Hoist |
+| `SN_Arch_Road` | `assets/models/architecture/SN_Arch_Road.glb` | `SN_Arch_Road_Prototype` | 8.00 × 0.29 × 8.00 | **1 368** | 5 | 地面 z=0；四向 Module_Next/Prev/Left/Right |
+| `SN_Arch_Loading_Platform` | `assets/models/architecture/SN_Arch_Loading_Platform.glb` | `SN_Arch_Loading_Platform_Prototype` | 10.95 × 5.25 × 6.20 | **1 552** | 8 | 月台面 1.25 m；Dock_Edge/Hoist/Stair_Foot |
+| `SN_Arch_Warehouse_Variant` | `assets/models/architecture/SN_Arch_Warehouse_Variant.glb` | `SN_Arch_Warehouse_Variant_Prototype` | 11.80 × 8.55 × 8.51 | **4 216** | 9 | Door_Front/Hoist/Sign + 14 级外楼梯上 3.48 m 侧门 |
+| `SN_Arch_Workshop_Annex` | `assets/models/architecture/SN_Arch_Workshop_Annex.glb` | `SN_Arch_Workshop_Annex_Prototype` | 6.61 × 7.15 × 5.74 | **1 900** | 8 | Drive_Shaft(+Y, z=1.45) 接工坊 / Chimney / Coal_Hatch |
+
+（尺寸按 GLB 的 glTF Y-up 口径：X × Y × Z；Blender 口径见 §12.1。）
+批次 4 合计 **12,584 三角面 / 16,800 预算**、39 mesh、37 socket、82 节点、117 图元，GLB 合计 966,464 B；
+材质沿用既有 11 张共享贴图（无新增），`architecture/shared_materials/` 与 Core 副本各 11 张。
+- 结构要点：围墙 = 石基座 + 铆接铁板墙 + 端部立柱 + 石压顶/铁披檐 + 三处射击孔 + 黄铜壁灯；大门 = 双侧铁包石柱 + 铆接门楣 + 双扇铁木门（关闭）+ 抬起吊闸 + 垛口 + 门灯 + 石门槛；道路 = 8×8 石板 + 4 处红铁修补片 + 双侧铁篦排水沟 + 路缘条石 + 铜钉；装卸平台 = 石砌月台（面 1.25 m）+ 木铺面 + 护舷/系缆桩 + 四柱铁雨棚 + 外挑吊货梁/滑轮/吊钩 + 5 级木楼梯；仓库变体 = 石砌下层 + 木构上层 + 山墙双坡铁皮顶 + 山墙装载门 + 上层吊货门/吊梁 + 铁框高窗 + 14 级外楼梯 + 招牌；工坊扩建 = 锅炉房 + 双坡顶 + 石烟囱/汽管 + +Y 传动轴飞轮 + 斜置送煤槽/煤堆 + 压力表/蒸汽管。
+- 源/工具：生成器 `kit_batch4_generator.py`；干跑 `dryrun_kit_batch4.py`；导出 `export_kit_batch4_glb.py`；GLB 自检 `verify_kit_batch4_glb.py`（6/6 ALL OK）；预览 `render_kit_batch4_preview.py`；目录 `gen_kit_catalog.py`（v1.4，32 件 / 54,642 tri，4 条新配方）。
+- 验收图：`docs/design/screenshots/kits/kit_architecture_extension_lineup.png` / `kit_architecture_extension_assembly.png` / `kit_architecture_extension_assembly_detail.png` 与 6 件 × {3/4, 侧视}。
+- Godot 运行时：`framework/tests/cases/test_architecture_extension_assets.gd` 2 例（外链共享贴图 + tri 锁定 12,584、跨 6 件同一 `Texture2D` 实例）。
+- 本批不登记 manifest、不接运行时装配（同 kit 批次 1–3，走 `kit_catalog.json`）；LOD1 未做（后续批次按 M0-5 派生）。
+
+## 模型素材库批次 5：base_kit 生产建筑（M1-2，2026-10-22）
+
+backlog `M1-2` 的 5 件基地生产建筑：锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔。
+与 `machinery_kit`、`cargo_kit`、批次 4 的边界件拼装成生产链基地。完整目录、接口与装配配方见
+[KIT_ASSET_LIBRARY.md §13](KIT_ASSET_LIBRARY.md)；工单
+`tools/modeling/briefs/sn_kit_batch5_base_kit.json`。
+
+| 资产 | 运行时 GLB | 集合 | 尺寸 X×Y×Z (m, Blender) | tri | 材质数 | 接口 / 基准 |
+| --- | --- | --- | --- | ---: | ---: | --- |
+| `SN_Base_Sawmill` | `assets/models/base/SN_Base_Sawmill.glb` | `SN_Base_Sawmill_Prototype` | 11.30 × 7.54 × 6.05 | **2 684** | 9 | 地面 z=0；Drive_Shaft / Log_Input / Timber_Output |
+| `SN_Base_Smelter` | `assets/models/base/SN_Base_Smelter.glb` | `SN_Base_Smelter_Prototype` | 9.10 × 7.72 × 11.40 | **3 012** | 7 | 地面 z=0；Coal/Ore_Input、Molten_Out、Chimney 11.40 |
+| `SN_Base_Foundry` | `assets/models/base/SN_Base_Foundry.glb` | `SN_Base_Foundry_Prototype` | 12.95 × 8.55 × 9.15 | **4 096** | 9 | 地面 z=0；Door_Front / Hoist / Molten_In / Pour_Point |
+| `SN_Base_Stockyard` | `assets/models/base/SN_Base_Stockyard.glb` | `SN_Base_Stockyard_Prototype` | 13.20 × 11.00 × 6.20 | **3 260** | 11 | 地面 z=0；Gate_In / Hoist / Scale 0.30 / Storage |
+| `SN_Base_Defense_Tower` | `assets/models/base/SN_Base_Defense_Tower.glb` | `SN_Base_Defense_Tower_Prototype` | 7.50 × 7.26 × 12.25 | **2 896** | 8 | 地面 z=0；Weapon_Mount 9.20 / Searchlight / Flag / Magazine |
+
+批次 5 合计 **15 948 三角面 / 19 000 预算**、42 mesh、37 socket、84 节点、159 图元，
+GLB 合计 1 212 768 B；材质沿用既有 11 张共享贴图（无新增），新类别目录 `assets/models/base/`
++ Core 副本各 11 张 PNG（`shared_materials.spec.json` 的 `runtime_dirs` 已追加）。
+- 结构要点：锯木厂 = 半开敞锯棚（后墙铁板/侧墙木构/前开敞立柱）+ 双坡铁皮顶 + 立式锯盘（齿圈/护罩/主轴）+ 进料辊道/原木坡道 + 木料堆 + 锯屑槽 + +Y 传动轴皮带轮；冶炼炉 = 石砌收分高炉（铁箍/风口/出渣口/出铁沟）+ 上料平台与围栏 + 上料斜桥/斜斗 + 双热风炉与热风管 + 煤/矿料仓 + 高烟囱（上升管接炉顶）；铸造车间 = 铁包木厂房（采光顶/石腰线/石门套滑门/门头招牌）+ 冲天炉 + 纵向行车梁/吊钩/浇包 + 浇注坑与模具台/砂箱 + 砂料仓；仓库堆场 = 12×10 石铺堆场 + 三面铁围栏与 +X 双扇门 + 木料/木箱/煤堆/矿石堆分区 + A 形龙门吊 + 地磅/读数表 + 门卫小亭 + 灯柱；防御塔 = 三级收分石塔（铁箍/射孔/角扶壁/底层铁门）+ 炮位平台与垛口（中央武器底座/探照灯/旗杆）+ 弹药库 + 外部铁梯（护笼 + 登台过桥）。
+- 源/工具：生成器 `kit_batch5_generator.py`；干跑 `dryrun_kit_batch5.py`；导出 `export_kit_batch5_glb.py`；GLB 自检 `verify_kit_batch5_glb.py`（5/5 ALL OK）；预览 `render_kit_batch5_preview.py`；目录 `gen_kit_catalog.py`（v1.5，37 件 / 70 590 tri，4 条生产链配方）。
+- 验收图：`docs/design/screenshots/kits/kit_base_lineup.png` / `kit_base_assembly.png` / `kit_base_assembly_detail.png` 与 5 件 × {3/4, 侧视}。
+- Godot 运行时：`framework/tests/cases/test_base_kit_assets.gd` 2 例（外链共享贴图 + tri 锁定 15 948、跨 5 件同一 `Texture2D` 实例）。
+- 本批不登记 manifest、不接运行时装配；防御塔只提供炮位/灯/弹药库接口，不含武器本体；LOD1 未做。
 
 ## LOD1 基础套件（M0-5，2026-10-22）
 

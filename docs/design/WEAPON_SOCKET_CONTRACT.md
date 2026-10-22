@@ -363,7 +363,6 @@ Root extras：`gun_port_sockets`（按 `socket_index` 顺序的名字数组）�
 - 内容侧镜像（`hull.schema.json` 的 `gun_port_sockets`）本轮**未做**，运行时仍以 GLB 节点 extras 为准。
 
 ## 10. 运行时装配（`ShipVisualAssembler`，2026-10-22）
-
 **状态：已实现。** `framework/ui/stages/ship_weapon_assembly.gd`（`ShipWeaponAssembly`）+
 `ship_weapon_mount.gd`（`ShipWeaponMount`）是 §5 fallback 链的代码实现，由
 `ShipVisualAssembler` 在整船装配时调用：
@@ -388,3 +387,32 @@ weapon GLB → find_weapon_root() / weapon_info()     # Root extras（assembly_s
   loadout 当前为空；截图工具注入的预览 loadout 只作为装配证据。
 - 契约 §7 待决 5（`base_footprint` F1）在运行时按 §8.3 用底座网格实测规避，`clearance_report()`
   不读 `base_footprint_*`。
+
+## 11. 敌舰船体 socket（`combat_kit` M2-1，2026-10-22）
+
+**状态：已执行。** 4 艘敌舰沿用 §8（甲板）与 §9（炮门）两套既有 socket 契约，没有新增第三套基准：
+
+| 资产 | 敌人类别 | 甲板 `SN_Socket_Weapon_*` | 炮门 `SN_Socket_GunPort_*` | 备注 |
+| --- | --- | ---: | ---: | --- |
+| `SN_Enemy_Pirate_Sloop` | Light | 3（Port_1 / Starboard_1 / Bow，Light） | 0 | 单桅纵帆 |
+| `SN_Enemy_Merchant_Armed` | Medium | 6（Port/Starboard_1..2 + Bow + Stern，Medium） | 0 | 双桅横帆 |
+| `SN_Enemy_Ironclad_Raider` | Heavy | 4（Port/Starboard_1 Heavy + _2 Medium） | 8（每舷 4，`port_class=Medium`） | 复用 `SN_Weapon_CasemateGun`（`port_pitch`） |
+| `SN_Enemy_Gunboat` | Light | 3（Bow_1 Heavy / Port_1 / Starboard_1 Light） | 0 | 艏部装甲炮盾内固定重炮位 |
+
+- 甲板 socket 与 §8 完全同口径：原点 = down-ray 实测甲板面、`+X` = 炮向前向、extras
+  `socket_spec="hull-sockets@1"` / `socket_index` / `socket_class` / `clearance_r/x/y/h` /
+  `mount_scale`；Root extras `weapon_sockets` / `weapon_socket_count` / `socket_spec`。
+- 铁甲舰变体炮门与 §9 完全同口径：原点 = 炮门平面中心（解析船壳面）、`+X` = 炮膛轴线
+  （12.13° 外张 + 1.72° 上抬）、`port_w=2.05` / `port_h=1.95` / `sill_z=1.30` /
+  `deck_z=3.66` / `inboard_depth=1.10` / `outboard_clearance=6.00`；Root extras
+  `gun_port_sockets` / `gun_port_socket_count` / `gun_port_socket_spec`。
+- 敌舰 Root 另写 `combat_kit="enemy-ships@1"` / `enemy_class`（Light / Medium / Heavy）/
+  `enemy_archetype`（pirate_sloop / armed_merchantman / ironclad_raider / gunboat）/
+  `baked_weapons=false`。
+- **不烘炮**：4 艘 GLB 里没有炮管；武器由运行时装配层（§10）按 class 挂到 socket 上。
+- 工具链：`combat_kit_generator.py`（规格真源 + 几何）、`sn_enemy_weapon_sockets.py`、
+  `sn_enemy_gun_ports.py`、`glb_enemy_sockets.py`（BLEND 前缀 → GLB 标准名 + Root 名单）、
+  `export_combat_kit_glb.py`、`verify_combat_kit_glb.py`；验收见
+  [COMBAT_KIT_ACCEPTANCE.md](../archive/COMBAT_KIT_ACCEPTANCE.md)。
+- 边界：敌人内容 Schema（`enemy_archetypes` / `encounter_tables`）仍为 planned；本批只交付
+  资产 / socket / 目录，不接 Core manifest 与运行时 AI。

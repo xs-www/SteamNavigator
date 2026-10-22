@@ -1,7 +1,7 @@
 # 建模需求 Backlog（3D 资产）
 
 > 状态：Active（2026-10-22）
-> 盘点基线：模型素材库 kit 26 件（批次 1–3，42,058 tri）+ **kit LOD1 26 件 + 船 LOD1 4 件（19,850 tri，M0-5）**、**船体帆索 rig_kit 12 件（3,774 tri，M0-4）**、舰载武器 8 件（16,996 tri，装配规范 v2）、船 4 艘 + 原型、铁港建筑 8 栋（8 LOD0 + 8 LOD1，共 16 个 GLB）、起重机 4 台、**旧道具 31 + 港口设施 6（批次 A 已迁移）**、旧船模块 11 + 4 艘可玩船 + 旧小镇 10（批次 B 已迁移，实际重导 21 个 GLB；`SN_Ship_Prototype` 遗留键除外）。
+> 盘点基线：模型素材库 kit **37 件（批次 1–5，70,590 tri）** + **kit LOD1 26 件 + 船 LOD1 4 件（19,850 tri，M0-5）**、**船体帆索 rig_kit 12 件（3,774 tri，M0-4）**、舰载武器 8 件（16,996 tri，装配规范 v2）、船 4 艘 + 原型、铁港建筑 8 栋（8 LOD0 + 8 LOD1，共 16 个 GLB）、起重机 4 台、**旧道具 31 + 港口设施 6（批次 A 已迁移）**、旧船模块 11 + 4 艘可玩船 + 旧小镇 10（批次 B 已迁移，实际重导 21 个 GLB；`SN_Ship_Prototype` 遗留键除外）。
 > 相关：[KIT_ASSET_LIBRARY.md](KIT_ASSET_LIBRARY.md) · [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) · [ASSET_MAP.md](ASSET_MAP.md) · [MODELING_WORKFLOW.md](MODELING_WORKFLOW.md)
 
 本文件只列**建模/资产侧**待办，不包含玩法、UI、运行时装配代码；接入类任务见 [todo.md](../../todo.md)。
@@ -16,6 +16,9 @@
 - **旧资产 UV 迁移 B（2026-10-22）**：船模块 12 GLB（含占位副本）+ 4 艘可玩船 + 旧小镇剩余 5 件补 UV、切 `SN_Tex_*`、重导 GLB；**55,256 tri / 118 网格不变、111,564 UV loops、10 个共享材质、Godot 21/21 / 24 共享贴图实例通过**（见 [LEGACY_UV_MIGRATION_B_ACCEPTANCE.md](../archive/LEGACY_UV_MIGRATION_B_ACCEPTANCE.md)）；旧小镇 5 栋建筑此前已由建筑套件升级为 `SN_Town_*`，`SN_Ship_Prototype` 遗留键仍是旧纯色。
 - **穿壳炮 casemate gun 模块化 M0-6（2026-10-22）**：铁甲舰 12 门舷侧炮拆成独立模块 `SN_Weapon_CasemateGun`（108 tri，根 = 炮门平面中心，`port_pitch`），船体侧新增 12 个 `SN_Socket_GunPort_*`，船体重导为空炮门版（8 830 → 8 158 tri）；模块装回去与烘焙炮管逐顶点重合。见 [CASEMATE_GUN_ACCEPTANCE.md](../archive/CASEMATE_GUN_ACCEPTANCE.md)。
 - **LOD1 基础套件 M0-5（2026-10-22）**：kit 26 件 + 4 艘可玩船各补 LOD1，**30 件 19,850 / 88,026 = 22.6%**（铁甲舰 LOD0 随后由 M0-6 casemate 批次 −672 tri，30 件合计现为 87,354 / 22.7%）（kit 10,824 / 42,058 = 25.7% ≤35%、船 9,026 / 45,968 = 19.6% ≤30%）；LOD0↔LOD1 世界包围盒逐轴 0.000 m，30/30 单根节点 / 单 mesh / UV 完整 / 外部共享贴图；铁港建筑 8 个 LOD1（8 栋 × LOD0/LOD1 = 16 个 GLB）此前已交付。见 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md)。
+- **architecture_kit 扩展 M1-1（2026-10-22，批次 4）**：6 件可围合建筑件（围墙段 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建），**12,584 / 16,800 tri**、39 mesh、37 socket、11 张共享贴图（无新增）；6/6 GLB 自检 ALL OK、独立 Verifier 只读验收 0 failures、Godot 运行时用例 2 例；`kit_catalog.json` v1.4（32 件 / 54,642 tri、4 条基地装配配方）。见 [KIT_ASSET_LIBRARY.md §12](KIT_ASSET_LIBRARY.md) / [MODELING_WORKFLOW.md §11.20](MODELING_WORKFLOW.md)。
+- **base_kit 生产建筑 M1-2（2026-10-22，批次 5）**：5 件生产建筑（锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔），**15,948 / 19,000 tri**、42 mesh、37 socket、84 节点、11 张共享贴图（无新增，新增 `assets/models/base/` 类别目录）；5/5 GLB 自检 ALL OK、独立 Verifier 只读验收、Godot 运行时用例 2 例；`kit_catalog.json` v1.5（37 件 / 70,590 tri、4 条生产链配方）。3 轮返工修掉浇包悬空、探照灯悬空、Foundry 正立面被墙吞没。见 [KIT_ASSET_LIBRARY.md §13](KIT_ASSET_LIBRARY.md) / [MODELING_WORKFLOW.md §11.21](MODELING_WORKFLOW.md)。
+- **`combat_kit` 敌舰 M2-1（2026-10-22，批次 9）**：4 艘敌舰 = **3 类敌人**（Light ×2 / Medium / Heavy）：海盗单桅 `SN_Enemy_Pirate_Sloop` 8,678 tri、武装商船 `SN_Enemy_Merchant_Armed` 11,746、铁甲舰变体 `SN_Enemy_Ironclad_Raider` 7,440（含 8 个空炮门 socket）、小型炮艇 `SN_Enemy_Gunboat` 3,460，合计 **31,324 / 32,400 tri**；55 mesh（GLB 节点合计 86）+ 16 武器 socket + 8 炮门 socket、4 个集合、9 张共享贴图（**无新增贴图**，新增 `assets/models/combat/` 类别目录）；4/4 GLB 自检 ALL OK、独立 Verifier 只读验收 0 failures、Godot 运行时用例（4 GLB 加载 / 31,324 tri / socket 契约）；预览 8 单件 + 1 lineup。骨架复用现有船体站表放样 + `rig_kit` / `ship_parts`；**不烘炮**，甲板炮位按 `weapon-assembly@2`、铁甲舰炮门按 `hull-gunports@1` 给空节点并复用 `SN_Weapon_CasemateGun`。见 [KIT_ASSET_LIBRARY.md §14](KIT_ASSET_LIBRARY.md) / [MODELING_WORKFLOW.md §11.22](MODELING_WORKFLOW.md) / [COMBAT_KIT_ACCEPTANCE.md](../archive/COMBAT_KIT_ACCEPTANCE.md)。
 
 ## 2. P0：接入前的硬缺口
 
@@ -31,9 +34,9 @@
 
 | ID | 任务 | 内容 | 说明 |
 | --- | --- | --- | --- |
-| M1-1 | architecture_kit 扩展 | 围墙 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建 | 阶段 3 基地需要“可围合”模块；当前只有 4 栋独立建筑 |
-| M1-2 | `base_kit` 生产建筑 | 锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔 | 与 machinery_kit（齿轮/动力/卷扬）拼装，支撑生产链 |
-| M1-3 | `interior_kit` 切面内景 | 酒馆 / 船长室 / 仓库 / 办公室固定机位内景 | 委托 / 情报页舞台化；低模切面，不做可走室内 |
+| ~~M1-1~~ | ~~architecture_kit 扩展~~ | ~~围墙 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建~~ | **✅ 2026-10-22 完成（批次 4）**：6 件 **12,584 / 16,800 tri**、39 mesh / 37 socket / 82 节点；全部地面件 zmin=0、4 m 网格 `Module_Next/Prev` 平铺；大门门扇净间隙 0.05、吊闸不碰门顶；装卸平台月台面 1.25 m、楼梯末级接面；仓库变体外楼梯 14 级到 3.48 m 上层侧门；工坊扩建 Drive_Shaft 接工坊、送煤槽落地。6/6 GLB 自检 ALL OK + 独立 Verifier 只读验收 **passed / 0 failures**；Godot 运行时用例 2 例；`kit_catalog.json` v1.4。见 [KIT_ASSET_LIBRARY.md §12](KIT_ASSET_LIBRARY.md) / [MODELING_WORKFLOW.md §11.20](MODELING_WORKFLOW.md) |
+| ~~M1-2~~ | ~~`base_kit` 生产建筑~~ | ~~锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔~~ | **✅ 2026-10-22 完成（批次 5）**：5 件 **15,948 / 19,000 tri**、42 mesh / 37 socket / 84 节点；全部地面件 zmin=0、4 m 网格；生产链接口（Drive_Shaft / Log_Input / Timber_Output、Coal/Ore_Input / Molten_In/Out / Pour_Point、Gate_In / Hoist / Scale / Storage、Weapon_Mount / Searchlight / Flag / Magazine / Ladder_Foot）；5/5 GLB 自检 ALL OK + 独立 Verifier 只读验收；Godot 运行时用例 2 例；`kit_catalog.json` v1.5。见 [KIT_ASSET_LIBRARY.md §13](KIT_ASSET_LIBRARY.md) / [MODELING_WORKFLOW.md §11.21](MODELING_WORKFLOW.md) |
+| M1-3 | `interior_kit` 切面内景 | 酒馆 / 船长室 / 仓库 / 办公室固定机位内景 | 委托 / 情报页舞台化；低模切面，不做可走室内。**切面约定已定（2026-10-22）**：根在地面中心 z=0，−X 背景墙 / ±Y 侧墙 / 顶部只留梁，**开放面 +X**；统一 8×6×3.6 m 内景盒，提供 `Camera_Fixed` / `Focus_Primary` / `Light_Main` / `Wall_Back` / `Door_In` 接口 |
 | M1-4 | environment_kit v2 | 悬崖 / 沙滩 / 小岛 / 植被 / 残骸变体 / 浮标变体 / 冰山 / 漩涡 | 事件化海洋与探索；需新增贴图（草 / 苔 / 沙 / 冰） |
 | M1-5 | 港口变体 | 第二港口建筑组、市场摊、信号塔、干船坞 | 旧 `SN_Port_Facilities` 先迁移，再补新设施 |
 | M1-0 | port cassette 炮门舱段 | 舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口的适配模块（Light/Medium/Heavy 口径） | 让 `SN_Weapon_CasemateGun` 能装到没有炮门的船；同时解决空炮门“暗腔”读感。依赖本批 §9 契约 |\n| M1-6 | 战斗残骸 / 损伤状态 | 断桅 / 破帆 / 船体破洞 / 燃烧残骸 | 可替换 mesh；战斗结算与事件舞台使用 |
@@ -42,7 +45,7 @@
 
 | ID | 任务 | 内容 | 说明 |
 | --- | --- | --- | --- |
-| M2-1 | `combat_kit` 敌舰 | 海盗单桅 / 武装商船 / 铁甲舰变体 / 小型炮艇 | 阶段 2 需要 3 类敌人；复用现有船体骨架与武器 socket |
+| ~~M2-1~~ | ~~`combat_kit` 敌舰~~ | ~~海盗单桅 / 武装商船 / 铁甲舰变体 / 小型炮艇~~ | **✅ 2026-10-22 完成（批次 9）**：4 艘 = 3 类敌人，**31,324 / 32,400 tri**、16 武器 socket + 8 炮门 socket（复用 `SN_Weapon_CasemateGun`）、9 张共享贴图（无新增）；4/4 GLB ALL OK + 独立 Verifier 0 failures + Godot 用例；见 §1 / [KIT_ASSET_LIBRARY.md §14](KIT_ASSET_LIBRARY.md) |
 | M2-2 | `sea_monster` | 海蛇 / 巨型触手 / 浮上海面的背脊 | 阶段 5 事件与航行危险；低模 + 分段动画节点 |
 | M2-3 | `ruins_kit` | 程序化遗迹房间：墙 / 门 / 柱 / 楼梯 / 祭坛 / 机关 / 宝箱 | 阶段 5 遗迹探索；按房间模块拼装 |
 | M2-4 | expedition props | 营地 / 火把 / 绳索 / 脚手架 / 探险道具 | 遗迹与海岛事件点缀 |
@@ -55,8 +58,10 @@
 3. ~~**批次 6**：M0-2 旧资产 UV 迁移 B（21 个 GLB）~~ —— **✅ 2026-10-22 完成**。
 4. ~~**批次 6b**：M0-5 LOD1 基础套件（kit 26 + 船 4 = 30 件；建筑 8 个 LOD1 / 16 个 GLB 已在批次 A/B 交付）~~ —— **✅ 2026-10-22 完成**；M0 系列（M0-1 ~ M0-5）全部收口，下一步接运行时 LOD 切换 / 质量档位与 M2-5。
 5. ~~**批次 6c**：M0-6 炮门 socket + 穿壳炮模块化~~ —— **✅ 2026-10-22 完成**；M0 系列（M0-1 ~ M0-6）全部收口。
-6. **批次 7（下一批）**：M2-1 `combat_kit` 敌舰 + M1-1 architecture_kit 扩展 + M1-2 `base_kit` + M1-3 `interior_kit`（按阶段 2/3 的优先级取 M2-1 或 M1-1/M1-2/M1-3）。
-7. **批次 8**：M1-4 environment_kit v2 + M2-3 `ruins_kit` + M2-2 `sea_monster`。
+6. ~~**批次 7**：M1-1 architecture_kit 扩展（6 件可围合建筑件）~~ —— **✅ 2026-10-22 完成**（见 §1 / [KIT_ASSET_LIBRARY.md §12](KIT_ASSET_LIBRARY.md)）。
+7. ~~**批次 8**：M1-2 `base_kit` 生产建筑~~ —— **✅ 2026-10-22 完成（批次 5）**。
+8. ~~**批次 9**：M2-1 `combat_kit` 敌舰~~ —— **✅ 2026-10-22 完成**（4 艘 / 3 类敌人 / 31,324 tri / 16 武器 socket + 8 炮门 socket）；运行时装配（`ShipVisualAssembler` 把武器挂到敌舰 socket）与敌人内容 Schema（`enemy_archetypes`）留后续。
+9. **批次 10（下一批）**：M1-3 `interior_kit` 切面内景（切面约定已定，见 §3 M1-3）或 M0 系列运行时接线（LOD 切换 / 质量档位 / M2-5）；M1-4 environment_kit v2 + M2-3 `ruins_kit` + M2-2 `sea_monster`；M1-0 port cassette 与 M1-6 战斗残骸按战斗系统排期插入。
 
 ## 6. 跨批次统一要求
 
@@ -70,8 +75,8 @@
 
 1. 第二港口风格：同铁港图集换色，还是新建一套材质/图集？
 2. ~~`rig_kit` 帆面是布面网格还是 Godot 侧布料/顶点动画？~~ —— **2026-10-22 已决**：模型侧交付**静态低模布面**（帆腹/帆缝/帆缘绳、单层双面）+ `SN_Socket_Sail_*` 挂点；风动/布料留 Godot 侧后续实现。
-3. 敌舰是否复用玩家船体骨架（省预算）还是独立轮廓（可读性更好）？
-4. 内景切面是否统一 1 m 墙厚 / 固定机位套装，还是按场景单独构图？
+3. ~~敌舰是否复用玩家船体骨架（省预算）还是独立轮廓（可读性更好）？~~ —— **2026-10-22 已决（M2-1）**：复用现有船体骨架（同一套站表放样 + `rig_kit` / `ship_parts` / 武器 socket 契约，不新造船型语言）；4 个变体靠轮廓（单桅纵帆 / 双桅横帆 / 单烟囱炮房 / 艏炮盾）、涂装与武备布置区分，**不新增贴图**。
+4. ~~内景切面是否统一 1 m 墙厚 / 固定机位套装，还是按场景单独构图？~~ —— **2026-10-22 已决**：统一「地面中心 z=0、−X 背景墙、±Y 侧墙、顶部只留梁、开放面 +X」的 8×6×3.6 m 内景盒 + `Camera_Fixed` / `Focus_Primary` / `Light_Main` / `Wall_Back` / `Door_In` 固定接口（M1-3 工单按此执行）。
 5. **武器底座占地字段（M0-3 验收 F1）**：武器批次 1 的 `base_footprint_x/y` 当前等于整机 bbox（= `envelope`），
    不能当底座占地用；需要给武器 extras 补真实 `mount_pad_x` / `mount_pad_y`（底座/平台网格 bbox）并重导 5 件，
    回归 `verify_weapon_glb.py`；在此之前 §8.3 的底座判据以网格实测为准（见 [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) §7.5）。

@@ -459,6 +459,55 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 过程发现 | ⑦ 用户截图发现炮门框 / 暗板是平面件、未贴 17 站放样壳面（边缘间隙 0.241 m）——解析近似 `side_y_at()` 与网格真实表面不是一回事，平面件必须逐角取「站间线性插值」的壳面 y（`hull_surface_y()`）；socket 位姿也要用同一函数，否则炮管会偏离暗板中心。① **活体 Blender 缓存纯 Python 模块**：材质白名单模块是旧版 → 新键 `KeyError`；落盘脚本必须对 `sn_weapon_materials` 也 `importlib.reload`（同 §11.13 / §11.17）；② `mesh.materials` 是 Material 集合不是 slot 集合，`slot.material` 会 AttributeError；③ **毫米量化仍会在 float32 边界翻边**：按 `round(x,3)` 比对坐标有 17 个面误报漂移，最终改用**按索引比对**（顶点容差 + 面顶点集合 + 材质），不依赖量化；④ **预览近景相机用了船体局部坐标**：炮门中心是局部坐标，船体对象在工作台摆位 (0,90,0)，直接把局部坐标当世界坐标会把镜头对到 90 m 外空气里，渲染出纯背景；⑤ GLB 验收的 4×4 单位阵 1.0 在索引 0/5/10/**15**，漏 15 会把单位阵判失败（验收脚本自身缺陷）；⑥ 其它 3 艘船没有炮门开口，不能直接挂穿壳炮，需 port cassette（backlog M1-0） |
 | 交付 | 1 个模块 GLB + 重导铁甲舰 GLB（+ Core 副本）、8 个工具脚本（生成 / 干跑 / 端口 / 归一化 / 落盘 / 导出 / 验收 / 预览）、5 张预览图、Godot 守护测试、[WEAPON_SOCKET_CONTRACT.md §9](WEAPON_SOCKET_CONTRACT.md)、[CASEMATE_GUN_ACCEPTANCE.md](../archive/CASEMATE_GUN_ACCEPTANCE.md) |
 
+### 11.20 architecture_kit 扩展 M1-1（2026-10-22，6 件可围合建筑件 + 2 轮 Builder 返工）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M1-1：阶段 3 基地需要可围合模块。用户 2026-10-22 在批次 7 选「只做 M1-1（6 件）」，base_kit / interior_kit 留后续；内景切面约定（开放面 +X / 固定机位 socket）一并记录给 M1-3 |
+| 工单 | `briefs/sn_kit_batch4_architecture_extension.json`（6 件自包含：tri 预算 1600/3400/1500/3400/4600/2900、bbox+tol、socket 坐标、required_parts、验收条件、场景规则） |
+| Lead 生成器 | `kit_batch4_generator.py`：复用批次 3 的立面工具（`_face_box` / `_slab` / `_window` / `_door` / `_gable_roof` / `_chimney` / `_rivets`）+ `weapon_kit` 基本体；6 件参数化（围墙 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建）。第一版干跑就抓到：mesh/socket 同名 2 处（Lantern / Chimney → 改名 Lamp / Smokestack）、围墙超 76 tri（减铆钉行） |
+| 干跑 | `dryrun_kit_batch4.py`：命名 / 父级 / tri / bbox / zmin=0 / 边界边 / 非流形 / 退化面 / 材质白名单 / 共享贴图 / socket 契约 + **本批专属断言**（门扇净间隙 0.02–0.10、吊闸 ≥ 门顶、月台行走面 1.25、外楼梯到 3.48、承托面检查） |
+| Builder R0 | 一次构建成功：6/6 TEXTURED + PASS，12,228 tri；结构/契约全绿，但按工单验收抓出 **3 处真实设计偏差**：装卸平台木铺面行走面 1.39（工单 1.25）、仓库变体外楼梯只到 1.44（未到上层 3.48）、大门门扇-门柱净间隙 0.13–0.23 且吊闸与门顶相交 0.12 |
+| 返工 R1 | Lead 改生成器参数（不是手工补）：月台石基/Deck/木铺面整体下移使行走面 = 1.25；仓库变体楼梯改 14 级（0.2486/0.30）沿 -Y 墙到 3.48 平台 + -Y 上层侧门，bbox 宽 7.72→8.46、tri 预算 4000→4600；大门门扇加宽到 ±1.80（净间隙 0.05）、吊闸抬高（最低 3.64 > 门顶 3.62）。Builder 复核 passed=true |
+| 返工 R2 | Builder 视觉挑刺反馈 2 条（LP 末级 4 cm 钢包边台阶、WH 侧门与平台 x 只重叠 0.70/1.30 m）→ Lead 把踏面钢包边压到踏面下、平台块顶 = 3.48、侧门收宽到落在平台面内（tri 4228→4216，总 12,584） |
+| 导出与验收 | `export_kit_batch4_glb.py` 6 件（逐件根归零 + `externalize_glb(prefer_authored=True)` + 旧 GLB 备份 + Core 副本 + 保存工作台）；`verify_kit_batch4_glb.py` **6/6 ALL OK**（tri / 世界 bbox / 贴地 / 材质 / doubleSided / UV / 外部 PNG 字节 / Core 一致 / Root extras / socket）；Godot 新增 `test_architecture_extension_assets.gd` 2 例；全量 headless **419 → 421 例**（见下）；预览 12 单件 + 1 lineup + 2 拼装 |
+| 独立 Verifier | 只读复核 passed=true / 0 failures：82 对象、39 mesh 健康四项全 0、35 socket 坐标误差 ≤2.44e-5、支撑面实测（LP 5 级踏面 0.25→1.25、WH 14/14 级到 3.48、15 个 z=0 底面、工坊送煤槽落在煤堆上）、大门射线净间隙 0.10–0.15、回归 817/62/Camera=2/Light=1 + 抽样 Root 坐标一致 |
+| 过程发现 | ① **工单验收数值要能被几何直接命中**：R0 的 3 处偏差都是「数值存在、位置不对」——月台面 1.25 在石基座顶但行走面被木板抬高、楼梯落地但没到上层、门扇存在但留缝过大；Builder 按数值复核比只看 report 有效。② **Builder 视觉挑刺能反哺生成器**：钢包边 4 cm 台阶与侧门/平台错位都是渲染图里才看得出来，改法是压边/对齐参数而不是手工补几何。③ **独立 Verifier 的支撑面测量**（z=0 面面积、逐级踏面高度、射线间隙）比 bbox 更接近「能不能用」；本次 6 件全部通过。④ **Blender 崩溃恢复**：本轮遇到用户机器死机导致活体 Blender 丢失未存场景，靠「生成器 + 工作台 .blend」重新打开 + 重跑生成器恢复；工作台在导出时保存，生成器是唯一几何真源。⑤ 大门净间隙口径待统一：按门洞角柱测 0.05、按无箍带门柱面测 0.12–0.15（Verifier 记录，非 blocking）。 |
+| 交付 | 6 个 GLB（`assets/models/architecture/` + Core 副本）、11 张共享贴图 ×2 目录、生成器 / 干跑 / 导出 / 验收 / 预览 5 个脚本、`kit_catalog.json` v1.4（32 件 / 54,642 tri + 4 条基地配方）、Godot 用例、[KIT_ASSET_LIBRARY.md §12](KIT_ASSET_LIBRARY.md)、预览图 15 张 |
+
+### 11.21 base_kit 生产建筑 M1-2（2026-10-22，5 件 + 3 轮 Builder 返工 + 射线级立面复核）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M1-2：阶段 3 基地建设需要可生产建筑。用户 2026-10-22 在批次 4 交付后指示「先做 M1-2」，范围按 backlog 的 5 件（锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔） |
+| 工单 | `briefs/sn_kit_batch5_base_kit.json`（5 件自包含：tri 预算 3800/4000/4600/3600/3400、bbox+tol、socket、required_parts、生产链布局验收、场景规则；新类别 `base`） |
+| Lead 生成器 | `kit_batch5_generator.py`：复用批次 3 立面工具（`_gable_roof` / `_window` / `_door` / `_face_box` / `_slab`）与批次 4 盒体/壁灯；新增 `_ladder_vertical`（护笼 + 横档）、`_gable_roof_at`（任意 Y 中心双坡顶，批次 3 的 `_gable_roof` 固定在 y=0）、`_railing_rect`、`_tank` 等。干跑先抓到：mesh/socket 同名 4 处（Chimney×2 / Scale / Magazine / Searchlight → Stack / Weighbridge / PowderStore / Lamp）、2 件 bbox 偏差、1 处未声明材质（Smelter SkipHoist 用 Wood_Dark）、`_gable_roof` 对偏移建筑（小屋 / 弹药库）屋顶错位 |
+| 干跑 | `dryrun_kit_batch5.py`：命名/父级/tri/bbox/zmin/网格健康/材质白名单/socket + **生产链布局断言**（锯盘高度、炉体收分、上料平台高度、斜桥落地、浇包净空、龙门吊/堆垛关系、塔身收分、梯子落地、承托面） |
+| Builder R0 | 一次构建成功：5/5 TEXTURED + PASS，15,528 tri；结构/契约全绿；找到 **2 个真缺陷**：Foundry 浇包桶底 1.30 与模具台（1.46）互穿 38 tri、Defense_Tower 探照灯与平台最小距离 0.092 m（悬空） |
+| 返工 R1 | Lead 改生成器：浇包整组 +0.25 m（桶底 1.55）、探照灯加灯座（底板 + 立柱）、梯子加登台过桥、Stockyard Scale socket 0.18→0.30（与台面一致）；Builder 复核 passed=true，R1 合计 15,612（塔 +84） |
+| 返工 R2 | Builder 视觉挑刺：Foundry 深色墙面读成大黑盒、看不到门/生产链 → Lead 加石腰线/石门套/亮木门板/门头招牌；Builder 复核发现 **R2 新构件被 +X 铁板墙（x=6.13）吞掉**（门板 6.10、招牌 6.10、+X 腰线 6.08 全在墙内），且招牌铆钉行坐标写错落在室内（stray 几何） |
+| 返工 R3 | Lead 把 +X 立面构件全部外移到墙面之外（门板 6.15–6.25、招牌 6.37–6.43、黄铜框 6.43–6.47、腰线 6.13–6.24、黄铜条 6.38–6.46），铆钉行改 axis=(1,0,0)；Builder 用 **BVH 射线**从 +X 外侧采样验证：门板/招牌/石腰线/黄铜条首命中均为立面构件（x≥6.24）而非墙板 6.13，室内 stray 0；passed=true |
+| 导出与验收 | `export_kit_batch5_glb.py`（新类别 `assets/models/base/` + Core 副本 + 旧 GLB 备份 + 共享贴图 11 张双目录 + 保存工作台）；`verify_kit_batch5_glb.py` **5/5 ALL OK**；Godot 新增 `test_base_kit_assets.gd` 2 例；预览 10 单件 + 1 lineup + 2 拼装；`kit_catalog.json` v1.5（37 件 / 70,590 tri + 4 条生产链配方） |
+| 独立 Verifier | 只读复核（见验收文档）：5 件 42 mesh 网格健康四项全 0、UV 42/42、37 socket 坐标一致、Root extras（含 `production` 标志）齐全、无孤立网格；支撑面/布局实测与 +X 射线复核通过；回归 899 非本批对象 / 62 既有集合 + 5 本批 / Camera=2 / Light=1 |
+| 过程发现 | ① **封闭厂房的可读性需要正立面语言**：Foundry 内部生产链在实心墙里从外部完全不可见，R2/R3 证明「深色墙 + 深色门」等于没有入口——必须亮木门板 + 石门套 + 招牌 + 腰线，且**外移到墙皮之外**才可见（0.01–0.02 m 安装缝可接受）。② **射线复核比渲染目测可靠**：R2 渲染只能看到"门框内仍是深色板"，真正根因靠从 +X 外沿 -X 打 BVH 射线、检查首命中 mesh/材质才定位（墙板 6.13 先于门板 6.10）。③ **吊挂类部件要量净空**：浇包桶底 1.30 vs 模具台 1.46 是 bbox 正常、空间关系错的典型，Builder 三角求交 38 tri 才抓到；修法是整组抬高而不是缩台面。④ **小件落地检查要含圆柱半径**：垂直梯横档用沿 X 的圆柱，半径 0.03 会让最低横档伸到 z=-0.03；干跑 zmin 因此报 -0.029，修法是横档起始抬 0.12 m。⑤ 新类别目录（`base`）需要同步 `shared_materials.spec.json` 的 `runtime_dirs`，否则 `ContentAssetLoader` 不能按路径共享 `Texture2D`。 |
+| 交付 | 5 个 GLB（`assets/models/base/` + Core 副本）、11 张共享贴图 ×2 目录、生成器/干跑/导出/验收/预览 5 个脚本、`kit_catalog.json` v1.5、Godot 用例、[KIT_ASSET_LIBRARY.md §13](KIT_ASSET_LIBRARY.md)、验收文档 [KIT_BATCH5_ACCEPTANCE.md](../archive/KIT_BATCH5_ACCEPTANCE.md)、预览图 13 张 |
+
+### 11.22 `combat_kit` 敌舰 M2-1（2026-10-22，4 艘 = 3 类敌人 + 武器 socket 复用）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | backlog M2-1：阶段 2 自动战斗需要「3 类敌人」，4 个变体（海盗单桅 / 武装商船 / 铁甲舰变体 / 小型炮艇）；用户 2026-10-22 明确「可复用现有船体 + 武器 socket 的模型」。§7 待决 #3 据此定案：复用船体骨架（站表放样 + `rig_kit` / `ship_parts`），靠轮廓 / 涂装 / 武备布置区分，不新增贴图 |
+| 工单 | `briefs/sn_combat_kit_batch1.json`（4 件自包含：tri 预算 9000/12000/7800/3600、bbox + tol、class/archetype、socket 数量与 extras、验收条件、场景规则、工作台摆位） |
+| Lead 生成器 | `combat_kit_generator.py`：`HullSpec`（站表 + 剖面轮廓，与现有船体同一套放样数学）+ 4 套上层建筑 / 桅帆 / 烟囱 / 炮门几何；帆索走 `rig_kit`（`schooner_mast` / `gaff_sail` / `square_sail` / `tri_sail` / `shroud_fan`），甲板属具走 `ship_parts.deck`，共享贴图 / UV 走 `sn_shared_materials.apply_collection(space="root")`；纯 Python 部分同时是 `WEAPON_SOCKETS` / `GUN_PORTS` / `report()` 的真源 |
+| 干跑 | `dryrun_combat_kit.py`：命名 / 父级 / tri / **含 Pivot 变换的世界 bbox** / 网格健康（开放件仅 `*_Deck`、`*_Sails*`、`*_Headsails`）/ 材质白名单 / socket 规格（class、镜像、y 在甲板内、clearance 口径）/ 炮门规格（8 个、`port_class=Medium`、开口 ≥ 1.9×1.9）；一次 `ALL OK`（4 艘 / 31,324 tri / 3 类） |
+| Builder R0 | 一次构建成功：4 集合 / 62 对象（55 mesh + 7 empty）、31,324 tri，逐艘 bbox 与 target 最大偏差 0.031 m；网格健康四项全 0；材质全 `SN_Tex_*`、UV loops == loops；非本批 983 对象名 SHA-256 与基线一致；Camera=2 / Light=1。**look 发现**工作台 y=150 与既有 LOD0 建筑行三维相交（sloop / merchant 桅帆插楼） |
+| 工作台摆位返工 | R1 挪 y=240 后 AABB 零交叠，但 look 正视被 y=225 的 LOD1 行透视遮挡（非相交）→ R2 修正 raider 艏平台（让开 x=13 Heavy 炮位射线净空）；R3 整排挪到 y=-110 空走廊，A 稳定零交叠、4 艘 3/4 + 正视全部无遮挡。三次重建 tri / bbox / UV / 材质逐位不变 |
+| socket 落盘（复用 M0-3 / M0-6） | `sn_enemy_weapon_sockets.py`（16 个甲板 socket：3/6/4/3，down-ray 实测甲板 z + 16 向净空 + 向上净空，声明不得高于实测）+ `sn_enemy_gun_ports.py`（铁甲舰变体 8 个炮门 socket，原点 = 炮门平面中心、+X = 炮膛轴线，实测门内 / 舷外净空）；Builder 在 Blender 内 apply + verify 全绿：objects 1045→1069、mesh / tri 不变、extras / 父级 / Root count 全对 |
+| 导出 | `export_combat_kit_glb.py`：socket verify 门禁 → 根归零整集合导出（`export_extras=True`）→ `glb_shared_textures.externalize_glb(prefer_authored=True)` → `glb_enemy_sockets.normalize()`（BLEND 前缀 → `SN_Socket_Weapon_*` / `SN_Socket_GunPort_*`、Root 名单 extras）→ Core 副本 → 保存工作台；4 个 GLB 共 2,235,780 B，节点 20 / 14 / 27 / 25，images 各 8 张外部共享 PNG，assets / core 逐字节一致；导出后剥掉 glTF `scenes[].extras` 里的 MCP 会话元数据 |
+| 验收 | `verify_combat_kit_glb.py` **4/4 ALL OK**（tri / 世界 bbox / 每图元 UV / 材质 doubleSided / 外部贴图字节 / 双副本 / root extras / socket 坐标与 extras）；Godot `test_combat_kit_assets.gd` 守护 4 个 GLB（全量 headless **463 passed / 0 failed**）；**独立 Verifier 只读验收**：核心资产（场景 / socket / GLB / 贴图 / 回归 / 视觉）24 项通过，另揪出 5 项文档 / 数据级问题（验收记录缺失、merchant bbox 三处不一致、EM Stern 净空声明比实测高 0.02 m、catalog deck_z 用解析值、GLB scene extras 残留 MCP 元数据）；Lead 已逐项修复并重导，复验后 passed=true / 0 failures；预览 8 单件 + 1 lineup（`docs/design/screenshots/combat/combat_lineup.png`） |
+| 过程发现 | ① **工单工作台摆位要先扫空走廊**：几何 AABB 零交叠不代表 look 干净，固定机位会被邻排建筑透视遮挡；先用只读 bbox / 行带扫描选行，再重建。② **纯 Python `report()` 必须复刻 Pivot 装配变换**：merchant 主桅在 Pivot 下，`report()` 原先把局部 z 当世界 z，z_max 少 0.33 m，GLB 验收首次报 3/4；补 `world_vertices()` 后 4/4 通过（与 §11.9 干跑教训同源）。③ **socket 声明值先做纯 Python 射线预演**：socket-tools 在 Builder 之前预演出 7 处「声明高于实测」，Lead 据此把 clearance_h / r / cx 调保守并挪开 raider 艏平台，Builder 一次 apply 全绿。④ **脚本路径 dirname 层数错**：预览 / 导出脚本 `WORKDIR` 少一层，产物写进 `tools/.design` 与 `tools/docs`；Builder 在导出前主动停手报告（未污染 GLB），修 `dirname(dirname(dirname(HERE)))` 后重跑并清理错目录。⑤ LIVE Blender 模块缓存仍需 `importlib.reload`（重建 / socket 脚本均按此执行）。 |
+| 交付 | 4 个 GLB（`assets/models/combat/` + Core 副本 + 11 张共享贴图 ×2 目录，新增 `combat` 类别并写进 `shared_materials.spec.json` 的 `runtime_dirs`）、`combat_kit_generator.py` / `dryrun_combat_kit.py` / `sn_enemy_weapon_sockets.py` / `sn_enemy_gun_ports.py` / `glb_enemy_sockets.py` / `export_combat_kit_glb.py` / `verify_combat_kit_glb.py` / `render_combat_kit_preview.py` / `gen_combat_kit_catalog.py`、`combat_kit_catalog.json`、Godot 用例、[KIT_ASSET_LIBRARY.md §14](KIT_ASSET_LIBRARY.md)、[COMBAT_KIT_ACCEPTANCE.md](../archive/COMBAT_KIT_ACCEPTANCE.md) |
+
 ## 12. 共享贴图材质与 UV（新资产默认约定，2026-10-21 起）
 
 > 结论：**新资产不再用纯色代表材质**。材质 = 共享贴图（`SN_Tex_*`）+ spec 参数，

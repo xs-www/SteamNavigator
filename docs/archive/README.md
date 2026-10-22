@@ -12,6 +12,9 @@
 
 ## 建模交付与验收（已完成，仅追溯）
 
+- [combat_kit 敌舰 M2-1 验收（4 艘 / 3 类敌人 + 16 武器 socket + 8 炮门 socket，2026-10-22）](COMBAT_KIT_ACCEPTANCE.md)
+- [base_kit 生产建筑 M1-2 验收（批次 5：基地生产链 5 件，2026-10-22）](KIT_BATCH5_ACCEPTANCE.md)
+- [architecture_kit 扩展 M1-1 验收（批次 4：可围合基地 6 件，2026-10-22）](KIT_BATCH4_ACCEPTANCE.md)
 - [穿壳炮 casemate gun 模块化验收（12 门舷侧炮拆成独立模块 + 铁甲舰空炮门，2026-10-22）](CASEMATE_GUN_ACCEPTANCE.md)
 - [LOD1 基础套件 M0-5 验收（kit 26 件 + 4 艘可玩船，2026-10-22）](LOD1_BASE_KIT_ACCEPTANCE.md)
 - [船体帆索部件库 M0-4 验收（rig_kit 12 件 + 3 艘船参数化 + 22 个帆索 socket，2026-10-22）](RIG_KIT_ACCEPTANCE.md)

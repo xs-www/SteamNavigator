@@ -37,7 +37,11 @@
     "assets/models/architecture/shared_materials",
     "dev_mods/core/assets/models/architecture/shared_materials",
     "assets/models/environment/shared_materials",
-    "dev_mods/core/assets/models/environment/shared_materials"
+    "dev_mods/core/assets/models/environment/shared_materials",
+    "assets/models/base/shared_materials",
+    "dev_mods/core/assets/models/base/shared_materials",
+    "assets/models/combat/shared_materials",
+    "dev_mods/core/assets/models/combat/shared_materials"
   ],
   "uri_prefix": "shared_materials",
   "materials": [
