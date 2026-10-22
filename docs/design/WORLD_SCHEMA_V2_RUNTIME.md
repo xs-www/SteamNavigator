@@ -1,6 +1,6 @@
 # 世界与战役内容 Schema 2.0 实现契约（Phase B）
 
-> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1–B5 已落地）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
+> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1–B6 已完成，Phase B 收尾）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
 > 总方案见 [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md) §4 Phase B，实体契约见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)；探索规则见 `EXPLORATION_SYSTEM.md`，教程剧情见
 > [STORY_TUTORIAL.md](STORY_TUTORIAL.md)。
@@ -370,9 +370,15 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | 校验语义 | `draft_content` 只对草案类型提示（提升后不再出现）；`capability_undeclared` 改为“schemaVersion=2.0 且未声明 capability” |
 | 导出守卫（G8） | 判定从「draft **或** schema_version 2.0」改为「**当前运行时不支持**」：`info.draft` 或未知类型/版本不可加载；提升后的 9 类允许部署 |
 | CLI | `types` 运行时组新增 9 类（`schema_version: "2.0"`）；`describe` 显示 v2 Schema；`add/new` 写 2.0 envelope；`validate` 走新引用规则 |
-| SDK / 发布 | `sdk/validate.gd` 需通过新增 9 类内容；release workflow 无新增步骤（沿用 `gen_content_types --check` / `gen_static_docs --check` / Godot tests / sdk validate） |
+| SDK / 发布 | `sdk/validate.gd` 需通过新增 9 类内容；release workflow 追加 SNModMaker `run-tests.js` 与 Content CLI `content-cli.test.mjs` 两步（其余沿用 Godot tests / `gen_content_types --check` / `gen_static_docs --check` / sdk validate） |
 | 会被影响的既有测试 | `framework/tests/cases/test_content_versions.gd`（断言所有 runtime 类型 1.0、草案不在 runtime → 改为新类型表）；`test_schema_v2_drafts.gd:207`（断言草案仍 planned/非 active → 改为“8 类已 active + `weapons` 仍 draft + 保留有效/无效样本”）；`test_content_types_manifest.gd:20-45`（manifest types 与 `ContentTypes.all()` 数量）；`test_map_constraints.gd`（30 seed 硬约束走 1.0 路径，须保持不变）；`test_world_generator.gd`（`formal_profile` 15–20 港断言，扩展该函数时需同步）；`test_run_pipeline.gd`；`test_exploration.gd` / `test_story_ui.gd`（新增的 `map_profile` 读取点，resolver 切换后须保持 1.0 行为）；`SNModMaker/tests/run-tests.js`（24/8 草案断言 → 25/1，并补 map_configs）；`content-cli.test.mjs`（types 计数） |
 | 生成物同步 | 每次改 `schemas/**` 后必须跑 `node SNModMaker/tools/sync-schemas.mjs`（嵌入式 schema bundle 有新鲜度断言；B0 已修复一次 `hull.schema.json` 过期）。`gen_content_types.mjs` / `gen_static_docs.mjs` 照旧 `--check` |
+
+> **B6 落地记录（2026-10-22）**：生成器为每个运行时可编辑器类型输出 `capability`；`scope`/`store` 判定改为
+> `schemaVersion = 2.0`（`capability_undeclared` 按 capability 去重，`draft_content` 只对 `weapons`）；G8 守卫
+> 改为 `runtimeSupportsFile` / `unsupportedContentFiles`（草案、未知类型、版本不符 → 运行时不支持），提升的
+> 2.0 类型可正常部署；CLI `types` 标 `[runtime 2.0]`、`describe` 显示运行时 2.0、`new --draft` 仅接受 `weapons`。
+> 验证：Node 50/50、Content CLI 58/58；release workflow 已把两个 Node 套件加入发布门禁。
 
 ## 10. 测试与验收（B6）
 
@@ -398,7 +404,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | B3 | **✅ 已完成（2026-10-22）**：`CampaignFactory` + 5 个装配器 + `MapGenerationSpec`/`MapGenerator.generate_spec`；`run.start` 可选 `start_profile`；`campaign.view` 注册；`ContentRefs` 与 12 处运行时 resolver 切换；`initialize_markets` 抽公共；state 写 `campaign.setup/content_versions/world/codex/factions`。证据：`test_campaign_assembly` 10/10、`test_campaign_start` 6/6、全量 468/468 | B1、B2、B4（core 内容可并行） | 保留入口但默认不走 v2；revert 运行时 |
 | B4 | **✅ 已完成（2026-10-22）**：`dev_mods/core/content/` 新增 9 个 v2 文件（world_profiles 1 / map_configs 1 / regions 5 / sites 6 / route_templates 3 / weather_profiles 2 / factions 3 / discoveries 7 / start_profiles 2）、map_config 的 exploration 31 键与 story 原块逐键搬迁、本地化 +62 键、manifest content 24 / capabilities 4。证据：SDK validate `status: ok`（82 definitions）、Godot 468/468、Node 50/50 + CLI 57/57 | B1 | 回退内容文件（旧内容仍在） |
 | B5 | **✅ 已完成（2026-10-22）**：`prepare_for_save()` 快照 `ContentTypes.SCHEMA_VERSIONS`；`_ensure_content_versions()` 旧档推断（`starting_builds/map_profiles → 1.0`、`map_configs → 2.0`）+ 当前注册表补齐 + `content version drift` warning；1.0 新 run 创建即写快照。证据：`test_save_migration` 8/8、`test_save_load` 2/2、v2 战役 round-trip | B3 | revert 迁移器；旧档不受影响 |
-| B6 | 编辑器/CLI/G8/测试/文档/门禁；`test_schema_v2_drafts` 改写 | B1–B5 | 逐项 revert |
+| B6 | **✅ 已完成（2026-10-22）**：编辑器 `capability` 按 2.0 判定 + G8 改运行时支持语义（提升类型可部署、草案/未知/版本不符拦截）；CLI runtime 2.0 标注与 capability；release workflow 加入 Node 两套件。证据：Node 50/50、CLI 58/58、全量 Godot 472/472、生成物 `--check` 全绿 | B1–B5 | 逐项 revert |
 
 并行写作用域建议：B1 只动 `content_types.json` / `schemas/v2/` / `tools/gen_content_types.mjs`；B2 只动
 `framework/modding/`；B3 只动 `framework/domain/{campaign,world,map}`、`framework/application/{commands,queries}`、

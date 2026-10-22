@@ -1454,7 +1454,7 @@ export const FILE_DOCS = {
       "单一真源是 `content_types.json`；生成物 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js` 禁止手改。",
       "生成前校验格式版本、key/singular/schema 唯一、分组与 v2 模块分类引用、Schema 文件存在、Patch 数量、planned 不覆盖 active、draft_schemas 只指向 planned 类型。",
       "`draft_types` 必须与 `draft_schemas` 键集合完全一致，且不得自带 schema 路径；生成器校验 singular/abbr/color/default_file 唯一、group 已声明、`schema_version` 等于对应 Schema 的 const、capability 等于该类型所属 planned system 的 capability。",
-      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（含 Phase B 的 9 类 2.0 类型）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`。",
+      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（含 Phase B 的 9 类 2.0 类型）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`；编辑器 `TYPES` 条目同时输出 `capability` 供 2.0 capability 校验。",
       "`--check` 不写文件，生成物缺失或过期时以退出码 1 结束，供 CI/发布门禁使用。"
     ]
   },
@@ -1550,7 +1550,7 @@ export const FILE_DOCS = {
       "`resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。",
       "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons 草案 2.0），最后回退 1.0。",
       "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
-      "`draft_content` 警告只针对仍是草案的 `weapons`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。",
+      "`draft_content` 警告只针对仍是草案的 `weapons`；`capability_undeclared` 按 `schemaVersion = 2.0` 判定（Phase B 9 类 + weapons），同一 capability 每次校验只报一条。",
       "`LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。",
       "武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。",
       "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
@@ -1582,6 +1582,7 @@ export const FILE_DOCS = {
     contracts: [
       "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
       "`schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与 weapons 草案写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。",
+      "`runtimeSupportsFile()` / `unsupportedContentFiles()` 判断当前运行时能否加载：未知类型、`weapons` 草案、`schema_version` 与类型期望版本不符 → 不支持；Phase B 提升的 2.0 类型受支持。`draftContentFiles` / `hasDraftContent` 保留为兼容 alias，供 G8 导出守卫使用。",
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
@@ -1703,7 +1704,7 @@ export const FILE_DOCS = {
       "自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。",
       "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
       "项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。",
-      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量。",
+      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（`weapons` 草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。Phase B 提升的 2.0 运行时类型可直接部署。",
       "没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。",
       "资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。",
       "Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。"
@@ -1782,12 +1783,12 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 16 个运行时类型与 9 个 Schema 2.0 草案类型（含舰载武器 `weapons`）；`new --draft` 可直接创建纯 2.0 草案项目。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 25 个运行时类型（其中 9 类为 Phase B 的 Schema 2.0）与唯一的 `weapons` 草案；`new --draft` 只能创建 weapons 草案项目。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与唯一的 `weapons` 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。",
+      "`types` 同时列出 25 个运行时类型（其中 9 类为 Phase B Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与唯一的 `weapons` 草案（`draft: true`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”，对 weapons 显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability。",
       "`new --draft <content_type>` 仅接受剩余草案（`weapons`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 草案定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
       "`--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。",

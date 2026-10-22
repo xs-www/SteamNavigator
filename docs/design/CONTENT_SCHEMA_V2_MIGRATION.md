@@ -133,7 +133,7 @@ G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案
 
 ### Phase B · 世界探索家族提升（阶段 0/1，2–4 周）
 
-**状态：B0–B5 已完成（2026-10-22）；B6 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
+**状态：B0–B6 已完成（2026-10-22），Phase B 收尾。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
 （Draft 2，含 9 类类型、引用/完整性规则、CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。
 B0 证据：探索 4.1 与 Phase A 均已在 `main`（无需 rebase）；契约已按 4.2–4.5 的 `map_profile` 现状刷新
 （`exploration` 31 键、`twin_world_size`、`story`、15 处读取点）；Godot 419/419、生成物检查、SDK core 校验、
@@ -153,7 +153,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 | B3 | 世界生成运行时 | ✅ 已完成（2026-10-22）：新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询；`ContentRefs` 统一 12 处 resolver |
 | B4 | core 内容 | ✅ 已完成（2026-10-22）：`dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化（各 +62 键）；`map_profiles.exploration` 31 键与 `story` 原样迁入 `map_configs` |
 | B5 | 存档 | ✅ 已完成（2026-10-22）：新档由 `prepare_for_save()` 写 `campaign.setup.content_versions`；旧档推断 `starting_builds/map_profiles → 1.0` 并用注册表补齐；版本漂移只 warning、不重排世界 |
-| B6 | 编辑器 / CLI / SDK | 草案分区消失、`capability_undeclared` 改为按 schemaVersion=2.0 判定、G8 判定改为“运行时是否支持”；发布门禁要求 v2 core 校验通过 |
+| B6 | 编辑器 / CLI / SDK | ✅ 已完成（2026-10-22）：草案分区只剩 `weapons`；`capability_undeclared` 按 schemaVersion=2.0 判定并按 capability 去重；G8 改为“运行时不支持”（草案/未知类型/版本不符拦截，提升类型可部署）；CLI 标 runtime 2.0、`new --draft` 仅 weapons；release workflow 加入 Node 两套件 |
 
 验收：v2 世界生成可开局；旧档可继续；1.0 模组在双读窗口内仍可加载；seed 回归（现有 seed + 新 v2 seed）；
 编辑器/CLI/SDK 全链零 error；`gen_content_types --check`、`gen_static_docs --check`。
@@ -234,7 +234,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase B · B3：`CampaignFactory` 世界装配 + `run.start start_profile` + `campaign.view` + `ContentRefs` resolver 改造（2026-10-22）。
 - [x] Phase B · B4：Core 9 个 v2 内容文件 + 本地化 + manifest capabilities（82 definitions，SDK `status: ok`）（2026-10-22）。
 - [x] Phase B · B5：保存快照 `campaign.setup.content_versions`；旧档推断/补齐 + 漂移 warning；存档矩阵测试（2026-10-22）。
-- [ ] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过。
+- [x] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过（B6 收尾，2026-10-22）。
 - [ ] Phase C：实体合并后旧 ID 别名可用一个版本；存档 ID 迁移可回读。
 - [ ] Phase E：1.0 生成停止；迁移工具可用；文档状态更新为 Finalized。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。
