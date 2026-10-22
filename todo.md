@@ -11,6 +11,7 @@
 ## Pending
 
 ### 近期
+- [ ] Lua Modding SDK S0：按 [LUA_MODDING_SDK.md](docs/design/LUA_MODDING_SDK.md) 盘点公开 Query/Command/Event API、确定 `script_api_version`/capability/错误协议与威胁模型；S1 再做独立 Lua Host PoC，禁止直接接入正式 ModLoader
 - [ ] 炮门舱段 port cassette：给明轮货轮 / 明轮客船 / 纵帆船（以及未来的船）提供“舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口”的适配模块，让 `SN_Weapon_CasemateGun` 能装到没有炮门的船上；同时解决空炮门的“暗腔”读感（当前是木制深色炮口板）
 - [ ] 铁甲舰 `SN_Ironclad_LOD1.glb` 随空炮门 LOD0 重建（当前 LOD1 仍是带炮旧件；LOD 切换未接线，暂不影响运行时）
 - [ ] 炮门 socket 内容镜像：`schemas/v2/hull.schema.json` 的 `hull_data` 新增可选 `gun_port_sockets` 数组并回填 Core `hulls.json`（供编辑器 / 装配器读内容，运行时仍以 GLB extras 为准）

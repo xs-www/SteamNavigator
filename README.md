@@ -17,6 +17,7 @@
 | 改剧情 / 任务 | [STORY_TUTORIAL.md](docs/design/STORY_TUTORIAL.md)、[TASK_QUEST_SYSTEM.md](docs/design/TASK_QUEST_SYSTEM.md)、[STORY_MODE.md](docs/design/STORY_MODE.md) |
 | 改 UI / 2.5D 舞台 | [UI_PROTOTYPE.md](docs/design/UI_PROTOTYPE.md)、[2.5D_STAGE_PLAN.md](docs/design/2.5D_STAGE_PLAN.md)、[SHIP_VISUAL_ASSEMBLY.md](docs/design/SHIP_VISUAL_ASSEMBLY.md) |
 | 做模组 / 校验 / 打包 | [SNModMaker/README.md](SNModMaker/README.md)、[sdk/README.md](sdk/README.md)、[dev_mods/core/content/](dev_mods/core/content/) |
+| 可执行模组 / Lua 脚本 | [LUA_MODDING_SDK.md](docs/design/LUA_MODDING_SDK.md)（Draft，尚未实现） |
 | 看实现边界（别把限制当 bug） | [KNOWN_LIMITS.md](docs/design/KNOWN_LIMITS.md) |
 | 看 Core 内容与数值基线 | [CORE_CONTENT.md](docs/design/CORE_CONTENT.md) |
 | 找 GDD / 架构 / 迭代契约 | [docs/README.md](docs/README.md)、[docs/specs/README.md](docs/specs/README.md)、[docs/design/README.md](docs/design/README.md) |
