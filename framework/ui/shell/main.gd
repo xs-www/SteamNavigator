@@ -3484,8 +3484,7 @@ func _item_name(item_id: String) -> String:
 
 
 func _module_name(module_id: String) -> String:
-	var content_type := ShipOps.module_type(_context.registries, module_id)
-	var definition := _context.registries.get_by_id(content_type, module_id) if content_type != &"" else null
+	var definition := ShipOps.find_installable(_context.registries, module_id)
 	return _tr(definition.name_key, module_id) if definition != null else module_id
 
 

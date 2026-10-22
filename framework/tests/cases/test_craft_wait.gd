@@ -8,16 +8,16 @@ const STRATEGY := "core:strategy/standard"
 const CONTRACT_FREIGHT := "core:good/contract_freight"
 const TIER1_MODULES := [
 	"core:hull/small_efficient",
-	"core:boiler/small_efficient",
-	"core:boiler/standard",
-	"core:cabin/passenger_cabin",
-	"core:cargo_module/small_hold",
-	"core:navigation_module/spyglass",
-	"core:safety_module/lifeboat",
+	"core:module/small_efficient",
+	"core:module/standard",
+	"core:module/passenger_cabin",
+	"core:module/small_hold",
+	"core:module/spyglass",
+	"core:module/lifeboat",
 ]
-const SMALL_HOLD := "core:cargo_module/small_hold"
-const SPYGLASS := "core:navigation_module/spyglass"
-const CHART_ROOM := "core:navigation_module/chart_room"
+const SMALL_HOLD := "core:module/small_hold"
+const SPYGLASS := "core:module/spyglass"
+const CHART_ROOM := "core:module/chart_room"
 
 
 ## Boots Core, starts a run, sets a predictable wallet and releases the starter

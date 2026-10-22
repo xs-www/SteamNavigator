@@ -12,13 +12,13 @@ extends TestCase
 ## - weapons 同时登记在 `draft_schemas`（Schema 2.0）与 `draft_types`（编辑元数据），
 ##   并且仍在 `planned` 的 `content.combat.v1` 下；运行时 `ContentTypes.all()` /
 ##   `registry_types()` 不得包含它（草案不加载）。
-## - `schemas/hull.schema.json` 的 socket 镜像字段非法（class / kind / 缺失 name /
-##   越界 clearance / position 长度错误）必须被拒；不含 socket 字段的旧 hull 1.0
+## - `schemas/v2/hull.schema.json`（hulls 2.0）的 socket 镜像字段非法（class / kind /
+##   缺失 name / 越界 clearance / position 长度错误）必须被拒；不含 socket 字段的 hull
 ##   内容保持合法；Core 已回填的 14 个 weapon socket + 22 个 rig socket 必须通过校验。
 ## @end-static-doc
 
 const WEAPON_SCHEMA := "res://schemas/v2/weapon.schema.json"
-const HULL_SCHEMA := "res://schemas/hull.schema.json"
+const HULL_SCHEMA := "res://schemas/v2/hull.schema.json"
 const CONTENT_TYPES := "res://content_types.json"
 const CORE_HULLS := "res://dev_mods/core/content/hulls.json"
 
@@ -190,7 +190,7 @@ func _hull_data() -> Dictionary:
 
 func _hull_envelope(data: Dictionary) -> Dictionary:
 	return {
-		"schema_version": "1.0",
+		"schema_version": "2.0",
 		"content_type": "hulls",
 		"definitions": [
 			{

@@ -186,7 +186,7 @@ func test_world_actor_v2_drafts_accept_valid_definitions() -> void:
 		"source_site_kinds": ["ruin", "wreck"],
 		"region_kinds": ["industrial", "frontier"],
 		"requires_tags": ["ruin", "mechanical"],
-		"unlock_ids": ["core:boiler/high_pressure"],
+		"unlock_ids": ["core:module/high_pressure"],
 	})
 	assert_empty(validator.validate_file(weather, WEATHER_PROFILE_SCHEMA), "valid weather profile passes Schema 2.0 draft")
 	assert_empty(validator.validate_file(faction, FACTION_SCHEMA), "valid faction passes Schema 2.0 draft")

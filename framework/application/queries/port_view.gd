@@ -186,7 +186,7 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 		var module_id := String(ship.get(slots[slot], ""))
 		if module_id.is_empty():
 			continue
-		var definition := ShipOps.find_module(hub, module_id)
+		var definition := ShipOps.find_installable(hub, module_id)
 		modules.append({
 			"slot": slot,
 			"module_id": module_id,
@@ -194,7 +194,7 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 			"tier": int(definition.data.get("tier", 0)) if definition != null else 0,
 		})
 	for module_id in ShipOps.cargo_module_ids(ship):
-		var definition := hub.get_by_id(ContentTypes.CARGO_MODULE, module_id)
+		var definition := ModuleOps.get_by_id(hub, module_id)
 		modules.append({
 			"slot": "cargo",
 			"module_id": module_id,
@@ -225,7 +225,7 @@ static func _ship_view(hub: RegistryHub, state: GameState, stats: Dictionary, sh
 		var qty := int(transit_map[raw_module_id])
 		if qty <= 0:
 			continue
-		var transit_definition := ShipOps.find_module(hub, module_id)
+		var transit_definition := ShipOps.find_installable(hub, module_id)
 		transit_entries.append({
 			"module_id": module_id,
 			"name_key": transit_definition.name_key if transit_definition != null else module_id,

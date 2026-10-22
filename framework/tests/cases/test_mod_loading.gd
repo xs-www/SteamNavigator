@@ -63,6 +63,6 @@ func test_third_party_mod_uses_public_api() -> void:
 	assert_eq(report.status_name(), "ok", "core + example mod loads cleanly")
 	assert_true(report.mods.size() >= 2, "example mod is loaded")
 	var context: AppContext = boot["context"]
-	var boiler := context.registries.get_by_id(ContentTypes.BOILER, "example_boilers:boiler/compound_efficient")
+	var boiler := context.registries.get_by_id(ContentTypes.MODULE, "example_boilers:module/compound_efficient")
 	assert_not_null(boiler, "example boiler is registered through the normal registry")
 	assert_eq(context.localization.tr_key(boiler.name_key), "复合式高效锅炉", "example localization is loaded")

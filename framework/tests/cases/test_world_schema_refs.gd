@@ -121,12 +121,16 @@ func _port_archetype(hub: RegistryHub, definition_id: String) -> void:
 
 func _starting_build(hub: RegistryHub, definition_id: String = "test:starting_build/standard") -> void:
 	_define(hub, ContentTypes.HULL, "test:hull/small", {"cargo_slots": 1, "cabin_slots": 0})
-	_define(hub, ContentTypes.BOILER, "test:boiler/basic", {})
-	_define(hub, ContentTypes.CARGO_MODULE, "test:cargo_module/hold", {})
+	_define(hub, ContentTypes.MODULE, "test:module/basic_boiler", {
+		"v2_category": "boiler", "speed_mul": 1.0, "coal_rate": 0.3, "water_rate": 0.2,
+	})
+	_define(hub, ContentTypes.MODULE, "test:module/basic_hold", {
+		"v2_category": "cargo", "capacity": 10.0,
+	})
 	_define(hub, ContentTypes.STARTING_BUILD, definition_id, {
 		"hull": "test:hull/small",
-		"boiler": "test:boiler/basic",
-		"cargo_modules": ["test:cargo_module/hold"],
+		"boiler": "test:module/basic_boiler",
+		"cargo_modules": ["test:module/basic_hold"],
 	})
 
 

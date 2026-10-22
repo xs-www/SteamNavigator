@@ -2,9 +2,9 @@ class_name ShipModules
 extends RefCounted
 ## Durable per-module instance state for a ship.
 ##
-## Content Schema 1.0 ships store installed modules as definition IDs in flat
-## slot keys (`boiler_id`, `cargo_modules`, ...). This helper adds the instance
-## layer repair and combat need without changing that projection yet:
+## Content Schema 2.0 ships store installed modules as unified `modules` definition
+## IDs in flat slot keys (`boiler_id`, `cargo_modules`, ...). This helper adds the
+## instance layer repair and combat need without changing that projection:
 ##
 ## ```json
 ## "module_instances": {
@@ -20,10 +20,9 @@ extends RefCounted
 ##   writers besides `ensure()`.
 ## - `instance_id` is stable for the life of one installed module, so events and
 ##   (later) combat can reference a specific module instance across save/load.
-## - Flat slot keys stay authoritative for *which definition* is installed in
-##   this schema; `ensure()` keeps the instance table aligned with them. The
-##   unified Module migration (phase 2) moves `definition_id` into the instance
-##   and turns the flat keys into derived accessors.
+## - Flat slot keys stay authoritative for *which definition* is installed; the
+##   unified `modules` type maps category -> flat slot through `ModuleOps`, and
+##   `ensure()` keeps the instance table aligned with the flat keys.
 ##
 ## All accessors are read-safe on legacy ships: a missing instance table reads as
 ## full condition instead of failing. `ensure()` is called on new runs, after
@@ -37,19 +36,6 @@ const SINGLE_SLOTS := {
 }
 const CARGO_SLOT := "cargo"
 const DEFAULT_CONDITION := 1.0
-## Content-type to instance slot. Hull condition is the ship's own durability.
-const SLOT_BY_CONTENT_TYPE := {
-	"boilers": "boiler",
-	"navigation_modules": "navigation",
-	"safety_modules": "safety",
-	"cabins": "cabin",
-	"cargo_modules": "cargo",
-}
-
-
-## Slot name for a content type key, or "" when the type has no instance layer.
-static func slot_for_content_type(content_type: String) -> String:
-	return String(SLOT_BY_CONTENT_TYPE.get(content_type, ""))
 
 
 static func has_slot(ship: Dictionary, slot: String) -> bool:

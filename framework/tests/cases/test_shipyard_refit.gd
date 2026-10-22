@@ -18,7 +18,7 @@ const STEADY_BUILD := "core:starting_build/steady"
 const MODE_EXTERIOR := 0
 const MODE_CUTAWAY := 1
 const SHIP_THUMB_SIZE := Vector2(210, 118)
-const MODULE_TYPES := ["hulls", "boilers", "cargo_modules", "navigation_modules", "safety_modules", "cabins"]
+const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin"]
 ## Section titles of the deleted lower panels, by localization key. None of them
 ## may be rendered on the new shipyard page, in normal or refit mode.
 const LEGACY_SECTION_KEYS := [
@@ -192,10 +192,10 @@ func test_normal_mode_shows_owned_ship_render_and_component_categories() -> void
 	assert_not_null(hull, "the ironclad hull definition is registered")
 	if hull != null:
 		assert_contains(labels, context.translate(String(hull.name_key), ""), "the ship card names the hull")
-	for content_type in MODULE_TYPES:
-		var category_label: String = shell._tr("ui.category.%s" % content_type, "")
-		assert_false(category_label.is_empty(), "the %s category has a localized label" % content_type)
-		assert_not_null(_button_with_text(shell._root_box, category_label), "the components column offers the %s category" % content_type)
+	for category in MODULE_CATEGORIES:
+		var category_label: String = shell._tr("ui.category.%s" % category, "")
+		assert_false(category_label.is_empty(), "the %s category has a localized label" % category)
+		assert_not_null(_button_with_text(shell._root_box, category_label), "the components column offers the %s category" % category)
 	assert_not_null(_ship_thumb_area(shell._root_box), "the owned-ship card reserves its thumbnail area")
 	_assert_no_legacy_sections(shell)
 	assert_eq(_nodes_with_script(shell._root_box, SHIPYARD_SCREEN_SCRIPT).size(), 1, "the page hosts exactly one shipyard screen")
@@ -233,9 +233,9 @@ func test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> vo
 	assert_contains(labels, shell._tr("ui.label.craft_section", "按配方打造"), "the hulls category keeps the craft entry")
 	_assert_no_legacy_sections(shell)
 	# Category switching is synchronous and reported to the shell.
-	screen.set_category("cargo_modules")
-	assert_eq(String(screen.get("_category")), "cargo_modules", "set_category switches the operation panel")
-	assert_eq(String(shell._shipyard_category), "cargo_modules", "the shell stores the refit category")
+	screen.set_category("cargo")
+	assert_eq(String(screen.get("_category")), "cargo", "set_category switches the operation panel")
+	assert_eq(String(shell._shipyard_category), "cargo", "the shell stores the refit category")
 	assert_true(bool(screen.get("_refit")), "switching category keeps refit mode")
 	assert_contains(_label_texts(shell._root_box), shell._tr("ui.label.slot_cargo", "货舱槽 %d") % 1, "the cargo category lists cargo slot cards")
 	# A full shell rebuild restores both refit mode and the selected category.
@@ -244,7 +244,7 @@ func test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> vo
 	assert_not_null(rebuilt, "the shell rebuilds the shipyard screen")
 	if rebuilt != null:
 		assert_true(bool(rebuilt.get("_refit")), "the rebuilt shipyard re-enters refit mode")
-		assert_eq(String(rebuilt.get("_category")), "cargo_modules", "the rebuilt shipyard restores the category")
+		assert_eq(String(rebuilt.get("_category")), "cargo", "the rebuilt shipyard restores the category")
 		var rebuilt_stage: Variant = rebuilt.get("_stage")
 		assert_eq(int(rebuilt_stage.mode), MODE_CUTAWAY, "the rebuilt stage is already a cutaway")
 	_unmount(bundle)
@@ -266,7 +266,7 @@ func test_damaged_module_shows_a_condition_badge() -> void:
 		var refit_button: Variant = damaged_screen.get("_refit_button")
 		if refit_button is Button:
 			(refit_button as Button).emit_signal("pressed")
-		damaged_screen.set_category("boilers")
+		damaged_screen.set_category("boiler")
 	var expected := "%s %d%%" % [shell._tr("ui.label.status", "状态"), 50]
 	assert_contains(_label_texts(shell._root_box), expected, "a damaged boiler shows its condition badge")
 	_unmount(bundle)
@@ -361,9 +361,10 @@ func test_dragging_a_warehouse_module_maps_to_install_command() -> void:
 	# operations panel has a free part to drag.
 	var candidate := {}
 	for row in context.queries.execute(&"shipyard.view")["data"]["candidates"]:
-		if row is Dictionary and String(row["content_type"]) == "navigation_modules" and bool(row["can_install"]):
+		if row is Dictionary and String(row.get("category", "")) == "utility" and bool(row["can_install"]):
 			candidate = row
-	assert_true(not candidate.is_empty(), "the fixture offers a navigation module to own")
+			break
+	assert_true(not candidate.is_empty(), "the fixture offers a utility module to own")
 	var module_id := String(candidate["module_id"])
 	WarehouseOps.add_module(context.state, port_id, module_id, 1)
 	var screen := _shipyard(bundle)
@@ -371,27 +372,27 @@ func test_dragging_a_warehouse_module_maps_to_install_command() -> void:
 		_unmount(bundle)
 		return
 	# The parts HUD for a category lives in the refit operations panel now.
-	screen.set_category("navigation_modules")
-	assert_eq(String(screen.get("_category")), "navigation_modules", "the navigation category opens")
+	screen.set_category("utility")
+	assert_eq(String(screen.get("_category")), "utility", "the utility category opens")
 	var nav_slot := {}
 	for slot in screen.get("_slots"):
-		if slot is Dictionary and String(slot.get("content_type", "")) == "navigation_modules":
+		if slot is Dictionary and String(slot.get("slot", "")) == "navigation_module":
 			nav_slot = slot
 	assert_true(not nav_slot.is_empty(), "the cutaway has a navigation slot")
 	var stage: Variant = screen.get("_stage")
-	var nav_target := _slot_target_for(stage, "navigation_modules")
+	var nav_target := _slot_target_for(stage, "navigation_module")
 	assert_not_null(nav_target, "the navigation slot has a drop target")
 	var part := {
 		"module_id": module_id,
 		"name": "Fixture compass",
-		"content_type": "navigation_modules",
+		"category": "utility",
 		"source": "warehouse",
 		"can_install": true,
 	}
 	var cargo_part := part.duplicate(true)
-	cargo_part["content_type"] = "cargo_modules"
-	assert_true(bool(nav_target._accepts(part)), "an owned free module of the slot's type is accepted")
-	assert_false(bool(nav_target._accepts(cargo_part)), "a module for another slot type is rejected")
+	cargo_part["category"] = "cargo"
+	assert_true(bool(nav_target._accepts(part)), "an owned free module of the slot's category is accepted")
+	assert_false(bool(nav_target._accepts(cargo_part)), "a module for another category is rejected")
 	var purchase_part := part.duplicate(true)
 	purchase_part["source"] = "purchase"
 	assert_false(bool(nav_target._accepts(purchase_part)), "purchase candidates are not drag sources")
@@ -420,9 +421,9 @@ func test_dragging_a_warehouse_module_maps_to_install_command() -> void:
 	_unmount(bundle)
 
 
-func _slot_target_for(stage: Node, content_type: String) -> Control:
+func _slot_target_for(stage: Node, slot_name: String) -> Control:
 	for target in stage._slot_targets:
-		if target.get_script() == SLOT_TARGET_SCRIPT and String(target.slot.get("content_type", "")) == content_type:
+		if target.get_script() == SLOT_TARGET_SCRIPT and String(target.slot.get("slot", "")) == slot_name:
 			return target
 	return null
 
@@ -437,14 +438,14 @@ func test_category_navigation_switches_operations_and_misc_hosts_actions() -> vo
 		_unmount(bundle)
 		return
 	# Cargo: one operation card per cargo slot under a category-titled panel.
-	screen.set_category("cargo_modules")
+	screen.set_category("cargo")
 	var labels := _label_texts(shell._root_box)
-	assert_contains(labels, shell._tr("ui.category.cargo_modules", "货舱"), "the operation panel is titled by category")
+	assert_contains(labels, shell._tr("ui.category.cargo", "货舱"), "the operation panel is titled by category")
 	for index in int(view["ship"]["cargo_slots"]):
 		assert_contains(labels, shell._tr("ui.label.slot_cargo", "货舱槽 %d") % (index + 1), "the cargo category lists cargo slot %d" % (index + 1))
 	assert_not_null(_button_with_text(shell._root_box, shell._tr("ui.category.misc", "杂项")), "the category tabs stay reachable from cargo")
 	# Boiler: the boiler slot card belongs to its own category.
-	screen.set_category("boilers")
+	screen.set_category("boiler")
 	assert_contains(_label_texts(shell._root_box), shell._tr("ui.label.slot_boiler", "锅炉槽"), "the boiler category shows the boiler slot")
 	# Misc: everything that used to live in the deleted lower panels.
 	screen.set_category("misc")

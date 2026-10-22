@@ -7,6 +7,15 @@ extends RefCounted
 ## 4.5.5：剧情期间（`StoryService.module_filter`）购买 / 打造 / 仓库候选按 Core
 ## `unlocked_modules` 裁剪；当前已装模块与当前槽位仍完整输出，保证可以卸下。
 
+const SLOT_VIEW_DEFS := [
+	{"slot": "hull", "category": "hulls", "instance": "hull", "key": "hull_id"},
+	{"slot": "boiler", "category": "boiler", "instance": "boiler", "key": "boiler_id"},
+	{"slot": "navigation_module", "category": "utility", "instance": "navigation", "key": "navigation_module_id"},
+	{"slot": "safety_module", "category": "utility", "instance": "safety", "key": "safety_module_id"},
+	{"slot": "passenger_cabin", "category": "cabin", "instance": "cabin", "key": "passenger_cabin_id"},
+]
+
+
 static func execute(_params: Dictionary, context) -> Dictionary:
 	if not context.has_run():
 		return Result.ok(_empty_view())
@@ -37,37 +46,38 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		craft_rows = _filter_module_rows(craft_rows, allowed)
 
 	var candidates: Array = []
-	for content_type in ShipOps.INSTALLABLE_TYPES:
-		for module in hub.get_all(content_type):
-			if bool(module_filter.get("active", false)) \
-					and not Array(module_filter.get("items", [])).has(module.id):
-				continue
-			var blockers := ShipOps.install_blockers(hub, state, module.id)
-			if not has_shipyard:
-				blockers.push_front("no_shipyard")
-			if not at_port:
-				blockers.push_front("not_at_port")
-			var installed := installed_ids.has(module.id)
-			if installed:
-				blockers.push_front("already_installed")
-			candidates.append({
-				"content_type": String(content_type),
-				"module_id": module.id,
-				"name_key": module.name_key,
-				"description_key": module.description_key,
-				"price": int(round(float(module.data.get("purchase_price", 0.0)))),
-				"weight": float(module.data.get("weight", 0.0)),
-				"tier": int(module.data.get("tier", 1)),
-				"installed": installed,
-				"blockers": blockers,
-				"can_install": blockers.is_empty(),
-				"will_replace": _will_replace(hub, ship, content_type, module.id),
-				"unlock_template_id": ShipOps.unlock_contract_id(hub, module.id),
-				"craftable": CraftOps.craftable(hub, module.id),
-				"money_only": CraftOps.money_only(hub, module.id),
-				"craft_blockers": CraftOps.craft_blockers(hub, state, module.id),
-				"effect": module.data.duplicate(true),
-			})
+	for module in ShipOps.installable_definitions(hub):
+		if bool(module_filter.get("active", false)) \
+				and not Array(module_filter.get("items", [])).has(module.id):
+			continue
+		var category := "hulls" if module.content_type == ContentTypes.HULL else ModuleOps.category_of(module)
+		var blockers := ShipOps.install_blockers(hub, state, module.id)
+		if not has_shipyard:
+			blockers.push_front("no_shipyard")
+		if not at_port:
+			blockers.push_front("not_at_port")
+		var installed := installed_ids.has(module.id)
+		if installed:
+			blockers.push_front("already_installed")
+		candidates.append({
+			"content_type": String(module.content_type),
+			"category": category,
+			"module_id": module.id,
+			"name_key": module.name_key,
+			"description_key": module.description_key,
+			"price": int(round(float(module.data.get("purchase_price", 0.0)))),
+			"weight": float(module.data.get("weight", 0.0)),
+			"tier": int(module.data.get("tier", 1)),
+			"installed": installed,
+			"blockers": blockers,
+			"can_install": blockers.is_empty(),
+			"will_replace": _will_replace(hub, ship, module),
+			"unlock_template_id": ShipOps.unlock_contract_id(hub, module.id),
+			"craftable": CraftOps.craftable(hub, module.id),
+			"money_only": CraftOps.money_only(hub, module.id),
+			"craft_blockers": CraftOps.craft_blockers(hub, state, module.id),
+			"effect": module.data.duplicate(true),
+		})
 
 	return Result.ok({
 		"has_run": true,
@@ -165,51 +175,59 @@ static func _empty_view() -> Dictionary:
 
 static func _current_modules(hub: RegistryHub, state: GameState, ship: Dictionary) -> Array:
 	var rows: Array = []
-	for content_type in ShipOps.INSTALLABLE_TYPES:
-		var module_ids := _installed_ids_for(ship, content_type)
-		var slot := ShipModules.slot_for_content_type(String(content_type))
-		for index in module_ids.size():
-			var module_id: String = module_ids[index]
-			if module_id.is_empty():
-				continue
-			var module := hub.get_by_id(content_type, module_id)
-			var uninstall_blockers := ShipOps.uninstall_blockers(hub, state, module_id)
-			var condition := ShipModules.condition(ship, slot, index) if not slot.is_empty() else 1.0
-			rows.append({
-				"content_type": String(content_type),
-				"slot": slot,
-				"index": index,
-				"module_id": module_id,
-				"name_key": module.name_key if module != null else module_id,
-				"description_key": module.description_key if module != null else module_id,
-				"price": int(round(float(module.data.get("purchase_price", 0.0)))) if module != null else 0,
-				"weight": float(module.data.get("weight", 0.0)) if module != null else 0.0,
-				"tier": int(module.data.get("tier", 1)) if module != null else 1,
-				"effect": module.data.duplicate(true) if module != null else {},
-				"condition": condition,
-				"disabled": condition <= 0.0,
-				"can_uninstall": uninstall_blockers.is_empty(),
-				"uninstall_blockers": uninstall_blockers,
-			})
+	for slot_def in SLOT_VIEW_DEFS:
+		var module_id := String(ship.get(String(slot_def["key"]), ""))
+		if module_id.is_empty():
+			continue
+		var is_hull: bool = String(slot_def["slot"]) == "hull"
+		var module := hub.get_by_id(ContentTypes.HULL, module_id) if is_hull else ModuleOps.get_by_id(hub, module_id)
+		var category := "hulls" if is_hull else ModuleOps.category_of(module)
+		var content_type: String = "hulls" if is_hull else String(module.content_type) if module != null else ""
+		var instance_slot := String(slot_def["instance"])
+		var uninstall_blockers := ShipOps.uninstall_blockers(hub, state, module_id)
+		var condition := ShipModules.condition(ship, instance_slot, 0) if not is_hull else 1.0
+		rows.append({
+			"content_type": content_type,
+			"category": category,
+			"slot": instance_slot,
+			"slot_key": String(slot_def["slot"]),
+			"index": 0,
+			"module_id": module_id,
+			"name_key": module.name_key if module != null else module_id,
+			"description_key": module.description_key if module != null else module_id,
+			"price": int(round(float(module.data.get("purchase_price", 0.0)))) if module != null else 0,
+			"weight": float(module.data.get("weight", 0.0)) if module != null else 0.0,
+			"tier": int(module.data.get("tier", 1)) if module != null else 1,
+			"effect": module.data.duplicate(true) if module != null else {},
+			"condition": condition,
+			"disabled": condition <= 0.0,
+			"can_uninstall": uninstall_blockers.is_empty(),
+			"uninstall_blockers": uninstall_blockers,
+		})
+	for index in ShipOps.cargo_module_ids(ship).size():
+		var cargo_id := ShipOps.cargo_module_ids(ship)[index]
+		var cargo := ModuleOps.get_by_id(hub, cargo_id)
+		var cargo_uninstall := ShipOps.uninstall_blockers(hub, state, cargo_id)
+		var cargo_condition := ShipModules.condition(ship, "cargo", index)
+		rows.append({
+			"content_type": String(cargo.content_type) if cargo != null else "",
+			"category": "cargo",
+			"slot": "cargo",
+			"slot_key": "cargo_modules",
+			"index": index,
+			"module_id": cargo_id,
+			"name_key": cargo.name_key if cargo != null else cargo_id,
+			"description_key": cargo.description_key if cargo != null else cargo_id,
+			"price": int(round(float(cargo.data.get("purchase_price", 0.0)))) if cargo != null else 0,
+			"weight": float(cargo.data.get("weight", 0.0)) if cargo != null else 0.0,
+			"tier": int(cargo.data.get("tier", 1)) if cargo != null else 1,
+			"effect": cargo.data.duplicate(true) if cargo != null else {},
+			"condition": cargo_condition,
+			"disabled": cargo_condition <= 0.0,
+			"can_uninstall": cargo_uninstall.is_empty(),
+			"uninstall_blockers": cargo_uninstall,
+		})
 	return rows
-
-
-static func _installed_ids_for(ship: Dictionary, content_type: StringName) -> Array[String]:
-	var ids: Array[String] = []
-	match content_type:
-		ContentTypes.CARGO_MODULE:
-			return ShipOps.cargo_module_ids(ship)
-		ContentTypes.HULL:
-			ids.append(String(ship.get("hull_id", "")))
-		ContentTypes.BOILER:
-			ids.append(String(ship.get("boiler_id", "")))
-		ContentTypes.NAVIGATION_MODULE:
-			ids.append(String(ship.get("navigation_module_id", "")))
-		ContentTypes.SAFETY_MODULE:
-			ids.append(String(ship.get("safety_module_id", "")))
-		ContentTypes.CABIN:
-			ids.append(String(ship.get("passenger_cabin_id", "")))
-	return ids
 
 
 static func _asset_path(context, uri: String) -> String:
@@ -228,6 +246,12 @@ static func _disabled_module_count(ship: Dictionary) -> int:
 	return count
 
 
+static func _category_for(definition: ContentDefinition) -> String:
+	if definition == null:
+		return ""
+	return "hulls" if definition.content_type == ContentTypes.HULL else ModuleOps.category_of(definition)
+
+
 static func _transit_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 	var rows: Array = []
 	var transit := WarehouseOps.transit_modules(ship)
@@ -236,7 +260,7 @@ static func _transit_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 		var qty := int(transit[raw_module_id])
 		if qty <= 0:
 			continue
-		var module := ShipOps.find_module(hub, module_id)
+		var module := ShipOps.find_installable(hub, module_id)
 		var unit_weight := float(module.data.get("weight", 0.0)) if module != null else 0.0
 		rows.append({
 			"module_id": module_id,
@@ -245,6 +269,7 @@ static func _transit_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 			"weight": unit_weight,
 			"total_weight": unit_weight * float(qty),
 			"content_type": String(module.content_type) if module != null else "",
+			"category": _category_for(module),
 		})
 	return rows
 
@@ -259,15 +284,15 @@ static func _warehouse_data(hub: RegistryHub, state: GameState, port_id: String,
 			var qty := int(modules[raw_module_id])
 			if qty <= 0:
 				continue
-			var content_type := ShipOps.module_type(hub, module_id)
-			var module := hub.get_by_id(content_type, module_id) if content_type != &"" else null
+			var module := ShipOps.find_installable(hub, module_id)
 			var blockers := ShipOps.install_blockers(hub, state, module_id, "warehouse")
 			if not has_shipyard:
 				blockers.push_front("no_shipyard")
 			if not at_port:
 				blockers.push_front("not_at_port")
 			module_rows.append({
-				"content_type": String(content_type) if module != null else "",
+				"content_type": String(module.content_type) if module != null else "",
+				"category": _category_for(module),
 				"module_id": module_id,
 				"name_key": module.name_key if module != null else module_id,
 				"qty": qty,
@@ -299,30 +324,33 @@ static func _warehouse_data(hub: RegistryHub, state: GameState, port_id: String,
 
 static func _craft_rows(hub: RegistryHub, state: GameState, at_port: bool, has_shipyard: bool) -> Array:
 	var rows: Array = []
-	for content_type in CraftOps.CRAFTABLE_TYPES:
-		for module in hub.get_all(content_type):
-			if not CraftOps.craftable(hub, module.id):
-				continue
-			var blockers := CraftOps.craft_blockers(hub, state, module.id)
-			if not has_shipyard:
-				blockers.push_front("no_shipyard")
-			if not at_port:
-				blockers.push_front("not_at_port")
-			rows.append({
-				"content_type": String(content_type),
-				"module_id": module.id,
-				"name_key": module.name_key,
-				"description_key": module.description_key,
-				"tier": int(module.data.get("tier", 1)),
-				"weight": float(module.data.get("weight", 0.0)),
-				"craft_time_hours": CraftOps.craft_time(hub, module.id),
-				"craft_cost": CraftOps.craft_cost(hub, module.id),
-				"money_only": CraftOps.money_only(hub, module.id),
-				"materials": CraftOps.material_plan(state, hub, state.current_port_id(), module.id),
-				"unlocked": not ShipOps.locked_by_contract(hub, state, module.id),
-				"can_craft": blockers.is_empty(),
-				"blockers": blockers,
-			})
+	for module in ShipOps.installable_definitions(hub):
+		if not CraftOps.is_craftable_definition(module):
+			continue
+		if not CraftOps.craftable(hub, module.id):
+			continue
+		var blockers := CraftOps.craft_blockers(hub, state, module.id)
+		if not has_shipyard:
+			blockers.push_front("no_shipyard")
+		if not at_port:
+			blockers.push_front("not_at_port")
+		var category := "hulls" if module.content_type == ContentTypes.HULL else ModuleOps.category_of(module)
+		rows.append({
+			"content_type": String(module.content_type),
+			"category": category,
+			"module_id": module.id,
+			"name_key": module.name_key,
+			"description_key": module.description_key,
+			"tier": int(module.data.get("tier", 1)),
+			"weight": float(module.data.get("weight", 0.0)),
+			"craft_time_hours": CraftOps.craft_time(hub, module.id),
+			"craft_cost": CraftOps.craft_cost(hub, module.id),
+			"money_only": CraftOps.money_only(hub, module.id),
+			"materials": CraftOps.material_plan(state, hub, state.current_port_id(), module.id),
+			"unlocked": not ShipOps.locked_by_contract(hub, state, module.id),
+			"can_craft": blockers.is_empty(),
+			"blockers": blockers,
+		})
 	return rows
 
 
@@ -334,7 +362,7 @@ static func _order_rows(hub: RegistryHub, state: GameState, current_port_id: Str
 		if not (order is Dictionary):
 			continue
 		var module_id := String(order.get("module_id", ""))
-		var module := ShipOps.find_module(hub, module_id)
+		var module := ShipOps.find_installable(hub, module_id)
 		var port_id := String(order.get("port_id", ""))
 		var ready_at := float(order.get("ready_at", 0.0))
 		rows.append({
@@ -353,19 +381,16 @@ static func _order_rows(hub: RegistryHub, state: GameState, current_port_id: Str
 
 
 ## Module that the purchase candidate would move into the current-port warehouse.
-static func _will_replace(hub: RegistryHub, ship: Dictionary, content_type: StringName, module_id: String) -> String:
+static func _will_replace(hub: RegistryHub, ship: Dictionary, module: ContentDefinition) -> String:
 	var current_id := ""
-	match content_type:
-		ContentTypes.HULL:
-			current_id = String(ship.get("hull_id", ""))
-		ContentTypes.BOILER:
-			current_id = String(ship.get("boiler_id", ""))
-		ContentTypes.NAVIGATION_MODULE:
-			current_id = String(ship.get("navigation_module_id", ""))
-		ContentTypes.SAFETY_MODULE:
-			current_id = String(ship.get("safety_module_id", ""))
-		ContentTypes.CABIN:
-			current_id = String(ship.get("passenger_cabin_id", ""))
-	if current_id == module_id:
+	if module.content_type == ContentTypes.HULL:
+		current_id = String(ship.get("hull_id", ""))
+	elif ModuleOps.category_of(module) == "cargo":
+		# Cargo candidates fill a free slot; the caller names a replace target explicitly.
+		return ""
+	else:
+		var slot := ModuleOps.slot_for(module, ship)
+		current_id = String(ship.get(ModuleOps.ship_slot_key(slot), ""))
+	if current_id == module.id:
 		return ""
 	return current_id

@@ -122,11 +122,11 @@ func _register_synthetic_contents(hub: RegistryHub) -> void:
 	_faction(hub, "test:faction/navy", "naval", 0, -30, 30)
 	_faction(hub, "test:faction/pirates", "pirates", -10, -50, 10)
 	# 6 discoveries: rarity / weight / source filters / tag gate all represented.
-	_discovery(hub, "test:discovery/blueprint_schematic", "blueprint", "uncommon", 4, false, ["ruin", "wreck"], ["industrial", "open_sea"], [], ["core:boiler/standard"])
-	_discovery(hub, "test:discovery/relic_compass", "relic", "rare", 3, false, ["wreck", "landmark"], [], [], ["core:navigation_module/spyglass"])
+	_discovery(hub, "test:discovery/blueprint_schematic", "blueprint", "uncommon", 4, false, ["ruin", "wreck"], ["industrial", "open_sea"], [], ["core:module/standard"])
+	_discovery(hub, "test:discovery/relic_compass", "relic", "rare", 3, false, ["wreck", "landmark"], [], [], ["core:module/spyglass"])
 	_discovery(hub, "test:discovery/lore_harbor", "lore", "common", 5, true, [], [], [], [])
 	_discovery(hub, "test:discovery/species_gull", "species", "common", 3, true, ["landmark"], [], [], [])
-	_discovery(hub, "test:discovery/ruin_room_boiler", "ruin_room", "uncommon", 2, false, ["ruin"], [], ["region.start"], ["core:boiler/standard"])
+	_discovery(hub, "test:discovery/ruin_room_boiler", "ruin_room", "uncommon", 2, false, ["ruin"], [], ["region.start"], ["core:module/standard"])
 	_discovery(hub, "test:discovery/site_cache", "site", "common", 2, true, [], ["coastal", "archipelago"], [], [])
 	# Map config: the 1.0 scenario tuning the generator needs (archetypes / names /
 	# facilities) plus twin world size. No core ids beyond the 1.0 archetypes.

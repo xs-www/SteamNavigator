@@ -4,9 +4,9 @@ extends RefCounted
 ## consumption and settlement.
 ##
 ## Recipes live in module.data.materials / craft_time_hours / craft_cost. A recipe
-## is craftable when its type is in CRAFTABLE_TYPES and it either needs materials
-## or has a craft_cost > 0, so tier-1 "money only" recipes (materials: []) are
-## still craftable without ever reporting missing_materials.
+## is craftable when it is a hull or a unified `modules` definition and it either
+## needs materials or has a craft_cost > 0, so tier-1 "money only" recipes
+## (materials: []) are still craftable without ever reporting missing_materials.
 ##
 ## Crafting consumes materials from the current port warehouse first, then from
 ## non-contract cargo on the ship, pays craft_cost and queues an order. The ship
@@ -14,27 +14,32 @@ extends RefCounted
 ## game time reaches ready_at, settled by CraftOps.settle_orders() (called at the
 ## start of a craft, after voyage time advances and by the port.wait command).
 
-const CRAFTABLE_TYPES := [
-	ContentTypes.HULL,
-	ContentTypes.BOILER,
-	ContentTypes.CARGO_MODULE,
-	ContentTypes.NAVIGATION_MODULE,
-	ContentTypes.SAFETY_MODULE,
-	ContentTypes.CABIN,
-]
-
 const ORDER_KEY := "shipyard_orders"
 const SERIAL_KEY := "order_serial"
 const EPSILON := 0.000000001
 
 
+## Hull or unified module definition behind a craftable id, or null.
+static func craft_definition(hub: RegistryHub, module_id: String) -> ContentDefinition:
+	if module_id.is_empty():
+		return null
+	var hull := hub.get_by_id(ContentTypes.HULL, module_id)
+	if hull != null:
+		return hull
+	return ModuleOps.get_by_id(hub, module_id)
+
+
+static func is_craftable_definition(definition: ContentDefinition) -> bool:
+	if definition == null:
+		return false
+	return definition.content_type == ContentTypes.HULL or not ModuleOps.category_of(definition).is_empty()
+
+
 ## Normalized recipe rows: [{item_id, amount}]. Empty when the module has no recipe.
 static func materials_required(hub: RegistryHub, module_id: String) -> Array:
 	var result: Array = []
-	var module := ShipOps.find_module(hub, module_id)
-	if module == null:
-		return result
-	if not CRAFTABLE_TYPES.has(module.content_type):
+	var module := craft_definition(hub, module_id)
+	if module == null or not is_craftable_definition(module):
 		return result
 	var materials: Variant = module.data.get("materials", null)
 	if not (materials is Array):
@@ -51,11 +56,11 @@ static func materials_required(hub: RegistryHub, module_id: String) -> Array:
 	return result
 
 
-## Craftable = supported type and (materials required or a gold cost). A recipe
-## with an empty materials list is never "not_craftable" on its own.
+## Craftable = supported definition and (materials required or a gold cost). A
+## recipe with an empty materials list is never "not_craftable" on its own.
 static func craftable(hub: RegistryHub, module_id: String) -> bool:
-	var module := ShipOps.find_module(hub, module_id)
-	if module == null or not CRAFTABLE_TYPES.has(module.content_type):
+	var module := craft_definition(hub, module_id)
+	if not is_craftable_definition(module):
 		return false
 	return not materials_required(hub, module_id).is_empty() or craft_cost(hub, module_id) > 0
 
@@ -68,14 +73,14 @@ static func money_only(hub: RegistryHub, module_id: String) -> bool:
 
 
 static func craft_cost(hub: RegistryHub, module_id: String) -> int:
-	var module := ShipOps.find_module(hub, module_id)
+	var module := craft_definition(hub, module_id)
 	if module == null:
 		return 0
 	return maxi(0, int(round(float(module.data.get("craft_cost", 0.0)))))
 
 
 static func craft_time(hub: RegistryHub, module_id: String) -> float:
-	var module := ShipOps.find_module(hub, module_id)
+	var module := craft_definition(hub, module_id)
 	if module == null:
 		return 0.0
 	return maxf(0.0, float(module.data.get("craft_time_hours", 0.0)))
@@ -133,8 +138,8 @@ static func material_plan(state: GameState, hub: RegistryHub, port_id: String, m
 ## user-facing priority. Callers add port/facility checks.
 static func craft_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]:
 	var blockers: Array[String] = []
-	var content_type := ShipOps.module_type(hub, module_id)
-	if content_type == &"" or ShipOps.find_module(hub, module_id) == null:
+	var definition := craft_definition(hub, module_id)
+	if not is_craftable_definition(definition):
 		blockers.append("unknown_module")
 		return blockers
 	if not craftable(hub, module_id):
@@ -169,7 +174,9 @@ static func craft(state: GameState, hub: RegistryHub, module_id: String) -> Dict
 			"blockers": blockers,
 			"materials": material_plan(state, hub, state.current_port_id(), module_id),
 		})
-	var content_type := ShipOps.module_type(hub, module_id)
+	var definition := craft_definition(hub, module_id)
+	var content_type := String(definition.content_type)
+	var category := ModuleOps.category_of(definition)
 	var ship := state.ship()
 	var port_id := state.current_port_id()
 	WarehouseOps.ensure_structure(state)
@@ -209,7 +216,8 @@ static func craft(state: GameState, hub: RegistryHub, module_id: String) -> Dict
 		"order_id": "order_%d" % serial,
 		"module_id": module_id,
 		"port_id": port_id,
-		"content_type": String(content_type),
+		"content_type": content_type,
+		"category": category,
 		"placed_at": placed_at,
 		"ready_at": ready_at,
 		"craft_cost": cost,
@@ -276,5 +284,5 @@ static func settle_orders(state: GameState, hub: RegistryHub) -> Array:
 
 
 static func _module_name_key(hub: RegistryHub, module_id: String) -> String:
-	var module := ShipOps.find_module(hub, module_id)
+	var module := craft_definition(hub, module_id)
 	return module.name_key if module != null else module_id

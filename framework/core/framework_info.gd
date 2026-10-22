@@ -16,4 +16,6 @@ const CAPABILITIES := [
 	"content.event.choice_pool.v1",
 	"content.world.v1",
 	"content.campaign.v1",
+	"content.modules.v1",
+	"content.hulls.v1",
 ]

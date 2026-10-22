@@ -79,7 +79,7 @@ static func transit_module_weight(hub: RegistryHub, ship: Dictionary) -> float:
 		var qty := int(transit[raw_module_id])
 		if qty <= 0:
 			continue
-		var definition := ShipOps.find_module(hub, module_id)
+		var definition := ShipOps.find_installable(hub, module_id)
 		if definition != null:
 			total += float(definition.data.get("weight", 0.0)) * float(qty)
 	return total
@@ -103,7 +103,7 @@ static func store_module(state: GameState, hub: RegistryHub, port_id: String, mo
 		return Result.fail("invalid_amount", "ui.error.invalid_amount", {"module_id": module_id, "qty": qty})
 	if not _at_warehouse_port(state, port_id):
 		return Result.fail("not_at_port", "ui.error.not_at_port", {"port_id": port_id})
-	if ShipOps.find_module(hub, module_id) == null:
+	if ShipOps.find_installable(hub, module_id) == null:
 		return Result.fail("unknown_module", "ui.error.unknown_module", {"module_id": module_id})
 	ensure_structure(state)
 	var ship := state.ship()
@@ -133,7 +133,7 @@ static func take_module(state: GameState, hub: RegistryHub, port_id: String, mod
 		return Result.fail("invalid_amount", "ui.error.invalid_amount", {"module_id": module_id, "qty": qty})
 	if not _at_warehouse_port(state, port_id):
 		return Result.fail("not_at_port", "ui.error.not_at_port", {"port_id": port_id})
-	var module := ShipOps.find_module(hub, module_id)
+	var module := ShipOps.find_installable(hub, module_id)
 	if module == null:
 		return Result.fail("unknown_module", "ui.error.unknown_module", {"module_id": module_id})
 	ensure_structure(state)

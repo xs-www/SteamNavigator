@@ -35,7 +35,7 @@ static func conditions(hub: RegistryHub, state: GameState) -> Dictionary:
 	var main_complete := main_chain_complete(hub, state)
 	var ship_stats := ShipOps.stats(hub, ship)
 	var large_hull := int(ship_stats.get("hull_tier", 0)) >= 3
-	var boiler := hub.get_by_id(ContentTypes.BOILER, String(ship.get("boiler_id", ""))) != null
+	var boiler := ModuleOps.category_of_id(hub, String(ship.get("boiler_id", ""))) == "boiler"
 	var cargo := not ShipOps.cargo_module_ids(ship).is_empty()
 	var ready := shipyard and main_complete and large_hull and boiler and cargo
 	return {
@@ -97,7 +97,8 @@ static func summary(hub: RegistryHub, state: GameState) -> Dictionary:
 	var modules: Array = []
 	for module in ShipOps.installed_modules(hub, ship):
 		modules.append({
-			"content_type": String(ShipOps.module_type(hub, module.id)),
+			"content_type": String(module.content_type),
+			"category": ModuleOps.category_of(module),
 			"name_key": module.name_key,
 			"module_id": module.id,
 		})

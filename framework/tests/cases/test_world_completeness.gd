@@ -25,8 +25,9 @@ const WEATHER_PROFILE_ID := "core:weather_profile/temperate"
 const START_PROFILE_ID := "core:start_profile/standard"
 const STARTING_BUILD_ID := "core:starting_build/standard"
 const STANDARD_HULL_ID := "core:hull/standard"
-const STANDARD_BOILER_ID := "core:boiler/standard"
-const STANDARD_CARGO_ID := "core:cargo_module/standard"
+const STANDARD_BOILER_ID := "core:module/standard_boiler"
+const SECOND_BOILER_ID := "core:module/second_boiler"
+const STANDARD_CARGO_ID := "core:module/standard_cargo"
 
 
 func test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void:
@@ -267,9 +268,15 @@ func _baseline_hub() -> RegistryHub:
 	_register(hub, ContentTypes.HULL, STANDARD_HULL_ID, ["module.large"], {"tier": 1})
 	_register(hub, ContentTypes.HULL, "core:hull/second", [], {"tier": 1})
 	_register(hub, ContentTypes.HULL, "core:hull/third", [], {"tier": 1})
-	_register(hub, ContentTypes.BOILER, STANDARD_BOILER_ID, [], {"tier": 1})
-	_register(hub, ContentTypes.BOILER, "core:boiler/second", [], {"tier": 1})
-	_register(hub, ContentTypes.CARGO_MODULE, STANDARD_CARGO_ID, [], {"tier": 1})
+	_register(hub, ContentTypes.MODULE, STANDARD_BOILER_ID, ["module.boiler"], {
+		"tier": 1, "v2_category": "boiler", "speed_mul": 1.0, "coal_rate": 0.3, "water_rate": 0.2,
+	})
+	_register(hub, ContentTypes.MODULE, SECOND_BOILER_ID, ["module.boiler"], {
+		"tier": 1, "v2_category": "boiler", "speed_mul": 1.1, "coal_rate": 0.35, "water_rate": 0.22,
+	})
+	_register(hub, ContentTypes.MODULE, STANDARD_CARGO_ID, ["module.cargo"], {
+		"tier": 1, "v2_category": "cargo", "capacity": 10.0,
+	})
 	_register(hub, ContentTypes.STRATEGY, "core:strategy/economy", ["strategy.economy"])
 	_register(hub, ContentTypes.STRATEGY, "core:strategy/standard", ["strategy.standard"])
 	_register(hub, ContentTypes.STRATEGY, "core:strategy/fast", ["strategy.fast"])

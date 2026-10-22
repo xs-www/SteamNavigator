@@ -25,10 +25,19 @@ const BRASS := Color("e1c487")
 const TEAL := Color("76aaa7")
 const RED := Color("c36b53")
 const GREEN := Color("76aa8c")
-const MODULE_TYPES := ["hulls", "boilers", "cargo_modules", "navigation_modules", "safety_modules", "cabins"]
-const CATEGORY_ORDER := ["hulls", "boilers", "cargo_modules", "navigation_modules", "safety_modules", "cabins", "misc"]
-const TYPE_LABELS := {"hulls": "船体", "boilers": "锅炉", "cargo_modules": "货舱", "navigation_modules": "导航", "safety_modules": "安全", "cabins": "客舱", "misc": "杂项"}
-const SLOT_TITLES := {"hulls": "ui.label.slot_hull", "boilers": "ui.label.slot_boiler", "navigation_modules": "ui.label.slot_navigation", "safety_modules": "ui.label.slot_safety", "cabins": "ui.label.slot_cabin"}
+const CATEGORY_ORDER := ["hulls", "boiler", "cargo", "utility", "cabin", "misc"]
+const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin"]
+const TYPE_LABELS := {"hulls": "船体", "boiler": "锅炉", "cargo": "货舱", "utility": "通用", "cabin": "客舱", "misc": "杂项"}
+const SLOT_TITLES := {"hull": "ui.label.slot_hull", "boiler": "ui.label.slot_boiler", "navigation_module": "ui.label.slot_navigation", "safety_module": "ui.label.slot_safety", "passenger_cabin": "ui.label.slot_cabin"}
+## Refit slots: flat ship slot key + the UI category it belongs to + instance name.
+const SLOT_DEFS := [
+	{"slot": "hull", "category": "hulls", "instance": "hull"},
+	{"slot": "boiler", "category": "boiler", "instance": "boiler"},
+	{"slot": "navigation_module", "category": "utility", "instance": "navigation"},
+	{"slot": "safety_module", "category": "utility", "instance": "safety"},
+	{"slot": "passenger_cabin", "category": "cabin", "instance": "cabin"},
+]
+const CARGO_CATEGORY := "cargo"
 const SHIP_THUMB_PATH := "res://assets/ui/shipyard/ship_thumb_ironclad.png"
 
 var _tr: Callable
@@ -134,7 +143,7 @@ func _on_toggle_refit() -> void:
 
 ## Enter refit mode on one category. Tests and the shell may call this directly.
 func set_category(category: String) -> void:
-	if category != "misc" and not MODULE_TYPES.has(category):
+	if not CATEGORY_ORDER.has(category):
 		return
 	if not _refit:
 		_refit = true
@@ -269,8 +278,8 @@ func _components_panel() -> Control:
 	header.add_child(_badge(_loc("ui.label.draggable_count", "%d 可拖") % _draggable_count(), SNBadge.Tone.SUCCESS if _draggable_count() > 0 else SNBadge.Tone.NEUTRAL))
 	box.add_child(header)
 	box.add_child(_label(_loc("ui.hint.components", "点击分类进入改装，查看槽位、仓库/随船部件、购买与打造。"), 11, MUTED))
-	for content_type in MODULE_TYPES:
-		box.add_child(_category_row(content_type))
+	for category in MODULE_CATEGORIES:
+		box.add_child(_category_row(category))
 	var guide := PanelContainer.new()
 	guide.theme_type_variation = &"SNInsetPanel"
 	var guide_box := _content(guide)
@@ -284,16 +293,16 @@ func _components_panel() -> Control:
 	return panel
 
 
-func _category_row(content_type: String) -> Control:
+func _category_row(category: String) -> Control:
 	var button := SNButton.new()
 	button.variant = SNButton.Variant.GHOST
 	button.compact = true
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.custom_minimum_size = Vector2(0, 40)
-	button.text = "   " + String(TYPE_LABELS.get(content_type, content_type))
+	button.text = "   " + String(TYPE_LABELS.get(category, category))
 	button.tooltip_text = _loc("ui.hint.components", "")
-	button.pressed.connect(_ui_set_category.bind(content_type))
-	var count := _label(_slot_count_text(_vm, content_type), 11, TEAL)
+	button.pressed.connect(_ui_set_category.bind(category))
+	var count := _label(_slot_count_text(_vm, category), 11, TEAL)
 	count.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	count.offset_left = -120
 	count.offset_right = -14
@@ -363,14 +372,14 @@ func _category_tabs_panel() -> Control:
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var box := _content(panel)
 	box.add_child(_label(_loc("ui.label.category_tabs", "部件分类"), 15, BRASS))
-	for content_type in CATEGORY_ORDER:
+	for category in CATEGORY_ORDER:
 		var button := SNButton.new()
-		button.variant = SNButton.Variant.PRIMARY if content_type == _category else SNButton.Variant.GHOST
+		button.variant = SNButton.Variant.PRIMARY if category == _category else SNButton.Variant.GHOST
 		button.compact = true
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.custom_minimum_size = Vector2(0, 38)
-		button.text = "   " + _category_label(content_type)
-		button.pressed.connect(_ui_set_category.bind(content_type))
+		button.text = "   " + _category_label(category)
+		button.pressed.connect(_ui_set_category.bind(category))
 		box.add_child(button)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -382,25 +391,25 @@ func _build_category_body(box: VBoxContainer) -> void:
 	if _category == "misc":
 		_build_misc_body(box)
 		return
-	var content_type := _category
-	var slot_rows := _slot_rows_for_type(content_type)
+	var category := _category
+	var slot_rows := _slot_rows_for_category(category)
 	box.add_child(_section_label(_loc("ui.label.section_slots", "槽位")))
 	if slot_rows.is_empty():
 		box.add_child(_label(_loc("ui.label.no_slot_for_type", "当前船体没有该类型的槽位。"), 12, MUTED))
 	for slot in slot_rows:
 		box.add_child(_slot_card(slot))
-	var owned := _owned_parts(content_type)
+	var owned := _owned_parts(category)
 	if not owned.is_empty():
 		box.add_child(_section_label(_loc("ui.label.owned_parts", "仓库 / 随船")))
 		box.add_child(_label(_loc("ui.hint.drag_parts", "拖动仓库或随船部件到左侧槽位即可装配或替换同槽位旧件。"), 11, MUTED))
 		for part in owned:
 			box.add_child(_part_row(part))
-	var candidates := _candidates_for_type(content_type)
+	var candidates := _candidates_for_category(category)
 	if not candidates.is_empty():
 		box.add_child(_section_label(_loc("ui.label.buy_and_install", "购买并安装")))
 		for candidate in candidates:
 			box.add_child(_candidate_card(candidate))
-	var recipes := _recipes_for_type(content_type)
+	var recipes := _recipes_for_category(category)
 	if not recipes.is_empty():
 		box.add_child(_section_label(_loc("ui.label.craft_section", "按配方打造")))
 		box.add_child(_label(_loc("ui.hint.craft_section", "打造会先产生订单，完工后进入当前港仓库。"), 11, MUTED))
@@ -461,7 +470,7 @@ func _slot_card(slot: Dictionary) -> Control:
 	var card := _panel()
 	card.theme_type_variation = &"SNInsetPanel"
 	var box := _content(card)
-	var content_type := String(slot.get("content_type", ""))
+	var category := String(slot.get("category", ""))
 	var installed: Dictionary = slot.get("module", {})
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 8)
@@ -484,7 +493,7 @@ func _slot_card(slot: Dictionary) -> Control:
 		box.add_child(_badge(status_text, tone))
 	var installed_row := _installed_row(module_id)
 	if not installed_row.is_empty():
-		var effect_text := _module_effect_text(content_type, installed_row.get("effect", {}))
+		var effect_text := _module_effect_text(category, installed_row.get("effect", {}))
 		if not effect_text.is_empty():
 			box.add_child(_wrap_label(_loc("ui.label.effect", "") + "：" + effect_text, 11, TEAL))
 		var action_row := HBoxContainer.new()
@@ -520,33 +529,40 @@ func _installed_row(module_id: String) -> Dictionary:
 # ---------------------------------------------------------------------------
 func _build_slots(vm: Dictionary) -> Array:
 	var ship: Dictionary = vm.get("ship", {})
-	var by_type: Dictionary = {}
+	var by_slot: Dictionary = {}
 	for module in ship.get("modules", []):
 		if not (module is Dictionary):
 			continue
-		var content_type := String(module.get("content_type", ""))
-		if not by_type.has(content_type):
-			by_type[content_type] = []
-		by_type[content_type].append(module)
+		var slot_name := String(module.get("slot", ""))
+		if not by_slot.has(slot_name):
+			by_slot[slot_name] = []
+		by_slot[slot_name].append(module)
 	var slots: Array = []
-	for content_type in ["hulls", "boilers", "navigation_modules", "safety_modules"]:
-		var installed: Array = by_type.get(content_type, [])
-		slots.append(_slot_row(content_type, 0, installed[0] if installed.size() > 0 else null))
-	if int(ship.get("cabin_slots", 0)) >= 1:
-		var cabins: Array = by_type.get("cabins", [])
-		slots.append(_slot_row("cabins", 0, cabins[0] if cabins.size() > 0 else null))
-	var cargo_installed: Array = by_type.get("cargo_modules", [])
+	for slot_def in SLOT_DEFS:
+		var slot_name := String(slot_def["instance"])
+		if slot_name == "cabin" and int(ship.get("cabin_slots", 0)) < 1:
+			continue
+		var installed: Array = by_slot.get(slot_name, [])
+		slots.append(_slot_row(slot_def, 0, installed[0] if installed.size() > 0 else null))
+	var cargo_installed: Array = by_slot.get("cargo", [])
 	var cargo_slots := maxi(int(ship.get("cargo_slots", 0)), cargo_installed.size())
 	for index in cargo_slots:
-		slots.append(_slot_row("cargo_modules", index, cargo_installed[index] if index < cargo_installed.size() else null))
+		slots.append(_cargo_slot_row(index, cargo_installed[index] if index < cargo_installed.size() else null))
 	return slots
 
 
-func _slot_row(content_type: String, index: int, installed: Variant) -> Dictionary:
-	var title_key := String(SLOT_TITLES.get(content_type, content_type))
-	var title := _loc(title_key, String(TYPE_LABELS.get(content_type, content_type)))
-	if content_type == "cargo_modules":
-		title = _loc("ui.label.slot_cargo", "货舱槽 %d") % (index + 1)
+func _slot_row(slot_def: Dictionary, index: int, installed: Variant) -> Dictionary:
+	var slot_name := String(slot_def["slot"])
+	var title := _loc(String(SLOT_TITLES.get(slot_name, slot_name)), String(TYPE_LABELS.get(String(slot_def["category"]), slot_name)))
+	return _make_slot_row(slot_name, String(slot_def["category"]), index, title, installed, slot_name in ["hull", "boiler"])
+
+
+func _cargo_slot_row(index: int, installed: Variant) -> Dictionary:
+	var title := _loc("ui.label.slot_cargo", "货舱槽 %d") % (index + 1)
+	return _make_slot_row("cargo_modules", CARGO_CATEGORY, index, title, installed, false)
+
+
+func _make_slot_row(slot_name: String, category: String, index: int, title: String, installed: Variant, fixed: bool) -> Dictionary:
 	var module_id := ""
 	var name := ""
 	var hint := ""
@@ -558,20 +574,20 @@ func _slot_row(content_type: String, index: int, installed: Variant) -> Dictiona
 		hint = "· " + _fmt(float(installed.get("weight", 0.0)))
 		tooltip = _loc(String(installed.get("description_key", "")), "")
 		condition = clampf(float(installed.get("condition", 1.0)), 0.0, 1.0)
-	var slot := {
-		"id": "%s_%d" % [content_type, index],
-		"content_type": content_type,
+	return {
+		"id": "%s_%d" % [slot_name, index],
+		"slot": slot_name,
+		"category": category,
 		"index": index,
 		"title": title,
 		"module": {"module_id": module_id, "name": name},
 		"replace_module_id": module_id,
-		"fixed": content_type in ["hulls", "boilers"],
+		"fixed": fixed,
 		"hint": hint,
 		"condition": condition,
 		"empty_text": _loc("ui.label.slot_empty", "空槽位"),
 		"tooltip": tooltip if not tooltip.is_empty() else _loc("ui.hint.slot_drop", "把同槽位的仓库/随船部件拖到这里。"),
 	}
-	return slot
 
 
 func _make_stage(mode: int, minimum: Vector2) -> SNShipView:
@@ -596,36 +612,36 @@ func _make_stage(mode: int, minimum: Vector2) -> SNShipView:
 # ---------------------------------------------------------------------------
 # Parts HUD / operations building blocks
 # ---------------------------------------------------------------------------
-func _slot_rows_for_type(content_type: String) -> Array:
+func _slot_rows_for_category(category: String) -> Array:
 	var rows: Array = []
 	for slot in _slots:
-		if slot is Dictionary and String(slot.get("content_type", "")) == content_type:
+		if slot is Dictionary and String(slot.get("category", "")) == category:
 			rows.append(slot)
 	return rows
 
 
-func _owned_parts(content_type: String) -> Array:
+func _owned_parts(category: String) -> Array:
 	var rows: Array = []
-	for part in _part_rows_for_type(_vm, content_type):
+	for part in _part_rows_for_category(_vm, category):
 		if part is Dictionary and ["warehouse", "transit"].has(String(part.get("source", ""))):
 			rows.append(part)
 	return rows
 
 
-func _candidates_for_type(content_type: String) -> Array:
+func _candidates_for_category(category: String) -> Array:
 	var rows: Array = []
 	for candidate in _vm.get("candidates", []):
-		if candidate is Dictionary and String(candidate.get("content_type", "")) == content_type:
+		if candidate is Dictionary and String(candidate.get("category", "")) == category:
 			if bool(candidate.get("installed", false)):
 				continue
 			rows.append(candidate)
 	return rows
 
 
-func _recipes_for_type(content_type: String) -> Array:
+func _recipes_for_category(category: String) -> Array:
 	var rows: Array = []
 	for recipe in _vm.get("craft", []):
-		if recipe is Dictionary and String(recipe.get("content_type", "")) == content_type:
+		if recipe is Dictionary and String(recipe.get("category", "")) == category:
 			rows.append(recipe)
 	return rows
 
@@ -645,19 +661,19 @@ func _part_row(part: Dictionary) -> SNPartRow:
 	return row
 
 
-func _part_rows_for_type(vm: Dictionary, content_type: String) -> Array:
+func _part_rows_for_category(vm: Dictionary, category: String) -> Array:
 	var rows: Array = []
 	var ship: Dictionary = vm.get("ship", {})
 	var installed: Array = []
 	for module in ship.get("modules", []):
-		if module is Dictionary and String(module.get("content_type", "")) == content_type:
+		if module is Dictionary and String(module.get("category", "")) == category:
 			installed.append(module)
 	for module in installed:
 		var name := _loc(String(module.get("name_key", "")), String(module.get("module_id", "")))
 		rows.append({
 			"module_id": String(module.get("module_id", "")),
 			"name": name,
-			"content_type": content_type,
+			"category": category,
 			"source": "installed",
 			"tag": _loc("ui.tag.installed", "已装"),
 			"tag_color": GREEN,
@@ -667,7 +683,7 @@ func _part_rows_for_type(vm: Dictionary, content_type: String) -> Array:
 		})
 	var warehouse: Dictionary = vm.get("warehouse", {})
 	for module in warehouse.get("modules", []):
-		if not (module is Dictionary) or String(module.get("content_type", "")) != content_type:
+		if not (module is Dictionary) or String(module.get("category", "")) != category:
 			continue
 		var name := _loc(String(module.get("name_key", "")), String(module.get("module_id", "")))
 		var can_install := bool(module.get("can_install", false))
@@ -675,7 +691,7 @@ func _part_rows_for_type(vm: Dictionary, content_type: String) -> Array:
 		rows.append({
 			"module_id": String(module.get("module_id", "")),
 			"name": name,
-			"content_type": content_type,
+			"category": category,
 			"source": "warehouse",
 			"can_install": can_install,
 			"tag": _loc("ui.tag.warehouse", "仓库"),
@@ -685,13 +701,13 @@ func _part_rows_for_type(vm: Dictionary, content_type: String) -> Array:
 			"hint": _loc("ui.hint.drag_to_slot", "拖到左侧槽位") if blockers.is_empty() else blockers,
 		})
 	for module in ship.get("transit_modules", []):
-		if not (module is Dictionary) or String(module.get("content_type", "")) != content_type:
+		if not (module is Dictionary) or String(module.get("category", "")) != category:
 			continue
 		var name := _loc(String(module.get("name_key", "")), String(module.get("module_id", "")))
 		rows.append({
 			"module_id": String(module.get("module_id", "")),
 			"name": name,
-			"content_type": content_type,
+			"category": category,
 			"source": "transit",
 			"can_install": true,
 			"tag": _loc("ui.tag.transit", "随船"),
@@ -701,7 +717,7 @@ func _part_rows_for_type(vm: Dictionary, content_type: String) -> Array:
 			"hint": _loc("ui.hint.drag_to_slot", "拖到左侧槽位"),
 		})
 	for candidate in vm.get("candidates", []):
-		if not (candidate is Dictionary) or String(candidate.get("content_type", "")) != content_type:
+		if not (candidate is Dictionary) or String(candidate.get("category", "")) != category:
 			continue
 		if bool(candidate.get("installed", false)):
 			continue
@@ -710,13 +726,13 @@ func _part_rows_for_type(vm: Dictionary, content_type: String) -> Array:
 		rows.append({
 			"module_id": String(candidate.get("module_id", "")),
 			"name": name,
-			"content_type": content_type,
+			"category": category,
 			"source": "purchase",
 			"can_install": bool(candidate.get("can_install", false)),
 			"tag": _loc("ui.tag.purchase", "购买 %d") % int(candidate.get("price", 0)),
 			"tag_color": BRASS,
 			"draggable": false,
-			"meta": "%s · %s %s" % [TYPE_LABELS.get(content_type, content_type), _loc("ui.label.weight_short", "重量"), _fmt(float(candidate.get("weight", 0.0)))],
+			"meta": "%s · %s %s" % [TYPE_LABELS.get(category, category), _loc("ui.label.weight_short", "重量"), _fmt(float(candidate.get("weight", 0.0)))],
 			"hint": _loc("ui.hint.click_buy", "点击购买并安装") if blockers.is_empty() else blockers,
 		})
 	return rows
@@ -732,8 +748,8 @@ func _draggable_count() -> int:
 
 func _owned_parts_for_all() -> Array:
 	var rows: Array = []
-	for content_type in MODULE_TYPES:
-		rows.append_array(_owned_parts(content_type))
+	for category in MODULE_CATEGORIES:
+		rows.append_array(_owned_parts(category))
 	return rows
 
 
@@ -742,8 +758,8 @@ func _owned_parts_for_all() -> Array:
 # ---------------------------------------------------------------------------
 func _on_slot_drop(payload: Dictionary, slot: Dictionary) -> void:
 	var part: Dictionary = payload.get("part", {})
-	var part_type := String(part.get("content_type", ""))
-	if part_type != String(slot.get("content_type", "")):
+	var part_category := String(part.get("category", ""))
+	if part_category != String(slot.get("category", "")):
 		return
 	var source := String(part.get("source", ""))
 	if not ["warehouse", "transit"].has(source):
@@ -752,6 +768,9 @@ func _on_slot_drop(payload: Dictionary, slot: Dictionary) -> void:
 	if module_id.is_empty():
 		return
 	var params := {"module_id": module_id, "source": source}
+	var flat_slot := String(slot.get("slot", ""))
+	if not flat_slot.is_empty() and flat_slot != "hull":
+		params["slot"] = flat_slot
 	var replace_id := String(slot.get("replace_module_id", ""))
 	if not replace_id.is_empty() and replace_id != module_id:
 		params["replace_module_id"] = replace_id
@@ -759,13 +778,13 @@ func _on_slot_drop(payload: Dictionary, slot: Dictionary) -> void:
 
 
 func _on_slot_activated(slot: Dictionary) -> void:
-	var accepted := String(slot.get("content_type", ""))
-	if accepted != _category and MODULE_TYPES.has(accepted):
+	var accepted := String(slot.get("category", ""))
+	if accepted != _category and MODULE_CATEGORIES.has(accepted):
 		_ui_set_category(accepted)
 		return
 	for row in _hud_rows:
 		if row is SNPartRow:
-			row.set_compatible_hint(String(row.part.get("content_type", "")) == accepted)
+			row.set_compatible_hint(String(row.part.get("category", "")) == accepted)
 
 
 func _on_part_activated(part: Dictionary) -> void:
@@ -787,7 +806,7 @@ func _candidate_card(candidate: Dictionary) -> Control:
 	title_row.add_child(title)
 	title_row.add_child(_label("%d 金币 · %s" % [int(candidate.get("price", 0)), _fmt(float(candidate.get("weight", 0.0)))], 12, MUTED))
 	box.add_child(title_row)
-	var effect := _module_effect_text(String(candidate.get("content_type", "")), candidate.get("effect", {}))
+	var effect := _module_effect_text(String(candidate.get("category", "")), candidate.get("effect", {}))
 	if not effect.is_empty():
 		box.add_child(_wrap_label(_loc("ui.label.effect", "") + "：" + effect, 11, TEAL))
 	var blocker := _blocker_text(candidate.get("blockers", []))
@@ -807,8 +826,8 @@ func _craft_recipe(recipe: Dictionary, has_shipyard: bool) -> Control:
 	var title := _label(_loc(String(recipe.get("name_key", "")), String(recipe.get("module_id", ""))), 14, TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(title)
-	var content_type := String(recipe.get("content_type", ""))
-	title_row.add_child(_label("%s · %s" % [String(TYPE_LABELS.get(content_type, content_type)), _fmt(float(recipe.get("weight", 0.0)))], 12, MUTED))
+	var category := String(recipe.get("category", ""))
+	title_row.add_child(_label("%s · %s" % [String(TYPE_LABELS.get(category, category)), _fmt(float(recipe.get("weight", 0.0)))], 12, MUTED))
 	box.add_child(title_row)
 	var material_row := HBoxContainer.new()
 	material_row.add_theme_constant_override("separation", 12)
@@ -898,17 +917,17 @@ func _ship_slot_summary(vm: Dictionary) -> String:
 	]
 
 
-func _slot_count_text(vm: Dictionary, content_type: String) -> String:
+func _slot_count_text(vm: Dictionary, category: String) -> String:
 	var ship: Dictionary = vm.get("ship", {})
-	match content_type:
-		"cargo_modules":
+	match category:
+		"cargo":
 			return "%d / %d" % [int(ship.get("cargo_used", 0)), int(ship.get("cargo_slots", 0))]
-		"cabins":
+		"cabin":
 			return "%d / %d" % [int(ship.get("cabin_used", 0)), int(ship.get("cabin_slots", 0))]
-		"navigation_modules":
-			return _loc("ui.tag.installed", "已装") if bool(ship.get("navigation_occupied", false)) else "-"
-		"safety_modules":
-			return _loc("ui.tag.installed", "已装") if bool(ship.get("safety_occupied", false)) else "-"
+		"utility":
+			var used := (1 if bool(ship.get("navigation_occupied", false)) else 0) \
+				+ (1 if bool(ship.get("safety_occupied", false)) else 0)
+			return "%d / 2" % used
 		_:
 			return "1 / 1"
 
@@ -916,11 +935,10 @@ func _slot_count_text(vm: Dictionary, content_type: String) -> String:
 func _category_label(category: String) -> String:
 	match category:
 		"hulls": return _loc("ui.category.hulls", "船体")
-		"boilers": return _loc("ui.category.boilers", "锅炉")
-		"cargo_modules": return _loc("ui.category.cargo_modules", "货舱")
-		"navigation_modules": return _loc("ui.category.navigation_modules", "导航")
-		"safety_modules": return _loc("ui.category.safety_modules", "安全")
-		"cabins": return _loc("ui.category.cabins", "客舱")
+		"boiler": return _loc("ui.category.boiler", "锅炉")
+		"cargo": return _loc("ui.category.cargo", "货舱")
+		"utility": return _loc("ui.category.utility", "通用")
+		"cabin": return _loc("ui.category.cabin", "客舱")
 		"misc": return _loc("ui.category.misc", "杂项")
 		_: return category
 
@@ -928,18 +946,34 @@ func _category_label(category: String) -> String:
 func _category_count_text(category: String) -> String:
 	if category == "misc":
 		return _loc("ui.label.misc_count", "工单 / 材料")
-	return "%d %s" % [_slot_rows_for_type(category).size(), _loc("ui.label.slots_unit", "槽位")]
+	return "%d %s" % [_slot_rows_for_category(category).size(), _loc("ui.label.slots_unit", "槽位")]
 
 
-func _module_effect_text(content_type: String, effect: Dictionary) -> String:
-	match content_type:
+func _module_effect_text(category: String, effect: Dictionary) -> String:
+	match category:
 		"hulls": return "货舱 %d · 客舱 %d · 载重 %s · 航速 %s · 耐久 %s" % [int(effect.get("cargo_slots", 0)), int(effect.get("cabin_slots", 0)), _fmt(float(effect.get("max_weight", 0.0))), _fmt(float(effect.get("base_speed", 0.0))), _fmt(float(effect.get("max_durability", 0.0)))]
-		"boilers": return "航速 ×%s · 煤耗 %s/h · 水耗 %s/h" % [_fmt(float(effect.get("speed_mul", 1.0)), 2), _fmt(float(effect.get("coal_rate", 0.0)), 2), _fmt(float(effect.get("water_rate", 0.0)), 2)]
-		"cargo_modules": return "容量 %s" % _fmt(float(effect.get("capacity", 0.0)))
-		"navigation_modules": return "风险 %+.3f · 速度 ×%s · %s" % [float(effect.get("risk_add", 0.0)), _fmt(float(effect.get("speed_mul", 1.0)), 2), "出航前揭示设施" if bool(effect.get("reveal_facilities", false)) else "无设施揭示"]
-		"safety_modules": return "风险 %+.3f · 损伤 ×%s · 维修 ×%s" % [float(effect.get("risk_add", 0.0)), _fmt(float(effect.get("damage_mul", 1.0)), 2), _fmt(float(effect.get("repair_cost_mul", 1.0)), 2)]
-		"cabins": return "旅客 %d" % int(effect.get("passenger_capacity", 0))
+		"boiler": return "航速 ×%s · 煤耗 %s/h · 水耗 %s/h" % [_fmt(float(effect.get("speed_mul", 1.0)), 2), _fmt(float(effect.get("coal_rate", 0.0)), 2), _fmt(float(effect.get("water_rate", 0.0)), 2)]
+		"cargo": return "容量 %s" % _fmt(float(effect.get("capacity", 0.0)))
+		"utility": return _utility_effect_text(effect)
+		"cabin": return "旅客 %d" % int(effect.get("passenger_capacity", 0))
 		_: return ""
+
+
+## Utility definitions carry the union of the legacy navigation/safety numbers; show
+## the block their tags/data actually populate.
+func _utility_effect_text(effect: Dictionary) -> String:
+	var parts := PackedStringArray()
+	if effect.has("risk_add"):
+		parts.append("风险 %+.3f" % float(effect.get("risk_add", 0.0)))
+	if effect.has("speed_mul"):
+		parts.append("速度 ×%s" % _fmt(float(effect.get("speed_mul", 1.0)), 2))
+	if effect.has("reveal_facilities"):
+		parts.append("出航前揭示设施" if bool(effect.get("reveal_facilities", false)) else "无设施揭示")
+	if effect.has("damage_mul"):
+		parts.append("损伤 ×%s" % _fmt(float(effect.get("damage_mul", 1.0)), 2))
+	if effect.has("repair_cost_mul"):
+		parts.append("维修 ×%s" % _fmt(float(effect.get("repair_cost_mul", 1.0)), 2))
+	return " · ".join(parts)
 
 
 func _craft_button_text(recipe: Dictionary) -> String:

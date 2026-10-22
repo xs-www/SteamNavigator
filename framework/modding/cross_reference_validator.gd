@@ -17,6 +17,10 @@ extends RefCounted
 ## - `map_configs.archetypes` 数量必须 ≥ 引用它的 `start_profiles.world_profile.port_count`；
 ##   找不到对应 world_profile 时跳过（缺失本身已由 start_profiles 检查报错）。
 ## - 既有检查与错误码保持不变；空的 v2 Core 内容基线不受影响。
+## - C1：5 类模块合并为 `modules` 后，`starting_builds` 的 boiler / cargo_modules /
+##   navigation_module / safety_module / passenger_cabin 按 `data.v2_category`
+##   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
+##   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。
 ## @end-static-doc
 
 ## Planned target types referenced by active Phase B schemas. They have no runtime
@@ -29,6 +33,21 @@ const PLANNED_REF_TYPES := {
 	"encounter_table": "encounter_tables",
 	"loot_table": "loot_tables",
 	"contract_family": "contract_families",
+}
+
+## C1 unified module categories and the per-category data block the merged schema
+## cannot require (see schemas/v2/module.schema.json). `crew` is reserved by the
+## schema but has no runtime consumer yet, so it is not a valid authored category.
+const MODULE_CATEGORIES := ["boiler", "cargo", "utility", "cabin"]
+const MODULE_CATEGORY_REQUIRED_FIELDS := {
+	"boiler": ["speed_mul", "coal_rate", "water_rate"],
+	"cargo": ["capacity"],
+	"utility": ["risk_add"],
+	"cabin": ["passenger_capacity"],
+}
+const UTILITY_TAG_FIELDS := {
+	"module.navigation": ["speed_mul", "reveal_facilities"],
+	"module.safety": ["damage_mul", "repair_cost_mul"],
 }
 
 var errors: Array[Dictionary] = []
@@ -65,6 +84,8 @@ func validate(hub: RegistryHub) -> Dictionary:
 func _check_modules() -> void:
 	for content_type in ContentTypes.MODULE_TYPES:
 		for definition in _hub.get_all(content_type):
+			if content_type == ContentTypes.MODULE:
+				_check_module_category(definition)
 			for material in definition.data.get("materials", []):
 				if not (material is Dictionary):
 					continue
@@ -76,19 +97,56 @@ func _check_modules() -> void:
 					_warn("modifier_unknown_stat", "%s has an unrecognised modifier stat '%s'" % [definition.id, modifier.get("stat", "")], definition.id)
 
 
+## C1: the merged `modules` schema is a field superset and cannot express per-category
+## required blocks (the project SchemaValidator has no if/then), so category semantics
+## live here. Navigation/safety modules stay distinguishable through their legacy tags.
+func _check_module_category(definition: ContentDefinition) -> void:
+	var category := String(definition.data.get("v2_category", ""))
+	if not MODULE_CATEGORIES.has(category):
+		_error(
+			"module_category_unknown",
+			"%s has unsupported v2_category '%s'" % [definition.id, category],
+			definition.id
+		)
+		return
+	for field in MODULE_CATEGORY_REQUIRED_FIELDS.get(category, []):
+		if not definition.data.has(String(field)):
+			_error(
+				"module_category_field",
+				"%s is a %s module but lacks required field '%s'" % [definition.id, category, field],
+				definition.id
+			)
+	if category == "utility":
+		for tag in UTILITY_TAG_FIELDS.keys():
+			if definition.has_tag(tag):
+				for field in UTILITY_TAG_FIELDS[tag]:
+					if not definition.data.has(String(field)):
+						_error(
+							"module_category_field",
+							"%s is tagged %s but lacks required field '%s'" % [definition.id, tag, field],
+							definition.id
+						)
+		if not definition.has_tag("module.navigation") and not definition.has_tag("module.safety"):
+			_warn(
+				"module_utility_tag",
+				"%s is a utility module without module.navigation / module.safety; install slot falls back to the first empty utility slot" % definition.id,
+				definition.id
+			)
+
+
 func _check_starting_builds() -> void:
 	for build in _hub.get_all(ContentTypes.STARTING_BUILD):
 		var hull := _require(ContentTypes.HULL, String(build.data.get("hull", "")), build.id, "hull")
-		_require(ContentTypes.BOILER, String(build.data.get("boiler", "")), build.id, "boiler")
+		_require_module(String(build.data.get("boiler", "")), "boiler", build.id, "boiler")
 		var cargo_modules: Array = build.data.get("cargo_modules", [])
 		for module_id in cargo_modules:
-			_require(ContentTypes.CARGO_MODULE, String(module_id), build.id, "cargo_modules")
+			_require_module(String(module_id), "cargo", build.id, "cargo_modules")
 		if not String(build.data.get("navigation_module", "")).is_empty():
-			_require(ContentTypes.NAVIGATION_MODULE, String(build.data.get("navigation_module")), build.id, "navigation_module")
+			_require_module(String(build.data.get("navigation_module")), "utility", build.id, "navigation_module")
 		if not String(build.data.get("safety_module", "")).is_empty():
-			_require(ContentTypes.SAFETY_MODULE, String(build.data.get("safety_module")), build.id, "safety_module")
+			_require_module(String(build.data.get("safety_module")), "utility", build.id, "safety_module")
 		if not String(build.data.get("passenger_cabin", "")).is_empty():
-			_require(ContentTypes.CABIN, String(build.data.get("passenger_cabin")), build.id, "passenger_cabin")
+			_require_module(String(build.data.get("passenger_cabin")), "cabin", build.id, "passenger_cabin")
 		_check_role(build, "engineer", "engineer")
 		_check_role(build, "navigator", "navigator")
 		if hull != null:
@@ -467,6 +525,27 @@ func _require(content_type: StringName, definition_id: String, owner: String, fi
 	var definition := _hub.get_by_id(content_type, definition_id)
 	if definition == null:
 		_error("reference_missing", "%s field '%s' references missing %s '%s'" % [owner, field, content_type, definition_id], owner)
+	return definition
+
+
+## `modules` definition behind an id, additionally checked against the category the
+## declaring field expects (boiler / cargo / utility / cabin).
+func _require_module(module_id: String, category: String, owner: String, field: String) -> ContentDefinition:
+	var definition := _hub.get_by_id(ContentTypes.MODULE, module_id)
+	if definition == null:
+		_error(
+			"reference_missing",
+			"%s field '%s' references missing %s '%s'" % [owner, field, ContentTypes.MODULE, module_id],
+			owner
+		)
+		return null
+	var actual := String(definition.data.get("v2_category", ""))
+	if actual != category:
+		_error(
+			"module_category_mismatch",
+			"%s field '%s' expects a %s module but '%s' is %s" % [owner, field, category, module_id, actual],
+			owner
+		)
 	return definition
 
 

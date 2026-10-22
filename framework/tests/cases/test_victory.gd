@@ -344,7 +344,7 @@ func test_shipyard_install_triggers_victory_once() -> void:
 	assert_eq(int(state.stats()["expense"]), price, "purchase is recorded exactly once as an expense")
 
 	# A later successful install keeps the same summary and never re-awards.
-	var cabin := context.commands.execute(&"ship.install_module", {"module_id": "core:cabin/passenger_cabin"})
+	var cabin := context.commands.execute(&"ship.install_module", {"module_id": "core:module/passenger_cabin"})
 	assert_true(bool(cabin["ok"]), "cabin installs after victory: %s" % str(cabin))
 	assert_false(bool(cabin["data"]["victory"]["newly_achieved"]), "second install does not re-award")
 	assert_false(_has_event(cabin.get("events", []), "run.victory_achieved"), "no second victory event")

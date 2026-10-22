@@ -113,7 +113,7 @@ func set_ship_model(model: Dictionary) -> void:
 	queue_redraw()
 
 
-## Replace the slot descriptors. Each descriptor: id, content_type, index,
+## Replace the slot descriptors. Each descriptor: id, category, slot, index,
 ## title, module (Dictionary or null), replace_module_id, fixed.
 func set_slots(slots: Array) -> void:
 	_slots = slots.duplicate(true)
@@ -173,7 +173,7 @@ func _layout_slots() -> void:
 	var fixed: Array = []
 	var cargo: Array = []
 	for target in _slot_targets:
-		if String(target.slot.get("content_type", "")) == "cargo_modules":
+		if String(target.slot.get("category", "")) == "cargo":
 			cargo.append(target)
 		else:
 			fixed.append(target)
@@ -199,22 +199,22 @@ func _place_row(targets: Array, left: float, span: float, top: float, chip_h: fl
 		x += chip_w + gap
 
 
-func _chip_anchor(content_type: String, index: int, cargo_count: int) -> Vector2:
+func _chip_anchor(slot: Dictionary, cargo_count: int) -> Vector2:
 	var w := size.x
 	var h := size.y
-	match content_type:
-		"hulls":
+	match String(slot.get("slot", "")):
+		"hull":
 			return Vector2(w * 0.20, h * 0.47)
-		"boilers":
+		"boiler":
 			return Vector2(w * 0.37, h * 0.50)
-		"cargo_modules":
+		"cargo":
 			var step := 0.055 if cargo_count <= 1 else 0.09
-			return Vector2(w * (0.52 + step * float(index)), h * 0.52)
-		"navigation_modules":
+			return Vector2(w * (0.52 + step * float(int(slot.get("index", 0)))), h * 0.52)
+		"navigation":
 			return Vector2(w * 0.74, h * 0.42)
-		"safety_modules":
+		"safety":
 			return Vector2(w * 0.63, h * 0.50)
-		"cabins":
+		"cabin":
 			return Vector2(w * 0.85, h * 0.46)
 		_:
 			return Vector2(w * 0.5, h * 0.5)
@@ -281,7 +281,7 @@ func _draw_exterior() -> void:
 	var modules: Array = _model.get("modules", [])
 	var cargo_total := 0
 	for module in modules:
-		if module is Dictionary and String(module.get("content_type", "")) == "cargo_modules":
+		if module is Dictionary and String(module.get("category", "")) == "cargo":
 			cargo_total += 1
 	for index in cargo_total:
 		draw_rect(Rect2(w * (0.62 + float(index) * 0.045), water_y - h * 0.245, w * 0.03, h * 0.045), BRASS, false, 1.5)
@@ -365,11 +365,10 @@ func _draw_slot_leaders() -> void:
 		return
 	var cargo_count := 0
 	for target in _slot_targets:
-		if String(target.slot.get("content_type", "")) == "cargo_modules":
+		if String(target.slot.get("category", "")) == "cargo":
 			cargo_count += 1
 	for target in _slot_targets:
-		var content_type := String(target.slot.get("content_type", ""))
-		var anchor := _chip_anchor(content_type, int(target.slot.get("index", 0)), cargo_count)
+		var anchor := _chip_anchor(target.slot, cargo_count)
 		var start := Vector2(target.position.x + target.size.x * 0.5, target.position.y)
 		draw_line(start, anchor, Color(TEAL, 0.28), 1.0)
 		draw_circle(anchor, 3.0, Color(BRASS, 0.6))

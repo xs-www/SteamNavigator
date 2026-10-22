@@ -9,8 +9,10 @@ extends RefCounted
 ##
 ## ## 契约与约束
 ## - 要求 core 存在、required=true 且进入加载顺序。
-## - 1.0 基线：最低数量（3 船体、2 锅炉、3 策略、4 港口原型、5 主线、2 事件、2 岗位等）、
-##   必需标签、主线 sequence 1–5、至少一套可解析为 hull + boiler + cargo 的初始构筑。
+## - 1.0 基线：最低数量（3 船体、≥2 boiler 模块、≥1 cargo 模块、3 策略、4 港口原型、
+##   5 主线、2 事件、2 岗位等）、必需标签、主线 sequence 1–5、至少一套可解析为
+##   hull + boiler 模块 + cargo 模块的初始构筑。模块数量按统一 `modules` 类型的
+##   `data.v2_category` 切片计数；utility / cabin 不设硬下限。
 ## - Phase B 规则用 presence gate：**Core 来源**的 `world_profiles` 至少 1 条才启用，保证 B4
 ##   之前 Core 没有 v2 内容时基线不红，第三方单独提供的 v2 世界内容也不会触发 Core 规则。
 ## - 硬性：world_profiles / map_configs / start_profiles / weather_profiles / regions 各 ≥1。
@@ -34,8 +36,8 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 
 	_require_count(hub, ContentTypes.GOOD, 1, "goods", errors)
 	_require_count(hub, ContentTypes.HULL, 3, "hulls", errors)
-	_require_count(hub, ContentTypes.BOILER, 2, "boilers", errors)
-	_require_count(hub, ContentTypes.CARGO_MODULE, 1, "cargo modules", errors)
+	_require_module_category_count(hub, "boiler", 2, "boilers", errors)
+	_require_module_category_count(hub, "cargo", 1, "cargo modules", errors)
 	_require_count(hub, ContentTypes.STRATEGY, 3, "boiler strategies", errors)
 	_require_count(hub, ContentTypes.PORT_ARCHETYPE, 4, "port archetypes", errors)
 	_require_count(hub, ContentTypes.MAP_PROFILE, 1, "map profiles", errors)
@@ -67,13 +69,16 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	var ships: Array = []
 	for build in hub.get_all(ContentTypes.STARTING_BUILD):
 		var hull := hub.get_by_id(ContentTypes.HULL, String(build.data.get("hull", "")))
-		var boiler := hub.get_by_id(ContentTypes.BOILER, String(build.data.get("boiler", "")))
+		var boiler_id := String(build.data.get("boiler", ""))
+		var boiler := ModuleOps.get_by_id(hub, boiler_id)
+		var has_boiler := boiler != null and ModuleOps.category_of(boiler) == "boiler"
 		var cargo_modules: Array = build.data.get("cargo_modules", [])
 		var has_cargo := false
 		for module_id in cargo_modules:
-			if hub.contains(ContentTypes.CARGO_MODULE, String(module_id)):
+			var cargo := ModuleOps.get_by_id(hub, String(module_id))
+			if cargo != null and ModuleOps.category_of(cargo) == "cargo":
 				has_cargo = true
-		if hull != null and boiler != null and has_cargo:
+		if hull != null and has_boiler and has_cargo:
 			ships.append(build.id)
 		else:
 			warnings.append({
@@ -83,7 +88,7 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	if ships.is_empty():
 		errors.append({"code": "no_runnable_starting_build", "message": "no starting build resolves to a runnable ship"})
 
-	for content_type in ContentTypes.MODULE_TYPES:
+	for content_type in [ContentTypes.HULL, ContentTypes.MODULE]:
 		for module in hub.get_all(content_type):
 			if int(module.data.get("tier", 0)) > 3:
 				warnings.append({
@@ -102,6 +107,16 @@ static func _require_count(hub: RegistryHub, content_type: StringName, minimum: 
 			"message": "core must declare at least %d %s (found %d)" % [
 				minimum, label, hub.get_all(content_type).size()
 			],
+		})
+
+
+## Unified `modules` type count sliced by `data.v2_category`.
+static func _require_module_category_count(hub: RegistryHub, category: String, minimum: int, label: String, errors: Array[Dictionary]) -> void:
+	var found := ModuleOps.count(hub, category)
+	if found < minimum:
+		errors.append({
+			"code": "content_count",
+			"message": "core must declare at least %d %s (found %d)" % [minimum, label, found],
 		})
 
 

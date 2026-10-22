@@ -117,11 +117,7 @@ static func _installed_module_ids(ship: Dictionary) -> Array[String]:
 
 
 static func _find_module(hub: RegistryHub, module_id: String) -> ContentDefinition:
-	for content_type in ContentTypes.MODULE_TYPES:
-		var definition := hub.get_by_id(content_type, module_id)
-		if definition != null:
-			return definition
-	return null
+	return ShipOps.find_installable(hub, module_id)
 
 
 static func _item_amount(ship: Dictionary, item_id: String) -> int:

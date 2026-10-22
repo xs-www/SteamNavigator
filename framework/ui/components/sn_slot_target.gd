@@ -4,7 +4,7 @@ extends PanelContainer
 ##
 ## Draws the slot title, the installed module (or 空), and accepts a dragged
 ## owned free module (SNPartRow payload, `kind = "ship_parts"`). The screen owns
-## the command intent; this control only validates content type and source.
+## the command intent; this control only validates the module category and source.
 
 signal part_dropped(payload: Dictionary, slot: Dictionary)
 signal slot_activated(slot: Dictionary)
@@ -150,7 +150,9 @@ func _accepts(part: Dictionary) -> bool:
 		return false
 	if not ["warehouse", "transit"].has(String(part.get("source", ""))):
 		return false
-	if String(part.get("content_type", "")) != String(slot.get("content_type", "")):
+	var part_category := String(part.get("category", ""))
+	var slot_category := String(slot.get("category", ""))
+	if part_category.is_empty() or part_category != slot_category:
 		return false
 	if part.has("can_install") and not bool(part.get("can_install", true)):
 		return false

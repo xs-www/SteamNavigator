@@ -105,7 +105,7 @@ func test_manifest_entries_are_unique_and_complete() -> void:
 			assert_true(module_categories.has(String(entry["v2_category"])), "%s references a declared v2 module category" % key)
 
 
-func test_minor_modules_share_one_utility_category() -> void:
+func test_merged_modules_and_hulls_are_active_2_0() -> void:
 	var data := _manifest()
 	if data.is_empty():
 		return
@@ -113,12 +113,13 @@ func test_minor_modules_share_one_utility_category() -> void:
 	for entry in data.get("types", []):
 		if entry is Dictionary:
 			by_key[String(entry.get("key", ""))] = entry
-	assert_eq(String(by_key.get("navigation_modules", {}).get("v2_category", "")), "utility", "navigation modules are utility")
-	assert_eq(String(by_key.get("safety_modules", {}).get("v2_category", "")), "utility", "safety modules are utility")
-	assert_eq(String(by_key.get("boilers", {}).get("v2_category", "")), "boiler", "boilers keep their category")
-	assert_eq(String(by_key.get("cargo_modules", {}).get("v2_category", "")), "cargo", "cargo modules keep their category")
-	assert_eq(String(by_key.get("cabins", {}).get("v2_category", "")), "cabin", "cabins keep their category")
-	assert_false(by_key.has("utility_modules"), "no separate active utility type before the v2 migration")
+	assert_eq(String(by_key.get("modules", {}).get("schema_version", "")), "2.0", "modules is an active Schema 2.0 type")
+	assert_eq(String(by_key.get("modules", {}).get("capability", "")), "content.modules.v1", "modules capability")
+	assert_eq(String(by_key.get("modules", {}).get("schema", "")), "schemas/v2/module.schema.json", "modules schema path")
+	assert_eq(String(by_key.get("hulls", {}).get("schema_version", "")), "2.0", "hulls is an active Schema 2.0 type")
+	assert_eq(String(by_key.get("hulls", {}).get("schema", "")), "schemas/v2/hull.schema.json", "hulls schema path")
+	for legacy in ["boilers", "cargo_modules", "navigation_modules", "safety_modules", "cabins"]:
+		assert_false(by_key.has(legacy), "%s legacy module type is retired" % legacy)
 
 
 func test_planned_types_do_not_shadow_active_types() -> void:

@@ -256,12 +256,12 @@ func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
 		"the third-port shipyard retrofits a cabin-capable hull")
 	assert_true(MapOps.has_facility(MapOps.port(context.state.world(), target), "shipyard"),
 		"the third harbour gains a shipyard from the Core story")
-	assert_true((view.get("unlocked_modules", []) as Array).has("core:cabin/small_cabin"),
+	assert_true((view.get("unlocked_modules", []) as Array).has("core:module/small_cabin"),
 		"the story unlocks the one-passenger cabin")
 	var yard: Dictionary = context.queries.execute(&"shipyard.view")["data"]
 	var cabin_only := true
 	for candidate in yard.get("candidates", []):
-		if String((candidate as Dictionary).get("module_id", "")) != "core:cabin/small_cabin":
+		if String((candidate as Dictionary).get("module_id", "")) != "core:module/small_cabin":
 			cabin_only = false
 	assert_true(cabin_only, "the tutorial shipyard only lists the small cabin")
 	assert_eq((yard.get("candidates", []) as Array).size(), 1, "exactly one shipyard module is offered")
@@ -269,7 +269,7 @@ func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "refit_unload", "third-port card hands over to the refit")
 	var uninstalled := context.commands.execute(&"ship.uninstall_module", {
-		"module_id": "core:cargo_module/small_hold",
+		"module_id": "core:module/small_hold",
 	})
 	assert_true(bool(uninstalled.get("ok", false)), "unloading the cargo hold succeeds: %s" % str(uninstalled))
 	context.commands.execute(&"story.observe", {
@@ -280,7 +280,7 @@ func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
 	assert_eq(String(view.get("stage_id", "")), "refit_cabin", "unloading the hold advances to the cabin step")
 	context.state.set_money(5000)
 	var installed := context.commands.execute(&"ship.install_module", {
-		"module_id": "core:cabin/small_cabin",
+		"module_id": "core:module/small_cabin",
 	})
 	assert_true(bool(installed.get("ok", false)), "installing the small cabin succeeds: %s" % str(installed))
 	context.commands.execute(&"story.observe", {
@@ -300,7 +300,7 @@ func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
 			"the passenger mainline has no cargo payload")
 		assert_eq(int(ShipOps.passenger_capacity(context.registries, context.state.ship())), 1,
 			"the small cabin seats one passenger")
-	assert_eq(String(context.state.ship().get("passenger_cabin_id", "")), "core:cabin/small_cabin",
+	assert_eq(String(context.state.ship().get("passenger_cabin_id", "")), "core:module/small_cabin",
 		"the small cabin is fitted")
 	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {}})
 	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})

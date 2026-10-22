@@ -11,7 +11,7 @@ const BUILD := "core:starting_build/steady"
 const STRATEGY := "core:strategy/standard"
 const MEDIUM_HULL := "core:hull/medium_standard"
 const LARGE_HULL := "core:hull/large_efficient"
-const CABIN := "core:cabin/passenger_cabin"
+const CABIN := "core:module/passenger_cabin"
 const VOYAGE_LIMIT := 16
 const LIQUIDITY_FLOOR := 700
 
@@ -48,7 +48,7 @@ func _play_full_clear(seed: int) -> AppContext:
 
 	var unlocks: Array = context.state.player().get("unlocks", [])
 	assert_contains(unlocks, MEDIUM_HULL, "seed %d: main 3 unlocks the medium hull" % seed)
-	assert_contains(unlocks, "core:cargo_module/medium_hold", "seed %d: main 3 unlocks the medium cargo hold" % seed)
+	assert_contains(unlocks, "core:module/medium_hold", "seed %d: main 3 unlocks the medium cargo hold" % seed)
 
 	# Mid-game build: passengers need a cabin slot, which only the medium hull has.
 	# Keep a cash buffer so the chapter-4/5 detours can always pay wages and supplies.

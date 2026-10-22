@@ -3,7 +3,7 @@ extends TestCase
 ## See docs/specs/ITERATION_1_MVP_LOOP.md §3.1-3.3, §4, §6 and §8.
 
 const CONTRACT_FREIGHT := "core:good/contract_freight"
-const MEDIUM_UNLOCKS := ["core:hull/medium_standard", "core:cargo_module/medium_hold"]
+const MEDIUM_UNLOCKS := ["core:hull/medium_standard", "core:module/medium_hold"]
 const LARGE_UNLOCKS := ["core:hull/large_efficient", "core:hull/large_performance"]
 
 
@@ -78,11 +78,11 @@ func test_transit_weight_counts_without_cargo_capacity() -> void:
 	var context := _start(7102)
 	var hub: RegistryHub = context.registries
 	var port_id := context.state.current_port_id()
-	WarehouseOps.add_module(context.state, port_id, "core:cargo_module/small_hold", 1)
+	WarehouseOps.add_module(context.state, port_id, "core:module/small_hold", 1)
 	var weight_before := ShipOps.total_weight(hub, context.state)
 	var capacity_before := ShipOps.cargo_capacity(hub, context.state.ship())
 	var cargo_used_before := ShipOps.cargo_used(hub, context.state.ship())
-	var taken := context.commands.execute(&"warehouse.take_module", {"module_id": "core:cargo_module/small_hold", "qty": 1})
+	var taken := context.commands.execute(&"warehouse.take_module", {"module_id": "core:module/small_hold", "qty": 1})
 	assert_true(bool(taken["ok"]), "taking a module from the warehouse succeeds: %s" % str(taken))
 	assert_almost_eq(ShipOps.total_weight(hub, context.state), weight_before + 6.0, 0.001, "transit module weight is counted")
 	assert_almost_eq(ShipOps.cargo_capacity(hub, context.state.ship()), capacity_before, 0.001, "transit does not change cargo capacity")
@@ -90,10 +90,10 @@ func test_transit_weight_counts_without_cargo_capacity() -> void:
 	var view := context.queries.execute(&"shipyard.view")
 	assert_almost_eq(float(view["data"]["ship"]["transit_weight"]), 6.0, 0.001, "view exposes transit weight")
 	assert_eq(view["data"]["ship"]["transit_modules"].size(), 1, "view lists transit modules")
-	var stored := context.commands.execute(&"warehouse.store_module", {"module_id": "core:cargo_module/small_hold", "qty": 1})
+	var stored := context.commands.execute(&"warehouse.store_module", {"module_id": "core:module/small_hold", "qty": 1})
 	assert_true(bool(stored["ok"]), "storing the module back succeeds: %s" % str(stored))
 	assert_almost_eq(ShipOps.total_weight(hub, context.state), weight_before, 0.001, "storing removes transit weight")
-	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:cargo_module/small_hold"), 1, "module is stored again")
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/small_hold"), 1, "module is stored again")
 	assert_empty(WarehouseOps.transit_modules(context.state.ship()), "transit bag is empty again")
 
 
@@ -126,7 +126,7 @@ func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 	var time_before := context.state.now()
 	var money_before := context.state.money()
 	var expense_before := int(context.state.data["stats"].get("expense", 0))
-	var result := context.commands.execute(&"ship.craft_module", {"module_id": "core:navigation_module/chart_room"})
+	var result := context.commands.execute(&"ship.craft_module", {"module_id": "core:module/chart_room"})
 	assert_true(bool(result["ok"]), "crafting chart room succeeds: %s" % str(result))
 	# Crafting is now an order: pay and consume immediately, but do not advance
 	# time and do not store the module until the order is ready.
@@ -136,7 +136,7 @@ func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:good/brass"), 0, "warehouse brass is consumed first")
 	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:material/sealing_compound"), 0, "warehouse sealing compound is consumed")
 	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:good/brass", false), 0, "cargo covers the material remainder")
-	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:navigation_module/chart_room"), 0, "crafted module is not stored before the order is ready")
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/chart_room"), 0, "crafted module is not stored before the order is ready")
 	assert_eq(CraftOps.orders(context.state).size(), 1, "craft queues one open order")
 	assert_almost_eq(float(result["data"]["craft_time_hours"]), 5.0, 0.001, "result reports craft time")
 	assert_eq(int(result["data"]["craft_cost"]), 140, "result reports craft cost")
@@ -154,7 +154,7 @@ func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 	var waited := context.commands.execute(&"port.wait", {"hours": 5})
 	assert_true(bool(waited["ok"]), "port.wait succeeds: %s" % str(waited))
 	assert_almost_eq(context.state.now(), time_before + 5.0, 0.001, "waiting advances game time")
-	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:navigation_module/chart_room"), 1, "waited order lands in the port warehouse")
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/chart_room"), 1, "waited order lands in the port warehouse")
 	assert_empty(CraftOps.orders(context.state), "the finished order leaves the queue")
 	assert_eq(Array(waited["data"]["completed_orders"]).size(), 1, "wait reports the completed order")
 	assert_contains(_event_types(waited["events"]), "ship.module_crafted", "settlement emits ship.module_crafted")
@@ -163,7 +163,7 @@ func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 func test_failed_craft_leaves_state_unchanged() -> void:
 	var context := _start(7105)
 	var before := context.state.hash()
-	var result := context.commands.execute(&"ship.craft_module", {"module_id": "core:navigation_module/chart_room"})
+	var result := context.commands.execute(&"ship.craft_module", {"module_id": "core:module/chart_room"})
 	assert_false(bool(result["ok"]), "crafting without materials fails")
 	assert_eq(String(result["error_code"]), "missing_materials", "missing_materials is reported")
 	assert_contains(result["data"]["blockers"], "missing_materials", "failure data lists craft blockers")
@@ -176,45 +176,45 @@ func test_install_from_warehouse_is_free_and_replaces_old_module() -> void:
 	var port_id := context.state.current_port_id()
 	WarehouseOps.add_material(context.state, port_id, "core:good/brass", 3)
 	WarehouseOps.add_material(context.state, port_id, "core:material/sealing_compound", 2)
-	var crafted := context.commands.execute(&"ship.craft_module", {"module_id": "core:navigation_module/chart_room"})
+	var crafted := context.commands.execute(&"ship.craft_module", {"module_id": "core:module/chart_room"})
 	assert_true(bool(crafted["ok"]), "chart room crafts into the warehouse: %s" % str(crafted))
 	# The order must be ready before it can be installed from the warehouse.
 	var waited := context.commands.execute(&"port.wait", {"hours": 5})
 	assert_true(bool(waited["ok"]), "waiting settles the order: %s" % str(waited))
 	var money_before := context.state.money()
 	var result := context.commands.execute(&"ship.install_module", {
-		"module_id": "core:navigation_module/chart_room",
+		"module_id": "core:module/chart_room",
 		"source": "warehouse",
 	})
 	assert_true(bool(result["ok"]), "installing from the warehouse succeeds: %s" % str(result))
 	assert_eq(context.state.money(), money_before, "warehouse install is free")
 	assert_eq(String(result["data"]["source"]), "warehouse", "result reports the warehouse source")
 	assert_eq(int(result["data"]["price"]), 0, "warehouse install price is zero")
-	assert_eq(String(context.state.ship()["navigation_module_id"]), "core:navigation_module/chart_room", "crafted module is installed")
-	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:navigation_module/chart_room"), 0, "installed module leaves the warehouse")
-	assert_eq(String(result["data"]["replaced_module_id"]), "core:navigation_module/spyglass", "result reports the replaced module")
-	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:navigation_module/spyglass"), 1, "replaced module moves into the warehouse")
+	assert_eq(String(context.state.ship()["navigation_module_id"]), "core:module/chart_room", "crafted module is installed")
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/chart_room"), 0, "installed module leaves the warehouse")
+	assert_eq(String(result["data"]["replaced_module_id"]), "core:module/spyglass", "result reports the replaced module")
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/spyglass"), 1, "replaced module moves into the warehouse")
 
 
 func test_uninstall_and_reinstall_from_transit() -> void:
 	var context := _start(7107)
 	var port_id := context.state.current_port_id()
-	var uninstalled := context.commands.execute(&"ship.uninstall_module", {"module_id": "core:navigation_module/spyglass"})
+	var uninstalled := context.commands.execute(&"ship.uninstall_module", {"module_id": "core:module/spyglass"})
 	assert_true(bool(uninstalled["ok"]), "uninstalling a navigation module succeeds: %s" % str(uninstalled))
 	assert_true(String(context.state.ship()["navigation_module_id"]).is_empty(), "navigation slot is empty")
-	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:navigation_module/spyglass"), 1, "uninstalled module is stored at the current port")
-	var taken := context.commands.execute(&"warehouse.take_module", {"module_id": "core:navigation_module/spyglass", "qty": 1})
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/spyglass"), 1, "uninstalled module is stored at the current port")
+	var taken := context.commands.execute(&"warehouse.take_module", {"module_id": "core:module/spyglass", "qty": 1})
 	assert_true(bool(taken["ok"]), "taking the module into transit succeeds: %s" % str(taken))
-	assert_eq(WarehouseOps.transit_qty(context.state.ship(), "core:navigation_module/spyglass"), 1, "module is in transit")
+	assert_eq(WarehouseOps.transit_qty(context.state.ship(), "core:module/spyglass"), 1, "module is in transit")
 	var money_before := context.state.money()
 	var installed := context.commands.execute(&"ship.install_module", {
-		"module_id": "core:navigation_module/spyglass",
+		"module_id": "core:module/spyglass",
 		"source": "transit",
 	})
 	assert_true(bool(installed["ok"]), "installing from transit succeeds: %s" % str(installed))
 	assert_eq(context.state.money(), money_before, "transit install is free")
-	assert_eq(String(context.state.ship()["navigation_module_id"]), "core:navigation_module/spyglass", "module is installed again")
-	assert_eq(WarehouseOps.transit_qty(context.state.ship(), "core:navigation_module/spyglass"), 0, "transit bag is emptied")
+	assert_eq(String(context.state.ship()["navigation_module_id"]), "core:module/spyglass", "module is installed again")
+	assert_eq(WarehouseOps.transit_qty(context.state.ship(), "core:module/spyglass"), 0, "transit bag is emptied")
 
 
 func test_uninstall_rejects_hull_and_boiler() -> void:
@@ -223,7 +223,7 @@ func test_uninstall_rejects_hull_and_boiler() -> void:
 	var hull := context.commands.execute(&"ship.uninstall_module", {"module_id": "core:hull/small_efficient"})
 	assert_false(bool(hull["ok"]), "hull cannot be uninstalled")
 	assert_eq(String(hull["error_code"]), "required_module", "hull reports required_module")
-	var boiler := context.commands.execute(&"ship.uninstall_module", {"module_id": "core:boiler/small_efficient"})
+	var boiler := context.commands.execute(&"ship.uninstall_module", {"module_id": "core:module/small_efficient"})
 	assert_false(bool(boiler["ok"]), "boiler cannot be uninstalled")
 	assert_eq(String(boiler["error_code"]), "required_module", "boiler reports required_module")
 	assert_eq(context.state.hash(), before, "rejected uninstalls leave state unchanged")
@@ -249,11 +249,11 @@ func test_duplicate_cargo_module_allowed_while_slots_free() -> void:
 	var hull := context.commands.execute(&"ship.install_module", {"module_id": "core:hull/medium_standard"})
 	assert_true(bool(hull["ok"]), "medium hull installs: %s" % str(hull))
 	assert_eq(ShipOps.cargo_module_ids(context.state.ship()).size(), 1, "one cargo module is installed on the new hull")
-	var duplicate := context.commands.execute(&"ship.install_module", {"module_id": "core:cargo_module/small_hold"})
+	var duplicate := context.commands.execute(&"ship.install_module", {"module_id": "core:module/small_hold"})
 	assert_true(bool(duplicate["ok"]), "a duplicate cargo module installs into a free slot: %s" % str(duplicate))
 	assert_eq(ShipOps.cargo_module_ids(context.state.ship()).size(), 2, "two cargo modules are installed")
-	assert_eq(ShipOps.cargo_module_ids(context.state.ship()).count("core:cargo_module/small_hold"), 2, "duplicate IDs are kept as separate copies")
-	var third := context.commands.execute(&"ship.install_module", {"module_id": "core:cargo_module/small_hold"})
+	assert_eq(ShipOps.cargo_module_ids(context.state.ship()).count("core:module/small_hold"), 2, "duplicate IDs are kept as separate copies")
+	var third := context.commands.execute(&"ship.install_module", {"module_id": "core:module/small_hold"})
 	assert_false(bool(third["ok"]), "a duplicate cargo module is blocked once slots are full")
 	assert_eq(String(third["error_code"]), "already_installed", "already_installed is the primary reason when full")
 	assert_contains(third["data"]["blockers"], "cargo_slots_full", "cargo_slots_full is also reported")
@@ -273,7 +273,7 @@ func test_contract_lock_blocks_hulls_and_crafts_until_unlock() -> void:
 	assert_eq(String(large["error_code"]), "locked_by_contract", "locked_by_contract is reported for large hulls")
 	WarehouseOps.add_material(context.state, port_id, "core:good/timber", 6)
 	WarehouseOps.add_material(context.state, port_id, "core:material/boiler_plate", 2)
-	var craft_locked := context.commands.execute(&"ship.craft_module", {"module_id": "core:cargo_module/medium_hold"})
+	var craft_locked := context.commands.execute(&"ship.craft_module", {"module_id": "core:module/medium_hold"})
 	assert_false(bool(craft_locked["ok"]), "crafting a contract-locked module is rejected")
 	assert_eq(String(craft_locked["error_code"]), "locked_by_contract", "craft reports locked_by_contract")
 	context.state.player()["unlocks"] = MEDIUM_UNLOCKS.duplicate()
@@ -287,9 +287,9 @@ func test_contract_lock_blocks_hulls_and_crafts_until_unlock() -> void:
 func test_take_module_respects_weight_limit() -> void:
 	var context := _start(7111)
 	var port_id := context.state.current_port_id()
-	WarehouseOps.add_module(context.state, port_id, "core:cargo_module/large_hold", 1)
+	WarehouseOps.add_module(context.state, port_id, "core:module/large_hold", 1)
 	var before := context.state.hash()
-	var taken := context.commands.execute(&"warehouse.take_module", {"module_id": "core:cargo_module/large_hold", "qty": 1})
+	var taken := context.commands.execute(&"warehouse.take_module", {"module_id": "core:module/large_hold", "qty": 1})
 	assert_false(bool(taken["ok"]), "taking a module that breaks the weight limit is rejected")
 	assert_eq(String(taken["error_code"]), "weight_limit", "weight_limit is reported")
 	assert_eq(context.state.hash(), before, "rejected take leaves state unchanged")

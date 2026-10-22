@@ -13,6 +13,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_semver_range.gd",
 	"res://framework/tests/cases/test_schema_validator.gd",
 	"res://framework/tests/cases/test_content_types_manifest.gd",
+	"res://framework/tests/cases/test_module_categories.gd",
 	"res://framework/tests/cases/test_schema_v2_drafts.gd",
 	"res://framework/tests/cases/test_schema_v2_weapons.gd",
 	"res://framework/tests/cases/test_registry.gd",

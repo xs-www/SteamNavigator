@@ -17,8 +17,8 @@ func _cleanup(directory: String) -> void:
 func _legacy_ship() -> Dictionary:
 	return {
 		"hull_id": "core:hull/small_efficient",
-		"boiler_id": "core:boiler/basic",
-		"cargo_modules": ["core:cargo_module/basic"],
+		"boiler_id": "core:module/basic",
+		"cargo_modules": ["core:module/basic"],
 		"navigation_module_id": "",
 		"safety_module_id": "",
 		"passenger_cabin_id": "",
@@ -82,7 +82,7 @@ func test_cargo_instances_stay_aligned() -> void:
 	var ship := _legacy_ship()
 	ShipModules.ensure(ship)
 	var first_id := String(ShipModules.installed_rows(ship)[1]["instance_id"])
-	ship["cargo_modules"] = Array(ship["cargo_modules"]) + ["core:cargo_module/basic"]
+	ship["cargo_modules"] = Array(ship["cargo_modules"]) + ["core:module/basic"]
 	ShipModules.ensure(ship)
 	assert_eq(Array(ShipModules.instances(ship)["cargo"]).size(), 2, "a new cargo module gets an instance")
 	ship["cargo_modules"] = [String(ship["cargo_modules"][1])]
@@ -97,7 +97,7 @@ func test_install_slot_resets_condition() -> void:
 	ShipModules.ensure(ship)
 	ShipModules.damage(ship, "boiler", 0, 0.5)
 	var old_id := String(ShipModules.instances(ship)["boiler"]["instance_id"])
-	ship["boiler_id"] = "core:boiler/efficient"
+	ship["boiler_id"] = "core:module/efficient"
 	ShipModules.install_slot(ship, "boiler")
 	assert_almost_eq(ShipModules.condition(ship, "boiler"), 1.0, 1e-9, "a swapped-in module starts at full condition")
 	assert_ne(String(ShipModules.instances(ship)["boiler"]["instance_id"]), old_id, "a replacement gets a new instance id")
