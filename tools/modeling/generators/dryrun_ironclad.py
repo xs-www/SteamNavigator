@@ -28,6 +28,9 @@ def load_module(path):
     sys.modules.setdefault("bmesh", types.ModuleType("bmesh"))
     spec = importlib.util.spec_from_file_location("ironclad_gen_under_test", path)
     mod = importlib.util.module_from_spec(spec)
+    # 生成器内部用 sys.modules[__name__] 把自身传给 rig_kit（部件库复用），
+    # 因此必须在 exec 前登记到 sys.modules，否则 build_masts 会 KeyError。
+    sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
     return mod
 

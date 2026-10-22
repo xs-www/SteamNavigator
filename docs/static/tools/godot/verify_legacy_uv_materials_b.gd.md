@@ -31,7 +31,7 @@
 - `images[].uri` 必须是 `shared_materials/<texture>.png`，文件存在于 GLB 同级目录；
 - 每个 surface 必须有 `ARRAY_TEX_UV`；每个材质必须是 `SN_Tex_*` 且有 albedo_texture；
 - 同一 URI 在同类别的多个 GLB 之间必须命中同一个 `Texture2D` 实例 id；
-- 三角面总数：modules 7492 / ships 45968 / town 1796（与迁移前一致）；
+- 三角面总数：modules 7492 / ships 45296 / town 1796（与迁移前一致；铁甲舰 LOD0 于 2026-10-22 casemate 批次拆炮 −672 tri）；
 - 网格节点数：modules 12 / ships 101 / town 5（Ironclad 1 + 39 + 32 + 29）。
 
 模块索引：[tools](../README.md)

@@ -2,7 +2,8 @@
 """Steam Navigator — SN_Ironclad GLB 结构自检（纯 Python，不进 Blender）。
 
 解析 GLB：节点 / 网格 / 图元 / 三角面 / 材质 / glTF Y-up 包围盒。
-预期：1 节点 1 网格 8 个材质图元、9226 tri、Y-up 尺寸 (60.215, 28.64, 18.0)。
+预期：26 节点（1 mesh + 4 武器 socket + 9 帆索 socket + 12 炮门 socket）、1 网格、
+8 个材质图元、8158 tri、Y-up 尺寸 (60.1346, 28.64, 18.0)。
 
 用法：
     python tools/modeling/generators/verify_ironclad_glb.py
@@ -20,12 +21,13 @@ from verify_modules_glb import gltf_stats  # noqa: E402
 WORKDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 DEFAULT_GLB = os.path.join(WORKDIR, "assets", "models", "ships", "SN_Ironclad.glb")
 
-EXPECTED_TRIS = 8830
-EXPECTED_YUP = (60.215, 28.64, 18.0)   # glTF Y-up: (Blender X, Blender Z, Blender Y)
+EXPECTED_NODES = 26
+EXPECTED_TRIS = 8158
+EXPECTED_YUP = (60.1346, 28.64, 18.0)  # glTF Y-up: (Blender X, Blender Z, Blender Y)
 EXPECTED_Z = (-4.2, 24.44)             # 水线轴心：glTF Y 从 -4.2（龙骨）到 24.44（主桅顶）
 SIZE_TOL = 0.5
-PALETTE = {"SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck", "SN_Wood",
-           "SN_Wood_Dark", "SN_Metal", "SN_Brass", "SN_Canvas"}
+PALETTE = {"SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Wood_Deck", "SN_Tex_Wood",
+           "SN_Tex_Wood_Dark", "SN_Tex_Metal", "SN_Tex_Brass", "SN_Tex_Canvas_Shade"}
 
 
 def main():
@@ -35,7 +37,7 @@ def main():
         return 1
     s = gltf_stats(path)
     flags = []
-    if s["nodes"] != 1:
+    if s["nodes"] != EXPECTED_NODES:
         flags.append("nodes=%d" % s["nodes"])
     if s["meshes"] != 1:
         flags.append("meshes=%d" % s["meshes"])

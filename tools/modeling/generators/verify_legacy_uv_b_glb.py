@@ -65,7 +65,7 @@ EXPECTED = {
     "SN_Safety_Lifeboat": ("modules", 1, 1, 4, 660, (4.2, 1.1, 1.5), {"SN_Tex_Brass", "SN_Tex_Canvas_Shade", "SN_Tex_Wood", "SN_Tex_Wood_Dark"}),
     "SN_Safety_Valve": ("modules", 1, 1, 3, 428, (1.4881, 1.84, 1.256), {"SN_Tex_Brass", "SN_Tex_Iron", "SN_Tex_Metal"}),
     # ships（4）
-    "SN_Ironclad": ("ships", 14, 1, 8, 8830, (60.1346, 28.64, 18.0), {"SN_Tex_Brass", "SN_Tex_Canvas_Shade", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Metal", "SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck"}),
+    "SN_Ironclad": ("ships", 26, 1, 8, 8158, (60.1346, 28.64, 18.0), {"SN_Tex_Brass", "SN_Tex_Canvas_Shade", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Metal", "SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck"}),
     "SN_Paddle_Freighter": ("ships", 56, 39, 95, 12200, (59.5276, 19.52, 14.1), {"SN_Tex_Brass", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Metal", "SN_Tex_Wood", "SN_Tex_Wood_Deck"}),
     "SN_Paddle_Steamer": ("ships", 38, 32, 90, 11764, (24.56, 10.47, 8.74), {"SN_Tex_Brass", "SN_Tex_Canvas_Shade", "SN_Tex_Glass_Dark", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Metal", "SN_Tex_Wood_Deck"}),
     "SN_Schooner_Fame": ("ships", 42, 29, 73, 13174, (33.4411, 26.8191, 6.88), {"SN_Tex_Brass", "SN_Tex_Canvas_Shade", "SN_Tex_Glass_Dark", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Metal", "SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck"}),

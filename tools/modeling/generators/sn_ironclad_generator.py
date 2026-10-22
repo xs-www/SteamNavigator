@@ -1,26 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Steam Navigator — 舷侧炮铁甲舰 SN_Ironclad 参数化生成脚本。
-
-工单：tools/modeling/briefs/sn_ironclad_broadside.json
-集合：SN_Ironclad_Prototype（新建；重跑时只删除/重建 SN_Ironclad）
-摆位：工作台 (0, 90, 0)；轴心 = 水线中心（x=0 船中，z=0 水线，+X 船首）
-尺寸：60.0 × 18.0 × 28.65 m（LOA 含艏斜桁与艉廊；z -4.2 .. 24.45）
-预算：<= 12000 tri；材质只用 8 色调色板（不新增）
-
-设计（1860 年代舷侧炮铁甲舰）
---------------------------------
-- 低干舷铁壳：17 站放样，水线附近装甲带外凸 220 mm；水下锈红、水线以上铁灰。
-- 撞角艏 + 艉廊；水线装甲带带竖向板缝。
-- 舷侧炮列：每舷 8 门（炮门框 + 深色炮口 + 铁炮管 + 黄铜炮口箍），另 2 门艏 pivot 炮。
-- 中央装甲炮房（斜壁）+ 指挥塔 + 双后倾烟囱 + 通风筒 + 天窗。
-- 三桅横桁：主桅 24.2 m 顶，横桁上收帆（帆布卷）；艏斜桁；简单支索/侧支索。
-- 甲板：木甲板、舷墙 + 黄铜压条、舱口格栅、绞盘、舵轮、罗经柜、小艇、锚、螺旋桨、艉旗。
-
-用法
-----
-Blender 内：import runpy; runpy.run_path(<本文件>, run_name="__main__")
-纯 Python 干跑：python tools/modeling/generators/dryrun_ironclad.py
-"""
+# @static-doc
+# 作用：舷侧炮铁甲舰 `SN_Ironclad` 的参数化生成脚本（纯 Python 几何 + Blender 装配入口），
+# 同时是**炮门几何参数**唯一真源：`GUN_X` / `GUN_Z0..1` / `GUN_LENGTH` / `gun_port_pose()`，
+# 供 `sn_ship_gun_ports.py`（船体 socket）与 `sn_casemate_gun_generator.py`（独立炮模块）复用。
+#
+# 工单：tools/modeling/briefs/sn_ironclad_broadside.json
+# 集合：`SN_Ironclad_Prototype`；工作台摆位 (0, 90, 0)；轴心 = 水线中心（x=0 船中、z=0 水线、+X 船首）
+# 尺寸：60.0 × 18.0 × 28.65 m（LOA 含艏斜桁与艉廊；z -4.2 .. 24.45），预算 ≤ 12 000 tri
+# 材质：共享贴图 `SN_Tex_*`（8 个槽）；UV 由 `sn_shared_materials.apply_collection(space="local")` 写
+#
+# 设计（1860 年代舷侧炮铁甲舰）
+# - 低干舷铁壳：17 站放样，装甲带外凸 380 mm；水下锈红、水线以上铁灰。
+# - 撞角艏 + 艉廊；水线装甲带带竖向板缝。
+# - 舷侧炮门：每舷 6 个（炮门框 + 深色炮口板 + 上翻炮门盖），另 2 门艏 pivot 炮。
+# - 中央装甲炮房（斜壁）+ 指挥塔 + 双后倾烟囱 + 通风筒 + 天窗。
+# - 三桅横桁 + 艏斜桁 + 支索/侧支索；甲板：木甲板、舷墙、舱口格栅、绞盘、舵轮、小艇、锚、螺旋桨、艉旗。
+#
+# 2026-10-22 casemate 模块化（本批）：船体**不再烘炮管/炮口箍**——
+# `build_guns(with_barrels=False)` 只留炮门框 + 深色炮口板 + 炮门盖；炮管改为独立模块
+# `SN_Weapon_CasemateGun`，经 12 个 `SN_Socket_GunPort_*` 挂载（契约见
+# docs/design/WEAPON_SOCKET_CONTRACT.md §9）。`with_barrels=True` 仍保留“炮管烘死”的旧变体，
+# 仅供 `apply_casemate_assets.py` 做“现存资产 = 生成器”的几何门禁与差异比对。
+#
+# 用法：
+# - Blender 内：`import runpy; runpy.run_path(<本文件>, run_name="__main__")`
+# - 纯 Python 干跑：`python tools/modeling/generators/dryrun_ironclad.py`
+# @end-static-doc
 
 import math
 import os
@@ -43,20 +48,18 @@ TRI_BUDGET = 12000
 Z_MIN = -4.2
 Z_MAX = 24.45
 
-ALLOWED_MATERIALS = {
-    "SN_Iron_Hull", "SN_Iron_Red", "SN_Wood_Deck", "SN_Wood",
-    "SN_Wood_Dark", "SN_Metal", "SN_Brass", "SN_Canvas",
-}
-NEW_MATERIALS = {}
+# 共享贴图材质（2026-10-22 起：旧纯色名已由 legacy UV 迁移 B 换名，生成器同步到同一套）
+IRON = "SN_Tex_Iron"
+RED = "SN_Tex_Iron_Red"
+DECK = "SN_Tex_Wood_Deck"
+WOOD = "SN_Tex_Wood"
+DARK = "SN_Tex_Wood_Dark"
+MET = "SN_Tex_Metal"
+BRASS = "SN_Tex_Brass"
+CANVAS = "SN_Tex_Canvas_Shade"
 
-IRON = "SN_Iron_Hull"
-RED = "SN_Iron_Red"
-DECK = "SN_Wood_Deck"
-WOOD = "SN_Wood"
-DARK = "SN_Wood_Dark"
-MET = "SN_Metal"
-BRASS = "SN_Brass"
-CANVAS = "SN_Canvas"
+ALLOWED_MATERIALS = {IRON, RED, DECK, WOOD, DARK, MET, BRASS, CANVAS}
+NEW_MATERIALS = {}  # 共享贴图材质由 sn_shared_materials.build_materials() 统一创建
 
 # 船体站：x 从艉到艏（m）
 STATIONS = [-26.0, -23.0, -19.5, -16.0, -12.5, -9.0, -5.5, -2.0, 1.5,
@@ -66,6 +69,22 @@ KEEL_Z = -4.2
 
 # 每舷炮门中心 x（英雄化：6 门/舷，间距约 7 m，读感优先于写实密度）
 GUN_X = [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5]
+
+# --------------------------------------------------------------------------- #
+# 炮门 / 炮管几何参数（船体与独立 casemate 炮模块的唯一真源）
+# --------------------------------------------------------------------------- #
+GUN_Z0, GUN_Z1 = 1.30, 3.20              # 炮门上下沿（船体局部 z）
+GUN_Z_MID = (GUN_Z0 + GUN_Z1) / 2.0      # 2.25
+GUN_PORT_HALF = 0.95                     # 炮门半宽（沿 x）
+GUN_PORT_FRAME = 0.20                    # 炮门框宽
+GUN_INBOARD = 0.40                       # 炮尾起点在船壳面内侧 0.40 m（炮尾藏进船体）
+GUN_LENGTH = 1.95                        # 炮管全长（沿炮膛轴线）
+GUN_R_BREECH, GUN_R_MUZZLE = 0.44, 0.36  # 炮尾 / 炮口半径
+GUN_MUZZLE_BAND_FROM = 1.78              # 炮口箍起点（沿轴线的距离）
+GUN_MUZZLE_BAND_R = 0.50                 # 炮口箍半径
+GUN_TOE_OUT = 0.21                       # 炮管前外张（+X 分量，固定机位可读性）
+GUN_RISE = 0.03                          # 炮管上抬（+Z 分量）
+
 
 # 三桅：x / 下桅顶 / 上桅顶 / 横桁 (z, 半长)
 MASTS = [
@@ -289,6 +308,41 @@ def side_y_at(x, z):
     return w + (b * 1.02 - w) * t
 
 
+def gun_bore_dir(side):
+    """炮膛轴线方向（船体局部；side=+1 为 +Y 左舷 / -1 为右舷）。"""
+    dx, dy, dz = GUN_TOE_OUT, float(side) * 0.977, GUN_RISE
+    length = math.sqrt(dx * dx + dy * dy + dz * dz)
+    return (dx / length, dy / length, dz / length)
+
+
+def gun_port_pose(x, side):
+    """炮门平面中心的局部位姿 —— 炮门 socket 与独立 casemate 炮模块共用的挂载基准。
+
+    - `center`：炮膛轴线与船壳面的交点（炮门平面中心）；
+    - `bore`：轴线方向 = socket 局部 +X；
+    - `rot_z_deg` / `rot_y_deg`：把模块局部 +X 转到轴线的 Blender XYZ 欧拉角（先 Z 后 Y）；
+    - `plane_offset` / `protrusion`：炮门平面在烘焙炮管上的位置 / 门外的外露长度。
+    """
+    y_mid = side_y_at(x, GUN_Z_MID)
+    dx, dy, dz = gun_bore_dir(side)
+    p0 = (x, side * (y_mid - GUN_INBOARD), GUN_Z_MID)
+    t = GUN_INBOARD / abs(dy)  # 沿轴线从炮尾走到船壳面的距离
+    center = (p0[0] + dx * t, p0[1] + dy * t, p0[2] + dz * t)
+    return {
+        "x": x,
+        "side": side,
+        "center": center,
+        "bore": (dx, dy, dz),
+        "plane_offset": t,
+        "protrusion": GUN_LENGTH - t,
+        "rot_z_deg": math.degrees(math.atan2(dy, dx)),
+        "rot_y_deg": -math.degrees(math.asin(dz)),
+        "z_mid": GUN_Z_MID,
+        "port_half": GUN_PORT_HALF,
+        "sill_z": GUN_Z0,
+    }
+
+
 def hull_material(verts, face):
     zs = [verts[i][2] for i in face]
     if min(zs) > DECK_Z - 0.05:
@@ -362,12 +416,17 @@ def build_armor_belt(m):
 # 3. 舷侧炮列 + 艏 pivot 炮
 # --------------------------------------------------------------------------- #
 
-def build_guns(m):
-    # 英雄化炮列：每舷 6 门、炮门 ~1.9×1.9 m、炮管 Ø0.88→0.72 m、外露 ~1.55 m
-    z_lo, z_hi = 1.30, 3.20
-    z_mid = (z_lo + z_hi) / 2.0
-    frame = 0.20
-    port_half = 0.95
+def build_guns(m, with_barrels=True):
+    """舷侧炮门列 + 艏 pivot 炮。
+
+    `with_barrels=False`（当前资产默认）：只留炮门框 / 深色炮口板 / 上翻炮门盖，
+    炮管与炮口箍交给独立模块 `SN_Weapon_CasemateGun` 经 `SN_Socket_GunPort_*` 挂载；
+    `with_barrels=True` 保留旧“烘死炮管”变体，仅供几何门禁/差异比对。
+    """
+    z_lo, z_hi = GUN_Z0, GUN_Z1
+    z_mid = GUN_Z_MID
+    frame = GUN_PORT_FRAME
+    port_half = GUN_PORT_HALF
     for x in GUN_X:
         y_lo = side_y_at(x, z_lo)
         y_hi = side_y_at(x, z_hi)
@@ -394,7 +453,7 @@ def build_guns(m):
             ystrip(z_hi, z_hi + frame, y_hi, y_top)
             ystrip(z_lo - frame, z_lo, y_bot, y_lo)
             xstrip(z_lo, z_hi, y_lo, y_hi)
-            # 深色炮口（贴着斜面，略凹）
+            # 深色炮口板（贴着斜面，略凹）：空炮门时它就是“炮门里的暗腔”遮挡面
             bot = [(x - port_half, s * (y_lo - 0.05), z_lo),
                    (x + port_half, s * (y_lo - 0.05), z_lo),
                    (x + port_half, s * (y_lo + 0.06), z_lo),
@@ -404,16 +463,17 @@ def build_guns(m):
                    (x + port_half, s * (y_hi + 0.06), z_hi),
                    (x - port_half, s * (y_hi + 0.06), z_hi)]
             m.add(*hexa(bot, top), DARK)
-            # 炮管（略向前外张 12°，让固定 3/4 机位能看到管长）+ 黄铜炮口箍
-            dx, dy, dz = 0.21, s * 0.977, 0.03
-            norm = (dx * dx + dy * dy + dz * dz) ** 0.5
-            dx, dy, dz = dx / norm, dy / norm, dz / norm
-            p0 = (x, s * (y_mid - 0.40), z_mid)
-            p1 = (p0[0] + dx * 1.95, p0[1] + dy * 1.95, p0[2] + dz * 1.95)
-            m.add(*taper_cyl(p0, p1, 0.44, 0.36, 8), MET)
-            m0 = (p0[0] + dx * 1.78, p0[1] + dy * 1.78, p0[2] + dz * 1.78)
-            m1 = (p0[0] + dx * 1.95, p0[1] + dy * 1.95, p0[2] + dz * 1.95)
-            m.add(*taper_cyl(m0, m1, 0.50, 0.50, 8), BRASS)
+            if with_barrels:
+                # 炮管（前外张 + 上抬，让固定 3/4 机位能看到管长）+ 黄铜炮口箍
+                dx, dy, dz = gun_bore_dir(s)
+                p0 = (x, s * (y_mid - GUN_INBOARD), z_mid)
+                p1 = (p0[0] + dx * GUN_LENGTH, p0[1] + dy * GUN_LENGTH,
+                      p0[2] + dz * GUN_LENGTH)
+                m.add(*taper_cyl(p0, p1, GUN_R_BREECH, GUN_R_MUZZLE, 8), MET)
+                m0 = (p0[0] + dx * GUN_MUZZLE_BAND_FROM,
+                      p0[1] + dy * GUN_MUZZLE_BAND_FROM,
+                      p0[2] + dz * GUN_MUZZLE_BAND_FROM)
+                m.add(*taper_cyl(m0, p1, GUN_MUZZLE_BAND_R, GUN_MUZZLE_BAND_R, 8), BRASS)
             # 上翻炮门盖（更大，强化"炮列"读感）
             zin0, zin1 = z_hi + frame - 0.02, z_hi + frame + 0.08
             zout0, zout1 = z_hi + frame + 0.62, z_hi + frame + 0.72
@@ -423,6 +483,7 @@ def build_guns(m):
             top = [(x - 1.10, y_in, zin1), (x + 1.10, y_in, zin1),
                    (x + 1.10, y_out, zout1), (x - 1.10, y_out, zout1)]
             m.add(*hexa(bottom, top), IRON)
+
 
     # 艏部两门 pivot gun（朝前，英雄化）
     for s in (-1.0, 1.0):
@@ -564,13 +625,13 @@ def build_superstructure(m):
 
 def build_masts(m):
     """三桅 + 横桁 + 收帆 + 艏斜桁承座 + 锚吊架（几何来自 rig_kit.ironclad_masts）。"""
-    b = rig_kit.builder(m, sys.modules[__name__], legacy=True)
+    b = rig_kit.builder(m, sys.modules[__name__], materials=rig_kit.KIT_MATERIALS, legacy=True)
     rig_kit.ironclad_masts(b, MASTS, {"deck_z": DECK_Z, "beam_deck": beam_deck})
 
 
 def build_rigging(m):
     """静索 / 侧支索（几何来自 rig_kit.ironclad_rigging）。"""
-    b = rig_kit.builder(m, sys.modules[__name__], legacy=True)
+    b = rig_kit.builder(m, sys.modules[__name__], materials=rig_kit.KIT_MATERIALS, legacy=True)
     rig_kit.ironclad_rigging(b, MASTS, {"beam_deck": beam_deck})
 
 
@@ -750,12 +811,12 @@ def _flag(m, x, y0, y1, z0, z1, seg=4, thickness=0.025):
     m.add(verts, faces, CANVAS)
 
 
-def build_ironclad():
+def build_ironclad(with_barrels=False):
     m = Part()
     build_hull(m)
     build_armor_belt(m)
     build_plating(m)
-    build_guns(m)
+    build_guns(m, with_barrels=with_barrels)
     build_superstructure(m)
     build_masts(m)
     build_rigging(m)
@@ -764,8 +825,8 @@ def build_ironclad():
     return m
 
 
-def build_all_geometry():
-    return {OBJECT: build_ironclad()}
+def build_all_geometry(with_barrels=False):
+    return {OBJECT: build_ironclad(with_barrels=with_barrels)}
 
 
 def _ensure_material(name):
@@ -817,7 +878,12 @@ def _make_object(name, part, location):
     return obj
 
 
-def build_all():
+def build_all(with_barrels=False, apply_materials=True):
+    """幂等重建船体网格（默认空炮门变体）+ 共享贴图材质 / UV。
+
+    注意：本函数只重建 `SN_Ironclad` 网格对象本身；船体上的 socket 空节点由
+    `sn_ship_weapon_sockets` / `sn_ship_rig_sockets` / `sn_ship_gun_ports` 各自补齐。
+    """
     import bpy
 
     coll = bpy.data.collections.get(COLLECTION)
@@ -834,8 +900,20 @@ def build_all():
     for stale in [m for m in bpy.data.meshes if m.users == 0 and m.name.startswith(OBJECT)]:
         bpy.data.meshes.remove(stale)
 
-    geometry = build_all_geometry()
-    return _make_object(OBJECT, geometry[OBJECT], WORKBENCH_POS)
+    import sn_shared_materials as shared
+    if apply_materials:
+        shared.build_materials(force=False)
+
+    geometry = build_all_geometry(with_barrels=with_barrels)
+    obj = _make_object(OBJECT, geometry[OBJECT], WORKBENCH_POS)
+    if apply_materials:
+        report_mat = shared.apply_collection(coll, space="local")
+        if report_mat.get("failures"):
+            raise RuntimeError("共享贴图材质/UV 应用失败：%r" % report_mat["failures"])
+        print("TEXTURED %s: %d 对象 / %d 材质 / UV loops=%d" % (
+            OBJECT, report_mat["objects"], len(report_mat["materials"]),
+            report_mat["uv_loops"]))
+    return obj
 
 
 def report():

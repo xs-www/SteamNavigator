@@ -61,6 +61,11 @@ ASSET_MATERIALS = {
         MAT_IRON, MAT_METAL, MAT_IRON_RED, MAT_WOOD_DARK, MAT_BRASS,
         MAT_CANVAS_SHADE,
     }),
+    # 2026-10-22：穿船壳炮（casemate gun）模块 —— 可见部分只有炮管 + 炮口箍，
+    # 内膛段用 IRON；不再有炮架 / 炮盾，因此材质白名单只有 3 个。
+    "SN_Weapon_CasemateGun": frozenset({
+        MAT_IRON, MAT_METAL, MAT_BRASS,
+    }),
 }
 
 

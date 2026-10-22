@@ -25,7 +25,7 @@ const TOWN := [
 	"SN_HT_Cargo_Lighter", "SN_HT_Dock_Worker_A", "SN_HT_Dock_Worker_B",
 	"SN_HT_Fence_Row", "SN_HT_Rowboat",
 ]
-const EXPECTED_TRIS := {"modules": 7492, "ships": 45968, "town": 1796}
+const EXPECTED_TRIS := {"modules": 7492, "ships": 45296, "town": 1796}  # 2026-10-22 铁甲舰炮管拆出为独立模块（-672 tri）
 const EXPECTED_MESHES := {"modules": 12, "ships": 101, "town": 5}
 const EXPECTED_TEXTURE_COUNT := {"modules": 7, "ships": 9, "town": 8}
 

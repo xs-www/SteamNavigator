@@ -32,6 +32,7 @@ if HERE not in sys.path:
 
 import sn_ship_weapon_sockets as socks
 import sn_ship_rig_sockets as rigsocks
+import sn_ship_gun_ports as gunports
 import verify_legacy_uv_b_glb as base
 
 WORKDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -117,10 +118,12 @@ def check_ship(asset):
         rig_expected = [sock["glb_name"] for sock in rig_specs]
         rig_by_name = {sock["glb_name"]: sock for sock in rig_specs}
 
-    if stats["nodes"] != baseline_nodes + len(expected) + len(rig_expected):
+    # 2026-10-22 casemate：铁甲舰另有 12 个炮门 socket（其余 3 艘为空）
+    gunport_count = len(gunports.expected_ports().get(asset, []))
+    if stats["nodes"] != baseline_nodes + len(expected) + len(rig_expected) + gunport_count:
         flags.append("节点数 %d != %d" % (
             stats["nodes"],
-            baseline_nodes + len(expected) + len(rig_expected)))
+            baseline_nodes + len(expected) + len(rig_expected) + gunport_count))
     if stats["meshes"] != base_meshes:
         flags.append("网格数 %d != %d" % (stats["meshes"], base_meshes))
     if stats["primitives"] > base_prims or stats["primitives"] < stats["meshes"]:

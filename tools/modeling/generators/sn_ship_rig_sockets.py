@@ -58,7 +58,8 @@ SHIPS = [
         "collection": "SN_Ironclad_Prototype",
         "root": "SN_Ironclad",
         "root_type": "MESH",
-        "mesh_baseline": (1, 8830),
+        # 2026-10-22 casemate 模块化：船体炮管拆出为独立模块后 8158 tri（原 8830）
+        "mesh_baseline": (1, 8158),
     },
 ]
 
