@@ -42,15 +42,17 @@
     passenger_cabin: ['module'],
     engineer: ['role'],
     navigator: ['role'],
-    default_starting_build: ['starting_build'],
-    archetypes: ['port_archetype'],
+    default_starting_build: ['starting_scenario'],
+    default_starting_scenario: ['starting_scenario'],
+    archetypes: ['port_template'],
     good: ['item'],
     materials: ['item'],
     item_id: ['item'],
     levels: ['story_level'],
     quests_completed: ['quest'],
     map_config: ['map_config'],
-    starting_build: ['starting_build'],
+    starting_build: ['starting_scenario'],
+    starting_scenario: ['starting_scenario'],
   };
 
   function schemas() {
@@ -453,7 +455,7 @@
 
   /* Fields that look like definition IDs (e.g. "core:story/opening") but are
    * local identifiers scoped to their owning definition, not cross-definition
-   * references. map_profiles.data.story.flow_id is the current example: the
+   * references. story flow ids are the current example: the
    * story compiler resolves it inside the same map profile, so checking it
    * against the content registry produced a false ref_missing error. */
   const LOCAL_IDENTIFIER_FIELDS = new Set(['flow_id']);

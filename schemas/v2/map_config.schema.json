@@ -149,7 +149,7 @@
           "minimum": 0,
           "maximum": 1
         },
-        "default_starting_build": {
+        "default_starting_scenario": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },
         "twin_world_size": {

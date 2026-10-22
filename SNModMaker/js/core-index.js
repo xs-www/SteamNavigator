@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T13:01:38.107Z",
+    "generated_at": "2026-10-22T14:39:52.813Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -25,9 +25,8 @@
         "content/modules.json",
         "content/roles.json",
         "content/strategies.json",
-        "content/port_archetypes.json",
-        "content/map_profiles.json",
-        "content/starting_builds.json",
+        "content/port_templates.json",
+        "content/starting_scenarios.json",
         "content/contracts.json",
         "content/events.json",
         "content/quests.json",
@@ -179,7 +178,9 @@
         "content.items.v1",
         "content.hulls.v1",
         "content.modules.v1",
+        "content.port_templates.v1",
         "content.quests.v1",
+        "content.starting_scenarios.v1",
         "content.world.v1",
         "content.campaign.v1"
       ]
@@ -1538,14 +1539,14 @@
           }
         ]
       },
-      "content/port_archetypes.json": {
-        "schema_version": "1.0",
-        "content_type": "port_archetypes",
+      "content/port_templates.json": {
+        "schema_version": "2.0",
+        "content_type": "port_templates",
         "definitions": [
           {
-            "id": "core:port_archetype/iron_harbor",
-            "name_key": "port.core.iron_harbor.name",
-            "description_key": "port.core.iron_harbor.description",
+            "id": "core:port_template/iron_harbor",
+            "name_key": "port_template.core.iron_harbor.name",
+            "description_key": "port_template.core.iron_harbor.description",
             "tags": [
               "port.hub",
               "port.industrial",
@@ -1644,9 +1645,9 @@
             }
           },
           {
-            "id": "core:port_archetype/spice_port",
-            "name_key": "port.core.spice_port.name",
-            "description_key": "port.core.spice_port.description",
+            "id": "core:port_template/spice_port",
+            "name_key": "port_template.core.spice_port.name",
+            "description_key": "port_template.core.spice_port.description",
             "tags": [
               "port.trade",
               "port.intel"
@@ -1725,9 +1726,9 @@
             }
           },
           {
-            "id": "core:port_archetype/free_town",
-            "name_key": "port.core.free_town.name",
-            "description_key": "port.core.free_town.description",
+            "id": "core:port_template/free_town",
+            "name_key": "port_template.core.free_town.name",
+            "description_key": "port_template.core.free_town.description",
             "tags": [
               "port.hub",
               "port.trade",
@@ -1829,9 +1830,9 @@
             }
           },
           {
-            "id": "core:port_archetype/fishing_village",
-            "name_key": "port.core.fishing_village.name",
-            "description_key": "port.core.fishing_village.description",
+            "id": "core:port_template/fishing_village",
+            "name_key": "port_template.core.fishing_village.name",
+            "description_key": "port_template.core.fishing_village.description",
             "tags": [
               "port.rural",
               "port.supply"
@@ -1909,9 +1910,9 @@
             }
           },
           {
-            "id": "core:port_archetype/glass_port",
-            "name_key": "port.core.glass_port.name",
-            "description_key": "port.core.glass_port.description",
+            "id": "core:port_template/glass_port",
+            "name_key": "port_template.core.glass_port.name",
+            "description_key": "port_template.core.glass_port.description",
             "tags": [
               "port.craft",
               "port.intel"
@@ -1991,679 +1992,14 @@
           }
         ]
       },
-      "content/map_profiles.json": {
-        "schema_version": "1.0",
-        "content_type": "map_profiles",
+      "content/starting_scenarios.json": {
+        "schema_version": "2.0",
+        "content_type": "starting_scenarios",
         "definitions": [
           {
-            "id": "core:map_profile/standard",
-            "name_key": "map_profile.core.standard.name",
-            "description_key": "map_profile.core.standard.description",
-            "tags": [
-              "map.standard",
-              "map.mvp"
-            ],
-            "enabled": true,
-            "data": {
-              "port_count_range": [
-                4,
-                5
-              ],
-              "edge_count_range": [
-                5,
-                7
-              ],
-              "distance_range": [
-                90,
-                220
-              ],
-              "route_risk_range": [
-                0.01,
-                0.055
-              ],
-              "archetypes": [
-                "core:port_archetype/iron_harbor",
-                "core:port_archetype/spice_port",
-                "core:port_archetype/free_town",
-                "core:port_archetype/fishing_village",
-                "core:port_archetype/glass_port"
-              ],
-              "port_name_keys": [
-                "port_name.core.iron_harbor",
-                "port_name.core.spice_port",
-                "port_name.core.free_town",
-                "port_name.core.fishing_village",
-                "port_name.core.glass_port",
-                "port_name.core.mist_cove"
-              ],
-              "start_archetype_tags": [
-                "port.hub"
-              ],
-              "required_facility_tags": [
-                "port.shipyard",
-                "port.intel"
-              ],
-              "required_facility_max_edges": 2,
-              "npc_count_range": [
-                2,
-                3
-              ],
-              "npc_cargo_range": [
-                8,
-                24
-              ],
-              "supply_prices": {
-                "coal": 4,
-                "water": 2,
-                "repair_per_point": 6
-              },
-              "loan": {
-                "limit": 400,
-                "interest_rate": 0.1,
-                "term_hours": 96
-              },
-              "intel_cost": 25,
-              "trade_margin": 0.95,
-              "player_trade_impact": 0.35,
-              "default_starting_build": "core:starting_build/steady",
-              "twin_world_size": 160,
-              "exploration": {
-                "rumor_clue_chance": 0.65,
-                "fog_port_reveal_ratio": 0.05,
-                "fog_vision_ratio": 0.05,
-                "intel_clue_cost": 40,
-                "max_active_clues": 4,
-                "level_weights": {
-                  "rumor": [
-                    0.55,
-                    0.35,
-                    0.1,
-                    0
-                  ],
-                  "intel": [
-                    0,
-                    0.15,
-                    0.45,
-                    0.4
-                  ]
-                },
-                "credibility_range": {
-                  "rumor": [
-                    0.25,
-                    0.55
-                  ],
-                  "intel": [
-                    0.6,
-                    0.95
-                  ],
-                  "wait": [
-                    0.4,
-                    0.7
-                  ],
-                  "contract": [
-                    0.55,
-                    0.85
-                  ]
-                },
-                "distance_error_ratio": 0.35,
-                "search_zone_radius": 14,
-                "search_zone_noise": 12,
-                "discovery_chance_base": 0.2,
-                "discovery_chance_per_credibility": 0.7,
-                "risk_base": 0.08,
-                "risk_per_unreliability": 0.12,
-                "drift_durability_loss": 8,
-                "drift_extra_coal": 4,
-                "drift_extra_water": 4,
-                "drift_hours": 6,
-                "alert_threshold": 0.5,
-                "alert_progress": 0.5,
-                "turnback_extra_ratio": 0.25,
-                "investigation_cost": 20,
-                "investigation_hours": 6,
-                "investigation_success_chance": 0.75,
-                "goods_clue_expiry_hours": {
-                  "rumor": 24,
-                  "intel": 72,
-                  "wait": 48,
-                  "contract": 72
-                },
-                "goods_clue_price_error_ratio": 0.15,
-                "goods_clue_source_weights": {
-                  "rumor": 0,
-                  "intel": 0,
-                  "wait": 1,
-                  "contract": 0
-                },
-                "wait_clue_hours_block": 6,
-                "wait_clue_chance_per_block": 0.35,
-                "wait_clue_max_chance": 0.85,
-                "contract_clue_chance": 0.5
-              },
-              "story": {
-                "flow_id": "core:story/opening",
-                "enabled": true,
-                "skip_unlocks": [
-                  "overview",
-                  "supply",
-                  "chart",
-                  "market",
-                  "contracts",
-                  "clues",
-                  "tavern",
-                  "shipyard"
-                ],
-                "start_unlocks": [],
-                "start_items": [],
-                "start_modules": [],
-                "stages": [
-                  {
-                    "id": "opening",
-                    "dialogue": {
-                      "title_key": "story.core.opening.title",
-                      "body_keys": [
-                        "story.core.opening.body.1",
-                        "story.core.opening.body.2"
-                      ]
-                    },
-                    "unlock_features": [
-                      "overview"
-                    ],
-                    "effects": [
-                      {
-                        "type": "set_ship_fuel",
-                        "amount": 4
-                      },
-                      {
-                        "type": "grant_tutorial_contract",
-                        "template_id": "core:contract/main_01",
-                        "cargo_item_id": "core:item/coal",
-                        "amount": 10,
-                        "provider": "fuel",
-                        "deadline_formula": "tutorial_express",
-                        "name_key": "contract.core.tutorial_coal.name",
-                        "description_key": "contract.core.tutorial_coal.description"
-                      },
-                      {
-                        "type": "discover_contract_destination"
-                      }
-                    ],
-                    "advance": {
-                      "mode": "confirm"
-                    }
-                  },
-                  {
-                    "id": "supply_brief",
-                    "dialogue": {
-                      "title_key": "story.core.supply_brief.title",
-                      "body_keys": [
-                        "story.core.supply_brief.body.1"
-                      ]
-                    },
-                    "unlock_features": [
-                      "market"
-                    ],
-                    "objective": {
-                      "text_key": "story.core.supply_brief.objective",
-                      "target": 4
-                    },
-                    "advance": {
-                      "all": [
-                        {
-                          "event": "cmd:supply.buy_coal",
-                          "counter": "coal_bought",
-                          "at_least": 4
-                        },
-                        {
-                          "event": "cmd:supply.buy_water",
-                          "counter": "water_bought",
-                          "at_least": 2
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "id": "supply_hold",
-                    "dialogue": {
-                      "title_key": "story.core.supply_hold.title",
-                      "body_keys": [
-                        "story.core.supply_hold.body.1"
-                      ]
-                    },
-                    "unlock_features": [
-                      "chart"
-                    ],
-                    "lock_actions": [
-                      "supply.buy"
-                    ],
-                    "objective": {
-                      "text_key": "story.core.supply_hold.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "ui:chart_opened"
-                    }
-                  },
-                  {
-                    "id": "chart_brief",
-                    "dialogue": {
-                      "title_key": "story.core.chart_brief.title",
-                      "body_keys": [
-                        "story.core.chart_brief.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.chart_brief.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "ui:chart_closed"
-                    }
-                  },
-                  {
-                    "id": "supply_finish",
-                    "dialogue": {
-                      "title_key": "story.core.supply_finish.title",
-                      "body_keys": [
-                        "story.core.supply_finish.body.1"
-                      ]
-                    },
-                    "effects": [
-                      {
-                        "type": "set_counter_from_ship",
-                        "counter": "coal_aboard",
-                        "kind": "coal"
-                      }
-                    ],
-                    "objective": {
-                      "text_key": "story.core.supply_finish.objective",
-                      "target": 10
-                    },
-                    "advance": {
-                      "event": "cmd:supply.buy_coal",
-                      "counter": "coal_aboard",
-                      "counter_from": "stock",
-                      "at_least": 10
-                    }
-                  },
-                  {
-                    "id": "depart_brief",
-                    "dialogue": {
-                      "title_key": "story.core.depart_brief.title",
-                      "body_keys": [
-                        "story.core.depart_brief.body.1"
-                      ]
-                    },
-                    "preferred_strategy": "fast",
-                    "objective": {
-                      "text_key": "story.core.depart_brief.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "ui:arrival_settled"
-                    }
-                  },
-                  {
-                    "id": "second_port",
-                    "dialogue": {
-                      "title_key": "story.core.second_port.title",
-                      "body_keys": [
-                        "story.core.second_port.body.1"
-                      ]
-                    },
-                    "unlock_features": [
-                      "market",
-                      "contracts"
-                    ],
-                    "unlock_items": [
-                      "core:item/spices",
-                      "core:item/textiles"
-                    ],
-                    "effects": [
-                      {
-                        "type": "grant_tutorial_contract",
-                        "template_id": "core:contract/main_02",
-                        "cargo_item_id": "core:item/textiles",
-                        "amount": 6,
-                        "provider": "player",
-                        "destination": "home",
-                        "deadline_formula": "tutorial_trade",
-                        "name_key": "contract.core.tutorial_trade.name",
-                        "description_key": "contract.core.tutorial_trade.description"
-                      }
-                    ],
-                    "objective": {
-                      "text_key": "story.core.second_port.objective",
-                      "target": 8
-                    },
-                    "advance": {
-                      "event": "cmd:trade.buy",
-                      "counter": "textiles_bought",
-                      "at_least": 8,
-                      "match": {
-                        "item_id": "core:item/textiles"
-                      }
-                    }
-                  },
-                  {
-                    "id": "second_depart",
-                    "dialogue": {
-                      "title_key": "story.core.second_depart.title",
-                      "body_keys": [
-                        "story.core.second_depart.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.second_depart.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "ui:arrival_settled"
-                    }
-                  },
-                  {
-                    "id": "back_first",
-                    "dialogue": {
-                      "title_key": "story.core.back_first.title",
-                      "body_keys": [
-                        "story.core.back_first.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.back_first.objective",
-                      "target": 2
-                    },
-                    "advance": {
-                      "event": "cmd:trade.sell",
-                      "counter": "textiles_sold",
-                      "at_least": 2,
-                      "match": {
-                        "item_id": "core:item/textiles"
-                      }
-                    }
-                  },
-                  {
-                    "id": "chapter_wrap",
-                    "dialogue": {
-                      "title_key": "story.core.chapter_wrap.title",
-                      "body_keys": [
-                        "story.core.chapter_wrap.body.1"
-                      ]
-                    },
-                    "advance": {
-                      "mode": "confirm"
-                    }
-                  },
-                  {
-                    "id": "tavern_open",
-                    "dialogue": {
-                      "title_key": "story.core.tavern_open.title",
-                      "body_keys": [
-                        "story.core.tavern_open.body.1",
-                        "story.core.tavern_open.body.2"
-                      ]
-                    },
-                    "unlock_features": [
-                      "clues",
-                      "tavern"
-                    ],
-                    "effects": [
-                      {
-                        "type": "grant_clue",
-                        "port": "next_unknown",
-                        "level": 1,
-                        "source": "rumor"
-                      },
-                      {
-                        "type": "set_market_price_bias",
-                        "item_ids": [
-                          "core:item/textiles",
-                          "core:item/spices"
-                        ],
-                        "home_bias": 1.35,
-                        "other_bias": 0.7,
-                        "reset_stock": true,
-                        "make_buyable": true
-                      }
-                    ],
-                    "advance": {
-                      "mode": "confirm"
-                    }
-                  },
-                  {
-                    "id": "tavern_intro",
-                    "dialogue": {
-                      "title_key": "story.core.tavern_intro.title",
-                      "body_keys": [
-                        "story.core.tavern_intro.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.tavern_intro.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "cmd:intel.refresh",
-                      "counter": "intel_refreshed",
-                      "at_least": 1
-                    }
-                  },
-                  {
-                    "id": "third_good",
-                    "dialogue": {
-                      "title_key": "story.core.third_good.title",
-                      "body_keys": [
-                        "story.core.third_good.body.1"
-                      ]
-                    },
-                    "unlock_items": [
-                      "core:item/timber"
-                    ],
-                    "objective": {
-                      "text_key": "story.core.third_good.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "all": [
-                        {
-                          "event": "cmd:voyage.start",
-                          "counter": "act2_departures",
-                          "at_least": 1
-                        },
-                        {
-                          "event": "ui:arrival_settled",
-                          "counter": "act2_arrivals",
-                          "at_least": 1
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "id": "second_clue",
-                    "dialogue": {
-                      "title_key": "story.core.second_clue.title",
-                      "body_keys": [
-                        "story.core.second_clue.body.1",
-                        "story.core.second_clue.body.2"
-                      ]
-                    },
-                    "effects": [
-                      {
-                        "type": "grant_clue",
-                        "port": "next_unknown",
-                        "level": 3,
-                        "source": "rumor"
-                      },
-                      {
-                        "type": "guarantee_explore_success"
-                      }
-                    ],
-                    "advance": {
-                      "mode": "confirm"
-                    }
-                  },
-                  {
-                    "id": "explore_third",
-                    "dialogue": {
-                      "title_key": "story.core.explore_third.title",
-                      "body_keys": [
-                        "story.core.explore_third.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.explore_third.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "all": [
-                        {
-                          "event": "cmd:explore.start",
-                          "counter": "act2_explorations",
-                          "at_least": 1
-                        },
-                        {
-                          "event": "ui:arrival_settled",
-                          "counter": "act2_explore_arrivals",
-                          "at_least": 1
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "id": "third_port",
-                    "dialogue": {
-                      "title_key": "story.core.third_port.title",
-                      "body_keys": [
-                        "story.core.third_port.body.1",
-                        "story.core.third_port.body.2"
-                      ]
-                    },
-                    "unlock_features": [
-                      "shipyard"
-                    ],
-                    "unlock_modules": [
-                      "core:module/small_cabin"
-                    ],
-                    "effects": [
-                      {
-                        "type": "add_facility",
-                        "facility": "shipyard"
-                      },
-                      {
-                        "type": "upgrade_hull",
-                        "hull_id": "core:hull/medium_standard",
-                        "store_old": true
-                      }
-                    ],
-                    "advance": {
-                      "mode": "confirm"
-                    }
-                  },
-                  {
-                    "id": "refit_unload",
-                    "dialogue": {
-                      "title_key": "story.core.refit_unload.title",
-                      "body_keys": [
-                        "story.core.refit_unload.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.refit_unload.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "cmd:ship.uninstall_module",
-                      "counter": "cargo_uninstalled",
-                      "at_least": 1,
-                      "match": {
-                        "category": "cargo"
-                      }
-                    }
-                  },
-                  {
-                    "id": "refit_cabin",
-                    "dialogue": {
-                      "title_key": "story.core.refit_cabin.title",
-                      "body_keys": [
-                        "story.core.refit_cabin.body.1"
-                      ]
-                    },
-                    "objective": {
-                      "text_key": "story.core.refit_cabin.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "event": "cmd:ship.install_module",
-                      "counter": "cabin_installed",
-                      "at_least": 1,
-                      "match": {
-                        "module_id": "core:module/small_cabin"
-                      }
-                    }
-                  },
-                  {
-                    "id": "passenger_run",
-                    "dialogue": {
-                      "title_key": "story.core.passenger_run.title",
-                      "body_keys": [
-                        "story.core.passenger_run.body.1"
-                      ]
-                    },
-                    "effects": [
-                      {
-                        "type": "grant_tutorial_contract",
-                        "template_id": "core:contract/main_03",
-                        "passengers": 1,
-                        "deadline_formula": "tutorial_craft",
-                        "name_key": "contract.core.tutorial_passenger.name",
-                        "description_key": "contract.core.tutorial_passenger.description"
-                      }
-                    ],
-                    "objective": {
-                      "text_key": "story.core.passenger_run.objective",
-                      "target": 1
-                    },
-                    "advance": {
-                      "all": [
-                        {
-                          "event": "cmd:voyage.start",
-                          "counter": "passenger_departures",
-                          "at_least": 1
-                        },
-                        {
-                          "event": "ui:arrival_settled",
-                          "counter": "passenger_arrivals",
-                          "at_least": 1
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "id": "story_complete",
-                    "dialogue": {
-                      "title_key": "story.core.story_complete.title",
-                      "body_keys": [
-                        "story.core.story_complete.body.1"
-                      ]
-                    },
-                    "advance": {
-                      "mode": "confirm"
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "content/starting_builds.json": {
-        "schema_version": "1.0",
-        "content_type": "starting_builds",
-        "definitions": [
-          {
-            "id": "core:starting_build/steady",
-            "name_key": "starting_build.core.steady.name",
-            "description_key": "starting_build.core.steady.description",
+            "id": "core:starting_scenario/steady",
+            "name_key": "starting_scenario.core.steady.name",
+            "description_key": "starting_scenario.core.steady.description",
             "tags": [
               "starting_build.efficient",
               "starting_build.safe"
@@ -2687,9 +2023,9 @@
             }
           },
           {
-            "id": "core:starting_build/swift",
-            "name_key": "starting_build.core.swift.name",
-            "description_key": "starting_build.core.swift.description",
+            "id": "core:starting_scenario/swift",
+            "name_key": "starting_scenario.core.swift.name",
+            "description_key": "starting_scenario.core.swift.description",
             "tags": [
               "starting_build.performance",
               "starting_build.risky"
@@ -3352,7 +2688,7 @@
             "enabled": true,
             "data": {
               "kind": "guide",
-              "auto_start": false,
+              "auto_start": true,
               "repeatable": false,
               "tracking": {
                 "label_key": "quest.tracking.guide",
@@ -3514,11 +2850,11 @@
             "enabled": true,
             "data": {
               "archetypes": [
-                "core:port_archetype/iron_harbor",
-                "core:port_archetype/spice_port",
-                "core:port_archetype/free_town",
-                "core:port_archetype/fishing_village",
-                "core:port_archetype/glass_port"
+                "core:port_template/iron_harbor",
+                "core:port_template/spice_port",
+                "core:port_template/free_town",
+                "core:port_template/fishing_village",
+                "core:port_template/glass_port"
               ],
               "port_name_keys": [
                 "port_name.core.iron_harbor",
@@ -3557,7 +2893,7 @@
               "intel_cost": 25,
               "trade_margin": 0.95,
               "player_trade_impact": 0.35,
-              "default_starting_build": "core:starting_build/steady",
+              "default_starting_scenario": "core:starting_scenario/steady",
               "twin_world_size": 160,
               "exploration": {
                 "rumor_clue_chance": 0.65,
@@ -4832,7 +4168,7 @@
             "data": {
               "world_profile": "core:world_profile/default_world",
               "map_config": "core:map_config/standard",
-              "starting_build": "core:starting_build/steady",
+              "starting_scenario": "core:starting_scenario/steady",
               "difficulty": "standard",
               "starting_port_tags": [
                 "port.hub"
@@ -4853,7 +4189,7 @@
             "data": {
               "world_profile": "core:world_profile/default_world",
               "map_config": "core:map_config/standard",
-              "starting_build": "core:starting_build/swift",
+              "starting_scenario": "core:starting_scenario/swift",
               "difficulty": "hard",
               "starting_port_tags": [
                 "port.trade"
@@ -4938,16 +4274,16 @@
         "strategy.core.standard.description": "速度、补给与风险的平衡方案。",
         "strategy.core.fast.name": "极速",
         "strategy.core.fast.description": "显著提高航速，但煤水消耗与风险更高。",
-        "port.core.iron_harbor.name": "铁港",
-        "port.core.iron_harbor.description": "工业港口，拥有造船厂，铁矿石与钢板供应充足。",
-        "port.core.spice_port.name": "香料港",
-        "port.core.spice_port.description": "香料贸易繁荣，设有情报站。",
-        "port.core.free_town.name": "自由镇",
-        "port.core.free_town.description": "设施齐全的中立贸易港，造船厂与情报站并存。",
-        "port.core.fishing_village.name": "渔村",
-        "port.core.fishing_village.description": "木材与铁矿便宜，但设施有限。",
-        "port.core.glass_port.name": "玻璃港",
-        "port.core.glass_port.description": "玻璃器皿的产地，设有情报站。",
+        "port_template.core.iron_harbor.name": "铁港",
+        "port_template.core.iron_harbor.description": "工业港口，拥有造船厂，铁矿石与钢板供应充足。",
+        "port_template.core.spice_port.name": "香料港",
+        "port_template.core.spice_port.description": "香料贸易繁荣，设有情报站。",
+        "port_template.core.free_town.name": "自由镇",
+        "port_template.core.free_town.description": "设施齐全的中立贸易港，造船厂与情报站并存。",
+        "port_template.core.fishing_village.name": "渔村",
+        "port_template.core.fishing_village.description": "木材与铁矿便宜，但设施有限。",
+        "port_template.core.glass_port.name": "玻璃港",
+        "port_template.core.glass_port.description": "玻璃器皿的产地，设有情报站。",
         "port_name.core.iron_harbor": "铁港",
         "port_name.core.spice_port": "香料港",
         "port_name.core.free_town": "自由镇",
@@ -4956,10 +4292,10 @@
         "port_name.core.mist_cove": "雾湾",
         "map_profile.core.standard.name": "标准海图",
         "map_profile.core.standard.description": "4–5 个港口的分支网络，包含造船厂与情报站。",
-        "starting_build.core.steady.name": "低耗稳健型",
-        "starting_build.core.steady.description": "效率型锅炉与较充足补给，风险低，适合学习。",
-        "starting_build.core.swift.name": "高速冒险型",
-        "starting_build.core.swift.description": "性能型锅炉与较少补给，抢时间但容错低。",
+        "starting_scenario.core.steady.name": "低耗稳健型",
+        "starting_scenario.core.steady.description": "效率型锅炉与较充足补给，风险低，适合学习。",
+        "starting_scenario.core.swift.name": "高速冒险型",
+        "starting_scenario.core.swift.description": "性能型锅炉与较少补给，抢时间但容错低。",
         "contract.core.main_01.name": "主线一：初次出航",
         "contract.core.main_01.description": "把第一批委托货箱送到相邻港口，熟悉航线与补给。",
         "contract.core.main_01.payload": "委托货箱",
@@ -5219,16 +4555,16 @@
         "strategy.core.standard.description": "A balanced mix of speed, supplies and risk.",
         "strategy.core.fast.name": "Full Speed",
         "strategy.core.fast.description": "Much faster, but burns coal and water and raises risk.",
-        "port.core.iron_harbor.name": "Iron Harbor",
-        "port.core.iron_harbor.description": "Industrial port with a shipyard and plenty of ore and plate.",
-        "port.core.spice_port.name": "Spice Port",
-        "port.core.spice_port.description": "A busy spice trade port with an intelligence station.",
-        "port.core.free_town.name": "Free Town",
-        "port.core.free_town.description": "A neutral trade hub with every facility.",
-        "port.core.fishing_village.name": "Fishing Village",
-        "port.core.fishing_village.description": "Cheap timber and ore, but limited facilities.",
-        "port.core.glass_port.name": "Glass Port",
-        "port.core.glass_port.description": "Glassware producer with an intelligence station.",
+        "port_template.core.iron_harbor.name": "Iron Harbor",
+        "port_template.core.iron_harbor.description": "Industrial port with a shipyard and plenty of ore and plate.",
+        "port_template.core.spice_port.name": "Spice Port",
+        "port_template.core.spice_port.description": "A busy spice trade port with an intelligence station.",
+        "port_template.core.free_town.name": "Free Town",
+        "port_template.core.free_town.description": "A neutral trade hub with every facility.",
+        "port_template.core.fishing_village.name": "Fishing Village",
+        "port_template.core.fishing_village.description": "Cheap timber and ore, but limited facilities.",
+        "port_template.core.glass_port.name": "Glass Port",
+        "port_template.core.glass_port.description": "Glassware producer with an intelligence station.",
         "port_name.core.iron_harbor": "Iron Harbor",
         "port_name.core.spice_port": "Spice Port",
         "port_name.core.free_town": "Free Town",
@@ -5237,10 +4573,10 @@
         "port_name.core.mist_cove": "Mist Cove",
         "map_profile.core.standard.name": "Standard Chart",
         "map_profile.core.standard.description": "A 4-5 port branch network with a shipyard and intelligence station.",
-        "starting_build.core.steady.name": "Steady and Thrifty",
-        "starting_build.core.steady.description": "Efficient boiler and generous supplies. Low risk, easy to learn.",
-        "starting_build.core.swift.name": "Swift and Bold",
-        "starting_build.core.swift.description": "Performance boiler and light supplies. Fast, but unforgiving.",
+        "starting_scenario.core.steady.name": "Steady and Thrifty",
+        "starting_scenario.core.steady.description": "Efficient boiler and generous supplies. Low risk, easy to learn.",
+        "starting_scenario.core.swift.name": "Swift and Bold",
+        "starting_scenario.core.swift.description": "Performance boiler and light supplies. Fast, but unforgiving.",
         "contract.core.main_01.name": "Main 1: First Departure",
         "contract.core.main_01.description": "Deliver the first sealed crates to a neighbouring port.",
         "contract.core.main_01.payload": "Sealed cargo crates",
@@ -7173,10 +6509,10 @@
         }
       },
       {
-        "id": "core:port_archetype/iron_harbor",
-        "content_type": "port_archetypes",
-        "file": "content/port_archetypes.json",
-        "name_key": "port.core.iron_harbor.name",
+        "id": "core:port_template/iron_harbor",
+        "content_type": "port_templates",
+        "file": "content/port_templates.json",
+        "name_key": "port_template.core.iron_harbor.name",
         "name_zh": "铁港",
         "name_en": "Iron Harbor",
         "tags": [
@@ -7185,9 +6521,9 @@
           "port.shipyard"
         ],
         "definition": {
-          "id": "core:port_archetype/iron_harbor",
-          "name_key": "port.core.iron_harbor.name",
-          "description_key": "port.core.iron_harbor.description",
+          "id": "core:port_template/iron_harbor",
+          "name_key": "port_template.core.iron_harbor.name",
+          "description_key": "port_template.core.iron_harbor.description",
           "tags": [
             "port.hub",
             "port.industrial",
@@ -7287,10 +6623,10 @@
         }
       },
       {
-        "id": "core:port_archetype/spice_port",
-        "content_type": "port_archetypes",
-        "file": "content/port_archetypes.json",
-        "name_key": "port.core.spice_port.name",
+        "id": "core:port_template/spice_port",
+        "content_type": "port_templates",
+        "file": "content/port_templates.json",
+        "name_key": "port_template.core.spice_port.name",
         "name_zh": "香料港",
         "name_en": "Spice Port",
         "tags": [
@@ -7298,9 +6634,9 @@
           "port.intel"
         ],
         "definition": {
-          "id": "core:port_archetype/spice_port",
-          "name_key": "port.core.spice_port.name",
-          "description_key": "port.core.spice_port.description",
+          "id": "core:port_template/spice_port",
+          "name_key": "port_template.core.spice_port.name",
+          "description_key": "port_template.core.spice_port.description",
           "tags": [
             "port.trade",
             "port.intel"
@@ -7380,10 +6716,10 @@
         }
       },
       {
-        "id": "core:port_archetype/free_town",
-        "content_type": "port_archetypes",
-        "file": "content/port_archetypes.json",
-        "name_key": "port.core.free_town.name",
+        "id": "core:port_template/free_town",
+        "content_type": "port_templates",
+        "file": "content/port_templates.json",
+        "name_key": "port_template.core.free_town.name",
         "name_zh": "自由镇",
         "name_en": "Free Town",
         "tags": [
@@ -7393,9 +6729,9 @@
           "port.intel"
         ],
         "definition": {
-          "id": "core:port_archetype/free_town",
-          "name_key": "port.core.free_town.name",
-          "description_key": "port.core.free_town.description",
+          "id": "core:port_template/free_town",
+          "name_key": "port_template.core.free_town.name",
+          "description_key": "port_template.core.free_town.description",
           "tags": [
             "port.hub",
             "port.trade",
@@ -7498,10 +6834,10 @@
         }
       },
       {
-        "id": "core:port_archetype/fishing_village",
-        "content_type": "port_archetypes",
-        "file": "content/port_archetypes.json",
-        "name_key": "port.core.fishing_village.name",
+        "id": "core:port_template/fishing_village",
+        "content_type": "port_templates",
+        "file": "content/port_templates.json",
+        "name_key": "port_template.core.fishing_village.name",
         "name_zh": "渔村",
         "name_en": "Fishing Village",
         "tags": [
@@ -7509,9 +6845,9 @@
           "port.supply"
         ],
         "definition": {
-          "id": "core:port_archetype/fishing_village",
-          "name_key": "port.core.fishing_village.name",
-          "description_key": "port.core.fishing_village.description",
+          "id": "core:port_template/fishing_village",
+          "name_key": "port_template.core.fishing_village.name",
+          "description_key": "port_template.core.fishing_village.description",
           "tags": [
             "port.rural",
             "port.supply"
@@ -7590,10 +6926,10 @@
         }
       },
       {
-        "id": "core:port_archetype/glass_port",
-        "content_type": "port_archetypes",
-        "file": "content/port_archetypes.json",
-        "name_key": "port.core.glass_port.name",
+        "id": "core:port_template/glass_port",
+        "content_type": "port_templates",
+        "file": "content/port_templates.json",
+        "name_key": "port_template.core.glass_port.name",
         "name_zh": "玻璃港",
         "name_en": "Glass Port",
         "tags": [
@@ -7601,9 +6937,9 @@
           "port.intel"
         ],
         "definition": {
-          "id": "core:port_archetype/glass_port",
-          "name_key": "port.core.glass_port.name",
-          "description_key": "port.core.glass_port.description",
+          "id": "core:port_template/glass_port",
+          "name_key": "port_template.core.glass_port.name",
+          "description_key": "port_template.core.glass_port.description",
           "tags": [
             "port.craft",
             "port.intel"
@@ -7683,681 +7019,10 @@
         }
       },
       {
-        "id": "core:map_profile/standard",
-        "content_type": "map_profiles",
-        "file": "content/map_profiles.json",
-        "name_key": "map_profile.core.standard.name",
-        "name_zh": "标准海图",
-        "name_en": "Standard Chart",
-        "tags": [
-          "map.standard",
-          "map.mvp"
-        ],
-        "definition": {
-          "id": "core:map_profile/standard",
-          "name_key": "map_profile.core.standard.name",
-          "description_key": "map_profile.core.standard.description",
-          "tags": [
-            "map.standard",
-            "map.mvp"
-          ],
-          "enabled": true,
-          "data": {
-            "port_count_range": [
-              4,
-              5
-            ],
-            "edge_count_range": [
-              5,
-              7
-            ],
-            "distance_range": [
-              90,
-              220
-            ],
-            "route_risk_range": [
-              0.01,
-              0.055
-            ],
-            "archetypes": [
-              "core:port_archetype/iron_harbor",
-              "core:port_archetype/spice_port",
-              "core:port_archetype/free_town",
-              "core:port_archetype/fishing_village",
-              "core:port_archetype/glass_port"
-            ],
-            "port_name_keys": [
-              "port_name.core.iron_harbor",
-              "port_name.core.spice_port",
-              "port_name.core.free_town",
-              "port_name.core.fishing_village",
-              "port_name.core.glass_port",
-              "port_name.core.mist_cove"
-            ],
-            "start_archetype_tags": [
-              "port.hub"
-            ],
-            "required_facility_tags": [
-              "port.shipyard",
-              "port.intel"
-            ],
-            "required_facility_max_edges": 2,
-            "npc_count_range": [
-              2,
-              3
-            ],
-            "npc_cargo_range": [
-              8,
-              24
-            ],
-            "supply_prices": {
-              "coal": 4,
-              "water": 2,
-              "repair_per_point": 6
-            },
-            "loan": {
-              "limit": 400,
-              "interest_rate": 0.1,
-              "term_hours": 96
-            },
-            "intel_cost": 25,
-            "trade_margin": 0.95,
-            "player_trade_impact": 0.35,
-            "default_starting_build": "core:starting_build/steady",
-            "twin_world_size": 160,
-            "exploration": {
-              "rumor_clue_chance": 0.65,
-              "fog_port_reveal_ratio": 0.05,
-              "fog_vision_ratio": 0.05,
-              "intel_clue_cost": 40,
-              "max_active_clues": 4,
-              "level_weights": {
-                "rumor": [
-                  0.55,
-                  0.35,
-                  0.1,
-                  0
-                ],
-                "intel": [
-                  0,
-                  0.15,
-                  0.45,
-                  0.4
-                ]
-              },
-              "credibility_range": {
-                "rumor": [
-                  0.25,
-                  0.55
-                ],
-                "intel": [
-                  0.6,
-                  0.95
-                ],
-                "wait": [
-                  0.4,
-                  0.7
-                ],
-                "contract": [
-                  0.55,
-                  0.85
-                ]
-              },
-              "distance_error_ratio": 0.35,
-              "search_zone_radius": 14,
-              "search_zone_noise": 12,
-              "discovery_chance_base": 0.2,
-              "discovery_chance_per_credibility": 0.7,
-              "risk_base": 0.08,
-              "risk_per_unreliability": 0.12,
-              "drift_durability_loss": 8,
-              "drift_extra_coal": 4,
-              "drift_extra_water": 4,
-              "drift_hours": 6,
-              "alert_threshold": 0.5,
-              "alert_progress": 0.5,
-              "turnback_extra_ratio": 0.25,
-              "investigation_cost": 20,
-              "investigation_hours": 6,
-              "investigation_success_chance": 0.75,
-              "goods_clue_expiry_hours": {
-                "rumor": 24,
-                "intel": 72,
-                "wait": 48,
-                "contract": 72
-              },
-              "goods_clue_price_error_ratio": 0.15,
-              "goods_clue_source_weights": {
-                "rumor": 0,
-                "intel": 0,
-                "wait": 1,
-                "contract": 0
-              },
-              "wait_clue_hours_block": 6,
-              "wait_clue_chance_per_block": 0.35,
-              "wait_clue_max_chance": 0.85,
-              "contract_clue_chance": 0.5
-            },
-            "story": {
-              "flow_id": "core:story/opening",
-              "enabled": true,
-              "skip_unlocks": [
-                "overview",
-                "supply",
-                "chart",
-                "market",
-                "contracts",
-                "clues",
-                "tavern",
-                "shipyard"
-              ],
-              "start_unlocks": [],
-              "start_items": [],
-              "start_modules": [],
-              "stages": [
-                {
-                  "id": "opening",
-                  "dialogue": {
-                    "title_key": "story.core.opening.title",
-                    "body_keys": [
-                      "story.core.opening.body.1",
-                      "story.core.opening.body.2"
-                    ]
-                  },
-                  "unlock_features": [
-                    "overview"
-                  ],
-                  "effects": [
-                    {
-                      "type": "set_ship_fuel",
-                      "amount": 4
-                    },
-                    {
-                      "type": "grant_tutorial_contract",
-                      "template_id": "core:contract/main_01",
-                      "cargo_item_id": "core:item/coal",
-                      "amount": 10,
-                      "provider": "fuel",
-                      "deadline_formula": "tutorial_express",
-                      "name_key": "contract.core.tutorial_coal.name",
-                      "description_key": "contract.core.tutorial_coal.description"
-                    },
-                    {
-                      "type": "discover_contract_destination"
-                    }
-                  ],
-                  "advance": {
-                    "mode": "confirm"
-                  }
-                },
-                {
-                  "id": "supply_brief",
-                  "dialogue": {
-                    "title_key": "story.core.supply_brief.title",
-                    "body_keys": [
-                      "story.core.supply_brief.body.1"
-                    ]
-                  },
-                  "unlock_features": [
-                    "market"
-                  ],
-                  "objective": {
-                    "text_key": "story.core.supply_brief.objective",
-                    "target": 4
-                  },
-                  "advance": {
-                    "all": [
-                      {
-                        "event": "cmd:supply.buy_coal",
-                        "counter": "coal_bought",
-                        "at_least": 4
-                      },
-                      {
-                        "event": "cmd:supply.buy_water",
-                        "counter": "water_bought",
-                        "at_least": 2
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "supply_hold",
-                  "dialogue": {
-                    "title_key": "story.core.supply_hold.title",
-                    "body_keys": [
-                      "story.core.supply_hold.body.1"
-                    ]
-                  },
-                  "unlock_features": [
-                    "chart"
-                  ],
-                  "lock_actions": [
-                    "supply.buy"
-                  ],
-                  "objective": {
-                    "text_key": "story.core.supply_hold.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "ui:chart_opened"
-                  }
-                },
-                {
-                  "id": "chart_brief",
-                  "dialogue": {
-                    "title_key": "story.core.chart_brief.title",
-                    "body_keys": [
-                      "story.core.chart_brief.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.chart_brief.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "ui:chart_closed"
-                  }
-                },
-                {
-                  "id": "supply_finish",
-                  "dialogue": {
-                    "title_key": "story.core.supply_finish.title",
-                    "body_keys": [
-                      "story.core.supply_finish.body.1"
-                    ]
-                  },
-                  "effects": [
-                    {
-                      "type": "set_counter_from_ship",
-                      "counter": "coal_aboard",
-                      "kind": "coal"
-                    }
-                  ],
-                  "objective": {
-                    "text_key": "story.core.supply_finish.objective",
-                    "target": 10
-                  },
-                  "advance": {
-                    "event": "cmd:supply.buy_coal",
-                    "counter": "coal_aboard",
-                    "counter_from": "stock",
-                    "at_least": 10
-                  }
-                },
-                {
-                  "id": "depart_brief",
-                  "dialogue": {
-                    "title_key": "story.core.depart_brief.title",
-                    "body_keys": [
-                      "story.core.depart_brief.body.1"
-                    ]
-                  },
-                  "preferred_strategy": "fast",
-                  "objective": {
-                    "text_key": "story.core.depart_brief.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "ui:arrival_settled"
-                  }
-                },
-                {
-                  "id": "second_port",
-                  "dialogue": {
-                    "title_key": "story.core.second_port.title",
-                    "body_keys": [
-                      "story.core.second_port.body.1"
-                    ]
-                  },
-                  "unlock_features": [
-                    "market",
-                    "contracts"
-                  ],
-                  "unlock_items": [
-                    "core:item/spices",
-                    "core:item/textiles"
-                  ],
-                  "effects": [
-                    {
-                      "type": "grant_tutorial_contract",
-                      "template_id": "core:contract/main_02",
-                      "cargo_item_id": "core:item/textiles",
-                      "amount": 6,
-                      "provider": "player",
-                      "destination": "home",
-                      "deadline_formula": "tutorial_trade",
-                      "name_key": "contract.core.tutorial_trade.name",
-                      "description_key": "contract.core.tutorial_trade.description"
-                    }
-                  ],
-                  "objective": {
-                    "text_key": "story.core.second_port.objective",
-                    "target": 8
-                  },
-                  "advance": {
-                    "event": "cmd:trade.buy",
-                    "counter": "textiles_bought",
-                    "at_least": 8,
-                    "match": {
-                      "item_id": "core:item/textiles"
-                    }
-                  }
-                },
-                {
-                  "id": "second_depart",
-                  "dialogue": {
-                    "title_key": "story.core.second_depart.title",
-                    "body_keys": [
-                      "story.core.second_depart.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.second_depart.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "ui:arrival_settled"
-                  }
-                },
-                {
-                  "id": "back_first",
-                  "dialogue": {
-                    "title_key": "story.core.back_first.title",
-                    "body_keys": [
-                      "story.core.back_first.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.back_first.objective",
-                    "target": 2
-                  },
-                  "advance": {
-                    "event": "cmd:trade.sell",
-                    "counter": "textiles_sold",
-                    "at_least": 2,
-                    "match": {
-                      "item_id": "core:item/textiles"
-                    }
-                  }
-                },
-                {
-                  "id": "chapter_wrap",
-                  "dialogue": {
-                    "title_key": "story.core.chapter_wrap.title",
-                    "body_keys": [
-                      "story.core.chapter_wrap.body.1"
-                    ]
-                  },
-                  "advance": {
-                    "mode": "confirm"
-                  }
-                },
-                {
-                  "id": "tavern_open",
-                  "dialogue": {
-                    "title_key": "story.core.tavern_open.title",
-                    "body_keys": [
-                      "story.core.tavern_open.body.1",
-                      "story.core.tavern_open.body.2"
-                    ]
-                  },
-                  "unlock_features": [
-                    "clues",
-                    "tavern"
-                  ],
-                  "effects": [
-                    {
-                      "type": "grant_clue",
-                      "port": "next_unknown",
-                      "level": 1,
-                      "source": "rumor"
-                    },
-                    {
-                      "type": "set_market_price_bias",
-                      "item_ids": [
-                        "core:item/textiles",
-                        "core:item/spices"
-                      ],
-                      "home_bias": 1.35,
-                      "other_bias": 0.7,
-                      "reset_stock": true,
-                      "make_buyable": true
-                    }
-                  ],
-                  "advance": {
-                    "mode": "confirm"
-                  }
-                },
-                {
-                  "id": "tavern_intro",
-                  "dialogue": {
-                    "title_key": "story.core.tavern_intro.title",
-                    "body_keys": [
-                      "story.core.tavern_intro.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.tavern_intro.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "cmd:intel.refresh",
-                    "counter": "intel_refreshed",
-                    "at_least": 1
-                  }
-                },
-                {
-                  "id": "third_good",
-                  "dialogue": {
-                    "title_key": "story.core.third_good.title",
-                    "body_keys": [
-                      "story.core.third_good.body.1"
-                    ]
-                  },
-                  "unlock_items": [
-                    "core:item/timber"
-                  ],
-                  "objective": {
-                    "text_key": "story.core.third_good.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "all": [
-                      {
-                        "event": "cmd:voyage.start",
-                        "counter": "act2_departures",
-                        "at_least": 1
-                      },
-                      {
-                        "event": "ui:arrival_settled",
-                        "counter": "act2_arrivals",
-                        "at_least": 1
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "second_clue",
-                  "dialogue": {
-                    "title_key": "story.core.second_clue.title",
-                    "body_keys": [
-                      "story.core.second_clue.body.1",
-                      "story.core.second_clue.body.2"
-                    ]
-                  },
-                  "effects": [
-                    {
-                      "type": "grant_clue",
-                      "port": "next_unknown",
-                      "level": 3,
-                      "source": "rumor"
-                    },
-                    {
-                      "type": "guarantee_explore_success"
-                    }
-                  ],
-                  "advance": {
-                    "mode": "confirm"
-                  }
-                },
-                {
-                  "id": "explore_third",
-                  "dialogue": {
-                    "title_key": "story.core.explore_third.title",
-                    "body_keys": [
-                      "story.core.explore_third.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.explore_third.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "all": [
-                      {
-                        "event": "cmd:explore.start",
-                        "counter": "act2_explorations",
-                        "at_least": 1
-                      },
-                      {
-                        "event": "ui:arrival_settled",
-                        "counter": "act2_explore_arrivals",
-                        "at_least": 1
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "third_port",
-                  "dialogue": {
-                    "title_key": "story.core.third_port.title",
-                    "body_keys": [
-                      "story.core.third_port.body.1",
-                      "story.core.third_port.body.2"
-                    ]
-                  },
-                  "unlock_features": [
-                    "shipyard"
-                  ],
-                  "unlock_modules": [
-                    "core:module/small_cabin"
-                  ],
-                  "effects": [
-                    {
-                      "type": "add_facility",
-                      "facility": "shipyard"
-                    },
-                    {
-                      "type": "upgrade_hull",
-                      "hull_id": "core:hull/medium_standard",
-                      "store_old": true
-                    }
-                  ],
-                  "advance": {
-                    "mode": "confirm"
-                  }
-                },
-                {
-                  "id": "refit_unload",
-                  "dialogue": {
-                    "title_key": "story.core.refit_unload.title",
-                    "body_keys": [
-                      "story.core.refit_unload.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.refit_unload.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "cmd:ship.uninstall_module",
-                    "counter": "cargo_uninstalled",
-                    "at_least": 1,
-                    "match": {
-                      "category": "cargo"
-                    }
-                  }
-                },
-                {
-                  "id": "refit_cabin",
-                  "dialogue": {
-                    "title_key": "story.core.refit_cabin.title",
-                    "body_keys": [
-                      "story.core.refit_cabin.body.1"
-                    ]
-                  },
-                  "objective": {
-                    "text_key": "story.core.refit_cabin.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "event": "cmd:ship.install_module",
-                    "counter": "cabin_installed",
-                    "at_least": 1,
-                    "match": {
-                      "module_id": "core:module/small_cabin"
-                    }
-                  }
-                },
-                {
-                  "id": "passenger_run",
-                  "dialogue": {
-                    "title_key": "story.core.passenger_run.title",
-                    "body_keys": [
-                      "story.core.passenger_run.body.1"
-                    ]
-                  },
-                  "effects": [
-                    {
-                      "type": "grant_tutorial_contract",
-                      "template_id": "core:contract/main_03",
-                      "passengers": 1,
-                      "deadline_formula": "tutorial_craft",
-                      "name_key": "contract.core.tutorial_passenger.name",
-                      "description_key": "contract.core.tutorial_passenger.description"
-                    }
-                  ],
-                  "objective": {
-                    "text_key": "story.core.passenger_run.objective",
-                    "target": 1
-                  },
-                  "advance": {
-                    "all": [
-                      {
-                        "event": "cmd:voyage.start",
-                        "counter": "passenger_departures",
-                        "at_least": 1
-                      },
-                      {
-                        "event": "ui:arrival_settled",
-                        "counter": "passenger_arrivals",
-                        "at_least": 1
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "story_complete",
-                  "dialogue": {
-                    "title_key": "story.core.story_complete.title",
-                    "body_keys": [
-                      "story.core.story_complete.body.1"
-                    ]
-                  },
-                  "advance": {
-                    "mode": "confirm"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      },
-      {
-        "id": "core:starting_build/steady",
-        "content_type": "starting_builds",
-        "file": "content/starting_builds.json",
-        "name_key": "starting_build.core.steady.name",
+        "id": "core:starting_scenario/steady",
+        "content_type": "starting_scenarios",
+        "file": "content/starting_scenarios.json",
+        "name_key": "starting_scenario.core.steady.name",
         "name_zh": "低耗稳健型",
         "name_en": "Steady and Thrifty",
         "tags": [
@@ -8365,9 +7030,9 @@
           "starting_build.safe"
         ],
         "definition": {
-          "id": "core:starting_build/steady",
-          "name_key": "starting_build.core.steady.name",
-          "description_key": "starting_build.core.steady.description",
+          "id": "core:starting_scenario/steady",
+          "name_key": "starting_scenario.core.steady.name",
+          "description_key": "starting_scenario.core.steady.description",
           "tags": [
             "starting_build.efficient",
             "starting_build.safe"
@@ -8392,10 +7057,10 @@
         }
       },
       {
-        "id": "core:starting_build/swift",
-        "content_type": "starting_builds",
-        "file": "content/starting_builds.json",
-        "name_key": "starting_build.core.swift.name",
+        "id": "core:starting_scenario/swift",
+        "content_type": "starting_scenarios",
+        "file": "content/starting_scenarios.json",
+        "name_key": "starting_scenario.core.swift.name",
         "name_zh": "高速冒险型",
         "name_en": "Swift and Bold",
         "tags": [
@@ -8403,9 +7068,9 @@
           "starting_build.risky"
         ],
         "definition": {
-          "id": "core:starting_build/swift",
-          "name_key": "starting_build.core.swift.name",
-          "description_key": "starting_build.core.swift.description",
+          "id": "core:starting_scenario/swift",
+          "name_key": "starting_scenario.core.swift.name",
+          "description_key": "starting_scenario.core.swift.description",
           "tags": [
             "starting_build.performance",
             "starting_build.risky"
@@ -9201,7 +7866,7 @@
           "enabled": true,
           "data": {
             "kind": "guide",
-            "auto_start": false,
+            "auto_start": true,
             "repeatable": false,
             "tracking": {
               "label_key": "quest.tracking.guide",
@@ -9387,11 +8052,11 @@
           "enabled": true,
           "data": {
             "archetypes": [
-              "core:port_archetype/iron_harbor",
-              "core:port_archetype/spice_port",
-              "core:port_archetype/free_town",
-              "core:port_archetype/fishing_village",
-              "core:port_archetype/glass_port"
+              "core:port_template/iron_harbor",
+              "core:port_template/spice_port",
+              "core:port_template/free_town",
+              "core:port_template/fishing_village",
+              "core:port_template/glass_port"
             ],
             "port_name_keys": [
               "port_name.core.iron_harbor",
@@ -9430,7 +8095,7 @@
             "intel_cost": 25,
             "trade_margin": 0.95,
             "player_trade_impact": 0.35,
-            "default_starting_build": "core:starting_build/steady",
+            "default_starting_scenario": "core:starting_scenario/steady",
             "twin_world_size": 160,
             "exploration": {
               "rumor_clue_chance": 0.65,
@@ -10965,7 +9630,7 @@
           "data": {
             "world_profile": "core:world_profile/default_world",
             "map_config": "core:map_config/standard",
-            "starting_build": "core:starting_build/steady",
+            "starting_scenario": "core:starting_scenario/steady",
             "difficulty": "standard",
             "starting_port_tags": [
               "port.hub"
@@ -10997,7 +9662,7 @@
           "data": {
             "world_profile": "core:world_profile/default_world",
             "map_config": "core:map_config/standard",
-            "starting_build": "core:starting_build/swift",
+            "starting_scenario": "core:starting_scenario/swift",
             "difficulty": "hard",
             "starting_port_tags": [
               "port.trade"

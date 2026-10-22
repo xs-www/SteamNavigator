@@ -395,12 +395,15 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 24, '21 runtime types + 3 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 21, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.types.length, 23, '20 runtime types + 3 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 20, 'activeTypes counts runtime types at both 1.0 and 2.0');
   assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
-  for (const key of ['items', 'hulls', 'modules', 'events', 'contracts', 'quests', 'patches']) {
+  for (const key of ['items', 'hulls', 'modules', 'events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
+  }
+  for (const retiredType of ['map_profiles', 'port_archetypes', 'starting_builds']) {
+    assert.ok(!keys.includes(retiredType), `C4 retired the ${retiredType} content type`);
   }
   for (const legacyModuleType of ['boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins']) {
     assert.ok(!keys.includes(legacyModuleType), `C1 removed the ${legacyModuleType} content type in favour of modules`);
@@ -446,19 +449,21 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(startProfile.schema_version, '2.0');
   assert.equal(startProfile.capability, 'content.campaign.v1');
 
-  // The Phase B world/campaign types plus the C1 hull/module, C2 item and C3 quest types are active runtime rows at Schema 2.0.
+  // The Phase B world/campaign types plus the C1–C4 upgraded families are active runtime rows at Schema 2.0.
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules', 'quests', 'regions', 'route_templates',
-      'sites', 'start_profiles', 'weather_profiles', 'world_profiles'],
-    'exactly the thirteen Schema 2.0 runtime rows are active'
+    ['discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules', 'port_templates', 'quests', 'regions',
+      'route_templates', 'sites', 'start_profiles', 'starting_scenarios', 'weather_profiles', 'world_profiles'],
+    'exactly the fifteen Schema 2.0 runtime rows are active'
   );
   const runtimeCapabilities = {
     hulls: 'content.hulls.v1',
     items: 'content.items.v1',
     modules: 'content.modules.v1',
+    port_templates: 'content.port_templates.v1',
     quests: 'content.quests.v1',
+    starting_scenarios: 'content.starting_scenarios.v1',
     start_profiles: 'content.campaign.v1',
   };
   for (const runtime of runtimeV2) {
@@ -525,13 +530,23 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（21；其中 13 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 21 active types, 13 of them Schema 2.0:\n${stdout}`
+    /运行时内容类型（20；其中 15 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 20 active types, 15 of them Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    13,
+    15,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^port_templates\s+港口模板\s+port_template\s+content\/port_templates\.json  \[runtime 2\.0\]$/m,
+    `port_templates must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^starting_scenarios\s+起始场景\s+starting_scenario\s+content\/starting_scenarios\.json  \[runtime 2\.0\]$/m,
+    `starting_scenarios must be shown as a runtime Schema 2.0 type:\n${stdout}`
   );
   assert.match(
     stdout,
@@ -1152,6 +1167,35 @@ test('list --type items filters core rows down to item definitions', (t) => {
   }
   assert.ok(rows.some((row) => row.id === 'core:item/coal'));
   assert.ok(rows.some((row) => row.id === 'core:item/boiler_plate'), 'C2 merged the crafting materials into items');
+});
+
+test('C4 port/starting content is listed and the retired types are gone', (t) => {
+  const portResult = jsonRun(['list', '--mod', 'dev_mods/core', '--type', 'port_templates']);
+  assertStatus(portResult, 0, 'list core port_templates');
+  const portRows = listRows(mustJson(portResult, 'list core port_templates'), 'list core port_templates');
+  assert.equal(portRows.length, 5, 'core ships the five port templates');
+  for (const row of portRows) {
+    assert.equal(row.type, 'port_templates');
+    assert.equal(row.file, 'content/port_templates.json');
+    assert.match(row.id, /^core:port_template\//);
+  }
+  assert.ok(portRows.some((row) => row.id === 'core:port_template/iron_harbor'));
+
+  const scenarioResult = jsonRun(['list', '--mod', 'dev_mods/core', '--type', 'starting_scenarios']);
+  assertStatus(scenarioResult, 0, 'list core starting_scenarios');
+  const scenarioRows = listRows(mustJson(scenarioResult, 'list core starting_scenarios'), 'list core starting_scenarios');
+  assert.deepEqual(
+    scenarioRows.map((row) => row.id).sort(),
+    ['core:starting_scenario/steady', 'core:starting_scenario/swift']
+  );
+
+  const retiredResult = jsonRun(['describe', 'map_profiles']);
+  const retiredJson = mustFailJson(retiredResult, 'describe retired map_profiles');
+  assertStatus(retiredResult, 2, 'describe retired map_profiles');
+  assert.equal(retiredJson.error.code, 'usage');
+
+  const retiredList = jsonRun(['list', '--mod', 'dev_mods/core', '--type', 'port_archetypes']);
+  assertStatus(retiredList, 2, 'list retired port_archetypes');
 });
 
 /* ------------------------------------------------------------------------- */

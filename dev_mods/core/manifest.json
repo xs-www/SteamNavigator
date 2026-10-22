@@ -16,9 +16,8 @@
     "content/modules.json",
     "content/roles.json",
     "content/strategies.json",
-    "content/port_archetypes.json",
-    "content/map_profiles.json",
-    "content/starting_builds.json",
+    "content/port_templates.json",
+    "content/starting_scenarios.json",
     "content/contracts.json",
     "content/events.json",
     "content/quests.json",
@@ -170,7 +169,9 @@
     "content.items.v1",
     "content.hulls.v1",
     "content.modules.v1",
+    "content.port_templates.v1",
     "content.quests.v1",
+    "content.starting_scenarios.v1",
     "content.world.v1",
     "content.campaign.v1"
   ]

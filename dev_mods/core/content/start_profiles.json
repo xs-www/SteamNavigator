@@ -11,7 +11,7 @@
       "data": {
         "world_profile": "core:world_profile/default_world",
         "map_config": "core:map_config/standard",
-        "starting_build": "core:starting_build/steady",
+        "starting_scenario": "core:starting_scenario/steady",
         "difficulty": "standard",
         "starting_port_tags": ["port.hub"],
         "starting_money": 900,
@@ -28,7 +28,7 @@
       "data": {
         "world_profile": "core:world_profile/default_world",
         "map_config": "core:map_config/standard",
-        "starting_build": "core:starting_build/swift",
+        "starting_scenario": "core:starting_scenario/swift",
         "difficulty": "hard",
         "starting_port_tags": ["port.trade"],
         "starting_money": 400,

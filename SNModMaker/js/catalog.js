@@ -128,7 +128,8 @@
     intel_cost: '情报费用',
     trade_margin: '交易利润率',
     player_trade_impact: '玩家交易冲击',
-    default_starting_build: '默认初始构筑',
+    default_starting_build: '默认初始构筑（1.0 已退役）',
+    default_starting_scenario: '默认起始场景',
     money: '金钱',
     hull: '船体',
     boiler: '锅炉',
@@ -201,7 +202,8 @@
     source_site_kinds: '来源地点类型',
     requires_tags: '必需标签',
     world_profile: '世界配置',
-    starting_build: '起始构筑',
+    starting_build: '起始构筑（1.0 已退役）',
+    starting_scenario: '起始场景',
     difficulty: '难度',
     starting_port_tags: '起始港口标签',
     starting_money: '起始金钱',
@@ -354,11 +356,9 @@
     'items.category': '物品分类',
     'contracts.sequence': '主线序号',
     'events.weight': '出现权重',
-    'port_archetypes.size': '港口规模',
-    'map_profiles.distance_range': '航路距离区间',
-    'map_profiles.supply_prices': '补给价格',
-    'starting_builds.money': '初始金钱',
-    'starting_builds.reputation': '初始声望',
+    'port_templates.size': '港口规模',
+    'starting_scenarios.money': '初始金钱',
+    'starting_scenarios.reputation': '初始声望',
     'patch.target': '目标定义',
     'patch.operations': '补丁操作',
     'patch.requires': '来源约束',
@@ -434,7 +434,7 @@
     path: 'JSON Pointer，例如 /data/purchase_price。',
     name_key: '本地化键；建议使用 <类型>.<模组>.<本地ID>.name。',
     description_key: '本地化键；留空则不显示描述。',
-    default_starting_build: '引用一个 starting_build 定义。',
+    default_starting_scenario: '引用一个起始场景定义（C4 起为 starting_scenarios）。',
     required_facility_tags: '例如 port.shipyard；Core 完整性依赖这些标签。',
     /* Schema 2.0 draft hints. */
     region_count: '生成的世界区域数量，1–64。',
@@ -450,7 +450,8 @@
     patrol_strength: '0–10；阵营巡逻队强度。',
     rarity: 'common / uncommon / rare / unique。',
     repeatable: '是否允许在同一局中重复获得。',
-    starting_build: '引用一个 starting_build 定义（完整 ID）。',
+    starting_build: '剧情关卡引用的起始构筑（1.0 已退役，值改为 core:starting_scenario/*）。',
+    starting_scenario: '引用一个 starting_scenario 定义（完整 ID）。',
     starting_port_tags: '起始港口必须带有的标签，至少 1 个。',
     world_profile: '引用一个 world_profile 草案定义（完整 ID）。',
     /* 武器草案（数值口径对齐 SNBattleSim 的 weapon 目录）。 */
@@ -655,7 +656,8 @@
       water_mul: 1.0,
       risk_add: 0,
     }),
-    port_archetypes: () => ({
+    /* C4: 1.0 port_archetypes became port_templates (2.0). */
+    port_templates: () => ({
       size: 'medium',
       facilities: ['exchange', 'contracts'],
       market: [
@@ -663,36 +665,8 @@
         { good: 'core:item/timber', stock_range: [50, 100], price_bias: 1.0 },
       ],
     }),
-    map_profiles: () => ({
-      port_count_range: [4, 5],
-      edge_count_range: [4, 6],
-      distance_range: [1, 3],
-      route_risk_range: [0.02, 0.12],
-      archetypes: [
-        'core:port_archetype/iron_harbor',
-        'core:port_archetype/spice_port',
-        'core:port_archetype/free_town',
-        'core:port_archetype/fishing_village',
-      ],
-      port_name_keys: [
-        'port.core.iron_harbor.name',
-        'port.core.spice_port.name',
-        'port.core.free_town.name',
-        'port.core.fishing_village.name',
-      ],
-      start_archetype_tags: [],
-      required_facility_tags: ['port.shipyard'],
-      required_facility_max_edges: 2,
-      npc_count_range: [2, 3],
-      npc_cargo_range: [10, 40],
-      supply_prices: { coal: 4, water: 2, repair_per_point: 8 },
-      loan: { limit: 800, interest_rate: 0.04, term_hours: 120 },
-      intel_cost: 40,
-      trade_margin: 0.9,
-      player_trade_impact: 0.35,
-      default_starting_build: 'core:starting_build/steady',
-    }),
-    starting_builds: () => ({
+    /* C4: 1.0 starting_builds became starting_scenarios (2.0). */
+    starting_scenarios: () => ({
       money: 1000,
       reputation: 0,
       hull: 'core:hull/small_efficient',
@@ -810,11 +784,11 @@
     }),
     map_configs: () => ({
       archetypes: [
-        'core:port_archetype/iron_harbor',
-        'core:port_archetype/spice_port',
-        'core:port_archetype/free_town',
-        'core:port_archetype/fishing_village',
-        'core:port_archetype/glass_port',
+        'core:port_template/iron_harbor',
+        'core:port_template/spice_port',
+        'core:port_template/free_town',
+        'core:port_template/fishing_village',
+        'core:port_template/glass_port',
       ],
       port_name_keys: [
         'port_name.core.iron_harbor',
@@ -834,7 +808,7 @@
       intel_cost: 40,
       trade_margin: 0.9,
       player_trade_impact: 0.35,
-      default_starting_build: 'core:starting_build/steady',
+      default_starting_scenario: 'core:starting_scenario/steady',
       twin_world_size: 160,
       exploration: {
       "rumor_clue_chance": 0.65,
@@ -912,7 +886,7 @@
     }),
     start_profiles: () => ({
       world_profile: 'core:world_profile/default_world',
-      starting_build: 'core:starting_build/steady',
+      starting_scenario: 'core:starting_scenario/steady',
       difficulty: 'standard',
       starting_port_tags: ['port.start'],
       starting_money: 1000,
@@ -977,7 +951,7 @@
         },
       },
       start: {
-        starting_build: 'core:starting_build/steady',
+        starting_build: 'core:starting_scenario/steady',
         port_id: 'port_0',
         money: 200,
         ship_fuel: 4,
@@ -1055,8 +1029,7 @@
     contracts: ['contract.main', 'contract.normal', 'contract.cargo', 'contract.passenger'],
     quests: ['quest.guide', 'quest.story', 'quest.system'],
     events: ['event.risk', 'event.opportunity', 'event.mechanical', 'event.merchant'],
-    port_archetypes: ['port.shipyard', 'port.market', 'port.intel', 'port.start'],
-    map_profiles: ['map.standard'],
+    port_templates: ['port.shipyard', 'port.market', 'port.intel', 'port.start'],
     /* Schema 2.0 draft tag suggestions. */
     world_profiles: ['world.standard', 'world.large'],
     regions: ['region.coastal', 'region.frontier', 'region.industrial'],

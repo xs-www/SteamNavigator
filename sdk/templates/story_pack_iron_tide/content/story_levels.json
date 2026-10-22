@@ -48,7 +48,7 @@
           }
         },
         "start": {
-          "starting_build": "core:starting_build/steady",
+          "starting_build": "core:starting_scenario/steady",
           "port_id": "port_0",
           "money": 200,
           "ship_fuel": 4,
@@ -183,7 +183,7 @@
           }
         },
         "start": {
-          "starting_build": "core:starting_build/steady",
+          "starting_build": "core:starting_scenario/steady",
           "port_id": "port_1",
           "money": 260,
           "ship_fuel": 5,

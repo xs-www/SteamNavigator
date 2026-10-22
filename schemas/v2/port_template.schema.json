@@ -1,16 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://steam-navigator.local/schema/port-archetype-1.json",
-  "title": "Steam Navigator port archetype content file",
+  "$id": "https://steam-navigator.local/schema/port-template-2.json",
+  "title": "Steam Navigator port template content file (Content Schema 2.0)",
+  "description": "Generated-port template (C4): size, facilities and market stock table. Successor of the 1.0 port_archetype content type; the data block is unchanged, the type, id segment and default file are renamed to port_templates / core:port_template/* / content/port_templates.json.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
   "properties": {
     "schema_version": {
-      "enum": ["1.0"]
+      "const": "2.0"
     },
     "content_type": {
-      "const": "port_archetypes"
+      "const": "port_templates"
     },
     "definitions": {
       "type": "array",
@@ -24,7 +25,7 @@
             "type": "object",
             "properties": {
               "data": {
-                "$ref": "#/$defs/port_archetype_data"
+                "$ref": "#/$defs/port_template_data"
               }
             }
           }
@@ -33,7 +34,7 @@
     }
   },
   "$defs": {
-    "port_archetype_data": {
+    "port_template_data": {
       "type": "object",
       "additionalProperties": false,
       "required": ["size", "facilities", "market"],

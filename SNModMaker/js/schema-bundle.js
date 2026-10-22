@@ -728,665 +728,6 @@
         }
       }
     },
-    "map_profile.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/map-profile-1.json",
-      "title": "Steam Navigator map generation profile content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "map_profiles"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "common.schema.json#/$defs/definition"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "$ref": "#/$defs/map_profile_data"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "$defs": {
-        "map_profile_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "port_count_range",
-            "edge_count_range",
-            "distance_range",
-            "route_risk_range",
-            "archetypes",
-            "port_name_keys",
-            "required_facility_tags"
-          ],
-          "properties": {
-            "port_count_range": {
-              "$ref": "common.schema.json#/$defs/range2"
-            },
-            "edge_count_range": {
-              "$ref": "common.schema.json#/$defs/range2"
-            },
-            "distance_range": {
-              "$ref": "common.schema.json#/$defs/range2"
-            },
-            "route_risk_range": {
-              "$ref": "common.schema.json#/$defs/range2"
-            },
-            "archetypes": {
-              "type": "array",
-              "minItems": 4,
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "port_name_keys": {
-              "type": "array",
-              "minItems": 4,
-              "items": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "start_archetype_tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "required_facility_tags": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "string",
-                "pattern": "^port\\.[a-z_]+$"
-              }
-            },
-            "required_facility_max_edges": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 4
-            },
-            "npc_count_range": {
-              "$ref": "common.schema.json#/$defs/range2"
-            },
-            "npc_cargo_range": {
-              "$ref": "common.schema.json#/$defs/range2"
-            },
-            "supply_prices": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "coal",
-                "water",
-                "repair_per_point"
-              ],
-              "properties": {
-                "coal": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "water": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "repair_per_point": {
-                  "type": "number",
-                  "minimum": 0
-                }
-              }
-            },
-            "loan": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "limit",
-                "interest_rate",
-                "term_hours"
-              ],
-              "properties": {
-                "limit": {
-                  "type": "number",
-                  "minimum": 1
-                },
-                "interest_rate": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 0.5
-                },
-                "term_hours": {
-                  "type": "number",
-                  "minimum": 1
-                }
-              }
-            },
-            "intel_cost": {
-              "type": "number",
-              "minimum": 0
-            },
-            "trade_margin": {
-              "type": "number",
-              "minimum": 0.5,
-              "maximum": 1
-            },
-            "player_trade_impact": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 1
-            },
-            "default_starting_build": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "twin_world_size": {
-              "type": "number",
-              "minimum": 64,
-              "maximum": 1024
-            },
-            "exploration": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "rumor_clue_chance": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "fog_port_reveal_ratio": {
-                  "type": "number",
-                  "minimum": 0.01,
-                  "maximum": 0.5
-                },
-                "fog_vision_ratio": {
-                  "type": "number",
-                  "minimum": 0.01,
-                  "maximum": 0.5
-                },
-                "intel_clue_cost": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "max_active_clues": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 12
-                },
-                "level_weights": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "rumor",
-                    "intel"
-                  ],
-                  "properties": {
-                    "rumor": {
-                      "$ref": "#/$defs/level_weight_vector"
-                    },
-                    "intel": {
-                      "$ref": "#/$defs/level_weight_vector"
-                    }
-                  }
-                },
-                "credibility_range": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "rumor",
-                    "intel"
-                  ],
-                  "properties": {
-                    "rumor": {
-                      "$ref": "common.schema.json#/$defs/range2"
-                    },
-                    "intel": {
-                      "$ref": "common.schema.json#/$defs/range2"
-                    },
-                    "wait": {
-                      "$ref": "common.schema.json#/$defs/range2"
-                    },
-                    "contract": {
-                      "$ref": "common.schema.json#/$defs/range2"
-                    }
-                  }
-                },
-                "distance_error_ratio": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "search_zone_radius": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "search_zone_noise": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "discovery_chance_base": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "discovery_chance_per_credibility": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "risk_base": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "risk_per_unreliability": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "drift_durability_loss": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "drift_extra_coal": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "drift_extra_water": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "drift_hours": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "alert_threshold": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "alert_progress": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "turnback_extra_ratio": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "investigation_cost": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "investigation_hours": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "investigation_success_chance": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "goods_clue_expiry_hours": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "rumor",
-                    "intel",
-                    "wait",
-                    "contract"
-                  ],
-                  "properties": {
-                    "rumor": {
-                      "type": "number",
-                      "minimum": 0
-                    },
-                    "intel": {
-                      "type": "number",
-                      "minimum": 0
-                    },
-                    "wait": {
-                      "type": "number",
-                      "minimum": 0
-                    },
-                    "contract": {
-                      "type": "number",
-                      "minimum": 0
-                    }
-                  }
-                },
-                "goods_clue_price_error_ratio": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "goods_clue_source_weights": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "rumor",
-                    "intel",
-                    "wait",
-                    "contract"
-                  ],
-                  "properties": {
-                    "rumor": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 1
-                    },
-                    "intel": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 1
-                    },
-                    "wait": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 1
-                    },
-                    "contract": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 1
-                    }
-                  }
-                },
-                "wait_clue_hours_block": {
-                  "type": "number",
-                  "minimum": 1
-                },
-                "wait_clue_chance_per_block": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "wait_clue_max_chance": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "contract_clue_chance": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                }
-              }
-            },
-            "story": {
-              "$ref": "#/$defs/story_flow"
-            }
-          }
-        },
-        "level_weight_vector": {
-          "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
-          "items": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          }
-        },
-        "story_flow": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "flow_id",
-            "stages"
-          ],
-          "properties": {
-            "flow_id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "enabled": {
-              "type": "boolean"
-            },
-            "skip_unlocks": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              }
-            },
-            "start_unlocks": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              }
-            },
-            "start_items": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "start_modules": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "stages": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "$ref": "#/$defs/story_stage"
-              }
-            }
-          }
-        },
-        "story_stage": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "advance"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "dialogue": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "title_key",
-                "body_keys"
-              ],
-              "properties": {
-                "title_key": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "body_keys": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            },
-            "unlock_features": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              }
-            },
-            "unlock_items": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "unlock_modules": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "objective": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "text_key",
-                "target"
-              ],
-              "properties": {
-                "text_key": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "target": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            },
-            "advance": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "mode": {
-                  "enum": [
-                    "confirm"
-                  ]
-                },
-                "event": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "counter": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "counter_from": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "at_least": {
-                  "type": "integer",
-                  "minimum": 1
-                },
-                "flag": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "not_flag": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "all": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "$ref": "#/$defs/story_condition"
-                  }
-                },
-                "match": {
-                  "$ref": "#/$defs/story_match"
-                }
-              }
-            },
-            "lock_actions": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              }
-            },
-            "preferred_strategy": {
-              "type": "string",
-              "minLength": 1
-            },
-            "effects": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            }
-          }
-        },
-        "story_condition": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "event": {
-              "type": "string",
-              "minLength": 1
-            },
-            "counter": {
-              "type": "string",
-              "minLength": 1
-            },
-            "counter_from": {
-              "type": "string",
-              "minLength": 1
-            },
-            "at_least": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "flag": {
-              "type": "string",
-              "minLength": 1
-            },
-            "not_flag": {
-              "type": "string",
-              "minLength": 1
-            },
-            "match": {
-              "$ref": "#/$defs/story_match"
-            }
-          }
-        },
-        "story_match": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "patch.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/patch-1.json",
@@ -1476,153 +817,6 @@
         }
       }
     },
-    "port_archetype.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/port-archetype-1.json",
-      "title": "Steam Navigator port archetype content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "port_archetypes"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "common.schema.json#/$defs/definition"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "$ref": "#/$defs/port_archetype_data"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "$defs": {
-        "port_archetype_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "size",
-            "facilities",
-            "market"
-          ],
-          "properties": {
-            "size": {
-              "enum": [
-                "small",
-                "medium",
-                "large"
-              ]
-            },
-            "facilities": {
-              "type": "array",
-              "minItems": 2,
-              "uniqueItems": true,
-              "items": {
-                "enum": [
-                  "exchange",
-                  "contracts",
-                  "supply",
-                  "shipyard",
-                  "tavern",
-                  "intel"
-                ]
-              }
-            },
-            "banner_asset": {
-              "type": "string",
-              "pattern": "^[a-z][a-z0-9_.-]*$"
-            },
-            "diorama": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "kit": {
-                  "type": "string",
-                  "pattern": "^[a-z][a-z0-9_.-]*$"
-                },
-                "density": {
-                  "enum": [
-                    "sparse",
-                    "normal",
-                    "busy"
-                  ]
-                },
-                "town": {
-                  "type": "object",
-                  "minProperties": 1,
-                  "additionalProperties": {
-                    "type": "string",
-                    "pattern": "^[a-z][a-z0-9_.-]*$"
-                  }
-                },
-                "facility_visuals": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string",
-                    "pattern": "^[a-z][a-z0-9_.-]*$"
-                  }
-                },
-                "palette": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                },
-                "landmark": {
-                  "type": "string",
-                  "pattern": "^[a-z][a-z0-9_.-]*$"
-                }
-              }
-            },
-            "market": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "good",
-                  "stock_range"
-                ],
-                "properties": {
-                  "good": {
-                    "$ref": "common.schema.json#/$defs/id_ref"
-                  },
-                  "stock_range": {
-                    "$ref": "common.schema.json#/$defs/range2"
-                  },
-                  "price_bias": {
-                    "type": "number",
-                    "minimum": 0.5,
-                    "maximum": 2
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "role.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/role-1.json",
@@ -1690,137 +884,6 @@
               "type": "array",
               "items": {
                 "$ref": "common.schema.json#/$defs/modifier"
-              }
-            }
-          }
-        }
-      }
-    },
-    "starting_build.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/starting-build-1.json",
-      "title": "Steam Navigator starting build content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "starting_builds"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "common.schema.json#/$defs/definition"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "$ref": "#/$defs/starting_build_data"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "$defs": {
-        "starting_build_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "money",
-            "reputation",
-            "hull",
-            "boiler",
-            "cargo_modules",
-            "coal",
-            "water"
-          ],
-          "properties": {
-            "money": {
-              "type": "number",
-              "minimum": 0
-            },
-            "reputation": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "hull": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "boiler": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "cargo_modules": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "navigation_module": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "safety_module": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "passenger_cabin": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "engineer": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "navigator": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "coal": {
-              "type": "number",
-              "minimum": 0
-            },
-            "water": {
-              "type": "number",
-              "minimum": 0
-            },
-            "durability_ratio": {
-              "type": "number",
-              "minimum": 0.1,
-              "maximum": 1
-            },
-            "loan": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "principal",
-                "interest_rate",
-                "term_hours"
-              ],
-              "properties": {
-                "principal": {
-                  "type": "number",
-                  "minimum": 1
-                },
-                "interest_rate": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 0.5
-                },
-                "term_hours": {
-                  "type": "number",
-                  "minimum": 1
-                }
               }
             }
           }
@@ -3108,7 +2171,7 @@
               "minimum": 0,
               "maximum": 1
             },
-            "default_starting_build": {
+            "default_starting_scenario": {
               "$ref": "common.schema.json#/$defs/id_ref"
             },
             "twin_world_size": {
@@ -3611,6 +2674,152 @@
         }
       }
     },
+    "v2/port_template.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/port-template-2.json",
+      "title": "Steam Navigator port template content file (Content Schema 2.0)",
+      "description": "Generated-port template (C4): size, facilities and market stock table. Successor of the 1.0 port_archetype content type; the data block is unchanged, the type, id segment and default file are renamed to port_templates / core:port_template/* / content/port_templates.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "port_templates"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/port_template_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "port_template_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "size",
+            "facilities",
+            "market"
+          ],
+          "properties": {
+            "size": {
+              "enum": [
+                "small",
+                "medium",
+                "large"
+              ]
+            },
+            "facilities": {
+              "type": "array",
+              "minItems": 2,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "exchange",
+                  "contracts",
+                  "supply",
+                  "shipyard",
+                  "tavern",
+                  "intel"
+                ]
+              }
+            },
+            "banner_asset": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.-]*$"
+            },
+            "diorama": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kit": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]*$"
+                },
+                "density": {
+                  "enum": [
+                    "sparse",
+                    "normal",
+                    "busy"
+                  ]
+                },
+                "town": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_.-]*$"
+                  }
+                },
+                "facility_visuals": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_.-]*$"
+                  }
+                },
+                "palette": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "landmark": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]*$"
+                }
+              }
+            },
+            "market": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "good",
+                  "stock_range"
+                ],
+                "properties": {
+                  "good": {
+                    "$ref": "common.schema.json#/$defs/id_ref"
+                  },
+                  "stock_range": {
+                    "$ref": "common.schema.json#/$defs/range2"
+                  },
+                  "price_bias": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 2
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "v2/quest.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/quest-2.json",
@@ -4095,7 +3304,7 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/start-profile-2.json",
       "title": "Steam Navigator start profile content file (Schema 2.0 draft)",
-      "description": "Persistent campaign start profile: world profile, starting build, difficulty, port tags and optional cargo/contract.",
+      "description": "Persistent campaign start profile: world profile, starting scenario, difficulty, port tags and optional cargo/contract. C4 replaced the 1.0 `starting_build` reference with a `starting_scenario` reference.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -4136,7 +3345,7 @@
           "additionalProperties": false,
           "required": [
             "world_profile",
-            "starting_build",
+            "starting_scenario",
             "difficulty",
             "starting_port_tags"
           ],
@@ -4147,7 +3356,7 @@
             "map_config": {
               "$ref": "common.schema.json#/$defs/id_ref"
             },
-            "starting_build": {
+            "starting_scenario": {
               "$ref": "common.schema.json#/$defs/id_ref"
             },
             "difficulty": {
@@ -4181,6 +3390,136 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 160
+            }
+          }
+        }
+      }
+    },
+    "v2/starting_scenario.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/starting-scenario-2.json",
+      "title": "Steam Navigator starting scenario content file (Content Schema 2.0)",
+      "description": "Campaign start scenario (C4): opening money, hull/module build, supplies and loan. Successor of the 1.0 starting_build content type; the data block is unchanged, the type, id segment and default file are renamed to starting_scenarios / core:starting_scenario/* / content/starting_scenarios.json. Ship slots stay flat (boiler / cargo_modules / navigation_module / safety_module / passenger_cabin).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "starting_scenarios"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/starting_scenario_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "starting_scenario_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "money",
+            "reputation",
+            "hull",
+            "boiler",
+            "cargo_modules",
+            "coal",
+            "water"
+          ],
+          "properties": {
+            "money": {
+              "type": "number",
+              "minimum": 0
+            },
+            "reputation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hull": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "boiler": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "cargo_modules": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "navigation_module": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "safety_module": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "passenger_cabin": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "engineer": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "navigator": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "coal": {
+              "type": "number",
+              "minimum": 0
+            },
+            "water": {
+              "type": "number",
+              "minimum": 0
+            },
+            "durability_ratio": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1
+            },
+            "loan": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "principal",
+                "interest_rate",
+                "term_hours"
+              ],
+              "properties": {
+                "principal": {
+                  "type": "number",
+                  "minimum": 1
+                },
+                "interest_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.5
+                },
+                "term_hours": {
+                  "type": "number",
+                  "minimum": 1
+                }
+              }
             }
           }
         }

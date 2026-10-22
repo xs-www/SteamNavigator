@@ -99,12 +99,17 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 27, `expected 10 top-level + 17 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 27, `expected 27 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 26, `expected 7 top-level + 19 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 26, `expected 26 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['role.schema.json'], 'remaining 1.0 runtime schemas stay embedded');
     assert.equal(globalThis.SN_SCHEMAS['good.schema.json'], undefined, 'the dead 1.0 goods schema was removed (C2)');
+    assert.equal(globalThis.SN_SCHEMAS['map_profile.schema.json'], undefined, 'the retired 1.0 map_profile schema was removed (C4)');
+    assert.equal(globalThis.SN_SCHEMAS['port_archetype.schema.json'], undefined, 'the 1.0 port_archetype schema was removed (C4)');
+    assert.equal(globalThis.SN_SCHEMAS['starting_build.schema.json'], undefined, 'the 1.0 starting_build schema was removed (C4)');
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
+    assert.ok(globalThis.SN_SCHEMAS['v2/port_template.schema.json'], 'v2/port_template is the C4 port template schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/starting_scenario.schema.json'], 'v2/starting_scenario is the C4 starting scenario schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
     assert.ok(globalThis.SN_SCHEMAS['v2/item.schema.json'], 'v2/item is the C2 merged item schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/quest.schema.json'], 'v2/quest is the C3 quest schema');
@@ -345,10 +350,11 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 21, 'content_types.json exposes 21 runtime types (20 definitions + patches); C3 added quests');
+    assert.equal(Types.TYPES.length, 20, 'content_types.json exposes 20 runtime types (19 definitions + patches); C4 retired map_profiles and promoted port/starting types');
     const promoted = new Set([
       'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
       'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules', 'items', 'quests',
+      'port_templates', 'starting_scenarios',
     ]);
     for (const info of Types.TYPES) {
       const expected = promoted.has(info.key) ? '2.0' : '1.0';
@@ -999,6 +1005,80 @@ function warningsOf(result) {
       'uppercase segments are rejected like the runtime validator');
   });
 
+  await test('C4 retires map_profiles and promotes port/starting content to 2.0', () => {
+    const coreRoot = path.resolve(__dirname, '..', '..', 'dev_mods', 'core');
+    const typeKeys = Types.TYPES.map((info) => info.key);
+    for (const retired of ['map_profiles', 'port_archetypes', 'starting_builds']) {
+      assert.ok(!typeKeys.includes(retired), `${retired} must not be a runtime type after C4`);
+      assert.equal(
+        fs.existsSync(path.join(coreRoot, 'content', `${retired}.json`)),
+        false,
+        `${retired}.json must be deleted from core`
+      );
+    }
+    for (const legacyConstant of ['MAP_PROFILE', 'PORT_ARCHETYPE', 'STARTING_BUILD']) {
+      assert.equal(globalThis.ContentTypes ? globalThis.ContentTypes[legacyConstant] : undefined, undefined);
+    }
+
+    const portTemplates = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'port_templates.json'), 'utf8'));
+    assert.equal(portTemplates.schema_version, '2.0');
+    assert.equal(portTemplates.content_type, 'port_templates');
+    assert.equal(portTemplates.definitions.length, 5, 'core ships the five former port archetypes');
+    for (const definition of portTemplates.definitions) {
+      assert.match(definition.id, /^core:port_template\//, 'port template ids use the new segment');
+      assert.match(definition.name_key, /^port_template\.core\./);
+    }
+    assert.deepEqual(
+      Validate.validateSchema(portTemplates, globalThis.SN_SCHEMAS['v2/port_template.schema.json'], 'v2/port_template.schema.json'),
+      [],
+      'core port_templates.json satisfies the 2.0 schema'
+    );
+
+    const scenarios = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'starting_scenarios.json'), 'utf8'));
+    assert.equal(scenarios.schema_version, '2.0');
+    assert.equal(scenarios.content_type, 'starting_scenarios');
+    assert.deepEqual(scenarios.definitions.map((definition) => definition.id), [
+      'core:starting_scenario/steady',
+      'core:starting_scenario/swift',
+    ]);
+    for (const definition of scenarios.definitions) {
+      assert.match(definition.name_key, /^starting_scenario\.core\./);
+      // Flat ship slots are unchanged from the 1.0 starting_build data block.
+      assert.ok(definition.data.hull && definition.data.boiler, 'scenario references hull + boiler');
+      assert.ok(Array.isArray(definition.data.cargo_modules), 'scenario keeps flat cargo_modules slots');
+    }
+    assert.deepEqual(
+      Validate.validateSchema(scenarios, globalThis.SN_SCHEMAS['v2/starting_scenario.schema.json'], 'v2/starting_scenario.schema.json'),
+      [],
+      'core starting_scenarios.json satisfies the 2.0 schema'
+    );
+
+    const mapConfigs = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'map_configs.json'), 'utf8'));
+    const mapData = mapConfigs.definitions[0].data;
+    for (const archetype of mapData.archetypes) {
+      assert.match(archetype, /^core:port_template\//, 'map configs reference port_templates');
+    }
+    assert.equal(mapData.default_starting_scenario, 'core:starting_scenario/steady');
+    assert.ok(!('default_starting_build' in mapData), 'the 1.0 default_starting_build field is gone');
+
+    const startProfiles = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'start_profiles.json'), 'utf8'));
+    for (const definition of startProfiles.definitions) {
+      assert.ok(!('starting_build' in definition.data), 'the 1.0 starting_build field is gone');
+      assert.match(definition.data.starting_scenario, /^core:starting_scenario\//);
+      assert.match(definition.data.map_config, /^core:map_config\//);
+    }
+
+    // No core content file may still point at the retired ids.
+    const forbidden = ['core:port_archetype/', 'core:starting_build/', 'core:map_profile/'];
+    for (const entry of fs.readdirSync(path.join(coreRoot, 'content'))) {
+      if (!entry.endsWith('.json')) continue;
+      const text = fs.readFileSync(path.join(coreRoot, 'content', entry), 'utf8');
+      for (const needle of forbidden) {
+        assert.ok(!text.includes(needle), `${entry} must not reference ${needle}`);
+      }
+    }
+  });
+
   await test('entity localization rename commits once and removes old keys', () => {
     const project = freshProject();
     const definition = project.contentFiles[0].definitions[0];
@@ -1082,7 +1162,7 @@ function warningsOf(result) {
 
   await test('missing own-namespace reference is an error; unknown core reference is a warning', () => {
     const project = freshProject();
-    const added = Store.addDefinition(project, 'starting_builds', {});
+    const added = Store.addDefinition(project, 'starting_scenarios', {});
     added.definition.data.hull = 'test_mod:hull/does_not_exist';
     added.definition.data.boiler = 'core:module/also_missing';
     const result = Validate.validateProject(project);

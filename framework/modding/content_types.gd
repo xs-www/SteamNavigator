@@ -11,9 +11,8 @@ const HULL := &"hulls"
 const MODULE := &"modules"
 const ROLE := &"roles"
 const STRATEGY := &"strategies"
-const PORT_ARCHETYPE := &"port_archetypes"
-const MAP_PROFILE := &"map_profiles"
-const STARTING_BUILD := &"starting_builds"
+const PORT_TEMPLATE := &"port_templates"
+const STARTING_SCENARIO := &"starting_scenarios"
 const WORLD_PROFILE := &"world_profiles"
 const REGION := &"regions"
 const SITE := &"sites"
@@ -34,9 +33,8 @@ const SCHEMA_PATHS := {
 	MODULE: "res://schemas/v2/module.schema.json",
 	ROLE: "res://schemas/role.schema.json",
 	STRATEGY: "res://schemas/strategy.schema.json",
-	PORT_ARCHETYPE: "res://schemas/port_archetype.schema.json",
-	MAP_PROFILE: "res://schemas/map_profile.schema.json",
-	STARTING_BUILD: "res://schemas/starting_build.schema.json",
+	PORT_TEMPLATE: "res://schemas/v2/port_template.schema.json",
+	STARTING_SCENARIO: "res://schemas/v2/starting_scenario.schema.json",
 	WORLD_PROFILE: "res://schemas/v2/world_profile.schema.json",
 	REGION: "res://schemas/v2/region.schema.json",
 	SITE: "res://schemas/v2/site.schema.json",
@@ -58,9 +56,8 @@ const SCHEMA_VERSIONS := {
 	MODULE: "2.0",
 	ROLE: "1.0",
 	STRATEGY: "1.0",
-	PORT_ARCHETYPE: "1.0",
-	MAP_PROFILE: "1.0",
-	STARTING_BUILD: "1.0",
+	PORT_TEMPLATE: "2.0",
+	STARTING_SCENARIO: "2.0",
 	WORLD_PROFILE: "2.0",
 	REGION: "2.0",
 	SITE: "2.0",
@@ -82,9 +79,8 @@ const SINGULAR := {
 	MODULE: "module",
 	ROLE: "role",
 	STRATEGY: "strategy",
-	PORT_ARCHETYPE: "port_archetype",
-	MAP_PROFILE: "map_profile",
-	STARTING_BUILD: "starting_build",
+	PORT_TEMPLATE: "port_template",
+	STARTING_SCENARIO: "starting_scenario",
 	WORLD_PROFILE: "world_profile",
 	REGION: "region",
 	SITE: "site",
@@ -106,9 +102,9 @@ const MODULE_TYPES := [HULL, MODULE]
 static func all() -> Array[StringName]:
 	var types: Array[StringName] = [
 		ITEM, HULL, MODULE, ROLE, STRATEGY,
-		PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, WORLD_PROFILE, REGION,
-		SITE, ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY,
-		START_PROFILE, MAP_CONFIG, CONTRACT, QUEST, EVENT,
+		PORT_TEMPLATE, STARTING_SCENARIO, WORLD_PROFILE, REGION, SITE,
+		ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY, START_PROFILE,
+		MAP_CONFIG, CONTRACT, QUEST, EVENT,
 	]
 	return types
 
