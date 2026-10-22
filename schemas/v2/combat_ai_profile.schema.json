@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/combat-ai-profile-2.json",
+  "title": "Steam Navigator combat AI profile content file (Content Schema 2.0 draft)",
+  "description": "Combat AI profiles (D-AI, schema-first draft): an FSM decision graph plus its targeting/rang control parameters, aligned with SNBattleSim/docs/FSM_MOD_CONTRACT.md and SNBattleSim/js/tactics.mjs normalisation limits. The Godot runtime does not load this type yet; it is editable and draft-validated only. IDs use core:combat_ai_profile/* once promoted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "combat_ai_profiles"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/combat_ai_profile_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "fsm_node_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,23}$"
+    },
+    "fsm_node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "runtime_action"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/fsm_node_id"
+        },
+        "runtime_action": {
+          "description": "Safe FSM action shared with the battle simulator (SNBattleSim FSM_ACTIONS).",
+          "enum": ["recon", "cruise", "approach", "flank", "evade", "maneuver", "withdraw", "flee", "engage", "focus"]
+        },
+        "name_key": {
+          "description": "Optional localization key for the editor graph label; defaults to the node id.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "x": {
+          "description": "Optional graph position 0.08–0.92 (simulator FSM import/export).",
+          "type": "number",
+          "minimum": 0.08,
+          "maximum": 0.92
+        },
+        "y": {
+          "description": "Optional graph position 0.08–0.92.",
+          "type": "number",
+          "minimum": 0.08,
+          "maximum": 0.92
+        }
+      }
+    },
+    "fsm_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "logic", "conditions"],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/fsm_node_id"
+        },
+        "to": {
+          "$ref": "#/$defs/fsm_node_id"
+        },
+        "logic": {
+          "description": "all = every condition must hold, any = one is enough.",
+          "enum": ["all", "any"]
+        },
+        "conditions": {
+          "description": "Condition enum shared with the battle simulator (SNBattleSim FSM_CONDITIONS); at most 8 per transition.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "enum": [
+              "cargo_threatened",
+              "no_target",
+              "visible_target",
+              "last_known_target",
+              "withdraw_trigger",
+              "withdraw_recovered",
+              "enemy_in_range",
+              "enemy_out_of_range",
+              "weapon_ready",
+              "broadside_ready",
+              "commander_present",
+              "hull_below",
+              "has_target",
+              "target_far",
+              "target_band",
+              "always"
+            ]
+          }
+        }
+      }
+    },
+    "combat_ai_profile_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_priority", "preferred_range", "initial", "nodes", "transitions"],
+      "properties": {
+        "target_priority": {
+          "enum": ["nearest", "cargo", "weakest"]
+        },
+        "preferred_range": {
+          "description": "Preferred engagement range as a 0–1 fraction of weapon range (simulator tactic.preferredRange).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "initial": {
+          "description": "Initial node id; must appear in nodes (semantic check).",
+          "$ref": "#/$defs/fsm_node_id"
+        },
+        "nodes": {
+          "description": "FSM states (simulator limit: at most 20).",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/fsm_node"
+          }
+        },
+        "transitions": {
+          "description": "Ordered transitions per from-node (simulator limit: at most 80). The first satisfied transition wins.",
+          "type": "array",
+          "maxItems": 80,
+          "items": {
+            "$ref": "#/$defs/fsm_transition"
+          }
+        }
+      }
+    }
+  }
+}
