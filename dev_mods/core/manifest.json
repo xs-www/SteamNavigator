@@ -165,6 +165,7 @@
   "description": "Official MVP content: ports, items, ships, contracts and events.",
   "capabilities": [
     "content.contract.passenger.v1",
+    "content.contracts.v1",
     "content.boiler_strategies.v1",
     "content.crew_roles.v1",
     "content.event.choice_pool.v1",

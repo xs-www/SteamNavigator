@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T15:37:17.734Z",
+    "generated_at": "2026-10-22T15:55:50.375Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -174,6 +174,7 @@
       "description": "Official MVP content: ports, items, ships, contracts and events.",
       "capabilities": [
         "content.contract.passenger.v1",
+        "content.contracts.v1",
         "content.boiler_strategies.v1",
         "content.crew_roles.v1",
         "content.event.choice_pool.v1",
@@ -2052,7 +2053,7 @@
         ]
       },
       "content/contracts.json": {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "content_type": "contracts",
         "definitions": [
           {

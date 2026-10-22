@@ -351,125 +351,6 @@
         }
       }
     },
-    "contract.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/contract-1.json",
-      "title": "Steam Navigator contract content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "contracts"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "common.schema.json#/$defs/definition"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "$ref": "#/$defs/contract_data"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "$defs": {
-        "contract_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "generator",
-            "payloads",
-            "deadline_formula",
-            "rewards"
-          ],
-          "properties": {
-            "kind": {
-              "enum": [
-                "main",
-                "normal"
-              ]
-            },
-            "sequence": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 99
-            },
-            "generator": {
-              "enum": [
-                "route_pair",
-                "random_pair"
-              ]
-            },
-            "constraints": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "requires_discovered_origin": {
-                  "type": "boolean"
-                },
-                "min_route_edges": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 8
-                },
-                "max_route_edges": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 8
-                },
-                "required_port_tags": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "payloads": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 4,
-              "items": {
-                "$ref": "common.schema.json#/$defs/payload"
-              }
-            },
-            "deadline_formula": {
-              "type": "string",
-              "minLength": 1
-            },
-            "rewards": {
-              "$ref": "common.schema.json#/$defs/rewards"
-            },
-            "requires_completed": {
-              "type": "array",
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            }
-          }
-        }
-      }
-    },
     "manifest.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/mod-manifest-1.json",
@@ -603,95 +484,6 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 80
-            }
-          }
-        }
-      }
-    },
-    "patch.schema.json": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://steam-navigator.local/schema/patch-1.json",
-      "title": "Steam Navigator explicit patch content file",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "content_type",
-        "definitions"
-      ],
-      "properties": {
-        "schema_version": {
-          "enum": [
-            "1.0"
-          ]
-        },
-        "content_type": {
-          "const": "patches"
-        },
-        "definitions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/patch_data"
-          }
-        }
-      },
-      "$defs": {
-        "patch_data": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "target",
-            "operations"
-          ],
-          "properties": {
-            "target": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "requires": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "mod",
-                "version"
-              ],
-              "properties": {
-                "mod": {
-                  "type": "string",
-                  "pattern": "^[a-z][a-z0-9_]{2,31}$"
-                },
-                "version": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              }
-            },
-            "operations": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 32,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "op",
-                  "path"
-                ],
-                "properties": {
-                  "op": {
-                    "enum": [
-                      "add",
-                      "replace",
-                      "remove"
-                    ]
-                  },
-                  "path": {
-                    "type": "string",
-                    "pattern": "^/"
-                  },
-                  "value": {}
-                }
-              }
             }
           }
         }
@@ -1224,6 +1016,181 @@
             "index": {
               "type": "integer",
               "minimum": 0
+            }
+          }
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "cargo",
+                "passenger"
+              ]
+            },
+            "name_key": {
+              "type": "string"
+            },
+            "weight_range": {
+              "$ref": "#/$defs/range2"
+            },
+            "count_range": {
+              "$ref": "#/$defs/range2"
+            },
+            "provider": {
+              "enum": [
+                "player",
+                "fuel"
+              ]
+            }
+          }
+        },
+        "rewards": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "base_money",
+            "on_time_bonus",
+            "reputation"
+          ],
+          "properties": {
+            "base_money": {
+              "$ref": "#/$defs/range2"
+            },
+            "on_time_bonus": {
+              "$ref": "#/$defs/range2"
+            },
+            "reputation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unlock_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id_ref"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/contract.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/contract-2.json",
+      "title": "Steam Navigator contract content file (Content Schema 2.0)",
+      "description": "Transport contracts (C4): generation constraints, cargo/passenger payloads, deadline formula and rewards. Successor of the 1.0 `contracts` content type; the data block and IDs (core:contract/*) are unchanged, only the envelope moves to Content Schema 2.0 and the schema file moves to schemas/v2/contract.schema.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "contracts"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/contract_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "contract_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "generator",
+            "payloads",
+            "deadline_formula",
+            "rewards"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "main",
+                "normal"
+              ]
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 99
+            },
+            "generator": {
+              "enum": [
+                "route_pair",
+                "random_pair"
+              ]
+            },
+            "constraints": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "requires_discovered_origin": {
+                  "type": "boolean"
+                },
+                "min_route_edges": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 8
+                },
+                "max_route_edges": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 8
+                },
+                "required_port_tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "payloads": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "$ref": "common.schema.json#/$defs/payload"
+              }
+            },
+            "deadline_formula": {
+              "type": "string",
+              "minLength": 1
+            },
+            "rewards": {
+              "$ref": "common.schema.json#/$defs/rewards"
+            },
+            "requires_completed": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
             }
           }
         }
@@ -2689,6 +2656,94 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 12
+            }
+          }
+        }
+      }
+    },
+    "v2/patch.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/patch-2.json",
+      "title": "Steam Navigator explicit patch content file (Content Schema 2.0)",
+      "description": "Explicit patches that modify definitions of other mods (C4). Each definition declares the full target id (mod/type/definition), an optional source-mod version requirement, and JSON Patch-style operations against that definition. The envelope is Content Schema 2.0; patched definitions are re-validated against the current schema of the target content type, so the patch envelope version no longer selects a 1.0 fallback.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "patches"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/patch_data"
+          }
+        }
+      },
+      "$defs": {
+        "patch_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target",
+            "operations"
+          ],
+          "properties": {
+            "target": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "requires": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mod",
+                "version"
+              ],
+              "properties": {
+                "mod": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{2,31}$"
+                },
+                "version": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "operations": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "op",
+                  "path"
+                ],
+                "properties": {
+                  "op": {
+                    "enum": [
+                      "add",
+                      "replace",
+                      "remove"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "pattern": "^/"
+                  },
+                  "value": {}
+                }
+              }
             }
           }
         }

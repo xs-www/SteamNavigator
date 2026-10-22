@@ -8,7 +8,7 @@
 `content_types.json` 是内容类型清单的唯一真源，生成物 `framework/modding/content_types.gd`（`ContentTypes`）
 携带每个 **active** 类型的 Schema 路径与 `schema_version`。SDK 不维护第二套类型或版本表：
 
-- **active 类型**：由运行时真实加载，版本可以是 `1.0` 或 `2.0`（例如 `roles` 仍是 1.0，`items` / `modules` / 世界类已是 2.0）。
+- **active 类型**：由运行时真实加载；C4 收尾后所有运行时类型（含 `contracts` / `patches`）统一为 `2.0`。
 - **草案（draft）类型**：登记在 `content_types.json` 的 `draft_schemas` / `draft_types`，目前是
   `weapons`、`story_arcs`、`story_levels`。运行时不会加载它们，只能做 `--mode=draft` 静态校验，不能发布。
 
@@ -18,7 +18,7 @@
 
 ```powershell
 # 默认 runtime：真实 Bootstrap 加载 core + 指定模组（旧调用方式保持兼容）
-godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examples/example_roles_1_0
+godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examples/example_crew_roles
 
 # 草案 / 混合模组的静态 Schema 校验：不启动运行时
 godot --headless --path . --script res://sdk/validate.gd -- \
@@ -74,6 +74,6 @@ Core 从 `dev_mods` 加载，第三方模组先复制到 `user://` 隔离目录�
 `.github/workflows/release.yml` 在发布 tag 上依次执行：
 
 1. Core runtime 校验（`--mode=runtime`）；
-2. 1.0 / 混合示例的 runtime 校验，以及草案模板的 draft 校验；
+2. 示例 mod 的 runtime 校验（全部为 2.0），以及草案模板的 draft 校验；
 3. 草案发布拦截（`pack_mod --release` 对草案必须失败）；
 4. `pack_mod --release` 打包 Core（校验通过才写 zip）。

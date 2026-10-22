@@ -5,7 +5,7 @@ extends SceneTree
 ## ## 用法
 ## ```text
 ## godot --headless --path . --script res://sdk/validate.gd -- \
-##     --mod-root=sdk/examples/example_roles_1_0 [--mode=runtime|draft] [--json]
+##     --mod-root=sdk/examples/example_crew_roles [--mode=runtime|draft] [--json]
 ## ```
 ##
 ## ## 契约与约束

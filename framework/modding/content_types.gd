@@ -44,10 +44,10 @@ const SCHEMA_PATHS := {
 	DISCOVERY: "res://schemas/v2/discovery.schema.json",
 	START_PROFILE: "res://schemas/v2/start_profile.schema.json",
 	MAP_CONFIG: "res://schemas/v2/map_config.schema.json",
-	CONTRACT: "res://schemas/contract.schema.json",
+	CONTRACT: "res://schemas/v2/contract.schema.json",
 	QUEST: "res://schemas/v2/quest.schema.json",
 	VOYAGE_EVENT: "res://schemas/v2/voyage_event.schema.json",
-	PATCH: "res://schemas/patch.schema.json",
+	PATCH: "res://schemas/v2/patch.schema.json",
 }
 
 const SCHEMA_VERSIONS := {
@@ -67,10 +67,10 @@ const SCHEMA_VERSIONS := {
 	DISCOVERY: "2.0",
 	START_PROFILE: "2.0",
 	MAP_CONFIG: "2.0",
-	CONTRACT: "1.0",
+	CONTRACT: "2.0",
 	QUEST: "2.0",
 	VOYAGE_EVENT: "2.0",
-	PATCH: "1.0",
+	PATCH: "2.0",
 }
 
 const SINGULAR := {

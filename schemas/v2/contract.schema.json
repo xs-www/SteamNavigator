@@ -1,13 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://steam-navigator.local/schema/contract-1.json",
-  "title": "Steam Navigator contract content file",
+  "$id": "https://steam-navigator.local/schema/contract-2.json",
+  "title": "Steam Navigator contract content file (Content Schema 2.0)",
+  "description": "Transport contracts (C4): generation constraints, cargo/passenger payloads, deadline formula and rewards. Successor of the 1.0 `contracts` content type; the data block and IDs (core:contract/*) are unchanged, only the envelope moves to Content Schema 2.0 and the schema file moves to schemas/v2/contract.schema.json.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
   "properties": {
     "schema_version": {
-      "enum": ["1.0"]
+      "const": "2.0"
     },
     "content_type": {
       "const": "contracts"

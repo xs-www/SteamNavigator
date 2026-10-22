@@ -453,6 +453,63 @@
           "minimum": 0
         }
       }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "cargo",
+            "passenger"
+          ]
+        },
+        "name_key": {
+          "type": "string"
+        },
+        "weight_range": {
+          "$ref": "#/$defs/range2"
+        },
+        "count_range": {
+          "$ref": "#/$defs/range2"
+        },
+        "provider": {
+          "enum": [
+            "player",
+            "fuel"
+          ]
+        }
+      }
+    },
+    "rewards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_money",
+        "on_time_bonus",
+        "reputation"
+      ],
+      "properties": {
+        "base_money": {
+          "$ref": "#/$defs/range2"
+        },
+        "on_time_bonus": {
+          "$ref": "#/$defs/range2"
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unlock_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id_ref"
+          }
+        }
+      }
     }
   }
 }

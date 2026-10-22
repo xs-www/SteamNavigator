@@ -99,10 +99,13 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 26, `expected 4 top-level + 22 v2 schemas, got ${keys.length}`);
+    assert.equal(keys.length, 26, `expected 2 top-level + 24 v2 schemas, got ${keys.length}`);
     assert.equal(files.length, 26, `expected 26 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
-    assert.ok(globalThis.SN_SCHEMAS['contract.schema.json'], 'the remaining 1.0 runtime schema stays embedded');
+    assert.equal(globalThis.SN_SCHEMAS['contract.schema.json'], undefined, 'the 1.0 contract schema was removed (C4-D)');
+    assert.equal(globalThis.SN_SCHEMAS['patch.schema.json'], undefined, 'the 1.0 patch schema was removed (C4-D)');
+    assert.ok(globalThis.SN_SCHEMAS['v2/contract.schema.json'], 'v2/contract is the C4-D contract schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/patch.schema.json'], 'v2/patch is the C4-D patch schema');
     assert.equal(globalThis.SN_SCHEMAS['good.schema.json'], undefined, 'the dead 1.0 goods schema was removed (C2)');
     assert.equal(globalThis.SN_SCHEMAS['map_profile.schema.json'], undefined, 'the retired 1.0 map_profile schema was removed (C4)');
     assert.equal(globalThis.SN_SCHEMAS['port_archetype.schema.json'], undefined, 'the 1.0 port_archetype schema was removed (C4)');
@@ -349,29 +352,25 @@ function warningsOf(result) {
       assert.equal(Validate.schemaVersionFor(info.key), '2.0', `${info.key} version by key`);
       assert.equal(Validate.schemaVersionFor({ content_type: info.key }), '2.0', `${info.key} version by file`);
     }
-    // 1.0 types keep their version without regression (contracts is the last 1.0 definition type).
-    assert.equal(Validate.schemaVersionFor('contracts'), '1.0');
-    assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '1.0' }), '1.0');
-    assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to 1.0');
+    // C4-D promoted the last 1.0 definition type: contracts is 2.0 now.
+    assert.equal(Validate.schemaVersionFor('contracts'), '2.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '2.0' }), '2.0');
+    assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to the 1.0 baseline default');
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
     assert.equal(Types.TYPES.length, 20, 'content_types.json exposes 20 runtime types (19 definitions + patches); C4 retired map_profiles and promoted port/starting types');
-    const promoted = new Set([
-      'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
-      'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules', 'items', 'quests',
-      'port_templates', 'starting_scenarios', 'voyage_events', 'crew_roles', 'boiler_strategies',
-    ]);
+    // C4-D: every runtime type (definitions and patches) is Content Schema 2.0.
     for (const info of Types.TYPES) {
-      const expected = promoted.has(info.key) ? '2.0' : '1.0';
+      const expected = '2.0';
       assert.equal(info.schemaVersion, expected, `${info.key} must declare schemaVersion ${expected}`);
       assert.equal(Catalog.schemaVersionFor(info.key), expected, `${info.key} catalog version`);
       assert.equal(Validate.schemaVersionFor(info.key), expected, `${info.key} validator version by type`);
       assert.equal(Validate.schemaVersionFor({ content_type: info.key }), expected, `${info.key} version by file`);
     }
     // An explicit file version still wins so a wrong version is reported by validation.
-    assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '2.0' }), '2.0');
-    assert.equal(Catalog.schemaVersionFor('patches'), '1.0', 'patches are a runtime type at 1.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '1.0' }), '1.0', 'an explicit file version still wins');
+    assert.equal(Catalog.schemaVersionFor('patches'), '2.0', 'patches are a runtime type at 2.0');
   });
 
   await test('runtime support: promoted 2.0 types deploy while drafts and mismatches are blocked', () => {
@@ -397,8 +396,8 @@ function warningsOf(result) {
     // Compatibility aliases still expose the same list.
     assert.deepEqual(Store.draftContentFiles(project), unsupported);
 
-    // A 1.0 runtime type whose file declares 2.0 (imported or malformed) cannot load either.
-    const versionMismatch = { path: 'content/contracts_2.json', content_type: 'contracts', schema_version: '2.0', definitions: [] };
+    // No 1.0 runtime type remains: a file declaring 1.0 cannot load.
+    const versionMismatch = { path: 'content/contracts_1.json', content_type: 'contracts', schema_version: '1.0', definitions: [] };
     project.contentFiles.push(versionMismatch);
     assert.equal(Store.runtimeSupportsFile(versionMismatch), false);
     assert.ok(Store.unsupportedContentFiles(project).includes(versionMismatch));
@@ -409,11 +408,12 @@ function warningsOf(result) {
     assert.equal(Store.runtimeSupportsFile(unknown), false);
     assert.equal(Store.unsupportedContentFiles(project).length, 3);
 
-    // Plain 1.0 runtime content stays supported/exportable.
+    // No runtime type accepts a 1.0 envelope any more.
     const legacy = freshProject();
-    Store.addDefinition(legacy, 'contracts', {});
-    assert.equal(Store.hasDraftContent(legacy), false, 'runtime 1.0 content stays exportable');
-    assert.equal(Store.runtimeSupportsFile(legacy.contentFiles.find((file) => file.content_type === 'contracts')), true);
+    const legacyFile = legacy.contentFiles.find((file) => file.content_type === 'items');
+    legacyFile.schema_version = '1.0';
+    assert.equal(Store.runtimeSupportsFile(legacyFile), false, '1.0 content has no runtime type left');
+    assert.equal(Store.unsupportedContentFiles(legacy).length, 1, 'the 1.0 file is unsupported');
   });
 
   await test('every draft type validates with zero errors using catalog defaults', () => {
@@ -758,7 +758,7 @@ function warningsOf(result) {
     assert.equal(errorsOf(result).length, 0, JSON.stringify(errorsOf(result), null, 2));
   });
 
-  await test('draft files require schema 2.0 and 1.0 types keep 1.0', () => {
+  await test('draft files require schema 2.0 and every runtime type is 2.0', () => {
     const project = freshProject();
     Store.addDefinition(project, 'weapons', {});
     let result = Validate.validateProject(project);
@@ -783,15 +783,15 @@ function warningsOf(result) {
     );
     itemsFile.schema_version = '2.0';
 
-    // The remaining 1.0 type (contracts) keeps 1.0.
+    // The former last 1.0 type (contracts) is 2.0 now, so a 1.0 file is rejected.
     const contractsFile = Store.addDefinition(project, 'contracts', {}).file;
-    contractsFile.schema_version = '2.0';
+    contractsFile.schema_version = '1.0';
     result = Validate.validateProject(project);
     assert.ok(
       errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
-      'a 1.0 type declaring 2.0 must report schema_version_mismatch'
+      'a runtime 2.0 type declaring 1.0 must report schema_version_mismatch'
     );
-    contractsFile.schema_version = '1.0';
+    contractsFile.schema_version = '2.0';
 
     draftFile.schema_version = '3.0';
     result = Validate.validateProject(project);
@@ -890,7 +890,7 @@ function warningsOf(result) {
     );
   });
 
-  await test('export and re-import preserves schema 2.0 alongside 1.0 content', () => {
+  await test('export and re-import preserves schema 2.0 content', () => {
     const project = freshProject();
     Store.addDefinition(project, 'start_profiles', {});
     const files = Store.toExportFiles(project);
@@ -1097,11 +1097,9 @@ function warningsOf(result) {
       );
       assert.ok(!Catalog.DEFAULTS[retired], `${retired} must not keep editor defaults`);
     }
-    // contracts is the only remaining 1.0 definition type (+ the patch type).
-    const legacyDefinitions = Types.TYPES
-      .filter((info) => info.key !== 'patches' && info.schemaVersion === '1.0')
-      .map((info) => info.key);
-    assert.deepEqual(legacyDefinitions, ['contracts'], 'contracts stays the only 1.0 definition type');
+    // C4-D removed the last 1.0 definition type: every type is 2.0 now.
+    const legacyTypes = Types.TYPES.filter((info) => info.schemaVersion !== '2.0').map((info) => info.key);
+    assert.deepEqual(legacyTypes, [], 'no runtime type declares 1.0 after C4-D');
 
     const fixtures = [
       ['voyage_events', 'v2/voyage_event.schema.json', 'core:voyage_event/', 'voyage_event.core.', 2],
@@ -1169,6 +1167,73 @@ function warningsOf(result) {
       assert.ok(entries['crew_role.core.engineer_basic.name'], `${locale} has the new crew role key`);
       assert.ok(entries['boiler_strategy.core.standard.name'], `${locale} has the new boiler strategy key`);
     }
+  });
+
+  await test('C4-D promotes contracts and patches to 2.0, leaving no 1.0 runtime type', () => {
+    const coreRoot = path.resolve(__dirname, '..', '..', 'dev_mods', 'core');
+    assert.deepEqual(
+      Types.TYPES.filter((info) => info.schemaVersion !== '2.0').map((info) => info.key),
+      [],
+      'every runtime type (definitions + patches) is Content Schema 2.0'
+    );
+    for (const info of Types.TYPES) {
+      assert.match(info.schema, /^v2\/.+\.schema\.json$/, `${info.key} points at a v2 schema`);
+    }
+    assert.equal(globalThis.SN_SCHEMAS['contract.schema.json'], undefined, 'the 1.0 contract schema is deleted');
+    assert.equal(globalThis.SN_SCHEMAS['patch.schema.json'], undefined, 'the 1.0 patch schema is deleted');
+    assert.ok(globalThis.SN_SCHEMAS['v2/contract.schema.json']);
+    assert.ok(globalThis.SN_SCHEMAS['v2/patch.schema.json']);
+
+    // contracts keep their ids and data; only the envelope moved to 2.0.
+    const contracts = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'contracts.json'), 'utf8'));
+    assert.equal(contracts.schema_version, '2.0');
+    assert.equal(contracts.content_type, 'contracts');
+    assert.equal(contracts.definitions.length, 9, 'core still ships the nine contracts');
+    for (const definition of contracts.definitions) {
+      assert.match(definition.id, /^core:contract\//, 'contract ids are unchanged');
+      assert.match(definition.name_key, /^contract\.core\./);
+      assert.equal(typeof definition.data.payloads, 'object', `${definition.id} keeps its payload list`);
+      assert.ok(definition.data.rewards, `${definition.id} keeps its rewards`);
+    }
+    const first = contracts.definitions[0];
+    assert.equal(first.id, 'core:contract/main_01');
+    assert.equal(first.data.kind, 'main');
+    assert.equal(first.data.sequence, 1);
+    assert.deepEqual(
+      Validate.validateSchema(contracts, globalThis.SN_SCHEMAS['v2/contract.schema.json'], 'v2/contract.schema.json'),
+      [],
+      'core contracts.json satisfies the 2.0 contract schema'
+    );
+    const manifest = JSON.parse(fs.readFileSync(path.join(coreRoot, 'manifest.json'), 'utf8'));
+    assert.ok(manifest.capabilities.includes('content.contracts.v1'), 'core declares content.contracts.v1');
+    assert.equal(fs.existsSync(path.join(coreRoot, 'content', 'patches.json')), false, 'core ships no patches');
+
+    // A 2.0 patch file validates against the v2 patch schema; a 1.0 envelope no longer does.
+    const patchPayload = {
+      schema_version: '2.0',
+      content_type: 'patches',
+      definitions: [{
+        target: 'core:item/iron_ore',
+        requires: { mod: 'core', version: '>=1.0.0 <2.0.0' },
+        operations: [{ op: 'replace', path: '/data/base_price', value: 50 }],
+      }],
+    };
+    assert.deepEqual(
+      Validate.validateSchema(patchPayload, globalThis.SN_SCHEMAS['v2/patch.schema.json'], 'v2/patch.schema.json'),
+      [],
+      'a 2.0 patch envelope with target/requires/operations satisfies the v2 patch schema'
+    );
+    assert.ok(
+      Validate.validateSchema(
+        { ...patchPayload, schema_version: '1.0' },
+        globalThis.SN_SCHEMAS['v2/patch.schema.json'],
+        'v2/patch.schema.json'
+      ).length > 0,
+      'the 1.0 patch envelope is rejected by the 2.0 patch schema'
+    );
+    const patchedDefinition = patchPayload.definitions[0];
+    assert.equal(typeof patchedDefinition.target, 'string', 'patch target stays a full "mod:type/id" string');
+    assert.equal(patchedDefinition.requires.version, '>=1.0.0 <2.0.0', 'patch keeps the source-version requirement');
   });
 
   await test('entity localization rename commits once and removes old keys', () => {

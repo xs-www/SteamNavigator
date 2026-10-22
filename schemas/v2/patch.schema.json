@@ -1,13 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://steam-navigator.local/schema/patch-1.json",
-  "title": "Steam Navigator explicit patch content file",
+  "$id": "https://steam-navigator.local/schema/patch-2.json",
+  "title": "Steam Navigator explicit patch content file (Content Schema 2.0)",
+  "description": "Explicit patches that modify definitions of other mods (C4). Each definition declares the full target id (mod/type/definition), an optional source-mod version requirement, and JSON Patch-style operations against that definition. The envelope is Content Schema 2.0; patched definitions are re-validated against the current schema of the target content type, so the patch envelope version no longer selects a 1.0 fallback.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
   "properties": {
     "schema_version": {
-      "enum": ["1.0"]
+      "const": "2.0"
     },
     "content_type": {
       "const": "patches"

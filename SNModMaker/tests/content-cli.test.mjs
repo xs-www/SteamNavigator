@@ -11,7 +11,7 @@
  *   node SNModMaker/tests/content-cli.test.mjs
  *   # or: node --test SNModMaker/tests/content-cli.test.mjs
  *
- * Covers the 25 runtime Content Schema types (16 1.0 + 9 promoted Phase B 2.0)
+ * Covers the 20 runtime content types (all Content Schema 2.0 after C4-D)
  * and the 3 Schema 2.0 draft types (weapons + Story Mode arcs/levels):
  * draft:true / schema_version 2.0, draft_content warning, v2 $refs, the
  * story-pack whitelist, and capability exposure / capability_undeclared for
@@ -39,7 +39,7 @@ const cliCwd = repoRoot;
 const MOD_ID = 'test_mod';
 const ITEMS_FILE = 'content/items.json';
 /* Shipped Story Mode sample pack: story-only content mod, read-only fixture.
- * It lives under sdk/templates because the 1.0 runtime cannot load it yet. */
+ * It lives under sdk/templates because the runtime does not load draft content yet. */
 const STORY_PACK_DIR = path.join(repoRoot, 'sdk', 'templates', 'story_pack_iron_tide');
 
 /* ------------------------------------------------------------------------- */
@@ -425,7 +425,7 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.ok(!items.draft, 'runtime types are not marked draft');
   const patches = json.types.find((entry) => entry.key === 'patches');
   assert.equal(patches.file, 'content/patches.json');
-  assert.equal(patches.schema, 'patch.schema.json');
+  assert.equal(patches.schema, 'v2/patch.schema.json');
 
   const drafts = json.types.filter((entry) => entry.draft);
   assert.equal(drafts.length, 3, 'weapons and the two Story Mode drafts are listed with draft:true');
@@ -453,13 +453,15 @@ test('types --json lists every content type with presentation metadata', (t) => 
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['boiler_strategies', 'crew_roles', 'discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules',
-      'port_templates', 'quests', 'regions', 'route_templates', 'sites', 'start_profiles', 'starting_scenarios',
-      'voyage_events', 'weather_profiles', 'world_profiles'],
-    'exactly the eighteen Schema 2.0 runtime rows are active'
+    ['boiler_strategies', 'contracts', 'crew_roles', 'discoveries', 'factions', 'hulls', 'items', 'map_configs',
+      'modules', 'patches', 'port_templates', 'quests', 'regions', 'route_templates', 'sites', 'start_profiles',
+      'starting_scenarios', 'voyage_events', 'weather_profiles', 'world_profiles'],
+    'every runtime row is Schema 2.0 after C4-D'
   );
   const runtimeCapabilities = {
     boiler_strategies: 'content.boiler_strategies.v1',
+    contracts: 'content.contracts.v1',
+    patches: 'content.patches.v1',
     crew_roles: 'content.crew_roles.v1',
     hulls: 'content.hulls.v1',
     items: 'content.items.v1',
@@ -534,12 +536,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（20；其中 18 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 20 active types, 18 of them Schema 2.0:\n${stdout}`
+    /运行时内容类型（20；其中 20 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 20 active types, all 20 at Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    18,
+    20,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
   );
   assert.match(
@@ -594,8 +596,13 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
   assert.match(
     stdout,
-    /^contracts\s+委托\s+contract\s+content\/contracts\.json$/m,
-    `1.0 runtime rows stay unmarked:\n${stdout}`
+    /^contracts\s+委托\s+contract\s+content\/contracts\.json  \[runtime 2\.0\]$/m,
+    `contracts is promoted to Schema 2.0:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^patches\s+显式补丁\s+patch\s+content\/patches\.json  \[runtime 2\.0\]$/m,
+    `patches are Schema 2.0 as well:\n${stdout}`
   );
   assert.match(
     stdout,
