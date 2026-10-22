@@ -4,7 +4,7 @@
 
 - 类型：JSON 数据/配置
 
-- 引用关系：`content_types.json.draft_schemas.story_levels` 指向本文件；游戏 1.0 运行时不加载，编辑器 / CLI 用它校验。
+- 引用关系：`content_types.json.draft_schemas.story_levels` 指向本文件；当前运行时不加载（草案），编辑器 / CLI 用它校验。
 - 定义 envelope 固定 `schema_version: "2.0"`、`content_type: "story_levels"`，单条定义复用 `common.schema.json#/$defs/definition`。
 - `data.map.fixed` 是手工固定地图：`ports` ≥ 2（ID 形如 `port_0`）、`edges` ≥ 1，航道两端必须是已声明港口；`start_port` 可省，缺省时按 `start.port_id`、首个港口兜底。
 - `data.map.map_config` 是可选引用：只复用 Core `map_config` 的经济 / 探索参数，地形始终以 `fixed` 为准。

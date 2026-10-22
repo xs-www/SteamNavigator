@@ -12,8 +12,8 @@
 | `ITEM` | L9 |
 | `HULL` | L10 |
 | `MODULE` | L11 |
-| `ROLE` | L12 |
-| `STRATEGY` | L13 |
+| `CREW_ROLE` | L12 |
+| `BOILER_STRATEGY` | L13 |
 | `PORT_TEMPLATE` | L14 |
 | `STARTING_SCENARIO` | L15 |
 | `WORLD_PROFILE` | L16 |
@@ -27,7 +27,7 @@
 | `MAP_CONFIG` | L24 |
 | `CONTRACT` | L25 |
 | `QUEST` | L26 |
-| `EVENT` | L27 |
+| `VOYAGE_EVENT` | L27 |
 | `PATCH` | L28 |
 | `SCHEMA_PATHS` | L30 |
 | `SCHEMA_VERSIONS` | L53 |

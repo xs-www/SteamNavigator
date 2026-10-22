@@ -63,9 +63,9 @@
 
 - Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。
 - `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
-- `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons / story_arcs / story_levels 草案 2.0），最后回退 1.0。
+- `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（C4 后全部 active 类型为 2.0；weapons / story_arcs / story_levels 草案为 2.0），未知类型最后回退 1.0。
 - 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
-- `draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（Phase B 9 类 + 草案族），同一 capability 每次校验只报一条。
+- `draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；active 2.0 类型（C4 后全部 20 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（20 类 + 草案族），同一 capability 每次校验只报一条。
 - `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
 - `REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_build` → starting_build，与已有的 hull / good 等字段共用 `ref_type` 提示。
 - 武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。

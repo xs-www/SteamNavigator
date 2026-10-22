@@ -18,10 +18,10 @@
 
 ## 契约与约束
 - 内容版本按内容类型声明：每个内容文件的 `schema_version` 必须等于
-  `ContentTypes.schema_version(content_type)`；期望版本为空时回退
-  `FrameworkInfo.CONTENT_SCHEMA`。未知类型仍按 `unknown_content_type` 拒绝。
-- Phase A 只把全局版本比较改为按类型比较，1.0 内容行为完全不变；Schema 2.0
-  草案类型尚未提升 active，仍不会进入加载链。
-- Patch 的再校验用**目标定义类型**的版本构造 envelope，避免借用全局基线版本。
+  `ContentTypes.schema_version(content_type)`。C4-D 起所有 active 类型（含
+  `contracts` 与 `patches`）都是 2.0，不再回退全局 1.0 基线；未知类型仍按
+  `unknown_content_type` 拒绝。
+- Patch 的再校验用**目标定义类型**的版本构造 envelope（目标类型当前均为
+  2.0），没有「目标 1.0 → 用 1.0 envelope」的 fallback。
 
 模块索引：[framework/modding](./README.md)

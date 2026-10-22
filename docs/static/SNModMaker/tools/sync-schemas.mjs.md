@@ -12,7 +12,7 @@
 
 ## 契约与约束
 
-- bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（含 Phase B 9 类、C1 module/hull、C2 item、C3 quest 与 weapon/story 草案）为 `v2/...`，与磁盘文件一一对应（当前 27 个：10 顶层 + 17 个 v2）。
+- bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（C4 后含全部 20 类 active 2.0 Schema + 3 类草案）为 `v2/...`，与磁盘文件一一对应（当前 26 个：2 顶层 + 24 个 v2）。
 - 生成文件头带 AUTO-GENERATED 标记；修改任何 Schema 后必须重跑。
 - 只做 JSON 解析与嵌入，不校验 Schema 自身。
 

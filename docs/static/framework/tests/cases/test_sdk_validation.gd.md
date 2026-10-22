@@ -16,11 +16,11 @@
 | `STORY_TEMPLATE` | L22 |
 | `test_default_mode_is_runtime_and_validates_core() -> void` | L207 |
 | `test_mod_root_core_does_not_duplicate_the_default_scan_root() -> void` | L217 |
-| `test_runtime_accepts_1_0_and_mixed_version_mods() -> void` | L234 |
+| `test_runtime_accepts_mixed_version_mods() -> void` | L234 |
 | `test_runtime_rejects_unactivated_draft_content() -> void` | L264 |
 | `test_draft_mode_validates_draft_story_and_mixed_mods() -> void` | L283 |
 | `test_draft_mode_reports_schema_and_per_type_version_errors() -> void` | L308 |
-| `test_patch_envelope_is_checked_against_the_target_type_version() -> void` | L346 |
+| `test_patch_envelope_is_checked_against_the_patches_type_version() -> void` | L346 |
 | `test_unknown_mode_is_a_usage_error() -> void` | L380 |
 | `test_pack_release_rejects_draft_content_and_plain_pack_allows_it() -> void` | L390 |
 | `test_pack_release_rejects_validation_errors() -> void` | L420 |
@@ -33,7 +33,7 @@
   `res://sdk/validate.gd` / `res://sdk/pack_mod.gd`，不直接调用内部实现。
 - 仓库内示例 / 模板只读（`sdk/examples/**`、`sdk/templates/**`）；运行期 fixture 写在
   `user://sdk_test_*`，每个用例结束清理。
-- runtime 必须：1.0 兼容、混合 1.0 + 2.0 可加载、未激活草案被显式拒绝
+- runtime 必须：2.0 示例可加载、多类型 2.0 混合模组可加载、未激活草案被显式拒绝；`contracts` 保留唯一 1.0 定义类型
   （`inactive_content_type`，带 `mod` / `file` / `path` 字段）。
 - draft 必须：草案 / 混合模组可静态校验；Schema 错误与“按类型版本”错误能被发现。
 - `pack_mod --release` 必须拒绝未激活草案与校验 error；不带 `--release` 保持旧行为。
