@@ -354,6 +354,7 @@
 | `assets/models/weapons/shared_materials/wood_deck.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/ports/iron_harbor_banner.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/boiler_strategies.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/captains.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/combat_abilities.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/contracts.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/crew_roles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -362,6 +363,8 @@
 | `content/encounter_tables.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/enemy_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/factions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/fleet_doctrines.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/formations.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/hulls.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/items.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/loot_tables.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -371,6 +374,7 @@
 | `content/quests.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/regions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/route_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/ship_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/sites.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/start_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/starting_scenarios.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -384,7 +388,7 @@
 
 ## 模块契约
 
-- `manifest.json` 声明 required=true，内容文件 25 个（含 D1 的 6 个战斗内容文件），本地化 zh_CN/en。
+- `manifest.json` 声明 required=true，内容文件 29 个（含 D1 的 6 个战斗内容文件与 D2 的 4 个舰队内容文件），本地化 zh_CN/en。
 - tier≥2 模块带 `craft_cost`；所有模块可带 `materials`/`craft_time_hours` 供 CraftOps 读取。
 - 两个造船厂港口（iron_harbor/free_town）市场限量出售精密齿轮，保证大型船材料在当局地图可获得。
 - 框架不得引用这里的具体 ID；所有引用由 Schema/交叉校验保证。

@@ -30,6 +30,7 @@
 | `test_enemy_weapon_sockets_that_resolve_are_clean() -> void` | L527 |
 | `test_core_combat_socket_classes_resolve() -> void` | L547 |
 | `test_combat_references_are_checked() -> void` | L558 |
+| `test_fleet_references_are_checked() -> void` | L600 |
 
 （`bootstrap_core()`）复制出的临时 `RegistryHub` 注册合成定义，驱动
 `CrossReferenceValidator.validate()`，覆盖硬引用缺失 error、planned 目标

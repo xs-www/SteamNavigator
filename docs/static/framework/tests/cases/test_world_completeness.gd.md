@@ -14,28 +14,32 @@
 | `WEATHER_PROFILE_ID` | L26 |
 | `START_PROFILE_ID` | L27 |
 | `STARTING_BUILD_ID` | L28 |
-| `STANDARD_HULL_ID` | L29 |
-| `STANDARD_BOILER_ID` | L30 |
-| `SECOND_BOILER_ID` | L31 |
-| `STANDARD_CARGO_ID` | L32 |
-| `test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void` | L35 |
-| `test_gate_is_off_without_world_profiles() -> void` | L75 |
-| `test_third_party_world_profile_does_not_enable_core_rules() -> void` | L83 |
-| `test_missing_map_config_reports_error() -> void` | L98 |
-| `test_missing_start_profile_reports_error() -> void` | L105 |
-| `test_missing_weather_profile_reports_error() -> void` | L111 |
-| `test_missing_region_reports_error() -> void` | L116 |
-| `test_complete_phase_b_content_has_no_errors() -> void` | L122 |
-| `test_core_requires_combat_content_counts() -> void` | L128 |
-| `test_combat_counts_ignore_third_party_content() -> void` | L135 |
-| `test_core_combat_content_satisfies_core_counts() -> void` | L164 |
-| `test_core_requires_at_least_one_quest() -> void` | L177 |
-| `test_phase_b_capabilities_include_quests() -> void` | L184 |
-| `test_suggested_content_is_warning_only() -> void` | L188 |
-| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L204 |
-| `test_start_region_tags_must_match_a_region() -> void` | L212 |
-| `test_start_profile_must_resolve_starting_scenario() -> void` | L220 |
-| `test_phase_b_capabilities_are_whitelisted() -> void` | L229 |
+| `SHIP_ARCHETYPE_ID` | L29 |
+| `FORMATION_ID` | L30 |
+| `FLEET_DOCTRINE_ID` | L31 |
+| `STANDARD_HULL_ID` | L32 |
+| `STANDARD_BOILER_ID` | L33 |
+| `SECOND_BOILER_ID` | L34 |
+| `STANDARD_CARGO_ID` | L35 |
+| `test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void` | L38 |
+| `test_gate_is_off_without_world_profiles() -> void` | L78 |
+| `test_third_party_world_profile_does_not_enable_core_rules() -> void` | L86 |
+| `test_missing_map_config_reports_error() -> void` | L101 |
+| `test_missing_start_profile_reports_error() -> void` | L108 |
+| `test_missing_weather_profile_reports_error() -> void` | L114 |
+| `test_missing_region_reports_error() -> void` | L119 |
+| `test_complete_phase_b_content_has_no_errors() -> void` | L125 |
+| `test_core_requires_fleet_content_counts() -> void` | L131 |
+| `test_core_requires_combat_content_counts() -> void` | L138 |
+| `test_combat_counts_ignore_third_party_content() -> void` | L145 |
+| `test_core_combat_content_satisfies_core_counts() -> void` | L174 |
+| `test_core_requires_at_least_one_quest() -> void` | L187 |
+| `test_phase_b_capabilities_include_quests() -> void` | L194 |
+| `test_suggested_content_is_warning_only() -> void` | L198 |
+| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L214 |
+| `test_start_region_tags_must_match_a_region() -> void` | L222 |
+| `test_start_profile_must_resolve_starting_scenario() -> void` | L230 |
+| `test_phase_b_capabilities_are_whitelisted() -> void` | L239 |
 
 1.0 合成基线 + 注入的 2.0 世界/战役定义驱动 `CoreCompletenessChecker.check()`，覆盖
 presence gate、5 个硬性数量下限、4 个建议 warning、start_profile 组合解析与 capability 白名单。

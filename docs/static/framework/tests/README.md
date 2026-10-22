@@ -1,6 +1,6 @@
 # `framework/tests`
 
-> 无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施、总览页 3D 港口舞台接入、D0 模拟时钟、D1 自动战斗、完整通关流程与坐标空间世界生成器。
+> 无头测试与冒烟脚本。覆盖加载链、确定性、经济、航行、委托刷新、仓库存取、打造订单/替换/在港等待、船厂改装 UI、UI 外壳接线、2.5D 舞台基础设施、总览页 3D 港口舞台接入、D0 模拟时钟、D1 自动战斗、D2 舰队、完整通关流程与坐标空间世界生成器。
 
 ## 文件索引
 
@@ -21,6 +21,7 @@
 | `cases/test_craft_wait.gd` | 迭代 2 打造订单测试：tier1 仅金币配方、下单不即时入库、port.wait/抵达结算与旧存档补齐。 | [查看](./cases/test_craft_wait.gd.md) |
 | `cases/test_events_effects.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_exploration.gd` | 探索系统（阶段 4.1–4.4）领域层无头测试：线索生成 / 固定 1 级 / 逐级调查 | [查看](./cases/test_exploration.gd.md) |
+| `cases/test_fleet.gd` | Phase D2 舰队运行时的回归测试：`data.fleet` 惰性结构、旗舰与当前单船衔接、 | [查看](./cases/test_fleet.gd.md) |
 | `cases/test_fog_system.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_full_clear.gd` | MVP 完整通关验收：脚本化玩家完成五段主线、中期升级、大型船组装并触发通关。 | [查看](./cases/test_full_clear.gd.md) |
 | `cases/test_item_categories.gd` | Phase C C2（goods + materials → `items` 2.0）的运行时合并回归：类型表 / | [查看](./cases/test_item_categories.gd.md) |
@@ -87,9 +88,10 @@
 - `test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。
 - `test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。
 - `test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。
-- `test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema、D1 `weapons` 与 `map_configs`（31 键 exploration），确认 9 类 + D1 active、只剩 2 类剧情草案。
+- `test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema、D1 `weapons` / D2 fleet 类型与 `map_configs`（31 键 exploration），确认 9 类 + D1/D2 active、只剩 2 类剧情草案。
 - `test_simulation.gd` 守护 D0：`data.sim` 惰性状态、`sim.pause|resume|set_speed|advance` 与 `sim.view`、tick 系统 priority/id 顺序、`sim.tick` 事件、同种子 hash 确定性与旧档补齐。
 - `test_combat.gd` 守护 D1：`CombatOps` 纯规则（护甲/穿甲/状态/撤退/战利品）、`CombatService` 落盘与 `data.combat` 惰性记录、`combat.resolve|view|log`、同 seed 确定性与 core 内容冒烟。
+- `test_fleet.gd` 守护 D2：`data.fleet` 惰性结构、旗舰与当前单船衔接、`fleet.view` 形状、captain 指派/可指挥船型/唯一性、formation slot 校验、doctrine 选择、增删舰与容量、`fleet.*` 事件、存档 round-trip 与旧档补齐。
 - `test_world_schema_refs.gd` 覆盖 Phase B 9 类引用规则：硬引用缺失 error、planned 目标仅 `ref_inactive_type` warning、faction 自指、map_config archetype 数量组合规则。
 - `test_world_completeness.gd` 覆盖 Core Phase B 完整性：presence gate（仅 Core 自带 world_profiles 时启用）、五项硬性数量、四项建议 warning 与 start_profile / region / map_config 组合规则。
 - `test_campaign_assembly.gd` 用合成 v2 定义验证 `CampaignFactory` 世界装配：state 形状、同 seed 确定性、区域/地点/航路引用一致性、map_config 回退与结构化错误。

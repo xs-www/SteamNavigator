@@ -35,19 +35,23 @@
 | `ENEMY_ARCHETYPE` | L32 |
 | `ENCOUNTER_TABLE` | L33 |
 | `LOOT_TABLE` | L34 |
-| `SCHEMA_PATHS` | L36 |
-| `SCHEMA_VERSIONS` | L65 |
-| `SINGULAR` | L94 |
-| `MODULE_TYPES` | L123 |
-| `all() -> Array[StringName]` | L126 |
-| `registry_types() -> Array[StringName]` | L137 |
-| `is_known(content_type: StringName) -> bool` | L143 |
-| `is_module(content_type: StringName) -> bool` | L147 |
-| `is_patch(content_type: StringName) -> bool` | L151 |
-| `schema_path(content_type: StringName) -> String` | L155 |
-| `schema_version(content_type: StringName) -> String` | L159 |
-| `singular(content_type: StringName) -> String` | L163 |
-| `from_singular(singular_name: String) -> StringName` | L167 |
+| `SHIP_ARCHETYPE` | L35 |
+| `CAPTAIN` | L36 |
+| `FORMATION` | L37 |
+| `FLEET_DOCTRINE` | L38 |
+| `SCHEMA_PATHS` | L40 |
+| `SCHEMA_VERSIONS` | L73 |
+| `SINGULAR` | L106 |
+| `MODULE_TYPES` | L139 |
+| `all() -> Array[StringName]` | L142 |
+| `registry_types() -> Array[StringName]` | L154 |
+| `is_known(content_type: StringName) -> bool` | L160 |
+| `is_module(content_type: StringName) -> bool` | L164 |
+| `is_patch(content_type: StringName) -> bool` | L168 |
+| `schema_path(content_type: StringName) -> String` | L172 |
+| `schema_version(content_type: StringName) -> String` | L176 |
+| `singular(content_type: StringName) -> String` | L180 |
+| `from_singular(singular_name: String) -> StringName` | L184 |
 
 ## 契约与约束
 

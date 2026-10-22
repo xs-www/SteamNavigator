@@ -1,6 +1,6 @@
 # `SNModMaker/tests/content-cli.test.mjs`
 
-> 作用：Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出；含 D1 `weapons` 运行时类型与「舰载武器包」模板，以及剧情 `story_arcs` / `story_levels` 草案与示例剧情包。
+> 作用：Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出；含 D1 `weapons` / D2 fleet 运行时类型与「舰载武器包」模板，以及剧情 `story_arcs` / `story_levels` 草案与示例剧情包。
 
 - 类型：Node ES 模块
 

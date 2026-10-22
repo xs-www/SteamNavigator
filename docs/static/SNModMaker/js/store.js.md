@@ -77,8 +77,8 @@
 ## 契约与约束
 
 - 项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。
-- `schema_version` 由内容类型推导（D1 后全部 active 类型与草案均写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。
-- `runtimeSupportsFile()` / `unsupportedContentFiles()` 判断当前运行时能否加载：未知类型、草案类型（`story_arcs` / `story_levels`）、`schema_version` 与类型期望版本不符 → 不支持；D1 后 26 类 active 2.0 类型全部受支持。`draftContentFiles` / `hasDraftContent` 保留为兼容 alias，供 G8 导出守卫使用。
+- `schema_version` 由内容类型推导（D2 后全部 active 类型与草案均写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。
+- `runtimeSupportsFile()` / `unsupportedContentFiles()` 判断当前运行时能否加载：未知类型、草案类型（`story_arcs` / `story_levels`）、`schema_version` 与类型期望版本不符 → 不支持；D2 后 30 类 active 2.0 类型全部受支持。`draftContentFiles` / `hasDraftContent` 保留为兼容 alias，供 G8 导出守卫使用。
 - 所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。
 - `keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。
 - 导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。

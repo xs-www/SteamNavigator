@@ -1,6 +1,6 @@
 # `framework/state`
 
-> 运行态数据模型。GameState 是唯一持久化状态，定义对象永不进入存档；含 campaign 分区（world/codex/factions）、探索进度、D0 `data.sim` 时钟与 D1 `data.combat` 战斗记录、收入/支出/利润统计的惰性补齐。
+> 运行态数据模型。GameState 是唯一持久化状态，定义对象永不进入存档；含 campaign 分区（world/codex/factions）、探索进度、D0 `data.sim` 时钟、D1 `data.combat` 战斗记录与 D2 `data.fleet` 舰队编成、收入/支出/利润统计的惰性补齐。
 
 ## 文件索引
 

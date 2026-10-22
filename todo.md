@@ -27,7 +27,7 @@
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
 - [ ] 模型素材库接入：kit 批次 1–5 其余 33 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记；批次 4 新增 6 件可围合建筑件、批次 5 新增 5 件基地生产建筑），接 `ShipVisualAssembler` / 基地舞台 / PortStage 的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C（C1–C4）已完成**；**Phase D0/D1 已完成**（D0 sim 时钟；D1 combat 6 类 active）。下一步 **Phase D 其余系统类型**（fleet / base / auto_trade / ruins）→ **Phase E 冻结 1.0 读路径与发布门禁**。当前 **26 类 active 全部 2.0（25 定义 + patch）、0 个 1.0 runtime**；schema bundle 31、编辑器 28。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
+- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C（C1–C4）已完成**；**Phase D0/D1/D2 已完成**（D0 sim 时钟；D1 combat 6 类 active；D2 fleet 4 类 active）。下一步 **Phase D 其余系统类型**（base / auto_trade / ruins）→ **Phase E 冻结 1.0 读路径与发布门禁**。当前 **30 类 active 全部 2.0（29 定义 + patch）、0 个 1.0 runtime**；schema bundle 35、编辑器 32、Core 29 内容文件。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 
 ### 海图 / 探索
 
@@ -39,7 +39,7 @@
 
 - [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架（tick 框架 D0 ✅、combat D1 ✅；多战役存档与其余系统待做）
 - [ ] 阶段 1：广域海图与探索运行时（v2 草案提升 active，接世界生成 / 战役 `world` 分区 / 区域低细节模拟）
-- [ ] 阶段 2：舰队组成与战斗（D1 已交付自动结算 + 6 类战斗内容；待航行遭遇接线、敌舰可视化、舰队编成与 2v2；SNBattleSim 规则并入）
+- [ ] 阶段 2：舰队组成与战斗（D1 已交付自动结算 + 6 类战斗内容；D2 已交付舰队 4 类 + `fleet.*` / `data.fleet`；待航行遭遇接线、敌舰可视化、舰队参与 2v2 与跨区调度；SNBattleSim 规则并入）
 - [ ] 阶段 3：基地建设与生产链（接入舰队 / 战斗 / 贸易）
 - [ ] 阶段 4：自动化贸易（航线、规则、风险与 tick 结算）
 - [ ] 阶段 5：遗迹探索（程序化房间、远征、战利品）
@@ -49,6 +49,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- Content Schema 2.0 Phase D2（2026-10-23）：fleet 4 类 active 2.0（`ship_archetypes` / `captains` / `formations` / `fleet_doctrines`，content.fleet.v1）；Core 4 个舰队内容文件（3 船型 / 3 舰长 / 2 编队 / 2 战术）；`FleetOps` / `FleetService` / `fleet.assign_captain|set_formation|set_doctrine|add_ship|remove_ship` + `fleet.view`，`data.fleet` 惰性持久；SDK `example_fleet`。**30 类 active 全部 2.0（29 定义 + patch）**、schema bundle 35（2 顶层 + 33 v2）、编辑器 32（30 runtime + 2 draft）、Core 29 内容文件 / 114 定义。验证：Godot **578/578**、Node **59/59**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase D0/D1（2026-10-23）：D0 确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长，`sim.tick` 事件）；D1 combat（`weapons` 提升 active + `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 5 类，共 6 个战斗类型；Core 6 个战斗内容文件；`CombatOps` / `CombatService` / `combat.resolve|view|log`）。**26 类 active 全部 2.0（25 定义 + patch）**、schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）、Core 25 内容文件。验证：Godot **566/566**、Node **58/58**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase C · C4（Phase C 完成，全类型 2.0）：`port_archetypes → port_templates`、`starting_builds → starting_scenarios`、`roles → crew_roles`、`strategies → boiler_strategies`、`events → voyage_events`；`map_profiles` 退役（`map_configs` 取代）；`contracts` / `patches` 升 2.0，删除 1.0 回退路径（RunFactory / ContentRefs / 存档 resolver）。**20 个 active 类型全部 2.0（19 定义 + patch）**；schema bundle 26（2 顶层 + 24 v2）、编辑器 23（20 runtime + 3 draft）、Core 19 内容文件。验证：Godot **527/527**、Node **58/58**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase C · C3（委托/任务解耦）：新增 `quests` active 2.0（kind story/guide/system、stages/objectives 复用剧情 DSL、tracking/prerequisites；无运输 payload）；core `quests.json` 2 条；新增 `QuestOps`/`QuestService` 与 `data.quests` 持久实例（惰性 ensure），委托 `accept_offer`/教程主线挂接生成追踪实例、完成关闭；`task.view` 增加 `kind:"quest"` 聚合（contract 实例不重复渲染），Shell 转发 `cmd:*`/`ui:*` 给 quest.observe；`content.quests.v1` capability 与 `quest.start|complete|observe` 命令。验证：Godot **525/525**、Node **55/55**、CLI **62/62**、SDK `status: ok`。

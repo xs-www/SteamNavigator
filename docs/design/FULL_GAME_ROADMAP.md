@@ -17,7 +17,7 @@
 - [x] `content_types.json` 单一真源（框架 / Schema / 编辑器 / SDK / 文档）。
 - [x] 存档 Schema 2.0；1.x 旧档迁移器 + 回归测试。
 - [x] Content Schema 2.0 草案骨架：`schemas/v2/common` + start/world/region/site/route（planned，暂不加载）。
-- [ ] Content Schema 2.0 系统类型：weather / faction / discovery ✅；combat 6 类 ✅（D1：weapons / damage_types / combat_abilities / enemy_archetypes / encounter_tables / loot_tables）；fleet / base / trade / ruins 仍待做。
+- [ ] Content Schema 2.0 系统类型：weather / faction / discovery ✅；combat 6 类 ✅（D1：weapons / damage_types / combat_abilities / enemy_archetypes / encounter_tables / loot_tables）；fleet 4 类 ✅（D2：ship_archetypes / captains / formations / fleet_doctrines）；base / trade / ruins 仍待做。
 - [ ] `CampaignState` 分区与多战役存档槽；新战役 / 继续 / 自动存档 UI。
 - [x] 确定性 tick 模拟框架（D0）：`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`、`data.sim`、固定 1 游戏小时步长、`sim.tick` 事件。
 - [ ] 区域分层模拟与系统注册扩展（D0 只做最小时钟，不含区域低细节 / 自动贸易结算）。
@@ -35,13 +35,13 @@
 
 ## 阶段 2：舰队与战斗
 
-- 多船舰队、船长/船员、编组与跨区调度；单船逻辑泛化为舰队逻辑。
+- 多船舰队、船长/船员、编组与跨区调度；单船逻辑泛化为舰队逻辑。D2 已落 4 类舰队内容（`ship_archetypes` / `captains` / `formations` / `fleet_doctrines`）+ `data.fleet` / `fleet.*` 命令与 `fleet.view`；跨区调度与舰队参与战斗结算仍待接。
 - 模块分类收敛为 `boiler / cargo / utility / cabin / crew`；导航与安全并入 `utility`，不再单独设内容类型或编辑器分组。
 - 战斗先做自动结算 + 少量选择，再评估战术格；数据侧武器、敌人原型、遭遇表、掉落表已随 D1 落地（6 类 active 2.0 + `combat.resolve`）。
 - 战斗契约与外部草案的采纳边界见 [战斗系统架构评审](../specs/COMBAT_ARCHITECTURE_REVIEW.md)：本阶段只做自动结算，实时战术与部位伤害后置。
 - 战斗消耗与舰队状态、补给、耐久、船员挂钩。
 
-验收：2v2 战斗可自动/半自动结算，战利品进入经济；舰队可跨区移动；失败产生可恢复损失。
+验收：2v2 战斗可自动/半自动结算，战利品进入经济（D1 已有 money/cargo/warehouse 落点，市场出售/平衡待做）；舰队可跨区移动（D2 编成/舰长/战术已就绪，移动与跨区调度待做）；失败产生可恢复损失。
 
 ## 阶段 3：基地建设
 

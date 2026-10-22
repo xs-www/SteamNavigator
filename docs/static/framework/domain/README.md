@@ -32,6 +32,8 @@
 | `exploration/exploration_calculator.gd` | 把「一条线索的搜索区 + 当前船况 + 锅炉策略 + 探索规则」折算成探索出航预览 | [查看](./exploration/exploration_calculator.gd.md) |
 | `exploration/exploration_rules.gd` | 读取并合并探索系统规则（`map_configs` 定义的 | [查看](./exploration/exploration_rules.gd.md) |
 | `exploration/explore_voyage_service.gd` | 探索航次的领域执行——出航（只扣工资、记录出发库存与每小时煤水费率、写探索 | [查看](./exploration/explore_voyage_service.gd.md) |
+| `fleet/fleet_ops.gd` | Phase D2 舰队（fleet）的纯结构助手：惰性维护 `data.fleet`、解析旗舰条目、 | [查看](./fleet/fleet_ops.gd.md) |
+| `fleet/fleet_service.gd` | Phase D2 舰队的领域用例：舰长指派、编队/槽位、战术选择、增删舰船。 | [查看](./fleet/fleet_service.gd.md) |
 | `map/map_generator.gd` | 程序生成 4–5 港口连通分支网络，并验证 MVP 硬约束。 | [查看](./map/map_generator.gd.md) |
 | `map/map_ops.gd` | GameState.world 上的港口/航线查询、设施可见性、发现与 BFS。 | [查看](./map/map_ops.gd.md) |
 | `port/port_time_service.gd` | 在港时间推进的统一领域入口。推进游戏时间，并让打造订单、NPC 市场模拟与 | [查看](./port/port_time_service.gd.md) |
@@ -67,4 +69,4 @@
 - 不读写文件、不创建 UI、不直接访问场景树。
 - 仓库/运输/打造只操作 GameState 纯数据；通关判定读取注册表合同与船只派生属性。
 - 世界生成器使用坐标空间模型（替代 MVP 时期的抽象图），港口锚定在程序生成的陆地海岸线上。
-- D0 SimulationService / TickScheduler 只推进 data.sim 与已注册 tick 系统，不改写既有 port.wait / 航行时间语义；D1 CombatOps 纯规则、CombatService 负责落盘与 data.combat 记录。
+- D0 SimulationService / TickScheduler 只推进 data.sim 与已注册 tick 系统，不改写既有 port.wait / 航行时间语义；D1 CombatOps 纯规则、CombatService 负责落盘与 data.combat 记录；D2 FleetOps 维护 data.fleet 结构、FleetService 负责 captain / formation / doctrine / 增删舰校验。

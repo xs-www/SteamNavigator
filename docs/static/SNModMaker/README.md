@@ -27,11 +27,11 @@
 | `mods/README.md` | 磁盘工作区说明：每个模组目录的结构与 .snmodproj.json。 | 本页 |
 | `start.bat` | Windows 双击启动 SNModMaker；缺少 Node.js 时先安装最新 LTS，再启动本地服务并打开浏览器。 | [查看](./start.bat.md) |
 | `tests/browser-smoke.mjs` | Chrome DevTools Protocol 冒烟测试：新建项目、实体键事务、模块子分页与船体模块区 / 安装点面板、本地化、自定义资源选择器、ZIP、导入与撤销。 | [查看](./tests/browser-smoke.mjs.md) |
-| `tests/content-cli.test.mjs` | Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出；含 D1 `weapons` 运行时类型与「舰载武器包」模板，以及剧情 `story_arcs` / `story_levels` 草案与示例剧情包。 | [查看](./tests/content-cli.test.mjs.md) |
-| `tests/run-tests.js` | Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析；含 D1 `weapons` / 战斗类型、船体 socket 镜像、「舰载武器包」模板与剧情模式（`story_arcs` / `story_levels`）用例。 | [查看](./tests/run-tests.js.md) |
+| `tests/content-cli.test.mjs` | Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出；含 D1 `weapons` / D2 fleet 运行时类型与「舰载武器包」模板，以及剧情 `story_arcs` / `story_levels` 草案与示例剧情包。 | [查看](./tests/content-cli.test.mjs.md) |
+| `tests/run-tests.js` | Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析；含 D1 `weapons` / 战斗类型、D2 fleet 4 类型、船体 socket 镜像、「舰载武器包」模板与剧情模式（`story_arcs` / `story_levels`）用例。 | [查看](./tests/run-tests.js.md) |
 | `tests/server-smoke.mjs` | 本地服务磁盘 API 冒烟测试：在隔离临时目录验证游戏模组部署、覆盖、枚举、删除与旧版本清理。 | [查看](./tests/server-smoke.mjs.md) |
 | `tests/workspace-smoke.mjs` | 原生工作区冒烟测试：用 `/api/workspace/<id>` 打开 dev_mods/<id>，验证删除定义、新增内容文件、删除本地化、资产不被改写与禁止整体删除。 | [查看](./tests/workspace-smoke.mjs.md) |
-| `tools/content.mjs` | SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 26 个运行时类型（D1 后全部为 Schema 2.0）与 2 个 Schema 2.0 草案类型（剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。 | [查看](./tools/content.mjs.md) |
+| `tools/content.mjs` | SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 30 个运行时类型（D2 后全部为 Schema 2.0）与 2 个 Schema 2.0 草案类型（剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。 | [查看](./tools/content.mjs.md) |
 | `tools/content_json.mjs` | 保源 JSON 源文本编辑器（纯函数、无 fs）：解析带 start / end 的节点树，只替换目标节点附近的文本切片，让 CLI 增删改内容时既有字节、缩进与 BOM 保持不变。 | [查看](./tools/content_json.mjs.md) |
 | `tools/game_mods_dir.mjs` | 解析编辑器「导出并覆盖到发布包 mods/」的默认目标目录。 | [查看](./tools/game_mods_dir.mjs.md) |
 | `tools/serve.mjs` | 零依赖本地静态服务器 + 磁盘 API：项目工作区、原生模组工作区（dev_mods 原地编辑）、普通导出与发布包模组覆盖部署。 | [查看](./tools/serve.mjs.md) |
