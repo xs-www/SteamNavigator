@@ -3,7 +3,7 @@
 > 状态：**草案**（2026-10-22），编辑器可编辑 / 校验 / 导出，**运行时不加载**
 > Schema：[schemas/v2/weapon.schema.json](../../schemas/v2/weapon.schema.json) · 类型登记：[content_types.json](../../content_types.json)
 > 上游契约：[WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md)（装配 v2）· [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md)（帆索 socket）· [SHIP_WEAPON_SOCKETS_ACCEPTANCE.md](../archive/SHIP_WEAPON_SOCKETS_ACCEPTANCE.md)（14 个武器 socket 实测值）
-> 数据侧：[hull.schema.json](../../schemas/hull.schema.json) · [hulls.json](../../dev_mods/core/content/hulls.json) · [runtime manifest](../../dev_mods/core/manifest.json) · 战斗规则真源：[SNBattleSim/js/catalog.mjs](../../SNBattleSim/js/catalog.mjs) · 编辑器：[SNModMaker/README.md](../../SNModMaker/README.md)
+> 数据侧：[hull.schema.json](../../schemas/v2/hull.schema.json) · [hulls.json](../../dev_mods/core/content/hulls.json) · [runtime manifest](../../dev_mods/core/manifest.json) · 战斗规则真源：[SNBattleSim/js/catalog.mjs](../../SNBattleSim/js/catalog.mjs) · 编辑器：[SNModMaker/README.md](../../SNModMaker/README.md)
 
 ## 1. 定位
 
@@ -205,7 +205,7 @@
 
 ## 6. 船体安装点：GLB extras ↔ 内容镜像
 
-`hull.schema.json`（仍是 active 1.0）在 `hull_data` 新增两个**可选**数组；Core `hulls.json` 已回填，因此这段数据**会随运行时 hulls 一起被 Schema 校验**，但尚无运行时消费者：
+`schemas/v2/hull.schema.json`（active 2.0）在 `hull_data` 新增两个**可选**数组；Core `hulls.json` 已回填，因此这段数据**会随运行时 hulls 一起被 Schema 校验**，但尚无运行时消费者：
 
 | 数组 | 每项必填 | 可选字段 |
 | --- | --- | --- |

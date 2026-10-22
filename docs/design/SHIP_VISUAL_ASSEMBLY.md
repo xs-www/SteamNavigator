@@ -59,7 +59,7 @@ ShipVisualPlan.resolve(hub, assets, {
 
 ## 3. 内容字段：`data.rig_plan`
 
-`schemas/hull.schema.json` 新增 `$defs/rig_plan`（先加 schema 再改内容）：
+`schemas/v2/hull.schema.json` 新增 `$defs/rig_plan`（先加 schema 再改内容）：
 
 ```json
 "rig_plan": {

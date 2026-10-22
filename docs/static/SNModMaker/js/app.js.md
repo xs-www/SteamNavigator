@@ -168,7 +168,7 @@
 - 自动保存有 800ms 防抖，并用 revision 防止旧保存清除新改动；IDB 失败回退 localStorage。
 - ID 修改与条目内翻译先进入 localizationDrafts；自动保存不写多语言键，只有“保存条目”提交键迁移。
 - 船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。
-- 「新建模组」对话框的模板卡片来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；选 `weapons` 即「舰载武器包」，仅创建编辑器项目内容、不写 Core。
+- 「新建模组」对话框的模板卡片来自 `Catalog.TEMPLATES`（items / boiler / event / weapons / starter_kit / blank）；选 `weapons` 即「舰载武器包」，仅创建编辑器项目内容、不写 Core。
 - 侧栏在运行时类型分组之后渲染「Schema 2.0 草案 / 运行时不加载」分区（`DRAFT_TYPES` 为空则隐藏）；草案内容页显示 2.0 徽标与提示，并隐藏「从 Core 复制」。
 - 自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。
 - 检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。

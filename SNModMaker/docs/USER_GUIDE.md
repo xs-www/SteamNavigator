@@ -51,10 +51,10 @@ Phase B 起，8 类世界/战役类型 + 新增 `map_configs` 已提升为**运�
 - **舰载武器表单**：`weapons` 草案按战斗（kind / damage / range / cooldown / accuracy / salvo / color…）、装配（weapon_class / assembly_profile / has_yaw·has_pitch·has_recoil·has_muzzle / muzzle_count / envelope_* / height / mount_scale）、经济（tier / weight / purchase_price / craft_* / materials）三组渲染；新增定义默认取模拟器「甲板速射炮」数值。
 - **船体安装点**：船体表单可编辑 `weapon_sockets` / `rig_sockets` 数组（安装点名称、class/kind、索引、position 三元组、clearance_*、mount_scale、note），校验重复 name / 索引、非法 class/kind 与缺失必填；写出的是内容侧镜像，运行时装配仍读 GLB extras。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
-- **引用选择**：船体、锅炉、商品、材料等字段带 Core + 当前项目的 ID 候选；显示中文名。
+- **引用选择**：船体、模块、物品等字段带 Core + 当前项目的 ID 候选；显示中文名。
 - **复制与派生**：复制当前定义，或从 Core 复制一条完整定义并自动改写 ID、本地化键与翻译；官方贴图/模型会保留为 `asset://core/...` 引用，不会被误认成当前模组资产。
 - **实体键事务**：编辑 ID 时只同步显示多语言键预览；名称/描述可直接编辑所有语言，点击「保存条目」后才一次性迁移键和值并清理旧键。
-- **模块子分页**：船体、锅炉、货舱、导航、安全、客舱、岗位与策略在同一“船只与模块”工作区中直接切换。
+- **模块分类**：船体（`hulls`）与模块（`modules`，按 boiler/cargo/utility/cabin 分类页签）、岗位与策略在同一“船只与模块”工作区中直接切换；导航/安全归入 utility 分类。
 - **实体视觉资源**：每条标准实体都可通过暗色可搜索下拉框配置贴图与单文件 GLB 模型；图片、模型候选分开过滤，也允许直接输入资源键。
 - **船体模块配置**：船体表单单独展示锅炉、导航、安全固定槽位，并直接编辑货舱与客舱槽位数量，不再混在普通数值字段中。
 - **JSON 检视 / 编辑**：任意定义可切换为原始 JSON 编辑；右侧检视器可查看当前上下文。
@@ -196,8 +196,8 @@ node SNModMaker/tools/content.mjs add --mod SNModMaker/mods/my_mod --type items 
 改既有定义；`+=` / `-=` 用于数组，`--dry-run` 只看 diff 不落盘：
 
 ```powershell
-node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:good/tea data.base_price=72
-node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:good/tea tags+=good.luxury --dry-run
+node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:item/tea data.base_price=72
+node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:item/tea tags+=good.luxury --dry-run
 ```
 
 从 Core 复制一条再校验：

@@ -139,7 +139,7 @@
 `rig_stowed`。`rig_yard_z` 统一为**船体坐标 z**（与 socket `local[2]` 相同；SF 后倾船的
 桅局部高度不写在该字段），`rig_height` 是桅顶相对甲板的高度。
 
-> **内容侧镜像（2026-10-22）**：`schemas/hull.schema.json` 的 `hull_data` 已新增可选
+> **内容侧镜像（2026-10-22）**：`schemas/v2/hull.schema.json` 的 `hull_data` 已新增可选
 > `rig_sockets` 数组（字段同本节 extras，`mast_key` 在内容侧写作 `mast_id`），Core
 > `dev_mods/core/content/hulls.json` 已回填 22 个；供编辑器编辑与后续数据驱动装配，运行时
 > 现阶段仍读 GLB extras。口径差异见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) §6。

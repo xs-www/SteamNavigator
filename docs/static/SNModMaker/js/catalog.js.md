@@ -44,7 +44,7 @@
 ## 契约与约束
 
 - `BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型（1.0 与 Phase B 的 2.0）与 3 个 Schema 2.0 草案类型（weapons / story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。
-- `TYPES` 含 25 个可加载类型（1.0 16 类 + Phase B 提升的 9 类），`DRAFT_TYPES` 为 `weapons` + 剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。
+- `TYPES` 含 20 个可加载类型（8 类 1.0（含 patches）+ 12 类 2.0），`DRAFT_TYPES` 为 `weapons` + 剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。
 - `DEFAULTS` 生成的定义必须能通过对应 Schema；Phase B 9 类 2.0 类型（含 `map_configs` 的 31 键 exploration）、`weapons` 草案与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。
 - `weapons` 草案的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。
 - 剧情草案复用共享 `FIELD_LABELS`，用 `TYPE_FIELD_LABELS` / `TYPE_FIELD_HINTS` 处理同名不同义的字段（如关卡 `position` 是世界坐标、`rewards` 只允许成就/图鉴/装饰），并在 `FIELD_ENUM_LABELS` 提供 `role` / `presentation` / `fog` / `profile` / `hint_level` / 重试方式的可读名。

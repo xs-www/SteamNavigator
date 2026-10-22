@@ -88,7 +88,7 @@
 
 ### `createProject(options)`
 
-- 创建 Manifest + zh_CN/en 两个语言文件，再按模板写入定义；模板包含 goods / boiler / event / weapons / starter_kit / blank。
+- 创建 Manifest + zh_CN/en 两个语言文件，再按模板写入定义；模板包含 items / boiler / event / weapons / starter_kit / blank。
 - `template: null` 时不写 1.0 模板；`drafts` 数组里的每个 Schema 2.0 草案类型由 `addDraftStarter()` 生成一个 contentType/2.0 内容文件与起始定义，并把该类型的 capability 去重写入 `manifest.capabilities`（纯 2.0 项目不附带 1.0 商品起始定义）。
 - 模板只使用默认值与 Core 引用，生成后立即由 `syncManifest()` 对齐清单。
 - `applyTemplate(project, 'weapons')` 从 `catalog.WEAPON_PRESETS` 生成 5 条 weapons 草案定义（`content/weapons.json`、`schema_version` 2.0），`information.model` 写 `asset://core/model.weapon.<local_id>`，并把 `content.combat.v1` 去重加入 `manifest.capabilities`；只写编辑器项目，不触碰 Core。

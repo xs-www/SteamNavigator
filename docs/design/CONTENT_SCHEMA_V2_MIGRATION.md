@@ -176,7 +176,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 
 ### Phase C · 实体合并（Module / Item / Quest，1–2 周）
 
-**状态：C1–C2 已完成（2026-10-22）；C3 待开工。** C1 证据：5 类模块合并为 `modules` 2.0（12 条 core 定义，`core:module/*`）、hulls 升 2.0、`ModuleOps` 运行时与船厂分类 UI 落地；Godot 491/491。C2 证据：goods + materials 合并为 `items` 2.0（12 条 core 定义，`core:item/*`，`crafting_material` 标志），全量引用/本地化/编辑器/运行时统一到 ITEM；Godot **497/497**、Node **53/53**、CLI **61/61**、SDK `status: ok`。
+**状态：C1–C2 已完成（2026-10-22）；C3 待开工。** C1 证据：5 类模块合并为 `modules` 2.0（12 条 core 定义，`core:module/*`）、hulls 升 2.0、`ModuleOps` 运行时与船厂分类 UI 落地；Godot 491/491。C2 证据：goods + materials 合并为 `items` 2.0（12 条 core 定义，`core:item/*`，`crafting_material` 标志），全量引用/本地化/编辑器/运行时统一到 ITEM；Godot **508/508**、Node **53/53**、CLI **61/61**、SDK `status: ok`。
 
 > **开发期策略（2026-10-22 拍板）**：开发器没有第三方模组，直接全量升级 core 到 Schema 2.0 并保证运行即可；
 > 每次迭代后不保留旧存档 / 旧内容模型兼容。C-D2 的旧/新类型并存仅是分步开发手段，不是兼容窗口；每个实体

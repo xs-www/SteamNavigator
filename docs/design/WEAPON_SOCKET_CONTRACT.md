@@ -126,7 +126,7 @@ Hull / Compartment                船体 / 舱段
 
 船体 Root extras 额外写：`weapon_sockets`（按 socket_index 顺序的标准节点名数组）、`weapon_socket_count`、`socket_spec`。
 
-> **内容侧镜像（2026-10-22）**：`schemas/hull.schema.json` 的 `hull_data` 已新增可选 `weapon_sockets` / `rig_sockets` 数组，字段与本节 GLB extras 同口径；Core `dev_mods/core/content/hulls.json` 已回填 4 艘船（14 个武器 socket + 22 个帆索 socket）。该镜像供编辑器查看 / 编辑 / 校验，以及后续数据驱动装配使用；**运行时装配现阶段仍以 GLB 节点 extras 为准**（`ShipVisualAssembler` 未接入）。字段口径、镜像与 GLB 的坐标 / 索引差异见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) §6。
+> **内容侧镜像（2026-10-22）**：`schemas/v2/hull.schema.json` 的 `hull_data` 已新增可选 `weapon_sockets` / `rig_sockets` 数组，字段与本节 GLB extras 同口径；Core `dev_mods/core/content/hulls.json` 已回填 4 艘船（14 个武器 socket + 22 个帆索 socket）。该镜像供编辑器查看 / 编辑 / 校验，以及后续数据驱动装配使用；**运行时装配现阶段仍以 GLB 节点 extras 为准**（`ShipVisualAssembler` 未接入）。字段口径、镜像与 GLB 的坐标 / 索引差异见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) §6。
 
 装配 fallback：
 
@@ -360,7 +360,7 @@ Root extras：`gun_port_sockets`（按 `socket_index` 顺序的名字数组）�
 - 炮门 socket 不提供碰撞体、炮门开合动画与索具避让；炮门盖在资产里是固定打开的；
 - 空载读感 = 炮门框 + 木制深色炮口板 + 开着的门盖；深色板同时是模块门内隐藏段的遮挡面；
 - `SN_Ironclad_LOD1.glb` 仍是拆炮前的旧件（LOD 切换未接线），重建 LOD1 列为后续项；
-- 内容侧镜像（`hull.schema.json` 的 `gun_port_sockets`）本轮**未做**，运行时仍以 GLB 节点 extras 为准。
+- 内容侧镜像（`schemas/v2/hull.schema.json` 的 `gun_port_sockets`）本轮**未做**，运行时仍以 GLB 节点 extras 为准。
 
 ## 10. 运行时装配（`ShipVisualAssembler`，2026-10-22）
 **状态：已实现。** `framework/ui/stages/ship_weapon_assembly.gd`（`ShipWeaponAssembly`）+
