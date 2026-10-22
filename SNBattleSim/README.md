@@ -4,6 +4,8 @@
 
 ## 启动
 
+Windows 用户可直接双击 [`start.bat`](start.bat)。脚本会在缺少 Node.js 时自动安装最新 LTS 版，然后启动本地服务并打开浏览器；使用期间请保留命令窗口。
+
 在仓库根目录执行：
 
 ```powershell

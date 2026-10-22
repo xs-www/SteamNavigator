@@ -38,3 +38,6 @@ docs/design/screenshots/
 *.zip
 SNBattleSim/user_data/*.json
 SNBattleSim/user_data/*.tmp
+
+# Local release staging
+/release/
