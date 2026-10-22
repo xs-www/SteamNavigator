@@ -8,7 +8,7 @@ extends SceneTree
 ##
 ## 流程与框架测试的 bootstrap_core 完全一致：
 ##   Bootstrap.run(scan res://dev_mods, allow_loose, 不挂 pack, 不自动存档)
-##   → AppContext.set_active → run.start {core:starting_build/steady, seed}
+##   → AppContext.set_active → run.start {core:starting_scenario/steady, seed}
 ##   → 实例化 res://framework/ui/shell/main.tscn 并挂到 root
 ##   → 等待布局 → 切到 shipyard → 截图 shipyard_normal.png
 ##   → 进入改装态（点「改装」按钮）→ 截图 shipyard_refit.png → 干净退出
@@ -42,7 +42,7 @@ const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
 const OVERVIEW_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/overview_screen.gd")
 const SN_SHIP_VIEW_SCRIPT := preload("res://framework/ui/components/sn_ship_view.gd")
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const DEFAULT_SEED := 5201
 const DEFAULT_OUT_DIR := "res://docs/design/screenshots"
 const DEFAULT_WINDOW := Vector2i(1440, 900)
@@ -118,7 +118,7 @@ func _run() -> void:
 		return
 	print("[INFO] Core 就绪：mod=%s，内容条目=%d" % [str(context.mod_order), context.content_total()])
 	var started: Dictionary = context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": _seed,
 	})
 	_expect(bool(started.get("ok", false)), "run.start 成功：%s" % str(started))

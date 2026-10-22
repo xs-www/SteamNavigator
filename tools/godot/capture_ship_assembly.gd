@@ -177,7 +177,7 @@ func _bootstrap() -> bool:
 		_fail("bootstrap failed; cannot resolve Core content")
 		return false
 	var started := _context.commands.execute(&"run.start", {
-		"build_id": "core:starting_build/steady",
+		"starting_scenario": "core:starting_scenario/steady",
 		"seed": 20261022,
 	})
 	if not bool(started.get("ok", false)):

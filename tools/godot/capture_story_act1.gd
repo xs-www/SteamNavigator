@@ -22,7 +22,7 @@ const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const OUT_DIR := "res://docs/design/screenshots/story"
 const WINDOW := Vector2i(1440, 900)
 const SEED := 20260421
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const WATCHDOG_SECONDS := 120.0
 
 const SHOTS := [
@@ -59,7 +59,7 @@ func _run() -> void:
 		_finish()
 		return
 	var started := context.commands.execute(&"run.start", {
-		"build_id": STEADY_BUILD,
+		"starting_scenario": STEADY_BUILD,
 		"seed": SEED,
 		"tutorial": true,
 	})

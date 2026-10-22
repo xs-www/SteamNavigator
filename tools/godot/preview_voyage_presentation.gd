@@ -20,7 +20,7 @@ extends SceneTree
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const WINDOW := Vector2i(1440, 900)
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const STANDARD_STRATEGY := "core:strategy/standard"
 const SETTLE_SECONDS := 0.8
 const CYCLE_GAP_SECONDS := 2.2
@@ -88,7 +88,7 @@ func _play_cycle(seed_value: int) -> void:
 	_shell._reset_voyage_presentation()
 	_shell._settlement_summary = {}
 	_shell._active_screen = "overview"
-	var started := _context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": seed_value})
+	var started := _context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": seed_value})
 	if not bool(started.get("ok", false)):
 		push_error("run.start failed: %s" % str(started))
 		return

@@ -105,7 +105,7 @@ func _run() -> void:
 	if context == null:
 		_finish()
 		return
-	var started := context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": SEED})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": SEED})
 	if not bool(started.get("ok", false)):
 		_fail("run.start failed: %s" % str(started))
 		_finish()

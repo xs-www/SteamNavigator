@@ -59,7 +59,7 @@ const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const OUT_DIR := "res://docs/design/screenshots/exploration"
 const WINDOW := Vector2i(1440, 900)
 const SEED := 20260421
-const STEADY_BUILD := "core:starting_build/steady"
+const STEADY_BUILD := "core:starting_scenario/steady"
 const STRATEGY_ID := "core:strategy/standard"
 const WATCHDOG_SECONDS := 120.0
 const TMP_PREFIX := "res://tmp_exploration_"
@@ -118,7 +118,7 @@ func _run() -> void:
 	if context == null:
 		_finish()
 		return
-	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
+	var started := context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": SEED})
 	if not bool(started.get("ok", false)):
 		_fail("run.start failed: %s" % str(started))
 		_finish()
