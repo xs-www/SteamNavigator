@@ -1,0 +1,156 @@
+{
+  "id": "sn_combat_kit_batch1",
+  "title": "combat_kit 敌舰套件（M2-1）：海盗单桅 / 武装商船 / 铁甲舰变体 / 小型炮艇",
+  "purpose": "backlog M2-1：阶段 2 的自动战斗需要「3 类敌人」。本批交付 4 艘敌舰资产（Light ×2 / Medium ×1 / Heavy ×1），复用现有船体骨架的站表放样与 rig_kit / ship_parts 部件库，不烘炮——甲板炮位按 weapon-assembly@2 给空节点，铁甲舰变体舷侧炮门按 hull-gunports@1 给空节点并直接复用既有 SN_Weapon_CasemateGun 模块。",
+  "category": "ship",
+  "approved_by_human": true,
+  "approved_note": "用户 2026-10-22 指示「根据 modeling backlog，建立 combat_kit（敌舰）海盗单桅 / 武装商船 / 铁甲舰变体 / 小型炮艇；阶段 2 需要 3 类敌人；可复用现有船体 + 武器 socket 的模型」——范围即 backlog M2-1 的 4 个变体，交付 3 类敌人。",
+
+  "assets": [
+    {
+      "id": "SN_Enemy_Pirate_Sloop",
+      "enemy_class": "Light",
+      "enemy_archetype": "pirate_sloop",
+      "collection": "SN_Enemy_Pirate_Sloop_Prototype",
+      "prefix": "SN_ES_",
+      "root": "SN_ES_Root",
+      "look": "单桅纵帆海盗船：深棕木船身（共享贴图 SN_Tex_Wood_Dark 读感近黑）+ 锈红上舷带 / 舷墙，后倾单桅 + 大斜桁帆 + 方顶帆 + 艏三角帆，艉楼与三扇艉窗；黑色尾旗 + 红色长旒",
+      "loa_m": 22.5,
+      "tri_budget": 9000,
+      "bbox_m": [29.1, 6.35, 24.2],
+      "weapon_sockets": 3,
+      "gun_ports": 0
+    },
+    {
+      "id": "SN_Enemy_Merchant_Armed",
+      "enemy_class": "Medium",
+      "enemy_archetype": "armed_merchantman",
+      "collection": "SN_Enemy_Merchant_Armed_Prototype",
+      "prefix": "SN_EM_",
+      "root": "SN_EM_Root",
+      "look": "双桅横帆武装商船：中棕木船身（SN_Tex_Wood）+ 深色腰板 + 锈红水线，前桅 / 主桅各两面方帆，艉楼 + 三扇艉窗 + 艉旗；两舷各 2 个中型炮位 + 艏 / 艉炮位",
+      "loa_m": 34.0,
+      "tri_budget": 12000,
+      "bbox_m": [40.8, 9.4, 28.8],
+      "weapon_sockets": 6,
+      "gun_ports": 0
+    },
+    {
+      "id": "SN_Enemy_Ironclad_Raider",
+      "enemy_class": "Heavy",
+      "enemy_archetype": "ironclad_raider",
+      "collection": "SN_Enemy_Ironclad_Raider_Prototype",
+      "prefix": "SN_ER_",
+      "root": "SN_ER_Root",
+      "look": "低干舷铁甲舰变体：2.2 m 外凸装甲带 + 水下撞角 + 螺旋桨，中央斜壁装甲炮房 + 指挥塔 + 单后倾烟囱（区别于玩家铁甲舰的双烟囱 / 三桅），单蒸汽桅 + 收帆横桁，每舷 4 个空炮门（不烘炮管）",
+      "loa_m": 44.0,
+      "tri_budget": 7800,
+      "bbox_m": [44.85, 14.75, 21.1],
+      "weapon_sockets": 4,
+      "gun_ports": 8
+    },
+    {
+      "id": "SN_Enemy_Gunboat",
+      "enemy_class": "Light",
+      "enemy_archetype": "gunboat",
+      "collection": "SN_Enemy_Gunboat_Prototype",
+      "prefix": "SN_EG_",
+      "root": "SN_EG_Root",
+      "look": "小型蒸汽炮艇：16 m 铁壳 + 锈红水线，艏部 U 形装甲炮盾（中央留炮口）+ 单烟囱 + 小驾驶室 + 短信号桅，艏部固定重炮位 + 两舷轻型炮位",
+      "loa_m": 16.0,
+      "tri_budget": 3600,
+      "bbox_m": [16.9, 4.75, 10.1],
+      "weapon_sockets": 3,
+      "gun_ports": 0
+    }
+  ],
+
+  "style": {
+    "look": "低模 / flat shading / 只用 SN_Tex_* 共享贴图材质（世界=根节点局部空间盒式 UV）；敌舰靠轮廓 + 涂装 + 武备布置区分，而不是靠新增贴图；不新增贴图。",
+    "palette": ["SN_Tex_Wood", "SN_Tex_Wood_Dark", "SN_Tex_Wood_Deck", "SN_Tex_Metal", "SN_Tex_Brass", "SN_Tex_Iron", "SN_Tex_Iron_Red", "SN_Tex_Canvas_Shade", "SN_Tex_Glass_Dark"],
+    "reference_images": [],
+    "notes": "贴图 / 材质真源见 docs/design/textures/shared_materials/shared_materials.spec.json（11 张，本批不新增）。"
+  },
+  "materials_spec": "docs/design/textures/shared_materials/shared_materials.spec.json",
+  "uv": {
+    "projection": "根节点局部空间盒式投影（space=root）",
+    "uv_layer": "UVMap",
+    "tile_m_source": "shared_materials.spec.json (per material)"
+  },
+  "transform": {
+    "pivot": "waterline, centre of hull（x=0 船中、z=0 水线、+X 船首、+Z 向上）",
+    "forward": "+X",
+    "up": "+Z",
+    "unit_scale": 1.0
+  },
+  "naming": {
+    "prefix": "SN_<PFX>_（ES / EM / ER / EG）",
+    "collection": "SN_<Asset>_Prototype",
+    "socket_blend": "SN_<PFX>_Socket_Weapon_<suffix> / SN_ER_Socket_GunPort_<suffix>",
+    "socket_glb": "SN_Socket_Weapon_<suffix> / SN_Socket_GunPort_<suffix>（导出后归一化）"
+  },
+
+  "weapon_socket_contract": {
+    "spec": "hull-sockets@1",
+    "extras": ["socket_spec", "socket_index", "socket_class", "clearance_r", "clearance_x", "clearance_y", "clearance_h", "mount_scale", "note"],
+    "root_extras": ["weapon_sockets", "weapon_socket_count", "socket_spec"],
+    "source": "docs/design/WEAPON_SOCKET_CONTRACT.md §8"
+  },
+  "gun_port_contract": {
+    "spec": "hull-gunports@1",
+    "extras": ["socket_spec", "socket_index", "side_index", "port_class", "port_w", "port_h", "sill_z", "deck_z", "inboard_depth", "outboard_clearance", "lid", "lid_hinge_z", "elev_min_deg", "elev_max_deg", "traverse_deg", "mount_scale"],
+    "root_extras": ["gun_port_sockets", "gun_port_socket_count", "gun_port_socket_spec"],
+    "source": "docs/design/WEAPON_SOCKET_CONTRACT.md §9",
+    "note": "炮门由 SN_Weapon_CasemateGun（Medium 1.9×1.9 / port_pitch）复用；船体只保留炮门框 + 深色炮口板 + 打开的门盖"
+  },
+
+  "required_parts": {
+    "all": ["Hull", "Deck", "Bulwark", "Keel_Stem_Rudder", "Transom", "Deck_Fittings", "Flags"],
+    "sailing": ["Mast", "Spars", "Sails", "Rigging", "Headsails", "Bow_Fittings"],
+    "steam": ["Superstructure", "Rigging"],
+    "ironclad_raider": ["Armor_Belt", "Gun_Ports", "Superstructure"],
+    "gunboat": ["Superstructure"]
+  },
+  "scene_rules": {
+    "single_writer": true,
+    "do_not_modify": ["Camera", "Light", "DBG2_CAM", "SN_Ship_Prototype"],
+    "keep_existing_objects": true,
+    "no_delete": true,
+    "no_save": true,
+    "no_export": true,
+    "no_new_camera_or_light": true,
+    "scene": ".design/SN_Asset_Workbench.blend",
+    "workbench_positions": {
+      "SN_Enemy_Pirate_Sloop": [-55.0, -110.0, 0.0],
+      "SN_Enemy_Merchant_Armed": [10.0, -110.0, 0.0],
+      "SN_Enemy_Ironclad_Raider": [75.0, -110.0, 0.0],
+      "SN_Enemy_Gunboat": [-95.0, -110.0, 0.0]
+    }
+  },
+
+  "deliverables": {
+    "generator": "tools/modeling/generators/combat_kit_generator.py",
+    "dryrun": "tools/modeling/generators/dryrun_combat_kit.py",
+    "socket_tools": ["tools/modeling/generators/sn_enemy_weapon_sockets.py", "tools/modeling/generators/sn_enemy_gun_ports.py", "tools/modeling/generators/glb_enemy_sockets.py"],
+    "export": "tools/modeling/generators/export_combat_kit_glb.py",
+    "verify": "tools/modeling/generators/verify_combat_kit_glb.py",
+    "catalog": "tools/modeling/combat_kit_catalog.json",
+    "glb": "assets/models/combat/SN_*.glb + dev_mods/core/assets/models/combat/SN_*.glb",
+    "shared_textures": "assets/models/combat/shared_materials/ + dev_mods/core/assets/models/combat/shared_materials/",
+    "preview": ".design/combat/preview/",
+    "acceptance": "docs/archive/COMBAT_KIT_ACCEPTANCE.md"
+  },
+
+  "acceptance": [
+    "4 艘敌舰全部在各自集合、对象 100% 带资产前缀；3 类敌人（Light / Medium / Heavy）",
+    "每艘 tri <= 工单预算；包围盒与 bbox_m 误差在 0.9 m 内；轴心 = 水线中心；zmin（吃水）< 0、zmax 由桅 / 烟囱给出",
+    "闭合件无非流形边 / 边界边 / 退化面 / 孤立点；甲板 / 帆面为单层开放件（边界边 > 0 且无非流形边）",
+    "材质全部为 SN_Tex_* 共享贴图；每个 mesh 有 UVMap 且 len(uv) == len(loops)；无旧纯色 SN_* 材质",
+    "甲板 socket：class / 净空字段齐全、左右镜像、原点落在甲板面（down-ray 实测）；BLEND 前缀名导出后归一化为 SN_Socket_Weapon_*",
+    "炮门 socket：8 个（每舷 4）、port_class=Medium、port_w/port_h >= 1.9、原点 = 炮门平面中心、+X = 炮膛轴线；BLEND 名归一化为 SN_Socket_GunPort_*",
+    "GLB images[].uri = shared_materials/<texture>.png，外部 PNG 与授权 tile 逐字节一致；assets 与 dev_mods/core 副本一致",
+    "回归：场景中原有对象 / Camera / Light 数量与命名不变；旧资产 GLB 字节不变",
+    "独立 Verifier 只读验收 passed=true / 0 failures；Godot headless 全量测试通过"
+  ],
+  "notes": "几何真源 = combat_kit_generator.py；Blender 单写者 = Builder；Lead 负责生成器 / 干跑 / 导出 / 文档。"
+}
