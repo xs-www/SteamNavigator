@@ -59,7 +59,7 @@ static func ensure_defaults() -> void:
 			if not wanted_id.is_empty() and role_id == wanted_id:
 				return true
 			if not wanted_kind.is_empty():
-				var role: ContentDefinition = ctx["hub"].get_by_id(ContentTypes.ROLE, role_id)
+				var role: ContentDefinition = ctx["hub"].get_by_id(ContentTypes.CREW_ROLE, role_id)
 				if role != null and String(role.data.get("kind", "")) == wanted_kind:
 					return true
 		return false

@@ -345,7 +345,7 @@ func test_main_contract_needs_player_supplied_coal_before_departure() -> void:
 	var destination := String(contract.get("destination", ""))
 	var blocked := context.commands.execute(&"voyage.start", {
 		"destination_id": destination,
-		"strategy_id": "core:strategy/standard",
+		"strategy_id": "core:boiler_strategy/standard",
 	})
 	assert_eq(String(blocked.get("error_code", "")), "missing_contract_cargo",
 		"departure is blocked until the cargo is aboard")
@@ -353,8 +353,8 @@ func test_main_contract_needs_player_supplied_coal_before_departure() -> void:
 	assert_true(bool(bought.get("ok", false)), "buying 10 coal succeeds: %s" % str(bought))
 	assert_true(ContractOps.missing_player_cargo(context.state, contract).is_empty(),
 		"the self-supplied cargo is complete")
-	var standard_preview := VoyageCalculator.preview(context, destination, "core:strategy/standard")
-	var fast_preview := VoyageCalculator.preview(context, destination, "core:strategy/fast")
+	var standard_preview := VoyageCalculator.preview(context, destination, "core:boiler_strategy/standard")
+	var fast_preview := VoyageCalculator.preview(context, destination, "core:boiler_strategy/fast")
 	assert_true(bool(standard_preview.get("ok", false)), "the standard preview succeeds")
 	assert_true(bool(fast_preview.get("ok", false)), "the fast preview succeeds")
 	var deadline := float(contract.get("deadline", 0.0))
@@ -501,7 +501,7 @@ func _sail_after_the_story_clue(
 	context.commands.execute(&"supply.buy_water", {"amount": 10})
 	var started := context.commands.execute(&"explore.start", {
 		"clue_id": String(clue.get("id", "")),
-		"strategy_id": "core:strategy/standard",
+		"strategy_id": "core:boiler_strategy/standard",
 	})
 	assert_true(bool(started.get("ok", false)), "sailing after the story clue succeeds: %s" % str(started))
 	context.commands.execute(&"story.observe", {"event": "cmd:explore.start", "data": started.get("data", {})})

@@ -171,7 +171,7 @@ static func choose_option(context, option_id: String) -> Dictionary:
 	if not (event_state is Dictionary):
 		return Result.fail("no_pending_event", "ui.error.no_pending_event")
 	var event_id := String(event_state.get("event_id", ""))
-	var template := hub.get_by_id(ContentTypes.EVENT, event_id)
+	var template := hub.get_by_id(ContentTypes.VOYAGE_EVENT, event_id)
 	if template == null:
 		return Result.fail("unknown_event", "ui.error.unknown_event", {"event_id": event_id})
 	var option := _find_option(template, option_id)
@@ -500,7 +500,7 @@ static func _pick_event(context, preview: Dictionary, destination_id: String) ->
 	if trigger.is_empty():
 		return {}
 	var candidates: Array = []
-	for definition in hub.get_all(ContentTypes.EVENT):
+	for definition in hub.get_all(ContentTypes.VOYAGE_EVENT):
 		if String(definition.data.get("trigger", "")) != trigger:
 			continue
 		var condition_result := ConditionEvaluator.evaluate(

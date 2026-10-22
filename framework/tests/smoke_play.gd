@@ -26,9 +26,9 @@ func _initialize() -> void:
 		quit(1)
 		return
 	var destination: String = destinations[0]["port_id"]
-	var preview := context.commands.execute(&"voyage.preview", {"destination_id": destination, "strategy_id": "core:strategy/standard"})
+	var preview := context.commands.execute(&"voyage.preview", {"destination_id": destination, "strategy_id": "core:boiler_strategy/standard"})
 	print("preview ok=", preview.get("ok"), " data=", preview.get("data", {}))
-	var voyage := context.commands.execute(&"voyage.start", {"destination_id": destination, "strategy_id": "core:strategy/standard"})
+	var voyage := context.commands.execute(&"voyage.start", {"destination_id": destination, "strategy_id": "core:boiler_strategy/standard"})
 	print("voyage.start ok=", voyage.get("ok"), " code=", voyage.get("error_code"), " data=", voyage.get("data", {}))
 	if not bool(voyage.get("ok", false)):
 		quit(1)

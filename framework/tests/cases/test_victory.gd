@@ -3,7 +3,7 @@ extends TestCase
 ## Owned by loop-systems; see docs/specs/ITERATION_1_MVP_LOOP.md §3.4 / §3.8 / §5.3 / §8.
 
 const STEADY_BUILD := "core:starting_scenario/steady"
-const STANDARD_STRATEGY := "core:strategy/standard"
+const STANDARD_STRATEGY := "core:boiler_strategy/standard"
 const LARGE_HULL := "core:hull/large_efficient"
 const SMALL_HULL := "core:hull/small_efficient"
 

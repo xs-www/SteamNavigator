@@ -3517,10 +3517,10 @@ func _value_name(port: Dictionary, fallback: String) -> String:
 
 
 func _standard_strategy_id() -> String:
-	for strategy in _context.registries.get_all(ContentTypes.STRATEGY):
+	for strategy in _context.registries.get_all(ContentTypes.BOILER_STRATEGY):
 		if strategy.has_tag("strategy.standard"):
 			return strategy.id
-	var strategies := _context.registries.get_all(ContentTypes.STRATEGY)
+	var strategies := _context.registries.get_all(ContentTypes.BOILER_STRATEGY)
 	return strategies[0].id if not strategies.is_empty() else ""
 
 

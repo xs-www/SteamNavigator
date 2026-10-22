@@ -284,7 +284,7 @@ static func role_definition(hub: RegistryHub, ship: Dictionary, kind: String) ->
 	var role_id := String(ship.get(key, ""))
 	if role_id.is_empty():
 		return null
-	var role := hub.get_by_id(ContentTypes.ROLE, role_id)
+	var role := hub.get_by_id(ContentTypes.CREW_ROLE, role_id)
 	if role == null or String(role.data.get("kind", "")) != kind:
 		return null
 	return role

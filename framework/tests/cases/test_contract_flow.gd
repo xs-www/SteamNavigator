@@ -15,7 +15,7 @@ func test_main_chain_offer_and_accept() -> void:
 	var destination := String(context.state.contracts()["main"]["destination"])
 	var voyage := context.commands.execute(&"voyage.start", {
 		"destination_id": destination,
-		"strategy_id": "core:strategy/economic",
+		"strategy_id": "core:boiler_strategy/economic",
 	})
 	assert_true(bool(voyage["ok"]), "voyage starts")
 	if not bool(voyage["data"].get("arrived", true)):

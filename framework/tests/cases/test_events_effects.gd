@@ -36,7 +36,7 @@ func test_effects_apply_in_order() -> void:
 		"arrival_time": state.now() + 10.0,
 		"delay_hours": 0.0,
 		"injuries": 0,
-		"event": {"event_id": "core:event/boiler_overheat"},
+		"event": {"event_id": "core:voyage_event/boiler_overheat"},
 	}
 	var water_before := float(state.ship()["water"])
 	var durability_before := float(state.ship()["durability"])
@@ -83,11 +83,11 @@ func test_event_content_and_sampling() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6363})
-	var risk_event := context.registries.get_by_id(ContentTypes.EVENT, "core:event/boiler_overheat")
+	var risk_event := context.registries.get_by_id(ContentTypes.VOYAGE_EVENT, "core:voyage_event/boiler_overheat")
 	assert_not_null(risk_event, "risk event exists")
 	assert_eq(Array(risk_event.data["options"]).size(), 5, "risk event has five options")
 	assert_true(risk_event.has_tag("event.risk"), "risk event is tagged")
-	var merchant := context.registries.get_by_id(ContentTypes.EVENT, "core:event/merchant_intel")
+	var merchant := context.registries.get_by_id(ContentTypes.VOYAGE_EVENT, "core:voyage_event/merchant_intel")
 	assert_not_null(merchant, "merchant event exists")
 	assert_eq(Array(merchant.data["options"]).size(), 2, "merchant event has two options")
 

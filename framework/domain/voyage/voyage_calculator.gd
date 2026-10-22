@@ -20,7 +20,7 @@ static func preview(context, destination_id: String, strategy_id: String) -> Dic
 	var route := MapOps.route_between(state.world(), origin, destination_id)
 	if route.is_empty():
 		return Result.fail("no_route", "ui.error.no_route", {"destination": destination_id})
-	var strategy: ContentDefinition = hub.get_by_id(ContentTypes.STRATEGY, strategy_id)
+	var strategy: ContentDefinition = hub.get_by_id(ContentTypes.BOILER_STRATEGY, strategy_id)
 	if strategy == null:
 		return Result.fail("unknown_strategy", "ui.error.unknown_strategy", {"strategy_id": strategy_id})
 

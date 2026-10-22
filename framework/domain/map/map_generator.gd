@@ -246,7 +246,7 @@ static func _any_assigned_has_tag(assigned: Dictionary, tag: String) -> bool:
 
 static func _starting_supplies_reach_neighbor(world: Dictionary, hub: RegistryHub, ship: Dictionary, profile_data: Dictionary) -> bool:
 	var stats := ShipOps.stats(hub, ship)
-	var strategies := hub.query(ContentTypes.STRATEGY, ["strategy.economy"])
+	var strategies := hub.query(ContentTypes.BOILER_STRATEGY, ["strategy.economy"])
 	var strategy: ContentDefinition = strategies[0] if not strategies.is_empty() else null
 	var speed_mul := float(strategy.data.get("speed_mul", 1.0)) if strategy != null else 1.0
 	var coal_mul := float(strategy.data.get("coal_mul", 1.0)) if strategy != null else 1.0

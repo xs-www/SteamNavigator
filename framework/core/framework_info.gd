@@ -20,6 +20,9 @@ const CAPABILITIES := [
 	"content.quests.v1",
 	"content.port_templates.v1",
 	"content.starting_scenarios.v1",
+	"content.voyage_events.v1",
+	"content.crew_roles.v1",
+	"content.boiler_strategies.v1",
 	"content.modules.v1",
 	"content.hulls.v1",
 ]

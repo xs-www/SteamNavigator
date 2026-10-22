@@ -88,7 +88,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	)
 
 	var strategies: Array = []
-	for strategy in hub.get_all(ContentTypes.STRATEGY):
+	for strategy in hub.get_all(ContentTypes.BOILER_STRATEGY):
 		strategies.append({
 			"id": strategy.id,
 			"name_key": strategy.name_key,

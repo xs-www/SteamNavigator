@@ -8,7 +8,7 @@ extends TestCase
 ## human, the bot is allowed a few extra normal contracts as a money buffer.
 
 const BUILD := "core:starting_scenario/steady"
-const STRATEGY := "core:strategy/standard"
+const STRATEGY := "core:boiler_strategy/standard"
 const MEDIUM_HULL := "core:hull/medium_standard"
 const LARGE_HULL := "core:hull/large_efficient"
 const CABIN := "core:module/passenger_cabin"

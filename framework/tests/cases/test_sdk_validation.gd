@@ -8,7 +8,7 @@ extends TestCase
 ##   `res://sdk/validate.gd` / `res://sdk/pack_mod.gd`，不直接调用内部实现。
 ## - 仓库内示例 / 模板只读（`sdk/examples/**`、`sdk/templates/**`）；运行期 fixture 写在
 ##   `user://sdk_test_*`，每个用例结束清理。
-## - runtime 必须：1.0 兼容、混合 1.0 + 2.0 可加载、未激活草案被显式拒绝
+## - runtime 必须：2.0 示例可加载、多类型 2.0 混合模组可加载、未激活草案被显式拒绝；`contracts` 保留唯一 1.0 定义类型
 ##   （`inactive_content_type`，带 `mod` / `file` / `path` 字段）。
 ## - draft 必须：草案 / 混合模组可静态校验；Schema 错误与“按类型版本”错误能被发现。
 ## - `pack_mod --release` 必须拒绝未激活草案与校验 error；不带 `--release` 保持旧行为。
@@ -16,8 +16,8 @@ extends TestCase
 
 const VALIDATE_SCRIPT := "res://sdk/validate.gd"
 const PACK_SCRIPT := "res://sdk/pack_mod.gd"
-const ROLES_EXAMPLE := "sdk/examples/example_roles_1_0"
-const MIXED_EXAMPLE := "sdk/examples/example_mixed_roles_items"
+const ROLES_EXAMPLE := "sdk/examples/example_crew_roles"
+const MIXED_EXAMPLE := "sdk/examples/example_mixed_crew_roles_items"
 const DRAFT_WEAPONS_TEMPLATE := "sdk/templates/draft_weapons_pack"
 const STORY_TEMPLATE := "sdk/templates/story_pack_iron_tide"
 
@@ -231,33 +231,33 @@ func test_mod_root_core_does_not_duplicate_the_default_scan_root() -> void:
 		assert_eq(scanned.size(), 1, "only the deduplicated core root is scanned")
 
 
-func test_runtime_accepts_1_0_and_mixed_version_mods() -> void:
-	# A mod that stays on Content Schema 1.0 with a still-active type.
+func test_runtime_accepts_mixed_version_mods() -> void:
+	# A 2.0 example mod that uses only the public content API.
 	var one := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s" % ROLES_EXAMPLE, "--mode=runtime", "--json",
 	]))
-	assert_eq(int(one["exit"]), 0, "1.0 example must pass runtime validation")
-	var one_json := _json_of(one, "runtime 1.0 example")
+	assert_eq(int(one["exit"]), 0, "2.0 example must pass runtime validation")
+	var one_json := _json_of(one, "runtime 2.0 example")
 	assert_eq(String(one_json.get("mode", "")), "runtime", "explicit runtime mode")
-	assert_contains(_mod_ids(one_json), "example_roles_1_0", "the 1.0 example mod must be loaded")
-	assert_true(int(_counts(one_json).get("roles", 0)) >= 3, "the 1.0 role definition must be registered next to core")
+	assert_contains(_mod_ids(one_json), "example_crew_roles", "the 2.0 example mod must be loaded")
+	assert_true(int(_counts(one_json).get("crew_roles", 0)) >= 3, "the example crew role must be registered next to core")
 
-	# A mixed mod: roles stays 1.0 while the active items type is 2.0.
+	# Mixed-version coverage: every active type is 2.0, while the patch/contract 1.0 baseline stays covered below.
 	var mixed := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s" % MIXED_EXAMPLE, "--mode=runtime", "--json",
 	]))
 	assert_eq(int(mixed["exit"]), 0, "mixed-version example must pass runtime validation")
 	var mixed_json := _json_of(mixed, "runtime mixed example")
-	assert_contains(_mod_ids(mixed_json), "example_mixed_roles_items", "the mixed mod must be loaded")
+	assert_contains(_mod_ids(mixed_json), "example_mixed_crew_roles_items", "the mixed example mod must be loaded")
 	assert_true(int(_counts(mixed_json).get("items", 0)) >= 13, "the 2.0 item must be registered")
-	assert_true(int(_counts(mixed_json).get("roles", 0)) >= 3, "the 1.0 role must be registered at the same time")
+	assert_true(int(_counts(mixed_json).get("crew_roles", 0)) >= 3, "the example crew role must be registered at the same time")
 
 	# Per-type versions come from ContentTypes, not a global gate.
-	assert_eq(ContentTypes.schema_version(ContentTypes.ROLE), "1.0", "roles is still a 1.0 type")
+	assert_eq(ContentTypes.schema_version(ContentTypes.CREW_ROLE), "2.0", "crew_roles is a 2.0 type")
 	assert_eq(ContentTypes.schema_version(ContentTypes.ITEM), "2.0", "items is a 2.0 type")
-	var roles_file := JsonUtils.parse_file("res://%s/content/roles.json" % MIXED_EXAMPLE)
+	var roles_file := JsonUtils.parse_file("res://%s/content/crew_roles.json" % MIXED_EXAMPLE)
 	var items_file := JsonUtils.parse_file("res://%s/content/items.json" % MIXED_EXAMPLE)
-	assert_eq(String(roles_file["value"]["schema_version"]), "1.0", "the mixed mod keeps roles on 1.0")
+	assert_eq(String(roles_file["value"]["schema_version"]), "2.0", "the mixed mod writes crew_roles with 2.0")
 	assert_eq(String(items_file["value"]["schema_version"]), "2.0", "the mixed mod writes items with 2.0")
 
 
@@ -347,14 +347,14 @@ func test_patch_envelope_is_checked_against_the_target_type_version() -> void:
 	var root := _temp_root("patch_target_version")
 	_write_mod(root, "sdk_patch_mod", {
 		"content/patches.json": _patch_envelope("1.0", [
-			{"target": "core:role/engineer_basic", "operations": [{"op": "replace", "path": "/data/wage_per_voyage", "value": 45}]},
+			{"target": "core:crew_role/engineer_basic", "operations": [{"op": "replace", "path": "/data/wage_per_voyage", "value": 45}]},
 			{"target": "core:item/iron_ore", "operations": [{"op": "replace", "path": "/data/base_price", "value": 45}]},
 		]),
 	})
 	var result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s/sdk_patch_mod" % root, "--mode=runtime", "--json",
 	]))
-	assert_eq(int(result["exit"]), 0, "a 1.0 patch envelope may target both 1.0 roles and 2.0 items")
+	assert_eq(int(result["exit"]), 0, "a 1.0 patch envelope may target 2.0 content (patches is the only 1.0 type)")
 	var json := _json_of(result, "patch target version")
 	assert_empty(json.get("errors", []), "patch re-validation uses the target type version, not the patch envelope version")
 
@@ -362,7 +362,7 @@ func test_patch_envelope_is_checked_against_the_target_type_version() -> void:
 	var bad_root := _temp_root("patch_bad_envelope")
 	_write_mod(bad_root, "sdk_patch_bad", {
 		"content/patches.json": _patch_envelope("2.0", [
-			{"target": "core:role/engineer_basic", "operations": [{"op": "replace", "path": "/data/wage_per_voyage", "value": 45}]},
+			{"target": "core:crew_role/engineer_basic", "operations": [{"op": "replace", "path": "/data/wage_per_voyage", "value": 45}]},
 		]),
 	})
 	var bad_result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
@@ -441,16 +441,16 @@ func test_pack_release_keeps_the_snavmod_zip_layout() -> void:
 		"--source=%s" % MIXED_EXAMPLE, "--out=%s" % out, "--release",
 	]))
 	assert_eq(int(result["exit"]), 0, "pack --release must accept a runtime-valid mixed mod")
-	var pack_path := "%s/example_mixed_roles_items-1.0.0.snavmod.zip" % out
+	var pack_path := "%s/example_mixed_crew_roles_items-1.0.0.snavmod.zip" % out
 	assert_true(FileAccess.file_exists(pack_path), "release packing must write the zip")
 	var reader := ZIPReader.new()
 	var open_error := reader.open(pack_path)
 	assert_eq(open_error, OK, "the release zip must be readable")
 	if open_error == OK:
 		var entries := reader.get_files()
-		assert_true(entries.has("mods/example_mixed_roles_items/manifest.json"), "pack layout keeps mods/<id>/manifest.json")
-		assert_true(entries.has("mods/example_mixed_roles_items/content/roles.json"), "pack layout keeps content files")
-		assert_true(entries.has("mods/example_mixed_roles_items/content/items.json"), "pack layout keeps every content file")
+		assert_true(entries.has("mods/example_mixed_crew_roles_items/manifest.json"), "pack layout keeps mods/<id>/manifest.json")
+		assert_true(entries.has("mods/example_mixed_crew_roles_items/content/crew_roles.json"), "pack layout keeps content files")
+		assert_true(entries.has("mods/example_mixed_crew_roles_items/content/items.json"), "pack layout keeps every content file")
 		assert_false(entries.has("manifest.json"), "the zip must not flatten the manifest to its root")
 		reader.close()
 	SdkValidationCore.cleanup_stage(out)

@@ -8,14 +8,14 @@ func test_full_first_voyage() -> void:
 	assert_true(bool(start["ok"]), "run starts: %s" % str(start))
 	var main_contract: Dictionary = context.state.contracts()["main"]
 	var destination := String(main_contract["destination"])
-	var preview := context.commands.execute(&"voyage.preview", {"destination_id": destination, "strategy_id": "core:strategy/standard"})
+	var preview := context.commands.execute(&"voyage.preview", {"destination_id": destination, "strategy_id": "core:boiler_strategy/standard"})
 	assert_true(bool(preview["ok"]), "preview succeeds")
 	var preview_data: Dictionary = preview["data"]
 	assert_true(float(preview_data["duration_hours"]) > 0.0, "preview has a duration")
 	assert_true(float(preview_data["coal_required"]) > 0.0, "preview has coal demand")
 	assert_true(float(preview_data["water_required"]) > 0.0, "preview has water demand")
 	assert_true(bool(preview_data["feasible"]), "first voyage is feasible: %s" % str(preview_data["blockers"]))
-	var voyage := context.commands.execute(&"voyage.start", {"destination_id": destination, "strategy_id": "core:strategy/standard"})
+	var voyage := context.commands.execute(&"voyage.start", {"destination_id": destination, "strategy_id": "core:boiler_strategy/standard"})
 	assert_true(bool(voyage["ok"]), "voyage starts: %s" % str(voyage))
 	if not bool(voyage["data"].get("arrived", true)):
 		var option_ids: Array = voyage["data"]["event"]["option_ids"]
@@ -92,7 +92,7 @@ func test_run_maps_a_chart_twin_world() -> void:
 
 	# A voyage keeps the twin in step: the destination becomes visited + revealed.
 	var destination := String(state.contracts()["main"]["destination"])
-	var voyage := context.commands.execute(&"voyage.start", {"destination_id": destination, "strategy_id": "core:strategy/standard"})
+	var voyage := context.commands.execute(&"voyage.start", {"destination_id": destination, "strategy_id": "core:boiler_strategy/standard"})
 	assert_true(bool(voyage["ok"]), "voyage starts: %s" % str(voyage))
 	if not bool(voyage["data"].get("arrived", true)):
 		var option_ids: Array = voyage["data"]["event"]["option_ids"]
@@ -113,6 +113,6 @@ func test_swift_build_can_start() -> void:
 	assert_true(bool(start["ok"]), "swift build starts: %s" % str(start))
 	var preview := context.commands.execute(&"voyage.preview", {
 		"destination_id": String(context.state.contracts()["main"]["destination"]),
-		"strategy_id": "core:strategy/standard",
+		"strategy_id": "core:boiler_strategy/standard",
 	})
 	assert_true(bool(preview["ok"]), "swift build can preview a voyage")

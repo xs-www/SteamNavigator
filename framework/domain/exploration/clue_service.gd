@@ -1019,7 +1019,7 @@ static func _default_speed(context) -> float:
 	if not bool(stats.get("valid", false)):
 		return maxf(0.1, float(stats.get("speed", 1.0)))
 	var strategy: ContentDefinition = null
-	for definition in hub.get_all(ContentTypes.STRATEGY):
+	for definition in hub.get_all(ContentTypes.BOILER_STRATEGY):
 		if definition.has_tag("strategy.standard"):
 			strategy = definition
 			break

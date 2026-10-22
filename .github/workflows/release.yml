@@ -100,9 +100,9 @@ jobs:
         run: |
           set -euo pipefail
           godot --headless --path . --script res://sdk/validate.gd -- \
-            --mod-root=sdk/examples/example_roles_1_0 --mode=runtime
+            --mod-root=sdk/examples/example_crew_roles --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
-            --mod-root=sdk/examples/example_mixed_roles_items --mode=runtime
+            --mod-root=sdk/examples/example_mixed_crew_roles_items --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/templates/draft_weapons_pack --mode=draft
           godot --headless --path . --script res://sdk/validate.gd -- \

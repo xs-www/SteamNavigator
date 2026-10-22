@@ -4,7 +4,7 @@ extends TestCase
 ## old-save backfill. See docs/specs/ITERATION_1_MVP_LOOP.md §3.2, §4 and §9.
 
 const BUILD := "core:starting_scenario/steady"
-const STRATEGY := "core:strategy/standard"
+const STRATEGY := "core:boiler_strategy/standard"
 const CONTRACT_FREIGHT := "core:item/contract_freight"
 const TIER1_MODULES := [
 	"core:hull/small_efficient",

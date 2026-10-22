@@ -289,9 +289,9 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 	_register(hub, ContentTypes.MODULE, STANDARD_CARGO_ID, ["module.cargo"], {
 		"tier": 1, "v2_category": "cargo", "capacity": 10.0,
 	})
-	_register(hub, ContentTypes.STRATEGY, "core:strategy/economy", ["strategy.economy"])
-	_register(hub, ContentTypes.STRATEGY, "core:strategy/standard", ["strategy.standard"])
-	_register(hub, ContentTypes.STRATEGY, "core:strategy/fast", ["strategy.fast"])
+	_register(hub, ContentTypes.BOILER_STRATEGY, "core:boiler_strategy/economy", ["strategy.economy"])
+	_register(hub, ContentTypes.BOILER_STRATEGY, "core:boiler_strategy/standard", ["strategy.standard"])
+	_register(hub, ContentTypes.BOILER_STRATEGY, "core:boiler_strategy/fast", ["strategy.fast"])
 	for index in range(4):
 		_register(hub, ContentTypes.PORT_TEMPLATE, "core:port_template/type_%d" % index)
 	_register(hub, ContentTypes.STARTING_SCENARIO, STARTING_BUILD_ID, [], {
@@ -304,10 +304,10 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 			"kind": "main",
 			"sequence": sequence,
 		})
-	_register(hub, ContentTypes.EVENT, "core:event/risk", ["event.risk"])
-	_register(hub, ContentTypes.EVENT, "core:event/quiet")
-	_register(hub, ContentTypes.ROLE, "core:role/engineer", ["role.engineer"])
-	_register(hub, ContentTypes.ROLE, "core:role/navigator", ["role.navigator"])
+	_register(hub, ContentTypes.VOYAGE_EVENT, "core:voyage_event/risk", ["event.risk"])
+	_register(hub, ContentTypes.VOYAGE_EVENT, "core:voyage_event/quiet")
+	_register(hub, ContentTypes.CREW_ROLE, "core:crew_role/engineer", ["role.engineer"])
+	_register(hub, ContentTypes.CREW_ROLE, "core:crew_role/navigator", ["role.navigator"])
 	if not skip.has(ContentTypes.QUEST):
 		_register(hub, ContentTypes.QUEST, "core:quest/guide", ["quest.guide"], {
 			"kind": "guide",

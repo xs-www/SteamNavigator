@@ -50,7 +50,7 @@ static func preview(context, clue_id: String, strategy_id: String = "") -> Dicti
 		return Result.fail("unknown_port", "ui.error.unknown_port", {"port_id": state.current_port_id()})
 	var strategy: ContentDefinition = null
 	if not strategy_id.is_empty():
-		strategy = hub.get_by_id(ContentTypes.STRATEGY, strategy_id)
+		strategy = hub.get_by_id(ContentTypes.BOILER_STRATEGY, strategy_id)
 		if strategy == null:
 			return Result.fail("unknown_strategy", "ui.error.unknown_strategy", {"strategy_id": strategy_id})
 	else:
@@ -166,7 +166,7 @@ static func effective_speed(context, strategy_id: String = "") -> float:
 	if strategy_id.is_empty():
 		strategy = _default_strategy(hub)
 	else:
-		strategy = hub.get_by_id(ContentTypes.STRATEGY, strategy_id)
+		strategy = hub.get_by_id(ContentTypes.BOILER_STRATEGY, strategy_id)
 	var speed_mul := float(strategy.data.get("speed_mul", 1.0)) if strategy != null else 1.0
 	var max_weight := ShipOps.max_weight(hub, ship)
 	var total_weight := ShipOps.total_weight(hub, state)
@@ -178,10 +178,10 @@ static func effective_speed(context, strategy_id: String = "") -> float:
 
 
 static func _default_strategy(hub: RegistryHub) -> ContentDefinition:
-	for definition in hub.get_all(ContentTypes.STRATEGY):
+	for definition in hub.get_all(ContentTypes.BOILER_STRATEGY):
 		if definition.has_tag("strategy.standard"):
 			return definition
-	var all := hub.get_all(ContentTypes.STRATEGY)
+	var all := hub.get_all(ContentTypes.BOILER_STRATEGY)
 	return all[0] if not all.is_empty() else null
 
 

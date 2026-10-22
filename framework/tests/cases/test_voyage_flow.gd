@@ -17,7 +17,7 @@ const EVENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/event_scre
 const SEA_CHART_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/sea_chart_screen.gd")
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
 const STEADY_BUILD := "core:starting_scenario/steady"
-const STANDARD_STRATEGY := "core:strategy/standard"
+const STANDARD_STRATEGY := "core:boiler_strategy/standard"
 const STEP_SECONDS := 0.1
 ## Upper bound on simulated seconds per phase; a stuck演出 fails here instead of
 ## hanging the suite.
@@ -1043,7 +1043,7 @@ func _force_delayed_event_context(context: AppContext, destination: String) -> D
 ## The first offered option whose effects contain `add_delay_hours` (empty when none).
 func _offered_delay_option(context: AppContext, event: Dictionary) -> String:
 	var template := context.registries.get_by_id(
-		ContentTypes.EVENT, String(event.get("event_id", ""))
+		ContentTypes.VOYAGE_EVENT, String(event.get("event_id", ""))
 	)
 	if template == null:
 		return ""

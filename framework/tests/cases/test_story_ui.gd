@@ -97,7 +97,7 @@ func test_continue_unlocks_market_then_buying_advances_to_the_chart() -> void:
 	shell._run_command(&"supply.buy_coal", {"amount": 2})
 	assert_eq(String(shell._story_vm.get("stage_id", "")), "depart_brief", "10 coal reaches the departure stage")
 	assert_eq(String(shell._story_vm.get("preferred_strategy", "")), "fast", "the departure stage prefers Fast")
-	assert_eq(shell._chart_departure_strategy(), "core:strategy/fast", "the departure dialog defaults to Fast")
+	assert_eq(shell._chart_departure_strategy(), "core:boiler_strategy/fast", "the departure dialog defaults to Fast")
 	_unmount(bundle)
 
 

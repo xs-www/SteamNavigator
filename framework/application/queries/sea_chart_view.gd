@@ -272,7 +272,7 @@ static func _estimate_context(context, params: Dictionary, current_port: String)
 	var preferred_strategy := String(params.get("strategy_id", ""))
 	var strategies: Dictionary = {}
 	var preferred: ContentDefinition = null
-	for strategy in hub.get_all(ContentTypes.STRATEGY):
+	for strategy in hub.get_all(ContentTypes.BOILER_STRATEGY):
 		strategies[strategy.id] = strategy
 		if preferred == null and strategy.has_tag("strategy.standard"):
 			preferred = strategy

@@ -227,7 +227,7 @@ func test_sea_chart_routes_carry_voyage_estimates() -> void:
 		# Coal is duration × boiler rate × strategy coal multiplier. Recompute it
 		# from the route's own travel time and the reported strategy.
 		var strategy_id := String(route.get("strategy_id", ""))
-		var strategy := context.registries.get_by_id(ContentTypes.STRATEGY, strategy_id)
+		var strategy := context.registries.get_by_id(ContentTypes.BOILER_STRATEGY, strategy_id)
 		var coal_mul := float(strategy.data.get("coal_mul", 1.0)) if strategy != null else 1.0
 		var water_mul := float(strategy.data.get("water_mul", 1.0)) if strategy != null else 1.0
 		var expected_coal := float(route.get("travel_hours", 0.0)) * float(stats.get("coal_rate", 0.0)) * coal_mul
@@ -910,10 +910,10 @@ func test_sea_chart_screen_renders_the_departure_confirm_dialog() -> void:
 		"target_id": "port_b",
 		"target_name": "香料港",
 		"current_port_name": "铁港",
-		"strategy_id": "core:strategy/standard",
+		"strategy_id": "core:boiler_strategy/standard",
 		"strategies": [
-			{"id": "core:strategy/standard", "name": "标准"},
-			{"id": "core:strategy/economy", "name": "经济"},
+			{"id": "core:boiler_strategy/standard", "name": "标准"},
+			{"id": "core:boiler_strategy/economy", "name": "经济"},
 		],
 		"preview": {
 			"feasible": false,
@@ -973,7 +973,7 @@ func test_sea_chart_screen_renders_the_departure_confirm_dialog() -> void:
 	if confirm != null:
 		assert_false(confirm.disabled, "a feasible departure can be confirmed")
 		confirm.pressed.emit()
-	assert_eq(confirmed, [["voyage", "port_b", "core:strategy/standard"]],
+	assert_eq(confirmed, [["voyage", "port_b", "core:boiler_strategy/standard"]],
 		"confirm reports kind, target and strategy to the shell")
 	screen.free()
 

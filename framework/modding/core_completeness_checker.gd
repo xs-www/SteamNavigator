@@ -39,25 +39,25 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_count(hub, ContentTypes.HULL, 3, "hulls", errors)
 	_require_module_category_count(hub, "boiler", 2, "boilers", errors)
 	_require_module_category_count(hub, "cargo", 1, "cargo modules", errors)
-	_require_count(hub, ContentTypes.STRATEGY, 3, "boiler strategies", errors)
+	_require_count(hub, ContentTypes.BOILER_STRATEGY, 3, "boiler strategies", errors)
 	_require_count(hub, ContentTypes.PORT_TEMPLATE, 4, "port templates", errors)
 	_require_count(hub, ContentTypes.STARTING_SCENARIO, 1, "starting scenarios", errors)
 	_require_count(hub, ContentTypes.CONTRACT, 5, "contracts", errors)
 	# C3: the abstraction quest layer ships at least one core quest (guide/system).
 	_require_count(hub, ContentTypes.QUEST, 1, "quests", errors)
-	_require_count(hub, ContentTypes.EVENT, 2, "events", errors)
-	_require_count(hub, ContentTypes.ROLE, 2, "crew roles", errors)
+	_require_count(hub, ContentTypes.VOYAGE_EVENT, 2, "voyage events", errors)
+	_require_count(hub, ContentTypes.CREW_ROLE, 2, "crew roles", errors)
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
-		if hub.query(ContentTypes.STRATEGY, [required_tag]).is_empty():
+		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():
 			errors.append({"code": "strategy_tag_missing", "message": "no strategy with tag '%s'" % required_tag})
 	if hub.query(ContentTypes.HULL, ["module.large"]).is_empty():
 		errors.append({"code": "large_hull_missing", "message": "no large hull is available for the finale reward"})
-	if hub.query(ContentTypes.ROLE, ["role.engineer"]).is_empty():
+	if hub.query(ContentTypes.CREW_ROLE, ["role.engineer"]).is_empty():
 		errors.append({"code": "engineer_missing", "message": "no engineer role is available"})
-	if hub.query(ContentTypes.ROLE, ["role.navigator"]).is_empty():
+	if hub.query(ContentTypes.CREW_ROLE, ["role.navigator"]).is_empty():
 		errors.append({"code": "navigator_missing", "message": "no navigator role is available"})
-	if hub.query(ContentTypes.EVENT, ["event.risk"]).is_empty():
+	if hub.query(ContentTypes.VOYAGE_EVENT, ["event.risk"]).is_empty():
 		errors.append({"code": "risk_events_missing", "message": "no voyage risk event is tagged event.risk"})
 
 	var sequences: Dictionary = {}

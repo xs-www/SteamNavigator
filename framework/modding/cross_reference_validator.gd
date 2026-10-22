@@ -66,8 +66,8 @@ const QUEST_MATCH_REFERENCE_TYPES := {
 	"item_id": ContentTypes.ITEM,
 	"module_id": ContentTypes.MODULE,
 	"hull_id": ContentTypes.HULL,
-	"role_id": ContentTypes.ROLE,
-	"strategy_id": ContentTypes.STRATEGY,
+	"role_id": ContentTypes.CREW_ROLE,
+	"strategy_id": ContentTypes.BOILER_STRATEGY,
 }
 
 var errors: Array[Dictionary] = []
@@ -186,7 +186,7 @@ func _check_role(build: ContentDefinition, field: String, expected_kind: String)
 	var role_id := String(build.data.get(field, ""))
 	if role_id.is_empty():
 		return
-	var role := _hub.get_by_id(ContentTypes.ROLE, role_id)
+	var role := _hub.get_by_id(ContentTypes.CREW_ROLE, role_id)
 	if role == null:
 		_error("role_missing", "%s references missing role %s" % [build.id, role_id], build.id)
 	elif String(role.data.get("kind", "")) != expected_kind:
@@ -258,7 +258,7 @@ func _check_contracts() -> void:
 func _check_events() -> void:
 	var has_risk := false
 	var has_opportunity := false
-	for event in _hub.get_all(ContentTypes.EVENT):
+	for event in _hub.get_all(ContentTypes.VOYAGE_EVENT):
 		var data: Dictionary = event.data
 		var trigger := String(data.get("trigger", ""))
 		has_risk = has_risk or trigger == "voyage_risk"
@@ -331,7 +331,7 @@ func _check_condition_recursive(node: Dictionary, owner: String, state: Dictiona
 		"has_role":
 			var role_id := String(node.get("id", ""))
 			var role_kind := String(node.get("role_kind", ""))
-			if not role_id.is_empty() and _hub.get_by_id(ContentTypes.ROLE, role_id) == null:
+			if not role_id.is_empty() and _hub.get_by_id(ContentTypes.CREW_ROLE, role_id) == null:
 				_error("condition_role_missing", "%s condition references unknown role %s" % [owner, role_id], owner)
 			if role_id.is_empty() and role_kind.is_empty():
 				_error("condition_role_empty", "%s has_role condition needs id or role_kind" % owner, owner)

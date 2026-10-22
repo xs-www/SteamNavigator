@@ -27,7 +27,7 @@ extends TestCase
 ## @end-static-doc
 
 const SEED := 20260421
-const STRATEGY_ID := "core:strategy/standard"
+const STRATEGY_ID := "core:boiler_strategy/standard"
 
 var _stream_serial := 0
 

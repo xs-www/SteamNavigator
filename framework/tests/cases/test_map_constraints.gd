@@ -43,7 +43,7 @@ func test_many_seeds_meet_map_constraints() -> void:
 			failures.append("seed %d: main destination is not adjacent" % seed_value)
 		var saved := context.state
 		context.state = state
-		var preview := VoyageCalculator.preview(context, destination, "core:strategy/economic")
+		var preview := VoyageCalculator.preview(context, destination, "core:boiler_strategy/economic")
 		context.state = saved
 		if not bool(preview["ok"]) or not bool(preview["data"].get("feasible", false)):
 			failures.append("seed %d: first voyage infeasible" % seed_value)
