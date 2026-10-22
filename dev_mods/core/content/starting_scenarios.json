@@ -7,8 +7,8 @@
       "name_key": "starting_scenario.core.steady.name",
       "description_key": "starting_scenario.core.steady.description",
       "tags": [
-        "starting_build.efficient",
-        "starting_build.safe"
+        "starting_scenario.efficient",
+        "starting_scenario.safe"
       ],
       "enabled": true,
       "data": {
@@ -33,8 +33,8 @@
       "name_key": "starting_scenario.core.swift.name",
       "description_key": "starting_scenario.core.swift.description",
       "tags": [
-        "starting_build.performance",
-        "starting_build.risky"
+        "starting_scenario.performance",
+        "starting_scenario.risky"
       ],
       "enabled": true,
       "data": {
