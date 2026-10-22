@@ -395,11 +395,11 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 23, '20 runtime types + 3 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 20, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.types.length, 24, '21 runtime types + 3 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 21, 'activeTypes counts runtime types at both 1.0 and 2.0');
   assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
-  for (const key of ['items', 'hulls', 'modules', 'events', 'contracts', 'patches']) {
+  for (const key of ['items', 'hulls', 'modules', 'events', 'contracts', 'quests', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
   }
   for (const legacyModuleType of ['boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins']) {
@@ -446,18 +446,19 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(startProfile.schema_version, '2.0');
   assert.equal(startProfile.capability, 'content.campaign.v1');
 
-  // The Phase B world/campaign types plus the C1 hull/module and C2 item types are active runtime rows at Schema 2.0.
+  // The Phase B world/campaign types plus the C1 hull/module, C2 item and C3 quest types are active runtime rows at Schema 2.0.
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules', 'regions', 'route_templates', 'sites',
-      'start_profiles', 'weather_profiles', 'world_profiles'],
-    'exactly the twelve Schema 2.0 runtime rows are active'
+    ['discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules', 'quests', 'regions', 'route_templates',
+      'sites', 'start_profiles', 'weather_profiles', 'world_profiles'],
+    'exactly the thirteen Schema 2.0 runtime rows are active'
   );
   const runtimeCapabilities = {
     hulls: 'content.hulls.v1',
     items: 'content.items.v1',
     modules: 'content.modules.v1',
+    quests: 'content.quests.v1',
     start_profiles: 'content.campaign.v1',
   };
   for (const runtime of runtimeV2) {
@@ -483,6 +484,18 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(hulls.schema, 'v2/hull.schema.json');
   assert.equal(hulls.schema_version, '2.0');
   assert.equal(hulls.capability, 'content.hulls.v1');
+  const quests = json.types.find((entry) => entry.key === 'quests');
+  assert.ok(quests, 'quests must be listed as an active type');
+  assert.equal(quests.singular, 'quest');
+  assert.equal(quests.keyPrefix, 'quest');
+  assert.equal(quests.label, '任务');
+  assert.equal(quests.en, 'Quests');
+  assert.equal(quests.file, 'content/quests.json');
+  assert.equal(quests.schema, 'v2/quest.schema.json');
+  assert.equal(quests.schema_version, '2.0');
+  assert.equal(quests.capability, 'content.quests.v1');
+  assert.equal(quests.group, json.types.find((entry) => entry.key === 'contracts').group, 'C3 quests join the narrative/events group');
+  assert.ok(!quests.draft, 'C3 promoted quests to a runtime type');
   const weapons = drafts.find((entry) => entry.key === 'weapons');
   assert.ok(weapons, 'weapons must be listed as a draft type');
   assert.equal(weapons.singular, 'weapon');
@@ -512,12 +525,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（20；其中 12 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 20 active types, 12 of them Schema 2.0:\n${stdout}`
+    /运行时内容类型（21；其中 13 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 21 active types, 13 of them Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    12,
+    13,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
   );
   assert.match(
@@ -539,6 +552,11 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
     stdout,
     /^items\s+物品\s+item\s+content\/items\.json  \[runtime 2\.0\]$/m,
     `items must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^quests\s+任务\s+quest\s+content\/quests\.json  \[runtime 2\.0\]$/m,
+    `quests must be shown as a runtime Schema 2.0 type:\n${stdout}`
   );
   assert.match(
     stdout,
@@ -639,6 +657,54 @@ test('describe items --json reports id pattern, keys, fields, defaults and skele
   assert.equal(json.skeleton.enabled, true);
   assert.equal(json.skeleton.data.base_price, 50);
   assert.equal(json.skeleton.data.crafting_material, false);
+});
+
+test('describe quests --json reports the C3 quest contract and nested defaults', (t) => {
+  const result = jsonRun(['describe', 'quests']);
+  assertStatus(result, 0, 'describe quests');
+  const json = mustJson(result, 'describe quests');
+  assert.equal(json.ok, true);
+  assert.equal(json.command, 'describe');
+
+  assert.equal(json.type.key, 'quests');
+  assert.equal(json.type.singular, 'quest');
+  assert.equal(json.type.keyPrefix, 'quest');
+  assert.equal(json.type.label, '任务');
+  assert.equal(json.type.file, 'content/quests.json');
+  assert.equal(json.type.schema, 'v2/quest.schema.json');
+  assert.equal(json.type.schema_version, '2.0');
+  assert.equal(json.type.capability, 'content.quests.v1');
+  assert.ok(!json.type.draft, 'C3 quests is an active runtime type');
+
+  assert.equal(json.skeleton.id, 'my_mod:quest/tea');
+  assert.equal(json.skeleton.name_key, 'quest.my_mod.tea.name');
+  assert.equal(json.skeleton.data.kind, 'guide');
+  assert.equal(json.skeleton.data.auto_start, false, 'quests must not auto-start by default');
+  assert.equal(json.skeleton.data.stages.length, 1);
+  assert.equal(json.skeleton.data.stages[0].title_key, 'quest.my_mod.tea.opening.title');
+  assert.equal(json.skeleton.data.stages[0].objectives[0].event, 'ui:arrival_settled');
+
+  const fields = new Map(json.fields.map((field) => [field.path, field]));
+  for (const [path, type, required] of [
+    ['data.kind', 'string', true],
+    ['data.auto_start', 'boolean', false],
+    ['data.prerequisites', 'object', false],
+    ['data.prerequisites.quests_completed', 'array', false],
+    ['data.tracking', 'object', false],
+    ['data.stages', 'array', true],
+    ['data.stages[].id', 'string', true],
+    ['data.stages[].title_key', 'string', true],
+    ['data.stages[].objectives', 'array', true],
+  ]) {
+    const field = fields.get(path);
+    assert.ok(field, `fields must contain ${path}`);
+    assert.equal(field.type, type, `${path} type`);
+    assert.equal(field.required, required, `${path} required`);
+  }
+  // Transport payload / economy rewards belong to contracts, never to quests.
+  for (const forbidden of ['data.payload', 'data.payloads', 'data.rewards', 'data.deadline', 'data.money']) {
+    assert.ok(!fields.has(forbidden), `quest schema must not expose ${forbidden}`);
+  }
 });
 
 test('describe patches --json reports the patch target/operations skeleton and null defaults', (t) => {

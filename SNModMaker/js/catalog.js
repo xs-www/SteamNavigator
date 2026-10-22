@@ -294,6 +294,15 @@
     failure_keys: '失败文本键',
     hook_key: '预告文本键',
     stages: '任务阶段',
+    /* C3 quests */
+    objectives: '阶段目标',
+    auto_start: '自动接取',
+    prerequisites: '前置条件',
+    quests_completed: '需已完成任务',
+    flags: '需已置位标记',
+    tracking: '追踪设置',
+    priority: '优先级',
+    hidden: '不在任务日志显示',
     advance: '推进条件',
     checkpoint: '存档点',
     presentation: '呈现方式',
@@ -331,6 +340,14 @@
   };
 
   const TYPE_FIELD_LABELS = {
+    /* C3: abstract guidance quests. */
+    'quests.kind': '任务类别',
+    'quests.auto_start': '满足前置时自动接取',
+    'quests.repeatable': '可重复接取',
+    'quests.stages': '任务阶段（按顺序推进）',
+    'quests.objectives': '阶段目标（全部完成才推进）',
+    'quests.tracking': '追踪与排序',
+    'quests.priority': 'HUD 优先级',
     /* C2: merged item family. */
     'items.crafting_material': '可作为打造材料',
     'items.tier': '材料等级',
@@ -521,6 +538,16 @@
     failure_keys: '失败结算文本键列表。',
     hook_key: '下一关预告文本键。',
     stages: '按顺序推进的任务阶段；至少一个，建议首尾阶段都勾选存档点。',
+    /* C3 quests */
+    objectives: '阶段内的全部目标都要完成（AND）；每个目标复用剧情条件 DSL。',
+    auto_start: '满足前置条件时自动接取；默认关闭，避免影响现有开局。',
+    repeatable: '完成后可再次接取；默认关闭（同一任务不重复发奖）。',
+    prerequisites: '开始任务前必须满足的条件；由 QuestService 检查。',
+    quests_completed: '需要先完成的任务定义 ID 列表。',
+    flags: '需要已置位的剧情标记列表。',
+    tracking: '任务日志 / HUD 的展示与排序设置；不保存进度。',
+    priority: '任务列表排序优先级，数值越大越靠前。',
+    hidden: '勾选后不在任务日志列出（仍可被系统追踪）。',
     advance: '推进条件：confirm 手动确认 / event 事件 / counter 计数 / flag 标记 / all 组合 / match 参数匹配。',
     checkpoint: '勾选后失败可从该阶段重试，而不是从本关开头。',
     presentation: '叙事卡片的呈现方式；缺省沿用任务简报的呈现方式。',
@@ -994,6 +1021,28 @@
       rewards: { achievements: [], codex_entries: [], cosmetics: [] },
       fail: { default_mode: 'checkpoint', allow: ['checkpoint', 'level_start'] },
     }),
+    /* C3: abstract guidance quest. Nested stage/objective keys are derived from
+     * the new definition's mod id + local id so the editor can localize them. */
+    quests: (options) => {
+      const opts = options || {};
+      const base = `quest.${opts.modId || 'my_mod'}.${opts.localId || 'new_quest'}`;
+      return {
+        kind: 'guide',
+        auto_start: false,
+        repeatable: false,
+        tracking: { label_key: `${base}.tracking.label`, priority: 50 },
+        stages: [
+          {
+            id: 'opening',
+            title_key: `${base}.opening.title`,
+            description_key: `${base}.opening.description`,
+            objectives: [
+              { event: 'ui:arrival_settled', counter: 'arrivals', at_least: 1, text_key: `${base}.opening.objective_1` },
+            ],
+          },
+        ],
+      };
+    },
     patches: () => null,
   };
 
@@ -1004,6 +1053,7 @@
     roles: ['role.engineer', 'role.navigator'],
     strategies: ['strategy.economic', 'strategy.standard', 'strategy.fast'],
     contracts: ['contract.main', 'contract.normal', 'contract.cargo', 'contract.passenger'],
+    quests: ['quest.guide', 'quest.story', 'quest.system'],
     events: ['event.risk', 'event.opportunity', 'event.mechanical', 'event.merchant'],
     port_archetypes: ['port.shipyard', 'port.market', 'port.intel', 'port.start'],
     map_profiles: ['map.standard'],
@@ -1261,6 +1311,12 @@
   /* Readable option labels for enum fields whose raw values are identifiers.
    * Keyed "<typeKey>.<field>"; unlisted enum values fall back to the raw value. */
   const FIELD_ENUM_LABELS = {
+    /* C3: quest kinds. */
+    'quests.kind': {
+      story: '剧情演出 story',
+      guide: '游戏指引 guide',
+      system: '系统目标 system',
+    },
     /* C1: merged module categories. */
     'modules.v2_category': {
       boiler: '锅炉 boiler',

@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/quest-2.json",
+  "title": "Steam Navigator quest content file (Content Schema 2.0)",
+  "description": "Abstract guidance quest (C3): story performance, player guidance and non-transport system goals. A quest is a sequence of stages whose objectives reuse the story condition DSL (event / counter / at_least / match). Transport payload, deadlines and economy rewards stay on contracts; a quest may reference a spawned contract by id but never carries its payload or settlement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "quests"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/quest_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "quest_objective": {
+      "description": "A single countable objective, reusing the story/quest DSL. Completion is derived from persisted counters; the quest definition never stores progress.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event"],
+      "properties": {
+        "event": {
+          "description": "触发事件名（与剧情 DSL 同一命名空间，例如 cmd:trade.buy / ui:arrival_settled）。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "counter": {
+          "description": "计数键；同 event 的多次触发累加到该 counter。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "at_least": {
+          "description": "目标进度阈值；省略时默认 1。",
+          "type": "integer",
+          "minimum": 1
+        },
+        "match": {
+          "description": "事件 payload 的匹配条件（字符串键值），例如 {item_id: core:item/coal}。",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "text_key": {
+          "description": "目标在任务追踪/任务日志中的展示文本键；省略时回退到 stage.title_key。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    },
+    "quest_stage": {
+      "description": "One ordered stage of a quest. Stages advance in array order; objectives inside a stage are all required.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title_key", "objectives"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "maxLength": 64
+        },
+        "title_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "objectives": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/quest_objective"
+          }
+        }
+      }
+    },
+    "prerequisites": {
+      "description": "开始该任务前必须满足的条件；由 QuestService 在接取/自动开始时检查。",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quests_completed": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        },
+        "flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]*$"
+          }
+        }
+      }
+    },
+    "tracking": {
+      "description": "任务日志 / HUD 追踪的展示与排序设置；不含进度状态。",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label_key": {
+          "description": "任务日志分组标签键（如「指引」「系统」）。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "priority": {
+          "description": "HUD/任务列表排序优先级，数值越大越靠前。",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "hidden": {
+          "description": "为 true 时不在任务日志列出（仍可被系统追踪）。",
+          "type": "boolean"
+        }
+      }
+    },
+    "quest_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stages"],
+      "properties": {
+        "kind": {
+          "description": "story=剧情演出；guide=游戏指引；system=非运输类系统需求。",
+          "enum": ["story", "guide", "system"]
+        },
+        "auto_start": {
+          "description": "满足 prerequisites 时自动接取；默认 false。",
+          "type": "boolean"
+        },
+        "repeatable": {
+          "description": "完成后可再次接取；默认 false（同一任务不重复发奖）。",
+          "type": "boolean"
+        },
+        "prerequisites": {
+          "$ref": "#/$defs/prerequisites"
+        },
+        "tracking": {
+          "$ref": "#/$defs/tracking"
+        },
+        "stages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/quest_stage"
+          }
+        }
+      }
+    }
+  }
+}

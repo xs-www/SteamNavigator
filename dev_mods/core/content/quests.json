@@ -1,0 +1,119 @@
+{
+  "schema_version": "2.0",
+  "content_type": "quests",
+  "definitions": [
+    {
+      "id": "core:quest/first_voyage_guide",
+      "name_key": "quest.core.first_voyage_guide.name",
+      "description_key": "quest.core.first_voyage_guide.description",
+      "tags": ["quest.guide", "quest.tutorial"],
+      "enabled": true,
+      "data": {
+        "kind": "guide",
+        "auto_start": false,
+        "repeatable": false,
+        "tracking": {
+          "label_key": "quest.tracking.guide",
+          "priority": 60,
+          "hidden": false
+        },
+        "stages": [
+          {
+            "id": "supply_ship",
+            "title_key": "quest.core.first_voyage_guide.stage.supply.title",
+            "description_key": "quest.core.first_voyage_guide.stage.supply.description",
+            "objectives": [
+              {
+                "event": "cmd:supply.buy_coal",
+                "counter": "coal_bought",
+                "at_least": 4,
+                "match": {"item_id": "core:item/coal"},
+                "text_key": "quest.core.first_voyage_guide.objective.buy_coal"
+              },
+              {
+                "event": "cmd:supply.buy_water",
+                "counter": "water_bought",
+                "at_least": 2,
+                "match": {"item_id": "core:item/water"},
+                "text_key": "quest.core.first_voyage_guide.objective.buy_water"
+              }
+            ]
+          },
+          {
+            "id": "depart_harbor",
+            "title_key": "quest.core.first_voyage_guide.stage.depart.title",
+            "description_key": "quest.core.first_voyage_guide.stage.depart.description",
+            "objectives": [
+              {
+                "event": "cmd:voyage.start",
+                "counter": "voyages_started",
+                "at_least": 1,
+                "text_key": "quest.core.first_voyage_guide.objective.depart"
+              }
+            ]
+          },
+          {
+            "id": "reach_port",
+            "title_key": "quest.core.first_voyage_guide.stage.arrive.title",
+            "description_key": "quest.core.first_voyage_guide.stage.arrive.description",
+            "objectives": [
+              {
+                "event": "ui:arrival_settled",
+                "counter": "ports_reached",
+                "at_least": 1,
+                "text_key": "quest.core.first_voyage_guide.objective.arrive"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:quest/shipyard_refit",
+      "name_key": "quest.core.shipyard_refit.name",
+      "description_key": "quest.core.shipyard_refit.description",
+      "tags": ["quest.system", "quest.shipyard"],
+      "enabled": true,
+      "data": {
+        "kind": "system",
+        "auto_start": false,
+        "repeatable": false,
+        "tracking": {
+          "label_key": "quest.tracking.system",
+          "priority": 40,
+          "hidden": false
+        },
+        "stages": [
+          {
+            "id": "free_cargo_slot",
+            "title_key": "quest.core.shipyard_refit.stage.uninstall.title",
+            "description_key": "quest.core.shipyard_refit.stage.uninstall.description",
+            "objectives": [
+              {
+                "event": "cmd:ship.uninstall_module",
+                "counter": "modules_uninstalled",
+                "at_least": 1,
+                "match": {"category": "cargo"},
+                "text_key": "quest.core.shipyard_refit.objective.uninstall"
+              }
+            ]
+          },
+          {
+            "id": "install_cabin",
+            "title_key": "quest.core.shipyard_refit.stage.install.title",
+            "description_key": "quest.core.shipyard_refit.stage.install.description",
+            "objectives": [
+              {
+                "event": "cmd:ship.install_module",
+                "counter": "modules_installed",
+                "at_least": 1,
+                "match": {"module_id": "core:module/small_cabin"},
+                "text_key": "quest.core.shipyard_refit.objective.install"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

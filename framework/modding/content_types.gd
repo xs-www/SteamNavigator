@@ -24,6 +24,7 @@ const DISCOVERY := &"discoveries"
 const START_PROFILE := &"start_profiles"
 const MAP_CONFIG := &"map_configs"
 const CONTRACT := &"contracts"
+const QUEST := &"quests"
 const EVENT := &"events"
 const PATCH := &"patches"
 
@@ -46,6 +47,7 @@ const SCHEMA_PATHS := {
 	START_PROFILE: "res://schemas/v2/start_profile.schema.json",
 	MAP_CONFIG: "res://schemas/v2/map_config.schema.json",
 	CONTRACT: "res://schemas/contract.schema.json",
+	QUEST: "res://schemas/v2/quest.schema.json",
 	EVENT: "res://schemas/event.schema.json",
 	PATCH: "res://schemas/patch.schema.json",
 }
@@ -69,6 +71,7 @@ const SCHEMA_VERSIONS := {
 	START_PROFILE: "2.0",
 	MAP_CONFIG: "2.0",
 	CONTRACT: "1.0",
+	QUEST: "2.0",
 	EVENT: "1.0",
 	PATCH: "1.0",
 }
@@ -92,6 +95,7 @@ const SINGULAR := {
 	START_PROFILE: "start_profile",
 	MAP_CONFIG: "map_config",
 	CONTRACT: "contract",
+	QUEST: "quest",
 	EVENT: "event",
 	PATCH: "patch",
 }
@@ -104,7 +108,7 @@ static func all() -> Array[StringName]:
 		ITEM, HULL, MODULE, ROLE, STRATEGY,
 		PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, WORLD_PROFILE, REGION,
 		SITE, ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY,
-		START_PROFILE, MAP_CONFIG, CONTRACT, EVENT,
+		START_PROFILE, MAP_CONFIG, CONTRACT, QUEST, EVENT,
 	]
 	return types
 

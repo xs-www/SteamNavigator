@@ -199,6 +199,7 @@
     good: ['item'],
     materials: ['item'],
     item_id: ['item'],
+    quests_completed: ['quest'],
   };
 
   function expectedTypes(field) {

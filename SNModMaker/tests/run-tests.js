@@ -99,14 +99,15 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 26, `expected 10 top-level + 16 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 26, `expected 26 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 27, `expected 10 top-level + 17 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 27, `expected 27 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['role.schema.json'], 'remaining 1.0 runtime schemas stay embedded');
     assert.equal(globalThis.SN_SCHEMAS['good.schema.json'], undefined, 'the dead 1.0 goods schema was removed (C2)');
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
     assert.ok(globalThis.SN_SCHEMAS['v2/item.schema.json'], 'v2/item is the C2 merged item schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/quest.schema.json'], 'v2/quest is the C3 quest schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/map_config.schema.json'], 'v2/map_config is the Phase B scenario config schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/module.schema.json'], 'v2/module is the C1 merged module schema');
@@ -344,10 +345,10 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 20, 'content_types.json exposes 20 runtime types (19 definitions + patches); C2 merged goods + materials into items');
+    assert.equal(Types.TYPES.length, 21, 'content_types.json exposes 21 runtime types (20 definitions + patches); C3 added quests');
     const promoted = new Set([
       'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
-      'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules', 'items',
+      'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules', 'items', 'quests',
     ]);
     for (const info of Types.TYPES) {
       const expected = promoted.has(info.key) ? '2.0' : '1.0';
@@ -909,6 +910,63 @@ function warningsOf(result) {
     // Both merged modules share the `module` id prefix but keep distinct local ids.
     assert.equal(boiler.definition.id, 'test_mod:module/example_boiler');
     assert.equal(cargo.definition.id, 'test_mod:module/example_cargo');
+  });
+
+  await test('quest defaults validate and core quest content matches the C3 contract', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'quests', {});
+    assert.equal(added.definition.id, 'test_mod:quest/new_item');
+    assert.equal(added.definition.data.kind, 'guide');
+    assert.equal(added.definition.data.auto_start, false, 'quests must not auto-start by default');
+    const stage = added.definition.data.stages[0];
+    assert.equal(stage.title_key, 'quest.test_mod.new_item.opening.title');
+    assert.equal(stage.objectives[0].text_key, 'quest.test_mod.new_item.opening.objective_1');
+    assert.equal(added.definition.data.tracking.label_key, 'quest.test_mod.new_item.tracking.label');
+
+    // Nested stage / objective / tracking keys get placeholder translations.
+    const zh = Store.getLoc(project, 'zh_CN');
+    for (const key of [
+      'quest.test_mod.new_item.opening.title',
+      'quest.test_mod.new_item.opening.description',
+      'quest.test_mod.new_item.opening.objective_1',
+      'quest.test_mod.new_item.tracking.label',
+    ]) {
+      assert.ok(zh.entries[key], `zh_CN must translate ${key}`);
+    }
+
+    const html = UI.renderDefinitionForm({
+      project,
+      typeKey: 'quests',
+      definition: added.definition,
+      file: added.file,
+      index: added.index,
+      schemaFile: Catalog.BY_KEY.quests.schema,
+    });
+    for (const field of ['data.kind', 'data.auto_start', 'data.stages.0.title_key', 'data.stages.0.objectives.0.event']) {
+      assert.ok(html.includes(`data-field="${field}"`), `quest form must render ${field}`);
+    }
+    assert.ok(html.includes('游戏指引 guide'), 'kind enum uses readable options');
+    assert.ok(!html.includes('undefined'), 'quest form must not render undefined values');
+
+    const result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+
+    // Core ships two quest definitions, both auto_start=false so existing openings are untouched.
+    const coreQuests = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '..', '..', 'dev_mods', 'core', 'content', 'quests.json'), 'utf8')
+    );
+    const coreErrors = Validate.validateSchema(
+      coreQuests,
+      globalThis.SN_SCHEMAS['v2/quest.schema.json'],
+      'v2/quest.schema.json'
+    );
+    assert.deepEqual(coreErrors, [], 'core quests.json satisfies the quest schema');
+    assert.equal(coreQuests.definitions.length, 2, 'core ships an initial guide and system quest');
+    assert.deepEqual(coreQuests.definitions.map((definition) => definition.data.kind).sort(), ['guide', 'system']);
+    for (const definition of coreQuests.definitions) {
+      assert.equal(definition.data.auto_start, false, `${definition.id} must not auto-start`);
+      assert.ok(definition.data.stages.length >= 1, `${definition.id} declares stages`);
+    }
   });
 
   await test('entity localization rename commits once and removes old keys', () => {

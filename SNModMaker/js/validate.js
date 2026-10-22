@@ -48,6 +48,7 @@
     materials: ['item'],
     item_id: ['item'],
     levels: ['story_level'],
+    quests_completed: ['quest'],
     map_config: ['map_config'],
     starting_build: ['starting_build'],
   };

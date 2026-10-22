@@ -21,6 +21,7 @@
     "content/starting_builds.json",
     "content/contracts.json",
     "content/events.json",
+    "content/quests.json",
     "content/world_profiles.json",
     "content/map_configs.json",
     "content/regions.json",
@@ -169,6 +170,7 @@
     "content.items.v1",
     "content.hulls.v1",
     "content.modules.v1",
+    "content.quests.v1",
     "content.world.v1",
     "content.campaign.v1"
   ]

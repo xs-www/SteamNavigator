@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T11:53:08.443Z",
+    "generated_at": "2026-10-22T13:01:38.107Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -30,6 +30,7 @@
         "content/starting_builds.json",
         "content/contracts.json",
         "content/events.json",
+        "content/quests.json",
         "content/world_profiles.json",
         "content/map_configs.json",
         "content/regions.json",
@@ -178,6 +179,7 @@
         "content.items.v1",
         "content.hulls.v1",
         "content.modules.v1",
+        "content.quests.v1",
         "content.world.v1",
         "content.campaign.v1"
       ]
@@ -3335,6 +3337,139 @@
           }
         ]
       },
+      "content/quests.json": {
+        "schema_version": "2.0",
+        "content_type": "quests",
+        "definitions": [
+          {
+            "id": "core:quest/first_voyage_guide",
+            "name_key": "quest.core.first_voyage_guide.name",
+            "description_key": "quest.core.first_voyage_guide.description",
+            "tags": [
+              "quest.guide",
+              "quest.tutorial"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "guide",
+              "auto_start": false,
+              "repeatable": false,
+              "tracking": {
+                "label_key": "quest.tracking.guide",
+                "priority": 60,
+                "hidden": false
+              },
+              "stages": [
+                {
+                  "id": "supply_ship",
+                  "title_key": "quest.core.first_voyage_guide.stage.supply.title",
+                  "description_key": "quest.core.first_voyage_guide.stage.supply.description",
+                  "objectives": [
+                    {
+                      "event": "cmd:supply.buy_coal",
+                      "counter": "coal_bought",
+                      "at_least": 4,
+                      "match": {
+                        "item_id": "core:item/coal"
+                      },
+                      "text_key": "quest.core.first_voyage_guide.objective.buy_coal"
+                    },
+                    {
+                      "event": "cmd:supply.buy_water",
+                      "counter": "water_bought",
+                      "at_least": 2,
+                      "match": {
+                        "item_id": "core:item/water"
+                      },
+                      "text_key": "quest.core.first_voyage_guide.objective.buy_water"
+                    }
+                  ]
+                },
+                {
+                  "id": "depart_harbor",
+                  "title_key": "quest.core.first_voyage_guide.stage.depart.title",
+                  "description_key": "quest.core.first_voyage_guide.stage.depart.description",
+                  "objectives": [
+                    {
+                      "event": "cmd:voyage.start",
+                      "counter": "voyages_started",
+                      "at_least": 1,
+                      "text_key": "quest.core.first_voyage_guide.objective.depart"
+                    }
+                  ]
+                },
+                {
+                  "id": "reach_port",
+                  "title_key": "quest.core.first_voyage_guide.stage.arrive.title",
+                  "description_key": "quest.core.first_voyage_guide.stage.arrive.description",
+                  "objectives": [
+                    {
+                      "event": "ui:arrival_settled",
+                      "counter": "ports_reached",
+                      "at_least": 1,
+                      "text_key": "quest.core.first_voyage_guide.objective.arrive"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:quest/shipyard_refit",
+            "name_key": "quest.core.shipyard_refit.name",
+            "description_key": "quest.core.shipyard_refit.description",
+            "tags": [
+              "quest.system",
+              "quest.shipyard"
+            ],
+            "enabled": true,
+            "data": {
+              "kind": "system",
+              "auto_start": false,
+              "repeatable": false,
+              "tracking": {
+                "label_key": "quest.tracking.system",
+                "priority": 40,
+                "hidden": false
+              },
+              "stages": [
+                {
+                  "id": "free_cargo_slot",
+                  "title_key": "quest.core.shipyard_refit.stage.uninstall.title",
+                  "description_key": "quest.core.shipyard_refit.stage.uninstall.description",
+                  "objectives": [
+                    {
+                      "event": "cmd:ship.uninstall_module",
+                      "counter": "modules_uninstalled",
+                      "at_least": 1,
+                      "match": {
+                        "category": "cargo"
+                      },
+                      "text_key": "quest.core.shipyard_refit.objective.uninstall"
+                    }
+                  ]
+                },
+                {
+                  "id": "install_cabin",
+                  "title_key": "quest.core.shipyard_refit.stage.install.title",
+                  "description_key": "quest.core.shipyard_refit.stage.install.description",
+                  "objectives": [
+                    {
+                      "event": "cmd:ship.install_module",
+                      "counter": "modules_installed",
+                      "at_least": 1,
+                      "match": {
+                        "module_id": "core:module/small_cabin"
+                      },
+                      "text_key": "quest.core.shipyard_refit.objective.install"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
       "content/world_profiles.json": {
         "schema_version": "2.0",
         "content_type": "world_profiles",
@@ -4995,7 +5130,29 @@
         "start_profile.core.standard.notes": "起始港为枢纽港；推荐先完成教程主线。",
         "start_profile.core.hard.name": "硬核开局",
         "start_profile.core.hard.description": "高难度：高性能构筑与有限资金，容错很低。",
-        "start_profile.core.hard.notes": "起始港为贸易港；补给更贵、失败代价更高。"
+        "start_profile.core.hard.notes": "起始港为贸易港；补给更贵、失败代价更高。",
+        "quest.tracking.guide": "指引",
+        "quest.tracking.system": "系统目标",
+        "quest.core.first_voyage_guide.name": "首航指引",
+        "quest.core.first_voyage_guide.description": "从备好补给到抵达下一座港口的分步指引。",
+        "quest.core.first_voyage_guide.stage.supply.title": "备齐补给",
+        "quest.core.first_voyage_guide.stage.supply.description": "在市场补给区购买燃煤与淡水。",
+        "quest.core.first_voyage_guide.objective.buy_coal": "购买 4 单位煤",
+        "quest.core.first_voyage_guide.objective.buy_water": "购买 2 单位淡水",
+        "quest.core.first_voyage_guide.stage.depart.title": "离开港口",
+        "quest.core.first_voyage_guide.stage.depart.description": "打开海图，选择目的港并出航。",
+        "quest.core.first_voyage_guide.objective.depart": "出航一次",
+        "quest.core.first_voyage_guide.stage.arrive.title": "抵达目的港",
+        "quest.core.first_voyage_guide.stage.arrive.description": "平安抵达并完成靠港结算。",
+        "quest.core.first_voyage_guide.objective.arrive": "抵达目的港",
+        "quest.core.shipyard_refit.name": "船厂改装入门",
+        "quest.core.shipyard_refit.description": "在船厂卸下货舱、装上客舱，理解槽位与载重限制。",
+        "quest.core.shipyard_refit.stage.uninstall.title": "卸下货舱",
+        "quest.core.shipyard_refit.stage.uninstall.description": "货舱会占用槽位与重量；先为客舱腾出位置。",
+        "quest.core.shipyard_refit.objective.uninstall": "卸下 1 个货舱模块",
+        "quest.core.shipyard_refit.stage.install.title": "安装客舱",
+        "quest.core.shipyard_refit.stage.install.description": "把小型客舱装到船体的客舱槽位。",
+        "quest.core.shipyard_refit.objective.install": "安装小型客舱"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -5254,7 +5411,29 @@
         "start_profile.core.standard.notes": "Starts at a hub port; finishing the tutorial mainline is recommended.",
         "start_profile.core.hard.name": "Hard Start",
         "start_profile.core.hard.description": "Hard difficulty: a fast build with limited funds and little room for error.",
-        "start_profile.core.hard.notes": "Starts at a trade port; supplies cost more and mistakes hurt."
+        "start_profile.core.hard.notes": "Starts at a trade port; supplies cost more and mistakes hurt.",
+        "quest.tracking.guide": "Guide",
+        "quest.tracking.system": "System goal",
+        "quest.core.first_voyage_guide.name": "First Voyage Guide",
+        "quest.core.first_voyage_guide.description": "A step-by-step guide from stocking supplies to reaching the next harbour.",
+        "quest.core.first_voyage_guide.stage.supply.title": "Stock the ship",
+        "quest.core.first_voyage_guide.stage.supply.description": "Buy coal and fresh water in the market supply tab.",
+        "quest.core.first_voyage_guide.objective.buy_coal": "Buy 4 units of coal",
+        "quest.core.first_voyage_guide.objective.buy_water": "Buy 2 units of fresh water",
+        "quest.core.first_voyage_guide.stage.depart.title": "Leave harbour",
+        "quest.core.first_voyage_guide.stage.depart.description": "Open the chart, pick the destination and set sail.",
+        "quest.core.first_voyage_guide.objective.depart": "Set sail once",
+        "quest.core.first_voyage_guide.stage.arrive.title": "Reach the destination",
+        "quest.core.first_voyage_guide.stage.arrive.description": "Arrive safely and settle the arrival.",
+        "quest.core.first_voyage_guide.objective.arrive": "Arrive at the destination",
+        "quest.core.shipyard_refit.name": "Shipyard Refit Basics",
+        "quest.core.shipyard_refit.description": "Swap a cargo hold for a passenger cabin and learn the slot and weight limits.",
+        "quest.core.shipyard_refit.stage.uninstall.title": "Free a slot",
+        "quest.core.shipyard_refit.stage.uninstall.description": "A cargo hold occupies a slot and weight; make room for the cabin.",
+        "quest.core.shipyard_refit.objective.uninstall": "Uninstall one cargo module",
+        "quest.core.shipyard_refit.stage.install.title": "Install the cabin",
+        "quest.core.shipyard_refit.stage.install.description": "Fit the small cabin into the hull's cabin slot.",
+        "quest.core.shipyard_refit.objective.install": "Install the small cabin"
       }
     },
     "definitions": [
@@ -8993,6 +9172,157 @@
                   {
                     "op": "emit_notice",
                     "text_key": "notice.core.merchant.declined"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:quest/first_voyage_guide",
+        "content_type": "quests",
+        "file": "content/quests.json",
+        "name_key": "quest.core.first_voyage_guide.name",
+        "name_zh": "首航指引",
+        "name_en": "First Voyage Guide",
+        "tags": [
+          "quest.guide",
+          "quest.tutorial"
+        ],
+        "definition": {
+          "id": "core:quest/first_voyage_guide",
+          "name_key": "quest.core.first_voyage_guide.name",
+          "description_key": "quest.core.first_voyage_guide.description",
+          "tags": [
+            "quest.guide",
+            "quest.tutorial"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "guide",
+            "auto_start": false,
+            "repeatable": false,
+            "tracking": {
+              "label_key": "quest.tracking.guide",
+              "priority": 60,
+              "hidden": false
+            },
+            "stages": [
+              {
+                "id": "supply_ship",
+                "title_key": "quest.core.first_voyage_guide.stage.supply.title",
+                "description_key": "quest.core.first_voyage_guide.stage.supply.description",
+                "objectives": [
+                  {
+                    "event": "cmd:supply.buy_coal",
+                    "counter": "coal_bought",
+                    "at_least": 4,
+                    "match": {
+                      "item_id": "core:item/coal"
+                    },
+                    "text_key": "quest.core.first_voyage_guide.objective.buy_coal"
+                  },
+                  {
+                    "event": "cmd:supply.buy_water",
+                    "counter": "water_bought",
+                    "at_least": 2,
+                    "match": {
+                      "item_id": "core:item/water"
+                    },
+                    "text_key": "quest.core.first_voyage_guide.objective.buy_water"
+                  }
+                ]
+              },
+              {
+                "id": "depart_harbor",
+                "title_key": "quest.core.first_voyage_guide.stage.depart.title",
+                "description_key": "quest.core.first_voyage_guide.stage.depart.description",
+                "objectives": [
+                  {
+                    "event": "cmd:voyage.start",
+                    "counter": "voyages_started",
+                    "at_least": 1,
+                    "text_key": "quest.core.first_voyage_guide.objective.depart"
+                  }
+                ]
+              },
+              {
+                "id": "reach_port",
+                "title_key": "quest.core.first_voyage_guide.stage.arrive.title",
+                "description_key": "quest.core.first_voyage_guide.stage.arrive.description",
+                "objectives": [
+                  {
+                    "event": "ui:arrival_settled",
+                    "counter": "ports_reached",
+                    "at_least": 1,
+                    "text_key": "quest.core.first_voyage_guide.objective.arrive"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:quest/shipyard_refit",
+        "content_type": "quests",
+        "file": "content/quests.json",
+        "name_key": "quest.core.shipyard_refit.name",
+        "name_zh": "船厂改装入门",
+        "name_en": "Shipyard Refit Basics",
+        "tags": [
+          "quest.system",
+          "quest.shipyard"
+        ],
+        "definition": {
+          "id": "core:quest/shipyard_refit",
+          "name_key": "quest.core.shipyard_refit.name",
+          "description_key": "quest.core.shipyard_refit.description",
+          "tags": [
+            "quest.system",
+            "quest.shipyard"
+          ],
+          "enabled": true,
+          "data": {
+            "kind": "system",
+            "auto_start": false,
+            "repeatable": false,
+            "tracking": {
+              "label_key": "quest.tracking.system",
+              "priority": 40,
+              "hidden": false
+            },
+            "stages": [
+              {
+                "id": "free_cargo_slot",
+                "title_key": "quest.core.shipyard_refit.stage.uninstall.title",
+                "description_key": "quest.core.shipyard_refit.stage.uninstall.description",
+                "objectives": [
+                  {
+                    "event": "cmd:ship.uninstall_module",
+                    "counter": "modules_uninstalled",
+                    "at_least": 1,
+                    "match": {
+                      "category": "cargo"
+                    },
+                    "text_key": "quest.core.shipyard_refit.objective.uninstall"
+                  }
+                ]
+              },
+              {
+                "id": "install_cabin",
+                "title_key": "quest.core.shipyard_refit.stage.install.title",
+                "description_key": "quest.core.shipyard_refit.stage.install.description",
+                "objectives": [
+                  {
+                    "event": "cmd:ship.install_module",
+                    "counter": "modules_installed",
+                    "at_least": 1,
+                    "match": {
+                      "module_id": "core:module/small_cabin"
+                    },
+                    "text_key": "quest.core.shipyard_refit.objective.install"
                   }
                 ]
               }

@@ -453,7 +453,7 @@
     touch(project);
   }
 
-  function collectAutoNameKeys(definition) {
+  function collectAutoNameKeys(definition, typeKey) {
     const keys = new Set();
     const walk = (value, depth) => {
       if ((depth || 0) > 24 || value == null) return;
@@ -469,6 +469,21 @@
       }
     };
     walk(definition, 0);
+    /* C3 quests: stage titles, descriptions and objective texts are localization
+     * keys as well, so a freshly added quest gets placeholder translations. */
+    if (typeKey === 'quests' && definition && definition.data) {
+      const tracking = definition.data.tracking;
+      if (tracking && typeof tracking.label_key === 'string' && tracking.label_key.trim()) keys.add(tracking.label_key);
+      for (const stage of definition.data.stages || []) {
+        if (!stage || typeof stage !== 'object') continue;
+        for (const field of ['title_key', 'description_key']) {
+          if (typeof stage[field] === 'string' && stage[field].trim()) keys.add(stage[field]);
+        }
+        for (const objective of stage.objectives || []) {
+          if (objective && typeof objective.text_key === 'string' && objective.text_key.trim()) keys.add(objective.text_key);
+        }
+      }
+    }
     return keys;
   }
 
@@ -507,6 +522,17 @@
         }
       });
     }
+    /* C3 quests: nested stage titles / objective texts are localization keys too. */
+    if (typeKey === 'quests' && Array.isArray(data.stages)) {
+      data.stages.forEach((stage, index) => {
+        if (!stage || typeof stage !== 'object') return;
+        const suffix = stage.id || `stage_${index + 1}`;
+        if (!stage.title_key) stage.title_key = `${base}.${suffix}.title`;
+        (stage.objectives || []).forEach((objective, objectiveIndex) => {
+          if (objective && !objective.text_key) objective.text_key = `${base}.${suffix}.objective_${objectiveIndex + 1}`;
+        });
+      });
+    }
   }
 
   function addDefinition(project, typeKey, options) {
@@ -535,7 +561,7 @@
         : [catalog().TAG_SUGGESTIONS[typeKey] && catalog().TAG_SUGGESTIONS[typeKey][0] || `${info.singular}.custom`];
       const defaultData = !defaults
         ? {}
-        : (typeKey === 'modules' ? defaults({ v2_category: requestedCategory }) : defaults());
+        : (typeKey === 'modules' ? defaults({ v2_category: requestedCategory, modId, localId }) : defaults({ modId, localId }));
       definition = {
         id: `${modId}:${info.singular}/${localId}`,
         name_key: `${base}.name`,
@@ -558,7 +584,7 @@
       const zh = getLoc(project, 'zh_CN') || addLocale(project, 'zh_CN');
       const en = getLoc(project, 'en') || addLocale(project, 'en');
       const keys = collectDefinitionKeys(definition);
-      const autoKeys = collectAutoNameKeys(definition);
+      const autoKeys = collectAutoNameKeys(definition, typeKey);
       for (const key of keys) {
         if (key === definition.name_key) {
           zh.entries[key] = nameZh;

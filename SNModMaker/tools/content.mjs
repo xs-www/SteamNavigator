@@ -929,12 +929,16 @@ function requestedModuleCategory(ctx) {
   return '';
 }
 
-function buildData(typeKey, ctx) {
+function buildData(typeKey, ctx, owner) {
   const defaults = Catalog.DEFAULTS[typeKey];
+  const ownerContext = {
+    modId: (owner && owner.modId) || '',
+    localId: (owner && owner.localId) || '',
+  };
   let data;
   if (!defaults) data = {};
-  else if (typeKey === 'modules') data = defaults({ v2_category: requestedModuleCategory(ctx) });
-  else data = defaults();
+  else if (typeKey === 'modules') data = defaults({ v2_category: requestedModuleCategory(ctx), ...ownerContext });
+  else data = defaults(ownerContext);
   const dataJson = flagValue(ctx, 'data-json');
   if (dataJson !== undefined) {
     const parsed = parseJsonOrFile(dataJson, '--data-json');
@@ -1247,7 +1251,7 @@ function describeFields(info) {
 function describePayload(typeKey) {
   const info = findTypeInfo(typeKey);
   const defaults = Catalog.DEFAULTS[typeKey];
-  const defaultsValue = defaults ? defaults() : null;
+  const defaultsValue = defaults ? defaults({ modId: 'my_mod', localId: 'tea' }) : null;
   const keyPrefix = info.keyPrefix;
   const baseKey = `${keyPrefix}.my_mod.tea`;
   let skeleton;
@@ -1493,7 +1497,7 @@ function commandAdd(ctx) {
       tags = [(Catalog.TAG_SUGGESTIONS[typeKey] || [])[0] || `${info.singular}.custom`];
     }
   }
-  const data = isPatch ? undefined : buildData(typeKey, ctx);
+  const data = isPatch ? undefined : buildData(typeKey, ctx, { modId: project.manifest.id, localId });
 
   let filePath = flagValue(ctx, 'file');
   if (filePath !== undefined) {
