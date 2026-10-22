@@ -3,6 +3,33 @@
 > 只记录有意义的功能与变更，不写逐条流水账；实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 [todo.md](todo.md) 的 `Recently Completed` 按版本归并到这里，并从 todo 移除。
 
+## [0.2.0-dev.3] — 2026-10-22
+
+### Added
+
+- 新手剧情 / 教学系统（4.5.1–4.5.6）：新开局默认五幕教学（获船 → 补给限购 / 海图首航 → 第二港市场往返 → 酒馆线索 / 保底探索 → 第三港船厂客舱 / 旅客），`data.story` 状态机 + Core JSON 剧情 / 文案 / 解锁、剧情卡与非阻塞目标条、功能门禁与跳过；补给并市、酒馆替换情报站、两港确定性价差、第三种货、1 人客舱与旅客主线 `main_03`；全量测试 0 failed
+- 航海图阶段 4.3 体验修正：雾半径与双子世界尺寸内容化、线索失败保留可重试、逐级「调查」（20 金 / 6 h / 75%）、删除出航准备页并把出航确认移入海图、演出随船照亮与沿途迷雾落账、资源按航行小时连续读数
+- 航海图阶段 4.4 线索扩展：`port_goods` 货物行情线索（冻结行情快照 + 分级披露 + 24/48/72 h 时效）、`clue.list` 查询与过期 sweep、在港等待 / 委托线索来源、`clue.travel`、线索列表页与回海图选中
+- 任务追踪聚合 4.6 Phase A：只读 `task.view` 把剧情目标 / 待接主线 / 已接委托 / 普通委托聚合成统一 Task，委托拆成接取 / 备货 / 接客 / 前往 / 抵达交付步骤；HUD 任务条（剧情结束后接替目标条）+ 委托页任务面板
+- Content Schema 2.0 迁移 Phase A（16 个运行时类型各自 `schema_version`、按类型校验与 Patch 再校验）+ Phase B 世界 / 战役运行时实现契约（9 类草案、CampaignFactory、1.0→2.0 映射、`content_versions`）
+- 舰载武器内容 Schema 2.0 草案：`schemas/v2/weapon.schema.json`（战斗 / 装配 / 经济，15 项必填）+ `content_types.json` 登记 `weapons` 草案；`hull_data` 新增 `weapon_sockets` / `rig_sockets` 镜像并回填 Core 4 艘船（14 + 22）；SNModMaker 支持武器新建 / 编辑 / 校验 / 导出与船体安装点编辑
+- 模型素材库批次 1–3（kit 30 件：武器套件 / 船体部件 / 机械 / 货物 / 码头 / 建筑 / 环境）+ 武器独立建模批次 1–2（8 件舰载武器）+ 武器装配规范 v2（`SN_Socket_Weapon` / `SN_Mount` / `SN_Pivot_*` / `SN_Recoil` / `SN_Muzzle`）
+- 船体部件接口：船侧武器 socket M0-3（4 艘船 14 个）、`rig_kit` 帆索部件库 M0-4（12 件套件 + 3 艘船参数化 + 22 个帆索 socket）、LOD1 基础套件 M0-5（kit 26 + 船 4 = 30 个远景低模，19 850 / 88 026 tri = 22.6%）
+- 船体运行时装配 `ShipVisualAssembler`：`ShipVisualPlan` 从 manifest / `rig_plan` / `weapon_loadout` 解析 hull + rig + weapon，按 socket 对齐套件 `SN_Mount`、按 class 挂武器（Modular 拒绝），接入船厂 3D 舞台 / 港口舞台 / 航行演出；旧 ViewModel 回退；新增 25 例装配测试
+- 穿壳炮 casemate gun 模块化 M0-6：铁甲舰 12 门舷侧炮拆成独立模块 `SN_Weapon_CasemateGun`（108 tri，根 = 炮门平面中心、`port_pitch`），船体侧 12 个 `SN_Socket_GunPort_*`（`hull-gunports@1`）；铁甲舰重导为空炮门版（8 830 → 8 158 tri、26 节点），模块装回去与拆炮前炮管逐顶点重合
+
+### Changed
+
+- 旧资产 UV 迁移 B：11 件船模块 + 4 艘可玩船 + 旧小镇剩余 5 件补 `UVMap`、切 10 种 `SN_Tex_*` 共享贴图、重导 21 个 GLB；几何逐位不变（55 256 tri / 118 网格）
+- 静态代码文档生成器升级为 v3：源码 `@static-doc` / sidecar 为唯一真源，项目配置声明模块与跳过规则，`--check` 保持新鲜度门禁
+- 设计截图继续作为本地生成物（不入库）；文档按 Active / Finalized / Archived 分层维护
+
+### Fixed
+
+- 炮门框 / 深色炮口板 / 上翻门盖贴合 17 站放样壳面（边缘间隙 0.241 m → 0；三角面不变）
+- 新手剧情补给引导改为跟踪真实煤舱（目标条显示「8/10，还差 2」，不再要求玩家自己换算）
+- 海图幽灵按钮 hover 稳定、头部详情可收缩、航线距离标签；SNModMaker 草案内容禁止覆盖发布包（G8）与 story `flow_id` 假阳性
+
 ## [0.2.0-dev.2] — 2026-10-21
 
 ### Added
