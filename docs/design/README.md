@@ -7,6 +7,9 @@
 - [CORE_CONTENT.md](CORE_CONTENT.md) — MVP Core 内容与数值概览（真源仍是 `dev_mods/core/content/`）
 - [KNOWN_LIMITS.md](KNOWN_LIMITS.md) — 已知边界与暂缓项（判断需求是否已实现前先读）
 - [LUA_MODDING_SDK.md](LUA_MODDING_SDK.md) — Lua 可执行模组 SDK 架构与实施规范（Draft 0.1；沙箱 / 权限 / API / 确定性 / 发布门禁；尚未实现）
+- [LUA_SDK_S0_API_CONTRACT.md](LUA_SDK_S0_API_CONTRACT.md) — Lua SDK S0-1：公开 Query/Command/Event 全量盘点与 Script API 1.0 契约草案（19/42/53 条；候选 API 与版本/能力/错误协议）
+- [LUA_SDK_S0_THREAT_MODEL.md](LUA_SDK_S0_THREAT_MODEL.md) — Lua SDK S0-2：运行时威胁模型（44 威胁 / 28 不变量 / 9 条发布阻断项；信任边界与 S1 证据要求）
+- [LUA_SDK_S0_TEST_MATRIX.md](LUA_SDK_S0_TEST_MATRIX.md) — Lua SDK S0-3/S0-4：测试矩阵 v0.2（83 条 TC、L0–L3 分级、TM 44/44、INV 28/28、API 20/20 覆盖、9 条阻断项全绿、S1/S2/S3 退出判定与 CI 门禁）
 - [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md) — 2.5D 固定舞台升级方案（阶段 1 持续落地中）
 - [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) — 正式版航海图系统设计；阶段 1–3 已实现，后续阶段仍在本文件迭代
 - [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) — 海图阶段 4 探索系统实现契约（4.1/4.2 已实现；4.3 体验修正的 8 条反馈、决策与分片计划见 §10，待实现）

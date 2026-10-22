@@ -4,7 +4,8 @@
 > **适用项目**：Steam Navigator（SN）  
 > **建议实施窗口**：Phase D D2 验收收口后，与 D3 Base 独立并行开展 PoC；正式 ModLoader 集成须单独验收。  
 > **当前上下文**：Phase D D2 Fleet 已提交，独立验收收尾中；`combat_ai_profiles` 已作为 **draft Schema 2.0** 先落地（运行时不加载），Lua 是后续 L2 可执行模组层。本文不假设 D3 或 Lua SDK 已经合并。  
-> **参考现状**：`framework/application/command_bus.gd`、`domain_event_bus.gd`、`framework_api.gd`、`framework/modding/mod_loader.gd`、`sdk/validate.gd`、`sdk/pack_mod.gd`、`content_types.json`、`SNModMaker/`。
+> **参考现状**：`framework/application/command_bus.gd`、`domain_event_bus.gd`、`framework_api.gd`、`framework/modding/mod_loader.gd`、`sdk/validate.gd`、`sdk/pack_mod.gd`、`content_types.json`、`SNModMaker/`。  
+> **S0 交付物（2026-10-23，均为 Draft，不改变运行时行为）**：公开 API 盘点与 Script API 1.0 契约见 [LUA_SDK_S0_API_CONTRACT.md](LUA_SDK_S0_API_CONTRACT.md)；运行时威胁模型见 [LUA_SDK_S0_THREAT_MODEL.md](LUA_SDK_S0_THREAT_MODEL.md)；验收与测试矩阵见 [LUA_SDK_S0_TEST_MATRIX.md](LUA_SDK_S0_TEST_MATRIX.md)。S1 仍未开始，禁止把本文 §3/§4 的提案字段直接接入正式 ModLoader。
 
 ## 1. 执行摘要
 
@@ -310,6 +311,8 @@ sn-sdk script pack --mod <directory>        # 格式与发布门禁后打包
 
 ## 11. 测试矩阵与验收条件
 
+> S0 已把下表展开为带 `TC-*` 编号、L0–L3 级别、判定标准与证据形式的可执行矩阵：[LUA_SDK_S0_TEST_MATRIX.md](LUA_SDK_S0_TEST_MATRIX.md)。本节保留为范围概览，具体验收以矩阵与 [威胁模型](LUA_SDK_S0_THREAT_MODEL.md) 的阻断项为准。
+
 | 范围 | 最低测试 |
 |---|---|
 | 兼容 | 现有纯数据 Core、第三方 1.0/2.0 模组不创建 VM、行为不变 |
@@ -336,7 +339,7 @@ sn-sdk script pack --mod <directory>        # 格式与发布门禁后打包
 
 | 阶段 | 时机 | 产出 | 合入政策 |
 |---|---|---|---|
-| S0 契约设计 | 现在，D2 验收收尾/D3 开始前后 | 本文、版本/能力/API 契约、威胁模型 | 可单独合并文档 |
+| S0 契约设计 | ✅ 2026-10-23 完成 | 本文 + [API 契约](LUA_SDK_S0_API_CONTRACT.md) + [威胁模型](LUA_SDK_S0_THREAT_MODEL.md) + [测试矩阵](LUA_SDK_S0_TEST_MATRIX.md) | 文档，可单独合并 |
 | S1 Lua Host PoC | 与 D3 独立并行 | 原型 VM、桥接、预算与平台实验、报告 | 实验分支，不改正式加载器 |
 | S2 Script SDK MVP | D3 与 PoC 验收后 | `framework/scripting/`、SDK 示例/CLI、存档与测试 | 独立集成工作包，完整 CI 绿 |
 | S3 战斗扩展点 | 战斗状态机与行为接口稳定后 | 战术决策/技能触发等**预定义**扩展点 | 由战斗系统明确契约后开放 |
@@ -371,12 +374,24 @@ sn-sdk script pack --mod <directory>        # 格式与发布门禁后打包
 
 ## 15. Agent 实施任务拆分
 
-### Work Package S0 — 契约与威胁模型（文档）
+### Work Package S0 — 契约与威胁模型（文档）— **已完成（2026-10-23）**
 
-- 将本文放入 `docs/design/LUA_MODDING_SDK.md`，保留 Draft 标记。
-- 盘点现有 Query/Command/Event 注册名称及数据结构，输出可公开的首批候选 API；不能把内部对象当 API。
-- 明确 `api_version` 与 `script_api_version` 语义、capability 命名方式、返回错误协议。
-- 输出 Lua 运行时威胁模型及验收测试案例。
+- 将本文放入 `docs/design/LUA_MODDING_SDK.md`，保留 Draft 标记。✅
+- 盘点现有 Query/Command/Event 注册名称及数据结构，输出可公开的首批候选 API；不能把内部对象当 API。✅
+  → [LUA_SDK_S0_API_CONTRACT.md](LUA_SDK_S0_API_CONTRACT.md)：Query 19、Command 42、Event 53 全量盘点；候选 `API-Q-01..07` / `API-E-01..08` / `API-C-01..05`；`OQ-01..16`。
+- 明确 `api_version` 与 `script_api_version` 语义、capability 命名方式、返回错误协议。✅
+  → 同文 §4：四类版本独立；`script.*` 能力复用 `capabilities` 按前缀分流，「声明≠授权」；脚本错误码清单。
+- 输出 Lua 运行时威胁模型及验收测试案例。✅
+  → [LUA_SDK_S0_THREAT_MODEL.md](LUA_SDK_S0_THREAT_MODEL.md)：44 条威胁、28 条不变量、22 条现状差距、9 条发布阻断项。
+  → [LUA_SDK_S0_TEST_MATRIX.md](LUA_SDK_S0_TEST_MATRIX.md)：L0–L3 分级、TM→TC 与 API→TC 覆盖、S1/S2/S3 退出判定。
+
+**S0 结论（进入 S1 前必须接受）**：
+
+1. 现有 Manifest 是封闭 schema（`additionalProperties: false`、`type: const "content"`）且扫描器只放行内容/资产扩展名，脚本支持必须走 **Manifest Schema v2 + 显式判别字段**，不能"加个可选字段"。
+2. 现有 42 个 Command 多数是玩家意图/经济入口，**不得按总线名直接暴露给脚本**；首批候选只取 5 个（含 2 个需新增宿主用例），其余需单列威胁与用户授权。
+3. `script_api_version`、内容 `api_version`、Content Schema、Save Schema 四类版本独立演进；`script_states` 未接入存档。
+4. S1 硬门槛（任何一项失败即停止晋级）：无限循环可靠中断、桥接不泄漏 Godot 对象、内存上限可验证；OS/IO/原生不可达、逐调用授权、独立 state、故障隔离紧随其后。
+5. 脚本错误码统一为 `script.<snake_case>` 点分形式（S0-1 §4.3 共 29 个）；威胁模型与测试矩阵已按此收敛，下划线草案命名不再作为契约引用。
 
 ### Work Package S1 — 独立 PoC（禁止碰正式加载器）
 

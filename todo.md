@@ -11,7 +11,7 @@
 ## Pending
 
 ### 近期
-- [ ] Lua Modding SDK S0：按 [LUA_MODDING_SDK.md](docs/design/LUA_MODDING_SDK.md) 盘点公开 Query/Command/Event API、确定 `script_api_version`/capability/错误协议与威胁模型；S1 再做独立 Lua Host PoC，禁止直接接入正式 ModLoader
+- [ ] Lua Modding SDK S1：按 [LUA_SDK_S0_API_CONTRACT.md](docs/design/LUA_SDK_S0_API_CONTRACT.md) / [LUA_SDK_S0_THREAT_MODEL.md](docs/design/LUA_SDK_S0_THREAT_MODEL.md) / [LUA_SDK_S0_TEST_MATRIX.md](docs/design/LUA_SDK_S0_TEST_MATRIX.md) 做独立 Lua Host PoC（VM 选型、中断/内存/库隔离证据、纵向样例），实验分支，禁止接入正式 ModLoader；S0 已完成
 - [ ] 炮门舱段 port cassette：给明轮货轮 / 明轮客船 / 纵帆船（以及未来的船）提供“舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口”的适配模块，让 `SN_Weapon_CasemateGun` 能装到没有炮门的船上；同时解决空炮门的“暗腔”读感（当前是木制深色炮口板）
 - [ ] 铁甲舰 `SN_Ironclad_LOD1.glb` 随空炮门 LOD0 重建（当前 LOD1 仍是带炮旧件；LOD 切换未接线，暂不影响运行时）
 - [ ] 炮门 socket 内容镜像：`schemas/v2/hull.schema.json` 的 `hull_data` 新增可选 `gun_port_sockets` 数组并回填 Core `hulls.json`（供编辑器 / 装配器读内容，运行时仍以 GLB extras 为准）
@@ -49,6 +49,8 @@
 ## Recently Completed
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
+
+- Lua Modding SDK S0（2026-10-23）：三份契约文档落地——[API 契约](docs/design/LUA_SDK_S0_API_CONTRACT.md) 全量盘点 Query 19 / Command 42 / Event 53 并给出 20 条候选 API 与版本/能力/错误协议（含 Manifest Schema v2 演进、`script.*` 能力前缀分流、脚本错误码）；[威胁模型](docs/design/LUA_SDK_S0_THREAT_MODEL.md) 44 威胁 / 28 不变量 / 22 差距 / 9 条发布阻断项；[测试矩阵](docs/design/LUA_SDK_S0_TEST_MATRIX.md) L0–L3 分级与双向覆盖、L0 门禁 G0-1..G0-8。结论：现有 Manifest 为封闭 schema + 扫描器白名单，脚本支持需 v2 Schema；42 个 Command 不得按总线名直接暴露。未改运行时代码。
 
 - Content Schema 2.0 Phase D2（2026-10-23）：fleet 4 类 active 2.0（`ship_archetypes` / `captains` / `formations` / `fleet_doctrines`，content.fleet.v1）；Core 4 个舰队内容文件（3 船型 / 3 舰长 / 2 编队 / 2 战术）；`FleetOps` / `FleetService` / `fleet.assign_captain|set_formation|set_doctrine|add_ship|remove_ship` + `fleet.view`，`data.fleet` 惰性持久；SDK `example_fleet`。**30 类 active 全部 2.0（29 定义 + patch）**、schema bundle 35（2 顶层 + 33 v2）、编辑器 32（30 runtime + 2 draft）、Core 29 内容文件 / 114 定义。验证：Godot **578/578**、Node **59/59**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase D0/D1（2026-10-23）：D0 确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长，`sim.tick` 事件）；D1 combat（`weapons` 提升 active + `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 5 类，共 6 个战斗类型；Core 6 个战斗内容文件；`CombatOps` / `CombatService` / `combat.resolve|view|log`）。**26 类 active 全部 2.0（25 定义 + patch）**、schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）、Core 25 内容文件。验证：Godot **566/566**、Node **58/58**、CLI **63/63**、SDK `status: ok`。
