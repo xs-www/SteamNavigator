@@ -28,6 +28,7 @@
       file: "content/goods.json",
       schema: "good.schema.json",
       schemaVersion: "1.0",
+      capability: "content.goods.v1",
       summary: "港口买卖、库存与价格弹性的基础物品，也是委托货箱与补给的载体。",
     },
     {
@@ -42,6 +43,7 @@
       file: "content/materials.json",
       schema: "material.schema.json",
       schemaVersion: "1.0",
+      capability: "content.materials.v1",
       summary: "打造与升级模块时消耗的专用材料，参与库存、价格与重量计算。",
     },
     {
@@ -56,6 +58,7 @@
       file: "content/hulls.json",
       schema: "hull.schema.json",
       schemaVersion: "1.0",
+      capability: "content.hulls.v1",
       summary: "决定基础航速、最大载重、耐久与货舱/客舱槽位。",
     },
     {
@@ -70,6 +73,7 @@
       file: "content/boilers.json",
       schema: "boiler.schema.json",
       schemaVersion: "1.0",
+      capability: "content.boilers.v1",
       summary: "航速与煤水消耗的核心模块，与三种锅炉策略相乘。",
     },
     {
@@ -84,6 +88,7 @@
       file: "content/cargo_modules.json",
       schema: "cargo_module.schema.json",
       schemaVersion: "1.0",
+      capability: "content.cargo_modules.v1",
       summary: "安装到船体货舱槽位，提供额外载货容量。",
     },
     {
@@ -98,6 +103,7 @@
       file: "content/navigation_modules.json",
       schema: "navigation_module.schema.json",
       schemaVersion: "1.0",
+      capability: "content.navigation_modules.v1",
       summary: "影响风险与航速，部分可提前揭示港口设施。",
     },
     {
@@ -112,6 +118,7 @@
       file: "content/safety_modules.json",
       schema: "safety_module.schema.json",
       schemaVersion: "1.0",
+      capability: "content.safety_modules.v1",
       summary: "降低航行风险、损伤与维修费用。",
     },
     {
@@ -126,6 +133,7 @@
       file: "content/cabins.json",
       schema: "cabin.schema.json",
       schemaVersion: "1.0",
+      capability: "content.cabins.v1",
       summary: "提供载客容量，是客运委托的前置条件。",
     },
     {
@@ -140,6 +148,7 @@
       file: "content/roles.json",
       schema: "role.schema.json",
       schemaVersion: "1.0",
+      capability: "content.roles.v1",
       summary: "工程师与领航员等岗位，每航程支付工资并提供属性修正。",
     },
     {
@@ -154,6 +163,7 @@
       file: "content/strategies.json",
       schema: "strategy.schema.json",
       schemaVersion: "1.0",
+      capability: "content.strategies.v1",
       summary: "出航时选择的推进策略：经济、标准或极速。",
     },
     {
@@ -168,6 +178,7 @@
       file: "content/port_archetypes.json",
       schema: "port_archetype.schema.json",
       schemaVersion: "1.0",
+      capability: "content.port_archetypes.v1",
       summary: "程序生成港口的模板：规模、设施与可交易商品表。",
     },
     {
@@ -182,6 +193,7 @@
       file: "content/map_profiles.json",
       schema: "map_profile.schema.json",
       schemaVersion: "1.0",
+      capability: "content.map_profiles.v1",
       summary: "港口数量、航路、风险、NPC 与初始经济参数。Core 完整性要求至少一个。",
     },
     {
@@ -196,6 +208,7 @@
       file: "content/starting_builds.json",
       schema: "starting_build.schema.json",
       schemaVersion: "1.0",
+      capability: "content.starting_builds.v1",
       summary: "开局金钱、船只模块、补给与贷款配置。",
     },
     {
@@ -210,6 +223,7 @@
       file: "content/world_profiles.json",
       schema: "v2/world_profile.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "持久战役的世界生成参数：区域、地点、港口、遗迹、基地与阵营数量。",
     },
     {
@@ -224,6 +238,7 @@
       file: "content/regions.json",
       schema: "v2/region.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "区域原型：类型、规模、港口/地点密度、敌对度、天气与阵营归属。",
     },
     {
@@ -238,6 +253,7 @@
       file: "content/sites.json",
       schema: "v2/site.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "可发现地点原型：遗迹、基地点、资源点、残骸、地标与遭遇。",
     },
     {
@@ -252,6 +268,7 @@
       file: "content/route_templates.json",
       schema: "v2/route_template.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "程序生成航路的原型：距离、风险、耗时区间、双向与遭遇表。",
     },
     {
@@ -266,6 +283,7 @@
       file: "content/weather_profiles.json",
       schema: "v2/weather_profile.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "气候带原型：雾/风暴/浮冰概率与能见度、风险、航速、煤耗修正。",
     },
     {
@@ -280,6 +298,7 @@
       file: "content/factions.json",
       schema: "v2/faction.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "阵营原型：初始声望、好感阈值、巡逻强度、偏好商品、活动区域与敌对阵营。",
     },
     {
@@ -294,6 +313,7 @@
       file: "content/discoveries.json",
       schema: "v2/discovery.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "图鉴条目原型：遗迹/房间/遗物/物种/蓝图/传闻的稀有度、权重与解锁引用。",
     },
     {
@@ -308,6 +328,7 @@
       file: "content/start_profiles.json",
       schema: "v2/start_profile.schema.json",
       schemaVersion: "2.0",
+      capability: "content.campaign.v1",
       summary: "战役起始配置：世界配置、起始构筑、难度、起始港口标签与可选货物/委托。",
     },
     {
@@ -322,6 +343,7 @@
       file: "content/map_configs.json",
       schema: "v2/map_config.schema.json",
       schemaVersion: "2.0",
+      capability: "content.world.v1",
       summary: "1.0 map_profile 的 v2 继任者：港口原型与名称、设施、NPC、补给、贷款、情报、交易、孪生世界尺寸、31 键探索规则与教程剧情流。",
     },
     {
@@ -336,6 +358,7 @@
       file: "content/contracts.json",
       schema: "contract.schema.json",
       schemaVersion: "1.0",
+      capability: "content.contracts.v1",
       summary: "主线或普通委托：生成约束、载货/载客需求、截止公式与奖励。",
     },
     {
@@ -350,6 +373,7 @@
       file: "content/events.json",
       schema: "event.schema.json",
       schemaVersion: "1.0",
+      capability: "content.events.v1",
       summary: "航行途中触发的事件与选项；条件与效果只使用框架操作码。",
     },
     {
@@ -364,6 +388,7 @@
       file: "content/patches.json",
       schema: "patch.schema.json",
       schemaVersion: "1.0",
+      capability: "content.patches.v1",
       summary: "修改其他模组的定义。必须声明目标与来源版本，冲突时阻止启动。",
       special: true,
     },

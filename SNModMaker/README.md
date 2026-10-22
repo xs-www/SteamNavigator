@@ -3,7 +3,7 @@
 在浏览器里可视化创建、编辑和打包《Steam Navigator》的内容模组：
 
 - 读取仓库内 **官方 JSON Schema**，按类型生成表单；
-- 编辑 Manifest、16 类运行时类型（15 类内容 + 显式补丁）、9 类 Content Schema 2.0 草案类型、本地化与资源；
+- 编辑 Manifest、25 类运行时类型（24 类内容 + 显式补丁，其中 9 类为 Content Schema 2.0）与 `weapons` 草案、本地化与资源；
 - 实时校验 ID 命名空间、字段约束、跨引用、本地化覆盖与补丁安全；
 - 导入松散目录 / `.snavmod.zip` / 项目文件；
 - 导出 `mods/<id>/` 结构的 `.snavmod.zip`、项目文件，或直接写入本地目录；
@@ -72,28 +72,29 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 | 航行事件 | `events` | `event` | 选项、条件与效果 |
 | 显式补丁 | `patches` | — | 修改其他模组 |
 
-#### Schema 2.0 草案
+#### Content Schema 2.0 运行时类型与草案
 
-以下 9 类 Content Schema 2.0 草案类型同样可以在编辑器与 Content CLI 中创建、编辑和校验，内容文件写 `schema_version: "2.0"`。它们**尚未接入游戏运行时**：运行时仍只加载 Content Schema 1.0，草案内容不会生效，校验会给出 `draft_content` 警告。注意「不加载」不是静默忽略：Core 里若出现未注册类型或版本不符的内容，运行时会按 mod error 拒绝，Core 作为必需包会导致启动进入 `Degraded`；因此草案内容与「舰载武器包」模板**只存在于编辑器项目**，不要写进 `dev_mods/core`。
+Phase B 起，8 类世界/战役类型 + 新增 `map_configs` 已提升为**运行时 active 类型**（与 1.0 类型一起由 Godot 按类型版本加载），内容文件写 `schema_version: "2.0"`；只有 `weapons` 仍是编辑器草案（运行时暂不加载，校验给 `draft_content` 警告）。注意「不加载」不是静默忽略：Core 里若出现未注册类型或版本不符的内容，运行时会按 mod error 拒绝，Core 作为必需包会导致启动进入 `Degraded`；因此武器草案内容与「舰载武器包」模板**只存在于编辑器项目**，不要写进 `dev_mods/core`。
 
-| 类型 | `content_type` | 说明 |
-| --- | --- | --- |
-| 世界配置 | `world_profiles` | 区域 / 地点 / 港口 / 遗迹 / 基地 / 阵营数量 |
-| 区域 | `regions` | 区域类型、规模、密度、敌对度、天气与阵营 |
-| 地点 | `sites` | 遗迹 / 基地点 / 资源 / 残骸 / 地标 / 遭遇 |
-| 航道模板 | `route_templates` | 距离、风险、耗时区间、双向与遭遇表 |
-| 天气配置 | `weather_profiles` | 气候带、雾 / 风暴 / 浮冰概率与修正 |
-| 阵营 | `factions` | 声望、阈值、巡逻强度、偏好商品、活动区域 |
-| 图鉴发现 | `discoveries` | 图鉴条目类型、稀有度、权重与解锁引用 |
-| 起始档案 | `start_profiles` | 世界配置、起始构筑、难度、起始港口与货物 |
-| 舰载武器 | `weapons` | 战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型键；船体安装点决定可装 class |
+| 类型 | `content_type` | 状态 | 说明 |
+| --- | --- | --- | --- |
+| 世界配置 | `world_profiles` | 运行时 2.0 | 区域 / 地点 / 港口 / 遗迹 / 基地 / 阵营数量 |
+| 场景配置 | `map_configs` | 运行时 2.0 | 港口原型/名称、设施、NPC 与经济、孪生世界尺寸、31 键探索规则、教程 story |
+| 区域 | `regions` | 运行时 2.0 | 区域类型、规模、密度、敌对度、天气与阵营 |
+| 地点 | `sites` | 运行时 2.0 | 遗迹 / 基地点 / 资源 / 残骸 / 地标 / 遭遇 |
+| 航道模板 | `route_templates` | 运行时 2.0 | 距离、风险、耗时区间、双向与遭遇表 |
+| 天气配置 | `weather_profiles` | 运行时 2.0 | 气候带、雾 / 风暴 / 浮冰概率与修正 |
+| 阵营 | `factions` | 运行时 2.0 | 声望、阈值、巡逻强度、偏好商品、活动区域 |
+| 图鉴发现 | `discoveries` | 运行时 2.0 | 图鉴条目类型、稀有度、权重与解锁引用 |
+| 起始档案 | `start_profiles` | 运行时 2.0 | 世界配置 + 场景配置 + 起始构筑、难度、起始港口与货物 |
+| 舰载武器 | `weapons` | 草案 | 战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型键；船体安装点决定可装 class |
 
-草案类型使用 `schemas/v2/` 下的 Schema（含 `v2/common.schema.json` 的共享定义与跨文件 `$ref`）。草案模组若使用 capability，还需在 `manifest.capabilities` 声明对应能力（例如 `content.world.v1`），否则校验给出 `capability_undeclared` 警告。
+这些类型使用 `schemas/v2/` 下的 Schema（含 `v2/common.schema.json` 的共享定义与跨文件 `$ref`）。使用 `capability` 的内容模组需在 `manifest.capabilities` 声明对应能力（例如 `content.world.v1`、`content.campaign.v1`），否则校验给出 `capability_undeclared` 警告；该规则按 `schema_version: "2.0"` 判定，不再只针对草案。
 
 ### 编辑器
 
 - **表单驱动**：字段、枚举、数字范围、必填项与数组结构来自 `schemas/` 的 JSON Schema，与 Godot 加载链共用同一套约束。
-- **Schema 2.0 草案类型**：侧栏「Schema 2.0 草案 / 运行时不加载」分区列出 9 类草案（带 draft 标记，悬停提示运行时 1.0 不加载）；表单、默认值、引用与校验走同一套 v2 Schema，内容文件自动写 `schema_version: "2.0"`。
+- **Content Schema 2.0 类型**：运行时分组列出 25 类（其中 9 类为 2.0，按 v2 Schema 校验并正常导出），侧栏「Schema 2.0 草案 / 运行时不加载」只保留 `weapons`（带 draft 标记）；表单、默认值、引用与校验走同一套 Schema，内容文件自动写 `schema_version: "2.0"`。
 - **舰载武器表单**：`weapons` 草案按战斗（kind / damage / range / cooldown / accuracy / salvo / color…）、装配（weapon_class / assembly_profile / has_yaw·has_pitch·has_recoil·has_muzzle / muzzle_count / envelope_* / height / mount_scale）、经济（tier / weight / purchase_price / craft_* / materials）三组渲染；新增定义默认取模拟器「甲板速射炮」数值。
 - **船体安装点**：船体表单可编辑 `weapon_sockets` / `rig_sockets` 数组（安装点名称、class/kind、索引、position 三元组、clearance_*、mount_scale、note），校验重复 name / 索引、非法 class/kind 与缺失必填；写出的是内容侧镜像，运行时装配仍读 GLB extras。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
@@ -140,7 +141,7 @@ DELETE /api/game-mods/<id>
 - 默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可覆盖（容器里设为 `0.0.0.0`），但服务没有鉴权，只应经宿主机端口映射 + `tailscale serve` 之类的可信通道访问。
 - 浏览器自动保存仍走 IndexedDB；磁盘写入是同一份项目的镜像，Ctrl+S 会立即刷新磁盘。
 - 导出菜单的“导出并覆盖到发布包 mods/”默认写入当前平台发布包的 `dist/build/<platform>/mods/<id>.snavmod.zip`（Windows 为 `dist/build/windows/mods/`）；若已存在其他平台的导出目录则优先使用当前平台，重复部署会覆盖稳定文件名，并清理同 ID 的旧 `<id>-<version>.snavmod.zip`，避免游戏加载重复模组。
-- 含 Schema 2.0 草案内容的项目：ZIP / 目录导出会二次确认并说明“游戏运行时不加载”，而“导出并覆盖到发布包 mods/”直接禁用（草案内容会让游戏启动进入 `Degraded` 且内容被丢弃），需先移除草案内容再部署。
+- 含当前运行时不支持内容的项目（`weapons` 草案，或内容文件版本与类型期望不一致 / 未知类型）：ZIP / 目录导出会二次确认并说明“游戏运行时不支持”，而“导出并覆盖到发布包 mods/”直接禁用（会让游戏启动进入 `Degraded` 且内容被丢弃）；Phase B 提升的 9 类 2.0 运行时类型可以正常部署。
 - 默认目标由 `tools/game_mods_dir.mjs` 解析：优先 `SNMODMAKER_GAME_MODS_DIR`，其次已有的 `dist/build/*`，最后回退到当前平台目录。若编辑的是另一个游戏安装目录，启动服务前把 `SNMODMAKER_GAME_MODS_DIR` 设为该游戏旁的 `mods/`；开发态调试（编辑器 F5 扫描的 `dist/mods`）也可显式指向 `dist/mods`。项目与普通导出目录仍可分别用 `SNMODMAKER_MODS_DIR`、`SNMODMAKER_EXPORTS_DIR` 调整。
 - 静态托管或 `file://` 打开时 `api/status` 不可用，界面会自动退化为浏览器存储。
 
@@ -264,7 +265,7 @@ node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_world --id my_wor
 node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_weapons --json
 ```
 
-草案项目会在 `manifest.capabilities` 里自动声明对应 capability（如 weapons → `content.combat.v1`），校验只会给 `draft_content` 警告；这类项目同样不能「导出并覆盖到发布包 mods/」（运行时不加载草案内容）。
+`--draft weapons` 项目会在 `manifest.capabilities` 里自动声明对应 capability（weapons → `content.combat.v1`），校验只会给 `draft_content` 警告；这类项目同样不能「导出并覆盖到发布包 mods/」（运行时不加载草案内容）。普通 `add` 新增 Phase B 的 2.0 运行时类型（如 `world_profiles`）会正常写出 2.0 文件并参与导出，但需在 manifest 声明对应 capability，否则校验给 `capability_undeclared` 警告。
 
 一次生成 5 件战斗模拟器武器（「舰载武器包」模板，只写编辑器项目、不写 Core）：
 
@@ -327,13 +328,13 @@ node SNModMaker/tools/content.mjs validate --mod dev_mods/core --godot
    本地与 `common.schema.json` 引用；`schemas/v2/` 的草案 Schema 按基准文件所在目录解析
    `common.schema.json` 等跨文件 `$ref`。
 2. **Schema 版本**：每个内容类型在 `content_types.json` 声明自己的 `schema_version`，生成到编辑器的 `schemaVersion` 字段
-   （运行时类型 1.0、草案类型 2.0）；声明版本与类型不符报 `schema_version_mismatch`，不是 1.0 / 2.0 报
+   （当前 1.0 类型为 1.0，Phase B 的 9 类与 weapons 草案为 2.0）；声明版本与类型不符报 `schema_version_mismatch`，不是 1.0 / 2.0 报
    `schema_version_unsupported`。运行时同样按类型校验版本，不再有全局单一门禁。
 3. **Steam Navigator 语义**
    Manifest ID / SemVer / 依赖范围、内容与本地化清单一致性、ID 命名空间与类型段、跨文件重复 ID、
    本模组引用是否存在、Core 引用是否存在、本地化键缺失/空值、补丁目标与操作安全、资源扩展名与大小。
-   草案内容文件另给 `draft_content` 警告（运行时 1.0 不加载），使用 `capability` 但未写入
-   `manifest.capabilities` 时给 `capability_undeclared` 警告。
+   `draft_content` 只对 `weapons` 草案提示（运行时暂不加载）；`schemaVersion = 2.0` 的内容使用
+   `capability` 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
 
 网页端**不会**执行 Godot 的领域规则、Core 完整性检查、真实注册表冻结或脚本/资源包安全检查。导出前仍建议用 SDK 再跑一次：
 
@@ -458,7 +459,7 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 
 ## 已知边界
 
-- Content Schema 2.0 草案类型（含新增的 `weapons`）可以在编辑器与 CLI 中创建、编辑、校验和导出，但**运行时尚未接入**：游戏仍只加载 Content Schema 1.0，草案内容文件（`content/weapons.json`）只用于设计与评审，校验会给出 `draft_content` 警告；草案模组的能力需在 `manifest.capabilities` 声明。含草案内容的项目无法部署到发布包 `mods/`（导出 ZIP 会二次确认）。**「运行时不加载」不等于静默忽略**：Core 里出现未注册类型 / 版本不符会按 mod error 拒绝，Core 必需包会让启动进入 `Degraded`；「舰载武器包」模板只写编辑器项目，不要手工搬进 `dev_mods/core`（要进 Core 需先把 `weapons` 提升为运行时类型）。
+- Content Schema 2.0：Phase B 的 9 类（world_profiles / map_configs / regions / sites / route_templates / weather_profiles / factions / discoveries / start_profiles）已是**运行时类型**，可正常编辑、校验、导出并部署；只有 `weapons` 仍是编辑器草案（运行时暂不加载，校验给 `draft_content` 警告，含它的项目不能部署到发布包）。`schemaVersion = 2.0` 的内容需在 `manifest.capabilities` 声明对应 capability（如 `content.world.v1` / `content.campaign.v1`），否则给 `capability_undeclared` 警告。**「运行时不支持」不等于静默忽略**：Core 里出现未注册类型 / 版本不符会按 mod error 拒绝，Core 必需包会让启动进入 `Degraded`；武器包模板只写编辑器项目，不要手工搬进 `dev_mods/core`。
 - 船体 `weapon_sockets` / `rig_sockets` 是**内容侧镜像**：编辑器可编辑、Schema 可校验，但运行时装配仍读 GLB 节点 extras，`ShipVisualAssembler` 尚未接入；镜像里的 `socket_index` 从 0 起，GLB extras 的武器 socket 从 1 起，对表时需转换。
 - 不支持 `.csv` 本地化；导入时会被跳过并给出警告。
 - 不读取 Godot `.import` / `.uid`；资源以原始文件打包。

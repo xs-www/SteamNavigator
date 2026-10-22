@@ -297,6 +297,7 @@ function renderJs(data) {
     lines.push(`      file: ${JSON.stringify(type.default_file)},`);
     lines.push(`      schema: ${JSON.stringify(schemaKey)},`);
     lines.push(`      schemaVersion: ${JSON.stringify(type.schema_version)},`);
+    lines.push(`      capability: ${JSON.stringify(type.capability || '')},`);
     lines.push(`      summary: ${JSON.stringify(type.summary_zh)},`);
     if (type.kind === 'patch') lines.push('      special: true,');
     lines.push('    },');

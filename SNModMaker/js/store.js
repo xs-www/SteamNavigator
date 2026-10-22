@@ -24,9 +24,10 @@
   }
 
   /**
-   * Schema version for a content type. Schema 2.0 draft types carry "2.0";
-   * every runtime-active type stays "1.0". The version belongs to the type, not
-   * to the individual file, so a stale/missing value cannot downgrade a draft.
+   * Schema version for a content type. Schema 2.0 is versioned per type: the
+   * Phase B world/campaign types and the weapons draft carry "2.0"; the other
+   * runtime types stay "1.0". The version belongs to the type, not to the
+   * individual file, so a stale/missing value cannot downgrade the type.
    */
   function schemaVersionFor(typeKey) {
     const cat = catalog();
@@ -348,23 +349,46 @@
   }
 
   /**
-   * Content files the game runtime will not load: Schema 2.0 draft types and
-   * any content file that declares schema_version "2.0". Export/deploy flows
-   * use this to warn (ZIP) or block (release-package deploy).
+   * Whether the game runtime can load one content file.
+   *
+   * Runtime support is a property of the current type table, not of the draft
+   * flag alone:
+   *   - unknown content types cannot be compiled by the runtime;
+   *   - Schema 2.0 draft types (weapons) are editor-only for now;
+   *   - a file whose schema_version differs from the version its type expects
+   *     cannot be loaded (e.g. goods written as "2.0").
+   * Phase B promoted the world/campaign types into the runtime, so their 2.0
+   * files stay supported and export/deploy like any other content.
    */
-  function draftContentFiles(project) {
-    if (!project || !Array.isArray(project.contentFiles)) return [];
+  function runtimeSupportsFile(file) {
+    if (!file) return false;
     const cat = catalog();
-    return project.contentFiles.filter((file) => {
-      if (!file) return false;
-      const info = cat && cat.BY_KEY ? cat.BY_KEY[file.content_type] : null;
-      if (info && info.draft) return true;
-      return String(file.schema_version == null ? '' : file.schema_version) === '2.0';
-    });
+    const info = cat && cat.BY_KEY ? cat.BY_KEY[file.content_type] : null;
+    if (!info) return false;
+    if (info.draft) return false;
+    const expected = schemaVersionFor(info.key);
+    const declared = file.schema_version == null ? expected : String(file.schema_version);
+    return declared === expected;
+  }
+
+  /**
+   * Content files the running game cannot load (drafts, unknown types, version
+   * mismatches). Export/deploy flows warn (ZIP/directory) or block
+   * (release-package deploy) for these.
+   */
+  function unsupportedContentFiles(project) {
+    if (!project || !Array.isArray(project.contentFiles)) return [];
+    return project.contentFiles.filter((file) => !runtimeSupportsFile(file));
+  }
+
+  /* Compatibility aliases: these used to mean "draft content only"; callers
+   * should prefer unsupportedContentFiles / runtimeSupportsFile. */
+  function draftContentFiles(project) {
+    return unsupportedContentFiles(project);
   }
 
   function hasDraftContent(project) {
-    return draftContentFiles(project).length > 0;
+    return unsupportedContentFiles(project).length > 0;
   }
 
   function definitionIdSet(project) {
@@ -1043,6 +1067,8 @@
     applyTemplate,
     ensureContentFile,
     allDefinitions,
+    runtimeSupportsFile,
+    unsupportedContentFiles,
     draftContentFiles,
     hasDraftContent,
     definitionKeys,

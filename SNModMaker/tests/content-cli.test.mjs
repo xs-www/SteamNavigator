@@ -11,8 +11,10 @@
  *   node SNModMaker/tests/content-cli.test.mjs
  *   # or: node --test SNModMaker/tests/content-cli.test.mjs
  *
- * Covers the 16 runtime Content Schema 1.0 types and the 9 Schema 2.0 draft
- * types (draft:true / schema_version 2.0, draft_content warning, v2 $refs).
+ * Covers the 25 runtime content types (16 Content Schema 1.0 + 9 promoted
+ * Schema 2.0) and the one remaining Schema 2.0 draft type (weapons: draft:true,
+ * draft_content warning, v2 $refs); capability exposure and the
+ * capability_undeclared warning for every Schema 2.0 type are asserted too.
  * All write operations happen inside fs.mkdtempSync(os.tmpdir()) fixtures. The
  * repository's dev_mods/core is only ever read (a few tests hash its JSON files
  * before and after to prove that).
@@ -392,6 +394,7 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(goods.file, 'content/goods.json');
   assert.equal(goods.schema, 'good.schema.json');
   assert.equal(goods.schema_version, '1.0');
+  assert.equal(goods.capability, 'content.goods.v1', 'runtime 1.0 rows may still expose their capability');
   assert.ok(goods.group, 'goods.group must be present');
   assert.ok(goods.summary, 'goods.summary must be present');
   assert.ok(!goods.draft, 'runtime types are not marked draft');
@@ -408,11 +411,34 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(world.file, 'content/world_profiles.json');
   assert.equal(world.schema, 'v2/world_profile.schema.json');
   assert.equal(world.schema_version, '2.0');
+  assert.equal(world.capability, 'content.world.v1', 'promoted Schema 2.0 runtime rows expose their capability');
   assert.ok(!world.draft, 'Phase B promoted world_profiles to a runtime type');
   const mapConfig = json.types.find((entry) => entry.key === 'map_configs');
   assert.ok(mapConfig, 'map_configs must be listed as an active type');
   assert.equal(mapConfig.schema, 'v2/map_config.schema.json');
   assert.equal(mapConfig.schema_version, '2.0');
+  assert.equal(mapConfig.capability, 'content.world.v1');
+  const startProfile = json.types.find((entry) => entry.key === 'start_profiles');
+  assert.ok(startProfile, 'start_profiles must be listed as an active type');
+  assert.equal(startProfile.schema_version, '2.0');
+  assert.equal(startProfile.capability, 'content.campaign.v1');
+
+  // The nine Phase B types are active runtime rows at Schema 2.0, not drafts.
+  const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
+  assert.deepEqual(
+    runtimeV2.map((entry) => entry.key).sort(),
+    ['discoveries', 'factions', 'map_configs', 'regions', 'route_templates', 'sites',
+      'start_profiles', 'weather_profiles', 'world_profiles'],
+    'exactly the nine Phase B types are Schema 2.0 runtime rows'
+  );
+  for (const runtime of runtimeV2) {
+    assert.equal(runtime.schema, `v2/${runtime.singular}.schema.json`,
+      `${runtime.key} must point at its v2 schema`);
+    assert.ok(runtime.capability, `${runtime.key} must expose its capability`);
+  }
+  for (const runtime of runtimeV2.filter((entry) => entry.key !== 'start_profiles')) {
+    assert.equal(runtime.capability, 'content.world.v1', `${runtime.key} belongs to the world capability`);
+  }
   const weapons = drafts.find((entry) => entry.key === 'weapons');
   assert.ok(weapons, 'weapons must be listed as a draft type');
   assert.equal(weapons.singular, 'weapon');
@@ -426,6 +452,49 @@ test('types --json lists every content type with presentation metadata', (t) => 
     assert.match(draft.schema, /^v2\/.+\.schema\.json$/, `${draft.key} must point at the v2 schema bundle entry`);
     assert.ok(draft.capability, `${draft.key} must expose its capability`);
   }
+});
+
+test('types human output separates Schema 2.0 runtime rows from the remaining draft', (t) => {
+  const result = runCli(['types']);
+  assertStatus(result, 0, 'types human');
+  const stdout = String(result.stdout);
+  assert.match(
+    stdout,
+    /运行时内容类型（25；其中 9 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 25 active types, 9 of them Schema 2.0:\n${stdout}`
+  );
+  assert.equal(
+    stdout.split('[runtime 2.0]').length - 1,
+    9,
+    `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^world_profiles\s+世界配置\s+world_profile\s+content\/world_profiles\.json  \[runtime 2\.0\]$/m,
+    `world_profiles must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^goods\s+商品\s+good\s+content\/goods\.json$/m,
+    `1.0 runtime rows stay unmarked:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /Schema 2\.0 草案类型（1）：编辑器 \/ CLI 可编辑，游戏运行时不加载/,
+    `the draft section must only describe the remaining draft type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^weapons\s+舰载武器\s+weapon\s+content\/weapons\.json  \[draft 2\.0\]$/m,
+    `weapons keeps a draft marker:\n${stdout}`
+  );
+  const runtimeIndex = stdout.indexOf('运行时内容类型');
+  const draftIndex = stdout.indexOf('Schema 2.0 草案类型');
+  assert.ok(runtimeIndex >= 0 && draftIndex > runtimeIndex, 'the draft section must come after the runtime section');
+  assert.ok(
+    stdout.indexOf('world_profiles') < draftIndex,
+    'world_profiles must be listed inside the runtime section, not in the draft section'
+  );
 });
 
 test('describe goods --json reports id pattern, keys, fields, defaults and skeleton', (t) => {
@@ -513,6 +582,7 @@ test('describe world_profiles --json reports the Schema 2.0 runtime contract', (
   assert.equal(json.type.schema, 'v2/world_profile.schema.json');
   assert.ok(!json.type.draft, 'Phase B promoted world_profiles to a runtime type');
   assert.equal(json.type.schema_version, '2.0');
+  assert.equal(json.type.capability, 'content.world.v1', 'describe must expose the runtime capability');
   assert.equal(json.id.singular, 'world_profile');
   assert.equal(json.id.example, 'my_mod:world_profile/tea');
   assert.equal(json.keys.base, 'world.my_mod.tea');
@@ -533,6 +603,15 @@ test('describe world_profiles --json reports the Schema 2.0 runtime contract', (
   assert.equal(json.skeleton.id, 'my_mod:world_profile/tea');
   assert.equal(json.skeleton.name_key, 'world.my_mod.tea.name');
   assert.equal(json.skeleton.data.region_count, 3);
+
+  // Human output: a promoted type is a runtime Schema 2.0 type, never a draft.
+  const humanResult = runCli(['describe', 'world_profiles']);
+  assertStatus(humanResult, 0, 'describe world_profiles human');
+  const human = String(humanResult.stdout);
+  assert.match(human, /运行时 Schema 2\.0/, `subtitle must name the runtime Schema 2.0:\n${human}`);
+  assert.match(human, /capability content\.world\.v1/, 'subtitle must name the declared capability');
+  assert.ok(!human.includes('草案'), `a promoted type must not be described as a draft:\n${human}`);
+  assert.ok(!human.includes('不加载'), `a promoted type is loaded by the runtime:\n${human}`);
 });
 
 test('describe weapons --json reports the Schema 2.0 weapon contract', (t) => {
@@ -593,6 +672,14 @@ test('describe weapons --json reports the Schema 2.0 weapon contract', (t) => {
   assert.equal(json.skeleton.name_key, 'weapon.my_mod.tea.name');
   assert.equal(json.skeleton.data.kind, 'direct');
   assert.ok(json.suggestions.tags.includes('weapon.direct'), 'weapon tag suggestions are exposed');
+
+  // Human output: the remaining weapon type is still a draft the runtime does not load.
+  const humanResult = runCli(['describe', 'weapons']);
+  assertStatus(humanResult, 0, 'describe weapons human');
+  const human = String(humanResult.stdout);
+  assert.match(human, /草案 Schema 2\.0/, `the weapon draft must stay marked as a draft:\n${human}`);
+  assert.match(human, /游戏运行时不加载/, 'the draft subtitle must explain that the runtime does not load it');
+  assert.match(human, /capability content\.combat\.v1/, 'the draft subtitle must expose its capability');
 });
 
 test('add --type world_profiles writes a Schema 2.0 content file as a runtime type', (t) => {
@@ -626,6 +713,16 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
 
   const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
   assert.ok(!warningCodes.includes('draft_content'), `a promoted type must not warn as draft: ${JSON.stringify(json.issues.list)}`);
+  // Schema 2.0 content needs its capability in manifest.capabilities; the CLI never
+  // declares it automatically, so the add reports `capability_undeclared` instead.
+  assert.ok(
+    warningCodes.includes('capability_undeclared'),
+    `Schema 2.0 content without a declared capability must warn: ${JSON.stringify(json.issues.list)}`
+  );
+  assert.ok(json.issues.newWarnings >= 1, 'the undeclared capability is a new warning for the add');
+  const undeclared = json.issues.list.find((issue) => issue.code === 'capability_undeclared');
+  assert.match(String(undeclared.message), /content\.world\.v1/, 'the warning must name the required capability');
+  assert.deepEqual(manifestOf(mod).capabilities || [], [], 'add must not declare the capability automatically');
   // B4 landed the Core world content (`core:weather_profile/temperate` etc.), so the starter
   // reference resolves and must no longer warn as `ref_core_unknown`.
   assert.ok(
@@ -638,9 +735,33 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
   const validateJson = mustJson(validateResult, 'validate world mod');
   assert.equal(validateJson.issues.errors, 0, `Schema 2.0 content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
   assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'draft_content'));
+  assert.ok(
+    validateJson.issues.list.some((issue) => issue.code === 'capability_undeclared'),
+    `validate must report the undeclared capability: ${JSON.stringify(validateJson.issues.list)}`
+  );
 
+  // `--strict` turns the undeclared-capability warning into a failure.
   const strictResult = jsonRun(['validate', '--mod', mod, '--strict']);
-  assertStatus(strictResult, 0, 'B4 Core content resolves every reference, so --strict passes');
+  assertStatus(strictResult, 1, 'an undeclared capability warning fails --strict');
+  const strictJson = mustJson(strictResult, 'validate world mod strict');
+  assert.equal(strictJson.ok, false);
+  assert.equal(strictJson.error.code, 'validation', JSON.stringify(strictJson.error));
+
+  // Declaring the capability in the manifest clears the warning. The CLI does not do
+  // this for `add`, so the project author has to make the declaration explicit.
+  const manifest = manifestOf(mod);
+  manifest.capabilities = ['content.world.v1'];
+  writeJson(path.join(mod, 'manifest.json'), manifest);
+  const declaredResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(declaredResult, 0, 'validate world mod with declared capability');
+  const declaredJson = mustJson(declaredResult, 'validate world mod declared');
+  assert.equal(declaredJson.issues.errors, 0, JSON.stringify(declaredJson.issues.list));
+  assert.ok(
+    !declaredJson.issues.list.some((issue) => issue.code === 'capability_undeclared'),
+    `the declared capability must clear the warning: ${JSON.stringify(declaredJson.issues.list)}`
+  );
+  const strictDeclared = jsonRun(['validate', '--mod', mod, '--strict']);
+  assertStatus(strictDeclared, 0, 'declaring content.world.v1 makes --strict pass');
 });
 
 test('add --type weapons writes a Schema 2.0 content file that validates cleanly', (t) => {
@@ -679,6 +800,9 @@ test('add --type weapons writes a Schema 2.0 content file that validates cleanly
   const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
   assert.ok(warningCodes.includes('draft_content'), `draft content must warn: ${JSON.stringify(json.issues.list)}`);
   assert.ok(warningCodes.includes('capability_undeclared'), `undeclared capability must warn: ${JSON.stringify(json.issues.list)}`);
+  const undeclared = json.issues.list.find((issue) => issue.code === 'capability_undeclared');
+  assert.match(String(undeclared.message), /content\.combat\.v1/, 'the weapon capability must be named');
+  assert.deepEqual(manifestOf(mod).capabilities || [], [], 'add must not declare the capability automatically');
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate weapons mod');
