@@ -6,6 +6,8 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
+| `cases/test_campaign_assembly.gd` | Phase B B3-A 战役世界装配测试（WORLD_SCHEMA_V2_RUNTIME §6.2/§6.3/§6.4）：用 | [查看](./cases/test_campaign_assembly.gd.md) |
+| `cases/test_campaign_start.gd` | Phase B B3 运行时接线的无头测试：`run.start` 的 1.0 legacy 路径零变化、 | [查看](./cases/test_campaign_start.gd.md) |
 | `cases/test_campaign_state.gd` | CampaignState 分区测试：分区惰性补齐、探索进度只追加 id、阵营声望夹取，以及分区随存档往返。 | [查看](./cases/test_campaign_state.gd.md) |
 | `cases/test_content_asset_loader.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_content_types_manifest.gd` | content_types.json 与框架 ContentTypes / 本地 Schema 文件的一致性守护，防止单一真源在过渡期漂移。 | [查看](./cases/test_content_types_manifest.gd.md) |
@@ -79,5 +81,7 @@
 - `test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema 与 `map_configs`（31 键 exploration），确认 9 类 active、只有 `weapons` 仍为草案。
 - `test_world_schema_refs.gd` 覆盖 Phase B 9 类引用规则：硬引用缺失 error、planned 目标仅 `ref_inactive_type` warning、faction 自指、map_config archetype 数量组合规则。
 - `test_world_completeness.gd` 覆盖 Core Phase B 完整性：presence gate（仅 Core 自带 world_profiles 时启用）、五项硬性数量、四项建议 warning 与 start_profile / region / map_config 组合规则。
+- `test_campaign_assembly.gd` 用合成 v2 定义验证 `CampaignFactory` 世界装配：state 形状、同 seed 确定性、区域/地点/航路引用一致性、map_config 回退与结构化错误。
+- `test_campaign_start.gd` 覆盖 `run.start start_profile=` 端到端、`campaign.view` 形状、`ContentRefs` 1.0↔v2 解析与 resolver 旧档回退。
 - `test_schema_v2_weapons.gd` 守护 `weapons` 草案（合法 direct / broadside 与非法必填 / 枚举 / 范围 / 颜色 / 材料 ID）、草案登记与 hull `weapon_sockets` / `rig_sockets` 镜像（含 Core 14 个武器 socket + 22 个帆索 socket）。
 - `test_world_generator.gd` 守护坐标空间世界生成：同 seed 可复现、港口锚定海岸线、最小间距、连通性、出航角度、必需设施位置与序列化往返。

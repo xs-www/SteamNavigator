@@ -17,27 +17,27 @@
 | `STANDARD_HULL_ID` | L27 |
 | `STANDARD_BOILER_ID` | L28 |
 | `STANDARD_CARGO_ID` | L29 |
-| `test_bootstrapped_core_baseline_is_ok_without_phase_b() -> void` | L32 |
-| `test_gate_is_off_without_world_profiles() -> void` | L45 |
-| `test_third_party_world_profile_does_not_enable_core_rules() -> void` | L53 |
-| `test_missing_map_config_reports_error() -> void` | L68 |
-| `test_missing_start_profile_reports_error() -> void` | L75 |
-| `test_missing_weather_profile_reports_error() -> void` | L81 |
-| `test_missing_region_reports_error() -> void` | L86 |
-| `test_complete_phase_b_content_has_no_errors() -> void` | L92 |
-| `test_suggested_content_is_warning_only() -> void` | L98 |
-| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L114 |
-| `test_start_region_tags_must_match_a_region() -> void` | L122 |
-| `test_start_profile_must_resolve_starting_build() -> void` | L130 |
-| `test_phase_b_capabilities_are_whitelisted() -> void` | L139 |
+| `test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void` | L32 |
+| `test_gate_is_off_without_world_profiles() -> void` | L72 |
+| `test_third_party_world_profile_does_not_enable_core_rules() -> void` | L80 |
+| `test_missing_map_config_reports_error() -> void` | L95 |
+| `test_missing_start_profile_reports_error() -> void` | L102 |
+| `test_missing_weather_profile_reports_error() -> void` | L108 |
+| `test_missing_region_reports_error() -> void` | L113 |
+| `test_complete_phase_b_content_has_no_errors() -> void` | L119 |
+| `test_suggested_content_is_warning_only() -> void` | L125 |
+| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L141 |
+| `test_start_region_tags_must_match_a_region() -> void` | L149 |
+| `test_start_profile_must_resolve_starting_build() -> void` | L157 |
+| `test_phase_b_capabilities_are_whitelisted() -> void` | L166 |
 
 1.0 合成基线 + 注入的 2.0 世界/战役定义驱动 `CoreCompletenessChecker.check()`，覆盖
 presence gate、5 个硬性数量下限、4 个建议 warning、start_profile 组合解析与 capability 白名单。
 
 ## 契约与约束
-- v2 规则只在 **Core 自己** 发布至少一个 `world_profiles` 定义时启用（B4 之后）；当前 Core
-  没有 v2 内容时 `bootstrap_core()` 基线必须保持 `ok`，第三方单独提供的 v2 world profile
-  也不能让 Core 完整性规则变红。
+- v2 规则只在 **Core 自己** 发布至少一个 `world_profiles` 定义时启用。B4 落盘后
+  `dev_mods/core/content/world_profiles.json` 存在，Core 基线用例因此改为「gate 打开且零
+  error」；「gate 关闭」的语义仍由 `_full_hub([ContentTypes.WORLD_PROFILE])` 的合成用例覆盖。
 - 硬性 error（`content_count`）：world_profiles / map_configs / start_profiles /
   weather_profiles / regions 各 ≥1。
 - 建议 warning（`content_count_recommended`）：route_templates / factions / sites / discoveries 各 ≥1。

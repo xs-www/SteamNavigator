@@ -1,6 +1,6 @@
 # `framework/domain/story/story_service.gd`
 
-> 作用：新手剧情 / 教学系统的领域状态机。读取当前 map profile 的
+> 作用：新手剧情 / 教学系统的领域状态机。读取当前场景定义（v2 `map_configs`，
 
 - 类型：GDScript 源文件
 
@@ -9,33 +9,34 @@
 | 符号 | 位置 |
 | --- | --- |
 | `StoryService` | L1 |
-| `FEATURE_OVERVIEW` | L36 |
-| `FEATURE_SUPPLY` | L37 |
-| `FEATURE_CHART` | L38 |
-| `FEATURE_MARKET` | L39 |
-| `FEATURE_CONTRACTS` | L40 |
-| `FEATURE_CLUES` | L41 |
-| `FEATURE_TAVERN` | L42 |
-| `FEATURE_SHIPYARD` | L43 |
-| `FEATURES` | L44 |
-| `EVENT_STAGE_ENTERED` | L49 |
-| `EVENT_COMPLETED` | L50 |
-| `EVENT_FEATURE_UNLOCKED` | L51 |
-| `config(state: GameState, hub: RegistryHub) -> Dictionary` | L55 |
-| `begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void` | L69 |
-| `view(context) -> Dictionary` | L95 |
-| `market_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L152 |
-| `module_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L163 |
-| `advance(context) -> Dictionary` | L173 |
-| `skip(context) -> Dictionary` | L201 |
-| `observe(context, event: String, data: Dictionary = {}) -> Dictionary` | L228 |
-| `guaranteed_explore_clue_id(state: GameState) -> String` | L558 |
-| `consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool` | L567 |
+| `FEATURE_OVERVIEW` | L37 |
+| `FEATURE_SUPPLY` | L38 |
+| `FEATURE_CHART` | L39 |
+| `FEATURE_MARKET` | L40 |
+| `FEATURE_CONTRACTS` | L41 |
+| `FEATURE_CLUES` | L42 |
+| `FEATURE_TAVERN` | L43 |
+| `FEATURE_SHIPYARD` | L44 |
+| `FEATURES` | L45 |
+| `EVENT_STAGE_ENTERED` | L50 |
+| `EVENT_COMPLETED` | L51 |
+| `EVENT_FEATURE_UNLOCKED` | L52 |
+| `config(state: GameState, hub: RegistryHub) -> Dictionary` | L58 |
+| `begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void` | L66 |
+| `view(context) -> Dictionary` | L92 |
+| `market_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L149 |
+| `module_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L160 |
+| `advance(context) -> Dictionary` | L170 |
+| `skip(context) -> Dictionary` | L198 |
+| `observe(context, event: String, data: Dictionary = {}) -> Dictionary` | L225 |
+| `guaranteed_explore_clue_id(state: GameState) -> String` | L555 |
+| `consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool` | L564 |
 
-`data.story`（Core JSON）阶段表，维护 `GameState.data.story` 的进度、事件计数、
-标志、功能 / 商品 / 模块解锁，并分发「发现委托目的港」等剧情效果。
+旧档回退 `map_profiles`）的 `data.story`（Core JSON）阶段表，维护
+`GameState.data.story` 的进度、事件计数、标志、功能 / 商品 / 模块解锁，并分发
+「发现委托目的港」等剧情效果。
 
-- 关键依赖：`GameState.ensure_story()`、`ContentTypes.MAP_PROFILE`、`WorldOps`、
+- 关键依赖：`GameState.ensure_story()`、`ContentRefs.map_config_data()`、`WorldOps`、
   `MapOps`、`GameState.contracts()`
 
 ## 契约与约束

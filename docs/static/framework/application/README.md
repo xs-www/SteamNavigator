@@ -13,7 +13,7 @@
 | `commands/explore_commands.gd` | 探索系统的命令包装（`explore.start` / `explore.settle` / `explore.decide` / | [查看](./commands/explore_commands.gd.md) |
 | `commands/intel_commands.gd` | 情报刷新命令：设施、费用、快照。 | 本页 |
 | `commands/port_commands.gd` | 港口停留用例：在本港消耗时间，让打造订单、NPC 市场与债务期限一起推进。 | [查看](./commands/port_commands.gd.md) |
-| `commands/run_start.gd` | run.start 命令：调用 RunFactory 并写回状态/随机流。 | 本页 |
+| `commands/run_start.gd` | `run.start` 命令入口（Phase B B3）。保持 1.0 路径原样：无 `start_profile` | [查看](./commands/run_start.gd.md) |
 | `commands/ship_commands.gd` | 船厂用例：购买/仓库/随船运输三种来源安装模块（含替换）、卸下模块、打造模块，并在安装成功后检查通关。 | [查看](./commands/ship_commands.gd.md) |
 | `commands/story_commands.gd` | 新手剧情 / 教学系统的命令包装：`story.advance`（剧情卡继续）、 | [查看](./commands/story_commands.gd.md) |
 | `commands/supply_commands.gd` | 按市场价购买煤水与维修命令包装。 | 本页 |
@@ -23,6 +23,7 @@
 | `domain_event_bus.gd` | 已提交领域事件的 envelope、历史与订阅信号。 | [查看](./domain_event_bus.gd.md) |
 | `framework_api.gd` | 注册全部命令与查询。 | 本页 |
 | `queries/app_view.gd` | 启动与菜单 ViewModel：状态、模组、计数、构筑、命令列表。 | 本页 |
+| `queries/campaign_view.gd` | v2 战役运行时快照查询（`campaign.view`，Phase B B3）。只读地输出 | [查看](./queries/campaign_view.gd.md) |
 | `queries/clue_list_view.gd` | 线索列表页的只读查询（`clue.list`）。返回全部 active 线索的等级裁剪视图 | [查看](./queries/clue_list_view.gd.md) |
 | `queries/intel_view.gd` | 情报独立界面 ViewModel：快照时间/年龄、商品 × 港口对比矩阵（含未探索港口列）与 NPC 预计动向。 | [查看](./queries/intel_view.gd.md) |
 | `queries/map_view.gd` | 海图 ViewModel：港口坐标、发现/访问、设施与航线。 | 本页 |
