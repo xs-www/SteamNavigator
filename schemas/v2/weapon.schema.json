@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/weapon-2.json",
+  "title": "Steam Navigator weapon content file (Schema 2.0 draft)",
+  "description": "Ship-mounted weapon definitions (Content Schema 2.0 draft). The combat block mirrors the S-N Battle Simulator weapon catalogue, the assembly block mirrors docs/design/WEAPON_SOCKET_CONTRACT.md (weapon-assembly@2), and the economy block follows the runtime module shape so a future runtime can consume the same definitions. The Godot runtime does not load Schema 2.0 content yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "weapons"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/weapon_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "craft_material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "amount"],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0.1
+        }
+      }
+    },
+    "weapon_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "damage",
+        "range",
+        "min_range",
+        "cooldown",
+        "accuracy",
+        "projectile_speed",
+        "splash",
+        "arc_deg",
+        "salvo",
+        "weapon_class",
+        "assembly_profile",
+        "tier",
+        "weight",
+        "purchase_price"
+      ],
+      "properties": {
+        "kind": {
+          "description": "开火行为：direct 直射 / artillery 曲射 / broadside 舷侧齐射（与战斗模拟器 weapon.kind 一致）。",
+          "enum": ["direct", "artillery", "broadside"]
+        },
+        "damage": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "range": {
+          "description": "最大射程（模拟器单位，米）。",
+          "type": "number",
+          "minimum": 60,
+          "maximum": 700
+        },
+        "min_range": {
+          "description": "最小射程；必须小于 range。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 400
+        },
+        "cooldown": {
+          "description": "两轮齐射间隔（秒）。",
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 20
+        },
+        "accuracy": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.98
+        },
+        "projectile_speed": {
+          "type": "number",
+          "minimum": 60,
+          "maximum": 900
+        },
+        "splash": {
+          "description": "溅射半径（米），0 表示单体命中。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "arc_deg": {
+          "description": "射界/炮口可覆盖角度（度）。",
+          "type": "number",
+          "minimum": 30,
+          "maximum": 360
+        },
+        "salvo": {
+          "description": "单次开火的弹药数（多联装）。",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "color": {
+          "description": "弹道/炮口特效基色（#RRGGBB）。",
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "weapon_class": {
+          "description": "与船体 SN_Socket_Weapon_* 的 socket_class 做硬门禁；Modular 是 kit 部件，不是完整武器。",
+          "enum": ["Light", "Medium", "Heavy", "Tower", "Side", "Modular"]
+        },
+        "mount_class": {
+          "description": "可选：安装帧类别，缺省与 weapon_class 相同。",
+          "enum": ["Light", "Medium", "Heavy", "Tower", "Side"]
+        },
+        "assembly_profile": {
+          "description": "机构层组合：yaw_pitch / yaw_pitch_multi / pitch_only / fixed / base_only / yaw_only（WEAPON_SOCKET_CONTRACT §4）。",
+          "enum": ["yaw_pitch", "yaw_pitch_multi", "pitch_only", "fixed", "base_only", "yaw_only"]
+        },
+        "has_yaw": {
+          "type": "boolean"
+        },
+        "has_pitch": {
+          "type": "boolean"
+        },
+        "has_recoil": {
+          "type": "boolean"
+        },
+        "has_muzzle": {
+          "type": "boolean"
+        },
+        "muzzle_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "envelope_x": {
+          "description": "GLB Root extras envelope_x（米），含炮管的整机长度。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "envelope_y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "height": {
+          "description": "GLB Root extras height（米），甲板面以上总高。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "mount_scale": {
+          "description": "装配时的统一缩放（socket extras mount_scale 的同名口径）。",
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10
+        },
+        "tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "weight": {
+          "description": "重量（对应模拟器 weapon.mass），影响船体载重。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "purchase_price": {
+          "type": "number",
+          "minimum": 0
+        },
+        "craft_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "craft_time_hours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/craft_material"
+          }
+        }
+      }
+    }
+  }
+}

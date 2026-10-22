@@ -372,6 +372,22 @@
       schemaVersion: "2.0",
       capability: "content.campaign.v1",
     },
+    {
+      key: "weapons",
+      singular: "weapon",
+      keyPrefix: "weapon",
+      label: "舰载武器",
+      en: "Weapons",
+      abbr: "WN",
+      color: "#e2685e",
+      group: "船只与模块",
+      file: "content/weapons.json",
+      schema: "v2/weapon.schema.json",
+      summary: "舰载武器：战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型资源键；船体侧安装点决定可装 class。",
+      draft: true,
+      schemaVersion: "2.0",
+      capability: "content.combat.v1",
+    },
   ];
 
   root.SNContentTypes = { GROUPS, TYPES, DRAFT_TYPES };

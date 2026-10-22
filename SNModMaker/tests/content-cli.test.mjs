@@ -11,7 +11,7 @@
  *   node SNModMaker/tests/content-cli.test.mjs
  *   # or: node --test SNModMaker/tests/content-cli.test.mjs
  *
- * Covers the 16 runtime Content Schema 1.0 types and the 8 Schema 2.0 draft
+ * Covers the 16 runtime Content Schema 1.0 types and the 9 Schema 2.0 draft
  * types (draft:true / schema_version 2.0, draft_content warning, v2 $refs).
  * All write operations happen inside fs.mkdtempSync(os.tmpdir()) fixtures. The
  * repository's dev_mods/core is only ever read (a few tests hash its JSON files
@@ -377,9 +377,9 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 24, '16 runtime types + 8 Schema 2.0 draft types are editable');
+  assert.equal(json.types.length, 25, '16 runtime types + 9 Schema 2.0 draft types are editable');
   assert.equal(json.activeTypes, 16, 'activeTypes counts runtime Content Schema 1.0 types');
-  assert.equal(json.draftTypes, 8, 'draftTypes counts Content Schema 2.0 draft types');
+  assert.equal(json.draftTypes, 9, 'draftTypes counts Content Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
   for (const key of ['goods', 'materials', 'hulls', 'boilers', 'events', 'contracts', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
@@ -400,7 +400,7 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(patches.schema, 'patch.schema.json');
 
   const drafts = json.types.filter((entry) => entry.draft);
-  assert.equal(drafts.length, 8, 'all 8 draft types are listed with draft:true');
+  assert.equal(drafts.length, 9, 'all 9 draft types are listed with draft:true');
   const world = drafts.find((entry) => entry.key === 'world_profiles');
   assert.ok(world, 'world_profiles must be listed');
   assert.equal(world.singular, 'world_profile');
@@ -409,6 +409,14 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(world.schema, 'v2/world_profile.schema.json');
   assert.equal(world.schema_version, '2.0');
   assert.equal(world.capability, 'content.world.v1');
+  const weapons = drafts.find((entry) => entry.key === 'weapons');
+  assert.ok(weapons, 'weapons must be listed as a draft type');
+  assert.equal(weapons.singular, 'weapon');
+  assert.equal(weapons.keyPrefix, 'weapon');
+  assert.equal(weapons.file, 'content/weapons.json');
+  assert.equal(weapons.schema, 'v2/weapon.schema.json');
+  assert.equal(weapons.schema_version, '2.0');
+  assert.equal(weapons.capability, 'content.combat.v1');
   for (const draft of drafts) {
     assert.equal(draft.schema_version, '2.0', `${draft.key} must list schema_version 2.0`);
     assert.match(draft.schema, /^v2\/.+\.schema\.json$/, `${draft.key} must point at the v2 schema bundle entry`);
@@ -524,6 +532,66 @@ test('describe world_profiles --json reports the Schema 2.0 draft contract', (t)
   assert.equal(json.skeleton.data.region_count, 3);
 });
 
+test('describe weapons --json reports the Schema 2.0 weapon contract', (t) => {
+  const result = jsonRun(['describe', 'weapons']);
+  assertStatus(result, 0, 'describe weapons');
+  const json = mustJson(result, 'describe weapons');
+  assert.equal(json.ok, true);
+  assert.equal(json.command, 'describe');
+  assert.equal(json.type.key, 'weapons');
+  assert.equal(json.type.singular, 'weapon');
+  assert.equal(json.type.keyPrefix, 'weapon');
+  assert.equal(json.type.file, 'content/weapons.json');
+  assert.equal(json.type.schema, 'v2/weapon.schema.json');
+  assert.equal(json.type.draft, true, 'draft types must be marked');
+  assert.equal(json.type.schema_version, '2.0');
+  assert.equal(json.type.capability, 'content.combat.v1');
+  assert.equal(json.id.singular, 'weapon');
+  assert.equal(json.id.example, 'my_mod:weapon/tea');
+  assert.equal(json.keys.base, 'weapon.my_mod.tea');
+
+  const kind = json.fields.find((field) => field.path === 'data.kind');
+  assert.ok(kind, `fields must contain data.kind: ${JSON.stringify(json.fields)}`);
+  assert.equal(kind.type, 'string');
+  assert.equal(kind.required, true);
+  assert.deepEqual(kind.enum, ['direct', 'artillery', 'broadside']);
+  const damage = json.fields.find((field) => field.path === 'data.damage');
+  assert.ok(damage, 'fields must contain data.damage');
+  assert.equal(damage.type, 'number');
+  assert.equal(damage.required, true);
+  assert.equal(damage.minimum, 1);
+  assert.equal(damage.maximum, 120);
+  const weaponClass = json.fields.find((field) => field.path === 'data.weapon_class');
+  assert.ok(weaponClass, 'fields must contain data.weapon_class');
+  assert.deepEqual(weaponClass.enum, ['Light', 'Medium', 'Heavy', 'Tower', 'Side', 'Modular']);
+  const assembly = json.fields.find((field) => field.path === 'data.assembly_profile');
+  assert.ok(assembly, 'fields must contain data.assembly_profile');
+  assert.ok(assembly.enum.includes('yaw_pitch_multi'), 'assembly_profile exposes every mechanism combo');
+  const muzzle = json.fields.find((field) => field.path === 'data.muzzle_count');
+  assert.ok(muzzle, 'fields must contain data.muzzle_count');
+  assert.equal(muzzle.type, 'integer');
+  assert.equal(muzzle.minimum, 1);
+  assert.equal(muzzle.maximum, 8);
+  const materials = json.fields.find((field) => field.path === 'data.materials[]');
+  assert.ok(materials, 'fields must contain the data.materials item shape');
+  assert.equal(materials.$ref, '#/$defs/craft_material');
+  const materialId = json.fields.find((field) => field.path === 'data.materials[].id');
+  assert.ok(materialId, 'weapon craft materials use the {id, amount} runtime module shape');
+  assert.match(String(materialId.$ref), /id_ref/, 'material id keeps the common id_ref $ref');
+
+  assert.equal(json.defaults.kind, 'direct');
+  assert.equal(json.defaults.damage, 12);
+  assert.equal(json.defaults.range, 245);
+  assert.equal(json.defaults.weapon_class, 'Light');
+  assert.equal(json.defaults.assembly_profile, 'yaw_pitch');
+  assert.equal(json.defaults.color, '#ffd37a');
+  assert.deepEqual(json.defaults.materials, []);
+  assert.equal(json.skeleton.id, 'my_mod:weapon/tea');
+  assert.equal(json.skeleton.name_key, 'weapon.my_mod.tea.name');
+  assert.equal(json.skeleton.data.kind, 'direct');
+  assert.ok(json.suggestions.tags.includes('weapon.direct'), 'weapon tag suggestions are exposed');
+});
+
 test('add --type world_profiles writes a Schema 2.0 content file and warns about draft content', (t) => {
   const mod = createMod(t);
   const result = jsonRun([
@@ -565,6 +633,49 @@ test('add --type world_profiles writes a Schema 2.0 content file and warns about
 
   const strictResult = jsonRun(['validate', '--mod', mod, '--strict']);
   assertStatus(strictResult, 1, 'draft warnings make --strict fail');
+});
+
+test('add --type weapons writes a Schema 2.0 content file that validates cleanly', (t) => {
+  const mod = createMod(t);
+  const result = jsonRun([
+    'add', '--mod', mod, '--type', 'weapons', '--id', 'deck_gun',
+    '--name-zh', '甲板速射炮', '--name-en', 'Deck Rapid Gun',
+  ]);
+  const json = mustJson(result, 'add weapons');
+  assertStatus(result, 0, 'add weapons');
+  assert.equal(json.ok, true);
+  assert.equal(json.issues.newErrors, 0, `add must not introduce errors: ${JSON.stringify(json.issues.list)}`);
+  const changedPaths = json.changes.map((change) => change.path);
+  assert.ok(changedPaths.includes('content/weapons.json'), `changes must mention the weapon content file: ${JSON.stringify(changedPaths)}`);
+  assert.ok(changedPaths.includes('manifest.json'), 'the new content file must be declared in manifest.content');
+
+  const file = contentFileOfType(mod, 'weapons');
+  assert.equal(file.payload.schema_version, '2.0');
+  assert.equal(file.payload.content_type, 'weapons');
+  assert.equal(file.payload.definitions.length, 1);
+  const definition = file.payload.definitions[0];
+  assert.equal(definition.id, 'test_mod:weapon/deck_gun');
+  assert.equal(definition.name_key, 'weapon.test_mod.deck_gun.name');
+  assert.ok(definition.tags.includes('weapon.direct'), 'default weapon tag is applied');
+  assert.equal(definition.data.kind, 'direct');
+  assert.equal(definition.data.damage, 12);
+  assert.equal(definition.data.range, 245);
+  assert.equal(definition.data.weapon_class, 'Light');
+  assert.equal(definition.data.assembly_profile, 'yaw_pitch');
+  assert.equal(definition.data.muzzle_count, 1);
+  assert.deepEqual(definition.data.materials, []);
+  assert.ok(manifestOf(mod).content.includes('content/weapons.json'));
+  assert.equal(localeOf(mod, 'zh_CN')['weapon.test_mod.deck_gun.name'], '甲板速射炮');
+  assert.equal(localeOf(mod, 'en')['weapon.test_mod.deck_gun.name'], 'Deck Rapid Gun');
+
+  const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
+  assert.ok(warningCodes.includes('draft_content'), `draft content must warn: ${JSON.stringify(json.issues.list)}`);
+  assert.ok(warningCodes.includes('capability_undeclared'), `undeclared capability must warn: ${JSON.stringify(json.issues.list)}`);
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate weapons mod');
+  const validateJson = mustJson(validateResult, 'validate weapons mod');
+  assert.equal(validateJson.issues.errors, 0, `weapon content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
 });
 
 test('add blocks new Schema 2.0 errors and writes nothing', (t) => {
@@ -644,6 +755,31 @@ test('set on a draft definition keeps the 2.0 envelope and rewrites one line', (
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate after set draft');
   assert.equal(mustJson(validateResult, 'validate after set draft').issues.errors, 0);
+});
+
+test('set updates weapon data and keeps the 2.0 envelope and one-line diff', (t) => {
+  const mod = createMod(t);
+  const addResult = jsonRun([
+    'add', '--mod', mod, '--type', 'weapons', '--id', 'deck_gun',
+    '--name-zh', '甲板速射炮', '--name-en', 'Deck Rapid Gun',
+  ]);
+  assertStatus(addResult, 0, 'add weapon before set');
+  const file = contentFileOfType(mod, 'weapons');
+  const before = readText(file.abs);
+  const result = jsonRun(['set', '--mod', mod, 'test_mod:weapon/deck_gun', 'data.damage=24']);
+  const json = mustJson(result, 'set weapon');
+  assertStatus(result, 0, 'set weapon');
+  assert.equal(json.ok, true);
+  assert.equal(json.issues.newErrors, 0);
+  const after = readText(file.abs);
+  assert.equal(changedLineIndexes(before, after).length, 1, 'set must touch exactly one line');
+  const payload = JSON.parse(after);
+  assert.equal(payload.schema_version, '2.0');
+  assert.equal(payload.definitions[0].data.damage, 24);
+  assert.equal(payload.definitions[0].data.range, 245, 'untouched weapon fields keep their defaults');
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate after set weapon');
+  assert.equal(mustJson(validateResult, 'validate after set weapon').issues.errors, 0);
 });
 
 test('list --mod dev_mods/core --json lists every core definition and leaves core untouched', (t) => {
@@ -743,6 +879,265 @@ test('new --json creates a valid mod (manifest, content, both locales) that vali
   const validateJson = mustJson(validateResult, 'validate after new');
   assert.equal(validateJson.ok, true);
   assert.equal(validateJson.issues.errors, 0, `new mod must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
+});
+
+test('new --draft weapons creates a pure Schema 2.0 draft project', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'weapon_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'weapon_mod', '--name', '武器包', '--draft', 'weapons',
+  ]);
+  const json = mustJson(result, 'new --draft weapons');
+  assertStatus(result, 0, 'new --draft weapons');
+  assert.equal(json.ok, true);
+  assert.equal(json.command, 'new');
+
+  // Pure draft project: manifest + one 2.0 content file + two locales, no 1.0 starter.
+  const changedPaths = json.changes.map((change) => change.path).sort();
+  assert.deepEqual(changedPaths, [
+    'content/weapons.json',
+    'localization/en.json',
+    'localization/zh_CN.json',
+    'manifest.json',
+  ]);
+  for (const change of json.changes) {
+    assert.equal(change.action, 'create', `new --draft change must be create: ${JSON.stringify(change)}`);
+  }
+  assert.ok(!fs.existsSync(path.join(mod, GOODS_FILE)), 'pure draft projects must not create content/goods.json');
+  assert.deepEqual(manifestOf(mod).content, ['content/weapons.json'], 'only the draft content file is declared');
+  assert.deepEqual(manifestOf(mod).localization, ['localization/zh_CN.json', 'localization/en.json']);
+  assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1'], 'the weapons capability is declared automatically');
+
+  const file = contentFileOfType(mod, 'weapons');
+  assert.equal(file.payload.schema_version, '2.0');
+  assert.equal(file.payload.content_type, 'weapons');
+  assert.equal(file.payload.definitions.length, 1, 'exactly one starter definition is written');
+  const definition = file.payload.definitions[0];
+  assert.equal(definition.id, 'weapon_mod:weapon/weapon_starter');
+  assert.equal(definition.name_key, 'weapon.weapon_mod.weapon_starter.name');
+  assert.equal(definition.enabled, true);
+  assert.equal(definition.data.kind, 'direct', 'the starter uses the weapons draft defaults');
+  assert.equal(definition.data.weapon_class, 'Light');
+  assert.equal(definition.data.damage, 12);
+  assert.ok(localeOf(mod, 'zh_CN')['weapon.weapon_mod.weapon_starter.name'], 'zh_CN has the starter name');
+  assert.equal(localeOf(mod, 'en')['weapon.weapon_mod.weapon_starter.name'], 'Starter Weapons');
+  assert.equal(json.stats.definitions, 1);
+  assert.equal(json.stats.contentFiles, 1);
+  assert.equal(json.stats.locales, 2);
+
+  // Only draft_content warns: the capability is already in the manifest.
+  assert.equal(json.issues.errors, 0, `pure draft project must have no errors: ${JSON.stringify(json.issues.list)}`);
+  assert.deepEqual(
+    json.issues.list.map((issue) => issue.code),
+    ['draft_content'],
+    `only draft_content may warn: ${JSON.stringify(json.issues.list)}`
+  );
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate pure draft project');
+  const validateJson = mustJson(validateResult, 'validate pure draft project');
+  assert.equal(validateJson.issues.errors, 0, `pure draft project validates with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
+  assert.deepEqual(
+    validateJson.issues.list.map((issue) => issue.code),
+    ['draft_content'],
+    `capability_undeclared must not fire for --draft projects: ${JSON.stringify(validateJson.issues.list)}`
+  );
+});
+
+test('new --draft accepts multiple draft types and dedupes capabilities', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'world_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'world_mod', '--name', 'World Mod',
+    '--draft', 'world_profiles', '--draft', 'regions',
+  ]);
+  const json = mustJson(result, 'new --draft world_profiles --draft regions');
+  assertStatus(result, 0, 'new multi draft');
+  assert.equal(json.ok, true);
+  assert.deepEqual(
+    manifestOf(mod).content,
+    ['content/world_profiles.json', 'content/regions.json'],
+    'each --draft gets its own content file'
+  );
+  assert.deepEqual(
+    manifestOf(mod).capabilities,
+    ['content.world.v1'],
+    'types sharing a capability declare it once'
+  );
+  for (const typeKey of ['world_profiles', 'regions']) {
+    const file = contentFileOfType(mod, typeKey);
+    assert.equal(file.payload.schema_version, '2.0', `${typeKey} content file is 2.0`);
+    assert.equal(file.payload.content_type, typeKey);
+    assert.equal(file.payload.definitions.length, 1, `${typeKey} has one starter definition`);
+  }
+  assert.equal(json.stats.contentFiles, 2);
+  assert.equal(json.stats.definitions, 2);
+  assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
+  assert.deepEqual(json.issues.list.map((issue) => issue.code), ['draft_content', 'draft_content']);
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate multi draft project');
+  const validateJson = mustJson(validateResult, 'validate multi draft project');
+  assert.equal(validateJson.issues.errors, 0);
+  assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'capability_undeclared'));
+});
+
+test('new --draft rejects unknown draft types with a usage error listing the available drafts', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'bad_draft_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'bad_draft_mod', '--name', 'Bad Draft', '--draft', 'nope',
+  ]);
+  const json = assertUsageError(result, 'new unknown draft');
+  assert.equal(json.command, 'new');
+  assert.match(String(json.error.message), /未知 Schema 2\.0 草案类型/, `usage error must name the problem: ${json.error.message}`);
+  const manifest = readJson(path.join(repoRoot, 'content_types.json'));
+  for (const entry of manifest.draft_types) {
+    assert.ok(
+      String(json.error.message).includes(entry.key),
+      `usage error must list available draft type ${entry.key}: ${json.error.message}`
+    );
+  }
+  assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
+});
+
+test('new --template goods --draft weapons layers 1.0 and 2.0 content', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'mix_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'mix_mod', '--name', 'Mix Mod',
+    '--template', 'goods', '--draft', 'weapons',
+  ]);
+  const json = mustJson(result, 'new template + draft');
+  assertStatus(result, 0, 'new template + draft');
+  assert.equal(json.ok, true);
+  assert.deepEqual(
+    manifestOf(mod).content,
+    ['content/goods.json', 'content/weapons.json'],
+    'template content and draft content coexist'
+  );
+  assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1']);
+  assert.equal(contentFileOfType(mod, 'goods').payload.schema_version, '1.0', 'template content stays 1.0');
+  assert.equal(contentFileOfType(mod, 'weapons').payload.schema_version, '2.0', 'draft content is 2.0');
+  assert.equal(json.stats.contentFiles, 2);
+  assert.equal(json.stats.definitions, 2);
+  assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
+  assert.deepEqual(json.issues.list.map((issue) => issue.code), ['draft_content']);
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate template + draft project');
+  assert.equal(mustJson(validateResult, 'validate template + draft project').issues.errors, 0);
+});
+
+test('new --draft --dry-run reports would-create changes and writes nothing', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'dry_draft_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'dry_draft_mod', '--name', 'Dry Draft',
+    '--draft', 'weapons', '--dry-run',
+  ]);
+  const json = mustJson(result, 'new --draft --dry-run');
+  assertStatus(result, 0, 'new --draft --dry-run');
+  assert.equal(json.ok, true);
+  assert.ok(Array.isArray(json.changes) && json.changes.length > 0, 'dry-run must report planned changes');
+  for (const change of json.changes) {
+    assert.equal(change.action, 'would-create', `dry-run change action must be would-create: ${JSON.stringify(change)}`);
+  }
+  assert.ok(
+    json.changes.some((change) => change.path === 'content/weapons.json'),
+    `dry-run must plan content/weapons.json: ${JSON.stringify(json.changes.map((change) => change.path))}`
+  );
+  assert.ok(!fs.existsSync(mod), '--dry-run must not create the target directory');
+});
+
+test('new --template weapons creates the five-weapon draft pack', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'weapon_pack');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'weapon_pack', '--name', '武器包', '--template', 'weapons',
+  ]);
+  const json = mustJson(result, 'new --template weapons');
+  assertStatus(result, 0, 'new --template weapons');
+  assert.equal(json.ok, true);
+  assert.equal(json.command, 'new');
+  assert.deepEqual(
+    json.changes.map((change) => change.path).sort(),
+    ['content/weapons.json', 'localization/en.json', 'localization/zh_CN.json', 'manifest.json'],
+    'the weapons template only creates the draft content file plus manifest and locales'
+  );
+  for (const change of json.changes) {
+    assert.equal(change.action, 'create', `weapons template change must be create: ${JSON.stringify(change)}`);
+  }
+  assert.ok(!fs.existsSync(path.join(mod, GOODS_FILE)), 'the weapons template must not create 1.0 goods content');
+
+  const manifest = manifestOf(mod);
+  assert.deepEqual(manifest.content, ['content/weapons.json']);
+  assert.deepEqual(manifest.capabilities, ['content.combat.v1']);
+  assert.deepEqual(manifest.localization, ['localization/zh_CN.json', 'localization/en.json']);
+
+  const file = contentFileOfType(mod, 'weapons');
+  assert.equal(file.payload.schema_version, '2.0');
+  assert.equal(file.payload.content_type, 'weapons');
+  assert.equal(file.payload.definitions.length, 5, 'the template ships the five simulator weapons');
+  const expected = [
+    { localId: 'deck_gun', model: 'model.weapon.deck_gun', kind: 'direct', damage: 12, range: 245, cooldown: 1.65, salvo: 1 },
+    { localId: 'heavy_cannon', model: 'model.weapon.heavy_cannon', kind: 'direct', damage: 30, range: 355, cooldown: 4.2, salvo: 1 },
+    { localId: 'mortar', model: 'model.weapon.mortar', kind: 'artillery', damage: 24, range: 430, cooldown: 5.1, salvo: 1 },
+    { localId: 'repeater', model: 'model.weapon.repeater', kind: 'direct', damage: 7, range: 185, cooldown: 0.72, salvo: 1 },
+    { localId: 'broadside', model: 'model.weapon.broadside', kind: 'broadside', damage: 8, range: 285, cooldown: 5.4, salvo: 4 },
+  ];
+  assert.deepEqual(
+    file.payload.definitions.map((definition) => definition.id),
+    expected.map((weapon) => `weapon_pack:weapon/${weapon.localId}`),
+    'definitions keep the battle simulator order'
+  );
+  for (let index = 0; index < expected.length; index += 1) {
+    const weapon = expected[index];
+    const definition = file.payload.definitions[index];
+    assert.equal(definition.name_key, `weapon.weapon_pack.${weapon.localId}.name`);
+    assert.equal(definition.description_key, `weapon.weapon_pack.${weapon.localId}.description`);
+    assert.deepEqual(definition.information, { model: `asset://core/${weapon.model}` }, `${weapon.localId} uses the Core model key`);
+    for (const field of ['kind', 'damage', 'range', 'cooldown', 'salvo']) {
+      assert.equal(definition.data[field], weapon[field], `${weapon.localId}.data.${field}`);
+    }
+  }
+
+  for (const locale of ['zh_CN', 'en']) {
+    const entries = localeOf(mod, locale);
+    for (const weapon of expected) {
+      assert.ok(entries[`weapon.weapon_pack.${weapon.localId}.name`], `${locale} name for ${weapon.localId}`);
+      assert.ok(entries[`weapon.weapon_pack.${weapon.localId}.description`], `${locale} description for ${weapon.localId}`);
+    }
+  }
+  assert.equal(json.stats.definitions, 5);
+  assert.equal(json.stats.contentFiles, 1);
+  assert.equal(json.stats.locales, 2);
+  assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
+  assert.deepEqual(json.issues.list.map((issue) => issue.code), ['draft_content']);
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate weapons template project');
+  const validateJson = mustJson(validateResult, 'validate weapons template project');
+  assert.equal(validateJson.issues.errors, 0, JSON.stringify(validateJson.issues.list));
+  assert.deepEqual(validateJson.issues.list.map((issue) => issue.code), ['draft_content']);
+  assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'capability_undeclared'));
+  assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'entity_model_missing'));
+});
+
+test('new --template nope rejects unknown templates and lists weapons among the options', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'bad_template_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'bad_template_mod', '--name', 'Bad Template', '--template', 'nope',
+  ]);
+  const json = assertUsageError(result, 'new unknown template');
+  assert.equal(json.command, 'new');
+  assert.match(String(json.error.message), /未知模板/, `usage error must name the problem: ${json.error.message}`);
+  assert.ok(
+    String(json.error.message).includes('weapons'),
+    `available templates must include weapons: ${json.error.message}`
+  );
+  assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
 });
 
 test('new refuses a non-empty target directory without --force and writes nothing', (t) => {

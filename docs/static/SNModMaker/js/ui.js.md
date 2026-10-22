@@ -57,12 +57,25 @@
 | `effectField(field, value, path)` | L627 |
 | `renderObjectFields(objectSchema, objectFile, value, basePath, ctx, options)` | L641 |
 | `renderField(field, schema, value, path, ctx, options, schemaFile)` | L659 |
-| `previewLocalizationKey(key, draft)` | L769 |
-| `renderKeyBlock(project, definition, field, typeKey, key, draft, token)` | L777 |
-| `renderAdditionalLocalization(project, definition, typeKey, draft)` | L810 |
-| `renderHullModuleConfiguration(definition)` | L825 |
-| `renderDefinitionForm(options)` | L855 |
-| `SNUI (global)` | L940 |
+| `previewLocalizationKey(key, draft)` | L772 |
+| `renderKeyBlock(project, definition, field, typeKey, key, draft, token)` | L780 |
+| `renderAdditionalLocalization(project, definition, typeKey, draft)` | L813 |
+| `renderHullModuleConfiguration(definition)` | L828 |
+| `SOCKET_CLASSES` | L862 |
+| `SOCKET_KINDS` | L863 |
+| `SOCKET_CLASS_COLORS` | L864 |
+| `SOCKET_ROW_STYLE` | L871 |
+| `socketBadge(value)` | L873 |
+| `socketValueCounts(items, key)` | L879 |
+| `socketRowHead(path, index, title, badge)` | L889 |
+| `socketPositionField(path, value)` | L900 |
+| `socketDuplicateNote(duplicate, text)` | L916 |
+| `renderWeaponSocketRow(item, index, nameCounts, indexCounts)` | L920 |
+| `renderRigSocketRow(item, index, nameCounts, indexCounts)` | L972 |
+| `socketEnumOptions(values, field)` | L1032 |
+| `renderHullSocketConfiguration(definition)` | L1037 |
+| `renderDefinitionForm(options)` | L1076 |
+| `SNUI (global)` | L1162 |
 
 ## 契约与约束
 
@@ -72,6 +85,7 @@
 - 标准实体表单额外呈现所有语言的名称/描述暂存输入，以及 information.texture/model 资源键配置。
 - 贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。
 - 船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。
+- 船体安装点子面板：`weapon_sockets` / `rig_sockets` 表格行可增删，按 `socket_class` / `socket_kind` 着色徽标，重复 name / 索引就地提示；武器草案复用通用 Schema 渲染并显示中文枚举标签。
 - 所有用户文本与属性值经过 `esc/attr` 转义；引用候选来自当前项目 + Core 索引。
 - 表单生成的路径是相对定义的属性路径（manifest 除外），与 app.setByPath 的约定一致。
 

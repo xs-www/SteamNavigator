@@ -2383,6 +2383,36 @@
     render({ preserveScroll: true });
   }
 
+  /** 新安装点行的默认值：序号接在现有最大序号之后，节点名避免与已有行重复。 */
+  function nextSocketItem(existing, kind) {
+    const items = Array.isArray(existing) ? existing : [];
+    const nextIndex = items.reduce((max, item) => {
+      const value = Number(item && item.socket_index);
+      return Number.isFinite(value) ? Math.max(max, value) : max;
+    }, -1) + 1;
+    const names = new Set(items.map((item) => item && item.name).filter(Boolean));
+    const prefix = kind === 'weapon' ? 'SN_Socket_Weapon_New' : 'SN_Socket_Mast_New';
+    let suffix = nextIndex + 1;
+    while (names.has(`${prefix}_${suffix}`)) suffix += 1;
+    const item = {
+      name: `${prefix}_${suffix}`,
+      socket_index: nextIndex,
+      position: [0, 0, 0],
+    };
+    if (kind === 'weapon') {
+      item.socket_class = 'Light';
+      item.clearance_r = 1;
+      item.clearance_x = 1;
+      item.clearance_y = 1;
+      item.clearance_h = 20;
+      item.mount_scale = 1;
+    } else {
+      item.socket_kind = 'mast';
+      item.mast_id = 'fore';
+    }
+    return item;
+  }
+
   function defaultArrayItem(path, definition) {
     const tail = path.split('.').filter((segment) => !/^\d+$/.test(segment)).pop();
     if (tail === 'modifiers') return { stat: 'speed', op: 'mul', value: 1.02 };
@@ -2391,6 +2421,8 @@
     if (tail === 'effects') return { op: 'add_money', amount: 50 };
     if (tail === 'operations') return { op: 'replace', path: '/data/purchase_price', value: 100 };
     if (tail === 'market') return { good: 'core:good/brass', stock_range: [40, 80], price_bias: 1 };
+    if (tail === 'weapon_sockets') return nextSocketItem(getByPath(definition, path), 'weapon');
+    if (tail === 'rig_sockets') return nextSocketItem(getByPath(definition, path), 'rig');
     if (tail === 'options') {
       const info = selectedTypeInfo();
       const local = Store.localPart(definition.id);

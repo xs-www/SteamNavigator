@@ -394,6 +394,12 @@
             },
             "count_range": {
               "$ref": "#/$defs/range2"
+            },
+            "provider": {
+              "enum": [
+                "player",
+                "fuel"
+              ]
             }
           }
         },
@@ -906,6 +912,156 @@
         }
       },
       "$defs": {
+        "weapon_socket": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "socket_class",
+            "socket_index"
+          ],
+          "properties": {
+            "name": {
+              "description": "GLB 节点名（标准名，例如 SN_Socket_Weapon_Port_1）。",
+              "type": "string",
+              "pattern": "^SN_Socket_Weapon"
+            },
+            "socket_class": {
+              "description": "可安装武器的 weapon_class；装配时是硬门禁。",
+              "enum": [
+                "Light",
+                "Medium",
+                "Heavy",
+                "Tower",
+                "Side"
+              ]
+            },
+            "socket_index": {
+              "description": "安装点序号，用于稳定排序与 UI 编号。",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "position": {
+              "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "clearance_r": {
+              "description": "16 向水平射线最小自由距离（米）。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "clearance_x": {
+              "description": "socket 局部 ±X 较小自由距离（米）；侧舷点 +X 为舷外（炮口方向）。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "clearance_y": {
+              "description": "socket 局部 ±Y 较小自由距离（米）；侧舷点沿船体纵轴（炮列方向）。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "clearance_h": {
+              "description": "安装面向上首个遮挡高度（米）；露天按 20 m 封顶。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "mount_scale": {
+              "description": "装配时武器本体的统一缩放。",
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10
+            },
+            "note": {
+              "description": "人类可读备注；装配忽略。",
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        },
+        "rig_socket": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "socket_kind",
+            "socket_index"
+          ],
+          "properties": {
+            "name": {
+              "description": "GLB 节点名（标准名，例如 SN_Socket_Mast_Fore）。",
+              "type": "string",
+              "pattern": "^SN_Socket_"
+            },
+            "socket_kind": {
+              "enum": [
+                "mast",
+                "yard",
+                "sail"
+              ]
+            },
+            "mast_id": {
+              "description": "所属桅杆标识（fore / main / mizzen 等）。",
+              "type": "string",
+              "maxLength": 32
+            },
+            "socket_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "position": {
+              "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "rig_height": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_deck_z": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_yard_z": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_yard_length": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_stowed": {
+              "type": "boolean"
+            },
+            "rig_sail_area_m2": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2000
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        },
         "hull_data": {
           "allOf": [
             {
@@ -955,6 +1111,20 @@
                     "medium",
                     "large"
                   ]
+                },
+                "weapon_sockets": {
+                  "description": "内容侧的船体武器安装点镜像（与 GLB 里 SN_Socket_Weapon_* 节点 extras 同口径）。运行时装配仍读 GLB extras；这里供编辑器查看、编辑与校验，并作为后续数据驱动装配的前向声明。",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/weapon_socket"
+                  }
+                },
+                "rig_sockets": {
+                  "description": "内容侧的船体帆索安装点镜像（与 GLB 里 SN_Socket_Mast/Yard/Sail_* 节点 extras 同口径，见 RIG_KIT_CONTRACT.md）。运行时装配仍读 GLB extras。",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/rig_socket"
+                  }
                 }
               }
             }
@@ -1270,7 +1440,491 @@
             },
             "default_starting_build": {
               "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "twin_world_size": {
+              "type": "number",
+              "minimum": 64,
+              "maximum": 1024
+            },
+            "exploration": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rumor_clue_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "fog_port_reveal_ratio": {
+                  "type": "number",
+                  "minimum": 0.01,
+                  "maximum": 0.5
+                },
+                "fog_vision_ratio": {
+                  "type": "number",
+                  "minimum": 0.01,
+                  "maximum": 0.5
+                },
+                "intel_clue_cost": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max_active_clues": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "level_weights": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "$ref": "#/$defs/level_weight_vector"
+                    },
+                    "intel": {
+                      "$ref": "#/$defs/level_weight_vector"
+                    }
+                  }
+                },
+                "credibility_range": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    },
+                    "intel": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    },
+                    "wait": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    },
+                    "contract": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    }
+                  }
+                },
+                "distance_error_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "search_zone_radius": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "search_zone_noise": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "discovery_chance_base": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "discovery_chance_per_credibility": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "risk_base": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "risk_per_unreliability": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "drift_durability_loss": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "drift_extra_coal": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "drift_extra_water": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "drift_hours": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "alert_threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "alert_progress": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "turnback_extra_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "investigation_cost": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "investigation_hours": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "investigation_success_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "goods_clue_expiry_hours": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel",
+                    "wait",
+                    "contract"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "intel": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "wait": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "contract": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "goods_clue_price_error_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "goods_clue_source_weights": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel",
+                    "wait",
+                    "contract"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "intel": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "wait": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "contract": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                },
+                "wait_clue_hours_block": {
+                  "type": "number",
+                  "minimum": 1
+                },
+                "wait_clue_chance_per_block": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "wait_clue_max_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "contract_clue_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "story": {
+              "$ref": "#/$defs/story_flow"
             }
+          }
+        },
+        "level_weight_vector": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "story_flow": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "flow_id",
+            "stages"
+          ],
+          "properties": {
+            "flow_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "skip_unlocks": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "start_unlocks": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "start_items": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "start_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "stages": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/story_stage"
+              }
+            }
+          }
+        },
+        "story_stage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "advance"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dialogue": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "title_key",
+                "body_keys"
+              ],
+              "properties": {
+                "title_key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "body_keys": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "unlock_features": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "unlock_items": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "unlock_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "objective": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text_key",
+                "target"
+              ],
+              "properties": {
+                "text_key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "target": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "advance": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "confirm"
+                  ]
+                },
+                "event": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counter": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counter_from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "at_least": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "flag": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "not_flag": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "all": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/story_condition"
+                  }
+                },
+                "match": {
+                  "$ref": "#/$defs/story_match"
+                }
+              }
+            },
+            "lock_actions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "preferred_strategy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "story_condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "event": {
+              "type": "string",
+              "minLength": 1
+            },
+            "counter": {
+              "type": "string",
+              "minLength": 1
+            },
+            "counter_from": {
+              "type": "string",
+              "minLength": 1
+            },
+            "at_least": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "flag": {
+              "type": "string",
+              "minLength": 1
+            },
+            "not_flag": {
+              "type": "string",
+              "minLength": 1
+            },
+            "match": {
+              "$ref": "#/$defs/story_match"
+            }
+          }
+        },
+        "story_match": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
           }
         }
       }
@@ -1585,6 +2239,7 @@
                   "contracts",
                   "supply",
                   "shipyard",
+                  "tavern",
                   "intel"
                 ]
               }
@@ -2732,6 +3387,253 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 160
+            }
+          }
+        }
+      }
+    },
+    "v2/weapon.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/weapon-2.json",
+      "title": "Steam Navigator weapon content file (Schema 2.0 draft)",
+      "description": "Ship-mounted weapon definitions (Content Schema 2.0 draft). The combat block mirrors the S-N Battle Simulator weapon catalogue, the assembly block mirrors docs/design/WEAPON_SOCKET_CONTRACT.md (weapon-assembly@2), and the economy block follows the runtime module shape so a future runtime can consume the same definitions. The Godot runtime does not load Schema 2.0 content yet.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "weapons"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/weapon_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "craft_material": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "amount"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "amount": {
+              "type": "number",
+              "minimum": 0.1
+            }
+          }
+        },
+        "weapon_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "damage",
+            "range",
+            "min_range",
+            "cooldown",
+            "accuracy",
+            "projectile_speed",
+            "splash",
+            "arc_deg",
+            "salvo",
+            "weapon_class",
+            "assembly_profile",
+            "tier",
+            "weight",
+            "purchase_price"
+          ],
+          "properties": {
+            "kind": {
+              "description": "开火行为：direct 直射 / artillery 曲射 / broadside 舷侧齐射（与战斗模拟器 weapon.kind 一致）。",
+              "enum": [
+                "direct",
+                "artillery",
+                "broadside"
+              ]
+            },
+            "damage": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 120
+            },
+            "range": {
+              "description": "最大射程（模拟器单位，米）。",
+              "type": "number",
+              "minimum": 60,
+              "maximum": 700
+            },
+            "min_range": {
+              "description": "最小射程；必须小于 range。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 400
+            },
+            "cooldown": {
+              "description": "两轮齐射间隔（秒）。",
+              "type": "number",
+              "minimum": 0.25,
+              "maximum": 20
+            },
+            "accuracy": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 0.98
+            },
+            "projectile_speed": {
+              "type": "number",
+              "minimum": 60,
+              "maximum": 900
+            },
+            "splash": {
+              "description": "溅射半径（米），0 表示单体命中。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "arc_deg": {
+              "description": "射界/炮口可覆盖角度（度）。",
+              "type": "number",
+              "minimum": 30,
+              "maximum": 360
+            },
+            "salvo": {
+              "description": "单次开火的弹药数（多联装）。",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "color": {
+              "description": "弹道/炮口特效基色（#RRGGBB）。",
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "weapon_class": {
+              "description": "与船体 SN_Socket_Weapon_* 的 socket_class 做硬门禁；Modular 是 kit 部件，不是完整武器。",
+              "enum": [
+                "Light",
+                "Medium",
+                "Heavy",
+                "Tower",
+                "Side",
+                "Modular"
+              ]
+            },
+            "mount_class": {
+              "description": "可选：安装帧类别，缺省与 weapon_class 相同。",
+              "enum": [
+                "Light",
+                "Medium",
+                "Heavy",
+                "Tower",
+                "Side"
+              ]
+            },
+            "assembly_profile": {
+              "description": "机构层组合：yaw_pitch / yaw_pitch_multi / pitch_only / fixed / base_only / yaw_only（WEAPON_SOCKET_CONTRACT §4）。",
+              "enum": [
+                "yaw_pitch",
+                "yaw_pitch_multi",
+                "pitch_only",
+                "fixed",
+                "base_only",
+                "yaw_only"
+              ]
+            },
+            "has_yaw": {
+              "type": "boolean"
+            },
+            "has_pitch": {
+              "type": "boolean"
+            },
+            "has_recoil": {
+              "type": "boolean"
+            },
+            "has_muzzle": {
+              "type": "boolean"
+            },
+            "muzzle_count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "envelope_x": {
+              "description": "GLB Root extras envelope_x（米），含炮管的整机长度。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "envelope_y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "height": {
+              "description": "GLB Root extras height（米），甲板面以上总高。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "mount_scale": {
+              "description": "装配时的统一缩放（socket extras mount_scale 的同名口径）。",
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10
+            },
+            "tier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "weight": {
+              "description": "重量（对应模拟器 weapon.mass），影响船体载重。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "purchase_price": {
+              "type": "number",
+              "minimum": 0
+            },
+            "craft_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "craft_time_hours": {
+              "type": "number",
+              "minimum": 0
+            },
+            "materials": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/craft_material"
+              }
             }
           }
         }

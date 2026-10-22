@@ -209,6 +209,49 @@
     starting_contract: '起始委托',
     notes_key: '备注键',
     item: '物品',
+    /* weapons (Content Schema 2.0 draft): combat / assembly / economy fields. */
+    damage: '伤害',
+    range: '射程',
+    min_range: '最小射程',
+    cooldown: '射击间隔（秒）',
+    accuracy: '命中率',
+    projectile_speed: '弹速',
+    splash: '溅射半径',
+    arc_deg: '射界角度',
+    salvo: '齐射弹药数',
+    color: '弹道颜色',
+    weapon_class: '武器等级',
+    mount_class: '安装帧类别',
+    assembly_profile: '机构组合',
+    has_yaw: '可水平旋转',
+    has_pitch: '可俯仰',
+    has_recoil: '带后坐',
+    has_muzzle: '带炮口',
+    muzzle_count: '炮口数量',
+    envelope_x: '整机长度 X',
+    envelope_y: '整机宽度 Y',
+    height: '整机高度',
+    mount_scale: '装配缩放',
+    /* hull socket mirror (hull_data.weapon_sockets / rig_sockets). */
+    weapon_sockets: '武器安装点',
+    rig_sockets: '帆索安装点',
+    name: '名称',
+    socket_class: '安装点等级',
+    socket_kind: '安装点类型',
+    mast_id: '所属桅杆',
+    socket_index: '安装点序号',
+    position: '局部坐标 [x, y, z]',
+    clearance_r: '水平净空半径',
+    clearance_x: 'X 向净空',
+    clearance_y: 'Y 向净空',
+    clearance_h: '上方净空高度',
+    note: '备注',
+    rig_height: '帆索高度',
+    rig_deck_z: '甲板高度 Z',
+    rig_yard_z: '横桁高度 Z',
+    rig_yard_length: '横桁长度',
+    rig_stowed: '帆已收起',
+    rig_sail_area_m2: '帆面积（㎡）',
   };
 
   const TYPE_FIELD_LABELS = {
@@ -230,6 +273,20 @@
     'sites.weight': '抽取权重',
     'discoveries.weight': '抽取权重',
     'route_templates.distance_range': '距离区间',
+    /* 武器草案：同一字段在武器语境下用更具体的叫法。 */
+    'weapons.kind': '开火方式',
+    'weapons.color': '弹道颜色',
+    'weapons.tier': '武器等级',
+    'weapons.weight': '武器重量',
+    'weapons.mount_class': '安装帧类别',
+    'weapons.assembly_profile': '机构组合',
+    'weapons.weapon_class': '武器等级',
+    'weapons.height': '整机高度',
+    /* 船体安装点镜像。 */
+    'hulls.name': '安装点名称',
+    'hulls.socket_class': '安装点等级',
+    'hulls.socket_kind': '安装点类型',
+    'hulls.note': '安装点备注',
   };
 
   const FIELD_HINTS = {
@@ -241,8 +298,9 @@
     tier: '1–3 级。',
     weight: '安装后计入船只总重。',
     purchase_price: '船厂直接购买价格。',
-    craft_time_hours: '预留字段：模块打造耗时。',
-    craft_cost: '预留字段：模块打造人工费。',
+    craft_time_hours: '打造订单耗时（小时）。',
+    craft_cost: '打造订单的人工费用（金币）。',
+    materials: '打造材料；tier1 配方通常留空（仅金币）。',
     speed_mul: '与原航速相乘，1.0 为不变。',
     coal_rate: '每航程的基础煤耗系数。',
     water_rate: '每航程的基础水耗系数。',
@@ -273,11 +331,60 @@
     starting_build: '引用一个 starting_build 定义（完整 ID）。',
     starting_port_tags: '起始港口必须带有的标签，至少 1 个。',
     world_profile: '引用一个 world_profile 草案定义（完整 ID）。',
+    /* 武器草案（数值口径对齐 SNBattleSim 的 weapon 目录）。 */
+    damage: '单发伤害，1–120。',
+    range: '最大射程（模拟器单位，米），60–700。',
+    min_range: '最小射程；必须小于射程，0 表示无最小射程限制。',
+    cooldown: '两轮齐射的间隔（秒），0.25–20。',
+    accuracy: '命中率，0.05–0.98。',
+    projectile_speed: '弹丸速度（米/秒），60–900。',
+    splash: '溅射半径（米）；0 表示单体命中。',
+    arc_deg: '射界（度）；固定炮位可小于 360。',
+    salvo: '单次开火的弹药数，1–8；多联装通常大于 1。',
+    color: '#RRGGBB 弹道/炮口特效基色。',
+    weapon_class: '决定能装到哪类船体安装点（socket_class）；Modular 只是 kit 部件，不能直接挂载。',
+    mount_class: '可选：安装帧类别，缺省与武器等级相同。',
+    assembly_profile: '机构层组合；必须与可水平旋转 / 可俯仰 / 炮口声明一致。',
+    has_yaw: '是否有水平旋转枢轴。',
+    has_pitch: '是否有俯仰枢轴。',
+    has_recoil: '是否有后坐动画。',
+    has_muzzle: '是否有炮口特效点；muzzle_count > 1 时必须为真。',
+    muzzle_count: '炮口数量，1–8；多联装共用同一安装点。',
+    envelope_x: '含炮管的整机长度（米），写入 GLB Root extras。',
+    envelope_y: '整机宽度（米），写入 GLB Root extras。',
+    height: '甲板面以上总高（米），写入 GLB Root extras。',
+    mount_scale: '装配时武器本体 / 安装点的统一缩放，与 GLB extras 同口径。',
+    /* 船体安装点镜像（内容侧，不改 GLB）。 */
+    weapon_sockets: '与 GLB 里 SN_Socket_Weapon_* 节点 extras 同口径的镜像；运行时装配仍读 GLB。',
+    rig_sockets: '与 GLB 里 SN_Socket_Mast/Yard/Sail_* 节点 extras 同口径的镜像；运行时装配仍读 GLB。',
+    name: '标准 GLB 节点名；武器安装点必须以 SN_Socket_Weapon 开头。',
+    socket_class: '该安装点可安装的 weapon_class：Light / Medium / Heavy / Tower / Side，装配时是硬门禁。',
+    socket_kind: '帆索安装点类型：mast（桅杆）/ yard（横桁）/ sail（帆面）。',
+    mast_id: '所属桅杆标识（fore / main / mizzen 等）；缺省只是建议不报错。',
+    socket_index: '安装点序号，用于稳定排序与 UI 编号；同一船体内必须唯一。',
+    position: '船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。',
+    clearance_r: '16 向水平射线最小自由距离（米）。',
+    clearance_x: 'socket 局部 ±X 较小自由距离（米）；侧舷点 +X 为舷外。',
+    clearance_y: 'socket 局部 ±Y 较小自由距离（米）；侧舷点沿船体纵轴。',
+    clearance_h: '安装面向上首个遮挡高度（米）；露天按 20 m 封顶。',
+    note: '人类可读备注；装配忽略。',
+    rig_height: '帆索部件相对甲板的高度（米）。',
+    rig_deck_z: '安装点所在甲板实测高度 Z（米）。',
+    rig_yard_z: '横桁中心高度 Z（米）。',
+    rig_yard_length: '横桁长度（米），装配时按此缩放横桁。',
+    rig_stowed: '帆是否默认收起。',
+    rig_sail_area_m2: '帆面积（㎡），用于航行性能换算。',
   };
 
   const REF_LABELS = {
     'id_ref': '定义引用',
     'craft_material': '材料引用',
+  };
+
+  /* Type-scoped hints win over the shared FIELD_HINTS; used when a field means
+   * something more specific inside one content type (weapons.kind vs roles.kind). */
+  const TYPE_FIELD_HINTS = {
+    'weapons.kind': '开火行为：direct 直射 / artillery 曲射 / broadside 舷侧齐射，影响弹道与命中判定。',
   };
 
   const DEFAULTS = {
@@ -519,6 +626,38 @@
       starting_reputation: 0,
       starting_cargo: [],
     }),
+    /* 舰载武器（Schema 2.0 草案）。数值取 SNBattleSim 的「甲板速射炮」deck_gun：
+     * direct / 12 伤害 / 245 m / 1.65 s / 0.72 命中 / 360 弹速 / yaw_pitch 轻型炮。 */
+    weapons: () => ({
+      kind: 'direct',
+      damage: 12,
+      range: 245,
+      min_range: 0,
+      cooldown: 1.65,
+      accuracy: 0.72,
+      projectile_speed: 360,
+      splash: 0,
+      arc_deg: 260,
+      salvo: 1,
+      color: '#ffd37a',
+      weapon_class: 'Light',
+      assembly_profile: 'yaw_pitch',
+      has_yaw: true,
+      has_pitch: true,
+      has_recoil: true,
+      has_muzzle: true,
+      muzzle_count: 1,
+      envelope_x: 2.815,
+      envelope_y: 1.41,
+      height: 1.613,
+      mount_scale: 1.0,
+      tier: 1,
+      weight: 9,
+      purchase_price: 380,
+      craft_cost: 170,
+      craft_time_hours: 4,
+      materials: [],
+    }),
     patches: () => null,
   };
 
@@ -545,6 +684,7 @@
     factions: ['faction.guild', 'faction.naval', 'faction.pirates'],
     discoveries: ['discovery.relic', 'discovery.blueprint', 'discovery.lore'],
     start_profiles: ['start.standard', 'start.hard'],
+    weapons: ['weapon.direct', 'weapon.light', 'weapon.mounted', 'weapon.craftable'],
   };
 
   const CONDITION_OPS = [
@@ -619,6 +759,115 @@
     { key: 'intel', label: '情报站' },
   ];
 
+  /* 战斗模拟器五件内置武器 → 编辑器的「武器包」起始数据。
+   * 战斗数值对齐 SNBattleSim/js/catalog.mjs 的 BUILTIN_WEAPONS；装配字段对齐各 GLB Root
+   * extras（weapon-assembly@2）；经济字段为本项目补齐（模拟器无经济概念）。
+   * 这些只是编辑器模板数据，不会同步进 Core；模型引用 Core 的 model.weapon.* 资源键。 */
+  const WEAPON_PRESETS = [
+    {
+      localId: 'deck_gun',
+      nameZh: '甲板速射炮',
+      nameEn: 'Deck Rapid Gun',
+      descriptionZh: '轻型甲板速射炮：射速快、射程适中，是最通用的舰载火炮。',
+      descriptionEn: 'A light deck gun with a fast reload and mid-range reach; the workhorse of any hull.',
+      tags: ['weapon.direct', 'weapon.light'],
+      model: 'model.weapon.deck_gun',
+      data: {
+        kind: 'direct', damage: 12, range: 245, min_range: 0, cooldown: 1.65, accuracy: 0.72,
+        projectile_speed: 360, splash: 0, arc_deg: 260, salvo: 1, color: '#ffd37a',
+        weapon_class: 'Light', assembly_profile: 'yaw_pitch',
+        has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
+        envelope_x: 2.8, envelope_y: 1.4, height: 1.6, mount_scale: 1.0,
+        tier: 1, weight: 9, purchase_price: 380, craft_cost: 170, craft_time_hours: 4, materials: [],
+      },
+    },
+    {
+      localId: 'heavy_cannon',
+      nameZh: '重型舰炮',
+      nameEn: 'Heavy Naval Cannon',
+      descriptionZh: '重型舰炮：单发伤害高、射程远，但装填慢、需要重级安装点。',
+      descriptionEn: 'A heavy cannon: high damage and long reach, but slow to reload and needs a Heavy socket.',
+      tags: ['weapon.direct', 'weapon.heavy'],
+      model: 'model.weapon.heavy_cannon',
+      data: {
+        kind: 'direct', damage: 30, range: 355, min_range: 35, cooldown: 4.2, accuracy: 0.61,
+        projectile_speed: 285, splash: 8, arc_deg: 150, salvo: 1, color: '#ff9a63',
+        weapon_class: 'Heavy', assembly_profile: 'yaw_pitch',
+        has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
+        envelope_x: 4.8, envelope_y: 2.2, height: 2.2, mount_scale: 1.0,
+        tier: 3, weight: 20, purchase_price: 1200, craft_cost: 520, craft_time_hours: 10,
+        materials: [
+          { id: 'core:good/timber', amount: 6 },
+          { id: 'core:material/boiler_plate', amount: 3 },
+          { id: 'core:material/precision_gear', amount: 1 },
+        ],
+      },
+    },
+    {
+      localId: 'mortar',
+      nameZh: '曲射迫击炮',
+      nameEn: 'Curved Mortar',
+      descriptionZh: '曲射迫击炮：高抛弹道、射程最远且带大范围溅射，近距离无法开火。',
+      descriptionEn: 'A curved-fire mortar: longest reach with heavy splash, but it cannot fire at close range.',
+      tags: ['weapon.artillery', 'weapon.heavy'],
+      model: 'model.weapon.mortar',
+      data: {
+        kind: 'artillery', damage: 24, range: 430, min_range: 105, cooldown: 5.1, accuracy: 0.58,
+        projectile_speed: 175, splash: 34, arc_deg: 360, salvo: 1, color: '#f3c8ff',
+        weapon_class: 'Heavy', assembly_profile: 'yaw_pitch',
+        has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
+        envelope_x: 3.2, envelope_y: 2.2, height: 2.6, mount_scale: 1.0,
+        tier: 3, weight: 16, purchase_price: 1100, craft_cost: 470, craft_time_hours: 9,
+        materials: [
+          { id: 'core:good/timber', amount: 5 },
+          { id: 'core:material/boiler_plate', amount: 3 },
+        ],
+      },
+    },
+    {
+      localId: 'repeater',
+      nameZh: '机关连发炮',
+      nameEn: 'Steam Repeater',
+      descriptionZh: '机关连发炮：射速极快、射程短，适合压制近距离目标。',
+      descriptionEn: 'A steam repeater: extremely fast fire rate but short reach, built for close-range pressure.',
+      tags: ['weapon.direct', 'weapon.medium'],
+      model: 'model.weapon.repeater',
+      data: {
+        kind: 'direct', damage: 7, range: 185, min_range: 0, cooldown: 0.72, accuracy: 0.76,
+        projectile_speed: 430, splash: 0, arc_deg: 300, salvo: 1, color: '#fff0a4',
+        weapon_class: 'Medium', assembly_profile: 'yaw_pitch',
+        has_yaw: true, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 1,
+        envelope_x: 2.8, envelope_y: 1.6, height: 1.8, mount_scale: 1.0,
+        tier: 2, weight: 11, purchase_price: 620, craft_cost: 260, craft_time_hours: 6,
+        materials: [
+          { id: 'core:good/timber', amount: 2 },
+          { id: 'core:material/boiler_plate', amount: 1 },
+        ],
+      },
+    },
+    {
+      localId: 'broadside',
+      nameZh: '侧弦炮列',
+      nameEn: 'Broadside Battery',
+      descriptionZh: '侧弦炮列：四门短舰炮共用一个舷侧安装点，齐射后装填较慢。',
+      descriptionEn: 'A broadside battery: four short guns on one Side socket, slow to reload after a salvo.',
+      tags: ['weapon.broadside', 'weapon.side'],
+      model: 'model.weapon.broadside',
+      data: {
+        kind: 'broadside', damage: 8, range: 285, min_range: 20, cooldown: 5.4, accuracy: 0.64,
+        projectile_speed: 330, splash: 0, arc_deg: 76, salvo: 4, color: '#ffcf87',
+        weapon_class: 'Side', assembly_profile: 'pitch_only',
+        has_yaw: false, has_pitch: true, has_recoil: true, has_muzzle: true, muzzle_count: 4,
+        envelope_x: 2.2, envelope_y: 8.0, height: 2.0, mount_scale: 1.0,
+        tier: 2, weight: 22, purchase_price: 820, craft_cost: 340, craft_time_hours: 7,
+        materials: [
+          { id: 'core:good/timber', amount: 4 },
+          { id: 'core:material/boiler_plate', amount: 2 },
+        ],
+      },
+    },
+  ];
+
   const TEMPLATES = [
     {
       key: 'goods',
@@ -642,6 +891,13 @@
       deps: true,
     },
     {
+      key: 'weapons',
+      name: '舰载武器包',
+      description: '战斗模拟器的 5 件内置武器（速射炮 / 重炮 / 迫击炮 / 连发炮 / 侧弦炮列），带 Core 模型与装配数据。',
+      type: 'weapons',
+      deps: true,
+    },
+    {
       key: 'starter_kit',
       name: '小型内容合集',
       description: '商品 + 锅炉 + 事件 + 委托，一次看到四种编辑器的配合。',
@@ -657,6 +913,59 @@
     },
   ];
 
+  /* Readable option labels for enum fields whose raw values are identifiers.
+   * Keyed "<typeKey>.<field>"; unlisted enum values fall back to the raw value. */
+  const FIELD_ENUM_LABELS = {
+    'weapons.kind': {
+      direct: '直射 direct',
+      artillery: '曲射 artillery',
+      broadside: '舷侧齐射 broadside',
+    },
+    'weapons.weapon_class': {
+      Light: '轻型 Light',
+      Medium: '中型 Medium',
+      Heavy: '重型 Heavy',
+      Tower: '塔式 Tower',
+      Side: '舷侧 Side',
+      Modular: '模块化 Modular（kit 部件）',
+    },
+    'weapons.mount_class': {
+      Light: '轻型 Light',
+      Medium: '中型 Medium',
+      Heavy: '重型 Heavy',
+      Tower: '塔式 Tower',
+      Side: '舷侧 Side',
+    },
+    'weapons.assembly_profile': {
+      yaw_pitch: '偏航 + 俯仰 yaw_pitch',
+      yaw_pitch_multi: '多联偏航 + 俯仰 yaw_pitch_multi',
+      pitch_only: '仅俯仰 pitch_only',
+      fixed: '固定 fixed',
+      base_only: '仅基座 base_only',
+      yaw_only: '仅偏航 yaw_only',
+    },
+    'hulls.socket_class': {
+      Light: '轻型 Light',
+      Medium: '中型 Medium',
+      Heavy: '重型 Heavy',
+      Tower: '塔式 Tower',
+      Side: '舷侧 Side',
+    },
+    'hulls.socket_kind': {
+      mast: '桅杆 mast',
+      yard: '横桁 yard',
+      sail: '帆面 sail',
+    },
+  };
+
+  /** [{ key, label }] options for an enum field, with readable labels when known. */
+  function enumOptions(typeKey, field, values) {
+    const list = Array.isArray(values) ? values : [];
+    const labels = FIELD_ENUM_LABELS[`${typeKey}.${field}`];
+    if (!labels) return list;
+    return list.map((item) => ({ key: item, label: labels[item] || String(item) }));
+  }
+
   const KEY_PREFIX = Object.fromEntries(ALL_TYPES.map((t) => [t.key, t.keyPrefix]));
 
   root.SNCatalog = {
@@ -669,6 +978,8 @@
     FIELD_LABELS,
     TYPE_FIELD_LABELS,
     FIELD_HINTS,
+    FIELD_ENUM_LABELS,
+    TYPE_FIELD_HINTS,
     REF_LABELS,
     DEFAULTS,
     TAG_SUGGESTIONS,
@@ -680,9 +991,11 @@
     DEADLINE_FORMULAS,
     GENERATORS,
     FACILITIES,
+    WEAPON_PRESETS,
     TEMPLATES,
     KEY_PREFIX,
     schemaVersionFor,
+    enumOptions,
     isDraft(typeKey) {
       const info = BY_KEY[typeKey];
       return Boolean(info && info.draft);
@@ -694,8 +1007,7 @@
       return TYPE_FIELD_LABELS[`${typeKey}.${field}`] || FIELD_LABELS[field] || field.replace(/_/g, ' ');
     },
     hintFor(typeKey, field) {
-      const scoped = TYPE_FIELD_LABELS[`${typeKey}.${field}`];
-      return FIELD_HINTS[field] || (scoped ? '' : '');
+      return TYPE_FIELD_HINTS[`${typeKey}.${field}`] || FIELD_HINTS[field] || '';
     },
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

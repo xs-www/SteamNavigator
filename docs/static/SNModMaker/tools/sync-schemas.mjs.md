@@ -12,7 +12,7 @@
 
 ## 契约与约束
 
-- bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，草案为 `v2/...`，与磁盘文件一一对应（当前 27 个：18 顶层 + 9 个 v2）。
+- bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，草案为 `v2/...`，与磁盘文件一一对应（当前 28 个：18 顶层 + 10 个 v2）。
 - 生成文件头带 AUTO-GENERATED 标记；修改任何 Schema 后必须重跑。
 - 只做 JSON 解析与嵌入，不校验 Schema 自身。
 

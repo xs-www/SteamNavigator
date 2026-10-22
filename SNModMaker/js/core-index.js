@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-20T23:43:06.290Z",
+    "generated_at": "2026-10-21T23:40:13.448Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -100,10 +100,12 @@
         "model.prop.gear_crate": "assets/models/props/SN_Gear_Crate.glb",
         "model.prop.grab_bucket": "assets/models/props/SN_Grab_Bucket.glb",
         "model.prop.handcart": "assets/models/props/SN_Handcart.glb",
+        "model.prop.hand_jib_crane": "assets/models/props/SN_Hand_Jib_Crane.glb",
         "model.prop.harbor_crane": "assets/models/props/SN_Harbor_Crane.glb",
         "model.prop.harbor_office": "assets/models/props/SN_HT_Harbor_Office.glb",
         "model.prop.harbor_office_lod1": "assets/models/props/SN_HT_Harbor_Office_LOD1.glb",
         "model.prop.keel_block": "assets/models/props/SN_Keel_Block.glb",
+        "model.prop.mega_gantry": "assets/models/props/SN_Mega_Gantry.glb",
         "model.prop.mooring_bollard": "assets/models/props/SN_Mooring_Bollard.glb",
         "model.prop.mooring_rope": "assets/models/props/SN_Mooring_Rope.glb",
         "model.prop.ore_pile": "assets/models/props/SN_Ore_Pile.glb",
@@ -120,13 +122,46 @@
         "model.prop.warehouse_long_lod1": "assets/models/props/SN_HT_Warehouse_Long_LOD1.glb",
         "model.prop.warehouse_short": "assets/models/props/SN_HT_Warehouse_Short.glb",
         "model.prop.warehouse_short_lod1": "assets/models/props/SN_HT_Warehouse_Short_LOD1.glb",
+        "model.prop.wooden_mast_crane": "assets/models/props/SN_Wooden_Mast_Crane.glb",
         "model.prop.workshop_row": "assets/models/props/SN_HT_Workshop_Row.glb",
         "model.prop.workshop_row_lod1": "assets/models/props/SN_HT_Workshop_Row_LOD1.glb",
+        "model.rig.boom": "assets/models/rig/SN_Rig_Boom.glb",
+        "model.rig.bowsprit": "assets/models/rig/SN_Rig_Bowsprit.glb",
+        "model.rig.gaff": "assets/models/rig/SN_Rig_Gaff.glb",
+        "model.rig.mast_sail": "assets/models/rig/SN_Rig_Mast_Sail.glb",
+        "model.rig.mast_steam": "assets/models/rig/SN_Rig_Mast_Steam.glb",
+        "model.rig.running": "assets/models/rig/SN_Rig_Running.glb",
+        "model.rig.sail_gaff": "assets/models/rig/SN_Rig_Sail_Gaff.glb",
+        "model.rig.sail_jib": "assets/models/rig/SN_Rig_Sail_Jib.glb",
+        "model.rig.sail_square": "assets/models/rig/SN_Rig_Sail_Square.glb",
+        "model.rig.shrouds": "assets/models/rig/SN_Rig_Shrouds.glb",
+        "model.rig.stays": "assets/models/rig/SN_Rig_Stays.glb",
+        "model.rig.yard": "assets/models/rig/SN_Rig_Yard.glb",
         "model.ship.ironclad": "assets/models/ships/SN_Ironclad.glb",
+        "model.ship.ironclad_lod1": "assets/models/ships/SN_Ironclad_LOD1.glb",
         "model.ship.paddle_freighter": "assets/models/ships/SN_Paddle_Freighter.glb",
+        "model.ship.paddle_freighter_lod1": "assets/models/ships/SN_Paddle_Freighter_LOD1.glb",
         "model.ship.paddle_steamer": "assets/models/ships/SN_Paddle_Steamer.glb",
+        "model.ship.paddle_steamer_lod1": "assets/models/ships/SN_Paddle_Steamer_LOD1.glb",
         "model.ship.prototype": "assets/models/ships/SN_Ship_Prototype.glb",
-        "model.ship.schooner_fame": "assets/models/ships/SN_Schooner_Fame.glb"
+        "model.ship.schooner_fame": "assets/models/ships/SN_Schooner_Fame.glb",
+        "model.ship.schooner_fame_lod1": "assets/models/ships/SN_Schooner_Fame_LOD1.glb",
+        "model.ship_part.deck": "assets/models/ship_parts/SN_ShipPart_Deck.glb",
+        "model.ship_part.funnel": "assets/models/ship_parts/SN_ShipPart_Funnel.glb",
+        "model.ship_part.hatch_cover": "assets/models/ship_parts/SN_ShipPart_HatchCover.glb",
+        "model.ship_part.mast": "assets/models/ship_parts/SN_ShipPart_Mast.glb",
+        "model.weapon.arrow_tower": "assets/models/weapons/SN_Weapon_ArrowTower.glb",
+        "model.weapon.ballista": "assets/models/weapons/SN_Weapon_Ballista.glb",
+        "model.weapon.broadside": "assets/models/weapons/SN_Weapon_Broadside.glb",
+        "model.weapon.cannon": "assets/models/weapons/SN_Weapon_Cannon.glb",
+        "model.weapon.deck_gun": "assets/models/weapons/SN_Weapon_DeckGun.glb",
+        "model.weapon.gun_carriage": "assets/models/weapons/SN_Weapon_GunCarriage.glb",
+        "model.weapon.harpoon_launcher": "assets/models/weapons/SN_Weapon_HarpoonLauncher.glb",
+        "model.weapon.heavy_cannon": "assets/models/weapons/SN_Weapon_HeavyCannon.glb",
+        "model.weapon.mortar": "assets/models/weapons/SN_Weapon_Mortar.glb",
+        "model.weapon.pedestal": "assets/models/weapons/SN_Weapon_Pedestal.glb",
+        "model.weapon.repeater": "assets/models/weapons/SN_Weapon_Repeater.glb",
+        "model.weapon.turret": "assets/models/weapons/SN_Weapon_Turret.glb"
       },
       "authors": [
         "Steam Navigator Team"
@@ -426,7 +461,54 @@
               "cargo_slots": 1,
               "cabin_slots": 0,
               "base_risk": 0.025,
-              "size_tag": "small"
+              "size_tag": "small",
+              "weapon_sockets": [
+                {
+                  "name": "SN_Socket_Weapon_Port_1",
+                  "socket_class": "Light",
+                  "socket_index": 0,
+                  "position": [
+                    9.6,
+                    0.8,
+                    1.91
+                  ],
+                  "clearance_r": 1,
+                  "clearance_x": 1.35,
+                  "clearance_y": 1.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Starboard_1",
+                  "socket_class": "Light",
+                  "socket_index": 1,
+                  "position": [
+                    9.6,
+                    -0.8,
+                    1.91
+                  ],
+                  "clearance_r": 1,
+                  "clearance_x": 1.35,
+                  "clearance_y": 1.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Stern",
+                  "socket_class": "Medium",
+                  "socket_index": 2,
+                  "position": [
+                    -9,
+                    0.4,
+                    3.42
+                  ],
+                  "clearance_r": 1.75,
+                  "clearance_x": 8,
+                  "clearance_y": 8,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                }
+              ]
             }
           },
           {
@@ -465,7 +547,133 @@
               "cargo_slots": 2,
               "cabin_slots": 1,
               "base_risk": 0.02,
-              "size_tag": "medium"
+              "size_tag": "medium",
+              "weapon_sockets": [
+                {
+                  "name": "SN_Socket_Weapon_Port_1",
+                  "socket_class": "Light",
+                  "socket_index": 0,
+                  "position": [
+                    -8.6,
+                    1.4,
+                    3.08
+                  ],
+                  "clearance_r": 1.05,
+                  "clearance_x": 1.05,
+                  "clearance_y": 2.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Starboard_1",
+                  "socket_class": "Light",
+                  "socket_index": 1,
+                  "position": [
+                    -8.6,
+                    -1.4,
+                    3.08
+                  ],
+                  "clearance_r": 1.05,
+                  "clearance_x": 1.05,
+                  "clearance_y": 2.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Bow",
+                  "socket_class": "Medium",
+                  "socket_index": 2,
+                  "position": [
+                    10,
+                    0.2,
+                    2.89
+                  ],
+                  "clearance_r": 1.1,
+                  "clearance_x": 1.1,
+                  "clearance_y": 1.25,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                }
+              ],
+              "rig_sockets": [
+                {
+                  "name": "SN_Socket_Mast_Fore",
+                  "socket_kind": "mast",
+                  "mast_id": "fore",
+                  "socket_index": 0,
+                  "position": [
+                    4.6,
+                    0,
+                    2.575
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Mast_Main",
+                  "socket_kind": "mast",
+                  "mast_id": "main",
+                  "socket_index": 1,
+                  "position": [
+                    -1.8,
+                    0,
+                    2.608
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Fore",
+                  "socket_kind": "yard",
+                  "mast_id": "fore",
+                  "socket_index": 2,
+                  "position": [
+                    3.945,
+                    0,
+                    17.571
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Main",
+                  "socket_kind": "yard",
+                  "mast_id": "main",
+                  "socket_index": 3,
+                  "position": [
+                    -2.328,
+                    0,
+                    12.044
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Fore",
+                  "socket_kind": "sail",
+                  "mast_id": "fore",
+                  "socket_index": 4,
+                  "position": [
+                    4.532,
+                    0,
+                    4.124
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Main",
+                  "socket_kind": "sail",
+                  "mast_id": "main",
+                  "socket_index": 5,
+                  "position": [
+                    -1.887,
+                    0,
+                    4.156
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Jib",
+                  "socket_kind": "sail",
+                  "mast_id": "fore",
+                  "socket_index": 6,
+                  "position": [
+                    5.55,
+                    0,
+                    4.2
+                  ]
+                }
+              ]
             }
           },
           {
@@ -508,7 +716,137 @@
               "cargo_slots": 3,
               "cabin_slots": 1,
               "base_risk": 0.02,
-              "size_tag": "large"
+              "size_tag": "large",
+              "weapon_sockets": [
+                {
+                  "name": "SN_Socket_Weapon_Port_1",
+                  "socket_class": "Side",
+                  "socket_index": 0,
+                  "position": [
+                    13,
+                    2.3,
+                    3.34
+                  ],
+                  "clearance_r": 0.75,
+                  "clearance_x": 1.9,
+                  "clearance_y": 4.1,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Starboard_1",
+                  "socket_class": "Side",
+                  "socket_index": 1,
+                  "position": [
+                    13,
+                    -2.3,
+                    3.34
+                  ],
+                  "clearance_r": 0.75,
+                  "clearance_x": 1.9,
+                  "clearance_y": 4.1,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Port_2",
+                  "socket_class": "Light",
+                  "socket_index": 2,
+                  "position": [
+                    -14,
+                    2.2,
+                    3.25
+                  ],
+                  "clearance_r": 1.45,
+                  "clearance_x": 1.9,
+                  "clearance_y": 6.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Starboard_2",
+                  "socket_class": "Light",
+                  "socket_index": 3,
+                  "position": [
+                    -14,
+                    -2.2,
+                    3.25
+                  ],
+                  "clearance_r": 1.45,
+                  "clearance_x": 1.9,
+                  "clearance_y": 6.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                }
+              ],
+              "rig_sockets": [
+                {
+                  "name": "SN_Socket_Mast_Fore",
+                  "socket_kind": "mast",
+                  "mast_id": "fore",
+                  "socket_index": 0,
+                  "position": [
+                    22.8,
+                    0,
+                    4.4
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Fore",
+                  "socket_kind": "yard",
+                  "mast_id": "fore",
+                  "socket_index": 1,
+                  "position": [
+                    23.1,
+                    0,
+                    12.8
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Fore",
+                  "socket_kind": "sail",
+                  "mast_id": "fore",
+                  "socket_index": 2,
+                  "position": [
+                    23.1,
+                    0,
+                    12.71
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Mast_Main",
+                  "socket_kind": "mast",
+                  "mast_id": "main",
+                  "socket_index": 3,
+                  "position": [
+                    -23.8,
+                    0,
+                    4.1
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Main",
+                  "socket_kind": "yard",
+                  "mast_id": "main",
+                  "socket_index": 4,
+                  "position": [
+                    -23.5,
+                    0,
+                    13.6
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Main",
+                  "socket_kind": "sail",
+                  "mast_id": "main",
+                  "socket_index": 5,
+                  "position": [
+                    -23.5,
+                    0,
+                    13.51
+                  ]
+                }
+              ]
             }
           },
           {
@@ -551,7 +889,170 @@
               "cargo_slots": 3,
               "cabin_slots": 1,
               "base_risk": 0.025,
-              "size_tag": "large"
+              "size_tag": "large",
+              "weapon_sockets": [
+                {
+                  "name": "SN_Socket_Weapon_Port_1",
+                  "socket_class": "Heavy",
+                  "socket_index": 0,
+                  "position": [
+                    13.5,
+                    3.1,
+                    4.6
+                  ],
+                  "clearance_r": 1.9,
+                  "clearance_x": 1.9,
+                  "clearance_y": 7.3,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Starboard_1",
+                  "socket_class": "Heavy",
+                  "socket_index": 1,
+                  "position": [
+                    13.5,
+                    -3.1,
+                    4.6
+                  ],
+                  "clearance_r": 1.9,
+                  "clearance_x": 1.9,
+                  "clearance_y": 7.3,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Port_2",
+                  "socket_class": "Medium",
+                  "socket_index": 2,
+                  "position": [
+                    -17.5,
+                    2.6,
+                    4.6
+                  ],
+                  "clearance_r": 1.9,
+                  "clearance_x": 1.9,
+                  "clearance_y": 3.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                },
+                {
+                  "name": "SN_Socket_Weapon_Starboard_2",
+                  "socket_class": "Medium",
+                  "socket_index": 3,
+                  "position": [
+                    -17.5,
+                    -2.6,
+                    4.6
+                  ],
+                  "clearance_r": 1.9,
+                  "clearance_x": 1.9,
+                  "clearance_y": 3.35,
+                  "clearance_h": 20,
+                  "mount_scale": 1
+                }
+              ],
+              "rig_sockets": [
+                {
+                  "name": "SN_Socket_Mast_Fore",
+                  "socket_kind": "mast",
+                  "mast_id": "fore",
+                  "socket_index": 0,
+                  "position": [
+                    15,
+                    0,
+                    4.6
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Mast_Main",
+                  "socket_kind": "mast",
+                  "mast_id": "main",
+                  "socket_index": 1,
+                  "position": [
+                    -10,
+                    0,
+                    4.6
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Mast_Mizzen",
+                  "socket_kind": "mast",
+                  "mast_id": "mizzen",
+                  "socket_index": 2,
+                  "position": [
+                    -20,
+                    0,
+                    4.6
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Fore",
+                  "socket_kind": "yard",
+                  "mast_id": "fore",
+                  "socket_index": 3,
+                  "position": [
+                    15,
+                    0,
+                    13.8
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Main",
+                  "socket_kind": "yard",
+                  "mast_id": "main",
+                  "socket_index": 4,
+                  "position": [
+                    -10,
+                    0,
+                    14.4
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Yard_Mizzen",
+                  "socket_kind": "yard",
+                  "mast_id": "mizzen",
+                  "socket_index": 5,
+                  "position": [
+                    -20,
+                    0,
+                    12.6
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Fore",
+                  "socket_kind": "sail",
+                  "mast_id": "fore",
+                  "socket_index": 6,
+                  "position": [
+                    15,
+                    0,
+                    13.54
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Main",
+                  "socket_kind": "sail",
+                  "mast_id": "main",
+                  "socket_index": 7,
+                  "position": [
+                    -10,
+                    0,
+                    14.14
+                  ]
+                },
+                {
+                  "name": "SN_Socket_Sail_Mizzen",
+                  "socket_kind": "sail",
+                  "mast_id": "mizzen",
+                  "socket_index": 8,
+                  "position": [
+                    -20,
+                    0,
+                    12.34
+                  ]
+                }
+              ]
             }
           }
         ]
@@ -868,6 +1369,26 @@
               "materials": [],
               "passenger_capacity": 4
             }
+          },
+          {
+            "id": "core:cabin/small_cabin",
+            "name_key": "module.core.small_cabin.name",
+            "description_key": "module.core.small_cabin.description",
+            "tags": [
+              "module.cabin",
+              "module.passenger",
+              "module.small"
+            ],
+            "enabled": true,
+            "data": {
+              "tier": 1,
+              "weight": 8,
+              "purchase_price": 120,
+              "craft_cost": 60,
+              "craft_time_hours": 2,
+              "materials": [],
+              "passenger_capacity": 1
+            }
           }
         ]
       },
@@ -1045,7 +1566,8 @@
                 "exchange",
                 "contracts",
                 "supply",
-                "shipyard"
+                "shipyard",
+                "tavern"
               ],
               "market": [
                 {
@@ -1140,7 +1662,7 @@
                 "exchange",
                 "contracts",
                 "supply",
-                "intel"
+                "tavern"
               ],
               "market": [
                 {
@@ -1224,7 +1746,7 @@
                 "contracts",
                 "supply",
                 "shipyard",
-                "intel"
+                "tavern"
               ],
               "market": [
                 {
@@ -1405,7 +1927,7 @@
                 "exchange",
                 "contracts",
                 "supply",
-                "intel"
+                "tavern"
               ],
               "market": [
                 {
@@ -1516,7 +2038,593 @@
               "intel_cost": 25,
               "trade_margin": 0.95,
               "player_trade_impact": 0.35,
-              "default_starting_build": "core:starting_build/steady"
+              "default_starting_build": "core:starting_build/steady",
+              "twin_world_size": 160,
+              "exploration": {
+                "rumor_clue_chance": 0.65,
+                "fog_port_reveal_ratio": 0.05,
+                "fog_vision_ratio": 0.05,
+                "intel_clue_cost": 40,
+                "max_active_clues": 4,
+                "level_weights": {
+                  "rumor": [
+                    0.55,
+                    0.35,
+                    0.1,
+                    0
+                  ],
+                  "intel": [
+                    0,
+                    0.15,
+                    0.45,
+                    0.4
+                  ]
+                },
+                "credibility_range": {
+                  "rumor": [
+                    0.25,
+                    0.55
+                  ],
+                  "intel": [
+                    0.6,
+                    0.95
+                  ],
+                  "wait": [
+                    0.4,
+                    0.7
+                  ],
+                  "contract": [
+                    0.55,
+                    0.85
+                  ]
+                },
+                "distance_error_ratio": 0.35,
+                "search_zone_radius": 14,
+                "search_zone_noise": 12,
+                "discovery_chance_base": 0.2,
+                "discovery_chance_per_credibility": 0.7,
+                "risk_base": 0.08,
+                "risk_per_unreliability": 0.12,
+                "drift_durability_loss": 8,
+                "drift_extra_coal": 4,
+                "drift_extra_water": 4,
+                "drift_hours": 6,
+                "alert_threshold": 0.5,
+                "alert_progress": 0.5,
+                "turnback_extra_ratio": 0.25,
+                "investigation_cost": 20,
+                "investigation_hours": 6,
+                "investigation_success_chance": 0.75,
+                "goods_clue_expiry_hours": {
+                  "rumor": 24,
+                  "intel": 72,
+                  "wait": 48,
+                  "contract": 72
+                },
+                "goods_clue_price_error_ratio": 0.15,
+                "goods_clue_source_weights": {
+                  "rumor": 0,
+                  "intel": 0,
+                  "wait": 1,
+                  "contract": 0
+                },
+                "wait_clue_hours_block": 6,
+                "wait_clue_chance_per_block": 0.35,
+                "wait_clue_max_chance": 0.85,
+                "contract_clue_chance": 0.5
+              },
+              "story": {
+                "flow_id": "core:story/opening",
+                "enabled": true,
+                "skip_unlocks": [
+                  "overview",
+                  "supply",
+                  "chart",
+                  "market",
+                  "contracts",
+                  "clues",
+                  "tavern",
+                  "shipyard"
+                ],
+                "start_unlocks": [],
+                "start_items": [],
+                "start_modules": [],
+                "stages": [
+                  {
+                    "id": "opening",
+                    "dialogue": {
+                      "title_key": "story.core.opening.title",
+                      "body_keys": [
+                        "story.core.opening.body.1",
+                        "story.core.opening.body.2"
+                      ]
+                    },
+                    "unlock_features": [
+                      "overview"
+                    ],
+                    "effects": [
+                      {
+                        "type": "set_ship_fuel",
+                        "amount": 4
+                      },
+                      {
+                        "type": "grant_tutorial_contract",
+                        "template_id": "core:contract/main_01",
+                        "cargo_item_id": "core:good/coal",
+                        "amount": 10,
+                        "provider": "fuel",
+                        "deadline_formula": "tutorial_express",
+                        "name_key": "contract.core.tutorial_coal.name",
+                        "description_key": "contract.core.tutorial_coal.description"
+                      },
+                      {
+                        "type": "discover_contract_destination"
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "supply_brief",
+                    "dialogue": {
+                      "title_key": "story.core.supply_brief.title",
+                      "body_keys": [
+                        "story.core.supply_brief.body.1"
+                      ]
+                    },
+                    "unlock_features": [
+                      "market"
+                    ],
+                    "objective": {
+                      "text_key": "story.core.supply_brief.objective",
+                      "target": 4
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:supply.buy_coal",
+                          "counter": "coal_bought",
+                          "at_least": 4
+                        },
+                        {
+                          "event": "cmd:supply.buy_water",
+                          "counter": "water_bought",
+                          "at_least": 2
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "supply_hold",
+                    "dialogue": {
+                      "title_key": "story.core.supply_hold.title",
+                      "body_keys": [
+                        "story.core.supply_hold.body.1"
+                      ]
+                    },
+                    "unlock_features": [
+                      "chart"
+                    ],
+                    "lock_actions": [
+                      "supply.buy"
+                    ],
+                    "objective": {
+                      "text_key": "story.core.supply_hold.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:chart_opened"
+                    }
+                  },
+                  {
+                    "id": "chart_brief",
+                    "dialogue": {
+                      "title_key": "story.core.chart_brief.title",
+                      "body_keys": [
+                        "story.core.chart_brief.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.chart_brief.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:chart_closed"
+                    }
+                  },
+                  {
+                    "id": "supply_finish",
+                    "dialogue": {
+                      "title_key": "story.core.supply_finish.title",
+                      "body_keys": [
+                        "story.core.supply_finish.body.1"
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "set_counter_from_ship",
+                        "counter": "coal_aboard",
+                        "kind": "coal"
+                      }
+                    ],
+                    "objective": {
+                      "text_key": "story.core.supply_finish.objective",
+                      "target": 10
+                    },
+                    "advance": {
+                      "event": "cmd:supply.buy_coal",
+                      "counter": "coal_aboard",
+                      "counter_from": "stock",
+                      "at_least": 10
+                    }
+                  },
+                  {
+                    "id": "depart_brief",
+                    "dialogue": {
+                      "title_key": "story.core.depart_brief.title",
+                      "body_keys": [
+                        "story.core.depart_brief.body.1"
+                      ]
+                    },
+                    "preferred_strategy": "fast",
+                    "objective": {
+                      "text_key": "story.core.depart_brief.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:arrival_settled"
+                    }
+                  },
+                  {
+                    "id": "second_port",
+                    "dialogue": {
+                      "title_key": "story.core.second_port.title",
+                      "body_keys": [
+                        "story.core.second_port.body.1"
+                      ]
+                    },
+                    "unlock_features": [
+                      "market",
+                      "contracts"
+                    ],
+                    "unlock_items": [
+                      "core:good/spices",
+                      "core:good/textiles"
+                    ],
+                    "effects": [
+                      {
+                        "type": "grant_tutorial_contract",
+                        "template_id": "core:contract/main_02",
+                        "cargo_item_id": "core:good/textiles",
+                        "amount": 6,
+                        "provider": "player",
+                        "destination": "home",
+                        "deadline_formula": "tutorial_trade",
+                        "name_key": "contract.core.tutorial_trade.name",
+                        "description_key": "contract.core.tutorial_trade.description"
+                      }
+                    ],
+                    "objective": {
+                      "text_key": "story.core.second_port.objective",
+                      "target": 8
+                    },
+                    "advance": {
+                      "event": "cmd:trade.buy",
+                      "counter": "textiles_bought",
+                      "at_least": 8,
+                      "match": {
+                        "item_id": "core:good/textiles"
+                      }
+                    }
+                  },
+                  {
+                    "id": "second_depart",
+                    "dialogue": {
+                      "title_key": "story.core.second_depart.title",
+                      "body_keys": [
+                        "story.core.second_depart.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.second_depart.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "ui:arrival_settled"
+                    }
+                  },
+                  {
+                    "id": "back_first",
+                    "dialogue": {
+                      "title_key": "story.core.back_first.title",
+                      "body_keys": [
+                        "story.core.back_first.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.back_first.objective",
+                      "target": 2
+                    },
+                    "advance": {
+                      "event": "cmd:trade.sell",
+                      "counter": "textiles_sold",
+                      "at_least": 2,
+                      "match": {
+                        "item_id": "core:good/textiles"
+                      }
+                    }
+                  },
+                  {
+                    "id": "chapter_wrap",
+                    "dialogue": {
+                      "title_key": "story.core.chapter_wrap.title",
+                      "body_keys": [
+                        "story.core.chapter_wrap.body.1"
+                      ]
+                    },
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "tavern_open",
+                    "dialogue": {
+                      "title_key": "story.core.tavern_open.title",
+                      "body_keys": [
+                        "story.core.tavern_open.body.1",
+                        "story.core.tavern_open.body.2"
+                      ]
+                    },
+                    "unlock_features": [
+                      "clues",
+                      "tavern"
+                    ],
+                    "effects": [
+                      {
+                        "type": "grant_clue",
+                        "port": "next_unknown",
+                        "level": 1,
+                        "source": "rumor"
+                      },
+                      {
+                        "type": "set_market_price_bias",
+                        "item_ids": [
+                          "core:good/textiles",
+                          "core:good/spices"
+                        ],
+                        "home_bias": 1.35,
+                        "other_bias": 0.7,
+                        "reset_stock": true,
+                        "make_buyable": true
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "tavern_intro",
+                    "dialogue": {
+                      "title_key": "story.core.tavern_intro.title",
+                      "body_keys": [
+                        "story.core.tavern_intro.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.tavern_intro.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "cmd:intel.refresh",
+                      "counter": "intel_refreshed",
+                      "at_least": 1
+                    }
+                  },
+                  {
+                    "id": "third_good",
+                    "dialogue": {
+                      "title_key": "story.core.third_good.title",
+                      "body_keys": [
+                        "story.core.third_good.body.1"
+                      ]
+                    },
+                    "unlock_items": [
+                      "core:good/timber"
+                    ],
+                    "objective": {
+                      "text_key": "story.core.third_good.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:voyage.start",
+                          "counter": "act2_departures",
+                          "at_least": 1
+                        },
+                        {
+                          "event": "ui:arrival_settled",
+                          "counter": "act2_arrivals",
+                          "at_least": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "second_clue",
+                    "dialogue": {
+                      "title_key": "story.core.second_clue.title",
+                      "body_keys": [
+                        "story.core.second_clue.body.1",
+                        "story.core.second_clue.body.2"
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "grant_clue",
+                        "port": "next_unknown",
+                        "level": 3,
+                        "source": "rumor"
+                      },
+                      {
+                        "type": "guarantee_explore_success"
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "explore_third",
+                    "dialogue": {
+                      "title_key": "story.core.explore_third.title",
+                      "body_keys": [
+                        "story.core.explore_third.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.explore_third.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:explore.start",
+                          "counter": "act2_explorations",
+                          "at_least": 1
+                        },
+                        {
+                          "event": "ui:arrival_settled",
+                          "counter": "act2_explore_arrivals",
+                          "at_least": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "third_port",
+                    "dialogue": {
+                      "title_key": "story.core.third_port.title",
+                      "body_keys": [
+                        "story.core.third_port.body.1",
+                        "story.core.third_port.body.2"
+                      ]
+                    },
+                    "unlock_features": [
+                      "shipyard"
+                    ],
+                    "unlock_modules": [
+                      "core:cabin/small_cabin"
+                    ],
+                    "effects": [
+                      {
+                        "type": "add_facility",
+                        "facility": "shipyard"
+                      },
+                      {
+                        "type": "upgrade_hull",
+                        "hull_id": "core:hull/medium_standard",
+                        "store_old": true
+                      }
+                    ],
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  },
+                  {
+                    "id": "refit_unload",
+                    "dialogue": {
+                      "title_key": "story.core.refit_unload.title",
+                      "body_keys": [
+                        "story.core.refit_unload.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.refit_unload.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "cmd:ship.uninstall_module",
+                      "counter": "cargo_uninstalled",
+                      "at_least": 1,
+                      "match": {
+                        "content_type": "cargo_modules"
+                      }
+                    }
+                  },
+                  {
+                    "id": "refit_cabin",
+                    "dialogue": {
+                      "title_key": "story.core.refit_cabin.title",
+                      "body_keys": [
+                        "story.core.refit_cabin.body.1"
+                      ]
+                    },
+                    "objective": {
+                      "text_key": "story.core.refit_cabin.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "event": "cmd:ship.install_module",
+                      "counter": "cabin_installed",
+                      "at_least": 1,
+                      "match": {
+                        "module_id": "core:cabin/small_cabin"
+                      }
+                    }
+                  },
+                  {
+                    "id": "passenger_run",
+                    "dialogue": {
+                      "title_key": "story.core.passenger_run.title",
+                      "body_keys": [
+                        "story.core.passenger_run.body.1"
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "grant_tutorial_contract",
+                        "template_id": "core:contract/main_03",
+                        "passengers": 1,
+                        "deadline_formula": "tutorial_craft",
+                        "name_key": "contract.core.tutorial_passenger.name",
+                        "description_key": "contract.core.tutorial_passenger.description"
+                      }
+                    ],
+                    "objective": {
+                      "text_key": "story.core.passenger_run.objective",
+                      "target": 1
+                    },
+                    "advance": {
+                      "all": [
+                        {
+                          "event": "cmd:voyage.start",
+                          "counter": "passenger_departures",
+                          "at_least": 1
+                        },
+                        {
+                          "event": "ui:arrival_settled",
+                          "counter": "passenger_arrivals",
+                          "at_least": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "story_complete",
+                    "dialogue": {
+                      "title_key": "story.core.story_complete.title",
+                      "body_keys": [
+                        "story.core.story_complete.body.1"
+                      ]
+                    },
+                    "advance": {
+                      "mode": "confirm"
+                    }
+                  }
+                ]
+              }
             }
           }
         ]
@@ -2289,6 +3397,10 @@
         "starting_build.core.swift.description": "性能型锅炉与较少补给，抢时间但容错低。",
         "contract.core.main_01.name": "主线一：初次出航",
         "contract.core.main_01.description": "把第一批委托货箱送到相邻港口，熟悉航线与补给。",
+        "contract.core.main_01.payload": "委托货箱",
+        "contract.core.tutorial_coal.name": "首次出航：运煤",
+        "contract.core.tutorial_coal.description": "从燃料舱备足 10 单位煤，送到相邻港口。限时很紧，只有极速航行能准时抵达。",
+        "contract.core.tutorial_coal.payload": "煤 10 单位（燃料舱交付）",
         "contract.core.main_02.name": "主线二：自由贸易",
         "contract.core.main_02.description": "运货之余观察市场，理解重量与航速的关系。",
         "contract.core.main_03.name": "主线三：模块制造",
@@ -2327,7 +3439,71 @@
         "risk.strategy": "锅炉策略",
         "risk.overload": "接近载重上限",
         "risk.low_durability": "船体耐久偏低",
-        "risk.equipment_crew": "设备与船员修正"
+        "risk.equipment_crew": "设备与船员修正",
+        "story.core.opening.title": "第一日 · 铁港",
+        "story.core.opening.body.1": "你在铁港的码头醒来，身上没有船，也没有钱。",
+        "story.core.opening.body.2": "老船工把一艘旧船的钥匙塞进你手里：「锅炉还能烧。先去把补给备齐，别让它半路熄火。」",
+        "story.core.supply_brief.title": "备航",
+        "story.core.supply_brief.body.1": "打开市场的补给区，先买 4 单位煤和 2 单位淡水。码头管事说，海图和报关手续等补给装好再谈。",
+        "story.core.supply_brief.objective": "为船购买 4 单位煤和 2 单位淡水（市场 · 补给区）",
+        "story.core.supply_hold.title": "补给受限",
+        "story.core.supply_hold.body.1": "码头管事按住账本：「先别急着囤货。海图给你了，出航前得先看明白目的港。」",
+        "story.core.supply_hold.objective": "打开海图查看目的港",
+        "story.core.chart_brief.title": "海图解禁",
+        "story.core.chart_brief.body.1": "码头管事看过你的委托书，把一张海图拍在桌上。目的港已经标出来了——确认完航线就回市场补给区把煤补满。",
+        "story.core.chart_brief.objective": "关闭海图，回到市场继续买煤",
+        "story.core.supply_finish.title": "装满煤舱",
+        "story.core.supply_finish.body.1": "补给限制解除。委托要求船上自备 10 单位煤，在市场的补给区买够再出航。",
+        "story.core.supply_finish.objective": "为船买够 10 单位煤（市场 · 补给区）",
+        "story.core.depart_brief.title": "第一航",
+        "story.core.depart_brief.body.1": "委托是限时的：标准航速会迟到，出航确认里记得选「极速」。目的港已经在海图上标出来了。",
+        "story.core.depart_brief.objective": "从海图出航前往目的港（选极速）",
+        "story.core.second_port.title": "第二港 · 纺织品的委托",
+        "story.core.second_port.body.1": "抵达邻港。码头管事递来第二份委托：在本地市场买 8 件纺织品，运回铁港交付 6 件，余下 2 件可在铁港市场自行出售。市场现在开放纺织品与香料。",
+        "story.core.second_port.objective": "在邻港市场购买 8 件纺织品",
+        "story.core.second_depart.title": "返航",
+        "story.core.second_depart.body.1": "纺织品已装船。打开海图，把船开回铁港；委托限时，别在港里耽搁太久。",
+        "story.core.second_depart.objective": "从海图出航返回铁港",
+        "story.core.back_first.title": "交货",
+        "story.core.back_first.body.1": "委托货已交付。把剩下的 2 件纺织品在铁港市场卖掉，结清这一趟。",
+        "story.core.back_first.objective": "在铁港市场卖出 2 件纺织品",
+        "contract.core.tutorial_trade.name": "第二主线：纺织品回运",
+        "contract.core.tutorial_trade.description": "在邻港市场买 8 件纺织品，交付 6 件回铁港，余下 2 件可自行出售。",
+        "story.core.chapter_wrap.title": "第二航结束",
+        "story.core.chapter_wrap.body.1": "第一、二段主线完成。港口边的酒馆重新开门，去那里打听物价，也听听水手们的传闻。",
+        "story.core.tavern_open.title": "酒馆开门",
+        "story.core.tavern_open.body.1": "码头的酒馆重新亮起灯。老板把一份港口传闻推到你面前：有人在附近见过一座还没画进海图的港口。",
+        "story.core.tavern_open.body.2": "酒馆可以做两件事：刷新物价情报，看清两座港口之间的价差；购买或调查港口线索，循着线索出海探索。",
+        "story.core.tavern_intro.title": "物价情报",
+        "story.core.tavern_intro.body.1": "先让老板刷新一次物价情报。同一件货在起始港和邻港的价格已经被拉开——低买高卖，这一趟就不会白跑。",
+        "story.core.tavern_intro.objective": "在酒馆刷新一次物价情报（1/1）",
+        "story.core.third_good.title": "第三种货",
+        "story.core.third_good.body.1": "酒馆的消息带来新的商路，市场里多出了一种可交易的货物：木材。装一船货，离港跑一个来回，熟悉一下这条航线。",
+        "story.core.third_good.objective": "装货离港并抵达一座港口（1 个来回）",
+        "story.core.second_clue.title": "更确切的消息",
+        "story.core.second_clue.body.1": "老板压低声音：那座未标注的港口在更确切的方向上，航程也大致能估出来。海图上会标出搜索范围。",
+        "story.core.second_clue.body.2": "备好煤和水，从海图循这条线索出航。这一次，线索不会落空。",
+        "story.core.explore_third.title": "循线索出航",
+        "story.core.explore_third.body.1": "海图上已经圈出搜索区。打开海图，选「循此线索出航」，备足补给后出发。",
+        "story.core.explore_third.objective": "循线索出航并抵达第三港（1/1）",
+        "story.core.third_port.title": "第三港",
+        "story.core.third_port.body.1": "海雾散开，一座新的港口出现在眼前。酒馆的第二条线索把你带到了这里——接下来的故事，将从这座港口继续。",
+        "module.core.small_cabin.name": "小型客舱（1 人）",
+        "module.core.small_cabin.description": "第三港船厂为教学船准备的单人客舱：只能载 1 名旅客，重量轻，适合刚起步的船。",
+        "contract.core.tutorial_passenger.name": "第三主线：送 1 名旅客",
+        "contract.core.tutorial_passenger.description": "在第三港接上 1 名旅客，安全送到目的港。",
+        "story.core.third_port.body.2": "第三港的船厂愿意帮你把船改成能载客的配置：先换一艘带客舱位的船，再卸下货舱、装上小型客舱。",
+        "story.core.refit_unload.title": "卸货舱",
+        "story.core.refit_unload.body.1": "客舱要占位置，也占重量。去船厂把现在的货舱卸下来，放进港口仓库。",
+        "story.core.refit_unload.objective": "在船厂卸下 1 个货舱模块（1/1）",
+        "story.core.refit_cabin.title": "装客舱",
+        "story.core.refit_cabin.body.1": "船厂里现在只上架一种新模块：小型客舱（1 人）。买下并装到船上，旅客就有地方坐了。",
+        "story.core.refit_cabin.objective": "在船厂装上小型客舱（1/1）",
+        "story.core.passenger_run.title": "送客出航",
+        "story.core.passenger_run.body.1": "一位旅客要在第三港搭船去邻港。打开海图，送他抵达目的港，第三主线就完成了。",
+        "story.core.passenger_run.objective": "出航并送旅客抵达目的港（1/1）",
+        "story.core.story_complete.title": "教学结束",
+        "story.core.story_complete.body.1": "你已经学会了补给、贸易、线索探索和载客改装。接下来的航路交给你自己：继续完成剩余主线，或自由探索这片海。"
       },
       "en": {
         "good.core.iron_ore.name": "Iron Ore",
@@ -2414,6 +3590,10 @@
         "starting_build.core.swift.description": "Performance boiler and light supplies. Fast, but unforgiving.",
         "contract.core.main_01.name": "Main 1: First Departure",
         "contract.core.main_01.description": "Deliver the first sealed crates to a neighbouring port.",
+        "contract.core.main_01.payload": "Sealed cargo crates",
+        "contract.core.tutorial_coal.name": "First Departure: Coal Run",
+        "contract.core.tutorial_coal.description": "Carry 10 coal in the bunkers and deliver it to the neighbouring port. The deadline only allows Full Speed.",
+        "contract.core.tutorial_coal.payload": "10 coal (from the bunkers)",
         "contract.core.main_02.name": "Main 2: Free Trade",
         "contract.core.main_02.description": "Watch the market while hauling, and feel how weight changes speed.",
         "contract.core.main_03.name": "Main 3: Module Crafting",
@@ -2452,7 +3632,71 @@
         "risk.strategy": "Boiler strategy",
         "risk.overload": "Near weight limit",
         "risk.low_durability": "Low hull durability",
-        "risk.equipment_crew": "Equipment and crew modifiers"
+        "risk.equipment_crew": "Equipment and crew modifiers",
+        "story.core.opening.title": "Day One — Iron Harbour",
+        "story.core.opening.body.1": "You wake on the Iron Harbour docks with no ship and no coin.",
+        "story.core.opening.body.2": "An old shipwright presses a rusty key into your hand: \"The boiler still burns. Get her supplies before she dies on you.\"",
+        "story.core.supply_brief.title": "Making Ready",
+        "story.core.supply_brief.body.1": "Open the market's supply section and buy 4 coal and 2 fresh water. The harbour clerk will talk charts and papers once she is provisioned.",
+        "story.core.supply_brief.objective": "Buy 4 coal and 2 fresh water (Market - Supplies)",
+        "story.core.supply_hold.title": "Supplies on Hold",
+        "story.core.supply_hold.body.1": "The harbour clerk holds the ledger shut: \"Not so fast. The chart is yours — read it and know where you are going before you hoard coal.\"",
+        "story.core.supply_hold.objective": "Open the chart and review the destination",
+        "story.core.chart_brief.title": "The Chart Unsealed",
+        "story.core.chart_brief.body.1": "The harbour clerk reads your contract and slaps a chart on the table. Your destination is marked - check the route, then go back to the market and top up the coal.",
+        "story.core.chart_brief.objective": "Close the chart and keep buying coal",
+        "story.core.supply_finish.title": "Fill the Bunkers",
+        "story.core.supply_finish.body.1": "The hold on supplies is lifted. The contract needs 10 coal aboard; buy the rest in the market's supply section before departure.",
+        "story.core.supply_finish.objective": "Buy 10 coal for the ship (Market - Supplies)",
+        "story.core.depart_brief.title": "First Voyage",
+        "story.core.depart_brief.body.1": "The contract is on a clock: standard speed will arrive late, so pick Full Speed in the departure dialog. The destination is already marked on the chart.",
+        "story.core.depart_brief.objective": "Depart from the chart for the destination (Full Speed)",
+        "story.core.second_port.title": "Second Harbour - A Cargo of Textiles",
+        "story.core.second_port.body.1": "You reach the neighbouring harbour. The clerk hands you a second contract: buy 8 textiles at the local market, deliver 6 to Iron Harbour, and sell the remaining 2 there. Textiles and spices are now on the market.",
+        "story.core.second_port.objective": "Buy 8 textiles at the neighbouring market",
+        "story.core.second_depart.title": "Return Voyage",
+        "story.core.second_depart.body.1": "The textiles are aboard. Open the chart and sail back to Iron Harbour; the contract is on a clock.",
+        "story.core.second_depart.objective": "Depart from the chart back to Iron Harbour",
+        "story.core.back_first.title": "Delivery",
+        "story.core.back_first.body.1": "The contract cargo is delivered. Sell the remaining 2 textiles at the Iron Harbour market to close the run.",
+        "story.core.back_first.objective": "Sell 2 textiles at the Iron Harbour market",
+        "contract.core.tutorial_trade.name": "Main 2: The Textile Run",
+        "contract.core.tutorial_trade.description": "Buy 8 textiles at the neighbouring market, deliver 6 back to Iron Harbour, and sell the other 2.",
+        "story.core.chapter_wrap.title": "Second Voyage Complete",
+        "story.core.chapter_wrap.body.1": "The first two chapters are complete. The tavern by the quay has opened again: ask about prices, and listen to the sailors' rumours.",
+        "story.core.tavern_open.title": "The Tavern Opens",
+        "story.core.tavern_open.body.1": "Lights come on in the dockside tavern. The keeper slides a harbour rumour across the counter: someone has sighted a port that is not on the chart yet.",
+        "story.core.tavern_open.body.2": "The tavern offers two things: a price-intelligence refresh that shows the spread between two harbours, and port clues you can buy or investigate before sailing out.",
+        "story.core.tavern_intro.title": "Price Intelligence",
+        "story.core.tavern_intro.body.1": "Ask the keeper to refresh the price report. The same goods now command very different prices in your home harbour and the neighbouring one — buy low, sell high.",
+        "story.core.tavern_intro.objective": "Refresh the price report at the tavern (1/1)",
+        "story.core.third_good.title": "A Third Good",
+        "story.core.third_good.body.1": "Word from the tavern opens a new trade route: timber is now on the market. Load a cargo, leave port and complete one round trip to learn the route.",
+        "story.core.third_good.objective": "Depart with cargo and reach a harbour (one round trip)",
+        "story.core.second_clue.title": "A Firmer Lead",
+        "story.core.second_clue.body.1": "The keeper lowers his voice: the uncharted harbour lies in a firmer direction, and the voyage can be estimated. The search area will be marked on the chart.",
+        "story.core.second_clue.body.2": "Stock coal and water, then sail after this lead from the chart. This time the lead will not fail.",
+        "story.core.explore_third.title": "Follow the Lead",
+        "story.core.explore_third.body.1": "The search area is circled on the chart. Open the chart, choose \"sail after this clue\", and depart with enough supplies.",
+        "story.core.explore_third.objective": "Sail after the clue and find the third harbour (1/1)",
+        "story.core.third_port.title": "The Third Harbour",
+        "story.core.third_port.body.1": "The sea mist parts and a new harbour appears. The tavern's second lead has brought you here — the next chapter begins at this port.",
+        "module.core.small_cabin.name": "Small Cabin (1 passenger)",
+        "module.core.small_cabin.description": "A one-passenger cabin the third harbour fits to your teaching ship: light, simple, and enough to start carrying travellers.",
+        "contract.core.tutorial_passenger.name": "Third Mainline: Carry One Passenger",
+        "contract.core.tutorial_passenger.description": "Pick up one passenger at the third harbour and deliver them safely to the destination.",
+        "story.core.third_port.body.2": "The shipyard here can refit your ship to carry passengers: first a hull with a cabin berth, then unload the cargo hold and fit a small cabin.",
+        "story.core.refit_unload.title": "Unload the Hold",
+        "story.core.refit_unload.body.1": "A cabin needs space and weight. Go to the shipyard and unload the current cargo hold into the port warehouse.",
+        "story.core.refit_unload.objective": "Unload one cargo module at the shipyard (1/1)",
+        "story.core.refit_cabin.title": "Fit the Cabin",
+        "story.core.refit_cabin.body.1": "The shipyard now lists one new module: the small one-passenger cabin. Buy and install it so your passenger has a berth.",
+        "story.core.refit_cabin.objective": "Install the small cabin at the shipyard (1/1)",
+        "story.core.passenger_run.title": "Carry the Passenger",
+        "story.core.passenger_run.body.1": "A traveller needs passage from the third harbour to a neighbouring port. Open the chart, deliver them, and the third mainline is complete.",
+        "story.core.passenger_run.objective": "Depart and deliver the passenger (1/1)",
+        "story.core.story_complete.title": "Tutorial Complete",
+        "story.core.story_complete.body.1": "You have learned provisioning, trade, clue exploration and passenger refits. The sea is yours now: finish the remaining mainline or explore freely."
       }
     },
     "definitions": [
@@ -2887,7 +4131,54 @@
             "cargo_slots": 1,
             "cabin_slots": 0,
             "base_risk": 0.025,
-            "size_tag": "small"
+            "size_tag": "small",
+            "weapon_sockets": [
+              {
+                "name": "SN_Socket_Weapon_Port_1",
+                "socket_class": "Light",
+                "socket_index": 0,
+                "position": [
+                  9.6,
+                  0.8,
+                  1.91
+                ],
+                "clearance_r": 1,
+                "clearance_x": 1.35,
+                "clearance_y": 1.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Starboard_1",
+                "socket_class": "Light",
+                "socket_index": 1,
+                "position": [
+                  9.6,
+                  -0.8,
+                  1.91
+                ],
+                "clearance_r": 1,
+                "clearance_x": 1.35,
+                "clearance_y": 1.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Stern",
+                "socket_class": "Medium",
+                "socket_index": 2,
+                "position": [
+                  -9,
+                  0.4,
+                  3.42
+                ],
+                "clearance_r": 1.75,
+                "clearance_x": 8,
+                "clearance_y": 8,
+                "clearance_h": 20,
+                "mount_scale": 1
+              }
+            ]
           }
         }
       },
@@ -2940,7 +4231,133 @@
             "cargo_slots": 2,
             "cabin_slots": 1,
             "base_risk": 0.02,
-            "size_tag": "medium"
+            "size_tag": "medium",
+            "weapon_sockets": [
+              {
+                "name": "SN_Socket_Weapon_Port_1",
+                "socket_class": "Light",
+                "socket_index": 0,
+                "position": [
+                  -8.6,
+                  1.4,
+                  3.08
+                ],
+                "clearance_r": 1.05,
+                "clearance_x": 1.05,
+                "clearance_y": 2.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Starboard_1",
+                "socket_class": "Light",
+                "socket_index": 1,
+                "position": [
+                  -8.6,
+                  -1.4,
+                  3.08
+                ],
+                "clearance_r": 1.05,
+                "clearance_x": 1.05,
+                "clearance_y": 2.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Bow",
+                "socket_class": "Medium",
+                "socket_index": 2,
+                "position": [
+                  10,
+                  0.2,
+                  2.89
+                ],
+                "clearance_r": 1.1,
+                "clearance_x": 1.1,
+                "clearance_y": 1.25,
+                "clearance_h": 20,
+                "mount_scale": 1
+              }
+            ],
+            "rig_sockets": [
+              {
+                "name": "SN_Socket_Mast_Fore",
+                "socket_kind": "mast",
+                "mast_id": "fore",
+                "socket_index": 0,
+                "position": [
+                  4.6,
+                  0,
+                  2.575
+                ]
+              },
+              {
+                "name": "SN_Socket_Mast_Main",
+                "socket_kind": "mast",
+                "mast_id": "main",
+                "socket_index": 1,
+                "position": [
+                  -1.8,
+                  0,
+                  2.608
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Fore",
+                "socket_kind": "yard",
+                "mast_id": "fore",
+                "socket_index": 2,
+                "position": [
+                  3.945,
+                  0,
+                  17.571
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Main",
+                "socket_kind": "yard",
+                "mast_id": "main",
+                "socket_index": 3,
+                "position": [
+                  -2.328,
+                  0,
+                  12.044
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Fore",
+                "socket_kind": "sail",
+                "mast_id": "fore",
+                "socket_index": 4,
+                "position": [
+                  4.532,
+                  0,
+                  4.124
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Main",
+                "socket_kind": "sail",
+                "mast_id": "main",
+                "socket_index": 5,
+                "position": [
+                  -1.887,
+                  0,
+                  4.156
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Jib",
+                "socket_kind": "sail",
+                "mast_id": "fore",
+                "socket_index": 6,
+                "position": [
+                  5.55,
+                  0,
+                  4.2
+                ]
+              }
+            ]
           }
         }
       },
@@ -2997,7 +4414,137 @@
             "cargo_slots": 3,
             "cabin_slots": 1,
             "base_risk": 0.02,
-            "size_tag": "large"
+            "size_tag": "large",
+            "weapon_sockets": [
+              {
+                "name": "SN_Socket_Weapon_Port_1",
+                "socket_class": "Side",
+                "socket_index": 0,
+                "position": [
+                  13,
+                  2.3,
+                  3.34
+                ],
+                "clearance_r": 0.75,
+                "clearance_x": 1.9,
+                "clearance_y": 4.1,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Starboard_1",
+                "socket_class": "Side",
+                "socket_index": 1,
+                "position": [
+                  13,
+                  -2.3,
+                  3.34
+                ],
+                "clearance_r": 0.75,
+                "clearance_x": 1.9,
+                "clearance_y": 4.1,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Port_2",
+                "socket_class": "Light",
+                "socket_index": 2,
+                "position": [
+                  -14,
+                  2.2,
+                  3.25
+                ],
+                "clearance_r": 1.45,
+                "clearance_x": 1.9,
+                "clearance_y": 6.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Starboard_2",
+                "socket_class": "Light",
+                "socket_index": 3,
+                "position": [
+                  -14,
+                  -2.2,
+                  3.25
+                ],
+                "clearance_r": 1.45,
+                "clearance_x": 1.9,
+                "clearance_y": 6.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              }
+            ],
+            "rig_sockets": [
+              {
+                "name": "SN_Socket_Mast_Fore",
+                "socket_kind": "mast",
+                "mast_id": "fore",
+                "socket_index": 0,
+                "position": [
+                  22.8,
+                  0,
+                  4.4
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Fore",
+                "socket_kind": "yard",
+                "mast_id": "fore",
+                "socket_index": 1,
+                "position": [
+                  23.1,
+                  0,
+                  12.8
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Fore",
+                "socket_kind": "sail",
+                "mast_id": "fore",
+                "socket_index": 2,
+                "position": [
+                  23.1,
+                  0,
+                  12.71
+                ]
+              },
+              {
+                "name": "SN_Socket_Mast_Main",
+                "socket_kind": "mast",
+                "mast_id": "main",
+                "socket_index": 3,
+                "position": [
+                  -23.8,
+                  0,
+                  4.1
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Main",
+                "socket_kind": "yard",
+                "mast_id": "main",
+                "socket_index": 4,
+                "position": [
+                  -23.5,
+                  0,
+                  13.6
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Main",
+                "socket_kind": "sail",
+                "mast_id": "main",
+                "socket_index": 5,
+                "position": [
+                  -23.5,
+                  0,
+                  13.51
+                ]
+              }
+            ]
           }
         }
       },
@@ -3054,7 +4601,170 @@
             "cargo_slots": 3,
             "cabin_slots": 1,
             "base_risk": 0.025,
-            "size_tag": "large"
+            "size_tag": "large",
+            "weapon_sockets": [
+              {
+                "name": "SN_Socket_Weapon_Port_1",
+                "socket_class": "Heavy",
+                "socket_index": 0,
+                "position": [
+                  13.5,
+                  3.1,
+                  4.6
+                ],
+                "clearance_r": 1.9,
+                "clearance_x": 1.9,
+                "clearance_y": 7.3,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Starboard_1",
+                "socket_class": "Heavy",
+                "socket_index": 1,
+                "position": [
+                  13.5,
+                  -3.1,
+                  4.6
+                ],
+                "clearance_r": 1.9,
+                "clearance_x": 1.9,
+                "clearance_y": 7.3,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Port_2",
+                "socket_class": "Medium",
+                "socket_index": 2,
+                "position": [
+                  -17.5,
+                  2.6,
+                  4.6
+                ],
+                "clearance_r": 1.9,
+                "clearance_x": 1.9,
+                "clearance_y": 3.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              },
+              {
+                "name": "SN_Socket_Weapon_Starboard_2",
+                "socket_class": "Medium",
+                "socket_index": 3,
+                "position": [
+                  -17.5,
+                  -2.6,
+                  4.6
+                ],
+                "clearance_r": 1.9,
+                "clearance_x": 1.9,
+                "clearance_y": 3.35,
+                "clearance_h": 20,
+                "mount_scale": 1
+              }
+            ],
+            "rig_sockets": [
+              {
+                "name": "SN_Socket_Mast_Fore",
+                "socket_kind": "mast",
+                "mast_id": "fore",
+                "socket_index": 0,
+                "position": [
+                  15,
+                  0,
+                  4.6
+                ]
+              },
+              {
+                "name": "SN_Socket_Mast_Main",
+                "socket_kind": "mast",
+                "mast_id": "main",
+                "socket_index": 1,
+                "position": [
+                  -10,
+                  0,
+                  4.6
+                ]
+              },
+              {
+                "name": "SN_Socket_Mast_Mizzen",
+                "socket_kind": "mast",
+                "mast_id": "mizzen",
+                "socket_index": 2,
+                "position": [
+                  -20,
+                  0,
+                  4.6
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Fore",
+                "socket_kind": "yard",
+                "mast_id": "fore",
+                "socket_index": 3,
+                "position": [
+                  15,
+                  0,
+                  13.8
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Main",
+                "socket_kind": "yard",
+                "mast_id": "main",
+                "socket_index": 4,
+                "position": [
+                  -10,
+                  0,
+                  14.4
+                ]
+              },
+              {
+                "name": "SN_Socket_Yard_Mizzen",
+                "socket_kind": "yard",
+                "mast_id": "mizzen",
+                "socket_index": 5,
+                "position": [
+                  -20,
+                  0,
+                  12.6
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Fore",
+                "socket_kind": "sail",
+                "mast_id": "fore",
+                "socket_index": 6,
+                "position": [
+                  15,
+                  0,
+                  13.54
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Main",
+                "socket_kind": "sail",
+                "mast_id": "main",
+                "socket_index": 7,
+                "position": [
+                  -10,
+                  0,
+                  14.14
+                ]
+              },
+              {
+                "name": "SN_Socket_Sail_Mizzen",
+                "socket_kind": "sail",
+                "mast_id": "mizzen",
+                "socket_index": 8,
+                "position": [
+                  -20,
+                  0,
+                  12.34
+                ]
+              }
+            ]
           }
         }
       },
@@ -3480,6 +5190,39 @@
         }
       },
       {
+        "id": "core:cabin/small_cabin",
+        "content_type": "cabins",
+        "file": "content/cabins.json",
+        "name_key": "module.core.small_cabin.name",
+        "name_zh": "小型客舱（1 人）",
+        "name_en": "Small Cabin (1 passenger)",
+        "tags": [
+          "module.cabin",
+          "module.passenger",
+          "module.small"
+        ],
+        "definition": {
+          "id": "core:cabin/small_cabin",
+          "name_key": "module.core.small_cabin.name",
+          "description_key": "module.core.small_cabin.description",
+          "tags": [
+            "module.cabin",
+            "module.passenger",
+            "module.small"
+          ],
+          "enabled": true,
+          "data": {
+            "tier": 1,
+            "weight": 8,
+            "purchase_price": 120,
+            "craft_cost": 60,
+            "craft_time_hours": 2,
+            "materials": [],
+            "passenger_capacity": 1
+          }
+        }
+      },
+      {
         "id": "core:role/engineer_basic",
         "content_type": "roles",
         "file": "content/roles.json",
@@ -3709,7 +5452,8 @@
               "exchange",
               "contracts",
               "supply",
-              "shipyard"
+              "shipyard",
+              "tavern"
             ],
             "market": [
               {
@@ -3816,7 +5560,7 @@
               "exchange",
               "contracts",
               "supply",
-              "intel"
+              "tavern"
             ],
             "market": [
               {
@@ -3914,7 +5658,7 @@
               "contracts",
               "supply",
               "shipyard",
-              "intel"
+              "tavern"
             ],
             "market": [
               {
@@ -4119,7 +5863,7 @@
               "exchange",
               "contracts",
               "supply",
-              "intel"
+              "tavern"
             ],
             "market": [
               {
@@ -4236,7 +5980,593 @@
             "intel_cost": 25,
             "trade_margin": 0.95,
             "player_trade_impact": 0.35,
-            "default_starting_build": "core:starting_build/steady"
+            "default_starting_build": "core:starting_build/steady",
+            "twin_world_size": 160,
+            "exploration": {
+              "rumor_clue_chance": 0.65,
+              "fog_port_reveal_ratio": 0.05,
+              "fog_vision_ratio": 0.05,
+              "intel_clue_cost": 40,
+              "max_active_clues": 4,
+              "level_weights": {
+                "rumor": [
+                  0.55,
+                  0.35,
+                  0.1,
+                  0
+                ],
+                "intel": [
+                  0,
+                  0.15,
+                  0.45,
+                  0.4
+                ]
+              },
+              "credibility_range": {
+                "rumor": [
+                  0.25,
+                  0.55
+                ],
+                "intel": [
+                  0.6,
+                  0.95
+                ],
+                "wait": [
+                  0.4,
+                  0.7
+                ],
+                "contract": [
+                  0.55,
+                  0.85
+                ]
+              },
+              "distance_error_ratio": 0.35,
+              "search_zone_radius": 14,
+              "search_zone_noise": 12,
+              "discovery_chance_base": 0.2,
+              "discovery_chance_per_credibility": 0.7,
+              "risk_base": 0.08,
+              "risk_per_unreliability": 0.12,
+              "drift_durability_loss": 8,
+              "drift_extra_coal": 4,
+              "drift_extra_water": 4,
+              "drift_hours": 6,
+              "alert_threshold": 0.5,
+              "alert_progress": 0.5,
+              "turnback_extra_ratio": 0.25,
+              "investigation_cost": 20,
+              "investigation_hours": 6,
+              "investigation_success_chance": 0.75,
+              "goods_clue_expiry_hours": {
+                "rumor": 24,
+                "intel": 72,
+                "wait": 48,
+                "contract": 72
+              },
+              "goods_clue_price_error_ratio": 0.15,
+              "goods_clue_source_weights": {
+                "rumor": 0,
+                "intel": 0,
+                "wait": 1,
+                "contract": 0
+              },
+              "wait_clue_hours_block": 6,
+              "wait_clue_chance_per_block": 0.35,
+              "wait_clue_max_chance": 0.85,
+              "contract_clue_chance": 0.5
+            },
+            "story": {
+              "flow_id": "core:story/opening",
+              "enabled": true,
+              "skip_unlocks": [
+                "overview",
+                "supply",
+                "chart",
+                "market",
+                "contracts",
+                "clues",
+                "tavern",
+                "shipyard"
+              ],
+              "start_unlocks": [],
+              "start_items": [],
+              "start_modules": [],
+              "stages": [
+                {
+                  "id": "opening",
+                  "dialogue": {
+                    "title_key": "story.core.opening.title",
+                    "body_keys": [
+                      "story.core.opening.body.1",
+                      "story.core.opening.body.2"
+                    ]
+                  },
+                  "unlock_features": [
+                    "overview"
+                  ],
+                  "effects": [
+                    {
+                      "type": "set_ship_fuel",
+                      "amount": 4
+                    },
+                    {
+                      "type": "grant_tutorial_contract",
+                      "template_id": "core:contract/main_01",
+                      "cargo_item_id": "core:good/coal",
+                      "amount": 10,
+                      "provider": "fuel",
+                      "deadline_formula": "tutorial_express",
+                      "name_key": "contract.core.tutorial_coal.name",
+                      "description_key": "contract.core.tutorial_coal.description"
+                    },
+                    {
+                      "type": "discover_contract_destination"
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "supply_brief",
+                  "dialogue": {
+                    "title_key": "story.core.supply_brief.title",
+                    "body_keys": [
+                      "story.core.supply_brief.body.1"
+                    ]
+                  },
+                  "unlock_features": [
+                    "market"
+                  ],
+                  "objective": {
+                    "text_key": "story.core.supply_brief.objective",
+                    "target": 4
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:supply.buy_coal",
+                        "counter": "coal_bought",
+                        "at_least": 4
+                      },
+                      {
+                        "event": "cmd:supply.buy_water",
+                        "counter": "water_bought",
+                        "at_least": 2
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "supply_hold",
+                  "dialogue": {
+                    "title_key": "story.core.supply_hold.title",
+                    "body_keys": [
+                      "story.core.supply_hold.body.1"
+                    ]
+                  },
+                  "unlock_features": [
+                    "chart"
+                  ],
+                  "lock_actions": [
+                    "supply.buy"
+                  ],
+                  "objective": {
+                    "text_key": "story.core.supply_hold.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:chart_opened"
+                  }
+                },
+                {
+                  "id": "chart_brief",
+                  "dialogue": {
+                    "title_key": "story.core.chart_brief.title",
+                    "body_keys": [
+                      "story.core.chart_brief.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.chart_brief.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:chart_closed"
+                  }
+                },
+                {
+                  "id": "supply_finish",
+                  "dialogue": {
+                    "title_key": "story.core.supply_finish.title",
+                    "body_keys": [
+                      "story.core.supply_finish.body.1"
+                    ]
+                  },
+                  "effects": [
+                    {
+                      "type": "set_counter_from_ship",
+                      "counter": "coal_aboard",
+                      "kind": "coal"
+                    }
+                  ],
+                  "objective": {
+                    "text_key": "story.core.supply_finish.objective",
+                    "target": 10
+                  },
+                  "advance": {
+                    "event": "cmd:supply.buy_coal",
+                    "counter": "coal_aboard",
+                    "counter_from": "stock",
+                    "at_least": 10
+                  }
+                },
+                {
+                  "id": "depart_brief",
+                  "dialogue": {
+                    "title_key": "story.core.depart_brief.title",
+                    "body_keys": [
+                      "story.core.depart_brief.body.1"
+                    ]
+                  },
+                  "preferred_strategy": "fast",
+                  "objective": {
+                    "text_key": "story.core.depart_brief.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:arrival_settled"
+                  }
+                },
+                {
+                  "id": "second_port",
+                  "dialogue": {
+                    "title_key": "story.core.second_port.title",
+                    "body_keys": [
+                      "story.core.second_port.body.1"
+                    ]
+                  },
+                  "unlock_features": [
+                    "market",
+                    "contracts"
+                  ],
+                  "unlock_items": [
+                    "core:good/spices",
+                    "core:good/textiles"
+                  ],
+                  "effects": [
+                    {
+                      "type": "grant_tutorial_contract",
+                      "template_id": "core:contract/main_02",
+                      "cargo_item_id": "core:good/textiles",
+                      "amount": 6,
+                      "provider": "player",
+                      "destination": "home",
+                      "deadline_formula": "tutorial_trade",
+                      "name_key": "contract.core.tutorial_trade.name",
+                      "description_key": "contract.core.tutorial_trade.description"
+                    }
+                  ],
+                  "objective": {
+                    "text_key": "story.core.second_port.objective",
+                    "target": 8
+                  },
+                  "advance": {
+                    "event": "cmd:trade.buy",
+                    "counter": "textiles_bought",
+                    "at_least": 8,
+                    "match": {
+                      "item_id": "core:good/textiles"
+                    }
+                  }
+                },
+                {
+                  "id": "second_depart",
+                  "dialogue": {
+                    "title_key": "story.core.second_depart.title",
+                    "body_keys": [
+                      "story.core.second_depart.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.second_depart.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "ui:arrival_settled"
+                  }
+                },
+                {
+                  "id": "back_first",
+                  "dialogue": {
+                    "title_key": "story.core.back_first.title",
+                    "body_keys": [
+                      "story.core.back_first.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.back_first.objective",
+                    "target": 2
+                  },
+                  "advance": {
+                    "event": "cmd:trade.sell",
+                    "counter": "textiles_sold",
+                    "at_least": 2,
+                    "match": {
+                      "item_id": "core:good/textiles"
+                    }
+                  }
+                },
+                {
+                  "id": "chapter_wrap",
+                  "dialogue": {
+                    "title_key": "story.core.chapter_wrap.title",
+                    "body_keys": [
+                      "story.core.chapter_wrap.body.1"
+                    ]
+                  },
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "tavern_open",
+                  "dialogue": {
+                    "title_key": "story.core.tavern_open.title",
+                    "body_keys": [
+                      "story.core.tavern_open.body.1",
+                      "story.core.tavern_open.body.2"
+                    ]
+                  },
+                  "unlock_features": [
+                    "clues",
+                    "tavern"
+                  ],
+                  "effects": [
+                    {
+                      "type": "grant_clue",
+                      "port": "next_unknown",
+                      "level": 1,
+                      "source": "rumor"
+                    },
+                    {
+                      "type": "set_market_price_bias",
+                      "item_ids": [
+                        "core:good/textiles",
+                        "core:good/spices"
+                      ],
+                      "home_bias": 1.35,
+                      "other_bias": 0.7,
+                      "reset_stock": true,
+                      "make_buyable": true
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "tavern_intro",
+                  "dialogue": {
+                    "title_key": "story.core.tavern_intro.title",
+                    "body_keys": [
+                      "story.core.tavern_intro.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.tavern_intro.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "cmd:intel.refresh",
+                    "counter": "intel_refreshed",
+                    "at_least": 1
+                  }
+                },
+                {
+                  "id": "third_good",
+                  "dialogue": {
+                    "title_key": "story.core.third_good.title",
+                    "body_keys": [
+                      "story.core.third_good.body.1"
+                    ]
+                  },
+                  "unlock_items": [
+                    "core:good/timber"
+                  ],
+                  "objective": {
+                    "text_key": "story.core.third_good.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:voyage.start",
+                        "counter": "act2_departures",
+                        "at_least": 1
+                      },
+                      {
+                        "event": "ui:arrival_settled",
+                        "counter": "act2_arrivals",
+                        "at_least": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "second_clue",
+                  "dialogue": {
+                    "title_key": "story.core.second_clue.title",
+                    "body_keys": [
+                      "story.core.second_clue.body.1",
+                      "story.core.second_clue.body.2"
+                    ]
+                  },
+                  "effects": [
+                    {
+                      "type": "grant_clue",
+                      "port": "next_unknown",
+                      "level": 3,
+                      "source": "rumor"
+                    },
+                    {
+                      "type": "guarantee_explore_success"
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "explore_third",
+                  "dialogue": {
+                    "title_key": "story.core.explore_third.title",
+                    "body_keys": [
+                      "story.core.explore_third.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.explore_third.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:explore.start",
+                        "counter": "act2_explorations",
+                        "at_least": 1
+                      },
+                      {
+                        "event": "ui:arrival_settled",
+                        "counter": "act2_explore_arrivals",
+                        "at_least": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "third_port",
+                  "dialogue": {
+                    "title_key": "story.core.third_port.title",
+                    "body_keys": [
+                      "story.core.third_port.body.1",
+                      "story.core.third_port.body.2"
+                    ]
+                  },
+                  "unlock_features": [
+                    "shipyard"
+                  ],
+                  "unlock_modules": [
+                    "core:cabin/small_cabin"
+                  ],
+                  "effects": [
+                    {
+                      "type": "add_facility",
+                      "facility": "shipyard"
+                    },
+                    {
+                      "type": "upgrade_hull",
+                      "hull_id": "core:hull/medium_standard",
+                      "store_old": true
+                    }
+                  ],
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                },
+                {
+                  "id": "refit_unload",
+                  "dialogue": {
+                    "title_key": "story.core.refit_unload.title",
+                    "body_keys": [
+                      "story.core.refit_unload.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.refit_unload.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "cmd:ship.uninstall_module",
+                    "counter": "cargo_uninstalled",
+                    "at_least": 1,
+                    "match": {
+                      "content_type": "cargo_modules"
+                    }
+                  }
+                },
+                {
+                  "id": "refit_cabin",
+                  "dialogue": {
+                    "title_key": "story.core.refit_cabin.title",
+                    "body_keys": [
+                      "story.core.refit_cabin.body.1"
+                    ]
+                  },
+                  "objective": {
+                    "text_key": "story.core.refit_cabin.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "event": "cmd:ship.install_module",
+                    "counter": "cabin_installed",
+                    "at_least": 1,
+                    "match": {
+                      "module_id": "core:cabin/small_cabin"
+                    }
+                  }
+                },
+                {
+                  "id": "passenger_run",
+                  "dialogue": {
+                    "title_key": "story.core.passenger_run.title",
+                    "body_keys": [
+                      "story.core.passenger_run.body.1"
+                    ]
+                  },
+                  "effects": [
+                    {
+                      "type": "grant_tutorial_contract",
+                      "template_id": "core:contract/main_03",
+                      "passengers": 1,
+                      "deadline_formula": "tutorial_craft",
+                      "name_key": "contract.core.tutorial_passenger.name",
+                      "description_key": "contract.core.tutorial_passenger.description"
+                    }
+                  ],
+                  "objective": {
+                    "text_key": "story.core.passenger_run.objective",
+                    "target": 1
+                  },
+                  "advance": {
+                    "all": [
+                      {
+                        "event": "cmd:voyage.start",
+                        "counter": "passenger_departures",
+                        "at_least": 1
+                      },
+                      {
+                        "event": "ui:arrival_settled",
+                        "counter": "passenger_arrivals",
+                        "at_least": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "story_complete",
+                  "dialogue": {
+                    "title_key": "story.core.story_complete.title",
+                    "body_keys": [
+                      "story.core.story_complete.body.1"
+                    ]
+                  },
+                  "advance": {
+                    "mode": "confirm"
+                  }
+                }
+              ]
+            }
           }
         }
       },

@@ -113,10 +113,30 @@
     };
   }
 
+  /** 给新项目加一条 Schema 2.0 草案起始定义，并把它的 capability 写进 manifest。
+   * 草案类型只在编辑器 / CLI 里可用，运行时仍只加载 Content Schema 1.0。 */
+  function addDraftStarter(project, typeKey) {
+    const info = catalog().BY_KEY[typeKey];
+    if (!info || !info.draft) throw new Error(`未知 Schema 2.0 草案类型: ${typeKey}`);
+    addDefinition(project, typeKey, {
+      localId: `${info.singular}_starter`,
+      nameZh: `起始${info.label}`,
+      nameEn: `Starter ${info.en}`,
+      descriptionZh: 'Schema 2.0 草案起始定义；游戏运行时不加载，可继续在编辑器中修改。',
+      descriptionEn: 'Starter Schema 2.0 draft definition; the game runtime does not load it yet.',
+    });
+    const capability = info.capability;
+    if (capability && !project.manifest.capabilities.includes(capability)) {
+      project.manifest.capabilities.push(capability);
+    }
+  }
+
   function createProject(options) {
     const opts = options || {};
     const id = opts.id || 'my_mod';
     const name = opts.name || 'My Content Mod';
+    const drafts = Array.isArray(opts.drafts) ? opts.drafts.filter(Boolean) : [];
+    const template = opts.template === null ? null : (opts.template || 'goods');
     const project = {
       format: FORMAT,
       formatVersion: FORMAT_VERSION,
@@ -125,7 +145,11 @@
       contentFiles: [],
       localization: [],
       assets: [],
-      meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), template: opts.template || 'goods' },
+      meta: {
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        template: template || (drafts.length ? `draft:${drafts.join('+')}` : 'goods'),
+      },
     };
     if (opts.dependencies === false) project.manifest.dependencies = [];
     if (opts.description) project.manifest.description = opts.description;
@@ -133,7 +157,8 @@
 
     addLocale(project, 'zh_CN');
     addLocale(project, 'en');
-    applyTemplate(project, opts.template || 'goods');
+    if (template) applyTemplate(project, template);
+    for (const typeKey of drafts) addDraftStarter(project, typeKey);
 
     if (!project.contentFiles.length) {
       addDefinition(project, 'goods', { localId: 'starter_good', nameZh: '起始商品', nameEn: 'Starter Good' });
@@ -230,6 +255,30 @@
           ],
         },
       });
+      return;
+    }
+    if (key === 'weapons') {
+      // 战斗模拟器 5 件内置武器：数据在 catalog.WEAPON_PRESETS，模型引用 Core 的 model.weapon.*。
+      const presets = catalog().WEAPON_PRESETS || [];
+      for (const preset of presets) {
+        const added = addDefinition(project, 'weapons', {
+          localId: preset.localId,
+          nameZh: preset.nameZh,
+          nameEn: preset.nameEn,
+          descriptionZh: preset.descriptionZh,
+          descriptionEn: preset.descriptionEn,
+          tags: preset.tags,
+          data: preset.data,
+        });
+        if (preset.model) {
+          added.definition.information = { model: preset.model };
+          qualifyCoreAssetReferences(added.definition);
+        }
+      }
+      const capability = 'content.combat.v1';
+      if (!project.manifest.capabilities.includes(capability)) {
+        project.manifest.capabilities.push(capability);
+      }
       return;
     }
     if (key === 'starter_kit') {

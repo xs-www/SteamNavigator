@@ -42,10 +42,15 @@
 | `walkStrings(value, path, callback, depth)` | L415 |
 | `referencedIdType(id)` | L430 |
 | `expectedRefType(path)` | L435 |
-| `validateProject(project, options)` | L445 |
-| `finish(issues)` | L796 |
-| `byDefinition(issues)` | L805 |
-| `SNValidate (global)` | L818 |
+| `LOCAL_IDENTIFIER_FIELDS` | L450 |
+| `SOCKET_CLASSES` | L455 |
+| `RIG_SOCKET_KINDS` | L456 |
+| `checkWeaponSemantics(definition, view, add)` | L459 |
+| `checkHullSocketSemantics(definition, view, add)` | L493 |
+| `validateProject(project, options)` | L566 |
+| `finish(issues)` | L923 |
+| `byDefinition(issues)` | L932 |
+| `SNValidate (global)` | L945 |
 
 ## 契约与约束
 
@@ -54,6 +59,8 @@
 - `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（草案 2.0），最后回退 1.0。
 - 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
 - 草案内容文件每文件一条 `draft_content` 警告；草案 capability 未写入 `manifest.capabilities` 时按 capability 去重报 `capability_undeclared`；草案跨引用跳过 `ref_core_unknown`。
+- `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
+- 武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。
 - 错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。
 - 语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。
 - 实体 information.texture/model 支持当前模组裸资源键与完整 asset:// URI；当前模组和 Core 引用必须存在且格式匹配。

@@ -79,13 +79,14 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 27, `expected 18 top-level + 9 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 27, `expected 27 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 28, `expected 18 top-level + 10 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 28, `expected 28 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
     assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
+    assert.ok(globalThis.SN_SCHEMAS['v2/weapon.schema.json'], 'v2/weapon is the weapons draft schema');
   });
 
   await test('embedded schema bundle is in sync with /schemas recursively', () => {
@@ -120,6 +121,103 @@ function warningsOf(result) {
     assert.equal(result.stats.definitions, 1);
     assert.equal(project.manifest.content.length, 1);
     assert.equal(project.manifest.localization.length, 2);
+  });
+
+  await test('createProject with drafts builds a pure Schema 2.0 project', () => {
+    const project = Store.createProject({ id: 'draft_mod', name: 'Draft Mod', template: null, drafts: ['weapons'] });
+    assert.deepEqual(project.contentFiles.map((file) => file.content_type), ['weapons'], 'only the requested draft type is created');
+    assert.equal(project.contentFiles[0].path, 'content/weapons.json');
+    assert.equal(project.contentFiles[0].schema_version, '2.0');
+    assert.equal(project.contentFiles[0].definitions.length, 1);
+    assert.equal(project.contentFiles[0].definitions[0].id, 'draft_mod:weapon/weapon_starter');
+    assert.deepEqual(project.manifest.content, ['content/weapons.json']);
+    assert.deepEqual(project.manifest.capabilities, ['content.combat.v1'], 'the draft capability is declared in the manifest');
+    assert.equal(project.manifest.localization.length, 2, 'both localization files are created');
+
+    const validation = Validate.validateProject(project);
+    assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
+    assert.deepEqual(warningsOf(validation).map((issue) => issue.code), ['draft_content'], 'capability_undeclared must not fire');
+
+    // Several draft types at once; capabilities shared by two types are deduped.
+    const multi = Store.createProject({
+      id: 'world_mod', name: 'World Mod', template: null, drafts: ['world_profiles', 'regions'],
+    });
+    assert.deepEqual(multi.contentFiles.map((file) => file.content_type), ['world_profiles', 'regions']);
+    assert.deepEqual(multi.manifest.capabilities, ['content.world.v1']);
+    assert.equal(Validate.validateProject(multi).counts.error, 0);
+
+    // The legacy template path is untouched (goods starter, 1.0, no capabilities).
+    const legacy = Store.createProject({ id: 'legacy_mod', name: 'Legacy Mod', template: 'goods' });
+    assert.deepEqual(legacy.contentFiles.map((file) => file.content_type), ['goods']);
+    assert.equal(legacy.contentFiles[0].schema_version, '1.0');
+    assert.deepEqual(legacy.manifest.capabilities, []);
+
+    // Unknown draft types are rejected instead of silently ignored.
+    assert.throws(
+      () => Store.createProject({ id: 'bad_mod', name: 'Bad Mod', template: null, drafts: ['nope'] }),
+      /未知 Schema 2\.0 草案类型/
+    );
+  });
+
+  await test('weapons template creates five Schema 2.0 weapon presets', () => {
+    const template = Catalog.TEMPLATES.find((item) => item.key === 'weapons');
+    assert.ok(template, 'catalog must expose the weapons starter template');
+    assert.equal(template.type, 'weapons');
+    assert.equal(template.name, '舰载武器包');
+    assert.equal(Catalog.WEAPON_PRESETS.length, 5, 'the template ships exactly five preset weapons');
+    const presets = Catalog.WEAPON_PRESETS;
+    const presetIds = ['deck_gun', 'heavy_cannon', 'mortar', 'repeater', 'broadside'];
+    assert.deepEqual(presets.map((preset) => preset.localId), presetIds, 'presets follow the battle simulator order');
+
+    // Combat numbers mirror SNBattleSim/js/catalog.mjs BUILTIN_WEAPONS; assembly fields follow GLB extras.
+    const expected = {
+      deck_gun: { kind: 'direct', damage: 12, range: 245, min_range: 0, cooldown: 1.65, salvo: 1, weapon_class: 'Light', assembly_profile: 'yaw_pitch' },
+      heavy_cannon: { kind: 'direct', damage: 30, range: 355, min_range: 35, cooldown: 4.2, salvo: 1, weapon_class: 'Heavy', assembly_profile: 'yaw_pitch' },
+      mortar: { kind: 'artillery', damage: 24, range: 430, min_range: 105, cooldown: 5.1, salvo: 1, weapon_class: 'Heavy', assembly_profile: 'yaw_pitch' },
+      repeater: { kind: 'direct', damage: 7, range: 185, min_range: 0, cooldown: 0.72, salvo: 1, weapon_class: 'Medium', assembly_profile: 'yaw_pitch' },
+      broadside: { kind: 'broadside', damage: 8, range: 285, min_range: 20, cooldown: 5.4, salvo: 4, weapon_class: 'Side', assembly_profile: 'pitch_only' },
+    };
+    const coreManifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'dev_mods', 'core', 'manifest.json'), 'utf8'));
+    for (const preset of presets) {
+      assert.equal(preset.model, `model.weapon.${preset.localId}`, `${preset.localId} points at its Core model key`);
+      assert.ok(coreManifest.assets[preset.model], `Core manifest must declare ${preset.model}`);
+      for (const [field, value] of Object.entries(expected[preset.localId])) {
+        assert.equal(preset.data[field], value, `${preset.localId}.data.${field}`);
+      }
+      assert.ok(Number.isInteger(preset.data.muzzle_count) && preset.data.muzzle_count >= 1, `${preset.localId} declares muzzle_count`);
+      assert.ok(Array.isArray(preset.data.materials), `${preset.localId} declares craft materials`);
+    }
+
+    const project = Store.createProject({ id: 'weapon_pack', name: 'Weapon Pack', template: 'weapons' });
+    assert.deepEqual(project.contentFiles.map((file) => file.content_type), ['weapons'], 'the template creates one content file');
+    assert.equal(project.contentFiles[0].path, 'content/weapons.json');
+    assert.equal(project.contentFiles[0].schema_version, '2.0');
+    assert.equal(project.contentFiles[0].definitions.length, 5);
+    assert.deepEqual(project.manifest.content, ['content/weapons.json']);
+    assert.deepEqual(project.manifest.capabilities, ['content.combat.v1']);
+    assert.deepEqual(
+      project.contentFiles[0].definitions.map((definition) => definition.id),
+      presetIds.map((localId) => `weapon_pack:weapon/${localId}`)
+    );
+    for (let index = 0; index < presets.length; index += 1) {
+      const preset = presets[index];
+      const definition = project.contentFiles[0].definitions[index];
+      assert.deepEqual(definition.information, { model: `asset://core/${preset.model}` }, `${preset.localId} model is namespaced to Core`);
+      assert.deepEqual(definition.data, preset.data, `${preset.localId} draft data matches the preset`);
+      for (const locale of ['zh_CN', 'en']) {
+        const entries = Store.getLoc(project, locale).entries;
+        assert.ok(entries[`weapon.weapon_pack.${preset.localId}.name`], `${locale} name for ${preset.localId}`);
+        assert.ok(entries[`weapon.weapon_pack.${preset.localId}.description`], `${locale} description for ${preset.localId}`);
+      }
+    }
+
+    const validation = Validate.validateProject(project);
+    assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
+    assert.deepEqual(
+      warningsOf(validation).map((issue) => issue.code),
+      ['draft_content'],
+      'only draft_content may warn: no capability_undeclared and no entity_model_missing'
+    );
   });
 
   await test('schema validator catches required, enum, pattern and extra fields', () => {
@@ -187,11 +285,11 @@ function warningsOf(result) {
   });
 
   await test('draft types are generated with schema 2.0 and registered in the catalog', () => {
-    assert.equal(Types.DRAFT_TYPES.length, 8, 'content_types.json must expose 8 Schema 2.0 draft types');
+    assert.equal(Types.DRAFT_TYPES.length, 9, 'content_types.json must expose 9 Schema 2.0 draft types');
     const keys = Types.DRAFT_TYPES.map((info) => info.key).sort();
     assert.deepEqual(keys, [
       'discoveries', 'factions', 'regions', 'route_templates',
-      'sites', 'start_profiles', 'weather_profiles', 'world_profiles',
+      'sites', 'start_profiles', 'weapons', 'weather_profiles', 'world_profiles',
     ]);
     for (const info of Types.DRAFT_TYPES) {
       assert.equal(info.draft, true, `${info.key} must be marked draft`);
@@ -271,6 +369,201 @@ function warningsOf(result) {
     const warningCodes = new Set(warningsOf(result).map((issue) => issue.code));
     assert.ok(warningCodes.has('draft_content'), 'draft content must produce a draft_content warning');
     assert.ok(warningCodes.has('capability_undeclared'), 'undeclared capabilities must warn');
+  });
+
+  await test('weapons draft defaults satisfy the Schema 2.0 weapon schema', () => {
+    const weaponSchema = globalThis.SN_SCHEMAS['v2/weapon.schema.json'];
+    assert.ok(weaponSchema, 'v2/weapon.schema.json must be embedded in the schema bundle');
+    const defaults = Catalog.DEFAULTS.weapons();
+    assert.equal(typeof defaults, 'object', 'DEFAULTS.weapons must return a data object');
+    const envelope = {
+      schema_version: '2.0',
+      content_type: 'weapons',
+      definitions: [{
+        id: 'test_mod:weapon/deck_gun',
+        name_key: 'weapon.test_mod.deck_gun.name',
+        tags: ['weapon.direct'],
+        enabled: true,
+        data: defaults,
+      }],
+    };
+    const errors = Validate.validateSchema(envelope, weaponSchema, 'v2/weapon.schema.json');
+    assert.deepEqual(errors, [], `DEFAULTS.weapons must pass the draft schema: ${JSON.stringify(errors, null, 2)}`);
+    for (const field of weaponSchema.$defs.weapon_data.required) {
+      assert.ok(Object.prototype.hasOwnProperty.call(defaults, field), `DEFAULTS.weapons must provide required field ${field}`);
+    }
+    // Economy defaults use the runtime module material shape ({id, amount}).
+    assert.equal(defaults.kind, 'direct');
+    assert.equal(defaults.weapon_class, 'Light');
+    assert.equal(defaults.assembly_profile, 'yaw_pitch');
+    assert.equal(defaults.muzzle_count, 1);
+    assert.deepEqual(defaults.materials, []);
+  });
+
+  await test('weapons is registered as a Schema 2.0 draft type and stays out of runtime types', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
+    assert.equal(manifest.draft_schemas.weapons, 'schemas/v2/weapon.schema.json', 'weapons must point at the weapon schema');
+    const entry = (manifest.draft_types || []).find((type) => type.key === 'weapons');
+    assert.ok(entry, 'weapons must be listed in draft_types');
+    assert.equal(entry.singular, 'weapon');
+    assert.equal(entry.key_prefix, 'weapon');
+    assert.equal(entry.group, 'ships_modules');
+    assert.equal(entry.default_file, 'content/weapons.json');
+    assert.equal(entry.schema_version, '2.0');
+    assert.equal(entry.capability, 'content.combat.v1');
+    const weaponSchema = globalThis.SN_SCHEMAS['v2/weapon.schema.json'];
+    assert.equal(weaponSchema.properties.content_type.const, 'weapons', 'schema pins content_type weapons');
+    assert.equal(weaponSchema.properties.schema_version.const, entry.schema_version, 'draft metadata matches the schema const');
+    const combat = (manifest.planned || []).find((system) => system.capability === 'content.combat.v1');
+    assert.ok(combat && combat.types.includes('weapons'), 'weapons stays planned under content.combat.v1');
+    assert.ok(!Types.TYPES.some((type) => type.key === 'weapons'), 'the Godot runtime type list must not load weapons');
+  });
+
+  await test('weapon form renders combat, assembly and economy fields with readable enums', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'weapons', {});
+    added.definition.data.materials = [{ id: 'core:material/boiler_plate', amount: 2 }];
+    const html = UI.renderDefinitionForm({
+      project,
+      typeKey: 'weapons',
+      definition: added.definition,
+      file: added.file,
+      index: added.index,
+      schemaFile: Catalog.BY_KEY.weapons.schema,
+    });
+    const paths = [
+      'data.kind', 'data.damage', 'data.range', 'data.min_range', 'data.accuracy',
+      'data.weapon_class', 'data.mount_class', 'data.assembly_profile',
+      'data.has_yaw', 'data.has_pitch', 'data.has_muzzle', 'data.muzzle_count',
+      'data.envelope_x', 'data.envelope_y', 'data.height', 'data.mount_scale',
+      'data.tier', 'data.weight', 'data.purchase_price', 'data.craft_cost',
+      'data.materials.0.id', 'data.materials.0.amount',
+    ];
+    for (const field of paths) {
+      assert.ok(html.includes(`data-field="${field}"`), `weapon form must render ${field}`);
+    }
+    assert.ok(html.includes('直射 direct'), 'kind enum uses readable options');
+    assert.ok(html.includes('轻型 Light'), 'weapon_class enum uses readable options');
+    assert.ok(html.includes('偏航 + 俯仰 yaw_pitch'), 'assembly_profile enum uses readable options');
+    assert.ok(!html.includes('undefined'), 'weapon form must not render undefined values');
+  });
+
+  await test('hull form renders weapon and rig socket mirror editors', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'hulls', {});
+    const emptyHtml = UI.renderDefinitionForm({
+      project,
+      typeKey: 'hulls',
+      definition: added.definition,
+      file: added.file,
+      index: added.index,
+      schemaFile: Catalog.BY_KEY.hulls.schema,
+    });
+    assert.ok(emptyHtml.includes('data-action="array-add" data-path="data.weapon_sockets"'), 'hulls expose add-weapon-socket control');
+    assert.ok(emptyHtml.includes('data-action="array-add" data-path="data.rig_sockets"'), 'hulls expose add-rig-socket control');
+
+    added.definition.data.weapon_sockets = [{
+      name: 'SN_Socket_Weapon_New_1',
+      socket_class: 'Light',
+      socket_index: 0,
+      position: [0, 0, 0],
+      clearance_r: 1,
+      clearance_x: 1,
+      clearance_y: 1,
+      clearance_h: 20,
+      mount_scale: 1,
+    }];
+    added.definition.data.rig_sockets = [{
+      name: 'SN_Socket_Mast_New_1',
+      socket_kind: 'mast',
+      mast_id: 'fore',
+      socket_index: 0,
+      position: [0, 0, 0],
+    }];
+    const html = UI.renderDefinitionForm({
+      project,
+      typeKey: 'hulls',
+      definition: added.definition,
+      file: added.file,
+      index: added.index,
+      schemaFile: Catalog.BY_KEY.hulls.schema,
+    });
+    assert.ok(html.includes('data-socket-row="weapon"'), 'weapon socket rows use the socket row renderer');
+    assert.ok(html.includes('data-socket-row="rig"'), 'rig socket rows use the socket row renderer');
+    for (const field of [
+      'data.weapon_sockets.0.name',
+      'data.weapon_sockets.0.socket_class',
+      'data.weapon_sockets.0.socket_index',
+      'data.weapon_sockets.0.position.0',
+      'data.weapon_sockets.0.position.1',
+      'data.weapon_sockets.0.position.2',
+      'data.weapon_sockets.0.clearance_r',
+      'data.weapon_sockets.0.mount_scale',
+      'data.rig_sockets.0.name',
+      'data.rig_sockets.0.socket_kind',
+      'data.rig_sockets.0.mast_id',
+      'data.rig_sockets.0.socket_index',
+      'data.rig_sockets.0.position.2',
+      'data.rig_sockets.0.rig_height',
+      'data.rig_sockets.0.rig_stowed',
+    ]) {
+      assert.ok(html.includes(`data-field="${field}"`), `hull form must render ${field}`);
+    }
+    assert.ok(html.includes('轻型 Light'), 'socket_class enum uses readable options');
+    assert.ok(html.includes('桅杆 mast'), 'socket_kind enum uses readable options');
+    assert.ok(!html.includes('undefined'), 'hull socket editor must not render undefined values');
+  });
+
+  await test('weapon semantics report range order, assembly pivot and muzzle problems', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'weapons', {});
+    const data = added.definition.data;
+    data.min_range = data.range;
+    data.has_yaw = false;
+    data.muzzle_count = 3;
+    data.has_muzzle = false;
+    data.weapon_class = 'Modular';
+    const result = Validate.validateProject(project);
+    const errorCodes = new Set(errorsOf(result).map((issue) => issue.code));
+    assert.ok(errorCodes.has('weapon_range_order'), 'min_range >= range must report weapon_range_order');
+    assert.ok(errorCodes.has('weapon_assembly_pivot'), 'yaw_pitch without has_yaw must report weapon_assembly_pivot');
+    assert.ok(errorCodes.has('weapon_muzzle_count'), 'muzzle_count > 1 without has_muzzle must report weapon_muzzle_count');
+    const warningCodes = new Set(warningsOf(result).map((issue) => issue.code));
+    assert.ok(warningCodes.has('weapon_class_modular'), 'Modular weapons warn that they are kit parts');
+  });
+
+  await test('hull socket semantics report duplicates and unknown vocabularies', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'hulls', {});
+    added.definition.data.weapon_sockets = [
+      { name: 'SN_Socket_Weapon_Port_1', socket_class: 'Light', socket_index: 0 },
+      { name: 'SN_Socket_Weapon_Port_1', socket_class: 'Giant', socket_index: 0 },
+      { name: 'Weapon_Mount_3', socket_class: 'Light', socket_index: 2 },
+    ];
+    added.definition.data.rig_sockets = [
+      { name: 'SN_Socket_Mast_Fore', socket_kind: 'mast', socket_index: 0 },
+      { name: 'SN_Socket_Mast_Fore', socket_kind: 'rope', socket_index: 0 },
+    ];
+    const result = Validate.validateProject(project);
+    const errorCodes = new Set(errorsOf(result).map((issue) => issue.code));
+    assert.ok(errorCodes.has('socket_name_duplicate'), 'duplicate socket names must be an error');
+    assert.ok(errorCodes.has('socket_index_duplicate'), 'duplicate socket indexes must be an error');
+    const warningCodes = new Set(warningsOf(result).map((issue) => issue.code));
+    assert.ok(warningCodes.has('socket_class_unknown'), 'unknown socket_class must warn');
+    assert.ok(warningCodes.has('socket_kind_unknown'), 'unknown socket_kind must warn');
+    assert.ok(warningCodes.has('socket_name_prefix'), 'non-standard socket names must warn');
+    assert.ok(warningCodes.has('rig_socket_mast_id'), 'rig sockets without mast_id must warn');
+  });
+
+  await test('old hull content without socket mirrors stays free of socket issues', () => {
+    const project = freshProject();
+    Store.addDefinition(project, 'hulls', {});
+    const result = Validate.validateProject(project);
+    const socketIssues = result.issues.filter((issue) => (
+      String(issue.code).startsWith('socket_') || issue.code === 'rig_socket_mast_id'
+    ));
+    assert.deepEqual(socketIssues, [], 'hulls without weapon_sockets / rig_sockets must not emit socket issues');
+    assert.equal(errorsOf(result).length, 0, JSON.stringify(errorsOf(result), null, 2));
   });
 
   await test('draft files require schema 2.0 and 1.0 types keep 1.0', () => {

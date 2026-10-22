@@ -3,7 +3,7 @@
 在浏览器里可视化创建、编辑和打包《Steam Navigator》的内容模组：
 
 - 读取仓库内 **官方 JSON Schema**，按类型生成表单；
-- 编辑 Manifest、15 类运行时内容、8 类 Content Schema 2.0 草案类型、显式补丁、本地化与资源；
+- 编辑 Manifest、16 类运行时类型（15 类内容 + 显式补丁）、9 类 Content Schema 2.0 草案类型、本地化与资源；
 - 实时校验 ID 命名空间、字段约束、跨引用、本地化覆盖与补丁安全；
 - 导入松散目录 / `.snavmod.zip` / 项目文件；
 - 导出 `mods/<id>/` 结构的 `.snavmod.zip`、项目文件，或直接写入本地目录；
@@ -43,6 +43,8 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 4. 打开「校验」，修正错误与警告。
 5. 「导出」→ 打包 `.snavmod.zip`，放到游戏的 `mods/` 或 `user://mods/`。
 
+**起始模板**（新建模组对话框与 CLI `new --template <key>` 共用同一清单）：商品包、锅炉包、事件包、**舰载武器包**（战斗模拟器 5 件内置武器，带 `asset://core/model.weapon.*` 模型与 `weapon-assembly@2` 装配数据）、小型内容合集、空白模组。武器包只写入编辑器项目、不写 Core，原因见下方「Schema 2.0 草案」。
+
 > 官方内容也是模组。新建项目默认依赖 `core`；引用 `core:good/brass` 这类 ID 时请保留完整命名空间。
 
 ---
@@ -72,7 +74,7 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 
 #### Schema 2.0 草案
 
-以下 8 类 Content Schema 2.0 草案类型同样可以在编辑器与 Content CLI 中创建、编辑和校验，内容文件写 `schema_version: "2.0"`。它们**尚未接入游戏运行时**：运行时仍只加载 Content Schema 1.0，草案内容不会生效，校验会给出 `draft_content` 警告。
+以下 9 类 Content Schema 2.0 草案类型同样可以在编辑器与 Content CLI 中创建、编辑和校验，内容文件写 `schema_version: "2.0"`。它们**尚未接入游戏运行时**：运行时仍只加载 Content Schema 1.0，草案内容不会生效，校验会给出 `draft_content` 警告。注意「不加载」不是静默忽略：Core 里若出现未注册类型或版本不符的内容，运行时会按 mod error 拒绝，Core 作为必需包会导致启动进入 `Degraded`；因此草案内容与「舰载武器包」模板**只存在于编辑器项目**，不要写进 `dev_mods/core`。
 
 | 类型 | `content_type` | 说明 |
 | --- | --- | --- |
@@ -84,13 +86,16 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 | 阵营 | `factions` | 声望、阈值、巡逻强度、偏好商品、活动区域 |
 | 图鉴发现 | `discoveries` | 图鉴条目类型、稀有度、权重与解锁引用 |
 | 起始档案 | `start_profiles` | 世界配置、起始构筑、难度、起始港口与货物 |
+| 舰载武器 | `weapons` | 战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型键；船体安装点决定可装 class |
 
 草案类型使用 `schemas/v2/` 下的 Schema（含 `v2/common.schema.json` 的共享定义与跨文件 `$ref`）。草案模组若使用 capability，还需在 `manifest.capabilities` 声明对应能力（例如 `content.world.v1`），否则校验给出 `capability_undeclared` 警告。
 
 ### 编辑器
 
 - **表单驱动**：字段、枚举、数字范围、必填项与数组结构来自 `schemas/` 的 JSON Schema，与 Godot 加载链共用同一套约束。
-- **Schema 2.0 草案类型**：侧栏「Schema 2.0 草案 / 运行时不加载」分区列出 8 类草案（带 draft 标记，悬停提示运行时 1.0 不加载）；表单、默认值、引用与校验走同一套 v2 Schema，内容文件自动写 `schema_version: "2.0"`。
+- **Schema 2.0 草案类型**：侧栏「Schema 2.0 草案 / 运行时不加载」分区列出 9 类草案（带 draft 标记，悬停提示运行时 1.0 不加载）；表单、默认值、引用与校验走同一套 v2 Schema，内容文件自动写 `schema_version: "2.0"`。
+- **舰载武器表单**：`weapons` 草案按战斗（kind / damage / range / cooldown / accuracy / salvo / color…）、装配（weapon_class / assembly_profile / has_yaw·has_pitch·has_recoil·has_muzzle / muzzle_count / envelope_* / height / mount_scale）、经济（tier / weight / purchase_price / craft_* / materials）三组渲染；新增定义默认取模拟器「甲板速射炮」数值。
+- **船体安装点**：船体表单可编辑 `weapon_sockets` / `rig_sockets` 数组（安装点名称、class/kind、索引、position 三元组、clearance_*、mount_scale、note），校验重复 name / 索引、非法 class/kind 与缺失必填；写出的是内容侧镜像，运行时装配仍读 GLB extras。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
 - **引用选择**：船体、锅炉、商品、材料等字段带 Core + 当前项目的 ID 候选；显示中文名。
 - **复制与派生**：复制当前定义，或从 Core 复制一条完整定义并自动改写 ID、本地化键与翻译；官方贴图/模型会保留为 `asset://core/...` 引用，不会被误认成当前模组资产。
@@ -196,7 +201,7 @@ tailscale serve --bg --set-path /snmodmaker http://127.0.0.1:8099
 
 除网页编辑器外，`tools/content.mjs` 提供同一套内容模型的命令行入口：按 Schema 增删改定义、补本地化、读取类型说明、校验既有模组。它面向 agent、CI 与批量维护脚本，不启动浏览器，也不引入额外依赖（Node.js ≥ 18，ESM）。
 
-CLI 与编辑器使用同一份类型清单：`types` 会同时列出 16 个运行时类型与 8 个 Schema 2.0 草案类型（草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。
+CLI 与编辑器使用同一份类型清单：`types` 会同时列出 16 个运行时类型与 9 个 Schema 2.0 草案类型（草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`；`--template` 可选 `goods` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加。
 
 所有命令都从**仓库根**执行，`--mod` 指向仓库内的松散模组目录（例如 `dev_mods/core` 或 `SNModMaker/mods/<id>`，必须含 `manifest.json`）；所有写入都会留在该目录内。
 
@@ -213,7 +218,7 @@ CLI 与编辑器使用同一份类型清单：`types` 会同时列出 16 个运�
 | `rm --mod <dir> <id> --yes` | 删除定义，并清理它独占的本地化键 |
 | `clone --mod <dir> --from <core-id>` | 从 Core 定义复制一条到当前模组 |
 | `validate --mod <dir>` | 只读校验：Schema、引用、命名空间与本地化 |
-| `new --mod <dir> --id <mod_id>` | 从模板新建模组骨架 |
+| `new --mod <dir> --id <mod_id>` | 从模板新建模组骨架：`--template goods\|boiler\|event\|weapons\|starter_kit\|blank`（`weapons` 生成 5 件舰载武器包）；`--draft <content_type>`（可重复）改为新建纯 Schema 2.0 草案项目 |
 
 每个命令都支持 `--json`、`--quiet`、`--help`（`-h`）；`add` / `set` / `rm` / `clone` 支持 `--dry-run`（`rm` 另需 `--yes`），`add` / `set` / `clone` 支持 `--force`。完整选项见 `node SNModMaker/tools/content.mjs <command> --help`。
 
@@ -248,6 +253,27 @@ node SNModMaker/tools/content.mjs clone --mod SNModMaker/mods/my_mod --from core
   --name-zh "铁矿石" --name-en "Iron Ore"
 node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_mod --json
 ```
+
+新建 Schema 2.0 草案项目（武器 / 世界生成等）；`--template` 可叠加 1.0 模板：
+
+```powershell
+node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_weapons --id my_weapons `
+  --name "我的武器包" --draft weapons
+node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_world --id my_world `
+  --name "我的世界包" --draft world_profiles --draft regions --draft sites
+node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_weapons --json
+```
+
+草案项目会在 `manifest.capabilities` 里自动声明对应 capability（如 weapons → `content.combat.v1`），校验只会给 `draft_content` 警告；这类项目同样不能「导出并覆盖到发布包 mods/」（运行时不加载草案内容）。
+
+一次生成 5 件战斗模拟器武器（「舰载武器包」模板，只写编辑器项目、不写 Core）：
+
+```powershell
+node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_weapon_pack --id my_weapon_pack `
+  --name "我的武器包" --template weapons
+```
+
+它会创建 `content/weapons.json`（`schema_version: "2.0"`）与 5 条定义：`my_weapon_pack:weapon/deck_gun` / `heavy_cannon` / `mortar` / `repeater` / `broadside`，战斗数值抄 SNBattleSim，装配字段来自 GLB extras，`information.model` 写成 `asset://core/model.weapon.<id>`，并把 `content.combat.v1` 写进 `manifest.capabilities`。需要单条骨架时继续用 `--draft weapons`。
 
 ### JSON 输出与退出码
 
@@ -387,7 +413,7 @@ node tools/gen_content_types.mjs --check
 node SNModMaker/tools/sync-schemas.mjs
 ```
 
-生成物覆盖 27 个 Schema：18 个顶层运行时 Schema + 9 个 `v2/`（`v2/common.schema.json` 与 8 个草案）。
+生成物覆盖 28 个 Schema：18 个顶层运行时 Schema + 10 个 `v2/`（`v2/common.schema.json` 与 9 个草案）。
 
 ### 重新生成 Core 索引
 
@@ -417,7 +443,7 @@ node SNModMaker/tools/serve.mjs
 node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-smoke.png"
 ```
 
-当前基线：**39 个 Node 用例 + 47 个 Content CLI 用例 + 1 个本地服务用例 + 16 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
+当前基线：**50 个 Node 用例 + 57 个 Content CLI 用例 + 1 个本地服务用例 + 17 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
 
 ### 代码约定
 
@@ -432,7 +458,8 @@ node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-
 
 ## 已知边界
 
-- Content Schema 2.0 草案类型可以在编辑器与 CLI 中创建、编辑、校验和导出，但**运行时尚未接入**：游戏仍只加载 Content Schema 1.0，草案内容文件只用于设计与评审，校验会给出 `draft_content` 警告；草案模组的能力需在 `manifest.capabilities` 声明。含草案内容的项目无法部署到发布包 `mods/`（导出 ZIP 会二次确认）。
+- Content Schema 2.0 草案类型（含新增的 `weapons`）可以在编辑器与 CLI 中创建、编辑、校验和导出，但**运行时尚未接入**：游戏仍只加载 Content Schema 1.0，草案内容文件（`content/weapons.json`）只用于设计与评审，校验会给出 `draft_content` 警告；草案模组的能力需在 `manifest.capabilities` 声明。含草案内容的项目无法部署到发布包 `mods/`（导出 ZIP 会二次确认）。**「运行时不加载」不等于静默忽略**：Core 里出现未注册类型 / 版本不符会按 mod error 拒绝，Core 必需包会让启动进入 `Degraded`；「舰载武器包」模板只写编辑器项目，不要手工搬进 `dev_mods/core`（要进 Core 需先把 `weapons` 提升为运行时类型）。
+- 船体 `weapon_sockets` / `rig_sockets` 是**内容侧镜像**：编辑器可编辑、Schema 可校验，但运行时装配仍读 GLB 节点 extras，`ShipVisualAssembler` 尚未接入；镜像里的 `socket_index` 从 0 起，GLB extras 的武器 socket 从 1 起，对表时需转换。
 - 不支持 `.csv` 本地化；导入时会被跳过并给出警告。
 - 不读取 Godot `.import` / `.uid`；资源以原始文件打包。
 - 模型缩略图只做基础单帧渲染：不解析贴图、Draco / KTX2、骨骼动画与变形目标；解析失败时保留 GLB 占位，不影响编辑和导出。

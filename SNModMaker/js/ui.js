@@ -341,7 +341,7 @@
     const min = node.minimum != null ? `min="${attr(node.minimum)}"` : '';
     const max = node.maximum != null ? `max="${attr(node.maximum)}"` : '';
     const step = opts.step || (isInt ? '1' : 'any');
-    return `<input class="input mono" type="number" value="${value == null ? '' : attr(value)}"
+    return `<input class="input mono ${opts.className || ''}" type="number" value="${value == null ? '' : attr(value)}"
       data-field="${attr(path)}" data-parse="${isInt ? 'int' : 'number'}" step="${step}" ${min} ${max}
       ${opts.extra || ''}>`;
   }
@@ -738,7 +738,10 @@
     }
 
     if (node.enum) {
-      return fieldShell(typeKey, field, selectEnum(path, value != null ? value : node.enum[0], node.enum), shellOpts);
+      const enumValues = typeof catalog().enumOptions === 'function'
+        ? catalog().enumOptions(typeKey, field, node.enum)
+        : node.enum;
+      return fieldShell(typeKey, field, selectEnum(path, value != null ? value : node.enum[0], enumValues), shellOpts);
     }
     if (type === 'boolean') {
       return fieldShell(typeKey, field, toggle(path, Boolean(value)), shellOpts);
@@ -852,6 +855,224 @@
     </section>`;
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Hull socket mirror (weapon_sockets / rig_sockets)                   */
+  /* ------------------------------------------------------------------ */
+
+  const SOCKET_CLASSES = ['Light', 'Medium', 'Heavy', 'Tower', 'Side'];
+  const SOCKET_KINDS = ['mast', 'yard', 'sail'];
+  const SOCKET_CLASS_COLORS = {
+    Light: '#7fc7a4',
+    Medium: '#e0b45a',
+    Heavy: '#d97a72',
+    Tower: '#9aa7e0',
+    Side: '#8fc3e8',
+  };
+  const SOCKET_ROW_STYLE = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;';
+
+  function socketBadge(value) {
+    if (!value) return ' <span class="mini-badge ghost">未设置</span>';
+    const color = SOCKET_CLASS_COLORS[value] || '#8fa2a4';
+    return ` <span class="mini-badge" style="color:${attr(color)};border-color:${attr(color)}66;background:${attr(color)}1a">${esc(value)}</span>`;
+  }
+
+  function socketValueCounts(items, key) {
+    const counts = new Map();
+    for (const item of items) {
+      const value = item ? item[key] : undefined;
+      if (value == null || value === '') continue;
+      counts.set(value, (counts.get(value) || 0) + 1);
+    }
+    return counts;
+  }
+
+  function socketRowHead(path, index, title, badge) {
+    return `<header class="item-head">
+      <span class="item-title">${esc(title)}${badge || ''}</span>
+      <div class="item-tools">
+        ${index > 0 ? `<button type="button" class="icon-btn tiny" data-action="array-move" data-path="${attr(path)}" data-index="${index}" data-dir="-1" title="上移">↑</button>` : ''}
+        <button type="button" class="icon-btn tiny" data-action="array-move" data-path="${attr(path)}" data-index="${index}" data-dir="1" title="下移">↓</button>
+        <button type="button" class="icon-btn tiny danger" data-action="array-remove" data-path="${attr(path)}" data-index="${index}" title="删除">✕</button>
+      </div>
+    </header>`;
+  }
+
+  function socketPositionField(path, value) {
+    const values = Array.isArray(value) ? value : [];
+    const axes = ['X', 'Y', 'Z'];
+    return `<div class="field">
+      <label class="field-label">${esc(label('hulls', 'position'))}</label>
+      <div class="socket-position" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px">
+        ${axes.map((axis, axisIndex) => `<label class="socket-axis" style="display:flex;align-items:center;gap:3px" title="${axis} 轴（米）">
+          <span class="muted-sm mono">${axis}</span>
+          <input class="input mono" type="number" step="any" value="${values[axisIndex] == null ? '' : attr(values[axisIndex])}"
+            data-field="${attr(`${path}.${axisIndex}`)}" data-parse="number" aria-label="${axis} 轴局部坐标">
+        </label>`).join('')}
+      </div>
+      <p class="field-hint">船体局部坐标，Z 为该点甲板实测高度。</p>
+    </div>`;
+  }
+
+  function socketDuplicateNote(duplicate, text) {
+    return duplicate ? `<p class="field-hint" style="color:#eccb8a">${esc(text)}</p>` : '';
+  }
+
+  function renderWeaponSocketRow(item, index, nameCounts, indexCounts) {
+    const value = item || {};
+    const path = `data.weapon_sockets.${index}`;
+    const duplicateName = value.name != null && value.name !== '' && (nameCounts.get(value.name) || 0) > 1;
+    const duplicateIndex = value.socket_index != null && (indexCounts.get(value.socket_index) || 0) > 1;
+    const title = value.name ? value.name : `武器安装点 ${index + 1}`;
+    return `<div class="item-card slim socket-row" data-socket-row="weapon">
+      ${socketRowHead('data.weapon_sockets', index, title, socketBadge(value.socket_class))}
+      <div class="socket-fields" style="${SOCKET_ROW_STYLE}">
+        <div class="field">
+          <label class="field-label">安装点名称</label>
+          ${inputText(`${path}.name`, value.name || '', { className: `mono ${duplicateName ? 'invalid' : ''}`, spellcheck: false })}
+          ${socketDuplicateNote(duplicateName, '名称与同一船体的其它武器安装点重复。')}
+        </div>
+        <div class="field">
+          <label class="field-label">安装点等级</label>
+          ${selectEnum(`${path}.socket_class`, value.socket_class || 'Light', socketEnumOptions(SOCKET_CLASSES, 'socket_class'))}
+        </div>
+        <div class="field">
+          <label class="field-label">安装点序号</label>
+          ${inputNumber(`${path}.socket_index`, value.socket_index, { type: 'integer', minimum: 0, maximum: 64 }, { className: duplicateIndex ? 'invalid' : '' })}
+          ${socketDuplicateNote(duplicateIndex, '序号与同一船体的其它武器安装点重复。')}
+        </div>
+        ${socketPositionField(`${path}.position`, value.position)}
+        <div class="field">
+          <label class="field-label">水平净空半径</label>
+          ${inputNumber(`${path}.clearance_r`, value.clearance_r, { type: 'number', minimum: 0, maximum: 30 })}
+        </div>
+        <div class="field">
+          <label class="field-label">X 向净空</label>
+          ${inputNumber(`${path}.clearance_x`, value.clearance_x, { type: 'number', minimum: 0, maximum: 30 })}
+        </div>
+        <div class="field">
+          <label class="field-label">Y 向净空</label>
+          ${inputNumber(`${path}.clearance_y`, value.clearance_y, { type: 'number', minimum: 0, maximum: 30 })}
+        </div>
+        <div class="field">
+          <label class="field-label">上方净空高度</label>
+          ${inputNumber(`${path}.clearance_h`, value.clearance_h, { type: 'number', minimum: 0, maximum: 40 })}
+        </div>
+        <div class="field">
+          <label class="field-label">装配缩放</label>
+          ${inputNumber(`${path}.mount_scale`, value.mount_scale, { type: 'number', minimum: 0.1, maximum: 10 })}
+        </div>
+        <div class="field field-wide">
+          <label class="field-label">备注</label>
+          ${inputText(`${path}.note`, value.note || '', { className: '', placeholder: '人类可读备注，装配时忽略' })}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderRigSocketRow(item, index, nameCounts, indexCounts) {
+    const value = item || {};
+    const path = `data.rig_sockets.${index}`;
+    const duplicateName = value.name != null && value.name !== '' && (nameCounts.get(value.name) || 0) > 1;
+    const duplicateIndex = value.socket_index != null && (indexCounts.get(value.socket_index) || 0) > 1;
+    const title = value.name ? value.name : `帆索安装点 ${index + 1}`;
+    return `<div class="item-card slim socket-row" data-socket-row="rig">
+      ${socketRowHead('data.rig_sockets', index, title, socketBadge(value.socket_kind))}
+      <div class="socket-fields" style="${SOCKET_ROW_STYLE}">
+        <div class="field">
+          <label class="field-label">安装点名称</label>
+          ${inputText(`${path}.name`, value.name || '', { className: `mono ${duplicateName ? 'invalid' : ''}`, spellcheck: false })}
+          ${socketDuplicateNote(duplicateName, '名称与同一船体的其它帆索安装点重复。')}
+        </div>
+        <div class="field">
+          <label class="field-label">安装点类型</label>
+          ${selectEnum(`${path}.socket_kind`, value.socket_kind || 'mast', socketEnumOptions(SOCKET_KINDS, 'socket_kind'))}
+        </div>
+        <div class="field">
+          <label class="field-label">所属桅杆</label>
+          ${inputText(`${path}.mast_id`, value.mast_id || '', { className: 'mono', placeholder: 'fore / main / mizzen' })}
+        </div>
+        <div class="field">
+          <label class="field-label">安装点序号</label>
+          ${inputNumber(`${path}.socket_index`, value.socket_index, { type: 'integer', minimum: 0, maximum: 64 }, { className: duplicateIndex ? 'invalid' : '' })}
+          ${socketDuplicateNote(duplicateIndex, '序号与同一船体的其它帆索安装点重复。')}
+        </div>
+        ${socketPositionField(`${path}.position`, value.position)}
+        <div class="field">
+          <label class="field-label">帆索高度</label>
+          ${inputNumber(`${path}.rig_height`, value.rig_height, { type: 'number', minimum: 0, maximum: 80 })}
+        </div>
+        <div class="field">
+          <label class="field-label">甲板高度 Z</label>
+          ${inputNumber(`${path}.rig_deck_z`, value.rig_deck_z, { type: 'number', minimum: 0, maximum: 80 })}
+        </div>
+        <div class="field">
+          <label class="field-label">横桁高度 Z</label>
+          ${inputNumber(`${path}.rig_yard_z`, value.rig_yard_z, { type: 'number', minimum: 0, maximum: 80 })}
+        </div>
+        <div class="field">
+          <label class="field-label">横桁长度</label>
+          ${inputNumber(`${path}.rig_yard_length`, value.rig_yard_length, { type: 'number', minimum: 0, maximum: 80 })}
+        </div>
+        <div class="field">
+          <label class="field-label">帆面积（㎡）</label>
+          ${inputNumber(`${path}.rig_sail_area_m2`, value.rig_sail_area_m2, { type: 'number', minimum: 0, maximum: 2000 })}
+        </div>
+        <div class="field">
+          <label class="field-label">帆已收起</label>
+          ${toggle(`${path}.rig_stowed`, Boolean(value.rig_stowed), '默认收起')}
+        </div>
+        <div class="field field-wide">
+          <label class="field-label">备注</label>
+          ${inputText(`${path}.note`, value.note || '', { className: '', placeholder: '人类可读备注，装配时忽略' })}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function socketEnumOptions(values, field) {
+    const entry = (catalog().FIELD_ENUM_LABELS || {})[`hulls.${field}`] || {};
+    return values.map((value) => ({ key: value, label: entry[value] || value }));
+  }
+
+  function renderHullSocketConfiguration(definition) {
+    const data = definition.data || {};
+    const weaponSockets = Array.isArray(data.weapon_sockets) ? data.weapon_sockets : [];
+    const rigSockets = Array.isArray(data.rig_sockets) ? data.rig_sockets : [];
+    const weaponNameCounts = socketValueCounts(weaponSockets, 'name');
+    const weaponIndexCounts = socketValueCounts(weaponSockets, 'socket_index');
+    const rigNameCounts = socketValueCounts(rigSockets, 'name');
+    const rigIndexCounts = socketValueCounts(rigSockets, 'socket_index');
+    const weaponRows = weaponSockets.length
+      ? weaponSockets.map((item, index) => renderWeaponSocketRow(item, index, weaponNameCounts, weaponIndexCounts)).join('')
+      : '<p class="empty-inline">暂无武器安装点；GLB 里有 SN_Socket_Weapon_* 节点时可在此回填镜像。</p>';
+    const rigRows = rigSockets.length
+      ? rigSockets.map((item, index) => renderRigSocketRow(item, index, rigNameCounts, rigIndexCounts)).join('')
+      : '<p class="empty-inline">暂无帆索安装点；GLB 里有 SN_Socket_Mast/Yard/Sail_* 节点时可在此回填镜像。</p>';
+    return `<section class="form-section hull-socket-section">
+      <header class="section-head"><h4>安装点（GLB socket 镜像）</h4>
+        <p>与 GLB 节点 extras 同口径的船体侧镜像：武器安装点决定可装哪类武器（weapon_class），帆索安装点描述桅杆 / 横桁 / 帆面。运行时装配仍读 GLB；这里用于查看、编辑与校验。</p>
+      </header>
+      <div class="sub-section">
+        <h5>武器安装点 <span class="muted-sm mono">${weaponSockets.length}</span></h5>
+        <div class="array-editor">
+          ${weaponRows}
+          <div class="array-actions">
+            <button type="button" class="btn small ghost" data-action="array-add" data-path="data.weapon_sockets">+ 新增武器安装点</button>
+          </div>
+        </div>
+      </div>
+      <div class="sub-section">
+        <h5>帆索安装点 <span class="muted-sm mono">${rigSockets.length}</span></h5>
+        <div class="array-editor">
+          ${rigRows}
+          <div class="array-actions">
+            <button type="button" class="btn small ghost" data-action="array-add" data-path="data.rig_sockets">+ 新增帆索安装点</button>
+          </div>
+        </div>
+      </div>
+    </section>`;
+  }
+
   function renderDefinitionForm(options) {
     const ctx = options;
     const project = ctx.project;
@@ -927,11 +1148,12 @@
         </div>
       </section>
       ${typeKey === 'hulls' ? renderHullModuleConfiguration(definition) : ''}
+      ${typeKey === 'hulls' ? renderHullSocketConfiguration(definition) : ''}
       <section class="form-section">
         <header class="section-head"><h4>${esc(info.label)}数据</h4><p>字段约束来自 <code>${esc(info.schema)}</code>，留空或越界会立刻在校验页报出。</p></header>
         ${renderObjectFields(data.schema, data.file, definition.data || {}, 'data', ctx, {
           extraNote: true,
-          skip: typeKey === 'hulls' ? ['cargo_slots', 'cabin_slots'] : [],
+          skip: typeKey === 'hulls' ? ['cargo_slots', 'cabin_slots', 'weapon_sockets', 'rig_sockets'] : [],
         })}
       </section>
     </div>`;
@@ -946,6 +1168,7 @@
     uid,
     renderDatalists,
     renderDefinitionForm,
+    renderHullSocketConfiguration,
     renderObjectFields,
     inputText,
     assetPicker,

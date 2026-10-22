@@ -111,52 +111,53 @@
 | `deleteLocaleKey(key)` | L2340 |
 | `fillMissingKeys()` | L2350 |
 | `arrayAdd(path)` | L2372 |
-| `defaultArrayItem(path, definition)` | L2386 |
-| `arrayRemove(path, index)` | L2409 |
-| `arrayMove(path, index, direction)` | L2420 |
-| `addListValue(path, input, button)` | L2434 |
-| `listRemove(path, index)` | L2458 |
-| `enumToggle(path, value, element)` | L2471 |
-| `addCondition(path, kind)` | L2488 |
-| `removeCondition(path)` | L2500 |
-| `changeConditionKind(element)` | L2509 |
-| `changeConditionOp(element)` | L2529 |
-| `changeEffectOp(element)` | L2549 |
-| `addAssets()` | L2573 |
-| `removeAsset(path)` | L2615 |
-| `downloadAsset(path)` | L2631 |
-| `showNewProject()` | L2641 |
-| `createProjectFromModal()` | L2674 |
-| `showImport()` | L2710 |
-| `importFolder()` | L2730 |
-| `importFile()` | L2735 |
-| `importEntries(entries)` | L2740 |
-| `draftContentFiles()` | L2784 |
-| `draftContentLabel(files)` | L2788 |
-| `draftExportNotice(files)` | L2792 |
-| `confirmDraftExport(files, actionLabel)` | L2802 |
-| `showExport()` | L2812 |
-| `exportZip()` | L2855 |
-| `exportZipToDisk()` | L2878 |
-| `deployGameMod()` | L2902 |
-| `exportProjectFile()` | L2932 |
-| `exportFolder()` | L2942 |
-| `showProjectLibrary()` | L2955 |
-| `openDiskProject(id)` | L3016 |
-| `openWorkspaceProject(id)` | L3035 |
-| `deleteDiskProject(id)` | L3053 |
-| `showCoreClone()` | L3072 |
-| `showAddLocale()` | L3103 |
-| `createLocale()` | L3118 |
-| `showAddLocaleKey()` | L3139 |
-| `createLocaleKey()` | L3151 |
-| `showHelp()` | L3168 |
-| `onDragEnter(event)` | L3210 |
-| `onDragOver(event)` | L3217 |
-| `onDragLeave()` | L3221 |
-| `onDrop(event)` | L3229 |
-| `runValidation()` | L3246 |
-| `copyText(text)` | L3252 |
+| `nextSocketItem(existing, kind)` | L2387 |
+| `defaultArrayItem(path, definition)` | L2416 |
+| `arrayRemove(path, index)` | L2441 |
+| `arrayMove(path, index, direction)` | L2452 |
+| `addListValue(path, input, button)` | L2466 |
+| `listRemove(path, index)` | L2490 |
+| `enumToggle(path, value, element)` | L2503 |
+| `addCondition(path, kind)` | L2520 |
+| `removeCondition(path)` | L2532 |
+| `changeConditionKind(element)` | L2541 |
+| `changeConditionOp(element)` | L2561 |
+| `changeEffectOp(element)` | L2581 |
+| `addAssets()` | L2605 |
+| `removeAsset(path)` | L2647 |
+| `downloadAsset(path)` | L2663 |
+| `showNewProject()` | L2673 |
+| `createProjectFromModal()` | L2706 |
+| `showImport()` | L2742 |
+| `importFolder()` | L2762 |
+| `importFile()` | L2767 |
+| `importEntries(entries)` | L2772 |
+| `draftContentFiles()` | L2816 |
+| `draftContentLabel(files)` | L2820 |
+| `draftExportNotice(files)` | L2824 |
+| `confirmDraftExport(files, actionLabel)` | L2834 |
+| `showExport()` | L2844 |
+| `exportZip()` | L2887 |
+| `exportZipToDisk()` | L2910 |
+| `deployGameMod()` | L2934 |
+| `exportProjectFile()` | L2964 |
+| `exportFolder()` | L2974 |
+| `showProjectLibrary()` | L2987 |
+| `openDiskProject(id)` | L3048 |
+| `openWorkspaceProject(id)` | L3067 |
+| `deleteDiskProject(id)` | L3085 |
+| `showCoreClone()` | L3104 |
+| `showAddLocale()` | L3135 |
+| `createLocale()` | L3150 |
+| `showAddLocaleKey()` | L3171 |
+| `createLocaleKey()` | L3183 |
+| `showHelp()` | L3200 |
+| `onDragEnter(event)` | L3242 |
+| `onDragOver(event)` | L3249 |
+| `onDragLeave()` | L3253 |
+| `onDrop(event)` | L3261 |
+| `runValidation()` | L3278 |
+| `copyText(text)` | L3284 |
 
 ## 契约与约束
 
@@ -166,6 +167,7 @@
 - 自动保存有 800ms 防抖，并用 revision 防止旧保存清除新改动；IDB 失败回退 localStorage。
 - ID 修改与条目内翻译先进入 localizationDrafts；自动保存不写多语言键，只有“保存条目”提交键迁移。
 - 船只与模块相关类型共享页面子分页，可直接切换而无需返回侧栏重新选择。
+- 「新建模组」对话框的模板卡片来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；选 `weapons` 即「舰载武器包」，仅创建编辑器项目内容、不写 Core。
 - 侧栏在运行时类型分组之后渲染「Schema 2.0 草案 / 运行时不加载」分区（`DRAFT_TYPES` 为空则隐藏）；草案内容页显示 2.0 徽标与提示，并隐藏「从 Core 复制」。
 - 自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。
 - 检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。
@@ -180,6 +182,7 @@
 ### `applyField(element, fromChange)`
 
 - 区分 manifest 与当前定义；数字/整数/布尔/JSON 各有解析，解析失败不写回。
+- 船体安装点的 `array-add` 走 `nextSocketItem` 生成默认 socket 行（weapon / rig 两套默认值），写回仍走 `data-field` 路径与既有撤销 / 校验流程。
 - ID 输入按前缀重建完整 ID，只更新多语言键预览，不直接改定义 `_key` 或语言文件。
 - 空描述键、空 checksum 与空 information 资源字段会删除，避免违反可选字段的 pattern/minLength。
 

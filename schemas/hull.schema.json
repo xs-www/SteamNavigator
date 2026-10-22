@@ -33,6 +33,138 @@
     }
   },
   "$defs": {
+    "weapon_socket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "socket_class", "socket_index"],
+      "properties": {
+        "name": {
+          "description": "GLB 节点名（标准名，例如 SN_Socket_Weapon_Port_1）。",
+          "type": "string",
+          "pattern": "^SN_Socket_Weapon"
+        },
+        "socket_class": {
+          "description": "可安装武器的 weapon_class；装配时是硬门禁。",
+          "enum": ["Light", "Medium", "Heavy", "Tower", "Side"]
+        },
+        "socket_index": {
+          "description": "安装点序号，用于稳定排序与 UI 编号。",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "position": {
+          "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "clearance_r": {
+          "description": "16 向水平射线最小自由距离（米）。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "clearance_x": {
+          "description": "socket 局部 ±X 较小自由距离（米）；侧舷点 +X 为舷外（炮口方向）。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "clearance_y": {
+          "description": "socket 局部 ±Y 较小自由距离（米）；侧舷点沿船体纵轴（炮列方向）。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "clearance_h": {
+          "description": "安装面向上首个遮挡高度（米）；露天按 20 m 封顶。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40
+        },
+        "mount_scale": {
+          "description": "装配时武器本体的统一缩放。",
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10
+        },
+        "note": {
+          "description": "人类可读备注；装配忽略。",
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
+    "rig_socket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "socket_kind", "socket_index"],
+      "properties": {
+        "name": {
+          "description": "GLB 节点名（标准名，例如 SN_Socket_Mast_Fore）。",
+          "type": "string",
+          "pattern": "^SN_Socket_"
+        },
+        "socket_kind": {
+          "enum": ["mast", "yard", "sail"]
+        },
+        "mast_id": {
+          "description": "所属桅杆标识（fore / main / mizzen 等）。",
+          "type": "string",
+          "maxLength": 32
+        },
+        "socket_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "position": {
+          "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "rig_height": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80
+        },
+        "rig_deck_z": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80
+        },
+        "rig_yard_z": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80
+        },
+        "rig_yard_length": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80
+        },
+        "rig_stowed": {
+          "type": "boolean"
+        },
+        "rig_sail_area_m2": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
     "hull_data": {
       "allOf": [
         {
@@ -71,6 +203,20 @@
             },
             "size_tag": {
               "enum": ["small", "medium", "large"]
+            },
+            "weapon_sockets": {
+              "description": "内容侧的船体武器安装点镜像（与 GLB 里 SN_Socket_Weapon_* 节点 extras 同口径）。运行时装配仍读 GLB extras；这里供编辑器查看、编辑与校验，并作为后续数据驱动装配的前向声明。",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/weapon_socket"
+              }
+            },
+            "rig_sockets": {
+              "description": "内容侧的船体帆索安装点镜像（与 GLB 里 SN_Socket_Mast/Yard/Sail_* 节点 extras 同口径，见 RIG_KIT_CONTRACT.md）。运行时装配仍读 GLB extras。",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/rig_socket"
+              }
             }
           }
         }

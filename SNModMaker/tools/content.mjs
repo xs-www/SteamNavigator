@@ -85,7 +85,8 @@ const USAGE = `SNModMaker 内容 CLI（v1）
   rm --mod <dir> <definition-id> --yes [--keep-loc]
   clone --mod <dir> --from <core-definition-id> [--id <local_id>] [--name-zh <text>] [--name-en <text>]
   validate --mod <dir> [--strict] [--godot]
-  new --mod <dir> --id <mod_id> --name <name> [--template goods|boiler|event|starter_kit|blank]
+  new --mod <dir> --id <mod_id> --name <name> [--template goods|boiler|event|weapons|starter_kit|blank]
+      [--draft <content_type>]...          用 Schema 2.0 草案类型新建项目（可重复；纯 2.0 项目）
 
 add 选项：
   --name-zh <text> --name-en <text>       标准定义必须同时提供双语名称
@@ -105,10 +106,18 @@ add 选项：
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
 
 Schema 2.0 草案（world_profiles / regions / sites / route_templates / weather_profiles /
-factions / discoveries / start_profiles）可以像 1.0 类型一样 list / add / set / describe /
-validate，内容文件写 schema_version "2.0"；但游戏运行时仍只加载 Content Schema 1.0，
-草案内容不会在游戏里生效（校验会给出 draft_content 警告）。草案模组使用 capability 时
-还需在 manifest.capabilities 声明对应能力。
+factions / discoveries / start_profiles / weapons）可以像 1.0 类型一样 list / add / set /
+describe / validate，内容文件写 schema_version "2.0"；但游戏运行时仍只加载 Content
+Schema 1.0，草案内容不会在游戏里生效（校验会给出 draft_content 警告）。草案模组使用
+capability 时还需在 manifest.capabilities 声明对应能力。
+
+新建项目时用 --draft 直接创建 Schema 2.0 草案项目（每类生成一个 content 文件、
+schema_version "2.0" 与起始定义，并把 capability 写入 manifest；不与 --template 同时
+指定时不会附带 1.0 商品起始定义）：
+  node SNModMaker/tools/content.mjs new --mod my_weapon_mod --id my_weapon_mod \\
+    --name "我的武器包" --draft weapons
+  node SNModMaker/tools/content.mjs new --mod my_world_mod --id my_world_mod \\
+    --name "我的世界包" --draft world_profiles --draft regions --draft sites
 `;
 
 /* ------------------------------------------------------------------ */
@@ -1816,8 +1825,17 @@ function commandNew(ctx) {
   if (!Validate.MOD_ID_RE.test(modId)) {
     throw usageError(`模组 ID 必须匹配 ${Validate.MOD_ID_RE.source}（小写字母开头，3–32 位）：${modId}`);
   }
-  const template = flagValue(ctx, 'template') || 'goods';
-  if (!Catalog.TEMPLATES.some((item) => item.key === template)) {
+  const draftKeys = flagValues(ctx, 'draft');
+  for (const draftKey of draftKeys) {
+    const info = draftTypes().find((item) => item.key === draftKey);
+    if (!info) {
+      throw usageError(`未知 Schema 2.0 草案类型 "${draftKey}"。可用：${draftTypes().map((item) => item.key).join(', ')}`);
+    }
+  }
+  const explicitTemplate = flagValue(ctx, 'template');
+  // 只指定 --draft 时创建纯 2.0 草案项目（不附带 1.0 商品起始定义）。
+  const template = explicitTemplate || (draftKeys.length ? null : 'goods');
+  if (template && !Catalog.TEMPLATES.some((item) => item.key === template)) {
     throw usageError(`未知模板 "${template}"。可用：${Catalog.TEMPLATES.map((item) => item.key).join(', ')}`);
   }
   const description = flagValue(ctx, 'description') || '';
@@ -1835,9 +1853,13 @@ function commandNew(ctx) {
     id: modId,
     name,
     template,
+    drafts: draftKeys,
     description,
     authors: authors.length ? authors : undefined,
   });
+  if (draftKeys.length) {
+    ctx.notes.push(`Schema 2.0 草案项目：${draftKeys.join(', ')}（运行时不加载，capability 已写入 manifest）。`);
+  }
   const exportFiles = Store.toExportFiles(project, { prefix: false });
   const contentPaths = new Set(project.contentFiles.map((file) => file.path));
   const changes = [];

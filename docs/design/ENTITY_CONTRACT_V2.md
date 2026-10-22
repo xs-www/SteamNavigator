@@ -157,15 +157,16 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 - `schemas/v2/weather_profile.schema.json`：`weather_profiles` 草案，包含气候带、雾/风暴/浮冰概率、能见度、风险/航速/煤耗修正与季节集合。
 - `schemas/v2/faction.schema.json`：`factions` 草案，包含阵营类型、初始声望、敌对/友好阈值、巡逻强度、偏好商品、活动区域标签、委托族与敌对阵营。
 - `schemas/v2/discovery.schema.json`：`discoveries` 草案，包含图鉴条目类型（遗迹/房间/遗物/物种/蓝图/传闻）、稀有度、权重、可重复、来源站点/区域类型、前置标签与解锁引用。
+- `schemas/v2/weapon.schema.json`：`weapons` 草案，战斗字段对齐 SNBattleSim（kind / damage / range / min_range / cooldown / accuracy / projectile_speed / splash / arc_deg / salvo / color），装配字段对齐 `weapon-assembly@2`（weapon_class / mount_class / assembly_profile / has_* / muzzle_count / envelope_* / height / mount_scale），经济字段对齐 `module_common`（tier / weight / purchase_price / craft_* / materials）。契约见 [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md)。
 - `content_types.json.draft_schemas` 登记草案 Schema 文件，`draft_types` 携带编辑器元数据（key / singular / key_prefix / label / group / default_file / `schema_version: "2.0"` / capability）。
 - 生成器把草案导出为 `SNContentTypes.DRAFT_TYPES`；编辑器 catalog 的 `BY_KEY` / `DEFAULTS` 与侧栏「Schema 2.0 草案 / 运行时不加载」分区覆盖草案类型，Content CLI 的 `types` / `describe` / `list` / `add` / `set` / `validate` 同样支持草案，并把落盘内容文件的 `schema_version` 按类型推导为 `2.0`。
-- `schema-bundle.js` 递归收录 `schemas/` 的 27 个文件（18 个顶层 + 9 个 `v2/`，含 `v2/common.schema.json`）；校验器按基准文件所在目录解析 `common.schema.json` 等跨文件 `$ref`，`v2` 草案的 required / pattern 因此生效。
+- `schema-bundle.js` 递归收录 `schemas/` 的 28 个文件（18 个顶层 + 10 个 `v2/`，含 `v2/common.schema.json` 与 9 个草案）；校验器按基准文件所在目录解析 `common.schema.json` 等跨文件 `$ref`，`v2` 草案的 required / pattern 因此生效。
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；草案文件声明 1.0 或 1.0 类型声明 2.0 报 `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；每个草案内容文件给一条 `draft_content` 警告，使用 capability 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
 - **运行时仍未接入**：`TYPES`（框架 `ContentTypes`、编辑器运行时目录、注册表、加载链）保持 16 类 Content Schema 1.0，草案内容不会加载，导出/重新导入保留 2.0 与 1.0 混排只为编辑器与评审服务。
 
 约束：
 
-- 草案 Schema 只使用当前 SchemaValidator 支持的 JSON Schema 子集，由 `test_schema_v2_drafts.gd` 做有效/无效样本测试。
+- 草案 Schema 只使用当前 SchemaValidator 支持的 JSON Schema 子集，由 `test_schema_v2_drafts.gd`（世界/战役 8 类）与 `test_schema_v2_weapons.gd`（`weapons` 与 hull socket 镜像）做有效/无效样本测试。
 - 草案类型只有在对应运行时系统（世界生成、存档分区、命令/查询）落地后才从 planned 提升为 active。
 - 世界探索家族草案已齐全（start/world/region/site/route/weather/faction/discovery）；下一步是运行时接入：`CampaignState` 分区已落地 `world` / `codex` / `factions` 三个运行态分区，探索进度只追加 ID。
 

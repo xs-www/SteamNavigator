@@ -39,7 +39,7 @@
 
 | 事实 | 证据 |
 | --- | --- |
-| 内容版本按类型：16 个 active 类型版本都是 `1.0`，8 类草案是 `2.0` | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
+| 内容版本按类型：16 个 active 类型版本都是 `1.0`，草案是 `2.0`（当前 9 类草案：world/campaign 家族 8 类 + `weapons`；Phase B 只提升前者） | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
 | 运行时加载：`ContentCompiler` 按类型版本校验 envelope；Patch 再校验走目标类型版本 | `framework/modding/content_compiler.gd` |
 | 开局链路：`run.start(build_id, seed)` → `RunFactory.create_run` → `create_ship` → `MapGenerator.generate(map_profile)` → `WorldGenerator.generate(_coordinate_world_profile(world))`（孪生海图世界）→ markets / npcs / main contract | `framework/application/commands/run_start.gd`、`framework/domain/contracts/run_factory.gd` |
 | 抽象地图输入：`port_count_range / archetypes / start_archetype_tags / required_facility_tags / required_facility_max_edges / port_name_keys / edge_count_range / distance_range / route_risk_range` | `framework/domain/map/map_generator.gd` |
@@ -76,7 +76,7 @@
    `schema`、`schema_version: "2.0"`、`v2_target`/`aliases` 按需）。
 2. `planned` 中删除已提升的类型：`world_exploration` 系统 7 个类型全部提升 → 删除该 system 条目；
    `campaign` 系统删除 `start_profiles`，保留 `difficulty_profiles` / `simulation_profiles`。
-3. `draft_schemas` / `draft_types` 中删除已提升的 8 条（提升后 `SNContentTypes.DRAFT_TYPES` 为空 → 编辑器草案分区自动隐藏）。
+3. `draft_schemas` / `draft_types` 中删除已提升的 8 条（提升后 `SNContentTypes.DRAFT_TYPES` 只剩 `weapons`，编辑器草案分区仍保留 1 条，不消失）。
 4. `map_configs` 不进 `planned`（直接 active）。
 5. `content_schema` 基线保持 `"1.0"`（存档 header 语义见 §7）。
 
@@ -311,12 +311,12 @@ alert_progress / turnback_extra_ratio`。
 
 | 面 | 变更 |
 | --- | --- |
-| 编辑器类型目录 | `TYPES` 16 → 25；草案分区因 `DRAFT_TYPES` 为空自动隐藏；9 类显示版本 2.0 |
+| 编辑器类型目录 | `TYPES` 16 → 25；提升的 8 类从 `DRAFT_TYPES` 移除，草案分区只剩 `weapons`（战斗，不属 Phase B）；9 类显示版本 2.0 |
 | 校验语义 | `draft_content` 只对草案类型提示（提升后不再出现）；`capability_undeclared` 改为“schemaVersion=2.0 且未声明 capability” |
 | 导出守卫（G8） | 判定从「draft **或** schema_version 2.0」改为「**当前运行时不支持**」：`info.draft` 或未知类型/版本不可加载；提升后的 9 类允许部署 |
 | CLI | `types` 运行时组新增 9 类（`schema_version: "2.0"`）；`describe` 显示 v2 Schema；`add/new` 写 2.0 envelope；`validate` 走新引用规则 |
 | SDK / 发布 | `sdk/validate.gd` 需通过新增 9 类内容；release workflow 无新增步骤（沿用 `gen_content_types --check` / `gen_static_docs --check` / Godot tests / sdk validate） |
-| 会被影响的既有测试 | `framework/tests/cases/test_content_versions.gd`（断言所有 runtime 类型 1.0、草案不在 runtime → 改为新类型表）；`test_schema_v2_drafts.gd:207`（断言草案仍 planned/非 active → 改为“8 类已 active + 保留有效/无效样本”）；`test_content_types_manifest.gd:20-45`（manifest types 与 `ContentTypes.all()` 数量）；`test_map_constraints.gd`（30 seed 硬约束走 1.0 路径，须保持不变）；`test_world_generator.gd`（`formal_profile` 15–20 港断言，扩展该函数时需同步）；`test_run_pipeline.gd`；`SNModMaker/tests/run-tests.js`（24/8 草案断言 → 25/0，并补 map_configs）；`content-cli.test.mjs`（types 计数） |
+| 会被影响的既有测试 | `framework/tests/cases/test_content_versions.gd`（断言所有 runtime 类型 1.0、草案不在 runtime → 改为新类型表）；`test_schema_v2_drafts.gd:207`（断言草案仍 planned/非 active → 改为“8 类已 active + `weapons` 仍 draft + 保留有效/无效样本”）；`test_content_types_manifest.gd:20-45`（manifest types 与 `ContentTypes.all()` 数量）；`test_map_constraints.gd`（30 seed 硬约束走 1.0 路径，须保持不变）；`test_world_generator.gd`（`formal_profile` 15–20 港断言，扩展该函数时需同步）；`test_run_pipeline.gd`；`SNModMaker/tests/run-tests.js`（24/8 草案断言 → 25/1，并补 map_configs）；`content-cli.test.mjs`（types 计数） |
 
 ## 10. 测试与验收（B6）
 

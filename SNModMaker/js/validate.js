@@ -442,6 +442,127 @@
     return REF_TYPE_BY_FIELD[leaf] || null;
   }
 
+  /* Fields that look like definition IDs (e.g. "core:story/opening") but are
+   * local identifiers scoped to their owning definition, not cross-definition
+   * references. map_profiles.data.story.flow_id is the current example: the
+   * story compiler resolves it inside the same map profile, so checking it
+   * against the content registry produced a false ref_missing error. */
+  const LOCAL_IDENTIFIER_FIELDS = new Set(['flow_id']);
+
+  /* Weapon assembly / socket vocabularies mirrored from the schemas. Semantic
+   * checks below only run when the corresponding fields are present, so old
+   * content (1.0 hulls without sockets, modules without weapons) is untouched. */
+  const SOCKET_CLASSES = ['Light', 'Medium', 'Heavy', 'Tower', 'Side'];
+  const RIG_SOCKET_KINDS = ['mast', 'yard', 'sail'];
+
+  /** Weapon semantics that a JSON Schema cannot express (range order, assembly consistency). */
+  function checkWeaponSemantics(definition, view, add) {
+    const data = definition && definition.data;
+    if (!data || typeof data !== 'object') return;
+    const range = Number(data.range);
+    const minRange = Number(data.min_range);
+    if (Number.isFinite(range) && Number.isFinite(minRange) && minRange >= range) {
+      add('error', 'weapon_range_order', `最小射程 ${minRange} 必须小于最大射程 ${range}。`, view);
+    }
+    const profile = typeof data.assembly_profile === 'string' ? data.assembly_profile : '';
+    const hasYaw = data.has_yaw === true;
+    const hasPitch = data.has_pitch === true;
+    if (profile === 'yaw_pitch' || profile === 'yaw_pitch_multi') {
+      if (!hasYaw || !hasPitch) {
+        add('error', 'weapon_assembly_pivot', `机构组合 ${profile} 需要 has_yaw 与 has_pitch 同时为 true。`, view);
+      }
+    } else if (profile === 'pitch_only') {
+      if (!hasPitch || hasYaw) {
+        add('error', 'weapon_assembly_pivot', '机构组合 pitch_only 需要 has_pitch = true 且 has_yaw = false。', view);
+      }
+    } else if (profile === 'fixed') {
+      if (hasYaw || hasPitch) {
+        add('error', 'weapon_assembly_pivot', '机构组合 fixed 不应带水平旋转或俯仰枢轴（has_yaw / has_pitch 应为 false）。', view);
+      }
+    }
+    const muzzleCount = Number(data.muzzle_count);
+    if (Number.isFinite(muzzleCount) && muzzleCount > 1 && data.has_muzzle !== true) {
+      add('error', 'weapon_muzzle_count', `muzzle_count = ${muzzleCount} 时必须声明 has_muzzle = true。`, view);
+    }
+    if (data.weapon_class === 'Modular') {
+      add('warning', 'weapon_class_modular', 'weapon_class = Modular 是 kit 部件，不是完整武器，不能直接挂到船体安装点。', view);
+    }
+  }
+
+  /** Hull socket mirror semantics: unique names / indexes, standard node names, known enums. */
+  function checkHullSocketSemantics(definition, view, add) {
+    const data = definition && definition.data;
+    if (!data || typeof data !== 'object') return;
+    const weaponSockets = Array.isArray(data.weapon_sockets) ? data.weapon_sockets : null;
+    if (weaponSockets) {
+      const names = new Map();
+      const indexes = new Map();
+      weaponSockets.forEach((socket, socketIndex) => {
+        if (!socket || typeof socket !== 'object') return;
+        const socketView = Object.assign({}, view, { field: `data.weapon_sockets.${socketIndex}` });
+        const name = typeof socket.name === 'string' ? socket.name.trim() : '';
+        if (name) {
+          if (names.has(name)) {
+            add('error', 'socket_name_duplicate',
+              `武器安装点名称重复：${name}（第 ${names.get(name) + 1} 行与第 ${socketIndex + 1} 行）`, socketView);
+          } else {
+            names.set(name, socketIndex);
+          }
+          if (!name.startsWith('SN_Socket_Weapon')) {
+            add('warning', 'socket_name_prefix', `武器安装点名建议以 SN_Socket_Weapon 开头：${name}`, socketView);
+          }
+        }
+        if (Number.isInteger(socket.socket_index)) {
+          if (indexes.has(socket.socket_index)) {
+            add('error', 'socket_index_duplicate',
+              `武器安装点 socket_index 重复：${socket.socket_index}（第 ${indexes.get(socket.socket_index) + 1} 行与第 ${socketIndex + 1} 行）`, socketView);
+          } else {
+            indexes.set(socket.socket_index, socketIndex);
+          }
+        }
+        if (socket.socket_class && !SOCKET_CLASSES.includes(socket.socket_class)) {
+          add('warning', 'socket_class_unknown', `未知的武器安装点 socket_class：${socket.socket_class}`, socketView);
+        }
+      });
+    }
+    const rigSockets = Array.isArray(data.rig_sockets) ? data.rig_sockets : null;
+    if (rigSockets) {
+      const names = new Map();
+      const indexes = new Map();
+      rigSockets.forEach((socket, socketIndex) => {
+        if (!socket || typeof socket !== 'object') return;
+        const socketView = Object.assign({}, view, { field: `data.rig_sockets.${socketIndex}` });
+        const name = typeof socket.name === 'string' ? socket.name.trim() : '';
+        if (name) {
+          if (names.has(name)) {
+            add('error', 'socket_name_duplicate',
+              `帆索安装点名称重复：${name}（第 ${names.get(name) + 1} 行与第 ${socketIndex + 1} 行）`, socketView);
+          } else {
+            names.set(name, socketIndex);
+          }
+          if (!name.startsWith('SN_Socket_')) {
+            add('warning', 'socket_name_prefix', `帆索安装点名建议以 SN_Socket_ 开头：${name}`, socketView);
+          }
+        }
+        if (Number.isInteger(socket.socket_index)) {
+          if (indexes.has(socket.socket_index)) {
+            add('error', 'socket_index_duplicate',
+              `帆索安装点 socket_index 重复：${socket.socket_index}（第 ${indexes.get(socket.socket_index) + 1} 行与第 ${socketIndex + 1} 行）`, socketView);
+          } else {
+            indexes.set(socket.socket_index, socketIndex);
+          }
+        }
+        if (socket.socket_kind && !RIG_SOCKET_KINDS.includes(socket.socket_kind)) {
+          add('warning', 'socket_kind_unknown', `未知的帆索安装点 socket_kind：${socket.socket_kind}`, socketView);
+        }
+        if (name && !socket.mast_id) {
+          add('warning', 'rig_socket_mast_id',
+            `帆索安装点 ${name} 建议填写 mast_id（fore / main / mizzen 等）；缺省不报错。`, socketView);
+        }
+      });
+    }
+  }
+
   function validateProject(project, options) {
     const opts = options || {};
     const issues = [];
@@ -684,6 +805,9 @@
           }
         }
 
+        if (info.key === 'weapons') checkWeaponSemantics(definition, view, add);
+        if (info.key === 'hulls') checkHullSocketSemantics(definition, view, add);
+
         if (info.key === 'patches') {
           const target = String(definition.target || '');
           if (target.startsWith('core:')) usesCore = true;
@@ -755,6 +879,9 @@
         const view = { name: 'content', type: file.content_type, file: file.path, index };
         walkStrings(definition.data, '', (value, path) => {
           if (typeof value !== 'string' || !ID_REF_RE.test(value)) return;
+          /* Skip local identifiers that merely look like definition IDs. */
+          const leaf = pointerUnescape(path.split('/').pop() || '');
+          if (LOCAL_IDENTIFIER_FIELDS.has(leaf)) return;
           const referencedType = referencedIdType(value);
           const expected = expectedRefType(path);
           if (expected && !expected.includes(referencedType)) {

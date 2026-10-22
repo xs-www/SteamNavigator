@@ -11,7 +11,8 @@
     "route_templates": "schemas/v2/route_template.schema.json",
     "weather_profiles": "schemas/v2/weather_profile.schema.json",
     "factions": "schemas/v2/faction.schema.json",
-    "discoveries": "schemas/v2/discovery.schema.json"
+    "discoveries": "schemas/v2/discovery.schema.json",
+    "weapons": "schemas/v2/weapon.schema.json"
   },
   "draft_types": [
     {
@@ -125,6 +126,20 @@
       "schema_version": "2.0",
       "capability": "content.campaign.v1",
       "summary_zh": "战役起始配置：世界配置、起始构筑、难度、起始港口标签与可选货物/委托。"
+    },
+    {
+      "key": "weapons",
+      "singular": "weapon",
+      "key_prefix": "weapon",
+      "label_zh": "舰载武器",
+      "label_en": "Weapons",
+      "abbr": "WN",
+      "color": "#e2685e",
+      "group": "ships_modules",
+      "default_file": "content/weapons.json",
+      "schema_version": "2.0",
+      "capability": "content.combat.v1",
+      "summary_zh": "舰载武器：战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型资源键；船体侧安装点决定可装 class。"
     }
   ],
   "groups": [

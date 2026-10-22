@@ -24,52 +24,53 @@
 | `keyBase(typeKey, modId, localId)` | L76 |
 | `keyBaseOf(definition, typeKey, modId, localId)` | L85 |
 | `blankManifest(id, name)` | L93 |
-| `createProject(options)` | L116 |
-| `applyTemplate(project, templateKey)` | L145 |
-| `ensureContentFile(project, typeKey)` | L269 |
-| `allDefinitions(project)` | L291 |
-| `draftContentFiles(project)` | L306 |
-| `hasDraftContent(project)` | L317 |
-| `definitionIdSet(project)` | L321 |
-| `uniqueLocalId(project, typeKey, preferred)` | L329 |
-| `getLoc(project, locale)` | L347 |
-| `addLocale(project, locale, path)` | L351 |
-| `removeLocale(project, locale)` | L366 |
-| `setLocalization(project, locale, key, value)` | L371 |
-| `collectAutoNameKeys(definition)` | L379 |
-| `collectDefinitionKeys(definition)` | L398 |
-| `fillNestedKeys(definition, typeKey, modId, localId)` | L417 |
-| `addDefinition(project, typeKey, options)` | L435 |
-| `removeDefinition(project, filePath, index)` | L507 |
-| `rewriteKeyBase(value, oldBase, newBase)` | L518 |
-| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L549 |
-| `duplicateDefinition(project, filePath, index)` | L589 |
-| `coreIndex()` | L627 |
-| `qualifyCoreAssetReferences(definition)` | L631 |
-| `cloneCoreDefinition(project, coreDefinitionId)` | L640 |
-| `addAsset(project, asset)` | L685 |
-| `removeAsset(project, path)` | L695 |
-| `syncManifest(project)` | L701 |
-| `touch(project)` | L719 |
-| `normalizeProject(raw, options)` | L724 |
-| `serialize(project)` | L751 |
-| `deserialize(text)` | L755 |
-| `bytesToBase64(bytes)` | L759 |
-| `base64ToBytes(base64)` | L768 |
-| `mimeFor(path)` | L777 |
-| `bytesToDataUrl(bytes, mime)` | L790 |
-| `dataUrlToBytes(dataUrl)` | L794 |
-| `decodeText(data)` | L798 |
-| `encodeText(text)` | L803 |
-| `toExportFiles(project, options)` | L808 |
-| `stripRoot(paths)` | L834 |
-| `fromFiles(entries)` | L847 |
-| `definitionKeys(project, typeKey)` | L950 |
-| `findDefinition(project, filePath, index)` | L954 |
-| `localizationValue(project, definition, field, locale)` | L960 |
-| `definitionTitle(project, definition)` | L967 |
-| `dependencyOnCore(project)` | L975 |
-| `SNStore (global)` | L979 |
+| `addDraftStarter(project, typeKey)` | L118 |
+| `createProject(options)` | L134 |
+| `applyTemplate(project, templateKey)` | L170 |
+| `ensureContentFile(project, typeKey)` | L318 |
+| `allDefinitions(project)` | L340 |
+| `draftContentFiles(project)` | L355 |
+| `hasDraftContent(project)` | L366 |
+| `definitionIdSet(project)` | L370 |
+| `uniqueLocalId(project, typeKey, preferred)` | L378 |
+| `getLoc(project, locale)` | L396 |
+| `addLocale(project, locale, path)` | L400 |
+| `removeLocale(project, locale)` | L415 |
+| `setLocalization(project, locale, key, value)` | L420 |
+| `collectAutoNameKeys(definition)` | L428 |
+| `collectDefinitionKeys(definition)` | L447 |
+| `fillNestedKeys(definition, typeKey, modId, localId)` | L466 |
+| `addDefinition(project, typeKey, options)` | L484 |
+| `removeDefinition(project, filePath, index)` | L556 |
+| `rewriteKeyBase(value, oldBase, newBase)` | L567 |
+| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L598 |
+| `duplicateDefinition(project, filePath, index)` | L638 |
+| `coreIndex()` | L676 |
+| `qualifyCoreAssetReferences(definition)` | L680 |
+| `cloneCoreDefinition(project, coreDefinitionId)` | L689 |
+| `addAsset(project, asset)` | L734 |
+| `removeAsset(project, path)` | L744 |
+| `syncManifest(project)` | L750 |
+| `touch(project)` | L768 |
+| `normalizeProject(raw, options)` | L773 |
+| `serialize(project)` | L800 |
+| `deserialize(text)` | L804 |
+| `bytesToBase64(bytes)` | L808 |
+| `base64ToBytes(base64)` | L817 |
+| `mimeFor(path)` | L826 |
+| `bytesToDataUrl(bytes, mime)` | L839 |
+| `dataUrlToBytes(dataUrl)` | L843 |
+| `decodeText(data)` | L847 |
+| `encodeText(text)` | L852 |
+| `toExportFiles(project, options)` | L857 |
+| `stripRoot(paths)` | L883 |
+| `fromFiles(entries)` | L896 |
+| `definitionKeys(project, typeKey)` | L999 |
+| `findDefinition(project, filePath, index)` | L1003 |
+| `localizationValue(project, definition, field, locale)` | L1009 |
+| `definitionTitle(project, definition)` | L1016 |
+| `dependencyOnCore(project)` | L1024 |
+| `SNStore (global)` | L1028 |
 
 ## 契约与约束
 
@@ -84,8 +85,11 @@
 
 ### `createProject(options)`
 
-- 创建 Manifest + zh_CN/en 两个语言文件，再按模板写入定义；模板包含 goods / boiler / event / starter_kit / blank。
+- 创建 Manifest + zh_CN/en 两个语言文件，再按模板写入定义；模板包含 goods / boiler / event / weapons / starter_kit / blank。
+- `template: null` 时不写 1.0 模板；`drafts` 数组里的每个 Schema 2.0 草案类型由 `addDraftStarter()` 生成一个 contentType/2.0 内容文件与起始定义，并把该类型的 capability 去重写入 `manifest.capabilities`（纯 2.0 项目不附带 1.0 商品起始定义）。
 - 模板只使用默认值与 Core 引用，生成后立即由 `syncManifest()` 对齐清单。
+- `applyTemplate(project, 'weapons')` 从 `catalog.WEAPON_PRESETS` 生成 5 条 weapons 草案定义（`content/weapons.json`、`schema_version` 2.0），`information.model` 写 `asset://core/model.weapon.<local_id>`，并把 `content.combat.v1` 去重加入 `manifest.capabilities`；只写编辑器项目，不触碰 Core。
+- `applyTemplate(project, '<draft_type>')` 与 `new --draft <type>` 的单条起始定义不同：前者是成品包（weapons 5 件），后者走 `addDraftStarter()` 的单条默认值。
 
 ### `addDefinition(project, typeKey, options)`
 
