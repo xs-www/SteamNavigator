@@ -1,6 +1,6 @@
 作用：剧情模式篇章（Content Schema 2.0 草案）：固定主角、角色表、术语、有序关卡列表与正史溯源；一个剧情包通常一个篇章。
 
-- 引用关系：`content_types.json.draft_schemas.story_arcs` 指向本文件；SNModMaker / Content CLI 用它校验，游戏 1.0 运行时不加载。
+- 引用关系：`content_types.json.draft_schemas.story_arcs` 指向本文件；SNModMaker / Content CLI 用它校验，当前运行时不加载（草案）。
 - 定义 envelope 固定 `schema_version: "2.0"`、`content_type: "story_arcs"`，单条定义复用 `common.schema.json#/$defs/definition`（`id` / `name_key` / `enabled` / `data`）。
 - `data.protagonist_id` 必须是 `characters` 中的角色 ID（语义错误 `story_protagonist_unknown`）；本作固定单主角。
 - `data.characters[].id` / `data.terms[].id` 是篇章内局部标识符（`^[a-z][a-z0-9_]{0,31}$`），不是跨定义引用。

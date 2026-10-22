@@ -16,7 +16,8 @@
 > B0 已在 `main` 的内容基线上刷新本契约，**不再需要 rebase**；旧「schema-v2 待 rebase main」拓扑与冲突处理说明作废。
 >
 > 结论先行：Phase B = **8 类既有草案提升 active + 新增 `map_configs`（1.0 `map_profiles` 的 v2 继任者）+ 新的
-> CampaignFactory 世界装配链路**；1.0 老链路原样保留，旧档不重排，1.0 模组在双读窗口内继续可用。
+> CampaignFactory 世界装配链路**。Phase B 期间 1.0 老链路由双读窗口保留；**C4 起 1.0 链路已删除**
+> （`map_profiles` 退役，所有开局统一走 `CampaignFactory`），本契约中的 1.0 字段映射仅作迁移历史参考。
 > `map_configs` 必须继承 1.0 `map_profile` 的**全部场景调参**（含 `twin_world_size` 与 31 键 `exploration`）；
 > 教程 `story` 的归属见 §12 D13。
 
@@ -41,7 +42,7 @@
 
 | 事实 | 证据 |
 | --- | --- |
-| 内容版本按类型：**当前（C3 后）21 个 active 类型 = 13 类 `2.0` + 8 类 `1.0`（含 `patches`）**，另有 3 类 `2.0` 草案（`weapons` / `story_arcs` / `story_levels`）；Phase B 只提升了世界/战役 9 类（C1/C2/C3 另补 hulls/modules/items/quests） | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
+| 内容版本按类型：**当前（C4 后）20 个 active 类型全部为 `2.0`（19 定义 + `patches`，0 个 1.0 runtime）**，另有 3 类 `2.0` 草案（`weapons` / `story_arcs` / `story_levels`）；Phase B 只提升了世界/战役 9 类（C1–C4 另补 hulls/modules/items/quests 与其余类型改名） | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
 | 运行时加载：`ContentCompiler` 按类型版本校验 envelope；Patch 再校验走目标类型版本 | `framework/modding/content_compiler.gd` |
 | 开局链路：`run.start(build_id, seed, tutorial)` → `RunFactory.create_run` → `create_ship` → `MapGenerator.generate(map_profile)` → `WorldGenerator.generate(_coordinate_world_profile(world))`（孪生海图世界）→ markets / npcs / main contract；`tutorial=true` 时 `StoryService.begin` 从 `map_profiles.data.story` 启动教程 | `framework/application/commands/run_start.gd`、`framework/domain/contracts/run_factory.gd`、`framework/domain/story/story_service.gd` |
 | 抽象地图输入：`port_count_range / archetypes / start_archetype_tags / required_facility_tags / required_facility_max_edges / port_name_keys / edge_count_range / distance_range / route_risk_range` | `framework/domain/map/map_generator.gd` |
@@ -175,7 +176,7 @@ _check_route_templates / _check_weather_profiles / _check_factions / _check_disc
 _check_map_configs`，在 `validate()` 注册；错误码沿用 `REF-*` 语义（`reference_missing`、`ref_inactive_type`、
 `reference_self` 等）。`_definition_exists()` 遍历 `ContentTypes.all()`，提升后的类型自动进入通用引用检查。
 `map_profile.default_starting_build` 在 1.0 运行时从未被读取（仅 `_check_map_profiles` 校验存在性）；v2 中它只作为
-`start_profiles.starting_build` 缺失时的兜底，并在校验期提示。
+`start_profiles.starting_build` 缺失时的兜底，并在校验期提示。**C4 起 `map_profiles` 已退役**，该字段随 1.0 内容删除。
 
 > **B2 实现备注（2026-10-22）**：`PLANNED_REF_TYPES` 常量只用于尚未 active 的目标；引用先走
 > `_check_planned_ref()`——目标类型一旦 `ContentTypes.is_known()` 就自动升级为硬校验（兑现“激活后自动升级为

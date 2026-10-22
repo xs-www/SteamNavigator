@@ -25,7 +25,7 @@
 
 - **可玩闭环**：程序生成海图、市场/补给、委托、船厂购买/打造/仓库/改装、出航与风险事件、探索线索、通关总结、主菜单与设置持久化。
 - **2.5D 固定舞台**：港口全窗 3D 舞台、连续港区三站位、船厂 3D 实机舞台、航行离港/入港演出、静态合批与低配回退。
-- **Content Schema 2.0 Phase C 进行中**：C1（5 类模块 → `modules` 2.0 + `hulls` 2.0）、C2（goods + materials → `items` 2.0）与 C3（`quests` 2.0 + 持久 `data.quests` + QuestService，委托/任务解耦）已完成；当前 active 21 类（7×1.0 + 13×2.0 + 显式补丁），3 类草案（`weapons` / `story_arcs` / `story_levels`）仅供编辑器与 draft 校验。
+- **Content Schema 2.0 Phase C 已完成**：C1（5 类模块 → `modules` 2.0 + `hulls` 2.0）、C2（goods + materials → `items` 2.0）、C3（`quests` 2.0 + 持久 `data.quests` + QuestService，委托/任务解耦）与 C4（`port_templates` / `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events`、`contracts` 与 `patches` 升 2.0，`map_profiles` 退役）已完成；**20 个 active 类型全部 2.0（19 定义 + 显式补丁，0 个 1.0 runtime）**，3 类草案（`weapons` / `story_arcs` / `story_levels`）仅供编辑器与 draft 校验。
 - **剧情 / 任务**：新手教学 4.5 与任务追踪 `task.view` 已落地；C3 起 `quests` 2.0 + 持久 `data.quests` + `QuestService` 已接入（委托接取生成追踪实例，剧情演出/游戏指引等抽象引导由 Quest 承载），剧情模式 S1 数据契约（`story_arcs` / `story_levels` 草案）已就绪。
 - **无头测试**：`pwsh ./tools/test.ps1` 跑 Godot 全量；Node/CLI/SDK 门禁命令见下方。
 
@@ -80,7 +80,7 @@ godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examp
 godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/templates/draft_weapons_pack --mode=draft
 ```
 
-示例：`sdk/examples/example_roles_1_0`（1.0）、`example_mixed_roles_items`（1.0 + 已激活 2.0）、`sdk/templates/draft_weapons_pack`（草案，仅 draft）。模式、结构化错误与发布门禁说明见 [sdk/README.md](sdk/README.md)。
+示例：`sdk/examples/example_crew_roles`（2.0）、`example_mixed_crew_roles_items`（混合 2.0 内容）、`sdk/templates/draft_weapons_pack`（草案，仅 draft）。模式、结构化错误与发布门禁说明见 [sdk/README.md](sdk/README.md)。
 
 ## 架构概览
 
@@ -133,7 +133,7 @@ content_types.json             内容类型单一真源（框架 / 编辑器 / S
 framework/                     启动、模组、应用/领域、服务、状态、UI、测试、本地化
 schemas/                       Manifest 与各类内容的 JSON Schema
 dev_mods/core/                 官方内容模组（内容 JSON、本地化、资产副本）
-sdk/                           打包、校验、模板与 1.0/混合/草案示例
+sdk/                           打包、校验、模板与全 2.0/草案示例
 SNModMaker/                    零依赖网页端模组制作器
 assets/                        框架 UI 资产；内容模型随 core 模组发布
 docs/                          设计/契约文档；docs/static/ 为生成代码索引

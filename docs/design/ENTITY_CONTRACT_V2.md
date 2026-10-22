@@ -1,15 +1,15 @@
 # Steam Navigator 实体契约 v2
 
-> 状态：Draft 3（2026-10-23，Phase A/B 与 C1/C2/C3 落地后刷新）
+> 状态：Draft 4（2026-10-23，Phase A/B 与 C1–C4 落地后刷新，**Phase C 完成**）
 > 适用范围：Schema 2.0、Content Types 单一真源、注册表、跨引用校验、发布门禁与 SNModMaker
-> 运行时已按类型版本加载：当前 21 个 active 类型中 13 类为 Content Schema 2.0、8 类为 1.0（含 `patches`）；
+> 运行时已按类型版本加载：当前 20 个 active 类型**全部为 Content Schema 2.0**（19 个定义 + `patches`，0 个 1.0 runtime）；
 > 本文描述 v2 契约与迁移边界。
 
 ## 1. 与草案的关系
 
 `Steam_Navigator_Mod_Entity_Constraints_Spec.md`（Draft 0.1）是目标架构参考。本文采用它的原则、通用实体契约、注册顺序、错误分级、编辑器分工与验收标准，但不直接采用：
 
-- 把 6 种模块合并为 `Module`、把 goods/materials 合并为 `Item` 的**实体合并方案**：已分别由 C1 / C2 落地（`modules` / `items` 2.0）；Quest 由 C3 独立落地为 `quests` 2.0（不合并进 Contract）。
+- 把 6 种模块合并为 `Module`、把 goods/materials 合并为 `Item` 的**实体合并方案**：已分别由 C1 / C2 落地（`modules` / `items` 2.0）；Quest 由 C3 独立落地为 `quests` 2.0（不合并进 Contract）；C4 完成其余 1.0 类型改名 / 升 2.0。
 - 草案中的伪 Schema 关键字（`min`、`max`、`min_length`、`unique_by`、`reference`、`rules`）：改为当前校验器支持的 JSON Schema 子集 + 框架侧引用/规则校验。
 - 草案缺少的本地化键、资源键、Patch 与 capability 规则：在本契约中补齐。
 - `roles` 不并入模块；`strategies` 暂保留独立内容类型；`starting_builds` 是玩家开局配置，不是世界建筑布局。
@@ -38,7 +38,7 @@
 ```
 
 - `schema_version`：该类型的期望 Content Schema 版本（由 `content_types.json.types[].schema_version` 声明）；
-  1.0 类型仍是 `"1.0"`，2.0 类型是 `"2.0"`，由 `ContentCompiler` 按类型校验。
+  当前 20 个 active 类型全部为 `"2.0"`，由 `ContentCompiler` 按类型校验。
 - `content_type`：必须是 `content_types.json` 中 `status=active` 的 `key`。
 - `definitions`：同类型定义数组；补丁文件使用 `patches`，见 §9。
 
@@ -151,7 +151,7 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 
 ### 7.2 Schema 2.0 运行时类型与草案（已落地）
 
-当前 13 类运行时类型使用 `schemas/v2/`：
+当前 **20 类 active 类型（0 个 1.0 runtime）** 全部使用 `schemas/v2/`：
 
 | 来源 | 类型 | Schema |
 | --- | --- | --- |
@@ -159,6 +159,8 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 | C1 | `hulls`（类型与 ID 不变） / `modules`（5 类模块合并） | `v2/hull.schema.json` / `v2/module.schema.json` |
 | C2 | `items`（goods + materials 合并，`data.crafting_material` 标志） | `v2/item.schema.json` |
 | C3 | `quests`（抽象引导目标链，不复制 contract 的 payload / 目的地 / 结算） | `v2/quest.schema.json` |
+| C4 | `port_templates` / `starting_scenarios` / `contracts` / `voyage_events` / `crew_roles` / `boiler_strategies` | `v2/port_template.schema.json` / `v2/starting_scenario.schema.json` / `v2/contract.schema.json` / `v2/voyage_event.schema.json` / `v2/crew_role.schema.json` / `v2/boiler_strategy.schema.json` |
+| C4 | `patches`（显式补丁） | `v2/patch.schema.json` |
 
 - `schemas/v2/common.schema.json`：2.0 通用定义、ID、标签、资源信息与 cargo stack。
 - `hulls` 的 `hull_data` 内联原 `module_common` 字段（tier / weight / purchase_price / craft_* / materials /
@@ -172,18 +174,17 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
     数据契约；契约见 [STORY_MODE.md](STORY_MODE.md)。
 - `content_types.json.types[]` 为每个 active 类型声明 `schema` 与 `schema_version`；草案在
   `draft_schemas` / `draft_types` 登记，各自带 `schema_version: "2.0"` 与 capability。
-- `schema-bundle.js` 递归收录 `schemas/` 共 **27 个**文件（10 个顶层 + 17 个 `v2/`：`v2/common`、
-  13 类运行时 2.0、`weapon` 与剧情 2 个草案）；校验器按基准文件所在目录解析 `common.schema.json` 等
-  跨文件 `$ref`。
+- `schema-bundle.js` 递归收录 `schemas/` 共 **26 个**文件（**2 个顶层**：`common` / `manifest` + **24 个 `v2/`**：
+  `v2/common`、20 类 active 2.0、`weapon` 与剧情 2 个草案）；校验器按基准文件所在目录解析
+  `common.schema.json` 等跨文件 `$ref`。
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；声明版本与类型不符报
   `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；草案内容给 `draft_content` 警告；
   使用 capability 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
-- 编辑器与 CLI 对 13 类运行时 2.0 正常编辑 / 校验 / 导出，对 3 类草案标 draft（含它的项目不能部署到发布包）。
-- 剩余 1.0 定义类型（Phase C4）：`roles / strategies / port_archetypes / map_profiles / starting_builds /
-  contracts / events`（+ `patches`）。
+- 编辑器与 CLI 对 20 类运行时 2.0 正常编辑 / 校验 / 导出，对 3 类草案标 draft（含它的项目不能部署到发布包）。
+- **无剩余 1.0 定义类型**；`map_profiles` 已退役（`map_configs` 取代），`v2_target` / `aliases` 已清空。
 - 测试：`test_schema_v2_drafts.gd`（Phase B 9 类 + `map_configs`）、`test_schema_v2_weapons.gd`
   （`weapons` 与 hull socket 镜像）、`test_item_categories.gd`（C2 items）、`test_quest_service.gd`
-  （C3 quests / 委托追踪实例）、`test_content_versions.gd`（按类型版本与生成物一致性）。
+  （C3 quests / 委托追踪实例）、`test_content_versions.gd`（全类型版本与生成物一致性）。
 
 ## 8. 定义、生成与运行态
 
@@ -267,16 +268,16 @@ scan → manifest / dependency resolve → schema compile
 
 - Content Schema 主版本变化在**发布版**必须提供迁移器与旧档只读兼容；**开发期（C/D）例外**：不保留旧档 / 旧内容
   兼容，实体合并后旧档直接作废（2026-10-22 拍板，详见迁移方案 §3.2 D2/D5）。
-- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。当前状态：13 类运行时类型为 `2.0`（Phase B 9 类 + C1 `hulls`/`modules` + C2 `items` + C3 `quests`），8 类（含 `patches`）仍为 `1.0`。
-- 新系统通过 capability 暴露（`content.world.v1`、`content.modules.v1`、`content.items.v1`、`content.quests.v1`、`content.combat.v1`…）；模组使用新能力必须声明。
-- `v2_target` 只用于规划剩余迁移（`port_template` / `starting_scenario` / `voyage_event` 等），不代表当前可加载类型；已完成的 `map_profile → map_config`、模块合并、Item 合并与 Quest 解耦已从迁移提示转为实际类型。
+- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。当前状态：**20 个 active 类型全部为 `2.0`（19 定义 + `patches`），0 个 1.0 runtime 类型**（Phase C 完成）。
+- 新系统通过 capability 暴露（`content.world.v1`、`content.modules.v1`、`content.items.v1`、`content.quests.v1`、`content.port_templates.v1`、`content.starting_scenarios.v1`、`content.voyage_events.v1`、`content.crew_roles.v1`、`content.boiler_strategies.v1`、`content.contracts.v1`、`content.patches.v1`、`content.combat.v1`…）；模组使用新能力必须声明。
+- `v2_target` / `aliases` 已清空：剩余迁移全部完成，不再有「迁移提示」类型；`port_templates` / `starting_scenarios` / `voyage_events` / `crew_roles` / `boiler_strategies` 等已是实际运行时类型。
 
 ## 15. 编辑器契约
 
 - 通用实体编辑：元数据、Schema 表单、枚举/数值、引用选择、ID 唯一性、未知字段、路径定位。
 - 专用视图：装配、世界/区域、起始场景、委托、事件、战斗遭遇、生产链、遗迹房间；只编辑数据。
 - 编辑器不能实现独立校验规则；必须与运行时/SDK 共用同一规则来源。
-- Schema 2.0 运行时类型：13 类已按 v2 Schema 正常编辑 / 校验 / 导出并部署；3 类草案（`weapons` / `story_arcs` /
+- Schema 2.0 运行时类型：20 类已按 v2 Schema 正常编辑 / 校验 / 导出并部署；3 类草案（`weapons` / `story_arcs` /
   `story_levels`）在侧栏「Schema 2.0 草案 / 运行时不加载」分区标 draft，内容文件按类型写
   `schema_version: "2.0"`，运行时暂不加载。
 - 草案与能力：内容使用 capability 但未写入 `manifest.capabilities` 时「校验」面板给出
@@ -291,9 +292,11 @@ scan → manifest / dependency resolve → schema compile
 2. **单一真源**：✅ 已落地（`content_types.json` 接入框架测试、编辑器与 SDK）。
 3. **存档与 Schema 2.0**：✅ 已落地（Save/State 2.0、`content_versions`；旧档兼容在开发期不承诺）。
 4. **新系统类型**：Phase B 世界/战役 9 类 ✅；Phase D 的舰队、战斗、基地、自动贸易、遗迹仍为 planned。
-5. **实体合并**：C1 `modules`/`hulls` + C2 `items` + C3 `quests`（与 `contracts` 解耦）✅；Phase C4 待开工。开发期直接改 core ID，
-   **不做 ID 别名 / 内容迁移器**。
-6. **清理**：✅ 已开始（C1/C2 删除旧类型与旧内容，2026-10-22 删除 8 个死 1.0 Schema）；Phase E 冻结 1.0 读路径。
+5. **实体合并**：C1 `modules`/`hulls` + C2 `items` + C3 `quests` + C4 剩余类型改名/升 2.0（`port_templates` /
+   `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches`）✅；
+   Phase C 完成。开发期直接改 core ID，**不做 ID 别名 / 内容迁移器**。
+6. **清理**：✅ 已开始（C1/C2 删除旧类型与旧内容，2026-10-22 删除 8 个死 1.0 Schema；C4 删除全部剩余 1.0 内容 Schema
+   与回退路径）；Phase E 冻结 1.0 读路径。
 
 阶段 3–6 的可执行切片、文件触点、兼容性矩阵与验收见
 [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md)。
@@ -308,7 +311,7 @@ scan → manifest / dependency resolve → schema compile
   只要求新战役可创建、保存、读回。
 - [x] 第三方模组可注册新内容类型内的数据，但不能覆盖已有 ID 或绕过校验。
 - [x] 发布产物零 `error`；`warning` 可见。
-- [ ] Core 内容迁移后无玩法回归（C1/C2 全量回归已绿；以 Phase E 发布门禁再次验证）。
+- [ ] Core 内容迁移后无玩法回归（C1–C4 全量回归已绿：Godot 527 / Node 58 / CLI 63；以 Phase E 发布门禁再次验证）。
 
 ## 18. 待决策
 
@@ -317,7 +320,7 @@ scan → manifest / dependency resolve → schema compile
   Compartment 模型何时进入舰队阶段仍待定。
 - ~~C3 `quests` 2.0 字段范围与 QuestService 持久化时机~~：已由 C3 落地（`data.quests` 惰性 ensure；
   quest 实例只存 `quest_id / stage_index / counters / flags / contract_instance_id`）。
-- 奖励 / effects 系统（Quest 完成发奖、`spawn_contract` 等）暂缓，待 C4/后续切片决定数据形状。
-- Phase C4 剩余 1.0 类型的提升顺序与命名（`port_templates` / `starting_scenarios` / `voyage_events` 等）。
-- `strategies` 是否保留独立类型，或并入 Module 配置。
+- 奖励 / effects 系统（Quest 完成发奖、`spawn_contract` 等）暂缓，待后续切片决定数据形状。
+- Phase D 系统类型（fleet / combat / base / auto_trade / ruins）的 Schema 与运行时顺序；Phase E 冻结 1.0 读路径 / 发布门禁。
+- `crew_roles` / `boiler_strategies` 是否在新系统中保持独立类型，或并入 module 预设。
 - 持久战役的 tick 粒度、失败恢复与离线模拟边界。

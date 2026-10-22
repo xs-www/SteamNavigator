@@ -28,7 +28,7 @@
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
 - [ ] 模型素材库接入：kit 批次 1–5 其余 33 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记；批次 4 新增 6 件可围合建筑件、批次 5 新增 5 件基地生产建筑），接 `ShipVisualAssembler` / 基地舞台 / PortStage 的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C · C1–C3 已完成**（C1：5 类模块→`modules` 2.0 + `hulls` 2.0；C2：goods+materials→`items` 2.0（`crafting_material`）；C3：`quests` 2.0 + 持久 `data.quests` + QuestService，委托接取生成追踪实例；active 21、编辑器 24（21 runtime + 3 draft））。下一步 **C4 残留类型 2.0 化**（port_archetypes/map_profiles/starting_builds/events/roles/strategies/patches/contracts），之后 D 其余系统 → E 冻结 1.0。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
+- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C（C1–C4）已完成**（C1 modules/hulls；C2 items；C3 quests；C4 port_templates/starting_scenarios/crew_roles/boiler_strategies/voyage_events、contracts/patches 2.0、map_profiles 退役；**20 类 active 全部 2.0，0 个 1.0 runtime**；schema bundle 26、编辑器 23）。下一步 **Phase D 其余系统类型**（fleet / combat / base / auto_trade / ruins）→ **Phase E 冻结 1.0 读路径与发布门禁**。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 
 ### 海图 / 探索
 
@@ -50,6 +50,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- Content Schema 2.0 Phase C · C4（Phase C 完成，全类型 2.0）：`port_archetypes → port_templates`、`starting_builds → starting_scenarios`、`roles → crew_roles`、`strategies → boiler_strategies`、`events → voyage_events`；`map_profiles` 退役（`map_configs` 取代）；`contracts` / `patches` 升 2.0，删除 1.0 回退路径（RunFactory / ContentRefs / 存档 resolver）。**20 个 active 类型全部 2.0（19 定义 + patch）**；schema bundle 26（2 顶层 + 24 v2）、编辑器 23（20 runtime + 3 draft）、Core 19 内容文件。验证：Godot **527/527**、Node **58/58**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase C · C3（委托/任务解耦）：新增 `quests` active 2.0（kind story/guide/system、stages/objectives 复用剧情 DSL、tracking/prerequisites；无运输 payload）；core `quests.json` 2 条；新增 `QuestOps`/`QuestService` 与 `data.quests` 持久实例（惰性 ensure），委托 `accept_offer`/教程主线挂接生成追踪实例、完成关闭；`task.view` 增加 `kind:"quest"` 聚合（contract 实例不重复渲染），Shell 转发 `cmd:*`/`ui:*` 给 quest.observe；`content.quests.v1` capability 与 `quest.start|complete|observe` 命令。验证：Godot **525/525**、Node **55/55**、CLI **62/62**、SDK `status: ok`。
 - README 瘦身（2026-10-22）：根 README 从 323 行压到 115 行、SNModMaker README 从 479 行压到 63 行；详细进度拆到 `docs/design/PROJECT_STATUS.md`、Core 内容基线拆到 `docs/design/CORE_CONTENT.md`、实现边界拆到 `docs/design/KNOWN_LIMITS.md`，SNModMaker 使用/开发细节拆到 `SNModMaker/docs/{USER_GUIDE,DEVELOPMENT}.md`；README 改为「按需读取」索引。
 
