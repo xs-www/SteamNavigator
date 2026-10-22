@@ -1,6 +1,6 @@
 # `SNModMaker/tools/content.mjs`
 
-> 作用：SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 16 个运行时类型与 9 个 Schema 2.0 草案类型（含舰载武器 `weapons`）；`new --draft` 可直接创建纯 2.0 草案项目。
+> 作用：SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 25 个运行时类型与 3 个 Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。
 
 - 关键依赖：`SNStore`、`SNValidate`、`SNCatalog`、`content_json.mjs`、`Node 内置模块`
 - 类型：Node ES 模块
@@ -16,85 +16,86 @@
 | `knownTypeKeys()` | L54 |
 | `schemaVersionFor(target)` | L59 |
 | `USAGE` | L72 |
-| `BOOLEAN_FLAGS` | L138 |
-| `parseArgv(argv)` | L143 |
-| `flagTrue(ctx, name)` | L186 |
-| `flagValue(ctx, name)` | L193 |
-| `flagValues(ctx, name)` | L203 |
-| `requireFlag(ctx, name, label)` | L209 |
-| `jsonEqual(a, b)` | L223 |
-| `isPlainObject(value)` | L227 |
-| `sha256(buffer)` | L231 |
-| `splitLines(text)` | L235 |
-| `unifiedDiff(oldText, newText, context = 3)` | L243 |
-| `printJson(payload)` | L310 |
-| `stripChanges(changes)` | L314 |
-| `changeLines(changes)` | L322 |
-| `issueSummary(after, newIssues)` | L329 |
-| `buildStats(project)` | L343 |
-| `respond(ctx, payload, humanText, exitCode = 0)` | L351 |
-| `issueKey(issue)` | L363 |
-| `newIssuesBetween(baseline, after)` | L367 |
-| `listFilesRecursive(root)` | L376 |
-| `loadMod(ctx, modArg)` | L392 |
-| `fileText(load, rel)` | L417 |
-| `resolveInside(root, relative)` | L424 |
-| `validateContentFilePath(filePath)` | L437 |
-| `atomicWrite(absolute, buffer)` | L447 |
-| `collectChanges(load, writes, deletes, wouldWrite)` | L465 |
-| `verifyBaseline(load, writes, deletes)` | L494 |
-| `commitChanges(load, writes, deletes)` | L505 |
-| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L519 |
-| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L549 |
-| `planLocaleChanges(load, project, writes, localeNames)` | L568 |
-| `patchManifestText(originalText, manifest)` | L602 |
-| `planManifest(load, project, writes)` | L632 |
-| `runSyncCoreIndex(ctx)` | L644 |
-| `runNodeTests(ctx)` | L656 |
-| `finalizeWrite(ctx, options)` | L672 |
-| `parseDataPath(input)` | L746 |
-| `resolveTokenFile(reference)` | L791 |
-| `readTextFile(reference)` | L803 |
-| `parseValueToken(raw)` | L809 |
-| `parseJsonOrFile(raw, label)` | L834 |
-| `parseAssignmentSpec(raw)` | L844 |
-| `setByPath(target, pathSegments, value)` | L866 |
-| `getByPath(target, pathSegments)` | L880 |
-| `deepMerge(base, extra)` | L889 |
-| `buildData(typeKey, ctx)` | L900 |
-| `findLocalIdConflict(project, info, localId, exclude)` | L921 |
-| `validateLocalId(localId)` | L931 |
-| `collectStrings(value, output, depth = 0)` | L938 |
-| `applyValueAssignment(definition, assignment)` | L958 |
-| `nestValue(segments, value)` | L988 |
-| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1004 |
-| `applyAssignmentToText(text, definitionNode, assignment)` | L1036 |
-| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1063 |
-| `describeFields(info)` | L1111 |
-| `collectObject(node, file)` | L1123 |
-| `inferType(target, raw)` | L1151 |
-| `expand(pathText, node, isRequired, file, depth)` | L1174 |
-| `describePayload(typeKey)` | L1212 |
-| `commandTypes(ctx)` | L1275 |
-| `commandDescribe(ctx)` | L1319 |
-| `commandList(ctx)` | L1349 |
-| `commandAdd(ctx)` | L1397 |
-| `commandSet(ctx)` | L1520 |
-| `commandLoc(ctx)` | L1576 |
-| `commandRm(ctx)` | L1628 |
-| `commandClone(ctx)` | L1698 |
-| `commandValidate(ctx)` | L1757 |
-| `commandNew(ctx)` | L1821 |
-| `COMMANDS` | L1918 |
-| `handleError(ctx, error)` | L1931 |
-| `main(argv)` | L1949 |
+| `BOOLEAN_FLAGS` | L139 |
+| `parseArgv(argv)` | L144 |
+| `flagTrue(ctx, name)` | L187 |
+| `flagValue(ctx, name)` | L194 |
+| `flagValues(ctx, name)` | L204 |
+| `requireFlag(ctx, name, label)` | L210 |
+| `jsonEqual(a, b)` | L224 |
+| `isPlainObject(value)` | L228 |
+| `sha256(buffer)` | L232 |
+| `splitLines(text)` | L236 |
+| `unifiedDiff(oldText, newText, context = 3)` | L244 |
+| `printJson(payload)` | L311 |
+| `stripChanges(changes)` | L315 |
+| `changeLines(changes)` | L323 |
+| `issueSummary(after, newIssues)` | L330 |
+| `buildStats(project)` | L344 |
+| `respond(ctx, payload, humanText, exitCode = 0)` | L352 |
+| `issueKey(issue)` | L364 |
+| `newIssuesBetween(baseline, after)` | L368 |
+| `listFilesRecursive(root)` | L377 |
+| `loadMod(ctx, modArg)` | L393 |
+| `fileText(load, rel)` | L418 |
+| `resolveInside(root, relative)` | L425 |
+| `validateContentFilePath(filePath)` | L438 |
+| `atomicWrite(absolute, buffer)` | L448 |
+| `collectChanges(load, writes, deletes, wouldWrite)` | L466 |
+| `verifyBaseline(load, writes, deletes)` | L495 |
+| `commitChanges(load, writes, deletes)` | L506 |
+| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L520 |
+| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L550 |
+| `planLocaleChanges(load, project, writes, localeNames)` | L569 |
+| `patchManifestText(originalText, manifest)` | L603 |
+| `planManifest(load, project, writes)` | L633 |
+| `runSyncCoreIndex(ctx)` | L645 |
+| `runNodeTests(ctx)` | L657 |
+| `finalizeWrite(ctx, options)` | L673 |
+| `parseDataPath(input)` | L747 |
+| `resolveTokenFile(reference)` | L792 |
+| `readTextFile(reference)` | L804 |
+| `parseValueToken(raw)` | L810 |
+| `parseJsonOrFile(raw, label)` | L835 |
+| `parseAssignmentSpec(raw)` | L845 |
+| `setByPath(target, pathSegments, value)` | L867 |
+| `getByPath(target, pathSegments)` | L881 |
+| `deepMerge(base, extra)` | L890 |
+| `buildData(typeKey, ctx)` | L901 |
+| `findLocalIdConflict(project, info, localId, exclude)` | L922 |
+| `validateLocalId(localId)` | L932 |
+| `collectStrings(value, output, depth = 0)` | L939 |
+| `applyValueAssignment(definition, assignment)` | L959 |
+| `nestValue(segments, value)` | L989 |
+| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1005 |
+| `applyAssignmentToText(text, definitionNode, assignment)` | L1037 |
+| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1064 |
+| `describeFields(info)` | L1112 |
+| `collectObject(node, file)` | L1124 |
+| `inferType(target, raw)` | L1152 |
+| `expand(pathText, node, isRequired, file, depth)` | L1175 |
+| `describePayload(typeKey)` | L1213 |
+| `commandTypes(ctx)` | L1276 |
+| `commandDescribe(ctx)` | L1320 |
+| `commandList(ctx)` | L1350 |
+| `commandAdd(ctx)` | L1398 |
+| `commandSet(ctx)` | L1521 |
+| `commandLoc(ctx)` | L1577 |
+| `commandRm(ctx)` | L1629 |
+| `commandClone(ctx)` | L1699 |
+| `commandValidate(ctx)` | L1758 |
+| `commandNew(ctx)` | L1822 |
+| `COMMANDS` | L1919 |
+| `handleError(ctx, error)` | L1932 |
+| `main(argv)` | L1950 |
 
 ## 契约与约束
 
 - 十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。
 - 复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。
-- `types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与唯一的 `weapons` 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。
-- `new --draft <content_type>` 仅接受剩余草案（`weapons`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容。
+- `types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与 3 个草案（`weapons` / `story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。
+- `new --draft <content_type>` 只接受真实草案（`weapons` / `story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。
+- `validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。
 - `new --template` 的模板清单来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 草案定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。
 - `--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。
 - 输出契约：`--json` 时 stdout 只有一个 JSON 对象（成功 / 失败 / 用法错误都是），人读日志写 stderr；退出码 0 成功、1 执行失败 / 校验未通过 / 冲突、2 用法错误。

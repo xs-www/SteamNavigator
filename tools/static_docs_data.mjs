@@ -1538,13 +1538,14 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/js/catalog.js": {
-    role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板（含「舰载武器包」5 件武器预设）；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`）。",
+    role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板（含「舰载武器包」5 件武器预设）；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`），并按类型提供剧情模式（篇章/关卡）的标签、默认值与枚举可读名。",
     dependencies: ["JSON Schema（结构约束）", "content-types.js（由 content_types.json 生成）"],
     contracts: [
-      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型（1.0 与 Phase B 的 2.0）与剩余 Schema 2.0 草案类型；`schemaVersionFor()` 返回类型期望版本。",
-      "`TYPES` 含 25 个可加载类型（1.0 16 类 + Phase B 提升的 9 类），`DRAFT_TYPES` 只剩 `weapons`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
-      "`DEFAULTS` 生成的定义必须能通过对应 Schema；Phase B 9 类 2.0 类型（含 `map_configs` 的 31 键 exploration）与 `weapons` 草案的默认值都在此维护。",
+      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型（1.0 与 Phase B 的 2.0）与 3 个 Schema 2.0 草案类型（weapons / story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。",
+      "`TYPES` 含 25 个可加载类型（1.0 16 类 + Phase B 提升的 9 类），`DRAFT_TYPES` 为 `weapons` + 剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
+      "`DEFAULTS` 生成的定义必须能通过对应 Schema；Phase B 9 类 2.0 类型（含 `map_configs` 的 31 键 exploration）、`weapons` 草案与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。",
       "`weapons` 草案的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。",
+      "剧情草案复用共享 `FIELD_LABELS`，用 `TYPE_FIELD_LABELS` / `TYPE_FIELD_HINTS` 处理同名不同义的字段（如关卡 `position` 是世界坐标、`rewards` 只允许成就/图鉴/装饰），并在 `FIELD_ENUM_LABELS` 提供 `role` / `presentation` / `fog` / `profile` / `hint_level` / 重试方式的可读名。",
       "`WEAPON_PRESETS` 是「舰载武器包」模板的 5 件成品数据（deck_gun / heavy_cannon / mortar / repeater / broadside）：战斗数值对齐 SNBattleSim，装配字段对齐 GLB Root extras，经济字段项目补齐，`model` 为 `model.weapon.*`；`TEMPLATES` 的 `weapons` 条目（显示名「舰载武器包」）驱动新建模组对话框与 CLI `new --template weapons`。",
       "`keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。",
       "操作码、公式、设施等词汇与框架注册表保持同源；页面只做候选与提示，不自行执行。"
@@ -1572,16 +1573,18 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/js/validate.js": {
-    role: "JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁与清单一致性。",
+    role: "JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁、清单一致性，以及剧情模式（故事包白名单 / 篇章 / 关卡固定地图与任务线）语义。",
     dependencies: ["schema-bundle.js", "catalog.js", "core-index.js（可选外部引用检查）"],
     contracts: [
       "Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。",
       "`resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。",
-      "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons 草案 2.0），最后回退 1.0。",
+      "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons / story_arcs / story_levels 草案 2.0），最后回退 1.0。",
       "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
-      "`draft_content` 警告只针对仍是草案的 `weapons`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。",
+      "`draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。",
       "`LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。",
+      "`REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_build` → starting_build，与已有的 hull / good 等字段共用 `ref_type` 提示。",
       "武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。",
+      "剧情语义码：`story_pack_off_whitelist`（故事包混入非剧情内容，error）、`story_arc_level_type`（篇章关卡列表只能引用 story_level）、`story_protagonist_unknown`、`story_character_duplicate`、`story_stage_duplicate`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_port_duplicate`、`story_fixed_start_port_unknown`、`story_fixed_edge_port_unknown`、`story_start_port_unknown`；`story_arc_empty_levels` / `story_level_orphan` / `story_fixed_map_disconnected` / `story_term_duplicate` / `story_multiple_protagonists` 为 warning（空篇章与暂存关卡不阻塞编辑器/CLI 写入）。",
       "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
       "语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。",
       "实体 information.texture/model 支持当前模组裸资源键与完整 asset:// URI；当前模组和 Core 引用必须存在且格式匹配。",
@@ -1595,11 +1598,23 @@ export const FILE_DOCS = {
       "flattenObject(schema, file)": [
         "合并 `$ref` 与 allOf 的 properties/required，仅用于表单渲染，不用于替代校验。"
       ],
+      "checkStoryArcSemantics(definition, view, add)": [
+        "校验 protagonist_id 在 characters 中、角色 ID 不重复、至多一个 protagonist；levels 为空只给 warning。"
+      ],
+      "checkStoryLevelSemantics(definition, view, add)": [
+        "校验阶段 ID 唯一、至少一个 checkpoint、叙事 beat 的 stage_id 属于本关、fail.default_mode 在 allow 中。",
+        "校验固定地图港口 ID 唯一、start_port / start.port_id / 航道两端都引用已声明港口，并用 BFS 报告从起点走不到的港口（warning）。"
+      ],
+      "checkStoryPack(contentFiles, add)": [
+        "出现剧情内容文件时，任何非 story_arcs / story_levels 内容都报 `story_pack_off_whitelist`，保证故事包无法改动自由模式。",
+        "篇章 levels 只能引用 story_level；未被任何篇章引用的关卡给 `story_level_orphan` warning。"
+      ],
       "validateProject(project)": [
         "先跑 Manifest Schema 与内容文件 Schema，再检查 schema_version、命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。",
         "草案实例缺省版本按类型取 2.0，避免 v2 Schema 的 `schema_version` const 误报。",
         "资源裸键按当前模组 manifest.assets 解析；asset://core/<key> 使用嵌入 Core 索引校验，其他外部模组 URI 在无法读取其清单时给出未验证提示。",
         "引用本模组缺失为 error；Core 缺失为 warning（草案文件跳过）；其他命名空间只提示外部引用。",
+        "内容文件循环内按类型调用武器 / 船体 / 篇章 / 关卡语义检查，循环后调用一次故事包白名单检查。",
         "结果包含 counts 与 stats（定义/文件/语言/资源数量）。"
       ]
     }
@@ -1610,7 +1625,7 @@ export const FILE_DOCS = {
     dependencies: ["catalog.js", "core-index.js"],
     contracts: [
       "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
-      "`schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与 weapons 草案写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。",
+      "`schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与草案 weapons / story_arcs / story_levels 写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。",
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
@@ -1811,13 +1826,14 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 16 个运行时类型与 9 个 Schema 2.0 草案类型（含舰载武器 `weapons`）；`new --draft` 可直接创建纯 2.0 草案项目。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 25 个运行时类型与 3 个 Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与唯一的 `weapons` 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。",
-      "`new --draft <content_type>` 仅接受剩余草案（`weapons`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容。",
+      "`types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与 3 个草案（`weapons` / `story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。",
+      "`new --draft <content_type>` 只接受真实草案（`weapons` / `story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。",
+      "`validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 草案定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
       "`--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。",
       "输出契约：`--json` 时 stdout 只有一个 JSON 对象（成功 / 失败 / 用法错误都是），人读日志写 stderr；退出码 0 成功、1 执行失败 / 校验未通过 / 冲突、2 用法错误。",
@@ -1900,21 +1916,23 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tests/content-cli.test.mjs": {
-    role: "Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出；含 `weapons` 草案类型与「舰载武器包」模板。",
+    role: "Content CLI 集成测试：用 node:test 子进程调用真实 CLI，在临时模组目录覆盖十个命令、保源写回、校验闸门与 JSON 输出；含 `weapons` 草案类型、「舰载武器包」模板，以及剧情 `story_arcs` / `story_levels` 草案与示例剧情包。",
     contracts: [
-      "每个用例在 `fs.mkdtempSync(os.tmpdir())` 建临时模组；仓库 `dev_mods/core` 只读（部分用例比对前后 SHA-256），任何写操作都不落在仓库内。",
+      "每个用例在 `fs.mkdtempSync(os.tmpdir())` 建临时模组；仓库 `dev_mods/core` 与 `sdk/templates/story_pack_iron_tide` 只读（部分用例比对前后 SHA-256），任何写操作都不落在仓库内。",
       "覆盖 types / describe / list / new / add / set / loc / clone / rm / validate 的正常路径与用法错误、`--dry-run` 不写盘、最小 diff 与 add → rm 逐字节还原（含 BOM）、本地化专属键清理、`--json` 单一对象与退出码 0 / 1 / 2；`describe weapons` 与 `add --type weapons`（写 `schema_version: \"2.0\"`）在列。",
-      "`new --template weapons` 生成 5 条 weapons 草案定义与 `content.combat.v1` capability、不生成 1.0 商品；未知模板拒绝时错误信息列出 weapons 在内的可用模板。",
+      "`new --template weapons` 生成 5 条 weapons 草案定义与 `content.combat.v1` capability、不生成 1.0 商品；`new --draft story_arcs --draft story_levels` 生成纯剧情包（`content.story.v1`、空篇章 / 孤儿关卡只警告）；未知模板拒绝时错误信息列出 weapons 在内的可用模板，`--draft world_profiles` 等已提升类型按用法错误拒绝。",
+      "`validate --mod sdk/templates/story_pack_iron_tide` 断言 0 error / 2 个 `draft_content` warning；把 `goods` 内容加进剧情包副本后断言 `story_pack_off_whitelist` 与退出码 1。",
       "运行：`node --test SNModMaker/tests/content-cli.test.mjs`（从仓库根执行），只用 Node 内置模块，不引入第三方依赖。"
     ]
   },
 
   "SNModMaker/tests/run-tests.js": {
-    role: "Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析；含 `weapons` 草案、船体 socket 镜像与「舰载武器包」模板用例。",
+    role: "Node 单元测试：Schema 校验、项目模型、全部内容类型表单、索引/克隆、ZIP、导入导出往返、GLB 解析与部署目标解析；含 `weapons` 草案、船体 socket 镜像、「舰载武器包」模板与剧情模式（`story_arcs` / `story_levels`）用例。",
     contracts: [
       "不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。",
       "覆盖实体多语言键事务、资源候选类型过滤、船体模块区、武器表单字段、船体安装点编辑、贴图/GLB 引用、GLB 解析与发布包 mods 目标解析；任何失败以退出码 1 结束。",
-      "「舰载武器包」模板断言 5 件预设（`WEAPON_PRESETS`）、生成一个 `content/weapons.json`、每条 `information.model` 为 `asset://core/model.weapon.*` 且 manifest 声明 `content.combat.v1`。"
+      "「舰载武器包」模板断言 5 件预设（`WEAPON_PRESETS`）、生成一个 `content/weapons.json`、每条 `information.model` 为 `asset://core/model.weapon.*` 且 manifest 声明 `content.combat.v1`。",
+      "剧情用例：Schema bundle 31 个（含 `v2/story_arc` / `v2/story_level`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器草案分开建项目（混装会被白名单拒绝）。"
     ]
   },
 

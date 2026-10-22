@@ -75,7 +75,7 @@
 ## 契约与约束
 
 - 项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。
-- `schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与 weapons 草案写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。
+- `schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与草案 weapons / story_arcs / story_levels 写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。
 - 所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。
 - `keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。
 - 导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。

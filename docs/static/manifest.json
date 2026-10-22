@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T05:10:59.554Z",
-  "commit": "33d9c66",
+  "generated_at": "2026-10-22T10:40:22.960Z",
+  "commit": "202c8d3",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 899,
-    "documented": 357,
-    "grouped": 542
+    "sources": 972,
+    "documented": 381,
+    "grouped": 591
   },
   "files": [
     {
@@ -19,14 +19,14 @@
     },
     {
       "source": "README.md",
-      "sha256": "986077f8351f20535a4957ca16c3401c8b390690df1adc9280cd72deaf00986a",
+      "sha256": "c1c72a41dbcfd2434c3089b6036a096dcbc977dc26485b72bed8c79b0d7b5530",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
     },
     {
       "source": "SNBattleSim/README.md",
-      "sha256": "ccc6055872e3208ce81beff09313cb673017e734b4a393f32a9be5dc5807e567",
+      "sha256": "9f017e94320d889a4aa36560923120818681f4ae9abb62ea568184fb520d17b7",
       "doc": "docs/static/SNBattleSim/README.md",
       "status": "grouped",
       "group": "docs/static/SNBattleSim/README.md"
@@ -131,6 +131,12 @@
       "group": "docs/static/SNBattleSim/README.md"
     },
     {
+      "source": "SNBattleSim/start.bat",
+      "sha256": "badc80e030e392530817bb35a767f5a253970d845987aeffff8658de0d52fbe8",
+      "doc": "docs/static/SNBattleSim/start.bat.md",
+      "status": "documented"
+    },
+    {
       "source": "SNBattleSim/tests/simulation.test.mjs",
       "sha256": "4e3f009c7324171b40e8feb2bbc485c808d669a18302f21a576a4bdc257ae78d",
       "doc": "docs/static/SNBattleSim/tests/simulation.test.mjs.md",
@@ -175,7 +181,7 @@
     },
     {
       "source": "SNModMaker/README.md",
-      "sha256": "377f45c392cd43b67a25430f6a458f95194f6377553ab8d6edb9cd04b9cefa5e",
+      "sha256": "bc1d224115ad3bf8a24ffcb871bc025b75e235779458d7ed85488242bfc3299f",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -214,7 +220,7 @@
     },
     {
       "source": "SNModMaker/js/catalog.js",
-      "sha256": "f6a03aa33c6f7eec3f6edd64e62a09c29d2b876f547b0da29c26b994165c1808",
+      "sha256": "26836c29d2f28bad48f2a264dccf18680e1b1c8f2aa14f02288a839374b82eb7",
       "doc": "docs/static/SNModMaker/js/catalog.js.md",
       "status": "documented"
     },
@@ -250,7 +256,7 @@
     },
     {
       "source": "SNModMaker/js/validate.js",
-      "sha256": "fb1d852c0f32047562f00f0786d590a25755986846d9c88478acc8745a321c82",
+      "sha256": "26ade26acfe6fe0ec96ab233a70fce2e101771fabaf366706e96476a2e6af4c8",
       "doc": "docs/static/SNModMaker/js/validate.js.md",
       "status": "documented"
     },
@@ -268,6 +274,12 @@
       "group": "docs/static/SNModMaker/README.md"
     },
     {
+      "source": "SNModMaker/start.bat",
+      "sha256": "43dc9daedb8f55246d148c1f25422f3e5c9f951edd9dc677fe61ac02e93364a4",
+      "doc": "docs/static/SNModMaker/start.bat.md",
+      "status": "documented"
+    },
+    {
       "source": "SNModMaker/tests/browser-smoke.mjs",
       "sha256": "84a55fa1d412579e1a966c23a52bb6a96e9c439a5823d576724ba3c30cc4981e",
       "doc": "docs/static/SNModMaker/tests/browser-smoke.mjs.md",
@@ -275,13 +287,13 @@
     },
     {
       "source": "SNModMaker/tests/content-cli.test.mjs",
-      "sha256": "d0767934ee6751d8758858307d575c7aaa4037f7fdd6604fac8dc9ee31fa81cb",
+      "sha256": "6c31b9dc0ad8a34cb226bcce7c316945e257c0ce71b667692c3709a5290bd928",
       "doc": "docs/static/SNModMaker/tests/content-cli.test.mjs.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "acc9a9ffecb063bbb92b4c3babb60b6ee63082ca0225e2adbbab951e1c59f7cc",
+      "sha256": "84ceccf5fb13bbc73b12f343fd0dfda6d3be34ff4754664ee1ac03f9b3ac85e4",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -299,7 +311,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "695a101b4ac15f96214253bd84c24ea1cb615ea93f890fa8099e6bf0f3592e5c",
+      "sha256": "e8460dbafa6bc829ac30e0493475b7f9ede9d3db1df885dbe6bbe849fd74e7bb",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -359,7 +371,7 @@
     },
     {
       "source": "content_types.json",
-      "sha256": "2cce95d76cee9242784730fb8182713c7018eab4135fbf20b4b5c9ee8d1d05e8",
+      "sha256": "8a52a96718f05d39e5066b58e5c0c4e59357a0f5a3a44eb8afb9cbfa01d2cb50",
       "doc": "docs/static/content_types.json.md",
       "status": "documented"
     },
@@ -399,6 +411,34 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/architecture/SN_Arch_Gate.glb",
+      "sha256": "3d3fd524d7dace92459188311ca3b2de04407b06d9f10694509384cbe8606248",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/architecture/SN_Arch_Loading_Platform.glb",
+      "sha256": "88d0d819518a45ca0eadbb329ef5b99c92f06d3caf31e9254189801708f95b9a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/architecture/SN_Arch_Perimeter_Wall.glb",
+      "sha256": "6eb8161b4c28fc0c208105e28014fd0d4aeb5dc899ae9e61c746db97ce6f9840",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/architecture/SN_Arch_Road.glb",
+      "sha256": "abadb13b98d3909b2c2a9eb2f1710ae189786455ab65466b3314f704108f3e05",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/architecture/SN_Arch_Tavern.glb",
       "sha256": "82f8a6ac89dbfa2eb4fe2d6bf1d94a2fe6b046965f3621ad8b9efee561ed1787",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -427,8 +467,22 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/architecture/SN_Arch_Warehouse_Variant.glb",
+      "sha256": "d0b78efd84f9b9877b86d11d07139cb72554ce54675c77a213170e8141398979",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/architecture/SN_Arch_Workshop.glb",
       "sha256": "5ffa14387bce9c33e1625d1c5c02651bc4a6259cb95e08741f4e7d2b9385cc61",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/architecture/SN_Arch_Workshop_Annex.glb",
+      "sha256": "38676f55b402a065da12dc1922448a91142c093a8b1123612958431838d80879",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -512,6 +566,118 @@
     },
     {
       "source": "dev_mods/core/assets/models/architecture/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/SN_Base_Defense_Tower.glb",
+      "sha256": "aaa1ddb84e9c18a738223fa4330b93d140b2b0050f45064fb40ee4c450701137",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/SN_Base_Foundry.glb",
+      "sha256": "3b6124e378ea8339f8dffa65fd2b56c37dbf48c687361739c9e5c26050859a28",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/SN_Base_Sawmill.glb",
+      "sha256": "6e614f761b6641c6cdb07f724828d6ec46f2e46c6e16cfee7d2682b38ed11898",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/SN_Base_Smelter.glb",
+      "sha256": "ddbb971e7245fd5d1e8983df3e4c3a6e3c2d3acb43017e6f16b70447dd6ee69f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/SN_Base_Stockyard.glb",
+      "sha256": "b24ff4cec7aab3d14bdf1992928e40302d6109738712b587e8b5d3ea3a2b822b",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/coal.png",
+      "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/wood_deck.png",
       "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
@@ -645,6 +811,111 @@
     },
     {
       "source": "dev_mods/core/assets/models/cargo/shared_materials/wood_deck.png",
+      "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/SN_Enemy_Gunboat.glb",
+      "sha256": "e335ae150d68859251eca0b11b2de2b1434ce4e94862d60c56343b18b057dc7f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/SN_Enemy_Ironclad_Raider.glb",
+      "sha256": "b4981925714cab73a61801b5e16db04fb8311b358b1cf0c5e442c8d98d79c069",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/SN_Enemy_Merchant_Armed.glb",
+      "sha256": "08a869980a3596c8d544335cb5cda36115acd4018bca5c14c3a4b3910ac768b6",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/SN_Enemy_Pirate_Sloop.glb",
+      "sha256": "f6e5aebbd1debd33a3da9560c050ef290a67c3d5ac5df5ecdbcec653be5d305d",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/brass.png",
+      "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/canvas.png",
+      "sha256": "b7a55850402aaab00a75e4fecd71aba5b3817a156a080caeda1cb4891300372a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/coal.png",
+      "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/glass_dark.png",
+      "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/iron.png",
+      "sha256": "88ce6bb42fbb7193f833db33dacc4473c9cd033b2aaaab9f31aeb19feb6b9c4e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/iron_red.png",
+      "sha256": "c9944eada4121c506f7f5d787ede1ea440481127319e5a19fa0db56cf0114b2f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/metal.png",
+      "sha256": "6004343658ce6f98dd0ee1ed152f3a6954686bc83b30604e9ff03da86852a1e3",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/stone.png",
+      "sha256": "aceaf64af344978c8984275249f256af9f334c4127182228484ebf37354ae110",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/wood.png",
+      "sha256": "9db133e1497160f64f2623762ce836d1cf5e56e206cea1079ca346c642e14185",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/wood_dark.png",
+      "sha256": "6c833db6ac6ed6b2bf075b6d2ca08cb35a10e444a1fada71495ec18055bece98",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/wood_deck.png",
       "sha256": "b318beddf66f29e4d63aa596e909b03204da99a7ba7578ea2f8ca74da43e65fa",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
@@ -3412,9 +3683,29 @@
       "status": "documented"
     },
     {
+      "source": "framework/tests/cases/test_architecture_extension_assets.gd",
+      "sha256": "3abdd12120e680f6fb1ee0e3f02c566995234083dec89a50dc1db2d58f4f0743",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
+      "source": "framework/tests/cases/test_base_kit_assets.gd",
+      "sha256": "c45f8bbf6da51b84b537671d79af1f7ca8b4633c3e4d7f4521a0725944bb565b",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
+    },
+    {
       "source": "framework/tests/cases/test_campaign_state.gd",
       "sha256": "089f1bf9eb4c98906c81d63918716ea5ba1cd4652ba839d2e761ab1e94f10012",
       "doc": "docs/static/framework/tests/cases/test_campaign_state.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/tests/cases/test_combat_kit_assets.gd",
+      "sha256": "8d40977b06226773b0ef17a1aae935a7dbf5bf1c81162ae460da5e3b8d9da610",
+      "doc": "docs/static/framework/tests/cases/test_combat_kit_assets.gd.md",
       "status": "documented"
     },
     {
@@ -3432,7 +3723,7 @@
     },
     {
       "source": "framework/tests/cases/test_content_versions.gd",
-      "sha256": "8295f9f3488b43d18a793ef7793a4c48d9c03c344825c0c6c00d2d3be21ef568",
+      "sha256": "719e5a24316170271ced4937ee60428b6244b98ec01728fbde1333227be9d19f",
       "doc": "docs/static/framework/tests/cases/test_content_versions.gd.md",
       "status": "documented"
     },
@@ -3586,7 +3877,7 @@
     },
     {
       "source": "framework/tests/cases/test_schema_v2_drafts.gd",
-      "sha256": "c048ed58fdc84715b31c71b7b6bde5ffac53bc5a59410ce1ff48777a324be4c3",
+      "sha256": "e1c4a7ea4ff144f45f88efd2cbaef902ceb78b8e3303595e3bb3594343bca7e0",
       "doc": "docs/static/framework/tests/cases/test_schema_v2_drafts.gd.md",
       "status": "documented"
     },
@@ -3787,7 +4078,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "1d441ec9d870ab435c5eb8e7430e8d982c1b8a7f94c4fef724beefd56bdd067b",
+      "sha256": "b568fbd16178094699b46f1b7b93c067dc2ca43d7814c1182393c0df07d3d6c4",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -4437,7 +4728,7 @@
     },
     {
       "source": "schemas/v2/common.schema.json",
-      "sha256": "85dccb2c62cd0b01e64f39cb73af119a6d78d8dd797561b79a10e6641f22d956",
+      "sha256": "dbac533ec436447c759bb053a0fdd8840c60bb3333f88cc24a66b2b536267848",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4458,7 +4749,7 @@
     },
     {
       "source": "schemas/v2/map_config.schema.json",
-      "sha256": "47c23fdbcd946d64b0824b5add36b5554cda51500a5a525b9a2fae924b468ab9",
+      "sha256": "e2137d97883fe66b1bc607037b4a98b4b20158753e89b5eb10fd6a4bed739c21",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4490,6 +4781,18 @@
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
+    },
+    {
+      "source": "schemas/v2/story_arc.schema.json",
+      "sha256": "84330e98f8af59a6ab53852f021defefca054568fd8b7b92e70d5a837cbb0130",
+      "doc": "docs/static/schemas/v2/story_arc.schema.json.md",
+      "status": "documented"
+    },
+    {
+      "source": "schemas/v2/story_level.schema.json",
+      "sha256": "0f5ef770f7ebd8447d23b565f9ea985b04c602e3a1a78a1b4a613a512189efa6",
+      "doc": "docs/static/schemas/v2/story_level.schema.json.md",
+      "status": "documented"
     },
     {
       "source": "schemas/v2/weapon.schema.json",
@@ -4582,6 +4885,48 @@
       "group": "docs/static/sdk/README.md"
     },
     {
+      "source": "sdk/templates/story_pack_iron_tide/README.md",
+      "sha256": "24a51245869d3da447834596e227078d1010f2bdbcdd7d37a7053e77261aa525",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/story_pack_iron_tide/content/story_arcs.json",
+      "sha256": "c6d9d879670eaaf1078dfafa12741bc33ddc89b6108929c7bc06634ccf34158b",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/story_pack_iron_tide/content/story_levels.json",
+      "sha256": "076352adf288d8fac17ab6286cd5fd4830b2998bf81bbe32e1c1780a1dfbfc15",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/story_pack_iron_tide/localization/en.json",
+      "sha256": "770a05489edcc10ffd489e9ef33d4e61e93abef6060ca5bc530e63e822f4b1f2",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/story_pack_iron_tide/localization/zh_CN.json",
+      "sha256": "a9b1bd1fdbee277225f82e0f569613e95f45ae6c7c770dc9afeeac91651f4b15",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
+      "source": "sdk/templates/story_pack_iron_tide/manifest.json",
+      "sha256": "eae83888a49ba093388642f191477558a3a97915ad716d02eca3859cb0827d76",
+      "doc": "docs/static/sdk/README.md",
+      "status": "grouped",
+      "group": "docs/static/sdk/README.md"
+    },
+    {
       "source": "sdk/validate.gd",
       "sha256": "eae9025ea76c0b8b699b50b2df460e7ab1746626ee766d686c2946d89b5a690c",
       "doc": "docs/static/sdk/validate.gd.md",
@@ -4589,7 +4934,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "31694f1d6ca4f16971b7083766746fb00ba2bcf730d7790e1652cf9e77e0ee93",
+      "sha256": "3a06abdb1249bb1c7696f4edc4c04692a39483cdd8771bf49eff2d70cff59560",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -4809,6 +5154,13 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/briefs/sn_combat_kit_batch1.json",
+      "sha256": "5d9cc730e8bec8ece4d2e261a6cf3cf6670a26177fe31a747f9a473ff9fa2bd0",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/briefs/sn_crane_batch1.json",
       "sha256": "8137c6c868339a3e5f492362e75d1f4a2cfa85f00d82986bf9257501613f12ad",
       "doc": "docs/static/tools/modeling/briefs/sn_crane_batch1.json.md",
@@ -4897,6 +5249,20 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/briefs/sn_kit_batch4_architecture_extension.json",
+      "sha256": "e250c2c88e4d163728013beb0cf65cea3bd594d542c32cacd8fc13726e34c79b",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/briefs/sn_kit_batch5_base_kit.json",
+      "sha256": "591267cf534ce50d2b5a36c3d63b4fc357a90b9cc29ee2eecbc388c103c6bf92",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/briefs/sn_paddle_freighter.json",
       "sha256": "9c95600977db4cb8ba0164d79b57a8c8b72edb9e4cf972aa5f76da212eacb194",
       "doc": "docs/static/tools/README.md",
@@ -4967,11 +5333,24 @@
       "group": "docs/static/tools/README.md"
     },
     {
+      "source": "tools/modeling/combat_kit_catalog.json",
+      "sha256": "76b2c2f2658443e5b694ba5345fcd41b8446e706c854bc4e544bfaff9e6e0d45",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/dispatch.workflow.js",
       "sha256": "656610c475c1b55e2a01e131bf82845cb9e053449f8b7d6e4bab5f529627e055",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/gen_combat_kit_catalog.py",
+      "sha256": "ffa057fe4dfea29278457ea4672acf60843f86eb28f7920c9cb1256ff8c57df4",
+      "doc": "docs/static/tools/modeling/gen_combat_kit_catalog.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/apply_casemate_assets.py",
@@ -4985,6 +5364,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/generators/combat_kit_generator.py",
+      "sha256": "20e28d516620e3c69dbc2e087800149bde9d609533894e6398f5c976c58d5498",
+      "doc": "docs/static/tools/modeling/generators/combat_kit_generator.py.md",
+      "status": "documented"
     },
     {
       "source": "tools/modeling/generators/crane_kit.py",
@@ -5003,6 +5388,12 @@
       "source": "tools/modeling/generators/dryrun_casemate_gun.py",
       "sha256": "b794fb41ef21cbe7a21b4a1ee8e6def8bd8f2f7e5259c1aa45bf3ae6cb35e6f6",
       "doc": "docs/static/tools/modeling/generators/dryrun_casemate_gun.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/dryrun_combat_kit.py",
+      "sha256": "481d4177ca8d791f84c7b5cf794ef45762284f0e8a05bd0950ea7a7a0f43d988",
+      "doc": "docs/static/tools/modeling/generators/dryrun_combat_kit.py.md",
       "status": "documented"
     },
     {
@@ -5034,6 +5425,18 @@
       "source": "tools/modeling/generators/dryrun_kit_batch3.py",
       "sha256": "1cc4e24fd9f90cc90261da2806408b6c047d35c41f75b192e88bed21dbf790f4",
       "doc": "docs/static/tools/modeling/generators/dryrun_kit_batch3.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/dryrun_kit_batch4.py",
+      "sha256": "1434cc8d4a8887c8732d7ada03f17f563b4dd5f00383473cf7e5fe0c63db80a4",
+      "doc": "docs/static/tools/modeling/generators/dryrun_kit_batch4.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/dryrun_kit_batch5.py",
+      "sha256": "7de2e863205a0d45ecfe8b700590316cfceff302de0bcb9bd5d91c487b44af11",
+      "doc": "docs/static/tools/modeling/generators/dryrun_kit_batch5.py.md",
       "status": "documented"
     },
     {
@@ -5125,6 +5528,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/export_combat_kit_glb.py",
+      "sha256": "d744f2e706bbc6212ccddeae393be98cac5f7a7d4ed93e9c0c620fb2b37cd2b3",
+      "doc": "docs/static/tools/modeling/generators/export_combat_kit_glb.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/export_cranes_glb.py",
       "sha256": "a97c528a872f87eb095619ca57bdd4ce56fcc69ec287fd3270ec90307aba2d25",
       "doc": "docs/static/tools/modeling/generators/export_cranes_glb.py.md",
@@ -5165,6 +5574,18 @@
       "source": "tools/modeling/generators/export_kit_batch3_glb.py",
       "sha256": "f44786bdb5e29467d693cc81154a85a5bd7a809d43ed351fac6b964db9550c40",
       "doc": "docs/static/tools/modeling/generators/export_kit_batch3_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/export_kit_batch4_glb.py",
+      "sha256": "817eba95af8c76e27859c36a4fb9acea88351ec597737b36d21211e269401906",
+      "doc": "docs/static/tools/modeling/generators/export_kit_batch4_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/export_kit_batch5_glb.py",
+      "sha256": "6c4bf138b138b5f326c42cb4641746ee0398bff9d5e5762a96a070d4914193aa",
+      "doc": "docs/static/tools/modeling/generators/export_kit_batch5_glb.py.md",
       "status": "documented"
     },
     {
@@ -5259,7 +5680,7 @@
     },
     {
       "source": "tools/modeling/generators/gen_kit_catalog.py",
-      "sha256": "0cd2c00663e9d03bf1939e60c7673732f45dca6492dacd4dbe70713428f40ab2",
+      "sha256": "832bacabf763c8e739f8aed86f829f1f9db4b7131fc7a8d70b3e1db403458245",
       "doc": "docs/static/tools/modeling/generators/gen_kit_catalog.py.md",
       "status": "documented"
     },
@@ -5267,6 +5688,12 @@
       "source": "tools/modeling/generators/gen_rig_kit_catalog.py",
       "sha256": "ae5bce5c8168feaf9259bb8eb52d62944e33f4f4e047dde86975cccd4680f789",
       "doc": "docs/static/tools/modeling/generators/gen_rig_kit_catalog.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/glb_enemy_sockets.py",
+      "sha256": "7b9169b9a1b9016fdc35e2b79106a0e936c6bb623301637c8a3571ff0a90ffd0",
+      "doc": "docs/static/tools/modeling/generators/glb_enemy_sockets.py.md",
       "status": "documented"
     },
     {
@@ -5336,6 +5763,18 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/kit_batch4_generator.py",
+      "sha256": "3bf64cf57a81f4b28035206b9c1f98180a63ea65c933da1d6cce71284ab2ff6f",
+      "doc": "docs/static/tools/modeling/generators/kit_batch4_generator.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/kit_batch5_generator.py",
+      "sha256": "7c94c36f0bca3bc7701e508682d879c7dd4f1f955dfdf158e6af13772623016f",
+      "doc": "docs/static/tools/modeling/generators/kit_batch5_generator.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/p0_finalize.py",
       "sha256": "d81d6094791a3d2a11d8f1fd6d4b776e17cbc5778e53919c2d0805d7e473399b",
       "doc": "docs/static/tools/README.md",
@@ -5359,6 +5798,12 @@
       "source": "tools/modeling/generators/render_casemate_preview.py",
       "sha256": "5d3aad5b866a7e40f700b51a2b681b0cd119a5f77254bf6303dd59b24dba7d81",
       "doc": "docs/static/tools/modeling/generators/render_casemate_preview.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/render_combat_kit_preview.py",
+      "sha256": "01746a0cc4b506d900390bf8373c7e1f3e430e4a7e5c42de665af5f2563116be",
+      "doc": "docs/static/tools/modeling/generators/render_combat_kit_preview.py.md",
       "status": "documented"
     },
     {
@@ -5390,6 +5835,18 @@
       "source": "tools/modeling/generators/render_kit_batch3_preview.py",
       "sha256": "beb004b827f86fa8b847a1fed194944ba3cc98d5277b84924fe529951ee53724",
       "doc": "docs/static/tools/modeling/generators/render_kit_batch3_preview.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/render_kit_batch4_preview.py",
+      "sha256": "dbc87c33fdb7fbac7823d82f78a126e728a4f455b41ca212f5623b7076951441",
+      "doc": "docs/static/tools/modeling/generators/render_kit_batch4_preview.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/render_kit_batch5_preview.py",
+      "sha256": "b9788fb6cbef0df0257f4c0e95ddd19cdc7823d04a0e5b37001d10788a2d2716",
+      "doc": "docs/static/tools/modeling/generators/render_kit_batch5_preview.py.md",
       "status": "documented"
     },
     {
@@ -5531,6 +5988,18 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/sn_enemy_gun_ports.py",
+      "sha256": "4d5be4821af6e8be1a8c8db93770ca272c373973f7e5154f897feca5d1fb8c07",
+      "doc": "docs/static/tools/modeling/generators/sn_enemy_gun_ports.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/sn_enemy_weapon_sockets.py",
+      "sha256": "8a08cf2b07d4c667341993b9f434bd2670b98653227a78e4c0c3f47c4c56e473",
+      "doc": "docs/static/tools/modeling/generators/sn_enemy_weapon_sockets.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
       "sha256": "25f660c038197152ee1b6af0d2fea697ee84aeb3b72039b9d3e5094ea0b65c01",
       "doc": "docs/static/tools/modeling/generators/sn_hand_jib_crane_generator.py.md",
@@ -5638,7 +6107,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_kit_materials.py",
-      "sha256": "fb65f25b26fbd529d33410880b637b780bfab5f0229141cee394cecdd566ad59",
+      "sha256": "9a6198e1d4b42855899e5fb5627f3a07ef6524eb51e69ee17f57383b5da78cff",
       "doc": "docs/static/tools/modeling/generators/sn_kit_materials.py.md",
       "status": "documented"
     },
@@ -5762,6 +6231,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/verify_combat_kit_glb.py",
+      "sha256": "93eafded5df2d951245de99e1d0bdd9816c6c5b5520f164860d90062ccfe093b",
+      "doc": "docs/static/tools/modeling/generators/verify_combat_kit_glb.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/verify_cranes_glb.py",
       "sha256": "dbd4059d9cf19c20cf1075e2ad4db0f7c431d12706e068b74a933e0fc4a409d5",
       "doc": "docs/static/tools/modeling/generators/verify_cranes_glb.py.md",
@@ -5796,6 +6271,18 @@
       "source": "tools/modeling/generators/verify_kit_batch3_glb.py",
       "sha256": "9b735a949bbaab8c34c0357529305925389e89c753f6abaf9f0d7d6f8a58d06b",
       "doc": "docs/static/tools/modeling/generators/verify_kit_batch3_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/verify_kit_batch4_glb.py",
+      "sha256": "5ce3fd5f211c11023c7dd3a18c23993d78396badffb7c70e7d1e652115fe2490",
+      "doc": "docs/static/tools/modeling/generators/verify_kit_batch4_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/verify_kit_batch5_glb.py",
+      "sha256": "968398bbe1a1bcddc43c5a56c9a9c7f18486a9759698a6baa994af1f1ba3fbf7",
+      "doc": "docs/static/tools/modeling/generators/verify_kit_batch5_glb.py.md",
       "status": "documented"
     },
     {
@@ -5896,7 +6383,7 @@
     },
     {
       "source": "tools/modeling/kit_catalog.json",
-      "sha256": "af2864e5d6d2975e6f984865780e231fd25b041e165c50088068775fe2ff9918",
+      "sha256": "0ff9dc784be00429f45d5aebb8acadac4d7a8198718c38d7cd86691e511bec9f",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
@@ -5924,7 +6411,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "03bc03680918e30113dbafc893171a68d21a9a10623992c8743976bac7c07161",
+      "sha256": "a0d18cc326d9314c4bce61d14a21810a37848b8bb5fe369410d8b262c14e8bc4",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

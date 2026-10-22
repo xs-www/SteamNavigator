@@ -6,7 +6,10 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
+| `cases/test_architecture_extension_assets.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
+| `cases/test_base_kit_assets.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_campaign_state.gd` | CampaignState 分区测试：分区惰性补齐、探索进度只追加 id、阵营声望夹取，以及分区随存档往返。 | [查看](./cases/test_campaign_state.gd.md) |
+| `cases/test_combat_kit_assets.gd` | `combat_kit` 敌舰套件（M2-1，4 艘 `SN_Enemy_*.glb`）的运行时守护用例：资产必须 | [查看](./cases/test_combat_kit_assets.gd.md) |
 | `cases/test_content_asset_loader.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_content_types_manifest.gd` | content_types.json 与框架 ContentTypes / 本地 Schema 文件的一致性守护，防止单一真源在过渡期漂移。 | [查看](./cases/test_content_types_manifest.gd.md) |
 | `cases/test_content_versions.gd` | 按内容类型声明 Schema 版本（Phase A）与 Phase B 世界/战役家族提升 active 的 | [查看](./cases/test_content_versions.gd.md) |
@@ -32,7 +35,7 @@
 | `cases/test_run_pipeline.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_save_load.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_save_migration.gd` | 存档 Schema 2.0 迁移测试：v1 payload 加载为持久战役状态，v2 往返不迁移，缺失 campaign 回填，未知版本拒绝。 | [查看](./cases/test_save_migration.gd.md) |
-| `cases/test_schema_v2_drafts.gd` | Content Schema 2.0 世界/战役 Schema 测试：SchemaValidator 合法 / 非法样本， | [查看](./cases/test_schema_v2_drafts.gd.md) |
+| `cases/test_schema_v2_drafts.gd` | Content Schema 2.0 世界/战役/剧情 Schema 测试：SchemaValidator 合法 / 非法样本， | [查看](./cases/test_schema_v2_drafts.gd.md) |
 | `cases/test_schema_v2_weapons.gd` | Content Schema 2.0 草案武器类型（`weapons`）与船体安装点镜像（hull_data 的 | [查看](./cases/test_schema_v2_weapons.gd.md) |
 | `cases/test_schema_validator.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_sea_chart.gd` | 海图系统的无头测试——阶段 2 验证 `sea_chart.view` 的输出结构与陆地/港口/ | [查看](./cases/test_sea_chart.gd.md) |

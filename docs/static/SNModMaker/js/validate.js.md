@@ -1,6 +1,6 @@
 # `SNModMaker/js/validate.js`
 
-> 作用：JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁与清单一致性。
+> 作用：JSON Schema 子集校验器与 Steam Navigator 项目语义校验：Schema 版本、ID、引用、本地化、补丁、清单一致性，以及剧情模式（故事包白名单 / 篇章 / 关卡固定地图与任务线）语义。
 
 - 关键依赖：`schema-bundle.js`、`catalog.js`、`core-index.js（可选外部引用检查）`
 - 类型：浏览器经典脚本
@@ -20,47 +20,54 @@
 | `SUPPORTED_SCHEMA_VERSIONS` | L29 |
 | `DEFAULT_SCHEMA_VERSION` | L30 |
 | `REF_TYPE_BY_FIELD` | L32 |
-| `schemas()` | L48 |
-| `catalog()` | L52 |
-| `schemaVersionFor(typeKeyOrFile)` | L62 |
-| `normalizeSchemaPath(file)` | L73 |
-| `pointerEscape(text)` | L83 |
-| `pointerUnescape(text)` | L87 |
-| `joinPointer(base, key)` | L91 |
-| `resolveRef(ref, baseFile)` | L104 |
-| `deref(schema, file, seen)` | L136 |
-| `flattenObject(schema, file, seen)` | L162 |
-| `typeOf(value)` | L190 |
-| `matchesType(value, type)` | L196 |
-| `validateSchema(instance, schema, file)` | L203 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L207 |
-| `parseSemver(text)` | L367 |
-| `versionRangeError(text)` | L378 |
-| `safePath(path)` | L395 |
-| `extensionOf(path)` | L405 |
-| `isForbiddenPath(path)` | L411 |
-| `walkStrings(value, path, callback, depth)` | L415 |
-| `referencedIdType(id)` | L430 |
-| `expectedRefType(path)` | L435 |
-| `LOCAL_IDENTIFIER_FIELDS` | L450 |
-| `SOCKET_CLASSES` | L455 |
-| `RIG_SOCKET_KINDS` | L456 |
-| `checkWeaponSemantics(definition, view, add)` | L459 |
-| `checkHullSocketSemantics(definition, view, add)` | L493 |
-| `validateProject(project, options)` | L566 |
-| `finish(issues)` | L923 |
-| `byDefinition(issues)` | L932 |
-| `SNValidate (global)` | L945 |
+| `schemas()` | L51 |
+| `catalog()` | L55 |
+| `schemaVersionFor(typeKeyOrFile)` | L65 |
+| `normalizeSchemaPath(file)` | L76 |
+| `pointerEscape(text)` | L86 |
+| `pointerUnescape(text)` | L90 |
+| `joinPointer(base, key)` | L94 |
+| `resolveRef(ref, baseFile)` | L107 |
+| `deref(schema, file, seen)` | L139 |
+| `flattenObject(schema, file, seen)` | L165 |
+| `typeOf(value)` | L193 |
+| `matchesType(value, type)` | L199 |
+| `validateSchema(instance, schema, file)` | L206 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L210 |
+| `parseSemver(text)` | L370 |
+| `versionRangeError(text)` | L381 |
+| `safePath(path)` | L398 |
+| `extensionOf(path)` | L408 |
+| `isForbiddenPath(path)` | L414 |
+| `walkStrings(value, path, callback, depth)` | L418 |
+| `referencedIdType(id)` | L433 |
+| `expectedRefType(path)` | L438 |
+| `LOCAL_IDENTIFIER_FIELDS` | L453 |
+| `SOCKET_CLASSES` | L458 |
+| `RIG_SOCKET_KINDS` | L459 |
+| `checkWeaponSemantics(definition, view, add)` | L462 |
+| `checkHullSocketSemantics(definition, view, add)` | L496 |
+| `STORY_TYPES` | L580 |
+| `storyFieldView(view, field)` | L582 |
+| `checkStoryArcSemantics(definition, view, add)` | L587 |
+| `checkStoryLevelSemantics(definition, view, add)` | L631 |
+| `checkStoryPack(contentFiles, add)` | L739 |
+| `validateProject(project, options)` | L780 |
+| `finish(issues)` | L1141 |
+| `byDefinition(issues)` | L1150 |
+| `SNValidate (global)` | L1163 |
 
 ## 契约与约束
 
 - Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。
 - `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
-- `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons 草案 2.0），最后回退 1.0。
+- `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons / story_arcs / story_levels 草案 2.0），最后回退 1.0。
 - 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
-- `draft_content` 警告只针对仍是草案的 `weapons`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。
+- `draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。
 - `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
+- `REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_build` → starting_build，与已有的 hull / good 等字段共用 `ref_type` 提示。
 - 武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。
+- 剧情语义码：`story_pack_off_whitelist`（故事包混入非剧情内容，error）、`story_arc_level_type`（篇章关卡列表只能引用 story_level）、`story_protagonist_unknown`、`story_character_duplicate`、`story_stage_duplicate`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_port_duplicate`、`story_fixed_start_port_unknown`、`story_fixed_edge_port_unknown`、`story_start_port_unknown`；`story_arc_empty_levels` / `story_level_orphan` / `story_fixed_map_disconnected` / `story_term_duplicate` / `story_multiple_protagonists` 为 warning（空篇章与暂存关卡不阻塞编辑器/CLI 写入）。
 - 错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。
 - 语义规则不替代 Godot 领域校验与 Core 完整性检查；网页端只做静态内容检查。
 - 实体 information.texture/model 支持当前模组裸资源键与完整 asset:// URI；当前模组和 Core 引用必须存在且格式匹配。
@@ -77,12 +84,27 @@
 
 - 合并 `$ref` 与 allOf 的 properties/required，仅用于表单渲染，不用于替代校验。
 
+### `checkStoryArcSemantics(definition, view, add)`
+
+- 校验 protagonist_id 在 characters 中、角色 ID 不重复、至多一个 protagonist；levels 为空只给 warning。
+
+### `checkStoryLevelSemantics(definition, view, add)`
+
+- 校验阶段 ID 唯一、至少一个 checkpoint、叙事 beat 的 stage_id 属于本关、fail.default_mode 在 allow 中。
+- 校验固定地图港口 ID 唯一、start_port / start.port_id / 航道两端都引用已声明港口，并用 BFS 报告从起点走不到的港口（warning）。
+
+### `checkStoryPack(contentFiles, add)`
+
+- 出现剧情内容文件时，任何非 story_arcs / story_levels 内容都报 `story_pack_off_whitelist`，保证故事包无法改动自由模式。
+- 篇章 levels 只能引用 story_level；未被任何篇章引用的关卡给 `story_level_orphan` warning。
+
 ### `validateProject(project)`
 
 - 先跑 Manifest Schema 与内容文件 Schema，再检查 schema_version、命名空间/类型段、重复 ID、本地化覆盖、跨引用与补丁目标。
 - 草案实例缺省版本按类型取 2.0，避免 v2 Schema 的 `schema_version` const 误报。
 - 资源裸键按当前模组 manifest.assets 解析；asset://core/<key> 使用嵌入 Core 索引校验，其他外部模组 URI 在无法读取其清单时给出未验证提示。
 - 引用本模组缺失为 error；Core 缺失为 warning（草案文件跳过）；其他命名空间只提示外部引用。
+- 内容文件循环内按类型调用武器 / 船体 / 篇章 / 关卡语义检查，循环后调用一次故事包白名单检查。
 - 结果包含 counts 与 stats（定义/文件/语言/资源数量）。
 
 模块索引：[SNModMaker](../README.md)
