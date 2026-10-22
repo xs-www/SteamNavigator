@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T11:25:20.860Z",
+    "generated_at": "2026-10-22T11:53:08.443Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -20,8 +20,7 @@
       "optional_dependencies": [],
       "conflicts": [],
       "content": [
-        "content/goods.json",
-        "content/materials.json",
+        "content/items.json",
         "content/hulls.json",
         "content/modules.json",
         "content/roles.json",
@@ -172,10 +171,11 @@
         "Steam Navigator Team"
       ],
       "license": "Proprietary",
-      "description": "Official MVP content: ports, goods, ships, contracts and events.",
+      "description": "Official MVP content: ports, items, ships, contracts and events.",
       "capabilities": [
         "content.contract.passenger.v1",
         "content.event.choice_pool.v1",
+        "content.items.v1",
         "content.hulls.v1",
         "content.modules.v1",
         "content.world.v1",
@@ -183,14 +183,14 @@
       ]
     },
     "contentFiles": {
-      "content/goods.json": {
-        "schema_version": "1.0",
-        "content_type": "goods",
+      "content/items.json": {
+        "schema_version": "2.0",
+        "content_type": "items",
         "definitions": [
           {
-            "id": "core:good/iron_ore",
-            "name_key": "good.core.iron_ore.name",
-            "description_key": "good.core.iron_ore.description",
+            "id": "core:item/iron_ore",
+            "name_key": "item.core.iron_ore.name",
+            "description_key": "item.core.iron_ore.description",
             "tags": [
               "good.trade",
               "good.bulk",
@@ -201,44 +201,45 @@
               "model": "model.good.iron_ore"
             },
             "data": {
+              "crafting_material": true,
               "unit_weight": 3,
               "base_price": 42,
               "base_stock": 120,
               "price_elasticity": 0.16,
               "spawn_weight": 1,
-              "crafting_material": true,
               "category": "ore"
             }
           },
           {
-            "id": "core:good/brass",
-            "name_key": "good.core.brass.name",
-            "description_key": "good.core.brass.description",
+            "id": "core:item/brass",
+            "name_key": "item.core.brass.name",
+            "description_key": "item.core.brass.description",
             "tags": [
               "good.trade",
               "good.shipbuilding"
             ],
             "enabled": true,
             "data": {
+              "crafting_material": true,
               "unit_weight": 2,
               "base_price": 88,
               "base_stock": 80,
               "price_elasticity": 0.18,
               "spawn_weight": 1,
-              "crafting_material": true,
               "category": "metal"
             }
           },
           {
-            "id": "core:good/textiles",
-            "name_key": "good.core.textiles.name",
-            "description_key": "good.core.textiles.description",
+            "id": "core:item/textiles",
+            "name_key": "item.core.textiles.name",
+            "description_key": "item.core.textiles.description",
             "tags": [
               "good.trade",
               "good.consumer"
             ],
             "enabled": true,
             "data": {
+              "crafting_material": false,
               "unit_weight": 1,
               "base_price": 64,
               "base_stock": 90,
@@ -248,15 +249,16 @@
             }
           },
           {
-            "id": "core:good/spices",
-            "name_key": "good.core.spices.name",
-            "description_key": "good.core.spices.description",
+            "id": "core:item/spices",
+            "name_key": "item.core.spices.name",
+            "description_key": "item.core.spices.description",
             "tags": [
               "good.trade",
               "good.luxury"
             ],
             "enabled": true,
             "data": {
+              "crafting_material": false,
               "unit_weight": 0.5,
               "base_price": 150,
               "base_stock": 55,
@@ -266,9 +268,9 @@
             }
           },
           {
-            "id": "core:good/timber",
-            "name_key": "good.core.timber.name",
-            "description_key": "good.core.timber.description",
+            "id": "core:item/timber",
+            "name_key": "item.core.timber.name",
+            "description_key": "item.core.timber.description",
             "tags": [
               "good.trade",
               "good.bulk",
@@ -279,25 +281,26 @@
               "model": "model.good.timber"
             },
             "data": {
+              "crafting_material": true,
               "unit_weight": 2.5,
               "base_price": 36,
               "base_stock": 130,
               "price_elasticity": 0.17,
               "spawn_weight": 1,
-              "crafting_material": true,
               "category": "wood"
             }
           },
           {
-            "id": "core:good/glassware",
-            "name_key": "good.core.glassware.name",
-            "description_key": "good.core.glassware.description",
+            "id": "core:item/glassware",
+            "name_key": "item.core.glassware.name",
+            "description_key": "item.core.glassware.description",
             "tags": [
               "good.trade",
               "good.fragile"
             ],
             "enabled": true,
             "data": {
+              "crafting_material": false,
               "unit_weight": 1.5,
               "base_price": 105,
               "base_stock": 60,
@@ -307,14 +310,15 @@
             }
           },
           {
-            "id": "core:good/contract_freight",
-            "name_key": "good.core.contract_freight.name",
-            "description_key": "good.core.contract_freight.description",
+            "id": "core:item/contract_freight",
+            "name_key": "item.core.contract_freight.name",
+            "description_key": "item.core.contract_freight.description",
             "tags": [
               "good.contract"
             ],
             "enabled": true,
             "data": {
+              "crafting_material": false,
               "unit_weight": 1,
               "base_price": 1,
               "base_stock": 1,
@@ -324,9 +328,9 @@
             }
           },
           {
-            "id": "core:good/coal",
-            "name_key": "good.core.coal.name",
-            "description_key": "good.core.coal.description",
+            "id": "core:item/coal",
+            "name_key": "item.core.coal.name",
+            "description_key": "item.core.coal.description",
             "tags": [
               "good.supply",
               "supply.coal",
@@ -338,6 +342,7 @@
               "model": "model.good.coal"
             },
             "data": {
+              "crafting_material": false,
               "unit_weight": 1,
               "base_price": 4,
               "base_stock": 140,
@@ -347,9 +352,9 @@
             }
           },
           {
-            "id": "core:good/water",
-            "name_key": "good.core.water.name",
-            "description_key": "good.core.water.description",
+            "id": "core:item/water",
+            "name_key": "item.core.water.name",
+            "description_key": "item.core.water.description",
             "tags": [
               "good.supply",
               "supply.water",
@@ -360,6 +365,7 @@
               "texture": "icon.water"
             },
             "data": {
+              "crafting_material": false,
               "unit_weight": 1,
               "base_price": 2,
               "base_stock": 160,
@@ -367,17 +373,11 @@
               "spawn_weight": 0,
               "category": "supply"
             }
-          }
-        ]
-      },
-      "content/materials.json": {
-        "schema_version": "1.0",
-        "content_type": "materials",
-        "definitions": [
+          },
           {
-            "id": "core:material/boiler_plate",
-            "name_key": "material.core.boiler_plate.name",
-            "description_key": "material.core.boiler_plate.description",
+            "id": "core:item/boiler_plate",
+            "name_key": "item.core.boiler_plate.name",
+            "description_key": "item.core.boiler_plate.description",
             "tags": [
               "material.shipbuilding",
               "material.tier2"
@@ -387,6 +387,7 @@
               "model": "model.material.boiler_plate"
             },
             "data": {
+              "crafting_material": true,
               "tier": 2,
               "unit_weight": 2,
               "base_price": 120,
@@ -396,9 +397,9 @@
             }
           },
           {
-            "id": "core:material/precision_gear",
-            "name_key": "material.core.precision_gear.name",
-            "description_key": "material.core.precision_gear.description",
+            "id": "core:item/precision_gear",
+            "name_key": "item.core.precision_gear.name",
+            "description_key": "item.core.precision_gear.description",
             "tags": [
               "material.shipbuilding",
               "material.tier3"
@@ -408,6 +409,7 @@
               "model": "model.material.precision_gear"
             },
             "data": {
+              "crafting_material": true,
               "tier": 3,
               "unit_weight": 0.8,
               "base_price": 190,
@@ -417,9 +419,9 @@
             }
           },
           {
-            "id": "core:material/sealing_compound",
-            "name_key": "material.core.sealing_compound.name",
-            "description_key": "material.core.sealing_compound.description",
+            "id": "core:item/sealing_compound",
+            "name_key": "item.core.sealing_compound.name",
+            "description_key": "item.core.sealing_compound.description",
             "tags": [
               "material.shipbuilding",
               "material.tier1"
@@ -429,6 +431,7 @@
               "model": "model.material.sealing_compound"
             },
             "data": {
+              "crafting_material": true,
               "tier": 1,
               "unit_weight": 0.5,
               "base_price": 75,
@@ -542,11 +545,11 @@
               "craft_cost": 220,
               "materials": [
                 {
-                  "id": "core:good/timber",
+                  "id": "core:item/timber",
                   "amount": 8
                 },
                 {
-                  "id": "core:material/boiler_plate",
+                  "id": "core:item/boiler_plate",
                   "amount": 3
                 }
               ],
@@ -718,15 +721,15 @@
               "craft_cost": 520,
               "materials": [
                 {
-                  "id": "core:good/timber",
+                  "id": "core:item/timber",
                   "amount": 14
                 },
                 {
-                  "id": "core:material/boiler_plate",
+                  "id": "core:item/boiler_plate",
                   "amount": 6
                 },
                 {
-                  "id": "core:material/precision_gear",
+                  "id": "core:item/precision_gear",
                   "amount": 2
                 }
               ],
@@ -905,15 +908,15 @@
               "craft_cost": 680,
               "materials": [
                 {
-                  "id": "core:good/timber",
+                  "id": "core:item/timber",
                   "amount": 12
                 },
                 {
-                  "id": "core:material/boiler_plate",
+                  "id": "core:item/boiler_plate",
                   "amount": 8
                 },
                 {
-                  "id": "core:material/precision_gear",
+                  "id": "core:item/precision_gear",
                   "amount": 4
                 }
               ],
@@ -1167,15 +1170,15 @@
               "craft_cost": 180,
               "materials": [
                 {
-                  "id": "core:good/brass",
+                  "id": "core:item/brass",
                   "amount": 8
                 },
                 {
-                  "id": "core:material/boiler_plate",
+                  "id": "core:item/boiler_plate",
                   "amount": 4
                 },
                 {
-                  "id": "core:material/precision_gear",
+                  "id": "core:item/precision_gear",
                   "amount": 1
                 }
               ],
@@ -1224,11 +1227,11 @@
               "craft_cost": 160,
               "materials": [
                 {
-                  "id": "core:good/timber",
+                  "id": "core:item/timber",
                   "amount": 6
                 },
                 {
-                  "id": "core:material/boiler_plate",
+                  "id": "core:item/boiler_plate",
                   "amount": 2
                 }
               ],
@@ -1254,11 +1257,11 @@
               "craft_cost": 320,
               "materials": [
                 {
-                  "id": "core:good/timber",
+                  "id": "core:item/timber",
                   "amount": 10
                 },
                 {
-                  "id": "core:material/boiler_plate",
+                  "id": "core:item/boiler_plate",
                   "amount": 4
                 }
               ],
@@ -1305,11 +1308,11 @@
               "craft_cost": 140,
               "materials": [
                 {
-                  "id": "core:good/brass",
+                  "id": "core:item/brass",
                   "amount": 3
                 },
                 {
-                  "id": "core:material/sealing_compound",
+                  "id": "core:item/sealing_compound",
                   "amount": 2
                 }
               ],
@@ -1358,11 +1361,11 @@
               "craft_cost": 130,
               "materials": [
                 {
-                  "id": "core:good/brass",
+                  "id": "core:item/brass",
                   "amount": 4
                 },
                 {
-                  "id": "core:material/sealing_compound",
+                  "id": "core:item/sealing_compound",
                   "amount": 3
                 }
               ],
@@ -1593,21 +1596,21 @@
               ],
               "market": [
                 {
-                  "good": "core:good/iron_ore",
+                  "good": "core:item/iron_ore",
                   "stock_range": [
                     70,
                     130
                   ]
                 },
                 {
-                  "good": "core:good/timber",
+                  "good": "core:item/timber",
                   "stock_range": [
                     80,
                     140
                   ]
                 },
                 {
-                  "good": "core:good/brass",
+                  "good": "core:item/brass",
                   "stock_range": [
                     40,
                     90
@@ -1615,21 +1618,21 @@
                   "price_bias": 0.95
                 },
                 {
-                  "good": "core:material/boiler_plate",
+                  "good": "core:item/boiler_plate",
                   "stock_range": [
                     30,
                     70
                   ]
                 },
                 {
-                  "good": "core:material/sealing_compound",
+                  "good": "core:item/sealing_compound",
                   "stock_range": [
                     40,
                     80
                   ]
                 },
                 {
-                  "good": "core:material/precision_gear",
+                  "good": "core:item/precision_gear",
                   "stock_range": [
                     10,
                     25
@@ -1688,7 +1691,7 @@
               ],
               "market": [
                 {
-                  "good": "core:good/spices",
+                  "good": "core:item/spices",
                   "stock_range": [
                     30,
                     70
@@ -1696,21 +1699,21 @@
                   "price_bias": 0.9
                 },
                 {
-                  "good": "core:good/textiles",
+                  "good": "core:item/textiles",
                   "stock_range": [
                     50,
                     110
                   ]
                 },
                 {
-                  "good": "core:good/glassware",
+                  "good": "core:item/glassware",
                   "stock_range": [
                     30,
                     80
                   ]
                 },
                 {
-                  "good": "core:material/sealing_compound",
+                  "good": "core:item/sealing_compound",
                   "stock_range": [
                     30,
                     60
@@ -1772,49 +1775,49 @@
               ],
               "market": [
                 {
-                  "good": "core:good/brass",
+                  "good": "core:item/brass",
                   "stock_range": [
                     40,
                     90
                   ]
                 },
                 {
-                  "good": "core:good/timber",
+                  "good": "core:item/timber",
                   "stock_range": [
                     60,
                     120
                   ]
                 },
                 {
-                  "good": "core:good/textiles",
+                  "good": "core:item/textiles",
                   "stock_range": [
                     50,
                     100
                   ]
                 },
                 {
-                  "good": "core:good/spices",
+                  "good": "core:item/spices",
                   "stock_range": [
                     25,
                     60
                   ]
                 },
                 {
-                  "good": "core:good/glassware",
+                  "good": "core:item/glassware",
                   "stock_range": [
                     30,
                     75
                   ]
                 },
                 {
-                  "good": "core:material/boiler_plate",
+                  "good": "core:item/boiler_plate",
                   "stock_range": [
                     25,
                     60
                   ]
                 },
                 {
-                  "good": "core:material/precision_gear",
+                  "good": "core:item/precision_gear",
                   "stock_range": [
                     10,
                     25
@@ -1872,7 +1875,7 @@
               ],
               "market": [
                 {
-                  "good": "core:good/timber",
+                  "good": "core:item/timber",
                   "stock_range": [
                     90,
                     150
@@ -1880,21 +1883,21 @@
                   "price_bias": 0.9
                 },
                 {
-                  "good": "core:good/iron_ore",
+                  "good": "core:item/iron_ore",
                   "stock_range": [
                     60,
                     110
                   ]
                 },
                 {
-                  "good": "core:good/textiles",
+                  "good": "core:item/textiles",
                   "stock_range": [
                     40,
                     90
                   ]
                 },
                 {
-                  "good": "core:material/sealing_compound",
+                  "good": "core:item/sealing_compound",
                   "stock_range": [
                     30,
                     70
@@ -1953,7 +1956,7 @@
               ],
               "market": [
                 {
-                  "good": "core:good/glassware",
+                  "good": "core:item/glassware",
                   "stock_range": [
                     40,
                     90
@@ -1961,21 +1964,21 @@
                   "price_bias": 0.9
                 },
                 {
-                  "good": "core:good/brass",
+                  "good": "core:item/brass",
                   "stock_range": [
                     35,
                     80
                   ]
                 },
                 {
-                  "good": "core:good/spices",
+                  "good": "core:item/spices",
                   "stock_range": [
                     25,
                     55
                   ]
                 },
                 {
-                  "good": "core:material/precision_gear",
+                  "good": "core:item/precision_gear",
                   "stock_range": [
                     15,
                     40
@@ -2172,7 +2175,7 @@
                       {
                         "type": "grant_tutorial_contract",
                         "template_id": "core:contract/main_01",
-                        "cargo_item_id": "core:good/coal",
+                        "cargo_item_id": "core:item/coal",
                         "amount": 10,
                         "provider": "fuel",
                         "deadline_formula": "tutorial_express",
@@ -2311,14 +2314,14 @@
                       "contracts"
                     ],
                     "unlock_items": [
-                      "core:good/spices",
-                      "core:good/textiles"
+                      "core:item/spices",
+                      "core:item/textiles"
                     ],
                     "effects": [
                       {
                         "type": "grant_tutorial_contract",
                         "template_id": "core:contract/main_02",
-                        "cargo_item_id": "core:good/textiles",
+                        "cargo_item_id": "core:item/textiles",
                         "amount": 6,
                         "provider": "player",
                         "destination": "home",
@@ -2336,7 +2339,7 @@
                       "counter": "textiles_bought",
                       "at_least": 8,
                       "match": {
-                        "item_id": "core:good/textiles"
+                        "item_id": "core:item/textiles"
                       }
                     }
                   },
@@ -2373,7 +2376,7 @@
                       "counter": "textiles_sold",
                       "at_least": 2,
                       "match": {
-                        "item_id": "core:good/textiles"
+                        "item_id": "core:item/textiles"
                       }
                     }
                   },
@@ -2412,8 +2415,8 @@
                       {
                         "type": "set_market_price_bias",
                         "item_ids": [
-                          "core:good/textiles",
-                          "core:good/spices"
+                          "core:item/textiles",
+                          "core:item/spices"
                         ],
                         "home_bias": 1.35,
                         "other_bias": 0.7,
@@ -2452,7 +2455,7 @@
                       ]
                     },
                     "unlock_items": [
-                      "core:good/timber"
+                      "core:item/timber"
                     ],
                     "objective": {
                       "text_key": "story.core.third_good.objective",
@@ -2735,7 +2738,7 @@
                 {
                   "kind": "cargo",
                   "name_key": "contract.core.main_01.payload",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     8,
                     12
@@ -2782,7 +2785,7 @@
                 {
                   "kind": "cargo",
                   "name_key": "contract.core.main_02.payload",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     10,
                     14
@@ -2831,7 +2834,7 @@
                 {
                   "kind": "cargo",
                   "name_key": "contract.core.main_03.payload",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     12,
                     16
@@ -2934,7 +2937,7 @@
                 {
                   "kind": "cargo",
                   "name_key": "contract.core.main_05.cargo",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     22,
                     30
@@ -2991,7 +2994,7 @@
               "payloads": [
                 {
                   "kind": "cargo",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     6,
                     10
@@ -3035,7 +3038,7 @@
               "payloads": [
                 {
                   "kind": "cargo",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     14,
                     20
@@ -3123,7 +3126,7 @@
               "payloads": [
                 {
                   "kind": "cargo",
-                  "cargo_item_id": "core:good/contract_freight",
+                  "cargo_item_id": "core:item/contract_freight",
                   "weight_range": [
                     8,
                     12
@@ -3531,7 +3534,7 @@
                       {
                         "type": "grant_tutorial_contract",
                         "template_id": "core:contract/main_01",
-                        "cargo_item_id": "core:good/coal",
+                        "cargo_item_id": "core:item/coal",
                         "amount": 10,
                         "provider": "fuel",
                         "deadline_formula": "tutorial_express",
@@ -3670,14 +3673,14 @@
                       "contracts"
                     ],
                     "unlock_items": [
-                      "core:good/spices",
-                      "core:good/textiles"
+                      "core:item/spices",
+                      "core:item/textiles"
                     ],
                     "effects": [
                       {
                         "type": "grant_tutorial_contract",
                         "template_id": "core:contract/main_02",
-                        "cargo_item_id": "core:good/textiles",
+                        "cargo_item_id": "core:item/textiles",
                         "amount": 6,
                         "provider": "player",
                         "destination": "home",
@@ -3695,7 +3698,7 @@
                       "counter": "textiles_bought",
                       "at_least": 8,
                       "match": {
-                        "item_id": "core:good/textiles"
+                        "item_id": "core:item/textiles"
                       }
                     }
                   },
@@ -3732,7 +3735,7 @@
                       "counter": "textiles_sold",
                       "at_least": 2,
                       "match": {
-                        "item_id": "core:good/textiles"
+                        "item_id": "core:item/textiles"
                       }
                     }
                   },
@@ -3771,8 +3774,8 @@
                       {
                         "type": "set_market_price_bias",
                         "item_ids": [
-                          "core:good/textiles",
-                          "core:good/spices"
+                          "core:item/textiles",
+                          "core:item/spices"
                         ],
                         "home_bias": 1.35,
                         "other_bias": 0.7,
@@ -3811,7 +3814,7 @@
                       ]
                     },
                     "unlock_items": [
-                      "core:good/timber"
+                      "core:item/timber"
                     ],
                     "objective": {
                       "text_key": "story.core.third_good.objective",
@@ -4421,9 +4424,9 @@
               },
               "patrol_strength": 1,
               "trade_goods": [
-                "core:good/spices",
-                "core:good/textiles",
-                "core:good/glassware"
+                "core:item/spices",
+                "core:item/textiles",
+                "core:item/glassware"
               ],
               "home_region_tags": [
                 "region.start",
@@ -4451,9 +4454,9 @@
               },
               "patrol_strength": 3,
               "trade_goods": [
-                "core:good/brass",
-                "core:material/boiler_plate",
-                "core:material/sealing_compound"
+                "core:item/brass",
+                "core:item/boiler_plate",
+                "core:item/sealing_compound"
               ],
               "home_region_tags": [
                 "region.coastal",
@@ -4482,8 +4485,8 @@
               },
               "patrol_strength": 2,
               "trade_goods": [
-                "core:good/coal",
-                "core:material/precision_gear"
+                "core:item/coal",
+                "core:item/precision_gear"
               ],
               "home_region_tags": [
                 "region.archipelago",
@@ -4625,7 +4628,7 @@
                 "industrial"
               ],
               "unlock_ids": [
-                "core:good/glassware"
+                "core:item/glassware"
               ]
             }
           },
@@ -4724,7 +4727,7 @@
               "starting_reputation": 0,
               "starting_cargo": [
                 {
-                  "item": "core:good/coal",
+                  "item": "core:item/coal",
                   "amount": 8
                 }
               ],
@@ -4736,26 +4739,30 @@
     },
     "localization": {
       "zh_CN": {
-        "good.core.iron_ore.name": "铁矿石",
-        "good.core.iron_ore.description": "造船与冶炼的基础原料，单位重量大。",
-        "good.core.brass.name": "黄铜",
-        "good.core.brass.description": "锅炉与精密机械常用的金属材料。",
-        "good.core.textiles.name": "纺织品",
-        "good.core.textiles.description": "轻便的日用商品，适合填充剩余舱位。",
-        "good.core.spices.name": "香料",
-        "good.core.spices.description": "重量极轻、价格昂贵的奢侈品。",
-        "good.core.timber.name": "木材",
-        "good.core.timber.description": "船体与货舱的通用建造材料。",
-        "good.core.glassware.name": "玻璃器皿",
-        "good.core.glassware.description": "易碎但利润可观的工艺品。",
-        "good.core.contract_freight.name": "委托货箱",
-        "good.core.contract_freight.description": "由委托方提供的封装货物，不能自由买卖或抛弃。",
-        "material.core.boiler_plate.name": "锅炉钢板",
-        "material.core.boiler_plate.description": "耐压锅炉与中型船体的专用材料。",
-        "material.core.precision_gear.name": "精密齿轮",
-        "material.core.precision_gear.description": "大型船只与高性能锅炉所需的高级材料。",
-        "material.core.sealing_compound.name": "密封胶",
-        "material.core.sealing_compound.description": "用于锅炉、客舱和导航设备的密封耗材。",
+        "item.core.iron_ore.name": "铁矿石",
+        "item.core.iron_ore.description": "造船与冶炼的基础原料，单位重量大。",
+        "item.core.brass.name": "黄铜",
+        "item.core.brass.description": "锅炉与精密机械常用的金属材料。",
+        "item.core.textiles.name": "纺织品",
+        "item.core.textiles.description": "轻便的日用商品，适合填充剩余舱位。",
+        "item.core.spices.name": "香料",
+        "item.core.spices.description": "重量极轻、价格昂贵的奢侈品。",
+        "item.core.timber.name": "木材",
+        "item.core.timber.description": "船体与货舱的通用建造材料。",
+        "item.core.glassware.name": "玻璃器皿",
+        "item.core.glassware.description": "易碎但利润可观的工艺品。",
+        "item.core.contract_freight.name": "委托货箱",
+        "item.core.contract_freight.description": "由委托方提供的封装货物，不能自由买卖或抛弃。",
+        "item.core.coal.name": "煤",
+        "item.core.coal.description": "锅炉燃料，重量轻、价格低，任何航程都离不开。",
+        "item.core.water.name": "淡水",
+        "item.core.water.description": "锅炉给水与日常补给，长途航行消耗很大。",
+        "item.core.boiler_plate.name": "锅炉钢板",
+        "item.core.boiler_plate.description": "耐压锅炉与中型船体的专用材料。",
+        "item.core.precision_gear.name": "精密齿轮",
+        "item.core.precision_gear.description": "大型船只与高性能锅炉所需的高级材料。",
+        "item.core.sealing_compound.name": "密封胶",
+        "item.core.sealing_compound.description": "用于锅炉、客舱和导航设备的密封耗材。",
         "module.core.small_efficient_hull.name": "效率型小型船体",
         "module.core.small_efficient_hull.description": "造价低、自重轻，只有一个货舱槽，适合起步。",
         "module.core.medium_standard_hull.name": "标准中型船体",
@@ -4991,26 +4998,30 @@
         "start_profile.core.hard.notes": "起始港为贸易港；补给更贵、失败代价更高。"
       },
       "en": {
-        "good.core.iron_ore.name": "Iron Ore",
-        "good.core.iron_ore.description": "Heavy base material for smelting and shipbuilding.",
-        "good.core.brass.name": "Brass",
-        "good.core.brass.description": "A metal used in boilers and precision machinery.",
-        "good.core.textiles.name": "Textiles",
-        "good.core.textiles.description": "Light consumer goods that fill spare hold space.",
-        "good.core.spices.name": "Spices",
-        "good.core.spices.description": "Very light, very expensive luxury cargo.",
-        "good.core.timber.name": "Timber",
-        "good.core.timber.description": "General shipbuilding material for hulls and holds.",
-        "good.core.glassware.name": "Glassware",
-        "good.core.glassware.description": "Fragile craft goods with a healthy margin.",
-        "good.core.contract_freight.name": "Contract Freight",
-        "good.core.contract_freight.description": "Sealed cargo supplied by the client. Cannot be sold or jettisoned.",
-        "material.core.boiler_plate.name": "Boiler Plate",
-        "material.core.boiler_plate.description": "Pressure-rated plate for medium hulls and boilers.",
-        "material.core.precision_gear.name": "Precision Gear",
-        "material.core.precision_gear.description": "Advanced material for large ships and high-performance boilers.",
-        "material.core.sealing_compound.name": "Sealing Compound",
-        "material.core.sealing_compound.description": "Consumable sealant for boilers, cabins and navigation gear.",
+        "item.core.iron_ore.name": "Iron Ore",
+        "item.core.iron_ore.description": "Heavy base material for smelting and shipbuilding.",
+        "item.core.brass.name": "Brass",
+        "item.core.brass.description": "A metal used in boilers and precision machinery.",
+        "item.core.textiles.name": "Textiles",
+        "item.core.textiles.description": "Light consumer goods that fill spare hold space.",
+        "item.core.spices.name": "Spices",
+        "item.core.spices.description": "Very light, very expensive luxury cargo.",
+        "item.core.timber.name": "Timber",
+        "item.core.timber.description": "General shipbuilding material for hulls and holds.",
+        "item.core.glassware.name": "Glassware",
+        "item.core.glassware.description": "Fragile craft goods with a healthy margin.",
+        "item.core.contract_freight.name": "Contract Freight",
+        "item.core.contract_freight.description": "Sealed cargo supplied by the client. Cannot be sold or jettisoned.",
+        "item.core.coal.name": "Coal",
+        "item.core.coal.description": "Boiler fuel; light, cheap and essential for any voyage.",
+        "item.core.water.name": "Fresh Water",
+        "item.core.water.description": "Boiler feed and daily supply; long hauls drink a lot of it.",
+        "item.core.boiler_plate.name": "Boiler Plate",
+        "item.core.boiler_plate.description": "Pressure-rated plate for medium hulls and boilers.",
+        "item.core.precision_gear.name": "Precision Gear",
+        "item.core.precision_gear.description": "Advanced material for large ships and high-performance boilers.",
+        "item.core.sealing_compound.name": "Sealing Compound",
+        "item.core.sealing_compound.description": "Consumable sealant for boilers, cabins and navigation gear.",
         "module.core.small_efficient_hull.name": "Small Efficient Hull",
         "module.core.small_efficient_hull.description": "Cheap and light, with a single cargo slot. A good starter.",
         "module.core.medium_standard_hull.name": "Medium Standard Hull",
@@ -5248,10 +5259,10 @@
     },
     "definitions": [
       {
-        "id": "core:good/iron_ore",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.iron_ore.name",
+        "id": "core:item/iron_ore",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.iron_ore.name",
         "name_zh": "铁矿石",
         "name_en": "Iron Ore",
         "tags": [
@@ -5260,9 +5271,9 @@
           "good.shipbuilding"
         ],
         "definition": {
-          "id": "core:good/iron_ore",
-          "name_key": "good.core.iron_ore.name",
-          "description_key": "good.core.iron_ore.description",
+          "id": "core:item/iron_ore",
+          "name_key": "item.core.iron_ore.name",
+          "description_key": "item.core.iron_ore.description",
           "tags": [
             "good.trade",
             "good.bulk",
@@ -5273,21 +5284,21 @@
             "model": "model.good.iron_ore"
           },
           "data": {
+            "crafting_material": true,
             "unit_weight": 3,
             "base_price": 42,
             "base_stock": 120,
             "price_elasticity": 0.16,
             "spawn_weight": 1,
-            "crafting_material": true,
             "category": "ore"
           }
         }
       },
       {
-        "id": "core:good/brass",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.brass.name",
+        "id": "core:item/brass",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.brass.name",
         "name_zh": "黄铜",
         "name_en": "Brass",
         "tags": [
@@ -5295,30 +5306,30 @@
           "good.shipbuilding"
         ],
         "definition": {
-          "id": "core:good/brass",
-          "name_key": "good.core.brass.name",
-          "description_key": "good.core.brass.description",
+          "id": "core:item/brass",
+          "name_key": "item.core.brass.name",
+          "description_key": "item.core.brass.description",
           "tags": [
             "good.trade",
             "good.shipbuilding"
           ],
           "enabled": true,
           "data": {
+            "crafting_material": true,
             "unit_weight": 2,
             "base_price": 88,
             "base_stock": 80,
             "price_elasticity": 0.18,
             "spawn_weight": 1,
-            "crafting_material": true,
             "category": "metal"
           }
         }
       },
       {
-        "id": "core:good/textiles",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.textiles.name",
+        "id": "core:item/textiles",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.textiles.name",
         "name_zh": "纺织品",
         "name_en": "Textiles",
         "tags": [
@@ -5326,15 +5337,16 @@
           "good.consumer"
         ],
         "definition": {
-          "id": "core:good/textiles",
-          "name_key": "good.core.textiles.name",
-          "description_key": "good.core.textiles.description",
+          "id": "core:item/textiles",
+          "name_key": "item.core.textiles.name",
+          "description_key": "item.core.textiles.description",
           "tags": [
             "good.trade",
             "good.consumer"
           ],
           "enabled": true,
           "data": {
+            "crafting_material": false,
             "unit_weight": 1,
             "base_price": 64,
             "base_stock": 90,
@@ -5345,10 +5357,10 @@
         }
       },
       {
-        "id": "core:good/spices",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.spices.name",
+        "id": "core:item/spices",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.spices.name",
         "name_zh": "香料",
         "name_en": "Spices",
         "tags": [
@@ -5356,15 +5368,16 @@
           "good.luxury"
         ],
         "definition": {
-          "id": "core:good/spices",
-          "name_key": "good.core.spices.name",
-          "description_key": "good.core.spices.description",
+          "id": "core:item/spices",
+          "name_key": "item.core.spices.name",
+          "description_key": "item.core.spices.description",
           "tags": [
             "good.trade",
             "good.luxury"
           ],
           "enabled": true,
           "data": {
+            "crafting_material": false,
             "unit_weight": 0.5,
             "base_price": 150,
             "base_stock": 55,
@@ -5375,10 +5388,10 @@
         }
       },
       {
-        "id": "core:good/timber",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.timber.name",
+        "id": "core:item/timber",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.timber.name",
         "name_zh": "木材",
         "name_en": "Timber",
         "tags": [
@@ -5387,9 +5400,9 @@
           "good.shipbuilding"
         ],
         "definition": {
-          "id": "core:good/timber",
-          "name_key": "good.core.timber.name",
-          "description_key": "good.core.timber.description",
+          "id": "core:item/timber",
+          "name_key": "item.core.timber.name",
+          "description_key": "item.core.timber.description",
           "tags": [
             "good.trade",
             "good.bulk",
@@ -5400,21 +5413,21 @@
             "model": "model.good.timber"
           },
           "data": {
+            "crafting_material": true,
             "unit_weight": 2.5,
             "base_price": 36,
             "base_stock": 130,
             "price_elasticity": 0.17,
             "spawn_weight": 1,
-            "crafting_material": true,
             "category": "wood"
           }
         }
       },
       {
-        "id": "core:good/glassware",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.glassware.name",
+        "id": "core:item/glassware",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.glassware.name",
         "name_zh": "玻璃器皿",
         "name_en": "Glassware",
         "tags": [
@@ -5422,15 +5435,16 @@
           "good.fragile"
         ],
         "definition": {
-          "id": "core:good/glassware",
-          "name_key": "good.core.glassware.name",
-          "description_key": "good.core.glassware.description",
+          "id": "core:item/glassware",
+          "name_key": "item.core.glassware.name",
+          "description_key": "item.core.glassware.description",
           "tags": [
             "good.trade",
             "good.fragile"
           ],
           "enabled": true,
           "data": {
+            "crafting_material": false,
             "unit_weight": 1.5,
             "base_price": 105,
             "base_stock": 60,
@@ -5441,24 +5455,25 @@
         }
       },
       {
-        "id": "core:good/contract_freight",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.contract_freight.name",
+        "id": "core:item/contract_freight",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.contract_freight.name",
         "name_zh": "委托货箱",
         "name_en": "Contract Freight",
         "tags": [
           "good.contract"
         ],
         "definition": {
-          "id": "core:good/contract_freight",
-          "name_key": "good.core.contract_freight.name",
-          "description_key": "good.core.contract_freight.description",
+          "id": "core:item/contract_freight",
+          "name_key": "item.core.contract_freight.name",
+          "description_key": "item.core.contract_freight.description",
           "tags": [
             "good.contract"
           ],
           "enabled": true,
           "data": {
+            "crafting_material": false,
             "unit_weight": 1,
             "base_price": 1,
             "base_stock": 1,
@@ -5469,21 +5484,21 @@
         }
       },
       {
-        "id": "core:good/coal",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.coal.name",
-        "name_zh": "",
-        "name_en": "",
+        "id": "core:item/coal",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.coal.name",
+        "name_zh": "煤",
+        "name_en": "Coal",
         "tags": [
           "good.supply",
           "supply.coal",
           "good.bulk"
         ],
         "definition": {
-          "id": "core:good/coal",
-          "name_key": "good.core.coal.name",
-          "description_key": "good.core.coal.description",
+          "id": "core:item/coal",
+          "name_key": "item.core.coal.name",
+          "description_key": "item.core.coal.description",
           "tags": [
             "good.supply",
             "supply.coal",
@@ -5495,6 +5510,7 @@
             "model": "model.good.coal"
           },
           "data": {
+            "crafting_material": false,
             "unit_weight": 1,
             "base_price": 4,
             "base_stock": 140,
@@ -5505,21 +5521,21 @@
         }
       },
       {
-        "id": "core:good/water",
-        "content_type": "goods",
-        "file": "content/goods.json",
-        "name_key": "good.core.water.name",
-        "name_zh": "",
-        "name_en": "",
+        "id": "core:item/water",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.water.name",
+        "name_zh": "淡水",
+        "name_en": "Fresh Water",
         "tags": [
           "good.supply",
           "supply.water",
           "good.bulk"
         ],
         "definition": {
-          "id": "core:good/water",
-          "name_key": "good.core.water.name",
-          "description_key": "good.core.water.description",
+          "id": "core:item/water",
+          "name_key": "item.core.water.name",
+          "description_key": "item.core.water.description",
           "tags": [
             "good.supply",
             "supply.water",
@@ -5530,6 +5546,7 @@
             "texture": "icon.water"
           },
           "data": {
+            "crafting_material": false,
             "unit_weight": 1,
             "base_price": 2,
             "base_stock": 160,
@@ -5540,10 +5557,10 @@
         }
       },
       {
-        "id": "core:material/boiler_plate",
-        "content_type": "materials",
-        "file": "content/materials.json",
-        "name_key": "material.core.boiler_plate.name",
+        "id": "core:item/boiler_plate",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.boiler_plate.name",
         "name_zh": "锅炉钢板",
         "name_en": "Boiler Plate",
         "tags": [
@@ -5551,9 +5568,9 @@
           "material.tier2"
         ],
         "definition": {
-          "id": "core:material/boiler_plate",
-          "name_key": "material.core.boiler_plate.name",
-          "description_key": "material.core.boiler_plate.description",
+          "id": "core:item/boiler_plate",
+          "name_key": "item.core.boiler_plate.name",
+          "description_key": "item.core.boiler_plate.description",
           "tags": [
             "material.shipbuilding",
             "material.tier2"
@@ -5563,6 +5580,7 @@
             "model": "model.material.boiler_plate"
           },
           "data": {
+            "crafting_material": true,
             "tier": 2,
             "unit_weight": 2,
             "base_price": 120,
@@ -5573,10 +5591,10 @@
         }
       },
       {
-        "id": "core:material/precision_gear",
-        "content_type": "materials",
-        "file": "content/materials.json",
-        "name_key": "material.core.precision_gear.name",
+        "id": "core:item/precision_gear",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.precision_gear.name",
         "name_zh": "精密齿轮",
         "name_en": "Precision Gear",
         "tags": [
@@ -5584,9 +5602,9 @@
           "material.tier3"
         ],
         "definition": {
-          "id": "core:material/precision_gear",
-          "name_key": "material.core.precision_gear.name",
-          "description_key": "material.core.precision_gear.description",
+          "id": "core:item/precision_gear",
+          "name_key": "item.core.precision_gear.name",
+          "description_key": "item.core.precision_gear.description",
           "tags": [
             "material.shipbuilding",
             "material.tier3"
@@ -5596,6 +5614,7 @@
             "model": "model.material.precision_gear"
           },
           "data": {
+            "crafting_material": true,
             "tier": 3,
             "unit_weight": 0.8,
             "base_price": 190,
@@ -5606,10 +5625,10 @@
         }
       },
       {
-        "id": "core:material/sealing_compound",
-        "content_type": "materials",
-        "file": "content/materials.json",
-        "name_key": "material.core.sealing_compound.name",
+        "id": "core:item/sealing_compound",
+        "content_type": "items",
+        "file": "content/items.json",
+        "name_key": "item.core.sealing_compound.name",
         "name_zh": "密封胶",
         "name_en": "Sealing Compound",
         "tags": [
@@ -5617,9 +5636,9 @@
           "material.tier1"
         ],
         "definition": {
-          "id": "core:material/sealing_compound",
-          "name_key": "material.core.sealing_compound.name",
-          "description_key": "material.core.sealing_compound.description",
+          "id": "core:item/sealing_compound",
+          "name_key": "item.core.sealing_compound.name",
+          "description_key": "item.core.sealing_compound.description",
           "tags": [
             "material.shipbuilding",
             "material.tier1"
@@ -5629,6 +5648,7 @@
             "model": "model.material.sealing_compound"
           },
           "data": {
+            "crafting_material": true,
             "tier": 1,
             "unit_weight": 0.5,
             "base_price": 75,
@@ -5764,11 +5784,11 @@
             "craft_cost": 220,
             "materials": [
               {
-                "id": "core:good/timber",
+                "id": "core:item/timber",
                 "amount": 8
               },
               {
-                "id": "core:material/boiler_plate",
+                "id": "core:item/boiler_plate",
                 "amount": 3
               }
             ],
@@ -5954,15 +5974,15 @@
             "craft_cost": 520,
             "materials": [
               {
-                "id": "core:good/timber",
+                "id": "core:item/timber",
                 "amount": 14
               },
               {
-                "id": "core:material/boiler_plate",
+                "id": "core:item/boiler_plate",
                 "amount": 6
               },
               {
-                "id": "core:material/precision_gear",
+                "id": "core:item/precision_gear",
                 "amount": 2
               }
             ],
@@ -6155,15 +6175,15 @@
             "craft_cost": 680,
             "materials": [
               {
-                "id": "core:good/timber",
+                "id": "core:item/timber",
                 "amount": 12
               },
               {
-                "id": "core:material/boiler_plate",
+                "id": "core:item/boiler_plate",
                 "amount": 8
               },
               {
-                "id": "core:material/precision_gear",
+                "id": "core:item/precision_gear",
                 "amount": 4
               }
             ],
@@ -6448,15 +6468,15 @@
             "craft_cost": 180,
             "materials": [
               {
-                "id": "core:good/brass",
+                "id": "core:item/brass",
                 "amount": 8
               },
               {
-                "id": "core:material/boiler_plate",
+                "id": "core:item/boiler_plate",
                 "amount": 4
               },
               {
-                "id": "core:material/precision_gear",
+                "id": "core:item/precision_gear",
                 "amount": 1
               }
             ],
@@ -6531,11 +6551,11 @@
             "craft_cost": 160,
             "materials": [
               {
-                "id": "core:good/timber",
+                "id": "core:item/timber",
                 "amount": 6
               },
               {
-                "id": "core:material/boiler_plate",
+                "id": "core:item/boiler_plate",
                 "amount": 2
               }
             ],
@@ -6574,11 +6594,11 @@
             "craft_cost": 320,
             "materials": [
               {
-                "id": "core:good/timber",
+                "id": "core:item/timber",
                 "amount": 10
               },
               {
-                "id": "core:material/boiler_plate",
+                "id": "core:item/boiler_plate",
                 "amount": 4
               }
             ],
@@ -6649,11 +6669,11 @@
             "craft_cost": 140,
             "materials": [
               {
-                "id": "core:good/brass",
+                "id": "core:item/brass",
                 "amount": 3
               },
               {
-                "id": "core:material/sealing_compound",
+                "id": "core:item/sealing_compound",
                 "amount": 2
               }
             ],
@@ -6726,11 +6746,11 @@
             "craft_cost": 130,
             "materials": [
               {
-                "id": "core:good/brass",
+                "id": "core:item/brass",
                 "amount": 4
               },
               {
-                "id": "core:material/sealing_compound",
+                "id": "core:item/sealing_compound",
                 "amount": 3
               }
             ],
@@ -7041,21 +7061,21 @@
             ],
             "market": [
               {
-                "good": "core:good/iron_ore",
+                "good": "core:item/iron_ore",
                 "stock_range": [
                   70,
                   130
                 ]
               },
               {
-                "good": "core:good/timber",
+                "good": "core:item/timber",
                 "stock_range": [
                   80,
                   140
                 ]
               },
               {
-                "good": "core:good/brass",
+                "good": "core:item/brass",
                 "stock_range": [
                   40,
                   90
@@ -7063,21 +7083,21 @@
                 "price_bias": 0.95
               },
               {
-                "good": "core:material/boiler_plate",
+                "good": "core:item/boiler_plate",
                 "stock_range": [
                   30,
                   70
                 ]
               },
               {
-                "good": "core:material/sealing_compound",
+                "good": "core:item/sealing_compound",
                 "stock_range": [
                   40,
                   80
                 ]
               },
               {
-                "good": "core:material/precision_gear",
+                "good": "core:item/precision_gear",
                 "stock_range": [
                   10,
                   25
@@ -7148,7 +7168,7 @@
             ],
             "market": [
               {
-                "good": "core:good/spices",
+                "good": "core:item/spices",
                 "stock_range": [
                   30,
                   70
@@ -7156,21 +7176,21 @@
                 "price_bias": 0.9
               },
               {
-                "good": "core:good/textiles",
+                "good": "core:item/textiles",
                 "stock_range": [
                   50,
                   110
                 ]
               },
               {
-                "good": "core:good/glassware",
+                "good": "core:item/glassware",
                 "stock_range": [
                   30,
                   80
                 ]
               },
               {
-                "good": "core:material/sealing_compound",
+                "good": "core:item/sealing_compound",
                 "stock_range": [
                   30,
                   60
@@ -7246,49 +7266,49 @@
             ],
             "market": [
               {
-                "good": "core:good/brass",
+                "good": "core:item/brass",
                 "stock_range": [
                   40,
                   90
                 ]
               },
               {
-                "good": "core:good/timber",
+                "good": "core:item/timber",
                 "stock_range": [
                   60,
                   120
                 ]
               },
               {
-                "good": "core:good/textiles",
+                "good": "core:item/textiles",
                 "stock_range": [
                   50,
                   100
                 ]
               },
               {
-                "good": "core:good/spices",
+                "good": "core:item/spices",
                 "stock_range": [
                   25,
                   60
                 ]
               },
               {
-                "good": "core:good/glassware",
+                "good": "core:item/glassware",
                 "stock_range": [
                   30,
                   75
                 ]
               },
               {
-                "good": "core:material/boiler_plate",
+                "good": "core:item/boiler_plate",
                 "stock_range": [
                   25,
                   60
                 ]
               },
               {
-                "good": "core:material/precision_gear",
+                "good": "core:item/precision_gear",
                 "stock_range": [
                   10,
                   25
@@ -7358,7 +7378,7 @@
             ],
             "market": [
               {
-                "good": "core:good/timber",
+                "good": "core:item/timber",
                 "stock_range": [
                   90,
                   150
@@ -7366,21 +7386,21 @@
                 "price_bias": 0.9
               },
               {
-                "good": "core:good/iron_ore",
+                "good": "core:item/iron_ore",
                 "stock_range": [
                   60,
                   110
                 ]
               },
               {
-                "good": "core:good/textiles",
+                "good": "core:item/textiles",
                 "stock_range": [
                   40,
                   90
                 ]
               },
               {
-                "good": "core:material/sealing_compound",
+                "good": "core:item/sealing_compound",
                 "stock_range": [
                   30,
                   70
@@ -7451,7 +7471,7 @@
             ],
             "market": [
               {
-                "good": "core:good/glassware",
+                "good": "core:item/glassware",
                 "stock_range": [
                   40,
                   90
@@ -7459,21 +7479,21 @@
                 "price_bias": 0.9
               },
               {
-                "good": "core:good/brass",
+                "good": "core:item/brass",
                 "stock_range": [
                   35,
                   80
                 ]
               },
               {
-                "good": "core:good/spices",
+                "good": "core:item/spices",
                 "stock_range": [
                   25,
                   55
                 ]
               },
               {
-                "good": "core:material/precision_gear",
+                "good": "core:item/precision_gear",
                 "stock_range": [
                   15,
                   40
@@ -7676,7 +7696,7 @@
                     {
                       "type": "grant_tutorial_contract",
                       "template_id": "core:contract/main_01",
-                      "cargo_item_id": "core:good/coal",
+                      "cargo_item_id": "core:item/coal",
                       "amount": 10,
                       "provider": "fuel",
                       "deadline_formula": "tutorial_express",
@@ -7815,14 +7835,14 @@
                     "contracts"
                   ],
                   "unlock_items": [
-                    "core:good/spices",
-                    "core:good/textiles"
+                    "core:item/spices",
+                    "core:item/textiles"
                   ],
                   "effects": [
                     {
                       "type": "grant_tutorial_contract",
                       "template_id": "core:contract/main_02",
-                      "cargo_item_id": "core:good/textiles",
+                      "cargo_item_id": "core:item/textiles",
                       "amount": 6,
                       "provider": "player",
                       "destination": "home",
@@ -7840,7 +7860,7 @@
                     "counter": "textiles_bought",
                     "at_least": 8,
                     "match": {
-                      "item_id": "core:good/textiles"
+                      "item_id": "core:item/textiles"
                     }
                   }
                 },
@@ -7877,7 +7897,7 @@
                     "counter": "textiles_sold",
                     "at_least": 2,
                     "match": {
-                      "item_id": "core:good/textiles"
+                      "item_id": "core:item/textiles"
                     }
                   }
                 },
@@ -7916,8 +7936,8 @@
                     {
                       "type": "set_market_price_bias",
                       "item_ids": [
-                        "core:good/textiles",
-                        "core:good/spices"
+                        "core:item/textiles",
+                        "core:item/spices"
                       ],
                       "home_bias": 1.35,
                       "other_bias": 0.7,
@@ -7956,7 +7976,7 @@
                     ]
                   },
                   "unlock_items": [
-                    "core:good/timber"
+                    "core:item/timber"
                   ],
                   "objective": {
                     "text_key": "story.core.third_good.objective",
@@ -8264,7 +8284,7 @@
               {
                 "kind": "cargo",
                 "name_key": "contract.core.main_01.payload",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   8,
                   12
@@ -8324,7 +8344,7 @@
               {
                 "kind": "cargo",
                 "name_key": "contract.core.main_02.payload",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   10,
                   14
@@ -8386,7 +8406,7 @@
               {
                 "kind": "cargo",
                 "name_key": "contract.core.main_03.payload",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   12,
                   16
@@ -8516,7 +8536,7 @@
               {
                 "kind": "cargo",
                 "name_key": "contract.core.main_05.cargo",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   22,
                   30
@@ -8585,7 +8605,7 @@
             "payloads": [
               {
                 "kind": "cargo",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   6,
                   10
@@ -8641,7 +8661,7 @@
             "payloads": [
               {
                 "kind": "cargo",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   14,
                   20
@@ -8754,7 +8774,7 @@
             "payloads": [
               {
                 "kind": "cargo",
-                "cargo_item_id": "core:good/contract_freight",
+                "cargo_item_id": "core:item/contract_freight",
                 "weight_range": [
                   8,
                   12
@@ -9192,7 +9212,7 @@
                     {
                       "type": "grant_tutorial_contract",
                       "template_id": "core:contract/main_01",
-                      "cargo_item_id": "core:good/coal",
+                      "cargo_item_id": "core:item/coal",
                       "amount": 10,
                       "provider": "fuel",
                       "deadline_formula": "tutorial_express",
@@ -9331,14 +9351,14 @@
                     "contracts"
                   ],
                   "unlock_items": [
-                    "core:good/spices",
-                    "core:good/textiles"
+                    "core:item/spices",
+                    "core:item/textiles"
                   ],
                   "effects": [
                     {
                       "type": "grant_tutorial_contract",
                       "template_id": "core:contract/main_02",
-                      "cargo_item_id": "core:good/textiles",
+                      "cargo_item_id": "core:item/textiles",
                       "amount": 6,
                       "provider": "player",
                       "destination": "home",
@@ -9356,7 +9376,7 @@
                     "counter": "textiles_bought",
                     "at_least": 8,
                     "match": {
-                      "item_id": "core:good/textiles"
+                      "item_id": "core:item/textiles"
                     }
                   }
                 },
@@ -9393,7 +9413,7 @@
                     "counter": "textiles_sold",
                     "at_least": 2,
                     "match": {
-                      "item_id": "core:good/textiles"
+                      "item_id": "core:item/textiles"
                     }
                   }
                 },
@@ -9432,8 +9452,8 @@
                     {
                       "type": "set_market_price_bias",
                       "item_ids": [
-                        "core:good/textiles",
-                        "core:good/spices"
+                        "core:item/textiles",
+                        "core:item/spices"
                       ],
                       "home_bias": 1.35,
                       "other_bias": 0.7,
@@ -9472,7 +9492,7 @@
                     ]
                   },
                   "unlock_items": [
-                    "core:good/timber"
+                    "core:item/timber"
                   ],
                   "objective": {
                     "text_key": "story.core.third_good.objective",
@@ -10243,9 +10263,9 @@
             },
             "patrol_strength": 1,
             "trade_goods": [
-              "core:good/spices",
-              "core:good/textiles",
-              "core:good/glassware"
+              "core:item/spices",
+              "core:item/textiles",
+              "core:item/glassware"
             ],
             "home_region_tags": [
               "region.start",
@@ -10284,9 +10304,9 @@
             },
             "patrol_strength": 3,
             "trade_goods": [
-              "core:good/brass",
-              "core:material/boiler_plate",
-              "core:material/sealing_compound"
+              "core:item/brass",
+              "core:item/boiler_plate",
+              "core:item/sealing_compound"
             ],
             "home_region_tags": [
               "region.coastal",
@@ -10327,8 +10347,8 @@
             },
             "patrol_strength": 2,
             "trade_goods": [
-              "core:good/coal",
-              "core:material/precision_gear"
+              "core:item/coal",
+              "core:item/precision_gear"
             ],
             "home_region_tags": [
               "region.archipelago",
@@ -10519,7 +10539,7 @@
               "industrial"
             ],
             "unlock_ids": [
-              "core:good/glassware"
+              "core:item/glassware"
             ]
           }
         }
@@ -10656,7 +10676,7 @@
             "starting_reputation": 0,
             "starting_cargo": [
               {
-                "item": "core:good/coal",
+                "item": "core:item/coal",
                 "amount": 8
               }
             ],

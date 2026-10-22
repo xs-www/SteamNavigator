@@ -153,8 +153,8 @@ await check('new project modal creates a valid project', async () => {
   if (errorCount && !errorCount.startsWith('0')) throw new Error(`validation errors after create: ${errorCount}`);
 });
 
-await check('goods editor adds a definition and edits a number field', async () => {
-  await cdp.eval("document.querySelector('[data-nav=\"content:goods\"]').click()");
+await check('items editor adds a definition and edits a number field', async () => {
+  await cdp.eval("document.querySelector('[data-nav=\"content:items\"]').click()");
   await waitFor(cdp, "!!document.querySelector('.content-view')", 4000, 'content view');
   const before = await cdp.eval("document.querySelectorAll('.def-card').length");
   await cdp.eval("document.querySelector('.content-view [data-action=\"add-definition\"]').click()");
@@ -175,7 +175,7 @@ await check('entity ID previews localization keys and commits them only on save'
   const original = await cdp.eval(`(async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const project = (await SNIO.listProjects())[0];
-    const file = project.contentFiles.find((item) => item.content_type === 'goods');
+    const file = project.contentFiles.find((item) => item.content_type === 'items');
     const definition = file.definitions[file.definitions.length - 1];
     return { id: definition.id, key: definition.name_key };
   })()`);
@@ -185,14 +185,14 @@ await check('entity ID previews localization keys and commits them only on save'
     input.dispatchEvent(new Event('input', { bubbles: true }));
   })()`);
   const preview = await cdp.eval("document.querySelector('[data-key-preview-field=\"name_key\"]')?.value");
-  if (preview !== 'good.smoke_mod.renamed_good.name') throw new Error(`localization preview did not follow ID: ${preview}`);
+  if (preview !== 'item.smoke_mod.renamed_good.name') throw new Error(`localization preview did not follow ID: ${preview}`);
   await sleep(1100);
   const staged = await cdp.eval(`(async () => {
     const project = (await SNIO.listProjects())[0];
-    const file = project.contentFiles.find((item) => item.content_type === 'goods');
-    const definition = file.definitions.find((item) => item.id === 'smoke_mod:good/renamed_good');
+    const file = project.contentFiles.find((item) => item.content_type === 'items');
+    const definition = file.definitions.find((item) => item.id === 'smoke_mod:item/renamed_good');
     const zh = project.localization.find((item) => item.locale === 'zh_CN').entries;
-    return { key: definition.name_key, oldValue: zh[definition.name_key], previewValue: zh['good.smoke_mod.renamed_good.name'] };
+    return { key: definition.name_key, oldValue: zh[definition.name_key], previewValue: zh['item.smoke_mod.renamed_good.name'] };
   })()`);
   if (staged.key !== original.key || !staged.oldValue || staged.previewValue != null) {
     throw new Error(`localization keys changed before save: ${JSON.stringify(staged)}`);
@@ -207,8 +207,8 @@ await check('entity ID previews localization keys and commits them only on save'
   const committed = await cdp.eval(`(async () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     const project = (await SNIO.listProjects())[0];
-    const file = project.contentFiles.find((item) => item.content_type === 'goods');
-    const definition = file.definitions.find((item) => item.id === 'smoke_mod:good/renamed_good');
+    const file = project.contentFiles.find((item) => item.content_type === 'items');
+    const definition = file.definitions.find((item) => item.id === 'smoke_mod:item/renamed_good');
     const zh = project.localization.find((item) => item.locale === 'zh_CN').entries;
     return { key: definition.name_key, value: zh[definition.name_key], oldExists: Object.hasOwn(zh, ${JSON.stringify(original.key)}) };
   })()`);
@@ -327,7 +327,7 @@ await check('asset picker adds an asset and writes manifest.assets', async () =>
   if (saved.assets !== 1) throw new Error(`asset was not saved: ${JSON.stringify(saved)}`);
   if (!saved.manifestKeys.includes('icon.tea')) throw new Error('manifest.assets missing icon.tea');
   if (saved.errors) throw new Error(`asset project has ${saved.errors} errors`);
-  await cdp.eval("document.querySelector('[data-nav=\"content:goods\"]').click()");
+  await cdp.eval("document.querySelector('[data-nav=\"content:items\"]').click()");
   await waitFor(cdp, "!!document.querySelector('#definition-editor [data-asset-kind=\"image\"]')", 3000, 'custom image picker');
   const pickerShape = await cdp.eval(`(() => ({
     nativeList: document.querySelector('#definition-editor [data-field="information.texture"]')?.hasAttribute('list'),
@@ -374,7 +374,7 @@ await check('patch editor exposes target and operations', async () => {
 });
 
 await check('undo reverts a field edit', async () => {
-  await cdp.eval("document.querySelector('[data-nav=\"content:goods\"]').click()");
+  await cdp.eval("document.querySelector('[data-nav=\"content:items\"]').click()");
   await sleep(300);
   await cdp.eval(`(() => {
     const input = document.querySelector('#definition-editor [data-field="data.base_price"]');

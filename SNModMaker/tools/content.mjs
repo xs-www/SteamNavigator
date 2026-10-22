@@ -86,7 +86,7 @@ const USAGE = `SNModMaker 内容 CLI（v1）
   rm --mod <dir> <definition-id> --yes [--keep-loc]
   clone --mod <dir> --from <core-definition-id> [--id <local_id>] [--name-zh <text>] [--name-en <text>]
   validate --mod <dir> [--strict] [--godot]
-  new --mod <dir> --id <mod_id> --name <name> [--template goods|boiler|event|weapons|starter_kit|blank]
+  new --mod <dir> --id <mod_id> --name <name> [--template items|boiler|event|weapons|starter_kit|blank]
       [--draft <content_type>]...          用 Schema 2.0 草案类型新建项目（可重复；纯 2.0 项目）
 
 add 选项：
@@ -1351,7 +1351,7 @@ function commandTypes(ctx) {
 
 function commandDescribe(ctx) {
   const typeKey = ctx.positional[1];
-  if (!typeKey) throw usageError('缺少 <type>，例如 describe goods');
+  if (!typeKey) throw usageError('缺少 <type>，例如 describe items');
   const info = findTypeInfo(typeKey);
   if (!info) {
     throw usageError(`未知内容类型 "${typeKey}"。可用类型：${knownTypeKeys().join(', ')}`);
@@ -1873,8 +1873,8 @@ function commandNew(ctx) {
     }
   }
   const explicitTemplate = flagValue(ctx, 'template');
-  // 只指定 --draft 时创建纯 2.0 草案项目（不附带 1.0 商品起始定义）。
-  const template = explicitTemplate || (draftKeys.length ? null : 'goods');
+  // 只指定 --draft 时创建纯 2.0 草案项目（不附带默认物品起始定义）。
+  const template = explicitTemplate || (draftKeys.length ? null : 'items');
   if (template && !Catalog.TEMPLATES.some((item) => item.key === template)) {
     throw usageError(`未知模板 "${template}"。可用：${Catalog.TEMPLATES.map((item) => item.key).join(', ')}`);
   }

@@ -1,0 +1,259 @@
+{
+  "schema_version": "2.0",
+  "content_type": "items",
+  "definitions": [
+    {
+      "id": "core:item/iron_ore",
+      "name_key": "item.core.iron_ore.name",
+      "description_key": "item.core.iron_ore.description",
+      "tags": [
+        "good.trade",
+        "good.bulk",
+        "good.shipbuilding"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.good.iron_ore"
+      },
+      "data": {
+        "crafting_material": true,
+        "unit_weight": 3,
+        "base_price": 42,
+        "base_stock": 120,
+        "price_elasticity": 0.16,
+        "spawn_weight": 1,
+        "category": "ore"
+      }
+    },
+    {
+      "id": "core:item/brass",
+      "name_key": "item.core.brass.name",
+      "description_key": "item.core.brass.description",
+      "tags": [
+        "good.trade",
+        "good.shipbuilding"
+      ],
+      "enabled": true,
+      "data": {
+        "crafting_material": true,
+        "unit_weight": 2,
+        "base_price": 88,
+        "base_stock": 80,
+        "price_elasticity": 0.18,
+        "spawn_weight": 1,
+        "category": "metal"
+      }
+    },
+    {
+      "id": "core:item/textiles",
+      "name_key": "item.core.textiles.name",
+      "description_key": "item.core.textiles.description",
+      "tags": [
+        "good.trade",
+        "good.consumer"
+      ],
+      "enabled": true,
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 1,
+        "base_price": 64,
+        "base_stock": 90,
+        "price_elasticity": 0.15,
+        "spawn_weight": 1,
+        "category": "textile"
+      }
+    },
+    {
+      "id": "core:item/spices",
+      "name_key": "item.core.spices.name",
+      "description_key": "item.core.spices.description",
+      "tags": [
+        "good.trade",
+        "good.luxury"
+      ],
+      "enabled": true,
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 0.5,
+        "base_price": 150,
+        "base_stock": 55,
+        "price_elasticity": 0.12,
+        "spawn_weight": 0.8,
+        "category": "luxury"
+      }
+    },
+    {
+      "id": "core:item/timber",
+      "name_key": "item.core.timber.name",
+      "description_key": "item.core.timber.description",
+      "tags": [
+        "good.trade",
+        "good.bulk",
+        "good.shipbuilding"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.good.timber"
+      },
+      "data": {
+        "crafting_material": true,
+        "unit_weight": 2.5,
+        "base_price": 36,
+        "base_stock": 130,
+        "price_elasticity": 0.17,
+        "spawn_weight": 1,
+        "category": "wood"
+      }
+    },
+    {
+      "id": "core:item/glassware",
+      "name_key": "item.core.glassware.name",
+      "description_key": "item.core.glassware.description",
+      "tags": [
+        "good.trade",
+        "good.fragile"
+      ],
+      "enabled": true,
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 1.5,
+        "base_price": 105,
+        "base_stock": 60,
+        "price_elasticity": 0.2,
+        "spawn_weight": 0.9,
+        "category": "craft"
+      }
+    },
+    {
+      "id": "core:item/contract_freight",
+      "name_key": "item.core.contract_freight.name",
+      "description_key": "item.core.contract_freight.description",
+      "tags": [
+        "good.contract"
+      ],
+      "enabled": true,
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 1,
+        "base_price": 1,
+        "base_stock": 1,
+        "price_elasticity": 0.1,
+        "spawn_weight": 0,
+        "category": "contract"
+      }
+    },
+    {
+      "id": "core:item/coal",
+      "name_key": "item.core.coal.name",
+      "description_key": "item.core.coal.description",
+      "tags": [
+        "good.supply",
+        "supply.coal",
+        "good.bulk"
+      ],
+      "enabled": true,
+      "information": {
+        "texture": "icon.coal",
+        "model": "model.good.coal"
+      },
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 1,
+        "base_price": 4,
+        "base_stock": 140,
+        "price_elasticity": 0.12,
+        "spawn_weight": 0,
+        "category": "supply"
+      }
+    },
+    {
+      "id": "core:item/water",
+      "name_key": "item.core.water.name",
+      "description_key": "item.core.water.description",
+      "tags": [
+        "good.supply",
+        "supply.water",
+        "good.bulk"
+      ],
+      "enabled": true,
+      "information": {
+        "texture": "icon.water"
+      },
+      "data": {
+        "crafting_material": false,
+        "unit_weight": 1,
+        "base_price": 2,
+        "base_stock": 160,
+        "price_elasticity": 0.1,
+        "spawn_weight": 0,
+        "category": "supply"
+      }
+    },
+    {
+      "id": "core:item/boiler_plate",
+      "name_key": "item.core.boiler_plate.name",
+      "description_key": "item.core.boiler_plate.description",
+      "tags": [
+        "material.shipbuilding",
+        "material.tier2"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.material.boiler_plate"
+      },
+      "data": {
+        "crafting_material": true,
+        "tier": 2,
+        "unit_weight": 2,
+        "base_price": 120,
+        "base_stock": 60,
+        "price_elasticity": 0.15,
+        "category": "plate"
+      }
+    },
+    {
+      "id": "core:item/precision_gear",
+      "name_key": "item.core.precision_gear.name",
+      "description_key": "item.core.precision_gear.description",
+      "tags": [
+        "material.shipbuilding",
+        "material.tier3"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.material.precision_gear"
+      },
+      "data": {
+        "crafting_material": true,
+        "tier": 3,
+        "unit_weight": 0.8,
+        "base_price": 190,
+        "base_stock": 40,
+        "price_elasticity": 0.12,
+        "category": "mechanism"
+      }
+    },
+    {
+      "id": "core:item/sealing_compound",
+      "name_key": "item.core.sealing_compound.name",
+      "description_key": "item.core.sealing_compound.description",
+      "tags": [
+        "material.shipbuilding",
+        "material.tier1"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.material.sealing_compound"
+      },
+      "data": {
+        "crafting_material": true,
+        "tier": 1,
+        "unit_weight": 0.5,
+        "base_price": 75,
+        "base_stock": 70,
+        "price_elasticity": 0.1,
+        "category": "compound"
+      }
+    }
+  ]
+}

@@ -37,7 +37,7 @@ const coreDir = path.join(repoRoot, 'dev_mods', 'core');
 const cliCwd = repoRoot;
 
 const MOD_ID = 'test_mod';
-const GOODS_FILE = 'content/goods.json';
+const ITEMS_FILE = 'content/items.json';
 /* Shipped Story Mode sample pack: story-only content mod, read-only fixture.
  * It lives under sdk/templates because the 1.0 runtime cannot load it yet. */
 const STORY_PACK_DIR = path.join(repoRoot, 'sdk', 'templates', 'story_pack_iron_tide');
@@ -124,10 +124,10 @@ function tempRoot(t) {
 
 /**
  * Create a throwaway mod with the CLI's own `new` command. Returns the mod root.
- * Default fixture: template "goods" -> one definition (test_mod:good/tea) plus
+ * Default fixture: template "items" -> one definition (test_mod:item/tea) plus
  * localization/zh_CN.json + localization/en.json, 0 validation errors.
  */
-function createMod(t, { id = MOD_ID, name = '测试模组', template = 'goods', extra = [] } = {}) {
+function createMod(t, { id = MOD_ID, name = '测试模组', template = 'items', extra = [] } = {}) {
   const root = tempRoot(t);
   const mod = path.join(root, 'mod');
   const result = jsonRun(['new', '--mod', mod, '--id', id, '--name', name, '--template', template, ...extra]);
@@ -171,8 +171,8 @@ function contentFileOfType(mod, typeKey) {
   return files[0];
 }
 
-function goodsFileOf(mod) {
-  return contentFileOfType(mod, 'goods');
+function itemsFileOf(mod) {
+  return contentFileOfType(mod, 'items');
 }
 
 function definitionsOf(mod) {
@@ -198,9 +198,9 @@ function localeOf(mod, locale) {
   return readJson(path.join(mod, rel));
 }
 
-function addGood(mod, id, extra = []) {
+function addItem(mod, id, extra = []) {
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', id,
+    'add', '--mod', mod, '--type', 'items', '--id', id,
     '--name-zh', `${id} 中文名`, '--name-en', `${id} English Name`,
     '--desc-zh', `${id} 的中文描述`, '--desc-en', `${id} English description`,
     '--tag', 'good.trade', ...extra,
@@ -395,28 +395,31 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 24, '21 runtime types + 3 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 21, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.types.length, 23, '20 runtime types + 3 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 20, 'activeTypes counts runtime types at both 1.0 and 2.0');
   assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
-  for (const key of ['goods', 'materials', 'hulls', 'modules', 'events', 'contracts', 'patches']) {
+  for (const key of ['items', 'hulls', 'modules', 'events', 'contracts', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
   }
   for (const legacyModuleType of ['boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins']) {
     assert.ok(!keys.includes(legacyModuleType), `C1 removed the ${legacyModuleType} content type in favour of modules`);
   }
-  const goods = json.types.find((entry) => entry.key === 'goods');
-  assert.equal(goods.singular, 'good');
-  assert.equal(goods.keyPrefix, 'good');
-  assert.equal(goods.label, '商品');
-  assert.equal(goods.en, 'Goods');
-  assert.equal(goods.file, 'content/goods.json');
-  assert.equal(goods.schema, 'good.schema.json');
-  assert.equal(goods.schema_version, '1.0');
-  assert.equal(goods.capability, 'content.goods.v1', 'runtime 1.0 rows may still expose their capability');
-  assert.ok(goods.group, 'goods.group must be present');
-  assert.ok(goods.summary, 'goods.summary must be present');
-  assert.ok(!goods.draft, 'runtime types are not marked draft');
+  for (const legacyItemType of ['goods', 'materials']) {
+    assert.ok(!keys.includes(legacyItemType), `C2 removed the ${legacyItemType} content type in favour of items`);
+  }
+  const items = json.types.find((entry) => entry.key === 'items');
+  assert.equal(items.singular, 'item');
+  assert.equal(items.keyPrefix, 'item');
+  assert.equal(items.label, '物品');
+  assert.equal(items.en, 'Items');
+  assert.equal(items.file, 'content/items.json');
+  assert.equal(items.schema, 'v2/item.schema.json');
+  assert.equal(items.schema_version, '2.0');
+  assert.equal(items.capability, 'content.items.v1', 'the merged item type exposes its capability');
+  assert.ok(items.group, 'items.group must be present');
+  assert.ok(items.summary, 'items.summary must be present');
+  assert.ok(!items.draft, 'runtime types are not marked draft');
   const patches = json.types.find((entry) => entry.key === 'patches');
   assert.equal(patches.file, 'content/patches.json');
   assert.equal(patches.schema, 'patch.schema.json');
@@ -443,16 +446,17 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(startProfile.schema_version, '2.0');
   assert.equal(startProfile.capability, 'content.campaign.v1');
 
-  // The Phase B world/campaign types plus the C1 hull/module types are active runtime rows at Schema 2.0.
+  // The Phase B world/campaign types plus the C1 hull/module and C2 item types are active runtime rows at Schema 2.0.
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['discoveries', 'factions', 'hulls', 'map_configs', 'modules', 'regions', 'route_templates', 'sites',
+    ['discoveries', 'factions', 'hulls', 'items', 'map_configs', 'modules', 'regions', 'route_templates', 'sites',
       'start_profiles', 'weather_profiles', 'world_profiles'],
-    'exactly the eleven Schema 2.0 runtime rows are active'
+    'exactly the twelve Schema 2.0 runtime rows are active'
   );
   const runtimeCapabilities = {
     hulls: 'content.hulls.v1',
+    items: 'content.items.v1',
     modules: 'content.modules.v1',
     start_profiles: 'content.campaign.v1',
   };
@@ -508,12 +512,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（21；其中 11 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 21 active types, 11 of them Schema 2.0:\n${stdout}`
+    /运行时内容类型（20；其中 12 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 20 active types, 12 of them Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    11,
+    12,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
   );
   assert.match(
@@ -533,7 +537,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
   assert.match(
     stdout,
-    /^goods\s+商品\s+good\s+content\/goods\.json$/m,
+    /^items\s+物品\s+item\s+content\/items\.json  \[runtime 2\.0\]$/m,
+    `items must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^roles\s+船员岗位\s+role\s+content\/roles\.json$/m,
     `1.0 runtime rows stay unmarked:\n${stdout}`
   );
   assert.match(
@@ -569,27 +578,29 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   );
 });
 
-test('describe goods --json reports id pattern, keys, fields, defaults and skeleton', (t) => {
-  const result = jsonRun(['describe', 'goods']);
-  assertStatus(result, 0, 'describe goods');
-  const json = mustJson(result, 'describe goods');
+test('describe items --json reports id pattern, keys, fields, defaults and skeleton', (t) => {
+  const result = jsonRun(['describe', 'items']);
+  assertStatus(result, 0, 'describe items');
+  const json = mustJson(result, 'describe items');
   assert.equal(json.ok, true);
   assert.equal(json.command, 'describe');
 
-  assert.equal(json.type.key, 'goods');
-  assert.equal(json.type.singular, 'good');
-  assert.equal(json.type.keyPrefix, 'good');
-  assert.equal(json.type.label, '商品');
-  assert.equal(json.type.file, 'content/goods.json');
-  assert.equal(json.type.schema, 'good.schema.json');
+  assert.equal(json.type.key, 'items');
+  assert.equal(json.type.singular, 'item');
+  assert.equal(json.type.keyPrefix, 'item');
+  assert.equal(json.type.label, '物品');
+  assert.equal(json.type.file, 'content/items.json');
+  assert.equal(json.type.schema, 'v2/item.schema.json');
+  assert.equal(json.type.schema_version, '2.0');
+  assert.equal(json.type.capability, 'content.items.v1');
 
   assert.equal(json.id.pattern, '^[a-z][a-z0-9_]{2,31}:[a-z_]+/[a-z0-9_]+$');
-  assert.equal(json.id.singular, 'good');
-  assert.equal(json.id.example, 'my_mod:good/tea');
+  assert.equal(json.id.singular, 'item');
+  assert.equal(json.id.example, 'my_mod:item/tea');
 
-  assert.equal(json.keys.base, 'good.my_mod.tea');
-  assert.equal(json.keys.name, 'good.my_mod.tea.name');
-  assert.equal(json.keys.description, 'good.my_mod.tea.description');
+  assert.equal(json.keys.base, 'item.my_mod.tea');
+  assert.equal(json.keys.name, 'item.my_mod.tea.name');
+  assert.equal(json.keys.description, 'item.my_mod.tea.description');
 
   assert.ok(Array.isArray(json.fields), 'fields must be an array');
   const basePrice = json.fields.find((field) => field.path === 'data.base_price');
@@ -597,6 +608,10 @@ test('describe goods --json reports id pattern, keys, fields, defaults and skele
   assert.equal(basePrice.type, 'number');
   assert.equal(basePrice.required, true);
   assert.equal(basePrice.minimum, 1);
+  const craftingMaterial = json.fields.find((field) => field.path === 'data.crafting_material');
+  assert.ok(craftingMaterial, 'fields must contain data.crafting_material');
+  assert.equal(craftingMaterial.type, 'boolean');
+  assert.equal(craftingMaterial.required, true, 'C2 requires the explicit crafting_material flag');
   const category = json.fields.find((field) => field.path === 'data.category');
   assert.ok(category, 'fields must contain data.category');
   assert.equal(category.type, 'string');
@@ -606,6 +621,7 @@ test('describe goods --json reports id pattern, keys, fields, defaults and skele
   assert.equal(elasticity.minimum, 0);
   assert.equal(elasticity.maximum, 1);
 
+  assert.equal(json.defaults.crafting_material, false);
   assert.equal(json.defaults.unit_weight, 1);
   assert.equal(json.defaults.base_price, 50);
   assert.equal(json.defaults.base_stock, 80);
@@ -616,12 +632,13 @@ test('describe goods --json reports id pattern, keys, fields, defaults and skele
   assert.ok(Array.isArray(json.suggestions.tags));
   assert.ok(json.suggestions.tags.includes('good.trade'));
 
-  assert.equal(json.skeleton.id, 'my_mod:good/tea');
-  assert.equal(json.skeleton.name_key, 'good.my_mod.tea.name');
-  assert.equal(json.skeleton.description_key, 'good.my_mod.tea.description');
+  assert.equal(json.skeleton.id, 'my_mod:item/tea');
+  assert.equal(json.skeleton.name_key, 'item.my_mod.tea.name');
+  assert.equal(json.skeleton.description_key, 'item.my_mod.tea.description');
   assert.deepEqual(json.skeleton.tags, ['good.trade']);
   assert.equal(json.skeleton.enabled, true);
   assert.equal(json.skeleton.data.base_price, 50);
+  assert.equal(json.skeleton.data.crafting_material, false);
 });
 
 test('describe patches --json reports the patch target/operations skeleton and null defaults', (t) => {
@@ -780,8 +797,8 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
   assert.ok(manifestOf(mod).content.includes('content/world_profiles.json'));
   assert.equal(localeOf(mod, 'zh_CN')['world.test_mod.first_world.name'], '首个世界');
   assert.equal(localeOf(mod, 'en')['world.test_mod.first_world.name'], 'First World');
-  // 1.0 content keeps its envelope in the same project.
-  assert.equal(goodsFileOf(mod).payload.schema_version, '1.0');
+  // Merged items keep their 2.0 envelope in the same project.
+  assert.equal(itemsFileOf(mod).payload.schema_version, '2.0');
 
   const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
   assert.ok(!warningCodes.includes('draft_content'), `a promoted type must not warn as draft: ${JSON.stringify(json.issues.list)}`);
@@ -792,7 +809,10 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
     `Schema 2.0 content without a declared capability must warn: ${JSON.stringify(json.issues.list)}`
   );
   assert.ok(json.issues.newWarnings >= 1, 'the undeclared capability is a new warning for the add');
-  const undeclared = json.issues.list.find((issue) => issue.code === 'capability_undeclared');
+  const undeclared = json.issues.list.find(
+    (issue) => issue.code === 'capability_undeclared' && /content\.world\.v1/.test(String(issue.message))
+  );
+  assert.ok(undeclared, 'the world capability must be reported as undeclared');
   assert.match(String(undeclared.message), /content\.world\.v1/, 'the warning must name the required capability');
   assert.deepEqual(manifestOf(mod).capabilities || [], [], 'add must not declare the capability automatically');
   // B4 landed the Core world content (`core:weather_profile/temperate` etc.), so the starter
@@ -822,7 +842,7 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
   // Declaring the capability in the manifest clears the warning. The CLI does not do
   // this for `add`, so the project author has to make the declaration explicit.
   const manifest = manifestOf(mod);
-  manifest.capabilities = ['content.world.v1'];
+  manifest.capabilities = ['content.world.v1', 'content.items.v1'];
   writeJson(path.join(mod, 'manifest.json'), manifest);
   const declaredResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(declaredResult, 0, 'validate world mod with declared capability');
@@ -833,7 +853,7 @@ test('add --type world_profiles writes a Schema 2.0 content file as a runtime ty
     `the declared capability must clear the warning: ${JSON.stringify(declaredJson.issues.list)}`
   );
   const strictDeclared = jsonRun(['validate', '--mod', mod, '--strict']);
-  assertStatus(strictDeclared, 0, 'declaring content.world.v1 makes --strict pass');
+  assertStatus(strictDeclared, 0, 'declaring content.world.v1 and content.items.v1 makes --strict pass');
 });
 
 test('add --type weapons writes a Schema 2.0 content file that validates cleanly', (t) => {
@@ -901,18 +921,18 @@ test('validate accepts the shipped Story Mode example pack', () => {
 
 test('validate rejects free-mode content inside a story pack', (t) => {
   const mod = copyDir(STORY_PACK_DIR, path.join(tempRoot(t), 'story_pack'));
-  writeJson(path.join(mod, 'content', 'goods.json'), {
-    schema_version: '1.0',
-    content_type: 'goods',
+  writeJson(path.join(mod, 'content', 'items.json'), {
+    schema_version: '2.0',
+    content_type: 'items',
     definitions: [{
-      id: 'example_story_iron_tide:good/tea',
+      id: 'example_story_iron_tide:item/tea',
       name_key: 'story.iron_tide.l01.name',
       enabled: true,
-      data: { unit_weight: 1, base_price: 50, base_stock: 80, price_elasticity: 0.15, spawn_weight: 1, category: 'trade' },
+      data: { crafting_material: false, unit_weight: 1, base_price: 50, base_stock: 80, price_elasticity: 0.15, spawn_weight: 1, category: 'trade' },
     }],
   });
   const manifest = manifestOf(mod);
-  manifest.content.push('content/goods.json');
+  manifest.content.push('content/items.json');
   writeJson(path.join(mod, 'manifest.json'), manifest);
 
   const result = jsonRun(['validate', '--mod', mod]);
@@ -1039,33 +1059,33 @@ test('list --mod dev_mods/core --json lists every core definition and leaves cor
   const rows = listRows(json, 'list core');
   assert.equal(rows.length, expectedCoreDefinitionCount(), `list must return one row per core definition`);
 
-  const ironOre = rows.find((row) => row.id === 'core:good/iron_ore');
-  assert.ok(ironOre, 'list must contain core:good/iron_ore');
-  assert.equal(ironOre.type, 'goods');
-  assert.equal(ironOre.file, 'content/goods.json');
+  const ironOre = rows.find((row) => row.id === 'core:item/iron_ore');
+  assert.ok(ironOre, 'list must contain core:item/iron_ore');
+  assert.equal(ironOre.type, 'items');
+  assert.equal(ironOre.file, 'content/items.json');
   assert.equal(ironOre.index, 0);
   assert.equal(ironOre.name_zh, '铁矿石');
   assert.equal(ironOre.name_en, 'Iron Ore');
   assert.equal(ironOre.enabled, true);
-  assert.equal(ironOre.keys.name, 'good.core.iron_ore.name');
-  assert.equal(ironOre.keys.description, 'good.core.iron_ore.description');
+  assert.equal(ironOre.keys.name, 'item.core.iron_ore.name');
+  assert.equal(ironOre.keys.description, 'item.core.iron_ore.description');
 
   assert.deepEqual(snapshotDir(coreDir, { onlyJson: true }), before, 'list must not modify dev_mods/core');
 });
 
-test('list --type goods filters core rows down to goods definitions', (t) => {
-  const result = jsonRun(['list', '--mod', 'dev_mods/core', '--type', 'goods']);
-  assertStatus(result, 0, 'list core goods');
-  const json = mustJson(result, 'list core goods');
+test('list --type items filters core rows down to item definitions', (t) => {
+  const result = jsonRun(['list', '--mod', 'dev_mods/core', '--type', 'items']);
+  assertStatus(result, 0, 'list core items');
+  const json = mustJson(result, 'list core items');
   assert.equal(json.ok, true);
-  const rows = listRows(json, 'list core goods');
-  assert.equal(rows.length, 9, 'core currently has 9 goods definitions');
+  const rows = listRows(json, 'list core items');
+  assert.equal(rows.length, 12, 'core currently has 12 items definitions (9 trade goods + 3 crafting materials)');
   for (const row of rows) {
-    assert.equal(row.type, 'goods');
-    assert.equal(row.file, 'content/goods.json');
+    assert.equal(row.type, 'items');
+    assert.equal(row.file, 'content/items.json');
   }
-  assert.ok(rows.some((row) => row.id === 'core:good/coal'));
-  assert.ok(!rows.some((row) => row.id === 'core:material/boiler_plate'));
+  assert.ok(rows.some((row) => row.id === 'core:item/coal'));
+  assert.ok(rows.some((row) => row.id === 'core:item/boiler_plate'), 'C2 merged the crafting materials into items');
 });
 
 /* ------------------------------------------------------------------------- */
@@ -1075,7 +1095,7 @@ test('list --type goods filters core rows down to goods definitions', (t) => {
 test('new --json creates a valid mod (manifest, content, both locales) that validates cleanly', (t) => {
   const root = tempRoot(t);
   const mod = path.join(root, 'brand_new_mod');
-  const result = jsonRun(['new', '--mod', mod, '--id', 'my_mod', '--name', '我的模组', '--template', 'goods', '--description', '测试用模组']);
+  const result = jsonRun(['new', '--mod', mod, '--id', 'my_mod', '--name', '我的模组', '--template', 'items', '--description', '测试用模组']);
   const json = mustJson(result, 'new');
   assertStatus(result, 0, 'new');
   assert.equal(json.ok, true);
@@ -1087,7 +1107,7 @@ test('new --json creates a valid mod (manifest, content, both locales) that vali
     assert.equal(typeof change.path, 'string');
   }
   assert.ok(fs.existsSync(path.join(mod, 'manifest.json')), 'manifest.json must exist');
-  assert.ok(fs.existsSync(path.join(mod, GOODS_FILE)), 'content/goods.json must exist');
+  assert.ok(fs.existsSync(path.join(mod, ITEMS_FILE)), 'content/items.json must exist');
   assert.ok(fs.existsSync(path.join(mod, 'localization', 'zh_CN.json')), 'zh_CN.json must exist');
   assert.ok(fs.existsSync(path.join(mod, 'localization', 'en.json')), 'en.json must exist');
 
@@ -1097,26 +1117,27 @@ test('new --json creates a valid mod (manifest, content, both locales) that vali
   assert.equal(manifest.version, '1.0.0');
   assert.equal(manifest.type, 'content');
   assert.equal(manifest.description, '测试用模组');
-  assert.deepEqual(manifest.content, [GOODS_FILE]);
+  assert.deepEqual(manifest.content, [ITEMS_FILE]);
   assert.deepEqual(manifest.localization, ['localization/zh_CN.json', 'localization/en.json']);
   assert.ok(
     Array.isArray(manifest.dependencies) && manifest.dependencies.some((dependency) => dependency.id === 'core'),
     `new mod must depend on core: ${JSON.stringify(manifest.dependencies)}`
   );
 
-  const goods = goodsFileOf(mod);
-  assert.equal(goods.payload.schema_version, '1.0');
-  assert.equal(goods.payload.content_type, 'goods');
-  assert.equal(goods.payload.definitions.length, 1);
-  const tea = goods.payload.definitions[0];
-  assert.equal(tea.id, 'my_mod:good/tea');
-  assert.equal(tea.name_key, 'good.my_mod.tea.name');
-  assert.equal(tea.description_key, 'good.my_mod.tea.description');
+  const items = itemsFileOf(mod);
+  assert.equal(items.payload.schema_version, '2.0');
+  assert.equal(items.payload.content_type, 'items');
+  assert.equal(items.payload.definitions.length, 1);
+  const tea = items.payload.definitions[0];
+  assert.equal(tea.id, 'my_mod:item/tea');
+  assert.equal(tea.name_key, 'item.my_mod.tea.name');
+  assert.equal(tea.description_key, 'item.my_mod.tea.description');
+  assert.equal(tea.data.crafting_material, false, 'the starter item is a pure trade item');
 
   const zh = localeOf(mod, 'zh_CN');
   const en = localeOf(mod, 'en');
-  assert.equal(zh['good.my_mod.tea.name'], '茶叶');
-  assert.equal(en['good.my_mod.tea.name'], 'Tea');
+  assert.equal(zh['item.my_mod.tea.name'], '茶叶');
+  assert.equal(en['item.my_mod.tea.name'], 'Tea');
   assert.equal(typeof json.stats.definitions, 'number');
   assert.equal(json.stats.definitions, 1);
 
@@ -1149,7 +1170,7 @@ test('new --draft weapons creates a pure Schema 2.0 draft project', (t) => {
   for (const change of json.changes) {
     assert.equal(change.action, 'create', `new --draft change must be create: ${JSON.stringify(change)}`);
   }
-  assert.ok(!fs.existsSync(path.join(mod, GOODS_FILE)), 'pure draft projects must not create content/goods.json');
+  assert.ok(!fs.existsSync(path.join(mod, ITEMS_FILE)), 'pure draft projects must not create content/items.json');
   assert.deepEqual(manifestOf(mod).content, ['content/weapons.json'], 'only the draft content file is declared');
   assert.deepEqual(manifestOf(mod).localization, ['localization/zh_CN.json', 'localization/en.json']);
   assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1'], 'the weapons capability is declared automatically');
@@ -1249,28 +1270,32 @@ test('new --draft rejects unknown draft types with a usage error listing the ava
   assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
 });
 
-test('new --template goods --draft weapons layers 1.0 and 2.0 content', (t) => {
+test('new --template items --draft weapons layers 2.0 template and draft content', (t) => {
   const root = tempRoot(t);
   const mod = path.join(root, 'mix_mod');
   const result = jsonRun([
     'new', '--mod', mod, '--id', 'mix_mod', '--name', 'Mix Mod',
-    '--template', 'goods', '--draft', 'weapons',
+    '--template', 'items', '--draft', 'weapons',
   ]);
   const json = mustJson(result, 'new template + draft');
   assertStatus(result, 0, 'new template + draft');
   assert.equal(json.ok, true);
   assert.deepEqual(
     manifestOf(mod).content,
-    ['content/goods.json', 'content/weapons.json'],
+    ['content/items.json', 'content/weapons.json'],
     'template content and draft content coexist'
   );
   assert.deepEqual(manifestOf(mod).capabilities, ['content.combat.v1']);
-  assert.equal(contentFileOfType(mod, 'goods').payload.schema_version, '1.0', 'template content stays 1.0');
+  assert.equal(contentFileOfType(mod, 'items').payload.schema_version, '2.0', 'merged items content is 2.0');
   assert.equal(contentFileOfType(mod, 'weapons').payload.schema_version, '2.0', 'draft content is 2.0');
   assert.equal(json.stats.contentFiles, 2);
   assert.equal(json.stats.definitions, 2);
   assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
-  assert.deepEqual(json.issues.list.map((issue) => issue.code), ['draft_content']);
+  assert.deepEqual(
+    json.issues.list.map((issue) => issue.code).sort(),
+    ['capability_undeclared', 'draft_content'],
+    'the undeclared items capability and the weapons draft both warn'
+  );
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate template + draft project');
@@ -1316,7 +1341,7 @@ test('new --template weapons creates the five-weapon draft pack', (t) => {
   for (const change of json.changes) {
     assert.equal(change.action, 'create', `weapons template change must be create: ${JSON.stringify(change)}`);
   }
-  assert.ok(!fs.existsSync(path.join(mod, GOODS_FILE)), 'the weapons template must not create 1.0 goods content');
+  assert.ok(!fs.existsSync(path.join(mod, ITEMS_FILE)), 'the weapons template must not create items content');
 
   const manifest = manifestOf(mod);
   assert.deepEqual(manifest.content, ['content/weapons.json']);
@@ -1396,7 +1421,7 @@ test('new refuses a non-empty target directory without --force and writes nothin
   fs.writeFileSync(marker, 'keep me\n', 'utf8');
   const before = snapshotDir(mod);
 
-  const result = jsonRun(['new', '--mod', mod, '--id', 'my_mod', '--name', '我的模组', '--template', 'goods']);
+  const result = jsonRun(['new', '--mod', mod, '--id', 'my_mod', '--name', '我的模组', '--template', 'items']);
   mustFailJson(result, 'new non-empty');
   assertStatus(result, 1, 'new non-empty');
   assert.deepEqual(snapshotDir(mod), before, 'failed new must not touch the target directory');
@@ -1410,7 +1435,7 @@ test('new refuses a non-empty target directory without --force and writes nothin
 test('add without --id is a usage error (exit 2) that still emits JSON', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
-  const result = jsonRun(['add', '--mod', mod, '--type', 'goods', '--name-zh', '甲', '--name-en', 'A']);
+  const result = jsonRun(['add', '--mod', mod, '--type', 'items', '--name-zh', '甲', '--name-en', 'A']);
   assertUsageError(result, 'add missing id');
   assertDirUnchanged(before, mod, 'add missing id');
 });
@@ -1426,7 +1451,7 @@ test('add with an unknown --type is a usage error (exit 2)', (t) => {
 test('add requires --name-zh and --name-en together', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
-  const result = jsonRun(['add', '--mod', mod, '--type', 'goods', '--id', 'only_zh', '--name-zh', '只有中文']);
+  const result = jsonRun(['add', '--mod', mod, '--type', 'items', '--id', 'only_zh', '--name-zh', '只有中文']);
   assertUsageError(result, 'add missing name-en');
   assertDirUnchanged(before, mod, 'add missing name-en');
 });
@@ -1435,7 +1460,7 @@ test('add requires --desc-zh and --desc-en together', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'only_desc_zh',
+    'add', '--mod', mod, '--type', 'items', '--id', 'only_desc_zh',
     '--name-zh', '双语名', '--name-en', 'Bilingual', '--desc-zh', '只有中文描述',
   ]);
   assertUsageError(result, 'add missing desc-en');
@@ -1445,7 +1470,7 @@ test('add requires --desc-zh and --desc-en together', (t) => {
 test('add writes the definition with tags/data and both bilingual localization files', (t) => {
   const mod = createMod(t);
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'black_tea',
+    'add', '--mod', mod, '--type', 'items', '--id', 'black_tea',
     '--name-zh', '红茶', '--name-en', 'Black Tea',
     '--desc-zh', '醇厚的红茶。', '--desc-en', 'A malty black tea.',
     '--tag', 'good.trade', '--data', 'data.base_price=80', '--data', 'data.unit_weight=1.5',
@@ -1459,18 +1484,18 @@ test('add writes the definition with tags/data and both bilingual localization f
 
   assert.ok(Array.isArray(json.changes));
   const changedPaths = json.changes.map((change) => change.path);
-  assert.ok(changedPaths.includes(GOODS_FILE), `changes must mention ${GOODS_FILE}: ${JSON.stringify(changedPaths)}`);
+  assert.ok(changedPaths.includes(ITEMS_FILE), `changes must mention ${ITEMS_FILE}: ${JSON.stringify(changedPaths)}`);
   assert.ok(changedPaths.includes('localization/zh_CN.json'), `changes must mention zh_CN.json: ${JSON.stringify(changedPaths)}`);
   assert.ok(changedPaths.includes('localization/en.json'), `changes must mention en.json: ${JSON.stringify(changedPaths)}`);
   for (const change of json.changes) {
     assert.ok(['create', 'update', 'delete'].includes(change.action), `unexpected change action ${change.action}`);
   }
 
-  const found = definitionById(mod, 'test_mod:good/black_tea');
-  assert.equal(found.file, GOODS_FILE);
+  const found = definitionById(mod, 'test_mod:item/black_tea');
+  assert.equal(found.file, ITEMS_FILE);
   const definition = found.definition;
-  assert.equal(definition.name_key, 'good.test_mod.black_tea.name');
-  assert.equal(definition.description_key, 'good.test_mod.black_tea.description');
+  assert.equal(definition.name_key, 'item.test_mod.black_tea.name');
+  assert.equal(definition.description_key, 'item.test_mod.black_tea.description');
   assert.deepEqual(definition.tags, ['good.trade']);
   assert.equal(definition.enabled, true);
   assert.equal(definition.data.base_price, 80);
@@ -1478,27 +1503,27 @@ test('add writes the definition with tags/data and both bilingual localization f
   assert.equal(definition.data.base_stock, 80, 'unspecified data fields keep catalog defaults');
   assert.equal(definition.data.category, 'trade');
 
-  const goods = goodsFileOf(mod);
+  const goods = itemsFileOf(mod);
   assert.equal(goods.payload.definitions.length, 2);
-  assert.equal(goods.payload.definitions[1].id, 'test_mod:good/black_tea', 'new definition is appended at the end');
+  assert.equal(goods.payload.definitions[1].id, 'test_mod:item/black_tea', 'new definition is appended at the end');
 
   const zh = localeOf(mod, 'zh_CN');
   const en = localeOf(mod, 'en');
-  assert.equal(zh['good.test_mod.black_tea.name'], '红茶');
-  assert.equal(zh['good.test_mod.black_tea.description'], '醇厚的红茶。');
-  assert.equal(en['good.test_mod.black_tea.name'], 'Black Tea');
-  assert.equal(en['good.test_mod.black_tea.description'], 'A malty black tea.');
+  assert.equal(zh['item.test_mod.black_tea.name'], '红茶');
+  assert.equal(zh['item.test_mod.black_tea.description'], '醇厚的红茶。');
+  assert.equal(en['item.test_mod.black_tea.name'], 'Black Tea');
+  assert.equal(en['item.test_mod.black_tea.description'], 'A malty black tea.');
   // The pre-existing template definition keeps its translations.
-  assert.equal(zh['good.test_mod.tea.name'], '茶叶');
-  assert.equal(en['good.test_mod.tea.name'], 'Tea');
+  assert.equal(zh['item.test_mod.tea.name'], '茶叶');
+  assert.equal(en['item.test_mod.tea.name'], 'Tea');
 });
 
 test('add rejects a duplicate local id with conflict (exit 1) and leaves files untouched', (t) => {
   const mod = createMod(t);
-  addGood(mod, 'dup_good');
+  addItem(mod, 'dup_good');
   const before = snapshotDir(mod);
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'dup_good',
+    'add', '--mod', mod, '--type', 'items', '--id', 'dup_good',
     '--name-zh', '重复', '--name-en', 'Duplicate',
   ]);
   const json = mustJson(result, 'add duplicate id');
@@ -1510,25 +1535,25 @@ test('add rejects a duplicate local id with conflict (exit 1) and leaves files u
 
 test('add --suffix picks the next free local id instead of failing', (t) => {
   const mod = createMod(t);
-  // "tea" already exists as the template definition test_mod:good/tea.
+  // "tea" already exists as the template definition test_mod:item/tea.
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'tea', '--suffix',
+    'add', '--mod', mod, '--type', 'items', '--id', 'tea', '--suffix',
     '--name-zh', '第二份茶叶', '--name-en', 'Second Tea',
   ]);
   const json = mustJson(result, 'add --suffix');
   assertStatus(result, 0, 'add --suffix');
   assert.equal(json.ok, true);
   assert.equal(json.stats.definitions, 2);
-  const ids = goodsFileOf(mod).payload.definitions.map((definition) => definition.id);
-  assert.deepEqual(ids, ['test_mod:good/tea', 'test_mod:good/tea_2']);
+  const ids = itemsFileOf(mod).payload.definitions.map((definition) => definition.id);
+  assert.deepEqual(ids, ['test_mod:item/tea', 'test_mod:item/tea_2']);
   const zh = localeOf(mod, 'zh_CN');
-  assert.equal(zh['good.test_mod.tea_2.name'], '第二份茶叶');
+  assert.equal(zh['item.test_mod.tea_2.name'], '第二份茶叶');
 });
 
 test('add --data-json is deep-merged and --data wins on conflicting paths', (t) => {
   const mod = createMod(t);
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'merged_good',
+    'add', '--mod', mod, '--type', 'items', '--id', 'merged_good',
     '--name-zh', '合并', '--name-en', 'Merged',
     '--data-json', '{"base_price":200,"base_stock":7,"category":"ore"}',
     '--data', 'data.base_price=300',
@@ -1538,7 +1563,7 @@ test('add --data-json is deep-merged and --data wins on conflicting paths', (t) 
   const json = mustJson(result, 'add data merge');
   assertStatus(result, 0, 'add data merge');
   assert.equal(json.ok, true);
-  const definition = definitionById(mod, 'test_mod:good/merged_good').definition;
+  const definition = definitionById(mod, 'test_mod:item/merged_good').definition;
   assert.equal(definition.data.base_price, 300, '--data must override --data-json');
   assert.equal(definition.data.base_stock, 7, '--data-json value is kept when --data does not touch it');
   assert.equal(definition.data.category, 'ore');
@@ -1553,14 +1578,14 @@ test('add --data-json accepts @file and parses typed values', (t) => {
   const dataFile = path.join(root, 'data.json');
   fs.writeFileSync(dataFile, JSON.stringify({ base_price: 210, base_stock: 9, category: 'craft' }), 'utf8');
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'from_file',
+    'add', '--mod', mod, '--type', 'items', '--id', 'from_file',
     '--name-zh', '来自文件', '--name-en', 'From File',
     '--data-json', `@${dataFile}`,
   ]);
   const json = mustJson(result, 'add @file');
   assertStatus(result, 0, 'add @file');
   assert.equal(json.ok, true);
-  const definition = definitionById(mod, 'test_mod:good/from_file').definition;
+  const definition = definitionById(mod, 'test_mod:item/from_file').definition;
   assert.equal(definition.data.base_price, 210);
   assert.equal(definition.data.base_stock, 9);
   assert.equal(definition.data.category, 'craft');
@@ -1570,7 +1595,7 @@ test('add --dry-run reports would-* changes and writes no file', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'dry_good',
+    'add', '--mod', mod, '--type', 'items', '--id', 'dry_good',
     '--name-zh', '试运行', '--name-en', 'Dry Run', '--dry-run',
   ]);
   const json = mustJson(result, 'add --dry-run');
@@ -1583,8 +1608,8 @@ test('add --dry-run reports would-* changes and writes no file', (t) => {
       `dry-run change action must be would-* -> ${JSON.stringify(change)}`
     );
   }
-  const goodsChange = json.changes.find((change) => change.path === GOODS_FILE);
-  assert.ok(goodsChange, `dry-run must list ${GOODS_FILE}`);
+  const goodsChange = json.changes.find((change) => change.path === ITEMS_FILE);
+  assert.ok(goodsChange, `dry-run must list ${ITEMS_FILE}`);
   assert.equal(goodsChange.action, 'would-update');
   assert.equal(typeof goodsChange.diff, 'string', 'dry-run change must include a unified diff string');
   assert.match(goodsChange.diff, /^\+/m, 'dry-run diff must contain added lines');
@@ -1594,15 +1619,15 @@ test('add --dry-run reports would-* changes and writes no file', (t) => {
 
 test('add keeps a minimal diff: old definitions and localization lines are untouched', (t) => {
   const mod = createMod(t);
-  const goodsBefore = readText(goodsFileOf(mod).abs);
+  const goodsBefore = readText(itemsFileOf(mod).abs);
   const zhBefore = readText(path.join(mod, 'localization', 'zh_CN.json'));
   const enBefore = readText(path.join(mod, 'localization', 'en.json'));
   const oldSlices = extractDefinitionSlices(goodsBefore);
   assert.equal(oldSlices.length, 1);
 
-  addGood(mod, 'minimal_diff');
+  addItem(mod, 'minimal_diff');
 
-  const goodsAfter = readText(goodsFileOf(mod).abs);
+  const goodsAfter = readText(itemsFileOf(mod).abs);
   const newSlices = extractDefinitionSlices(goodsAfter);
   assert.equal(newSlices.length, 2, 'exactly one definition was added');
   assert.deepEqual(
@@ -1619,8 +1644,8 @@ test('add keeps a minimal diff: old definitions and localization lines are untou
   const enAfter = readText(path.join(mod, 'localization', 'en.json'));
   assertLinesPreservedInOrder(zhBefore, zhAfter, 'zh_CN.json minimal diff');
   assertLinesPreservedInOrder(enBefore, enAfter, 'en.json minimal diff');
-  assert.ok(zhAfter.includes('"good.test_mod.minimal_diff.name": "minimal_diff 中文名"'), 'zh key added verbatim');
-  assert.ok(enAfter.includes('"good.test_mod.minimal_diff.name": "minimal_diff English Name"'), 'en key added verbatim');
+  assert.ok(zhAfter.includes('"item.test_mod.minimal_diff.name": "minimal_diff 中文名"'), 'zh key added verbatim');
+  assert.ok(enAfter.includes('"item.test_mod.minimal_diff.name": "minimal_diff English Name"'), 'en key added verbatim');
 });
 
 test('add blocks new validation errors (exit 1) and writes nothing', (t) => {
@@ -1628,7 +1653,7 @@ test('add blocks new validation errors (exit 1) and writes nothing', (t) => {
   const before = snapshotDir(mod);
   // good.schema.json requires data.unit_weight >= 1.
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'bad_weight',
+    'add', '--mod', mod, '--type', 'items', '--id', 'bad_weight',
     '--name-zh', '非法重量', '--name-en', 'Bad Weight',
     '--data', 'data.unit_weight=0',
   ]);
@@ -1645,11 +1670,11 @@ test('add blocks new validation errors (exit 1) and writes nothing', (t) => {
 
 test('set on a scalar rewrites only the target line', (t) => {
   const mod = createMod(t);
-  const goods = goodsFileOf(mod);
+  const goods = itemsFileOf(mod);
   const before = readText(goods.abs);
   const localeBefore = snapshotDir(path.join(mod, 'localization'));
 
-  const result = jsonRun(['set', '--mod', mod, 'test_mod:good/tea', 'data.base_price=123']);
+  const result = jsonRun(['set', '--mod', mod, 'test_mod:item/tea', 'data.base_price=123']);
   const json = mustJson(result, 'set scalar');
   assertStatus(result, 0, 'set scalar');
   assert.equal(json.ok, true);
@@ -1663,22 +1688,22 @@ test('set on a scalar rewrites only the target line', (t) => {
   assert.equal(JSON.parse(after).definitions[0].data.base_price, 123);
   assert.deepEqual(snapshotDir(path.join(mod, 'localization')), localeBefore, 'set must only write the content file');
   const changedPaths = (json.changes || []).map((change) => change.path);
-  assert.deepEqual(changedPaths, [GOODS_FILE], `set changes must only mention ${GOODS_FILE}: ${JSON.stringify(changedPaths)}`);
+  assert.deepEqual(changedPaths, [ITEMS_FILE], `set changes must only mention ${ITEMS_FILE}: ${JSON.stringify(changedPaths)}`);
 });
 
 test('set arrays support += append and -= remove-first', (t) => {
   const mod = createMod(t);
-  const goods = goodsFileOf(mod);
+  const goods = itemsFileOf(mod);
   const original = readText(goods.abs);
 
-  const addResult = jsonRun(['set', '--mod', mod, 'test_mod:good/tea', 'tags+=good.bulk']);
+  const addResult = jsonRun(['set', '--mod', mod, 'test_mod:item/tea', 'tags+=good.bulk']);
   assertStatus(addResult, 0, 'set tags+=');
   assert.equal(mustJson(addResult, 'set tags+=').ok, true);
   const afterAdd = readText(goods.abs);
   assert.deepEqual(JSON.parse(afterAdd).definitions[0].tags, ['good.trade', 'good.consumer', 'good.bulk']);
   assert.equal(changedLineIndexes(original, afterAdd).length, 1, 'tags+= must touch only the tags line');
 
-  const removeResult = jsonRun(['set', '--mod', mod, 'test_mod:good/tea', 'tags-=good.trade']);
+  const removeResult = jsonRun(['set', '--mod', mod, 'test_mod:item/tea', 'tags-=good.trade']);
   assertStatus(removeResult, 0, 'set tags-=');
   assert.equal(mustJson(removeResult, 'set tags-=').ok, true);
   const afterRemove = readText(goods.abs);
@@ -1689,7 +1714,7 @@ test('set arrays support += append and -= remove-first', (t) => {
 test('set refuses _key fields with a usage error (exit 2)', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
-  const result = jsonRun(['set', '--mod', mod, 'test_mod:good/tea', 'name_key=good.test_mod.tea.name']);
+  const result = jsonRun(['set', '--mod', mod, 'test_mod:item/tea', 'name_key=item.test_mod.tea.name']);
   assertUsageError(result, 'set _key');
   assert.deepEqual(snapshotDir(mod), before, 'rejected set must not write anything');
 });
@@ -1697,7 +1722,7 @@ test('set refuses _key fields with a usage error (exit 2)', (t) => {
 test('set reports an error for an unknown path and writes nothing', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
-  const result = jsonRun(['set', '--mod', mod, 'test_mod:good/tea', 'data.definitely_missing=1']);
+  const result = jsonRun(['set', '--mod', mod, 'test_mod:item/tea', 'data.definitely_missing=1']);
   const json = mustFailJson(result, 'set unknown path');
   assert.ok(json.error.code, 'unknown path must report an error code');
   assert.deepEqual(snapshotDir(mod), before, 'failed set must not write anything');
@@ -1711,7 +1736,7 @@ test('loc --field name updates zh_CN and en for the definition name key', (t) =>
   const mod = createMod(t);
   const zhBefore = readJson(path.join(mod, 'localization', 'zh_CN.json'));
   const enBefore = readJson(path.join(mod, 'localization', 'en.json'));
-  const result = jsonRun(['loc', '--mod', mod, 'test_mod:good/tea', '--field', 'name', '--zh', '特级茶叶', '--en', 'Premium Tea']);
+  const result = jsonRun(['loc', '--mod', mod, 'test_mod:item/tea', '--field', 'name', '--zh', '特级茶叶', '--en', 'Premium Tea']);
   const json = mustJson(result, 'loc name');
   assertStatus(result, 0, 'loc name');
   assert.equal(json.ok, true);
@@ -1719,23 +1744,23 @@ test('loc --field name updates zh_CN and en for the definition name key', (t) =>
 
   const zh = localeOf(mod, 'zh_CN');
   const en = localeOf(mod, 'en');
-  assert.equal(zh['good.test_mod.tea.name'], '特级茶叶');
-  assert.equal(en['good.test_mod.tea.name'], 'Premium Tea');
+  assert.equal(zh['item.test_mod.tea.name'], '特级茶叶');
+  assert.equal(en['item.test_mod.tea.name'], 'Premium Tea');
   // Description keys are untouched by --field name.
-  assert.equal(zh['good.test_mod.tea.description'], zhBefore['good.test_mod.tea.description']);
-  assert.equal(en['good.test_mod.tea.description'], enBefore['good.test_mod.tea.description']);
+  assert.equal(zh['item.test_mod.tea.description'], zhBefore['item.test_mod.tea.description']);
+  assert.equal(en['item.test_mod.tea.description'], enBefore['item.test_mod.tea.description']);
 });
 
 test('loc only writes the language that was given', (t) => {
   const mod = createMod(t);
   const enBefore = readJson(path.join(mod, 'localization', 'en.json'));
-  const result = jsonRun(['loc', '--mod', mod, 'test_mod:good/tea', '--field', 'description', '--zh', '新的中文描述']);
+  const result = jsonRun(['loc', '--mod', mod, 'test_mod:item/tea', '--field', 'description', '--zh', '新的中文描述']);
   assertStatus(result, 0, 'loc zh only');
   assert.equal(mustJson(result, 'loc zh only').ok, true);
   const zh = localeOf(mod, 'zh_CN');
   const en = localeOf(mod, 'en');
-  assert.equal(zh['good.test_mod.tea.description'], '新的中文描述');
-  assert.equal(en['good.test_mod.tea.description'], enBefore['good.test_mod.tea.description'], 'en must keep its value');
+  assert.equal(zh['item.test_mod.tea.description'], '新的中文描述');
+  assert.equal(en['item.test_mod.tea.description'], enBefore['item.test_mod.tea.description'], 'en must keep its value');
 });
 
 test('loc --key/--locale/--text writes an arbitrary localization key directly', (t) => {
@@ -1760,21 +1785,21 @@ test('loc --key/--locale/--text writes an arbitrary localization key directly', 
 /* 6. clone                                                                  */
 /* ------------------------------------------------------------------------- */
 
-test('clone --from core:good/iron_ore --id my_ore renames id and keys, and qualifies the core model asset', (t) => {
+test('clone --from core:item/iron_ore --id my_ore renames id and keys, and qualifies the core model asset', (t) => {
   const mod = createMod(test, { id: 'clone_mod' });
-  const result = jsonRun(['clone', '--mod', mod, '--from', 'core:good/iron_ore', '--id', 'my_ore']);
+  const result = jsonRun(['clone', '--mod', mod, '--from', 'core:item/iron_ore', '--id', 'my_ore']);
   const json = mustJson(result, 'clone iron_ore');
   assertStatus(result, 0, 'clone iron_ore');
   assert.equal(json.ok, true);
   assert.equal(json.command, 'clone');
   assert.equal(json.stats.definitions, 2, 'clone adds one definition to the template one');
 
-  const goods = goodsFileOf(mod);
+  const goods = itemsFileOf(mod);
   assert.equal(goods.payload.definitions.length, 2);
-  assert.equal(goods.payload.definitions[0].id, 'clone_mod:good/tea', 'existing definition is kept first');
-  const cloned = definitionById(mod, 'clone_mod:good/my_ore').definition;
-  assert.equal(cloned.name_key, 'good.clone_mod.my_ore.name');
-  assert.equal(cloned.description_key, 'good.clone_mod.my_ore.description');
+  assert.equal(goods.payload.definitions[0].id, 'clone_mod:item/tea', 'existing definition is kept first');
+  const cloned = definitionById(mod, 'clone_mod:item/my_ore').definition;
+  assert.equal(cloned.name_key, 'item.clone_mod.my_ore.name');
+  assert.equal(cloned.description_key, 'item.clone_mod.my_ore.description');
   assert.deepEqual(cloned.tags, ['good.trade', 'good.bulk', 'good.shipbuilding']);
   assert.equal(cloned.data.base_price, 42);
   assert.equal(cloned.data.unit_weight, 3);
@@ -1782,10 +1807,10 @@ test('clone --from core:good/iron_ore --id my_ore renames id and keys, and quali
 
   const zh = localeOf(mod, 'zh_CN');
   const en = localeOf(mod, 'en');
-  assert.ok(zh['good.clone_mod.my_ore.name'], 'zh name key must be migrated to the new base');
-  assert.match(zh['good.clone_mod.my_ore.name'], /副本/, 'default clone name keeps a (副本) marker');
-  assert.ok(en['good.clone_mod.my_ore.name'], 'en name key must be migrated to the new base');
-  assert.match(en['good.clone_mod.my_ore.name'], /\(copy\)/, 'default clone name keeps a (copy) marker');
+  assert.ok(zh['item.clone_mod.my_ore.name'], 'zh name key must be migrated to the new base');
+  assert.match(zh['item.clone_mod.my_ore.name'], /副本/, 'default clone name keeps a (副本) marker');
+  assert.ok(en['item.clone_mod.my_ore.name'], 'en name key must be migrated to the new base');
+  assert.match(en['item.clone_mod.my_ore.name'], /\(copy\)/, 'default clone name keeps a (copy) marker');
   for (const key of [...Object.keys(zh), ...Object.keys(en)]) {
     assert.ok(!key.includes('iron_ore_copy'), `no stale clone keys may remain, found ${key}`);
   }
@@ -1794,15 +1819,15 @@ test('clone --from core:good/iron_ore --id my_ore renames id and keys, and quali
 test('clone --name-zh/--name-en overrides the default copy names', (t) => {
   const mod = createMod(test, { id: 'clone_mod2' });
   const result = jsonRun([
-    'clone', '--mod', mod, '--from', 'core:good/coal', '--id', 'my_coal',
+    'clone', '--mod', mod, '--from', 'core:item/coal', '--id', 'my_coal',
     '--name-zh', '我的煤', '--name-en', 'My Coal',
   ]);
   assertStatus(result, 0, 'clone with names');
   assert.equal(mustJson(result, 'clone with names').ok, true);
   const zh = localeOf(mod, 'zh_CN');
   const en = localeOf(mod, 'en');
-  assert.equal(zh['good.clone_mod2.my_coal.name'], '我的煤');
-  assert.equal(en['good.clone_mod2.my_coal.name'], 'My Coal');
+  assert.equal(zh['item.clone_mod2.my_coal.name'], '我的煤');
+  assert.equal(en['item.clone_mod2.my_coal.name'], 'My Coal');
 });
 
 /* ------------------------------------------------------------------------- */
@@ -1812,40 +1837,40 @@ test('clone --name-zh/--name-en overrides the default copy names', (t) => {
 test('rm without --yes is a usage error (exit 2) and keeps the mod intact', (t) => {
   const mod = createMod(t);
   const before = snapshotDir(mod);
-  const result = jsonRun(['rm', '--mod', mod, 'test_mod:good/tea']);
+  const result = jsonRun(['rm', '--mod', mod, 'test_mod:item/tea']);
   assertUsageError(result, 'rm without --yes');
   assert.deepEqual(snapshotDir(mod), before, 'guarded rm must not write anything');
 });
 
 test('rm handles the first, middle and last array item without disturbing the others', (t) => {
   const mod = createMod(t);
-  addGood(mod, 'item_a');
-  addGood(mod, 'item_b');
-  addGood(mod, 'item_c');
-  const ids = () => goodsFileOf(mod).payload.definitions.map((definition) => definition.id);
-  assert.deepEqual(ids(), ['test_mod:good/tea', 'test_mod:good/item_a', 'test_mod:good/item_b', 'test_mod:good/item_c']);
+  addItem(mod, 'item_a');
+  addItem(mod, 'item_b');
+  addItem(mod, 'item_c');
+  const ids = () => itemsFileOf(mod).payload.definitions.map((definition) => definition.id);
+  assert.deepEqual(ids(), ['test_mod:item/tea', 'test_mod:item/item_a', 'test_mod:item/item_b', 'test_mod:item/item_c']);
 
   // first
-  let result = jsonRun(['rm', '--mod', mod, 'test_mod:good/tea', '--yes']);
+  let result = jsonRun(['rm', '--mod', mod, 'test_mod:item/tea', '--yes']);
   assertStatus(result, 0, 'rm first');
   assert.equal(mustJson(result, 'rm first').ok, true);
-  assert.deepEqual(ids(), ['test_mod:good/item_a', 'test_mod:good/item_b', 'test_mod:good/item_c']);
+  assert.deepEqual(ids(), ['test_mod:item/item_a', 'test_mod:item/item_b', 'test_mod:item/item_c']);
 
   // middle
-  result = jsonRun(['rm', '--mod', mod, 'test_mod:good/item_b', '--yes']);
+  result = jsonRun(['rm', '--mod', mod, 'test_mod:item/item_b', '--yes']);
   assertStatus(result, 0, 'rm middle');
   assert.equal(mustJson(result, 'rm middle').ok, true);
-  assert.deepEqual(ids(), ['test_mod:good/item_a', 'test_mod:good/item_c']);
+  assert.deepEqual(ids(), ['test_mod:item/item_a', 'test_mod:item/item_c']);
 
   // last
-  result = jsonRun(['rm', '--mod', mod, 'test_mod:good/item_c', '--yes']);
+  result = jsonRun(['rm', '--mod', mod, 'test_mod:item/item_c', '--yes']);
   assertStatus(result, 0, 'rm last');
   const lastJson = mustJson(result, 'rm last');
   assert.equal(lastJson.ok, true);
-  assert.deepEqual(ids(), ['test_mod:good/item_a']);
+  assert.deepEqual(ids(), ['test_mod:item/item_a']);
 
   // Remaining definition data is intact and the mod still validates.
-  assert.equal(definitionById(mod, 'test_mod:good/item_a').definition.data.base_price, 50);
+  assert.equal(definitionById(mod, 'test_mod:item/item_a').definition.data.base_price, 50);
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate after rm first/middle/last');
   assert.equal(mustJson(validateResult, 'validate after rm').issues.errors, 0);
@@ -1854,7 +1879,7 @@ test('rm handles the first, middle and last array item without disturbing the ot
 test('rm of the only definition in a content file deletes that file and its manifest entry', (t) => {
   const mod = createMod(test, { template: 'starter_kit' });
   assert.deepEqual(manifestOf(mod).content, [
-    'content/goods.json',
+    'content/items.json',
     'content/modules.json',
     'content/events.json',
     'content/contracts.json',
@@ -1865,12 +1890,12 @@ test('rm of the only definition in a content file deletes that file and its mani
     'content/contracts.json': sha256File(path.join(mod, 'content/contracts.json')),
   };
 
-  const result = jsonRun(['rm', '--mod', mod, 'test_mod:good/tea', '--yes']);
+  const result = jsonRun(['rm', '--mod', mod, 'test_mod:item/tea', '--yes']);
   const json = mustJson(result, 'rm unique item');
   assertStatus(result, 0, 'rm unique item');
   assert.equal(json.ok, true);
 
-  assert.ok(!fs.existsSync(path.join(mod, 'content', 'goods.json')), 'emptied content file must be deleted');
+  assert.ok(!fs.existsSync(path.join(mod, 'content', 'items.json')), 'emptied content file must be deleted');
   assert.deepEqual(manifestOf(mod).content, [
     'content/modules.json',
     'content/events.json',
@@ -1880,8 +1905,8 @@ test('rm of the only definition in a content file deletes that file and its mani
     assert.equal(sha256File(path.join(mod, rel)), hash, `${rel} must be untouched`);
   }
   const zh = localeOf(mod, 'zh_CN');
-  assert.ok(!('good.test_mod.tea.name' in zh), 'exclusive localization keys of the removed definition must be deleted');
-  assert.ok(!('good.test_mod.tea.description' in zh));
+  assert.ok(!('item.test_mod.tea.name' in zh), 'exclusive localization keys of the removed definition must be deleted');
+  assert.ok(!('item.test_mod.tea.description' in zh));
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
   assertStatus(validateResult, 0, 'validate after rm unique item');
@@ -1890,14 +1915,14 @@ test('rm of the only definition in a content file deletes that file and its mani
 
 test('rm deletes exclusive localization keys but keeps keys shared with remaining definitions', (t) => {
   const mod = createMod(t);
-  addGood(mod, 'item_a');
-  addGood(mod, 'item_b');
+  addItem(mod, 'item_a');
+  addItem(mod, 'item_b');
 
   // Make item_b's name key shared: item_a now uses it as its description key.
-  const goodsFile = goodsFileOf(mod);
+  const goodsFile = itemsFileOf(mod);
   const payload = readJson(goodsFile.abs);
-  const defA = payload.definitions.find((definition) => definition.id === 'test_mod:good/item_a');
-  const defB = payload.definitions.find((definition) => definition.id === 'test_mod:good/item_b');
+  const defA = payload.definitions.find((definition) => definition.id === 'test_mod:item/item_a');
+  const defB = payload.definitions.find((definition) => definition.id === 'test_mod:item/item_b');
   assert.ok(defA && defB);
   const sharedKey = defB.name_key;
   const exclusiveKey = defB.description_key;
@@ -1908,7 +1933,7 @@ test('rm deletes exclusive localization keys but keeps keys shared with remainin
   const sharedValue = zhBefore[sharedKey];
   assert.ok(sharedValue, `fixture expected ${sharedKey} to exist`);
 
-  const result = jsonRun(['rm', '--mod', mod, 'test_mod:good/item_b', '--yes']);
+  const result = jsonRun(['rm', '--mod', mod, 'test_mod:item/item_b', '--yes']);
   const json = mustJson(result, 'rm shared keys');
   assertStatus(result, 0, 'rm shared keys');
   assert.equal(json.ok, true);
@@ -1918,23 +1943,23 @@ test('rm deletes exclusive localization keys but keeps keys shared with remainin
   assert.equal(zh[sharedKey], sharedValue, 'shared key must be retained with its value');
   assert.ok(!(exclusiveKey in zh), 'exclusive key must be deleted from zh_CN');
   assert.ok(!(exclusiveKey in en), 'exclusive key must be deleted from en');
-  assert.ok(zh['good.test_mod.item_a.name'], 'remaining definition translations must survive');
-  const ids = goodsFileOf(mod).payload.definitions.map((definition) => definition.id);
-  assert.deepEqual(ids, ['test_mod:good/tea', 'test_mod:good/item_a']);
+  assert.ok(zh['item.test_mod.item_a.name'], 'remaining definition translations must survive');
+  const ids = itemsFileOf(mod).payload.definitions.map((definition) => definition.id);
+  assert.deepEqual(ids, ['test_mod:item/tea', 'test_mod:item/item_a']);
 });
 
 test('add then rm restores the content file byte-for-byte', (t) => {
   const mod = createMod(t);
-  const goodsRel = goodsFileOf(mod).rel;
+  const goodsRel = itemsFileOf(mod).rel;
   const goodsBytesBefore = fs.readFileSync(path.join(mod, goodsRel));
   const manifestBytesBefore = fs.readFileSync(path.join(mod, 'manifest.json'));
   const zhBefore = localeOf(mod, 'zh_CN');
   const enBefore = localeOf(mod, 'en');
 
-  addGood(mod, 'temporary_good');
+  addItem(mod, 'temporary_good');
   assert.notDeepEqual(fs.readFileSync(path.join(mod, goodsRel)), goodsBytesBefore, 'add must actually change the content file');
 
-  const result = jsonRun(['rm', '--mod', mod, 'test_mod:good/temporary_good', '--yes']);
+  const result = jsonRun(['rm', '--mod', mod, 'test_mod:item/temporary_good', '--yes']);
   const json = mustJson(result, 'rm after add');
   assertStatus(result, 0, 'rm after add');
   assert.equal(json.ok, true);
@@ -1953,7 +1978,7 @@ test('add then rm restores the content file byte-for-byte', (t) => {
 
 test('add/rm preserves a leading UTF-8 BOM in the content file', (t) => {
   const mod = createMod(t);
-  const goods = goodsFileOf(mod);
+  const goods = itemsFileOf(mod);
 
   // Regression: parseSource must accept a leading U+FEFF, keep source offsets
   // anchored to the original text, and therefore preserve the BOM on writes.
@@ -1963,7 +1988,7 @@ test('add/rm preserves a leading UTF-8 BOM in the content file', (t) => {
   assert.equal(fs.readFileSync(goods.abs).subarray(0, 3).toString('hex'), 'efbbbf', 'fixture must start with a UTF-8 BOM');
 
   const addResult = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'bom_good',
+    'add', '--mod', mod, '--type', 'items', '--id', 'bom_good',
     '--name-zh', 'BOM 商品', '--name-en', 'BOM Good',
   ]);
   const addJson = mustJson(addResult, 'add with BOM');
@@ -1975,7 +2000,7 @@ test('add/rm preserves a leading UTF-8 BOM in the content file', (t) => {
   const afterAddPayload = JSON.parse(afterAdd.subarray(3).toString('utf8'));
   assert.equal(afterAddPayload.definitions.length, 2);
   assert.ok(
-    afterAddPayload.definitions.some((definition) => definition.id === 'test_mod:good/bom_good'),
+    afterAddPayload.definitions.some((definition) => definition.id === 'test_mod:item/bom_good'),
     'the added definition must be present in the BOM-prefixed file'
   );
 
@@ -1984,7 +2009,7 @@ test('add/rm preserves a leading UTF-8 BOM in the content file', (t) => {
   const validateJson = mustJson(validateResult, 'validate with BOM');
   assert.equal(validateJson.issues.errors, 0, `a BOM-prefixed mod must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
 
-  const rmResult = jsonRun(['rm', '--mod', mod, 'test_mod:good/bom_good', '--yes']);
+  const rmResult = jsonRun(['rm', '--mod', mod, 'test_mod:item/bom_good', '--yes']);
   const rmJson = mustJson(rmResult, 'rm with BOM');
   assertStatus(rmResult, 0, 'rm with BOM');
   assert.equal(rmJson.ok, true);
@@ -2050,9 +2075,9 @@ test('validate --json on a broken mod still prints exactly one valid JSON object
 
 test('a failing add with --json emits only one valid JSON object and a conflict code', (t) => {
   const mod = createMod(t);
-  addGood(mod, 'json_failure');
+  addItem(mod, 'json_failure');
   const result = jsonRun([
-    'add', '--mod', mod, '--type', 'goods', '--id', 'json_failure',
+    'add', '--mod', mod, '--type', 'items', '--id', 'json_failure',
     '--name-zh', '失败', '--name-en', 'Failure',
   ]);
   // mustJson already proves stdout is exactly one parseable JSON object.

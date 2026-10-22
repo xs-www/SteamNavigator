@@ -138,7 +138,7 @@
     const id = opts.id || 'my_mod';
     const name = opts.name || 'My Content Mod';
     const drafts = Array.isArray(opts.drafts) ? opts.drafts.filter(Boolean) : [];
-    const template = opts.template === null ? null : (opts.template || 'goods');
+    const template = opts.template === null ? null : (opts.template || 'items');
     const project = {
       format: FORMAT,
       formatVersion: FORMAT_VERSION,
@@ -150,7 +150,7 @@
       meta: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        template: template || (drafts.length ? `draft:${drafts.join('+')}` : 'goods'),
+        template: template || (drafts.length ? `draft:${drafts.join('+')}` : 'items'),
       },
     };
     if (opts.dependencies === false) project.manifest.dependencies = [];
@@ -163,16 +163,16 @@
     for (const typeKey of drafts) addDraftStarter(project, typeKey);
 
     if (!project.contentFiles.length) {
-      addDefinition(project, 'goods', { localId: 'starter_good', nameZh: '起始商品', nameEn: 'Starter Good' });
+      addDefinition(project, 'items', { localId: 'starter_item', nameZh: '起始物品', nameEn: 'Starter Item' });
     }
     syncManifest(project);
     return project;
   }
 
   function applyTemplate(project, templateKey) {
-    const key = templateKey || 'goods';
-    if (key === 'goods' || key === 'blank') {
-      addDefinition(project, 'goods', {
+    const key = templateKey || 'items';
+    if (key === 'items' || key === 'blank') {
+      addDefinition(project, 'items', {
         localId: 'tea',
         nameZh: '茶叶',
         nameEn: 'Tea',
@@ -180,6 +180,7 @@
         descriptionEn: 'A light beverage from eastern ports, good for filling spare capacity.',
         tags: ['good.trade', 'good.consumer'],
         data: {
+          crafting_material: false,
           unit_weight: 0.8,
           base_price: 95,
           base_stock: 60,
@@ -205,7 +206,7 @@
           purchase_price: 520,
           craft_time_hours: 6,
           craft_cost: 80,
-          materials: [{ id: 'core:good/brass', amount: 3 }],
+          materials: [{ id: 'core:item/brass', amount: 3 }],
           speed_mul: 1.02,
           coal_rate: 0.33,
           water_rate: 0.24,
@@ -244,7 +245,7 @@
               name_key: '',
               weight: 1,
               effects: [
-                { op: 'add_item', item_id: 'core:good/timber', amount: 4 },
+                { op: 'add_item', item_id: 'core:item/timber', amount: 4 },
                 { op: 'add_delay_hours', amount: 1 },
                 { op: 'emit_notice', text_key: 'notice.mod.drifting_wreck.salvaged' },
               ],
@@ -285,7 +286,7 @@
       return;
     }
     if (key === 'starter_kit') {
-      applyTemplate(project, 'goods');
+      applyTemplate(project, 'items');
       applyTemplate(project, 'boiler');
       applyTemplate(project, 'event');
       addDefinition(project, 'contracts', {
@@ -359,7 +360,7 @@
    *   - Schema 2.0 draft types (weapons / story_arcs / story_levels) are
    *     editor-only for now;
    *   - a file whose schema_version differs from the version its type expects
-   *     cannot be loaded (e.g. goods written as "2.0").
+   *     cannot be loaded (e.g. items written as "1.0").
    * Phase B promoted the world/campaign types into the runtime, so their 2.0
    * files stay supported and export/deploy like any other content.
    */
@@ -971,7 +972,7 @@
       const payload = readJson(path);
       if (!payload) {
         warnings.push(`Manifest 声明的内容文件不存在：${path}`);
-        project.contentFiles.push({ path, content_type: 'goods', schema_version: '1.0', definitions: [] });
+        project.contentFiles.push({ path, content_type: 'items', schema_version: '2.0', definitions: [] });
         continue;
       }
       const contentType = payload.content_type;

@@ -331,6 +331,10 @@
   };
 
   const TYPE_FIELD_LABELS = {
+    /* C2: merged item family. */
+    'items.crafting_material': '可作为打造材料',
+    'items.tier': '材料等级',
+    'items.category': '物品分类',
     'contracts.sequence': '主线序号',
     'events.weight': '出现权重',
     'port_archetypes.size': '港口规模',
@@ -574,21 +578,15 @@
   };
 
   const DEFAULTS = {
-    goods: () => ({
+    /* C2: goods + materials merged into items; crafting_material marks recipe inputs. */
+    items: () => ({
+      crafting_material: false,
       unit_weight: 1.0,
       base_price: 50,
       base_stock: 80,
       price_elasticity: 0.15,
       spawn_weight: 1.0,
       category: 'trade',
-    }),
-    materials: () => ({
-      tier: 1,
-      unit_weight: 2.0,
-      base_price: 60,
-      base_stock: 60,
-      price_elasticity: 0.15,
-      category: 'material',
     }),
     hulls: () => ({
       tier: 1,
@@ -634,8 +632,8 @@
       size: 'medium',
       facilities: ['exchange', 'contracts'],
       market: [
-        { good: 'core:good/brass', stock_range: [40, 80], price_bias: 1.0 },
-        { good: 'core:good/timber', stock_range: [50, 100], price_bias: 1.0 },
+        { good: 'core:item/brass', stock_range: [40, 80], price_bias: 1.0 },
+        { good: 'core:item/timber', stock_range: [50, 100], price_bias: 1.0 },
       ],
     }),
     map_profiles: () => ({
@@ -1000,7 +998,7 @@
   };
 
   const TAG_SUGGESTIONS = {
-    goods: ['good.trade', 'good.bulk', 'good.luxury', 'good.shipbuilding', 'good.supply'],
+    items: ['good.trade', 'good.bulk', 'good.luxury', 'good.shipbuilding', 'good.supply', 'material.shipbuilding'],
     hulls: ['module.hull', 'module.small', 'module.medium', 'module.large', 'module.efficient'],
     modules: ['module.boiler', 'module.small', 'module.efficient', 'module.navigation', 'module.safety'],
     roles: ['role.engineer', 'role.navigator'],
@@ -1144,9 +1142,9 @@
         envelope_x: 4.8, envelope_y: 2.2, height: 2.2, mount_scale: 1.0,
         tier: 3, weight: 20, purchase_price: 1200, craft_cost: 520, craft_time_hours: 10,
         materials: [
-          { id: 'core:good/timber', amount: 6 },
-          { id: 'core:material/boiler_plate', amount: 3 },
-          { id: 'core:material/precision_gear', amount: 1 },
+          { id: 'core:item/timber', amount: 6 },
+          { id: 'core:item/boiler_plate', amount: 3 },
+          { id: 'core:item/precision_gear', amount: 1 },
         ],
       },
     },
@@ -1166,8 +1164,8 @@
         envelope_x: 3.2, envelope_y: 2.2, height: 2.6, mount_scale: 1.0,
         tier: 3, weight: 16, purchase_price: 1100, craft_cost: 470, craft_time_hours: 9,
         materials: [
-          { id: 'core:good/timber', amount: 5 },
-          { id: 'core:material/boiler_plate', amount: 3 },
+          { id: 'core:item/timber', amount: 5 },
+          { id: 'core:item/boiler_plate', amount: 3 },
         ],
       },
     },
@@ -1187,8 +1185,8 @@
         envelope_x: 2.8, envelope_y: 1.6, height: 1.8, mount_scale: 1.0,
         tier: 2, weight: 11, purchase_price: 620, craft_cost: 260, craft_time_hours: 6,
         materials: [
-          { id: 'core:good/timber', amount: 2 },
-          { id: 'core:material/boiler_plate', amount: 1 },
+          { id: 'core:item/timber', amount: 2 },
+          { id: 'core:item/boiler_plate', amount: 1 },
         ],
       },
     },
@@ -1208,8 +1206,8 @@
         envelope_x: 2.2, envelope_y: 8.0, height: 2.0, mount_scale: 1.0,
         tier: 2, weight: 22, purchase_price: 820, craft_cost: 340, craft_time_hours: 7,
         materials: [
-          { id: 'core:good/timber', amount: 4 },
-          { id: 'core:material/boiler_plate', amount: 2 },
+          { id: 'core:item/timber', amount: 4 },
+          { id: 'core:item/boiler_plate', amount: 2 },
         ],
       },
     },
@@ -1217,16 +1215,16 @@
 
   const TEMPLATES = [
     {
-      key: 'goods',
-      name: '商品包',
-      description: '一件可交易商品 + 中英文本地化，适合第一次做模组。',
-      type: 'goods',
+      key: 'items',
+      name: '物品包',
+      description: '一件可交易物品（可勾选「可作为打造材料」）+ 中英文本地化，适合第一次做模组。',
+      type: 'items',
       deps: true,
     },
     {
       key: 'boiler',
       name: '锅炉包',
-      description: '一个可购买安装的锅炉（C1 modules 类型的 boiler 分类），依赖 Core 的商品与飞船体系。',
+      description: '一个可购买安装的锅炉（C1 modules 类型的 boiler 分类），依赖 Core 的物品与飞船体系。',
       type: 'modules',
       deps: true,
     },
@@ -1247,15 +1245,15 @@
     {
       key: 'starter_kit',
       name: '小型内容合集',
-      description: '商品 + 锅炉 + 事件 + 委托，一次看到四种编辑器的配合。',
+      description: '物品 + 锅炉 + 事件 + 委托，一次看到四种编辑器的配合。',
       type: 'multi',
       deps: true,
     },
     {
       key: 'blank',
       name: '空白模组',
-      description: '只创建一个商品占位定义，结构合法、可随时扩展。',
-      type: 'goods',
+      description: '只创建一个物品占位定义，结构合法、可随时扩展。',
+      type: 'items',
       deps: true,
     },
   ];

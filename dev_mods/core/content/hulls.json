@@ -101,11 +101,11 @@
         "craft_cost": 220,
         "materials": [
           {
-            "id": "core:good/timber",
+            "id": "core:item/timber",
             "amount": 8
           },
           {
-            "id": "core:material/boiler_plate",
+            "id": "core:item/boiler_plate",
             "amount": 3
           }
         ],
@@ -277,15 +277,15 @@
         "craft_cost": 520,
         "materials": [
           {
-            "id": "core:good/timber",
+            "id": "core:item/timber",
             "amount": 14
           },
           {
-            "id": "core:material/boiler_plate",
+            "id": "core:item/boiler_plate",
             "amount": 6
           },
           {
-            "id": "core:material/precision_gear",
+            "id": "core:item/precision_gear",
             "amount": 2
           }
         ],
@@ -464,15 +464,15 @@
         "craft_cost": 680,
         "materials": [
           {
-            "id": "core:good/timber",
+            "id": "core:item/timber",
             "amount": 12
           },
           {
-            "id": "core:material/boiler_plate",
+            "id": "core:item/boiler_plate",
             "amount": 8
           },
           {
-            "id": "core:material/precision_gear",
+            "id": "core:item/precision_gear",
             "amount": 4
           }
         ],

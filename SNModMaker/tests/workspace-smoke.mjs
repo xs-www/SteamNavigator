@@ -29,17 +29,17 @@ writeJson(path.join(coreDir, 'manifest.json'), {
   api_version: '1.0',
   type: 'content',
   required: true,
-  content: ['content/goods.json', 'content/events.json'],
+  content: ['content/items.json', 'content/events.json'],
   localization: ['localization/zh_CN.json'],
   assets: { 'model.test': 'assets/models/SN_Test.glb' },
   dependencies: [],
 });
-writeJson(path.join(coreDir, 'content/goods.json'), {
-  schema_version: '1.0',
-  content_type: 'goods',
+writeJson(path.join(coreDir, 'content/items.json'), {
+  schema_version: '2.0',
+  content_type: 'items',
   definitions: [
-    { id: 'core:good/keep', name_key: 'good.keep.name', enabled: true, data: { base_price: 10 } },
-    { id: 'core:good/drop', name_key: 'good.drop.name', enabled: true, data: { base_price: 20 } },
+    { id: 'core:item/keep', name_key: 'item.keep.name', enabled: true, data: { crafting_material: false, unit_weight: 1, base_price: 10, base_stock: 10, price_elasticity: 0.1 } },
+    { id: 'core:item/drop', name_key: 'item.drop.name', enabled: true, data: { crafting_material: false, unit_weight: 1, base_price: 20, base_stock: 10, price_elasticity: 0.1 } },
   ],
 });
 writeJson(path.join(coreDir, 'content/events.json'), {
@@ -47,7 +47,7 @@ writeJson(path.join(coreDir, 'content/events.json'), {
   content_type: 'events',
   definitions: [{ id: 'core:event/old', name_key: 'event.old.name', enabled: true, data: { trigger: 'voyage_risk', category: 'mechanical', options: [] } }],
 });
-writeJson(path.join(coreDir, 'localization/zh_CN.json'), { 'good.keep.name': '淇濈暀', 'good.drop.name': '鍒犻櫎' });
+writeJson(path.join(coreDir, 'localization/zh_CN.json'), { 'item.keep.name': '保留', 'item.drop.name': '删除' });
 fs.mkdirSync(path.join(coreDir, 'assets/models'), { recursive: true });
 fs.writeFileSync(path.join(coreDir, 'assets/models/SN_Test.glb'), 'raw-glb-bytes');
 
@@ -105,16 +105,16 @@ try {
   assert.equal(project.assets[0].dataUrl, '', 'workspace assets stay on disk (no binary round-trip)');
 
   // Delete one definition, add another, add a new content file.
-  const goods = project.contentFiles.find((file) => file.content_type === 'goods');
-  goods.definitions = goods.definitions.filter((definition) => definition.id !== 'core:good/drop');
-  goods.definitions.push({ id: 'core:good/new', name_key: 'good.new.name', enabled: true, data: { base_price: 30 } });
-  project.contentFiles.push({ path: 'content/materials.json', content_type: 'materials', schema_version: '1.0', definitions: [{ id: 'core:material/new', name_key: 'material.new.name', enabled: true, data: {} }] });
-  project.manifest.content.push('content/materials.json');
+  const items = project.contentFiles.find((file) => file.content_type === 'items');
+  items.definitions = items.definitions.filter((definition) => definition.id !== 'core:item/drop');
+  items.definitions.push({ id: 'core:item/new', name_key: 'item.new.name', enabled: true, data: { crafting_material: true, unit_weight: 2, base_price: 30, base_stock: 10, price_elasticity: 0.1 } });
+  project.contentFiles.push({ path: 'content/roles.json', content_type: 'roles', schema_version: '1.0', definitions: [{ id: 'core:role/new', name_key: 'role.new.name', enabled: true, data: { kind: 'engineer', wage_per_voyage: 10, hire_cost: 50 } }] });
+  project.manifest.content.push('content/roles.json');
 
   const files = [
     { path: 'manifest.json', encoding: 'utf8', data: `${JSON.stringify(project.manifest, null, 2)}\n` },
-    { path: goods.path, encoding: 'utf8', data: `${JSON.stringify({ schema_version: '1.0', content_type: 'goods', definitions: goods.definitions }, null, 2)}\n` },
-    { path: 'content/materials.json', encoding: 'utf8', data: `${JSON.stringify({ schema_version: '1.0', content_type: 'materials', definitions: project.contentFiles.find((file) => file.content_type === 'materials').definitions }, null, 2)}\n` },
+    { path: items.path, encoding: 'utf8', data: `${JSON.stringify({ schema_version: '2.0', content_type: 'items', definitions: items.definitions }, null, 2)}\n` },
+    { path: 'content/roles.json', encoding: 'utf8', data: `${JSON.stringify({ schema_version: '1.0', content_type: 'roles', definitions: project.contentFiles.find((file) => file.content_type === 'roles').definitions }, null, 2)}\n` },
   ];
   const saved = await api('/api/workspace/core', {
     method: 'PUT',
@@ -133,9 +133,9 @@ try {
   assert.ok(validated.data.validation, 'manual workspace save runs Content CLI validation');
   assert.equal(typeof validated.data.validation.counts.error, 'number', 'validation returns schema error count');
 
-  const goodsOnDisk = JSON.parse(fs.readFileSync(path.join(coreDir, 'content/goods.json'), 'utf8'));
-  assert.deepEqual(goodsOnDisk.definitions.map((definition) => definition.id), ['core:good/keep', 'core:good/new']);
-  assert.ok(fs.existsSync(path.join(coreDir, 'content/materials.json')), 'new content file is written');
+  const itemsOnDisk = JSON.parse(fs.readFileSync(path.join(coreDir, 'content/items.json'), 'utf8'));
+  assert.deepEqual(itemsOnDisk.definitions.map((definition) => definition.id), ['core:item/keep', 'core:item/new']);
+  assert.ok(fs.existsSync(path.join(coreDir, 'content/roles.json')), 'new content file is written');
   assert.equal(fs.readFileSync(path.join(coreDir, 'assets/models/SN_Test.glb'), 'utf8'), 'raw-glb-bytes', 'assets are never rewritten');
 
   // Removing a declared localization file from the manifest deletes it on disk.

@@ -11,8 +11,7 @@
   "optional_dependencies": [],
   "conflicts": [],
   "content": [
-    "content/goods.json",
-    "content/materials.json",
+    "content/items.json",
     "content/hulls.json",
     "content/modules.json",
     "content/roles.json",
@@ -163,10 +162,11 @@
     "Steam Navigator Team"
   ],
   "license": "Proprietary",
-  "description": "Official MVP content: ports, goods, ships, contracts and events.",
+  "description": "Official MVP content: ports, items, ships, contracts and events.",
   "capabilities": [
     "content.contract.passenger.v1",
     "content.event.choice_pool.v1",
+    "content.items.v1",
     "content.hulls.v1",
     "content.modules.v1",
     "content.world.v1",

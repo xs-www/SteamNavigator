@@ -196,9 +196,9 @@
     navigator: ['role'],
     default_starting_build: ['starting_build'],
     archetypes: ['port_archetype'],
-    good: ['good'],
-    materials: ['good', 'material'],
-    item_id: ['good', 'material'],
+    good: ['item'],
+    materials: ['item'],
+    item_id: ['item'],
   };
 
   function expectedTypes(field) {
@@ -484,7 +484,7 @@
     return `<div class="item-card slim">
       ${itemHead(path, index, `商品 ${index + 1}`, { up: index > 0, down: true })}
       <div class="grid-3">
-        <div class="field"><label class="field-label">商品</label>${refInput(`${path}.${index}.good`, value.good || '', 'good')}</div>
+        <div class="field"><label class="field-label">物品</label>${refInput(`${path}.${index}.good`, value.good || '', 'good')}</div>
         <div class="field"><label class="field-label">库存区间</label>${rangePair(`${path}.${index}.stock_range`, value.stock_range, { type: 'number', minimum: 0 }, '')}</div>
         <div class="field"><label class="field-label">价格偏移</label><input class="input mono" type="number" step="any" min="0.5" max="2" value="${value.price_bias == null ? '' : attr(value.price_bias)}" data-field="${attr(path)}.${index}.price_bias" data-parse="number"></div>
       </div>

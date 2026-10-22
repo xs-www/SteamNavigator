@@ -168,7 +168,7 @@
                 {
                   "type": "grant_tutorial_contract",
                   "template_id": "core:contract/main_01",
-                  "cargo_item_id": "core:good/coal",
+                  "cargo_item_id": "core:item/coal",
                   "amount": 10,
                   "provider": "fuel",
                   "deadline_formula": "tutorial_express",
@@ -307,14 +307,14 @@
                 "contracts"
               ],
               "unlock_items": [
-                "core:good/spices",
-                "core:good/textiles"
+                "core:item/spices",
+                "core:item/textiles"
               ],
               "effects": [
                 {
                   "type": "grant_tutorial_contract",
                   "template_id": "core:contract/main_02",
-                  "cargo_item_id": "core:good/textiles",
+                  "cargo_item_id": "core:item/textiles",
                   "amount": 6,
                   "provider": "player",
                   "destination": "home",
@@ -332,7 +332,7 @@
                 "counter": "textiles_bought",
                 "at_least": 8,
                 "match": {
-                  "item_id": "core:good/textiles"
+                  "item_id": "core:item/textiles"
                 }
               }
             },
@@ -369,7 +369,7 @@
                 "counter": "textiles_sold",
                 "at_least": 2,
                 "match": {
-                  "item_id": "core:good/textiles"
+                  "item_id": "core:item/textiles"
                 }
               }
             },
@@ -408,8 +408,8 @@
                 {
                   "type": "set_market_price_bias",
                   "item_ids": [
-                    "core:good/textiles",
-                    "core:good/spices"
+                    "core:item/textiles",
+                    "core:item/spices"
                   ],
                   "home_bias": 1.35,
                   "other_bias": 0.7,
@@ -448,7 +448,7 @@
                 ]
               },
               "unlock_items": [
-                "core:good/timber"
+                "core:item/timber"
               ],
               "objective": {
                 "text_key": "story.core.third_good.objective",

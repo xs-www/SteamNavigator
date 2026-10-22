@@ -211,13 +211,13 @@ function readWorkspaceProject(id) {
       const payload = JSON.parse(fs.readFileSync(path.join(dir, relative), 'utf8'));
       return {
         path: relative,
-        content_type: payload.content_type || 'goods',
-        schema_version: payload.schema_version || schemaVersionForContentType(payload.content_type || 'goods'),
+        content_type: payload.content_type || 'items',
+        schema_version: payload.schema_version || schemaVersionForContentType(payload.content_type || 'items'),
         definitions: Array.isArray(payload.definitions) ? payload.definitions : [],
       };
     } catch (error) {
       // 文件读不出来时无法判断类型，只能按运行时 1.0 建桩；编辑器保存后会写回真实版本。
-      return { path: relative, content_type: 'goods', schema_version: schemaVersionForContentType('goods'), definitions: [] };
+      return { path: relative, content_type: 'items', schema_version: schemaVersionForContentType('items'), definitions: [] };
     }
   });
   const localization = (manifest.localization || []).map((relative) => {

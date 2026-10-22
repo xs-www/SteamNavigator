@@ -34,7 +34,7 @@
         "starting_money": 400,
         "starting_reputation": 0,
         "starting_cargo": [
-          {"item": "core:good/coal", "amount": 8}
+          {"item": "core:item/coal", "amount": 8}
         ],
         "notes_key": "start_profile.core.hard.notes"
       }

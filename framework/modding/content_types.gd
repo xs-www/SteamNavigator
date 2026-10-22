@@ -6,8 +6,7 @@ extends RefCounted
 ## A content file's `content_type` selects both its registry and its JSON
 ## schema. Framework code never refers to concrete content IDs.
 
-const GOOD := &"goods"
-const MATERIAL := &"materials"
+const ITEM := &"items"
 const HULL := &"hulls"
 const MODULE := &"modules"
 const ROLE := &"roles"
@@ -29,8 +28,7 @@ const EVENT := &"events"
 const PATCH := &"patches"
 
 const SCHEMA_PATHS := {
-	GOOD: "res://schemas/good.schema.json",
-	MATERIAL: "res://schemas/material.schema.json",
+	ITEM: "res://schemas/v2/item.schema.json",
 	HULL: "res://schemas/v2/hull.schema.json",
 	MODULE: "res://schemas/v2/module.schema.json",
 	ROLE: "res://schemas/role.schema.json",
@@ -53,8 +51,7 @@ const SCHEMA_PATHS := {
 }
 
 const SCHEMA_VERSIONS := {
-	GOOD: "1.0",
-	MATERIAL: "1.0",
+	ITEM: "2.0",
 	HULL: "2.0",
 	MODULE: "2.0",
 	ROLE: "1.0",
@@ -77,8 +74,7 @@ const SCHEMA_VERSIONS := {
 }
 
 const SINGULAR := {
-	GOOD: "good",
-	MATERIAL: "material",
+	ITEM: "item",
 	HULL: "hull",
 	MODULE: "module",
 	ROLE: "role",
@@ -105,10 +101,10 @@ const MODULE_TYPES := [HULL, MODULE]
 
 static func all() -> Array[StringName]:
 	var types: Array[StringName] = [
-		GOOD, MATERIAL, HULL, MODULE, ROLE,
-		STRATEGY, PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, WORLD_PROFILE,
-		REGION, SITE, ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION,
-		DISCOVERY, START_PROFILE, MAP_CONFIG, CONTRACT, EVENT,
+		ITEM, HULL, MODULE, ROLE, STRATEGY,
+		PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, WORLD_PROFILE, REGION,
+		SITE, ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY,
+		START_PROFILE, MAP_CONFIG, CONTRACT, EVENT,
 	]
 	return types
 

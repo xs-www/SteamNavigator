@@ -74,15 +74,15 @@
         "craft_cost": 180,
         "materials": [
           {
-            "id": "core:good/brass",
+            "id": "core:item/brass",
             "amount": 8
           },
           {
-            "id": "core:material/boiler_plate",
+            "id": "core:item/boiler_plate",
             "amount": 4
           },
           {
-            "id": "core:material/precision_gear",
+            "id": "core:item/precision_gear",
             "amount": 1
           }
         ],
@@ -131,11 +131,11 @@
         "craft_cost": 160,
         "materials": [
           {
-            "id": "core:good/timber",
+            "id": "core:item/timber",
             "amount": 6
           },
           {
-            "id": "core:material/boiler_plate",
+            "id": "core:item/boiler_plate",
             "amount": 2
           }
         ],
@@ -161,11 +161,11 @@
         "craft_cost": 320,
         "materials": [
           {
-            "id": "core:good/timber",
+            "id": "core:item/timber",
             "amount": 10
           },
           {
-            "id": "core:material/boiler_plate",
+            "id": "core:item/boiler_plate",
             "amount": 4
           }
         ],
@@ -212,11 +212,11 @@
         "craft_cost": 140,
         "materials": [
           {
-            "id": "core:good/brass",
+            "id": "core:item/brass",
             "amount": 3
           },
           {
-            "id": "core:material/sealing_compound",
+            "id": "core:item/sealing_compound",
             "amount": 2
           }
         ],
@@ -265,11 +265,11 @@
         "craft_cost": 130,
         "materials": [
           {
-            "id": "core:good/brass",
+            "id": "core:item/brass",
             "amount": 4
           },
           {
-            "id": "core:material/sealing_compound",
+            "id": "core:item/sealing_compound",
             "amount": 3
           }
         ],

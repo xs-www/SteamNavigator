@@ -131,7 +131,7 @@
                 {
                   "type": "grant_tutorial_contract",
                   "template_id": "core:contract/main_01",
-                  "cargo_item_id": "core:good/coal",
+                  "cargo_item_id": "core:item/coal",
                   "amount": 10,
                   "provider": "fuel",
                   "deadline_formula": "tutorial_express",
@@ -234,12 +234,12 @@
                 "body_keys": ["story.core.second_port.body.1"]
               },
               "unlock_features": ["market", "contracts"],
-              "unlock_items": ["core:good/spices", "core:good/textiles"],
+              "unlock_items": ["core:item/spices", "core:item/textiles"],
               "effects": [
                 {
                   "type": "grant_tutorial_contract",
                   "template_id": "core:contract/main_02",
-                  "cargo_item_id": "core:good/textiles",
+                  "cargo_item_id": "core:item/textiles",
                   "amount": 6,
                   "provider": "player",
                   "destination": "home",
@@ -256,7 +256,7 @@
                 "event": "cmd:trade.buy",
                 "counter": "textiles_bought",
                 "at_least": 8,
-                "match": {"item_id": "core:good/textiles"}
+                "match": {"item_id": "core:item/textiles"}
               }
             },
             {
@@ -285,7 +285,7 @@
                 "event": "cmd:trade.sell",
                 "counter": "textiles_sold",
                 "at_least": 2,
-                "match": {"item_id": "core:good/textiles"}
+                "match": {"item_id": "core:item/textiles"}
               }
             },
             {
@@ -305,7 +305,7 @@
               "unlock_features": ["clues", "tavern"],
               "effects": [
                 {"type": "grant_clue", "port": "next_unknown", "level": 1, "source": "rumor"},
-                {"type": "set_market_price_bias", "item_ids": ["core:good/textiles", "core:good/spices"], "home_bias": 1.35, "other_bias": 0.7, "reset_stock": true, "make_buyable": true}
+                {"type": "set_market_price_bias", "item_ids": ["core:item/textiles", "core:item/spices"], "home_bias": 1.35, "other_bias": 0.7, "reset_stock": true, "make_buyable": true}
               ],
               "advance": {"mode": "confirm"}
             },
@@ -327,7 +327,7 @@
                 "title_key": "story.core.third_good.title",
                 "body_keys": ["story.core.third_good.body.1"]
               },
-              "unlock_items": ["core:good/timber"],
+              "unlock_items": ["core:item/timber"],
               "objective": {
                 "text_key": "story.core.third_good.objective",
                 "target": 1

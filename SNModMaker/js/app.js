@@ -2455,11 +2455,11 @@
   function defaultArrayItem(path, definition) {
     const tail = path.split('.').filter((segment) => !/^\d+$/.test(segment)).pop();
     if (tail === 'modifiers') return { stat: 'speed', op: 'mul', value: 1.02 };
-    if (tail === 'materials') return { id: 'core:good/brass', amount: 1 };
+    if (tail === 'materials') return { id: 'core:item/brass', amount: 1 };
     if (tail === 'payloads') return { kind: 'cargo', weight_range: [8, 16] };
     if (tail === 'effects') return { op: 'add_money', amount: 50 };
     if (tail === 'operations') return { op: 'replace', path: '/data/purchase_price', value: 100 };
-    if (tail === 'market') return { good: 'core:good/brass', stock_range: [40, 80], price_bias: 1 };
+    if (tail === 'market') return { good: 'core:item/brass', stock_range: [40, 80], price_bias: 1 };
     if (tail === 'weapon_sockets') return nextSocketItem(getByPath(definition, path), 'weapon');
     if (tail === 'rig_sockets') return nextSocketItem(getByPath(definition, path), 'rig');
     if (tail === 'options') {
@@ -2766,7 +2766,7 @@
       const project = Store.createProject({
         id,
         name,
-        template: checkedTemplate ? checkedTemplate.value : 'goods',
+        template: checkedTemplate ? checkedTemplate.value : 'items',
         dependencies: Boolean(coreInput && coreInput.checked),
       });
       UI.closeModal();

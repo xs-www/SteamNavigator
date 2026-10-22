@@ -22,7 +22,7 @@
           {
             "kind": "cargo",
             "name_key": "contract.core.main_01.payload",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [8, 12]
           }
         ],
@@ -56,7 +56,7 @@
           {
             "kind": "cargo",
             "name_key": "contract.core.main_02.payload",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [10, 14]
           }
         ],
@@ -90,7 +90,7 @@
           {
             "kind": "cargo",
             "name_key": "contract.core.main_03.payload",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [12, 16]
           }
         ],
@@ -162,7 +162,7 @@
           {
             "kind": "cargo",
             "name_key": "contract.core.main_05.cargo",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [22, 30]
           },
           {
@@ -202,7 +202,7 @@
         "payloads": [
           {
             "kind": "cargo",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [6, 10]
           }
         ],
@@ -234,7 +234,7 @@
         "payloads": [
           {
             "kind": "cargo",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [14, 20]
           }
         ],
@@ -297,7 +297,7 @@
         "payloads": [
           {
             "kind": "cargo",
-            "cargo_item_id": "core:good/contract_freight",
+            "cargo_item_id": "core:item/contract_freight",
             "weight_range": [8, 12]
           }
         ],

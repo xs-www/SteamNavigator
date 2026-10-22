@@ -16,7 +16,7 @@
           "friendly_at": 25
         },
         "patrol_strength": 1,
-        "trade_goods": ["core:good/spices", "core:good/textiles", "core:good/glassware"],
+        "trade_goods": ["core:item/spices", "core:item/textiles", "core:item/glassware"],
         "home_region_tags": ["region.start", "region.coastal"],
         "rival_factions": ["core:faction/pirates"]
       }
@@ -35,7 +35,7 @@
           "friendly_at": 30
         },
         "patrol_strength": 3,
-        "trade_goods": ["core:good/brass", "core:material/boiler_plate", "core:material/sealing_compound"],
+        "trade_goods": ["core:item/brass", "core:item/boiler_plate", "core:item/sealing_compound"],
         "home_region_tags": ["region.coastal", "region.industrial"],
         "rival_factions": ["core:faction/pirates"]
       }
@@ -54,7 +54,7 @@
           "friendly_at": 40
         },
         "patrol_strength": 2,
-        "trade_goods": ["core:good/coal", "core:material/precision_gear"],
+        "trade_goods": ["core:item/coal", "core:item/precision_gear"],
         "home_region_tags": ["region.archipelago", "region.open_sea"],
         "rival_factions": ["core:faction/merchant_guild", "core:faction/royal_navy"]
       }

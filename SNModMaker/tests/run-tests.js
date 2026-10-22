@@ -64,7 +64,7 @@ async function test(name, fn) {
 }
 
 function freshProject() {
-  return Store.createProject({ id: 'test_mod', name: 'Test Mod', template: 'goods' });
+  return Store.createProject({ id: 'test_mod', name: 'Test Mod', template: 'items' });
 }
 
 /* Load a directory of mod files (manifest + content + localization) as a project. */
@@ -99,12 +99,13 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 33, `expected 18 top-level + 15 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 33, `expected 33 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 34, `expected 18 top-level + 16 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 34, `expected 34 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
+    assert.ok(globalThis.SN_SCHEMAS['v2/item.schema.json'], 'v2/item is the C2 merged item schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/map_config.schema.json'], 'v2/map_config is the Phase B scenario config schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/module.schema.json'], 'v2/module is the C1 merged module schema');
@@ -139,7 +140,7 @@ function warningsOf(result) {
     }
   });
 
-  await test('a fresh goods project validates without errors', () => {
+  await test('a fresh items project validates without errors', () => {
     const project = freshProject();
     const result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
@@ -166,12 +167,12 @@ function warningsOf(result) {
     // Phase B promoted the world/campaign family out of the draft API; weapons
     // and the two Story Mode types are the only creatable drafts now, and
     // promoted types are editable through the normal runtime-type path.
-    const promoted = Store.createProject({ id: 'world_mod', name: 'World Mod', template: 'goods' });
+    const promoted = Store.createProject({ id: 'world_mod', name: 'World Mod', template: 'items' });
     Store.addDefinition(promoted, 'world_profiles', {});
     Store.addDefinition(promoted, 'regions', {});
-    assert.deepEqual(promoted.contentFiles.map((file) => file.content_type), ['goods', 'world_profiles', 'regions']);
+    assert.deepEqual(promoted.contentFiles.map((file) => file.content_type), ['items', 'world_profiles', 'regions']);
     assert.deepEqual(
-      promoted.contentFiles.filter((file) => file.content_type !== 'goods').map((file) => file.schema_version),
+      promoted.contentFiles.filter((file) => file.content_type !== 'items').map((file) => file.schema_version),
       ['2.0', '2.0'],
       'promoted types write Schema 2.0 content files'
     );
@@ -182,10 +183,11 @@ function warningsOf(result) {
       /未知 Schema 2\.0 草案类型/
     );
 
-    // The legacy template path is untouched (goods starter, 1.0, no capabilities).
-    const legacy = Store.createProject({ id: 'legacy_mod', name: 'Legacy Mod', template: 'goods' });
-    assert.deepEqual(legacy.contentFiles.map((file) => file.content_type), ['goods']);
-    assert.equal(legacy.contentFiles[0].schema_version, '1.0');
+    // The default template now creates the merged items type at Schema 2.0; the
+    // template path itself does not auto-declare capabilities.
+    const legacy = Store.createProject({ id: 'legacy_mod', name: 'Legacy Mod', template: 'items' });
+    assert.deepEqual(legacy.contentFiles.map((file) => file.content_type), ['items']);
+    assert.equal(legacy.contentFiles[0].schema_version, '2.0', 'C2 merged items is a runtime Schema 2.0 type');
     assert.deepEqual(legacy.manifest.capabilities, []);
 
     // Unknown draft types are rejected instead of silently ignored.
@@ -258,13 +260,14 @@ function warningsOf(result) {
 
   await test('schema validator catches required, enum, pattern and extra fields', () => {
     const errors = Validate.validateSchema(
-      { schema_version: '1.0', content_type: 'goods', definitions: [{ id: 'Bad', name_key: '', enabled: true, data: { unit_weight: 0, base_price: 1, base_stock: 1, price_elasticity: 2, extra: 1 } }] },
-      globalThis.SN_SCHEMAS['good.schema.json'],
-      'good.schema.json'
+      { schema_version: '2.0', content_type: 'items', definitions: [{ id: 'Bad', name_key: '', enabled: true, data: { crafting_material: 'yes', unit_weight: 0, base_price: 1, base_stock: 1, price_elasticity: 2, extra: 1 } }] },
+      globalThis.SN_SCHEMAS['v2/item.schema.json'],
+      'v2/item.schema.json'
     );
     const keywords = new Set(errors.map((error) => error.keyword));
     assert.ok(keywords.has('pattern'), 'id pattern');
     assert.ok(keywords.has('minLength'), 'name_key minLength');
+    assert.ok(keywords.has('type'), 'crafting_material boolean type');
     assert.ok(keywords.has('minimum'), 'unit_weight minimum');
     assert.ok(keywords.has('maximum'), 'price_elasticity maximum');
     assert.ok(keywords.has('additionalProperties'), 'extra data field');
@@ -273,10 +276,10 @@ function warningsOf(result) {
   await test('every content type renders a form and validates with defaults', () => {
     const project = freshProject();
     for (const info of Catalog.TYPES) {
-      if (info.key === 'goods') continue;
+      if (info.key === 'items') continue;
       const added = Store.addDefinition(project, info.key, {});
       assert.ok(added && added.definition, `add ${info.key}`);
-      if (info.key === 'boilers') added.definition.data.materials = [{ id: 'core:good/brass', amount: 2 }];
+      if (info.key === 'modules') added.definition.data.materials = [{ id: 'core:item/brass', amount: 2 }];
       const html = UI.renderDefinitionForm({
         project,
         typeKey: info.key,
@@ -294,8 +297,8 @@ function warningsOf(result) {
         assert.ok(html.includes('condition-empty'), 'event conditions use the condition editor');
         assert.ok(html.includes('条目内其他多语言文本'), 'nested localization values are editable in the entity');
       }
-      if (info.key === 'boilers') {
-        assert.ok(html.includes('item-card slim'), 'boiler materials use the material editor');
+      if (info.key === 'modules') {
+        assert.ok(html.includes('item-card slim'), 'module materials use the material editor');
       }
       if (info.key === 'roles') {
         assert.ok(html.includes('dl-stats'), 'role modifiers use the stat editor');
@@ -333,17 +336,17 @@ function warningsOf(result) {
       assert.equal(Validate.schemaVersionFor(info.key), '2.0', `${info.key} version by key`);
       assert.equal(Validate.schemaVersionFor({ content_type: info.key }), '2.0', `${info.key} version by file`);
     }
-    // 1.0 types keep their version without regression.
-    assert.equal(Validate.schemaVersionFor('goods'), '1.0');
-    assert.equal(Validate.schemaVersionFor({ content_type: 'goods', schema_version: '1.0' }), '1.0');
+    // 1.0 types keep their version without regression (roles is still 1.0).
+    assert.equal(Validate.schemaVersionFor('roles'), '1.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'roles', schema_version: '1.0' }), '1.0');
     assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to 1.0');
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 21, 'content_types.json exposes 21 runtime types (20 definitions + patches); C1 merged five module types into modules');
+    assert.equal(Types.TYPES.length, 20, 'content_types.json exposes 20 runtime types (19 definitions + patches); C2 merged goods + materials into items');
     const promoted = new Set([
       'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
-      'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules',
+      'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules', 'items',
     ]);
     for (const info of Types.TYPES) {
       const expected = promoted.has(info.key) ? '2.0' : '1.0';
@@ -353,13 +356,13 @@ function warningsOf(result) {
       assert.equal(Validate.schemaVersionFor({ content_type: info.key }), expected, `${info.key} version by file`);
     }
     // An explicit file version still wins so a wrong version is reported by validation.
-    assert.equal(Validate.schemaVersionFor({ content_type: 'goods', schema_version: '2.0' }), '2.0');
+    assert.equal(Validate.schemaVersionFor({ content_type: 'roles', schema_version: '2.0' }), '2.0');
     assert.equal(Catalog.schemaVersionFor('patches'), '1.0', 'patches are a runtime type at 1.0');
   });
 
   await test('runtime support: promoted 2.0 types deploy while drafts and mismatches are blocked', () => {
     const project = freshProject();
-    assert.equal(Store.hasDraftContent(project), false, 'a 1.0-only project is fully loadable');
+    assert.equal(Store.hasDraftContent(project), false, 'a project without draft types is fully loadable');
     assert.deepEqual(Store.unsupportedContentFiles(project), []);
     assert.equal(Store.runtimeSupportsFile(project.contentFiles[0]), true);
 
@@ -381,7 +384,7 @@ function warningsOf(result) {
     assert.deepEqual(Store.draftContentFiles(project), unsupported);
 
     // A 1.0 runtime type whose file declares 2.0 (imported or malformed) cannot load either.
-    const versionMismatch = { path: 'content/goods_2.json', content_type: 'goods', schema_version: '2.0', definitions: [] };
+    const versionMismatch = { path: 'content/roles_2.json', content_type: 'roles', schema_version: '2.0', definitions: [] };
     project.contentFiles.push(versionMismatch);
     assert.equal(Store.runtimeSupportsFile(versionMismatch), false);
     assert.ok(Store.unsupportedContentFiles(project).includes(versionMismatch));
@@ -590,7 +593,7 @@ function warningsOf(result) {
     assert.ok(codes().has('story_fixed_start_port_unknown'), 'start_port must be a declared port');
     level.data.map.fixed.start_port = 'port_0';
 
-    Store.addDefinition(project, 'goods', {});
+    Store.addDefinition(project, 'items', {});
     assert.ok(codes().has('story_pack_off_whitelist'), 'a story pack may not carry free-mode content');
   });
 
@@ -756,15 +759,26 @@ function warningsOf(result) {
     );
 
     draftFile.schema_version = '2.0';
-    const legacyFile = project.contentFiles.find((file) => file.content_type === 'goods');
-    legacyFile.schema_version = '2.0';
+    // Every runtime 2.0 type (items) must declare 2.0.
+    const itemsFile = project.contentFiles.find((file) => file.content_type === 'items');
+    itemsFile.schema_version = '1.0';
+    result = Validate.validateProject(project);
+    assert.ok(
+      errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
+      'a runtime 2.0 type declaring 1.0 must report schema_version_mismatch'
+    );
+    itemsFile.schema_version = '2.0';
+
+    // The remaining 1.0 types (roles) keep 1.0.
+    const rolesFile = Store.addDefinition(project, 'roles', {}).file;
+    rolesFile.schema_version = '2.0';
     result = Validate.validateProject(project);
     assert.ok(
       errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
       'a 1.0 type declaring 2.0 must report schema_version_mismatch'
     );
+    rolesFile.schema_version = '1.0';
 
-    legacyFile.schema_version = '1.0';
     draftFile.schema_version = '3.0';
     result = Validate.validateProject(project);
     assert.ok(
@@ -788,14 +802,22 @@ function warningsOf(result) {
     assert.match(draftWarnings[0].message, /草案类型/);
 
     let capabilityWarnings = warningsOf(result).filter((issue) => issue.code === 'capability_undeclared');
-    assert.equal(capabilityWarnings.length, 1, 'the weapons capability warns once');
-    assert.ok(capabilityWarnings[0].message.includes('content.combat.v1'));
+    assert.equal(capabilityWarnings.length, 2, 'each missing capability warns once (items + weapons)');
+    assert.ok(capabilityWarnings.some((issue) => issue.message.includes('content.combat.v1')));
+    assert.ok(capabilityWarnings.some((issue) => issue.message.includes('content.items.v1')));
     assert.match(
       capabilityWarnings[0].message,
       /^Schema 2\.0 内容使用了 capability，但未写入 manifest\.capabilities：/
     );
 
     draftProject.manifest.capabilities = ['content.combat.v1'];
+    result = Validate.validateProject(draftProject);
+    assert.equal(
+      warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
+      1,
+      'the items capability still warns until it is declared'
+    );
+    draftProject.manifest.capabilities = ['content.combat.v1', 'content.items.v1'];
     result = Validate.validateProject(draftProject);
     assert.equal(
       warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
@@ -823,11 +845,12 @@ function warningsOf(result) {
       'a promoted Schema 2.0 type is not draft content'
     );
     capabilityWarnings = promotedWarnings.filter((issue) => issue.code === 'capability_undeclared');
-    assert.equal(capabilityWarnings.length, 2, 'one warning per missing capability, not per content file');
+    assert.equal(capabilityWarnings.length, 3, 'one warning per missing capability, not per content file');
     assert.ok(capabilityWarnings.some((issue) => issue.message.endsWith('content.world.v1')), 'the world family warns once');
     assert.ok(capabilityWarnings.some((issue) => issue.message.endsWith('content.campaign.v1')), 'start_profiles warns for content.campaign.v1');
+    assert.ok(capabilityWarnings.some((issue) => issue.message.endsWith('content.items.v1')), 'the merged items type warns for content.items.v1');
 
-    promoted.manifest.capabilities = ['content.world.v1', 'content.campaign.v1'];
+    promoted.manifest.capabilities = ['content.world.v1', 'content.campaign.v1', 'content.items.v1'];
     result = Validate.validateProject(promoted);
     assert.equal(
       warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
@@ -858,14 +881,14 @@ function warningsOf(result) {
     Store.addDefinition(project, 'start_profiles', {});
     const files = Store.toExportFiles(project);
     const draftFile = files.find((file) => file.path.endsWith('content/start_profiles.json'));
-    const legacyFile = files.find((file) => file.path.endsWith('content/goods.json'));
+    const legacyFile = files.find((file) => file.path.endsWith('content/items.json'));
     assert.ok(draftFile && legacyFile);
     assert.equal(JSON.parse(draftFile.data).schema_version, '2.0');
-    assert.equal(JSON.parse(legacyFile.data).schema_version, '1.0', '1.0 content keeps its 1.0 envelope');
+    assert.equal(JSON.parse(legacyFile.data).schema_version, '2.0', 'merged items keep their 2.0 envelope');
 
     const back = Store.fromFiles(files);
     assert.equal(back.project.contentFiles.find((file) => file.content_type === 'start_profiles').schema_version, '2.0');
-    assert.equal(back.project.contentFiles.find((file) => file.content_type === 'goods').schema_version, '1.0');
+    assert.equal(back.project.contentFiles.find((file) => file.content_type === 'items').schema_version, '2.0');
     const validation = Validate.validateProject(back.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
     assert.ok(!warningsOf(validation).some((issue) => issue.code === 'draft_content'), 'promoted types are not draft content');
@@ -890,13 +913,13 @@ function warningsOf(result) {
   await test('entity localization rename commits once and removes old keys', () => {
     const project = freshProject();
     const definition = project.contentFiles[0].definitions[0];
-    const oldBase = 'good.test_mod.tea';
-    const newBase = 'good.test_mod.black_tea';
+    const oldBase = 'item.test_mod.tea';
+    const newBase = 'item.test_mod.black_tea';
     const zh = Store.getLoc(project, 'zh_CN');
     const en = Store.getLoc(project, 'en');
     assert.ok(zh.entries[`${oldBase}.name`]);
-    definition.id = 'test_mod:good/black_tea';
-    Store.commitDefinitionLocalization(project, definition, 'goods', oldBase, newBase, {
+    definition.id = 'test_mod:item/black_tea';
+    Store.commitDefinitionLocalization(project, definition, 'items', oldBase, newBase, {
       zh_CN: { [`${newBase}.name`]: '红茶' },
       en: { [`${newBase}.name`]: 'Black tea' },
     });
@@ -952,7 +975,7 @@ function warningsOf(result) {
   await test('ID namespace and type mismatches are reported', () => {
     const project = freshProject();
     const definition = project.contentFiles[0].definitions[0];
-    definition.id = 'other_mod:good/tea';
+    definition.id = 'other_mod:item/tea';
     let result = Validate.validateProject(project);
     assert.ok(errorsOf(result).some((issue) => issue.code === 'id_namespace'));
     definition.id = 'test_mod:boiler/tea';
@@ -962,7 +985,7 @@ function warningsOf(result) {
 
   await test('duplicate IDs are reported across content files', () => {
     const project = freshProject();
-    const second = Store.addDefinition(project, 'goods', { localId: 'second' });
+    const second = Store.addDefinition(project, 'items', { localId: 'second' });
     second.definition.id = project.contentFiles[0].definitions[0].id;
     const result = Validate.validateProject(project);
     assert.ok(errorsOf(result).some((issue) => issue.code === 'duplicate_id'));
@@ -972,7 +995,7 @@ function warningsOf(result) {
     const project = freshProject();
     const added = Store.addDefinition(project, 'starting_builds', {});
     added.definition.data.hull = 'test_mod:hull/does_not_exist';
-    added.definition.data.boiler = 'core:boiler/also_missing';
+    added.definition.data.boiler = 'core:module/also_missing';
     const result = Validate.validateProject(project);
     assert.ok(errorsOf(result).some((issue) => issue.code === 'ref_missing'));
     assert.ok(warningsOf(result).some((issue) => issue.code === 'ref_core_unknown'));
@@ -981,7 +1004,7 @@ function warningsOf(result) {
   await test('missing localization key produces a warning and blank translation is reported', () => {
     const project = freshProject();
     const definition = project.contentFiles[0].definitions[0];
-    definition.name_key = 'good.test_mod.untracked.name';
+    definition.name_key = 'item.test_mod.untracked.name';
     let result = Validate.validateProject(project);
     assert.ok(warningsOf(result).some((issue) => issue.code === 'localization_missing'));
     const zh = Store.getLoc(project, 'zh_CN');
@@ -993,7 +1016,7 @@ function warningsOf(result) {
   await test('patch targeting own namespace and invalid source range are rejected', () => {
     const project = freshProject();
     const patch = Store.addDefinition(project, 'patches', {});
-    patch.definition.target = 'test_mod:good/tea';
+    patch.definition.target = 'test_mod:item/tea';
     patch.definition.requires.version = 'not-a-range';
     const result = Validate.validateProject(project);
     assert.ok(errorsOf(result).some((issue) => issue.code === 'patch_own_target'));
@@ -1177,7 +1200,7 @@ function warningsOf(result) {
       all: [
         { op: 'money_gte', value: 10 },
         { any: [{ op: 'at_port', port_id: '' }, { op: 'has_module', id: 'core:boiler/small_efficient' }] },
-        { not: { op: 'has_item', item_id: 'core:good/tea', amount: 1 } },
+        { not: { op: 'has_item', item_id: 'core:item/tea', amount: 1 } },
       ],
     };
     const html = UI.renderDefinitionForm({

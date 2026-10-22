@@ -15,8 +15,8 @@
         "purchase_price": 1000,
         "craft_time_hours": 6,
         "materials": [
-          {"id": "core:good/brass", "amount": 6},
-          {"id": "core:material/boiler_plate", "amount": 2}
+          {"id": "core:item/brass", "amount": 6},
+          {"id": "core:item/boiler_plate", "amount": 2}
         ],
         "speed_mul": 1.08,
         "coal_rate": 0.34,

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/item-2.json",
+  "title": "Steam Navigator item content file (Content Schema 2.0)",
+  "description": "Merged trade item family (C2): the former `goods` and `materials` content types now share one active type. `data.crafting_material` marks items that can be consumed by crafting/refit recipes; every other market field (weight, price, stock, elasticity, spawn weight, category, tier) is the union of the two legacy schemas. Content Schema 2.0 drops the 1.0 goods/material types and their ids.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "items"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/item_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "item_data": {
+      "description": "Union of the legacy good_data and material_data blocks. `crafting_material` replaces the old content-type split: true = consumable by recipes (old materials plus craftable goods such as timber/brass/iron ore), false = pure trade/supply item.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["crafting_material", "unit_weight", "base_price", "base_stock", "price_elasticity"],
+      "properties": {
+        "crafting_material": {
+          "description": "是否可作为打造 / 改装材料消耗。old materials 恒为 true；old goods 中原本可打造者保留 true。",
+          "type": "boolean"
+        },
+        "unit_weight": {
+          "type": "number",
+          "minimum": 0.1
+        },
+        "base_price": {
+          "type": "number",
+          "minimum": 1
+        },
+        "base_stock": {
+          "type": "number",
+          "minimum": 1
+        },
+        "price_elasticity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "spawn_weight": {
+          "description": "市场随机进货权重；0 = 只按供需/补给规则出现。",
+          "type": "number",
+          "minimum": 0
+        },
+        "category": {
+          "description": "自由分类标签（ore/metal/plate/supply 等），市场与 UI 分组用。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "tier": {
+          "description": "材料品质等级；普通商品可省略。",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        }
+      }
+    }
+  }
+}

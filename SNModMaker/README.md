@@ -47,9 +47,9 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 4. 打开「校验」，修正错误与警告。
 5. 「导出」→ 打包 `.snavmod.zip`，放到游戏的 `mods/` 或 `user://mods/`。
 
-**起始模板**（新建模组对话框与 CLI `new --template <key>` 共用同一清单）：商品包、锅炉包、事件包、**舰载武器包**（战斗模拟器 5 件内置武器，带 `asset://core/model.weapon.*` 模型与 `weapon-assembly@2` 装配数据）、小型内容合集、空白模组。武器包只写入编辑器项目、不写 Core，原因见下方「Schema 2.0 草案」。
+**起始模板**（新建模组对话框与 CLI `new --template <key>` 共用同一清单）：物品包、锅炉包、事件包、**舰载武器包**（战斗模拟器 5 件内置武器，带 `asset://core/model.weapon.*` 模型与 `weapon-assembly@2` 装配数据）、小型内容合集、空白模组。武器包只写入编辑器项目、不写 Core，原因见下方「Schema 2.0 草案」。
 
-> 官方内容也是模组。新建项目默认依赖 `core`；引用 `core:good/brass` 这类 ID 时请保留完整命名空间。
+> 官方内容也是模组。新建项目默认依赖 `core`；引用 `core:item/brass` 这类 ID 时请保留完整命名空间。
 
 ---
 
@@ -59,8 +59,7 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 
 | 类型 | `content_type` | ID 类型段 | 说明 |
 | --- | --- | --- | --- |
-| 商品 | `goods` | `good` | 价格、重量、库存、弹性 |
-| 造船材料 | `materials` | `material` | 打造材料 |
+| 物品 | `items` | `item` | C2 合并商品与造船材料；`data.crafting_material` 区分打造材料（C2 起 Schema 2.0） |
 | 船体 | `hulls` | `hull` | 航速、载重、槽位、耐久、武器/帆索安装点（C1 起 Schema 2.0） |
 | 模块 | `modules` | `module` | C1 合并锅炉 / 货舱 / 杂项功能（导航·安全）/ 客舱，`data.v2_category` 区分 |
 | 船员岗位 | `roles` | `role` | 工资与属性修正 |
@@ -207,7 +206,7 @@ tailscale serve --bg --set-path /snmodmaker http://127.0.0.1:8099
 
 除网页编辑器外，`tools/content.mjs` 提供同一套内容模型的命令行入口：按 Schema 增删改定义、补本地化、读取类型说明、校验既有模组。它面向 agent、CI 与批量维护脚本，不启动浏览器，也不引入额外依赖（Node.js ≥ 18，ESM）。
 
-CLI 与编辑器使用同一份类型清单：`types` 会同时列出 21 个运行时类型（C1 起锅炉/货舱/导航/安全/客舱合并为 `modules`，船体升级为 2.0）与 3 个 Schema 2.0 草案类型（weapons + 剧情 story_arcs / story_levels；草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`（例如 `--draft story_arcs --draft story_levels` 建一个纯剧情包）；`--template` 可选 `goods` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template boiler` 生成一个 `modules` 类型的锅炉模块（`data.v2_category: "boiler"`），`--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加——但剧情包是白名单模组，不要与 `--draft story_*` 之外的模板叠加。
+CLI 与编辑器使用同一份类型清单：`types` 会同时列出 20 个运行时类型（C1 起锅炉/货舱/导航/安全/客舱合并为 `modules`，船体升级为 2.0；C2 起商品与材料合并为 `items`）与 3 个 Schema 2.0 草案类型（weapons + 剧情 story_arcs / story_levels；草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`（例如 `--draft story_arcs --draft story_levels` 建一个纯剧情包）；`--template` 可选 `items` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template boiler` 生成一个 `modules` 类型的锅炉模块（`data.v2_category: "boiler"`），`--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加——但剧情包是白名单模组，不要与 `--draft story_*` 之外的模板叠加。
 
 所有命令都从**仓库根**执行，`--mod` 指向仓库内的松散模组目录（例如 `dev_mods/core` 或 `SNModMaker/mods/<id>`，必须含 `manifest.json`）；所有写入都会留在该目录内。
 
@@ -224,7 +223,7 @@ CLI 与编辑器使用同一份类型清单：`types` 会同时列出 21 个运�
 | `rm --mod <dir> <id> --yes` | 删除定义，并清理它独占的本地化键 |
 | `clone --mod <dir> --from <core-id>` | 从 Core 定义复制一条到当前模组 |
 | `validate --mod <dir>` | 只读校验：Schema、引用、命名空间与本地化 |
-| `new --mod <dir> --id <mod_id>` | 从模板新建模组骨架：`--template goods\|boiler\|event\|weapons\|starter_kit\|blank`（`weapons` 生成 5 件舰载武器包）；`--draft <content_type>`（可重复）改为新建纯 Schema 2.0 草案项目 |
+| `new --mod <dir> --id <mod_id>` | 从模板新建模组骨架：`--template items\|boiler\|event\|weapons\|starter_kit\|blank`（`weapons` 生成 5 件舰载武器包）；`--draft <content_type>`（可重复）改为新建纯 Schema 2.0 草案项目 |
 
 每个命令都支持 `--json`、`--quiet`、`--help`（`-h`）；`add` / `set` / `rm` / `clone` 支持 `--dry-run`（`rm` 另需 `--yes`），`add` / `set` / `clone` 支持 `--force`。完整选项见 `node SNModMaker/tools/content.mjs <command> --help`。
 
@@ -233,13 +232,13 @@ CLI 与编辑器使用同一份类型清单：`types` 会同时列出 21 个运�
 先看某个类型的字段与骨架，再照着写 `add`：
 
 ```powershell
-node SNModMaker/tools/content.mjs describe goods
+node SNModMaker/tools/content.mjs describe items
 ```
 
 新增商品；`--data` 按路径赋值，支持 `a.b`、`a[2].b` 与 `/data/x`：
 
 ```powershell
-node SNModMaker/tools/content.mjs add --mod SNModMaker/mods/my_mod --type goods --id tea `
+node SNModMaker/tools/content.mjs add --mod SNModMaker/mods/my_mod --type items --id tea `
   --name-zh "红茶" --name-en "Black Tea" `
   --desc-zh "来自东方的发酵茶。" --desc-en "A fermented tea from the east." `
   --tag good.trade --data base_price=68 --data unit_weight=1
@@ -255,7 +254,7 @@ node SNModMaker/tools/content.mjs set --mod SNModMaker/mods/my_mod my_mod:good/t
 从 Core 复制一条再校验：
 
 ```powershell
-node SNModMaker/tools/content.mjs clone --mod SNModMaker/mods/my_mod --from core:good/iron_ore --id iron_ore `
+node SNModMaker/tools/content.mjs clone --mod SNModMaker/mods/my_mod --from core:item/iron_ore --id iron_ore `
   --name-zh "铁矿石" --name-en "Iron Ore"
 node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_mod --json
 ```
@@ -292,7 +291,7 @@ node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_weapon_pack --id 
   "ok": true,
   "command": "add",
   "mod": "dev_mods/core",
-  "changes": [{ "path": "content/goods.json", "action": "update", "bytes": 4321, "diff": "..." }],
+  "changes": [{ "path": "content/items.json", "action": "update", "bytes": 4321, "diff": "..." }],
   "issues": { "errors": 0, "warnings": 29, "newErrors": 0, "newWarnings": 0, "list": [] },
   "stats": { "definitions": 51, "contentFiles": 15, "locales": 2 },
   "notes": []

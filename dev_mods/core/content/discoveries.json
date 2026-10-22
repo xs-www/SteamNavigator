@@ -79,7 +79,7 @@
         "repeatable": true,
         "source_site_kinds": ["wreck", "encounter"],
         "region_kinds": ["coastal", "industrial"],
-        "unlock_ids": ["core:good/glassware"]
+        "unlock_ids": ["core:item/glassware"]
       }
     },
     {
