@@ -80,10 +80,26 @@ func _write_world_profile_mod(root: String, mod_id: String) -> void:
 		"load_priority": 10,
 		"required": false,
 		"dependencies": [{"id": "core", "version": ">=1.0.0 <2.0.0"}],
-		"content": ["content/world_profiles.json"],
+		"content": ["content/world_profiles.json", "content/weather_profiles.json"],
 		"localization": ["localization/zh_CN.json"],
 	}
 	_write_file(mod_root + "/manifest.json", JsonUtils.canonical_stringify(manifest, "  "))
+	var weather_profile := {
+		"schema_version": "2.0",
+		"content_type": "weather_profiles",
+		"definitions": [{
+			"id": "%s:weather_profile/temperate" % mod_id,
+			"name_key": "weather.%s.temperate.name" % mod_id,
+			"enabled": true,
+			"data": {
+				"climate": "temperate",
+				"fog_chance": 0.1,
+				"storm_chance": 0.05,
+				"risk_modifier": 0.0,
+			},
+		}],
+	}
+	_write_file(mod_root + "/content/weather_profiles.json", JsonUtils.canonical_stringify(weather_profile, "  "))
 	var world_profile := {
 		"schema_version": "2.0",
 		"content_type": "world_profiles",
@@ -96,12 +112,15 @@ func _write_world_profile_mod(root: String, mod_id: String) -> void:
 				"sites_per_region": 3,
 				"port_count": 2,
 				"start_region_tags": ["region.start"],
-				"weather_profile": "core:weather_profile/temperate",
+				"weather_profile": "%s:weather_profile/temperate" % mod_id,
 			},
 		}],
 	}
 	_write_file(mod_root + "/content/world_profiles.json", JsonUtils.canonical_stringify(world_profile, "  "))
-	var localization := {"world.%s.test_world.name" % mod_id: "Test World"}
+	var localization := {
+		"world.%s.test_world.name" % mod_id: "Test World",
+		"weather.%s.temperate.name" % mod_id: "Temperate",
+	}
 	_write_file(mod_root + "/localization/zh_CN.json", JsonUtils.canonical_stringify(localization, "  "))
 
 

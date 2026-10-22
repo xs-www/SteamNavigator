@@ -133,7 +133,7 @@ G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案
 
 ### Phase B · 世界探索家族提升（阶段 0/1，2–4 周）
 
-**状态：B0–B1 已完成（2026-10-22）；B2 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
+**状态：B0–B2 已完成（2026-10-22）；B3 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
 （Draft 2，含 9 类类型、引用/完整性规则、CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。
 B0 证据：探索 4.1 与 Phase A 均已在 `main`（无需 rebase）；契约已按 4.2–4.5 的 `map_profile` 现状刷新
 （`exploration` 31 键、`twin_world_size`、`story`、15 处读取点）；Godot 419/419、生成物检查、SDK core 校验、
@@ -147,7 +147,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 | --- | --- | --- |
 | B0 | 前置 | 探索 4.1 提交；`schema-v2` rebase `main`；冻结其 1.0 `map_profile` 字段，后续只做迁移映射 |
 | B1 | 类型提升 | ✅ 已完成（2026-10-22）：8 类从 `planned` 移入 `types` + 新增 `map_configs`；删除对应 `draft_types` / `draft_schemas` 条目、清理 `planned`；新增 `schemas/v2/map_config.schema.json` 并微调 `world_profiles`/`start_profiles` |
-| B2 | 注册表与引用 | `RegistryHub` 按 `ContentTypes.all()` 自动生效；`CrossReferenceValidator` 增加 9 个 `_check_*` 与 `ref_inactive_type` 规则；`CoreCompletenessChecker` 增加规则 |
+| B2 | 注册表与引用 | ✅ 已完成（2026-10-22）：`RegistryHub` 按 `ContentTypes.all()` 自动生效；`CrossReferenceValidator` 增加 9 个 `_check_*` 与 `ref_inactive_type` 规则（目标激活后自动升级硬校验）；`CoreCompletenessChecker` 增加 Phase B 规则（Core presence gate）；`FrameworkInfo.CAPABILITIES` 增加 `content.world.v1` / `content.campaign.v1` |
 | B3 | 世界生成运行时 | 新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询 |
 | B4 | core 内容 | `dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化；`map_profiles.exploration` 原样迁入 `map_configs.exploration` |
 | B5 | 存档 | 新档写 `campaign.setup.content_versions`；旧档惰性补齐、世界不重排（D3） |
@@ -228,6 +228,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase A：1.0 全量测试绿；版本表生成物最新；Patch 按目标类型版本校验（2026-10-21）。
 - [x] Phase B · B0：探索 4.1 / Phase A 合入 main；契约刷新到 Draft 2；基线门禁全绿（2026-10-22）。
 - [x] Phase B · B1：9 类 2.0 类型 active + `map_configs` Schema；编辑器 / CLI / 测试同步；生成物全绿（2026-10-22）。
+- [x] Phase B · B2：9 类跨引用规则 + `ref_inactive_type`、Core Phase B 完整性（presence gate）、capability 白名单（2026-10-22）。
 - [ ] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过。
 - [ ] Phase C：实体合并后旧 ID 别名可用一个版本；存档 ID 迁移可回读。
 - [ ] Phase E：1.0 生成停止；迁移工具可用；文档状态更新为 Finalized。

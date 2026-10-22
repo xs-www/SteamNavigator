@@ -3,6 +3,22 @@ extends RefCounted
 ## Verifies the official content pack provides everything the MVP needs.
 ##
 ## This is intentionally about presence and contracts, not balance.
+## @static-doc
+## 作用：检查官方 core 包是否提供 MVP 所需的最少内容与构筑，并在 Core 自己发布 Content
+## Schema 2.0 世界内容后追加 Phase B 完整性规则（WORLD_SCHEMA_V2_RUNTIME §5.2）。
+##
+## ## 契约与约束
+## - 要求 core 存在、required=true 且进入加载顺序。
+## - 1.0 基线：最低数量（3 船体、2 锅炉、3 策略、4 港口原型、5 主线、2 事件、2 岗位等）、
+##   必需标签、主线 sequence 1–5、至少一套可解析为 hull + boiler + cargo 的初始构筑。
+## - Phase B 规则用 presence gate：**Core 来源**的 `world_profiles` 至少 1 条才启用，保证 B4
+##   之前 Core 没有 v2 内容时基线不红，第三方单独提供的 v2 世界内容也不会触发 Core 规则。
+## - 硬性：world_profiles / map_configs / start_profiles / weather_profiles / regions 各 ≥1。
+## - 建议（warning）：route_templates / factions / sites / discoveries 各 ≥1。
+## - 组合：至少一个 start_profile 解析 world_profile + map_config + starting_build；
+##   start_region_tags 命中至少一个 regions.region_tags；map_config.archetypes 数量 ≥
+##   对应 world_profile.port_count。
+## @end-static-doc
 
 static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary:
 	var errors: Array[Dictionary] = []
@@ -75,6 +91,7 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 					"message": "%s has tier %d; MVP expects 1-3" % [module.id, int(module.data.get("tier", 0))],
 				})
 
+	_check_phase_b(hub, errors, warnings)
 	return {"errors": errors, "warnings": warnings}
 
 
@@ -86,3 +103,136 @@ static func _require_count(hub: RegistryHub, content_type: StringName, minimum: 
 				minimum, label, hub.get_all(content_type).size()
 			],
 		})
+
+
+static func _recommend_count(hub: RegistryHub, content_type: StringName, minimum: int, label: String, warnings: Array[Dictionary]) -> void:
+	if hub.get_all(content_type).size() < minimum:
+		warnings.append({
+			"code": "content_count_recommended",
+			"message": "core should declare at least %d %s (found %d)" % [
+				minimum, label, hub.get_all(content_type).size()
+			],
+		})
+
+
+## Phase B (Content Schema 2.0) completeness rules.
+##
+## Gated on the presence of at least one `world_profiles` definition shipped by
+## the `core` pack: until the Core content pack ships v2 world content (B4) the
+## legacy baseline must stay green, and a third-party v2 world profile alone
+## must not impose Core completeness requirements before Core has its own.
+static func _check_phase_b(hub: RegistryHub, errors: Array[Dictionary], warnings: Array[Dictionary]) -> void:
+	if not _core_ships_world_profiles(hub):
+		return
+	_require_count(hub, ContentTypes.WORLD_PROFILE, 1, "world profiles", errors)
+	_require_count(hub, ContentTypes.MAP_CONFIG, 1, "map configs", errors)
+	_require_count(hub, ContentTypes.START_PROFILE, 1, "start profiles", errors)
+	_require_count(hub, ContentTypes.WEATHER_PROFILE, 1, "weather profiles", errors)
+	_require_count(hub, ContentTypes.REGION, 1, "regions", errors)
+
+	_recommend_count(hub, ContentTypes.ROUTE_TEMPLATE, 1, "route templates", warnings)
+	_recommend_count(hub, ContentTypes.FACTION, 1, "factions", warnings)
+	_recommend_count(hub, ContentTypes.SITE, 1, "sites", warnings)
+	_recommend_count(hub, ContentTypes.DISCOVERY, 1, "discoveries", warnings)
+
+	_check_phase_b_combinations(hub, errors)
+
+
+## Presence gate for the Phase B block: only Core's own v2 world content turns
+## the completeness rules on (B4). Third-party world profiles alone stay inert.
+static func _core_ships_world_profiles(hub: RegistryHub) -> bool:
+	for definition in hub.get_all(ContentTypes.WORLD_PROFILE):
+		if definition.source_mod == "core":
+			return true
+	return false
+
+
+## Cross-type combination rules for the v2 campaign start:
+## a start profile must resolve world profile + map config + starting build,
+## its start region tags must match a region, and the map config must provide
+## at least as many port archetypes as the world profile declares ports.
+static func _check_phase_b_combinations(hub: RegistryHub, errors: Array[Dictionary]) -> void:
+	var start_profiles := hub.get_all(ContentTypes.START_PROFILE)
+	start_profiles.sort_custom(func(a: ContentDefinition, b: ContentDefinition) -> bool: return a.id < b.id)
+	var resolved: Array[Dictionary] = []
+	for start_profile in start_profiles:
+		var world_profile_id := String(start_profile.data.get("world_profile", ""))
+		var world_profile := hub.get_by_id(ContentTypes.WORLD_PROFILE, world_profile_id)
+		if world_profile == null:
+			errors.append({
+				"code": "start_profile_world_profile_missing",
+				"message": "start profile '%s' references missing world profile '%s'" % [start_profile.id, world_profile_id],
+			})
+			continue
+		var map_config := _resolve_start_map_config(hub, start_profile)
+		if map_config == null:
+			errors.append({
+				"code": "start_profile_map_config_missing",
+				"message": "start profile '%s' declares no resolvable map config" % start_profile.id,
+			})
+			continue
+		var starting_build_id := String(start_profile.data.get("starting_build", ""))
+		if not hub.contains(ContentTypes.STARTING_BUILD, starting_build_id):
+			errors.append({
+				"code": "start_profile_starting_build_missing",
+				"message": "start profile '%s' references missing starting build '%s'" % [start_profile.id, starting_build_id],
+			})
+			continue
+		resolved.append({
+			"world_profile": world_profile,
+			"map_config": map_config,
+		})
+
+	if resolved.is_empty():
+		errors.append({
+			"code": "no_resolvable_start_profile",
+			"message": "no start profile resolves to world_profile + map_config + starting_build",
+		})
+		return
+
+	if not _has_matching_start_region(hub, resolved):
+		errors.append({
+			"code": "start_region_unmatched",
+			"message": "no resolved world profile start_region_tags match a regions.region_tags entry",
+		})
+
+	for combination in resolved:
+		var map_config: ContentDefinition = combination["map_config"]
+		var world_profile: ContentDefinition = combination["world_profile"]
+		var archetypes: Variant = map_config.data.get("archetypes", [])
+		var archetype_count: int = archetypes.size() if archetypes is Array else 0
+		var port_count := int(world_profile.data.get("port_count", 0))
+		if port_count > 0 and archetype_count < port_count:
+			errors.append({
+				"code": "map_config_archetypes_short",
+				"message": "map config '%s' declares %d archetypes but world profile '%s' needs %d ports" % [
+					map_config.id, archetype_count, world_profile.id, port_count
+				],
+			})
+
+
+## Resolves the map config a start profile points at, falling back to the only
+## registered map config when the optional reference is omitted (contract §4.2:
+## core content must provide one, third-party content may omit it).
+static func _resolve_start_map_config(hub: RegistryHub, start_profile: ContentDefinition) -> ContentDefinition:
+	var map_config_id := String(start_profile.data.get("map_config", ""))
+	if not map_config_id.is_empty():
+		return hub.get_by_id(ContentTypes.MAP_CONFIG, map_config_id)
+	var candidates := hub.get_all(ContentTypes.MAP_CONFIG)
+	if candidates.is_empty():
+		return null
+	candidates.sort_custom(func(a: ContentDefinition, b: ContentDefinition) -> bool: return a.id < b.id)
+	return candidates[0]
+
+
+static func _has_matching_start_region(hub: RegistryHub, resolved: Array[Dictionary]) -> bool:
+	var region_tags: Dictionary = {}
+	for region in hub.get_all(ContentTypes.REGION):
+		for tag in region.data.get("region_tags", []):
+			region_tags[String(tag)] = true
+	for combination in resolved:
+		var world_profile: ContentDefinition = combination["world_profile"]
+		for tag in world_profile.data.get("start_region_tags", []):
+			if region_tags.has(String(tag)):
+				return true
+	return false

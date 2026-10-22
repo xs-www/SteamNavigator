@@ -235,26 +235,6 @@ export const FILE_DOCS = {
     }
   },
 
-  "framework/modding/cross_reference_validator.gd": {
-    role: "Schema 之后的语义校验：材料、构筑、委托奖励、事件条件/效果、港口市场与地图配置的引用完整性。",
-    contracts: [
-      "所有可引用 ID 必须在已注册定义中存在；未知条件/效果操作码直接报错。",
-      "主线序列必须覆盖 1–5；普通委托至少一个模板；最终委托应同时包含货物与旅客。",
-      "港口原型必须提供 exchange 与 contracts；市场引用商品/材料必须存在。",
-      "地图配置的港口数、名称键数量、必需设施标签与默认构筑均被检查。"
-    ]
-  },
-
-  "framework/modding/core_completeness_checker.gd": {
-    role: "检查官方 core 包是否提供 MVP 所需的最少内容与构筑。",
-    contracts: [
-      "要求 core 存在、required=true 且进入加载顺序。",
-      "最低数量：3 船体、2 锅炉、3 策略、4 港口原型、5 主线、2 事件、2 岗位等。",
-      "要求存在 `strategy.economy/standard/fast`、大型船体、工程师/领航员与风险事件标签。",
-      "至少一套初始构筑可解析为 hull + boiler + cargo。"
-    ]
-  },
-
   "framework/modding/content_types.gd": {
     role: "内容类型常量、Schema 路径、单数类型名与模块类型集合；由 tools/gen_content_types.mjs 从 content_types.json 生成。",
     contracts: [
@@ -2573,6 +2553,8 @@ export const MODULES = {
       "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
       "`test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
       "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema 与 `map_configs`（31 键 exploration），确认 9 类 active、只有 `weapons` 仍为草案。",
+      "`test_world_schema_refs.gd` 覆盖 Phase B 9 类引用规则：硬引用缺失 error、planned 目标仅 `ref_inactive_type` warning、faction 自指、map_config archetype 数量组合规则。",
+      "`test_world_completeness.gd` 覆盖 Core Phase B 完整性：presence gate（仅 Core 自带 world_profiles 时启用）、五项硬性数量、四项建议 warning 与 start_profile / region / map_config 组合规则。",
       "`test_schema_v2_weapons.gd` 守护 `weapons` 草案（合法 direct / broadside 与非法必填 / 枚举 / 范围 / 颜色 / 材料 ID）、草案登记与 hull `weapon_sockets` / `rig_sockets` 镜像（含 Core 14 个武器 socket + 22 个帆索 socket）。",
       "`test_world_generator.gd` 守护坐标空间世界生成：同 seed 可复现、港口锚定海岸线、最小间距、连通性、出航角度、必需设施位置与序列化往返。"
     ]

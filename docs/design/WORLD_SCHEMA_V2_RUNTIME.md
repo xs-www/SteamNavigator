@@ -1,6 +1,6 @@
 # 世界与战役内容 Schema 2.0 实现契约（Phase B）
 
-> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1 已落地）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
+> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1–B2 已落地）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
 > 总方案见 [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md) §4 Phase B，实体契约见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)；探索规则见 `EXPLORATION_SYSTEM.md`，教程剧情见
 > [STORY_TUTORIAL.md](STORY_TUTORIAL.md)。
@@ -177,16 +177,25 @@ _check_map_configs`，在 `validate()` 注册；错误码沿用 `REF-*` 语义�
 `map_profile.default_starting_build` 在 1.0 运行时从未被读取（仅 `_check_map_profiles` 校验存在性）；v2 中它只作为
 `start_profiles.starting_build` 缺失时的兜底，并在校验期提示。
 
+> **B2 实现备注（2026-10-22）**：`PLANNED_REF_TYPES` 常量只用于尚未 active 的目标；引用先走
+> `_check_planned_ref()`——目标类型一旦 `ContentTypes.is_known()` 就自动升级为硬校验（兑现“激活后自动升级为
+> error”），否则才给 `ref_inactive_type` warning。`contract_family` 指向的 `contract_families` 当前不在
+> `content_types.json.planned` 中，此处按契约 §5.1 先登记，后续补 planned 条目时无需改 validator。
+
 ### 5.2 Core 完整性
 
-`CoreCompletenessChecker.check()` 新增（在 B4 core 内容落地后启用，避免中途红）：
+`CoreCompletenessChecker.check()` 新增 Phase B 规则；**presence gate**：仅当 `source_mod == "core"` 的
+`world_profiles` 至少 1 条时启用，B4 之前 Core 没有 v2 内容时旧基线零新增错误，第三方单独携带 v2 世界内容也
+不会触发 Core 完整性规则。B4 落盘后 gate 自动打开（落地时需一次满足以下全部条件）。
 
 - 硬性：`world_profiles ≥ 1`、`map_configs ≥ 1`、`start_profiles ≥ 1`、`weather_profiles ≥ 1`、`regions ≥ 1`、
   `starting_builds ≥ 1`（已有）。
-- 建议：`route_templates ≥ 1`、`factions ≥ 1`、`sites ≥ 1`、`discoveries ≥ 1`（warning）。
-- 组合：至少一个 `start_profiles` 能解析 `world_profile + map_config + starting_build`；其
-  `world_profile.start_region_tags` 至少匹配一个 `regions.region_tags`；`map_configs.archetypes` 数量 ≥
-  `world_profiles.port_count`。
+- 建议：`route_templates ≥ 1`、`factions ≥ 1`、`sites ≥ 1`、`discoveries ≥ 1`（warning，code `content_count_recommended`）。
+- 组合：至少一个 `start_profiles` 能解析 `world_profile + map_config + starting_build`（`map_config` 显式引用缺失
+  报 error；省略时按 id 排序回退到第一个 `map_config`）；其 `world_profile.start_region_tags` 至少匹配一个
+  `regions.region_tags`；`map_configs.archetypes` 数量 ≥ `world_profiles.port_count`。
+
+> B4 验收 checklist：`framework/tests/cases/test_world_completeness.gd` 的完整合成组合即为最低 core 内容形状。
 
 ### 5.3 capability
 
@@ -365,7 +374,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | --- | --- | --- | --- |
 | B0 | **✅ 已完成（2026-10-22）**：探索 4.1（及 4.2–4.5）与 Phase A 都已在 `main`，无需 rebase；刷新本契约到 Draft 2（31 键 exploration、`twin_world_size`/`story`、15 处读取）；重新同步 SNModMaker schema bundle。基线证据：Godot **419/419**、`gen_content_types --check`、`gen_static_docs --check`、SDK core 校验、Node **50/50** 全绿 | 探索 4.1 + Phase A | 无（准备） |
 | B1 | **✅ 已完成（2026-10-22）**：`content_types.json` 9 类 active（8 类草案提升 + 新增 `map_configs`）、`schemas/v2/map_config.schema.json`、`world_profiles.edge_density`、`start_profiles.map_config`、生成物（`ContentTypes` 25 类 / 编辑器 26 项 / schema bundle 29 个）、框架与编辑器测试同步改写。证据：Godot 全量、Node **50/50**、CLI **57/57**、生成器 `--check` 全绿 | B0、Phase A | revert commit（类型回到草案） |
-| B2 | 注册表自动生效；cross-ref 9 个 `_check_*`；completeness（core 落地后启用）；capability | B1 | revert 校验器改动 |
+| B2 | **✅ 已完成（2026-10-22）**：`CrossReferenceValidator` 9 个 `_check_*` + `ref_inactive_type`（目标激活后自动升级硬校验）；`CoreCompletenessChecker` Phase B 规则 + Core presence gate；`FrameworkInfo.CAPABILITIES` 增加 `content.world.v1` / `content.campaign.v1`。证据：`test_world_schema_refs` 16/16、`test_world_completeness` 13/13、全量回归绿 | B1 | revert 校验器改动 |
 | B3 | `CampaignFactory` + `run.start start_profile` + `campaign.view` + resolver 改造（15 处生产读取 + 2 处测试） | B1、B2、B4（core 内容可并行） | 保留入口但默认不走 v2；revert 运行时 |
 | B4 | core 9 个 v2 内容文件 + 本地化 + manifest capabilities | B1 | 回退内容文件（旧内容仍在） |
 | B5 | `content_versions` + 迁移器 + 存档矩阵测试 | B3 | revert 迁移器；旧档不受影响 |

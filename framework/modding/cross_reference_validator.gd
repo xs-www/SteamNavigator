@@ -3,6 +3,33 @@ extends RefCounted
 ## Validates references between content definitions after patches are applied.
 ##
 ## Schema validation guarantees shape; this pass guarantees meaning.
+## @static-doc
+## 作用：Schema 之后的语义校验：材料、构筑、委托奖励、事件条件/效果、港口市场与地图配置，
+## 以及 Phase B 世界/战役 9 类（world_profiles / regions / sites / route_templates /
+## weather_profiles / factions / discoveries / start_profiles / map_configs）的引用完整性。
+##
+## ## 契约与约束
+## - 硬引用缺失一律 `error`（`reference_missing`）；引用尚未 active 的 planned 类型只给
+##   `warning: ref_inactive_type`，目标类型提升后这条规则升级为 `_require` 硬校验。
+## - planned 目标类型没有运行时注册表，因此用本文件的 `PLANNED_REF_TYPES` 显式映射
+##   （来源：`content_types.json` 的 `planned` 与 WORLD_SCHEMA_V2_RUNTIME §5.1 引用表）。
+## - `factions.rival_factions[]` 允许指向同类型定义，但指向自身报 `reference_self`。
+## - `map_configs.archetypes` 数量必须 ≥ 引用它的 `start_profiles.world_profile.port_count`；
+##   找不到对应 world_profile 时跳过（缺失本身已由 start_profiles 检查报错）。
+## - 既有检查与错误码保持不变；空的 v2 Core 内容基线不受影响。
+## @end-static-doc
+
+## Planned target types referenced by active Phase B schemas. They have no runtime
+## schema/registry yet (`ContentTypes.all()` does not contain them), so a reference can
+## only be reported as `ref_inactive_type` until the target type is promoted.
+## Source: content_types.json `planned` (ruin_archetypes / encounter_tables / loot_tables)
+## plus the WORLD_SCHEMA_V2_RUNTIME §5.1 table entry for `factions.contract_family`.
+const PLANNED_REF_TYPES := {
+	"ruin_archetype": "ruin_archetypes",
+	"encounter_table": "encounter_tables",
+	"loot_table": "loot_tables",
+	"contract_family": "contract_families",
+}
 
 var errors: Array[Dictionary] = []
 var warnings: Array[Dictionary] = []
@@ -20,6 +47,15 @@ func validate(hub: RegistryHub) -> Dictionary:
 	_check_events()
 	_check_port_archetypes()
 	_check_map_profiles()
+	_check_world_profiles()
+	_check_regions()
+	_check_sites()
+	_check_route_templates()
+	_check_weather_profiles()
+	_check_factions()
+	_check_discoveries()
+	_check_start_profiles()
+	_check_map_configs()
 	return {
 		"errors": errors.duplicate(true),
 		"warnings": warnings.duplicate(true),
@@ -303,6 +339,130 @@ func _check_map_profiles() -> void:
 			_warn("map_npc_count", "%s NPC count range should stay within 2-3 for MVP" % profile.id, profile.id)
 
 
+func _check_world_profiles() -> void:
+	for profile in _hub.get_all(ContentTypes.WORLD_PROFILE):
+		var data: Dictionary = profile.data
+		var weather_id := String(data.get("weather_profile", ""))
+		if not weather_id.is_empty():
+			_require(ContentTypes.WEATHER_PROFILE, weather_id, profile.id, "weather_profile")
+
+
+func _check_regions() -> void:
+	for region in _hub.get_all(ContentTypes.REGION):
+		var data: Dictionary = region.data
+		_require(ContentTypes.WEATHER_PROFILE, String(data.get("weather_profile", "")), region.id, "weather_profile")
+		for faction_id in data.get("factions", []):
+			_require(ContentTypes.FACTION, String(faction_id), region.id, "factions")
+
+
+func _check_sites() -> void:
+	for site in _hub.get_all(ContentTypes.SITE):
+		var data: Dictionary = site.data
+		for field in ["ruin_archetype", "encounter_table", "loot_table"]:
+			_check_planned_ref(site.id, field, String(PLANNED_REF_TYPES[field]), String(data.get(field, "")))
+
+
+func _check_route_templates() -> void:
+	for route_template in _hub.get_all(ContentTypes.ROUTE_TEMPLATE):
+		_check_planned_ref(
+			route_template.id,
+			"encounter_table",
+			String(PLANNED_REF_TYPES["encounter_table"]),
+			String(route_template.data.get("encounter_table", ""))
+		)
+
+
+func _check_weather_profiles() -> void:
+	## weather_profiles is a leaf target type: §5.1 declares no outgoing references for it.
+	## The method stays as the registration point so the 9 Phase B checks stay symmetric and a
+	## future field addition has an obvious home.
+	pass
+
+
+func _check_factions() -> void:
+	for faction in _hub.get_all(ContentTypes.FACTION):
+		var data: Dictionary = faction.data
+		for item_id in data.get("trade_goods", []):
+			_require_item(String(item_id), faction.id, "trade_goods")
+		for rival_id in data.get("rival_factions", []):
+			var rival := String(rival_id)
+			if rival == faction.id:
+				_error("reference_self", "%s field 'rival_factions' references itself" % faction.id, faction.id)
+			elif not _hub.contains(ContentTypes.FACTION, rival):
+				_error(
+					"reference_missing",
+					"%s field 'rival_factions' references missing %s '%s'" % [faction.id, ContentTypes.FACTION, rival],
+					faction.id
+				)
+		var contract_family := String(data.get("contract_family", ""))
+		_check_planned_ref(
+			faction.id,
+			"contract_family",
+			String(PLANNED_REF_TYPES["contract_family"]),
+			contract_family
+		)
+
+
+func _check_discoveries() -> void:
+	for discovery in _hub.get_all(ContentTypes.DISCOVERY):
+		for unlock_id in discovery.data.get("unlock_ids", []):
+			if not _definition_exists(String(unlock_id)):
+				_error(
+					"reference_missing",
+					"%s field 'unlock_ids' references missing definition '%s'" % [discovery.id, unlock_id],
+					discovery.id
+				)
+
+
+func _check_start_profiles() -> void:
+	for start_profile in _hub.get_all(ContentTypes.START_PROFILE):
+		var data: Dictionary = start_profile.data
+		_require(ContentTypes.WORLD_PROFILE, String(data.get("world_profile", "")), start_profile.id, "world_profile")
+		_require(ContentTypes.STARTING_BUILD, String(data.get("starting_build", "")), start_profile.id, "starting_build")
+		var map_config_id := String(data.get("map_config", ""))
+		if not map_config_id.is_empty():
+			# Soft reference: third-party mods may omit it (runtime falls back to the core map config);
+			# only an existing-but-unknown id is an error.
+			_require(ContentTypes.MAP_CONFIG, map_config_id, start_profile.id, "map_config")
+		var contract_id := String(data.get("starting_contract", ""))
+		if not contract_id.is_empty():
+			_require(ContentTypes.CONTRACT, contract_id, start_profile.id, "starting_contract")
+		for cargo_stack in data.get("starting_cargo", []):
+			if not (cargo_stack is Dictionary):
+				continue
+			_require_item(String(cargo_stack.get("item", "")), start_profile.id, "starting_cargo")
+
+
+func _check_map_configs() -> void:
+	for map_config in _hub.get_all(ContentTypes.MAP_CONFIG):
+		var data: Dictionary = map_config.data
+		var archetypes: Array = data.get("archetypes", [])
+		for archetype_id in archetypes:
+			_require(ContentTypes.PORT_ARCHETYPE, String(archetype_id), map_config.id, "archetypes")
+		var default_build := String(data.get("default_starting_build", ""))
+		if not default_build.is_empty():
+			_require(ContentTypes.STARTING_BUILD, default_build, map_config.id, "default_starting_build")
+		for start_profile in _hub.get_all(ContentTypes.START_PROFILE):
+			if String(start_profile.data.get("map_config", "")) != map_config.id:
+				continue
+			var world_profile_id := String(start_profile.data.get("world_profile", ""))
+			if world_profile_id.is_empty():
+				continue
+			var world_profile := _hub.get_by_id(ContentTypes.WORLD_PROFILE, world_profile_id)
+			if world_profile == null:
+				# Missing world_profile is reported by _check_start_profiles; nothing to compare here.
+				continue
+			var port_count := int(world_profile.data.get("port_count", 0))
+			if archetypes.size() < port_count:
+				_error(
+					"map_config_archetype_count",
+					"%s provides %d archetypes but world profile %s needs %d ports" % [
+						map_config.id, archetypes.size(), world_profile_id, port_count
+					],
+					map_config.id
+				)
+
+
 func _require(content_type: StringName, definition_id: String, owner: String, field: String) -> ContentDefinition:
 	var definition := _hub.get_by_id(content_type, definition_id)
 	if definition == null:
@@ -312,6 +472,32 @@ func _require(content_type: StringName, definition_id: String, owner: String, fi
 
 func _item_exists(item_id: String) -> bool:
 	return _hub.contains(ContentTypes.GOOD, item_id) or _hub.contains(ContentTypes.MATERIAL, item_id)
+
+
+func _require_item(item_id: String, owner: String, field: String) -> void:
+	if not _item_exists(item_id):
+		_error("reference_missing", "%s field '%s' references missing item '%s'" % [owner, field, item_id], owner)
+
+
+func _check_planned_ref(owner: String, field: String, target_type: String, target_id: String) -> void:
+	if target_id.is_empty():
+		return
+	var content_type := StringName(target_type)
+	if ContentTypes.is_known(content_type):
+		# The target type was promoted to active: the soft warning auto-upgrades to a hard check.
+		_require(content_type, target_id, owner, field)
+		return
+	_warn_inactive_type(owner, field, target_type)
+
+
+func _warn_inactive_type(owner: String, field: String, target_type: String) -> void:
+	_warn(
+		"ref_inactive_type",
+		"%s field '%s' references planned content type '%s' which has no runtime registry yet" % [
+			owner, field, target_type
+		],
+		owner
+	)
 
 
 func _module_exists(module_id: String) -> bool:

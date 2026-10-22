@@ -14,4 +14,6 @@ const CONTENT_SCHEMA := "1.0"
 const CAPABILITIES := [
 	"content.contract.passenger.v1",
 	"content.event.choice_pool.v1",
+	"content.world.v1",
+	"content.campaign.v1",
 ]
