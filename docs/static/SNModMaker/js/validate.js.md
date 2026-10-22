@@ -9,48 +9,48 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `MAX_ERRORS` | L19 |
-| `MAX_DEPTH` | L20 |
-| `SEMVER_RE` | L21 |
-| `MOD_ID_RE` | L22 |
-| `ID_REF_RE` | L23 |
-| `ASSET_URI_RE` | L24 |
-| `ASSET_EXTENSIONS` | L25 |
-| `FORBIDDEN_EXTENSIONS` | L26 |
-| `SUPPORTED_SCHEMA_VERSIONS` | L29 |
-| `DEFAULT_SCHEMA_VERSION` | L30 |
-| `REF_TYPE_BY_FIELD` | L32 |
-| `schemas()` | L48 |
-| `catalog()` | L52 |
-| `schemaVersionFor(typeKeyOrFile)` | L62 |
-| `normalizeSchemaPath(file)` | L73 |
-| `pointerEscape(text)` | L83 |
-| `pointerUnescape(text)` | L87 |
-| `joinPointer(base, key)` | L91 |
-| `resolveRef(ref, baseFile)` | L104 |
-| `deref(schema, file, seen)` | L136 |
-| `flattenObject(schema, file, seen)` | L162 |
-| `typeOf(value)` | L190 |
-| `matchesType(value, type)` | L196 |
-| `validateSchema(instance, schema, file)` | L203 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L207 |
-| `parseSemver(text)` | L367 |
-| `versionRangeError(text)` | L378 |
-| `safePath(path)` | L395 |
-| `extensionOf(path)` | L405 |
-| `isForbiddenPath(path)` | L411 |
-| `walkStrings(value, path, callback, depth)` | L415 |
-| `referencedIdType(id)` | L430 |
-| `expectedRefType(path)` | L435 |
-| `LOCAL_IDENTIFIER_FIELDS` | L450 |
-| `SOCKET_CLASSES` | L455 |
-| `RIG_SOCKET_KINDS` | L456 |
-| `checkWeaponSemantics(definition, view, add)` | L459 |
-| `checkHullSocketSemantics(definition, view, add)` | L493 |
-| `validateProject(project, options)` | L566 |
-| `finish(issues)` | L923 |
-| `byDefinition(issues)` | L932 |
-| `SNValidate (global)` | L945 |
+| `MAX_ERRORS` | L21 |
+| `MAX_DEPTH` | L22 |
+| `SEMVER_RE` | L23 |
+| `MOD_ID_RE` | L24 |
+| `ID_REF_RE` | L25 |
+| `ASSET_URI_RE` | L26 |
+| `ASSET_EXTENSIONS` | L27 |
+| `FORBIDDEN_EXTENSIONS` | L28 |
+| `SUPPORTED_SCHEMA_VERSIONS` | L32 |
+| `DEFAULT_SCHEMA_VERSION` | L33 |
+| `REF_TYPE_BY_FIELD` | L35 |
+| `schemas()` | L51 |
+| `catalog()` | L55 |
+| `schemaVersionFor(typeKeyOrFile)` | L66 |
+| `normalizeSchemaPath(file)` | L77 |
+| `pointerEscape(text)` | L87 |
+| `pointerUnescape(text)` | L91 |
+| `joinPointer(base, key)` | L95 |
+| `resolveRef(ref, baseFile)` | L108 |
+| `deref(schema, file, seen)` | L140 |
+| `flattenObject(schema, file, seen)` | L166 |
+| `typeOf(value)` | L194 |
+| `matchesType(value, type)` | L200 |
+| `validateSchema(instance, schema, file)` | L207 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L211 |
+| `parseSemver(text)` | L371 |
+| `versionRangeError(text)` | L382 |
+| `safePath(path)` | L399 |
+| `extensionOf(path)` | L409 |
+| `isForbiddenPath(path)` | L415 |
+| `walkStrings(value, path, callback, depth)` | L419 |
+| `referencedIdType(id)` | L434 |
+| `expectedRefType(path)` | L439 |
+| `LOCAL_IDENTIFIER_FIELDS` | L454 |
+| `SOCKET_CLASSES` | L459 |
+| `RIG_SOCKET_KINDS` | L460 |
+| `checkWeaponSemantics(definition, view, add)` | L463 |
+| `checkHullSocketSemantics(definition, view, add)` | L497 |
+| `validateProject(project, options)` | L570 |
+| `finish(issues)` | L937 |
+| `byDefinition(issues)` | L946 |
+| `SNValidate (global)` | L959 |
 
 ## 契约与约束
 
@@ -58,7 +58,7 @@
 - `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
 - `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons 草案 2.0），最后回退 1.0。
 - 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
-- `draft_content` 警告只针对仍是草案的 `weapons`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。
+- `draft_content` 警告只针对仍是草案的 `weapons`；`capability_undeclared` 按 `schemaVersion = 2.0` 判定（Phase B 9 类 + weapons），同一 capability 每次校验只报一条。
 - `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
 - 武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。
 - 错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。
