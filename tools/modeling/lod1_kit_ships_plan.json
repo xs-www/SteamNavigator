@@ -1,0 +1,1097 @@
+{
+  "schema": "steam-navigator/lod1-kit-ships-plan@1",
+  "generator": "tools/modeling/generators/sn_lod1_kit_ships_generator.py",
+  "verifier": "tools/modeling/generators/verify_lod1_kit_ships_glb.py",
+  "installer": "tools/modeling/generators/install_lod1_kit_ships.py",
+  "candidate_dir": ".design\\lod1_kit_ships\\out",
+  "shared_textures_uri_prefix": "shared_materials",
+  "caps": {
+    "kit": 0.35,
+    "ship": 0.3
+  },
+  "totals": {
+    "assets": 30,
+    "kit_assets": 26,
+    "ship_assets": 4,
+    "lod0_tri": 87354,
+    "lod1_tri": 19850,
+    "lod1_bytes": 2172008
+  },
+  "assets": [
+    {
+      "asset": "SN_Weapon_Cannon",
+      "kind": "kit",
+      "family": "weapon_kit",
+      "category": "weapons",
+      "lod0_glb": "assets/models/weapons/SN_Weapon_Cannon.glb",
+      "lod1_glb": "assets/models/weapons/SN_Weapon_Cannon_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_Cannon_LOD1.glb",
+      "lod0_tri": 1156,
+      "lod1_tri": 336,
+      "lod1_ratio": 0.290657,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 404,
+      "lod1_bytes": 39376,
+      "lod1_sha256": "425a293a2dd36c039094e576ed800bedd18d7fb895e7253abd54209177e44f39",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        4.0,
+        0.819,
+        1.44
+      ],
+      "bbox_min": [
+        -2.04,
+        -0.24,
+        -0.72
+      ],
+      "shared_textures": "assets/models/weapons/shared_materials"
+    },
+    {
+      "asset": "SN_Weapon_GunCarriage",
+      "kind": "kit",
+      "family": "weapon_kit",
+      "category": "weapons",
+      "lod0_glb": "assets/models/weapons/SN_Weapon_GunCarriage.glb",
+      "lod1_glb": "assets/models/weapons/SN_Weapon_GunCarriage_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_GunCarriage_LOD1.glb",
+      "lod0_tri": 2256,
+      "lod1_tri": 596,
+      "lod1_ratio": 0.264184,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 789,
+      "lod1_bytes": 69028,
+      "lod1_sha256": "ac503ad7068ce2e8d81d5d4938c279e02b5156abbe7b4525b83d455d36bb8d6b",
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Brass"
+      ],
+      "primitives": 7,
+      "bbox_size": [
+        2.965,
+        1.1,
+        1.795
+      ],
+      "bbox_min": [
+        -1.66,
+        0.0,
+        -0.875
+      ],
+      "shared_textures": "assets/models/weapons/shared_materials"
+    },
+    {
+      "asset": "SN_Weapon_Turret",
+      "kind": "kit",
+      "family": "weapon_kit",
+      "category": "weapons",
+      "lod0_glb": "assets/models/weapons/SN_Weapon_Turret.glb",
+      "lod1_glb": "assets/models/weapons/SN_Weapon_Turret_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_Turret_LOD1.glb",
+      "lod0_tri": 1904,
+      "lod1_tri": 482,
+      "lod1_ratio": 0.253151,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 666,
+      "lod1_bytes": 53144,
+      "lod1_sha256": "2154bc00ea8d309768778cc3f96f7cb5973e5553171f847ea741f07b5b4cfc28",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Dark"
+      ],
+      "primitives": 6,
+      "bbox_size": [
+        5.12,
+        3.04,
+        3.44
+      ],
+      "bbox_min": [
+        -1.72,
+        0.0,
+        -1.72
+      ],
+      "shared_textures": "assets/models/weapons/shared_materials"
+    },
+    {
+      "asset": "SN_Weapon_Pedestal",
+      "kind": "kit",
+      "family": "weapon_kit",
+      "category": "weapons",
+      "lod0_glb": "assets/models/weapons/SN_Weapon_Pedestal.glb",
+      "lod1_glb": "assets/models/weapons/SN_Weapon_Pedestal_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/weapons/SN_Weapon_Pedestal_LOD1.glb",
+      "lod0_tri": 940,
+      "lod1_tri": 246,
+      "lod1_ratio": 0.261702,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 329,
+      "lod1_bytes": 29640,
+      "lod1_sha256": "dcdb370deb8d85576b5313709827fe2536f1ba593b9b70cf64de8495096f5d48",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Brass",
+        "SN_Tex_Metal"
+      ],
+      "primitives": 4,
+      "bbox_size": [
+        1.9,
+        1.2,
+        1.9
+      ],
+      "bbox_min": [
+        -0.95,
+        0.0,
+        -0.95
+      ],
+      "shared_textures": "assets/models/weapons/shared_materials"
+    },
+    {
+      "asset": "SN_ShipPart_Deck",
+      "kind": "kit",
+      "family": "ship_parts",
+      "category": "ship_parts",
+      "lod0_glb": "assets/models/ship_parts/SN_ShipPart_Deck.glb",
+      "lod1_glb": "assets/models/ship_parts/SN_ShipPart_Deck_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Deck_LOD1.glb",
+      "lod0_tri": 576,
+      "lod1_tri": 142,
+      "lod1_ratio": 0.246528,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 201,
+      "lod1_bytes": 18364,
+      "lod1_sha256": "f4438dbb1081ee16d5814d3f502e4d4e094e72198c41ab9d0019c93d0787a4d8",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Deck"
+      ],
+      "primitives": 3,
+      "bbox_size": [
+        8.4,
+        0.355,
+        6.0
+      ],
+      "bbox_min": [
+        -4.2,
+        0.0,
+        -3.0
+      ],
+      "shared_textures": "assets/models/ship_parts/shared_materials"
+    },
+    {
+      "asset": "SN_ShipPart_Mast",
+      "kind": "kit",
+      "family": "ship_parts",
+      "category": "ship_parts",
+      "lod0_glb": "assets/models/ship_parts/SN_ShipPart_Mast.glb",
+      "lod1_glb": "assets/models/ship_parts/SN_ShipPart_Mast_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Mast_LOD1.glb",
+      "lod0_tri": 2764,
+      "lod1_tri": 780,
+      "lod1_ratio": 0.2822,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 967,
+      "lod1_bytes": 85464,
+      "lod1_sha256": "754ef680bb89827c0f726f9cba458482d32cc7256a65bf40a3288db3d1cd53ab",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Metal",
+        "SN_Tex_Brass"
+      ],
+      "primitives": 6,
+      "bbox_size": [
+        1.77,
+        12.84,
+        6.2
+      ],
+      "bbox_min": [
+        -0.81,
+        0.0,
+        -3.1
+      ],
+      "shared_textures": "assets/models/ship_parts/shared_materials"
+    },
+    {
+      "asset": "SN_ShipPart_Funnel",
+      "kind": "kit",
+      "family": "ship_parts",
+      "category": "ship_parts",
+      "lod0_glb": "assets/models/ship_parts/SN_ShipPart_Funnel.glb",
+      "lod1_glb": "assets/models/ship_parts/SN_ShipPart_Funnel_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_Funnel_LOD1.glb",
+      "lod0_tri": 1528,
+      "lod1_tri": 392,
+      "lod1_ratio": 0.256545,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 534,
+      "lod1_bytes": 43876,
+      "lod1_sha256": "9d4c3bca728f8fc8d3cde12eca80fb1d4b2c55bc68b5abf4bcc31318fb27624d",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Brass",
+        "SN_Tex_Metal"
+      ],
+      "primitives": 4,
+      "bbox_size": [
+        2.4,
+        4.66,
+        2.0
+      ],
+      "bbox_min": [
+        -1.2,
+        0.0,
+        -1.0
+      ],
+      "shared_textures": "assets/models/ship_parts/shared_materials"
+    },
+    {
+      "asset": "SN_ShipPart_HatchCover",
+      "kind": "kit",
+      "family": "ship_parts",
+      "category": "ship_parts",
+      "lod0_glb": "assets/models/ship_parts/SN_ShipPart_HatchCover.glb",
+      "lod1_glb": "assets/models/ship_parts/SN_ShipPart_HatchCover_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ship_parts/SN_ShipPart_HatchCover_LOD1.glb",
+      "lod0_tri": 840,
+      "lod1_tri": 210,
+      "lod1_ratio": 0.25,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 294,
+      "lod1_bytes": 28064,
+      "lod1_sha256": "50392537de3f078b8a3ba35eccb4593413762b8e8c827331c6f81821b594abde",
+      "materials": [
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Brass"
+      ],
+      "primitives": 6,
+      "bbox_size": [
+        2.72,
+        0.49,
+        2.0
+      ],
+      "bbox_min": [
+        -1.36,
+        0.0,
+        -1.0
+      ],
+      "shared_textures": "assets/models/ship_parts/shared_materials"
+    },
+    {
+      "asset": "SN_Machinery_GearSet",
+      "kind": "kit",
+      "family": "machinery_kit",
+      "category": "machinery",
+      "lod0_glb": "assets/models/machinery/SN_Machinery_GearSet.glb",
+      "lod1_glb": "assets/models/machinery/SN_Machinery_GearSet_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/machinery/SN_Machinery_GearSet_LOD1.glb",
+      "lod0_tri": 2020,
+      "lod1_tri": 494,
+      "lod1_ratio": 0.244554,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 707,
+      "lod1_bytes": 54832,
+      "lod1_sha256": "dc1de818223a754962af5f3399917722a98eb55107da9fc75003b75a9d534124",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Wood_Dark"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        1.9,
+        1.06,
+        1.12
+      ],
+      "bbox_min": [
+        -0.95,
+        0.0,
+        -0.66
+      ],
+      "shared_textures": "assets/models/machinery/shared_materials"
+    },
+    {
+      "asset": "SN_Machinery_Winch",
+      "kind": "kit",
+      "family": "machinery_kit",
+      "category": "machinery",
+      "lod0_glb": "assets/models/machinery/SN_Machinery_Winch.glb",
+      "lod1_glb": "assets/models/machinery/SN_Machinery_Winch_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/machinery/SN_Machinery_Winch_LOD1.glb",
+      "lod0_tri": 1776,
+      "lod1_tri": 498,
+      "lod1_ratio": 0.280405,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 621,
+      "lod1_bytes": 58008,
+      "lod1_sha256": "03bbafb62abe7856557d3f9496427d0313e3bf9c0b44ca5d0e1134383104a3ad",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron_Red"
+      ],
+      "primitives": 7,
+      "bbox_size": [
+        2.24,
+        1.418485,
+        1.82
+      ],
+      "bbox_min": [
+        -1.12,
+        0.0,
+        -0.91
+      ],
+      "shared_textures": "assets/models/machinery/shared_materials"
+    },
+    {
+      "asset": "SN_Machinery_PowerUnit",
+      "kind": "kit",
+      "family": "machinery_kit",
+      "category": "machinery",
+      "lod0_glb": "assets/models/machinery/SN_Machinery_PowerUnit.glb",
+      "lod1_glb": "assets/models/machinery/SN_Machinery_PowerUnit_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/machinery/SN_Machinery_PowerUnit_LOD1.glb",
+      "lod0_tri": 2260,
+      "lod1_tri": 618,
+      "lod1_ratio": 0.273451,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 791,
+      "lod1_bytes": 68148,
+      "lod1_sha256": "ff7ac067d1dcd82d2db7ac84032d80d9b0f29f1bcaa39671e9f1c44a616e570a",
+      "materials": [
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood",
+        "SN_Tex_Glass_Dark"
+      ],
+      "primitives": 7,
+      "bbox_size": [
+        3.78,
+        2.112618,
+        1.44
+      ],
+      "bbox_min": [
+        -1.84,
+        0.0,
+        -0.72
+      ],
+      "shared_textures": "assets/models/machinery/shared_materials"
+    },
+    {
+      "asset": "SN_Cargo_Crate",
+      "kind": "kit",
+      "family": "cargo_kit",
+      "category": "cargo",
+      "lod0_glb": "assets/models/cargo/SN_Cargo_Crate.glb",
+      "lod1_glb": "assets/models/cargo/SN_Cargo_Crate_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_Crate_LOD1.glb",
+      "lod0_tri": 672,
+      "lod1_tri": 150,
+      "lod1_ratio": 0.223214,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 235,
+      "lod1_bytes": 21248,
+      "lod1_sha256": "d946de33293d2d94493c99fb9fa7be4436a00834f663d6acd3a7e2d3063273b2",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Wood_Deck"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        1.26,
+        1.035,
+        1.19
+      ],
+      "bbox_min": [
+        -0.63,
+        0.0,
+        -0.595
+      ],
+      "shared_textures": "assets/models/cargo/shared_materials"
+    },
+    {
+      "asset": "SN_Cargo_CoalScuttle",
+      "kind": "kit",
+      "family": "cargo_kit",
+      "category": "cargo",
+      "lod0_glb": "assets/models/cargo/SN_Cargo_CoalScuttle.glb",
+      "lod1_glb": "assets/models/cargo/SN_Cargo_CoalScuttle_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_CoalScuttle_LOD1.glb",
+      "lod0_tri": 588,
+      "lod1_tri": 146,
+      "lod1_ratio": 0.248299,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 205,
+      "lod1_bytes": 23036,
+      "lod1_sha256": "e195b1eb86205cb7746483196a6d327297ad01baafac2191edcfe94f7dc41544",
+      "materials": [
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Iron",
+        "SN_Tex_Metal",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Coal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Brass"
+      ],
+      "primitives": 8,
+      "bbox_size": [
+        1.4815,
+        1.1,
+        1.14
+      ],
+      "bbox_min": [
+        -0.59,
+        0.0,
+        -0.57
+      ],
+      "shared_textures": "assets/models/cargo/shared_materials"
+    },
+    {
+      "asset": "SN_Cargo_Tank",
+      "kind": "kit",
+      "family": "cargo_kit",
+      "category": "cargo",
+      "lod0_glb": "assets/models/cargo/SN_Cargo_Tank.glb",
+      "lod1_glb": "assets/models/cargo/SN_Cargo_Tank_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_Tank_LOD1.glb",
+      "lod0_tri": 1820,
+      "lod1_tri": 462,
+      "lod1_ratio": 0.253846,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 637,
+      "lod1_bytes": 51908,
+      "lod1_sha256": "b94dd419395574de71e13b97572f362d79c2c289a49420c0caf48b012d17aa2b",
+      "materials": [
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Metal",
+        "SN_Tex_Iron",
+        "SN_Tex_Brass",
+        "SN_Tex_Stone"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        3.37,
+        1.95,
+        1.6
+      ],
+      "bbox_min": [
+        -1.55,
+        0.0,
+        -0.8
+      ],
+      "shared_textures": "assets/models/cargo/shared_materials"
+    },
+    {
+      "asset": "SN_Cargo_Pallet",
+      "kind": "kit",
+      "family": "cargo_kit",
+      "category": "cargo",
+      "lod0_glb": "assets/models/cargo/SN_Cargo_Pallet.glb",
+      "lod1_glb": "assets/models/cargo/SN_Cargo_Pallet_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/cargo/SN_Cargo_Pallet_LOD1.glb",
+      "lod0_tri": 316,
+      "lod1_tri": 84,
+      "lod1_ratio": 0.265823,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 110,
+      "lod1_bytes": 14604,
+      "lod1_sha256": "8e3441d296ba44a1aef1b34b6b3a4a037085b62bbce971c87150704e2dd53323",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Iron",
+        "SN_Tex_Brass"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        1.23,
+        0.18,
+        1.02
+      ],
+      "bbox_min": [
+        -0.615,
+        0.0,
+        -0.51
+      ],
+      "shared_textures": "assets/models/cargo/shared_materials"
+    },
+    {
+      "asset": "SN_Dock_Structure",
+      "kind": "kit",
+      "family": "dock_kit",
+      "category": "dock",
+      "lod0_glb": "assets/models/dock/SN_Dock_Structure.glb",
+      "lod1_glb": "assets/models/dock/SN_Dock_Structure_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/dock/SN_Dock_Structure_LOD1.glb",
+      "lod0_tri": 1628,
+      "lod1_tri": 434,
+      "lod1_ratio": 0.266585,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 569,
+      "lod1_bytes": 47836,
+      "lod1_sha256": "ac93e76e6a17cd4cd9fc8b38d6b317008aac2be7cf806cb9a68a430aeb81aa99",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Stone"
+      ],
+      "primitives": 3,
+      "bbox_size": [
+        8.4,
+        3.16,
+        4.46
+      ],
+      "bbox_min": [
+        -4.2,
+        0.0,
+        -2.36
+      ],
+      "shared_textures": "assets/models/dock/shared_materials"
+    },
+    {
+      "asset": "SN_Dock_Jetty",
+      "kind": "kit",
+      "family": "dock_kit",
+      "category": "dock",
+      "lod0_glb": "assets/models/dock/SN_Dock_Jetty.glb",
+      "lod1_glb": "assets/models/dock/SN_Dock_Jetty_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/dock/SN_Dock_Jetty_LOD1.glb",
+      "lod0_tri": 1660,
+      "lod1_tri": 468,
+      "lod1_ratio": 0.281928,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 581,
+      "lod1_bytes": 52232,
+      "lod1_sha256": "cc19ae60fc3b416b6ef938cf76638e9440f614103660a5ccfae5bf869b7ea594",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Deck"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        8.025981,
+        2.8,
+        2.66
+      ],
+      "bbox_min": [
+        -4.025981,
+        -1.3,
+        -1.4
+      ],
+      "shared_textures": "assets/models/dock/shared_materials"
+    },
+    {
+      "asset": "SN_Dock_Mooring",
+      "kind": "kit",
+      "family": "dock_kit",
+      "category": "dock",
+      "lod0_glb": "assets/models/dock/SN_Dock_Mooring.glb",
+      "lod1_glb": "assets/models/dock/SN_Dock_Mooring_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/dock/SN_Dock_Mooring_LOD1.glb",
+      "lod0_tri": 940,
+      "lod1_tri": 286,
+      "lod1_ratio": 0.304255,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 329,
+      "lod1_bytes": 35260,
+      "lod1_sha256": "f687b2bb10cf40784934fa9e485ff2689e1334cd2bf2184fd1c01ff1e743761a",
+      "materials": [
+        "SN_Tex_Stone",
+        "SN_Tex_Iron",
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Canvas_Shade"
+      ],
+      "primitives": 5,
+      "bbox_size": [
+        1.56,
+        0.95,
+        1.146
+      ],
+      "bbox_min": [
+        -0.78,
+        0.0,
+        -0.746
+      ],
+      "shared_textures": "assets/models/dock/shared_materials"
+    },
+    {
+      "asset": "SN_Arch_Warehouse",
+      "kind": "kit",
+      "family": "architecture_kit",
+      "category": "architecture",
+      "lod0_glb": "assets/models/architecture/SN_Arch_Warehouse.glb",
+      "lod1_glb": "assets/models/architecture/SN_Arch_Warehouse_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Warehouse_LOD1.glb",
+      "lod0_tri": 2704,
+      "lod1_tri": 626,
+      "lod1_ratio": 0.231509,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 946,
+      "lod1_bytes": 67576,
+      "lod1_sha256": "98b66ed25bdd5cc2285a34275367a285139a2c068543ce45488764eb848241be",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Stone",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Iron",
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Glass_Dark"
+      ],
+      "primitives": 7,
+      "bbox_size": [
+        10.95,
+        6.35,
+        6.953607
+      ],
+      "bbox_min": [
+        -4.45,
+        0.0,
+        -3.476803
+      ],
+      "shared_textures": "assets/models/architecture/shared_materials"
+    },
+    {
+      "asset": "SN_Arch_Workshop",
+      "kind": "kit",
+      "family": "architecture_kit",
+      "category": "architecture",
+      "lod0_glb": "assets/models/architecture/SN_Arch_Workshop.glb",
+      "lod1_glb": "assets/models/architecture/SN_Arch_Workshop_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Workshop_LOD1.glb",
+      "lod0_tri": 1996,
+      "lod1_tri": 444,
+      "lod1_ratio": 0.222445,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 698,
+      "lod1_bytes": 53484,
+      "lod1_sha256": "04849f7e39b377e80e51fd43c35144174048929a2998ffa25f9296b704a3d0be",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Brass",
+        "SN_Tex_Metal",
+        "SN_Tex_Stone"
+      ],
+      "primitives": 8,
+      "bbox_size": [
+        9.320293,
+        7.04,
+        6.626976
+      ],
+      "bbox_min": [
+        -4.35,
+        0.0,
+        -3.313488
+      ],
+      "shared_textures": "assets/models/architecture/shared_materials"
+    },
+    {
+      "asset": "SN_Arch_Tavern",
+      "kind": "kit",
+      "family": "architecture_kit",
+      "category": "architecture",
+      "lod0_glb": "assets/models/architecture/SN_Arch_Tavern.glb",
+      "lod1_glb": "assets/models/architecture/SN_Arch_Tavern_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Tavern_LOD1.glb",
+      "lod0_tri": 2884,
+      "lod1_tri": 600,
+      "lod1_ratio": 0.208044,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 1009,
+      "lod1_bytes": 63652,
+      "lod1_sha256": "a8c29f00bd2ac0eb70ee15d4158b12d6e290ee66cfa7f40623ec192ae9952850",
+      "materials": [
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Wood",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron"
+      ],
+      "primitives": 7,
+      "bbox_size": [
+        8.668,
+        7.64,
+        6.961881
+      ],
+      "bbox_min": [
+        -3.45,
+        0.0,
+        -3.48094
+      ],
+      "shared_textures": "assets/models/architecture/shared_materials"
+    },
+    {
+      "asset": "SN_Arch_Factory",
+      "kind": "kit",
+      "family": "architecture_kit",
+      "category": "architecture",
+      "lod0_glb": "assets/models/architecture/SN_Arch_Factory.glb",
+      "lod1_glb": "assets/models/architecture/SN_Arch_Factory_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/architecture/SN_Arch_Factory_LOD1.glb",
+      "lod0_tri": 3020,
+      "lod1_tri": 768,
+      "lod1_ratio": 0.254305,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 1057,
+      "lod1_bytes": 80968,
+      "lod1_sha256": "88228d6d16069bc102fbac8fb0008f81f0cf2d21cbf8953f1b2bd7bbfc9926c3",
+      "materials": [
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Iron",
+        "SN_Tex_Stone",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Brass"
+      ],
+      "primitives": 8,
+      "bbox_size": [
+        14.74,
+        9.64,
+        8.305
+      ],
+      "bbox_min": [
+        -6.1,
+        0.0,
+        -4.155
+      ],
+      "shared_textures": "assets/models/architecture/shared_materials"
+    },
+    {
+      "asset": "SN_Env_Reef",
+      "kind": "kit",
+      "family": "environment_kit",
+      "category": "environment",
+      "lod0_glb": "assets/models/environment/SN_Env_Reef.glb",
+      "lod1_glb": "assets/models/environment/SN_Env_Reef_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/environment/SN_Env_Reef_LOD1.glb",
+      "lod0_tri": 1944,
+      "lod1_tri": 556,
+      "lod1_ratio": 0.286008,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 680,
+      "lod1_bytes": 60364,
+      "lod1_sha256": "d5e205cc2a2083dda8ecf2a6ee6f4e0e4d4012425af525041b30e2047d2534fb",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark"
+      ],
+      "primitives": 3,
+      "bbox_size": [
+        7.130671,
+        5.515,
+        6.44406
+      ],
+      "bbox_min": [
+        -3.207259,
+        -3.0,
+        -2.840664
+      ],
+      "shared_textures": "assets/models/environment/shared_materials"
+    },
+    {
+      "asset": "SN_Env_Wreck",
+      "kind": "kit",
+      "family": "environment_kit",
+      "category": "environment",
+      "lod0_glb": "assets/models/environment/SN_Env_Wreck.glb",
+      "lod1_glb": "assets/models/environment/SN_Env_Wreck_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/environment/SN_Env_Wreck_LOD1.glb",
+      "lod0_tri": 1046,
+      "lod1_tri": 268,
+      "lod1_ratio": 0.256214,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 366,
+      "lod1_bytes": 34520,
+      "lod1_sha256": "9e28e7a9e5f2ae527f1022c55c6be841fb801560f442d260e8f2615bca02c86a",
+      "materials": [
+        "SN_Tex_Stone",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Brass",
+        "SN_Tex_Wood_Deck"
+      ],
+      "primitives": 6,
+      "bbox_size": [
+        8.62,
+        4.719105,
+        3.962356
+      ],
+      "bbox_min": [
+        -4.4,
+        -1.497547,
+        -1.997739
+      ],
+      "shared_textures": "assets/models/environment/shared_materials"
+    },
+    {
+      "asset": "SN_Env_Lighthouse",
+      "kind": "kit",
+      "family": "environment_kit",
+      "category": "environment",
+      "lod0_glb": "assets/models/environment/SN_Env_Lighthouse.glb",
+      "lod1_glb": "assets/models/environment/SN_Env_Lighthouse_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/environment/SN_Env_Lighthouse_LOD1.glb",
+      "lod0_tri": 1952,
+      "lod1_tri": 482,
+      "lod1_ratio": 0.246926,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 683,
+      "lod1_bytes": 50524,
+      "lod1_sha256": "0013486bf381dd2357c730663588bc7ea497a67a1313db599241f93d5901e7c1",
+      "materials": [
+        "SN_Tex_Stone",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Glass_Dark",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Dark"
+      ],
+      "primitives": 6,
+      "bbox_size": [
+        4.62046,
+        13.16,
+        4.60092
+      ],
+      "bbox_min": [
+        -2.30046,
+        0.0,
+        -2.30046
+      ],
+      "shared_textures": "assets/models/environment/shared_materials"
+    },
+    {
+      "asset": "SN_Env_Buoy",
+      "kind": "kit",
+      "family": "environment_kit",
+      "category": "environment",
+      "lod0_glb": "assets/models/environment/SN_Env_Buoy.glb",
+      "lod1_glb": "assets/models/environment/SN_Env_Buoy_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/environment/SN_Env_Buoy_LOD1.glb",
+      "lod0_tri": 868,
+      "lod1_tri": 256,
+      "lod1_ratio": 0.294931,
+      "lod1_cap_ratio": 0.35,
+      "lod1_cap_tri": 303,
+      "lod1_bytes": 31188,
+      "lod1_sha256": "25e94ccf50d573cda4fe5c7ce62cd046bb53f43607b02461c7731f06a589cbe8",
+      "materials": [
+        "SN_Tex_Iron",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Glass_Dark"
+      ],
+      "primitives": 4,
+      "bbox_size": [
+        1.88,
+        3.84,
+        1.88
+      ],
+      "bbox_min": [
+        -0.94,
+        -0.74,
+        -0.94
+      ],
+      "shared_textures": "assets/models/environment/shared_materials"
+    },
+    {
+      "asset": "SN_Paddle_Freighter",
+      "kind": "ship",
+      "family": "ship",
+      "category": "ships",
+      "lod0_glb": "assets/models/ships/SN_Paddle_Freighter.glb",
+      "lod1_glb": "assets/models/ships/SN_Paddle_Freighter_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ships/SN_Paddle_Freighter_LOD1.glb",
+      "lod0_tri": 12200,
+      "lod1_tri": 2507,
+      "lod1_ratio": 0.205492,
+      "lod1_cap_ratio": 0.3,
+      "lod1_cap_tri": 3660,
+      "lod1_bytes": 257492,
+      "lod1_sha256": "f02089a1f129d31e5a4df7ec5a6cbb0abf7190966b1fb434e1b1507cdb844a17",
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Iron_Red"
+      ],
+      "primitives": 6,
+      "bbox_size": [
+        59.52763,
+        19.520001,
+        14.1
+      ],
+      "bbox_min": [
+        -28.5,
+        -2.74,
+        -7.05
+      ],
+      "shared_textures": "assets/models/ships/shared_materials"
+    },
+    {
+      "asset": "SN_Paddle_Steamer",
+      "kind": "ship",
+      "family": "ship",
+      "category": "ships",
+      "lod0_glb": "assets/models/ships/SN_Paddle_Steamer.glb",
+      "lod1_glb": "assets/models/ships/SN_Paddle_Steamer_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ships/SN_Paddle_Steamer_LOD1.glb",
+      "lod0_tri": 11764,
+      "lod1_tri": 2379,
+      "lod1_ratio": 0.202227,
+      "lod1_cap_ratio": 0.3,
+      "lod1_cap_tri": 3529,
+      "lod1_bytes": 245228,
+      "lod1_sha256": "21cbb5ce01527f4b41b15db0973aae7d3d9e29a512d9b6efe91ef2546f0b3650",
+      "materials": [
+        "SN_Tex_Metal",
+        "SN_Tex_Brass",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Glass_Dark"
+      ],
+      "primitives": 7,
+      "bbox_size": [
+        24.56,
+        10.47,
+        8.74
+      ],
+      "bbox_min": [
+        -12.34,
+        -1.32,
+        -4.37
+      ],
+      "shared_textures": "assets/models/ships/shared_materials"
+    },
+    {
+      "asset": "SN_Schooner_Fame",
+      "kind": "ship",
+      "family": "ship",
+      "category": "ships",
+      "lod0_glb": "assets/models/ships/SN_Schooner_Fame.glb",
+      "lod1_glb": "assets/models/ships/SN_Schooner_Fame_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ships/SN_Schooner_Fame_LOD1.glb",
+      "lod0_tri": 13174,
+      "lod1_tri": 2484,
+      "lod1_ratio": 0.188553,
+      "lod1_cap_ratio": 0.3,
+      "lod1_cap_tri": 3952,
+      "lod1_bytes": 259832,
+      "lod1_sha256": "119f4e781ba90415a7fc100a3f8ee9f2201682dafa3701cb8fbebcacb67bfd32",
+      "materials": [
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Iron",
+        "SN_Tex_Brass",
+        "SN_Tex_Canvas_Shade",
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Glass_Dark"
+      ],
+      "primitives": 9,
+      "bbox_size": [
+        33.441101,
+        26.816891,
+        6.88
+      ],
+      "bbox_min": [
+        -12.82,
+        -2.74,
+        -3.44
+      ],
+      "shared_textures": "assets/models/ships/shared_materials"
+    },
+    {
+      "asset": "SN_Ironclad",
+      "kind": "ship",
+      "family": "ship",
+      "category": "ships",
+      "lod0_glb": "assets/models/ships/SN_Ironclad.glb",
+      "lod1_glb": "assets/models/ships/SN_Ironclad_LOD1.glb",
+      "lod1_core_glb": "dev_mods/core/assets/models/ships/SN_Ironclad_LOD1.glb",
+      "lod0_tri": 8158,
+      "lod1_tri": 1656,
+      "lod1_ratio": 0.202991,
+      "lod1_cap_ratio": 0.3,
+      "lod1_cap_tri": 2447,
+      "lod1_bytes": 173112,
+      "lod1_sha256": "48a21255f6e05cf3ca903b9adb676325e09db1c92428991a44c3c2b8be67fd7e",
+      "materials": [
+        "SN_Tex_Iron_Red",
+        "SN_Tex_Iron",
+        "SN_Tex_Wood_Deck",
+        "SN_Tex_Metal",
+        "SN_Tex_Wood_Dark",
+        "SN_Tex_Brass",
+        "SN_Tex_Wood",
+        "SN_Tex_Canvas_Shade"
+      ],
+      "primitives": 8,
+      "bbox_size": [
+        60.134638,
+        28.64,
+        18.0
+      ],
+      "bbox_min": [
+        -28.6,
+        -4.2,
+        -9.0
+      ],
+      "shared_textures": "assets/models/ships/shared_materials"
+    }
+  ]
+}

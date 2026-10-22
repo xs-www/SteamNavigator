@@ -2,10 +2,14 @@
 # @static-doc
 # 作用：从批次 1/2/3 生成器的纯几何数据生成机器可读的模型素材库目录
 # `tools/modeling/kit_catalog.json`（资产 / 尺寸 / tri / 材质 / socket 接口 / 装配
-# 配方）。改几何后重跑本脚本即可，不再手工维护第二份尺寸表。
+# 配方），并把 M0-5 的 LOD1 计划（`lod1_kit_ships_plan.json`）合并成逐件 `lod1` 块与
+# 顶层 `lod1` 汇总（路径 / LOD1 tri / 比例 / 上限 / 字节 / bbox）。
 #
 # 用法：
 #     python tools/modeling/generators/gen_kit_catalog.py
+#
+# 约定：LOD1 段只合并 `kind == "kit"` 的 26 件（船 LOD1 在 Core manifest 登记）；
+# 计划文件缺失时目录照常生成，只是没有 `lod1` 字段（向后兼容）。
 # @end-static-doc
 
 import json
@@ -22,6 +26,7 @@ import kit_batch3_generator as gen3  # noqa: E402
 
 WORKDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 OUT = os.path.join(WORKDIR, "tools", "modeling", "kit_catalog.json")
+LOD1_PLAN = os.path.join(WORKDIR, "tools", "modeling", "lod1_kit_ships_plan.json")
 GENERATORS = [gen1, gen2, gen3]
 
 CATEGORY = {
@@ -206,14 +211,55 @@ def _asset_entry(gen, asset):
     }
 
 
+def _load_lod1_plan(assets):
+    """Merge the M0-5 LOD1 plan into the catalog (machine-readable LOD1 paths)."""
+    if not os.path.exists(LOD1_PLAN):
+        return {}, None
+    with open(LOD1_PLAN, encoding="utf-8") as handle:
+        plan = json.load(handle)
+    merged = {}
+    for row in plan.get("assets", []):
+        asset = row.get("asset")
+        if row.get("kind") != "kit" or asset not in assets:
+            continue
+        merged[asset] = {
+            "glb": row["lod1_glb"],
+            "core_glb": row["lod1_core_glb"],
+            "tri_count": row["lod1_tri"],
+            "ratio": row["lod1_ratio"],
+            "cap_ratio": row["lod1_cap_ratio"],
+            "cap_tri": row["lod1_cap_tri"],
+            "bytes": row["lod1_bytes"],
+            "materials": row["materials"],
+            "bbox_size": row["bbox_size"],
+            "bbox_min": row["bbox_min"],
+        }
+    kit_rows = [row for row in plan.get("assets", []) if row.get("kind") == "kit"]
+    summary = {
+        "schema": plan.get("schema"),
+        "generator": plan.get("generator"),
+        "verifier": plan.get("verifier"),
+        "plan": os.path.relpath(LOD1_PLAN, WORKDIR).replace("\\", "/"),
+        "caps": plan.get("caps"),
+        "assets": len(kit_rows),
+        "lod0_tri": sum(int(row["lod0_tri"]) for row in kit_rows),
+        "lod1_tri": sum(int(row["lod1_tri"]) for row in kit_rows),
+        "lod1_bytes": sum(int(row["lod1_bytes"]) for row in kit_rows),
+    }
+    return merged, summary
+
+
 def main():
     assets = {}
     for gen in GENERATORS:
         for asset in gen.ASSETS:
             assets[asset] = _asset_entry(gen, asset)
+    lod1_assets, lod1_summary = _load_lod1_plan(assets)
+    for asset, entry in lod1_assets.items():
+        assets[asset]["lod1"] = entry
     catalog = {
         "schema": "steam-navigator/model-kit-catalog@1",
-        "version": "1.2",
+        "version": "1.3",
         "units": "metres",
         "axes": {"up": "+Z", "forward": "+X"},
         "source_generators": [
@@ -227,6 +273,8 @@ def main():
             "tools/modeling/briefs/sn_kit_batch3.json",
         ],
         "contract": "docs/design/KIT_ASSET_LIBRARY.md",
+        "lod1_generator": "tools/modeling/generators/sn_lod1_kit_ships_generator.py",
+        "lod1": lod1_summary,
         "families": {
             "weapon_kit": "舰载武器可拼装件：火炮 / 炮架 / 炮塔 / 武器基座",
             "ship_parts": "船体可拼装件：甲板 / 桅杆 / 烟囱 / 货舱盖",
@@ -237,6 +285,7 @@ def main():
             "environment_kit": "环境可拼装件：礁石 / 沉船残骸 / 灯塔 / 航标浮标",
         },
         "total_tri": sum(entry["tri_count"] for entry in assets.values()),
+        "total_lod1_tri": lod1_summary["lod1_tri"] if lod1_summary else 0,
         "assets": assets,
         "recipes": RECIPES,
     }

@@ -1,4 +1,4 @@
-# 模型素材库（批次 1 P0：武器套件 + 船体部件；批次 2 P1：机械 / 货物 / 码头；批次 3 P2：建筑 / 环境）
+# 模型素材库（批次 1 P0：武器套件 + 船体部件；批次 2 P1：机械 / 货物 / 码头；批次 3 P2：建筑 / 环境；LOD1 远景低模 M0-5）
 
 > 状态：Active（2026-10-21）
 > 工单：[sn_kit_batch1.json](../../tools/modeling/briefs/sn_kit_batch1.json) / [sn_kit_batch2.json](../../tools/modeling/briefs/sn_kit_batch2.json) / [sn_kit_batch3.json](../../tools/modeling/briefs/sn_kit_batch3.json)
@@ -281,3 +281,75 @@ Pedestal  Root → Deck Root + Socket_Weapon_Starboard # z +0.33
 - 环境件是**可复用单体**：礁石不生成程序化岛链、残骸不带动画、灯塔灯室只给 `Lamp` 接口（光束 / VFX 在 Godot 侧做）。
 - 环境件 Root 在水线，礁石 / 残骸 / 浮标有水下部分；场景摆放时把 Root 放到水面高度，不要按 zmin=0 落地。
 - 建筑 `Module_Next/Prev` 只约定位移（X 方向体量边），不做自动吸附 / 碰撞；本批同样不登记 manifest、不接运行时装配。
+
+## 11. LOD1 远景低模（M0-5，2026-10-22）
+
+kit 26 件各补一个远景低模 `SN_<Asset>_LOD1`，由 LOD0 就地派生（不重新建模、不复制生成器参数）。**本节只覆盖 kit**；4 艘可玩船的 LOD1 与总表见 [ASSET_MAP.md §LOD1 基础套件](ASSET_MAP.md#lod1-基础套件m0-52026-10-22)，验收见 [LOD1_BASE_KIT_ACCEPTANCE.md](../archive/LOD1_BASE_KIT_ACCEPTANCE.md)。LOD1 只交付资产：运行时 LOD 切换 / 质量档位尚未接线。
+
+### 11.1 资产表（26 件 kit）
+
+| 资产 | LOD0 tri | LOD1 tri | 比例 | 上限 tri | LOD1 GLB 字节 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `SN_Weapon_Cannon` | 1 156 | 336 | 29.07 % | 404 | 39 376 |
+| `SN_Weapon_GunCarriage` | 2 256 | 596 | 26.42 % | 789 | 69 028 |
+| `SN_Weapon_Turret` | 1 904 | 482 | 25.32 % | 666 | 53 144 |
+| `SN_Weapon_Pedestal` | 940 | 246 | 26.17 % | 329 | 29 640 |
+| `SN_ShipPart_Deck` | 576 | 142 | 24.65 % | 201 | 18 364 |
+| `SN_ShipPart_Mast` | 2 764 | 780 | 28.22 % | 967 | 85 464 |
+| `SN_ShipPart_Funnel` | 1 528 | 392 | 25.65 % | 534 | 43 876 |
+| `SN_ShipPart_HatchCover` | 840 | 210 | 25.00 % | 294 | 28 064 |
+| `SN_Machinery_GearSet` | 2 020 | 494 | 24.46 % | 707 | 54 832 |
+| `SN_Machinery_Winch` | 1 776 | 498 | 28.04 % | 621 | 58 008 |
+| `SN_Machinery_PowerUnit` | 2 260 | 618 | 27.35 % | 791 | 68 148 |
+| `SN_Cargo_Crate` | 672 | 150 | 22.32 % | 235 | 21 248 |
+| `SN_Cargo_CoalScuttle` | 588 | 146 | 24.83 % | 205 | 23 036 |
+| `SN_Cargo_Tank` | 1 820 | 462 | 25.38 % | 637 | 51 908 |
+| `SN_Cargo_Pallet` | 316 | 84 | 26.58 % | 110 | 14 604 |
+| `SN_Dock_Structure` | 1 628 | 434 | 26.66 % | 569 | 47 836 |
+| `SN_Dock_Jetty` | 1 660 | 468 | 28.19 % | 581 | 52 232 |
+| `SN_Dock_Mooring` | 940 | 286 | 30.43 % | 329 | 35 260 |
+| `SN_Arch_Warehouse` | 2 704 | 626 | 23.15 % | 946 | 67 576 |
+| `SN_Arch_Workshop` | 1 996 | 444 | 22.24 % | 698 | 53 484 |
+| `SN_Arch_Tavern` | 2 884 | 600 | 20.80 % | 1 009 | 63 652 |
+| `SN_Arch_Factory` | 3 020 | 768 | 25.43 % | 1 057 | 80 968 |
+| `SN_Env_Reef` | 1 944 | 556 | 28.60 % | 680 | 60 364 |
+| `SN_Env_Wreck` | 1 046 | 268 | 25.62 % | 366 | 34 520 |
+| `SN_Env_Lighthouse` | 1 952 | 482 | 24.69 % | 683 | 50 524 |
+| `SN_Env_Buoy` | 868 | 256 | 29.49 % | 303 | 31 188 |
+| **合计（26 件）** | **42 058** | **10 824** | **25.7 %** | 14 711 | **1 236 344** |
+
+运行时路径：`assets/models/<category>/SN_<Asset>_LOD1.glb` + `dev_mods/core/assets/models/<category>/` 副本（8 个类别目录）；贴图指回各类别已有的 `shared_materials/<texture>.png`（8 目录 × 11 张，无新增贴图）。
+
+### 11.2 派生契约
+
+- **LOD0 是唯一几何真源**：LOD1 由工作台 LOD0 网格 `Decimate(collapse)` 派生，不复制生成器参数、不手摆点；源对象 ≤20 tri（`KEEP_TRI`）的部件原样保留，其余按预算统一 ratio，单件 ratio 下限 0.08（`MIN_RATIO`）。
+- **预算**：目标 kit 30 % / 船 25 %，硬上限 kit 35 % / 船 30 %；逐件 tri ≤ 上限且 ≤ LOD0×cap，必须有实质简化（LOD1 ≤ LOD0×0.5）且足够几何（LOD1 ≥ 24 tri）。
+- **单 mesh 交付**：LOD0 根下全部 mesh 子件合并为一个 mesh（按材质分 primitive），命名 `SN_<Asset>_LOD1`，单根节点；**不保留 socket / pivot / 层级**。
+- **材质 / UV**：只允许 `SN_Tex_*` 共享贴图材质，且是 LOD0 材质集合的子集；先按面记录材质名、合并后去重，再由 `sn_shared_materials.apply_to_object(space="local")` 重写槽位与盒式 UV（几何不变），每个 primitive 都带 UV。
+- **包围盒钉死**：LOD1 顶点在根局部空间按 LOD0 的 x/y/z min/max 逐轴重映射，LOD0↔LOD1 世界包围盒逐轴一致（容差 0.02 m；本批实测 0.000 m）。
+- **拓扑收口**：Decimate 产生的共顶点重复面（零体积「pillow」面）成对删除（只删一张会开洞，必须成对），保持邻接拓扑、不新增边界边；LOD1 网格健康不得高于 LOD0。
+- **导出**：逐件单位阵、selection-only 导出 GLB，贴图外部化为 `shared_materials/<texture>.png`（`prefer_authored=True`，与授权 tile 逐字节一致）；根节点 extras 写 `lod_level=1` / `lod_source`。
+
+### 11.3 工具链
+
+| 环节 | 文件 / 命令 |
+| --- | --- |
+| 生成器（Blender 工作台） | `tools/modeling/generators/sn_lod1_kit_ships_generator.py`（`build_all()` / `report()` / `export_candidates()`） |
+| 纯 Python 干跑 / 预算计划 | `python tools/modeling/generators/dryrun_lod1_kit_ships.py` → `.design/lod1_kit_ships/plan.json` |
+| 世界空间几何读取 | `tools/modeling/generators/glb_world_bounds.py`（真实顶点 bbox / tri / UV，供 LOD0↔LOD1 对账） |
+| 候选 / 安装后验收 | `python tools/modeling/generators/verify_lod1_kit_ships_glb.py [--candidate] [--report …]` |
+| 安装（GLB 两处 + 共享贴图 + 机器计划） | `python tools/modeling/generators/install_lod1_kit_ships.py` |
+| 预览渲染 | `tools/modeling/generators/render_lod1_kit_ships_preview.py`（工作台内，LOD0/LOD1 同机位 + 8 张 lineup） |
+| 机器计划 | `tools/modeling/lod1_kit_ships_plan.json`（30 件 tri / 比例 / 上限 / GLB 路径 / bbox / 材质 / 字节 / sha256 + 总账） |
+| 目录合并 | `python tools/modeling/generators/gen_kit_catalog.py` → `kit_catalog.json` v1.3 逐件 `lod1` 块 + 顶层 `lod1` 段 |
+| Godot 运行时探针 | `godot --headless --path . --script res://tools/godot/verify_lod1_kit_ships.gd`（30 件 / 67 个共享贴图实例 / 0 失败） |
+| Godot 回归用例 | `framework/tests/cases/test_lod1_assets.gd`（3 例：单 mesh + UV + 共享贴图、tri 比例 / bbox、manifest 键），随 `pwsh ./tools/test.ps1` 跑全量 |
+
+### 11.4 边界
+
+- **派生结果，不是手工资产**：轮廓与 UV 由 LOD0 决定；小件靠 ≤20 tri 保留，但细铆钉 / 窗框 / 板缝在 LOD1 上不可依赖，远景可读性以轮廓与材质色块为主。
+- **零厚度区域会被合并**：Decimate 产生的共顶点「pillow」重合面成对删除（保留闭合拓扑），因此近距离对比图里小件（如储罐鞍座）比 LOD0 粗糙；远景使用不受影响。
+- **UV 是重投影的盒式投影**：只保证完整、材质可采样，不追求与 LOD0 逐面 UV 一致；近景必须用 LOD0。
+- **不保留接口层级**：单 mesh 无 socket / pivot / 层级，远景不参与装配；装配 / 换装只属于 LOD0（见 §4）。
+- **运行时未接线**：只交付资产，切换阈值、质量档位、低配回退留到 `M2-5`（LOD2 / impostor）与 todo；kit LOD1 未登记 Core manifest（同 kit LOD0，走 `kit_catalog.json`）。
+- 船 4 艘的 LOD1 不在本文档展开，见 [ASSET_MAP.md §LOD1 基础套件](ASSET_MAP.md#lod1-基础套件m0-52026-10-22) 与验收文档。
