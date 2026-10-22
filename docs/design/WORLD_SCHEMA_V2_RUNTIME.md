@@ -1,6 +1,6 @@
 # 世界与战役内容 Schema 2.0 实现契约（Phase B）
 
-> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1–B4 已落地）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
+> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1–B5 已落地）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
 > 总方案见 [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md) §4 Phase B，实体契约见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)；探索规则见 `EXPLORATION_SYSTEM.md`，教程剧情见
 > [STORY_TUTORIAL.md](STORY_TUTORIAL.md)。
@@ -300,6 +300,13 @@ data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
 | 迁移器 | `save_migrations.gd` 在 1.x→2.0 分支补 `content_versions`；`_ensure_current` 对缺失字段惰性补齐 |
 | ID 稳定 | 1.0 `core:map_profile/standard` 保留；v2 使用新 ID `core:map_config/standard`；别名与迁移在 Phase E 统一 |
 
+> **B5 实现备注（2026-10-22）**：`SaveMigrations.prepare_for_save()` 在保存克隆上快照
+> `ContentTypes.SCHEMA_VERSIONS`（1.0 新档也会写全表）；加载时 `_ensure_content_versions()` 对缺表旧档先推断
+> `starting_builds / map_profiles → 1.0`（v2 另记 `map_configs → 2.0`），再用当前注册表补齐缺失类型并写
+> `content_versions inferred` warning；已记录版本与运行时不一致时写 `content version drift: <type> save=… current=…`
+> warning，但**不阻塞加载、不重排世界**。1.0 新 run 在 `RunFactory.create_run` 创建时即写入版本快照（保证
+> save/load 的 state hash 一致）。
+
 ## 8. Core 内容与 1.0 → 2.0 字段映射（B4）
 
 ### 8.1 1.0 `map_profile` 字段去向
@@ -390,7 +397,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | B2 | **✅ 已完成（2026-10-22）**：`CrossReferenceValidator` 9 个 `_check_*` + `ref_inactive_type`（目标激活后自动升级硬校验）；`CoreCompletenessChecker` Phase B 规则 + Core presence gate；`FrameworkInfo.CAPABILITIES` 增加 `content.world.v1` / `content.campaign.v1`。证据：`test_world_schema_refs` 16/16、`test_world_completeness` 13/13、全量回归绿 | B1 | revert 校验器改动 |
 | B3 | **✅ 已完成（2026-10-22）**：`CampaignFactory` + 5 个装配器 + `MapGenerationSpec`/`MapGenerator.generate_spec`；`run.start` 可选 `start_profile`；`campaign.view` 注册；`ContentRefs` 与 12 处运行时 resolver 切换；`initialize_markets` 抽公共；state 写 `campaign.setup/content_versions/world/codex/factions`。证据：`test_campaign_assembly` 10/10、`test_campaign_start` 6/6、全量 468/468 | B1、B2、B4（core 内容可并行） | 保留入口但默认不走 v2；revert 运行时 |
 | B4 | **✅ 已完成（2026-10-22）**：`dev_mods/core/content/` 新增 9 个 v2 文件（world_profiles 1 / map_configs 1 / regions 5 / sites 6 / route_templates 3 / weather_profiles 2 / factions 3 / discoveries 7 / start_profiles 2）、map_config 的 exploration 31 键与 story 原块逐键搬迁、本地化 +62 键、manifest content 24 / capabilities 4。证据：SDK validate `status: ok`（82 definitions）、Godot 468/468、Node 50/50 + CLI 57/57 | B1 | 回退内容文件（旧内容仍在） |
-| B5 | `content_versions` + 迁移器 + 存档矩阵测试 | B3 | revert 迁移器；旧档不受影响 |
+| B5 | **✅ 已完成（2026-10-22）**：`prepare_for_save()` 快照 `ContentTypes.SCHEMA_VERSIONS`；`_ensure_content_versions()` 旧档推断（`starting_builds/map_profiles → 1.0`、`map_configs → 2.0`）+ 当前注册表补齐 + `content version drift` warning；1.0 新 run 创建即写快照。证据：`test_save_migration` 8/8、`test_save_load` 2/2、v2 战役 round-trip | B3 | revert 迁移器；旧档不受影响 |
 | B6 | 编辑器/CLI/G8/测试/文档/门禁；`test_schema_v2_drafts` 改写 | B1–B5 | 逐项 revert |
 
 并行写作用域建议：B1 只动 `content_types.json` / `schemas/v2/` / `tools/gen_content_types.mjs`；B2 只动
