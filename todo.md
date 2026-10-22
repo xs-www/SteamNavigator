@@ -16,8 +16,7 @@
 - [ ] 炮门 socket 内容镜像：`schemas/v2/hull.schema.json` 的 `hull_data` 新增可选 `gun_port_sockets` 数组并回填 Core `hulls.json`（供编辑器 / 装配器读内容，运行时仍以 GLB extras 为准）
 - [ ] 剧情模式（Story Mode）：**S1 数据契约已交付**（`story_arcs` / `story_levels` Schema 2.0 草案 + 内嵌固定地图 + 只加剧情白名单 + 示例包 `sdk/templates/story_pack_iron_tide/`）；下一步 **S2 加载链**：剧情包按内容模组加载、白名单校验、注册，`story_mode.view` 列出篇章与关卡；之后 S3 首发 1 关内容 → S4 运行时（`data.story_mode` / `run.start story_level` / checkpoint 重试）→ S5 UI → S6 档案 → S7 `SNStoryMaker/`（Node Web，复用 SNModMaker 的 Schema / 校验 / 打包）。首发固定主角、每关独立、奖励不影响自由模式（成就延后）；草案见 [STORY_MODE.md](docs/design/STORY_MODE.md)
 - [ ] 正式任务系统后续切片：Quest 奖励 / effects（`spawn_contract` 等）、任务发布点（酒馆 / 港务告示牌）、任务日志页；`quests` 内容类型与 `QuestService` 已随 C3 落地，契约见 [TASK_QUEST_SYSTEM.md](docs/design/TASK_QUEST_SYSTEM.md)
-- [ ] 战斗内容 Schema 2.0 其余类型：`damage_types` / `enemy_archetypes` / `encounter_tables` / `loot_tables`（`weapons` 草案已落地，见 [WEAPON_CONTENT_SCHEMA.md](docs/design/WEAPON_CONTENT_SCHEMA.md)）；保持 `planned`，先补 Schema + 有效/无效样本
-- [ ] 武器内容接入运行时：`weapons` 进 runtime types / 注册表，`ShipVisualAssembler` 改读内容 + GLB 节点（船体 socket 镜像转正），SNBattleSim 的 `kind` 行为与命中/齐射/冷却规则并入战斗结算；同时补齐 `yaw_limit_deg` / `mount_pad_*`、统一 socket 索引与 `mast_key` 口径。**类型提升前不要把 2.0 `weapons` 写进 Core**（运行时会按 mod error 拒绝，Core 必需包 → `Degraded`）；当前 5 件模拟器武器落在编辑器「舰载武器包」模板
+- [ ] 战斗后续接线：D1 已交付 6 类战斗内容 + `CombatOps` / `CombatService` / `combat.resolve|view|log`；剩余「航行遭遇接入（voyage 风险 → 遭遇表）」「敌舰可视化 / `combat_kit` 接入 ShipVisualAssembler」「舰队编成与 2v2」三项切片。`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 均已 active 2.0，Core 已带 5+4+4+4+2+2 条内容；契约见 [WEAPON_CONTENT_SCHEMA.md](docs/design/WEAPON_CONTENT_SCHEMA.md) 与 [COMBAT_ARCHITECTURE_REVIEW.md](docs/specs/COMBAT_ARCHITECTURE_REVIEW.md)
 
 - [ ] 2.5D 舞台收尾：委托 / 情报页舞台化、事件触发的 3D 场景预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审
 - [ ] 高频决策页第二轮：市场数量步进 / 即时成本、持久 `ScreenHost` 与局部数据刷新
@@ -28,7 +27,7 @@
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
 - [ ] 模型素材库接入：kit 批次 1–5 其余 33 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记；批次 4 新增 6 件可围合建筑件、批次 5 新增 5 件基地生产建筑），接 `ShipVisualAssembler` / 基地舞台 / PortStage 的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C（C1–C4）已完成**（C1 modules/hulls；C2 items；C3 quests；C4 port_templates/starting_scenarios/crew_roles/boiler_strategies/voyage_events、contracts/patches 2.0、map_profiles 退役；**20 类 active 全部 2.0，0 个 1.0 runtime**；schema bundle 26、编辑器 23）。下一步 **Phase D 其余系统类型**（fleet / combat / base / auto_trade / ruins）→ **Phase E 冻结 1.0 读路径与发布门禁**。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
+- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C（C1–C4）已完成**；**Phase D0/D1 已完成**（D0 sim 时钟；D1 combat 6 类 active）。下一步 **Phase D 其余系统类型**（fleet / base / auto_trade / ruins）→ **Phase E 冻结 1.0 读路径与发布门禁**。当前 **26 类 active 全部 2.0（25 定义 + patch）、0 个 1.0 runtime**；schema bundle 31、编辑器 28。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 
 ### 海图 / 探索
 
@@ -38,9 +37,9 @@
 
 ### 正式版路线图
 
-- [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架
+- [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架（tick 框架 D0 ✅、combat D1 ✅；多战役存档与其余系统待做）
 - [ ] 阶段 1：广域海图与探索运行时（v2 草案提升 active，接世界生成 / 战役 `world` 分区 / 区域低细节模拟）
-- [ ] 阶段 2：舰队组成与战斗（先自动结算，再战术层）；模块 condition 进入派生属性；战斗内容 Schema 2.0（`weapons` 草案、船体 socket 镜像与编辑器支持已完成；**`combat_kit` 敌舰 4 艘 / 3 类敌人资产 + 16 武器 socket + 8 炮门 socket 已交付**，待接 `ShipVisualAssembler` 武器挂载与遭遇表；`enemy_archetypes` / `encounter_tables` / `loot_tables` 待做）；SNBattleSim 规则并入
+- [ ] 阶段 2：舰队组成与战斗（D1 已交付自动结算 + 6 类战斗内容；待航行遭遇接线、敌舰可视化、舰队编成与 2v2；SNBattleSim 规则并入）
 - [ ] 阶段 3：基地建设与生产链（接入舰队 / 战斗 / 贸易）
 - [ ] 阶段 4：自动化贸易（航线、规则、风险与 tick 结算）
 - [ ] 阶段 5：遗迹探索（程序化房间、远征、战利品）
@@ -50,6 +49,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- Content Schema 2.0 Phase D0/D1（2026-10-23）：D0 确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长，`sim.tick` 事件）；D1 combat（`weapons` 提升 active + `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 5 类，共 6 个战斗类型；Core 6 个战斗内容文件；`CombatOps` / `CombatService` / `combat.resolve|view|log`）。**26 类 active 全部 2.0（25 定义 + patch）**、schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）、Core 25 内容文件。验证：Godot **554/554**、Node **58/58**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase C · C4（Phase C 完成，全类型 2.0）：`port_archetypes → port_templates`、`starting_builds → starting_scenarios`、`roles → crew_roles`、`strategies → boiler_strategies`、`events → voyage_events`；`map_profiles` 退役（`map_configs` 取代）；`contracts` / `patches` 升 2.0，删除 1.0 回退路径（RunFactory / ContentRefs / 存档 resolver）。**20 个 active 类型全部 2.0（19 定义 + patch）**；schema bundle 26（2 顶层 + 24 v2）、编辑器 23（20 runtime + 3 draft）、Core 19 内容文件。验证：Godot **527/527**、Node **58/58**、CLI **63/63**、SDK `status: ok`。
 - Content Schema 2.0 Phase C · C3（委托/任务解耦）：新增 `quests` active 2.0（kind story/guide/system、stages/objectives 复用剧情 DSL、tracking/prerequisites；无运输 payload）；core `quests.json` 2 条；新增 `QuestOps`/`QuestService` 与 `data.quests` 持久实例（惰性 ensure），委托 `accept_offer`/教程主线挂接生成追踪实例、完成关闭；`task.view` 增加 `kind:"quest"` 聚合（contract 实例不重复渲染），Shell 转发 `cmd:*`/`ui:*` 给 quest.observe；`content.quests.v1` capability 与 `quest.start|complete|observe` 命令。验证：Godot **525/525**、Node **55/55**、CLI **62/62**、SDK `status: ok`。
 - README 瘦身（2026-10-22）：根 README 从 323 行压到 115 行、SNModMaker README 从 479 行压到 63 行；详细进度拆到 `docs/design/PROJECT_STATUS.md`、Core 内容基线拆到 `docs/design/CORE_CONTENT.md`、实现边界拆到 `docs/design/KNOWN_LIMITS.md`，SNModMaker 使用/开发细节拆到 `SNModMaker/docs/{USER_GUIDE,DEVELOPMENT}.md`；README 改为「按需读取」索引。

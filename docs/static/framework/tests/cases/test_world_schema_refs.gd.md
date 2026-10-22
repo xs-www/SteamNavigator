@@ -12,20 +12,21 @@
 | `TEST_FILE` | L24 |
 | `test_world_profiles_weather_profile_reference() -> void` | L138 |
 | `test_regions_weather_and_faction_references() -> void` | L164 |
-| `test_sites_planned_references_are_warnings_only() -> void` | L195 |
-| `test_route_template_planned_encounter_table_is_warning_only() -> void` | L211 |
-| `test_weather_profiles_have_no_outgoing_references() -> void` | L226 |
-| `test_factions_trade_goods_and_rival_references() -> void` | L234 |
-| `test_faction_self_rival_is_reference_self() -> void` | L255 |
-| `test_faction_missing_trade_good_and_rival_are_errors() -> void` | L272 |
-| `test_faction_contract_family_is_inactive_type_warning() -> void` | L290 |
-| `test_discoveries_unlock_ids_reference_checks() -> void` | L308 |
-| `test_start_profile_valid_without_optional_map_config() -> void` | L335 |
-| `test_start_profile_missing_hard_references_are_errors() -> void` | L360 |
-| `test_map_config_valid_with_matching_world_profile() -> void` | L379 |
-| `test_map_config_archetype_count_below_world_port_count_is_error() -> void` | L416 |
-| `test_map_config_count_check_skips_missing_world_profile() -> void` | L450 |
-| `test_map_config_missing_archetype_and_default_starting_scenario_are_errors() -> void` | L479 |
+| `test_sites_promoted_and_planned_references() -> void` | L195 |
+| `test_route_template_promoted_encounter_table_is_an_error() -> void` | L212 |
+| `test_weather_profiles_have_no_outgoing_references() -> void` | L227 |
+| `test_factions_trade_goods_and_rival_references() -> void` | L235 |
+| `test_faction_self_rival_is_reference_self() -> void` | L256 |
+| `test_faction_missing_trade_good_and_rival_are_errors() -> void` | L273 |
+| `test_faction_contract_family_is_inactive_type_warning() -> void` | L291 |
+| `test_discoveries_unlock_ids_reference_checks() -> void` | L309 |
+| `test_start_profile_valid_without_optional_map_config() -> void` | L336 |
+| `test_start_profile_missing_hard_references_are_errors() -> void` | L361 |
+| `test_map_config_valid_with_matching_world_profile() -> void` | L380 |
+| `test_map_config_archetype_count_below_world_port_count_is_error() -> void` | L417 |
+| `test_map_config_count_check_skips_missing_world_profile() -> void` | L451 |
+| `test_map_config_missing_archetype_and_default_starting_scenario_are_errors() -> void` | L480 |
+| `test_combat_references_are_checked() -> void` | L495 |
 
 复制出的临时 `RegistryHub` 注册合成定义，驱动 `CrossReferenceValidator.validate()`，
 覆盖硬引用缺失 error、planned 目标 `ref_inactive_type` warning、阵营自指

@@ -17,9 +17,10 @@
 - [x] `content_types.json` 单一真源（框架 / Schema / 编辑器 / SDK / 文档）。
 - [x] 存档 Schema 2.0；1.x 旧档迁移器 + 回归测试。
 - [x] Content Schema 2.0 草案骨架：`schemas/v2/common` + start/world/region/site/route（planned，暂不加载）。
-- [ ] Content Schema 2.0 系统类型：weather / faction / discovery → fleet / combat / base / trade / ruins。
+- [ ] Content Schema 2.0 系统类型：weather / faction / discovery ✅；combat 6 类 ✅（D1：weapons / damage_types / combat_abilities / enemy_archetypes / encounter_tables / loot_tables）；fleet / base / trade / ruins 仍待做。
 - [ ] `CampaignState` 分区与多战役存档槽；新战役 / 继续 / 自动存档 UI。
-- [ ] 模拟时钟、暂停/加速、tick 调度与区域分层模拟框架。
+- [x] 确定性 tick 模拟框架（D0）：`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`、`data.sim`、固定 1 游戏小时步长、`sim.tick` 事件。
+- [ ] 区域分层模拟与系统注册扩展（D0 只做最小时钟，不含区域低细节 / 自动贸易结算）。
 - [ ] 明确首个纵向切片的内容清单与验收脚本。
 
 验收：旧 MVP 存档可迁移打开；新战役可创建、保存、读回；同种子 + 同命令序列结果一致。
@@ -36,7 +37,7 @@
 
 - 多船舰队、船长/船员、编组与跨区调度；单船逻辑泛化为舰队逻辑。
 - 模块分类收敛为 `boiler / cargo / utility / cabin / crew`；导航与安全并入 `utility`，不再单独设内容类型或编辑器分组。
-- 战斗先做自动结算 + 少量选择，再评估战术格；数据侧先做武器、敌人原型、遭遇表、掉落表。
+- 战斗先做自动结算 + 少量选择，再评估战术格；数据侧武器、敌人原型、遭遇表、掉落表已随 D1 落地（6 类 active 2.0 + `combat.resolve`）。
 - 战斗契约与外部草案的采纳边界见 [战斗系统架构评审](../specs/COMBAT_ARCHITECTURE_REVIEW.md)：本阶段只做自动结算，实时战术与部位伤害后置。
 - 战斗消耗与舰队状态、补给、耐久、船员挂钩。
 

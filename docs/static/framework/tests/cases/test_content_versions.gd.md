@@ -14,10 +14,10 @@
 | `test_phase_b_world_family_is_active_with_2_0_schemas() -> void` | L190 |
 | `test_unknown_type_has_no_declared_version() -> void` | L206 |
 | `test_v2_draft_types_are_not_runtime_types() -> void` | L211 |
-| `test_promoted_world_profile_content_compiles_and_registers() -> void` | L226 |
-| `test_item_envelope_with_2_0_still_compiles() -> void` | L240 |
-| `test_item_envelope_with_1_0_is_rejected_per_type() -> void` | L254 |
-| `test_patch_revalidation_uses_target_type_version() -> void` | L273 |
+| `test_promoted_world_profile_content_compiles_and_registers() -> void` | L228 |
+| `test_item_envelope_with_2_0_still_compiles() -> void` | L242 |
+| `test_item_envelope_with_1_0_is_rejected_per_type() -> void` | L256 |
+| `test_patch_revalidation_uses_target_type_version() -> void` | L275 |
 
 回归测试：版本表、编译器按类型校验、Patch 再校验、2.0 内容真实加载与注册。
 

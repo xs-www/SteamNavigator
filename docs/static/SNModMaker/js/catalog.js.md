@@ -19,34 +19,34 @@
 | `schemaVersionFor(typeKey)` | L27 |
 | `FIELD_LABELS` | L34 |
 | `TYPE_FIELD_LABELS` | L342 |
-| `FIELD_HINTS` | L412 |
-| `REF_LABELS` | L586 |
-| `TYPE_FIELD_HINTS` | L593 |
-| `DEFAULTS` | L605 |
-| `TAG_SUGGESTIONS` | L1020 |
-| `MODULE_CATEGORY_IDS` | L1046 |
-| `MODULE_CATEGORY_TAGS` | L1047 |
-| `CONDITION_OPS` | L1055 |
-| `CONDITION_FIELDS` | L1061 |
-| `EFFECT_OPS` | L1077 |
-| `EFFECT_FIELDS` | L1085 |
-| `MODIFIER_STATS` | L1109 |
-| `DEADLINE_FORMULAS` | L1113 |
-| `GENERATORS` | L1118 |
-| `FACILITIES` | L1119 |
-| `WEAPON_PRESETS` | L1131 |
-| `TEMPLATES` | L1236 |
-| `FIELD_ENUM_LABELS` | L1283 |
-| `enumOptions(typeKey, field, values)` | L1380 |
-| `KEY_PREFIX` | L1387 |
-| `SNCatalog (global)` | L1389 |
+| `FIELD_HINTS` | L421 |
+| `REF_LABELS` | L595 |
+| `TYPE_FIELD_HINTS` | L602 |
+| `DEFAULTS` | L614 |
+| `TAG_SUGGESTIONS` | L1064 |
+| `MODULE_CATEGORY_IDS` | L1095 |
+| `MODULE_CATEGORY_TAGS` | L1096 |
+| `CONDITION_OPS` | L1104 |
+| `CONDITION_FIELDS` | L1110 |
+| `EFFECT_OPS` | L1126 |
+| `EFFECT_FIELDS` | L1134 |
+| `MODIFIER_STATS` | L1158 |
+| `DEADLINE_FORMULAS` | L1162 |
+| `GENERATORS` | L1167 |
+| `FACILITIES` | L1168 |
+| `WEAPON_PRESETS` | L1180 |
+| `TEMPLATES` | L1285 |
+| `FIELD_ENUM_LABELS` | L1332 |
+| `enumOptions(typeKey, field, values)` | L1429 |
+| `KEY_PREFIX` | L1436 |
+| `SNCatalog (global)` | L1438 |
 
 ## 契约与约束
 
-- `BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖 20 个运行时类型（全部 2.0）与 3 个 Schema 2.0 草案类型（weapons / story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。
-- `TYPES` 含 20 个可加载类型（19 个 2.0 定义 + 2.0 显式补丁 `patches`），`DRAFT_TYPES` 为 `weapons` + 剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。
-- `DEFAULTS` 生成的定义必须能通过对应 Schema；C4 后 20 类 active 2.0 类型（含 `map_configs` 的 31 键 exploration）、`weapons` 草案与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。
-- `weapons` 草案的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。
+- `BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖 26 个运行时类型（全部 2.0）与 2 个 Schema 2.0 草案类型（story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。
+- `TYPES` 含 26 个可加载类型（25 个 2.0 定义 + 2.0 显式补丁 `patches`），`DRAFT_TYPES` 为剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。
+- `DEFAULTS` 生成的定义必须能通过对应 Schema；D1 后 26 类 active 2.0 类型（含 `map_configs` 的 31 键 exploration 与 6 个战斗类型）与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。
+- `weapons` 的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。
 - 剧情草案复用共享 `FIELD_LABELS`，用 `TYPE_FIELD_LABELS` / `TYPE_FIELD_HINTS` 处理同名不同义的字段（如关卡 `position` 是世界坐标、`rewards` 只允许成就/图鉴/装饰），并在 `FIELD_ENUM_LABELS` 提供 `role` / `presentation` / `fog` / `profile` / `hint_level` / 重试方式的可读名。
 - `WEAPON_PRESETS` 是「舰载武器包」模板的 5 件成品数据（deck_gun / heavy_cannon / mortar / repeater / broadside）：战斗数值对齐 SNBattleSim，装配字段对齐 GLB Root extras，经济字段项目补齐，`model` 为 `model.weapon.*`；`TEMPLATES` 的 `weapons` 条目（显示名「舰载武器包」）驱动新建模组对话框与 CLI `new --template weapons`。
 - `keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。

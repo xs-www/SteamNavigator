@@ -8,9 +8,9 @@
 `content_types.json` 是内容类型清单的唯一真源，生成物 `framework/modding/content_types.gd`（`ContentTypes`）
 携带每个 **active** 类型的 Schema 路径与 `schema_version`。SDK 不维护第二套类型或版本表：
 
-- **active 类型**：由运行时真实加载；C4 收尾后所有运行时类型（含 `contracts` / `patches`）统一为 `2.0`。
+- **active 类型**：由运行时真实加载；C4 收尾后所有运行时类型统一为 `2.0`，D1 起 `weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 也已 active（26 类）。
 - **草案（draft）类型**：登记在 `content_types.json` 的 `draft_schemas` / `draft_types`，目前是
-  `weapons`、`story_arcs`、`story_levels`。运行时不会加载它们，只能做 `--mode=draft` 静态校验，不能发布。
+  `story_arcs`、`story_levels`。运行时不会加载它们，只能做 `--mode=draft` 静态校验，不能发布。
 
 新增类型时先改 `content_types.json` 与 `schemas/`，再跑 `node tools/gen_content_types.mjs`；不要在 SDK 里硬编码类型表。
 

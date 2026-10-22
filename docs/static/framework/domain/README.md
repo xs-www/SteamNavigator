@@ -1,6 +1,6 @@
 # `framework/domain`
 
-> 纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、世界生成（坐标空间+程序化陆地+贝塞尔航线）、事件、债务与通关判定。
+> 纯领域逻辑：航行、市场、委托、船只/模块实例/仓库/打造订单、地图、世界生成（坐标空间+程序化陆地+贝塞尔航线）、事件、债务与通关判定、D0 tick 模拟与 D1 战斗规则。
 
 ## 文件索引
 
@@ -14,6 +14,8 @@
 | `campaign/region_assembler.gd` | v2 战役的区域装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 5）。按 | [查看](./campaign/region_assembler.gd.md) |
 | `campaign/route_assembler.gd` | v2 战役的航路装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 7）。为抽象海图的每条边 | [查看](./campaign/route_assembler.gd.md) |
 | `campaign/site_assembler.gd` | v2 战役的地点装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 6）。每个区域按 | [查看](./campaign/site_assembler.gd.md) |
+| `combat/combat_ops.gd` | Phase D1 战斗自动结算的纯规则层。把「玩家船 + encounter_table 抽出的敌舰组合 + | [查看](./combat/combat_ops.gd.md) |
+| `combat/combat_service.gd` | Phase D1 战斗自动结算的运行时门面：解析遭遇表、调用 `CombatOps` 纯规则层， | [查看](./combat/combat_service.gd.md) |
 | `contracts/contract_ops.gd` | 委托实例生成、装载、交付结算、接取规则、普通委托池生成与抵达刷新。 | [查看](./contracts/contract_ops.gd.md) |
 | `contracts/formula_registry.gd` | 框架拥有的安全期限公式注册表，供委托数据引用。 | [查看](./contracts/formula_registry.gd.md) |
 | `contracts/run_factory.gd` | 开局装配的共享 helper（C4 起不再持有 1.0 `map_profiles` 几何路径）。提供 | [查看](./contracts/run_factory.gd.md) |
@@ -41,6 +43,8 @@
 | `ship/ship_modules.gd` | 船舶模块实例层：为每个已装模块维护稳定 instance_id 与 0..1 condition，对齐扁平槽位键，并作为损伤/维修/存档的唯一写入口。 | [查看](./ship/ship_modules.gd.md) |
 | `ship/ship_ops.gd` | 船只组合的纯函数：模块/货物/煤水/旅客/随船运输重量、容量、槽位、安装/卸下规则与派生属性。 | [查看](./ship/ship_ops.gd.md) |
 | `ship/warehouse_ops.gd` | 港口仓库与随船运输：每港独立保存模块/材料，transit 模块计入重量但不占货舱。 | [查看](./ship/warehouse_ops.gd.md) |
+| `sim/simulation_service.gd` | 最小确定性 tick / 模拟框架（Phase D0）。以 1 游戏小时为固定步长推进 | [查看](./sim/simulation_service.gd.md) |
+| `sim/tick_scheduler.gd` | SimulationService 的确定性 tick 系统注册表。系统用 `(id, priority, | [查看](./sim/tick_scheduler.gd.md) |
 | `story/story_service.gd` | 新手剧情 / 教学系统的领域状态机。读取当前场景定义（`map_configs`， | [查看](./story/story_service.gd.md) |
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |
 | `voyage/voyage_estimator.gd` | 把「一条航线 + 当前船况 + 锅炉策略 + 航行规则」折算成海图右侧面板需要的 | [查看](./voyage/voyage_estimator.gd.md) |
@@ -63,3 +67,4 @@
 - 不读写文件、不创建 UI、不直接访问场景树。
 - 仓库/运输/打造只操作 GameState 纯数据；通关判定读取注册表合同与船只派生属性。
 - 世界生成器使用坐标空间模型（替代 MVP 时期的抽象图），港口锚定在程序生成的陆地海岸线上。
+- D0 SimulationService / TickScheduler 只推进 data.sim 与已注册 tick 系统，不改写既有 port.wait / 航行时间语义；D1 CombatOps 纯规则、CombatService 负责落盘与 data.combat 记录。

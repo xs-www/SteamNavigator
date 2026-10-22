@@ -29,19 +29,25 @@
 | `QUEST` | L26 |
 | `VOYAGE_EVENT` | L27 |
 | `PATCH` | L28 |
-| `SCHEMA_PATHS` | L30 |
-| `SCHEMA_VERSIONS` | L53 |
-| `SINGULAR` | L76 |
-| `MODULE_TYPES` | L99 |
-| `all() -> Array[StringName]` | L102 |
-| `registry_types() -> Array[StringName]` | L112 |
-| `is_known(content_type: StringName) -> bool` | L118 |
-| `is_module(content_type: StringName) -> bool` | L122 |
-| `is_patch(content_type: StringName) -> bool` | L126 |
-| `schema_path(content_type: StringName) -> String` | L130 |
-| `schema_version(content_type: StringName) -> String` | L134 |
-| `singular(content_type: StringName) -> String` | L138 |
-| `from_singular(singular_name: String) -> StringName` | L142 |
+| `WEAPON` | L29 |
+| `DAMAGE_TYPE` | L30 |
+| `COMBAT_ABILITY` | L31 |
+| `ENEMY_ARCHETYPE` | L32 |
+| `ENCOUNTER_TABLE` | L33 |
+| `LOOT_TABLE` | L34 |
+| `SCHEMA_PATHS` | L36 |
+| `SCHEMA_VERSIONS` | L65 |
+| `SINGULAR` | L94 |
+| `MODULE_TYPES` | L123 |
+| `all() -> Array[StringName]` | L126 |
+| `registry_types() -> Array[StringName]` | L137 |
+| `is_known(content_type: StringName) -> bool` | L143 |
+| `is_module(content_type: StringName) -> bool` | L147 |
+| `is_patch(content_type: StringName) -> bool` | L151 |
+| `schema_path(content_type: StringName) -> String` | L155 |
+| `schema_version(content_type: StringName) -> String` | L159 |
+| `singular(content_type: StringName) -> String` | L163 |
+| `from_singular(singular_name: String) -> StringName` | L167 |
 
 ## 契约与约束
 
