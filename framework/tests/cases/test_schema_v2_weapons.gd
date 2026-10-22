@@ -373,9 +373,18 @@ func test_weapon_type_matches_schema() -> void:
 
 func test_weapon_type_is_active_runtime() -> void:
 	var manifest := _parse_json(CONTENT_TYPES)
+	# D1 combat types are active; the planned block may still carry editor-only
+	# drafts (e.g. combat_ai_profiles) but no runtime-known combat type.
+	var active_combat_types := ["weapons", "damage_types", "combat_abilities",
+		"enemy_archetypes", "encounter_tables", "loot_tables"]
 	for system in manifest.get("planned", []):
-		if system is Dictionary and String(system.get("capability", "")) == "content.combat.v1":
-			fail("content.combat.v1 must not stay planned now that its types are active")
+		if not (system is Dictionary) or String(system.get("capability", "")) != "content.combat.v1":
+			continue
+		for type_key in Array(system.get("types", [])):
+			assert_false(active_combat_types.has(String(type_key)),
+				"planned combat still lists active runtime type '%s'" % type_key)
+			assert_false(ContentTypes.is_known(StringName(type_key)),
+				"planned combat draft '%s' must stay editor-only" % type_key)
 	assert_true(ContentTypes.all().has(ContentTypes.WEAPON), "weapons is in ContentTypes.all()")
 	assert_true(ContentTypes.registry_types().has(ContentTypes.WEAPON), "weapons has a runtime registry")
 	assert_true(ContentTypes.is_known(ContentTypes.WEAPON), "weapons has a runtime schema mapping")

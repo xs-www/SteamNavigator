@@ -26,7 +26,8 @@
         "loyalty": 70,
         "commandable_archetypes": [
           "core:ship_archetype/flagship_ironclad",
-          "core:ship_archetype/freight_hauler"
+          "core:ship_archetype/freight_hauler",
+          "core:ship_archetype/flagship_large_efficient"
         ]
       }
     },
@@ -80,7 +81,8 @@
         "loyalty": 65,
         "commandable_archetypes": [
           "core:ship_archetype/courier_sloop",
-          "core:ship_archetype/freight_hauler"
+          "core:ship_archetype/freight_hauler",
+          "core:ship_archetype/flagship_large_efficient"
         ]
       }
     }

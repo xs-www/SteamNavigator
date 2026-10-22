@@ -13,8 +13,13 @@ extends RefCounted
 ##   `commandable_archetypes` 必须包含目标船的 archetype；formation slot 必须存在于
 ##   当前 formation 且互斥；doctrine 的 `formation` 引用若存在则必须可解析。
 ## - 旗舰：`data.fleet.flagship = "flagship"`，其 archetype 始终由 `data.ship.hull_id`
-##   反查，不允许 remove；`assign_captain` 对旗舰同样校验可指挥船型。
-## - 容量：`FleetOps.MAX_SHIPS` 为框架上限，当前 formation 的 `max_ships` 可进一步收紧。
+##   反查，不允许 remove；`assign_captain` 对旗舰同样校验可指挥船型。role 为
+##   `flagship` 的 formation 槽位只能由旗舰使用（`flagship_slot_only`）；`add_ship`
+##   自动分配槽位时跳过旗舰槽与已占槽。
+## - 容量：`FleetOps.MAX_SHIPS` 为框架上限；有 formation 时缺省按
+##   `formation.slots.size()`，显式 `max_ships` 优先；无 formation 时用 MAX_SHIPS。
+## - 清空语义：`captain_id:""` / `doctrine_id:""` 清空对应选择；`slot:""` 清空单船槽位；
+##   `formation_id:""` 清空整队编队并清空所有槽位。
 ## - 领域事件（由命令层发布）：`fleet.captain_assigned` / `fleet.formation_changed` /
 ##   `fleet.slot_assigned` / `fleet.doctrine_changed` / `fleet.ship_added` /
 ##   `fleet.ship_removed`。
@@ -66,10 +71,10 @@ static func assign_captain(state: GameState, hub: RegistryHub, params: Dictionar
 ## Sets the fleet formation (`formation_id`) and/or assigns a ship to a formation slot.
 ##
 ## Accepted params:
-## - `formation_id`: switch the whole fleet's formation (unassigned slots are cleared
-##   when they no longer exist in the new formation).
-## - `ship_id` + `slot`: assign one ship to a formation slot; requires a current
-##   formation and enforces slot uniqueness.
+## - `formation_id`: switch (or clear, with `""`) the whole fleet's formation; ships
+##   whose slots no longer exist are unassigned. Clearing also clears every slot.
+## - `ship_id` + `slot`: assign one ship to a formation slot; `slot: ""` clears that
+##   ship's slot. Requires a current formation and enforces slot uniqueness.
 ## Supplying both applies the formation first, then the slot.
 static func set_formation(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary:
 	var fleet := FleetOps.ensure_structure(state, hub)
@@ -80,26 +85,36 @@ static func set_formation(state: GameState, hub: RegistryHub, params: Dictionary
 	var events: Array = []
 	if has_formation:
 		var formation_id := String(params.get("formation_id", ""))
-		var formation := hub.get_by_id(ContentTypes.FORMATION, formation_id)
-		if formation == null:
-			return Result.fail("unknown_formation", "ui.error.unknown_formation", {"formation_id": formation_id})
-		fleet["formation_id"] = formation_id
-		var valid_slots := FleetOps.formation_slot_ids(hub, formation_id)
-		for entry in fleet.get("ships", []):
-			if entry is Dictionary:
-				var slot_id := String((entry as Dictionary).get("formation_slot", ""))
-				if not slot_id.is_empty() and not valid_slots.has(slot_id):
+		if formation_id.is_empty():
+			fleet["formation_id"] = ""
+			for entry in fleet.get("ships", []):
+				if entry is Dictionary:
 					(entry as Dictionary)["formation_slot"] = ""
-		var cap := FleetOps.max_ships(hub, formation_id)
-		if int(fleet.get("ships", []).size()) > cap:
-			return Result.fail("fleet_full", "ui.error.fleet_full", {
-				"ship_count": int(fleet.get("ships", []).size()),
-				"max_ships": cap,
+			events.append({
+				"type": "fleet.formation_changed",
+				"payload": {"formation_id": ""},
 			})
-		events.append({
-			"type": "fleet.formation_changed",
-			"payload": {"formation_id": formation_id},
-		})
+		else:
+			var formation := hub.get_by_id(ContentTypes.FORMATION, formation_id)
+			if formation == null:
+				return Result.fail("unknown_formation", "ui.error.unknown_formation", {"formation_id": formation_id})
+			fleet["formation_id"] = formation_id
+			var valid_slots := FleetOps.formation_slot_ids(hub, formation_id)
+			for entry in fleet.get("ships", []):
+				if entry is Dictionary:
+					var slot_id := String((entry as Dictionary).get("formation_slot", ""))
+					if not slot_id.is_empty() and not valid_slots.has(slot_id):
+						(entry as Dictionary)["formation_slot"] = ""
+			var cap := FleetOps.max_ships(hub, formation_id)
+			if int((fleet.get("ships", []) as Array).size()) > cap:
+				return Result.fail("fleet_full", "ui.error.fleet_full", {
+					"ship_count": int((fleet.get("ships", []) as Array).size()),
+					"max_ships": cap,
+				})
+			events.append({
+				"type": "fleet.formation_changed",
+				"payload": {"formation_id": formation_id},
+			})
 	if has_slot:
 		var ship_id := String(params.get("ship_id", FleetOps.FLAGSHIP_ID))
 		var slot_id := String(params.get("slot", ""))
@@ -107,26 +122,39 @@ static func set_formation(state: GameState, hub: RegistryHub, params: Dictionary
 		if ship.is_empty():
 			return Result.fail("ship_not_found", "ui.error.ship_not_found", {"ship_id": ship_id})
 		var formation_id := String(fleet.get("formation_id", ""))
-		if formation_id.is_empty():
-			return Result.fail("no_formation", "ui.error.no_formation")
-		if not FleetOps.is_valid_slot_id(slot_id):
-			return Result.fail("invalid_formation_slot", "ui.error.invalid_formation_slot", {"slot": slot_id})
-		if FleetOps.formation_slot(hub, formation_id, slot_id).is_empty():
-			return Result.fail("invalid_formation_slot", "ui.error.invalid_formation_slot", {
-				"slot": slot_id,
-				"formation_id": formation_id,
+		if slot_id.is_empty():
+			ship["formation_slot"] = ""
+			events.append({
+				"type": "fleet.slot_assigned",
+				"payload": {"ship_id": ship_id, "slot": "", "formation_id": formation_id},
 			})
-		var occupied := _slot_ship(fleet, slot_id)
-		if not occupied.is_empty() and occupied != ship_id:
-			return Result.fail("formation_slot_occupied", "ui.error.formation_slot_occupied", {
-				"slot": slot_id,
-				"ship_id": occupied,
+		else:
+			if formation_id.is_empty():
+				return Result.fail("no_formation", "ui.error.no_formation")
+			if not FleetOps.is_valid_slot_id(slot_id):
+				return Result.fail("invalid_formation_slot", "ui.error.invalid_formation_slot", {"slot": slot_id})
+			var slot := FleetOps.formation_slot(hub, formation_id, slot_id)
+			if slot.is_empty():
+				return Result.fail("invalid_formation_slot", "ui.error.invalid_formation_slot", {
+					"slot": slot_id,
+					"formation_id": formation_id,
+				})
+			if String(slot.get("role", "")) == "flagship" and ship_id != FleetOps.FLAGSHIP_ID:
+				return Result.fail("flagship_slot_only", "ui.error.flagship_slot_only", {
+					"slot": slot_id,
+					"ship_id": ship_id,
+				})
+			var occupied := _slot_ship(fleet, slot_id)
+			if not occupied.is_empty() and occupied != ship_id:
+				return Result.fail("formation_slot_occupied", "ui.error.formation_slot_occupied", {
+					"slot": slot_id,
+					"ship_id": occupied,
+				})
+			ship["formation_slot"] = slot_id
+			events.append({
+				"type": "fleet.slot_assigned",
+				"payload": {"ship_id": ship_id, "slot": slot_id, "formation_id": formation_id},
 			})
-		ship["formation_slot"] = slot_id
-		events.append({
-			"type": "fleet.slot_assigned",
-			"payload": {"ship_id": ship_id, "slot": slot_id, "formation_id": formation_id},
-		})
 	return Result.ok({
 		"formation_id": String(fleet.get("formation_id", "")),
 		"ship_id": String(params.get("ship_id", "")) if has_slot else "",
@@ -186,8 +214,14 @@ static func add_ship(state: GameState, hub: RegistryHub, params: Dictionary) -> 
 	if not slot_id.is_empty():
 		if formation_id.is_empty():
 			return Result.fail("no_formation", "ui.error.no_formation")
-		if FleetOps.formation_slot(hub, formation_id, slot_id).is_empty():
+		var slot := FleetOps.formation_slot(hub, formation_id, slot_id)
+		if slot.is_empty():
 			return Result.fail("invalid_formation_slot", "ui.error.invalid_formation_slot", {"slot": slot_id})
+		if String(slot.get("role", "")) == "flagship":
+			return Result.fail("flagship_slot_only", "ui.error.flagship_slot_only", {
+				"slot": slot_id,
+				"ship_id": "roster",
+			})
 		if not _slot_ship(fleet, slot_id).is_empty():
 			return Result.fail("formation_slot_occupied", "ui.error.formation_slot_occupied", {
 				"slot": slot_id,
@@ -254,7 +288,10 @@ static func _slot_ship(fleet: Dictionary, slot_id: String) -> String:
 
 
 static func _first_free_slot(hub: RegistryHub, fleet: Dictionary, formation_id: String) -> String:
+	var flagship_slots := FleetOps.flagship_slot_ids(hub, formation_id)
 	for slot_id in FleetOps.formation_slot_ids(hub, formation_id):
+		if flagship_slots.has(slot_id):
+			continue
 		if _slot_ship(fleet, slot_id).is_empty():
 			return slot_id
 	return ""

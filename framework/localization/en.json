@@ -413,6 +413,7 @@
   "ui.error.unknown_fleet_doctrine": "Unknown fleet doctrine.",
   "ui.error.fleet_full": "The fleet is full.",
   "ui.error.flagship_required": "The flagship cannot be removed.",
+  "ui.error.flagship_slot_only": "Only the flagship may use the flagship slot.",
   "ui.error.missing_archetype": "Missing ship archetype.",
   "ui.combat.outcome.victory": "Victory",
   "ui.combat.outcome.defeat": "Defeat",

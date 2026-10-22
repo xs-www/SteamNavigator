@@ -170,6 +170,67 @@
           }
         ]
       }
+    },
+    {
+      "id": "core:ship_archetype/flagship_large_efficient",
+      "name_key": "ship_archetype.core.flagship_large_efficient.name",
+      "description_key": "ship_archetype.core.flagship_large_efficient.description",
+      "tags": [
+        "ship_archetype.fleet",
+        "ship_archetype.flagship"
+      ],
+      "enabled": true,
+      "data": {
+        "hull_ref": "core:hull/large_efficient",
+        "crew_capacity": 34,
+        "cargo_capacity": 260,
+        "base_speed": 14,
+        "upkeep": 100,
+        "default_modules": [
+          {
+            "slot": "boiler",
+            "module": "core:module/standard"
+          },
+          {
+            "slot": "cargo",
+            "module": "core:module/large_hold"
+          },
+          {
+            "slot": "navigation",
+            "module": "core:module/chart_room"
+          },
+          {
+            "slot": "safety",
+            "module": "core:module/safety_valve"
+          },
+          {
+            "slot": "cabin",
+            "module": "core:module/passenger_cabin"
+          }
+        ],
+        "weapon_sockets": [
+          {
+            "socket": "SN_Socket_Weapon_Port_1",
+            "class": "Side",
+            "weapon": "core:weapon/broadside"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Starboard_1",
+            "class": "Side",
+            "weapon": "core:weapon/broadside"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Port_2",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          },
+          {
+            "socket": "SN_Socket_Weapon_Starboard_2",
+            "class": "Light",
+            "weapon": "core:weapon/deck_gun"
+          }
+        ]
+      }
     }
   ]
 }

@@ -13,9 +13,12 @@ extends RefCounted
 ## - 旗舰的 `archetype_id` 由当前 `data.ship.hull_id` 反查 `ship_archetypes.hull_ref`
 ##   得到（不写死内容 id）；hull 升级后 ensure 会重新同步。
 ## - 其余船是「名册条目」，只保存编队元数据；最多 `MAX_SHIPS` 艘（含旗舰）。
-## - formation slot 是 formations 定义里的字符串 slot id；空串表示未分配。
-## - `view()` 只读，缺 `data.fleet` 时返回默认视图而不写状态；`ensure_structure()`
-##   才会持久化/修复块。
+## - 容量：有 formation 时默认按 `formation.slots.size()`，显式 `max_ships` 优先；
+##   无 formation 时用 `MAX_SHIPS`。
+## - formation slot 是 formations 定义里的字符串 slot id；空串表示未分配。role 为
+##   `flagship` 的槽位只允许旗舰使用；每艘船一个槽位，槽位互斥。
+## - 损坏数据（`data.fleet` 不是字典、ships 不是数组、条目/字段类型不对）一律规范化
+##   为默认块或跳过，`view()` 绝不抛引擎错误；`view()` 只读不写状态。
 ## @end-static-doc
 
 const FLEET_KEY := "fleet"
@@ -40,40 +43,15 @@ const DEFAULT_FLEET := {
 static func ensure_structure(state: GameState, hub: RegistryHub = null) -> Dictionary:
 	if state == null:
 		return DEFAULT_FLEET.duplicate(true)
-	var current: Variant = state.data.get(FLEET_KEY, null)
-	if not (current is Dictionary):
-		current = DEFAULT_FLEET.duplicate(true)
-		state.data[FLEET_KEY] = current
-	var fleet: Dictionary = current
-	fleet["flagship"] = FLAGSHIP_ID
-	if not (fleet.get("ships", null) is Array):
-		fleet["ships"] = []
-	if fleet["ships"].is_empty():
-		fleet["ships"].append(_make_flagship_entry(state, hub))
-	else:
-		# The flagship entry is structural: keep it first and unique.
-		var ships: Array = fleet["ships"]
-		var flagship_entry: Dictionary = {}
-		for ship in ships:
-			if ship is Dictionary and String((ship as Dictionary).get("ship_id", "")) == FLAGSHIP_ID:
-				flagship_entry = ship
-				break
-		if flagship_entry.is_empty():
-			flagship_entry = _make_flagship_entry(state, hub)
-			ships.insert(0, flagship_entry)
-		else:
-			_repair_ship_entry(flagship_entry)
-			_sync_flagship_archetype(flagship_entry, state, hub)
-		fleet["ships"] = ships
-	for key in ["doctrine_id", "formation_id"]:
-		if not fleet.has(key):
-			fleet[key] = ""
+	var fleet := _normalize_fleet(state.data.get(FLEET_KEY, null), state, hub)
+	state.data[FLEET_KEY] = fleet
 	return fleet
 
 
-## Read-only view of the current fleet. Never writes `data.fleet`.
+## Read-only view of the current fleet. Never writes `data.fleet`, and tolerates any
+## malformed stored shape.
 static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
-	var fleet := _structural_fleet(state)
+	var fleet := _normalize_fleet(state.data.get(FLEET_KEY, null) if state != null else null, state, hub)
 	var ships: Array = []
 	for entry in fleet.get("ships", []):
 		if not (entry is Dictionary):
@@ -92,7 +70,7 @@ static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
 			"captain_id": captain_id,
 			"captain_name_key": _definition_name_key(hub, ContentTypes.CAPTAIN, captain_id, captain_id),
 			"formation_slot": String(ship.get("formation_slot", "")),
-			"condition": float(ship.get("condition", 1.0)),
+			"condition": _safe_float(ship.get("condition", 1.0), 1.0),
 		})
 	var formation_id := String(fleet.get("formation_id", ""))
 	var doctrine_id := String(fleet.get("doctrine_id", ""))
@@ -123,14 +101,17 @@ static func flagship_archetype_id(state: GameState, hub: RegistryHub = null) -> 
 	return ""
 
 
-## Max ships allowed by the fleet: framework cap, further limited by the current
-## formation's optional `max_ships`.
+## Max ships allowed by the fleet: framework cap MAX_SHIPS; with a formation the
+## default is the formation's slot count unless it declares `max_ships`.
 static func max_ships(hub: RegistryHub = null, formation_id: String = "") -> int:
 	var cap := MAX_SHIPS
 	var formation := _definition(hub, ContentTypes.FORMATION, formation_id)
 	if formation != null:
-		cap = mini(cap, int(formation.data.get("max_ships", MAX_SHIPS)))
-	return cap
+		if formation.data.has("max_ships"):
+			cap = mini(MAX_SHIPS, int(formation.data.get("max_ships", MAX_SHIPS)))
+		else:
+			cap = mini(MAX_SHIPS, (formation.data.get("slots", []) as Array).size())
+	return maxi(1, cap)
 
 
 static func formation_slot_ids(hub: RegistryHub, formation_id: String) -> Array[String]:
@@ -148,12 +129,30 @@ static func formation_slot_ids(hub: RegistryHub, formation_id: String) -> Array[
 
 static func formation_slot(hub: RegistryHub, formation_id: String, slot_id: String) -> Dictionary:
 	var formation := _definition(hub, ContentTypes.FORMATION, formation_id)
-	if formation == null:
+	if formation == null or slot_id.is_empty():
 		return {}
 	for raw in formation.data.get("slots", []):
 		if raw is Dictionary and String((raw as Dictionary).get("id", "")) == slot_id:
 			return (raw as Dictionary).duplicate(true)
 	return {}
+
+
+static func formation_slot_role(hub: RegistryHub, formation_id: String, slot_id: String) -> String:
+	return String(formation_slot(hub, formation_id, slot_id).get("role", ""))
+
+
+## Slot ids whose role is `flagship`; only the flagship may occupy them.
+static func flagship_slot_ids(hub: RegistryHub, formation_id: String) -> Array[String]:
+	var ids: Array[String] = []
+	var formation := _definition(hub, ContentTypes.FORMATION, formation_id)
+	if formation == null:
+		return ids
+	for raw in formation.data.get("slots", []):
+		if raw is Dictionary and String((raw as Dictionary).get("role", "")) == "flagship":
+			var slot_id := String((raw as Dictionary).get("id", ""))
+			if not slot_id.is_empty():
+				ids.append(slot_id)
+	return ids
 
 
 ## Ship entry behind a `ship_id`, or `{}`.
@@ -165,8 +164,10 @@ static func ship_entry(fleet: Dictionary, ship_id: String) -> Dictionary:
 
 
 static func is_valid_slot_id(slot_id: String) -> bool:
+	if slot_id.is_empty():
+		return false
 	var regex := RegEx.create_from_string("^[a-z][a-z0-9_]{0,31}$")
-	return not slot_id.is_empty() and regex.search(slot_id) != null
+	return regex.search(slot_id) != null
 
 
 ## Smallest free deterministic `ship_<n>` id (flagship is not numeric).
@@ -181,22 +182,54 @@ static func next_ship_id(fleet: Dictionary) -> String:
 	return "ship_%d" % index
 
 
-static func _structural_fleet(state: GameState) -> Dictionary:
+## Normalizes any stored value into a valid fleet block (flagship first, sane types).
+static func _normalize_fleet(raw: Variant, state: GameState, hub: RegistryHub) -> Dictionary:
 	var fleet: Dictionary = DEFAULT_FLEET.duplicate(true)
-	if state != null and state.data.get(FLEET_KEY, null) is Dictionary:
-		fleet = (state.data[FLEET_KEY] as Dictionary).duplicate(true)
-	for key in DEFAULT_FLEET.keys():
-		if not fleet.has(key):
-			fleet[key] = DEFAULT_FLEET[key]
-	if not (fleet.get("ships", null) is Array) or (fleet["ships"] as Array).is_empty():
-		fleet["ships"] = [DEFAULT_SHIP.duplicate(true)]
-		(fleet["ships"][0] as Dictionary)["ship_id"] = FLAGSHIP_ID
-	for entry in fleet["ships"]:
-		if entry is Dictionary:
-			for key in DEFAULT_SHIP.keys():
-				if not (entry as Dictionary).has(key):
-					(entry as Dictionary)[key] = DEFAULT_SHIP[key]
+	var source: Dictionary = raw if raw is Dictionary else {}
+	for key in ["doctrine_id", "formation_id"]:
+		fleet[key] = _safe_string(source.get(key, ""), "")
+	var raw_ships: Variant = source.get("ships", null)
+	var ships: Array = []
+	var seen: Dictionary = {}
+	var flagship_entry: Dictionary = {}
+	if raw_ships is Array:
+		for raw_entry in raw_ships:
+			var entry := _normalize_ship(raw_entry)
+			if entry.is_empty():
+				continue
+			var ship_id := String(entry["ship_id"])
+			if seen.has(ship_id):
+				continue
+			seen[ship_id] = true
+			if ship_id == FLAGSHIP_ID:
+				if flagship_entry.is_empty():
+					flagship_entry = entry
+				continue
+			ships.append(entry)
+	if flagship_entry.is_empty():
+		flagship_entry = _make_flagship_entry(state, hub)
+	else:
+		_sync_flagship_archetype(flagship_entry, state, hub)
+	ships.insert(0, flagship_entry)
+	fleet["ships"] = ships
+	fleet["flagship"] = FLAGSHIP_ID
 	return fleet
+
+
+static func _normalize_ship(raw: Variant) -> Dictionary:
+	if not (raw is Dictionary):
+		return {}
+	var ship: Dictionary = raw
+	var ship_id := _safe_string(ship.get("ship_id", ""), "")
+	if ship_id.is_empty():
+		return {}
+	var entry := DEFAULT_SHIP.duplicate(true)
+	entry["ship_id"] = ship_id
+	entry["archetype_id"] = _safe_string(ship.get("archetype_id", ""), "")
+	entry["captain_id"] = _safe_string(ship.get("captain_id", ""), "")
+	entry["formation_slot"] = _safe_string(ship.get("formation_slot", ""), "")
+	entry["condition"] = clampf(_safe_float(ship.get("condition", 1.0), 1.0), 0.0, 1.0)
+	return entry
 
 
 static func _make_flagship_entry(state: GameState, hub: RegistryHub) -> Dictionary:
@@ -207,12 +240,6 @@ static func _make_flagship_entry(state: GameState, hub: RegistryHub) -> Dictiona
 	return entry
 
 
-static func _repair_ship_entry(entry: Dictionary) -> void:
-	for key in DEFAULT_SHIP.keys():
-		if not entry.has(key):
-			entry[key] = DEFAULT_SHIP[key]
-
-
 static func _sync_flagship_archetype(entry: Dictionary, state: GameState, hub: RegistryHub) -> void:
 	if hub == null:
 		return
@@ -221,6 +248,17 @@ static func _sync_flagship_archetype(entry: Dictionary, state: GameState, hub: R
 	var archetype_id := flagship_archetype_id(state, hub)
 	if not archetype_id.is_empty():
 		entry["archetype_id"] = archetype_id
+
+
+static func _safe_string(value: Variant, fallback: String) -> String:
+	return value if value is String else fallback
+
+
+static func _safe_float(value: Variant, fallback: float) -> float:
+	if value is int or value is float:
+		var number := float(value)
+		return number if is_finite(number) else fallback
+	return fallback
 
 
 static func _definition(hub: RegistryHub, content_type: StringName, definition_id: String) -> ContentDefinition:
@@ -237,12 +275,13 @@ static func _definition_name_key(hub: RegistryHub, content_type: StringName, def
 static func _formation_view(formation: ContentDefinition) -> Dictionary:
 	if formation == null:
 		return {}
+	var slots: Array = formation.data.get("slots", [])
 	return {
 		"id": formation.id,
 		"name_key": formation.name_key,
-		"slots": Array(formation.data.get("slots", [])).duplicate(true),
-		"max_ships": int(formation.data.get("max_ships", MAX_SHIPS)),
-		"bonuses": Array(formation.data.get("bonuses", [])).duplicate(true),
+		"slots": slots.duplicate(true),
+		"max_ships": int(formation.data.get("max_ships", slots.size())),
+		"bonuses": (formation.data.get("bonuses", []) as Array).duplicate(true),
 	}
 
 

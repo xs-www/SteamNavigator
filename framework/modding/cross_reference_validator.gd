@@ -34,6 +34,12 @@ extends RefCounted
 ##   `enemy_weapon_class_missing`（message / 记录带 mod / file / entity / path）。
 ##   运行时对未解析 class 只 skip 该 socket，如果校验器不报错，内容错误会把「武装敌舰」
 ##   静默变成「无武装敌舰」。
+## - D2 舰队：`ship_archetypes` 的 `hull_ref` / `default_modules[].module` /
+##   `captains.commandable_archetypes` / `fleet_doctrines.formation` 走硬引用；
+##   `weapon_sockets[]` 还会对照目标 hull 的实际 socket 镜像：socket 名必须存在
+##   （`ship_archetype_socket_missing`）、声明的 class 必须等于 hull `socket_class`
+##   （`ship_archetype_socket_class`）、可选默认武器的 `weapon_class` / `mount_class`
+##   必须能装进该 class（`ship_archetype_weapon_class`）。
 ## @end-static-doc
 
 ## Planned target types referenced by active Phase B schemas. They have no runtime
@@ -178,8 +184,9 @@ func _weapon_class_exists(socket_class: String) -> bool:
 
 
 func _check_fleet() -> void:
-	## D2 fleet content: archetype hull/module/weapon refs, captain commandables,
-	## doctrine formations. Slot -> module category mapping mirrors modules.v2_category.
+	## D2 fleet content: archetype hull/module/weapon refs, weapon socket names /
+	## classes against the target hull sockets, captain commandables, doctrine
+	## formations. Slot -> module category mapping mirrors modules.v2_category.
 	var slot_categories := {
 		"boiler": "boiler",
 		"cargo": "cargo",
@@ -188,7 +195,7 @@ func _check_fleet() -> void:
 		"cabin": "cabin",
 	}
 	for archetype in _hub.get_all(ContentTypes.SHIP_ARCHETYPE):
-		_require(ContentTypes.HULL, String(archetype.data.get("hull_ref", "")), archetype.id, "hull_ref")
+		var hull := _require(ContentTypes.HULL, String(archetype.data.get("hull_ref", "")), archetype.id, "hull_ref")
 		for entry in archetype.data.get("default_modules", []):
 			if not (entry is Dictionary):
 				continue
@@ -204,6 +211,8 @@ func _check_fleet() -> void:
 				var weapon_id := String(entry.get("weapon", ""))
 				if not weapon_id.is_empty():
 					_require(ContentTypes.WEAPON, weapon_id, archetype.id, "weapon_sockets.weapon")
+		if hull != null:
+			_check_ship_archetype_weapon_sockets(archetype, hull)
 	for captain in _hub.get_all(ContentTypes.CAPTAIN):
 		for archetype_id in captain.data.get("commandable_archetypes", []):
 			_require(ContentTypes.SHIP_ARCHETYPE, String(archetype_id), captain.id, "commandable_archetypes")
@@ -211,6 +220,63 @@ func _check_fleet() -> void:
 		var formation_id := String(doctrine.data.get("formation", ""))
 		if not formation_id.is_empty():
 			_require(ContentTypes.FORMATION, formation_id, doctrine.id, "formation")
+
+
+## Validates ship_archetype.weapon_sockets against the target hull's actual socket
+## mirrors: the socket name must exist, the declared class must equal the hull
+## socket's class, and an optional default weapon must be mountable in that class.
+func _check_ship_archetype_weapon_sockets(archetype: ContentDefinition, hull: ContentDefinition) -> void:
+	var hull_sockets: Dictionary = {}
+	for raw in hull.data.get("weapon_sockets", []):
+		if raw is Dictionary:
+			var socket_name := String((raw as Dictionary).get("name", ""))
+			if not socket_name.is_empty():
+				hull_sockets[socket_name] = raw
+	var sockets: Variant = archetype.data.get("weapon_sockets", [])
+	if not (sockets is Array):
+		return
+	for index in (sockets as Array).size():
+		var entry: Variant = (sockets as Array)[index]
+		if not (entry is Dictionary):
+			continue
+		var socket_name := String((entry as Dictionary).get("socket", ""))
+		var socket_class := String((entry as Dictionary).get("class", ""))
+		var hull_socket: Variant = hull_sockets.get(socket_name, null)
+		if not (hull_socket is Dictionary):
+			_error(
+				"ship_archetype_socket_missing",
+				"%s weapon_sockets[%d] uses '%s' but hull %s has no such weapon socket" % [
+					archetype.id, index, socket_name, hull.id
+				],
+				archetype.id
+			)
+			continue
+		var hull_class := String((hull_socket as Dictionary).get("socket_class", ""))
+		if hull_class != socket_class:
+			_error(
+				"ship_archetype_socket_class",
+				"%s weapon_sockets[%d] class '%s' does not match hull %s socket class '%s'" % [
+					archetype.id, index, socket_class, hull.id, hull_class
+				],
+				archetype.id
+			)
+		var weapon_id := String((entry as Dictionary).get("weapon", ""))
+		if weapon_id.is_empty():
+			continue
+		var weapon := _hub.get_by_id(ContentTypes.WEAPON, weapon_id)
+		if weapon == null:
+			# Missing weapon references are reported by the loop above.
+			continue
+		var weapon_class := String(weapon.data.get("weapon_class", ""))
+		var mount_class := String(weapon.data.get("mount_class", weapon_class))
+		if weapon_class != hull_class and mount_class != hull_class:
+			_error(
+				"ship_archetype_weapon_class",
+				"%s weapon_sockets[%d] default weapon '%s' (%s) cannot mount in hull %s socket class '%s'" % [
+					archetype.id, index, weapon_id, weapon_class, hull.id, hull_class
+				],
+				archetype.id
+			)
 
 
 func _check_modules() -> void:

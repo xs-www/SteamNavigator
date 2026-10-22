@@ -337,5 +337,7 @@
   "fleet_doctrine.core.merchant_escort.name": "Merchant Escort",
   "fleet_doctrine.core.merchant_escort.description": "A defensive convoy doctrine: protect the freighters, conserve supplies and disengage when threatened.",
   "fleet_doctrine.core.raider_hunt.name": "Raider Hunt",
-  "fleet_doctrine.core.raider_hunt.description": "An aggressive hunting doctrine: break the weakest target, engage eagerly and resupply aggressively."
+  "fleet_doctrine.core.raider_hunt.description": "An aggressive hunting doctrine: break the weakest target, engage eagerly and resupply aggressively.",
+  "ship_archetype.core.flagship_large_efficient.name": "Steady-class Flagship",
+  "ship_archetype.core.flagship_large_efficient.description": "An endgame flagship built on the large efficient hull: three cargo holds, twin broadside batteries and a full crew."
 }

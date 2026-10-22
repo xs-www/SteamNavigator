@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T22:43:06.274Z",
+    "generated_at": "2026-10-22T23:07:35.364Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -5112,6 +5112,67 @@
                 }
               ]
             }
+          },
+          {
+            "id": "core:ship_archetype/flagship_large_efficient",
+            "name_key": "ship_archetype.core.flagship_large_efficient.name",
+            "description_key": "ship_archetype.core.flagship_large_efficient.description",
+            "tags": [
+              "ship_archetype.fleet",
+              "ship_archetype.flagship"
+            ],
+            "enabled": true,
+            "data": {
+              "hull_ref": "core:hull/large_efficient",
+              "crew_capacity": 34,
+              "cargo_capacity": 260,
+              "base_speed": 14,
+              "upkeep": 100,
+              "default_modules": [
+                {
+                  "slot": "boiler",
+                  "module": "core:module/standard"
+                },
+                {
+                  "slot": "cargo",
+                  "module": "core:module/large_hold"
+                },
+                {
+                  "slot": "navigation",
+                  "module": "core:module/chart_room"
+                },
+                {
+                  "slot": "safety",
+                  "module": "core:module/safety_valve"
+                },
+                {
+                  "slot": "cabin",
+                  "module": "core:module/passenger_cabin"
+                }
+              ],
+              "weapon_sockets": [
+                {
+                  "socket": "SN_Socket_Weapon_Port_1",
+                  "class": "Side",
+                  "weapon": "core:weapon/broadside"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Starboard_1",
+                  "class": "Side",
+                  "weapon": "core:weapon/broadside"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Port_2",
+                  "class": "Light",
+                  "weapon": "core:weapon/deck_gun"
+                },
+                {
+                  "socket": "SN_Socket_Weapon_Starboard_2",
+                  "class": "Light",
+                  "weapon": "core:weapon/deck_gun"
+                }
+              ]
+            }
           }
         ]
       },
@@ -5143,7 +5204,8 @@
               "loyalty": 70,
               "commandable_archetypes": [
                 "core:ship_archetype/flagship_ironclad",
-                "core:ship_archetype/freight_hauler"
+                "core:ship_archetype/freight_hauler",
+                "core:ship_archetype/flagship_large_efficient"
               ]
             }
           },
@@ -5197,7 +5259,8 @@
               "loyalty": 65,
               "commandable_archetypes": [
                 "core:ship_archetype/courier_sloop",
-                "core:ship_archetype/freight_hauler"
+                "core:ship_archetype/freight_hauler",
+                "core:ship_archetype/flagship_large_efficient"
               ]
             }
           }
@@ -5696,7 +5759,9 @@
         "fleet_doctrine.core.merchant_escort.name": "商队护航",
         "fleet_doctrine.core.merchant_escort.description": "防御优先的护航战术：保护货船、节约补给，遇险时优先撤离。",
         "fleet_doctrine.core.raider_hunt.name": "猎袭战术",
-        "fleet_doctrine.core.raider_hunt.description": "激进猎杀战术：优先击溃最弱目标，主动交战并积极补给。"
+        "fleet_doctrine.core.raider_hunt.description": "激进猎杀战术：优先击溃最弱目标，主动交战并积极补给。",
+        "ship_archetype.core.flagship_large_efficient.name": "稳健级旗舰",
+        "ship_archetype.core.flagship_large_efficient.description": "大型高效船体改造的终局旗舰：三货舱、双舷炮列与充足船员，兼顾续航与火力。"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -6037,7 +6102,9 @@
         "fleet_doctrine.core.merchant_escort.name": "Merchant Escort",
         "fleet_doctrine.core.merchant_escort.description": "A defensive convoy doctrine: protect the freighters, conserve supplies and disengage when threatened.",
         "fleet_doctrine.core.raider_hunt.name": "Raider Hunt",
-        "fleet_doctrine.core.raider_hunt.description": "An aggressive hunting doctrine: break the weakest target, engage eagerly and resupply aggressively."
+        "fleet_doctrine.core.raider_hunt.description": "An aggressive hunting doctrine: break the weakest target, engage eagerly and resupply aggressively.",
+        "ship_archetype.core.flagship_large_efficient.name": "Steady-class Flagship",
+        "ship_archetype.core.flagship_large_efficient.description": "An endgame flagship built on the large efficient hull: three cargo holds, twin broadside batteries and a full crew."
       }
     },
     "definitions": [
@@ -12069,6 +12136,79 @@
         }
       },
       {
+        "id": "core:ship_archetype/flagship_large_efficient",
+        "content_type": "ship_archetypes",
+        "file": "content/ship_archetypes.json",
+        "name_key": "ship_archetype.core.flagship_large_efficient.name",
+        "name_zh": "稳健级旗舰",
+        "name_en": "Steady-class Flagship",
+        "tags": [
+          "ship_archetype.fleet",
+          "ship_archetype.flagship"
+        ],
+        "definition": {
+          "id": "core:ship_archetype/flagship_large_efficient",
+          "name_key": "ship_archetype.core.flagship_large_efficient.name",
+          "description_key": "ship_archetype.core.flagship_large_efficient.description",
+          "tags": [
+            "ship_archetype.fleet",
+            "ship_archetype.flagship"
+          ],
+          "enabled": true,
+          "data": {
+            "hull_ref": "core:hull/large_efficient",
+            "crew_capacity": 34,
+            "cargo_capacity": 260,
+            "base_speed": 14,
+            "upkeep": 100,
+            "default_modules": [
+              {
+                "slot": "boiler",
+                "module": "core:module/standard"
+              },
+              {
+                "slot": "cargo",
+                "module": "core:module/large_hold"
+              },
+              {
+                "slot": "navigation",
+                "module": "core:module/chart_room"
+              },
+              {
+                "slot": "safety",
+                "module": "core:module/safety_valve"
+              },
+              {
+                "slot": "cabin",
+                "module": "core:module/passenger_cabin"
+              }
+            ],
+            "weapon_sockets": [
+              {
+                "socket": "SN_Socket_Weapon_Port_1",
+                "class": "Side",
+                "weapon": "core:weapon/broadside"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Starboard_1",
+                "class": "Side",
+                "weapon": "core:weapon/broadside"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Port_2",
+                "class": "Light",
+                "weapon": "core:weapon/deck_gun"
+              },
+              {
+                "socket": "SN_Socket_Weapon_Starboard_2",
+                "class": "Light",
+                "weapon": "core:weapon/deck_gun"
+              }
+            ]
+          }
+        }
+      },
+      {
         "id": "core:captain/elena_voss",
         "content_type": "captains",
         "file": "content/captains.json",
@@ -12103,7 +12243,8 @@
             "loyalty": 70,
             "commandable_archetypes": [
               "core:ship_archetype/flagship_ironclad",
-              "core:ship_archetype/freight_hauler"
+              "core:ship_archetype/freight_hauler",
+              "core:ship_archetype/flagship_large_efficient"
             ]
           }
         }
@@ -12181,7 +12322,8 @@
             "loyalty": 65,
             "commandable_archetypes": [
               "core:ship_archetype/courier_sloop",
-              "core:ship_archetype/freight_hauler"
+              "core:ship_archetype/freight_hauler",
+              "core:ship_archetype/flagship_large_efficient"
             ]
           }
         }

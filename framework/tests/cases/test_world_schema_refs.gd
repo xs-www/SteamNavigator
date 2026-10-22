@@ -638,3 +638,82 @@ func test_fleet_references_are_checked() -> void:
 			if String(hit.get("message", "")).contains(field):
 				matched = true
 		assert_true(matched, "%s error names field %s: %s" % [owner, field, str(hits)])
+
+
+## D2-FIX：ship_archetype.weapon_sockets 的 socket 名 / class / 默认武器 class 必须与
+## 目标 hull 的实际 socket 镜像一致；large_efficient（无 Bow 槽）是负样本。
+func test_ship_archetype_weapon_sockets_match_the_hull() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.HULL, "test:hull/sockets", {
+		"weapon_sockets": [
+			{"name": "SN_Socket_Weapon_Port_1", "socket_class": "Light", "socket_index": 0},
+		],
+	})
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/valid", {
+		"hull_ref": "test:hull/sockets",
+		"crew_capacity": 6,
+		"cargo_capacity": 40,
+		"base_speed": 12,
+		"upkeep": 10,
+		"weapon_sockets": [
+			{"socket": "SN_Socket_Weapon_Port_1", "class": "Light", "weapon": "core:weapon/deck_gun"},
+		],
+	})
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/socket_missing", {
+		"hull_ref": "test:hull/sockets",
+		"crew_capacity": 6,
+		"cargo_capacity": 40,
+		"base_speed": 12,
+		"upkeep": 10,
+		"weapon_sockets": [
+			{"socket": "SN_Socket_Weapon_Bow", "class": "Medium"},
+		],
+	})
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/socket_class", {
+		"hull_ref": "test:hull/sockets",
+		"crew_capacity": 6,
+		"cargo_capacity": 40,
+		"base_speed": 12,
+		"upkeep": 10,
+		"weapon_sockets": [
+			{"socket": "SN_Socket_Weapon_Port_1", "class": "Medium"},
+		],
+	})
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/weapon_class", {
+		"hull_ref": "core:hull/large_efficient",
+		"crew_capacity": 8,
+		"cargo_capacity": 80,
+		"base_speed": 10,
+		"upkeep": 20,
+		"weapon_sockets": [
+			{"socket": "SN_Socket_Weapon_Port_1", "class": "Side", "weapon": "core:weapon/heavy_cannon"},
+		],
+	})
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/large_efficient_bow", {
+		"hull_ref": "core:hull/large_efficient",
+		"crew_capacity": 8,
+		"cargo_capacity": 80,
+		"base_speed": 10,
+		"upkeep": 20,
+		"weapon_sockets": [
+			{"socket": "SN_Socket_Weapon_Bow", "class": "Medium"},
+		],
+	})
+	var result := _result(hub)
+	assert_empty(_codes(_errors_for(result, "test:ship_archetype/valid")),
+		"a matching socket name/class/weapon is clean")
+	assert_contains(_codes(_errors_for(result, "test:ship_archetype/socket_missing")),
+		"ship_archetype_socket_missing", "unknown hull sockets are rejected")
+	assert_contains(_codes(_errors_for(result, "test:ship_archetype/socket_class")),
+		"ship_archetype_socket_class", "socket class mismatches are rejected")
+	assert_contains(_codes(_errors_for(result, "test:ship_archetype/weapon_class")),
+		"ship_archetype_weapon_class", "default weapons that cannot mount are rejected")
+	assert_contains(_codes(_errors_for(result, "test:ship_archetype/large_efficient_bow")),
+		"ship_archetype_socket_missing", "large_efficient has no Bow socket (negative sample)")
+
+
+## D2-FIX：真实 Core 的舰队内容必须零 socket/reference error。
+func test_core_fleet_content_has_no_socket_errors() -> void:
+	var result := _result(_new_hub())
+	for code in ["ship_archetype_socket_missing", "ship_archetype_socket_class", "ship_archetype_weapon_class"]:
+		assert_eq(_count_code(result.get("errors", []), code), 0, "core has no %s" % code)

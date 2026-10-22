@@ -9,7 +9,7 @@ extends TestCase
 ##   fleet_doctrines），不写死 core:* 内容 id 到断言里。
 ## - 旗舰永远等于当前 `data.ship`（archetype 由 hull_ref 反查），fleet 不复制 ship
 ##   的模块/耐久状态；测试用 `state.ship().hull_id` 对照。
-## - 所有写操作走 `fleet.*` 命令（CommandBus 事务）；失败命令不得提交状态。
+## - 所有写操作走 `fleet.*` 命令（CommandBus 事务）；失败命令不得提交状态。`n## - D2-FIX 覆盖：max_ships 缺省按 slots 数、flagship 槽位独占与自动分配跳过、`n##   slot/formation 清空、以及损坏 `data.fleet` 的规范化不抛引擎错误。
 ## @end-static-doc
 
 const STEADY := "core:starting_scenario/steady"
@@ -157,7 +157,13 @@ func test_set_formation_assigns_slots_and_rejects_conflicts() -> void:
 	var set := context.commands.execute(&"fleet.set_formation", {"formation_id": formation_id})
 	assert_true(bool(set.get("ok", false)), "setting a formation succeeds: %s" % str(set))
 	assert_eq(String(_view(context).get("formation_id", "")), formation_id, "the view reports the formation")
-	var slot_id := slot_ids[0]
+	var slot_id := ""
+	for candidate in slot_ids:
+		if FleetOps.formation_slot_role(context.registries, formation_id, candidate) != "flagship":
+			slot_id = candidate
+			break
+	if slot_id.is_empty():
+		slot_id = slot_ids[0]
 	var assigned := context.commands.execute(&"fleet.set_formation", {"ship_id": FleetOps.FLAGSHIP_ID, "slot": slot_id})
 	assert_true(bool(assigned.get("ok", false)), "assigning the flagship to a slot succeeds: %s" % str(assigned))
 	assert_eq(String(_flagship(_view(context)).get("formation_slot", "")), slot_id, "the slot is recorded")
@@ -318,3 +324,142 @@ func test_same_seed_and_commands_are_deterministic() -> void:
 		(second.state.data["campaign"] as Dictionary).erase("created_at")
 	assert_eq(first.state.data.get("fleet", null), second.state.data.get("fleet", null),
 		"same seed + same fleet commands produce the same fleet block")
+
+
+func test_every_core_hull_has_an_archetype_and_commandable_captain() -> void:
+	var context: AppContext = bootstrap_core()["context"]
+	var hulls := context.registries.get_all(ContentTypes.HULL)
+	var archetypes := context.registries.get_all(ContentTypes.SHIP_ARCHETYPE)
+	var hull_by_id := {}
+	for hull in hulls:
+		hull_by_id[hull.id] = hull
+	var commanded := {}
+	for captain in context.registries.get_all(ContentTypes.CAPTAIN):
+		for archetype_id in captain.data.get("commandable_archetypes", []):
+			commanded[String(archetype_id)] = true
+	var covered := {}
+	for archetype in archetypes:
+		var hull_ref := String(archetype.data.get("hull_ref", ""))
+		assert_true(hull_by_id.has(hull_ref), "%s references a legal Core hull" % archetype.id)
+		if not hull_by_id.has(hull_ref):
+			continue
+		covered[hull_ref] = true
+		var hull: ContentDefinition = hull_by_id[hull_ref]
+		var sockets := {}
+		for socket in hull.data.get("weapon_sockets", []):
+			sockets[String(socket.get("name", ""))] = String(socket.get("socket_class", ""))
+		for entry in archetype.data.get("weapon_sockets", []):
+			var socket_name := String(entry.get("socket", ""))
+			assert_true(sockets.has(socket_name), "%s socket %s exists on %s" % [archetype.id, socket_name, hull_ref])
+			if sockets.has(socket_name):
+				assert_eq(String(entry.get("class", "")), String(sockets[socket_name]),
+					"%s socket %s class matches the hull" % [archetype.id, socket_name])
+		assert_true(commanded.has(archetype.id), "%s is commandable by a Core captain" % archetype.id)
+	for hull in hulls:
+		assert_true(covered.has(hull.id), "legal Core hull %s has a ship archetype" % hull.id)
+	assert_true(covered.has("core:hull/large_efficient"), "the endgame large_efficient hull is covered")
+
+
+## D2-FIX：无显式 max_ships 的 formation 以 slots 数量为容量；无 formation 用框架上限。
+func test_max_ships_defaults_to_slot_count() -> void:
+	var hub := RegistryHub.new()
+	var without_cap := ContentDefinition.from_raw({
+		"id": "test:formation/three_slots",
+		"name_key": "test.formation.three_slots.name",
+		"enabled": true,
+		"data": {"slots": [
+			{"id": "flagship", "role": "flagship", "offset": {"x": 0, "y": 0}},
+			{"id": "left", "role": "line", "offset": {"x": -8, "y": 8}},
+			{"id": "right", "role": "line", "offset": {"x": -8, "y": -8}},
+		]},
+	}, ContentTypes.FORMATION, "test", "res://framework/tests/cases/test_fleet.gd")
+	var with_cap := ContentDefinition.from_raw({
+		"id": "test:formation/two_ships",
+		"name_key": "test.formation.two_ships.name",
+		"enabled": true,
+		"data": {"max_ships": 2, "slots": [
+			{"id": "flagship", "role": "flagship", "offset": {"x": 0, "y": 0}},
+			{"id": "left", "role": "line", "offset": {"x": -8, "y": 8}},
+			{"id": "right", "role": "line", "offset": {"x": -8, "y": -8}},
+		]},
+	}, ContentTypes.FORMATION, "test", "res://framework/tests/cases/test_fleet.gd")
+	hub.register(without_cap)
+	hub.register(with_cap)
+	assert_eq(FleetOps.max_ships(hub, "test:formation/three_slots"), 3, "capacity defaults to the slot count")
+	assert_eq(FleetOps.max_ships(hub, "test:formation/two_ships"), 2, "an explicit max_ships wins over slots")
+	assert_eq(FleetOps.max_ships(hub, ""), FleetOps.MAX_SHIPS, "without a formation the framework cap applies")
+	assert_eq(FleetOps.max_ships(hub, "test:formation/absent"), FleetOps.MAX_SHIPS, "missing formations fall back")
+
+
+## D2-FIX：旗舰槽只能旗舰；add_ship 自动分配跳过旗舰/已占槽；slot 与 formation 可清空。
+func test_flagship_slot_rules_and_clear_semantics() -> void:
+	var context := _start(212)
+	var formation_id := ""
+	var flagship_slot := ""
+	for candidate in _sorted_ids(context, ContentTypes.FORMATION):
+		for slot_id in FleetOps.formation_slot_ids(context.registries, candidate):
+			if FleetOps.formation_slot_role(context.registries, candidate, slot_id) == "flagship":
+				formation_id = candidate
+				flagship_slot = slot_id
+				break
+		if not formation_id.is_empty():
+			break
+	if formation_id.is_empty():
+		return
+	var set := context.commands.execute(&"fleet.set_formation", {"formation_id": formation_id})
+	assert_true(bool(set.get("ok", false)), "setting the formation succeeds: %s" % str(set))
+	var flagship := _flagship(_view(context))
+	var other_archetype := _other_archetype(context, String(flagship.get("archetype_id", "")))
+	var added := context.commands.execute(&"fleet.add_ship", {"archetype_id": other_archetype})
+	assert_true(bool(added.get("ok", false)), "adding a roster ship succeeds: %s" % str(added))
+	var ship_id := String(added["data"].get("ship_id", ""))
+	assert_ne(String(added["data"].get("formation_slot", "x")), flagship_slot,
+		"auto-assignment skips the flagship slot")
+	var occupied := context.commands.execute(&"fleet.set_formation", {"ship_id": ship_id, "slot": flagship_slot})
+	assert_eq(String(occupied.get("error_code", "")), "flagship_slot_only", "non-flagship cannot use the flagship slot")
+	var flagship_assigned := context.commands.execute(&"fleet.set_formation", {
+		"ship_id": FleetOps.FLAGSHIP_ID,
+		"slot": flagship_slot,
+	})
+	assert_true(bool(flagship_assigned.get("ok", false)), "the flagship may use its slot: %s" % str(flagship_assigned))
+	assert_eq(String(_flagship(_view(context)).get("formation_slot", "")), flagship_slot, "the flagship slot is recorded")
+	var cleared_slot := context.commands.execute(&"fleet.set_formation", {
+		"ship_id": FleetOps.FLAGSHIP_ID,
+		"slot": "",
+	})
+	assert_true(bool(cleared_slot.get("ok", false)), "an empty slot clears the assignment")
+	assert_eq(String(_flagship(_view(context)).get("formation_slot", "x")), "", "the flagship slot is cleared")
+	var cleared_formation := context.commands.execute(&"fleet.set_formation", {"formation_id": ""})
+	assert_true(bool(cleared_formation.get("ok", false)), "an empty formation clears the formation")
+	var view := _view(context)
+	assert_eq(String(view.get("formation_id", "x")), "", "the formation is cleared")
+	for ship in _ships(view):
+		assert_eq(String((ship as Dictionary).get("formation_slot", "x")), "", "clearing the formation clears all slots")
+
+
+## D2-FIX：损坏的 data.fleet（非字典 / 非数组 / 字段类型错误）不抛引擎错误。
+func test_malformed_fleet_data_is_normalized() -> void:
+	var context := _start(213)
+	var variants: Array = [
+		"broken",
+		42,
+		["not", "a", "fleet"],
+		{"ships": "nope", "formation_id": 5, "doctrine_id": []},
+		{"ships": [null, 42, {"ship_id": 7}, {"ship_id": "flagship", "archetype_id": {}, "captain_id": 5, "formation_slot": [], "condition": "bad"}, {"ship_id": "ship_x", "captain_id": "not-a-real-captain"}]},
+		{"flagship": 99, "ships": [{"ship_id": "flagship"}]},
+	]
+	for variant in variants:
+		context.state.data["fleet"] = variant
+		var result := context.queries.execute(&"fleet.view")
+		assert_true(bool(result.get("ok", false)), "fleet.view stays ok for malformed data: %s" % str(result))
+		var view: Dictionary = result.get("data", {})
+		assert_true(view.get("ships", null) is Array, "ships are normalized to an array")
+		assert_eq(_flagship(view).size() > 0, true, "the flagship entry is restored")
+		for ship in _ships(view):
+			assert_eq(typeof((ship as Dictionary).get("ship_id", "")), TYPE_STRING, "ship ids are strings")
+			assert_eq(typeof((ship as Dictionary).get("formation_slot", "")), TYPE_STRING, "slots are strings")
+		assert_eq(typeof(view.get("formation_id", "")), TYPE_STRING, "formation id is normalized to a string")
+		assert_eq(typeof(view.get("doctrine_id", "")), TYPE_STRING, "doctrine id is normalized to a string")
+	var healed := context.commands.execute(&"fleet.set_doctrine", {"doctrine_id": ""})
+	assert_true(bool(healed.get("ok", false)), "a command repairs the malformed block")
+	assert_true(context.state.data.get("fleet", null) is Dictionary, "the repaired block is a dictionary")

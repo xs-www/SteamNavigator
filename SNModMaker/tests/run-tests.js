@@ -1254,7 +1254,7 @@ function warningsOf(result) {
     const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
     assert.ok(!(manifest.planned || []).some((system) => system.capability === 'content.fleet.v1'), 'planned.fleet is fully promoted');
     const fleet = [
-      ['ship_archetypes', 'v2/ship_archetype.schema.json', 'core:ship_archetype/', 'ship_archetype.core.', 3],
+      ['ship_archetypes', 'v2/ship_archetype.schema.json', 'core:ship_archetype/', 'ship_archetype.core.', 4],
       ['captains', 'v2/captain.schema.json', 'core:captain/', 'captain.core.', 3],
       ['formations', 'v2/formation.schema.json', 'core:formation/', 'formation.core.', 2],
       ['fleet_doctrines', 'v2/fleet_doctrine.schema.json', 'core:fleet_doctrine/', 'fleet_doctrine.core.', 2],
@@ -1282,7 +1282,8 @@ function warningsOf(result) {
     const coreManifest = JSON.parse(fs.readFileSync(path.join(coreRoot, 'manifest.json'), 'utf8'));
     assert.ok(coreManifest.capabilities.includes('content.fleet.v1'));
     // Cross-content sanity: captains command existing archetypes, doctrines bind existing formations.
-    const archetypes = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'ship_archetypes.json'), 'utf8')).definitions.map((d) => d.id);
+    const archetypeDefinitions = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'ship_archetypes.json'), 'utf8')).definitions;
+    const archetypes = archetypeDefinitions.map((d) => d.id);
     const captains = JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'captains.json'), 'utf8')).definitions;
     for (const captain of captains) {
       for (const archetype of captain.data.commandable_archetypes) {
@@ -1295,6 +1296,42 @@ function warningsOf(result) {
       if (doctrine.data.formation) assert.ok(formations.includes(doctrine.data.formation), `${doctrine.id} binds ${doctrine.data.formation}`);
     }
     assert.ok(archetypes.includes('core:ship_archetype/flagship_ironclad'), 'Core ships a flagship archetype');
+
+    // Every legal Core hull has a matching archetype; defaults agree with the hull sockets/classes.
+    const hulls = Object.fromEntries(JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'hulls.json'), 'utf8')).definitions.map((d) => [d.id, d.data]));
+    const modules = Object.fromEntries(JSON.parse(fs.readFileSync(path.join(coreRoot, 'content', 'modules.json'), 'utf8')).definitions.map((d) => [d.id, d.data]));
+    const slotCategories = { boiler: 'boiler', cargo: 'cargo', navigation: 'utility', safety: 'utility', cabin: 'cabin' };
+    const locs = {};
+    for (const locale of ['zh_CN', 'en']) locs[locale] = JSON.parse(fs.readFileSync(path.join(coreRoot, 'localization', `${locale}.json`), 'utf8'));
+    const commanded = new Set(captains.flatMap((captain) => captain.data.commandable_archetypes));
+    const coveredHulls = new Set();
+    for (const archetype of archetypeDefinitions) {
+      const hull = hulls[archetype.data.hull_ref];
+      assert.ok(hull, `${archetype.id} references an existing hull`);
+      coveredHulls.add(archetype.data.hull_ref);
+      const sockets = Object.fromEntries((hull.weapon_sockets || []).map((socket) => [socket.name, socket.socket_class]));
+      for (const entry of archetype.data.weapon_sockets || []) {
+        assert.ok(entry.socket in sockets, `${archetype.id} socket ${entry.socket} exists on ${archetype.data.hull_ref}`);
+        assert.equal(entry.class, sockets[entry.socket], `${archetype.id} socket ${entry.socket} class matches the hull`);
+      }
+      for (const entry of archetype.data.default_modules || []) {
+        const module = modules[entry.module];
+        assert.ok(module, `${archetype.id} default module ${entry.module} exists`);
+        assert.equal(module.v2_category, slotCategories[entry.slot], `${archetype.id} slot ${entry.slot} module category`);
+      }
+      assert.ok(archetype.data.cargo_capacity <= Number(hull.max_weight), `${archetype.id} cargo capacity fits the hull`);
+      for (const locale of ['zh_CN', 'en']) {
+        assert.ok(locs[locale][archetype.name_key], `${locale} has ${archetype.name_key}`);
+        assert.ok(locs[locale][archetype.description_key], `${locale} has ${archetype.description_key}`);
+      }
+      assert.ok(commanded.has(archetype.id), `${archetype.id} is commandable by a captain`);
+    }
+    const largeEfficient = archetypeDefinitions.find((d) => d.id === 'core:ship_archetype/flagship_large_efficient');
+    assert.ok(largeEfficient, 'the endgame large_efficient hull has a flagship archetype');
+    assert.equal(largeEfficient.data.hull_ref, 'core:hull/large_efficient');
+    assert.ok(coveredHulls.has('core:hull/large_efficient'), 'large_efficient is covered by an archetype');
+    assert.deepEqual([...coveredHulls].sort(), Object.keys(hulls).sort(), 'every legal Core hull has an archetype');
+    assert.ok(archetypes.length === 4, 'Core ships four ship archetypes');
   });
 
   await test('combat AI profiles validate defaults and check FSM graph endpoints', () => {

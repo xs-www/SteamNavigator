@@ -24,6 +24,11 @@ extends RefCounted
 ## - D1 战斗家族（weapons / damage_types / combat_abilities / enemy_archetypes /
 ##   encounter_tables / loot_tables）的最低数量只统计 `source_mod == "core"` 的定义，
 ##   第三方单独提供的战斗内容不能替代 Core 自己的完整性门槛。
+## - D2 舰队家族（ship_archetypes / captains / formations / fleet_doctrines）的
+##   最低数量同样只统计 Core 来源；没有舰队内容时启动保持基线，第三方内容不能替代
+##   Core 的舰队门槛。引用合法性（hull / modules / weapons / formation / captain
+##   可指挥船型 / ship_archetype.weapon_sockets 与 hull socket 名和 class）由
+##   `CrossReferenceValidator._check_fleet` 负责硬校验。
 ## @end-static-doc
 
 static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary:
