@@ -2550,11 +2550,11 @@ export const MODULES = {
     ]
   },
   "schemas": {
-    intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0（Phase B 运行时 Schema + weapon 草案）。",
+    intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0（Phase B/C 运行时 Schema + 草案）。",
     contracts: [
       "每类内容一个 envelope Schema；公共字段在 `common.schema.json`。",
-      "1.x 类型继续使用根目录 Schema；Phase B 的 9 类 2.0 运行时 Schema 在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载。",
-      "`schemas/v2/` 当前：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`、`map_config`、`weapon`；其中 `weapon` 仍是草案。",
+      "1.x 类型继续使用根目录 Schema；Phase B 的 9 类与 C1 的 `module` / `hull` 共 11 类 2.0 运行时 Schema 在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载。",
+      "`schemas/v2/` 当前：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`、`map_config`、`module`、`hull`、`weapon`、`story_arc`、`story_level`；其中 `weapon` / `story_arc` / `story_level` 仍是草案。",
       "标准实体可选 `information.texture/model` 资源键；贴图与 GLB 模型属于展示信息，不替代 data 权威字段。",
       "Schema 的 `const`/`enum` 与 `ContentTypes`/操作码注册表需同步维护；效果操作码枚举（如 `damage_module`）必须与 `EffectOpRegistry` 同时增改，否则 core 校验会 fatal。"
     ]
@@ -2664,7 +2664,7 @@ export const GROUPED_ROLES = {
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",
   "sdk/examples": "第三方锅炉示例，验证公共内容接口。",
-  "schemas/v2": "Content Schema 2.0：common + Phase B active 的 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery / map_config（31 键 exploration、twin_world_size、story），以及仍为草案的 weapon。",
+  "schemas/v2": "Content Schema 2.0：common + Phase B active 的 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery / map_config + C1 的 module / hull，以及仍为草案的 weapon / story_arc / story_level。",
   "schemas": "JSON Schema 文件（Manifest/common/15 类内容）。",
   "dev_mods/core": "官方 Core 内容文件（manifest/content/localization/assets）。",
   "tools/modeling/generators": "铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。",
