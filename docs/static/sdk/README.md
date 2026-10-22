@@ -6,7 +6,7 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
-| `examples/example_boilers/content/boilers.json` | 第三方锅炉示例，验证公共内容接口。 | 本页 |
+| `examples/example_boilers/content/modules.json` | 第三方锅炉示例，验证公共内容接口。 | 本页 |
 | `examples/example_boilers/localization/en.json` | 第三方锅炉示例，验证公共内容接口。 | 本页 |
 | `examples/example_boilers/localization/zh_CN.json` | 第三方锅炉示例，验证公共内容接口。 | 本页 |
 | `examples/example_boilers/manifest.json` | 第三方锅炉示例，验证公共内容接口。 | 本页 |

@@ -12,41 +12,37 @@
 | `GOOD` | L9 |
 | `MATERIAL` | L10 |
 | `HULL` | L11 |
-| `BOILER` | L12 |
-| `CARGO_MODULE` | L13 |
-| `NAVIGATION_MODULE` | L14 |
-| `SAFETY_MODULE` | L15 |
-| `CABIN` | L16 |
-| `ROLE` | L17 |
-| `STRATEGY` | L18 |
-| `PORT_ARCHETYPE` | L19 |
-| `MAP_PROFILE` | L20 |
-| `STARTING_BUILD` | L21 |
-| `WORLD_PROFILE` | L22 |
-| `REGION` | L23 |
-| `SITE` | L24 |
-| `ROUTE_TEMPLATE` | L25 |
-| `WEATHER_PROFILE` | L26 |
-| `FACTION` | L27 |
-| `DISCOVERY` | L28 |
-| `START_PROFILE` | L29 |
-| `MAP_CONFIG` | L30 |
-| `CONTRACT` | L31 |
-| `EVENT` | L32 |
-| `PATCH` | L33 |
-| `SCHEMA_PATHS` | L35 |
-| `SCHEMA_VERSIONS` | L63 |
-| `SINGULAR` | L91 |
-| `MODULE_TYPES` | L119 |
-| `all() -> Array[StringName]` | L122 |
-| `registry_types() -> Array[StringName]` | L133 |
-| `is_known(content_type: StringName) -> bool` | L139 |
-| `is_module(content_type: StringName) -> bool` | L143 |
-| `is_patch(content_type: StringName) -> bool` | L147 |
-| `schema_path(content_type: StringName) -> String` | L151 |
-| `schema_version(content_type: StringName) -> String` | L155 |
-| `singular(content_type: StringName) -> String` | L159 |
-| `from_singular(singular_name: String) -> StringName` | L163 |
+| `MODULE` | L12 |
+| `ROLE` | L13 |
+| `STRATEGY` | L14 |
+| `PORT_ARCHETYPE` | L15 |
+| `MAP_PROFILE` | L16 |
+| `STARTING_BUILD` | L17 |
+| `WORLD_PROFILE` | L18 |
+| `REGION` | L19 |
+| `SITE` | L20 |
+| `ROUTE_TEMPLATE` | L21 |
+| `WEATHER_PROFILE` | L22 |
+| `FACTION` | L23 |
+| `DISCOVERY` | L24 |
+| `START_PROFILE` | L25 |
+| `MAP_CONFIG` | L26 |
+| `CONTRACT` | L27 |
+| `EVENT` | L28 |
+| `PATCH` | L29 |
+| `SCHEMA_PATHS` | L31 |
+| `SCHEMA_VERSIONS` | L55 |
+| `SINGULAR` | L79 |
+| `MODULE_TYPES` | L103 |
+| `all() -> Array[StringName]` | L106 |
+| `registry_types() -> Array[StringName]` | L116 |
+| `is_known(content_type: StringName) -> bool` | L122 |
+| `is_module(content_type: StringName) -> bool` | L126 |
+| `is_patch(content_type: StringName) -> bool` | L130 |
+| `schema_path(content_type: StringName) -> String` | L134 |
+| `schema_version(content_type: StringName) -> String` | L138 |
+| `singular(content_type: StringName) -> String` | L142 |
+| `from_singular(singular_name: String) -> StringName` | L146 |
 
 ## 契约与约束
 

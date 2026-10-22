@@ -13,38 +13,40 @@
 | `WATER_WEIGHT` | L6 |
 | `PASSENGER_WEIGHT` | L7 |
 | `EQUIPMENT_KEYS` | L9 |
-| `INSTALLABLE_TYPES` | L10 |
-| `all_installed_module_ids(ship: Dictionary) -> Array[String]` | L20 |
-| `cargo_module_ids(ship: Dictionary) -> Array[String]` | L31 |
-| `find_module(hub: RegistryHub, module_id: String) -> ContentDefinition` | L38 |
-| `item_definition(hub: RegistryHub, item_id: String) -> ContentDefinition` | L48 |
-| `installed_modules(hub: RegistryHub, ship: Dictionary) -> Array[ContentDefinition]` | L55 |
-| `module_weight(hub: RegistryHub, ship: Dictionary) -> float` | L64 |
-| `module_damage_points(hub: RegistryHub, ship: Dictionary) -> float` | L74 |
-| `has_disabled_module(ship: Dictionary) -> bool` | L87 |
-| `cargo_weight(hub: RegistryHub, ship: Dictionary) -> float` | L94 |
-| `passenger_count(state: GameState) -> int` | L104 |
-| `total_weight(hub: RegistryHub, state: GameState) -> float` | L116 |
-| `max_weight(hub: RegistryHub, ship: Dictionary) -> float` | L126 |
-| `cargo_capacity(hub: RegistryHub, ship: Dictionary) -> float` | L131 |
-| `cargo_used(hub: RegistryHub, ship: Dictionary) -> float` | L140 |
-| `free_cargo_capacity(hub: RegistryHub, ship: Dictionary) -> float` | L144 |
-| `passenger_capacity(hub: RegistryHub, ship: Dictionary) -> int` | L148 |
-| `durability_max(hub: RegistryHub, ship: Dictionary) -> float` | L156 |
-| `stats(hub: RegistryHub, ship: Dictionary) -> Dictionary` | L161 |
-| `role_definition(hub: RegistryHub, ship: Dictionary, kind: String) -> ContentDefinition` | L263 |
-| `add_cargo(ship: Dictionary, item_id: String, amount: int, contract_id: String = "", total_cost: float = 0.0) -> void` | L274 |
-| `cargo_amount(ship: Dictionary, item_id: String, allow_contract: bool = true) -> int` | L293 |
-| `cargo_total_cost(ship: Dictionary, allow_contract: bool = false) -> float` | L304 |
-| `cargo_average_cost(ship: Dictionary, item_id: String, allow_contract: bool = false) -> float` | L313 |
-| `remove_cargo(ship: Dictionary, item_id: String, amount: int, allow_contract: bool = false) -> int` | L326 |
-| `remove_non_contract_cargo_by_weight(hub: RegistryHub, ship: Dictionary, weight: float) -> float` | L353 |
-| `module_type(hub: RegistryHub, module_id: String) -> StringName` | L382 |
-| `unlock_contract_id(hub: RegistryHub, module_id: String) -> String` | L390 |
-| `locked_by_contract(hub: RegistryHub, state: GameState, module_id: String) -> bool` | L403 |
-| `install_blockers(hub: RegistryHub, state: GameState, module_id: String, source: String = "purchase", replace_module_id: String = "") -> Array[String]` | L419 |
-| `uninstall_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]` | L516 |
-| `validate_configuration(hub: RegistryHub, ship: Dictionary) -> Dictionary` | L530 |
+| `installable_definitions(hub: RegistryHub) -> Array[ContentDefinition]` | L13 |
+| `find_installable(hub: RegistryHub, module_id: String) -> ContentDefinition` | L21 |
+| `all_installed_module_ids(ship: Dictionary) -> Array[String]` | L30 |
+| `cargo_module_ids(ship: Dictionary) -> Array[String]` | L41 |
+| `find_module(hub: RegistryHub, module_id: String) -> ContentDefinition` | L48 |
+| `module_in_slot(hub: RegistryHub, ship: Dictionary, slot: String) -> ContentDefinition` | L54 |
+| `item_definition(hub: RegistryHub, item_id: String) -> ContentDefinition` | L64 |
+| `installed_modules(hub: RegistryHub, ship: Dictionary) -> Array[ContentDefinition]` | L71 |
+| `module_weight(hub: RegistryHub, ship: Dictionary) -> float` | L80 |
+| `module_damage_points(hub: RegistryHub, ship: Dictionary) -> float` | L90 |
+| `has_disabled_module(ship: Dictionary) -> bool` | L103 |
+| `cargo_weight(hub: RegistryHub, ship: Dictionary) -> float` | L110 |
+| `passenger_count(state: GameState) -> int` | L120 |
+| `total_weight(hub: RegistryHub, state: GameState) -> float` | L132 |
+| `max_weight(hub: RegistryHub, ship: Dictionary) -> float` | L142 |
+| `cargo_capacity(hub: RegistryHub, ship: Dictionary) -> float` | L147 |
+| `cargo_used(hub: RegistryHub, ship: Dictionary) -> float` | L156 |
+| `free_cargo_capacity(hub: RegistryHub, ship: Dictionary) -> float` | L160 |
+| `passenger_capacity(hub: RegistryHub, ship: Dictionary) -> int` | L164 |
+| `durability_max(hub: RegistryHub, ship: Dictionary) -> float` | L169 |
+| `stats(hub: RegistryHub, ship: Dictionary) -> Dictionary` | L174 |
+| `role_definition(hub: RegistryHub, ship: Dictionary, kind: String) -> ContentDefinition` | L276 |
+| `add_cargo(ship: Dictionary, item_id: String, amount: int, contract_id: String = "", total_cost: float = 0.0) -> void` | L287 |
+| `cargo_amount(ship: Dictionary, item_id: String, allow_contract: bool = true) -> int` | L306 |
+| `cargo_total_cost(ship: Dictionary, allow_contract: bool = false) -> float` | L317 |
+| `cargo_average_cost(ship: Dictionary, item_id: String, allow_contract: bool = false) -> float` | L326 |
+| `remove_cargo(ship: Dictionary, item_id: String, amount: int, allow_contract: bool = false) -> int` | L339 |
+| `remove_non_contract_cargo_by_weight(hub: RegistryHub, ship: Dictionary, weight: float) -> float` | L366 |
+| `module_category(hub: RegistryHub, module_id: String) -> String` | L395 |
+| `unlock_contract_id(hub: RegistryHub, module_id: String) -> String` | L400 |
+| `locked_by_contract(hub: RegistryHub, state: GameState, module_id: String) -> bool` | L413 |
+| `install_blockers(hub: RegistryHub, state: GameState, module_id: String, source: String = "purchase", replace_module_id: String = "", requested_slot: String = "") -> Array[String]` | L431 |
+| `uninstall_blockers(hub: RegistryHub, state: GameState, module_id: String) -> Array[String]` | L529 |
+| `validate_configuration(hub: RegistryHub, ship: Dictionary) -> Dictionary` | L543 |
 
 ## 契约与约束
 

@@ -353,9 +353,6 @@
 | `assets/models/weapons/shared_materials/wood_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/wood_deck.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/ports/iron_harbor_banner.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `content/boilers.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `content/cabins.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `content/cargo_modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/contracts.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/discoveries.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/events.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -365,12 +362,11 @@
 | `content/map_configs.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/map_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/materials.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `content/navigation_modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/port_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/regions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/roles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/route_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `content/safety_modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/sites.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/start_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/starting_builds.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

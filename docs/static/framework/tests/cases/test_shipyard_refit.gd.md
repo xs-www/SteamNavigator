@@ -17,7 +17,7 @@
 | `MODE_EXTERIOR` | L18 |
 | `MODE_CUTAWAY` | L19 |
 | `SHIP_THUMB_SIZE` | L20 |
-| `MODULE_TYPES` | L21 |
+| `MODULE_CATEGORIES` | L21 |
 | `LEGACY_SECTION_KEYS` | L24 |
 | `test_normal_mode_shows_owned_ship_render_and_component_categories() -> void` | L167 |
 | `test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> void` | L205 |
@@ -26,8 +26,8 @@
 | `test_ship_card_uses_the_authored_thumbnail() -> void` | L302 |
 | `test_renderer_slot_is_swappable_for_the_future_2_5d_scene() -> void` | L321 |
 | `test_dragging_a_warehouse_module_maps_to_install_command() -> void` | L355 |
-| `test_category_navigation_switches_operations_and_misc_hosts_actions() -> void` | L430 |
-| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L468 |
+| `test_category_navigation_switches_operations_and_misc_hosts_actions() -> void` | L431 |
+| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L469 |
 
 ## 契约与约束
 

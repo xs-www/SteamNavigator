@@ -9,7 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipyardViewQuery` | L1 |
-| `execute(_params: Dictionary, context) -> Dictionary` | L10 |
+| `SLOT_VIEW_DEFS` | L10 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L19 |
 
 ## 契约与约束
 

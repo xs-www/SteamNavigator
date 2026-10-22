@@ -14,7 +14,7 @@
 | `has(op: String) -> bool` | L88 |
 | `get_handler(op: String) -> Callable` | L93 |
 | `known_ops() -> PackedStringArray` | L98 |
-| `clear_runtime() -> void` | L135 |
+| `clear_runtime() -> void` | L131 |
 
 ## 契约与约束
 

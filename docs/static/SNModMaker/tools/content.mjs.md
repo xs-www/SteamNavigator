@@ -61,33 +61,35 @@
 | `setByPath(target, pathSegments, value)` | L873 |
 | `getByPath(target, pathSegments)` | L887 |
 | `deepMerge(base, extra)` | L896 |
-| `buildData(typeKey, ctx)` | L907 |
-| `findLocalIdConflict(project, info, localId, exclude)` | L928 |
-| `validateLocalId(localId)` | L938 |
-| `collectStrings(value, output, depth = 0)` | L945 |
-| `applyValueAssignment(definition, assignment)` | L965 |
-| `nestValue(segments, value)` | L995 |
-| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1011 |
-| `applyAssignmentToText(text, definitionNode, assignment)` | L1043 |
-| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1070 |
-| `describeFields(info)` | L1118 |
-| `collectObject(node, file)` | L1130 |
-| `inferType(target, raw)` | L1158 |
-| `expand(pathText, node, isRequired, file, depth)` | L1181 |
-| `describePayload(typeKey)` | L1219 |
-| `commandTypes(ctx)` | L1280 |
-| `commandDescribe(ctx)` | L1325 |
-| `commandList(ctx)` | L1357 |
-| `commandAdd(ctx)` | L1405 |
-| `commandSet(ctx)` | L1528 |
-| `commandLoc(ctx)` | L1584 |
-| `commandRm(ctx)` | L1636 |
-| `commandClone(ctx)` | L1706 |
-| `commandValidate(ctx)` | L1765 |
-| `commandNew(ctx)` | L1829 |
-| `COMMANDS` | L1926 |
-| `handleError(ctx, error)` | L1939 |
-| `main(argv)` | L1957 |
+| `MODULE_CATEGORY_VALUES` | L908 |
+| `requestedModuleCategory(ctx)` | L910 |
+| `buildData(typeKey, ctx)` | L931 |
+| `findLocalIdConflict(project, info, localId, exclude)` | L955 |
+| `validateLocalId(localId)` | L965 |
+| `collectStrings(value, output, depth = 0)` | L972 |
+| `applyValueAssignment(definition, assignment)` | L992 |
+| `nestValue(segments, value)` | L1022 |
+| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1038 |
+| `applyAssignmentToText(text, definitionNode, assignment)` | L1070 |
+| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1097 |
+| `describeFields(info)` | L1145 |
+| `collectObject(node, file)` | L1157 |
+| `inferType(target, raw)` | L1185 |
+| `expand(pathText, node, isRequired, file, depth)` | L1208 |
+| `describePayload(typeKey)` | L1246 |
+| `commandTypes(ctx)` | L1307 |
+| `commandDescribe(ctx)` | L1352 |
+| `commandList(ctx)` | L1384 |
+| `commandAdd(ctx)` | L1432 |
+| `commandSet(ctx)` | L1560 |
+| `commandLoc(ctx)` | L1616 |
+| `commandRm(ctx)` | L1668 |
+| `commandClone(ctx)` | L1738 |
+| `commandValidate(ctx)` | L1797 |
+| `commandNew(ctx)` | L1861 |
+| `COMMANDS` | L1958 |
+| `handleError(ctx, error)` | L1971 |
+| `main(argv)` | L1989 |
 
 ## 契约与约束
 

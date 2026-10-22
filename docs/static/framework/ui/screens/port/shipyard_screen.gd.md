@@ -19,13 +19,15 @@
 | `TEAL` | L25 |
 | `RED` | L26 |
 | `GREEN` | L27 |
-| `MODULE_TYPES` | L28 |
-| `CATEGORY_ORDER` | L29 |
+| `CATEGORY_ORDER` | L28 |
+| `MODULE_CATEGORIES` | L29 |
 | `TYPE_LABELS` | L30 |
 | `SLOT_TITLES` | L31 |
-| `SHIP_THUMB_PATH` | L32 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L48 |
-| `set_category(category: String) -> void` | L136 |
+| `SLOT_DEFS` | L33 |
+| `CARGO_CATEGORY` | L40 |
+| `SHIP_THUMB_PATH` | L41 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L57 |
+| `set_category(category: String) -> void` | L145 |
 
 ## 契约与约束
 

@@ -16,20 +16,21 @@
 | `STARTING_BUILD_ID` | L26 |
 | `STANDARD_HULL_ID` | L27 |
 | `STANDARD_BOILER_ID` | L28 |
-| `STANDARD_CARGO_ID` | L29 |
-| `test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void` | L32 |
-| `test_gate_is_off_without_world_profiles() -> void` | L72 |
-| `test_third_party_world_profile_does_not_enable_core_rules() -> void` | L80 |
-| `test_missing_map_config_reports_error() -> void` | L95 |
-| `test_missing_start_profile_reports_error() -> void` | L102 |
-| `test_missing_weather_profile_reports_error() -> void` | L108 |
-| `test_missing_region_reports_error() -> void` | L113 |
-| `test_complete_phase_b_content_has_no_errors() -> void` | L119 |
-| `test_suggested_content_is_warning_only() -> void` | L125 |
-| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L141 |
-| `test_start_region_tags_must_match_a_region() -> void` | L149 |
-| `test_start_profile_must_resolve_starting_build() -> void` | L157 |
-| `test_phase_b_capabilities_are_whitelisted() -> void` | L166 |
+| `SECOND_BOILER_ID` | L29 |
+| `STANDARD_CARGO_ID` | L30 |
+| `test_bootstrapped_core_baseline_is_ok_with_phase_b() -> void` | L33 |
+| `test_gate_is_off_without_world_profiles() -> void` | L73 |
+| `test_third_party_world_profile_does_not_enable_core_rules() -> void` | L81 |
+| `test_missing_map_config_reports_error() -> void` | L96 |
+| `test_missing_start_profile_reports_error() -> void` | L103 |
+| `test_missing_weather_profile_reports_error() -> void` | L109 |
+| `test_missing_region_reports_error() -> void` | L114 |
+| `test_complete_phase_b_content_has_no_errors() -> void` | L120 |
+| `test_suggested_content_is_warning_only() -> void` | L126 |
+| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L142 |
+| `test_start_region_tags_must_match_a_region() -> void` | L150 |
+| `test_start_profile_must_resolve_starting_build() -> void` | L158 |
+| `test_phase_b_capabilities_are_whitelisted() -> void` | L167 |
 
 1.0 合成基线 + 注入的 2.0 世界/战役定义驱动 `CoreCompletenessChecker.check()`，覆盖
 presence gate、5 个硬性数量下限、4 个建议 warning、start_profile 组合解析与 capability 白名单。

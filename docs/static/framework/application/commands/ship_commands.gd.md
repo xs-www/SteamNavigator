@@ -11,8 +11,8 @@
 | `ShipCommands` | L1 |
 | `VALID_SOURCES` | L11 |
 | `install_module(params: Dictionary, context) -> Dictionary` | L14 |
-| `uninstall_module(params: Dictionary, context) -> Dictionary` | L102 |
-| `craft_module(params: Dictionary, context) -> Dictionary` | L141 |
+| `uninstall_module(params: Dictionary, context) -> Dictionary` | L105 |
+| `craft_module(params: Dictionary, context) -> Dictionary` | L148 |
 
 ## 契约与约束
 

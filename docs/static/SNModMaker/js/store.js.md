@@ -27,52 +27,52 @@
 | `addDraftStarter(project, typeKey)` | L120 |
 | `createProject(options)` | L136 |
 | `applyTemplate(project, templateKey)` | L172 |
-| `ensureContentFile(project, typeKey)` | L320 |
-| `allDefinitions(project)` | L342 |
-| `runtimeSupportsFile(file)` | L365 |
-| `unsupportedContentFiles(project)` | L381 |
-| `draftContentFiles(project)` | L388 |
-| `hasDraftContent(project)` | L392 |
-| `definitionIdSet(project)` | L396 |
-| `uniqueLocalId(project, typeKey, preferred)` | L404 |
-| `getLoc(project, locale)` | L422 |
-| `addLocale(project, locale, path)` | L426 |
-| `removeLocale(project, locale)` | L441 |
-| `setLocalization(project, locale, key, value)` | L446 |
-| `collectAutoNameKeys(definition)` | L454 |
-| `collectDefinitionKeys(definition)` | L473 |
-| `fillNestedKeys(definition, typeKey, modId, localId)` | L492 |
-| `addDefinition(project, typeKey, options)` | L510 |
-| `removeDefinition(project, filePath, index)` | L582 |
-| `rewriteKeyBase(value, oldBase, newBase)` | L593 |
-| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L624 |
-| `duplicateDefinition(project, filePath, index)` | L664 |
-| `coreIndex()` | L702 |
-| `qualifyCoreAssetReferences(definition)` | L706 |
-| `cloneCoreDefinition(project, coreDefinitionId)` | L715 |
-| `addAsset(project, asset)` | L760 |
-| `removeAsset(project, path)` | L770 |
-| `syncManifest(project)` | L776 |
-| `touch(project)` | L794 |
-| `normalizeProject(raw, options)` | L799 |
-| `serialize(project)` | L826 |
-| `deserialize(text)` | L830 |
-| `bytesToBase64(bytes)` | L834 |
-| `base64ToBytes(base64)` | L843 |
-| `mimeFor(path)` | L852 |
-| `bytesToDataUrl(bytes, mime)` | L865 |
-| `dataUrlToBytes(dataUrl)` | L869 |
-| `decodeText(data)` | L873 |
-| `encodeText(text)` | L878 |
-| `toExportFiles(project, options)` | L883 |
-| `stripRoot(paths)` | L909 |
-| `fromFiles(entries)` | L922 |
-| `definitionKeys(project, typeKey)` | L1025 |
-| `findDefinition(project, filePath, index)` | L1029 |
-| `localizationValue(project, definition, field, locale)` | L1035 |
-| `definitionTitle(project, definition)` | L1042 |
-| `dependencyOnCore(project)` | L1050 |
-| `SNStore (global)` | L1054 |
+| `ensureContentFile(project, typeKey)` | L321 |
+| `allDefinitions(project)` | L343 |
+| `runtimeSupportsFile(file)` | L366 |
+| `unsupportedContentFiles(project)` | L382 |
+| `draftContentFiles(project)` | L389 |
+| `hasDraftContent(project)` | L393 |
+| `definitionIdSet(project)` | L397 |
+| `uniqueLocalId(project, typeKey, preferred)` | L405 |
+| `getLoc(project, locale)` | L423 |
+| `addLocale(project, locale, path)` | L427 |
+| `removeLocale(project, locale)` | L442 |
+| `setLocalization(project, locale, key, value)` | L447 |
+| `collectAutoNameKeys(definition)` | L455 |
+| `collectDefinitionKeys(definition)` | L474 |
+| `fillNestedKeys(definition, typeKey, modId, localId)` | L493 |
+| `addDefinition(project, typeKey, options)` | L511 |
+| `removeDefinition(project, filePath, index)` | L590 |
+| `rewriteKeyBase(value, oldBase, newBase)` | L601 |
+| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L632 |
+| `duplicateDefinition(project, filePath, index)` | L672 |
+| `coreIndex()` | L710 |
+| `qualifyCoreAssetReferences(definition)` | L714 |
+| `cloneCoreDefinition(project, coreDefinitionId)` | L723 |
+| `addAsset(project, asset)` | L768 |
+| `removeAsset(project, path)` | L778 |
+| `syncManifest(project)` | L784 |
+| `touch(project)` | L802 |
+| `normalizeProject(raw, options)` | L807 |
+| `serialize(project)` | L834 |
+| `deserialize(text)` | L838 |
+| `bytesToBase64(bytes)` | L842 |
+| `base64ToBytes(base64)` | L851 |
+| `mimeFor(path)` | L860 |
+| `bytesToDataUrl(bytes, mime)` | L873 |
+| `dataUrlToBytes(dataUrl)` | L877 |
+| `decodeText(data)` | L881 |
+| `encodeText(text)` | L886 |
+| `toExportFiles(project, options)` | L891 |
+| `stripRoot(paths)` | L917 |
+| `fromFiles(entries)` | L930 |
+| `definitionKeys(project, typeKey)` | L1033 |
+| `findDefinition(project, filePath, index)` | L1037 |
+| `localizationValue(project, definition, field, locale)` | L1043 |
+| `definitionTitle(project, definition)` | L1050 |
+| `dependencyOnCore(project)` | L1058 |
+| `SNStore (global)` | L1062 |
 
 ## 契约与约束
 

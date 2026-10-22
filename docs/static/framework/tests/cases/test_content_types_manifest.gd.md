@@ -11,8 +11,8 @@
 | `MANIFEST_PATH` | L6 |
 | `test_manifest_matches_content_types() -> void` | L20 |
 | `test_manifest_entries_are_unique_and_complete() -> void` | L63 |
-| `test_minor_modules_share_one_utility_category() -> void` | L108 |
-| `test_planned_types_do_not_shadow_active_types() -> void` | L124 |
+| `test_merged_modules_and_hulls_are_active_2_0() -> void` | L108 |
+| `test_planned_types_do_not_shadow_active_types() -> void` | L125 |
 
 ## 契约与约束
 
