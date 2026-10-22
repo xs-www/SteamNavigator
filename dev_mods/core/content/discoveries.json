@@ -31,7 +31,7 @@
         "repeatable": false,
         "source_site_kinds": ["ruin", "wreck"],
         "region_kinds": ["coastal", "industrial"],
-        "unlock_ids": ["core:boiler/standard"]
+        "unlock_ids": ["core:module/standard"]
       }
     },
     {
@@ -47,7 +47,7 @@
         "repeatable": false,
         "source_site_kinds": ["ruin", "wreck"],
         "region_kinds": ["coastal"],
-        "unlock_ids": ["core:cabin/small_cabin"]
+        "unlock_ids": ["core:module/small_cabin"]
       }
     },
     {

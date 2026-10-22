@@ -187,11 +187,11 @@
 
   const REF_TYPE_BY_FIELD = {
     hull: ['hull'],
-    boiler: ['boiler'],
-    cargo_modules: ['cargo_module'],
-    navigation_module: ['navigation_module'],
-    safety_module: ['safety_module'],
-    passenger_cabin: ['cabin'],
+    boiler: ['module'],
+    cargo_modules: ['module'],
+    navigation_module: ['module'],
+    safety_module: ['module'],
+    passenger_cabin: ['module'],
     engineer: ['role'],
     navigator: ['role'],
     default_starting_build: ['starting_build'],

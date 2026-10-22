@@ -533,7 +533,7 @@
                 "shipyard"
               ],
               "unlock_modules": [
-                "core:cabin/small_cabin"
+                "core:module/small_cabin"
               ],
               "effects": [
                 {
@@ -567,7 +567,7 @@
                 "counter": "cargo_uninstalled",
                 "at_least": 1,
                 "match": {
-                  "content_type": "cargo_modules"
+                  "category": "cargo"
                 }
               }
             },
@@ -588,7 +588,7 @@
                 "counter": "cabin_installed",
                 "at_least": 1,
                 "match": {
-                  "module_id": "core:cabin/small_cabin"
+                  "module_id": "core:module/small_cabin"
                 }
               }
             },

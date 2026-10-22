@@ -3294,6 +3294,418 @@
         }
       }
     },
+    "v2/hull.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/hull-2.json",
+      "title": "Steam Navigator hull content file (Content Schema 2.0)",
+      "description": "Ship hull definitions promoted to Content Schema 2.0 (C1). Fields are unchanged from the 1.0 hull schema: economy block, sailing stats and the weapon/rig socket mirrors used by the shipyard editor. The content type and core hull ids are kept.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "hulls"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/hull_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "craft_material": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "amount"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "amount": {
+              "type": "number",
+              "minimum": 0.1
+            }
+          }
+        },
+        "modifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "stat",
+            "op",
+            "value"
+          ],
+          "properties": {
+            "stat": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "op": {
+              "enum": [
+                "add",
+                "mul",
+                "set"
+              ]
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        "weapon_socket": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "socket_class",
+            "socket_index"
+          ],
+          "properties": {
+            "name": {
+              "description": "GLB 节点名（标准名，例如 SN_Socket_Weapon_Port_1）。",
+              "type": "string",
+              "pattern": "^SN_Socket_Weapon"
+            },
+            "socket_class": {
+              "description": "可安装武器的 weapon_class；装配时是硬门禁。",
+              "enum": [
+                "Light",
+                "Medium",
+                "Heavy",
+                "Tower",
+                "Side"
+              ]
+            },
+            "socket_index": {
+              "description": "安装点序号，用于稳定排序与 UI 编号。",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "position": {
+              "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "clearance_r": {
+              "description": "16 向水平射线最小自由距离（米）。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "clearance_x": {
+              "description": "socket 局部 ±X 较小自由距离（米）；侧舷点 +X 为舷外（炮口方向）。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "clearance_y": {
+              "description": "socket 局部 ±Y 较小自由距离（米）；侧舷点沿船体纵轴（炮列方向）。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "clearance_h": {
+              "description": "安装面向上首个遮挡高度（米）；露天按 20 m 封顶。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "mount_scale": {
+              "description": "装配时武器本体的统一缩放。",
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10
+            },
+            "note": {
+              "description": "人类可读备注；装配忽略。",
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        },
+        "rig_socket": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "socket_kind",
+            "socket_index"
+          ],
+          "properties": {
+            "name": {
+              "description": "GLB 节点名（标准名，例如 SN_Socket_Mast_Fore）。",
+              "type": "string",
+              "pattern": "^SN_Socket_"
+            },
+            "socket_kind": {
+              "enum": [
+                "mast",
+                "yard",
+                "sail"
+              ]
+            },
+            "mast_id": {
+              "description": "所属桅杆标识（fore / main / mizzen 等）。",
+              "type": "string",
+              "maxLength": 32
+            },
+            "socket_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "position": {
+              "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "rig_height": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_deck_z": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_yard_z": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_yard_length": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "rig_stowed": {
+              "type": "boolean"
+            },
+            "rig_sail_area_m2": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2000
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        },
+        "rig_plan": {
+          "description": "运行时帆索装配计划（ShipVisualAssembler）：声明该船体用哪套 rig_kit 部件替换烘焙帆索。GLB 里的 SN_Socket_Mast/Yard/Sail_* 空节点仍是安装点唯一真源；本字段只决定装哪些资产、隐藏哪些烘焙节点。缺省 = 保留 GLB 内烘焙帆索（rig_mode=baked）。",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "description": "帆型 / 蒸汽船配置，用于报告与套件族选择（sail = 帆船桅，steam = 蒸汽船桅）。",
+              "enum": [
+                "sail",
+                "steam"
+              ]
+            },
+            "mount_kinds": {
+              "description": "要填充的船体 socket 类型；缺省 [mast]。yard/sail 只在套件尺寸与烘焙件吻合时才声明。",
+              "type": "array",
+              "items": {
+                "enum": [
+                  "mast",
+                  "yard",
+                  "sail"
+                ]
+              },
+              "uniqueItems": true,
+              "maxItems": 3
+            },
+            "hide_nodes": {
+              "description": "装配前隐藏（并从渲染中移除）的烘焙节点名，覆盖被 kit 替换的桅 / 桁；不写则保留原船，避免双层帆索。",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_]+$"
+              },
+              "maxItems": 64
+            },
+            "mast_asset": {
+              "description": "桅杆套件资源键（如 model.rig.mast_sail / model.rig.mast_steam）。",
+              "type": "string",
+              "pattern": "^[a-z0-9_.]+$"
+            },
+            "yard_asset": {
+              "description": "横桁 / 斜桁套件资源键。",
+              "type": "string",
+              "pattern": "^[a-z0-9_.]+$"
+            },
+            "sail_asset": {
+              "description": "帆面套件资源键。",
+              "type": "string",
+              "pattern": "^[a-z0-9_.]+$"
+            },
+            "per_mast_assets": {
+              "description": "每个桅点额外挂的索具套件资源键（侧支索 / 前后支索 / 动索）。",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_.]+$"
+              },
+              "maxItems": 8
+            },
+            "yaw_deg": {
+              "description": "挂件整体绕 socket 局部 +Y 的附加旋转（度），用于让套件轴向与烘焙布局对齐。",
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          }
+        },
+        "hull_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tier",
+            "weight",
+            "purchase_price",
+            "base_speed",
+            "max_weight",
+            "max_durability",
+            "cargo_slots",
+            "cabin_slots",
+            "base_risk"
+          ],
+          "properties": {
+            "tier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "weight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "purchase_price": {
+              "type": "number",
+              "minimum": 0
+            },
+            "craft_time_hours": {
+              "type": "number",
+              "minimum": 0
+            },
+            "craft_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "materials": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/craft_material"
+              }
+            },
+            "modifiers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/modifier"
+              }
+            },
+            "unlock_reputation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "base_speed": {
+              "type": "number",
+              "minimum": 1
+            },
+            "max_weight": {
+              "type": "number",
+              "minimum": 1
+            },
+            "max_durability": {
+              "type": "number",
+              "minimum": 1
+            },
+            "cargo_slots": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "cabin_slots": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "base_risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5
+            },
+            "size_tag": {
+              "enum": [
+                "small",
+                "medium",
+                "large"
+              ]
+            },
+            "weapon_sockets": {
+              "description": "内容侧的船体武器安装点镜像（与 GLB 里 SN_Socket_Weapon_* 节点 extras 同口径）。运行时装配仍读 GLB extras；这里供编辑器查看、编辑与校验，并作为后续数据驱动装配的前向声明。",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/weapon_socket"
+              }
+            },
+            "rig_sockets": {
+              "description": "内容侧的船体帆索安装点镜像（与 GLB 里 SN_Socket_Mast/Yard/Sail_* 节点 extras 同口径，见 RIG_KIT_CONTRACT.md）。运行时装配仍读 GLB extras。",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/rig_socket"
+              }
+            },
+            "rig_plan": {
+              "$ref": "#/$defs/rig_plan"
+            }
+          }
+        }
+      }
+    },
     "v2/map_config.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/map-config-2.json",
@@ -3746,6 +4158,203 @@
               "items": {
                 "$ref": "common.schema.json#/$defs/story_stage"
               }
+            }
+          }
+        }
+      }
+    },
+    "v2/module.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/module-2.json",
+      "title": "Steam Navigator module content file (Content Schema 2.0)",
+      "description": "Merged ship module family (C1): boilers, cargo holds, utility modules (navigation/safety) and passenger cabins share one active type. `data.v2_category` selects the category; the remaining fields are the union of the five legacy per-category schemas, so a single definition still carries exactly the numbers its category needs. Content Schema 2.0 drops the 1.0 slot-specific content types and their ids.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "modules"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/module_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "craft_material": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "amount"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "amount": {
+              "type": "number",
+              "minimum": 0.1
+            }
+          }
+        },
+        "modifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "stat",
+            "op",
+            "value"
+          ],
+          "properties": {
+            "stat": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "op": {
+              "enum": [
+                "add",
+                "mul",
+                "set"
+              ]
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        "module_data": {
+          "description": "Union of the five legacy module schemas. Required per category: boiler -> speed_mul/coal_rate/water_rate; cargo -> capacity; utility -> risk_add; cabin -> passenger_capacity. The schema cannot express those conditionals, so the runtime validates the category-specific block.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "v2_category",
+            "tier",
+            "weight",
+            "purchase_price"
+          ],
+          "properties": {
+            "v2_category": {
+              "description": "模块分类。boiler=锅炉，cargo=货舱，utility=导航/安全等杂项功能，cabin=客舱；crew 为船员居住预留，Phase C 暂无内容。",
+              "enum": [
+                "boiler",
+                "cargo",
+                "utility",
+                "cabin",
+                "crew"
+              ]
+            },
+            "tier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "weight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "purchase_price": {
+              "type": "number",
+              "minimum": 0
+            },
+            "craft_time_hours": {
+              "type": "number",
+              "minimum": 0
+            },
+            "craft_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "materials": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/craft_material"
+              }
+            },
+            "modifiers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/modifier"
+              }
+            },
+            "unlock_reputation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "speed_mul": {
+              "description": "boiler / utility: 航速乘数。",
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 3
+            },
+            "coal_rate": {
+              "description": "boiler: 每小时煤耗。",
+              "type": "number",
+              "minimum": 0
+            },
+            "water_rate": {
+              "description": "boiler: 每小时水耗。",
+              "type": "number",
+              "minimum": 0
+            },
+            "capacity": {
+              "description": "cargo: 货舱容量。",
+              "type": "number",
+              "minimum": 1
+            },
+            "risk_add": {
+              "description": "utility: 风险修正（负值为降低）。navigation / safety 共用。",
+              "type": "number",
+              "minimum": -0.5,
+              "maximum": 0.5
+            },
+            "damage_mul": {
+              "description": "utility / safety: 事故损伤乘数。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1.5
+            },
+            "repair_cost_mul": {
+              "description": "utility / safety: 维修费用乘数。",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "reveal_facilities": {
+              "description": "utility / navigation: 出航前是否揭示目的港设施。",
+              "type": "boolean"
+            },
+            "passenger_capacity": {
+              "description": "cabin: 可搭载旅客数。",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
             }
           }
         }

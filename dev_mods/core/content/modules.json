@@ -1,0 +1,323 @@
+{
+  "schema_version": "2.0",
+  "content_type": "modules",
+  "definitions": [
+    {
+      "id": "core:module/small_efficient",
+      "name_key": "module.core.small_efficient.name",
+      "description_key": "module.core.small_efficient.description",
+      "tags": [
+        "module.boiler",
+        "module.small",
+        "module.efficient"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.module.boiler"
+      },
+      "data": {
+        "v2_category": "boiler",
+        "tier": 1,
+        "weight": 8,
+        "purchase_price": 420,
+        "craft_cost": 190,
+        "craft_time_hours": 4,
+        "materials": [],
+        "speed_mul": 0.94,
+        "coal_rate": 0.3,
+        "water_rate": 0.22
+      }
+    },
+    {
+      "id": "core:module/standard",
+      "name_key": "module.core.standard.name",
+      "description_key": "module.core.standard.description",
+      "tags": [
+        "module.boiler",
+        "module.standard"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.module.boiler"
+      },
+      "data": {
+        "v2_category": "boiler",
+        "tier": 1,
+        "weight": 10,
+        "purchase_price": 650,
+        "craft_cost": 290,
+        "craft_time_hours": 5,
+        "materials": [],
+        "speed_mul": 1,
+        "coal_rate": 0.4,
+        "water_rate": 0.28
+      }
+    },
+    {
+      "id": "core:module/performance",
+      "name_key": "module.core.performance.name",
+      "description_key": "module.core.performance.description",
+      "tags": [
+        "module.boiler",
+        "module.performance"
+      ],
+      "enabled": true,
+      "information": {
+        "model": "model.module.boiler"
+      },
+      "data": {
+        "v2_category": "boiler",
+        "tier": 2,
+        "weight": 14,
+        "purchase_price": 1200,
+        "craft_time_hours": 7,
+        "craft_cost": 180,
+        "materials": [
+          {
+            "id": "core:good/brass",
+            "amount": 8
+          },
+          {
+            "id": "core:material/boiler_plate",
+            "amount": 4
+          },
+          {
+            "id": "core:material/precision_gear",
+            "amount": 1
+          }
+        ],
+        "speed_mul": 1.18,
+        "coal_rate": 0.58,
+        "water_rate": 0.36
+      }
+    },
+    {
+      "id": "core:module/small_hold",
+      "name_key": "module.core.small_hold.name",
+      "description_key": "module.core.small_hold.description",
+      "tags": [
+        "module.cargo",
+        "module.small",
+        "module.efficient"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "cargo",
+        "tier": 1,
+        "weight": 6,
+        "purchase_price": 260,
+        "craft_cost": 120,
+        "craft_time_hours": 3,
+        "materials": [],
+        "capacity": 32
+      }
+    },
+    {
+      "id": "core:module/medium_hold",
+      "name_key": "module.core.medium_hold.name",
+      "description_key": "module.core.medium_hold.description",
+      "tags": [
+        "module.cargo",
+        "module.medium",
+        "module.standard"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "cargo",
+        "tier": 2,
+        "weight": 12,
+        "purchase_price": 900,
+        "craft_time_hours": 6,
+        "craft_cost": 160,
+        "materials": [
+          {
+            "id": "core:good/timber",
+            "amount": 6
+          },
+          {
+            "id": "core:material/boiler_plate",
+            "amount": 2
+          }
+        ],
+        "capacity": 68
+      }
+    },
+    {
+      "id": "core:module/large_hold",
+      "name_key": "module.core.large_hold.name",
+      "description_key": "module.core.large_hold.description",
+      "tags": [
+        "module.cargo",
+        "module.large",
+        "module.performance"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "cargo",
+        "tier": 3,
+        "weight": 20,
+        "purchase_price": 1800,
+        "craft_time_hours": 9,
+        "craft_cost": 320,
+        "materials": [
+          {
+            "id": "core:good/timber",
+            "amount": 10
+          },
+          {
+            "id": "core:material/boiler_plate",
+            "amount": 4
+          }
+        ],
+        "capacity": 110
+      }
+    },
+    {
+      "id": "core:module/spyglass",
+      "name_key": "module.core.spyglass.name",
+      "description_key": "module.core.spyglass.description",
+      "tags": [
+        "module.navigation",
+        "module.efficient"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "utility",
+        "tier": 1,
+        "weight": 2,
+        "purchase_price": 300,
+        "craft_cost": 140,
+        "craft_time_hours": 2,
+        "materials": [],
+        "risk_add": -0.012,
+        "speed_mul": 1,
+        "reveal_facilities": false
+      }
+    },
+    {
+      "id": "core:module/chart_room",
+      "name_key": "module.core.chart_room.name",
+      "description_key": "module.core.chart_room.description",
+      "tags": [
+        "module.navigation",
+        "module.performance"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "utility",
+        "tier": 2,
+        "weight": 5,
+        "purchase_price": 850,
+        "craft_time_hours": 5,
+        "craft_cost": 140,
+        "materials": [
+          {
+            "id": "core:good/brass",
+            "amount": 3
+          },
+          {
+            "id": "core:material/sealing_compound",
+            "amount": 2
+          }
+        ],
+        "risk_add": -0.022,
+        "speed_mul": 1.03,
+        "reveal_facilities": true
+      }
+    },
+    {
+      "id": "core:module/lifeboat",
+      "name_key": "module.core.lifeboat.name",
+      "description_key": "module.core.lifeboat.description",
+      "tags": [
+        "module.safety",
+        "module.efficient"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "utility",
+        "tier": 1,
+        "weight": 4,
+        "purchase_price": 280,
+        "craft_cost": 130,
+        "craft_time_hours": 2,
+        "materials": [],
+        "risk_add": -0.015,
+        "damage_mul": 0.9,
+        "repair_cost_mul": 1
+      }
+    },
+    {
+      "id": "core:module/safety_valve",
+      "name_key": "module.core.safety_valve.name",
+      "description_key": "module.core.safety_valve.description",
+      "tags": [
+        "module.safety",
+        "module.performance"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "utility",
+        "tier": 2,
+        "weight": 6,
+        "purchase_price": 760,
+        "craft_time_hours": 4,
+        "craft_cost": 130,
+        "materials": [
+          {
+            "id": "core:good/brass",
+            "amount": 4
+          },
+          {
+            "id": "core:material/sealing_compound",
+            "amount": 3
+          }
+        ],
+        "risk_add": -0.03,
+        "damage_mul": 0.75,
+        "repair_cost_mul": 0.85
+      }
+    },
+    {
+      "id": "core:module/passenger_cabin",
+      "name_key": "module.core.passenger_cabin.name",
+      "description_key": "module.core.passenger_cabin.description",
+      "tags": [
+        "module.cabin",
+        "module.passenger"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "cabin",
+        "tier": 1,
+        "weight": 12,
+        "purchase_price": 600,
+        "craft_cost": 270,
+        "craft_time_hours": 4,
+        "materials": [],
+        "passenger_capacity": 4
+      }
+    },
+    {
+      "id": "core:module/small_cabin",
+      "name_key": "module.core.small_cabin.name",
+      "description_key": "module.core.small_cabin.description",
+      "tags": [
+        "module.cabin",
+        "module.passenger",
+        "module.small"
+      ],
+      "enabled": true,
+      "data": {
+        "v2_category": "cabin",
+        "tier": 1,
+        "weight": 8,
+        "purchase_price": 120,
+        "craft_cost": 60,
+        "craft_time_hours": 2,
+        "materials": [],
+        "passenger_capacity": 1
+      }
+    }
+  ]
+}

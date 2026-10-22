@@ -13,7 +13,7 @@
   "optional_dependencies": [],
   "conflicts": [],
   "content": [
-    "content/boilers.json"
+    "content/modules.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -22,6 +22,8 @@
   "assets": {},
   "authors": ["Steam Navigator Team"],
   "license": "CC-BY-4.0",
-  "description": "A third-party boiler that uses only the public content API.",
-  "capabilities": []
+  "description": "A third-party boiler module (C1 modules type) that uses only the public content API.",
+  "capabilities": [
+    "content.modules.v1"
+  ]
 }

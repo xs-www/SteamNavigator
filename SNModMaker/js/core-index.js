@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T05:36:25.180Z",
+    "generated_at": "2026-10-22T11:25:20.860Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -23,11 +23,7 @@
         "content/goods.json",
         "content/materials.json",
         "content/hulls.json",
-        "content/boilers.json",
-        "content/cargo_modules.json",
-        "content/navigation_modules.json",
-        "content/safety_modules.json",
-        "content/cabins.json",
+        "content/modules.json",
         "content/roles.json",
         "content/strategies.json",
         "content/port_archetypes.json",
@@ -180,6 +176,8 @@
       "capabilities": [
         "content.contract.passenger.v1",
         "content.event.choice_pool.v1",
+        "content.hulls.v1",
+        "content.modules.v1",
         "content.world.v1",
         "content.campaign.v1"
       ]
@@ -442,7 +440,7 @@
         ]
       },
       "content/hulls.json": {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "content_type": "hulls",
         "definitions": [
           {
@@ -1093,14 +1091,14 @@
           }
         ]
       },
-      "content/boilers.json": {
-        "schema_version": "1.0",
-        "content_type": "boilers",
+      "content/modules.json": {
+        "schema_version": "2.0",
+        "content_type": "modules",
         "definitions": [
           {
-            "id": "core:boiler/small_efficient",
-            "name_key": "module.core.small_efficient_boiler.name",
-            "description_key": "module.core.small_efficient_boiler.description",
+            "id": "core:module/small_efficient",
+            "name_key": "module.core.small_efficient.name",
+            "description_key": "module.core.small_efficient.description",
             "tags": [
               "module.boiler",
               "module.small",
@@ -1111,6 +1109,7 @@
               "model": "model.module.boiler"
             },
             "data": {
+              "v2_category": "boiler",
               "tier": 1,
               "weight": 8,
               "purchase_price": 420,
@@ -1123,9 +1122,9 @@
             }
           },
           {
-            "id": "core:boiler/standard",
-            "name_key": "module.core.standard_boiler.name",
-            "description_key": "module.core.standard_boiler.description",
+            "id": "core:module/standard",
+            "name_key": "module.core.standard.name",
+            "description_key": "module.core.standard.description",
             "tags": [
               "module.boiler",
               "module.standard"
@@ -1135,6 +1134,7 @@
               "model": "model.module.boiler"
             },
             "data": {
+              "v2_category": "boiler",
               "tier": 1,
               "weight": 10,
               "purchase_price": 650,
@@ -1147,9 +1147,9 @@
             }
           },
           {
-            "id": "core:boiler/performance",
-            "name_key": "module.core.performance_boiler.name",
-            "description_key": "module.core.performance_boiler.description",
+            "id": "core:module/performance",
+            "name_key": "module.core.performance.name",
+            "description_key": "module.core.performance.description",
             "tags": [
               "module.boiler",
               "module.performance"
@@ -1159,6 +1159,7 @@
               "model": "model.module.boiler"
             },
             "data": {
+              "v2_category": "boiler",
               "tier": 2,
               "weight": 14,
               "purchase_price": 1200,
@@ -1182,15 +1183,9 @@
               "coal_rate": 0.58,
               "water_rate": 0.36
             }
-          }
-        ]
-      },
-      "content/cargo_modules.json": {
-        "schema_version": "1.0",
-        "content_type": "cargo_modules",
-        "definitions": [
+          },
           {
-            "id": "core:cargo_module/small_hold",
+            "id": "core:module/small_hold",
             "name_key": "module.core.small_hold.name",
             "description_key": "module.core.small_hold.description",
             "tags": [
@@ -1200,6 +1195,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "cargo",
               "tier": 1,
               "weight": 6,
               "purchase_price": 260,
@@ -1210,7 +1206,7 @@
             }
           },
           {
-            "id": "core:cargo_module/medium_hold",
+            "id": "core:module/medium_hold",
             "name_key": "module.core.medium_hold.name",
             "description_key": "module.core.medium_hold.description",
             "tags": [
@@ -1220,6 +1216,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "cargo",
               "tier": 2,
               "weight": 12,
               "purchase_price": 900,
@@ -1239,7 +1236,7 @@
             }
           },
           {
-            "id": "core:cargo_module/large_hold",
+            "id": "core:module/large_hold",
             "name_key": "module.core.large_hold.name",
             "description_key": "module.core.large_hold.description",
             "tags": [
@@ -1249,6 +1246,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "cargo",
               "tier": 3,
               "weight": 20,
               "purchase_price": 1800,
@@ -1266,15 +1264,9 @@
               ],
               "capacity": 110
             }
-          }
-        ]
-      },
-      "content/navigation_modules.json": {
-        "schema_version": "1.0",
-        "content_type": "navigation_modules",
-        "definitions": [
+          },
           {
-            "id": "core:navigation_module/spyglass",
+            "id": "core:module/spyglass",
             "name_key": "module.core.spyglass.name",
             "description_key": "module.core.spyglass.description",
             "tags": [
@@ -1283,6 +1275,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "utility",
               "tier": 1,
               "weight": 2,
               "purchase_price": 300,
@@ -1295,7 +1288,7 @@
             }
           },
           {
-            "id": "core:navigation_module/chart_room",
+            "id": "core:module/chart_room",
             "name_key": "module.core.chart_room.name",
             "description_key": "module.core.chart_room.description",
             "tags": [
@@ -1304,6 +1297,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "utility",
               "tier": 2,
               "weight": 5,
               "purchase_price": 850,
@@ -1323,15 +1317,9 @@
               "speed_mul": 1.03,
               "reveal_facilities": true
             }
-          }
-        ]
-      },
-      "content/safety_modules.json": {
-        "schema_version": "1.0",
-        "content_type": "safety_modules",
-        "definitions": [
+          },
           {
-            "id": "core:safety_module/lifeboat",
+            "id": "core:module/lifeboat",
             "name_key": "module.core.lifeboat.name",
             "description_key": "module.core.lifeboat.description",
             "tags": [
@@ -1340,6 +1328,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "utility",
               "tier": 1,
               "weight": 4,
               "purchase_price": 280,
@@ -1352,7 +1341,7 @@
             }
           },
           {
-            "id": "core:safety_module/safety_valve",
+            "id": "core:module/safety_valve",
             "name_key": "module.core.safety_valve.name",
             "description_key": "module.core.safety_valve.description",
             "tags": [
@@ -1361,6 +1350,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "utility",
               "tier": 2,
               "weight": 6,
               "purchase_price": 760,
@@ -1380,15 +1370,9 @@
               "damage_mul": 0.75,
               "repair_cost_mul": 0.85
             }
-          }
-        ]
-      },
-      "content/cabins.json": {
-        "schema_version": "1.0",
-        "content_type": "cabins",
-        "definitions": [
+          },
           {
-            "id": "core:cabin/passenger_cabin",
+            "id": "core:module/passenger_cabin",
             "name_key": "module.core.passenger_cabin.name",
             "description_key": "module.core.passenger_cabin.description",
             "tags": [
@@ -1397,6 +1381,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "cabin",
               "tier": 1,
               "weight": 12,
               "purchase_price": 600,
@@ -1407,7 +1392,7 @@
             }
           },
           {
-            "id": "core:cabin/small_cabin",
+            "id": "core:module/small_cabin",
             "name_key": "module.core.small_cabin.name",
             "description_key": "module.core.small_cabin.description",
             "tags": [
@@ -1417,6 +1402,7 @@
             ],
             "enabled": true,
             "data": {
+              "v2_category": "cabin",
               "tier": 1,
               "weight": 8,
               "purchase_price": 120,
@@ -2551,7 +2537,7 @@
                       "shipyard"
                     ],
                     "unlock_modules": [
-                      "core:cabin/small_cabin"
+                      "core:module/small_cabin"
                     ],
                     "effects": [
                       {
@@ -2585,7 +2571,7 @@
                       "counter": "cargo_uninstalled",
                       "at_least": 1,
                       "match": {
-                        "content_type": "cargo_modules"
+                        "category": "cargo"
                       }
                     }
                   },
@@ -2606,7 +2592,7 @@
                       "counter": "cabin_installed",
                       "at_least": 1,
                       "match": {
-                        "module_id": "core:cabin/small_cabin"
+                        "module_id": "core:module/small_cabin"
                       }
                     }
                   },
@@ -2682,12 +2668,12 @@
               "money": 900,
               "reputation": 0,
               "hull": "core:hull/small_efficient",
-              "boiler": "core:boiler/small_efficient",
+              "boiler": "core:module/small_efficient",
               "cargo_modules": [
-                "core:cargo_module/small_hold"
+                "core:module/small_hold"
               ],
-              "navigation_module": "core:navigation_module/spyglass",
-              "safety_module": "core:safety_module/lifeboat",
+              "navigation_module": "core:module/spyglass",
+              "safety_module": "core:module/lifeboat",
               "engineer": "core:role/engineer_basic",
               "navigator": "core:role/navigator_basic",
               "coal": 26,
@@ -2708,11 +2694,11 @@
               "money": 700,
               "reputation": 0,
               "hull": "core:hull/small_efficient",
-              "boiler": "core:boiler/performance",
+              "boiler": "core:module/performance",
               "cargo_modules": [
-                "core:cargo_module/small_hold"
+                "core:module/small_hold"
               ],
-              "navigation_module": "core:navigation_module/spyglass",
+              "navigation_module": "core:module/spyglass",
               "navigator": "core:role/navigator_basic",
               "coal": 20,
               "water": 14,
@@ -2865,7 +2851,7 @@
                 "reputation": 1,
                 "unlock_ids": [
                   "core:hull/medium_standard",
-                  "core:cargo_module/medium_hold"
+                  "core:module/medium_hold"
                 ]
               },
               "requires_completed": [
@@ -2915,7 +2901,7 @@
                 ],
                 "reputation": 2,
                 "unlock_ids": [
-                  "core:safety_module/safety_valve"
+                  "core:module/safety_valve"
                 ]
               },
               "requires_completed": [
@@ -3910,7 +3896,7 @@
                       "shipyard"
                     ],
                     "unlock_modules": [
-                      "core:cabin/small_cabin"
+                      "core:module/small_cabin"
                     ],
                     "effects": [
                       {
@@ -3944,7 +3930,7 @@
                       "counter": "cargo_uninstalled",
                       "at_least": 1,
                       "match": {
-                        "content_type": "cargo_modules"
+                        "category": "cargo"
                       }
                     }
                   },
@@ -3965,7 +3951,7 @@
                       "counter": "cabin_installed",
                       "at_least": 1,
                       "match": {
-                        "module_id": "core:cabin/small_cabin"
+                        "module_id": "core:module/small_cabin"
                       }
                     }
                   },
@@ -4562,7 +4548,7 @@
                 "industrial"
               ],
               "unlock_ids": [
-                "core:boiler/standard"
+                "core:module/standard"
               ]
             }
           },
@@ -4587,7 +4573,7 @@
                 "coastal"
               ],
               "unlock_ids": [
-                "core:cabin/small_cabin"
+                "core:module/small_cabin"
               ]
             }
           },
@@ -4778,12 +4764,12 @@
         "module.core.large_efficient_hull.description": "三个货舱槽、高耐久与低单位重量成本。",
         "module.core.large_performance_hull.name": "性能型大型船体",
         "module.core.large_performance_hull.description": "更快但更重、更贵的大型船体。",
-        "module.core.small_efficient_boiler.name": "效率型小型锅炉",
-        "module.core.small_efficient_boiler.description": "省煤省水，航速略低，适合长途与学习。",
-        "module.core.standard_boiler.name": "标准锅炉",
-        "module.core.standard_boiler.description": "速度与补给消耗均衡的默认锅炉。",
-        "module.core.performance_boiler.name": "性能型锅炉",
-        "module.core.performance_boiler.description": "航速高，但煤水消耗显著上升。",
+        "module.core.small_efficient.name": "效率型小型锅炉",
+        "module.core.small_efficient.description": "省煤省水，航速略低，适合长途与学习。",
+        "module.core.standard.name": "标准锅炉",
+        "module.core.standard.description": "速度与补给消耗均衡的默认锅炉。",
+        "module.core.performance.name": "性能型锅炉",
+        "module.core.performance.description": "航速高，但煤水消耗显著上升。",
         "module.core.small_hold.name": "小型货舱",
         "module.core.small_hold.description": "自重低，容量 32。",
         "module.core.medium_hold.name": "中型货舱",
@@ -5033,12 +5019,12 @@
         "module.core.large_efficient_hull.description": "Three cargo slots, high durability and low weight cost.",
         "module.core.large_performance_hull.name": "Large Performance Hull",
         "module.core.large_performance_hull.description": "Faster, heavier and more expensive than the efficient large hull.",
-        "module.core.small_efficient_boiler.name": "Small Efficient Boiler",
-        "module.core.small_efficient_boiler.description": "Thrifty on coal and water, slightly slower. Good for long hauls.",
-        "module.core.standard_boiler.name": "Standard Boiler",
-        "module.core.standard_boiler.description": "A balanced default for speed and supplies.",
-        "module.core.performance_boiler.name": "Performance Boiler",
-        "module.core.performance_boiler.description": "High speed at a steep coal and water cost.",
+        "module.core.small_efficient.name": "Small Efficient Boiler",
+        "module.core.small_efficient.description": "Thrifty on coal and water, slightly slower. Good for long hauls.",
+        "module.core.standard.name": "Standard Boiler",
+        "module.core.standard.description": "A balanced default for speed and supplies.",
+        "module.core.performance.name": "Performance Boiler",
+        "module.core.performance.description": "High speed at a steep coal and water cost.",
         "module.core.small_hold.name": "Small Hold",
         "module.core.small_hold.description": "Light hold with capacity 32.",
         "module.core.medium_hold.name": "Medium Hold",
@@ -6355,10 +6341,10 @@
         }
       },
       {
-        "id": "core:boiler/small_efficient",
-        "content_type": "boilers",
-        "file": "content/boilers.json",
-        "name_key": "module.core.small_efficient_boiler.name",
+        "id": "core:module/small_efficient",
+        "content_type": "modules",
+        "file": "content/modules.json",
+        "name_key": "module.core.small_efficient.name",
         "name_zh": "效率型小型锅炉",
         "name_en": "Small Efficient Boiler",
         "tags": [
@@ -6367,9 +6353,9 @@
           "module.efficient"
         ],
         "definition": {
-          "id": "core:boiler/small_efficient",
-          "name_key": "module.core.small_efficient_boiler.name",
-          "description_key": "module.core.small_efficient_boiler.description",
+          "id": "core:module/small_efficient",
+          "name_key": "module.core.small_efficient.name",
+          "description_key": "module.core.small_efficient.description",
           "tags": [
             "module.boiler",
             "module.small",
@@ -6380,6 +6366,7 @@
             "model": "model.module.boiler"
           },
           "data": {
+            "v2_category": "boiler",
             "tier": 1,
             "weight": 8,
             "purchase_price": 420,
@@ -6393,10 +6380,10 @@
         }
       },
       {
-        "id": "core:boiler/standard",
-        "content_type": "boilers",
-        "file": "content/boilers.json",
-        "name_key": "module.core.standard_boiler.name",
+        "id": "core:module/standard",
+        "content_type": "modules",
+        "file": "content/modules.json",
+        "name_key": "module.core.standard.name",
         "name_zh": "标准锅炉",
         "name_en": "Standard Boiler",
         "tags": [
@@ -6404,9 +6391,9 @@
           "module.standard"
         ],
         "definition": {
-          "id": "core:boiler/standard",
-          "name_key": "module.core.standard_boiler.name",
-          "description_key": "module.core.standard_boiler.description",
+          "id": "core:module/standard",
+          "name_key": "module.core.standard.name",
+          "description_key": "module.core.standard.description",
           "tags": [
             "module.boiler",
             "module.standard"
@@ -6416,6 +6403,7 @@
             "model": "model.module.boiler"
           },
           "data": {
+            "v2_category": "boiler",
             "tier": 1,
             "weight": 10,
             "purchase_price": 650,
@@ -6429,10 +6417,10 @@
         }
       },
       {
-        "id": "core:boiler/performance",
-        "content_type": "boilers",
-        "file": "content/boilers.json",
-        "name_key": "module.core.performance_boiler.name",
+        "id": "core:module/performance",
+        "content_type": "modules",
+        "file": "content/modules.json",
+        "name_key": "module.core.performance.name",
         "name_zh": "性能型锅炉",
         "name_en": "Performance Boiler",
         "tags": [
@@ -6440,9 +6428,9 @@
           "module.performance"
         ],
         "definition": {
-          "id": "core:boiler/performance",
-          "name_key": "module.core.performance_boiler.name",
-          "description_key": "module.core.performance_boiler.description",
+          "id": "core:module/performance",
+          "name_key": "module.core.performance.name",
+          "description_key": "module.core.performance.description",
           "tags": [
             "module.boiler",
             "module.performance"
@@ -6452,6 +6440,7 @@
             "model": "model.module.boiler"
           },
           "data": {
+            "v2_category": "boiler",
             "tier": 2,
             "weight": 14,
             "purchase_price": 1200,
@@ -6478,9 +6467,9 @@
         }
       },
       {
-        "id": "core:cargo_module/small_hold",
-        "content_type": "cargo_modules",
-        "file": "content/cargo_modules.json",
+        "id": "core:module/small_hold",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.small_hold.name",
         "name_zh": "小型货舱",
         "name_en": "Small Hold",
@@ -6490,7 +6479,7 @@
           "module.efficient"
         ],
         "definition": {
-          "id": "core:cargo_module/small_hold",
+          "id": "core:module/small_hold",
           "name_key": "module.core.small_hold.name",
           "description_key": "module.core.small_hold.description",
           "tags": [
@@ -6500,6 +6489,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "cargo",
             "tier": 1,
             "weight": 6,
             "purchase_price": 260,
@@ -6511,9 +6501,9 @@
         }
       },
       {
-        "id": "core:cargo_module/medium_hold",
-        "content_type": "cargo_modules",
-        "file": "content/cargo_modules.json",
+        "id": "core:module/medium_hold",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.medium_hold.name",
         "name_zh": "中型货舱",
         "name_en": "Medium Hold",
@@ -6523,7 +6513,7 @@
           "module.standard"
         ],
         "definition": {
-          "id": "core:cargo_module/medium_hold",
+          "id": "core:module/medium_hold",
           "name_key": "module.core.medium_hold.name",
           "description_key": "module.core.medium_hold.description",
           "tags": [
@@ -6533,6 +6523,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "cargo",
             "tier": 2,
             "weight": 12,
             "purchase_price": 900,
@@ -6553,9 +6544,9 @@
         }
       },
       {
-        "id": "core:cargo_module/large_hold",
-        "content_type": "cargo_modules",
-        "file": "content/cargo_modules.json",
+        "id": "core:module/large_hold",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.large_hold.name",
         "name_zh": "大型货舱",
         "name_en": "Large Hold",
@@ -6565,7 +6556,7 @@
           "module.performance"
         ],
         "definition": {
-          "id": "core:cargo_module/large_hold",
+          "id": "core:module/large_hold",
           "name_key": "module.core.large_hold.name",
           "description_key": "module.core.large_hold.description",
           "tags": [
@@ -6575,6 +6566,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "cargo",
             "tier": 3,
             "weight": 20,
             "purchase_price": 1800,
@@ -6595,9 +6587,9 @@
         }
       },
       {
-        "id": "core:navigation_module/spyglass",
-        "content_type": "navigation_modules",
-        "file": "content/navigation_modules.json",
+        "id": "core:module/spyglass",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.spyglass.name",
         "name_zh": "望远镜",
         "name_en": "Spyglass",
@@ -6606,7 +6598,7 @@
           "module.efficient"
         ],
         "definition": {
-          "id": "core:navigation_module/spyglass",
+          "id": "core:module/spyglass",
           "name_key": "module.core.spyglass.name",
           "description_key": "module.core.spyglass.description",
           "tags": [
@@ -6615,6 +6607,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "utility",
             "tier": 1,
             "weight": 2,
             "purchase_price": 300,
@@ -6628,9 +6621,9 @@
         }
       },
       {
-        "id": "core:navigation_module/chart_room",
-        "content_type": "navigation_modules",
-        "file": "content/navigation_modules.json",
+        "id": "core:module/chart_room",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.chart_room.name",
         "name_zh": "海图室",
         "name_en": "Chart Room",
@@ -6639,7 +6632,7 @@
           "module.performance"
         ],
         "definition": {
-          "id": "core:navigation_module/chart_room",
+          "id": "core:module/chart_room",
           "name_key": "module.core.chart_room.name",
           "description_key": "module.core.chart_room.description",
           "tags": [
@@ -6648,6 +6641,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "utility",
             "tier": 2,
             "weight": 5,
             "purchase_price": 850,
@@ -6670,9 +6664,9 @@
         }
       },
       {
-        "id": "core:safety_module/lifeboat",
-        "content_type": "safety_modules",
-        "file": "content/safety_modules.json",
+        "id": "core:module/lifeboat",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.lifeboat.name",
         "name_zh": "救生艇",
         "name_en": "Lifeboat",
@@ -6681,7 +6675,7 @@
           "module.efficient"
         ],
         "definition": {
-          "id": "core:safety_module/lifeboat",
+          "id": "core:module/lifeboat",
           "name_key": "module.core.lifeboat.name",
           "description_key": "module.core.lifeboat.description",
           "tags": [
@@ -6690,6 +6684,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "utility",
             "tier": 1,
             "weight": 4,
             "purchase_price": 280,
@@ -6703,9 +6698,9 @@
         }
       },
       {
-        "id": "core:safety_module/safety_valve",
-        "content_type": "safety_modules",
-        "file": "content/safety_modules.json",
+        "id": "core:module/safety_valve",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.safety_valve.name",
         "name_zh": "安全阀组",
         "name_en": "Safety Valve Set",
@@ -6714,7 +6709,7 @@
           "module.performance"
         ],
         "definition": {
-          "id": "core:safety_module/safety_valve",
+          "id": "core:module/safety_valve",
           "name_key": "module.core.safety_valve.name",
           "description_key": "module.core.safety_valve.description",
           "tags": [
@@ -6723,6 +6718,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "utility",
             "tier": 2,
             "weight": 6,
             "purchase_price": 760,
@@ -6745,9 +6741,9 @@
         }
       },
       {
-        "id": "core:cabin/passenger_cabin",
-        "content_type": "cabins",
-        "file": "content/cabins.json",
+        "id": "core:module/passenger_cabin",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.passenger_cabin.name",
         "name_zh": "固定客舱",
         "name_en": "Fixed Passenger Cabin",
@@ -6756,7 +6752,7 @@
           "module.passenger"
         ],
         "definition": {
-          "id": "core:cabin/passenger_cabin",
+          "id": "core:module/passenger_cabin",
           "name_key": "module.core.passenger_cabin.name",
           "description_key": "module.core.passenger_cabin.description",
           "tags": [
@@ -6765,6 +6761,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "cabin",
             "tier": 1,
             "weight": 12,
             "purchase_price": 600,
@@ -6776,9 +6773,9 @@
         }
       },
       {
-        "id": "core:cabin/small_cabin",
-        "content_type": "cabins",
-        "file": "content/cabins.json",
+        "id": "core:module/small_cabin",
+        "content_type": "modules",
+        "file": "content/modules.json",
         "name_key": "module.core.small_cabin.name",
         "name_zh": "小型客舱（1 人）",
         "name_en": "Small Cabin (1 passenger)",
@@ -6788,7 +6785,7 @@
           "module.small"
         ],
         "definition": {
-          "id": "core:cabin/small_cabin",
+          "id": "core:module/small_cabin",
           "name_key": "module.core.small_cabin.name",
           "description_key": "module.core.small_cabin.description",
           "tags": [
@@ -6798,6 +6795,7 @@
           ],
           "enabled": true,
           "data": {
+            "v2_category": "cabin",
             "tier": 1,
             "weight": 8,
             "purchase_price": 120,
@@ -8043,7 +8041,7 @@
                     "shipyard"
                   ],
                   "unlock_modules": [
-                    "core:cabin/small_cabin"
+                    "core:module/small_cabin"
                   ],
                   "effects": [
                     {
@@ -8077,7 +8075,7 @@
                     "counter": "cargo_uninstalled",
                     "at_least": 1,
                     "match": {
-                      "content_type": "cargo_modules"
+                      "category": "cargo"
                     }
                   }
                 },
@@ -8098,7 +8096,7 @@
                     "counter": "cabin_installed",
                     "at_least": 1,
                     "match": {
-                      "module_id": "core:cabin/small_cabin"
+                      "module_id": "core:module/small_cabin"
                     }
                   }
                 },
@@ -8180,12 +8178,12 @@
             "money": 900,
             "reputation": 0,
             "hull": "core:hull/small_efficient",
-            "boiler": "core:boiler/small_efficient",
+            "boiler": "core:module/small_efficient",
             "cargo_modules": [
-              "core:cargo_module/small_hold"
+              "core:module/small_hold"
             ],
-            "navigation_module": "core:navigation_module/spyglass",
-            "safety_module": "core:safety_module/lifeboat",
+            "navigation_module": "core:module/spyglass",
+            "safety_module": "core:module/lifeboat",
             "engineer": "core:role/engineer_basic",
             "navigator": "core:role/navigator_basic",
             "coal": 26,
@@ -8218,11 +8216,11 @@
             "money": 700,
             "reputation": 0,
             "hull": "core:hull/small_efficient",
-            "boiler": "core:boiler/performance",
+            "boiler": "core:module/performance",
             "cargo_modules": [
-              "core:cargo_module/small_hold"
+              "core:module/small_hold"
             ],
-            "navigation_module": "core:navigation_module/spyglass",
+            "navigation_module": "core:module/spyglass",
             "navigator": "core:role/navigator_basic",
             "coal": 20,
             "water": 14,
@@ -8408,7 +8406,7 @@
               "reputation": 1,
               "unlock_ids": [
                 "core:hull/medium_standard",
-                "core:cargo_module/medium_hold"
+                "core:module/medium_hold"
               ]
             },
             "requires_completed": [
@@ -8471,7 +8469,7 @@
               ],
               "reputation": 2,
               "unlock_ids": [
-                "core:safety_module/safety_valve"
+                "core:module/safety_valve"
               ]
             },
             "requires_completed": [
@@ -9559,7 +9557,7 @@
                     "shipyard"
                   ],
                   "unlock_modules": [
-                    "core:cabin/small_cabin"
+                    "core:module/small_cabin"
                   ],
                   "effects": [
                     {
@@ -9593,7 +9591,7 @@
                     "counter": "cargo_uninstalled",
                     "at_least": 1,
                     "match": {
-                      "content_type": "cargo_modules"
+                      "category": "cargo"
                     }
                   }
                 },
@@ -9614,7 +9612,7 @@
                     "counter": "cabin_installed",
                     "at_least": 1,
                     "match": {
-                      "module_id": "core:cabin/small_cabin"
+                      "module_id": "core:module/small_cabin"
                     }
                   }
                 },
@@ -10411,7 +10409,7 @@
               "industrial"
             ],
             "unlock_ids": [
-              "core:boiler/standard"
+              "core:module/standard"
             ]
           }
         }
@@ -10447,7 +10445,7 @@
               "coastal"
             ],
             "unlock_ids": [
-              "core:cabin/small_cabin"
+              "core:module/small_cabin"
             ]
           }
         }

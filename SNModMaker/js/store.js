@@ -191,7 +191,7 @@
       return;
     }
     if (key === 'boiler') {
-      addDefinition(project, 'boilers', {
+      addDefinition(project, 'modules', {
         localId: 'compound_economizer',
         nameZh: '复合省煤锅炉',
         nameEn: 'Compound Economizer Boiler',
@@ -199,6 +199,7 @@
         descriptionEn: 'A tier-2 boiler with better speed and noticeably lower coal/water use.',
         tags: ['module.boiler', 'module.efficient'],
         data: {
+          v2_category: 'boiler',
           tier: 2,
           weight: 9,
           purchase_price: 520,
@@ -520,20 +521,27 @@
     let definition;
     if (typeKey === 'patches') {
       definition = {
-        target: opts.target || 'core:boiler/small_efficient',
+        target: opts.target || 'core:module/small_efficient',
         requires: { mod: 'core', version: '>=1.0.0 <2.0.0' },
         operations: [{ op: 'replace', path: '/data/purchase_price', value: 380 }],
       };
     } else {
       const base = keyBase(typeKey, modId, localId);
       const defaults = catalog().DEFAULTS[typeKey];
+      const requestedCategory = (opts.data && opts.data.v2_category) || '';
+      const defaultTags = typeKey === 'modules'
+        ? [catalog().MODULE_CATEGORY_TAGS[requestedCategory || 'boiler'] || 'module.boiler']
+        : [catalog().TAG_SUGGESTIONS[typeKey] && catalog().TAG_SUGGESTIONS[typeKey][0] || `${info.singular}.custom`];
+      const defaultData = !defaults
+        ? {}
+        : (typeKey === 'modules' ? defaults({ v2_category: requestedCategory }) : defaults());
       definition = {
         id: `${modId}:${info.singular}/${localId}`,
         name_key: `${base}.name`,
         description_key: `${base}.description`,
-        tags: Array.isArray(opts.tags) && opts.tags.length ? opts.tags.slice() : [catalog().TAG_SUGGESTIONS[typeKey] && catalog().TAG_SUGGESTIONS[typeKey][0] || `${info.singular}.custom`],
+        tags: Array.isArray(opts.tags) && opts.tags.length ? opts.tags.slice() : defaultTags,
         enabled: true,
-        data: deepClone(opts.data || (defaults ? defaults() : {})),
+        data: deepClone(opts.data || defaultData),
       };
       if (opts.descriptionKey === false) delete definition.description_key;
       fillNestedKeys(definition, typeKey, modId, localId);

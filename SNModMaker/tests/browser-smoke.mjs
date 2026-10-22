@@ -217,9 +217,9 @@ await check('entity ID previews localization keys and commits them only on save'
   }
 });
 
-await check('module workspace exposes type subpages', async () => {
-  await cdp.eval("document.querySelector('[data-nav=\"content:boilers\"]').click()");
-  await waitFor(cdp, "document.querySelectorAll('.module-tab').length >= 8", 3000, 'module subpages');
+await check('module workspace exposes type and category subpages', async () => {
+  await cdp.eval("document.querySelector('[data-nav=\"content:modules\"]').click()");
+  await waitFor(cdp, "document.querySelectorAll('.module-tab').length >= 4", 3000, 'module subpages');
   await cdp.eval("document.querySelector('.module-tab[data-nav=\"content:hulls\"]').click()");
   await waitFor(cdp, "!!document.querySelector('.module-tab.active[data-nav=\"content:hulls\"]')", 3000, 'hull module subpage');
   await cdp.eval("document.querySelector('.content-view [data-action=\"add-definition\"]').click()");
@@ -232,8 +232,8 @@ await check('module workspace exposes type subpages', async () => {
   if (hullModules.fixed !== 3 || hullModules.cargo !== 1 || hullModules.cabin !== 1) {
     throw new Error(`unexpected hull module configuration: ${JSON.stringify(hullModules)}`);
   }
-  await cdp.eval("document.querySelector('.module-tab[data-nav=\"content:cargo_modules\"]').click()");
-  await waitFor(cdp, "!!document.querySelector('.module-tab.active[data-nav=\"content:cargo_modules\"]')", 3000, 'cargo module subpage');
+  await cdp.eval("document.querySelector('.module-category-tabs [data-module-category=\"cargo\"]').click()");
+  await waitFor(cdp, "!!document.querySelector('.module-category-tabs .module-tab.active[data-module-category=\"cargo\"]')", 3000, 'cargo module category');
 });
 
 await check('localization view lists keys and accepts a translation', async () => {

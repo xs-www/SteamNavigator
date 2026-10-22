@@ -61,12 +61,8 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 | --- | --- | --- | --- |
 | 商品 | `goods` | `good` | 价格、重量、库存、弹性 |
 | 造船材料 | `materials` | `material` | 打造材料 |
-| 船体 | `hulls` | `hull` | 航速、载重、槽位、耐久 |
-| 锅炉 | `boilers` | `boiler` | 航速与煤水系数 |
-| 货舱 | `cargo_modules` | `cargo_module` | 容量 |
-| 导航模块 | `navigation_modules` | `navigation_module` | 风险 / 航速 / 揭示设施 |
-| 安全模块 | `safety_modules` | `safety_module` | 风险 / 损伤 / 维修 |
-| 客舱 | `cabins` | `cabin` | 载客量 |
+| 船体 | `hulls` | `hull` | 航速、载重、槽位、耐久、武器/帆索安装点（C1 起 Schema 2.0） |
+| 模块 | `modules` | `module` | C1 合并锅炉 / 货舱 / 杂项功能（导航·安全）/ 客舱，`data.v2_category` 区分 |
 | 船员岗位 | `roles` | `role` | 工资与属性修正 |
 | 锅炉策略 | `strategies` | `strategy` | 航速 / 煤 / 水 / 风险 |
 | 港口原型 | `port_archetypes` | `port_archetype` | 设施与商品表 |
@@ -211,7 +207,7 @@ tailscale serve --bg --set-path /snmodmaker http://127.0.0.1:8099
 
 除网页编辑器外，`tools/content.mjs` 提供同一套内容模型的命令行入口：按 Schema 增删改定义、补本地化、读取类型说明、校验既有模组。它面向 agent、CI 与批量维护脚本，不启动浏览器，也不引入额外依赖（Node.js ≥ 18，ESM）。
 
-CLI 与编辑器使用同一份类型清单：`types` 会同时列出 25 个运行时类型与 3 个 Schema 2.0 草案类型（weapons + 剧情 story_arcs / story_levels；草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`（例如 `--draft story_arcs --draft story_levels` 建一个纯剧情包）；`--template` 可选 `goods` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加——但剧情包是白名单模组，不要与 `--draft story_*` 之外的模板叠加。
+CLI 与编辑器使用同一份类型清单：`types` 会同时列出 21 个运行时类型（C1 起锅炉/货舱/导航/安全/客舱合并为 `modules`，船体升级为 2.0）与 3 个 Schema 2.0 草案类型（weapons + 剧情 story_arcs / story_levels；草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`（例如 `--draft story_arcs --draft story_levels` 建一个纯剧情包）；`--template` 可选 `goods` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template boiler` 生成一个 `modules` 类型的锅炉模块（`data.v2_category: "boiler"`），`--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加——但剧情包是白名单模组，不要与 `--draft story_*` 之外的模板叠加。
 
 所有命令都从**仓库根**执行，`--mod` 指向仓库内的松散模组目录（例如 `dev_mods/core` 或 `SNModMaker/mods/<id>`，必须含 `manifest.json`）；所有写入都会留在该目录内。
 

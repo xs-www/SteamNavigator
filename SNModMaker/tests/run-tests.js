@@ -99,14 +99,16 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 31, `expected 18 top-level + 13 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 31, `expected 31 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 33, `expected 18 top-level + 15 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 33, `expected 33 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
     assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/map_config.schema.json'], 'v2/map_config is the Phase B scenario config schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/module.schema.json'], 'v2/module is the C1 merged module schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/hull.schema.json'], 'v2/hull is the C1 hull schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/weapon.schema.json'], 'v2/weapon is the weapons draft schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_arc.schema.json'], 'v2/story_arc is the Story Mode arc draft schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_level.schema.json'], 'v2/story_level is the Story Mode level draft schema');
@@ -338,10 +340,10 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 25, 'content_types.json exposes 25 runtime types (24 definitions + patches)');
+    assert.equal(Types.TYPES.length, 21, 'content_types.json exposes 21 runtime types (20 definitions + patches); C1 merged five module types into modules');
     const promoted = new Set([
       'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
-      'factions', 'discoveries', 'start_profiles', 'map_configs',
+      'factions', 'discoveries', 'start_profiles', 'map_configs', 'hulls', 'modules',
     ]);
     for (const info of Types.TYPES) {
       const expected = promoted.has(info.key) ? '2.0' : '1.0';
@@ -392,9 +394,9 @@ function warningsOf(result) {
 
     // Plain 1.0 runtime content stays supported/exportable.
     const legacy = freshProject();
-    Store.addDefinition(legacy, 'boilers', {});
+    Store.addDefinition(legacy, 'roles', {});
     assert.equal(Store.hasDraftContent(legacy), false, 'runtime 1.0 content stays exportable');
-    assert.equal(Store.runtimeSupportsFile(legacy.contentFiles.find((file) => file.content_type === 'boilers')), true);
+    assert.equal(Store.runtimeSupportsFile(legacy.contentFiles.find((file) => file.content_type === 'roles')), true);
   });
 
   await test('every draft type validates with zero errors using catalog defaults', () => {
@@ -870,14 +872,19 @@ function warningsOf(result) {
     assert.ok(!warningsOf(validation).some((issue) => issue.code === 'schema_version_mismatch'));
   });
 
-  await test('module localization keys do not collide across module types', () => {
+  await test('module localization keys do not collide across module categories', () => {
     const project = freshProject();
     const hull = Store.addDefinition(project, 'hulls', {});
-    const boiler = Store.addDefinition(project, 'boilers', {});
-    const cargo = Store.addDefinition(project, 'cargo_modules', {});
+    const boiler = Store.addDefinition(project, 'modules', { localId: 'example_boiler', data: { v2_category: 'boiler' } });
+    const cargo = Store.addDefinition(project, 'modules', { localId: 'example_cargo', data: { v2_category: 'cargo' } });
     assert.equal(hull.definition.name_key, 'module.test_mod.new_item.name');
+    assert.ok(boiler.definition.name_key.startsWith('module.test_mod.example_boiler.'));
+    assert.ok(cargo.definition.name_key.startsWith('module.test_mod.example_cargo.'));
     assert.notEqual(boiler.definition.name_key, hull.definition.name_key);
     assert.notEqual(cargo.definition.name_key, boiler.definition.name_key);
+    // Both merged modules share the `module` id prefix but keep distinct local ids.
+    assert.equal(boiler.definition.id, 'test_mod:module/example_boiler');
+    assert.equal(cargo.definition.id, 'test_mod:module/example_cargo');
   });
 
   await test('entity localization rename commits once and removes old keys', () => {
@@ -1004,10 +1011,11 @@ function warningsOf(result) {
 
   await test('core definition clone rewrites IDs, keys and translations', () => {
     const project = freshProject();
-    const result = Store.cloneCoreDefinition(project, 'core:boiler/small_efficient');
+    const result = Store.cloneCoreDefinition(project, 'core:module/small_efficient');
     assert.ok(result);
-    assert.equal(result.definition.id, 'test_mod:boiler/small_efficient_copy');
+    assert.equal(result.definition.id, 'test_mod:module/small_efficient_copy');
     assert.equal(result.definition.information.model, 'asset://core/model.module.boiler');
+    assert.equal(result.definition.data.v2_category, 'boiler');
     assert.ok(result.definition.name_key.startsWith('module.test_mod.'));
     const zh = Store.getLoc(project, 'zh_CN');
     assert.ok(zh.entries[result.definition.name_key]);
@@ -1154,7 +1162,12 @@ function warningsOf(result) {
     assert.equal(result.warnings.length, 0, JSON.stringify(result.warnings));
     const validation = Validate.validateProject(result.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
-    assert.ok(result.project.contentFiles.some((file) => file.content_type === 'boilers'));
+    assert.ok(result.project.contentFiles.some((file) => file.content_type === 'modules'));
+    assert.equal(
+      result.project.contentFiles.find((file) => file.content_type === 'modules').definitions[0].data.v2_category,
+      'boiler',
+      'the example module declares its C1 category'
+    );
   });
 
   await test('condition group rendering is recursive', () => {

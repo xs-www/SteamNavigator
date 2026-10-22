@@ -101,7 +101,7 @@
           "reputation": 1,
           "unlock_ids": [
             "core:hull/medium_standard",
-            "core:cargo_module/medium_hold"
+            "core:module/medium_hold"
           ]
         },
         "requires_completed": ["core:contract/main_02"]
@@ -136,7 +136,7 @@
           "on_time_bonus": [180, 220],
           "reputation": 2,
           "unlock_ids": [
-            "core:safety_module/safety_valve"
+            "core:module/safety_valve"
           ]
         },
         "requires_completed": ["core:contract/main_03"]

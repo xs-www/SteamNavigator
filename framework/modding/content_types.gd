@@ -9,11 +9,7 @@ extends RefCounted
 const GOOD := &"goods"
 const MATERIAL := &"materials"
 const HULL := &"hulls"
-const BOILER := &"boilers"
-const CARGO_MODULE := &"cargo_modules"
-const NAVIGATION_MODULE := &"navigation_modules"
-const SAFETY_MODULE := &"safety_modules"
-const CABIN := &"cabins"
+const MODULE := &"modules"
 const ROLE := &"roles"
 const STRATEGY := &"strategies"
 const PORT_ARCHETYPE := &"port_archetypes"
@@ -35,12 +31,8 @@ const PATCH := &"patches"
 const SCHEMA_PATHS := {
 	GOOD: "res://schemas/good.schema.json",
 	MATERIAL: "res://schemas/material.schema.json",
-	HULL: "res://schemas/hull.schema.json",
-	BOILER: "res://schemas/boiler.schema.json",
-	CARGO_MODULE: "res://schemas/cargo_module.schema.json",
-	NAVIGATION_MODULE: "res://schemas/navigation_module.schema.json",
-	SAFETY_MODULE: "res://schemas/safety_module.schema.json",
-	CABIN: "res://schemas/cabin.schema.json",
+	HULL: "res://schemas/v2/hull.schema.json",
+	MODULE: "res://schemas/v2/module.schema.json",
 	ROLE: "res://schemas/role.schema.json",
 	STRATEGY: "res://schemas/strategy.schema.json",
 	PORT_ARCHETYPE: "res://schemas/port_archetype.schema.json",
@@ -63,12 +55,8 @@ const SCHEMA_PATHS := {
 const SCHEMA_VERSIONS := {
 	GOOD: "1.0",
 	MATERIAL: "1.0",
-	HULL: "1.0",
-	BOILER: "1.0",
-	CARGO_MODULE: "1.0",
-	NAVIGATION_MODULE: "1.0",
-	SAFETY_MODULE: "1.0",
-	CABIN: "1.0",
+	HULL: "2.0",
+	MODULE: "2.0",
 	ROLE: "1.0",
 	STRATEGY: "1.0",
 	PORT_ARCHETYPE: "1.0",
@@ -92,11 +80,7 @@ const SINGULAR := {
 	GOOD: "good",
 	MATERIAL: "material",
 	HULL: "hull",
-	BOILER: "boiler",
-	CARGO_MODULE: "cargo_module",
-	NAVIGATION_MODULE: "navigation_module",
-	SAFETY_MODULE: "safety_module",
-	CABIN: "cabin",
+	MODULE: "module",
 	ROLE: "role",
 	STRATEGY: "strategy",
 	PORT_ARCHETYPE: "port_archetype",
@@ -116,16 +100,15 @@ const SINGULAR := {
 	PATCH: "patch",
 }
 
-const MODULE_TYPES := [HULL, BOILER, CARGO_MODULE, NAVIGATION_MODULE, SAFETY_MODULE, CABIN]
+const MODULE_TYPES := [HULL, MODULE]
 
 
 static func all() -> Array[StringName]:
 	var types: Array[StringName] = [
-		GOOD, MATERIAL, HULL, BOILER, CARGO_MODULE,
-		NAVIGATION_MODULE, SAFETY_MODULE, CABIN, ROLE, STRATEGY,
-		PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, WORLD_PROFILE, REGION,
-		SITE, ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY,
-		START_PROFILE, MAP_CONFIG, CONTRACT, EVENT,
+		GOOD, MATERIAL, HULL, MODULE, ROLE,
+		STRATEGY, PORT_ARCHETYPE, MAP_PROFILE, STARTING_BUILD, WORLD_PROFILE,
+		REGION, SITE, ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION,
+		DISCOVERY, START_PROFILE, MAP_CONFIG, CONTRACT, EVENT,
 	]
 	return types
 

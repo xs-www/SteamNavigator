@@ -904,9 +904,36 @@ function deepMerge(base, extra) {
   return deepClone(extra);
 }
 
+/* C1 modules: the requested category drives the default data block and tag. */
+const MODULE_CATEGORY_VALUES = ['boiler', 'cargo', 'utility', 'cabin', 'crew'];
+
+function requestedModuleCategory(ctx) {
+  for (const spec of flagValues(ctx, 'data')) {
+    const equal = spec.indexOf('=');
+    if (equal < 0) continue;
+    const pathText = spec.slice(0, equal).trim().replace(/^data\./, '').replace(/^\/?data\//, '').replace(/^\//, '');
+    if (pathText !== 'v2_category') continue;
+    const raw = spec.slice(equal + 1).trim().replace(/^['"]|['"]$/g, '');
+    if (MODULE_CATEGORY_VALUES.includes(raw)) return raw;
+  }
+  const dataJson = flagValue(ctx, 'data-json');
+  if (dataJson !== undefined) {
+    try {
+      const parsed = parseJsonOrFile(dataJson, '--data-json');
+      if (isPlainObject(parsed) && MODULE_CATEGORY_VALUES.includes(parsed.v2_category)) return parsed.v2_category;
+    } catch (error) {
+      /* buildData reports the JSON error with the proper CLI message. */
+    }
+  }
+  return '';
+}
+
 function buildData(typeKey, ctx) {
   const defaults = Catalog.DEFAULTS[typeKey];
-  let data = defaults ? defaults() : {};
+  let data;
+  if (!defaults) data = {};
+  else if (typeKey === 'modules') data = defaults({ v2_category: requestedModuleCategory(ctx) });
+  else data = defaults();
   const dataJson = flagValue(ctx, 'data-json');
   if (dataJson !== undefined) {
     const parsed = parseJsonOrFile(dataJson, '--data-json');
@@ -1225,7 +1252,7 @@ function describePayload(typeKey) {
   let skeleton;
   if (info.key === 'patches') {
     skeleton = {
-      target: 'core:boiler/small_efficient',
+      target: 'core:module/small_efficient',
       requires: { mod: 'core', version: '>=1.0.0 <2.0.0' },
       operations: [{ op: 'replace', path: '/data/purchase_price', value: 380 }],
     };
@@ -1458,7 +1485,12 @@ function commandAdd(ctx) {
 
   let tags = flagValues(ctx, 'tag');
   if (!isPatch && !tags.length) {
-    tags = [(Catalog.TAG_SUGGESTIONS[typeKey] || [])[0] || `${info.singular}.custom`];
+    if (typeKey === 'modules') {
+      const category = requestedModuleCategory(ctx) || 'boiler';
+      tags = [Catalog.MODULE_CATEGORY_TAGS[category] || 'module.boiler'];
+    } else {
+      tags = [(Catalog.TAG_SUGGESTIONS[typeKey] || [])[0] || `${info.singular}.custom`];
+    }
   }
   const data = isPatch ? undefined : buildData(typeKey, ctx);
 

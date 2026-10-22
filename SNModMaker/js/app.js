@@ -13,7 +13,7 @@
   const V = root.SNValidate;
   const IO = root.SNIO;
   const Cat = root.SNCatalog;
-  const MODULE_PAGE_TYPES = ['hulls', 'boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins', 'roles', 'strategies'];
+  const MODULE_PAGE_TYPES = ['hulls', 'modules', 'roles', 'strategies'];
 
   const state = {
     project: null,
@@ -21,6 +21,7 @@
     selected: null,
     locale: 'zh_CN',
     search: '',
+    moduleCategory: 'all',
     locSearch: '',
     missingOnly: false,
     validFilter: 'all',
@@ -969,6 +970,32 @@
     </nav>`;
   }
 
+  /* C1: the merged modules page groups definitions by `data.v2_category`. */
+  function renderModuleCategoryTabs() {
+    const labels = Cat.FIELD_ENUM_LABELS['modules.v2_category'] || {};
+    const counts = new Map();
+    let total = 0;
+    for (const file of state.project.contentFiles) {
+      if (file.content_type !== 'modules') continue;
+      for (const definition of file.definitions || []) {
+        total += 1;
+        const category = definition && definition.data ? definition.data.v2_category : '';
+        if (category) counts.set(category, (counts.get(category) || 0) + 1);
+      }
+    }
+    const tab = (key, label, count) => `<button type="button" class="module-tab ${state.moduleCategory === key ? 'active' : ''}" data-module-category="${UI.attr(key)}">
+          ${UI.esc(label)}<span>${count}</span>
+        </button>`;
+    const tabs = [tab('all', '全部分类', total)];
+    for (const category of Cat.MODULE_CATEGORY_IDS) {
+      tabs.push(tab(category, labels[category] || category, counts.get(category) || 0));
+    }
+    return `<nav class="module-tabs module-category-tabs" aria-label="模块分类">
+      <span class="module-tabs-label">模块分类</span>
+      ${tabs.join('')}
+    </nav>`;
+  }
+
   function renderContent() {
     const typeKey = state.view.type;
     const info = Cat.BY_KEY[typeKey];
@@ -979,13 +1006,17 @@
     files.forEach((file) => (file.definitions || []).forEach((definition, index) => {
       all.push({ file, definition, index });
     }));
+    const moduleCategory = typeKey === 'modules' ? state.moduleCategory : 'all';
+    const visible = moduleCategory === 'all'
+      ? all
+      : all.filter((item) => item.definition && item.definition.data && item.definition.data.v2_category === moduleCategory);
     if (state.selected && state.selected.type !== typeKey) {
-      state.selected = all.length ? { type: typeKey, file: all[0].file.path, index: all[0].index } : null;
+      state.selected = visible.length ? { type: typeKey, file: visible[0].file.path, index: visible[0].index } : null;
     }
-    const selected = all.find((item) => state.selected && item.file.path === state.selected.file && item.index === state.selected.index) || all[0];
+    const selected = visible.find((item) => state.selected && item.file.path === state.selected.file && item.index === state.selected.index) || visible[0];
     if (selected) state.selected = { type: typeKey, file: selected.file.path, index: selected.index };
 
-    const cards = all.map((item) => {
+    const cards = visible.map((item) => {
       const key = `${item.file.path}#${item.index}`;
       const badge = state.issueByDef.get(key) || { error: 0, warning: 0 };
       const title = Store.definitionTitle(state.project, item.definition);
@@ -1032,14 +1063,15 @@
       </header>
 
       ${renderModuleTabs(typeKey)}
+      ${typeKey === 'modules' ? renderModuleCategoryTabs() : ''}
 
       <div class="content-layout">
         <section class="def-list-panel">
           <div class="list-tools">
             <input class="input search" type="search" placeholder="搜索名称、ID 或标签…" value="${UI.attr(state.search)}" data-filter="content">
-            <span class="list-count">${all.length} 条</span>
+            <span class="list-count">${visible.length}${moduleCategory === 'all' ? '' : ` / ${all.length}`} 条</span>
           </div>
-          <div class="def-list">${cards || `<div class="empty-inline large">还没有${UI.esc(info.label)}定义。</div>`}</div>
+          <div class="def-list">${cards || `<div class="empty-inline large">${moduleCategory === 'all' ? `还没有${UI.esc(info.label)}定义。` : '该分类下还没有模块定义。'}</div>`}</div>
           <button type="button" class="btn ghost block" data-action="add-definition">+ 新增${UI.esc(info.label)}</button>
         </section>
         <section class="editor-panel" id="definition-editor">
@@ -1520,6 +1552,12 @@
       selectDefinition(selectEl.dataset.file, Number(selectEl.dataset.index));
       return;
     }
+    const moduleCategoryEl = event.target.closest('[data-module-category]');
+    if (moduleCategoryEl) {
+      state.moduleCategory = moduleCategoryEl.dataset.moduleCategory || 'all';
+      render();
+      return;
+    }
     const navEl = event.target.closest('[data-nav]');
     if (navEl) {
       const [kind, argument] = navEl.dataset.nav.split(':');
@@ -1547,6 +1585,7 @@
     else if (kind === 'content' && argument) {
       state.view = { name: 'content', type: argument };
       state.search = '';
+      state.moduleCategory = 'all';
       ensureSelection();
       const items = [];
       state.project.contentFiles

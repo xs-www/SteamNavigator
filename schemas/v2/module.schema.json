@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/module-2.json",
+  "title": "Steam Navigator module content file (Content Schema 2.0)",
+  "description": "Merged ship module family (C1): boilers, cargo holds, utility modules (navigation/safety) and passenger cabins share one active type. `data.v2_category` selects the category; the remaining fields are the union of the five legacy per-category schemas, so a single definition still carries exactly the numbers its category needs. Content Schema 2.0 drops the 1.0 slot-specific content types and their ids.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "modules"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/module_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "craft_material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "amount"],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0.1
+        }
+      }
+    },
+    "modifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stat", "op", "value"],
+      "properties": {
+        "stat": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "op": {
+          "enum": ["add", "mul", "set"]
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "module_data": {
+      "description": "Union of the five legacy module schemas. Required per category: boiler -> speed_mul/coal_rate/water_rate; cargo -> capacity; utility -> risk_add; cabin -> passenger_capacity. The schema cannot express those conditionals, so the runtime validates the category-specific block.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v2_category", "tier", "weight", "purchase_price"],
+      "properties": {
+        "v2_category": {
+          "description": "模块分类。boiler=锅炉，cargo=货舱，utility=导航/安全等杂项功能，cabin=客舱；crew 为船员居住预留，Phase C 暂无内容。",
+          "enum": ["boiler", "cargo", "utility", "cabin", "crew"]
+        },
+        "tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0
+        },
+        "purchase_price": {
+          "type": "number",
+          "minimum": 0
+        },
+        "craft_time_hours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "craft_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/craft_material"
+          }
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modifier"
+          }
+        },
+        "unlock_reputation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1
+        },
+        "speed_mul": {
+          "description": "boiler / utility: 航速乘数。",
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 3
+        },
+        "coal_rate": {
+          "description": "boiler: 每小时煤耗。",
+          "type": "number",
+          "minimum": 0
+        },
+        "water_rate": {
+          "description": "boiler: 每小时水耗。",
+          "type": "number",
+          "minimum": 0
+        },
+        "capacity": {
+          "description": "cargo: 货舱容量。",
+          "type": "number",
+          "minimum": 1
+        },
+        "risk_add": {
+          "description": "utility: 风险修正（负值为降低）。navigation / safety 共用。",
+          "type": "number",
+          "minimum": -0.5,
+          "maximum": 0.5
+        },
+        "damage_mul": {
+          "description": "utility / safety: 事故损伤乘数。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.5
+        },
+        "repair_cost_mul": {
+          "description": "utility / safety: 维修费用乘数。",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "reveal_facilities": {
+          "description": "utility / navigation: 出航前是否揭示目的港设施。",
+          "type": "boolean"
+        },
+        "passenger_capacity": {
+          "description": "cabin: 可搭载旅客数。",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      }
+    }
+  }
+}

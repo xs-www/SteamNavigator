@@ -375,7 +375,7 @@
                 "body_keys": ["story.core.third_port.body.1", "story.core.third_port.body.2"]
               },
               "unlock_features": ["shipyard"],
-              "unlock_modules": ["core:cabin/small_cabin"],
+              "unlock_modules": ["core:module/small_cabin"],
               "effects": [
                 {"type": "add_facility", "facility": "shipyard"},
                 {"type": "upgrade_hull", "hull_id": "core:hull/medium_standard", "store_old": true}
@@ -396,7 +396,7 @@
                 "event": "cmd:ship.uninstall_module",
                 "counter": "cargo_uninstalled",
                 "at_least": 1,
-                "match": {"content_type": "cargo_modules"}
+                "match": {"category": "cargo"}
               }
             },
             {
@@ -413,7 +413,7 @@
                 "event": "cmd:ship.install_module",
                 "counter": "cabin_installed",
                 "at_least": 1,
-                "match": {"module_id": "core:cabin/small_cabin"}
+                "match": {"module_id": "core:module/small_cabin"}
               }
             },
             {

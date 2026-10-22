@@ -341,6 +341,17 @@
     'patch.target': '目标定义',
     'patch.operations': '补丁操作',
     'patch.requires': '来源约束',
+    /* C1: merged module family. */
+    'modules.v2_category': '模块分类',
+    'modules.speed_mul': '航速倍率（锅炉 / 导航）',
+    'modules.coal_rate': '煤耗（锅炉）',
+    'modules.water_rate': '水耗（锅炉）',
+    'modules.capacity': '货舱容量',
+    'modules.risk_add': '风险修正（导航 / 安全）',
+    'modules.damage_mul': '损伤倍率（安全）',
+    'modules.repair_cost_mul': '维修费用倍率（安全）',
+    'modules.reveal_facilities': '揭示港口设施（导航）',
+    'modules.passenger_capacity': '载客量（客舱）',
     'regions.kind': '区域类型',
     'regions.size': '区域规模',
     'route_templates.kind': '航道类型',
@@ -591,42 +602,22 @@
       base_risk: 0.08,
       size_tag: 'small',
     }),
-    boilers: () => ({
-      tier: 1,
-      weight: 8,
-      purchase_price: 420,
-      speed_mul: 1.0,
-      coal_rate: 0.4,
-      water_rate: 0.28,
-    }),
-    cargo_modules: () => ({
-      tier: 1,
-      weight: 4,
-      purchase_price: 300,
-      capacity: 32,
-    }),
-    navigation_modules: () => ({
-      tier: 1,
-      weight: 2,
-      purchase_price: 260,
-      risk_add: -0.01,
-      speed_mul: 1.0,
-      reveal_facilities: false,
-    }),
-    safety_modules: () => ({
-      tier: 1,
-      weight: 3,
-      purchase_price: 240,
-      risk_add: -0.02,
-      damage_mul: 0.9,
-      repair_cost_mul: 1.0,
-    }),
-    cabins: () => ({
-      tier: 1,
-      weight: 5,
-      purchase_price: 400,
-      passenger_capacity: 2,
-    }),
+    /* C1: one module type carries boiler / cargo / utility / cabin; the default
+     * block and the default tag follow the requested `v2_category`. */
+    modules: (options) => {
+      const category = (options && options.v2_category) || 'boiler';
+      const base = { v2_category: category, tier: 1 };
+      if (category === 'cargo') return { ...base, weight: 4, purchase_price: 300, capacity: 32 };
+      if (category === 'utility') {
+        return {
+          ...base, weight: 2, purchase_price: 260,
+          risk_add: -0.01, speed_mul: 1.0, reveal_facilities: false,
+        };
+      }
+      if (category === 'cabin') return { ...base, weight: 5, purchase_price: 400, passenger_capacity: 2 };
+      if (category === 'crew') return { ...base, weight: 5, purchase_price: 320 };
+      return { ...base, weight: 8, purchase_price: 420, speed_mul: 1.0, coal_rate: 0.4, water_rate: 0.28 };
+    },
     roles: () => ({
       kind: 'engineer',
       wage_per_voyage: 30,
@@ -680,8 +671,8 @@
       money: 1000,
       reputation: 0,
       hull: 'core:hull/small_efficient',
-      boiler: 'core:boiler/small_efficient',
-      cargo_modules: ['core:cargo_module/small_hold'],
+      boiler: 'core:module/small_efficient',
+      cargo_modules: ['core:module/small_hold'],
       coal: 30,
       water: 30,
       durability_ratio: 1.0,
@@ -1011,11 +1002,7 @@
   const TAG_SUGGESTIONS = {
     goods: ['good.trade', 'good.bulk', 'good.luxury', 'good.shipbuilding', 'good.supply'],
     hulls: ['module.hull', 'module.small', 'module.medium', 'module.large', 'module.efficient'],
-    boilers: ['module.boiler', 'module.economic', 'module.performance'],
-    cargo_modules: ['module.cargo', 'module.small', 'module.medium', 'module.large'],
-    navigation_modules: ['module.navigation', 'module.intel'],
-    safety_modules: ['module.safety', 'module.repair'],
-    cabins: ['module.cabin', 'module.passenger'],
+    modules: ['module.boiler', 'module.small', 'module.efficient', 'module.navigation', 'module.safety'],
     roles: ['role.engineer', 'role.navigator'],
     strategies: ['strategy.economic', 'strategy.standard', 'strategy.fast'],
     contracts: ['contract.main', 'contract.normal', 'contract.cargo', 'contract.passenger'],
@@ -1035,6 +1022,16 @@
     /* Story Mode draft tags. */
     story_arcs: ['story.canon', 'story.arc'],
     story_levels: ['story.level', 'story.tutorial', 'story.trade', 'story.combat'],
+  };
+
+  /* C1: ordered module categories. `crew` is reserved and has no core content yet. */
+  const MODULE_CATEGORY_IDS = ['boiler', 'cargo', 'utility', 'cabin'];
+  const MODULE_CATEGORY_TAGS = {
+    boiler: 'module.boiler',
+    cargo: 'module.cargo',
+    utility: 'module.navigation',
+    cabin: 'module.cabin',
+    crew: 'module.crew',
   };
 
   const CONDITION_OPS = [
@@ -1229,8 +1226,8 @@
     {
       key: 'boiler',
       name: '锅炉包',
-      description: '一个可购买安装的锅炉，依赖 Core 的商品与飞船体系。',
-      type: 'boilers',
+      description: '一个可购买安装的锅炉（C1 modules 类型的 boiler 分类），依赖 Core 的商品与飞船体系。',
+      type: 'modules',
       deps: true,
     },
     {
@@ -1266,6 +1263,14 @@
   /* Readable option labels for enum fields whose raw values are identifiers.
    * Keyed "<typeKey>.<field>"; unlisted enum values fall back to the raw value. */
   const FIELD_ENUM_LABELS = {
+    /* C1: merged module categories. */
+    'modules.v2_category': {
+      boiler: '锅炉 boiler',
+      cargo: '货舱 cargo',
+      utility: '杂项功能 utility（导航 / 安全）',
+      cabin: '客舱 cabin',
+      crew: '船员居住 crew（预留）',
+    },
     'weapons.kind': {
       direct: '直射 direct',
       artillery: '曲射 artillery',
@@ -1372,6 +1377,8 @@
     REF_LABELS,
     DEFAULTS,
     TAG_SUGGESTIONS,
+    MODULE_CATEGORY_IDS,
+    MODULE_CATEGORY_TAGS,
     CONDITION_OPS,
     CONDITION_FIELDS,
     EFFECT_OPS,

@@ -395,12 +395,15 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 28, '25 runtime types + 3 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 25, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.types.length, 24, '21 runtime types + 3 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 21, 'activeTypes counts runtime types at both 1.0 and 2.0');
   assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
-  for (const key of ['goods', 'materials', 'hulls', 'boilers', 'events', 'contracts', 'patches']) {
+  for (const key of ['goods', 'materials', 'hulls', 'modules', 'events', 'contracts', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
+  }
+  for (const legacyModuleType of ['boilers', 'cargo_modules', 'navigation_modules', 'safety_modules', 'cabins']) {
+    assert.ok(!keys.includes(legacyModuleType), `C1 removed the ${legacyModuleType} content type in favour of modules`);
   }
   const goods = json.types.find((entry) => entry.key === 'goods');
   assert.equal(goods.singular, 'good');
@@ -440,22 +443,42 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(startProfile.schema_version, '2.0');
   assert.equal(startProfile.capability, 'content.campaign.v1');
 
-  // The nine Phase B types are active runtime rows at Schema 2.0, not drafts.
+  // The Phase B world/campaign types plus the C1 hull/module types are active runtime rows at Schema 2.0.
   const runtimeV2 = json.types.filter((entry) => !entry.draft && entry.schema_version === '2.0');
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
-    ['discoveries', 'factions', 'map_configs', 'regions', 'route_templates', 'sites',
+    ['discoveries', 'factions', 'hulls', 'map_configs', 'modules', 'regions', 'route_templates', 'sites',
       'start_profiles', 'weather_profiles', 'world_profiles'],
-    'exactly the nine Phase B types are Schema 2.0 runtime rows'
+    'exactly the eleven Schema 2.0 runtime rows are active'
   );
+  const runtimeCapabilities = {
+    hulls: 'content.hulls.v1',
+    modules: 'content.modules.v1',
+    start_profiles: 'content.campaign.v1',
+  };
   for (const runtime of runtimeV2) {
     assert.equal(runtime.schema, `v2/${runtime.singular}.schema.json`,
       `${runtime.key} must point at its v2 schema`);
     assert.ok(runtime.capability, `${runtime.key} must expose its capability`);
+    assert.equal(
+      runtime.capability,
+      runtimeCapabilities[runtime.key] || 'content.world.v1',
+      `${runtime.key} declares its capability`
+    );
   }
-  for (const runtime of runtimeV2.filter((entry) => entry.key !== 'start_profiles')) {
-    assert.equal(runtime.capability, 'content.world.v1', `${runtime.key} belongs to the world capability`);
-  }
+  const modules = json.types.find((entry) => entry.key === 'modules');
+  assert.ok(modules, 'modules must be listed as an active type');
+  assert.equal(modules.singular, 'module');
+  assert.equal(modules.keyPrefix, 'module');
+  assert.equal(modules.file, 'content/modules.json');
+  assert.equal(modules.schema, 'v2/module.schema.json');
+  assert.equal(modules.schema_version, '2.0');
+  assert.equal(modules.capability, 'content.modules.v1');
+  assert.ok(!modules.draft, 'C1 promoted modules to a runtime type');
+  const hulls = json.types.find((entry) => entry.key === 'hulls');
+  assert.equal(hulls.schema, 'v2/hull.schema.json');
+  assert.equal(hulls.schema_version, '2.0');
+  assert.equal(hulls.capability, 'content.hulls.v1');
   const weapons = drafts.find((entry) => entry.key === 'weapons');
   assert.ok(weapons, 'weapons must be listed as a draft type');
   assert.equal(weapons.singular, 'weapon');
@@ -485,13 +508,23 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（25；其中 9 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 25 active types, 9 of them Schema 2.0:\n${stdout}`
+    /运行时内容类型（21；其中 11 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 21 active types, 11 of them Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    9,
+    11,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^modules\s+模块\s+module\s+content\/modules\.json  \[runtime 2\.0\]$/m,
+    `modules must be shown as a runtime Schema 2.0 type:\n${stdout}`
+  );
+  assert.match(
+    stdout,
+    /^hulls\s+船体\s+hull\s+content\/hulls\.json  \[runtime 2\.0\]$/m,
+    `hulls must be shown as a runtime Schema 2.0 type:\n${stdout}`
   );
   assert.match(
     stdout,
@@ -601,7 +634,7 @@ test('describe patches --json reports the patch target/operations skeleton and n
   assert.equal(json.type.singular, 'patch');
   assert.equal(json.type.file, 'content/patches.json');
   assert.equal(json.defaults, null, 'patches have no defaults');
-  assert.equal(json.skeleton.target, 'core:boiler/small_efficient');
+  assert.equal(json.skeleton.target, 'core:module/small_efficient');
   assert.equal(json.skeleton.requires.mod, 'core');
   assert.equal(json.skeleton.requires.version, '>=1.0.0 <2.0.0');
   assert.ok(Array.isArray(json.skeleton.operations));
@@ -1822,12 +1855,12 @@ test('rm of the only definition in a content file deletes that file and its mani
   const mod = createMod(test, { template: 'starter_kit' });
   assert.deepEqual(manifestOf(mod).content, [
     'content/goods.json',
-    'content/boilers.json',
+    'content/modules.json',
     'content/events.json',
     'content/contracts.json',
   ]);
   const otherFilesBefore = {
-    'content/boilers.json': sha256File(path.join(mod, 'content/boilers.json')),
+    'content/modules.json': sha256File(path.join(mod, 'content/modules.json')),
     'content/events.json': sha256File(path.join(mod, 'content/events.json')),
     'content/contracts.json': sha256File(path.join(mod, 'content/contracts.json')),
   };
@@ -1839,7 +1872,7 @@ test('rm of the only definition in a content file deletes that file and its mani
 
   assert.ok(!fs.existsSync(path.join(mod, 'content', 'goods.json')), 'emptied content file must be deleted');
   assert.deepEqual(manifestOf(mod).content, [
-    'content/boilers.json',
+    'content/modules.json',
     'content/events.json',
     'content/contracts.json',
   ], 'manifest.content must drop the deleted file');
