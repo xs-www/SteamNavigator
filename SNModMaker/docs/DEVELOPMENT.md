@@ -72,7 +72,7 @@ node tools/gen_content_types.mjs --check
 node SNModMaker/tools/sync-schemas.mjs
 ```
 
-生成物覆盖 26 个 Schema：10 个顶层运行时 Schema + 16 个 `v2/`（`v2/common.schema.json` + Phase B 9 类 + C1 的 `hull` / `module` + C2 的 `item` + `weapon` + `story_arc` + `story_level`）。
+生成物覆盖 27 个 Schema：10 个顶层运行时 Schema + 17 个 `v2/`（`v2/common.schema.json` + Phase B 9 类 + C1 的 `hull` / `module` + C2 的 `item` + C3 的 `quest` + `weapon` + `story_arc` + `story_level`）。
 
 ### 重新生成 Core 索引
 

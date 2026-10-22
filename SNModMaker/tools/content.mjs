@@ -76,7 +76,7 @@ const USAGE = `SNModMaker 内容 CLI（v1）
   node SNModMaker/tools/content.mjs <command> [options]
 
 命令：
-  types                                   列出全部内容类型（运行时 20 类 + 3 类 Schema 2.0 草案）
+  types                                   列出全部内容类型（运行时 21 类 + 3 类 Schema 2.0 草案）
   describe <type>                         查看类型的 ID / 键 / 字段 / 默认值与骨架
   list --mod <dir> [--type <key>]         列出模组内的全部定义
   add --mod <dir> --type <key> --id <local_id> [选项]
@@ -106,9 +106,9 @@ add 选项：
 通用选项：--json  --quiet  --help/-h
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
 
-Schema 2.0 运行时类型共 12 类：Phase B 的 9 类（world_profiles / map_configs / regions /
+Schema 2.0 运行时类型共 13 类：Phase B 的 9 类（world_profiles / map_configs / regions /
 sites / route_templates / weather_profiles / factions / discoveries / start_profiles）+
-C1 的 hulls / modules + C2 的 items。它们已接入游戏运行时，可以像 1.0 类型一样
+C1 的 hulls / modules + C2 的 items + C3 的 quests。它们已接入游戏运行时，可以像 1.0 类型一样
 list / add / set / describe / validate，内容文件写 schema_version "2.0"。
 CLI 不会自动声明 capability：内容使用 Schema 2.0 但未在 manifest.capabilities 声明对应
 能力时，校验给出 capability_undeclared 警告（按类型去重，每个 capability 一条）。

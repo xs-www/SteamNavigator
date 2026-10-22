@@ -41,7 +41,7 @@
 
 | 事实 | 证据 |
 | --- | --- |
-| 内容版本按类型：**当前（C2 后）20 个 active 类型 = 12 类 `2.0` + 8 类 `1.0`（含 `patches`）**，另有 3 类 `2.0` 草案（`weapons` / `story_arcs` / `story_levels`）；Phase B 只提升了世界/战役 9 类 | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
+| 内容版本按类型：**当前（C3 后）21 个 active 类型 = 13 类 `2.0` + 8 类 `1.0`（含 `patches`）**，另有 3 类 `2.0` 草案（`weapons` / `story_arcs` / `story_levels`）；Phase B 只提升了世界/战役 9 类（C1/C2/C3 另补 hulls/modules/items/quests） | `content_types.json.types[].schema_version`、`ContentTypes.SCHEMA_VERSIONS` |
 | 运行时加载：`ContentCompiler` 按类型版本校验 envelope；Patch 再校验走目标类型版本 | `framework/modding/content_compiler.gd` |
 | 开局链路：`run.start(build_id, seed, tutorial)` → `RunFactory.create_run` → `create_ship` → `MapGenerator.generate(map_profile)` → `WorldGenerator.generate(_coordinate_world_profile(world))`（孪生海图世界）→ markets / npcs / main contract；`tutorial=true` 时 `StoryService.begin` 从 `map_profiles.data.story` 启动教程 | `framework/application/commands/run_start.gd`、`framework/domain/contracts/run_factory.gd`、`framework/domain/story/story_service.gd` |
 | 抽象地图输入：`port_count_range / archetypes / start_archetype_tags / required_facility_tags / required_facility_max_edges / port_name_keys / edge_count_range / distance_range / route_risk_range` | `framework/domain/map/map_generator.gd` |

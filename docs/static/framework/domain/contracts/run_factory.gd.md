@@ -14,8 +14,8 @@
 | `default_map_profile(hub: RegistryHub) -> ContentDefinition` | L32 |
 | `create_ship(hub: RegistryHub, build: ContentDefinition) -> Dictionary` | L37 |
 | `create_run(context, build_id: String = "", requested_seed: int = 0, tutorial: bool = false) -> Dictionary` | L61 |
-| `initialize_markets(state: GameState, hub: RegistryHub, _scenario: ContentDefinition, rng: RngService) -> void` | L269 |
-| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L299 |
+| `initialize_markets(state: GameState, hub: RegistryHub, _scenario: ContentDefinition, rng: RngService) -> void` | L272 |
+| `starting_build_summaries(hub: RegistryHub) -> Array[Dictionary]` | L302 |
 
 ## 契约与约束
 

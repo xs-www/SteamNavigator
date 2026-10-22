@@ -23,6 +23,6 @@
 - 不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。
 - 覆盖实体多语言键事务、资源候选类型过滤、船体模块区、武器表单字段、船体安装点编辑、贴图/GLB 引用、GLB 解析与发布包 mods 目标解析；任何失败以退出码 1 结束。
 - 「舰载武器包」模板断言 5 件预设（`WEAPON_PRESETS`）、生成一个 `content/weapons.json`、每条 `information.model` 为 `asset://core/model.weapon.*` 且 manifest 声明 `content.combat.v1`。
-- 剧情用例：Schema bundle 31 个（含 `v2/story_arc` / `v2/story_level`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器草案分开建项目（混装会被白名单拒绝）。
+- 剧情用例：Schema bundle 27 个（含 `v2/story_arc` / `v2/story_level`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器草案分开建项目（混装会被白名单拒绝）。
 
 模块索引：[SNModMaker](../README.md)

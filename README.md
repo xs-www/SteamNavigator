@@ -26,7 +26,7 @@
 - **可玩闭环**：程序生成海图、市场/补给、委托、船厂购买/打造/仓库/改装、出航与风险事件、探索线索、通关总结、主菜单与设置持久化。
 - **2.5D 固定舞台**：港口全窗 3D 舞台、连续港区三站位、船厂 3D 实机舞台、航行离港/入港演出、静态合批与低配回退。
 - **Content Schema 2.0 Phase C 进行中**：C1（5 类模块 → `modules` 2.0 + `hulls` 2.0）、C2（goods + materials → `items` 2.0）与 C3（`quests` 2.0 + 持久 `data.quests` + QuestService，委托/任务解耦）已完成；当前 active 21 类（7×1.0 + 13×2.0 + 显式补丁），3 类草案（`weapons` / `story_arcs` / `story_levels`）仅供编辑器与 draft 校验。
-- **剧情 / 任务**：新手教学 4.5 与任务追踪 `task.view` 已落地；剧情模式 S1 数据契约（`story_arcs` / `story_levels` 草案）已就绪，正式 Quest（`data.quests` + QuestService）在 Phase C3。
+- **剧情 / 任务**：新手教学 4.5 与任务追踪 `task.view` 已落地；C3 起 `quests` 2.0 + 持久 `data.quests` + `QuestService` 已接入（委托接取生成追踪实例，剧情演出/游戏指引等抽象引导由 Quest 承载），剧情模式 S1 数据契约（`story_arcs` / `story_levels` 草案）已就绪。
 - **无头测试**：`pwsh ./tools/test.ps1` 跑 Godot 全量；Node/CLI/SDK 门禁命令见下方。
 
 ## 环境要求

@@ -1497,7 +1497,7 @@ export const FILE_DOCS = {
     dependencies: ["JSON Schema（结构约束）", "content-types.js（由 content_types.json 生成）"],
     contracts: [
       "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型（1.0 与 Phase B 的 2.0）与 3 个 Schema 2.0 草案类型（weapons / story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。",
-      "`TYPES` 含 20 个可加载类型（8 类 1.0（含 patches）+ 12 类 2.0），`DRAFT_TYPES` 为 `weapons` + 剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
+      "`TYPES` 含 21 个可加载类型（8 类 1.0（含 patches）+ 13 类 2.0），`DRAFT_TYPES` 为 `weapons` + 剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
       "`DEFAULTS` 生成的定义必须能通过对应 Schema；Phase B 9 类 2.0 类型（含 `map_configs` 的 31 键 exploration）、`weapons` 草案与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。",
       "`weapons` 草案的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。",
       "剧情草案复用共享 `FIELD_LABELS`，用 `TYPE_FIELD_LABELS` / `TYPE_FIELD_HINTS` 处理同名不同义的字段（如关卡 `position` 是世界坐标、`rewards` 只允许成就/图鉴/装饰），并在 `FIELD_ENUM_LABELS` 提供 `role` / `presentation` / `fog` / `profile` / `hint_level` / 重试方式的可读名。",
@@ -1733,7 +1733,7 @@ export const FILE_DOCS = {
   "SNModMaker/tools/sync-schemas.mjs": {
     role: "把 `schemas/` 下全部 `*.schema.json`（含 `v2/` 草案）递归打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。",
     contracts: [
-      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（含 Phase B 9 类、C1 module/hull、C2 item 与 weapon/story 草案）为 `v2/...`，与磁盘文件一一对应（当前 26 个：10 顶层 + 16 个 v2）。",
+      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（含 Phase B 9 类、C1 module/hull、C2 item、C3 quest 与 weapon/story 草案）为 `v2/...`，与磁盘文件一一对应（当前 27 个：10 顶层 + 17 个 v2）。",
       "生成文件头带 AUTO-GENERATED 标记；修改任何 Schema 后必须重跑。",
       "只做 JSON 解析与嵌入，不校验 Schema 自身。"
     ]
@@ -1782,12 +1782,12 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 20 个运行时类型（其中 12 类为 Schema 2.0）与 3 个 Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 21 个运行时类型（其中 13 类为 Schema 2.0）与 3 个 Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出 20 个运行时类型（其中 12 类为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`weapons` / `story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
+      "`types` 同时列出 21 个运行时类型（其中 13 类为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`weapons` / `story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
       "`new --draft <content_type>` 只接受真实草案（`weapons` / `story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；已 active 的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。",
       "`validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（items / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 草案定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
@@ -1888,7 +1888,7 @@ export const FILE_DOCS = {
       "不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。",
       "覆盖实体多语言键事务、资源候选类型过滤、船体模块区、武器表单字段、船体安装点编辑、贴图/GLB 引用、GLB 解析与发布包 mods 目标解析；任何失败以退出码 1 结束。",
       "「舰载武器包」模板断言 5 件预设（`WEAPON_PRESETS`）、生成一个 `content/weapons.json`、每条 `information.model` 为 `asset://core/model.weapon.*` 且 manifest 声明 `content.combat.v1`。",
-      "剧情用例：Schema bundle 31 个（含 `v2/story_arc` / `v2/story_level`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器草案分开建项目（混装会被白名单拒绝）。"
+      "剧情用例：Schema bundle 27 个（含 `v2/story_arc` / `v2/story_level`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器草案分开建项目（混装会被白名单拒绝）。"
     ]
   },
 
@@ -2540,8 +2540,8 @@ export const MODULES = {
     intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0（Phase B/C 运行时 Schema + 草案）。",
     contracts: [
       "每类内容一个 envelope Schema；公共字段在 `common.schema.json`。",
-      "1.x 类型继续使用根目录 Schema；Phase B 的 9 类 + C1 的 `module` / `hull` + C2 的 `item` 共 12 类 2.0 运行时 Schema 在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载。",
-      "`schemas/v2/` 当前：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`、`map_config`、`module`、`hull`、`item`、`weapon`、`story_arc`、`story_level`；其中 `weapon` / `story_arc` / `story_level` 仍是草案。",
+      "1.x 类型继续使用根目录 Schema；Phase B 的 9 类 + C1 的 `module` / `hull` + C2 的 `item` + C3 的 `quest` 共 13 类 2.0 运行时 Schema 在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载。",
+      "`schemas/v2/` 当前：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`、`map_config`、`module`、`hull`、`item`、`quest`、`weapon`、`story_arc`、`story_level`；其中 `weapon` / `story_arc` / `story_level` 仍是草案。",
       "标准实体可选 `information.texture/model` 资源键；贴图与 GLB 模型属于展示信息，不替代 data 权威字段。",
       "Schema 的 `const`/`enum` 与 `ContentTypes`/操作码注册表需同步维护；效果操作码枚举（如 `damage_module`）必须与 `EffectOpRegistry` 同时增改，否则 core 校验会 fatal。"
     ]
@@ -2549,7 +2549,7 @@ export const MODULES = {
   "dev_mods/core": {
     intro: "官方 MVP 内容包：港口、商品、船只、模块、策略、岗位、委托、事件、地图与本地化；模块含打造配方/工时/费用，tier1 为仅金币配方（materials 为空）。",
     contracts: [
-      "`manifest.json` 声明 required=true，内容文件 19 个，本地化 zh_CN/en。",
+      "`manifest.json` 声明 required=true，内容文件 20 个，本地化 zh_CN/en。",
       "tier≥2 模块带 `craft_cost`；所有模块可带 `materials`/`craft_time_hours` 供 CraftOps 读取。",
       "两个造船厂港口（iron_harbor/free_town）市场限量出售精密齿轮，保证大型船材料在当局地图可获得。",
       "框架不得引用这里的具体 ID；所有引用由 Schema/交叉校验保证。",
@@ -2651,8 +2651,8 @@ export const GROUPED_ROLES = {
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `weapons` / `story_arcs` / `story_levels` 草案模板。",
   "sdk/examples": "可被运行时扫描的示例：1.0 roles、2.0 modules 与 1.0 + 2.0 混合模组。",
-  "schemas/v2": "Content Schema 2.0：common + Phase B active 的 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery / map_config + C1 的 module / hull + C2 的 item，以及仍为草案的 weapon / story_arc / story_level。",
-  "schemas": "JSON Schema 文件（Manifest/common/20 类内容 + v2）。",
+  "schemas/v2": "Content Schema 2.0：common + Phase B active 的 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery / map_config + C1 的 module / hull + C2 的 item + C3 的 quest，以及仍为草案的 weapon / story_arc / story_level。",
+  "schemas": "JSON Schema 文件（Manifest/common/21 类内容 + v2）。",
   "dev_mods/core": "官方 Core 内容文件（manifest/content/localization/assets）。",
   "tools/modeling/generators": "铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。",
   "tools/modeling/generators/sn_iron_harbor_batch2_generator.py": "铁港第二批 6 件生成器（煤气灯/跳板/抓斗/煤堆/爬梯/钢板堆）。",

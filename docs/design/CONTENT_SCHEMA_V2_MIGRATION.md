@@ -1,12 +1,12 @@
 # Content Schema 2.0 迁移落地方案
 
-> 状态：Draft 2（2026-10-22，C2 收尾后刷新；Phase A/B 与 C1/C2 已落地）。本文件是**执行方案**，不是已定稿契约；契约性规则见
+> 状态：Draft 3（2026-10-23，C3 收尾后刷新；Phase A/B 与 C1/C2/C3 已落地）。本文件是**执行方案**，不是已定稿契约；契约性规则见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)，路线图见 [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md)
 > 阶段 0/1，近期计划见 [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) §4.4。
 >
 > **结论先行**：不做「全量类型一次性 bump 到 2.0」；改为
 > **按内容类型版本化 → 世界探索家族提升 → 实体合并 → 其余系统 → 冻结 1.0** 的分层统一。
-> 开发期没有第三方模组与旧档负担，实体合并（C1/C2）**直接改 Core 内容与 ID、删除旧类型，不做别名与存档迁移**；
+> 开发期没有第三方模组与旧档负担，实体合并（C1/C2/C3）**直接改 Core 内容与 ID、删除旧类型，不做别名与存档迁移**；
 > 兼容策略只在发布前按 Phase E 另行评估。
 
 ## 1. 版本轴与术语
@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | Framework | 0.2.0-dev 系列（`FrameworkInfo.VERSION`） | 随发布走 |
 | Mod API | `1.0` | 未动 |
-| **Content Schema** | **基线 `1.0`；按类型声明：12 类 `2.0` + 8 类 `1.0`（含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1 / C2 已落地 |
+| **Content Schema** | **基线 `1.0`；按类型声明：13 类 `2.0` + 8 类 `1.0`（含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1 / C2 / C3 已落地 |
 | Save Schema | `2.0` | 已完成（含 1.x → 2.0 迁移） |
 | State Schema | `2.0` | 已完成（`GameState.SCHEMA_VERSION`） |
 
@@ -23,17 +23,17 @@
 `FrameworkInfo.CONTENT_SCHEMA`（`"1.0"`）自 Phase A 起只是**基线 / 默认值**（存档 header、编辑器默认），
 不再是运行时全局门禁；每个 active 类型在 `content_types.json` 声明自己的期望版本。
 
-## 2. 现状基线（2026-10-22 C2 收尾后快照）
+## 2. 现状基线（2026-10-23 C3 收尾后快照）
 
 ### 2.1 游戏运行时
 
-- [content_types.json](../../content_types.json) 是唯一真源：**20 个 active 类型**（19 个定义类型 +
-  `patches`），其中 **12 类 `schema_version: "2.0"`**、**8 类 `1.0`（7 个定义类型 + `patches`）**。
+- [content_types.json](../../content_types.json) 是唯一真源：**21 个 active 类型**（20 个定义类型 +
+  `patches`），其中 **13 类 `schema_version: "2.0"`**、**8 类 `1.0`（7 个定义类型 + `patches`）**。
 - `ContentTypes`（生成物 [content_types.gd](../../framework/modding/content_types.gd)）带
   `SCHEMA_PATHS` / `SCHEMA_VERSIONS` / `schema_version(type)`；[content_compiler.gd](../../framework/modding/content_compiler.gd)
   按 `content_type` 取期望版本校验 envelope（Patch 再校验按**目标类型**版本），不存在全局 1.0 门禁。
   `FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。
-- 2.0 运行时类型（12）：C2 合并的 `items`、C1 的 `hulls` / `modules`、Phase B 的
+- 2.0 运行时类型（13）：C2 合并的 `items`、C1 的 `hulls` / `modules`、C3 的 `quests`、Phase B 的
   `world_profiles / map_configs / regions / sites / route_templates / weather_profiles / factions /
   discoveries / start_profiles`。
 - 1.0 运行时类型（8，含补丁）：`roles / strategies / port_archetypes / map_profiles /
@@ -41,14 +41,15 @@
 - 开局链路：v2 战役由 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs +
   regions/sites/route_templates/weather/factions/discoveries`；`run.start` 不传 `start_profile` 时仍走
   1.0 `RunFactory`（`map_profiles` → `MapGenerator`/`WorldGenerator`）。
-- Core：`dev_mods/core/` 19 个内容文件（含 9 个 Phase B v2 文件）；goods+materials 已合并为
+- Core：`dev_mods/core/` 20 个内容文件（含 9 个 Phase B v2 文件 + C3 `quests.json`）；goods+materials 已合并为
   `items`（12 条 `core:item/*`，`data.crafting_material` 区分布尔标志），5 类模块已合并为
-  `modules`（12 条，`data.v2_category` = boiler/cargo/utility/cabin），`hulls` 升 2.0（类型与 ID 不变）。
+  `modules`（12 条，`data.v2_category` = boiler/cargo/utility/cabin），`hulls` 升 2.0（类型与 ID 不变），
+  `quests` 2.0（2 条 `core:quest/*` 引导任务）。
 
 ### 2.2 内容 Schema 与草案
 
-- `schemas/` 共 **26 个 Schema**：10 个顶层（`common` / `manifest` + 7 类 1.0 定义 + `patch`）+
-  16 个 `schemas/v2/`（`common` + 12 类运行时 2.0 + 3 类草案）。
+- `schemas/` 共 **27 个 Schema**：10 个顶层（`common` / `manifest` + 7 类 1.0 定义 + `patch`）+
+  17 个 `schemas/v2/`（`common` + 13 类运行时 2.0 + 3 类草案）。
 - 3 类草案（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑）：
   `weapons`、`story_arcs`、`story_levels`，运行时暂不加载。
 - v2 **未覆盖**：`roles / strategies / port_archetypes / map_profiles / starting_builds / contracts /
@@ -67,12 +68,12 @@
 
 ### 2.4 编辑器 / CLI / SDK / 门禁
 
-- 编辑器：`SNContentTypes.TYPES`（20 个运行时类型）+ `DRAFT_TYPES`（3 个草案）；
-  schema bundle 26 个（10 顶层 + 16 个 v2），由 `sync-schemas.mjs` 生成。
+- 编辑器：`SNContentTypes.TYPES`（21 个运行时类型）+ `DRAFT_TYPES`（3 个草案）；
+  schema bundle 27 个（10 顶层 + 17 个 v2），由 `sync-schemas.mjs` 生成。
   校验器有 `schemaVersionFor` 与 `schema_version_mismatch` / `schema_version_unsupported` /
   `draft_content` / `capability_undeclared`；G8 导出守卫按“当前运行时不支持”判定（草案 / 未注册 /
   版本不符拦截，运行时 2.0 类型可部署）。
-- Content CLI：`types` 输出 20 个运行时类型（12 类标 runtime 2.0）与 3 个草案；
+- Content CLI：`types` 输出 21 个运行时类型（13 类标 runtime 2.0）与 3 个草案；
   `--draft` 只接受剩余草案类型；写出的内容文件按类型版本写 `schema_version: "2.0"`。
 - SDK `sdk/validate.gd` 走真实 `Bootstrap`（运行时语义）；发布 workflow 含 Godot 测试、
   `gen_content_types --check`、`gen_static_docs --check` 与 core 校验。
@@ -228,7 +229,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 1.x 旧存档 | 正常 | 正常（惰性补齐） | 正常（迁移矩阵覆盖） |
 | v2 世界存档读入 1.0 运行时 | 不适用 | 拒绝并保留只读提示 | — |
 
-> **当前实现（2026-10-22 C2 后）**：Phase B 已完成，C1/C2 已合并模块与物品类型并删除旧类型；1.0 类型
+> **当前实现（2026-10-23 C3 后）**：Phase B 已完成，C1/C2/C3 已合并模块与物品类型、解耦委托/任务并删除旧类型；1.0 类型
 > （roles / strategies / port_archetypes / map_profiles / starting_builds / contracts / events）仍可加载，
 > 但 goods / materials / boilers / cargo_modules / navigation_modules / safety_modules / cabins 的旧模组会被拒绝；
 > 双读窗口不再适用于 C/D（见下方开发期例外）。
@@ -302,4 +303,4 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - 2026-10-22（C1/C2 期间）开发期策略：不做旧档 / 旧内容兼容，实体合并直接改 core 内容与 ID、删除旧类型；
   D2 的双读窗口不再适用于 C/D（发布前按 Phase E 重新评估）。
 - 2026-10-22（C2 收尾）删除已无类型引用的 8 个 1.0 Schema（goods/material/boiler/cargo_module/
-  navigation_module/safety_module/cabin/hull）；schema bundle 34 → 26（10 顶层 + 16 个 v2）。
+  navigation_module/safety_module/cabin/hull）；schema bundle 34 → 26（10 顶层 + 16 个 v2），C3 后为 27（10 顶层 + 17 个 v2）。

@@ -15,7 +15,7 @@
 | `test_continue_unlocks_market_then_buying_advances_to_the_chart() -> void` | L34 |
 | `test_skip_confirmation_unlocks_everything_and_removes_the_card() -> void` | L104 |
 | `test_non_tutorial_shell_has_no_card_and_no_gating() -> void` | L121 |
-| `test_new_game_screen_hides_build_picker_in_tutorial_mode() -> void` | L154 |
+| `test_new_game_screen_hides_build_picker_in_tutorial_mode() -> void` | L159 |
 
 按功能解锁过滤、剧情卡继续推进阶段、跳过教程的确认页与全解锁。
 

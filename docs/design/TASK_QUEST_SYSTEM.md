@@ -18,15 +18,16 @@
 - HUD 顶部任务条显示优先级最高的任务；委托页顶部显示全部任务与步骤；
 - 不写状态、不改存档、不新增业务命令。
 
-**Phase B（正式任务系统）**：
+**Phase B（正式任务系统，C3 已实现）**：
 - 新增内容驱动的 **Quest**（抽象引导层），服务剧情演出、游戏指引与一切非运输类系统需求；
 - **Contract 保持独立**：仍是「一单运输生意」的经济实例（payload / 目的地 / 时限 / 报酬）；
-- **解耦但联动**：委托被接取后生成一个 Quest 实例写入 `data.quests`，由任务层追踪；
-  Quest 定义不复制 Contract 的 payload/目的地/结算；
-- `task.view` 统一聚合 Quest 实例 + 已接 Contract（Contract 作为 Quest 下的任务项展示）。
+- **解耦但联动**：委托被接取后生成一条**追踪实例**写入 `data.quests`（`source=contract`），
+  只存 `contract_instance_id` 作为追踪 / 历史引用；Quest 定义与实例不复制 Contract 的 payload/目的地/结算；
+- `task.view` 聚合 Quest 任务项；**委托任务仍由 `contracts` 派生**，contract 来源的 Quest 追踪实例
+  不重复渲染，避免同一委托出现两次。
 
-**不做**：本切片不做任务接受 / 放弃 / 追踪切换命令，不做分支、时限奖励、每日刷新；
-这些属于 Phase B。
+**暂缓**：Quest 完成的奖励与 effects（`grant_money` / `grant_item` / `unlock_contract` / `start_quest` /
+`complete_quest` / `set_flag`、`spawn_contract` 等）与任务发布点 / 任务日志 UI 不在 C3 范围，后续切片再定。
 
 ## 2. 现有系统边界
 
@@ -34,11 +35,13 @@
 |---|---|---|
 | 委托 Contract | 一单生意的 payload / 目的地 / 时限 / 报酬 / 接取与结算 | `data.contracts.main`、`main_offer`、`active`、`offers` |
 | 剧情 Story | 新手教学的固定阶段 / 文本 / 解锁 / 目标 | `data.story` |
-| 任务追踪 Task | 只读聚合与步骤推导，供 HUD / 页面展示；Phase B 起改为聚合 Quest + 已接 Contract | 派生自 `data.quests` / `data.story` / `contracts` |
-| Quest（Phase B） | 抽象引导：剧情演出、游戏指引、非运输类系统需求；委托接取后生成 Quest 实例 | `data.quests`（惰性 ensure） |
+| 任务追踪 Task | 只读聚合与步骤推导，供 HUD / 页面展示；C3 起聚合 Quest 任务项与已接 Contract（委托任务仍由 contracts 派生） | 派生自 `data.quests` / `data.story` / `contracts` |
+| Quest（C3） | 抽象引导：剧情演出、游戏指引、非运输类系统需求；委托接取后生成追踪实例 | `data.quests`（惰性 ensure） |
 
-关键原则：**任务追踪不复制状态**。委托或剧情一变化，`task.view` 重新推导即可；
-不要为追踪器写入 `active_task_id` 之类的存档字段，除非 Phase B 需要玩家手动追踪。
+关键原则：**任务追踪不复制业务状态**。委托或剧情一变化，`task.view` 重新推导即可；`data.quests`
+只保存 Quest 实例自身的 `quest_id / stage_index / counters / flags / contract_instance_id`，不保存
+Contract 的 payload / 目的地 / 结算。contract 来源的追踪实例只用于持久追踪与历史记录，`task.view`
+不会据此重复渲染委托任务。
 
 ## 3. Phase A：`task.view` 实现契约
 
@@ -53,9 +56,9 @@ task.view → {
 }
 
 Task = {
-  id: String,                 # "story" / "main:<instance_id>" / "contract:<instance_id>" / "main_offer:<id>"
-  kind: "story" | "main" | "contract" | "main_offer",
-  category_key: String,       # ui.task.kind.story / main / contract / main_offer
+  id: String,                 # "story" / "quest:<instance_id>" / "main:<instance_id>" / "contract:<instance_id>" / "main_offer:<id>"
+  kind: "story" | "quest" | "main" | "contract" | "main_offer",
+  category_key: String,       # ui.task.kind.story / quest / main / contract / main_offer
   title_key: String,          # 剧情用 stage 标题或 ui.task.kind.story；委托用 contract.name_key
   destination_id: String,     # 委托目的地（剧情为空）
   destination_name_key: String,
@@ -64,7 +67,8 @@ Task = {
   steps: [Step],
   current_step_index: int,    # -1 = 全部完成
   current_step: Step | null,
-  priority: int,              # 排序用：story 300 / main 200 / active 100
+  priority: int,              # 排序用：story 300 / quest 250 / main 200 / main_offer 150 / contract 100
+  tracking_priority: int,     # Quest 的 tracking.priority（同 priority 内排序，可选）
 }
 
 Step = {
@@ -108,7 +112,8 @@ Step = {
 
 ### 3.4 排序与 HUD
 
-- 排序：`priority` 降序，同优先级按 `id`；`active_task = tasks[0]`。
+- 排序：`priority` 降序（story 300 > quest 250 > main 200 > main_offer 150 > contract 100），
+  同优先级先按 Quest `tracking.priority` 降序、再按 `id`；`active_task = tasks[0]`。
 - HUD 任务条（`SNTaskTracker`）显示：类别 + 标题 + 当前步骤 + 进度；
   若还有其它任务，追加「另有 N 个任务」。
 - 剧情目标条存在时，HUD 仍显示剧情目标（剧情按优先级最高），任务条不重复；
@@ -125,20 +130,21 @@ Step = {
 ## 4. Phase B：正式 Quest 系统（C3 已实现）
 
 > 2026-10-22 拍板：Contract 与 Quest **不合并**；Quest 是抽象引导层，Contract 仍是运输请求。
-> 委托接取后由 `QuestService` **生成 Quest 实例写入 `data.quests`**（解耦联动），不复制 Contract 的
-> payload / 目的地 / 时限 / 结算字段。Story 暂时保留；后续剧情模式开发时由 Quest 自动上位替代
-> Story 的演出/目标功能。
+> 委托接取后由 `QuestService` **生成追踪实例写入 `data.quests`**（解耦联动，`source=contract`），不复制
+> Contract 的 payload / 目的地 / 时限 / 结算字段。Story 暂时保留；后续剧情模式开发时由 Quest 自动上位
+> 替代 Story 的演出/目标功能。
 >
 > **实现（2026-10-22）**：`quests` 2.0 + `QuestOps` / `QuestService` + `quest.start|complete|observe`
 > 命令；`data.quests = {schema_version:1, instances:[{instance_id, source:"content"|"contract",
 > quest_id, contract_instance_id, stage_index, counters, flags, status, started_at, completed_at}]}`
 > （惰性 ensure，旧档无块 = 无任务）。委托 `accept_offer` / 教程直接挂主线时 `track_contract`，
-> 完成时关闭实例；task.view 增加 `kind:"quest"`（priority 250，contract 来源实例不重复渲染）。
-> `auto_start` 仅存储/校验，开局自动接取与失败/放弃钩子留给后续切片。
+> 完成时关闭实例；task.view 增加 `kind:"quest"`（priority 250）；contract 来源实例不重复渲染，
+> 委托任务仍由 contracts 派生。`auto_start` 仅存储 / 校验，开局自动接取与失败/放弃钩子留给后续切片。
+> **奖励与 effects 暂缓**：C3 只做目标推进与追踪，不做发奖、`spawn_contract` 或 effects 执行。
 
 ### 4.1 内容类型
 
-`quests`（2.0，capacity `content.quests.v1`）定义抽象目标链，字段以实现为准：
+`quests`（2.0，capability `content.quests.v1`）定义抽象目标链，字段以实现为准：
 
 - `kind`：`story`（剧情演出）/ `guide`（游戏指引）/ `system`（非运输类系统需求）；
 - `stages`：顺序目标，复用剧情条件模型（事件 + counter + 阈值 + match），每 stage 有 `id` / `title_key` / `objectives`；
@@ -154,40 +160,40 @@ Step = {
 
 支持类型：`deliver_cargo` / `carry_passenger` / `visit_port` / `discover_port` /
 `buy_good` / `sell_good` / `install_module` / `earn_money` / `story_stage`。
-目标完成可发效果：`grant_money` / `grant_item` / `unlock_contract` / `start_quest` /
-`complete_quest` / `set_flag`。
+**奖励与 effects 暂缓**：C3 只推进目标与追踪，不实现 `grant_money` / `grant_item` / `unlock_contract` /
+`start_quest` / `complete_quest` / `set_flag` 等效果，也不实现 `spawn_contract` 奖励；奖励系统后续切片再定。
 
 ### 4.2 与现有系统的关系
 
-- **Contract 独立**：接受委托时生成 Quest 实例（`data.quests`，`kind:"contract"` 或引用型），
-  只存 `contract_instance_id` 作为追踪引用；payload/目的地/时限/结算仍由 `ContractOps` 负责；
-- **Story 暂时保留**：剧情阶段可以 `start_quest` / `complete_quest`，把教学目标交给 Quest 统一追踪；
-  后续剧情模式上线时由 Quest 取代 Story 的演出与目标能力；
-- **Task 追踪器**：`task.view` 增加 `kind:"quest"` 来源，并聚合 Quest 实例下的 Contract 任务项；
-  HUD / 任务页无需重写；
+- **Contract 独立**：接受委托时生成 Quest 追踪实例（`data.quests`，`source:"contract"`），
+  只存 `contract_instance_id` 作为追踪 / 历史引用；payload/目的地/时限/结算仍由 `ContractOps` 负责；
+- **Story 暂时保留**：剧情阶段仍由 Story 驱动，Quest 的目标条件可观察 `story_stage`；剧情与 Quest 的
+  相互替代（含 `start_quest` / `complete_quest` effects）留给后续剧情模式切片；
+- **Task 追踪器**：`task.view` 增加 `kind:"quest"` 任务项；contract 来源的追踪实例**不重复渲染**，
+  委托任务仍由 `contracts` 派生，HUD / 任务页无需重写；
 - **存档**：`data.quests` 惰性 ensure（旧存档无块 → 无任务），任务实例只存
   `quest_id / stage_index / counters / flags / contract_instance_id`，内容仍在 Core JSON。
 
-### 4.3 UI
+### 4.3 UI（后续切片，未在 C3 实现）
 
 - 任务日志页（可与委托页合并为「委托与任务」两个 tab）；
 - 任务发布点：酒馆告示板 / 港务告示牌（复用现有设施）；
-- HUD 追踪器支持点击切换追踪任务（Phase B 才引入 `tracked_quest_id` 会话状态）。
+- HUD 追踪器支持点击切换追踪任务（后续切片引入 `tracked_quest_id` 会话状态）。
 
 ### 4.4 落地顺序（建议）
 
-1. `task.view` + HUD / 委托页任务追踪（本切片）；
-2. 任务链内容类型 + `QuestService`（状态机、目标事件、奖励、存档）；
-3. 发布点 UI（酒馆 / 港务）与任务日志页；
-4. 把剧情目标迁移为 Quest（可选，保持剧情阶段状态机不变，只复用目标/奖励）；
-5. 联调、回归、静态文档与截图。
+1. ✅ `task.view` + HUD / 委托页任务追踪（4.6 Phase A）；
+2. ✅ 任务链内容类型 + `QuestService`（状态机、目标事件、存档；奖励暂缓）；
+3. 后续：发布点 UI（酒馆 / 港务）与任务日志页；
+4. 后续：奖励 / effects 系统与 `spawn_contract`（独立切片）；
+5. 后续：把剧情目标迁移为 Quest（可选，保持剧情阶段状态机不变）。
 
-### 4.5 验收口径（Phase B）
+### 4.5 验收口径（Phase B / C3）
 
-- 内容定义的任务链可被接取、追踪、完成并发放奖励；
+- 内容定义的 Quest 可被启动、按目标事件推进、完成并持久化（奖励与 effects 暂缓）；
 - 任务目标事件复用 `cmd:*` / `ui:*`，不需要为每个玩法复制计数逻辑；
 - 存档 round-trip 一致，旧存档无任务块时行为不变；
-- 同一任务不会重复接取 / 重复发奖；
+- 同一 Quest 不会重复启动；委托追踪实例不重复渲染（task.view 仍以 contracts 派生委托任务）；
 - 任务页与 HUD 的步骤进度和实际状态一致。
 
 ## 5. 风险

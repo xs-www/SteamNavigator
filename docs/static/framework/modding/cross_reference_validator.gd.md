@@ -9,11 +9,11 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CrossReferenceValidator` | L1 |
-| `PLANNED_REF_TYPES` | L31 |
-| `MODULE_CATEGORIES` | L41 |
-| `MODULE_CATEGORY_REQUIRED_FIELDS` | L42 |
-| `UTILITY_TAG_FIELDS` | L48 |
-| `validate(hub: RegistryHub) -> Dictionary` | L59 |
+| `PLANNED_REF_TYPES` | L36 |
+| `MODULE_CATEGORIES` | L46 |
+| `MODULE_CATEGORY_REQUIRED_FIELDS` | L47 |
+| `UTILITY_TAG_FIELDS` | L53 |
+| `validate(hub: RegistryHub) -> Dictionary` | L64 |
 
 以及 Phase B 世界/战役 9 类（world_profiles / regions / sites / route_templates /
 weather_profiles / factions / discoveries / start_profiles / map_configs）的引用完整性。
@@ -31,5 +31,10 @@ weather_profiles / factions / discoveries / start_profiles / map_configs）的�
   navigation_module / safety_module / passenger_cabin 按 `data.v2_category`
   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。
+- C3：`quests` 的 `prerequisites.quests_completed[]` 必须是已存在的 quest 定义；
+  objective 的 `event` 必须是 `cmd:*` / `ui:*` 形式（D6：不静默）。
+  **设计理由**：命令 / UI 事件名是字符串总线（`CommandBus` / Shell 观测），没有可枚举的
+  运行时注册表交给内容校验器，因此这里只做格式硬校验；未知但格式合法的事件名属于
+  「内容作者拼写」问题，无法在不引入注册表快照的前提下可靠判定，故不误报。
 
 模块索引：[framework/modding](./README.md)

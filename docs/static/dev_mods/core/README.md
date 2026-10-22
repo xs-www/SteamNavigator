@@ -379,7 +379,7 @@
 
 ## 模块契约
 
-- `manifest.json` 声明 required=true，内容文件 19 个，本地化 zh_CN/en。
+- `manifest.json` 声明 required=true，内容文件 20 个，本地化 zh_CN/en。
 - tier≥2 模块带 `craft_cost`；所有模块可带 `materials`/`craft_time_hours` 供 CraftOps 读取。
 - 两个造船厂港口（iron_harbor/free_town）市场限量出售精密齿轮，保证大型船材料在当局地图可获得。
 - 框架不得引用这里的具体 ID；所有引用由 Schema/交叉校验保证。
