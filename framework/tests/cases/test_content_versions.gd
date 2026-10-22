@@ -1,9 +1,18 @@
 extends TestCase
-## Phase A: content schema versions are declared per content type.
+## @static-doc
+## 作用：按内容类型声明 Schema 版本（Phase A）与 Phase B 世界/战役家族提升 active 的
+## 回归测试：版本表、编译器按类型校验、Patch 再校验、2.0 内容真实加载与注册。
 ##
-## The runtime still loads Content Schema 1.0 only; these tests pin the new
-## contract (per-type version table, per-type compiler check and patch
-## re-validation) without activating any Schema 2.0 draft type.
+## ## 契约与约束
+## - 每个 runtime 类型都必须有非空 schema_version；Phase B 的 9 类
+##   （world_profiles / regions / sites / route_templates / weather_profiles /
+##   factions / discoveries / start_profiles / map_configs）为 2.0，其余运行时类型与
+##   patches 仍为 1.0。
+## - `content_types.json.draft_schemas` 只剩 `weapons`，草案不得进入 `ContentTypes`。
+## - 1.0 内容的 envelope 仍走 1.0 校验；goods 声明 2.0 必须报 `unsupported_schema`。
+## - 一个 2.0 `world_profiles` 内容模组必须通过 ContentCompiler、进入注册表，
+##   且不产生 fatal / degraded 启动状态。
+## @end-static-doc
 
 const TEMP_MOD_ID := "cvmod_ok"
 const TEMP_V2_MOD_ID := "cvmod_v2"
@@ -57,6 +66,45 @@ func _write_goods_mod(root: String, mod_id: String, schema_version: String) -> v
 	_write_file(mod_root + "/localization/zh_CN.json", JsonUtils.canonical_stringify(localization, "  "))
 
 
+func _write_world_profile_mod(root: String, mod_id: String) -> void:
+	var mod_root := root + "/" + mod_id
+	DirAccess.make_dir_recursive_absolute(mod_root + "/content")
+	DirAccess.make_dir_recursive_absolute(mod_root + "/localization")
+	var manifest := {
+		"$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+		"id": mod_id,
+		"name": mod_id,
+		"version": "1.0.0",
+		"api_version": "1.0",
+		"type": "content",
+		"load_priority": 10,
+		"required": false,
+		"dependencies": [{"id": "core", "version": ">=1.0.0 <2.0.0"}],
+		"content": ["content/world_profiles.json"],
+		"localization": ["localization/zh_CN.json"],
+	}
+	_write_file(mod_root + "/manifest.json", JsonUtils.canonical_stringify(manifest, "  "))
+	var world_profile := {
+		"schema_version": "2.0",
+		"content_type": "world_profiles",
+		"definitions": [{
+			"id": "%s:world_profile/test_world" % mod_id,
+			"name_key": "world.%s.test_world.name" % mod_id,
+			"enabled": true,
+			"data": {
+				"region_count": 2,
+				"sites_per_region": 3,
+				"port_count": 2,
+				"start_region_tags": ["region.start"],
+				"weather_profile": "core:weather_profile/temperate",
+			},
+		}],
+	}
+	_write_file(mod_root + "/content/world_profiles.json", JsonUtils.canonical_stringify(world_profile, "  "))
+	var localization := {"world.%s.test_world.name" % mod_id: "Test World"}
+	_write_file(mod_root + "/localization/zh_CN.json", JsonUtils.canonical_stringify(localization, "  "))
+
+
 func _error_codes(report: StartupReport) -> PackedStringArray:
 	var codes := PackedStringArray()
 	for error in report.errors:
@@ -64,12 +112,35 @@ func _error_codes(report: StartupReport) -> PackedStringArray:
 	return codes
 
 
-func test_every_runtime_type_declares_content_schema_1_0() -> void:
+func test_every_runtime_type_declares_its_content_schema_version() -> void:
 	var registry_types: Array[StringName] = ContentTypes.registry_types()
 	assert_eq(ContentTypes.SCHEMA_VERSIONS.size(), registry_types.size(), "every runtime type has a schema version")
 	for content_type in registry_types:
-		assert_eq(ContentTypes.schema_version(content_type), "1.0", "%s declares content schema 1.0" % content_type)
-	assert_eq(ContentTypes.schema_version(ContentTypes.PATCH), "1.0", "patch type declares content schema 1.0")
+		assert_false(ContentTypes.schema_version(content_type).is_empty(), "%s declares a content schema version" % content_type)
+	for content_type in [
+		ContentTypes.WORLD_PROFILE, ContentTypes.REGION, ContentTypes.SITE,
+		ContentTypes.ROUTE_TEMPLATE, ContentTypes.WEATHER_PROFILE, ContentTypes.FACTION,
+		ContentTypes.DISCOVERY, ContentTypes.START_PROFILE, ContentTypes.MAP_CONFIG,
+	]:
+		assert_eq(ContentTypes.schema_version(content_type), "2.0", "%s is a Phase B Schema 2.0 type" % content_type)
+	assert_eq(ContentTypes.schema_version(ContentTypes.GOOD), "1.0", "goods stays on content schema 1.0")
+	assert_eq(ContentTypes.schema_version(ContentTypes.PATCH), "1.0", "patch type stays on content schema 1.0")
+
+
+func test_phase_b_world_family_is_active_with_2_0_schemas() -> void:
+	var parsed := JsonUtils.parse_file("res://content_types.json")
+	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
+	var manifest: Dictionary = parsed["value"]
+	var active: Dictionary = {}
+	for entry in manifest.get("types", []):
+		active[String(entry.get("key", ""))] = entry
+	for key in ["world_profiles", "regions", "sites", "route_templates", "weather_profiles", "factions", "discoveries", "start_profiles", "map_configs"]:
+		assert_true(active.has(key), "%s is an active content type" % key)
+		var entry: Dictionary = active[key]
+		assert_eq(String(entry.get("schema_version", "")), "2.0", "%s declares schema 2.0" % key)
+		assert_eq(ContentTypes.schema_version(StringName(key)), "2.0", "%s runtime version" % key)
+		assert_true(FileAccess.file_exists("res://" + String(entry.get("schema", ""))), "%s schema exists" % key)
+		assert_eq("res://" + String(entry.get("schema", "")), ContentTypes.schema_path(StringName(key)), "%s schema path matches" % key)
 
 
 func test_unknown_type_has_no_declared_version() -> void:
@@ -82,11 +153,26 @@ func test_v2_draft_types_are_not_runtime_types() -> void:
 	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
 	var manifest: Dictionary = parsed["value"]
 	var drafts: Dictionary = manifest.get("draft_schemas", {})
-	assert_true(drafts.size() >= 8, "Schema 2.0 draft types are declared in the manifest")
+	assert_eq(drafts.size(), 1, "only weapons remains a Schema 2.0 draft type")
+	assert_true(drafts.has("weapons"), "weapons is the remaining draft type")
 	for draft_type in drafts.keys():
 		var content_type := StringName(String(draft_type))
 		assert_false(ContentTypes.is_known(content_type), "%s is not a runtime content type" % draft_type)
 		assert_eq(ContentTypes.schema_version(content_type), "", "%s has no runtime schema version" % draft_type)
+
+
+func test_promoted_world_profile_content_compiles_and_registers() -> void:
+	var root := _temp_root("v2_ok")
+	_write_world_profile_mod(root, "cvmod_world")
+	var boot := bootstrap_core({"scan_roots": PackedStringArray(["res://dev_mods", root])})
+	var report: StartupReport = boot["report"]
+	assert_true(not report.has_fatal(), "2.0 world profile load has no fatal error: %s" % report.format_text())
+	assert_eq(report.status_name(), "ok", "a promoted Schema 2.0 type loads through the normal compiler: %s" % report.format_text())
+	var context: AppContext = boot["context"]
+	assert_not_null(
+		context.registries.get_by_id(ContentTypes.WORLD_PROFILE, "cvmod_world:world_profile/test_world"),
+		"2.0 world profile definition is registered"
+	)
 
 
 func test_goods_envelope_with_1_0_still_compiles() -> void:

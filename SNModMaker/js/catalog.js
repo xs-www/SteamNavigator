@@ -617,6 +617,108 @@
       repeatable: false,
       source_site_kinds: ['ruin'],
     }),
+    map_configs: () => ({
+      archetypes: [
+        'core:port_archetype/iron_harbor',
+        'core:port_archetype/spice_port',
+        'core:port_archetype/free_town',
+        'core:port_archetype/fishing_village',
+        'core:port_archetype/glass_port',
+      ],
+      port_name_keys: [
+        'port_name.core.iron_harbor',
+        'port_name.core.spice_port',
+        'port_name.core.free_town',
+        'port_name.core.fishing_village',
+        'port_name.core.glass_port',
+        'port_name.core.mist_cove',
+      ],
+      start_archetype_tags: ["port.hub"],
+      required_facility_tags: ["port.shipyard","port.intel"],
+      required_facility_max_edges: 2,
+      npc_count_range: [2,3],
+      npc_cargo_range: [8,24],
+      supply_prices: {"coal":4,"water":2,"repair_per_point":6},
+      loan: {"limit":400,"interest_rate":0.1,"term_hours":96},
+      intel_cost: 40,
+      trade_margin: 0.9,
+      player_trade_impact: 0.35,
+      default_starting_build: 'core:starting_build/steady',
+      twin_world_size: 160,
+      exploration: {
+      "rumor_clue_chance": 0.65,
+      "fog_port_reveal_ratio": 0.05,
+      "fog_vision_ratio": 0.05,
+      "intel_clue_cost": 40,
+      "max_active_clues": 4,
+      "level_weights": {
+        "rumor": [
+          0.55,
+          0.35,
+          0.1,
+          0
+        ],
+        "intel": [
+          0,
+          0.15,
+          0.45,
+          0.4
+        ]
+      },
+      "credibility_range": {
+        "rumor": [
+          0.25,
+          0.55
+        ],
+        "intel": [
+          0.6,
+          0.95
+        ],
+        "wait": [
+          0.4,
+          0.7
+        ],
+        "contract": [
+          0.55,
+          0.85
+        ]
+      },
+      "distance_error_ratio": 0.35,
+      "search_zone_radius": 14,
+      "search_zone_noise": 12,
+      "discovery_chance_base": 0.2,
+      "discovery_chance_per_credibility": 0.7,
+      "risk_base": 0.08,
+      "risk_per_unreliability": 0.12,
+      "drift_durability_loss": 8,
+      "drift_extra_coal": 4,
+      "drift_extra_water": 4,
+      "drift_hours": 6,
+      "alert_threshold": 0.5,
+      "alert_progress": 0.5,
+      "turnback_extra_ratio": 0.25,
+      "investigation_cost": 20,
+      "investigation_hours": 6,
+      "investigation_success_chance": 0.75,
+      "goods_clue_expiry_hours": {
+        "rumor": 24,
+        "intel": 72,
+        "wait": 48,
+        "contract": 72
+      },
+      "goods_clue_price_error_ratio": 0.15,
+      "goods_clue_source_weights": {
+        "rumor": 0,
+        "intel": 0,
+        "wait": 1,
+        "contract": 0
+      },
+      "wait_clue_hours_block": 6,
+      "wait_clue_chance_per_block": 0.35,
+      "wait_clue_max_chance": 0.85,
+      "contract_clue_chance": 0.5
+      },
+    }),
     start_profiles: () => ({
       world_profile: 'core:world_profile/default_world',
       starting_build: 'core:starting_build/steady',

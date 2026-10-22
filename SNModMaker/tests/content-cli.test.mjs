@@ -377,9 +377,9 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 25, '16 runtime types + 9 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 16, 'activeTypes counts runtime Content Schema 1.0 types');
-  assert.equal(json.draftTypes, 9, 'draftTypes counts Content Schema 2.0 draft types');
+  assert.equal(json.types.length, 26, '25 runtime types + 1 Schema 2.0 draft type are editable');
+  assert.equal(json.activeTypes, 25, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.draftTypes, 1, 'draftTypes counts the remaining Schema 2.0 draft type');
   const keys = json.types.map((entry) => entry.key);
   for (const key of ['goods', 'materials', 'hulls', 'boilers', 'events', 'contracts', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
@@ -400,15 +400,19 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(patches.schema, 'patch.schema.json');
 
   const drafts = json.types.filter((entry) => entry.draft);
-  assert.equal(drafts.length, 9, 'all 9 draft types are listed with draft:true');
-  const world = drafts.find((entry) => entry.key === 'world_profiles');
-  assert.ok(world, 'world_profiles must be listed');
+  assert.equal(drafts.length, 1, 'only the weapons draft is listed with draft:true');
+  const world = json.types.find((entry) => entry.key === 'world_profiles');
+  assert.ok(world, 'world_profiles must be listed as an active type');
   assert.equal(world.singular, 'world_profile');
   assert.equal(world.keyPrefix, 'world');
   assert.equal(world.file, 'content/world_profiles.json');
   assert.equal(world.schema, 'v2/world_profile.schema.json');
   assert.equal(world.schema_version, '2.0');
-  assert.equal(world.capability, 'content.world.v1');
+  assert.ok(!world.draft, 'Phase B promoted world_profiles to a runtime type');
+  const mapConfig = json.types.find((entry) => entry.key === 'map_configs');
+  assert.ok(mapConfig, 'map_configs must be listed as an active type');
+  assert.equal(mapConfig.schema, 'v2/map_config.schema.json');
+  assert.equal(mapConfig.schema_version, '2.0');
   const weapons = drafts.find((entry) => entry.key === 'weapons');
   assert.ok(weapons, 'weapons must be listed as a draft type');
   assert.equal(weapons.singular, 'weapon');
@@ -496,7 +500,7 @@ test('describe patches --json reports the patch target/operations skeleton and n
   assert.deepEqual(json.skeleton.operations[0], { op: 'replace', path: '/data/purchase_price', value: 380 });
 });
 
-test('describe world_profiles --json reports the Schema 2.0 draft contract', (t) => {
+test('describe world_profiles --json reports the Schema 2.0 runtime contract', (t) => {
   const result = jsonRun(['describe', 'world_profiles']);
   assertStatus(result, 0, 'describe world_profiles');
   const json = mustJson(result, 'describe world_profiles');
@@ -507,9 +511,8 @@ test('describe world_profiles --json reports the Schema 2.0 draft contract', (t)
   assert.equal(json.type.keyPrefix, 'world');
   assert.equal(json.type.file, 'content/world_profiles.json');
   assert.equal(json.type.schema, 'v2/world_profile.schema.json');
-  assert.equal(json.type.draft, true, 'draft types must be marked');
+  assert.ok(!json.type.draft, 'Phase B promoted world_profiles to a runtime type');
   assert.equal(json.type.schema_version, '2.0');
-  assert.equal(json.type.capability, 'content.world.v1');
   assert.equal(json.id.singular, 'world_profile');
   assert.equal(json.id.example, 'my_mod:world_profile/tea');
   assert.equal(json.keys.base, 'world.my_mod.tea');
@@ -592,7 +595,7 @@ test('describe weapons --json reports the Schema 2.0 weapon contract', (t) => {
   assert.ok(json.suggestions.tags.includes('weapon.direct'), 'weapon tag suggestions are exposed');
 });
 
-test('add --type world_profiles writes a Schema 2.0 content file and warns about draft content', (t) => {
+test('add --type world_profiles writes a Schema 2.0 content file as a runtime type', (t) => {
   const mod = createMod(t);
   const result = jsonRun([
     'add', '--mod', mod, '--type', 'world_profiles', '--id', 'first_world',
@@ -622,17 +625,20 @@ test('add --type world_profiles writes a Schema 2.0 content file and warns about
   assert.equal(goodsFileOf(mod).payload.schema_version, '1.0');
 
   const warningCodes = (json.issues.list || []).filter((issue) => issue.severity === 'warning').map((issue) => issue.code);
-  assert.ok(warningCodes.includes('draft_content'), `draft content must warn: ${JSON.stringify(json.issues.list)}`);
-  assert.ok(warningCodes.includes('capability_undeclared'), `undeclared capability must warn: ${JSON.stringify(json.issues.list)}`);
+  assert.ok(!warningCodes.includes('draft_content'), `a promoted type must not warn as draft: ${JSON.stringify(json.issues.list)}`);
+  assert.ok(
+    warningCodes.includes('ref_core_unknown'),
+    `the starter references Core world content that lands in B4: ${JSON.stringify(json.issues.list)}`
+  );
 
   const validateResult = jsonRun(['validate', '--mod', mod]);
-  assertStatus(validateResult, 0, 'validate draft mod');
-  const validateJson = mustJson(validateResult, 'validate draft mod');
-  assert.equal(validateJson.issues.errors, 0, `draft content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
-  assert.ok(validateJson.issues.list.some((issue) => issue.code === 'draft_content'));
+  assertStatus(validateResult, 0, 'validate world mod');
+  const validateJson = mustJson(validateResult, 'validate world mod');
+  assert.equal(validateJson.issues.errors, 0, `Schema 2.0 content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
+  assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'draft_content'));
 
   const strictResult = jsonRun(['validate', '--mod', mod, '--strict']);
-  assertStatus(strictResult, 1, 'draft warnings make --strict fail');
+  assertStatus(strictResult, 1, 'the pending Core reference warning makes --strict fail until B4 lands');
 });
 
 test('add --type weapons writes a Schema 2.0 content file that validates cleanly', (t) => {
@@ -944,42 +950,18 @@ test('new --draft weapons creates a pure Schema 2.0 draft project', (t) => {
   );
 });
 
-test('new --draft accepts multiple draft types and dedupes capabilities', (t) => {
+test('new --draft rejects promoted runtime types and only offers the remaining draft', (t) => {
   const root = tempRoot(t);
   const mod = path.join(root, 'world_mod');
   const result = jsonRun([
     'new', '--mod', mod, '--id', 'world_mod', '--name', 'World Mod',
-    '--draft', 'world_profiles', '--draft', 'regions',
+    '--draft', 'world_profiles',
   ]);
-  const json = mustJson(result, 'new --draft world_profiles --draft regions');
-  assertStatus(result, 0, 'new multi draft');
-  assert.equal(json.ok, true);
-  assert.deepEqual(
-    manifestOf(mod).content,
-    ['content/world_profiles.json', 'content/regions.json'],
-    'each --draft gets its own content file'
-  );
-  assert.deepEqual(
-    manifestOf(mod).capabilities,
-    ['content.world.v1'],
-    'types sharing a capability declare it once'
-  );
-  for (const typeKey of ['world_profiles', 'regions']) {
-    const file = contentFileOfType(mod, typeKey);
-    assert.equal(file.payload.schema_version, '2.0', `${typeKey} content file is 2.0`);
-    assert.equal(file.payload.content_type, typeKey);
-    assert.equal(file.payload.definitions.length, 1, `${typeKey} has one starter definition`);
-  }
-  assert.equal(json.stats.contentFiles, 2);
-  assert.equal(json.stats.definitions, 2);
-  assert.equal(json.issues.errors, 0, JSON.stringify(json.issues.list));
-  assert.deepEqual(json.issues.list.map((issue) => issue.code), ['draft_content', 'draft_content']);
-
-  const validateResult = jsonRun(['validate', '--mod', mod]);
-  assertStatus(validateResult, 0, 'validate multi draft project');
-  const validateJson = mustJson(validateResult, 'validate multi draft project');
-  assert.equal(validateJson.issues.errors, 0);
-  assert.ok(!validateJson.issues.list.some((issue) => issue.code === 'capability_undeclared'));
+  const json = assertUsageError(result, 'new --draft world_profiles');
+  assert.equal(json.command, 'new');
+  assert.match(String(json.error.message), /未知 Schema 2\.0 草案类型/, `promoted types are no longer drafts: ${json.error.message}`);
+  assert.ok(String(json.error.message).includes('weapons'), 'the usage error lists weapons as the remaining draft');
+  assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
 });
 
 test('new --draft rejects unknown draft types with a usage error listing the available drafts', (t) => {

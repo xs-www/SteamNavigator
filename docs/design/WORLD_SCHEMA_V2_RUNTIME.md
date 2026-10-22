@@ -1,6 +1,6 @@
 # 世界与战役内容 Schema 2.0 实现契约（Phase B）
 
-> 状态：Draft 2（2026-10-22，B0 收尾后刷新）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
+> 状态：Draft 2（2026-10-22，B0 收尾后刷新；B1 已落地）。本文件是 **Content Schema 2.0 迁移 Phase B 的执行契约**，不是已定稿 specs；
 > 总方案见 [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md) §4 Phase B，实体契约见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)；探索规则见 `EXPLORATION_SYSTEM.md`，教程剧情见
 > [STORY_TUTORIAL.md](STORY_TUTORIAL.md)。
@@ -364,7 +364,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | 步 | 内容 | 依赖 | 回滚 |
 | --- | --- | --- | --- |
 | B0 | **✅ 已完成（2026-10-22）**：探索 4.1（及 4.2–4.5）与 Phase A 都已在 `main`，无需 rebase；刷新本契约到 Draft 2（31 键 exploration、`twin_world_size`/`story`、15 处读取）；重新同步 SNModMaker schema bundle。基线证据：Godot **419/419**、`gen_content_types --check`、`gen_static_docs --check`、SDK core 校验、Node **50/50** 全绿 | 探索 4.1 + Phase A | 无（准备） |
-| B1 | `content_types.json` 9 类 active、schema 文件（新增 map_config + 微调）、生成物、编辑器目录 | B0、Phase A | revert commit（类型回到草案） |
+| B1 | **✅ 已完成（2026-10-22）**：`content_types.json` 9 类 active（8 类草案提升 + 新增 `map_configs`）、`schemas/v2/map_config.schema.json`、`world_profiles.edge_density`、`start_profiles.map_config`、生成物（`ContentTypes` 25 类 / 编辑器 26 项 / schema bundle 29 个）、框架与编辑器测试同步改写。证据：Godot 全量、Node **50/50**、CLI **57/57**、生成器 `--check` 全绿 | B0、Phase A | revert commit（类型回到草案） |
 | B2 | 注册表自动生效；cross-ref 9 个 `_check_*`；completeness（core 落地后启用）；capability | B1 | revert 校验器改动 |
 | B3 | `CampaignFactory` + `run.start start_profile` + `campaign.view` + resolver 改造（15 处生产读取 + 2 处测试） | B1、B2、B4（core 内容可并行） | 保留入口但默认不走 v2；revert 运行时 |
 | B4 | core 9 个 v2 内容文件 + 本地化 + manifest capabilities | B1 | 回退内容文件（旧内容仍在） |
@@ -376,7 +376,12 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 `framework/state/game_state.gd`、`framework/services/rng_service.gd`；B4 只动
 `dev_mods/core/**`；B6 只动 `SNModMaker/**`、`framework/tests/**`、`docs/**`。
 
-## 12. 待拍板决策
+## 12. 决策
+
+> **已拍板（2026-10-22，全部按建议值）**：D2 双读一个 minor；D3 `campaign.setup.content_versions`；D7 新增
+> `map_configs`；D8 首个切片 ≤5 港；D9 planned 引用先 warning 后升级 error；D10 保留 1.0 `starting_builds`；
+> D11 复用 `run.start` 的 `start_profile`；D12 只交付 `campaign.view` + 最小展示；D13 `story` 搬入
+> `map_configs.story`。
 
 | 编号 | 决策 | 建议 |
 | --- | --- | --- |

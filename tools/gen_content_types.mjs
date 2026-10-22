@@ -284,6 +284,7 @@ function renderJs(data) {
   lines.push('');
   lines.push('  const TYPES = [');
   for (const type of data.types) {
+    const schemaKey = String(type.schema).replace(/^schemas[\\/]/, '').replace(/\\/g, '/');
     lines.push('    {');
     lines.push(`      key: ${JSON.stringify(type.key)},`);
     lines.push(`      singular: ${JSON.stringify(type.singular)},`);
@@ -294,7 +295,7 @@ function renderJs(data) {
     lines.push(`      color: ${JSON.stringify(type.color)},`);
     lines.push(`      group: ${JSON.stringify(groupLabel.get(type.group))},`);
     lines.push(`      file: ${JSON.stringify(type.default_file)},`);
-    lines.push(`      schema: ${JSON.stringify(path.posix.basename(type.schema))},`);
+    lines.push(`      schema: ${JSON.stringify(schemaKey)},`);
     lines.push(`      schemaVersion: ${JSON.stringify(type.schema_version)},`);
     lines.push(`      summary: ${JSON.stringify(type.summary_zh)},`);
     if (type.kind === 'patch') lines.push('      special: true,');

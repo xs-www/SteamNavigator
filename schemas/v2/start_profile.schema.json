@@ -42,6 +42,9 @@
         "world_profile": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },
+        "map_config": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
         "starting_build": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },

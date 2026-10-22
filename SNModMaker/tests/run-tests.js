@@ -79,13 +79,14 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 28, `expected 18 top-level + 10 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 28, `expected 28 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 29, `expected 18 top-level + 11 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 29, `expected 29 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/common.schema.json'], 'v2/common is needed by the draft schemas');
     assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
+    assert.ok(globalThis.SN_SCHEMAS['v2/map_config.schema.json'], 'v2/map_config is the Phase B scenario config schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/weapon.schema.json'], 'v2/weapon is the weapons draft schema');
   });
 
@@ -138,13 +139,24 @@ function warningsOf(result) {
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
     assert.deepEqual(warningsOf(validation).map((issue) => issue.code), ['draft_content'], 'capability_undeclared must not fire');
 
-    // Several draft types at once; capabilities shared by two types are deduped.
-    const multi = Store.createProject({
-      id: 'world_mod', name: 'World Mod', template: null, drafts: ['world_profiles', 'regions'],
-    });
-    assert.deepEqual(multi.contentFiles.map((file) => file.content_type), ['world_profiles', 'regions']);
-    assert.deepEqual(multi.manifest.capabilities, ['content.world.v1']);
-    assert.equal(Validate.validateProject(multi).counts.error, 0);
+    // Phase B promoted the world/campaign family out of the draft API; only
+    // weapons can still be created through `drafts`, and promoted types are
+    // editable through the normal runtime-type path.
+    const promoted = Store.createProject({ id: 'world_mod', name: 'World Mod', template: 'goods' });
+    Store.addDefinition(promoted, 'world_profiles', {});
+    Store.addDefinition(promoted, 'regions', {});
+    assert.deepEqual(promoted.contentFiles.map((file) => file.content_type), ['goods', 'world_profiles', 'regions']);
+    assert.deepEqual(
+      promoted.contentFiles.filter((file) => file.content_type !== 'goods').map((file) => file.schema_version),
+      ['2.0', '2.0'],
+      'promoted types write Schema 2.0 content files'
+    );
+    assert.deepEqual(promoted.manifest.capabilities, [], 'active types do not auto-declare capabilities yet');
+    assert.equal(Validate.validateProject(promoted).counts.error, 0);
+    assert.throws(
+      () => Store.createProject({ id: 'promoted_draft', name: 'Promoted', template: null, drafts: ['world_profiles'] }),
+      /未知 Schema 2\.0 草案类型/
+    );
 
     // The legacy template path is untouched (goods starter, 1.0, no capabilities).
     const legacy = Store.createProject({ id: 'legacy_mod', name: 'Legacy Mod', template: 'goods' });
@@ -285,12 +297,8 @@ function warningsOf(result) {
   });
 
   await test('draft types are generated with schema 2.0 and registered in the catalog', () => {
-    assert.equal(Types.DRAFT_TYPES.length, 9, 'content_types.json must expose 9 Schema 2.0 draft types');
-    const keys = Types.DRAFT_TYPES.map((info) => info.key).sort();
-    assert.deepEqual(keys, [
-      'discoveries', 'factions', 'regions', 'route_templates',
-      'sites', 'start_profiles', 'weapons', 'weather_profiles', 'world_profiles',
-    ]);
+    assert.equal(Types.DRAFT_TYPES.length, 1, 'only weapons remains a Schema 2.0 draft type');
+    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['weapons']);
     for (const info of Types.DRAFT_TYPES) {
       assert.equal(info.draft, true, `${info.key} must be marked draft`);
       assert.equal(info.schemaVersion, '2.0', `${info.key} must declare schema 2.0`);
@@ -308,12 +316,17 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 16, 'content_types.json keeps 16 runtime types (15 definitions + patches)');
+    assert.equal(Types.TYPES.length, 25, 'content_types.json exposes 25 runtime types (24 definitions + patches)');
+    const promoted = new Set([
+      'world_profiles', 'regions', 'sites', 'route_templates', 'weather_profiles',
+      'factions', 'discoveries', 'start_profiles', 'map_configs',
+    ]);
     for (const info of Types.TYPES) {
-      assert.equal(info.schemaVersion, '1.0', `${info.key} must declare schemaVersion 1.0`);
-      assert.equal(Catalog.schemaVersionFor(info.key), '1.0', `${info.key} catalog version`);
-      assert.equal(Validate.schemaVersionFor(info.key), '1.0', `${info.key} validator version by type`);
-      assert.equal(Validate.schemaVersionFor({ content_type: info.key }), '1.0', `${info.key} version by file`);
+      const expected = promoted.has(info.key) ? '2.0' : '1.0';
+      assert.equal(info.schemaVersion, expected, `${info.key} must declare schemaVersion ${expected}`);
+      assert.equal(Catalog.schemaVersionFor(info.key), expected, `${info.key} catalog version`);
+      assert.equal(Validate.schemaVersionFor(info.key), expected, `${info.key} validator version by type`);
+      assert.equal(Validate.schemaVersionFor({ content_type: info.key }), expected, `${info.key} version by file`);
     }
     // An explicit file version still wins so a wrong version is reported by validation.
     assert.equal(Validate.schemaVersionFor({ content_type: 'goods', schema_version: '2.0' }), '2.0');
@@ -568,11 +581,11 @@ function warningsOf(result) {
 
   await test('draft files require schema 2.0 and 1.0 types keep 1.0', () => {
     const project = freshProject();
-    Store.addDefinition(project, 'world_profiles', {});
+    Store.addDefinition(project, 'weapons', {});
     let result = Validate.validateProject(project);
     assert.equal(errorsOf(result).filter((issue) => issue.code === 'schema_version_mismatch').length, 0);
 
-    const draftFile = project.contentFiles.find((file) => file.content_type === 'world_profiles');
+    const draftFile = project.contentFiles.find((file) => file.content_type === 'weapons');
     draftFile.schema_version = '1.0';
     result = Validate.validateProject(project);
     assert.ok(
@@ -603,25 +616,19 @@ function warningsOf(result) {
 
   await test('draft warnings: one draft_content per file and capability_undeclared per capability', () => {
     const project = freshProject();
-    Store.addDefinition(project, 'world_profiles', {});
-    Store.addDefinition(project, 'regions', {});
+    Store.addDefinition(project, 'weapons', {});
     let result = Validate.validateProject(project);
 
     const draftWarnings = warningsOf(result).filter((issue) => issue.code === 'draft_content');
-    assert.equal(draftWarnings.length, 2, 'each draft content file gets exactly one draft_content warning');
-    assert.deepEqual(
-      draftWarnings.map((issue) => issue.view && issue.view.file).sort(),
-      ['content/regions.json', 'content/world_profiles.json']
-    );
-    for (const issue of draftWarnings) {
-      assert.match(issue.message, /Content Schema 1\.0/);
-    }
+    assert.equal(draftWarnings.length, 1, 'the weapons file gets exactly one draft_content warning');
+    assert.equal(draftWarnings[0].view && draftWarnings[0].view.file, 'content/weapons.json');
+    assert.match(draftWarnings[0].message, /Content Schema 1\.0/);
 
     const capabilityWarnings = warningsOf(result).filter((issue) => issue.code === 'capability_undeclared');
-    assert.equal(capabilityWarnings.length, 1, 'types sharing a capability warn once');
-    assert.ok(capabilityWarnings[0].message.includes('content.world.v1'));
+    assert.equal(capabilityWarnings.length, 1, 'the weapons capability warns once');
+    assert.ok(capabilityWarnings[0].message.includes('content.combat.v1'));
 
-    project.manifest.capabilities = ['content.world.v1'];
+    project.manifest.capabilities = ['content.combat.v1'];
     result = Validate.validateProject(project);
     assert.equal(
       warningsOf(result).filter((issue) => issue.code === 'capability_undeclared').length,
@@ -630,8 +637,18 @@ function warningsOf(result) {
     );
     assert.equal(
       warningsOf(result).filter((issue) => issue.code === 'draft_content').length,
-      2,
+      1,
       'draft_content remains because the runtime still does not load draft content'
+    );
+
+    // Phase B promoted types are runtime types: they must not warn as drafts.
+    const promoted = freshProject();
+    Store.addDefinition(promoted, 'world_profiles', {});
+    const promotedWarnings = warningsOf(Validate.validateProject(promoted));
+    assert.equal(
+      promotedWarnings.filter((issue) => issue.code === 'draft_content').length,
+      0,
+      'a promoted Schema 2.0 type is not draft content'
     );
   });
 
@@ -652,7 +669,7 @@ function warningsOf(result) {
     );
   });
 
-  await test('export and re-import preserves draft schema 2.0 alongside 1.0 content', () => {
+  await test('export and re-import preserves schema 2.0 alongside 1.0 content', () => {
     const project = freshProject();
     Store.addDefinition(project, 'start_profiles', {});
     const files = Store.toExportFiles(project);
@@ -667,7 +684,7 @@ function warningsOf(result) {
     assert.equal(back.project.contentFiles.find((file) => file.content_type === 'goods').schema_version, '1.0');
     const validation = Validate.validateProject(back.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
-    assert.ok(warningsOf(validation).some((issue) => issue.code === 'draft_content'));
+    assert.ok(!warningsOf(validation).some((issue) => issue.code === 'draft_content'), 'promoted types are not draft content');
     assert.ok(!warningsOf(validation).some((issue) => issue.code === 'schema_version_mismatch'));
   });
 
@@ -1011,7 +1028,7 @@ function warningsOf(result) {
       const source = manifest.types[index];
       const type = generated.TYPES[index];
       assert.equal(type.singular, source.singular, `${source.key} singular`);
-      assert.equal(type.schema, path.posix.basename(source.schema), `${source.key} schema`);
+      assert.equal(type.schema, String(source.schema).replace(/^schemas\//, ''), `${source.key} schema`);
       assert.equal(type.keyPrefix, source.key_prefix, `${source.key} key prefix`);
       assert.equal(type.group, groupLabel.get(source.group), `${source.key} group label`);
       assert.equal(type.file, source.default_file, `${source.key} default file`);

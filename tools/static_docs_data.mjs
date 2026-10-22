@@ -1503,7 +1503,7 @@ export const FILE_DOCS = {
       "单一真源是 `content_types.json`；生成物 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js` 禁止手改。",
       "生成前校验格式版本、key/singular/schema 唯一、分组与 v2 模块分类引用、Schema 文件存在、Patch 数量、planned 不覆盖 active、draft_schemas 只指向 planned 类型。",
       "`draft_types` 必须与 `draft_schemas` 键集合完全一致，且不得自带 schema 路径；生成器校验 singular/abbr/color/default_file 唯一、group 已声明、`schema_version` 等于对应 Schema 的 const、capability 等于该类型所属 planned system 的 capability。",
-      "`framework/modding/content_types.gd` 只输出可加载的 active 类型；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`，运行时类型清单不变。",
+      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（含 Phase B 的 9 类 2.0 类型）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`。",
       "`--check` 不写文件，生成物缺失或过期时以退出码 1 结束，供 CI/发布门禁使用。"
     ]
   },
@@ -1561,9 +1561,9 @@ export const FILE_DOCS = {
     role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板（含「舰载武器包」5 件武器预设）；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`）。",
     dependencies: ["JSON Schema（结构约束）", "content-types.js（由 content_types.json 生成）"],
     contracts: [
-      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型与 Schema 2.0 草案类型；`schemaVersionFor()` 返回类型期望版本（草案 2.0，其余 1.0）。",
-      "`TYPES` 仍只含可加载的 Content Schema 1.0 类型，`DRAFT_TYPES` 与 `ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
-      "`DEFAULTS` 生成的定义必须能通过对应 Schema；9 个草案类型的默认值必须补齐 `schemas/v2/*` 的必需字段。",
+      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖运行时类型（1.0 与 Phase B 的 2.0）与剩余 Schema 2.0 草案类型；`schemaVersionFor()` 返回类型期望版本。",
+      "`TYPES` 含 25 个可加载类型（1.0 16 类 + Phase B 提升的 9 类），`DRAFT_TYPES` 只剩 `weapons`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
+      "`DEFAULTS` 生成的定义必须能通过对应 Schema；Phase B 9 类 2.0 类型（含 `map_configs` 的 31 键 exploration）与 `weapons` 草案的默认值都在此维护。",
       "`weapons` 草案的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。",
       "`WEAPON_PRESETS` 是「舰载武器包」模板的 5 件成品数据（deck_gun / heavy_cannon / mortar / repeater / broadside）：战斗数值对齐 SNBattleSim，装配字段对齐 GLB Root extras，经济字段项目补齐，`model` 为 `model.weapon.*`；`TEMPLATES` 的 `weapons` 条目（显示名「舰载武器包」）驱动新建模组对话框与 CLI `new --template weapons`。",
       "`keyPrefix` 决定本地化键前缀；船只模块共用 `module`，因此跨模块类型的 local ID 必须唯一。",
@@ -1597,9 +1597,9 @@ export const FILE_DOCS = {
     contracts: [
       "Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。",
       "`resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。",
-      "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（草案 2.0），最后回退 1.0。",
+      "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（Phase B 的 9 类 2.0 与 weapons 草案 2.0），最后回退 1.0。",
       "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
-      "草案内容文件每文件一条 `draft_content` 警告；草案 capability 未写入 `manifest.capabilities` 时按 capability 去重报 `capability_undeclared`；草案跨引用跳过 `ref_core_unknown`。",
+      "`draft_content` 警告只针对仍是草案的 `weapons`；Phase B 提升的 2.0 类型不再算草案，按其 capability 报 `capability_undeclared`（未声明时）。",
       "`LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。",
       "武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。",
       "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
@@ -1630,7 +1630,7 @@ export const FILE_DOCS = {
     dependencies: ["catalog.js", "core-index.js"],
     contracts: [
       "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
-      "`schema_version` 由内容类型推导（运行时类型 1.0、Schema 2.0 草案 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留草案 2.0。",
+      "`schema_version` 由内容类型推导（1.0 类型写 1.0，Phase B 的 9 类与 weapons 草案写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。",
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
@@ -1782,7 +1782,7 @@ export const FILE_DOCS = {
   "SNModMaker/tools/sync-schemas.mjs": {
     role: "把 `schemas/` 下全部 `*.schema.json`（含 `v2/` 草案）递归打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。",
     contracts: [
-      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，草案为 `v2/...`，与磁盘文件一一对应（当前 28 个：18 顶层 + 10 个 v2）。",
+      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（含 Phase B 的 map_config 与 weapon 草案）为 `v2/...`，与磁盘文件一一对应（当前 29 个：18 顶层 + 11 个 v2）。",
       "生成文件头带 AUTO-GENERATED 标记；修改任何 Schema 后必须重跑。",
       "只做 JSON 解析与嵌入，不校验 Schema 自身。"
     ]
@@ -1836,8 +1836,8 @@ export const FILE_DOCS = {
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出运行时类型与 Schema 2.0 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导（草案恒 2.0）。",
-      "`new --draft <content_type>`（可重复）创建纯 2.0 草案项目：每类一个内容文件 + 起始定义，capability 自动写入 manifest；未知草案类型按用法错误退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容。",
+      "`types` 同时列出 25 个运行时类型（含 Phase B 的 9 类 2.0）与唯一的 `weapons` 草案（`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 标草案并提示运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导。",
+      "`new --draft <content_type>` 仅接受剩余草案（`weapons`）：生成内容文件 + 起始定义并把 capability 写入 manifest；Phase B 提升的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 1.0 模板与草案内容。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（goods / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 草案定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
       "`--mod` 必须是含 `manifest.json` 的目录；所有写入经 `resolveInside` 限制在目录内，拒绝绝对路径、盘符与 `..`。",
       "输出契约：`--json` 时 stdout 只有一个 JSON 对象（成功 / 失败 / 用法错误都是），人读日志写 stderr；退出码 0 成功、1 执行失败 / 校验未通过 / 冲突、2 用法错误。",
@@ -2079,15 +2079,6 @@ export const FILE_DOCS = {
       "手写 1.0 payload 验证 save_schema → 2.0、state schema → 2.0、campaign/id/created_at/playtime 回填与 migrated_from 记录。",
       "验证 v2 写入/读取的 save_schema、state_schema、content_schema 与 state hash 往返一致。",
       "验证缺 campaign 的 2.0 payload 惰性补齐并产生 warning；3.0 等未知版本返回结构化错误。"
-    ]
-  },
-
-  "framework/tests/cases/test_schema_v2_drafts.gd": {
-    role: "Content Schema 2.0 草案测试：用现有 SchemaValidator 验证 start/world/region/site/route/weather/faction/discovery 草案，并守护草案类型不进入 active 注册表。",
-    contracts: [
-      "合法 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery envelope 必须零错误；缺字段、非法 ID、非法 difficulty、非法 cargo、越界概率、非法稀有度/权重必须报错。",
-      "`draft_schemas` 中的类型必须出现在 planned、不得出现在 ContentTypes.all()，对应 Schema 文件必须存在。",
-      "草案 Schema 只使用项目校验器支持的 JSON Schema 子集；正式接入运行时前保持 planned。"
     ]
   },
 
@@ -2581,7 +2572,7 @@ export const MODULES = {
       "`test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。",
       "`test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。",
       "`test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。",
-      "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 草案，并确认草案类型仍为 planned、不在 active 注册表。",
+      "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema 与 `map_configs`（31 键 exploration），确认 9 类 active、只有 `weapons` 仍为草案。",
       "`test_schema_v2_weapons.gd` 守护 `weapons` 草案（合法 direct / broadside 与非法必填 / 枚举 / 范围 / 颜色 / 材料 ID）、草案登记与 hull `weapon_sockets` / `rig_sockets` 镜像（含 Core 14 个武器 socket + 22 个帆索 socket）。",
       "`test_world_generator.gd` 守护坐标空间世界生成：同 seed 可复现、港口锚定海岸线、最小间距、连通性、出航角度、必需设施位置与序列化往返。"
     ]
@@ -2594,11 +2585,11 @@ export const MODULES = {
     ]
   },
   "schemas": {
-    intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0 草案。",
+    intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0（Phase B 运行时 Schema + weapon 草案）。",
     contracts: [
       "每类内容一个 envelope Schema；公共字段在 `common.schema.json`。",
-      "1.x 类型继续使用根目录 Schema；2.0 草案在 `schemas/v2/`，由 `content_types.json.draft_schemas` 登记，尚未接入运行时加载。",
-      "当前 2.0 草案：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`、`weapon`；对应类型仍为 planned。",
+      "1.x 类型继续使用根目录 Schema；Phase B 的 9 类 2.0 运行时 Schema 在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载。",
+      "`schemas/v2/` 当前：`common`、`start_profile`、`world_profile`、`region`、`site`、`route_template`、`weather_profile`、`faction`、`discovery`、`map_config`、`weapon`；其中 `weapon` 仍是草案。",
       "标准实体可选 `information.texture/model` 资源键；贴图与 GLB 模型属于展示信息，不替代 data 权威字段。",
       "Schema 的 `const`/`enum` 与 `ContentTypes`/操作码注册表需同步维护；效果操作码枚举（如 `damage_module`）必须与 `EffectOpRegistry` 同时增改，否则 core 校验会 fatal。"
     ]
@@ -2708,7 +2699,7 @@ export const GROUPED_ROLES = {
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、商品、双语本地化与说明。",
   "sdk/examples": "第三方锅炉示例，验证公共内容接口。",
-  "schemas/v2": "Content Schema 2.0 草案：common 与 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery / weapon；仍为 planned，暂不接入运行时加载。",
+  "schemas/v2": "Content Schema 2.0：common + Phase B active 的 start_profile / world_profile / region / site / route_template / weather_profile / faction / discovery / map_config（31 键 exploration、twin_world_size、story），以及仍为草案的 weapon。",
   "schemas": "JSON Schema 文件（Manifest/common/15 类内容）。",
   "dev_mods/core": "官方 Core 内容文件（manifest/content/localization/assets）。",
   "tools/modeling/generators": "铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。",

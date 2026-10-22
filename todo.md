@@ -22,12 +22,12 @@
 - [ ] 高频决策页第二轮：市场数量步进 / 即时成本、持久 `ScreenHost` 与局部数据刷新
 - [ ] 存档：声明式 ID 别名与数据迁移执行器；出航失败回滚的存档路径端到端测试
 - [ ] SDK / 发布：模组管理 UI（启用 / 禁用 / 优先级）、发布签名与固定哈希校验
-- [ ] 建模需求 Backlog：按 [MODELING_BACKLOG.md](docs/design/MODELING_BACKLOG.md) 的批次顺序推进（M0-3 船侧武器 socket、M0-4 `rig_kit`、M0-5 LOD1 基础套件、casemate 穿壳炮模块化均已完成，M0 系列收口；下一批建议：port cassette 或 M2-1 `combat_kit` 敌舰，或 M1-1 / M1-2 / M1-3 基地 / 内景；LOD1 运行时切换与质量档位待接线，LOD2 见 M2-5）
+- [ ] 建模需求 Backlog：按 [MODELING_BACKLOG.md](docs/design/MODELING_BACKLOG.md) 的批次顺序推进（M0 系列全部收口；**M1-1 architecture_kit 扩展 6 件已完成**；下一批建议 M1-2 `base_kit` 生产建筑 + M1-3 `interior_kit` 切面内景（切面约定已定），或按阶段 2 优先级改做 M2-1 `combat_kit` 敌舰 / port cassette；LOD1 运行时切换与质量档位待接线，LOD2 见 M2-5）
 - [ ] 遗留清理：`SN_Ship_Prototype`（`model.ship.prototype` 遗留键）仍是旧纯色 `SN_*`，可随船体资产批次一起迁移或删除遗留键
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
-- [ ] 模型素材库接入：kit 批次 1–3 其余 22 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记），接 `ShipVisualAssembler` / 场景装配的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B **B0 已收尾**（探索 4.1–4.5 与 Phase A 均已在 main；契约升 [Draft 2](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)，补 31 键 `exploration`、`twin_world_size`、`story`、15 处读取点；SNModMaker schema bundle 已重同步）。下一步 **B1 类型提升**（9 类 active + `map_configs`，待拍板 D2–D3、D7–D13）；之后 C 实体合并 → D 其余系统 → E 冻结 1.0。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md)
+- [ ] 模型素材库接入：kit 批次 1–4 其余 28 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记；批次 4 新增 6 件可围合建筑件），接 `ShipVisualAssembler` / 场景装配的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
+- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B **B0–B1 已完成**（9 类 2.0 类型 active：world_profiles / regions / sites / route_templates / weather_profiles / factions / discoveries / start_profiles + 新增 map_configs；`ContentTypes` 25 类、schema bundle 29 个、编辑器可编辑，框架/编辑器/CLI 测试全绿）。下一步 **B2 注册表与引用规则**（9 个 `_check_*`、completeness、capability）→ B3 CampaignFactory → B4 core v2 内容 → B5 存档 → B6 门禁；之后 C 实体合并 → D 其余系统 → E 冻结 1.0。决策已全部拍板（契约 §12）。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 
 ### 海图 / 探索
 
@@ -50,3 +50,5 @@
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
 - Content Schema 2.0 Phase B · B0：执行契约刷新到 [Draft 2](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)（按 4.1–4.5 的 `map_profile` 现状补 31 键 `exploration`、`twin_world_size`、`story`、15 处生产读取点，新增 D13 教程 story 归属）；同步迁移方案状态；重新同步 SNModMaker 嵌入式 schema bundle（Node 恢复 50/50）。基线证据：Godot 419/419、`gen_content_types --check`、`gen_static_docs --check`、SDK core 校验全绿。
+- Content Schema 2.0 Phase B · B1：8 类草案提升 active + 新增 `map_configs`；`schemas/v2/map_config.schema.json`（31 键 exploration、`twin_world_size`、`story`）+ `world_profiles.edge_density` + `start_profiles.map_config`；`ContentTypes` 16 → 25、编辑器 TYPES 26 项（草案只剩 weapons）、schema bundle 29 个；编辑器 catalog 增加 `map_configs` 默认值；框架 `test_content_versions` / `test_schema_v2_drafts` 与 SNModMaker/CLI 测试同步改写。
+- 建模 M1-1 architecture_kit 扩展（批次 4）：6 件可围合建筑件（围墙段 / 大门 / 道路 / 装卸平台 / 仓库变体 / 工坊扩建），**12,584 / 16,800 tri**、39 mesh / 37 socket / 82 节点 / 117 图元、11 张共享贴图（无新增）；6/6 GLB 自检 ALL OK、独立 Verifier 只读验收 0 failures、Godot 运行时用例 2 例；`kit_catalog.json` v1.4（32 件 / 54,642 tri、4 条基地装配配方）；预览 12 单件 + 3 张拼装。接入类工作（PortStage / 基地舞台）与 LOD1 留后续。

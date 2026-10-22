@@ -3092,6 +3092,648 @@
         }
       }
     },
+    "v2/map_config.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/map-config-2.json",
+      "title": "Steam Navigator map config content file (Schema 2.0)",
+      "description": "Scene tuning for a generated campaign: port archetypes/names, facilities, NPC and economy parameters, twin chart world size, exploration rules and the tutorial story flow. Successor of the 1.0 map_profile scenario block.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "map_configs"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/map_config_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "map_config_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "archetypes",
+            "port_name_keys",
+            "required_facility_tags"
+          ],
+          "properties": {
+            "archetypes": {
+              "type": "array",
+              "minItems": 4,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "port_name_keys": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "start_archetype_tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "required_facility_tags": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^port\\.[a-z_]+$"
+              }
+            },
+            "required_facility_max_edges": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "npc_count_range": {
+              "$ref": "common.schema.json#/$defs/range2"
+            },
+            "npc_cargo_range": {
+              "$ref": "common.schema.json#/$defs/range2"
+            },
+            "supply_prices": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "coal",
+                "water",
+                "repair_per_point"
+              ],
+              "properties": {
+                "coal": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "water": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "repair_per_point": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "loan": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "limit",
+                "interest_rate",
+                "term_hours"
+              ],
+              "properties": {
+                "limit": {
+                  "type": "number",
+                  "minimum": 1
+                },
+                "interest_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.5
+                },
+                "term_hours": {
+                  "type": "number",
+                  "minimum": 1
+                }
+              }
+            },
+            "intel_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "trade_margin": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            },
+            "player_trade_impact": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "default_starting_build": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "twin_world_size": {
+              "type": "number",
+              "minimum": 64,
+              "maximum": 1024
+            },
+            "exploration": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rumor_clue_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "fog_port_reveal_ratio": {
+                  "type": "number",
+                  "minimum": 0.01,
+                  "maximum": 0.5
+                },
+                "fog_vision_ratio": {
+                  "type": "number",
+                  "minimum": 0.01,
+                  "maximum": 0.5
+                },
+                "intel_clue_cost": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max_active_clues": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "level_weights": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "$ref": "#/$defs/level_weight_vector"
+                    },
+                    "intel": {
+                      "$ref": "#/$defs/level_weight_vector"
+                    }
+                  }
+                },
+                "credibility_range": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    },
+                    "intel": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    },
+                    "wait": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    },
+                    "contract": {
+                      "$ref": "common.schema.json#/$defs/range2"
+                    }
+                  }
+                },
+                "distance_error_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "search_zone_radius": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "search_zone_noise": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "discovery_chance_base": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "discovery_chance_per_credibility": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "risk_base": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "risk_per_unreliability": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "drift_durability_loss": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "drift_extra_coal": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "drift_extra_water": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "drift_hours": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "alert_threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "alert_progress": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "turnback_extra_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "investigation_cost": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "investigation_hours": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "investigation_success_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "goods_clue_expiry_hours": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel",
+                    "wait",
+                    "contract"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "intel": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "wait": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "contract": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "goods_clue_price_error_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "goods_clue_source_weights": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rumor",
+                    "intel",
+                    "wait",
+                    "contract"
+                  ],
+                  "properties": {
+                    "rumor": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "intel": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "wait": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "contract": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                },
+                "wait_clue_hours_block": {
+                  "type": "number",
+                  "minimum": 1
+                },
+                "wait_clue_chance_per_block": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "wait_clue_max_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "contract_clue_chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "story": {
+              "$ref": "#/$defs/story_flow"
+            }
+          }
+        },
+        "level_weight_vector": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "story_flow": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "flow_id",
+            "stages"
+          ],
+          "properties": {
+            "flow_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "skip_unlocks": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "start_unlocks": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "start_items": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "start_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "stages": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/story_stage"
+              }
+            }
+          }
+        },
+        "story_stage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "advance"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dialogue": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "title_key",
+                "body_keys"
+              ],
+              "properties": {
+                "title_key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "body_keys": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "unlock_features": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "unlock_items": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "unlock_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "objective": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text_key",
+                "target"
+              ],
+              "properties": {
+                "text_key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "target": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "advance": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "confirm"
+                  ]
+                },
+                "event": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counter": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counter_from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "at_least": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "flag": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "not_flag": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "all": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/story_condition"
+                  }
+                },
+                "match": {
+                  "$ref": "#/$defs/story_match"
+                }
+              }
+            },
+            "lock_actions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "preferred_strategy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "story_condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "event": {
+              "type": "string",
+              "minLength": 1
+            },
+            "counter": {
+              "type": "string",
+              "minLength": 1
+            },
+            "counter_from": {
+              "type": "string",
+              "minLength": 1
+            },
+            "at_least": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "flag": {
+              "type": "string",
+              "minLength": 1
+            },
+            "not_flag": {
+              "type": "string",
+              "minLength": 1
+            },
+            "match": {
+              "$ref": "#/$defs/story_match"
+            }
+          }
+        },
+        "story_match": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v2/region.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/region-2.json",
@@ -3423,6 +4065,9 @@
           ],
           "properties": {
             "world_profile": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "map_config": {
               "$ref": "common.schema.json#/$defs/id_ref"
             },
             "starting_build": {
@@ -3903,6 +4548,11 @@
             },
             "weather_profile": {
               "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "edge_density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             },
             "start_region_tags": {
               "$ref": "common.schema.json#/$defs/tag_list"

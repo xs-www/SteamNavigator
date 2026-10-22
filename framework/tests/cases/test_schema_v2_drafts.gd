@@ -1,6 +1,17 @@
 extends TestCase
-## Schema 2.0 draft contracts: validate the start profile schema with the
-## project SchemaValidator and keep draft types out of the active registry.
+## @static-doc
+## 作用：Content Schema 2.0 世界/战役 Schema 测试：SchemaValidator 合法 / 非法样本，
+## Phase B 9 类提升 active，`weapons` 仍是唯一草案，`map_configs` 覆盖 31 键 exploration。
+##
+## ## 契约与约束
+## - start_profile / world_profile / region / site / route_template / weather_profile /
+##   faction / discovery / map_config 的合法 envelope 必须零错误；缺必填 / 非法 ID /
+##   非法枚举 / 越界数值 / 未知 exploration 键必须报错。
+## - `map_configs.exploration` 必须完整覆盖 31 键（4.1 的 19 键 + 4.2–4.5 的 12 键），
+##   `twin_world_size` 范围 64–1024，`story` 走 story_flow 子 Schema。
+## - Phase B 的 9 类必须出现在 `content_types.json.types`、schema_version 为 2.0、
+##   Schema 文件存在且进入 `ContentTypes`；`draft_schemas` 只剩 `weapons`。
+## @end-static-doc
 
 const START_PROFILE_SCHEMA := "res://schemas/v2/start_profile.schema.json"
 const WORLD_PROFILE_SCHEMA := "res://schemas/v2/world_profile.schema.json"
@@ -10,6 +21,7 @@ const ROUTE_TEMPLATE_SCHEMA := "res://schemas/v2/route_template.schema.json"
 const WEATHER_PROFILE_SCHEMA := "res://schemas/v2/weather_profile.schema.json"
 const FACTION_SCHEMA := "res://schemas/v2/faction.schema.json"
 const DISCOVERY_SCHEMA := "res://schemas/v2/discovery.schema.json"
+const MAP_CONFIG_SCHEMA := "res://schemas/v2/map_config.schema.json"
 
 
 func _valid_envelope() -> Dictionary:
@@ -25,6 +37,7 @@ func _valid_envelope() -> Dictionary:
 				"enabled": true,
 				"data": {
 					"world_profile": "core:world_profile/default",
+					"map_config": "core:map_config/standard",
 					"starting_build": "core:starting_build/steady",
 					"difficulty": "standard",
 					"starting_port_tags": ["industrial"],
@@ -204,20 +217,122 @@ func test_world_actor_v2_drafts_reject_invalid_definitions() -> void:
 	assert_true(discovery_errors.size() >= 3, "invalid discovery reports enum/range/type errors: %s" % str(discovery_errors))
 
 
-func test_draft_schemas_are_planned_and_not_active() -> void:
+func _map_config_file(data: Dictionary) -> Dictionary:
+	return _world_draft_file("2.0", "map_configs", "core:map_config/standard", data)
+
+
+func _valid_map_config_data() -> Dictionary:
+	return {
+		"archetypes": [
+			"core:port_archetype/iron_harbor",
+			"core:port_archetype/spice_port",
+			"core:port_archetype/free_town",
+			"core:port_archetype/fishing_village",
+		],
+		"port_name_keys": [
+			"port_name.core.iron_harbor",
+			"port_name.core.spice_port",
+			"port_name.core.free_town",
+			"port_name.core.fishing_village",
+		],
+		"start_archetype_tags": ["port.hub"],
+		"required_facility_tags": ["port.shipyard", "port.intel"],
+		"required_facility_max_edges": 2,
+		"npc_count_range": [2, 3],
+		"npc_cargo_range": [8, 24],
+		"supply_prices": {"coal": 4, "water": 2, "repair_per_point": 6},
+		"loan": {"limit": 400, "interest_rate": 0.1, "term_hours": 96},
+		"intel_cost": 40,
+		"trade_margin": 0.9,
+		"player_trade_impact": 0.35,
+		"default_starting_build": "core:starting_build/steady",
+		"twin_world_size": 160,
+		"exploration": {
+			"rumor_clue_chance": 0.65,
+			"intel_clue_cost": 40,
+			"max_active_clues": 4,
+			"level_weights": {"rumor": [0.55, 0.35, 0.1, 0], "intel": [0, 0.15, 0.45, 0.4]},
+			"credibility_range": {
+				"rumor": [0.25, 0.55],
+				"intel": [0.6, 0.95],
+				"wait": [0.4, 0.7],
+				"contract": [0.55, 0.85],
+			},
+			"distance_error_ratio": 0.35,
+			"search_zone_radius": 14,
+			"search_zone_noise": 12,
+			"discovery_chance_base": 0.2,
+			"discovery_chance_per_credibility": 0.7,
+			"risk_base": 0.08,
+			"risk_per_unreliability": 0.12,
+			"drift_durability_loss": 8,
+			"drift_extra_coal": 4,
+			"drift_extra_water": 4,
+			"drift_hours": 6,
+			"alert_threshold": 0.5,
+			"alert_progress": 0.5,
+			"turnback_extra_ratio": 0.25,
+			"fog_port_reveal_ratio": 0.05,
+			"fog_vision_ratio": 0.05,
+			"investigation_cost": 20,
+			"investigation_hours": 6,
+			"investigation_success_chance": 0.75,
+			"goods_clue_expiry_hours": {"rumor": 24, "intel": 72, "wait": 48, "contract": 72},
+			"goods_clue_price_error_ratio": 0.15,
+			"goods_clue_source_weights": {"rumor": 0, "intel": 0, "wait": 1, "contract": 0},
+			"wait_clue_hours_block": 6,
+			"wait_clue_chance_per_block": 0.35,
+			"wait_clue_max_chance": 0.85,
+			"contract_clue_chance": 0.5,
+		},
+		"story": {
+			"flow_id": "core:story/opening",
+			"enabled": true,
+			"stages": [{
+				"id": "opening",
+				"dialogue": {"title_key": "story.core.opening.title", "body_keys": ["story.core.opening.body.1"]},
+				"advance": {"mode": "confirm"},
+			}],
+		},
+	}
+
+
+func test_map_config_v2_schema_accepts_all_exploration_keys() -> void:
+	var validator := SchemaValidator.new()
+	var errors := validator.validate_file(_map_config_file(_valid_map_config_data()), MAP_CONFIG_SCHEMA)
+	assert_empty(errors, "valid map config (31-key exploration + story) passes Schema 2.0: %s" % str(errors))
+	var exploration: Dictionary = _valid_map_config_data()["exploration"]
+	assert_eq(exploration.size(), 31, "map config exploration fixture covers all 31 keys")
+
+
+func test_map_config_v2_schema_rejects_invalid_data() -> void:
+	var validator := SchemaValidator.new()
+	var invalid := _valid_map_config_data()
+	invalid.erase("archetypes")
+	invalid["required_facility_tags"] = ["not_a_port_tag"]
+	invalid["twin_world_size"] = 8
+	invalid["exploration"]["unknown_key"] = 1
+	var errors := validator.validate_file(_map_config_file(invalid), MAP_CONFIG_SCHEMA)
+	assert_true(errors.size() >= 4, "invalid map config reports required/pattern/range/extra-key errors: %s" % str(errors))
+
+
+func test_phase_b_types_are_active_and_only_weapons_remains_draft() -> void:
 	var parsed := JsonUtils.parse_file("res://content_types.json")
 	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
 	var data: Dictionary = parsed["value"]
-	var planned_types: Dictionary = {}
-	for system in data.get("planned", []):
-		for type_name in system.get("types", []):
-			planned_types[String(type_name)] = true
 	var active_types: Dictionary = {}
-	for content_type in ContentTypes.all():
-		active_types[String(content_type)] = true
+	for entry in data.get("types", []):
+		active_types[String(entry.get("key", ""))] = entry
+	var promoted := ["world_profiles", "regions", "sites", "route_templates", "weather_profiles", "factions", "discoveries", "start_profiles", "map_configs"]
+	for type_name in promoted:
+		assert_true(active_types.has(type_name), "%s is active" % type_name)
+		var entry: Dictionary = active_types[type_name]
+		assert_eq(String(entry.get("schema_version", "")), "2.0", "%s declares 2.0" % type_name)
+		assert_eq(ContentTypes.schema_version(StringName(type_name)), "2.0", "%s runtime version" % type_name)
+		assert_true(FileAccess.file_exists("res://" + String(entry.get("schema", ""))), "%s schema exists" % type_name)
+
 	var drafts: Dictionary = data.get("draft_schemas", {})
-	assert_true(drafts.size() > 0, "draft schemas are declared")
-	for type_name in drafts.keys():
-		assert_true(FileAccess.file_exists("res://" + String(drafts[type_name])), "draft schema exists: %s" % type_name)
-		assert_true(planned_types.has(type_name), "draft type remains planned: %s" % type_name)
-		assert_false(active_types.has(type_name), "draft type is not active: %s" % type_name)
+	assert_eq(drafts.size(), 1, "only weapons remains a draft schema")
+	assert_true(drafts.has("weapons"), "weapons remains editor-only")
+	assert_true(FileAccess.file_exists("res://" + String(drafts["weapons"])), "weapons schema exists")
+	assert_false(ContentTypes.is_known(&"weapons"), "weapons is not a runtime type")

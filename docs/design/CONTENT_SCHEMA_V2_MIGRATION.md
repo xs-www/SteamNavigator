@@ -133,11 +133,12 @@ G8 同步收口：`Store.draftContentFiles()` / `hasDraftContent()` 识别草案
 
 ### Phase B · 世界探索家族提升（阶段 0/1，2–4 周）
 
-**状态：B0 已收尾（2026-10-22）；B1 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
+**状态：B0–B1 已完成（2026-10-22）；B2 待开工。** 执行契约：[WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md)
 （Draft 2，含 9 类类型、引用/完整性规则、CampaignFactory 流水线、1.0→2.0 字段映射、存档与落地顺序）。
 B0 证据：探索 4.1 与 Phase A 均已在 `main`（无需 rebase）；契约已按 4.2–4.5 的 `map_profile` 现状刷新
 （`exploration` 31 键、`twin_world_size`、`story`、15 处读取点）；Godot 419/419、生成物检查、SDK core 校验、
-Node 50/50 全绿。
+Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 类、编辑器 26 项、schema bundle 29 个），
+`map_configs` 覆盖 31 键 exploration + `story`，框架/编辑器测试与 CLI 全绿。
 
 目标：8 类 v2 草案 + 新增 `map_configs`（1.0 `map_profiles` 的 v2 继任者）从 `planned`/草案提升为 active，
 并由真实运行时消费；1.0 老链路与旧档保持可用。
@@ -145,7 +146,7 @@ Node 50/50 全绿。
 | 任务 | 范围 | 说明 |
 | --- | --- | --- |
 | B0 | 前置 | 探索 4.1 提交；`schema-v2` rebase `main`；冻结其 1.0 `map_profile` 字段，后续只做迁移映射 |
-| B1 | 类型提升 | `content_types.json`：8 类从 `planned` 移入 `types` + 新增 `map_configs`；删除 `draft_types` / `draft_schemas` 中对应条目、清理 `planned`；新增 `schemas/v2/map_config.schema.json` 并微调 `world_profiles`/`start_profiles` |
+| B1 | 类型提升 | ✅ 已完成（2026-10-22）：8 类从 `planned` 移入 `types` + 新增 `map_configs`；删除对应 `draft_types` / `draft_schemas` 条目、清理 `planned`；新增 `schemas/v2/map_config.schema.json` 并微调 `world_profiles`/`start_profiles` |
 | B2 | 注册表与引用 | `RegistryHub` 按 `ContentTypes.all()` 自动生效；`CrossReferenceValidator` 增加 9 个 `_check_*` 与 `ref_inactive_type` 规则；`CoreCompletenessChecker` 增加规则 |
 | B3 | 世界生成运行时 | 新 `CampaignFactory` 消费 `start_profiles → world_profiles + map_configs + regions/sites/route_templates/weather/factions/discoveries`；复用 `MapGenerator` 几何 + 孪生 `world_map`；`campaign.world / codex / factions` 接线；`run.start` 增加可选 `start_profile`，新增 `campaign.view` 查询 |
 | B4 | core 内容 | `dev_mods/core/content/` 新增 9 个 v2 内容文件 + 本地化；`map_profiles.exploration` 原样迁入 `map_configs.exploration` |
@@ -226,14 +227,17 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 
 - [x] Phase A：1.0 全量测试绿；版本表生成物最新；Patch 按目标类型版本校验（2026-10-21）。
 - [x] Phase B · B0：探索 4.1 / Phase A 合入 main；契约刷新到 Draft 2；基线门禁全绿（2026-10-22）。
+- [x] Phase B · B1：9 类 2.0 类型 active + `map_configs` Schema；编辑器 / CLI / 测试同步；生成物全绿（2026-10-22）。
 - [ ] Phase B：v2 世界生成可开局；旧档可继续；编辑器/CLI/SDK 全链零 error；发布门禁通过。
 - [ ] Phase C：实体合并后旧 ID 别名可用一个版本；存档 ID 迁移可回读。
 - [ ] Phase E：1.0 生成停止；迁移工具可用；文档状态更新为 Finalized。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。
 
-## 10. 待确认
+## 10. 决策记录
 
-- D1–D6（§3.2）需要拍板，尤其 D2 双读窗口长度与 D3 存档版本记录形状。
-- Phase B 契约 §12 的 D2 / D3 / D7–D13 需要拍板；D13（v2 战役的教程 `story` 来源）是 B0 刷新时新发现的问题。
-- Phase B 是否与世界探索运行时同一个发布版本（建议：类型提升与运行时同版本）。
-- 是否把「编辑器禁止把草案内容部署到发布包」作为 Phase A 的前置小修（建议是）。
+- 2026-10-22 全部按建议拍板：D1 按类型版本、D2 一个 minor 双读、D3 `campaign.setup.content_versions`、
+  D4 Patch 版本强校验、D5 实体合并独立阶段、D6 七项提升门槛；Phase B 契约的 D7 新增 `map_configs`、
+  D8 首个切片 ≤5 港、D9 planned 引用先 warning、D10 保留 1.0 `starting_builds`、D11 `run.start start_profile`、
+  D12 `campaign.view` + 最小展示、D13 `story` 搬入 `map_configs.story`。
+- Phase B 与世界探索运行时同一个发布版本（类型提升与运行时同版本）。
+- 「编辑器禁止把草案内容部署到发布包」已作为 Phase A 的 G8 小修完成。
