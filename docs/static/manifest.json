@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T05:57:45.350Z",
-  "commit": "855814e",
+  "generated_at": "2026-10-22T10:10:44.771Z",
+  "commit": "562f36c",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -3140,7 +3140,7 @@
     },
     {
       "source": "framework/domain/contracts/run_factory.gd",
-      "sha256": "109933ea78b87d9d2786009561d04cff5cbd427d4a0115221eca4a5b844fe19c",
+      "sha256": "493fc49b76e201809a6bc79a626a43fda43bedf38390dfefc9b7f3cc208c5c87",
       "doc": "docs/static/framework/domain/contracts/run_factory.gd.md",
       "status": "documented"
     },
@@ -3505,13 +3505,13 @@
     },
     {
       "source": "framework/services/save_migrations.gd",
-      "sha256": "86eb195813562fe8bb49989cf798014a9604c41ee2c64f685294c6e67837282e",
+      "sha256": "f513519e3d34e01bd2d2cc514fa60412c671b30c15b13a4c081854d0db59ec53",
       "doc": "docs/static/framework/services/save_migrations.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/services/save_service.gd",
-      "sha256": "e59b0e01f28d298cf2d555e5aaf7fd8d96b637ddfea51c1d08dd34de5214434c",
+      "sha256": "e62e7741b6503fca736cfbf8bc4cc19fdf0294bafe325cdf9d155d626ec19143",
       "doc": "docs/static/framework/services/save_service.gd.md",
       "status": "documented"
     },
@@ -3714,7 +3714,7 @@
     },
     {
       "source": "framework/tests/cases/test_save_migration.gd",
-      "sha256": "a19b208ba071a207cc237f9d2a300ac7a3fb54ef159943cd78da9aeba6b29065",
+      "sha256": "2570a3ed9792d743f93b566e0a4e794e991e0bc3a7557a1b38165210c26df6e3",
       "doc": "docs/static/framework/tests/cases/test_save_migration.gd.md",
       "status": "documented"
     },
@@ -4723,7 +4723,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "a49d7b4b5d3def74afd0cebda3115929ce110c7782883cf42c8c9320bfefe1d1",
+      "sha256": "b5c74d65593015c0a959c0b35932155a3d4d893f77d7076b92a3d9c17b40af43",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6058,7 +6058,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "a7606b45e3263407ce5051839ec5de9b802afb8687685854d36c914289144b71",
+      "sha256": "483c0f4a886201e0e8410fdf64977a89fc2ea185325f193bc7bc1d6a258036bf",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
