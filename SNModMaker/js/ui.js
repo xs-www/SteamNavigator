@@ -194,13 +194,11 @@
     passenger_cabin: ['module'],
     engineer: ['crew_role'],
     navigator: ['crew_role'],
-    default_starting_build: ['starting_scenario'],
     default_starting_scenario: ['starting_scenario'],
     archetypes: ['port_template'],
     good: ['item'],
     materials: ['item'],
     item_id: ['item'],
-    starting_build: ['starting_scenario'],
     starting_scenario: ['starting_scenario'],
     quests_completed: ['quest'],
   };

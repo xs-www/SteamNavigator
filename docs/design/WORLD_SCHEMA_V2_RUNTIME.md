@@ -111,22 +111,22 @@
 | `intel_cost` | number ≥0 | | 情报价 |
 | `trade_margin` | number 0.5–1 | | 交易利润率 |
 | `player_trade_impact` | number 0–1 | | 玩家交易冲击 |
-| `default_starting_build` | `id_ref` | | 起始构筑兜底（`start_profiles.starting_build` 优先） |
+| `default_starting_scenario` | `id_ref` | | 起始场景兜底（`start_profiles.starting_scenario` 优先） |
 | `twin_world_size` | number 64–1024（默认 160） | | 孪生海图世界边长；探索 4.3 U1 内容化，原样迁移 |
 | `exploration` | object（31 键，见 §8.2） | | 探索 4.1 参数 + 4.2–4.5 追加键，原样迁移 |
 | `story` | object（`story_flow`，见 STORY_TUTORIAL §7） | | 教程剧情流；是否搬入见 D13（4.5 新增，Phase B 前 Draft 2 未覆盖） |
 
-约束：`archetypes` 数量 ≥ 世界构成里的 `port_count`；`default_starting_build` 必须指向 active 的 `starting_builds`；
+约束：`archetypes` 数量 ≥ 世界构成里的 `port_count`；`default_starting_scenario` 必须指向 active 的 `starting_scenarios`；
 `twin_world_size` 运行时 clamp 到 64–1024（与 1.0 一致）；`story` 缺失或非法时教程不门禁、不弹卡（沿用 1.0 行为）。
 
 ### 4.2 `start_profiles` 调整
 
 - 新增**可选** `map_config`（`id_ref → map_configs`）；core 内容必须提供，第三方模组可省略（运行时用
   `core:map_config/standard` 兜底并在校验期给 warning）。
-- 保留 `world_profile / starting_build / difficulty / starting_port_tags` 为必填（现有草案 schema 不变）。
+- 保留 `world_profile / starting_scenario / difficulty / starting_port_tags` 为必填（C4 schema）。
 - `difficulty`（easy/standard/hard）只影响起始数值与 UI 展示，不改变世界生成；具体倍率由 `start_profiles.starting_money`
   等字段显式表达（不在框架写死）。
-- `starting_build` 继续引用 **1.0 `starting_builds`**（Phase C/D 再合并为 `starting_scenarios`）。
+- `starting_scenario` 引用 **`starting_scenarios` 2.0**（C4 已完成由 1.0 `starting_build(s)` 的改名/升级）。
 - `starting_contract` / `starting_cargo.item` 继续引用 1.0 `contracts` 与 **`items`**（C2 起 goods/materials 已合并为 `items`）。
 
 ### 4.3 `world_profiles` 微调
@@ -165,18 +165,19 @@
 | `discoveries.source_site_kinds` / `region_kinds` | 枚举 | Schema 内校验 | |
 | `start_profiles.world_profile` | `world_profiles` | 硬 | |
 | `start_profiles.map_config` | `map_configs` | 软（core 必有） | 第三方可省略 |
-| `start_profiles.starting_build` | `starting_builds`（1.0） | 硬 | |
-| `start_profiles.starting_contract` | `contracts`（1.0） | 硬（存在时） | |
+| `start_profiles.starting_scenario` | `starting_scenarios` | 硬 | |
+| `start_profiles.starting_contract` | `contracts` | 硬（存在时） | |
 | `start_profiles.starting_cargo[].item` | `items` | 硬 | C2 起 goods/materials 合并为 `items` |
-| `map_configs.archetypes[]` | `port_archetypes`（1.0） | 硬 | 数量 ≥ `world_profiles.port_count` |
-| `map_configs.default_starting_build` | `starting_builds`（1.0） | 硬（存在时） | |
+| `map_configs.archetypes[]` | `port_templates` | 硬 | 数量 ≥ `world_profiles.port_count` |
+| `map_configs.default_starting_scenario` | `starting_scenarios` | 硬（存在时） | |
 
 实现位置：`cross_reference_validator.gd` 新增 `_check_world_profiles / _check_regions / _check_sites /
 _check_route_templates / _check_weather_profiles / _check_factions / _check_discoveries / _check_start_profiles /
 _check_map_configs`，在 `validate()` 注册；错误码沿用 `REF-*` 语义（`reference_missing`、`ref_inactive_type`、
 `reference_self` 等）。`_definition_exists()` 遍历 `ContentTypes.all()`，提升后的类型自动进入通用引用检查。
-`map_profile.default_starting_build` 在 1.0 运行时从未被读取（仅 `_check_map_profiles` 校验存在性）；v2 中它只作为
-`start_profiles.starting_build` 缺失时的兜底，并在校验期提示。**C4 起 `map_profiles` 已退役**，该字段随 1.0 内容删除。
+`map_profile.default_starting_build` 在 1.0 运行时从未被读取（仅旧的 `_check_map_profiles` 校验存在性）；C4 后对应
+`map_configs.default_starting_scenario` 只在 `start_profiles.starting_scenario` 缺失时作为兜底，并在校验期提示。
+**C4 起 `map_profiles` 已退役**，该字段随 1.0 内容删除。
 
 > **B2 实现备注（2026-10-22）**：`PLANNED_REF_TYPES` 常量只用于尚未 active 的目标；引用先走
 > `_check_planned_ref()`——目标类型一旦 `ContentTypes.is_known()` 就自动升级为硬校验（兑现“激活后自动升级为
@@ -190,9 +191,9 @@ _check_map_configs`，在 `validate()` 注册；错误码沿用 `REF-*` 语义�
 不会触发 Core 完整性规则。B4 落盘后 gate 自动打开（落地时需一次满足以下全部条件）。
 
 - 硬性：`world_profiles ≥ 1`、`map_configs ≥ 1`、`start_profiles ≥ 1`、`weather_profiles ≥ 1`、`regions ≥ 1`、
-  `starting_builds ≥ 1`（已有）。
+  `starting_scenarios ≥ 1`。
 - 建议：`route_templates ≥ 1`、`factions ≥ 1`、`sites ≥ 1`、`discoveries ≥ 1`（warning，code `content_count_recommended`）。
-- 组合：至少一个 `start_profiles` 能解析 `world_profile + map_config + starting_build`（`map_config` 显式引用缺失
+- 组合：至少一个 `start_profiles` 能解析 `world_profile + map_config + starting_scenario`（`map_config` 显式引用缺失
   报 error；省略时按 id 排序回退到第一个 `map_config`）；其 `world_profile.start_region_tags` 至少匹配一个
   `regions.region_tags`；`map_configs.archetypes` 数量 ≥ `world_profiles.port_count`。
 
@@ -296,17 +297,15 @@ data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
 | --- | --- |
 | header | `save_schema=2.0`、`state_schema=2.0` 不变；`content_schema` 继续写基线 `1.0`（D3：它只是默认/基线） |
 | 新字段 | `state.campaign.setup.content_versions`（类型 → 期望版本），新战役创建时从 `ContentTypes.SCHEMA_VERSIONS` 快照写入 |
-| 旧档 | `ensure_campaign()` 惰性补齐：无 `setup` 时推断 `{starting_build → 1.0, map_profile → 1.0}`，`content_versions` 由当前注册表补齐；**不重排世界、不重新随机** |
+| 旧档 | `ensure_campaign()` 惰性补齐：无 `setup` 时不再推断 1.0 类型（C4 已删除 `map_profile` / `starting_build`），`content_versions` 只用当前注册表补齐；**不重排世界、不重新随机** |
 | 版本漂移 | 加载时若 `content_versions` 与当前注册表不一致 → warning（存档仍可读，旧内容按原定义 ID 解析）；破坏性迁移留 Phase E |
 | 迁移器 | `save_migrations.gd` 在 1.x→2.0 分支补 `content_versions`；`_ensure_current` 对缺失字段惰性补齐 |
-| ID 稳定 | 1.0 `core:map_profile/standard` 保留；v2 使用新 ID `core:map_config/standard`；别名与迁移在 Phase E 统一 |
+| ID 稳定 | C4 后只有 `core:map_config/standard`；1.0 `core:map_profile/standard` 已随类型退役删除（开发期旧档不兼容，Phase E 再评估迁移） |
 
-> **B5 实现备注（2026-10-22）**：`SaveMigrations.prepare_for_save()` 在保存克隆上快照
-> `ContentTypes.SCHEMA_VERSIONS`（1.0 新档也会写全表）；加载时 `_ensure_content_versions()` 对缺表旧档先推断
-> `starting_builds / map_profiles → 1.0`（v2 另记 `map_configs → 2.0`），再用当前注册表补齐缺失类型并写
-> `content_versions inferred` warning；已记录版本与运行时不一致时写 `content version drift: <type> save=… current=…`
-> warning，但**不阻塞加载、不重排世界**。1.0 新 run 在 `RunFactory.create_run` 创建时即写入版本快照（保证
-> save/load 的 state hash 一致）。
+> **C4 更新（2026-10-23）**：C4 起 `map_profiles` / `starting_builds` 已删除，`_ensure_content_versions()` 不再
+> 推断 1.0 类型，只用当前注册表补齐缺失类型并写 `content_versions inferred` warning；已记录版本与运行时不一致时仍写
+> `content version drift: <type> save=… current=…` warning，**不阻塞加载、不重排世界**。所有新 run 由
+> `CampaignFactory` 创建并写入版本快照（保证 save/load 的 state hash 一致）。
 
 ## 8. Core 内容与 1.0 → 2.0 字段映射（B4）
 
@@ -321,7 +320,7 @@ data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
 | `required_facility_tags` / `required_facility_max_edges` | `map_configs.*` |
 | `npc_count_range` / `npc_cargo_range` | `map_configs.*` |
 | `supply_prices` / `loan` / `intel_cost` / `trade_margin` / `player_trade_impact` | `map_configs.*` |
-| `default_starting_build` | `map_configs.default_starting_build`（`start_profiles.starting_build` 优先） |
+| `default_starting_build` | `map_configs.default_starting_scenario`（`start_profiles.starting_scenario` 优先；C4 改名） |
 | `twin_world_size`（4.3 新增） | **`map_configs.twin_world_size` 原样迁移**（默认 160，clamp 64–1024） |
 | `exploration`（4.1 新增，4.2–4.5 扩到 **31 键**） | **`map_configs.exploration` 原样迁移**（键名/范围不变） |
 | `story`（4.5 新增，`story_flow`） | **`map_configs.story` 原样搬迁**（D13 建议；需 `StoryService` 切 resolver） |
@@ -353,7 +352,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | `weather_profiles.json` | ≥2 条（temperate / storm_belt） |
 | `factions.json` | ≥3 条（merchant_guild / naval / pirates） |
 | `discoveries.json` | ≥6 条（blueprint / relic / lore，权重与解锁引用指向现有 1.0 定义） |
-| `start_profiles.json` | ≥2 条（standard / hard）：引用 `core:world_profile/default_world` + `core:map_config/standard` + 现有 `core:starting_build/*` |
+| `start_profiles.json` | ≥2 条（standard / hard）：引用 `core:world_profile/default_world` + `core:map_config/standard` + 现有 `core:starting_scenario/*` |
 | 本地化 | 以上所有 `name_key / description_key` 的 `zh_CN` + `en` 条目 |
 | manifest | 9 个新内容文件；`capabilities` 增加 `content.world.v1` / `content.campaign.v1` |
 
@@ -404,7 +403,7 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 | B2 | **✅ 已完成（2026-10-22）**：`CrossReferenceValidator` 9 个 `_check_*` + `ref_inactive_type`（目标激活后自动升级硬校验）；`CoreCompletenessChecker` Phase B 规则 + Core presence gate；`FrameworkInfo.CAPABILITIES` 增加 `content.world.v1` / `content.campaign.v1`。证据：`test_world_schema_refs` 16/16、`test_world_completeness` 13/13、全量回归绿 | B1 | revert 校验器改动 |
 | B3 | **✅ 已完成（2026-10-22）**：`CampaignFactory` + 5 个装配器 + `MapGenerationSpec`/`MapGenerator.generate_spec`；`run.start` 可选 `start_profile`；`campaign.view` 注册；`ContentRefs` 与 12 处运行时 resolver 切换；`initialize_markets` 抽公共；state 写 `campaign.setup/content_versions/world/codex/factions`。证据：`test_campaign_assembly` 10/10、`test_campaign_start` 6/6、全量 468/468 | B1、B2、B4（core 内容可并行） | 保留入口但默认不走 v2；revert 运行时 |
 | B4 | **✅ 已完成（2026-10-22）**：`dev_mods/core/content/` 新增 9 个 v2 文件（world_profiles 1 / map_configs 1 / regions 5 / sites 6 / route_templates 3 / weather_profiles 2 / factions 3 / discoveries 7 / start_profiles 2）、map_config 的 exploration 31 键与 story 原块逐键搬迁、本地化 +62 键、manifest content 24 / capabilities 4。证据：SDK validate `status: ok`（82 definitions）、Godot 468/468、Node 50/50 + CLI 57/57 | B1 | 回退内容文件（旧内容仍在） |
-| B5 | **✅ 已完成（2026-10-22）**：`prepare_for_save()` 快照 `ContentTypes.SCHEMA_VERSIONS`；`_ensure_content_versions()` 旧档推断（`starting_builds/map_profiles → 1.0`、`map_configs → 2.0`）+ 当前注册表补齐 + `content version drift` warning；1.0 新 run 创建即写快照。证据：`test_save_migration` 8/8、`test_save_load` 2/2、v2 战役 round-trip | B3 | revert 迁移器；旧档不受影响 |
+| B5 | **✅ 已完成（2026-10-22；C4 更新）**：`prepare_for_save()` 快照 `ContentTypes.SCHEMA_VERSIONS`；`_ensure_content_versions()` 只用当前注册表补齐缺失类型 + `content version drift` warning；C4 起不再推断 `starting_builds/map_profiles`（旧类型已删除），所有新 run 由 `CampaignFactory` 写快照。证据：`test_save_migration` 8/8、`test_save_load` 2/2、v2 战役 round-trip | B3 | revert 迁移器；旧档不受影响 |
 | B6 | **✅ 已完成（2026-10-22）**：编辑器 `capability` 按 2.0 判定 + G8 改运行时支持语义（提升类型可部署、草案/未知/版本不符拦截）；CLI runtime 2.0 标注与 capability；release workflow 加入 Node 两套件。证据：Node 50/50、CLI 58/58、全量 Godot 472/472、生成物 `--check` 全绿 | B1–B5 | 逐项 revert |
 
 并行写作用域建议：B1 只动 `content_types.json` / `schemas/v2/` / `tools/gen_content_types.mjs`；B2 只动

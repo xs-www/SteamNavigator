@@ -128,7 +128,6 @@
     intel_cost: '情报费用',
     trade_margin: '交易利润率',
     player_trade_impact: '玩家交易冲击',
-    default_starting_build: '默认初始构筑（1.0 已退役）',
     default_starting_scenario: '默认起始场景',
     money: '金钱',
     hull: '船体',
@@ -202,7 +201,6 @@
     source_site_kinds: '来源地点类型',
     requires_tags: '必需标签',
     world_profile: '世界配置',
-    starting_build: '起始构筑（1.0 已退役）',
     starting_scenario: '起始场景',
     difficulty: '难度',
     starting_port_tags: '起始港口标签',
@@ -450,7 +448,6 @@
     patrol_strength: '0–10；阵营巡逻队强度。',
     rarity: 'common / uncommon / rare / unique。',
     repeatable: '是否允许在同一局中重复获得。',
-    starting_build: '剧情关卡引用的起始构筑（1.0 已退役，值改为 core:starting_scenario/*）。',
     starting_scenario: '引用一个 starting_scenario 定义（完整 ID）。',
     starting_port_tags: '起始港口必须带有的标签，至少 1 个。',
     world_profile: '引用一个 world_profile 草案定义（完整 ID）。',
@@ -665,7 +662,7 @@
         { good: 'core:item/timber', stock_range: [50, 100], price_bias: 1.0 },
       ],
     }),
-    /* C4: 1.0 starting_builds became starting_scenarios (2.0). */
+    /* C4: starting scenarios are the 2.0 successor of the retired 1.0 start-build type. */
     starting_scenarios: () => ({
       money: 1000,
       reputation: 0,
@@ -951,7 +948,7 @@
         },
       },
       start: {
-        starting_build: 'core:starting_scenario/steady',
+        starting_scenario: 'core:starting_scenario/steady',
         port_id: 'port_0',
         money: 200,
         ship_fuel: 4,

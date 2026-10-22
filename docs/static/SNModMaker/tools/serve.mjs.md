@@ -8,7 +8,7 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `DRAFT_SCHEMA_VERSIONS` | L35 |
+| `SCHEMA_VERSIONS` | L35 |
 | `schemaVersionForContentType(contentType)` | L49 |
 | `MODS_DIR` | L62 |
 | `EXPORTS_DIR` | L63 |
@@ -28,18 +28,18 @@
 | `countWorkspaceDefinitions(manifest)` | L166 |
 | `listWorkspaces()` | L179 |
 | `readWorkspaceProject(id)` | L203 |
-| `runNodeTool(args, timeoutMs = 30000)` | L257 |
-| `validateWorkspace(id)` | L274 |
-| `syncCoreIndex()` | L302 |
-| `saveWorkspaceProject(id, project, files, options)` | L312 |
-| `listProjects()` | L363 |
-| `saveProject(id, payload)` | L394 |
-| `listExports()` | L429 |
-| `safeExportName(value)` | L441 |
-| `gameModName(id)` | L447 |
-| `listGameMods()` | L451 |
-| `deployGameMod(id, body)` | L462 |
-| `handleApi(request, response, url)` | L484 |
+| `runNodeTool(args, timeoutMs = 30000)` | L256 |
+| `validateWorkspace(id)` | L273 |
+| `syncCoreIndex()` | L301 |
+| `saveWorkspaceProject(id, project, files, options)` | L311 |
+| `listProjects()` | L362 |
+| `saveProject(id, payload)` | L393 |
+| `listExports()` | L428 |
+| `safeExportName(value)` | L440 |
+| `gameModName(id)` | L446 |
+| `listGameMods()` | L450 |
+| `deployGameMod(id, body)` | L461 |
+| `handleApi(request, response, url)` | L483 |
 
 ## 契约与约束
 

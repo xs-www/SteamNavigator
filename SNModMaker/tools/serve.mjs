@@ -29,25 +29,25 @@ import { resolveGameModsDir } from './game_mods_dir.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const port = Number(process.argv[2] || process.env.PORT || 8099);
-// 内容类型清单的草案版本：读取仓库根的 content_types.json（单一真源）。
-// 草案类型（Schema 2.0）与运行时类型共用编辑器，但运行时只加载 1.0；
-// 这里只用于给缺失 schema_version 的内容文件桩补上正确版本，未知类型回退 1.0。
-const DRAFT_SCHEMA_VERSIONS = (() => {
+// 内容类型版本清单：读取仓库根的 content_types.json（单一真源）。
+// C4 起所有 active 类型与草案类型统一为 Schema 2.0；这里只用于给缺失
+// schema_version 的内容文件补齐类型的期望版本，未知类型返回空串（不再兜底 1.0）。
+const SCHEMA_VERSIONS = (() => {
   const map = new Map();
   try {
     const source = path.join(root, '..', 'content_types.json');
     const manifest = JSON.parse(fs.readFileSync(source, 'utf8'));
-    for (const type of manifest.draft_types || []) {
+    for (const type of [...(manifest.types || []), ...(manifest.draft_types || [])]) {
       if (type && type.key) map.set(type.key, type.schema_version || '2.0');
     }
   } catch (error) {
-    /* 清单不可用时全部按 1.0 处理 */
+    /* 清单不可用时保持空表：调用方按缺失版本处理，不再猜测 1.0 */
   }
   return map;
 })();
 
 function schemaVersionForContentType(contentType) {
-  return DRAFT_SCHEMA_VERSIONS.get(contentType) || '1.0';
+  return SCHEMA_VERSIONS.get(contentType) || '';
 }
 
 // 默认只暴露给本机。容器/反向代理场景用 SNMODMAKER_HOST=0.0.0.0，
@@ -214,10 +214,9 @@ function readWorkspaceProject(id) {
         content_type: payload.content_type || 'items',
         schema_version: payload.schema_version || schemaVersionForContentType(payload.content_type || 'items'),
         definitions: Array.isArray(payload.definitions) ? payload.definitions : [],
-      };
-    } catch (error) {
-      // 文件读不出来时无法判断类型，只能按运行时 1.0 建桩；编辑器保存后会写回真实版本。
-      return { path: relative, content_type: 'items', schema_version: schemaVersionForContentType('items'), definitions: [] };
+      };    } catch (error) {
+      // 文件缺失/不可读时无法判断类型：直接报错，不再桩成 1.0 内容文件。
+      throw new Error(`无法读取内容文件 ${relative}: ${error.message}`);
     }
   });
   const localization = (manifest.localization || []).map((relative) => {

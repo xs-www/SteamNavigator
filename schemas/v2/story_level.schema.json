@@ -153,8 +153,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "starting_build": {
-          "$ref": "common.schema.json#/$defs/id_ref"
+        "starting_scenario": {
+          "$ref": "common.schema.json#/$defs/id_ref",
+          "description": "C4: references a core:starting_scenario/* definition (the retired 1.0 start-build field was renamed)."
         },
         "port_id": {
           "$ref": "#/$defs/port_id"

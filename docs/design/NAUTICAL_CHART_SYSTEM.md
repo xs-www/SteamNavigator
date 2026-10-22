@@ -92,7 +92,7 @@ WorldMap (一次性生成，seed 可复现)
   真的生成一张世界，断言港口数 = 15、全部锚定海岸线（< 2 单位）、陆地占比 < 0.45。
   配套 `test_world_below_port_floor_is_rejected` 断言 10 港的世界必须被拒。
 
-> 边界：当前 MVP 的可玩地图仍走 `MapGenerator` 的 4–5 港分支网络（`core:map_profile/standard`），
+> 边界：当前 MVP 的可玩地图仍走 `MapGenerator` 的 4–5 港分支网络（`core:map_config/standard`），
 > 不经过 `WorldGenerator` 的 15 港下限；坐标空间世界（正式版口径 + 现有对局的孪生世界）
 > 才走这条校验。真实 run 直接跑 15–20 港的坐标空间世界属于阶段 3 之后的接入工作，见 `todo.md`。
 
@@ -642,7 +642,7 @@ godot --path . --resolution 1440x900 --script res://tools/godot/capture_sea_char
 `WorldGenerator.MIN_PORTS..MAX_PORTS`（15–20）生成，和验收口径同一把尺子。`explored` 会真实回放一次沿岸航行
 （`FogOps.update_ship_vision` 沿大陆海岸环走一圈），所以灰雾带是阶段 1 的真实产出，不是画上去的。
 
-面板里的航程数字不是预览编的：预览会跑一次真实 `RunFactory.create_run`，只替换坐标
+面板里的航程数字不是预览编的：预览会跑一次真实 `CampaignFactory.create_default_campaign`，只替换坐标
 `world_map`，船况、锅炉策略与抽象地图航线都来自真实对局，因此截图里的预计时间/消耗/风险
 就是玩家在游戏里会看到的数值（`voyage.preview` 同源）。
 

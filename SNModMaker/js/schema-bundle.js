@@ -3379,7 +3379,7 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/start-profile-2.json",
       "title": "Steam Navigator start profile content file (Content Schema 2.0)",
-      "description": "Persistent campaign start profile: world profile, starting scenario, difficulty, port tags and optional cargo/contract. C4 replaced the 1.0 `starting_build` reference with a `starting_scenario` reference.",
+      "description": "Persistent campaign start profile: world profile, starting scenario, difficulty, port tags and optional cargo/contract. C4 replaced the retired 1.0 start-build reference with a `starting_scenario` reference.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -3474,7 +3474,7 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/starting-scenario-2.json",
       "title": "Steam Navigator starting scenario content file (Content Schema 2.0)",
-      "description": "Campaign start scenario (C4): opening money, hull/module build, supplies and loan. Successor of the 1.0 starting_build content type; the data block is unchanged, the type, id segment and default file are renamed to starting_scenarios / core:starting_scenario/* / content/starting_scenarios.json. Ship slots stay flat (boiler / cargo_modules / navigation_module / safety_module / passenger_cabin).",
+      "description": "Campaign start scenario (C4): opening money, hull/module build, supplies and loan. Successor of the retired 1.0 start-build content type; the data block is unchanged, the type, id segment and default file are renamed to starting_scenarios / core:starting_scenario/* / content/starting_scenarios.json. Ship slots stay flat (boiler / cargo_modules / navigation_module / safety_module / passenger_cabin).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -3935,8 +3935,9 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "starting_build": {
-              "$ref": "common.schema.json#/$defs/id_ref"
+            "starting_scenario": {
+              "$ref": "common.schema.json#/$defs/id_ref",
+              "description": "C4: references a core:starting_scenario/* definition (the retired 1.0 start-build field was renamed)."
             },
             "port_id": {
               "$ref": "#/$defs/port_id"

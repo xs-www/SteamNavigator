@@ -392,7 +392,7 @@ func _valid_story_level_file() -> Dictionary:
 					},
 				},
 				"start": {
-					"starting_build": "core:starting_scenario/steady",
+					"starting_scenario": "core:starting_scenario/steady",
 					"port_id": "port_0",
 					"money": 200,
 					"ship_fuel": 4,

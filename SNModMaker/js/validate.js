@@ -42,7 +42,6 @@
     passenger_cabin: ['module'],
     engineer: ['crew_role'],
     navigator: ['crew_role'],
-    default_starting_build: ['starting_scenario'],
     default_starting_scenario: ['starting_scenario'],
     archetypes: ['port_template'],
     good: ['item'],
@@ -51,7 +50,6 @@
     levels: ['story_level'],
     quests_completed: ['quest'],
     map_config: ['map_config'],
-    starting_build: ['starting_scenario'],
     starting_scenario: ['starting_scenario'],
   };
 

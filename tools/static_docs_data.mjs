@@ -627,28 +627,6 @@ export const FILE_DOCS = {
     }
   },
 
-  "framework/domain/contracts/run_factory.gd": {
-    role: "新局工厂：选构筑/地图配置、生成船只与市场、NPC、仓库/运输/统计/通关结构、初始主线与普通委托。",
-    contracts: [
-      "框架不引用具体 core ID：默认构筑/地图配置取该类型第一个注册定义。",
-      "创建顺序：船 → 地图 → 玩家/状态 → 仓库/运输/统计/通关字段 → 市场 → NPC → 主线 1 → 普通 offer。",
-      "状态写入后调用 `GameState.ensure_campaign()` 建立 campaign 分区，并把 `campaign.world.generated` 置为 true、起始港记入 `visited_port_ids`。",
-      "主线 1 自动装载并接取；后续主线由 VoyageService 生成 offer。",
-      "普通委托初始池与抵达刷新共用 ContractOps.generate_normal_offers，初始键为 `initial:<port>`。",
-      "生成失败返回结构化 Result，不写入 AppContext。"
-    ],
-    l2: {
-      "create_run(context, build_id, requested_seed)": [
-        "本地 RngService 由 seed 派生，成功后才由 run.start 写回 context，失败不污染现有随机流。",
-        "地图生成依赖初始船只属性（起始补给可达性检查）。",
-        "调用 WarehouseOps.ensure_structure 初始化每港仓库与 ship.transit_modules；写入 stats 默认值与 victory=null。",
-        "初始债务按 build.loan 写入 player.debt，之后由收入自动偿还。",
-        "`create_ship()` 在返回前调用 `ShipModules.ensure()`：按槽位顺序分配 module_1..N 实例 id 与满状态 condition，保证同 seed 同构筑的存档哈希一致。",
-        "战役分区（world/codex/factions）通过 `ensure_campaign_sections` 惰性补齐，探索进度只追加 id。"
-      ]
-    }
-  },
-
   "framework/domain/contracts/formula_registry.gd": {
     role: "框架拥有的安全期限公式注册表，供委托数据引用。",
     contracts: [
@@ -1537,7 +1515,7 @@ export const FILE_DOCS = {
       "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
       "`draft_content` 警告只针对仍是草案的 `weapons` / `story_arcs` / `story_levels`；active 2.0 类型（C4 后全部 20 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（20 类 + 草案族），同一 capability 每次校验只报一条。",
       "`LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。",
-      "`REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_build` → starting_build，与已有的 hull / good 等字段共用 `ref_type` 提示。",
+      "`REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_scenario` → starting_scenario，与已有的 hull / good 等字段共用 `ref_type` 提示。",
       "武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。",
       "剧情语义码：`story_pack_off_whitelist`（故事包混入非剧情内容，error）、`story_arc_level_type`（篇章关卡列表只能引用 story_level）、`story_protagonist_unknown`、`story_character_duplicate`、`story_stage_duplicate`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_port_duplicate`、`story_fixed_start_port_unknown`、`story_fixed_edge_port_unknown`、`story_start_port_unknown`；`story_arc_empty_levels` / `story_level_orphan` / `story_fixed_map_disconnected` / `story_term_duplicate` / `story_multiple_protagonists` 为 warning（空篇章与暂存关卡不阻塞编辑器/CLI 写入）。",
       "错误路径使用 JSON Pointer；项目问题附带 `view` 提示供 UI 跳转。",
@@ -2630,7 +2608,6 @@ export const GROUPED_ROLES = {
   "framework/modding/registries/registry_hub.gd": "按类型持有注册表并统一冻结/计数。",
   "framework/application/commands/command_registry.gd": "命令名到静态用例的绑定表（含船厂/仓库/打造/在港等待命令）。",
   "framework/application/queries/query_registry.gd": "查询名到 ViewModel 构造器的绑定表（含 shipyard/victory）。",
-  "framework/application/commands/run_start.gd": "run.start 命令：调用 RunFactory 并写回状态/随机流。",
   "framework/application/commands/trade_commands.gd": "trade.buy / trade.sell 命令包装与市场事件。",
   "framework/application/commands/supply_commands.gd": "按市场价购买煤水与维修命令包装。",
   "framework/application/commands/intel_commands.gd": "情报刷新命令：设施、费用、快照。",

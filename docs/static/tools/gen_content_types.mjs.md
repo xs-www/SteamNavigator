@@ -8,23 +8,23 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `ROOT` | L17 |
-| `MANIFEST` | L18 |
-| `GD_OUTPUT` | L19 |
-| `JS_OUTPUT` | L20 |
-| `CHECK` | L21 |
-| `fail(message)` | L23 |
-| `readJson(relativePath)` | L28 |
-| `schemaVersionFromSchema(versionField)` | L41 |
-| `readManifest()` | L51 |
-| `validate(data)` | L66 |
-| `validateDraftTypes(data, context)` | L128 |
-| `constantName(type)` | L180 |
-| `generatedHeader(commentPrefix)` | L184 |
-| `renderGd(data)` | L191 |
-| `renderJs(data)` | L268 |
-| `SNContentTypes (global)` | L329 |
-| `compareOrWrite(relativePath, content)` | L334 |
+| `ROOT` | L18 |
+| `MANIFEST` | L19 |
+| `GD_OUTPUT` | L20 |
+| `JS_OUTPUT` | L21 |
+| `CHECK` | L22 |
+| `fail(message)` | L24 |
+| `readJson(relativePath)` | L29 |
+| `schemaVersionFromSchema(versionField)` | L42 |
+| `readManifest()` | L52 |
+| `validate(data)` | L67 |
+| `validateDraftTypes(data, context)` | L129 |
+| `constantName(type)` | L181 |
+| `generatedHeader(commentPrefix)` | L185 |
+| `renderGd(data)` | L192 |
+| `renderJs(data)` | L269 |
+| `SNContentTypes (global)` | L330 |
+| `compareOrWrite(relativePath, content)` | L335 |
 
 ## 契约与约束
 

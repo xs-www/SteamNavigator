@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T16:33:17.522Z",
-  "commit": "9f0fb19",
+  "generated_at": "2026-10-22T19:52:44.687Z",
+  "commit": "5eb16c6",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -234,7 +234,7 @@
     },
     {
       "source": "SNModMaker/js/catalog.js",
-      "sha256": "8a675b4c52bc8ca5ea2dce487e44ffccad1e0429dc38a87598cc0ee706fbf3bd",
+      "sha256": "6dfebcf5174fc09744b766079336eddfcde547c00000c1844c2224766725f748",
       "doc": "docs/static/SNModMaker/js/catalog.js.md",
       "status": "documented"
     },
@@ -264,13 +264,13 @@
     },
     {
       "source": "SNModMaker/js/ui.js",
-      "sha256": "fe488ced7903edb584002a5d767474e8771a6a57f8d0860f7ea4405842727d7e",
+      "sha256": "9266e60579b8e202cab901a82be90ffbefff5b51eeba2b851adb5314724ac2e1",
       "doc": "docs/static/SNModMaker/js/ui.js.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/js/validate.js",
-      "sha256": "42560d3ed73d4f02f0248073a631dabb0f5e2ff6373f7305264aec14730cc311",
+      "sha256": "db5d3cf4b5b46d7a4b990d15a9c31f7140f820fcec28c409632a16ce4b2fe39c",
       "doc": "docs/static/SNModMaker/js/validate.js.md",
       "status": "documented"
     },
@@ -325,7 +325,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "262e21264d1dd1a1a889d8147859616989cfbb6e04d44cfda3ef9ac1eb7376a5",
+      "sha256": "82e4d06e85d01600354dca280f5f5a70ef480599a3100f45a587c991017b068d",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -343,7 +343,7 @@
     },
     {
       "source": "SNModMaker/tools/serve.mjs",
-      "sha256": "e8d0c5b932e7a5686e212f41d74198dd6d74955949a2a7e625f476576cd675a1",
+      "sha256": "2366e1dd2a9c424e10d8130aee53bb0db515d328f53319b8541629a08ac284d8",
       "doc": "docs/static/SNModMaker/tools/serve.mjs.md",
       "status": "documented"
     },
@@ -4032,7 +4032,7 @@
     },
     {
       "source": "framework/tests/cases/test_schema_v2_drafts.gd",
-      "sha256": "2d950eb34a6a5d179f90b9faa16dfec78320f53674e94ba4874853373b4c8856",
+      "sha256": "70cb083b3fb1d0905f371ca4f81102f8e5cb150b9f741b8e6b770c7f3047d399",
       "doc": "docs/static/framework/tests/cases/test_schema_v2_drafts.gd.md",
       "status": "documented"
     },
@@ -4889,14 +4889,14 @@
     },
     {
       "source": "schemas/v2/start_profile.schema.json",
-      "sha256": "afeeb5a99437a82d176d1df3649bc2c159da71f9e001821b78a0cb234d8e89c0",
+      "sha256": "cdf67d1ccfa35871038cd906694a468d98399e17e73ee95b69b55cd1c379a0ec",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
     },
     {
       "source": "schemas/v2/starting_scenario.schema.json",
-      "sha256": "10b7bc855b9fd88853934b39eea336528a9ea0ad21f5d5c03ecd6c54bf29aa7a",
+      "sha256": "3106f31c033a9a5ef1dbc03ebb46137fd6aaf87b0cba5bfa3c98a088cec11645",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -4909,7 +4909,7 @@
     },
     {
       "source": "schemas/v2/story_level.schema.json",
-      "sha256": "0f5ef770f7ebd8447d23b565f9ea985b04c602e3a1a78a1b4a613a512189efa6",
+      "sha256": "a9c6c9d393d34880ddb4ddac86e688220c68af4329a61e0540e951c0b3ffd133",
       "doc": "docs/static/schemas/v2/story_level.schema.json.md",
       "status": "documented"
     },
@@ -5124,7 +5124,7 @@
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/content/story_levels.json",
-      "sha256": "d7a5a5fe9b812c3c6612471356e8b341213f0d2d929057dd81f496ded0df73af",
+      "sha256": "d625a6901f202c5612e97f66f85bded92d5089c79804decb2805155635724c5b",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
@@ -5202,7 +5202,7 @@
     },
     {
       "source": "tools/gen_content_types.mjs",
-      "sha256": "9ad1ddf0d2e94199b0ac561d776e1c6d9aa78d8042a14b2b54f140f36d7ebd6e",
+      "sha256": "67a66c96f0b8d9eecebb7e6ed9d4f3237666373966998155b84b46f69a71bc34",
       "doc": "docs/static/tools/gen_content_types.mjs.md",
       "status": "documented"
     },
@@ -6641,7 +6641,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "bb96345180ed39ec3006367378c083a90644af9468257202eb19becad9e03193",
+      "sha256": "3aad993a788024af6b58b64b6c020d2d1e3045516b6c1bc77b0fbaf9731b4c15",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

@@ -318,7 +318,7 @@ story_levels.data.map = {
 
 ```text
 start = {
-  starting_build: "core:starting_build/...",   # 船体 / 模块 / 初始补给
+  starting_build: "core:starting_scenario/...",   # 船体 / 模块 / 初始补给（字段名沿用，值为 starting_scenario ID）
   port_id: "port_0",
   money: 180,
   ship_fuel: 6, ship_water: 4,
@@ -440,7 +440,7 @@ mods/<pack_id>/
 - **固定地图内嵌在关卡数据里**（`story_levels.data.map.fixed`，见 D2）：港口 / 航道 / 坐标由
   关卡自己拥有，不进自由模式的 `map_configs` 生成池；`map.map_config` 只是**可选引用**，
   用于复用 Core 的经济 / 探索参数，地形始终以 `fixed` 为准。
-- 关卡可以通过完整 ID 引用 `core` 的 `starting_builds` / `goods` / `maps` 等现有定义，
+- 关卡可以通过完整 ID 引用 `core` 的 `starting_scenarios` / `items` / `map_configs` 等现有定义，
   **不复制定义**；剧情包内不允许新增这些类型（白名单）。
 - 角色 / 术语不单设内容类型：放进 `story_arcs.characters` / `story_arcs.terms`，由包本地化
   提供文本；游戏只按 id 引用与展示。
@@ -510,7 +510,7 @@ mods/<pack_id>/
     },
 
     "start": {
-      "starting_build": "core:starting_build/steady",
+      "starting_build": "core:starting_scenario/steady",
       "port_id": "port_0",
       "money": 200,
       "ship_fuel": 4,
@@ -831,7 +831,7 @@ SNStoryMaker/
       与语义校验分别报出。
 - [x] `sdk/templates/story_pack_iron_tide/` 作为手写包：`content.mjs validate --mod` 0 error，
       只出现预期的 `draft_content` warning；导入 / 导出 round-trip 不丢字段。
-- [x] 白名单：同一故事包里加入 `goods` 内容会产生 `story_pack_off_whitelist` error（CLI 退出码 1）。
+- [x] 白名单：同一故事包里加入 `items` 内容会产生 `story_pack_off_whitelist` error（CLI 退出码 1）。
 - [x] `catalog.DEFAULTS` 的篇章 / 关卡默认值可直接通过对应 Schema，空篇章 / 孤儿关卡只警告。
 - [x] 全量无头测试 0 failed；`gen_static_docs --check` 通过。
 

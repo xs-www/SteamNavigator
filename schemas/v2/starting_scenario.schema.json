@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/starting-scenario-2.json",
   "title": "Steam Navigator starting scenario content file (Content Schema 2.0)",
-  "description": "Campaign start scenario (C4): opening money, hull/module build, supplies and loan. Successor of the 1.0 starting_build content type; the data block is unchanged, the type, id segment and default file are renamed to starting_scenarios / core:starting_scenario/* / content/starting_scenarios.json. Ship slots stay flat (boiler / cargo_modules / navigation_module / safety_module / passenger_cabin).",
+  "description": "Campaign start scenario (C4): opening money, hull/module build, supplies and loan. Successor of the retired 1.0 start-build content type; the data block is unchanged, the type, id segment and default file are renamed to starting_scenarios / core:starting_scenario/* / content/starting_scenarios.json. Ship slots stay flat (boiler / cargo_modules / navigation_module / safety_module / passenger_cabin).",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],

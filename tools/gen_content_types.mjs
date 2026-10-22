@@ -6,9 +6,10 @@
 //   node tools/gen_content_types.mjs --check
 //
 // Content Schema 2.0 draft types (content_types.json "draft_types") are
-// exported to the Mod Maker only; the framework runtime stays on 1.0. The
-// manifest is the single source; the generated files must not be edited by
-// hand. --check exits with 1 when a generated file is missing or stale.
+// exported to the Mod Maker only; the framework loads active types, which are
+// all Content Schema 2.0 after C4. The manifest is the single source; the
+// generated files must not be edited by hand. --check exits with 1 when a
+// generated file is missing or stale.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,9 +35,9 @@ function readJson(relativePath) {
 }
 
 /**
- * A content schema pins its version either with `const` (Schema 2.0 drafts) or
- * a single-value `enum` (the 1.0 runtime schemas). Both must yield one string,
- * which is what `content_types.json` has to mirror per type.
+ * A content schema pins its version with `const` (C4 后所有 active 与草案
+ * Schema 均为 Schema 2.0)；单值 `enum` 仅作兼容容忍。Both must yield one
+ * string, which is what `content_types.json` has to mirror per type.
  */
 function schemaVersionFromSchema(versionField) {
   if (!versionField || typeof versionField !== 'object') return '';
