@@ -3,7 +3,7 @@
 在浏览器里可视化创建、编辑和打包《Steam Navigator》的内容模组：
 
 - 读取仓库内 **官方 JSON Schema**，按类型生成表单；
-- 编辑 Manifest、16 类运行时类型（15 类内容 + 显式补丁）、9 类 Content Schema 2.0 草案类型、本地化与资源；
+- 编辑 Manifest、25 类运行时类型（16 类 1.0 + Phase B 提升的 9 类 2.0 + 显式补丁）、3 类 Content Schema 2.0 草案类型（`weapons` + 剧情 `story_arcs` / `story_levels`）、本地化与资源；
 - 实时校验 ID 命名空间、字段约束、跨引用、本地化覆盖与补丁安全；
 - 导入松散目录 / `.snavmod.zip` / 项目文件；
 - 导出 `mods/<id>/` 结构的 `.snavmod.zip`、项目文件，或直接写入本地目录；
@@ -15,6 +15,10 @@
 ---
 
 ## 快速开始
+
+### Windows 一键启动（推荐）
+
+双击 [`start.bat`](start.bat)。脚本会在缺少 Node.js 时自动安装最新 LTS 版，然后启动本地服务并打开 `http://127.0.0.1:8099/`。使用期间请保留命令窗口；关闭窗口即停止服务。
 
 ### 方式一：直接打开
 
@@ -74,26 +78,25 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 
 #### Schema 2.0 草案
 
-以下 9 类 Content Schema 2.0 草案类型同样可以在编辑器与 Content CLI 中创建、编辑和校验，内容文件写 `schema_version: "2.0"`。它们**尚未接入游戏运行时**：运行时仍只加载 Content Schema 1.0，草案内容不会生效，校验会给出 `draft_content` 警告。注意「不加载」不是静默忽略：Core 里若出现未注册类型或版本不符的内容，运行时会按 mod error 拒绝，Core 作为必需包会导致启动进入 `Degraded`；因此草案内容与「舰载武器包」模板**只存在于编辑器项目**，不要写进 `dev_mods/core`。
+以下 3 类 Content Schema 2.0 草案类型可以在编辑器与 Content CLI 中创建、编辑和校验，内容文件写 `schema_version: "2.0"`。它们**尚未接入游戏运行时**：运行时仍只加载 Content Schema 1.0，草案内容不会生效，校验会给出 `draft_content` 警告。注意「不加载」不是静默忽略：Core 里若出现未注册类型或版本不符的内容，运行时会按 mod error 拒绝，Core 作为必需包会导致启动进入 `Degraded`；因此草案内容与「舰载武器包」模板**只存在于编辑器项目**，不要写进 `dev_mods/core`。
 
 | 类型 | `content_type` | 说明 |
 | --- | --- | --- |
-| 世界配置 | `world_profiles` | 区域 / 地点 / 港口 / 遗迹 / 基地 / 阵营数量 |
-| 区域 | `regions` | 区域类型、规模、密度、敌对度、天气与阵营 |
-| 地点 | `sites` | 遗迹 / 基地点 / 资源 / 残骸 / 地标 / 遭遇 |
-| 航道模板 | `route_templates` | 距离、风险、耗时区间、双向与遭遇表 |
-| 天气配置 | `weather_profiles` | 气候带、雾 / 风暴 / 浮冰概率与修正 |
-| 阵营 | `factions` | 声望、阈值、巡逻强度、偏好商品、活动区域 |
-| 图鉴发现 | `discoveries` | 图鉴条目类型、稀有度、权重与解锁引用 |
-| 起始档案 | `start_profiles` | 世界配置、起始构筑、难度、起始港口与货物 |
 | 舰载武器 | `weapons` | 战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型键；船体安装点决定可装 class |
+| 剧情篇章 | `story_arcs` | 固定主角 / 角色表 / 术语 / 有序关卡列表；一个剧情包一个篇章（见 [STORY_MODE.md](../docs/design/STORY_MODE.md)） |
+| 剧情关卡 | `story_levels` | 内嵌固定地图（港口 / 航线 / 坐标）、初始状态、任务阶段、叙事、难度、checkpoint、仅成就类奖励 |
 
-草案类型使用 `schemas/v2/` 下的 Schema（含 `v2/common.schema.json` 的共享定义与跨文件 `$ref`）。草案模组若使用 capability，还需在 `manifest.capabilities` 声明对应能力（例如 `content.world.v1`），否则校验给出 `capability_undeclared` 警告。
+> Phase B 提升的 9 类 2.0 类型（world_profiles / regions / sites / route_templates / weather_profiles / factions / discoveries / start_profiles / map_configs）已是**运行时类型**，见上方表格，不再算草案。
+
+剧情包是「只加剧情的模组」：同一包里出现 `story_arcs` / `story_levels` 之外的内容会报 `story_pack_off_whitelist`，保证不改动自由模式。示例见 `sdk/templates/story_pack_iron_tide/`。
+
+草案类型使用 `schemas/v2/` 下的 Schema（含 `v2/common.schema.json` 的共享定义与跨文件 `$ref`）。草案模组若使用 capability，还需在 `manifest.capabilities` 声明对应能力（`weapons` → `content.combat.v1`，剧情 → `content.story.v1`），否则校验给出 `capability_undeclared` 警告。
 
 ### 编辑器
 
 - **表单驱动**：字段、枚举、数字范围、必填项与数组结构来自 `schemas/` 的 JSON Schema，与 Godot 加载链共用同一套约束。
-- **Schema 2.0 草案类型**：侧栏「Schema 2.0 草案 / 运行时不加载」分区列出 9 类草案（带 draft 标记，悬停提示运行时 1.0 不加载）；表单、默认值、引用与校验走同一套 v2 Schema，内容文件自动写 `schema_version: "2.0"`。
+- **Schema 2.0 草案类型**：侧栏「Schema 2.0 草案 / 运行时不加载」分区列出 3 类草案（`weapons` + 剧情 `story_arcs` / `story_levels`，带 draft 标记，悬停提示运行时 1.0 不加载）；表单、默认值、引用与校验走同一套 v2 Schema，内容文件自动写 `schema_version: "2.0"`。
+- **剧情表单**：`story_arcs` 编辑主角 / 角色表 / 术语 / 关卡顺序；`story_levels` 编辑内嵌固定地图（港口坐标、设施、市场、航道）、初始状态、任务阶段（含 checkpoint / presentation）、叙事简报 / beats / 结算、难度旋钮、奖励与失败重试策略；默认值自带 2 港 1 航道小地图，可直接校验通过。
 - **舰载武器表单**：`weapons` 草案按战斗（kind / damage / range / cooldown / accuracy / salvo / color…）、装配（weapon_class / assembly_profile / has_yaw·has_pitch·has_recoil·has_muzzle / muzzle_count / envelope_* / height / mount_scale）、经济（tier / weight / purchase_price / craft_* / materials）三组渲染；新增定义默认取模拟器「甲板速射炮」数值。
 - **船体安装点**：船体表单可编辑 `weapon_sockets` / `rig_sockets` 数组（安装点名称、class/kind、索引、position 三元组、clearance_*、mount_scale、note），校验重复 name / 索引、非法 class/kind 与缺失必填；写出的是内容侧镜像，运行时装配仍读 GLB extras。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
@@ -201,7 +204,7 @@ tailscale serve --bg --set-path /snmodmaker http://127.0.0.1:8099
 
 除网页编辑器外，`tools/content.mjs` 提供同一套内容模型的命令行入口：按 Schema 增删改定义、补本地化、读取类型说明、校验既有模组。它面向 agent、CI 与批量维护脚本，不启动浏览器，也不引入额外依赖（Node.js ≥ 18，ESM）。
 
-CLI 与编辑器使用同一份类型清单：`types` 会同时列出 16 个运行时类型与 9 个 Schema 2.0 草案类型（草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`；`--template` 可选 `goods` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加。
+CLI 与编辑器使用同一份类型清单：`types` 会同时列出 25 个运行时类型与 3 个 Schema 2.0 草案类型（weapons + 剧情 story_arcs / story_levels；草案标 `draft: true`、`schema_version: "2.0"`），`describe` / `list` / `add` / `set` / `validate` 对草案类型同样可用；写出的草案内容文件自动使用 `schema_version: "2.0"`。新建项目时可用 `new --draft <content_type>`（可重复）直接创建**纯 2.0 草案项目**：每类生成一个内容文件与起始定义，并把 capability 自动写入 `manifest.capabilities`（例如 `--draft story_arcs --draft story_levels` 建一个纯剧情包）；`--template` 可选 `goods` / `boiler` / `event` / `weapons` / `starter_kit` / `blank`，其中 `--template weapons` 是「舰载武器包」（一次生成 5 件模拟器武器），可与 `--draft` 叠加——但剧情包是白名单模组，不要与 `--draft story_*` 之外的模板叠加。
 
 所有命令都从**仓库根**执行，`--mod` 指向仓库内的松散模组目录（例如 `dev_mods/core` 或 `SNModMaker/mods/<id>`，必须含 `manifest.json`）；所有写入都会留在该目录内。
 
@@ -254,17 +257,19 @@ node SNModMaker/tools/content.mjs clone --mod SNModMaker/mods/my_mod --from core
 node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_mod --json
 ```
 
-新建 Schema 2.0 草案项目（武器 / 世界生成等）；`--template` 可叠加 1.0 模板：
+新建 Schema 2.0 草案项目（武器 / 剧情等）；`--template` 可叠加 1.0 模板：
 
 ```powershell
 node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_weapons --id my_weapons `
   --name "我的武器包" --draft weapons
-node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_world --id my_world `
-  --name "我的世界包" --draft world_profiles --draft regions --draft sites
+node SNModMaker/tools/content.mjs new --mod SNModMaker/mods/my_story --id my_story `
+  --name "我的剧情包" --draft story_arcs --draft story_levels
 node SNModMaker/tools/content.mjs validate --mod SNModMaker/mods/my_weapons --json
 ```
 
-草案项目会在 `manifest.capabilities` 里自动声明对应 capability（如 weapons → `content.combat.v1`），校验只会给 `draft_content` 警告；这类项目同样不能「导出并覆盖到发布包 mods/」（运行时不加载草案内容）。
+草案项目会在 `manifest.capabilities` 里自动声明对应 capability（weapons → `content.combat.v1`，剧情 → `content.story.v1`），校验只会给 `draft_content`（新建剧情项目另有 `story_arc_empty_levels` / `story_level_orphan` 提示，补齐关卡与引用后消失）；这类项目同样不能「导出并覆盖到发布包 mods/」（运行时不加载草案内容）。
+
+校验随仓库分发的完整剧情示例包（1 篇章 + 2 关卡 + 中英文本）：`node SNModMaker/tools/content.mjs validate --mod sdk/templates/story_pack_iron_tide`（0 error / 2 个预期 `draft_content` warning）。剧情包里混入任何非剧情内容会报 `story_pack_off_whitelist`。
 
 一次生成 5 件战斗模拟器武器（「舰载武器包」模板，只写编辑器项目、不写 Core）：
 
@@ -413,7 +418,7 @@ node tools/gen_content_types.mjs --check
 node SNModMaker/tools/sync-schemas.mjs
 ```
 
-生成物覆盖 28 个 Schema：18 个顶层运行时 Schema + 10 个 `v2/`（`v2/common.schema.json` 与 9 个草案）。
+生成物覆盖 31 个 Schema：18 个顶层运行时 Schema + 13 个 `v2/`（`v2/common.schema.json` + Phase B 9 类 + `weapon` + `story_arc` + `story_level`）。
 
 ### 重新生成 Core 索引
 

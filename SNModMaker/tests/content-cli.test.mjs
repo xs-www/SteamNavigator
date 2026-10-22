@@ -11,11 +11,12 @@
  *   node SNModMaker/tests/content-cli.test.mjs
  *   # or: node --test SNModMaker/tests/content-cli.test.mjs
  *
- * Covers the 16 runtime Content Schema 1.0 types and the 9 Schema 2.0 draft
- * types (draft:true / schema_version 2.0, draft_content warning, v2 $refs).
- * All write operations happen inside fs.mkdtempSync(os.tmpdir()) fixtures. The
- * repository's dev_mods/core is only ever read (a few tests hash its JSON files
- * before and after to prove that).
+ * Covers the 25 runtime Content Schema types (1.0 and promoted 2.0) and the 3
+ * Schema 2.0 draft types (weapons + Story Mode arcs/levels): draft:true /
+ * schema_version 2.0, draft_content warning, v2 $refs and the story-pack
+ * whitelist. All write operations happen inside fs.mkdtempSync(os.tmpdir())
+ * fixtures. The repository's dev_mods/core and sdk/templates are only ever read
+ * (a few tests hash them before and after to prove that).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -35,6 +36,9 @@ const cliCwd = repoRoot;
 
 const MOD_ID = 'test_mod';
 const GOODS_FILE = 'content/goods.json';
+/* Shipped Story Mode sample pack: story-only content mod, read-only fixture.
+ * It lives under sdk/templates because the 1.0 runtime cannot load it yet. */
+const STORY_PACK_DIR = path.join(repoRoot, 'sdk', 'templates', 'story_pack_iron_tide');
 
 /* ------------------------------------------------------------------------- */
 /* CLI invocation helpers                                                     */
@@ -237,6 +241,18 @@ function assertDirUnchanged(before, dir, label, options) {
   assert.deepEqual(snapshotDir(dir, options), before, `${label}: directory content must be unchanged (files written when they should not be)`);
 }
 
+/** Recursively copy a directory so a test can mutate a read-only fixture copy. */
+function copyDir(source, target) {
+  fs.mkdirSync(target, { recursive: true });
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const from = path.join(source, entry.name);
+    const to = path.join(target, entry.name);
+    if (entry.isDirectory()) copyDir(from, to);
+    else fs.copyFileSync(from, to);
+  }
+  return target;
+}
+
 /**
  * Assert every non-empty `before` line still occurs, in the same order, in `after`.
  * Appending a key to a flat JSON object necessarily appends a comma to the old
@@ -377,9 +393,9 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 26, '25 runtime types + 1 Schema 2.0 draft type are editable');
+  assert.equal(json.types.length, 28, '25 runtime types + 3 Schema 2.0 draft types are editable');
   assert.equal(json.activeTypes, 25, 'activeTypes counts runtime types at both 1.0 and 2.0');
-  assert.equal(json.draftTypes, 1, 'draftTypes counts the remaining Schema 2.0 draft type');
+  assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
   for (const key of ['goods', 'materials', 'hulls', 'boilers', 'events', 'contracts', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
@@ -400,7 +416,8 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(patches.schema, 'patch.schema.json');
 
   const drafts = json.types.filter((entry) => entry.draft);
-  assert.equal(drafts.length, 1, 'only the weapons draft is listed with draft:true');
+  assert.equal(drafts.length, 3, 'weapons and the two Story Mode drafts are listed with draft:true');
+  assert.deepEqual(drafts.map((entry) => entry.key), ['weapons', 'story_arcs', 'story_levels']);
   const world = json.types.find((entry) => entry.key === 'world_profiles');
   assert.ok(world, 'world_profiles must be listed as an active type');
   assert.equal(world.singular, 'world_profile');
@@ -421,6 +438,14 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(weapons.schema, 'v2/weapon.schema.json');
   assert.equal(weapons.schema_version, '2.0');
   assert.equal(weapons.capability, 'content.combat.v1');
+  for (const key of ['story_arcs', 'story_levels']) {
+    const story = drafts.find((entry) => entry.key === key);
+    assert.ok(story, `${key} must be listed as a draft type`);
+    assert.equal(story.schema_version, '2.0');
+    assert.equal(story.schema, `v2/${key === 'story_arcs' ? 'story_arc' : 'story_level'}.schema.json`);
+    assert.equal(story.capability, 'content.story.v1');
+    assert.equal(story.group, json.types.find((entry) => entry.key === 'contracts').group, 'story drafts share the narrative/events group');
+  }
   for (const draft of drafts) {
     assert.equal(draft.schema_version, '2.0', `${draft.key} must list schema_version 2.0`);
     assert.match(draft.schema, /^v2\/.+\.schema\.json$/, `${draft.key} must point at the v2 schema bundle entry`);
@@ -682,6 +707,48 @@ test('add --type weapons writes a Schema 2.0 content file that validates cleanly
   assertStatus(validateResult, 0, 'validate weapons mod');
   const validateJson = mustJson(validateResult, 'validate weapons mod');
   assert.equal(validateJson.issues.errors, 0, `weapon content must validate with 0 errors: ${JSON.stringify(validateJson.issues.list)}`);
+});
+
+test('validate accepts the shipped Story Mode example pack', () => {
+  const before = snapshotDir(STORY_PACK_DIR);
+  const result = jsonRun(['validate', '--mod', STORY_PACK_DIR]);
+  assertStatus(result, 0, 'validate story example pack');
+  const json = mustJson(result, 'validate story example pack');
+  assert.equal(json.issues.errors, 0, `story pack must validate with 0 errors: ${JSON.stringify(json.issues.list)}`);
+  const warningCodes = (json.issues.list || [])
+    .filter((issue) => issue.severity === 'warning')
+    .map((issue) => issue.code)
+    .sort();
+  assert.deepEqual(warningCodes, ['draft_content', 'draft_content']);
+  assert.equal(json.stats.definitions, 3, 'one arc + two levels');
+  assert.equal(json.stats.contentFiles, 2);
+  assert.equal(json.stats.locales, 2);
+  assertDirUnchanged(before, STORY_PACK_DIR, 'the story example pack is a read-only fixture');
+});
+
+test('validate rejects free-mode content inside a story pack', (t) => {
+  const mod = copyDir(STORY_PACK_DIR, path.join(tempRoot(t), 'story_pack'));
+  writeJson(path.join(mod, 'content', 'goods.json'), {
+    schema_version: '1.0',
+    content_type: 'goods',
+    definitions: [{
+      id: 'example_story_iron_tide:good/tea',
+      name_key: 'story.iron_tide.l01.name',
+      enabled: true,
+      data: { unit_weight: 1, base_price: 50, base_stock: 80, price_elasticity: 0.15, spawn_weight: 1, category: 'trade' },
+    }],
+  });
+  const manifest = manifestOf(mod);
+  manifest.content.push('content/goods.json');
+  writeJson(path.join(mod, 'manifest.json'), manifest);
+
+  const result = jsonRun(['validate', '--mod', mod]);
+  assertStatus(result, 1, 'validate story pack with free-mode content');
+  const json = mustJson(result, 'validate story pack with free-mode content');
+  assert.ok(
+    json.issues.list.some((issue) => issue.code === 'story_pack_off_whitelist'),
+    `story packs are story-only: ${JSON.stringify(json.issues.list)}`
+  );
 });
 
 test('add blocks new Schema 2.0 errors and writes nothing', (t) => {
@@ -950,7 +1017,7 @@ test('new --draft weapons creates a pure Schema 2.0 draft project', (t) => {
   );
 });
 
-test('new --draft rejects promoted runtime types and only offers the remaining draft', (t) => {
+test('new --draft rejects promoted runtime types and only offers real drafts', (t) => {
   const root = tempRoot(t);
   const mod = path.join(root, 'world_mod');
   const result = jsonRun([
@@ -960,8 +1027,34 @@ test('new --draft rejects promoted runtime types and only offers the remaining d
   const json = assertUsageError(result, 'new --draft world_profiles');
   assert.equal(json.command, 'new');
   assert.match(String(json.error.message), /未知 Schema 2\.0 草案类型/, `promoted types are no longer drafts: ${json.error.message}`);
-  assert.ok(String(json.error.message).includes('weapons'), 'the usage error lists weapons as the remaining draft');
+  assert.ok(String(json.error.message).includes('weapons'), 'the usage error lists weapons as a draft');
+  assert.ok(String(json.error.message).includes('story_arcs'), 'the usage error lists the Story Mode drafts');
   assert.ok(!fs.existsSync(mod), 'a rejected new must not create the target directory');
+});
+
+test('new --draft story_arcs --draft story_levels creates a pure story pack', (t) => {
+  const root = tempRoot(t);
+  const mod = path.join(root, 'story_mod');
+  const result = jsonRun([
+    'new', '--mod', mod, '--id', 'story_mod', '--name', 'Story Mod',
+    '--draft', 'story_arcs', '--draft', 'story_levels',
+  ]);
+  const json = mustJson(result, 'new --draft story pack');
+  assertStatus(result, 0, 'new --draft story pack');
+  assert.deepEqual(manifestOf(mod).content, ['content/story_arcs.json', 'content/story_levels.json']);
+  assert.deepEqual(manifestOf(mod).capabilities, ['content.story.v1']);
+  assert.equal(contentFileOfType(mod, 'story_arcs').payload.schema_version, '2.0');
+  assert.equal(contentFileOfType(mod, 'story_levels').payload.schema_version, '2.0');
+  assert.equal(contentFileOfType(mod, 'story_levels').payload.definitions[0].data.map.fixed.ports.length, 2);
+  assert.equal(json.issues.errors, 0, `a fresh story pack must have no errors: ${JSON.stringify(json.issues.list)}`);
+  const codes = new Set(json.issues.list.map((issue) => issue.code));
+  assert.ok(codes.has('draft_content'));
+  assert.ok(codes.has('story_arc_empty_levels'), 'an arc with no levels warns instead of failing');
+  assert.ok(codes.has('story_level_orphan'), 'a level not yet listed by the arc warns instead of failing');
+
+  const validateResult = jsonRun(['validate', '--mod', mod]);
+  assertStatus(validateResult, 0, 'validate fresh story pack');
+  assert.equal(mustJson(validateResult, 'validate fresh story pack').issues.errors, 0);
 });
 
 test('new --draft rejects unknown draft types with a usage error listing the available drafts', (t) => {

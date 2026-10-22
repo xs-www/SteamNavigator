@@ -2856,6 +2856,208 @@
           "items": {
             "$ref": "#/$defs/tag"
           }
+        },
+        "story_presentation": {
+          "enum": [
+            "card",
+            "briefing",
+            "debrief",
+            "toast",
+            "choice",
+            "radio",
+            "camera_hint"
+          ]
+        },
+        "story_stage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "advance"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "checkpoint": {
+              "type": "boolean"
+            },
+            "presentation": {
+              "$ref": "#/$defs/story_presentation"
+            },
+            "dialogue": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "title_key",
+                "body_keys"
+              ],
+              "properties": {
+                "title_key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "body_keys": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "unlock_features": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "unlock_items": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/id_ref"
+              }
+            },
+            "unlock_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/id_ref"
+              }
+            },
+            "objective": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text_key",
+                "target"
+              ],
+              "properties": {
+                "text_key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "target": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "advance": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "confirm"
+                  ]
+                },
+                "event": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counter": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counter_from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "at_least": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "flag": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "not_flag": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "all": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/story_condition"
+                  }
+                },
+                "match": {
+                  "$ref": "#/$defs/story_match"
+                }
+              }
+            },
+            "lock_actions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "preferred_strategy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "story_condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "event": {
+              "type": "string",
+              "minLength": 1
+            },
+            "counter": {
+              "type": "string",
+              "minLength": 1
+            },
+            "counter_from": {
+              "type": "string",
+              "minLength": 1
+            },
+            "at_least": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "flag": {
+              "type": "string",
+              "minLength": 1
+            },
+            "not_flag": {
+              "type": "string",
+              "minLength": 1
+            },
+            "match": {
+              "$ref": "#/$defs/story_match"
+            }
+          }
+        },
+        "story_match": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -3542,194 +3744,9 @@
               "type": "array",
               "minItems": 1,
               "items": {
-                "$ref": "#/$defs/story_stage"
+                "$ref": "common.schema.json#/$defs/story_stage"
               }
             }
-          }
-        },
-        "story_stage": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "advance"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "dialogue": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "title_key",
-                "body_keys"
-              ],
-              "properties": {
-                "title_key": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "body_keys": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            },
-            "unlock_features": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              }
-            },
-            "unlock_items": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "unlock_modules": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "objective": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "text_key",
-                "target"
-              ],
-              "properties": {
-                "text_key": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "target": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            },
-            "advance": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "mode": {
-                  "enum": [
-                    "confirm"
-                  ]
-                },
-                "event": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "counter": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "counter_from": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "at_least": {
-                  "type": "integer",
-                  "minimum": 1
-                },
-                "flag": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "not_flag": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "all": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "$ref": "#/$defs/story_condition"
-                  }
-                },
-                "match": {
-                  "$ref": "#/$defs/story_match"
-                }
-              }
-            },
-            "lock_actions": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              }
-            },
-            "preferred_strategy": {
-              "type": "string",
-              "minLength": 1
-            },
-            "effects": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            }
-          }
-        },
-        "story_condition": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "event": {
-              "type": "string",
-              "minLength": 1
-            },
-            "counter": {
-              "type": "string",
-              "minLength": 1
-            },
-            "counter_from": {
-              "type": "string",
-              "minLength": 1
-            },
-            "at_least": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "flag": {
-              "type": "string",
-              "minLength": 1
-            },
-            "not_flag": {
-              "type": "string",
-              "minLength": 1
-            },
-            "match": {
-              "$ref": "#/$defs/story_match"
-            }
-          }
-        },
-        "story_match": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
           }
         }
       }
@@ -4104,6 +4121,681 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 160
+            }
+          }
+        }
+      }
+    },
+    "v2/story_arc.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/story-arc-2.json",
+      "title": "Steam Navigator story arc content file (Schema 2.0 draft)",
+      "description": "Story Mode campaign arcs (Content Schema 2.0 draft). One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. See docs/design/STORY_MODE.md for the full contract. The Godot runtime does not load Schema 2.0 draft content yet.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "story_arcs"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/story_arc_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "local_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$"
+        },
+        "story_character": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name_key"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/local_id"
+            },
+            "name_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "description_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "role": {
+              "enum": [
+                "protagonist",
+                "supporting",
+                "antagonist",
+                "other"
+              ]
+            }
+          }
+        },
+        "story_term": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "term_key",
+            "definition_key"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/local_id"
+            },
+            "term_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "definition_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        },
+        "story_arc_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "protagonist_id",
+            "characters",
+            "levels"
+          ],
+          "properties": {
+            "protagonist_id": {
+              "$ref": "#/$defs/local_id"
+            },
+            "characters": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/story_character"
+              }
+            },
+            "terms": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/story_term"
+              }
+            },
+            "levels": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "canon": {
+              "type": "boolean"
+            },
+            "completion_achievement": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.]{1,63}$"
+            },
+            "source": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "world_bible": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "author": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/story_level.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/story-level-2.json",
+      "title": "Steam Navigator story level content file (Schema 2.0 draft)",
+      "description": "Story Mode levels (Content Schema 2.0 draft). One level is one hand-authored mission on a fixed map: the embedded fixed_layout ports/edges, the initial run state, the staged mission line (shared story_stage DSL from v2/common.schema.json), narrative briefing/beats/debrief, difficulty knobs, checkpoint-driven retry policy and non-gameplay rewards. See docs/design/STORY_MODE.md for the full contract. The Godot runtime does not load Schema 2.0 draft content yet.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "story_levels"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/story_level_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "port_id": {
+          "type": "string",
+          "pattern": "^port_[0-9]{1,2}$"
+        },
+        "fixed_port": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name_key",
+            "position"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/port_id"
+            },
+            "name_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "archetype": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "position": {
+              "$ref": "common.schema.json#/$defs/range2"
+            },
+            "facilities": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z_]+$"
+              }
+            },
+            "market": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "stock": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "price": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fixed_edge": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to",
+            "distance",
+            "risk"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/port_id"
+            },
+            "to": {
+              "$ref": "#/$defs/port_id"
+            },
+            "distance": {
+              "type": "number",
+              "minimum": 1
+            },
+            "risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "bidirectional": {
+              "type": "boolean"
+            }
+          }
+        },
+        "fixed_map": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ports",
+            "edges"
+          ],
+          "properties": {
+            "ports": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "$ref": "#/$defs/fixed_port"
+              }
+            },
+            "edges": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/fixed_edge"
+              }
+            },
+            "start_port": {
+              "$ref": "#/$defs/port_id"
+            }
+          }
+        },
+        "level_map": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fixed"
+          ],
+          "properties": {
+            "map_config": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "fog": {
+              "enum": [
+                "revealed",
+                "explored",
+                "unknown"
+              ]
+            },
+            "fixed": {
+              "$ref": "#/$defs/fixed_map"
+            }
+          }
+        },
+        "level_start": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "starting_build": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "port_id": {
+              "$ref": "#/$defs/port_id"
+            },
+            "money": {
+              "type": "number",
+              "minimum": 0
+            },
+            "ship_fuel": {
+              "type": "number",
+              "minimum": 0
+            },
+            "ship_water": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cargo": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/cargo_stack"
+              }
+            },
+            "equipped_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "world_time": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
+        "level_systems": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "unlock_features": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "unlock_items": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "unlock_modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "lock_actions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "narrative_dialogue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title_key",
+            "body_keys"
+          ],
+          "properties": {
+            "title_key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "body_keys": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "narrative_brief": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title_key",
+            "body_keys"
+          ],
+          "properties": {
+            "presentation": {
+              "$ref": "common.schema.json#/$defs/story_presentation"
+            },
+            "speaker_key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "title_key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "body_keys": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "narrative_beat": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "dialogue"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "stage_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "presentation": {
+              "$ref": "common.schema.json#/$defs/story_presentation"
+            },
+            "dialogue": {
+              "$ref": "#/$defs/narrative_dialogue"
+            }
+          }
+        },
+        "narrative_debrief": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "success_keys"
+          ],
+          "properties": {
+            "presentation": {
+              "$ref": "common.schema.json#/$defs/story_presentation"
+            },
+            "success_keys": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "failure_keys": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "hook_key": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "level_narrative": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "brief",
+            "debrief"
+          ],
+          "properties": {
+            "brief": {
+              "$ref": "#/$defs/narrative_brief"
+            },
+            "beats": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/narrative_beat"
+              }
+            },
+            "debrief": {
+              "$ref": "#/$defs/narrative_debrief"
+            }
+          }
+        },
+        "level_difficulty": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "profile": {
+              "enum": [
+                "story.intro",
+                "story.standard",
+                "story.hard"
+              ]
+            },
+            "knobs": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "starting_money_scale": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "deadline_scale": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "risk_scale": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "coal_water_scale": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "hint_level": {
+                  "enum": [
+                    "full",
+                    "light",
+                    "none"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "level_rewards": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "achievements": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]{1,63}$"
+              }
+            },
+            "codex_entries": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]{1,63}$"
+              }
+            },
+            "cosmetics": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]{1,63}$"
+              }
+            }
+          }
+        },
+        "level_fail": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "default_mode",
+            "allow"
+          ],
+          "properties": {
+            "default_mode": {
+              "enum": [
+                "checkpoint",
+                "level_start"
+              ]
+            },
+            "allow": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "checkpoint",
+                  "level_start"
+                ]
+              }
+            }
+          }
+        },
+        "story_level_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "map",
+            "stages",
+            "narrative"
+          ],
+          "properties": {
+            "map": {
+              "$ref": "#/$defs/level_map"
+            },
+            "start": {
+              "$ref": "#/$defs/level_start"
+            },
+            "systems": {
+              "$ref": "#/$defs/level_systems"
+            },
+            "narrative": {
+              "$ref": "#/$defs/level_narrative"
+            },
+            "stages": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "common.schema.json#/$defs/story_stage"
+              }
+            },
+            "difficulty": {
+              "$ref": "#/$defs/level_difficulty"
+            },
+            "rewards": {
+              "$ref": "#/$defs/level_rewards"
+            },
+            "fail": {
+              "$ref": "#/$defs/level_fail"
             }
           }
         }

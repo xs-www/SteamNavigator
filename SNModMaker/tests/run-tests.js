@@ -67,6 +67,26 @@ function freshProject() {
   return Store.createProject({ id: 'test_mod', name: 'Test Mod', template: 'goods' });
 }
 
+/* Load a directory of mod files (manifest + content + localization) as a project. */
+function projectFromDir(dir) {
+  const entries = [];
+  const walk = (current, prefix) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(path.join(current, entry.name), relative);
+      else entries.push({ path: relative, data: fs.readFileSync(path.join(current, entry.name)) });
+    }
+  };
+  walk(dir, '');
+  return Store.fromFiles(entries).project;
+}
+
+/* The shipped Story Mode sample pack (story-only content mod, not loadable by
+ * the 1.0 runtime yet, so it lives under sdk/templates rather than sdk/examples). */
+function storyPackProject() {
+  return projectFromDir(path.resolve(__dirname, '..', '..', 'sdk', 'templates', 'story_pack_iron_tide'));
+}
+
 function errorsOf(result) {
   return result.issues.filter((issue) => issue.severity === 'error');
 }
@@ -79,8 +99,8 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 29, `expected 18 top-level + 11 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 29, `expected 29 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 31, `expected 18 top-level + 13 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 31, `expected 31 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.ok(globalThis.SN_SCHEMAS['good.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['common.schema.json']);
@@ -88,6 +108,8 @@ function warningsOf(result) {
     assert.ok(globalThis.SN_SCHEMAS['v2/world_profile.schema.json']);
     assert.ok(globalThis.SN_SCHEMAS['v2/map_config.schema.json'], 'v2/map_config is the Phase B scenario config schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/weapon.schema.json'], 'v2/weapon is the weapons draft schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/story_arc.schema.json'], 'v2/story_arc is the Story Mode arc draft schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/story_level.schema.json'], 'v2/story_level is the Story Mode level draft schema');
   });
 
   await test('embedded schema bundle is in sync with /schemas recursively', () => {
@@ -139,9 +161,9 @@ function warningsOf(result) {
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
     assert.deepEqual(warningsOf(validation).map((issue) => issue.code), ['draft_content'], 'capability_undeclared must not fire');
 
-    // Phase B promoted the world/campaign family out of the draft API; only
-    // weapons can still be created through `drafts`, and promoted types are
-    // editable through the normal runtime-type path.
+    // Phase B promoted the world/campaign family out of the draft API; weapons
+    // and the two Story Mode types are the only creatable drafts now, and
+    // promoted types are editable through the normal runtime-type path.
     const promoted = Store.createProject({ id: 'world_mod', name: 'World Mod', template: 'goods' });
     Store.addDefinition(promoted, 'world_profiles', {});
     Store.addDefinition(promoted, 'regions', {});
@@ -297,8 +319,8 @@ function warningsOf(result) {
   });
 
   await test('draft types are generated with schema 2.0 and registered in the catalog', () => {
-    assert.equal(Types.DRAFT_TYPES.length, 1, 'only weapons remains a Schema 2.0 draft type');
-    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['weapons']);
+    assert.equal(Types.DRAFT_TYPES.length, 3, 'weapons and the two Story Mode types are Schema 2.0 draft types');
+    assert.deepEqual(Types.DRAFT_TYPES.map((info) => info.key), ['weapons', 'story_arcs', 'story_levels']);
     for (const info of Types.DRAFT_TYPES) {
       assert.equal(info.draft, true, `${info.key} must be marked draft`);
       assert.equal(info.schemaVersion, '2.0', `${info.key} must declare schema 2.0`);
@@ -359,29 +381,44 @@ function warningsOf(result) {
   });
 
   await test('every draft type validates with zero errors using catalog defaults', () => {
-    const project = freshProject();
-    for (const info of Types.DRAFT_TYPES) {
-      const added = Store.addDefinition(project, info.key, {});
-      assert.ok(added && added.definition && added.file, `add ${info.key}`);
-      assert.equal(added.file.schema_version, '2.0', `${info.key} content file must be written as schema 2.0`);
-      assert.equal(added.file.definitions.length, 1, `${info.key} adds exactly one definition`);
-      const html = UI.renderDefinitionForm({
-        project,
-        typeKey: info.key,
-        definition: added.definition,
-        file: added.file,
-        index: added.index,
-        schemaFile: info.schema,
+    /* Story packs are story-only, so weapons and the Story Mode drafts live in
+     * separate projects: mixing them would trip the story_pack_off_whitelist rule. */
+    const families = [
+      { drafts: ['weapons'], types: ['weapons'] },
+      { drafts: ['story_arcs', 'story_levels'], types: ['story_arcs', 'story_levels'] },
+    ];
+    for (const family of families) {
+      const project = Store.createProject({
+        id: 'draft_family_mod',
+        name: 'Draft Family',
+        template: null,
+        drafts: family.drafts,
       });
-      assert.ok(html.length > 200, `${info.key} form too small`);
-      assert.ok(html.includes('data-field='), `${info.key} form has no inputs`);
-      assert.ok(!html.includes('undefined'), `${info.key} form contains undefined`);
+      for (const typeKey of family.types) {
+        const info = Types.DRAFT_TYPES.find((item) => item.key === typeKey);
+        assert.ok(info, `${typeKey} must be a draft type`);
+        const file = project.contentFiles.find((item) => item.content_type === typeKey);
+        assert.ok(file, `${typeKey} content file must exist`);
+        assert.equal(file.schema_version, '2.0', `${typeKey} content file must be written as schema 2.0`);
+        assert.equal(file.definitions.length, 1, `${typeKey} adds exactly one starter definition`);
+        const html = UI.renderDefinitionForm({
+          project,
+          typeKey,
+          definition: file.definitions[0],
+          file,
+          index: 0,
+          schemaFile: info.schema,
+        });
+        assert.ok(html.length > 200, `${typeKey} form too small`);
+        assert.ok(html.includes('data-field='), `${typeKey} form has no inputs`);
+        assert.ok(!html.includes('undefined'), `${typeKey} form contains undefined`);
+      }
+      const result = Validate.validateProject(project);
+      assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+      const warningCodes = new Set(warningsOf(result).map((issue) => issue.code));
+      assert.ok(warningCodes.has('draft_content'), 'draft content must produce a draft_content warning');
+      assert.ok(!warningCodes.has('capability_undeclared'), 'the draft starter must declare its capability');
     }
-    const result = Validate.validateProject(project);
-    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
-    const warningCodes = new Set(warningsOf(result).map((issue) => issue.code));
-    assert.ok(warningCodes.has('draft_content'), 'draft content must produce a draft_content warning');
-    assert.ok(warningCodes.has('capability_undeclared'), 'undeclared capabilities must warn');
   });
 
   await test('weapons draft defaults satisfy the Schema 2.0 weapon schema', () => {
@@ -430,6 +467,112 @@ function warningsOf(result) {
     const combat = (manifest.planned || []).find((system) => system.capability === 'content.combat.v1');
     assert.ok(combat && combat.types.includes('weapons'), 'weapons stays planned under content.combat.v1');
     assert.ok(!Types.TYPES.some((type) => type.key === 'weapons'), 'the Godot runtime type list must not load weapons');
+  });
+
+  await test('story drafts satisfy their Schema 2.0 schemas and stay out of runtime types', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'content_types.json'), 'utf8'));
+    for (const key of ['story_arcs', 'story_levels']) {
+      const entry = (manifest.draft_types || []).find((type) => type.key === key);
+      assert.ok(entry, `${key} must be listed in draft_types`);
+      assert.equal(entry.capability, 'content.story.v1', `${key} declares the story capability`);
+      assert.equal(entry.schema_version, '2.0');
+      const schemaFile = String(manifest.draft_schemas[key]).replace(/^schemas\//, '');
+      const schema = globalThis.SN_SCHEMAS[schemaFile];
+      assert.ok(schema, `${schemaFile} must be embedded in the schema bundle`);
+      assert.equal(schema.properties.content_type.const, key, `${key} schema pins content_type`);
+      assert.equal(schema.properties.schema_version.const, '2.0', `${key} schema pins schema_version`);
+      assert.ok(!Types.TYPES.some((type) => type.key === key), 'the runtime type list must not load story drafts');
+    }
+    const story = (manifest.planned || []).find((system) => system.capability === 'content.story.v1');
+    assert.ok(story, 'the story family stays planned under content.story.v1');
+    assert.deepEqual(story.types, ['story_arcs', 'story_levels']);
+
+    // Catalog defaults must pass the real draft schemas.
+    for (const [typeKey, id, required] of [
+      ['story_arcs', 'test_mod:story_arc/iron_tide', ['protagonist_id', 'characters', 'levels']],
+      ['story_levels', 'test_mod:story_level/01_first_smoke', ['map', 'stages', 'narrative']],
+    ]) {
+      const info = Types.DRAFT_TYPES.find((item) => item.key === typeKey);
+      const defaults = Catalog.DEFAULTS[typeKey]();
+      const envelope = {
+        schema_version: '2.0',
+        content_type: typeKey,
+        definitions: [{ id, name_key: `${typeKey}.test_mod.name`, enabled: true, data: defaults }],
+      };
+      const errors = Validate.validateSchema(envelope, globalThis.SN_SCHEMAS[info.schema], info.schema);
+      assert.deepEqual(errors, [], `${typeKey} defaults must pass the draft schema: ${JSON.stringify(errors, null, 2)}`);
+      for (const field of required) {
+        assert.ok(Object.prototype.hasOwnProperty.call(defaults, field), `${typeKey} defaults must provide ${field}`);
+      }
+    }
+  });
+
+  await test('story example pack validates as a story-only mod', () => {
+    const project = storyPackProject();
+    assert.deepEqual(project.contentFiles.map((file) => file.content_type), ['story_arcs', 'story_levels']);
+    assert.deepEqual(project.manifest.capabilities, ['content.story.v1'], 'the pack declares the story capability');
+    const result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+    assert.deepEqual(
+      warningsOf(result).map((issue) => issue.code),
+      ['draft_content', 'draft_content'],
+      'the sample pack may only warn that draft content is not loaded by the runtime'
+    );
+    const arc = project.contentFiles[0].definitions[0];
+    assert.deepEqual(arc.data.levels, [
+      'example_story_iron_tide:story_level/01_first_smoke',
+      'example_story_iron_tide:story_level/02_homeward',
+    ]);
+  });
+
+  await test('story semantics catch cast, checkpoint, beat, fixed map and whitelist mistakes', () => {
+    const project = Store.createProject({
+      id: 'story_mod',
+      name: 'Story Mod',
+      template: null,
+      drafts: ['story_arcs', 'story_levels'],
+    });
+    const arcFile = project.contentFiles.find((file) => file.content_type === 'story_arcs');
+    const levelFile = project.contentFiles.find((file) => file.content_type === 'story_levels');
+    const arc = arcFile.definitions[0];
+    const level = levelFile.definitions[0];
+    const codes = () => new Set(Validate.validateProject(project).issues.map((issue) => issue.code));
+
+    assert.ok(!codes().has('story_protagonist_unknown'), 'the starter keeps its protagonist in the cast');
+    arc.data.protagonist_id = 'ghost';
+    assert.ok(codes().has('story_protagonist_unknown'), 'an unknown protagonist must error');
+    arc.data.protagonist_id = 'protagonist';
+
+    arc.data.levels = ['story_mod:story_arc/other'];
+    assert.ok(codes().has('story_arc_level_type'), 'an arc may only list story_level ids');
+    arc.data.levels = [];
+
+    level.data.stages = level.data.stages.map((stage) => Object.assign({}, stage, { checkpoint: false }));
+    assert.ok(codes().has('story_level_checkpoint_missing'), 'a level without a checkpoint must error');
+    level.data.stages[0].checkpoint = true;
+
+    level.data.narrative.beats = [{
+      id: 'oops',
+      stage_id: 'missing_stage',
+      dialogue: { title_key: 'story.placeholder.title', body_keys: ['story.placeholder.body'] },
+    }];
+    assert.ok(codes().has('story_beat_stage_unknown'), 'a beat on an unknown stage must error');
+    level.data.narrative.beats = [];
+
+    level.data.fail = { default_mode: 'level_start', allow: ['checkpoint'] };
+    assert.ok(codes().has('story_fail_default_not_allowed'), 'default_mode outside allow must error');
+    level.data.fail = { default_mode: 'checkpoint', allow: ['checkpoint', 'level_start'] };
+
+    level.data.map.fixed.edges.push({ from: 'port_0', to: 'port_9', distance: 10, risk: 0.1 });
+    assert.ok(codes().has('story_fixed_edge_port_unknown'), 'an edge to an unknown port must error');
+    level.data.map.fixed.edges.pop();
+
+    level.data.map.fixed.start_port = 'port_9';
+    assert.ok(codes().has('story_fixed_start_port_unknown'), 'start_port must be a declared port');
+    level.data.map.fixed.start_port = 'port_0';
+
+    Store.addDefinition(project, 'goods', {});
+    assert.ok(codes().has('story_pack_off_whitelist'), 'a story pack may not carry free-mode content');
   });
 
   await test('weapon form renders combat, assembly and economy fields with readable enums', () => {

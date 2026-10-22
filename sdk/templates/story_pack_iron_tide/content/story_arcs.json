@@ -1,0 +1,47 @@
+{
+  "schema_version": "2.0",
+  "content_type": "story_arcs",
+  "definitions": [
+    {
+      "id": "example_story_iron_tide:story_arc/iron_tide",
+      "name_key": "story.iron_tide.arc.name",
+      "description_key": "story.iron_tide.arc.desc",
+      "tags": ["story.arc", "story.canon"],
+      "enabled": true,
+      "data": {
+        "protagonist_id": "captain",
+        "characters": [
+          {
+            "id": "captain",
+            "name_key": "story.iron_tide.cast.captain.name",
+            "description_key": "story.iron_tide.cast.captain.desc",
+            "role": "protagonist"
+          },
+          {
+            "id": "harbor_master",
+            "name_key": "story.iron_tide.cast.harbor_master.name",
+            "description_key": "story.iron_tide.cast.harbor_master.desc",
+            "role": "supporting"
+          }
+        ],
+        "terms": [
+          {
+            "id": "black_tide",
+            "term_key": "story.iron_tide.term.black_tide.term",
+            "definition_key": "story.iron_tide.term.black_tide.desc"
+          }
+        ],
+        "levels": [
+          "example_story_iron_tide:story_level/01_first_smoke",
+          "example_story_iron_tide:story_level/02_homeward"
+        ],
+        "canon": false,
+        "completion_achievement": "iron_tide.complete",
+        "source": {
+          "world_bible": "world_forge_iron_tide_v1",
+          "author": "SNStoryMaker sample"
+        }
+      }
+    }
+  ]
+}

@@ -105,19 +105,20 @@ add 选项：
 通用选项：--json  --quiet  --help/-h
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
 
-Schema 2.0 草案（world_profiles / regions / sites / route_templates / weather_profiles /
-factions / discoveries / start_profiles / weapons）可以像 1.0 类型一样 list / add / set /
+Schema 2.0 草案（weapons / story_arcs / story_levels）可以像 1.0 类型一样 list / add / set /
 describe / validate，内容文件写 schema_version "2.0"；但游戏运行时仍只加载 Content
 Schema 1.0，草案内容不会在游戏里生效（校验会给出 draft_content 警告）。草案模组使用
-capability 时还需在 manifest.capabilities 声明对应能力。
+capability 时还需在 manifest.capabilities 声明对应能力（weapons → content.combat.v1，
+剧情 → content.story.v1）。剧情包是白名单模组：同一包里出现故事内容之外的类型会报
+story_pack_off_whitelist。
 
 新建项目时用 --draft 直接创建 Schema 2.0 草案项目（每类生成一个 content 文件、
 schema_version "2.0" 与起始定义，并把 capability 写入 manifest；不与 --template 同时
 指定时不会附带 1.0 商品起始定义）：
   node SNModMaker/tools/content.mjs new --mod my_weapon_mod --id my_weapon_mod \\
     --name "我的武器包" --draft weapons
-  node SNModMaker/tools/content.mjs new --mod my_world_mod --id my_world_mod \\
-    --name "我的世界包" --draft world_profiles --draft regions --draft sites
+  node SNModMaker/tools/content.mjs new --mod my_story_mod --id my_story_mod \\
+    --name "我的剧情包" --draft story_arcs --draft story_levels
 `;
 
 /* ------------------------------------------------------------------ */

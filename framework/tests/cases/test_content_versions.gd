@@ -8,7 +8,8 @@ extends TestCase
 ##   （world_profiles / regions / sites / route_templates / weather_profiles /
 ##   factions / discoveries / start_profiles / map_configs）为 2.0，其余运行时类型与
 ##   patches 仍为 1.0。
-## - `content_types.json.draft_schemas` 只剩 `weapons`，草案不得进入 `ContentTypes`。
+## - `content_types.json.draft_schemas` 是 `weapons` + 剧情模式 `story_arcs` /
+##   `story_levels`，草案不得进入 `ContentTypes`。
 ## - 1.0 内容的 envelope 仍走 1.0 校验；goods 声明 2.0 必须报 `unsupported_schema`。
 ## - 一个 2.0 `world_profiles` 内容模组必须通过 ContentCompiler、进入注册表，
 ##   且不产生 fatal / degraded 启动状态。
@@ -172,8 +173,10 @@ func test_v2_draft_types_are_not_runtime_types() -> void:
 	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
 	var manifest: Dictionary = parsed["value"]
 	var drafts: Dictionary = manifest.get("draft_schemas", {})
-	assert_eq(drafts.size(), 1, "only weapons remains a Schema 2.0 draft type")
-	assert_true(drafts.has("weapons"), "weapons is the remaining draft type")
+	assert_eq(drafts.size(), 3, "weapons and the two Story Mode types are Schema 2.0 draft types")
+	for expected in ["weapons", "story_arcs", "story_levels"]:
+		assert_true(drafts.has(expected), "%s is a draft schema" % expected)
+		assert_true(FileAccess.file_exists("res://" + String(drafts[expected])), "%s draft schema exists" % expected)
 	for draft_type in drafts.keys():
 		var content_type := StringName(String(draft_type))
 		assert_false(ContentTypes.is_known(content_type), "%s is not a runtime content type" % draft_type)

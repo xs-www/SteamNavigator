@@ -7,7 +7,7 @@
 - [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) — 正式版航海图系统设计；阶段 1–3 已实现，后续阶段仍在本文件迭代
 - [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) — 海图阶段 4 探索系统实现契约（4.1/4.2 已实现；4.3 体验修正的 8 条反馈、决策与分片计划见 §10，待实现）
 - [STORY_TUTORIAL.md](STORY_TUTORIAL.md) — 阶段 4.5 新手剧情 / 教学系统实现契约（全部 Implemented；Phase A 任务追踪见 TASK_QUEST_SYSTEM.md）
-- [STORY_MODE.md](STORY_MODE.md) — 剧情模式设计草案（Draft 1：固定地图 + 固定任务线 + 独立世界观 + 关卡数据化；未实现）
+- [STORY_MODE.md](STORY_MODE.md) — 剧情模式设计草案（Draft 5：只加剧情的模组数据包（多关）+ 内嵌固定地图 + 任务线 + 四类能力 + 仓库根目录 SNStoryMaker 编辑器；S1 数据契约已交付，S2 起做加载链）
 - [TASK_QUEST_SYSTEM.md](TASK_QUEST_SYSTEM.md) — 任务追踪与任务系统设计（Phase A `task.view` 已实现；Phase B 正式 Quest 待实现）
 - [ASSET_MAP.md](ASSET_MAP.md) — 美术 / 音频资产映射与来源（随批次持续更新）
 - [MODELING_BACKLOG.md](MODELING_BACKLOG.md) — 3D 建模需求 backlog（P0/P1/P2、建议批次、统一验收口径）

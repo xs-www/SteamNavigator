@@ -1,0 +1,253 @@
+{
+  "schema_version": "2.0",
+  "content_type": "story_levels",
+  "definitions": [
+    {
+      "id": "example_story_iron_tide:story_level/01_first_smoke",
+      "name_key": "story.iron_tide.l01.name",
+      "description_key": "story.iron_tide.l01.desc",
+      "tags": ["story.level", "story.tutorial"],
+      "enabled": true,
+      "data": {
+        "map": {
+          "fog": "revealed",
+          "fixed": {
+            "ports": [
+              {
+                "id": "port_0",
+                "name_key": "story.iron_tide.port.ash_harbor",
+                "position": [40, 80],
+                "facilities": ["exchange", "supply"],
+                "market": {
+                  "coal": {"stock": 30, "price": 4},
+                  "water": {"stock": 30, "price": 2}
+                }
+              },
+              {
+                "id": "port_1",
+                "name_key": "story.iron_tide.port.iron_bay",
+                "position": [160, 80],
+                "facilities": ["exchange", "shipyard"],
+                "market": {
+                  "coal": {"stock": 12, "price": 7}
+                }
+              },
+              {
+                "id": "port_2",
+                "name_key": "story.iron_tide.port.mist_reef",
+                "position": [100, 180],
+                "facilities": ["intel"]
+              }
+            ],
+            "edges": [
+              {"from": "port_0", "to": "port_1", "distance": 120, "risk": 0.05, "bidirectional": true},
+              {"from": "port_1", "to": "port_2", "distance": 90, "risk": 0.12, "bidirectional": true},
+              {"from": "port_0", "to": "port_2", "distance": 140, "risk": 0.02, "bidirectional": true}
+            ],
+            "start_port": "port_0"
+          }
+        },
+        "start": {
+          "starting_build": "core:starting_build/steady",
+          "port_id": "port_0",
+          "money": 200,
+          "ship_fuel": 4,
+          "ship_water": 3,
+          "cargo": [],
+          "equipped_modules": [],
+          "world_time": "day_1_0600"
+        },
+        "systems": {
+          "unlock_features": ["market", "contracts"],
+          "unlock_items": [],
+          "unlock_modules": [],
+          "lock_actions": ["loan"]
+        },
+        "stages": [
+          {
+            "id": "opening",
+            "checkpoint": true,
+            "presentation": "briefing",
+            "dialogue": {
+              "title_key": "story.iron_tide.l01.stage.opening.title",
+              "body_keys": ["story.iron_tide.l01.stage.opening.body.0"]
+            },
+            "advance": {"mode": "confirm"}
+          },
+          {
+            "id": "buy_fuel",
+            "presentation": "card",
+            "objective": {
+              "text_key": "story.iron_tide.l01.objective.coal",
+              "target": 6
+            },
+            "advance": {"event": "cmd:supply.buy_coal"}
+          },
+          {
+            "id": "first_depart",
+            "checkpoint": true,
+            "presentation": "card",
+            "advance": {"event": "ui:arrival_settled"}
+          },
+          {
+            "id": "closing",
+            "checkpoint": true,
+            "presentation": "debrief",
+            "dialogue": {
+              "title_key": "story.iron_tide.l01.stage.closing.title",
+              "body_keys": ["story.iron_tide.l01.stage.closing.body.0"]
+            },
+            "advance": {"event": "story.level_complete"}
+          }
+        ],
+        "narrative": {
+          "brief": {
+            "presentation": "briefing",
+            "speaker_key": "story.iron_tide.cast.harbor_master.name",
+            "title_key": "story.iron_tide.l01.brief.title",
+            "body_keys": [
+              "story.iron_tide.l01.brief.body.0",
+              "story.iron_tide.l01.brief.body.1"
+            ]
+          },
+          "beats": [
+            {
+              "id": "harbor_farewell",
+              "stage_id": "first_depart",
+              "presentation": "choice",
+              "dialogue": {
+                "title_key": "story.iron_tide.l01.beat.farewell.title",
+                "body_keys": ["story.iron_tide.l01.beat.farewell.body.0"]
+              }
+            }
+          ],
+          "debrief": {
+            "presentation": "debrief",
+            "success_keys": ["story.iron_tide.l01.debrief.success.0"],
+            "failure_keys": ["story.iron_tide.l01.debrief.failure.0"],
+            "hook_key": "story.iron_tide.l01.debrief.hook"
+          }
+        },
+        "difficulty": {
+          "profile": "story.intro",
+          "knobs": {
+            "starting_money_scale": 1.0,
+            "deadline_scale": 1.0,
+            "risk_scale": 0.6,
+            "coal_water_scale": 1.0,
+            "hint_level": "full"
+          }
+        },
+        "rewards": {
+          "achievements": ["iron_tide.first_smoke"],
+          "codex_entries": ["iron_tide.black_tide"],
+          "cosmetics": []
+        },
+        "fail": {
+          "default_mode": "checkpoint",
+          "allow": ["checkpoint", "level_start"]
+        }
+      }
+    },
+    {
+      "id": "example_story_iron_tide:story_level/02_homeward",
+      "name_key": "story.iron_tide.l02.name",
+      "description_key": "story.iron_tide.l02.desc",
+      "tags": ["story.level", "story.trade"],
+      "enabled": true,
+      "data": {
+        "map": {
+          "fog": "explored",
+          "fixed": {
+            "ports": [
+              {
+                "id": "port_0",
+                "name_key": "story.iron_tide.port.iron_bay",
+                "position": [160, 80],
+                "facilities": ["exchange", "shipyard"]
+              },
+              {
+                "id": "port_1",
+                "name_key": "story.iron_tide.port.ash_harbor",
+                "position": [40, 80],
+                "facilities": ["exchange", "supply"],
+                "market": {
+                  "coal": {"stock": 4, "price": 11}
+                }
+              }
+            ],
+            "edges": [
+              {"from": "port_0", "to": "port_1", "distance": 120, "risk": 0.08, "bidirectional": true}
+            ],
+            "start_port": "port_1"
+          }
+        },
+        "start": {
+          "starting_build": "core:starting_build/steady",
+          "port_id": "port_1",
+          "money": 260,
+          "ship_fuel": 5,
+          "ship_water": 4,
+          "cargo": [],
+          "equipped_modules": [],
+          "world_time": "day_3_1800"
+        },
+        "stages": [
+          {
+            "id": "opening",
+            "checkpoint": true,
+            "presentation": "briefing",
+            "dialogue": {
+              "title_key": "story.iron_tide.l02.stage.opening.title",
+              "body_keys": ["story.iron_tide.l02.stage.opening.body.0"]
+            },
+            "advance": {"mode": "confirm"}
+          },
+          {
+            "id": "return_run",
+            "presentation": "card",
+            "advance": {"event": "ui:arrival_settled"}
+          },
+          {
+            "id": "closing",
+            "checkpoint": true,
+            "presentation": "debrief",
+            "dialogue": {
+              "title_key": "story.iron_tide.l02.stage.closing.title",
+              "body_keys": ["story.iron_tide.l02.stage.closing.body.0"]
+            },
+            "advance": {"event": "story.level_complete"}
+          }
+        ],
+        "narrative": {
+          "brief": {
+            "presentation": "briefing",
+            "speaker_key": "story.iron_tide.cast.captain.name",
+            "title_key": "story.iron_tide.l02.brief.title",
+            "body_keys": ["story.iron_tide.l02.brief.body.0"]
+          },
+          "beats": [],
+          "debrief": {
+            "presentation": "debrief",
+            "success_keys": ["story.iron_tide.l02.debrief.success.0"],
+            "failure_keys": ["story.iron_tide.l02.debrief.failure.0"]
+          }
+        },
+        "difficulty": {
+          "profile": "story.standard",
+          "knobs": {
+            "starting_money_scale": 1.0,
+            "deadline_scale": 1.0,
+            "risk_scale": 1.0,
+            "coal_water_scale": 1.0,
+            "hint_level": "light"
+          }
+        },
+        "fail": {
+          "default_mode": "level_start",
+          "allow": ["checkpoint", "level_start"]
+        }
+      }
+    }
+  ]
+}

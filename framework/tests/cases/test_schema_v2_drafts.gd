@@ -1,16 +1,18 @@
 extends TestCase
 ## @static-doc
-## 作用：Content Schema 2.0 世界/战役 Schema 测试：SchemaValidator 合法 / 非法样本，
-## Phase B 9 类提升 active，`weapons` 仍是唯一草案，`map_configs` 覆盖 31 键 exploration。
+## 作用：Content Schema 2.0 世界/战役/剧情 Schema 测试：SchemaValidator 合法 / 非法样本，
+## Phase B 9 类提升 active，`weapons` + 剧情 `story_arcs` / `story_levels` 仍是草案，
+## `map_configs` 覆盖 31 键 exploration。
 ##
 ## ## 契约与约束
 ## - start_profile / world_profile / region / site / route_template / weather_profile /
-##   faction / discovery / map_config 的合法 envelope 必须零错误；缺必填 / 非法 ID /
-##   非法枚举 / 越界数值 / 未知 exploration 键必须报错。
+##   faction / discovery / map_config / story_arc / story_level 的合法 envelope 必须零错误；
+##   缺必填 / 非法 ID / 非法枚举 / 越界数值 / 未知 exploration 键必须报错。
 ## - `map_configs.exploration` 必须完整覆盖 31 键（4.1 的 19 键 + 4.2–4.5 的 12 键），
-##   `twin_world_size` 范围 64–1024，`story` 走 story_flow 子 Schema。
+##   `twin_world_size` 范围 64–1024，`story` 走 story_flow 子 Schema；剧情关卡复用
+##   `common.schema.json#/$defs/story_stage`，其 checkpoint / presentation 为关卡层新增字段。
 ## - Phase B 的 9 类必须出现在 `content_types.json.types`、schema_version 为 2.0、
-##   Schema 文件存在且进入 `ContentTypes`；`draft_schemas` 只剩 `weapons`。
+##   Schema 文件存在且进入 `ContentTypes`；`draft_schemas` 是 weapons + 2 类剧情。
 ## @end-static-doc
 
 const START_PROFILE_SCHEMA := "res://schemas/v2/start_profile.schema.json"
@@ -22,6 +24,8 @@ const WEATHER_PROFILE_SCHEMA := "res://schemas/v2/weather_profile.schema.json"
 const FACTION_SCHEMA := "res://schemas/v2/faction.schema.json"
 const DISCOVERY_SCHEMA := "res://schemas/v2/discovery.schema.json"
 const MAP_CONFIG_SCHEMA := "res://schemas/v2/map_config.schema.json"
+const STORY_ARC_SCHEMA := "res://schemas/v2/story_arc.schema.json"
+const STORY_LEVEL_SCHEMA := "res://schemas/v2/story_level.schema.json"
 
 
 func _valid_envelope() -> Dictionary:
@@ -316,7 +320,7 @@ func test_map_config_v2_schema_rejects_invalid_data() -> void:
 	assert_true(errors.size() >= 4, "invalid map config reports required/pattern/range/extra-key errors: %s" % str(errors))
 
 
-func test_phase_b_types_are_active_and_only_weapons_remains_draft() -> void:
+func test_phase_b_types_are_active_and_drafts_are_editor_only() -> void:
 	var parsed := JsonUtils.parse_file("res://content_types.json")
 	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
 	var data: Dictionary = parsed["value"]
@@ -332,7 +336,125 @@ func test_phase_b_types_are_active_and_only_weapons_remains_draft() -> void:
 		assert_true(FileAccess.file_exists("res://" + String(entry.get("schema", ""))), "%s schema exists" % type_name)
 
 	var drafts: Dictionary = data.get("draft_schemas", {})
-	assert_eq(drafts.size(), 1, "only weapons remains a draft schema")
-	assert_true(drafts.has("weapons"), "weapons remains editor-only")
-	assert_true(FileAccess.file_exists("res://" + String(drafts["weapons"])), "weapons schema exists")
-	assert_false(ContentTypes.is_known(&"weapons"), "weapons is not a runtime type")
+	assert_eq(drafts.size(), 3, "weapons and the two Story Mode schemas remain drafts")
+	for draft_name in ["weapons", "story_arcs", "story_levels"]:
+		assert_true(drafts.has(draft_name), "%s remains editor-only" % draft_name)
+		assert_true(FileAccess.file_exists("res://" + String(drafts[draft_name])), "%s schema exists" % draft_name)
+		assert_false(ContentTypes.is_known(StringName(draft_name)), "%s is not a runtime type" % draft_name)
+
+
+func _valid_story_arc_file() -> Dictionary:
+	return {
+		"schema_version": "2.0",
+		"content_type": "story_arcs",
+		"definitions": [{
+			"id": "story_mod:story_arc/iron_tide",
+			"name_key": "story.iron_tide.arc.name",
+			"enabled": true,
+			"data": {
+				"protagonist_id": "captain",
+				"characters": [
+					{"id": "captain", "name_key": "story.iron_tide.captain.name", "role": "protagonist"},
+					{"id": "harbor_master", "name_key": "story.iron_tide.master.name", "role": "supporting"},
+				],
+				"terms": [{
+					"id": "black_tide",
+					"term_key": "story.iron_tide.black_tide.term",
+					"definition_key": "story.iron_tide.black_tide.desc",
+				}],
+				"levels": ["story_mod:story_level/01_first_smoke"],
+				"canon": true,
+				"completion_achievement": "iron_tide.complete",
+				"source": {"world_bible": "world_forge_iron_tide_v1"},
+			},
+		}],
+	}
+
+
+func _valid_story_level_file() -> Dictionary:
+	return {
+		"schema_version": "2.0",
+		"content_type": "story_levels",
+		"definitions": [{
+			"id": "story_mod:story_level/01_first_smoke",
+			"name_key": "story.iron_tide.l01.name",
+			"enabled": true,
+			"data": {
+				"map": {
+					"fog": "revealed",
+					"fixed": {
+						"ports": [
+							{"id": "port_0", "name_key": "story.iron_tide.port.ash_harbor", "position": [40, 80]},
+							{"id": "port_1", "name_key": "story.iron_tide.port.iron_bay", "position": [160, 80]},
+						],
+						"edges": [{"from": "port_0", "to": "port_1", "distance": 120, "risk": 0.05}],
+						"start_port": "port_0",
+					},
+				},
+				"start": {
+					"starting_build": "core:starting_build/steady",
+					"port_id": "port_0",
+					"money": 200,
+					"ship_fuel": 4,
+					"ship_water": 3,
+					"cargo": [],
+					"equipped_modules": [],
+					"world_time": "day_1_0600",
+				},
+				"stages": [
+					{"id": "opening", "checkpoint": true, "presentation": "briefing", "advance": {"mode": "confirm"}},
+					{"id": "closing", "checkpoint": true, "advance": {"event": "story.level_complete"}},
+				],
+				"narrative": {
+					"brief": {
+						"presentation": "briefing",
+						"title_key": "story.iron_tide.l01.brief.title",
+						"body_keys": ["story.iron_tide.l01.brief.body.0"],
+					},
+					"beats": [{
+						"id": "farewell",
+						"stage_id": "closing",
+						"dialogue": {
+							"title_key": "story.iron_tide.l01.beat.title",
+							"body_keys": ["story.iron_tide.l01.beat.body.0"],
+						},
+					}],
+					"debrief": {
+						"success_keys": ["story.iron_tide.l01.debrief.success.0"],
+						"failure_keys": ["story.iron_tide.l01.debrief.failure.0"],
+					},
+				},
+				"difficulty": {"profile": "story.intro", "knobs": {"risk_scale": 0.6, "hint_level": "full"}},
+				"rewards": {"achievements": ["iron_tide.first_smoke"]},
+				"fail": {"default_mode": "checkpoint", "allow": ["checkpoint", "level_start"]},
+			},
+		}],
+	}
+
+
+func test_story_schemas_accept_valid_arc_and_level() -> void:
+	var validator := SchemaValidator.new()
+	var arc_errors := validator.validate_file(_valid_story_arc_file(), STORY_ARC_SCHEMA)
+	assert_empty(arc_errors, "valid story arc passes Schema 2.0 draft: %s" % str(arc_errors))
+	var level_errors := validator.validate_file(_valid_story_level_file(), STORY_LEVEL_SCHEMA)
+	assert_empty(level_errors, "valid story level passes Schema 2.0 draft: %s" % str(level_errors))
+
+
+func test_story_schemas_reject_invalid_data() -> void:
+	var validator := SchemaValidator.new()
+	var arc := _valid_story_arc_file()
+	var arc_definition: Dictionary = arc["definitions"][0]
+	arc_definition["data"].erase("protagonist_id")
+	arc_definition["data"]["characters"][0]["role"] = "villain"
+	arc_definition["data"]["levels"] = ["not-an-id"]
+	var arc_errors := validator.validate_file(arc, STORY_ARC_SCHEMA)
+	assert_true(arc_errors.size() >= 3, "invalid story arc reports required/enum/pattern errors: %s" % str(arc_errors))
+
+	var level := _valid_story_level_file()
+	var level_definition: Dictionary = level["definitions"][0]
+	level_definition["data"]["stages"] = []
+	level_definition["data"]["map"]["fixed"]["ports"] = [{"id": "bad"}]
+	level_definition["data"]["fail"] = {"default_mode": "rewind", "allow": []}
+	level_definition["data"]["unknown"] = true
+	var level_errors := validator.validate_file(level, STORY_LEVEL_SCHEMA)
+	assert_true(level_errors.size() >= 5, "invalid story level reports structure errors: %s" % str(level_errors))

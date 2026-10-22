@@ -2,9 +2,11 @@
   "format": "steam-navigator-content-types",
   "format_version": 1,
   "content_schema": "1.0",
-  "description": "Single source for content type keys, schema paths, per-type schema_version, registry kind and editor presentation metadata. Every active type declares its own 'schema_version' (Content Schema 1.0 or 2.0) and the framework validates content files against the version of their type; 'content_schema' is only the baseline/default used by header fields and editor defaults. Entries under 'planned' are roadmap only and have no schema yet. 'draft_schemas' maps the remaining Content Schema 2.0 draft type to its schema file; 'draft_types' carries its editor metadata. Draft types are editable in SNModMaker but not loadable by the runtime yet. 'v2_module_categories' records the target module taxonomy; it is not a runtime type list.",
+  "description": "Single source for content type keys, schema paths, per-type schema_version, registry kind and editor presentation metadata. Every active type declares its own 'schema_version' (Content Schema 1.0 or 2.0) and the framework validates content files against the version of their type; 'content_schema' is only the baseline/default used by header fields and editor defaults. Entries under 'planned' are roadmap only and have no schema yet. 'draft_schemas' maps the remaining Content Schema 2.0 draft types to their schema files; 'draft_types' carries their editor metadata. Draft types are editable in SNModMaker but not loadable by the runtime yet. 'v2_module_categories' records the target module taxonomy; it is not a runtime type list.",
   "draft_schemas": {
-    "weapons": "schemas/v2/weapon.schema.json"
+    "weapons": "schemas/v2/weapon.schema.json",
+    "story_arcs": "schemas/v2/story_arc.schema.json",
+    "story_levels": "schemas/v2/story_level.schema.json"
   },
   "draft_types": [
     {
@@ -20,6 +22,34 @@
       "schema_version": "2.0",
       "capability": "content.combat.v1",
       "summary_zh": "舰载武器：战斗数值（对齐 SNBattleSim）、装配 class / 机构层、经济与模型资源键；船体侧安装点决定可装 class。"
+    },
+    {
+      "key": "story_arcs",
+      "singular": "story_arc",
+      "key_prefix": "story_arc",
+      "label_zh": "剧情篇章",
+      "label_en": "Story arcs",
+      "abbr": "SA",
+      "color": "#b48ed6",
+      "group": "narrative_events",
+      "default_file": "content/story_arcs.json",
+      "schema_version": "2.0",
+      "capability": "content.story.v1",
+      "summary_zh": "剧情模式篇章：固定主角与角色表、术语、有序关卡列表（story_levels）与正史溯源；一个剧情包一个篇章。见 docs/design/STORY_MODE.md。"
+    },
+    {
+      "key": "story_levels",
+      "singular": "story_level",
+      "key_prefix": "story_level",
+      "label_zh": "剧情关卡",
+      "label_en": "Story levels",
+      "abbr": "SL",
+      "color": "#8ed6b4",
+      "group": "narrative_events",
+      "default_file": "content/story_levels.json",
+      "schema_version": "2.0",
+      "capability": "content.story.v1",
+      "summary_zh": "剧情模式关卡：内嵌固定地图（港口/航线/坐标）、初始状态、任务线阶段（共用 story_stage DSL）、叙事简报/节点/结算、难度旋钮、checkpoint 重试与仅成就类奖励。"
     }
   ],
   "groups": [
@@ -644,6 +674,14 @@
       "types": [
         "difficulty_profiles",
         "simulation_profiles"
+      ]
+    },
+    {
+      "system": "story",
+      "capability": "content.story.v1",
+      "types": [
+        "story_arcs",
+        "story_levels"
       ]
     }
   ]
