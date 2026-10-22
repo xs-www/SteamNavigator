@@ -139,8 +139,11 @@ Step = {
 > quest_id, contract_instance_id, stage_index, counters, flags, status, started_at, completed_at}]}`
 > （惰性 ensure，旧档无块 = 无任务）。委托 `accept_offer` / 教程直接挂主线时 `track_contract`，
 > 完成时关闭实例；task.view 增加 `kind:"quest"`（priority 250）；contract 来源实例不重复渲染，
-> 委托任务仍由 contracts 派生。`auto_start` 仅存储 / 校验，开局自动接取与失败/放弃钩子留给后续切片。
+> 委托任务仍由 contracts 派生。`auto_start` 已在开局初始化时由 `QuestService.auto_start_state()` 启动
+> （`core:quest/first_voyage_guide` 即自动接取）；失败/放弃钩子留给后续切片。
 > **奖励与 effects 暂缓**：C3 只做目标推进与追踪，不做发奖、`spawn_contract` 或 effects 执行。
+> **`core:quest/shipyard_refit` 是预备 / 调试内容**：`auto_start:false`，当前没有玩家入口触发（发布点 / 任务日志页
+> 未实现），玩家入口在后续切片接入；`core:quest/first_voyage_guide` 是唯一自动接取的引导任务。
 
 ### 4.1 内容类型
 
@@ -158,17 +161,16 @@ Step = {
  "match": {"item_id": "core:item/textiles"}}
 ```
 
-支持类型：`deliver_cargo` / `carry_passenger` / `visit_port` / `discover_port` /
-`buy_good` / `sell_good` / `install_module` / `earn_money` / `story_stage`。
-**奖励与 effects 暂缓**：C3 只推进目标与追踪，不实现 `grant_money` / `grant_item` / `unlock_contract` /
+目标通过事件计数派生（`event` 必须是 `cmd:*` / `ui:*`，见下方校验规则），没有单独的「目标类型」字段；
+奖励与 effects 暂缓：C3 只推进目标与追踪，不实现 `grant_money` / `grant_item` / `unlock_contract` /
 `start_quest` / `complete_quest` / `set_flag` 等效果，也不实现 `spawn_contract` 奖励；奖励系统后续切片再定。
 
 ### 4.2 与现有系统的关系
 
 - **Contract 独立**：接受委托时生成 Quest 追踪实例（`data.quests`，`source:"contract"`），
   只存 `contract_instance_id` 作为追踪 / 历史引用；payload/目的地/时限/结算仍由 `ContractOps` 负责；
-- **Story 暂时保留**：剧情阶段仍由 Story 驱动，Quest 的目标条件可观察 `story_stage`；剧情与 Quest 的
-  相互替代（含 `start_quest` / `complete_quest` effects）留给后续剧情模式切片；
+- **Story 暂时保留**：剧情阶段仍由 Story 驱动；Quest 不观察 `story_stage`（目标事件只接受 `cmd:*` / `ui:*`），
+  剧情与 Quest 的相互替代（含 `start_quest` / `complete_quest` effects）留给后续剧情模式切片；
 - **Task 追踪器**：`task.view` 增加 `kind:"quest"` 任务项；contract 来源的追踪实例**不重复渲染**，
   委托任务仍由 `contracts` 派生，HUD / 任务页无需重写；
 - **存档**：`data.quests` 惰性 ensure（旧存档无块 → 无任务），任务实例只存

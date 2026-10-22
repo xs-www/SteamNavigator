@@ -47,15 +47,17 @@
 | `RIG_SOCKET_KINDS` | L465 |
 | `checkWeaponSemantics(definition, view, add)` | L468 |
 | `checkHullSocketSemantics(definition, view, add)` | L502 |
-| `STORY_TYPES` | L586 |
-| `storyFieldView(view, field)` | L588 |
-| `checkStoryArcSemantics(definition, view, add)` | L593 |
-| `checkStoryLevelSemantics(definition, view, add)` | L637 |
-| `checkStoryPack(contentFiles, add)` | L745 |
-| `validateProject(project, options)` | L786 |
-| `finish(issues)` | L1157 |
-| `byDefinition(issues)` | L1166 |
-| `SNValidate (global)` | L1179 |
+| `QUEST_EVENT_RE` | L584 |
+| `checkQuestSemantics(definition, view, add)` | L587 |
+| `STORY_TYPES` | L617 |
+| `storyFieldView(view, field)` | L619 |
+| `checkStoryArcSemantics(definition, view, add)` | L624 |
+| `checkStoryLevelSemantics(definition, view, add)` | L668 |
+| `checkStoryPack(contentFiles, add)` | L776 |
+| `validateProject(project, options)` | L817 |
+| `finish(issues)` | L1189 |
+| `byDefinition(issues)` | L1198 |
+| `SNValidate (global)` | L1211 |
 
 ## 契约与约束
 

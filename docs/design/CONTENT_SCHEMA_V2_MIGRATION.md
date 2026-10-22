@@ -177,7 +177,7 @@ Node 50/50 全绿。B1 证据：9 类 2.0 类型已 active（`ContentTypes` 25 �
 
 ### Phase C · 实体合并（Module / Item / Quest，1–2 周）
 
-**状态：C1–C3 已完成（2026-10-22）；C4 待开工。** C1 证据：5 类模块合并为 `modules` 2.0（12 条 core 定义，`core:module/*`）、hulls 升 2.0、`ModuleOps` 运行时与船厂分类 UI 落地；Godot 491/491。C2 证据：goods + materials 合并为 `items` 2.0（12 条 core 定义，`core:item/*`，`crafting_material` 标志），全量引用/本地化/编辑器/运行时统一到 ITEM。C3 证据：新增 `quests` 2.0（`core:quest/*` 2 条）+ 持久 `data.quests` + QuestService，委托接取生成追踪实例、task.view 聚合；当前 active 21（13×2.0 + 7×1.0 定义 + patch）。验证：Godot **518/518**、Node **54/54**、CLI **62/62**、SDK `status: ok`。
+**状态：C1–C3 已完成（2026-10-22）；C4 待开工。** C1 证据：5 类模块合并为 `modules` 2.0（12 条 core 定义，`core:module/*`）、hulls 升 2.0、`ModuleOps` 运行时与船厂分类 UI 落地；Godot 491/491。C2 证据：goods + materials 合并为 `items` 2.0（12 条 core 定义，`core:item/*`，`crafting_material` 标志），全量引用/本地化/编辑器/运行时统一到 ITEM。C3 证据：新增 `quests` 2.0（`core:quest/*` 2 条）+ 持久 `data.quests` + QuestService，委托接取生成追踪实例、task.view 聚合；当前 active 21（13×2.0 + 7×1.0 定义 + patch）。验证：Godot **525/525**、Node **55/55**、CLI **62/62**、SDK `status: ok`。
 
 > **开发期策略（2026-10-22 拍板）**：开发器没有第三方模组，直接全量升级 core 到 Schema 2.0 并保证运行即可；
 > 每次迭代后不保留旧存档 / 旧内容模型兼容。C-D2 的旧/新类型并存仅是分步开发手段，不是兼容窗口；每个实体

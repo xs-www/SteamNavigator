@@ -9,11 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CrossReferenceValidator` | L1 |
-| `PLANNED_REF_TYPES` | L36 |
-| `MODULE_CATEGORIES` | L46 |
-| `MODULE_CATEGORY_REQUIRED_FIELDS` | L47 |
-| `UTILITY_TAG_FIELDS` | L53 |
-| `validate(hub: RegistryHub) -> Dictionary` | L64 |
+| `PLANNED_REF_TYPES` | L39 |
+| `MODULE_CATEGORIES` | L49 |
+| `MODULE_CATEGORY_REQUIRED_FIELDS` | L50 |
+| `UTILITY_TAG_FIELDS` | L56 |
+| `QUEST_MATCH_REFERENCE_TYPES` | L65 |
+| `validate(hub: RegistryHub) -> Dictionary` | L79 |
 
 以及 Phase B 世界/战役 9 类（world_profiles / regions / sites / route_templates /
 weather_profiles / factions / discoveries / start_profiles / map_configs）的引用完整性。
@@ -32,7 +33,10 @@ weather_profiles / factions / discoveries / start_profiles / map_configs）的�
   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。
 - C3：`quests` 的 `prerequisites.quests_completed[]` 必须是已存在的 quest 定义；
-  objective 的 `event` 必须是 `cmd:*` / `ui:*` 形式（D6：不静默）。
+  objective 的 `event` 必须是 `cmd:*` / `ui:*` 形式（D6：不静默）；objective
+  `match` 里的实体引用键（`item_id` / `module_id` / `hull_id` / `role_id` /
+  `strategy_id`）必须解析到对应运行时注册表（`quest_match_ref_missing`，message
+  带 mod / file / entity / path），`category` 等字面过滤键跳过。
   **设计理由**：命令 / UI 事件名是字符串总线（`CommandBus` / Shell 观测），没有可枚举的
   运行时注册表交给内容校验器，因此这里只做格式硬校验；未知但格式合法的事件名属于
   「内容作者拼写」问题，无法在不引入注册表快照的前提下可靠判定，故不误报。

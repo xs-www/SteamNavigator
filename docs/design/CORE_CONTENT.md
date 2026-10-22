@@ -10,5 +10,7 @@
 - 经济 / 标准 / 极速三种锅炉策略；工程师 / 领航员岗位。
 - 5 段主线 + 4 种普通委托；2 类事件（锅炉过热、偶遇商船）。
 - 2 套初始构筑：低耗稳健型、高速冒险型。
+- 2 条 Quest 内容：`core:quest/first_voyage_guide`（`auto_start:true`，开局自动接取的燃料/出航引导）与
+  `core:quest/shipyard_refit`（`auto_start:false`，预备 / 调试内容，玩家入口后续切片接入）。
 - 15 条 Core 实体已配置新版 `information.texture/model`：船体、锅炉、商品、造船材料与铁港可直接解析对应贴图或 GLB 模型。
 - 所有数值均为数据驱动，位于 `dev_mods/core/content/*.json`。

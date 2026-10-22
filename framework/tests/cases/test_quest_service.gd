@@ -354,7 +354,7 @@ func test_quest_complete_rejects_contract_instances() -> void:
 		QuestOps.STATUS_ACTIVE, "the contract tracking instance stays active")
 
 
-func test_quest_validator_reports_dangling_references_and_bad_events() -> void:
+func test_quest_validator_reports_dangling_references_events_and_match_refs() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var dangling := _quest_definition("test:quest/dangling", {
@@ -366,7 +366,42 @@ func test_quest_validator_reports_dangling_references_and_bad_events() -> void:
 			"objectives": [{"event": "trade.buy", "counter": "x", "at_least": 1}],
 		}],
 	})
-	var hub := _hub_with(context.registries, [dangling])
+	# F1: every known entity reference key in `match` resolves against its registry;
+	# `category` / other literal filter keys are skipped on purpose.
+	var match_bad := _quest_definition("test:quest/match_bad", {
+		"kind": "guide",
+		"stages": [{
+			"id": "one",
+			"title_key": "test.quest.match_bad.stage",
+			"objectives": [{
+				"event": "cmd:test.one",
+				"counter": "one_done",
+				"at_least": 1,
+				"match": {
+					"item_id": "core:item/absent",
+					"module_id": "test:module/absent",
+					"hull_id": "test:hull/absent",
+					"role_id": "test:role/absent",
+					"strategy_id": "test:strategy/absent",
+					"category": "cargo",
+				},
+			}],
+		}],
+	})
+	var category_only := _quest_definition("test:quest/category_only", {
+		"kind": "guide",
+		"stages": [{
+			"id": "one",
+			"title_key": "test.quest.category_only.stage",
+			"objectives": [{
+				"event": "cmd:test.two",
+				"counter": "two_done",
+				"at_least": 1,
+				"match": {"category": "cargo", "kind": "module"},
+			}],
+		}],
+	})
+	var hub := _hub_with(context.registries, [dangling, match_bad, category_only])
 	var validator := CrossReferenceValidator.new()
 	var report := validator.validate(hub)
 	var codes := PackedStringArray()
@@ -374,14 +409,87 @@ func test_quest_validator_reports_dangling_references_and_bad_events() -> void:
 		codes.append(String((error as Dictionary).get("code", "")))
 	assert_contains(codes, "quest_prerequisite_missing", "a dangling quest prerequisite is an error")
 	assert_contains(codes, "quest_event_invalid", "an objective event without cmd:/ui: prefix is an error")
+	var match_errors := 0
+	var match_paths := PackedStringArray()
+	for error in report.get("errors", []):
+		var entry: Dictionary = error
+		if String(entry.get("code", "")) != "quest_match_ref_missing":
+			continue
+		match_errors += 1
+		match_paths.append(String(entry.get("path", "")))
+		assert_eq(String(entry.get("mod", "")), "test", "the match error reports the source mod")
+		assert_false(String(entry.get("entity", "")).is_empty(), "the match error reports the entity type")
+		assert_true(String(entry.get("path", "")).contains("match."), "the content path points at the match key")
+		assert_true(String(entry.get("message", "")).contains("file '"), "the message names the source file")
+	assert_eq(match_errors, 5, "all five known match reference keys are validated (category skipped)")
+	for key in ["item_id", "module_id", "hull_id", "role_id", "strategy_id"]:
+		var key_paths := 0
+		for path in match_paths:
+			if String(path).ends_with("match." + key):
+				key_paths += 1
+		assert_eq(key_paths, 1, "exactly one match error points at match.%s" % key)
+	for error in report.get("errors", []):
+		if String((error as Dictionary).get("code", "")) == "quest_match_ref_missing":
+			assert_false(String((error as Dictionary).get("path", "")).contains("category"),
+				"literal filter keys like category are never treated as references")
 	# Core's own quests raise no quest-level validation errors.
-	var quest_errors := 0
 	for error in report.get("errors", []):
 		if String((error as Dictionary).get("code", "")).begins_with("quest_"):
-			quest_errors += 1
-	assert_eq(quest_errors, 2, "only the two synthetic problems are reported")
-	for error in report.get("errors", []):
-		assert_ne(String((error as Dictionary).get("owner", "")), GUIDE_QUEST, "core guide passes quest validation")
+			assert_ne(String((error as Dictionary).get("definition_id", "")), GUIDE_QUEST,
+				"core guide passes quest validation")
+
+
+## F1 end-to-end: a third-party quest file whose objective match points at a missing
+## item is rejected by the normal loader (`sdk/validate.gd` uses the same pipeline).
+func test_dangling_quest_match_item_is_rejected_at_runtime() -> void:
+	var root := "user://quest_match_%d" % Time.get_ticks_usec()
+	var mod_root := root + "/questmatchmod"
+	DirAccess.make_dir_recursive_absolute(mod_root + "/content")
+	var manifest := {
+		"$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+		"id": "questmatchmod",
+		"name": "Quest Match Mod",
+		"version": "1.0.0",
+		"api_version": "1.0",
+		"type": "content",
+		"load_priority": 10,
+		"required": false,
+		"dependencies": [{"id": "core", "version": ">=1.0.0 <2.0.0"}],
+		"content": ["content/quests.json"],
+	}
+	_write_file(mod_root + "/manifest.json", JsonUtils.canonical_stringify(manifest, "  "))
+	var quests := {
+		"schema_version": "2.0",
+		"content_type": "quests",
+		"definitions": [{
+			"id": "questmatchmod:quest/bad",
+			"name_key": "quest.questmatchmod.bad.name",
+			"enabled": true,
+			"data": {
+				"kind": "guide",
+				"stages": [{
+					"id": "one",
+					"title_key": "quest.questmatchmod.bad.stage",
+					"objectives": [{
+						"event": "cmd:trade.buy",
+						"counter": "bought",
+						"at_least": 1,
+						"match": {"item_id": "questmatchmod:item/absent"},
+					}],
+				}],
+			},
+		}],
+	}
+	_write_file(mod_root + "/content/quests.json", JsonUtils.canonical_stringify(quests, "  "))
+	var boot := bootstrap_core({"scan_roots": PackedStringArray(["res://dev_mods", root])})
+	var report: StartupReport = boot["report"]
+	var codes := PackedStringArray()
+	for error in report.errors:
+		codes.append(String(error.get("code", "")))
+	assert_contains(codes, "quest_match_ref_missing",
+		"the loader rejects a quest match pointing at a missing item: %s" % report.format_text())
+	assert_false(report.has_fatal(), "a third-party content error is not a fatal startup error")
+	_cleanup_dir(root)
 
 
 # ── helpers ──
@@ -432,3 +540,19 @@ func _hub_with(baseline: RegistryHub, quests: Array) -> RegistryHub:
 		hub.register(definition)
 	hub.freeze_all()
 	return hub
+
+
+func _write_file(path: String, text: String) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(text)
+	file.close()
+
+
+func _cleanup_dir(root: String) -> void:
+	for file_name in DirAccess.get_files_at(root + "/questmatchmod/content"):
+		DirAccess.remove_absolute(root + "/questmatchmod/content/" + file_name)
+	for file_name in DirAccess.get_files_at(root + "/questmatchmod"):
+		DirAccess.remove_absolute(root + "/questmatchmod/" + file_name)
+	DirAccess.remove_absolute(root + "/questmatchmod/content")
+	DirAccess.remove_absolute(root + "/questmatchmod")
+	DirAccess.remove_absolute(root)

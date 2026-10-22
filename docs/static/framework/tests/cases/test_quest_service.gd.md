@@ -23,7 +23,8 @@
 | `test_auto_start_is_idempotent_and_content_driven() -> void` | L290 |
 | `test_one_observe_adds_a_shared_counter_once() -> void` | L313 |
 | `test_quest_complete_rejects_contract_instances() -> void` | L345 |
-| `test_quest_validator_reports_dangling_references_and_bad_events() -> void` | L357 |
+| `test_quest_validator_reports_dangling_references_events_and_match_refs() -> void` | L357 |
+| `test_dangling_quest_match_item_is_rejected_at_runtime() -> void` | L444 |
 
 `QuestService` 状态机（auto_start / start / observe / complete / prerequisites /
 repeatable）、counter 去重、contract 实例保护、CrossReferenceValidator 的 quest 引用/

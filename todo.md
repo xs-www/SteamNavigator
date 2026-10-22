@@ -15,7 +15,7 @@
 - [ ] 铁甲舰 `SN_Ironclad_LOD1.glb` 随空炮门 LOD0 重建（当前 LOD1 仍是带炮旧件；LOD 切换未接线，暂不影响运行时）
 - [ ] 炮门 socket 内容镜像：`schemas/v2/hull.schema.json` 的 `hull_data` 新增可选 `gun_port_sockets` 数组并回填 Core `hulls.json`（供编辑器 / 装配器读内容，运行时仍以 GLB extras 为准）
 - [ ] 剧情模式（Story Mode）：**S1 数据契约已交付**（`story_arcs` / `story_levels` Schema 2.0 草案 + 内嵌固定地图 + 只加剧情白名单 + 示例包 `sdk/templates/story_pack_iron_tide/`）；下一步 **S2 加载链**：剧情包按内容模组加载、白名单校验、注册，`story_mode.view` 列出篇章与关卡；之后 S3 首发 1 关内容 → S4 运行时（`data.story_mode` / `run.start story_level` / checkpoint 重试）→ S5 UI → S6 档案 → S7 `SNStoryMaker/`（Node Web，复用 SNModMaker 的 Schema / 校验 / 打包）。首发固定主角、每关独立、奖励不影响自由模式（成就延后）；草案见 [STORY_MODE.md](docs/design/STORY_MODE.md)
-- [ ] 正式任务系统 Phase B：`quests` 内容类型 + `QuestService`（任务链、目标事件、前置 / 奖励、发布点、任务日志页）；契约见 [TASK_QUEST_SYSTEM.md](docs/design/TASK_QUEST_SYSTEM.md)
+- [ ] 正式任务系统后续切片：Quest 奖励 / effects（`spawn_contract` 等）、任务发布点（酒馆 / 港务告示牌）、任务日志页；`quests` 内容类型与 `QuestService` 已随 C3 落地，契约见 [TASK_QUEST_SYSTEM.md](docs/design/TASK_QUEST_SYSTEM.md)
 - [ ] 战斗内容 Schema 2.0 其余类型：`damage_types` / `enemy_archetypes` / `encounter_tables` / `loot_tables`（`weapons` 草案已落地，见 [WEAPON_CONTENT_SCHEMA.md](docs/design/WEAPON_CONTENT_SCHEMA.md)）；保持 `planned`，先补 Schema + 有效/无效样本
 - [ ] 武器内容接入运行时：`weapons` 进 runtime types / 注册表，`ShipVisualAssembler` 改读内容 + GLB 节点（船体 socket 镜像转正），SNBattleSim 的 `kind` 行为与命中/齐射/冷却规则并入战斗结算；同时补齐 `yaw_limit_deg` / `mount_pad_*`、统一 socket 索引与 `mast_key` 口径。**类型提升前不要把 2.0 `weapons` 写进 Core**（运行时会按 mod error 拒绝，Core 必需包 → `Degraded`）；当前 5 件模拟器武器落在编辑器「舰载武器包」模板
 
@@ -50,7 +50,7 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
-- Content Schema 2.0 Phase C · C3（委托/任务解耦）：新增 `quests` active 2.0（kind story/guide/system、stages/objectives 复用剧情 DSL、tracking/prerequisites；无运输 payload）；core `quests.json` 2 条；新增 `QuestOps`/`QuestService` 与 `data.quests` 持久实例（惰性 ensure），委托 `accept_offer`/教程主线挂接生成追踪实例、完成关闭；`task.view` 增加 `kind:"quest"` 聚合（contract 实例不重复渲染），Shell 转发 `cmd:*`/`ui:*` 给 quest.observe；`content.quests.v1` capability 与 `quest.start|complete|observe` 命令。验证：Godot **518/518**、Node **54/54**、CLI **62/62**、SDK `status: ok`。
+- Content Schema 2.0 Phase C · C3（委托/任务解耦）：新增 `quests` active 2.0（kind story/guide/system、stages/objectives 复用剧情 DSL、tracking/prerequisites；无运输 payload）；core `quests.json` 2 条；新增 `QuestOps`/`QuestService` 与 `data.quests` 持久实例（惰性 ensure），委托 `accept_offer`/教程主线挂接生成追踪实例、完成关闭；`task.view` 增加 `kind:"quest"` 聚合（contract 实例不重复渲染），Shell 转发 `cmd:*`/`ui:*` 给 quest.observe；`content.quests.v1` capability 与 `quest.start|complete|observe` 命令。验证：Godot **525/525**、Node **55/55**、CLI **62/62**、SDK `status: ok`。
 - README 瘦身（2026-10-22）：根 README 从 323 行压到 115 行、SNModMaker README 从 479 行压到 63 行；详细进度拆到 `docs/design/PROJECT_STATUS.md`、Core 内容基线拆到 `docs/design/CORE_CONTENT.md`、实现边界拆到 `docs/design/KNOWN_LIMITS.md`，SNModMaker 使用/开发细节拆到 `SNModMaker/docs/{USER_GUIDE,DEVELOPMENT}.md`；README 改为「按需读取」索引。
 
 - SN SDK Schema 2.0 兼容（2026-10-22）：`sdk/validate.gd` 新增 `--mode=runtime|draft`（默认 runtime 保持旧调用兼容；runtime 显式拒绝未激活草案并输出结构化 `inactive_content_type`，draft 对草案 / 混合模组做静态 Schema 校验）；`sdk/pack_mod.gd --release` 打包前跑真实 runtime 校验、草案或 error 时拒绝且 `.snavmod.zip` 结构不变；新增 `sdk/validation_core.gd` 共享实现（扫描根去重，`--mod-root=dev_mods/core` 不再重复加载 core），类型 / 版本只读 `content_types.json`；示例补 1.0 `example_roles_1_0`、混合 `example_mixed_roles_items` 与草案模板 `draft_weapons_pack`；新增 `framework/tests/cases/test_sdk_validation.gd`（11 用例）并更新 release workflow 的 runtime / draft / 发布拦截门禁。验证：SDK 套件 11/11、Godot 全量 507/507、`gen_content_types --check` 全绿（`docs/static` 待 Lead 统一生成）。

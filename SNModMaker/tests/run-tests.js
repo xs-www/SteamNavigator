@@ -973,6 +973,32 @@ function warningsOf(result) {
     }
   });
 
+  await test('quest objective events must live in the cmd:/ui: namespace', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'quests', {});
+    const objective = added.definition.data.stages[0].objectives[0];
+
+    objective.event = 'trade.buy';
+    let result = Validate.validateProject(project);
+    const invalid = errorsOf(result).filter((issue) => issue.code === 'quest_event_invalid');
+    assert.equal(invalid.length, 1, 'a bare objective event is rejected');
+    assert.equal(invalid[0].view.field, 'data.stages.0.objectives.0.event',
+      'the error points at the offending objective event');
+
+    objective.event = 'cmd:trade.buy';
+    result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
+
+    objective.event = 'ui:arrival_settled';
+    result = Validate.validateProject(project);
+    assert.equal(result.counts.error, 0, 'ui: events are accepted');
+
+    objective.event = 'cmd:Trade.Buy';
+    result = Validate.validateProject(project);
+    assert.ok(errorsOf(result).some((issue) => issue.code === 'quest_event_invalid'),
+      'uppercase segments are rejected like the runtime validator');
+  });
+
   await test('entity localization rename commits once and removes old keys', () => {
     const project = freshProject();
     const definition = project.contentFiles[0].definitions[0];

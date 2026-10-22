@@ -22,7 +22,10 @@ extends RefCounted
 ##   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
 ##   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。
 ## - C3：`quests` 的 `prerequisites.quests_completed[]` 必须是已存在的 quest 定义；
-##   objective 的 `event` 必须是 `cmd:*` / `ui:*` 形式（D6：不静默）。
+##   objective 的 `event` 必须是 `cmd:*` / `ui:*` 形式（D6：不静默）；objective
+##   `match` 里的实体引用键（`item_id` / `module_id` / `hull_id` / `role_id` /
+##   `strategy_id`）必须解析到对应运行时注册表（`quest_match_ref_missing`，message
+##   带 mod / file / entity / path），`category` 等字面过滤键跳过。
 ##   **设计理由**：命令 / UI 事件名是字符串总线（`CommandBus` / Shell 观测），没有可枚举的
 ##   运行时注册表交给内容校验器，因此这里只做格式硬校验；未知但格式合法的事件名属于
 ##   「内容作者拼写」问题，无法在不引入注册表快照的前提下可靠判定，故不误报。
@@ -53,6 +56,18 @@ const MODULE_CATEGORY_REQUIRED_FIELDS := {
 const UTILITY_TAG_FIELDS := {
 	"module.navigation": ["speed_mul", "reveal_facilities"],
 	"module.safety": ["damage_mul", "repair_cost_mul"],
+}
+
+## C3 quest objective `match` keys that are entity references (checked against the
+## runtime registries), mirroring the story condition DSL (`condition_item_missing` /
+## `condition_module_missing`). Other match keys — `category`, `kind`, `flag`, ... —
+## are literal payload filters, not references, and are skipped on purpose.
+const QUEST_MATCH_REFERENCE_TYPES := {
+	"item_id": ContentTypes.ITEM,
+	"module_id": ContentTypes.MODULE,
+	"hull_id": ContentTypes.HULL,
+	"role_id": ContentTypes.ROLE,
+	"strategy_id": ContentTypes.STRATEGY,
 }
 
 var errors: Array[Dictionary] = []
@@ -478,11 +493,15 @@ func _check_discoveries() -> void:
 				)
 
 
-## C3: quest chain references + objective event format (D6: never silent).
+## C3: quest chain references + objective event format + objective `match` entity
+## references (D6: never silent).
 ## `prerequisites.quests_completed[]` is a hard quest reference; `stages[].objectives[]`
 ## events must use the `cmd:` / `ui:` observation namespace the runtime forwards from
 ## StoryService/QuestService. Command-name existence stays out of scope (no enumerable
 ## runtime command registry is available to content validation; see header rationale).
+## `match` keys listed in `QUEST_MATCH_REFERENCE_TYPES` are resolved against their
+## runtime registry (missing id → `quest_match_ref_missing` with mod/file/entity/path);
+## all other match keys are literal payload filters and intentionally skipped.
 func _check_quests() -> void:
 	var event_pattern := RegEx.new()
 	event_pattern.compile("^(cmd|ui):[a-z][a-z0-9_.-]*$")
@@ -500,10 +519,15 @@ func _check_quests() -> void:
 		var stages: Variant = quest.data.get("stages", null)
 		if not (stages is Array):
 			continue
-		for raw_stage in stages:
+		for stage_index in (stages as Array).size():
+			var raw_stage: Variant = (stages as Array)[stage_index]
 			if not (raw_stage is Dictionary):
 				continue
-			for raw_objective in Array((raw_stage as Dictionary).get("objectives", [])):
+			var objectives: Variant = (raw_stage as Dictionary).get("objectives", null)
+			if not (objectives is Array):
+				continue
+			for objective_index in (objectives as Array).size():
+				var raw_objective: Variant = (objectives as Array)[objective_index]
 				if not (raw_objective is Dictionary):
 					continue
 				var event_name := String((raw_objective as Dictionary).get("event", ""))
@@ -513,6 +537,44 @@ func _check_quests() -> void:
 						"%s objective event '%s' must look like cmd:<command> or ui:<event>" % [quest.id, event_name],
 						quest.id
 					)
+				_check_quest_objective_match(quest, stage_index, raw_stage as Dictionary, objective_index, raw_objective as Dictionary)
+
+
+## Validates entity references inside one objective's `match` block. Only known
+## reference keys are resolved; literal filters (`category`, `kind`, ...) pass through.
+func _check_quest_objective_match(
+	quest: ContentDefinition,
+	stage_index: int,
+	stage: Dictionary,
+	objective_index: int,
+	objective: Dictionary
+) -> void:
+	var raw_match: Variant = objective.get("match", null)
+	if not (raw_match is Dictionary):
+		return
+	var matched: Dictionary = raw_match
+	for raw_key in matched.keys():
+		var key := String(raw_key)
+		if not QUEST_MATCH_REFERENCE_TYPES.has(key):
+			continue
+		var target_id := String(matched[raw_key])
+		if target_id.is_empty():
+			continue
+		var content_type: StringName = QUEST_MATCH_REFERENCE_TYPES[key]
+		if _hub.contains(content_type, target_id):
+			continue
+		var stage_id := String(stage.get("id", ""))
+		errors.append({
+			"code": "quest_match_ref_missing",
+			"message": "%s (mod '%s', file '%s') stage '%s' objective[%d].match.%s references missing %s '%s'" % [
+				quest.id, quest.source_mod, quest.source_file, stage_id, objective_index, key, content_type, target_id
+			],
+			"definition_id": quest.id,
+			"mod": quest.source_mod,
+			"file": quest.source_file,
+			"entity": String(content_type),
+			"path": "data.stages[%d].objectives[%d].match.%s" % [stage_index, objective_index, key],
+		})
 
 
 func _check_start_profiles() -> void:

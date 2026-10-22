@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T13:50:27.428Z",
-  "commit": "c566da1",
+  "generated_at": "2026-10-22T14:35:05.631Z",
+  "commit": "cc24d82",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -270,7 +270,7 @@
     },
     {
       "source": "SNModMaker/js/validate.js",
-      "sha256": "99dbd5050732bde3e59ec6f11fa1b00aeeb0e7c0313cd6585064c32e0b6b9da7",
+      "sha256": "d9e6c6d0f77abc74c95e01a91dfb7c5b831da94cd508ae0a31d6b60f9b3ee9d0",
       "doc": "docs/static/SNModMaker/js/validate.js.md",
       "status": "documented"
     },
@@ -307,7 +307,7 @@
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "eb726676683624d0f3ae9eaf9aecaef0e7559cba0ac103fa230893e5f4a8e8fa",
+      "sha256": "4613ce88ef069acc4913bbb70c53b9738a6ce5d407ce4fdec0dfd7006b672520",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -3667,7 +3667,7 @@
     },
     {
       "source": "framework/modding/cross_reference_validator.gd",
-      "sha256": "1841dcb1e20ff54c54dcd7e8897750744a614688fe90bf35f77d3d2d91e69464",
+      "sha256": "954bd6b11f16221fc08726907e308262b0291c09764278ac130bca277efa7133",
       "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
       "status": "documented"
     },
@@ -3992,7 +3992,7 @@
     },
     {
       "source": "framework/tests/cases/test_quest_service.gd",
-      "sha256": "e1ac226834d69c558cbe5443da4e10719ff4acdfcb54564483c0979199a6db8d",
+      "sha256": "66f20fc833eb259fb260b6ebfd8afa9a63aa243d8271463388197939f3a7ea89",
       "doc": "docs/static/framework/tests/cases/test_quest_service.gd.md",
       "status": "documented"
     },
@@ -5178,7 +5178,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "d2699bfa05b9f352525610807e0b03231096560a441721743da50a13c61da7d1",
+      "sha256": "1a36775b7bdbb987cbdd43bce70fb019d87a023cc1741623fadb3de33e366aab",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"

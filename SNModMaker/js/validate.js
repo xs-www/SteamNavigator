@@ -573,6 +573,37 @@
   }
 
   /* ---------------------------------------------------------------------------
+   * Quest (Content Schema 2.0 active, C3).
+   *
+   * The schema pins the shape; these checks cover what JSON Schema cannot:
+   * objective events must live in the cmd:/ui: namespace so QuestService can
+   * observe them. Mirrors the Godot cross-reference validator's
+   * `quest_event_invalid` rule (^(cmd|ui):[a-z][a-z0-9_.-]*$).
+   * See docs/design/TASK_QUEST_SYSTEM.md.
+   * ------------------------------------------------------------------------- */
+  const QUEST_EVENT_RE = /^(cmd|ui):[a-z][a-z0-9_.-]*$/;
+
+  /** Quest objective events must be `cmd:*` or `ui:*` with a lowercase name. */
+  function checkQuestSemantics(definition, view, add) {
+    const data = definition && definition.data;
+    if (!data || typeof data !== 'object') return;
+    const stages = Array.isArray(data.stages) ? data.stages : [];
+    stages.forEach((stage, stageIndex) => {
+      if (!stage || typeof stage !== 'object') return;
+      const objectives = Array.isArray(stage.objectives) ? stage.objectives : [];
+      objectives.forEach((objective, objectiveIndex) => {
+        if (!objective || typeof objective !== 'object') return;
+        const event = typeof objective.event === 'string' ? objective.event : '';
+        if (!event) return; // required by the schema; leave missing-field errors to it.
+        if (QUEST_EVENT_RE.test(event)) return;
+        add('error', 'quest_event_invalid',
+          `目标事件 "${event}" 必须以 cmd: 或 ui: 开头，且命令/事件名为小写字母开头的路径（例如 cmd:trade.buy / ui:arrival_settled）。`,
+          Object.assign({}, view, { field: `data.stages.${stageIndex}.objectives.${objectiveIndex}.event` }));
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------------------
    * Story Mode (Content Schema 2.0 draft).
    *
    * A story pack is a story-only content mod: story_arcs plus their
@@ -1037,6 +1068,7 @@
 
         if (info.key === 'weapons') checkWeaponSemantics(definition, view, add);
         if (info.key === 'hulls') checkHullSocketSemantics(definition, view, add);
+        if (info.key === 'quests') checkQuestSemantics(definition, view, add);
         if (info.key === 'story_arcs') checkStoryArcSemantics(definition, view, add);
         if (info.key === 'story_levels') checkStoryLevelSemantics(definition, view, add);
 
