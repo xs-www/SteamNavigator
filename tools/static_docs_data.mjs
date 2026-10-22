@@ -2555,6 +2555,8 @@ export const MODULES = {
       "`test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema 与 `map_configs`（31 键 exploration），确认 9 类 active、只有 `weapons` 仍为草案。",
       "`test_world_schema_refs.gd` 覆盖 Phase B 9 类引用规则：硬引用缺失 error、planned 目标仅 `ref_inactive_type` warning、faction 自指、map_config archetype 数量组合规则。",
       "`test_world_completeness.gd` 覆盖 Core Phase B 完整性：presence gate（仅 Core 自带 world_profiles 时启用）、五项硬性数量、四项建议 warning 与 start_profile / region / map_config 组合规则。",
+      "`test_campaign_assembly.gd` 用合成 v2 定义验证 `CampaignFactory` 世界装配：state 形状、同 seed 确定性、区域/地点/航路引用一致性、map_config 回退与结构化错误。",
+      "`test_campaign_start.gd` 覆盖 `run.start start_profile=` 端到端、`campaign.view` 形状、`ContentRefs` 1.0↔v2 解析与 resolver 旧档回退。",
       "`test_schema_v2_weapons.gd` 守护 `weapons` 草案（合法 direct / broadside 与非法必填 / 枚举 / 范围 / 颜色 / 材料 ID）、草案登记与 hull `weapon_sockets` / `rig_sockets` 镜像（含 Core 14 个武器 socket + 22 个帆索 socket）。",
       "`test_world_generator.gd` 守护坐标空间世界生成：同 seed 可复现、港口锚定海岸线、最小间距、连通性、出航角度、必需设施位置与序列化往返。"
     ]
