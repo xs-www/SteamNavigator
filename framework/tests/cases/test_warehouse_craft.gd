@@ -2,7 +2,7 @@ extends TestCase
 ## Warehouse, crafting, transit and replacement flows for iteration 1.
 ## See docs/specs/ITERATION_1_MVP_LOOP.md §3.1-3.3, §4, §6 and §8.
 
-const CONTRACT_FREIGHT := "core:good/contract_freight"
+const CONTRACT_FREIGHT := "core:item/contract_freight"
 const MEDIUM_UNLOCKS := ["core:hull/medium_standard", "core:module/medium_hold"]
 const LARGE_UNLOCKS := ["core:hull/large_efficient", "core:hull/large_performance"]
 
@@ -100,19 +100,19 @@ func test_transit_weight_counts_without_cargo_capacity() -> void:
 func test_store_and_take_materials() -> void:
 	var context := _start(7103)
 	var port_id := context.state.current_port_id()
-	ShipOps.add_cargo(context.state.ship(), "core:good/brass", 2, "", 40.0)
-	var stored := context.commands.execute(&"warehouse.store_materials", {"item_id": "core:good/brass", "amount": 2})
+	ShipOps.add_cargo(context.state.ship(), "core:item/brass", 2, "", 40.0)
+	var stored := context.commands.execute(&"warehouse.store_materials", {"item_id": "core:item/brass", "amount": 2})
 	assert_true(bool(stored["ok"]), "storing materials succeeds: %s" % str(stored))
-	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:good/brass"), 2, "warehouse holds the materials")
-	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:good/brass", false), 0, "cargo no longer holds the materials")
-	var taken := context.commands.execute(&"warehouse.take_materials", {"item_id": "core:good/brass", "amount": 1})
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:item/brass"), 2, "warehouse holds the materials")
+	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:item/brass", false), 0, "cargo no longer holds the materials")
+	var taken := context.commands.execute(&"warehouse.take_materials", {"item_id": "core:item/brass", "amount": 1})
 	assert_true(bool(taken["ok"]), "taking materials succeeds: %s" % str(taken))
-	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:good/brass"), 1, "warehouse amount decreases")
-	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:good/brass", false), 1, "materials return to cargo")
-	var too_many := context.commands.execute(&"warehouse.take_materials", {"item_id": "core:good/brass", "amount": 5})
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:item/brass"), 1, "warehouse amount decreases")
+	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:item/brass", false), 1, "materials return to cargo")
+	var too_many := context.commands.execute(&"warehouse.take_materials", {"item_id": "core:item/brass", "amount": 5})
 	assert_false(bool(too_many["ok"]), "taking more than stored is rejected")
 	assert_eq(String(too_many["error_code"]), "insufficient_materials", "insufficient_materials is reported")
-	var over_cargo := context.commands.execute(&"warehouse.store_materials", {"item_id": "core:good/brass", "amount": 3})
+	var over_cargo := context.commands.execute(&"warehouse.store_materials", {"item_id": "core:item/brass", "amount": 3})
 	assert_false(bool(over_cargo["ok"]), "storing more than carried is rejected")
 	assert_eq(String(over_cargo["error_code"]), "insufficient_cargo", "insufficient_cargo is reported")
 
@@ -120,9 +120,9 @@ func test_store_and_take_materials() -> void:
 func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 	var context := _start(7104)
 	var port_id := context.state.current_port_id()
-	WarehouseOps.add_material(context.state, port_id, "core:good/brass", 2)
-	WarehouseOps.add_material(context.state, port_id, "core:material/sealing_compound", 2)
-	ShipOps.add_cargo(context.state.ship(), "core:good/brass", 1, "", 20.0)
+	WarehouseOps.add_material(context.state, port_id, "core:item/brass", 2)
+	WarehouseOps.add_material(context.state, port_id, "core:item/sealing_compound", 2)
+	ShipOps.add_cargo(context.state.ship(), "core:item/brass", 1, "", 20.0)
 	var time_before := context.state.now()
 	var money_before := context.state.money()
 	var expense_before := int(context.state.data["stats"].get("expense", 0))
@@ -133,9 +133,9 @@ func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 	assert_almost_eq(context.state.now(), time_before, 0.001, "craft no longer advances time")
 	assert_eq(context.state.money(), money_before - 140, "craft pays craft_cost")
 	assert_eq(int(context.state.data["stats"].get("expense", 0)), expense_before + 140, "craft cost is recorded as an expense")
-	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:good/brass"), 0, "warehouse brass is consumed first")
-	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:material/sealing_compound"), 0, "warehouse sealing compound is consumed")
-	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:good/brass", false), 0, "cargo covers the material remainder")
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:item/brass"), 0, "warehouse brass is consumed first")
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, "core:item/sealing_compound"), 0, "warehouse sealing compound is consumed")
+	assert_eq(ShipOps.cargo_amount(context.state.ship(), "core:item/brass", false), 0, "cargo covers the material remainder")
 	assert_eq(WarehouseOps.module_qty(context.state, port_id, "core:module/chart_room"), 0, "crafted module is not stored before the order is ready")
 	assert_eq(CraftOps.orders(context.state).size(), 1, "craft queues one open order")
 	assert_almost_eq(float(result["data"]["craft_time_hours"]), 5.0, 0.001, "result reports craft time")
@@ -147,7 +147,7 @@ func test_craft_consumes_warehouse_first_then_cargo_and_charges_cost() -> void:
 	assert_contains(event_types, "ship.craft_ordered", "ordering emits ship.craft_ordered")
 	assert_false(event_types.has("ship.module_crafted"), "ship.module_crafted is reserved for settlement")
 	var consumed: Array = result["data"]["consumed"]
-	assert_eq(String(consumed[0]["item_id"]), "core:good/brass", "first consumed row is brass")
+	assert_eq(String(consumed[0]["item_id"]), "core:item/brass", "first consumed row is brass")
 	assert_eq(int(consumed[0]["from_warehouse"]), 2, "brass taken from warehouse")
 	assert_eq(int(consumed[0]["from_cargo"]), 1, "brass remainder taken from cargo")
 	# Waiting in port advances time and settles the order into the warehouse.
@@ -174,8 +174,8 @@ func test_install_from_warehouse_is_free_and_replaces_old_module() -> void:
 	var context := _start(7106)
 	var hub: RegistryHub = context.registries
 	var port_id := context.state.current_port_id()
-	WarehouseOps.add_material(context.state, port_id, "core:good/brass", 3)
-	WarehouseOps.add_material(context.state, port_id, "core:material/sealing_compound", 2)
+	WarehouseOps.add_material(context.state, port_id, "core:item/brass", 3)
+	WarehouseOps.add_material(context.state, port_id, "core:item/sealing_compound", 2)
 	var crafted := context.commands.execute(&"ship.craft_module", {"module_id": "core:module/chart_room"})
 	assert_true(bool(crafted["ok"]), "chart room crafts into the warehouse: %s" % str(crafted))
 	# The order must be ready before it can be installed from the warehouse.
@@ -271,8 +271,8 @@ func test_contract_lock_blocks_hulls_and_crafts_until_unlock() -> void:
 	var large := context.commands.execute(&"ship.install_module", {"module_id": "core:hull/large_efficient"})
 	assert_false(bool(large["ok"]), "large hull is contract-locked at run start")
 	assert_eq(String(large["error_code"]), "locked_by_contract", "locked_by_contract is reported for large hulls")
-	WarehouseOps.add_material(context.state, port_id, "core:good/timber", 6)
-	WarehouseOps.add_material(context.state, port_id, "core:material/boiler_plate", 2)
+	WarehouseOps.add_material(context.state, port_id, "core:item/timber", 6)
+	WarehouseOps.add_material(context.state, port_id, "core:item/boiler_plate", 2)
 	var craft_locked := context.commands.execute(&"ship.craft_module", {"module_id": "core:module/medium_hold"})
 	assert_false(bool(craft_locked["ok"]), "crafting a contract-locked module is rejected")
 	assert_eq(String(craft_locked["error_code"]), "locked_by_contract", "craft reports locked_by_contract")

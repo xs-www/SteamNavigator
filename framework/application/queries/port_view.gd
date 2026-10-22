@@ -52,6 +52,11 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 		market_rows.append({
 			"item_id": String(item_id),
 			"name_key": definition.name_key,
+			# C2: one `items` type backs both trade goods and crafting materials;
+			# the UI groups/labels rows from the content category + flag.
+			"category": String(definition.data.get("category", "")),
+			"crafting_material": bool(definition.data.get("crafting_material", false)),
+			"tier": int(definition.data.get("tier", 0)),
 			"unit_weight": float(definition.data.get("unit_weight", 0.0)),
 			"price": int(round(float(entry.get("price", 0.0)))),
 			"stock": int(entry.get("stock", 0)),

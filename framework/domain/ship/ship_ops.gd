@@ -61,11 +61,17 @@ static func module_in_slot(hub: RegistryHub, ship: Dictionary, slot: String) -> 
 	return definition
 
 
+## Trade / crafting item definition behind an id. C2 merged the old `goods` and
+## `materials` registries into one `items` type, so there is a single lookup.
 static func item_definition(hub: RegistryHub, item_id: String) -> ContentDefinition:
-	var good := hub.get_by_id(ContentTypes.GOOD, item_id)
-	if good != null:
-		return good
-	return hub.get_by_id(ContentTypes.MATERIAL, item_id)
+	return hub.get_by_id(ContentTypes.ITEM, item_id)
+
+
+## True when the item can be consumed by crafting / refit recipes. Content marks
+## these with `data.crafting_material` (replaces the old materials content type).
+static func is_crafting_material(hub: RegistryHub, item_id: String) -> bool:
+	var definition := item_definition(hub, item_id)
+	return definition != null and bool(definition.data.get("crafting_material", false))
 
 
 static func installed_modules(hub: RegistryHub, ship: Dictionary) -> Array[ContentDefinition]:

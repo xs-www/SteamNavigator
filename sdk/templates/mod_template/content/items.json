@@ -1,14 +1,15 @@
 {
-  "schema_version": "1.0",
-  "content_type": "goods",
+  "schema_version": "2.0",
+  "content_type": "items",
   "definitions": [
     {
-      "id": "example_mod:good/tea",
-      "name_key": "good.example_mod.tea.name",
-      "description_key": "good.example_mod.tea.description",
+      "id": "example_mod:item/tea",
+      "name_key": "item.example_mod.tea.name",
+      "description_key": "item.example_mod.tea.description",
       "tags": ["good.trade", "good.consumer"],
       "enabled": true,
       "data": {
+        "crafting_material": false,
         "unit_weight": 0.8,
         "base_price": 95,
         "base_stock": 60,

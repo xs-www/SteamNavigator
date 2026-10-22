@@ -1,4 +1,4 @@
 {
-  "good.example_mod.tea.name": "Tea",
-  "good.example_mod.tea.description": "An ordinary good added by the example mod."
+  "item.example_mod.tea.name": "Tea",
+  "item.example_mod.tea.description": "An ordinary trade item added by the example mod."
 }

@@ -13,7 +13,7 @@
   "optional_dependencies": [],
   "conflicts": [],
   "content": [
-    "content/goods.json"
+    "content/items.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -23,5 +23,5 @@
   "authors": ["Your Name"],
   "license": "CC-BY-4.0",
   "description": "Copy this template, change the id, and add content files.",
-  "capabilities": []
+  "capabilities": ["content.items.v1"]
 }

@@ -27,7 +27,7 @@ func _make_patch_mod(root: String, mod_id: String, price: int, texture_key: Stri
 		"schema_version": "1.0",
 		"content_type": "patches",
 		"definitions": [{
-			"target": "core:good/iron_ore",
+			"target": "core:item/iron_ore",
 			"operations": [
 				{"op": "replace", "path": "/data/base_price", "value": price},
 				{"op": "add", "path": "/information", "value": {"texture": texture_key}},
@@ -55,7 +55,7 @@ func test_patch_applies_to_core_definition() -> void:
 	assert_true(not report.has_fatal(), "patch load has no fatal error: %s" % report.format_text())
 	assert_eq(report.status_name(), "ok", "single patch loads cleanly")
 	var context: AppContext = AppContext.get_active()
-	var iron_ore := context.registries.get_by_id(ContentTypes.GOOD, "core:good/iron_ore")
+	var iron_ore := context.registries.get_by_id(ContentTypes.ITEM, "core:item/iron_ore")
 	assert_not_null(iron_ore, "patched definition still exists")
 	assert_eq(int(iron_ore.data["base_price"]), 50, "patch replaces the value")
 	assert_eq(String(iron_ore.information.get("texture", "")), "icon.coal", "patch updates parsed information")

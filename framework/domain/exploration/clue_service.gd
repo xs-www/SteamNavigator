@@ -562,8 +562,10 @@ static func goods_candidates(context) -> Array:
 				continue
 			if bool((entry as Dictionary).get("is_supply", false)):
 				continue
-			# 只收普通货物；材料 / 补给 / 委托货箱不进入货物线索。
-			if hub == null or hub.get_by_id(ContentTypes.GOOD, item_id) == null:
+			# 只收普通贸易货物（`good.trade` 标签）；C2 合并后材料 / 补给 /
+			# 委托货箱与普通货物同属 `items`，按内容标签而不是旧内容类型区分。
+			var definition: ContentDefinition = hub.get_by_id(ContentTypes.ITEM, item_id) if hub != null else null
+			if definition == null or not definition.has_tag("good.trade"):
 				continue
 			if referenced.has("%s|%s" % [port_id, item_id]):
 				continue
@@ -955,10 +957,10 @@ static func _goods_pair(clue: Dictionary) -> String:
 	]
 
 
-## Localized display key of a good, resolved from the registry (never a content literal).
+## Localized display key of an item, resolved from the registry (never a content literal).
 static func _goods_name_key(context, good_id: String) -> String:
 	var hub: RegistryHub = context.registries
-	var definition: ContentDefinition = hub.get_by_id(ContentTypes.GOOD, good_id) if hub != null else null
+	var definition: ContentDefinition = hub.get_by_id(ContentTypes.ITEM, good_id) if hub != null else null
 	return definition.name_key if definition != null else good_id
 
 

@@ -34,7 +34,7 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	if not order.has("core"):
 		errors.append({"code": "core_not_enabled", "message": "core mod is not in the load order"})
 
-	_require_count(hub, ContentTypes.GOOD, 1, "goods", errors)
+	_require_count(hub, ContentTypes.ITEM, 1, "items", errors)
 	_require_count(hub, ContentTypes.HULL, 3, "hulls", errors)
 	_require_module_category_count(hub, "boiler", 2, "boilers", errors)
 	_require_module_category_count(hub, "cargo", 1, "cargo modules", errors)

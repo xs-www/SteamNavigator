@@ -6,11 +6,12 @@ extends TestCase
 ## ## 契约与约束
 ## - 每个 runtime 类型都必须有非空 schema_version；Phase B 的 9 类
 ##   （world_profiles / regions / sites / route_templates / weather_profiles /
-##   factions / discoveries / start_profiles / map_configs）与 C1 合并后的
-##   `modules` + `hulls` 为 2.0，其余运行时类型与 patches 仍为 1.0。
+##   factions / discoveries / start_profiles / map_configs）、C1 合并后的
+##   `modules` + `hulls` 与 C2 合并后的 `items` 为 2.0，其余运行时类型与 patches 仍为 1.0。
 ## - `content_types.json.draft_schemas` 是 `weapons` + 剧情模式 `story_arcs` /
 ##   `story_levels`，草案不得进入 `ContentTypes`。
-## - 1.0 内容的 envelope 仍走 1.0 校验；goods 声明 2.0 必须报 `unsupported_schema`。
+## - 1.0 内容的 envelope 仍走 1.0 校验；`items` 声明 1.0 必须报 `unsupported_schema`
+##   （C2 合并后 items 是 active 2.0 类型）。
 ## - 一个 2.0 `world_profiles` 内容模组必须通过 ContentCompiler、进入注册表，
 ##   且不产生 fatal / degraded 启动状态。
 ## @end-static-doc
@@ -29,7 +30,7 @@ func _temp_root(prefix: String) -> String:
 	return "user://content_versions_%s_%d" % [prefix, Time.get_ticks_usec()]
 
 
-func _write_goods_mod(root: String, mod_id: String, schema_version: String) -> void:
+func _write_item_mod(root: String, mod_id: String, schema_version: String) -> void:
 	var mod_root := root + "/" + mod_id
 	DirAccess.make_dir_recursive_absolute(mod_root + "/content")
 	DirAccess.make_dir_recursive_absolute(mod_root + "/localization")
@@ -43,18 +44,19 @@ func _write_goods_mod(root: String, mod_id: String, schema_version: String) -> v
 		"load_priority": 10,
 		"required": false,
 		"dependencies": [{"id": "core", "version": ">=1.0.0 <2.0.0"}],
-		"content": ["content/goods.json"],
+		"content": ["content/items.json"],
 		"localization": ["localization/zh_CN.json"],
 	}
 	_write_file(mod_root + "/manifest.json", JsonUtils.canonical_stringify(manifest, "  "))
-	var goods := {
+	var items := {
 		"schema_version": schema_version,
-		"content_type": "goods",
+		"content_type": "items",
 		"definitions": [{
-			"id": "%s:good/test_good" % mod_id,
-			"name_key": "good.%s.test_good.name" % mod_id,
+			"id": "%s:item/test_item" % mod_id,
+			"name_key": "item.%s.test_item.name" % mod_id,
 			"enabled": true,
 			"data": {
+				"crafting_material": false,
 				"unit_weight": 1.0,
 				"base_price": 10,
 				"base_stock": 10,
@@ -62,8 +64,8 @@ func _write_goods_mod(root: String, mod_id: String, schema_version: String) -> v
 			},
 		}],
 	}
-	_write_file(mod_root + "/content/goods.json", JsonUtils.canonical_stringify(goods, "  "))
-	var localization := {"good.%s.test_good.name" % mod_id: "Test Good"}
+	_write_file(mod_root + "/content/items.json", JsonUtils.canonical_stringify(items, "  "))
+	var localization := {"item.%s.test_item.name" % mod_id: "Test Item"}
 	_write_file(mod_root + "/localization/zh_CN.json", JsonUtils.canonical_stringify(localization, "  "))
 
 
@@ -143,7 +145,8 @@ func test_every_runtime_type_declares_its_content_schema_version() -> void:
 		ContentTypes.DISCOVERY, ContentTypes.START_PROFILE, ContentTypes.MAP_CONFIG,
 	]:
 		assert_eq(ContentTypes.schema_version(content_type), "2.0", "%s is a Phase B Schema 2.0 type" % content_type)
-	assert_eq(ContentTypes.schema_version(ContentTypes.GOOD), "1.0", "goods stays on content schema 1.0")
+	assert_eq(ContentTypes.schema_version(ContentTypes.ITEM), "2.0", "items is the merged Schema 2.0 family (C2)")
+	assert_eq(ContentTypes.schema_path(ContentTypes.ITEM), "res://schemas/v2/item.schema.json", "items schema path")
 	assert_eq(ContentTypes.schema_version(ContentTypes.HULL), "2.0", "hulls is a Schema 2.0 type after C1")
 	assert_eq(ContentTypes.schema_version(ContentTypes.MODULE), "2.0", "the merged modules type is Schema 2.0")
 	assert_eq(ContentTypes.schema_path(ContentTypes.MODULE), "res://schemas/v2/module.schema.json", "modules schema path")
@@ -201,35 +204,35 @@ func test_promoted_world_profile_content_compiles_and_registers() -> void:
 	)
 
 
-func test_goods_envelope_with_1_0_still_compiles() -> void:
+func test_item_envelope_with_2_0_still_compiles() -> void:
 	var root := _temp_root("ok")
-	_write_goods_mod(root, TEMP_MOD_ID, "1.0")
+	_write_item_mod(root, TEMP_MOD_ID, "2.0")
 	var boot := bootstrap_core({"scan_roots": PackedStringArray(["res://dev_mods", root])})
 	var report: StartupReport = boot["report"]
-	assert_true(not report.has_fatal(), "1.0 content load has no fatal error: %s" % report.format_text())
-	assert_eq(report.status_name(), "ok", "a 1.0 content mod still loads cleanly")
+	assert_true(not report.has_fatal(), "2.0 content load has no fatal error: %s" % report.format_text())
+	assert_eq(report.status_name(), "ok", "a 2.0 items mod loads cleanly")
 	var context: AppContext = boot["context"]
 	assert_not_null(
-		context.registries.get_by_id(ContentTypes.GOOD, "%s:good/test_good" % TEMP_MOD_ID),
-		"1.0 goods definition is registered"
+		context.registries.get_by_id(ContentTypes.ITEM, "%s:item/test_item" % TEMP_MOD_ID),
+		"2.0 items definition is registered"
 	)
 
 
-func test_goods_envelope_with_2_0_is_rejected_per_type() -> void:
-	var root := _temp_root("v2")
-	_write_goods_mod(root, TEMP_V2_MOD_ID, "2.0")
+func test_item_envelope_with_1_0_is_rejected_per_type() -> void:
+	var root := _temp_root("v1")
+	_write_item_mod(root, TEMP_V2_MOD_ID, "1.0")
 	var boot := bootstrap_core({"scan_roots": PackedStringArray(["res://dev_mods", root])})
 	var report: StartupReport = boot["report"]
 	var codes := _error_codes(report)
-	assert_contains(codes, "unsupported_schema", "goods declaring 2.0 is rejected: %s" % report.format_text())
+	assert_contains(codes, "unsupported_schema", "items declaring 1.0 is rejected: %s" % report.format_text())
 	var message := ""
 	var mod_id := ""
 	for error in report.errors:
 		if String(error.get("code", "")) == "unsupported_schema":
 			message = String(error.get("message", ""))
 			mod_id = String(error.get("mod_id", ""))
-	assert_contains(message, "goods", "the error names the content type")
-	assert_contains(message, "1.0", "the error names the expected version")
+	assert_contains(message, "items", "the error names the content type")
+	assert_contains(message, "2.0", "the error names the expected version")
 	assert_eq(mod_id, TEMP_V2_MOD_ID, "the error points at the offending mod")
 	assert_false(report.has_fatal(), "an unsupported version is a mod error, not a fatal startup error")
 
@@ -238,14 +241,14 @@ func test_patch_revalidation_uses_target_type_version() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	var compiler := ContentCompiler.new(context.registries, context.localization, context.assets, context.logger)
-	var iron_ore := context.registries.get_by_id(ContentTypes.GOOD, "core:good/iron_ore")
-	assert_not_null(iron_ore, "core goods definition exists")
+	var iron_ore := context.registries.get_by_id(ContentTypes.ITEM, "core:item/iron_ore")
+	assert_not_null(iron_ore, "core item definition exists")
 	var raw: Dictionary = iron_ore.to_raw()
-	var valid_errors := compiler._validate_definition(ContentTypes.GOOD, raw)
-	assert_empty(valid_errors, "patch re-validation accepts a 1.0 goods definition: %s" % str(valid_errors))
+	var valid_errors := compiler._validate_definition(ContentTypes.ITEM, raw)
+	assert_empty(valid_errors, "patch re-validation accepts a 2.0 item definition: %s" % str(valid_errors))
 	var broken: Dictionary = raw.duplicate(true)
 	broken["data"]["unit_weight"] = -1.0
-	var broken_errors := compiler._validate_definition(ContentTypes.GOOD, broken)
+	var broken_errors := compiler._validate_definition(ContentTypes.ITEM, broken)
 	assert_false(broken_errors.is_empty(), "patch re-validation still reports schema errors")
 	var version_errors := 0
 	for error in broken_errors:

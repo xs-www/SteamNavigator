@@ -38,7 +38,7 @@ func test_failed_trade_rolls_back() -> void:
 	var context: AppContext = boot["context"]
 	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 222})
 	var before := context.state.hash()
-	var result := context.commands.execute(&"trade.buy", {"item_id": "core:good/iron_ore", "amount": 999999})
+	var result := context.commands.execute(&"trade.buy", {"item_id": "core:item/iron_ore", "amount": 999999})
 	assert_false(bool(result["ok"]), "oversized purchase fails")
 	assert_eq(context.state.hash(), before, "failed command leaves state untouched")
 
@@ -69,7 +69,7 @@ func test_player_trade_price_impact_is_damped() -> void:
 	var view := context.queries.execute(&"port.view")
 	var target := {}
 	for row in view["data"]["market"]:
-		if bool(row.get("buyable", true)) and String(row["item_id"]) == "core:material/sealing_compound":
+		if bool(row.get("buyable", true)) and String(row["item_id"]) == "core:item/sealing_compound":
 			target = row
 			break
 	assert_true(not target.is_empty(), "found the sealing compound row")

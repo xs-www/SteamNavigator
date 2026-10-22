@@ -1,4 +1,6 @@
 extends TestCase
+## Core content load checks. C2 (items merge): the old `goods` + `materials`
+## definitions now live in one active Schema 2.0 `items` registry.
 
 
 func test_core_loads_cleanly() -> void:
@@ -11,7 +13,7 @@ func test_core_loads_cleanly() -> void:
 	assert_eq(report.mods.size(), 1, "one mod loaded")
 	assert_eq(String(report.mods[0]["id"]), "core", "loaded mod is core")
 	assert_true(report.content_total() >= 45, "core provides a substantial content set")
-	assert_eq(int(report.content_counts.get("goods", 0)), 9, "goods count includes coal and water")
+	assert_eq(int(report.content_counts.get("items", 0)), 12, "items merge goods and materials (incl. coal and water)")
 	assert_eq(int(report.content_counts.get("hulls", 0)), 4, "hull count")
 	assert_eq(int(report.content_counts.get("contracts", 0)), 9, "contract count")
 
@@ -19,12 +21,12 @@ func test_core_loads_cleanly() -> void:
 func test_registry_accessible_after_freeze() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
-	assert_not_null(context.registries.get_by_id(ContentTypes.GOOD, "core:good/iron_ore"), "iron ore is registered")
+	assert_not_null(context.registries.get_by_id(ContentTypes.ITEM, "core:item/iron_ore"), "iron ore is registered")
 	assert_not_null(context.registries.get_by_id(ContentTypes.HULL, "core:hull/medium_standard"), "medium hull is registered")
 	assert_not_null(context.registries.get_by_id(ContentTypes.CONTRACT, "core:contract/main_05"), "finale contract is registered")
 	assert_true(context.commands.has(&"run.start"), "run.start command is registered")
 	assert_true(context.queries.has(&"port.view"), "port.view query is registered")
-	assert_true(context.localization.has_key("good.core.iron_ore.name"), "localization loaded")
+	assert_true(context.localization.has_key("item.core.iron_ore.name"), "localization loaded")
 	var manifest_parsed := JsonUtils.parse_file("res://dev_mods/core/manifest.json")
 	assert_true(bool(manifest_parsed.get("ok", false)), "core manifest parses")
 	if bool(manifest_parsed.get("ok", false)):
@@ -34,9 +36,9 @@ func test_registry_accessible_after_freeze() -> void:
 			declared_assets.size(),
 			"every Core manifest asset is registered (image, model and shared-texture keys)"
 		)
-	var coal := context.registries.get_by_id(ContentTypes.GOOD, "core:good/coal")
-	assert_eq(String(coal.information.get("texture", "")), "icon.coal", "Core goods expose parsed texture information")
-	assert_eq(coal.asset_uri("model"), "asset://core/model.good.coal", "Core goods expose namespaced model URIs")
+	var coal := context.registries.get_by_id(ContentTypes.ITEM, "core:item/coal")
+	assert_eq(String(coal.information.get("texture", "")), "icon.coal", "Core items expose parsed texture information")
+	assert_eq(coal.asset_uri("model"), "asset://core/model.good.coal", "Core items expose namespaced model URIs")
 	assert_true(context.assets.has(coal.asset_uri("texture")), "Core texture URI resolves")
 	assert_true(context.assets.has(coal.asset_uri("model")), "Core model URI resolves")
 	var hull := context.registries.get_by_id(ContentTypes.HULL, "core:hull/large_efficient")

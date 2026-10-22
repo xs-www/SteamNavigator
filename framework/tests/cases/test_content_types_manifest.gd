@@ -122,6 +122,24 @@ func test_merged_modules_and_hulls_are_active_2_0() -> void:
 		assert_false(by_key.has(legacy), "%s legacy module type is retired" % legacy)
 
 
+func test_merged_items_are_active_2_0() -> void:
+	var data := _manifest()
+	if data.is_empty():
+		return
+	var by_key: Dictionary = {}
+	for entry in data.get("types", []):
+		if entry is Dictionary:
+			by_key[String(entry.get("key", ""))] = entry
+	assert_eq(String(by_key.get("items", {}).get("schema_version", "")), "2.0", "items is an active Schema 2.0 type")
+	assert_eq(String(by_key.get("items", {}).get("capability", "")), "content.items.v1", "items capability")
+	assert_eq(String(by_key.get("items", {}).get("schema", "")), "schemas/v2/item.schema.json", "items schema path")
+	assert_eq(String(by_key.get("items", {}).get("singular", "")), "item", "items singular")
+	for legacy in ["goods", "materials"]:
+		assert_false(by_key.has(legacy), "%s legacy type is retired" % legacy)
+	assert_eq(ContentTypes.schema_version(ContentTypes.ITEM), "2.0", "runtime ITEM version matches the manifest")
+	assert_eq(ContentTypes.schema_path(ContentTypes.ITEM), "res://schemas/v2/item.schema.json", "runtime ITEM schema path")
+
+
 func test_planned_types_do_not_shadow_active_types() -> void:
 	var data := _manifest()
 	if data.is_empty():

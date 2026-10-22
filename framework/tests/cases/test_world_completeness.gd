@@ -264,7 +264,7 @@ func _full_hub(
 ## satisfied so v2 assertions are not polluted by legacy errors.
 func _baseline_hub() -> RegistryHub:
 	var hub := RegistryHub.new(ContentTypes.all())
-	_register(hub, ContentTypes.GOOD, "core:good/coal")
+	_register(hub, ContentTypes.ITEM, "core:item/coal")
 	_register(hub, ContentTypes.HULL, STANDARD_HULL_ID, ["module.large"], {"tier": 1})
 	_register(hub, ContentTypes.HULL, "core:hull/second", [], {"tier": 1})
 	_register(hub, ContentTypes.HULL, "core:hull/third", [], {"tier": 1})

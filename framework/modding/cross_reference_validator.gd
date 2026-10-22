@@ -550,7 +550,7 @@ func _require_module(module_id: String, category: String, owner: String, field: 
 
 
 func _item_exists(item_id: String) -> bool:
-	return _hub.contains(ContentTypes.GOOD, item_id) or _hub.contains(ContentTypes.MATERIAL, item_id)
+	return _hub.contains(ContentTypes.ITEM, item_id)
 
 
 func _require_item(item_id: String, owner: String, field: String) -> void:

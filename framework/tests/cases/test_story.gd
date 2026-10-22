@@ -133,7 +133,7 @@ func test_second_mainline_buys_market_goods_and_returns_home() -> void:
 	assert_true(unlocked_features.has("market"), "the market is available")
 	assert_true(unlocked_features.has("contracts"), "the contracts page is unlocked")
 	var unlocked_items: Array = view.get("unlocked_items", [])
-	assert_true(unlocked_items.has("core:good/spices") and unlocked_items.has("core:good/textiles"),
+	assert_true(unlocked_items.has("core:item/spices") and unlocked_items.has("core:item/textiles"),
 		"Act 1 unlocks exactly the two tutorial goods")
 	var main_contract: Variant = context.state.contracts().get("main", null)
 	assert_true(main_contract is Dictionary, "the second mainline contract exists")
@@ -145,17 +145,17 @@ func test_second_mainline_buys_market_goods_and_returns_home() -> void:
 		"the second mainline returns to the starting harbour")
 	var goods_entry := {}
 	for entry in contract.get("cargo", []):
-		if String((entry as Dictionary).get("item_id", "")) == "core:good/textiles":
+		if String((entry as Dictionary).get("item_id", "")) == "core:item/textiles":
 			goods_entry = entry
 	assert_eq(int(goods_entry.get("amount", 0)), 6, "six textiles are delivered")
 	assert_true(bool(goods_entry.get("player_sourced", false)), "the goods are bought by the player")
 	var port_view: Dictionary = context.queries.execute(&"port.view")["data"]
 	assert_eq((port_view.get("market", []) as Array).size(), 2, "only the two unlocked goods are on the market")
-	var bought := context.commands.execute(&"trade.buy", {"item_id": "core:good/textiles", "amount": 8})
+	var bought := context.commands.execute(&"trade.buy", {"item_id": "core:item/textiles", "amount": 8})
 	assert_true(bool(bought.get("ok", false)), "buying 8 textiles succeeds: %s" % str(bought))
 	context.commands.execute(&"story.observe", {
 		"event": "cmd:trade.buy",
-		"data": {"item_id": "core:good/textiles", "amount": 8},
+		"data": {"item_id": "core:item/textiles", "amount": 8},
 	})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "second_depart", "8 textiles complete the purchase objective")
@@ -166,11 +166,11 @@ func test_second_mainline_buys_market_goods_and_returns_home() -> void:
 	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "back_first", "returning home enters the delivery stage")
-	var sold := context.commands.execute(&"trade.sell", {"item_id": "core:good/textiles", "amount": 2})
+	var sold := context.commands.execute(&"trade.sell", {"item_id": "core:item/textiles", "amount": 2})
 	assert_true(bool(sold.get("ok", false)), "selling the remaining goods succeeds: %s" % str(sold))
 	context.commands.execute(&"story.observe", {
 		"event": "cmd:trade.sell",
-		"data": {"item_id": "core:good/textiles", "amount": 2},
+		"data": {"item_id": "core:item/textiles", "amount": 2},
 	})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "chapter_wrap", "selling the leftovers wraps the chapter")
@@ -215,11 +215,11 @@ func test_tavern_clue_guaranteed_explore_and_third_port() -> void:
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "third_good", "the price intel refresh unlocks the third good")
 	var unlocked_items: Array = view.get("unlocked_items", [])
-	assert_true(unlocked_items.has("core:good/timber"), "the third good is content-driven")
+	assert_true(unlocked_items.has("core:item/timber"), "the third good is content-driven")
 	var port_view: Dictionary = context.queries.execute(&"port.view")["data"]
 	var has_timber := false
 	for row in port_view.get("market", []):
-		if String((row as Dictionary).get("item_id", "")) == "core:good/timber":
+		if String((row as Dictionary).get("item_id", "")) == "core:item/timber":
 			has_timber = true
 	assert_true(has_timber, "the third good appears in the home market")
 	# 跑一个来回（离港 + 抵达）→ 第二条 L3 线索 + 保底探索成功。
@@ -336,7 +336,7 @@ func test_main_contract_needs_player_supplied_coal_before_departure() -> void:
 	assert_true(bool(contract.get("player_sourced", false)), "main_01 asks for player-supplied cargo")
 	var coal_entry := {}
 	for entry in contract.get("cargo", []):
-		if String((entry as Dictionary).get("item_id", "")) == "core:good/coal":
+		if String((entry as Dictionary).get("item_id", "")) == "core:item/coal":
 			coal_entry = entry
 	assert_eq(int(coal_entry.get("amount", 0)), 10, "the contract requires 10 coal")
 	assert_true(bool(coal_entry.get("fuel_sourced", false)), "the coal entry is delivered from the bunkers")
@@ -445,21 +445,21 @@ func _walk_to_second_port(context: AppContext) -> void:
 ## 4.5.4：停在「酒馆开门」阶段。先按第二幕走完回港卖货，再确认 chapter_wrap。
 func _walk_to_tavern(context: AppContext) -> void:
 	_walk_to_second_port(context)
-	var bought := context.commands.execute(&"trade.buy", {"item_id": "core:good/textiles", "amount": 8})
+	var bought := context.commands.execute(&"trade.buy", {"item_id": "core:item/textiles", "amount": 8})
 	assert_true(bool(bought.get("ok", false)), "buying the Act 1 cargo succeeds: %s" % str(bought))
 	context.commands.execute(&"story.observe", {
 		"event": "cmd:trade.buy",
-		"data": {"item_id": "core:good/textiles", "amount": 8},
+		"data": {"item_id": "core:item/textiles", "amount": 8},
 	})
 	var home := String(context.state.story().get("home_port_id", ""))
 	context.state.world()["current_port_id"] = home
 	context.state.mark_port_visited(home)
 	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
-	var sold := context.commands.execute(&"trade.sell", {"item_id": "core:good/textiles", "amount": 2})
+	var sold := context.commands.execute(&"trade.sell", {"item_id": "core:item/textiles", "amount": 2})
 	assert_true(bool(sold.get("ok", false)), "selling the leftover textiles succeeds: %s" % str(sold))
 	context.commands.execute(&"story.observe", {
 		"event": "cmd:trade.sell",
-		"data": {"item_id": "core:good/textiles", "amount": 2},
+		"data": {"item_id": "core:item/textiles", "amount": 2},
 	})
 	context.commands.execute(&"story.advance", {})
 
@@ -473,7 +473,7 @@ func _assert_price_spread(context: AppContext, _story_target: String) -> void:
 		return
 	var other := String((main as Dictionary).get("origin", ""))
 	assert_false(other.is_empty() or other == home, "the Act 1 route has a distinct origin harbour")
-	for item_id in ["core:good/textiles", "core:good/spices"]:
+	for item_id in ["core:item/textiles", "core:item/spices"]:
 		var home_entry := MarketOps.entry_for(context.state, home, item_id)
 		var other_entry := MarketOps.entry_for(context.state, other, item_id)
 		assert_false(home_entry.is_empty() or other_entry.is_empty(),

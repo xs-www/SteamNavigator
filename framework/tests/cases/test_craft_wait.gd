@@ -5,7 +5,7 @@ extends TestCase
 
 const BUILD := "core:starting_build/steady"
 const STRATEGY := "core:strategy/standard"
-const CONTRACT_FREIGHT := "core:good/contract_freight"
+const CONTRACT_FREIGHT := "core:item/contract_freight"
 const TIER1_MODULES := [
 	"core:hull/small_efficient",
 	"core:module/small_efficient",

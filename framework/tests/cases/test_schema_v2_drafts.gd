@@ -48,7 +48,7 @@ func _valid_envelope() -> Dictionary:
 					"starting_money": 1000,
 					"starting_reputation": 0,
 					"starting_cargo": [
-						{"item": "core:good/timber", "amount": 10},
+						{"item": "core:item/timber", "amount": 10},
 					],
 					"starting_contract": "core:contract/main_01",
 					"notes_key": "start.core.default.notes",
@@ -173,7 +173,7 @@ func test_world_actor_v2_drafts_accept_valid_definitions() -> void:
 		"starting_reputation": 10,
 		"attitude_thresholds": {"hostile_below": -25, "friendly_at": 25},
 		"patrol_strength": 3,
-		"trade_goods": ["core:good/timber", "core:good/coal"],
+		"trade_goods": ["core:item/timber", "core:item/coal"],
 		"home_region_tags": ["industrial", "coastal"],
 		"contract_family": "core:contract_family/guild_trade",
 		"rival_factions": ["core:faction/pirates"],

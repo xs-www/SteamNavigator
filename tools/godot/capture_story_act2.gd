@@ -160,7 +160,7 @@ func _walk_to_tavern(context: AppContext, shell: Control) -> void:
 	shell._refresh()
 	await _settle(3, 0.2)
 	_click_continue(shell)
-	shell._run_command(&"trade.buy", {"item_id": "core:good/textiles", "amount": 8})
+	shell._run_command(&"trade.buy", {"item_id": "core:item/textiles", "amount": 8})
 	_click_continue(shell)
 	# 回起始港：交付 6 件、卖出 2 件、收尾进酒馆。
 	var home := String(context.state.story().get("home_port_id", ""))
@@ -170,7 +170,7 @@ func _walk_to_tavern(context: AppContext, shell: Control) -> void:
 	shell._refresh()
 	await _settle(3, 0.2)
 	_click_continue(shell)
-	shell._run_command(&"trade.sell", {"item_id": "core:good/textiles", "amount": 2})
+	shell._run_command(&"trade.sell", {"item_id": "core:item/textiles", "amount": 2})
 	_click_continue(shell)
 	await _settle(3, 0.2)
 

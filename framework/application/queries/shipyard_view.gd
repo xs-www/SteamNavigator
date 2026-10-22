@@ -313,6 +313,11 @@ static func _warehouse_data(hub: RegistryHub, state: GameState, port_id: String,
 				"item_id": item_id,
 				"name_key": item.name_key if item != null else item_id,
 				"amount": amount,
+				# C2: warehouse contents are plain items now; expose the content
+				# category/flag so the 杂项 panel can label them consistently.
+				"category": String(item.data.get("category", "")) if item != null else "",
+				"crafting_material": bool(item.data.get("crafting_material", false)) if item != null else false,
+				"tier": int(item.data.get("tier", 0)) if item != null else 0,
 				"unit_weight": float(item.data.get("unit_weight", 0.0)) if item != null else 0.0,
 			})
 	return {

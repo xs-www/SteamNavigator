@@ -125,6 +125,10 @@ static func material_plan(state: GameState, hub: RegistryHub, port_id: String, m
 		plan.append({
 			"item_id": item_id,
 			"name_key": definition.name_key if definition != null else item_id,
+			# C2: recipe inputs are items too; keep the content category/tier so
+			# the shipyard recipe list can label materials without a type check.
+			"category": String(definition.data.get("category", "")) if definition != null else "",
+			"tier": int(definition.data.get("tier", 0)) if definition != null else 0,
 			"required": required,
 			"warehouse": in_warehouse,
 			"cargo": in_cargo,

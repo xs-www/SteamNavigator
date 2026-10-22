@@ -185,6 +185,13 @@ func _market_entry(row: Dictionary, trend: String) -> Control:
 func _row_title(row: Dictionary, buyable: bool) -> String:
 	var item_id := String(row.get("item_id", ""))
 	var item_label := _loc(String(row.get("name_key", "")), item_id)
+	# C2: goods and materials share one `items` type, so the row title carries the
+	# content category (fallback = raw category) and a crafting-material mark.
+	var category := String(row.get("category", ""))
+	if not category.is_empty():
+		item_label += " · " + _loc("ui.item.category." + category, category)
+	if bool(row.get("crafting_material", false)):
+		item_label += " · " + _loc("ui.label.crafting_material", "材料")
 	if not buyable:
 		item_label += " · " + _loc("ui.label.sell_only", "Sell-only")
 	return item_label

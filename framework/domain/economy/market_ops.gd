@@ -97,19 +97,18 @@ static func initialize_port_market(hub: RegistryHub, archetype: ContentDefinitio
 		entry["buyable"] = true
 		market[item_id] = entry
 		listed[item_id] = true
-	# Every port buys every ordinary good/material, but only the listed
-	# assortment has a buy-side market. Coal and water are handled separately
-	# below as supply commodities.
-	for content_type in [ContentTypes.GOOD, ContentTypes.MATERIAL]:
-		for item_definition in hub.get_all(content_type):
-			if listed.has(item_definition.id) or item_definition.has_tag("good.contract") or item_definition.has_tag("good.supply"):
-				continue
-			var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
-			entry["stock"] = 0
-			entry["buyable"] = false
-			recalc(entry)
-			market[item_definition.id] = entry
-	for item_definition in hub.get_all(ContentTypes.GOOD):
+	# Every port buys every ordinary item (C2: goods and materials share one
+	# `items` type), but only the listed assortment has a buy-side market. Coal
+	# and water are handled separately below as supply commodities.
+	for item_definition in hub.get_all(ContentTypes.ITEM):
+		if listed.has(item_definition.id) or item_definition.has_tag("good.contract") or item_definition.has_tag("good.supply"):
+			continue
+		var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
+		entry["stock"] = 0
+		entry["buyable"] = false
+		recalc(entry)
+		market[item_definition.id] = entry
+	for item_definition in hub.get_all(ContentTypes.ITEM):
 		var supply_kind := supply_kind_for(item_definition)
 		if supply_kind.is_empty():
 			continue
@@ -142,16 +141,15 @@ static func ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void
 		for entry in market.values():
 			if entry is Dictionary and not entry.has("buyable"):
 				entry["buyable"] = true
-		for content_type in [ContentTypes.GOOD, ContentTypes.MATERIAL]:
-			for item_definition in hub.get_all(content_type):
-				if market.has(item_definition.id) or item_definition.has_tag("good.contract") or item_definition.has_tag("good.supply"):
-					continue
-				var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
-				entry["stock"] = 0
-				entry["buyable"] = false
-				recalc(entry)
-				market[item_definition.id] = entry
-		for item_definition in hub.get_all(ContentTypes.GOOD):
+		for item_definition in hub.get_all(ContentTypes.ITEM):
+			if market.has(item_definition.id) or item_definition.has_tag("good.contract") or item_definition.has_tag("good.supply"):
+				continue
+			var entry := create_market_entry(item_definition, 1, SELL_ONLY_PRICE_FACTOR)
+			entry["stock"] = 0
+			entry["buyable"] = false
+			recalc(entry)
+			market[item_definition.id] = entry
+		for item_definition in hub.get_all(ContentTypes.ITEM):
 			var supply_kind := supply_kind_for(item_definition)
 			if supply_kind.is_empty() or market.has(item_definition.id):
 				continue

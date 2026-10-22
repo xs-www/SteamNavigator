@@ -28,12 +28,12 @@ func test_main_chain_offer_and_accept() -> void:
 	assert_true(bool(accept["ok"]), "main offer accepts: %s" % str(accept))
 	assert_eq(int(context.state.contracts()["main"].get("sequence", 0)), 2, "main slot now holds sequence 2")
 	assert_eq(context.state.contracts().get("main_offer", null), null, "main offer is cleared after acceptance")
-	assert_true(ShipOps.cargo_amount(context.state.ship(), "core:good/contract_freight", true) > 0, "contract cargo is loaded")
+	assert_true(ShipOps.cargo_amount(context.state.ship(), "core:item/contract_freight", true) > 0, "contract cargo is loaded")
 
 
 func test_contract_cargo_cannot_be_sold() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
 	context.commands.execute(&"run.start", {"build_id": "core:starting_build/steady", "seed": 5252})
-	var result := context.commands.execute(&"trade.sell", {"item_id": "core:good/contract_freight", "amount": 1})
+	var result := context.commands.execute(&"trade.sell", {"item_id": "core:item/contract_freight", "amount": 1})
 	assert_false(bool(result["ok"]), "contract cargo cannot be sold")

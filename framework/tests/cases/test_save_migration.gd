@@ -189,7 +189,7 @@ func test_content_version_drift_warns_without_reordering_the_world() -> void:
 	payload["state"]["schema_version"] = "2.0"
 	payload["state"]["campaign"] = {
 		"id": "campaign_4242",
-		"setup": {"content_versions": {"goods": "0.9"}},
+		"setup": {"content_versions": {"items": "1.0"}},
 	}
 	_write_payload(directory, "drift", payload)
 	var first := service.load_slot("drift")
@@ -199,7 +199,7 @@ func test_content_version_drift_warns_without_reordering_the_world() -> void:
 	var warnings: Array = first.get("migration_warnings", [])
 	var has_drift := false
 	for warning in warnings:
-		if String(warning).contains("content version drift") and String(warning).contains("goods"):
+		if String(warning).contains("content version drift") and String(warning).contains("items"):
 			has_drift = true
 	assert_true(has_drift, "drift is reported as a warning: %s" % str(warnings))
 	assert_eq(

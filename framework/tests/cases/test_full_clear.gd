@@ -309,7 +309,7 @@ func _buy_supply(context: AppContext, kind: String, wanted: float) -> void:
 		# Try a smaller purchase when money is tight; feasibility assertions below
 		# will surface a real supply shortfall.
 		var affordable := int(floor(float(context.state.money()) / maxf(1.0, float(context.state.market().get(
-			context.state.current_port_id(), {}).get("core:good/%s" % kind, {}).get("price", 4.0)))))
+			context.state.current_port_id(), {}).get("core:item/%s" % kind, {}).get("price", 4.0)))))
 		if affordable > 0:
 			context.commands.execute(command, {"amount": mini(affordable, amount)})
 

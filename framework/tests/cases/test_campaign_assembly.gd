@@ -383,7 +383,7 @@ func test_create_campaign_returns_full_state_shape() -> void:
 	var versions: Dictionary = setup.get("content_versions", {})
 	assert_eq(versions.size(), ContentTypes.SCHEMA_VERSIONS.size(), "content_versions snapshots every type")
 	assert_eq(String(versions.get("world_profiles", "")), "2.0", "v2 types report 2.0")
-	assert_eq(String(versions.get("goods", "")), "1.0", "1.0 types keep 1.0")
+	assert_eq(String(versions.get("items", "")), "2.0", "the merged items type reports 2.0")
 
 	# campaign.world assembly output.
 	var campaign_world: Dictionary = state.campaign_world()

@@ -232,7 +232,7 @@ func test_weather_profiles_have_no_outgoing_references() -> void:
 
 func test_factions_trade_goods_and_rival_references() -> void:
 	var hub := _new_hub()
-	_define(hub, ContentTypes.GOOD, "test:good/tea", {"base_price": 20})
+	_define(hub, ContentTypes.ITEM, "test:item/tea", {"base_price": 20})
 	_faction(hub, "test:faction/guild")
 	_faction(hub, "test:faction/navy")
 	_define(hub, ContentTypes.FACTION, "test:faction/trader", {
@@ -240,7 +240,7 @@ func test_factions_trade_goods_and_rival_references() -> void:
 		"starting_reputation": 0,
 		"attitude_thresholds": {"hostile_below": -30, "friendly_at": 30},
 		"patrol_strength": 1,
-		"trade_goods": ["test:good/tea"],
+		"trade_goods": ["test:item/tea"],
 		"rival_factions": ["test:faction/navy"],
 	})
 	var result := _result(hub)
@@ -275,7 +275,7 @@ func test_faction_missing_trade_good_and_rival_are_errors() -> void:
 		"starting_reputation": 0,
 		"attitude_thresholds": {"hostile_below": -30, "friendly_at": 30},
 		"patrol_strength": 1,
-		"trade_goods": ["test:good/absent"],
+		"trade_goods": ["test:item/absent"],
 		"rival_factions": ["test:faction/absent"],
 	})
 	var result := _result(hub)
@@ -306,21 +306,21 @@ func test_faction_contract_family_is_inactive_type_warning() -> void:
 
 func test_discoveries_unlock_ids_reference_checks() -> void:
 	var hub := _new_hub()
-	_define(hub, ContentTypes.GOOD, "test:good/relic", {"base_price": 50})
+	_define(hub, ContentTypes.ITEM, "test:item/relic", {"base_price": 50})
 	_faction(hub, "test:faction/explorers")
 	_define(hub, ContentTypes.DISCOVERY, "test:discovery/good", {
 		"kind": "relic",
 		"rarity": "rare",
 		"weight": 1,
 		"repeatable": false,
-		"unlock_ids": ["test:good/relic", "test:faction/explorers"],
+		"unlock_ids": ["test:item/relic", "test:faction/explorers"],
 	})
 	_define(hub, ContentTypes.DISCOVERY, "test:discovery/broken", {
 		"kind": "lore",
 		"rarity": "common",
 		"weight": 1,
 		"repeatable": true,
-		"unlock_ids": ["test:good/absent"],
+		"unlock_ids": ["test:item/absent"],
 	})
 	var result := _result(hub)
 	assert_empty(_errors_for(result, "test:discovery/good"), "unlock_ids pointing at active definitions are valid")
@@ -333,7 +333,7 @@ func test_discoveries_unlock_ids_reference_checks() -> void:
 
 func test_start_profile_valid_without_optional_map_config() -> void:
 	var hub := _new_hub()
-	_define(hub, ContentTypes.GOOD, "test:good/supplies", {"base_price": 10})
+	_define(hub, ContentTypes.ITEM, "test:item/supplies", {"base_price": 10})
 	_starting_build(hub)
 	_define(hub, ContentTypes.WORLD_PROFILE, "test:world/start", {
 		"region_count": 2,
@@ -346,7 +346,7 @@ func test_start_profile_valid_without_optional_map_config() -> void:
 		"starting_build": "test:starting_build/standard",
 		"difficulty": "standard",
 		"starting_port_tags": ["port.exchange"],
-		"starting_cargo": [{"item": "test:good/supplies", "amount": 2}],
+		"starting_cargo": [{"item": "test:item/supplies", "amount": 2}],
 	})
 	var result := _result(hub)
 	assert_empty(
@@ -363,7 +363,7 @@ func test_start_profile_missing_hard_references_are_errors() -> void:
 		"starting_build": "test:starting_build/absent",
 		"difficulty": "easy",
 		"starting_port_tags": ["port.exchange"],
-		"starting_cargo": [{"item": "test:good/absent", "amount": 1}],
+		"starting_cargo": [{"item": "test:item/absent", "amount": 1}],
 		"starting_contract": "test:contract/absent",
 		"map_config": "test:map_config/absent",
 	})

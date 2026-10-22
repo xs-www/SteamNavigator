@@ -1540,7 +1540,7 @@ func test_sea_chart_panel_renders_goods_lead_and_offers_travel() -> void:
 		"source_key": "wait",
 		"source_display_key": "ui.clue.source.wait",
 		"level": 4,
-		"target_goods_id": "core:good/spices",
+		"target_goods_id": "core:item/spices",
 		"reference_port_id": "port_a",
 		"direction_angle": 0.0,
 		"distance_min_hours": 0.0,
@@ -1689,7 +1689,7 @@ func test_clue_log_screen_lists_active_and_expired_leads() -> void:
 				"source_display_key": "ui.clue.source.wait", "level": 4,
 				"next_level": 0, "next_level_key": "",
 				"direction_angle": 0.0, "distance_min_hours": 0.0, "distance_max_hours": 0.0,
-				"circle": null, "name_key": "", "target_goods_id": "core:good/spices",
+				"circle": null, "name_key": "", "target_goods_id": "core:item/spices",
 				"goods": {
 					"port_name_key": "port_name.core.spice_port",
 					"buy_price_min": 20, "buy_price_max": 24,
@@ -1705,7 +1705,7 @@ func test_clue_log_screen_lists_active_and_expired_leads() -> void:
 			{
 				"id": "clue:9", "type": "port_goods", "level": 2,
 				"source_key": "wait", "source_display_key": "ui.clue.source.wait",
-				"expires_at": 40.0, "target_goods_id": "core:good/spices",
+				"expires_at": 40.0, "target_goods_id": "core:item/spices",
 				"port_name_key": "port_name.core.spice_port",
 			},
 		],

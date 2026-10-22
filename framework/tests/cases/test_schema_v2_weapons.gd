@@ -89,7 +89,7 @@ func _broadside_weapon_data() -> Dictionary:
 		"purchase_price": 640.0,
 		"craft_cost": 300.0,
 		"craft_time_hours": 6.0,
-		"materials": [{"id": "core:material/boiler_plate", "amount": 2}],
+		"materials": [{"id": "core:item/boiler_plate", "amount": 2}],
 	}
 
 
