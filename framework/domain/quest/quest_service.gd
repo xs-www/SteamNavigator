@@ -12,11 +12,19 @@ extends RefCounted
 ## - **Contract 独立**：quest 不复制委托 payload / 目的地 / 时限 / 奖励；contract 来源
 ##   实例只存 `contract_instance_id` 作追踪引用，进度与结算仍由 `ContractOps` 负责。
 ## - 起点：`start(context, quest_id)` 校验定义存在、`repeatable`、重复接取与
-##   `prerequisites.quests_completed / flags`（flag 读 `data.story.flags`）。
+##   `prerequisites.quests_completed / flags`（flag 读 `data.story.flags`）；
+##   成功返回 `autosave:true`（任务进度需要落盘）。
+## - **auto_start**：`auto_start_state(state, hub)` 在 run 初始化末尾（1.0 `RunFactory` 与
+##   v2 `CampaignFactory`）启动所有 enabled 且 `data.auto_start == true` 的 content quest；
+##   幂等（已 active / 已完成 / 前置不满足只记入 `skipped`，绝不失败开局），定义按 id 排序。
 ## - 推进：`observe(context, event, data)` 只作用于 active **content** 实例；目标复用剧情
 ##   DSL（`event` / `counter` / `at_least` / `match`），`payload.amount` 累加到 counter，
 ##   无 counter 的目标使用隐式出现次数计数；本 stage 全部 objective 达标才前进。
+##   **一次 observe 对同一 counter 只累加一次 amount**（多个 objective 共享 counter 不双加）。
+##   成功返回 `autosave:true`。
 ## - 完成：最后一个 stage 达标或 `complete()` 手动完成；重复完成/接取返回结构化失败。
+##   `complete()` 拒绝 `source == "contract"` 的追踪实例（`quest_source_forbidden`），
+##   委托实例的生命周期由 `ContractOps` 驱动。
 ## - 事件：`quest.started` / `quest.updated` / `quest.completed`（payload 只含实例引用与
 ##   stage 序号，不含内容 payload）。
 ## - 存档：状态只在 `data.quests`（`QuestOps` 惰性 ensure），不改 `state.schema_version`；
@@ -73,8 +81,14 @@ static func current_stage(hub: RegistryHub, instance: Dictionary) -> Dictionary:
 static func start(context, quest_id: String) -> Dictionary:
 	if not context.has_run():
 		return Result.fail("no_run", "ui.error.no_run")
-	var state: GameState = context.state
-	var hub: RegistryHub = context.registries
+	var result := start_state(context.state, context.registries, quest_id)
+	if bool(result.get("ok", false)):
+		result["autosave"] = true
+	return result
+
+
+## Context-free start used by `start()` and the run-initialisation `auto_start_state()`.
+static func start_state(state: GameState, hub: RegistryHub, quest_id: String) -> Dictionary:
 	var quest := definition(hub, quest_id)
 	if quest == null or not quest.enabled:
 		return Result.fail("unknown_quest", "ui.error.unknown_quest", {"quest_id": quest_id})
@@ -102,6 +116,52 @@ static func start(context, quest_id: String) -> Dictionary:
 	}, events)
 
 
+## Starts every enabled content quest with `data.auto_start == true` (C3 `auto_start`
+## runtime, called at the end of run initialisation). Idempotent: already active /
+## completed (non-repeatable) / prerequisite-blocked quests are reported as skipped
+## instead of failing the run. Iterates definitions by id for deterministic order.
+static func auto_start_state(state: GameState, hub: RegistryHub) -> Dictionary:
+	var started: Array = []
+	var skipped: Array = []
+	var events: Array = []
+	if state == null or hub == null:
+		return Result.ok({"started": started, "skipped": skipped}, events)
+	var quest_ids: Array[String] = []
+	for quest in hub.get_all(ContentTypes.QUEST):
+		quest_ids.append(quest.id)
+	quest_ids.sort()
+	for quest_id in quest_ids:
+		var quest := definition(hub, quest_id)
+		if quest == null or not quest.enabled or not bool(quest.data.get("auto_start", false)):
+			continue
+		if not QuestOps.active_content_instance(state, quest_id).is_empty():
+			skipped.append({"quest_id": quest_id, "reason": "already_active"})
+			continue
+		if not bool(quest.data.get("repeatable", false)) and QuestOps.completed_quest_ids(state).has(quest_id):
+			skipped.append({"quest_id": quest_id, "reason": "already_completed"})
+			continue
+		if not _unmet_prerequisites(state, quest.data).is_empty():
+			skipped.append({"quest_id": quest_id, "reason": "prerequisites"})
+			continue
+		var result := start_state(state, hub, quest_id)
+		if bool(result.get("ok", false)):
+			started.append(String((result["data"]["instance"] as Dictionary).get("instance_id", "")))
+			events.append_array(Array(result.get("events", [])))
+		else:
+			skipped.append({"quest_id": quest_id, "reason": String(result.get("error_code", ""))})
+	return Result.ok({"started": started, "skipped": skipped, "count": started.size()}, events)
+
+
+## Command-shaped wrapper for `auto_start_state` (e.g. future debug commands / tests).
+static func auto_start(context) -> Dictionary:
+	if context == null or not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	var result := auto_start_state(context.state, context.registries)
+	if bool(result.get("ok", false)) and not Array(result.get("data", {}).get("started", [])).is_empty():
+		result["autosave"] = true
+	return result
+
+
 ## Manual completion (system hooks / debugging). The normal path is `observe()`.
 static func complete(context, instance_id: String) -> Dictionary:
 	if not context.has_run():
@@ -111,6 +171,12 @@ static func complete(context, instance_id: String) -> Dictionary:
 	var instance := QuestOps.find_instance(state, instance_id)
 	if instance.is_empty():
 		return Result.fail("quest_instance_not_found", "ui.error.quest_instance_not_found", {"instance_id": instance_id})
+	# Contract 追踪实例的生命周期由 ContractOps 驱动，不能手动完成。
+	if String(instance.get("source", "")) == QuestOps.SOURCE_CONTRACT:
+		return Result.fail("quest_source_forbidden", "ui.error.quest_source_forbidden", {
+			"instance_id": instance_id,
+			"source": QuestOps.SOURCE_CONTRACT,
+		})
 	if String(instance.get("status", "")) != QuestOps.STATUS_ACTIVE:
 		return Result.fail("quest_not_active", "ui.error.quest_not_active", {"instance_id": instance_id})
 	QuestOps.mark_completed(instance, state.now())
@@ -138,7 +204,9 @@ static func observe(context, event: String, data: Dictionary = {}) -> Dictionary
 	var hub: RegistryHub = context.registries
 	var result := {"advanced": false, "progressed": false, "completed": []}
 	if event.is_empty() or not _has_active_content(state):
-		return Result.ok(result)
+		var idle := Result.ok(result)
+		idle["autosave"] = true
+		return idle
 	var events: Array = []
 	for raw_instance in QuestOps.instances(state):
 		if not (raw_instance is Dictionary):
@@ -172,7 +240,9 @@ static func observe(context, event: String, data: Dictionary = {}) -> Dictionary
 			result["completed"].append(String(instance.get("instance_id", "")))
 		else:
 			events.append(_updated_event(instance))
-	return Result.ok(result, events)
+	var observed := Result.ok(result, events)
+	observed["autosave"] = true
+	return observed
 
 
 # ---------------------------------------------------------------------------
@@ -329,10 +399,13 @@ static func _finish(state: GameState, instance: Dictionary, events: Array) -> vo
 ## Increments counters for matching objectives. Returns `{changed, done}` where
 ## `changed` means an objective counter moved and `done` means the whole stage is
 ## now satisfied (all objectives at/above their target).
+##
+## One observed event adds `amount` to each distinct matched counter exactly once,
+## even when several objectives share that counter (D-fix: no double counting).
 static func _observe_stage(instance: Dictionary, stage: Dictionary, event: String, data: Dictionary) -> Dictionary:
 	var objectives: Array = stage.get("objectives", []) if stage.get("objectives", []) is Array else []
 	var counters: Dictionary = instance.get("counters", {})
-	var changed := false
+	var matched_counters: Array[String] = []
 	var amount := 1
 	if data.has("amount"):
 		amount = maxi(1, int(data.get("amount", 1)))
@@ -347,8 +420,11 @@ static func _observe_stage(instance: Dictionary, stage: Dictionary, event: Strin
 		if not _matches(objective, data):
 			continue
 		var counter := _counter_key(stage, objective_index, objective)
+		if not matched_counters.has(counter):
+			matched_counters.append(counter)
+	var changed := not matched_counters.is_empty()
+	for counter in matched_counters:
 		counters[counter] = int(counters.get(counter, 0)) + amount
-		changed = true
 	if changed:
 		instance["counters"] = counters
 	return {"changed": changed, "done": _objectives_met(instance, stage)}

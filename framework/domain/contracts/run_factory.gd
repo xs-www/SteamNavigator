@@ -179,6 +179,9 @@ static func create_run(context, build_id: String = "", requested_seed: int = 0, 
 		# Stage 4.5: new runs start with the Core-authored story flow enabled (or
 		# completed when the profile has no story), before the first UI rebuild.
 		StoryService.begin(state, hub, rng)
+	# C3: `auto_start` content quests are picked up at the end of run initialisation
+	# (idempotent, content-driven; core ships the first-voyage guide here).
+	QuestService.auto_start_state(state, hub)
 	return Result.ok({
 		"state": state,
 		"rng": rng,

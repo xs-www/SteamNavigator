@@ -34,15 +34,16 @@ func test_pending_main_offer_is_a_task() -> void:
 	contracts["main"] = null
 	var data := _task_view(context)
 	var tasks: Array = data.get("tasks", [])
-	assert_eq(tasks.size(), 1, "only the pending main offer is tracked")
-	var task: Dictionary = tasks[0]
-	assert_eq(String(task.get("kind", "")), "main_offer", "the pending offer is a main offer task")
+	assert_eq(tasks.size(), 2, "the auto-started quest and the pending main offer are tracked")
+	var task := _task(data, "main_offer")
+	assert_false(task.is_empty(), "the pending offer is a main offer task")
 	assert_eq(String(task.get("category_key", "")), "ui.task.kind.main_offer", "the category is content-keyed")
 	var steps: Array = task.get("steps", [])
 	assert_eq(steps.size(), 1, "an offer has a single accept step")
 	assert_eq(String((steps[0] as Dictionary).get("kind", "")), "accept", "the offer step is accept")
 	assert_false(bool((steps[0] as Dictionary).get("done", true)), "the offer is not accepted yet")
-	assert_eq(String(data.get("active_task_id", "")), String(task.get("id", "")), "the offer is the active task")
+	assert_eq(String(data.get("active_task_id", "")), String(_task(data, "quest").get("id", "")),
+		"the auto-started quest outranks the pending main offer")
 
 
 func test_main_contract_derives_load_sail_and_deliver_steps() -> void:
@@ -98,7 +99,7 @@ func test_active_contract_is_tracked_but_the_offer_pool_is_not() -> void:
 	var offers: Array = context.state.contracts().get("offers", [])
 	assert_true(not offers.is_empty(), "the run has normal offers")
 	var before := (_task_view(context).get("tasks", []) as Array).size()
-	assert_eq(before, 1, "normal offers are not tasks")
+	assert_eq(before, 2, "the auto-started guide quest and the main contract are tasks; offers are not")
 	# 先清空自动装船的主线货箱 / 主线槽位，避免载重与主线占用影响普通委托。
 	context.state.contracts()["main"] = null
 	context.state.ship()["cargo"] = []
@@ -114,7 +115,7 @@ func test_active_contract_is_tracked_but_the_offer_pool_is_not() -> void:
 			break
 	assert_true(accepted, "a normal contract can be accepted")
 	var tasks: Array = _task_view(context).get("tasks", [])
-	assert_eq(tasks.size(), 1, "the accepted normal contract joins the task list")
+	assert_eq(tasks.size(), 2, "the accepted normal contract joins the still-active quest task")
 	var kinds := []
 	for task in tasks:
 		if task is Dictionary:
@@ -124,11 +125,10 @@ func test_active_contract_is_tracked_but_the_offer_pool_is_not() -> void:
 
 func test_content_quest_is_tracked_between_story_and_contracts() -> void:
 	var context := _start_run()
-	var started := context.commands.execute(&"quest.start", {"quest_id": "core:quest/first_voyage_guide"})
-	assert_true(bool(started.get("ok", false)), "the guide quest starts: %s" % str(started))
+	# C3 auto_start: the core guide is already tracked when the run starts.
 	var data := _task_view(context)
 	var tasks: Array = data.get("tasks", [])
-	assert_eq(tasks.size(), 2, "the quest joins the accepted main contract")
+	assert_eq(tasks.size(), 2, "the auto-started quest joins the accepted main contract")
 	var quest_task := _task(data, "quest")
 	assert_false(quest_task.is_empty(), "task.view exposes the content quest")
 	assert_eq(int(quest_task.get("priority", 0)), 250, "quest priority sits between story and main")

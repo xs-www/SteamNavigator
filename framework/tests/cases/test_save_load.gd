@@ -17,6 +17,8 @@ func test_save_and_load_state_hash() -> void:
 	assert_eq(loaded_state.hash(), before, "state hash is identical after load")
 	assert_eq(QuestOps.instances(loaded_state).size(), QuestOps.instances(context.state).size(),
 		"quest instances round-trip through the save")
+	assert_false(QuestOps.active_content_instance(loaded_state, "core:quest/first_voyage_guide").is_empty(),
+		"the auto-started guide quest survives load")
 	var main_contract: Variant = context.state.contracts().get("main", null)
 	if main_contract is Dictionary:
 		assert_false(QuestOps.find_by_contract(loaded_state, String((main_contract as Dictionary).get("instance_id", ""))).is_empty(),

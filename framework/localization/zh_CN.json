@@ -572,6 +572,7 @@
   "ui.error.quest_not_active": "该任务不在进行中",
   "ui.error.quest_instance_not_found": "找不到该任务实例",
   "ui.error.quest_prerequisites": "任务前置条件尚未满足",
+  "ui.error.quest_source_forbidden": "委托追踪任务由委托流程管理，不能手动完成",
   "ui.market.supply_section": "补给（煤 / 水）",
   "ui.story.supply_locked": "补给暂时受限：先看完海图的目的港",
   "ui.new_game.tutorial_note": "新手剧情：本局使用默认教学船，构筑选择已关闭",

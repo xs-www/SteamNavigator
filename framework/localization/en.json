@@ -572,6 +572,7 @@
   "ui.error.quest_not_active": "That quest is not active",
   "ui.error.quest_instance_not_found": "That quest instance was not found",
   "ui.error.quest_prerequisites": "Quest prerequisites are not met",
+  "ui.error.quest_source_forbidden": "Contract-tracked quests are managed by the contract flow and cannot be completed manually",
   "ui.story.supply_locked": "Supplies are on hold: read the chart destination first",
   "ui.market.supply_section": "Supplies (coal / water)",
   "ui.new_game.tutorial_note": "Tutorial run: the default teaching ship is used; build selection is disabled",

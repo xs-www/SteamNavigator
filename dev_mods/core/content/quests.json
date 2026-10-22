@@ -10,7 +10,7 @@
       "enabled": true,
       "data": {
         "kind": "guide",
-        "auto_start": false,
+        "auto_start": true,
         "repeatable": false,
         "tracking": {
           "label_key": "quest.tracking.guide",

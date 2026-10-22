@@ -21,6 +21,11 @@ extends RefCounted
 ##   navigation_module / safety_module / passenger_cabin 按 `data.v2_category`
 ##   （boiler / cargo / utility / utility / cabin）解析；category 专属必填字段由
 ##   `_check_module_category` 承担（合并 Schema 无法表达 if/then）。
+## - C3：`quests` 的 `prerequisites.quests_completed[]` 必须是已存在的 quest 定义；
+##   objective 的 `event` 必须是 `cmd:*` / `ui:*` 形式（D6：不静默）。
+##   **设计理由**：命令 / UI 事件名是字符串总线（`CommandBus` / Shell 观测），没有可枚举的
+##   运行时注册表交给内容校验器，因此这里只做格式硬校验；未知但格式合法的事件名属于
+##   「内容作者拼写」问题，无法在不引入注册表快照的前提下可靠判定，故不误报。
 ## @end-static-doc
 
 ## Planned target types referenced by active Phase B schemas. They have no runtime
@@ -73,6 +78,7 @@ func validate(hub: RegistryHub) -> Dictionary:
 	_check_weather_profiles()
 	_check_factions()
 	_check_discoveries()
+	_check_quests()
 	_check_start_profiles()
 	_check_map_configs()
 	return {
@@ -470,6 +476,43 @@ func _check_discoveries() -> void:
 					"%s field 'unlock_ids' references missing definition '%s'" % [discovery.id, unlock_id],
 					discovery.id
 				)
+
+
+## C3: quest chain references + objective event format (D6: never silent).
+## `prerequisites.quests_completed[]` is a hard quest reference; `stages[].objectives[]`
+## events must use the `cmd:` / `ui:` observation namespace the runtime forwards from
+## StoryService/QuestService. Command-name existence stays out of scope (no enumerable
+## runtime command registry is available to content validation; see header rationale).
+func _check_quests() -> void:
+	var event_pattern := RegEx.new()
+	event_pattern.compile("^(cmd|ui):[a-z][a-z0-9_.-]*$")
+	for quest in _hub.get_all(ContentTypes.QUEST):
+		var prerequisites: Variant = quest.data.get("prerequisites", null)
+		if prerequisites is Dictionary:
+			for required_quest_id in Array((prerequisites as Dictionary).get("quests_completed", [])):
+				var required_id := String(required_quest_id)
+				if not _hub.contains(ContentTypes.QUEST, required_id):
+					_error(
+						"quest_prerequisite_missing",
+						"%s prerequisites reference missing quest '%s'" % [quest.id, required_id],
+						quest.id
+					)
+		var stages: Variant = quest.data.get("stages", null)
+		if not (stages is Array):
+			continue
+		for raw_stage in stages:
+			if not (raw_stage is Dictionary):
+				continue
+			for raw_objective in Array((raw_stage as Dictionary).get("objectives", [])):
+				if not (raw_objective is Dictionary):
+					continue
+				var event_name := String((raw_objective as Dictionary).get("event", ""))
+				if event_pattern.search(event_name) == null:
+					_error(
+						"quest_event_invalid",
+						"%s objective event '%s' must look like cmd:<command> or ui:<event>" % [quest.id, event_name],
+						quest.id
+					)
 
 
 func _check_start_profiles() -> void:

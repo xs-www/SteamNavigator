@@ -10,7 +10,7 @@ extends RefCounted
 ## ## 契约与约束
 ## - 要求 core 存在、required=true 且进入加载顺序。
 ## - 1.0 基线：最低数量（3 船体、≥2 boiler 模块、≥1 cargo 模块、3 策略、4 港口原型、
-##   5 主线、2 事件、2 岗位等）、必需标签、主线 sequence 1–5、至少一套可解析为
+##   5 主线、2 事件、2 岗位、≥1 quest 等）、必需标签、主线 sequence 1–5、至少一套可解析为
 ##   hull + boiler 模块 + cargo 模块的初始构筑。模块数量按统一 `modules` 类型的
 ##   `data.v2_category` 切片计数；utility / cabin 不设硬下限。
 ## - Phase B 规则用 presence gate：**Core 来源**的 `world_profiles` 至少 1 条才启用，保证 B4
@@ -43,6 +43,8 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_count(hub, ContentTypes.MAP_PROFILE, 1, "map profiles", errors)
 	_require_count(hub, ContentTypes.STARTING_BUILD, 1, "starting builds", errors)
 	_require_count(hub, ContentTypes.CONTRACT, 5, "contracts", errors)
+	# C3: the abstraction quest layer ships at least one core quest (guide/system).
+	_require_count(hub, ContentTypes.QUEST, 1, "quests", errors)
 	_require_count(hub, ContentTypes.EVENT, 2, "events", errors)
 	_require_count(hub, ContentTypes.ROLE, 2, "crew roles", errors)
 

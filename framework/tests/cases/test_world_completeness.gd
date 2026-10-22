@@ -123,6 +123,17 @@ func test_complete_phase_b_content_has_no_errors() -> void:
 	assert_true(result["warnings"].is_empty(), "complete v2 combination has no suggestion warnings: %s" % str(result["warnings"]))
 
 
+func test_core_requires_at_least_one_quest() -> void:
+	var result := _check(_full_hub([ContentTypes.QUEST]))
+	assert_true(_has_error(result, "content_count"), "missing quests raise content_count")
+	assert_true(_has_error_message(result, "quests"), "content_count names quests")
+	assert_true(_has_error(result, "content_count"), "a Core without quests is incomplete")
+
+
+func test_phase_b_capabilities_include_quests() -> void:
+	assert_contains(AppContext.KNOWN_CAPABILITIES, "content.quests.v1", "quests capability is known (C3)")
+
+
 func test_suggested_content_is_warning_only() -> void:
 	var result := _check(_full_hub([
 		ContentTypes.ROUTE_TEMPLATE,
@@ -209,7 +220,7 @@ func _full_hub(
 	region_tags: Array = ["region.start"],
 	starting_build_id: String = STARTING_BUILD_ID
 ) -> RegistryHub:
-	var hub := _baseline_hub()
+	var hub := _baseline_hub(skip)
 	if not skip.has(ContentTypes.WEATHER_PROFILE):
 		_register(hub, ContentTypes.WEATHER_PROFILE, WEATHER_PROFILE_ID)
 	if not skip.has(ContentTypes.REGION):
@@ -261,8 +272,9 @@ func _full_hub(
 
 
 ## Minimal 1.0 content the legacy baseline checks need; keeps every legacy rule
-## satisfied so v2 assertions are not polluted by legacy errors.
-func _baseline_hub() -> RegistryHub:
+## satisfied so v2 assertions are not polluted by legacy errors. `skip` may remove
+## a baseline type so a missing-content rule can be exercised.
+func _baseline_hub(skip: Array = []) -> RegistryHub:
 	var hub := RegistryHub.new(ContentTypes.all())
 	_register(hub, ContentTypes.ITEM, "core:item/coal")
 	_register(hub, ContentTypes.HULL, STANDARD_HULL_ID, ["module.large"], {"tier": 1})
@@ -297,6 +309,16 @@ func _baseline_hub() -> RegistryHub:
 	_register(hub, ContentTypes.EVENT, "core:event/quiet")
 	_register(hub, ContentTypes.ROLE, "core:role/engineer", ["role.engineer"])
 	_register(hub, ContentTypes.ROLE, "core:role/navigator", ["role.navigator"])
+	if not skip.has(ContentTypes.QUEST):
+		_register(hub, ContentTypes.QUEST, "core:quest/guide", ["quest.guide"], {
+			"kind": "guide",
+			"auto_start": false,
+			"stages": [{
+				"id": "one",
+				"title_key": "test.quest.title",
+				"objectives": [{"event": "cmd:test.one"}],
+			}],
+		})
 	return hub
 
 

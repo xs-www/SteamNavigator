@@ -1,8 +1,9 @@
 extends TestCase
 ## @static-doc
 ## 作用：C3 抽象任务（Quest）运行时测试：`data.quests` 惰性状态 + 存档 round-trip、
-## `QuestService` 状态机（start / observe / complete / prerequisites / repeatable）、
-## 委托接取生成 contract 追踪实例与完成联动，以及 `task.view` 的 quest 任务聚合。
+## `QuestService` 状态机（auto_start / start / observe / complete / prerequisites /
+## repeatable）、counter 去重、contract 实例保护、CrossReferenceValidator 的 quest 引用/
+## 事件格式校验，委托接取生成 contract 追踪实例与完成联动，以及 `task.view` 的 quest 聚合。
 ##
 ## - 关键依赖：`bootstrap_core()`、`QuestOps`、`QuestService`、`ContentTypes.QUEST`、
 ##   `ContractOps.complete`、`TaskViewQuery`、`SaveService`
@@ -36,8 +37,9 @@ func test_quests_block_is_lazy_and_survives_save() -> void:
 
 	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
 	assert_true(bool(started.get("ok", false)), "run starts: %s" % str(started))
-	var quest_start := context.commands.execute(&"quest.start", {"quest_id": GUIDE_QUEST})
-	assert_true(bool(quest_start.get("ok", false)), "guide quest starts: %s" % str(quest_start))
+	# C3 auto_start: core's first-voyage guide is already active right after the run starts.
+	var auto_instance := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
+	assert_false(auto_instance.is_empty(), "the auto_start guide quest starts with the run")
 	var before := context.state.hash()
 	var saved := context.save.save_slot("quests", context.state, context.save_meta())
 	assert_true(bool(saved.get("ok", false)), "save succeeds: %s" % str(saved))
@@ -101,8 +103,8 @@ func test_contract_completion_marks_tracking_instance_completed() -> void:
 
 func test_guide_quest_advances_stages_and_completes() -> void:
 	var context := _start_run()
-	var started := context.commands.execute(&"quest.start", {"quest_id": GUIDE_QUEST})
-	assert_true(bool(started.get("ok", false)), "guide quest starts: %s" % str(started))
+	var instance := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
+	assert_false(instance.is_empty(), "the guide quest auto-starts with the run")
 	var duplicate := context.commands.execute(&"quest.start", {"quest_id": GUIDE_QUEST})
 	assert_false(bool(duplicate.get("ok", false)), "the same quest cannot be started twice")
 	assert_eq(String(duplicate.get("error_code", "")), "quest_already_active", "duplicate reports quest_already_active")
@@ -113,9 +115,10 @@ func test_guide_quest_advances_stages_and_completes() -> void:
 		"event": "cmd:supply.buy_coal", "data": {"item_id": "core:item/coal", "amount": 4},
 	})
 	assert_true(bool(coal_observed.get("ok", false)), "quest.observe succeeds")
-	var instance := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
-	assert_eq(int(instance.get("stage_index", -1)), 0, "one of two stage-0 objectives is not enough")
-	assert_eq(int((instance.get("counters", {}) as Dictionary).get("coal_bought", 0)), 4, "coal counter accumulates")
+	assert_true(bool(coal_observed.get("autosave", false)), "quest.observe asks for an autosave")
+	var instance_after_coal := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
+	assert_eq(int(instance_after_coal.get("stage_index", -1)), 0, "one of two stage-0 objectives is not enough")
+	assert_eq(int((instance_after_coal.get("counters", {}) as Dictionary).get("coal_bought", 0)), 4, "coal counter accumulates")
 	var observed := context.commands.execute(&"quest.observe", {
 		"event": "cmd:supply.buy_water", "data": {"item_id": "core:item/water", "amount": 2},
 	})
@@ -143,8 +146,8 @@ func test_guide_quest_advances_stages_and_completes() -> void:
 
 func test_complete_command_completes_once() -> void:
 	var context := _start_run()
-	var started := context.commands.execute(&"quest.start", {"quest_id": GUIDE_QUEST})
-	var instance_id := String(started["data"]["instance"].get("instance_id", ""))
+	var auto_instance := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
+	var instance_id := String(auto_instance.get("instance_id", ""))
 	var completed := context.commands.execute(&"quest.complete", {"instance_id": instance_id})
 	assert_true(bool(completed.get("ok", false)), "quest.complete succeeds: %s" % str(completed))
 	var again := context.commands.execute(&"quest.complete", {"instance_id": instance_id})
@@ -216,6 +219,7 @@ func test_prerequisites_and_repeatable() -> void:
 
 	var alpha_start := context.commands.execute(&"quest.start", {"quest_id": "test:quest/alpha"})
 	assert_true(bool(alpha_start.get("ok", false)), "alpha starts: %s" % str(alpha_start))
+	assert_true(bool(alpha_start.get("autosave", false)), "quest.start asks for an autosave")
 	# at_least = 2: one event is progress, the second completes it.
 	context.commands.execute(&"quest.observe", {"event": "cmd:test.one", "data": {}})
 	var alpha_instance := QuestOps.active_content_instance(context.state, "test:quest/alpha")
@@ -246,14 +250,12 @@ func test_prerequisites_and_repeatable() -> void:
 func test_task_view_aggregates_content_quests_without_duplicating_contracts() -> void:
 	var context := _start_run()
 	var before := _task_view(context)
-	assert_eq((before.get("tasks", []) as Array).size(), 1, "only the main contract is tracked before quests exist")
-	var started := context.commands.execute(&"quest.start", {"quest_id": GUIDE_QUEST})
-	assert_true(bool(started.get("ok", false)), "guide quest starts")
-	var data := _task_view(context)
+	# C3: run start auto-starts the core guide quest, so the contract task + quest task exist.
+	assert_eq((before.get("tasks", []) as Array).size(), 2, "the auto-started quest joins the main contract task")
+	var data := before
 	var tasks: Array = data.get("tasks", [])
-	assert_eq(tasks.size(), 2, "the quest joins the contract task")
 	var quest_task := _task_of_kind(data, "quest")
-	assert_false(quest_task.is_empty(), "task.view exposes a quest task")
+	assert_false(quest_task.is_empty(), "task.view exposes the auto-started quest")
 	assert_eq(int(quest_task.get("priority", 0)), 250, "quest priority sits between story and main")
 	assert_eq(String(quest_task.get("category_key", "")), "quest.tracking.guide", "the category key comes from content tracking")
 	assert_false(String(quest_task.get("title_key", "")).is_empty(), "the stage title key is exposed")
@@ -280,6 +282,106 @@ func test_task_view_aggregates_content_quests_without_duplicating_contracts() ->
 	for task in (data.get("tasks", []) as Array):
 		assert_ne(String((task as Dictionary).get("id", "")), "quest:%s" % contract_instance_id,
 			"contract-source quest instances are not rendered as quest tasks")
+
+
+# ── auto_start / counter dedupe / guards / content validation ──
+
+
+func test_auto_start_is_idempotent_and_content_driven() -> void:
+	var context := _start_run()
+	var guide := QuestOps.active_content_instance(context.state, GUIDE_QUEST)
+	assert_false(guide.is_empty(), "the core guide auto-starts with the run")
+	assert_eq(String(guide.get("instance_id", "")), "%s#1" % GUIDE_QUEST, "the auto-start instance uses the first deterministic id")
+	assert_eq(String(guide.get("source", "")), QuestOps.SOURCE_CONTENT, "auto-start creates a content instance")
+	assert_true(QuestOps.active_content_instance(context.state, "core:quest/shipyard_refit").is_empty(),
+		"quests with auto_start:false stay manual")
+	# The HUD/task tracker sees the quest right after run.start, before any manual command.
+	var quest_task := _task_of_kind(_task_view(context), "quest")
+	assert_false(quest_task.is_empty(), "the auto-started quest is visible to task.view at run start")
+	# auto_start is idempotent: re-running it never duplicates the instance.
+	var before_count := QuestOps.instances(context.state).size()
+	var again := QuestService.auto_start(context)
+	assert_true(bool(again.get("ok", false)), "auto_start succeeds when re-run")
+	assert_true(Array((again.get("data", {}) as Dictionary).get("started", [])).is_empty(), "re-running auto_start starts nothing")
+	assert_eq(QuestOps.instances(context.state).size(), before_count, "auto_start never duplicates instances")
+	# Manual content quests still start through the command and request an autosave.
+	var manual := context.commands.execute(&"quest.start", {"quest_id": "core:quest/shipyard_refit"})
+	assert_true(bool(manual.get("ok", false)), "a manual quest starts: %s" % str(manual))
+	assert_true(bool(manual.get("autosave", false)), "quest.start requests an autosave")
+
+
+func test_one_observe_adds_a_shared_counter_once() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	# Two objectives share the same explicit counter: a single event must add its
+	# amount once, otherwise the stage would complete after one event instead of two.
+	var dedupe := _quest_definition("test:quest/dedupe", {
+		"kind": "guide",
+		"stages": [{
+			"id": "one",
+			"title_key": "test.quest.dedupe.stage",
+			"objectives": [
+				{"event": "cmd:test.shared", "counter": "shared", "at_least": 2},
+				{"event": "cmd:test.shared", "counter": "shared", "at_least": 2},
+			],
+		}],
+	})
+	context.registries = _hub_with(context.registries, [dedupe])
+	var started := context.commands.execute(&"run.start", {"build_id": STEADY_BUILD, "seed": SEED})
+	assert_true(bool(started.get("ok", false)), "run starts on the synthetic hub: %s" % str(started))
+	var quest_start := context.commands.execute(&"quest.start", {"quest_id": "test:quest/dedupe"})
+	assert_true(bool(quest_start.get("ok", false)), "dedupe quest starts: %s" % str(quest_start))
+	context.commands.execute(&"quest.observe", {"event": "cmd:test.shared", "data": {"amount": 1}})
+	var instance := QuestOps.active_content_instance(context.state, "test:quest/dedupe")
+	assert_eq(int((instance.get("counters", {}) as Dictionary).get("shared", 0)), 1,
+		"one event increments a shared counter exactly once")
+	assert_eq(int(instance.get("stage_index", -1)), 0, "one event is not enough for target 2")
+	context.commands.execute(&"quest.observe", {"event": "cmd:test.shared", "data": {"amount": 1}})
+	instance = QuestOps.find_instance(context.state, String(instance.get("instance_id", "")))
+	assert_eq(int((instance.get("counters", {}) as Dictionary).get("shared", 0)), 2, "the second event reaches the target")
+	assert_true(QuestOps.active_content_instance(context.state, "test:quest/dedupe").is_empty(), "the quest completes")
+
+
+func test_quest_complete_rejects_contract_instances() -> void:
+	var context := _start_run()
+	var main_contract: Dictionary = context.state.contracts()["main"]
+	var tracking := QuestOps.find_by_contract(context.state, String(main_contract.get("instance_id", "")))
+	assert_false(tracking.is_empty(), "the accepted contract is tracked")
+	var result := context.commands.execute(&"quest.complete", {"instance_id": String(tracking.get("instance_id", ""))})
+	assert_false(bool(result.get("ok", false)), "contract-source quests cannot be completed manually")
+	assert_eq(String(result.get("error_code", "")), "quest_source_forbidden", "the guard reports quest_source_forbidden")
+	assert_eq(String(QuestOps.find_instance(context.state, String(tracking.get("instance_id", ""))).get("status", "")),
+		QuestOps.STATUS_ACTIVE, "the contract tracking instance stays active")
+
+
+func test_quest_validator_reports_dangling_references_and_bad_events() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var dangling := _quest_definition("test:quest/dangling", {
+		"kind": "guide",
+		"prerequisites": {"quests_completed": ["test:quest/absent"]},
+		"stages": [{
+			"id": "one",
+			"title_key": "test.quest.dangling.stage",
+			"objectives": [{"event": "trade.buy", "counter": "x", "at_least": 1}],
+		}],
+	})
+	var hub := _hub_with(context.registries, [dangling])
+	var validator := CrossReferenceValidator.new()
+	var report := validator.validate(hub)
+	var codes := PackedStringArray()
+	for error in report.get("errors", []):
+		codes.append(String((error as Dictionary).get("code", "")))
+	assert_contains(codes, "quest_prerequisite_missing", "a dangling quest prerequisite is an error")
+	assert_contains(codes, "quest_event_invalid", "an objective event without cmd:/ui: prefix is an error")
+	# Core's own quests raise no quest-level validation errors.
+	var quest_errors := 0
+	for error in report.get("errors", []):
+		if String((error as Dictionary).get("code", "")).begins_with("quest_"):
+			quest_errors += 1
+	assert_eq(quest_errors, 2, "only the two synthetic problems are reported")
+	for error in report.get("errors", []):
+		assert_ne(String((error as Dictionary).get("owner", "")), GUIDE_QUEST, "core guide passes quest validation")
 
 
 # ── helpers ──

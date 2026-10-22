@@ -951,7 +951,7 @@ function warningsOf(result) {
     const result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
 
-    // Core ships two quest definitions, both auto_start=false so existing openings are untouched.
+    // C3 auto-start quest is the first-voyage guide; the shipyard quest stays manual.
     const coreQuests = JSON.parse(
       fs.readFileSync(path.resolve(__dirname, '..', '..', 'dev_mods', 'core', 'content', 'quests.json'), 'utf8')
     );
@@ -963,8 +963,12 @@ function warningsOf(result) {
     assert.deepEqual(coreErrors, [], 'core quests.json satisfies the quest schema');
     assert.equal(coreQuests.definitions.length, 2, 'core ships an initial guide and system quest');
     assert.deepEqual(coreQuests.definitions.map((definition) => definition.data.kind).sort(), ['guide', 'system']);
+    const autoStart = Object.fromEntries(
+      coreQuests.definitions.map((definition) => [definition.id, definition.data.auto_start])
+    );
+    assert.equal(autoStart['core:quest/first_voyage_guide'], true, 'first-voyage guide auto-starts');
+    assert.equal(autoStart['core:quest/shipyard_refit'], false, 'shipyard quest is opt-in');
     for (const definition of coreQuests.definitions) {
-      assert.equal(definition.data.auto_start, false, `${definition.id} must not auto-start`);
       assert.ok(definition.data.stages.length >= 1, `${definition.id} declares stages`);
     }
   });

@@ -185,6 +185,8 @@ static func create_campaign(
 		# StoryService resolves `map_configs.story` through ContentRefs; missing or
 		# disabled story keeps the "tutorial completed, all features unlocked" fallback.
 		StoryService.begin(state, hub, rng)
+	# C3: `auto_start` content quests are picked up at the end of run initialisation.
+	QuestService.auto_start_state(state, hub)
 
 	return Result.ok({
 		"state": state,
