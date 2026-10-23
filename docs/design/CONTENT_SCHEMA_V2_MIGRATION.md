@@ -1,6 +1,6 @@
 # Content Schema 2.0 迁移落地方案
 
-> 状态：Draft 6（2026-10-23，Phase D5 落地后刷新；Phase A/B、C1–C4 与 D0–D5 已落地，**Phase C 完成、Phase D 进行中**）。本文件是**执行方案**，不是已定稿契约；契约性规则见
+> 状态：Draft 6（2026-10-23，Phase D5 落地后刷新；Phase A/B、C1–C4 与 D0–D5 已落地，**Phase C 完成、Phase D 完成**）。本文件是**执行方案**，不是已定稿契约；契约性规则见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)，路线图见 [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md)
 > 阶段 0/1，近期计划见 [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) §4.4。
 >
@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | Framework | 0.2.0-dev 系列（`FrameworkInfo.VERSION`） | 随发布走 |
 | Mod API | `1.0` | 未动 |
-| **Content Schema** | **基线 `1.0`；按类型声明：42 类 active 全部 `2.0`（0 类 `1.0` runtime；含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1–C4 / D0–D5 已落地，Phase C 完成、Phase D 进行中 |
+| **Content Schema** | **基线 `1.0`；按类型声明：42 类 active 全部 `2.0`（0 类 `1.0` runtime；含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1–C4 / D0–D5 已落地，Phase C 完成、Phase D 完成 |
 | Save Schema | `2.0` | 已完成（含 1.x → 2.0 迁移） |
 | State Schema | `2.0` | 已完成（`GameState.SCHEMA_VERSION`） |
 
@@ -254,7 +254,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 1.x 旧存档 | 正常 | 正常（惰性补齐） | 正常（迁移矩阵覆盖） |
 | v2 世界存档读入 1.0 运行时 | 不适用 | 拒绝并保留只读提示 | — |
 
-> **当前实现（2026-10-23 D4 后）**：Phase B、Phase C（C1–C4）与 Phase D0–D4 已完成；**37 个 active 类型全部为 2.0，运行时不再有 1.0 类型**，
+> **当前实现（2026-10-23 D5 后）**：Phase B、Phase C（C1–C4）与 Phase D0–D5 已完成；**42 个 active 类型全部为 2.0，运行时不再有 1.0 类型**，
 > 顶层 1.0 内容 Schema（roles / strategies / port_archetypes / map_profiles / starting_builds / contracts / events / patch）
 > 与对应旧内容文件已删除，旧模组按「未知类型 / 版本不符」拒绝。双读窗口不再适用（见下方开发期例外）。
 >

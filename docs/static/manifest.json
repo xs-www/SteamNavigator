@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T05:03:03.135Z",
-  "commit": "d5fb310",
+  "generated_at": "2026-10-23T05:12:07.289Z",
+  "commit": "9c01e38",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "fa85a36935dde304ff498e561b83e400ace2e676a4729fb62aabe8bf1c22a9d5",
+      "sha256": "7b9488928c4f0ddaba9d9e45b3584b6323fb810790009cf34f5567a1d6a66bcc",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3568,7 +3568,7 @@
     },
     {
       "source": "framework/domain/base/base_ops.gd",
-      "sha256": "cbd55d6fe6bd08bddb97810425a64728f663c5d450b3795ad9ce7b16fad4b819",
+      "sha256": "fb2623a3424ab13ef8e918c05fa85a2a970bfc971ba1ce8e540db9e4cc02cc29",
       "doc": "docs/static/framework/domain/base/base_ops.gd.md",
       "status": "documented"
     },
@@ -4138,7 +4138,7 @@
     },
     {
       "source": "framework/tests/cases/test_base.gd",
-      "sha256": "858228711a757a881017871024656dddd0fc2ba96dd974d21a3d4001f48d3a5e",
+      "sha256": "f8f295de7389f417b652c76c5749d42eb01c45a37d8db64b8bee6fc67ba28de0",
       "doc": "docs/static/framework/tests/cases/test_base.gd.md",
       "status": "documented"
     },
@@ -7408,7 +7408,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "c927c53fb41cd347b01830232364e7facc1863421a6d3bf058b556a0b7c1e2a9",
+      "sha256": "be8619d1f869ef7fee65d597957ee347834adb027c9eeb946650a60f906051eb",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

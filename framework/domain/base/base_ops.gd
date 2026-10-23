@@ -49,7 +49,9 @@ static func has_base(state: GameState) -> bool:
 	if state == null:
 		return false
 	var raw: Variant = state.data.get(BASE_KEY, null)
-	return raw is Dictionary and not _safe_string((raw as Dictionary).get("site_archetype_id", "")).is_empty()
+	# A present, non-empty base block counts as claimed even when the site id is
+	# corrupt: hiding it here would let `base.claim` overwrite live buildings/storage.
+	return raw is Dictionary and not (raw as Dictionary).is_empty()
 
 
 ## Returns the live base block, or `{}` when the player has not claimed a base.
@@ -57,7 +59,7 @@ static func ensure_structure(state: GameState) -> Dictionary:
 	if state == null:
 		return {}
 	var raw: Variant = state.data.get(BASE_KEY, null)
-	if not (raw is Dictionary) or _safe_string((raw as Dictionary).get("site_archetype_id", "")).is_empty():
+	if not (raw is Dictionary) or (raw as Dictionary).is_empty():
 		return {}
 	var base := _normalize(raw)
 	state.data[BASE_KEY] = base
@@ -65,10 +67,11 @@ static func ensure_structure(state: GameState) -> Dictionary:
 
 
 ## Read-only view. Never writes `data.base`; malformed stored values are normalized in
-## a copy so the query always answers.
+## a copy so the query always answers. A present, non-empty block stays `claimed:true`
+## even if its site id is not a string, so the UI cannot offer a destructive reclaim.
 static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
 	var raw: Variant = state.data.get(BASE_KEY, null) if state != null else null
-	if not (raw is Dictionary) or _safe_string((raw as Dictionary).get("site_archetype_id", "")).is_empty():
+	if not (raw is Dictionary) or (raw as Dictionary).is_empty():
 		return {"claimed": false}
 	var base := _normalize(raw)
 	var site := site_definition(hub, String(base.get("site_archetype_id", "")))

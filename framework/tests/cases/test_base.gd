@@ -269,15 +269,23 @@ func test_transfer_requires_being_at_port() -> void:
 	assert_eq(_storage_amount(_view(context), "core:item/timber"), 5, "rejected transfers leave storage unchanged")
 
 
-## D3-FIX3：site_archetype_id 被写成非字符串时不能抛引擎错误；base.view 返回未占领，
-## 但原始块不能被 tick 清空。
+## D3-FIX3：site_archetype_id 被写成非字符串时不能抛引擎错误；它仍算已占领，
+## 且 base.claim 不能覆盖/清空现有建筑与仓储。
 func test_malformed_site_id_is_tolerated() -> void:
 	var context := _start(314)
 	_claim(context)
+	_deposit(context, "core:item/timber", 4)
+	_build(context, "core:building/sawmill")
+	var slots_before := int(_view(context).get("slots_used", 0))
 	for variant in [null, [], {}]:
 		context.state.data["base"]["site_archetype_id"] = variant
 		var view := _view(context)
-		assert_false(bool(view.get("claimed", true)), "a non-string site id reads as unclaimed")
+		assert_true(bool(view.get("claimed", false)), "a present base block still counts as claimed")
+		var before: Dictionary = (context.state.data["base"] as Dictionary).duplicate(true)
+		var reclaimed := context.commands.execute(&"base.claim", {"base_site_id": "core:base_site/industrial_yard"})
+		assert_eq(String(reclaimed.get("error_code", "")), "base_exists", "claim cannot overwrite a corrupt base")
+		assert_eq(context.state.data.get("base", null), before, "a rejected claim leaves the base block untouched")
+		assert_eq(int(_view(context).get("slots_used", 0)), slots_before, "buildings are not lost")
 		_advance(context, 1)
 		assert_true(context.state.data.get("base", null) is Dictionary, "the base block is not destroyed")
 		assert_false((context.state.data.get("base", {}) as Dictionary).is_empty(), "the base block keeps its fields")

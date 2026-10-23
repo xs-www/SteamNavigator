@@ -14,29 +14,29 @@
 | `DEFAULT_BASE` | L33 |
 | `VALID_STATUS` | L45 |
 | `has_base(state: GameState) -> bool` | L48 |
-| `ensure_structure(state: GameState) -> Dictionary` | L56 |
-| `view(state: GameState, hub: RegistryHub = null) -> Dictionary` | L69 |
-| `site_definition(hub: RegistryHub, site_id: String) -> ContentDefinition` | L103 |
-| `building_definition(hub: RegistryHub, building_id: String) -> ContentDefinition` | L109 |
-| `recipe_definition(hub: RegistryHub, recipe_id: String) -> ContentDefinition` | L115 |
-| `upgrade_definition(hub: RegistryHub, upgrade_id: String) -> ContentDefinition` | L121 |
-| `worker_role_definition(hub: RegistryHub, role_id: String) -> ContentDefinition` | L127 |
-| `building_entry(base: Dictionary, instance_id: String) -> Dictionary` | L133 |
-| `next_instance_id(base: Dictionary) -> String` | L140 |
-| `slot_count(hub: RegistryHub, base: Dictionary) -> int` | L145 |
-| `item_unit_weight(hub: RegistryHub, item_id: String) -> float` | L150 |
-| `storage_used(hub: RegistryHub, storage: Dictionary) -> float` | L157 |
-| `storage_capacity(hub: RegistryHub, base: Dictionary) -> float` | L166 |
-| `defense(hub: RegistryHub, base: Dictionary) -> int` | L183 |
-| `maintenance_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L200 |
-| `upkeep_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L205 |
-| `wages_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L215 |
-| `money_due_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L232 |
-| `assigned_worker_count(entry: Dictionary) -> int` | L236 |
-| `production_speed(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> float` | L243 |
-| `storage_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L264 |
-| `workers_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L291 |
-| `building_view(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> Dictionary` | L316 |
+| `ensure_structure(state: GameState) -> Dictionary` | L58 |
+| `view(state: GameState, hub: RegistryHub = null) -> Dictionary` | L72 |
+| `site_definition(hub: RegistryHub, site_id: String) -> ContentDefinition` | L106 |
+| `building_definition(hub: RegistryHub, building_id: String) -> ContentDefinition` | L112 |
+| `recipe_definition(hub: RegistryHub, recipe_id: String) -> ContentDefinition` | L118 |
+| `upgrade_definition(hub: RegistryHub, upgrade_id: String) -> ContentDefinition` | L124 |
+| `worker_role_definition(hub: RegistryHub, role_id: String) -> ContentDefinition` | L130 |
+| `building_entry(base: Dictionary, instance_id: String) -> Dictionary` | L136 |
+| `next_instance_id(base: Dictionary) -> String` | L143 |
+| `slot_count(hub: RegistryHub, base: Dictionary) -> int` | L148 |
+| `item_unit_weight(hub: RegistryHub, item_id: String) -> float` | L153 |
+| `storage_used(hub: RegistryHub, storage: Dictionary) -> float` | L160 |
+| `storage_capacity(hub: RegistryHub, base: Dictionary) -> float` | L169 |
+| `defense(hub: RegistryHub, base: Dictionary) -> int` | L186 |
+| `maintenance_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L203 |
+| `upkeep_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L208 |
+| `wages_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L218 |
+| `money_due_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L235 |
+| `assigned_worker_count(entry: Dictionary) -> int` | L239 |
+| `production_speed(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> float` | L246 |
+| `storage_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L267 |
+| `workers_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L294 |
+| `building_view(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> Dictionary` | L319 |
 
 升级/配方/工人工种引用、计算仓储、防御、每 tick 支出、生产速度，并给出只读
 `base.view` 数据。持久状态只记录基地实例（站点、建筑、工人、仓储、生产订单），

@@ -1761,12 +1761,12 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 42 个运行时类型（D4 后全部为 Schema 2.0）与 3 个 Schema 2.0 草案类型（剧情 `story_arcs` / `story_levels` + `combat_ai_profiles`）；`new --draft` 可直接创建纯 2.0 草案项目。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 42 个运行时类型（D5 后全部为 Schema 2.0）与 3 个 Schema 2.0 草案类型（剧情 `story_arcs` / `story_levels` + `combat_ai_profiles`）；`new --draft` 可直接创建纯 2.0 草案项目。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出 42 个运行时类型（D4 后全部为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`story_arcs` / `story_levels` / `combat_ai_profiles`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
+      "`types` 同时列出 42 个运行时类型（D5 后全部为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`story_arcs` / `story_levels` / `combat_ai_profiles`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
       "`new --draft <content_type>` 只接受真实草案（`story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；已 active 的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 2.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。",
       "`validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（items / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 2.0 运行时定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
@@ -2478,7 +2478,7 @@ export const MODULES = {
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
-    intro: "展示层。固定 Shell、四个菜单场景、七个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。",
+    intro: "展示层。固定 Shell、四个菜单场景、八个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。",
     contracts: [
       "UI 只识别 Query/Command 与定义类型，不识别 core 内容。",
       "公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。",
