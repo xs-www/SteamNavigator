@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T05:38:59.910Z",
-  "commit": "671a1e7",
+  "generated_at": "2026-10-23T05:53:57.240Z",
+  "commit": "d347aaa",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -3850,7 +3850,7 @@
     },
     {
       "source": "framework/domain/trade/auto_trade_ops.gd",
-      "sha256": "584bc121136f153d9b5a58efe1406a1c36de276ded3dd42b745ef7f177caa1ac",
+      "sha256": "a990d08950009bccb739b9e2315e3e14667b607719873aabb41912ad01f29d63",
       "doc": "docs/static/framework/domain/trade/auto_trade_ops.gd.md",
       "status": "documented"
     },
@@ -4132,7 +4132,7 @@
     },
     {
       "source": "framework/tests/cases/test_auto_trade.gd",
-      "sha256": "6747adc3c99c7d8e4be6a3837730e1af9603093db44fe9fdf4dac495019b39ed",
+      "sha256": "03f6eb0057a6e25b14a49ef7a7af6d7055b4791197b0f8e8c3b4639ad20fd9c9",
       "doc": "docs/static/framework/tests/cases/test_auto_trade.gd.md",
       "status": "documented"
     },
@@ -5931,7 +5931,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "75f81a1cbbf187f2fed9c28c525796bc25771fb8b8b10cf02e04b1df3f26f337",
+      "sha256": "01433c9fc526070077ba51665b9bf2fdb9b8e82526f24517f47807e8d007566a",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7408,7 +7408,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "75039938741dc6b3f73dc0cd98e6953b8fa0ba30dc67de3fe0d3e860aefb9af7",
+      "sha256": "b08a0827578a0a28cde48261c35bddf7a5308b4382222f079894344682040c13",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

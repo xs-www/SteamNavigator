@@ -125,6 +125,8 @@ static func apply_rule_action(state: GameState, hub: RegistryHub, trade: Diction
 				trade["paused"] = false
 				_append_log(trade, tick, "resumed", "", 0, 0)
 		"sell_now":
+			if bool(trade.get("paused", false)):
+				return
 			var target := String(trade.get("target_port_id", ""))
 			if String(trade.get("at_port_id", "")) == target and cargo_units(trade) > 0:
 				_sell_cargo(state, hub, trade, tick)
@@ -229,6 +231,10 @@ static func evaluate_rules(state: GameState, hub: RegistryHub, trade: Dictionary
 		if not condition_met(state, hub, trade, policy, rule):
 			continue
 		apply_rule_action(state, hub, trade, rule, tick)
+		# Pause stops the rest of this phase: later rules (e.g. sell_now) must not
+		# keep trading in a tick that is already paused.
+		if bool(trade.get("paused", false)):
+			return true
 	if bool(trade.get("paused", false)):
 		return true
 	return false

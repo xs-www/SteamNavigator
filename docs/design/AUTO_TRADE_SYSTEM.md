@@ -86,7 +86,7 @@ D4 交付可观察的自动贸易纵向切片：
 
 ## 7. 验收
 
-- `test_auto_trade.gd` 8 例：命令/查询、启动校验、买入-航行-卖出-返航、规则暂停/恢复、
+- `test_auto_trade.gd` 11 例：命令/查询、启动校验、买入-航行-卖出-返航、规则暂停/恢复、
   切策略/停止、存档往返、损坏数据、确定性。
 - `test_world_schema_refs.gd`：策略 goods/规则与 rule→policy 反向引用。
 - `test_world_completeness.gd`：Core 最低策略/规则数量 + 策略必须带规则。

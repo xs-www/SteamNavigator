@@ -175,6 +175,33 @@ func test_core_full_cargo_rule_sells_on_arrival() -> void:
 	assert_true(int(view.get("earned", 0)) > 0, "the sale books revenue")
 
 
+## D4-FIX3：arrival pause 必须真的停止本 tick，后面的 sell_now 不能继续成交。
+func test_arrival_pause_blocks_a_later_sell_rule() -> void:
+	var context := _start(511)
+	_discover_all_ports(context)
+	_prepare_market(context)
+	var policy_id := _policy_id(context)
+	var stop_rule := context.registries.get_by_id(ContentTypes.AUTOMATION_RULE, "core:automation_rule/bulk_stop_low_money")
+	assert_true(stop_rule != null, "the pause rule exists")
+	var original := String(stop_rule.data.get("when", "tick"))
+	stop_rule.data["when"] = "arrival"
+	var started := context.commands.execute(&"auto_trade.start", {"policy_id": policy_id})
+	assert_true(bool(started.get("ok", false)), "start succeeds")
+	context.state.player()["money"] = 100
+	var trade: Dictionary = context.state.data["trade"]
+	trade["phase"] = "outbound"
+	trade["at_port_id"] = _target_port(context)
+	trade["target_port_id"] = _target_port(context)
+	trade["travel_remaining"] = 0.0
+	trade["cargo"] = {"core:item/timber": 40}
+	_advance(context, 1)
+	var view := _view(context)
+	assert_true(bool(view.get("paused", false)), "the arrival pause rule fires")
+	assert_eq(int(view.get("cargo_units", -1)), 40, "the later sell_now rule does not sell in a paused tick")
+	assert_eq(int(view.get("earned", -1)), 0, "no revenue is booked in a paused tick")
+	stop_rule.data["when"] = original
+
+
 func test_set_policy_and_stop() -> void:
 	var context := _start(505)
 	var policies := context.registries.get_all(ContentTypes.TRADE_POLICY)
@@ -246,7 +273,7 @@ func test_rule_when_gates_the_trigger_phase() -> void:
 	assert_true(rule != null, "the low-money rule exists")
 	var original := String(rule.data.get("when", "tick"))
 	rule.data["when"] = "arrival"
-	context.state.data["money"] = 100
+	context.state.player()["money"] = 100
 	var started := context.commands.execute(&"auto_trade.start", {"policy_id": _policy_id(context)})
 	assert_true(bool(started.get("ok", false)), "starting with a low balance succeeds")
 	_advance(context, 1)

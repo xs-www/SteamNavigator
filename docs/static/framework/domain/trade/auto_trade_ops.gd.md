@@ -20,13 +20,13 @@
 | `policy_rules(hub: RegistryHub, policy: ContentDefinition) -> Array` | L74 |
 | `condition_met(state: GameState, hub: RegistryHub, trade: Dictionary, policy: ContentDefinition, rule: ContentDefinition) -> bool` | L92 |
 | `apply_rule_action(state: GameState, hub: RegistryHub, trade: Dictionary, rule: ContentDefinition, tick: int) -> void` | L116 |
-| `cargo_units(trade: Dictionary) -> int` | L138 |
-| `cargo_view(hub: RegistryHub, trade: Dictionary) -> Array` | L145 |
-| `choose_target(state: GameState, hub: RegistryHub, policy: ContentDefinition, home_port_id: String) -> Dictionary` | L164 |
-| `buy_and_depart(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int, policy: ContentDefinition) -> bool` | L209 |
-| `sell_cargo(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int) -> bool` | L213 |
-| `evaluate_rules(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int, when: String = "tick") -> bool` | L221 |
-| `view(state: GameState, hub: RegistryHub = null) -> Dictionary` | L237 |
+| `cargo_units(trade: Dictionary) -> int` | L140 |
+| `cargo_view(hub: RegistryHub, trade: Dictionary) -> Array` | L147 |
+| `choose_target(state: GameState, hub: RegistryHub, policy: ContentDefinition, home_port_id: String) -> Dictionary` | L166 |
+| `buy_and_depart(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int, policy: ContentDefinition) -> bool` | L211 |
+| `sell_cargo(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int) -> bool` | L215 |
+| `evaluate_rules(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int, when: String = "tick") -> bool` | L223 |
+| `view(state: GameState, hub: RegistryHub = null) -> Dictionary` | L243 |
 
 自动化规则、挑选买卖港口与商品、维护自动货舱、直接按港口市场价结算买卖，并给出
 只读 `auto_trade.view` 数据。

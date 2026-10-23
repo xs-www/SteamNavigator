@@ -325,7 +325,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase D · D4：auto_trade 2 类 active 2.0 + Core 2 个内容文件 + `AutoTradeOps` / `AutoTradeService` / `AutoTradeSystem` / `auto_trade.*` 命令与 `auto_trade.view`；SDK `example_trade`、最小自动贸易页（2026-10-23）。
 - [x] **Phase D0/D1/D2/D3/D4 完成快照**：37 个 active 类型全部 2.0（36 定义 + patch）；schema bundle 43（2 顶层 + 41 v2）、编辑器 40（37 runtime + 3 draft）、Core 36 内容文件 / 140 定义；Godot **618/618**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [x] Phase D · D5：ruins 5 类 active 2.0 + Core 5 个内容文件 + `RuinOps` / `ExpeditionService` / `expedition.*` 命令与 `expedition.view`；SDK `example_ruins`、最小遗迹页（2026-10-23）。
-- [x] **Phase D0–D5 完成快照**：42 个 active 类型全部 2.0（41 定义 + patch）；schema bundle 48（2 顶层 + 46 v2）、编辑器 45（42 runtime + 3 draft）、Core 41 内容文件 / 154 定义；Godot **634/634**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
+- [x] **Phase D0–D5 完成快照**：42 个 active 类型全部 2.0（41 定义 + patch）；schema bundle 48（2 顶层 + 46 v2）、编辑器 45（42 runtime + 3 draft）、Core 41 内容文件 / 154 定义；Godot **635/635**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。
 

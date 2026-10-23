@@ -14,11 +14,12 @@
 | `test_buy_travel_sell_cycle() -> void` | L113 |
 | `test_rules_pause_and_resume_the_run() -> void` | L135 |
 | `test_core_full_cargo_rule_sells_on_arrival() -> void` | L158 |
-| `test_set_policy_and_stop() -> void` | L178 |
-| `test_save_round_trip() -> void` | L195 |
-| `test_malformed_trade_data_is_normalized() -> void` | L212 |
-| `test_rule_when_gates_the_trigger_phase() -> void` | L243 |
-| `test_same_seed_and_commands_are_deterministic() -> void` | L257 |
+| `test_arrival_pause_blocks_a_later_sell_rule() -> void` | L179 |
+| `test_set_policy_and_stop() -> void` | L205 |
+| `test_save_round_trip() -> void` | L222 |
+| `test_malformed_trade_data_is_normalized() -> void` | L239 |
+| `test_rule_when_gates_the_trigger_phase() -> void` | L270 |
+| `test_same_seed_and_commands_are_deterministic() -> void` | L284 |
 
 风险日志、存档 round-trip、损坏数据规范化与确定性。
 
