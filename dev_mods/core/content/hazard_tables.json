@@ -1,0 +1,33 @@
+{
+  "schema_version": "2.0",
+  "content_type": "hazard_tables",
+  "definitions": [
+    {
+      "id": "core:hazard_table/minor",
+      "name_key": "hazard_table.core.minor.name",
+      "description_key": "hazard_table.core.minor.description",
+      "tags": ["hazard_table.minor"],
+      "enabled": true,
+      "data": {
+        "entries": [
+          {"type": "durability", "weight": 50, "amount_range": [2, 4], "text_key": "hazard_table.core.minor.durability"},
+          {"type": "money", "weight": 50, "amount_range": [5, 10], "text_key": "hazard_table.core.minor.money"}
+        ]
+      }
+    },
+    {
+      "id": "core:hazard_table/major",
+      "name_key": "hazard_table.core.major.name",
+      "description_key": "hazard_table.core.major.description",
+      "tags": ["hazard_table.major"],
+      "enabled": true,
+      "data": {
+        "entries": [
+          {"type": "durability", "weight": 60, "amount_range": [6, 12], "text_key": "hazard_table.core.major.durability"},
+          {"type": "money", "weight": 25, "amount_range": [20, 40], "text_key": "hazard_table.core.major.money"},
+          {"type": "cargo", "weight": 15, "amount_range": [1, 2], "text_key": "hazard_table.core.major.cargo"}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/ruin-archetype-2.json",
+  "title": "Steam Navigator ruin archetype content file (Content Schema 2.0)",
+  "description": "Procedural ruin archetypes (D5): room count, difficulty, room tag pool, hazard/relic/loot references. IDs use core:ruin_archetype/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "content_type": { "const": "ruin_archetypes" },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          { "$ref": "common.schema.json#/$defs/definition" },
+          { "type": "object", "properties": { "data": { "$ref": "#/$defs/ruin_archetype_data" } } }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "ruin_archetype_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["room_count", "difficulty", "room_tags", "hazard_table", "loot_table"],
+      "properties": {
+        "room_count": { "type": "integer", "minimum": 2, "maximum": 12 },
+        "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "room_tags": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/tag" }
+        },
+        "hazard_table": { "$ref": "common.schema.json#/$defs/id_ref" },
+        "loot_table": { "$ref": "common.schema.json#/$defs/id_ref" },
+        "relic_pool": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/id_ref" }
+        },
+        "entry_event": { "$ref": "common.schema.json#/$defs/id_ref" }
+      }
+    }
+  }
+}

@@ -2527,6 +2527,91 @@
         }
       }
     },
+    "v2/expedition_event.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/expedition-event-2.json",
+      "title": "Steam Navigator expedition event content file (Content Schema 2.0)",
+      "description": "Ruin expedition events (D5): prompt, 1-3 options and their effect ops. IDs use core:expedition_event/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "expedition_events"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/expedition_event_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "expedition_event_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text_key",
+            "options"
+          ],
+          "properties": {
+            "text_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text_key",
+                  "effect"
+                ],
+                "properties": {
+                  "text_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "name_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "effect": {
+                    "$ref": "common.schema.json#/$defs/effect"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "v2/faction.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/faction-2.json",
@@ -2865,6 +2950,93 @@
               "type": "array",
               "items": {
                 "$ref": "common.schema.json#/$defs/modifier"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/hazard_table.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/hazard-table-2.json",
+      "title": "Steam Navigator hazard table content file (Content Schema 2.0)",
+      "description": "Ruin hazard tables (D5): weighted hazards with type, amount range and text. IDs use core:hazard_table/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "hazard_tables"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/hazard_table_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "hazard_table_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entries"
+          ],
+          "properties": {
+            "entries": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "weight",
+                  "amount_range"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "durability",
+                      "money",
+                      "cargo"
+                    ]
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "amount_range": {
+                    "$ref": "common.schema.json#/$defs/integer_range2"
+                  },
+                  "text_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  }
+                }
               }
             }
           }
@@ -4747,6 +4919,155 @@
         }
       }
     },
+    "v2/relic.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/relic-2.json",
+      "title": "Steam Navigator relic content file (Content Schema 2.0)",
+      "description": "Ruin relics (D5): rarity, passive modifiers and optional value. IDs use core:relic/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "relics"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/relic_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "relic_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rarity",
+            "value"
+          ],
+          "properties": {
+            "rarity": {
+              "enum": [
+                "common",
+                "rare",
+                "legendary"
+              ]
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            "modifiers": {
+              "type": "array",
+              "maxItems": 6,
+              "items": {
+                "$ref": "common.schema.json#/$defs/modifier"
+              }
+            }
+          }
+        }
+      }
+    },
+    "v2/room_template.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/room-template-2.json",
+      "title": "Steam Navigator ruin room template content file (Content Schema 2.0)",
+      "description": "Ruin room templates (D5): tags, size, exits, optional event/hazard/loot references. IDs use core:room_template/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "room_templates"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/room_template_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "room_template_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "size",
+            "exits"
+          ],
+          "properties": {
+            "size": {
+              "enum": [
+                "small",
+                "medium",
+                "large"
+              ]
+            },
+            "exits": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "event_ref": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "hazard_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "loot_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
     "v2/route_template.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/route-template-2.json",
@@ -4830,6 +5151,96 @@
               }
             },
             "encounter_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            }
+          }
+        }
+      }
+    },
+    "v2/ruin_archetype.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/ruin-archetype-2.json",
+      "title": "Steam Navigator ruin archetype content file (Content Schema 2.0)",
+      "description": "Procedural ruin archetypes (D5): room count, difficulty, room tag pool, hazard/relic/loot references. IDs use core:ruin_archetype/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "ruin_archetypes"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/ruin_archetype_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "ruin_archetype_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "room_count",
+            "difficulty",
+            "room_tags",
+            "hazard_table",
+            "loot_table"
+          ],
+          "properties": {
+            "room_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 12
+            },
+            "difficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "room_tags": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/tag"
+              }
+            },
+            "hazard_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "loot_table": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "relic_pool": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "entry_event": {
               "$ref": "common.schema.json#/$defs/id_ref"
             }
           }

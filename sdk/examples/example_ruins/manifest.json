@@ -1,0 +1,28 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_ruins",
+  "name": "Example Ruins",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 10,
+  "required": false,
+  "dependencies": [
+    {"id": "core", "version": ">=1.0.0 <2.0.0"}
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/ruin_archetypes.json",
+    "content/room_templates.json",
+    "content/expedition_events.json",
+    "content/hazard_tables.json",
+    "content/relics.json"
+  ],
+  "localization": ["localization/zh_CN.json", "localization/en.json"],
+  "assets": {},
+  "authors": ["Steam Navigator Team"],
+  "license": "CC-BY-4.0",
+  "description": "Active Content Schema 2.0 ruins example: one ruin, room, event, hazard table and relic built on Core loot.",
+  "capabilities": ["content.ruins.v1"]
+}

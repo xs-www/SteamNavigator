@@ -13,6 +13,7 @@
 | `commands/command_registry.gd` | 命令名到静态用例的绑定表（含船厂/仓库/打造/在港等待、D0 `sim.*`、D1 `combat.resolve` 与 D2 `fleet.*` 命令）。 | 本页 |
 | `commands/contract_commands.gd` | 委托接取命令包装。 | 本页 |
 | `commands/debt_commands.gd` | 借款命令包装。 | 本页 |
+| `commands/expedition_commands.gd` | Phase D5 遗迹远征的命令入口：`expedition.start` / `enter` / `choose` / | [查看](./commands/expedition_commands.gd.md) |
 | `commands/explore_commands.gd` | 探索系统的命令包装（`explore.start` / `explore.settle` / `explore.decide` / | [查看](./commands/explore_commands.gd.md) |
 | `commands/fleet_commands.gd` | Phase D2 舰队的命令入口：`fleet.assign_captain` / `fleet.set_formation` / | [查看](./commands/fleet_commands.gd.md) |
 | `commands/intel_commands.gd` | 情报刷新命令：设施、费用、快照。 | 本页 |
@@ -35,6 +36,7 @@
 | `queries/clue_list_view.gd` | 线索列表页的只读查询（`clue.list`）。返回全部 active 线索的等级裁剪视图 | [查看](./queries/clue_list_view.gd.md) |
 | `queries/combat_log.gd` | `combat.log` 只读查询：按时间顺序输出持久化的战斗摘要（最新在最后），供 | [查看](./queries/combat_log.gd.md) |
 | `queries/combat_view.gd` | `combat.view` 只读查询：输出玩家当前武装 / 结构耐久、可选遭遇表摘要与最近 | [查看](./queries/combat_view.gd.md) |
+| `queries/expedition_view.gd` | `expedition.view` 只读查询：输出遗迹、房间序列、当前房间/事件选项、奖励日志 | [查看](./queries/expedition_view.gd.md) |
 | `queries/fleet_view.gd` | `fleet.view` 只读查询：输出旗舰 / 名册 / captain 指派 / 编队与槽位 / | [查看](./queries/fleet_view.gd.md) |
 | `queries/intel_view.gd` | 情报独立界面 ViewModel：快照时间/年龄、商品 × 港口对比矩阵（含未探索港口列）与 NPC 预计动向。 | [查看](./queries/intel_view.gd.md) |
 | `queries/map_view.gd` | 海图 ViewModel：港口坐标、发现/访问、设施与航线。 | 本页 |

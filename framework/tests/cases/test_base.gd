@@ -269,6 +269,20 @@ func test_transfer_requires_being_at_port() -> void:
 	assert_eq(_storage_amount(_view(context), "core:item/timber"), 5, "rejected transfers leave storage unchanged")
 
 
+## D3-FIX3：site_archetype_id 被写成非字符串时不能抛引擎错误；base.view 返回未占领，
+## 但原始块不能被 tick 清空。
+func test_malformed_site_id_is_tolerated() -> void:
+	var context := _start(314)
+	_claim(context)
+	for variant in [null, [], {}]:
+		context.state.data["base"]["site_archetype_id"] = variant
+		var view := _view(context)
+		assert_false(bool(view.get("claimed", true)), "a non-string site id reads as unclaimed")
+		_advance(context, 1)
+		assert_true(context.state.data.get("base", null) is Dictionary, "the base block is not destroyed")
+		assert_false((context.state.data.get("base", {}) as Dictionary).is_empty(), "the base block keeps its fields")
+
+
 func test_malformed_base_data_is_normalized() -> void:
 	var context := _start(309)
 	_claim(context)

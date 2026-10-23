@@ -1,0 +1,20 @@
+{
+  "schema_version": "2.0",
+  "content_type": "expedition_events",
+  "definitions": [
+    {
+      "id": "example_ruins:expedition_event/damp_cache",
+      "name_key": "expedition_event.example_ruins.damp_cache.name",
+      "description_key": "expedition_event.example_ruins.damp_cache.description",
+      "tags": ["expedition_event.reward"],
+      "enabled": true,
+      "data": {
+        "text_key": "expedition_event.example_ruins.damp_cache.text",
+        "options": [
+          {"text_key": "expedition_event.example_ruins.damp_cache.open", "effect": {"op": "add_money", "amount": 25}},
+          {"text_key": "expedition_event.example_ruins.damp_cache.leave", "effect": {"op": "add_money", "amount": 0}}
+        ]
+      }
+    }
+  ]
+}

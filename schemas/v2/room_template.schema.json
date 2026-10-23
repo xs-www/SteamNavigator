@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/room-template-2.json",
+  "title": "Steam Navigator ruin room template content file (Content Schema 2.0)",
+  "description": "Ruin room templates (D5): tags, size, exits, optional event/hazard/loot references. IDs use core:room_template/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "content_type": { "const": "room_templates" },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          { "$ref": "common.schema.json#/$defs/definition" },
+          { "type": "object", "properties": { "data": { "$ref": "#/$defs/room_template_data" } } }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "room_template_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["size", "exits"],
+      "properties": {
+        "size": { "enum": ["small", "medium", "large"] },
+        "exits": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "event_ref": { "$ref": "common.schema.json#/$defs/id_ref" },
+        "hazard_table": { "$ref": "common.schema.json#/$defs/id_ref" },
+        "loot_table": { "$ref": "common.schema.json#/$defs/id_ref" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    }
+  }
+}

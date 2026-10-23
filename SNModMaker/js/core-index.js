@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-23T04:15:39.637Z",
+    "generated_at": "2026-10-23T04:46:16.582Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -55,7 +55,12 @@
         "content/production_recipes.json",
         "content/worker_roles.json",
         "content/trade_policies.json",
-        "content/automation_rules.json"
+        "content/automation_rules.json",
+        "content/ruin_archetypes.json",
+        "content/room_templates.json",
+        "content/expedition_events.json",
+        "content/hazard_tables.json",
+        "content/relics.json"
       ],
       "localization": [
         "localization/zh_CN.json",
@@ -217,7 +222,8 @@
         "content.combat.v1",
         "content.fleet.v1",
         "content.base.v1",
-        "content.trade.v1"
+        "content.trade.v1",
+        "content.ruins.v1"
       ]
     },
     "contentFiles": {
@@ -6134,6 +6140,374 @@
             }
           }
         ]
+      },
+      "content/ruin_archetypes.json": {
+        "schema_version": "2.0",
+        "content_type": "ruin_archetypes",
+        "definitions": [
+          {
+            "id": "core:ruin_archetype/sunken_hall",
+            "name_key": "ruin_archetype.core.sunken_hall.name",
+            "description_key": "ruin_archetype.core.sunken_hall.description",
+            "tags": [
+              "ruin.coastal",
+              "ruin.starter"
+            ],
+            "enabled": true,
+            "data": {
+              "room_count": 4,
+              "difficulty": 2,
+              "room_tags": [
+                "room.hall",
+                "room.gallery",
+                "room.shrine"
+              ],
+              "hazard_table": "core:hazard_table/minor",
+              "loot_table": "core:loot_table/pirate_wreck",
+              "relic_pool": [
+                "core:relic/brass_compass",
+                "core:relic/sealed_chart"
+              ]
+            }
+          },
+          {
+            "id": "core:ruin_archetype/collapsed_vault",
+            "name_key": "ruin_archetype.core.collapsed_vault.name",
+            "description_key": "ruin_archetype.core.collapsed_vault.description",
+            "tags": [
+              "ruin.industrial",
+              "ruin.deep"
+            ],
+            "enabled": true,
+            "data": {
+              "room_count": 6,
+              "difficulty": 3,
+              "room_tags": [
+                "room.vault",
+                "room.gallery",
+                "room.shrine"
+              ],
+              "hazard_table": "core:hazard_table/major",
+              "loot_table": "core:loot_table/iron_wreck",
+              "relic_pool": [
+                "core:relic/sealed_chart",
+                "core:relic/steam_heart"
+              ]
+            }
+          }
+        ]
+      },
+      "content/room_templates.json": {
+        "schema_version": "2.0",
+        "content_type": "room_templates",
+        "definitions": [
+          {
+            "id": "core:room_template/flooded_hall",
+            "name_key": "room_template.core.flooded_hall.name",
+            "description_key": "room_template.core.flooded_hall.description",
+            "tags": [
+              "room.hall",
+              "room.flooded"
+            ],
+            "enabled": true,
+            "data": {
+              "size": "large",
+              "exits": 2,
+              "hazard_table": "core:hazard_table/minor",
+              "loot_table": "core:loot_table/pirate_wreck",
+              "weight": 30
+            }
+          },
+          {
+            "id": "core:room_template/collapsed_gallery",
+            "name_key": "room_template.core.collapsed_gallery.name",
+            "description_key": "room_template.core.collapsed_gallery.description",
+            "tags": [
+              "room.gallery",
+              "room.collapsed"
+            ],
+            "enabled": true,
+            "data": {
+              "size": "medium",
+              "exits": 1,
+              "event_ref": "core:expedition_event/fallen_beam",
+              "weight": 30
+            }
+          },
+          {
+            "id": "core:room_template/old_shrine",
+            "name_key": "room_template.core.old_shrine.name",
+            "description_key": "room_template.core.old_shrine.description",
+            "tags": [
+              "room.shrine"
+            ],
+            "enabled": true,
+            "data": {
+              "size": "small",
+              "exits": 1,
+              "event_ref": "core:expedition_event/old_shrine",
+              "weight": 20
+            }
+          },
+          {
+            "id": "core:room_template/sealed_vault",
+            "name_key": "room_template.core.sealed_vault.name",
+            "description_key": "room_template.core.sealed_vault.description",
+            "tags": [
+              "room.vault"
+            ],
+            "enabled": true,
+            "data": {
+              "size": "medium",
+              "exits": 1,
+              "event_ref": "core:expedition_event/sealed_vault",
+              "loot_table": "core:loot_table/iron_wreck",
+              "weight": 20
+            }
+          }
+        ]
+      },
+      "content/expedition_events.json": {
+        "schema_version": "2.0",
+        "content_type": "expedition_events",
+        "definitions": [
+          {
+            "id": "core:expedition_event/fallen_beam",
+            "name_key": "expedition_event.core.fallen_beam.name",
+            "description_key": "expedition_event.core.fallen_beam.description",
+            "tags": [
+              "expedition_event.hazard"
+            ],
+            "enabled": true,
+            "data": {
+              "text_key": "expedition_event.core.fallen_beam.text",
+              "options": [
+                {
+                  "text_key": "expedition_event.core.fallen_beam.force",
+                  "effect": {
+                    "op": "damage_ship",
+                    "amount": 10
+                  }
+                },
+                {
+                  "text_key": "expedition_event.core.fallen_beam.retreat",
+                  "effect": {
+                    "op": "add_money",
+                    "amount": 0
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:expedition_event/old_shrine",
+            "name_key": "expedition_event.core.old_shrine.name",
+            "description_key": "expedition_event.core.old_shrine.description",
+            "tags": [
+              "expedition_event.reward"
+            ],
+            "enabled": true,
+            "data": {
+              "text_key": "expedition_event.core.old_shrine.text",
+              "options": [
+                {
+                  "text_key": "expedition_event.core.old_shrine.pray",
+                  "effect": {
+                    "op": "add_money",
+                    "amount": 80
+                  }
+                },
+                {
+                  "text_key": "expedition_event.core.old_shrine.loot",
+                  "effect": {
+                    "op": "add_item",
+                    "item_id": "core:item/brass",
+                    "amount": 3
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:expedition_event/sealed_vault",
+            "name_key": "expedition_event.core.sealed_vault.name",
+            "description_key": "expedition_event.core.sealed_vault.description",
+            "tags": [
+              "expedition_event.reward"
+            ],
+            "enabled": true,
+            "data": {
+              "text_key": "expedition_event.core.sealed_vault.text",
+              "options": [
+                {
+                  "text_key": "expedition_event.core.sealed_vault.force",
+                  "effect": {
+                    "op": "damage_ship",
+                    "amount": 15
+                  }
+                },
+                {
+                  "text_key": "expedition_event.core.sealed_vault.leave",
+                  "effect": {
+                    "op": "add_money",
+                    "amount": 0
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/hazard_tables.json": {
+        "schema_version": "2.0",
+        "content_type": "hazard_tables",
+        "definitions": [
+          {
+            "id": "core:hazard_table/minor",
+            "name_key": "hazard_table.core.minor.name",
+            "description_key": "hazard_table.core.minor.description",
+            "tags": [
+              "hazard_table.minor"
+            ],
+            "enabled": true,
+            "data": {
+              "entries": [
+                {
+                  "type": "durability",
+                  "weight": 50,
+                  "amount_range": [
+                    2,
+                    4
+                  ],
+                  "text_key": "hazard_table.core.minor.durability"
+                },
+                {
+                  "type": "money",
+                  "weight": 50,
+                  "amount_range": [
+                    5,
+                    10
+                  ],
+                  "text_key": "hazard_table.core.minor.money"
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:hazard_table/major",
+            "name_key": "hazard_table.core.major.name",
+            "description_key": "hazard_table.core.major.description",
+            "tags": [
+              "hazard_table.major"
+            ],
+            "enabled": true,
+            "data": {
+              "entries": [
+                {
+                  "type": "durability",
+                  "weight": 60,
+                  "amount_range": [
+                    6,
+                    12
+                  ],
+                  "text_key": "hazard_table.core.major.durability"
+                },
+                {
+                  "type": "money",
+                  "weight": 25,
+                  "amount_range": [
+                    20,
+                    40
+                  ],
+                  "text_key": "hazard_table.core.major.money"
+                },
+                {
+                  "type": "cargo",
+                  "weight": 15,
+                  "amount_range": [
+                    1,
+                    2
+                  ],
+                  "text_key": "hazard_table.core.major.cargo"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/relics.json": {
+        "schema_version": "2.0",
+        "content_type": "relics",
+        "definitions": [
+          {
+            "id": "core:relic/brass_compass",
+            "name_key": "relic.core.brass_compass.name",
+            "description_key": "relic.core.brass_compass.description",
+            "tags": [
+              "relic.navigation",
+              "relic.rare"
+            ],
+            "enabled": true,
+            "data": {
+              "rarity": "rare",
+              "value": 400,
+              "modifiers": [
+                {
+                  "stat": "navigation",
+                  "op": "add",
+                  "value": 2
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:relic/sealed_chart",
+            "name_key": "relic.core.sealed_chart.name",
+            "description_key": "relic.core.sealed_chart.description",
+            "tags": [
+              "relic.charting",
+              "relic.rare"
+            ],
+            "enabled": true,
+            "data": {
+              "rarity": "rare",
+              "value": 450,
+              "modifiers": [
+                {
+                  "stat": "charting",
+                  "op": "add",
+                  "value": 3
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:relic/steam_heart",
+            "name_key": "relic.core.steam_heart.name",
+            "description_key": "relic.core.steam_heart.description",
+            "tags": [
+              "relic.engineering",
+              "relic.legendary"
+            ],
+            "enabled": true,
+            "data": {
+              "rarity": "legendary",
+              "value": 1200,
+              "modifiers": [
+                {
+                  "stat": "engineering",
+                  "op": "add",
+                  "value": 5
+                },
+                {
+                  "stat": "upkeep",
+                  "op": "mul",
+                  "value": 0.95
+                }
+              ]
+            }
+          }
+        ]
       }
     },
     "localization": {
@@ -6528,7 +6902,49 @@
         "automation_rule.core.luxury_stop_low_money.name": "资金不足暂停",
         "automation_rule.core.luxury_stop_low_money.description": "金币低于 500 时暂停奢侈品快线。",
         "automation_rule.core.luxury_resume_healthy.name": "资金恢复继续",
-        "automation_rule.core.luxury_resume_healthy.description": "金币回到 900 时恢复奢侈品快线。"
+        "automation_rule.core.luxury_resume_healthy.description": "金币回到 900 时恢复奢侈品快线。",
+        "ruin_archetype.core.sunken_hall.name": "沉没大厅",
+        "ruin_archetype.core.sunken_hall.description": "半淹的沿岸遗迹，适合第一次远征。",
+        "ruin_archetype.core.collapsed_vault.name": "坍塌金库",
+        "ruin_archetype.core.collapsed_vault.description": "深层工业遗迹，危险更高，遗物更好。",
+        "room_template.core.flooded_hall.name": "积水大厅",
+        "room_template.core.flooded_hall.description": "海水漫过石阶的大厅。",
+        "room_template.core.collapsed_gallery.name": "坍塌回廊",
+        "room_template.core.collapsed_gallery.description": "横梁断裂的回廊。",
+        "room_template.core.old_shrine.name": "古老神龛",
+        "room_template.core.old_shrine.description": "被遗忘的小神龛。",
+        "room_template.core.sealed_vault.name": "封闭金库",
+        "room_template.core.sealed_vault.description": "门缝里透出黄铜光。",
+        "expedition_event.core.fallen_beam.name": "倒塌的横梁",
+        "expedition_event.core.fallen_beam.description": "通道被巨梁堵住。",
+        "expedition_event.core.fallen_beam.text": "一根锈蚀的横梁挡住去路，后面传来滴水声。",
+        "expedition_event.core.fallen_beam.force": "硬闯过去",
+        "expedition_event.core.fallen_beam.retreat": "小心绕开",
+        "expedition_event.core.old_shrine.name": "古老神龛",
+        "expedition_event.core.old_shrine.description": "神龛上落满盐霜。",
+        "expedition_event.core.old_shrine.text": "神龛里似乎还留着供品。",
+        "expedition_event.core.old_shrine.pray": "祈祷并取走供品",
+        "expedition_event.core.old_shrine.loot": "搜刮铜器",
+        "expedition_event.core.sealed_vault.name": "封闭金库",
+        "expedition_event.core.sealed_vault.description": "金库门被蒸汽锁死。",
+        "expedition_event.core.sealed_vault.text": "黄铜门后传来齿轮转动的声音。",
+        "expedition_event.core.sealed_vault.force": "强行撬开",
+        "expedition_event.core.sealed_vault.leave": "原路离开",
+        "hazard_table.core.minor.name": "轻微危险",
+        "hazard_table.core.minor.description": "潮湿与松动石块。",
+        "hazard_table.core.minor.durability": "落石擦过船体",
+        "hazard_table.core.minor.money": "补给被水泡坏",
+        "hazard_table.core.major.name": "严重危险",
+        "hazard_table.core.major.description": "坍塌与蒸汽泄漏。",
+        "hazard_table.core.major.durability": "坍塌砸中船体",
+        "hazard_table.core.major.money": "被迫丢弃补给",
+        "hazard_table.core.major.cargo": "货物落入水中",
+        "relic.core.brass_compass.name": "黄铜罗盘",
+        "relic.core.brass_compass.description": "指针始终指向传说中的航线。",
+        "relic.core.sealed_chart.name": "密封海图",
+        "relic.core.sealed_chart.description": "一张标注着未知暗礁的旧海图。",
+        "relic.core.steam_heart.name": "蒸汽之心",
+        "relic.core.steam_heart.description": "仍在缓慢跳动的蒸汽机械核心。"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -6921,7 +7337,49 @@
         "automation_rule.core.luxury_stop_low_money.name": "Stop When Low on Money",
         "automation_rule.core.luxury_stop_low_money.description": "Pause the luxury run below 500 money.",
         "automation_rule.core.luxury_resume_healthy.name": "Resume When Healthy",
-        "automation_rule.core.luxury_resume_healthy.description": "Resume the luxury run once money is back to 900."
+        "automation_rule.core.luxury_resume_healthy.description": "Resume the luxury run once money is back to 900.",
+        "ruin_archetype.core.sunken_hall.name": "Sunken Hall",
+        "ruin_archetype.core.sunken_hall.description": "A half-flooded coastal ruin suited to a first expedition.",
+        "ruin_archetype.core.collapsed_vault.name": "Collapsed Vault",
+        "ruin_archetype.core.collapsed_vault.description": "A deep industrial ruin with greater danger and better relics.",
+        "room_template.core.flooded_hall.name": "Flooded Hall",
+        "room_template.core.flooded_hall.description": "A hall where seawater covers the steps.",
+        "room_template.core.collapsed_gallery.name": "Collapsed Gallery",
+        "room_template.core.collapsed_gallery.description": "A gallery with broken beams.",
+        "room_template.core.old_shrine.name": "Old Shrine",
+        "room_template.core.old_shrine.description": "A forgotten little shrine.",
+        "room_template.core.sealed_vault.name": "Sealed Vault",
+        "room_template.core.sealed_vault.description": "Brass light leaks through the door seam.",
+        "expedition_event.core.fallen_beam.name": "Fallen Beam",
+        "expedition_event.core.fallen_beam.description": "A giant beam blocks the passage.",
+        "expedition_event.core.fallen_beam.text": "A rusted beam blocks the way; dripping water echoes behind it.",
+        "expedition_event.core.fallen_beam.force": "Force through",
+        "expedition_event.core.fallen_beam.retreat": "Carefully go around",
+        "expedition_event.core.old_shrine.name": "Old Shrine",
+        "expedition_event.core.old_shrine.description": "Salt frost covers the shrine.",
+        "expedition_event.core.old_shrine.text": "Offerings seem to remain in the shrine.",
+        "expedition_event.core.old_shrine.pray": "Pray and take the offering",
+        "expedition_event.core.old_shrine.loot": "Strip the brass",
+        "expedition_event.core.sealed_vault.name": "Sealed Vault",
+        "expedition_event.core.sealed_vault.description": "The vault door is steam-locked.",
+        "expedition_event.core.sealed_vault.text": "Gears turn behind the brass door.",
+        "expedition_event.core.sealed_vault.force": "Pry it open",
+        "expedition_event.core.sealed_vault.leave": "Leave it",
+        "hazard_table.core.minor.name": "Minor Hazard",
+        "hazard_table.core.minor.description": "Damp air and loose stones.",
+        "hazard_table.core.minor.durability": "Falling stones graze the hull",
+        "hazard_table.core.minor.money": "Supplies are waterlogged",
+        "hazard_table.core.major.name": "Major Hazard",
+        "hazard_table.core.major.description": "Collapses and steam leaks.",
+        "hazard_table.core.major.durability": "A collapse hits the hull",
+        "hazard_table.core.major.money": "Supplies are abandoned",
+        "hazard_table.core.major.cargo": "Cargo falls into the water",
+        "relic.core.brass_compass.name": "Brass Compass",
+        "relic.core.brass_compass.description": "Its needle always points to a legendary route.",
+        "relic.core.sealed_chart.name": "Sealed Chart",
+        "relic.core.sealed_chart.description": "An old chart marked with unknown reefs.",
+        "relic.core.steam_heart.name": "Steam Heart",
+        "relic.core.steam_heart.description": "A steam core that still beats slowly."
       }
     },
     "definitions": [
@@ -14270,6 +14728,505 @@
             },
             "action": "resume",
             "priority": 20
+          }
+        }
+      },
+      {
+        "id": "core:ruin_archetype/sunken_hall",
+        "content_type": "ruin_archetypes",
+        "file": "content/ruin_archetypes.json",
+        "name_key": "ruin_archetype.core.sunken_hall.name",
+        "name_zh": "沉没大厅",
+        "name_en": "Sunken Hall",
+        "tags": [
+          "ruin.coastal",
+          "ruin.starter"
+        ],
+        "definition": {
+          "id": "core:ruin_archetype/sunken_hall",
+          "name_key": "ruin_archetype.core.sunken_hall.name",
+          "description_key": "ruin_archetype.core.sunken_hall.description",
+          "tags": [
+            "ruin.coastal",
+            "ruin.starter"
+          ],
+          "enabled": true,
+          "data": {
+            "room_count": 4,
+            "difficulty": 2,
+            "room_tags": [
+              "room.hall",
+              "room.gallery",
+              "room.shrine"
+            ],
+            "hazard_table": "core:hazard_table/minor",
+            "loot_table": "core:loot_table/pirate_wreck",
+            "relic_pool": [
+              "core:relic/brass_compass",
+              "core:relic/sealed_chart"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:ruin_archetype/collapsed_vault",
+        "content_type": "ruin_archetypes",
+        "file": "content/ruin_archetypes.json",
+        "name_key": "ruin_archetype.core.collapsed_vault.name",
+        "name_zh": "坍塌金库",
+        "name_en": "Collapsed Vault",
+        "tags": [
+          "ruin.industrial",
+          "ruin.deep"
+        ],
+        "definition": {
+          "id": "core:ruin_archetype/collapsed_vault",
+          "name_key": "ruin_archetype.core.collapsed_vault.name",
+          "description_key": "ruin_archetype.core.collapsed_vault.description",
+          "tags": [
+            "ruin.industrial",
+            "ruin.deep"
+          ],
+          "enabled": true,
+          "data": {
+            "room_count": 6,
+            "difficulty": 3,
+            "room_tags": [
+              "room.vault",
+              "room.gallery",
+              "room.shrine"
+            ],
+            "hazard_table": "core:hazard_table/major",
+            "loot_table": "core:loot_table/iron_wreck",
+            "relic_pool": [
+              "core:relic/sealed_chart",
+              "core:relic/steam_heart"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:room_template/flooded_hall",
+        "content_type": "room_templates",
+        "file": "content/room_templates.json",
+        "name_key": "room_template.core.flooded_hall.name",
+        "name_zh": "积水大厅",
+        "name_en": "Flooded Hall",
+        "tags": [
+          "room.hall",
+          "room.flooded"
+        ],
+        "definition": {
+          "id": "core:room_template/flooded_hall",
+          "name_key": "room_template.core.flooded_hall.name",
+          "description_key": "room_template.core.flooded_hall.description",
+          "tags": [
+            "room.hall",
+            "room.flooded"
+          ],
+          "enabled": true,
+          "data": {
+            "size": "large",
+            "exits": 2,
+            "hazard_table": "core:hazard_table/minor",
+            "loot_table": "core:loot_table/pirate_wreck",
+            "weight": 30
+          }
+        }
+      },
+      {
+        "id": "core:room_template/collapsed_gallery",
+        "content_type": "room_templates",
+        "file": "content/room_templates.json",
+        "name_key": "room_template.core.collapsed_gallery.name",
+        "name_zh": "坍塌回廊",
+        "name_en": "Collapsed Gallery",
+        "tags": [
+          "room.gallery",
+          "room.collapsed"
+        ],
+        "definition": {
+          "id": "core:room_template/collapsed_gallery",
+          "name_key": "room_template.core.collapsed_gallery.name",
+          "description_key": "room_template.core.collapsed_gallery.description",
+          "tags": [
+            "room.gallery",
+            "room.collapsed"
+          ],
+          "enabled": true,
+          "data": {
+            "size": "medium",
+            "exits": 1,
+            "event_ref": "core:expedition_event/fallen_beam",
+            "weight": 30
+          }
+        }
+      },
+      {
+        "id": "core:room_template/old_shrine",
+        "content_type": "room_templates",
+        "file": "content/room_templates.json",
+        "name_key": "room_template.core.old_shrine.name",
+        "name_zh": "古老神龛",
+        "name_en": "Old Shrine",
+        "tags": [
+          "room.shrine"
+        ],
+        "definition": {
+          "id": "core:room_template/old_shrine",
+          "name_key": "room_template.core.old_shrine.name",
+          "description_key": "room_template.core.old_shrine.description",
+          "tags": [
+            "room.shrine"
+          ],
+          "enabled": true,
+          "data": {
+            "size": "small",
+            "exits": 1,
+            "event_ref": "core:expedition_event/old_shrine",
+            "weight": 20
+          }
+        }
+      },
+      {
+        "id": "core:room_template/sealed_vault",
+        "content_type": "room_templates",
+        "file": "content/room_templates.json",
+        "name_key": "room_template.core.sealed_vault.name",
+        "name_zh": "封闭金库",
+        "name_en": "Sealed Vault",
+        "tags": [
+          "room.vault"
+        ],
+        "definition": {
+          "id": "core:room_template/sealed_vault",
+          "name_key": "room_template.core.sealed_vault.name",
+          "description_key": "room_template.core.sealed_vault.description",
+          "tags": [
+            "room.vault"
+          ],
+          "enabled": true,
+          "data": {
+            "size": "medium",
+            "exits": 1,
+            "event_ref": "core:expedition_event/sealed_vault",
+            "loot_table": "core:loot_table/iron_wreck",
+            "weight": 20
+          }
+        }
+      },
+      {
+        "id": "core:expedition_event/fallen_beam",
+        "content_type": "expedition_events",
+        "file": "content/expedition_events.json",
+        "name_key": "expedition_event.core.fallen_beam.name",
+        "name_zh": "倒塌的横梁",
+        "name_en": "Fallen Beam",
+        "tags": [
+          "expedition_event.hazard"
+        ],
+        "definition": {
+          "id": "core:expedition_event/fallen_beam",
+          "name_key": "expedition_event.core.fallen_beam.name",
+          "description_key": "expedition_event.core.fallen_beam.description",
+          "tags": [
+            "expedition_event.hazard"
+          ],
+          "enabled": true,
+          "data": {
+            "text_key": "expedition_event.core.fallen_beam.text",
+            "options": [
+              {
+                "text_key": "expedition_event.core.fallen_beam.force",
+                "effect": {
+                  "op": "damage_ship",
+                  "amount": 10
+                }
+              },
+              {
+                "text_key": "expedition_event.core.fallen_beam.retreat",
+                "effect": {
+                  "op": "add_money",
+                  "amount": 0
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:expedition_event/old_shrine",
+        "content_type": "expedition_events",
+        "file": "content/expedition_events.json",
+        "name_key": "expedition_event.core.old_shrine.name",
+        "name_zh": "古老神龛",
+        "name_en": "Old Shrine",
+        "tags": [
+          "expedition_event.reward"
+        ],
+        "definition": {
+          "id": "core:expedition_event/old_shrine",
+          "name_key": "expedition_event.core.old_shrine.name",
+          "description_key": "expedition_event.core.old_shrine.description",
+          "tags": [
+            "expedition_event.reward"
+          ],
+          "enabled": true,
+          "data": {
+            "text_key": "expedition_event.core.old_shrine.text",
+            "options": [
+              {
+                "text_key": "expedition_event.core.old_shrine.pray",
+                "effect": {
+                  "op": "add_money",
+                  "amount": 80
+                }
+              },
+              {
+                "text_key": "expedition_event.core.old_shrine.loot",
+                "effect": {
+                  "op": "add_item",
+                  "item_id": "core:item/brass",
+                  "amount": 3
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:expedition_event/sealed_vault",
+        "content_type": "expedition_events",
+        "file": "content/expedition_events.json",
+        "name_key": "expedition_event.core.sealed_vault.name",
+        "name_zh": "封闭金库",
+        "name_en": "Sealed Vault",
+        "tags": [
+          "expedition_event.reward"
+        ],
+        "definition": {
+          "id": "core:expedition_event/sealed_vault",
+          "name_key": "expedition_event.core.sealed_vault.name",
+          "description_key": "expedition_event.core.sealed_vault.description",
+          "tags": [
+            "expedition_event.reward"
+          ],
+          "enabled": true,
+          "data": {
+            "text_key": "expedition_event.core.sealed_vault.text",
+            "options": [
+              {
+                "text_key": "expedition_event.core.sealed_vault.force",
+                "effect": {
+                  "op": "damage_ship",
+                  "amount": 15
+                }
+              },
+              {
+                "text_key": "expedition_event.core.sealed_vault.leave",
+                "effect": {
+                  "op": "add_money",
+                  "amount": 0
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:hazard_table/minor",
+        "content_type": "hazard_tables",
+        "file": "content/hazard_tables.json",
+        "name_key": "hazard_table.core.minor.name",
+        "name_zh": "轻微危险",
+        "name_en": "Minor Hazard",
+        "tags": [
+          "hazard_table.minor"
+        ],
+        "definition": {
+          "id": "core:hazard_table/minor",
+          "name_key": "hazard_table.core.minor.name",
+          "description_key": "hazard_table.core.minor.description",
+          "tags": [
+            "hazard_table.minor"
+          ],
+          "enabled": true,
+          "data": {
+            "entries": [
+              {
+                "type": "durability",
+                "weight": 50,
+                "amount_range": [
+                  2,
+                  4
+                ],
+                "text_key": "hazard_table.core.minor.durability"
+              },
+              {
+                "type": "money",
+                "weight": 50,
+                "amount_range": [
+                  5,
+                  10
+                ],
+                "text_key": "hazard_table.core.minor.money"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:hazard_table/major",
+        "content_type": "hazard_tables",
+        "file": "content/hazard_tables.json",
+        "name_key": "hazard_table.core.major.name",
+        "name_zh": "严重危险",
+        "name_en": "Major Hazard",
+        "tags": [
+          "hazard_table.major"
+        ],
+        "definition": {
+          "id": "core:hazard_table/major",
+          "name_key": "hazard_table.core.major.name",
+          "description_key": "hazard_table.core.major.description",
+          "tags": [
+            "hazard_table.major"
+          ],
+          "enabled": true,
+          "data": {
+            "entries": [
+              {
+                "type": "durability",
+                "weight": 60,
+                "amount_range": [
+                  6,
+                  12
+                ],
+                "text_key": "hazard_table.core.major.durability"
+              },
+              {
+                "type": "money",
+                "weight": 25,
+                "amount_range": [
+                  20,
+                  40
+                ],
+                "text_key": "hazard_table.core.major.money"
+              },
+              {
+                "type": "cargo",
+                "weight": 15,
+                "amount_range": [
+                  1,
+                  2
+                ],
+                "text_key": "hazard_table.core.major.cargo"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:relic/brass_compass",
+        "content_type": "relics",
+        "file": "content/relics.json",
+        "name_key": "relic.core.brass_compass.name",
+        "name_zh": "黄铜罗盘",
+        "name_en": "Brass Compass",
+        "tags": [
+          "relic.navigation",
+          "relic.rare"
+        ],
+        "definition": {
+          "id": "core:relic/brass_compass",
+          "name_key": "relic.core.brass_compass.name",
+          "description_key": "relic.core.brass_compass.description",
+          "tags": [
+            "relic.navigation",
+            "relic.rare"
+          ],
+          "enabled": true,
+          "data": {
+            "rarity": "rare",
+            "value": 400,
+            "modifiers": [
+              {
+                "stat": "navigation",
+                "op": "add",
+                "value": 2
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:relic/sealed_chart",
+        "content_type": "relics",
+        "file": "content/relics.json",
+        "name_key": "relic.core.sealed_chart.name",
+        "name_zh": "密封海图",
+        "name_en": "Sealed Chart",
+        "tags": [
+          "relic.charting",
+          "relic.rare"
+        ],
+        "definition": {
+          "id": "core:relic/sealed_chart",
+          "name_key": "relic.core.sealed_chart.name",
+          "description_key": "relic.core.sealed_chart.description",
+          "tags": [
+            "relic.charting",
+            "relic.rare"
+          ],
+          "enabled": true,
+          "data": {
+            "rarity": "rare",
+            "value": 450,
+            "modifiers": [
+              {
+                "stat": "charting",
+                "op": "add",
+                "value": 3
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:relic/steam_heart",
+        "content_type": "relics",
+        "file": "content/relics.json",
+        "name_key": "relic.core.steam_heart.name",
+        "name_zh": "蒸汽之心",
+        "name_en": "Steam Heart",
+        "tags": [
+          "relic.engineering",
+          "relic.legendary"
+        ],
+        "definition": {
+          "id": "core:relic/steam_heart",
+          "name_key": "relic.core.steam_heart.name",
+          "description_key": "relic.core.steam_heart.description",
+          "tags": [
+            "relic.engineering",
+            "relic.legendary"
+          ],
+          "enabled": true,
+          "data": {
+            "rarity": "legendary",
+            "value": 1200,
+            "modifiers": [
+              {
+                "stat": "engineering",
+                "op": "add",
+                "value": 5
+              },
+              {
+                "stat": "upkeep",
+                "op": "mul",
+                "value": 0.95
+              }
+            ]
           }
         }
       }

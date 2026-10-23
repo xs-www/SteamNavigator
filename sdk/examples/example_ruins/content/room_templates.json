@@ -1,0 +1,14 @@
+{
+  "schema_version": "2.0",
+  "content_type": "room_templates",
+  "definitions": [
+    {
+      "id": "example_ruins:room_template/damp_cell",
+      "name_key": "room_template.example_ruins.damp_cell.name",
+      "description_key": "room_template.example_ruins.damp_cell.description",
+      "tags": ["room.example"],
+      "enabled": true,
+      "data": {"size": "small", "exits": 1, "event_ref": "example_ruins:expedition_event/damp_cache", "weight": 1}
+    }
+  ]
+}

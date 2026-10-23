@@ -46,19 +46,24 @@
 | `WORKER_ROLE` | L43 |
 | `TRADE_POLICY` | L44 |
 | `AUTOMATION_RULE` | L45 |
-| `SCHEMA_PATHS` | L47 |
-| `SCHEMA_VERSIONS` | L87 |
-| `SINGULAR` | L127 |
-| `MODULE_TYPES` | L167 |
-| `all() -> Array[StringName]` | L170 |
-| `registry_types() -> Array[StringName]` | L184 |
-| `is_known(content_type: StringName) -> bool` | L190 |
-| `is_module(content_type: StringName) -> bool` | L194 |
-| `is_patch(content_type: StringName) -> bool` | L198 |
-| `schema_path(content_type: StringName) -> String` | L202 |
-| `schema_version(content_type: StringName) -> String` | L206 |
-| `singular(content_type: StringName) -> String` | L210 |
-| `from_singular(singular_name: String) -> StringName` | L214 |
+| `RUIN_ARCHETYPE` | L46 |
+| `ROOM_TEMPLATE` | L47 |
+| `EXPEDITION_EVENT` | L48 |
+| `HAZARD_TABLE` | L49 |
+| `RELIC` | L50 |
+| `SCHEMA_PATHS` | L52 |
+| `SCHEMA_VERSIONS` | L97 |
+| `SINGULAR` | L142 |
+| `MODULE_TYPES` | L187 |
+| `all() -> Array[StringName]` | L190 |
+| `registry_types() -> Array[StringName]` | L205 |
+| `is_known(content_type: StringName) -> bool` | L211 |
+| `is_module(content_type: StringName) -> bool` | L215 |
+| `is_patch(content_type: StringName) -> bool` | L219 |
+| `schema_path(content_type: StringName) -> String` | L223 |
+| `schema_version(content_type: StringName) -> String` | L227 |
+| `singular(content_type: StringName) -> String` | L231 |
+| `from_singular(singular_name: String) -> StringName` | L235 |
 
 ## 契约与约束
 

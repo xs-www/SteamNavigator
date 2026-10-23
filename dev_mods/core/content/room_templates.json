@@ -1,0 +1,60 @@
+{
+  "schema_version": "2.0",
+  "content_type": "room_templates",
+  "definitions": [
+    {
+      "id": "core:room_template/flooded_hall",
+      "name_key": "room_template.core.flooded_hall.name",
+      "description_key": "room_template.core.flooded_hall.description",
+      "tags": ["room.hall", "room.flooded"],
+      "enabled": true,
+      "data": {
+        "size": "large",
+        "exits": 2,
+        "hazard_table": "core:hazard_table/minor",
+        "loot_table": "core:loot_table/pirate_wreck",
+        "weight": 30
+      }
+    },
+    {
+      "id": "core:room_template/collapsed_gallery",
+      "name_key": "room_template.core.collapsed_gallery.name",
+      "description_key": "room_template.core.collapsed_gallery.description",
+      "tags": ["room.gallery", "room.collapsed"],
+      "enabled": true,
+      "data": {
+        "size": "medium",
+        "exits": 1,
+        "event_ref": "core:expedition_event/fallen_beam",
+        "weight": 30
+      }
+    },
+    {
+      "id": "core:room_template/old_shrine",
+      "name_key": "room_template.core.old_shrine.name",
+      "description_key": "room_template.core.old_shrine.description",
+      "tags": ["room.shrine"],
+      "enabled": true,
+      "data": {
+        "size": "small",
+        "exits": 1,
+        "event_ref": "core:expedition_event/old_shrine",
+        "weight": 20
+      }
+    },
+    {
+      "id": "core:room_template/sealed_vault",
+      "name_key": "room_template.core.sealed_vault.name",
+      "description_key": "room_template.core.sealed_vault.description",
+      "tags": ["room.vault"],
+      "enabled": true,
+      "data": {
+        "size": "medium",
+        "exits": 1,
+        "event_ref": "core:expedition_event/sealed_vault",
+        "loot_table": "core:loot_table/iron_wreck",
+        "weight": 20
+      }
+    }
+  ]
+}

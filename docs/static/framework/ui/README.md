@@ -70,6 +70,8 @@
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
 | `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |
+| `screens/port/ruins_screen.gd` | Phase D5 遗迹远征页：渲染 `expedition.view` 与可用遗迹原型，展示房间进度、 | [查看](./screens/port/ruins_screen.gd.md) |
+| `screens/port/ruins_screen.tscn` | 框架源文件：ruins_screen.tscn | 本页 |
 | `screens/port/shipyard_screen.gd` | 船厂页两种布局共用一页：正常态为「已有船舶卡片 / 实机渲染舞台 / 组件分类入口」，改装态为「贴图纵剖图 / 所选分类的槽位与操作 / 竖排分类页签（含杂项）」。规则仍来自 `shipyard.view`，页面不写 `GameState`。 | [查看](./screens/port/shipyard_screen.gd.md) |
 | `screens/port/shipyard_screen.tscn` | 框架源文件：shipyard_screen.tscn | 本页 |
 | `screens/port/supply_screen.gd` | 补给与维修页面场景：绑定 SupplyView，组合煤水决策卡、资源摘要与维修操作；作为泊位侧栏时按 620 px 窄列设计（卡片单列堆叠、badge 可换行），外层 PageScroll 负责竖向滚动。 | [查看](./screens/port/supply_screen.gd.md) |

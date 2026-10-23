@@ -1,8 +1,8 @@
 # Steam Navigator 实体契约 v2
 
-> 状态：Draft 6（2026-10-23，Phase A/B、C1–C4 与 D0–D4 落地后刷新，**Phase C 完成、Phase D 进行中**）
+> 状态：Draft 6（2026-10-23，Phase A/B、C1–C4 与 D0–D5 落地后刷新，**Phase C 完成、Phase D 进行中**）
 > 适用范围：Schema 2.0、Content Types 单一真源、注册表、跨引用校验、发布门禁与 SNModMaker
-> 运行时已按类型版本加载：当前 37 个 active 类型**全部为 Content Schema 2.0**（36 个定义 + `patches`，0 个 1.0 runtime）；
+> 运行时已按类型版本加载：当前 42 个 active 类型**全部为 Content Schema 2.0**（41 个定义 + `patches`，0 个 1.0 runtime）；
 > 本文描述 v2 契约与迁移边界。
 
 ## 1. 与草案的关系
@@ -38,7 +38,7 @@
 ```
 
 - `schema_version`：该类型的期望 Content Schema 版本（由 `content_types.json.types[].schema_version` 声明）；
-  当前 37 个 active 类型全部为 `"2.0"`，由 `ContentCompiler` 按类型校验。
+  当前 42 个 active 类型全部为 `"2.0"`，由 `ContentCompiler` 按类型校验。
 - `content_type`：必须是 `content_types.json` 中 `status=active` 的 `key`。
 - `definitions`：同类型定义数组；补丁文件使用 `patches`，见 §9。
 
@@ -151,7 +151,7 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 
 ### 7.2 Schema 2.0 运行时类型与草案（已落地）
 
-当前 **37 类 active 类型（0 个 1.0 runtime）** 全部使用 `schemas/v2/`：
+当前 **42 类 active 类型（0 个 1.0 runtime）** 全部使用 `schemas/v2/`：
 
 | 来源 | 类型 | Schema |
 | --- | --- | --- |
@@ -177,12 +177,12 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 - `content_types.json.types[]` 为每个 active 类型声明 `schema` 与 `schema_version`；草案在
   `draft_schemas` / `draft_types` 登记，各自带 `schema_version: "2.0"` 与 capability。
 - `schema-bundle.js` 递归收录 `schemas/` 共 **36 个**文件（**2 个顶层**：`common` / `manifest` + **34 个 `v2/`**：
-  `v2/common`、37 类 active 2.0、3 个草案）；校验器按基准文件所在目录解析
+  `v2/common`、42 类 active 2.0、3 个草案）；校验器按基准文件所在目录解析
   `common.schema.json` 等跨文件 `$ref`。
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；声明版本与类型不符报
   `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；草案内容给 `draft_content` 警告；
   使用 capability 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
-- 编辑器与 CLI 对 37 类运行时 2.0 正常编辑 / 校验 / 导出，对 3 类草案标 draft（含它的项目不能部署到发布包）。
+- 编辑器与 CLI 对 42 类运行时 2.0 正常编辑 / 校验 / 导出，对 3 类草案标 draft（含它的项目不能部署到发布包）。
 - **无剩余 1.0 定义类型**；`map_profiles` 已退役（`map_configs` 取代），`v2_target` / `aliases` 已清空。
 - 测试：`test_schema_v2_drafts.gd`（Phase B 9 类 + `map_configs`）、`test_schema_v2_weapons.gd`
   （D1 `weapons` 与 hull socket 镜像）、`test_item_categories.gd`（C2 items）、`test_quest_service.gd`
@@ -271,7 +271,7 @@ scan → manifest / dependency resolve → schema compile
 
 - Content Schema 主版本变化在**发布版**必须提供迁移器与旧档只读兼容；**开发期（C/D）例外**：不保留旧档 / 旧内容
   兼容，实体合并后旧档直接作废（2026-10-22 拍板，详见迁移方案 §3.2 D2/D5）。
-- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。当前状态：**37 个 active 类型全部为 `2.0`（36 定义 + `patches`），0 个 1.0 runtime 类型**（Phase D0–D4 完成）。
+- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。当前状态：**42 个 active 类型全部为 `2.0`（41 定义 + `patches`），0 个 1.0 runtime 类型**（Phase D0–D5 完成）。
 - 新系统通过 capability 暴露（`content.world.v1`、`content.modules.v1`、`content.items.v1`、`content.quests.v1`、`content.port_templates.v1`、`content.starting_scenarios.v1`、`content.voyage_events.v1`、`content.crew_roles.v1`、`content.boiler_strategies.v1`、`content.contracts.v1`、`content.patches.v1`、`content.combat.v1`…）；模组使用新能力必须声明。
 - `v2_target` / `aliases` 已清空：剩余迁移全部完成，不再有「迁移提示」类型；`port_templates` / `starting_scenarios` / `voyage_events` / `crew_roles` / `boiler_strategies` 等已是实际运行时类型。
 
@@ -280,7 +280,7 @@ scan → manifest / dependency resolve → schema compile
 - 通用实体编辑：元数据、Schema 表单、枚举/数值、引用选择、ID 唯一性、未知字段、路径定位。
 - 专用视图：装配、世界/区域、起始场景、委托、事件、战斗遭遇、生产链、遗迹房间；只编辑数据。
 - 编辑器不能实现独立校验规则；必须与运行时/SDK 共用同一规则来源。
-- Schema 2.0 运行时类型：37 类已按 v2 Schema 正常编辑 / 校验 / 导出并部署；3 类草案（剧情 `story_arcs` / `story_levels` + `combat_ai_profiles`）在侧栏「Schema 2.0 草案 / 运行时不加载」分区标 draft，内容文件按类型写
+- Schema 2.0 运行时类型：42 类已按 v2 Schema 正常编辑 / 校验 / 导出并部署；3 类草案（剧情 `story_arcs` / `story_levels` + `combat_ai_profiles`）在侧栏「Schema 2.0 草案 / 运行时不加载」分区标 draft，内容文件按类型写
   `schema_version: "2.0"`，运行时暂不加载。
 - 草案与能力：内容使用 capability 但未写入 `manifest.capabilities` 时「校验」面板给出
   `capability_undeclared` 警告（按 `schemaVersion = 2.0` 判定）；声明后消除。G8 导出守卫按
@@ -313,7 +313,7 @@ scan → manifest / dependency resolve → schema compile
   只要求新战役可创建、保存、读回。
 - [x] 第三方模组可注册新内容类型内的数据，但不能覆盖已有 ID 或绕过校验。
 - [x] 发布产物零 `error`；`warning` 可见。
-- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D4 全量回归已绿：Godot 618 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
+- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D5 全量回归已绿：Godot 630 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
 
 ## 18. 待决策
 

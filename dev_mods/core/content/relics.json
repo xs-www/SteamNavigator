@@ -1,0 +1,49 @@
+{
+  "schema_version": "2.0",
+  "content_type": "relics",
+  "definitions": [
+    {
+      "id": "core:relic/brass_compass",
+      "name_key": "relic.core.brass_compass.name",
+      "description_key": "relic.core.brass_compass.description",
+      "tags": ["relic.navigation", "relic.rare"],
+      "enabled": true,
+      "data": {
+        "rarity": "rare",
+        "value": 400,
+        "modifiers": [
+          {"stat": "navigation", "op": "add", "value": 2}
+        ]
+      }
+    },
+    {
+      "id": "core:relic/sealed_chart",
+      "name_key": "relic.core.sealed_chart.name",
+      "description_key": "relic.core.sealed_chart.description",
+      "tags": ["relic.charting", "relic.rare"],
+      "enabled": true,
+      "data": {
+        "rarity": "rare",
+        "value": 450,
+        "modifiers": [
+          {"stat": "charting", "op": "add", "value": 3}
+        ]
+      }
+    },
+    {
+      "id": "core:relic/steam_heart",
+      "name_key": "relic.core.steam_heart.name",
+      "description_key": "relic.core.steam_heart.description",
+      "tags": ["relic.engineering", "relic.legendary"],
+      "enabled": true,
+      "data": {
+        "rarity": "legendary",
+        "value": 1200,
+        "modifiers": [
+          {"stat": "engineering", "op": "add", "value": 5},
+          {"stat": "upkeep", "op": "mul", "value": 0.95}
+        ]
+      }
+    }
+  ]
+}

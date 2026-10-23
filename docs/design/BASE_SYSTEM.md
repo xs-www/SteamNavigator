@@ -99,7 +99,7 @@ D3 交付一个可玩的基地纵向切片：
 
 ## 7. 验收
 
-- `test_base.gd` 15 例：占领唯一性、建造扣料 + 工时、仓储存取/容量、雇工派工与工资、
+- `test_base.gd` 14 例：占领唯一性、建造扣料 + 工时、仓储存取/容量、雇工派工与工资、
   升级与速度、生产链产出精密齿轮、欠费停工、损坏数据、存档往返、确定性。
 - `test_world_schema_refs.gd`：基地引用/升级等级/修正 stat/配方归属。
 - `test_world_completeness.gd`：5 类 Core 最低数量 + 生产链到达 `material.shipbuilding`。

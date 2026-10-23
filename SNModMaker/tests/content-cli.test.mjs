@@ -11,7 +11,7 @@
  *   node SNModMaker/tests/content-cli.test.mjs
  *   # or: node --test SNModMaker/tests/content-cli.test.mjs
  *
- * Covers the 37 runtime content types (all Content Schema 2.0 after C4-D/D1/D2/D3/D4)
+ * Covers the 42 runtime content types (all Content Schema 2.0 after C4-D/D1/D2/D3/D4/D5)
  * and the 3 Schema 2.0 draft types (Story Mode arcs/levels + combat AI):
  * draft:true / schema_version 2.0, draft_content warning, v2 $refs, the
  * story-pack whitelist, and capability exposure / capability_undeclared for
@@ -395,12 +395,12 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.equal(json.ok, true);
   assert.equal(json.command, 'types');
   assert.ok(Array.isArray(json.types), 'types must be an array');
-  assert.equal(json.types.length, 40, '37 runtime types + 3 Schema 2.0 draft types are editable');
-  assert.equal(json.activeTypes, 37, 'activeTypes counts runtime types at both 1.0 and 2.0');
+  assert.equal(json.types.length, 45, '37 runtime types + 3 Schema 2.0 draft types are editable');
+  assert.equal(json.activeTypes, 42, 'activeTypes counts runtime types at both 1.0 and 2.0');
   assert.equal(json.draftTypes, 3, 'draftTypes counts the Schema 2.0 draft types');
   const keys = json.types.map((entry) => entry.key);
   for (const key of ['items', 'hulls', 'modules', 'crew_roles', 'boiler_strategies', 'voyage_events', 'contracts', 'quests', 'port_templates', 'starting_scenarios', 'weapons', 'damage_types', 'combat_abilities', 'enemy_archetypes', 'encounter_tables', 'loot_tables',
-    'ship_archetypes', 'captains', 'formations', 'fleet_doctrines', 'base_sites', 'buildings', 'building_upgrades', 'production_recipes', 'worker_roles', 'trade_policies', 'automation_rules', 'patches']) {
+    'ship_archetypes', 'captains', 'formations', 'fleet_doctrines', 'base_sites', 'buildings', 'building_upgrades', 'production_recipes', 'worker_roles', 'trade_policies', 'automation_rules', 'ruin_archetypes', 'room_templates', 'expedition_events', 'hazard_tables', 'relics', 'patches']) {
     assert.ok(keys.includes(key), `types must include ${key}`);
   }
   for (const retiredType of ['map_profiles', 'port_archetypes', 'starting_builds', 'events', 'roles', 'strategies']) {
@@ -455,10 +455,10 @@ test('types --json lists every content type with presentation metadata', (t) => 
   assert.deepEqual(
     runtimeV2.map((entry) => entry.key).sort(),
     ['automation_rules', 'base_sites', 'boiler_strategies', 'building_upgrades', 'buildings', 'captains', 'combat_abilities', 'contracts', 'crew_roles', 'damage_types', 'discoveries',
-      'encounter_tables', 'enemy_archetypes', 'factions', 'fleet_doctrines', 'formations', 'hulls', 'items', 'loot_tables',
-      'map_configs', 'modules', 'patches', 'port_templates', 'production_recipes', 'quests', 'regions', 'route_templates', 'ship_archetypes',
+      'encounter_tables', 'enemy_archetypes', 'expedition_events', 'factions', 'fleet_doctrines', 'formations', 'hazard_tables', 'hulls', 'items', 'loot_tables',
+      'map_configs', 'modules', 'patches', 'port_templates', 'production_recipes', 'quests', 'regions', 'relics', 'room_templates', 'route_templates', 'ruin_archetypes', 'ship_archetypes',
       'sites', 'start_profiles', 'starting_scenarios', 'trade_policies', 'voyage_events', 'weapons', 'weather_profiles', 'worker_roles', 'world_profiles'],
-    'every runtime row is Schema 2.0 after D4'
+    'every runtime row is Schema 2.0 after D5'
   );
   const runtimeCapabilities = {
     boiler_strategies: 'content.boiler_strategies.v1',
@@ -490,6 +490,11 @@ test('types --json lists every content type with presentation metadata', (t) => 
     worker_roles: 'content.base.v1',
     trade_policies: 'content.trade.v1',
     automation_rules: 'content.trade.v1',
+    ruin_archetypes: 'content.ruins.v1',
+    room_templates: 'content.ruins.v1',
+    expedition_events: 'content.ruins.v1',
+    hazard_tables: 'content.ruins.v1',
+    relics: 'content.ruins.v1',
   };
   for (const runtime of runtimeV2) {
     assert.equal(runtime.schema, `v2/${runtime.singular}.schema.json`,
@@ -563,12 +568,12 @@ test('types human output separates Schema 2.0 runtime rows from the remaining dr
   const stdout = String(result.stdout);
   assert.match(
     stdout,
-    /运行时内容类型（37；其中 37 类为运行时 Schema 2\.0）：/,
-    `runtime section must report the 37 active types, all 37 at Schema 2.0:\n${stdout}`
+    /运行时内容类型（42；其中 42 类为运行时 Schema 2\.0）：/,
+    `runtime section must report the 42 active types, all 42 at Schema 2.0:\n${stdout}`
   );
   assert.equal(
     stdout.split('[runtime 2.0]').length - 1,
-    37,
+    42,
     `every promoted Schema 2.0 runtime row must be marked:\n${stdout}`
   );
   assert.match(

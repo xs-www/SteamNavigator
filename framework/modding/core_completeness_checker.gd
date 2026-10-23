@@ -107,6 +107,12 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 			"code": "trade_rule_missing",
 			"message": "core has no trade policy with an automation rule",
 		})
+	# D5 ruins minimums.
+	_require_core_count(hub, ContentTypes.RUIN_ARCHETYPE, 1, "ruin archetypes", errors)
+	_require_core_count(hub, ContentTypes.ROOM_TEMPLATE, 2, "room templates", errors)
+	_require_core_count(hub, ContentTypes.EXPEDITION_EVENT, 1, "expedition events", errors)
+	_require_core_count(hub, ContentTypes.HAZARD_TABLE, 1, "hazard tables", errors)
+	_require_core_count(hub, ContentTypes.RELIC, 2, "relics", errors)
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
 		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():

@@ -1,0 +1,12 @@
+{
+  "ruin_archetype.example_ruins.damp_cellar.name": "Damp Cellar",
+  "ruin_archetype.example_ruins.damp_cellar.description": "A small example ruin.",
+  "room_template.example_ruins.damp_cell.name": "Damp Cell",
+  "room_template.example_ruins.damp_cell.description": "A small room with water seeping through the walls.",
+  "expedition_event.example_ruins.damp_cache.name": "Damp Cache",
+  "expedition_event.example_ruins.damp_cache.description": "There may still be something inside.",
+  "expedition_event.example_ruins.damp_cache.text": "A waterlogged chest is wedged in the corner.",
+  "expedition_event.example_ruins.damp_cache.open": "Pry it open", "expedition_event.example_ruins.damp_cache.leave": "Leave it",
+  "hazard_table.example_ruins.damp.name": "Damp Hazard", "hazard_table.example_ruins.damp.description": "Seepage and loose bricks.",
+  "relic.example_ruins.damp_lens.name": "Damp Lens", "relic.example_ruins.damp_lens.description": "An old lens that still focuses light."
+}

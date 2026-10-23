@@ -26,7 +26,7 @@
 
 - **可玩闭环**：程序生成海图、市场/补给、委托、船厂购买/打造/仓库/改装、出航与风险事件、探索线索、通关总结、主菜单与设置持久化。
 - **2.5D 固定舞台**：港口全窗 3D 舞台、连续港区三站位、船厂 3D 实机舞台、航行离港/入港演出、静态合批与低配回退。
-- **Content Schema 2.0 Phase D 进行中（D0–D4 已完成）**：Phase C 已完成（`modules` / `hulls` / `items` / `quests` / `port_templates` / `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches` 全 2.0，`map_profiles` 退役）。D0 落地确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长）；D1 把 `weapons` 提升为 active，并新增 `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`；D2 新增 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类舰队内容与 `fleet.*` 命令；D3 新增 `base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles` 五类基地内容与 tick 生产；D4 新增 `trade_policies` / `automation_rules` 两类自动贸易内容与 tick 买卖。**37 个 active 类型全部 2.0（36 定义 + 显式补丁，0 个 1.0 runtime）**，只剩 3 类草案（`story_arcs` / `story_levels` / `combat_ai_profiles`）仅供编辑器与 draft 校验；`combat_ai_profiles` 为 schema 先行的战斗 AI 状态机（FSM），运行时不加载。
+- **Content Schema 2.0 Phase D 进行中（D0–D4 已完成）**：Phase C 已完成（`modules` / `hulls` / `items` / `quests` / `port_templates` / `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches` 全 2.0，`map_profiles` 退役）。D0 落地确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长）；D1 把 `weapons` 提升为 active，并新增 `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`；D2 新增 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类舰队内容与 `fleet.*` 命令；D3 新增 `base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles` 五类基地内容与 tick 生产；D4 新增 `trade_policies` / `automation_rules` 两类自动贸易内容与 tick 买卖；D5 新增 `ruin_archetypes` / `room_templates` / `expedition_events` / `hazard_tables` / `relics` 五类遗迹内容与远征运行时。**42 个 active 类型全部 2.0（41 定义 + 显式补丁，0 个 1.0 runtime）**，只剩 3 类草案（`story_arcs` / `story_levels` / `combat_ai_profiles`）仅供编辑器与 draft 校验；`combat_ai_profiles` 为 schema 先行的战斗 AI 状态机（FSM），运行时不加载。
 - **剧情 / 任务**：新手教学 4.5 与任务追踪 `task.view` 已落地；C3 起 `quests` 2.0 + 持久 `data.quests` + `QuestService` 已接入（委托接取生成追踪实例，剧情演出/游戏指引等抽象引导由 Quest 承载），剧情模式 S1 数据契约（`story_arcs` / `story_levels` 草案）已就绪。
 - **无头测试**：`pwsh ./tools/test.ps1` 跑 Godot 全量（默认按 CPU 多进程分片并行）；Node/CLI/SDK 门禁命令见下方。
 
@@ -87,7 +87,7 @@ godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/examp
 godot --headless --path . --script res://sdk/validate.gd -- --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
 ```
 
-示例：`sdk/examples/example_crew_roles`（2.0）、`example_mixed_crew_roles_items`（混合 2.0 内容）、`example_weapons`（D1 `weapons` 2.0）、`example_fleet`（D2 fleet 4 类型 2.0）、`example_base`（D3 base 5 类型 2.0）、`example_trade`（D4 auto_trade 2 类型 2.0）；草案模板 `story_pack_iron_tide`（仅 draft）。模式、结构化错误与发布门禁说明见 [sdk/README.md](sdk/README.md)。
+示例：`sdk/examples/example_crew_roles`（2.0）、`example_mixed_crew_roles_items`（混合 2.0 内容）、`example_weapons`（D1 `weapons` 2.0）、`example_fleet`（D2 fleet 4 类型 2.0）、`example_base`（D3 base 5 类型 2.0）、`example_trade`（D4 auto_trade 2 类型 2.0）、`example_ruins`（D5 ruins 5 类型 2.0）；草案模板 `story_pack_iron_tide`（仅 draft）。模式、结构化错误与发布门禁说明见 [sdk/README.md](sdk/README.md)。
 
 ## 架构概览
 

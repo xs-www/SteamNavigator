@@ -1,0 +1,36 @@
+{
+  "schema_version": "2.0",
+  "content_type": "ruin_archetypes",
+  "definitions": [
+    {
+      "id": "core:ruin_archetype/sunken_hall",
+      "name_key": "ruin_archetype.core.sunken_hall.name",
+      "description_key": "ruin_archetype.core.sunken_hall.description",
+      "tags": ["ruin.coastal", "ruin.starter"],
+      "enabled": true,
+      "data": {
+        "room_count": 4,
+        "difficulty": 2,
+        "room_tags": ["room.hall", "room.gallery", "room.shrine"],
+        "hazard_table": "core:hazard_table/minor",
+        "loot_table": "core:loot_table/pirate_wreck",
+        "relic_pool": ["core:relic/brass_compass", "core:relic/sealed_chart"]
+      }
+    },
+    {
+      "id": "core:ruin_archetype/collapsed_vault",
+      "name_key": "ruin_archetype.core.collapsed_vault.name",
+      "description_key": "ruin_archetype.core.collapsed_vault.description",
+      "tags": ["ruin.industrial", "ruin.deep"],
+      "enabled": true,
+      "data": {
+        "room_count": 6,
+        "difficulty": 3,
+        "room_tags": ["room.vault", "room.gallery", "room.shrine"],
+        "hazard_table": "core:hazard_table/major",
+        "loot_table": "core:loot_table/iron_wreck",
+        "relic_pool": ["core:relic/sealed_chart", "core:relic/steam_heart"]
+      }
+    }
+  ]
+}

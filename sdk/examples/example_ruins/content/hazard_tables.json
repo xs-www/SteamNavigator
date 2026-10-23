@@ -1,0 +1,18 @@
+{
+  "schema_version": "2.0",
+  "content_type": "hazard_tables",
+  "definitions": [
+    {
+      "id": "example_ruins:hazard_table/damp",
+      "name_key": "hazard_table.example_ruins.damp.name",
+      "description_key": "hazard_table.example_ruins.damp.description",
+      "tags": ["hazard_table.minor"],
+      "enabled": true,
+      "data": {
+        "entries": [
+          {"type": "durability", "weight": 1, "amount_range": [1, 2]}
+        ]
+      }
+    }
+  ]
+}

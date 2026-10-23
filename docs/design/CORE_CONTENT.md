@@ -19,5 +19,6 @@
 - D3 基地内容 5 个文件（均 2.0，capability `content.base.v1`）：`base_sites` 2 种（槽位 / 仓储 / 维护 / 防御 / 占领费）、`buildings` 5 栋（锯木厂 / 冶炼炉 / 铸造车间 / 仓库堆场 / 防御塔）、`building_upgrades` 5 条、`production_recipes` 3 条（木材 / 锅炉钢板 / 精密齿轮）、`worker_roles` 3 种（劳工 / 冶炼工 / 工程师）；`sites.base_camp` 绑定海岸前哨。
 - D0 模拟时钟是运行时状态而非内容：`data.sim` 惰性保存 `paused` / `speed` / `tick`，以 1 游戏小时固定步长推进，不新增 Core 内容文件、不改现有数值。
 - D4 自动贸易内容 2 个文件（均 2.0，capability `content.trade.v1`）：`trade_policies` 2 条（大宗航线 / 奢侈品快线）、`automation_rules` 5 条（暂停 / 恢复 / 满载卖出）。
-- Core 当前共 **36 个内容文件 / 140 条定义**（19 个基础/世界/战役/任务 + 6 个战斗 + 4 个舰队 + 5 个基地 + 2 个自动贸易；`patches` 只在类型层，无 Core 补丁文件）。
+- D5 遗迹内容 5 个文件（均 2.0，capability `content.ruins.v1`）：`ruin_archetypes` 2 个（沉没大厅 / 坍塌金库）、`room_templates` 4 个、`expedition_events` 3 个、`hazard_tables` 2 个、`relics` 3 件。
+- Core 当前共 **41 个内容文件 / 154 条定义**（19 个基础/世界/战役/任务 + 6 个战斗 + 4 个舰队 + 5 个基地 + 2 个自动贸易 + 5 个遗迹；`patches` 只在类型层，无 Core 补丁文件）。
 - 所有数值均为数据驱动，位于 `dev_mods/core/content/*.json`。

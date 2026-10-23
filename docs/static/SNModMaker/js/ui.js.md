@@ -25,57 +25,57 @@
 | `confirm(options)` | L143 |
 | `setBusy(active, text)` | L177 |
 | `REF_TYPE_BY_FIELD` | L188 |
-| `expectedTypes(field)` | L222 |
-| `listIdFor(field)` | L226 |
-| `renderDatalists(project)` | L232 |
-| `translated(project, key)` | L279 |
-| `label(typeKey, field)` | L286 |
-| `hint(typeKey, field)` | L290 |
-| `fieldShell(typeKey, field, control, options)` | L294 |
-| `inputText(path, value, options)` | L308 |
-| `assetMatchesKind(asset, kind)` | L316 |
-| `assetPicker(path, value, kind, project, options)` | L323 |
-| `inputNumber(path, value, schema, options)` | L355 |
-| `selectEnum(path, value, values, options)` | L367 |
-| `toggle(path, checked, text)` | L379 |
-| `rangePair(path, value, itemSchema, itemFile)` | L386 |
-| `refInput(path, value, field, options)` | L396 |
-| `stringList(path, value, options)` | L407 |
-| `enumMulti(path, value, values)` | L425 |
-| `arrayShell(path, items, renderItem, addLabel, emptyText, addExtra)` | L439 |
-| `itemHead(path, index, title, options)` | L451 |
-| `renderModifier(item, index, path, ctx)` | L463 |
-| `renderMaterial(item, index, path, ctx)` | L475 |
-| `renderPayload(item, index, path, ctx)` | L486 |
-| `renderMarket(item, index, path)` | L500 |
-| `renderOperation(item, index, path)` | L512 |
-| `renderOption(item, index, path, ctx)` | L525 |
-| `conditionKind(value)` | L551 |
-| `renderCondition(value, path, ctx, nested, depth)` | L559 |
-| `conditionField(field, value, path)` | L616 |
-| `renderEffect(item, index, path, ctx)` | L630 |
-| `effectField(field, value, path)` | L645 |
-| `renderObjectFields(objectSchema, objectFile, value, basePath, ctx, options)` | L659 |
-| `renderField(field, schema, value, path, ctx, options, schemaFile)` | L677 |
-| `previewLocalizationKey(key, draft)` | L790 |
-| `renderKeyBlock(project, definition, field, typeKey, key, draft, token)` | L798 |
-| `renderAdditionalLocalization(project, definition, typeKey, draft)` | L831 |
-| `renderHullModuleConfiguration(definition)` | L846 |
-| `SOCKET_CLASSES` | L880 |
-| `SOCKET_KINDS` | L881 |
-| `SOCKET_CLASS_COLORS` | L882 |
-| `SOCKET_ROW_STYLE` | L889 |
-| `socketBadge(value)` | L891 |
-| `socketValueCounts(items, key)` | L897 |
-| `socketRowHead(path, index, title, badge)` | L907 |
-| `socketPositionField(path, value)` | L918 |
-| `socketDuplicateNote(duplicate, text)` | L934 |
-| `renderWeaponSocketRow(item, index, nameCounts, indexCounts)` | L938 |
-| `renderRigSocketRow(item, index, nameCounts, indexCounts)` | L990 |
-| `socketEnumOptions(values, field)` | L1050 |
-| `renderHullSocketConfiguration(definition)` | L1055 |
-| `renderDefinitionForm(options)` | L1094 |
-| `SNUI (global)` | L1180 |
+| `expectedTypes(field)` | L226 |
+| `listIdFor(field)` | L230 |
+| `renderDatalists(project)` | L236 |
+| `translated(project, key)` | L283 |
+| `label(typeKey, field)` | L290 |
+| `hint(typeKey, field)` | L294 |
+| `fieldShell(typeKey, field, control, options)` | L298 |
+| `inputText(path, value, options)` | L312 |
+| `assetMatchesKind(asset, kind)` | L320 |
+| `assetPicker(path, value, kind, project, options)` | L327 |
+| `inputNumber(path, value, schema, options)` | L359 |
+| `selectEnum(path, value, values, options)` | L371 |
+| `toggle(path, checked, text)` | L383 |
+| `rangePair(path, value, itemSchema, itemFile)` | L390 |
+| `refInput(path, value, field, options)` | L400 |
+| `stringList(path, value, options)` | L411 |
+| `enumMulti(path, value, values)` | L429 |
+| `arrayShell(path, items, renderItem, addLabel, emptyText, addExtra)` | L443 |
+| `itemHead(path, index, title, options)` | L455 |
+| `renderModifier(item, index, path, ctx)` | L467 |
+| `renderMaterial(item, index, path, ctx)` | L479 |
+| `renderPayload(item, index, path, ctx)` | L490 |
+| `renderMarket(item, index, path)` | L504 |
+| `renderOperation(item, index, path)` | L516 |
+| `renderOption(item, index, path, ctx)` | L529 |
+| `conditionKind(value)` | L555 |
+| `renderCondition(value, path, ctx, nested, depth)` | L563 |
+| `conditionField(field, value, path)` | L620 |
+| `renderEffect(item, index, path, ctx)` | L634 |
+| `effectField(field, value, path)` | L649 |
+| `renderObjectFields(objectSchema, objectFile, value, basePath, ctx, options)` | L663 |
+| `renderField(field, schema, value, path, ctx, options, schemaFile)` | L681 |
+| `previewLocalizationKey(key, draft)` | L794 |
+| `renderKeyBlock(project, definition, field, typeKey, key, draft, token)` | L802 |
+| `renderAdditionalLocalization(project, definition, typeKey, draft)` | L835 |
+| `renderHullModuleConfiguration(definition)` | L850 |
+| `SOCKET_CLASSES` | L884 |
+| `SOCKET_KINDS` | L885 |
+| `SOCKET_CLASS_COLORS` | L886 |
+| `SOCKET_ROW_STYLE` | L893 |
+| `socketBadge(value)` | L895 |
+| `socketValueCounts(items, key)` | L901 |
+| `socketRowHead(path, index, title, badge)` | L911 |
+| `socketPositionField(path, value)` | L922 |
+| `socketDuplicateNote(duplicate, text)` | L938 |
+| `renderWeaponSocketRow(item, index, nameCounts, indexCounts)` | L942 |
+| `renderRigSocketRow(item, index, nameCounts, indexCounts)` | L994 |
+| `socketEnumOptions(values, field)` | L1054 |
+| `renderHullSocketConfiguration(definition)` | L1059 |
+| `renderDefinitionForm(options)` | L1098 |
+| `SNUI (global)` | L1184 |
 
 ## 契约与约束
 

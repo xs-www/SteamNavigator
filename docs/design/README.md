@@ -9,6 +9,7 @@
 - [LUA_MODDING_SDK.md](LUA_MODDING_SDK.md) — Lua 可执行模组 SDK 架构与实施规范（Draft 0.1；沙箱 / 权限 / API / 确定性 / 发布门禁；尚未实现）
 - [BASE_SYSTEM.md](BASE_SYSTEM.md) — Phase D3 基地系统（5 类 active 2.0、`data.base`、命令/查询、tick 生产与最小 UI）
 - [AUTO_TRADE_SYSTEM.md](AUTO_TRADE_SYSTEM.md) — Phase D4 自动贸易（2 类 active 2.0、策略/规则、tick 买卖与最小 UI）
+- [RUINS_SYSTEM.md](RUINS_SYSTEM.md) — Phase D5 遗迹远征（5 类 active 2.0、房间/危险/事件/遗物与最小 UI）
 - [LUA_SDK_S0_API_CONTRACT.md](LUA_SDK_S0_API_CONTRACT.md) — Lua SDK S0-1：公开 Query/Command/Event 全量盘点与 Script API 1.0 契约草案（19/42/53 条；候选 API 与版本/能力/错误协议）
 - [LUA_SDK_S0_THREAT_MODEL.md](LUA_SDK_S0_THREAT_MODEL.md) — Lua SDK S0-2：运行时威胁模型（44 威胁 / 28 不变量 / 9 条发布阻断项；信任边界与 S1 证据要求）
 - [LUA_SDK_S0_TEST_MATRIX.md](LUA_SDK_S0_TEST_MATRIX.md) — Lua SDK S0-3/S0-4：测试矩阵 v0.2（83 条 TC、L0–L3 分级、TM 44/44、INV 28/28、API 20/20 覆盖、9 条阻断项全绿、S1/S2/S3 退出判定与 CI 门禁）

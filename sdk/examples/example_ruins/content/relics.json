@@ -1,0 +1,14 @@
+{
+  "schema_version": "2.0",
+  "content_type": "relics",
+  "definitions": [
+    {
+      "id": "example_ruins:relic/damp_lens",
+      "name_key": "relic.example_ruins.damp_lens.name",
+      "description_key": "relic.example_ruins.damp_lens.description",
+      "tags": ["relic.navigation"],
+      "enabled": true,
+      "data": {"rarity": "common", "value": 80, "modifiers": []}
+    }
+  ]
+}

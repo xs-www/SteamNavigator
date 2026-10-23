@@ -31,4 +31,5 @@ const CAPABILITIES := [
 	"content.fleet.v1",
 	"content.base.v1",
 	"content.trade.v1",
+	"content.ruins.v1",
 ]

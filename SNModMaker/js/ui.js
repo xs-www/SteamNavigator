@@ -216,6 +216,10 @@
     goods: ['item'],
     rules: ['automation_rule'],
     policy_ref: ['trade_policy'],
+    ruin_archetype: ['ruin_archetype'],
+    relic_pool: ['relic'],
+    event_ref: ['expedition_event'],
+    hazard_table: ['hazard_table'],
     quests_completed: ['quest'],
   };
 

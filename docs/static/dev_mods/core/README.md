@@ -366,9 +366,11 @@
 | `content/discoveries.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/encounter_tables.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/enemy_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/expedition_events.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/factions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/fleet_doctrines.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/formations.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/hazard_tables.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/hulls.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/items.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/loot_tables.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -378,7 +380,10 @@
 | `content/production_recipes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/quests.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/regions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/relics.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/room_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/route_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/ruin_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/ship_archetypes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/sites.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/start_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

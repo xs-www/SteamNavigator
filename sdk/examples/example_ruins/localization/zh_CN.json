@@ -1,0 +1,12 @@
+{
+  "ruin_archetype.example_ruins.damp_cellar.name": "潮湿地窖",
+  "ruin_archetype.example_ruins.damp_cellar.description": "一处小型示例遗迹。",
+  "room_template.example_ruins.damp_cell.name": "潮湿地窖",
+  "room_template.example_ruins.damp_cell.description": "墙缝渗水的小房间。",
+  "expedition_event.example_ruins.damp_cache.name": "潮湿的储物箱",
+  "expedition_event.example_ruins.damp_cache.description": "箱子里也许还有东西。",
+  "expedition_event.example_ruins.damp_cache.text": "一只被水泡过的储物箱卡在墙角。",
+  "expedition_event.example_ruins.damp_cache.open": "撬开箱子", "expedition_event.example_ruins.damp_cache.leave": "离开",
+  "hazard_table.example_ruins.damp.name": "潮湿危险", "hazard_table.example_ruins.damp.description": "渗水与松动砖石。",
+  "relic.example_ruins.damp_lens.name": "潮湿镜片", "relic.example_ruins.damp_lens.description": "一枚仍能聚光的旧镜片。"
+}

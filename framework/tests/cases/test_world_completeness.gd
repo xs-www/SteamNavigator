@@ -154,6 +154,18 @@ func test_core_requires_auto_trade_counts() -> void:
 	assert_true(_has_error_message(result, "automation rules"), "missing automation rules raise content_count")
 
 
+func test_core_requires_ruins_counts() -> void:
+	for case in [
+		[ContentTypes.RUIN_ARCHETYPE, "ruin archetypes"],
+		[ContentTypes.ROOM_TEMPLATE, "room templates"],
+		[ContentTypes.EXPEDITION_EVENT, "expedition events"],
+		[ContentTypes.HAZARD_TABLE, "hazard tables"],
+		[ContentTypes.RELIC, "relics"],
+	]:
+		var result := _check(_full_hub([case[0]]))
+		assert_true(_has_error_message(result, String(case[1])), "missing %s raise content_count" % String(case[1]))
+
+
 func test_core_requires_combat_content_counts() -> void:
 	var result := _check(_full_hub([ContentTypes.ENEMY_ARCHETYPE]))
 	assert_true(_has_error_message(result, "enemy archetypes"), "missing enemy archetypes raise content_count")
@@ -501,6 +513,34 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 			"condition": {"op": "money_lte", "value": 0},
 			"action": "pause",
 			"priority": 1,
+		})
+	if not skip.has(ContentTypes.RELIC):
+		_register(hub, ContentTypes.RELIC, "core:relic/test_a", [], {"rarity": "common", "value": 10})
+		_register(hub, ContentTypes.RELIC, "core:relic/test_b", [], {"rarity": "rare", "value": 20})
+	if not skip.has(ContentTypes.ROOM_TEMPLATE):
+		_register(hub, ContentTypes.ROOM_TEMPLATE, "core:room_template/test_a", ["room.test"], {
+			"size": "small", "exits": 1, "weight": 1,
+		})
+		_register(hub, ContentTypes.ROOM_TEMPLATE, "core:room_template/test_b", ["room.test"], {
+			"size": "medium", "exits": 2, "weight": 1,
+		})
+	if not skip.has(ContentTypes.EXPEDITION_EVENT):
+		_register(hub, ContentTypes.EXPEDITION_EVENT, "core:expedition_event/test", [], {
+			"text_key": "test.event.text",
+			"options": [{"text_key": "test.event.option", "effect": {"op": "add_money", "amount": 1}}],
+		})
+	if not skip.has(ContentTypes.HAZARD_TABLE):
+		_register(hub, ContentTypes.HAZARD_TABLE, "core:hazard_table/test", [], {
+			"entries": [{"type": "durability", "weight": 1, "amount_range": [1, 2]}],
+		})
+	if not skip.has(ContentTypes.RUIN_ARCHETYPE):
+		_register(hub, ContentTypes.RUIN_ARCHETYPE, "core:ruin_archetype/test", [], {
+			"room_count": 2,
+			"difficulty": 1,
+			"room_tags": ["room.test"],
+			"hazard_table": "core:hazard_table/test",
+			"loot_table": "core:loot_table/wreck",
+			"relic_pool": ["core:relic/test_a"],
 		})
 	if not skip.has(ContentTypes.QUEST):
 		_register(hub, ContentTypes.QUEST, "core:quest/guide", ["quest.guide"], {

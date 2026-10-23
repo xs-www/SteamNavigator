@@ -43,6 +43,11 @@ const PRODUCTION_RECIPE := &"production_recipes"
 const WORKER_ROLE := &"worker_roles"
 const TRADE_POLICY := &"trade_policies"
 const AUTOMATION_RULE := &"automation_rules"
+const RUIN_ARCHETYPE := &"ruin_archetypes"
+const ROOM_TEMPLATE := &"room_templates"
+const EXPEDITION_EVENT := &"expedition_events"
+const HAZARD_TABLE := &"hazard_tables"
+const RELIC := &"relics"
 
 const SCHEMA_PATHS := {
 	ITEM: "res://schemas/v2/item.schema.json",
@@ -82,6 +87,11 @@ const SCHEMA_PATHS := {
 	WORKER_ROLE: "res://schemas/v2/worker_role.schema.json",
 	TRADE_POLICY: "res://schemas/v2/trade_policy.schema.json",
 	AUTOMATION_RULE: "res://schemas/v2/automation_rule.schema.json",
+	RUIN_ARCHETYPE: "res://schemas/v2/ruin_archetype.schema.json",
+	ROOM_TEMPLATE: "res://schemas/v2/room_template.schema.json",
+	EXPEDITION_EVENT: "res://schemas/v2/expedition_event.schema.json",
+	HAZARD_TABLE: "res://schemas/v2/hazard_table.schema.json",
+	RELIC: "res://schemas/v2/relic.schema.json",
 }
 
 const SCHEMA_VERSIONS := {
@@ -122,6 +132,11 @@ const SCHEMA_VERSIONS := {
 	WORKER_ROLE: "2.0",
 	TRADE_POLICY: "2.0",
 	AUTOMATION_RULE: "2.0",
+	RUIN_ARCHETYPE: "2.0",
+	ROOM_TEMPLATE: "2.0",
+	EXPEDITION_EVENT: "2.0",
+	HAZARD_TABLE: "2.0",
+	RELIC: "2.0",
 }
 
 const SINGULAR := {
@@ -162,6 +177,11 @@ const SINGULAR := {
 	WORKER_ROLE: "worker_role",
 	TRADE_POLICY: "trade_policy",
 	AUTOMATION_RULE: "automation_rule",
+	RUIN_ARCHETYPE: "ruin_archetype",
+	ROOM_TEMPLATE: "room_template",
+	EXPEDITION_EVENT: "expedition_event",
+	HAZARD_TABLE: "hazard_table",
+	RELIC: "relic",
 }
 
 const MODULE_TYPES := [HULL, MODULE]
@@ -176,7 +196,8 @@ static func all() -> Array[StringName]:
 		DAMAGE_TYPE, COMBAT_ABILITY, ENEMY_ARCHETYPE, ENCOUNTER_TABLE, LOOT_TABLE,
 		SHIP_ARCHETYPE, CAPTAIN, FORMATION, FLEET_DOCTRINE, BASE_SITE,
 		BUILDING, BUILDING_UPGRADE, PRODUCTION_RECIPE, WORKER_ROLE, TRADE_POLICY,
-		AUTOMATION_RULE,
+		AUTOMATION_RULE, RUIN_ARCHETYPE, ROOM_TEMPLATE, EXPEDITION_EVENT, HAZARD_TABLE,
+		RELIC,
 	]
 	return types
 

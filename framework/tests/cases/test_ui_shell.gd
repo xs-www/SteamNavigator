@@ -500,6 +500,24 @@ func test_auto_trade_page_starts_a_policy_from_the_ui() -> void:
 	_unmount(bundle)
 
 
+func test_ruins_page_starts_an_expedition_from_the_ui() -> void:
+	var bundle := _mount(4244)
+	var context: AppContext = bundle["context"]
+	var shell: Control = bundle["shell"]
+	shell._active_screen = "ruins"
+	shell._rebuild_ui()
+	var screen: Control = shell.find_child("RuinsScreen", true, false)
+	assert_not_null(screen, "the ruins page mounts from the navigation")
+	var ruin := context.registries.get_all(ContentTypes.RUIN_ARCHETYPE)[0]
+	var ruin_name := context.translate(ruin.name_key, ruin.id)
+	var start := _button_by_text(screen, ruin_name)
+	assert_not_null(start, "the start button lists the ruin: %s" % str(_label_texts(screen)))
+	start.pressed.emit()
+	assert_true(context.state.data.get("expedition", null) is Dictionary, "the button runs expedition.start")
+	assert_true(bool(context.queries.execute(&"expedition.view")["data"].get("active", false)), "the view reports the active expedition")
+	_unmount(bundle)
+
+
 func _log_lines(shell: Control) -> Array:
 	var lines: Array = []
 	for text in _label_texts(shell._root_box):
@@ -661,7 +679,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
 	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
 	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	for screen in ["overview", "market", "contracts", "shipyard", "base", "trade", "tavern"]:
+	for screen in ["overview", "market", "contracts", "shipyard", "base", "trade", "ruins", "tavern"]:
 		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
 	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
 		"4.3/U7: the voyage page is gone from the navigation")

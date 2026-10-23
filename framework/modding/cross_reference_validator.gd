@@ -98,6 +98,7 @@ func validate(hub: RegistryHub) -> Dictionary:
 	_check_fleet()
 	_check_base()
 	_check_trade()
+	_check_ruins()
 	_check_starting_scenarios()
 	_check_contracts()
 	_check_events()
@@ -463,6 +464,68 @@ func _check_trade() -> void:
 				"trade_rule_not_listed",
 				"%s references %s but the policy does not list the rule" % [rule.id, policy_ref],
 				rule.id
+			)
+
+
+func _check_ruins() -> void:
+	## D5 ruins: hazard/loot/relic refs, room template refs, effect item refs and the
+	## requirement that each ruin's room tag pool resolves at least one room template.
+	for room in _hub.get_all(ContentTypes.ROOM_TEMPLATE):
+		for field in ["event_ref", "hazard_table", "loot_table"]:
+			var target := String(room.data.get(field, ""))
+			if target.is_empty():
+				continue
+			var type_name: StringName
+			match field:
+				"event_ref":
+					type_name = ContentTypes.EXPEDITION_EVENT
+				"hazard_table":
+					type_name = ContentTypes.HAZARD_TABLE
+				_:
+					type_name = ContentTypes.LOOT_TABLE
+			_require(type_name, target, room.id, field)
+	for event in _hub.get_all(ContentTypes.EXPEDITION_EVENT):
+		for option in event.data.get("options", []):
+			if not (option is Dictionary):
+				continue
+			var effect: Dictionary = (option as Dictionary).get("effect", {})
+			if String(effect.get("op", "")) == "add_item":
+				_require_item(String(effect.get("item_id", "")), event.id, "options.effect.item_id")
+	for hazard in _hub.get_all(ContentTypes.HAZARD_TABLE):
+		for entry in hazard.data.get("entries", []):
+			if not (entry is Dictionary):
+				continue
+			var amount_range: Array = Array((entry as Dictionary).get("amount_range", [0, 0]))
+			if amount_range.size() >= 2 and int(amount_range[0]) > int(amount_range[1]):
+				_error(
+					"hazard_range_invalid",
+					"%s has amount_range %s with low > high" % [hazard.id, str(amount_range)],
+					hazard.id
+				)
+	for ruin in _hub.get_all(ContentTypes.RUIN_ARCHETYPE):
+		for field in ["hazard_table", "loot_table"]:
+			_require(
+				ContentTypes.HAZARD_TABLE if field == "hazard_table" else ContentTypes.LOOT_TABLE,
+				String(ruin.data.get(field, "")),
+				ruin.id,
+				field
+			)
+		for relic_id in ruin.data.get("relic_pool", []):
+			_require(ContentTypes.RELIC, String(relic_id), ruin.id, "relic_pool")
+		var tags: Array = Array(ruin.data.get("room_tags", []))
+		var has_room := false
+		for room in _hub.get_all(ContentTypes.ROOM_TEMPLATE):
+			for tag in tags:
+				if room.tags.has(String(tag)):
+					has_room = true
+					break
+			if has_room:
+				break
+		if not has_room:
+			_error(
+				"ruin_room_pool_empty",
+				"%s room_tags %s do not match any room template" % [ruin.id, str(tags)],
+				ruin.id
 			)
 
 

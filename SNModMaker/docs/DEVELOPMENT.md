@@ -72,7 +72,7 @@ node tools/gen_content_types.mjs --check
 node SNModMaker/tools/sync-schemas.mjs
 ```
 
-生成物覆盖 43 个 Schema：2 个顶层（`common` / `manifest`）+ 41 个 `v2/`（`v2/common.schema.json` + D4 后全部 37 类 active 2.0 Schema + `story_arc` / `story_level` 2 类剧情草案 + `combat_ai_profile` 战斗 AI 草案）。
+生成物覆盖 48 个 Schema：2 个顶层（`common` / `manifest`）+ 46 个 `v2/`（`v2/common.schema.json` + D5 后全部 42 类 active 2.0 Schema + `story_arc` / `story_level` 2 类剧情草案 + `combat_ai_profile` 战斗 AI 草案）。
 
 ### 重新生成 Core 索引
 

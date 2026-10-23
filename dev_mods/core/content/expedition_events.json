@@ -1,0 +1,66 @@
+{
+  "schema_version": "2.0",
+  "content_type": "expedition_events",
+  "definitions": [
+    {
+      "id": "core:expedition_event/fallen_beam",
+      "name_key": "expedition_event.core.fallen_beam.name",
+      "description_key": "expedition_event.core.fallen_beam.description",
+      "tags": ["expedition_event.hazard"],
+      "enabled": true,
+      "data": {
+        "text_key": "expedition_event.core.fallen_beam.text",
+        "options": [
+          {
+            "text_key": "expedition_event.core.fallen_beam.force",
+            "effect": {"op": "damage_ship", "amount": 10}
+          },
+          {
+            "text_key": "expedition_event.core.fallen_beam.retreat",
+            "effect": {"op": "add_money", "amount": 0}
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:expedition_event/old_shrine",
+      "name_key": "expedition_event.core.old_shrine.name",
+      "description_key": "expedition_event.core.old_shrine.description",
+      "tags": ["expedition_event.reward"],
+      "enabled": true,
+      "data": {
+        "text_key": "expedition_event.core.old_shrine.text",
+        "options": [
+          {
+            "text_key": "expedition_event.core.old_shrine.pray",
+            "effect": {"op": "add_money", "amount": 80}
+          },
+          {
+            "text_key": "expedition_event.core.old_shrine.loot",
+            "effect": {"op": "add_item", "item_id": "core:item/brass", "amount": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "core:expedition_event/sealed_vault",
+      "name_key": "expedition_event.core.sealed_vault.name",
+      "description_key": "expedition_event.core.sealed_vault.description",
+      "tags": ["expedition_event.reward"],
+      "enabled": true,
+      "data": {
+        "text_key": "expedition_event.core.sealed_vault.text",
+        "options": [
+          {
+            "text_key": "expedition_event.core.sealed_vault.force",
+            "effect": {"op": "damage_ship", "amount": 15}
+          },
+          {
+            "text_key": "expedition_event.core.sealed_vault.leave",
+            "effect": {"op": "add_money", "amount": 0}
+          }
+        ]
+      }
+    }
+  ]
+}

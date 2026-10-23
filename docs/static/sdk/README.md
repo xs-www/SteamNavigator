@@ -35,6 +35,14 @@
 | `examples/example_mixed_crew_roles_items/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_mixed_crew_roles_items/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_mixed_crew_roles_items/manifest.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/content/expedition_events.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/content/hazard_tables.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/content/relics.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/content/room_templates.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/content/ruin_archetypes.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_ruins/manifest.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_trade/content/automation_rules.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_trade/content/trade_policies.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_trade/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |

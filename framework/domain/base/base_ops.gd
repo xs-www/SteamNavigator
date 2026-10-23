@@ -49,7 +49,7 @@ static func has_base(state: GameState) -> bool:
 	if state == null:
 		return false
 	var raw: Variant = state.data.get(BASE_KEY, null)
-	return raw is Dictionary and not String((raw as Dictionary).get("site_archetype_id", "")).is_empty()
+	return raw is Dictionary and not _safe_string((raw as Dictionary).get("site_archetype_id", "")).is_empty()
 
 
 ## Returns the live base block, or `{}` when the player has not claimed a base.
@@ -57,7 +57,7 @@ static func ensure_structure(state: GameState) -> Dictionary:
 	if state == null:
 		return {}
 	var raw: Variant = state.data.get(BASE_KEY, null)
-	if not (raw is Dictionary) or String((raw as Dictionary).get("site_archetype_id", "")).is_empty():
+	if not (raw is Dictionary) or _safe_string((raw as Dictionary).get("site_archetype_id", "")).is_empty():
 		return {}
 	var base := _normalize(raw)
 	state.data[BASE_KEY] = base
@@ -68,7 +68,7 @@ static func ensure_structure(state: GameState) -> Dictionary:
 ## a copy so the query always answers.
 static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
 	var raw: Variant = state.data.get(BASE_KEY, null) if state != null else null
-	if not (raw is Dictionary) or String((raw as Dictionary).get("site_archetype_id", "")).is_empty():
+	if not (raw is Dictionary) or _safe_string((raw as Dictionary).get("site_archetype_id", "")).is_empty():
 		return {"claimed": false}
 	var base := _normalize(raw)
 	var site := site_definition(hub, String(base.get("site_archetype_id", "")))

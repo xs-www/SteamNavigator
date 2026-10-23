@@ -39,13 +39,14 @@
 | `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L421 |
 | `test_base_page_claims_and_builds_from_the_ui() -> void` | L453 |
 | `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L485 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L527 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L585 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L618 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L826 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L846 |
-| `test_sea_chart_entry_integration() -> void` | L926 |
-| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1019 |
+| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L503 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L545 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L603 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L636 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L844 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L864 |
+| `test_sea_chart_entry_integration() -> void` | L944 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1037 |
 
 ## 契约与约束
 

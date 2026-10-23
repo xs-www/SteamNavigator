@@ -279,7 +279,7 @@ static func _enter_stage(
 		_unlock_list_entry(story, "unlocked_modules", String(module_id))
 	for effect in Array(stage.get("effects", [])):
 		if effect is Dictionary:
-			_apply_effect(state, hub, story, effect as Dictionary, rng)
+			_apply_effect(state, hub, story, effect as Dictionary, rng, events)
 	events.append({
 		"type": EVENT_STAGE_ENTERED,
 		"payload": {
@@ -391,7 +391,7 @@ static func _objective_progress(stage: Dictionary, story: Dictionary) -> int:
 # ---------------------------------------------------------------------------
 
 
-static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary, effect: Dictionary, rng: RngService = null) -> void:
+static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary, effect: Dictionary, rng: RngService = null, events: Array = []) -> void:
 	var type := String(effect.get("type", ""))
 	match type:
 		"unlock_features":
@@ -433,7 +433,7 @@ static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary,
 			_add_port_facility(state, String(effect.get("facility", "")))
 		"upgrade_hull":
 			# 4.5.5：船厂替玩家换一艘带客舱位的船（旧船存入当前港仓库）。
-			_upgrade_hull(state, hub, effect)
+			_upgrade_hull(state, hub, effect, events)
 		"set_counter_from_ship":
 			# 4.5.6 引导修正：用船上现有资源初始化计数器（如开图后「煤舱 8/10」）。
 			_set_counter_from_ship(state, story, effect)
@@ -601,7 +601,7 @@ static func _add_port_facility(state: GameState, facility: String) -> void:
 
 ## 4.5.5：剧情换船——保留已有货舱 / 锅炉等模块，把船体换成 Core 指定的、
 ## 带客舱位的船体；旧船体存入当前港仓库，耐久重置为新船上限。
-static func _upgrade_hull(state: GameState, hub: RegistryHub, effect: Dictionary) -> void:
+static func _upgrade_hull(state: GameState, hub: RegistryHub, effect: Dictionary, events: Array = []) -> void:
 	var hull_id := String(effect.get("hull_id", ""))
 	if hull_id.is_empty():
 		return
@@ -620,7 +620,7 @@ static func _upgrade_hull(state: GameState, hub: RegistryHub, effect: Dictionary
 	ShipModules.install_slot(ship, "hull")
 	# D2 follow-up: the flagship archetype follows the hull, so release a captain
 	# that can no longer command the new archetype (same rule as ship.install_module).
-	FleetService.reconcile_flagship_after_hull_change(state, hub)
+	events.append_array(FleetService.reconcile_flagship_after_hull_change(state, hub))
 
 
 ## 4.5.6：用船上现有资源初始化剧情计数器（`kind` 如 `coal` / `water`），让

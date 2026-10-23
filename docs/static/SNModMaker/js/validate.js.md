@@ -20,46 +20,46 @@
 | `SUPPORTED_SCHEMA_VERSIONS` | L33 |
 | `DEFAULT_SCHEMA_VERSION` | L34 |
 | `REF_TYPE_BY_FIELD` | L36 |
-| `schemas()` | L72 |
-| `catalog()` | L76 |
-| `schemaVersionFor(typeKeyOrFile)` | L87 |
-| `normalizeSchemaPath(file)` | L98 |
-| `pointerEscape(text)` | L108 |
-| `pointerUnescape(text)` | L112 |
-| `joinPointer(base, key)` | L116 |
-| `resolveRef(ref, baseFile)` | L129 |
-| `deref(schema, file, seen)` | L161 |
-| `flattenObject(schema, file, seen)` | L187 |
-| `typeOf(value)` | L215 |
-| `matchesType(value, type)` | L221 |
-| `validateSchema(instance, schema, file)` | L228 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L232 |
-| `parseSemver(text)` | L392 |
-| `versionRangeError(text)` | L403 |
-| `safePath(path)` | L420 |
-| `extensionOf(path)` | L430 |
-| `isForbiddenPath(path)` | L436 |
-| `walkStrings(value, path, callback, depth)` | L440 |
-| `referencedIdType(id)` | L455 |
-| `expectedRefType(path)` | L460 |
-| `LOCAL_IDENTIFIER_FIELDS` | L475 |
-| `SOCKET_CLASSES` | L480 |
-| `RIG_SOCKET_KINDS` | L481 |
-| `checkWeaponSemantics(definition, view, add)` | L484 |
-| `checkCombatAIProfileSemantics(definition, view, add)` | L518 |
-| `checkLootTableSemantics(definition, view, add)` | L550 |
-| `checkHullSocketSemantics(definition, view, add)` | L566 |
-| `QUEST_EVENT_RE` | L648 |
-| `checkQuestSemantics(definition, view, add)` | L651 |
-| `STORY_TYPES` | L681 |
-| `storyFieldView(view, field)` | L683 |
-| `checkStoryArcSemantics(definition, view, add)` | L688 |
-| `checkStoryLevelSemantics(definition, view, add)` | L732 |
-| `checkStoryPack(contentFiles, add)` | L840 |
-| `validateProject(project, options)` | L881 |
-| `finish(issues)` | L1255 |
-| `byDefinition(issues)` | L1264 |
-| `SNValidate (global)` | L1277 |
+| `schemas()` | L76 |
+| `catalog()` | L80 |
+| `schemaVersionFor(typeKeyOrFile)` | L91 |
+| `normalizeSchemaPath(file)` | L102 |
+| `pointerEscape(text)` | L112 |
+| `pointerUnescape(text)` | L116 |
+| `joinPointer(base, key)` | L120 |
+| `resolveRef(ref, baseFile)` | L133 |
+| `deref(schema, file, seen)` | L165 |
+| `flattenObject(schema, file, seen)` | L191 |
+| `typeOf(value)` | L219 |
+| `matchesType(value, type)` | L225 |
+| `validateSchema(instance, schema, file)` | L232 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L236 |
+| `parseSemver(text)` | L396 |
+| `versionRangeError(text)` | L407 |
+| `safePath(path)` | L424 |
+| `extensionOf(path)` | L434 |
+| `isForbiddenPath(path)` | L440 |
+| `walkStrings(value, path, callback, depth)` | L444 |
+| `referencedIdType(id)` | L459 |
+| `expectedRefType(path)` | L464 |
+| `LOCAL_IDENTIFIER_FIELDS` | L479 |
+| `SOCKET_CLASSES` | L484 |
+| `RIG_SOCKET_KINDS` | L485 |
+| `checkWeaponSemantics(definition, view, add)` | L488 |
+| `checkCombatAIProfileSemantics(definition, view, add)` | L522 |
+| `checkLootTableSemantics(definition, view, add)` | L554 |
+| `checkHullSocketSemantics(definition, view, add)` | L570 |
+| `QUEST_EVENT_RE` | L652 |
+| `checkQuestSemantics(definition, view, add)` | L655 |
+| `STORY_TYPES` | L685 |
+| `storyFieldView(view, field)` | L687 |
+| `checkStoryArcSemantics(definition, view, add)` | L692 |
+| `checkStoryLevelSemantics(definition, view, add)` | L736 |
+| `checkStoryPack(contentFiles, add)` | L844 |
+| `validateProject(project, options)` | L885 |
+| `finish(issues)` | L1259 |
+| `byDefinition(issues)` | L1268 |
+| `SNValidate (global)` | L1281 |
 
 ## 契约与约束
 
@@ -67,7 +67,7 @@
 - `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
 - `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（D2 后全部 active 类型为 2.0；story_arcs / story_levels 草案为 2.0），未知类型最后回退 1.0。
 - 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
-- `draft_content` 警告只针对仍是草案的 `story_arcs` / `story_levels`；active 2.0 类型（D4 后全部 37 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（37 类 + 草案族），同一 capability 每次校验只报一条。
+- `draft_content` 警告只针对仍是草案的 `story_arcs` / `story_levels`；active 2.0 类型（D5 后全部 42 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（42 类 + 草案族），同一 capability 每次校验只报一条。
 - `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
 - `REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_scenario` → starting_scenario，与已有的 hull / good 等字段共用 `ref_type` 提示。
 - 武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。

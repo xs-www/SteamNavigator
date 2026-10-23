@@ -46,7 +46,12 @@
     "content/production_recipes.json",
     "content/worker_roles.json",
     "content/trade_policies.json",
-    "content/automation_rules.json"
+    "content/automation_rules.json",
+    "content/ruin_archetypes.json",
+    "content/room_templates.json",
+    "content/expedition_events.json",
+    "content/hazard_tables.json",
+    "content/relics.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -208,6 +213,7 @@
     "content.combat.v1",
     "content.fleet.v1",
     "content.base.v1",
-    "content.trade.v1"
+    "content.trade.v1",
+    "content.ruins.v1"
   ]
 }

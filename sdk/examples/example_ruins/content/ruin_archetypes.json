@@ -1,0 +1,21 @@
+{
+  "schema_version": "2.0",
+  "content_type": "ruin_archetypes",
+  "definitions": [
+    {
+      "id": "example_ruins:ruin_archetype/damp_cellar",
+      "name_key": "ruin_archetype.example_ruins.damp_cellar.name",
+      "description_key": "ruin_archetype.example_ruins.damp_cellar.description",
+      "tags": ["ruin.example"],
+      "enabled": true,
+      "data": {
+        "room_count": 3,
+        "difficulty": 1,
+        "room_tags": ["room.example"],
+        "hazard_table": "example_ruins:hazard_table/damp",
+        "loot_table": "core:loot_table/pirate_wreck",
+        "relic_pool": ["example_ruins:relic/damp_lens"]
+      }
+    }
+  ]
+}
