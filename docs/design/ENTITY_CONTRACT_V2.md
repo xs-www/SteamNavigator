@@ -1,8 +1,8 @@
 # Steam Navigator 实体契约 v2
 
-> 状态：Draft 6（2026-10-23，Phase A/B、C1–C4 与 D0–D5 落地后刷新，**Phase C 完成、Phase D 完成**）
+> 状态：**Finalized**（2026-10-23，Phase A/B、C1–C4、D0–D5 与 Phase E 完成后定稿）
 > 适用范围：Schema 2.0、Content Types 单一真源、注册表、跨引用校验、发布门禁与 SNModMaker
-> 运行时已按类型版本加载：当前 42 个 active 类型**全部为 Content Schema 2.0**（41 个定义 + `patches`，0 个 1.0 runtime）；
+> 运行时已按类型版本加载：当前 42 个 active 类型**全部为 Content Schema 2.0**（41 个定义 + `patches`，0 个 1.0 runtime），3 类草案也是 2.0；
 > 本文描述 v2 契约与迁移边界。
 
 ## 1. 与草案的关系
@@ -180,7 +180,7 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
   `v2/common`、42 类 active 2.0、3 个草案）；校验器按基准文件所在目录解析
   `common.schema.json` 等跨文件 `$ref`。
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；声明版本与类型不符报
-  `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；草案内容给 `draft_content` 警告；
+  1.0 报 `schema_version_frozen`（Phase E），其他非 2.0 报 `schema_version_unsupported`，类型不符报 `schema_version_mismatch`；草案内容给 `draft_content` 警告；
   使用 capability 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
 - 编辑器与 CLI 对 42 类运行时 2.0 正常编辑 / 校验 / 导出，对 3 类草案标 draft（含它的项目不能部署到发布包）。
 - **无剩余 1.0 定义类型**；`map_profiles` 已退役（`map_configs` 取代），`v2_target` / `aliases` 已清空。
@@ -271,7 +271,7 @@ scan → manifest / dependency resolve → schema compile
 
 - Content Schema 主版本变化在**发布版**必须提供迁移器与旧档只读兼容；**开发期（C/D）例外**：不保留旧档 / 旧内容
   兼容，实体合并后旧档直接作废（2026-10-22 拍板，详见迁移方案 §3.2 D2/D5）。
-- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。当前状态：**42 个 active 类型全部为 `2.0`（41 定义 + `patches`），0 个 1.0 runtime 类型**（Phase D0–D5 完成）。
+- **内容版本按类型声明**：`content_types.json.types[].schema_version` 是每个类型的期望版本，生成 `ContentTypes.SCHEMA_VERSIONS`；`ContentCompiler` 按 `content_type` 取期望版本校验 envelope（Patch 再校验同样按目标类型版本），`FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。当前状态：**42 个 active 类型全部为 `2.0`（41 定义 + `patches`），0 个 1.0 runtime 类型**（Phase E Finalized）。
 - 新系统通过 capability 暴露（`content.world.v1`、`content.modules.v1`、`content.items.v1`、`content.quests.v1`、`content.port_templates.v1`、`content.starting_scenarios.v1`、`content.voyage_events.v1`、`content.crew_roles.v1`、`content.boiler_strategies.v1`、`content.contracts.v1`、`content.patches.v1`、`content.combat.v1`…）；模组使用新能力必须声明。
 - `v2_target` / `aliases` 已清空：剩余迁移全部完成，不再有「迁移提示」类型；`port_templates` / `starting_scenarios` / `voyage_events` / `crew_roles` / `boiler_strategies` 等已是实际运行时类型。
 
@@ -293,12 +293,12 @@ scan → manifest / dependency resolve → schema compile
 1. **冻结 1.0**：✅ 已落地（盘点 + 基线测试）。
 2. **单一真源**：✅ 已落地（`content_types.json` 接入框架测试、编辑器与 SDK）。
 3. **存档与 Schema 2.0**：✅ 已落地（Save/State 2.0、`content_versions`；旧档兼容在开发期不承诺）。
-4. **新系统类型**：Phase B 世界/战役 9 类 ✅；Phase D0 模拟时钟 ✅、D1 combat 6 类 ✅、D2 fleet 4 类 ✅；Phase D 的基地、自动贸易、遗迹仍为 planned。
+4. **新系统类型**：Phase B 世界/战役 9 类 ✅；Phase D0 模拟时钟 ✅、D1 combat 6 类 ✅、D2 fleet 4 类 ✅、D3 base 5 类 ✅、D4 auto_trade 2 类 ✅、D5 ruins 5 类 ✅。
 5. **实体合并**：C1 `modules`/`hulls` + C2 `items` + C3 `quests` + C4 剩余类型改名/升 2.0（`port_templates` /
    `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches`）✅；
    Phase C 完成。开发期直接改 core ID，**不做 ID 别名 / 内容迁移器**。
 6. **清理**：✅ 已开始（C1/C2 删除旧类型与旧内容，2026-10-22 删除 8 个死 1.0 Schema；C4 删除全部剩余 1.0 内容 Schema
-   与回退路径）；Phase E 冻结 1.0 读路径。
+   与回退路径）；Phase E 已冻结 1.0 生成/读取并加发布门禁。
 
 阶段 3–6 的可执行切片、文件触点、兼容性矩阵与验收见
 [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md)。
@@ -308,12 +308,12 @@ scan → manifest / dependency resolve → schema compile
 - [x] `content_types.json` 与框架、编辑器、SDK 一致，测试守护。
 - [x] 所有实体 ID 合法、唯一，引用可解析。
 - [x] 未知字段、未知类型、未知操作码均产生明确 `error`。
-- [ ] 编辑器与发布门禁使用同一套语义校验（编辑器静态校验 + SDK 运行时校验已就位，语义合并随 Phase B6/C 收尾）。
+- [x] 编辑器与发布门禁使用同一套语义校验（编辑器静态校验 + SDK 运行时校验 + `check_content_schema_v2` 门禁）。
 - [ ] 旧 MVP 存档迁移后可继续；新战役可创建、保存、读回。**开发期例外**：每次内容模型迭代后旧档作废，
   只要求新战役可创建、保存、读回。
 - [x] 第三方模组可注册新内容类型内的数据，但不能覆盖已有 ID 或绕过校验。
 - [x] 发布产物零 `error`；`warning` 可见。
-- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D5 全量回归已绿：Godot 635 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
+- [x] Core 内容迁移后无玩法回归（C1–C4、D0–D5 与 Phase E 全量回归已绿：Godot 636 / Node 60 / CLI 64；Phase E 发布门禁通过）。
 
 ## 18. 待决策
 
@@ -323,6 +323,6 @@ scan → manifest / dependency resolve → schema compile
 - ~~C3 `quests` 2.0 字段范围与 QuestService 持久化时机~~：已由 C3 落地（`data.quests` 惰性 ensure；
   quest 实例只存 `quest_id / stage_index / counters / flags / contract_instance_id`）。
 - 奖励 / effects 系统（Quest 完成发奖、`spawn_contract` 等）暂缓，待后续切片决定数据形状。
-- Phase D 其余系统类型（base / auto_trade / ruins）的 Schema 与运行时顺序；D1 combat 后续接入航行风险结算、敌舰可视化，D2 舰队与战斗/航行联动；Phase E 冻结 1.0 读路径 / 发布门禁。
+- Phase D 已全部落地（base / auto_trade / ruins）；Phase E 已冻结 1.0 生成/读取并加发布门禁。后续：D1 combat 航行风险结算、敌舰可视化，D2 舰队与战斗/航行联动。
 - `crew_roles` / `boiler_strategies` 是否在新系统中保持独立类型，或并入 module 预设。
 - 持久战役的 tick 粒度、失败恢复与离线模拟边界。

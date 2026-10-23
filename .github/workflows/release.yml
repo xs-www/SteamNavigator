@@ -73,6 +73,14 @@ jobs:
           set -euo pipefail
           node tools/gen_static_docs.mjs --check
 
+      # Phase E: Content Schema 1.0 is frozen. Fail the release if any active/
+      # draft type, Core/SDK content envelope, or FrameworkInfo baseline is not 2.0.
+      - name: Check Content Schema 2.0 freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/check_content_schema_v2.mjs
+
       # The editor and Content CLI share the same validation engine as the game;
       # keep their suites in the release gate so content-type promotions cannot
       # silently drift from the deploy guard / capability semantics.
@@ -92,9 +100,9 @@ jobs:
           set -euo pipefail
           godot --headless --path . --script res://sdk/validate.gd -- --mode=runtime
 
-      # SDK compatibility gate: 1.0 and mixed 1.0 + 2.0 examples must load in the
-      # real runtime; draft-only types may be schema-checked with --mode=draft but
-      # must never be treated as publishable.
+      # SDK compatibility gate: all runtime examples are Content Schema 2.0 and
+      # must load in the real runtime; draft-only types may be schema-checked with
+      # --mode=draft but must never be treated as publishable.
       - name: Validate SDK examples (runtime + draft)
         shell: bash
         run: |

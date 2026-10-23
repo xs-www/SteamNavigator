@@ -125,11 +125,14 @@ func _load_content_file(package: ModPackage, relative_path: String) -> void:
 	var expected_schema_version := _expected_content_schema_version(content_type)
 	var declared_schema_version := String(envelope.get("schema_version", ""))
 	if declared_schema_version != expected_schema_version:
+		var detail := "schema_version must be '%s' for content type '%s', got '%s'" % [
+			expected_schema_version, content_type_name, declared_schema_version
+		]
+		if declared_schema_version == "1.0":
+			detail = "Content Schema 1.0 is frozen; content type '%s' requires schema_version '2.0' (got '1.0')" % content_type_name
 		_add_error(
 			"unsupported_schema",
-			"schema_version must be '%s' for content type '%s', got '%s'" % [
-				expected_schema_version, content_type_name, declared_schema_version
-			],
+			detail,
 			package.id,
 			relative_path,
 			"/schema_version"

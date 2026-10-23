@@ -11,6 +11,7 @@ extends RefCounted
 ##
 ## ## 契约与约束
 ## - `save_schema`/`state_schema` 当前 2.0；1.x 只做兼容增量，保留 run/world/ship 字段。
+##   Phase E 冻结的是 Content Schema 1.0（内容 envelope），存档 payload 迁移仍保留。
 ## - D3：新档由 `prepare_for_save()` 从 `ContentTypes.SCHEMA_VERSIONS` 快照全部类型版本；
 ##   旧档缺表时用当前注册表补齐缺失类型（C4 起 `starting_scenarios` / `map_configs` 均为
 ##   2.0，`map_profiles` 已退役，不再做 1.0 类型推断）。

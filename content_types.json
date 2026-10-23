@@ -1,8 +1,8 @@
 {
   "format": "steam-navigator-content-types",
   "format_version": 1,
-  "content_schema": "1.0",
-  "description": "Single source for content type keys, schema paths, per-type schema_version, registry kind and editor presentation metadata. Every active type declares its own 'schema_version' (Content Schema 1.0 or 2.0) and the framework validates content files against the version of their type; 'content_schema' is only the baseline/default used by header fields and editor defaults. Entries under 'planned' are roadmap only and have no schema yet. 'draft_schemas' maps the remaining Content Schema 2.0 draft types to their schema files; 'draft_types' carries their editor metadata. Draft types are editable in SNModMaker but not loadable by the runtime yet. 'v2_module_categories' records the target module taxonomy; it is not a runtime type list.",
+  "content_schema": "2.0",
+  "description": "Single source for content type keys, schema paths, per-type schema_version, registry kind and editor presentation metadata. Phase E froze Content Schema 1.0: every active and draft type declares schema_version 2.0 and the framework validates content files against the type version; 'content_schema' is the 2.0 baseline/default used by header fields and editor defaults. Entries under 'planned' are roadmap only and have no schema yet. 'draft_schemas' maps the remaining Content Schema 2.0 draft types to their schema files; 'draft_types' carries their editor metadata. Draft types are editable in SNModMaker but not loadable by the runtime yet. 'v2_module_categories' records the target module taxonomy; it is not a runtime type list.",
   "draft_schemas": {
     "story_arcs": "schemas/v2/story_arc.schema.json",
     "story_levels": "schemas/v2/story_level.schema.json",

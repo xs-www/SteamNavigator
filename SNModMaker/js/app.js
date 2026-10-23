@@ -659,8 +659,8 @@
   }
 
   function draftSchemaFootText() {
-    if (!Cat.DRAFT_TYPES || !Cat.DRAFT_TYPES.length) return 'Schema 1.0 / 2.0 / API 1.0';
-    return 'Schema 1.0 / 2.0 运行时 + 草案 / API 1.0';
+    if (!Cat.DRAFT_TYPES || !Cat.DRAFT_TYPES.length) return 'Content Schema 2.0 / API 1.0';
+    return 'Content Schema 2.0 运行时 + 草案 / API 1.0';
   }
 
   function renderDraftSideGroup(counts, typeIssues) {

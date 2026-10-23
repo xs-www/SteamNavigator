@@ -28,10 +28,10 @@
   const ASSET_EXTENSIONS = ['.png', '.webp', '.svg', '.ogg', '.wav', '.glb'];
   const FORBIDDEN_EXTENSIONS = ['.gd', '.gdshader', '.cs', '.dll', '.so', '.dylib', '.exe', '.bat',
     '.cmd', '.ps1', '.sh', '.pck', '.tscn', '.tres', '.import'];
-  /* Content Schema versions the Mod Maker understands. The runtime loads each
-   * type at its own version (1.0 or 2.0); this list only guards the envelope. */
-  const SUPPORTED_SCHEMA_VERSIONS = ['1.0', '2.0'];
-  const DEFAULT_SCHEMA_VERSION = '1.0';
+  /* Phase E: Content Schema 1.0 is frozen. The editor/validator emits an explicit
+   * "needs 2.0" error for 1.0 envelopes and never defaults to 1.0 again. */
+  const SUPPORTED_SCHEMA_VERSIONS = ['2.0'];
+  const DEFAULT_SCHEMA_VERSION = '2.0';
 
   const REF_TYPE_BY_FIELD = {
     hull: ['hull'],
@@ -85,8 +85,8 @@
    * Content Schema version for a content file or a content type key.
    *
    * Order: an explicit `file.schema_version`, then the type's catalog
-   * `schemaVersion` (Schema 2.0 for the promoted world/campaign family and the
-   * weapons / story draft types), then the legacy 1.0 default.
+   * `schemaVersion` (all active/draft types are 2.0 in Phase E), then the 2.0
+   * default. 1.0 is never generated or defaulted any more.
    */
   function schemaVersionFor(typeKeyOrFile) {
     if (typeKeyOrFile && typeof typeKeyOrFile === 'object') {
@@ -1013,9 +1013,12 @@
       const typeKey = info ? info.key : file.content_type;
       const baseView = { name: 'content', type: typeKey, file: file.path };
       const declaredVersion = file.schema_version == null ? '' : String(file.schema_version);
-      if (declaredVersion && !SUPPORTED_SCHEMA_VERSIONS.includes(declaredVersion)) {
+      if (declaredVersion === '1.0') {
+        add('error', 'schema_version_frozen',
+          `内容文件 ${file.path} 使用 Content Schema 1.0；1.0 已冻结，请把 schema_version 改为 "2.0" 并按 2.0 Schema 迁移内容`, baseView);
+      } else if (declaredVersion && !SUPPORTED_SCHEMA_VERSIONS.includes(declaredVersion)) {
         add('error', 'schema_version_unsupported',
-          `内容文件 ${file.path} 的 schema_version 不受支持：${declaredVersion}（只支持 1.0 / 2.0）`, baseView);
+          `内容文件 ${file.path} 的 schema_version 不受支持：${declaredVersion}（Phase E 只支持 2.0）`, baseView);
       }
       if (!info) {
         add('error', 'unknown_content_type', `未知的内容类型：${file.content_type}`, baseView);

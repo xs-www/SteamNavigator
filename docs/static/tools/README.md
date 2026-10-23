@@ -10,6 +10,7 @@
 | `art/gen_shared_material_textures.py` | 生成通用共享材质贴图库（每张 512² 无缝平铺的 sRGB 贴图对应一个 `SN_*` 材质）， | [查看](./art/gen_shared_material_textures.py.md) |
 | `art/gen_shipyard_textures.py` | 船厂两张授权贴图的确定性生成器：纵剖图 `ship_section.png`（1792×1008）与船卡缩略图 `ship_thumb_ironclad.png`（640×360）。 | [查看](./art/gen_shipyard_textures.py.md) |
 | `capture_ui.ps1` | `tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。 | [查看](./capture_ui.ps1.md) |
+| `check_content_schema_v2.mjs` | Phase E 发布门禁：确认 Content Schema 1.0 已冻结，内容类型、Schema 文件与 | [查看](./check_content_schema_v2.mjs.md) |
 | `fog_grid_simulator.html` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `gen_content_types.mjs` | 从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录（active `TYPES` + Schema 2.0 草案 `DRAFT_TYPES`）；提供 `--check` 过期检查。 | [查看](./gen_content_types.mjs.md) |
 | `gen_static_docs.mjs` | 从源码静态文档注释、sidecar 头文件和旧策展数据生成镜像文档、模块索引与 SHA-256 manifest。 | [查看](./gen_static_docs.mjs.md) |

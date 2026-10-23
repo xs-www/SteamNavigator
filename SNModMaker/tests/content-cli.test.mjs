@@ -1146,7 +1146,7 @@ test('add blocks new Schema 2.0 errors and writes nothing', (t) => {
   assert.deepEqual(snapshotDir(mod), before, 'a blocked draft add must not write anything');
 });
 
-test('validate reports schema_version_mismatch for a 1.0 draft content file', (t) => {
+test('validate reports schema_version_frozen for a 1.0 draft content file', (t) => {
   const mod = createMod(t);
   const addResult = jsonRun([
     'add', '--mod', mod, '--type', 'world_profiles', '--id', 'first_world',
@@ -1160,12 +1160,12 @@ test('validate reports schema_version_mismatch for a 1.0 draft content file', (t
   writeJson(file.abs, payload);
 
   const result = jsonRun(['validate', '--mod', mod]);
-  const json = mustJson(result, 'validate draft mismatch');
-  assertStatus(result, 1, 'validate draft mismatch');
+  const json = mustJson(result, 'validate frozen content version');
+  assertStatus(result, 1, 'validate frozen content version');
   assert.equal(json.ok, false);
   assert.ok(
-    json.issues.list.some((issue) => issue.code === 'schema_version_mismatch'),
-    `expected schema_version_mismatch: ${JSON.stringify(json.issues.list)}`
+    json.issues.list.some((issue) => issue.code === 'schema_version_frozen'),
+    `expected schema_version_frozen: ${JSON.stringify(json.issues.list)}`
   );
 });
 

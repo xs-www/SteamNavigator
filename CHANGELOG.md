@@ -3,6 +3,22 @@
 > 只记录有意义的功能与变更，不写逐条流水账；实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 [todo.md](todo.md) 的 `Recently Completed` 按版本归并到这里，并从 todo 移除。
 
+## [Unreleased]
+
+### Added
+
+- Content Schema 2.0 Phase C–E 完成：实体合并（`modules` / `items` / `quests` 与 C4 类型改名升 2.0）、
+  Phase D 系统切片（sim tick、combat、fleet、base、auto_trade、ruins）、Phase E 冻结 1.0；
+  42 个 active 类型与 3 类草案全部 2.0，1.0 内容生成/读取已关闭并新增发布门禁 `tools/check_content_schema_v2.mjs`
+- 基地 / 自动贸易 / 遗迹三套纵向切片：`data.base` 生产链、`data.trade` 自动买卖、`data.expedition` + `data.relics`
+  远征；对应命令、查询、tick 系统与最小页面
+
+### Changed
+
+- `FrameworkInfo.CONTENT_SCHEMA` 与 `content_types.json.content_schema` 升为 `2.0`；SNModMaker / Content CLI
+  不再默认或写出 1.0，1.0 内容明确报「需要 2.0」/ `schema_version_frozen`
+- 迁移与实体契约文档状态改为 **Finalized**
+
 ## [0.2.0-dev.3] — 2026-10-22
 
 ### Added

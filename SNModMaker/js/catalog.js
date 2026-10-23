@@ -13,9 +13,9 @@
   if (!GENERATED || !Array.isArray(GENERATED.TYPES)) {
     throw new Error('SNContentTypes is missing; load js/content-types.js before catalog.js');
   }
-  /* TYPES are the runtime-active Content Schema 1.0 types. DRAFT_TYPES are the
+  /* TYPES are the runtime-active Content Schema 2.0 types. DRAFT_TYPES are the
    * Schema 2.0 draft types: the editor can create/validate/export them, but the
-   * game runtime still loads 1.0 only. */
+   * game runtime still does not load drafts. Phase E froze 1.0 entirely. */
   const TYPES = GENERATED.TYPES;
   const DRAFT_TYPES = Array.isArray(GENERATED.DRAFT_TYPES) ? GENERATED.DRAFT_TYPES : [];
   const ALL_TYPES = [...TYPES, ...DRAFT_TYPES];
@@ -26,8 +26,8 @@
   /** Schema version a content file of this type must carry, declared per type in content_types.json. */
   function schemaVersionFor(typeKey) {
     const info = BY_KEY[typeKey];
-    if (!info) return '1.0';
-    return info.schemaVersion || '1.0';
+    if (!info) return '2.0';
+    return info.schemaVersion || '2.0';
   }
 
   /* Field labels are shared by all types; type-scoped overrides win. */

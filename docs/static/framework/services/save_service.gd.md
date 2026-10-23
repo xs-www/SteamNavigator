@@ -30,7 +30,7 @@
 旧档加载迁移入口与存档/模组兼容性检查。
 
 ## 契约与约束
-- 头字段 `save_schema/state_schema` 2.0、`content_schema` 继续写基线 1.0（D3）；
+- 头字段 `save_schema/state_schema` 2.0、`content_schema` 写 Content Schema 基线 2.0（Phase E）；
   类型级版本在 `state.campaign.setup.content_versions`。
 - 保存前不修改实时状态：克隆状态并 `ShipModules.ensure()`；B5 起克隆上再调用
   `SaveMigrations.prepare_for_save()` 快照当前 `ContentTypes.SCHEMA_VERSIONS`。

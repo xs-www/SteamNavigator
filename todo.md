@@ -28,7 +28,6 @@
 - [ ] 3D 资产收尾：帆船 / 明轮 / 模块的 Godot 导入与目标机位验收、水面性能低配档位与第二港口变体
 - [ ] 起重机三件新资产接入：`SN_Mega_Gantry` / `SN_Wooden_Mast_Crane` / `SN_Hand_Jib_Crane` 的 PortStage 槽位与目标机位复核（Core manifest 资源键与 `shared_materials` 贴图已接入）
 - [ ] 模型素材库接入：kit 批次 1–5 其余 33 件资产登记 Core `model.kit.*` 资源键（武器 4 件已以 `model.weapon.*` 登记，帆索 12 件以 `model.rig.*`、船体部件 4 件以 `model.ship_part.*` 登记；批次 4 新增 6 件可围合建筑件、批次 5 新增 5 件基地生产建筑），接 `ShipVisualAssembler` / 基地舞台 / PortStage 的 socket 装配与目标机位复核（目录见 `tools/modeling/kit_catalog.json`）
-- [ ] Content Schema 2.0 迁移（分层）：Phase A + Phase B（B0–B6）+ **Phase C（C1–C4）已完成**；**Phase D0–D5 已完成**（D0 sim 时钟；D1 combat 6 类 active；D2 fleet 4 类 active；D3 base 5 类 active；D4 auto_trade 2 类 active；D5 ruins 5 类 active）。下一步 **Phase E 冻结 1.0 读路径与发布门禁**。当前 **42 类 active 全部 2.0（41 定义 + patch）、0 个 1.0 runtime**；schema bundle 48、编辑器 45、Core 41 内容文件 / 154 定义。开发期不保留旧档/旧模型兼容。方案：[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) / [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)
 
 ### 海图 / 探索
 
@@ -38,15 +37,17 @@
 
 ### 正式版路线图
 
-- [ ] 阶段 0：Content Schema 2.0 系统类型、多战役存档、tick 模拟框架（tick 框架 D0 ✅、combat D1 ✅；多战役存档与其余系统待做）
+- [ ] 阶段 0：多战役存档（Content Schema 2.0 已 Finalized、tick 框架 D0 ✅、combat D1 ✅；多战役存档与其余系统待做）
 - [ ] 阶段 1：广域海图与探索运行时（v2 草案提升 active，接世界生成 / 战役 `world` 分区 / 区域低细节模拟）
 - [ ] 阶段 2：舰队组成与战斗（D1 已交付自动结算 + 6 类战斗内容；D2 已交付舰队 4 类 + `fleet.*` / `data.fleet`；待航行遭遇接线、敌舰可视化、舰队参与 2v2 与跨区调度；SNBattleSim 规则并入）
 - [ ] 阶段 3：基地建设与生产链（接入舰队 / 战斗 / 贸易）
 - [ ] 阶段 4：自动化贸易（航线、规则、风险与 tick 结算）
 - [ ] 阶段 5：遗迹探索（程序化房间、远征、战利品）
-- [ ] 阶段 6：整合、内容量、Mod API 2.0 / Content Schema 2.0 冻结与发布验收
+- [ ] 阶段 6：整合、内容量、Mod API 2.0 与发布验收（Content Schema 2.0 已冻结）
 
 ## Recently Completed
+
+- Content Schema 2.0 Phase E（2026-10-23，**Finalized**）：`FrameworkInfo.CONTENT_SCHEMA` / `content_types.json.content_schema` 升 2.0；运行时 `ContentCompiler` 对 1.0 envelope 报「needs 2.0」，SNModMaker / Content CLI fallback 全部 2.0 且 1.0 内容报 `schema_version_frozen`；新增发布门禁 `node tools/check_content_schema_v2.mjs`；迁移/实体契约文档状态 Finalized；636/636 Godot、Node 60、CLI 64、SDK `status: ok`。
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 

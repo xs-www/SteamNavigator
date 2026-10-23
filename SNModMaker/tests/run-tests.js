@@ -378,7 +378,7 @@ function warningsOf(result) {
     // C4-D promoted the last 1.0 definition type: contracts is 2.0 now.
     assert.equal(Validate.schemaVersionFor('contracts'), '2.0');
     assert.equal(Validate.schemaVersionFor({ content_type: 'contracts', schema_version: '2.0' }), '2.0');
-    assert.equal(Validate.schemaVersionFor('not_a_type'), '1.0', 'unknown types fall back to the 1.0 baseline default');
+    assert.equal(Validate.schemaVersionFor('not_a_type'), '2.0', 'unknown types fall back to the Phase E 2.0 default');
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
@@ -795,14 +795,14 @@ function warningsOf(result) {
     const project = freshProject();
     Store.addDefinition(project, 'weapons', {});
     let result = Validate.validateProject(project);
-    assert.equal(errorsOf(result).filter((issue) => issue.code === 'schema_version_mismatch').length, 0);
+    assert.equal(errorsOf(result).filter((issue) => issue.code === 'schema_version_frozen').length, 0);
 
     const draftFile = project.contentFiles.find((file) => file.content_type === 'weapons');
     draftFile.schema_version = '1.0';
     result = Validate.validateProject(project);
     assert.ok(
-      errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
-      'a 2.0 draft file declaring 1.0 must report schema_version_mismatch'
+      errorsOf(result).some((issue) => issue.code === 'schema_version_frozen'),
+      'a 2.0 draft file declaring 1.0 must report schema_version_frozen'
     );
 
     draftFile.schema_version = '2.0';
@@ -811,8 +811,8 @@ function warningsOf(result) {
     itemsFile.schema_version = '1.0';
     result = Validate.validateProject(project);
     assert.ok(
-      errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
-      'a runtime 2.0 type declaring 1.0 must report schema_version_mismatch'
+      errorsOf(result).some((issue) => issue.code === 'schema_version_frozen'),
+      'a runtime 2.0 type declaring 1.0 must report schema_version_frozen'
     );
     itemsFile.schema_version = '2.0';
 
@@ -821,8 +821,8 @@ function warningsOf(result) {
     contractsFile.schema_version = '1.0';
     result = Validate.validateProject(project);
     assert.ok(
-      errorsOf(result).some((issue) => issue.code === 'schema_version_mismatch'),
-      'a runtime 2.0 type declaring 1.0 must report schema_version_mismatch'
+      errorsOf(result).some((issue) => issue.code === 'schema_version_frozen'),
+      'a runtime 2.0 type declaring 1.0 must report schema_version_frozen'
     );
     contractsFile.schema_version = '2.0';
 
@@ -931,7 +931,7 @@ function warningsOf(result) {
     const validation = Validate.validateProject(back.project);
     assert.equal(validation.counts.error, 0, JSON.stringify(errorsOf(validation), null, 2));
     assert.ok(!warningsOf(validation).some((issue) => issue.code === 'draft_content'), 'promoted types are not draft content');
-    assert.ok(!warningsOf(validation).some((issue) => issue.code === 'schema_version_mismatch'));
+    assert.ok(!warningsOf(validation).some((issue) => issue.code === 'schema_version_frozen'));
   });
 
   await test('module localization keys do not collide across module categories', () => {

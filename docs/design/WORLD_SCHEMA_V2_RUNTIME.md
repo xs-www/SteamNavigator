@@ -36,7 +36,7 @@
 - 区域地图 / 图鉴 / 阵营的完整 2.5D UI（Phase B 只交付数据与最小查询，UI 切片另开）。
 - fleet / combat / base / auto_trade / ruins 系统类型。
 - Item / Module / Quest 实体合并（Phase C）。
-- 移除 1.0 内容类型、ID 别名迁移器（Phase E）。
+- ~~移除 1.0 内容类型、ID 别名迁移器~~（Phase E 已完成：1.0 内容生成/读取冻结，不提供迁移器）。
 
 ## 2. 现状基线（Phase A 之后）
 
@@ -49,7 +49,7 @@
 | （历史，Phase B 前）孪生世界：固定 5 块陆地布局、`min_ports = 抽象港口数`、world_map 预计算航线（`WorldMap.edges`）；世界边长由 `map_profiles.data.twin_world_size` 缩放（默认 160，clamp 64–1024）；C4 起读 `map_configs.data.twin_world_size` | `run_factory.gd::_coordinate_world_profile`、`framework/domain/world/world_generator.gd` |
 | 经济 / NPC / 探索 / 教程来自 `map_configs.data`：market 用 port template，`npc_*`、`loan`、`supply_prices`、`intel_cost`、`trade_margin`、`player_trade_impact`，以及 `twin_world_size`（4.3）、`exploration`（31 键）、`story`（4.5 教程流） | `run_factory.gd`、`framework/domain/economy/*`、`framework/domain/exploration/exploration_rules.gd`、`framework/domain/story/story_service.gd` |
 | 随机流：`map_generation / goods_generation / npc_trade / contract_generation / voyage_risk / voyage_event / event_options`（探索 4.1 另有 `exploration`） | `framework/services/rng_service.gd` |
-| 存档 header：`save_schema=2.0 / state_schema=2.0 / content_schema=FrameworkInfo.CONTENT_SCHEMA(1.0)`；1.x→2.0 迁移器已存在 | `framework/services/save_service.gd`、`save_migrations.gd` |
+| 存档 header：`save_schema=2.0 / state_schema=2.0 / content_schema=FrameworkInfo.CONTENT_SCHEMA(2.0)`；save payload 1.x→2.0 迁移器保留 | `framework/services/save_service.gd`、`save_migrations.gd` |
 | Campaign 分区：`campaign.world / codex / factions` + 探索 4.1 的 `data.clues`（惰性 ensure）；剧情 4.5 的 `data.story` 是独立惰性块（不在 `campaign` 下） | `framework/state/game_state.gd` |
 | 注册表：`RegistryHub` 按 `ContentTypes.all()` 建通用注册表（`get_all / get_by_id / query / freeze_all`） | `framework/modding/registries/registry_hub.gd` |
 | （历史）跨引用：按类型写 `_check_*`（如 `_check_map_profiles`），缺失硬引用 `_error`、软约束 `_warn`；C4 起对应检查为 `_check_port_templates` / `_check_map_configs` | `framework/modding/cross_reference_validator.gd` |
@@ -295,12 +295,12 @@ data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
 
 | 项 | 决策 |
 | --- | --- |
-| header | `save_schema=2.0`、`state_schema=2.0` 不变；`content_schema` 继续写基线 `1.0`（D3：它只是默认/基线） |
+| header | `save_schema=2.0`、`state_schema=2.0` 不变；`content_schema` 写基线 `2.0`（Phase E） |
 | 新字段 | `state.campaign.setup.content_versions`（类型 → 期望版本），新战役创建时从 `ContentTypes.SCHEMA_VERSIONS` 快照写入 |
 | 旧档 | `ensure_campaign()` 惰性补齐：无 `setup` 时不再推断 1.0 类型（C4 已删除 `map_profile` / `starting_build`），`content_versions` 只用当前注册表补齐；**不重排世界、不重新随机** |
-| 版本漂移 | 加载时若 `content_versions` 与当前注册表不一致 → warning（存档仍可读，旧内容按原定义 ID 解析）；破坏性迁移留 Phase E |
+| 版本漂移 | 加载时若 `content_versions` 与当前注册表不一致 → warning（存档仍可读，旧内容按原定义 ID 解析）；Phase E 已决定不做破坏性内容迁移 |
 | 迁移器 | `save_migrations.gd` 在 1.x→2.0 分支补 `content_versions`；`_ensure_current` 对缺失字段惰性补齐 |
-| ID 稳定 | C4 后只有 `core:map_config/standard`；1.0 `core:map_profile/standard` 已随类型退役删除（开发期旧档不兼容，Phase E 再评估迁移） |
+| ID 稳定 | C4 后只有 `core:map_config/standard`；1.0 `core:map_profile/standard` 已随类型退役删除（Phase E 已拍板不提供内容迁移器） |
 
 > **C4 更新（2026-10-23）**：C4 起 `map_profiles` / `starting_builds` 已删除，`_ensure_content_versions()` 不再
 > 推断 1.0 类型，只用当前注册表补齐缺失类型并写 `content_versions inferred` warning；已记录版本与运行时不一致时仍写
@@ -439,4 +439,4 @@ wait_clue_chance_per_block / wait_clue_max_chance / contract_clue_chance`（4.4.
 - [ ] 海图 / 港口 / 探索演出 / 迷雾 / 教程剧情在 v2 战役中正常工作，且旧档行为零回归；
 - [ ] 存档记录 `content_versions`，旧档惰性补齐且世界不重排；
 - [ ] 跨引用/完整性/能力校验按 §5 生效，编辑器与 SDK 语义一致；
-- [ ] 1.0 模组在双读窗口内仍可加载；发布门禁（Godot + Node + 生成器检查 + SDK）全绿。
+- [x] Phase E 冻结 1.0 内容（不再加载）；发布门禁（Godot + Node + 生成器检查 + SDK + `check_content_schema_v2`）全绿。

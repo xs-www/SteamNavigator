@@ -1,13 +1,13 @@
 # Content Schema 2.0 迁移落地方案
 
-> 状态：Draft 6（2026-10-23，Phase D5 落地后刷新；Phase A/B、C1–C4 与 D0–D5 已落地，**Phase C 完成、Phase D 完成**）。本文件是**执行方案**，不是已定稿契约；契约性规则见
+> 状态：**Finalized**（2026-10-23，Phase A/B、C1–C4、D0–D5 与 Phase E 完成后定稿）。本文件是**执行方案**；契约性规则见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)，路线图见 [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md)
 > 阶段 0/1，近期计划见 [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) §4.4。
 >
 > **结论先行**：实际按「按内容类型版本化 → 世界探索家族提升 → 实体合并 → 其余系统 → 冻结 1.0」分层落地；
-> 截至 D5，**42 个 active 类型全部是 Content Schema 2.0（0 个 1.0 runtime）**，只剩 3 类编辑器草案（剧情 2 类 + 战斗 AI 1 类）。
+> Phase E 完成后，**42 个 active 类型与 3 类编辑器草案全部是 Content Schema 2.0**，1.0 内容生成与读取已冻结。
 > 开发期没有第三方模组与旧档负担，实体合并（C1/C2/C3/C4）**直接改 Core 内容与 ID、删除旧类型，不做别名与存档迁移**；
-> 兼容策略只在发布前按 Phase E 另行评估。
+> 发布前不再评估 1.0 兼容，遇到 1.0 内容直接报「需要 2.0」。
 
 ## 1. 版本轴与术语
 
@@ -15,15 +15,15 @@
 | --- | --- | --- |
 | Framework | 0.2.0-dev 系列（`FrameworkInfo.VERSION`） | 随发布走 |
 | Mod API | `1.0` | 未动 |
-| **Content Schema** | **基线 `1.0`；按类型声明：42 类 active 全部 `2.0`（0 类 `1.0` runtime；含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1–C4 / D0–D5 已落地，Phase C 完成、Phase D 完成 |
+| **Content Schema** | **基线 `2.0`；按类型声明：42 类 active 全部 `2.0`（0 类 `1.0` runtime；含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1–C4 / D0–D5 / E 已落地，**Finalized** |
 | Save Schema | `2.0` | 已完成（含 1.x → 2.0 迁移） |
 | State Schema | `2.0` | 已完成（`GameState.SCHEMA_VERSION`） |
 
 本文只处理 **Content Schema**；Save / State 已是 2.0，不要在迁移中混用这两条轴。
-`FrameworkInfo.CONTENT_SCHEMA`（`"1.0"`）自 Phase A 起只是**基线 / 默认值**（存档 header、编辑器默认），
-不再是运行时全局门禁；每个 active 类型在 `content_types.json` 声明自己的期望版本。
+`FrameworkInfo.CONTENT_SCHEMA`（Phase E 起为 `"2.0"`）是**基线 / 默认值**（存档 header、编辑器默认），
+不再接受 1.0；每个 active 类型在 `content_types.json` 声明自己的期望版本。
 
-## 2. 现状基线（2026-10-23 Phase D5 后快照）
+## 2. 现状基线（2026-10-23 Phase E 后快照）
 
 ### 2.1 游戏运行时
 
@@ -96,8 +96,8 @@
 | G9 | ✅ Phase C3 已解耦：`contracts` 保持运输请求，`quests` 2.0 + `data.quests` + QuestService 负责抽象引导 | 委托接取生成追踪实例；task.view 聚合 |
 | G10 | ✅ Phase C4 已完成：所有 1.0 定义类型 + `patch` 已升 2.0，`map_profiles` 退役 | 运行时不再有 1.0 类型 |
 | G11 | Phase D：D0（sim tick）、D1（combat 6 类）、D2（fleet 4 类）、D3（base 5 类）、D4（auto_trade 2 类）与 D5（ruins 5 类）已完成 | 全部系统类型已有运行时读者 |
-| G12 | Phase E：1.0 内容生成与读取尚未冻结（运行时已无 1.0 类型） | 发布门禁尚未强制 Content Schema 2.0 |
-| G13 | 开发期不做旧档 / 旧内容兼容 | 发布前若需兼容，按 Phase E 重新评估 |
+| G12 | ✅ Phase E 已完成：1.0 内容生成与读取已冻结，发布门禁强制 Content Schema 2.0 | 任何 1.0 envelope 都会被运行时/编辑器拒绝 |
+| G13 | 开发期不做旧档 / 旧内容兼容；Phase E 已拍板不提供 1.0→2.0 内容/存档迁移工具 | 1.0 内容直接拒绝，1.x 存档只保留既有 save payload 迁移 |
 
 （Phase A/B 的 G1–G8 已随落地的按类型版本、类型提升、v2 运行时、Core v2 内容、Patch 版本规则、
 `content_versions` 与 G8 导出守卫关闭；Phase C 的 G9/G10 已随 C3/C4 关闭。）
@@ -235,14 +235,16 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 - **D3 ✅ base**：`base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles` 五类 active 2.0；`BaseOps` / `BaseService` / `BaseProductionSystem` / `base.claim|build|upgrade|deposit|withdraw|hire_worker|assign_worker|start_production` / `base.view`，`data.base` 惰性持久；Core 5 个基地内容文件、`sdk/examples/example_base`、最小基地页。
 - **D4 ✅ auto_trade**：`trade_policies` / `automation_rules` 两类 active 2.0；`AutoTradeOps` / `AutoTradeService` / `AutoTradeSystem` / `auto_trade.start|stop|set_policy|pause|resume` / `auto_trade.view`，`data.trade` 惰性持久；Core 2 个内容文件、`sdk/examples/example_trade`、最小自动贸易页。
 - **D5 ✅ ruins**：`ruin_archetypes` / `room_templates` / `expedition_events` / `hazard_tables` / `relics` 五类 active 2.0；`RuinOps` / `ExpeditionService` / `expedition.start|enter|choose|retreat` / `expedition.view`，`data.expedition` + `data.relics`；Core 5 个内容文件、`sdk/examples/example_ruins`、最小遗迹页。
-- **下一步**：Phase E（冻结 1.0 读路径与发布门禁），以及 D1 航行遭遇接入 / 敌舰可视化、D2 舰队与战斗 / 航行的联动。
+- **Phase E ✅ 已完成**：1.0 生成/读取冻结、发布门禁强制 2.0、文档 Finalized。后续是 D1 航行遭遇接入 / 敌舰可视化、D2 舰队与战斗 / 航行的联动。
 
-### Phase E · 冻结 1.0（1 周）
+### Phase E · 冻结 1.0（已完成）
 
-- 停止生成 1.0 内容；删除 1.0 读路径，遇到 1.0 内容给出明确“需要 2.0”的错误。
-- 开发期已拍板不保留旧档/旧模型兼容，因此不再提供面向玩家的 1.0→2.0 存档/内容迁移工具；如发布前确需，
-  另行评估。
-- 发布门禁要求 Content Schema 2.0；更新 `README`、`CHANGELOG`、`ENTITY_CONTRACT_V2` 状态为 Finalized。
+- [x] 停止生成 1.0 内容：编辑器/CLI 的 fallback 改为 2.0，`FrameworkInfo.CONTENT_SCHEMA` 改为 `"2.0"`。
+- [x] 删除 1.0 读路径：`ContentCompiler` 对 1.0 envelope 直接报「Content Schema 1.0 is frozen; requires 2.0」；
+  编辑器/CLI 对 1.0 文件报 `schema_version_frozen`。
+- [x] 不提供面向玩家的 1.0→2.0 存档/内容迁移工具；保留既有 save payload 的 1.x→2.0 迁移矩阵。
+- [x] 发布门禁新增 `node tools/check_content_schema_v2.mjs`（active/draft、Core/SDK envelope、FrameworkInfo 基线全 2.0）。
+- [x] 更新 `README`、`CHANGELOG`、`ENTITY_CONTRACT_V2`、本文档状态为 **Finalized**。
 
 ## 5. 兼容性矩阵（目标态）
 
@@ -254,12 +256,12 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 1.x 旧存档 | 正常 | 正常（惰性补齐） | 正常（迁移矩阵覆盖） |
 | v2 世界存档读入 1.0 运行时 | 不适用 | 拒绝并保留只读提示 | — |
 
-> **当前实现（2026-10-23 D5 后）**：Phase B、Phase C（C1–C4）与 Phase D0–D5 已完成；**42 个 active 类型全部为 2.0，运行时不再有 1.0 类型**，
+> **当前实现（2026-10-23 Phase E 后）**：Phase B、Phase C（C1–C4）、Phase D0–D5 与 Phase E 已完成；**42 个 active 类型与 3 类草案全部为 2.0，运行时不再有 1.0 类型**，
 > 顶层 1.0 内容 Schema（roles / strategies / port_archetypes / map_profiles / starting_builds / contracts / events / patch）
 > 与对应旧内容文件已删除，旧模组按「未知类型 / 版本不符」拒绝。双读窗口不再适用（见下方开发期例外）。
 >
-> **开发期（C/D）例外（2026-10-22 拍板）**：开发器没有第三方模组，每次迭代后旧存档 / 旧内容模型直接作废，
-> 不要求跨迭代兼容；上表的 1.0 兼容列只描述已发布 MVP 的历史行为，不是 C/D 的门禁。
+> **开发期例外（2026-10-22 拍板，Phase E 收口）**：没有第三方模组，旧存档 / 旧内容模型直接作废；
+> 上表的 1.0 兼容列只描述已发布 MVP 的历史行为。Phase E 起 1.0 内容不再读取，也不再提供迁移工具。
 
 ## 6. 测试与门禁
 
@@ -277,7 +279,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 风险 | 影响 | 缓解 | 回滚点 |
 | --- | --- | --- | --- |
 | 与在途探索/海图工作冲突（最大） | `map_profile` 字段互相覆盖 | 先等探索 4.1 落定；B 阶段做字段映射 | 回退 Phase B 运行时，类型保留草案 |
-| 第三方 1.0 模组失效 | 社区内容不可用 | **开发期不承诺兼容**（旧内容模型随合并作废）；发布前按 Phase E 重新评估双读 / 迁移工具 | 发布前决策 |
+| 第三方 1.0 模组失效 | 社区内容不可用 | **开发期不承诺兼容**（旧内容模型随合并作废）；Phase E 已拍板不做双读/迁移工具，1.0 直接拒绝 | 已收口 |
 | Patch 跨版本错配 | 定义被错误修改 | D4 强校验：`patches` 2.0 envelope 不符由 `unsupported_schema` 拦截 | 单点回退 |
 | 存档版本记录变化 | 旧档读回失败 | D3 惰性补齐 + 迁移矩阵；**C/D 开发期旧档直接作废** | 保留 `content_schema` 单值兼容 |
 | 编辑器导出草案到游戏 | 玩家启动 Degraded | 已实现导出守卫（G8）：发布包部署禁用、ZIP/目录导出二次确认 | 编辑器单点回退 |
@@ -326,7 +328,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] **Phase D0/D1/D2/D3/D4 完成快照**：37 个 active 类型全部 2.0（36 定义 + patch）；schema bundle 43（2 顶层 + 41 v2）、编辑器 40（37 runtime + 3 draft）、Core 36 内容文件 / 140 定义；Godot **618/618**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [x] Phase D · D5：ruins 5 类 active 2.0 + Core 5 个内容文件 + `RuinOps` / `ExpeditionService` / `expedition.*` 命令与 `expedition.view`；SDK `example_ruins`、最小遗迹页（2026-10-23）。
 - [x] **Phase D0–D5 完成快照**：42 个 active 类型全部 2.0（41 定义 + patch）；schema bundle 48（2 顶层 + 46 v2）、编辑器 45（42 runtime + 3 draft）、Core 41 内容文件 / 154 定义；Godot **635/635**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
-- [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
+- [x] **Phase E**：1.0 生成/读取冻结；`tools/check_content_schema_v2.mjs` 发布门禁；文档状态 Finalized（2026-10-23）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。
 
 ## 10. 决策记录

@@ -288,8 +288,7 @@ node SNModMaker/tools/content.mjs validate --mod dev_mods/core --godot
    本地与 `common.schema.json` 引用；`schemas/v2/` 的草案 Schema 按基准文件所在目录解析
    `common.schema.json` 等跨文件 `$ref`。
 2. **Schema 版本**：每个内容类型在 `content_types.json` 声明自己的 `schema_version`，生成到编辑器的 `schemaVersion` 字段
-   （当前 42 类运行时类型全部为 2.0：Phase B 的 9 类 + C1 的 `hulls` / `modules` + C2 的 `items` + C3 的 `quests` + C4 的 `port_templates` / `starting_scenarios` + C4-C 的 `voyage_events` / `crew_roles` / `boiler_strategies` + C4-D 的 `contracts` / `patches` + D1 的 6 个战斗类型 + D2 的 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` + D3 的 5 个基地类型 + D4 的 `trade_policies` / `automation_rules` + D5 的 5 个遗迹类型；`story_arcs` / `story_levels` / `combat_ai_profiles` 草案为 2.0）；声明版本与类型不符报 `schema_version_mismatch`，不是 1.0 / 2.0 报
-   `schema_version_unsupported`。运行时同样按类型校验版本，不再有全局单一门禁。
+   （当前 42 类运行时类型全部为 2.0：Phase B 的 9 类 + C1 的 `hulls` / `modules` + C2 的 `items` + C3 的 `quests` + C4 的 `port_templates` / `starting_scenarios` + C4-C 的 `voyage_events` / `crew_roles` / `boiler_strategies` + C4-D 的 `contracts` / `patches` + D1 的 6 个战斗类型 + D2 的 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` + D3 的 5 个基地类型 + D4 的 `trade_policies` / `automation_rules` + D5 的 5 个遗迹类型；`story_arcs` / `story_levels` / `combat_ai_profiles` 草案为 2.0）；1.0 内容报 `schema_version_frozen`，其他非 2.0 报 `schema_version_unsupported`，类型期望版本不符报 `schema_version_mismatch`。运行时同样按类型校验版本，不再有全局单一门禁。
 3. **Steam Navigator 语义**
    Manifest ID / SemVer / 依赖范围、内容与本地化清单一致性、ID 命名空间与类型段、跨文件重复 ID、
    本模组引用是否存在、Core 引用是否存在、本地化键缺失/空值、补丁目标与操作安全、资源扩展名与大小。

@@ -24,25 +24,23 @@
   }
 
   /**
-   * Schema version for a content type. Schema 2.0 is versioned per type: the
-   * Phase B world/campaign types and the draft types (weapons and the Story
-   * Mode arcs/levels) carry "2.0"; the other runtime types stay "1.0". The
-   * version belongs to the type, not to the individual file, so a
-   * stale/missing value cannot downgrade the type.
+   * Schema version for a content type. Phase E freezes Content Schema 1.0:
+   * every active and draft type is 2.0, so a missing catalog entry falls back to
+   * 2.0 and the editor never writes a 1.0 envelope.
    */
   function schemaVersionFor(typeKey) {
     const cat = catalog();
     if (cat && typeof cat.schemaVersionFor === 'function') return cat.schemaVersionFor(typeKey);
-    return '1.0';
+    return '2.0';
   }
 
   /** Effective schema_version a content file should be saved/exported with. */
   function fileSchemaVersion(file) {
-    if (!file) return '1.0';
+    if (!file) return '2.0';
     const cat = catalog();
     const info = cat && cat.BY_KEY ? cat.BY_KEY[file.content_type] : null;
     if (info) return schemaVersionFor(info.key);
-    return file.schema_version || '1.0';
+    return file.schema_version || '2.0';
   }
 
   function deepClone(value) {

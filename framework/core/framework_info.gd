@@ -9,7 +9,10 @@ const VERSION := "0.1.0"
 const API_MAJOR := 1
 const API_MINOR := 0
 const API_VERSION := "1.0"
-const CONTENT_SCHEMA := "1.0"
+## Phase E: Content Schema 2.0 is the only supported content baseline. Saves keep
+## writing `content_schema` so older headers remain diagnosable, but no 1.0 content
+## is generated or read any more.
+const CONTENT_SCHEMA := "2.0"
 
 const CAPABILITIES := [
 	"content.contract.passenger.v1",

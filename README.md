@@ -26,7 +26,7 @@
 
 - **可玩闭环**：程序生成海图、市场/补给、委托、船厂购买/打造/仓库/改装、出航与风险事件、探索线索、通关总结、主菜单与设置持久化。
 - **2.5D 固定舞台**：港口全窗 3D 舞台、连续港区三站位、船厂 3D 实机舞台、航行离港/入港演出、静态合批与低配回退。
-- **Content Schema 2.0 Phase D 已完成（D0–D5）**：Phase C 已完成（`modules` / `hulls` / `items` / `quests` / `port_templates` / `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches` 全 2.0，`map_profiles` 退役）。D0 落地确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长）；D1 把 `weapons` 提升为 active，并新增 `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`；D2 新增 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类舰队内容与 `fleet.*` 命令；D3 新增 `base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles` 五类基地内容与 tick 生产；D4 新增 `trade_policies` / `automation_rules` 两类自动贸易内容与 tick 买卖；D5 新增 `ruin_archetypes` / `room_templates` / `expedition_events` / `hazard_tables` / `relics` 五类遗迹内容与远征运行时。**42 个 active 类型全部 2.0（41 定义 + 显式补丁，0 个 1.0 runtime）**，只剩 3 类草案（`story_arcs` / `story_levels` / `combat_ai_profiles`）仅供编辑器与 draft 校验；`combat_ai_profiles` 为 schema 先行的战斗 AI 状态机（FSM），运行时不加载。
+- **Content Schema 2.0 已 Finalized（Phase A–E）**：Phase C 已完成（`modules` / `hulls` / `items` / `quests` / `port_templates` / `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches` 全 2.0，`map_profiles` 退役）。D0 落地确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长）；D1 把 `weapons` 提升为 active，并新增 `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`；D2 新增 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类舰队内容与 `fleet.*` 命令；D3 新增 `base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles` 五类基地内容与 tick 生产；D4 新增 `trade_policies` / `automation_rules` 两类自动贸易内容与 tick 买卖；D5 新增 `ruin_archetypes` / `room_templates` / `expedition_events` / `hazard_tables` / `relics` 五类遗迹内容与远征运行时。**42 个 active 类型与 3 类草案全部 2.0（41 定义 + 显式补丁，0 个 1.0 runtime）**；Phase E 已冻结 1.0 内容生成/读取，1.0 内容会直接报「需要 2.0」。草案（`story_arcs` / `story_levels` / `combat_ai_profiles`）仍仅供编辑器与 draft 校验；`combat_ai_profiles` 为 schema 先行的战斗 AI 状态机（FSM），运行时不加载。
 - **剧情 / 任务**：新手教学 4.5 与任务追踪 `task.view` 已落地；C3 起 `quests` 2.0 + 持久 `data.quests` + `QuestService` 已接入（委托接取生成追踪实例，剧情演出/游戏指引等抽象引导由 Quest 承载），剧情模式 S1 数据契约（`story_arcs` / `story_levels` 草案）已就绪。
 - **无头测试**：`pwsh ./tools/test.ps1` 跑 Godot 全量（默认按 CPU 多进程分片并行）；Node/CLI/SDK 门禁命令见下方。
 
@@ -58,6 +58,7 @@ pwsh ./tools/test.ps1 -Suite ui_shell # 只跑单个套件（名字片段即可�
 - 分片成员用上一轮 `.godot/test_suite_timings.json` 的套件耗时做负载均衡；首次运行无缓存时按声明顺序拆分，跑完自动写入缓存，下一轮更均衡。
 - 首次在干净克隆 / 新 worktree 上运行会先做一次 `--editor --quit` 资源导入（可用 `-NoImport` 跳过）。
 - 单进程等价命令仍可用：`godot --headless --path . --script res://framework/tests/test_runner.gd`；加 `-- --shard=0/2` 可手工分片，`-- --list` 可列出套件。
+- Content Schema 2.0 冻结门禁：`node tools/check_content_schema_v2.mjs`（Phase E 起 active/draft、Core/SDK 内容 envelope 与框架基线必须全部为 2.0）。
 
 
 ### 打包 Core 模组

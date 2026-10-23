@@ -14,65 +14,65 @@
 | `MANIFEST_SCHEMA_URL` | L14 |
 | `DEFAULT_OPTION_NAMES` | L15 |
 | `catalog()` | L22 |
-| `schemaVersionFor(typeKey)` | L33 |
-| `fileSchemaVersion(file)` | L40 |
-| `deepClone(value)` | L48 |
-| `uid()` | L52 |
-| `slugify(text, fallback)` | L57 |
-| `localPart(id)` | L68 |
-| `namespaceOf(id)` | L74 |
-| `keyBase(typeKey, modId, localId)` | L78 |
-| `keyBaseOf(definition, typeKey, modId, localId)` | L87 |
-| `blankManifest(id, name)` | L95 |
-| `addDraftStarter(project, typeKey)` | L120 |
-| `createProject(options)` | L136 |
-| `applyTemplate(project, templateKey)` | L172 |
-| `ensureContentFile(project, typeKey)` | L322 |
-| `allDefinitions(project)` | L344 |
-| `runtimeSupportsFile(file)` | L367 |
-| `unsupportedContentFiles(project)` | L383 |
-| `draftContentFiles(project)` | L390 |
-| `hasDraftContent(project)` | L394 |
-| `definitionIdSet(project)` | L398 |
-| `uniqueLocalId(project, typeKey, preferred)` | L406 |
-| `getLoc(project, locale)` | L424 |
-| `addLocale(project, locale, path)` | L428 |
-| `removeLocale(project, locale)` | L443 |
-| `setLocalization(project, locale, key, value)` | L448 |
-| `collectAutoNameKeys(definition, typeKey)` | L456 |
-| `collectDefinitionKeys(definition)` | L490 |
-| `fillNestedKeys(definition, typeKey, modId, localId)` | L509 |
-| `addDefinition(project, typeKey, options)` | L538 |
-| `removeDefinition(project, filePath, index)` | L617 |
-| `rewriteKeyBase(value, oldBase, newBase)` | L628 |
-| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L659 |
-| `duplicateDefinition(project, filePath, index)` | L699 |
-| `coreIndex()` | L737 |
-| `qualifyCoreAssetReferences(definition)` | L741 |
-| `cloneCoreDefinition(project, coreDefinitionId)` | L750 |
-| `addAsset(project, asset)` | L795 |
-| `removeAsset(project, path)` | L805 |
-| `syncManifest(project)` | L811 |
-| `touch(project)` | L829 |
-| `normalizeProject(raw, options)` | L834 |
-| `serialize(project)` | L861 |
-| `deserialize(text)` | L865 |
-| `bytesToBase64(bytes)` | L869 |
-| `base64ToBytes(base64)` | L878 |
-| `mimeFor(path)` | L887 |
-| `bytesToDataUrl(bytes, mime)` | L900 |
-| `dataUrlToBytes(dataUrl)` | L904 |
-| `decodeText(data)` | L908 |
-| `encodeText(text)` | L913 |
-| `toExportFiles(project, options)` | L918 |
-| `stripRoot(paths)` | L944 |
-| `fromFiles(entries)` | L957 |
-| `definitionKeys(project, typeKey)` | L1060 |
-| `findDefinition(project, filePath, index)` | L1064 |
-| `localizationValue(project, definition, field, locale)` | L1070 |
-| `definitionTitle(project, definition)` | L1077 |
-| `dependencyOnCore(project)` | L1085 |
-| `SNStore (global)` | L1089 |
+| `schemaVersionFor(typeKey)` | L31 |
+| `fileSchemaVersion(file)` | L38 |
+| `deepClone(value)` | L46 |
+| `uid()` | L50 |
+| `slugify(text, fallback)` | L55 |
+| `localPart(id)` | L66 |
+| `namespaceOf(id)` | L72 |
+| `keyBase(typeKey, modId, localId)` | L76 |
+| `keyBaseOf(definition, typeKey, modId, localId)` | L85 |
+| `blankManifest(id, name)` | L93 |
+| `addDraftStarter(project, typeKey)` | L118 |
+| `createProject(options)` | L134 |
+| `applyTemplate(project, templateKey)` | L170 |
+| `ensureContentFile(project, typeKey)` | L320 |
+| `allDefinitions(project)` | L342 |
+| `runtimeSupportsFile(file)` | L365 |
+| `unsupportedContentFiles(project)` | L381 |
+| `draftContentFiles(project)` | L388 |
+| `hasDraftContent(project)` | L392 |
+| `definitionIdSet(project)` | L396 |
+| `uniqueLocalId(project, typeKey, preferred)` | L404 |
+| `getLoc(project, locale)` | L422 |
+| `addLocale(project, locale, path)` | L426 |
+| `removeLocale(project, locale)` | L441 |
+| `setLocalization(project, locale, key, value)` | L446 |
+| `collectAutoNameKeys(definition, typeKey)` | L454 |
+| `collectDefinitionKeys(definition)` | L488 |
+| `fillNestedKeys(definition, typeKey, modId, localId)` | L507 |
+| `addDefinition(project, typeKey, options)` | L536 |
+| `removeDefinition(project, filePath, index)` | L615 |
+| `rewriteKeyBase(value, oldBase, newBase)` | L626 |
+| `commitDefinitionLocalization(project, definition, typeKey, oldBase, newBase, translations)` | L657 |
+| `duplicateDefinition(project, filePath, index)` | L697 |
+| `coreIndex()` | L735 |
+| `qualifyCoreAssetReferences(definition)` | L739 |
+| `cloneCoreDefinition(project, coreDefinitionId)` | L748 |
+| `addAsset(project, asset)` | L793 |
+| `removeAsset(project, path)` | L803 |
+| `syncManifest(project)` | L809 |
+| `touch(project)` | L827 |
+| `normalizeProject(raw, options)` | L832 |
+| `serialize(project)` | L859 |
+| `deserialize(text)` | L863 |
+| `bytesToBase64(bytes)` | L867 |
+| `base64ToBytes(base64)` | L876 |
+| `mimeFor(path)` | L885 |
+| `bytesToDataUrl(bytes, mime)` | L898 |
+| `dataUrlToBytes(dataUrl)` | L902 |
+| `decodeText(data)` | L906 |
+| `encodeText(text)` | L911 |
+| `toExportFiles(project, options)` | L916 |
+| `stripRoot(paths)` | L942 |
+| `fromFiles(entries)` | L955 |
+| `definitionKeys(project, typeKey)` | L1058 |
+| `findDefinition(project, filePath, index)` | L1062 |
+| `localizationValue(project, definition, field, locale)` | L1068 |
+| `definitionTitle(project, definition)` | L1075 |
+| `dependencyOnCore(project)` | L1083 |
+| `SNStore (global)` | L1087 |
 
 ## 契约与约束
 

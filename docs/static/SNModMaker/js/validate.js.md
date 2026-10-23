@@ -57,16 +57,16 @@
 | `checkStoryLevelSemantics(definition, view, add)` | L736 |
 | `checkStoryPack(contentFiles, add)` | L844 |
 | `validateProject(project, options)` | L885 |
-| `finish(issues)` | L1259 |
-| `byDefinition(issues)` | L1268 |
-| `SNValidate (global)` | L1281 |
+| `finish(issues)` | L1262 |
+| `byDefinition(issues)` | L1271 |
+| `SNValidate (global)` | L1284 |
 
 ## 契约与约束
 
 - Schema 能力与 Godot `SchemaValidator` 的常用子集对齐；不支持远程 ref、if/then/else、format 断言。
 - `resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。
 - `schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（D2 后全部 active 类型为 2.0；story_arcs / story_levels 草案为 2.0），未知类型最后回退 1.0。
-- 内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。
+- 内容文件的 `schema_version` 只接受 2.0（Phase E 冻结 1.0）；1.0 报 `schema_version_frozen`，其他值报 `schema_version_unsupported`，与类型期望版本不符报 `schema_version_mismatch`。
 - `draft_content` 警告只针对仍是草案的 `story_arcs` / `story_levels`；active 2.0 类型（D5 后全部 42 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（42 类 + 草案族），同一 capability 每次校验只报一条。
 - `LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。
 - `REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_scenario` → starting_scenario，与已有的 hull / good 等字段共用 `ref_type` 提示。

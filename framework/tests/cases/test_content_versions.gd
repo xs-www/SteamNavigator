@@ -15,7 +15,9 @@ extends TestCase
 ## - `content_types.json.draft_schemas` 是 `weapons` + 剧情模式 `story_arcs` /
 ##   `story_levels`，草案不得进入 `ContentTypes`。
 ## - 所有 active 类型的 envelope 必须声明 2.0；任何声明 1.0 的内容（如 `items`）
-##   都会报 `unsupported_schema`（C4-D 后无 1.0 active 类型）。
+##   都会报 `unsupported_schema`（Phase E 起 1.0 已冻结，错误信息明确要求 2.0）。
+## - Phase E 的基线常量 `FrameworkInfo.CONTENT_SCHEMA` 与 `content_types.json.content_schema`
+##   也必须是 2.0。
 ## - 一个 2.0 `world_profiles` 内容模组必须通过 ContentCompiler、进入注册表，
 ##   且不产生 fatal / degraded 启动状态。
 ## @end-static-doc
@@ -268,8 +270,21 @@ func test_item_envelope_with_1_0_is_rejected_per_type() -> void:
 			mod_id = String(error.get("mod_id", ""))
 	assert_contains(message, "items", "the error names the content type")
 	assert_contains(message, "2.0", "the error names the expected version")
+	assert_contains(message, "frozen", "Phase E marks 1.0 as frozen rather than merely mismatched")
 	assert_eq(mod_id, TEMP_V2_MOD_ID, "the error points at the offending mod")
 	assert_false(report.has_fatal(), "an unsupported version is a mod error, not a fatal startup error")
+
+
+## Phase E：内容版本基线本身也必须是 2.0（存档 header + content_types.json），
+## 否则旧编辑器/工具仍可能生成 1.0 内容。
+func test_phase_e_freezes_the_content_schema_baseline() -> void:
+	assert_eq(FrameworkInfo.CONTENT_SCHEMA, "2.0", "the framework content-schema baseline is 2.0")
+	var parsed := JsonUtils.parse_file("res://content_types.json")
+	assert_true(bool(parsed.get("ok", false)), "content_types.json parses")
+	var manifest: Dictionary = parsed["value"]
+	assert_eq(String(manifest.get("content_schema", "")), "2.0", "content_types.json declares the 2.0 baseline")
+	for content_type in ContentTypes.registry_types():
+		assert_eq(ContentTypes.schema_version(content_type), "2.0", "%s is 2.0 in the finalized baseline" % content_type)
 
 
 func test_patch_revalidation_uses_target_type_version() -> void:
