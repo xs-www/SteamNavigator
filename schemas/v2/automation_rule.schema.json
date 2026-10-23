@@ -60,7 +60,7 @@
           }
         },
         "action": {
-          "enum": ["pause", "resume", "sell_now", "buy_now", "skip_good"]
+          "enum": ["pause", "resume", "sell_now", "buy_now"]
         },
         "priority": {
           "type": "integer",

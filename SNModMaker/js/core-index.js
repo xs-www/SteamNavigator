@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-23T04:46:16.582Z",
+    "generated_at": "2026-10-23T05:00:34.824Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -6092,7 +6092,7 @@
             "enabled": true,
             "data": {
               "policy_ref": "core:trade_policy/bulk_lane",
-              "when": "tick",
+              "when": "arrival",
               "condition": {
                 "op": "cargo_gte",
                 "value": 40
@@ -14661,7 +14661,7 @@
           "enabled": true,
           "data": {
             "policy_ref": "core:trade_policy/bulk_lane",
-            "when": "tick",
+            "when": "arrival",
             "condition": {
               "op": "cargo_gte",
               "value": 40

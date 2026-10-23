@@ -190,13 +190,47 @@ func test_save_round_trip() -> void:
 
 func test_malformed_trade_data_is_normalized() -> void:
 	var context := _start(507)
-	for variant in ["broken", 42, ["no"], {"active": true, "cargo": "bad", "log": "bad", "phase": "warp"}]:
+	for variant in [
+		"broken",
+		42,
+		["no"],
+		{"active": true, "cargo": "bad", "log": "bad", "phase": "warp"},
+		{"active": true, "log": null},
+		{"active": true, "travel_remaining": null},
+		{"active": true, "legs": null, "spent": [], "profit": {}},
+		{"active": true, "cargo": {"core:item/timber": {}}},
+		{"active": "false", "paused": "x"},
+	]:
 		context.state.data["trade"] = variant
 		var result := context.queries.execute(&"auto_trade.view")
 		assert_true(bool(result.get("ok", false)), "auto_trade.view tolerates malformed data")
 		var view: Dictionary = result.get("data", {})
 		assert_eq(typeof(view.get("phase", "")), TYPE_STRING, "the phase is normalized")
 		assert_true(view.get("cargo", null) is Array, "cargo normalizes to an array")
+		assert_true(view.get("log", null) is Array, "log normalizes to an array")
+		assert_eq(typeof(view.get("travel_remaining", null)), TYPE_FLOAT, "travel time normalizes to a float")
+		assert_eq(typeof(view.get("legs", null)), TYPE_INT, "leg counters normalize to ints")
+		assert_eq(typeof(view.get("paused", null)), TYPE_BOOL, "paused normalizes to a bool")
+		_advance(context, 1)
+		if variant is Dictionary:
+			var active_value: Variant = (variant as Dictionary).get("active", false)
+			if active_value is bool and active_value:
+				assert_true(context.state.data.get("trade", null) is Dictionary, "a tick keeps the normalized trade block")
+
+
+## D4-FIX：`when` 必须真的控制规则触发阶段；arrival 规则不能在第 1 tick 就暂停。
+func test_rule_when_gates_the_trigger_phase() -> void:
+	var context := _start(509)
+	var rule := context.registries.get_by_id(ContentTypes.AUTOMATION_RULE, "core:automation_rule/bulk_stop_low_money")
+	assert_true(rule != null, "the low-money rule exists")
+	var original := String(rule.data.get("when", "tick"))
+	rule.data["when"] = "arrival"
+	context.state.data["money"] = 100
+	var started := context.commands.execute(&"auto_trade.start", {"policy_id": _policy_id(context)})
+	assert_true(bool(started.get("ok", false)), "starting with a low balance succeeds")
+	_advance(context, 1)
+	assert_false(bool(_view(context).get("paused", true)), "an arrival rule does not fire on the first tick")
+	rule.data["when"] = original
 
 
 func test_same_seed_and_commands_are_deterministic() -> void:

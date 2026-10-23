@@ -313,7 +313,7 @@ scan → manifest / dependency resolve → schema compile
   只要求新战役可创建、保存、读回。
 - [x] 第三方模组可注册新内容类型内的数据，但不能覆盖已有 ID 或绕过校验。
 - [x] 发布产物零 `error`；`warning` 可见。
-- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D5 全量回归已绿：Godot 630 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
+- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D5 全量回归已绿：Godot 631 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
 
 ## 18. 待决策
 

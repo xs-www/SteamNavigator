@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T04:55:12.964Z",
-  "commit": "b5137a5",
+  "generated_at": "2026-10-23T05:03:03.135Z",
+  "commit": "d5fb310",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -2820,7 +2820,7 @@
     },
     {
       "source": "dev_mods/core/content/automation_rules.json",
-      "sha256": "3fb647ebf3799d401926571ed7ab7bd942d36760de02212f03bf9ed2fb3859b4",
+      "sha256": "dfe17dac40fc56e670e26c836c53ce25521aea1edf151950b0f7f303e9c3e6f8",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3790,7 +3790,7 @@
     },
     {
       "source": "framework/domain/ruins/ruin_ops.gd",
-      "sha256": "4b5a80ffe6b5c54c760952834c834b8e2b8aa93495d1558a3db40b76db45359e",
+      "sha256": "dc8875a1cb133d522c35f55a1fcb02abdc45743bc12fca06ac1a67b1965c4a5c",
       "doc": "docs/static/framework/domain/ruins/ruin_ops.gd.md",
       "status": "documented"
     },
@@ -3850,7 +3850,7 @@
     },
     {
       "source": "framework/domain/trade/auto_trade_ops.gd",
-      "sha256": "8360e0ee1fe72fca3f74b948b573e1d92102b5f2932d32ecec3bd9fcd6241083",
+      "sha256": "584bc121136f153d9b5a58efe1406a1c36de276ded3dd42b745ef7f177caa1ac",
       "doc": "docs/static/framework/domain/trade/auto_trade_ops.gd.md",
       "status": "documented"
     },
@@ -3862,7 +3862,7 @@
     },
     {
       "source": "framework/domain/trade/auto_trade_system.gd",
-      "sha256": "f89d3daeaf3ceacba6e969f84864aeda593a16f789b8fb30e884282ec6eb184b",
+      "sha256": "816926c2b48ce651e83a28022263a9d71f8e9408843d257f4a5f094338196b47",
       "doc": "docs/static/framework/domain/trade/auto_trade_system.gd.md",
       "status": "documented"
     },
@@ -4132,7 +4132,7 @@
     },
     {
       "source": "framework/tests/cases/test_auto_trade.gd",
-      "sha256": "2d38ce0066656cb6abca4a73bd648667d5f12c425c7de997f68ae2b66b60a705",
+      "sha256": "23c8813ab30661aa44839ea010c7fb1fe79541b69d675034b303524dcfb5f2a9",
       "doc": "docs/static/framework/tests/cases/test_auto_trade.gd.md",
       "status": "documented"
     },
@@ -5168,7 +5168,7 @@
     },
     {
       "source": "schemas/v2/automation_rule.schema.json",
-      "sha256": "ab69bddbf0299f8e7ab5354abb6fddce122c88a4e6c6d77bb0c6705a757d5142",
+      "sha256": "ac86c5059296503a6ba9ccd2b1f53bda5155875bf9adfbb645f547fe4e184f4f",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -5931,7 +5931,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "9c9cb93f50d3d2e0344d68d6c71162fca14bfc43e06bb87bb7c4309834d598f4",
+      "sha256": "e739fb110cad4757957b610b329ad962a7024de0fad055008f764793b59e2886",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7408,7 +7408,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "a500c838c88e7be24c0686227926e0e6b4ec1130208c4b09e87b203176f4d4b5",
+      "sha256": "c927c53fb41cd347b01830232364e7facc1863421a6d3bf058b556a0b7c1e2a9",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

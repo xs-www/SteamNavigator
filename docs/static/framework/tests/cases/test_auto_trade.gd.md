@@ -16,7 +16,8 @@
 | `test_set_policy_and_stop() -> void` | L157 |
 | `test_save_round_trip() -> void` | L174 |
 | `test_malformed_trade_data_is_normalized() -> void` | L191 |
-| `test_same_seed_and_commands_are_deterministic() -> void` | L202 |
+| `test_rule_when_gates_the_trigger_phase() -> void` | L222 |
+| `test_same_seed_and_commands_are_deterministic() -> void` | L236 |
 
 风险日志、存档 round-trip、损坏数据规范化与确定性。
 

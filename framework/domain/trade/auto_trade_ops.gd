@@ -43,7 +43,7 @@ static func has_auto_trade(state: GameState) -> bool:
 	if state == null:
 		return false
 	var raw: Variant = state.data.get(TRADE_KEY, null)
-	return raw is Dictionary and bool((raw as Dictionary).get("active", false))
+	return raw is Dictionary and _safe_bool((raw as Dictionary).get("active", false), false)
 
 
 ## Returns the live trade block, or `{}` when auto trade is not active.
@@ -51,7 +51,7 @@ static func ensure_structure(state: GameState) -> Dictionary:
 	if state == null:
 		return {}
 	var raw: Variant = state.data.get(TRADE_KEY, null)
-	if not (raw is Dictionary) or not bool((raw as Dictionary).get("active", false)):
+	if not (raw is Dictionary) or not _safe_bool((raw as Dictionary).get("active", false), false):
 		return {}
 	var trade := _normalize(raw)
 	state.data[TRADE_KEY] = trade
@@ -214,13 +214,18 @@ static func sell_cargo(state: GameState, hub: RegistryHub, trade: Dictionary, ti
 	return _sell_cargo(state, hub, trade, tick)
 
 
-## Runs policy rules for this tick; returns true when the automation should stop
-## processing the rest of the tick (paused).
-static func evaluate_rules(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int) -> bool:
+## Runs policy rules for this tick phase; returns true when the automation should stop
+## processing the rest of the tick (paused). `when` selects the trigger phase:
+## `tick` at the start of a tick, `departure` right after a buy, `arrival` at the
+## destination before risk/sale (so `sell_now` rules can fire there).
+static func evaluate_rules(state: GameState, hub: RegistryHub, trade: Dictionary, tick: int, when: String = "tick") -> bool:
 	var policy := policy_definition(hub, String(trade.get("policy_id", "")))
 	if policy == null:
 		return true
 	for rule in policy_rules(hub, policy):
+		var rule_when := String(rule.data.get("when", "tick"))
+		if rule_when != when:
+			continue
 		if not condition_met(state, hub, trade, policy, rule):
 			continue
 		apply_rule_action(state, hub, trade, rule, tick)
@@ -387,28 +392,49 @@ static func _normalize(raw: Variant) -> Dictionary:
 		trade[key] = _safe_string(source.get(key, ""))
 	var phase := _safe_string(source.get("phase", "idle"), "idle")
 	trade["phase"] = phase if PHASES.has(phase) else "idle"
-	trade["active"] = bool(source.get("active", false))
-	trade["paused"] = bool(source.get("paused", false))
-	trade["travel_remaining"] = maxf(0.0, float(source.get("travel_remaining", 0.0)))
-	trade["legs"] = maxi(0, int(source.get("legs", 0)))
-	trade["spent"] = maxi(0, int(source.get("spent", 0)))
-	trade["earned"] = maxi(0, int(source.get("earned", 0)))
-	trade["profit"] = int(source.get("profit", 0))
+	trade["active"] = _safe_bool(source.get("active", false), false)
+	trade["paused"] = _safe_bool(source.get("paused", false), false)
+	trade["travel_remaining"] = maxf(0.0, _safe_float(source.get("travel_remaining", 0.0), 0.0))
+	trade["legs"] = maxi(0, _safe_int(source.get("legs", 0), 0))
+	trade["spent"] = maxi(0, _safe_int(source.get("spent", 0), 0))
+	trade["earned"] = maxi(0, _safe_int(source.get("earned", 0), 0))
+	trade["profit"] = _safe_int(source.get("profit", 0), 0)
 	var cargo: Dictionary = {}
 	var raw_cargo: Variant = source.get("cargo", {})
 	if raw_cargo is Dictionary:
 		for raw_item_id in (raw_cargo as Dictionary).keys():
-			var amount := int((raw_cargo as Dictionary)[raw_item_id])
+			var amount := _safe_int((raw_cargo as Dictionary)[raw_item_id], 0)
 			if amount > 0:
 				cargo[String(raw_item_id)] = amount
 	trade["cargo"] = cargo
 	var log: Array = []
-	for entry in source.get("log", []):
-		if entry is Dictionary and log.size() < LOG_LIMIT:
-			log.append(entry.duplicate(true))
+	var raw_log: Variant = source.get("log", [])
+	if raw_log is Array:
+		for entry in raw_log:
+			if entry is Dictionary and log.size() < LOG_LIMIT:
+				log.append(entry.duplicate(true))
 	trade["log"] = log
 	return trade
 
 
 static func _safe_string(value: Variant, fallback: String = "") -> String:
 	return value if value is String else fallback
+
+
+static func _safe_int(value: Variant, fallback: int = 0) -> int:
+	if value is int:
+		return value
+	if value is float and is_finite(value):
+		return int(value)
+	return fallback
+
+
+static func _safe_float(value: Variant, fallback: float = 0.0) -> float:
+	if value is int or value is float:
+		var number := float(value)
+		return number if is_finite(number) else fallback
+	return fallback
+
+
+static func _safe_bool(value: Variant, fallback: bool = false) -> bool:
+	return value if value is bool else fallback

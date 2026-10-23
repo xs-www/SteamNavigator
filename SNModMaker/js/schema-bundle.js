@@ -579,8 +579,7 @@
                 "pause",
                 "resume",
                 "sell_now",
-                "buy_now",
-                "skip_good"
+                "buy_now"
               ]
             },
             "priority": {

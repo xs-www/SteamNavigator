@@ -26,6 +26,9 @@ D4 交付可观察的自动贸易纵向切片：
 `condition.op`：`always` / `money_gte` / `money_lte` / `cargo_gte` / `cargo_lte` /
 `margin_gte` / `risk_gte`；`action`：`pause` / `resume` / `sell_now` / `buy_now`。
 
+`when` 决定规则触发阶段：`tick` 在每 tick 开始评估，`departure` 在买入后评估，
+`arrival` 在抵达目标港后、风险与卖出前评估（因此满载 `sell_now` 规则可在到港时生效）。
+
 ## 3. 运行态 `data.trade`
 
 ```json

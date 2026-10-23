@@ -35,14 +35,15 @@ static func tick(state: GameState, tick: int, context = null) -> void:
 	var trade := AutoTradeOps.ensure_structure(state)
 	if trade.is_empty():
 		return
-	if AutoTradeOps.evaluate_rules(state, hub, trade, tick):
+	if AutoTradeOps.evaluate_rules(state, hub, trade, tick, "tick"):
 		return
 	var policy := AutoTradeOps.policy_definition(hub, String(trade.get("policy_id", "")))
 	if policy == null:
 		return
 	match String(trade.get("phase", "idle")):
 		"idle":
-			AutoTradeOps.buy_and_depart(state, hub, trade, tick, policy)
+			if AutoTradeOps.buy_and_depart(state, hub, trade, tick, policy):
+				AutoTradeOps.evaluate_rules(state, hub, trade, tick, "departure")
 		"outbound":
 			_advance_leg(state, hub, trade, tick, policy, true)
 		"returning":
@@ -56,6 +57,9 @@ static func _advance_leg(state: GameState, hub: RegistryHub, trade: Dictionary, 
 		return
 	if outbound:
 		trade["at_port_id"] = String(trade.get("target_port_id", ""))
+		# Arrival rules run before risk/sale so `sell_now` rules (e.g. a full-cargo
+		# sell rule) actually fire instead of being dead content.
+		AutoTradeOps.evaluate_rules(state, hub, trade, tick, "arrival")
 		_apply_risk(state, hub, trade, tick, policy)
 		AutoTradeOps.sell_cargo(state, hub, trade, tick)
 		trade["phase"] = "returning"
