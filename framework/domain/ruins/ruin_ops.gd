@@ -269,6 +269,12 @@ static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
 			"event_id": String(entry.get("event_id", "")),
 			"loot_table": String(entry.get("loot_table", "")),
 		})
+	var relics: Array = []
+	var raw_relics: Variant = state.data.get(RELICS_KEY, []) if state != null else []
+	if raw_relics is Array:
+		for relic_id in raw_relics:
+			if relic_id is String:
+				relics.append(relic_id)
 	return {
 		"active": bool(expedition.get("active", false)),
 		"ruin_id": String(expedition.get("ruin_id", "")),
@@ -287,7 +293,7 @@ static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
 		"loot_money": int(expedition.get("loot_money", 0)),
 		"loot_items": _items_view(hub, expedition.get("loot_items", {})),
 		"log": (expedition.get("log", []) as Array).duplicate(true),
-		"relics": Array(state.data.get(RELICS_KEY, [])) if state != null else [],
+		"relics": relics,
 	}
 
 
