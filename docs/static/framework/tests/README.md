@@ -88,7 +88,7 @@
 - `test_campaign_state.gd` 守护 CampaignState 分区补齐、探索进度幂等与存档往返。
 - `test_ship_modules.gd` 守护模块实例补齐/condition 失效/安装重置/货舱对齐/damage_module 操作码/维修报价与存档往返。
 - `test_stage_host.gd` 守护 LocationStage 契约、SNStageHost 生命周期/回退/停更、ShipyardStage 场景、SNShipStage3D 适配器与 PortStage 装配/替换/缩放/portal。
-- `test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema、D1 `weapons` / D2 fleet 类型与 `map_configs`（31 键 exploration），确认 9 类 + D1/D2 active、只剩 2 类剧情草案。
+- `test_schema_v2_drafts.gd` 用当前 SchemaValidator 验证 `schemas/v2` 的 Phase B 世界/战役 Schema、D1 `weapons` / D2 fleet 类型与 `map_configs`（31 键 exploration），确认 9 类 + D1/D2 active、只剩 3 类草案（剧情 2 类 + 战斗 AI 1 类）。
 - `test_simulation.gd` 守护 D0：`data.sim` 惰性状态、`sim.pause|resume|set_speed|advance` 与 `sim.view`、tick 系统 priority/id 顺序、`sim.tick` 事件、同种子 hash 确定性与旧档补齐。
 - `test_combat.gd` 守护 D1：`CombatOps` 纯规则（护甲/穿甲/状态/撤退/战利品）、`CombatService` 落盘与 `data.combat` 惰性记录、`combat.resolve|view|log`、同 seed 确定性与 core 内容冒烟。
 - `test_fleet.gd` 守护 D2：`data.fleet` 惰性结构、旗舰与当前单船衔接、`fleet.view` 形状、captain 指派/可指挥船型/唯一性、formation slot 校验、doctrine 选择、增删舰与容量、`fleet.*` 事件、存档 round-trip 与旧档补齐。

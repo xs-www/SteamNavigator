@@ -5,7 +5,7 @@
 > 阶段 0/1，近期计划见 [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) §4.4。
 >
 > **结论先行**：实际按「按内容类型版本化 → 世界探索家族提升 → 实体合并 → 其余系统 → 冻结 1.0」分层落地；
-> 截至 D2，**30 个 active 类型全部是 Content Schema 2.0（0 个 1.0 runtime）**，只剩 2 类编辑器草案。
+> 截至 D2，**30 个 active 类型全部是 Content Schema 2.0（0 个 1.0 runtime）**，只剩 3 类编辑器草案（剧情 2 类 + 战斗 AI 1 类）。
 > 开发期没有第三方模组与旧档负担，实体合并（C1/C2/C3/C4）**直接改 Core 内容与 ID、删除旧类型，不做别名与存档迁移**；
 > 兼容策略只在发布前按 Phase E 另行评估。
 
@@ -45,7 +45,7 @@
 - 开局链路：C4 起**所有开局统一走 `CampaignFactory`**——`run.start` 无 `start_profile` 时
   `create_default_campaign`（默认 start profile + `starting_scenarios` 选择），显式传入时
   `create_campaign`；`build_id` / 1.0 `map_profiles` 路径已删除。
-- Core：`dev_mods/core/` 29 个内容文件 / 114 条定义（9 个 Phase B v2 文件 + `hulls` / `modules` / `items` /
+- Core：`dev_mods/core/` 29 个内容文件 / 115 条定义（9 个 Phase B v2 文件 + `hulls` / `modules` / `items` /
   `crew_roles` / `boiler_strategies` / `port_templates` / `starting_scenarios` / `contracts` /
   `voyage_events` / `quests` + D1 的 `weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` /
   `encounter_tables` / `loot_tables` + D2 的 `ship_archetypes` / `captains` / `formations` /
@@ -55,11 +55,11 @@
 
 ### 2.2 内容 Schema 与草案
 
-- `schemas/` 共 **35 个 Schema**：**2 个顶层**（`common` / `manifest`）+ **33 个 `schemas/v2/`**
+- `schemas/` 共 **36 个 Schema**：**2 个顶层**（`common` / `manifest`）+ **34 个 `schemas/v2/`**
   （`common` + 30 类 active 2.0 + 3 类草案）。不存在 1.0 内容 Schema。
 - 3 类草案（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑）：
-  `story_arcs`、`story_levels`，运行时暂不加载。
-- v2 **未覆盖**：无；所有 active 类型（含 `patches`）均使用 2.0 Schema，仅剩 2 类剧情草案待后续系统接入。
+  `story_arcs`、`story_levels`、`combat_ai_profiles`，运行时暂不加载。
+- v2 **未覆盖**：无；所有 active 类型（含 `patches`）均使用 2.0 Schema，仅剩 3 类草案（剧情 2 类 + 战斗 AI 1 类）待后续系统接入。
 - 旧模型清理（C1–C4）：合并完成后即删除旧类型、旧内容文件与旧 1.0 Schema（goods/materials、
   boilers/cargo_modules/navigation_modules/safety_modules/cabins、1.0 hull/roles/strategies/
   port_archetypes/starting_builds/events/contract/patch 顶层 Schema），**不保留 ID 别名**。
@@ -75,12 +75,12 @@
 
 ### 2.4 编辑器 / CLI / SDK / 门禁
 
-- 编辑器：`SNContentTypes.TYPES`（30 个运行时类型，全部 2.0）+ `DRAFT_TYPES`（2 个草案），合计 **32**；
-  schema bundle **35 个**（2 顶层 + 33 个 v2），由 `sync-schemas.mjs` 生成。
+- 编辑器：`SNContentTypes.TYPES`（30 个运行时类型，全部 2.0）+ `DRAFT_TYPES`（3 个草案），合计 **33**；
+  schema bundle **36 个**（2 顶层 + 34 个 v2），由 `sync-schemas.mjs` 生成。
   校验器有 `schemaVersionFor` 与 `schema_version_mismatch` / `schema_version_unsupported` /
   `draft_content` / `capability_undeclared`；G8 导出守卫按“当前运行时不支持”判定（草案 / 未注册 /
   版本不符拦截，运行时 2.0 类型可部署）。
-- Content CLI：`types` 输出 30 个运行时类型（全部标 runtime 2.0）与 2 个草案；
+- Content CLI：`types` 输出 30 个运行时类型（全部标 runtime 2.0）与 3 个草案；
   `--draft` 只接受剩余草案类型；写出的内容文件按类型版本写 `schema_version: "2.0"`（CLI 测试 64；D-AI 新增 `combat_ai_profiles` schema 先行草案，CLI/编辑器可编辑，运行时不加载）。
 - SDK `sdk/validate.gd` 走真实 `Bootstrap`（运行时语义）；`sdk/examples/example_weapons` 是 D1 的 runtime 2.0 示例，
   `sdk/examples/example_fleet` 是 D2 的 fleet 4 类型示例；发布 workflow 含 Godot 测试、`gen_content_types --check`、`gen_static_docs --check` 与 core 校验。
@@ -312,7 +312,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase D · D1：combat 6 类 active 2.0 + Core 6 个战斗内容文件 + `CombatOps` / `CombatService` / `combat.resolve|view|log`（2026-10-23）。
 - [x] **Phase D0/D1 完成快照**：26 个 active 类型全部 2.0（25 定义 + patch）；schema bundle 31（2 顶层 + 29 v2）、编辑器 28（26 runtime + 2 draft）；Godot **566/566**、Node **58/58**、CLI **63/63**、SDK `status: ok`（2026-10-23）。
 - [x] Phase D · D2：fleet 4 类 active 2.0 + Core 4 个舰队内容文件 + `FleetOps` / `FleetService` / `fleet.*` 命令与 `fleet.view`；SDK `example_fleet`（2026-10-23）。
-- [x] **Phase D0/D1/D2 完成快照**：30 个 active 类型全部 2.0（29 定义 + patch）；schema bundle 35（2 顶层 + 33 v2）、编辑器 32（30 runtime + 2 draft）、Core 29 内容文件 / 114 定义；Godot **578/578**、Node **59/59**、CLI **63/63**、SDK `status: ok`（2026-10-23）。
+- [x] **Phase D0/D1/D2 完成快照**：30 个 active 类型全部 2.0（29 定义 + patch）；schema bundle 36（2 顶层 + 34 v2）、编辑器 33（30 runtime + 3 draft）、Core 29 内容文件 / 115 定义；Godot **590/590**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [x] **D-AI schema 先行**：新增 draft `combat_ai_profiles`（FSM 节点/转移/条件，对齐 SNBattleSim FSM 契约；运行时不加载）；schema bundle 36（2 顶层 + 34 v2）、编辑器 33（30 runtime + 3 draft）、Node **60/60**、CLI **64/64**。
 - [ ] Phase D 其余：base / auto_trade / ruins 系统类型与运行时切片。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
@@ -339,5 +339,5 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
   Phase D 继续 fleet / base / auto_trade / ruins。
 - 2026-10-23（D2）：新增 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类 active 2.0（content.fleet.v1），
   落地 `FleetOps` / `FleetService` / `fleet.*` 命令与 `fleet.view`、`data.fleet` 惰性持久；
-  **30 active（29 定义 + patch）**、schema bundle **35（2 顶层 + 33 v2）**、编辑器 **32（30 runtime + 2 draft）**、
-  Core **29 文件 / 114 定义**；Phase D 继续 base / auto_trade / ruins。
+  **30 active（29 定义 + patch）**、schema bundle **36（2 顶层 + 34 v2）**、编辑器 **33（30 runtime + 3 draft）**、
+  Core **29 文件 / 115 定义**；Phase D 继续 base / auto_trade / ruins。

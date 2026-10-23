@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-22T22:58:08.029Z",
-  "commit": "1ee3d06",
+  "generated_at": "2026-10-23T00:14:25.382Z",
+  "commit": "70a554a",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -201,7 +201,7 @@
     },
     {
       "source": "SNModMaker/docs/DEVELOPMENT.md",
-      "sha256": "2a090164debe4c8781a2fef4e5860ff801f7de33016a339d723e15c3797ce758",
+      "sha256": "7b7cc5ecbf244b848f9a4e685349618ef6aa158a574c079249445bb7cd149494",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -307,7 +307,7 @@
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "0a31e247372408bab03360b21fc87600f56f07c36de972ab25bf10cfbde8119f",
+      "sha256": "3d0d97f9e1e31960f1ec1052bf0db507f38c63bc9610f099a6a2371e6dbee793",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -325,7 +325,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "82e4d06e85d01600354dca280f5f5a70ef480599a3100f45a587c991017b068d",
+      "sha256": "026a7481053c41301b79706d4487252a62ad0e87d008036b83bdf1e15eaa38a7",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -2827,7 +2827,7 @@
     },
     {
       "source": "dev_mods/core/content/captains.json",
-      "sha256": "bdc603708696181b30dcf97e7c61901074a34c735c19c001417baa52157bd10f",
+      "sha256": "1375ee4c121ae089e6f470e780d8fbf1d99d3bf5774b9197788a3bdf5d0afb20",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2967,7 +2967,7 @@
     },
     {
       "source": "dev_mods/core/content/ship_archetypes.json",
-      "sha256": "e25f20cb8889a46504435fd68724a4600fd86b3a0f826b113b7a74cd711a3fa8",
+      "sha256": "d22e1dba223c4691ed0023b6a74cbc9f0df2400aab117637d49b84f60072575c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3023,14 +3023,14 @@
     },
     {
       "source": "dev_mods/core/localization/en.json",
-      "sha256": "7c7b9bbbd7e492983f3d9ee330fdc606625415637dc7f023f39007e1655d2d31",
+      "sha256": "6a13d1f9fa5e76365c5ff7f09f112f2f8b0c76eed0eda92471ed88f9b6078bb1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/localization/zh_CN.json",
-      "sha256": "ae439143ff60a585fb3c0dd844c750de0cb4b6d974de1a093fd19f1a3e46dc67",
+      "sha256": "14ae677147153ed9fc8d8da42fa229ec50922405487078b726bc49b8e09a8d4d",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3184,7 +3184,7 @@
     },
     {
       "source": "framework/application/commands/ship_commands.gd",
-      "sha256": "941c23184d954ac6f0d53e0b1709b428e0347e5bf0b80a9d83362c872315b401",
+      "sha256": "ef71487d680097797c3214d0dab9dcd112b7a792c01d9cef4e77f5eaac19ffd4",
       "doc": "docs/static/framework/application/commands/ship_commands.gd.md",
       "status": "documented"
     },
@@ -3604,13 +3604,13 @@
     },
     {
       "source": "framework/domain/fleet/fleet_ops.gd",
-      "sha256": "9100a0d6707c71d60a8d72f48442551fbb0a2b99250c6d9fd94c5ef1a5aa1034",
+      "sha256": "30ad0c69f53c8c2c241d67b57edd22481e9fb284757571d356f5fb3d89b82663",
       "doc": "docs/static/framework/domain/fleet/fleet_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/fleet/fleet_service.gd",
-      "sha256": "47d522cddb6ec6b093158288752b6bbc9d4bdce287666ae66337c08337483df8",
+      "sha256": "e5084848011d61577575d6253ee1caa4b4d6b8e5e6115b19e4df3c8f775001f7",
       "doc": "docs/static/framework/domain/fleet/fleet_service.gd.md",
       "status": "documented"
     },
@@ -3802,13 +3802,13 @@
     },
     {
       "source": "framework/modding/core_completeness_checker.gd",
-      "sha256": "021a7510f8464e65162567295dd86a5cf185184fcb6db20761e6ff75a02b55c5",
+      "sha256": "a80e19bd275a068f39b332496d5a76b2933c869081f3faf47ec3332b88561eee",
       "doc": "docs/static/framework/modding/core_completeness_checker.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/modding/cross_reference_validator.gd",
-      "sha256": "e8073ad651141dc5fc1bab1f521cc4f705ed90feac3035e639bf4936195b1c5c",
+      "sha256": "1af0b61d90007e817f4391bba55240469ec32b2646616817321cd67f6897c168",
       "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
       "status": "documented"
     },
@@ -4052,7 +4052,7 @@
     },
     {
       "source": "framework/tests/cases/test_fleet.gd",
-      "sha256": "d934ad65c183d2aaa186e05c94d8f6bbc3ad9b436c1bf7e61f208818c8a0dd33",
+      "sha256": "2d10b0a56c5076da564e30c8f9ff903c691df4a5b5c0ea1c4fc4484925739862",
       "doc": "docs/static/framework/tests/cases/test_fleet.gd.md",
       "status": "documented"
     },
@@ -4198,7 +4198,7 @@
     },
     {
       "source": "framework/tests/cases/test_schema_v2_weapons.gd",
-      "sha256": "5b98f263cfa3dc058af4a69c253efd389e9ebe2963ff26aad79ae0503cb2ebbb",
+      "sha256": "e3766e337193fe84ba8b6ec83758c5edfbbf554ad237a12671cd61437ab7b4fa",
       "doc": "docs/static/framework/tests/cases/test_schema_v2_weapons.gd.md",
       "status": "documented"
     },
@@ -4371,7 +4371,7 @@
     },
     {
       "source": "framework/tests/cases/test_world_schema_refs.gd",
-      "sha256": "50dd280f15eea269d702280dc86457d7a888623dd11b5c8fca607d8b016d9b8f",
+      "sha256": "ece1353c5d42e2b62ec8efbd0731af8e9040200a8d1abefed6fea8927d6af4f6",
       "doc": "docs/static/framework/tests/cases/test_world_schema_refs.gd.md",
       "status": "documented"
     },
@@ -5034,7 +5034,7 @@
     },
     {
       "source": "schemas/v2/formation.schema.json",
-      "sha256": "f4734b0a447e32e9c2e87a371a6e187de0039a49024a425a6da2a9591777f494",
+      "sha256": "a293f6933cbab846fb6a5e0b09c1d29842eba0057acfb9bd030a87af1d04fedf",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -5476,7 +5476,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "f1db57b50da42567ad191a95541c8c970bfdf94e8e028119b2e1c9e098e3401f",
+      "sha256": "1c8ae4059fbf13c33d7ec47376ab0af01521b333f3a46d388f7d820b30297a9c",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6953,7 +6953,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "4ebbf66919781f0852c120205ed15081d3be00f59515c5cb400a8448acf9a0c1",
+      "sha256": "0245155918b8374de391547fa7c3bfccca4c1410203431b767d57594306204be",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

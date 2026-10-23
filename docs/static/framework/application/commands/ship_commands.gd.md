@@ -9,10 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipCommands` | L1 |
-| `VALID_SOURCES` | L11 |
-| `install_module(params: Dictionary, context) -> Dictionary` | L14 |
-| `uninstall_module(params: Dictionary, context) -> Dictionary` | L105 |
-| `craft_module(params: Dictionary, context) -> Dictionary` | L148 |
+| `VALID_SOURCES` | L13 |
+| `install_module(params: Dictionary, context) -> Dictionary` | L16 |
+| `uninstall_module(params: Dictionary, context) -> Dictionary` | L109 |
+| `craft_module(params: Dictionary, context) -> Dictionary` | L152 |
 
 ## 契约与约束
 

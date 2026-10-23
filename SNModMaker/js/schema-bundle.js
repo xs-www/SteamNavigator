@@ -2405,7 +2405,7 @@
           ],
           "properties": {
             "max_ships": {
-              "description": "Optional ship count cap; defaults to slots length.",
+              "description": "Optional ship count cap; defaults to slots length. The framework also clamps it to MAX_SHIPS (5).",
               "type": "integer",
               "minimum": 1,
               "maximum": 5
@@ -2413,7 +2413,7 @@
             "slots": {
               "type": "array",
               "minItems": 1,
-              "maxItems": 6,
+              "maxItems": 5,
               "items": {
                 "$ref": "#/$defs/formation_slot"
               }

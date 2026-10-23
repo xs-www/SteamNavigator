@@ -72,7 +72,7 @@ node tools/gen_content_types.mjs --check
 node SNModMaker/tools/sync-schemas.mjs
 ```
 
-生成物覆盖 35 个 Schema：2 个顶层（`common` / `manifest`）+ 33 个 `v2/`（`v2/common.schema.json` + D2 后全部 30 类 active 2.0 Schema + `story_arc` / `story_level` 2 类剧情草案）。
+生成物覆盖 36 个 Schema：2 个顶层（`common` / `manifest`）+ 34 个 `v2/`（`v2/common.schema.json` + D2 后全部 30 类 active 2.0 Schema + `story_arc` / `story_level` 2 类剧情草案 + `combat_ai_profile` 战斗 AI 草案）。
 
 ### 重新生成 Core 索引
 
@@ -102,7 +102,7 @@ node SNModMaker/tools/serve.mjs
 node SNModMaker/tests/browser-smoke.mjs http://127.0.0.1:8099/ "$env:TEMP\snmod-smoke.png"
 ```
 
-当前基线：**58 个 Node 用例 + 63 个 Content CLI 用例 + 1 个本地服务用例 + 17 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
+当前基线：**60 个 Node 用例 + 64 个 Content CLI 用例 + 1 个本地服务用例 + 17 个浏览器用例**。浏览器测试会清空该调试实例下 `127.0.0.1:8099` 的存储，再完整走一遍：新建项目 → 新增定义 → 改数值 → ID/多语言键事务 → 模块子分页与船体模块区 → 本地化 → JSON 检视 → 自动保存 → 导出 ZIP → 资源与自定义资源选择器 → 事件条件/效果 → 补丁 → 撤销 → 从 ZIP 重新导入 → 文件夹导出 → 写入 `mods/` / `exports/` → 覆盖部署到发布包 `mods/`。
 
 ### 代码约定
 

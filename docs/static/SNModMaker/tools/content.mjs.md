@@ -16,86 +16,86 @@
 | `knownTypeKeys()` | L55 |
 | `schemaVersionFor(target)` | L60 |
 | `USAGE` | L73 |
-| `BOOLEAN_FLAGS` | L146 |
-| `parseArgv(argv)` | L151 |
-| `flagTrue(ctx, name)` | L194 |
-| `flagValue(ctx, name)` | L201 |
-| `flagValues(ctx, name)` | L211 |
-| `requireFlag(ctx, name, label)` | L217 |
-| `jsonEqual(a, b)` | L231 |
-| `isPlainObject(value)` | L235 |
-| `sha256(buffer)` | L239 |
-| `splitLines(text)` | L243 |
-| `unifiedDiff(oldText, newText, context = 3)` | L251 |
-| `printJson(payload)` | L318 |
-| `stripChanges(changes)` | L322 |
-| `changeLines(changes)` | L330 |
-| `issueSummary(after, newIssues)` | L337 |
-| `buildStats(project)` | L351 |
-| `respond(ctx, payload, humanText, exitCode = 0)` | L359 |
-| `issueKey(issue)` | L371 |
-| `newIssuesBetween(baseline, after)` | L375 |
-| `listFilesRecursive(root)` | L384 |
-| `loadMod(ctx, modArg)` | L400 |
-| `fileText(load, rel)` | L425 |
-| `resolveInside(root, relative)` | L432 |
-| `validateContentFilePath(filePath)` | L445 |
-| `atomicWrite(absolute, buffer)` | L455 |
-| `collectChanges(load, writes, deletes, wouldWrite)` | L473 |
-| `verifyBaseline(load, writes, deletes)` | L502 |
-| `commitChanges(load, writes, deletes)` | L513 |
-| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L527 |
-| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L557 |
-| `planLocaleChanges(load, project, writes, localeNames)` | L576 |
-| `patchManifestText(originalText, manifest)` | L610 |
-| `planManifest(load, project, writes)` | L640 |
-| `runSyncCoreIndex(ctx)` | L652 |
-| `runNodeTests(ctx)` | L664 |
-| `finalizeWrite(ctx, options)` | L680 |
-| `parseDataPath(input)` | L754 |
-| `resolveTokenFile(reference)` | L799 |
-| `readTextFile(reference)` | L811 |
-| `parseValueToken(raw)` | L817 |
-| `parseJsonOrFile(raw, label)` | L842 |
-| `parseAssignmentSpec(raw)` | L852 |
-| `setByPath(target, pathSegments, value)` | L874 |
-| `getByPath(target, pathSegments)` | L888 |
-| `deepMerge(base, extra)` | L897 |
-| `MODULE_CATEGORY_VALUES` | L909 |
-| `requestedModuleCategory(ctx)` | L911 |
-| `buildData(typeKey, ctx, owner)` | L932 |
-| `findLocalIdConflict(project, info, localId, exclude)` | L960 |
-| `validateLocalId(localId)` | L970 |
-| `collectStrings(value, output, depth = 0)` | L977 |
-| `applyValueAssignment(definition, assignment)` | L997 |
-| `nestValue(segments, value)` | L1027 |
-| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1043 |
-| `applyAssignmentToText(text, definitionNode, assignment)` | L1075 |
-| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1102 |
-| `describeFields(info)` | L1150 |
-| `collectObject(node, file)` | L1162 |
-| `inferType(target, raw)` | L1190 |
-| `expand(pathText, node, isRequired, file, depth)` | L1213 |
-| `describePayload(typeKey)` | L1251 |
-| `commandTypes(ctx)` | L1312 |
-| `commandDescribe(ctx)` | L1357 |
-| `commandList(ctx)` | L1389 |
-| `commandAdd(ctx)` | L1437 |
-| `commandSet(ctx)` | L1565 |
-| `commandLoc(ctx)` | L1621 |
-| `commandRm(ctx)` | L1673 |
-| `commandClone(ctx)` | L1743 |
-| `commandValidate(ctx)` | L1802 |
-| `commandNew(ctx)` | L1866 |
-| `COMMANDS` | L1963 |
-| `handleError(ctx, error)` | L1976 |
-| `main(argv)` | L1994 |
+| `BOOLEAN_FLAGS` | L148 |
+| `parseArgv(argv)` | L153 |
+| `flagTrue(ctx, name)` | L196 |
+| `flagValue(ctx, name)` | L203 |
+| `flagValues(ctx, name)` | L213 |
+| `requireFlag(ctx, name, label)` | L219 |
+| `jsonEqual(a, b)` | L233 |
+| `isPlainObject(value)` | L237 |
+| `sha256(buffer)` | L241 |
+| `splitLines(text)` | L245 |
+| `unifiedDiff(oldText, newText, context = 3)` | L253 |
+| `printJson(payload)` | L320 |
+| `stripChanges(changes)` | L324 |
+| `changeLines(changes)` | L332 |
+| `issueSummary(after, newIssues)` | L339 |
+| `buildStats(project)` | L353 |
+| `respond(ctx, payload, humanText, exitCode = 0)` | L361 |
+| `issueKey(issue)` | L373 |
+| `newIssuesBetween(baseline, after)` | L377 |
+| `listFilesRecursive(root)` | L386 |
+| `loadMod(ctx, modArg)` | L402 |
+| `fileText(load, rel)` | L427 |
+| `resolveInside(root, relative)` | L434 |
+| `validateContentFilePath(filePath)` | L447 |
+| `atomicWrite(absolute, buffer)` | L457 |
+| `collectChanges(load, writes, deletes, wouldWrite)` | L475 |
+| `verifyBaseline(load, writes, deletes)` | L504 |
+| `commitChanges(load, writes, deletes)` | L515 |
+| `planAppendDefinition(load, project, file, definition, index, writes, detail)` | L529 |
+| `insertLocaleEntries(oldText, oldEntries, newEntries)` | L559 |
+| `planLocaleChanges(load, project, writes, localeNames)` | L578 |
+| `patchManifestText(originalText, manifest)` | L612 |
+| `planManifest(load, project, writes)` | L642 |
+| `runSyncCoreIndex(ctx)` | L654 |
+| `runNodeTests(ctx)` | L666 |
+| `finalizeWrite(ctx, options)` | L682 |
+| `parseDataPath(input)` | L756 |
+| `resolveTokenFile(reference)` | L801 |
+| `readTextFile(reference)` | L813 |
+| `parseValueToken(raw)` | L819 |
+| `parseJsonOrFile(raw, label)` | L844 |
+| `parseAssignmentSpec(raw)` | L854 |
+| `setByPath(target, pathSegments, value)` | L876 |
+| `getByPath(target, pathSegments)` | L890 |
+| `deepMerge(base, extra)` | L899 |
+| `MODULE_CATEGORY_VALUES` | L911 |
+| `requestedModuleCategory(ctx)` | L913 |
+| `buildData(typeKey, ctx, owner)` | L934 |
+| `findLocalIdConflict(project, info, localId, exclude)` | L962 |
+| `validateLocalId(localId)` | L972 |
+| `collectStrings(value, output, depth = 0)` | L979 |
+| `applyValueAssignment(definition, assignment)` | L999 |
+| `nestValue(segments, value)` | L1029 |
+| `insertValueAtPath(text, rootNode, pathSegments, value)` | L1045 |
+| `applyAssignmentToText(text, definitionNode, assignment)` | L1077 |
+| `editDefinitionText(load, file, index, assignments, expectedDefinitions)` | L1104 |
+| `describeFields(info)` | L1152 |
+| `collectObject(node, file)` | L1164 |
+| `inferType(target, raw)` | L1192 |
+| `expand(pathText, node, isRequired, file, depth)` | L1215 |
+| `describePayload(typeKey)` | L1253 |
+| `commandTypes(ctx)` | L1314 |
+| `commandDescribe(ctx)` | L1359 |
+| `commandList(ctx)` | L1391 |
+| `commandAdd(ctx)` | L1439 |
+| `commandSet(ctx)` | L1567 |
+| `commandLoc(ctx)` | L1623 |
+| `commandRm(ctx)` | L1675 |
+| `commandClone(ctx)` | L1745 |
+| `commandValidate(ctx)` | L1804 |
+| `commandNew(ctx)` | L1868 |
+| `COMMANDS` | L1965 |
+| `handleError(ctx, error)` | L1978 |
+| `main(argv)` | L1996 |
 
 ## 契约与约束
 
 - 十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。
 - 复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。
-- `types` 同时列出 30 个运行时类型（D2 后全部为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 2 个草案（`story_arcs` / `story_levels`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。
+- `types` 同时列出 30 个运行时类型（D2 后全部为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`story_arcs` / `story_levels` / `combat_ai_profiles`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。
 - `new --draft <content_type>` 只接受真实草案（`story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；已 active 的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 2.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。
 - `validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。
 - `new --template` 的模板清单来自 `Catalog.TEMPLATES`（items / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 2.0 运行时定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。

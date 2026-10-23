@@ -106,16 +106,18 @@ add 选项：
 通用选项：--json  --quiet  --help/-h
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
 
-Schema 2.0 运行时类型共 13 类：Phase B 的 9 类（world_profiles / map_configs / regions /
-sites / route_templates / weather_profiles / factions / discoveries / start_profiles）+
-C1 的 hulls / modules + C2 的 items + C3 的 quests。它们已接入游戏运行时，可以像其他 active 类型一样
-list / add / set / describe / validate，内容文件写 schema_version "2.0"。
+Schema 2.0 运行时类型共 30 类（29 个定义类型 + patches）：Phase B 的 9 类（world_profiles /
+map_configs / regions / sites / route_templates / weather_profiles / factions / discoveries /
+start_profiles）+ C1 的 hulls / modules + C2 的 items + C3 的 quests + C4 的 port_templates /
+starting_scenarios / contracts / voyage_events / crew_roles / boiler_strategies + D1 的 6 类战斗
+类型 + D2 的 ship_archetypes / captains / formations / fleet_doctrines。它们已接入游戏运行时，
+可以像其他 active 类型一样 list / add / set / describe / validate，内容文件写 schema_version "2.0"。
 CLI 不会自动声明 capability：内容使用 Schema 2.0 但未在 manifest.capabilities 声明对应
 能力时，校验给出 capability_undeclared 警告（按类型去重，每个 capability 一条）。
 
-剩余 Schema 2.0 草案类型（weapons / story_arcs / story_levels）同样可编辑、可校验，
+剩余 Schema 2.0 草案类型（story_arcs / story_levels / combat_ai_profiles）同样可编辑、可校验，
 内容文件写 schema_version "2.0"；但游戏运行时不加载，校验给出 draft_content 警告。
-草案模组使用 capability 时还需在 manifest.capabilities 声明对应能力（weapons →
+草案模组使用 capability 时还需在 manifest.capabilities 声明对应能力（战斗 AI →
 content.combat.v1，剧情 → content.story.v1）。剧情包是白名单模组：同一包里出现故事
 内容之外的类型会报 story_pack_off_whitelist。
 

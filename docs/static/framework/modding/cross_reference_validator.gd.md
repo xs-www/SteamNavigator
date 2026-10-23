@@ -9,12 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CrossReferenceValidator` | L1 |
-| `PLANNED_REF_TYPES` | L44 |
-| `MODULE_CATEGORIES` | L54 |
-| `MODULE_CATEGORY_REQUIRED_FIELDS` | L55 |
-| `UTILITY_TAG_FIELDS` | L61 |
-| `QUEST_MATCH_REFERENCE_TYPES` | L70 |
-| `validate(hub: RegistryHub) -> Dictionary` | L84 |
+| `PLANNED_REF_TYPES` | L50 |
+| `MODULE_CATEGORIES` | L60 |
+| `MODULE_CATEGORY_REQUIRED_FIELDS` | L61 |
+| `UTILITY_TAG_FIELDS` | L67 |
+| `QUEST_MATCH_REFERENCE_TYPES` | L76 |
+| `validate(hub: RegistryHub) -> Dictionary` | L90 |
 
 以及 Phase B 世界/战役 9 类（world_profiles / regions / sites / route_templates /
 weather_profiles / factions / discoveries / start_profiles / map_configs）的引用完整性。
@@ -45,5 +45,11 @@ weather_profiles / factions / discoveries / start_profiles / map_configs）的�
   `enemy_weapon_class_missing`（message / 记录带 mod / file / entity / path）。
   运行时对未解析 class 只 skip 该 socket，如果校验器不报错，内容错误会把「武装敌舰」
   静默变成「无武装敌舰」。
+- D2 舰队：`ship_archetypes` 的 `hull_ref` / `default_modules[].module` /
+  `captains.commandable_archetypes` / `fleet_doctrines.formation` 走硬引用；
+  `weapon_sockets[]` 还会对照目标 hull 的实际 socket 镜像：socket 名必须存在
+  （`ship_archetype_socket_missing`）、声明的 class 必须等于 hull `socket_class`
+  （`ship_archetype_socket_class`）、可选默认武器的 `weapon_class` / `mount_class`
+  必须能装进该 class（`ship_archetype_weapon_class`）。
 
 模块索引：[framework/modding](./README.md)

@@ -9,7 +9,7 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CoreCompletenessChecker` | L1 |
-| `check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary` | L29 |
+| `check(hub: RegistryHub, packages: Dictionary, order: Array[String]) -> Dictionary` | L34 |
 
 Schema 2.0 世界内容后追加 Phase B 完整性规则（WORLD_SCHEMA_V2_RUNTIME §5.2）。
 
@@ -30,5 +30,10 @@ Schema 2.0 世界内容后追加 Phase B 完整性规则（WORLD_SCHEMA_V2_RUNTI
 - D1 战斗家族（weapons / damage_types / combat_abilities / enemy_archetypes /
   encounter_tables / loot_tables）的最低数量只统计 `source_mod == "core"` 的定义，
   第三方单独提供的战斗内容不能替代 Core 自己的完整性门槛。
+- D2 舰队家族（ship_archetypes / captains / formations / fleet_doctrines）的
+  最低数量同样只统计 Core 来源；没有舰队内容时启动保持基线，第三方内容不能替代
+  Core 的舰队门槛。引用合法性（hull / modules / weapons / formation / captain
+  可指挥船型 / ship_archetype.weapon_sockets 与 hull socket 名和 class）由
+  `CrossReferenceValidator._check_fleet` 负责硬校验。
 
 模块索引：[framework/modding](./README.md)

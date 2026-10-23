@@ -9,7 +9,12 @@ extends TestCase
 ##   fleet_doctrines），不写死 core:* 内容 id 到断言里。
 ## - 旗舰永远等于当前 `data.ship`（archetype 由 hull_ref 反查），fleet 不复制 ship
 ##   的模块/耐久状态；测试用 `state.ship().hull_id` 对照。
-## - 所有写操作走 `fleet.*` 命令（CommandBus 事务）；失败命令不得提交状态。`n## - D2-FIX 覆盖：max_ships 缺省按 slots 数、flagship 槽位独占与自动分配跳过、`n##   slot/formation 清空、以及损坏 `data.fleet` 的规范化不抛引擎错误。
+## - 所有写操作走 `fleet.*` 命令（CommandBus 事务）；失败命令不得提交状态。
+## - D2-FIX 覆盖：max_ships 缺省按 slots 数、flagship 槽位独占与自动分配跳过、
+##   slot/formation 清空、以及损坏 `data.fleet` 的规范化不抛引擎错误。
+## - D2-FIX2 覆盖：换 hull 后释放无法指挥新旗舰 archetype 的舰长；切换 formation
+##   清空 role 变成 `flagship` 的槽位上的非旗舰船；旗舰 tag 优先于字典序；容量
+##   view 与命令层同样受 MAX_SHIPS 封顶；每个 hull 最多一个 flagship tag。
 ## @end-static-doc
 
 const STEADY := "core:starting_scenario/steady"
@@ -463,3 +468,131 @@ func test_malformed_fleet_data_is_normalized() -> void:
 	var healed := context.commands.execute(&"fleet.set_doctrine", {"doctrine_id": ""})
 	assert_true(bool(healed.get("ok", false)), "a command repairs the malformed block")
 	assert_true(context.state.data.get("fleet", null) is Dictionary, "the repaired block is a dictionary")
+
+
+## D2-FIX2：换 hull 会让旗舰 archetype 变化；无法指挥新 archetype 的舰长必须释放，
+## 否则 `fleet.view` 会留下「已指派但不可指挥」的自相矛盾状态。
+func test_hull_swap_releases_a_captain_that_cannot_command_the_new_archetype() -> void:
+	var context := _start(214)
+	context.state.set_money(20000)
+	context.state.player()["unlocks"] = [
+		"core:hull/large_efficient", "core:hull/large_performance",
+	]
+	var large := context.commands.execute(&"ship.install_module", {
+		"module_id": "core:hull/large_efficient",
+	})
+	assert_true(bool(large.get("ok", false)), "large_efficient installs: %s" % str(large))
+	var assigned := context.commands.execute(&"fleet.assign_captain", {"captain_id": "core:captain/yuki_sato"})
+	assert_true(bool(assigned.get("ok", false)), "yuki commands the large_efficient flagship: %s" % str(assigned))
+	assert_eq(String(_flagship(_view(context)).get("captain_id", "")), "core:captain/yuki_sato",
+		"the captain is recorded before the swap")
+	context.events.clear()
+	var performance := context.commands.execute(&"ship.install_module", {
+		"module_id": "core:hull/large_performance",
+	})
+	assert_true(bool(performance.get("ok", false)), "large_performance installs: %s" % str(performance))
+	assert_eq(String(_flagship(_view(context)).get("captain_id", "unset")), "",
+		"the captain is released when the new archetype is not commandable")
+	assert_true(context.events.has_event(&"fleet.captain_assigned"),
+		"the release is published as a fleet event")
+	var rejected := context.commands.execute(&"fleet.assign_captain", {"captain_id": "core:captain/yuki_sato"})
+	assert_eq(String(rejected.get("error_code", "")), "captain_cannot_command",
+		"the released captain still cannot command the new flagship")
+
+
+## D2-FIX2：切换 formation 时，同名槽位的 role 可能从 line 变成 flagship；非旗舰船
+## 不能因为槽位 id 仍然存在就留在 flagship 槽里。
+func test_switching_formation_clears_roster_ships_from_flagship_slots() -> void:
+	var context := _start(215)
+	var hub := RegistryHub.new()
+	hub.register(_definition_raw("test:formation/line", ContentTypes.FORMATION, {
+		"max_ships": 2,
+		"slots": [
+			{"id": "flagship", "role": "flagship", "offset": {"x": 0, "y": 0}},
+			{"id": "center", "role": "line", "offset": {"x": -8, "y": 0}},
+		],
+	}))
+	hub.register(_definition_raw("test:formation/flagship_center", ContentTypes.FORMATION, {
+		"max_ships": 2,
+		"slots": [
+			{"id": "center", "role": "flagship", "offset": {"x": 0, "y": 0}},
+			{"id": "left", "role": "line", "offset": {"x": -8, "y": 8}},
+		],
+	}))
+	context.state.data["fleet"] = {
+		"flagship": FleetOps.FLAGSHIP_ID,
+		"doctrine_id": "",
+		"formation_id": "test:formation/line",
+		"ships": [
+			{"ship_id": FleetOps.FLAGSHIP_ID, "archetype_id": "", "captain_id": "", "formation_slot": "", "condition": 1.0},
+			{"ship_id": "ship_1", "archetype_id": "", "captain_id": "", "formation_slot": "center", "condition": 1.0},
+		],
+	}
+	var switched := FleetService.set_formation(context.state, hub, {
+		"formation_id": "test:formation/flagship_center",
+	})
+	assert_true(bool(switched.get("ok", false)), "switching the formation succeeds: %s" % str(switched))
+	var fleet: Dictionary = context.state.data["fleet"]
+	assert_eq(String(FleetOps.ship_entry(fleet, "ship_1").get("formation_slot", "unset")), "",
+		"a roster ship leaves a slot whose role became flagship")
+	var flagship := FleetOps.ship_entry(fleet, FleetOps.FLAGSHIP_ID)
+	assert_eq(String(flagship.get("formation_slot", "unset")), "", "the flagship slot is untouched")
+
+
+## D2-FIX2：同一 hull 多 archetype 时，旗舰 tag 优先于 id 字典序；没有 tag 才回退。
+func test_flagship_archetype_prefers_the_flagship_tag() -> void:
+	var context := _start(216)
+	var hull_id := String(context.state.ship().get("hull_id", ""))
+	var tagged_hub := RegistryHub.new()
+	tagged_hub.register(_definition_raw("aaa:ship_archetype/untagged", ContentTypes.SHIP_ARCHETYPE, {
+		"hull_ref": hull_id,
+	}))
+	tagged_hub.register(_definition_raw("zzz:ship_archetype/tagged", ContentTypes.SHIP_ARCHETYPE, {
+		"hull_ref": hull_id,
+	}, ["ship_archetype.flagship"]))
+	assert_eq(FleetOps.flagship_archetype_id(context.state, tagged_hub), "zzz:ship_archetype/tagged",
+		"the flagship-tagged archetype wins over the lexicographically first one")
+	var untagged_hub := RegistryHub.new()
+	untagged_hub.register(_definition_raw("bbb:ship_archetype/plain", ContentTypes.SHIP_ARCHETYPE, {
+		"hull_ref": hull_id,
+	}))
+	untagged_hub.register(_definition_raw("aaa:ship_archetype/plain", ContentTypes.SHIP_ARCHETYPE, {
+		"hull_ref": hull_id,
+	}))
+	assert_eq(FleetOps.flagship_archetype_id(context.state, untagged_hub), "aaa:ship_archetype/plain",
+		"without a tag the lexicographically smallest id is the deterministic fallback")
+
+
+## D2-FIX2：formation 的 view 容量与命令层都受 MAX_SHIPS 封顶，不能出现
+## `view.max_ships=5` 而 `view.formation.max_ships=6` 的自相矛盾。
+func test_formation_capacity_view_is_clamped_by_the_framework_cap() -> void:
+	var context := _start(217)
+	var hub := RegistryHub.new()
+	var slots: Array = [
+		{"id": "flagship", "role": "flagship", "offset": {"x": 0, "y": 0}},
+	]
+	for index in FleetOps.MAX_SHIPS:
+		slots.append({"id": "line_%d" % index, "role": "line", "offset": {"x": -8, "y": index * 8}})
+	hub.register(_definition_raw("test:formation/generous", ContentTypes.FORMATION, {"slots": slots}))
+	context.state.data["fleet"] = {
+		"flagship": FleetOps.FLAGSHIP_ID,
+		"doctrine_id": "",
+		"formation_id": "test:formation/generous",
+		"ships": [
+			{"ship_id": FleetOps.FLAGSHIP_ID, "archetype_id": "", "captain_id": "", "formation_slot": "", "condition": 1.0},
+		],
+	}
+	var view := FleetOps.view(context.state, hub)
+	assert_eq(int(view.get("max_ships", 0)), FleetOps.MAX_SHIPS, "the fleet capacity is clamped")
+	assert_eq(int((view.get("formation", {}) as Dictionary).get("max_ships", 0)), FleetOps.MAX_SHIPS,
+		"the formation block reports the same clamped capacity")
+
+
+func _definition_raw(definition_id: String, content_type: StringName, data: Dictionary, tags: Array = []) -> ContentDefinition:
+	return ContentDefinition.from_raw({
+		"id": definition_id,
+		"name_key": "test.%s.name" % definition_id.get_slice("/", 1),
+		"enabled": true,
+		"tags": tags,
+		"data": data,
+	}, content_type, "test", "res://framework/tests/cases/test_fleet.gd")

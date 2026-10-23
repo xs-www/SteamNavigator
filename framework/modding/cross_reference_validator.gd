@@ -187,6 +187,8 @@ func _check_fleet() -> void:
 	## D2 fleet content: archetype hull/module/weapon refs, weapon socket names /
 	## classes against the target hull sockets, captain commandables, doctrine
 	## formations. Slot -> module category mapping mirrors modules.v2_category.
+	## At most one archetype per hull may carry the `ship_archetype.flagship` tag,
+	## so the flagship resolution (tag first, then lexicographic id) is unambiguous.
 	var slot_categories := {
 		"boiler": "boiler",
 		"cargo": "cargo",
@@ -194,8 +196,21 @@ func _check_fleet() -> void:
 		"safety": "utility",
 		"cabin": "cabin",
 	}
+	var flagship_hulls: Dictionary = {}
 	for archetype in _hub.get_all(ContentTypes.SHIP_ARCHETYPE):
 		var hull := _require(ContentTypes.HULL, String(archetype.data.get("hull_ref", "")), archetype.id, "hull_ref")
+		if archetype.tags.has(FleetOps.FLAGSHIP_TAG):
+			var hull_ref := String(archetype.data.get("hull_ref", ""))
+			if flagship_hulls.has(hull_ref):
+				_error(
+					"ship_archetype_flagship_ambiguous",
+					"%s and %s both declare the flagship tag for hull %s; at most one flagship archetype per hull is allowed" % [
+						String(flagship_hulls[hull_ref]), archetype.id, hull_ref
+					],
+					archetype.id
+				)
+			else:
+				flagship_hulls[hull_ref] = archetype.id
 		for entry in archetype.data.get("default_modules", []):
 			if not (entry is Dictionary):
 				continue

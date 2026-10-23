@@ -7,6 +7,8 @@ extends RefCounted
 ## All handlers run inside the CommandBus transaction. Slot, weight, money,
 ## lock and source rules come from ShipOps.install_blockers()/uninstall_blockers()
 ## and CraftOps.craft_blockers() so the shipyard ViewModel never drifts.
+## A successful hull replacement also reconciles `data.fleet`: a flagship captain
+## that cannot command the new archetype is released in the same transaction.
 
 const VALID_SOURCES := ["purchase", "warehouse", "transit"]
 
@@ -84,6 +86,8 @@ static func install_module(params: Dictionary, context) -> Dictionary:
 			"replaced_module_id": replaced_module_id,
 		},
 	}]
+	if module.content_type == ContentTypes.HULL:
+		events.append_array(FleetService.reconcile_flagship_after_hull_change(state, hub))
 	if bool(victory.get("newly_achieved", false)):
 		events.append({
 			"type": "run.victory_achieved",

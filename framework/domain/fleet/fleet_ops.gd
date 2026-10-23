@@ -11,18 +11,23 @@ extends RefCounted
 ##   formation_slot, condition}], doctrine_id, formation_id}`；flagship 条目固定
 ##   `ship_id = "flagship"` 且永远存在。
 ## - 旗舰的 `archetype_id` 由当前 `data.ship.hull_id` 反查 `ship_archetypes.hull_ref`
-##   得到（不写死内容 id）；hull 升级后 ensure 会重新同步。
+##   得到（不写死内容 id）；hull 升级后 ensure 会重新同步。同一 hull 有多个候选时
+##   优先带 `ship_archetype.flagship` tag 的定义，再按 id 字典序；跨引用校验保证
+##   每个 hull 最多一个带该 tag 的 archetype。
 ## - 其余船是「名册条目」，只保存编队元数据；最多 `MAX_SHIPS` 艘（含旗舰）。
-## - 容量：有 formation 时默认按 `formation.slots.size()`，显式 `max_ships` 优先；
-##   无 formation 时用 `MAX_SHIPS`。
+## - 容量：有 formation 时默认按 `min(MAX_SHIPS, formation.slots.size())`，显式
+##   `max_ships` 同样以 MAX_SHIPS 封顶；无 formation 时用 `MAX_SHIPS`。formation
+##   Schema 的 slots / max_ships 上限与 MAX_SHIPS 一致。
 ## - formation slot 是 formations 定义里的字符串 slot id；空串表示未分配。role 为
-##   `flagship` 的槽位只允许旗舰使用；每艘船一个槽位，槽位互斥。
+##   `flagship` 的槽位只允许旗舰使用；每艘船一个槽位，槽位互斥。切换 formation 时
+##   清空失效槽位，以及 role 变为 `flagship` 的槽位上的非旗舰船。
 ## - 损坏数据（`data.fleet` 不是字典、ships 不是数组、条目/字段类型不对）一律规范化
 ##   为默认块或跳过，`view()` 绝不抛引擎错误；`view()` 只读不写状态。
 ## @end-static-doc
 
 const FLEET_KEY := "fleet"
 const FLAGSHIP_ID := "flagship"
+const FLAGSHIP_TAG := "ship_archetype.flagship"
 const MAX_SHIPS := 5
 const DEFAULT_SHIP := {
 	"ship_id": "",
@@ -88,21 +93,31 @@ static func view(state: GameState, hub: RegistryHub = null) -> Dictionary:
 	}
 
 
-## The current ship's hull resolves to a ship archetype (flagship only).
+## The current ship's hull resolves to a ship archetype (flagship only). A hull may
+## have more than one archetype; a definition tagged `ship_archetype.flagship` wins
+## over untagged candidates. Otherwise the lexicographically smallest id is used, so
+## the result is always deterministic.
 static func flagship_archetype_id(state: GameState, hub: RegistryHub = null) -> String:
 	if state == null or hub == null:
 		return ""
 	var hull_id := String(state.ship().get("hull_id", ""))
 	if hull_id.is_empty():
 		return ""
+	var fallback := ""
 	for definition in _sorted(hub.get_all(ContentTypes.SHIP_ARCHETYPE)):
-		if String(definition.data.get("hull_ref", "")) == hull_id:
+		if String(definition.data.get("hull_ref", "")) != hull_id:
+			continue
+		if fallback.is_empty():
+			fallback = definition.id
+		if definition.tags.has(FLAGSHIP_TAG):
 			return definition.id
-	return ""
+	return fallback
 
 
 ## Max ships allowed by the fleet: framework cap MAX_SHIPS; with a formation the
-## default is the formation's slot count unless it declares `max_ships`.
+## default is the formation's slot count unless it declares `max_ships`. Both paths
+## are clamped by MAX_SHIPS so `fleet.view` never reports a capacity the command
+## layer cannot honour.
 static func max_ships(hub: RegistryHub = null, formation_id: String = "") -> int:
 	var cap := MAX_SHIPS
 	var formation := _definition(hub, ContentTypes.FORMATION, formation_id)
@@ -280,7 +295,7 @@ static func _formation_view(formation: ContentDefinition) -> Dictionary:
 		"id": formation.id,
 		"name_key": formation.name_key,
 		"slots": slots.duplicate(true),
-		"max_ships": int(formation.data.get("max_ships", slots.size())),
+		"max_ships": maxi(1, mini(MAX_SHIPS, int(formation.data.get("max_ships", slots.size())))),
 		"bonuses": (formation.data.get("bonuses", []) as Array).duplicate(true),
 	}
 

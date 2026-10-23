@@ -19,10 +19,10 @@
 | `test_weapon_v2_schema_rejects_wrong_envelope() -> void` | L319 |
 | `test_weapon_type_matches_schema() -> void` | L334 |
 | `test_weapon_type_is_active_runtime() -> void` | L374 |
-| `test_hull_schema_accepts_socket_mirror_fields() -> void` | L385 |
-| `test_hull_schema_rejects_invalid_socket_entries() -> void` | L390 |
-| `test_hull_schema_accepts_legacy_content_without_sockets() -> void` | L440 |
-| `test_core_hull_socket_mirrors_are_schema_valid() -> void` | L448 |
+| `test_hull_schema_accepts_socket_mirror_fields() -> void` | L394 |
+| `test_hull_schema_rejects_invalid_socket_entries() -> void` | L399 |
+| `test_hull_schema_accepts_legacy_content_without_sockets() -> void` | L449 |
+| `test_core_hull_socket_mirrors_are_schema_valid() -> void` | L457 |
 
 （hull_data 的 `weapon_sockets` / `rig_sockets`）测试：SchemaValidator 合法 / 非法
 文件、运行时类型登记（content_types.json / ContentTypes）与 Core 船体镜像回归。

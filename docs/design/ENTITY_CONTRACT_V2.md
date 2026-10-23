@@ -181,7 +181,7 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；声明版本与类型不符报
   `schema_version_mismatch`，非 1.0 / 2.0 报 `schema_version_unsupported`；草案内容给 `draft_content` 警告；
   使用 capability 但未写入 `manifest.capabilities` 时给 `capability_undeclared` 警告（同一 capability 一条）。
-- 编辑器与 CLI 对 26 类运行时 2.0 正常编辑 / 校验 / 导出，对 2 类剧情草案标 draft（含它的项目不能部署到发布包）。
+- 编辑器与 CLI 对 30 类运行时 2.0 正常编辑 / 校验 / 导出，对 3 类草案标 draft（含它的项目不能部署到发布包）。
 - **无剩余 1.0 定义类型**；`map_profiles` 已退役（`map_configs` 取代），`v2_target` / `aliases` 已清空。
 - 测试：`test_schema_v2_drafts.gd`（Phase B 9 类 + `map_configs`）、`test_schema_v2_weapons.gd`
   （D1 `weapons` 与 hull socket 镜像）、`test_item_categories.gd`（C2 items）、`test_quest_service.gd`
@@ -312,7 +312,7 @@ scan → manifest / dependency resolve → schema compile
   只要求新战役可创建、保存、读回。
 - [x] 第三方模组可注册新内容类型内的数据，但不能覆盖已有 ID 或绕过校验。
 - [x] 发布产物零 `error`；`warning` 可见。
-- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0/D1/D2 全量回归已绿：Godot 578 / Node 59 / CLI 63；以 Phase E 发布门禁再次验证）。
+- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0/D1/D2 全量回归已绿：Godot 590 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
 
 ## 18. 待决策
 

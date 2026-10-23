@@ -15,7 +15,7 @@
   `core:quest/shipyard_refit`（`auto_start:false`，预备 / 调试内容，玩家入口后续切片接入）。
 - 15 条 Core 实体已配置新版 `information.texture/model`：船体、锅炉、商品、造船材料与铁港可直接解析对应贴图或 GLB 模型。
 - D1 战斗内容 6 个文件（均 2.0，capability `content.combat.v1`）：`weapons` 5 件（甲板速射炮 / 重型加农 / 臼炮 / 连发炮 / 舷炮，对齐 SNBattleSim 数值与 `weapon-assembly@2`）、`damage_types` 4 种（动能 / 爆炸 / 燃烧 / 电击）、`combat_abilities` 4 个、`enemy_archetypes` 4 个、`encounter_tables` 2 张、`loot_tables` 2 张。
-- D2 舰队内容 4 个文件（均 2.0，capability `content.fleet.v1`）：`ship_archetypes` 3 种（含 hull_ref / 槽位 / 属性）、`captains` 3 名（可指挥船型与修正）、`formations` 2 套（槽位与上限）、`fleet_doctrines` 2 条（战术与编队引用）。
+- D2 舰队内容 4 个文件（均 2.0，capability `content.fleet.v1`）：`ship_archetypes` 4 种（含 hull_ref / 槽位 / 属性）、`captains` 3 名（可指挥船型与修正）、`formations` 2 套（槽位与上限）、`fleet_doctrines` 2 条（战术与编队引用）。
 - D0 模拟时钟是运行时状态而非内容：`data.sim` 惰性保存 `paused` / `speed` / `tick`，以 1 游戏小时固定步长推进，不新增 Core 内容文件、不改现有数值。
-- Core 当前共 **29 个内容文件 / 114 条定义**（19 个基础/世界/战役/任务 + 6 个战斗 + 4 个舰队；`patches` 只在类型层，无 Core 补丁文件）。
+- Core 当前共 **29 个内容文件 / 115 条定义**（19 个基础/世界/战役/任务 + 6 个战斗 + 4 个舰队；`patches` 只在类型层，无 Core 补丁文件）。
 - 所有数值均为数据驱动，位于 `dev_mods/core/content/*.json`。

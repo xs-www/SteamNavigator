@@ -15,11 +15,14 @@ extends RefCounted
 ## - 旗舰：`data.fleet.flagship = "flagship"`，其 archetype 始终由 `data.ship.hull_id`
 ##   反查，不允许 remove；`assign_captain` 对旗舰同样校验可指挥船型。role 为
 ##   `flagship` 的 formation 槽位只能由旗舰使用（`flagship_slot_only`）；`add_ship`
-##   自动分配槽位时跳过旗舰槽与已占槽。
+##   自动分配槽位时跳过旗舰槽与已占槽。`ship.install_module` 换 hull 后调用
+##   `reconcile_flagship_after_hull_change`，释放已无法指挥新旗舰 archetype 的舰长。
 ## - 容量：`FleetOps.MAX_SHIPS` 为框架上限；有 formation 时缺省按
-##   `formation.slots.size()`，显式 `max_ships` 优先；无 formation 时用 MAX_SHIPS。
+##   `min(MAX_SHIPS, formation.slots.size())`，显式 `max_ships` 也以 MAX_SHIPS 封顶；
+##   无 formation 时用 MAX_SHIPS。
 ## - 清空语义：`captain_id:""` / `doctrine_id:""` 清空对应选择；`slot:""` 清空单船槽位；
-##   `formation_id:""` 清空整队编队并清空所有槽位。
+##   `formation_id:""` 清空整队编队并清空所有槽位。切换 formation 时还会清空 role 变成
+##   `flagship` 的槽位上的非旗舰船。
 ## - 领域事件（由命令层发布）：`fleet.captain_assigned` / `fleet.formation_changed` /
 ##   `fleet.slot_assigned` / `fleet.doctrine_changed` / `fleet.ship_added` /
 ##   `fleet.ship_removed`。
@@ -100,11 +103,18 @@ static func set_formation(state: GameState, hub: RegistryHub, params: Dictionary
 				return Result.fail("unknown_formation", "ui.error.unknown_formation", {"formation_id": formation_id})
 			fleet["formation_id"] = formation_id
 			var valid_slots := FleetOps.formation_slot_ids(hub, formation_id)
+			var flagship_slots := FleetOps.flagship_slot_ids(hub, formation_id)
 			for entry in fleet.get("ships", []):
 				if entry is Dictionary:
-					var slot_id := String((entry as Dictionary).get("formation_slot", ""))
-					if not slot_id.is_empty() and not valid_slots.has(slot_id):
-						(entry as Dictionary)["formation_slot"] = ""
+					var ship_entry: Dictionary = entry
+					var slot_id := String(ship_entry.get("formation_slot", ""))
+					if slot_id.is_empty():
+						continue
+					var ship_id := String(ship_entry.get("ship_id", ""))
+					var slot_missing := not valid_slots.has(slot_id)
+					var roster_in_flagship_slot := flagship_slots.has(slot_id) and ship_id != FleetOps.FLAGSHIP_ID
+					if slot_missing or roster_in_flagship_slot:
+						ship_entry["formation_slot"] = ""
 			var cap := FleetOps.max_ships(hub, formation_id)
 			if int((fleet.get("ships", []) as Array).size()) > cap:
 				return Result.fail("fleet_full", "ui.error.fleet_full", {
@@ -258,6 +268,29 @@ static func remove_ship(state: GameState, hub: RegistryHub, params: Dictionary) 
 		"type": "fleet.ship_removed",
 		"payload": {"ship_id": ship_id},
 	}])
+
+
+## Reconciles the flagship after `data.ship.hull_id` changed. The flagship archetype
+## is derived from the hull, so a captain that could command the old archetype may be
+## unable to command the new one. Such a captain is released (an empty
+## `fleet.captain_assigned` event is returned); the command layer publishes it.
+## Does nothing when no fleet block exists, which keeps `data.fleet` lazy.
+static func reconcile_flagship_after_hull_change(state: GameState, hub: RegistryHub) -> Array:
+	if state == null or hub == null or not state.data.has(FleetOps.FLEET_KEY):
+		return []
+	var fleet := FleetOps.ensure_structure(state, hub)
+	var flagship := FleetOps.ship_entry(fleet, FleetOps.FLAGSHIP_ID)
+	if flagship.is_empty():
+		return []
+	var captain_id := String(flagship.get("captain_id", ""))
+	if captain_id.is_empty():
+		return []
+	var archetype_id := FleetOps.flagship_archetype_id(state, hub)
+	var captain := hub.get_by_id(ContentTypes.CAPTAIN, captain_id)
+	if captain != null and _captain_can_command(captain, archetype_id):
+		return []
+	flagship["captain_id"] = ""
+	return [_captain_event(FleetOps.FLAGSHIP_ID, "")]
 
 
 static func _ship_archetype_id(state: GameState, hub: RegistryHub, ship: Dictionary) -> String:

@@ -717,3 +717,29 @@ func test_core_fleet_content_has_no_socket_errors() -> void:
 	var result := _result(_new_hub())
 	for code in ["ship_archetype_socket_missing", "ship_archetype_socket_class", "ship_archetype_weapon_class"]:
 		assert_eq(_count_code(result.get("errors", []), code), 0, "core has no %s" % code)
+
+
+## D2-FIX2：每个 hull 最多一个带 `ship_archetype.flagship` tag 的 archetype，避免
+## 旗舰解析（tag 优先）在第三方内容里出现静默歧义。
+func test_flagship_tag_must_be_unique_per_hull() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.HULL, "test:hull/flagship", {})
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/flagship_a", {
+		"hull_ref": "test:hull/flagship",
+		"crew_capacity": 8,
+		"cargo_capacity": 80,
+		"base_speed": 10,
+		"upkeep": 20,
+	}, ["ship_archetype.flagship"])
+	_define(hub, ContentTypes.SHIP_ARCHETYPE, "test:ship_archetype/flagship_b", {
+		"hull_ref": "test:hull/flagship",
+		"crew_capacity": 8,
+		"cargo_capacity": 80,
+		"base_speed": 10,
+		"upkeep": 20,
+	}, ["ship_archetype.flagship"])
+	var result := _result(hub)
+	assert_contains(_codes(_errors_for(result, "test:ship_archetype/flagship_b")),
+		"ship_archetype_flagship_ambiguous", "a second flagship-tagged archetype for the same hull is rejected")
+	assert_empty(_codes(_errors_for(result, "test:ship_archetype/flagship_a")),
+		"the first flagship-tagged archetype stays clean")
