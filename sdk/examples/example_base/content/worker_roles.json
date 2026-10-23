@@ -1,0 +1,19 @@
+{
+  "schema_version": "2.0",
+  "content_type": "worker_roles",
+  "definitions": [
+    {
+      "id": "example_base:worker_role/settler",
+      "name_key": "worker_role.example_base.settler.name",
+      "description_key": "worker_role.example_base.settler.description",
+      "tags": ["worker_role.frontier"],
+      "enabled": true,
+      "data": {
+        "wage_per_tick": 0.3,
+        "hire_cost_money": 4,
+        "speed_bonus": 0.1,
+        "skill": "labor"
+      }
+    }
+  ]
+}

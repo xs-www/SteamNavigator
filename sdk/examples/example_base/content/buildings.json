@@ -1,0 +1,26 @@
+{
+  "schema_version": "2.0",
+  "content_type": "buildings",
+  "definitions": [
+    {
+      "id": "example_base:building/kiln",
+      "name_key": "building.example_base.kiln.name",
+      "description_key": "building.example_base.kiln.description",
+      "tags": ["building.production"],
+      "enabled": true,
+      "data": {
+        "category": "production",
+        "build_cost_money": 80,
+        "build_cost_items": [
+          {"item": "core:item/timber", "amount": 1}
+        ],
+        "build_time_hours": 1,
+        "worker_slots": 1,
+        "worker_role": "example_base:worker_role/settler",
+        "upkeep_per_tick": 1,
+        "max_level": 2,
+        "recipes": ["example_base:production_recipe/charcoal"]
+      }
+    }
+  ]
+}

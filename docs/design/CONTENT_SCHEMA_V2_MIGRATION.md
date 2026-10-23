@@ -1,11 +1,11 @@
 # Content Schema 2.0 迁移落地方案
 
-> 状态：Draft 6（2026-10-23，Phase D2 落地后刷新；Phase A/B、C1–C4 与 D0/D1/D2 已落地，**Phase C 完成、Phase D 进行中**）。本文件是**执行方案**，不是已定稿契约；契约性规则见
+> 状态：Draft 6（2026-10-23，Phase D3 落地后刷新；Phase A/B、C1–C4 与 D0/D1/D2/D3 已落地，**Phase C 完成、Phase D 进行中**）。本文件是**执行方案**，不是已定稿契约；契约性规则见
 > [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md)，路线图见 [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md)
 > 阶段 0/1，近期计划见 [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) §4.4。
 >
 > **结论先行**：实际按「按内容类型版本化 → 世界探索家族提升 → 实体合并 → 其余系统 → 冻结 1.0」分层落地；
-> 截至 D2，**30 个 active 类型全部是 Content Schema 2.0（0 个 1.0 runtime）**，只剩 3 类编辑器草案（剧情 2 类 + 战斗 AI 1 类）。
+> 截至 D3，**35 个 active 类型全部是 Content Schema 2.0（0 个 1.0 runtime）**，只剩 3 类编辑器草案（剧情 2 类 + 战斗 AI 1 类）。
 > 开发期没有第三方模组与旧档负担，实体合并（C1/C2/C3/C4）**直接改 Core 内容与 ID、删除旧类型，不做别名与存档迁移**；
 > 兼容策略只在发布前按 Phase E 另行评估。
 
@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | Framework | 0.2.0-dev 系列（`FrameworkInfo.VERSION`） | 随发布走 |
 | Mod API | `1.0` | 未动 |
-| **Content Schema** | **基线 `1.0`；按类型声明：30 类 active 全部 `2.0`（0 类 `1.0` runtime；含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1–C4 / D0–D2 已落地，Phase C 完成、Phase D 进行中 |
+| **Content Schema** | **基线 `1.0`；按类型声明：35 类 active 全部 `2.0`（0 类 `1.0` runtime；含显式补丁）** | 运行时按 `ContentTypes.schema_version(type)` 加载；Phase A / B / C1–C4 / D0–D3 已落地，Phase C 完成、Phase D 进行中 |
 | Save Schema | `2.0` | 已完成（含 1.x → 2.0 迁移） |
 | State Schema | `2.0` | 已完成（`GameState.SCHEMA_VERSION`） |
 
@@ -23,40 +23,42 @@
 `FrameworkInfo.CONTENT_SCHEMA`（`"1.0"`）自 Phase A 起只是**基线 / 默认值**（存档 header、编辑器默认），
 不再是运行时全局门禁；每个 active 类型在 `content_types.json` 声明自己的期望版本。
 
-## 2. 现状基线（2026-10-23 Phase D2 后快照）
+## 2. 现状基线（2026-10-23 Phase D3 后快照）
 
 ### 2.1 游戏运行时
 
-- [content_types.json](../../content_types.json) 是唯一真源：**30 个 active 类型**（29 个定义类型 +
+- [content_types.json](../../content_types.json) 是唯一真源：**35 个 active 类型**（34 个定义类型 +
   `patches`），**全部 `schema_version: "2.0"`，0 个 1.0 runtime 类型**。
 - `ContentTypes`（生成物 [content_types.gd](../../framework/modding/content_types.gd)）带
   `SCHEMA_PATHS` / `SCHEMA_VERSIONS` / `schema_version(type)`；[content_compiler.gd](../../framework/modding/content_compiler.gd)
   按 `content_type` 取期望版本校验 envelope（Patch 再校验按**目标类型**版本），不存在全局 1.0 门禁。
   `FrameworkInfo.CONTENT_SCHEMA` 只作为基线/默认（存档 header 与编辑器默认）。
-- 2.0 定义类型（29）：Phase B 的 `world_profiles / map_configs / regions / sites / route_templates /
+- 2.0 定义类型（34）：Phase B 的 `world_profiles / map_configs / regions / sites / route_templates /
   weather_profiles / factions / discoveries / start_profiles`；C1 的 `hulls` / `modules`；C2 的 `items`；
   C3 的 `quests`；C4 的 `port_templates` / `starting_scenarios` / `contracts` / `voyage_events` /
   `crew_roles` / `boiler_strategies`；D1 的 `weapons` / `damage_types` / `combat_abilities` /
   `enemy_archetypes` / `encounter_tables` / `loot_tables`；D2 的 `ship_archetypes` / `captains` /
-  `formations` / `fleet_doctrines`；外加同样升 2.0 的 `patches`（第 30 个 active）。
+  `formations` / `fleet_doctrines`；D3 的 `base_sites` / `buildings` / `building_upgrades` /
+  `production_recipes` / `worker_roles`；外加同样升 2.0 的 `patches`（第 35 个 active）。
 - 1.0 运行时类型：**无**。`map_profiles` 已退役（`map_configs` 取代）；`port_archetypes` / `starting_builds` /
   `roles` / `strategies` / `events` 分别改名为 `port_templates` / `starting_scenarios` / `crew_roles` /
   `boiler_strategies` / `voyage_events`。
 - 开局链路：C4 起**所有开局统一走 `CampaignFactory`**——`run.start` 无 `start_profile` 时
   `create_default_campaign`（默认 start profile + `starting_scenarios` 选择），显式传入时
   `create_campaign`；`build_id` / 1.0 `map_profiles` 路径已删除。
-- Core：`dev_mods/core/` 29 个内容文件 / 115 条定义（9 个 Phase B v2 文件 + `hulls` / `modules` / `items` /
+- Core：`dev_mods/core/` 34 个内容文件 / 133 条定义（9 个 Phase B v2 文件 + `hulls` / `modules` / `items` /
   `crew_roles` / `boiler_strategies` / `port_templates` / `starting_scenarios` / `contracts` /
   `voyage_events` / `quests` + D1 的 `weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` /
   `encounter_tables` / `loot_tables` + D2 的 `ship_archetypes` / `captains` / `formations` /
-  `fleet_doctrines`）；`map_profiles.json` 已删除，`map_configs.json` 为唯一场景配置。
+  `fleet_doctrines` + D3 的 `base_sites` / `buildings` / `building_upgrades` / `production_recipes` /
+  `worker_roles`）；`map_profiles.json` 已删除，`map_configs.json` 为唯一场景配置。
   goods+materials 已合并为 `items`（12 条 `core:item/*`，`data.crafting_material` 标志），5 类模块已合并为
   `modules`（12 条，`data.v2_category` = boiler/cargo/utility/cabin）。
 
 ### 2.2 内容 Schema 与草案
 
-- `schemas/` 共 **36 个 Schema**：**2 个顶层**（`common` / `manifest`）+ **34 个 `schemas/v2/`**
-  （`common` + 30 类 active 2.0 + 3 类草案）。不存在 1.0 内容 Schema。
+- `schemas/` 共 **41 个 Schema**：**2 个顶层**（`common` / `manifest`）+ **39 个 `schemas/v2/`**
+  （`common` + 35 类 active 2.0 + 3 类草案）。不存在 1.0 内容 Schema。
 - 3 类草案（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑）：
   `story_arcs`、`story_levels`、`combat_ai_profiles`，运行时暂不加载。
 - v2 **未覆盖**：无；所有 active 类型（含 `patches`）均使用 2.0 Schema，仅剩 3 类草案（剧情 2 类 + 战斗 AI 1 类）待后续系统接入。
@@ -75,12 +77,12 @@
 
 ### 2.4 编辑器 / CLI / SDK / 门禁
 
-- 编辑器：`SNContentTypes.TYPES`（30 个运行时类型，全部 2.0）+ `DRAFT_TYPES`（3 个草案），合计 **33**；
-  schema bundle **36 个**（2 顶层 + 34 个 v2），由 `sync-schemas.mjs` 生成。
+- 编辑器：`SNContentTypes.TYPES`（35 个运行时类型，全部 2.0）+ `DRAFT_TYPES`（3 个草案），合计 **38**；
+  schema bundle **41 个**（2 顶层 + 39 个 v2），由 `sync-schemas.mjs` 生成。
   校验器有 `schemaVersionFor` 与 `schema_version_mismatch` / `schema_version_unsupported` /
   `draft_content` / `capability_undeclared`；G8 导出守卫按“当前运行时不支持”判定（草案 / 未注册 /
   版本不符拦截，运行时 2.0 类型可部署）。
-- Content CLI：`types` 输出 30 个运行时类型（全部标 runtime 2.0）与 3 个草案；
+- Content CLI：`types` 输出 35 个运行时类型（全部标 runtime 2.0）与 3 个草案；
   `--draft` 只接受剩余草案类型；写出的内容文件按类型版本写 `schema_version: "2.0"`（CLI 测试 64；D-AI 新增 `combat_ai_profiles` schema 先行草案，CLI/编辑器可编辑，运行时不加载）。
 - SDK `sdk/validate.gd` 走真实 `Bootstrap`（运行时语义）；`sdk/examples/example_weapons` 是 D1 的 runtime 2.0 示例，
   `sdk/examples/example_fleet` 是 D2 的 fleet 4 类型示例；发布 workflow 含 Godot 测试、`gen_content_types --check`、`gen_static_docs --check` 与 core 校验。
@@ -92,7 +94,7 @@
 | --- | --- | --- |
 | G9 | ✅ Phase C3 已解耦：`contracts` 保持运输请求，`quests` 2.0 + `data.quests` + QuestService 负责抽象引导 | 委托接取生成追踪实例；task.view 聚合 |
 | G10 | ✅ Phase C4 已完成：所有 1.0 定义类型 + `patch` 已升 2.0，`map_profiles` 退役 | 运行时不再有 1.0 类型 |
-| G11 | Phase D：D0（sim tick）、D1（combat 6 类）与 D2（fleet 4 类）已完成；base / auto_trade / ruins 类型仍是 planned | D2 已有运行时读者；其余系统待接入 |
+| G11 | Phase D：D0（sim tick）、D1（combat 6 类）、D2（fleet 4 类）与 D3（base 5 类）已完成；auto_trade / ruins 类型仍是 planned | D1–D3 已有运行时读者；其余系统待接入 |
 | G12 | Phase E：1.0 内容生成与读取尚未冻结（运行时已无 1.0 类型） | 发布门禁尚未强制 Content Schema 2.0 |
 | G13 | 开发期不做旧档 / 旧内容兼容 | 发布前若需兼容，按 Phase E 重新评估 |
 
@@ -229,7 +231,8 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 - **D0 ✅ 确定性模拟时钟**：`sim.pause` / `sim.resume` / `sim.set_speed` / `sim.advance` + `sim.view`，`data.sim` 惰性状态，固定 1 游戏小时步长，`sim.tick` 领域事件；不接 gameplay。
 - **D1 ✅ combat**：`weapons` 提升 active + 新增 `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`（6 类 2.0）；`CombatOps` / `CombatService` / `combat.resolve` / `combat.view` / `combat.log`，Core 6 个战斗内容文件；暂不接航行风险结算。
 - **D2 ✅ fleet**：`ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类 active 2.0；`FleetOps` / `FleetService` / `fleet.assign_captain|set_formation|set_doctrine|add_ship|remove_ship` / `fleet.view`，`data.fleet` 惰性持久；Core 4 个舰队内容文件、`sdk/examples/example_fleet`。
-- **下一步**：base / auto_trade / ruins 的 Schema 与运行时切片，以及 D1 航行遭遇接入 / 敌舰可视化、D2 舰队与战斗 / 航行的联动。
+- **D3 ✅ base**：`base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles` 五类 active 2.0；`BaseOps` / `BaseService` / `BaseProductionSystem` / `base.claim|build|upgrade|deposit|withdraw|hire_worker|assign_worker|start_production` / `base.view`，`data.base` 惰性持久；Core 5 个基地内容文件、`sdk/examples/example_base`、最小基地页。
+- **下一步**：auto_trade / ruins 的 Schema 与运行时切片，以及 D1 航行遭遇接入 / 敌舰可视化、D2 舰队与战斗 / 航行的联动。
 
 ### Phase E · 冻结 1.0（1 周）
 
@@ -314,7 +317,9 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase D · D2：fleet 4 类 active 2.0 + Core 4 个舰队内容文件 + `FleetOps` / `FleetService` / `fleet.*` 命令与 `fleet.view`；SDK `example_fleet`（2026-10-23）。
 - [x] **Phase D0/D1/D2 完成快照**：30 个 active 类型全部 2.0（29 定义 + patch）；schema bundle 36（2 顶层 + 34 v2）、编辑器 33（30 runtime + 3 draft）、Core 29 内容文件 / 115 定义；Godot **590/590**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [x] **D-AI schema 先行**：新增 draft `combat_ai_profiles`（FSM 节点/转移/条件，对齐 SNBattleSim FSM 契约；运行时不加载）；schema bundle 36（2 顶层 + 34 v2）、编辑器 33（30 runtime + 3 draft）、Node **60/60**、CLI **64/64**。
-- [ ] Phase D 其余：base / auto_trade / ruins 系统类型与运行时切片。
+- [x] Phase D · D3：base 5 类 active 2.0 + Core 5 个基地内容文件 + `BaseOps` / `BaseService` / `BaseProductionSystem` / `base.*` 命令与 `base.view`；SDK `example_base`、最小基地页（2026-10-23）。
+- [x] **Phase D0/D1/D2/D3 完成快照**：35 个 active 类型全部 2.0（34 定义 + patch）；schema bundle 41（2 顶层 + 39 v2）、编辑器 38（35 runtime + 3 draft）、Core 34 内容文件 / 133 定义；Godot **605/605**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
+- [ ] Phase D 其余：auto_trade / ruins 系统类型与运行时切片。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。
 

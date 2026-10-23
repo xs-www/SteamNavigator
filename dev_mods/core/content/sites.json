@@ -64,6 +64,7 @@
         "site_kind": "base_site",
         "weight": 8,
         "region_kinds": ["coastal", "industrial"],
+        "base_site_archetype": "core:base_site/coastal_outpost",
         "repeatable": false
       }
     },

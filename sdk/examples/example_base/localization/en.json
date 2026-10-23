@@ -1,0 +1,12 @@
+{
+  "base_site.example_base.frontier_depot.name": "Frontier Depot",
+  "base_site.example_base.frontier_depot.description": "A small frontier base used to demonstrate a mod-owned base and production chain.",
+  "worker_role.example_base.settler.name": "Settler",
+  "worker_role.example_base.settler.description": "A cheap general worker for small frontier workshops.",
+  "building.example_base.kiln.name": "Charcoal Kiln",
+  "building.example_base.kiln.description": "Burns timber into coal.",
+  "building_upgrade.example_base.kiln_2.name": "Charcoal Kiln II",
+  "building_upgrade.example_base.kiln_2.description": "Expands the kiln for +20% production speed.",
+  "production_recipe.example_base.charcoal.name": "Charcoal Burning",
+  "production_recipe.example_base.charcoal.description": "Consumes 1 timber and yields 2 coal."
+}

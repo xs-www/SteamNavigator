@@ -9,12 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CrossReferenceValidator` | L1 |
-| `PLANNED_REF_TYPES` | L50 |
-| `MODULE_CATEGORIES` | L60 |
-| `MODULE_CATEGORY_REQUIRED_FIELDS` | L61 |
-| `UTILITY_TAG_FIELDS` | L67 |
-| `QUEST_MATCH_REFERENCE_TYPES` | L76 |
-| `validate(hub: RegistryHub) -> Dictionary` | L90 |
+| `PLANNED_REF_TYPES` | L52 |
+| `MODULE_CATEGORIES` | L62 |
+| `MODULE_CATEGORY_REQUIRED_FIELDS` | L63 |
+| `UTILITY_TAG_FIELDS` | L69 |
+| `QUEST_MATCH_REFERENCE_TYPES` | L78 |
+| `validate(hub: RegistryHub) -> Dictionary` | L92 |
 
 以及 Phase B 世界/战役 9 类（world_profiles / regions / sites / route_templates /
 weather_profiles / factions / discoveries / start_profiles / map_configs）的引用完整性。
@@ -50,6 +50,8 @@ weather_profiles / factions / discoveries / start_profiles / map_configs）的�
   `weapon_sockets[]` 还会对照目标 hull 的实际 socket 镜像：socket 名必须存在
   （`ship_archetype_socket_missing`）、声明的 class 必须等于 hull `socket_class`
   （`ship_archetype_socket_class`）、可选默认武器的 `weapon_class` / `mount_class`
-  必须能装进该 class（`ship_archetype_weapon_class`）。
+  必须能装进该 class（`ship_archetype_weapon_class`）。同一 hull 最多一个带
+  `ship_archetype.flagship` tag 的 archetype（`ship_archetype_flagship_ambiguous`），
+  formation slot id 必须唯一（`formation_slot_duplicate`）。
 
 模块索引：[framework/modding](./README.md)

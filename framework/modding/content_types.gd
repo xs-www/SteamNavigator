@@ -36,6 +36,11 @@ const SHIP_ARCHETYPE := &"ship_archetypes"
 const CAPTAIN := &"captains"
 const FORMATION := &"formations"
 const FLEET_DOCTRINE := &"fleet_doctrines"
+const BASE_SITE := &"base_sites"
+const BUILDING := &"buildings"
+const BUILDING_UPGRADE := &"building_upgrades"
+const PRODUCTION_RECIPE := &"production_recipes"
+const WORKER_ROLE := &"worker_roles"
 
 const SCHEMA_PATHS := {
 	ITEM: "res://schemas/v2/item.schema.json",
@@ -68,6 +73,11 @@ const SCHEMA_PATHS := {
 	CAPTAIN: "res://schemas/v2/captain.schema.json",
 	FORMATION: "res://schemas/v2/formation.schema.json",
 	FLEET_DOCTRINE: "res://schemas/v2/fleet_doctrine.schema.json",
+	BASE_SITE: "res://schemas/v2/base_site.schema.json",
+	BUILDING: "res://schemas/v2/building.schema.json",
+	BUILDING_UPGRADE: "res://schemas/v2/building_upgrade.schema.json",
+	PRODUCTION_RECIPE: "res://schemas/v2/production_recipe.schema.json",
+	WORKER_ROLE: "res://schemas/v2/worker_role.schema.json",
 }
 
 const SCHEMA_VERSIONS := {
@@ -101,6 +111,11 @@ const SCHEMA_VERSIONS := {
 	CAPTAIN: "2.0",
 	FORMATION: "2.0",
 	FLEET_DOCTRINE: "2.0",
+	BASE_SITE: "2.0",
+	BUILDING: "2.0",
+	BUILDING_UPGRADE: "2.0",
+	PRODUCTION_RECIPE: "2.0",
+	WORKER_ROLE: "2.0",
 }
 
 const SINGULAR := {
@@ -134,6 +149,11 @@ const SINGULAR := {
 	CAPTAIN: "captain",
 	FORMATION: "formation",
 	FLEET_DOCTRINE: "fleet_doctrine",
+	BASE_SITE: "base_site",
+	BUILDING: "building",
+	BUILDING_UPGRADE: "building_upgrade",
+	PRODUCTION_RECIPE: "production_recipe",
+	WORKER_ROLE: "worker_role",
 }
 
 const MODULE_TYPES := [HULL, MODULE]
@@ -146,7 +166,8 @@ static func all() -> Array[StringName]:
 		ROUTE_TEMPLATE, WEATHER_PROFILE, FACTION, DISCOVERY, START_PROFILE,
 		MAP_CONFIG, CONTRACT, QUEST, VOYAGE_EVENT, WEAPON,
 		DAMAGE_TYPE, COMBAT_ABILITY, ENEMY_ARCHETYPE, ENCOUNTER_TABLE, LOOT_TABLE,
-		SHIP_ARCHETYPE, CAPTAIN, FORMATION, FLEET_DOCTRINE,
+		SHIP_ARCHETYPE, CAPTAIN, FORMATION, FLEET_DOCTRINE, BASE_SITE,
+		BUILDING, BUILDING_UPGRADE, PRODUCTION_RECIPE, WORKER_ROLE,
 	]
 	return types
 

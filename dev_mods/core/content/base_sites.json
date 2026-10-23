@@ -1,0 +1,41 @@
+{
+  "schema_version": "2.0",
+  "content_type": "base_sites",
+  "definitions": [
+    {
+      "id": "core:base_site/coastal_outpost",
+      "name_key": "base_site.core.coastal_outpost.name",
+      "description_key": "base_site.core.coastal_outpost.description",
+      "tags": ["base.site.coastal", "base.site.starter"],
+      "enabled": true,
+      "data": {
+        "slot_count": 3,
+        "storage_capacity": 600,
+        "maintenance_per_tick": 4,
+        "defense": 10,
+        "claim_cost_money": 250,
+        "starting_workers": [
+          {"role": "core:worker_role/laborer", "amount": 2}
+        ]
+      }
+    },
+    {
+      "id": "core:base_site/industrial_yard",
+      "name_key": "base_site.core.industrial_yard.name",
+      "description_key": "base_site.core.industrial_yard.description",
+      "tags": ["base.site.industrial", "base.site.advanced"],
+      "enabled": true,
+      "data": {
+        "slot_count": 5,
+        "storage_capacity": 1200,
+        "maintenance_per_tick": 10,
+        "defense": 25,
+        "claim_cost_money": 900,
+        "starting_workers": [
+          {"role": "core:worker_role/laborer", "amount": 2},
+          {"role": "core:worker_role/smelter", "amount": 1}
+        ]
+      }
+    }
+  ]
+}

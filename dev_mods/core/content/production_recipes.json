@@ -1,0 +1,65 @@
+{
+  "schema_version": "2.0",
+  "content_type": "production_recipes",
+  "definitions": [
+    {
+      "id": "core:production_recipe/timber",
+      "name_key": "production_recipe.core.timber.name",
+      "description_key": "production_recipe.core.timber.description",
+      "tags": ["production_recipe.tier1"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/sawmill",
+        "inputs": [
+          {"item": "core:item/coal", "amount": 1}
+        ],
+        "outputs": [
+          {"item": "core:item/timber", "amount": 2}
+        ],
+        "duration_hours": 2,
+        "workers_required": 1,
+        "money_cost": 0
+      }
+    },
+    {
+      "id": "core:production_recipe/boiler_plate",
+      "name_key": "production_recipe.core.boiler_plate.name",
+      "description_key": "production_recipe.core.boiler_plate.description",
+      "tags": ["production_recipe.tier2"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/smelter",
+        "inputs": [
+          {"item": "core:item/iron_ore", "amount": 2},
+          {"item": "core:item/coal", "amount": 1}
+        ],
+        "outputs": [
+          {"item": "core:item/boiler_plate", "amount": 1}
+        ],
+        "duration_hours": 3,
+        "workers_required": 2,
+        "money_cost": 10
+      }
+    },
+    {
+      "id": "core:production_recipe/precision_gear",
+      "name_key": "production_recipe.core.precision_gear.name",
+      "description_key": "production_recipe.core.precision_gear.description",
+      "tags": ["production_recipe.tier3", "production_recipe.shipbuilding"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/foundry",
+        "inputs": [
+          {"item": "core:item/brass", "amount": 2},
+          {"item": "core:item/boiler_plate", "amount": 1}
+        ],
+        "outputs": [
+          {"item": "core:item/precision_gear", "amount": 1}
+        ],
+        "duration_hours": 4,
+        "workers_required": 2,
+        "money_cost": 25
+      }
+    }
+  ]
+}

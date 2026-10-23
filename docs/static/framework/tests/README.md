@@ -7,6 +7,7 @@
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `cases/test_architecture_extension_assets.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
+| `cases/test_base.gd` | Phase D3 基地运行时的回归测试：`data.base` 惰性结构、占领/建造/升级、 | [查看](./cases/test_base.gd.md) |
 | `cases/test_base_kit_assets.gd` | 按主题拆分的 168 个测试（含委托刷新、仓库/打造订单/在港等待、船厂改装 UI、模块实例与部件损耗可见性、UI 外壳接线、密集界面横向排版、通报文案本地化、2.5D 舞台基础设施（LocationStage/SNStageHost/ShipyardStage/PortStage）与场景填充访问器、港口街景 town kit 装配/blockout/port.view 接线与 size/density 分档、静态层与玩家船合批、无 banner 程序化远景、主界面紧凑 HUD + 资源图标 + 主题化招牌 + 状态条 + 详细抽屉、存档迁移、CampaignState 分区、Schema 2.0 草案与通关与多 seed 完整通关）。 | 本页 |
 | `cases/test_campaign_assembly.gd` | Phase B B3-A 战役世界装配测试（WORLD_SCHEMA_V2_RUNTIME §6.2/§6.3/§6.4）：用 | [查看](./cases/test_campaign_assembly.gd.md) |
 | `cases/test_campaign_start.gd` | C4 开局入口测试：`run.start` 的默认路径（无 start_profile）与显式 start_profile | [查看](./cases/test_campaign_start.gd.md) |

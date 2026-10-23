@@ -135,6 +135,18 @@ func test_core_requires_fleet_content_counts() -> void:
 	assert_true(_has_error_message(result, "captains"), "missing captains raise content_count")
 
 
+func test_core_requires_base_content_counts_and_a_production_chain() -> void:
+	for case in [
+		[ContentTypes.BASE_SITE, "base sites"],
+		[ContentTypes.BUILDING, "buildings"],
+		[ContentTypes.BUILDING_UPGRADE, "building upgrades"],
+		[ContentTypes.PRODUCTION_RECIPE, "production recipes"],
+		[ContentTypes.WORKER_ROLE, "worker roles"],
+	]:
+		var result := _check(_full_hub([case[0]]))
+		assert_true(_has_error_message(result, String(case[1])), "missing %s raise content_count" % String(case[1]))
+
+
 func test_core_requires_combat_content_counts() -> void:
 	var result := _check(_full_hub([ContentTypes.ENEMY_ARCHETYPE]))
 	assert_true(_has_error_message(result, "enemy archetypes"), "missing enemy archetypes raise content_count")
@@ -409,6 +421,61 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 	if not skip.has(ContentTypes.ENEMY_ARCHETYPE):
 		for index in range(4):
 			_register(hub, ContentTypes.ENEMY_ARCHETYPE, "core:enemy_archetype/enemy_%d" % index)
+	# D3 base minimums (skippable like the other families).
+	if not skip.has(ContentTypes.WORKER_ROLE):
+		_register(hub, ContentTypes.WORKER_ROLE, "core:worker_role/laborer")
+		_register(hub, ContentTypes.WORKER_ROLE, "core:worker_role/engineer")
+	if not skip.has(ContentTypes.BASE_SITE):
+		_register(hub, ContentTypes.BASE_SITE, "core:base_site/outpost", [], {
+			"slot_count": 3,
+			"storage_capacity": 600,
+			"maintenance_per_tick": 4,
+			"claim_cost_money": 250,
+			"starting_workers": [{"role": "core:worker_role/laborer", "amount": 2}],
+		})
+	if not skip.has(ContentTypes.PRODUCTION_RECIPE):
+		_register(hub, ContentTypes.PRODUCTION_RECIPE, "core:production_recipe/gear", [], {
+			"building_ref": "core:building/sawmill",
+			"inputs": [{"item": "core:item/coal", "amount": 1}],
+			"outputs": [{"item": "core:item/precision_gear", "amount": 1}],
+			"duration_hours": 2,
+			"workers_required": 1,
+		})
+		_register(hub, ContentTypes.PRODUCTION_RECIPE, "core:production_recipe/plate", [], {
+			"building_ref": "core:building/smelter",
+			"inputs": [{"item": "core:item/coal", "amount": 1}],
+			"outputs": [{"item": "core:item/coal", "amount": 2}],
+			"duration_hours": 2,
+			"workers_required": 1,
+		})
+	if not skip.has(ContentTypes.BUILDING):
+		for building_id in ["core:building/sawmill", "core:building/smelter", "core:building/stockyard"]:
+			var recipes: Array = []
+			if building_id == "core:building/sawmill":
+				recipes = ["core:production_recipe/gear"]
+			elif building_id == "core:building/smelter":
+				recipes = ["core:production_recipe/plate"]
+			_register(hub, ContentTypes.BUILDING, building_id, [], {
+				"category": "production" if not recipes.is_empty() else "storage",
+				"build_cost_money": 100,
+				"build_time_hours": 1,
+				"worker_slots": 2,
+				"worker_role": "core:worker_role/laborer",
+				"upkeep_per_tick": 1,
+				"max_level": 2,
+				"recipes": recipes,
+			})
+	if not skip.has(ContentTypes.BUILDING_UPGRADE):
+		for building_id in ["core:building/sawmill", "core:building/smelter", "core:building/stockyard"]:
+			_register(hub, ContentTypes.BUILDING_UPGRADE, "core:building_upgrade/%s_2" % building_id.get_slice("/", 1), [], {
+				"building_ref": building_id,
+				"from_level": 1,
+				"to_level": 2,
+				"cost_money": 100,
+				"time_hours": 2,
+			})
+	if not skip.has(ContentTypes.ITEM):
+		_register(hub, ContentTypes.ITEM, "core:item/precision_gear", ["material.shipbuilding"])
 	if not skip.has(ContentTypes.QUEST):
 		_register(hub, ContentTypes.QUEST, "core:quest/guide", ["quest.guide"], {
 			"kind": "guide",

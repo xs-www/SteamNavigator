@@ -70,6 +70,30 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 	_require_core_count(hub, ContentTypes.CAPTAIN, 1, "captains", errors)
 	_require_core_count(hub, ContentTypes.FORMATION, 1, "formations", errors)
 	_require_core_count(hub, ContentTypes.FLEET_DOCTRINE, 1, "fleet doctrines", errors)
+	# D3 base family minimums + a production chain reaching shipbuilding material.
+	_require_core_count(hub, ContentTypes.BASE_SITE, 1, "base sites", errors)
+	_require_core_count(hub, ContentTypes.BUILDING, 3, "buildings", errors)
+	_require_core_count(hub, ContentTypes.BUILDING_UPGRADE, 3, "building upgrades", errors)
+	_require_core_count(hub, ContentTypes.PRODUCTION_RECIPE, 2, "production recipes", errors)
+	_require_core_count(hub, ContentTypes.WORKER_ROLE, 2, "worker roles", errors)
+	var base_chain_ok := false
+	for recipe in hub.get_all(ContentTypes.PRODUCTION_RECIPE):
+		if String(recipe.source_mod) != "core":
+			continue
+		for stack in recipe.data.get("outputs", []):
+			if not (stack is Dictionary):
+				continue
+			var output := hub.get_by_id(ContentTypes.ITEM, String((stack as Dictionary).get("item", "")))
+			if output != null and output.tags.has("material.shipbuilding"):
+				base_chain_ok = true
+				break
+		if base_chain_ok:
+			break
+	if not base_chain_ok:
+		errors.append({
+			"code": "base_production_chain_missing",
+			"message": "core has no production recipe whose output is tagged material.shipbuilding",
+		})
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
 		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():

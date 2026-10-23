@@ -1,0 +1,109 @@
+{
+  "schema_version": "2.0",
+  "content_type": "building_upgrades",
+  "definitions": [
+    {
+      "id": "core:building_upgrade/sawmill_2",
+      "name_key": "building_upgrade.core.sawmill_2.name",
+      "description_key": "building_upgrade.core.sawmill_2.description",
+      "tags": ["building_upgrade.production"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/sawmill",
+        "from_level": 1,
+        "to_level": 2,
+        "cost_money": 180,
+        "cost_items": [
+          {"item": "core:item/timber", "amount": 4}
+        ],
+        "time_hours": 3,
+        "modifiers": [
+          {"stat": "production_speed", "op": "mul", "value": 1.25}
+        ]
+      }
+    },
+    {
+      "id": "core:building_upgrade/smelter_2",
+      "name_key": "building_upgrade.core.smelter_2.name",
+      "description_key": "building_upgrade.core.smelter_2.description",
+      "tags": ["building_upgrade.production"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/smelter",
+        "from_level": 1,
+        "to_level": 2,
+        "cost_money": 320,
+        "cost_items": [
+          {"item": "core:item/iron_ore", "amount": 4},
+          {"item": "core:item/boiler_plate", "amount": 1}
+        ],
+        "time_hours": 4,
+        "modifiers": [
+          {"stat": "production_speed", "op": "mul", "value": 1.25}
+        ]
+      }
+    },
+    {
+      "id": "core:building_upgrade/foundry_2",
+      "name_key": "building_upgrade.core.foundry_2.name",
+      "description_key": "building_upgrade.core.foundry_2.description",
+      "tags": ["building_upgrade.production"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/foundry",
+        "from_level": 1,
+        "to_level": 2,
+        "cost_money": 520,
+        "cost_items": [
+          {"item": "core:item/brass", "amount": 4},
+          {"item": "core:item/precision_gear", "amount": 1}
+        ],
+        "time_hours": 5,
+        "modifiers": [
+          {"stat": "production_speed", "op": "mul", "value": 1.3}
+        ]
+      }
+    },
+    {
+      "id": "core:building_upgrade/stockyard_2",
+      "name_key": "building_upgrade.core.stockyard_2.name",
+      "description_key": "building_upgrade.core.stockyard_2.description",
+      "tags": ["building_upgrade.storage"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/stockyard",
+        "from_level": 1,
+        "to_level": 2,
+        "cost_money": 240,
+        "cost_items": [
+          {"item": "core:item/timber", "amount": 4}
+        ],
+        "time_hours": 3,
+        "modifiers": [
+          {"stat": "storage_capacity", "op": "add", "value": 600}
+        ]
+      }
+    },
+    {
+      "id": "core:building_upgrade/defense_tower_2",
+      "name_key": "building_upgrade.core.defense_tower_2.name",
+      "description_key": "building_upgrade.core.defense_tower_2.description",
+      "tags": ["building_upgrade.defense"],
+      "enabled": true,
+      "data": {
+        "building_ref": "core:building/defense_tower",
+        "from_level": 1,
+        "to_level": 2,
+        "cost_money": 420,
+        "cost_items": [
+          {"item": "core:item/boiler_plate", "amount": 2},
+          {"item": "core:item/brass", "amount": 2}
+        ],
+        "time_hours": 4,
+        "modifiers": [
+          {"stat": "defense", "op": "add", "value": 25}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "schema_version": "2.0",
+  "content_type": "buildings",
+  "definitions": [
+    {
+      "id": "core:building/sawmill",
+      "name_key": "building.core.sawmill.name",
+      "description_key": "building.core.sawmill.description",
+      "tags": ["building.production", "building.wood"],
+      "enabled": true,
+      "information": {"model": "asset://core/model.building.sawmill"},
+      "data": {
+        "category": "production",
+        "build_cost_money": 120,
+        "build_cost_items": [
+          {"item": "core:item/timber", "amount": 2}
+        ],
+        "build_time_hours": 2,
+        "worker_slots": 2,
+        "worker_role": "core:worker_role/laborer",
+        "upkeep_per_tick": 1,
+        "max_level": 2,
+        "recipes": ["core:production_recipe/timber"]
+      }
+    },
+    {
+      "id": "core:building/smelter",
+      "name_key": "building.core.smelter.name",
+      "description_key": "building.core.smelter.description",
+      "tags": ["building.production", "building.metal"],
+      "enabled": true,
+      "information": {"model": "asset://core/model.building.smelter"},
+      "data": {
+        "category": "production",
+        "build_cost_money": 220,
+        "build_cost_items": [
+          {"item": "core:item/timber", "amount": 2},
+          {"item": "core:item/iron_ore", "amount": 2}
+        ],
+        "build_time_hours": 3,
+        "worker_slots": 2,
+        "worker_role": "core:worker_role/smelter",
+        "upkeep_per_tick": 2,
+        "max_level": 2,
+        "recipes": ["core:production_recipe/boiler_plate"]
+      }
+    },
+    {
+      "id": "core:building/foundry",
+      "name_key": "building.core.foundry.name",
+      "description_key": "building.core.foundry.description",
+      "tags": ["building.production", "building.precision"],
+      "enabled": true,
+      "information": {"model": "asset://core/model.building.foundry"},
+      "data": {
+        "category": "production",
+        "build_cost_money": 380,
+        "build_cost_items": [
+          {"item": "core:item/timber", "amount": 3},
+          {"item": "core:item/boiler_plate", "amount": 1}
+        ],
+        "build_time_hours": 4,
+        "worker_slots": 3,
+        "worker_role": "core:worker_role/engineer",
+        "upkeep_per_tick": 4,
+        "max_level": 2,
+        "recipes": ["core:production_recipe/precision_gear"]
+      }
+    },
+    {
+      "id": "core:building/stockyard",
+      "name_key": "building.core.stockyard.name",
+      "description_key": "building.core.stockyard.description",
+      "tags": ["building.storage"],
+      "enabled": true,
+      "information": {"model": "asset://core/model.building.stockyard"},
+      "data": {
+        "category": "storage",
+        "build_cost_money": 160,
+        "build_cost_items": [
+          {"item": "core:item/timber", "amount": 2}
+        ],
+        "build_time_hours": 2,
+        "worker_slots": 1,
+        "worker_role": "core:worker_role/laborer",
+        "upkeep_per_tick": 1,
+        "storage_capacity": 800,
+        "max_level": 2
+      }
+    },
+    {
+      "id": "core:building/defense_tower",
+      "name_key": "building.core.defense_tower.name",
+      "description_key": "building.core.defense_tower.description",
+      "tags": ["building.defense"],
+      "enabled": true,
+      "information": {"model": "asset://core/model.building.defense_tower"},
+      "data": {
+        "category": "defense",
+        "build_cost_money": 300,
+        "build_cost_items": [
+          {"item": "core:item/boiler_plate", "amount": 2}
+        ],
+        "build_time_hours": 3,
+        "worker_slots": 1,
+        "worker_role": "core:worker_role/laborer",
+        "upkeep_per_tick": 3,
+        "defense": 30,
+        "max_level": 2
+      }
+    }
+  ]
+}

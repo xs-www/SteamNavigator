@@ -16,6 +16,7 @@ const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contra
 const TAVERN_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/tavern_screen.gd")
 const OVERVIEW_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/overview_screen.gd")
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
+const BASE_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/base_screen.gd")
 const PORT_MEMORY_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/port_memory_screen.gd")
 const SETTLEMENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/settlement_screen.gd")
 const AT_SEA_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/at_sea_screen.gd")
@@ -449,6 +450,38 @@ func test_tavern_screen_renders_price_intel_and_port_clues() -> void:
 	_unmount(bundle)
 
 
+func test_base_page_claims_and_builds_from_the_ui() -> void:
+	var bundle := _mount(4242)
+	var context: AppContext = bundle["context"]
+	var shell: Control = bundle["shell"]
+	context.state.set_money(5000)
+	WarehouseOps.add_material(context.state, context.state.current_port_id(), "core:item/timber", 10)
+	shell._active_screen = "base"
+	shell._rebuild_ui()
+	var screen: Control = shell.find_child("BaseScreen", true, false)
+	assert_not_null(screen, "the base page mounts from the navigation")
+	var site_name := context.translate("base_site.core.coastal_outpost.name", "")
+	var claim := _button_by_text(screen, "%s（250 金）" % site_name)
+	assert_not_null(claim, "the claim button lists the base site and cost: %s" % str(_label_texts(screen)))
+	claim.pressed.emit()
+	assert_true(context.state.data.get("base", null) is Dictionary, "the claim button runs base.claim through the shell")
+	shell._rebuild_ui()
+	screen = shell.find_child("BaseScreen", true, false)
+	assert_not_null(screen, "the page rebuilds after claiming")
+	var deposit := _button_by_text(screen, "投入 5")
+	assert_not_null(deposit, "the storage deposit button is offered for port warehouse materials")
+	deposit.pressed.emit()
+	shell._rebuild_ui()
+	screen = shell.find_child("BaseScreen", true, false)
+	var building_name := context.translate("building.core.sawmill.name", "")
+	var build := _button_by_text(screen, "%s（120 金）" % building_name)
+	assert_not_null(build, "the build button lists the sawmill: %s" % str(_label_texts(screen)))
+	build.pressed.emit()
+	var view: Dictionary = context.queries.execute(&"base.view")["data"]
+	assert_eq(int(view.get("slots_used", 0)), 1, "the build button starts a base building")
+	_unmount(bundle)
+
+
 func _log_lines(shell: Control) -> Array:
 	var lines: Array = []
 	for text in _label_texts(shell._root_box):
@@ -610,7 +643,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
 	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
 	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
+	for screen in ["overview", "market", "contracts", "shipyard", "base", "tavern"]:
 		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
 	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
 		"4.3/U7: the voyage page is gone from the navigation")

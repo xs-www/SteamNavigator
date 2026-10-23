@@ -1,0 +1,12 @@
+{
+  "base_site.example_base.frontier_depot.name": "边疆补给站",
+  "base_site.example_base.frontier_depot.description": "一处规模很小的边疆基地点，适合演示模组自己的基地与生产链。",
+  "worker_role.example_base.settler.name": "拓荒者",
+  "worker_role.example_base.settler.description": "廉价的基础工人，适合边疆小作坊。",
+  "building.example_base.kiln.name": "炭窑",
+  "building.example_base.kiln.description": "把木材烧成煤炭。",
+  "building_upgrade.example_base.kiln_2.name": "炭窑 II",
+  "building_upgrade.example_base.kiln_2.description": "扩建炭窑，生产速度 +20%。",
+  "production_recipe.example_base.charcoal.name": "烧炭",
+  "production_recipe.example_base.charcoal.description": "消耗 1 份木材，产出 2 份煤炭。"
+}

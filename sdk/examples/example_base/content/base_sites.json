@@ -1,0 +1,23 @@
+{
+  "schema_version": "2.0",
+  "content_type": "base_sites",
+  "definitions": [
+    {
+      "id": "example_base:base_site/frontier_depot",
+      "name_key": "base_site.example_base.frontier_depot.name",
+      "description_key": "base_site.example_base.frontier_depot.description",
+      "tags": ["base.site.frontier"],
+      "enabled": true,
+      "data": {
+        "slot_count": 2,
+        "storage_capacity": 300,
+        "maintenance_per_tick": 2,
+        "defense": 5,
+        "claim_cost_money": 100,
+        "starting_workers": [
+          {"role": "example_base:worker_role/settler", "amount": 1}
+        ]
+      }
+    }
+  ]
+}

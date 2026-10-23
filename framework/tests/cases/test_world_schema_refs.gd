@@ -712,6 +712,54 @@ func test_ship_archetype_weapon_sockets_match_the_hull() -> void:
 		"ship_archetype_socket_missing", "large_efficient has no Bow socket (negative sample)")
 
 
+## D2-FIX3：formation 的 slot id 必须唯一，否则运行时只能命中第一个槽位。
+func test_formation_slot_ids_must_be_unique() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.FORMATION, "test:formation/duplicate", {
+		"slots": [
+			{"id": "flagship", "role": "flagship", "offset": {"x": 0, "y": 0}},
+			{"id": "flagship", "role": "line", "offset": {"x": -8, "y": 0}},
+		],
+	})
+	var result := _result(hub)
+	assert_contains(_codes(_errors_for(result, "test:formation/duplicate")), "formation_slot_duplicate",
+		"duplicate formation slot ids are rejected")
+
+
+## D3-FIX：基地内容的建筑/配方/升级/工人工种引用与修正 stat 必须可解析。
+func test_base_content_references_and_modifiers_are_checked() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.WORKER_ROLE, "test:worker_role/laborer", {
+		"wage_per_tick": 1, "hire_cost_money": 5, "speed_bonus": 0.1, "skill": "labor",
+	})
+	_define(hub, ContentTypes.BUILDING, "test:building/sawmill", {
+		"category": "production", "build_cost_money": 10, "build_time_hours": 1,
+		"worker_slots": 1, "worker_role": "test:worker_role/laborer",
+		"upkeep_per_tick": 1, "max_level": 2,
+		"recipes": ["test:production_recipe/missing"],
+	})
+	_define(hub, ContentTypes.BUILDING_UPGRADE, "test:building_upgrade/bad", {
+		"building_ref": "test:building/sawmill", "from_level": 2, "to_level": 2,
+		"cost_money": 10, "time_hours": 1,
+		"modifiers": [{"stat": "luck", "op": "add", "value": 1}],
+	})
+	_define(hub, ContentTypes.PRODUCTION_RECIPE, "test:production_recipe/gear", {
+		"building_ref": "test:building/absent",
+		"inputs": [{"item": "test:item/absent", "amount": 1}],
+		"outputs": [{"item": "core:item/coal", "amount": 1}],
+		"duration_hours": 1,
+	})
+	var result := _result(hub)
+	assert_contains(_codes(_errors_for(result, "test:building/sawmill")), "reference_missing",
+		"a building recipe that does not exist is a hard reference error")
+	assert_contains(_codes(_errors_for(result, "test:building_upgrade/bad")), "base_upgrade_level_order",
+		"upgrade levels must increase")
+	assert_contains(_codes(_errors_for(result, "test:building_upgrade/bad")), "base_upgrade_modifier_unknown",
+		"unknown upgrade modifier stats are rejected")
+	assert_contains(_codes(_errors_for(result, "test:production_recipe/gear")), "reference_missing",
+		"recipe building and input item references are hard errors")
+
+
 ## D2-FIX：真实 Core 的舰队内容必须零 socket/reference error。
 func test_core_fleet_content_has_no_socket_errors() -> void:
 	var result := _result(_new_hub())

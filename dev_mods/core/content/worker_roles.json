@@ -1,0 +1,45 @@
+{
+  "schema_version": "2.0",
+  "content_type": "worker_roles",
+  "definitions": [
+    {
+      "id": "core:worker_role/laborer",
+      "name_key": "worker_role.core.laborer.name",
+      "description_key": "worker_role.core.laborer.description",
+      "tags": ["worker_role.labor"],
+      "enabled": true,
+      "data": {
+        "wage_per_tick": 0.5,
+        "hire_cost_money": 8,
+        "speed_bonus": 0.1,
+        "skill": "labor"
+      }
+    },
+    {
+      "id": "core:worker_role/smelter",
+      "name_key": "worker_role.core.smelter.name",
+      "description_key": "worker_role.core.smelter.description",
+      "tags": ["worker_role.smithing"],
+      "enabled": true,
+      "data": {
+        "wage_per_tick": 0.8,
+        "hire_cost_money": 14,
+        "speed_bonus": 0.15,
+        "skill": "smithing"
+      }
+    },
+    {
+      "id": "core:worker_role/engineer",
+      "name_key": "worker_role.core.engineer.name",
+      "description_key": "worker_role.core.engineer.description",
+      "tags": ["worker_role.engineering"],
+      "enabled": true,
+      "data": {
+        "wage_per_tick": 1.2,
+        "hire_cost_money": 22,
+        "speed_bonus": 0.2,
+        "skill": "engineering"
+      }
+    }
+  ]
+}

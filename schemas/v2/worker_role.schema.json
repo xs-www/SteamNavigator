@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/worker-role-2.json",
+  "title": "Steam Navigator worker role content file (Content Schema 2.0)",
+  "description": "Base worker roles (D3): hire cost, per-tick wage and the production speed bonus one worker contributes. IDs use core:worker_role/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "worker_roles"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/worker_role_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "worker_role_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wage_per_tick", "hire_cost_money", "speed_bonus"],
+      "properties": {
+        "wage_per_tick": {
+          "description": "Money paid per simulation tick for each hired worker of this role.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "hire_cost_money": {
+          "description": "One-off money cost to hire one worker.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "speed_bonus": {
+          "description": "Production speed multiplier added per worker (0.1 = +10%).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "skill": {
+          "enum": ["labor", "smithing", "engineering"]
+        }
+      }
+    }
+  }
+}

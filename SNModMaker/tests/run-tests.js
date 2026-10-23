@@ -99,8 +99,8 @@ function warningsOf(result) {
   await test('schema bundle contains every canonical schema', () => {
     const files = schemaFilesOnDisk();
     const keys = Object.keys(globalThis.SN_SCHEMAS).sort();
-    assert.equal(keys.length, 36, `expected 2 top-level + 34 v2 schemas, got ${keys.length}`);
-    assert.equal(files.length, 36, `expected 36 schema files on disk, got ${files.length}`);
+    assert.equal(keys.length, 41, `expected 2 top-level + 39 v2 schemas, got ${keys.length}`);
+    assert.equal(files.length, 41, `expected 41 schema files on disk, got ${files.length}`);
     assert.deepEqual(keys, files, 'the bundle keys must mirror /schemas recursively');
     assert.equal(globalThis.SN_SCHEMAS['contract.schema.json'], undefined, 'the 1.0 contract schema was removed (C4-D)');
     assert.equal(globalThis.SN_SCHEMAS['patch.schema.json'], undefined, 'the 1.0 patch schema was removed (C4-D)');
@@ -136,6 +136,11 @@ function warningsOf(result) {
     assert.ok(globalThis.SN_SCHEMAS['v2/captain.schema.json'], 'v2/captain is the D2 captain schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/formation.schema.json'], 'v2/formation is the D2 formation schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/fleet_doctrine.schema.json'], 'v2/fleet_doctrine is the D2 doctrine schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/base_site.schema.json'], 'v2/base_site is the D3 base-site schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/building.schema.json'], 'v2/building is the D3 building schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/building_upgrade.schema.json'], 'v2/building_upgrade is the D3 upgrade schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/production_recipe.schema.json'], 'v2/production_recipe is the D3 recipe schema');
+    assert.ok(globalThis.SN_SCHEMAS['v2/worker_role.schema.json'], 'v2/worker_role is the D3 worker-role schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_arc.schema.json'], 'v2/story_arc is the Story Mode arc draft schema');
     assert.ok(globalThis.SN_SCHEMAS['v2/story_level.schema.json'], 'v2/story_level is the Story Mode level draft schema');
   });
@@ -370,7 +375,7 @@ function warningsOf(result) {
   });
 
   await test('every runtime type declares its content schema version (type-level versioning)', () => {
-    assert.equal(Types.TYPES.length, 30, 'content_types.json exposes 30 runtime types (29 definitions + patches); D2 promoted the four fleet types');
+    assert.equal(Types.TYPES.length, 35, 'content_types.json exposes 35 runtime types (34 definitions + patches); D3 promoted the five base types');
     // C4-D: every runtime type (definitions and patches) is Content Schema 2.0.
     for (const info of Types.TYPES) {
       const expected = '2.0';

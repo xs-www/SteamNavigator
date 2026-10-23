@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/base-site-2.json",
+  "title": "Steam Navigator base site content file (Content Schema 2.0)",
+  "description": "Player base archetypes (D3): building slots, storage, upkeep, defense and claim cost. A base instance binds one archetype to a world port; IDs use core:base_site/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "base_sites"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/base_site_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "worker_seed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "amount"],
+      "properties": {
+        "role": {
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        }
+      }
+    },
+    "base_site_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot_count",
+        "storage_capacity",
+        "maintenance_per_tick",
+        "claim_cost_money"
+      ],
+      "properties": {
+        "slot_count": {
+          "description": "Building slots available on this site.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "storage_capacity": {
+          "description": "Base storage capacity in weight units.",
+          "type": "number",
+          "minimum": 50,
+          "maximum": 20000
+        },
+        "maintenance_per_tick": {
+          "description": "Money paid every simulation tick while the base exists.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "defense": {
+          "description": "Base defense contribution before buildings.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "claim_cost_money": {
+          "description": "One-off money cost to claim the site.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "starting_workers": {
+          "description": "Optional worker pool granted on claim (content-driven bootstrap).",
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/worker_seed"
+          }
+        },
+        "starting_storage": {
+          "description": "Optional items granted to base storage on claim.",
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "common.schema.json#/$defs/cargo_stack"
+          }
+        }
+      }
+    }
+  }
+}

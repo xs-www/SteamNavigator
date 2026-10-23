@@ -39,7 +39,9 @@ extends RefCounted
 ##   `weapon_sockets[]` 还会对照目标 hull 的实际 socket 镜像：socket 名必须存在
 ##   （`ship_archetype_socket_missing`）、声明的 class 必须等于 hull `socket_class`
 ##   （`ship_archetype_socket_class`）、可选默认武器的 `weapon_class` / `mount_class`
-##   必须能装进该 class（`ship_archetype_weapon_class`）。
+##   必须能装进该 class（`ship_archetype_weapon_class`）。同一 hull 最多一个带
+##   `ship_archetype.flagship` tag 的 archetype（`ship_archetype_flagship_ambiguous`），
+##   formation slot id 必须唯一（`formation_slot_duplicate`）。
 ## @end-static-doc
 
 ## Planned target types referenced by active Phase B schemas. They have no runtime
@@ -94,6 +96,7 @@ func validate(hub: RegistryHub) -> Dictionary:
 	_check_modules()
 	_check_combat()
 	_check_fleet()
+	_check_base()
 	_check_starting_scenarios()
 	_check_contracts()
 	_check_events()
@@ -235,6 +238,20 @@ func _check_fleet() -> void:
 		var formation_id := String(doctrine.data.get("formation", ""))
 		if not formation_id.is_empty():
 			_require(ContentTypes.FORMATION, formation_id, doctrine.id, "formation")
+	for formation in _hub.get_all(ContentTypes.FORMATION):
+		var seen_slots: Dictionary = {}
+		for slot in formation.data.get("slots", []):
+			if not (slot is Dictionary):
+				continue
+			var slot_id := String((slot as Dictionary).get("id", ""))
+			if seen_slots.has(slot_id):
+				_error(
+					"formation_slot_duplicate",
+					"%s declares slot id '%s' more than once" % [formation.id, slot_id],
+					formation.id
+				)
+			else:
+				seen_slots[slot_id] = true
 
 
 ## Validates ship_archetype.weapon_sockets against the target hull's actual socket
@@ -345,6 +362,76 @@ func _check_module_category(definition: ContentDefinition) -> void:
 				"%s is a utility module without module.navigation / module.safety; install slot falls back to the first empty utility slot" % definition.id,
 				definition.id
 			)
+
+
+func _check_base() -> void:
+	## D3 base content: site worker/storage refs, building worker roles and recipe
+	## links, upgrade building/level refs, recipe item inputs/outputs. Unknown
+	## modifier stats are rejected because the runtime would silently ignore them.
+	var allowed_modifier_stats := ["production_speed", "storage_capacity", "defense"]
+	for site in _hub.get_all(ContentTypes.BASE_SITE):
+		for worker_seed in site.data.get("starting_workers", []):
+			if worker_seed is Dictionary:
+				_require(ContentTypes.WORKER_ROLE, String((worker_seed as Dictionary).get("role", "")), site.id, "starting_workers.role")
+		for stack in site.data.get("starting_storage", []):
+			if stack is Dictionary:
+				_require_item(String((stack as Dictionary).get("item", "")), site.id, "starting_storage")
+	for building in _hub.get_all(ContentTypes.BUILDING):
+		var worker_role := String(building.data.get("worker_role", ""))
+		if not worker_role.is_empty():
+			_require(ContentTypes.WORKER_ROLE, worker_role, building.id, "worker_role")
+		elif int(building.data.get("worker_slots", 0)) > 0:
+			_error("base_worker_role_missing", "%s has worker_slots but no worker_role" % building.id, building.id)
+		for recipe_id in building.data.get("recipes", []):
+			var recipe := _require(ContentTypes.PRODUCTION_RECIPE, String(recipe_id), building.id, "recipes")
+			if recipe == null:
+				continue
+			if String(recipe.data.get("building_ref", "")) != building.id:
+				_error(
+					"base_recipe_building_mismatch",
+					"%s lists recipe %s but the recipe references building %s" % [
+						building.id, recipe.id, String(recipe.data.get("building_ref", ""))
+					],
+					building.id
+				)
+	for upgrade in _hub.get_all(ContentTypes.BUILDING_UPGRADE):
+		var building_ref := String(upgrade.data.get("building_ref", ""))
+		_require(ContentTypes.BUILDING, building_ref, upgrade.id, "building_ref")
+		var from_level := int(upgrade.data.get("from_level", 0))
+		var to_level := int(upgrade.data.get("to_level", 0))
+		if from_level >= to_level:
+			_error(
+				"base_upgrade_level_order",
+				"%s moves from level %d to %d; to_level must be greater" % [upgrade.id, from_level, to_level],
+				upgrade.id
+			)
+		for stack in upgrade.data.get("cost_items", []):
+			if stack is Dictionary:
+				_require_item(String((stack as Dictionary).get("item", "")), upgrade.id, "cost_items")
+		for modifier in upgrade.data.get("modifiers", []):
+			if modifier is Dictionary:
+				var stat := String((modifier as Dictionary).get("stat", ""))
+				if not allowed_modifier_stats.has(stat):
+					_error(
+						"base_upgrade_modifier_unknown",
+						"%s uses modifier stat '%s' outside %s" % [upgrade.id, stat, str(allowed_modifier_stats)],
+						upgrade.id
+					)
+	for recipe in _hub.get_all(ContentTypes.PRODUCTION_RECIPE):
+		var building_ref := String(recipe.data.get("building_ref", ""))
+		var building := _require(ContentTypes.BUILDING, building_ref, recipe.id, "building_ref")
+		if building != null and not Array(building.data.get("recipes", [])).has(recipe.id):
+			_error(
+				"base_recipe_not_listed",
+				"%s references %s but the building does not list the recipe" % [recipe.id, building_ref],
+				recipe.id
+			)
+		for stack in recipe.data.get("inputs", []):
+			if stack is Dictionary:
+				_require_item(String((stack as Dictionary).get("item", "")), recipe.id, "inputs")
+		for stack in recipe.data.get("outputs", []):
+			if stack is Dictionary:
+				_require_item(String((stack as Dictionary).get("item", "")), recipe.id, "outputs")
 
 
 func _check_starting_scenarios() -> void:
@@ -606,6 +693,9 @@ func _check_sites() -> void:
 		var data: Dictionary = site.data
 		for field in ["ruin_archetype", "encounter_table", "loot_table"]:
 			_check_planned_ref(site.id, field, String(PLANNED_REF_TYPES[field]), String(data.get(field, "")))
+		var base_site_archetype := String(data.get("base_site_archetype", ""))
+		if not base_site_archetype.is_empty():
+			_require(ContentTypes.BASE_SITE, base_site_archetype, site.id, "base_site_archetype")
 
 
 func _check_route_templates() -> void:

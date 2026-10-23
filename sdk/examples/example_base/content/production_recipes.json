@@ -1,0 +1,25 @@
+{
+  "schema_version": "2.0",
+  "content_type": "production_recipes",
+  "definitions": [
+    {
+      "id": "example_base:production_recipe/charcoal",
+      "name_key": "production_recipe.example_base.charcoal.name",
+      "description_key": "production_recipe.example_base.charcoal.description",
+      "tags": ["production_recipe.frontier"],
+      "enabled": true,
+      "data": {
+        "building_ref": "example_base:building/kiln",
+        "inputs": [
+          {"item": "core:item/timber", "amount": 1}
+        ],
+        "outputs": [
+          {"item": "core:item/coal", "amount": 2}
+        ],
+        "duration_hours": 2,
+        "workers_required": 1,
+        "money_cost": 0
+      }
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-22T23:07:35.364Z",
+    "generated_at": "2026-10-23T00:38:09.281Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -48,7 +48,12 @@
         "content/ship_archetypes.json",
         "content/captains.json",
         "content/formations.json",
-        "content/fleet_doctrines.json"
+        "content/fleet_doctrines.json",
+        "content/base_sites.json",
+        "content/buildings.json",
+        "content/building_upgrades.json",
+        "content/production_recipes.json",
+        "content/worker_roles.json"
       ],
       "localization": [
         "localization/zh_CN.json",
@@ -179,7 +184,12 @@
         "model.enemy.pirate_sloop": "assets/models/combat/SN_Enemy_Pirate_Sloop.glb",
         "model.enemy.gunboat": "assets/models/combat/SN_Enemy_Gunboat.glb",
         "model.enemy.armed_merchantman": "assets/models/combat/SN_Enemy_Merchant_Armed.glb",
-        "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb"
+        "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb",
+        "model.building.sawmill": "assets/models/base/SN_Base_Sawmill.glb",
+        "model.building.smelter": "assets/models/base/SN_Base_Smelter.glb",
+        "model.building.foundry": "assets/models/base/SN_Base_Foundry.glb",
+        "model.building.stockyard": "assets/models/base/SN_Base_Stockyard.glb",
+        "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb"
       },
       "authors": [
         "Steam Navigator Team",
@@ -203,7 +213,8 @@
         "content.world.v1",
         "content.campaign.v1",
         "content.combat.v1",
-        "content.fleet.v1"
+        "content.fleet.v1",
+        "content.base.v1"
       ]
     },
     "contentFiles": {
@@ -3723,6 +3734,7 @@
                 "coastal",
                 "industrial"
               ],
+              "base_site_archetype": "core:base_site/coastal_outpost",
               "repeatable": false
             }
           },
@@ -5417,6 +5429,535 @@
             }
           }
         ]
+      },
+      "content/base_sites.json": {
+        "schema_version": "2.0",
+        "content_type": "base_sites",
+        "definitions": [
+          {
+            "id": "core:base_site/coastal_outpost",
+            "name_key": "base_site.core.coastal_outpost.name",
+            "description_key": "base_site.core.coastal_outpost.description",
+            "tags": [
+              "base.site.coastal",
+              "base.site.starter"
+            ],
+            "enabled": true,
+            "data": {
+              "slot_count": 3,
+              "storage_capacity": 600,
+              "maintenance_per_tick": 4,
+              "defense": 10,
+              "claim_cost_money": 250,
+              "starting_workers": [
+                {
+                  "role": "core:worker_role/laborer",
+                  "amount": 2
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:base_site/industrial_yard",
+            "name_key": "base_site.core.industrial_yard.name",
+            "description_key": "base_site.core.industrial_yard.description",
+            "tags": [
+              "base.site.industrial",
+              "base.site.advanced"
+            ],
+            "enabled": true,
+            "data": {
+              "slot_count": 5,
+              "storage_capacity": 1200,
+              "maintenance_per_tick": 10,
+              "defense": 25,
+              "claim_cost_money": 900,
+              "starting_workers": [
+                {
+                  "role": "core:worker_role/laborer",
+                  "amount": 2
+                },
+                {
+                  "role": "core:worker_role/smelter",
+                  "amount": 1
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/buildings.json": {
+        "schema_version": "2.0",
+        "content_type": "buildings",
+        "definitions": [
+          {
+            "id": "core:building/sawmill",
+            "name_key": "building.core.sawmill.name",
+            "description_key": "building.core.sawmill.description",
+            "tags": [
+              "building.production",
+              "building.wood"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "asset://core/model.building.sawmill"
+            },
+            "data": {
+              "category": "production",
+              "build_cost_money": 120,
+              "build_cost_items": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 2
+                }
+              ],
+              "build_time_hours": 2,
+              "worker_slots": 2,
+              "worker_role": "core:worker_role/laborer",
+              "upkeep_per_tick": 1,
+              "max_level": 2,
+              "recipes": [
+                "core:production_recipe/timber"
+              ]
+            }
+          },
+          {
+            "id": "core:building/smelter",
+            "name_key": "building.core.smelter.name",
+            "description_key": "building.core.smelter.description",
+            "tags": [
+              "building.production",
+              "building.metal"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "asset://core/model.building.smelter"
+            },
+            "data": {
+              "category": "production",
+              "build_cost_money": 220,
+              "build_cost_items": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 2
+                },
+                {
+                  "item": "core:item/iron_ore",
+                  "amount": 2
+                }
+              ],
+              "build_time_hours": 3,
+              "worker_slots": 2,
+              "worker_role": "core:worker_role/smelter",
+              "upkeep_per_tick": 2,
+              "max_level": 2,
+              "recipes": [
+                "core:production_recipe/boiler_plate"
+              ]
+            }
+          },
+          {
+            "id": "core:building/foundry",
+            "name_key": "building.core.foundry.name",
+            "description_key": "building.core.foundry.description",
+            "tags": [
+              "building.production",
+              "building.precision"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "asset://core/model.building.foundry"
+            },
+            "data": {
+              "category": "production",
+              "build_cost_money": 380,
+              "build_cost_items": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 3
+                },
+                {
+                  "item": "core:item/boiler_plate",
+                  "amount": 1
+                }
+              ],
+              "build_time_hours": 4,
+              "worker_slots": 3,
+              "worker_role": "core:worker_role/engineer",
+              "upkeep_per_tick": 4,
+              "max_level": 2,
+              "recipes": [
+                "core:production_recipe/precision_gear"
+              ]
+            }
+          },
+          {
+            "id": "core:building/stockyard",
+            "name_key": "building.core.stockyard.name",
+            "description_key": "building.core.stockyard.description",
+            "tags": [
+              "building.storage"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "asset://core/model.building.stockyard"
+            },
+            "data": {
+              "category": "storage",
+              "build_cost_money": 160,
+              "build_cost_items": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 2
+                }
+              ],
+              "build_time_hours": 2,
+              "worker_slots": 1,
+              "worker_role": "core:worker_role/laborer",
+              "upkeep_per_tick": 1,
+              "storage_capacity": 800,
+              "max_level": 2
+            }
+          },
+          {
+            "id": "core:building/defense_tower",
+            "name_key": "building.core.defense_tower.name",
+            "description_key": "building.core.defense_tower.description",
+            "tags": [
+              "building.defense"
+            ],
+            "enabled": true,
+            "information": {
+              "model": "asset://core/model.building.defense_tower"
+            },
+            "data": {
+              "category": "defense",
+              "build_cost_money": 300,
+              "build_cost_items": [
+                {
+                  "item": "core:item/boiler_plate",
+                  "amount": 2
+                }
+              ],
+              "build_time_hours": 3,
+              "worker_slots": 1,
+              "worker_role": "core:worker_role/laborer",
+              "upkeep_per_tick": 3,
+              "defense": 30,
+              "max_level": 2
+            }
+          }
+        ]
+      },
+      "content/building_upgrades.json": {
+        "schema_version": "2.0",
+        "content_type": "building_upgrades",
+        "definitions": [
+          {
+            "id": "core:building_upgrade/sawmill_2",
+            "name_key": "building_upgrade.core.sawmill_2.name",
+            "description_key": "building_upgrade.core.sawmill_2.description",
+            "tags": [
+              "building_upgrade.production"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/sawmill",
+              "from_level": 1,
+              "to_level": 2,
+              "cost_money": 180,
+              "cost_items": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 4
+                }
+              ],
+              "time_hours": 3,
+              "modifiers": [
+                {
+                  "stat": "production_speed",
+                  "op": "mul",
+                  "value": 1.25
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:building_upgrade/smelter_2",
+            "name_key": "building_upgrade.core.smelter_2.name",
+            "description_key": "building_upgrade.core.smelter_2.description",
+            "tags": [
+              "building_upgrade.production"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/smelter",
+              "from_level": 1,
+              "to_level": 2,
+              "cost_money": 320,
+              "cost_items": [
+                {
+                  "item": "core:item/iron_ore",
+                  "amount": 4
+                },
+                {
+                  "item": "core:item/boiler_plate",
+                  "amount": 1
+                }
+              ],
+              "time_hours": 4,
+              "modifiers": [
+                {
+                  "stat": "production_speed",
+                  "op": "mul",
+                  "value": 1.25
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:building_upgrade/foundry_2",
+            "name_key": "building_upgrade.core.foundry_2.name",
+            "description_key": "building_upgrade.core.foundry_2.description",
+            "tags": [
+              "building_upgrade.production"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/foundry",
+              "from_level": 1,
+              "to_level": 2,
+              "cost_money": 520,
+              "cost_items": [
+                {
+                  "item": "core:item/brass",
+                  "amount": 4
+                },
+                {
+                  "item": "core:item/precision_gear",
+                  "amount": 1
+                }
+              ],
+              "time_hours": 5,
+              "modifiers": [
+                {
+                  "stat": "production_speed",
+                  "op": "mul",
+                  "value": 1.3
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:building_upgrade/stockyard_2",
+            "name_key": "building_upgrade.core.stockyard_2.name",
+            "description_key": "building_upgrade.core.stockyard_2.description",
+            "tags": [
+              "building_upgrade.storage"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/stockyard",
+              "from_level": 1,
+              "to_level": 2,
+              "cost_money": 240,
+              "cost_items": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 4
+                }
+              ],
+              "time_hours": 3,
+              "modifiers": [
+                {
+                  "stat": "storage_capacity",
+                  "op": "add",
+                  "value": 600
+                }
+              ]
+            }
+          },
+          {
+            "id": "core:building_upgrade/defense_tower_2",
+            "name_key": "building_upgrade.core.defense_tower_2.name",
+            "description_key": "building_upgrade.core.defense_tower_2.description",
+            "tags": [
+              "building_upgrade.defense"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/defense_tower",
+              "from_level": 1,
+              "to_level": 2,
+              "cost_money": 420,
+              "cost_items": [
+                {
+                  "item": "core:item/boiler_plate",
+                  "amount": 2
+                },
+                {
+                  "item": "core:item/brass",
+                  "amount": 2
+                }
+              ],
+              "time_hours": 4,
+              "modifiers": [
+                {
+                  "stat": "defense",
+                  "op": "add",
+                  "value": 25
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "content/production_recipes.json": {
+        "schema_version": "2.0",
+        "content_type": "production_recipes",
+        "definitions": [
+          {
+            "id": "core:production_recipe/timber",
+            "name_key": "production_recipe.core.timber.name",
+            "description_key": "production_recipe.core.timber.description",
+            "tags": [
+              "production_recipe.tier1"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/sawmill",
+              "inputs": [
+                {
+                  "item": "core:item/coal",
+                  "amount": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "item": "core:item/timber",
+                  "amount": 2
+                }
+              ],
+              "duration_hours": 2,
+              "workers_required": 1,
+              "money_cost": 0
+            }
+          },
+          {
+            "id": "core:production_recipe/boiler_plate",
+            "name_key": "production_recipe.core.boiler_plate.name",
+            "description_key": "production_recipe.core.boiler_plate.description",
+            "tags": [
+              "production_recipe.tier2"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/smelter",
+              "inputs": [
+                {
+                  "item": "core:item/iron_ore",
+                  "amount": 2
+                },
+                {
+                  "item": "core:item/coal",
+                  "amount": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "item": "core:item/boiler_plate",
+                  "amount": 1
+                }
+              ],
+              "duration_hours": 3,
+              "workers_required": 2,
+              "money_cost": 10
+            }
+          },
+          {
+            "id": "core:production_recipe/precision_gear",
+            "name_key": "production_recipe.core.precision_gear.name",
+            "description_key": "production_recipe.core.precision_gear.description",
+            "tags": [
+              "production_recipe.tier3",
+              "production_recipe.shipbuilding"
+            ],
+            "enabled": true,
+            "data": {
+              "building_ref": "core:building/foundry",
+              "inputs": [
+                {
+                  "item": "core:item/brass",
+                  "amount": 2
+                },
+                {
+                  "item": "core:item/boiler_plate",
+                  "amount": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "item": "core:item/precision_gear",
+                  "amount": 1
+                }
+              ],
+              "duration_hours": 4,
+              "workers_required": 2,
+              "money_cost": 25
+            }
+          }
+        ]
+      },
+      "content/worker_roles.json": {
+        "schema_version": "2.0",
+        "content_type": "worker_roles",
+        "definitions": [
+          {
+            "id": "core:worker_role/laborer",
+            "name_key": "worker_role.core.laborer.name",
+            "description_key": "worker_role.core.laborer.description",
+            "tags": [
+              "worker_role.labor"
+            ],
+            "enabled": true,
+            "data": {
+              "wage_per_tick": 0.5,
+              "hire_cost_money": 8,
+              "speed_bonus": 0.1,
+              "skill": "labor"
+            }
+          },
+          {
+            "id": "core:worker_role/smelter",
+            "name_key": "worker_role.core.smelter.name",
+            "description_key": "worker_role.core.smelter.description",
+            "tags": [
+              "worker_role.smithing"
+            ],
+            "enabled": true,
+            "data": {
+              "wage_per_tick": 0.8,
+              "hire_cost_money": 14,
+              "speed_bonus": 0.15,
+              "skill": "smithing"
+            }
+          },
+          {
+            "id": "core:worker_role/engineer",
+            "name_key": "worker_role.core.engineer.name",
+            "description_key": "worker_role.core.engineer.description",
+            "tags": [
+              "worker_role.engineering"
+            ],
+            "enabled": true,
+            "data": {
+              "wage_per_tick": 1.2,
+              "hire_cost_money": 22,
+              "speed_bonus": 0.2,
+              "skill": "engineering"
+            }
+          }
+        ]
       }
     },
     "localization": {
@@ -5761,7 +6302,43 @@
         "fleet_doctrine.core.raider_hunt.name": "猎袭战术",
         "fleet_doctrine.core.raider_hunt.description": "激进猎杀战术：优先击溃最弱目标，主动交战并积极补给。",
         "ship_archetype.core.flagship_large_efficient.name": "稳健级旗舰",
-        "ship_archetype.core.flagship_large_efficient.description": "大型高效船体改造的终局旗舰：三货舱、双舷炮列与充足船员，兼顾续航与火力。"
+        "ship_archetype.core.flagship_large_efficient.description": "大型高效船体改造的终局旗舰：三货舱、双舷炮列与充足船员，兼顾续航与火力。",
+        "base_site.core.coastal_outpost.name": "海岸前哨",
+        "base_site.core.coastal_outpost.description": "一处临海的小型基地点，适合起步的仓储与生产。",
+        "base_site.core.industrial_yard.name": "工业堆场",
+        "base_site.core.industrial_yard.description": "靠近航道的较大基地点，可容纳更多建筑与工人。",
+        "building.core.sawmill.name": "锯木厂",
+        "building.core.sawmill.description": "把煤炭与本地木料加工成造船木材。",
+        "building.core.smelter.name": "冶炼炉",
+        "building.core.smelter.description": "熔炼铁矿并轧制锅炉钢板。",
+        "building.core.foundry.name": "铸造车间",
+        "building.core.foundry.description": "把黄铜与钢板加工成精密齿轮。",
+        "building.core.stockyard.name": "仓库堆场",
+        "building.core.stockyard.description": "为基地提供额外仓储空间。",
+        "building.core.defense_tower.name": "防御塔",
+        "building.core.defense_tower.description": "提升基地防御，抵御袭击。",
+        "building_upgrade.core.sawmill_2.name": "锯木厂 II",
+        "building_upgrade.core.sawmill_2.description": "扩建锯木厂，生产速度 +25%。",
+        "building_upgrade.core.smelter_2.name": "冶炼炉 II",
+        "building_upgrade.core.smelter_2.description": "扩建冶炼炉，生产速度 +25%。",
+        "building_upgrade.core.foundry_2.name": "铸造车间 II",
+        "building_upgrade.core.foundry_2.description": "扩建铸造车间，生产速度 +30%。",
+        "building_upgrade.core.stockyard_2.name": "仓库堆场 II",
+        "building_upgrade.core.stockyard_2.description": "扩建堆场，额外提供 600 仓储。",
+        "building_upgrade.core.defense_tower_2.name": "防御塔 II",
+        "building_upgrade.core.defense_tower_2.description": "加固防御塔，防御 +25。",
+        "production_recipe.core.timber.name": "加工木材",
+        "production_recipe.core.timber.description": "消耗煤炭，产出 2 份木材。",
+        "production_recipe.core.boiler_plate.name": "轧制锅炉钢板",
+        "production_recipe.core.boiler_plate.description": "熔炼铁矿并消耗煤炭，产出锅炉钢板。",
+        "production_recipe.core.precision_gear.name": "加工精密齿轮",
+        "production_recipe.core.precision_gear.description": "用黄铜与锅炉钢板加工舰队所需的精密齿轮。",
+        "worker_role.core.laborer.name": "劳工",
+        "worker_role.core.laborer.description": "通用体力工人，工资低、加成小。",
+        "worker_role.core.smelter.name": "冶炼工",
+        "worker_role.core.smelter.description": "熟悉炉温与轧制的技术工人。",
+        "worker_role.core.engineer.name": "工程师",
+        "worker_role.core.engineer.description": "负责精密加工的高级工人。"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -6104,7 +6681,43 @@
         "fleet_doctrine.core.raider_hunt.name": "Raider Hunt",
         "fleet_doctrine.core.raider_hunt.description": "An aggressive hunting doctrine: break the weakest target, engage eagerly and resupply aggressively.",
         "ship_archetype.core.flagship_large_efficient.name": "Steady-class Flagship",
-        "ship_archetype.core.flagship_large_efficient.description": "An endgame flagship built on the large efficient hull: three cargo holds, twin broadside batteries and a full crew."
+        "ship_archetype.core.flagship_large_efficient.description": "An endgame flagship built on the large efficient hull: three cargo holds, twin broadside batteries and a full crew.",
+        "base_site.core.coastal_outpost.name": "Coastal Outpost",
+        "base_site.core.coastal_outpost.description": "A small seaside base with room for early storage and production.",
+        "base_site.core.industrial_yard.name": "Industrial Yard",
+        "base_site.core.industrial_yard.description": "A larger base near the shipping lanes, with room for more buildings and workers.",
+        "building.core.sawmill.name": "Sawmill",
+        "building.core.sawmill.description": "Processes coal and local lumber into shipbuilding timber.",
+        "building.core.smelter.name": "Smelter",
+        "building.core.smelter.description": "Smelts iron ore and rolls boiler plate.",
+        "building.core.foundry.name": "Foundry",
+        "building.core.foundry.description": "Turns brass and boiler plate into precision gears.",
+        "building.core.stockyard.name": "Stockyard",
+        "building.core.stockyard.description": "Adds extra storage capacity to the base.",
+        "building.core.defense_tower.name": "Defense Tower",
+        "building.core.defense_tower.description": "Raises base defense against raids.",
+        "building_upgrade.core.sawmill_2.name": "Sawmill II",
+        "building_upgrade.core.sawmill_2.description": "Expands the sawmill for +25% production speed.",
+        "building_upgrade.core.smelter_2.name": "Smelter II",
+        "building_upgrade.core.smelter_2.description": "Expands the smelter for +25% production speed.",
+        "building_upgrade.core.foundry_2.name": "Foundry II",
+        "building_upgrade.core.foundry_2.description": "Expands the foundry for +30% production speed.",
+        "building_upgrade.core.stockyard_2.name": "Stockyard II",
+        "building_upgrade.core.stockyard_2.description": "Expands the stockyard with 600 extra storage.",
+        "building_upgrade.core.defense_tower_2.name": "Defense Tower II",
+        "building_upgrade.core.defense_tower_2.description": "Reinforces the tower for +25 defense.",
+        "production_recipe.core.timber.name": "Process Timber",
+        "production_recipe.core.timber.description": "Consumes coal and yields 2 timber.",
+        "production_recipe.core.boiler_plate.name": "Roll Boiler Plate",
+        "production_recipe.core.boiler_plate.description": "Smelts iron ore and coal into boiler plate.",
+        "production_recipe.core.precision_gear.name": "Machine Precision Gear",
+        "production_recipe.core.precision_gear.description": "Turns brass and boiler plate into fleet-grade precision gears.",
+        "worker_role.core.laborer.name": "Laborer",
+        "worker_role.core.laborer.description": "General labor: cheap wages and a small bonus.",
+        "worker_role.core.smelter.name": "Smelter",
+        "worker_role.core.smelter.description": "A skilled worker for furnace and rolling work.",
+        "worker_role.core.engineer.name": "Engineer",
+        "worker_role.core.engineer.description": "A senior worker for precision manufacturing."
       }
     },
     "definitions": [
@@ -10339,6 +10952,7 @@
               "coastal",
               "industrial"
             ],
+            "base_site_archetype": "core:base_site/coastal_outpost",
             "repeatable": false
           }
         }
@@ -12509,6 +13123,709 @@
             "target_priority": "weakest",
             "supply_policy": "aggressive",
             "formation": "core:formation/line_abreast"
+          }
+        }
+      },
+      {
+        "id": "core:base_site/coastal_outpost",
+        "content_type": "base_sites",
+        "file": "content/base_sites.json",
+        "name_key": "base_site.core.coastal_outpost.name",
+        "name_zh": "海岸前哨",
+        "name_en": "Coastal Outpost",
+        "tags": [
+          "base.site.coastal",
+          "base.site.starter"
+        ],
+        "definition": {
+          "id": "core:base_site/coastal_outpost",
+          "name_key": "base_site.core.coastal_outpost.name",
+          "description_key": "base_site.core.coastal_outpost.description",
+          "tags": [
+            "base.site.coastal",
+            "base.site.starter"
+          ],
+          "enabled": true,
+          "data": {
+            "slot_count": 3,
+            "storage_capacity": 600,
+            "maintenance_per_tick": 4,
+            "defense": 10,
+            "claim_cost_money": 250,
+            "starting_workers": [
+              {
+                "role": "core:worker_role/laborer",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:base_site/industrial_yard",
+        "content_type": "base_sites",
+        "file": "content/base_sites.json",
+        "name_key": "base_site.core.industrial_yard.name",
+        "name_zh": "工业堆场",
+        "name_en": "Industrial Yard",
+        "tags": [
+          "base.site.industrial",
+          "base.site.advanced"
+        ],
+        "definition": {
+          "id": "core:base_site/industrial_yard",
+          "name_key": "base_site.core.industrial_yard.name",
+          "description_key": "base_site.core.industrial_yard.description",
+          "tags": [
+            "base.site.industrial",
+            "base.site.advanced"
+          ],
+          "enabled": true,
+          "data": {
+            "slot_count": 5,
+            "storage_capacity": 1200,
+            "maintenance_per_tick": 10,
+            "defense": 25,
+            "claim_cost_money": 900,
+            "starting_workers": [
+              {
+                "role": "core:worker_role/laborer",
+                "amount": 2
+              },
+              {
+                "role": "core:worker_role/smelter",
+                "amount": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building/sawmill",
+        "content_type": "buildings",
+        "file": "content/buildings.json",
+        "name_key": "building.core.sawmill.name",
+        "name_zh": "锯木厂",
+        "name_en": "Sawmill",
+        "tags": [
+          "building.production",
+          "building.wood"
+        ],
+        "definition": {
+          "id": "core:building/sawmill",
+          "name_key": "building.core.sawmill.name",
+          "description_key": "building.core.sawmill.description",
+          "tags": [
+            "building.production",
+            "building.wood"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "asset://core/model.building.sawmill"
+          },
+          "data": {
+            "category": "production",
+            "build_cost_money": 120,
+            "build_cost_items": [
+              {
+                "item": "core:item/timber",
+                "amount": 2
+              }
+            ],
+            "build_time_hours": 2,
+            "worker_slots": 2,
+            "worker_role": "core:worker_role/laborer",
+            "upkeep_per_tick": 1,
+            "max_level": 2,
+            "recipes": [
+              "core:production_recipe/timber"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building/smelter",
+        "content_type": "buildings",
+        "file": "content/buildings.json",
+        "name_key": "building.core.smelter.name",
+        "name_zh": "冶炼炉",
+        "name_en": "Smelter",
+        "tags": [
+          "building.production",
+          "building.metal"
+        ],
+        "definition": {
+          "id": "core:building/smelter",
+          "name_key": "building.core.smelter.name",
+          "description_key": "building.core.smelter.description",
+          "tags": [
+            "building.production",
+            "building.metal"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "asset://core/model.building.smelter"
+          },
+          "data": {
+            "category": "production",
+            "build_cost_money": 220,
+            "build_cost_items": [
+              {
+                "item": "core:item/timber",
+                "amount": 2
+              },
+              {
+                "item": "core:item/iron_ore",
+                "amount": 2
+              }
+            ],
+            "build_time_hours": 3,
+            "worker_slots": 2,
+            "worker_role": "core:worker_role/smelter",
+            "upkeep_per_tick": 2,
+            "max_level": 2,
+            "recipes": [
+              "core:production_recipe/boiler_plate"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building/foundry",
+        "content_type": "buildings",
+        "file": "content/buildings.json",
+        "name_key": "building.core.foundry.name",
+        "name_zh": "铸造车间",
+        "name_en": "Foundry",
+        "tags": [
+          "building.production",
+          "building.precision"
+        ],
+        "definition": {
+          "id": "core:building/foundry",
+          "name_key": "building.core.foundry.name",
+          "description_key": "building.core.foundry.description",
+          "tags": [
+            "building.production",
+            "building.precision"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "asset://core/model.building.foundry"
+          },
+          "data": {
+            "category": "production",
+            "build_cost_money": 380,
+            "build_cost_items": [
+              {
+                "item": "core:item/timber",
+                "amount": 3
+              },
+              {
+                "item": "core:item/boiler_plate",
+                "amount": 1
+              }
+            ],
+            "build_time_hours": 4,
+            "worker_slots": 3,
+            "worker_role": "core:worker_role/engineer",
+            "upkeep_per_tick": 4,
+            "max_level": 2,
+            "recipes": [
+              "core:production_recipe/precision_gear"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building/stockyard",
+        "content_type": "buildings",
+        "file": "content/buildings.json",
+        "name_key": "building.core.stockyard.name",
+        "name_zh": "仓库堆场",
+        "name_en": "Stockyard",
+        "tags": [
+          "building.storage"
+        ],
+        "definition": {
+          "id": "core:building/stockyard",
+          "name_key": "building.core.stockyard.name",
+          "description_key": "building.core.stockyard.description",
+          "tags": [
+            "building.storage"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "asset://core/model.building.stockyard"
+          },
+          "data": {
+            "category": "storage",
+            "build_cost_money": 160,
+            "build_cost_items": [
+              {
+                "item": "core:item/timber",
+                "amount": 2
+              }
+            ],
+            "build_time_hours": 2,
+            "worker_slots": 1,
+            "worker_role": "core:worker_role/laborer",
+            "upkeep_per_tick": 1,
+            "storage_capacity": 800,
+            "max_level": 2
+          }
+        }
+      },
+      {
+        "id": "core:building/defense_tower",
+        "content_type": "buildings",
+        "file": "content/buildings.json",
+        "name_key": "building.core.defense_tower.name",
+        "name_zh": "防御塔",
+        "name_en": "Defense Tower",
+        "tags": [
+          "building.defense"
+        ],
+        "definition": {
+          "id": "core:building/defense_tower",
+          "name_key": "building.core.defense_tower.name",
+          "description_key": "building.core.defense_tower.description",
+          "tags": [
+            "building.defense"
+          ],
+          "enabled": true,
+          "information": {
+            "model": "asset://core/model.building.defense_tower"
+          },
+          "data": {
+            "category": "defense",
+            "build_cost_money": 300,
+            "build_cost_items": [
+              {
+                "item": "core:item/boiler_plate",
+                "amount": 2
+              }
+            ],
+            "build_time_hours": 3,
+            "worker_slots": 1,
+            "worker_role": "core:worker_role/laborer",
+            "upkeep_per_tick": 3,
+            "defense": 30,
+            "max_level": 2
+          }
+        }
+      },
+      {
+        "id": "core:building_upgrade/sawmill_2",
+        "content_type": "building_upgrades",
+        "file": "content/building_upgrades.json",
+        "name_key": "building_upgrade.core.sawmill_2.name",
+        "name_zh": "锯木厂 II",
+        "name_en": "Sawmill II",
+        "tags": [
+          "building_upgrade.production"
+        ],
+        "definition": {
+          "id": "core:building_upgrade/sawmill_2",
+          "name_key": "building_upgrade.core.sawmill_2.name",
+          "description_key": "building_upgrade.core.sawmill_2.description",
+          "tags": [
+            "building_upgrade.production"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/sawmill",
+            "from_level": 1,
+            "to_level": 2,
+            "cost_money": 180,
+            "cost_items": [
+              {
+                "item": "core:item/timber",
+                "amount": 4
+              }
+            ],
+            "time_hours": 3,
+            "modifiers": [
+              {
+                "stat": "production_speed",
+                "op": "mul",
+                "value": 1.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building_upgrade/smelter_2",
+        "content_type": "building_upgrades",
+        "file": "content/building_upgrades.json",
+        "name_key": "building_upgrade.core.smelter_2.name",
+        "name_zh": "冶炼炉 II",
+        "name_en": "Smelter II",
+        "tags": [
+          "building_upgrade.production"
+        ],
+        "definition": {
+          "id": "core:building_upgrade/smelter_2",
+          "name_key": "building_upgrade.core.smelter_2.name",
+          "description_key": "building_upgrade.core.smelter_2.description",
+          "tags": [
+            "building_upgrade.production"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/smelter",
+            "from_level": 1,
+            "to_level": 2,
+            "cost_money": 320,
+            "cost_items": [
+              {
+                "item": "core:item/iron_ore",
+                "amount": 4
+              },
+              {
+                "item": "core:item/boiler_plate",
+                "amount": 1
+              }
+            ],
+            "time_hours": 4,
+            "modifiers": [
+              {
+                "stat": "production_speed",
+                "op": "mul",
+                "value": 1.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building_upgrade/foundry_2",
+        "content_type": "building_upgrades",
+        "file": "content/building_upgrades.json",
+        "name_key": "building_upgrade.core.foundry_2.name",
+        "name_zh": "铸造车间 II",
+        "name_en": "Foundry II",
+        "tags": [
+          "building_upgrade.production"
+        ],
+        "definition": {
+          "id": "core:building_upgrade/foundry_2",
+          "name_key": "building_upgrade.core.foundry_2.name",
+          "description_key": "building_upgrade.core.foundry_2.description",
+          "tags": [
+            "building_upgrade.production"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/foundry",
+            "from_level": 1,
+            "to_level": 2,
+            "cost_money": 520,
+            "cost_items": [
+              {
+                "item": "core:item/brass",
+                "amount": 4
+              },
+              {
+                "item": "core:item/precision_gear",
+                "amount": 1
+              }
+            ],
+            "time_hours": 5,
+            "modifiers": [
+              {
+                "stat": "production_speed",
+                "op": "mul",
+                "value": 1.3
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building_upgrade/stockyard_2",
+        "content_type": "building_upgrades",
+        "file": "content/building_upgrades.json",
+        "name_key": "building_upgrade.core.stockyard_2.name",
+        "name_zh": "仓库堆场 II",
+        "name_en": "Stockyard II",
+        "tags": [
+          "building_upgrade.storage"
+        ],
+        "definition": {
+          "id": "core:building_upgrade/stockyard_2",
+          "name_key": "building_upgrade.core.stockyard_2.name",
+          "description_key": "building_upgrade.core.stockyard_2.description",
+          "tags": [
+            "building_upgrade.storage"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/stockyard",
+            "from_level": 1,
+            "to_level": 2,
+            "cost_money": 240,
+            "cost_items": [
+              {
+                "item": "core:item/timber",
+                "amount": 4
+              }
+            ],
+            "time_hours": 3,
+            "modifiers": [
+              {
+                "stat": "storage_capacity",
+                "op": "add",
+                "value": 600
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:building_upgrade/defense_tower_2",
+        "content_type": "building_upgrades",
+        "file": "content/building_upgrades.json",
+        "name_key": "building_upgrade.core.defense_tower_2.name",
+        "name_zh": "防御塔 II",
+        "name_en": "Defense Tower II",
+        "tags": [
+          "building_upgrade.defense"
+        ],
+        "definition": {
+          "id": "core:building_upgrade/defense_tower_2",
+          "name_key": "building_upgrade.core.defense_tower_2.name",
+          "description_key": "building_upgrade.core.defense_tower_2.description",
+          "tags": [
+            "building_upgrade.defense"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/defense_tower",
+            "from_level": 1,
+            "to_level": 2,
+            "cost_money": 420,
+            "cost_items": [
+              {
+                "item": "core:item/boiler_plate",
+                "amount": 2
+              },
+              {
+                "item": "core:item/brass",
+                "amount": 2
+              }
+            ],
+            "time_hours": 4,
+            "modifiers": [
+              {
+                "stat": "defense",
+                "op": "add",
+                "value": 25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:production_recipe/timber",
+        "content_type": "production_recipes",
+        "file": "content/production_recipes.json",
+        "name_key": "production_recipe.core.timber.name",
+        "name_zh": "加工木材",
+        "name_en": "Process Timber",
+        "tags": [
+          "production_recipe.tier1"
+        ],
+        "definition": {
+          "id": "core:production_recipe/timber",
+          "name_key": "production_recipe.core.timber.name",
+          "description_key": "production_recipe.core.timber.description",
+          "tags": [
+            "production_recipe.tier1"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/sawmill",
+            "inputs": [
+              {
+                "item": "core:item/coal",
+                "amount": 1
+              }
+            ],
+            "outputs": [
+              {
+                "item": "core:item/timber",
+                "amount": 2
+              }
+            ],
+            "duration_hours": 2,
+            "workers_required": 1,
+            "money_cost": 0
+          }
+        }
+      },
+      {
+        "id": "core:production_recipe/boiler_plate",
+        "content_type": "production_recipes",
+        "file": "content/production_recipes.json",
+        "name_key": "production_recipe.core.boiler_plate.name",
+        "name_zh": "轧制锅炉钢板",
+        "name_en": "Roll Boiler Plate",
+        "tags": [
+          "production_recipe.tier2"
+        ],
+        "definition": {
+          "id": "core:production_recipe/boiler_plate",
+          "name_key": "production_recipe.core.boiler_plate.name",
+          "description_key": "production_recipe.core.boiler_plate.description",
+          "tags": [
+            "production_recipe.tier2"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/smelter",
+            "inputs": [
+              {
+                "item": "core:item/iron_ore",
+                "amount": 2
+              },
+              {
+                "item": "core:item/coal",
+                "amount": 1
+              }
+            ],
+            "outputs": [
+              {
+                "item": "core:item/boiler_plate",
+                "amount": 1
+              }
+            ],
+            "duration_hours": 3,
+            "workers_required": 2,
+            "money_cost": 10
+          }
+        }
+      },
+      {
+        "id": "core:production_recipe/precision_gear",
+        "content_type": "production_recipes",
+        "file": "content/production_recipes.json",
+        "name_key": "production_recipe.core.precision_gear.name",
+        "name_zh": "加工精密齿轮",
+        "name_en": "Machine Precision Gear",
+        "tags": [
+          "production_recipe.tier3",
+          "production_recipe.shipbuilding"
+        ],
+        "definition": {
+          "id": "core:production_recipe/precision_gear",
+          "name_key": "production_recipe.core.precision_gear.name",
+          "description_key": "production_recipe.core.precision_gear.description",
+          "tags": [
+            "production_recipe.tier3",
+            "production_recipe.shipbuilding"
+          ],
+          "enabled": true,
+          "data": {
+            "building_ref": "core:building/foundry",
+            "inputs": [
+              {
+                "item": "core:item/brass",
+                "amount": 2
+              },
+              {
+                "item": "core:item/boiler_plate",
+                "amount": 1
+              }
+            ],
+            "outputs": [
+              {
+                "item": "core:item/precision_gear",
+                "amount": 1
+              }
+            ],
+            "duration_hours": 4,
+            "workers_required": 2,
+            "money_cost": 25
+          }
+        }
+      },
+      {
+        "id": "core:worker_role/laborer",
+        "content_type": "worker_roles",
+        "file": "content/worker_roles.json",
+        "name_key": "worker_role.core.laborer.name",
+        "name_zh": "劳工",
+        "name_en": "Laborer",
+        "tags": [
+          "worker_role.labor"
+        ],
+        "definition": {
+          "id": "core:worker_role/laborer",
+          "name_key": "worker_role.core.laborer.name",
+          "description_key": "worker_role.core.laborer.description",
+          "tags": [
+            "worker_role.labor"
+          ],
+          "enabled": true,
+          "data": {
+            "wage_per_tick": 0.5,
+            "hire_cost_money": 8,
+            "speed_bonus": 0.1,
+            "skill": "labor"
+          }
+        }
+      },
+      {
+        "id": "core:worker_role/smelter",
+        "content_type": "worker_roles",
+        "file": "content/worker_roles.json",
+        "name_key": "worker_role.core.smelter.name",
+        "name_zh": "冶炼工",
+        "name_en": "Smelter",
+        "tags": [
+          "worker_role.smithing"
+        ],
+        "definition": {
+          "id": "core:worker_role/smelter",
+          "name_key": "worker_role.core.smelter.name",
+          "description_key": "worker_role.core.smelter.description",
+          "tags": [
+            "worker_role.smithing"
+          ],
+          "enabled": true,
+          "data": {
+            "wage_per_tick": 0.8,
+            "hire_cost_money": 14,
+            "speed_bonus": 0.15,
+            "skill": "smithing"
+          }
+        }
+      },
+      {
+        "id": "core:worker_role/engineer",
+        "content_type": "worker_roles",
+        "file": "content/worker_roles.json",
+        "name_key": "worker_role.core.engineer.name",
+        "name_zh": "工程师",
+        "name_en": "Engineer",
+        "tags": [
+          "worker_role.engineering"
+        ],
+        "definition": {
+          "id": "core:worker_role/engineer",
+          "name_key": "worker_role.core.engineer.name",
+          "description_key": "worker_role.core.engineer.description",
+          "tags": [
+            "worker_role.engineering"
+          ],
+          "enabled": true,
+          "data": {
+            "wage_per_tick": 1.2,
+            "hire_cost_money": 22,
+            "speed_bonus": 0.2,
+            "skill": "engineering"
           }
         }
       }

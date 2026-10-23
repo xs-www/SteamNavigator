@@ -7,6 +7,14 @@
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `README.md` | 源文件：README.md | 本页 |
+| `examples/example_base/content/base_sites.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/content/building_upgrades.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/content/buildings.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/content/production_recipes.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/content/worker_roles.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_base/manifest.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_boilers/content/modules.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_boilers/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_boilers/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |

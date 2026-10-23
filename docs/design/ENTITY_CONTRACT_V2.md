@@ -172,10 +172,11 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 - **3 类草案**（`draft_schemas` / `draft_types`，仅编辑器与 Content CLI 可编辑，运行时暂不加载）：
   - `v2/story_arc.schema.json` / `v2/story_level.schema.json`（`story_arcs` / `story_levels`）：剧情模式 S1
     数据契约；契约见 [STORY_MODE.md](STORY_MODE.md)。
+  - `v2/combat_ai_profile.schema.json`（`combat_ai_profiles`）：战斗 AI 状态机 schema 先行草案，运行时暂不加载。
   - `weapons` 已于 D1 提升为 active（连同 5 个战斗类型），不再属于草案。
 - `content_types.json.types[]` 为每个 active 类型声明 `schema` 与 `schema_version`；草案在
   `draft_schemas` / `draft_types` 登记，各自带 `schema_version: "2.0"` 与 capability。
-- `schema-bundle.js` 递归收录 `schemas/` 共 **35 个**文件（**2 个顶层**：`common` / `manifest` + **33 个 `v2/`**：
+- `schema-bundle.js` 递归收录 `schemas/` 共 **36 个**文件（**2 个顶层**：`common` / `manifest` + **34 个 `v2/`**：
   `v2/common`、30 类 active 2.0、3 个草案）；校验器按基准文件所在目录解析
   `common.schema.json` 等跨文件 `$ref`。
 - 版本与告警：`Validate.schemaVersionFor` 按类型推导期望版本；声明版本与类型不符报

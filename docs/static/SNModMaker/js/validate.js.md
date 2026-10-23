@@ -20,46 +20,46 @@
 | `SUPPORTED_SCHEMA_VERSIONS` | L33 |
 | `DEFAULT_SCHEMA_VERSION` | L34 |
 | `REF_TYPE_BY_FIELD` | L36 |
-| `schemas()` | L65 |
-| `catalog()` | L69 |
-| `schemaVersionFor(typeKeyOrFile)` | L80 |
-| `normalizeSchemaPath(file)` | L91 |
-| `pointerEscape(text)` | L101 |
-| `pointerUnescape(text)` | L105 |
-| `joinPointer(base, key)` | L109 |
-| `resolveRef(ref, baseFile)` | L122 |
-| `deref(schema, file, seen)` | L154 |
-| `flattenObject(schema, file, seen)` | L180 |
-| `typeOf(value)` | L208 |
-| `matchesType(value, type)` | L214 |
-| `validateSchema(instance, schema, file)` | L221 |
-| `runSchemaValidation(instance, schema, context, startDepth)` | L225 |
-| `parseSemver(text)` | L385 |
-| `versionRangeError(text)` | L396 |
-| `safePath(path)` | L413 |
-| `extensionOf(path)` | L423 |
-| `isForbiddenPath(path)` | L429 |
-| `walkStrings(value, path, callback, depth)` | L433 |
-| `referencedIdType(id)` | L448 |
-| `expectedRefType(path)` | L453 |
-| `LOCAL_IDENTIFIER_FIELDS` | L468 |
-| `SOCKET_CLASSES` | L473 |
-| `RIG_SOCKET_KINDS` | L474 |
-| `checkWeaponSemantics(definition, view, add)` | L477 |
-| `checkCombatAIProfileSemantics(definition, view, add)` | L511 |
-| `checkLootTableSemantics(definition, view, add)` | L543 |
-| `checkHullSocketSemantics(definition, view, add)` | L559 |
-| `QUEST_EVENT_RE` | L641 |
-| `checkQuestSemantics(definition, view, add)` | L644 |
-| `STORY_TYPES` | L674 |
-| `storyFieldView(view, field)` | L676 |
-| `checkStoryArcSemantics(definition, view, add)` | L681 |
-| `checkStoryLevelSemantics(definition, view, add)` | L725 |
-| `checkStoryPack(contentFiles, add)` | L833 |
-| `validateProject(project, options)` | L874 |
-| `finish(issues)` | L1248 |
-| `byDefinition(issues)` | L1257 |
-| `SNValidate (global)` | L1270 |
+| `schemas()` | L69 |
+| `catalog()` | L73 |
+| `schemaVersionFor(typeKeyOrFile)` | L84 |
+| `normalizeSchemaPath(file)` | L95 |
+| `pointerEscape(text)` | L105 |
+| `pointerUnescape(text)` | L109 |
+| `joinPointer(base, key)` | L113 |
+| `resolveRef(ref, baseFile)` | L126 |
+| `deref(schema, file, seen)` | L158 |
+| `flattenObject(schema, file, seen)` | L184 |
+| `typeOf(value)` | L212 |
+| `matchesType(value, type)` | L218 |
+| `validateSchema(instance, schema, file)` | L225 |
+| `runSchemaValidation(instance, schema, context, startDepth)` | L229 |
+| `parseSemver(text)` | L389 |
+| `versionRangeError(text)` | L400 |
+| `safePath(path)` | L417 |
+| `extensionOf(path)` | L427 |
+| `isForbiddenPath(path)` | L433 |
+| `walkStrings(value, path, callback, depth)` | L437 |
+| `referencedIdType(id)` | L452 |
+| `expectedRefType(path)` | L457 |
+| `LOCAL_IDENTIFIER_FIELDS` | L472 |
+| `SOCKET_CLASSES` | L477 |
+| `RIG_SOCKET_KINDS` | L478 |
+| `checkWeaponSemantics(definition, view, add)` | L481 |
+| `checkCombatAIProfileSemantics(definition, view, add)` | L515 |
+| `checkLootTableSemantics(definition, view, add)` | L547 |
+| `checkHullSocketSemantics(definition, view, add)` | L563 |
+| `QUEST_EVENT_RE` | L645 |
+| `checkQuestSemantics(definition, view, add)` | L648 |
+| `STORY_TYPES` | L678 |
+| `storyFieldView(view, field)` | L680 |
+| `checkStoryArcSemantics(definition, view, add)` | L685 |
+| `checkStoryLevelSemantics(definition, view, add)` | L729 |
+| `checkStoryPack(contentFiles, add)` | L837 |
+| `validateProject(project, options)` | L878 |
+| `finish(issues)` | L1252 |
+| `byDefinition(issues)` | L1261 |
+| `SNValidate (global)` | L1274 |
 
 ## 契约与约束
 

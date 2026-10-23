@@ -618,6 +618,9 @@ static func _upgrade_hull(state: GameState, hub: RegistryHub, effect: Dictionary
 	if bool(effect.get("store_old", true)) and not old_hull_id.is_empty():
 		WarehouseOps.add_module(state, state.current_port_id(), old_hull_id, 1)
 	ShipModules.install_slot(ship, "hull")
+	# D2 follow-up: the flagship archetype follows the hull, so release a captain
+	# that can no longer command the new archetype (same rule as ship.install_module).
+	FleetService.reconcile_flagship_after_hull_change(state, hub)
 
 
 ## 4.5.6：用船上现有资源初始化剧情计数器（`kind` 如 `coal` / `water`），让

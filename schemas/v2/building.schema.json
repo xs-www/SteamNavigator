@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/building-2.json",
+  "title": "Steam Navigator base building content file (Content Schema 2.0)",
+  "description": "Base buildings (D3): construction cost and time, worker slots, upkeep, storage/defense contributions and the production recipes the building can run. IDs use core:building/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "buildings"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/building_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "building_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "build_cost_money",
+        "build_time_hours",
+        "worker_slots",
+        "upkeep_per_tick",
+        "max_level"
+      ],
+      "properties": {
+        "category": {
+          "enum": ["production", "storage", "defense", "utility"]
+        },
+        "build_cost_money": {
+          "description": "Money paid when the building is placed.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50000
+        },
+        "build_cost_items": {
+          "description": "Items consumed from base storage when the building is placed.",
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "common.schema.json#/$defs/cargo_stack"
+          }
+        },
+        "build_time_hours": {
+          "description": "Construction time in simulation hours.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 720
+        },
+        "worker_slots": {
+          "description": "Maximum workers assignable to this building.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "worker_role": {
+          "description": "Worker role required to staff this building.",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "upkeep_per_tick": {
+          "description": "Money paid every simulation tick while built.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "storage_capacity": {
+          "description": "Storage added to the base when the building is ready.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20000
+        },
+        "defense": {
+          "description": "Defense added to the base when the building is ready.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "max_level": {
+          "description": "Highest level this building can reach (1-3).",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "recipes": {
+          "description": "Production recipes this building can run.",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id_ref"
+          }
+        }
+      }
+    }
+  }
+}

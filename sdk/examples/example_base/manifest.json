@@ -1,0 +1,38 @@
+{
+  "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
+  "id": "example_base",
+  "name": "Example Base",
+  "version": "1.0.0",
+  "api_version": "1.0",
+  "type": "content",
+  "load_priority": 10,
+  "required": false,
+  "dependencies": [
+    {
+      "id": "core",
+      "version": ">=1.0.0 <2.0.0"
+    }
+  ],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "content": [
+    "content/base_sites.json",
+    "content/buildings.json",
+    "content/building_upgrades.json",
+    "content/production_recipes.json",
+    "content/worker_roles.json"
+  ],
+  "localization": [
+    "localization/zh_CN.json",
+    "localization/en.json"
+  ],
+  "assets": {},
+  "authors": [
+    "Steam Navigator Team"
+  ],
+  "license": "CC-BY-4.0",
+  "description": "Active Content Schema 2.0 base example: a frontier depot, kiln, upgrade, charcoal recipe and settler worker role on Core items.",
+  "capabilities": [
+    "content.base.v1"
+  ]
+}

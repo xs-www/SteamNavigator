@@ -39,7 +39,12 @@
     "content/ship_archetypes.json",
     "content/captains.json",
     "content/formations.json",
-    "content/fleet_doctrines.json"
+    "content/fleet_doctrines.json",
+    "content/base_sites.json",
+    "content/buildings.json",
+    "content/building_upgrades.json",
+    "content/production_recipes.json",
+    "content/worker_roles.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -170,7 +175,12 @@
     "model.enemy.pirate_sloop": "assets/models/combat/SN_Enemy_Pirate_Sloop.glb",
     "model.enemy.gunboat": "assets/models/combat/SN_Enemy_Gunboat.glb",
     "model.enemy.armed_merchantman": "assets/models/combat/SN_Enemy_Merchant_Armed.glb",
-    "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb"
+    "model.enemy.ironclad_raider": "assets/models/combat/SN_Enemy_Ironclad_Raider.glb",
+    "model.building.sawmill": "assets/models/base/SN_Base_Sawmill.glb",
+    "model.building.smelter": "assets/models/base/SN_Base_Smelter.glb",
+    "model.building.foundry": "assets/models/base/SN_Base_Foundry.glb",
+    "model.building.stockyard": "assets/models/base/SN_Base_Stockyard.glb",
+    "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb"
   },
   "authors": [
     "Steam Navigator Team",
@@ -194,6 +204,7 @@
     "content.world.v1",
     "content.campaign.v1",
     "content.combat.v1",
-    "content.fleet.v1"
+    "content.fleet.v1",
+    "content.base.v1"
   ]
 }

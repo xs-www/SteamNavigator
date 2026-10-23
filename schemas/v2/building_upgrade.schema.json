@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/building-upgrade-2.json",
+  "title": "Steam Navigator building upgrade content file (Content Schema 2.0)",
+  "description": "Base building upgrades (D3): one step from a building level to the next, with cost, time and stat modifiers. IDs use core:building_upgrade/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "building_upgrades"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/building_upgrade_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "building_upgrade_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "building_ref",
+        "from_level",
+        "to_level",
+        "cost_money",
+        "time_hours"
+      ],
+      "properties": {
+        "building_ref": {
+          "description": "Building definition this upgrade belongs to.",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "from_level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "to_level": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 3
+        },
+        "cost_money": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50000
+        },
+        "cost_items": {
+          "description": "Items consumed from base storage when the upgrade starts.",
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "common.schema.json#/$defs/cargo_stack"
+          }
+        },
+        "time_hours": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 720
+        },
+        "modifiers": {
+          "description": "Stat modifiers applied while the building is at least to_level (production_speed / storage_capacity / defense).",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "common.schema.json#/$defs/modifier"
+          }
+        }
+      }
+    }
+  }
+}

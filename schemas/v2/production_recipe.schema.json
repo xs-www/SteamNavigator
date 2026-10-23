@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/production-recipe-2.json",
+  "title": "Steam Navigator production recipe content file (Content Schema 2.0)",
+  "description": "Base production recipes (D3): item inputs and outputs, duration, required workers and money per batch. IDs use core:production_recipe/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "production_recipes"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/production_recipe_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "production_recipe_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["building_ref", "inputs", "outputs", "duration_hours"],
+      "properties": {
+        "building_ref": {
+          "description": "Building definition that can run this recipe.",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "inputs": {
+          "description": "Items consumed from base storage when the batch starts.",
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "common.schema.json#/$defs/cargo_stack"
+          }
+        },
+        "outputs": {
+          "description": "Items added to base storage when the batch completes.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "$ref": "common.schema.json#/$defs/cargo_stack"
+          }
+        },
+        "duration_hours": {
+          "description": "Base batch duration in simulation hours.",
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 240
+        },
+        "workers_required": {
+          "description": "Workers that must be assigned to the building while the batch runs.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "money_cost": {
+          "description": "Money paid when the batch starts.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50000
+        }
+      }
+    }
+  }
+}

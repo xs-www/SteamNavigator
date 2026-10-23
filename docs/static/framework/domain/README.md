@@ -6,6 +6,9 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
+| `base/base_ops.gd` | Phase D3 基地（base）的纯结构与计算层：规范化 `data.base`、解析基地/建筑/ | [查看](./base/base_ops.gd.md) |
+| `base/base_production_system.gd` | Phase D3 基地的确定性 tick 系统：每游戏小时支付维护费/建筑维护/工人工资， | [查看](./base/base_production_system.gd.md) |
+| `base/base_service.gd` | Phase D3 基地的领域用例：占领基地、建造/升级建筑、雇工/派工、仓储存取与 | [查看](./base/base_service.gd.md) |
 | `campaign/assembly_utils.gd` | CampaignFactory 世界装配链路（区域 / 地点 / 航路 / 阵营 / 图鉴）共用的 | [查看](./campaign/assembly_utils.gd.md) |
 | `campaign/campaign_factory.gd` | 战役开局装配（WORLD_SCHEMA_V2_RUNTIME §6.2）。从 `start_profiles` 定义解析 | [查看](./campaign/campaign_factory.gd.md) |
 | `campaign/discovery_assembler.gd` | v2 战役的图鉴装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 9）。按 | [查看](./campaign/discovery_assembler.gd.md) |

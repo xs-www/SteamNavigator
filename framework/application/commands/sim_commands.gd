@@ -54,6 +54,8 @@ static func advance(params: Dictionary, context) -> Dictionary:
 			"min": 0.0,
 			"max": SimulationService.MAX_ADVANCE_HOURS,
 		})
+	if BaseOps.has_base(context.state):
+		BaseProductionSystem.ensure_registered()
 	var advanced := SimulationService.advance(context.state, hours, context)
 	var events: Array = advanced.get("events", [])
 	advanced.erase("events")

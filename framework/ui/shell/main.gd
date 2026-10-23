@@ -36,6 +36,7 @@ const SUPPLY_SCREEN_SCENE := preload("res://framework/ui/screens/port/supply_scr
 const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/tavern_screen.tscn")
 const OVERVIEW_SCREEN_SCENE := preload("res://framework/ui/screens/port/overview_screen.tscn")
 const SHIPYARD_SCREEN_SCENE := preload("res://framework/ui/screens/port/shipyard_screen.tscn")
+const BASE_SCREEN_SCENE := preload("res://framework/ui/screens/port/base_screen.tscn")
 const PORT_MEMORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/port_memory_screen.tscn")
 const SETTLEMENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/settlement_screen.tscn")
 const AT_SEA_SCREEN_SCENE := preload("res://framework/ui/screens/flow/at_sea_screen.tscn")
@@ -64,7 +65,7 @@ const GAME_VERSION_FALLBACK := "0.2.0"
 
 ## 港口页面导航（4.3.4 / U7：出航准备页已删除；4.5.3：补给页并入市场；
 ## 4.5.4：情报站页面被酒馆页替换）。
-const SCREENS := ["overview", "market", "contracts", "shipyard", "tavern"]
+const SCREENS := ["overview", "market", "contracts", "shipyard", "base", "tavern"]
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
@@ -442,6 +443,8 @@ func _rebuild_ui() -> void:
 			_screen_contracts(data)
 		"shipyard":
 			_screen_shipyard(data)
+		"base":
+			_screen_base(data)
 		"tavern":
 			_screen_tavern(data)
 		"sea_chart":
@@ -497,6 +500,9 @@ func _story_screen_feature(screen: String) -> String:
 		"contracts":
 			return StoryService.FEATURE_CONTRACTS
 		"shipyard":
+			return StoryService.FEATURE_SHIPYARD
+		"base":
+			# D3：基地页随船厂一同解锁，教程开场不暴露额外入口。
 			return StoryService.FEATURE_SHIPYARD
 		"supply":
 			# 4.5.3 补给页已并入市场；旧入口重定向到市场。
@@ -1849,6 +1855,74 @@ func _contract_reward_text(contract: Dictionary) -> String:
 ## ---------------------------------------------------------------------------
 ## Shipyard
 ## ---------------------------------------------------------------------------
+
+func _screen_base(data: Dictionary) -> void:
+	var result := _context.queries.execute(&"base.view")
+	if not bool(result.get("ok", false)):
+		var error_panel := _panel()
+		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_root_box.add_child(error_panel)
+		return
+	var screen: Variant = BASE_SCREEN_SCENE.instantiate()
+	screen.bind(_base_model(result["data"], data), Callable(self, "_tr"))
+	screen.command_requested.connect(_run_command)
+	_root_box.add_child(screen)
+
+
+func _base_model(view: Dictionary, data: Dictionary) -> Dictionary:
+	var model := view.duplicate(true)
+	var sites: Array = []
+	for definition in _context.registries.get_all(ContentTypes.BASE_SITE):
+		sites.append({
+			"id": definition.id,
+			"name_key": definition.name_key,
+			"claim_cost": int(round(float(definition.data.get("claim_cost_money", 0.0)))),
+		})
+	model["available_sites"] = sites
+	var buildings: Array = []
+	for definition in _context.registries.get_all(ContentTypes.BUILDING):
+		buildings.append({
+			"id": definition.id,
+			"name_key": definition.name_key,
+			"category": String(definition.data.get("category", "")),
+			"cost": int(round(float(definition.data.get("build_cost_money", 0.0)))),
+		})
+	model["available_buildings"] = buildings
+	var upgrades: Array = []
+	for definition in _context.registries.get_all(ContentTypes.BUILDING_UPGRADE):
+		upgrades.append({
+			"id": definition.id,
+			"building_ref": String(definition.data.get("building_ref", "")),
+			"from_level": int(definition.data.get("from_level", 0)),
+			"to_level": int(definition.data.get("to_level", 0)),
+		})
+	model["available_upgrades"] = upgrades
+	var roles: Array = []
+	for definition in _context.registries.get_all(ContentTypes.WORKER_ROLE):
+		roles.append({
+			"id": definition.id,
+			"name_key": definition.name_key,
+			"hire_cost": int(round(float(definition.data.get("hire_cost_money", 0.0)))),
+		})
+	model["available_roles"] = roles
+	var warehouse := WarehouseOps.warehouse(_context.state, _context.state.current_port_id())
+	var materials: Dictionary = warehouse.get("materials", {})
+	var item_ids: Array = materials.keys()
+	item_ids.sort_custom(func(left: Variant, right: Variant) -> bool: return String(left) < String(right))
+	var warehouse_items: Array = []
+	for raw_item_id in item_ids:
+		var amount := int(materials[raw_item_id])
+		if amount <= 0:
+			continue
+		warehouse_items.append({
+			"item_id": String(raw_item_id),
+			"name_key": _definition_name(String(raw_item_id)),
+			"amount": amount,
+		})
+	model["warehouse_items"] = warehouse_items
+	model["current_port"] = data.get("current_port", {})
+	return model
+
 
 func _screen_shipyard(data: Dictionary) -> void:
 	var result := _context.queries.execute(&"shipyard.view")

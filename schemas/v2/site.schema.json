@@ -56,6 +56,10 @@
         "ruin_archetype": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },
+        "base_site_archetype": {
+          "description": "Base archetype used when a player claims this base site.",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
         "encounter_table": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },

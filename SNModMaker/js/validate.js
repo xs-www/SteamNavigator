@@ -60,6 +60,10 @@
     weapon: ['weapon'],
     formation: ['formation'],
     commandable_archetypes: ['ship_archetype'],
+    building_ref: ['building'],
+    recipes: ['production_recipe'],
+    worker_role: ['worker_role'],
+    item: ['item'],
   };
 
   function schemas() {

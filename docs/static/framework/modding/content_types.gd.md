@@ -39,19 +39,24 @@
 | `CAPTAIN` | L36 |
 | `FORMATION` | L37 |
 | `FLEET_DOCTRINE` | L38 |
-| `SCHEMA_PATHS` | L40 |
-| `SCHEMA_VERSIONS` | L73 |
-| `SINGULAR` | L106 |
-| `MODULE_TYPES` | L139 |
-| `all() -> Array[StringName]` | L142 |
-| `registry_types() -> Array[StringName]` | L154 |
-| `is_known(content_type: StringName) -> bool` | L160 |
-| `is_module(content_type: StringName) -> bool` | L164 |
-| `is_patch(content_type: StringName) -> bool` | L168 |
-| `schema_path(content_type: StringName) -> String` | L172 |
-| `schema_version(content_type: StringName) -> String` | L176 |
-| `singular(content_type: StringName) -> String` | L180 |
-| `from_singular(singular_name: String) -> StringName` | L184 |
+| `BASE_SITE` | L39 |
+| `BUILDING` | L40 |
+| `BUILDING_UPGRADE` | L41 |
+| `PRODUCTION_RECIPE` | L42 |
+| `WORKER_ROLE` | L43 |
+| `SCHEMA_PATHS` | L45 |
+| `SCHEMA_VERSIONS` | L83 |
+| `SINGULAR` | L121 |
+| `MODULE_TYPES` | L159 |
+| `all() -> Array[StringName]` | L162 |
+| `registry_types() -> Array[StringName]` | L175 |
+| `is_known(content_type: StringName) -> bool` | L181 |
+| `is_module(content_type: StringName) -> bool` | L185 |
+| `is_patch(content_type: StringName) -> bool` | L189 |
+| `schema_path(content_type: StringName) -> String` | L193 |
+| `schema_version(content_type: StringName) -> String` | L197 |
+| `singular(content_type: StringName) -> String` | L201 |
+| `from_singular(singular_name: String) -> StringName` | L205 |
 
 ## 契约与约束
 

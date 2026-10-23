@@ -1,0 +1,26 @@
+{
+  "schema_version": "2.0",
+  "content_type": "building_upgrades",
+  "definitions": [
+    {
+      "id": "example_base:building_upgrade/kiln_2",
+      "name_key": "building_upgrade.example_base.kiln_2.name",
+      "description_key": "building_upgrade.example_base.kiln_2.description",
+      "tags": ["building_upgrade.production"],
+      "enabled": true,
+      "data": {
+        "building_ref": "example_base:building/kiln",
+        "from_level": 1,
+        "to_level": 2,
+        "cost_money": 120,
+        "cost_items": [
+          {"item": "core:item/timber", "amount": 2}
+        ],
+        "time_hours": 2,
+        "modifiers": [
+          {"stat": "production_speed", "op": "mul", "value": 1.2}
+        ]
+      }
+    }
+  ]
+}

@@ -353,7 +353,10 @@
 | `assets/models/weapons/shared_materials/wood_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/wood_deck.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/ports/iron_harbor_banner.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/base_sites.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/boiler_strategies.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/building_upgrades.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/buildings.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/captains.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/combat_abilities.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/contracts.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -371,6 +374,7 @@
 | `content/map_configs.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/modules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/port_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/production_recipes.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/quests.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/regions.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/route_templates.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -381,6 +385,7 @@
 | `content/voyage_events.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/weapons.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/weather_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/worker_roles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/world_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `localization/en.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `localization/zh_CN.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
