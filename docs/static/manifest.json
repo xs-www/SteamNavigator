@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T05:25:41.955Z",
-  "commit": "9744f9d",
+  "generated_at": "2026-10-23T05:38:59.910Z",
+  "commit": "671a1e7",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -3065,7 +3065,7 @@
     },
     {
       "source": "dev_mods/core/content/trade_policies.json",
-      "sha256": "59768e771baa96a58ddfbb9954dd4dae8f8a7e08b0aa7fc490d0cd8d027db2b8",
+      "sha256": "f0056c463eb18f8e0a04e38d47aff62518d150b5683fd75eb06d26ecdb8205b1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3862,7 +3862,7 @@
     },
     {
       "source": "framework/domain/trade/auto_trade_system.gd",
-      "sha256": "816926c2b48ce651e83a28022263a9d71f8e9408843d257f4a5f094338196b47",
+      "sha256": "25c023a0420dd757a2d39f6267150bbc8d2b4c873583880a476d7719b51edd40",
       "doc": "docs/static/framework/domain/trade/auto_trade_system.gd.md",
       "status": "documented"
     },
@@ -4132,7 +4132,7 @@
     },
     {
       "source": "framework/tests/cases/test_auto_trade.gd",
-      "sha256": "23c8813ab30661aa44839ea010c7fb1fe79541b69d675034b303524dcfb5f2a9",
+      "sha256": "6747adc3c99c7d8e4be6a3837730e1af9603093db44fe9fdf4dac495019b39ed",
       "doc": "docs/static/framework/tests/cases/test_auto_trade.gd.md",
       "status": "documented"
     },
@@ -5931,7 +5931,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "23683115fb2714831bd6980148b2dca03b976b621667bfe025acc345a7112745",
+      "sha256": "75f81a1cbbf187f2fed9c28c525796bc25771fb8b8b10cf02e04b1df3f26f337",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7408,7 +7408,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "65a89b7ad41433030548982055b1dba170388692de9f04abe063d6852dbbd753",
+      "sha256": "75039938741dc6b3f73dc0cd98e6953b8fa0ba30dc67de3fe0d3e860aefb9af7",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

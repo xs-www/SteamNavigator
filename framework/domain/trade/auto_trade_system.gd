@@ -35,7 +35,13 @@ static func tick(state: GameState, tick: int, context = null) -> void:
 	var trade := AutoTradeOps.ensure_structure(state)
 	if trade.is_empty():
 		return
+	var phase_before := String(trade.get("phase", "idle"))
 	if AutoTradeOps.evaluate_rules(state, hub, trade, tick, "tick"):
+		return
+	# A tick-time buy_now action departs during rule evaluation; still run the
+	# departure trigger so `when:"departure"` rules apply to that purchase too.
+	if phase_before == "idle" and String(trade.get("phase", "")) == "outbound":
+		AutoTradeOps.evaluate_rules(state, hub, trade, tick, "departure")
 		return
 	var policy := AutoTradeOps.policy_definition(hub, String(trade.get("policy_id", "")))
 	if policy == null:
@@ -58,8 +64,10 @@ static func _advance_leg(state: GameState, hub: RegistryHub, trade: Dictionary, 
 	if outbound:
 		trade["at_port_id"] = String(trade.get("target_port_id", ""))
 		# Arrival rules run before risk/sale so `sell_now` rules (e.g. a full-cargo
-		# sell rule) actually fire instead of being dead content.
-		AutoTradeOps.evaluate_rules(state, hub, trade, tick, "arrival")
+		# sell rule) actually fire instead of being dead content. A pause rule
+		# still stops the rest of this tick per the rule contract.
+		if AutoTradeOps.evaluate_rules(state, hub, trade, tick, "arrival"):
+			return
 		_apply_risk(state, hub, trade, tick, policy)
 		AutoTradeOps.sell_cargo(state, hub, trade, tick)
 		trade["phase"] = "returning"

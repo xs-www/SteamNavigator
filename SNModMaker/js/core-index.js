@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-23T05:19:36.723Z",
+    "generated_at": "2026-10-23T05:36:19.077Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -5993,12 +5993,12 @@
                 "port.trade",
                 "port.craft"
               ],
-              "budget": 800,
+              "budget": 1600,
               "reserve_money": 250,
               "max_cargo": 40,
               "travel_hours": 8,
               "risk": 0.05,
-              "min_margin": 0.1,
+              "min_margin": 0.05,
               "rules": [
                 "core:automation_rule/bulk_stop_low_money",
                 "core:automation_rule/bulk_resume_healthy",
@@ -14523,12 +14523,12 @@
               "port.trade",
               "port.craft"
             ],
-            "budget": 800,
+            "budget": 1600,
             "reserve_money": 250,
             "max_cargo": 40,
             "travel_hours": 8,
             "risk": 0.05,
-            "min_margin": 0.1,
+            "min_margin": 0.05,
             "rules": [
               "core:automation_rule/bulk_stop_low_money",
               "core:automation_rule/bulk_resume_healthy",

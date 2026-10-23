@@ -154,6 +154,27 @@ func test_rules_pause_and_resume_the_run() -> void:
 	assert_false(bool(_view(context).get("paused", true)), "the resume rule clears the pause")
 
 
+## D4-FIX2：Core 的满载 sell_now 规则必须在到港时真正触发，而不是死内容。
+func test_core_full_cargo_rule_sells_on_arrival() -> void:
+	var context := _start(510)
+	_discover_all_ports(context)
+	_prepare_market(context)
+	var target_id := _target_port(context)
+	var started := context.commands.execute(&"auto_trade.start", {"policy_id": _policy_id(context)})
+	assert_true(bool(started.get("ok", false)), "start succeeds")
+	var trade: Dictionary = context.state.data["trade"]
+	trade["phase"] = "outbound"
+	trade["at_port_id"] = target_id
+	trade["target_port_id"] = target_id
+	trade["travel_remaining"] = 0.0
+	trade["cargo"] = {"core:item/timber": 40}
+	_advance(context, 1)
+	var view := _view(context)
+	assert_eq(int(view.get("cargo_units", -1)), 0, "the full-cargo arrival rule sells all cargo")
+	assert_eq(String(view.get("phase", "")), "returning", "the run starts the return leg after the sale")
+	assert_true(int(view.get("earned", 0)) > 0, "the sale books revenue")
+
+
 func test_set_policy_and_stop() -> void:
 	var context := _start(505)
 	var policies := context.registries.get_all(ContentTypes.TRADE_POLICY)
