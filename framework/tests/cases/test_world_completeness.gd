@@ -147,6 +147,13 @@ func test_core_requires_base_content_counts_and_a_production_chain() -> void:
 		assert_true(_has_error_message(result, String(case[1])), "missing %s raise content_count" % String(case[1]))
 
 
+func test_core_requires_auto_trade_counts() -> void:
+	var result := _check(_full_hub([ContentTypes.TRADE_POLICY]))
+	assert_true(_has_error_message(result, "trade policies"), "missing trade policies raise content_count")
+	result = _check(_full_hub([ContentTypes.AUTOMATION_RULE]))
+	assert_true(_has_error_message(result, "automation rules"), "missing automation rules raise content_count")
+
+
 func test_core_requires_combat_content_counts() -> void:
 	var result := _check(_full_hub([ContentTypes.ENEMY_ARCHETYPE]))
 	assert_true(_has_error_message(result, "enemy archetypes"), "missing enemy archetypes raise content_count")
@@ -476,6 +483,25 @@ func _baseline_hub(skip: Array = []) -> RegistryHub:
 			})
 	if not skip.has(ContentTypes.ITEM):
 		_register(hub, ContentTypes.ITEM, "core:item/precision_gear", ["material.shipbuilding"])
+	if not skip.has(ContentTypes.TRADE_POLICY):
+		_register(hub, ContentTypes.TRADE_POLICY, "core:trade_policy/bulk", [], {
+			"goods": ["core:item/coal"],
+			"budget": 500,
+			"reserve_money": 100,
+			"max_cargo": 10,
+			"travel_hours": 1,
+			"risk": 0,
+			"min_margin": 0,
+			"rules": ["core:automation_rule/stop"],
+		})
+	if not skip.has(ContentTypes.AUTOMATION_RULE):
+		_register(hub, ContentTypes.AUTOMATION_RULE, "core:automation_rule/stop", [], {
+			"policy_ref": "core:trade_policy/bulk",
+			"when": "tick",
+			"condition": {"op": "money_lte", "value": 0},
+			"action": "pause",
+			"priority": 1,
+		})
 	if not skip.has(ContentTypes.QUEST):
 		_register(hub, ContentTypes.QUEST, "core:quest/guide", ["quest.guide"], {
 			"kind": "guide",

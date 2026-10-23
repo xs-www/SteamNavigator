@@ -51,6 +51,9 @@
 | `sim/simulation_service.gd` | 最小确定性 tick / 模拟框架（Phase D0）。以 1 游戏小时为固定步长推进 | [查看](./sim/simulation_service.gd.md) |
 | `sim/tick_scheduler.gd` | SimulationService 的确定性 tick 系统注册表。系统用 `(id, priority, | [查看](./sim/tick_scheduler.gd.md) |
 | `story/story_service.gd` | 新手剧情 / 教学系统的领域状态机。读取当前场景定义（`map_configs`， | [查看](./story/story_service.gd.md) |
+| `trade/auto_trade_ops.gd` | Phase D4 自动贸易的纯结构/计算层：规范化 `data.trade`、读取贸易策略与 | [查看](./trade/auto_trade_ops.gd.md) |
+| `trade/auto_trade_service.gd` | Phase D4 自动贸易的领域用例：启动/停止/切换贸易策略，手动暂停/恢复； | [查看](./trade/auto_trade_service.gd.md) |
+| `trade/auto_trade_system.gd` | Phase D4 自动贸易的确定性 tick 系统：按策略在港口之间自动买卖，处理航程、 | [查看](./trade/auto_trade_system.gd.md) |
 | `voyage/voyage_calculator.gd` | 纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。 | [查看](./voyage/voyage_calculator.gd.md) |
 | `voyage/voyage_estimator.gd` | 把「一条航线 + 当前船况 + 锅炉策略 + 航行规则」折算成海图右侧面板需要的 | [查看](./voyage/voyage_estimator.gd.md) |
 | `voyage/voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**纯状态机**：把一次已经由 `voyage.start` | [查看](./voyage/voyage_presentation.gd.md) |

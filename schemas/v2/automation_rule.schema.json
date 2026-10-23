@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steam-navigator.local/schema/automation-rule-2.json",
+  "title": "Steam Navigator automation rule content file (Content Schema 2.0)",
+  "description": "Auto-trade automation rules (D4): ordered condition -> action overrides for a trade policy. IDs use core:automation_rule/*.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_type", "definitions"],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "content_type": {
+      "const": "automation_rules"
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/definition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/$defs/automation_rule_data"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "automation_rule_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_ref", "when", "condition", "action", "priority"],
+      "properties": {
+        "policy_ref": {
+          "description": "Trade policy this rule belongs to.",
+          "$ref": "common.schema.json#/$defs/id_ref"
+        },
+        "when": {
+          "enum": ["tick", "arrival", "departure"]
+        },
+        "condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op"],
+          "properties": {
+            "op": {
+              "enum": ["always", "money_gte", "money_lte", "cargo_gte", "cargo_lte", "margin_gte", "risk_gte"]
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        "action": {
+          "enum": ["pause", "resume", "sell_now", "buy_now", "skip_good"]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

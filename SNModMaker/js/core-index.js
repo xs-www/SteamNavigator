@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-23T00:38:09.281Z",
+    "generated_at": "2026-10-23T04:15:39.637Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -53,7 +53,9 @@
         "content/buildings.json",
         "content/building_upgrades.json",
         "content/production_recipes.json",
-        "content/worker_roles.json"
+        "content/worker_roles.json",
+        "content/trade_policies.json",
+        "content/automation_rules.json"
       ],
       "localization": [
         "localization/zh_CN.json",
@@ -214,7 +216,8 @@
         "content.campaign.v1",
         "content.combat.v1",
         "content.fleet.v1",
-        "content.base.v1"
+        "content.base.v1",
+        "content.trade.v1"
       ]
     },
     "contentFiles": {
@@ -5958,6 +5961,179 @@
             }
           }
         ]
+      },
+      "content/trade_policies.json": {
+        "schema_version": "2.0",
+        "content_type": "trade_policies",
+        "definitions": [
+          {
+            "id": "core:trade_policy/bulk_lane",
+            "name_key": "trade_policy.core.bulk_lane.name",
+            "description_key": "trade_policy.core.bulk_lane.description",
+            "tags": [
+              "trade_policy.bulk",
+              "trade_policy.safe"
+            ],
+            "enabled": true,
+            "data": {
+              "goods": [
+                "core:item/timber",
+                "core:item/boiler_plate"
+              ],
+              "buy_port_tags": [
+                "port.industrial"
+              ],
+              "sell_port_tags": [
+                "port.trade",
+                "port.craft"
+              ],
+              "budget": 800,
+              "reserve_money": 250,
+              "max_cargo": 40,
+              "travel_hours": 8,
+              "risk": 0.05,
+              "min_margin": 0.1,
+              "rules": [
+                "core:automation_rule/bulk_stop_low_money",
+                "core:automation_rule/bulk_resume_healthy",
+                "core:automation_rule/bulk_sell_full"
+              ]
+            }
+          },
+          {
+            "id": "core:trade_policy/luxury_run",
+            "name_key": "trade_policy.core.luxury_run.name",
+            "description_key": "trade_policy.core.luxury_run.description",
+            "tags": [
+              "trade_policy.luxury",
+              "trade_policy.risky"
+            ],
+            "enabled": true,
+            "data": {
+              "goods": [
+                "core:item/spices",
+                "core:item/glassware"
+              ],
+              "buy_port_tags": [
+                "port.trade"
+              ],
+              "sell_port_tags": [
+                "port.hub"
+              ],
+              "budget": 1500,
+              "reserve_money": 500,
+              "max_cargo": 14,
+              "travel_hours": 14,
+              "risk": 0.12,
+              "min_margin": 0.2,
+              "rules": [
+                "core:automation_rule/luxury_stop_low_money",
+                "core:automation_rule/luxury_resume_healthy"
+              ]
+            }
+          }
+        ]
+      },
+      "content/automation_rules.json": {
+        "schema_version": "2.0",
+        "content_type": "automation_rules",
+        "definitions": [
+          {
+            "id": "core:automation_rule/bulk_stop_low_money",
+            "name_key": "automation_rule.core.bulk_stop_low_money.name",
+            "description_key": "automation_rule.core.bulk_stop_low_money.description",
+            "tags": [
+              "automation_rule.safety"
+            ],
+            "enabled": true,
+            "data": {
+              "policy_ref": "core:trade_policy/bulk_lane",
+              "when": "tick",
+              "condition": {
+                "op": "money_lte",
+                "value": 250
+              },
+              "action": "pause",
+              "priority": 10
+            }
+          },
+          {
+            "id": "core:automation_rule/bulk_resume_healthy",
+            "name_key": "automation_rule.core.bulk_resume_healthy.name",
+            "description_key": "automation_rule.core.bulk_resume_healthy.description",
+            "tags": [
+              "automation_rule.recovery"
+            ],
+            "enabled": true,
+            "data": {
+              "policy_ref": "core:trade_policy/bulk_lane",
+              "when": "tick",
+              "condition": {
+                "op": "money_gte",
+                "value": 500
+              },
+              "action": "resume",
+              "priority": 20
+            }
+          },
+          {
+            "id": "core:automation_rule/bulk_sell_full",
+            "name_key": "automation_rule.core.bulk_sell_full.name",
+            "description_key": "automation_rule.core.bulk_sell_full.description",
+            "tags": [
+              "automation_rule.cargo"
+            ],
+            "enabled": true,
+            "data": {
+              "policy_ref": "core:trade_policy/bulk_lane",
+              "when": "tick",
+              "condition": {
+                "op": "cargo_gte",
+                "value": 40
+              },
+              "action": "sell_now",
+              "priority": 30
+            }
+          },
+          {
+            "id": "core:automation_rule/luxury_stop_low_money",
+            "name_key": "automation_rule.core.luxury_stop_low_money.name",
+            "description_key": "automation_rule.core.luxury_stop_low_money.description",
+            "tags": [
+              "automation_rule.safety"
+            ],
+            "enabled": true,
+            "data": {
+              "policy_ref": "core:trade_policy/luxury_run",
+              "when": "tick",
+              "condition": {
+                "op": "money_lte",
+                "value": 500
+              },
+              "action": "pause",
+              "priority": 10
+            }
+          },
+          {
+            "id": "core:automation_rule/luxury_resume_healthy",
+            "name_key": "automation_rule.core.luxury_resume_healthy.name",
+            "description_key": "automation_rule.core.luxury_resume_healthy.description",
+            "tags": [
+              "automation_rule.recovery"
+            ],
+            "enabled": true,
+            "data": {
+              "policy_ref": "core:trade_policy/luxury_run",
+              "when": "tick",
+              "condition": {
+                "op": "money_gte",
+                "value": 900
+              },
+              "action": "resume",
+              "priority": 20
+            }
+          }
+        ]
       }
     },
     "localization": {
@@ -6338,7 +6514,21 @@
         "worker_role.core.smelter.name": "冶炼工",
         "worker_role.core.smelter.description": "熟悉炉温与轧制的技术工人。",
         "worker_role.core.engineer.name": "工程师",
-        "worker_role.core.engineer.description": "负责精密加工的高级工人。"
+        "worker_role.core.engineer.description": "负责精密加工的高级工人。",
+        "trade_policy.core.bulk_lane.name": "大宗航线",
+        "trade_policy.core.bulk_lane.description": "在工业港买入木材与锅炉钢板，卖往贸易/工艺港的稳健航线。",
+        "trade_policy.core.luxury_run.name": "奢侈品快线",
+        "trade_policy.core.luxury_run.description": "在贸易港买入香料与玻璃器皿，卖往枢纽港的高利润高风险航线。",
+        "automation_rule.core.bulk_stop_low_money.name": "资金不足暂停",
+        "automation_rule.core.bulk_stop_low_money.description": "金币低于 250 时暂停大宗航线。",
+        "automation_rule.core.bulk_resume_healthy.name": "资金恢复继续",
+        "automation_rule.core.bulk_resume_healthy.description": "金币回到 500 时恢复大宗航线。",
+        "automation_rule.core.bulk_sell_full.name": "满载即卖",
+        "automation_rule.core.bulk_sell_full.description": "载货达到 40 单位时立即卖出。",
+        "automation_rule.core.luxury_stop_low_money.name": "资金不足暂停",
+        "automation_rule.core.luxury_stop_low_money.description": "金币低于 500 时暂停奢侈品快线。",
+        "automation_rule.core.luxury_resume_healthy.name": "资金恢复继续",
+        "automation_rule.core.luxury_resume_healthy.description": "金币回到 900 时恢复奢侈品快线。"
       },
       "en": {
         "item.core.iron_ore.name": "Iron Ore",
@@ -6717,7 +6907,21 @@
         "worker_role.core.smelter.name": "Smelter",
         "worker_role.core.smelter.description": "A skilled worker for furnace and rolling work.",
         "worker_role.core.engineer.name": "Engineer",
-        "worker_role.core.engineer.description": "A senior worker for precision manufacturing."
+        "worker_role.core.engineer.description": "A senior worker for precision manufacturing.",
+        "trade_policy.core.bulk_lane.name": "Bulk Lane",
+        "trade_policy.core.bulk_lane.description": "A steady route buying timber and boiler plate in industrial ports and selling in trade/craft ports.",
+        "trade_policy.core.luxury_run.name": "Luxury Run",
+        "trade_policy.core.luxury_run.description": "A high-margin, higher-risk route buying spices and glassware in trade ports and selling in hub ports.",
+        "automation_rule.core.bulk_stop_low_money.name": "Stop When Low on Money",
+        "automation_rule.core.bulk_stop_low_money.description": "Pause the bulk lane below 250 money.",
+        "automation_rule.core.bulk_resume_healthy.name": "Resume When Healthy",
+        "automation_rule.core.bulk_resume_healthy.description": "Resume the bulk lane once money is back to 500.",
+        "automation_rule.core.bulk_sell_full.name": "Sell When Full",
+        "automation_rule.core.bulk_sell_full.description": "Sell immediately when carrying 40 cargo units.",
+        "automation_rule.core.luxury_stop_low_money.name": "Stop When Low on Money",
+        "automation_rule.core.luxury_stop_low_money.description": "Pause the luxury run below 500 money.",
+        "automation_rule.core.luxury_resume_healthy.name": "Resume When Healthy",
+        "automation_rule.core.luxury_resume_healthy.description": "Resume the luxury run once money is back to 900."
       }
     },
     "definitions": [
@@ -13826,6 +14030,246 @@
             "hire_cost_money": 22,
             "speed_bonus": 0.2,
             "skill": "engineering"
+          }
+        }
+      },
+      {
+        "id": "core:trade_policy/bulk_lane",
+        "content_type": "trade_policies",
+        "file": "content/trade_policies.json",
+        "name_key": "trade_policy.core.bulk_lane.name",
+        "name_zh": "大宗航线",
+        "name_en": "Bulk Lane",
+        "tags": [
+          "trade_policy.bulk",
+          "trade_policy.safe"
+        ],
+        "definition": {
+          "id": "core:trade_policy/bulk_lane",
+          "name_key": "trade_policy.core.bulk_lane.name",
+          "description_key": "trade_policy.core.bulk_lane.description",
+          "tags": [
+            "trade_policy.bulk",
+            "trade_policy.safe"
+          ],
+          "enabled": true,
+          "data": {
+            "goods": [
+              "core:item/timber",
+              "core:item/boiler_plate"
+            ],
+            "buy_port_tags": [
+              "port.industrial"
+            ],
+            "sell_port_tags": [
+              "port.trade",
+              "port.craft"
+            ],
+            "budget": 800,
+            "reserve_money": 250,
+            "max_cargo": 40,
+            "travel_hours": 8,
+            "risk": 0.05,
+            "min_margin": 0.1,
+            "rules": [
+              "core:automation_rule/bulk_stop_low_money",
+              "core:automation_rule/bulk_resume_healthy",
+              "core:automation_rule/bulk_sell_full"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:trade_policy/luxury_run",
+        "content_type": "trade_policies",
+        "file": "content/trade_policies.json",
+        "name_key": "trade_policy.core.luxury_run.name",
+        "name_zh": "奢侈品快线",
+        "name_en": "Luxury Run",
+        "tags": [
+          "trade_policy.luxury",
+          "trade_policy.risky"
+        ],
+        "definition": {
+          "id": "core:trade_policy/luxury_run",
+          "name_key": "trade_policy.core.luxury_run.name",
+          "description_key": "trade_policy.core.luxury_run.description",
+          "tags": [
+            "trade_policy.luxury",
+            "trade_policy.risky"
+          ],
+          "enabled": true,
+          "data": {
+            "goods": [
+              "core:item/spices",
+              "core:item/glassware"
+            ],
+            "buy_port_tags": [
+              "port.trade"
+            ],
+            "sell_port_tags": [
+              "port.hub"
+            ],
+            "budget": 1500,
+            "reserve_money": 500,
+            "max_cargo": 14,
+            "travel_hours": 14,
+            "risk": 0.12,
+            "min_margin": 0.2,
+            "rules": [
+              "core:automation_rule/luxury_stop_low_money",
+              "core:automation_rule/luxury_resume_healthy"
+            ]
+          }
+        }
+      },
+      {
+        "id": "core:automation_rule/bulk_stop_low_money",
+        "content_type": "automation_rules",
+        "file": "content/automation_rules.json",
+        "name_key": "automation_rule.core.bulk_stop_low_money.name",
+        "name_zh": "资金不足暂停",
+        "name_en": "Stop When Low on Money",
+        "tags": [
+          "automation_rule.safety"
+        ],
+        "definition": {
+          "id": "core:automation_rule/bulk_stop_low_money",
+          "name_key": "automation_rule.core.bulk_stop_low_money.name",
+          "description_key": "automation_rule.core.bulk_stop_low_money.description",
+          "tags": [
+            "automation_rule.safety"
+          ],
+          "enabled": true,
+          "data": {
+            "policy_ref": "core:trade_policy/bulk_lane",
+            "when": "tick",
+            "condition": {
+              "op": "money_lte",
+              "value": 250
+            },
+            "action": "pause",
+            "priority": 10
+          }
+        }
+      },
+      {
+        "id": "core:automation_rule/bulk_resume_healthy",
+        "content_type": "automation_rules",
+        "file": "content/automation_rules.json",
+        "name_key": "automation_rule.core.bulk_resume_healthy.name",
+        "name_zh": "资金恢复继续",
+        "name_en": "Resume When Healthy",
+        "tags": [
+          "automation_rule.recovery"
+        ],
+        "definition": {
+          "id": "core:automation_rule/bulk_resume_healthy",
+          "name_key": "automation_rule.core.bulk_resume_healthy.name",
+          "description_key": "automation_rule.core.bulk_resume_healthy.description",
+          "tags": [
+            "automation_rule.recovery"
+          ],
+          "enabled": true,
+          "data": {
+            "policy_ref": "core:trade_policy/bulk_lane",
+            "when": "tick",
+            "condition": {
+              "op": "money_gte",
+              "value": 500
+            },
+            "action": "resume",
+            "priority": 20
+          }
+        }
+      },
+      {
+        "id": "core:automation_rule/bulk_sell_full",
+        "content_type": "automation_rules",
+        "file": "content/automation_rules.json",
+        "name_key": "automation_rule.core.bulk_sell_full.name",
+        "name_zh": "满载即卖",
+        "name_en": "Sell When Full",
+        "tags": [
+          "automation_rule.cargo"
+        ],
+        "definition": {
+          "id": "core:automation_rule/bulk_sell_full",
+          "name_key": "automation_rule.core.bulk_sell_full.name",
+          "description_key": "automation_rule.core.bulk_sell_full.description",
+          "tags": [
+            "automation_rule.cargo"
+          ],
+          "enabled": true,
+          "data": {
+            "policy_ref": "core:trade_policy/bulk_lane",
+            "when": "tick",
+            "condition": {
+              "op": "cargo_gte",
+              "value": 40
+            },
+            "action": "sell_now",
+            "priority": 30
+          }
+        }
+      },
+      {
+        "id": "core:automation_rule/luxury_stop_low_money",
+        "content_type": "automation_rules",
+        "file": "content/automation_rules.json",
+        "name_key": "automation_rule.core.luxury_stop_low_money.name",
+        "name_zh": "资金不足暂停",
+        "name_en": "Stop When Low on Money",
+        "tags": [
+          "automation_rule.safety"
+        ],
+        "definition": {
+          "id": "core:automation_rule/luxury_stop_low_money",
+          "name_key": "automation_rule.core.luxury_stop_low_money.name",
+          "description_key": "automation_rule.core.luxury_stop_low_money.description",
+          "tags": [
+            "automation_rule.safety"
+          ],
+          "enabled": true,
+          "data": {
+            "policy_ref": "core:trade_policy/luxury_run",
+            "when": "tick",
+            "condition": {
+              "op": "money_lte",
+              "value": 500
+            },
+            "action": "pause",
+            "priority": 10
+          }
+        }
+      },
+      {
+        "id": "core:automation_rule/luxury_resume_healthy",
+        "content_type": "automation_rules",
+        "file": "content/automation_rules.json",
+        "name_key": "automation_rule.core.luxury_resume_healthy.name",
+        "name_zh": "资金恢复继续",
+        "name_en": "Resume When Healthy",
+        "tags": [
+          "automation_rule.recovery"
+        ],
+        "definition": {
+          "id": "core:automation_rule/luxury_resume_healthy",
+          "name_key": "automation_rule.core.luxury_resume_healthy.name",
+          "description_key": "automation_rule.core.luxury_resume_healthy.description",
+          "tags": [
+            "automation_rule.recovery"
+          ],
+          "enabled": true,
+          "data": {
+            "policy_ref": "core:trade_policy/luxury_run",
+            "when": "tick",
+            "condition": {
+              "op": "money_gte",
+              "value": 900
+            },
+            "action": "resume",
+            "priority": 20
           }
         }
       }

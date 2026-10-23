@@ -44,7 +44,9 @@
     "content/buildings.json",
     "content/building_upgrades.json",
     "content/production_recipes.json",
-    "content/worker_roles.json"
+    "content/worker_roles.json",
+    "content/trade_policies.json",
+    "content/automation_rules.json"
   ],
   "localization": [
     "localization/zh_CN.json",
@@ -205,6 +207,7 @@
     "content.campaign.v1",
     "content.combat.v1",
     "content.fleet.v1",
-    "content.base.v1"
+    "content.base.v1",
+    "content.trade.v1"
   ]
 }

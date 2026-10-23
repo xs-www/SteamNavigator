@@ -37,6 +37,7 @@ const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/tavern_scre
 const OVERVIEW_SCREEN_SCENE := preload("res://framework/ui/screens/port/overview_screen.tscn")
 const SHIPYARD_SCREEN_SCENE := preload("res://framework/ui/screens/port/shipyard_screen.tscn")
 const BASE_SCREEN_SCENE := preload("res://framework/ui/screens/port/base_screen.tscn")
+const AUTO_TRADE_SCREEN_SCENE := preload("res://framework/ui/screens/port/auto_trade_screen.tscn")
 const PORT_MEMORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/port_memory_screen.tscn")
 const SETTLEMENT_SCREEN_SCENE := preload("res://framework/ui/screens/flow/settlement_screen.tscn")
 const AT_SEA_SCREEN_SCENE := preload("res://framework/ui/screens/flow/at_sea_screen.tscn")
@@ -65,7 +66,7 @@ const GAME_VERSION_FALLBACK := "0.2.0"
 
 ## 港口页面导航（4.3.4 / U7：出航准备页已删除；4.5.3：补给页并入市场；
 ## 4.5.4：情报站页面被酒馆页替换）。
-const SCREENS := ["overview", "market", "contracts", "shipyard", "base", "tavern"]
+const SCREENS := ["overview", "market", "contracts", "shipyard", "base", "trade", "tavern"]
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
@@ -445,6 +446,8 @@ func _rebuild_ui() -> void:
 			_screen_shipyard(data)
 		"base":
 			_screen_base(data)
+		"trade":
+			_screen_trade(data)
 		"tavern":
 			_screen_tavern(data)
 		"sea_chart":
@@ -503,6 +506,9 @@ func _story_screen_feature(screen: String) -> String:
 			return StoryService.FEATURE_SHIPYARD
 		"base":
 			# D3：基地页随船厂一同解锁，教程开场不暴露额外入口。
+			return StoryService.FEATURE_SHIPYARD
+		"trade":
+			# D4：自动贸易同样在船厂阶段解锁。
 			return StoryService.FEATURE_SHIPYARD
 		"supply":
 			# 4.5.3 补给页已并入市场；旧入口重定向到市场。
@@ -1920,6 +1926,32 @@ func _base_model(view: Dictionary, data: Dictionary) -> Dictionary:
 			"amount": amount,
 		})
 	model["warehouse_items"] = warehouse_items
+	model["current_port"] = data.get("current_port", {})
+	return model
+
+
+func _screen_trade(data: Dictionary) -> void:
+	var result := _context.queries.execute(&"auto_trade.view")
+	if not bool(result.get("ok", false)):
+		var error_panel := _panel()
+		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_root_box.add_child(error_panel)
+		return
+	var screen: Variant = AUTO_TRADE_SCREEN_SCENE.instantiate()
+	screen.bind(_auto_trade_model(result["data"], data), Callable(self, "_tr"))
+	screen.command_requested.connect(_run_command)
+	_root_box.add_child(screen)
+
+
+func _auto_trade_model(view: Dictionary, data: Dictionary) -> Dictionary:
+	var model := view.duplicate(true)
+	var policies: Array = []
+	for definition in _context.registries.get_all(ContentTypes.TRADE_POLICY):
+		policies.append({
+			"id": definition.id,
+			"name_key": definition.name_key,
+		})
+	model["available_policies"] = policies
 	model["current_port"] = data.get("current_port", {})
 	return model
 

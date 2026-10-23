@@ -1,0 +1,76 @@
+{
+  "schema_version": "2.0",
+  "content_type": "automation_rules",
+  "definitions": [
+    {
+      "id": "core:automation_rule/bulk_stop_low_money",
+      "name_key": "automation_rule.core.bulk_stop_low_money.name",
+      "description_key": "automation_rule.core.bulk_stop_low_money.description",
+      "tags": ["automation_rule.safety"],
+      "enabled": true,
+      "data": {
+        "policy_ref": "core:trade_policy/bulk_lane",
+        "when": "tick",
+        "condition": {"op": "money_lte", "value": 250},
+        "action": "pause",
+        "priority": 10
+      }
+    },
+    {
+      "id": "core:automation_rule/bulk_resume_healthy",
+      "name_key": "automation_rule.core.bulk_resume_healthy.name",
+      "description_key": "automation_rule.core.bulk_resume_healthy.description",
+      "tags": ["automation_rule.recovery"],
+      "enabled": true,
+      "data": {
+        "policy_ref": "core:trade_policy/bulk_lane",
+        "when": "tick",
+        "condition": {"op": "money_gte", "value": 500},
+        "action": "resume",
+        "priority": 20
+      }
+    },
+    {
+      "id": "core:automation_rule/bulk_sell_full",
+      "name_key": "automation_rule.core.bulk_sell_full.name",
+      "description_key": "automation_rule.core.bulk_sell_full.description",
+      "tags": ["automation_rule.cargo"],
+      "enabled": true,
+      "data": {
+        "policy_ref": "core:trade_policy/bulk_lane",
+        "when": "tick",
+        "condition": {"op": "cargo_gte", "value": 40},
+        "action": "sell_now",
+        "priority": 30
+      }
+    },
+    {
+      "id": "core:automation_rule/luxury_stop_low_money",
+      "name_key": "automation_rule.core.luxury_stop_low_money.name",
+      "description_key": "automation_rule.core.luxury_stop_low_money.description",
+      "tags": ["automation_rule.safety"],
+      "enabled": true,
+      "data": {
+        "policy_ref": "core:trade_policy/luxury_run",
+        "when": "tick",
+        "condition": {"op": "money_lte", "value": 500},
+        "action": "pause",
+        "priority": 10
+      }
+    },
+    {
+      "id": "core:automation_rule/luxury_resume_healthy",
+      "name_key": "automation_rule.core.luxury_resume_healthy.name",
+      "description_key": "automation_rule.core.luxury_resume_healthy.description",
+      "tags": ["automation_rule.recovery"],
+      "enabled": true,
+      "data": {
+        "policy_ref": "core:trade_policy/luxury_run",
+        "when": "tick",
+        "condition": {"op": "money_gte", "value": 900},
+        "action": "resume",
+        "priority": 20
+      }
+    }
+  ]
+}

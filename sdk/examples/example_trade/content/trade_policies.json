@@ -1,0 +1,25 @@
+{
+  "schema_version": "2.0",
+  "content_type": "trade_policies",
+  "definitions": [
+    {
+      "id": "example_trade:trade_policy/tea_run",
+      "name_key": "trade_policy.example_trade.tea_run.name",
+      "description_key": "trade_policy.example_trade.tea_run.description",
+      "tags": ["trade_policy.frontier"],
+      "enabled": true,
+      "data": {
+        "goods": ["core:item/spices"],
+        "buy_port_tags": ["port.trade"],
+        "sell_port_tags": ["port.hub"],
+        "budget": 600,
+        "reserve_money": 200,
+        "max_cargo": 10,
+        "travel_hours": 6,
+        "risk": 0.08,
+        "min_margin": 0.15,
+        "rules": ["example_trade:automation_rule/tea_pause"]
+      }
+    }
+  ]
+}

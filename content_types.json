@@ -79,6 +79,11 @@
       "label_en": "Base"
     },
     {
+      "id": "trade",
+      "label_zh": "自动贸易",
+      "label_en": "Auto trade"
+    },
+    {
       "id": "world_generation",
       "label_zh": "世界生成",
       "label_en": "World Generation"
@@ -822,17 +827,49 @@
       "v2_target": null,
       "aliases": [],
       "module": false
+    },
+    {
+      "key": "trade_policies",
+      "singular": "trade_policy",
+      "key_prefix": "trade_policy",
+      "label_zh": "贸易策略",
+      "label_en": "Trade policies",
+      "abbr": "TP",
+      "color": "#6a9a7a",
+      "group": "trade",
+      "schema": "schemas/v2/trade_policy.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/trade_policies.json",
+      "summary_zh": "自动贸易策略：商品、买卖港口标签、预算/储备金、载货量、航程、风险与规则引用。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.trade.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
+    },
+    {
+      "key": "automation_rules",
+      "singular": "automation_rule",
+      "key_prefix": "automation_rule",
+      "label_zh": "自动化规则",
+      "label_en": "Automation rules",
+      "abbr": "AR",
+      "color": "#8f9a6a",
+      "group": "trade",
+      "schema": "schemas/v2/automation_rule.schema.json",
+      "schema_version": "2.0",
+      "default_file": "content/automation_rules.json",
+      "summary_zh": "自动贸易规则：按优先级评估条件（金钱/载货/利润/风险）并执行暂停、恢复、立即买卖等动作。",
+      "kind": "definition",
+      "registry": true,
+      "capability": "content.trade.v1",
+      "v2_target": null,
+      "aliases": [],
+      "module": false
     }
   ],
   "planned": [
-    {
-      "system": "auto_trade",
-      "capability": "content.trade.v1",
-      "types": [
-        "trade_policies",
-        "automation_rules"
-      ]
-    },
     {
       "system": "ruins",
       "capability": "content.ruins.v1",

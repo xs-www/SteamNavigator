@@ -33,9 +33,10 @@
 | `test_fleet_references_are_checked() -> void` | L600 |
 | `test_ship_archetype_weapon_sockets_match_the_hull() -> void` | L645 |
 | `test_formation_slot_ids_must_be_unique() -> void` | L716 |
-| `test_base_content_references_and_modifiers_are_checked() -> void` | L730 |
-| `test_core_fleet_content_has_no_socket_errors() -> void` | L764 |
-| `test_flagship_tag_must_be_unique_per_hull() -> void` | L772 |
+| `test_trade_policy_and_rule_references_are_checked() -> void` | L730 |
+| `test_base_content_references_and_modifiers_are_checked() -> void` | L764 |
+| `test_core_fleet_content_has_no_socket_errors() -> void` | L798 |
+| `test_flagship_tag_must_be_unique_per_hull() -> void` | L806 |
 
 （`bootstrap_core()`）复制出的临时 `RegistryHub` 注册合成定义，驱动
 `CrossReferenceValidator.validate()`，覆盖硬引用缺失 error、planned 目标

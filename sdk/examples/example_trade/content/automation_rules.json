@@ -1,0 +1,20 @@
+{
+  "schema_version": "2.0",
+  "content_type": "automation_rules",
+  "definitions": [
+    {
+      "id": "example_trade:automation_rule/tea_pause",
+      "name_key": "automation_rule.example_trade.tea_pause.name",
+      "description_key": "automation_rule.example_trade.tea_pause.description",
+      "tags": ["automation_rule.safety"],
+      "enabled": true,
+      "data": {
+        "policy_ref": "example_trade:trade_policy/tea_run",
+        "when": "tick",
+        "condition": {"op": "money_lte", "value": 300},
+        "action": "pause",
+        "priority": 10
+      }
+    }
+  ]
+}

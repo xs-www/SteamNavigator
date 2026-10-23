@@ -375,5 +375,19 @@
   "worker_role.core.smelter.name": "Smelter",
   "worker_role.core.smelter.description": "A skilled worker for furnace and rolling work.",
   "worker_role.core.engineer.name": "Engineer",
-  "worker_role.core.engineer.description": "A senior worker for precision manufacturing."
+  "worker_role.core.engineer.description": "A senior worker for precision manufacturing.",
+  "trade_policy.core.bulk_lane.name": "Bulk Lane",
+  "trade_policy.core.bulk_lane.description": "A steady route buying timber and boiler plate in industrial ports and selling in trade/craft ports.",
+  "trade_policy.core.luxury_run.name": "Luxury Run",
+  "trade_policy.core.luxury_run.description": "A high-margin, higher-risk route buying spices and glassware in trade ports and selling in hub ports.",
+  "automation_rule.core.bulk_stop_low_money.name": "Stop When Low on Money",
+  "automation_rule.core.bulk_stop_low_money.description": "Pause the bulk lane below 250 money.",
+  "automation_rule.core.bulk_resume_healthy.name": "Resume When Healthy",
+  "automation_rule.core.bulk_resume_healthy.description": "Resume the bulk lane once money is back to 500.",
+  "automation_rule.core.bulk_sell_full.name": "Sell When Full",
+  "automation_rule.core.bulk_sell_full.description": "Sell immediately when carrying 40 cargo units.",
+  "automation_rule.core.luxury_stop_low_money.name": "Stop When Low on Money",
+  "automation_rule.core.luxury_stop_low_money.description": "Pause the luxury run below 500 money.",
+  "automation_rule.core.luxury_resume_healthy.name": "Resume When Healthy",
+  "automation_rule.core.luxury_resume_healthy.description": "Resume the luxury run once money is back to 900."
 }

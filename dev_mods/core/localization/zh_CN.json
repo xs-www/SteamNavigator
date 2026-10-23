@@ -375,5 +375,19 @@
   "worker_role.core.smelter.name": "冶炼工",
   "worker_role.core.smelter.description": "熟悉炉温与轧制的技术工人。",
   "worker_role.core.engineer.name": "工程师",
-  "worker_role.core.engineer.description": "负责精密加工的高级工人。"
+  "worker_role.core.engineer.description": "负责精密加工的高级工人。",
+  "trade_policy.core.bulk_lane.name": "大宗航线",
+  "trade_policy.core.bulk_lane.description": "在工业港买入木材与锅炉钢板，卖往贸易/工艺港的稳健航线。",
+  "trade_policy.core.luxury_run.name": "奢侈品快线",
+  "trade_policy.core.luxury_run.description": "在贸易港买入香料与玻璃器皿，卖往枢纽港的高利润高风险航线。",
+  "automation_rule.core.bulk_stop_low_money.name": "资金不足暂停",
+  "automation_rule.core.bulk_stop_low_money.description": "金币低于 250 时暂停大宗航线。",
+  "automation_rule.core.bulk_resume_healthy.name": "资金恢复继续",
+  "automation_rule.core.bulk_resume_healthy.description": "金币回到 500 时恢复大宗航线。",
+  "automation_rule.core.bulk_sell_full.name": "满载即卖",
+  "automation_rule.core.bulk_sell_full.description": "载货达到 40 单位时立即卖出。",
+  "automation_rule.core.luxury_stop_low_money.name": "资金不足暂停",
+  "automation_rule.core.luxury_stop_low_money.description": "金币低于 500 时暂停奢侈品快线。",
+  "automation_rule.core.luxury_resume_healthy.name": "资金恢复继续",
+  "automation_rule.core.luxury_resume_healthy.description": "金币回到 900 时恢复奢侈品快线。"
 }

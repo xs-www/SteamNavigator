@@ -1,0 +1,6 @@
+{
+  "trade_policy.example_trade.tea_run.name": "Tea Run",
+  "trade_policy.example_trade.tea_run.description": "An example auto-trade policy buying spices in trade ports and selling in hub ports.",
+  "automation_rule.example_trade.tea_pause.name": "Pause When Low on Money",
+  "automation_rule.example_trade.tea_pause.description": "Pause the tea run below 300 money."
+}

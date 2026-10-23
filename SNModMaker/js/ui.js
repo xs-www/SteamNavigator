@@ -213,6 +213,9 @@
     recipes: ['production_recipe'],
     worker_role: ['worker_role'],
     item: ['item'],
+    goods: ['item'],
+    rules: ['automation_rule'],
+    policy_ref: ['trade_policy'],
     quests_completed: ['quest'],
   };
 

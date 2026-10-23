@@ -94,6 +94,19 @@ static func check(hub: RegistryHub, packages: Dictionary, order: Array[String]) 
 			"code": "base_production_chain_missing",
 			"message": "core has no production recipe whose output is tagged material.shipbuilding",
 		})
+	# D4 auto trade minimums: a policy with at least one rule.
+	_require_core_count(hub, ContentTypes.TRADE_POLICY, 1, "trade policies", errors)
+	_require_core_count(hub, ContentTypes.AUTOMATION_RULE, 1, "automation rules", errors)
+	var trade_rule_ok := false
+	for policy in hub.get_all(ContentTypes.TRADE_POLICY):
+		if String(policy.source_mod) == "core" and not Array(policy.data.get("rules", [])).is_empty():
+			trade_rule_ok = true
+			break
+	if not trade_rule_ok:
+		errors.append({
+			"code": "trade_rule_missing",
+			"message": "core has no trade policy with an automation rule",
+		})
 
 	for required_tag in ["strategy.economy", "strategy.standard", "strategy.fast"]:
 		if hub.query(ContentTypes.BOILER_STRATEGY, [required_tag]).is_empty():

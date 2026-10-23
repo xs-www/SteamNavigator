@@ -110,6 +110,8 @@ jobs:
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/examples/example_base --mode=runtime
           godot --headless --path . --script res://sdk/validate.gd -- \
+            --mod-root=sdk/examples/example_trade --mode=runtime
+          godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/templates/story_pack_iron_tide --mode=draft
           godot --headless --path . --script res://sdk/validate.gd -- \
             --mod-root=sdk/templates/draft_combat_ai_profile --mode=draft

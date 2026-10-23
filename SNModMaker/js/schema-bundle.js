@@ -489,6 +489,109 @@
         }
       }
     },
+    "v2/automation_rule.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/automation-rule-2.json",
+      "title": "Steam Navigator automation rule content file (Content Schema 2.0)",
+      "description": "Auto-trade automation rules (D4): ordered condition -> action overrides for a trade policy. IDs use core:automation_rule/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "automation_rules"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/automation_rule_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "automation_rule_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "policy_ref",
+            "when",
+            "condition",
+            "action",
+            "priority"
+          ],
+          "properties": {
+            "policy_ref": {
+              "description": "Trade policy this rule belongs to.",
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "when": {
+              "enum": [
+                "tick",
+                "arrival",
+                "departure"
+              ]
+            },
+            "condition": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "enum": [
+                    "always",
+                    "money_gte",
+                    "money_lte",
+                    "cargo_gte",
+                    "cargo_lte",
+                    "margin_gte",
+                    "risk_gte"
+                  ]
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            },
+            "action": {
+              "enum": [
+                "pause",
+                "resume",
+                "sell_now",
+                "buy_now",
+                "skip_good"
+              ]
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
     "v2/base_site.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/base-site-2.json",
@@ -5866,6 +5969,133 @@
             },
             "fail": {
               "$ref": "#/$defs/level_fail"
+            }
+          }
+        }
+      }
+    },
+    "v2/trade_policy.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://steam-navigator.local/schema/trade-policy-2.json",
+      "title": "Steam Navigator auto-trade policy content file (Content Schema 2.0)",
+      "description": "Automated trade policies (D4): allowed goods, port tag filters, budget/reserve, cargo capacity, travel time, risk and rule links. IDs use core:trade_policy/*.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_type",
+        "definitions"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0"
+        },
+        "content_type": {
+          "const": "trade_policies"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/definition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/$defs/trade_policy_data"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "$defs": {
+        "trade_policy_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "goods",
+            "budget",
+            "reserve_money",
+            "max_cargo",
+            "travel_hours",
+            "risk",
+            "min_margin"
+          ],
+          "properties": {
+            "goods": {
+              "description": "Ordinary items the route may trade.",
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
+            },
+            "buy_port_tags": {
+              "description": "Optional port tags required at the buying end.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/tag"
+              }
+            },
+            "sell_port_tags": {
+              "description": "Optional port tags required at the selling end.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common.schema.json#/$defs/tag"
+              }
+            },
+            "budget": {
+              "description": "Maximum money spent on one buy.",
+              "type": "number",
+              "minimum": 1,
+              "maximum": 1000000
+            },
+            "reserve_money": {
+              "description": "Money the automation never spends.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "max_cargo": {
+              "description": "Cargo units the automated trader can carry.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "travel_hours": {
+              "description": "Simulation hours per leg.",
+              "type": "number",
+              "minimum": 1,
+              "maximum": 240
+            },
+            "risk": {
+              "description": "Per-leg loss probability (0-1).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "min_margin": {
+              "description": "Minimum expected profit ratio required before buying.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "rules": {
+              "description": "Automation rules attached to this policy.",
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "$ref": "common.schema.json#/$defs/id_ref"
+              }
             }
           }
         }

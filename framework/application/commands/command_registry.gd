@@ -53,3 +53,8 @@ static func register_all(bus: CommandBus) -> void:
 	bus.register(&"base.hire_worker", Callable(BaseCommands, "hire_worker"))
 	bus.register(&"base.assign_worker", Callable(BaseCommands, "assign_worker"))
 	bus.register(&"base.start_production", Callable(BaseCommands, "start_production"))
+	bus.register(&"auto_trade.start", Callable(AutoTradeCommands, "start"))
+	bus.register(&"auto_trade.stop", Callable(AutoTradeCommands, "stop"))
+	bus.register(&"auto_trade.set_policy", Callable(AutoTradeCommands, "set_policy"))
+	bus.register(&"auto_trade.pause", Callable(AutoTradeCommands, "pause"))
+	bus.register(&"auto_trade.resume", Callable(AutoTradeCommands, "resume"))

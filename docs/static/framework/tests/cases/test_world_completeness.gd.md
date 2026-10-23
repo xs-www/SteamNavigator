@@ -31,16 +31,17 @@
 | `test_complete_phase_b_content_has_no_errors() -> void` | L125 |
 | `test_core_requires_fleet_content_counts() -> void` | L131 |
 | `test_core_requires_base_content_counts_and_a_production_chain() -> void` | L138 |
-| `test_core_requires_combat_content_counts() -> void` | L150 |
-| `test_combat_counts_ignore_third_party_content() -> void` | L157 |
-| `test_core_combat_content_satisfies_core_counts() -> void` | L186 |
-| `test_core_requires_at_least_one_quest() -> void` | L199 |
-| `test_phase_b_capabilities_include_quests() -> void` | L206 |
-| `test_suggested_content_is_warning_only() -> void` | L210 |
-| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L226 |
-| `test_start_region_tags_must_match_a_region() -> void` | L234 |
-| `test_start_profile_must_resolve_starting_scenario() -> void` | L242 |
-| `test_phase_b_capabilities_are_whitelisted() -> void` | L251 |
+| `test_core_requires_auto_trade_counts() -> void` | L150 |
+| `test_core_requires_combat_content_counts() -> void` | L157 |
+| `test_combat_counts_ignore_third_party_content() -> void` | L164 |
+| `test_core_combat_content_satisfies_core_counts() -> void` | L193 |
+| `test_core_requires_at_least_one_quest() -> void` | L206 |
+| `test_phase_b_capabilities_include_quests() -> void` | L213 |
+| `test_suggested_content_is_warning_only() -> void` | L217 |
+| `test_map_config_needs_at_least_port_count_archetypes() -> void` | L233 |
+| `test_start_region_tags_must_match_a_region() -> void` | L241 |
+| `test_start_profile_must_resolve_starting_scenario() -> void` | L249 |
+| `test_phase_b_capabilities_are_whitelisted() -> void` | L258 |
 
 1.0 合成基线 + 注入的 2.0 世界/战役定义驱动 `CoreCompletenessChecker.check()`，覆盖
 presence gate、5 个硬性数量下限、4 个建议 warning、start_profile 组合解析与 capability 白名单。

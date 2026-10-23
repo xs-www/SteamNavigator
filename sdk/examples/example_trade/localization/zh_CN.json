@@ -1,0 +1,6 @@
+{
+  "trade_policy.example_trade.tea_run.name": "茶香航线",
+  "trade_policy.example_trade.tea_run.description": "在贸易港买入香料，卖往枢纽港的示例自动贸易策略。",
+  "automation_rule.example_trade.tea_pause.name": "资金不足暂停",
+  "automation_rule.example_trade.tea_pause.description": "金币低于 300 时暂停茶香航线。"
+}

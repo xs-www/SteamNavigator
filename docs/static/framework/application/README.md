@@ -7,6 +7,7 @@
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `command_bus.gd` | 命令执行器：在 GameState 深拷贝上运行用例，成功才提交并发布领域事件。 | [查看](./command_bus.gd.md) |
+| `commands/auto_trade_commands.gd` | Phase D4 自动贸易的命令入口：`auto_trade.start` / `stop` / `set_policy` / | [查看](./commands/auto_trade_commands.gd.md) |
 | `commands/base_commands.gd` | Phase D3 基地的命令入口：`base.claim` / `base.build` / `base.upgrade` / | [查看](./commands/base_commands.gd.md) |
 | `commands/combat_commands.gd` | `combat.resolve` 命令入口（Phase D1 自动战斗）。把参数（可选 | [查看](./commands/combat_commands.gd.md) |
 | `commands/command_registry.gd` | 命令名到静态用例的绑定表（含船厂/仓库/打造/在港等待、D0 `sim.*`、D1 `combat.resolve` 与 D2 `fleet.*` 命令）。 | 本页 |
@@ -28,6 +29,7 @@
 | `domain_event_bus.gd` | 已提交领域事件的 envelope、历史与订阅信号。 | [查看](./domain_event_bus.gd.md) |
 | `framework_api.gd` | 注册全部命令与查询。 | 本页 |
 | `queries/app_view.gd` | 启动与菜单 ViewModel：状态、模组、计数、构筑、命令列表。 | 本页 |
+| `queries/auto_trade_view.gd` | `auto_trade.view` 只读查询：输出策略、阶段、母港/目标港/当前港、航程剩余、 | [查看](./queries/auto_trade_view.gd.md) |
 | `queries/base_view.gd` | `base.view` 只读查询：输出基地站点、建筑实例、仓储、工人、防御与每 tick | [查看](./queries/base_view.gd.md) |
 | `queries/campaign_view.gd` | v2 战役运行时快照查询（`campaign.view`，Phase B B3）。只读地输出 | [查看](./queries/campaign_view.gd.md) |
 | `queries/clue_list_view.gd` | 线索列表页的只读查询（`clue.list`）。返回全部 active 线索的等级裁剪视图 | [查看](./queries/clue_list_view.gd.md) |

@@ -60,6 +60,8 @@
 | `screens/menu/new_game_screen.tscn` | 框架源文件：new_game_screen.tscn | 本页 |
 | `screens/menu/settings_screen.gd` | 设置页面场景：展示语言、自动存档与配置位置，并发出设置修改意图。 | [查看](./screens/menu/settings_screen.gd.md) |
 | `screens/menu/settings_screen.tscn` | 框架源文件：settings_screen.tscn | 本页 |
+| `screens/port/auto_trade_screen.gd` | Phase D4 自动贸易页：渲染 `auto_trade.view` 与可用策略，展示阶段、航程、 | [查看](./screens/port/auto_trade_screen.gd.md) |
+| `screens/port/auto_trade_screen.tscn` | 框架源文件：auto_trade_screen.tscn | 本页 |
 | `screens/port/base_screen.gd` | Phase D3 基地页：渲染 `base.view` 与 shell 提供的可用基地点/建筑/升级/工种/ | [查看](./screens/port/base_screen.gd.md) |
 | `screens/port/base_screen.tscn` | 框架源文件：base_screen.tscn | 本页 |
 | `screens/port/contracts_screen.gd` | 委托页面场景：按可接/进行中分组渲染主线与普通委托卡，并发出接取或规划出航意图。 | [查看](./screens/port/contracts_screen.gd.md) |

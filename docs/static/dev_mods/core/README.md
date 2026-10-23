@@ -353,6 +353,7 @@
 | `assets/models/weapons/shared_materials/wood_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/wood_deck.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/ports/iron_harbor_banner.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/automation_rules.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/base_sites.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/boiler_strategies.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/building_upgrades.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -382,6 +383,7 @@
 | `content/sites.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/start_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/starting_scenarios.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `content/trade_policies.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/voyage_events.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/weapons.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `content/weather_profiles.json` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

@@ -97,6 +97,7 @@ func validate(hub: RegistryHub) -> Dictionary:
 	_check_combat()
 	_check_fleet()
 	_check_base()
+	_check_trade()
 	_check_starting_scenarios()
 	_check_contracts()
 	_check_events()
@@ -432,6 +433,37 @@ func _check_base() -> void:
 		for stack in recipe.data.get("outputs", []):
 			if stack is Dictionary:
 				_require_item(String((stack as Dictionary).get("item", "")), recipe.id, "outputs")
+
+
+func _check_trade() -> void:
+	## D4 auto trade: policy goods/rule refs and the rule -> policy back-reference.
+	## A rule listed by a policy must belong to that policy, and vice versa.
+	var listed_rules: Dictionary = {}
+	for policy in _hub.get_all(ContentTypes.TRADE_POLICY):
+		for good_id in policy.data.get("goods", []):
+			_require_item(String(good_id), policy.id, "goods")
+		for rule_id in policy.data.get("rules", []):
+			var rule := _require(ContentTypes.AUTOMATION_RULE, String(rule_id), policy.id, "rules")
+			if rule == null:
+				continue
+			listed_rules[rule.id] = policy.id
+			if String(rule.data.get("policy_ref", "")) != policy.id:
+				_error(
+					"trade_rule_policy_mismatch",
+					"%s lists rule %s but the rule references policy %s" % [
+						policy.id, rule.id, String(rule.data.get("policy_ref", ""))
+					],
+					policy.id
+				)
+	for rule in _hub.get_all(ContentTypes.AUTOMATION_RULE):
+		var policy_ref := String(rule.data.get("policy_ref", ""))
+		var policy := _require(ContentTypes.TRADE_POLICY, policy_ref, rule.id, "policy_ref")
+		if policy != null and not listed_rules.has(rule.id):
+			_error(
+				"trade_rule_not_listed",
+				"%s references %s but the policy does not list the rule" % [rule.id, policy_ref],
+				rule.id
+			)
 
 
 func _check_starting_scenarios() -> void:

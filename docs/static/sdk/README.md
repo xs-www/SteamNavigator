@@ -35,6 +35,11 @@
 | `examples/example_mixed_crew_roles_items/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_mixed_crew_roles_items/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_mixed_crew_roles_items/manifest.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_trade/content/automation_rules.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_trade/content/trade_policies.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_trade/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_trade/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
+| `examples/example_trade/manifest.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_weapons/content/weapons.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_weapons/localization/en.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |
 | `examples/example_weapons/localization/zh_CN.json` | 可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。 | 本页 |

@@ -44,19 +44,21 @@
 | `BUILDING_UPGRADE` | L41 |
 | `PRODUCTION_RECIPE` | L42 |
 | `WORKER_ROLE` | L43 |
-| `SCHEMA_PATHS` | L45 |
-| `SCHEMA_VERSIONS` | L83 |
-| `SINGULAR` | L121 |
-| `MODULE_TYPES` | L159 |
-| `all() -> Array[StringName]` | L162 |
-| `registry_types() -> Array[StringName]` | L175 |
-| `is_known(content_type: StringName) -> bool` | L181 |
-| `is_module(content_type: StringName) -> bool` | L185 |
-| `is_patch(content_type: StringName) -> bool` | L189 |
-| `schema_path(content_type: StringName) -> String` | L193 |
-| `schema_version(content_type: StringName) -> String` | L197 |
-| `singular(content_type: StringName) -> String` | L201 |
-| `from_singular(singular_name: String) -> StringName` | L205 |
+| `TRADE_POLICY` | L44 |
+| `AUTOMATION_RULE` | L45 |
+| `SCHEMA_PATHS` | L47 |
+| `SCHEMA_VERSIONS` | L87 |
+| `SINGULAR` | L127 |
+| `MODULE_TYPES` | L167 |
+| `all() -> Array[StringName]` | L170 |
+| `registry_types() -> Array[StringName]` | L184 |
+| `is_known(content_type: StringName) -> bool` | L190 |
+| `is_module(content_type: StringName) -> bool` | L194 |
+| `is_patch(content_type: StringName) -> bool` | L198 |
+| `schema_path(content_type: StringName) -> String` | L202 |
+| `schema_version(content_type: StringName) -> String` | L206 |
+| `singular(content_type: StringName) -> String` | L210 |
+| `from_singular(singular_name: String) -> StringName` | L214 |
 
 ## 契约与约束
 

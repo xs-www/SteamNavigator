@@ -726,6 +726,40 @@ func test_formation_slot_ids_must_be_unique() -> void:
 		"duplicate formation slot ids are rejected")
 
 
+## D4-FIX：贸易策略的 goods/规则引用与 rule→policy 反向引用必须一致。
+func test_trade_policy_and_rule_references_are_checked() -> void:
+	var hub := _new_hub()
+	_define(hub, ContentTypes.TRADE_POLICY, "test:trade_policy/bad", {
+		"goods": ["core:item/coal"],
+		"budget": 100,
+		"reserve_money": 10,
+		"max_cargo": 5,
+		"travel_hours": 1,
+		"risk": 0,
+		"min_margin": 0,
+		"rules": ["test:automation_rule/wrong_policy"],
+	})
+	_define(hub, ContentTypes.AUTOMATION_RULE, "test:automation_rule/wrong_policy", {
+		"policy_ref": "test:trade_policy/other",
+		"when": "tick",
+		"condition": {"op": "always"},
+		"action": "pause",
+		"priority": 1,
+	})
+	_define(hub, ContentTypes.AUTOMATION_RULE, "test:automation_rule/unlisted", {
+		"policy_ref": "test:trade_policy/bad",
+		"when": "tick",
+		"condition": {"op": "always"},
+		"action": "resume",
+		"priority": 2,
+	})
+	var result := _result(hub)
+	assert_contains(_codes(_errors_for(result, "test:trade_policy/bad")), "trade_rule_policy_mismatch",
+		"a listed rule must reference the listing policy")
+	assert_contains(_codes(_errors_for(result, "test:automation_rule/unlisted")), "trade_rule_not_listed",
+		"a rule must be listed by its policy")
+
+
 ## D3-FIX：基地内容的建筑/配方/升级/工人工种引用与修正 stat 必须可解析。
 func test_base_content_references_and_modifiers_are_checked() -> void:
 	var hub := _new_hub()

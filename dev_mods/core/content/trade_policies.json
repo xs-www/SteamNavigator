@@ -1,0 +1,51 @@
+{
+  "schema_version": "2.0",
+  "content_type": "trade_policies",
+  "definitions": [
+    {
+      "id": "core:trade_policy/bulk_lane",
+      "name_key": "trade_policy.core.bulk_lane.name",
+      "description_key": "trade_policy.core.bulk_lane.description",
+      "tags": ["trade_policy.bulk", "trade_policy.safe"],
+      "enabled": true,
+      "data": {
+        "goods": ["core:item/timber", "core:item/boiler_plate"],
+        "buy_port_tags": ["port.industrial"],
+        "sell_port_tags": ["port.trade", "port.craft"],
+        "budget": 800,
+        "reserve_money": 250,
+        "max_cargo": 40,
+        "travel_hours": 8,
+        "risk": 0.05,
+        "min_margin": 0.1,
+        "rules": [
+          "core:automation_rule/bulk_stop_low_money",
+          "core:automation_rule/bulk_resume_healthy",
+          "core:automation_rule/bulk_sell_full"
+        ]
+      }
+    },
+    {
+      "id": "core:trade_policy/luxury_run",
+      "name_key": "trade_policy.core.luxury_run.name",
+      "description_key": "trade_policy.core.luxury_run.description",
+      "tags": ["trade_policy.luxury", "trade_policy.risky"],
+      "enabled": true,
+      "data": {
+        "goods": ["core:item/spices", "core:item/glassware"],
+        "buy_port_tags": ["port.trade"],
+        "sell_port_tags": ["port.hub"],
+        "budget": 1500,
+        "reserve_money": 500,
+        "max_cargo": 14,
+        "travel_hours": 14,
+        "risk": 0.12,
+        "min_margin": 0.2,
+        "rules": [
+          "core:automation_rule/luxury_stop_low_money",
+          "core:automation_rule/luxury_resume_healthy"
+        ]
+      }
+    }
+  ]
+}
