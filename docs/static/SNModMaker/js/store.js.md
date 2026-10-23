@@ -55,24 +55,24 @@
 | `syncManifest(project)` | L809 |
 | `touch(project)` | L827 |
 | `normalizeProject(raw, options)` | L832 |
-| `serialize(project)` | L859 |
-| `deserialize(text)` | L863 |
-| `bytesToBase64(bytes)` | L867 |
-| `base64ToBytes(base64)` | L876 |
-| `mimeFor(path)` | L885 |
-| `bytesToDataUrl(bytes, mime)` | L898 |
-| `dataUrlToBytes(dataUrl)` | L902 |
-| `decodeText(data)` | L906 |
-| `encodeText(text)` | L911 |
-| `toExportFiles(project, options)` | L916 |
-| `stripRoot(paths)` | L942 |
-| `fromFiles(entries)` | L955 |
-| `definitionKeys(project, typeKey)` | L1058 |
-| `findDefinition(project, filePath, index)` | L1062 |
-| `localizationValue(project, definition, field, locale)` | L1068 |
-| `definitionTitle(project, definition)` | L1075 |
-| `dependencyOnCore(project)` | L1083 |
-| `SNStore (global)` | L1087 |
+| `serialize(project)` | L862 |
+| `deserialize(text)` | L866 |
+| `bytesToBase64(bytes)` | L870 |
+| `base64ToBytes(base64)` | L879 |
+| `mimeFor(path)` | L888 |
+| `bytesToDataUrl(bytes, mime)` | L901 |
+| `dataUrlToBytes(dataUrl)` | L905 |
+| `decodeText(data)` | L909 |
+| `encodeText(text)` | L914 |
+| `toExportFiles(project, options)` | L919 |
+| `stripRoot(paths)` | L945 |
+| `fromFiles(entries)` | L958 |
+| `definitionKeys(project, typeKey)` | L1061 |
+| `findDefinition(project, filePath, index)` | L1065 |
+| `localizationValue(project, definition, field, locale)` | L1071 |
+| `definitionTitle(project, definition)` | L1078 |
+| `dependencyOnCore(project)` | L1086 |
+| `SNStore (global)` | L1090 |
 
 ## 契约与约束
 

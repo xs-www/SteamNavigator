@@ -19,7 +19,7 @@ extends RefCounted
 ## @end-static-doc
 
 const CONTENT_TYPES_MANIFEST := "res://content_types.json"
-const SUPPORTED_SCHEMA_VERSIONS := ["1.0", "2.0"]
+const SUPPORTED_SCHEMA_VERSIONS := ["2.0"]
 const MAX_CONTENT_FILE_BYTES := 8 * 1024 * 1024
 const MODE_RUNTIME := "runtime"
 const MODE_DRAFT := "draft"
@@ -338,6 +338,17 @@ static func _validate_content_file(
 		return
 	var declared := String(envelope.get("schema_version", ""))
 	var expected := String(info["schema_version"])
+	if declared == "1.0":
+		_add_report_error(
+			report,
+			"schema_version_frozen",
+			"Content Schema 1.0 is frozen; content type '%s' requires schema_version '2.0' (got '1.0')" % content_type_name,
+			package.id,
+			relative_path,
+			"/schema_version",
+			"error"
+		)
+		return
 	if not SUPPORTED_SCHEMA_VERSIONS.has(declared):
 		_add_report_error(
 			report,

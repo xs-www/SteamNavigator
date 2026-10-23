@@ -814,6 +814,15 @@ function warningsOf(result) {
       errorsOf(result).some((issue) => issue.code === 'schema_version_frozen'),
       'a runtime 2.0 type declaring 1.0 must report schema_version_frozen'
     );
+    // A project save/reload must not silently relabel 1.0 to 2.0: the frozen
+    // diagnostic has to survive serialize/deserialize.
+    const reloaded = Store.deserialize(Store.serialize(project));
+    const reloadedItems = reloaded.contentFiles.find((file) => file.content_type === 'items');
+    assert.equal(reloadedItems.schema_version, '1.0', 'explicit 1.0 survives a project reload');
+    assert.ok(
+      errorsOf(Validate.validateProject(reloaded)).some((issue) => issue.code === 'schema_version_frozen'),
+      'the frozen diagnostic survives a project reload'
+    );
     itemsFile.schema_version = '2.0';
 
     // The former last 1.0 type (contracts) is 2.0 now, so a 1.0 file is rejected.

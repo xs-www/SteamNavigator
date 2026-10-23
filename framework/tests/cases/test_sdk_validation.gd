@@ -387,8 +387,8 @@ func test_draft_mode_reports_schema_and_per_type_version_errors() -> void:
 		"--mod-root=%s/sdk_bad_version" % version_root, "--mode=draft", "--json",
 	]))
 	assert_eq(int(draft_result["exit"]), 1, "a per-type version mismatch must fail draft validation")
-	var mismatch := _error_with_code(_json_of(draft_result, "draft version mismatch"), "schema_version_mismatch")
-	assert_true(not mismatch.is_empty(), "draft validation reports schema_version_mismatch")
+	var mismatch := _error_with_code(_json_of(draft_result, "draft version frozen"), "schema_version_frozen")
+	assert_true(not mismatch.is_empty(), "draft validation reports schema_version_frozen")
 	assert_eq(String(mismatch.get("path", "")), "/schema_version", "the version error points at the envelope")
 	var runtime_result := _run_sdk(VALIDATE_SCRIPT, PackedStringArray([
 		"--mod-root=%s/sdk_bad_version" % version_root, "--mode=runtime", "--json",

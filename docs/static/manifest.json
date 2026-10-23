@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T06:25:26.301Z",
-  "commit": "6d07866",
+  "generated_at": "2026-10-23T06:43:10.869Z",
+  "commit": "db8d9fb",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -228,7 +228,7 @@
     },
     {
       "source": "SNModMaker/js/app.js",
-      "sha256": "409ca4d05ae798c7074414880b8bdc31f7873fc675a6c9a83d7027fa5976a62c",
+      "sha256": "e1b99df699769788691c7c3d90574b87e749dd36f965bd9e5c2ffb7ba98a9900",
       "doc": "docs/static/SNModMaker/js/app.js.md",
       "status": "documented"
     },
@@ -258,7 +258,7 @@
     },
     {
       "source": "SNModMaker/js/store.js",
-      "sha256": "a51274bacf3fd26cff00bebab5a87e0a37b3cdeabc172322b3b498c991906676",
+      "sha256": "9472f7580d5ec5cad5d795606efa3658564a0468da3a1ce739306ec49228bc82",
       "doc": "docs/static/SNModMaker/js/store.js.md",
       "status": "documented"
     },
@@ -307,7 +307,7 @@
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "88c7d50831acc866ab3ad690d6dfd21f09c56b32ec4d716e09c6354ece000401",
+      "sha256": "11b12bc697be96737fabf409f53b95ee982cd9b27481ecadc6bf11bfbc7fab5d",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -4397,7 +4397,7 @@
     },
     {
       "source": "framework/tests/cases/test_sdk_validation.gd",
-      "sha256": "186c482a9d42b55696656dd8cf082164bcddef2f8f38042e044ea451b4a688ae",
+      "sha256": "eeb96cd4c225e6919f392c50c7483d7f8b4d6c933c2bcdaa199f5ebfb55c9578",
       "doc": "docs/static/framework/tests/cases/test_sdk_validation.gd.md",
       "status": "documented"
     },
@@ -5925,7 +5925,7 @@
     },
     {
       "source": "sdk/validation_core.gd",
-      "sha256": "22a9176926b05e2aa1246c19d08c7dcd072c708c3b278d4f518928d1f01a5e7e",
+      "sha256": "e4f88ff7dff05f32309e75f7069e09b4665dfc52c27490323a03dc623ac60321",
       "doc": "docs/static/sdk/validation_core.gd.md",
       "status": "documented"
     },

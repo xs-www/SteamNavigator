@@ -1052,7 +1052,7 @@
             ${info.draft ? `<div class="draft-notice" role="note">
               <span class="draft-dot"></span>
               <span><strong>Schema 2.0 草案 · 当前游戏运行时不加载。</strong>
-              导出内容使用 <code>schema_version: "2.0"</code>，可用于起草、编辑与校验；已提升为运行时类型的 2.0 内容（世界 / 战役）不受影响，草案内容不会被游戏加载。</span>
+              导出内容使用 <code>schema_version: "2.0"</code>（Phase E 起 1.0 已冻结）；可用于起草、编辑与校验，但草案内容仍不会被游戏加载。</span>
             </div>` : ''}
           </div>
         </div>
@@ -1355,7 +1355,7 @@
           <li>本地化键覆盖情况、空翻译与未引用键。</li>
           <li>补丁目标、来源版本与操作安全性。</li>
         </ul>
-        ${Cat.DRAFT_TYPES && Cat.DRAFT_TYPES.length ? '<p class="muted-sm">Schema 2.0 草案类型（舰载武器 / 剧情篇章 / 剧情关卡）按 <code>schemas/v2</code> 校验；导出会写 <code>schema_version: "2.0"</code>，但游戏运行时不会加载草案类型，这类文件不会生效。已提升为运行时类型的 2.0 内容（世界 / 战役）不受影响。</p>' : ''}
+        ${Cat.DRAFT_TYPES && Cat.DRAFT_TYPES.length ? '<p class="muted-sm">Schema 2.0 草案类型（剧情篇章 / 剧情关卡 / 战斗 AI）按 <code>schemas/v2</code> 校验；导出会写 <code>schema_version: "2.0"</code>，但游戏运行时不会加载草案类型，这类文件不会生效。所有运行时类型同样使用 2.0。</p>' : ''}
         <p class="muted-sm">导出时不会自动修复任何问题；校验结果与 Godot 的加载校验保持同一套 Schema，但网页端不会运行领域规则或 Core 完整性检查。</p>
       </section>
     </div>`;

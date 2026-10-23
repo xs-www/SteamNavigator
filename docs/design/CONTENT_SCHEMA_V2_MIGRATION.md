@@ -116,7 +116,7 @@
 | 编号 | 决策 | 结论 |
 | --- | --- | --- |
 | D1 | 版本粒度 | **按内容类型声明版本**；C4 后 20 类 active 全部为 2.0（0 个 1.0 runtime），保留一个基线常量只用于编辑器默认与提示 |
-| D2 | 1.0 兼容窗口 | 原计划一个 minor 双读；**开发期（C/D，2026-10-22）拍板不要求旧档 / 旧内容兼容**，每次迭代后旧模型直接作废，发布前按 Phase E 重新评估 |
+| D2 | 1.0 兼容窗口 | 原计划一个 minor 双读；**开发期（C/D，2026-10-22）拍板不要求旧档 / 旧内容兼容**，每次迭代后旧模型直接作废；Phase E 确定不提供 1.0 迁移工具 |
 | D3 | 存档内容版本记录 | `content_schema` 保留为基线；新增 `content_versions`（类型 → 版本）惰性补齐，加载时按实际注册表推导 |
 | D4 | Patch 版本 | Patch envelope 固定 `schema_version: "2.0"`；不符时由 `patches` 2.0 的 envelope 校验以 `unsupported_schema` 拦截（不再有单独的 patch 目标版本错误码），不做隐式转换 |
 | D5 | 实体合并时机 | 独立于世界探索家族，单独一个阶段（Module → Item → Quest）；**开发期直接改 core ID、不保留别名/不写迁移器**（发布前若需兼容另评估） |
@@ -272,7 +272,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 编辑器 | 版本按类型统一、草案到 active 的分区与提示、导出侧约束（G8） | `run-tests.js` / `content-cli.test.mjs` |
 | 生成物 | `gen_content_types.mjs` 版本表；`sync-schemas.mjs` 继续递归 | `--check` 两个门禁 |
 | 存档 | 迁移矩阵、混合版本 header、世界不重排 | 存档回归用例 |
-| 发布 | workflow 增加版本一致性检查 | `.github/workflows/release.yml` |
+| 发布 | `tools/check_content_schema_v2.mjs` 冻结检查已接入 workflow | `.github/workflows/release.yml` |
 
 ## 7. 风险与回滚
 

@@ -846,7 +846,10 @@
     project.meta.updatedAt = project.meta.updatedAt || new Date().toISOString();
     for (const file of project.contentFiles) {
       file.definitions = Array.isArray(file.definitions) ? file.definitions : [];
-      file.schema_version = fileSchemaVersion(file);
+      // Preserve an explicit (possibly frozen 1.0) declaration so validation can
+      // still report schema_version_frozen after a project reload; only fill a
+      // missing version with the Phase E 2.0 default.
+      if (!file.schema_version) file.schema_version = fileSchemaVersion(file);
     }
     for (const entry of project.localization) {
       entry.entries = entry.entries && typeof entry.entries === 'object' ? entry.entries : {};
