@@ -5,6 +5,7 @@
 - **Godot 路径**: `C:\SteamLibrary\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe`
 - **Godot 版本**: 4.7.2 stable（通过 Steam 安装）
 - **运行测试**: `$env:GODOT_BIN = "C:\SteamLibrary\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe"; pwsh ./tools/test.ps1`
+- **Godot 导入隔离**: `SNModMaker/`（网页编辑器与本地工作区）、`.agents/`（Agent worktree）、`docs/`、`dist/`、`.design/`、`release/` 都不属于 Godot 内容，目录根部必须有 `.gdignore`。`.agents/` 被重建后要补一个空的 `.agents/.gdignore`，否则 Godot 会导入其中的仓库副本并报 GLB 外部贴图缺失。
 
 ## 协作规则
 

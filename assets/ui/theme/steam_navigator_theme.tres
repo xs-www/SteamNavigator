@@ -1,5 +1,7 @@
 [gd_resource type="Theme" format=3 uid="uid://donrdopu47413"]
 
+[ext_resource type="Texture2D" uid="uid://dbejoaohjwprt" path="res://assets/ui/shipyard/blueprint_panel.png" id="1_blueprintpanel"]
+
 [sub_resource type="StyleBoxFlat" id="ButtonDisabled"]
 content_margin_left = 18.0
 content_margin_top = 11.0
@@ -314,6 +316,33 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
+[sub_resource type="StyleBoxFlat" id="GlassPanel"]
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+bg_color = Color(0.031, 0.078, 0.094, 0.66)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.882353, 0.768627, 0.529412, 0.34)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxTexture" id="BlueprintPanel"]
+content_margin_left = 66.0
+content_margin_top = 62.0
+content_margin_right = 66.0
+content_margin_bottom = 62.0
+texture = ExtResource("1_blueprintpanel")
+texture_margin_left = 56.0
+texture_margin_top = 54.0
+texture_margin_right = 56.0
+texture_margin_bottom = 54.0
+
 [sub_resource type="StyleBoxFlat" id="PrimaryHover"]
 content_margin_left = 20.0
 content_margin_top = 12.0
@@ -434,6 +463,8 @@ SNBadge/base_type = &"Label"
 SNBadge/colors/font_color = Color(0.882353, 0.768627, 0.529412, 1)
 SNBadge/font_sizes/font_size = 11
 SNBadge/styles/normal = SubResource("BadgeNeutral")
+SNBlueprintPanel/base_type = &"PanelContainer"
+SNBlueprintPanel/styles/panel = SubResource("BlueprintPanel")
 SNBrassProgressBar/base_type = &"ProgressBar"
 SNBrassProgressBar/styles/background = SubResource("ProgressBackground")
 SNBrassProgressBar/styles/fill = SubResource("ProgressBrass")
@@ -464,6 +495,8 @@ SNGhostButton/styles/focus = SubResource("GhostFocus")
 SNGhostButton/styles/hover = SubResource("GhostHover")
 SNGhostButton/styles/normal = SubResource("Empty")
 SNGhostButton/styles/pressed = SubResource("GhostPressed")
+SNGlassPanel/base_type = &"PanelContainer"
+SNGlassPanel/styles/panel = SubResource("GlassPanel")
 SNInsetPanel/base_type = &"PanelContainer"
 SNInsetPanel/styles/panel = SubResource("PanelInset")
 SNPanel/base_type = &"PanelContainer"

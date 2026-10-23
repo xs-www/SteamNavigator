@@ -472,16 +472,15 @@ func test_player_weapon_rows_from_hull_sockets() -> void:
 	var hub := _hub()
 	var dual_ship := {"hull_id": HULL_DUAL}
 	var rows := CombatOps.player_weapon_rows(hub, dual_ship)
-	assert_eq(rows.size(), 2, "every hull socket maps to a weapon")
-	assert_eq(String(rows[0]["socket"]), "S1", "weapon rows keep socket order")
-	assert_eq(String(rows[0]["weapon_id"]), WEAPON_LIGHT, "Light socket picks the alphabetically first Light weapon")
-	assert_eq(String(rows[1]["weapon_id"]), WEAPON_BURNER, "Medium socket picks the alphabetically first Medium weapon")
-	assert_empty(CombatOps.unmounted_sockets(hub, dual_ship), "no unmounted sockets for the dual hull")
+	assert_empty(rows, "empty player sockets do not receive free registry-default weapons")
+	assert_eq(CombatOps.unmounted_sockets(hub, dual_ship).size(), 2, "both empty sockets are reported")
+	assert_eq(String(CombatOps.unmounted_sockets(hub, dual_ship)[0]["reason"]), "weapon_not_installed", "available classes distinguish an empty mount")
 	var explicit := {"hull_id": HULL_DUAL, "weapon_loadout": [{"socket": "S2", "weapon_id": WEAPON_MEDIUM}]}
 	var explicit_rows := CombatOps.player_weapon_rows(hub, explicit)
-	assert_eq(String(explicit_rows[1]["weapon_id"]), WEAPON_MEDIUM, "explicit loadout overrides the default weapon")
+	assert_eq(explicit_rows.size(), 1, "only purchased/equipped weapons resolve")
+	assert_eq(String(explicit_rows[0]["weapon_id"]), WEAPON_MEDIUM, "explicit loadout drives the mounted weapon")
 	var view: Dictionary = CombatViewQuery.execute({}, _context(_state(hub, HULL_DUAL))).get("data", {})
-	assert_eq((view["player"]["weapons"] as Array).size(), 2, "combat.view exposes the player armament")
+	assert_empty(view["player"]["weapons"] as Array, "combat.view exposes empty player armament honestly")
 	assert_eq((view["encounters"] as Array).size(), 10, "combat.view lists every encounter table")
 
 
@@ -558,7 +557,22 @@ func test_combat_commands_and_queries_are_registered() -> void:
 	var view := context.queries.execute(&"combat.view", {})
 	assert_true(bool(view.get("ok", false)), "combat.view works on a real run")
 	assert_false((view["data"]["encounters"] as Array).is_empty(), "real run exposes encounter tables")
-	assert_false(((view["data"]["player"] as Dictionary)["weapons"] as Array).is_empty(), "real run resolves hull weapons")
+	context.state.ship()["coal"] = 0.0
+	context.state.ship()["water"] = 0.0
+	var yard: Dictionary = context.queries.execute(&"shipyard.view")["data"]
+	var bought := false
+	for candidate in yard.get("weapon_candidates", []):
+		if candidate is Dictionary and bool(candidate.get("can_install", false)):
+			var install := context.commands.execute(&"ship.install_weapon", {
+				"socket": String(candidate.get("socket", "")),
+				"weapon_id": String(candidate.get("weapon_id", "")),
+				"source": "purchase",
+			})
+			bought = bool(install.get("ok", false))
+			break
+	assert_true(bought, "a real run buys one shipyard weapon before combat")
+	view = context.queries.execute(&"combat.view", {})
+	assert_false(((view["data"]["player"] as Dictionary)["weapons"] as Array).is_empty(), "combat resolves the purchased loadout")
 	var resolved := context.commands.execute(&"combat.resolve", {
 		"encounter_table_id": "core:encounter_table/coastal_patrol",
 		"seed": 99,

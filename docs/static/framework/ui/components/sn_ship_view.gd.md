@@ -1,8 +1,7 @@
 # `framework/ui/components/sn_ship_view.gd`
 
-> 作用：船厂中央改装台：`EXTERIOR` 画程序化侧视占位；`CUTAWAY` 画授权纵剖图贴图（`assets/ui/shipyard/ship_section.png`）+ 每槽位一个 `SNSlotTarget` 贴片，贴图缺失时回退程序化剖面；预留可替换的 2.5D 渲染器接口。
+> 作用：船厂中央船体视图；正常态承载 2.5D 船体，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
 
-- 关键依赖：`SNSlotTarget`
 - 类型：GDScript 源文件
 
 ## 关键符号
@@ -10,60 +9,75 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNShipView` | L1 |
-| `slot_drop_requested (signal)` | L23 |
-| `slot_activated (signal)` | L24 |
-| `TEXT` | L28 |
-| `MUTED` | L29 |
-| `BRASS` | L30 |
-| `TEAL` | L31 |
-| `HULL_DARK` | L32 |
-| `HULL_MID` | L33 |
-| `WATER` | L34 |
-| `SLOT_H` | L35 |
-| `CARGO_SLOT_H` | L36 |
-| `SECTION_TEXTURE_PATH` | L39 |
-| `set_renderer(node: Node) -> void` | L75 |
-| `has_renderer() -> bool` | L91 |
-| `has_section_texture() -> bool` | L96 |
-| `section_texture_size() -> Vector2` | L100 |
-| `set_ship_model(model: Dictionary) -> void` | L110 |
-| `set_slots(slots: Array) -> void` | L118 |
-| `set_mode(next: int) -> void` | L141 |
-| `highlight_slots(slot_ids: Array) -> void` | L151 |
+| `slot_drop_requested (signal)` | L44 |
+| `slot_activated (signal)` | L45 |
+| `TEXT` | L49 |
+| `MUTED` | L50 |
+| `BRASS` | L51 |
+| `TEAL` | L52 |
+| `HULL_DARK` | L53 |
+| `HULL_MID` | L54 |
+| `WATER` | L55 |
+| `SLOT_H` | L56 |
+| `CARGO_SLOT_H` | L57 |
+| `BLUEPRINT_SOCKET_MIN_SIZE` | L58 |
+| `BLUEPRINT_SOCKET_MAX_SIZE` | L59 |
+| `BLUEPRINT_SIDE_RATIO` | L60 |
+| `BLUEPRINT_VIEW_GAP` | L61 |
+| `SLOT_DOCK_MARGIN` | L62 |
+| `SLOT_DOCK_GAP` | L63 |
+| `SECTION_TEXTURE_PATH` | L66 |
+| `set_renderer(node: Node) -> void` | L112 |
+| `has_renderer() -> bool` | L128 |
+| `has_section_texture() -> bool` | L133 |
+| `section_texture_size() -> Vector2` | L137 |
+| `set_ship_model(model: Dictionary) -> void` | L147 |
+| `has_blueprint_views() -> bool` | L156 |
+| `blueprint_texture_size(view: String) -> Vector2` | L160 |
+| `slot_dock_height() -> float` | L166 |
+| `set_blueprint_backdrop(enabled: bool) -> void` | L177 |
+| `uses_blueprint_backdrop() -> bool` | L184 |
+| `blueprint_view_rect(view: String) -> Rect2` | L200 |
+| `set_slots(slots: Array) -> void` | L280 |
+| `set_mode(next: int) -> void` | L303 |
+| `highlight_slots(slot_ids: Array) -> void` | L313 |
+| `blueprint_socket_rects(view: String = "side") -> Dictionary` | L326 |
 
 ## 契约与约束
+- `set_ship_model()` 接收 `shipyard.view.ship`；`ship.blueprint_views.{side,top}` 是
+  已解析的线稿路径（`path`），没有线稿时回退到通用纵剖图/程序化占位。
+- 武器槽位行必须包含稳定 `socket` 与 `blueprint`，后者的 `side` / `top` 是左上原点、
+  0..1 的 JSON Vector2，坐标基准是各自视图的线稿纹理。
+- `blueprint_view_rect(view)` 返回该视图等比适配后的屏幕矩形；
+  `blueprint_socket_rects(view)` 用这个矩形把归一化坐标映射为屏幕框；缺失、越界或
+  形状错误的坐标跳过，不影响其它槽位和模块拖放。没有线稿时 rect 回退为整个 Control，
+  保持旧内容兼容。
+- CUTAWAY 同时绘制 side（上方）与 top（下方）两个视图；槽位框空槽为灰、已装武器为
+  黄铜、`highlight_slots()` 命中的 socket 为青色高亮；购买/安装命令仍由船厂页面发出。
+- 有每船线稿时船厂页把整列换成 `SNBlueprintPanel` 九宫格蓝图底板；页面调用
+  `set_blueprint_backdrop(true)` 后本视图不再自绘深色底、每视图边框与槽位坞条，只把
+  线稿、视图标签、武器槽位框和槽位 chip 画在底板的深蓝内容区上。底板由 Theme 提供，
+  本视图不持有底板纹理；未开启该开关（旧船、无底板）时背景绘制行为保持不变。
+- 模块 `SNSlotTarget`、通用纵剖图贴图和 2.5D renderer 协议保持不变。
 
-- `SECTION_TEXTURE_PATH` = `res://assets/ui/shipyard/ship_section.png`；`_ready()` 调用 `_load_section_texture()`，仅在 `ResourceLoader.exists` 为真时加载。`has_section_texture()` 判定是否用上授权贴图，`section_texture_size()` 返回像素尺寸（无贴图返回 `Vector2.ZERO`），供测试与调试确认贴图已导入。
-- `_draw_cutaway()` 优先 `_draw_section_texture()`（cover 裁切贴图）并始终叠加 `_draw_slot_leaders()`；仅贴图缺失/未导入时才用 `_draw_cutaway_placeholder()` 程序化剖面。`Mode.EXTERIOR` 保持程序化侧视、不读贴图。
-- `_draw_section_texture()` 为 cover 裁切：`cover_scale = max(dst.w/tex.w, dst.h/tex.h)`，取居中源矩形 `draw_texture_rect_region`，再叠 0.18 暗青蒙版；不改变纵横比、不移动控件。
-- 槽位仍按两行排布（非货舱槽 `top = h*0.60`，货舱槽 `top = h*0.82`）；贴片宽 84–148 px（按可用跨度均分），控件宽 < 80 px 时跳过布局。
-- `_chip_anchor()` 的舱室锚点（船体/锅炉/货舱/导航/安全/客舱）必须与 `tools/art/gen_shipyard_textures.py` 的 `ANCHORS` 保持同一构图比例；换图时两侧一起改。
-- `Mode.EXTERIOR` 仍是程序化侧视（水面/烟/明轮动画），不读贴图；正常态与改装态共用同一套 `set_slots` 数据。
-- `set_slots(slots)` 为每个描述重建一个 `SNSlotTarget`；字段：id、content_type、index、title、module、replace_module_id、fixed、hint、tooltip。贴片只在 CUTAWAY 可见；点击发 `slot_activated(slot)`，同类型部件拖到贴片发 `slot_drop_requested(payload, slot)`，本控件不发命令。
-- 2.5D 接入协议不变：`set_renderer(node)` 把节点作为铺满本控件的子节点挂入并立即下发 `ship_view_update(model)` / `ship_view_set_mode(mode)`；`has_renderer()` 判定是否已替换；传 `null` 恢复内置占位。
-- 渲染器实现 `ship_view_update(model)`、`ship_view_set_mode(mode)`、`ship_view_highlight(slot_ids)` 即可；缺方法时用 `has_method` 跳过，不报错。槽位贴片、拖放与命中布局都留在本控件，未来 2.5D 场景只画船体即可。
-- 无渲染器或 EXTERIOR 时每帧 `queue_redraw` 驱动动画；接入渲染器后的 CUTAWAY 只在数据/尺寸变化时重绘，贴图本身不参与动画。
+Refit stage for the centre of the shipyard screen.
 
-## 重点逻辑
+Two modes share one coordinate space:
+  EXTERIOR — a side view of the current ship (procedural placeholder today).
+  CUTAWAY  — dual blueprint views from the hull's `blueprint_views`; when absent,
+             the authored longitudinal section (assets/ui/shipyard/ship_section.png)
+             or the procedural fallback is used. SNSlotTarget chips stay on top so
+             owned free modules can be dragged straight onto a slot.
 
-### `_draw_section_texture()`
-
-- 只处理正尺寸贴图；`destination` 恒为整个控件，`source` 按 cover 居中，保证 1792×1008 图在任意舞台尺寸下铺满且不变形。
-- 绘制后统一加半透明暗色压住贴图亮度，保持与 Theme 暗青底一致；槽位引线在贴图之上。
-
-### `_layout_slots() / _place_row()`
-
-- 把货舱槽与非货舱槽拆成两行分别 `_place_row`；`_place_row` 计算 chip 宽高、水平居中、直接写 `position/size`（不用容器排布，便于引线定位）。
-- 贴片可见性每次布局都按 `mode == CUTAWAY` 重算，避免模式切换后残留。
-
-### `_draw_slot_leaders()`
-
-- 从每枚贴片顶部中心画线到 `_chip_anchor` 对应舱室点；货舱按数量决定步长（≤1 时 0.055，否则 0.09）。
-
-### `set_renderer(node)`
-
-- 先移除并 `queue_free` 旧渲染器，再 `add_child` + `move_child(..., 0)` 压到绘制底层。
-- Control 渲染器铺满本控件并设为 `MOUSE_FILTER_IGNORE`，避免抢走槽位贴片的拖放。
-- 挂载后立即下发当前 model 与 mode，渲染器不必等待下一次刷新。
+## 2.5D integration contract
+`set_renderer(node)` swaps the procedural placeholder for a real renderer.
+The node is added as a child filling this control and must expose:
+  func ship_view_update(model: Dictionary) -> void
+  func ship_view_set_mode(mode: int) -> void
+  func ship_view_highlight(slot_ids: Array) -> void
+Slot chips, drag & drop, and hit layout stay here, so a future 2.5D scene
+only has to draw the hull and can ignore input entirely. Passing null
+restores the built-in placeholder. Nothing in the screen depends on how the
+ship is drawn, so the swap needs no screen change.
 
 模块索引：[framework/ui](../README.md)

@@ -1,0 +1,340 @@
+{
+  "atlas": "sn_ui_icons_v1.png",
+  "atlas_size_px": [
+    1536,
+    1024
+  ],
+  "grid": {
+    "columns": 6,
+    "rows": 5,
+    "cell_width": 256,
+    "row_y": [
+      0,
+      205,
+      410,
+      614,
+      819
+    ],
+    "row_height": [
+      205,
+      205,
+      204,
+      205,
+      205
+    ]
+  },
+  "individual_canvas_px": [
+    256,
+    256
+  ],
+  "background": "transparent RGBA",
+  "style": "SN Visual Baseline V1; hand-painted maritime steampunk pictograms",
+  "assets": [
+    {
+      "id": "nav_market",
+      "atlas_region": [
+        0,
+        0,
+        256,
+        205
+      ],
+      "file": "icons/nav_market.png"
+    },
+    {
+      "id": "nav_contracts",
+      "atlas_region": [
+        256,
+        0,
+        256,
+        205
+      ],
+      "file": "icons/nav_contracts.png"
+    },
+    {
+      "id": "nav_shipyard",
+      "atlas_region": [
+        512,
+        0,
+        256,
+        205
+      ],
+      "file": "icons/nav_shipyard.png"
+    },
+    {
+      "id": "nav_resupply",
+      "atlas_region": [
+        768,
+        0,
+        256,
+        205
+      ],
+      "file": "icons/nav_resupply.png"
+    },
+    {
+      "id": "nav_intelligence",
+      "atlas_region": [
+        1024,
+        0,
+        256,
+        205
+      ],
+      "file": "icons/nav_intelligence.png"
+    },
+    {
+      "id": "nav_chart",
+      "atlas_region": [
+        1280,
+        0,
+        256,
+        205
+      ],
+      "file": "icons/nav_chart.png"
+    },
+    {
+      "id": "nav_departure",
+      "atlas_region": [
+        0,
+        205,
+        256,
+        205
+      ],
+      "file": "icons/nav_departure.png"
+    },
+    {
+      "id": "resource_coal",
+      "atlas_region": [
+        256,
+        205,
+        256,
+        205
+      ],
+      "file": "icons/resource_coal.png"
+    },
+    {
+      "id": "resource_water",
+      "atlas_region": [
+        512,
+        205,
+        256,
+        205
+      ],
+      "file": "icons/resource_water.png"
+    },
+    {
+      "id": "resource_durability",
+      "atlas_region": [
+        768,
+        205,
+        256,
+        205
+      ],
+      "file": "icons/resource_durability.png"
+    },
+    {
+      "id": "resource_cargo",
+      "atlas_region": [
+        1024,
+        205,
+        256,
+        205
+      ],
+      "file": "icons/resource_cargo.png"
+    },
+    {
+      "id": "resource_coins",
+      "atlas_region": [
+        1280,
+        205,
+        256,
+        205
+      ],
+      "file": "icons/resource_coins.png"
+    },
+    {
+      "id": "shipyard_hull",
+      "atlas_region": [
+        0,
+        410,
+        256,
+        204
+      ],
+      "file": "icons/shipyard_hull.png"
+    },
+    {
+      "id": "shipyard_boiler",
+      "atlas_region": [
+        256,
+        410,
+        256,
+        204
+      ],
+      "file": "icons/shipyard_boiler.png"
+    },
+    {
+      "id": "shipyard_cargo",
+      "atlas_region": [
+        512,
+        410,
+        256,
+        204
+      ],
+      "file": "icons/shipyard_cargo.png"
+    },
+    {
+      "id": "shipyard_navigation",
+      "atlas_region": [
+        768,
+        410,
+        256,
+        204
+      ],
+      "file": "icons/shipyard_navigation.png"
+    },
+    {
+      "id": "shipyard_safety",
+      "atlas_region": [
+        1024,
+        410,
+        256,
+        204
+      ],
+      "file": "icons/shipyard_safety.png"
+    },
+    {
+      "id": "shipyard_cabin",
+      "atlas_region": [
+        1280,
+        410,
+        256,
+        204
+      ],
+      "file": "icons/shipyard_cabin.png"
+    },
+    {
+      "id": "action_add",
+      "atlas_region": [
+        0,
+        614,
+        256,
+        205
+      ],
+      "file": "icons/action_add.png"
+    },
+    {
+      "id": "action_remove",
+      "atlas_region": [
+        256,
+        614,
+        256,
+        205
+      ],
+      "file": "icons/action_remove.png"
+    },
+    {
+      "id": "action_confirm",
+      "atlas_region": [
+        512,
+        614,
+        256,
+        205
+      ],
+      "file": "icons/action_confirm.png"
+    },
+    {
+      "id": "status_warning",
+      "atlas_region": [
+        768,
+        614,
+        256,
+        205
+      ],
+      "file": "icons/status_warning.png"
+    },
+    {
+      "id": "status_locked",
+      "atlas_region": [
+        1024,
+        614,
+        256,
+        205
+      ],
+      "file": "icons/status_locked.png"
+    },
+    {
+      "id": "status_unlocked",
+      "atlas_region": [
+        1280,
+        614,
+        256,
+        205
+      ],
+      "file": "icons/status_unlocked.png"
+    },
+    {
+      "id": "status_anchor",
+      "atlas_region": [
+        0,
+        819,
+        256,
+        205
+      ],
+      "file": "icons/status_anchor.png"
+    },
+    {
+      "id": "status_time",
+      "atlas_region": [
+        256,
+        819,
+        256,
+        205
+      ],
+      "file": "icons/status_time.png"
+    },
+    {
+      "id": "status_weather",
+      "atlas_region": [
+        512,
+        819,
+        256,
+        205
+      ],
+      "file": "icons/status_weather.png"
+    },
+    {
+      "id": "status_storm",
+      "atlas_region": [
+        768,
+        819,
+        256,
+        205
+      ],
+      "file": "icons/status_storm.png"
+    },
+    {
+      "id": "status_reputation",
+      "atlas_region": [
+        1024,
+        819,
+        256,
+        205
+      ],
+      "file": "icons/status_reputation.png"
+    },
+    {
+      "id": "status_route",
+      "atlas_region": [
+        1280,
+        819,
+        256,
+        205
+      ],
+      "file": "icons/status_route.png"
+    }
+  ],
+  "aliases": {
+    "shipyard_misc": "nav_shipyard",
+    "currency": "resource_coins",
+    "departure": "nav_departure"
+  }
+}
+

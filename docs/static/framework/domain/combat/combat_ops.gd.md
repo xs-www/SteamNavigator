@@ -9,24 +9,24 @@
 | 符号 | 位置 |
 | --- | --- |
 | `CombatOps` | L1 |
-| `STREAM_COMBAT` | L48 |
-| `MAX_ROUNDS` | L50 |
-| `PLAYER_HIT_POINTS_PER_DURABILITY` | L52 |
-| `PLAYER_ARMOR` | L54 |
-| `PLAYER_RETREAT_RATIO` | L56 |
-| `MIN_DURABILITY_AFTER_DEFEAT` | L58 |
-| `STATUS_DURATION_ROUNDS` | L60 |
-| `STATUS_DAMAGE_PER_ROUND` | L62 |
-| `LOOT_ROLLS_PER_TABLE` | L68 |
-| `WEAPON_SALVAGE_RATIO` | L70 |
-| `MAX_LOG_ENTRIES` | L72 |
-| `resolve(hub: RegistryHub,, ship: Dictionary,, encounter_table: ContentDefinition,, seed_value: int) -> Dictionary` | L78 |
-| `battle_view(battle: Dictionary) -> Dictionary` | L154 |
-| `encounter_summaries(hub: RegistryHub) -> Array` | L159 |
-| `player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array` | L185 |
-| `unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array` | L220 |
-| `status_of(hub: RegistryHub, weapon: ContentDefinition) -> String` | L261 |
-| `armor_pierce_of(hub: RegistryHub, weapon: ContentDefinition) -> float` | L272 |
+| `STREAM_COMBAT` | L49 |
+| `MAX_ROUNDS` | L51 |
+| `PLAYER_HIT_POINTS_PER_DURABILITY` | L53 |
+| `PLAYER_ARMOR` | L55 |
+| `PLAYER_RETREAT_RATIO` | L57 |
+| `MIN_DURABILITY_AFTER_DEFEAT` | L59 |
+| `STATUS_DURATION_ROUNDS` | L61 |
+| `STATUS_DAMAGE_PER_ROUND` | L63 |
+| `LOOT_ROLLS_PER_TABLE` | L69 |
+| `WEAPON_SALVAGE_RATIO` | L71 |
+| `MAX_LOG_ENTRIES` | L73 |
+| `resolve(hub: RegistryHub,, ship: Dictionary,, encounter_table: ContentDefinition,, seed_value: int) -> Dictionary` | L79 |
+| `battle_view(battle: Dictionary) -> Dictionary` | L155 |
+| `encounter_summaries(hub: RegistryHub) -> Array` | L160 |
+| `player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array` | L186 |
+| `unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array` | L219 |
+| `status_of(hub: RegistryHub, weapon: ContentDefinition) -> String` | L259 |
+| `armor_pierce_of(hub: RegistryHub, weapon: ContentDefinition) -> float` | L270 |
 
 武器/伤害类型/敌人原型/能力数据」解析成一次确定性、无状态副作用的自动战斗，输出
 回合日志、双方耐久变化、击沉 / 撤退结论与战利品 roll。
@@ -50,8 +50,8 @@ enemy_archetypes / loot_tables）、`ShipOps.durability_max`、`RngService`。
   `max_durability` 是结构耐久 0–100，敌舰 `hull_points` 是战斗 HP；D1 用固定倍率
   把两者放到同一量级）。战后的结构耐久 = `hp / PLAYER_HIT_POINTS_PER_DURABILITY`，
   击沉时落到 1.0（救援/维修入口沿用现有维修系统）。
-- **玩家护甲**：`PLAYER_ARMOR` 常量。hull Schema 目前没有 armor 字段，等 Phase E/
-  模块 condition 派生后再内容化，注释即 TODO。
+- **玩家护甲**：`PLAYER_ARMOR` 常量。hull Schema 目前没有 armor 字段；模块 condition
+  已在 ShipOps 派生属性中生效，但护甲内容化仍是后续战斗切片。
 - **内容字段消费范围（D1）**：`enemy_archetypes` 的 `hull_points / armor /
   weapon_sockets / combat_ability / loot_table` 参与结算；`max_speed / turn_rate_deg /
   enemy_class` 只写入 battle 视图（战术层后置）。`combat_abilities` 目前只消费
@@ -60,7 +60,8 @@ enemy_archetypes / loot_tables）、`ShipOps.durability_max`、`RngService`。
 - **结局**：`victory`（敌舰全灭）/ `enemy_retreated`（敌舰全部脱离）/ `retreated`
   （玩家耐久比例 ≤ `PLAYER_RETREAT_RATIO` 主动脱离）/ `defeat`（玩家 HP ≤ 0）。
   只有 `victory` 对**已击沉**敌舰 roll 战利品；撤退/击沉玩家不发奖励。
-- **内容缺失诊断（D1-FIX）**：未知 weapon class 的 socket 会被 skip，但同一份
+- **内容缺失诊断（D1-FIX）**：玩家空槽记录 `weapon_not_installed`，未知 weapon class
+  的 socket 会被 skip；同一份
   `battle.diagnostics[]` 会记录 `{side, index?, socket, socket_class,
   reason:"weapon_class_missing"}`；显式 `weapon_loadout` 的 weapon class 与 socket
   class 不匹配同样 skip 并记 `reason:"weapon_class_mismatch"`（与视觉装配的 class

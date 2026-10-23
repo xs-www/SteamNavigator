@@ -24,8 +24,8 @@ extends RefCounted
 ##   `max_durability` 是结构耐久 0–100，敌舰 `hull_points` 是战斗 HP；D1 用固定倍率
 ##   把两者放到同一量级）。战后的结构耐久 = `hp / PLAYER_HIT_POINTS_PER_DURABILITY`，
 ##   击沉时落到 1.0（救援/维修入口沿用现有维修系统）。
-## - **玩家护甲**：`PLAYER_ARMOR` 常量。hull Schema 目前没有 armor 字段，等 Phase E/
-##   模块 condition 派生后再内容化，注释即 TODO。
+## - **玩家护甲**：`PLAYER_ARMOR` 常量。hull Schema 目前没有 armor 字段；模块 condition
+##   已在 ShipOps 派生属性中生效，但护甲内容化仍是后续战斗切片。
 ## - **内容字段消费范围（D1）**：`enemy_archetypes` 的 `hull_points / armor /
 ##   weapon_sockets / combat_ability / loot_table` 参与结算；`max_speed / turn_rate_deg /
 ##   enemy_class` 只写入 battle 视图（战术层后置）。`combat_abilities` 目前只消费
@@ -34,7 +34,8 @@ extends RefCounted
 ## - **结局**：`victory`（敌舰全灭）/ `enemy_retreated`（敌舰全部脱离）/ `retreated`
 ##   （玩家耐久比例 ≤ `PLAYER_RETREAT_RATIO` 主动脱离）/ `defeat`（玩家 HP ≤ 0）。
 ##   只有 `victory` 对**已击沉**敌舰 roll 战利品；撤退/击沉玩家不发奖励。
-## - **内容缺失诊断（D1-FIX）**：未知 weapon class 的 socket 会被 skip，但同一份
+## - **内容缺失诊断（D1-FIX）**：玩家空槽记录 `weapon_not_installed`，未知 weapon class
+##   的 socket 会被 skip；同一份
 ##   `battle.diagnostics[]` 会记录 `{side, index?, socket, socket_class,
 ##   reason:"weapon_class_missing"}`；显式 `weapon_loadout` 的 weapon class 与 socket
 ##   class 不匹配同样 skip 并记 `reason:"weapon_class_mismatch"`（与视觉装配的 class
@@ -176,10 +177,10 @@ static func encounter_summaries(hub: RegistryHub) -> Array:
 	return summaries
 
 
-## Resolves the player's armament: an explicit `ship.weapon_loadout` /
-## `ship.weapons` list wins when it contains resolvable weapon ids whose class fits
-## the hull socket; otherwise every hull socket class maps to the
-## alphabetically-first weapon definition that fits the socket class. Returns rows
+## Resolves the player's armament exclusively from `ship.weapon_loadout` when its
+## weapon ids resolve and fit the hull socket. Empty sockets stay empty: the
+## shipyard purchase/install loop owns player equipment, so combat never grants a
+## registry-default weapon. Returns rows
 ## `{socket, weapon_id, weapon_class, damage}`.
 ## `range` is reported for UI only and never selects or gates a shot.
 static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
@@ -203,8 +204,6 @@ static func player_weapon_rows(hub: RegistryHub, ship: Dictionary) -> Array:
 				weapon = explicit_weapon
 			else:
 				continue
-		else:
-			weapon = _default_weapon_for_socket(hub, socket_class)
 		if weapon == null:
 			continue
 		rows.append(_weapon_row(socket_name, weapon))
@@ -238,12 +237,11 @@ static func unmounted_sockets(hub: RegistryHub, ship: Dictionary) -> Array:
 				"reason": "weapon_class_mismatch",
 			})
 			continue
-		if _default_weapon_for_socket(hub, socket_class) == null:
-			missing.append({
-				"socket": socket_name,
-				"socket_class": socket_class,
-				"reason": "weapon_class_missing",
-			})
+		missing.append({
+			"socket": socket_name,
+			"socket_class": socket_class,
+			"reason": "weapon_class_missing" if _default_weapon_for_socket(hub, socket_class) == null else "weapon_not_installed",
+		})
 	return missing
 
 
@@ -798,8 +796,6 @@ static func _loot_entry_diagnostic(enemy: Dictionary, kind: String, id: String) 
 static func _explicit_loadout(hub: RegistryHub, ship: Dictionary) -> Dictionary:
 	var result := {}
 	var raw: Variant = ship.get("weapon_loadout", null)
-	if raw == null:
-		raw = ship.get("weapons", null)
 	if raw is Array:
 		for item in raw:
 			if not (item is Dictionary):

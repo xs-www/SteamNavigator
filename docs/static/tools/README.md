@@ -39,6 +39,14 @@
 | `godot/verify_port_facilities.gd` | 港口设施锚点 GLB 导入验收（只读）：加载 `assets/models/port/SN_*.glb` 6 件，量测 Godot 侧包围盒 / 三角面 / 材质名，对照工单尺寸与调色板判定。 | [查看](./godot/verify_port_facilities.gd.md) |
 | `godot/verify_props.gd` | 道具 GLB 导入验收（只读）：加载 `assets/models/props/*.glb`，量测 Godot 侧包围盒、三角面与材质名，对照 brief 尺寸判定尺度与轴向。 | [查看](./godot/verify_props.gd.md) |
 | `godot/verify_shared_textures.gd` | 共享贴图建筑 GLB 的只读验收探针：通过 `ContentAssetLoader` 加载 5 栋 `SN_HT_*`，统计每栋 surfaces/tri/材质 albedo `Texture2D` 实例，验证同 cell 跨建筑共享同一实例、不同 cell 不塌缩、全局唯一贴图数 = 唯一 cell 数，并支持松散与挂载 ZIP 两种加载路径。 | [查看](./godot/verify_shared_textures.gd.md) |
+| `modeling/blueprint/README.md` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
+| `modeling/blueprint/apply_hull_blueprints.mjs` | 把离线蓝图线稿接入 Core 船体内容：拷贝 side/top PNG、登记 manifest 资源键、写入 `data.blueprint_views`，并用生成器 metadata 的正交相机把船体武器 socket 的 `position` 投影成 `blueprint` 归一化坐标。 | [查看](./modeling/blueprint/apply_hull_blueprints.mjs.md) |
+| `modeling/blueprint/blueprint_batch.py` | 工业蓝图线稿的外层批处理 CLI；为每个 `.blend` / `.glb` 启动独立 Blender 后台进程， | [查看](./modeling/blueprint/blueprint_batch.py.md) |
+| `modeling/blueprint/blueprint_generator.py` | Blender 后台工业蓝图线稿生成内核；只读加载 `.blend` / `.glb`，自动计算模型边界、 | [查看](./modeling/blueprint/blueprint_generator.py.md) |
+| `modeling/blueprint/config.example.json` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
+| `modeling/blueprint/png_alpha_crop.py` | 对 Blender 输出的 8-bit RGBA PNG 做无第三方依赖的 Alpha 包围框裁切；保留颜色配置块， | [查看](./modeling/blueprint/png_alpha_crop.py.md) |
+| `modeling/blueprint/tests/create_fixture.py` | 蓝图生成器集成测试的确定性蒸汽船 GLB fixture 构建器；仅在临时目录创建低面数船体、 | [查看](./modeling/blueprint/tests/create_fixture.py.md) |
+| `modeling/blueprint/tests/test_smoke.py` | 蓝图生成器可复现端到端测试；临时生成蒸汽船 GLB，经外层批处理调用 Blender 后台渲染， | [查看](./modeling/blueprint/tests/test_smoke.py.md) |
 | `modeling/briefs/IRON_HARBOR_PLAN.md` | 铁港小部件 31 件 / 5 批的工单总表、布局、材质与已知坑。 | 本页 |
 | `modeling/briefs/PORT_FACILITIES_PLAN.md` | 港口设施锚点建模总表：设施→锚点映射、尺寸/tri/材质、已有道具复用、PortStage 装配与验收约定。 | 本页 |
 | `modeling/briefs/_template.json` | 建模工单模板：字段说明与必填项。 | 本页 |
@@ -242,7 +250,7 @@
 | `static_docs_data.mjs` | 静态文档的兼容策展数据：保留尚未迁移文件的职责/契约，并维护模块简介与分组角色。 | [查看](./static_docs_data.mjs.md) |
 | `test.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `tests/static_docs.test.mjs` | 静态文档生成器的 Node 单元测试，守护源码注释解析与符号提取。 | [查看](./tests/static_docs.test.mjs.md) |
-| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。 | [查看](./ui_snapshot.gd.md) |
+| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。 | [查看](./ui_snapshot.gd.md) |
 
 ## 模块契约
 

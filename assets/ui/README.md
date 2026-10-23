@@ -15,6 +15,8 @@ assets/ui/
 
 - `banners/main_menu_harbor.png`：1672×941，主菜单背景。建议用 `TextureRect`，`expand_mode = IGNORE_SIZE`，`stretch_mode = KEEP_ASPECT_COVERED`。
 - `tokens.json`：来自 `.design/tokens.json`，明天做 `SteamNavigatorTheme.tres` 时作为唯一数值来源。
+- `shipyard/ship_section.png`：旧船纵剖图贴图（没有 `blueprint_views` 的船只在改装态回退使用）。
+- `shipyard/blueprint_panel.png`：改装蓝图底板九宫格运行纹理（841×299，取图区域 0.5 倍）。母版与九宫格参数见 `docs/design/ui_controls_v1/blueprint_panel/`；Theme 里是 variation `SNBlueprintPanel`（StyleBoxTexture，边框 56/54、安全区 66/62）。
 
 ## 规划
 

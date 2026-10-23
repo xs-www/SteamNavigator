@@ -141,6 +141,94 @@ func test_repair_cost_includes_module_damage() -> void:
 	assert_true(int(damaged["cost"]) > int(baseline["cost"]), "the repair quote grows with module damage")
 
 
+func test_condition_changes_performance_and_repair_restores_it() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7353})
+	assert_true(bool(started.get("ok", false)), "run starts")
+	var ship := context.state.ship()
+	var baseline := ShipOps.stats(context.registries, ship)
+	var baseline_capacity := ShipOps.cargo_capacity(context.registries, ship)
+	ShipModules.damage(ship, "boiler", 0, 0.5)
+	if not ShipOps.cargo_module_ids(ship).is_empty():
+		ShipModules.damage(ship, "cargo", 0, 0.5)
+	var damaged := ShipOps.stats(context.registries, ship)
+	assert_almost_eq(float(damaged["speed"]), float(baseline["speed"]) * 0.5, 1e-6, "boiler condition scales actual speed")
+	assert_true(float(damaged["cargo_capacity"]) < baseline_capacity, "cargo condition reduces usable capacity")
+	var quote: Dictionary = context.queries.execute(&"supply.view")["data"]["repair"]
+	assert_true(float(quote.get("module_points", 0.0)) > 0.0, "supply quote sees the same module damage")
+	var repaired := context.commands.execute(&"supply.repair", {})
+	assert_true(bool(repaired.get("ok", false)), "repair command closes the damage loop: %s" % repaired)
+	var restored := ShipOps.stats(context.registries, context.state.ship())
+	assert_almost_eq(float(restored["speed"]), float(baseline["speed"]), 1e-6, "repair restores speed")
+	assert_almost_eq(float(restored["cargo_capacity"]), baseline_capacity, 1e-6, "repair restores cargo capacity")
+
+
+func test_shipyard_weapon_purchase_uninstall_and_warehouse_reinstall() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7363})
+	assert_true(bool(started.get("ok", false)), "run starts")
+	assert_true(context.commands.has(&"ship.install_weapon"), "weapon install is registered through FrameworkApi")
+	assert_true(context.commands.has(&"ship.uninstall_weapon"), "weapon uninstall is registered through FrameworkApi")
+	context.state.ship()["coal"] = 0.0
+	context.state.ship()["water"] = 0.0
+	var yard: Dictionary = context.queries.execute(&"shipyard.view")["data"]
+	assert_false((yard.get("weapon_candidates", []) as Array).is_empty(), "shipyard exposes weapon purchase candidates")
+	var candidate: Dictionary = {}
+	for row in yard.get("weapon_candidates", []):
+		if row is Dictionary and bool(row.get("can_install", false)):
+			candidate = row
+			break
+	assert_false(candidate.is_empty(), "at least one starting-hull weapon is affordable and compatible")
+	var before_money := context.state.money()
+	var before_weight := ShipOps.total_weight(context.registries, context.state)
+	var installed := context.commands.execute(&"ship.install_weapon", {
+		"socket": String(candidate.get("socket", "")),
+		"weapon_id": String(candidate.get("weapon_id", "")),
+		"source": "purchase",
+	})
+	assert_true(bool(installed.get("ok", false)), "weapon purchase succeeds: %s" % installed)
+	assert_eq(context.state.money(), before_money - int(candidate.get("price", 0)), "purchase deducts the content price")
+	assert_true(ShipOps.total_weight(context.registries, context.state) > before_weight, "mounted weapon contributes weight")
+	assert_eq(CombatOps.player_weapon_rows(context.registries, context.state.ship()).size(), 1, "combat consumes the same loadout")
+	var socket_name := String(candidate.get("socket", ""))
+	var weapon_id := String(candidate.get("weapon_id", ""))
+	var removed := context.commands.execute(&"ship.uninstall_weapon", {"socket": socket_name})
+	assert_true(bool(removed.get("ok", false)), "weapon uninstalls")
+	assert_eq(WarehouseOps.weapon_qty(context.state, context.state.current_port_id(), weapon_id), 1, "uninstalled weapon enters the current-port warehouse")
+	var money_after_purchase := context.state.money()
+	var reinstalled := context.commands.execute(&"ship.install_weapon", {"socket": socket_name, "weapon_id": weapon_id, "source": "warehouse"})
+	assert_true(bool(reinstalled.get("ok", false)), "warehouse weapon reinstalls")
+	assert_eq(context.state.money(), money_after_purchase, "warehouse reinstall is free")
+	assert_eq(WarehouseOps.weapon_qty(context.state, context.state.current_port_id(), weapon_id), 0, "reinstall consumes the warehouse copy")
+
+
+func test_hull_replacement_returns_incompatible_weapons_to_port_storage() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var started := context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 7373})
+	assert_true(bool(started.get("ok", false)), "run starts")
+	var ship := context.state.ship()
+	ship["coal"] = 0.0
+	ship["water"] = 0.0
+	ship["weapon_loadout"] = [
+		{"socket": "SN_Socket_Weapon_Port_1", "weapon_id": "core:weapon/deck_gun"},
+		{"socket": "SN_Socket_Weapon_Stern", "weapon_id": "core:weapon/repeater"},
+	]
+	context.state.add_money(10000)
+	var unlocks: Array = context.state.player().get("unlocks", [])
+	if not unlocks.has("core:hull/large_efficient"):
+		unlocks.append("core:hull/large_efficient")
+	context.state.player()["unlocks"] = unlocks
+	var replaced := context.commands.execute(&"ship.install_module", {"module_id": "core:hull/large_efficient"})
+	assert_true(bool(replaced.get("ok", false)), "large hull replacement succeeds: %s" % replaced)
+	assert_empty(Array(context.state.ship().get("weapon_loadout", [])), "same-name sockets with incompatible classes and removed sockets are cleared")
+	var port_id := context.state.current_port_id()
+	assert_eq(WarehouseOps.weapon_qty(context.state, port_id, "core:weapon/deck_gun"), 1, "class-incompatible gun returns to storage")
+	assert_eq(WarehouseOps.weapon_qty(context.state, port_id, "core:weapon/repeater"), 1, "weapon from a removed socket returns to storage")
+
+
 func test_conditions_survive_save_load() -> void:
 	var directory := _directory()
 	var boot := bootstrap_core({"save_directory": directory})

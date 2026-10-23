@@ -1,14 +1,17 @@
 class_name WarehouseOps
 extends RefCounted
-## Port warehouses (stored modules + materials) and module transit.
+## @static-doc
+## 作用：港口仓库（模块、材料、武器）与随船运输模块的状态操作；旧存档缺分区时惰性补齐。
 ##
-## Warehouses live at `world.warehouses[port_id] = {modules:{}, materials:{}}`.
+## Warehouses live at `world.warehouses[port_id] = {modules:{}, materials:{}, weapons:{}}`.
 ## Modules that are not installed travel with the ship in `ship.transit_modules`;
 ## they add weight but never occupy cargo capacity. All helpers are pure state
 ## manipulation and never touch content definitions.
+## @end-static-doc
 
 const MODULE_SECTION := "modules"
 const MATERIAL_SECTION := "materials"
+const WEAPON_SECTION := "weapons"
 
 
 ## Idempotently creates warehouses for every port plus ship.transit_modules.
@@ -26,7 +29,7 @@ static func ensure_structure(state: GameState) -> void:
 			var port_id := String(raw_port_id)
 			var entry: Variant = warehouses.get(port_id, null)
 			if not (entry is Dictionary):
-				warehouses[port_id] = {MODULE_SECTION: {}, MATERIAL_SECTION: {}}
+				warehouses[port_id] = {MODULE_SECTION: {}, MATERIAL_SECTION: {}, WEAPON_SECTION: {}}
 				continue
 			_ensure_sections(entry)
 	if not (state.data.get("ship", null) is Dictionary):
@@ -40,13 +43,13 @@ static func ensure_structure(state: GameState) -> void:
 static func warehouse(state: GameState, port_id: String) -> Dictionary:
 	var world: Variant = state.data.get("world", null)
 	if not (world is Dictionary):
-		return {MODULE_SECTION: {}, MATERIAL_SECTION: {}}
+		return {MODULE_SECTION: {}, MATERIAL_SECTION: {}, WEAPON_SECTION: {}}
 	var warehouses: Variant = world.get("warehouses", null)
 	if not (warehouses is Dictionary):
-		return {MODULE_SECTION: {}, MATERIAL_SECTION: {}}
+		return {MODULE_SECTION: {}, MATERIAL_SECTION: {}, WEAPON_SECTION: {}}
 	var entry: Variant = warehouses.get(port_id, null)
 	if not (entry is Dictionary):
-		return {MODULE_SECTION: {}, MATERIAL_SECTION: {}}
+		return {MODULE_SECTION: {}, MATERIAL_SECTION: {}, WEAPON_SECTION: {}}
 	return entry
 
 
@@ -58,6 +61,11 @@ static func module_qty(state: GameState, port_id: String, module_id: String) -> 
 static func material_amount(state: GameState, port_id: String, item_id: String) -> int:
 	var materials := _section(warehouse(state, port_id), MATERIAL_SECTION)
 	return int(materials.get(item_id, 0))
+
+
+static func weapon_qty(state: GameState, port_id: String, weapon_id: String) -> int:
+	var weapons := _section(warehouse(state, port_id), WEAPON_SECTION)
+	return int(weapons.get(weapon_id, 0))
 
 
 static func transit_modules(ship: Dictionary) -> Dictionary:
@@ -257,6 +265,26 @@ static func remove_module(state: GameState, port_id: String, module_id: String, 
 	return remaining
 
 
+static func add_weapon(state: GameState, port_id: String, weapon_id: String, qty: int = 1) -> int:
+	ensure_structure(state)
+	var entry := _warehouse_entry(state, port_id)
+	var weapons: Dictionary = entry[WEAPON_SECTION]
+	weapons[weapon_id] = int(weapons.get(weapon_id, 0)) + maxi(0, qty)
+	return int(weapons[weapon_id])
+
+
+static func remove_weapon(state: GameState, port_id: String, weapon_id: String, qty: int = 1) -> int:
+	ensure_structure(state)
+	var entry := _warehouse_entry(state, port_id)
+	var weapons: Dictionary = entry[WEAPON_SECTION]
+	var remaining := maxi(0, int(weapons.get(weapon_id, 0)) - maxi(0, qty))
+	if remaining <= 0:
+		weapons.erase(weapon_id)
+	else:
+		weapons[weapon_id] = remaining
+	return remaining
+
+
 ## Adds material units to a port warehouse; returns the new stored amount.
 static func add_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int:
 	ensure_structure(state)
@@ -287,7 +315,7 @@ static func _warehouse_entry(state: GameState, port_id: String) -> Dictionary:
 	var warehouses: Dictionary = state.world()["warehouses"]
 	var entry: Variant = warehouses.get(port_id, null)
 	if not (entry is Dictionary):
-		entry = {MODULE_SECTION: {}, MATERIAL_SECTION: {}}
+		entry = {MODULE_SECTION: {}, MATERIAL_SECTION: {}, WEAPON_SECTION: {}}
 		warehouses[port_id] = entry
 	_ensure_sections(entry)
 	return entry
@@ -298,6 +326,8 @@ static func _ensure_sections(entry: Dictionary) -> void:
 		entry[MODULE_SECTION] = {}
 	if not (entry.get(MATERIAL_SECTION, null) is Dictionary):
 		entry[MATERIAL_SECTION] = {}
+	if not (entry.get(WEAPON_SECTION, null) is Dictionary):
+		entry[WEAPON_SECTION] = {}
 
 
 static func _section(entry: Dictionary, key: String) -> Dictionary:

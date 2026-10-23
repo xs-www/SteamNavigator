@@ -18,7 +18,7 @@ const STEADY_BUILD := "core:starting_scenario/steady"
 const MODE_EXTERIOR := 0
 const MODE_CUTAWAY := 1
 const SHIP_THUMB_SIZE := Vector2(210, 118)
-const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin"]
+const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin", "weapons"]
 ## Section titles of the deleted lower panels, by localization key. None of them
 ## may be rendered on the new shipyard page, in normal or refit mode.
 const LEGACY_SECTION_KEYS := [
@@ -92,6 +92,15 @@ func _nodes_with_script(root: Node, script: Script, out: Array = []) -> Array:
 		if child.get_script() == script:
 			out.append(child)
 		_nodes_with_script(child, script, out)
+	return out
+
+
+## Every Control that selects a Theme variation by name (e.g. the blueprint board).
+func _nodes_with_variation(root: Node, variation: StringName, out: Array = []) -> Array:
+	for child in root.get_children():
+		if child is Control and (child as Control).theme_type_variation == variation:
+			out.append(child)
+		_nodes_with_variation(child, variation, out)
 	return out
 
 
@@ -225,12 +234,23 @@ func test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> vo
 		if target.visible:
 			visible_chips += 1
 	assert_eq(visible_chips, _expected_slot_count(context), "every slot chip is visible on the cutaway")
-	assert_eq(String((refit_button as Button).text), shell._tr("ui.label.refit_done", "完成改装"), "the toggle now offers 完成改装")
+	# The refit page rebuilds the toggle inside the operations dock header.
+	var refit_done_button: Variant = screen.get("_refit_button")
+	assert_true(refit_done_button is Button, "refit mode keeps a refit toggle")
+	if refit_done_button is Button:
+		assert_eq(String((refit_done_button as Button).text), shell._tr("ui.label.refit_done", "完成改装"), "the toggle now offers 完成改装")
 	var labels := _label_texts(shell._root_box)
-	assert_contains(labels, shell._tr("ui.label.category_tabs", "部件分类"), "refit shows the vertical category tabs")
-	assert_not_null(_button_with_text(shell._root_box, shell._tr("ui.category.misc", "杂项")), "the vertical tabs include 杂项")
+	assert_contains(labels, shell._tr("ui.label.category_tabs", "部件分类"), "refit shows the category picker")
+	assert_not_null(_button_with_text(shell._root_box, shell._tr("ui.category.misc", "杂项")), "the category picker includes 杂项")
 	assert_contains(labels, shell._tr("ui.label.section_slots", "槽位"), "the hulls category lists its slot")
-	assert_contains(labels, shell._tr("ui.label.craft_section", "按配方打造"), "the hulls category keeps the craft entry")
+	# Buying and crafting live in their own tabs: the install tab must not mix
+	# them, and the craft tab must show the recipe section once selected.
+	assert_false(labels.has(shell._tr("ui.label.craft_section", "按配方打造")), "the install tab does not mix craft entries")
+	assert_not_null(_button_with_text(shell._root_box, shell._tr("ui.tab.buy", "购买")), "the dock offers a separate buy tab")
+	screen.set_tab("craft")
+	assert_contains(_label_texts(shell._root_box), shell._tr("ui.label.craft_section", "按配方打造"), "the craft tab lists the recipes")
+	assert_false(_label_texts(shell._root_box).has(shell._tr("ui.label.section_slots", "槽位")), "the craft tab does not repeat the install cards")
+	screen.set_tab("install")
 	_assert_no_legacy_sections(shell)
 	# Category switching is synchronous and reported to the shell.
 	screen.set_category("cargo")
@@ -296,6 +316,66 @@ func test_cutaway_uses_the_authored_section_texture() -> void:
 	assert_true(bool(stage.has_section_texture()), "the cutaway loaded the authored section texture instead of the placeholder")
 	var texture_size: Vector2 = stage.section_texture_size()
 	assert_true(texture_size.x > 0.0 and texture_size.y > 0.0, "the section texture reports a real pixel size: %s" % str(texture_size))
+	_unmount(bundle)
+
+
+## 改装蓝图底板：`docs/design/ui_controls_v1/blueprint_panel/` 记录的九宫格在 Godot
+## 里的落点。底板 = Theme variation + StyleBoxTexture（取图区域 0.5 倍），改装态左列
+## 换成该材质、舞台只画线稿；正常态与无 blueprint_views 的旧船仍用普通面板。
+func test_refit_blueprint_board_uses_the_nine_slice_panel() -> void:
+	var bundle := _mount(5211)
+	var shell: Control = bundle["shell"]
+	var ui_theme: Theme = shell.theme
+	assert_not_null(ui_theme, "the shell applies the shared UI theme")
+	if ui_theme != null:
+		assert_eq(String(ui_theme.get_type_variation_base(&"SNBlueprintPanel")), "PanelContainer",
+			"SNBlueprintPanel is a PanelContainer variation")
+		var style: Variant = ui_theme.get_stylebox(&"panel", &"SNBlueprintPanel")
+		assert_true(style is StyleBoxTexture, "the blueprint board is a nine-slice StyleBoxTexture")
+		if style is StyleBoxTexture:
+			var board := style as StyleBoxTexture
+			assert_not_null(board.texture, "the board stylebox binds the authored panel PNG")
+			if board.texture != null:
+				assert_eq(board.texture.resource_path, "res://assets/ui/shipyard/blueprint_panel.png",
+					"the board uses the runtime half-scale crop of the authored panel")
+				assert_eq(board.texture.get_size(), Vector2(841, 299),
+					"the asset is the 1682x598 layout.json region at 0.5 scale")
+			# layout.json：九宫格 L/T/R/B 112/108/112/108 → 56/54；安全区 132/124 → 66/62。
+			assert_true(is_equal_approx(board.texture_margin_left, 56.0), "left slice margin is half of 112")
+			assert_true(is_equal_approx(board.texture_margin_top, 54.0), "top slice margin is half of 108")
+			assert_true(is_equal_approx(board.texture_margin_right, 56.0), "right slice margin matches the left one")
+			assert_true(is_equal_approx(board.texture_margin_bottom, 54.0), "bottom slice margin matches the top one")
+			assert_true(is_equal_approx(board.content_margin_left, 66.0), "content safe inset is half of 132")
+			assert_true(is_equal_approx(board.content_margin_top, 62.0), "content safe inset is half of 124")
+			assert_true(board.content_margin_left > board.texture_margin_left,
+				"the safe area still leaves space between the frame and the content")
+			assert_true(board.content_margin_top > board.texture_margin_top,
+				"the safe area still leaves space between the frame and the content")
+	var screen := _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	assert_eq(_nodes_with_variation(shell._root_box, &"SNBlueprintPanel").size(), 0,
+		"normal mode keeps the elevated panel instead of the blueprint board")
+	var normal_stage: Variant = screen.get("_stage")
+	assert_false(bool(normal_stage.uses_blueprint_backdrop()),
+		"the exterior stage never paints onto a board")
+	var refit_button: Variant = screen.get("_refit_button")
+	if refit_button is Button:
+		(refit_button as Button).emit_signal("pressed")
+	var boards := _nodes_with_variation(shell._root_box, &"SNBlueprintPanel")
+	assert_eq(boards.size(), 1, "refit mode swaps exactly one column onto the nine-slice board")
+	var refit_stage: Variant = screen.get("_stage")
+	assert_not_null(refit_stage, "refit mode mounts the cutaway stage")
+	if refit_stage != null:
+		assert_true(bool(refit_stage.has_blueprint_views()), "the fixture hull ships line art for the board")
+		assert_true(bool(refit_stage.uses_blueprint_backdrop()),
+			"the line-art stage leaves the frame and blue field to the board")
+		if not boards.is_empty():
+			var board_node: Control = boards[0]
+			var stage_control := refit_stage as Control
+			assert_true(board_node.size.x >= stage_control.size.x, "the board wraps the stage horizontally")
+			assert_true(board_node.size.y >= stage_control.size.y, "the board wraps the stage vertically")
 	_unmount(bundle)
 
 
@@ -447,6 +527,21 @@ func test_category_navigation_switches_operations_and_misc_hosts_actions() -> vo
 	# Boiler: the boiler slot card belongs to its own category.
 	screen.set_category("boiler")
 	assert_contains(_label_texts(shell._root_box), shell._tr("ui.label.slot_boiler", "锅炉槽"), "the boiler category shows the boiler slot")
+	# Weapons: hull sockets live in the install tab, purchase actions in the buy tab.
+	screen.set_category("weapons")
+	labels = _label_texts(shell._root_box)
+	assert_contains(labels, "武器槽位", "the weapons category lists hull sockets")
+	var first_socket := String(view["ship"]["weapon_sockets"][0]["socket"])
+	var socket_visible := false
+	for label_text in labels:
+		if String(label_text).contains(first_socket):
+			socket_visible = true
+			break
+	assert_true(socket_visible, "the first real hull socket is visible")
+	assert_false(labels.has("购买并安装"), "the install tab does not list purchase cards")
+	screen.set_tab("buy")
+	assert_contains(_label_texts(shell._root_box), "购买并安装", "the buy tab exposes shipyard purchase actions")
+	screen.set_tab("install")
 	# Misc: everything that used to live in the deleted lower panels.
 	screen.set_category("misc")
 	labels = _label_texts(shell._root_box)
@@ -460,9 +555,112 @@ func test_category_navigation_switches_operations_and_misc_hosts_actions() -> vo
 			assert_not_null(_button_with_text(shell._root_box, "%d h" % hours), "杂项 offers the %d h port wait" % hours)
 	assert_false(labels.has(shell._tr("ui.label.craft_section", "按配方打造")), "craft buttons live in the module categories, not in 杂项")
 	assert_false(labels.has(shell._tr("ui.label.section_slots", "槽位")), "杂项 shows operations, not slot cards")
-	# Craft entry stays in the module type's category.
+	# Craft entry stays in the module type's category, inside the craft tab.
 	screen.set_category("hulls")
+	screen.set_tab("craft")
 	assert_contains(_label_texts(shell._root_box), shell._tr("ui.label.craft_section", "按配方打造"), "the hulls category keeps the craft section")
+	_unmount(bundle)
+
+
+## 新版改装页：左侧蓝图 / 中间 3D 窗口 / 右侧操作坞，舰船整体数据进坞，
+## 购买与打造是独立页签，且不再出现测试向文案（改装蓝图 / 蓝图线稿 / 贴图剖面）。
+func test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void:
+	var bundle := _mount(5212)
+	var shell: Control = bundle["shell"]
+	var screen := _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	var refit_button: Variant = screen.get("_refit_button")
+	if refit_button is Button:
+		(refit_button as Button).emit_signal("pressed")
+	var body: Variant = screen.get("_body")
+	assert_not_null(body, "the refit page owns a body row")
+	if body != null:
+		assert_eq((body as Control).get_child_count(), 3, "the refit page is blueprint / 3D window / dock")
+		assert_not_null(_node_named(body, "StageWindow"), "the middle column keeps an open window onto the 3D scene")
+		assert_not_null(_node_named(body, "RefitDock"), "the right column is the operations dock")
+	var labels := _label_texts(shell._root_box)
+	for key in ["ui.label.stage_blueprint", "ui.tag.blueprint_lineart", "ui.tag.section_texture", "ui.shipyard.detail"]:
+		var text := String(shell._tr(key, ""))
+		assert_false(text.is_empty(), "%s stays localized for the regression scan" % key)
+		assert_false(labels.has(text), "the refit page no longer shows the test label '%s'" % text)
+	for key in ["ui.label.ship_stats", "ui.label.weight_short", "ui.label.durability_short"]:
+		assert_contains(labels, shell._tr(key, ""), "the dock shows the ship data field %s" % key)
+	for tab_key in ["ui.tab.install", "ui.tab.buy", "ui.tab.craft"]:
+		assert_not_null(_button_with_text(shell._root_box, shell._tr(tab_key, "")), "the dock offers the %s tab" % tab_key)
+	assert_eq(String(screen.get("_tab")), "install", "the dock opens on the install tab")
+	assert_contains(labels, shell._tr("ui.label.category_tabs", "部件分类"), "the dock keeps the category picker")
+	_unmount(bundle)
+
+
+func _node_named(root: Node, node_name: String) -> Node:
+	for child in root.get_children():
+		if String(child.name) == node_name:
+			return child
+		var found := _node_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void:
+	var bundle := _mount(5209)
+	var context: AppContext = bundle["context"]
+	var view: Dictionary = context.queries.execute(&"shipyard.view")["data"]
+	var sockets: Array = view["ship"]["weapon_sockets"]
+	assert_false(sockets.is_empty(), "the fixture hull exposes weapon sockets")
+	for socket in sockets:
+		assert_true(socket is Dictionary, "every weapon socket row is a dictionary")
+		if not (socket is Dictionary):
+			continue
+		var blueprint: Variant = socket.get("blueprint", null)
+		assert_true(blueprint is Dictionary, "%s projects its blueprint position" % String(socket.get("socket", "")))
+		if blueprint is Dictionary:
+			for blueprint_view in ["side", "top"]:
+				var point: Variant = blueprint.get(blueprint_view, null)
+				assert_true(point is Array and point.size() == 2, "%s has a %s Vector2" % [String(socket.get("socket", "")), blueprint_view])
+				if point is Array and point.size() == 2:
+					assert_true(float(point[0]) >= 0.0 and float(point[0]) <= 1.0, "%s x is normalized" % blueprint_view)
+					assert_true(float(point[1]) >= 0.0 and float(point[1]) <= 1.0, "%s y is normalized" % blueprint_view)
+	var screen := _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	screen.set_category("weapons")
+	var stage: Control = screen.get("_stage")
+	assert_true(bool(stage.has_blueprint_views()), "the core hull binds per-view line art")
+	var side_texture_size: Vector2 = stage.blueprint_texture_size("side")
+	var top_texture_size: Vector2 = stage.blueprint_texture_size("top")
+	assert_true(side_texture_size.x > 0.0 and side_texture_size.y > 0.0, "the side line art loaded: %s" % str(side_texture_size))
+	assert_true(top_texture_size.x > 0.0 and top_texture_size.y > 0.0, "the top line art loaded: %s" % str(top_texture_size))
+	var side_region: Rect2 = stage.blueprint_view_rect("side")
+	var top_region: Rect2 = stage.blueprint_view_rect("top")
+	assert_true(side_region.size.x > 0.0 and side_region.size.y > 0.0, "the side view has an on-screen rect")
+	assert_true(top_region.size.x > 0.0 and top_region.size.y > 0.0, "the top view has an on-screen rect")
+	assert_true(top_region.position.y >= side_region.position.y + side_region.size.y, "the top view is stacked below the side view")
+	assert_true(absf(side_region.size.x - top_region.size.x) < 0.5, "both views share the same width for x alignment")
+	assert_true(absf(side_region.position.x - top_region.position.x) < 0.5, "both views share the same left edge for x alignment")
+	var side_rects: Dictionary = stage.blueprint_socket_rects("side")
+	var top_rects: Dictionary = stage.blueprint_socket_rects("top")
+	assert_eq(side_rects.size(), sockets.size(), "side blueprint draws one frame per hull weapon socket")
+	assert_eq(top_rects.size(), sockets.size(), "top blueprint resolves the same authored sockets")
+	for rect in side_rects.values():
+		assert_true(side_region.encloses(rect), "every side socket frame stays inside the side view rect")
+	for rect in top_rects.values():
+		assert_true(top_region.encloses(rect), "every top socket frame stays inside the top view rect")
+	var first: Dictionary = sockets[0]
+	var first_blueprint: Dictionary = first.get("blueprint", {})
+	var first_side: Array = first_blueprint.get("side", [])
+	if first_side.size() == 2:
+		var expected_center: Vector2 = side_region.position + Vector2(
+			float(first_side[0]) * side_region.size.x,
+			float(first_side[1]) * side_region.size.y
+		)
+		var frame: Rect2 = side_rects[String(first.get("socket", ""))]
+		assert_true(frame.get_center().distance_to(expected_center) < 0.5,
+			"socket frames map through the line-art rect")
+	assert_eq(stage.get("_highlighted_slot_ids").size(), sockets.size(), "opening the weapons category highlights every socket frame")
 	_unmount(bundle)
 
 

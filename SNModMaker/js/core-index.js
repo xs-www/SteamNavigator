@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-23T05:36:19.077Z",
+    "generated_at": "2026-10-23T11:23:24.732Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -196,7 +196,15 @@
         "model.building.smelter": "assets/models/base/SN_Base_Smelter.glb",
         "model.building.foundry": "assets/models/base/SN_Base_Foundry.glb",
         "model.building.stockyard": "assets/models/base/SN_Base_Stockyard.glb",
-        "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb"
+        "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb",
+        "blueprint.ship.small_efficient.side": "assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.side.png",
+        "blueprint.ship.small_efficient.top": "assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.top.png",
+        "blueprint.ship.medium_standard.side": "assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.side.png",
+        "blueprint.ship.medium_standard.top": "assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.top.png",
+        "blueprint.ship.large_efficient.side": "assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.side.png",
+        "blueprint.ship.large_efficient.top": "assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.top.png",
+        "blueprint.ship.large_performance.side": "assets/blueprints/ships/SN_Ironclad/SN_Ironclad.side.png",
+        "blueprint.ship.large_performance.top": "assets/blueprints/ships/SN_Ironclad/SN_Ironclad.top.png"
       },
       "authors": [
         "Steam Navigator Team",
@@ -523,6 +531,16 @@
                   "name": "SN_Socket_Weapon_Port_1",
                   "socket_class": "Light",
                   "socket_index": 0,
+                  "blueprint": {
+                    "side": [
+                      0.8632,
+                      0.6607
+                    ],
+                    "top": [
+                      0.8632,
+                      0.4257
+                    ]
+                  },
                   "position": [
                     9.6,
                     0.8,
@@ -538,6 +556,16 @@
                   "name": "SN_Socket_Weapon_Starboard_1",
                   "socket_class": "Light",
                   "socket_index": 1,
+                  "blueprint": {
+                    "side": [
+                      0.8632,
+                      0.6607
+                    ],
+                    "top": [
+                      0.8632,
+                      0.5743
+                    ]
+                  },
                   "position": [
                     9.6,
                     -0.8,
@@ -553,6 +581,16 @@
                   "name": "SN_Socket_Weapon_Stern",
                   "socket_class": "Medium",
                   "socket_index": 2,
+                  "blueprint": {
+                    "side": [
+                      0.1638,
+                      0.5397
+                    ],
+                    "top": [
+                      0.1638,
+                      0.4628
+                    ]
+                  },
                   "position": [
                     -9,
                     0.4,
@@ -564,7 +602,21 @@
                   "clearance_h": 20,
                   "mount_scale": 1
                 }
-              ]
+              ],
+              "blueprint_views": {
+                "side": {
+                  "image": "blueprint.ship.small_efficient.side",
+                  "width": 2016,
+                  "height": 946,
+                  "space": "trimmed"
+                },
+                "top": {
+                  "image": "blueprint.ship.small_efficient.top",
+                  "width": 2016,
+                  "height": 816,
+                  "space": "trimmed"
+                }
+              }
             }
           },
           {
@@ -609,6 +661,16 @@
                   "name": "SN_Socket_Weapon_Port_1",
                   "socket_class": "Light",
                   "socket_index": 0,
+                  "blueprint": {
+                    "side": [
+                      0.1548,
+                      0.7569
+                    ],
+                    "top": [
+                      0.1549,
+                      0.3546
+                    ]
+                  },
                   "position": [
                     -8.6,
                     1.4,
@@ -624,6 +686,16 @@
                   "name": "SN_Socket_Weapon_Starboard_1",
                   "socket_class": "Light",
                   "socket_index": 1,
+                  "blueprint": {
+                    "side": [
+                      0.1548,
+                      0.7569
+                    ],
+                    "top": [
+                      0.1549,
+                      0.6454
+                    ]
+                  },
                   "position": [
                     -8.6,
                     -1.4,
@@ -639,6 +711,16 @@
                   "name": "SN_Socket_Weapon_Bow",
                   "socket_class": "Medium",
                   "socket_index": 2,
+                  "blueprint": {
+                    "side": [
+                      0.6684,
+                      0.7633
+                    ],
+                    "top": [
+                      0.6688,
+                      0.4792
+                    ]
+                  },
                   "position": [
                     10,
                     0.2,
@@ -740,6 +822,20 @@
                   "SN_SF_Mast_Main"
                 ],
                 "mast_asset": "model.rig.mast_sail"
+              },
+              "blueprint_views": {
+                "side": {
+                  "image": "blueprint.ship.medium_standard.side",
+                  "width": 2016,
+                  "height": 1646,
+                  "space": "trimmed"
+                },
+                "top": {
+                  "image": "blueprint.ship.medium_standard.top",
+                  "width": 2015,
+                  "height": 536,
+                  "space": "trimmed"
+                }
               }
             }
           },
@@ -789,6 +885,16 @@
                   "name": "SN_Socket_Weapon_Port_1",
                   "socket_class": "Side",
                   "socket_index": 0,
+                  "blueprint": {
+                    "side": [
+                      0.6821,
+                      0.6511
+                    ],
+                    "top": [
+                      0.6824,
+                      0.3789
+                    ]
+                  },
                   "position": [
                     13,
                     2.3,
@@ -804,6 +910,16 @@
                   "name": "SN_Socket_Weapon_Starboard_1",
                   "socket_class": "Side",
                   "socket_index": 1,
+                  "blueprint": {
+                    "side": [
+                      0.6821,
+                      0.6511
+                    ],
+                    "top": [
+                      0.6824,
+                      0.6211
+                    ]
+                  },
                   "position": [
                     13,
                     -2.3,
@@ -819,6 +935,16 @@
                   "name": "SN_Socket_Weapon_Port_2",
                   "socket_class": "Light",
                   "socket_index": 2,
+                  "blueprint": {
+                    "side": [
+                      0.2632,
+                      0.6548
+                    ],
+                    "top": [
+                      0.2633,
+                      0.3842
+                    ]
+                  },
                   "position": [
                     -14,
                     2.2,
@@ -834,6 +960,16 @@
                   "name": "SN_Socket_Weapon_Starboard_2",
                   "socket_class": "Light",
                   "socket_index": 3,
+                  "blueprint": {
+                    "side": [
+                      0.2632,
+                      0.6548
+                    ],
+                    "top": [
+                      0.2633,
+                      0.6158
+                    ]
+                  },
                   "position": [
                     -14,
                     -2.2,
@@ -927,6 +1063,20 @@
                 ],
                 "mast_asset": "model.rig.mast_steam",
                 "yard_asset": "model.rig.yard"
+              },
+              "blueprint_views": {
+                "side": {
+                  "image": "blueprint.ship.large_efficient.side",
+                  "width": 2016,
+                  "height": 765,
+                  "space": "trimmed"
+                },
+                "top": {
+                  "image": "blueprint.ship.large_efficient.top",
+                  "width": 2015,
+                  "height": 594,
+                  "space": "trimmed"
+                }
               }
             }
           },
@@ -976,6 +1126,16 @@
                   "name": "SN_Socket_Weapon_Port_1",
                   "socket_class": "Heavy",
                   "socket_index": 0,
+                  "blueprint": {
+                    "side": [
+                      0.6848,
+                      0.6643
+                    ],
+                    "top": [
+                      0.6851,
+                      0.3643
+                    ]
+                  },
                   "position": [
                     13.5,
                     3.1,
@@ -991,6 +1151,16 @@
                   "name": "SN_Socket_Weapon_Starboard_1",
                   "socket_class": "Heavy",
                   "socket_index": 1,
+                  "blueprint": {
+                    "side": [
+                      0.6848,
+                      0.6643
+                    ],
+                    "top": [
+                      0.6851,
+                      0.6343
+                    ]
+                  },
                   "position": [
                     13.5,
                     -3.1,
@@ -1006,6 +1176,16 @@
                   "name": "SN_Socket_Weapon_Port_2",
                   "socket_class": "Medium",
                   "socket_index": 2,
+                  "blueprint": {
+                    "side": [
+                      0.2087,
+                      0.6643
+                    ],
+                    "top": [
+                      0.2088,
+                      0.3861
+                    ]
+                  },
                   "position": [
                     -17.5,
                     2.6,
@@ -1021,6 +1201,16 @@
                   "name": "SN_Socket_Weapon_Starboard_2",
                   "socket_class": "Medium",
                   "socket_index": 3,
+                  "blueprint": {
+                    "side": [
+                      0.2087,
+                      0.6643
+                    ],
+                    "top": [
+                      0.2088,
+                      0.6125
+                    ]
+                  },
                   "position": [
                     -17.5,
                     -2.6,
@@ -1133,7 +1323,21 @@
                     12.34
                   ]
                 }
-              ]
+              ],
+              "blueprint_views": {
+                "side": {
+                  "image": "blueprint.ship.large_performance.side",
+                  "width": 2016,
+                  "height": 1040,
+                  "space": "trimmed"
+                },
+                "top": {
+                  "image": "blueprint.ship.large_performance.top",
+                  "width": 2015,
+                  "height": 711,
+                  "space": "trimmed"
+                }
+              }
             }
           }
         ]
@@ -7829,6 +8033,16 @@
                 "name": "SN_Socket_Weapon_Port_1",
                 "socket_class": "Light",
                 "socket_index": 0,
+                "blueprint": {
+                  "side": [
+                    0.8632,
+                    0.6607
+                  ],
+                  "top": [
+                    0.8632,
+                    0.4257
+                  ]
+                },
                 "position": [
                   9.6,
                   0.8,
@@ -7844,6 +8058,16 @@
                 "name": "SN_Socket_Weapon_Starboard_1",
                 "socket_class": "Light",
                 "socket_index": 1,
+                "blueprint": {
+                  "side": [
+                    0.8632,
+                    0.6607
+                  ],
+                  "top": [
+                    0.8632,
+                    0.5743
+                  ]
+                },
                 "position": [
                   9.6,
                   -0.8,
@@ -7859,6 +8083,16 @@
                 "name": "SN_Socket_Weapon_Stern",
                 "socket_class": "Medium",
                 "socket_index": 2,
+                "blueprint": {
+                  "side": [
+                    0.1638,
+                    0.5397
+                  ],
+                  "top": [
+                    0.1638,
+                    0.4628
+                  ]
+                },
                 "position": [
                   -9,
                   0.4,
@@ -7870,7 +8104,21 @@
                 "clearance_h": 20,
                 "mount_scale": 1
               }
-            ]
+            ],
+            "blueprint_views": {
+              "side": {
+                "image": "blueprint.ship.small_efficient.side",
+                "width": 2016,
+                "height": 946,
+                "space": "trimmed"
+              },
+              "top": {
+                "image": "blueprint.ship.small_efficient.top",
+                "width": 2016,
+                "height": 816,
+                "space": "trimmed"
+              }
+            }
           }
         }
       },
@@ -7929,6 +8177,16 @@
                 "name": "SN_Socket_Weapon_Port_1",
                 "socket_class": "Light",
                 "socket_index": 0,
+                "blueprint": {
+                  "side": [
+                    0.1548,
+                    0.7569
+                  ],
+                  "top": [
+                    0.1549,
+                    0.3546
+                  ]
+                },
                 "position": [
                   -8.6,
                   1.4,
@@ -7944,6 +8202,16 @@
                 "name": "SN_Socket_Weapon_Starboard_1",
                 "socket_class": "Light",
                 "socket_index": 1,
+                "blueprint": {
+                  "side": [
+                    0.1548,
+                    0.7569
+                  ],
+                  "top": [
+                    0.1549,
+                    0.6454
+                  ]
+                },
                 "position": [
                   -8.6,
                   -1.4,
@@ -7959,6 +8227,16 @@
                 "name": "SN_Socket_Weapon_Bow",
                 "socket_class": "Medium",
                 "socket_index": 2,
+                "blueprint": {
+                  "side": [
+                    0.6684,
+                    0.7633
+                  ],
+                  "top": [
+                    0.6688,
+                    0.4792
+                  ]
+                },
                 "position": [
                   10,
                   0.2,
@@ -8060,6 +8338,20 @@
                 "SN_SF_Mast_Main"
               ],
               "mast_asset": "model.rig.mast_sail"
+            },
+            "blueprint_views": {
+              "side": {
+                "image": "blueprint.ship.medium_standard.side",
+                "width": 2016,
+                "height": 1646,
+                "space": "trimmed"
+              },
+              "top": {
+                "image": "blueprint.ship.medium_standard.top",
+                "width": 2015,
+                "height": 536,
+                "space": "trimmed"
+              }
             }
           }
         }
@@ -8123,6 +8415,16 @@
                 "name": "SN_Socket_Weapon_Port_1",
                 "socket_class": "Side",
                 "socket_index": 0,
+                "blueprint": {
+                  "side": [
+                    0.6821,
+                    0.6511
+                  ],
+                  "top": [
+                    0.6824,
+                    0.3789
+                  ]
+                },
                 "position": [
                   13,
                   2.3,
@@ -8138,6 +8440,16 @@
                 "name": "SN_Socket_Weapon_Starboard_1",
                 "socket_class": "Side",
                 "socket_index": 1,
+                "blueprint": {
+                  "side": [
+                    0.6821,
+                    0.6511
+                  ],
+                  "top": [
+                    0.6824,
+                    0.6211
+                  ]
+                },
                 "position": [
                   13,
                   -2.3,
@@ -8153,6 +8465,16 @@
                 "name": "SN_Socket_Weapon_Port_2",
                 "socket_class": "Light",
                 "socket_index": 2,
+                "blueprint": {
+                  "side": [
+                    0.2632,
+                    0.6548
+                  ],
+                  "top": [
+                    0.2633,
+                    0.3842
+                  ]
+                },
                 "position": [
                   -14,
                   2.2,
@@ -8168,6 +8490,16 @@
                 "name": "SN_Socket_Weapon_Starboard_2",
                 "socket_class": "Light",
                 "socket_index": 3,
+                "blueprint": {
+                  "side": [
+                    0.2632,
+                    0.6548
+                  ],
+                  "top": [
+                    0.2633,
+                    0.6158
+                  ]
+                },
                 "position": [
                   -14,
                   -2.2,
@@ -8261,6 +8593,20 @@
               ],
               "mast_asset": "model.rig.mast_steam",
               "yard_asset": "model.rig.yard"
+            },
+            "blueprint_views": {
+              "side": {
+                "image": "blueprint.ship.large_efficient.side",
+                "width": 2016,
+                "height": 765,
+                "space": "trimmed"
+              },
+              "top": {
+                "image": "blueprint.ship.large_efficient.top",
+                "width": 2015,
+                "height": 594,
+                "space": "trimmed"
+              }
             }
           }
         }
@@ -8324,6 +8670,16 @@
                 "name": "SN_Socket_Weapon_Port_1",
                 "socket_class": "Heavy",
                 "socket_index": 0,
+                "blueprint": {
+                  "side": [
+                    0.6848,
+                    0.6643
+                  ],
+                  "top": [
+                    0.6851,
+                    0.3643
+                  ]
+                },
                 "position": [
                   13.5,
                   3.1,
@@ -8339,6 +8695,16 @@
                 "name": "SN_Socket_Weapon_Starboard_1",
                 "socket_class": "Heavy",
                 "socket_index": 1,
+                "blueprint": {
+                  "side": [
+                    0.6848,
+                    0.6643
+                  ],
+                  "top": [
+                    0.6851,
+                    0.6343
+                  ]
+                },
                 "position": [
                   13.5,
                   -3.1,
@@ -8354,6 +8720,16 @@
                 "name": "SN_Socket_Weapon_Port_2",
                 "socket_class": "Medium",
                 "socket_index": 2,
+                "blueprint": {
+                  "side": [
+                    0.2087,
+                    0.6643
+                  ],
+                  "top": [
+                    0.2088,
+                    0.3861
+                  ]
+                },
                 "position": [
                   -17.5,
                   2.6,
@@ -8369,6 +8745,16 @@
                 "name": "SN_Socket_Weapon_Starboard_2",
                 "socket_class": "Medium",
                 "socket_index": 3,
+                "blueprint": {
+                  "side": [
+                    0.2087,
+                    0.6643
+                  ],
+                  "top": [
+                    0.2088,
+                    0.6125
+                  ]
+                },
                 "position": [
                   -17.5,
                   -2.6,
@@ -8481,7 +8867,21 @@
                   12.34
                 ]
               }
-            ]
+            ],
+            "blueprint_views": {
+              "side": {
+                "image": "blueprint.ship.large_performance.side",
+                "width": 2016,
+                "height": 1040,
+                "space": "trimmed"
+              },
+              "top": {
+                "image": "blueprint.ship.large_performance.top",
+                "width": 2015,
+                "height": 711,
+                "space": "trimmed"
+              }
+            }
           }
         }
       },

@@ -1,11 +1,20 @@
 class_name ShipyardViewQuery
 extends RefCounted
+## @static-doc
+## 作用：船厂只读 ViewModel；统一投影模块改装/打造/仓库、舰载武器 socket、购买/装配/库存，以及船体每视图蓝图线稿的已解析路径。
+##
 ## Shipyard ViewModel: current modules, transit modules, port warehouse, craft
 ## recipes, open craft orders, wait options and every purchasable module with the
 ## same blocker rules as ship.install_module / ship.craft_module. New arrays are
 ## always present so the UI can render them even without a run or outside a shipyard.
+## `ship.blueprint_views.{side,top}` is resolved from hull `data.blueprint_views`
+## through AssetService into `{image_key, path, width, height, space}`; the 2D stage
+## draws them in the refit view and falls back to the generic section when absent.
 ## 4.5.5：剧情期间（`StoryService.module_filter`）购买 / 打造 / 仓库候选按 Core
 ## `unlocked_modules` 裁剪；当前已装模块与当前槽位仍完整输出，保证可以卸下。
+## @end-static-doc
+
+const WeaponOps := preload("res://framework/domain/ship/weapon_ops.gd")
 
 const SLOT_VIEW_DEFS := [
 	{"slot": "hull", "category": "hulls", "instance": "hull", "key": "hull_id"},
@@ -37,6 +46,8 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 	var warehouse_data := _warehouse_data(hub, state, port_id, has_shipyard, at_port)
 	var craft_rows := _craft_rows(hub, state, at_port, has_shipyard)
 	var order_rows := _order_rows(hub, state, port_id)
+	var weapon_sockets := _weapon_socket_rows(hub, state)
+	var weapon_candidates := _weapon_candidate_rows(hub, state, at_port, has_shipyard)
 	# 4.5.5：剧情进行中时船厂只露出 Core `unlocked_modules`（第三港只卖小型客舱）；
 	# 已装模块 / 当前库存仍可卸下查看，其余购买 / 打造 / 仓库安装候选隐藏。
 	var module_filter := StoryService.module_filter(state, hub)
@@ -91,6 +102,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"hull_tier": int(stats.get("hull_tier", 1)),
 			"hull_model_key": String(hull.information.get("model", "")) if hull != null else "",
 			"hull_model_path": _asset_path(context, hull.asset_uri("model")) if hull != null else "",
+			"blueprint_views": _blueprint_views(context, hull),
 			"visual": ShipVisualPlan.resolve(hub, context.assets, ship),
 			"boiler_id": String(ship.get("boiler_id", "")),
 			"modules": current_modules,
@@ -112,12 +124,15 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"worst_module_condition": ShipModules.worst_condition(ship),
 			"damaged_modules": ShipModules.damaged_rows(ship).size(),
 			"disabled_modules": _disabled_module_count(ship),
+			"weapon_sockets": weapon_sockets,
+			"weapon_weight": WeaponOps.total_weight(hub, ship),
 		},
 		"warehouse": warehouse_data,
 		"craft": craft_rows,
 		"orders": order_rows,
 		"wait_options": PortCommands.WAIT_OPTIONS.duplicate(),
 		"candidates": candidates,
+		"weapon_candidates": weapon_candidates,
 	})
 
 
@@ -143,6 +158,7 @@ static func _empty_view() -> Dictionary:
 			"hull_tier": 1,
 			"hull_model_key": "",
 			"hull_model_path": "",
+			"blueprint_views": {},
 			"visual": ShipVisualPlan.empty(),
 			"boiler_id": "",
 			"modules": [],
@@ -164,12 +180,15 @@ static func _empty_view() -> Dictionary:
 			"worst_module_condition": 1.0,
 			"damaged_modules": 0,
 			"disabled_modules": 0,
+			"weapon_sockets": [],
+			"weapon_weight": 0.0,
 		},
-		"warehouse": {"port_id": "", "modules": [], "materials": []},
+		"warehouse": {"port_id": "", "modules": [], "materials": [], "weapons": []},
 		"craft": [],
 		"orders": [],
 		"wait_options": PortCommands.WAIT_OPTIONS.duplicate(),
 		"candidates": [],
+		"weapon_candidates": [],
 	}
 
 
@@ -236,6 +255,36 @@ static func _asset_path(context, uri: String) -> String:
 	if context.assets.has(uri):
 		return context.assets.resolve(uri)
 	return ""
+
+
+## Resolves the hull's authored blueprint line-art bindings into plain paths
+## that the 2D stage can load without knowing about mods or asset keys.
+static func _blueprint_views(context, hull: ContentDefinition) -> Dictionary:
+	var result: Dictionary = {}
+	if hull == null:
+		return result
+	var raw: Variant = hull.data.get("blueprint_views", null)
+	if not (raw is Dictionary):
+		return result
+	for view in ["side", "top"]:
+		var entry: Variant = (raw as Dictionary).get(view, null)
+		if not (entry is Dictionary):
+			continue
+		var key := String((entry as Dictionary).get("image", "")).strip_edges()
+		if key.is_empty():
+			continue
+		var uri := key if key.begins_with("asset://") else "asset://%s/%s" % [hull.source_mod, key]
+		var asset_path := _asset_path(context, uri)
+		if asset_path.is_empty():
+			continue
+		result[view] = {
+			"image_key": key,
+			"path": asset_path,
+			"width": int((entry as Dictionary).get("width", 0)),
+			"height": int((entry as Dictionary).get("height", 0)),
+			"space": String((entry as Dictionary).get("space", "trimmed")),
+		}
+	return result
 
 
 static func _disabled_module_count(ship: Dictionary) -> int:
@@ -320,11 +369,98 @@ static func _warehouse_data(hub: RegistryHub, state: GameState, port_id: String,
 				"tier": int(item.data.get("tier", 0)) if item != null else 0,
 				"unit_weight": float(item.data.get("unit_weight", 0.0)) if item != null else 0.0,
 			})
+	var weapon_rows: Array = []
+	var weapons: Variant = warehouse.get("weapons", null)
+	if weapons is Dictionary:
+		for raw_weapon_id in weapons.keys():
+			var weapon_id := String(raw_weapon_id)
+			var qty := int(weapons[raw_weapon_id])
+			if qty <= 0:
+				continue
+			var weapon := WeaponOps.get_by_id(hub, weapon_id)
+			var install_options: Array = []
+			for raw_socket in WeaponOps.sockets(hub, state.ship()):
+				if not (raw_socket is Dictionary) or not WeaponOps.accepts(raw_socket, weapon):
+					continue
+				var socket_name := String(raw_socket.get("name", ""))
+				var blockers := WeaponOps.install_blockers(hub, state, weapon_id, socket_name, "warehouse")
+				if not has_shipyard:
+					blockers.push_front("no_shipyard")
+				if not at_port:
+					blockers.push_front("not_at_port")
+				install_options.append({"socket": socket_name, "can_install": blockers.is_empty(), "blockers": blockers})
+			weapon_rows.append({
+				"weapon_id": weapon_id,
+				"name_key": weapon.name_key if weapon != null else weapon_id,
+				"qty": qty,
+				"weapon_class": WeaponOps.weapon_class(weapon),
+				"weight": float(weapon.data.get("weight", 0.0)) if weapon != null else 0.0,
+				"install_options": install_options,
+			})
 	return {
 		"port_id": port_id,
 		"modules": module_rows,
 		"materials": material_rows,
+		"weapons": weapon_rows,
 	}
+
+
+static func _weapon_socket_rows(hub: RegistryHub, state: GameState) -> Array:
+	var rows: Array = []
+	var ship := state.ship()
+	for raw_socket in WeaponOps.sockets(hub, ship):
+		if not (raw_socket is Dictionary):
+			continue
+		var socket: Dictionary = raw_socket
+		var socket_name := String(socket.get("name", ""))
+		var weapon_id := WeaponOps.weapon_id_at(ship, socket_name)
+		var weapon := WeaponOps.get_by_id(hub, weapon_id)
+		rows.append({
+			"socket": socket_name,
+			"socket_class": String(socket.get("socket_class", "")),
+			"socket_index": int(socket.get("socket_index", rows.size())),
+			"blueprint": (socket.get("blueprint", {}) as Dictionary).duplicate(true),
+			"weapon_id": weapon_id,
+			"name_key": weapon.name_key if weapon != null else "",
+			"weight": float(weapon.data.get("weight", 0.0)) if weapon != null else 0.0,
+			"damage": float(weapon.data.get("damage", 0.0)) if weapon != null else 0.0,
+			"can_uninstall": not weapon_id.is_empty(),
+		})
+	return rows
+
+
+static func _weapon_candidate_rows(hub: RegistryHub, state: GameState, at_port: bool, has_shipyard: bool) -> Array:
+	var rows: Array = []
+	for raw_socket in WeaponOps.sockets(hub, state.ship()):
+		if not (raw_socket is Dictionary):
+			continue
+		var socket: Dictionary = raw_socket
+		var socket_name := String(socket.get("name", ""))
+		for weapon in WeaponOps.all(hub):
+			if not WeaponOps.accepts(socket, weapon):
+				continue
+			var blockers := WeaponOps.install_blockers(hub, state, weapon.id, socket_name, "purchase")
+			if not has_shipyard:
+				blockers.push_front("no_shipyard")
+			if not at_port:
+				blockers.push_front("not_at_port")
+			rows.append({
+				"socket": socket_name,
+				"socket_class": String(socket.get("socket_class", "")),
+				"weapon_id": weapon.id,
+				"name_key": weapon.name_key,
+				"description_key": weapon.description_key,
+				"weapon_class": WeaponOps.weapon_class(weapon),
+				"price": int(round(float(weapon.data.get("purchase_price", 0.0)))),
+				"weight": float(weapon.data.get("weight", 0.0)),
+				"damage": float(weapon.data.get("damage", 0.0)),
+				"range": float(weapon.data.get("range", 0.0)),
+				"cooldown": float(weapon.data.get("cooldown", 0.0)),
+				"can_install": blockers.is_empty(),
+				"blockers": blockers,
+				"installed": WeaponOps.weapon_id_at(state.ship(), socket_name) == weapon.id,
+			})
+	return rows
 
 
 static func _craft_rows(hub: RegistryHub, state: GameState, at_port: bool, has_shipyard: bool) -> Array:

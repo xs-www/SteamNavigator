@@ -20,6 +20,9 @@ extends SceneTree
 ##   --out-dir=res://docs/design/screenshots
 ##   --window=1440x900               窗口/截图尺寸
 ##   --category=cargo,misc           改装态额外按分类各截一张（hulls/boiler/cargo/utility/cabin/misc）
+##   --tabs=buy,craft                改装态额外按操作坞页签各截一张
+##                                   （shipyard_refit_buy.png / shipyard_refit_craft.png；
+##                                   页签与装配分离，用于验收购买 / 打造独立列表）
 ##   --damage=boiler:0.5[,cargo:0.4] 先损坏指定模块实例，再额外截取受损状态的
 ##                                   船厂正常态 / 改装态 / 补给维修页
 ##   --overview-stage                额外切到总览页并截取主界面（3D 港口舞台 +
@@ -68,6 +71,9 @@ var _out_dir := DEFAULT_OUT_DIR
 var _window := DEFAULT_WINDOW
 ## 额外截图的分类（--category=cargo,misc；C1 分类：hulls/boiler/cargo/utility/cabin/misc）。
 var _categories: Array[String] = ["cargo", "misc"]
+## Optional operations-dock tabs to capture in the refit page (`--tabs=buy,craft`).
+## Each tab is captured once under the first category (`shipyard_refit_<tab>.png`).
+var _tabs: Array[String] = []
 var _skip_refit := false
 ## 是否额外截取总览页的 3D 港口舞台。
 var _overview_stage := false
@@ -164,12 +170,22 @@ func _run() -> void:
 		var pressed := _enter_refit(shell, screen)
 		_expect(pressed, "找到并点击了「改装」按钮")
 		await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
+		await _wait_port_stage_settled(shell)
 		_expect(bool(screen.get("_refit")), "点击后页面进入改装态")
 		_expect(bool(shell._shipyard_refit), "Shell 记住了改装态（_shipyard_refit）")
 		stage = screen.get("_stage")
 		if stage != null:
 			_expect(int(stage.mode) == SN_SHIP_VIEW_SCRIPT.Mode.CUTAWAY, "改装态显示纵剖图（SNShipView.Mode.CUTAWAY）")
 		await _capture(_path("shipyard_refit.png"))
+		# 购买 / 打造与装配是独立页签（`--tabs=buy,craft` 时各截一张）。
+		for tab in _tabs:
+			screen.set_tab(tab)
+			await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
+			_expect(String(screen.get("_tab")) == tab, "改装页签切换到 %s" % tab)
+			await _capture(_path("shipyard_refit_%s.png" % tab))
+		if not _tabs.is_empty():
+			screen.set_tab("install")
+			await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
 		# 每个额外分类各截一张，用于对照参考布局的中间操作区 / 右侧竖排 tab。
 		for category in _categories:
 			if category == "hulls":
@@ -475,6 +491,22 @@ func _settle(frames: int, seconds: float) -> void:
 		await process_frame
 
 
+## 改装态画在 3D 港区舞台的船厂站位上：等镜头平移与玩家船靠泊结束再截图，
+## 否则截到的是过渡中的半张画面。舞台没显示或没有站位 API 时立即返回。
+func _wait_port_stage_settled(shell: Control) -> void:
+	var host: Variant = shell.get("_port_stage_host")
+	var deadline := Time.get_ticks_msec() + 5000
+	while Time.get_ticks_msec() < deadline:
+		if host == null or not is_instance_valid(host) or not bool(host.is_stage_visible()):
+			return
+		var stage: Node = host.current_stage() if host.has_method("current_stage") else null
+		if stage == null or not stage.has_method("is_station_transitioning"):
+			return
+		if not bool(stage.is_station_transitioning()):
+			return
+		await process_frame
+
+
 ## 抓 root（即主 Window 视口）的当前渲染结果并存 PNG。
 func _capture(path_value: String) -> void:
 	# get_texture().get_image() 只在绘制完成后有效。
@@ -560,6 +592,12 @@ func _parse_args() -> void:
 				var category := String(part).strip_edges()
 				if not category.is_empty():
 					_categories.append(category)
+		elif text.begins_with("--tabs="):
+			_tabs.clear()
+			for part in text.get_slice("=", 1).split(",", false):
+				var tab := String(part).strip_edges()
+				if not tab.is_empty():
+					_tabs.append(tab)
 		elif text == "--skip-refit":
 			_skip_refit = true
 		elif text == "--overview-stage":

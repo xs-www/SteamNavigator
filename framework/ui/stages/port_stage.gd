@@ -86,7 +86,7 @@ const BOB_SPEED := 0.9
 # mooring change. `center` is the station anchor in world X (also the facility
 # anchor that station owns), `camera`/`target` are its department shot and
 # `ship` is the berth the player's vessel takes.
-const STATION_ORDER := ["market", "harbor", "supply"]
+const STATION_ORDER := ["market", "harbor", "shipyard", "supply"]
 const DEFAULT_STATION := "harbor"
 const STATION_FRAMINGS := ["stage", "panel"]
 const STATIONS := {
@@ -102,6 +102,16 @@ const STATIONS := {
 		"camera": CAMERA_POS,
 		"target": CAMERA_TARGET,
 		"ship": SHIP_SPAWN,
+		"ship_yaw": SHIP_YAW_DEG,
+	},
+	# 船厂改装页的镜头：干船坞 + 吊架站位（设施锚点 x≈14.5），玩家的船停在船坞
+	# 正前方的水面。镜头与目标整体西移 7.5 m，让船厂设施落在改装页中间的 3D 窗口
+	# 正中（左侧蓝图板与右侧操作坞各占一边），同时保持与其它站位相同的镜头/偏移。
+	"shipyard": {
+		"center": 14.5,
+		"camera": Vector3(53.0, 28.0, 64.0),
+		"target": Vector3(7.0, 12.0, -8.0),
+		"ship": Vector3(14.5, 0.0, 9.0),
 		"ship_yaw": SHIP_YAW_DEG,
 	},
 	"supply": {

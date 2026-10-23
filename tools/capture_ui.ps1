@@ -11,6 +11,8 @@
         docs/design/screenshots/shipyard_normal.png;
       - presses the refit button to enter the cutaway, then saves
         docs/design/screenshots/shipyard_refit.png;
+      - with -Tabs, also saves one capture per operations-dock tab
+        (docs/design/screenshots/shipyard_refit_<tab>.png, e.g. buy / craft);
       - with -OverviewStage, switches to the overview main view (3D port stage +
         compact top HUD + edge signs + bottom status strip) and saves
         docs/design/screenshots/overview_port_stage.png;
@@ -25,6 +27,9 @@
 
 .EXAMPLE
     .\tools\capture_ui.ps1 -GodotBin "D:\Godot\Godot_v4.7.2-stable_win64_console.exe" -Seed 5201
+
+.EXAMPLE
+    .\tools\capture_ui.ps1 -Tabs "buy,craft"
 #>
 [CmdletBinding()]
 param(
@@ -32,6 +37,7 @@ param(
     [int]$Seed = 5201,
     [string]$OutDir = "res://docs/design/screenshots",
     [string]$Categories = "cargo,misc",
+    [string]$Tabs = "",
     [string]$Damage = "",
     [switch]$SkipRefit,
     [switch]$OverviewStage,
@@ -61,6 +67,7 @@ $godotArgs = @(
     "--category=$Categories"
 )
 if ($SkipRefit) { $godotArgs += "--skip-refit" }
+if (-not [string]::IsNullOrWhiteSpace($Tabs)) { $godotArgs += "--tabs=$Tabs" }
 if ($OverviewStage) { $godotArgs += "--overview-stage" }
 if ($OverviewDetail) { $godotArgs += "--overview-detail" }
 if (-not [string]::IsNullOrWhiteSpace($Damage)) { $godotArgs += "--damage=$Damage" }
@@ -95,6 +102,12 @@ if ($OutDir -like "res://*") {
 $expected = @("shipyard_normal.png")
 if (-not $SkipRefit) {
     $expected += "shipyard_refit.png"
+    # Extra operations-dock tab captures (buy / craft) use the tab name.
+    foreach ($tab in ($Tabs -split ",")) {
+        $tab = $tab.Trim()
+        if ([string]::IsNullOrWhiteSpace($tab) -or $tab -eq "install") { continue }
+        $expected += "shipyard_refit_$tab.png"
+    }
     # Extra per-category captures use the same short names as ui_snapshot.gd.
     foreach ($category in ($Categories -split ",")) {
         $category = $category.Trim()

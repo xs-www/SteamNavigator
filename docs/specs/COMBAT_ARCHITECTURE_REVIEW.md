@@ -57,7 +57,7 @@
 
 | 依赖 | 现状 | 为什么阻塞战斗 |
 | --- | --- | --- |
-| Module 实例化（id + condition + 失效状态） | **已落地第一步**：`ship.module_instances` 提供 instance_id 与 condition，`damage_module` 可损坏部件、维修按部件计价；定义 ID 仍在扁平槽位键上 | 持久伤害已有落脚点；下一步把定义 ID 移入实例并让 condition 影响能力 |
+| Module 实例化（id + condition + 失效状态） | **已落地**：`ship.module_instances` 提供 instance_id 与 condition，`damage_module` 可损坏部件、维修按部件计价；Phase 1 已让 condition 影响速度、容量与 utility/modifier 能力；定义 ID 仍在扁平槽位键上 | 持久损伤—性能—维修闭环已具备；定向战斗部件伤害仍待接 |
 | 战斗内容类型 Schema 2.0 | D1 已完成：`weapons`（active 2.0，见 [WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）+ `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 全部 active 2.0，Core 已有内容 | 自动结算所需的武器/敌人/遭遇表/掉落表数据已具备 |
 | 遭遇生成来源 | 世界探索家族 Schema 已有草案，运行时未接入 | 战斗需要有“在哪打、和谁打”的数据来源 |
 | 结算与经济接入 | 市场/仓库/统计已存在 | 战利品与维修费用必须走既有事务 |
@@ -80,7 +80,7 @@
 2. ~~战斗内容 Schema 2.0（`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`）~~：D1 已全部提升 active 2.0 并落 Core 内容（[WEAPON_CONTENT_SCHEMA.md](../design/WEAPON_CONTENT_SCHEMA.md)）。
 3. ~~`CombatResolver` 纯函数层 + 自动结算命令 + 测试矩阵~~：D1 已由 `CombatOps` / `CombatService` / `combat.resolve|view|log` 与 `test_combat.gd` 落地；战利品经济已接入 **money / cargo / port warehouse**（`player.money + stats.income`、`ShipOps.add_cargo`、`WarehouseOps.add_module`），市场出售与经济平衡尚未接；遭遇自动触发仍待做。
 4. 遭遇生成接入世界探索（区域/地点/航线），战利品进仓库与市场。
-5. 模块 condition 接入派生属性（速度/容量/安全修正），再做统一 Module 迁移。
+5. ~~模块 condition 接入派生属性（速度/容量/安全修正）~~：Phase 1 已完成；统一 Module 运行态归一化仍可后置评估。
 6. 以上稳定后再评估半自动/实时战术层；届时以外部草案 §8/§9 为基线。
 
 ## 9. 待决策（继承草案 §16，按项目语境改写）

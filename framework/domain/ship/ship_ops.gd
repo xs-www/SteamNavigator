@@ -1,6 +1,14 @@
 class_name ShipOps
 extends RefCounted
-## Pure helpers for ship composition, weight, capacity and derived stats.
+## @static-doc
+## 作用：船只组合、重量、容量与派生属性的纯规则；模块实例 condition 会按槽位缩放能力贡献，舰载武器重量计入总重。
+##
+## - 模块重量不随损伤变化；货舱/客舱容量、锅炉输出、utility 数值与 modifiers 按 condition 衰减。
+## - add modifier 乘 condition；mul modifier在中性值 1 与定义值之间插值。
+## - 玩家武器装配由 WeaponOps 读取，已装武器重量属于船舶总重量。
+## @end-static-doc
+
+const WeaponOps := preload("res://framework/domain/ship/weapon_ops.gd")
 
 const COAL_WEIGHT := 1.0
 const WATER_WEIGHT := 1.0
@@ -138,6 +146,7 @@ static func passenger_count(state: GameState) -> int:
 static func total_weight(hub: RegistryHub, state: GameState) -> float:
 	var ship := state.ship()
 	return module_weight(hub, ship) \
+		+ WeaponOps.total_weight(hub, ship) \
 		+ WarehouseOps.transit_module_weight(hub, ship) \
 		+ cargo_weight(hub, ship) \
 		+ float(ship.get("coal", 0.0)) * COAL_WEIGHT \
@@ -152,10 +161,12 @@ static func max_weight(hub: RegistryHub, ship: Dictionary) -> float:
 
 static func cargo_capacity(hub: RegistryHub, ship: Dictionary) -> float:
 	var capacity := 0.0
-	for module_id in cargo_module_ids(ship):
+	var cargo_ids := cargo_module_ids(ship)
+	for index in cargo_ids.size():
+		var module_id := cargo_ids[index]
 		var definition := ModuleOps.get_by_id(hub, module_id)
 		if definition != null and ModuleOps.category_of(definition) == "cargo":
-			capacity += float(definition.data.get("capacity", 0.0))
+			capacity += float(definition.data.get("capacity", 0.0)) * ShipModules.condition(ship, "cargo", index)
 	return capacity
 
 
@@ -169,7 +180,9 @@ static func free_cargo_capacity(hub: RegistryHub, ship: Dictionary) -> float:
 
 static func passenger_capacity(hub: RegistryHub, ship: Dictionary) -> int:
 	var cabin := module_in_slot(hub, ship, "passenger_cabin")
-	return int(cabin.data.get("passenger_capacity", 0)) if cabin != null else 0
+	if cabin == null:
+		return 0
+	return int(floor(float(cabin.data.get("passenger_capacity", 0)) * ShipModules.condition(ship, "cabin")))
 
 
 static func durability_max(hub: RegistryHub, ship: Dictionary) -> float:
@@ -197,7 +210,8 @@ static func stats(hub: RegistryHub, ship: Dictionary) -> Dictionary:
 			"reveal_facilities": false,
 		}
 
-	var speed := float(hull.data.get("base_speed", 10.0)) * float(boiler.data.get("speed_mul", 1.0))
+	var boiler_condition := ShipModules.condition(ship, "boiler")
+	var speed := float(hull.data.get("base_speed", 10.0)) * float(boiler.data.get("speed_mul", 1.0)) * boiler_condition
 	var coal_rate := float(boiler.data.get("coal_rate", 0.3))
 	var water_rate := float(boiler.data.get("water_rate", 0.2))
 	var risk_add := float(hull.data.get("base_risk", 0.0))
@@ -207,17 +221,36 @@ static func stats(hub: RegistryHub, ship: Dictionary) -> Dictionary:
 
 	var navigation := module_in_slot(hub, ship, "navigation_module")
 	if navigation != null:
-		speed *= float(navigation.data.get("speed_mul", 1.0))
-		risk_add += float(navigation.data.get("risk_add", 0.0))
-		reveal_facilities = bool(navigation.data.get("reveal_facilities", false))
+		var navigation_condition := ShipModules.condition(ship, "navigation")
+		speed *= _conditioned_multiplier(float(navigation.data.get("speed_mul", 1.0)), navigation_condition)
+		risk_add += float(navigation.data.get("risk_add", 0.0)) * navigation_condition
+		reveal_facilities = navigation_condition > 0.0 and bool(navigation.data.get("reveal_facilities", false))
 
 	var safety := module_in_slot(hub, ship, "safety_module")
 	if safety != null:
-		risk_add += float(safety.data.get("risk_add", 0.0))
-		damage_mul *= float(safety.data.get("damage_mul", 1.0))
-		repair_cost_mul *= float(safety.data.get("repair_cost_mul", 1.0))
+		var safety_condition := ShipModules.condition(ship, "safety")
+		risk_add += float(safety.data.get("risk_add", 0.0)) * safety_condition
+		damage_mul *= _conditioned_multiplier(float(safety.data.get("damage_mul", 1.0)), safety_condition)
+		repair_cost_mul *= _conditioned_multiplier(float(safety.data.get("repair_cost_mul", 1.0)), safety_condition)
 
-	for definition in installed_modules(hub, ship):
+	for modifier in hull.data.get("modifiers", []):
+		if not (modifier is Dictionary):
+			continue
+		var stat := String(modifier.get("stat", ""))
+		var value := float(modifier.get("value", 0.0))
+		var op := String(modifier.get("op", "add"))
+		match stat:
+			"speed": speed = _apply_modifier(speed, op, value)
+			"coal_rate": coal_rate = _apply_modifier(coal_rate, op, value)
+			"water_rate": water_rate = _apply_modifier(water_rate, op, value)
+			"risk": risk_add = _apply_modifier(risk_add, op, value)
+			"repair_cost": repair_cost_mul = _apply_modifier(repair_cost_mul, op, value)
+			"damage": damage_mul = _apply_modifier(damage_mul, op, value)
+	for row in ShipModules.installed_rows(ship):
+		var definition := find_module(hub, String(row.get("module_id", "")))
+		if definition == null:
+			continue
+		var condition := clampf(float(row.get("condition", 1.0)), 0.0, 1.0)
 		for modifier in definition.data.get("modifiers", []):
 			if not (modifier is Dictionary):
 				continue
@@ -226,17 +259,17 @@ static func stats(hub: RegistryHub, ship: Dictionary) -> Dictionary:
 			var op := String(modifier.get("op", "add"))
 			match stat:
 				"speed":
-					speed = _apply_modifier(speed, op, value)
+					speed = _apply_conditioned_modifier(speed, op, value, condition)
 				"coal_rate":
-					coal_rate = _apply_modifier(coal_rate, op, value)
+					coal_rate = _apply_conditioned_modifier(coal_rate, op, value, condition)
 				"water_rate":
-					water_rate = _apply_modifier(water_rate, op, value)
+					water_rate = _apply_conditioned_modifier(water_rate, op, value, condition)
 				"risk":
-					risk_add = _apply_modifier(risk_add, op, value)
+					risk_add = _apply_conditioned_modifier(risk_add, op, value, condition)
 				"repair_cost":
-					repair_cost_mul = _apply_modifier(repair_cost_mul, op, value)
+					repair_cost_mul = _apply_conditioned_modifier(repair_cost_mul, op, value, condition)
 				"damage":
-					damage_mul = _apply_modifier(damage_mul, op, value)
+					damage_mul = _apply_conditioned_modifier(damage_mul, op, value, condition)
 
 	for kind in ["engineer", "navigator"]:
 		var role := role_definition(hub, ship, kind)
@@ -488,6 +521,7 @@ static func install_blockers(hub: RegistryHub, state: GameState, module_id: Stri
 	var module_weight := float(module.data.get("weight", 0.0))
 	var replaced_weight := 0.0
 	var weight_limit := current_max
+	var weapon_weight_delta := 0.0
 
 	if is_hull:
 		if hull != null:
@@ -498,6 +532,10 @@ static func install_blockers(hub: RegistryHub, state: GameState, module_id: Stri
 		var current_hull := hub.get_by_id(ContentTypes.HULL, String(ship.get("hull_id", "")))
 		replaced_weight = float(current_hull.data.get("weight", 0.0)) if current_hull != null else 0.0
 		weight_limit = float(module.data.get("max_weight", current_max))
+		var preview_ship := ship.duplicate(true)
+		preview_ship["hull_id"] = module_id
+		WeaponOps.reconcile_for_hull(hub, preview_ship)
+		weapon_weight_delta = WeaponOps.total_weight(hub, preview_ship) - WeaponOps.total_weight(hub, ship)
 	else:
 		match category:
 			"cargo":
@@ -524,7 +562,7 @@ static func install_blockers(hub: RegistryHub, state: GameState, module_id: Stri
 				replaced_weight = _slot_weight(hub, ship, "boiler")
 
 	var transit_release := module_weight if source == "transit" else 0.0
-	var delta := module_weight - replaced_weight - transit_release
+	var delta := module_weight - replaced_weight - transit_release + weapon_weight_delta
 	if current_weight + delta > weight_limit + 0.0001:
 		blockers.append("weight_limit")
 	return blockers
@@ -599,3 +637,18 @@ static func _apply_modifier(base: float, op: String, value: float) -> float:
 			return value
 		_:
 			return base + value
+
+
+static func _conditioned_multiplier(value: float, condition: float) -> float:
+	return lerpf(1.0, value, clampf(condition, 0.0, 1.0))
+
+
+static func _apply_conditioned_modifier(base: float, op: String, value: float, condition: float) -> float:
+	var ratio := clampf(condition, 0.0, 1.0)
+	match op:
+		"mul":
+			return base * _conditioned_multiplier(value, ratio)
+		"set":
+			return lerpf(base, value, ratio)
+		_:
+			return base + value * ratio

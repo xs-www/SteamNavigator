@@ -19,7 +19,7 @@ extends RefCounted
 ##   not operational until repaired). `damage()` and `repair_all()` are the only
 ##   writers besides `ensure()`.
 ## - `instance_id` is stable for the life of one installed module, so events and
-##   (later) combat can reference a specific module instance across save/load.
+##   combat and repairs can reference a specific module instance across save/load.
 ## - Flat slot keys stay authoritative for *which definition* is installed; the
 ##   unified `modules` type maps category -> flat slot through `ModuleOps`, and
 ##   `ensure()` keeps the instance table aligned with the flat keys.

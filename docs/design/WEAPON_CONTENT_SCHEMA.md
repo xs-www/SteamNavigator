@@ -213,6 +213,13 @@
 | `weapon_sockets` | `name`（`^SN_Socket_Weapon`）、`socket_class`（Light/Medium/Heavy/Tower/Side）、`socket_index`（0–64） | `position`（3 个数）、`clearance_r/x/y`（0–30）、`clearance_h`（0–40）、`mount_scale`、`note` |
 | `rig_sockets` | `name`（`^SN_Socket_`）、`socket_kind`（mast/yard/sail）、`socket_index`（0–64） | `mast_id`、`position`、`rig_height`、`rig_deck_z`、`rig_yard_z`、`rig_yard_length`、`rig_stowed`、`rig_sail_area_m2`、`note` |
 
+### 6.0 蓝图线稿与坐标（2026-10-23）
+
+- `hull_data` 另有可选 `blueprint_views`：每视图绑定线稿资源键（`image`，可带 `width/height/space`）。Core 四艘船已入库 8 张裁切线稿（`dev_mods/core/assets/blueprints/ships/<GLB>/<GLB>.side.png|<GLB>.top.png`，文件名带模型名以便素材页区分），资源键形如 `blueprint.ship.<hull_local_id>.side`。
+- `weapon_sockets[].blueprint` 现在是**生成缓存 + 可选手工覆盖**：`tools/modeling/blueprint/apply_hull_blueprints.mjs` 读取蓝图生成器 `metadata.json` 的相机/裁切参数，把内容侧 `position` 投影成每视图归一化 uv，并拷贝 PNG、登记 manifest 资源键、写入 `blueprint_views`。`--check` 可做门禁。
+- 投影使用与线稿渲染完全相同的正交相机与 crop，因此坐标与 PNG 内容一一对应；`side` 视图左右舷会重合（同一 x/z），这是当前数据事实，武器成对规则接入后再在 UI 层合并。
+- 船厂 2D 舞台同时绘制 `side`（上方）与 `top`（下方），按各自线稿的等比矩形映射坐标；没有 `blueprint_views` 的第三方船体回退到通用纵剖图/程序化占位。
+
 与 GLB extras 的口径差异（接入运行时时必须显式转换）：
 
 | 维度 | GLB extras（权威资产侧） | 内容镜像（`hulls.json`） |
@@ -329,13 +336,13 @@
 1. **类型提升（已完成）**：`weapons` 已在 `content_types.json.types`（`schema` / `kind: definition` / `capability` / `schema_version: "2.0"`），`ContentTypes` 与 `ContentCompiler` 会加载 `content/weapons.json`。
 2. **版本策略（已完成）**：运行时按类型 `schema_version` 接收 2.0，`weapons` envelope 固定 2.0。
 3. **内容落地（已完成）**：`dev_mods/core/content/weapons.json` 已含 5 件 `core:weapon/*`（5 件内置武器的 1:1 映射），`information.model` 指向 `model.weapon.*`、本地化与 manifest `content` 条目已补齐。
-4. **读取路径（已完成）**：`RegistryHub` 的 `ContentTypes.WEAPON` 注册表由 `CombatOps.player_weapon_rows()` / `_weapon_state()` 消费；船体 `hull_data.weapon_sockets` 决定玩家可用炮位，显式 `ship.weapon_loadout` 优先、否则按 socket class 选字母序第一件武器；`combat.resolve` 与 `combat.view` / `combat.log` 已注册。
+4. **读取路径（已完成）**：`RegistryHub` 的 `ContentTypes.WEAPON` 注册表由船厂 `WeaponOps`、`CombatOps.player_weapon_rows()` / `_weapon_state()` 与视觉装配共同消费；船体 `hull_data.weapon_sockets` 决定玩家可用炮位，`ship.weapon_loadout` 是玩家装配唯一真源，空 socket 不自动补默认武器；`combat.resolve` 与 `combat.view` / `combat.log` 已注册。
 5. **战斗结算（已完成）**：`CombatOps` 实现抽象回合、伤害/护甲/穿甲、状态效果、撤退、战利品 roll 与确定性随机流；`CombatService` 负责 `data.combat` 落盘与耐久/战利品事务（money → `player.money + stats.income`、item → 船上 cargo、module → 当前港 warehouse、weapon 掉落折成 salvage 金钱；市场出售与经济平衡未接）。战斗视图记录 unmounted sockets 与 loot diagnostics，跨引用校验要求敌舰每个 weapon socket class 能解析到武器。尚未接：空间/弹道、部位伤害、弹药/煤耗、航行遭遇自动触发。
 6. **视觉装配（部分完成）**：`ShipVisualAssembler` 仍以 GLB Root extras 为装配事实；后续切片再切到「内容定装配 + GLB 定节点」，并补齐 `yaw_limit_deg` / `pitch_limit_deg` / `mount_pad_*` / `swept_radius` / `anchor_count` 等资产已产但内容未建模字段。
 
 ## 11. 已知边界 / 待对齐
 
-1. **内容已生效，但玩家负重/装配入口未接**：战斗自动结算会从 `hull.weapon_sockets` + 武器内容解析默认武器；游戏内尚无「购买武器 / 装配到 socket」的 UI 与持久 loadout，`ship.weapon_loadout` 仍主要由预览注入。武器经济字段（`tier/purchase_price/craft_*`）尚未接入船厂。
+1. **购买/装配已接，打造与弹药未接**：Phase 1 已把 `purchase_price` / `weight`、港口仓库、socket class 门禁与持久 `ship.weapon_loadout` 接入船厂；`craft_*`、弹药/煤耗、武器 condition 与单件维修仍留后续。
 2. **Weapon socket `socket_index` 偏移**：GLB extras 从 1 起，内容镜像从 0 起（4 艘船均如此）。转换公式：`content_index = glb_socket_index - 1`；接入运行时前建议二选一并写死。
 3. **铁甲舰 rig socket 顺序**：GLB 按桅序交错编号（`Mast_Fore 0 / Yard_Fore 1 / Sail_Fore 2 / Mast_Main 3 …`），内容镜像按 kind 分组（`Mast_Fore 0 / Mast_Main 1 / Mast_Mizzen 2 / Yard_* 3–5 / Sail_* 6–8`）；PF / SF 两边一致。运行时若按 `socket_index` 配对，必须先统一。
 4. **`mast_key` vs `mast_id`**：GLB 用大写 `Fore/Main/Mizzen`，内容用小写；大小写不敏感比较或转换后再用。

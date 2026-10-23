@@ -765,11 +765,11 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/shell/main.gd": {
-    role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。",
+    role: "可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。自第八切片起船厂改装态也画在同一座港区的 `shipyard` 站位上（正常态仍用面板内的独立船体舞台），顶栏左侧的品牌位改为显示当前港口名。",
     contracts: [
       "所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。",
       "主界面默认 `_overview_stage_mode=true`：全窗 3D 港口舞台是主视图，2D 详细总览收进 `_overview_detail` 抽屉（默认关闭）；两者都只是 UI 会话状态，不写存档。",
-      "紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 6 个导航按钮 + 海图切换按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。",
+      "紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation（`STEAM NAVIGATOR / 蒸汽航海` 品牌位已取消，产品名只留在主菜单）：第 1 行港口名（`PortBrand`：eyebrow `ui.label.port` + 22 px 港口名，在航/演出时显示「在航 → 目的港」）+ 状态/版本 + 时间·金钱·声望 chip + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 6 个导航按钮 + 海图切换按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。",
       "HUD 图标：`_stat_chip(..., icon_key)` 在标签左侧挂 22 px `TextureRect`；`_hud_icon()` 经 `AssetService.find_key()` 把 `icon.money/coal/water` 解析到任一内容包并缓存 `Texture2D`，缺 key/缺文件时退回纯文字 chip。金币在顶部 chrome，煤炭/淡水同时在顶部与底部状态条。",
       "窗口适配：工程为 `canvas_items` 拉伸（1440×900 基准）+ `expand` 宽高比，真实窗口的逻辑宽度恒 ≥1440（960×540 → 1600×900），因此 HUD 与招牌按同一份完整布局整体缩放，不设删信息/缩控件的 compact 分支；960×540 截图验证缩放后不裁切。",
       "设施招牌由 `SNHarborSign`（`sn_harbor_sign.gd`）承载：`_port_sign()` 调 `configure(text, primary, facility, arrow)` 写木板/铁框/黄铜铆钉/徽记/箭头/悬停光晕，`Button` 语义与 `text`/tooltip 保留；招牌固定 172×42、边距 20。",
@@ -801,7 +801,7 @@ export const FILE_DOCS = {
       "根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。",
       "船厂页由独立 shipyard_screen.tscn 承载；Shell 查询 shipyard.view 并补充 `contracts`/`victory`（历史合并字段，当前船厂页不渲染通关清单）、船上材料数量 `ship_amount`、解锁来源 `unlock_name`、替换件名 `replacement_name` 与 `ship.hull_name`；页面发出的 ship/warehouse/port 命令统一交回 Shell。",
       "船厂页正常态三列（已有船舶 / 实机渲染 / 组件分类），点击分类由页面 `set_category()` 进入改装态并渲染所选分类的槽位操作；Shell 只做状态记忆与 ViewModel 组装，不决定布局。",
-      "船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复纵剖图与选中分类。",
+      "船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复蓝图与选中分类。改装态切换时 Shell 还会 `_sync_port_stage(_last_port_view)`：`STAGE_SCREENS` 含 `shipyard→shipyard`，但 `_shipyard_refit` 为假时隐藏港区舞台，避免与正常态面板内的 3D 船体舞台同时渲染；进入改装后舞台聚焦 `shipyard` 站位（framing 固定 `stage`，左右面板各占一边）。",
       "委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。",
       "通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。",
       "反馈5：紧凑 chrome 固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity；总览底部状态条再显示耐久/货舱/煤/水/受损/最新通告，避免信息只存在于详细抽屉。",
@@ -921,39 +921,47 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/screens/port/shipyard_screen.gd": {
-    role: "船厂页两种布局共用一页：正常态为「已有船舶卡片 / 实机渲染舞台 / 组件分类入口」，改装态为「贴图纵剖图 / 所选分类的槽位与操作 / 竖排分类页签（含杂项）」。规则仍来自 `shipyard.view`，页面不写 `GameState`。",
+    role: "船厂页两种布局共用一页：正常态为「已有船舶卡片 / 面板内 3D 船体舞台 / 组件分类入口」；改装态是画在连续港区 `shipyard` 站位上的船厂工作台——左侧九宫格蓝图底板、中间 3D 窗口、右侧半透明操作坞（舰船数据卡 + 七项分类 + 装配/购买/打造三个独立页签）。规则仍来自 `shipyard.view`，页面不写 `GameState`。",
     dependencies: ["SNShipView", "SNPartRow", "SNBadge", "SNButton", "SNSectionHeader", "steam_navigator_theme.tres"],
     contracts: [
-      "`bind(vm, translate)` 接收 Shell 组合后的 shipyard.view（含 refit/category/ship.hull_name/warehouse/candidates/craft/orders/wait_options），不访问 AppContext、QueryBus、CommandBus 或注册表；可重复 bind，每次 `_clear()` 后重建。",
-      "`CATEGORY_ORDER` = 船体/锅炉/货舱/导航/安全/客舱 + `misc`；`MODULE_TYPES` 不含 misc。`set_category` 只接受这七个值，非法值直接 return；切换分类会同时进入改装态并发 `refit_category_changed`。",
-      "`_body` 固定三列：正常态 `_ship_list_panel / _render_panel / _components_panel`；改装态 `_section_panel / _operations_panel / _category_tabs_panel`。`_rebuild_layout()` 只重建 `_body`，标题与摘要行保留。",
-      "正常态中央舞台由 `_make_stage(EXTERIOR, ...)` 创建；`ship.hull_model_path` 非空（内容模组提供船体 GLB）或本地有旧路径回退时，通过 `set_renderer(SNShipStage3D.new())` 挂载 3D 船体舞台；改装态仍用纵剖图贴图，无模型时保留程序化占位。",
-      "正常态：船卡用 `SHIP_THUMB_PATH`（存在才加载，210×118 cover；缺失回退占位面板），船名取 Shell 注入的 `ship.hull_name`，缺失回退 `hull_id` 的本地化键；组件列每类一行入口并显示槽位计数，「0 可拖」徽标统计仓库/随船可装行。",
-      "改装态：纵剖图 `SNShipView(CUTAWAY)` + 槽位贴片；中间操作列按分类渲染槽位卡、仓库/随船行、购买卡与打造卡。操作列自带 ScrollContainer（`horizontal_scroll_mode=DISABLED`），全页只有中列纵向滚动。",
-      "槽位卡：标题 + 固定槽徽标 + 已装名；效果行与重量/tier/卸下按钮取自 `ship.modules[]` 行的 `effect/can_uninstall/uninstall_blockers`（`shipyard.view._current_modules` 输出 `effect`）。",
-      "槽位卡按 `ship.modules[]` 行的 `condition` 显示「状态 NN%」徽标（满状态不显示；0 为失效红色），条件值来自模块实例层，页面不自行计算。",
-      "槽位反推（`_build_slots`）：船体/锅炉/导航/安全各 1，`cabin_slots≥1` 时加客舱 1，`cargo_slots` 个货舱槽（至少覆盖已装货舱数）；槽位 id `<content_type>_<index>`，fixed 仅船体/锅炉。",
-      "拖放 `_on_slot_drop`：类型一致且 source ∈ {warehouse, transit} 才发 `ship.install_module{module_id, source}`；槽位已有且不同件时补 `replace_module_id`。点击购买行 `_on_part_activated` 发 `ship.install_module{module_id}`；点击贴片只切到同类分类并高亮兼容行。",
-      "杂项页签 `_build_misc_body`：打造订单 + 在港等待 6/12/24 h + 仓库材料（固定 5 件存/取）+ 仓库模块（免费安装 / 取出）；模块类分类内仍各自保留「按配方打造」与「购买并安装」。",
-      "旧整页下方面板已删除：`_stage_row/_parts_hud/_victory_plan/_orders_panel/_warehouse_panel/_craft_panel/_build_purchase_panels` 不再存在；通关条件清单只在总览页。",
-      "所有 can_install/can_uninstall/can_craft、blockers、价格与工时来自 shipyard.view；页面只翻译原因、禁用按钮与组织布局。",
-      "密集字段（模块行、限制原因、按钮）用 AUTOWRAP_OFF 单行；操作列描述/效果行用 `_wrap_label` 允许换行，避免固定宽度列被撑开。",
-      "摘要行的「改装 / 完成改装」按钮直接连 `_on_toggle_refit`（按钮在 `_body` 外，可同步重建）；`_body` 内的分类按钮走 `_ui_set_category` → `set_category.call_deferred`，避免按钮在自身信号里被 `free()`。"
+      "`bind(vm, translate)` 接收 Shell 组合后的 shipyard.view（含 refit/category/ship.hull_name/warehouse/candidates/craft/orders/wait_options），不访问 AppContext、QueryBus、CommandBus 或注册表；`_build_page()` 每次整体重建，可重复 bind。",
+      "`_build_page()` 先把旧根节点 `remove_child` 后 `queue_free`（不是立即 free），所以操作坞里的「完成改装」按钮可以在自己的 `pressed` 信号里重建整页；绑定/切模式/切分类/切页签都走这一个入口。",
+      "`CATEGORY_ORDER` = 船体/锅炉/货舱/通用/客舱/武器/杂项；`TAB_ORDER` = 装配(install)/购买(buy)/打造(craft)。`set_category` 只接受声明值，未在改装态时先置 refit 并发 `refit_mode_changed(true)`，同时把页签重置为装配；`set_tab` 只切页签（相同值 no-op）。",
+      "`_body` 固定三列：正常态 `_ship_list_panel / _render_panel / _components_panel`；改装态 `_blueprint_panel / _stage_window / _refit_dock_panel`（`StageWindow` 空 Control、`RefitDock` 操作坞）。正常态保留章节标题与摘要行，改装态不显示标题/摘要行。",
+      "改装态画在 3D 港区舞台上：Shell 的 `STAGE_SCREENS` 含 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示，页面不再自带整页不透明背景；`_stage_window()` 是可让 3D 透出的空 Control（MOUSE_FILTER_IGNORE），蓝图板/操作坞用 `size_flags_stretch_ratio` 1.2 / 0.25 分配宽度。",
+      "左列蓝图：`SNBlueprintPanel` + `SNShipView(CUTAWAY)`（`set_blueprint_backdrop(true)`），不再有「改装蓝图 / 蓝图线稿 / 贴图剖面」标题与徽标；侧视/俯视等比绘制、武器框按 `weapon_sockets[].blueprint` 映射，槽位贴片停靠蓝图底部 dock。",
+      "右列操作坞：Theme variation `SNGlassPanel`（半透明）。顶部为当前分类标题 + 槽位计数徽标 + `_refit_button`（正常态在摘要行、改装态在坞头，文案 改装/完成改装）；`_ship_data_card()` 显示船名与重量·耐久·货舱槽·客舱槽·武器·剩余货舱；`_category_picker()` 两行七项分类；`_tab_row()` 三个页签。",
+      "装配页：当前分类的槽位卡 + 仓库/随船可拖行（`SNPartRow`，登记在 `_hud_rows`）+ 拖放提示；`_highlight_category_slots()` 把可安装槽位贴片高亮成青色（武器分类高亮蓝图武器框），购买/打造页清空高亮。拖放命令仍是 `ship.install_module{module_id, source, slot?, replace_module_id?}`。",
+      "购买页：`candidates`（武器分类用 `weapon_candidates`）；打造页：`craft` 配方 + `ship.craft_module`。两者与装配列表完全分离；socket/module 长名用 `_clip_title()` 省略号截断，避免撑宽固定宽度操作坞。",
+      "`杂项` 分类不显示页签，直接展示打造订单 / 在港等待（6/12/24 h `port.wait`）/ 仓库材料 / 仓库模块；页面不重复通关条件清单（只在总览页）。",
+      "武器交互：槽位卡与购买候选卡悬停时 `SNShipView.highlight_slots()` 高亮对应蓝图框，离开恢复当前分类高亮（`_highlight_all_weapon_sockets()` / `_highlight_category_slots()`）。",
+      "所有 can_install/can_uninstall/can_craft、blockers、价格与工时来自 shipyard.view；页面只翻译原因、禁用按钮与组织布局。密集字段（模块行、限制原因、按钮）用 AUTOWRAP_OFF 单行，操作坞描述/效果行用 `_wrap_label` 允许换行。",
+      "旧整页下方面板（`_stage_row/_parts_hud/_victory_plan/_orders_panel/_warehouse_panel/_craft_panel/_build_purchase_panels`）不再存在；测试向文案（`ui.label.stage_blueprint` / `ui.tag.blueprint_lineart` / `ui.tag.section_texture` / `ui.hint.live_render` / `ui.hint.ship_list`）不再渲染。",
+      "窗口适配：改装页在 PageScroll 内，页面根 `SIZE_EXPAND_FILL` 填满可视高度；三列最小宽 560 / 140 / 432，1440 逻辑宽度下不会横向溢出，窄窗口交给外层 PageScroll。",
     ],
     l2: {
-      "_rebuild_layout()": [
-        "清空 `_body` 子节点并重建当前布局；同时重置 `_stage/_stage_title/_stage_hint/_hud_rows`，最后 `_sync_refit_ui()` 同步改装按钮文案与 stage mode。",
-        "正常态与改装态互斥，仅靠 `_refit` 分支决定三列内容，不保留隐藏面板。"
+      "_build_page()": [
+        "清空根节点（detach + queue_free）并重置 `_stage/_stage_title/_body/_refit_button/_hud_rows`，按 `_refit` 选择 `_build_normal_page()` 或 `_build_refit_page()`，最后 `_sync_refit_ui()` 同步按钮文案与 stage mode。",
+        "正常态与改装态互斥；正常态才添加 `_heading()` 与 `_summary_row()`，改装态的三个子节点固定为蓝图 / 3D 窗口 / 操作坞。",
       ],
       "set_category(category)": [
-        "测试与 Shell 可直接调用；当前不在改装态时先置 `_refit=true` 并发 `refit_mode_changed(true)`，再记录分类、发 `refit_category_changed`、重建布局。",
-        "页面从 `vm.category` 恢复同一分类；非法值回退 `hulls`，Shell 只需保存字符串。"
+        "测试与 Shell 可直接调用；非法值直接 return，未在改装态时先置 `_refit=true` 并发 `refit_mode_changed(true)`，再记录分类、重置 `_tab=install`、发 `refit_category_changed`、`_build_page()`。",
+        "页面从 `vm.category` 恢复同一分类；非法值回退 `hulls`，Shell 只需保存字符串。",
+      ],
+      "set_tab(tab)": [
+        "只接受 `TAB_ORDER` 中的值，相同值 no-op；页签切换重建整页（蓝图纹理走静态缓存，不重复解码）。",
+      ],
+      "_build_tab_body(box)": [
+        "`杂项` 直接走 `_build_misc_body`；其它分类按 `_tab` 分派到 `_build_install_body` / `_build_buy_body` / `_build_craft_body`，武器分类分别走 `_build_weapon_install_body` / `_build_weapon_buy_body`。",
+      ],
+      "_ship_data_card()": [
+        "数据全部来自 ship VM（total_weight/max_weight、durability、cargo_used/slots、cabin_used/slots、weapon_sockets、free_cargo_capacity/capacity），缺失字段回退 0；顶栏已有金币/资源，数据卡不重复。",
       ],
       "_build_misc_body(box)": [
         "在港等待按钮按 `wait_options`（默认 6/12/24 h）动态生成 `port.wait`；订单行显示剩余工时，不在当前港时追加港口名。",
-        "仓库材料行按 `min(5, ship_amount/amount)` 生成存/取命令参数；仓库模块行在 can_install 时给免费安装，始终给取出。"
-      ]
-    }
+        "仓库材料行按 `min(5, ship_amount/amount)` 生成存/取命令参数；仓库模块行在 can_install 时给免费安装，始终给取出。",
+      ],
+    },
   },
 
   "framework/ui/screens/flow/port_memory_screen.gd": {
@@ -1145,41 +1153,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/ui/components/sn_ship_view.gd": {
-    role: "船厂中央改装台：`EXTERIOR` 画程序化侧视占位；`CUTAWAY` 画授权纵剖图贴图（`assets/ui/shipyard/ship_section.png`）+ 每槽位一个 `SNSlotTarget` 贴片，贴图缺失时回退程序化剖面；预留可替换的 2.5D 渲染器接口。",
-    dependencies: ["SNSlotTarget"],
-    contracts: [
-      "`SECTION_TEXTURE_PATH` = `res://assets/ui/shipyard/ship_section.png`；`_ready()` 调用 `_load_section_texture()`，仅在 `ResourceLoader.exists` 为真时加载。`has_section_texture()` 判定是否用上授权贴图，`section_texture_size()` 返回像素尺寸（无贴图返回 `Vector2.ZERO`），供测试与调试确认贴图已导入。",
-      "`_draw_cutaway()` 优先 `_draw_section_texture()`（cover 裁切贴图）并始终叠加 `_draw_slot_leaders()`；仅贴图缺失/未导入时才用 `_draw_cutaway_placeholder()` 程序化剖面。`Mode.EXTERIOR` 保持程序化侧视、不读贴图。",
-      "`_draw_section_texture()` 为 cover 裁切：`cover_scale = max(dst.w/tex.w, dst.h/tex.h)`，取居中源矩形 `draw_texture_rect_region`，再叠 0.18 暗青蒙版；不改变纵横比、不移动控件。",
-      "槽位仍按两行排布（非货舱槽 `top = h*0.60`，货舱槽 `top = h*0.82`）；贴片宽 84–148 px（按可用跨度均分），控件宽 < 80 px 时跳过布局。",
-      "`_chip_anchor()` 的舱室锚点（船体/锅炉/货舱/导航/安全/客舱）必须与 `tools/art/gen_shipyard_textures.py` 的 `ANCHORS` 保持同一构图比例；换图时两侧一起改。",
-      "`Mode.EXTERIOR` 仍是程序化侧视（水面/烟/明轮动画），不读贴图；正常态与改装态共用同一套 `set_slots` 数据。",
-      "`set_slots(slots)` 为每个描述重建一个 `SNSlotTarget`；字段：id、content_type、index、title、module、replace_module_id、fixed、hint、tooltip。贴片只在 CUTAWAY 可见；点击发 `slot_activated(slot)`，同类型部件拖到贴片发 `slot_drop_requested(payload, slot)`，本控件不发命令。",
-      "2.5D 接入协议不变：`set_renderer(node)` 把节点作为铺满本控件的子节点挂入并立即下发 `ship_view_update(model)` / `ship_view_set_mode(mode)`；`has_renderer()` 判定是否已替换；传 `null` 恢复内置占位。",
-      "渲染器实现 `ship_view_update(model)`、`ship_view_set_mode(mode)`、`ship_view_highlight(slot_ids)` 即可；缺方法时用 `has_method` 跳过，不报错。槽位贴片、拖放与命中布局都留在本控件，未来 2.5D 场景只画船体即可。",
-      "无渲染器或 EXTERIOR 时每帧 `queue_redraw` 驱动动画；接入渲染器后的 CUTAWAY 只在数据/尺寸变化时重绘，贴图本身不参与动画。"
-    ],
-    l2: {
-      "_draw_section_texture()": [
-        "只处理正尺寸贴图；`destination` 恒为整个控件，`source` 按 cover 居中，保证 1792×1008 图在任意舞台尺寸下铺满且不变形。",
-        "绘制后统一加半透明暗色压住贴图亮度，保持与 Theme 暗青底一致；槽位引线在贴图之上。"
-      ],
-      "_layout_slots() / _place_row()": [
-        "把货舱槽与非货舱槽拆成两行分别 `_place_row`；`_place_row` 计算 chip 宽高、水平居中、直接写 `position/size`（不用容器排布，便于引线定位）。",
-        "贴片可见性每次布局都按 `mode == CUTAWAY` 重算，避免模式切换后残留。"
-      ],
-      "_draw_slot_leaders()": [
-        "从每枚贴片顶部中心画线到 `_chip_anchor` 对应舱室点；货舱按数量决定步长（≤1 时 0.055，否则 0.09）。"
-      ],
-      "set_renderer(node)": [
-        "先移除并 `queue_free` 旧渲染器，再 `add_child` + `move_child(..., 0)` 压到绘制底层。",
-        "Control 渲染器铺满本控件并设为 `MOUSE_FILTER_IGNORE`，避免抢走槽位贴片的拖放。",
-        "挂载后立即下发当前 model 与 mode，渲染器不必等待下一次刷新。"
-      ]
-    }
-  },
-
   "framework/ui/components/sn_ship_stage_3d.gd": {
     role: "船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。",
     dependencies: ["SNStageHost", "ShipyardStage", "SNShipView"],
@@ -1274,7 +1247,7 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/stages/port_stage.gd": {
-    role: "固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 补给是同一港区里从左到右的三个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建。全程序化 + 内容模组 GLB，无外部框架贴图。",
+    role: "固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 船厂 / 补给是同一港区里的四个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建；船厂站位正对干船坞/吊架设施，供改装页把蓝图与操作坞画在 3D 舞台上。全程序化 + 内容模组 GLB，无外部框架贴图。",
     dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
     contracts: [
       "bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,town_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` / `town_visuals` 也可放在根层。",
@@ -1286,7 +1259,7 @@ export const FILE_DOCS = {
       "L2 实例总数 small 14 / medium 17 / large 20（建筑 + 吊机 + 仓房排/雾带/灯塔），仍在方案 L2 ≤20 预算内；small 的 7 栋低于任务描述的 8 下界，以源码为准。",
       "L2b 港口街景：`port.town_visuals`（slot → 已解析 GLB 路径）存在时在码头后方的抬升石广场（`TOWN_GROUND_Y=1.9`、`TOWN_PLAZA` 250×2.2×34）上装配建筑/围栏/工人/广场装饰/小船 + 码头工业件；密度由 `port.density` → `port.diorama.density` → `port.size` 推导（small→sparse、medium→normal、large→busy），每组按 tier 取前缀，`port.id.hash()` 只给自由摆放件加确定性 yaw 抖动（无全局 RNG）。normal = 5 建筑 + 7 围栏 + 7 工人 + 8 装饰 + 3 船 + 17 码头工业件 = **47 props**（sparse 28 / busy 63）。建筑缺失 GLB 时回退程序化 blockout，围栏/工人/船/装饰缺失则直接省略。",
       "town kit 存在时跳过 L2 程序化 skyline（`if _town_visuals.is_empty(): _rebuild_shoreline()`），因为街区已有近景轮廓；town 与 banner 相互独立（有 banner 也可有 town）。",
-      "连续港区与相邻站位：`STATION_ORDER = [market, harbor, supply]`（世界 X 从左到右），`STATIONS` 定义每个站位的 `center`、`camera`/`target`（同一 30° 长焦）、`ship` 泊位与 `ship_yaw`；码头甲板/木桩/系缆桩/煤气灯沿 160 m 连续铺开，`exchange` 与 `supply` 设施分别落在 -30 / +30 的站位上（contracts/intel/shipyard 仍集中在中心港务段）。",
+      "连续港区与相邻站位：`STATION_ORDER = [market, harbor, shipyard, supply]`（世界 X 从左到右），`STATIONS` 定义每个站位的 `center`、`camera`/`target`（同一 30° 长焦，恒为 `target + (46,16,72)`）、`ship` 泊位与 `ship_yaw`；码头甲板/木桩/系缆桩/煤气灯沿 160 m 连续铺开，`exchange` 与 `supply` 设施分别落在 -30 / +30 的站位上。`shipyard` 站位（世界 X 14.5）镜头 `camera (53,28,64)` / `target (7,12,-8)` 比站位锚点整体西移 7.5 m，让干船坞+吊架落在船厂改装页中间 3D 窗口正中；玩家船泊位 `(14.5,0,9)` 停在船坞正前方水面。",
       "`focus_station(station, framing, immediate)` 只重定向镜头与泊位，港口、街坊、设施、水面与合批层都不重建；`framing` = `stage`（全窗总览）或 `panel`（右侧 640 px 泊位面板，镜头整体右移 `PANEL_FRAMING_SHIFT_X=3 m`，让站位落在可见左半屏）。重复聚焦当前站位是 no-op，整页重建不会重启动画；`immediate` 只用于舞台首次挂载。",
       "站位切换演出：镜头在 `CAMERA_PAN_SECONDS=0.6 s` 内平滑 pan；玩家船先转艏向沿岸方向，再以 `SHIP_TRANSIT_SPEED=24 m/s` 驶到新泊位并转回 `ship_yaw`，泡沫环 `boat_center` 随船移动。`advance_station(delta)` 以 50 ms 切片推进整段过渡（`_process` 每帧调用；测试/截图工具可直接步进，无需真实帧）；`is_station_transitioning()` 报告过渡是否结束。",
       "镜头平移时的画幅层：`_apply_camera_shift()` 把相机朝向层（sky card/太阳光晕、painted backdrop、banner 背板、L6 前景框、雾带）按 `camera_shift_x` 平移保持构图，L2 剪影只平移一半保留视差；码头/街坊/设施/水面/船体是世界几何，随镜头真正移动。",
@@ -1402,15 +1375,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "assets/ui/theme/steam_navigator_theme.tres": {
-    role: "全局 Godot Theme：把深青、黄铜、纸色令牌映射为基础控件与语义变体。",
-    contracts: [
-      "基础类型覆盖 Button、PanelContainer、LineEdit、OptionButton、ProgressBar 与容器间距。",
-      "自定义 variation 包含按钮/面板/徽标/标签/进度条；删除或改名时必须同步控件脚本。",
-      "字体使用 SystemFont 回退链，不把本机字体文件写入资源。"
-    ]
-  },
-
   "tools/gen_content_types.mjs": {
     role: "从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录（active `TYPES` + Schema 2.0 草案 `DRAFT_TYPES`）；提供 `--check` 过期检查。",
     contracts: [
@@ -1454,14 +1418,14 @@ export const FILE_DOCS = {
   "SNModMaker/index.html": {
     role: "模组制作器的静态外壳：顶栏、导航/工作区/检视器布局，以及模态框、Toast、拖放与忙碌层宿主。",
     contracts: [
-      "脚本按 `schema-bundle → core-index → catalog → zip → validate → store → io → ui → app` 顺序加载，全部为经典 script，支持 file://。",
+      "脚本按 `schema-bundle → core-index → catalog → zip → validate → store → io → ui → blueprint_editor → app` 顺序加载，全部为经典 script，支持 file://。",
       "不引用外部字体、CDN、图片或模块；图标为内联 SVG / CSS。",
       "`#datalists` 必须保持可被表单引用，不能使用 `display:none` 以外的移除方式。"
     ]
   },
 
   "SNModMaker/css/app.css": {
-    role: "暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、内容/多语言编辑器、模态框与 Toast。",
+    role: "暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、蓝图槽位编辑器画布、内容/多语言编辑器、模态框与 Toast。",
     contracts: [
       "颜色、间距、字体通过 `:root` 变量统一；不引入外部字体。",
       "`[hidden] { display: none !important; }` 支撑视图与过滤逻辑。",
@@ -1564,7 +1528,8 @@ export const FILE_DOCS = {
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
-      "资产以 data URL 存项目；导出时解码为字节；`checksum` 不在网页端计算。"
+      "资产以 data URL 存项目；导出时解码为字节；`checksum` 不在网页端计算。",
+      "内容只引用资源键：`assets[]` 保存 `{key,path,...}`，`manifest.assets[key]` 映射相对路径；`assetKeyFromPath()` / `assetStoragePath()` 从导入时的相对路径生成可区分的键与存储路径，重名自动加 `_2` 后缀。"
     ],
     l2: {
       "createProject(options)": [
@@ -1595,6 +1560,13 @@ export const FILE_DOCS = {
         "定位最短路径的 `manifest.json`，剥离根目录；按清单读取内容/本地化/资产。",
         "内容文件保留显式 payload 版本（缺失时回退类型版本），让版本误配被校验器报出。",
         "缺失声明文件生成占位并返回 warnings；未知 content_type 跳过。"
+      ],
+      "assetKeyFromPath(sourcePath, mime, existingKeys) / assetStoragePath(sourcePath, mime, existingPaths)": [
+        "把 `blueprints/ship_a/side.png` 这类带上层目录的导入路径转成 `icon.blueprints.ship_a.side` 与 `assets/icons/blueprints/ship_a/side.png`；单文件仍退化为文件名。",
+        "键与路径都在调用方传入的已用集合上去重，重名追加 `_2`、`_3`；`assetKindOf()` 统一图片/模型/音频/其他的分类。"
+      ],
+      "migrateAssetReferences(project, oldKey, newKey)": [
+        "递归遍历全部内容定义，把裸键与 `asset://<本模组>/<旧键>` 改写为新键并返回替换数量；manifest.assets 由 syncManifest 重建。"
       ]
     }
   },
@@ -1627,6 +1599,7 @@ export const FILE_DOCS = {
       "目录导出需要 Chromium 的 `showDirectoryPicker`，在所选父目录下创建 `<mod_id>/`。",
       "检测到 `tools/serve.mjs` 时使用同源 `/api` 读写项目、普通导出与游戏模组目录；`detectBackend` 1.5s 超时后静默退化。",
       "`getWorkspaceProject/putWorkspaceProject` 走 `/api/workspace/<id>`，把 `dev_mods/<id>` 作为原生工作区直接读写；普通磁盘项目仍走 `/api/projects/<id>`，两者按 id 不会互相遮蔽。",
+      "`readWorkspaceAsset(id, path)` 走 `/api/workspace/<id>/asset?path=...`，把工作区里的原始图片惰性转成 data URL；蓝图编辑器用它预览 Core 线稿，资产页仍保持轻量占位。",
       "deployGameMod(id, bytes) 把已构建 ZIP 交给本地服务覆盖部署；纯静态/file:// 模式不暴露该操作。",
       "下载使用 Blob URL；不向外部网络上传任何内容。"
     ]
@@ -1643,6 +1616,8 @@ export const FILE_DOCS = {
       "贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。",
       "船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。",
       "船体安装点子面板：`weapon_sockets` / `rig_sockets` 表格行可增删，按 `socket_class` / `socket_kind` 着色徽标，重复 name / 索引就地提示；武器草案复用通用 Schema 渲染并显示中文枚举标签。",
+      "船体蓝图区：绑定 `blueprint_views.side/top.image` 线稿资源；`compartments` / `module_slots` 用专属行渲染（ID、等级/类别限制、`blueprint_position` 四分量输入），并提供「打开蓝图槽位编辑器」入口。",
+      "武器安装点行渲染 `blueprint.side/top` 的 U/V 数值输入；坐标 0..1，留空表示该视图不显示。",
       "所有用户文本与属性值经过 `esc/attr` 转义；引用候选来自当前项目 + Core 索引。",
       "表单生成的路径是相对定义的属性路径（manifest 除外），与 app.setByPath 的约定一致。"
     ],
@@ -1685,12 +1660,15 @@ export const FILE_DOCS = {
       "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（剧情草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。D5 后 42 类 2.0 运行时类型可直接部署。",
       "没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。",
       "资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。",
+      "素材页按资源键/路径/类型提供搜索、类型筛选（全部/图片/模型/音频/其他）、排序与引用次数提示；「导入文件夹」保留上层目录并据此生成资源键，同名文件自动后缀；修改资源键时调用 `Store.migrateAssetReferences` 同步更新内容引用。",
+      "船体蓝图槽位编辑器以全屏 Modal 打开（`open-blueprint-editor`）；打开前对工作区项目调用 `hydrateBlueprintArtwork` 惰性拉取线稿 data URL；拖拽结果通过隐藏 `data-field` + change 事件走 `applyField`，复用撤销、校验与自动保存；Modal 关闭后重绘船体表单。",
       "Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。"
     ],
     l2: {
       "applyField(element, fromChange)": [
         "区分 manifest 与当前定义；数字/整数/布尔/JSON 各有解析，解析失败不写回。",
-        "船体安装点的 `array-add` 走 `nextSocketItem` 生成默认 socket 行（weapon / rig 两套默认值），写回仍走 `data-field` 路径与既有撤销 / 校验流程。",
+        "船体安装点的 `array-add` 走 `nextSocketItem` 生成默认 socket 行（weapon / rig 两套默认值，武器带上中心占位 blueprint），`compartments` / `module_slots` 走 `nextBlueprintSlotItem` 生成唯一 id 与中心坐标；写回仍走 `data-field` 路径与既有撤销 / 校验流程。",
+        "空 `blueprint_views.<view>.image` 会删除键并清理空的视图对象，避免违反 minLength / minProperties。",
         "ID 输入按前缀重建完整 ID，只更新多语言键预览，不直接改定义 `_key` 或语言文件。",
         "空描述键、空 checksum 与空 information 资源字段会删除，避免违反可选字段的 pattern/minLength。"
       ],
@@ -1731,8 +1709,9 @@ export const FILE_DOCS = {
     contracts: [
       "默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可改绑定地址（容器设 `0.0.0.0`），默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` / `SNMODMAKER_WORKSPACE_ROOT` 覆盖目录；工作区根默认是仓库 `dev_mods/`。",
       "默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。",
-      "API：status、projects、workspace、exports 与 game-mods；请求体上限 128 MB。",
+      "API：status、projects、workspace、workspace asset、exports 与 game-mods；请求体上限 128 MB。",
       "`/api/workspace/<id>` 直接读写 `dev_mods/<id>`：打开时返回 manifest/content/localization 与资产键占位（不含二进制），保存时只写文本文件并删掉 manifest 不再声明的 content/localization 文件；资产目录永远不动。",
+      "`/api/workspace/<id>/asset?path=<相对路径>` 只读返回 `{mime,size,base64}`，用于编辑器预览工作区线稿；路径经过 `safeRelative` 与目录前缀双重校验，单文件上限 8 MB，缺文件 404、越界 400。",
       "工作区内容文件缺失 `schema_version` 时按 `content_type` 推导（Schema 2.0 草案 2.0，未知类型回退 1.0）。",
       "工作区保存允许删除/新增定义与内容文件；`/api/workspace/<id>` DELETE 被拒绝，避免误删整个原生模组。",
       "游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。",
@@ -2054,6 +2033,7 @@ export const FILE_DOCS = {
       "渲染器替换：正常态在 `ship.hull_model_path` 非空（或本地有旧路径回退）时挂载 `SNShipStage3D`，断言 `has_ship()`、`has_stage()`、`stage_id()==\"shipyard\"`；改装态 `is_stage_visible()` 为 false、回 EXTERIOR 重新为 true；无模型时断言保留程序化占位。`set_renderer(provider)` 后节点挂到舞台下，`set_renderer(null)` 恢复内置占位。",
       "拖放端到端：`WarehouseOps.add_module` 在仓库放一个导航模块 → 操作列恰好一行可拖拽；`_on_slot_drop` 发 `ship.install_module`，参数含 module_id / source 与槽位 `replace_module_id`，命令后模块离开仓库并装到船上；异类型部件与 purchase 候选被 `_accepts` 拒绝。",
       "分类导航：每个分类的中间面板标题取 `ui.category.<type>`，货舱按槽位数逐个列出「货舱槽 n」；杂项承载打造订单/在港等待/仓库材料/仓库模块，且不再出现「按配方打造」「槽位」；打造入口留在对应模块分类内。",
+      "武器蓝图位置：`shipyard.view.ship.weapon_sockets` 的每行必须投影 `blueprint.side/top` 两个归一化 Vector2；`SNShipView.blueprint_socket_rects()` 在两个视图都为每个 socket 生成框，进入武器分类后全部 socket id 进入高亮集合。",
       "旧面板守护：`LEGACY_SECTION_KEYS`（parts_hud / warehouse / available_modules / craft / recipes / victory plan 等本地化键）的译文不得出现在页面任意 Label 中；这些键必须仍被本地化，键被删时用例应失败而不是静默通过。`_body` 子节点数恒为 3。",
       "模块状态徽标：健康船不出现「状态 NN%」；对锅炉实例造成 50% 损耗后重建船厂页，锅炉槽位卡出现 `ui.label.status` 50% 徽标（条件值来自 shipyard.view 的 condition，不在页面计算）。"
     ]
@@ -2241,15 +2221,15 @@ export const FILE_DOCS = {
   },
 
   "tools/ui_snapshot.gd": {
-    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。",
+    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。",
     contracts: [
       "必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。",
-      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--damage` / `--skip-refit` / `--overview-stage` / `--overview-detail` / `--station-shots`。",
+      "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--tabs` / `--damage` / `--skip-refit` / `--overview-stage` / `--overview-detail` / `--station-shots`。",
       "`--damage=slot[:index]:ratio` 在 run.start 后用 `ShipModules.damage()` 损坏模块实例，额外截取 `shipyard_normal_damaged` / `shipyard_refit_damaged` / `supply_damaged`；只影响截图进程，不进入游戏逻辑。",
-      "`--overview-stage`：切到总览（默认即 3D 舞台，若处于 2D 回退才调 `_on_overview_stage_toggle()`）→ 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、招牌数 = 设施数 + 1、`_top_chrome` 高度 ≤130、底部状态条可见 → 保存 `overview_port_stage.png`。",
+      "`--tabs=buy,craft`：进入改装态后按操作坞页签各截一张 `shipyard_refit_<tab>.png`（购买 / 打造与装配分离），再切回装配页继续分类截图。`--overview-stage`：切到总览（默认即 3D 舞台，若处于 2D 回退才调 `_on_overview_stage_toggle()`）→ 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、招牌数 = 设施数 + 1、`_top_chrome` 高度 ≤130、底部状态条可见 → 保存 `overview_port_stage.png`。",
       "`--overview-detail`：在 `--overview-stage` 基础上点底部「详细总览」按钮（兜底直接置 `_overview_detail=true` 并 refresh），断言抽屉打开、总览页仍挂载 → 保存 `overview_detail.png`。",
       "`--station-shots`：分别切到 market / supply 页，轮询 `_port_stage_host` 的 `has_stage()+is_stage_visible()`、`PortStage.current_station()==目标` 且 `is_station_transitioning()==false` 后截图，保存 `market_station.png` / `supply_station.png`，并在同一进程内把窗口缩到 960×540 补拍 `market_station_960.png`，用于验证缩放下舞台与侧栏都不裁切。",
-      "进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用。",
+      "进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用；改装页画在 3D 港区 `shipyard` 站位上，截图前用 `_wait_port_stage_settled()` 轮询 `_port_stage_host` 的 `is_stage_visible()` / `PortStage.is_station_transitioning()`，等镜头平移与玩家船靠泊结束再拍。",
       "纯色画面判定为失败；120 s watchdog 防止协程中断挂住窗口；成功退出码 0，失败 1。",
       "只写 `docs/design/screenshots/`（或 `--out-dir` 临时目录），不修改游戏状态或源码。"
     ]
@@ -2259,7 +2239,7 @@ export const FILE_DOCS = {
     role: "`tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。",
     contracts: [
       "引擎解析顺序：`-GodotBin` > `$env:GODOT_BIN` > 本机默认路径；找不到直接抛错。",
-      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo,misc`；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图；`-OverviewDetail` 再透传 `--overview-detail` 并追加 `overview_detail.png`（隐含 `-OverviewStage`，同样校验新鲜度）。",
+      "默认 seed 5201、输出 `res://docs/design/screenshots`、额外分类 `cargo,misc`；`-Tabs buy,craft` 透传 `--tabs` 并把 `shipyard_refit_buy.png` / `shipyard_refit_craft.png` 加入期望截图；`-SkipRefit` 只截正常态；`-Damage boiler:0.5` 额外生成受损状态截图并要求它们新鲜；`-OverviewStage` 透传 `--overview-stage` 并把 `overview_port_stage.png` 加入期望截图；`-OverviewDetail` 再透传 `--overview-detail` 并追加 `overview_detail.png`（隐含 `-OverviewStage`，同样校验新鲜度）。",
       "检查每张期望截图存在且比本次运行新，旧图/缺图把退出码改为 1；完整日志写入 `.godot-ui-snapshot.log`。",
       "脚本保持 ASCII，兼容 Windows PowerShell 5.1 解析。"
     ]

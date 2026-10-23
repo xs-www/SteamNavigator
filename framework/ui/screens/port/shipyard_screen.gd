@@ -25,9 +25,9 @@ const BRASS := Color("e1c487")
 const TEAL := Color("76aaa7")
 const RED := Color("c36b53")
 const GREEN := Color("76aa8c")
-const CATEGORY_ORDER := ["hulls", "boiler", "cargo", "utility", "cabin", "misc"]
-const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin"]
-const TYPE_LABELS := {"hulls": "船体", "boiler": "锅炉", "cargo": "货舱", "utility": "通用", "cabin": "客舱", "misc": "杂项"}
+const CATEGORY_ORDER := ["hulls", "boiler", "cargo", "utility", "cabin", "weapons", "misc"]
+const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin", "weapons"]
+const TYPE_LABELS := {"hulls": "船体", "boiler": "锅炉", "cargo": "货舱", "utility": "通用", "cabin": "客舱", "weapons": "武器", "misc": "杂项"}
 const SLOT_TITLES := {"hull": "ui.label.slot_hull", "boiler": "ui.label.slot_boiler", "navigation_module": "ui.label.slot_navigation", "safety_module": "ui.label.slot_safety", "passenger_cabin": "ui.label.slot_cabin"}
 ## Refit slots: flat ship slot key + the UI category it belongs to + instance name.
 const SLOT_DEFS := [
@@ -38,17 +38,20 @@ const SLOT_DEFS := [
 	{"slot": "passenger_cabin", "category": "cabin", "instance": "cabin"},
 ]
 const CARGO_CATEGORY := "cargo"
+## Operations dock tabs: install what you own, buy a new module, or craft one.
+## Requirement: buying and crafting must not share one scrolling list.
+const TAB_ORDER := ["install", "buy", "craft"]
 const SHIP_THUMB_PATH := "res://assets/ui/shipyard/ship_thumb_ironclad.png"
 
 var _tr: Callable
 var _vm: Dictionary = {}
 var _refit := false
 var _category := "hulls"
+var _tab := "install"
 var _slots: Array = []
 var _stage: SNShipView
 var _refit_button: SNButton
 var _stage_title: Label
-var _stage_hint: Label
 var _hud_rows: Array = []
 var _body: HBoxContainer
 var _ship_thumb: Texture2D = null
@@ -58,35 +61,33 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	_tr = translate
 	_vm = vm
 	_refit = bool(vm.get("refit", false))
+	# Fill the page viewport so the refit dock keeps the 3D window open to the
+	# bottom of the screen instead of shrinking to its minimum height.
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var requested := String(vm.get("category", "hulls"))
 	_category = requested if CATEGORY_ORDER.has(requested) else "hulls"
 	_slots = _build_slots(vm)
 	_ship_thumb = null
 	if ResourceLoader.exists(SHIP_THUMB_PATH):
 		_ship_thumb = load(SHIP_THUMB_PATH) as Texture2D
+	_build_page()
+
+
+## Rebuilds the whole page for the current mode. Old nodes are detached and
+## queued for deletion instead of freed immediately, so a button may rebuild the
+## page from its own `pressed` signal without freeing itself mid-emit.
+func _build_page() -> void:
 	_clear()
 	_stage = null
 	_stage_title = null
-	_stage_hint = null
 	_body = null
+	_refit_button = null
 	_hud_rows.clear()
-	add_child(_heading(
-		_loc("ui.nav.shipyard", "Shipyard"),
-		_loc(String(vm.get("port_name_key", "")), String(vm.get("port_id", ""))),
-		_loc("ui.shipyard.detail", "当前船 · 槽位改装 · 打造与购买")
-	))
-	add_child(_summary_row())
-	if not bool(vm.get("has_shipyard", false)):
-		var warning := _panel()
-		_content(warning).add_child(_label(_loc("ui.label.shipyard_absent", ""), 13, RED))
-		add_child(warning)
-	_body = HBoxContainer.new()
-	_body.name = "ShipyardBody"
-	_body.add_theme_constant_override("separation", 14)
-	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_body)
-	_rebuild_layout()
+	if _refit:
+		_build_refit_page()
+	else:
+		_build_normal_page()
+	_sync_refit_ui()
 
 
 # ---------------------------------------------------------------------------
@@ -107,25 +108,45 @@ func _summary_row() -> Control:
 	return row
 
 
-func _rebuild_layout() -> void:
-	if _body == null:
-		return
-	for child in _body.get_children():
-		_body.remove_child(child)
-		child.free()
-	_stage = null
-	_stage_title = null
-	_stage_hint = null
-	_hud_rows.clear()
-	if _refit:
-		_body.add_child(_section_panel())
-		_body.add_child(_operations_panel())
-		_body.add_child(_category_tabs_panel())
-	else:
-		_body.add_child(_ship_list_panel())
-		_body.add_child(_render_panel())
-		_body.add_child(_components_panel())
-	_sync_refit_ui()
+## Normal mode keeps the list/render/components columns over the normal page.
+func _build_normal_page() -> void:
+	add_child(_heading(
+		_loc("ui.nav.shipyard", "Shipyard"),
+		_loc(String(_vm.get("port_name_key", "")), String(_vm.get("port_id", ""))),
+		_loc("ui.shipyard.detail", "当前船 · 槽位改装 · 打造与购买")
+	))
+	add_child(_summary_row())
+	if not bool(_vm.get("has_shipyard", false)):
+		var warning := _panel()
+		_content(warning).add_child(_label(_loc("ui.label.shipyard_absent", ""), 13, RED))
+		add_child(warning)
+	_body = _body_row()
+	add_child(_body)
+	_body.add_child(_ship_list_panel())
+	_body.add_child(_render_panel())
+	_body.add_child(_components_panel())
+
+
+## Refit mode is drawn over the shipyard's 3D station: the framed blueprint on
+## the left, an open window onto the 3D scene in the middle and the translucent
+## operations dock on the right. The page heading and the money / durability /
+## weight summary line belong to the normal mode only; the refit page takes its
+## numbers from the ship data card inside the dock.
+func _build_refit_page() -> void:
+	_body = _body_row()
+	add_child(_body)
+	_body.add_child(_blueprint_panel())
+	_body.add_child(_stage_window())
+	_body.add_child(_refit_dock_panel())
+
+
+func _body_row() -> HBoxContainer:
+	var body := HBoxContainer.new()
+	body.name = "ShipyardBody"
+	body.add_theme_constant_override("separation", 14)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return body
 
 
 func _sync_refit_ui() -> void:
@@ -138,7 +159,7 @@ func _sync_refit_ui() -> void:
 func _on_toggle_refit() -> void:
 	_refit = not _refit
 	refit_mode_changed.emit(_refit)
-	_rebuild_layout()
+	_build_page()
 
 
 ## Enter refit mode on one category. Tests and the shell may call this directly.
@@ -149,12 +170,26 @@ func set_category(category: String) -> void:
 		_refit = true
 		refit_mode_changed.emit(true)
 	_category = category
+	_tab = "install"
 	refit_category_changed.emit(_category)
-	_rebuild_layout()
+	_build_page()
 
 
 func _ui_set_category(category: String) -> void:
 	set_category.call_deferred(category)
+
+
+## Switches the operations dock tab (`install` / `buy` / `craft`). Tests and the
+## shell may call this directly; unknown values are ignored.
+func set_tab(tab: String) -> void:
+	if not TAB_ORDER.has(tab) or tab == _tab:
+		return
+	_tab = tab
+	_build_page()
+
+
+func _ui_set_tab(tab: String) -> void:
+	set_tab.call_deferred(tab)
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +209,6 @@ func _ship_list_panel() -> Control:
 	header.add_child(_badge(_loc("ui.label.ship_list_count", "1 / 1"), SNBadge.Tone.NEUTRAL))
 	box.add_child(header)
 	box.add_child(_ship_card())
-	box.add_child(_label(_loc("ui.hint.ship_list", "当前版本只有旗舰一艘船；更多坞位会在后续版本开放。"), 11, MUTED))
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(spacer)
@@ -252,15 +286,12 @@ func _render_panel() -> Control:
 	var box := _content(panel)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 8)
-	_stage_title = _label(_loc("ui.label.current_ship_render", "当前船只 · 实机渲染"), 16, BRASS)
+	_stage_title = _label(_loc("ui.label.current_ship", "当前船只"), 16, BRASS)
 	_stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_stage_title)
-	header.add_child(_badge(_loc("ui.tag.live_render", "实机渲染"), SNBadge.Tone.NEUTRAL))
 	box.add_child(header)
 	_stage = _make_stage(SNShipView.Mode.EXTERIOR, Vector2(520, 340))
 	box.add_child(_stage)
-	_stage_hint = _label(_loc("ui.hint.live_render", "中心为实机渲染场景，后续 2.5D 场景通过 SNShipView.set_renderer() 接入。"), 11, MUTED)
-	box.add_child(_stage_hint)
 	return panel
 
 
@@ -315,33 +346,47 @@ func _category_row(category: String) -> Control:
 
 
 # ---------------------------------------------------------------------------
-# Refit layout: textured section / operations / category tabs
+# Refit layout: blueprint board / 3D window / operations dock
 # ---------------------------------------------------------------------------
-func _section_panel() -> Control:
+## Left column: the nine-slice blueprint board with the per-hull side/top line
+## art and the slot chips (drag targets). No title or badge: the page reads as a
+## working blueprint instead of a test bench.
+func _blueprint_panel() -> Control:
 	var panel := _panel()
-	panel.theme_type_variation = &"SNElevatedPanel"
+	panel.theme_type_variation = &"SNBlueprintPanel"
+	panel.custom_minimum_size = Vector2(560, 0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.size_flags_stretch_ratio = 1.2
 	var box := _content(panel)
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 8)
-	_stage_title = _label(_loc("ui.label.stage_cutaway", "纵剖图"), 17, BRASS)
-	_stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(_stage_title)
-	header.add_child(_badge(_loc("ui.tag.section_texture", "贴图剖面"), SNBadge.Tone.SUCCESS))
-	box.add_child(header)
-	_stage = _make_stage(SNShipView.Mode.CUTAWAY, Vector2(620, 340))
+	_stage = _make_stage(SNShipView.Mode.CUTAWAY, Vector2(520, 380), true)
 	box.add_child(_stage)
-	_stage_hint = _label(_loc("ui.hint.drag_parts", "拖动仓库或随船部件到左侧槽位即可装配或替换同槽位旧件。"), 11, MUTED)
-	box.add_child(_stage_hint)
 	return panel
 
 
-func _operations_panel() -> Control:
+## Middle column: an empty window. The 3D shipyard station shows through it, so
+## the page never paints an opaque backdrop over the 3D scene.
+func _stage_window() -> Control:
+	var window := Control.new()
+	window.name = "StageWindow"
+	window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	window.custom_minimum_size = Vector2(140, 0)
+	window.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	window.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	window.size_flags_stretch_ratio = 1.0
+	return window
+
+
+## Right column: translucent dock with the ship data card, the category picker,
+## the install / buy / craft tabs and the tab body.
+func _refit_dock_panel() -> Control:
 	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"SNInsetPanel"
-	panel.custom_minimum_size = Vector2(404, 0)
+	panel.name = "RefitDock"
+	panel.theme_type_variation = &"SNGlassPanel"
+	panel.custom_minimum_size = Vector2(432, 0)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.size_flags_stretch_ratio = 0.25
 	var box := _content(panel)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 8)
@@ -349,9 +394,18 @@ func _operations_panel() -> Control:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	header.add_child(_badge(_category_count_text(_category), SNBadge.Tone.NEUTRAL))
+	_refit_button = SNButton.new()
+	_refit_button.variant = SNButton.Variant.PRIMARY
+	_refit_button.compact = true
+	_refit_button.custom_minimum_size = Vector2(96, 32)
+	_refit_button.pressed.connect(_on_toggle_refit)
+	header.add_child(_refit_button)
 	box.add_child(header)
-	var hint_key := "ui.hint.operations_misc" if _category == "misc" else "ui.hint.operations"
-	panel.tooltip_text = _loc(hint_key, "")
+	box.add_child(_ship_data_card())
+	box.add_child(_section_label(_loc("ui.label.category_tabs", "部件分类")))
+	box.add_child(_category_picker())
+	if _category != "misc":
+		box.add_child(_tab_row())
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -361,60 +415,237 @@ func _operations_panel() -> Control:
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(body)
 	box.add_child(scroll)
-	_build_category_body(body)
+	_build_tab_body(body)
+	_highlight_category_slots()
 	return panel
 
 
-func _category_tabs_panel() -> Control:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"SNInsetPanel"
-	panel.custom_minimum_size = Vector2(164, 0)
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var box := _content(panel)
-	box.add_child(_label(_loc("ui.label.category_tabs", "部件分类"), 15, BRASS))
+## Ship-wide numbers live here in the dock instead of a summary line over the
+## blueprint: hull name plus weight / durability / cargo / cabin / weapon counts.
+func _ship_data_card() -> Control:
+	var card := _panel()
+	card.theme_type_variation = &"SNInsetPanel"
+	var box := _content(card)
+	var ship: Dictionary = _vm.get("ship", {})
+	var hull_name := String(ship.get("hull_name", ""))
+	if hull_name.is_empty():
+		hull_name = _loc(String(ship.get("hull_id", "")), String(ship.get("hull_id", "")))
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	var name_label := _label(hull_name, 15, TEXT)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_row.add_child(name_label)
+	var damaged := int(ship.get("damaged_modules", 0))
+	if damaged > 0:
+		title_row.add_child(_badge("%s %d" % [_loc("ui.label.damaged_modules", "受损部件"), damaged], SNBadge.Tone.WARNING))
+	box.add_child(title_row)
+	box.add_child(_label(_loc("ui.label.ship_stats", "船体数据"), 11, TEAL))
+	var sockets: Array = ship.get("weapon_sockets", [])
+	var mounted := 0
+	for socket in sockets:
+		if socket is Dictionary and not String(socket.get("weapon_id", "")).is_empty():
+			mounted += 1
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 3)
+	_stat_cell(grid, _loc("ui.label.weight_short", "重量"), "%s / %s" % [
+		_fmt(float(ship.get("total_weight", 0.0))), _fmt(float(ship.get("max_weight", 0.0))),
+	])
+	_stat_cell(grid, _loc("ui.label.durability_short", "耐久"), "%s / %s" % [
+		_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0))),
+	])
+	_stat_cell(grid, _loc("ui.label.cargo_slots", "货舱槽"), "%d / %d" % [
+		int(ship.get("cargo_used", 0)), int(ship.get("cargo_slots", 0)),
+	])
+	_stat_cell(grid, _loc("ui.label.cabin_slots", "客舱槽"), "%d / %d" % [
+		int(ship.get("cabin_used", 0)), int(ship.get("cabin_slots", 0)),
+	])
+	_stat_cell(grid, _loc("ui.category.weapons", "武器"), "%d / %d" % [mounted, sockets.size()])
+	_stat_cell(grid, _loc("ui.label.free_capacity", "剩余货舱"), "%s / %s" % [
+		_fmt(float(ship.get("free_cargo_capacity", 0.0))), _fmt(float(ship.get("cargo_capacity", 0.0))),
+	])
+	box.add_child(grid)
+	return card
+
+
+func _stat_cell(grid: GridContainer, label_text: String, value_text: String) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var title := _label(label_text, 11, MUTED)
+	title.custom_minimum_size = Vector2(64, 0)
+	row.add_child(title)
+	var value := _label(value_text, 12, TEXT)
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value)
+	grid.add_child(row)
+
+
+## Seven part categories in a compact two-row grid (no separate tab column).
+func _category_picker() -> Control:
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
 	for category in CATEGORY_ORDER:
 		var button := SNButton.new()
-		button.variant = SNButton.Variant.PRIMARY if category == _category else SNButton.Variant.GHOST
+		button.variant = SNButton.Variant.PRIMARY if category == _category else SNButton.Variant.SECONDARY
 		button.compact = true
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.custom_minimum_size = Vector2(0, 38)
-		button.text = "   " + _category_label(category)
+		button.custom_minimum_size = Vector2(0, 30)
+		button.text = _category_label(category)
 		button.pressed.connect(_ui_set_category.bind(category))
-		box.add_child(button)
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(spacer)
-	return panel
+		grid.add_child(button)
+	return grid
 
 
-func _build_category_body(box: VBoxContainer) -> void:
+func _tab_row() -> Control:
+	var row := HBoxContainer.new()
+	row.name = "RefitTabs"
+	row.add_theme_constant_override("separation", 6)
+	for tab in TAB_ORDER:
+		var button := SNButton.new()
+		button.variant = SNButton.Variant.PRIMARY if tab == _tab else SNButton.Variant.SECONDARY
+		button.compact = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(0, 32)
+		button.text = _tab_label(tab)
+		button.pressed.connect(_ui_set_tab.bind(tab))
+		row.add_child(button)
+	return row
+
+
+func _tab_label(tab: String) -> String:
+	match tab:
+		"buy":
+			return _loc("ui.tab.buy", "购买")
+		"craft":
+			return _loc("ui.tab.craft", "打造")
+		_:
+			return _loc("ui.tab.install", "装配")
+
+
+func _build_tab_body(box: VBoxContainer) -> void:
 	if _category == "misc":
 		_build_misc_body(box)
 		return
-	var category := _category
-	var slot_rows := _slot_rows_for_category(category)
+	match _tab:
+		"buy":
+			_build_buy_body(box)
+		"craft":
+			_build_craft_body(box)
+		_:
+			_build_install_body(box)
+
+
+## Install: current slots plus the warehouse / on-board modules that can be
+## dragged onto the blueprint's slot chips.
+func _build_install_body(box: VBoxContainer) -> void:
+	if _category == "weapons":
+		_build_weapon_install_body(box)
+		return
+	var slot_rows := _slot_rows_for_category(_category)
 	box.add_child(_section_label(_loc("ui.label.section_slots", "槽位")))
 	if slot_rows.is_empty():
 		box.add_child(_label(_loc("ui.label.no_slot_for_type", "当前船体没有该类型的槽位。"), 12, MUTED))
 	for slot in slot_rows:
 		box.add_child(_slot_card(slot))
-	var owned := _owned_parts(category)
-	if not owned.is_empty():
-		box.add_child(_section_label(_loc("ui.label.owned_parts", "仓库 / 随船")))
-		box.add_child(_label(_loc("ui.hint.drag_parts", "拖动仓库或随船部件到左侧槽位即可装配或替换同槽位旧件。"), 11, MUTED))
+	var owned := _owned_parts(_category)
+	box.add_child(_section_label(_loc("ui.label.owned_parts", "仓库 / 随船")))
+	if owned.is_empty():
+		box.add_child(_label(_loc("ui.label.no_owned_parts", "仓库和随船都没有该分类的部件。"), 11, MUTED))
+	else:
+		box.add_child(_label(_loc("ui.hint.drag_install", "把仓库或随船部件拖到左侧蓝图的槽位即可装配。"), 11, MUTED))
 		for part in owned:
 			box.add_child(_part_row(part))
-	var candidates := _candidates_for_category(category)
-	if not candidates.is_empty():
-		box.add_child(_section_label(_loc("ui.label.buy_and_install", "购买并安装")))
-		for candidate in candidates:
-			box.add_child(_candidate_card(candidate))
-	var recipes := _recipes_for_category(category)
-	if not recipes.is_empty():
-		box.add_child(_section_label(_loc("ui.label.craft_section", "按配方打造")))
-		box.add_child(_label(_loc("ui.hint.craft_section", "打造会先产生订单，完工后进入当前港仓库。"), 11, MUTED))
-		for recipe in recipes:
-			box.add_child(_craft_recipe(recipe, bool(_vm.get("has_shipyard", false))))
+
+
+func _build_buy_body(box: VBoxContainer) -> void:
+	if _category == "weapons":
+		_build_weapon_buy_body(box)
+		return
+	var candidates := _candidates_for_category(_category)
+	box.add_child(_section_label(_loc("ui.label.buy_and_install", "购买并安装")))
+	if candidates.is_empty():
+		box.add_child(_label(_loc("ui.label.no_candidates", "当前没有可购买的模块"), 12, MUTED))
+	for candidate in candidates:
+		box.add_child(_candidate_card(candidate))
+
+
+func _build_craft_body(box: VBoxContainer) -> void:
+	var recipes := _recipes_for_category(_category)
+	box.add_child(_section_label(_loc("ui.label.craft_section", "按配方打造")))
+	box.add_child(_label(_loc("ui.hint.craft_section", "打造会先产生订单，完工后进入当前港仓库。"), 11, MUTED))
+	if recipes.is_empty():
+		box.add_child(_label(_loc("ui.label.no_recipes", "当前没有可打造的配方"), 12, MUTED))
+	var has_shipyard := bool(_vm.get("has_shipyard", false))
+	for recipe in recipes:
+		box.add_child(_craft_recipe(recipe, has_shipyard))
+
+
+## Highlight the slot chips that accept the current category, so a drag has an
+## obvious target. Weapons highlight their blueprint socket frames instead.
+func _highlight_category_slots() -> void:
+	if _stage == null or not is_instance_valid(_stage):
+		return
+	if _tab != "install" or _category == "misc":
+		_stage.highlight_slots([])
+		return
+	if _category == "weapons":
+		_stage.highlight_slots(_weapon_socket_ids())
+		return
+	var ids: Array = []
+	for slot in _slot_rows_for_category(_category):
+		ids.append(String(slot.get("id", "")))
+	_stage.highlight_slots(ids)
+
+
+func _build_weapon_install_body(box: VBoxContainer) -> void:
+	box.add_child(_section_label("武器槽位"))
+	var sockets: Array = _vm.get("ship", {}).get("weapon_sockets", [])
+	if sockets.is_empty():
+		box.add_child(_label("当前船体没有舰载武器槽位。", 12, MUTED))
+	for socket in sockets:
+		if not (socket is Dictionary):
+			continue
+		var card := _panel()
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		var content := _content(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var socket_name := String(socket.get("socket", ""))
+		var weapon_id := String(socket.get("weapon_id", ""))
+		var title := _label("%s · %s" % [socket_name, String(socket.get("socket_class", ""))], 13, BRASS)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# Long socket ids must not widen the fixed dock.
+		title.clip_text = true
+		title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		row.add_child(title)
+		if not weapon_id.is_empty():
+			row.add_child(_label(_loc(String(socket.get("name_key", "")), weapon_id), 13, TEXT))
+			row.add_child(_command_button("卸下", &"ship.uninstall_weapon", {"socket": socket_name}))
+		else:
+			row.add_child(_label("空槽位", 12, MUTED))
+		content.add_child(row)
+		card.mouse_entered.connect(func() -> void: _highlight_weapon_socket(socket_name))
+		card.mouse_exited.connect(_highlight_all_weapon_sockets)
+		box.add_child(card)
+	var warehouse_weapons: Array = _vm.get("warehouse", {}).get("weapons", [])
+	if not warehouse_weapons.is_empty():
+		box.add_child(_section_label("仓库武器"))
+		for weapon in warehouse_weapons:
+			if weapon is Dictionary:
+				box.add_child(_warehouse_weapon_row(weapon))
+
+
+func _build_weapon_buy_body(box: VBoxContainer) -> void:
+	box.add_child(_section_label("购买并安装"))
+	var candidates: Array = _vm.get("weapon_candidates", [])
+	if candidates.is_empty():
+		box.add_child(_label(_loc("ui.label.no_candidates", "当前没有可购买的模块"), 12, MUTED))
+	for candidate in candidates:
+		if candidate is Dictionary:
+			box.add_child(_weapon_candidate_card(candidate))
 
 
 func _build_misc_body(box: VBoxContainer) -> void:
@@ -476,6 +707,7 @@ func _slot_card(slot: Dictionary) -> Control:
 	header.add_theme_constant_override("separation", 8)
 	var title := _label(String(slot.get("title", "")), 14, BRASS)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clip_title(title)
 	header.add_child(title)
 	if bool(slot.get("fixed", false)):
 		header.add_child(_badge(_loc("ui.tag.fixed_slot", "固定槽"), SNBadge.Tone.WARNING))
@@ -590,23 +822,48 @@ func _make_slot_row(slot_name: String, category: String, index: int, title: Stri
 	}
 
 
-func _make_stage(mode: int, minimum: Vector2) -> SNShipView:
+## `blueprint_backdrop` tells the stage that the column already paints the
+## nine-slice blueprint board, so the cutaway must not add its own dark boxes.
+func _make_stage(mode: int, minimum: Vector2, blueprint_backdrop: bool = false) -> SNShipView:
 	var stage := SNShipView.new()
 	stage.name = "ShipStage"
 	stage.custom_minimum_size = minimum
 	stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stage.set_ship_model(_vm.get("ship", {}))
+	stage.set_blueprint_backdrop(blueprint_backdrop)
 	stage.set_slots(_slots)
 	stage.slot_drop_requested.connect(_on_slot_drop)
 	stage.slot_activated.connect(_on_slot_activated)
 	stage.set_mode(mode)
+	if _category == "weapons":
+		stage.highlight_slots(_weapon_socket_ids())
 	# 2.5D 舞台：正常态用真实 3D 船身，改装态仍走纵剖图贴图。船体模型由船体定义
 	# 的 information.model 资产键解析（来自内容模组）；解析不到时自动回退程序化占位。
 	var hull_model_path := String(_vm.get("ship", {}).get("hull_model_path", ""))
 	if mode == SNShipView.Mode.EXTERIOR and (not hull_model_path.is_empty() or SNShipStage3D.is_supported()):
 		stage.set_renderer(SNShipStage3D.new())
 	return stage
+
+
+func _weapon_socket_ids() -> Array:
+	var ids: Array = []
+	for socket in _vm.get("ship", {}).get("weapon_sockets", []):
+		if socket is Dictionary:
+			var socket_id := String(socket.get("socket", ""))
+			if not socket_id.is_empty():
+				ids.append(socket_id)
+	return ids
+
+
+func _highlight_weapon_socket(socket_id: String) -> void:
+	if _stage != null and is_instance_valid(_stage):
+		_stage.highlight_slots([socket_id])
+
+
+func _highlight_all_weapon_sockets() -> void:
+	if _stage != null and is_instance_valid(_stage) and _category == "weapons":
+		_stage.highlight_slots(_weapon_socket_ids())
 
 
 # ---------------------------------------------------------------------------
@@ -803,6 +1060,7 @@ func _candidate_card(candidate: Dictionary) -> Control:
 	var installed := bool(candidate.get("installed", false))
 	var title := _label(_loc(String(candidate.get("name_key", "")), String(candidate.get("module_id", ""))), 14, TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clip_title(title)
 	title_row.add_child(title)
 	title_row.add_child(_label("%d 金币 · %s" % [int(candidate.get("price", 0)), _fmt(float(candidate.get("weight", 0.0)))], 12, MUTED))
 	box.add_child(title_row)
@@ -819,12 +1077,61 @@ func _candidate_card(candidate: Dictionary) -> Control:
 	return card
 
 
+func _weapon_candidate_card(candidate: Dictionary) -> Control:
+	var card := _panel()
+	card.mouse_filter = Control.MOUSE_FILTER_PASS
+	var box := _content(card)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var weapon_id := String(candidate.get("weapon_id", ""))
+	var title := _label("%s → %s" % [_loc(String(candidate.get("name_key", "")), weapon_id), String(candidate.get("socket", ""))], 13, TEXT)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clip_title(title)
+	row.add_child(title)
+	row.add_child(_label("%d 金币 · %s · 伤害 %s" % [int(candidate.get("price", 0)), _fmt(float(candidate.get("weight", 0.0))), _fmt(float(candidate.get("damage", 0.0)))], 11, MUTED))
+	var button := _command_button("购买并安装", &"ship.install_weapon", {"socket": String(candidate.get("socket", "")), "weapon_id": weapon_id, "source": "purchase"})
+	button.disabled = not bool(candidate.get("can_install", false))
+	row.add_child(button)
+	box.add_child(row)
+	var blocker := _blocker_text(candidate.get("blockers", []))
+	if not blocker.is_empty():
+		box.add_child(_wrap_label(blocker, 11, RED))
+	var socket_id := String(candidate.get("socket", ""))
+	card.mouse_entered.connect(func() -> void: _highlight_weapon_socket(socket_id))
+	card.mouse_exited.connect(_highlight_all_weapon_sockets)
+	return card
+
+
+func _warehouse_weapon_row(weapon: Dictionary) -> Control:
+	var card := _panel()
+	var box := _content(card)
+	var title := _label("%s ×%d · %s" % [_loc(String(weapon.get("name_key", "")), String(weapon.get("weapon_id", ""))), int(weapon.get("qty", 0)), String(weapon.get("weapon_class", ""))], 13, TEXT)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clip_title(title)
+	box.add_child(title)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	for option in weapon.get("install_options", []):
+		if not (option is Dictionary):
+			continue
+		var button := _command_button("安装到 %s" % String(option.get("socket", "")), &"ship.install_weapon", {
+			"socket": String(option.get("socket", "")),
+			"weapon_id": String(weapon.get("weapon_id", "")),
+			"source": "warehouse",
+		})
+		button.disabled = not bool(option.get("can_install", false))
+		actions.add_child(button)
+	box.add_child(actions)
+	return card
+
+
 func _craft_recipe(recipe: Dictionary, has_shipyard: bool) -> Control:
 	var card := _panel()
 	var box := _content(card)
 	var title_row := HBoxContainer.new()
 	var title := _label(_loc(String(recipe.get("name_key", "")), String(recipe.get("module_id", ""))), 14, TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clip_title(title)
 	title_row.add_child(title)
 	var category := String(recipe.get("category", ""))
 	title_row.add_child(_label("%s · %s" % [String(TYPE_LABELS.get(category, category)), _fmt(float(recipe.get("weight", 0.0)))], 12, MUTED))
@@ -863,6 +1170,7 @@ func _warehouse_module_row(module: Dictionary, has_shipyard: bool) -> Control:
 	var module_id := String(module.get("module_id", ""))
 	var title := _label("· %s ×%d · %s" % [_loc(String(module.get("name_key", "")), module_id), maxi(1, int(module.get("qty", 1))), _fmt(float(module.get("weight", 0.0)))], 13, TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clip_title(title)
 	row.add_child(title)
 	var blockers: Array = module.get("blockers", [])
 	var reason := _blocker_text(blockers)
@@ -928,6 +1236,13 @@ func _slot_count_text(vm: Dictionary, category: String) -> String:
 			var used := (1 if bool(ship.get("navigation_occupied", false)) else 0) \
 				+ (1 if bool(ship.get("safety_occupied", false)) else 0)
 			return "%d / 2" % used
+		"weapons":
+			var sockets: Array = ship.get("weapon_sockets", [])
+			var mounted := 0
+			for socket in sockets:
+				if socket is Dictionary and not String(socket.get("weapon_id", "")).is_empty():
+					mounted += 1
+			return "%d / %d" % [mounted, sockets.size()]
 		_:
 			return "1 / 1"
 
@@ -939,6 +1254,7 @@ func _category_label(category: String) -> String:
 		"cargo": return _loc("ui.category.cargo", "货舱")
 		"utility": return _loc("ui.category.utility", "通用")
 		"cabin": return _loc("ui.category.cabin", "客舱")
+		"weapons": return "武器"
 		"misc": return _loc("ui.category.misc", "杂项")
 		_: return category
 
@@ -946,6 +1262,8 @@ func _category_label(category: String) -> String:
 func _category_count_text(category: String) -> String:
 	if category == "misc":
 		return _loc("ui.label.misc_count", "工单 / 材料")
+	if category == "weapons":
+		return "%d 槽位" % Array(_vm.get("ship", {}).get("weapon_sockets", [])).size()
 	return "%d %s" % [_slot_rows_for_category(category).size(), _loc("ui.label.slots_unit", "槽位")]
 
 
@@ -1070,6 +1388,13 @@ func _wrap_label(text: String, size: int, color: Color) -> Label:
 	return label
 
 
+## Long ids (socket / module / recipe names) must ellipsize instead of widening
+## the fixed-width operations dock.
+func _clip_title(label: Label) -> void:
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+
+
 func _loc(key: String, fallback: String) -> String:
 	var text := String(_tr.call(key)) if _tr.is_valid() else fallback
 	return fallback if text.is_empty() or text == key else text
@@ -1082,4 +1407,4 @@ func _fmt(value: float, decimals: int = 1) -> String:
 func _clear() -> void:
 	for child in get_children():
 		remove_child(child)
-		child.free()
+		child.queue_free()

@@ -65,6 +65,148 @@
         }
       }
     },
+    "blueprint_position": {
+      "description": "船厂蓝图中的归一化槽位坐标。side / top 分别对应侧视图和俯视图，原点在图像左上角，坐标范围为 0..1；至少提供一个视图。",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "default": {"side": [0.5, 0.5]},
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/normalized_vector2"
+        },
+        "top": {
+          "$ref": "#/$defs/normalized_vector2"
+        }
+      }
+    },
+    "normalized_vector2": {
+      "description": "JSON 表示的 Vector2：[x, y]，两个分量均为 0..1。",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "blueprint_view": {
+      "description": "船体蓝图某一视图的线稿绑定。image 是 mod 资源键；坐标即相对该线稿（space=trimmed，默认）或未裁切画布（space=canvas）的归一化值。",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["image"],
+      "properties": {
+        "image": {
+          "description": "线稿图片的资源键（manifest.assets 中的键，例如 blueprint.ship.side）。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "width": {
+          "description": "线稿像素宽（仅元数据；编辑器可回填）。",
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "description": "线稿像素高（仅元数据；编辑器可回填）。",
+          "type": "integer",
+          "minimum": 1
+        },
+        "space": {
+          "description": "坐标基准：trimmed = 裁切后线稿纹理（默认），canvas = 未裁切渲染画布。",
+          "enum": ["trimmed", "canvas"]
+        }
+      }
+    },
+    "blueprint_views": {
+      "description": "船体蓝图的每视图线稿绑定。至少绑定一个视图；槽位坐标的 side/top 与这里的键一一对应。",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/blueprint_view"
+        },
+        "top": {
+          "$ref": "#/$defs/blueprint_view"
+        }
+      }
+    },
+    "compartment_mount": {
+      "description": "船体提供的舱位安装位：可独立选中、装载货舱/客舱模块并配置蓝图坐标。",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "description": "船体内唯一的稳定标识，运行时存档与 UI 选中使用。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "blueprint_position": {
+          "$ref": "#/$defs/blueprint_position"
+        },
+        "max_tier": {
+          "description": "可装载舱位模块的最高等级；缺省表示不额外限制。",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "allowed_types": {
+          "description": "允许装载的舱位模块类型；省略或空数组表示全部类型。",
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 2,
+          "items": {
+            "enum": ["cargo", "cabin"]
+          }
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
+    "module_slot": {
+      "description": "船体提供的模块安装位；内部模块只需蓝图坐标，外部模块可附 GLB socket 引用。",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "blueprint_position": {
+          "$ref": "#/$defs/blueprint_position"
+        },
+        "allowed_categories": {
+          "description": "允许安装的模块 v2_category；省略或空数组表示不额外限制。",
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 5,
+          "items": {
+            "enum": ["boiler", "cargo", "utility", "cabin", "crew"]
+          }
+        },
+        "socket": {
+          "description": "可选 GLB 节点名（外部模块装配点，例如 SN_Socket_Module_Crane_1）。",
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^SN_Socket_"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
     "weapon_socket": {
       "type": "object",
       "additionalProperties": false,
@@ -84,6 +226,15 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 64
+        },
+        "blueprint": {
+          "$ref": "#/$defs/blueprint_position"
+        },
+        "pair": {
+          "description": "左右舷同型约束的对端 socket 名（例如 SN_Socket_Weapon_Starboard_1）；省略表示独立安装位。",
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^SN_Socket_Weapon"
         },
         "position": {
           "description": "船体局部坐标 [x, y, z]（米）；z 为该点甲板实测高度。",
@@ -334,6 +485,30 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 4
+        },
+        "base_cargo_capacity": {
+          "description": "船体自带的初始货舱空间；总货舱容量 = 本值 + Σ(货舱模块 capacity × condition)。",
+          "type": "number",
+          "minimum": 0
+        },
+        "blueprint_views": {
+          "$ref": "#/$defs/blueprint_views"
+        },
+        "compartments": {
+          "description": "船体提供的舱位安装位；数组长度即数量上限，每个安装位可独立配置蓝图坐标、等级与类型限制。",
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/compartment_mount"
+          }
+        },
+        "module_slots": {
+          "description": "船体提供的模块安装位；内部模块只需蓝图坐标，外部模块可附 socket 引用。",
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/module_slot"
+          }
         },
         "base_risk": {
           "type": "number",

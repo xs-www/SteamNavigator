@@ -6,6 +6,7 @@
 - [PROJECT_STATUS.md](PROJECT_STATUS.md) — 当前实现状态与最近交付的详细清单（从 README 拆出，按需读取）
 - [CORE_CONTENT.md](CORE_CONTENT.md) — MVP Core 内容与数值概览（真源仍是 `dev_mods/core/content/`）
 - [KNOWN_LIMITS.md](KNOWN_LIMITS.md) — 已知边界与暂缓项（判断需求是否已实现前先读）
+- [CORE_MECHANICS_PHASE1.md](CORE_MECHANICS_PHASE1.md) — 核心机制补全 Phase 1：模块状态实际影响性能、船厂武器购买/装配、损伤与维修回归
 - [LUA_MODDING_SDK.md](LUA_MODDING_SDK.md) — Lua 可执行模组 SDK 架构与实施规范（Draft 0.1；沙箱 / 权限 / API / 确定性 / 发布门禁；尚未实现）
 - [BASE_SYSTEM.md](BASE_SYSTEM.md) — Phase D3 基地系统（5 类 active 2.0、`data.base`、命令/查询、tick 生产与最小 UI）
 - [AUTO_TRADE_SYSTEM.md](AUTO_TRADE_SYSTEM.md) — Phase D4 自动贸易（2 类 active 2.0、策略/规则、tick 买卖与最小 UI）
@@ -23,7 +24,7 @@
 - [MODELING_BACKLOG.md](MODELING_BACKLOG.md) — 3D 建模需求 backlog（P0/P1/P2、建议批次、统一验收口径）
 - [KIT_ASSET_LIBRARY.md](KIT_ASSET_LIBRARY.md) — 模型素材库 26 件资产目录、接口契约与装配配方（批次 1–3）
 - [WEAPON_SOCKET_CONTRACT.md](WEAPON_SOCKET_CONTRACT.md) — 武器装配规范 v2（安装点 / Yaw / Pitch / Recoil / Muzzle）
-- [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) — 武器内容 Schema 2.0 草案（战斗 / 装配 / 经济字段、船体 socket 镜像与编辑器支持；运行时不加载）
+- [WEAPON_CONTENT_SCHEMA.md](WEAPON_CONTENT_SCHEMA.md) — 武器内容 Schema 2.0 契约（战斗 / 装配 / 经济字段、船体 socket 镜像与编辑器支持；D1 起已 active）
 - [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md) — 船体帆索部件库 rig_kit（12 件 SN_Rig_* + 22 个 SN_Socket_Mast/Yard/Sail_*，M0-4）
 - [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) — 近期开发计划、优先级与验收标准
 - [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md) — 正式版路线图（草案，随里程碑更新）
@@ -34,3 +35,4 @@
 - [UI_PROTOTYPE.md](UI_PROTOTYPE.md) — `.design` 美术与交互原型说明
 - [UI_VISUAL_BASELINE.md](UI_VISUAL_BASELINE.md) — SN Visual Baseline V1 与非约束性的 UI Kit Concept V1
 - [UI_FOUNDATION_SPEC_V1.md](UI_FOUNDATION_SPEC_V1.md) — 四类材质、基础尺寸、九宫格、安全区、字体、颜色、状态与动效生产前置规范
+- [UI_SCREEN_PROTOTYPES_V1.md](UI_SCREEN_PROTOTYPES_V1.md) — 总览、市场、委托、船厂、补给、情报、海图/出航、抵达结算八张页面级视觉原型

@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T06:43:10.869Z",
-  "commit": "db8d9fb",
+  "generated_at": "2026-10-23T12:50:28.864Z",
+  "commit": "97a6dc5",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1124,
-    "documented": 442,
-    "grouped": 682
+    "sources": 1143,
+    "documented": 450,
+    "grouped": 693
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "34c8b7263c354f8ea81bc3ccc012c16f2cae02d8795ceecdbcbc228ebef0c4c7",
+      "sha256": "60ee1309595eff08eabaf07e324aa6f01e09625b3176f198562801619081be1d",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -174,6 +174,13 @@
       "group": "docs/static/SNModMaker/README.md"
     },
     {
+      "source": "SNModMaker/.gdignore",
+      "sha256": "4f0790c6e558d1dff03201a2f09c4d33652cd3f33bcc7d421ab617e251c936f1",
+      "doc": "docs/static/SNModMaker/README.md",
+      "status": "grouped",
+      "group": "docs/static/SNModMaker/README.md"
+    },
+    {
       "source": "SNModMaker/Dockerfile",
       "sha256": "8909d8c8b4b92c0e88b0987b999cfb99d7cb88e0f195706903fcef9298acd201",
       "doc": "docs/static/SNModMaker/Dockerfile.md",
@@ -181,7 +188,7 @@
     },
     {
       "source": "SNModMaker/README.md",
-      "sha256": "31b26122d379eeff518e2d26f4c4150145eea60dff39b75640c5d926c4344a88",
+      "sha256": "46330cefa35f0f61912ddfe4e77faf72b80817317d282d0a870e0469abc380a3",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -195,7 +202,7 @@
     },
     {
       "source": "SNModMaker/css/app.css",
-      "sha256": "4a35db3423031b2d25ab9424b41dccff95a49a63e0d0bd892e56232098ae579b",
+      "sha256": "a3088a1427b5a64e77e9ee1c43a798e567e5a778aca7c0b67cd2f3bc2083d8ec",
       "doc": "docs/static/SNModMaker/css/app.css.md",
       "status": "documented"
     },
@@ -208,7 +215,7 @@
     },
     {
       "source": "SNModMaker/docs/USER_GUIDE.md",
-      "sha256": "fa4238ef4e64e2e6bbdb2df4e9a6edf84d343f4a1ab8d31302acbda22e354738",
+      "sha256": "ad9b85ad843218f478776e8a9345645a19ba549907817668a32d4ed375174264",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -222,14 +229,20 @@
     },
     {
       "source": "SNModMaker/index.html",
-      "sha256": "13387c55a75382a8ba4ce1b7ed470864a7e73d9025b0aaadd7c4e7b09f0cdafc",
+      "sha256": "7670a77a93fd87762dafbc55ce38d67dc35916a3c68e45273904086ddae583a1",
       "doc": "docs/static/SNModMaker/index.html.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/js/app.js",
-      "sha256": "e1b99df699769788691c7c3d90574b87e749dd36f965bd9e5c2ffb7ba98a9900",
+      "sha256": "dab1fed25c8d217520230fbc2a654050b3a412a3ae5ba6fee8b6ff3ff489ec97",
       "doc": "docs/static/SNModMaker/js/app.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "SNModMaker/js/blueprint_editor.js",
+      "sha256": "6a8ee0c570e12191022067a5d0afda346b56b2bc140df55207d8fca7876b80bd",
+      "doc": "docs/static/SNModMaker/js/blueprint_editor.js.md",
       "status": "documented"
     },
     {
@@ -246,7 +259,7 @@
     },
     {
       "source": "SNModMaker/js/io.js",
-      "sha256": "5a99385bab606be46997a2e7d769a917b8fecdabe0c366b850d9bffa1775461b",
+      "sha256": "9467daf0d3dcf6b3afcfd7481ae3d771e2452d5cd299074f13a6ee7ae4c305ec",
       "doc": "docs/static/SNModMaker/js/io.js.md",
       "status": "documented"
     },
@@ -258,13 +271,13 @@
     },
     {
       "source": "SNModMaker/js/store.js",
-      "sha256": "9472f7580d5ec5cad5d795606efa3658564a0468da3a1ce739306ec49228bc82",
+      "sha256": "5a640018fef954b4c12f7534660d94957262a7b2ce81ea412f69658e8b04c6c3",
       "doc": "docs/static/SNModMaker/js/store.js.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/js/ui.js",
-      "sha256": "e4bede47a3baef1d4114ab73b8603529ef118139beb716387f6c2a62e6082e7f",
+      "sha256": "ef4e37792e8767e01c5b0f7434177f11af27591766a327bd3482c9b1f424bf5f",
       "doc": "docs/static/SNModMaker/js/ui.js.md",
       "status": "documented"
     },
@@ -307,13 +320,13 @@
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "11b12bc697be96737fabf409f53b95ee982cd9b27481ecadc6bf11bfbc7fab5d",
+      "sha256": "088600fcf0388eb5de797600eea8c3a823860156b2d73e21c82277f6b35c9ae7",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
     {
       "source": "SNModMaker/tests/server-smoke.mjs",
-      "sha256": "fc13cb638346e9bcea764c273e44bd7254c74e79e0afcf33510c0978187d4d4d",
+      "sha256": "90c3af3f4fff55a0c9871bc2f36477f1473510415650a9279821320f7f46a943",
       "doc": "docs/static/SNModMaker/tests/server-smoke.mjs.md",
       "status": "documented"
     },
@@ -343,7 +356,7 @@
     },
     {
       "source": "SNModMaker/tools/serve.mjs",
-      "sha256": "2366e1dd2a9c424e10d8130aee53bb0db515d328f53319b8541629a08ac284d8",
+      "sha256": "5f6d5c611adb503e62322411016e336fc3bc0b7578436845893937dc0eb6736b",
       "doc": "docs/static/SNModMaker/tools/serve.mjs.md",
       "status": "documented"
     },
@@ -379,7 +392,7 @@
     },
     {
       "source": "assets/ui/theme/steam_navigator_theme.tres",
-      "sha256": "e689555ecc42461f7c67936e9d00b89c64885516e7ab9227a67c35b97ab110ff",
+      "sha256": "7c23c134c1c4d9cb9f0c3b593e54a40830433f264011b437929ca4c3016d920e",
       "doc": "docs/static/assets/ui/theme/steam_navigator_theme.tres.md",
       "status": "documented"
     },
@@ -388,6 +401,62 @@
       "sha256": "0547c4a26e07cbbae51288b90c2249be42f69a2bc4c5e9acf7a54a8adc95238e",
       "doc": "docs/static/content_types.json.md",
       "status": "documented"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Ironclad/SN_Ironclad.side.png",
+      "sha256": "bf1eec6a3988feaf7e1a0a7ef712b2d191acc2b9e8ef6e45f9d89dbc7fa53677",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Ironclad/SN_Ironclad.top.png",
+      "sha256": "900bf629dc04b982035e0719ebc51df576bf2c7a3dcad2e5e72c3642d2f72317",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.side.png",
+      "sha256": "d8ce85da45b2def7ef940e9e1d59cd74e7fb25216715cf7761f78bed0f85d3fd",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.top.png",
+      "sha256": "2c71474d9ad72761699e7556296636596ae15de57f9caf98d90a1685c2229555",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.side.png",
+      "sha256": "503949f18b6b80f56383517de63f3a76898fa520834abb17fabc32ce6adbac86",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.top.png",
+      "sha256": "1421a7e9f388c9fcab242b049cc1fccde6737ef42b9728b6a13ed87fd290ef6e",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.side.png",
+      "sha256": "771361534216908435d72fdbc7ae311edf9ff6eb73f3a4634b87ee7e7fdb101a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.top.png",
+      "sha256": "05b69bc6fe5c3f7a7d98459e673f032e852eb7e26dced731a6b8f0682fe65e1c",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/assets/icons/coal.png",
@@ -2946,7 +3015,7 @@
     },
     {
       "source": "dev_mods/core/content/hulls.json",
-      "sha256": "722991378a1964a0ceb5ade98caf89628801c61eee57ba448a7df691ce70bd2b",
+      "sha256": "ed5b319ef0b26adc8c7c96fe547e12431bc4ea47d8307ef0a487d0903e60e0d7",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3121,7 +3190,7 @@
     },
     {
       "source": "dev_mods/core/manifest.json",
-      "sha256": "3c62d49b8ba527e3328d289352f26fd4df1a56faa42c2cce7d980274b215da28",
+      "sha256": "be0ff0435a715a0694813df1e81cfcefb70f3aa11d062c78c6058446e0cc4415",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3185,7 +3254,7 @@
     },
     {
       "source": "docs/design/UI_PROTOTYPE.md",
-      "sha256": "3fa78b65d5950af06cd3276f1afb6b4f4015e61859cfeb0795b44c404a8e8af8",
+      "sha256": "93331b9ef6a289bdba03c4b5b9a27a26ad29183d37f25c150e9539079f44d30d",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3222,7 +3291,7 @@
     },
     {
       "source": "framework/application/commands/command_registry.gd",
-      "sha256": "c1724b2d43078225637370e6a71923a8fa370ded278e3bca121a5c7db69c6ad9",
+      "sha256": "310aa23d384a506989bae50eef84dfaa3d7a15ceff13e65acbb1cfc0f7a35ac9",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -3286,7 +3355,7 @@
     },
     {
       "source": "framework/application/commands/ship_commands.gd",
-      "sha256": "ef71487d680097797c3214d0dab9dcd112b7a792c01d9cef4e77f5eaac19ffd4",
+      "sha256": "ee809b1f4220347464939d7adb0e17cd9d9430463e69aeb8b723a18e7c087323",
       "doc": "docs/static/framework/application/commands/ship_commands.gd.md",
       "status": "documented"
     },
@@ -3437,7 +3506,7 @@
     },
     {
       "source": "framework/application/queries/shipyard_view.gd",
-      "sha256": "8095172757681540bd1f563720033fe50da625593c156e4ad14300d20b02e5e1",
+      "sha256": "204ff5a3d621419e1225f960be8a316f3d190027da40109f4ad5a42458e3dac8",
       "doc": "docs/static/framework/application/queries/shipyard_view.gd.md",
       "status": "documented"
     },
@@ -3634,7 +3703,7 @@
     },
     {
       "source": "framework/domain/combat/combat_ops.gd",
-      "sha256": "eef653d97e2676c1a909eb5c5558c83e8bbc8bd0b7397adc74ccb9c71b076b7b",
+      "sha256": "58275d7e53b3472777b8834b89ea018efc38cc83c5d703b099891fb7a22f38bb",
       "doc": "docs/static/framework/domain/combat/combat_ops.gd.md",
       "status": "documented"
     },
@@ -3814,20 +3883,26 @@
     },
     {
       "source": "framework/domain/ship/ship_modules.gd",
-      "sha256": "335f56b8b39b5b3a0dadd8726aaba88a71ec6ed3b2e521c61de2216062e54426",
+      "sha256": "68c54acf91710db1f00730c7944f9a026687508d2c35372f44916d8e75ce9f8a",
       "doc": "docs/static/framework/domain/ship/ship_modules.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/ship/ship_ops.gd",
-      "sha256": "006bb26603adac30341099ec03e28f5eb4d5f57e13dca7bae578d7c8bafa8c70",
+      "sha256": "298cc8069fccf31ba3573e6d5eea8192abbc0db542117a14d0f4a9f1e94ba07d",
       "doc": "docs/static/framework/domain/ship/ship_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/ship/warehouse_ops.gd",
-      "sha256": "44b76bcd7879d2547c095dc1576600d31ed0904c3afc840a8271b2b47d4707b6",
+      "sha256": "4d4e7b6a396003a723b1c1c37e9c2ce48f7db4ebcfdeacdbf29c77dd64e5d19a",
       "doc": "docs/static/framework/domain/ship/warehouse_ops.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/ship/weapon_ops.gd",
+      "sha256": "c606f4e709765aa587452f9f1125ef82af3679ccafb83318ebc610c082c8187f",
+      "doc": "docs/static/framework/domain/ship/weapon_ops.gd.md",
       "status": "documented"
     },
     {
@@ -4169,7 +4244,7 @@
     },
     {
       "source": "framework/tests/cases/test_combat.gd",
-      "sha256": "3a2ab238e23cceb1cdc93244e74adbcd0bd9afff9fcaf48f03db09a61d8cc380",
+      "sha256": "f942ab26d3e968c689cf124729cd61ad4a360d878d0d9b4e5b89c2e30eae557c",
       "doc": "docs/static/framework/tests/cases/test_combat.gd.md",
       "status": "documented"
     },
@@ -4430,7 +4505,7 @@
     },
     {
       "source": "framework/tests/cases/test_ship_modules.gd",
-      "sha256": "c20352074c0b313eb148c1ed6856c59581531ad987a334e93e21ec9b61e9f294",
+      "sha256": "84a561e85e78348cddf3e6556cd10e253a29180a2f8cf0f67412fbb26a83671d",
       "doc": "docs/static/framework/tests/cases/test_ship_modules.gd.md",
       "status": "documented"
     },
@@ -4462,7 +4537,7 @@
     },
     {
       "source": "framework/tests/cases/test_shipyard_refit.gd",
-      "sha256": "9978004154791ecee54d94d7e813645cd81307790776dec79f204d2f69fd1a48",
+      "sha256": "84cfe4df2311276758648db7eaebd7c5264ef328b3056ef611a0af986dc505eb",
       "doc": "docs/static/framework/tests/cases/test_shipyard_refit.gd.md",
       "status": "documented"
     },
@@ -4474,7 +4549,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "5774a80a77cda145a1914879ee24653585efd03e965486546ec98a1dcf60c3bb",
+      "sha256": "8501eea6d9fdf3b13e45213291d586953db2be8c371b7b2d0f91a1b30c717db7",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -4505,7 +4580,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "5b0a26fc8e839c8d09851d6bf0fa30d80a3b9c70318690c8496ef065bb2121f1",
+      "sha256": "8eabbb63336737fdf24336b2c08d7d14ae77f845b6e50bb79517d70c343397b0",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -4718,7 +4793,7 @@
     },
     {
       "source": "framework/ui/components/sn_ship_view.gd",
-      "sha256": "ed14a8f1868bbe983980e0cdbec42e9c1086ed8a1cd9c8e055b0e19e69d8c5d2",
+      "sha256": "80016000996f07b916f3e974ffc2ec65205a3df2c3a0e53204568a868efa3824",
       "doc": "docs/static/framework/ui/components/sn_ship_view.gd.md",
       "status": "documented"
     },
@@ -5021,7 +5096,7 @@
     },
     {
       "source": "framework/ui/screens/port/shipyard_screen.gd",
-      "sha256": "38a441666e802f3c1e685219554affb670551df6cb7a2a7e00c7f075c47ed643",
+      "sha256": "e48037152a762049370cf2acf4b207e401267d901517f6d45d6619397dea3260",
       "doc": "docs/static/framework/ui/screens/port/shipyard_screen.gd.md",
       "status": "documented"
     },
@@ -5060,7 +5135,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "d4d95bff2f1b49831c6e75455f7dff25f1d87c9acf0daa049ae6879b7101b4e8",
+      "sha256": "53f8be4e29d9782a24c14d02ce6bae83b420f968d63044636ecb353b27d04397",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -5092,7 +5167,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "4f509fe1c3e926188907c6c26191c3fe3b58241a78ae19eb89c5509e51dc84cc",
+      "sha256": "b3c46c5a07da291b3e694c1b9dbf2073759552641e222dc203d313dbdb832bb4",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -5307,7 +5382,7 @@
     },
     {
       "source": "schemas/v2/hull.schema.json",
-      "sha256": "c9a55b00c51e42b87f3f4323d4c5f43e9afd05271d8a37543cc8dedc7a595698",
+      "sha256": "534573ae11293db874cce2bba0af1e54c9179d0b4684570cc2f3fbb444376a98",
       "doc": "docs/static/schemas/v2/hull.schema.json.md",
       "status": "documented"
     },
@@ -5931,7 +6006,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "d4356e605b23c514cecd30b8596b68546a994e56b2b1d4d6582ea27571471552",
+      "sha256": "5132c5aabf58b61829cb0dad5d9df29c87427406ed999959fac6afe0db70742a",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -5956,7 +6031,7 @@
     },
     {
       "source": "tools/capture_ui.ps1",
-      "sha256": "8362fd2329d5585f3f6bcb69e603e7f5bca594fbc66d5d7e74551739051fac1d",
+      "sha256": "76712c4993db4fe7dbac97844785134c31fbbf8baa4878be5cf1a407c65162d5",
       "doc": "docs/static/tools/capture_ui.ps1.md",
       "status": "documented"
     },
@@ -6133,6 +6208,56 @@
       "source": "tools/godot/verify_shared_textures.gd",
       "sha256": "2ab6d98d2d7c3b5533a672cf67aecea12f9429d19f766818f1bf9be5b579a15c",
       "doc": "docs/static/tools/godot/verify_shared_textures.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/blueprint/README.md",
+      "sha256": "2b28bdee7052e26955ce0ae3948e0a4e6e0bc613583d057785d54f2003b6d8e9",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/blueprint/apply_hull_blueprints.mjs",
+      "sha256": "d73db44c71416f31d6822d59ab44c83d3e5ab506f66ff58e2a4fabc611952169",
+      "doc": "docs/static/tools/modeling/blueprint/apply_hull_blueprints.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/blueprint/blueprint_batch.py",
+      "sha256": "1f9c5c02806093ad7ab9a3a328ac727df064d10d32425387e3af5945d13af162",
+      "doc": "docs/static/tools/modeling/blueprint/blueprint_batch.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/blueprint/blueprint_generator.py",
+      "sha256": "d5cd4fceaae9e3d46cdd4f0be305716e7a0c761944ffdd2b6e3fdbfe7f2e7629",
+      "doc": "docs/static/tools/modeling/blueprint/blueprint_generator.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/blueprint/config.example.json",
+      "sha256": "793b5213452d03b8d86ffe78613ef0d02535a39d624a2e5077f7f08cf5fa0874",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/modeling/blueprint/png_alpha_crop.py",
+      "sha256": "b7eda5358671faef7bac7d4f6ea2131026d90341ac7d08dae0a5aa5e65af3198",
+      "doc": "docs/static/tools/modeling/blueprint/png_alpha_crop.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/blueprint/tests/create_fixture.py",
+      "sha256": "80942939d2615dbc65de44a012fda8230332744218ae1168ce75309948937043",
+      "doc": "docs/static/tools/modeling/blueprint/tests/create_fixture.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/blueprint/tests/test_smoke.py",
+      "sha256": "f338c3d1a5e2f9d400eaa1ea2ef458d82be902568fb6903e752ea0e583cccc35",
+      "doc": "docs/static/tools/modeling/blueprint/tests/test_smoke.py.md",
       "status": "documented"
     },
     {
@@ -7414,7 +7539,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "cf11a84426e4f5cc9aba860ca90be05b6bf85980266bfcc63e24aff069ebb9da",
+      "sha256": "c5711eac05104ae4e4284b9bb8e14333ccb8a024540fa73235b9c0e559b3462e",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
@@ -7433,7 +7558,7 @@
     },
     {
       "source": "tools/ui_snapshot.gd",
-      "sha256": "bda1c5f29e5052ba639824b6cb3fe4ee6941a213cec84604e19f7097cebdbce4",
+      "sha256": "887602de9b89b080bdd1196f9d1a6431f00f1454817d77264e76c961ea924fb0",
       "doc": "docs/static/tools/ui_snapshot.gd.md",
       "status": "documented"
     }

@@ -41,3 +41,6 @@ SNBattleSim/user_data/*.tmp
 
 # Local release staging
 /release/
+
+# Agent worktrees / local coordination (never project content)
+.agents/

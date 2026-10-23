@@ -1,6 +1,6 @@
 # `framework/ui/stages/port_stage.gd`
 
-> 作用：固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 补给是同一港区里从左到右的三个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建。全程序化 + 内容模组 GLB，无外部框架贴图。
+> 作用：固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 船厂 / 补给是同一港区里的四个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建；船厂站位正对干船坞/吊架设施，供改装页把蓝图与操作坞画在 3D 舞台上。全程序化 + 内容模组 GLB，无外部框架贴图。
 
 - 关键依赖：`LocationStage`、`StageKit`、`ContentAssetLoader`
 - 类型：GDScript 源文件
@@ -31,116 +31,116 @@
 | `DEFAULT_STATION` | L90 |
 | `STATION_FRAMINGS` | L91 |
 | `STATIONS` | L92 |
-| `PANEL_FRAMING_SHIFT_X` | L119 |
-| `CAMERA_PAN_SECONDS` | L122 |
-| `SHIP_TRANSIT_SPEED` | L123 |
-| `SHIP_TURN_SPEED` | L124 |
-| `SEA_HANDOFF` | L141 |
-| `DEPART_CAMERA` | L147 |
-| `DEPART_CAMERA_TARGET` | L148 |
-| `DEPART_CAMERA_FOV` | L149 |
-| `VOYAGE_BEAT_SECONDS` | L153 |
-| `VOYAGE_TURN_FRACTION` | L158 |
-| `VOYAGE_MOOR_TURN_FRACTION` | L161 |
-| `MODEL_BY_TIER` | L163 |
-| `FALLBACK_MODEL` | L168 |
-| `SLOT_POSITIONS` | L174 |
-| `SHIPYARD_PIECE_OFFSETS` | L183 |
-| `SIGN_YAW_DEG` | L185 |
-| `SIGN_COLORS` | L186 |
-| `SKY_TOP` | L194 |
-| `SKY_HORIZON` | L195 |
-| `SKY_GROUND_HORIZON` | L198 |
-| `SKY_GROUND_BOTTOM` | L199 |
-| `FOG_COLOR` | L200 |
-| `AMBIENT_COLOR` | L201 |
-| `BACKDROP_SIZE` | L205 |
-| `BACKDROP_POSITION` | L206 |
-| `NEAR_WATER_SIZE` | L207 |
-| `FAR_WATER_SIZE` | L208 |
-| `SKY_CARD_DEPTH` | L213 |
-| `SKY_CARD_SCREEN_CENTER` | L214 |
-| `SKY_CARD_SCREEN_SIZE` | L215 |
-| `SKYLINE_BUILDINGS_BY_SIZE` | L219 |
-| `SKYLINE_CRANES_BY_SIZE` | L220 |
-| `DENSITY_BY_SIZE` | L236 |
-| `DENSITY_ORDER` | L237 |
-| `TOWN_COUNTS` | L238 |
-| `TOWN_QUAY_ORDER` | L255 |
-| `TOWN_GROUND_Y` | L262 |
-| `TOWN_PLAZA_SIZE` | L263 |
-| `TOWN_PLAZA_CENTER` | L264 |
-| `TOWN_SLOTS` | L272 |
-| `TOWN_FENCE_X` | L280 |
-| `TOWN_WORKER_SLOTS` | L284 |
-| `TOWN_DECOR_SLOTS` | L297 |
-| `TOWN_BOAT_SLOTS` | L311 |
-| `TOWN_QUAY_SLOTS` | L321 |
-| `STATION_PROP_COUNTS` | L373 |
-| `STATION_PROPS` | L374 |
-| `TOWN_BLOCKOUT_SIZES` | L417 |
-| `FOREGROUND_COLOR` | L427 |
-| `FOG_BAND_COLOR` | L428 |
-| `FOG_BAND_ALPHA` | L429 |
-| `ATMOSPHERE_PARTICLE_AMOUNT` | L430 |
-| `SKY_GLOW_COLOR` | L431 |
-| `MATERIAL_DEFAULTS` | L433 |
-| `LANDMARK_POS` | L445 |
-| `enter(payload: Dictionary = {}) -> void` | L575 |
-| `exit() -> void` | L587 |
-| `bind(view_model: Dictionary = {}) -> void` | L591 |
-| `has_visual() -> bool` | L612 |
-| `has_backdrop() -> bool` | L616 |
-| `loaded_banner_path() -> String` | L621 |
-| `facility_count() -> int` | L625 |
-| `filler_count() -> int` | L631 |
-| `facility_visual_kind(facility: String) -> String` | L637 |
-| `facility_anchors() -> Dictionary` | L642 |
-| `facility_screen_anchor(facility: String) -> Vector2` | L656 |
-| `has_ship() -> bool` | L669 |
-| `ship_assembly_report() -> Dictionary` | L677 |
-| `ship_rig_report() -> Dictionary` | L682 |
-| `request_portal(facility: String) -> void` | L688 |
-| `hotspot_anchors() -> Dictionary` | L692 |
-| `foreground_frame() -> Node3D` | L699 |
-| `atmosphere_particle_systems() -> int` | L704 |
-| `atmosphere_layers() -> int` | L709 |
-| `skyline_building_count() -> int` | L714 |
-| `skyline_crane_count() -> int` | L719 |
-| `town_prop_count() -> int` | L725 |
-| `town_blockout_count() -> int` | L731 |
-| `town_density() -> String` | L738 |
-| `painted_backdrop_layer_count() -> int` | L745 |
-| `batch_stats() -> Dictionary` | L763 |
-| `ship_foam_bounds() -> AABB` | L786 |
-| `ship_visual_is_rigid(visual: Node) -> bool` | L795 |
-| `station_ids() -> Array[String]` | L848 |
-| `current_station() -> String` | L855 |
-| `current_station_framing() -> String` | L859 |
-| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L865 |
-| `station_ship_position(station_id: String) -> Vector3` | L878 |
-| `station_ship_yaw(station_id: String) -> float` | L883 |
-| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L892 |
-| `is_station_transitioning() -> bool` | L944 |
-| `camera_position() -> Vector3` | L950 |
-| `camera_target() -> Vector3` | L954 |
-| `ship_x() -> float` | L959 |
-| `station_ship_mooring_x() -> float` | L963 |
-| `station_prop_count() -> int` | L969 |
-| `camera_shift_x() -> float` | L974 |
-| `advance_station(delta: float) -> void` | L982 |
-| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1103 |
-| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1125 |
-| `advance_voyage(delta: float) -> void` | L1163 |
-| `reset_voyage() -> void` | L1253 |
-| `is_voyage_transitioning() -> bool` | L1273 |
-| `voyage_mode() -> String` | L1277 |
-| `is_voyage_holding_handoff() -> bool` | L1284 |
-| `voyage_progress() -> float` | L1289 |
-| `voyage_handoff_position() -> Vector3` | L1295 |
-| `ship_position() -> Vector3` | L1301 |
-| `ship_yaw() -> float` | L1309 |
-| `camera_pitch_deg() -> float` | L1316 |
+| `PANEL_FRAMING_SHIFT_X` | L129 |
+| `CAMERA_PAN_SECONDS` | L132 |
+| `SHIP_TRANSIT_SPEED` | L133 |
+| `SHIP_TURN_SPEED` | L134 |
+| `SEA_HANDOFF` | L151 |
+| `DEPART_CAMERA` | L157 |
+| `DEPART_CAMERA_TARGET` | L158 |
+| `DEPART_CAMERA_FOV` | L159 |
+| `VOYAGE_BEAT_SECONDS` | L163 |
+| `VOYAGE_TURN_FRACTION` | L168 |
+| `VOYAGE_MOOR_TURN_FRACTION` | L171 |
+| `MODEL_BY_TIER` | L173 |
+| `FALLBACK_MODEL` | L178 |
+| `SLOT_POSITIONS` | L184 |
+| `SHIPYARD_PIECE_OFFSETS` | L193 |
+| `SIGN_YAW_DEG` | L195 |
+| `SIGN_COLORS` | L196 |
+| `SKY_TOP` | L204 |
+| `SKY_HORIZON` | L205 |
+| `SKY_GROUND_HORIZON` | L208 |
+| `SKY_GROUND_BOTTOM` | L209 |
+| `FOG_COLOR` | L210 |
+| `AMBIENT_COLOR` | L211 |
+| `BACKDROP_SIZE` | L215 |
+| `BACKDROP_POSITION` | L216 |
+| `NEAR_WATER_SIZE` | L217 |
+| `FAR_WATER_SIZE` | L218 |
+| `SKY_CARD_DEPTH` | L223 |
+| `SKY_CARD_SCREEN_CENTER` | L224 |
+| `SKY_CARD_SCREEN_SIZE` | L225 |
+| `SKYLINE_BUILDINGS_BY_SIZE` | L229 |
+| `SKYLINE_CRANES_BY_SIZE` | L230 |
+| `DENSITY_BY_SIZE` | L246 |
+| `DENSITY_ORDER` | L247 |
+| `TOWN_COUNTS` | L248 |
+| `TOWN_QUAY_ORDER` | L265 |
+| `TOWN_GROUND_Y` | L272 |
+| `TOWN_PLAZA_SIZE` | L273 |
+| `TOWN_PLAZA_CENTER` | L274 |
+| `TOWN_SLOTS` | L282 |
+| `TOWN_FENCE_X` | L290 |
+| `TOWN_WORKER_SLOTS` | L294 |
+| `TOWN_DECOR_SLOTS` | L307 |
+| `TOWN_BOAT_SLOTS` | L321 |
+| `TOWN_QUAY_SLOTS` | L331 |
+| `STATION_PROP_COUNTS` | L383 |
+| `STATION_PROPS` | L384 |
+| `TOWN_BLOCKOUT_SIZES` | L427 |
+| `FOREGROUND_COLOR` | L437 |
+| `FOG_BAND_COLOR` | L438 |
+| `FOG_BAND_ALPHA` | L439 |
+| `ATMOSPHERE_PARTICLE_AMOUNT` | L440 |
+| `SKY_GLOW_COLOR` | L441 |
+| `MATERIAL_DEFAULTS` | L443 |
+| `LANDMARK_POS` | L455 |
+| `enter(payload: Dictionary = {}) -> void` | L585 |
+| `exit() -> void` | L597 |
+| `bind(view_model: Dictionary = {}) -> void` | L601 |
+| `has_visual() -> bool` | L622 |
+| `has_backdrop() -> bool` | L626 |
+| `loaded_banner_path() -> String` | L631 |
+| `facility_count() -> int` | L635 |
+| `filler_count() -> int` | L641 |
+| `facility_visual_kind(facility: String) -> String` | L647 |
+| `facility_anchors() -> Dictionary` | L652 |
+| `facility_screen_anchor(facility: String) -> Vector2` | L666 |
+| `has_ship() -> bool` | L679 |
+| `ship_assembly_report() -> Dictionary` | L687 |
+| `ship_rig_report() -> Dictionary` | L692 |
+| `request_portal(facility: String) -> void` | L698 |
+| `hotspot_anchors() -> Dictionary` | L702 |
+| `foreground_frame() -> Node3D` | L709 |
+| `atmosphere_particle_systems() -> int` | L714 |
+| `atmosphere_layers() -> int` | L719 |
+| `skyline_building_count() -> int` | L724 |
+| `skyline_crane_count() -> int` | L729 |
+| `town_prop_count() -> int` | L735 |
+| `town_blockout_count() -> int` | L741 |
+| `town_density() -> String` | L748 |
+| `painted_backdrop_layer_count() -> int` | L755 |
+| `batch_stats() -> Dictionary` | L773 |
+| `ship_foam_bounds() -> AABB` | L796 |
+| `ship_visual_is_rigid(visual: Node) -> bool` | L805 |
+| `station_ids() -> Array[String]` | L858 |
+| `current_station() -> String` | L865 |
+| `current_station_framing() -> String` | L869 |
+| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L875 |
+| `station_ship_position(station_id: String) -> Vector3` | L888 |
+| `station_ship_yaw(station_id: String) -> float` | L893 |
+| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L902 |
+| `is_station_transitioning() -> bool` | L954 |
+| `camera_position() -> Vector3` | L960 |
+| `camera_target() -> Vector3` | L964 |
+| `ship_x() -> float` | L969 |
+| `station_ship_mooring_x() -> float` | L973 |
+| `station_prop_count() -> int` | L979 |
+| `camera_shift_x() -> float` | L984 |
+| `advance_station(delta: float) -> void` | L992 |
+| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1113 |
+| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1135 |
+| `advance_voyage(delta: float) -> void` | L1173 |
+| `reset_voyage() -> void` | L1263 |
+| `is_voyage_transitioning() -> bool` | L1283 |
+| `voyage_mode() -> String` | L1287 |
+| `is_voyage_holding_handoff() -> bool` | L1294 |
+| `voyage_progress() -> float` | L1299 |
+| `voyage_handoff_position() -> Vector3` | L1305 |
+| `ship_position() -> Vector3` | L1311 |
+| `ship_yaw() -> float` | L1319 |
+| `camera_pitch_deg() -> float` | L1326 |
 
 ## 契约与约束
 
@@ -153,7 +153,7 @@
 - L2 实例总数 small 14 / medium 17 / large 20（建筑 + 吊机 + 仓房排/雾带/灯塔），仍在方案 L2 ≤20 预算内；small 的 7 栋低于任务描述的 8 下界，以源码为准。
 - L2b 港口街景：`port.town_visuals`（slot → 已解析 GLB 路径）存在时在码头后方的抬升石广场（`TOWN_GROUND_Y=1.9`、`TOWN_PLAZA` 250×2.2×34）上装配建筑/围栏/工人/广场装饰/小船 + 码头工业件；密度由 `port.density` → `port.diorama.density` → `port.size` 推导（small→sparse、medium→normal、large→busy），每组按 tier 取前缀，`port.id.hash()` 只给自由摆放件加确定性 yaw 抖动（无全局 RNG）。normal = 5 建筑 + 7 围栏 + 7 工人 + 8 装饰 + 3 船 + 17 码头工业件 = **47 props**（sparse 28 / busy 63）。建筑缺失 GLB 时回退程序化 blockout，围栏/工人/船/装饰缺失则直接省略。
 - town kit 存在时跳过 L2 程序化 skyline（`if _town_visuals.is_empty(): _rebuild_shoreline()`），因为街区已有近景轮廓；town 与 banner 相互独立（有 banner 也可有 town）。
-- 连续港区与相邻站位：`STATION_ORDER = [market, harbor, supply]`（世界 X 从左到右），`STATIONS` 定义每个站位的 `center`、`camera`/`target`（同一 30° 长焦）、`ship` 泊位与 `ship_yaw`；码头甲板/木桩/系缆桩/煤气灯沿 160 m 连续铺开，`exchange` 与 `supply` 设施分别落在 -30 / +30 的站位上（contracts/intel/shipyard 仍集中在中心港务段）。
+- 连续港区与相邻站位：`STATION_ORDER = [market, harbor, shipyard, supply]`（世界 X 从左到右），`STATIONS` 定义每个站位的 `center`、`camera`/`target`（同一 30° 长焦，恒为 `target + (46,16,72)`）、`ship` 泊位与 `ship_yaw`；码头甲板/木桩/系缆桩/煤气灯沿 160 m 连续铺开，`exchange` 与 `supply` 设施分别落在 -30 / +30 的站位上。`shipyard` 站位（世界 X 14.5）镜头 `camera (53,28,64)` / `target (7,12,-8)` 比站位锚点整体西移 7.5 m，让干船坞+吊架落在船厂改装页中间 3D 窗口正中；玩家船泊位 `(14.5,0,9)` 停在船坞正前方水面。
 - `focus_station(station, framing, immediate)` 只重定向镜头与泊位，港口、街坊、设施、水面与合批层都不重建；`framing` = `stage`（全窗总览）或 `panel`（右侧 640 px 泊位面板，镜头整体右移 `PANEL_FRAMING_SHIFT_X=3 m`，让站位落在可见左半屏）。重复聚焦当前站位是 no-op，整页重建不会重启动画；`immediate` 只用于舞台首次挂载。
 - 站位切换演出：镜头在 `CAMERA_PAN_SECONDS=0.6 s` 内平滑 pan；玩家船先转艏向沿岸方向，再以 `SHIP_TRANSIT_SPEED=24 m/s` 驶到新泊位并转回 `ship_yaw`，泡沫环 `boat_center` 随船移动。`advance_station(delta)` 以 50 ms 切片推进整段过渡（`_process` 每帧调用；测试/截图工具可直接步进，无需真实帧）；`is_station_transitioning()` 报告过渡是否结束。
 - 镜头平移时的画幅层：`_apply_camera_shift()` 把相机朝向层（sky card/太阳光晕、painted backdrop、banner 背板、L6 前景框、雾带）按 `camera_shift_x` 平移保持构图，L2 剪影只平移一半保留视差；码头/街坊/设施/水面/船体是世界几何，随镜头真正移动。

@@ -963,6 +963,7 @@
           ${socketDuplicateNote(duplicateIndex, '序号与同一船体的其它武器安装点重复。')}
         </div>
         ${socketPositionField(`${path}.position`, value.position)}
+        ${blueprintPositionField(`${path}.blueprint`, value.blueprint)}
         <div class="field">
           <label class="field-label">水平净空半径</label>
           ${inputNumber(`${path}.clearance_r`, value.clearance_r, { type: 'number', minimum: 0, maximum: 30 })}
@@ -1095,6 +1096,150 @@
     </section>`;
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Hull blueprint binding and slot coordinates                          */
+  /* ------------------------------------------------------------------ */
+
+  function blueprintVectorFields(path, value, viewLabel) {
+    const values = Array.isArray(value) ? value : [];
+    const axes = ['U', 'V'];
+    return `<div class="blueprint-vector">
+      <span class="blueprint-vector-view">${esc(viewLabel)}</span>
+      ${axes.map((axis, index) => `<label class="socket-axis" title="${axis} 轴（0..1）">
+        <span class="muted-sm mono">${axis}</span>
+        <input class="input mono" type="number" step="0.001" min="0" max="1"
+          value="${values[index] == null ? '' : attr(values[index])}"
+          data-field="${attr(`${path}.${index}`)}" data-parse="number" aria-label="${axis} 轴归一化坐标">
+      </label>`).join('')}
+    </div>`;
+  }
+
+  function blueprintPositionField(path, value) {
+    const position = value && typeof value === 'object' ? value : {};
+    return `<div class="field field-wide blueprint-position-field">
+      <label class="field-label">蓝图坐标（0..1，左上原点）</label>
+      <div class="blueprint-vectors">
+        ${blueprintVectorFields(`${path}.side`, position.side, '侧视 side')}
+        ${blueprintVectorFields(`${path}.top`, position.top, '俯视 top')}
+      </div>
+      <p class="field-hint">留空表示该视图不显示；推荐用「蓝图槽位编辑器」拖拽定位。</p>
+    </div>`;
+  }
+
+  function blueprintAssetPreview(project, key) {
+    if (!key) return '';
+    const asset = (project && Array.isArray(project.assets) ? project.assets : [])
+      .find((item) => item && item.key === key);
+    if (!asset || !asset.dataUrl) return `<span class="muted-sm">未在当前项目中找到可预览的图片（${esc(key)}）。</span>`;
+    return `<img class="blueprint-binding-preview" src="${attr(asset.dataUrl)}" alt="${attr(key)}">`;
+  }
+
+  function renderCompartmentRow(item, index) {
+    const value = item || {};
+    const path = `data.compartments.${index}`;
+    const title = value.id ? value.id : `舱位 ${index + 1}`;
+    return `<div class="item-card slim compartment-row">
+      ${itemHead('data.compartments', index, title, { up: index > 0, down: true })}
+      <div class="socket-fields" style="${SOCKET_ROW_STYLE}">
+        <div class="field">
+          <label class="field-label">舱位 ID</label>
+          ${inputText(`${path}.id`, value.id || '', { className: 'mono', spellcheck: false, placeholder: '例如 cargo_1' })}
+        </div>
+        <div class="field">
+          <label class="field-label">等级上限</label>
+          ${inputNumber(`${path}.max_tier`, value.max_tier, { type: 'integer', minimum: 1, maximum: 3 }, { placeholder: '不限' })}
+        </div>
+        <div class="field field-wide">
+          <label class="field-label">允许类型（不选 = 全部）</label>
+          ${enumMulti(`${path}.allowed_types`, value.allowed_types || [], [
+            { key: 'cargo', label: '货舱 cargo' },
+            { key: 'cabin', label: '客舱 cabin' },
+          ])}
+        </div>
+        ${blueprintPositionField(`${path}.blueprint_position`, value.blueprint_position)}
+      </div>
+    </div>`;
+  }
+
+  function renderModuleSlotRow(item, index) {
+    const value = item || {};
+    const path = `data.module_slots.${index}`;
+    const title = value.id ? value.id : `模块位 ${index + 1}`;
+    return `<div class="item-card slim module-slot-row">
+      ${itemHead('data.module_slots', index, title, { up: index > 0, down: true })}
+      <div class="socket-fields" style="${SOCKET_ROW_STYLE}">
+        <div class="field">
+          <label class="field-label">模块位 ID</label>
+          ${inputText(`${path}.id`, value.id || '', { className: 'mono', spellcheck: false, placeholder: '例如 boiler_1' })}
+        </div>
+        <div class="field">
+          <label class="field-label">GLB socket（可选）</label>
+          ${inputText(`${path}.socket`, value.socket || '', { className: 'mono', spellcheck: false, placeholder: 'SN_Socket_Module_*' })}
+        </div>
+        <div class="field field-wide">
+          <label class="field-label">允许类别（不选 = 不额外限制）</label>
+          ${enumMulti(`${path}.allowed_categories`, value.allowed_categories || [], [
+            { key: 'boiler', label: '锅炉 boiler' },
+            { key: 'cargo', label: '货舱 cargo' },
+            { key: 'utility', label: '通用 utility' },
+            { key: 'cabin', label: '客舱 cabin' },
+            { key: 'crew', label: '船员 crew' },
+          ])}
+        </div>
+        ${blueprintPositionField(`${path}.blueprint_position`, value.blueprint_position)}
+      </div>
+    </div>`;
+  }
+
+  function blueprintSlotCount(items) {
+    const list = Array.isArray(items) ? items : [];
+    return list.filter((item) => item && item.blueprint_position).length;
+  }
+
+  function renderHullBlueprintConfiguration(definition, project) {
+    const data = (definition && definition.data) || {};
+    const views = data.blueprint_views && typeof data.blueprint_views === 'object' ? data.blueprint_views : {};
+    const compartments = Array.isArray(data.compartments) ? data.compartments : [];
+    const moduleSlots = Array.isArray(data.module_slots) ? data.module_slots : [];
+    const weaponSockets = Array.isArray(data.weapon_sockets) ? data.weapon_sockets : [];
+    const weaponPositioned = weaponSockets.filter((socket) => socket && socket.blueprint).length;
+    const sideImage = views.side && views.side.image ? views.side.image : '';
+    const topImage = views.top && views.top.image ? views.top.image : '';
+    return `<section class="form-section hull-blueprint-section">
+      <header class="section-head"><h4>蓝图与槽位坐标</h4>
+        <p>先绑定每视图的线稿资源（资源页中的 PNG / WebP），再打开蓝图槽位编辑器拖拽定位。坐标是相对线稿的归一化 uv（0..1，左上原点），舱位/模块位的字段是 <code>blueprint_position</code>，武器位沿用 <code>blueprint</code>。</p>
+      </header>
+      <div class="blueprint-binding-grid">
+        ${fieldShell('hulls', 'blueprint_side', assetPicker('data.blueprint_views.side.image', sideImage, 'image', project, {
+          placeholder: '例如 blueprint.ship.side',
+        }), { label: '侧视线稿', hint: '资源键；侧视坐标以此图片为基准。' })}
+        ${fieldShell('hulls', 'blueprint_top', assetPicker('data.blueprint_views.top.image', topImage, 'image', project, {
+          placeholder: '例如 blueprint.ship.top',
+        }), { label: '俯视线稿', hint: '资源键；俯视坐标以此图片为基准。' })}
+      </div>
+      <div class="blueprint-binding-previews">
+        <div>${blueprintAssetPreview(project, sideImage)}</div>
+        <div>${blueprintAssetPreview(project, topImage)}</div>
+      </div>
+      <div class="hull-blueprint-summary">
+        <span class="mini-badge">舱位 ${blueprintSlotCount(compartments)} / ${compartments.length}</span>
+        <span class="mini-badge">模块位 ${blueprintSlotCount(moduleSlots)} / ${moduleSlots.length}</span>
+        <span class="mini-badge">武器位 ${weaponPositioned} / ${weaponSockets.length}</span>
+        <button type="button" class="btn primary small" data-action="open-blueprint-editor">打开蓝图槽位编辑器</button>
+      </div>
+      <div class="sub-section">
+        <h5>舱位安装位 <span class="muted-sm mono">${compartments.length}</span></h5>
+        ${arrayShell('data.compartments', compartments, (item, index) => renderCompartmentRow(item, index),
+          '新增舱位安装位', '暂无舱位安装位；每个舱位可独立装载货舱 / 客舱模块。')}
+      </div>
+      <div class="sub-section">
+        <h5>模块安装位 <span class="muted-sm mono">${moduleSlots.length}</span></h5>
+        ${arrayShell('data.module_slots', moduleSlots, (item, index) => renderModuleSlotRow(item, index),
+          '新增模块安装位', '暂无模块安装位；内部模块只需蓝图坐标，外部模块可附 GLB socket。')}
+      </div>
+    </section>`;
+  }
+
   function renderDefinitionForm(options) {
     const ctx = options;
     const project = ctx.project;
@@ -1171,11 +1316,15 @@
       </section>
       ${typeKey === 'hulls' ? renderHullModuleConfiguration(definition) : ''}
       ${typeKey === 'hulls' ? renderHullSocketConfiguration(definition) : ''}
+      ${typeKey === 'hulls' ? renderHullBlueprintConfiguration(definition, project) : ''}
       <section class="form-section">
         <header class="section-head"><h4>${esc(info.label)}数据</h4><p>字段约束来自 <code>${esc(info.schema)}</code>，留空或越界会立刻在校验页报出。</p></header>
         ${renderObjectFields(data.schema, data.file, definition.data || {}, 'data', ctx, {
           extraNote: true,
-          skip: typeKey === 'hulls' ? ['cargo_slots', 'cabin_slots', 'weapon_sockets', 'rig_sockets'] : [],
+          skip: typeKey === 'hulls' ? [
+            'cargo_slots', 'cabin_slots', 'weapon_sockets', 'rig_sockets',
+            'blueprint_views', 'compartments', 'module_slots',
+          ] : [],
         })}
       </section>
     </div>`;

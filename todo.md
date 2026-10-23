@@ -6,11 +6,12 @@
 ## In Progress
 
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
-- [ ] 海图阶段 3 验收反馈 F1–F4：离港要"驶离"而不是平移；镜头俯角加大到竖直再拉升、云层后海图先铺满再回落；海图上的船必须沿航线移动，不能两点直线
 
 ## Pending
 
 ### 近期
+- [ ] 船体蓝图后续：武器成对（左右舷同型）的运行时命令与校验；舱位运行时槽位化（`mount_state` + state 2.1 迁移）；把 `apply_hull_blueprints.mjs --check` 接入发布/CI 门禁，GLB 或线稿参数变化时自动重算坐标
+- [ ] 船厂改装页后续：港区 `shipyard` 站位接入真实干船坞 + 吊架（给 `port.view` / `facility_visuals.shipyard` 绑定 `SN_Dry_Dock.glb` + `SN_Shipyard_Gantry.glb`，当前是程序化 billboard）；3D 窗口按窗口宽度做机位微调，超宽屏下不要让船坞站位移到窗外
 - [ ] Lua Modding SDK S1：按 [LUA_SDK_S0_API_CONTRACT.md](docs/design/LUA_SDK_S0_API_CONTRACT.md) / [LUA_SDK_S0_THREAT_MODEL.md](docs/design/LUA_SDK_S0_THREAT_MODEL.md) / [LUA_SDK_S0_TEST_MATRIX.md](docs/design/LUA_SDK_S0_TEST_MATRIX.md) 做独立 Lua Host PoC（VM 选型、中断/内存/库隔离证据、纵向样例），实验分支，禁止接入正式 ModLoader；S0 已完成
 - [ ] 炮门舱段 port cassette：给明轮货轮 / 明轮客船 / 纵帆船（以及未来的船）提供“舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口”的适配模块，让 `SN_Weapon_CasemateGun` 能装到没有炮门的船上；同时解决空炮门的“暗腔”读感（当前是木制深色炮口板）
 - [ ] 铁甲舰 `SN_Ironclad_LOD1.glb` 随空炮门 LOD0 重建（当前 LOD1 仍是带炮旧件；LOD 切换未接线，暂不影响运行时）
@@ -47,6 +48,24 @@
 
 ## Recently Completed
 
+- 船厂改装页重做（2026-10-23）：改装态改为画在连续港区 3D 舞台上的工作台——`PortStage` 新增 `shipyard` 站位（干船坞/吊架设施锚点 x 14.5，镜头与目标西移 7.5 m 对准中间 3D 窗口，玩家船泊位 (14.5,0,9)），`STAGE_SCREENS` 增加 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示（正常态仍用面板内 3D 船体舞台）。页面不再有整页不透明背景：左蓝图板 / 中 3D 窗口 / 右 `SNGlassPanel` 半透明操作坞；操作坞含舰船数据卡（船名 + 重量 / 耐久 / 货舱 / 客舱 / 武器 / 剩余货舱）、七项分类、`装配 / 购买 / 打造` 三个独立页签（杂项无页签），装配页高亮可安装槽位并保留拖放安装；移除「改装蓝图 / 蓝图线稿 / 贴图剖面 / 实机渲染」等测试向文案与蓝图上方金币/耐久/重量摘要行；顶栏品牌位改为当前港口名。验证：Godot 全量 **643/643**（新增 3 例）、`ui_snapshot --tabs` / `capture_ui -Tabs` 截图、静态文档 `--check` 通过。
+
+- 船厂改装蓝图底板（2026-10-23）：把 `docs/design/ui_controls_v1/blueprint_panel/` 的九宫格底板落地为 Theme variation `SNBlueprintPanel`（`StyleBoxTexture` + 派生运行纹理 `assets/ui/shipyard/blueprint_panel.png`：取图区域 1682×598 的 0.5 倍，九宫格 56/54、安全区 66/62）；改装态有 `blueprint_views` 时整列换底板，`SNShipView.set_blueprint_backdrop(true)` 让舞台不再自绘深色底 / 视图框 / 槽位坞条；母版留在 docs 不改，导入参数与多尺寸验收（1440×900 / 960×540 / 1280×1024 / 1920×1080 / 2560×1080）回写 layout.json 与 README；新增 `test_refit_blueprint_board_uses_the_nine_slice_panel`，船厂改装套件 11/11。
+
+- Godot 导入隔离（2026-10-23）：新增 `SNModMaker/.gdignore`、`.agents/.gdignore`、`release/.gdignore`，阻止 Godot 扫描网页编辑器工作区（`mods/`、`exports/`）、Agent worktree 与发布暂存；清理 `SNModMaker` 下 294 个生成的 `.import`。`godot --headless --editor --quit` 扫描日志中 `SNModMaker` / `shared_materials` / `glTF` 报错均为 0，`docs/`、`dist/`、`.design/` 原有 ignore 保持不变。
+
+- 素材页命名与分选（SNModMaker，2026-10-23）：明确内容引用资源键、`manifest.assets` 映射相对路径；资源键与存储路径改为按导入路径生成（`blueprints/ship_a/side.png` → `icon.blueprints.ship_a.side`），同名自动 `_2` 后缀，新增「导入文件夹」保留上层目录；素材页加入搜索、类型筛选（图片/模型/音频/其他）、按键/路径/大小/类型排序、引用次数提示；修改资源键会自动迁移内容里的裸键与 `asset://` 引用；Core 8 张蓝图文件改名带模型名（`<GLB>.side.png`），重建 manifest/core-index；Node 单测 64/64。
+
+- 船体蓝图线稿与双视图（2026-10-23）：4 艘 Core 船入库 8 张 side/top 裁切线稿（manifest 资源键 + hull `blueprint_views`）；新增 `tools/modeling/blueprint/apply_hull_blueprints.mjs`，用生成器 metadata 的正交相机把 14 个武器 socket 的 `position` 投影成 `blueprint`（`--check` 可做门禁）；SNModMaker 新增工作区资产只读 API 与编辑器惰性 hydrate，Core 线稿可直接预览；船厂改装态同屏绘制侧视/俯视，并按每视图线稿等比矩形映射武器框（无 `blueprint_views` 的船体回退通用纵剖图）。
+
+- 船体蓝图槽位编辑器（SNModMaker，2026-10-23）：新增 `js/blueprint_editor.js` + 全屏 Modal 子界面；在绑定的 `blueprint_views.side/top` 线稿上用鼠标拖动舱位 / 模块位 / 武器位标记，自动计算归一化 uv 并写回 `blueprint_position` / `blueprint`，复用现有撤销、校验与自动保存；hull 表单新增线稿资源选择、舱位与模块位数组、四分量坐标输入；`hull.schema.json` 新增可选 `base_cargo_capacity` / `blueprint_views` / `compartments[]` / `module_slots[]` / `weapon_sockets[].pair`，`blueprint` 改为可选覆盖；Node 单测 62/62。
+
+- 船体武器槽位蓝图坐标（2026-10-23）：`weapon_sockets[].blueprint` 新增归一化 `side` / `top` Vector2 契约，Core 四艘船的 14 个槽位完成标注；`shipyard.view` 投影坐标，Godot 船厂改装蓝图绘制槽位框，并在武器分类与候选卡悬停时高亮对应槽位。
+
+- Blender 工业蓝图线稿生成器 MVP（2026-10-23）：新增独立 `tools/modeling/blueprint/` 工具，支持 `.blend` / `.glb`、侧视/俯视/轴测正交取景、Freestyle 三档细节、透明 2048 RGBA 渲染后按 Alpha 自动裁切、确定性相机/尺寸/裁切元数据，以及逐模型 Blender 进程隔离的目录批处理；真实 `SN_Paddle_Freighter.glb` 三视图与可复现 `.blend`/`.glb` 冒烟、损坏单件不中断批次均通过。
+
+- 核心机制补全 Phase 1（2026-10-23）：模块 condition 实际影响锅炉输出、utility 修正、货舱/客舱容量与 modifiers；船厂新增舰载武器购买/仓库/装配/卸下与持久 loadout，武器计重、hull 重配自动回仓；玩家空槽不再获得默认武器；损伤→性能下降→维修报价/扣款→性能恢复回归与船厂 UI 回归落地。设计见 [CORE_MECHANICS_PHASE1.md](docs/design/CORE_MECHANICS_PHASE1.md)，全量 639/639。
+
 - Content Schema 2.0 Phase E（2026-10-23，**Finalized**）：`FrameworkInfo.CONTENT_SCHEMA` / `content_types.json.content_schema` 升 2.0；运行时 `ContentCompiler` 对 1.0 envelope 报「needs 2.0」，SNModMaker / Content CLI fallback 全部 2.0 且 1.0 内容报 `schema_version_frozen`；新增发布门禁 `node tools/check_content_schema_v2.mjs`；迁移/实体契约文档状态 Finalized；636/636 Godot、Node 60、CLI 64、SDK `status: ok`。
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
@@ -69,6 +88,8 @@
 - 建模 M2-1 `combat_kit` 敌舰（批次 9）：4 艘敌舰 = **3 类敌人**（Light ×2 / Medium / Heavy），海盗单桅 `SN_Enemy_Pirate_Sloop` / 武装商船 `SN_Enemy_Merchant_Armed` / 铁甲舰变体 `SN_Enemy_Ironclad_Raider` / 小型炮艇 `SN_Enemy_Gunboat`，**31,324 / 32,400 tri**、55 mesh（GLB 节点合计 86）+ **16 武器 socket + 8 炮门 socket**、9 张共享贴图（无新增，新增 `assets/models/combat/` 类别目录 + Core 副本）。复用现有船体站表放样 + `rig_kit` / `ship_parts`，**不烘炮**（甲板 socket `hull-sockets@1`、炮门 socket `hull-gunports@1`，复用 `SN_Weapon_CasemateGun`）；4/4 GLB 自检 ALL OK、独立 Verifier 只读验收 0 failures、Godot 用例守护（4 GLB 加载 / tri 锁定 / socket 契约）；预览 8 单件 + 1 lineup。运行时武器挂载与敌人内容 Schema 留后续。
 
 - UI 视觉基准 V1：图二确认为约束性的 `SN Visual Baseline V1`，图一保留为非生产承诺的 `UI Kit Concept V1`；生产视觉收敛为黄铜钢板、羊皮纸、蓝图、布旗四个材质族，并冻结基础尺寸、九宫格、安全文字区、字体、颜色、交互状态、动效与边框治理。见 [UI_VISUAL_BASELINE.md](docs/design/UI_VISUAL_BASELINE.md) / [UI_FOUNDATION_SPEC_V1.md](docs/design/UI_FOUNDATION_SPEC_V1.md)。
+
+- UI 页面视觉原型 V1：按统一顶部资源带与布旗导航，完成总览/HUD、市场、委托、船厂、补给、酒馆/情报、海图/出航确认、抵达/航程结算 8 张 16:9 高保真原型；保持四材质族与状态语义，明确原型不等于生产切图。见 [UI_SCREEN_PROTOTYPES_V1.md](docs/design/UI_SCREEN_PROTOTYPES_V1.md)。
 
 - SNModMaker / SNBattleSim Windows 一键启动：两个子目录新增可双击的 `start.bat`，自动检测 Node.js；缺失时优先用 winget 安装最新 LTS，并以 nodejs.org 官方 MSI 作为回退，随后启动本地服务并打开浏览器。
 

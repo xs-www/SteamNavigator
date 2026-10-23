@@ -74,6 +74,16 @@ try {
   assert.equal(response.status, 200);
   assert.equal(fs.existsSync(path.join(gameModsDir, 'smoke_mod.snavmod.zip')), false);
   console.log('[PASS] local server deploys, overwrites, lists and removes a game mod package');
+
+  response = await fetch(`${base}/api/workspace/core/asset?path=assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.side.png`);
+  const asset = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(asset.ok, true);
+  assert.equal(asset.mime, 'image/png');
+  assert.ok(asset.base64.length > 1000, 'workspace line art is base64 encoded for preview');
+  response = await fetch(`${base}/api/workspace/core/asset?path=..%2F..%2Fmanifest.json`);
+  assert.equal(response.status, 400, 'workspace asset API rejects path traversal');
+  console.log('[PASS] workspace asset API previews core line art and rejects traversal');
 } finally {
   child.kill();
   fs.rmSync(tempRoot, { recursive: true, force: true });

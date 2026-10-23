@@ -1,0 +1,4 @@
+# SNModMaker is a standalone web editor, not Godot content.
+# Ignoring this tree keeps local editor workspaces (mods/, exports/), web assets
+# and tool sources out of Godot's import scan and avoids missing-texture errors
+# from raw GLBs in mods/core.

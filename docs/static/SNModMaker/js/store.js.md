@@ -50,29 +50,35 @@
 | `coreIndex()` | L735 |
 | `qualifyCoreAssetReferences(definition)` | L739 |
 | `cloneCoreDefinition(project, coreDefinitionId)` | L748 |
-| `addAsset(project, asset)` | L793 |
-| `removeAsset(project, path)` | L803 |
-| `syncManifest(project)` | L809 |
-| `touch(project)` | L827 |
-| `normalizeProject(raw, options)` | L832 |
-| `serialize(project)` | L862 |
-| `deserialize(text)` | L866 |
-| `bytesToBase64(bytes)` | L870 |
-| `base64ToBytes(base64)` | L879 |
-| `mimeFor(path)` | L888 |
-| `bytesToDataUrl(bytes, mime)` | L901 |
-| `dataUrlToBytes(dataUrl)` | L905 |
-| `decodeText(data)` | L909 |
-| `encodeText(text)` | L914 |
-| `toExportFiles(project, options)` | L919 |
-| `stripRoot(paths)` | L945 |
-| `fromFiles(entries)` | L958 |
-| `definitionKeys(project, typeKey)` | L1061 |
-| `findDefinition(project, filePath, index)` | L1065 |
-| `localizationValue(project, definition, field, locale)` | L1071 |
-| `definitionTitle(project, definition)` | L1078 |
-| `dependencyOnCore(project)` | L1086 |
-| `SNStore (global)` | L1090 |
+| `assetKindOf(asset)` | L794 |
+| `assetKeyPrefixFor(sourcePath, mime)` | L803 |
+| `assetKeySegments(sourcePath)` | L810 |
+| `assetKeyFromPath(sourcePath, mime, existingKeys)` | L823 |
+| `assetStoragePath(sourcePath, mime, existingPaths)` | L835 |
+| `migrateAssetReferences(project, oldKey, newKey)` | L864 |
+| `addAsset(project, asset)` | L898 |
+| `removeAsset(project, path)` | L908 |
+| `syncManifest(project)` | L914 |
+| `touch(project)` | L932 |
+| `normalizeProject(raw, options)` | L937 |
+| `serialize(project)` | L967 |
+| `deserialize(text)` | L971 |
+| `bytesToBase64(bytes)` | L975 |
+| `base64ToBytes(base64)` | L984 |
+| `mimeFor(path)` | L993 |
+| `bytesToDataUrl(bytes, mime)` | L1006 |
+| `dataUrlToBytes(dataUrl)` | L1010 |
+| `decodeText(data)` | L1014 |
+| `encodeText(text)` | L1019 |
+| `toExportFiles(project, options)` | L1024 |
+| `stripRoot(paths)` | L1050 |
+| `fromFiles(entries)` | L1063 |
+| `definitionKeys(project, typeKey)` | L1166 |
+| `findDefinition(project, filePath, index)` | L1170 |
+| `localizationValue(project, definition, field, locale)` | L1176 |
+| `definitionTitle(project, definition)` | L1183 |
+| `dependencyOnCore(project)` | L1191 |
+| `SNStore (global)` | L1195 |
 
 ## 契约与约束
 
@@ -83,6 +89,7 @@
 - `keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。
 - 导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。
 - 资产以 data URL 存项目；导出时解码为字节；`checksum` 不在网页端计算。
+- 内容只引用资源键：`assets[]` 保存 `{key,path,...}`，`manifest.assets[key]` 映射相对路径；`assetKeyFromPath()` / `assetStoragePath()` 从导入时的相对路径生成可区分的键与存储路径，重名自动加 `_2` 后缀。
 
 ## 重点逻辑
 
@@ -120,5 +127,14 @@
 - 定位最短路径的 `manifest.json`，剥离根目录；按清单读取内容/本地化/资产。
 - 内容文件保留显式 payload 版本（缺失时回退类型版本），让版本误配被校验器报出。
 - 缺失声明文件生成占位并返回 warnings；未知 content_type 跳过。
+
+### `assetKeyFromPath(sourcePath, mime, existingKeys) / assetStoragePath(sourcePath, mime, existingPaths)`
+
+- 把 `blueprints/ship_a/side.png` 这类带上层目录的导入路径转成 `icon.blueprints.ship_a.side` 与 `assets/icons/blueprints/ship_a/side.png`；单文件仍退化为文件名。
+- 键与路径都在调用方传入的已用集合上去重，重名追加 `_2`、`_3`；`assetKindOf()` 统一图片/模型/音频/其他的分类。
+
+### `migrateAssetReferences(project, oldKey, newKey)`
+
+- 递归遍历全部内容定义，把裸键与 `asset://<本模组>/<旧键>` 改写为新键并返回替换数量；manifest.assets 由 syncManifest 重建。
 
 模块索引：[SNModMaker](../README.md)

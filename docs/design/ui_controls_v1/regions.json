@@ -1,0 +1,558 @@
+{
+  "atlas": "sn_controls_atlas_v1.png",
+  "size_px": [
+    1536,
+    1024
+  ],
+  "region_units": "source pixels; [x,y,width,height]; origin top-left",
+  "margin_units": "source pixels relative to region; [left,top,right,bottom]; suggested, not engine-validated",
+  "assets": [
+    {
+      "id": "button_normal",
+      "region": [
+        23,
+        63,
+        235,
+        105
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        40,
+        34,
+        40,
+        34
+      ],
+      "minimum_size_px": [
+        88,
+        76
+      ]
+    },
+    {
+      "id": "button_hover",
+      "region": [
+        274,
+        63,
+        236,
+        105
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        40,
+        34,
+        40,
+        34
+      ],
+      "minimum_size_px": [
+        88,
+        76
+      ]
+    },
+    {
+      "id": "button_pressed",
+      "region": [
+        528,
+        63,
+        237,
+        105
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        40,
+        34,
+        40,
+        34
+      ],
+      "minimum_size_px": [
+        88,
+        76
+      ]
+    },
+    {
+      "id": "button_selected",
+      "region": [
+        780,
+        63,
+        236,
+        105
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        40,
+        34,
+        40,
+        34
+      ],
+      "minimum_size_px": [
+        88,
+        76
+      ]
+    },
+    {
+      "id": "button_disabled",
+      "region": [
+        1035,
+        63,
+        233,
+        105
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        40,
+        34,
+        40,
+        34
+      ],
+      "minimum_size_px": [
+        88,
+        76
+      ]
+    },
+    {
+      "id": "button_danger",
+      "region": [
+        1283,
+        63,
+        232,
+        106
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        40,
+        34,
+        40,
+        34
+      ],
+      "minimum_size_px": [
+        88,
+        76
+      ]
+    },
+    {
+      "id": "panel_steel",
+      "region": [
+        26,
+        201,
+        231,
+        218
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "minimum_size_px": [
+        84,
+        84
+      ]
+    },
+    {
+      "id": "panel_recess",
+      "region": [
+        281,
+        200,
+        226,
+        219
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "minimum_size_px": [
+        84,
+        84
+      ]
+    },
+    {
+      "id": "panel_parchment",
+      "region": [
+        531,
+        198,
+        229,
+        221
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "minimum_size_px": [
+        84,
+        84
+      ]
+    },
+    {
+      "id": "panel_blueprint",
+      "region": [
+        782,
+        199,
+        231,
+        220
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "minimum_size_px": [
+        84,
+        84
+      ]
+    },
+    {
+      "id": "panel_canvas",
+      "region": [
+        1036,
+        197,
+        225,
+        222
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "minimum_size_px": [
+        84,
+        84
+      ]
+    },
+    {
+      "id": "frame_open",
+      "region": [
+        1283,
+        200,
+        230,
+        218
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "minimum_size_px": [
+        84,
+        84
+      ]
+    },
+    {
+      "id": "input_recess",
+      "region": [
+        24,
+        463,
+        245,
+        78
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        34,
+        28,
+        34,
+        28
+      ],
+      "minimum_size_px": [
+        76,
+        64
+      ]
+    },
+    {
+      "id": "list_parchment",
+      "region": [
+        276,
+        463,
+        241,
+        78
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        34,
+        28,
+        34,
+        28
+      ],
+      "minimum_size_px": [
+        76,
+        64
+      ]
+    },
+    {
+      "id": "progress_trough",
+      "region": [
+        524,
+        465,
+        247,
+        74
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        34,
+        28,
+        34,
+        28
+      ],
+      "minimum_size_px": [
+        76,
+        64
+      ]
+    },
+    {
+      "id": "fill_amber",
+      "region": [
+        785,
+        475,
+        237,
+        50
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "minimum_size_px": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": "fill_aqua",
+      "region": [
+        1035,
+        475,
+        239,
+        50
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "minimum_size_px": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": "fill_sage",
+      "region": [
+        1292,
+        474,
+        224,
+        51
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "minimum_size_px": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": "flag_teal",
+      "region": [
+        45,
+        569,
+        206,
+        235
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        30,
+        38,
+        30,
+        32
+      ],
+      "minimum_size_px": [
+        68,
+        78
+      ]
+    },
+    {
+      "id": "flag_blue",
+      "region": [
+        297,
+        569,
+        210,
+        234
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        30,
+        38,
+        30,
+        32
+      ],
+      "minimum_size_px": [
+        68,
+        78
+      ]
+    },
+    {
+      "id": "flag_cream",
+      "region": [
+        551,
+        569,
+        206,
+        234
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        30,
+        38,
+        30,
+        32
+      ],
+      "minimum_size_px": [
+        68,
+        78
+      ]
+    },
+    {
+      "id": "flag_red",
+      "region": [
+        795,
+        569,
+        215,
+        234
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        30,
+        38,
+        30,
+        32
+      ],
+      "minimum_size_px": [
+        68,
+        78
+      ]
+    },
+    {
+      "id": "flag_disabled",
+      "region": [
+        1051,
+        569,
+        204,
+        235
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        30,
+        38,
+        30,
+        32
+      ],
+      "minimum_size_px": [
+        68,
+        78
+      ]
+    },
+    {
+      "id": "flag_selected",
+      "region": [
+        1294,
+        567,
+        216,
+        237
+      ],
+      "resizable": true,
+      "nine_slice_margins": [
+        30,
+        38,
+        30,
+        32
+      ],
+      "minimum_size_px": [
+        68,
+        78
+      ]
+    },
+    {
+      "id": "checkbox_empty",
+      "region": [
+        78,
+        859,
+        124,
+        121
+      ],
+      "resizable": false,
+      "nine_slice_margins": null
+    },
+    {
+      "id": "slider_knob",
+      "region": [
+        298,
+        865,
+        199,
+        95
+      ],
+      "resizable": false,
+      "nine_slice_margins": null
+    },
+    {
+      "id": "hook",
+      "region": [
+        597,
+        840,
+        88,
+        152
+      ],
+      "resizable": false,
+      "nine_slice_margins": null
+    },
+    {
+      "id": "rope_loop",
+      "region": [
+        816,
+        846,
+        139,
+        146
+      ],
+      "resizable": false,
+      "nine_slice_margins": null
+    },
+    {
+      "id": "paper_clip",
+      "region": [
+        1071,
+        841,
+        131,
+        149
+      ],
+      "resizable": false,
+      "nine_slice_margins": null
+    },
+    {
+      "id": "wax_seal",
+      "region": [
+        1323,
+        830,
+        168,
+        165
+      ],
+      "resizable": false,
+      "nine_slice_margins": null
+    }
+  ]
+}
+

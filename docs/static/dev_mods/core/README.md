@@ -6,6 +6,14 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
+| `assets/blueprints/ships/SN_Ironclad/SN_Ironclad.side.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Ironclad/SN_Ironclad.top.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.side.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.top.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.side.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.top.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.side.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.top.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/money.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/water.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

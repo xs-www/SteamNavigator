@@ -199,7 +199,7 @@ v2 的船舶模块不再按“导航 / 安全 / 其他小功能”拆成多个�
 
 持久战役中，世界布局、遗迹房间、遭遇实例在开局或首次进入时生成并写入存档；内容更新不得改变已生成结果。
 
-船舶模块实例（[SHIP_MODULE_INSTANCES.md](../specs/SHIP_MODULE_INSTANCES.md)）属于「运行态」：`ship.module_instances` 只存 `instance_id` 与 `condition`，已安装的定义 ID 仍由扁平槽位键表达；实例表由 `ShipModules.ensure()` 与扁平键对齐，随存档持久化。模块 condition 暂不进入派生属性计算，战斗阶段再接入。
+船舶模块实例（[SHIP_MODULE_INSTANCES.md](../specs/SHIP_MODULE_INSTANCES.md)）属于「运行态」：`ship.module_instances` 只存 `instance_id` 与 `condition`，已安装的定义 ID 仍由扁平槽位键表达；实例表由 `ShipModules.ensure()` 与扁平键对齐，随存档持久化。Phase 1 起 condition 已进入 `ShipOps` 派生属性：锅炉输出、utility 修正、货舱/客舱容量与 modifiers 连续衰减，维修恢复后回到内容基线。
 
 ## 9. 显式 Patch
 

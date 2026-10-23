@@ -363,6 +363,15 @@
     return data.project || null;
   }
 
+  /** Reads a workspace asset (e.g. core line art PNG) as a data URL for preview. */
+  async function readWorkspaceAsset(id, relativePath) {
+    const path = String(relativePath || '').trim();
+    if (!path) return '';
+    const data = await apiJson(`api/workspace/${encodeURIComponent(id)}/asset?path=${encodeURIComponent(path)}`);
+    if (!data || !data.base64) return '';
+    return `data:${data.mime || 'application/octet-stream'};base64,${data.base64}`;
+  }
+
   async function putWorkspaceProject(project, options) {
     const opts = options || {};
     const payload = projectPayload(project);
@@ -440,6 +449,7 @@
     putDiskProject,
     deleteDiskProject,
     getWorkspaceProject,
+    readWorkspaceAsset,
     putWorkspaceProject,
     listExports,
     saveExportToDisk,

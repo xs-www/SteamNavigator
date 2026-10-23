@@ -354,9 +354,10 @@ func test_shipyard_order_and_port_wait_make_time_move() -> void:
 			recipe = row
 			break
 	assert_true(not recipe.is_empty(), "a money-only tier-1 recipe is craftable without materials")
-	# Craft entries now live in the module type's refit category.
+	# Craft entries now live in the module type's refit category, craft tab.
 	shipyard_screen.set_category(String(recipe["content_type"]))
 	assert_true(bool(shipyard_screen._refit), "opening a category enters refit mode")
+	shipyard_screen.set_tab("craft")
 	var craft_button := _button_by_text(shell._root_box, shipyard_screen._craft_button_text(recipe))
 	assert_not_null(craft_button, "the craft button states the work hours it commits to")
 	var module_id := String(recipe["module_id"])
@@ -415,6 +416,54 @@ func test_market_supply_block_paints_the_lost_capacity_band() -> void:
 		0.001,
 		"the drawn bar spans the baseline ceiling, so the fill ratio cannot rise"
 	)
+	_unmount(bundle)
+
+
+func test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void:
+	var bundle := _mount(5206)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	_goto(shell, "shipyard")
+	# 顶栏品牌位换成港口名：产品名不再出现在常驻 chrome 里。
+	var chrome_texts := _label_texts(shell._top_chrome)
+	assert_false(chrome_texts.has(shell._tr("ui.app.title", "Steam Navigator")),
+		"the chrome no longer shows the product title")
+	assert_false(chrome_texts.has("S T E A M   N A V I G A T O R"),
+		"the chrome no longer shows the spaced brand line")
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	assert_contains(chrome_texts, context.translate(String(view["current_port"]["name_key"]), ""),
+		"the port name sits where the brand used to be")
+	# 正常态：面板内的 3D 船体舞台负责船体，港区舞台保持隐藏。
+	var host: Variant = shell.get("_port_stage_host")
+	assert_true(host == null or not bool(host.is_stage_visible()),
+		"the normal shipyard page keeps the district stage hidden")
+	var screens := _nodes_with_script(shell._root_box, SHIPYARD_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the shipyard page is mounted once")
+	if screens.size() != 1:
+		_unmount(bundle)
+		return
+	var screen: Control = screens[0]
+	var refit_button: Variant = screen.get("_refit_button")
+	assert_true(refit_button is Button, "the normal page offers the refit toggle")
+	if not (refit_button is Button):
+		_unmount(bundle)
+		return
+	(refit_button as Button).emit_signal("pressed")
+	# 改装态：港区舞台显示并停在船厂站位（页面本身只画蓝图与操作坞）。
+	host = shell.get("_port_stage_host")
+	assert_not_null(host, "refit mode mounts the shared 3D port stage")
+	if host != null:
+		assert_true(bool(host.is_stage_visible()), "refit mode shows the 3D shipyard station")
+		var stage: Node = host.current_stage()
+		if stage != null and stage.has_method("current_station"):
+			assert_eq(String(stage.current_station()), "shipyard", "the stage focuses the shipyard station")
+	# 退出改装态：舞台再次隐藏，避免与面板内的 3D 船体重叠。
+	var done_button: Variant = screen.get("_refit_button")
+	assert_true(done_button is Button, "refit mode keeps a toggle to leave it")
+	if done_button is Button:
+		(done_button as Button).emit_signal("pressed")
+	if host != null:
+		assert_false(bool(host.is_stage_visible()), "leaving refit hides the district stage again")
 	_unmount(bundle)
 
 

@@ -555,6 +555,40 @@ async function handleApi(request, response, url) {
       sendJson(response, 404, { ok: false, error: '工作区不存在' });
       return;
     }
+    if (parts[3] === 'asset' && method === 'GET') {
+      const relative = safeRelative(url.searchParams.get('path'));
+      if (!relative) {
+        sendJson(response, 400, { ok: false, error: '非法资源路径' });
+        return;
+      }
+      const resolvedDir = path.resolve(workspaceDir(id)) + path.sep;
+      const resolvedFile = path.resolve(path.join(workspaceDir(id), relative));
+      if (!resolvedFile.startsWith(resolvedDir)) {
+        sendJson(response, 400, { ok: false, error: '资源路径越界' });
+        return;
+      }
+      if (!fs.existsSync(resolvedFile) || !fs.statSync(resolvedFile).isFile()) {
+        sendJson(response, 404, { ok: false, error: '资源不存在' });
+        return;
+      }
+      const stat = fs.statSync(resolvedFile);
+      if (stat.size > 8 * 1024 * 1024) {
+        sendJson(response, 413, { ok: false, error: '资源超过 8 MB，无法预览' });
+        return;
+      }
+      try {
+        sendJson(response, 200, {
+          ok: true,
+          path: relative,
+          mime: mimeForPath(relative),
+          size: stat.size,
+          base64: fs.readFileSync(resolvedFile).toString('base64'),
+        });
+      } catch (error) {
+        sendJson(response, 500, { ok: false, error: error.message });
+      }
+      return;
+    }
     if (method === 'GET') {
       try {
         sendJson(response, 200, { ok: true, project: readWorkspaceProject(id) });

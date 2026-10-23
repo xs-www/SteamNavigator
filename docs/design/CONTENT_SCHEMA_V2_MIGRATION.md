@@ -73,7 +73,7 @@
 - `campaign.world / codex / factions` 分区与 clues 惰性块已建（只存 ID 与进度，不存定义）。
 - v2 新档由 `prepare_for_save()` 写 `campaign.setup.content_versions`（类型 → 版本）；
   旧档加载时用当前注册表补齐缺失类型，版本漂移只 warning、不重排世界；C4 起不再推断 1.0 类型。
-- 存档 header 的 `content_schema` 仍写基线 `FrameworkInfo.CONTENT_SCHEMA`（`"1.0"`），
+- 存档 header 的 `content_schema` 仍写基线 `FrameworkInfo.CONTENT_SCHEMA`（`"2.0"`），
   它不表达混合版本；实际加载集合看 `campaign.setup.content_versions`。
 
 ### 2.4 编辑器 / CLI / SDK / 门禁

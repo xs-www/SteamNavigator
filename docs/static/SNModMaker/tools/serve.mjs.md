@@ -45,8 +45,9 @@
 
 - 默认只监听 `127.0.0.1`；`SNMODMAKER_HOST` 可改绑定地址（容器设 `0.0.0.0`），默认端口 8099。支持 `SNMODMAKER_MODS_DIR` / `SNMODMAKER_EXPORTS_DIR` / `SNMODMAKER_GAME_MODS_DIR` / `SNMODMAKER_WORKSPACE_ROOT` 覆盖目录；工作区根默认是仓库 `dev_mods/`。
 - 默认部署目标由 `game_mods_dir.mjs` 解析为 `dist/build/<platform>/mods/`（优先已有的导出平台目录）。
-- API：status、projects、workspace、exports 与 game-mods；请求体上限 128 MB。
+- API：status、projects、workspace、workspace asset、exports 与 game-mods；请求体上限 128 MB。
 - `/api/workspace/<id>` 直接读写 `dev_mods/<id>`：打开时返回 manifest/content/localization 与资产键占位（不含二进制），保存时只写文本文件并删掉 manifest 不再声明的 content/localization 文件；资产目录永远不动。
+- `/api/workspace/<id>/asset?path=<相对路径>` 只读返回 `{mime,size,base64}`，用于编辑器预览工作区线稿；路径经过 `safeRelative` 与目录前缀双重校验，单文件上限 8 MB，缺文件 404、越界 400。
 - 工作区内容文件缺失 `schema_version` 时按 `content_type` 推导（Schema 2.0 草案 2.0，未知类型回退 1.0）。
 - 工作区保存允许删除/新增定义与内容文件；`/api/workspace/<id>` DELETE 被拒绝，避免误删整个原生模组。
 - 游戏部署使用稳定文件名 `<id>.snavmod.zip`，临时文件写完后替换目标，并清理同 ID 的旧版本号包，避免重复模组。

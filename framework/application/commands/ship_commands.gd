@@ -1,5 +1,8 @@
 class_name ShipCommands
 extends RefCounted
+## @static-doc
+## 作用：船厂事务用例：模块购买/仓库/运输安装、卸装与打造，以及舰载武器购买/仓库安装和卸下。
+##
 ## Shipyard use cases: install a module (purchase / warehouse / transit, with
 ## replacement), uninstall a module into the current port warehouse, and order a
 ## module craft (warehouse-first materials, delivered later by CraftOps settlement).
@@ -9,6 +12,11 @@ extends RefCounted
 ## and CraftOps.craft_blockers() so the shipyard ViewModel never drifts.
 ## A successful hull replacement also reconciles `data.fleet`: a flagship captain
 ## that cannot command the new archetype is released in the same transaction.
+## Hull replacement also reconciles the weapon loadout and returns incompatible
+## weapons to the current-port warehouse without losing ownership.
+## @end-static-doc
+
+const WeaponOps := preload("res://framework/domain/ship/weapon_ops.gd")
 
 const VALID_SOURCES := ["purchase", "warehouse", "transit"]
 
@@ -67,6 +75,11 @@ static func install_module(params: Dictionary, context) -> Dictionary:
 		_remove_installed(state, _installed_slot(ship, replaced_module_id), replaced_module_id)
 		WarehouseOps.add_module(state, state.current_port_id(), replaced_module_id, 1)
 	_install(state, module, module_id, source, requested_slot)
+	var returned_weapons: Array[String] = []
+	if module.content_type == ContentTypes.HULL:
+		returned_weapons = WeaponOps.reconcile_for_hull(hub, ship)
+		for weapon_id in returned_weapons:
+			WarehouseOps.add_weapon(state, state.current_port_id(), weapon_id, 1)
 
 	var validation := ShipOps.validate_configuration(hub, ship)
 	if not bool(validation["ok"]):
@@ -100,10 +113,83 @@ static func install_module(params: Dictionary, context) -> Dictionary:
 		"source": source,
 		"price": price,
 		"replaced_module_id": replaced_module_id,
+		"returned_weapons": returned_weapons,
 		"money": state.money(),
 		"total_weight": ShipOps.total_weight(hub, state),
 		"victory": victory,
 	}, events)
+
+
+static func install_weapon(params: Dictionary, context) -> Dictionary:
+	var state: GameState = context.state
+	var hub: RegistryHub = context.registries
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	if not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port")
+	var port_id := state.current_port_id()
+	if not MapOps.has_facility(MapOps.port(state.world(), port_id), "shipyard"):
+		return Result.fail("no_shipyard", "ui.error.no_shipyard")
+	var weapon_id := String(params.get("weapon_id", ""))
+	var socket_name := String(params.get("socket", ""))
+	var source := String(params.get("source", "purchase"))
+	if source.is_empty():
+		source = "purchase"
+	var blockers := WeaponOps.install_blockers(hub, state, weapon_id, socket_name, source)
+	if not blockers.is_empty():
+		return Result.fail(String(blockers[0]), "ui.error.%s" % String(blockers[0]), {
+			"weapon_id": weapon_id,
+			"socket": socket_name,
+			"source": source,
+			"blockers": blockers,
+		})
+	var weapon := WeaponOps.get_by_id(hub, weapon_id)
+	var price := int(round(float(weapon.data.get("purchase_price", 0.0)))) if source == "purchase" else 0
+	if source == "purchase" and price > 0:
+		state.add_money(-price)
+		state.record_expense(price)
+	elif source == "warehouse":
+		WarehouseOps.remove_weapon(state, port_id, weapon_id, 1)
+	var replaced := WeaponOps.install(state.ship(), socket_name, weapon_id)
+	if not replaced.is_empty() and replaced != weapon_id:
+		WarehouseOps.add_weapon(state, port_id, replaced, 1)
+	return Result.ok({
+		"socket": socket_name,
+		"weapon_id": weapon_id,
+		"source": source,
+		"price": price,
+		"replaced_weapon_id": replaced,
+		"money": state.money(),
+		"total_weight": ShipOps.total_weight(hub, state),
+	}, [{
+		"type": "ship.weapon_installed",
+		"payload": {"socket": socket_name, "weapon_id": weapon_id, "source": source, "price": price, "replaced_weapon_id": replaced},
+	}])
+
+
+static func uninstall_weapon(params: Dictionary, context) -> Dictionary:
+	var state: GameState = context.state
+	var hub: RegistryHub = context.registries
+	if not context.has_run():
+		return Result.fail("no_run", "ui.error.no_run")
+	if not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port")
+	var port_id := state.current_port_id()
+	if not MapOps.has_facility(MapOps.port(state.world(), port_id), "shipyard"):
+		return Result.fail("no_shipyard", "ui.error.no_shipyard")
+	var socket_name := String(params.get("socket", ""))
+	if socket_name.is_empty():
+		return Result.fail("missing_socket", "ui.error.missing_socket")
+	if WeaponOps.socket_by_name(hub, state.ship(), socket_name).is_empty():
+		return Result.fail("unknown_socket", "ui.error.unknown_socket", {"socket": socket_name})
+	var removed := WeaponOps.uninstall(state.ship(), socket_name)
+	if removed.is_empty():
+		return Result.fail("missing_weapon", "ui.error.missing_weapon", {"socket": socket_name})
+	var warehouse_qty := WarehouseOps.add_weapon(state, port_id, removed, 1)
+	return Result.ok({"socket": socket_name, "weapon_id": removed, "warehouse_qty": warehouse_qty}, [{
+		"type": "ship.weapon_uninstalled",
+		"payload": {"socket": socket_name, "weapon_id": removed, "warehouse_qty": warehouse_qty},
+	}])
 
 
 static func uninstall_module(params: Dictionary, context) -> Dictionary:

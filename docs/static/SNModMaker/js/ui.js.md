@@ -71,11 +71,18 @@
 | `socketPositionField(path, value)` | L922 |
 | `socketDuplicateNote(duplicate, text)` | L938 |
 | `renderWeaponSocketRow(item, index, nameCounts, indexCounts)` | L942 |
-| `renderRigSocketRow(item, index, nameCounts, indexCounts)` | L994 |
-| `socketEnumOptions(values, field)` | L1054 |
-| `renderHullSocketConfiguration(definition)` | L1059 |
-| `renderDefinitionForm(options)` | L1098 |
-| `SNUI (global)` | L1184 |
+| `renderRigSocketRow(item, index, nameCounts, indexCounts)` | L995 |
+| `socketEnumOptions(values, field)` | L1055 |
+| `renderHullSocketConfiguration(definition)` | L1060 |
+| `blueprintVectorFields(path, value, viewLabel)` | L1103 |
+| `blueprintPositionField(path, value)` | L1117 |
+| `blueprintAssetPreview(project, key)` | L1129 |
+| `renderCompartmentRow(item, index)` | L1137 |
+| `renderModuleSlotRow(item, index)` | L1164 |
+| `blueprintSlotCount(items)` | L1194 |
+| `renderHullBlueprintConfiguration(definition, project)` | L1199 |
+| `renderDefinitionForm(options)` | L1243 |
+| `SNUI (global)` | L1333 |
 
 ## 契约与约束
 
@@ -86,6 +93,8 @@
 - 贴图与模型不用浏览器原生 datalist：图片候选仅含 png/webp/svg，模型候选仅含 GLB，并保留直接输入资源键能力。
 - 船体把 cargo_slots/cabin_slots 移入专属模块区，并展示运行时固定的锅炉、导航、安全各一槽；普通数据区不重复渲染。
 - 船体安装点子面板：`weapon_sockets` / `rig_sockets` 表格行可增删，按 `socket_class` / `socket_kind` 着色徽标，重复 name / 索引就地提示；武器草案复用通用 Schema 渲染并显示中文枚举标签。
+- 船体蓝图区：绑定 `blueprint_views.side/top.image` 线稿资源；`compartments` / `module_slots` 用专属行渲染（ID、等级/类别限制、`blueprint_position` 四分量输入），并提供「打开蓝图槽位编辑器」入口。
+- 武器安装点行渲染 `blueprint.side/top` 的 U/V 数值输入；坐标 0..1，留空表示该视图不显示。
 - 所有用户文本与属性值经过 `esc/attr` 转义；引用候选来自当前项目 + Core 索引。
 - 表单生成的路径是相对定义的属性路径（manifest 除外），与 app.setByPath 的约定一致。
 

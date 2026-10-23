@@ -88,6 +88,9 @@ const PORT_STAGE_FACILITY_SCREENS := {
 const STAGE_SCREENS := {
 	"overview": "harbor",
 	"market": "market",
+	# 改装态船厂页也画在 3D 港区舞台上（镜头对准船厂干船坞站位）；正常态船厂页
+	# 自带面板内的 3D 船体舞台，所以 `_sync_port_stage()` 会按 `_shipyard_refit` 隐藏它。
+	"shipyard": "shipyard",
 }
 ## Width of the dock information panel on the market / supply pages. The stage
 ## keeps the left part of the window, the panel floats over the right side.
@@ -737,10 +740,11 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	row.add_theme_constant_override("separation", 12)
 	rows.add_child(row)
 	var brand := VBoxContainer.new()
+	brand.name = "PortBrand"
 	brand.add_theme_constant_override("separation", 0)
 	row.add_child(brand)
-	brand.add_child(_label("S T E A M   N A V I G A T O R", 9, COLOR_MUTED))
-	brand.add_child(_label(_tr("ui.app.title", "Steam Navigator"), 22, COLOR_BRASS))
+	brand.add_child(_label(_tr("ui.label.port", "Port"), 9, COLOR_MUTED))
+	brand.add_child(_label(_current_port_label(data), 22, COLOR_BRASS))
 	row.add_child(_badge(
 		_tr(String(app.get("status_key", "ui.status.ok")), ""),
 		_status_badge_tone(app)
@@ -748,7 +752,6 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, COLOR_MUTED))
 	row.add_child(VSeparator.new())
 	for stat in [
-		[_tr("ui.label.port", "Port"), _current_port_label(data), COLOR_BRASS, ""],
 		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), COLOR_TEXT, ""],
 		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), COLOR_BRASS, HUD_ICON_KEYS["money"]],
 		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), COLOR_GREEN, ""],
@@ -1353,6 +1356,11 @@ func _sync_overview_detail_backdrop() -> void:
 ## `STAGE_SCREENS` is active, and it always plays the harbour-authority shot.
 func _sync_port_stage(data: Dictionary, force_station: String = "") -> void:
 	var station := force_station if not force_station.is_empty() else String(STAGE_SCREENS.get(_active_screen, ""))
+	# 船厂只有改装态才画在 3D 舞台上：正常态页面自带面板内的 3D 船体舞台，
+	# 两个舞台同时可见会重复显示同一艘船。
+	if _active_screen == "shipyard" and not _shipyard_refit:
+		_hide_port_stage()
+		return
 	# The 2D-overview toggle only affects the overview page; market / supply are
 	# always presented over the district because that is where their station is.
 	var stage_page_enabled := _active_screen != "overview" or _overview_stage_mode
@@ -1377,7 +1385,10 @@ func _sync_port_stage(data: Dictionary, force_station: String = "") -> void:
 		if not _port_stage_host.load_stage(PORT_STAGE_SCENE_PATH):
 			_on_port_stage_fallback("stage_scene_load_failed")
 			return
-	var framing := "stage" if _active_screen == "overview" or not force_station.is_empty() else "panel"
+	# Shipyard refit keeps the station-centred shot: its panels sit on the left and
+	# right, so the shipyard yard must stay in the middle window instead of being
+	# shifted aside like the single right-hand dock panel of market / supply.
+	var framing := "stage" if _active_screen == "overview" or _active_screen == "shipyard" or not force_station.is_empty() else "panel"
 	_port_stage_host.bind_view_model(_port_stage_payload(data))
 	_port_stage_host.set_stage_visible(true)
 	_focus_stage_station(station, framing, just_mounted)
@@ -1998,7 +2009,12 @@ func _screen_shipyard(data: Dictionary) -> void:
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = SHIPYARD_SCREEN_SCENE.instantiate()
-	screen.refit_mode_changed.connect(func(active: bool): _shipyard_refit = active)
+	# 改装态切换要立刻把 3D 港区舞台显示/隐藏：页面本身只重建自己的内容，
+	# 舞台同步必须由 Shell 完成（不能整页刷新，否则会在按钮信号里重建页面）。
+	screen.refit_mode_changed.connect(func(active: bool):
+		_shipyard_refit = active
+		_sync_port_stage(_last_port_view)
+	)
 	screen.refit_category_changed.connect(func(category: String): _shipyard_category = category)
 	screen.bind(_shipyard_model(result["data"], data), Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)

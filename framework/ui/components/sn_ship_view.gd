@@ -1,13 +1,33 @@
 class_name SNShipView
 extends Control
+## @static-doc
+## 作用：船厂中央船体视图；正常态承载 2.5D 船体，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
+##
+## ## 契约与约束
+## - `set_ship_model()` 接收 `shipyard.view.ship`；`ship.blueprint_views.{side,top}` 是
+##   已解析的线稿路径（`path`），没有线稿时回退到通用纵剖图/程序化占位。
+## - 武器槽位行必须包含稳定 `socket` 与 `blueprint`，后者的 `side` / `top` 是左上原点、
+##   0..1 的 JSON Vector2，坐标基准是各自视图的线稿纹理。
+## - `blueprint_view_rect(view)` 返回该视图等比适配后的屏幕矩形；
+##   `blueprint_socket_rects(view)` 用这个矩形把归一化坐标映射为屏幕框；缺失、越界或
+##   形状错误的坐标跳过，不影响其它槽位和模块拖放。没有线稿时 rect 回退为整个 Control，
+##   保持旧内容兼容。
+## - CUTAWAY 同时绘制 side（上方）与 top（下方）两个视图；槽位框空槽为灰、已装武器为
+##   黄铜、`highlight_slots()` 命中的 socket 为青色高亮；购买/安装命令仍由船厂页面发出。
+## - 有每船线稿时船厂页把整列换成 `SNBlueprintPanel` 九宫格蓝图底板；页面调用
+##   `set_blueprint_backdrop(true)` 后本视图不再自绘深色底、每视图边框与槽位坞条，只把
+##   线稿、视图标签、武器槽位框和槽位 chip 画在底板的深蓝内容区上。底板由 Theme 提供，
+##   本视图不持有底板纹理；未开启该开关（旧船、无底板）时背景绘制行为保持不变。
+## - 模块 `SNSlotTarget`、通用纵剖图贴图和 2.5D renderer 协议保持不变。
+##
 ## Refit stage for the centre of the shipyard screen.
 ##
 ## Two modes share one coordinate space:
 ##   EXTERIOR — a side view of the current ship (procedural placeholder today).
-##   CUTAWAY  — a textured longitudinal section (assets/ui/shipyard/ship_section.png)
-##              with one SNSlotTarget chip per slot, so owned free modules can be
-##              dragged straight onto a slot. When the texture is missing the
-##              built-in procedural section is used as a fallback.
+##   CUTAWAY  — dual blueprint views from the hull's `blueprint_views`; when absent,
+##              the authored longitudinal section (assets/ui/shipyard/ship_section.png)
+##              or the procedural fallback is used. SNSlotTarget chips stay on top so
+##              owned free modules can be dragged straight onto a slot.
 ##
 ## ## 2.5D integration contract
 ## `set_renderer(node)` swaps the procedural placeholder for a real renderer.
@@ -19,6 +39,7 @@ extends Control
 ## only has to draw the hull and can ignore input entirely. Passing null
 ## restores the built-in placeholder. Nothing in the screen depends on how the
 ## ship is drawn, so the swap needs no screen change.
+## @end-static-doc
 
 signal slot_drop_requested(payload: Dictionary, slot: Dictionary)
 signal slot_activated(slot: Dictionary)
@@ -34,6 +55,12 @@ const HULL_MID := Color("30474b")
 const WATER := Color("10212a")
 const SLOT_H := 62.0
 const CARGO_SLOT_H := 58.0
+const BLUEPRINT_SOCKET_MIN_SIZE := Vector2(28.0, 20.0)
+const BLUEPRINT_SOCKET_MAX_SIZE := Vector2(42.0, 30.0)
+const BLUEPRINT_SIDE_RATIO := 0.52
+const BLUEPRINT_VIEW_GAP := 0.02
+const SLOT_DOCK_MARGIN := 8.0
+const SLOT_DOCK_GAP := 8.0
 ## Refit cross-section texture. Replace this PNG to reskin the whole cutaway;
 ## the screen and slot logic never depend on how the section is drawn.
 const SECTION_TEXTURE_PATH := "res://assets/ui/shipyard/ship_section.png"
@@ -45,7 +72,17 @@ var _slot_targets: Array = []
 var _renderer: Node = null
 var _slot_layer: Control
 var _section_texture: Texture2D = null
+var _blueprint_textures: Dictionary = {}
+var _blueprint_meta: Dictionary = {}
 var _time := 0.0
+var _highlighted_slot_ids: Array = []
+## True when the shipyard column already paints the nine-slice blueprint board
+## (`assets/ui/shipyard/blueprint_panel.png`); the cutaway then draws only line
+## art, labels and chips on top of that board instead of its own dark backdrop.
+var _blueprint_backdrop := false
+## Path -> Texture2D; content is frozen after load, so per-hull line art can be
+## decoded once even though the shipyard rebuilds the stage on every command.
+static var _blueprint_texture_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -109,8 +146,133 @@ func _load_section_texture() -> void:
 
 func set_ship_model(model: Dictionary) -> void:
 	_model = model.duplicate(true)
+	_load_blueprint_textures()
 	_notify_renderer("ship_view_update", [_model])
 	queue_redraw()
+
+
+## True when the hull ships per-view line art (side/top); otherwise the stage
+## keeps the legacy generic section texture.
+func has_blueprint_views() -> bool:
+	return not _blueprint_textures.is_empty()
+
+
+func blueprint_texture_size(view: String) -> Vector2:
+	var texture: Texture2D = _blueprint_textures.get(view, null)
+	return texture.get_size() if texture != null else Vector2.ZERO
+
+
+## Bottom dock reserved for SNSlotTarget chips; line art never draws under it.
+func slot_dock_height() -> float:
+	if not has_blueprint_views() or _slot_targets.is_empty():
+		return 0.0
+	var rows := 1 if _slot_targets.size() <= 6 else 2
+	return SLOT_DOCK_MARGIN + float(rows) * SLOT_H + float(rows - 1) * SLOT_DOCK_GAP + 6.0
+
+
+## Lets the screen declare that the parent column is a blueprint board. The
+## cutaway then stops painting its own wash, per-view boxes and dock bar, so the
+## board's blue field shows through and the pale line art keeps the intended
+## contrast. The board itself is a Theme stylebox; this flag only removes paint.
+func set_blueprint_backdrop(enabled: bool) -> void:
+	if _blueprint_backdrop == enabled:
+		return
+	_blueprint_backdrop = enabled
+	queue_redraw()
+
+
+func uses_blueprint_backdrop() -> bool:
+	return _blueprint_backdrop
+
+
+## Cutaway drawn straight onto the board: only meaningful when line art exists.
+func _uses_blueprint_board() -> bool:
+	return _blueprint_backdrop and has_blueprint_views()
+
+
+## Stage area left for line art: the whole control minus the slot dock.
+func _blueprint_view_available_rect() -> Rect2:
+	return Rect2(0.0, 0.0, size.x, maxf(0.0, size.y - slot_dock_height()))
+
+
+## Aspect-preserving on-screen rect of one blueprint view; falls back to the
+## whole control when no line art exists so pre-art hulls keep the old mapping.
+func blueprint_view_rect(view: String) -> Rect2:
+	if _blueprint_textures.is_empty():
+		return Rect2(Vector2.ZERO, size)
+	if not _blueprint_textures.has(view):
+		return Rect2(Vector2.ZERO, size)
+	var available := _blueprint_view_available_rect()
+	if available.size.y <= 0.0:
+		return Rect2(Vector2.ZERO, Vector2.ZERO)
+	var has_side: bool = _blueprint_textures.has("side")
+	var has_top: bool = _blueprint_textures.has("top")
+	if not (has_side and has_top):
+		return _fit_texture(_blueprint_textures[view], available)
+	var gap: float = available.size.y * BLUEPRINT_VIEW_GAP
+	var side_height: float = available.size.y * BLUEPRINT_SIDE_RATIO
+	var top_height: float = available.size.y - side_height - gap
+	var side_region := Rect2(0.0, 0.0, available.size.x, side_height)
+	var top_region := Rect2(0.0, side_height + gap, available.size.x, top_height)
+	var region: Rect2 = side_region if view == "side" else top_region
+	# Both generated views share the same world-x framing; displaying them at the
+	# same width keeps a given world x at the same horizontal screen position.
+	var side_fit := _fit_texture(_blueprint_textures["side"], side_region)
+	var top_fit := _fit_texture(_blueprint_textures["top"], top_region)
+	var shared_width: float = minf(side_fit.size.x, top_fit.size.x)
+	if shared_width <= 0.0:
+		return _fit_texture(_blueprint_textures[view], region)
+	return _fit_texture_with_width(_blueprint_textures[view], region, shared_width)
+
+
+## Fits a texture into a region using a caller-provided display width (and
+## clamps it back to the region height when the aspect would overflow).
+func _fit_texture_with_width(texture: Texture2D, region: Rect2, width: float) -> Rect2:
+	var texture_size := texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0 or width <= 0.0:
+		return Rect2(region.position, Vector2.ZERO)
+	var height: float = width * texture_size.y / texture_size.x
+	if height > region.size.y:
+		height = region.size.y
+		width = height * texture_size.x / texture_size.y
+	var fitted := Vector2(width, height)
+	return Rect2(region.position + (region.size - fitted) * 0.5, fitted)
+
+
+func _fit_texture(texture: Texture2D, region: Rect2) -> Rect2:
+	var texture_size := texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return Rect2(region.position, Vector2.ZERO)
+	var fit_scale: float = minf(region.size.x / texture_size.x, region.size.y / texture_size.y)
+	var fitted_size := texture_size * fit_scale
+	return Rect2(region.position + (region.size - fitted_size) * 0.5, fitted_size)
+
+
+func _load_blueprint_textures() -> void:
+	_blueprint_textures.clear()
+	_blueprint_meta.clear()
+	var views: Variant = _model.get("blueprint_views", {})
+	if not (views is Dictionary):
+		return
+	for view in ["side", "top"]:
+		var entry: Variant = (views as Dictionary).get(view, null)
+		if not (entry is Dictionary):
+			continue
+		var asset_path := String((entry as Dictionary).get("path", ""))
+		if asset_path.is_empty():
+			continue
+		var texture: Texture2D = _blueprint_texture_cache.get(asset_path, null)
+		if texture == null:
+			if ResourceLoader.exists(asset_path):
+				texture = load(asset_path) as Texture2D
+			if texture == null:
+				texture = ContentAssetLoader.load_texture(asset_path)
+			if texture != null:
+				_blueprint_texture_cache[asset_path] = texture
+		if texture == null:
+			continue
+		_blueprint_textures[view] = texture
+		_blueprint_meta[view] = entry
 
 
 ## Replace the slot descriptors. Each descriptor: id, category, slot, index,
@@ -149,10 +311,51 @@ func set_mode(next: int) -> void:
 
 
 func highlight_slots(slot_ids: Array) -> void:
+	_highlighted_slot_ids = slot_ids.duplicate()
 	for target in _slot_targets:
 		if target is SNSlotTarget:
 			target.set_compatible_hint(slot_ids.has(String(target.slot.get("id", ""))))
 	_notify_renderer("ship_view_highlight", [slot_ids])
+	queue_redraw()
+
+
+## Returns the on-screen frame of every weapon socket that defines a coordinate
+## for the requested blueprint view. Coordinates are normalized against that
+## view's line-art image; when no line art is bound the whole control is used so
+## legacy content keeps its previous mapping.
+func blueprint_socket_rects(view: String = "side") -> Dictionary:
+	var rects: Dictionary = {}
+	if size.x <= 0.0 or size.y <= 0.0:
+		return rects
+	var view_rect := blueprint_view_rect(view)
+	if view_rect.size.x <= 0.0 or view_rect.size.y <= 0.0:
+		return rects
+	var frame_size := Vector2(
+		clampf(view_rect.size.x * 0.045, BLUEPRINT_SOCKET_MIN_SIZE.x, BLUEPRINT_SOCKET_MAX_SIZE.x),
+		clampf(view_rect.size.y * 0.055, BLUEPRINT_SOCKET_MIN_SIZE.y, BLUEPRINT_SOCKET_MAX_SIZE.y)
+	)
+	for raw_socket in _model.get("weapon_sockets", []):
+		if not (raw_socket is Dictionary):
+			continue
+		var socket: Dictionary = raw_socket
+		var blueprint: Variant = socket.get("blueprint", {})
+		if not (blueprint is Dictionary):
+			continue
+		var point: Variant = (blueprint as Dictionary).get(view, null)
+		if not (point is Array) or (point as Array).size() != 2:
+			continue
+		var normalized := Vector2(float(point[0]), float(point[1]))
+		if normalized.x < 0.0 or normalized.x > 1.0 or normalized.y < 0.0 or normalized.y > 1.0:
+			continue
+		var socket_id := String(socket.get("socket", socket.get("name", "")))
+		if socket_id.is_empty():
+			continue
+		var center := view_rect.position + Vector2(
+			normalized.x * view_rect.size.x,
+			normalized.y * view_rect.size.y
+		)
+		rects[socket_id] = Rect2(center - frame_size * 0.5, frame_size)
+	return rects
 
 
 func _on_slot_drop(payload: Dictionary, slot: Dictionary) -> void:
@@ -170,6 +373,9 @@ func _notify_renderer(method: StringName, args: Array) -> void:
 func _layout_slots() -> void:
 	if _slot_targets.is_empty() or size.x < 80.0:
 		return
+	if has_blueprint_views():
+		_layout_slot_dock()
+		return
 	var fixed: Array = []
 	var cargo: Array = []
 	for target in _slot_targets:
@@ -181,6 +387,23 @@ func _layout_slots() -> void:
 	var h := size.y
 	_place_row(fixed, 16.0, w - 32.0, h * 0.60, SLOT_H, 8.0)
 	_place_row(cargo, w * 0.12, w * 0.76, h * 0.82, CARGO_SLOT_H, 8.0)
+
+
+## Bottom dock for the interactive module chips: one row up to six slots, two
+## rows above that. The blueprint views reserve this height so the deck plan is
+## never hidden behind the chips.
+func _layout_slot_dock() -> void:
+	var count := _slot_targets.size()
+	var rows := 1 if count <= 6 else 2
+	var per_row := int(ceil(float(count) / float(rows)))
+	var dock_top := size.y - slot_dock_height() + SLOT_DOCK_MARGIN
+	for row in rows:
+		var start := row * per_row
+		var end := mini(count, start + per_row)
+		if start >= end:
+			continue
+		var slice := _slot_targets.slice(start, end)
+		_place_row(slice, 12.0, size.x - 24.0, dock_top + float(row) * (SLOT_H + SLOT_DOCK_GAP), SLOT_H, 6.0)
 
 
 func _place_row(targets: Array, left: float, span: float, top: float, chip_h: float, gap: float) -> void:
@@ -223,7 +446,8 @@ func _chip_anchor(slot: Dictionary, cargo_count: int) -> Vector2:
 func _draw() -> void:
 	if size.x < 80.0 or size.y < 80.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.051, 0.090, 0.106, 0.55))
+	if not (mode == Mode.CUTAWAY and _uses_blueprint_board()):
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.051, 0.090, 0.106, 0.55))
 	if mode == Mode.CUTAWAY:
 		_draw_cutaway()
 	else:
@@ -288,11 +512,92 @@ func _draw_exterior() -> void:
 
 
 func _draw_cutaway() -> void:
-	if _section_texture != null:
+	if has_blueprint_views():
+		_draw_blueprint_views()
+	elif _section_texture != null:
 		_draw_section_texture()
 	else:
 		_draw_cutaway_placeholder()
-	_draw_slot_leaders()
+	_draw_blueprint_weapon_slots()
+	if not has_blueprint_views():
+		_draw_slot_leaders()
+
+
+## Dual-view blueprint: the side elevation on top, the deck plan below, both
+## aspect-fitted so author coordinates keep a 1:1 meaning with the source PNG.
+## On a blueprint board the two views sit directly on the board's blue field (no
+## boxes, no dock bar); without a board the legacy stage backdrop is kept.
+func _draw_blueprint_views() -> void:
+	var font := ThemeDB.fallback_font
+	var board := _uses_blueprint_board()
+	if not board:
+		_draw_blueprint_dock_bar()
+	for view in ["side", "top"]:
+		if not _blueprint_textures.has(view):
+			continue
+		var texture: Texture2D = _blueprint_textures[view]
+		var rect := blueprint_view_rect(view)
+		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+			continue
+		if not board:
+			draw_rect(rect.grow(2.0), Color(0.02, 0.055, 0.065, 0.55), true)
+		draw_texture_rect(texture, rect, false, Color(1.0, 1.0, 1.0, 0.96))
+		if not board:
+			draw_rect(rect, Color(TEAL, 0.28), false, 1.0)
+		var label := "侧视 SIDE" if view == "side" else "俯视 TOP"
+		draw_string(font, rect.position + Vector2(8.0, 15.0), label,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, Color(TEAL, 0.82))
+	var has_side: bool = _blueprint_textures.has("side")
+	var has_top: bool = _blueprint_textures.has("top")
+	if has_side and has_top:
+		var available := _blueprint_view_available_rect()
+		var divider_y: float = available.position.y + available.size.y * (BLUEPRINT_SIDE_RATIO + BLUEPRINT_VIEW_GAP * 0.5)
+		draw_line(Vector2(available.position.x + 8.0, divider_y), Vector2(available.end.x - 8.0, divider_y), Color(TEAL, 0.18), 1.0)
+
+
+## Legacy dark strip behind the slot chips; the board's field replaces it.
+func _draw_blueprint_dock_bar() -> void:
+	var dock := slot_dock_height()
+	if dock <= 0.0:
+		return
+	var dock_rect := Rect2(0.0, size.y - dock, size.x, dock)
+	draw_rect(dock_rect, Color(0.021, 0.051, 0.061, 0.82), true)
+	draw_line(Vector2(8.0, dock_rect.position.y), Vector2(size.x - 8.0, dock_rect.position.y), Color(TEAL, 0.22), 1.0)
+
+
+## Draws non-interactive weapon socket frames over the blueprint. Purchase and
+## install actions stay in the weapons panel; this layer only gives spatial
+## feedback and uses highlight_slots() for the active/compatible state.
+func _draw_blueprint_weapon_slots() -> void:
+	var sockets_by_id: Dictionary = {}
+	for raw_socket in _model.get("weapon_sockets", []):
+		if raw_socket is Dictionary:
+			var socket: Dictionary = raw_socket
+			sockets_by_id[String(socket.get("socket", socket.get("name", "")))] = socket
+	# With per-view line art both views are visible, so draw the socket frames in
+	# each. Legacy generic-section hulls keep the old single-view behaviour.
+	var views_to_draw: Array = ["side"]
+	if has_blueprint_views():
+		views_to_draw = ["side", "top"]
+	else:
+		var legacy_view := String(_model.get("blueprint_view", "side"))
+		if legacy_view in ["side", "top"]:
+			views_to_draw = [legacy_view]
+	for view in views_to_draw:
+		var socket_rects := blueprint_socket_rects(String(view))
+		for socket_id in socket_rects.keys():
+			var rect: Rect2 = socket_rects[socket_id]
+			var highlighted := _highlighted_slot_ids.has(String(socket_id))
+			var socket: Dictionary = sockets_by_id.get(socket_id, {})
+			var occupied := not String(socket.get("weapon_id", "")).is_empty()
+			var color := BRASS if occupied else MUTED
+			if highlighted:
+				color = TEAL
+			draw_rect(rect, Color(color, 0.18 if highlighted else 0.08), true)
+			draw_rect(rect, color, false, 2.5 if highlighted else 1.5)
+			var notch := minf(rect.size.x, rect.size.y) * 0.22
+			draw_line(rect.get_center() - Vector2(notch, 0.0), rect.get_center() + Vector2(notch, 0.0), color, 1.0)
+			draw_line(rect.get_center() - Vector2(0.0, notch), rect.get_center() + Vector2(0.0, notch), color, 1.0)
 
 
 ## Authored PNG section, cropped to cover the stage while keeping its aspect.

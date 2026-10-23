@@ -1,6 +1,6 @@
 # 船舶模块实例化（Module Instance）
 
-> 状态：已落地（2026-10 迭代）
+> 状态：已落地（2026-10 迭代；2026-10-23 Phase 1 补齐性能衰减）
 > 适用：Save Schema 2.0 运行态、维修经济、船厂 UI，以及后续战斗持久伤害
 > 相关：[实体契约 v2](../design/ENTITY_CONTRACT_V2.md)、[战斗系统架构评审](COMBAT_ARCHITECTURE_REVIEW.md)、[持久战役架构](PERSISTENT_CAMPAIGN_ARCHITECTURE.md)
 
@@ -8,7 +8,7 @@
 
 战斗评审把「Module 实例化（id + condition + 失效状态）」列为战斗实现的前置依赖：当前 `ship` 只把已装模块存成定义 ID，没有实例身份也没有耐久，战斗无法「打坏一个具体部件」，维修也无法按部件计价。
 
-这一步先把**实例身份与状态**落地，不改 Content Schema，也不做统一 Module 迁移：
+实例层不改变 Content Schema；Content Schema 2.0 C1 已把模块定义统一为 `modules`，运行态仍保留扁平槽位投影：
 
 - 每个已装模块有稳定 `instance_id` 与 `condition`（0..1）。
 - 事件可以损坏指定槽位的模块；港口维修按部件损耗计价并恢复。
@@ -19,8 +19,8 @@
 ```json
 "ship": {
   "hull_id": "core:hull/small_efficient",
-  "boiler_id": "core:boiler/basic",
-  "cargo_modules": ["core:cargo_module/basic"],
+  "boiler_id": "core:module/small_efficient",
+  "cargo_modules": ["core:module/small_hold"],
   "navigation_module_id": "", "safety_module_id": "", "passenger_cabin_id": "",
   "module_serial": 2,
   "module_instances": {
@@ -32,7 +32,7 @@
 
 - `module_instances` 只含单槽（`boiler` / `navigation` / `safety` / `cabin`）与有序 `cargo` 数组；船体耐久仍由 `ship.durability` 承担，船体不进实例表。
 - `module_serial` 是实例编号计数器，新实例按 `module_<n>` 递增；同 seed、同构筑、同操作序列产生相同 id。
-- `condition`：1.0 完好，0.0 失效；中间值可参与维修计价。
+- `condition`：1.0 完好，0.0 失效；中间值参与维修计价与能力贡献。
 - 实例只保存身份与状态；**已安装哪个定义**仍由扁平槽位键表达（`boiler_id` 等）。这是本阶段刻意保留的投影，统一 Module 迁移时再把 `definition_id` 移入实例、扁平键改为派生访问器。
 
 ## 3. 不变量
@@ -51,7 +51,7 @@
 - 失败返回 `unknown_module_slot` / `invalid_amount`，命令事务整体回滚。
 - Core 的「锅炉过热」两个选项已接入：水冷轻微损伤锅炉、强行继续明显损伤锅炉——部件损耗不再只是数据字段。
 - 维修报价：`missing = 船体缺失点数 + Σ(模块重量 × (1 - condition))`，再乘 `repair_per_point` 与安全设备/工程师的 `repair_cost_mul`；`repair()` 同时恢复船体与全部模块实例，返回 `modules_repaired`。
-- 当前边界：**模块 condition 暂不影响航速/容量等派生属性**，只影响失效标记与维修费用；性能影响与战斗规则放到战斗阶段（见评审文档 §8）。
+- Phase 1 性能规则：锅炉输出按 condition 缩放；导航/安全的加值按 condition 缩放、乘数在 1 与定义值之间插值；货舱/客舱容量按 condition 缩放；模块 `modifiers` 的 add/mul/set 使用同一连续衰减口径。重量不随损伤变化，煤耗/水耗保持内容定义值。
 
 ## 5. 界面
 
@@ -90,6 +90,8 @@ pwsh ./tools/capture_ui.ps1 -OutDir res://docs/design/screenshots/module_conditi
 - 单槽替换生成满状态新实例。
 - `damage_module` 操作码成功/非法槽位、事件类型。
 - 维修报价含模块损耗、不伪造船体缺失。
+- 锅炉与货舱损伤实际降低速度/容量，`supply.repair` 后恢复基线。
+- 船厂武器购买、卸下入仓与仓库免费重装复用同一玩家船状态。
 - 损伤状态与实例 id 随存档往返、哈希一致。
 
 另外 [test_shipyard_refit.gd](../../framework/tests/cases/test_shipyard_refit.gd) 守护「健康船无状态徽标 / 50% 损耗显示状态徽标」的界面契约。
@@ -103,7 +105,7 @@ pwsh ./tools/capture_ui.ps1 -OutDir res://docs/design/screenshots/module_conditi
 
 ## 8. 下一步
 
-1. 战斗/敌方攻击按实例造成伤害，condition 影响能力输出（速度、容量、安全修正）。
-2. 统一 Module 迁移：`definition_id` 进实例，扁平槽位键改为派生访问器，提供 ID 别名迁移。
+1. 战斗/敌方攻击按实例造成定向部件伤害。
+2. 可选的运行态归一化：`definition_id` 进实例，扁平槽位键改为派生访问器，并提供 ID 别名迁移。
 3. 部件维修单（按槽位单独修理/更换）与备件库存。
-4. UI：船卡与海图显示最差部件状态、维修预览拆分船体/部件。
+4. 海图显示最差部件状态；维修预览继续细分到单槽位。

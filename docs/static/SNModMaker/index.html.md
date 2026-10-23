@@ -6,7 +6,7 @@
 
 ## 契约与约束
 
-- 脚本按 `schema-bundle → core-index → catalog → zip → validate → store → io → ui → app` 顺序加载，全部为经典 script，支持 file://。
+- 脚本按 `schema-bundle → core-index → catalog → zip → validate → store → io → ui → blueprint_editor → app` 顺序加载，全部为经典 script，支持 file://。
 - 不引用外部字体、CDN、图片或模块；图标为内联 SVG / CSS。
 - `#datalists` 必须保持可被表单引用，不能使用 `display:none` 以外的移除方式。
 

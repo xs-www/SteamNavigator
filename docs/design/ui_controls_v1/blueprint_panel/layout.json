@@ -1,0 +1,81 @@
+{
+  "texture": "blueprint_panel_v1.png",
+  "texture_size": [
+    1860,
+    846
+  ],
+  "region": [
+    89,
+    121,
+    1682,
+    598
+  ],
+  "nine_slice_margins_ltrb": [
+    112,
+    108,
+    112,
+    108
+  ],
+  "content_insets_ltrb": [
+    132,
+    124,
+    132,
+    124
+  ],
+  "units": "source pixels; margins relative to region; suggested, not engine-tested",
+  "godot": {
+    "runtime_texture": "res://assets/ui/shipyard/blueprint_panel.png",
+    "runtime_size": [
+      841,
+      299
+    ],
+    "derivation": "crop region (1682x598) then scale 0.5; do not scale the full 1860x846 canvas because the outer padding would break the corner slices",
+    "display_scale": 0.5,
+    "stylebox_texture_margins_ltrb": [
+      56,
+      54,
+      56,
+      54
+    ],
+    "stylebox_content_margins_ltrb": [
+      66,
+      62,
+      66,
+      62
+    ],
+    "theme_variation": "SNBlueprintPanel",
+    "theme_stylebox": "BlueprintPanel",
+    "used_by": "framework/ui/screens/port/shipyard_screen.gd::_section_panel (refit mode with per-hull blueprint_views only)",
+    "acceptance": [
+      "1440x900",
+      "960x540",
+      "1280x1024",
+      "1920x1080",
+      "2560x1080"
+    ]
+  },
+  "line_art": {
+    "path": ".design/blueprint_acceptance/SN_Paddle_Freighter/top.png",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "current_legacy_alpha_bounds": [
+      91,
+      802,
+      1865,
+      444
+    ],
+    "current_legacy_region_with_16px_padding": [
+      75,
+      786,
+      1897,
+      476
+    ],
+    "crop_policy": "use the full texture for newly generated pre-trimmed line art; otherwise compute alpha bounds at import time and add optional padding",
+    "fit": "keep aspect centered; never stretch with panel",
+    "slot_coordinates": "store normalized coordinates relative to the trimmed line-art texture, not the pre-trim source canvas",
+    "note": "The file currently on disk is still the legacy 2048x2048 artifact. Regenerate it before relying on full-texture fitting."
+  }
+}
+

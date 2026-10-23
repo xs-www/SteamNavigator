@@ -790,6 +790,111 @@
     return { file, index: indexInFile, definition: clone, localId: newLocal };
   }
 
+  /** 资源的语义分类：决定默认资源键前缀、资产目录与素材页筛选。 */
+  function assetKindOf(asset) {
+    const mime = String((asset && asset.mime) || '').toLowerCase();
+    const path = String((asset && asset.path) || '').toLowerCase();
+    if (mime.startsWith('image/') || /\.(png|webp|svg)$/.test(path)) return 'image';
+    if (mime === 'model/gltf-binary' || path.endsWith('.glb')) return 'model';
+    if (mime.startsWith('audio/') || /\.(ogg|wav)$/.test(path)) return 'audio';
+    return 'other';
+  }
+
+  function assetKeyPrefixFor(sourcePath, mime) {
+    const kind = assetKindOf({ mime, path: sourcePath });
+    if (kind === 'image') return 'icon';
+    if (kind === 'model') return 'model';
+    return 'asset';
+  }
+
+  function assetKeySegments(sourcePath) {
+    return String(sourcePath || '')
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter(Boolean)
+      .map((segment) => slugify(segment.replace(/\.[^./]+$/, ''), 'file'));
+  }
+
+  /**
+   * 从“带上层目录的相对路径”推导资源键，例如
+   * `blueprints/ship_a/side.png` → `icon.blueprints.ship_a.side`。
+   * 文件选择器只给文件名时退回 `icon.side`；重名自动追加 _2、_3。
+   */
+  function assetKeyFromPath(sourcePath, mime, existingKeys) {
+    const segments = assetKeySegments(sourcePath);
+    let base = `${assetKeyPrefixFor(sourcePath, mime)}.${segments.join('.') || 'file'}`;
+    if (base.length > 120) base = base.slice(0, 120);
+    const used = new Set((existingKeys || []).filter(Boolean));
+    if (!used.has(base)) return base;
+    let counter = 2;
+    while (used.has(`${base}_${counter}`)) counter += 1;
+    return `${base}_${counter}`;
+  }
+
+  /** 保留导入时的上层目录，生成 `assets/<kind>/<相对路径>` 的存储路径。 */
+  function assetStoragePath(sourcePath, mime, existingPaths) {
+    const kind = assetKindOf({ mime, path: sourcePath });
+    const folder = kind === 'image'
+      ? 'assets/icons'
+      : kind === 'model'
+        ? 'assets/models'
+        : kind === 'audio' ? 'assets/audio' : 'assets/files';
+    const clean = String(sourcePath || '')
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter((segment) => segment && segment !== '.' && segment !== '..')
+      .map((segment) => segment.replace(/[^A-Za-z0-9._-]+/g, '_'))
+      .filter(Boolean)
+      .join('/');
+    const candidate = `${folder}/${clean || 'file'}`;
+    const used = new Set((existingPaths || []).filter(Boolean));
+    if (!used.has(candidate)) return candidate;
+    let counter = 2;
+    while (true) {
+      const next = candidate.replace(/(\.[^./]+)$/, `_${counter}$1`);
+      if (!used.has(next)) return next;
+      counter += 1;
+    }
+  }
+
+  /**
+   * 资源改名时同步更新内容引用：裸键和 `asset://<本模组>/<键>` 两种写法。
+   * 返回被替换的字符串数量，供 UI 提示。
+   */
+  function migrateAssetReferences(project, oldKey, newKey) {
+    if (!project || !oldKey || !newKey || oldKey === newKey) return 0;
+    const modId = project.manifest && project.manifest.id ? project.manifest.id : '';
+    const qualified = `asset://${modId}/${oldKey}`;
+    const qualifiedNext = `asset://${modId}/${newKey}`;
+    let count = 0;
+    const rewrite = (node) => {
+      if (Array.isArray(node)) {
+        for (let index = 0; index < node.length; index += 1) {
+          if (typeof node[index] === 'string') {
+            if (node[index] === oldKey) { node[index] = newKey; count += 1; }
+            else if (node[index] === qualified) { node[index] = qualifiedNext; count += 1; }
+          } else if (node[index] && typeof node[index] === 'object') {
+            rewrite(node[index]);
+          }
+        }
+        return;
+      }
+      if (!node || typeof node !== 'object') return;
+      for (const key of Object.keys(node)) {
+        if (typeof node[key] === 'string') {
+          if (node[key] === oldKey) { node[key] = newKey; count += 1; }
+          else if (node[key] === qualified) { node[key] = qualifiedNext; count += 1; }
+        } else if (node[key] && typeof node[key] === 'object') {
+          rewrite(node[key]);
+        }
+      }
+    };
+    for (const file of project.contentFiles || []) {
+      for (const definition of file.definitions || []) rewrite(definition);
+    }
+    return count;
+  }
+
   function addAsset(project, asset) {
     if (!asset || !asset.path) return null;
     const existing = project.assets.find((item) => item.path === asset.path);
@@ -1121,6 +1226,10 @@
     removeDefinition,
     duplicateDefinition,
     cloneCoreDefinition,
+    assetKindOf,
+    assetKeyFromPath,
+    assetStoragePath,
+    migrateAssetReferences,
     addAsset,
     removeAsset,
     syncManifest,

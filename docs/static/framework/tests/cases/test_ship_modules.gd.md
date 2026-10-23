@@ -15,7 +15,10 @@
 | `test_install_slot_resets_condition() -> void` | L95 |
 | `test_damage_module_effect_opcode() -> void` | L106 |
 | `test_repair_cost_includes_module_damage() -> void` | L129 |
-| `test_conditions_survive_save_load() -> void` | L144 |
+| `test_condition_changes_performance_and_repair_restores_it() -> void` | L144 |
+| `test_shipyard_weapon_purchase_uninstall_and_warehouse_reinstall() -> void` | L167 |
+| `test_hull_replacement_returns_incompatible_weapons_to_port_storage() -> void` | L207 |
+| `test_conditions_survive_save_load() -> void` | L232 |
 
 ## 契约与约束
 

@@ -187,7 +187,15 @@
     "model.building.smelter": "assets/models/base/SN_Base_Smelter.glb",
     "model.building.foundry": "assets/models/base/SN_Base_Foundry.glb",
     "model.building.stockyard": "assets/models/base/SN_Base_Stockyard.glb",
-    "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb"
+    "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb",
+    "blueprint.ship.small_efficient.side": "assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.side.png",
+    "blueprint.ship.small_efficient.top": "assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.top.png",
+    "blueprint.ship.medium_standard.side": "assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.side.png",
+    "blueprint.ship.medium_standard.top": "assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.top.png",
+    "blueprint.ship.large_efficient.side": "assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.side.png",
+    "blueprint.ship.large_efficient.top": "assets/blueprints/ships/SN_Paddle_Freighter/SN_Paddle_Freighter.top.png",
+    "blueprint.ship.large_performance.side": "assets/blueprints/ships/SN_Ironclad/SN_Ironclad.side.png",
+    "blueprint.ship.large_performance.top": "assets/blueprints/ships/SN_Ironclad/SN_Ironclad.top.png"
   },
   "authors": [
     "Steam Navigator Team",

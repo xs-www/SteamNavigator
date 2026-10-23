@@ -383,7 +383,7 @@ weapon GLB → find_weapon_root() / weapon_info()     # Root extras（assembly_s
 - **报告**：`weapons.mounted[{socket, asset, class, profile, fits}]` + `weapons.mounts`（`ShipWeaponMount`）。
 - **舞台**：船厂 / 港口 / 航行演出共用同一入口；船厂舞台不做合批，`ShipWeaponMount` 句柄保持有效；
   港口舞台把整船烘进 `ShipBatches`，合批后句柄失效（战斗层接入时需要不合批旁路）。
-- **内容边界**：`weapons` 已是 D1 active 2.0 内容类型，战斗结算会从船体 socket + 武器内容解析默认武器；但游戏内尚无武器购买 / 装配入口，`ship.weapon_loadout` 仍主要由预览注入，视觉装配仍以 GLB Root extras 为准。
+- **内容边界**：`weapons` 已是 active 2.0；Phase 1 起玩家通过船厂购买/仓库装配写入 `ship.weapon_loadout`，战斗与视觉装配消费同一 loadout，空 socket 不再解析默认武器。视觉节点与机制句柄仍以 GLB Root extras 为准。
 - 契约 §7 待决 5（`base_footprint` F1）在运行时按 §8.3 用底座网格实测规避，`clearance_report()`
   不读 `base_footprint_*`。
 

@@ -1043,11 +1043,12 @@ func test_port_stage_stations_are_adjacent_along_one_quay() -> void:
 	var port := stage as PortStage
 
 	var ids := port.station_ids()
-	assert_eq(ids.size(), 3, "the district exposes three adjacent stations")
-	if ids.size() == 3:
+	assert_eq(ids.size(), 4, "the district exposes four adjacent stations")
+	if ids.size() == 4:
 		assert_eq(String(ids[0]), "market", "the market is the west station")
 		assert_eq(String(ids[1]), "harbor", "the harbour authority is the centre station")
-		assert_eq(String(ids[2]), "supply", "the supply yard is the east station")
+		assert_eq(String(ids[2]), "shipyard", "the shipyard dry dock sits east of the harbour")
+		assert_eq(String(ids[3]), "supply", "the supply yard is the east station")
 	assert_eq(port.current_station(), "harbor", "the stage starts on the harbour reference shot")
 
 	var market_x := port.station_ship_position("market").x

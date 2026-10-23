@@ -9,7 +9,7 @@
 | 类型 | `content_type` | ID 类型段 | 说明 |
 | --- | --- | --- | --- |
 | 物品 | `items` | `item` | C2 合并商品与造船材料；`data.crafting_material` 区分打造材料（C2 起 Schema 2.0） |
-| 船体 | `hulls` | `hull` | 航速、载重、槽位、耐久、武器/帆索安装点（C1 起 Schema 2.0） |
+| 船体 | `hulls` | `hull` | 航速、载重、槽位、耐久、武器/帆索安装点；蓝图线稿绑定、舱位/模块位与可拖拽坐标（C1 起 Schema 2.0） |
 | 模块 | `modules` | `module` | C1 合并锅炉 / 货舱 / 杂项功能（导航·安全）/ 客舱，`data.v2_category` 区分 |
 | 船员岗位 | `crew_roles` | `crew_role` | 工资与属性修正（C4-C 由 1.0 roles 升级，2.0） |
 | 锅炉策略 | `boiler_strategies` | `boiler_strategy` | 航速 / 煤 / 水 / 风险（C4-C 由 1.0 strategies 升级，2.0） |
@@ -55,6 +55,7 @@ Phase B 起，8 类世界/战役类型 + 新增 `map_configs` 已提升为**运�
 - **剧情表单**：`story_arcs` 编辑主角 / 角色表 / 术语 / 关卡顺序；`story_levels` 编辑内嵌固定地图（港口坐标、设施、市场、航道）、初始状态、任务阶段（含 checkpoint / presentation）、叙事简报 / beats / 结算、难度旋钮、奖励与失败重试策略；默认值自带 2 港 1 航道小地图，可直接校验通过。
 - **舰载武器表单**：`weapons`（运行时 2.0）按战斗（kind / damage_type / damage / range / cooldown / accuracy / salvo / color…）、装配（weapon_class / assembly_profile / has_yaw·has_pitch·has_recoil·has_muzzle / muzzle_count / envelope_* / height / mount_scale）、经济（tier / weight / purchase_price / craft_* / materials）三组渲染；新增定义默认取模拟器「甲板速射炮」数值。
 - **船体安装点**：船体表单可编辑 `weapon_sockets` / `rig_sockets` 数组（安装点名称、class/kind、索引、position 三元组、clearance_*、mount_scale、note），校验重复 name / 索引、非法 class/kind 与缺失必填；写出的是内容侧镜像，运行时装配仍读 GLB extras。
+- **蓝图与槽位坐标**：船体表单的「蓝图与槽位坐标」区绑定 `blueprint_views.side/top.image` 线稿资源键，并编辑 `compartments` / `module_slots` 数组（ID、等级/类别限制、坐标）与武器安装点的 `blueprint.side/top` 四分量坐标。点击「打开蓝图槽位编辑器」进入全屏子界面：在绑定的线稿上拖动舱位 / 模块位 / 武器位标记，自动计算归一化 uv 并写回定义；坐标 0..1、左上原点，留空表示该视图不显示。打开编辑器时会按绑定键惰性拉取工作区图片（本地服务 `/api/workspace/<id>/asset`），因此 Core 四艘船的线稿可直接预览；没有本地服务或图片缺失时才退回资源键提示，不会报错。
 - **专用控件**：属性修正（stat / op / value）、打造材料、载货/载客需求、港口商品表、事件选项、条件树、效果操作码、补丁操作。
 - **引用选择**：船体、模块、物品等字段带 Core + 当前项目的 ID 候选；显示中文名。
 - **复制与派生**：复制当前定义，或从 Core 复制一条完整定义并自动改写 ID、本地化键与翻译；官方贴图/模型会保留为 `asset://core/...` 引用，不会被误认成当前模组资产。
@@ -65,7 +66,7 @@ Phase B 起，8 类世界/战役类型 + 新增 `map_configs` 已提升为**运�
 - **JSON 检视 / 编辑**：任意定义可切换为原始 JSON 编辑；右侧检视器可查看当前上下文。
 - **自动保存**：IndexedDB；状态栏显示保存时间。撤销 / 重做 40 步。
 - **批量本地化**：缺失键列表、一键补齐键、未引用键提示、覆盖率。
-- **资源**：添加 png / webp / svg / ogg / wav / glb，自动生成 `manifest.assets` 映射并随 ZIP 打包；GLB 资源卡片会渲染自动取景的缩略图。
+- **资源**：添加 png / webp / svg / ogg / wav / glb，自动生成 `manifest.assets` 映射并随 ZIP 打包；GLB 资源卡片会渲染自动取景的缩略图。**内容定义引用的是资源键（key），manifest.assets 再把键映射到相对路径**；素材页提供搜索、类型筛选（图片/模型/音频/其他）、按键/路径/大小/类型排序、引用次数提示，以及「导入文件夹」——导入目录时会保留上层目录并据此生成可区分的资源键（同名文件自动追加 `_2`、`_3`），避免不同船的 `side.png` / `top.png` 只靠文件名区分。在素材页修改资源键时会自动更新内容里的裸键与 `asset://<本模组>/<键>` 引用，并提示更新了多少处。
 - **模型缩略图**：内置 GLB 解析 + WebGL 单帧渲染，无第三方库；只读取场景节点、三角网格、法线与材质基色，不做交互旋转或动画。
 
 ### 导入 / 导出

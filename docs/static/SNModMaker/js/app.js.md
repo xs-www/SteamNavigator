@@ -11,154 +11,161 @@
 | --- | --- |
 | `UI` | L12 |
 | `IO` | L14 |
-| `MODULE_PAGE_TYPES` | L16 |
-| `init()` | L72 |
-| `probeBackend()` | L79 |
-| `loadInitialProject()` | L89 |
-| `setProject(project, options)` | L121 |
-| `clearProject()` | L150 |
-| `firstSelection(project)` | L162 |
-| `currentFile()` | L176 |
-| `currentDefinition()` | L181 |
-| `selectedTypeInfo()` | L187 |
-| `selectedDefinitionKey()` | L192 |
-| `localizationDraft(definition, oldId, syncToId)` | L196 |
-| `currentLocalizationDraft()` | L218 |
-| `previewLocalizationValue(key, draft)` | L222 |
-| `previewLocalizationKey(definition, field, draft)` | L230 |
-| `setByPath(object, path, value)` | L234 |
-| `getByPath(object, path)` | L250 |
-| `deleteByPath(object, path)` | L260 |
-| `snapshot()` | L273 |
-| `pushHistory()` | L277 |
-| `undo()` | L288 |
-| `redo()` | L304 |
-| `ensureSelection()` | L320 |
-| `fallbackKey(uid)` | L336 |
-| `loadFallbackProject()` | L340 |
-| `saveNow(options)` | L351 |
-| `flushDiskSave(options)` | L395 |
-| `openProject(uid)` | L439 |
-| `deleteProject(uid)` | L456 |
-| `render(options)` | L487 |
-| `renderChrome()` | L523 |
-| `renderStatus()` | L550 |
-| `saveStateText()` | L569 |
-| `saveStateTitle()` | L579 |
-| `updateSaveState()` | L584 |
-| `timeText(date)` | L592 |
-| `renderSidebar()` | L600 |
-| `draftSchemaFootText()` | L661 |
-| `renderDraftSideGroup(counts, typeIssues)` | L666 |
-| `sideTypeLink(type, count, issues, draft)` | L678 |
-| `activeLocale(locale)` | L692 |
-| `renderWorkspace()` | L700 |
-| `renderWelcome()` | L722 |
-| `loadRecent()` | L747 |
-| `renderOverview()` | L803 |
-| `ovField(labelText, control, hintText, wide)` | L913 |
-| `depRow(list, dependency, index)` | L921 |
-| `structureTree(project)` | L929 |
-| `renderModuleTabs(activeType)` | L957 |
-| `renderModuleCategoryTabs()` | L974 |
-| `renderContent()` | L999 |
-| `renderDefinitionEditor(selected, info)` | L1084 |
-| `collectNeededKeys(project)` | L1141 |
-| `renderLocalization()` | L1156 |
-| `renderAssets()` | L1235 |
-| `paintModelThumbnails()` | L1277 |
-| `runModelThumbQueue()` | L1296 |
-| `setModelThumbImage(node, dataUrl)` | L1315 |
-| `renderValidation()` | L1325 |
-| `issueLocation(issue)` | L1364 |
-| `gotoIssue(index)` | L1376 |
-| `attrSelector(value)` | L1416 |
-| `inspectorData()` | L1424 |
-| `renderInspector()` | L1438 |
-| `inspectorLabel()` | L1461 |
-| `bindEvents()` | L1479 |
-| `closeAssetPickers(except)` | L1496 |
-| `openAssetPicker(picker)` | L1505 |
-| `filterAssetPicker(input)` | L1515 |
-| `onClick(event)` | L1530 |
-| `selectDefinition(filePath, index)` | L1568 |
-| `navigate(kind, argument)` | L1577 |
-| `onInput(event)` | L1614 |
-| `onChange(event)` | L1662 |
-| `onKeyDown(event)` | L1687 |
-| `onFocusOut(event)` | L1745 |
-| `applyField(element, fromChange)` | L1753 |
-| `readValue(element)` | L1801 |
-| `markChanged(structural)` | L1828 |
-| `updateDefinitionLocalizationPreview(definition, draft)` | L1840 |
-| `updateEntityLocaleDraft(element)` | L1859 |
-| `updateLocaleValue(element)` | L1874 |
-| `filterDefinitionCards()` | L1894 |
-| `renderLocalizationListOnly()` | L1901 |
-| `autoProjectId(name)` | L1914 |
-| `filterCoreList(query)` | L1920 |
-| `handleAction(element, event)` | L1931 |
-| `saveDefinitionAction()` | L2166 |
-| `gotoDefinitionLocalization(field, keyOverride)` | L2203 |
-| `addDefinitionAction()` | L2220 |
-| `cloneCoreAction(coreId)` | L2231 |
-| `deleteDefinitionAction()` | L2247 |
-| `duplicateDefinitionAction()` | L2272 |
-| `applyRawJson()` | L2283 |
-| `addDependency(list)` | L2306 |
-| `removeDependency(list, index)` | L2316 |
-| `syncNamespace()` | L2325 |
-| `gotoKeyDefinition(filePath, index)` | L2370 |
-| `deleteLocaleKey(key)` | L2379 |
-| `fillMissingKeys()` | L2389 |
-| `arrayAdd(path)` | L2411 |
-| `nextSocketItem(existing, kind)` | L2426 |
-| `defaultArrayItem(path, definition)` | L2455 |
-| `arrayRemove(path, index)` | L2480 |
-| `arrayMove(path, index, direction)` | L2491 |
-| `addListValue(path, input, button)` | L2505 |
-| `listRemove(path, index)` | L2529 |
-| `enumToggle(path, value, element)` | L2542 |
-| `addCondition(path, kind)` | L2559 |
-| `removeCondition(path)` | L2571 |
-| `changeConditionKind(element)` | L2580 |
-| `changeConditionOp(element)` | L2600 |
-| `changeEffectOp(element)` | L2620 |
-| `addAssets()` | L2644 |
-| `removeAsset(path)` | L2686 |
-| `downloadAsset(path)` | L2702 |
-| `showNewProject()` | L2712 |
-| `createProjectFromModal()` | L2745 |
-| `showImport()` | L2781 |
-| `importFolder()` | L2801 |
-| `importFile()` | L2806 |
-| `importEntries(entries)` | L2811 |
-| `unsupportedContentFiles()` | L2855 |
-| `unsupportedContentLabel(files)` | L2859 |
-| `unsupportedExportNotice(files)` | L2863 |
-| `confirmUnsupportedExport(files, actionLabel)` | L2873 |
-| `showExport()` | L2883 |
-| `exportZip()` | L2926 |
-| `exportZipToDisk()` | L2949 |
-| `deployGameMod()` | L2973 |
-| `exportProjectFile()` | L3003 |
-| `exportFolder()` | L3013 |
-| `showProjectLibrary()` | L3026 |
-| `openDiskProject(id)` | L3087 |
-| `openWorkspaceProject(id)` | L3106 |
-| `deleteDiskProject(id)` | L3124 |
-| `showCoreClone()` | L3143 |
-| `showAddLocale()` | L3174 |
-| `createLocale()` | L3189 |
-| `showAddLocaleKey()` | L3210 |
-| `createLocaleKey()` | L3222 |
-| `showHelp()` | L3239 |
-| `onDragEnter(event)` | L3281 |
-| `onDragOver(event)` | L3288 |
-| `onDragLeave()` | L3292 |
-| `onDrop(event)` | L3300 |
-| `runValidation()` | L3317 |
-| `copyText(text)` | L3323 |
+| `MODULE_PAGE_TYPES` | L17 |
+| `init()` | L76 |
+| `probeBackend()` | L83 |
+| `loadInitialProject()` | L93 |
+| `setProject(project, options)` | L125 |
+| `clearProject()` | L157 |
+| `firstSelection(project)` | L169 |
+| `currentFile()` | L183 |
+| `currentDefinition()` | L188 |
+| `selectedTypeInfo()` | L194 |
+| `selectedDefinitionKey()` | L199 |
+| `localizationDraft(definition, oldId, syncToId)` | L203 |
+| `currentLocalizationDraft()` | L225 |
+| `previewLocalizationValue(key, draft)` | L229 |
+| `previewLocalizationKey(definition, field, draft)` | L237 |
+| `setByPath(object, path, value)` | L241 |
+| `getByPath(object, path)` | L257 |
+| `deleteByPath(object, path)` | L267 |
+| `snapshot()` | L280 |
+| `pushHistory()` | L284 |
+| `undo()` | L295 |
+| `redo()` | L311 |
+| `ensureSelection()` | L327 |
+| `fallbackKey(uid)` | L343 |
+| `loadFallbackProject()` | L347 |
+| `saveNow(options)` | L358 |
+| `flushDiskSave(options)` | L402 |
+| `openProject(uid)` | L446 |
+| `deleteProject(uid)` | L463 |
+| `render(options)` | L494 |
+| `renderChrome()` | L533 |
+| `renderStatus()` | L560 |
+| `saveStateText()` | L579 |
+| `saveStateTitle()` | L589 |
+| `updateSaveState()` | L594 |
+| `timeText(date)` | L602 |
+| `renderSidebar()` | L610 |
+| `draftSchemaFootText()` | L671 |
+| `renderDraftSideGroup(counts, typeIssues)` | L676 |
+| `sideTypeLink(type, count, issues, draft)` | L688 |
+| `activeLocale(locale)` | L702 |
+| `renderWorkspace()` | L710 |
+| `renderWelcome()` | L732 |
+| `loadRecent()` | L757 |
+| `renderOverview()` | L813 |
+| `ovField(labelText, control, hintText, wide)` | L923 |
+| `depRow(list, dependency, index)` | L931 |
+| `structureTree(project)` | L939 |
+| `renderModuleTabs(activeType)` | L967 |
+| `renderModuleCategoryTabs()` | L984 |
+| `renderContent()` | L1009 |
+| `renderDefinitionEditor(selected, info)` | L1094 |
+| `collectNeededKeys(project)` | L1151 |
+| `renderLocalization()` | L1166 |
+| `ASSET_KIND_LABELS` | L1245 |
+| `assetReferenceCounts()` | L1248 |
+| `filterAssetCards()` | L1268 |
+| `renderAssets()` | L1289 |
+| `paintModelThumbnails()` | L1371 |
+| `runModelThumbQueue()` | L1390 |
+| `setModelThumbImage(node, dataUrl)` | L1409 |
+| `renderValidation()` | L1419 |
+| `issueLocation(issue)` | L1458 |
+| `gotoIssue(index)` | L1470 |
+| `attrSelector(value)` | L1510 |
+| `inspectorData()` | L1518 |
+| `renderInspector()` | L1532 |
+| `inspectorLabel()` | L1555 |
+| `bindEvents()` | L1573 |
+| `closeAssetPickers(except)` | L1590 |
+| `openAssetPicker(picker)` | L1599 |
+| `filterAssetPicker(input)` | L1609 |
+| `onClick(event)` | L1624 |
+| `selectDefinition(filePath, index)` | L1668 |
+| `navigate(kind, argument)` | L1677 |
+| `onInput(event)` | L1714 |
+| `onChange(event)` | L1756 |
+| `onKeyDown(event)` | L1810 |
+| `onFocusOut(event)` | L1868 |
+| `applyField(element, fromChange)` | L1876 |
+| `readValue(element)` | L1938 |
+| `markChanged(structural)` | L1965 |
+| `updateDefinitionLocalizationPreview(definition, draft)` | L1977 |
+| `updateEntityLocaleDraft(element)` | L1996 |
+| `updateLocaleValue(element)` | L2011 |
+| `filterDefinitionCards()` | L2031 |
+| `renderLocalizationListOnly()` | L2038 |
+| `autoProjectId(name)` | L2051 |
+| `filterCoreList(query)` | L2057 |
+| `handleAction(element, event)` | L2068 |
+| `writeBlueprintField(path, value)` | L2306 |
+| `hydrateBlueprintArtwork(definition)` | L2323 |
+| `openBlueprintEditor()` | L2347 |
+| `saveDefinitionAction()` | L2385 |
+| `gotoDefinitionLocalization(field, keyOverride)` | L2422 |
+| `addDefinitionAction()` | L2439 |
+| `cloneCoreAction(coreId)` | L2450 |
+| `deleteDefinitionAction()` | L2466 |
+| `duplicateDefinitionAction()` | L2491 |
+| `applyRawJson()` | L2502 |
+| `addDependency(list)` | L2525 |
+| `removeDependency(list, index)` | L2535 |
+| `syncNamespace()` | L2544 |
+| `gotoKeyDefinition(filePath, index)` | L2589 |
+| `deleteLocaleKey(key)` | L2598 |
+| `fillMissingKeys()` | L2608 |
+| `arrayAdd(path)` | L2630 |
+| `nextSocketItem(existing, kind)` | L2645 |
+| `nextBlueprintSlotItem(existing, kind)` | L2677 |
+| `defaultArrayItem(path, definition)` | L2689 |
+| `arrayRemove(path, index)` | L2716 |
+| `arrayMove(path, index, direction)` | L2727 |
+| `addListValue(path, input, button)` | L2741 |
+| `listRemove(path, index)` | L2765 |
+| `enumToggle(path, value, element)` | L2778 |
+| `addCondition(path, kind)` | L2795 |
+| `removeCondition(path)` | L2807 |
+| `changeConditionKind(element)` | L2816 |
+| `changeConditionOp(element)` | L2836 |
+| `changeEffectOp(element)` | L2856 |
+| `addAssets(options)` | L2880 |
+| `removeAsset(path)` | L2933 |
+| `downloadAsset(path)` | L2949 |
+| `showNewProject()` | L2959 |
+| `createProjectFromModal()` | L2992 |
+| `showImport()` | L3028 |
+| `importFolder()` | L3048 |
+| `importFile()` | L3053 |
+| `importEntries(entries)` | L3058 |
+| `unsupportedContentFiles()` | L3102 |
+| `unsupportedContentLabel(files)` | L3106 |
+| `unsupportedExportNotice(files)` | L3110 |
+| `confirmUnsupportedExport(files, actionLabel)` | L3120 |
+| `showExport()` | L3130 |
+| `exportZip()` | L3173 |
+| `exportZipToDisk()` | L3196 |
+| `deployGameMod()` | L3220 |
+| `exportProjectFile()` | L3250 |
+| `exportFolder()` | L3260 |
+| `showProjectLibrary()` | L3273 |
+| `openDiskProject(id)` | L3334 |
+| `openWorkspaceProject(id)` | L3353 |
+| `deleteDiskProject(id)` | L3371 |
+| `showCoreClone()` | L3390 |
+| `showAddLocale()` | L3421 |
+| `createLocale()` | L3436 |
+| `showAddLocaleKey()` | L3457 |
+| `createLocaleKey()` | L3469 |
+| `showHelp()` | L3486 |
+| `onDragEnter(event)` | L3528 |
+| `onDragOver(event)` | L3535 |
+| `onDragLeave()` | L3539 |
+| `onDrop(event)` | L3547 |
+| `runValidation()` | L3564 |
+| `copyText(text)` | L3570 |
 
 ## 契约与约束
 
@@ -176,6 +183,8 @@
 - 导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（剧情草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。D5 后 42 类 2.0 运行时类型可直接部署。
 - 没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。
 - 资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。
+- 素材页按资源键/路径/类型提供搜索、类型筛选（全部/图片/模型/音频/其他）、排序与引用次数提示；「导入文件夹」保留上层目录并据此生成资源键，同名文件自动后缀；修改资源键时调用 `Store.migrateAssetReferences` 同步更新内容引用。
+- 船体蓝图槽位编辑器以全屏 Modal 打开（`open-blueprint-editor`）；打开前对工作区项目调用 `hydrateBlueprintArtwork` 惰性拉取线稿 data URL；拖拽结果通过隐藏 `data-field` + change 事件走 `applyField`，复用撤销、校验与自动保存；Modal 关闭后重绘船体表单。
 - Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。
 
 ## 重点逻辑
@@ -183,7 +192,8 @@
 ### `applyField(element, fromChange)`
 
 - 区分 manifest 与当前定义；数字/整数/布尔/JSON 各有解析，解析失败不写回。
-- 船体安装点的 `array-add` 走 `nextSocketItem` 生成默认 socket 行（weapon / rig 两套默认值），写回仍走 `data-field` 路径与既有撤销 / 校验流程。
+- 船体安装点的 `array-add` 走 `nextSocketItem` 生成默认 socket 行（weapon / rig 两套默认值，武器带上中心占位 blueprint），`compartments` / `module_slots` 走 `nextBlueprintSlotItem` 生成唯一 id 与中心坐标；写回仍走 `data-field` 路径与既有撤销 / 校验流程。
+- 空 `blueprint_views.<view>.image` 会删除键并清理空的视图对象，避免违反 minLength / minProperties。
 - ID 输入按前缀重建完整 ID，只更新多语言键预览，不直接改定义 `_key` 或语言文件。
 - 空描述键、空 checksum 与空 information 资源字段会删除，避免违反可选字段的 pattern/minLength。
 

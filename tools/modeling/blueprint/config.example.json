@@ -1,0 +1,16 @@
+{
+  "resolution": 2048,
+  "margin": 1.1,
+  "transparent": true,
+  "crease_angle_degrees": 35.0,
+  "line_color": [0.72, 0.92, 1.0],
+  "outline_thickness": 3.2,
+  "structure_thickness": 1.65,
+  "detail_thickness": 1.0,
+  "outline_alpha": 1.0,
+  "structure_alpha": 0.82,
+  "detail_alpha": 0.48,
+  "crop": true,
+  "crop_padding": 0.04,
+  "crop_alpha_threshold": 8
+}

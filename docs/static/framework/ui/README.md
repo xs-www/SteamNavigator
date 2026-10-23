@@ -25,7 +25,7 @@
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
 | `components/sn_ship_stage_3d.gd` | 船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。 | [查看](./components/sn_ship_stage_3d.gd.md) |
-| `components/sn_ship_view.gd` | 船厂中央改装台：`EXTERIOR` 画程序化侧视占位；`CUTAWAY` 画授权纵剖图贴图（`assets/ui/shipyard/ship_section.png`）+ 每槽位一个 `SNSlotTarget` 贴片，贴图缺失时回退程序化剖面；预留可替换的 2.5D 渲染器接口。 | [查看](./components/sn_ship_view.gd.md) |
+| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。 | [查看](./components/sn_ship_view.gd.md) |
 | `components/sn_ship_view.tscn` | 框架源文件：sn_ship_view.tscn | 本页 |
 | `components/sn_slot_target.gd` | 纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。 | [查看](./components/sn_slot_target.gd.md) |
 | `components/sn_slot_target.tscn` | 框架源文件：sn_slot_target.tscn | 本页 |
@@ -72,18 +72,18 @@
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |
 | `screens/port/ruins_screen.gd` | Phase D5 遗迹远征页：渲染 `expedition.view` 与可用遗迹原型，展示房间进度、 | [查看](./screens/port/ruins_screen.gd.md) |
 | `screens/port/ruins_screen.tscn` | 框架源文件：ruins_screen.tscn | 本页 |
-| `screens/port/shipyard_screen.gd` | 船厂页两种布局共用一页：正常态为「已有船舶卡片 / 实机渲染舞台 / 组件分类入口」，改装态为「贴图纵剖图 / 所选分类的槽位与操作 / 竖排分类页签（含杂项）」。规则仍来自 `shipyard.view`，页面不写 `GameState`。 | [查看](./screens/port/shipyard_screen.gd.md) |
+| `screens/port/shipyard_screen.gd` | 船厂页两种布局共用一页：正常态为「已有船舶卡片 / 面板内 3D 船体舞台 / 组件分类入口」；改装态是画在连续港区 `shipyard` 站位上的船厂工作台——左侧九宫格蓝图底板、中间 3D 窗口、右侧半透明操作坞（舰船数据卡 + 七项分类 + 装配/购买/打造三个独立页签）。规则仍来自 `shipyard.view`，页面不写 `GameState`。 | [查看](./screens/port/shipyard_screen.gd.md) |
 | `screens/port/shipyard_screen.tscn` | 框架源文件：shipyard_screen.tscn | 本页 |
 | `screens/port/supply_screen.gd` | 补给与维修页面场景：绑定 SupplyView，组合煤水决策卡、资源摘要与维修操作；作为泊位侧栏时按 620 px 窄列设计（卡片单列堆叠、badge 可换行），外层 PageScroll 负责竖向滚动。 | [查看](./screens/port/supply_screen.gd.md) |
 | `screens/port/supply_screen.tscn` | 框架源文件：supply_screen.tscn | 本页 |
 | `screens/port/tavern_screen.gd` | 酒馆页（阶段 4.5.4，替换原情报站页面）——上半部分保留物价情报矩阵与 | [查看](./screens/port/tavern_screen.gd.md) |
 | `screens/port/tavern_screen.tscn` | 框架源文件：tavern_screen.tscn | 本页 |
-| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。 | [查看](./shell/main.gd.md) |
+| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。自第八切片起船厂改装态也画在同一座港区的 `shipyard` 站位上（正常态仍用面板内的独立船体舞台），顶栏左侧的品牌位改为显示当前港口名。 | [查看](./shell/main.gd.md) |
 | `shell/main.tscn` | 框架源文件：main.tscn | 本页 |
 | `showcase/ui_kit_showcase.gd` | 独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。 | [查看](./showcase/ui_kit_showcase.gd.md) |
 | `showcase/ui_kit_showcase.tscn` | 框架源文件：ui_kit_showcase.tscn | 本页 |
 | `stages/location_stage.gd` | 2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。 | [查看](./stages/location_stage.gd.md) |
-| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 补给是同一港区里从左到右的三个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建。全程序化 + 内容模组 GLB，无外部框架贴图。 | [查看](./stages/port_stage.gd.md) |
+| `stages/port_stage.gd` | 固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 船厂 / 补给是同一港区里的四个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建；船厂站位正对干船坞/吊架设施，供改装页把蓝图与操作坞画在 3D 舞台上。全程序化 + 内容模组 GLB，无外部框架贴图。 | [查看](./stages/port_stage.gd.md) |
 | `stages/port_stage.tscn` | 港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id="port"`。 | 本页 |
 | `stages/ship_rig_assembly.gd` | rig_kit 运行时装配规则（契约 `rig-kit@1` / `rig-sockets@1` 的代码实现）：在船体 GLB 里按标准名找 `SN_Socket_Mast/Yard/Sail_*` 空节点，把套件 Root 的 `SN_Mount` 精确对齐到 socket，按内容名单隐藏被替换的烘焙节点，并给出可复现的节点快照。 | [查看](./stages/ship_rig_assembly.gd.md) |
 | `stages/ship_visual_assembler.gd` | `ShipVisualAssembler` —— 运行时把一条船拼成可见的整船：实例化船体 GLB，按船体 Root `SN_Socket_Mast/Yard/Sail_*` 挂 rig_kit 套件（并隐藏被替换的烘焙节点），再按 `SN_Socket_Weapon_*` 挂武器；返回装配根、可读报告与确定性快照，供船厂 / 港口 / 航行演出共用。 | [查看](./stages/ship_visual_assembler.gd.md) |

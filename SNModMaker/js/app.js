@@ -13,6 +13,7 @@
   const V = root.SNValidate;
   const IO = root.SNIO;
   const Cat = root.SNCatalog;
+  const BlueprintEditor = root.SNBlueprintEditor;
   const MODULE_PAGE_TYPES = ['hulls', 'modules', 'crew_roles', 'boiler_strategies'];
 
   const state = {
@@ -23,6 +24,9 @@
     search: '',
     moduleCategory: 'all',
     locSearch: '',
+    assetSearch: '',
+    assetKind: 'all',
+    assetSort: 'key',
     missingOnly: false,
     validFilter: 'all',
     issues: { issues: [], counts: { error: 0, warning: 0, info: 0, total: 0 }, stats: {} },
@@ -139,6 +143,9 @@
     state.history = { past: [], future: [], max: 40 };
     state.search = '';
     state.locSearch = '';
+    state.assetSearch = '';
+    state.assetKind = 'all';
+    state.assetSort = 'key';
     state.missingOnly = false;
     state.focusAfter = null;
     state.localizationDrafts = new Map();
@@ -494,7 +501,10 @@
     renderChrome();
     renderSidebar();
     renderWorkspace();
-    if (state.view.name === 'assets') paintModelThumbnails();
+    if (state.view.name === 'assets') {
+      filterAssetCards();
+      paintModelThumbnails();
+    }
     renderStatus();
     renderInspector();
 
@@ -1232,23 +1242,90 @@
   /* Assets view                                                         */
   /* ------------------------------------------------------------------ */
 
+  const ASSET_KIND_LABELS = { image: '图片', model: '模型', audio: '音频', other: '其他' };
+
+  /** 统计每个资源键在内容定义里被引用了多少次（嵌套字段也计入）。 */
+  function assetReferenceCounts() {
+    const counts = new Map();
+    const visit = (value, depth) => {
+      if (depth > 24 || value == null) return;
+      if (typeof value === 'string') {
+        counts.set(value, (counts.get(value) || 0) + 1);
+        return;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((item) => visit(item, depth + 1));
+        return;
+      }
+      if (typeof value === 'object') Object.values(value).forEach((item) => visit(item, depth + 1));
+    };
+    for (const file of state.project.contentFiles || []) {
+      for (const definition of file.definitions || []) visit(definition, 0);
+    }
+    return counts;
+  }
+
+  function filterAssetCards() {
+    const query = state.assetSearch.trim().toLowerCase();
+    let visible = 0;
+    let total = 0;
+    document.querySelectorAll('[data-asset-card]').forEach((card) => {
+      total += 1;
+      const kindMatch = state.assetKind === 'all' || card.dataset.kind === state.assetKind;
+      const searchMatch = !query || String(card.dataset.search || '').includes(query);
+      const show = kindMatch && searchMatch;
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+    document.querySelectorAll('[data-asset-kind]').forEach((button) => {
+      button.classList.toggle('active', button.dataset.assetKind === state.assetKind);
+    });
+    const counter = document.getElementById('asset-visible-count');
+    if (counter) counter.textContent = `${visible} / ${total} 个`;
+    const empty = document.getElementById('asset-empty-filter');
+    if (empty) empty.hidden = visible > 0 || total === 0;
+  }
+
   function renderAssets() {
     const assets = state.project.assets;
-    const cards = assets.map((asset) => {
-      const isImage = /^image\//.test(asset.mime || '') && asset.dataUrl;
-      const isModel = !isImage && asset.dataUrl && (/model\/gltf-binary/i.test(asset.mime || '') || /\.glb$/i.test(asset.path));
+    const references = assetReferenceCounts();
+    const kindCounts = { all: assets.length, image: 0, model: 0, audio: 0, other: 0 };
+    for (const asset of assets) kindCounts[Store.assetKindOf(asset)] += 1;
+    const kindTabs = ['all', 'image', 'model', 'audio', 'other'].map((kind) => `
+      <button type="button" class="asset-kind-tab ${state.assetKind === kind ? 'active' : ''}"
+        data-asset-kind="${kind}">${kind === 'all' ? '全部' : ASSET_KIND_LABELS[kind]}
+        <span class="mono">${kindCounts[kind]}</span></button>`).join('');
+    const sorters = {
+      key: (a, b) => String(a.key || '').localeCompare(String(b.key || '')),
+      path: (a, b) => String(a.path || '').localeCompare(String(b.path || '')),
+      size: (a, b) => Number(a.size || 0) - Number(b.size || 0) || String(a.key || '').localeCompare(String(b.key || '')),
+      kind: (a, b) => Store.assetKindOf(a).localeCompare(Store.assetKindOf(b)) || String(a.key || '').localeCompare(String(b.key || '')),
+    };
+    const sort = sorters[state.assetSort] || sorters.key;
+    const sorted = assets.slice().sort(sort);
+    const cards = sorted.map((asset) => {
+      const kind = Store.assetKindOf(asset);
+      const kindLabel = ASSET_KIND_LABELS[kind] || kind;
+      const referencesForAsset = references.get(String(asset.key || '')) || 0;
+      const isImage = kind === 'image' && asset.dataUrl;
+      const isModel = kind === 'model' && asset.dataUrl;
       const preview = isImage
         ? `<img src="${UI.attr(asset.dataUrl)}" alt="">`
         : isModel
           ? `<span class="asset-model-thumb" data-model-thumb="${UI.attr(asset.path)}"><span class="asset-ext">GLB</span></span>`
           : `<span class="asset-ext">${UI.esc((asset.path.split('.').pop() || '?').toUpperCase())}</span>`;
-      return `<article class="asset-card">
+      const searchText = `${asset.key || ''} ${asset.path || ''} ${kindLabel}`.toLowerCase();
+      return `<article class="asset-card" data-asset-card data-kind="${kind}" data-search="${UI.attr(searchText)}">
         <div class="asset-preview">${preview}</div>
         <div class="asset-body">
-          <label class="field-label">资源键</label>
-          <input class="input mono" type="text" value="${UI.attr(asset.key || '')}" data-asset-key="${UI.attr(asset.path)}" spellcheck="false">
-          <p class="mono asset-path">${UI.esc(asset.path)}</p>
-          <p class="muted-sm">${UI.fmtSize(asset.size || 0)}${asset.dataUrl ? '' : ' · 没有附件内容'}</p>
+          <div class="asset-card-head">
+            <span class="asset-kind-badge asset-kind-${kind}">${kindLabel}</span>
+            <span class="asset-refs ${referencesForAsset ? '' : 'unused'}">${referencesForAsset ? `引用 ${referencesForAsset} 处` : '未被引用'}</span>
+          </div>
+          <label class="field-label">资源键（内容引用这个键）</label>
+          <input class="input mono asset-key-input" type="text" value="${UI.attr(asset.key || '')}" data-asset-key="${UI.attr(asset.path)}" title="${UI.attr(asset.key || '')}" spellcheck="false">
+          <p class="mono asset-path" title="${UI.attr(asset.path)}">${UI.esc(asset.path)}</p>
+          <p class="muted-sm">${UI.fmtSize(asset.size || 0)} · ${kindLabel}${asset.dataUrl ? '' : ' · 没有附件内容'}</p>
         </div>
         <div class="asset-actions">
           <button type="button" class="btn small ghost" data-action="download-asset" data-path="${UI.attr(asset.path)}">下载</button>
@@ -1259,11 +1336,28 @@
 
     return `<div class="view assets-view">
       <header class="view-head">
-        <div><p class="eyebrow">ASSETS</p><h1>资源</h1><p class="view-sub">图标、贴图、音频与实体模型。允许 png / webp / svg / ogg / wav / glb；GLB 会生成自动取景缩略图，资源键会自动写入 manifest.assets。</p></div>
-        <div class="head-actions"><button type="button" class="btn primary small" data-action="add-asset">添加资源</button></div>
+        <div><p class="eyebrow">ASSETS</p><h1>资源</h1><p class="view-sub">图标、贴图、音频与实体模型。内容定义引用的是「资源键」；manifest.assets 再把键映射到相对路径。允许 png / webp / svg / ogg / wav / glb；导入文件夹时会保留上层目录并据此生成可区分的资源键。</p></div>
+        <div class="head-actions">
+          <button type="button" class="btn small ghost" data-action="add-asset-directory">导入文件夹</button>
+          <button type="button" class="btn primary small" data-action="add-asset">添加资源</button>
+        </div>
       </header>
-      <div class="asset-grid">${cards || `<div class="empty-inline large">还没有资源。图标是可选的；内容定义里的 icon 字段可以引用这里的资源键。</div>`}</div>
-      <p class="field-hint">单个资源建议不超过 2 MB，全部资源会随 ZIP 一起打包。网页端不导入 Godot 的 .import 元数据。</p>
+      <div class="asset-toolbar">
+        <input class="input search" type="search" data-filter="assets" placeholder="搜索资源键、路径或类型…" value="${UI.attr(state.assetSearch)}">
+        <div class="asset-kind-tabs">${kindTabs}</div>
+        <select class="input select asset-sort" data-asset-sort>
+          ${[
+            ['key', '按资源键'],
+            ['path', '按路径'],
+            ['size', '按大小'],
+            ['kind', '按类型'],
+          ].map(([value, labelText]) => `<option value="${value}" ${state.assetSort === value ? 'selected' : ''}>${labelText}</option>`).join('')}
+        </select>
+        <span class="muted-sm" id="asset-visible-count">${assets.length} / ${assets.length} 个</span>
+      </div>
+      <div class="asset-grid" id="asset-grid">${cards || `<div class="empty-inline large">还没有资源。图标是可选的；内容定义里的信息字段可以引用这里的资源键。</div>`}</div>
+      <div class="empty-inline large" id="asset-empty-filter" hidden>没有匹配的资源；清空搜索或切换类型筛选试试。</div>
+      <p class="field-hint">单个资源建议不超过 2 MB，全部资源会随 ZIP 一起打包。网页端不导入 Godot 的 .import 元数据；资源文件名与上层目录会保留，便于在素材页区分同名文件。</p>
     </div>`;
   }
 
@@ -1542,6 +1636,12 @@
       });
       return;
     }
+    const assetKindEl = event.target.closest('[data-asset-kind]');
+    if (assetKindEl) {
+      state.assetKind = assetKindEl.dataset.assetKind || 'all';
+      filterAssetCards();
+      return;
+    }
     const issueEl = event.target.closest('[data-action="goto-issue"]');
     if (issueEl) {
       gotoIssue(Number(issueEl.dataset.index));
@@ -1613,6 +1713,11 @@
 
   function onInput(event) {
     const element = event.target;
+    if (element.matches('[data-filter="assets"]')) {
+      state.assetSearch = element.value;
+      filterAssetCards();
+      return;
+    }
     if (element.matches('[data-filter="content"]')) {
       state.search = element.value;
       filterDefinitionCards();
@@ -1629,17 +1734,6 @@
     }
     if (element.matches('[data-locale-input]')) {
       updateLocaleValue(element);
-      return;
-    }
-    if (element.matches('[data-asset-key]')) {
-      const asset = state.project.assets.find((item) => item.path === element.dataset.assetKey);
-      if (!asset) return;
-      if (!state.typing) {
-        pushHistory();
-        state.typing = true;
-      }
-      asset.key = element.value.trim();
-      markChanged(false);
       return;
     }
     if (element.matches('[data-core-search]')) {
@@ -1661,6 +1755,35 @@
 
   function onChange(event) {
     const element = event.target;
+    if (element.matches('[data-asset-sort]')) {
+      state.assetSort = element.value || 'key';
+      render({ preserveScroll: true });
+      return;
+    }
+    if (element.matches('[data-asset-key]')) {
+      const asset = state.project.assets.find((item) => item.path === element.dataset.assetKey);
+      if (!asset) return;
+      const nextKey = element.value.trim();
+      if (nextKey === asset.key) return;
+      if (!/^[a-z][a-z0-9_.-]*$/.test(nextKey)) {
+        UI.toast('资源键必须以小写字母开头，只含小写字母、数字、下划线、点或短横线。', 'warning');
+        render({ preserveScroll: true });
+        return;
+      }
+      if (state.project.assets.some((item) => item !== asset && item.key === nextKey)) {
+        UI.toast(`资源键 ${nextKey} 已被占用。`, 'warning');
+        render({ preserveScroll: true });
+        return;
+      }
+      const oldKey = asset.key;
+      pushHistory();
+      asset.key = nextKey;
+      const updated = Store.migrateAssetReferences(state.project, oldKey, nextKey);
+      markChanged(true);
+      render({ preserveScroll: true });
+      UI.toast(updated ? `已改名并更新 ${updated} 处内容引用` : '已改名；当前没有内容引用这个资源键', 'success');
+      return;
+    }
     if (element.matches('[data-field]')) {
       applyField(element, true);
       if (element.dataset.rerender === 'true' || element.dataset.field === 'enabled') render({ preserveScroll: true });
@@ -1791,6 +1914,20 @@
       if (target.information && Object.keys(target.information).length === 0) delete target.information;
     }
     if (value === '' && isManifest && relative === 'checksum') delete target.checksum;
+    if (value === '' && !isManifest && relative.startsWith('data.blueprint_views.')) {
+      deleteByPath(target, relative);
+      const parts = relative.split('.');
+      const viewKey = parts[2];
+      const views = target.data && target.data.blueprint_views;
+      if (views && viewKey && views[viewKey] && Object.keys(views[viewKey]).length === 0) delete views[viewKey];
+      if (views && Object.keys(views).length === 0) delete target.data.blueprint_views;
+    }
+    if (value === '' && !isManifest && /^data\.module_slots\.\d+\.socket$/.test(relative)) {
+      deleteByPath(target, relative);
+    }
+    if (value === null && !isManifest && /^data\.compartments\.\d+\.max_tier$/.test(relative)) {
+      deleteByPath(target, relative);
+    }
     if (draft) {
       draft.previewBase = Store.keyBase(currentFile().content_type, project.manifest.id, Store.localPart(definition.id));
       updateDefinitionLocalizationPreview(definition, draft);
@@ -1996,6 +2133,9 @@
       case 'add-definition':
         addDefinitionAction();
         return;
+      case 'open-blueprint-editor':
+        await openBlueprintEditor();
+        return;
       case 'core-clone':
         showCoreClone();
         return;
@@ -2045,6 +2185,9 @@
         return;
       case 'add-asset':
         addAssets();
+        return;
+      case 'add-asset-directory':
+        addAssets({ directory: true });
         return;
       case 'remove-asset':
         await removeAsset(element.dataset.path);
@@ -2157,6 +2300,82 @@
       default:
         return;
     }
+  }
+
+  /** 把蓝图编辑器的一次拖拽结果写回定义；隐藏 input + change 事件复用 applyField 的事务。 */
+  function writeBlueprintField(path, value) {
+    const body = document.querySelector('#modal .modal-body');
+    if (!body || !path) return;
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.dataset.field = path;
+    input.dataset.parse = 'json';
+    input.value = JSON.stringify(value);
+    body.appendChild(input);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.remove();
+  }
+
+  /**
+   * Workspace (dev_mods) projects only carry asset keys, not bytes. Resolve the
+   * hull's bound line art through the local service so the editor can preview it.
+   */
+  async function hydrateBlueprintArtwork(definition) {
+    if (!state.workspace || !state.backend || !definition || !definition.data) return;
+    const views = definition.data.blueprint_views;
+    if (!views || typeof views !== 'object') return;
+    const manifestAssets = state.project.manifest.assets || {};
+    for (const view of ['side', 'top']) {
+      const key = views[view] && views[view].image ? String(views[view].image) : '';
+      if (!key) continue;
+      const relative = manifestAssets[key];
+      if (!relative) continue;
+      let asset = state.project.assets.find((item) => item && item.key === key);
+      if (!asset) {
+        asset = { key, path: relative, mime: '', size: 0, dataUrl: '' };
+        state.project.assets.push(asset);
+      }
+      if (asset.dataUrl) continue;
+      try {
+        asset.dataUrl = await IO.readWorkspaceAsset(state.project.manifest.id, relative);
+      } catch (error) {
+        /* keep the key-only placeholder; the editor explains the missing preview */
+      }
+    }
+  }
+
+  async function openBlueprintEditor() {
+    const definition = currentDefinition();
+    const file = currentFile();
+    if (!definition || !file || file.content_type !== 'hulls') {
+      UI.toast('请先在「船体」内容类型里选择一个定义。', 'warning');
+      return;
+    }
+    if (!BlueprintEditor || typeof BlueprintEditor.mount !== 'function') {
+      UI.toast('蓝图槽位编辑器未加载。', 'error');
+      return;
+    }
+    if (state.rawOpen) state.rawOpen = false;
+    await hydrateBlueprintArtwork(definition);
+    const dialog = UI.modal({
+      size: 'full',
+      title: `蓝图槽位编辑器 · ${Store.definitionTitle(state.project, definition)}`,
+      subtitle: '拖动标记定位；坐标自动写回当前船体定义。',
+      body: '<div id="blueprint-editor-host"></div>',
+      footer: '<button type="button" class="btn primary" data-modal-close>完成</button>',
+    });
+    if (!dialog) return;
+    const host = dialog.querySelector('#blueprint-editor-host');
+    const controller = BlueprintEditor.mount(host, {
+      project: state.project,
+      getDefinition: () => currentDefinition(),
+      writeField: writeBlueprintField,
+    });
+    dialog.onclose = () => {
+      if (controller && typeof controller.destroy === 'function') controller.destroy();
+      dialog.onclose = null;
+      render({ preserveScroll: true });
+    };
   }
 
   /* ------------------------------------------------------------------ */
@@ -2445,11 +2664,26 @@
       item.clearance_y = 1;
       item.clearance_h = 20;
       item.mount_scale = 1;
+      // 坐标可先给中心占位，作者用蓝图槽位编辑器拖到线稿上的实际位置。
+      item.blueprint = { side: [0.5, 0.5], top: [0.5, 0.5] };
     } else {
       item.socket_kind = 'mast';
       item.mast_id = 'fore';
     }
     return item;
+  }
+
+  /** 新舱位 / 模块安装位：ID 接在现有最大序号之后，坐标先给中心占位。 */
+  function nextBlueprintSlotItem(existing, kind) {
+    const items = Array.isArray(existing) ? existing : [];
+    const prefix = kind === 'compartment' ? 'compartment' : 'module_slot';
+    const ids = new Set(items.map((item) => item && item.id).filter(Boolean));
+    let suffix = items.length + 1;
+    while (ids.has(`${prefix}_${suffix}`)) suffix += 1;
+    return {
+      id: `${prefix}_${suffix}`,
+      blueprint_position: { side: [0.5, 0.5], top: [0.5, 0.5] },
+    };
   }
 
   function defaultArrayItem(path, definition) {
@@ -2462,6 +2696,8 @@
     if (tail === 'market') return { good: 'core:item/brass', stock_range: [40, 80], price_bias: 1 };
     if (tail === 'weapon_sockets') return nextSocketItem(getByPath(definition, path), 'weapon');
     if (tail === 'rig_sockets') return nextSocketItem(getByPath(definition, path), 'rig');
+    if (tail === 'compartments') return nextBlueprintSlotItem(getByPath(definition, path), 'compartment');
+    if (tail === 'module_slots') return nextBlueprintSlotItem(getByPath(definition, path), 'module_slot');
     if (tail === 'options') {
       const info = selectedTypeInfo();
       const local = Store.localPart(definition.id);
@@ -2641,43 +2877,54 @@
   /* Assets                                                              */
   /* ------------------------------------------------------------------ */
 
-  async function addAssets() {
+  async function addAssets(options) {
     if (!state.project) return;
+    const opts = options || {};
     try {
-      const entries = await IO.openFilePicker({ accept: '.png,.webp,.svg,.ogg,.wav,.glb' });
+      const entries = await IO.openFilePicker({
+        accept: '.png,.webp,.svg,.ogg,.wav,.glb',
+        directory: Boolean(opts.directory),
+      });
       if (!entries.length) return;
       pushHistory();
       let added = 0;
+      let skipped = 0;
       for (const entry of entries) {
         const file = entry.file || new File([entry.data], entry.path.split('/').pop() || 'asset');
+        if (!/\.(png|webp|svg|ogg|wav|glb)$/i.test(file.name)) {
+          skipped += 1;
+          continue;
+        }
         const isModel = /\.glb$/i.test(file.name);
         const maxBytes = isModel ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
         if (entry.data.length > maxBytes) {
           UI.toast(`${file.name} 超过 ${isModel ? 20 : 5} MB，已跳过`, 'warning');
+          skipped += 1;
           continue;
         }
+        // 文件夹导入时 entry.path 会带上层目录；资源键和存储路径都保留它，
+        // 这样不同船的 side.png / top.png 不会只靠文件名区分。
+        const sourcePath = String(entry.path || file.webkitRelativePath || file.name).replace(/\\/g, '/');
         const mime = Store.mimeFor(file.name);
-        const safeName = String(file.name).replace(/[^A-Za-z0-9._-]+/g, '_');
-        const folder = mime.startsWith('image/') ? 'assets/icons' : mime.startsWith('audio/') ? 'assets/audio' : isModel ? 'assets/models' : 'assets/files';
-        let path = `${folder}/${safeName}`;
-        let counter = 2;
-        while (state.project.assets.some((asset) => asset.path === path)) {
-          path = `${folder}/${safeName.replace(/(\.[^.]+)?$/, `_${counter}$1`)}`;
-          counter += 1;
-        }
         const dataUrl = Store.bytesToDataUrl(entry.data, mime);
+        const existingKeys = state.project.assets.map((asset) => asset.key);
+        const existingPaths = state.project.assets.map((asset) => asset.path);
         Store.addAsset(state.project, {
-          key: `${mime.startsWith('image/') ? 'icon' : isModel ? 'model' : 'asset'}.${Store.slugify(safeName.replace(/\.[^.]+$/, ''), 'file')}`,
-          path,
+          key: Store.assetKeyFromPath(sourcePath, mime, existingKeys),
+          path: Store.assetStoragePath(sourcePath, mime, existingPaths),
           mime,
           size: entry.data.length,
           dataUrl,
         });
         added += 1;
       }
-      markChanged(true);
-      render();
-      if (added) UI.toast(`已添加 ${added} 个资源`, 'success');
+      if (added) {
+        markChanged(true);
+        render();
+        UI.toast(`已添加 ${added} 个资源${skipped ? `，跳过 ${skipped} 个不支持的文件` : ''}`, 'success');
+      } else {
+        UI.toast('没有可添加的资源', 'warning');
+      }
     } catch (error) {
       UI.toast(error.message || '添加资源失败', 'error');
     }

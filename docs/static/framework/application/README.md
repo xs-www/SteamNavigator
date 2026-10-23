@@ -20,7 +20,7 @@
 | `commands/port_commands.gd` | 港口停留用例：在本港消耗时间，让打造订单、NPC 市场与债务期限一起推进。 | [查看](./commands/port_commands.gd.md) |
 | `commands/quest_commands.gd` | 抽象任务（Quest）的命令包装（C3）：`quest.start`（接取内容任务）、 | [查看](./commands/quest_commands.gd.md) |
 | `commands/run_start.gd` | `run.start` 命令入口（C4 起所有开局统一走 CampaignFactory）。无 | [查看](./commands/run_start.gd.md) |
-| `commands/ship_commands.gd` | 船厂用例：购买/仓库/随船运输三种来源安装模块（含替换）、卸下模块、打造模块，并在安装成功后检查通关。 | [查看](./commands/ship_commands.gd.md) |
+| `commands/ship_commands.gd` | 船厂事务用例：模块购买/仓库/运输安装、卸装与打造，以及舰载武器购买/仓库安装和卸下。 | [查看](./commands/ship_commands.gd.md) |
 | `commands/sim_commands.gd` | Phase D0 模拟时钟的四个命令入口：`sim.pause` / `sim.resume` / | [查看](./commands/sim_commands.gd.md) |
 | `commands/story_commands.gd` | 新手剧情 / 教学系统的命令包装：`story.advance`（剧情卡继续）、 | [查看](./commands/story_commands.gd.md) |
 | `commands/supply_commands.gd` | 按市场价购买煤水与维修命令包装。 | 本页 |
@@ -44,7 +44,7 @@
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知、统计与通关状态。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表（含 shipyard/victory、D0 `sim.view`、D1 `combat.view` / `combat.log` 与 D2 `fleet.view`）。 | 本页 |
 | `queries/sea_chart_view.gd` | 为可缩放 2D 海图生成只读视图模型（`sea_chart.view`），输出世界边界、 | [查看](./queries/sea_chart_view.gd.md) |
-| `queries/shipyard_view.gd` | 船厂独立界面 ViewModel：当前/随船运输模块、已装模块效果、港口仓库、打造配方与所有可购买模块的限制原因。 | [查看](./queries/shipyard_view.gd.md) |
+| `queries/shipyard_view.gd` | 船厂只读 ViewModel；统一投影模块改装/打造/仓库、舰载武器 socket、购买/装配/库存，以及船体每视图蓝图线稿的已解析路径。 | [查看](./queries/shipyard_view.gd.md) |
 | `queries/sim_view.gd` | `sim.view` 只读查询：输出模拟时钟的 paused / speed / tick / 步长 / | [查看](./queries/sim_view.gd.md) |
 | `queries/story_view.gd` | 新手剧情 / 教学系统的只读查询（`story.view`）。输出剧情卡、目标条、功能 / | [查看](./queries/story_view.gd.md) |
 | `queries/supply_view.gd` | 补给界面 ViewModel：煤水价/库存、载重余量、可补上限、预计续航与维修报价。 | [查看](./queries/supply_view.gd.md) |

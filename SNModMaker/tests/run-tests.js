@@ -21,6 +21,7 @@ require(js('validate.js'));
 require(js('store.js'));
 require(js('glb.js'));
 require(js('ui.js'));
+require(js('blueprint_editor.js'));
 
 const Store = globalThis.SNStore;
 const Validate = globalThis.SNValidate;
@@ -29,6 +30,7 @@ const Types = globalThis.SNContentTypes;
 const UI = globalThis.SNUI;
 const Zip = globalThis.SNZip;
 const GLB = globalThis.SNGLB;
+const Blueprint = globalThis.SNBlueprintEditor;
 
 /* Recursively list every schema file relative to `/schemas`, posix style. */
 function schemaFilesOnDisk() {
@@ -691,6 +693,7 @@ function warningsOf(result) {
       name: 'SN_Socket_Weapon_New_1',
       socket_class: 'Light',
       socket_index: 0,
+      blueprint: { side: [0.5, 0.5], top: [0.5, 0.5] },
       position: [0, 0, 0],
       clearance_r: 1,
       clearance_x: 1,
@@ -719,6 +722,10 @@ function warningsOf(result) {
       'data.weapon_sockets.0.name',
       'data.weapon_sockets.0.socket_class',
       'data.weapon_sockets.0.socket_index',
+      'data.weapon_sockets.0.blueprint.side.0',
+      'data.weapon_sockets.0.blueprint.side.1',
+      'data.weapon_sockets.0.blueprint.top.0',
+      'data.weapon_sockets.0.blueprint.top.1',
       'data.weapon_sockets.0.position.0',
       'data.weapon_sockets.0.position.1',
       'data.weapon_sockets.0.position.2',
@@ -737,6 +744,145 @@ function warningsOf(result) {
     assert.ok(html.includes('轻型 Light'), 'socket_class enum uses readable options');
     assert.ok(html.includes('桅杆 mast'), 'socket_kind enum uses readable options');
     assert.ok(!html.includes('undefined'), 'hull socket editor must not render undefined values');
+  });
+
+  await test('hull blueprint section binds line art and exposes slot coordinates', () => {
+    const project = freshProject();
+    const added = Store.addDefinition(project, 'hulls', {});
+    const definition = added.definition;
+    definition.data.blueprint_views = {
+      side: { image: 'blueprint.ship.side' },
+      top: { image: 'blueprint.ship.top' },
+    };
+    definition.data.compartments = [{
+      id: 'cargo_1',
+      max_tier: 2,
+      allowed_types: ['cargo'],
+      blueprint_position: { side: [0.3, 0.6], top: [0.3, 0.55] },
+    }];
+    definition.data.module_slots = [{
+      id: 'boiler_1',
+      socket: 'SN_Socket_Module_Boiler_1',
+      blueprint_position: { side: [0.5, 0.5] },
+    }];
+    definition.data.weapon_sockets = [{
+      name: 'SN_Socket_Weapon_Port_1',
+      socket_class: 'Light',
+      socket_index: 0,
+      blueprint: { side: [0.7, 0.45] },
+    }];
+    const html = UI.renderDefinitionForm({
+      project,
+      typeKey: 'hulls',
+      definition,
+      file: added.file,
+      index: added.index,
+      schemaFile: Catalog.BY_KEY.hulls.schema,
+    });
+    for (const field of [
+      'data.blueprint_views.side.image',
+      'data.blueprint_views.top.image',
+      'data.compartments.0.id',
+      'data.compartments.0.max_tier',
+      'data.compartments.0.blueprint_position.side.0',
+      'data.compartments.0.blueprint_position.side.1',
+      'data.compartments.0.blueprint_position.top.0',
+      'data.module_slots.0.id',
+      'data.module_slots.0.socket',
+      'data.module_slots.0.blueprint_position.side.0',
+      'data.weapon_sockets.0.blueprint.side.0',
+      'data.weapon_sockets.0.blueprint.side.1',
+    ]) {
+      assert.ok(html.includes(`data-field="${field}"`), `hull blueprint section must render ${field}`);
+    }
+    assert.ok(html.includes('data-action="open-blueprint-editor"'), 'hull form exposes the blueprint slot editor');
+    assert.ok(html.includes('data-action="array-add" data-path="data.compartments"'), 'hulls expose add-compartment control');
+    assert.ok(html.includes('data-action="array-add" data-path="data.module_slots"'), 'hulls expose add-module-slot control');
+    assert.ok(html.includes('舱位安装位'), 'hull blueprint section titles compartments');
+    assert.ok(!html.includes('undefined'), 'hull blueprint section must not render undefined values');
+  });
+
+  await test('blueprint editor maps pointer coordinates and collects slots', () => {
+    const rect = { left: 100, top: 50, width: 200, height: 100 };
+    assert.deepEqual(Blueprint.uvFromPoint(rect, 100, 50), [0, 0], 'top-left maps to origin');
+    assert.deepEqual(Blueprint.uvFromPoint(rect, 300, 150), [1, 1], 'bottom-right maps to one');
+    assert.deepEqual(Blueprint.uvFromPoint(rect, 400, -50), [1, 0], 'out-of-bounds is clamped');
+    assert.deepEqual(Blueprint.uvFromPoint({ left: 0, top: 0, width: 0, height: 0 }, 10, 10), [0, 0], 'zero size is safe');
+    assert.deepEqual(Blueprint.pointFromUv(rect, [0.25, 0.75]), { x: 150, y: 125 }, 'uv maps back to pixels');
+
+    const definition = {
+      data: {
+        compartments: [{ id: 'cargo_1', blueprint_position: { side: [0.3, 0.6] } }],
+        module_slots: [{ id: 'boiler_1' }],
+        weapon_sockets: [{ name: 'SN_Socket_Weapon_Port_1' }],
+        blueprint_views: { side: { image: 'blueprint.side' } },
+      },
+    };
+    const slots = Blueprint.collectSlots(definition);
+    assert.equal(slots.length, 3, 'all three slot families are collected');
+    assert.deepEqual(slots.map((slot) => slot.group), ['compartment', 'module_slot', 'weapon']);
+    assert.deepEqual(Blueprint.slotPosition(slots[0], 'side'), [0.3, 0.6], 'authored position reads back');
+    assert.equal(Blueprint.slotPosition(slots[1], 'side'), null, 'missing position reads as unplaced');
+    assert.equal(slots[0].positionField, 'data.compartments.0.blueprint_position');
+    assert.equal(slots[2].positionField, 'data.weapon_sockets.0.blueprint');
+
+    const project = { assets: [{ key: 'blueprint.side', path: 'blueprints/side.png', mime: 'image/png', dataUrl: 'data:image/png;base64,AA' }] };
+    const image = Blueprint.resolveViewImage(definition, project, 'side');
+    assert.equal(image.dataUrl, 'data:image/png;base64,AA', 'bound line art resolves from project assets');
+    assert.equal(Blueprint.resolveViewImage(definition, project, 'top'), null, 'unbound view has no image');
+  });
+
+  await test('hull schema accepts blueprint mounts and optional socket coordinates', () => {
+    const ds = UI.dataSchema('hulls');
+    const data = {
+      tier: 2,
+      weight: 20,
+      purchase_price: 100,
+      base_speed: 12,
+      max_weight: 100,
+      max_durability: 100,
+      cargo_slots: 1,
+      cabin_slots: 1,
+      base_risk: 0.02,
+      base_cargo_capacity: 8,
+      blueprint_views: {
+        side: { image: 'blueprint.ship.side', width: 800, height: 300, space: 'trimmed' },
+        top: { image: 'blueprint.ship.top' },
+      },
+      compartments: [{
+        id: 'cargo_1',
+        max_tier: 2,
+        allowed_types: ['cargo', 'cabin'],
+        blueprint_position: { side: [0.3, 0.6], top: [0.3, 0.5] },
+      }],
+      module_slots: [{
+        id: 'boiler_1',
+        allowed_categories: ['boiler'],
+        socket: 'SN_Socket_Module_Boiler_1',
+        blueprint_position: { side: [0.5, 0.5] },
+      }],
+      weapon_sockets: [{
+        name: 'SN_Socket_Weapon_Port_1',
+        socket_class: 'Light',
+        socket_index: 0,
+        pair: 'SN_Socket_Weapon_Starboard_1',
+        blueprint: { side: [0.7, 0.45] },
+      }],
+    };
+    assert.equal(Validate.validateSchema(data, ds.schema, ds.file).length, 0, 'valid blueprint mounts pass schema');
+
+    const legacy = JSON.parse(JSON.stringify(data));
+    legacy.weapon_sockets[0] = { name: 'SN_Socket_Weapon_Port_1', socket_class: 'Light', socket_index: 0 };
+    assert.equal(Validate.validateSchema(legacy, ds.schema, ds.file).length, 0, 'blueprint stays an optional override');
+
+    const bad = JSON.parse(JSON.stringify(data));
+    bad.compartments[0].id = 'Bad-ID';
+    bad.compartments[0].blueprint_position.side = [1.2, 0];
+    bad.blueprint_views.side.image = '';
+    const codes = Validate.validateSchema(bad, ds.schema, ds.file).map((error) => `${error.path}:${error.keyword}`);
+    assert.ok(codes.includes('/compartments/0/id:pattern'), 'compartment id pattern is enforced');
+    assert.ok(codes.includes('/compartments/0/blueprint_position/side/0:maximum'), 'coordinates stay in 0..1');
+    assert.ok(codes.includes('/blueprint_views/side/image:minLength'), 'empty line-art keys are rejected');
   });
 
   await test('weapon semantics report range order, assembly pivot and muzzle problems', () => {
@@ -1409,6 +1555,44 @@ function warningsOf(result) {
     assert.equal(voyageEvent.definition.data.options[0].name_key, oldOptionKey.replace('voyage_event.test_mod.fog', 'voyage_event.test_mod.thick_fog'));
     assert.equal(zh.entries[oldOptionKey], undefined);
     assert.ok(zh.entries[voyageEvent.definition.data.options[0].name_key]);
+  });
+
+  await test('asset keys and storage paths keep upper folders and stay unique', () => {
+    const keyA = Store.assetKeyFromPath('blueprints/ship_a/side.png', 'image/png', []);
+    const keyB = Store.assetKeyFromPath('blueprints/ship_b/side.png', 'image/png', []);
+    assert.equal(keyA, 'icon.blueprints.ship_a.side', 'folder segments become part of the key');
+    assert.notEqual(keyA, keyB, 'same file name under different folders gets distinct keys');
+    assert.equal(Store.assetKeyFromPath('side.png', 'image/png', []), 'icon.side', 'single files fall back to the file name');
+    assert.equal(Store.assetKeyFromPath('side.png', 'image/png', ['icon.side']), 'icon.side_2', 'duplicate keys get a numeric suffix');
+    assert.equal(
+      Store.assetStoragePath('blueprints/ship_a/side.png', 'image/png', []),
+      'assets/icons/blueprints/ship_a/side.png',
+      'storage keeps the imported folder tree',
+    );
+    assert.equal(
+      Store.assetStoragePath('side.png', 'image/png', ['assets/icons/side.png']),
+      'assets/icons/side_2.png',
+      'duplicate storage paths get a numeric suffix',
+    );
+    assert.equal(Store.assetKindOf({ mime: 'model/gltf-binary', path: 'assets/models/a.glb' }), 'model');
+    assert.equal(Store.assetKindOf({ mime: 'image/png', path: 'assets/icons/a.png' }), 'image');
+    assert.equal(Store.assetKindOf({ mime: 'application/octet-stream', path: 'assets/files/a.bin' }), 'other');
+
+    const project = freshProject();
+    const definition = project.contentFiles[0].definitions[0];
+    definition.information = {
+      texture: 'texture.tea',
+      model: `asset://${project.manifest.id}/model.tea`,
+    };
+    const migrated = Store.migrateAssetReferences(project, 'texture.tea', 'texture.tea_v2');
+    assert.equal(migrated, 1, 'renaming an asset key updates bare content references');
+    assert.equal(definition.information.texture, 'texture.tea_v2');
+    assert.equal(
+      Store.migrateAssetReferences(project, 'model.tea', 'model.tea_v2'),
+      1,
+      'renaming an asset key updates qualified references',
+    );
+    assert.equal(definition.information.model, `asset://${project.manifest.id}/model.tea_v2`);
   });
 
   await test('entity texture and GLB model references validate against assets', () => {

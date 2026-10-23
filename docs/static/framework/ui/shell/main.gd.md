@@ -1,6 +1,6 @@
 # `framework/ui/shell/main.gd`
 
-> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。
+> 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。自第八切片起船厂改装态也画在同一座港区的 `shipyard` 站位上（正常态仍用面板内的独立船体舞台），顶栏左侧的品牌位改为显示当前港口名。
 
 - 类型：GDScript 源文件
 
@@ -48,24 +48,24 @@
 | `PORT_STAGE_SCENE_PATH` | L73 |
 | `PORT_STAGE_FACILITY_SCREENS` | L75 |
 | `STAGE_SCREENS` | L88 |
-| `DOCK_PANEL_WIDTH` | L94 |
-| `TOP_CHROME_MAX_HEIGHT` | L98 |
-| `PORT_STATUS_BAR_HEIGHT` | L100 |
-| `PORT_STATUS_BAR_GAP` | L101 |
-| `PORT_SIGN_WIDTH` | L104 |
-| `PORT_SIGN_HEIGHT` | L105 |
-| `PORT_SIGN_GAP` | L106 |
-| `PORT_SIGN_MARGIN` | L107 |
-| `HUD_ICON_KEYS` | L111 |
-| `HUD_ICON_SIZE` | L116 |
-| `PAGE_BOTTOM_MARGIN` | L119 |
-| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L120 |
+| `DOCK_PANEL_WIDTH` | L97 |
+| `TOP_CHROME_MAX_HEIGHT` | L101 |
+| `PORT_STATUS_BAR_HEIGHT` | L103 |
+| `PORT_STATUS_BAR_GAP` | L104 |
+| `PORT_SIGN_WIDTH` | L107 |
+| `PORT_SIGN_HEIGHT` | L108 |
+| `PORT_SIGN_GAP` | L109 |
+| `PORT_SIGN_MARGIN` | L110 |
+| `HUD_ICON_KEYS` | L114 |
+| `HUD_ICON_SIZE` | L119 |
+| `PAGE_BOTTOM_MARGIN` | L122 |
+| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L123 |
 
 ## 契约与约束
 
 - 所有数据经 QueryBus 获取，所有修改经 CommandBus；UI 不保存规则状态。
 - 主界面默认 `_overview_stage_mode=true`：全窗 3D 港口舞台是主视图，2D 详细总览收进 `_overview_detail` 抽屉（默认关闭）；两者都只是 UI 会话状态，不写存档。
-- 紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation：第 1 行品牌/状态/版本 + 港口·时间·金钱·声望 + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 6 个导航按钮 + 海图切换按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。
+- 紧凑顶部 chrome（`_top_chrome`）用两行替代旧 header + stats bar + navigation（`STEAM NAVIGATOR / 蒸汽航海` 品牌位已取消，产品名只留在主菜单）：第 1 行港口名（`PortBrand`：eyebrow `ui.label.port` + 22 px 港口名，在航/演出时显示「在航 → 目的港」）+ 状态/版本 + 时间·金钱·声望 chip + 阶段切换/诊断/刷新，第 2 行剩余载重·货舱·煤·水·耐久·受损 chip + 6 个导航按钮 + 海图切换按钮；半透明面板，实测最小高度 ≤130 px（`TOP_CHROME_MAX_HEIGHT`）。
 - HUD 图标：`_stat_chip(..., icon_key)` 在标签左侧挂 22 px `TextureRect`；`_hud_icon()` 经 `AssetService.find_key()` 把 `icon.money/coal/water` 解析到任一内容包并缓存 `Texture2D`，缺 key/缺文件时退回纯文字 chip。金币在顶部 chrome，煤炭/淡水同时在顶部与底部状态条。
 - 窗口适配：工程为 `canvas_items` 拉伸（1440×900 基准）+ `expand` 宽高比，真实窗口的逻辑宽度恒 ≥1440（960×540 → 1600×900），因此 HUD 与招牌按同一份完整布局整体缩放，不设删信息/缩控件的 compact 分支；960×540 截图验证缩放后不裁切。
 - 设施招牌由 `SNHarborSign`（`sn_harbor_sign.gd`）承载：`_port_sign()` 调 `configure(text, primary, facility, arrow)` 写木板/铁框/黄铜铆钉/徽记/箭头/悬停光晕，`Button` 语义与 `text`/tooltip 保留；招牌固定 172×42、边距 20。
@@ -97,7 +97,7 @@
 - 根控件加载共享 `steam_navigator_theme.tres`；页面可继续局部覆写，但不再在运行时拼装全局 Theme。
 - 船厂页由独立 shipyard_screen.tscn 承载；Shell 查询 shipyard.view 并补充 `contracts`/`victory`（历史合并字段，当前船厂页不渲染通关清单）、船上材料数量 `ship_amount`、解锁来源 `unlock_name`、替换件名 `replacement_name` 与 `ship.hull_name`；页面发出的 ship/warehouse/port 命令统一交回 Shell。
 - 船厂页正常态三列（已有船舶 / 实机渲染 / 组件分类），点击分类由页面 `set_category()` 进入改装态并渲染所选分类的槽位操作；Shell 只做状态记忆与 ViewModel 组装，不决定布局。
-- 船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复纵剖图与选中分类。
+- 船厂改装态与分类由 Shell 保存：`refit_mode_changed` 写入 `_shipyard_refit`，`refit_category_changed` 写入 `_shipyard_category`（默认 `hulls`）；`_shipyard_model()` 把 `refit` 与 `category` 并入 shipyard.view；整页重建/切页后页面据此恢复蓝图与选中分类。改装态切换时 Shell 还会 `_sync_port_stage(_last_port_view)`：`STAGE_SCREENS` 含 `shipyard→shipyard`，但 `_shipyard_refit` 为假时隐藏港区舞台，避免与正常态面板内的 3D 船体舞台同时渲染；进入改装后舞台聚焦 `shipyard` 站位（framing 固定 `stage`，左右面板各占一边）。
 - 委托页显示普通委托持有上限（active_count/active_limit）、每次抵达刷新提示与主线完成状态。
 - 通关页由 victory.view.achieved 触发并优先于普通页面；展示 summary，提供“再来一局”（reset_state → 新航程菜单）与“继续游玩”（仅 UI 会话 dismiss）。
 - 反馈5：紧凑 chrome 固定显示当前港口（在航时显示“在航 → 目的港”）、剩余载重 free_weight/max_weight 与剩余货舱 free_cargo_capacity/cargo_capacity；总览底部状态条再显示耐久/货舱/煤/水/受损/最新通告，避免信息只存在于详细抽屉。

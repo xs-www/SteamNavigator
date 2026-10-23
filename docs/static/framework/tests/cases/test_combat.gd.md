@@ -51,16 +51,16 @@
 | `test_old_state_queries_are_read_only_and_command_creates_block() -> void` | L437 |
 | `test_command_errors_are_structured() -> void` | L457 |
 | `test_player_weapon_rows_from_hull_sockets() -> void` | L471 |
-| `test_multi_enemy_encounter_targets_sequentially() -> void` | L488 |
-| `test_battle_record_is_save_safe() -> void` | L511 |
-| `test_core_content_resolves() -> void` | L531 |
-| `test_combat_commands_and_queries_are_registered() -> void` | L550 |
-| `test_missing_weapon_class_is_reported_for_both_sides() -> void` | L574 |
-| `test_missing_loot_table_is_reported_in_battle_diagnostics() -> void` | L604 |
-| `test_explicit_loadout_enforces_socket_class() -> void` | L622 |
-| `test_settlement_key_makes_resolve_idempotent() -> void` | L645 |
-| `test_settlement_keys_are_pruned_with_the_battle_log() -> void` | L681 |
-| `test_combat_stream_is_registered() -> void` | L695 |
+| `test_multi_enemy_encounter_targets_sequentially() -> void` | L487 |
+| `test_battle_record_is_save_safe() -> void` | L510 |
+| `test_core_content_resolves() -> void` | L530 |
+| `test_combat_commands_and_queries_are_registered() -> void` | L549 |
+| `test_missing_weapon_class_is_reported_for_both_sides() -> void` | L588 |
+| `test_missing_loot_table_is_reported_in_battle_diagnostics() -> void` | L618 |
+| `test_explicit_loadout_enforces_socket_class() -> void` | L636 |
+| `test_settlement_key_makes_resolve_idempotent() -> void` | L659 |
+| `test_settlement_keys_are_pruned_with_the_battle_log() -> void` | L695 |
+| `test_combat_stream_is_registered() -> void` | L709 |
 
 敌人原型 / 遭遇表 / 掉落表 / hull）驱动 `CombatOps`（纯规则）、`CombatService`
 （落盘 / 战利品 / 惰性 `data.combat`）、`CombatCommands.resolve` 与

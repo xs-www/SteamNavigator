@@ -31,6 +31,8 @@ static func register_all(bus: CommandBus) -> void:
 	bus.register(&"ship.install_module", Callable(ShipCommands, "install_module"))
 	bus.register(&"ship.uninstall_module", Callable(ShipCommands, "uninstall_module"))
 	bus.register(&"ship.craft_module", Callable(ShipCommands, "craft_module"))
+	bus.register(&"ship.install_weapon", Callable(ShipCommands, "install_weapon"))
+	bus.register(&"ship.uninstall_weapon", Callable(ShipCommands, "uninstall_weapon"))
 	bus.register(&"warehouse.store_module", Callable(WarehouseCommands, "store_module"))
 	bus.register(&"warehouse.take_module", Callable(WarehouseCommands, "take_module"))
 	bus.register(&"warehouse.store_materials", Callable(WarehouseCommands, "store_materials"))

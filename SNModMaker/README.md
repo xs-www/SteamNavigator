@@ -63,7 +63,7 @@ python -m http.server 8099 --bind 127.0.0.1 -d SNModMaker
 ## 功能摘要
 
 - **内容类型**：42 类运行时类型 + 3 类草案；类型清单来自 `content_types.json`（唯一真源），表单由 Schema 生成。
-- **编辑器**：Manifest / 定义表单 / 本地化 / 资源；模块按 `v2_category` 分类；武器与剧情草案可编辑校验但不能部署。
+- **编辑器**：Manifest / 定义表单 / 本地化 / 资源；模块按 `v2_category` 分类；船体可绑定侧视/俯视线稿，并在全屏「蓝图槽位编辑器」里拖动舱位、模块位与武器位，自动写回归一化坐标；武器与剧情草案可编辑校验但不能部署。
 - **导入导出**：松散目录、`.snavmod.zip`、项目文件；本地服务可直接写入游戏 `mods/` 或发布包。
 - **Content CLI**：`list / add / set / describe / validate / new / clone / rm` 等，支持 agent 无头工作流。
 

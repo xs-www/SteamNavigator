@@ -1,6 +1,6 @@
 # `framework/domain/ship/warehouse_ops.gd`
 
-> 作用：港口仓库与随船运输：每港独立保存模块/材料，transit 模块计入重量但不占货舱。
+> 作用：港口仓库（模块、材料、武器）与随船运输模块的状态操作；旧存档缺分区时惰性补齐。
 
 - 类型：GDScript 源文件
 
@@ -9,43 +9,32 @@
 | 符号 | 位置 |
 | --- | --- |
 | `WarehouseOps` | L1 |
-| `MODULE_SECTION` | L10 |
-| `MATERIAL_SECTION` | L11 |
-| `ensure_structure(state: GameState) -> void` | L16 |
-| `warehouse(state: GameState, port_id: String) -> Dictionary` | L40 |
-| `module_qty(state: GameState, port_id: String, module_id: String) -> int` | L53 |
-| `material_amount(state: GameState, port_id: String, item_id: String) -> int` | L58 |
-| `transit_modules(ship: Dictionary) -> Dictionary` | L63 |
-| `transit_qty(ship: Dictionary, module_id: String) -> int` | L68 |
-| `transit_module_weight(hub: RegistryHub, ship: Dictionary) -> float` | L74 |
-| `owned_module_count(state: GameState, hub: RegistryHub, module_id: String) -> int` | L89 |
-| `store_module(state: GameState, hub: RegistryHub, port_id: String, module_id: String, qty: int = 1) -> Dictionary` | L101 |
-| `take_module(state: GameState, hub: RegistryHub, port_id: String, module_id: String, qty: int = 1) -> Dictionary` | L131 |
-| `store_materials(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int) -> Dictionary` | L169 |
-| `take_materials(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int) -> Dictionary` | L196 |
-| `add_module(state: GameState, port_id: String, module_id: String, qty: int = 1) -> int` | L239 |
-| `remove_module(state: GameState, port_id: String, module_id: String, qty: int = 1) -> int` | L248 |
-| `add_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int` | L261 |
-| `remove_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int` | L270 |
+| `MODULE_SECTION` | L12 |
+| `MATERIAL_SECTION` | L13 |
+| `WEAPON_SECTION` | L14 |
+| `ensure_structure(state: GameState) -> void` | L19 |
+| `warehouse(state: GameState, port_id: String) -> Dictionary` | L43 |
+| `module_qty(state: GameState, port_id: String, module_id: String) -> int` | L56 |
+| `material_amount(state: GameState, port_id: String, item_id: String) -> int` | L61 |
+| `weapon_qty(state: GameState, port_id: String, weapon_id: String) -> int` | L66 |
+| `transit_modules(ship: Dictionary) -> Dictionary` | L71 |
+| `transit_qty(ship: Dictionary, module_id: String) -> int` | L76 |
+| `transit_module_weight(hub: RegistryHub, ship: Dictionary) -> float` | L82 |
+| `owned_module_count(state: GameState, hub: RegistryHub, module_id: String) -> int` | L97 |
+| `store_module(state: GameState, hub: RegistryHub, port_id: String, module_id: String, qty: int = 1) -> Dictionary` | L109 |
+| `take_module(state: GameState, hub: RegistryHub, port_id: String, module_id: String, qty: int = 1) -> Dictionary` | L139 |
+| `store_materials(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int) -> Dictionary` | L177 |
+| `take_materials(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int) -> Dictionary` | L204 |
+| `add_module(state: GameState, port_id: String, module_id: String, qty: int = 1) -> int` | L247 |
+| `remove_module(state: GameState, port_id: String, module_id: String, qty: int = 1) -> int` | L256 |
+| `add_weapon(state: GameState, port_id: String, weapon_id: String, qty: int = 1) -> int` | L268 |
+| `remove_weapon(state: GameState, port_id: String, weapon_id: String, qty: int = 1) -> int` | L276 |
+| `add_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int` | L289 |
+| `remove_material(state: GameState, port_id: String, item_id: String, amount: int = 1) -> int` | L298 |
 
-## 契约与约束
-
-- 仓库数据位于 `world.warehouses[port_id] = {modules:{id:qty}, materials:{id:amount}}`；`ensure_structure()` 幂等补齐所有港口与 ship.transit_modules，兼容旧存档。
-- store/take 模块在 transit 与当前港仓库之间移动；take 检查船体 max_weight，store 只要求停靠。
-- store 材料把船上非委托货物移入仓库；take 材料检查重量与货舱容量。
-- 仓库操作只处理纯数据与结果码，不删除安装态；安装/替换由 ShipOps/ShipCommands 负责。
-- 所有失败返回 Result.fail，命令总线因此回滚工作副本。
-
-## 重点逻辑
-
-### `ensure_structure(state)`
-
-- 对每个 world.ports 键确保 warehouses 条目存在并含 modules/materials；缺失 ship 时也补齐。
-- 对已有条目只补缺失 section，不清空已有库存。
-
-### `take_module(...)`
-
-- 重量校验使用 ShipOps.total_weight + qty*module.weight；通过后才从仓库移除并写入 transit。
-- 返回 transit_qty/warehouse_qty/transit_weight 供 ViewModel 直接使用。
+Warehouses live at `world.warehouses[port_id] = {modules:{}, materials:{}, weapons:{}}`.
+Modules that are not installed travel with the ship in `ship.transit_modules`;
+they add weight but never occupy cargo capacity. All helpers are pure state
+manipulation and never touch content definitions.
 
 模块索引：[framework/domain](../README.md)

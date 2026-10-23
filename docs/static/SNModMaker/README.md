@@ -7,15 +7,17 @@
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `.dockerignore` | Docker 构建上下文过滤：排除本地 mods/、exports/ 与 Docker 自身文件。 | 本页 |
+| `.gdignore` | 源文件：.gdignore | 本页 |
 | `Dockerfile` | 零依赖容器镜像：Node 22 Alpine 打包静态编辑器与 tools/，以 node 用户运行，所有可写目录重定向到 /app/data 命名卷。 | [查看](./Dockerfile.md) |
 | `README.md` | 使用说明、数据流、开发约定与已知边界。 | 本页 |
 | `WORKSPACE.md` | 原生工作区使用说明：启动本地服务、在编辑器里直接编辑 dev_mods/core、保存边界与发布前校验。 | 本页 |
-| `css/app.css` | 暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、内容/多语言编辑器、模态框与 Toast。 | [查看](./css/app.css.md) |
+| `css/app.css` | 暗色工业主题与响应式布局：顶栏、侧栏、模块子分页、自定义资源选择器、船体模块区、蓝图槽位编辑器画布、内容/多语言编辑器、模态框与 Toast。 | [查看](./css/app.css.md) |
 | `docs/DEVELOPMENT.md` | 源文件：DEVELOPMENT.md | 本页 |
 | `docs/USER_GUIDE.md` | 源文件：USER_GUIDE.md | 本页 |
 | `exports/README.md` | 本地导出目录说明：ZIP 命名与忽略规则。 | 本页 |
 | `index.html` | 模组制作器的静态外壳：顶栏、导航/工作区/检视器布局，以及模态框、Toast、拖放与忙碌层宿主。 | [查看](./index.html.md) |
 | `js/app.js` | 应用控制器：视图状态、事件委托、表单写回、撤销/重做、自动保存、导入导出与 Modal 流程。 | [查看](./js/app.js.md) |
+| `js/blueprint_editor.js` | 船体蓝图槽位的可视化拖拽编辑器；在绑定的侧视 / 俯视线稿上显示舱位、模块位与武器位标记，拖动后自动计算归一化 uv 并通过 `data-field` 写回船体定义。 | [查看](./js/blueprint_editor.js.md) |
 | `js/catalog.js` | 字段标签、默认值、标签建议、条件/效果词汇与新建模板（含「舰载武器包」5 件武器预设）；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`），并按类型提供剧情模式（篇章/关卡）的标签、默认值与枚举可读名。 | [查看](./js/catalog.js.md) |
 | `js/glb.js` | 最小 GLB（glTF 2.0 二进制）解析器，为资源卡片提供场景节点、三角形网格、法线与材质基色。 | [查看](./js/glb.js.md) |
 | `js/io.js` | 浏览器 I/O：IndexedDB 项目库、文件/文件夹/ZIP 导入、下载、目录导出与本地游戏模组部署 API。 | [查看](./js/io.js.md) |

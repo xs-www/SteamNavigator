@@ -8,15 +8,15 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI` | L29 |
-| `GLB` | L31 |
-| `schemaFilesOnDisk()` | L34 |
-| `test(name, fn)` | L53 |
-| `freshProject()` | L66 |
-| `projectFromDir(dir)` | L71 |
-| `storyPackProject()` | L86 |
-| `errorsOf(result)` | L90 |
-| `warningsOf(result)` | L94 |
+| `UI` | L30 |
+| `GLB` | L32 |
+| `schemaFilesOnDisk()` | L36 |
+| `test(name, fn)` | L55 |
+| `freshProject()` | L68 |
+| `projectFromDir(dir)` | L73 |
+| `storyPackProject()` | L88 |
+| `errorsOf(result)` | L92 |
+| `warningsOf(result)` | L96 |
 
 ## 契约与约束
 
