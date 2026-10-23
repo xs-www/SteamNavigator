@@ -76,7 +76,7 @@
 | `smoke_load.gd` | 手动冒烟：加载 Core 并打印启动报告。 | 本页 |
 | `smoke_play.gd` | 手动冒烟：开局、预览、出航、事件选择。 | 本页 |
 | `test_case.gd` | 测试断言与 Core bootstrap 辅助。 | 本页 |
-| `test_runner.gd` | 无头测试发现、执行、汇总与退出码；首个渲染帧上运行，使 UI 套件能把外壳场景真正挂进场景树（含 test_shipyard_refit 改装 UI、test_stage_host 2.5D 舞台套件与 test_schema_v2_weapons 武器草案 / 船体 socket 镜像）。 | 本页 |
+| `test_runner.gd` | 无头测试入口：按 `SUITE_PATHS` 声明顺序加载测试套件、逐个执行 `test_*` 方法并打印 PASS/FAIL，退出码由失败数决定（0 = 全绿）。 | [查看](./test_runner.gd.md) |
 
 ## 模块契约
 

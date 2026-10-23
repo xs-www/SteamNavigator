@@ -50,6 +50,8 @@
 
 > 新完成项先记在这里，打 `v*` tag 前按版本归并进 [CHANGELOG.md](CHANGELOG.md) 并移除。
 
+- 测试运行器并行化（2026-10-23）：`tools/test.ps1` 默认按逻辑核数（2–8）拆多个 Godot 进程并行跑套件并聚合结果与退出码；分片成员用上一轮 `.godot/test_suite_timings.json` 的套件耗时做 LPT 负载均衡（首次按声明顺序、之后自调优），另支持 `-Shards` / `-Summary` / `-Suite` / `-NoImport` 与首次资源导入；`test_runner.gd` 新增 `--list` / `--suites=` / `--shard=i/n` / `--timings=` 与 `[SUITE]` 逐套件汇总（`Tests:` 行保持兼容）；`WorldGenerator.generate` 对 `ports` 定义数已低于 `min_ports` 的不可满足 profile 直接 fail-fast，不再空转 60 次整世界生成（单个用例 65s → ~0.1s）。验证：全量 **605/605**，墙钟 **481s → 106s**（约 4.5×）。
+
 - Lua Modding SDK S0（2026-10-23）：三份契约文档落地——[API 契约](docs/design/LUA_SDK_S0_API_CONTRACT.md) 全量盘点 Query 19 / Command 42 / Event 53 并给出 20 条候选 API 与版本/能力/错误协议（含 Manifest Schema v2 演进、`script.*` 能力前缀分流、脚本错误码）；[威胁模型](docs/design/LUA_SDK_S0_THREAT_MODEL.md) 44 威胁 / 28 不变量 / 22 差距 / 9 条发布阻断项；[测试矩阵](docs/design/LUA_SDK_S0_TEST_MATRIX.md) L0–L3 分级与双向覆盖、L0 门禁 G0-1..G0-8。结论：现有 Manifest 为封闭 schema + 扫描器白名单，脚本支持需 v2 Schema；42 个 Command 不得按总线名直接暴露。未改运行时代码。
 
 - Content Schema 2.0 Phase D3（2026-10-23）：base 5 类 active 2.0（`base_sites` / `buildings` / `building_upgrades` / `production_recipes` / `worker_roles`，content.base.v1）；Core 5 个内容文件（2 站点 / 5 建筑 / 5 升级 / 3 配方 / 3 工人工种）；`BaseOps` / `BaseService` / `BaseProductionSystem` / `base.claim|build|upgrade|deposit|withdraw|hire_worker|assign_worker|start_production` + `base.view`，`data.base` 惰性持久、tick 生产与欠费停工；SDK `example_base`、最小基地页。**35 类 active 全部 2.0（34 定义 + patch）**、schema bundle 41（2 顶层 + 39 v2）、编辑器 38（35 runtime + 3 draft）、Core 34 内容文件 / 133 定义。验证：Godot **605/605**、Node **60/60**、CLI **64/64**、SDK `status: ok`。

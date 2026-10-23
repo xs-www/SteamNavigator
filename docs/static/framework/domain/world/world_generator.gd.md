@@ -9,19 +9,21 @@
 | 符号 | 位置 |
 | --- | --- |
 | `WorldGenerator` | L1 |
-| `MAX_ATTEMPTS` | L35 |
-| `MIN_PORT_SPACING` | L36 |
-| `DEFAULT_WORLD_SIZE` | L37 |
-| `MIN_PORTS` | L39 |
-| `MAX_PORTS` | L40 |
-| `FORMAL_LANDMASSES` | L43 |
-| `FORMAL_PORT_SLOTS` | L62 |
-| `generate(profile: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L76 |
-| `formal_profile(definition: ContentDefinition) -> Dictionary` | L92 |
+| `MAX_ATTEMPTS` | L37 |
+| `MIN_PORT_SPACING` | L38 |
+| `DEFAULT_WORLD_SIZE` | L39 |
+| `MIN_PORTS` | L41 |
+| `MAX_PORTS` | L42 |
+| `FORMAL_LANDMASSES` | L45 |
+| `FORMAL_PORT_SLOTS` | L64 |
+| `generate(profile: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L78 |
+| `formal_profile(definition: ContentDefinition) -> Dictionary` | L107 |
 
 ## 契约与约束
 - 同 seed、profile 与内容注册表必须得到相同世界。
 - 整世界生成最多尝试 `MAX_ATTEMPTS`（60）次；单次放置内每港最多 20 次间距重试。
+- 可证明不可满足的 profile 不进入重试：`ports` 定义数低于 `min_ports` 时直接返回
+  `too few ports`（放置只会减少港口，重试 60 次不可能成功），避免开局/测试白等。
 - `required_tags` 来自港口配置，不依赖内容注册表中的硬编码 ID。
 - 航线在生成期算好后写入 `WorldMap.edges`（`{from,to,distance,path}`），
   运行期只读；换航线算法只需改这里，查询/UI 不受影响。

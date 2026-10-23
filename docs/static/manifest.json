@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T01:07:02.694Z",
-  "commit": "df8ff90",
+  "generated_at": "2026-10-23T04:12:33.346Z",
+  "commit": "172c17e",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
     "sources": 1081,
-    "documented": 427,
-    "grouped": 654
+    "documented": 428,
+    "grouped": 653
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "b0f66c829dfbedf94a123ce77ff085ffc6613d6c6cfa124c04e26feff9e9ea11",
+      "sha256": "d0b479f90f64b929aad3887396fa559176ffc93a7a0bb136e633b799bb530346",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3825,7 +3825,7 @@
     },
     {
       "source": "framework/domain/world/world_generator.gd",
-      "sha256": "b0cc6612e50abcd0bcce03e5b824600e2842cd3a8063012d701a92ac3431d816",
+      "sha256": "77eb74b08318cc3733d976c6c6b35deee36b1ac3ffabf8d4a508a755ee2b9eaa",
       "doc": "docs/static/framework/domain/world/world_generator.gd.md",
       "status": "documented"
     },
@@ -4476,10 +4476,9 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "3dfcbb1725388ef1db09fda0cc9c74777d38b396a1e5e09e847f24f1bff88d6a",
-      "doc": "docs/static/framework/tests/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/tests/README.md"
+      "sha256": "bd2fbce95d8f4cd0a400c99bed591af4975676a0b04a8c7c968893e450fe39cb",
+      "doc": "docs/static/framework/tests/test_runner.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/components/README.md",
@@ -5651,7 +5650,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "1658dc95c2e8d21724da0919e4e5a1ecd0e96292d99811c0854c7e4aaf506008",
+      "sha256": "8761832cec9959a4bf89f72e8bded674f598fc7a49aae90b5fbffac21ccb1146",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7128,13 +7127,13 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "ca0af30f5b05112b51e06374d698301bb9c9c07f12bae75b97d2b86334079deb",
+      "sha256": "5bd2f87f21fed134cbaa4e585284bec865a3418c76a78b2594f4297aaea06b46",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
     {
       "source": "tools/test.ps1",
-      "sha256": "25485fbbbf5ba05809897020fbaaf8e6887e9b9a9463ebc527309bffd527d5e2",
+      "sha256": "0c235cfc2c66234028c2554538647a8ccc371f6625140bd529f33fbb5c11b86f",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

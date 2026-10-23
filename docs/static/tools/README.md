@@ -246,6 +246,7 @@
 ## 模块契约
 
 - `test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。
+- `test.ps1` 默认按逻辑核数（2–8）启动多个 Godot 进程并行跑套件并聚合结果与退出码；分片成员用上一轮 `.godot/test_suite_timings.json` 的套件耗时做负载均衡（首次按声明顺序、之后自调优），`-Shards` / `-Summary` / `-Suite` / `-NoImport` 控制范围与输出，干净克隆首次运行会先自动导入资源。
 - `gen_static_docs.mjs` 优先读取源码 `@static-doc` 与 `docs/static_headers/` sidecar，旧 `static_docs_data.mjs` 仅作兼容；默认原子生成，`--check` 只读检查过期。
 - `ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。
 - `capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜，`-OverviewDetail` 再要求 `overview_detail.png`。

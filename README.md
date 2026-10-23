@@ -28,7 +28,7 @@
 - **2.5D 固定舞台**：港口全窗 3D 舞台、连续港区三站位、船厂 3D 实机舞台、航行离港/入港演出、静态合批与低配回退。
 - **Content Schema 2.0 Phase D 进行中（D0+D1+D2 已完成）**：Phase C 已完成（`modules` / `hulls` / `items` / `quests` / `port_templates` / `starting_scenarios` / `crew_roles` / `boiler_strategies` / `voyage_events` / `contracts` / `patches` 全 2.0，`map_profiles` 退役）。D0 落地确定性模拟时钟（`sim.pause` / `resume` / `set_speed` / `advance` + `sim.view`，`data.sim`，1 游戏小时固定步长）；D1 把 `weapons` 提升为 active，并新增 `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables`；D2 新增 `ship_archetypes` / `captains` / `formations` / `fleet_doctrines` 四类舰队内容与 `fleet.*` 命令。**30 个 active 类型全部 2.0（29 定义 + 显式补丁，0 个 1.0 runtime）**，只剩 3 类草案（`story_arcs` / `story_levels` / `combat_ai_profiles`）仅供编辑器与 draft 校验；`combat_ai_profiles` 为 schema 先行的战斗 AI 状态机（FSM），运行时不加载。
 - **剧情 / 任务**：新手教学 4.5 与任务追踪 `task.view` 已落地；C3 起 `quests` 2.0 + 持久 `data.quests` + `QuestService` 已接入（委托接取生成追踪实例，剧情演出/游戏指引等抽象引导由 Quest 承载），剧情模式 S1 数据契约（`story_arcs` / `story_levels` 草案）已就绪。
-- **无头测试**：`pwsh ./tools/test.ps1` 跑 Godot 全量；Node/CLI/SDK 门禁命令见下方。
+- **无头测试**：`pwsh ./tools/test.ps1` 跑 Godot 全量（默认按 CPU 多进程分片并行）；Node/CLI/SDK 门禁命令见下方。
 
 ## 环境要求
 
@@ -48,11 +48,17 @@
 
 ```powershell
 $env:GODOT_BIN = "C:\path\to\Godot_v4.7.2-stable_win64_console.exe"
-pwsh ./tools/test.ps1
-
-# 等价命令
-godot --headless --path . --script res://framework/tests/test_runner.gd
+pwsh ./tools/test.ps1                 # 全量：自动分片并行
+pwsh ./tools/test.ps1 -Summary        # 全量：只打印失败与套件汇总
+pwsh ./tools/test.ps1 -Shards 4       # 固定分片数
+pwsh ./tools/test.ps1 -Suite ui_shell # 只跑单个套件（名字片段即可，开发时最快）
 ```
+
+- 默认按 `CPU 逻辑核数 - 2`（2–8）启动多个 Godot 进程，每个进程跑一部分套件；退出码为 0 表示全绿。
+- 分片成员用上一轮 `.godot/test_suite_timings.json` 的套件耗时做负载均衡；首次运行无缓存时按声明顺序拆分，跑完自动写入缓存，下一轮更均衡。
+- 首次在干净克隆 / 新 worktree 上运行会先做一次 `--editor --quit` 资源导入（可用 `-NoImport` 跳过）。
+- 单进程等价命令仍可用：`godot --headless --path . --script res://framework/tests/test_runner.gd`；加 `-- --shard=0/2` 可手工分片，`-- --list` 可列出套件。
+
 
 ### 打包 Core 模组
 

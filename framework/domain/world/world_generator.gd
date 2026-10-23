@@ -6,6 +6,8 @@ extends RefCounted
 ## ## 契约与约束
 ## - 同 seed、profile 与内容注册表必须得到相同世界。
 ## - 整世界生成最多尝试 `MAX_ATTEMPTS`（60）次；单次放置内每港最多 20 次间距重试。
+## - 可证明不可满足的 profile 不进入重试：`ports` 定义数低于 `min_ports` 时直接返回
+##   `too few ports`（放置只会减少港口，重试 60 次不可能成功），避免开局/测试白等。
 ## - `required_tags` 来自港口配置，不依赖内容注册表中的硬编码 ID。
 ## - 航线在生成期算好后写入 `WorldMap.edges`（`{from,to,distance,path}`），
 ##   运行期只读；换航线算法只需改这里，查询/UI 不受影响。
@@ -74,6 +76,19 @@ const FORMAL_PORT_SLOTS := [
 
 
 static func generate(profile: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary:
+	var min_ports := int(profile.get("min_ports", MIN_PORTS))
+	var port_defs: Array = profile.get("ports", _default_ports())
+	# A profile whose port definitions already fall below its own floor can never
+	# pass `_validate_world`: placement only ever drops ports. Retrying it 60 times
+	# would burn a full world build per attempt (heavy land/routes work) and still
+	# fail, so report the constraint up front instead of stalling on it.
+	if port_defs.size() < min_ports:
+		return {
+			"ok": false,
+			"reason": "too few ports: %d < %d" % [port_defs.size(), min_ports],
+			"attempts": 0,
+			"world_map": {},
+		}
 	var rng := rng_service.stream(RngService.STREAM_MAP_GENERATION, "world")
 	# Keep the last attempt's reason: "failed after 60 attempts" alone hides the
 	# real constraint (too few ports, land coverage, facility distance, ...).
