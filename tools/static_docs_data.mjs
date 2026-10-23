@@ -1417,7 +1417,7 @@ export const FILE_DOCS = {
       "单一真源是 `content_types.json`；生成物 `framework/modding/content_types.gd` 与 `SNModMaker/js/content-types.js` 禁止手改。",
       "生成前校验格式版本、key/singular/schema 唯一、分组与 v2 模块分类引用、Schema 文件存在、Patch 数量、planned 不覆盖 active、draft_schemas 只指向 planned 类型。",
       "`draft_types` 必须与 `draft_schemas` 键集合完全一致，且不得自带 schema 路径；生成器校验 singular/abbr/color/default_file 唯一、group 已声明、`schema_version` 等于对应 Schema 的 const、capability 等于该类型所属 planned system 的 capability。",
-      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（D2 后 30 类全部为 2.0）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`；编辑器 `TYPES` 条目同时输出 `capability` 供 2.0 capability 校验。",
+      "`framework/modding/content_types.gd` 只输出可加载的 active 类型（D4 后 37 类全部为 2.0）；草案仅进入编辑器与 CLI 的 `DRAFT_TYPES`；编辑器 `TYPES` 条目同时输出 `capability` 供 2.0 capability 校验。",
       "`--check` 不写文件，生成物缺失或过期时以退出码 1 结束，供 CI/发布门禁使用。"
     ]
   },
@@ -1475,9 +1475,9 @@ export const FILE_DOCS = {
     role: "字段标签、默认值、标签建议、条件/效果词汇与新建模板（含「舰载武器包」5 件武器预设）；内容类型列表来自生成的 content-types.js（`TYPES` + `DRAFT_TYPES`），并按类型提供剧情模式（篇章/关卡）的标签、默认值与枚举可读名。",
     dependencies: ["JSON Schema（结构约束）", "content-types.js（由 content_types.json 生成）"],
     contracts: [
-      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖 30 个运行时类型（全部 2.0）与 2 个 Schema 2.0 草案类型（story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。",
+      "`BY_KEY` / `BY_SINGULAR` / `KEY_PREFIX` 覆盖 37 个运行时类型（全部 2.0）与 3 个 Schema 2.0 草案类型（story_arcs / story_levels）；`schemaVersionFor()` 返回类型期望版本。",
       "`TYPES` 含 30 个可加载类型（29 个 2.0 定义 + 2.0 显式补丁 `patches`），`DRAFT_TYPES` 为剧情 `story_arcs` / `story_levels`，`ALL_TYPES` 供编辑器侧栏、默认值与校验使用。",
-      "`DEFAULTS` 生成的定义必须能通过对应 Schema；D2 后 30 类 active 2.0 类型（含 `map_configs` 的 31 键 exploration、6 个战斗类型与 4 个舰队类型）与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。",
+      "`DEFAULTS` 生成的定义必须能通过对应 Schema；D4 后 37 类 active 2.0 类型（含 `map_configs` 的 31 键 exploration、6 个战斗类型、4 个舰队类型、5 个基地类型与 2 个自动贸易类型）与剧情篇章/关卡草案的默认值都在此维护（剧情关卡默认值自带 2 港 1 航道固定地图与首尾 checkpoint）。",
       "`weapons` 的字段标签 / 提示与 `DEFAULTS.weapons`（取 SNBattleSim「甲板速射炮」数值）就位；船体 `weapon_sockets` / `rig_sockets` 及 `clearance_*` / `rig_*` 字段有标签与提示。",
       "剧情草案复用共享 `FIELD_LABELS`，用 `TYPE_FIELD_LABELS` / `TYPE_FIELD_HINTS` 处理同名不同义的字段（如关卡 `position` 是世界坐标、`rewards` 只允许成就/图鉴/装饰），并在 `FIELD_ENUM_LABELS` 提供 `role` / `presentation` / `fog` / `profile` / `hint_level` / 重试方式的可读名。",
       "`WEAPON_PRESETS` 是「舰载武器包」模板的 5 件成品数据（deck_gun / heavy_cannon / mortar / repeater / broadside）：战斗数值对齐 SNBattleSim，装配字段对齐 GLB Root extras，经济字段项目补齐，`model` 为 `model.weapon.*`；`TEMPLATES` 的 `weapons` 条目（显示名「舰载武器包」）驱动新建模组对话框与 CLI `new --template weapons`。",
@@ -1514,7 +1514,7 @@ export const FILE_DOCS = {
       "`resolveRef` 以基准 Schema 文件所在目录解析相对 `$ref`，使 `schemas/v2/*` 能引用 `v2/common.schema.json`；顶层 basename 基准行为不变。",
       "`schemaVersionFor(fileOrType)` 优先显式 `schema_version`，其次类型期望版本（D2 后全部 active 类型为 2.0；story_arcs / story_levels 草案为 2.0），未知类型最后回退 1.0。",
       "内容文件的 `schema_version` 只接受 1.0 / 2.0；与类型期望版本不符报 `schema_version_mismatch`，其他值报 `schema_version_unsupported`。",
-      "`draft_content` 警告只针对仍是草案的 `story_arcs` / `story_levels`；active 2.0 类型（D2 后全部 30 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（30 类 + 草案族），同一 capability 每次校验只报一条。",
+      "`draft_content` 警告只针对仍是草案的 `story_arcs` / `story_levels`；active 2.0 类型（D4 后全部 37 类）不再算草案，`capability_undeclared` 按 `schemaVersion = 2.0` 判定（37 类 + 草案族），同一 capability 每次校验只报一条。",
       "`LOCAL_IDENTIFIER_FIELDS`（当前含 `flow_id`）里的字段是本地标识符，不做跨定义引用检查，修复 story `flow_id` 的假阳性 `ref_missing`；Core 导入保持 0 error。",
       "`REF_TYPE_BY_FIELD` 覆盖剧情引用：`levels` → story_level、`map_config` → map_config、`starting_scenario` → starting_scenario，与已有的 hull / good 等字段共用 `ref_type` 提示。",
       "武器语义校验码：`weapon_range_order`（min_range ≥ range）、`weapon_assembly_pivot`（profile 与 has_yaw/has_pitch 不一致）、`weapon_muzzle_count`、`weapon_class_modular`（warning）；船体 socket 语义码：`socket_name_duplicate` / `socket_index_duplicate` / `socket_name_prefix` / `socket_class_unknown` / `socket_kind_unknown` / `rig_socket_mast_id`（后四者为 warning）。",
@@ -1560,7 +1560,7 @@ export const FILE_DOCS = {
     contracts: [
       "项目以 `contentFiles/localization/assets` 为真源，`manifest.content/localization/assets` 每次由 `syncManifest()` 重建。",
       "`schema_version` 由内容类型推导（D2 后全部 active 类型与草案均写 2.0）：新建文件、归一化、导出都写类型版本，导出/重新导入保留 2.0。",
-      "`runtimeSupportsFile()` / `unsupportedContentFiles()` 判断当前运行时能否加载：未知类型、草案类型（`story_arcs` / `story_levels`）、`schema_version` 与类型期望版本不符 → 不支持；D2 后 30 类 active 2.0 类型全部受支持。`draftContentFiles` / `hasDraftContent` 保留为兼容 alias，供 G8 导出守卫使用。",
+      "`runtimeSupportsFile()` / `unsupportedContentFiles()` 判断当前运行时能否加载：未知类型、草案类型（`story_arcs` / `story_levels`）、`schema_version` 与类型期望版本不符 → 不支持；D4 后 37 类 active 2.0 类型全部受支持。`draftContentFiles` / `hasDraftContent` 保留为兼容 alias，供 G8 导出守卫使用。",
       "所有定义 ID 必须使用本模组命名空间；local ID 在共享 `keyPrefix` 的类型间也保持唯一，避免本地化键碰撞。",
       "`keyBaseOf()` 优先信任 `name_key` 去掉 `.name` 的前缀，兼容 Core 中 ID local 与键前缀不一致的情况。",
       "导出固定加 `mods/<id>/` 前缀；导入接受带/不带前缀的目录与 ZIP，并保留缺失文件为占位以便报错。",
@@ -1682,7 +1682,7 @@ export const FILE_DOCS = {
       "自定义资源选择器支持点击展开、输入搜索、清空和选择写回；点击外部或 Escape 关闭菜单。",
       "检测到本地服务时，同一项目再经 1.6s 防抖镜像到 `mods/<id>/`；磁盘失败只降低提示，不阻断浏览器保存。",
       "项目库的「磁盘」区同时列出 `mods/` 项目与 `dev_mods/` 工作区：工作区行标「工作区」且不提供删除；`state.workspace` 为真时保存改走 `putWorkspaceProject`，直接写回原生模组目录。",
-      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（剧情草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。D2 后 30 类 2.0 运行时类型可直接部署。",
+      "导出菜单在本地服务可用时提供发布包部署入口：先保存项目、构建 ZIP，再覆盖 `dist/build/<platform>/mods/<id>.snavmod.zip` 并报告旧包清理数量；若项目含当前运行时不支持的内容（剧情草案 / 未知类型 / 版本不符）则禁用部署，ZIP/目录导出改为二次确认（`unsupportedContentFiles` / `confirmUnsupportedExport`）。D4 后 37 类 2.0 运行时类型可直接部署。",
       "没有本地服务时，发布包部署入口以禁用项 + 启动服务指引呈现，而不是完全隐藏。",
       "资源页对带 dataUrl 的 GLB 卡片异步生成缩略图；渲染队列逐张执行，失败时保留 GLB 占位。",
       "Ctrl+S/Z/Shift+Z/N/O/E 为全局快捷键；文本输入中不拦截撤销。"
@@ -1712,7 +1712,7 @@ export const FILE_DOCS = {
   "SNModMaker/tools/sync-schemas.mjs": {
     role: "把 `schemas/` 下全部 `*.schema.json`（含 `v2/` 草案）递归打包为可直接 `<script>` 引入的 `js/schema-bundle.js`。",
     contracts: [
-      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（D2 后含全部 30 类 active 2.0 Schema + 3 类草案）为 `v2/...`，与磁盘文件一一对应（当前 36 个：2 顶层 + 34 个 v2）。",
+      "bundle key 是相对 `schemas/` 的 posix 路径：顶层仍是 basename，`v2/`（D2 后含全部 37 类 active 2.0 Schema + 3 类草案）为 `v2/...`，与磁盘文件一一对应（当前 43 个：2 顶层 + 41 个 v2）。",
       "生成文件头带 AUTO-GENERATED 标记；修改任何 Schema 后必须重跑。",
       "只做 JSON 解析与嵌入，不校验 Schema 自身。"
     ]
@@ -1761,12 +1761,12 @@ export const FILE_DOCS = {
   },
 
   "SNModMaker/tools/content.mjs": {
-    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 30 个运行时类型（D2 后全部为 Schema 2.0）与 2 个 Schema 2.0 草案类型（剧情 `story_arcs` / `story_levels`）；`new --draft` 可直接创建纯 2.0 草案项目。",
+    role: "SNModMaker 内容 CLI（零依赖 Node ESM）：types / describe / list / add / set / loc / rm / clone / validate / new 十个无头命令，按 Schema 增删改定义、补本地化并校验；类型清单含 37 个运行时类型（D4 后全部为 Schema 2.0）与 3 个 Schema 2.0 草案类型（剧情 `story_arcs` / `story_levels` + `combat_ai_profiles`）；`new --draft` 可直接创建纯 2.0 草案项目。",
     dependencies: ["SNStore", "SNValidate", "SNCatalog", "content_json.mjs", "Node 内置模块"],
     contracts: [
       "十个命令由 `COMMANDS` 分发表进入；`parseArgv` 支持 `--flag value` / `--flag=value`、重复 flag 收集为数组与 `--` 之后的按位置参数，`--help` 退出 0。",
       "复用网页端引擎而非另写规则：经典脚本按 schema-bundle → core-index → content-types → catalog → validate → store 的顺序 require 到 `globalThis`，校验、注册与本地化都走 `SNStore` / `SNValidate` / `SNCatalog`。",
-      "`types` 同时列出 30 个运行时类型（D2 后全部为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`story_arcs` / `story_levels` / `combat_ai_profiles`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
+      "`types` 同时列出 37 个运行时类型（D4 后全部为 Schema 2.0，输出 `capability` 与 `[runtime 2.0]` 标记）与 3 个草案（`story_arcs` / `story_levels` / `combat_ai_profiles`，`draft: true`、`schema_version`、`capability`；JSON 附 `activeTypes` / `draftTypes`）；`describe` 对 active 2.0 显示“运行时 Schema 2.0”、对草案显示草案/运行时不加载；`add` / `set` / `new` 写出的 `schema_version` 按类型推导，2.0 内容需手动在 manifest 声明 capability（`--draft` 项目自动写入）。",
       "`new --draft <content_type>` 只接受真实草案（`story_arcs` / `story_levels`）：生成内容文件 + 起始定义并把 capability 写入 manifest；已 active 的类型按用法错误退出 2；未知草案类型同样退出 2；与 `--template` 同时给出时叠加 2.0 模板与草案内容（剧情包是白名单模组，不应与 `--template` 叠加）。",
       "`validate --mod sdk/templates/story_pack_iron_tide` 可直接校验随仓库分发的剧情示例包（0 error / 预期 draft_content warning）；故事包混入非剧情内容会报 `story_pack_off_whitelist`。",
       "`new --template` 的模板清单来自 `Catalog.TEMPLATES`（items / boiler / event / weapons / starter_kit / blank）；`weapons` 即「舰载武器包」，一次生成 5 条 weapons 2.0 运行时定义（`asset://core/...` 模型 + `content.combat.v1`），未知模板按用法错误退出 2。",
@@ -1867,7 +1867,7 @@ export const FILE_DOCS = {
       "不依赖浏览器或 Godot；直接 require 经典脚本并以 `globalThis.SN*` 访问模块。",
       "覆盖实体多语言键事务、资源候选类型过滤、船体模块区、武器表单字段、船体安装点编辑、贴图/GLB 引用、GLB 解析与发布包 mods 目标解析；任何失败以退出码 1 结束。",
       "「舰载武器包」模板断言 5 件预设（`WEAPON_PRESETS`）、生成一个 `content/weapons.json`、每条 `information.model` 为 `asset://core/model.weapon.*` 且 manifest 声明 `content.combat.v1`。",
-      "剧情用例：Schema bundle 36 个（含 `v2/story_arc` / `v2/story_level` / `v2/combat_ai_profile`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器项目分开建项目（混装会被白名单拒绝）。"
+      "剧情用例：Schema bundle 43 个（含 `v2/story_arc` / `v2/story_level` / `v2/combat_ai_profile`）；catalog 默认值与示例包 `sdk/templates/story_pack_iron_tide` 零错误；`story_pack_off_whitelist`、`story_protagonist_unknown`、`story_level_checkpoint_missing`、`story_beat_stage_unknown`、`story_fail_default_not_allowed`、`story_fixed_*` 等语义错误可被触发；纯剧情项目与武器项目分开建项目（混装会被白名单拒绝）。"
     ]
   },
 
@@ -2524,8 +2524,8 @@ export const MODULES = {
     intro: "Manifest 与内容文件的 JSON Schema（项目校验器支持的子集）；`schemas/v2/` 存放 Content Schema 2.0（Phase B/C 运行时 Schema + 草案）。",
     contracts: [
       "每类内容一个 envelope Schema；公共字段在 `common.schema.json`。",
-      "D2 后全部 30 类 active 类型（29 定义 + `patches`）的 2.0 运行时 Schema 都在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载；根目录只保留 `common` / `manifest`。",
-      "`schemas/v2/` 当前：`common` + 30 类运行时 Schema（`item` / `hull` / `module` / `crew_role` / `boiler_strategy` / `port_template` / `starting_scenario` / `world_profile` / `region` / `site` / `route_template` / `weather_profile` / `faction` / `discovery` / `start_profile` / `map_config` / `contract` / `quest` / `voyage_event` / `patch` / `weapon` / `damage_type` / `combat_ability` / `enemy_archetype` / `encounter_table` / `loot_table` / `ship_archetype` / `captain` / `formation` / `fleet_doctrine`）+ 3 类草案（`story_arc` / `story_level` / `combat_ai_profile`）。",
+      "D4 后全部 37 类 active 类型（36 定义 + `patches`）的 2.0 运行时 Schema 都在 `schemas/v2/`，由 `content_types.json.types[].schema` 登记并由运行时按类型版本加载；根目录只保留 `common` / `manifest`。",
+      "`schemas/v2/` 当前：`common` + 37 类运行时 Schema（`item` / `hull` / `module` / `crew_role` / `boiler_strategy` / `port_template` / `starting_scenario` / `world_profile` / `region` / `site` / `route_template` / `weather_profile` / `faction` / `discovery` / `start_profile` / `map_config` / `contract` / `quest` / `voyage_event` / `patch` / `weapon` / `damage_type` / `combat_ability` / `enemy_archetype` / `encounter_table` / `loot_table` / `ship_archetype` / `captain` / `formation` / `fleet_doctrine` / `base_site` / `building` / `building_upgrade` / `production_recipe` / `worker_role` / `trade_policy` / `automation_rule`）+ 3 类草案（`story_arc` / `story_level` / `combat_ai_profile`）。",
       "标准实体可选 `information.texture/model` 资源键；贴图与 GLB 模型属于展示信息，不替代 data 权威字段。",
       "Schema 的 `const`/`enum` 与 `ContentTypes`/操作码注册表需同步维护；效果操作码枚举（如 `damage_module`）必须与 `EffectOpRegistry` 同时增改，否则 core 校验会 fatal。"
     ]
@@ -2544,6 +2544,7 @@ export const MODULES = {
     intro: "PowerShell 辅助脚本、Godot 验收 / 截图脚本、建模工单 / 参数化生成器与静态文档生成器。",
     contracts: [
       "`test.ps1` / `pack_core.ps1` / `capture_ui.ps1` 通过 `-GodotBin` / `GODOT_BIN` 定位引擎。",
+      "`test.ps1` 默认按逻辑核数（2–8）启动多个 Godot 进程并行跑套件并聚合结果与退出码；分片成员用上一轮 `.godot/test_suite_timings.json` 的套件耗时做负载均衡（首次按声明顺序、之后自调优），`-Shards` / `-Summary` / `-Suite` / `-NoImport` 控制范围与输出，干净克隆首次运行会先自动导入资源。",
       "`gen_static_docs.mjs` 优先读取源码 `@static-doc` 与 `docs/static_headers/` sidecar，旧 `static_docs_data.mjs` 仅作兼容；默认原子生成，`--check` 只读检查过期。",
       "`ui_snapshot.gd` 必须窗口模式运行（`--headless` 时视口纹理为空），bootstrap 顺序与 `framework/tests/test_case.gd` 一致；只写 `docs/design/screenshots/`，失败退出码 1。",
       "`capture_ui.ps1` 是 `ui_snapshot.gd` 的包装入口：默认 1440×900、seed 5201、输出 `res://docs/design/screenshots`，并检查产物比本次运行更新（防旧图冒充验收）；`-OverviewStage` 额外要求 `overview_port_stage.png` 新鲜，`-OverviewDetail` 再要求 `overview_detail.png`。",
@@ -2634,8 +2635,8 @@ export const GROUPED_ROLES = {
   "framework/tests/smoke_play.gd": "手动冒烟：开局、预览、出航、事件选择。",
   "sdk/templates": "模组模板：Manifest、`items` 2.0 最小模板，以及只能 draft 校验的 `story_arcs` / `story_levels` 剧情包模板。",
   "sdk/examples": "可被运行时扫描的示例：全 2.0 的 modules / crew_roles / items / D1 weapons / D2 fleet 与多类型混合模组。",
-  "schemas/v2": "Content Schema 2.0：common + D2 后全部 30 类 active Schema（item / hull / module / crew_role / boiler_strategy / port_template / starting_scenario / world_profile / region / site / route_template / weather_profile / faction / discovery / start_profile / map_config / contract / quest / voyage_event / patch / weapon / damage_type / combat_ability / enemy_archetype / encounter_table / loot_table / ship_archetype / captain / formation / fleet_doctrine）+ 3 类草案（story_arc / story_level / combat_ai_profile）。",
-  "schemas": "JSON Schema 文件（顶层 Manifest/common + `v2/` 的 30 类运行时 Schema 与 3 类草案）。",
+  "schemas/v2": "Content Schema 2.0：common + D4 后全部 37 类 active Schema（item / hull / module / crew_role / boiler_strategy / port_template / starting_scenario / world_profile / region / site / route_template / weather_profile / faction / discovery / start_profile / map_config / contract / quest / voyage_event / patch / weapon / damage_type / combat_ability / enemy_archetype / encounter_table / loot_table / ship_archetype / captain / formation / fleet_doctrine）+ 3 类草案（story_arc / story_level / combat_ai_profile）。",
+  "schemas": "JSON Schema 文件（顶层 Manifest/common + `v2/` 的 37 类运行时 Schema 与 3 类草案）。",
   "dev_mods/core": "官方 Core 内容文件（manifest/content/localization/assets）。",
   "tools/modeling/generators": "铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。",
   "tools/modeling/generators/sn_iron_harbor_batch2_generator.py": "铁港第二批 6 件生成器（煤气灯/跳板/抓斗/煤堆/爬梯/钢板堆）。",

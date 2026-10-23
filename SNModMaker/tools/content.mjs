@@ -106,11 +106,11 @@ add 选项：
 通用选项：--json  --quiet  --help/-h
 退出码：0 成功；1 执行失败 / 校验未通过 / 冲突；2 用法错误。
 
-Schema 2.0 运行时类型共 30 类（29 个定义类型 + patches）：Phase B 的 9 类（world_profiles /
+Schema 2.0 运行时类型共 37 类（36 个定义类型 + patches）：Phase B 的 9 类（world_profiles /
 map_configs / regions / sites / route_templates / weather_profiles / factions / discoveries /
 start_profiles）+ C1 的 hulls / modules + C2 的 items + C3 的 quests + C4 的 port_templates /
 starting_scenarios / contracts / voyage_events / crew_roles / boiler_strategies + D1 的 6 类战斗
-类型 + D2 的 ship_archetypes / captains / formations / fleet_doctrines。它们已接入游戏运行时，
+类型 + D2 的 ship_archetypes / captains / formations / fleet_doctrines + D3 的 5 类基地类型 + D4 的 trade_policies / automation_rules。它们已接入游戏运行时，
 可以像其他 active 类型一样 list / add / set / describe / validate，内容文件写 schema_version "2.0"。
 CLI 不会自动声明 capability：内容使用 Schema 2.0 但未在 manifest.capabilities 声明对应
 能力时，校验给出 capability_undeclared 警告（按类型去重，每个 capability 一条）。

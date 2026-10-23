@@ -13,10 +13,10 @@
 | `build(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L70 |
 | `upgrade(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L114 |
 | `deposit(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L167 |
-| `withdraw(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L209 |
-| `hire_worker(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L244 |
-| `assign_worker(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L278 |
-| `start_production(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L327 |
+| `withdraw(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L211 |
+| `hire_worker(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L248 |
+| `assign_worker(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L282 |
+| `start_production(state: GameState, hub: RegistryHub, params: Dictionary) -> Dictionary` | L331 |
 
 启动生产。所有入口返回 `Result`，由应用层命令在 CommandBus 事务内调用；状态只落在
 `data.base`，生产推进由 `BaseProductionSystem` 在 tick 中完成。

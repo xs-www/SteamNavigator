@@ -252,7 +252,7 @@ Schema 草案 → `planned` 登记 → 达到 D6 门槛 → 提升 active → �
 | 1.x 旧存档 | 正常 | 正常（惰性补齐） | 正常（迁移矩阵覆盖） |
 | v2 世界存档读入 1.0 运行时 | 不适用 | 拒绝并保留只读提示 | — |
 
-> **当前实现（2026-10-23 D2 后）**：Phase B、Phase C（C1–C4）与 Phase D0/D1/D2 已完成；**30 个 active 类型全部为 2.0，运行时不再有 1.0 类型**，
+> **当前实现（2026-10-23 D4 后）**：Phase B、Phase C（C1–C4）与 Phase D0–D4 已完成；**37 个 active 类型全部为 2.0，运行时不再有 1.0 类型**，
 > 顶层 1.0 内容 Schema（roles / strategies / port_archetypes / map_profiles / starting_builds / contracts / events / patch）
 > 与对应旧内容文件已删除，旧模组按「未知类型 / 版本不符」拒绝。双读窗口不再适用（见下方开发期例外）。
 >
@@ -321,7 +321,7 @@ WP2 只动 `SNModMaker/`；WP4 只动 `framework/domain/world|campaign` 与新�
 - [x] Phase D · D3：base 5 类 active 2.0 + Core 5 个基地内容文件 + `BaseOps` / `BaseService` / `BaseProductionSystem` / `base.*` 命令与 `base.view`；SDK `example_base`、最小基地页（2026-10-23）。
 - [x] **Phase D0/D1/D2/D3 完成快照**：35 个 active 类型全部 2.0（34 定义 + patch）；schema bundle 41（2 顶层 + 39 v2）、编辑器 38（35 runtime + 3 draft）、Core 34 内容文件 / 133 定义；Godot **605/605**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [x] Phase D · D4：auto_trade 2 类 active 2.0 + Core 2 个内容文件 + `AutoTradeOps` / `AutoTradeService` / `AutoTradeSystem` / `auto_trade.*` 命令与 `auto_trade.view`；SDK `example_trade`、最小自动贸易页（2026-10-23）。
-- [x] **Phase D0/D1/D2/D3/D4 完成快照**：37 个 active 类型全部 2.0（36 定义 + patch）；schema bundle 43（2 顶层 + 41 v2）、编辑器 40（37 runtime + 3 draft）、Core 36 内容文件 / 140 定义；Godot **616/616**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
+- [x] **Phase D0/D1/D2/D3/D4 完成快照**：37 个 active 类型全部 2.0（36 定义 + patch）；schema bundle 43（2 顶层 + 41 v2）、编辑器 40（37 runtime + 3 draft）、Core 36 内容文件 / 140 定义；Godot **618/618**、Node **60/60**、CLI **64/64**、SDK `status: ok`（2026-10-23）。
 - [ ] Phase D 剩余：ruins 系统类型与运行时切片。
 - [ ] Phase E：1.0 生成停止；文档状态更新为 Finalized（开发期无迁移工具，发布前评估）。
 - [ ] 全程：玩法数值不因迁移改变；存档世界布局不重排。

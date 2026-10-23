@@ -168,6 +168,8 @@ static func deposit(state: GameState, hub: RegistryHub, params: Dictionary) -> D
 	var base := BaseOps.ensure_structure(state)
 	if base.is_empty():
 		return Result.fail("no_base", "ui.error.no_base")
+	if not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if String(state.current_port_id()) != String(base.get("port_id", "")):
 		return Result.fail("not_at_base_port", "ui.error.not_at_base_port", {
 			"base_port_id": String(base.get("port_id", "")),
@@ -210,6 +212,8 @@ static func withdraw(state: GameState, hub: RegistryHub, params: Dictionary) -> 
 	var base := BaseOps.ensure_structure(state)
 	if base.is_empty():
 		return Result.fail("no_base", "ui.error.no_base")
+	if not state.is_at_port():
+		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if String(state.current_port_id()) != String(base.get("port_id", "")):
 		return Result.fail("not_at_base_port", "ui.error.not_at_base_port", {
 			"base_port_id": String(base.get("port_id", "")),

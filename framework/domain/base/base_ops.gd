@@ -415,15 +415,15 @@ static func _normalize(raw: Dictionary) -> Dictionary:
 	base["site_archetype_id"] = _safe_string(raw.get("site_archetype_id", ""))
 	base["site_id"] = _safe_string(raw.get("site_id", "base"), "base")
 	base["port_id"] = _safe_string(raw.get("port_id", ""))
-	base["next_building"] = maxi(1, int(raw.get("next_building", 1)))
-	base["unpaid_ticks"] = maxi(0, int(raw.get("unpaid_ticks", 0)))
-	base["upkeep_debt"] = maxf(0.0, float(raw.get("upkeep_debt", 0.0)))
-	base["halted"] = bool(raw.get("halted", false))
+	base["next_building"] = maxi(1, _safe_int(raw.get("next_building", 1), 1))
+	base["unpaid_ticks"] = maxi(0, _safe_int(raw.get("unpaid_ticks", 0), 0))
+	base["upkeep_debt"] = maxf(0.0, _safe_float(raw.get("upkeep_debt", 0.0), 0.0))
+	base["halted"] = _safe_bool(raw.get("halted", false), false)
 	var raw_storage: Variant = raw.get("storage", {})
 	var storage: Dictionary = {}
 	if raw_storage is Dictionary:
 		for raw_item_id in (raw_storage as Dictionary).keys():
-			var amount := int((raw_storage as Dictionary)[raw_item_id])
+			var amount := _safe_int((raw_storage as Dictionary)[raw_item_id], 0)
 			if amount > 0:
 				storage[String(raw_item_id)] = amount
 	base["storage"] = storage
@@ -431,7 +431,7 @@ static func _normalize(raw: Dictionary) -> Dictionary:
 	var workers: Dictionary = {}
 	if raw_workers is Dictionary:
 		for raw_role_id in (raw_workers as Dictionary).keys():
-			var amount := int((raw_workers as Dictionary)[raw_role_id])
+			var amount := _safe_int((raw_workers as Dictionary)[raw_role_id], 0)
 			if amount > 0:
 				workers[String(raw_role_id)] = amount
 	base["workers"] = workers
@@ -459,16 +459,16 @@ static func _normalize_building(raw: Dictionary) -> Dictionary:
 	var entry: Dictionary = DEFAULT_BUILDING.duplicate(true)
 	entry["instance_id"] = instance_id
 	entry["building_ref"] = building_ref
-	entry["level"] = clampi(int(raw.get("level", 1)), 1, 3)
+	entry["level"] = clampi(_safe_int(raw.get("level", 1), 1), 1, 3)
 	var status := _safe_string(raw.get("status", "building"))
 	entry["status"] = status if VALID_STATUS.has(status) else "building"
-	entry["remaining_hours"] = maxf(0.0, float(raw.get("remaining_hours", 0.0)))
+	entry["remaining_hours"] = maxf(0.0, _safe_float(raw.get("remaining_hours", 0.0), 0.0))
 	entry["upgrade_ref"] = _safe_string(raw.get("upgrade_ref", ""))
 	var raw_workers: Variant = raw.get("workers", {})
 	var workers: Dictionary = {}
 	if raw_workers is Dictionary:
 		for raw_role_id in (raw_workers as Dictionary).keys():
-			var amount := int((raw_workers as Dictionary)[raw_role_id])
+			var amount := _safe_int((raw_workers as Dictionary)[raw_role_id], 0)
 			if amount > 0:
 				workers[String(raw_role_id)] = amount
 	entry["workers"] = workers
@@ -476,12 +476,34 @@ static func _normalize_building(raw: Dictionary) -> Dictionary:
 	if raw_order is Dictionary and not _safe_string((raw_order as Dictionary).get("recipe_id", "")).is_empty():
 		entry["order"] = {
 			"recipe_id": _safe_string((raw_order as Dictionary).get("recipe_id", "")),
-			"remaining_hours": maxf(0.0, float((raw_order as Dictionary).get("remaining_hours", 0.0))),
-			"total_hours": maxf(0.0, float((raw_order as Dictionary).get("total_hours", 0.0))),
+			"remaining_hours": maxf(0.0, _safe_float((raw_order as Dictionary).get("remaining_hours", 0.0), 0.0)),
+			"total_hours": maxf(0.0, _safe_float((raw_order as Dictionary).get("total_hours", 0.0), 0.0)),
 		}
 	return entry
 
 
 static func _safe_string(value: Variant, fallback: String = "") -> String:
 	return value if value is String else fallback
+
+
+static func _safe_int(value: Variant, fallback: int = 0) -> int:
+	if value is int:
+		return value
+	if value is float:
+		var number := float(value)
+		return int(number) if is_finite(number) else fallback
+	return fallback
+
+
+static func _safe_float(value: Variant, fallback: float = 0.0) -> float:
+	if value is int or value is float:
+		var number := float(value)
+		return number if is_finite(number) else fallback
+	return fallback
+
+
+static func _safe_bool(value: Variant, fallback: bool = false) -> bool:
+	if value is bool:
+		return value
+	return fallback
 

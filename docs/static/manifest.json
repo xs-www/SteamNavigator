@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T04:25:31.367Z",
-  "commit": "172c17e",
+  "generated_at": "2026-10-23T04:35:05.291Z",
+  "commit": "906ebeb",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
     "sources": 1098,
-    "documented": 434,
-    "grouped": 664
+    "documented": 435,
+    "grouped": 663
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "b0f66c829dfbedf94a123ce77ff085ffc6613d6c6cfa124c04e26feff9e9ea11",
+      "sha256": "d15b3938c51e2c8b8c078d151ecccc7e88407981fd025671c299b9f337b73a8e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -181,7 +181,7 @@
     },
     {
       "source": "SNModMaker/README.md",
-      "sha256": "67b2295c7c9e9920c38cf6a5786d5e17897305c3c05fecad872eb76f68222088",
+      "sha256": "1cbd7d1a0d19d7ee3477fedecd6dfd4a83da1a61050601d545ce600256aa258c",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -201,14 +201,14 @@
     },
     {
       "source": "SNModMaker/docs/DEVELOPMENT.md",
-      "sha256": "7b7cc5ecbf244b848f9a4e685349618ef6aa158a574c079249445bb7cd149494",
+      "sha256": "47ed6b6e89c758bf43586a266dbc72d33d124f282eb9ce9d3a98717e7d9b7158",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
     },
     {
       "source": "SNModMaker/docs/USER_GUIDE.md",
-      "sha256": "0da580d42d8f5101db2d8e5177d180a69dcbc082ac8591fd90f90f5ceff9cd54",
+      "sha256": "0a8c0787e53ca9c6ab7d6f6093dd96fd27e3c6493a49753c6de2fe8986b92295",
       "doc": "docs/static/SNModMaker/README.md",
       "status": "grouped",
       "group": "docs/static/SNModMaker/README.md"
@@ -325,7 +325,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "026a7481053c41301b79706d4487252a62ad0e87d008036b83bdf1e15eaa38a7",
+      "sha256": "4783b9ef887faa457b2c741e8c419a0a56c4cc31b3126df0376fc5e3d66322e2",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -3521,7 +3521,7 @@
     },
     {
       "source": "framework/domain/base/base_ops.gd",
-      "sha256": "a06c4f96f4eba64da6372d4a0337062ebe7175b705055204c4275588ddc1bc6f",
+      "sha256": "d3d4f260c10dabb46ac6a194ded6a626390c3abdd4170ff49a3618b7babc32c0",
       "doc": "docs/static/framework/domain/base/base_ops.gd.md",
       "status": "documented"
     },
@@ -3533,7 +3533,7 @@
     },
     {
       "source": "framework/domain/base/base_service.gd",
-      "sha256": "a9cb3971b7077abed7bd09660a6b8ec4f3f4c57b2fbeba33a818211373117a83",
+      "sha256": "7c849cbdea06af1a2e0244389be6a7b623233da844bc775e13b1f86d2d460fe7",
       "doc": "docs/static/framework/domain/base/base_service.gd.md",
       "status": "documented"
     },
@@ -3869,7 +3869,7 @@
     },
     {
       "source": "framework/domain/world/world_generator.gd",
-      "sha256": "b0cc6612e50abcd0bcce03e5b824600e2842cd3a8063012d701a92ac3431d816",
+      "sha256": "77eb74b08318cc3733d976c6c6b35deee36b1ac3ffabf8d4a508a755ee2b9eaa",
       "doc": "docs/static/framework/domain/world/world_generator.gd.md",
       "status": "documented"
     },
@@ -4079,7 +4079,7 @@
     },
     {
       "source": "framework/tests/cases/test_base.gd",
-      "sha256": "18c3cbb57d8a9a746088d548c43bf84cc4877c776e76e0f42958d158c99af6b0",
+      "sha256": "56e0dfeaf640636400310ef5e7394c2cd32f4228b4f1f65ccd0a563a70fbd1c4",
       "doc": "docs/static/framework/tests/cases/test_base.gd.md",
       "status": "documented"
     },
@@ -4526,10 +4526,9 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "8052015df8cd8458e25791c7f79b08bca8a2887d75a43c5ff03edbfe72d6a2ff",
-      "doc": "docs/static/framework/tests/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/tests/README.md"
+      "sha256": "6e082b3cba5ed6098289f76e4a8fe1240b3b5a0064783be9c3fae47a263a5692",
+      "doc": "docs/static/framework/tests/test_runner.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/components/README.md",
@@ -5763,7 +5762,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "567c19b2447b018de384fd8891ae340aa8d0aff53e75b2c2daaed2ff5846d40f",
+      "sha256": "1fb6bc60bb280ef58c423034de490e98d391095192d21102d83e5240227ac29d",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7240,13 +7239,13 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "ca0af30f5b05112b51e06374d698301bb9c9c07f12bae75b97d2b86334079deb",
+      "sha256": "aaf06c8742d863844329da1c57830943ec0e6409af923cbb7cedf327fddd9565",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
     {
       "source": "tools/test.ps1",
-      "sha256": "25485fbbbf5ba05809897020fbaaf8e6887e9b9a9463ebc527309bffd527d5e2",
+      "sha256": "2c3ef0a12fda81682da5ac2eed48f3c4aabb244b5329b735a480988ef5875fa8",
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"

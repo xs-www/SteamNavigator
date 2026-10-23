@@ -19,9 +19,11 @@
 | `test_upgrade_raises_level_and_production_speed() -> void` | L165 |
 | `test_production_chain_reaches_shipbuilding_material() -> void` | L184 |
 | `test_unpaid_upkeep_halts_production() -> void` | L219 |
-| `test_malformed_base_data_is_normalized() -> void` | L230 |
-| `test_save_round_trip() -> void` | L252 |
-| `test_same_seed_and_commands_are_deterministic() -> void` | L271 |
+| `test_malformed_numeric_fields_do_not_destroy_the_base() -> void` | L232 |
+| `test_transfer_requires_being_at_port() -> void` | L259 |
+| `test_malformed_base_data_is_normalized() -> void` | L272 |
+| `test_save_round_trip() -> void` | L294 |
+| `test_same_seed_and_commands_are_deterministic() -> void` | L313 |
 
 仓储存取与容量、雇工/派工与工资、生产链（tick 产物进仓储）、维护费不足停机、
 损坏数据规范化、存档 round-trip 与确定性。

@@ -227,6 +227,48 @@ func test_unpaid_upkeep_halts_production() -> void:
 	assert_true(int(view.get("unpaid_ticks", 0)) >= 1, "the unpaid tick is recorded")
 
 
+## D3-FIX2：numeric fields 被写成 null/数组/字典时不能抛引擎错误，更不能在下一次 tick
+## 把整个 base 规范化成空块（旧行为会静默丢基地）。
+func test_malformed_numeric_fields_do_not_destroy_the_base() -> void:
+	var context := _start(312)
+	_claim(context)
+	context.state.data["base"]["next_building"] = null
+	context.state.data["base"]["unpaid_ticks"] = []
+	context.state.data["base"]["upkeep_debt"] = {}
+	context.state.data["base"]["storage"] = {"core:item/timber": null}
+	context.state.data["base"]["workers"] = {"core:worker_role/laborer": []}
+	context.state.data["base"]["buildings"] = [{
+		"instance_id": "bld_1",
+		"building_ref": "core:building/sawmill",
+		"level": null,
+		"status": "ready",
+		"remaining_hours": {},
+		"workers": {},
+		"order": {"recipe_id": "core:production_recipe/timber", "remaining_hours": null, "total_hours": []},
+	}]
+	var view := _view(context)
+	assert_true(bool(view.get("claimed", false)), "base.view normalizes numeric garbage without losing the base")
+	assert_eq(String(view.get("site_archetype_id", "")), COASTAL, "the site survives normalization")
+	_advance(context, 1)
+	var after: Variant = context.state.data.get("base", null)
+	assert_true(after is Dictionary and not (after as Dictionary).is_empty(), "a tick does not replace the base with an empty block")
+	assert_eq(String((after as Dictionary).get("site_archetype_id", "")), COASTAL, "the base is still the same site")
+
+
+## D3-FIX2：存取必须人在基地港口；在航（voyage 非空）时即使 current_port_id 仍是母港也要拒绝。
+func test_transfer_requires_being_at_port() -> void:
+	var context := _start(313)
+	_claim(context)
+	assert_true(bool(_deposit(context, "core:item/timber", 5).get("ok", false)), "a dock deposit succeeds")
+	context.state.data["voyage"] = {"origin_port_id": context.state.current_port_id()}
+	assert_false(context.state.is_at_port(), "the fixture is at sea")
+	var deposit := context.commands.execute(&"base.deposit", {"item_id": "core:item/timber", "amount": 1})
+	assert_eq(String(deposit.get("error_code", "")), "not_at_port", "deposit is rejected at sea")
+	var withdraw := context.commands.execute(&"base.withdraw", {"item_id": "core:item/timber", "amount": 1})
+	assert_eq(String(withdraw.get("error_code", "")), "not_at_port", "withdraw is rejected at sea")
+	assert_eq(_storage_amount(_view(context), "core:item/timber"), 5, "rejected transfers leave storage unchanged")
+
+
 func test_malformed_base_data_is_normalized() -> void:
 	var context := _start(309)
 	_claim(context)
