@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T05:22:09.538Z",
-  "commit": "a31f0eb",
+  "generated_at": "2026-10-23T05:25:41.955Z",
+  "commit": "9744f9d",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -3568,7 +3568,7 @@
     },
     {
       "source": "framework/domain/base/base_ops.gd",
-      "sha256": "fb2623a3424ab13ef8e918c05fa85a2a970bfc971ba1ce8e540db9e4cc02cc29",
+      "sha256": "ea8fb6c03e5097e7bb060767976d0b13d0f89d906c4c8a96705a2dbf326ae0c4",
       "doc": "docs/static/framework/domain/base/base_ops.gd.md",
       "status": "documented"
     },
@@ -3580,7 +3580,7 @@
     },
     {
       "source": "framework/domain/base/base_service.gd",
-      "sha256": "7c849cbdea06af1a2e0244389be6a7b623233da844bc775e13b1f86d2d460fe7",
+      "sha256": "112ab18a17f686c807ee56f992a525173742c9b58f996942017057669885e595",
       "doc": "docs/static/framework/domain/base/base_service.gd.md",
       "status": "documented"
     },
@@ -4138,7 +4138,7 @@
     },
     {
       "source": "framework/tests/cases/test_base.gd",
-      "sha256": "f8f295de7389f417b652c76c5749d42eb01c45a37d8db64b8bee6fc67ba28de0",
+      "sha256": "f2ea04e6b2e90952936a911b16633ce5e15cd503734821af02fc73e7227df4a4",
       "doc": "docs/static/framework/tests/cases/test_base.gd.md",
       "status": "documented"
     },
@@ -5931,7 +5931,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "1cd4c642838b8ca817b3034fb0e9181a1193ed275221cc692c861eb6161e647e",
+      "sha256": "23683115fb2714831bd6980148b2dca03b976b621667bfe025acc345a7112745",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7408,7 +7408,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "558e8ec998dc145729629afa56519e68d15d4a64912cfef9648be3da7bca5318",
+      "sha256": "65a89b7ad41433030548982055b1dba170388692de9f04abe063d6852dbbd753",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

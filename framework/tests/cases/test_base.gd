@@ -291,6 +291,27 @@ func test_malformed_site_id_is_tolerated() -> void:
 		assert_false((context.state.data.get("base", {}) as Dictionary).is_empty(), "the base block keeps its fields")
 
 
+## D3-FIX4：损坏的 next_building 计数器不能让下一次建造复用已有 instance_id，
+## 否则 tick 规范化去重时会静默丢掉新建筑。
+func test_corrupt_counter_never_duplicates_instance_ids() -> void:
+	var context := _start(315)
+	_claim(context)
+	_deposit(context, "core:item/timber", 8)
+	var first_id := _build(context, "core:building/sawmill")
+	assert_false(first_id.is_empty(), "the first build succeeds")
+	context.state.data["base"]["next_building"] = null
+	var second := context.commands.execute(&"base.build", {"building_id": "core:building/stockyard"})
+	assert_true(bool(second.get("ok", false)), "a second build succeeds despite the corrupt counter: %s" % str(second))
+	var second_id := String(second.get("data", {}).get("instance_id", ""))
+	assert_ne(second_id, first_id, "instance ids stay unique")
+	_advance(context, 1)
+	var ids: Array = []
+	for entry in context.state.data["base"]["buildings"]:
+		ids.append(String(entry.get("instance_id", "")))
+	assert_true(ids.has(second_id), "the new building survives the normalization tick")
+	assert_eq(ids.size(), 2, "both buildings remain")
+
+
 func test_malformed_base_data_is_normalized() -> void:
 	var context := _start(309)
 	_claim(context)

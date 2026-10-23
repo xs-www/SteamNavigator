@@ -100,7 +100,6 @@ static func build(state: GameState, hub: RegistryHub, params: Dictionary) -> Dic
 	entry["status"] = "ready" if build_time <= 0.0 else "building"
 	entry["remaining_hours"] = build_time
 	(base["buildings"] as Array).append(entry)
-	base["next_building"] = int(base.get("next_building", 1)) + 1
 	return Result.ok({
 		"instance_id": instance_id,
 		"building_id": definition.id,

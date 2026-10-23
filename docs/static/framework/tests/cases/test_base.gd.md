@@ -22,9 +22,10 @@
 | `test_malformed_numeric_fields_do_not_destroy_the_base() -> void` | L232 |
 | `test_transfer_requires_being_at_port() -> void` | L259 |
 | `test_malformed_site_id_is_tolerated() -> void` | L274 |
-| `test_malformed_base_data_is_normalized() -> void` | L294 |
-| `test_save_round_trip() -> void` | L316 |
-| `test_same_seed_and_commands_are_deterministic() -> void` | L335 |
+| `test_corrupt_counter_never_duplicates_instance_ids() -> void` | L296 |
+| `test_malformed_base_data_is_normalized() -> void` | L315 |
+| `test_save_round_trip() -> void` | L337 |
+| `test_same_seed_and_commands_are_deterministic() -> void` | L356 |
 
 仓储存取与容量、雇工/派工与工资、生产链（tick 产物进仓储）、维护费不足停机、
 损坏数据规范化、存档 round-trip 与确定性。

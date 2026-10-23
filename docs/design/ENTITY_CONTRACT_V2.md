@@ -1,6 +1,6 @@
 # Steam Navigator 实体契约 v2
 
-> 状态：Draft 6（2026-10-23，Phase A/B、C1–C4 与 D0–D5 落地后刷新，**Phase C 完成、Phase D 进行中**）
+> 状态：Draft 6（2026-10-23，Phase A/B、C1–C4 与 D0–D5 落地后刷新，**Phase C 完成、Phase D 完成**）
 > 适用范围：Schema 2.0、Content Types 单一真源、注册表、跨引用校验、发布门禁与 SNModMaker
 > 运行时已按类型版本加载：当前 42 个 active 类型**全部为 Content Schema 2.0**（41 个定义 + `patches`，0 个 1.0 runtime）；
 > 本文描述 v2 契约与迁移边界。
@@ -313,7 +313,7 @@ scan → manifest / dependency resolve → schema compile
   只要求新战役可创建、保存、读回。
 - [x] 第三方模组可注册新内容类型内的数据，但不能覆盖已有 ID 或绕过校验。
 - [x] 发布产物零 `error`；`warning` 可见。
-- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D5 全量回归已绿：Godot 632 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
+- [ ] Core 内容迁移后无玩法回归（C1–C4 与 D0–D5 全量回归已绿：Godot 633 / Node 60 / CLI 64；以 Phase E 发布门禁再次验证）。
 
 ## 18. 待决策
 

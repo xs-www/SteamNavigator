@@ -23,20 +23,20 @@
 | `worker_role_definition(hub: RegistryHub, role_id: String) -> ContentDefinition` | L130 |
 | `building_entry(base: Dictionary, instance_id: String) -> Dictionary` | L136 |
 | `next_instance_id(base: Dictionary) -> String` | L143 |
-| `slot_count(hub: RegistryHub, base: Dictionary) -> int` | L148 |
-| `item_unit_weight(hub: RegistryHub, item_id: String) -> float` | L153 |
-| `storage_used(hub: RegistryHub, storage: Dictionary) -> float` | L160 |
-| `storage_capacity(hub: RegistryHub, base: Dictionary) -> float` | L169 |
-| `defense(hub: RegistryHub, base: Dictionary) -> int` | L186 |
-| `maintenance_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L203 |
-| `upkeep_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L208 |
-| `wages_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L218 |
-| `money_due_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L235 |
-| `assigned_worker_count(entry: Dictionary) -> int` | L239 |
-| `production_speed(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> float` | L246 |
-| `storage_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L267 |
-| `workers_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L294 |
-| `building_view(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> Dictionary` | L319 |
+| `slot_count(hub: RegistryHub, base: Dictionary) -> int` | L157 |
+| `item_unit_weight(hub: RegistryHub, item_id: String) -> float` | L162 |
+| `storage_used(hub: RegistryHub, storage: Dictionary) -> float` | L169 |
+| `storage_capacity(hub: RegistryHub, base: Dictionary) -> float` | L178 |
+| `defense(hub: RegistryHub, base: Dictionary) -> int` | L195 |
+| `maintenance_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L212 |
+| `upkeep_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L217 |
+| `wages_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L227 |
+| `money_due_per_tick(hub: RegistryHub, base: Dictionary) -> float` | L244 |
+| `assigned_worker_count(entry: Dictionary) -> int` | L248 |
+| `production_speed(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> float` | L255 |
+| `storage_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L276 |
+| `workers_view(hub: RegistryHub, base: Dictionary) -> Dictionary` | L303 |
+| `building_view(hub: RegistryHub, base: Dictionary, entry: Dictionary) -> Dictionary` | L328 |
 
 升级/配方/工人工种引用、计算仓储、防御、每 tick 支出、生产速度，并给出只读
 `base.view` 数据。持久状态只记录基地实例（站点、建筑、工人、仓储、生产订单），

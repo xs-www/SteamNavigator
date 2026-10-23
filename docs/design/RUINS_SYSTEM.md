@@ -58,7 +58,7 @@ loot_money, loot_items, log[]}`；`phase` = `room` / `event` / `finished`。
 
 ## 6. 验收
 
-- `test_expedition.gd` 8 例：命令/查询、开始校验、完整远征 + 遗物、危险结算、撤退、
+- `test_expedition.gd` 9 例：命令/查询、开始校验、完整远征 + 遗物、危险结算、撤退、
   存档往返、损坏数据、确定性。
 - `test_world_schema_refs.gd`：遗迹/房间/事件/危险引用与房间池。
 - `test_world_completeness.gd`：5 类 Core 最低数量。

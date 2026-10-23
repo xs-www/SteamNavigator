@@ -141,7 +141,16 @@ static func building_entry(base: Dictionary, instance_id: String) -> Dictionary:
 
 
 static func next_instance_id(base: Dictionary) -> String:
-	var next_id := maxi(1, int(base.get("next_building", 1)))
+	## Corrupt next_building counters must not mint an id that already exists;
+	## otherwise the next normalize pass would dedupe and silently drop the build.
+	var used: Dictionary = {}
+	for entry in base.get("buildings", []):
+		if entry is Dictionary:
+			used[String((entry as Dictionary).get("instance_id", ""))] = true
+	var next_id := maxi(1, _safe_int(base.get("next_building", 1), 1))
+	while used.has("bld_%d" % next_id):
+		next_id += 1
+	base["next_building"] = next_id + 1
 	return "bld_%d" % next_id
 
 
