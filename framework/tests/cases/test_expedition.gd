@@ -135,6 +135,16 @@ func test_malformed_expedition_data_is_normalized() -> void:
 		assert_true(view.get("rooms", null) is Array, "rooms normalize to an array")
 
 
+func test_malformed_relics_completion_is_safe() -> void:
+	var context := _start(609)
+	context.state.data["relics"] = "broken"
+	assert_true(bool(context.commands.execute(&"expedition.start", {"ruin_id": _ruin_id(context)}).get("ok", false)), "start succeeds")
+	var view := _run_to_end(context)
+	assert_false(bool(view.get("active", true)), "completion succeeds with a corrupt relic list")
+	assert_true(context.state.data.get("relics", null) is Array, "the relic list is repaired to an array")
+	assert_false(Array(context.state.data.get("relics", [])).is_empty(), "the reward relic lands in the collection")
+
+
 func test_same_seed_and_commands_are_deterministic() -> void:
 	var first := _start(608)
 	var second := _start(608)

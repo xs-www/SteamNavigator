@@ -16,7 +16,8 @@
 | `test_retreat_ends_the_run_without_completion_reward() -> void` | L100 |
 | `test_save_round_trip_mid_expedition() -> void` | L111 |
 | `test_malformed_expedition_data_is_normalized() -> void` | L127 |
-| `test_same_seed_and_commands_are_deterministic() -> void` | L138 |
+| `test_malformed_relics_completion_is_safe() -> void` | L138 |
+| `test_same_seed_and_commands_are_deterministic() -> void` | L148 |
 
 遗物收藏、存档往返、损坏数据规范化与确定性。
 

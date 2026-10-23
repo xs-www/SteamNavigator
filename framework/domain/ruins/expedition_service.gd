@@ -139,7 +139,12 @@ static func _complete(state: GameState, hub: RegistryHub, expedition: Dictionary
 	for item_id in items.keys():
 		WarehouseOps.add_material(state, state.current_port_id(), String(item_id), int(items[item_id]))
 	var relic_id := String(reward.get("relic_id", ""))
-	var relics: Array = Array(state.data.get(RuinOps.RELICS_KEY, []))
+	var relics: Array = []
+	var raw_relics: Variant = state.data.get(RuinOps.RELICS_KEY, [])
+	if raw_relics is Array:
+		for existing in raw_relics:
+			if existing is String:
+				relics.append(existing)
 	if not relic_id.is_empty() and not relics.has(relic_id):
 		relics.append(relic_id)
 	state.data[RuinOps.RELICS_KEY] = relics

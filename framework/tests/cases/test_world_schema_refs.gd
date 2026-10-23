@@ -747,6 +747,9 @@ func test_ruin_references_and_room_pools_are_checked() -> void:
 	_define(hub, ContentTypes.HAZARD_TABLE, "test:hazard_table/bad_range", {
 		"entries": [{"type": "durability", "weight": 1, "amount_range": [5, 2]}],
 	})
+	_define(hub, ContentTypes.HAZARD_TABLE, "test:hazard_table/negative_range", {
+		"entries": [{"type": "money", "weight": 1, "amount_range": [-5, -2]}],
+	})
 	var result := _result(hub)
 	assert_contains(_codes(_errors_for(result, "test:ruin_archetype/broken")), "reference_missing",
 		"missing ruin hazard/loot/relic refs are hard errors")
@@ -758,6 +761,8 @@ func test_ruin_references_and_room_pools_are_checked() -> void:
 		"add_item effects validate their item ref")
 	assert_contains(_codes(_errors_for(result, "test:hazard_table/bad_range")), "hazard_range_invalid",
 		"hazard amount ranges must be ordered")
+	assert_contains(_codes(_errors_for(result, "test:hazard_table/negative_range")), "hazard_range_invalid",
+		"hazard amount ranges must be non-negative")
 
 
 ## D4-FIX：贸易策略的 goods/规则引用与 rule→policy 反向引用必须一致。

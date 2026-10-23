@@ -1506,7 +1506,8 @@
           "minItems": 2,
           "maxItems": 2,
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           }
         },
         "cargo_stack": {

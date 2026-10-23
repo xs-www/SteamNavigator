@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T05:12:07.289Z",
-  "commit": "9c01e38",
+  "generated_at": "2026-10-23T05:22:09.538Z",
+  "commit": "a31f0eb",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -325,7 +325,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "dcfdccd3a44020f0c66727e4ca18eab5d86f9494caa4ce9b573db6097dcc986e",
+      "sha256": "fa7b0eddee47be16096cc47c0db86642b5e7745e722f94d791aa6fc94f28d219",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -3784,13 +3784,13 @@
     },
     {
       "source": "framework/domain/ruins/expedition_service.gd",
-      "sha256": "7c88ec1fd330829c4f0451cafe783f030295a388c716c9adb2b72829c91392fe",
+      "sha256": "6a6870a2595f640ceb543cf80ad717b98bcafa7b983ecc4be4b5d3049b5fc3dc",
       "doc": "docs/static/framework/domain/ruins/expedition_service.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/ruins/ruin_ops.gd",
-      "sha256": "dc8875a1cb133d522c35f55a1fcb02abdc45743bc12fca06ac1a67b1965c4a5c",
+      "sha256": "d8e3b47cd1f7a0a4285c9d07307cb5162032a6ebf9f5e3ed21137c73370c94ff",
       "doc": "docs/static/framework/domain/ruins/ruin_ops.gd.md",
       "status": "documented"
     },
@@ -3976,7 +3976,7 @@
     },
     {
       "source": "framework/modding/cross_reference_validator.gd",
-      "sha256": "03a9fa712ec82e41cc106e29f14468b7ae5085e54c4388d688e495a9588803ea",
+      "sha256": "2b7a182f829188069ff5d8842c8834cc51ed2e23bf4a2b7271c286bfc54bd7a7",
       "doc": "docs/static/framework/modding/cross_reference_validator.gd.md",
       "status": "documented"
     },
@@ -4226,7 +4226,7 @@
     },
     {
       "source": "framework/tests/cases/test_expedition.gd",
-      "sha256": "7fc4214b9ee599875ece34b441092824576b4466ae3b7c05f3a7dc0f312455cd",
+      "sha256": "ec29064f14bc3c016328b79c4404204f349264b2074ab0d53101d6e7d479d21a",
       "doc": "docs/static/framework/tests/cases/test_expedition.gd.md",
       "status": "documented"
     },
@@ -4557,7 +4557,7 @@
     },
     {
       "source": "framework/tests/cases/test_world_schema_refs.gd",
-      "sha256": "b8faef7c291e83f4d857679a894a0ceeb2e93e03406cfb4327e9b8b09252d755",
+      "sha256": "40ce4ff689a1beb466c85ecda6900777eef25a508d9e3f7d2d7994a5d6810d02",
       "doc": "docs/static/framework/tests/cases/test_world_schema_refs.gd.md",
       "status": "documented"
     },
@@ -5223,7 +5223,7 @@
     },
     {
       "source": "schemas/v2/common.schema.json",
-      "sha256": "a18d0eee84baca3d52ee1aa56e612739b60148778248478497442a6ca40d9819",
+      "sha256": "64e97fb291f2f50a4c2c8ae153835aa8f05e2fb4f69577381212f87bf342c7b3",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -5486,7 +5486,7 @@
     },
     {
       "source": "sdk/README.md",
-      "sha256": "46346bffb9bccdfe8945aaa19964fa900a41dc865a4f97226c8ed6e084774e4d",
+      "sha256": "97b4e0f94d239dcc7c315db292d1a62a0f10d2f0d9f4f16f64d6071db0a6cdd1",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
@@ -5931,7 +5931,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "e739fb110cad4757957b610b329ad962a7024de0fad055008f764793b59e2886",
+      "sha256": "1cd4c642838b8ca817b3034fb0e9181a1193ed275221cc692c861eb6161e647e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7408,7 +7408,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "be8619d1f869ef7fee65d597957ee347834adb027c9eeb946650a60f906051eb",
+      "sha256": "558e8ec998dc145729629afa56519e68d15d4a64912cfef9648be3da7bca5318",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },

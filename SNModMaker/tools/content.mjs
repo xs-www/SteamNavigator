@@ -76,7 +76,7 @@ const USAGE = `SNModMaker 内容 CLI（v1）
   node SNModMaker/tools/content.mjs <command> [options]
 
 命令：
-  types                                   列出全部内容类型（运行时 20 类 + 3 类 Schema 2.0 草案）
+  types                                   列出全部内容类型（运行时 42 类 + 3 类 Schema 2.0 草案）
   describe <type>                         查看类型的 ID / 键 / 字段 / 默认值与骨架
   list --mod <dir> [--type <key>]         列出模组内的全部定义
   add --mod <dir> --type <key> --id <local_id> [选项]

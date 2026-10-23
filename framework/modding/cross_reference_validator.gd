@@ -496,10 +496,10 @@ func _check_ruins() -> void:
 			if not (entry is Dictionary):
 				continue
 			var amount_range: Array = Array((entry as Dictionary).get("amount_range", [0, 0]))
-			if amount_range.size() >= 2 and int(amount_range[0]) > int(amount_range[1]):
+			if amount_range.size() >= 2 and (int(amount_range[0]) < 0 or int(amount_range[1]) < 0 or int(amount_range[0]) > int(amount_range[1])):
 				_error(
 					"hazard_range_invalid",
-					"%s has amount_range %s with low > high" % [hazard.id, str(amount_range)],
+					"%s has amount_range %s with a negative value or low > high" % [hazard.id, str(amount_range)],
 					hazard.id
 				)
 	for ruin in _hub.get_all(ContentTypes.RUIN_ARCHETYPE):

@@ -8,9 +8,9 @@
 `content_types.json` 是内容类型清单的唯一真源，生成物 `framework/modding/content_types.gd`（`ContentTypes`）
 携带每个 **active** 类型的 Schema 路径与 `schema_version`。SDK 不维护第二套类型或版本表：
 
-- **active 类型**：由运行时真实加载；C4 收尾后所有运行时类型统一为 `2.0`，D1 起 `weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 也已 active（26 类）。
+- **active 类型**：由运行时真实加载；C4 收尾后所有运行时类型统一为 `2.0`，D1 起 `weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 也已 active（42 类）。
 - **草案（draft）类型**：登记在 `content_types.json` 的 `draft_schemas` / `draft_types`，目前是
-  `story_arcs`、`story_levels`。运行时不会加载它们，只能做 `--mode=draft` 静态校验，不能发布。
+  `story_arcs`、`story_levels`、`combat_ai_profiles`。运行时不会加载它们，只能做 `--mode=draft` 静态校验，不能发布。
 
 新增类型时先改 `content_types.json` 与 `schemas/`，再跑 `node tools/gen_content_types.mjs`；不要在 SDK 里硬编码类型表。
 
@@ -65,6 +65,9 @@ Core 从 `dev_mods` 加载，第三方模组先复制到 `user://` 隔离目录�
 | `templates/mod_template/` | 2.0 | 最小 `items` 2.0 模组模板。 |
 | `examples/example_weapons/` | 2.0 | 已激活的 `weapons` 2.0 示例：五件 Battle Sim 武器 + Core 模型键；runtime 校验通过。 |
 | `examples/example_fleet/` | 2.0 | 已激活的 `fleet` 4 类型 2.0 示例（ship_archetypes / captains / formations / fleet_doctrines）；runtime 校验通过。 |
+| `examples/example_base/` | 2.0 | 已激活的 `base` 5 类型 2.0 示例；runtime 校验通过。 |
+| `examples/example_trade/` | 2.0 | 已激活的 `auto_trade` 2 类型 2.0 示例；runtime 校验通过。 |
+| `examples/example_ruins/` | 2.0 | 已激活的 `ruins` 5 类型 2.0 示例；runtime 校验通过。 |
 | `templates/draft_combat_ai_profile/` | 2.0 草案 | `combat_ai_profiles`（FSM 战斗 AI）草案示例：schema 先行、运行时不加载，**只能** `--mode=draft` 校验、不可发布。 |
 | `templates/story_pack_iron_tide/` | 2.0 草案 | `story_arcs` / `story_levels` 剧情包草案示例，同样只能 draft 校验、不可发布。 |
 

@@ -136,7 +136,7 @@ static func roll_hazard(state: GameState, hub: RegistryHub, table_id: String, se
 	var range: Array = Array((picked as Dictionary).get("amount_range", [1, 1]))
 	var low := int(range[0]) if range.size() > 0 else 1
 	var high := int(range[1]) if range.size() > 1 else low
-	var amount := rng.randi_range(mini(low, high), maxi(low, high))
+	var amount := maxi(0, rng.randi_range(mini(low, high), maxi(low, high)))
 	var result := {"type": kind, "amount": amount, "text_key": String((picked as Dictionary).get("text_key", ""))}
 	match kind:
 		"durability":
