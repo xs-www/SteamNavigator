@@ -440,6 +440,47 @@
           88
         ]
       }
+    },
+    {
+      "name": "SN_Tex_Copper_Green",
+      "texture": "copper_green",
+      "tile_m": 2.0,
+      "roughness": 0.55,
+      "metallic": 0.35,
+      "kind": "verdigris",
+      "detail": "soft patina / fine drips",
+      "mean_rgb": [
+        88,
+        120,
+        106
+      ],
+      "palette": {
+        "base": [
+          96,
+          132,
+          116
+        ],
+        "alt": [
+          76,
+          110,
+          96
+        ],
+        "seam": [
+          48,
+          76,
+          66
+        ],
+        "rust": [
+          112,
+          80,
+          54
+        ],
+        "metal": [
+          150,
+          120,
+          88
+        ]
+      }
     }
   ]
 }

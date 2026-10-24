@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T12:50:28.864Z",
-  "commit": "97a6dc5",
+  "generated_at": "2026-10-24T06:25:40.898Z",
+  "commit": "e285d36",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1143,
-    "documented": 450,
-    "grouped": 693
+    "sources": 1164,
+    "documented": 455,
+    "grouped": 709
   },
   "files": [
     {
@@ -578,6 +578,13 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/architecture/SN_Grand_Harbour_Terminal.glb",
+      "sha256": "42864927cdb6005dcc98d603a4ed9bb7488bbff3ea8014eaa01573e90f3059de",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/architecture/shared_materials/brass.png",
       "sha256": "46f165cbf6c9fa0dd0e77715900d6062e5efe63997cbed94bbabd78a3a624781",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -594,6 +601,13 @@
     {
       "source": "dev_mods/core/assets/models/architecture/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/architecture/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -706,6 +720,13 @@
     {
       "source": "dev_mods/core/assets/models/base/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/base/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -844,6 +865,13 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/cargo/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/cargo/shared_materials/glass_dark.png",
       "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -944,6 +972,13 @@
     {
       "source": "dev_mods/core/assets/models/combat/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/combat/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1063,6 +1098,13 @@
     {
       "source": "dev_mods/core/assets/models/dock/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/dock/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1196,6 +1238,13 @@
     {
       "source": "dev_mods/core/assets/models/environment/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/environment/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1336,6 +1385,13 @@
     {
       "source": "dev_mods/core/assets/models/machinery/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/machinery/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -1523,6 +1579,13 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/modules/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/modules/shared_materials/glass_dark.png",
       "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -1637,6 +1700,13 @@
     {
       "source": "dev_mods/core/assets/models/port/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/port/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2195,6 +2265,13 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/props/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/props/shared_materials/glass_dark.png",
       "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -2356,6 +2433,13 @@
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
+      "source": "dev_mods/core/assets/models/rig/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
       "source": "dev_mods/core/assets/models/rig/shared_materials/glass_dark.png",
       "sha256": "76e4d78a0305c6334c1309929f189024b8421c2ec85470a338a84d098285a8df",
       "doc": "docs/static/dev_mods/core/README.md",
@@ -2484,6 +2568,13 @@
     {
       "source": "dev_mods/core/assets/models/ship_parts/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ship_parts/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2624,6 +2715,13 @@
     {
       "source": "dev_mods/core/assets/models/ships/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/ships/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -2820,6 +2918,13 @@
     {
       "source": "dev_mods/core/assets/models/weapons/shared_materials/coal.png",
       "sha256": "9a862e931cef8de0026ab3da1b7bb306418cf683e55d518216eab53cfa558dc8",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/models/weapons/shared_materials/copper_green.png",
+      "sha256": "7139523d514fa7ce2c4f21130ad27354aae6976fa43a2f2801a162478e742f0c",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3050,7 +3155,7 @@
     },
     {
       "source": "dev_mods/core/content/port_templates.json",
-      "sha256": "01a1fe9f3d91e052fed31d717ff14f18e6761f5b9c4d63a37715a644df14be26",
+      "sha256": "10598339cc68d5b533df728f133ed9cf59ff1a6e59adfb84af1c38362b6cb228",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3190,7 +3295,7 @@
     },
     {
       "source": "dev_mods/core/manifest.json",
-      "sha256": "be0ff0435a715a0694813df1e81cfcefb70f3aa11d062c78c6058446e0cc4415",
+      "sha256": "db78a34861a8449fb5c93440fc59ffb0c1bc72f1598576f392f32286e72307e1",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3222,7 +3327,7 @@
     },
     {
       "source": "dev_scenes/port_stage/port_stage_preview.gd",
-      "sha256": "91d863fdf45f8013228155408309170067b9785621262a869fbdde5ddcfb1205",
+      "sha256": "b7172558e3a9b3a5c97760c8d55c3da54643cefe15b953412bf002b7b3b35f3c",
       "doc": "docs/static/dev_scenes/port_stage/port_stage_preview.gd.md",
       "status": "documented"
     },
@@ -3487,7 +3592,7 @@
     },
     {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "f56714f06a3d7ccc1a0d1a22c66926823c7f0f2781eb7368fefe300fb31cc24c",
+      "sha256": "7d0c71edbae8ce3e907f6ff7345cfb303794a6a4170d9cd237c98a3a63e784a6",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
@@ -4549,7 +4654,7 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "8501eea6d9fdf3b13e45213291d586953db2be8c371b7b2d0f91a1b30c717db7",
+      "sha256": "1d9a2522b708519698c7fc2d19a6fc6ffdf9fba51133bee137d6668feaf1d9bc",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
@@ -5167,7 +5272,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "b3c46c5a07da291b3e694c1b9dbf2073759552641e222dc203d313dbdb832bb4",
+      "sha256": "2ee5fc327378ba05f56e711bf6a61c933fd9009956ffe85b71e91bbf9e25bdba",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -6006,7 +6111,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "5132c5aabf58b61829cb0dad5d9df29c87427406ed999959fac6afe0db70742a",
+      "sha256": "3a6d6a545d118ec1c3ab6a63d8ff8ef6ae9f1f2257a7dada59f434828f9323f5",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6019,7 +6124,7 @@
     },
     {
       "source": "tools/art/gen_shared_material_textures.py",
-      "sha256": "74d34b730cf063889acb2e2b62bdcb6a4bd49670358e7d62f1b1526330743553",
+      "sha256": "bb10c5a28b44725edf6a5011420e4bb8dae38eeaf85cb504d265fdbc102a72d1",
       "doc": "docs/static/tools/art/gen_shared_material_textures.py.md",
       "status": "documented"
     },
@@ -6295,6 +6400,13 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/briefs/sn_grand_harbour_terminal.json",
+      "sha256": "f8acc01b71ace2c5acaf0c42aaddeefffaca3bf3f54f7a5b43e2dbaa52dbbbe5",
+      "doc": "docs/static/tools/README.md",
+      "status": "grouped",
+      "group": "docs/static/tools/README.md"
+    },
+    {
       "source": "tools/modeling/briefs/sn_harbor_crane.json",
       "sha256": "a062eef4806bb8cc20f08b920e16eb5a00f1bc181879095bb6deb5f7e09021e6",
       "doc": "docs/static/tools/README.md",
@@ -6531,6 +6643,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/dryrun_grand_harbour_terminal.py",
+      "sha256": "28edac765b4e87a0d8546fa146f269f338cda295b7de47f1f4f410946fe6a5f9",
+      "doc": "docs/static/tools/modeling/generators/dryrun_grand_harbour_terminal.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/dryrun_ironclad.py",
       "sha256": "6421cb41d8ac5b2aec832be17240581f4b341445f425e52fc2c4b1cbba607b3f",
       "doc": "docs/static/tools/README.md",
@@ -6665,6 +6783,12 @@
       "source": "tools/modeling/generators/export_cranes_glb.py",
       "sha256": "a97c528a872f87eb095619ca57bdd4ce56fcc69ec287fd3270ec90307aba2d25",
       "doc": "docs/static/tools/modeling/generators/export_cranes_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/export_grand_harbour_terminal_glb.py",
+      "sha256": "29f0520e1e665b4f12c4e8624d7b9d02900edf650a13c5ba11119868427e3383",
+      "doc": "docs/static/tools/modeling/generators/export_grand_harbour_terminal_glb.py.md",
       "status": "documented"
     },
     {
@@ -6941,6 +7065,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/render_grand_harbour_terminal_preview.py",
+      "sha256": "1540d51028f100b22ec86b925647d3502105cc30ac07c5a17ea80adb548aafc6",
+      "doc": "docs/static/tools/modeling/generators/render_grand_harbour_terminal_preview.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/render_iron_harbor_architecture_preview.py",
       "sha256": "63d47ca71ac47a0326291a7d0919ed4c1e6f1b9ca7dee997b3d5577ec1eb0ac7",
       "doc": "docs/static/tools/modeling/generators/render_iron_harbor_architecture_preview.py.md",
@@ -7128,6 +7258,12 @@
       "status": "documented"
     },
     {
+      "source": "tools/modeling/generators/sn_grand_harbour_terminal_generator.py",
+      "sha256": "2e6a80423f10f831cc87b4dac32067f4e34312d13bc2e50c9a68488799cd5366",
+      "doc": "docs/static/tools/modeling/generators/sn_grand_harbour_terminal_generator.py.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/modeling/generators/sn_hand_jib_crane_generator.py",
       "sha256": "25f660c038197152ee1b6af0d2fea697ee84aeb3b72039b9d3e5094ea0b65c01",
       "doc": "docs/static/tools/modeling/generators/sn_hand_jib_crane_generator.py.md",
@@ -7235,7 +7371,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_kit_materials.py",
-      "sha256": "9a6198e1d4b42855899e5fb5627f3a07ef6524eb51e69ee17f57383b5da78cff",
+      "sha256": "6d8c3ccf770a61f3aa36c61d39b7fb26960d3e9068e5b2407d7441873ee9931c",
       "doc": "docs/static/tools/modeling/generators/sn_kit_materials.py.md",
       "status": "documented"
     },
@@ -7299,7 +7435,7 @@
     },
     {
       "source": "tools/modeling/generators/sn_shared_materials.py",
-      "sha256": "bad615afc2392ba01ecd0b088df4c82ece1d0b6782975c31c36d7672e31afa95",
+      "sha256": "a8ef78c7b743c69ab39dcaed3217f39e6f686219ecba29e27e2ad46f1b248c5a",
       "doc": "docs/static/tools/modeling/generators/sn_shared_materials.py.md",
       "status": "documented"
     },
@@ -7368,6 +7504,12 @@
       "source": "tools/modeling/generators/verify_cranes_glb.py",
       "sha256": "dbd4059d9cf19c20cf1075e2ad4db0f7c431d12706e068b74a933e0fc4a409d5",
       "doc": "docs/static/tools/modeling/generators/verify_cranes_glb.py.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/modeling/generators/verify_grand_harbour_terminal_glb.py",
+      "sha256": "c52a40ae1e1c9beb6ac4c32d3e8d06c1758aa185a6252d18ed25565078d96563",
+      "doc": "docs/static/tools/modeling/generators/verify_grand_harbour_terminal_glb.py.md",
       "status": "documented"
     },
     {

@@ -52,6 +52,7 @@
 | `modeling/briefs/_template.json` | 建模工单模板：字段说明与必填项。 | 本页 |
 | `modeling/briefs/sn_combat_kit_batch1.json` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `modeling/briefs/sn_crane_batch1.json` | 四台港口起重机的自包含建模工单（塔吊补全 / 大型龙门吊 / 木制桅杆起重机 / 手摇悬臂吊）。 | [查看](./modeling/briefs/sn_crane_batch1.json.md) |
+| `modeling/briefs/sn_grand_harbour_terminal.json` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `modeling/briefs/sn_harbor_crane.json` | 港口塔吊工单（锤头式，含回转枢轴与吊钩层级）。 | 本页 |
 | `modeling/briefs/sn_harbor_town_batch1.json` | 港口街景建筑/人物/小船第一批 10 件建模工单：集合 `SN_Harbor_Town`、前缀 `SN_HT_`、工作台 y=110 一排；定义 10 件尺寸/单件 tri 预算（合计 ≤11500）/调色板（含新增 SN_Brick/SN_Plaster/SN_Glass_Dark）/轴心与验收规则。 | [查看](./modeling/briefs/sn_harbor_town_batch1.json.md) |
 | `modeling/briefs/sn_iron_harbor_architecture_kit_v1.json` | 铁港近中景城镇建筑视觉升级工单：以模块化中等精度建筑替换 PortStage 白盒，定义 8 类建筑、共享材质与纹理、LOD 和固定机位门禁。 | [查看](./modeling/briefs/sn_iron_harbor_architecture_kit_v1.json.md) |
@@ -87,6 +88,7 @@
 | `modeling/generators/dryrun_casemate_gun.py` | casemate gun 模块（`SN_Weapon_CasemateGun`）的**纯 Python 干跑**——不进 Blender， | [查看](./modeling/generators/dryrun_casemate_gun.py.md) |
 | `modeling/generators/dryrun_combat_kit.py` | `combat_kit` 敌舰套件（M2-1，4 艘）生成器的纯 Python 干跑 —— 不进 Blender， | [查看](./modeling/generators/dryrun_combat_kit.py.md) |
 | `modeling/generators/dryrun_cranes.py` | 四台起重机生成器的纯 Python 干跑（不起 Blender），进 Blender 前拦几何缺陷。 | [查看](./modeling/generators/dryrun_cranes.py.md) |
+| `modeling/generators/dryrun_grand_harbour_terminal.py` | 大型港口航站楼 SN_Grand_Harbour_Terminal 的纯 Python 干跑自检（不进 Blender）。 | [查看](./modeling/generators/dryrun_grand_harbour_terminal.py.md) |
 | `modeling/generators/dryrun_ironclad.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/dryrun_kit_batch1.py` | 模型素材库批次 1（武器套件 + 船体部件 8 件）生成器的纯 Python 干跑；核对 | [查看](./modeling/generators/dryrun_kit_batch1.py.md) |
 | `modeling/generators/dryrun_kit_batch2.py` | 模型素材库批次 2（机械 / 货物 / 码头 10 件）生成器的纯 Python 干跑；核对 | [查看](./modeling/generators/dryrun_kit_batch2.py.md) |
@@ -109,6 +111,7 @@
 | `modeling/generators/export_casemate_glb.py` | casemate gun 模块化的 **GLB 归档导出**（Blender 内执行，验收通过后由 Lead 运行）： | [查看](./modeling/generators/export_casemate_glb.py.md) |
 | `modeling/generators/export_combat_kit_glb.py` | `combat_kit` 敌舰套件（M2-1）的 GLB 落盘导出（Blender 内执行，人工 / 独立 | [查看](./modeling/generators/export_combat_kit_glb.py.md) |
 | `modeling/generators/export_cranes_glb.py` | 四台起重机的 GLB 归档导出脚本（验收通过后由 Lead 执行）；导出后把 GLB 内嵌的 | [查看](./modeling/generators/export_cranes_glb.py.md) |
+| `modeling/generators/export_grand_harbour_terminal_glb.py` | `SN_Grand_Harbour_Terminal` 大型航站楼（architecture 类别）的 GLB 归档导出： | [查看](./modeling/generators/export_grand_harbour_terminal_glb.py.md) |
 | `modeling/generators/export_iron_harbor_architecture_glb.py` | 把 `SN_HT_Warehouse_Long_LOD0` 装配进 PortStage 的导出/还原工具：备份旧内容 GLB → 单对象导出（带内嵌 trim sheet 贴图）到内容路径 → 保留候选副本；`restore_legacy_glb()` 还原。 | [查看](./modeling/generators/export_iron_harbor_architecture_glb.py.md) |
 | `modeling/generators/export_iron_harbor_architecture_lod_glb.py` | 批次 A 的 Blender 侧导出器：把工作台里 5 栋 LOD0 + 5 栋 LOD1 逐件导出为单对象、根节点归零、内嵌贴图的 GLB 候选，并输出逐件 tri/尺寸/材质槽/cell/结构报告；后续由 `glb_shared_textures.py`（纯 Python、Blender 外）统一外部化共享贴图并安装进内容模组。 | [查看](./modeling/generators/export_iron_harbor_architecture_lod_glb.py.md) |
 | `modeling/generators/export_iron_harbor_prototypes_glb.py` | 批次 B 的 Blender 侧导出器：把工作台 y=200 / y=225 两排的三栋新原型（LOD0 + LOD1）逐件导出为单对象、根节点归零、内嵌贴图的 GLB 候选，并输出 tri/尺寸/材质槽/cell 报告；随后由 `glb_shared_textures.py` 外部化为共享贴图并安装进内容模组。 | [查看](./modeling/generators/export_iron_harbor_prototypes_glb.py.md) |
@@ -153,6 +156,7 @@
 | `modeling/generators/render_casemate_preview.py` | casemate gun 模块化的**预览渲染**（Lead 验收截图，非游戏资产，Blender 内执行）： | [查看](./modeling/generators/render_casemate_preview.py.md) |
 | `modeling/generators/render_combat_kit_preview.py` | `combat_kit` 敌舰套件（M2-1）预览渲染（人工 / 独立 Verifier 验收前由 Builder | [查看](./modeling/generators/render_combat_kit_preview.py.md) |
 | `modeling/generators/render_cranes_preview.py` | 四台起重机的预览渲染（Lead 验收截图，非游戏资产）。 | [查看](./modeling/generators/render_cranes_preview.py.md) |
+| `modeling/generators/render_grand_harbour_terminal_preview.py` | `SN_Grand_Harbour_Terminal` 大型航站楼的 EEVEE 预览渲染（Lead 人工验收用截图， | [查看](./modeling/generators/render_grand_harbour_terminal_preview.py.md) |
 | `modeling/generators/render_iron_harbor_architecture_preview.py` | 铁港建筑套件验收截图：临时相机 + 三盏太阳 + 地面 + 世界背景，只对 `SN_HT_Warehouse_Long_LOD0` 出图，渲染后还原可见性/相机/引擎/分辨率/世界并删除临时对象，不保存 .blend、不导出 GLB。 | [查看](./modeling/generators/render_iron_harbor_architecture_preview.py.md) |
 | `modeling/generators/render_ironclad_preview.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |
 | `modeling/generators/render_kit_batch2_preview.py` | 模型素材库批次 2（机械 / 货物 / 码头 10 件）的预览渲染（Lead 在人工验收前 | [查看](./modeling/generators/render_kit_batch2_preview.py.md) |
@@ -182,6 +186,7 @@
 | `modeling/generators/sn_crane_materials.py` | 起重机四件套的**共享贴图材质视图**（纯 Python，不 import bpy）：材质名 → | [查看](./modeling/generators/sn_crane_materials.py.md) |
 | `modeling/generators/sn_enemy_gun_ports.py` | `combat_kit` 敌舰**炮门安装点** `SN_<PFX>_Socket_GunPort_<suffix>` 的 Blender 就地补齐 / | [查看](./modeling/generators/sn_enemy_gun_ports.py.md) |
 | `modeling/generators/sn_enemy_weapon_sockets.py` | `combat_kit` 敌舰（4 艘：海盗单桅 / 炮艇 / 武装商船 / 铁甲舰变体）甲板武器安装点 | [查看](./modeling/generators/sn_enemy_weapon_sockets.py.md) |
+| `modeling/generators/sn_grand_harbour_terminal_generator.py` | 大型港口航站楼 SN_Grand_Harbour_Terminal 的参数化生成器（纯 Python 几何 + | [查看](./modeling/generators/sn_grand_harbour_terminal_generator.py.md) |
 | `modeling/generators/sn_hand_jib_crane_generator.py` | SN_Hand_Jib_Crane 手摇悬臂吊（码头小型回转吊）的参数化生成器。 | [查看](./modeling/generators/sn_hand_jib_crane_generator.py.md) |
 | `modeling/generators/sn_harbor_crane_generator.py` | SN_Harbor_Crane 锤头式塔吊的参数化生成器（补全此前缺失的几何真源）。 | [查看](./modeling/generators/sn_harbor_crane_generator.py.md) |
 | `modeling/generators/sn_harbor_town_generator.py` | 港口街景第一批 10 件的参数化几何唯一真源：顶部 `ITEMS` 参数表（名称/布局/tri 预算/目标包围盒）+ 各 `build_*` 纯几何函数，负责在 Blender 集合 `SN_Harbor_Town` 重建 10 件 `SN_HT_*` 单 mesh 对象。 | [查看](./modeling/generators/sn_harbor_town_generator.py.md) |
@@ -221,6 +226,7 @@
 | `modeling/generators/verify_casemate_glb.py` | casemate gun 模块化的 **GLB 独立验收**（纯 Python，不进 Blender / Godot）—— | [查看](./modeling/generators/verify_casemate_glb.py.md) |
 | `modeling/generators/verify_combat_kit_glb.py` | `combat_kit` 敌舰套件（M2-1，4 艘 `SN_Enemy_*.glb`）的 **GLB 独立只读验收** | [查看](./modeling/generators/verify_combat_kit_glb.py.md) |
 | `modeling/generators/verify_cranes_glb.py` | 四台起重机 GLB 的结构与共享贴图自检（纯 Python，不进 Blender）。 | [查看](./modeling/generators/verify_cranes_glb.py.md) |
+| `modeling/generators/verify_grand_harbour_terminal_glb.py` | `SN_Grand_Harbour_Terminal` 大型航站楼 GLB 的只读验收（纯 Python，不 import | [查看](./modeling/generators/verify_grand_harbour_terminal_glb.py.md) |
 | `modeling/generators/verify_iron_harbor_architecture_lod_glb.py` | 批次 A 运行时建筑资产的纯 Python 结构复检：逐件解析 `dev_mods/core/assets/models/props/SN_HT_*.glb`（5×LOD0 + 5×LOD1），核对 tri/单根节点/材质槽/共享外部贴图 URI/LOD0↔LOD1 包围盒与轴心，并汇总「模型+纹理」总量是否 ≤4.5 MB。不依赖 Blender/Godot，可在 CI 与验收脚本里复跑。 | [查看](./modeling/generators/verify_iron_harbor_architecture_lod_glb.py.md) |
 | `modeling/generators/verify_iron_harbor_prototypes_glb.py` | 批次 B 三栋新原型（Boiler House / Workshop Row / Brick Tenement）运行时 GLB 的纯 Python 结构复检：逐件解析 LOD0+LOD1，核对 tri（LOD0 精确值 / LOD1 硬上限）、单根节点、材质槽、共享外部贴图 URI、LOD0↔LOD1 包围盒与轴心，并汇总「新原型模型+新增共享贴图」的包体增量。不依赖 Blender/Godot，可在 CI 与验收脚本里复跑。 | [查看](./modeling/generators/verify_iron_harbor_prototypes_glb.py.md) |
 | `modeling/generators/verify_ironclad_glb.py` | 铁港道具参数化生成器与流水线工具：每批一个自包含生成器（纯几何函数，可离线干跑），配套干跑校验、GLB 导出、P0 整改与归档脚本。全部入库，改参数即可重建全部几何。 | 本页 |

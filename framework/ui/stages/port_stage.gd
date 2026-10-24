@@ -60,7 +60,7 @@ const SHORE_SIZE := Vector3(500.0, 1.3, 110.0)
 const SHORE_CENTER := Vector3(0.0, -0.55, -65.0)
 const SHORE_TOP := 0.1
 
-const CAMERA_POS := Vector3(46.0, 28.0, 64.0)
+const CAMERA_POS := Vector3(0.0, 28.0, 64.0)
 const CAMERA_TARGET := Vector3(0.0, 12.0, -8.0)
 const CAMERA_FOV := 30.0
 
@@ -92,7 +92,7 @@ const STATION_FRAMINGS := ["stage", "panel"]
 const STATIONS := {
 	"market": {
 		"center": -30.0,
-		"camera": Vector3(16.0, 28.0, 64.0),
+		"camera": Vector3(-30.0, 28.0, 64.0),
 		"target": Vector3(-30.0, 12.0, -8.0),
 		"ship": Vector3(-43.5, 0.0, 9.0),
 		"ship_yaw": SHIP_YAW_DEG,
@@ -109,14 +109,14 @@ const STATIONS := {
 	# 正中（左侧蓝图板与右侧操作坞各占一边），同时保持与其它站位相同的镜头/偏移。
 	"shipyard": {
 		"center": 14.5,
-		"camera": Vector3(53.0, 28.0, 64.0),
+		"camera": Vector3(7.0, 28.0, 64.0),
 		"target": Vector3(7.0, 12.0, -8.0),
 		"ship": Vector3(14.5, 0.0, 9.0),
 		"ship_yaw": SHIP_YAW_DEG,
 	},
 	"supply": {
 		"center": 30.0,
-		"camera": Vector3(76.0, 28.0, 64.0),
+		"camera": Vector3(30.0, 28.0, 64.0),
 		"target": Vector3(30.0, 12.0, -8.0),
 		"ship": Vector3(16.5, 0.0, 9.0),
 		"ship_yaw": SHIP_YAW_DEG,
@@ -316,6 +316,23 @@ const TOWN_DECOR_SLOTS := [
 	{"slot": "crate", "pos": Vector3(-26.5, TOWN_GROUND_Y, -19.5), "yaw": 45.0},
 	{"slot": "barrel", "pos": Vector3(25.5, TOWN_GROUND_Y, -19.0), "yaw": -30.0},
 ]
+## Minimal terminal facade: when a landmark is present the main port stage keeps
+## only the terminal plus a few small dock props — no town buildings, cranes,
+## market rows, boats or painted skyline.
+const MINIMAL_STAGE_DECOR := [
+	{"slot": "gas_lamp", "pos": Vector3(-33.0, TOWN_GROUND_Y, -11.5), "yaw": 0.0},
+	{"slot": "gas_lamp", "pos": Vector3(33.0, TOWN_GROUND_Y, -11.5), "yaw": 0.0},
+	{"slot": "gas_lamp", "pos": Vector3(-37.0, TOWN_GROUND_Y, -18.0), "yaw": 0.0},
+	{"slot": "gas_lamp", "pos": Vector3(37.0, TOWN_GROUND_Y, -18.0), "yaw": 0.0},
+	{"slot": "crate", "pos": Vector3(-34.0, TOWN_GROUND_Y, -20.0), "yaw": 20.0},
+	{"slot": "crate", "pos": Vector3(34.0, TOWN_GROUND_Y, -20.0), "yaw": -15.0},
+	{"slot": "barrel", "pos": Vector3(-36.0, TOWN_GROUND_Y, -15.0), "yaw": 0.0},
+	{"slot": "barrel", "pos": Vector3(36.0, TOWN_GROUND_Y, -15.0), "yaw": 0.0},
+	{"slot": "mooring_bollard", "pos": Vector3(-44.0, DOCK_TOP, -4.5), "yaw": 0.0},
+	{"slot": "mooring_bollard", "pos": Vector3(-28.0, DOCK_TOP, -4.5), "yaw": 0.0},
+	{"slot": "mooring_bollard", "pos": Vector3(28.0, DOCK_TOP, -4.5), "yaw": 0.0},
+	{"slot": "mooring_bollard", "pos": Vector3(44.0, DOCK_TOP, -4.5), "yaw": 0.0},
+]
 ## Small craft in the water around the player ship (authored three, then the
 ## busy-tier extras).
 const TOWN_BOAT_SLOTS := [
@@ -452,7 +469,12 @@ const MATERIAL_DEFAULTS := {
 	"plaza": [Color(0.24, 0.22, 0.19), 0.9, 0.0],
 }
 
-const LANDMARK_POS := Vector3(-25.0, DOCK_TOP, -15.5)
+## 主场景门面：航站楼放在港口中轴、town row 前方，主立面正对镜头。
+const LANDMARK_POS := Vector3(0.0, TOWN_GROUND_Y, -24.0)
+## 133.7 m 宽的资产按 0.42 缩放（≈56 m 宽、≈24 m 高），作为港口主背景。
+const LANDMARK_SCALE := 0.42
+## Authored front is +X; yaw −90 turns it to +Z, squarely facing the front camera.
+const LANDMARK_YAW := -90.0
 
 var _static_built := false
 var _content: Node3D
@@ -467,6 +489,7 @@ var _palette: Dictionary = {}
 var _facilities: Array[String] = []
 var _facilities_present: Dictionary = {}
 var _anchors: Dictionary = {}
+var _minimal_stage := false
 var _kinds: Dictionary = {}
 var _filler_count := 0
 var _scale := 1.0
@@ -1909,6 +1932,7 @@ func _has_stage_data(data: Dictionary) -> bool:
 
 func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary) -> void:
 	_port = port.duplicate(true)
+	_minimal_stage = not String(_port.get("landmark_path", "")).is_empty()
 	_size = String(_port.get("size", "medium")).to_lower()
 	if not SIZE_SCALE.has(_size):
 		_size = "medium"
@@ -1943,6 +1967,7 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	_rebuild_town()
 	_rebuild_facilities()
 	_rebuild_landmark()
+	_apply_minimal_visibility()
 	# Fold the freshly built static layers into draw batches before the player
 	# ship is mounted (the ship bobs and is deliberately not batched).
 	_batch_static_meshes()
@@ -2098,6 +2123,23 @@ func _apply_fallback_visibility() -> void:
 		_shore_steam.emitting = use_fallback
 
 
+## Minimal facade mode hides the framing crane arm, painted skylines and steam
+## plumes; only the terminal, water/quay and a few small props remain.
+func _apply_minimal_visibility() -> void:
+	if not _minimal_stage:
+		return
+	if _foreground_frame != null:
+		_foreground_frame.visible = false
+	if _atmosphere_root != null:
+		_atmosphere_root.visible = false
+	if _shore_shelf != null:
+		_shore_shelf.visible = false
+	if _fallback_sky_root != null:
+		for child in _fallback_sky_root.get_children():
+			if child.name == "PaintedBackdrop":
+				child.visible = false
+
+
 ## Deterministic two-depth silhouette bands (only when no banner is mounted).
 ## Counts follow `port.size`; the near band is dark blue-grey and the far band is
 ## warmer/mistier, so the skyline reads in layers instead of a black wall. Both
@@ -2106,7 +2148,7 @@ func _apply_fallback_visibility() -> void:
 func _rebuild_shoreline() -> void:
 	_skyline_building_count = 0
 	_skyline_crane_count = 0
-	if _has_backdrop:
+	if _minimal_stage or _has_backdrop:
 		return
 	var total_buildings := int(SKYLINE_BUILDINGS_BY_SIZE.get(_size, 10))
 	var total_cranes := int(SKYLINE_CRANES_BY_SIZE.get(_size, 2))
@@ -2334,6 +2376,10 @@ func _add_lighthouse_silhouette(
 # --- L1 backdrop ------------------------------------------------------------
 
 func _rebuild_backdrop() -> void:
+	if _minimal_stage:
+		# 主场景门面模式：不挂大幅港口 banner/crane 图，保留天空与水。
+		_banner_path = ""
+		return
 	_banner_path = String(_port.get("banner_path", ""))
 	var texture: Texture2D = null
 	if not _banner_path.is_empty():
@@ -2394,8 +2440,13 @@ func _rebuild_facilities() -> void:
 			anchor.position = slot
 			_facilities_root.add_child(anchor)
 			_anchors[facility] = anchor
+			if _minimal_stage:
+				# 只保留 UI 锚点，不生成 billboard/模型设施。
+				continue
 			_kinds[facility] = _build_facility_visual(String(facility), anchor)
 		else:
+			if _minimal_stage:
+				continue
 			var filler := Node3D.new()
 			filler.name = "Filler_" + String(facility)
 			filler.position = slot
@@ -2574,6 +2625,8 @@ func _rebuild_landmark() -> void:
 	var landmark := Node3D.new()
 	landmark.name = "Landmark"
 	landmark.position = LANDMARK_POS
+	landmark.rotation_degrees = Vector3(0.0, LANDMARK_YAW, 0.0)
+	landmark.scale = Vector3.ONE * LANDMARK_SCALE
 	visual.position = Vector3.ZERO
 	landmark.add_child(visual)
 	_content.add_child(landmark)
@@ -2623,6 +2676,17 @@ func _rebuild_town() -> void:
 		Vector3.ZERO,
 		"PlazaEdge"
 	)
+	if _minimal_stage:
+		# 主场景门面模式：只摆少量灯具/货箱/缆桩等小装饰。
+		for spec in MINIMAL_STAGE_DECOR:
+			_add_town_prop(
+				String(spec["slot"]),
+				spec["pos"],
+				float(spec["yaw"]),
+				1.0,
+				false
+			)
+		return
 	for spec in TOWN_SLOTS:
 		_add_town_prop(
 			String(spec["slot"]),
@@ -3208,6 +3272,12 @@ func _transforms_aabb(mesh: Mesh, transforms: Array[Transform3D]) -> AABB:
 # --- L5 player ship ---------------------------------------------------------
 
 func _rebuild_ship(ship: Dictionary) -> void:
+	if _minimal_stage:
+		# 主场景门面模式：不显示玩家船，把画面让给航站楼。
+		_disable_boat_foam()
+		_ship_root = null
+		_ship_assembly_report = {}
+		return
 	# Stage 5: the ship ViewModel may carry a resolved visual plan (hull + rig
 	# kit + weapons). Old ViewModels / saves have no `visual` block and keep the
 	# legacy single-hull path below.

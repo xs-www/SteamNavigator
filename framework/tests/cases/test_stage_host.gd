@@ -742,10 +742,24 @@ func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 		String(diorama.get("kit", "")).is_empty(),
 		"port.view keeps the diorama kit id: %s" % String(diorama.get("kit", ""))
 	)
+	var landmark_path := String(current_port.get("landmark_path", ""))
+	assert_true(
+		landmark_path.begins_with("res://"),
+		"port.view resolves the iron-harbor landmark GLB: %s" % landmark_path
+	)
+	assert_true(
+		FileAccess.file_exists(landmark_path),
+		"the resolved landmark GLB exists: %s" % landmark_path
+	)
+	assert_true(
+		landmark_path.ends_with("SN_Grand_Harbour_Terminal.glb"),
+		"the resolved landmark is the grand harbour terminal: %s" % landmark_path
+	)
 	var size := String(current_port.get("size", ""))
 	assert_true(["small", "medium", "large"].has(size), "the current port reports a known size: %s" % size)
 
-	# End to end: the ViewModel the page would bind mounts the full streetscape.
+	# End to end: the ViewModel the page would bind mounts the terminal facade
+	# (minimal stage mode) plus a small curated set of dock decorations.
 	var bundle := _mount_port_stage()
 	var host: SNStageHost = bundle["host"]
 	var stage: Variant = bundle["stage"]
@@ -753,14 +767,39 @@ func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 	if stage is PortStage:
 		host.bind_view_model({"port": current_port})
 		var port := stage as PortStage
+		var minimal := not landmark_path.is_empty()
 		var expected_street := int(TOWN_DENSITY_COUNTS.get(port.town_density(), -1))
 		assert_true(expected_street > 0, "the resolved port reports a known density tier: %s" % port.town_density())
-		assert_eq(
-			port.town_prop_count(),
-			expected_street,
-			"the resolved query ViewModel mounts the full %s streetscape" % port.town_density()
-		)
+		if minimal:
+			assert_true(
+				port.town_prop_count() > 0 and port.town_prop_count() <= 16,
+				"the terminal facade keeps only a small decoration set: %d" % port.town_prop_count()
+			)
+		else:
+			assert_eq(
+				port.town_prop_count(),
+				expected_street,
+				"the resolved query ViewModel mounts the full %s streetscape" % port.town_density()
+			)
 		assert_eq(port.town_blockout_count(), 0, "every resolved town visual replaces its blockout")
+		var landmark := port.find_child("Landmark", true, false)
+		assert_true(landmark is Node3D, "the resolved landmark mounts as a Node3D")
+		if landmark is Node3D:
+			assert_eq(
+				(landmark as Node3D).scale,
+				Vector3.ONE * PortStage.LANDMARK_SCALE,
+				"the landmark uses the stage's background scale"
+			)
+			assert_eq(
+				(landmark as Node3D).rotation_degrees.y,
+				PortStage.LANDMARK_YAW,
+				"the landmark faces the fixed camera"
+			)
+			assert_eq(
+				(landmark as Node3D).position,
+				PortStage.LANDMARK_POS,
+				"the landmark sits on the harbour centre line"
+			)
 	_free_host(host)
 
 

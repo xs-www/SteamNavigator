@@ -74,73 +74,76 @@
 | `TOWN_FENCE_X` | L290 |
 | `TOWN_WORKER_SLOTS` | L294 |
 | `TOWN_DECOR_SLOTS` | L307 |
-| `TOWN_BOAT_SLOTS` | L321 |
-| `TOWN_QUAY_SLOTS` | L331 |
-| `STATION_PROP_COUNTS` | L383 |
-| `STATION_PROPS` | L384 |
-| `TOWN_BLOCKOUT_SIZES` | L427 |
-| `FOREGROUND_COLOR` | L437 |
-| `FOG_BAND_COLOR` | L438 |
-| `FOG_BAND_ALPHA` | L439 |
-| `ATMOSPHERE_PARTICLE_AMOUNT` | L440 |
-| `SKY_GLOW_COLOR` | L441 |
-| `MATERIAL_DEFAULTS` | L443 |
-| `LANDMARK_POS` | L455 |
-| `enter(payload: Dictionary = {}) -> void` | L585 |
-| `exit() -> void` | L597 |
-| `bind(view_model: Dictionary = {}) -> void` | L601 |
-| `has_visual() -> bool` | L622 |
-| `has_backdrop() -> bool` | L626 |
-| `loaded_banner_path() -> String` | L631 |
-| `facility_count() -> int` | L635 |
-| `filler_count() -> int` | L641 |
-| `facility_visual_kind(facility: String) -> String` | L647 |
-| `facility_anchors() -> Dictionary` | L652 |
-| `facility_screen_anchor(facility: String) -> Vector2` | L666 |
-| `has_ship() -> bool` | L679 |
-| `ship_assembly_report() -> Dictionary` | L687 |
-| `ship_rig_report() -> Dictionary` | L692 |
-| `request_portal(facility: String) -> void` | L698 |
-| `hotspot_anchors() -> Dictionary` | L702 |
-| `foreground_frame() -> Node3D` | L709 |
-| `atmosphere_particle_systems() -> int` | L714 |
-| `atmosphere_layers() -> int` | L719 |
-| `skyline_building_count() -> int` | L724 |
-| `skyline_crane_count() -> int` | L729 |
-| `town_prop_count() -> int` | L735 |
-| `town_blockout_count() -> int` | L741 |
-| `town_density() -> String` | L748 |
-| `painted_backdrop_layer_count() -> int` | L755 |
-| `batch_stats() -> Dictionary` | L773 |
-| `ship_foam_bounds() -> AABB` | L796 |
-| `ship_visual_is_rigid(visual: Node) -> bool` | L805 |
-| `station_ids() -> Array[String]` | L858 |
-| `current_station() -> String` | L865 |
-| `current_station_framing() -> String` | L869 |
-| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L875 |
-| `station_ship_position(station_id: String) -> Vector3` | L888 |
-| `station_ship_yaw(station_id: String) -> float` | L893 |
-| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L902 |
-| `is_station_transitioning() -> bool` | L954 |
-| `camera_position() -> Vector3` | L960 |
-| `camera_target() -> Vector3` | L964 |
-| `ship_x() -> float` | L969 |
-| `station_ship_mooring_x() -> float` | L973 |
-| `station_prop_count() -> int` | L979 |
-| `camera_shift_x() -> float` | L984 |
-| `advance_station(delta: float) -> void` | L992 |
-| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1113 |
-| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1135 |
-| `advance_voyage(delta: float) -> void` | L1173 |
-| `reset_voyage() -> void` | L1263 |
-| `is_voyage_transitioning() -> bool` | L1283 |
-| `voyage_mode() -> String` | L1287 |
-| `is_voyage_holding_handoff() -> bool` | L1294 |
-| `voyage_progress() -> float` | L1299 |
-| `voyage_handoff_position() -> Vector3` | L1305 |
-| `ship_position() -> Vector3` | L1311 |
-| `ship_yaw() -> float` | L1319 |
-| `camera_pitch_deg() -> float` | L1326 |
+| `MINIMAL_STAGE_DECOR` | L322 |
+| `TOWN_BOAT_SLOTS` | L338 |
+| `TOWN_QUAY_SLOTS` | L348 |
+| `STATION_PROP_COUNTS` | L400 |
+| `STATION_PROPS` | L401 |
+| `TOWN_BLOCKOUT_SIZES` | L444 |
+| `FOREGROUND_COLOR` | L454 |
+| `FOG_BAND_COLOR` | L455 |
+| `FOG_BAND_ALPHA` | L456 |
+| `ATMOSPHERE_PARTICLE_AMOUNT` | L457 |
+| `SKY_GLOW_COLOR` | L458 |
+| `MATERIAL_DEFAULTS` | L460 |
+| `LANDMARK_POS` | L473 |
+| `LANDMARK_SCALE` | L475 |
+| `LANDMARK_YAW` | L477 |
+| `enter(payload: Dictionary = {}) -> void` | L608 |
+| `exit() -> void` | L620 |
+| `bind(view_model: Dictionary = {}) -> void` | L624 |
+| `has_visual() -> bool` | L645 |
+| `has_backdrop() -> bool` | L649 |
+| `loaded_banner_path() -> String` | L654 |
+| `facility_count() -> int` | L658 |
+| `filler_count() -> int` | L664 |
+| `facility_visual_kind(facility: String) -> String` | L670 |
+| `facility_anchors() -> Dictionary` | L675 |
+| `facility_screen_anchor(facility: String) -> Vector2` | L689 |
+| `has_ship() -> bool` | L702 |
+| `ship_assembly_report() -> Dictionary` | L710 |
+| `ship_rig_report() -> Dictionary` | L715 |
+| `request_portal(facility: String) -> void` | L721 |
+| `hotspot_anchors() -> Dictionary` | L725 |
+| `foreground_frame() -> Node3D` | L732 |
+| `atmosphere_particle_systems() -> int` | L737 |
+| `atmosphere_layers() -> int` | L742 |
+| `skyline_building_count() -> int` | L747 |
+| `skyline_crane_count() -> int` | L752 |
+| `town_prop_count() -> int` | L758 |
+| `town_blockout_count() -> int` | L764 |
+| `town_density() -> String` | L771 |
+| `painted_backdrop_layer_count() -> int` | L778 |
+| `batch_stats() -> Dictionary` | L796 |
+| `ship_foam_bounds() -> AABB` | L819 |
+| `ship_visual_is_rigid(visual: Node) -> bool` | L828 |
+| `station_ids() -> Array[String]` | L881 |
+| `current_station() -> String` | L888 |
+| `current_station_framing() -> String` | L892 |
+| `station_camera_pose(station_id: String, framing: String = "stage") -> Dictionary` | L898 |
+| `station_ship_position(station_id: String) -> Vector3` | L911 |
+| `station_ship_yaw(station_id: String) -> float` | L916 |
+| `focus_station(station_id: String, framing: String = "stage", immediate: bool = false) -> bool` | L925 |
+| `is_station_transitioning() -> bool` | L977 |
+| `camera_position() -> Vector3` | L983 |
+| `camera_target() -> Vector3` | L987 |
+| `ship_x() -> float` | L992 |
+| `station_ship_mooring_x() -> float` | L996 |
+| `station_prop_count() -> int` | L1002 |
+| `camera_shift_x() -> float` | L1007 |
+| `advance_station(delta: float) -> void` | L1015 |
+| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1136 |
+| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1158 |
+| `advance_voyage(delta: float) -> void` | L1196 |
+| `reset_voyage() -> void` | L1286 |
+| `is_voyage_transitioning() -> bool` | L1306 |
+| `voyage_mode() -> String` | L1310 |
+| `is_voyage_holding_handoff() -> bool` | L1317 |
+| `voyage_progress() -> float` | L1322 |
+| `voyage_handoff_position() -> Vector3` | L1328 |
+| `ship_position() -> Vector3` | L1334 |
+| `ship_yaw() -> float` | L1342 |
+| `camera_pitch_deg() -> float` | L1349 |
 
 ## 契约与约束
 

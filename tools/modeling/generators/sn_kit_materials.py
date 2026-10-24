@@ -9,6 +9,8 @@
 # `sn_shared_materials.apply_collection()` 写节点树与世界空间盒式 UV。
 # 本模块只给几何生成器提供 `MAT_*` 常量与每件资产的材质白名单，不另存颜色。
 # 批次 2 新增 `SN_Tex_Coal`（碎煤），用于煤斗 / 煤堆；批次 3 不新增贴图。
+# 2026-10-24 新增 `SN_Tex_Copper_Green`（氧化铜绿屋面，第 12 张共享贴图），
+# 供大型港口航站楼 SN_Grand_Harbour_Terminal 的铜绿屋面与穹顶使用。
 # @end-static-doc
 
 MAT_METAL = "SN_Tex_Metal"
@@ -22,6 +24,7 @@ MAT_CANVAS_SHADE = "SN_Tex_Canvas_Shade"
 MAT_GLASS_DARK = "SN_Tex_Glass_Dark"
 MAT_STONE = "SN_Tex_Stone"
 MAT_COAL = "SN_Tex_Coal"
+MAT_COPPER_GREEN = "SN_Tex_Copper_Green"
 
 import sn_shared_materials as shared
 

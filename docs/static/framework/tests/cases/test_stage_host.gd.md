@@ -41,24 +41,24 @@
 | `test_port_stage_without_town_kit_uses_blockouts_and_keeps_skyline() -> void` | L667 |
 | `test_port_stage_falls_back_to_blockouts_for_missing_town_models() -> void` | L686 |
 | `test_port_view_resolves_town_visuals_for_the_port_stage() -> void` | L719 |
-| `test_port_stage_batches_static_layers_into_few_draws() -> void` | L770 |
-| `test_port_stage_without_town_still_batches_facilities() -> void` | L829 |
-| `test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void` | L850 |
-| `test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void` | L897 |
-| `test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void` | L972 |
-| `test_port_stage_stations_are_adjacent_along_one_quay() -> void` | L1035 |
-| `test_port_stage_focus_station_pans_camera_and_sails_the_hull() -> void` | L1091 |
-| `test_port_stage_focus_station_immediate_and_idempotent() -> void` | L1160 |
-| `test_port_stage_bind_keeps_the_current_station_and_berth() -> void` | L1191 |
-| `test_port_stage_station_dressing_scales_with_density() -> void` | L1234 |
-| `test_port_stage_redirect_mid_transition_continues_from_current_pose() -> void` | L1262 |
-| `test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void` | L1338 |
-| `test_departure_hold_keeps_the_hull_on_the_sea_handoff_until_the_cut() -> void` | L1380 |
-| `test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void` | L1409 |
-| `test_port_stage_departure_turns_the_bow_out_to_sea_before_making_way() -> void` | L1456 |
-| `test_port_stage_voyage_handoff_heading_is_seamless() -> void` | L1495 |
-| `test_port_stage_departure_camera_climbs_to_a_near_vertical_high_shot() -> void` | L1541 |
-| `test_port_stage_arrival_camera_falls_back_to_the_station_shot() -> void` | L1598 |
+| `test_port_stage_batches_static_layers_into_few_draws() -> void` | L809 |
+| `test_port_stage_without_town_still_batches_facilities() -> void` | L868 |
+| `test_port_stage_painted_backdrop_has_depth_layers_without_banner() -> void` | L889 |
+| `test_port_stage_batches_player_hull_rigidly_and_keeps_foam_bounds() -> void` | L936 |
+| `test_port_stage_ship_batching_falls_back_for_non_rigid_hulls() -> void` | L1011 |
+| `test_port_stage_stations_are_adjacent_along_one_quay() -> void` | L1074 |
+| `test_port_stage_focus_station_pans_camera_and_sails_the_hull() -> void` | L1130 |
+| `test_port_stage_focus_station_immediate_and_idempotent() -> void` | L1199 |
+| `test_port_stage_bind_keeps_the_current_station_and_berth() -> void` | L1230 |
+| `test_port_stage_station_dressing_scales_with_density() -> void` | L1273 |
+| `test_port_stage_redirect_mid_transition_continues_from_current_pose() -> void` | L1301 |
+| `test_port_stage_departure_beat_sails_to_the_sea_handoff() -> void` | L1377 |
+| `test_departure_hold_keeps_the_hull_on_the_sea_handoff_until_the_cut() -> void` | L1419 |
+| `test_port_stage_arrival_beat_moors_the_hull_back_at_its_berth() -> void` | L1448 |
+| `test_port_stage_departure_turns_the_bow_out_to_sea_before_making_way() -> void` | L1495 |
+| `test_port_stage_voyage_handoff_heading_is_seamless() -> void` | L1534 |
+| `test_port_stage_departure_camera_climbs_to_a_near_vertical_high_shot() -> void` | L1580 |
+| `test_port_stage_arrival_camera_falls_back_to_the_station_shot() -> void` | L1637 |
 
 ## 契约与约束
 

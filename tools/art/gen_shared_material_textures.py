@@ -173,6 +173,41 @@ def _paint_canvas(spec, n, seed, rng):
     return col
 
 
+def _paint_verdigris(spec, n, seed, rng):
+    """氧化铜绿屋面：低频柔和斑驳 + 细竖向雨痕 + 极少量露铜点，不画规则板缝。
+
+    大型四坡顶如果使用带 1 m 网格/大块锈斑的 tile，重复感非常明显；这里把
+    图案压成低对比、无网格的连续锈层，让几何上的铜条承担“板缝”读感。
+    """
+    p = spec["palette"]
+    base, alt = ih._rgb(p["base"]), ih._rgb(p["alt"])
+    deep = ih._rgb(p["seam"])
+    rust, metal = ih._rgb(p["rust"]), ih._rgb(p["metal"])
+    u, v = ih._uv(n)
+    u_i, v_i = u.astype(np.int64), v.astype(np.int64)
+
+    # 大尺度云状明暗（低对比，跨 tile 连续）
+    mott = ih._periodic_noise(rng, n, 27.0, 21.0)
+    col = ih._lerp(base, alt, np.clip(0.50 + 0.16 * mott, 0.0, 1.0))
+    cloud = ih._periodic_noise(rng, n, 12.0, 9.0)
+    col = ih._lerp(col, deep, np.clip(0.10 * (cloud - 0.45), 0.0, 0.12))
+
+    # 铜绿雨痕：U 方向很窄、V 方向拉长，像沿坡面流下的水渍
+    streak = ih._periodic_noise(rng, n, 1.35, 44.0)
+    col = ih._lerp(col, deep, np.clip(0.14 * (streak - 0.15), 0.0, 0.11))
+
+    # 极少量小露铜点，避免整张图出现重复的大锈斑
+    spots = ((ih._periodic_noise(rng, n, 42.0, 42.0) > 2.30) &
+             (ih._hash01(seed + 31, u_i, v_i) < 0.20))
+    col = np.where(spots[..., None], ih._lerp(col, rust, 0.16), col)
+
+    # 细金属反光，保持铜面微光泽
+    sheen = ih._periodic_noise(rng, n, 1.2, 20.0) > 1.95
+    col = np.where(sheen[..., None], ih._lerp(col, metal, 0.05), col)
+    return col
+
+
+
 def _paint_coal(spec, n, seed, rng):
     """碎煤堆：低明度块面 + 低洼灰尘 + 少量反光棱面。tile = 1.0 m。"""
     p = spec["palette"]
@@ -195,6 +230,7 @@ _CUSTOM_PAINTERS = {
     "brass": _paint_brass,
     "canvas": _paint_canvas,
     "coal": _paint_coal,
+    "verdigris": _paint_verdigris,
 }
 
 # 直接复用铁港建筑的画家（同一套低饱和手绘语言）

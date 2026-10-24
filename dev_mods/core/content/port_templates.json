@@ -20,6 +20,7 @@
         "banner_asset": "banner.port.iron_harbor",
         "diorama": {
           "kit": "harbor.iron",
+          "landmark": "model.building.grand_harbour_terminal",
           "town": {
             "warehouse_long": "model.prop.workshop_row",
             "warehouse_short": "model.prop.warehouse_short",

@@ -1,0 +1,80 @@
+﻿{
+  "id": "sn_building_grand_harbour_terminal_v1",
+  "category": "building",
+  "style": "victorian / belle-epoque harbour terminal; cream stone, verdigris copper roofs, brass and dark glass details; reference image supplied by user (grand central terminal with clock tower, 3-arch portico, arcaded wings, end pavilions, stone quay and waterfront steps)",
+  "asset": "SN_Grand_Harbour_Terminal",
+  "collection": "SN_GHT_Grand_Harbour_Terminal_Prototype",
+  "prefix": "SN_GHT_",
+  "root": "SN_GHT_Root",
+  "dimensions": {
+    "x_depth_m": 72.5,
+    "y_width_m": 133.7,
+    "z_height_m": 56.7,
+    "tolerance_m": 0.65
+  },
+  "tri_budget": 90000,
+  "tri_floor": 45000,
+  "transform": {
+    "units": "m",
+    "forward": "+X",
+    "up": "+Z",
+    "pivot": "platform centre on ground z=0",
+    "workbench_pos": [0.0, -330.0, 0.0]
+  },
+  "required_parts": [
+    "SN_GHT_Quay_Base: rusticated stone quay platform 72.5 x 134 m with coping",
+    "SN_GHT_Quay_Stairs: 6-step grand waterfront stair, 24 m wide, flanked by cheek walls",
+    "SN_GHT_Quay_Balustrade: stone balustrade around plaza and stair, posts and urns",
+    "SN_GHT_Plaza_Furniture: cast-iron lamps, flagpoles, bollards, mooring rings, benches, corner urns",
+    "SN_GHT_Central_Block: 42 m wide central block, rusticated plinth, string courses, quoins, rear windows",
+    "SN_GHT_Central_Entrance: 8 m deep glazed entrance hall, 15 m wide great arch, brass tracery, rose window, timber doors",
+    "SN_GHT_Portico: 4 giant stone columns (17.5 m), entablature, dentils, roof terrace parapet, brass HARBOUR TERMINAL sign",
+    "SN_GHT_Wings: two 31 m arcaded wings, upper storey windows with pediments and pilasters, copper roofs",
+    "SN_GHT_Wing_Arcades: 6 blind/real arches per wing on piers, glass and timber shopfronts behind",
+    "SN_GHT_Wing_Windows: arcade lanterns and secondary joinery",
+    "SN_GHT_Pavilions: two 14 m end pavilions, arched windows, oculus, pediment, corner urns, cupola",
+    "SN_GHT_Roofs: hipped verdigris copper roofs with ribs, ridge cresting, dormers, chimneys, pavilion cupolas",
+    "SN_GHT_Tower: square clock tower, louvered arches, cornice, stone drum, copper dome, lantern and flag",
+    "SN_GHT_Tower_Clock: four 4.5 m clock faces with brass markers and iron hands",
+    "SN_GHT_Details: wall lanterns, downpipes",
+    "SN_GHT_Sign: brass text 'HARBOUR TERMINAL' on portico frieze"
+  ],
+  "materials": [
+    "SN_Tex_Stone",
+    "SN_Tex_Copper_Green",
+    "SN_Tex_Iron",
+    "SN_Tex_Iron_Red",
+    "SN_Tex_Wood",
+    "SN_Tex_Wood_Dark",
+    "SN_Tex_Brass",
+    "SN_Tex_Glass_Dark",
+    "SN_Tex_Canvas_Shade",
+    "SN_Tex_Metal"
+  ],
+  "naming": "objects SN_GHT_*; collection SN_GHT_Grand_Harbour_Terminal_Prototype; GLB SN_Grand_Harbour_Terminal.glb",
+  "hierarchy": "root empty SN_GHT_Root; all meshes parented to root; sign parented to root",
+  "scene_rules": [
+    "do not delete or modify existing scene objects, cameras or lights",
+    "only rebuild objects whose name starts with SN_GHT_",
+    "do not save .blend or export .glb during build; Lead archives after acceptance"
+  ],
+  "deliverables": [
+    "tools/modeling/generators/sn_grand_harbour_terminal_generator.py",
+    "tools/modeling/generators/dryrun_grand_harbour_terminal.py",
+    "assets/models/architecture/SN_Grand_Harbour_Terminal.glb",
+    "dev_mods/core/assets/models/architecture/SN_Grand_Harbour_Terminal.glb",
+    "assets/models/architecture/shared_materials/copper_green.png + core copy",
+    ".design/architecture/preview/*.png",
+    "docs/design/screenshots/architecture/grand_terminal_*.png"
+  ],
+  "acceptance": [
+    "geometry_report ok: 15 meshes, tri <= 90k, all boundary/non-manifold/degenerate/loose = 0",
+    "world bbox 72.45 x 133.9 x 56.65 m (+/-0.65), zmin = 0",
+    "all materials are shared SN_Tex_* textures; each mesh has complete UVMap",
+    "all four clock faces read from +X/-X/+Y/-Y; tower finial is the highest architectural point",
+    "central great arch is a real open recess leading to a glazed hall; wings have real arched arcades",
+    "visual: 3/4 and front look like a grand harbour terminal, not a warehouse; copper roofs read green",
+    "existing scene objects unchanged (object counts / names / transforms)"
+  ]
+}
+

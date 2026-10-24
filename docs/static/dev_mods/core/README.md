@@ -31,9 +31,11 @@
 | `assets/models/architecture/SN_Arch_Workshop.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/SN_Arch_Workshop_Annex.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/SN_Arch_Workshop_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/architecture/SN_Grand_Harbour_Terminal.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/architecture/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -50,6 +52,7 @@
 | `assets/models/base/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/base/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/base/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/base/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/base/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/base/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/base/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -69,6 +72,7 @@
 | `assets/models/cargo/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/cargo/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/cargo/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/cargo/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/cargo/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/cargo/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/cargo/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -84,6 +88,7 @@
 | `assets/models/combat/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/combat/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/combat/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/combat/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/combat/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/combat/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/combat/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -101,6 +106,7 @@
 | `assets/models/dock/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/dock/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/dock/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/dock/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/dock/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/dock/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/dock/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -120,6 +126,7 @@
 | `assets/models/environment/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/environment/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/environment/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/environment/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/environment/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/environment/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/environment/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -140,6 +147,7 @@
 | `assets/models/machinery/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/machinery/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/machinery/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/machinery/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/machinery/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/machinery/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/machinery/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -166,6 +174,7 @@
 | `assets/models/modules/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/modules/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/modules/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -183,6 +192,7 @@
 | `assets/models/port/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/port/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/port/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/port/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/port/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/port/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/port/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -262,6 +272,7 @@
 | `assets/models/props/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/props/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/props/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -285,6 +296,7 @@
 | `assets/models/rig/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/rig/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/rig/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/rig/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/rig/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/rig/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/rig/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -304,6 +316,7 @@
 | `assets/models/ship_parts/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ship_parts/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ship_parts/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/ship_parts/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ship_parts/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ship_parts/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ship_parts/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -324,6 +337,7 @@
 | `assets/models/ships/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/ships/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/ships/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -352,6 +366,7 @@
 | `assets/models/weapons/shared_materials/brass.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/canvas.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
+| `assets/models/weapons/shared_materials/copper_green.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/glass_dark.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/iron.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/weapons/shared_materials/iron_red.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

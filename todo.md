@@ -48,6 +48,8 @@
 
 ## Recently Completed
 
+- 大型港口航站楼 SN_Grand_Harbour_Terminal（2026-10-24）：按用户参考图新增 72.45 × 133.70 × 56.65 m 建筑资产（中央 15 m 三拱门廊 + 8 m 深玻璃门厅 + 四向钟楼 + 铜绿四坡顶 + 两翼连续拱廊 + 端亭 + 海堤广场），17 节点 / 16 mesh / **59,450 tri**，9 种共享贴图材质；新增第 12 张共享贴图 `SN_Tex_Copper_Green`（verdigris 软纹理）；UV 去重复（石/铜有效 tile 3.3–4.6 m + 每对象偏移）；按用户反馈移除全部檐口齿饰与竖向隅石；已接入 `iron_harbor` PortStage 作为 **0.42 缩放的主场景门面**（中央主背景、镜头垂直码头正视；最小门面模式只留 terminal + 12 件小装饰，移除城镇建筑/设施模型/船只/前景黑框与手绘 skyline，设施锚点保留给 UI；manifest `model.building.grand_harbour_terminal` + `diorama.landmark`，端到端 test_stage_host 通过）；导出 assets + Core 双份 GLB（3,991,540 B），`verify_grand_harbour_terminal_glb.py` ALL OK，4 张 EEVEE 预览与港口舞台截图已归档。未登记 PortStage 之外的其它站位。
+
 - 船厂改装页重做（2026-10-23）：改装态改为画在连续港区 3D 舞台上的工作台——`PortStage` 新增 `shipyard` 站位（干船坞/吊架设施锚点 x 14.5，镜头与目标西移 7.5 m 对准中间 3D 窗口，玩家船泊位 (14.5,0,9)），`STAGE_SCREENS` 增加 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示（正常态仍用面板内 3D 船体舞台）。页面不再有整页不透明背景：左蓝图板 / 中 3D 窗口 / 右 `SNGlassPanel` 半透明操作坞；操作坞含舰船数据卡（船名 + 重量 / 耐久 / 货舱 / 客舱 / 武器 / 剩余货舱）、七项分类、`装配 / 购买 / 打造` 三个独立页签（杂项无页签），装配页高亮可安装槽位并保留拖放安装；移除「改装蓝图 / 蓝图线稿 / 贴图剖面 / 实机渲染」等测试向文案与蓝图上方金币/耐久/重量摘要行；顶栏品牌位改为当前港口名。验证：Godot 全量 **643/643**（新增 3 例）、`ui_snapshot --tabs` / `capture_ui -Tabs` 截图、静态文档 `--check` 通过。
 
 - 船厂改装蓝图底板（2026-10-23）：把 `docs/design/ui_controls_v1/blueprint_panel/` 的九宫格底板落地为 Theme variation `SNBlueprintPanel`（`StyleBoxTexture` + 派生运行纹理 `assets/ui/shipyard/blueprint_panel.png`：取图区域 1682×598 的 0.5 倍，九宫格 56/54、安全区 66/62）；改装态有 `blueprint_views` 时整列换底板，`SNShipView.set_blueprint_backdrop(true)` 让舞台不再自绘深色底 / 视图框 / 槽位坞条；母版留在 docs 不改，导入参数与多尺寸验收（1440×900 / 960×540 / 1280×1024 / 1920×1080 / 2560×1080）回写 layout.json 与 README；新增 `test_refit_blueprint_board_uses_the_nine_slice_panel`，船厂改装套件 11/11。

@@ -508,6 +508,23 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 过程发现 | ① **工单工作台摆位要先扫空走廊**：几何 AABB 零交叠不代表 look 干净，固定机位会被邻排建筑透视遮挡；先用只读 bbox / 行带扫描选行，再重建。② **纯 Python `report()` 必须复刻 Pivot 装配变换**：merchant 主桅在 Pivot 下，`report()` 原先把局部 z 当世界 z，z_max 少 0.33 m，GLB 验收首次报 3/4；补 `world_vertices()` 后 4/4 通过（与 §11.9 干跑教训同源）。③ **socket 声明值先做纯 Python 射线预演**：socket-tools 在 Builder 之前预演出 7 处「声明高于实测」，Lead 据此把 clearance_h / r / cx 调保守并挪开 raider 艏平台，Builder 一次 apply 全绿。④ **脚本路径 dirname 层数错**：预览 / 导出脚本 `WORKDIR` 少一层，产物写进 `tools/.design` 与 `tools/docs`；Builder 在导出前主动停手报告（未污染 GLB），修 `dirname(dirname(dirname(HERE)))` 后重跑并清理错目录。⑤ LIVE Blender 模块缓存仍需 `importlib.reload`（重建 / socket 脚本均按此执行）。 |
 | 交付 | 4 个 GLB（`assets/models/combat/` + Core 副本 + 11 张共享贴图 ×2 目录，新增 `combat` 类别并写进 `shared_materials.spec.json` 的 `runtime_dirs`）、`combat_kit_generator.py` / `dryrun_combat_kit.py` / `sn_enemy_weapon_sockets.py` / `sn_enemy_gun_ports.py` / `glb_enemy_sockets.py` / `export_combat_kit_glb.py` / `verify_combat_kit_glb.py` / `render_combat_kit_preview.py` / `gen_combat_kit_catalog.py`、`combat_kit_catalog.json`、Godot 用例、[KIT_ASSET_LIBRARY.md §14](KIT_ASSET_LIBRARY.md)、[COMBAT_KIT_ACCEPTANCE.md](../archive/COMBAT_KIT_ACCEPTANCE.md) |
 
+### 11.23 大型港口航站楼 SN_Grand_Harbour_Terminal（2026-10-24，参考图 1 张 + 3 轮返工）
+
+| 环节 | 实际结果 |
+| --- | --- |
+| 需求 | 用户给出一张蒸汽港航站楼参考图，要求「制作一个类似该图片 terminal 的大型 terminal 模型」；按「中央钟楼 + 三拱门廊 + 两翼拱廊 + 铜绿四坡顶 + 海堤广场」定案，先作为独立建筑资产交付，随后接入 `iron_harbor` PortStage 作为背景地标（`diorama.landmark` + manifest `model.building.grand_harbour_terminal`） |
+| 工单 | `tools/modeling/briefs/sn_grand_harbour_terminal.json`：72.5 × 133.7 × 56.7 m、90k tri 预算、15 个结构 mesh + Sign、9 种 `SN_Tex_*` 材质、必含中央拱门 / 钟楼 / 拱廊 / 端亭 / 台阶 / 铭牌 |
+| 共享材质 | 新增第 12 张共享贴图 `SN_Tex_Copper_Green`（`verdigris` 画家：低对比云斑 + 细竖向雨痕 + 极少量小露铜点，无 1 m 网格/大锈斑；使用 `image.reload()` 保证活体 Blender 读到新 tile）；重跑贴图生成器后旧 11 张 tile **字节/hash 全不变**、12 张 deterministic / seam_ok；`sn_kit_materials.MAT_COPPER_GREEN` 同步 |
+| Lead 生成器 | `sn_grand_harbour_terminal_generator.py`：纯 Python 参数表 + 闭合壳体基本体（四坡顶 `_solid_shell` / 半圆拱券 / 拱肩填石 / 宝瓶栏杆 / 穹顶 / 钟盘 / 旗帜 / 铸铁路灯），15 个对象分件；Blender 侧 `assembly.build_collection()` + `sn_shared_materials.apply_collection(space="root")` + 字体铭牌 |
+| 干跑 | `dryrun_grand_harbour_terminal.py`：object/命名 / tri / bbox / zmin / 材质白名单 / 每个 mesh 的边界边·非流形·退化面·孤立点 / 12 张共享贴图 / 关键部件体量；修复 51 个 `r=0` 圆锥退化顶盖、整圆重复首点导致的退化侧片、平台压顶超宽、层线横穿窗洞/钟盘/百叶拱、亭阁双拱窗重叠、入口 0.8 m 台阶等问题后 **ALL OK（72,928 geometry tri）** |
+| Builder R0–R2 | Builder 建 17 对象 / 74,306 tri，射线 + look 发现两个硬伤：① 中央后部实体前伸到 x=2.2，把 8 m 深玻璃门厅整个埋进石墙；② 铭牌旋转矩阵为左手系，`HARBOUR TERMINAL` 从 +X 看逐字镜像。Lead 按参数修：后部实体拆成左右 + 中央后块（x≤1.15），门厅空腹；`rot` 中间行 −1 → +1（右手系）；同时把铭牌字号 1.18→1.65、加粗 offset、两翼端亭补 12 扇端墙窗。R2 射线复检：49 条里 47 条首击玻璃/黄铜/木门，2 条正确命中拱上墙体；铭牌读向正确 |
+| 自动质检 | 15 个结构 mesh 边界/非流形/退化/孤立点全 0；Sign 因字体挤出固有 6 条零面积细缝边界边（degenerate 0，不可见）；UV 16/16；9 种 `SN_Tex_*` 且贴图 512²；场地回归 non-GHT 1080 对象名单 md5 不变、Camera=2 / Light=1 |
+| 导出与验收 | `export_grand_harbour_terminal_glb.py` 根归零 + `export_extras` + `externalize_glb(prefer_authored=True)` → `assets/models/architecture/SN_Grand_Harbour_Terminal.glb`（3,991,540 B，17 节点 / 16 mesh / 9 张外部贴图）+ Core 副本；`.design/terminal/build_report.json`；`verify_grand_harbour_terminal_glb.py` **ALL OK**（tri 59,450 / Y-up bbox 72.45 × 56.65 × 133.70 / zmin 0 / 全套外部贴图字节 / assets-core 字节一致 / root extras）；`.design/architecture/SN_Grand_Harbour_Terminal.blend` 集合快照 |
+| 收尾（用户反馈） | 用户指出副楼转角竖向隅石远看像锯齿（先前误认为是檐口齿饰）。处理：檐口齿饰全部移除（974 × 12 = 11,688 tri）+ 两翼 / 端亭 / 中央主楼的隅石全部移除（184 + 80 块），geometry 72,928 → **58,072**、总 **59,450 tri**；重导 GLB（5,031,500 → **3,991,540 B**）、重跑 verify ALL OK、重渲 4 张预览；所有转角平直，UV 去重复参数保持不变 |
+| 预览 | `render_grand_harbour_terminal_preview.py`：EEVEE Next 临时水面 / 渐变天空 / 太阳 + 面积补光，4 镜头 → `.design/architecture/preview/` 与 `docs/design/screenshots/architecture/grand_terminal_{three_quarter,front,aerial,entrance_detail}.png` |
+| 过程发现 | ① **参考图建模最容易漏的是「内部可见性」**：门厅几何本身完整、健康检查全绿，但从拱门外看被后部实体挡住，必须用世界坐标射线验证“首击是不是玻璃/门”，不能只看 bbox；② **文字铭牌的旋转矩阵必须是右手系**，`(-1,0,0)` 这种看似对称的写法会导致整块文字镜像；③ **字体挤出 + offset 会在收尾处产生零面积三角/边界边二选一**，文字 mesh 宜单独体检，且不应把边界边=0 硬套到文字件；④ 大型资产的层线 / 檐口必须按开洞分段，整圈 `_string_course` 会横穿窗洞、钟盘与百叶拱；⑤ **共享 2 m tile 放在 130 m 级大面上会形成明显平铺网格**：本资产用“UV 周期乘 0.45–0.60 + 每对象确定性偏移”把有效 tile 拉到 3.3–4.6 m，既保留共享贴图又不动材质 spec；⑥ 齿饰先修正悬空，随后用户指出副楼“锯齿”其实是竖向隅石；最终按用户要求**移除全部齿饰与全部隅石**（geometry 72,928 → 58,072 tri），转角平直、檐口干净。 |
+| 交付 | 1 个 GLB（assets + Core 副本）+ 1 个 `.blend` 快照 + 工单 / 生成器 / 干跑 / 导出 / 验收 / 预览 5 个脚本 + 4 张预览 + `SN_Tex_Copper_Green` 第 12 张共享贴图 + [ASSET_MAP.md](ASSET_MAP.md) 条目 |
+
 ## 12. 共享贴图材质与 UV（新资产默认约定，2026-10-21 起）
 
 > 结论：**新资产不再用纯色代表材质**。材质 = 共享贴图（`SN_Tex_*`）+ spec 参数，
@@ -519,7 +536,7 @@ docs/design/ASSET_MAP.md                              增加一行映射
 | 环节 | 路径 | 说明 |
 | --- | --- | --- |
 | 材质 / 贴图 spec | `docs/design/textures/shared_materials/shared_materials.spec.json` | 材质名、纹理名、`tile_m`、roughness / metallic、调色板、贴图均值目标；改颜色的唯一入口 |
-| 贴图生成器 | `tools/art/gen_shared_material_textures.py` | 11 张 512² 无缝 sRGB 贴图（批次 2 新增 `SN_Tex_Coal` 碎煤）、montage、stats、运行时副本；确定性可复现（复用铁港生成器的周期噪声 / 木材 / 石材 / 玻璃画家） |
+| 贴图生成器 | `tools/art/gen_shared_material_textures.py` | 12 张 512² 无缝 sRGB 贴图（批次 2 新增 `SN_Tex_Coal` 碎煤；2026-10-24 新增 `SN_Tex_Copper_Green` 铜绿屋面）、montage、stats、运行时副本；确定性可复现（复用铁港生成器的周期噪声 / 木材 / 石材 / 玻璃画家） |
 | 授权贴图 | `docs/design/textures/shared_materials/tiles/<texture>.png` | 入库真源；材质贴图以它为准（不采用 Blender 重编码字节） |
 | 共享贴图运行时副本 | `assets/models/<category>/shared_materials/`（开发态）与 `dev_mods/core/assets/models/<category>/shared_materials/`（发布；示例：`props`、`weapons`、`ship_parts`、`machinery`、`cargo`、`dock`） | GLB 用相对 URI `shared_materials/<texture>.png` 引用；`ContentAssetLoader` 按路径缓存成同一个 `Texture2D`；新分类目录要同步写进 `shared_materials.spec.json` 的 `runtime_dirs` |
 | 材质库 | `tools/modeling/generators/sn_shared_materials.py` | spec → Blender 材质节点 / 世界空间盒式 UV / 验收；纯 Python 数据段可干跑 |

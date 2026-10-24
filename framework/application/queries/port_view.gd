@@ -119,6 +119,11 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"facilities": Array(port_data.get("facilities", [])),
 			"size": String(port_data.get("size", "medium")),
 			"diorama": diorama.duplicate(true),
+			"landmark_path": _resolved_landmark(
+				context,
+				String(port_data.get("source_mod", "")),
+				diorama
+			),
 			"town_visuals": _resolved_town_visuals(
 				context,
 				String(port_data.get("source_mod", "")),
@@ -289,6 +294,14 @@ static func _asset_path(context, uri: String) -> String:
 	if context.assets.has(uri):
 		return context.assets.resolve(uri)
 	return ""
+
+
+## Resolves the optional `diorama.landmark` asset key to a physical GLB path.
+static func _resolved_landmark(context, source_mod: String, diorama: Dictionary) -> String:
+	var key := String(diorama.get("landmark", ""))
+	if key.is_empty() or source_mod.is_empty() or context == null:
+		return ""
+	return _asset_path(context, "asset://%s/%s" % [source_mod, key])
 
 
 ## Resolves the `diorama.town` slot -> asset-key map to slot -> physical path so

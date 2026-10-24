@@ -551,7 +551,7 @@ P1 第二批 10 件：机械 3（齿轮组 / 卷扬机 / 动力装置）+ 货物
 | `SN_Dock_Mooring` | `assets/models/dock/SN_Dock_Mooring.glb` | `SN_Dock_Mooring_Prototype` | 1.56 × 1.15 × 0.95 | **940** | 5 | 甲板面 z=0；Bitt/Ring/Rope_Tie |
 
 批次 2 合计 **13,680 三角面**（预算 20,600）；两批合计 **25,644 / 37,100**。
-- 新增共享贴图 `SN_Tex_Coal`（512² 无缝碎煤），spec / 生成器 / runtime_dirs 已同步；`shared_materials` 现为 11 张。
+- 新增共享贴图 `SN_Tex_Coal`（512² 无缝碎煤），spec / 生成器 / runtime_dirs 已同步；`shared_materials` 现为 12 张（2026-10-24 新增 `SN_Tex_Copper_Green` 铜绿屋面）。
 - 结构要点：齿轮组 = 开式机架 + 三级齿轮（24/14/12 齿）+ 三轴 + 轴承 + 手摇曲柄；卷扬机 = 木铁底座 + A 形机架 + 缠绳绳鼓 + 棘轮/棘爪 + 刹车带 + 曲柄 + 吊钩；动力装置 = 滑橇 + 卧式汽缸 + 活塞/十字头/连杆 + 飞轮 + 阀箱/手轮 + 蒸汽管/排气管 + 压力表 + 调速器；货箱 = 板条箱体 + 铁包角/铁带 + 黄铜铭牌 + 提手；煤斗 = 收分铁斗 + 碎煤堆 + 双轮 + 支腿 + 拉手 + 出料滑槽；储罐 = 卧式铆接罐 + 双鞍座 + 3 道红箍 + 人孔 + 黄铜阀 + 排气管；托盘 = 7 板条 / 3 纵梁 / 3 垫块 / 铁包角；码头结构 = 石砌岸壁 + 顶面铺石 + 木压顶 + 4 护舷 + 系缆环 + 爬梯；栈桥 = 8 桩 + 纵梁/横梁/斜撑 + 21 铺板 + 端部爬梯；系缆设施 = 双柱缆桩 + 横档 + 系缆环 + 链条 + 绳圈 + 木护舷。
 - 源/工具：工单 `tools/modeling/briefs/sn_kit_batch2.json`；生成器 `kit_batch2_generator.py`；材质视图 `sn_kit_materials.py`；干跑 `dryrun_kit_batch2.py`；导出 `export_kit_batch2_glb.py`；GLB 自检 `verify_kit_batch2_glb.py`；预览 `render_kit_batch2_preview.py`；目录 `gen_kit_catalog.py`（合并两批）。
 - 验收图：`docs/design/screenshots/kits/kit_machinery_lineup.png` / `kit_cargo_lineup.png` / `kit_dock_lineup.png` / `kit_assembly_dock.png` / `kit_assembly_dock_detail.png` 与 10 件 × {3/4, 侧视}。
@@ -580,7 +580,33 @@ Mount + 语义 socket + 根 extras（建筑另写 `module_x/y`，环境件另写
 - 源/工具：工单 `tools/modeling/briefs/sn_kit_batch3.json`；生成器 `kit_batch3_generator.py`；材质视图 `sn_kit_materials.py`；干跑 `dryrun_kit_batch3.py`；导出 `export_kit_batch3_glb.py`；GLB 自检 `verify_kit_batch3_glb.py`；预览 `render_kit_batch3_preview.py`；目录 `gen_kit_catalog.py`（合并三批）。
 - 验收图：`docs/design/screenshots/kits/kit_architecture_lineup.png` / `kit_environment_lineup.png` / `kit_assembly_town.png` / `kit_assembly_town_detail.png` / `kit_assembly_coast.png` / `kit_assembly_coast_detail.png` 与 8 件 × {3/4, 侧视}。
 - 本批不登记 manifest、不接运行时装配；详细验收见 [KIT_BATCH3_ACCEPTANCE.md](../archive/KIT_BATCH3_ACCEPTANCE.md)。
-- 共享贴图：`assets/models/{architecture,environment}/shared_materials/` + `dev_mods/core/.../shared_materials/`；`shared_materials.spec.json` 的 `runtime_dirs` 已扩到 16 个目录（11 张贴图、本批无新增）。
+- 共享贴图：`assets/models/{architecture,environment}/shared_materials/` + `dev_mods/core/.../shared_materials/`；`shared_materials.spec.json` 的 `runtime_dirs` 已扩到 16 个目录（12 张贴图；2026-10-24 新增 `SN_Tex_Copper_Green`，本批无新增）。
+
+## 大型港口航站楼 `SN_Grand_Harbour_Terminal`（2026-10-24）
+
+按用户参考图制作的大型港口航站楼（非现有 PortStage 槽位资产，暂不登记 manifest / 不接运行时装配）：
+中央 15 m 宽三拱门廊 + 8 m 深玻璃门厅 + 四向钟楼 + 铜绿四坡顶 + 两翼连续拱廊 + 端部亭阁 + 海堤广场与 6 级大台阶。
+1 unit = 1 m；根 `SN_GHT_Root` 在平台地面中心 `(0, −330, 0)`，`+X` 为正面、`+Z` 向上。
+
+| 项 | 值 |
+| --- | --- |
+| 运行时 GLB | `assets/models/architecture/SN_Grand_Harbour_Terminal.glb` + `dev_mods/core` 副本 |
+| 集合 | `SN_GHT_Grand_Harbour_Terminal_Prototype` |
+| 尺寸 X×Y×Z | **72.45 × 133.70 × 56.65 m**（z=0..56.65） |
+| 节点 / 网格 | **17 / 16**（root 空物体 + 15 结构 mesh + `SN_GHT_Sign` 文字 mesh） |
+| 三角面 | **59,450**（geometry 58,072 + sign 1,378）/ 预算 90,000 |
+| 材质 | 9 个 `SN_Tex_*`：Stone / Copper_Green / Iron / Iron_Red / Wood / Wood_Dark / Brass / Glass_Dark / Canvas_Shade |
+| 文件 | GLB 3,991,540 B；`.design/architecture/SN_Grand_Harbour_Terminal.blend` 本地快照；`.design/terminal/build_report.json` |
+| 验收 | `verify_grand_harbour_terminal_glb.py` **ALL OK**；结构 mesh 边界/非流形/退化/孤立点全 0；UV 16/16；9 张外部共享贴图 |
+| 预览 | `docs/design/screenshots/architecture/grand_terminal_{three_quarter,front,aerial,entrance_detail}.png` |
+| 源 / 工具 | 工单 `tools/modeling/briefs/sn_grand_harbour_terminal.json`；生成器 `sn_grand_harbour_terminal_generator.py`；干跑 `dryrun_grand_harbour_terminal.py`；导出 `export_grand_harbour_terminal_glb.py`；GLB 验收 `verify_grand_harbour_terminal_glb.py`；预览 `render_grand_harbour_terminal_preview.py` |
+
+- 新增共享材质 `SN_Tex_Copper_Green`（第 12 张共享贴图，`verdigris` 画家：低对比云斑 + 细竖向雨痕 + 极少量露铜点，无 1 m 网格/大锈斑，避免大屋面平铺感），旧 11 张 tile 字节未变；`shared_materials.spec.json` / runtime_dirs / `sn_kit_materials.MAT_COPPER_GREEN` 已同步。
+- 设计要点：中央拱门是真实 8 m 深凹洞（不是贴片），玻璃幕墙 + 黄铜竖棂 + 玫瑰窗 + 双扇木门；两翼 6 跨拱廊为真实墩柱 + 拱券；钟楼四向钟盘 + 鼓座 + 16 肋铜穹顶 + 采光亭 + 旗；正立面黄铜铭牌 `HARBOUR TERMINAL`。檐口为三层退台，**按用户要求不排齿饰**；用户指出副楼转角竖向隅石远看像锯齿后，**两翼 / 端亭 / 中央主楼的隅石全部移除**，所有转角为平直石墙转角。
+- UV 去重复（2026-10-24 用户反馈“材质平铺感太重”）：**不改共享材质 spec**，只在 `SN_GHT_` 这套 mesh 的 `UVMap` 上做后处理——石/铜 UV 周期乘 0.45–0.60（有效 tile 约 3.3–4.6 m，砌块/铜板变大、重复频率下降）+ 每对象 ±10% 周期差 + SHA256 确定性 UV 偏移（切断相邻体量同频）；玻璃/木/黄铜保持原 UV。实测 Central_Block 12.4 × 19.8 m 墙 tile=4.59 m，无 NaN/拉伸。铜绿屋面另改用 `verdigris` 画家（低对比云斑 + 淡雨痕 + 少量小露铜点，无 1 m 网格/大锈斑），解决大屋面平铺感。
+- **已接入当前港口舞台（主场景门面）**：`dev_mods/core/content/port_templates.json` 的 `iron_harbor` diorama 增加 `landmark: "model.building.grand_harbour_terminal"`；`PortViewQuery` 将其解析为物理 GLB 路径，`PortStage` 以 **scale 0.42 / yaw −90° / position (0, 1.9, −24)** 放在港口中轴、town row 前方；固定机位改为**垂直于码头、沿 −Z 看向港口**（harbor 相机 x=0、target x=0；market/shipyard/supply 同样相机与目标同 X 的正视构图）。
+  - **最小门面模式**：检测到 `landmark_path` 时，舞台只保留 terminal、水/码头/天空和 12 件小装饰（4 盏煤气灯、2 货箱、2 木桶、4 系缆桩）；移除城镇建筑/市场/起重机/船只/前景黑框/手绘 skyline 与 banner。设施锚点仍保留为空节点供 UI 热点定位，不渲染设施模型。manifest 新增 `model.building.grand_harbour_terminal`。端到端截图见 `docs/design/screenshots/port_stage/port_stage_preview.png`，测试 `test_stage_host.gd` 断言 landmark 路径、挂载与最小装饰集合。
+- 已知非阻塞项：文字 mesh `SN_GHT_Sign` 因字体挤出固有 6 条零面积细缝边界边（不可见、无退化面）；Web 预览/导出路径仍使用 loose `dev_mods` 原始 GLB 外部贴图读取（发布包内需按 ContentAssetLoader 的共享贴图路径）。
 
 ## 模型素材库批次 4：architecture_kit 扩展 / 可围合基地（M1-1，2026-10-22）
 

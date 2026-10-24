@@ -112,6 +112,10 @@ def _load_image(material):
     if image is None or os.path.abspath(bpy.path.abspath(image.filepath)) != os.path.abspath(path):
         image = bpy.data.images.load(path, check_existing=True)
         image.name = entry["texture"]
+    else:
+        # 活体 Blender 会缓存已加载的贴图；重新生成 tile 后强制从磁盘刷新，
+        # 否则重建资产仍会使用旧像素。
+        image.reload()
     image.colorspace_settings.name = "sRGB"
     return image
 
