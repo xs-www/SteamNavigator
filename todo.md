@@ -10,6 +10,7 @@
 ## Pending
 
 ### 近期
+- [ ] UI 皮肤后续（V1 边界）：布旗 `flag_*` 接入导航/出航确认/港口识别（需布局改版，当前紧凑 64×36 导航与 172×42 侧牌放不下）；补齐 `nav_overview` / `nav_base` / `nav_trade` / `nav_ruins`、`shipyard_utility` / `shipyard_weapons`、`action_buy` / `sell` / `repair` / `wait`、`status_risk` 图标；多套皮肤运行时切换（Theme 动态重建，当前 Theme 绑定生成时的 skin 目录）；换肤后 960×540 文字/安全区复验与低动效模式
 - [ ] 船体蓝图后续：武器成对（左右舷同型）的运行时命令与校验；舱位运行时槽位化（`mount_state` + state 2.1 迁移）；把 `apply_hull_blueprints.mjs --check` 接入发布/CI 门禁，GLB 或线稿参数变化时自动重算坐标
 - [ ] 船厂改装页后续：港区 `shipyard` 站位接入真实干船坞 + 吊架（给 `port.view` / `facility_visuals.shipyard` 绑定 `SN_Dry_Dock.glb` + `SN_Shipyard_Gantry.glb`，当前是程序化 billboard）；3D 窗口按窗口宽度做机位微调，超宽屏下不要让船坞站位移到窗外
 - [ ] Lua Modding SDK S1：按 [LUA_SDK_S0_API_CONTRACT.md](docs/design/LUA_SDK_S0_API_CONTRACT.md) / [LUA_SDK_S0_THREAT_MODEL.md](docs/design/LUA_SDK_S0_THREAT_MODEL.md) / [LUA_SDK_S0_TEST_MATRIX.md](docs/design/LUA_SDK_S0_TEST_MATRIX.md) 做独立 Lua Host PoC（VM 选型、中断/内存/库隔离证据、纵向样例），实验分支，禁止接入正式 ModLoader；S0 已完成
@@ -47,6 +48,8 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 与发布验收（Content Schema 2.0 已冻结）
 
 ## Recently Completed
+
+- UI 外部贴图皮肤管线 V1（2026-10-24）：UI 从 Godot 内置绘制/StyleBoxFlat 全面切换为外部贴图控件。新增 `tools/ui/build_ui_skin.gd`（两份母版图集 → `assets/ui/skin/sn_v1/`：41 个九宫格 style、30 枚 128px 图标、6 个固定配件、派生仪表/铭牌/滚动条/复选框/焦点环 + `skin.json`）与 `tools/ui/build_ui_theme.gd`（skin.json → 纹理化 Theme，含按钮 6 变体、面板 10 变体、Badge 4、进度 3、输入/复选/滚动条/Tab/Tooltip/Popup），`tools/build_ui_skin.ps1 -Check` 作为母版一致性门禁；新增 `framework/ui/skin/sn_skin.gd`（SNSkin）作为程序化 UI 的唯一素材访问层。Shell 顶栏/HUD/导航/侧牌/底栏、8 个港口页、7 个流程页、4 个菜单页与 story 组件全部移除 `StyleBoxFlat.new()` 与十六进制业务色（Theme 0 flat、全局业务脚本 0 flat），接入 HUD/导航/侧牌/船厂分类/行动/状态图标；市场账册与委托/结算/线索用 Parchment 纸面、船厂保留 Blueprint 底板与 Glass 操作坞、HUD 用半透明钢框（TopChrome 实测 113px ≤130、状态条 50px）。换同名同尺寸贴图即整体换肤，流程见 `docs/design/UI_SKIN_PIPELINE.md`。验证：Godot 全量 **652/652**（新增 `test_ui_skin` 9 例含无 Flat/无 hex 守门）、`build_ui_skin -Check` 通过、`capture_ui -AllScreens` 两分辨率各 26 张、静态文档 `--check` 通过。
 
 - 大型港口航站楼 SN_Grand_Harbour_Terminal（2026-10-24）：按用户参考图新增 72.45 × 133.70 × 56.65 m 建筑资产（中央 15 m 三拱门廊 + 8 m 深玻璃门厅 + 四向钟楼 + 铜绿四坡顶 + 两翼连续拱廊 + 端亭 + 海堤广场），17 节点 / 16 mesh / **59,450 tri**，9 种共享贴图材质；新增第 12 张共享贴图 `SN_Tex_Copper_Green`（verdigris 软纹理）；UV 去重复（石/铜有效 tile 3.3–4.6 m + 每对象偏移）；按用户反馈移除全部檐口齿饰与竖向隅石；已接入 `iron_harbor` PortStage 作为 **0.42 缩放的主场景门面**（中央主背景、镜头垂直码头正视；最小门面模式只留 terminal + 12 件小装饰，移除城镇建筑/设施模型/船只/前景黑框与手绘 skyline，设施锚点保留给 UI；manifest `model.building.grand_harbour_terminal` + `diorama.landmark`，端到端 test_stage_host 通过）；导出 assets + Core 双份 GLB（3,991,540 B），`verify_grand_harbour_terminal_glb.py` ALL OK，4 张 EEVEE 预览与港口舞台截图已归档。未登记 PortStage 之外的其它站位。
 

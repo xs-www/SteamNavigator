@@ -9,15 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ClueLogScreen` | L1 |
-| `close_requested (signal)` | L21 |
-| `clue_selected (signal)` | L23 |
-| `TEXT` | L25 |
-| `MUTED` | L26 |
-| `BRASS` | L27 |
-| `TEAL` | L28 |
-| `GREEN` | L29 |
-| `RED` | L30 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L35 |
+| `close_requested (signal)` | L31 |
+| `clue_selected (signal)` | L33 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L38 |
 
 （类型 / 来源 / 等级 / 剩余时效 / 分级披露内容 / 可调查状态）与折叠的过期历史；
 点击条目回到海图并选中该线索，关闭返回海图。页面不查询后端、不执行命令。
@@ -32,5 +26,15 @@
 - 整张卡片是一个按钮：`clue_selected(clue_id)` 由 Shell 转成「回海图并选中」。
 - 过期历史只读 `vm.expired`，灰显并标注 `ui.clue.expired`；不参与 active 计数。
 - 空态（active + expired 都为空）显示 `ui.clue.list.empty` 引导文案。
+
+## 皮肤与节点约束（UI 贴图层）
+- 外观来自 `assets/ui/skin/sn_v1/` 纹理化 Theme：外层列表用 `SNPanel`，
+  active 卡片改为 `SNParchmentPanel` 承托、内部 `SNGhostButton` 只渲染文字并
+  由 Theme 表达 hover/pressed；不再手写三态 `StyleBoxFlat`。
+- 纸面正文/次要文字取 `SNSkin.color("ink.primary")` / `"paper.ink_muted"`；
+  深底标题/空态取 `text.light` / `text.muted`。
+- 节点名 `ClueCard_<id>`（Button 文本即卡片内容）、`ExpiredClue_<id>`、
+  `ClueList`、`CloseButton` 与线索列表 `520` 高滚动区不变，test_sea_chart
+  按名字与卡片文本断言。
 
 模块索引：[framework/ui](../../README.md)

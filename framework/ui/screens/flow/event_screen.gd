@@ -1,31 +1,40 @@
 class_name EventScreen
 extends VBoxContainer
-## Voyage-event choice presentation.
+## @static-doc
+## 作用：航行事件流程场景：展示事件说明、当前资源和本次抽取的处理选项。
 ##
 ## 普通航行事件与 4.2 资源告急页共用这一版式。选项按钮只发 `command_requested`，
 ## 由 Shell 决定把它接到 `event.choose_option` 还是资源告急决策；提示行默认是
 ## 「选择后会立即结算」，事件 VM 可以用 `hint_text`（已本地化）或 `hint_key`
 ## （交给翻译回调）覆盖它——资源告急的 `continue` 不会立刻结算，需要换文案。
+##
+## - 关键依赖：`event.view` / 资源告急 ViewModel、`SNSkin`、纹理化 Theme
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 事件正文是航海文书：面板用 `SNParchmentPanel` 纸面承托，标题用
+##   `state.danger`、正文 `ink.primary`、资源/提示行 `paper.ink_muted`；选项按钮
+##   统一 `SNSecondaryButton`（钢制铭牌），文字色与四态由 Theme 提供。
+## - 文案完全来自 `_loc()`（本地化缺失时回退中文/键名），DEFAULT_HINT 保持原文。
+## - 只依赖 `_label(text, size, color)` / `_panel` 结构；不新增节点名，也不改
+##   `command_requested(command, params)` 的 `event.choose_option` 契约。
+## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const RED := Color("c36b53")
 ## 没有 hint 覆盖时保持原有文案（普通事件的外观/语义一行不改）。
 const DEFAULT_HINT := "从以下方案中选择一个，选择后会立即结算。"
 var _tr: Callable
 
 
 func bind(vm: Dictionary, translate: Callable) -> void:
-	_tr = translate; _clear(); var event: Dictionary = vm.get("event", {}); var ship: Dictionary = vm.get("ship", {}); var panel := PanelContainer.new(); var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 8); panel.add_child(box)
-	box.add_child(_label(_loc(String(event.get("name_key", "")), String(event.get("event_id", ""))), 22, RED))
+	_tr = translate; _clear(); var event: Dictionary = vm.get("event", {}); var ship: Dictionary = vm.get("ship", {}); var panel := PanelContainer.new(); panel.theme_type_variation = &"SNParchmentPanel"; var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 8); panel.add_child(box)
+	box.add_child(_label(_loc(String(event.get("name_key", "")), String(event.get("event_id", ""))), 22, SNSkin.color("state.danger")))
 	var description_key := String(event.get("description_key", ""))
 	if not description_key.is_empty():
-		box.add_child(_label(_loc(description_key, ""), 14, TEXT))
-	box.add_child(_label("耐久 %s / %s · 淡水 %s · 煤炭 %s · 金币 %d" % [_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0))), _fmt(float(ship.get("water", 0.0))), _fmt(float(ship.get("coal", 0.0))), int(vm.get("money", 0))], 13, MUTED)); box.add_child(_label(_hint_text(event), 12, MUTED))
+		box.add_child(_label(_loc(description_key, ""), 14, SNSkin.color("ink.primary")))
+	box.add_child(_label("耐久 %s / %s · 淡水 %s · 煤炭 %s · 金币 %d" % [_fmt(float(ship.get("durability", 0.0))), _fmt(float(ship.get("max_durability", 0.0))), _fmt(float(ship.get("water", 0.0))), _fmt(float(ship.get("coal", 0.0))), int(vm.get("money", 0))], 13, SNSkin.color("paper.ink_muted"))); box.add_child(_label(_hint_text(event), 12, SNSkin.color("paper.ink_muted")))
 	for option in event.get("options", []):
-		var option_id := String(option.get("id", "")); var button := Button.new(); button.text = _loc(String(option.get("name_key", "")), option_id); button.pressed.connect(_choose_option.bind(option_id)); box.add_child(button)
+		var option_id := String(option.get("id", "")); var button := Button.new(); button.theme_type_variation = &"SNSecondaryButton"; button.text = _loc(String(option.get("name_key", "")), option_id); button.pressed.connect(_choose_option.bind(option_id)); box.add_child(button)
 	add_child(panel)
 
 

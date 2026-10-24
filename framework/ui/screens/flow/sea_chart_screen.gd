@@ -26,6 +26,16 @@ extends VBoxContainer
 ## - **线索列表入口**（4.4.4）：顶栏「线索列表」按钮发 `clue_list_requested` 给 Shell；
 ##   `view_model["preselect_clue_id"]` 非空时本页在绑定时直接选中该线索（列表页
 ##   「点击回海图」用，即使货物线索在海图上没有几何也能在面板里打开）。
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 本页只做壳层与接线：章节标题走 `SNSectionHeader`（SNTitleLabel/SNEyebrowLabel/
+##   SNDetailLabel），顶栏按钮统一 `SNGhostButton`，空态提示取
+##   `SNSkin.color("text.muted")`；不再保留颜色常量。
+## - 海图绘制、迷雾、航线与坐标全部在 `SNSeaChartView`（不在本页写域），右侧信息
+##   面板在 `SNSeaChartPanel`（ui-port 写域）；本页不改它们的绘制契约。
+## - 节点名 `Header` / `ChartBody` / `ChartRow` / `ClueListButton` / `CloseButton` /
+##   `VoyageConfirm` 与 `PANEL_WIDTH = 320`、全窗 `VBox` 结构不变（test_sea_chart /
+##   test_ui_shell 按名字与最小宽度断言）。
 ## @end-static-doc
 
 signal close_requested
@@ -44,7 +54,6 @@ signal purchase_clue_requested
 ## 调查线索：Shell 接 `clue.investigate`，成功后刷新海图。
 signal investigate_requested(clue_id: String)
 
-const COLOR_MUTED := Color("9fafa7")
 const PANEL_WIDTH := 320.0
 ## 新组件按路径 preload，避免依赖编辑器生成的全局 class_name 缓存（无头测试与
 ## 全新检出都能直接加载；不引用 `SNVoyageConfirm` 这个全局名）。
@@ -93,7 +102,7 @@ func _rebuild() -> void:
 		var message := Label.new()
 		message.text = _loc("ui.sea_chart.no_data", "没有可用的世界数据。")
 		message.add_theme_font_size_override("font_size", 15)
-		message.add_theme_color_override("font_color", COLOR_MUTED)
+		message.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 		add_child(message)
 		return
 	# 图表与确认弹窗叠在同一个 body 里：弹窗用全窗锚点覆盖图表，而不是把页面挤成

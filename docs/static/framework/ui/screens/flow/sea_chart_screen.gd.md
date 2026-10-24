@@ -9,22 +9,21 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartScreen` | L1 |
-| `close_requested (signal)` | L31 |
-| `clue_list_requested (signal)` | L33 |
-| `departure_requested (signal)` | L35 |
-| `departure_confirmed (signal)` | L37 |
-| `departure_cancelled (signal)` | L39 |
-| `departure_strategy_changed (signal)` | L41 |
-| `purchase_clue_requested (signal)` | L43 |
-| `investigate_requested (signal)` | L45 |
-| `COLOR_MUTED` | L47 |
-| `PANEL_WIDTH` | L48 |
-| `VOYAGE_CONFIRM_SCRIPT` | L51 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L62 |
-| `get_chart() -> SNSeaChartView` | L69 |
-| `get_panel() -> SNSeaChartPanel` | L73 |
-| `is_departure_open() -> bool` | L78 |
-| `get_departure() -> Dictionary` | L82 |
+| `close_requested (signal)` | L41 |
+| `clue_list_requested (signal)` | L43 |
+| `departure_requested (signal)` | L45 |
+| `departure_confirmed (signal)` | L47 |
+| `departure_cancelled (signal)` | L49 |
+| `departure_strategy_changed (signal)` | L51 |
+| `purchase_clue_requested (signal)` | L53 |
+| `investigate_requested (signal)` | L55 |
+| `PANEL_WIDTH` | L57 |
+| `VOYAGE_CONFIRM_SCRIPT` | L60 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L71 |
+| `get_chart() -> SNSeaChartView` | L78 |
+| `get_panel() -> SNSeaChartPanel` | L82 |
+| `is_departure_open() -> bool` | L87 |
+| `get_departure() -> Dictionary` | L91 |
 
 左侧 `SNSeaChartView` 铺满、右侧 `SNSeaChartPanel`（320 px）展示选中港口/航线/线索，
 顶部章节标题 + 关闭按钮；出航时在页内叠加 `SNVoyageConfirm` 确认弹窗。
@@ -50,5 +49,15 @@
 - **线索列表入口**（4.4.4）：顶栏「线索列表」按钮发 `clue_list_requested` 给 Shell；
   `view_model["preselect_clue_id"]` 非空时本页在绑定时直接选中该线索（列表页
   「点击回海图」用，即使货物线索在海图上没有几何也能在面板里打开）。
+
+## 皮肤与节点约束（UI 贴图层）
+- 本页只做壳层与接线：章节标题走 `SNSectionHeader`（SNTitleLabel/SNEyebrowLabel/
+  SNDetailLabel），顶栏按钮统一 `SNGhostButton`，空态提示取
+  `SNSkin.color("text.muted")`；不再保留颜色常量。
+- 海图绘制、迷雾、航线与坐标全部在 `SNSeaChartView`（不在本页写域），右侧信息
+  面板在 `SNSeaChartPanel`（ui-port 写域）；本页不改它们的绘制契约。
+- 节点名 `Header` / `ChartBody` / `ChartRow` / `ClueListButton` / `CloseButton` /
+  `VoyageConfirm` 与 `PANEL_WIDTH = 320`、全窗 `VBox` 结构不变（test_sea_chart /
+  test_ui_shell 按名字与最小宽度断言）。
 
 模块索引：[framework/ui](../../README.md)

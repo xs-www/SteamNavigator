@@ -1,5 +1,8 @@
 class_name SupplyScreen
 extends VBoxContainer
+## @static-doc
+## 作用：补给与维修页面场景：绑定 SupplyView，组合煤水决策卡、资源摘要与维修操作；作为泊位侧栏时按 620 px 窄列设计（卡片单列堆叠、badge 可换行），外层 PageScroll 负责竖向滚动。
+##
 ## Supply and repair presentation screen.
 ##
 ## The shell owns queries and commands. This scene only binds a SupplyView
@@ -9,14 +12,19 @@ extends VBoxContainer
 ## is designed for a 620 px berth sidebar. The coal/water cards stack in a single
 ## column and the summary badges flow onto an extra row instead of widening the
 ## page; the outer PageScroll owns vertical scrolling.
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 摘要与维修面板用 Theme 变体 `SNInsetPanel` / `SNElevatedPanel`（钢制）；
+##   `SNBadge` 负责四色状态；煤水卡内部由 `SNSupplyCard` 自己换皮。
+## - 文字与状态色取 `SNSkin.color(token)`（text.light / text.muted /
+##   brass.highlight / state.danger），本文件无内联十六进制色与 StyleBoxFlat。
+## - 尺寸约束：维修按钮高度 38（`SNPrimaryButton`）、煤水卡 `custom_minimum_size =
+##   (0, 0)` + EXPAND_FILL、badge `HFlowContainer` 自动换行均保持不变。
+## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
 const SUPPLY_CARD_SCENE := preload("res://framework/ui/components/sn_supply_card.tscn")
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_RED := Color("c36b53")
 
 var _tr: Callable
 
@@ -65,7 +73,7 @@ func _summary(view_model: Dictionary) -> Control:
 	], SNBadge.Tone.SUCCESS))
 	content.add_child(badges)
 	if not bool(view_model.get("has_supply", false)):
-		content.add_child(_label("当前港口没有补给码头。", 14, COLOR_RED))
+		content.add_child(_label("当前港口没有补给码头。", 14, SNSkin.color("state.danger")))
 	return panel
 
 
@@ -98,7 +106,7 @@ func _repair_panel(view_model: Dictionary) -> Control:
 	panel.add_child(content)
 	var repair: Dictionary = view_model.get("repair", {})
 	var header := HBoxContainer.new()
-	var title := _label("维修", 20, COLOR_BRASS)
+	var title := _label("维修", 20, SNSkin.color("brass.highlight"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var badges := HFlowContainer.new()
@@ -119,7 +127,7 @@ func _repair_panel(view_model: Dictionary) -> Control:
 		_fmt(float(repair.get("module_points", 0.0))),
 		int(repair.get("cost", 0)),
 		_fmt(float(view_model.get("repair_per_point", 0.0))),
-	], 13, COLOR_TEXT))
+	], 13, SNSkin.color("text.light")))
 	var repair_button := Button.new()
 	repair_button.text = _loc("ui.button.repair", "维修")
 	repair_button.custom_minimum_size = Vector2(0, 38)

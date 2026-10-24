@@ -1,20 +1,27 @@
 class_name SNPartRow
 extends PanelContainer
+## @static-doc
+## 作用：船厂右侧部件 HUD 的单行条目：用标签区分已装 / 仓库 / 随船 / 可购买，持有且可装的行是拖拽来源。
+##
 ## One module entry in the shipyard parts HUD.
 ##
 ## A row is one of: installed (已装), owned free module (仓库/随船, draggable),
 ## purchasable candidate (点击购买安装). Owned free rows produce the
 ## `ship_parts` drag payload consumed by SNSlotTarget.
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 行底板不再手搓 `StyleBoxFlat`：普通行取 `SNSkin.style("panel_recess")`（仪表凹槽
+##   纹理），可拖 / 匹配高亮行改用 `SNSkin.style("panel_steel")` 并用
+##   `modulate_color = SNSkin.color(...)` 着色；内容边距固定回 8 / 4，保持旧行高。
+## - 拖拽预览用同一套钢制九宫格 + 10 / 6 内边距；文字色全部取
+##   `SNSkin.color(token)`（text.light / text.muted / state.water），无十六进制色。
+## - 尺寸约束：标签 64 px 右对齐、行内间距 8、字号 13/11/10 与信号/拖拽载荷
+##   `{"kind": "ship_parts", "part": ...}` 保持不变；不新增包装容器。
+## @end-static-doc
 
 signal activated(part: Dictionary)
 signal drag_started(part: Dictionary)
 
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const BRASS := Color("e1c487")
-const TEAL := Color("76aaa7")
-const RED := Color("c36b53")
-const GREEN := Color("76aa8c")
 
 var part: Dictionary = {}
 var draggable := false
@@ -24,7 +31,7 @@ var _meta: Label
 var _hint: Label
 var _compatible := false
 var _tag_text := ""
-var _tag_color := Color("e1c487")
+var _tag_color: Color = SNSkin.color("brass.highlight")
 var _meta_text := ""
 var _hint_text := ""
 
@@ -72,13 +79,13 @@ func _ready() -> void:
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(text_box)
-	_title = _label(13, TEXT)
-	_meta = _label(11, MUTED)
-	_hint = _label(10, TEAL)
+	_title = _label(13, SNSkin.color("text.light"))
+	_meta = _label(11, SNSkin.color("text.muted"))
+	_hint = _label(10, SNSkin.color("state.water"))
 	text_box.add_child(_title)
 	text_box.add_child(_meta)
 	text_box.add_child(_hint)
-	_tag = _label(11, BRASS)
+	_tag = _label(11, SNSkin.color("brass.highlight"))
 	_tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_tag.custom_minimum_size = Vector2(64, 0)
 	_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -99,22 +106,24 @@ func _label(font_size: int, color: Color) -> Label:
 	return label
 
 
+## Skin-backed row sheet. Recess = idle row; steel + token tint = draggable /
+## compatible highlight. Content margins are pinned to 8 / 4 so the HUD keeps
+## its original row height.
 func _apply_style() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.055, 0.098, 0.110, 0.62)
-	style.border_color = Color(BRASS, 0.18)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(2)
+	var style_id := "panel_steel" if (draggable or _compatible) else "panel_recess"
+	var base_style: StyleBoxTexture = SNSkin.style(style_id)
+	if base_style == null:
+		theme_type_variation = &"SNInsetPanel"
+		return
+	var style := base_style.duplicate() as StyleBoxTexture
 	style.content_margin_left = 8.0
 	style.content_margin_right = 8.0
 	style.content_margin_top = 4.0
 	style.content_margin_bottom = 4.0
-	if draggable:
-		style.border_color = Color(TEAL, 0.55)
 	if _compatible:
-		style.bg_color = Color(0.086, 0.176, 0.173, 0.82)
-		style.border_color = Color(BRASS, 0.85)
-		style.set_border_width_all(2)
+		style.modulate_color = SNSkin.color("brass.highlight")
+	elif draggable:
+		style.modulate_color = SNSkin.color("state.water")
 	add_theme_stylebox_override("panel", style)
 
 
@@ -122,20 +131,21 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	if not draggable:
 		return null
 	var preview := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.055, 0.145, 0.137, 0.95)
-	style.border_color = Color(TEAL, 0.9)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.content_margin_left = 10.0
-	style.content_margin_right = 10.0
-	style.content_margin_top = 6.0
-	style.content_margin_bottom = 6.0
-	preview.add_theme_stylebox_override("panel", style)
+	var base_style: StyleBoxTexture = SNSkin.style("panel_steel")
+	if base_style != null:
+		var style := base_style.duplicate() as StyleBoxTexture
+		style.content_margin_left = 10.0
+		style.content_margin_right = 10.0
+		style.content_margin_top = 6.0
+		style.content_margin_bottom = 6.0
+		style.modulate_color = SNSkin.color("state.water")
+		preview.add_theme_stylebox_override("panel", style)
+	else:
+		preview.theme_type_variation = &"SNInsetPanel"
 	var label := Label.new()
 	label.text = "装配 · " + String(part.get("name", part.get("module_id", "")))
 	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", Color("d8efe8"))
+	label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 	preview.add_child(label)
 	set_drag_preview(preview)
 	drag_started.emit(part)

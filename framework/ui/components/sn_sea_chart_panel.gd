@@ -36,6 +36,19 @@ extends PanelContainer
 ##   精确买卖价（4 级）与剩余时效（`ui.clue.expiry`）；底部「前往该港」按钮发
 ##   `departure_requested("goods", clue_id)`（统一确认弹窗 → `clue.travel`）。等级文案
 ##   用 `ui.clue.goods.level.N`；面板仍不重算行情、不读 `credibility`。
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 面板底层用 Theme 变体 `SNPanel`（黄铜钢框纹理），内容边距由 theme 提供；
+##   不再 `StyleBoxFlat` / `add_theme_stylebox_override("panel")`。
+## - 所有文字 / 风险 / 状态色取 `SNSkin.color(token)`：text.light、text.muted、
+##   brass.highlight、state.water（航线信息）、state.success（已探索/可行）、
+##   state.warning（时效/未知风险）、state.danger（不可行/缺补给）。
+## - 按钮全部走 Theme 变体：启航 / 循此线索出航 / 前往该港 = `SNPrimaryButton`
+##   （图标 `nav_departure` / `status_route`，`icon_max_width` 18），调查 / 购买线索 =
+##   `SNSecondaryButton` / `SNGhostButton`；按钮 `text` 与节点名
+##   `DepartButton` / `ExploreButton` / `SailButton` / `InvestigateButton` /
+##   `PurchaseClueButton` 不变。
+## - 尺寸约束：`custom_minimum_size = (320, 0)` 不变；`_ready` 之后不新增子节点层级。
 ## @end-static-doc
 
 ## 「启航 / 循此线索出航 / 前往该港」共用的出航入口（4.3.4 / U7、4.4.2）：
@@ -72,13 +85,7 @@ var _translate: Callable
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(320, 0)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.12, 0.14, 0.92)
-	style.border_color = Color(0.35, 0.55, 0.52, 0.35)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(16)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = &"SNPanel"
 
 
 func bind(port_data: Dictionary, route_data: Dictionary, translate: Callable = Callable()) -> void:
@@ -146,7 +153,7 @@ func _rebuild() -> void:
 	var header := Label.new()
 	header.text = port_name
 	header.add_theme_font_size_override("font_size", 20)
-	header.add_theme_color_override("font_color", Color("e1c487"))
+	header.add_theme_color_override("font_color", SNSkin.color("brass.highlight"))
 	vbox.add_child(header)
 	
 	# Archetype and region: prefer the content name keys the query resolved, so a
@@ -168,7 +175,7 @@ func _rebuild() -> void:
 			parts.append(region_id)
 		detail.text = " · ".join(parts)
 		detail.add_theme_font_size_override("font_size", 11)
-		detail.add_theme_color_override("font_color", Color(0.6, 0.7, 0.7, 0.75))
+		detail.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 		vbox.add_child(detail)
 	
 	# Separator
@@ -182,7 +189,7 @@ func _rebuild() -> void:
 		var fac_label := Label.new()
 		fac_label.text = _tr("ui.label.facilities") + ":"
 		fac_label.add_theme_font_size_override("font_size", 12)
-		fac_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.78, 0.9))
+		fac_label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 		vbox.add_child(fac_label)
 		
 		var fac_list := Label.new()
@@ -195,7 +202,7 @@ func _rebuild() -> void:
 			fac_names.append(String(fac) if facility_label == facility_key else facility_label)
 		fac_list.text = "  " + "、".join(fac_names)
 		fac_list.add_theme_font_size_override("font_size", 11)
-		fac_list.add_theme_color_override("font_color", Color(0.65, 0.75, 0.73, 0.8))
+		fac_list.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 		fac_list.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(fac_list)
 	
@@ -208,7 +215,7 @@ func _rebuild() -> void:
 		var route_header := Label.new()
 		route_header.text = _tr("ui.label.voyage_info")
 		route_header.add_theme_font_size_override("font_size", 14)
-		route_header.add_theme_color_override("font_color", Color("7fc8e8"))
+		route_header.add_theme_color_override("font_color", SNSkin.color("state.water"))
 		vbox.add_child(route_header)
 		
 		# Distance
@@ -244,7 +251,7 @@ func _rebuild() -> void:
 		risk_label.add_theme_font_size_override("font_size", 12)
 		if risk_level < 0.0 or risk_band == "unknown":
 			risk_label.text = _tr("ui.label.risk") + ": " + _tr("ui.label.risk_unknown")
-			risk_label.add_theme_color_override("font_color", Color(0.62, 0.68, 0.66, 0.85))
+			risk_label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 		else:
 			var band_text := _tr("risk." + risk_band) if not risk_band.is_empty() else _risk_level_text(risk_level)
 			risk_label.text = _tr("ui.label.risk") + ": " + band_text
@@ -259,10 +266,10 @@ func _rebuild() -> void:
 		var status_label := Label.new()
 		if explored:
 			status_label.text = "✓ " + _tr("ui.label.route_explored")
-			status_label.add_theme_color_override("font_color", Color("8fd694"))
+			status_label.add_theme_color_override("font_color", SNSkin.color("state.success"))
 		else:
 			status_label.text = "? " + _tr("ui.label.route_unexplored")
-			status_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.5, 0.8))
+			status_label.add_theme_color_override("font_color", SNSkin.color("state.warning"))
 		status_label.add_theme_font_size_override("font_size", 11)
 		vbox.add_child(status_label)
 	
@@ -276,9 +283,8 @@ func _rebuild() -> void:
 		var voyage_btn := Button.new()
 		voyage_btn.name = "DepartButton"
 		voyage_btn.text = _tr("ui.button.start_voyage")
-		voyage_btn.add_theme_stylebox_override("normal", _button_style(Color(0.25, 0.45, 0.42)))
-		voyage_btn.add_theme_stylebox_override("hover", _button_style(Color(0.30, 0.52, 0.48)))
-		voyage_btn.add_theme_stylebox_override("pressed", _button_style(Color(0.20, 0.38, 0.35)))
+		voyage_btn.theme_type_variation = &"SNPrimaryButton"
+		_apply_button_icon(voyage_btn, "nav_departure", 18)
 		voyage_btn.pressed.connect(_on_voyage_pressed)
 		vbox.add_child(voyage_btn)
 	_append_purchase_button(vbox)
@@ -294,7 +300,7 @@ func _build_clue_state() -> void:
 	var header := Label.new()
 	header.text = _tr_or("ui.clue.section_title", "线索")
 	header.add_theme_font_size_override("font_size", 20)
-	header.add_theme_color_override("font_color", Color("e1c487"))
+	header.add_theme_color_override("font_color", SNSkin.color("brass.highlight"))
 	vbox.add_child(header)
 
 	# 4.4：线索类型（港口位置 / 货物行情）。类型是公开信息，不泄露目标。
@@ -303,7 +309,7 @@ func _build_clue_state() -> void:
 	type_label.name = "ClueTypeLabel"
 	type_label.text = _tr_or("ui.clue.type.%s" % type, type)
 	type_label.add_theme_font_size_override("font_size", 12)
-	type_label.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+	type_label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	vbox.add_child(type_label)
 
 	var source_key := String(_clue.get("source_key", ""))
@@ -317,7 +323,7 @@ func _build_clue_state() -> void:
 	var reliability := Label.new()
 	reliability.text = _tr_or("ui.clue.reliability_hint", "来源：%s") % source_label
 	reliability.add_theme_font_size_override("font_size", 12)
-	reliability.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+	reliability.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	vbox.add_child(reliability)
 
 	var level := int(_clue.get("level", 0))
@@ -327,7 +333,7 @@ func _build_clue_state() -> void:
 			_level_key(type, level), String(LEVEL_FALLBACK.get(level, "线索"))
 		)
 		level_label.add_theme_font_size_override("font_size", 13)
-		level_label.add_theme_color_override("font_color", Color("7fc8e8"))
+		level_label.add_theme_color_override("font_color", SNSkin.color("state.water"))
 		vbox.add_child(level_label)
 		_append_next_level_row(vbox, level)
 
@@ -337,7 +343,7 @@ func _build_clue_state() -> void:
 		var attempts_label := Label.new()
 		attempts_label.text = _tr_or("ui.clue.attempts", "已尝试 %d 次") % attempts
 		attempts_label.add_theme_font_size_override("font_size", 11)
-		attempts_label.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+		attempts_label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 		vbox.add_child(attempts_label)
 
 	# 4.4：货物行情线索的剩余时效（港口位置线索 expires_at == 0，不显示）。
@@ -353,7 +359,7 @@ func _build_clue_state() -> void:
 		)
 		expiry.add_theme_font_size_override("font_size", 11)
 		expiry.add_theme_color_override(
-			"font_color", Color("e8967f") if expired else Color("d8c68f")
+			"font_color", SNSkin.color("state.danger") if expired else SNSkin.color("state.warning")
 		)
 		vbox.add_child(expiry)
 
@@ -390,7 +396,7 @@ func _build_clue_state() -> void:
 			int(roundf(distance_min)), int(roundf(maxf(distance_min, distance_max)))
 		]
 		range_label.add_theme_font_size_override("font_size", 12)
-		range_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.78, 0.9))
+		range_label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 		vbox.add_child(range_label)
 
 	if estimated is Dictionary and not (estimated as Dictionary).is_empty():
@@ -402,9 +408,8 @@ func _build_clue_state() -> void:
 	var explore_button := Button.new()
 	explore_button.name = "ExploreButton"
 	explore_button.text = _tr_or("ui.button.explore_clue", "循此线索出航")
-	explore_button.add_theme_stylebox_override("normal", _button_style(Color(0.25, 0.45, 0.42)))
-	explore_button.add_theme_stylebox_override("hover", _button_style(Color(0.30, 0.52, 0.48)))
-	explore_button.add_theme_stylebox_override("pressed", _button_style(Color(0.20, 0.38, 0.35)))
+	explore_button.theme_type_variation = &"SNPrimaryButton"
+	_apply_button_icon(explore_button, "status_route", 18)
 	# 不可行时按钮保留但禁用：让玩家看到"为什么不能去"（blockers）而不是按钮凭空消失。
 	if estimated is Dictionary and (estimated as Dictionary).has("feasible"):
 		explore_button.disabled = not bool((estimated as Dictionary).get("feasible", true))
@@ -422,7 +427,7 @@ func _goods_block(goods: Dictionary, level: int) -> Control:
 	if not name_key.is_empty():
 		box.add_child(_clue_row(
 			_tr_or("ui.clue.goods.port", "港口：%s") % _tr_or(name_key, name_key),
-			Color(0.78, 0.86, 0.84, 0.95)
+			SNSkin.color("text.light")
 		))
 	if level >= ClueService.GOODS_PRICE_MIN_LEVEL:
 		box.add_child(_clue_row(
@@ -430,7 +435,7 @@ func _goods_block(goods: Dictionary, level: int) -> Control:
 				int(goods.get("buy_price_min", 0)), int(goods.get("buy_price_max", 0)),
 				int(goods.get("sell_price_min", 0)), int(goods.get("sell_price_max", 0)),
 			],
-			Color(0.72, 0.82, 0.8, 0.92)
+			SNSkin.color("text.light")
 		))
 	if level >= ClueService.GOODS_SUPPLY_MIN_LEVEL:
 		var demand := String(goods.get("demand", "normal"))
@@ -439,14 +444,14 @@ func _goods_block(goods: Dictionary, level: int) -> Control:
 				int(goods.get("stock", 0)),
 				_tr_or("ui.clue.goods.demand." + demand, demand),
 			],
-			Color(0.65, 0.75, 0.73, 0.85)
+			SNSkin.color("text.muted")
 		))
 	if level >= ClueService.GOODS_EXACT_MIN_LEVEL:
 		box.add_child(_clue_row(
 			_tr_or("ui.clue.goods.price_exact", "行情：买入 %d / 卖出 %d") % [
 				int(goods.get("buy_price", 0)), int(goods.get("sell_price", 0)),
 			],
-			Color("8fd694")
+			SNSkin.color("state.success")
 		))
 	return box
 
@@ -457,9 +462,8 @@ func _append_sail_button(vbox: VBoxContainer, estimated: Variant) -> void:
 	var button := Button.new()
 	button.name = "SailButton"
 	button.text = _tr_or("ui.button.sail_to_port", "前往该港")
-	button.add_theme_stylebox_override("normal", _button_style(Color(0.25, 0.45, 0.42)))
-	button.add_theme_stylebox_override("hover", _button_style(Color(0.30, 0.52, 0.48)))
-	button.add_theme_stylebox_override("pressed", _button_style(Color(0.20, 0.38, 0.35)))
+	button.theme_type_variation = &"SNPrimaryButton"
+	_apply_button_icon(button, "status_route", 18)
 	var can_sail := bool(_clue.get("can_sail", false))
 	if estimated is Dictionary and (estimated as Dictionary).has("feasible"):
 		can_sail = can_sail and bool((estimated as Dictionary).get("feasible", true))
@@ -488,21 +492,21 @@ func _clue_estimate_block(estimated: Dictionary) -> Control:
 	var header := Label.new()
 	header.text = _tr("ui.label.voyage_info")
 	header.add_theme_font_size_override("font_size", 14)
-	header.add_theme_color_override("font_color", Color("7fc8e8"))
+	header.add_theme_color_override("font_color", SNSkin.color("state.water"))
 	box.add_child(header)
 
 	var duration := float(estimated.get("duration_hours", 0.0))
 	if duration > 0.0:
 		box.add_child(_clue_row("%s: %s" % [
 			_tr("ui.label.estimated_time"), _format_duration(duration)
-		], Color(0.72, 0.82, 0.8, 0.92)))
+		], SNSkin.color("text.light")))
 	var coal := float(estimated.get("coal_required", 0.0))
 	var water := float(estimated.get("water_required", 0.0))
 	if coal > 0.0 or water > 0.0:
 		box.add_child(_clue_row("%s %s / %s %s" % [
 			_tr("ui.label.coal"), _format_amount(coal),
 			_tr("ui.label.water"), _format_amount(water),
-		], Color(0.65, 0.75, 0.73, 0.85)))
+		], SNSkin.color("text.muted")))
 	if estimated.has("risk_score"):
 		var risk := float(estimated.get("risk_score", 0.0))
 		var band := VoyageCalculator.risk_label(risk)
@@ -519,7 +523,7 @@ func _clue_estimate_block(estimated: Dictionary) -> Control:
 	)
 	feasible_label.add_theme_font_size_override("font_size", 12)
 	feasible_label.add_theme_color_override(
-		"font_color", Color("8fd694") if feasible else Color("e8967f")
+		"font_color", SNSkin.color("state.success") if feasible else SNSkin.color("state.danger")
 	)
 	box.add_child(feasible_label)
 
@@ -533,7 +537,7 @@ func _clue_estimate_block(estimated: Dictionary) -> Control:
 		var blocker_label := Label.new()
 		blocker_label.text = "· " + _tr_or(message_key, String((blocker as Dictionary).get("code", "")))
 		blocker_label.add_theme_font_size_override("font_size", 11)
-		blocker_label.add_theme_color_override("font_color", Color("e8967f"))
+		blocker_label.add_theme_color_override("font_color", SNSkin.color("state.danger"))
 		blocker_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(blocker_label)
 	return box
@@ -548,7 +552,7 @@ func _append_next_level_row(vbox: VBoxContainer, level: int) -> void:
 	row.add_theme_font_size_override("font_size", 11)
 	if level >= MAX_CLUE_LEVEL:
 		row.text = _tr_or("ui.clue.max_level", "已达最高等级")
-		row.add_theme_color_override("font_color", Color("8fd694"))
+		row.add_theme_color_override("font_color", SNSkin.color("state.success"))
 		vbox.add_child(row)
 		return
 	var next_level := int(_clue.get("next_level", level + 1))
@@ -559,7 +563,7 @@ func _append_next_level_row(vbox: VBoxContainer, level: int) -> void:
 		next_key = _level_key(String(_clue.get("type", "port_location")), next_level)
 	var next_text := _tr_or(next_key, String(LEVEL_FALLBACK.get(next_level, "线索")))
 	row.text = _tr_or("ui.clue.next_level", "下一级：%s") % next_text
-	row.add_theme_color_override("font_color", Color(0.62, 0.72, 0.69, 0.9))
+	row.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	vbox.add_child(row)
 
 
@@ -581,19 +585,20 @@ func _append_investigate_button(vbox: VBoxContainer, level: int) -> void:
 		) % [cost, int(roundf(maxf(0.0, hours))), int(roundf(chance * 100.0))]
 		detail.add_theme_font_size_override("font_size", 11)
 		detail.add_theme_color_override(
-			"font_color", Color("e8967f") if not can_afford else Color(0.62, 0.72, 0.69, 0.9)
+			"font_color", SNSkin.color("state.danger") if not can_afford else SNSkin.color("text.muted")
 		)
 		vbox.add_child(detail)
 	var button := Button.new()
 	button.name = "InvestigateButton"
 	button.text = _tr_or("ui.button.investigate_clue", "调查线索")
-	button.add_theme_stylebox_override("normal", _button_style(Color(0.30, 0.26, 0.16)))
-	button.add_theme_stylebox_override("hover", _button_style(Color(0.38, 0.32, 0.20)))
-	button.add_theme_stylebox_override("pressed", _button_style(Color(0.24, 0.20, 0.13)))
+	button.theme_type_variation = &"SNSecondaryButton"
 	var can_investigate := bool(
 		_clue.get("can_investigate", level < MAX_CLUE_LEVEL)
 	) and level < MAX_CLUE_LEVEL and can_afford
 	button.disabled = not can_investigate
+	if not can_afford:
+		# 买不起调查费时用锈红警示图标，文字仍是「调查线索」（不改按钮 text）。
+		_apply_button_icon(button, "status_warning", 18)
 	button.pressed.connect(_on_investigate_pressed)
 	vbox.add_child(button)
 
@@ -621,9 +626,6 @@ func _append_purchase_button(vbox: VBoxContainer) -> void:
 	button.name = "PurchaseClueButton"
 	button.text = _tr_or("ui.button.buy_clue", "购买线索（%d 金）") % cost
 	button.theme_type_variation = &"SNGhostButton"
-	button.add_theme_stylebox_override("normal", _button_style(Color(0.30, 0.26, 0.16)))
-	button.add_theme_stylebox_override("hover", _button_style(Color(0.38, 0.32, 0.20)))
-	button.add_theme_stylebox_override("pressed", _button_style(Color(0.24, 0.20, 0.13)))
 	button.pressed.connect(func() -> void: purchase_clue_requested.emit())
 	vbox.add_child(button)
 
@@ -650,7 +652,7 @@ func _supply_block(supplies: Dictionary) -> Control:
 	var header := Label.new()
 	header.text = _tr("ui.label.voyage_supplies")
 	header.add_theme_font_size_override("font_size", 12)
-	header.add_theme_color_override("font_color", Color(0.7, 0.8, 0.78, 0.9))
+	header.add_theme_color_override("font_color", SNSkin.color("text.light"))
 	box.add_child(header)
 	var sufficient := bool(supplies.get("sufficient", true))
 	for entry in [
@@ -669,14 +671,14 @@ func _supply_block(supplies: Dictionary) -> Control:
 		var short := available + 0.0001 < required
 		row.add_theme_color_override(
 			"font_color",
-			Color("e8967f") if short else Color(0.65, 0.75, 0.73, 0.85)
+			SNSkin.color("state.danger") if short else SNSkin.color("text.muted")
 		)
 		box.add_child(row)
 	if not sufficient:
 		var warning := Label.new()
 		warning.text = _tr("ui.hint.supplies_short")
 		warning.add_theme_font_size_override("font_size", 11)
-		warning.add_theme_color_override("font_color", Color("e8967f"))
+		warning.add_theme_color_override("font_color", SNSkin.color("state.danger"))
 		warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(warning)
 	return box
@@ -711,7 +713,7 @@ func _build_empty_state() -> void:
 	var hint := Label.new()
 	hint.text = _tr("ui.hint.select_destination")
 	hint.add_theme_font_size_override("font_size", 13)
-	hint.add_theme_color_override("font_color", Color(0.6, 0.7, 0.7, 0.6))
+	hint.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hint.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -773,22 +775,24 @@ func _risk_level_text(risk: float) -> String:
 func _risk_band_color(band: String) -> Color:
 	match band:
 		"low":
-			return Color("8fd694")  # Green
+			return SNSkin.color("state.success")  # Green
 		"medium":
-			return Color("e1c487")  # Yellow
+			return SNSkin.color("brass.highlight")  # Yellow
 		"high":
-			return Color("e87f7f")  # Red
+			return SNSkin.color("state.danger")  # Red
 		_:
-			return Color(0.62, 0.68, 0.66, 0.85)  # Unknown risk: neutral grey
+			return SNSkin.color("text.muted")  # Unknown risk: neutral grey
 
 
 func _risk_color(risk: float) -> Color:
 	return _risk_band_color(VoyageCalculator.risk_label(risk))
 
 
-func _button_style(bg_color: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = bg_color
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(8)
-	return style
+## Attaches a skin icon without a wrapper node; the button text and node name stay
+## untouched (tests and tooltips look buttons up by text / name).
+func _apply_button_icon(button: Button, icon_id: String, max_width: int) -> void:
+	var texture := SNSkin.icon(icon_id)
+	if texture == null:
+		return
+	button.icon = texture
+	button.add_theme_constant_override("icon_max_width", max_width)

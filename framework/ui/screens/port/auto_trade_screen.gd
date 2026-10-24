@@ -10,15 +10,18 @@ extends VBoxContainer
 ##   `auto_trade.view` 基础上补 `available_policies`。
 ## - 未启动：列出策略与启动按钮；运行中：状态徽章、货舱、日志、暂停/恢复/停止。
 ## - 所有按钮只 emit `command_requested(command, params)`。
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 面板用 Theme 变体 `SNInsetPanel`（钢制凹槽）；摘要徽标改用 `SNBadge`
+##   （13 px 中性纹理铭牌），不再返回 PanelContainer + Label 的临时徽标。
+## - 启停按钮挂 `Button.icon = SNSkin.icon("status_route")` + `icon_max_width` 16
+##   （航线语义），其余操作仍是 `SNGhostButton`（30 px 高）；按钮 `text` 不变。
+## - 文字色取 `SNSkin.color(token)`（text.light / text.muted / brass.highlight）；
+##   本文件无内联十六进制色与 StyleBoxFlat。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_RED := Color("c36b53")
-const COLOR_GREEN := Color("8fbf8f")
 
 var _tr: Callable
 var _model: Dictionary = {}
@@ -39,14 +42,14 @@ func _rebuild() -> void:
 		var panel := _panel()
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 8)
-		box.add_child(_label(_t("ui.trade.select_policy", "选择贸易策略"), 16, COLOR_BRASS))
+		box.add_child(_label(_t("ui.trade.select_policy", "选择贸易策略"), 16, SNSkin.color("brass.highlight")))
 		var row := HFlowContainer.new()
 		row.add_theme_constant_override("h_separation", 8)
 		row.add_theme_constant_override("v_separation", 8)
 		for policy in _model.get("available_policies", []):
 			if policy is Dictionary:
 				row.add_child(_action(_name((policy as Dictionary).get("name_key", "")),
-					&"auto_trade.start", {"policy_id": String((policy as Dictionary).get("id", ""))}))
+					&"auto_trade.start", {"policy_id": String((policy as Dictionary).get("id", ""))}, "status_route"))
 		box.add_child(row)
 		panel.add_child(box)
 		add_child(panel)
@@ -61,7 +64,7 @@ func _rebuild() -> void:
 		buttons.add_child(_action(_t("ui.trade.resume", "恢复"), &"auto_trade.resume", {}))
 	else:
 		buttons.add_child(_action(_t("ui.trade.pause", "暂停"), &"auto_trade.pause", {}))
-	buttons.add_child(_action(_t("ui.trade.stop", "停止"), &"auto_trade.stop", {}))
+	buttons.add_child(_action(_t("ui.trade.stop", "停止"), &"auto_trade.stop", {}, "status_route"))
 	add_child(buttons)
 	add_child(_wait_row())
 
@@ -69,12 +72,12 @@ func _rebuild() -> void:
 func _heading() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	box.add_child(_label(_t("ui.trade.title", "自动贸易"), 24, COLOR_BRASS))
+	box.add_child(_label(_t("ui.trade.title", "自动贸易"), 24, SNSkin.color("brass.highlight")))
 	var policy: Dictionary = _model.get("policy", {})
 	var subtitle := _t("ui.trade.subtitle", "策略、航线与规则")
 	if not policy.is_empty():
 		subtitle = _name(policy.get("name_key", ""))
-	box.add_child(_label(subtitle, 14, COLOR_MUTED))
+	box.add_child(_label(subtitle, 14, SNSkin.color("text.muted")))
 	return box
 
 
@@ -102,7 +105,7 @@ func _cargo() -> Control:
 	box.add_theme_constant_override("separation", 6)
 	box.add_child(_label("%s %d/%d" % [
 		_t("ui.trade.cargo", "自动货舱"), int(_model.get("cargo_units", 0)), int(_model.get("max_cargo", 0)),
-	], 18, COLOR_BRASS))
+	], 18, SNSkin.color("brass.highlight")))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 10)
 	for item in _model.get("cargo", []):
@@ -115,13 +118,13 @@ func _cargo() -> Control:
 func _log() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	box.add_child(_label(_t("ui.trade.log", "最近日志"), 16, COLOR_BRASS))
+	box.add_child(_label(_t("ui.trade.log", "最近日志"), 16, SNSkin.color("brass.highlight")))
 	var log: Array = _model.get("log", [])
 	if log.is_empty():
-		box.add_child(_label("—", 13, COLOR_MUTED))
+		box.add_child(_label("—", 13, SNSkin.color("text.muted")))
 	for entry in log:
 		if entry is Dictionary:
-			box.add_child(_label(_log_line(entry), 13, COLOR_MUTED))
+			box.add_child(_label(_log_line(entry), 13, SNSkin.color("text.muted")))
 	return box
 
 
@@ -159,12 +162,17 @@ func _wait_row() -> Control:
 	return row
 
 
-func _action(text: String, command: StringName, params: Dictionary) -> Button:
+func _action(text: String, command: StringName, params: Dictionary, icon_id: String = "") -> Button:
 	var button := Button.new()
 	button.text = text
 	button.theme_type_variation = &"SNGhostButton"
 	button.custom_minimum_size = Vector2(0, 30)
 	button.add_theme_font_size_override("font_size", 13)
+	if not icon_id.is_empty():
+		var texture := SNSkin.icon(icon_id)
+		if texture != null:
+			button.icon = texture
+			button.add_theme_constant_override("icon_max_width", 16)
 	button.pressed.connect(func() -> void: command_requested.emit(command, params))
 	return button
 
@@ -184,11 +192,13 @@ func _label(text: String, size: int, color: Color) -> Label:
 	return label
 
 
+## Skin-badge, not a hand-rolled PanelContainer + Label; text stays a Label.
 func _badge(text: String) -> Control:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"SNInsetPanel"
-	panel.add_child(_label(text, 13, COLOR_TEXT))
-	return panel
+	var badge := SNBadge.new()
+	badge.text = text
+	badge.tone = SNBadge.Tone.NEUTRAL
+	badge.add_theme_font_size_override("font_size", 13)
+	return badge
 
 
 func _name(key: Variant) -> String:

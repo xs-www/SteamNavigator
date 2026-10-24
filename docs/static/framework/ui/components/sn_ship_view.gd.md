@@ -1,6 +1,6 @@
 # `framework/ui/components/sn_ship_view.gd`
 
-> 作用：船厂中央船体视图；正常态承载 2.5D 船体，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
+> 作用：船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
 
 - 类型：GDScript 源文件
 
@@ -9,39 +9,41 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNShipView` | L1 |
-| `slot_drop_requested (signal)` | L44 |
-| `slot_activated (signal)` | L45 |
-| `TEXT` | L49 |
-| `MUTED` | L50 |
-| `BRASS` | L51 |
-| `TEAL` | L52 |
-| `HULL_DARK` | L53 |
-| `HULL_MID` | L54 |
-| `WATER` | L55 |
-| `SLOT_H` | L56 |
-| `CARGO_SLOT_H` | L57 |
-| `BLUEPRINT_SOCKET_MIN_SIZE` | L58 |
-| `BLUEPRINT_SOCKET_MAX_SIZE` | L59 |
-| `BLUEPRINT_SIDE_RATIO` | L60 |
-| `BLUEPRINT_VIEW_GAP` | L61 |
-| `SLOT_DOCK_MARGIN` | L62 |
-| `SLOT_DOCK_GAP` | L63 |
-| `SECTION_TEXTURE_PATH` | L66 |
-| `set_renderer(node: Node) -> void` | L112 |
-| `has_renderer() -> bool` | L128 |
-| `has_section_texture() -> bool` | L133 |
-| `section_texture_size() -> Vector2` | L137 |
-| `set_ship_model(model: Dictionary) -> void` | L147 |
-| `has_blueprint_views() -> bool` | L156 |
-| `blueprint_texture_size(view: String) -> Vector2` | L160 |
-| `slot_dock_height() -> float` | L166 |
-| `set_blueprint_backdrop(enabled: bool) -> void` | L177 |
-| `uses_blueprint_backdrop() -> bool` | L184 |
-| `blueprint_view_rect(view: String) -> Rect2` | L200 |
-| `set_slots(slots: Array) -> void` | L280 |
-| `set_mode(next: int) -> void` | L303 |
-| `highlight_slots(slot_ids: Array) -> void` | L313 |
-| `blueprint_socket_rects(view: String = "side") -> Dictionary` | L326 |
+| `slot_drop_requested (signal)` | L54 |
+| `slot_activated (signal)` | L55 |
+| `SLOT_H` | L70 |
+| `CARGO_SLOT_H` | L71 |
+| `BLUEPRINT_SOCKET_MIN_SIZE` | L72 |
+| `BLUEPRINT_SOCKET_MAX_SIZE` | L73 |
+| `BLUEPRINT_SIDE_RATIO` | L74 |
+| `BLUEPRINT_VIEW_GAP` | L75 |
+| `SLOT_DOCK_MARGIN` | L76 |
+| `SLOT_DOCK_GAP` | L77 |
+| `SECTION_TEXTURE_PATH` | L80 |
+| `set_renderer(node: Node) -> void` | L135 |
+| `has_renderer() -> bool` | L151 |
+| `has_section_texture() -> bool` | L156 |
+| `section_texture_size() -> Vector2` | L160 |
+| `set_ship_model(model: Dictionary) -> void` | L170 |
+| `has_blueprint_views() -> bool` | L179 |
+| `blueprint_texture_size(view: String) -> Vector2` | L183 |
+| `slot_dock_height() -> float` | L189 |
+| `set_blueprint_backdrop(enabled: bool) -> void` | L200 |
+| `uses_blueprint_backdrop() -> bool` | L207 |
+| `blueprint_view_rect(view: String) -> Rect2` | L223 |
+| `set_slots(slots: Array) -> void` | L303 |
+| `set_mode(next: int) -> void` | L326 |
+| `highlight_slots(slot_ids: Array) -> void` | L336 |
+| `blueprint_socket_rects(view: String = "side") -> Dictionary` | L349 |
+
+## 外观来源（外部贴图 + SNSkin）
+- 舞台背景 wash、每视图框/底板与底部槽位坞条改用皮肤九宫格：
+  `SNSkin.style("panel_recess" / "panel_blueprint" / "frame_open")` + `draw_style_box()`；
+  皮肤缺失时退回 token 色块/描边，仍保持可读性。
+- 所有颜色取 `SNSkin.color(token)`（本文件不写十六进制），文字字体取
+  `get_theme_default_font()`；线稿、水面、船身等数据绘制保留，但颜色来自 token。
+- `set_blueprint_backdrop(true)` 时仍不画背景 wash / 视图框 / 坞条：底板由父级
+  `SNBlueprintPanel` 提供，开关语义与之前一致。
 
 ## 契约与约束
 - `set_ship_model()` 接收 `shipyard.view.ship`；`ship.blueprint_views.{side,top}` 是
@@ -55,10 +57,11 @@
 - CUTAWAY 同时绘制 side（上方）与 top（下方）两个视图；槽位框空槽为灰、已装武器为
   黄铜、`highlight_slots()` 命中的 socket 为青色高亮；购买/安装命令仍由船厂页面发出。
 - 有每船线稿时船厂页把整列换成 `SNBlueprintPanel` 九宫格蓝图底板；页面调用
-  `set_blueprint_backdrop(true)` 后本视图不再自绘深色底、每视图边框与槽位坞条，只把
-  线稿、视图标签、武器槽位框和槽位 chip 画在底板的深蓝内容区上。底板由 Theme 提供，
-  本视图不持有底板纹理；未开启该开关（旧船、无底板）时背景绘制行为保持不变。
-- 模块 `SNSlotTarget`、通用纵剖图贴图和 2.5D renderer 协议保持不变。
+  `set_blueprint_backdrop(true)` 后本视图只把线稿、视图标签、武器槽位框和槽位 chip
+  画在底板的深蓝内容区上。底板由 Theme 提供，本视图不持有底板纹理。
+- `set_renderer()` / `set_slots()` / `set_blueprint_backdrop()` / `highlight_slots()` /
+  `blueprint_view_rect()` / `blueprint_socket_rects()` 与 `SNSlotTarget` 槽位契约完全
+  不变；本文件只替换绘制来源，不改命中、拖放与渲染器转发逻辑。
 
 Refit stage for the centre of the shipyard screen.
 

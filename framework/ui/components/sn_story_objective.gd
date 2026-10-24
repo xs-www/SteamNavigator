@@ -10,6 +10,13 @@ extends PanelContainer
 ## - `bind(text_key, progress, target, translate)` 只显示，不推进剧情、不发信号。
 ## - `mouse_filter = IGNORE`：目标条不拦截点击；位置由 Shell 负责摆放。
 ## - 进度 `target <= 0` 时只显示目标文案。
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 面板用 `SNPanel` 钢框纹理；前导符号改为 skin 图标 `status_route`（16 px，
+##   `SNSkin.icon_rect`，缺失贴图时回退文字符号「◈」），文字色取
+##   `SNSkin.color("text.light")`，不再写颜色常量。
+## - `ObjectiveLabel` 节点名、13 px 字号、进度模板与 target<=0 的文案分支不变
+##   （test_story_ui 按名字读文本并断言「8/10」「还差 2」）。
 ## @end-static-doc
 
 var _label: Label
@@ -25,12 +32,20 @@ func bind(text_key: String, progress: int, target: int, translate: Callable = Ca
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	var icon := Label.new()
-	icon.text = "◈"
-	icon.add_theme_font_size_override("font_size", 14)
-	icon.add_theme_color_override("font_color", Color("e1c487"))
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(icon)
+	# 前导徽记来自皮肤图标；贴图缺失（极简 checkout / 另一套 skin 未带该图标）时
+	# 回退到原文字符号，保证目标条仍可读且不改变布局高度。
+	var icon := SNSkin.icon_rect("status_route", 16.0)
+	if icon.texture != null:
+		icon.name = "ObjectiveIcon"
+		box.add_child(icon)
+	else:
+		icon.free()
+		var fallback := Label.new()
+		fallback.text = "◈"
+		fallback.add_theme_font_size_override("font_size", 14)
+		fallback.add_theme_color_override("font_color", SNSkin.color("brass.highlight"))
+		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(fallback)
 	_label = Label.new()
 	_label.name = "ObjectiveLabel"
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -50,7 +65,7 @@ func bind(text_key: String, progress: int, target: int, translate: Callable = Ca
 		var template := _loc("ui.story.objective", "目标：%s", translate)
 		_label.text = template % objective
 	_label.add_theme_font_size_override("font_size", 13)
-	_label.add_theme_color_override("font_color", Color("ece1c5"))
+	_label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 	box.add_child(_label)
 	custom_minimum_size = Vector2(0, 0)
 

@@ -1,5 +1,8 @@
 class_name MarketScreen
 extends VBoxContainer
+## @static-doc
+## 作用：港口市场页面场景：展示行情、真实价格历史、持仓成本及买卖操作；作为泊位侧栏时按 620 px 窄列设计（纵向商品条目列表，替代旧九列表格），外层 PageScroll 负责竖向滚动。
+##
 ## Port market presentation screen.
 ##
 ## The shell supplies a complete market ViewModel, including intelligence
@@ -10,17 +13,23 @@ extends VBoxContainer
 ## compact entries instead of the old full-width nine-column grid; rows break
 ## vertically rather than clipping horizontally, and the outer PageScroll owns
 ## vertical scrolling (the screen itself adds no ScrollContainer).
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），纸面正文改用
+##   `SNSkin.color("ink.primary")`（数据行）/ `paper.ink_muted`（说明），保证纸面
+##   对比度；商品行仍用 `SNInsetPanel`（钢制凹槽）承载密集价格数据。
+## - 其余文字颜色取 `SNSkin.color(token)`（text.light / text.muted / state.water /
+##   state.success / state.danger），趋势色与 sparkline 线色同源于 token。
+## - 买卖数量按钮用 `SNCompactButton`（小铭牌）并保持 `custom_minimum_size = (34, 28)`；
+##   数量按钮宽度不足 80，按规范不加图标以免溢出。
+## - 尺寸约束：`_grid_label` 的 72 px 最小宽、趋势单元格 136 px、sparkline 64×24、
+##   行间距 7 与所有节点结构/文本不变。
+## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
 const SPARKLINE_SCENE := preload("res://framework/ui/components/sn_sparkline.tscn")
 const SUPPLY_CARD_SCENE := preload("res://framework/ui/components/sn_supply_card.tscn")
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_TEAL := Color("76aaa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_RED := Color("c36b53")
-const COLOR_GREEN := Color("76aa8c")
 ## Vertical gap between two commodity entries (design: 6-8 px).
 const ENTRY_SEPARATION := 7
 
@@ -50,7 +59,7 @@ func _supply_block(view_model: Dictionary) -> Control:
 	block.add_theme_constant_override("separation", 7)
 	if supply.is_empty():
 		return block
-	var title := _label(_loc("ui.market.supply_section", "补给（煤 / 水）"), 15, COLOR_BRASS)
+	var title := _label(_loc("ui.market.supply_section", "补给（煤 / 水）"), 15, SNSkin.color("brass.highlight"))
 	block.add_child(title)
 	for kind in ["coal", "water"]:
 		var data: Dictionary = supply.get("%s_view" % kind, {})
@@ -91,9 +100,10 @@ func _supply_blocker_labels(blockers: Array) -> Array:
 	return labels
 
 
+## 「账册摘要」是一张羊皮纸：纸面正文只用 ink token，避免浅色字落在暖纸上。
 func _summary_panel(view_model: Dictionary) -> Control:
 	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"SNInsetPanel"
+	panel.theme_type_variation = &"SNParchmentPanel"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 6)
@@ -103,14 +113,14 @@ func _summary_panel(view_model: Dictionary) -> Control:
 		int(view_model.get("money", 0)),
 		_fmt(float(ship.get("total_weight", 0.0))),
 		_fmt(float(ship.get("max_weight", 0.0))),
-	], 13, COLOR_MUTED))
+	], 13, SNSkin.color("ink.primary")))
 	content.add_child(_label("货舱 %s / %s · %s %s" % [
 		_fmt(float(ship.get("cargo_used", 0.0))),
 		_fmt(float(ship.get("cargo_capacity", 0.0))),
 		_loc("ui.label.inventory_cost", ""),
 		_fmt(float(ship.get("cargo_cost_basis", 0.0))),
-	], 13, COLOR_MUTED))
-	var hint := _paragraph(_loc("ui.hint.market", ""), 12, COLOR_MUTED)
+	], 13, SNSkin.color("ink.primary")))
+	var hint := _paragraph(_loc("ui.hint.market", ""), 12, SNSkin.color("paper.ink_muted"))
 	if not hint.text.is_empty():
 		content.add_child(hint)
 	return panel
@@ -141,7 +151,7 @@ func _market_entry(row: Dictionary, trend: String) -> Control:
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	var item_label := _grid_label(_row_title(row, buyable), 13, COLOR_TEXT if buyable else COLOR_MUTED)
+	var item_label := _grid_label(_row_title(row, buyable), 13, SNSkin.color("text.light") if buyable else SNSkin.color("text.muted"))
 	item_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	item_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	top.add_child(item_label)
@@ -150,23 +160,23 @@ func _market_entry(row: Dictionary, trend: String) -> Control:
 
 	var metrics := HBoxContainer.new()
 	metrics.add_theme_constant_override("separation", 8)
-	metrics.add_child(_grid_label("单价 %d" % int(row.get("price", 0)), 13, COLOR_TEAL))
-	metrics.add_child(_grid_label("库存 %d" % int(row.get("stock", 0)), 13, COLOR_TEXT))
+	metrics.add_child(_grid_label("单价 %d" % int(row.get("price", 0)), 13, SNSkin.color("state.water")))
+	metrics.add_child(_grid_label("库存 %d" % int(row.get("stock", 0)), 13, SNSkin.color("text.light")))
 	metrics.add_child(_grid_label("%s %d / %s %d" % [
 		_loc("ui.label.held", "Held"),
 		int(row.get("cargo_amount", 0)),
 		_loc("ui.label.sellable", "Sellable"),
 		int(row.get("sellable_amount", 0)),
-	], 13, COLOR_TEXT))
+	], 13, SNSkin.color("text.light")))
 	var average_cost := float(row.get("cargo_avg_cost", 0.0))
 	metrics.add_child(_grid_label("%s %s" % [
 		_loc("ui.label.avg_cost", "Avg cost"),
 		_fmt(average_cost) if average_cost > 0.0 else "—",
-	], 13, COLOR_TEXT))
+	], 13, SNSkin.color("text.light")))
 	metrics.add_child(_grid_label("%s %s" % [
 		_loc("ui.label.unit_weight", "Unit weight"),
 		_fmt(float(row.get("unit_weight", 0.0))),
-	], 12, COLOR_MUTED))
+	], 12, SNSkin.color("text.muted")))
 	content.add_child(metrics)
 
 	var actions := HBoxContainer.new()
@@ -201,7 +211,7 @@ func _trend_cell(row: Dictionary, trend: String) -> Control:
 	var cell := HBoxContainer.new()
 	cell.custom_minimum_size.x = 136
 	cell.add_theme_constant_override("separation", 4)
-	cell.add_child(_label(_loc("ui.label.trend", "Trend"), 11, COLOR_MUTED))
+	cell.add_child(_label(_loc("ui.label.trend", "Trend"), 11, SNSkin.color("text.muted")))
 	var spark: Variant = SPARKLINE_SCENE.instantiate()
 	spark.custom_minimum_size = Vector2(64, 24)
 	spark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -217,11 +227,12 @@ func _trade_buttons(command: StringName, item_id: String, amounts: Array, availa
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	if not visible_actions:
-		row.add_child(_label("—", 13, COLOR_MUTED))
+		row.add_child(_label("—", 13, SNSkin.color("text.muted")))
 		return row
 	for amount in amounts:
 		var button := Button.new()
 		button.text = str(amount)
+		button.theme_type_variation = &"SNCompactButton"
 		button.add_theme_font_size_override("font_size", 12)
 		button.custom_minimum_size = Vector2(34, 28)
 		button.disabled = available < int(amount)
@@ -231,7 +242,7 @@ func _trade_buttons(command: StringName, item_id: String, amounts: Array, availa
 
 
 func _action_label(text: String) -> Label:
-	return _label(text, 12, COLOR_MUTED)
+	return _label(text, 12, SNSkin.color("text.muted"))
 
 
 func _emit_trade(command: StringName, item_id: String, amount: int) -> void:
@@ -280,11 +291,11 @@ func _grid_label(text: String, font_size: int, color: Color) -> Label:
 func _trend_color(trend: String) -> Color:
 	match trend:
 		"up":
-			return COLOR_GREEN
+			return SNSkin.color("state.success")
 		"down":
-			return COLOR_RED
+			return SNSkin.color("state.danger")
 		_:
-			return COLOR_MUTED
+			return SNSkin.color("text.muted")
 
 
 func _loc(key: String, fallback: String) -> String:

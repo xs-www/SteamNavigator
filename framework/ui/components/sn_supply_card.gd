@@ -1,17 +1,28 @@
 class_name SNSupplyCard
 extends PanelContainer
+## @static-doc
+## 作用：单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。
+##
 ## One supply commodity card (coal or water).
 ##
 ## The card only renders a ViewModel and emits intent; the shell owns commands.
 ## bind() takes an optional tr callable for the cap-loss/headroom copy; without it
 ## the card keeps its original Chinese wording. ViewModels without capacity keep
 ## the legacy "current + max_buy" meter scale.
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 卡片底层用 Theme 变体 `SNElevatedPanel`；资源条 `SNResourceMeter` 走
+##   `SNBrassProgressBar` / `SNWaterProgressBar` 的纹理填充。文字色全部取
+##   `SNSkin.color(token)`（text.light / text.muted / state.warning），不写十六进制。
+## - 按钮：步进 `+5 / +10` 用 `SNCompactButton`（小铭牌，保持 38 px 高、不撑宽卡片），
+##   补满用 `SNPrimaryButton` + `Button.icon = SNSkin.icon("action_confirm")`
+##   （`icon_max_width` 16，不加包装容器，按钮 `text` 不变）。
+## - 尺寸约束：三个按钮 `custom_minimum_size = (0, 38)` 不变；内容区
+##   `Content` 节点名与行顺序（标题 / 资源条 / 信息行 / 阻断 / 操作）保持不变。
+## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
-const COLOR_TEXT_MUTED := Color("9fafa7")
-const COLOR_TEXT := Color("e1c487")
-const COLOR_WARNING := Color("c36b53")
 
 var _content: VBoxContainer
 var _kind: String = ""
@@ -41,7 +52,7 @@ func bind(data: Dictionary, title: String, blocker_labels: Array = [], tr: Calla
 	var title_label := Label.new()
 	title_label.text = title
 	title_label.add_theme_font_size_override("font_size", 22)
-	title_label.add_theme_color_override("font_color", COLOR_TEXT)
+	title_label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title_label)
 	var badge := SNBadge.new()
@@ -72,30 +83,29 @@ func bind(data: Dictionary, title: String, blocker_labels: Array = [], tr: Calla
 	if has_capacity:
 		info.add_child(_small("%s %s" % [_loc("ui.label.headroom", "剩余可装"), _fmt(headroom)]))
 		if cap_loss > 0.0:
-			info.add_child(_small("%s %s" % [_loc("ui.label.cap_loss", "上限损失"), _fmt(cap_loss)], COLOR_WARNING))
+			info.add_child(_small("%s %s" % [_loc("ui.label.cap_loss", "上限损失"), _fmt(cap_loss)], SNSkin.color("state.warning")))
 	_content.add_child(info)
 
 	if not blocker_labels.is_empty():
 		var blocker := Label.new()
 		blocker.text = ", ".join(blocker_labels)
 		blocker.add_theme_font_size_override("font_size", 12)
-		blocker.add_theme_color_override("font_color", COLOR_WARNING)
+		blocker.add_theme_color_override("font_color", SNSkin.color("state.warning"))
 		_content.add_child(blocker)
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	var command := &"supply.buy_coal" if _kind == "coal" else &"supply.buy_water"
 	for amount in [5, 10]:
-		var button := _button("+%d" % amount)
-		button.theme_type_variation = &"SNSecondaryButton"
+		var button := _button("+%d" % amount, &"SNCompactButton")
 		button.disabled = max_buy < amount
 		button.pressed.connect(func() -> void:
 			command_requested.emit(command, {"amount": amount})
 		)
 		actions.add_child(button)
-	var fill := _button("补满 %d" % max_buy)
-	fill.theme_type_variation = &"SNPrimaryButton"
+	var fill := _button("补满 %d" % max_buy, &"SNPrimaryButton")
 	fill.disabled = max_buy <= 0
+	_apply_button_icon(fill, "action_confirm", 16)
 	fill.pressed.connect(func() -> void:
 		command_requested.emit(command, {"amount": max_buy})
 	)
@@ -120,18 +130,29 @@ func _build_once() -> void:
 	add_child(_content)
 
 
-func _button(text: String) -> Button:
+func _button(text: String, variation: StringName) -> Button:
 	var button := Button.new()
 	button.text = text
+	button.theme_type_variation = variation
 	button.custom_minimum_size = Vector2(0, 38)
 	return button
 
 
-func _small(text: String, color: Color = COLOR_TEXT_MUTED) -> Label:
+## Skin icon without a wrapper node; the button text stays untouched.
+func _apply_button_icon(button: Button, icon_id: String, max_width: int) -> void:
+	var texture := SNSkin.icon(icon_id)
+	if texture == null:
+		return
+	button.icon = texture
+	button.add_theme_constant_override("icon_max_width", max_width)
+
+
+func _small(text: String, color: Variant = null) -> Label:
+	var resolved: Color = SNSkin.color("text.muted") if color == null else (color as Color)
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_color", resolved)
 	return label
 
 

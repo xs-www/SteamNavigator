@@ -9,18 +9,18 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNSeaChartPanel` | L1 |
-| `departure_requested (signal)` | L44 |
-| `purchase_clue_requested (signal)` | L46 |
-| `investigate_requested (signal)` | L48 |
-| `COMPASS_KEYS` | L51 |
-| `COMPASS_FALLBACK` | L53 |
-| `LEVEL_FALLBACK` | L57 |
-| `SOURCE_FALLBACK` | L60 |
-| `MAX_CLUE_LEVEL` | L63 |
-| `get_clue() -> Dictionary` | L105 |
-| `set_can_buy_clue(can_buy: Dictionary) -> void` | L111 |
-| `clear() -> void` | L115 |
-| `compass_key(angle: float) -> String` | L632 |
+| `departure_requested (signal)` | L57 |
+| `purchase_clue_requested (signal)` | L59 |
+| `investigate_requested (signal)` | L61 |
+| `COMPASS_KEYS` | L64 |
+| `COMPASS_FALLBACK` | L66 |
+| `LEVEL_FALLBACK` | L70 |
+| `SOURCE_FALLBACK` | L73 |
+| `MAX_CLUE_LEVEL` | L76 |
+| `get_clue() -> Dictionary` | L112 |
+| `set_can_buy_clue(can_buy: Dictionary) -> void` | L118 |
+| `clear() -> void` | L122 |
+| `compass_key(angle: float) -> String` | L634 |
 
 **航程预估**（距离 / 预计时间 / 煤水消耗 / 风险 / 是否已探索），并提供「启航」按钮
 （阶段 4.3.4 / U7 起只打开 Shell 的出航确认弹窗，不再跳转出航准备页）。
@@ -56,5 +56,18 @@
   精确买卖价（4 级）与剩余时效（`ui.clue.expiry`）；底部「前往该港」按钮发
   `departure_requested("goods", clue_id)`（统一确认弹窗 → `clue.travel`）。等级文案
   用 `ui.clue.goods.level.N`；面板仍不重算行情、不读 `credibility`。
+
+## 外观来源（外部贴图 + SNSkin）
+- 面板底层用 Theme 变体 `SNPanel`（黄铜钢框纹理），内容边距由 theme 提供；
+  不再 `StyleBoxFlat` / `add_theme_stylebox_override("panel")`。
+- 所有文字 / 风险 / 状态色取 `SNSkin.color(token)`：text.light、text.muted、
+  brass.highlight、state.water（航线信息）、state.success（已探索/可行）、
+  state.warning（时效/未知风险）、state.danger（不可行/缺补给）。
+- 按钮全部走 Theme 变体：启航 / 循此线索出航 / 前往该港 = `SNPrimaryButton`
+  （图标 `nav_departure` / `status_route`，`icon_max_width` 18），调查 / 购买线索 =
+  `SNSecondaryButton` / `SNGhostButton`；按钮 `text` 与节点名
+  `DepartButton` / `ExploreButton` / `SailButton` / `InvestigateButton` /
+  `PurchaseClueButton` 不变。
+- 尺寸约束：`custom_minimum_size = (320, 0)` 不变；`_ready` 之后不新增子节点层级。
 
 模块索引：[framework/ui](../README.md)

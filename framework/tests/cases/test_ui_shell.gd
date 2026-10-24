@@ -198,8 +198,13 @@ func test_dense_screen_fields_keep_horizontal_minimum_widths() -> void:
 	assert_eq(goods_header.size_flags_horizontal, Control.SIZE_FILL, "intel metadata columns keep a compact fixed width")
 	assert_eq(port_header.size_flags_horizontal, Control.SIZE_EXPAND_FILL, "only port columns share the remaining width")
 	assert_true(port_header.custom_minimum_size.x >= 120.0, "port columns reserve a readable minimum width")
-	var regular_style := goods_header.get_theme_stylebox("panel") as StyleBoxFlat
-	assert_true(regular_style.bg_color.r < 0.2 and regular_style.bg_color.g < 0.2, "ordinary intel cells use the dark interface palette instead of StyleBoxFlat default gray")
+	var regular_style := goods_header.get_theme_stylebox("panel")
+	assert_true(regular_style is StyleBoxTexture, "ordinary intel cells are backed by a skin StyleBoxTexture, not a hand-built StyleBoxFlat")
+	if regular_style is StyleBoxTexture:
+		var regular_texture := (regular_style as StyleBoxTexture).texture
+		assert_not_null(regular_texture, "the intel cell stylebox carries a skin texture")
+		if regular_texture != null:
+			assert_contains(String(regular_texture.resource_path), "assets/ui/skin/", "ordinary intel cells use an external skin texture")
 	table.free()
 
 

@@ -1,4 +1,31 @@
 extends Control
+## @static-doc
+## 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并挂载已场景化的菜单/港口/流程页。主界面是「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的分层外壳；Shell 只保留上下文解析、ViewModel 组合、会话导航状态与命令派发。
+##
+## ## 皮肤接线（ui-skin-v1）
+## - 所有纹理/图标/颜色经 `SNSkin`（`framework/ui/skin/sn_skin.gd`）读取 `assets/ui/skin/sn_v1/skin.json`；
+##   本文件不写贴图路径、不写十六进制颜色，也不再手写 StyleBoxFlat。
+## - 顶栏 `_chrome_style()` = `SNSkin.panel("chrome")`（半透明钢框、content 16/12）；底部状态条
+##   `_bottom_bar_style()` = `SNSkin.panel("status_bar")`（content 14/6）。皮肤缺失时退回 Theme 的
+##   `SNChromePanel` / `SNStatusBarPanel` 变体，文字与交互不丢。
+## - 导航/小按钮走 Theme 变体：当前页 `SNPrimaryButton`，其余 `SNCompactButton`；图标来自
+##   `SNSkin.icon()`（`button.icon` + `icon_max_width = 18`），正文仍由 Theme 绘制，`text` 保持原样供测试精确查找。
+## - HUD chip 图标：内容包 `icon.*` 资产优先（`AssetService.find_key/load_texture`），缺失时按
+##   `HUD_SKIN_ICONS` 回退到皮肤图标；两者都没有时只显示文字。
+## - 边缘设施招牌交给 `SNHarborSign`（纹理化 Button）；Shell 只负责 `facilities → 页面` 的布局与导航。
+##
+## ## 尺寸预算
+## - `TOP_CHROME_MAX_HEIGHT = 130`：两行 chrome（品牌/状态/时间·金钱·声望 + 资源 chip/导航）实测最小高度必须 ≤130；
+##   3D 舞台是主视图，HUD 只做画框。
+## - `PORT_STATUS_BAR_HEIGHT = 60`：总览底部状态条固定高度，chip 字号 10/15、按钮 32 高，不得裁内容。
+## - 招牌 `172×42`、右列固定「海图 ▶」入口；`PageMargin` 底部为页脚/状态条预留 56/84。
+##
+## ## 契约
+## - 数据只走 QueryBus，修改只走 CommandBus；UI 会话状态不写存档。
+## - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
+## - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
+## @end-static-doc
+##
 ## Playable shell for the framework slice.
 ##
 ## The UI only reads ViewModels through QueryBus and mutates through
@@ -53,15 +80,20 @@ const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_me
 const NEW_GAME_SCREEN_SCENE := preload("res://framework/ui/screens/menu/new_game_screen.tscn")
 const MODS_SCREEN_SCENE := preload("res://framework/ui/screens/menu/mods_screen.tscn")
 const SETTINGS_SCREEN_SCENE := preload("res://framework/ui/screens/menu/settings_screen.tscn")
-const COLOR_BG := Color("071a1d")
-const COLOR_PANEL := Color("10353a")
-const COLOR_PANEL_ALT := Color("17464a")
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_TEAL := Color("76aaa7")
-const COLOR_RED := Color("c36b53")
-const COLOR_GREEN := Color("76aa8c")
+## Navigation icon per screen; the shell only names skin ids, `SNSkin.icon()`
+## resolves the texture (missing skin -> text-only button, never a path in code).
+const NAV_ICONS := {
+	"overview": "status_anchor",
+	"market": "nav_market",
+	"contracts": "nav_contracts",
+	"shipyard": "nav_shipyard",
+	"base": "shipyard_hull",
+	"trade": "status_route",
+	"ruins": "nav_chart",
+	"tavern": "nav_intelligence",
+	"sea_chart": "nav_chart",
+}
+const NAV_ICON_MAX_WIDTH := 18
 const DEV_TEAM := "PlayThought Team"
 const GAME_VERSION_FALLBACK := "0.2.0"
 
@@ -109,14 +141,30 @@ const PORT_SIGN_HEIGHT := 42.0
 const PORT_SIGN_GAP := 10.0
 const PORT_SIGN_MARGIN := 20.0
 ## Optional HUD icon keys. Content packs may declare `icon.*` assets; the Shell
-## resolves whichever mounted pack provides them and silently falls back to a
-## text-only chip when none do.
+## resolves whichever mounted pack provides them and falls back to the skin icon
+## table (`HUD_SKIN_ICONS`), then to a text-only chip when neither exists.
 const HUD_ICON_KEYS := {
 	"money": "icon.money",
 	"coal": "icon.coal",
 	"water": "icon.water",
+	"durability": "icon.durability",
+	"cargo": "icon.cargo",
+	"reputation": "icon.reputation",
+	"time": "icon.time",
+	"damaged": "icon.damaged",
 }
-const HUD_ICON_SIZE := 22.0
+## Skin icon fallback per logical HUD key (assets/ui/skin/sn_v1/icons).
+const HUD_SKIN_ICONS := {
+	"money": "resource_coins",
+	"coal": "resource_coal",
+	"water": "resource_water",
+	"durability": "resource_durability",
+	"cargo": "resource_cargo",
+	"reputation": "status_reputation",
+	"time": "status_time",
+	"damaged": "status_warning",
+}
+const HUD_ICON_SIZE := 24.0
 ## Page bottom reserve: default leaves room for the footer, the overview status
 ## bar is taller and replaces the footer while it is visible.
 const PAGE_BOTTOM_MARGIN := 56
@@ -283,7 +331,9 @@ func _begin_transition() -> void:
 	_transitioning = true
 	_fade_layer.visible = true
 	_fade_layer.mouse_filter = Control.MOUSE_FILTER_STOP
-	_fade_layer.color = Color(COLOR_BG.r, COLOR_BG.g, COLOR_BG.b, 0.0)
+	var fade_color := SNSkin.color("bg.abyss")
+	fade_color.a = 0.0
+	_fade_layer.color = fade_color
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_fade_layer, "color:a", 0.96, 0.16)
@@ -323,7 +373,7 @@ func _rebuild_ui() -> void:
 		_story_vm = {}
 		_task_vm = {}
 		_update_story_layer()
-		_root_box.add_child(_label("Loading framework...", 20, COLOR_MUTED))
+		_root_box.add_child(_label("Loading framework...", 20, SNSkin.color("text.muted")))
 		get_tree().create_timer(0.4).timeout.connect(_refresh)
 		return
 	_apply_settings_if_needed()
@@ -331,7 +381,7 @@ func _rebuild_ui() -> void:
 	if not bool(app_view.get("ok", false)):
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
-		_root_box.add_child(_label(_error_text(app_view), 18, COLOR_RED))
+		_root_box.add_child(_label(_error_text(app_view), 18, SNSkin.color("state.danger")))
 		return
 	var app: Dictionary = app_view["data"]
 	_refresh_footer()
@@ -349,7 +399,7 @@ func _rebuild_ui() -> void:
 	if not bool(port_result.get("ok", false)):
 		_hide_port_stage()
 		_set_port_status_bar_visible(false)
-		_root_box.add_child(_label(_error_text(port_result), 18, COLOR_RED))
+		_root_box.add_child(_label(_error_text(port_result), 18, SNSkin.color("state.danger")))
 		return
 	var data: Dictionary = port_result["data"]
 	_last_port_view = data
@@ -650,6 +700,15 @@ func _place_story_objective() -> void:
 	var width := control.size.x
 	var x := maxf(8.0, (_story_layer.size.x - width) * 0.5)
 	var y := _port_hud_top_safe() + 4.0
+	# At sea the page starts straight under the chrome (no StoryObjectiveSpacer),
+	# so a status banner ("离港，航向…") sits at the same y as this fixed strip.
+	# Push the strip below the banner instead of letting the two overlap.
+	var banner := _root_box.get_node_or_null("StatusBanner") as Control
+	if banner != null and is_instance_valid(banner) and banner.visible:
+		var banner_rect := banner.get_global_rect()
+		if banner_rect.size.y > 0.0:
+			var layer_top := _story_layer.get_global_rect().position.y
+			y = maxf(y, banner_rect.end.y - layer_top + 4.0)
 	control.position = Vector2(x, y)
 
 
@@ -727,7 +786,13 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	var panel := PanelContainer.new()
 	panel.name = "TopChrome"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel", _chrome_style())
+	var chrome_style := _chrome_style()
+	if chrome_style != null:
+		panel.add_theme_stylebox_override("panel", chrome_style)
+	else:
+		# No skin (missing manifest/textures): the generated theme variation still
+		# gives the chrome a textured frame; the 2D fallback is never layoutless.
+		panel.theme_type_variation = &"SNChromePanel"
 	_root_box.add_child(panel)
 	_top_chrome = panel
 	var rows := VBoxContainer.new()
@@ -743,18 +808,18 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	brand.name = "PortBrand"
 	brand.add_theme_constant_override("separation", 0)
 	row.add_child(brand)
-	brand.add_child(_label(_tr("ui.label.port", "Port"), 9, COLOR_MUTED))
-	brand.add_child(_label(_current_port_label(data), 22, COLOR_BRASS))
+	brand.add_child(_label(_tr("ui.label.port", "Port"), 9, SNSkin.color("text.muted")))
+	brand.add_child(_label(_current_port_label(data), 22, SNSkin.color("brass.highlight")))
 	row.add_child(_badge(
 		_tr(String(app.get("status_key", "ui.status.ok")), ""),
 		_status_badge_tone(app)
 	))
-	row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, COLOR_MUTED))
+	row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, SNSkin.color("text.muted")))
 	row.add_child(VSeparator.new())
 	for stat in [
-		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), COLOR_TEXT, ""],
-		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), COLOR_BRASS, HUD_ICON_KEYS["money"]],
-		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), COLOR_GREEN, ""],
+		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), SNSkin.color("text.light"), HUD_ICON_KEYS["time"]],
+		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), SNSkin.color("brass.highlight"), HUD_ICON_KEYS["money"]],
+		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), SNSkin.color("state.success"), HUD_ICON_KEYS["reputation"]],
 	]:
 		row.add_child(_stat_chip(stat[0], stat[1], stat[2], 10, 16, String(stat[3])))
 	var top_spacer := Control.new()
@@ -780,17 +845,17 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 		[_tr("ui.label.free_weight", ""), "%s / %s" % [
 			_fmt(float(ship.get("free_weight", 0.0))),
 			_fmt(float(ship.get("max_weight", 0.0))),
-		], COLOR_TEXT, ""],
+		], SNSkin.color("text.light"), HUD_ICON_KEYS["cargo"]],
 		[_tr("ui.label.free_capacity", ""), "%s / %s" % [
 			_fmt(float(ship.get("free_cargo_capacity", 0.0))),
 			_fmt(float(ship.get("cargo_capacity", 0.0))),
-		], COLOR_TEAL, ""],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS, HUD_ICON_KEYS["coal"], "CoalChip"],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL, HUD_ICON_KEYS["water"], "WaterChip"],
+		], SNSkin.color("state.water"), HUD_ICON_KEYS["cargo"]],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), HUD_ICON_KEYS["coal"], "CoalChip"],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), HUD_ICON_KEYS["water"], "WaterChip"],
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
 			_fmt(float(ship.get("durability", 0.0))),
 			_fmt(float(ship.get("max_durability", 0.0))),
-		], COLOR_GREEN, ""],
+		], SNSkin.color("state.success"), HUD_ICON_KEYS["durability"]],
 	]
 	var damaged_modules := int(ship.get("damaged_modules", 0))
 	if damaged_modules > 0:
@@ -798,8 +863,8 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 		detail_stats.append([
 			_tr("ui.label.module_status", "Modules"),
 			"%d · %d%%" % [damaged_modules, int(round(worst * 100.0))],
-			COLOR_RED if worst <= 0.0 else COLOR_BRASS,
-			"",
+			SNSkin.color("state.danger") if worst <= 0.0 else SNSkin.color("brass.base"),
+			HUD_ICON_KEYS["damaged"],
 		])
 	for stat in detail_stats:
 		var chip_key := String(stat[4]) if stat.size() > 4 else ""
@@ -831,7 +896,11 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
 		button.custom_minimum_size = Vector2(64, 36)
 		button.add_theme_font_size_override("font_size", 13)
-		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNGhostButton"
+		# Current page uses the selected plate texture; every other entry is a
+		# compact plate. Both are external-texture Theme variations, so the
+		# button text/behaviour stays stock Button (tests find it by exact text).
+		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNCompactButton"
+		_apply_skin_icon(button, NAV_ICONS.get(screen, ""))
 		nav.add_child(button)
 	# The nautical chart is a toggle, not a nav page: M opens/closes it and the
 	# button highlights only while the chart is up. Gated by the story feature.
@@ -839,31 +908,37 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 		var chart_button := _button(_tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
 		chart_button.custom_minimum_size = Vector2(64, 36)
 		chart_button.add_theme_font_size_override("font_size", 13)
-		chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNGhostButton"
+		chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNCompactButton"
+		_apply_skin_icon(chart_button, NAV_ICONS["sea_chart"])
 		nav.add_child(chart_button)
+
+
+## Attaches a skin icon to a stock Button without wrapping it: id comes from the
+## skin manifest, width is bounded by `icon_max_width`, and a missing skin simply
+## leaves the button text-only.
+func _apply_skin_icon(button: Button, icon_id: String) -> void:
+	if icon_id.is_empty():
+		return
+	var icon_texture := SNSkin.icon(icon_id)
+	button.icon = icon_texture
+	if icon_texture != null:
+		button.add_theme_constant_override("icon_max_width", NAV_ICON_MAX_WIDTH)
 
 
 func _small_chrome_button(text: String, callback: Callable) -> Button:
 	var button := _button(text, callback)
-	button.theme_type_variation = &"SNGhostButton"
+	button.theme_type_variation = &"SNCompactButton"
 	button.custom_minimum_size = Vector2(0, 30)
 	button.add_theme_font_size_override("font_size", 12)
 	return button
 
 
-## Semi-transparent dark chrome so the 3D stage is visible but the HUD stays
-## readable over bright sky, water or a banner.
-func _chrome_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.027451, 0.101961, 0.113725, 0.84)
-	style.border_color = Color(COLOR_BRASS.r, COLOR_BRASS.g, COLOR_BRASS.b, 0.35)
-	style.border_width_bottom = 1
-	style.content_margin_left = 16.0
-	style.content_margin_top = 14.0
-	style.content_margin_right = 16.0
-	style.content_margin_bottom = 14.0
-	style.set_corner_radius_all(4)
-	return style
+## Semi-transparent textured chrome so the 3D stage is visible but the HUD stays
+## readable over bright sky, water or a banner. The texture and content margins
+## (16/12) come from the skin manifest; null means no skin, and the caller falls
+## back to the generated Theme's `SNChromePanel`.
+func _chrome_style() -> StyleBox:
+	return SNSkin.panel("chrome")
 
 
 func _status_badge_tone(app: Dictionary) -> int:
@@ -879,11 +954,11 @@ func _status_badge_tone(app: Dictionary) -> int:
 func _status_color(app: Dictionary) -> Color:
 	match String(app.get("status", "fatal")):
 		"ok":
-			return COLOR_GREEN
+			return SNSkin.color("state.success")
 		"degraded":
-			return COLOR_BRASS
+			return SNSkin.color("state.warning")
 		_:
-			return COLOR_RED
+			return SNSkin.color("state.danger")
 
 
 ## Current port (or the destination while at sea) for the always-visible info bar.
@@ -926,7 +1001,7 @@ func _stat_chip(label_text: String, value_text: String, accent: Color, label_siz
 	column.size_flags_horizontal = Control.SIZE_FILL
 	column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	column.add_theme_constant_override("separation", 0)
-	column.add_child(_label(label_text, label_size, COLOR_MUTED))
+	column.add_child(_label(label_text, label_size, SNSkin.color("text.muted")))
 	var value_label := _label(value_text, value_size, accent)
 	if not chip_key.is_empty():
 		value_label.name = "Value"
@@ -935,18 +1010,24 @@ func _stat_chip(label_text: String, value_text: String, accent: Color, label_siz
 	return chip
 
 
-## Optional HUD icon resolved from whichever mounted content pack declares the
-## logical key (`icon.money` -> `asset://<pack>/icon.money`). Missing packs and
-## missing files both degrade to a text-only chip.
+## Optional HUD icon. Content packs win: the logical key (`icon.money`) is
+## resolved through `AssetService.find_key` / `load_texture` so the framework
+## never hardcodes a mod namespace. When no mounted pack provides it, the skin
+## fallback (`HUD_SKIN_ICONS`) is used; both missing -> null (text-only chip).
 func _hud_icon(icon_key: String) -> Texture2D:
-	if _context == null or icon_key.is_empty():
+	if icon_key.is_empty():
 		return null
 	if _hud_icon_cache.has(icon_key):
 		return _hud_icon_cache[icon_key] as Texture2D
 	var texture: Texture2D = null
-	var logical_key := _context.assets.find_key(icon_key)
-	if not logical_key.is_empty() and _context.assets.has(logical_key):
-		texture = _context.assets.load_texture(logical_key)
+	if _context != null:
+		var logical_key := _context.assets.find_key(icon_key)
+		if not logical_key.is_empty() and _context.assets.has(logical_key):
+			texture = _context.assets.load_texture(logical_key)
+	if texture == null:
+		var skin_id := String(HUD_SKIN_ICONS.get(icon_key.trim_prefix("icon."), ""))
+		if not skin_id.is_empty():
+			texture = SNSkin.icon(skin_id)
 	_hud_icon_cache[icon_key] = texture
 	return texture
 
@@ -960,6 +1041,7 @@ func _build_status_banner() -> void:
 	if _status_message.is_empty():
 		return
 	var panel := _panel()
+	panel.name = "StatusBanner"
 	panel.theme_type_variation = &"SNInsetPanel"
 	_panel_add(panel, _badge(_status_message, SNBadge.Tone.DANGER if _status_is_error else SNBadge.Tone.SUCCESS))
 	_root_box.add_child(panel)
@@ -996,7 +1078,11 @@ func _ensure_port_status_bar() -> void:
 		return
 	_port_status_bar = PanelContainer.new()
 	_port_status_bar.name = "PortStatusBar"
-	_port_status_bar.add_theme_stylebox_override("panel", _bottom_bar_style())
+	var bar_style := _bottom_bar_style()
+	if bar_style != null:
+		_port_status_bar.add_theme_stylebox_override("panel", bar_style)
+	else:
+		_port_status_bar.theme_type_variation = &"SNStatusBarPanel"
 	_port_status_bar.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_port_status_bar)
 	_port_status_bar.anchor_left = 0.0
@@ -1032,18 +1118,20 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
 			_fmt(float(ship.get("durability", 0.0))),
 			_fmt(float(ship.get("max_durability", 0.0))),
-		], COLOR_GREEN, ""],
+		], SNSkin.color("state.success"), HUD_ICON_KEYS["durability"]],
 		[_tr("ui.label.cargo_hold", "Hold"), "%s / %s" % [
 			_fmt(float(ship.get("cargo_used", 0.0))),
 			_fmt(float(ship.get("cargo_capacity", 0.0))),
-		], COLOR_TEAL, ""],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), COLOR_BRASS, HUD_ICON_KEYS["coal"]],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), COLOR_TEAL, HUD_ICON_KEYS["water"]],
+		], SNSkin.color("state.water"), HUD_ICON_KEYS["cargo"]],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), HUD_ICON_KEYS["coal"]],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), HUD_ICON_KEYS["water"]],
 		[_tr("ui.label.damaged_modules", "Damaged modules"),
 			"%d · %d%%" % [damaged, int(round(worst * 100.0))] if damaged > 0
 			else _tr("ui.label.none", "None"),
-			COLOR_RED if damaged > 0 and worst <= 0.0 else (COLOR_BRASS if damaged > 0 else COLOR_MUTED),
-			""],
+			SNSkin.color("state.danger") if damaged > 0 and worst <= 0.0 else (
+				SNSkin.color("brass.base") if damaged > 0 else SNSkin.color("text.muted")
+			),
+			HUD_ICON_KEYS["damaged"] if damaged > 0 else ""],
 	]
 	for chip in chips:
 		content.add_child(_stat_chip(chip[0], chip[1], chip[2], 10, 15, String(chip[3])))
@@ -1051,8 +1139,8 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 	var notice_box := VBoxContainer.new()
 	notice_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	notice_box.add_theme_constant_override("separation", 0)
-	notice_box.add_child(_label(_tr("ui.label.latest_notice", "Latest notice"), 9, COLOR_MUTED))
-	var notice_label := _label(_latest_notice_text(data), 12, COLOR_TEXT)
+	notice_box.add_child(_label(_tr("ui.label.latest_notice", "Latest notice"), 9, SNSkin.color("text.muted")))
+	var notice_label := _label(_latest_notice_text(data), 12, SNSkin.color("text.light"))
 	notice_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	notice_label.clip_text = true
 	notice_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1067,6 +1155,7 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 			else _tr("ui.button.overview_detail", "Detail overview"),
 			_on_overview_detail_toggle
 		)
+		detail_button.theme_type_variation = &"SNCompactButton"
 		detail_button.custom_minimum_size = Vector2(0, 32)
 		detail_button.add_theme_font_size_override("font_size", 13)
 		content.add_child(detail_button)
@@ -1078,12 +1167,14 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 		chart_button.theme_type_variation = &"SNPrimaryButton"
 		chart_button.custom_minimum_size = Vector2(0, 32)
 		chart_button.add_theme_font_size_override("font_size", 13)
+		_apply_skin_icon(chart_button, NAV_ICONS["sea_chart"])
 		content.add_child(chart_button)
 	if not _story_active():
 		var wait_button := _button(
 			_tr("ui.button.wait_hours", "Wait %d h") % 12,
 			func() -> void: _run_command(&"port.wait", {"hours": 12})
 		)
+		wait_button.theme_type_variation = &"SNCompactButton"
 		wait_button.custom_minimum_size = Vector2(0, 32)
 		wait_button.add_theme_font_size_override("font_size", 13)
 		content.add_child(wait_button)
@@ -1100,17 +1191,11 @@ func _latest_notice_text(data: Dictionary) -> String:
 	return _notice_text(notice)
 
 
-func _bottom_bar_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.027451, 0.101961, 0.113725, 0.88)
-	style.border_color = Color(COLOR_BRASS.r, COLOR_BRASS.g, COLOR_BRASS.b, 0.32)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 14.0
-	style.content_margin_top = 6.0
-	style.content_margin_right = 14.0
-	style.content_margin_bottom = 6.0
-	return style
+## Bottom status strip material, same skin pipeline as the chrome: a slightly
+## more opaque steel panel with tight 14/6 content margins so the 60 px budget
+## keeps every chip and action. Null means no skin -> `SNStatusBarPanel` fallback.
+func _bottom_bar_style() -> StyleBox:
+	return SNSkin.panel("status_bar")
 
 
 func _set_footer_visible(visible: bool) -> void:
@@ -1136,9 +1221,9 @@ func _build_menu(app: Dictionary) -> void:
 	var report: Dictionary = app.get("report", {})
 	if not report.get("errors", []).is_empty():
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_tr("ui.error.start_failed", "Startup failed"), 18, COLOR_RED))
+		_panel_add(error_panel, _label(_tr("ui.error.start_failed", "Startup failed"), 18, SNSkin.color("state.danger")))
 		for entry in report.get("errors", []):
-			_panel_add(error_panel, _label("[%s] %s" % [entry.get("severity", "error"), entry.get("message", "")], 14, COLOR_RED))
+			_panel_add(error_panel, _label("[%s] %s" % [entry.get("severity", "error"), entry.get("message", "")], 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		_root_box.add_child(_button(_tr("ui.button.retry", "Retry"), _retry_bootstrap))
 		return
@@ -1318,7 +1403,7 @@ func _ensure_overview_detail_backdrop() -> void:
 		return
 	_overview_detail_backdrop = ColorRect.new()
 	_overview_detail_backdrop.name = "OverviewDetailBackdrop"
-	_overview_detail_backdrop.color = COLOR_BG
+	_overview_detail_backdrop.color = SNSkin.color("bg.abyss")
 	_overview_detail_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overview_detail_backdrop.visible = false
 	add_child(_overview_detail_backdrop)
@@ -1656,7 +1741,7 @@ func _port_sign(text: String, callback: Callable, primary: bool, facility: Strin
 	button.size = sign_size
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_color_override("font_hover_color", COLOR_BRASS)
+	button.add_theme_color_override("font_hover_color", SNSkin.color("brass.highlight"))
 	button.tooltip_text = _tr("ui.hint.port_hotspot", "Open this facility")
 	if button.get_signal_connection_list("pressed").is_empty():
 		button.pressed.connect(callback)
@@ -1883,7 +1968,7 @@ func _screen_base(data: Dictionary) -> void:
 	var result := _context.queries.execute(&"base.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _label(_error_text(result), 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = BASE_SCREEN_SCENE.instantiate()
@@ -1951,7 +2036,7 @@ func _screen_trade(data: Dictionary) -> void:
 	var result := _context.queries.execute(&"auto_trade.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _label(_error_text(result), 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = AUTO_TRADE_SCREEN_SCENE.instantiate()
@@ -1977,7 +2062,7 @@ func _screen_ruins(data: Dictionary) -> void:
 	var result := _context.queries.execute(&"expedition.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _label(_error_text(result), 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = RUINS_SCREEN_SCENE.instantiate()
@@ -2005,7 +2090,7 @@ func _screen_shipyard(data: Dictionary) -> void:
 	var result := _context.queries.execute(&"shipyard.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _label(_error_text(result), 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = SHIPYARD_SCREEN_SCENE.instantiate()
@@ -2063,7 +2148,7 @@ func _screen_supply(_data: Dictionary) -> void:
 	var result := _context.queries.execute(&"supply.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _label(_error_text(result), 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = SUPPLY_SCREEN_SCENE.instantiate()
@@ -2092,7 +2177,7 @@ func _screen_tavern(_data: Dictionary) -> void:
 	var result := _context.queries.execute(&"tavern.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
-		_panel_add(error_panel, _label(_error_text(result), 14, COLOR_RED))
+		_panel_add(error_panel, _label(_error_text(result), 14, SNSkin.color("state.danger")))
 		_root_box.add_child(error_panel)
 		return
 	var screen: Variant = INTEL_SCREEN_SCENE.instantiate()
@@ -2528,9 +2613,15 @@ func _screen_at_sea(data: Dictionary, voyage: Variant) -> void:
 	# While presenting, the endpoints come from the presentation session: the
 	# domain voyage record is gone the moment an eventless voyage arrives.
 	var endpoints: Variant = _presentation_voyage if _presentation != null else voyage
+	var endpoint_dict: Dictionary = endpoints if endpoints is Dictionary else {}
 	var model := {
 		"chart": chart_vm,
-		"voyage": endpoints if endpoints is Dictionary else {},
+		"voyage": endpoint_dict,
+		# Domain ids alone render as "port_2" in the voyage strip once the chart VM
+		# cannot resolve a fogged destination; resolve both labels against the
+		# content registry here so the strip always shows the localized port name.
+		"origin_name": _port_name(String(endpoint_dict.get("origin", ""))),
+		"destination_name": _port_name(String(endpoint_dict.get("destination", ""))),
 		"positions": _presentation_positions(endpoints),
 		# 航路点来自坐标世界的完整航线表（`WorldMap.edges`），不是 `sea_chart.view`
 		# 的迷雾过滤结果：航线发现与否是玩家视角的规则，演出取用程序内部事实
@@ -3562,11 +3653,14 @@ func _tr(key: String, fallback: String = "") -> String:
 	return _context.translate(key, fallback)
 
 
-func _label(text: String, font_size: int = 15, color: Color = COLOR_TEXT) -> Label:
+## Label factory. The color defaults to the `text.light` token (a transparent
+## sentinel keeps the default argument a compile-time constant while the real
+## token still lives in skin.json).
+func _label(text: String, font_size: int = 15, color: Color = Color.TRANSPARENT) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_color", color if color.a > 0.0 else SNSkin.color("text.light"))
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	return label
 

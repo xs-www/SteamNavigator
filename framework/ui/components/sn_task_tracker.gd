@@ -11,11 +11,15 @@ extends PanelContainer
 ## - 纯展示：不查状态、不发信号；只按 step.kind 选择文案模板。
 ## - 名称字段（货物 / 港口）先用 `_tr` 翻译内容 key，再填进框架模板。
 ## - 只显示当前任务；完整列表在委托页 / 后续任务页。
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 面板用 `SNPanel` 钢框纹理；类别/其它任务数取 `text.muted`、标题与步骤取
+##   `text.light`、前导记号取 `brass.highlight`，统一 `SNSkin.color(token)`，
+##   不再保留颜色常量。
+## - `TaskTrackerBox` / `TaskIcon` / `TaskCategory` / `TaskTitle` / `TaskStep` /
+##   `TaskMore` 节点名、字号（11/12/13/14）与步骤文案模板不变
+##   （test_story_ui 按 `TaskStep` 名字读文本）。
 ## @end-static-doc
-
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const BRASS := Color("e1c487")
 
 
 func bind(task: Dictionary, total_tasks: int, translate: Callable = Callable()) -> void:
@@ -29,27 +33,27 @@ func bind(task: Dictionary, total_tasks: int, translate: Callable = Callable()) 
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	var icon := _label("◇", 14, BRASS)
+	var icon := _label("◇", 14, SNSkin.color("brass.highlight"))
 	icon.name = "TaskIcon"
 	box.add_child(icon)
-	var category := _label(_loc(String(task.get("category_key", "")), translate), 11, MUTED)
+	var category := _label(_loc(String(task.get("category_key", "")), translate), 11, SNSkin.color("text.muted"))
 	category.name = "TaskCategory"
 	box.add_child(category)
 	var title := _label(
 		_loc(String(task.get("title_key", "")), translate),
 		13,
-		TEXT
+		SNSkin.color("text.light")
 	)
 	title.name = "TaskTitle"
 	box.add_child(title)
 	var step: Variant = task.get("current_step", null)
 	if step is Dictionary:
-		box.add_child(_label("·", 13, MUTED))
-		var step_label := _label(_step_text(step as Dictionary, translate), 13, TEXT)
+		box.add_child(_label("·", 13, SNSkin.color("text.muted")))
+		var step_label := _label(_step_text(step as Dictionary, translate), 13, SNSkin.color("text.light"))
 		step_label.name = "TaskStep"
 		box.add_child(step_label)
 	if total_tasks > 1:
-		var more := _label(_loc("ui.task.more", translate) % (total_tasks - 1), 12, MUTED)
+		var more := _label(_loc("ui.task.more", translate) % (total_tasks - 1), 12, SNSkin.color("text.muted"))
 		more.name = "TaskMore"
 		box.add_child(more)
 	custom_minimum_size = Vector2(0, 0)

@@ -1,7 +1,16 @@
 class_name SNShipView
 extends Control
 ## @static-doc
-## 作用：船厂中央船体视图；正常态承载 2.5D 船体，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
+## 作用：船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 舞台背景 wash、每视图框/底板与底部槽位坞条改用皮肤九宫格：
+##   `SNSkin.style("panel_recess" / "panel_blueprint" / "frame_open")` + `draw_style_box()`；
+##   皮肤缺失时退回 token 色块/描边，仍保持可读性。
+## - 所有颜色取 `SNSkin.color(token)`（本文件不写十六进制），文字字体取
+##   `get_theme_default_font()`；线稿、水面、船身等数据绘制保留，但颜色来自 token。
+## - `set_blueprint_backdrop(true)` 时仍不画背景 wash / 视图框 / 坞条：底板由父级
+##   `SNBlueprintPanel` 提供，开关语义与之前一致。
 ##
 ## ## 契约与约束
 ## - `set_ship_model()` 接收 `shipyard.view.ship`；`ship.blueprint_views.{side,top}` 是
@@ -15,10 +24,11 @@ extends Control
 ## - CUTAWAY 同时绘制 side（上方）与 top（下方）两个视图；槽位框空槽为灰、已装武器为
 ##   黄铜、`highlight_slots()` 命中的 socket 为青色高亮；购买/安装命令仍由船厂页面发出。
 ## - 有每船线稿时船厂页把整列换成 `SNBlueprintPanel` 九宫格蓝图底板；页面调用
-##   `set_blueprint_backdrop(true)` 后本视图不再自绘深色底、每视图边框与槽位坞条，只把
-##   线稿、视图标签、武器槽位框和槽位 chip 画在底板的深蓝内容区上。底板由 Theme 提供，
-##   本视图不持有底板纹理；未开启该开关（旧船、无底板）时背景绘制行为保持不变。
-## - 模块 `SNSlotTarget`、通用纵剖图贴图和 2.5D renderer 协议保持不变。
+##   `set_blueprint_backdrop(true)` 后本视图只把线稿、视图标签、武器槽位框和槽位 chip
+##   画在底板的深蓝内容区上。底板由 Theme 提供，本视图不持有底板纹理。
+## - `set_renderer()` / `set_slots()` / `set_blueprint_backdrop()` / `highlight_slots()` /
+##   `blueprint_view_rect()` / `blueprint_socket_rects()` 与 `SNSlotTarget` 槽位契约完全
+##   不变；本文件只替换绘制来源，不改命中、拖放与渲染器转发逻辑。
 ##
 ## Refit stage for the centre of the shipyard screen.
 ##
@@ -46,13 +56,17 @@ signal slot_activated(slot: Dictionary)
 
 enum Mode { EXTERIOR, CUTAWAY }
 
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const BRASS := Color("e1c487")
-const TEAL := Color("76aaa7")
-const HULL_DARK := Color("223237")
-const HULL_MID := Color("30474b")
-const WATER := Color("10212a")
+## Skin colour tokens (UI Foundation Spec V1 §7). Values are resolved from
+## `skin.json` once per stage instance; data drawing keeps its own geometry.
+static var _token_cache: Dictionary = {}
+
+static func _token(token: String) -> Color:
+	if _token_cache.has(token):
+		return _token_cache[token]
+	var value := SNSkin.color(token)
+	_token_cache[token] = value
+	return value
+
 const SLOT_H := 62.0
 const CARGO_SLOT_H := 58.0
 const BLUEPRINT_SOCKET_MIN_SIZE := Vector2(28.0, 20.0)
@@ -64,6 +78,15 @@ const SLOT_DOCK_GAP := 8.0
 ## Refit cross-section texture. Replace this PNG to reskin the whole cutaway;
 ## the screen and slot logic never depend on how the section is drawn.
 const SECTION_TEXTURE_PATH := "res://assets/ui/shipyard/ship_section.png"
+
+## Token-backed colours for the procedural line art and skin fallbacks.
+var TEXT: Color = _token("text.light")
+var MUTED: Color = _token("text.muted")
+var BRASS: Color = _token("brass.highlight")
+var TEAL: Color = _token("state.water")
+var HULL_DARK: Color = _token("steel.base")
+var HULL_MID: Color = _token("steel.raised")
+var WATER: Color = _token("steel.recess")
 
 var mode: int = Mode.EXTERIOR
 var _model: Dictionary = {}
@@ -447,11 +470,32 @@ func _draw() -> void:
 	if size.x < 80.0 or size.y < 80.0:
 		return
 	if not (mode == Mode.CUTAWAY and _uses_blueprint_board()):
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.051, 0.090, 0.106, 0.55))
+		_draw_backdrop()
 	if mode == Mode.CUTAWAY:
 		_draw_cutaway()
 	else:
 		_draw_exterior()
+
+
+## Stage backdrop: the recessed steel plate from the skin replaces the old
+## hard-coded translucent rectangle. The token fallback keeps the view readable
+## before the skin is imported.
+func _draw_backdrop() -> void:
+	_draw_skin_box("panel_recess", Rect2(Vector2.ZERO, size), Color(_token("bg.abyss"), 0.55))
+
+
+## Draws one skin nine-slice into `rect`; falls back to a token-coloured fill or
+## outline when the style (or the whole skin) is unavailable. The stylebox is
+## read from SNSkin, never constructed here.
+func _draw_skin_box(style_id: String, rect: Rect2, fallback: Color, filled: bool = true) -> void:
+	var box := SNSkin.style(style_id)
+	if box != null:
+		draw_style_box(box, rect)
+		return
+	if filled:
+		draw_rect(rect, fallback, true)
+	else:
+		draw_rect(rect, fallback, false, 1.0)
 
 
 func _draw_exterior() -> void:
@@ -481,7 +525,7 @@ func _draw_exterior() -> void:
 		var phase := fmod(_time * 0.45 + float(index) / 3.0, 1.0)
 		var center := Vector2(funnel.get_center().x - phase * w * 0.05, funnel.position.y - phase * h * 0.16)
 		var alpha := 0.32 * (1.0 - phase)
-		draw_circle(center, 4.0 + phase * 12.0, Color(0.80, 0.78, 0.70, alpha))
+		draw_circle(center, 4.0 + phase * 12.0, Color(_token("text.light"), alpha))
 	# Mast + flag.
 	draw_line(Vector2(w * 0.72, water_y - h * 0.19), Vector2(w * 0.72, water_y - h * 0.42), BRASS, 2.0)
 	var flag := PackedVector2Array([
@@ -528,7 +572,7 @@ func _draw_cutaway() -> void:
 ## On a blueprint board the two views sit directly on the board's blue field (no
 ## boxes, no dock bar); without a board the legacy stage backdrop is kept.
 func _draw_blueprint_views() -> void:
-	var font := ThemeDB.fallback_font
+	var font := get_theme_default_font()
 	var board := _uses_blueprint_board()
 	if not board:
 		_draw_blueprint_dock_bar()
@@ -540,10 +584,12 @@ func _draw_blueprint_views() -> void:
 		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue
 		if not board:
-			draw_rect(rect.grow(2.0), Color(0.02, 0.055, 0.065, 0.55), true)
+			# Blueprint plate below the line art, open frame above it: both come
+			# from the skin, so re-skinning the PNG is enough.
+			_draw_skin_box("panel_blueprint", rect.grow(2.0), Color(_token("blueprint.base"), 0.55))
 		draw_texture_rect(texture, rect, false, Color(1.0, 1.0, 1.0, 0.96))
 		if not board:
-			draw_rect(rect, Color(TEAL, 0.28), false, 1.0)
+			_draw_skin_box("frame_open", rect, Color(TEAL, 0.28), false)
 		var label := "侧视 SIDE" if view == "side" else "俯视 TOP"
 		draw_string(font, rect.position + Vector2(8.0, 15.0), label,
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, Color(TEAL, 0.82))
@@ -561,7 +607,7 @@ func _draw_blueprint_dock_bar() -> void:
 	if dock <= 0.0:
 		return
 	var dock_rect := Rect2(0.0, size.y - dock, size.x, dock)
-	draw_rect(dock_rect, Color(0.021, 0.051, 0.061, 0.82), true)
+	_draw_skin_box("panel_recess", dock_rect, Color(_token("steel.recess"), 0.82))
 	draw_line(Vector2(8.0, dock_rect.position.y), Vector2(size.x - 8.0, dock_rect.position.y), Color(TEAL, 0.22), 1.0)
 
 
@@ -611,7 +657,7 @@ func _draw_section_texture() -> void:
 	var source_size := destination.size / cover_scale
 	var source_position := (texture_size - source_size) * 0.5
 	draw_texture_rect_region(_section_texture, destination, Rect2(source_position, source_size))
-	draw_rect(destination, Color(0.02, 0.055, 0.065, 0.18))
+	draw_rect(destination, Color(_token("bg.abyss"), 0.18))
 
 
 ## Procedural fallback used only before the section texture is imported.

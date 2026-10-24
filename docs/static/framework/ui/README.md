@@ -1,31 +1,33 @@
 # `framework/ui`
 
-> 展示层。固定 Shell、四个菜单场景、八个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。
+> 展示层。固定 Shell、四个菜单场景、八个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。UI 采用外部贴图皮肤管线（V1）：`assets/ui/skin/<skin>/` 提供九宫格纹理/图标与 `skin.json`，`tools/ui/build_ui_skin.gd` 生成运行纹理，`tools/ui/build_ui_theme.gd` 生成纹理化 Theme，`framework/ui/skin/sn_skin.gd`（SNSkin）是程序化 UI 的唯一素材访问层；换同名同尺寸贴图即整体换肤，流程见 `docs/design/UI_SKIN_PIPELINE.md`。可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。
 
 ## 文件索引
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
 | `components/README.md` | 框架源文件：README.md | 本页 |
-| `components/sn_badge.gd` | 紧凑状态徽标：中性、成功、警告和危险四种语义色。 | [查看](./components/sn_badge.gd.md) |
+| `components/sn_badge.gd` | 紧凑状态徽标：中性、成功、警告和危险四种语义；底色、描边与文字色全部由纹理化 Theme 的 `SN*Badge` 变体提供，控件本身只做语义映射。 | [查看](./components/sn_badge.gd.md) |
 | `components/sn_badge.tscn` | 框架源文件：sn_badge.tscn | 本页 |
-| `components/sn_button.gd` | 可复用语义按钮：在 Inspector 中选择主操作、次操作、危险或幽灵样式。 | [查看](./components/sn_button.gd.md) |
+| `components/sn_button.gd` | 可复用语义按钮：在 Inspector 中选择主操作、次操作、危险或幽灵样式，并可挂一枚皮肤图标；外观全部来自外部贴图驱动的 Theme variation，代码不写颜色与 StyleBox。 | [查看](./components/sn_button.gd.md) |
 | `components/sn_button.tscn` | 框架源文件：sn_button.tscn | 本页 |
 | `components/sn_cloud_veil.gd` | 航行演出的云层转场层（阶段 3）。全屏、不吃鼠标，用程序化云团把画面从 | [查看](./components/sn_cloud_veil.gd.md) |
-| `components/sn_harbor_sign.gd` | 2.5D 港口主界面的主题化边缘招牌：`Button` 子类，用自绘木板/木纹/铁框/黄铜铆钉/四角包边/设施徽记/指向场景的箭头替代主题 StyleBox，悬停/按下/焦点用黄铜光晕与明暗反馈；点击、焦点、tooltip、`text` 语义仍由 Button 提供。 | [查看](./components/sn_harbor_sign.gd.md) |
+| `components/sn_harbor_sign.gd` | 2.5D 港口主界面的边缘设施招牌。纹理化 `Button` 子类：底板/悬停/按下/焦点全部来自外部皮肤 | [查看](./components/sn_harbor_sign.gd.md) |
+| `components/sn_icon.gd` | 皮肤图标控件：按 `SNSkin` 的 icon id 显示外部贴图图标（导航 / 资源 / 船厂 / 状态 / 行动），供程序化 UI 与展示场景复用，不在页面里拼贴图路径。 | [查看](./components/sn_icon.gd.md) |
 | `components/sn_intel_table.gd` | 商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。 | [查看](./components/sn_intel_table.gd.md) |
-| `components/sn_panel.gd` | 可复用界面表面：基础、高架与内嵌三种层级。 | [查看](./components/sn_panel.gd.md) |
+| `components/sn_nav_button.gd` | 主导航 / 侧牌用的图标导航按钮：皮肤图标 + 原样文字，`active` 表达当前页选中态，`primary` / `compact` 选择黄铜主操作或小铭牌语义；外观全部来自 Theme variation。 | [查看](./components/sn_nav_button.gd.md) |
+| `components/sn_panel.gd` | 可复用界面表面：基础、高架、内嵌三种层级，外加羊皮纸、蓝图（技术页）、画布与玻璃浮层四种材质变体；只通过 Theme variation 换材质，不在调用处复制 StyleBox。 | [查看](./components/sn_panel.gd.md) |
 | `components/sn_panel.tscn` | 框架源文件：sn_panel.tscn | 本页 |
 | `components/sn_part_row.gd` | 船厂右侧部件 HUD 的单行条目：用标签区分已装 / 仓库 / 随船 / 可购买，持有且可装的行是拖拽来源。 | [查看](./components/sn_part_row.gd.md) |
 | `components/sn_part_row.tscn` | 框架源文件：sn_part_row.tscn | 本页 |
-| `components/sn_resource_meter.gd` | 煤水、耐久与载重共用的标签化资源存量条。 | [查看](./components/sn_resource_meter.gd.md) |
+| `components/sn_resource_meter.gd` | 煤水、耐久与载重共用的标签化资源存量条：无上限损失时用纹理化 Theme ProgressBar，有损失时自绘三段式条（已用 / 空余 / 右缘损失带），两套画法都取同一套皮肤纹理。 | [查看](./components/sn_resource_meter.gd.md) |
 | `components/sn_resource_meter.tscn` | 框架源文件：sn_resource_meter.tscn | 本页 |
 | `components/sn_sea_chart_panel.gd` | 海图右侧信息面板。选中港口后展示港口名、原型、区域、设施列表，以及 | [查看](./components/sn_sea_chart_panel.gd.md) |
 | `components/sn_sea_chart_view.gd` | 可缩放/平移的 2D 海图视图，使用 `_draw()` 在世界坐标上绘制水面与图框、 | [查看](./components/sn_sea_chart_view.gd.md) |
-| `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题和可选右侧说明。 | [查看](./components/sn_section_header.gd.md) |
+| `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题、可选右侧说明，并可挂一枚 16–18 px 的皮肤图标；文字颜色与字号由 Theme 的 SNEyebrowLabel/SNTitleLabel/SNDetailLabel 变体决定。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
 | `components/sn_ship_stage_3d.gd` | 船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。 | [查看](./components/sn_ship_stage_3d.gd.md) |
-| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。 | [查看](./components/sn_ship_view.gd.md) |
+| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。 | [查看](./components/sn_ship_view.gd.md) |
 | `components/sn_ship_view.tscn` | 框架源文件：sn_ship_view.tscn | 本页 |
 | `components/sn_slot_target.gd` | 纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。 | [查看](./components/sn_slot_target.gd.md) |
 | `components/sn_slot_target.tscn` | 框架源文件：sn_slot_target.tscn | 本页 |
@@ -78,10 +80,11 @@
 | `screens/port/supply_screen.tscn` | 框架源文件：supply_screen.tscn | 本页 |
 | `screens/port/tavern_screen.gd` | 酒馆页（阶段 4.5.4，替换原情报站页面）——上半部分保留物价情报矩阵与 | [查看](./screens/port/tavern_screen.gd.md) |
 | `screens/port/tavern_screen.tscn` | 框架源文件：tavern_screen.tscn | 本页 |
-| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并把已迁移页面挂载到场景宿主；主界面采用「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的 Bounty Train 式分层，2D 总览保留为回退/可访问性开关。自第七切片起总览/市场/补给三页共用同一座连续 3D 港区：页面切换只是平移镜头、把玩家的船开到对应泊位并换上右侧泊位面板，不重挂舞台、不过黑场；市场/补给页改为右侧 640 px 泊位面板，左侧保留舞台。自第八切片起船厂改装态也画在同一座港区的 `shipyard` 站位上（正常态仍用面板内的独立船体舞台），顶栏左侧的品牌位改为显示当前港口名。 | [查看](./shell/main.gd.md) |
+| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并挂载已场景化的菜单/港口/流程页。主界面是「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的分层外壳；Shell 只保留上下文解析、ViewModel 组合、会话导航状态与命令派发。 | [查看](./shell/main.gd.md) |
 | `shell/main.tscn` | 框架源文件：main.tscn | 本页 |
-| `showcase/ui_kit_showcase.gd` | 独立 UI Kit 展示与视觉冒烟场景，集中实例化全部可复用控件和状态。 | [查看](./showcase/ui_kit_showcase.gd.md) |
+| `showcase/ui_kit_showcase.gd` | 皮肤验收展示页：在一个可滚动页面里集中展示纹理化 Theme 与 SNSkin 素材的全部可复用控件状态——按钮矩阵、面板材质、徽标、表单、资源条、进度条、九宫格拉伸对照、图标网格、parts 装饰、旗帜与 sparkline；供 1440×900 / 960×540 截图验收与视觉冒烟。 | [查看](./showcase/ui_kit_showcase.gd.md) |
 | `showcase/ui_kit_showcase.tscn` | 框架源文件：ui_kit_showcase.tscn | 本页 |
+| `skin/sn_skin.gd` | UI 皮肤运行时访问层。所有「外部贴图控件」的纹理、九宫格 StyleBox、图标、颜色 token 都从 `assets/ui/skin/<skin>/skin.json` 解析，页面与控件只通过本类取素材，不在代码里写贴图路径或业务色值。 | [查看](./skin/sn_skin.gd.md) |
 | `stages/location_stage.gd` | 2.5D 固定机位舞台契约基类：舞台自持相机/灯光/环境/水面/道具与 idle 动画，由 `SNStageHost` 驱动 enter→bind→exit 生命周期；只读已解析 ViewModel，不访问 GameState / QueryBus / CommandBus。 | [查看](./stages/location_stage.gd.md) |
 | `stages/port_stage.gd` | 固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 船厂 / 补给是同一港区里的四个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建；船厂站位正对干船坞/吊架设施，供改装页把蓝图与操作坞画在 3D 舞台上。全程序化 + 内容模组 GLB，无外部框架贴图。 | [查看](./stages/port_stage.gd.md) |
 | `stages/port_stage.tscn` | 港口舞台场景：挂 `PortStage` 脚本并显式设置 `stage_id="port"`。 | 本页 |
@@ -99,3 +102,5 @@
 - 公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。
 - 页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。
 - 2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。
+- UI 材质与图标只引用外部贴图：Theme 由 skin.json 生成，程序化样式走 SNSkin；业务脚本不得新建 StyleBoxFlat、不得硬编码 skin 路径或十六进制业务色。
+- 换肤必须保持布局契约：TopChrome ≤130px、底部状态条 60px、侧牌 172×42、九宫格安全区；<38px 高按钮用 SNCompactButton/SNPlateButton。

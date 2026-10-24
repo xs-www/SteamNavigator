@@ -1,20 +1,28 @@
 class_name SNSlotTarget
 extends PanelContainer
+## @static-doc
+## 作用：纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。
+##
 ## One refit slot chip in the SNShipView cutaway.
 ##
 ## Draws the slot title, the installed module (or 空), and accepts a dragged
 ## owned free module (SNPartRow payload, `kind = "ship_parts"`). The screen owns
 ## the command intent; this control only validates the module category and source.
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 槽位底板不再手搓 `StyleBoxFlat`：取 `SNSkin.style("panel_recess")`（仪表凹槽
+##   纹理），悬停 / 匹配 / 固定槽位改用 `SNSkin.style("panel_steel")` 并以
+##   `modulate_color = SNSkin.color(token)` 区分（state.water / brass.highlight /
+##   brass.base）；内容边距固定回 8 / 4，保持旧槽位尺寸与文字裁切。
+## - 文字色取 `SNSkin.color(token)`；不写十六进制色，不新增子节点。
+## - 尺寸/契约：`fixed` 槽位仍用最亮黄铜语义；槽位尺寸由 SNShipView 的布局决定，
+##   本控件不设 custom_minimum_size；拖放只认 `kind == "ship_parts"` 且来源为
+##   仓库 / 随船。
+## @end-static-doc
 
 signal part_dropped(payload: Dictionary, slot: Dictionary)
 signal slot_activated(slot: Dictionary)
 
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const BRASS := Color("e1c487")
-const TEAL := Color("76aaa7")
-const RED := Color("c36b53")
-const DROP_HINT := Color("9fd3cc")
 
 var slot: Dictionary = {}
 var _title_label: Label
@@ -42,10 +50,10 @@ func configure(slot_data: Dictionary) -> void:
 	_title_label.text = String(slot.get("title", ""))
 	if installed is Dictionary and not String(installed.get("module_id", "")).is_empty():
 		_value_label.text = String(installed.get("name", String(installed.get("module_id", ""))))
-		_value_label.add_theme_color_override("font_color", TEXT)
+		_value_label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 	else:
 		_value_label.text = String(slot.get("empty_text", "空槽位"))
-		_value_label.add_theme_color_override("font_color", MUTED)
+		_value_label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	var hint := String(slot.get("hint", ""))
 	_meta_label.text = hint
 	_meta_label.visible = not hint.is_empty()
@@ -67,9 +75,9 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 1)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
-	_title_label = _label(11, BRASS)
-	_value_label = _label(13, TEXT)
-	_meta_label = _label(10, MUTED)
+	_title_label = _label(11, SNSkin.color("brass.highlight"))
+	_value_label = _label(13, SNSkin.color("text.light"))
+	_meta_label = _label(10, SNSkin.color("text.muted"))
 	box.add_child(_title_label)
 	box.add_child(_value_label)
 	box.add_child(_meta_label)
@@ -85,27 +93,27 @@ func _label(font_size: int, color: Color) -> Label:
 	return label
 
 
+## Skin-backed slot sheet: recess = idle, steel + token tint = hover / compatible,
+## brass-tinted steel = fixed hull/boiler slots. Content margins stay 8 / 4.
 func _apply_style() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.043, 0.078, 0.090, 0.86)
-	style.border_color = Color(BRASS, 0.45)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
+	var highlighted := _hovering or _compatible or bool(slot.get("fixed", false))
+	var style_id := "panel_steel" if highlighted else "panel_recess"
+	var base_style: StyleBoxTexture = SNSkin.style(style_id)
+	if base_style == null:
+		theme_type_variation = &"SNInsetPanel"
+		return
+	var style := base_style.duplicate() as StyleBoxTexture
 	style.content_margin_left = 8.0
 	style.content_margin_right = 8.0
 	style.content_margin_top = 4.0
 	style.content_margin_bottom = 4.0
 	if _hovering:
-		style.bg_color = Color(0.086, 0.176, 0.173, 0.94)
-		style.border_color = DROP_HINT
-		style.set_border_width_all(2)
+		style.modulate_color = SNSkin.color("state.water")
 	elif _compatible:
-		style.border_color = Color(TEAL, 0.85)
-		style.set_border_width_all(2)
-	if bool(slot.get("fixed", false)):
-		style.border_color = Color(BRASS, 0.75)
+		style.modulate_color = SNSkin.color("brass.highlight")
+	elif bool(slot.get("fixed", false)):
+		style.modulate_color = SNSkin.color("brass.base")
 	add_theme_stylebox_override("panel", style)
-	modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:

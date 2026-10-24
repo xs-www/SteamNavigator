@@ -9,6 +9,7 @@
 | `art/gen_iron_harbor_trim_sheet.py` | 铁港建筑套件**共享 trim sheet 的确定性画图器**：按 `docs/design/textures/iron_harbor/iron_harbor_trim_sheet_2048.spec.json` 画出 4×4×512 px 图集（评审件）与 16 张 512² 独立平铺贴图（运行时采样件），并写 stats。 | [查看](./art/gen_iron_harbor_trim_sheet.py.md) |
 | `art/gen_shared_material_textures.py` | 生成通用共享材质贴图库（每张 512² 无缝平铺的 sRGB 贴图对应一个 `SN_*` 材质）， | [查看](./art/gen_shared_material_textures.py.md) |
 | `art/gen_shipyard_textures.py` | 船厂两张授权贴图的确定性生成器：纵剖图 `ship_section.png`（1792×1008）与船卡缩略图 `ship_thumb_ironclad.png`（640×360）。 | [查看](./art/gen_shipyard_textures.py.md) |
+| `build_ui_skin.ps1` | UI 皮肤一键生成 / 一致性门禁。先运行 `tools/ui/build_ui_skin.gd` 把 `docs/design/` 的控件图集与图标图集裁成 `assets/ui/skin/<skin>/` 运行纹理 + skin.json，再运行 `tools/ui/build_ui_theme.gd` 从 skin.json 生成纹理化 Theme。 | [查看](./build_ui_skin.ps1.md) |
 | `capture_ui.ps1` | `tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。 | [查看](./capture_ui.ps1.md) |
 | `check_content_schema_v2.mjs` | Phase E 发布门禁：确认 Content Schema 1.0 已冻结，内容类型、Schema 文件与 | [查看](./check_content_schema_v2.mjs.md) |
 | `fog_grid_simulator.html` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
@@ -256,6 +257,8 @@
 | `static_docs_data.mjs` | 静态文档的兼容策展数据：保留尚未迁移文件的职责/契约，并维护模块简介与分组角色。 | [查看](./static_docs_data.mjs.md) |
 | `test.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `tests/static_docs.test.mjs` | 静态文档生成器的 Node 单元测试，守护源码注释解析与符号提取。 | [查看](./tests/static_docs.test.mjs.md) |
+| `ui/build_ui_skin.gd` | 把 `docs/design/` 下的 UI 控件图集与图标图集切成运行纹理，输出到 `assets/ui/skin/<skin>/`，并写 `skin.json`（样式/九宫格/颜色 token/图标表）。这是「外部贴图驱动 UI」的唯一素材入口：页面与 Theme 只引用本脚本产出的 PNG，换同名同尺寸贴图即可整体换肤。 | [查看](./ui/build_ui_skin.gd.md) |
+| `ui/build_ui_theme.gd` | 从 `assets/ui/skin/<skin>/skin.json` 生成 `assets/ui/theme/steam_navigator_theme.tres`。Theme 里的每个可见状态都是一张外部 PNG（StyleBoxTexture 九宫格）或外部图标，因此换掉 skin 目录里的同名同尺寸贴图即可整体换肤；本脚本只在换整套皮肤/改九宫格参数时重新运行。 | [查看](./ui/build_ui_theme.gd.md) |
 | `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。 | [查看](./ui_snapshot.gd.md) |
 
 ## 模块契约

@@ -1,18 +1,27 @@
 class_name ContractsScreen
 extends VBoxContainer
+## @static-doc
+## 作用：委托页面场景：按可接/进行中分组渲染主线与普通委托卡，并发出接取或规划出航意图。
+##
 ## Contract board presentation screen.
 ##
 ## Reachability and definition names are composed by the shell. This scene only
 ## renders the board and emits command/navigation intent.
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 委托卡是公告板上的纸面：Theme 变体 `SNParchmentPanel`；卡内正文一律改用 ink
+##   token（`ink.primary` / `paper.ink_muted` / `brass.shadow`），危险期限仍用
+##   `state.danger`，保证纸面可读性。任务追踪 / 持有上限 / 已完成面板保持钢制面板。
+## - 「接受」按钮用 `SNPrimaryButton` + `Button.icon = SNSkin.icon("action_confirm")`
+##   （`icon_max_width` 16）；按钮 `text` 不变，测试仍按文字查找。
+## - 其余文字颜色取 `SNSkin.color(token)`；无内联十六进制色与 StyleBoxFlat。
+## - 尺寸约束：卡片两列网格 16 px 间距、标题最多 2 行、`_button` 高度 38、
+##   所有节点结构与信号（contract.accept / sea_chart 导航）不变。
+## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 signal navigation_requested(screen_id: StringName, params: Dictionary)
 
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_TEAL := Color("76aaa7")
-const COLOR_RED := Color("c36b53")
 
 var _tr: Callable
 
@@ -52,7 +61,7 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 				active_grid.add_child(_contract_card(contract, false, false, true))
 	if available_count == 0 and active_count == 0:
 		var empty := _panel(&"SNPanel")
-		_panel_content(empty).add_child(_label(_loc("ui.label.no_contracts", "暂无委托"), 14, COLOR_MUTED))
+		_panel_content(empty).add_child(_label(_loc("ui.label.no_contracts", "暂无委托"), 14, SNSkin.color("text.muted")))
 		add_child(empty)
 	var completed_names: Array = view_model.get("completed_names", [])
 	if not completed_names.is_empty():
@@ -66,7 +75,7 @@ func _task_panel(tasks: Array, active_task_id: String) -> Control:
 	var content := _panel_content(panel)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 10)
-	header.add_child(_task_label(_loc("ui.task.title", "任务追踪"), 17, COLOR_BRASS))
+	header.add_child(_task_label(_loc("ui.task.title", "任务追踪"), 17, SNSkin.color("brass.highlight")))
 	header.add_child(_badge("%d" % tasks.size(), SNBadge.Tone.NEUTRAL))
 	content.add_child(header)
 	for raw_task in tasks:
@@ -82,17 +91,17 @@ func _task_panel(tasks: Array, active_task_id: String) -> Control:
 			title_row.add_child(_badge(category, SNBadge.Tone.WARNING))
 		var title_key := String(task.get("title_key", ""))
 		var title := _loc(title_key, title_key)
-		title_row.add_child(_task_label(title, 15, COLOR_TEXT if String(task.get("id", "")) == active_task_id else COLOR_MUTED))
+		title_row.add_child(_task_label(title, 15, SNSkin.color("text.light") if String(task.get("id", "")) == active_task_id else SNSkin.color("text.muted")))
 		var remaining := float(task.get("remaining_hours", -1.0))
 		if remaining >= 0.0:
-			title_row.add_child(_task_label(_loc("ui.task.remaining", "剩余 %d 小时") % int(ceil(remaining)), 12, COLOR_MUTED))
+			title_row.add_child(_task_label(_loc("ui.task.remaining", "剩余 %d 小时") % int(ceil(remaining)), 12, SNSkin.color("text.muted")))
 		row.add_child(title_row)
 		for raw_step in Array(task.get("steps", [])):
 			if not (raw_step is Dictionary):
 				continue
 			var step: Dictionary = raw_step
 			var prefix := "✓  " if bool(step.get("done", false)) else "·  "
-			var color := COLOR_TEAL if bool(step.get("done", false)) else COLOR_TEXT
+			var color := SNSkin.color("state.water") if bool(step.get("done", false)) else SNSkin.color("text.light")
 			row.add_child(_task_label(prefix + _task_step_text(step), 13, color))
 		content.add_child(row)
 	return panel
@@ -152,13 +161,13 @@ func _holding_panel(contracts: Dictionary) -> Control:
 	if bool(contracts.get("main_chain_complete", false)):
 		row.add_child(_badge(_loc("ui.label.main_chain_complete", "主线已完成"), SNBadge.Tone.SUCCESS))
 	content.add_child(row)
-	content.add_child(_label(_loc("ui.hint.contract_refresh", "每次抵达目的港后，普通委托池会自动刷新。"), 12, COLOR_MUTED))
+	content.add_child(_label(_loc("ui.hint.contract_refresh", "每次抵达目的港后，普通委托池会自动刷新。"), 12, SNSkin.color("text.muted")))
 	return panel
 
 
 func _section_header(title_text: String, count: int, tone: int) -> Control:
 	var row := HBoxContainer.new()
-	var title := _label(title_text, 18, COLOR_BRASS)
+	var title := _label(title_text, 18, SNSkin.color("brass.highlight"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
 	row.add_child(_badge("%d 个" % count, tone))
@@ -175,11 +184,11 @@ func _contract_grid() -> GridContainer:
 
 
 func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_plan: bool) -> Control:
-	var panel := _panel(&"SNElevatedPanel")
+	var panel := _panel(&"SNParchmentPanel")
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var content := _panel_content(panel)
 	var title_row := HBoxContainer.new()
-	var title := _label(_loc(String(contract.get("name_key", "")), String(contract.get("template_id", ""))), 18, COLOR_BRASS)
+	var title := _label(_loc(String(contract.get("name_key", "")), String(contract.get("template_id", ""))), 18, SNSkin.color("ink.primary"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.max_lines_visible = 2
 	title_row.add_child(title)
@@ -190,25 +199,26 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 	content.add_child(_contract_data(contract))
 	var description_key := String(contract.get("description_key", ""))
 	if not description_key.is_empty():
-		var description := _label(_loc(description_key, ""), 13, COLOR_MUTED)
+		var description := _label(_loc(description_key, ""), 13, SNSkin.color("paper.ink_muted"))
 		description.max_lines_visible = 2
 		content.add_child(description)
-	var deadline := _label("截止 %s" % String(contract.get("deadline_label", "")), 11, COLOR_MUTED)
+	var deadline := _label("截止 %s" % String(contract.get("deadline_label", "")), 11, SNSkin.color("paper.ink_muted"))
 	deadline.tooltip_text = _loc("ui.label.deadline_hint", "绝对时间仅作参考，优先看剩余期限")
 	content.add_child(deadline)
 	var reward_row := HBoxContainer.new()
-	var reward := _label(_reward_text(contract), 14, COLOR_TEXT)
+	var reward := _label(_reward_text(contract), 14, SNSkin.color("ink.primary"))
 	reward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reward_row.add_child(reward)
 	reward_row.add_child(_badge("声望 +%d" % int(contract.get("reputation", 0)), SNBadge.Tone.SUCCESS))
 	content.add_child(reward_row)
 	var unlock_names: Array = contract.get("unlock_names", [])
 	if not unlock_names.is_empty():
-		content.add_child(_label("解锁：%s" % ", ".join(PackedStringArray(unlock_names)), 12, COLOR_TEAL))
+		content.add_child(_label("解锁：%s" % ", ".join(PackedStringArray(unlock_names)), 12, SNSkin.color("brass.shadow")))
 	var buttons := HBoxContainer.new()
 	if can_accept:
 		var accept := _button(_loc("ui.button.accept", "接受"))
 		accept.theme_type_variation = &"SNPrimaryButton"
+		_apply_button_icon(accept, "action_confirm", 16)
 		accept.pressed.connect(func() -> void:
 			command_requested.emit(&"contract.accept", {"instance_id": String(contract.get("instance_id", ""))})
 		)
@@ -218,6 +228,8 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 		var plan := _button(_loc("ui.button.plan", "规划出航"))
 		plan.theme_type_variation = &"SNPrimaryButton"
 		plan.disabled = not bool(contract.get("destination_reachable", false))
+		if plan.disabled:
+			_apply_button_icon(plan, "status_locked", 16)
 		plan.pressed.connect(func() -> void:
 			# 4.3.4 / U7：出航准备页已删除，规划出航改为打开海图并预选目的港，
 			# 真正的出航在确认弹窗里完成。
@@ -227,7 +239,7 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 	if buttons.get_child_count() > 0:
 		content.add_child(buttons)
 	if can_plan and not bool(contract.get("destination_reachable", false)):
-		content.add_child(_label("目的港不直达，需要先到中转港。", 11, COLOR_RED))
+		content.add_child(_label("目的港不直达，需要先到中转港。", 11, SNSkin.color("state.danger")))
 	return panel
 
 
@@ -235,13 +247,13 @@ func _contract_data(contract: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	var remaining := float(contract.get("remaining_hours", 0.0))
-	row.add_child(_contract_stat("目的地", _loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), COLOR_TEXT))
+	row.add_child(_contract_stat("目的地", _loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), SNSkin.color("ink.primary")))
 	row.add_child(VSeparator.new())
-	row.add_child(_contract_stat("剩余期限", String(contract.get("remaining_label", "—")), COLOR_RED if remaining < 24.0 else COLOR_TEXT))
+	row.add_child(_contract_stat("剩余期限", String(contract.get("remaining_label", "—")), SNSkin.color("state.danger") if remaining < 24.0 else SNSkin.color("ink.primary")))
 	row.add_child(VSeparator.new())
-	row.add_child(_contract_stat("载重", _payload_text(contract).trim_prefix("载荷："), COLOR_TEXT))
+	row.add_child(_contract_stat("载重", _payload_text(contract).trim_prefix("载荷："), SNSkin.color("ink.primary")))
 	row.add_child(VSeparator.new())
-	row.add_child(_contract_stat("预计航程", String(contract.get("estimated_label", "—")), COLOR_MUTED))
+	row.add_child(_contract_stat("预计航程", String(contract.get("estimated_label", "—")), SNSkin.color("paper.ink_muted")))
 	return row
 
 
@@ -249,7 +261,7 @@ func _contract_stat(label_text: String, value_text: String, value_color: Color) 
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 1)
-	column.add_child(_label(label_text, 10, COLOR_MUTED))
+	column.add_child(_label(label_text, 10, SNSkin.color("paper.ink_muted")))
 	column.add_child(_label(value_text, 14, value_color))
 	return column
 
@@ -257,9 +269,9 @@ func _contract_stat(label_text: String, value_text: String, value_color: Color) 
 func _completed_panel(names: Array) -> Control:
 	var panel := _panel(&"SNPanel")
 	var content := _panel_content(panel)
-	content.add_child(_label("已完成主线", 15, COLOR_BRASS))
+	content.add_child(_label("已完成主线", 15, SNSkin.color("brass.highlight")))
 	for name in names:
-		content.add_child(_label("· %s" % String(name), 13, COLOR_MUTED))
+		content.add_child(_label("· %s" % String(name), 13, SNSkin.color("text.muted")))
 	return panel
 
 
@@ -328,6 +340,15 @@ func _button(text: String) -> Button:
 	button.text = text
 	button.custom_minimum_size = Vector2(0, 38)
 	return button
+
+
+## Skin icon without a wrapper node; the button text / node structure stay intact.
+func _apply_button_icon(button: Button, icon_id: String, max_width: int) -> void:
+	var texture := SNSkin.icon(icon_id)
+	if texture == null:
+		return
+	button.icon = texture
+	button.add_theme_constant_override("icon_max_width", max_width)
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
