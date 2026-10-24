@@ -132,18 +132,18 @@
 | `station_prop_count() -> int` | L1002 |
 | `camera_shift_x() -> float` | L1007 |
 | `advance_station(delta: float) -> void` | L1015 |
-| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1136 |
-| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1158 |
-| `advance_voyage(delta: float) -> void` | L1196 |
-| `reset_voyage() -> void` | L1286 |
-| `is_voyage_transitioning() -> bool` | L1306 |
-| `voyage_mode() -> String` | L1310 |
-| `is_voyage_holding_handoff() -> bool` | L1317 |
-| `voyage_progress() -> float` | L1322 |
-| `voyage_handoff_position() -> Vector3` | L1328 |
-| `ship_position() -> Vector3` | L1334 |
-| `ship_yaw() -> float` | L1342 |
-| `camera_pitch_deg() -> float` | L1349 |
+| `begin_departure(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1142 |
+| `begin_arrival(duration: float = VOYAGE_BEAT_SECONDS) -> void` | L1164 |
+| `advance_voyage(delta: float) -> void` | L1202 |
+| `reset_voyage() -> void` | L1292 |
+| `is_voyage_transitioning() -> bool` | L1312 |
+| `voyage_mode() -> String` | L1316 |
+| `is_voyage_holding_handoff() -> bool` | L1323 |
+| `voyage_progress() -> float` | L1328 |
+| `voyage_handoff_position() -> Vector3` | L1334 |
+| `ship_position() -> Vector3` | L1340 |
+| `ship_yaw() -> float` | L1348 |
+| `camera_pitch_deg() -> float` | L1355 |
 
 ## 契约与约束
 

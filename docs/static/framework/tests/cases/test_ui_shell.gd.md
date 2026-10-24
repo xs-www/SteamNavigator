@@ -44,10 +44,10 @@
 | `test_notice_log_renders_filled_localized_text() -> void` | L599 |
 | `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L657 |
 | `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L690 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L898 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L918 |
-| `test_sea_chart_entry_integration() -> void` | L998 |
-| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1091 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L905 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L925 |
+| `test_sea_chart_entry_integration() -> void` | L1005 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1098 |
 
 ## 契约与约束
 

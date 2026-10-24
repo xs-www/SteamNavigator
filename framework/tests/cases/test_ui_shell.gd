@@ -850,6 +850,9 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 
 	# Headless tests never advance frames, so step the stage clock directly: the
 	# camera really pans to the market shot and the hull really sails to the berth.
+	# A landmark facade (grand harbour terminal) intentionally keeps only the
+	# terminal plus small props — the player ship is not mounted there, so the
+	# berth assertion only applies to the regular district layout.
 	var market_shot: Vector3 = port_stage.station_camera_pose("market", "panel")["position"]
 	port_stage.advance_station(2.0)
 	assert_almost_eq(
@@ -860,8 +863,12 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	)
 	port_stage.advance_station(8.0)
 	assert_false(port_stage.is_station_transitioning(), "the market station transition settles")
-	var market_berth := port_stage.station_ship_position("market").x
-	assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the hull moors at the market berth")
+	var current_port: Dictionary = shell._last_port_view.get("current_port", {})
+	if String(current_port.get("landmark_path", "")).is_empty():
+		var market_berth := port_stage.station_ship_position("market").x
+		assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the hull moors at the market berth")
+	else:
+		assert_false(port_stage.has_ship(), "the landmark facade hides the player ship")
 
 	# 4.5.3: supply lives inside the market page, not as an adjacent station page;
 	# navigating to the old `supply` id is redirected to the market.

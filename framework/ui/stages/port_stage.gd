@@ -1036,6 +1036,12 @@ func _advance_camera(delta: float) -> void:
 
 func _advance_ship(delta: float) -> void:
 	if _ship_root == null or not is_instance_valid(_ship_root):
+		# Minimal landmark facade: no player hull is mounted, so there is nothing
+		# to sail. Snap the logical mooring state to the station berth, otherwise
+		# `is_station_transitioning()` would report a permanent ship manoeuvre and
+		# the station transition could never settle.
+		_ship_x = _ship_moor_x
+		_ship_yaw = _ship_moor_yaw
 		return
 	# Station transit runs along the quay (Z is the berth line); a voyage beat is
 	# the only thing that moves the hull off it.

@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-24T07:03:54.588Z",
-  "commit": "846db5b",
+  "generated_at": "2026-10-24T07:11:45.719Z",
+  "commit": "2305c5f",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -4685,7 +4685,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "467656ba238181021df48218a761b3e2b7136e0e05c726c23d9741e2e97accc5",
+      "sha256": "5d9e79aeaba8bd446588cb162a79cc3bd81fd9aea6321d72b8f2526eeadd556a",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -5297,7 +5297,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "2ee5fc327378ba05f56e711bf6a61c933fd9009956ffe85b71e91bbf9e25bdba",
+      "sha256": "5dee9e2c3e53c7c280ff65703503a092004b28c665dba6fb90cf0ef73d815b05",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
