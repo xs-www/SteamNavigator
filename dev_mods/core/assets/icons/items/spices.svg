@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- spice heap (behind the sack rim) -->
+    <circle cx="58" cy="38" r="9" fill="#C9963C"/>
+    <circle cx="69" cy="33" r="8" fill="#D9A94E"/>
+    <circle cx="77" cy="40" r="7" fill="#B9862F"/>
+    <circle cx="52" cy="44" r="5" fill="#B9862F"/>
+    <circle cx="63" cy="45" r="5" fill="#EBC978"/>
+    <circle cx="66" cy="31" r="2.2" fill="#FBEBC1"/>
+    <!-- burlap sack -->
+    <path d="M50 50 Q32 58 27 76 Q22 98 36 109 Q54 118 74 113 Q97 106 101 85 Q103 62 82 50 Z" fill="#6B7480" stroke="#191713" stroke-width="6"/>
+    <path d="M50 50 Q32 58 27 76 Q22 98 36 109 Q54 118 74 113 Q97 106 101 85 Q103 62 82 50 Z" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <!-- rolled rim -->
+    <path d="M48 50 Q66 41 84 50 L84 57 Q66 48 48 57 Z" fill="#7C8794" stroke="#191713" stroke-width="4"/>
+    <path d="M48 50 Q66 41 84 50" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <!-- brass tie cord -->
+    <path d="M46 57 Q66 49 86 57" fill="none" stroke="#B9862F" stroke-width="5"/>
+    <circle cx="66" cy="58" r="4.5" fill="#8A6424" stroke="#191713" stroke-width="2.5"/>
+    <path d="M62 62 L58 69" fill="none" stroke="#B9862F" stroke-width="3"/>
+    <path d="M70 62 L74 69" fill="none" stroke="#B9862F" stroke-width="3"/>
+    <!-- burlap weave -->
+    <path d="M34 72 L52 62" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <path d="M30 86 L50 74" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <path d="M36 100 L58 86" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <path d="M78 104 L98 92" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <path d="M84 113 L100 102" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <!-- loose grains -->
+    <circle cx="90" cy="52" r="2" fill="#EBC978"/>
+    <circle cx="95" cy="60" r="1.8" fill="#C9963C"/>
+    <!-- highlight -->
+    <path d="M36 68 Q30 84 35 97" fill="none" stroke="#DCE3EA" stroke-width="3.4" opacity="0.8"/>
+  </g>
+</svg>

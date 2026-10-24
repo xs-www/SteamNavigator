@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-24T07:11:45.719Z",
-  "commit": "2305c5f",
+  "generated_at": "2026-10-24T07:55:07.378Z",
+  "commit": "013754a",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1171,
-    "documented": 461,
-    "grouped": 710
+    "sources": 1185,
+    "documented": 467,
+    "grouped": 718
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "01c7e364fae42bcd4058f06f42932195a691abfadfa5006bbad6b2eb9a6525c1",
+      "sha256": "9bdaf376857b7908614b66acf002ceef70c25376683e8788a8e77f7651bc6e04",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -461,6 +461,76 @@
     {
       "source": "dev_mods/core/assets/icons/coal.png",
       "sha256": "d011a713738dfb0a95f62a0c68f09d6a93b71067fb27c54b10f250a74bb28b8a",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/boiler_plate.svg",
+      "sha256": "78e249fbfe78c784004aa01061cf359858c5c59b514e001bbf7ee971c3294766",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/brass.svg",
+      "sha256": "4d35e10bc4c629099ed3004ec104ad4083366714ce57fde5a4ac62821f6e8bca",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/contract_freight.svg",
+      "sha256": "cf5a15cb295c7c30f16e97b4ae60f9e957ae19cd3a9af36284780b747a56314f",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/glassware.svg",
+      "sha256": "2a27b9bbed9b9c14c091653a49f808979db718ed7dcaba89efde45746960debf",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/iron_ore.svg",
+      "sha256": "816f374e15469ec53f0957f12867d35a20f13a199990109e9dad4a6be1c0f678",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/precision_gear.svg",
+      "sha256": "381f1f259da33927cdf29cf7a8bb1a3ccaa2a42b4599b6833aff6be04646db36",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/sealing_compound.svg",
+      "sha256": "e5054357f217d817bce15bb857ce51c4637eb43d6ff489c6574d8db3a170c506",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/spices.svg",
+      "sha256": "047450455d7614b8e4a025da5e87dcc3e66200a51c599285f95f3540f17a1248",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/textiles.svg",
+      "sha256": "111b3f90bd38082b4a17b34e0a667588434b2eb058aedda122794651d6d3c2ea",
+      "doc": "docs/static/dev_mods/core/README.md",
+      "status": "grouped",
+      "group": "docs/static/dev_mods/core/README.md"
+    },
+    {
+      "source": "dev_mods/core/assets/icons/items/timber.svg",
+      "sha256": "91d8efdfc5612df9011de5c88efc6b5d868f34cc5fa48c5192eeb4f6b8956d52",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3127,7 +3197,7 @@
     },
     {
       "source": "dev_mods/core/content/items.json",
-      "sha256": "e784c007d02f72f019ef7366ee11518043d26037adae8e631f8a8331d08813ec",
+      "sha256": "7d5a59351f2068bf176adaa2cf8a2c9628ec3c90eeb9fa6d82b8b8abcdfd0ca7",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3295,7 +3365,7 @@
     },
     {
       "source": "dev_mods/core/manifest.json",
-      "sha256": "db78a34861a8449fb5c93440fc59ffb0c1bc72f1598576f392f32286e72307e1",
+      "sha256": "7e1b75b6f0b1887a2e7baca18e587c032497b43c01a2d23ff87703291cb500e7",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3485,10 +3555,9 @@
     },
     {
       "source": "framework/application/commands/trade_commands.gd",
-      "sha256": "9204b8cf54e18ba13d9dbc817d9a72c0aa4c645cd01a03121c0031a30b0699ad",
-      "doc": "docs/static/framework/application/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/application/README.md"
+      "sha256": "a2848740dd38f39472bd7e452c28ee77973e40b24610bc7797c0f43063a10177",
+      "doc": "docs/static/framework/application/commands/trade_commands.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/application/commands/voyage_commands.gd",
@@ -3585,6 +3654,12 @@
       "group": "docs/static/framework/application/README.md"
     },
     {
+      "source": "framework/application/queries/market_view.gd",
+      "sha256": "b9c2ba6178ce116901f4474296b2d8272d24bed2c864ed497783c3a5f33bd8ab",
+      "doc": "docs/static/framework/application/queries/market_view.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/application/queries/port_memory_view.gd",
       "sha256": "97fd1f1eca5bc0b2a4122794ca84c1167fd5859ba5f9cd122b0a69d71cabe747",
       "doc": "docs/static/framework/application/queries/port_memory_view.gd.md",
@@ -3598,7 +3673,7 @@
     },
     {
       "source": "framework/application/queries/query_registry.gd",
-      "sha256": "1e1699ab32c32a94606d9bc442a19a78ac0cc6d71c4a9ba42d58259bbf255911",
+      "sha256": "fb84731315dfcccb828b90ae0798cddb2c7fdbe803cbacd1ebf93d9c71067982",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -3856,7 +3931,7 @@
     },
     {
       "source": "framework/domain/economy/market_ops.gd",
-      "sha256": "a77d76fca60a2919d9d96a2ecabb5e889ba0bb673410d8e8a41af0f225a5a979",
+      "sha256": "735cfefa200c36d2ec584e59b49c953fd18db051349bd17ac4fafc7f2d097f12",
       "doc": "docs/static/framework/domain/economy/market_ops.gd.md",
       "status": "documented"
     },
@@ -4477,14 +4552,13 @@
     },
     {
       "source": "framework/tests/cases/test_market_trade.gd",
-      "sha256": "a3810d2358d19e27786e718a3318d9cd8d763dadb028fbd2394c8906c5bc38ac",
-      "doc": "docs/static/framework/tests/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/tests/README.md"
+      "sha256": "dac57fa10242ff6073e387687bed38b7861c2dacad2dc07fe6b925f93d2deb38",
+      "doc": "docs/static/framework/tests/cases/test_market_trade.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_mod_loading.gd",
-      "sha256": "793ec7f009c5872670fb816976f2f13b5fbf0b96c271f5418edfe0fb6d461d4f",
+      "sha256": "59a8684e94f05d5cfc84124113c7cc91a9f7ee624902322a6cff0f0a066dbe85",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -4685,7 +4759,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "5d9e79aeaba8bd446588cb162a79cc3bd81fd9aea6321d72b8f2526eeadd556a",
+      "sha256": "2a21d1414172c3753d3140cee3eb358479b530c623319c7b72b64489951cacc4",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -4698,7 +4772,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_views.gd",
-      "sha256": "e75539ec6348e5e99ff43d8705537e74ab67d1ea4d319fd5aa857635528f7d44",
+      "sha256": "c833f503340a7c4a3ee3bd1c07ae7925f2911356c4bb719dddb8b554ecbdfb9c",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
@@ -4816,9 +4890,21 @@
       "group": "docs/static/framework/ui/README.md"
     },
     {
+      "source": "framework/ui/components/sn_cargo_hold_panel.gd",
+      "sha256": "ad209437561cbd1d4fe4292cc761201328c6ef6dd356f0f44d4234f22f5c7a5b",
+      "doc": "docs/static/framework/ui/components/sn_cargo_hold_panel.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/ui/components/sn_cloud_veil.gd",
       "sha256": "3539d0be567798e6b1b2429819e9b2c9dfd02e2aa3f6f8f65b05ae39780b4e8a",
       "doc": "docs/static/framework/ui/components/sn_cloud_veil.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_drop_zone.gd",
+      "sha256": "eee18f9f5bc187a989d356604be80d55754564b03bf924fc3ebe3e90d502d256",
+      "doc": "docs/static/framework/ui/components/sn_drop_zone.gd.md",
       "status": "documented"
     },
     {
@@ -4837,6 +4923,12 @@
       "source": "framework/ui/components/sn_intel_table.gd",
       "sha256": "2d02d45537b7d877521a8bf6bef5e6d6688e74ac6e04c2a31019dfb3186383e0",
       "doc": "docs/static/framework/ui/components/sn_intel_table.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_item_tile.gd",
+      "sha256": "5b145deae00efc7fd8a7b8fcb246e90a995d4e7447b31a4a5bcfe32fce6a32d7",
+      "doc": "docs/static/framework/ui/components/sn_item_tile.gd.md",
       "status": "documented"
     },
     {
@@ -5181,7 +5273,7 @@
     },
     {
       "source": "framework/ui/screens/port/market_screen.gd",
-      "sha256": "883c677eeca1b00338852a5ec51ac9296fd0ae1d7f202c2e41dd2ecc38fce68f",
+      "sha256": "7057f24f6aab0bd757f964438d28ff37bfdde40e969989155b2eabd9ac14c7d3",
       "doc": "docs/static/framework/ui/screens/port/market_screen.gd.md",
       "status": "documented"
     },
@@ -5259,7 +5351,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "0242ee872adf24912691cf1f9f8b4344d442a4e3c7d4ded2c94e19e2e02466b2",
+      "sha256": "45abf80d19c0f11a450350da178a8531455048410cdeb15f1b7a941e8d5710e6",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -6136,7 +6228,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "2377de5bff982e5eb94367ee9f49e7374366a372521e126a3d35e2df0397ee62",
+      "sha256": "8b7381930901628eaec49de2c1e50c4aa2ba2ac5ab3ebac81d8378bcdb54fc01",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"

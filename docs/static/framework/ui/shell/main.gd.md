@@ -8,52 +8,56 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI_THEME` | L57 |
-| `HARBOR_SIGN_SCRIPT` | L59 |
-| `MARKET_SCREEN_SCENE` | L60 |
-| `CONTRACTS_SCREEN_SCENE` | L61 |
-| `SUPPLY_SCREEN_SCENE` | L62 |
-| `INTEL_SCREEN_SCENE` | L63 |
-| `OVERVIEW_SCREEN_SCENE` | L64 |
-| `SHIPYARD_SCREEN_SCENE` | L65 |
-| `BASE_SCREEN_SCENE` | L66 |
-| `AUTO_TRADE_SCREEN_SCENE` | L67 |
-| `RUINS_SCREEN_SCENE` | L68 |
-| `PORT_MEMORY_SCREEN_SCENE` | L69 |
-| `SETTLEMENT_SCREEN_SCENE` | L70 |
-| `AT_SEA_SCREEN_SCENE` | L71 |
-| `EVENT_SCREEN_SCENE` | L72 |
-| `SEA_CHART_SCREEN_SCENE` | L73 |
-| `CLUE_LOG_SCREEN_SCENE` | L74 |
-| `STORY_CARD_SCRIPT` | L75 |
-| `STORY_OBJECTIVE_SCRIPT` | L76 |
-| `TASK_TRACKER_SCRIPT` | L77 |
-| `VICTORY_SCREEN_SCENE` | L78 |
-| `MAIN_MENU_SCREEN_SCENE` | L79 |
-| `NEW_GAME_SCREEN_SCENE` | L80 |
-| `MODS_SCREEN_SCENE` | L81 |
-| `SETTINGS_SCREEN_SCENE` | L82 |
-| `NAV_ICONS` | L85 |
-| `NAV_ICON_MAX_WIDTH` | L96 |
-| `DEV_TEAM` | L97 |
-| `GAME_VERSION_FALLBACK` | L98 |
-| `SCREENS` | L102 |
-| `PORT_STAGE_SCENE_PATH` | L105 |
-| `PORT_STAGE_FACILITY_SCREENS` | L107 |
-| `STAGE_SCREENS` | L120 |
-| `DOCK_PANEL_WIDTH` | L129 |
-| `TOP_CHROME_MAX_HEIGHT` | L133 |
-| `PORT_STATUS_BAR_HEIGHT` | L135 |
-| `PORT_STATUS_BAR_GAP` | L136 |
-| `PORT_SIGN_WIDTH` | L139 |
-| `PORT_SIGN_HEIGHT` | L140 |
-| `PORT_SIGN_GAP` | L141 |
-| `PORT_SIGN_MARGIN` | L142 |
-| `HUD_ICON_KEYS` | L146 |
-| `HUD_SKIN_ICONS` | L157 |
-| `HUD_ICON_SIZE` | L167 |
-| `PAGE_BOTTOM_MARGIN` | L170 |
-| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L171 |
+| `UI_THEME` | L69 |
+| `HARBOR_SIGN_SCRIPT` | L71 |
+| `MARKET_SCREEN_SCENE` | L72 |
+| `CARGO_HOLD_PANEL_SCRIPT` | L74 |
+| `ITEM_FALLBACK_ICON` | L76 |
+| `CONTRACTS_SCREEN_SCENE` | L77 |
+| `SUPPLY_SCREEN_SCENE` | L78 |
+| `INTEL_SCREEN_SCENE` | L79 |
+| `OVERVIEW_SCREEN_SCENE` | L80 |
+| `SHIPYARD_SCREEN_SCENE` | L81 |
+| `BASE_SCREEN_SCENE` | L82 |
+| `AUTO_TRADE_SCREEN_SCENE` | L83 |
+| `RUINS_SCREEN_SCENE` | L84 |
+| `PORT_MEMORY_SCREEN_SCENE` | L85 |
+| `SETTLEMENT_SCREEN_SCENE` | L86 |
+| `AT_SEA_SCREEN_SCENE` | L87 |
+| `EVENT_SCREEN_SCENE` | L88 |
+| `SEA_CHART_SCREEN_SCENE` | L89 |
+| `CLUE_LOG_SCREEN_SCENE` | L90 |
+| `STORY_CARD_SCRIPT` | L91 |
+| `STORY_OBJECTIVE_SCRIPT` | L92 |
+| `TASK_TRACKER_SCRIPT` | L93 |
+| `VICTORY_SCREEN_SCENE` | L94 |
+| `MAIN_MENU_SCREEN_SCENE` | L95 |
+| `NEW_GAME_SCREEN_SCENE` | L96 |
+| `MODS_SCREEN_SCENE` | L97 |
+| `SETTINGS_SCREEN_SCENE` | L98 |
+| `NAV_ICONS` | L101 |
+| `NAV_ICON_MAX_WIDTH` | L112 |
+| `DEV_TEAM` | L113 |
+| `GAME_VERSION_FALLBACK` | L114 |
+| `SCREENS` | L118 |
+| `PORT_STAGE_SCENE_PATH` | L121 |
+| `PORT_STAGE_FACILITY_SCREENS` | L123 |
+| `STAGE_SCREENS` | L136 |
+| `DOCK_PANEL_WIDTH` | L145 |
+| `CARGO_HOLD_PANEL_WIDTH` | L147 |
+| `MARKET_COLUMN_GAP` | L149 |
+| `TOP_CHROME_MAX_HEIGHT` | L153 |
+| `PORT_STATUS_BAR_HEIGHT` | L155 |
+| `PORT_STATUS_BAR_GAP` | L156 |
+| `PORT_SIGN_WIDTH` | L159 |
+| `PORT_SIGN_HEIGHT` | L160 |
+| `PORT_SIGN_GAP` | L161 |
+| `PORT_SIGN_MARGIN` | L162 |
+| `HUD_ICON_KEYS` | L166 |
+| `HUD_SKIN_ICONS` | L177 |
+| `HUD_ICON_SIZE` | L187 |
+| `PAGE_BOTTOM_MARGIN` | L190 |
+| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L191 |
 
 ## 皮肤接线（ui-skin-v1）
 - 所有纹理/图标/颜色经 `SNSkin`（`framework/ui/skin/sn_skin.gd`）读取 `assets/ui/skin/sn_v1/skin.json`；
@@ -77,5 +81,17 @@
 - 数据只走 QueryBus，修改只走 CommandBus；UI 会话状态不写存档。
 - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
 - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
+
+## 市场页（图标直接交易，`docs/design/MARKET_UI_REFACTOR.md`）
+- `_screen_market()` 先执行 `market.view`；查询不可用时回退用 `port.view` 的行情 / 船摘要
+  组装同名字段的 ViewModel，页面不崩。
+- 每个行情 / 船舱 / 仓库行的 `icon_key` 由 Shell 经 `AssetService.find_key` →
+  `AssetService.load_texture` 解析成 `Texture2D`（实例内缓存）；缺失时回退
+  `assets/ui/icons/item_fallback.svg`，再缺失回退框架占位贴图。
+- 舞台可用时挂三栏 `DockPanelRow`：`CargoHoldPanel`(360) + 透明 `StageWindow`
+  (expand, `MOUSE_FILTER_IGNORE`, 只露出 3D 港区) + `DockPanel`(640)；舞台不可用时
+  退化成 `CargoHoldPanel` + 市场面板两栏，不出现空白舞台窗口。
+- 页面只发命令意图：`trade.buy{destination}` / `trade.sell{source}` /
+  `warehouse.store_materials` / `warehouse.take_materials`。
 
 模块索引：[framework/ui](../README.md)

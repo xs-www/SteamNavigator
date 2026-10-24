@@ -36,4 +36,5 @@
 - [UI_VISUAL_BASELINE.md](UI_VISUAL_BASELINE.md) — SN Visual Baseline V1 与非约束性的 UI Kit Concept V1
 - [UI_FOUNDATION_SPEC_V1.md](UI_FOUNDATION_SPEC_V1.md) — 四类材质、基础尺寸、九宫格、安全区、字体、颜色、状态与动效生产前置规范
 - [UI_SKIN_PIPELINE.md](UI_SKIN_PIPELINE.md) — 外部贴图皮肤管线 V1：图集→运行纹理/Theme 生成、SNSkin 契约、换贴图流程、图标语义与已知缺口
+- [MARKET_UI_REFACTOR.md](MARKET_UI_REFACTOR.md) — 市场界面重构 V1：图标直接交互（左键 +1 / 右键清空 / 拖拽买卖）、左背包 + 中 3D + 右市场布局、`market.view` 与 `trade.buy` destination / `trade.sell` source 契约、SVG 占位图标管线
 - [UI_SCREEN_PROTOTYPES_V1.md](UI_SCREEN_PROTOTYPES_V1.md) — 总览、市场、委托、船厂、补给、情报、海图/出航、抵达结算八张页面级视觉原型

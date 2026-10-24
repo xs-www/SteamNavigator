@@ -10,6 +10,9 @@ const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const METER_SCRIPT := preload("res://framework/ui/components/sn_resource_meter.gd")
 const CARD_SCRIPT := preload("res://framework/ui/components/sn_supply_card.gd")
 const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_table.gd")
+const ITEM_TILE_SCRIPT := preload("res://framework/ui/components/sn_item_tile.gd")
+const DROP_ZONE_SCRIPT := preload("res://framework/ui/components/sn_drop_zone.gd")
+const CARGO_HOLD_SCRIPT := preload("res://framework/ui/components/sn_cargo_hold_panel.gd")
 
 const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_screen.gd")
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
@@ -1147,6 +1150,295 @@ func test_sea_chart_buys_an_intel_clue_from_the_panel() -> void:
 		assert_eq((rebuilt._view_model.get("clues", []) as Array).size(), clues_before + 1,
 			"the refreshed chart view model carries the new clue")
 	_unmount(bundle)
+
+
+## 市场页重构（图标直接交易）：三栏布局、图标格子、船舱 / 仓库落点、待交易数量。
+func test_market_page_three_column_icon_trading() -> void:
+	var bundle := _mount(5301)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	context.state.set_money(5000)
+	var market_query := context.queries.execute(&"market.view")
+	var rows: Array = []
+	if bool(market_query.get("ok", false)):
+		rows = Array((market_query["data"] as Dictionary).get("market", []))
+	else:
+		rows = Array(context.queries.execute(&"port.view")["data"].get("market", []))
+	var trade_row := {}
+	for row in rows:
+		if row is Dictionary and bool(row.get("buyable", true)) and int(row.get("stock", 0)) >= 2:
+			trade_row = row
+			break
+	assert_true(not trade_row.is_empty(), "the fixture market has a buyable good")
+	if trade_row.is_empty():
+		_unmount(bundle)
+		return
+	var bought := context.commands.execute(&"trade.buy", {
+		"item_id": String(trade_row.get("item_id", "")),
+		"amount": 2,
+	})
+	assert_true(bool(bought.get("ok", false)), "loading the hold succeeds: %s" % str(bought))
+	ShipOps.add_cargo(context.state.ship(), "core:item/contract_freight", 1, "fixture_contract")
+	WarehouseOps.add_material(context.state, context.state.current_port_id(), "core:item/timber", 3)
+	_goto(shell, "market")
+
+	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the market page mounts exactly one MarketScreen")
+	var dock_row := _named_node(shell._root_box, "DockPanelRow") as HBoxContainer
+	assert_not_null(dock_row, "the market page keeps the three-column dock row")
+	var stage_window := _named_node(shell._root_box, "StageWindow") as Control
+	assert_not_null(stage_window, "the middle stage window stays in the row")
+	if stage_window != null:
+		assert_eq(stage_window.mouse_filter, Control.MOUSE_FILTER_IGNORE, "the stage window never eats mouse input")
+	var dock_panel := _named_node(shell._root_box, "DockPanel") as PanelContainer
+	assert_not_null(dock_panel, "the market dock panel is pinned to the right")
+	if dock_panel != null:
+		assert_true(dock_panel.custom_minimum_size.x >= 620.0, "the dock panel keeps the narrow content column")
+	var cargo_panel := _named_node(shell._root_box, "CargoHoldPanel") as Control
+	assert_not_null(cargo_panel, "the page adds the left ship-hold backpack")
+	if cargo_panel != null:
+		assert_true(cargo_panel.custom_minimum_size.x >= 360.0, "the backpack column keeps its 360 px minimum")
+	var cargo_zone := _named_node(shell._root_box, "CargoDropZone")
+	var warehouse_zone := _named_node(shell._root_box, "WarehouseDropZone")
+	var sell_zone := _named_node(shell._root_box, "MarketDropZone")
+	assert_not_null(cargo_zone, "the backpack exposes the 船舱货物 drop zone")
+	assert_not_null(warehouse_zone, "the backpack exposes the 港口仓库 drop zone")
+	assert_not_null(sell_zone, "the whole market panel is the sell drop zone")
+	if cargo_zone == null or warehouse_zone == null or sell_zone == null:
+		_unmount(bundle)
+		return
+	assert_contains(Array(cargo_zone.get("accept_kinds")), "market_item", "buying into cargo accepts market icons")
+	assert_contains(Array(cargo_zone.get("accept_kinds")), "warehouse_item", "taking from the warehouse accepts warehouse icons")
+	assert_contains(Array(warehouse_zone.get("accept_kinds")), "cargo_item", "storing accepts hold icons")
+	assert_contains(Array(warehouse_zone.get("accept_kinds")), "market_item", "buying into the warehouse accepts market icons")
+	assert_contains(Array(sell_zone.get("accept_kinds")), "cargo_item", "the market sells hold icons")
+	assert_contains(Array(sell_zone.get("accept_kinds")), "warehouse_item", "the market sells warehouse icons")
+
+	# Icon grid: every market row renders one tile with a resolved texture.
+	var market_tiles: Array = []
+	for node in _nodes_with_script(shell._root_box, ITEM_TILE_SCRIPT):
+		var tile_item: Dictionary = node.get("item")
+		if String(tile_item.get("kind", "")) == "market_item":
+			market_tiles.append(node)
+	assert_eq(market_tiles.size(), rows.size(), "every market row gets exactly one icon tile")
+	for node in market_tiles:
+		assert_not_null(node.call("icon_texture"), "market tiles paint a resolved icon texture (content icon or fallback)")
+
+	# Left click +1 (capped), right click clears.
+	var trade_tile: Variant = null
+	for node in market_tiles:
+		if bool(node.get("draggable")) and int(node.get("max_pending")) >= 3:
+			trade_tile = node
+			break
+	assert_not_null(trade_tile, "at least one market tile is draggable with stock available")
+	if trade_tile == null:
+		_unmount(bundle)
+		return
+	var tile: Control = trade_tile
+	tile.call("increment_pending")
+	assert_eq(int(tile.get("pending")), 1, "increment_pending bumps the pending amount by one")
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	tile.call("_on_gui_input", press)
+	assert_eq(int(tile.get("pending")), 1, "the press that starts a drag does not add a unit")
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	tile.call("_on_gui_input", release)
+	assert_eq(int(tile.get("pending")), 2, "a plain left click adds one unit on release")
+	for index in range(12):
+		tile.call("increment_pending")
+	assert_eq(int(tile.get("pending")), mini(14, int(tile.get("max_pending"))),
+		"the pending amount never exceeds the available stock")
+	var right_click := InputEventMouseButton.new()
+	right_click.button_index = MOUSE_BUTTON_RIGHT
+	right_click.pressed = true
+	tile.call("_on_gui_input", right_click)
+	assert_eq(int(tile.get("pending")), 0, "right click clears the pending amount")
+	var zero_payload: Dictionary = tile.call("drag_payload")
+	assert_eq(int(zero_payload.get("amount", 0)), 1, "a pure drag (pending 0) carries exactly one unit")
+	for index in range(3):
+		tile.call("increment_pending")
+	var drag_payload: Dictionary = tile.call("drag_payload")
+	assert_eq(String(drag_payload.get("kind", "")), "market_item", "market tiles carry the market_item drag kind")
+	assert_eq(int(drag_payload.get("amount", 0)), 3, "clicking three times then dragging carries exactly three units")
+	# A drag ends with a release: that release must not add a fourth unit.
+	tile.set("_dragging", true)
+	var drag_release := InputEventMouseButton.new()
+	drag_release.button_index = MOUSE_BUTTON_LEFT
+	drag_release.pressed = false
+	tile.call("_on_gui_input", drag_release)
+	assert_eq(int(tile.get("pending")), 3, "the release that ends a drag adds no extra unit")
+	assert_false(bool(tile.get("_dragging")), "the drag flag resets after the release")
+
+	# Contract cargo stays locked: no drag, explicit lock marker / label.
+	var contract_tiles: Array = []
+	var hold_tiles: Array = []
+	for node in _nodes_with_script(shell._root_box, ITEM_TILE_SCRIPT):
+		var tile_item: Dictionary = node.get("item")
+		if String(tile_item.get("kind", "")) != "cargo_item":
+			continue
+		hold_tiles.append(node)
+		if bool(node.get("locked")):
+			contract_tiles.append(node)
+	assert_true(hold_tiles.size() >= 2, "the hold renders the bought cargo and the contract cargo")
+	assert_eq(contract_tiles.size(), 1, "the contract cargo stack gets its own locked tile")
+	if contract_tiles.size() == 1:
+		var contract_tile: Control = contract_tiles[0]
+		assert_false(bool(contract_tile.get("draggable")), "contract cargo cannot be dragged")
+		assert_true(contract_tile.call("_get_drag_data", Vector2.ZERO) == null, "contract cargo returns no drag payload")
+		var contract_lock: String = shell._tr("ui.market.contract_locked", "")
+		var explained := false
+		for text in _label_texts(contract_tile):
+			if not contract_lock.is_empty() and String(text).contains(contract_lock):
+				explained = true
+		assert_true(explained, "the contract tile explains why it cannot be traded: %s" % str(_label_texts(contract_tile)))
+	var warehouse_tiles: Array = []
+	for node in _nodes_with_script(shell._root_box, ITEM_TILE_SCRIPT):
+		var tile_item: Dictionary = node.get("item")
+		if String(tile_item.get("kind", "")) == "warehouse_item":
+			warehouse_tiles.append(node)
+	if bool(market_query.get("ok", false)):
+		assert_eq(warehouse_tiles.size(), 1, "the port warehouse material renders one tile")
+	else:
+		assert_eq(warehouse_tiles.size(), 0, "without market.view the port.view fallback has no warehouse rows")
+	# Missing content icons must degrade to the framework item fallback, not crash.
+	assert_true(ResourceLoader.exists("res://assets/ui/icons/item_fallback.svg")
+			or FileAccess.file_exists("res://assets/ui/icons/item_fallback.svg"),
+		"the framework item fallback icon ships with the UI")
+	var fallback_texture: Texture2D = shell._fallback_item_icon()
+	assert_not_null(fallback_texture, "the framework item fallback icon loads")
+	var unknown_texture: Texture2D = shell._resolve_item_icon("icon.item.no_such_item", fallback_texture)
+	assert_eq(unknown_texture, fallback_texture, "unknown content icon keys fall back to the item placeholder")
+	_unmount(bundle)
+
+
+## 拖拽载荷 → 固定命令契约：船舱 / 仓库落点与整块市场面板的 fallback 行为。
+func test_market_drag_drops_emit_the_contract_commands() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 5302})
+	var view_model := {
+		"current_port": {"id": "fixture", "name_key": "fixture"},
+		"money": 100,
+		"ship": {
+			"total_weight": 1.0, "max_weight": 10.0, "cargo_used": 1.0, "cargo_capacity": 10.0,
+			"hold": [
+				{
+					"item_id": "core:item/brass", "name_key": "item.core.brass.name",
+					"category": "metal", "crafting_material": true, "unit_weight": 2.0,
+					"amount": 3, "sellable_amount": 3, "is_contract": false,
+					"contract_id": "", "avg_cost": 10.0, "icon_key": "",
+				},
+				{
+					"item_id": "core:item/contract_freight", "name_key": "item.core.contract_freight.name",
+					"category": "contract", "crafting_material": false, "unit_weight": 1.0,
+					"amount": 1, "sellable_amount": 0, "is_contract": true,
+					"contract_id": "fixture_contract", "avg_cost": 0.0, "icon_key": "",
+				},
+			],
+		},
+		"warehouse": {
+			"port_id": "fixture",
+			"materials": [{
+				"item_id": "core:item/timber", "name_key": "item.core.timber.name",
+				"category": "wood", "crafting_material": true, "unit_weight": 2.5,
+				"amount": 4, "icon_key": "",
+			}],
+		},
+		"market": [{
+			"item_id": "core:item/brass", "name_key": "item.core.brass.name",
+			"category": "metal", "crafting_material": true, "unit_weight": 2.0,
+			"price": 88, "stock": 10, "buyable": true, "icon_key": "",
+		}],
+		"trends": {},
+	}
+	var tree := Engine.get_main_loop() as SceneTree
+	var translate := Callable(context, "translate")
+
+	var hold: Control = CARGO_HOLD_SCRIPT.new()
+	var emitted: Array = []
+	hold.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+		emitted.append({"command": String(command), "params": params.duplicate(true)})
+	)
+	hold.bind(view_model, translate)
+	tree.root.add_child(hold)
+	var cargo_zone := _named_node(hold, "CargoDropZone")
+	var warehouse_zone := _named_node(hold, "WarehouseDropZone")
+	assert_not_null(cargo_zone, "standalone backpack exposes the cargo zone")
+	assert_not_null(warehouse_zone, "standalone backpack exposes the warehouse zone")
+	if cargo_zone == null or warehouse_zone == null:
+		hold.get_parent().remove_child(hold)
+		hold.free()
+		return
+	# Highlight only while a compatible payload hovers; incompatible kinds are rejected.
+	assert_true(bool(cargo_zone.call("_can_drop_data", Vector2.ZERO, {"kind": "market_item"})),
+		"the cargo zone accepts a market icon")
+	assert_true(bool(cargo_zone.call("is_highlighted")), "accepted payloads light the drop zone")
+	assert_false(bool(cargo_zone.call("_can_drop_data", Vector2.ZERO, {"kind": "cargo_item"})),
+		"the cargo zone rejects its own cargo kind")
+	assert_false(bool(cargo_zone.call("is_highlighted")), "a rejected payload clears the highlight again")
+
+	cargo_zone.call("_drop_data", Vector2.ZERO, {"kind": "market_item", "item_id": "core:item/brass", "amount": 2})
+	assert_eq(emitted.size(), 1, "a market icon dropped on 船舱货物 emits one command")
+	if emitted.size() == 1:
+		assert_eq(emitted[0]["command"], "trade.buy", "buying into cargo runs trade.buy")
+		assert_eq(String(emitted[0]["params"].get("destination", "")), "cargo", "the buy names the cargo destination")
+		assert_eq(int(emitted[0]["params"].get("amount", 0)), 2, "the buy carries the dragged amount")
+
+	warehouse_zone.call("_drop_data", Vector2.ZERO, {"kind": "market_item", "item_id": "core:item/brass", "amount": 1})
+	assert_eq(emitted.size(), 2, "a market icon dropped on 港口仓库 emits one command")
+	if emitted.size() == 2:
+		assert_eq(emitted[1]["command"], "trade.buy", "buying into the warehouse runs trade.buy")
+		assert_eq(String(emitted[1]["params"].get("destination", "")), "warehouse", "the buy names the warehouse destination")
+
+	warehouse_zone.call("_drop_data", Vector2.ZERO, {"kind": "cargo_item", "item_id": "core:item/brass", "amount": 3})
+	assert_eq(emitted.size(), 3, "hold cargo dropped on the warehouse emits one command")
+	if emitted.size() == 3:
+		assert_eq(emitted[2]["command"], "warehouse.store_materials", "storing hold cargo runs warehouse.store_materials")
+		assert_eq(int(emitted[2]["params"].get("amount", 0)), 3, "storing keeps the dragged amount")
+
+	cargo_zone.call("_drop_data", Vector2.ZERO, {"kind": "warehouse_item", "item_id": "core:item/timber", "amount": 1})
+	assert_eq(emitted.size(), 4, "warehouse material dropped on 船舱货物 emits one command")
+	if emitted.size() == 4:
+		assert_eq(emitted[3]["command"], "warehouse.take_materials", "taking warehouse material runs warehouse.take_materials")
+
+	# Contract cargo tile: pure render, no drag payload.
+	var contract_tile: Variant = null
+	for node in _nodes_with_script(hold, ITEM_TILE_SCRIPT):
+		if bool(node.get("locked")):
+			contract_tile = node
+			break
+	assert_not_null(contract_tile, "the standalone backpack renders the locked contract cargo")
+	if contract_tile != null:
+		assert_true(contract_tile.call("_get_drag_data", Vector2.ZERO) == null, "contract cargo never produces a drag payload")
+
+	# Sell side: the whole market panel maps cargo / warehouse payloads to trade.sell.
+	var market: Control = MARKET_SCREEN_SCRIPT.new()
+	var sells: Array = []
+	market.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+		sells.append({"command": String(command), "params": params.duplicate(true)})
+	)
+	market.bind(view_model, translate)
+	tree.root.add_child(market)
+	var sell_zone := _named_node(market, "MarketDropZone")
+	assert_not_null(sell_zone, "the market panel exposes the sell drop zone")
+	if sell_zone != null:
+		assert_false(bool(sell_zone.call("_can_drop_data", Vector2.ZERO, {"kind": "market_item"})),
+			"the sell zone rejects market icons")
+		sell_zone.call("_drop_data", Vector2.ZERO, {"kind": "cargo_item", "item_id": "core:item/brass", "amount": 2})
+		sell_zone.call("_drop_data", Vector2.ZERO, {"kind": "warehouse_item", "item_id": "core:item/timber", "amount": 1})
+	assert_eq(sells.size(), 2, "both hold and warehouse payloads sell from the market panel")
+	if sells.size() == 2:
+		assert_eq(sells[0]["command"], "trade.sell", "hold cargo dropped on the market runs trade.sell")
+		assert_eq(String(sells[0]["params"].get("source", "")), "cargo", "hold cargo sells from the cargo hold")
+		assert_eq(sells[1]["command"], "trade.sell", "warehouse material dropped on the market runs trade.sell")
+		assert_eq(String(sells[1]["params"].get("source", "")), "warehouse", "warehouse material sells from the warehouse")
+
+	hold.get_parent().remove_child(hold)
+	hold.free()
+	market.get_parent().remove_child(market)
+	market.free()
 
 
 func _named_node(root: Node, node_name: String) -> Node:

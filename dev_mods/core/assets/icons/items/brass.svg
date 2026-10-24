@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- bottom ingot -->
+    <path d="M16 86 L48 79 L78 88 L46 96 Z" fill="#D9A94E" stroke="#191713" stroke-width="5"/>
+    <path d="M16 86 L46 96 L46 108 L16 98 Z" fill="#8A6424" stroke="#191713" stroke-width="5"/>
+    <path d="M46 96 L78 88 L78 100 L46 108 Z" fill="#B9862F" stroke="#191713" stroke-width="5"/>
+    <path d="M16 86 L48 79" fill="none" stroke="#F0D9A0" stroke-width="2.6"/>
+    <!-- middle ingot -->
+    <path d="M26 60 L56 54 L84 62 L54 69 Z" fill="#D9A94E" stroke="#191713" stroke-width="5"/>
+    <path d="M26 60 L54 69 L54 83 L26 74 Z" fill="#8A6424" stroke="#191713" stroke-width="5"/>
+    <path d="M54 69 L84 62 L84 76 L54 83 Z" fill="#B9862F" stroke="#191713" stroke-width="5"/>
+    <path d="M26 60 L56 54" fill="none" stroke="#F0D9A0" stroke-width="2.6"/>
+    <circle cx="70" cy="72" r="5" fill="none" stroke="#F0D9A0" stroke-width="2.2"/>
+    <circle cx="34" cy="70" r="2" fill="#191713" opacity="0.55"/>
+    <circle cx="46" cy="75" r="2" fill="#191713" opacity="0.55"/>
+    <!-- top ingot, seated on the middle one -->
+    <path d="M40 38 L62 33 L80 39 L58 45 Z" fill="#D9A94E" stroke="#191713" stroke-width="5"/>
+    <path d="M40 38 L58 45 L58 57 L40 50 Z" fill="#8A6424" stroke="#191713" stroke-width="5"/>
+    <path d="M58 45 L80 39 L80 51 L58 57 Z" fill="#B9862F" stroke="#191713" stroke-width="5"/>
+    <path d="M40 38 L62 33" fill="none" stroke="#F0D9A0" stroke-width="2.6"/>
+    <!-- glints -->
+    <path d="M50 39 L56 37" fill="none" stroke="#FBEBC1" stroke-width="3"/>
+  </g>
+</svg>

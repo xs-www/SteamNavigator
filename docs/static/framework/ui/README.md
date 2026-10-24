@@ -11,10 +11,13 @@
 | `components/sn_badge.tscn` | 框架源文件：sn_badge.tscn | 本页 |
 | `components/sn_button.gd` | 可复用语义按钮：在 Inspector 中选择主操作、次操作、危险或幽灵样式，并可挂一枚皮肤图标；外观全部来自外部贴图驱动的 Theme variation，代码不写颜色与 StyleBox。 | [查看](./components/sn_button.gd.md) |
 | `components/sn_button.tscn` | 框架源文件：sn_button.tscn | 本页 |
+| `components/sn_cargo_hold_panel.gd` | 市场页左侧「船只背包」：顶部载重 / 货舱摘要，上半船舱货物（`SNDropZone` + 图标格子，委托货带锁定标记），下半当前港仓库材料；把图标拖拽映射成买卖 / 存取命令意图。 | [查看](./components/sn_cargo_hold_panel.gd.md) |
 | `components/sn_cloud_veil.gd` | 航行演出的云层转场层（阶段 3）。全屏、不吃鼠标，用程序化云团把画面从 | [查看](./components/sn_cloud_veil.gd.md) |
+| `components/sn_drop_zone.gd` | 图标拖拽的通用落点面板：按载荷 `kind` 过滤、命中时用 SNSkin 九宫格纹理的 `modulate_color` 高亮、放下后发出 `dropped`；拖拽结束 / 鼠标移出复位。 | [查看](./components/sn_drop_zone.gd.md) |
 | `components/sn_harbor_sign.gd` | 2.5D 港口主界面的边缘设施招牌。纹理化 `Button` 子类：底板/悬停/按下/焦点全部来自外部皮肤 | [查看](./components/sn_harbor_sign.gd.md) |
 | `components/sn_icon.gd` | 皮肤图标控件：按 `SNSkin` 的 icon id 显示外部贴图图标（导航 / 资源 / 船厂 / 状态 / 行动），供程序化 UI 与展示场景复用，不在页面里拼贴图路径。 | [查看](./components/sn_icon.gd.md) |
 | `components/sn_intel_table.gd` | 商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。 | [查看](./components/sn_intel_table.gd.md) |
+| `components/sn_item_tile.gd` | 市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与待交易数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。 | [查看](./components/sn_item_tile.gd.md) |
 | `components/sn_nav_button.gd` | 主导航 / 侧牌用的图标导航按钮：皮肤图标 + 原样文字，`active` 表达当前页选中态，`primary` / `compact` 选择黄铜主操作或小铭牌语义；外观全部来自 Theme variation。 | [查看](./components/sn_nav_button.gd.md) |
 | `components/sn_panel.gd` | 可复用界面表面：基础、高架、内嵌三种层级，外加羊皮纸、蓝图（技术页）、画布与玻璃浮层四种材质变体；只通过 Theme variation 换材质，不在调用处复制 StyleBox。 | [查看](./components/sn_panel.gd.md) |
 | `components/sn_panel.tscn` | 框架源文件：sn_panel.tscn | 本页 |
@@ -68,7 +71,7 @@
 | `screens/port/base_screen.tscn` | 框架源文件：base_screen.tscn | 本页 |
 | `screens/port/contracts_screen.gd` | 委托页面场景：按可接/进行中分组渲染主线与普通委托卡，并发出接取或规划出航意图。 | [查看](./screens/port/contracts_screen.gd.md) |
 | `screens/port/contracts_screen.tscn` | 框架源文件：contracts_screen.tscn | 本页 |
-| `screens/port/market_screen.gd` | 港口市场页面场景：展示行情、真实价格历史、持仓成本及买卖操作；作为泊位侧栏时按 620 px 窄列设计（纵向商品条目列表，替代旧九列表格），外层 PageScroll 负责竖向滚动。 | [查看](./screens/port/market_screen.gd.md) |
+| `screens/port/market_screen.gd` | 港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。 | [查看](./screens/port/market_screen.gd.md) |
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
 | `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |

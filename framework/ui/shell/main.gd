@@ -24,6 +24,18 @@ extends Control
 ## - 数据只走 QueryBus，修改只走 CommandBus；UI 会话状态不写存档。
 ## - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
 ## - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
+##
+## ## 市场页（图标直接交易，`docs/design/MARKET_UI_REFACTOR.md`）
+## - `_screen_market()` 先执行 `market.view`；查询不可用时回退用 `port.view` 的行情 / 船摘要
+##   组装同名字段的 ViewModel，页面不崩。
+## - 每个行情 / 船舱 / 仓库行的 `icon_key` 由 Shell 经 `AssetService.find_key` →
+##   `AssetService.load_texture` 解析成 `Texture2D`（实例内缓存）；缺失时回退
+##   `assets/ui/icons/item_fallback.svg`，再缺失回退框架占位贴图。
+## - 舞台可用时挂三栏 `DockPanelRow`：`CargoHoldPanel`(360) + 透明 `StageWindow`
+##   (expand, `MOUSE_FILTER_IGNORE`, 只露出 3D 港区) + `DockPanel`(640)；舞台不可用时
+##   退化成 `CargoHoldPanel` + 市场面板两栏，不出现空白舞台窗口。
+## - 页面只发命令意图：`trade.buy{destination}` / `trade.sell{source}` /
+##   `warehouse.store_materials` / `warehouse.take_materials`。
 ## @end-static-doc
 ##
 ## Playable shell for the framework slice.
@@ -58,6 +70,10 @@ const UI_THEME := preload("res://assets/ui/theme/steam_navigator_theme.tres")
 ## Themed edge signboard (wood/iron/brass custom draw, plain Button semantics).
 const HARBOR_SIGN_SCRIPT := preload("res://framework/ui/components/sn_harbor_sign.gd")
 const MARKET_SCREEN_SCENE := preload("res://framework/ui/screens/port/market_screen.tscn")
+## 市场页左侧「船只背包」面板（图标拖拽来源 / 落点）。
+const CARGO_HOLD_PANEL_SCRIPT := preload("res://framework/ui/components/sn_cargo_hold_panel.gd")
+## 通用物品回退图标（内容模组没提供 `information.texture` 时使用）。
+const ITEM_FALLBACK_ICON := "res://assets/ui/icons/item_fallback.svg"
 const CONTRACTS_SCREEN_SCENE := preload("res://framework/ui/screens/port/contracts_screen.tscn")
 const SUPPLY_SCREEN_SCENE := preload("res://framework/ui/screens/port/supply_screen.tscn")
 const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/tavern_screen.tscn")
@@ -127,6 +143,10 @@ const STAGE_SCREENS := {
 ## Width of the dock information panel on the market / supply pages. The stage
 ## keeps the left part of the window, the panel floats over the right side.
 const DOCK_PANEL_WIDTH := 640.0
+## Width of the market page's left "ship hold" column (cargo + port warehouse).
+const CARGO_HOLD_PANEL_WIDTH := 360.0
+## Gap between the market page's three columns (backpack / stage window / dock).
+const MARKET_COLUMN_GAP := 14
 ## Compact top chrome: header + resource stats + navigation in two tight rows.
 ## The measured minimum height must stay under `TOP_CHROME_MAX_HEIGHT`, because
 ## the 3D stage is the main view and the HUD only frames it.
@@ -175,6 +195,8 @@ var _context: AppContext = null
 ## 铺满整屏（阶段 3 验收反馈 F3）。它位于页面层之下、顶部 chrome 与转场层之上。
 @onready var _fullscreen_layer: Control = $FullscreenLayer
 var _last_port_view: Dictionary = {}
+## Market page icon resolution cache: `icon_key` -> Texture2D (session only).
+var _market_icon_cache: Dictionary = {}
 var _settings: SettingsService = null
 var _settings_applied: bool = false
 
@@ -1830,34 +1852,218 @@ func _format_slots(template: String) -> PackedStringArray:
 ## Market
 ## ---------------------------------------------------------------------------
 
+## Market page: left ship hold + transparent stage window + market dock panel.
+## The page itself is a scene (`MarketScreen`), the backpack is a script-built
+## component; the shell owns the ViewModel, icon resolution and command wiring.
 func _screen_market(data: Dictionary) -> void:
+	var market_model := _market_model(data)
+	_attach_market_supply(market_model)
+	_resolve_market_icons(market_model)
 	var screen: Variant = MARKET_SCREEN_SCENE.instantiate()
-	var market_model := {
-		"current_port": data.get("current_port", {}),
-		"money": data.get("money", 0),
-		"ship": data.get("ship", {}),
-		"market": data.get("market", []),
-		"trends": _market_trends(),
-	}
-	# 4.5.3：补给并市 —— 市场 VM 附带 supply.view 的煤 / 水区块（购买仍走
-	# `supply.buy_*`，不复制价格 / 库存逻辑）。
-	var supply_result := _context.queries.execute(&"supply.view")
-	if bool(supply_result.get("ok", false)):
-		var supply_model: Dictionary = supply_result["data"].duplicate(true)
-		if _story_action_locked(&"supply.buy_coal"):
-			for kind in ["coal", "water"]:
-				var kind_view: Dictionary = supply_model.get("%s_view" % kind, {})
-				var blockers: Array = Array(kind_view.get("blockers", [])).duplicate()
-				if not blockers.has("story_locked"):
-					blockers.append("story_locked")
-				kind_view["blockers"] = blockers
-		market_model["supply"] = supply_model
 	screen.bind(market_model, Callable(self, "_tr"))
 	screen.command_requested.connect(_run_command)
+	var hold: Variant = CARGO_HOLD_PANEL_SCRIPT.new()
+	hold.name = "CargoHoldPanel"
+	hold.bind(market_model, Callable(self, "_tr"))
+	hold.command_requested.connect(_run_command)
 	if _stage_backed_page():
-		_mount_dock_panel(screen)
+		_mount_market_dock(hold, screen)
 	else:
-		_root_box.add_child(screen)
+		_mount_market_columns(hold, screen)
+
+
+## `market.view` is the contract source; when the query is not available (older
+## build / partially merged branch) fall back to the `port.view` data the shell
+## already refreshed, keeping the same field names so the page still renders.
+func _market_model(data: Dictionary) -> Dictionary:
+	var result := _context.queries.execute(&"market.view")
+	if bool(result.get("ok", false)) and result.get("data", null) is Dictionary:
+		return (result["data"] as Dictionary).duplicate(true)
+	var model: Dictionary = data.duplicate(true)
+	model["trends"] = _market_trends()
+	if not (model.get("warehouse", null) is Dictionary):
+		model["warehouse"] = {
+			"port_id": String(model.get("current_port_id", "")),
+			"materials": [],
+		}
+	var ship: Dictionary = model.get("ship", {})
+	if not (ship.get("hold", null) is Array):
+		ship["hold"] = _market_hold_fallback(ship)
+		model["ship"] = ship
+	model["at_port"] = not bool(model.get("at_sea", false))
+	return model
+
+
+## Fallback hold rows from `port.view`'s `ship.cargo` stacks (no query available).
+## Aggregates per item / contract flag exactly like `market.view` does.
+func _market_hold_fallback(ship: Dictionary) -> Array:
+	var aggregated := {}
+	for stack in ship.get("cargo", []):
+		if not (stack is Dictionary):
+			continue
+		var item_id := String((stack as Dictionary).get("item_id", ""))
+		var amount := int((stack as Dictionary).get("amount", 0))
+		if item_id.is_empty() or amount <= 0:
+			continue
+		var contract_id := String((stack as Dictionary).get("contract_id", ""))
+		var is_contract := not contract_id.is_empty()
+		var key := "%s|%s" % [item_id, "contract" if is_contract else "free"]
+		if not aggregated.has(key):
+			aggregated[key] = {
+				"item_id": item_id,
+				"name_key": String((stack as Dictionary).get("name_key", item_id)),
+				"amount": 0,
+				"total_cost": 0.0,
+				"is_contract": is_contract,
+				"contract_id": contract_id,
+				"avg_cost": float((stack as Dictionary).get("average_cost", 0.0)),
+			}
+		aggregated[key]["amount"] = int(aggregated[key]["amount"]) + amount
+	var keys: Array = aggregated.keys()
+	keys.sort()
+	var rows: Array = []
+	for key in keys:
+		var entry: Dictionary = aggregated[key]
+		var amount := int(entry["amount"])
+		var is_contract := bool(entry["is_contract"])
+		rows.append({
+			"item_id": String(entry["item_id"]),
+			"name_key": String(entry["name_key"]),
+			"category": "",
+			"crafting_material": false,
+			"unit_weight": 0.0,
+			"amount": amount,
+			"sellable_amount": 0 if is_contract else amount,
+			"is_contract": is_contract,
+			"contract_id": String(entry["contract_id"]),
+			"avg_cost": 0.0 if is_contract else float(entry["avg_cost"]),
+			"icon_key": "",
+		})
+	return rows
+
+
+## 4.5.3：补给并市 —— 市场 VM 附带 supply.view 的煤 / 水区块（购买仍走
+## `supply.buy_*`，不复制价格 / 库存逻辑）。
+func _attach_market_supply(market_model: Dictionary) -> void:
+	var supply_result := _context.queries.execute(&"supply.view")
+	if not bool(supply_result.get("ok", false)):
+		return
+	var supply_model: Dictionary = supply_result["data"].duplicate(true)
+	if _story_action_locked(&"supply.buy_coal"):
+		for kind in ["coal", "water"]:
+			var kind_view: Dictionary = supply_model.get("%s_view" % kind, {})
+			var blockers: Array = Array(kind_view.get("blockers", [])).duplicate()
+			if not blockers.has("story_locked"):
+				blockers.append("story_locked")
+			kind_view["blockers"] = blockers
+	market_model["supply"] = supply_model
+
+
+## Resolves every `icon_key` of the market ViewModel into a `Texture2D` placed on
+## the row's `icon` field. Missing content keys fall back to the framework item
+## fallback (and finally the framework placeholder), so the grid never breaks.
+func _resolve_market_icons(market_model: Dictionary) -> void:
+	var fallback := _fallback_item_icon()
+	for row in market_model.get("market", []):
+		if row is Dictionary:
+			(row as Dictionary)["icon"] = _resolve_item_icon(String((row as Dictionary).get("icon_key", "")), fallback)
+	var ship: Dictionary = market_model.get("ship", {})
+	for row in ship.get("hold", []):
+		if row is Dictionary:
+			(row as Dictionary)["icon"] = _resolve_item_icon(String((row as Dictionary).get("icon_key", "")), fallback)
+	var warehouse: Dictionary = market_model.get("warehouse", {})
+	for row in warehouse.get("materials", []):
+		if row is Dictionary:
+			(row as Dictionary)["icon"] = _resolve_item_icon(String((row as Dictionary).get("icon_key", "")), fallback)
+
+
+func _resolve_item_icon(icon_key: String, fallback: Texture2D) -> Texture2D:
+	if icon_key.is_empty():
+		return fallback
+	if _market_icon_cache.has(icon_key):
+		return _market_icon_cache[icon_key] as Texture2D
+	var texture: Texture2D = null
+	if _context != null and _context.assets != null:
+		var logical := icon_key
+		if not logical.begins_with("res://") and not logical.begins_with("asset://"):
+			logical = _context.assets.find_key(icon_key)
+		if not logical.is_empty() and _context.assets.has(logical):
+			texture = _context.assets.load_texture(logical)
+	if texture == null:
+		texture = fallback
+	_market_icon_cache[icon_key] = texture
+	return texture
+
+
+## Framework-wide fallback item icon; the placeholder texture is the last resort
+## so a build without `assets/ui/icons/item_fallback.svg` still renders tiles.
+func _fallback_item_icon() -> Texture2D:
+	const CACHE_KEY := "__item_fallback__"
+	if _market_icon_cache.has(CACHE_KEY):
+		return _market_icon_cache[CACHE_KEY] as Texture2D
+	var texture: Texture2D = null
+	if ResourceLoader.exists(ITEM_FALLBACK_ICON):
+		texture = load(ITEM_FALLBACK_ICON) as Texture2D
+	elif FileAccess.file_exists(ITEM_FALLBACK_ICON):
+		texture = ContentAssetLoader.load_texture(ITEM_FALLBACK_ICON)
+	if texture == null and _context != null and _context.assets != null:
+		var fallback_path := _context.assets.fallback_path()
+		if ResourceLoader.exists(fallback_path):
+			texture = load(fallback_path) as Texture2D
+	_market_icon_cache[CACHE_KEY] = texture
+	return texture
+
+
+## Market layout over the live stage: backpack (left) + transparent stage window
+## (middle) + market dock panel (right). `StageWindow` stays mouse-transparent so
+## the 3D district keeps receiving its own interactions.
+func _mount_market_dock(hold: Control, screen: Control) -> void:
+	var row := HBoxContainer.new()
+	row.name = "DockPanelRow"
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", MARKET_COLUMN_GAP)
+	hold.custom_minimum_size = Vector2(CARGO_HOLD_PANEL_WIDTH, 0.0)
+	hold.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(hold)
+	var window := Control.new()
+	window.name = "StageWindow"
+	window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	window.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	window.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(window)
+	var panel := PanelContainer.new()
+	panel.name = "DockPanel"
+	panel.theme_type_variation = &"SNPanel"
+	panel.custom_minimum_size = Vector2(DOCK_PANEL_WIDTH, 0.0)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(screen)
+	row.add_child(panel)
+	_root_box.add_child(row)
+
+
+## Stage-unavailable fallback: backpack + market panel, no empty stage window.
+func _mount_market_columns(hold: Control, screen: Control) -> void:
+	var row := HBoxContainer.new()
+	row.name = "DockPanelRow"
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", MARKET_COLUMN_GAP)
+	hold.custom_minimum_size = Vector2(CARGO_HOLD_PANEL_WIDTH, 0.0)
+	hold.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(hold)
+	var panel := PanelContainer.new()
+	panel.name = "DockPanel"
+	panel.theme_type_variation = &"SNPanel"
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(screen)
+	row.add_child(panel)
+	_root_box.add_child(row)
 
 
 func _market_trends() -> Dictionary:
@@ -3451,17 +3657,33 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			else:
 				_full_stop_after_voyage(data)
 		"trade.buy":
-			_set_status("买入 %s ×%d，花费 %d 金币。" % [
-				_item_name(String(data.get("item_id", ""))),
-				int(data.get("amount", 0)),
-				int(data.get("total", 0)),
-			], false)
+			if String(data.get("destination", "cargo")) == "warehouse":
+				_set_status(_tr("ui.notice.trade_buy_warehouse", "买入 %s ×%d，存入 %s 仓库，花费 %d 金币。") % [
+					_item_name(String(data.get("item_id", ""))),
+					int(data.get("amount", 0)),
+					_port_name(String(data.get("port_id", _last_port_view.get("current_port_id", "")))),
+					int(data.get("total", 0)),
+				], false)
+			else:
+				_set_status("买入 %s ×%d，花费 %d 金币。" % [
+					_item_name(String(data.get("item_id", ""))),
+					int(data.get("amount", 0)),
+					int(data.get("total", 0)),
+				], false)
 		"trade.sell":
-			_set_status("卖出 %s ×%d，收入 %d 金币。" % [
-				_item_name(String(data.get("item_id", ""))),
-				int(data.get("amount", 0)),
-				int(data.get("revenue", 0)),
-			], false)
+			if String(data.get("source", "cargo")) == "warehouse":
+				_set_status(_tr("ui.notice.trade_sell_warehouse", "从 %s 仓库卖出 %s ×%d，收入 %d 金币。") % [
+					_port_name(String(data.get("port_id", _last_port_view.get("current_port_id", "")))),
+					_item_name(String(data.get("item_id", ""))),
+					int(data.get("amount", 0)),
+					int(data.get("revenue", 0)),
+				], false)
+			else:
+				_set_status("卖出 %s ×%d，收入 %d 金币。" % [
+					_item_name(String(data.get("item_id", ""))),
+					int(data.get("amount", 0)),
+					int(data.get("revenue", 0)),
+				], false)
 		"supply.buy_coal", "supply.buy_water":
 			var supply_kind := "ui.label.coal" if String(data.get("kind", "")) == "coal" else "ui.label.water"
 			_set_status("已购买%s ×%d，花费 %d 金币。" % [

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- woven bolt body -->
+    <path d="M40 40 L100 42 Q110 44 110 64 Q110 84 100 86 L40 88 Z" fill="#7C8794" stroke="#191713" stroke-width="6"/>
+    <path d="M40 40 L100 42 Q110 44 110 64 Q110 84 100 86 L40 88 Z" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <!-- cloth stripes -->
+    <path d="M62 43 Q66 64 62 85" fill="none" stroke="#474F59" stroke-width="3"/>
+    <path d="M86 44 Q92 64 86 85" fill="none" stroke="#474F59" stroke-width="3"/>
+    <path d="M74 43 Q79 64 74 85" fill="none" stroke="#C9963C" stroke-width="3.4"/>
+    <path d="M44 84 Q74 93 103 82" fill="none" stroke="#C9963C" stroke-width="3.4"/>
+    <!-- highlight along the top -->
+    <path d="M56 45 L94 46" fill="none" stroke="#DCE3EA" stroke-width="3.6" opacity="0.85"/>
+    <!-- rolled end face -->
+    <circle cx="40" cy="64" r="26" fill="#6B7480" stroke="#191713" stroke-width="6"/>
+    <circle cx="40" cy="64" r="26" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <circle cx="40" cy="64" r="17" fill="none" stroke="#191713" stroke-width="3"/>
+    <path d="M40 54 A10 10 0 0 1 50 64" fill="none" stroke="#191713" stroke-width="3"/>
+    <circle cx="40" cy="64" r="3.2" fill="#191713"/>
+    <path d="M22 56 A20 20 0 0 1 40 45" fill="none" stroke="#DCE3EA" stroke-width="3.6" opacity="0.9"/>
+  </g>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- keg body -->
+    <path d="M36 54 Q28 78 34 102 Q48 116 64 116 Q80 116 94 102 Q100 78 92 54 Z" fill="#6B7480" stroke="#191713" stroke-width="6"/>
+    <path d="M36 54 Q28 78 34 102 Q48 116 64 116 Q80 116 94 102 Q100 78 92 54 Z" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <!-- staves -->
+    <path d="M52 62 Q49 88 54 109" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <path d="M64 60 L64 113" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <path d="M76 62 Q79 88 74 109" fill="none" stroke="#474F59" stroke-width="2.6" opacity="0.8"/>
+    <!-- brass hoops -->
+    <path d="M33 62 Q64 71 95 62 L94 69 Q64 78 34 69 Z" fill="#B9862F" stroke="#191713" stroke-width="3.5"/>
+    <path d="M34 94 Q64 103 94 94 L94 101 Q64 110 34 101 Z" fill="#B9862F" stroke="#191713" stroke-width="3.5"/>
+    <!-- lid -->
+    <ellipse cx="64" cy="54" rx="30" ry="10" fill="#7C8794" stroke="#191713" stroke-width="5"/>
+    <ellipse cx="64" cy="54" rx="30" ry="10" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <ellipse cx="64" cy="54" rx="21" ry="6" fill="#939DAA" stroke="#191713" stroke-width="3"/>
+    <!-- wax seal -->
+    <circle cx="64" cy="49" r="9" fill="#C9963C" stroke="#191713" stroke-width="4"/>
+    <circle cx="64" cy="49" r="4.5" fill="none" stroke="#8A6424" stroke-width="2.5"/>
+    <path d="M58 45 A7 7 0 0 1 64 42.5" fill="none" stroke="#F0D9A0" stroke-width="2.4"/>
+    <!-- tar drip -->
+    <path d="M75 58 Q82 72 75 86 Q68 74 71 62 Z" fill="#C9963C" stroke="#191713" stroke-width="3"/>
+    <!-- highlights -->
+    <path d="M41 70 Q37 86 41 98" fill="none" stroke="#DCE3EA" stroke-width="3.4" opacity="0.75"/>
+    <path d="M48 50 Q58 46 68 47" fill="none" stroke="#E7EDF3" stroke-width="3" opacity="0.7"/>
+  </g>
+</svg>

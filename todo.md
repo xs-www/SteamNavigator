@@ -22,7 +22,8 @@
 - [ ] 战斗后续接线：D1 已交付 6 类战斗内容 + `CombatOps` / `CombatService` / `combat.resolve|view|log`；剩余「航行遭遇接入（voyage 风险 → 遭遇表）」「敌舰可视化 / `combat_kit` 接入 ShipVisualAssembler」「舰队编成与 2v2」三项切片。`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 均已 active 2.0，Core 已带 5+4+4+4+2+2 条内容；契约见 [WEAPON_CONTENT_SCHEMA.md](docs/design/WEAPON_CONTENT_SCHEMA.md) 与 [COMBAT_ARCHITECTURE_REVIEW.md](docs/specs/COMBAT_ARCHITECTURE_REVIEW.md)
 
 - [ ] 2.5D 舞台收尾：委托 / 情报页舞台化、事件触发的 3D 场景预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审
-- [ ] 高频决策页第二轮：市场数量步进 / 即时成本、持久 `ScreenHost` 与局部数据刷新
+- [ ] 高频决策页第二轮：持久 `ScreenHost` 与局部数据刷新（市场数量步进 / 即时成本已由「图标直接交易」取代）
+- [ ] 市场 V2：从「中间 3D 港区窗口」推进到 3D 船内交互（左侧背包退化为船体货舱热点，复用 `market_item` / `cargo_item` 拖拽载荷）；补给（煤 / 水）也改图标直接交互；商品分类筛选 / 分组；买卖音效与拖拽动效；用正式美术替换 10 张 SVG 占位图标（保持 `icon.item.*` 同名同尺寸即可）
 - [ ] 存档：声明式 ID 别名与数据迁移执行器；出航失败回滚的存档路径端到端测试
 - [ ] SDK / 发布：模组管理 UI（启用 / 禁用 / 优先级）、发布签名与固定哈希校验
 - [ ] 建模需求 Backlog：按 [MODELING_BACKLOG.md](docs/design/MODELING_BACKLOG.md) 的批次顺序推进（M0 系列全部收口；**M1-1 architecture_kit 扩展 6 件 + M1-2 base_kit 生产建筑 5 件 + M2-1 combat_kit 敌舰 4 艘（3 类敌人）已完成**；下一批建议 M1-3 `interior_kit` 切面内景（切面约定已定：开放面 +X / 8×6×3.6 m 内景盒 / Camera_Fixed 接口），或 M0 系列运行时接线（LOD 切换 / 质量档位 / M2-5）；批次 4–5 / 敌舰的 LOD1 与运行时舞台接入均留后续）
@@ -48,6 +49,8 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 与发布验收（Content Schema 2.0 已冻结）
 
 ## Recently Completed
+
+- 市场界面重构 V1 · 图标直接交易（2026-10-24）：市场页从「数字 + 买卖按钮」改为「左侧船只背包 / 中间 3D 港区窗口 / 右侧市场」三栏，数字操作换成图标直接交互——左键格子待交易量 +1、右键清空、拖到船舱/港口仓库即买入，把船舱/仓库货物拖回市场即卖出；船舱↔仓库复用既有 `warehouse.*`。新增 `market.view` 聚合查询（复用 `port.view` 行情，输出 `ship.hold` / `warehouse.materials` / `icon_key` / `trends`，经 QueryRegistry 注册）与 `SNItemTile` / `SNDropZone` / `SNCargoHoldPanel` 三个可复用组件；`MarketOps.buy/sell` 新增 `destination` / `source` 仓库路径（入库不占载重/货舱，非法落点事务不提交），`market.changed` 事件带 `storage`；Shell 解析内容 `information.texture` 图标并回退 `assets/ui/icons/item_fallback.svg`。10 张蒸汽朋克 SVG 占位图标挂在 `dev_mods/core/assets/icons/items/`（键 `icon.item.*`），换同名同尺寸正式美术即可。验证：Godot 全量 **665/665**（新增 13 例：market_trade 9、ui_shell 20、ui_views 9、test_mod_loading 7）、`capture_ui -Screens market` 1440×900/960×540 通过、`node tools/gen_static_docs.mjs --check` 通过、Content Schema 2.0 门禁通过。契约与交互表见 [MARKET_UI_REFACTOR.md](docs/design/MARKET_UI_REFACTOR.md)。
 
 - UI 外部贴图皮肤管线 V1（2026-10-24）：UI 从 Godot 内置绘制/StyleBoxFlat 全面切换为外部贴图控件。新增 `tools/ui/build_ui_skin.gd`（两份母版图集 → `assets/ui/skin/sn_v1/`：41 个九宫格 style、30 枚 128px 图标、6 个固定配件、派生仪表/铭牌/滚动条/复选框/焦点环 + `skin.json`）与 `tools/ui/build_ui_theme.gd`（skin.json → 纹理化 Theme，含按钮 6 变体、面板 10 变体、Badge 4、进度 3、输入/复选/滚动条/Tab/Tooltip/Popup），`tools/build_ui_skin.ps1 -Check` 作为母版一致性门禁；新增 `framework/ui/skin/sn_skin.gd`（SNSkin）作为程序化 UI 的唯一素材访问层。Shell 顶栏/HUD/导航/侧牌/底栏、8 个港口页、7 个流程页、4 个菜单页与 story 组件全部移除 `StyleBoxFlat.new()` 与十六进制业务色（Theme 0 flat、全局业务脚本 0 flat），接入 HUD/导航/侧牌/船厂分类/行动/状态图标；市场账册与委托/结算/线索用 Parchment 纸面、船厂保留 Blueprint 底板与 Glass 操作坞、HUD 用半透明钢框（TopChrome 实测 113px ≤130、状态条 50px）。换同名同尺寸贴图即整体换肤，流程见 `docs/design/UI_SKIN_PIPELINE.md`。验证：Godot 全量 **652/652**（新增 `test_ui_skin` 9 例含无 Flat/无 hex 守门）、`build_ui_skin -Check` 通过、`capture_ui -AllScreens` 两分辨率各 26 张、静态文档 `--check` 通过。
 

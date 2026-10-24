@@ -1,53 +1,96 @@
 class_name MarketScreen
 extends VBoxContainer
 ## @static-doc
-## 作用：港口市场页面场景：展示行情、真实价格历史、持仓成本及买卖操作；作为泊位侧栏时按 620 px 窄列设计（纵向商品条目列表，替代旧九列表格），外层 PageScroll 负责竖向滚动。
+## 作用：港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
 ##
-## Port market presentation screen.
+## Direct-manipulation port market page (Bounty Train style).
 ##
-## The shell supplies a complete market ViewModel, including intelligence
-## trends. Trading actions are emitted as intent and executed by the shell.
-##
-## Layout: the screen shares the window with the persistent 3D port stage, so
-## it is designed for a 620 px berth sidebar. Goods render as a vertical list of
-## compact entries instead of the old full-width nine-column grid; rows break
-## vertically rather than clipping horizontally, and the outer PageScroll owns
-## vertical scrolling (the screen itself adds no ScrollContainer).
+## The icon grid replaces the old buy/sell quantity buttons: a market tile holds a
+## pending amount (left click +1, right click clears) and dragging it to the left
+## backpack buys into cargo / warehouse. Conversely the whole market panel is the
+## sell drop target for `cargo_item` / `warehouse_item` payloads.
 ##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），纸面正文改用
-##   `SNSkin.color("ink.primary")`（数据行）/ `paper.ink_muted`（说明），保证纸面
-##   对比度；商品行仍用 `SNInsetPanel`（钢制凹槽）承载密集价格数据。
-## - 其余文字颜色取 `SNSkin.color(token)`（text.light / text.muted / state.water /
-##   state.success / state.danger），趋势色与 sparkline 线色同源于 token。
-## - 买卖数量按钮用 `SNCompactButton`（小铭牌）并保持 `custom_minimum_size = (34, 28)`；
-##   数量按钮宽度不足 80，按规范不加图标以免溢出。
-## - 尺寸约束：`_grid_label` 的 72 px 最小宽、趋势单元格 136 px、sparkline 64×24、
-##   行间距 7 与所有节点结构/文本不变。
+##   `SNSkin.color("ink.primary")` / `paper.ink_muted`；行情格子是 `SNItemTile`
+##   （`panel_recess` / `panel_steel` 皮肤纹理）；整个面板的落点用透明
+##   `SNDropZone`（高亮时仍是皮肤纹理 + token 染色）。
+## - 其余文字颜色取 `SNSkin.color(token)`（text.light / text.muted /
+##   brass.highlight / state.water）。
+## - 尺寸约束：行情网格 4 列（108 px 格子 + 8 px 间距），适配 Shell 提供的
+##   640 px 右侧面板（内层 592 px）；`_grid_label` 保持 72 px 最小宽。
+##
+## ## 契约与约束
+## - `bind(view_model, translate)` 可重复调用：每次先清空自建子节点再重建。
+## - ViewModel 字段按 `docs/design/MARKET_UI_REFACTOR.md` §3；行情行 `icon` 已由
+##   Shell 解析成 `Texture2D`，本页不解析资产路径。
+## - 图标行 `stock<=0` 或 `buyable=false` 时不可拖拽（仍显示，标注「仅收购」）。
+## - 待交易上限只按 `stock` 设置，不预扣金币与剩余载重：数量可以点到库存上限，
+##   金币 / 载重不足由 `trade.buy` 失败并在状态栏报错（页面刷新后归零）。
+## - 拖入市场面板的载荷 kind 只认 `cargo_item` / `warehouse_item`，命令固定为
+##   `trade.sell {item_id, amount, source}`。
+## - `_grid_label` / `_label` / `_loc` 是测试与旧调用方依赖的 helper，保留签名。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
-const SPARKLINE_SCENE := preload("res://framework/ui/components/sn_sparkline.tscn")
 const SUPPLY_CARD_SCENE := preload("res://framework/ui/components/sn_supply_card.tscn")
-## Vertical gap between two commodity entries (design: 6-8 px).
-const ENTRY_SEPARATION := 7
+const TILE_SCRIPT := preload("res://framework/ui/components/sn_item_tile.gd")
+const ZONE_SCRIPT := preload("res://framework/ui/components/sn_drop_zone.gd")
 
-var _tr: Callable
+## Market grid: four expanding tiles per row (min 108 px + 8 px gaps) fit the
+## 592 px dock panel while leaving room for the two-line price / stock meta.
+const MARKET_GRID_COLUMNS := 4
+const GRID_SEPARATION := 8
+
+var _tr: Callable = Callable()
+var _sell_zone: Variant = null
 
 
 func bind(view_model: Dictionary, translate: Callable) -> void:
 	_tr = translate
 	_clear()
+	# The whole market panel is the sell drop target: cargo / warehouse payloads
+	# dragged from the left backpack land here. Idle = transparent panel.
+	_sell_zone = ZONE_SCRIPT.new()
+	_sell_zone.name = "MarketDropZone"
+	_sell_zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sell_zone.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_sell_zone.content_padding = Vector2.ZERO
+	_sell_zone.configure(["cargo_item", "warehouse_item"], "")
+	_sell_zone.dropped.connect(handle_sell_drop)
+	add_child(_sell_zone)
+	var content: VBoxContainer = _sell_zone.content_root()
+	content.add_theme_constant_override("separation", 12)
 	var port: Dictionary = view_model.get("current_port", {})
-	add_child(_heading(
+	content.add_child(_heading(
 		_loc("ui.nav.market", "Market"),
 		_loc(String(port.get("name_key", "")), String(port.get("id", ""))),
-		"市场行情"
+		_loc("ui.market.grid_section", "市场行情")
 	))
-	add_child(_summary_panel(view_model))
-	add_child(_market_list(view_model))
-	add_child(_supply_block(view_model))
+	content.add_child(_summary_panel(view_model))
+	content.add_child(_market_section(view_model))
+	content.add_child(_supply_block(view_model))
+
+
+## Maps a payload dropped on the market panel to the sell command contract.
+func handle_sell_drop(data: Dictionary) -> void:
+	var item_id := String(data.get("item_id", ""))
+	if item_id.is_empty():
+		return
+	var source := ""
+	match String(data.get("kind", "")):
+		"cargo_item":
+			source = "cargo"
+		"warehouse_item":
+			source = "warehouse"
+		_:
+			return
+	command_requested.emit(&"trade.sell", {
+		"item_id": item_id,
+		"amount": maxi(1, int(data.get("amount", 1))),
+		"source": source,
+	})
 
 
 ## 4.5.3：补给并市 —— 市场页上方的煤 / 水区块，复用 `supply.buy_*` 命令。
@@ -109,15 +152,14 @@ func _summary_panel(view_model: Dictionary) -> Control:
 	content.add_theme_constant_override("separation", 6)
 	panel.add_child(content)
 	var ship: Dictionary = view_model.get("ship", {})
-	content.add_child(_label("金币 %d · 重量 %s / %s" % [
+	content.add_child(_label(_loc("ui.market.summary", "金币 %d · 重量 %s / %s") % [
 		int(view_model.get("money", 0)),
 		_fmt(float(ship.get("total_weight", 0.0))),
 		_fmt(float(ship.get("max_weight", 0.0))),
 	], 13, SNSkin.color("ink.primary")))
-	content.add_child(_label("货舱 %s / %s · %s %s" % [
+	content.add_child(_label(_loc("ui.market.cargo_summary", "货舱 %s / %s · 库存成本 %s") % [
 		_fmt(float(ship.get("cargo_used", 0.0))),
 		_fmt(float(ship.get("cargo_capacity", 0.0))),
-		_loc("ui.label.inventory_cost", ""),
 		_fmt(float(ship.get("cargo_cost_basis", 0.0))),
 	], 13, SNSkin.color("ink.primary")))
 	var hint := _paragraph(_loc("ui.hint.market", ""), 12, SNSkin.color("paper.ink_muted"))
@@ -126,127 +168,93 @@ func _summary_panel(view_model: Dictionary) -> Control:
 	return panel
 
 
-func _market_list(view_model: Dictionary) -> VBoxContainer:
-	var list := VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", ENTRY_SEPARATION)
+func _market_section(view_model: Dictionary) -> VBoxContainer:
+	var section := VBoxContainer.new()
+	section.name = "MarketList"
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_theme_constant_override("separation", 7)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 8)
+	var title := _label(_loc("ui.market.grid_section", "市场行情"), 15, SNSkin.color("brass.highlight"))
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	header.add_child(_label(_loc("ui.hint.market_drag", "点击 +1 · 右键清空 · 拖拽交易"), 11, SNSkin.color("text.muted")))
+	section.add_child(header)
+	var rows: Array = view_model.get("market", [])
+	if rows.is_empty():
+		section.add_child(_paragraph(_loc("ui.market.no_goods", "本港今日没有可交易的商品。"), 12, SNSkin.color("text.muted")))
+		return section
 	var trends: Dictionary = view_model.get("trends", {})
-	for row in view_model.get("market", []):
+	var grid := GridContainer.new()
+	grid.name = "MarketGrid"
+	grid.columns = MARKET_GRID_COLUMNS
+	grid.add_theme_constant_override("h_separation", GRID_SEPARATION)
+	grid.add_theme_constant_override("v_separation", GRID_SEPARATION)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for row in rows:
 		if not (row is Dictionary):
 			continue
 		var item_id := String((row as Dictionary).get("item_id", ""))
-		list.add_child(_market_entry(row as Dictionary, String(trends.get(item_id, ""))))
-	return list
+		grid.add_child(_market_tile(row as Dictionary, String(trends.get(item_id, ""))))
+	section.add_child(grid)
+	section.add_child(_paragraph(_loc("ui.hint.market_sell", "把船只背包里的货物拖到这里卖出。"), 11, SNSkin.color("text.muted")))
+	return section
 
 
-func _market_entry(row: Dictionary, trend: String) -> Control:
+func _market_tile(row: Dictionary, trend: String) -> Control:
 	var item_id := String(row.get("item_id", ""))
 	var buyable := bool(row.get("buyable", true))
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"SNInsetPanel"
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 6)
-	panel.add_child(content)
-
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 8)
-	var item_label := _grid_label(_row_title(row, buyable), 13, SNSkin.color("text.light") if buyable else SNSkin.color("text.muted"))
-	item_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	item_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	top.add_child(item_label)
-	top.add_child(_trend_cell(row, trend))
-	content.add_child(top)
-
-	var metrics := HBoxContainer.new()
-	metrics.add_theme_constant_override("separation", 8)
-	metrics.add_child(_grid_label("单价 %d" % int(row.get("price", 0)), 13, SNSkin.color("state.water")))
-	metrics.add_child(_grid_label("库存 %d" % int(row.get("stock", 0)), 13, SNSkin.color("text.light")))
-	metrics.add_child(_grid_label("%s %d / %s %d" % [
-		_loc("ui.label.held", "Held"),
-		int(row.get("cargo_amount", 0)),
-		_loc("ui.label.sellable", "Sellable"),
-		int(row.get("sellable_amount", 0)),
-	], 13, SNSkin.color("text.light")))
-	var average_cost := float(row.get("cargo_avg_cost", 0.0))
-	metrics.add_child(_grid_label("%s %s" % [
-		_loc("ui.label.avg_cost", "Avg cost"),
-		_fmt(average_cost) if average_cost > 0.0 else "—",
-	], 13, SNSkin.color("text.light")))
-	metrics.add_child(_grid_label("%s %s" % [
-		_loc("ui.label.unit_weight", "Unit weight"),
-		_fmt(float(row.get("unit_weight", 0.0))),
-	], 12, SNSkin.color("text.muted")))
-	content.add_child(metrics)
-
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 6)
-	actions.add_child(_action_label("买入"))
-	actions.add_child(_trade_buttons(&"trade.buy", item_id, [1, 5, 10], int(row.get("stock", 0)), buyable))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(spacer)
-	actions.add_child(_action_label("卖出"))
-	actions.add_child(_trade_buttons(&"trade.sell", item_id, [1, 5], int(row.get("sellable_amount", 0)), true))
-	content.add_child(actions)
-	return panel
+	var stock := int(row.get("stock", 0))
+	var title := _loc(String(row.get("name_key", "")), item_id)
+	var subtitle := _item_subtitle(row, buyable)
+	var meta := _loc("ui.market.tile_meta", "%d 金 · 存 %d") % [int(row.get("price", 0)), stock]
+	meta += " " + _trend_arrow(trend)
+	var tile: Variant = TILE_SCRIPT.new()
+	tile.configure({
+		"title": title,
+		"subtitle": subtitle,
+		"meta": meta,
+		"icon": row.get("icon", null),
+		"max_pending": stock if buyable else 0,
+		"draggable": buyable and stock > 0,
+		"locked": false,
+		"payload": {
+			"kind": "market_item",
+			"item_id": item_id,
+			"amount": 1,
+			"name": title,
+		},
+		"item": {
+			"kind": "market_item",
+			"item_id": item_id,
+			"buyable": buyable,
+			"stock": stock,
+		},
+	})
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return tile as Control
 
 
-func _row_title(row: Dictionary, buyable: bool) -> String:
-	var item_id := String(row.get("item_id", ""))
-	var item_label := _loc(String(row.get("name_key", "")), item_id)
-	# C2: goods and materials share one `items` type, so the row title carries the
-	# content category (fallback = raw category) and a crafting-material mark.
+func _item_subtitle(row: Dictionary, buyable: bool) -> String:
+	var parts: Array[String] = []
 	var category := String(row.get("category", ""))
 	if not category.is_empty():
-		item_label += " · " + _loc("ui.item.category." + category, category)
+		parts.append(_loc("ui.item.category." + category, category))
 	if bool(row.get("crafting_material", false)):
-		item_label += " · " + _loc("ui.label.crafting_material", "材料")
+		parts.append(_loc("ui.label.crafting_material", "材料"))
 	if not buyable:
-		item_label += " · " + _loc("ui.label.sell_only", "Sell-only")
-	return item_label
+		parts.append(_loc("ui.label.sell_only", "仅收购"))
+	return " · ".join(parts)
 
 
-func _trend_cell(row: Dictionary, trend: String) -> Control:
-	var cell := HBoxContainer.new()
-	cell.custom_minimum_size.x = 136
-	cell.add_theme_constant_override("separation", 4)
-	cell.add_child(_label(_loc("ui.label.trend", "Trend"), 11, SNSkin.color("text.muted")))
-	var spark: Variant = SPARKLINE_SCENE.instantiate()
-	spark.custom_minimum_size = Vector2(64, 24)
-	spark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var prices: Array = row.get("recent_prices", [])
-	spark.set_values(prices, _trend_color(trend))
-	cell.add_child(spark)
-	var percent := float(row.get("trend_percent", 0.0)) * 100.0
-	cell.add_child(_label(("%+.1f%%" % percent) if prices.size() >= 2 else "—", 11, _trend_color(trend)))
-	return cell
-
-
-func _trade_buttons(command: StringName, item_id: String, amounts: Array, available: int, visible_actions: bool) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	if not visible_actions:
-		row.add_child(_label("—", 13, SNSkin.color("text.muted")))
-		return row
-	for amount in amounts:
-		var button := Button.new()
-		button.text = str(amount)
-		button.theme_type_variation = &"SNCompactButton"
-		button.add_theme_font_size_override("font_size", 12)
-		button.custom_minimum_size = Vector2(34, 28)
-		button.disabled = available < int(amount)
-		button.pressed.connect(_emit_trade.bind(command, item_id, int(amount)))
-		row.add_child(button)
-	return row
-
-
-func _action_label(text: String) -> Label:
-	return _label(text, 12, SNSkin.color("text.muted"))
-
-
-func _emit_trade(command: StringName, item_id: String, amount: int) -> void:
-	command_requested.emit(command, {"item_id": item_id, "amount": amount})
+func _trend_arrow(trend: String) -> String:
+	match trend:
+		"up":
+			return "↑"
+		"down":
+			return "↓"
+		_:
+			return "→"
 
 
 func _clear() -> void:
@@ -272,8 +280,8 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	return label
 
 
-## Long descriptive copy (the market hint) wraps inside the 620 px panel instead
-## of forcing a horizontal minimum width; dense field labels stay single-line.
+## Long descriptive copy wraps inside the dock panel instead of forcing a
+## horizontal minimum width; dense field labels stay single-line.
 func _paragraph(text: String, font_size: int, color: Color) -> Label:
 	var label := _label(text, font_size, color)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -286,16 +294,6 @@ func _grid_label(text: String, font_size: int, color: Color) -> Label:
 	var label := _label(text, font_size, color)
 	label.custom_minimum_size.x = 72
 	return label
-
-
-func _trend_color(trend: String) -> Color:
-	match trend:
-		"up":
-			return SNSkin.color("state.success")
-		"down":
-			return SNSkin.color("state.danger")
-		_:
-			return SNSkin.color("text.muted")
 
 
 func _loc(key: String, fallback: String) -> String:

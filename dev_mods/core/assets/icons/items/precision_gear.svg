@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- gear body -->
+    <path d="M100.0 64.0 L99.9 66.6 L109.6 70.3 L108.4 76.0 L98.1 75.7 L93.1 85.2 L91.5 87.2 L97.1 95.9 L92.9 99.8 L84.7 93.5 L75.1 98.2 L72.6 99.0 L72.1 109.3 L66.3 109.9 L63.4 100.0 L52.9 98.2 L50.4 97.3 L43.9 105.4 L38.9 102.5 L42.4 92.8 L34.9 85.2 L33.4 83.0 L23.4 85.7 L21.0 80.4 L29.6 74.6 L28.0 64.0 L28.1 61.4 L18.4 57.7 L19.6 52.0 L29.9 52.3 L34.9 42.8 L36.5 40.8 L30.9 32.1 L35.1 28.2 L43.3 34.5 L52.9 29.8 L55.4 29.0 L55.9 18.7 L61.7 18.1 L64.6 28.0 L75.1 29.8 L77.6 30.7 L84.1 22.6 L89.1 25.5 L85.6 35.2 L93.1 42.8 L94.6 45.0 L104.6 42.3 L107.0 47.6 L98.4 53.4 Z" fill="#6B7480" stroke="#191713" stroke-width="6"/>
+    <path d="M100.0 64.0 L99.9 66.6 L109.6 70.3 L108.4 76.0 L98.1 75.7 L93.1 85.2 L91.5 87.2 L97.1 95.9 L92.9 99.8 L84.7 93.5 L75.1 98.2 L72.6 99.0 L72.1 109.3 L66.3 109.9 L63.4 100.0 L52.9 98.2 L50.4 97.3 L43.9 105.4 L38.9 102.5 L42.4 92.8 L34.9 85.2 L33.4 83.0 L23.4 85.7 L21.0 80.4 L29.6 74.6 L28.0 64.0 L28.1 61.4 L18.4 57.7 L19.6 52.0 L29.9 52.3 L34.9 42.8 L36.5 40.8 L30.9 32.1 L35.1 28.2 L43.3 34.5 L52.9 29.8 L55.4 29.0 L55.9 18.7 L61.7 18.1 L64.6 28.0 L75.1 29.8 L77.6 30.7 L84.1 22.6 L89.1 25.5 L85.6 35.2 L93.1 42.8 L94.6 45.0 L104.6 42.3 L107.0 47.6 L98.4 53.4 Z" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <!-- recessed face -->
+    <circle cx="64" cy="64" r="27" fill="#565F6A" stroke="#191713" stroke-width="4"/>
+    <circle cx="64" cy="64" r="24.5" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <!-- spokes -->
+    <path d="M64 76 L64 91" fill="none" stroke="#191713" stroke-width="8"/>
+    <path d="M53.6 70 L40.6 77.5" fill="none" stroke="#191713" stroke-width="8"/>
+    <path d="M74.4 70 L87.4 77.5" fill="none" stroke="#191713" stroke-width="8"/>
+    <path d="M64 76 L64 91" fill="none" stroke="#939DAA" stroke-width="3"/>
+    <path d="M53.6 70 L40.6 77.5" fill="none" stroke="#939DAA" stroke-width="3"/>
+    <path d="M74.4 70 L87.4 77.5" fill="none" stroke="#939DAA" stroke-width="3"/>
+    <!-- hub -->
+    <circle cx="64" cy="64" r="15" fill="none" stroke="#C9963C" stroke-width="2.6"/>
+    <circle cx="64" cy="64" r="12" fill="#B9862F" stroke="#191713" stroke-width="5"/>
+    <circle cx="64" cy="64" r="4.5" fill="#191713"/>
+    <path d="M56 59 A9 9 0 0 1 69 55" fill="none" stroke="#F0D9A0" stroke-width="2.8"/>
+    <!-- rim highlight -->
+    <path d="M58 21 L64 20.5 L63.4 28 L59.5 28.2 Z" fill="#DCE3EA" opacity="0.65"/>
+    <path d="M84 31 L89 34 L85 40 L80.5 37 Z" fill="#DCE3EA" opacity="0.5"/>
+  </g>
+</svg>

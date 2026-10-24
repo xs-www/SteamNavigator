@@ -1,6 +1,21 @@
 class_name MarketOps
 extends RefCounted
-## Deterministic market pricing, trading, supplies and repairs.
+## @static-doc
+## 作用：市场价格、买卖（可落船货舱或当前港仓库）、补给商品与维修结算；煤/水价格随港口库存浮动。
+##
+## ## 契约与约束
+## - 本地品种价格 = base_price × bias × (base_stock / stock)^elasticity，限制在 0.55–2.2；非本地品种以 `buyable=false` 只收购。
+## - `buy()` 默认 `destination="cargo"`：校验可买、货币、库存、总重量与货舱容量，写 `cargo` stack 的 total_cost。
+## - `buy(destination="warehouse")`：可买/货币/库存校验同上，但跳过重量与货舱校验，改写当前港仓库材料区（`WarehouseOps.add_material`）。
+## - `sell()` 默认 `source="cargo"`：允许所有非合同货物；`sell(source="warehouse")` 从当前港仓库材料区扣减，船舱不变。
+## - 非法 `destination` / `source` 在扣款或任何状态变更之前返回 `invalid_destination` / `invalid_trade_source`。
+## - 玩家买卖只把价格向新均衡推进 `player_trade_impact`（默认 0.35）；每个可买入条目维护最多 8 个真实价格样本。
+## - 成功的买入/补给/维修调用 `state.record_expense()`，卖出调用 `record_income()`；失败返回带 message_key 的 Result，命令总线因此不提交工作副本。
+##
+## ## 重点逻辑
+## ### `buy(...)` / `sell(...)`
+## - 所有前置条件通过后才扣款/入账、减/加港存、按 price_impact 平滑重算价格，最后写入货舱或仓库；返回 data 携带实际 `destination` / `source`。
+## @end-static-doc
 
 const DEFAULT_TRADE_MARGIN := 0.95
 const MIN_PRICE_FACTOR := 0.55
@@ -159,11 +174,13 @@ static func ensure_sell_only_entries(hub: RegistryHub, state: GameState) -> void
 			market[item_definition.id] = entry
 
 
-static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:
+static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT, destination: String = "cargo") -> Dictionary:
 	if state.current_port_id() != port_id or not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if amount <= 0:
 		return Result.fail("invalid_amount", "ui.error.invalid_amount")
+	if destination != "cargo" and destination != "warehouse":
+		return Result.fail("invalid_destination", "ui.error.invalid_destination", {"destination": destination})
 	var item_definition := ShipOps.item_definition(hub, item_id)
 	if item_definition == null:
 		return Result.fail("unknown_item", "ui.error.unknown_item", {"item_id": item_id})
@@ -181,20 +198,21 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 	if state.money() < total:
 		return Result.fail("insufficient_money", "ui.error.money", {"required": total, "money": state.money()})
 	var ship := state.ship()
-	var unit_weight := float(item_definition.data.get("unit_weight", 0.0))
-	var added_weight := unit_weight * float(amount)
-	var max_weight := ShipOps.max_weight(hub, ship)
-	if max_weight > 0.0 and ShipOps.total_weight(hub, state) + added_weight > max_weight + 0.0001:
-		return Result.fail("weight_limit", "ui.error.weight", {"max_weight": max_weight})
-	if ShipOps.cargo_used(hub, ship) + added_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
-		return Result.fail("cargo_capacity", "ui.error.capacity", {"capacity": ShipOps.cargo_capacity(hub, ship)})
+	# Warehouse purchases bypass hold weight / capacity: the goods never board the ship.
+	if destination == "cargo":
+		var unit_weight := float(item_definition.data.get("unit_weight", 0.0))
+		var added_weight := unit_weight * float(amount)
+		var max_weight := ShipOps.max_weight(hub, ship)
+		if max_weight > 0.0 and ShipOps.total_weight(hub, state) + added_weight > max_weight + 0.0001:
+			return Result.fail("weight_limit", "ui.error.weight", {"max_weight": max_weight})
+		if ShipOps.cargo_used(hub, ship) + added_weight > ShipOps.cargo_capacity(hub, ship) + 0.0001:
+			return Result.fail("cargo_capacity", "ui.error.capacity", {"capacity": ShipOps.cargo_capacity(hub, ship)})
 	state.add_money(-total)
 	state.record_expense(total)
 	var price_before := unit_price
 	entry["stock"] = int(entry.get("stock", 0)) - amount
 	_apply_player_price_change(entry, price_before, price_impact)
-	ShipOps.add_cargo(ship, item_id, amount, "", float(total))
-	return Result.ok({
+	var data := {
 		"item_id": item_id,
 		"amount": amount,
 		"unit_price": unit_price,
@@ -202,14 +220,22 @@ static func buy(state: GameState, hub: RegistryHub, port_id: String, item_id: St
 		"money": state.money(),
 		"stock": int(entry["stock"]),
 		"trade_margin": trade_margin,
-	})
+		"destination": destination,
+	}
+	if destination == "warehouse":
+		data["warehouse_amount"] = WarehouseOps.add_material(state, port_id, item_id, amount)
+	else:
+		ShipOps.add_cargo(ship, item_id, amount, "", float(total))
+	return Result.ok(data)
 
 
-static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:
+static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: String, amount: int, trade_margin: float = DEFAULT_TRADE_MARGIN, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT, source: String = "cargo") -> Dictionary:
 	if state.current_port_id() != port_id or not state.is_at_port():
 		return Result.fail("not_at_port", "ui.error.not_at_port")
 	if amount <= 0:
 		return Result.fail("invalid_amount", "ui.error.invalid_amount")
+	if source != "cargo" and source != "warehouse":
+		return Result.fail("invalid_trade_source", "ui.error.invalid_trade_source", {"source": source})
 	var entry := entry_for(state, port_id, item_id)
 	if entry.is_empty():
 		return Result.fail("item_not_traded", "ui.error.item_not_traded", {"item_id": item_id, "port_id": port_id})
@@ -217,23 +243,34 @@ static func sell(state: GameState, hub: RegistryHub, port_id: String, item_id: S
 		return Result.fail("supply_only", "ui.error.supply_only", {"item_id": item_id, "port_id": port_id})
 	var ship := state.ship()
 	var available := ShipOps.cargo_amount(ship, item_id, false)
+	if source == "warehouse":
+		available = WarehouseOps.material_amount(state, port_id, item_id)
 	if available < amount:
+		if source == "warehouse":
+			return Result.fail("insufficient_materials", "ui.error.insufficient_materials", {"available": available})
 		return Result.fail("insufficient_cargo", "ui.error.insufficient_cargo", {"available": available})
 	var unit_price := float(entry.get("price", 1.0))
 	var revenue := int(floor(unit_price * trade_margin * float(amount)))
-	ShipOps.remove_cargo(ship, item_id, amount, false)
+	if source == "warehouse":
+		WarehouseOps.remove_material(state, port_id, item_id, amount)
+	else:
+		ShipOps.remove_cargo(ship, item_id, amount, false)
 	entry["stock"] = int(entry.get("stock", 0)) + amount
 	_apply_player_price_change(entry, unit_price, price_impact)
 	state.add_money(revenue)
 	state.record_income(revenue)
-	return Result.ok({
+	var data := {
 		"item_id": item_id,
 		"amount": amount,
 		"unit_price": unit_price,
 		"revenue": revenue,
 		"money": state.money(),
 		"stock": int(entry["stock"]),
-	})
+		"source": source,
+	}
+	if source == "warehouse":
+		data["warehouse_amount"] = WarehouseOps.material_amount(state, port_id, item_id)
+	return Result.ok(data)
 
 
 static func buy_supply(state: GameState, hub: RegistryHub, port_id: String, kind: String, amount: int, price_impact: float = DEFAULT_PLAYER_PRICE_IMPACT) -> Dictionary:

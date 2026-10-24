@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- lower log -->
+    <rect x="30" y="80" width="82" height="30" rx="15" fill="#6B7480" stroke="#191713" stroke-width="6"/>
+    <rect x="30" y="80" width="82" height="30" rx="15" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <path d="M58 90 Q76 88 94 91" fill="none" stroke="#474F59" stroke-width="2.6"/>
+    <path d="M52 99 Q74 97 96 100" fill="none" stroke="#474F59" stroke-width="2.6"/>
+    <path d="M48 84 Q70 82 92 85" fill="none" stroke="#DCE3EA" stroke-width="3" opacity="0.75"/>
+    <circle cx="34" cy="95" r="15" fill="#939DAA" stroke="#191713" stroke-width="5"/>
+    <circle cx="34" cy="95" r="8" fill="none" stroke="#191713" stroke-width="2.5"/>
+    <path d="M34 91 A4 4 0 0 1 38 95" fill="none" stroke="#191713" stroke-width="2.5"/>
+    <!-- brass strap on lower log -->
+    <path d="M92 81 L92 109" fill="none" stroke="#B9862F" stroke-width="7"/>
+    <path d="M92 81 L92 109" fill="none" stroke="#191713" stroke-width="2" opacity="0.5"/>
+    <!-- upper log -->
+    <rect x="18" y="46" width="82" height="30" rx="15" fill="#7C8794" stroke="#191713" stroke-width="6"/>
+    <rect x="18" y="46" width="82" height="30" rx="15" fill="none" stroke="#C9963C" stroke-width="3"/>
+    <path d="M46 56 Q64 54 82 57" fill="none" stroke="#474F59" stroke-width="2.6"/>
+    <path d="M40 65 Q62 63 84 66" fill="none" stroke="#474F59" stroke-width="2.6"/>
+    <path d="M36 50 Q58 48 80 51" fill="none" stroke="#DCE3EA" stroke-width="3" opacity="0.75"/>
+    <circle cx="22" cy="61" r="15" fill="#939DAA" stroke="#191713" stroke-width="5"/>
+    <circle cx="22" cy="61" r="8" fill="none" stroke="#191713" stroke-width="2.5"/>
+    <path d="M22 57 A4 4 0 0 1 26 61" fill="none" stroke="#191713" stroke-width="2.5"/>
+    <!-- brass strap on upper log -->
+    <path d="M80 47 L80 75" fill="none" stroke="#B9862F" stroke-width="7"/>
+    <path d="M80 47 L80 75" fill="none" stroke="#191713" stroke-width="2" opacity="0.5"/>
+  </g>
+</svg>

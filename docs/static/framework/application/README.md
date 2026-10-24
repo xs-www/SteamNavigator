@@ -24,7 +24,7 @@
 | `commands/sim_commands.gd` | Phase D0 模拟时钟的四个命令入口：`sim.pause` / `sim.resume` / | [查看](./commands/sim_commands.gd.md) |
 | `commands/story_commands.gd` | 新手剧情 / 教学系统的命令包装：`story.advance`（剧情卡继续）、 | [查看](./commands/story_commands.gd.md) |
 | `commands/supply_commands.gd` | 按市场价购买煤水与维修命令包装。 | 本页 |
-| `commands/trade_commands.gd` | trade.buy / trade.sell 命令包装与市场事件。 | 本页 |
+| `commands/trade_commands.gd` | `trade.buy` / `trade.sell` 命令包装：读取场景贸易参数、透传落点（船货舱 / 当前港仓库）并发出 `market.changed` 事件。 | [查看](./commands/trade_commands.gd.md) |
 | `commands/voyage_commands.gd` | 预览/出航/事件选择命令包装。 | 本页 |
 | `commands/warehouse_commands.gd` | 仓库命令包装：ship.transit 与当前港仓库之间的模块/材料存取。 | [查看](./commands/warehouse_commands.gd.md) |
 | `domain_event_bus.gd` | 已提交领域事件的 envelope、历史与订阅信号。 | [查看](./domain_event_bus.gd.md) |
@@ -40,6 +40,7 @@
 | `queries/fleet_view.gd` | `fleet.view` 只读查询：输出旗舰 / 名册 / captain 指派 / 编队与槽位 / | [查看](./queries/fleet_view.gd.md) |
 | `queries/intel_view.gd` | 情报独立界面 ViewModel：快照时间/年龄、商品 × 港口对比矩阵（含未探索港口列）与 NPC 预计动向。 | [查看](./queries/intel_view.gd.md) |
 | `queries/map_view.gd` | 海图 ViewModel：港口坐标、发现/访问、设施与航线。 | 本页 |
+| `queries/market_view.gd` | 市场页聚合 ViewModel：复用 `port.view` 的行情行，补充「船舱货物 / 当前港仓库材料」与图标资产键，供「左侧船只背包 + 右侧市场」的图标直接交互页使用。 | [查看](./queries/market_view.gd.md) |
 | `queries/port_memory_view.gd` | 点击已访问港口时的只读市场记忆 ViewModel：上次在港的价格、储备与可买标记。 | [查看](./queries/port_memory_view.gd.md) |
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知、统计与通关状态。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表（含 shipyard/victory、D0 `sim.view`、D1 `combat.view` / `combat.log` 与 D2 `fleet.view`）。 | 本页 |

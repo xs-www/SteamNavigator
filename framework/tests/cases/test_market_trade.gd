@@ -1,9 +1,29 @@
 extends TestCase
+## @static-doc
+## 作用：市场买卖领域测试：船货舱买卖、港口仓库买入 / 直卖、默认落点、非法落点与失败回滚。
+##
+## ## 契约与约束
+## - 买进仓库不占船上重量 / 货舱，仓库直卖不动船舱；两者复用市场价格、库存与收入/支出口径。
+## - 非法 `destination` / `source`、港存不足、金币不足、仓库数量不足必须失败，且 `state.hash()` 不变（命令事务不提交）。
+## - 交易后状态引用会被事务提交替换，断言一律重新读取 `context.state`，不缓存 `ship` 字典。
+## @end-static-doc
 
 
 func _first_trade_row(view: Dictionary) -> Dictionary:
 	for row in view.get("market", []):
 		if float(row.get("unit_weight", 99.0)) <= 1.0 and int(row.get("stock", 0)) >= 2:
+			return row
+	return {}
+
+
+## 可买、港存足够、按整数参考价估算得起的市场行（仓库买卖不关心载重）。
+func _first_buyable_row(view: Dictionary, amount: int) -> Dictionary:
+	var money := int(view.get("money", 0))
+	for row in view.get("market", []):
+		if not bool(row.get("buyable", true)):
+			continue
+		var unit_price := int(row.get("price", 0))
+		if int(row.get("stock", 0)) >= amount and unit_price > 0 and unit_price * amount <= money:
 			return row
 	return {}
 
@@ -86,6 +106,130 @@ func test_player_trade_price_impact_is_damped() -> void:
 	assert_almost_eq(after_price, expected, 0.01, "player trade only passes 35% of the price impulse")
 	assert_true(absf(after_price - price_before) < absf(full_price - price_before), "damped move is smaller than full equilibrium")
 
+
+func test_default_trade_storage_is_cargo() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 606})
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var row := _first_trade_row(view)
+	assert_true(not row.is_empty(), "found an affordable light market row")
+	var item_id := String(row["item_id"])
+	var buy := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 1})
+	assert_true(bool(buy["ok"]), "default buy succeeds: %s" % str(buy))
+	assert_eq(String(buy["data"].get("destination", "")), "cargo", "default buy lands in the ship hold")
+	assert_eq(int(buy["data"].get("warehouse_amount", -1)), -1, "hold purchase does not report a warehouse amount")
+	var sell := context.commands.execute(&"trade.sell", {"item_id": item_id, "amount": 1})
+	assert_true(bool(sell["ok"]), "default sell succeeds: %s" % str(sell))
+	assert_eq(String(sell["data"].get("source", "")), "cargo", "default sell takes from the ship hold")
+	assert_eq(int(sell["data"].get("warehouse_amount", -1)), -1, "hold sale does not report a warehouse amount")
+
+
+func test_buy_into_warehouse_keeps_hold() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	assert_true(bool(context.commands.execute(&"run.start", {
+		"starting_scenario": "core:starting_scenario/steady",
+		"seed": 444,
+	})["ok"]), "run starts")
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var row := _first_buyable_row(view, 2)
+	assert_true(not row.is_empty(), "found an affordable buyable market row")
+	var item_id := String(row["item_id"])
+	var port_id := context.state.current_port_id()
+	var money_before := context.state.money()
+	var cargo_before := ShipOps.cargo_amount(context.state.ship(), item_id, true)
+	var stored_before := WarehouseOps.material_amount(context.state, port_id, item_id)
+	var result := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 2, "destination": "warehouse"})
+	assert_true(bool(result["ok"]), "warehouse purchase succeeds: %s" % str(result))
+	assert_eq(String(result["data"].get("destination", "")), "warehouse", "result reports the warehouse destination")
+	assert_eq(context.state.money(), money_before - int(result["data"]["total"]), "money decreases by the purchase total")
+	assert_eq(ShipOps.cargo_amount(context.state.ship(), item_id, true), cargo_before, "warehouse purchase leaves the hold untouched")
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, item_id), stored_before + 2, "warehouse materials increase by the purchase")
+	assert_eq(int(result["data"].get("warehouse_amount", -1)), stored_before + 2, "result reports the stored warehouse amount")
+	var events: Array = result.get("events", [])
+	assert_eq(events.size(), 1, "warehouse purchase emits one market event")
+	var payload: Dictionary = events[0]["payload"]
+	assert_eq(String(payload.get("storage", "")), "warehouse", "market event reports the warehouse storage")
+	assert_eq(String(payload.get("source", "")), "player", "market event keeps the player actor marker")
+
+
+func test_sell_from_warehouse_keeps_hold() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	assert_true(bool(context.commands.execute(&"run.start", {
+		"starting_scenario": "core:starting_scenario/steady",
+		"seed": 555,
+	})["ok"]), "run starts")
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var row := _first_buyable_row(view, 3)
+	assert_true(not row.is_empty(), "found an affordable buyable market row")
+	var item_id := String(row["item_id"])
+	var port_id := context.state.current_port_id()
+	var buy := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 3, "destination": "warehouse"})
+	assert_true(bool(buy["ok"]), "warehouse purchase succeeds: %s" % str(buy))
+	var money_after_buy := context.state.money()
+	var cargo_after_buy := ShipOps.cargo_amount(context.state.ship(), item_id, true)
+	var stored_after_buy := WarehouseOps.material_amount(context.state, port_id, item_id)
+	var result := context.commands.execute(&"trade.sell", {"item_id": item_id, "amount": 1, "source": "warehouse"})
+	assert_true(bool(result["ok"]), "warehouse sale succeeds: %s" % str(result))
+	assert_eq(String(result["data"].get("source", "")), "warehouse", "result reports the warehouse source")
+	assert_eq(context.state.money(), money_after_buy + int(result["data"]["revenue"]), "money increases by the sale revenue")
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, item_id), stored_after_buy - 1, "warehouse materials decrease by the sale")
+	assert_eq(int(result["data"].get("warehouse_amount", -1)), stored_after_buy - 1, "result reports the stored warehouse amount")
+	assert_eq(ShipOps.cargo_amount(context.state.ship(), item_id, true), cargo_after_buy, "warehouse sale leaves the hold untouched")
+	var events: Array = result.get("events", [])
+	assert_eq(events.size(), 1, "warehouse sale emits one market event")
+	var payload: Dictionary = events[0]["payload"]
+	assert_eq(String(payload.get("storage", "")), "warehouse", "market event reports the warehouse source")
+
+
+func test_invalid_trade_storage_fails_without_state_change() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 6060})
+	var before := context.state.hash()
+	var bad_buy := context.commands.execute(&"trade.buy", {"item_id": "core:item/iron_ore", "amount": 1, "destination": "hold"})
+	assert_false(bool(bad_buy["ok"]), "invalid destination fails")
+	assert_eq(String(bad_buy["error_code"]), "invalid_destination", "invalid destination error code")
+	assert_eq(String(bad_buy["message_key"]), "ui.error.invalid_destination", "invalid destination message key")
+	assert_eq(context.state.hash(), before, "invalid destination leaves state untouched")
+	var bad_sell := context.commands.execute(&"trade.sell", {"item_id": "core:item/iron_ore", "amount": 1, "source": "hold"})
+	assert_false(bool(bad_sell["ok"]), "invalid source fails")
+	assert_eq(String(bad_sell["error_code"]), "invalid_trade_source", "invalid source error code")
+	assert_eq(String(bad_sell["message_key"]), "ui.error.invalid_trade_source", "invalid source message key")
+	assert_eq(context.state.hash(), before, "invalid source leaves state untouched")
+
+
+func test_warehouse_trade_failures_roll_back() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 666})
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var row := _first_buyable_row(view, 1)
+	assert_true(not row.is_empty(), "found an affordable buyable market row")
+	var item_id := String(row["item_id"])
+	var port_id := context.state.current_port_id()
+	var cargo_before := ShipOps.cargo_amount(context.state.ship(), item_id, true)
+	var stored_before := WarehouseOps.material_amount(context.state, port_id, item_id)
+	var before := context.state.hash()
+	var stock_fail := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 999999, "destination": "warehouse"})
+	assert_false(bool(stock_fail["ok"]), "oversized warehouse purchase fails")
+	assert_eq(String(stock_fail["error_code"]), "insufficient_stock", "oversized warehouse purchase reports stock")
+	assert_eq(context.state.hash(), before, "failed oversized warehouse purchase leaves state untouched")
+	context.state.set_money(0)
+	var broke_hash := context.state.hash()
+	var money_fail := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 1, "destination": "warehouse"})
+	assert_false(bool(money_fail["ok"]), "warehouse purchase without money fails")
+	assert_eq(String(money_fail["error_code"]), "insufficient_money", "warehouse purchase without money reports money")
+	assert_eq(context.state.hash(), broke_hash, "failed money warehouse purchase leaves state untouched")
+	assert_eq(ShipOps.cargo_amount(context.state.ship(), item_id, true), cargo_before, "failed warehouse purchase leaves the hold untouched")
+	assert_eq(WarehouseOps.material_amount(context.state, port_id, item_id), stored_before, "failed warehouse purchase stores nothing")
+	var empty_sell := context.commands.execute(&"trade.sell", {"item_id": item_id, "amount": 1, "source": "warehouse"})
+	assert_false(bool(empty_sell["ok"]), "selling from an empty warehouse fails")
+	assert_eq(String(empty_sell["error_code"]), "insufficient_materials", "empty warehouse sale reports materials")
+	assert_eq(int(empty_sell["data"].get("available", -1)), 0, "empty warehouse sale reports the available amount")
+	assert_eq(context.state.hash(), broke_hash, "failed warehouse sale leaves state untouched")
 
 
 func _field(rows: Array, key: String, value: Variant) -> Dictionary:

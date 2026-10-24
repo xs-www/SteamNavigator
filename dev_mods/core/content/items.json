@@ -13,6 +13,7 @@
       ],
       "enabled": true,
       "information": {
+        "texture": "icon.item.iron_ore",
         "model": "model.good.iron_ore"
       },
       "data": {
@@ -34,6 +35,9 @@
         "good.shipbuilding"
       ],
       "enabled": true,
+      "information": {
+        "texture": "icon.item.brass"
+      },
       "data": {
         "crafting_material": true,
         "unit_weight": 2,
@@ -53,6 +57,9 @@
         "good.consumer"
       ],
       "enabled": true,
+      "information": {
+        "texture": "icon.item.textiles"
+      },
       "data": {
         "crafting_material": false,
         "unit_weight": 1,
@@ -72,6 +79,9 @@
         "good.luxury"
       ],
       "enabled": true,
+      "information": {
+        "texture": "icon.item.spices"
+      },
       "data": {
         "crafting_material": false,
         "unit_weight": 0.5,
@@ -93,6 +103,7 @@
       ],
       "enabled": true,
       "information": {
+        "texture": "icon.item.timber",
         "model": "model.good.timber"
       },
       "data": {
@@ -114,6 +125,9 @@
         "good.fragile"
       ],
       "enabled": true,
+      "information": {
+        "texture": "icon.item.glassware"
+      },
       "data": {
         "crafting_material": false,
         "unit_weight": 1.5,
@@ -132,6 +146,9 @@
         "good.contract"
       ],
       "enabled": true,
+      "information": {
+        "texture": "icon.item.contract_freight"
+      },
       "data": {
         "crafting_material": false,
         "unit_weight": 1,
@@ -199,6 +216,7 @@
       ],
       "enabled": true,
       "information": {
+        "texture": "icon.item.boiler_plate",
         "model": "model.material.boiler_plate"
       },
       "data": {
@@ -221,6 +239,7 @@
       ],
       "enabled": true,
       "information": {
+        "texture": "icon.item.precision_gear",
         "model": "model.material.precision_gear"
       },
       "data": {
@@ -243,6 +262,7 @@
       ],
       "enabled": true,
       "information": {
+        "texture": "icon.item.sealing_compound",
         "model": "model.material.sealing_compound"
       },
       "data": {

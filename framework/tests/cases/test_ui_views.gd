@@ -103,6 +103,46 @@ func _cell(cells: Array, port_id: String) -> Dictionary:
 	return {}
 
 
+## First buyable market row that fits the remaining hold capacity, stock and money.
+func _first_buyable_market_row(rows: Array, money: int, amount: int, free_capacity: float = 9999.0) -> Dictionary:
+	for row in rows:
+		if not (row is Dictionary):
+			continue
+		if not bool(row.get("buyable", true)) or int(row.get("stock", 0)) < amount:
+			continue
+		var unit_weight := float(row.get("unit_weight", 99.0))
+		if unit_weight <= 0.0 or unit_weight * float(amount) > free_capacity:
+			continue
+		if int(ceil(float(row.get("price", 0)) * float(amount))) > money:
+			continue
+		return row
+	return {}
+
+
+func _hold_row(rows: Array, item_id: String, is_contract: bool) -> Dictionary:
+	for row in rows:
+		if row is Dictionary \
+				and String(row.get("item_id", "")) == item_id \
+				and bool(row.get("is_contract", false)) == is_contract:
+			return row
+	return {}
+
+
+func _hold_amount(rows: Array, item_id: String) -> int:
+	var total := 0
+	for row in rows:
+		if row is Dictionary and String(row.get("item_id", "")) == item_id:
+			total += int(row.get("amount", 0))
+	return total
+
+
+func _warehouse_row(rows: Array, item_id: String) -> Dictionary:
+	for row in rows:
+		if row is Dictionary and String(row.get("item_id", "")) == item_id:
+			return row
+	return {}
+
+
 func _label_texts(node: Node) -> Array[String]:
 	var texts: Array[String] = []
 	if node is Label:
@@ -264,6 +304,116 @@ func test_intel_view_matrix_without_report() -> void:
 	var cell := _cell(first_row.get("cells", []), current)
 	assert_true(bool(cell.get("known", false)), "current column cell still reads the live market")
 	assert_eq(Array(first_row.get("cells", [])).size(), columns.size(), "cells stay aligned with columns")
+
+
+func test_market_view_without_run_returns_empty_structure() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	assert_true(context.queries.has(&"market.view"), "market.view is registered through the query bus")
+	var result := context.queries.execute(&"market.view")
+	assert_true(bool(result["ok"]), "market view succeeds before a run starts")
+	var data: Dictionary = result["data"]
+	assert_false(bool(data.get("has_run", true)), "market view reports no run")
+	assert_eq(Array(data.get("market", [])).size(), 0, "no market rows without a run")
+	assert_eq(Array(data.get("warehouse", {}).get("materials", [])).size(), 0, "no warehouse rows without a run")
+	assert_true(data.get("trends", null) is Dictionary, "trends key always exists")
+
+
+func test_market_view_exposes_hold_warehouse_and_icon_keys() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 8686})
+	var live: Dictionary = context.queries.execute(&"port.view")["data"]
+	var first: Dictionary = context.queries.execute(&"market.view")["data"]
+	assert_true(bool(first.get("has_run", false)), "market view reports the running run")
+	assert_true(bool(first.get("at_port", false)), "market view reports the ship is at port")
+	assert_eq(String(first["current_port"]["id"]), String(live["current_port"]["id"]), "market view keeps the current port")
+	assert_eq(int(first["money"]), int(live["money"]), "market view keeps the live money reading")
+	assert_eq(Array(first["market"]).size(), Array(live["market"]).size(), "market view keeps every live market row")
+	for row in first["market"]:
+		var live_row := _row(live["market"], String(row.get("item_id", "")))
+		assert_true(not live_row.is_empty(), "market row exists in port.view: %s" % String(row.get("item_id", "")))
+		assert_eq(int(row["price"]), int(live_row["price"]), "market view price matches the live market")
+		var definition := ShipOps.item_definition(context.registries, String(row["item_id"]))
+		assert_eq(
+			String(row.get("icon_key", "")),
+			String(definition.information.get("texture", "")),
+			"market rows carry the content texture key: %s" % String(row["item_id"])
+		)
+	assert_true(first["ship"].get("hold", null) is Array, "ship hold rows are exposed")
+	assert_true(first["warehouse"].get("materials", null) is Array, "warehouse material rows are exposed")
+	assert_true(first["trends"] is Dictionary, "trends dictionary is exposed")
+
+	var target := _first_buyable_market_row(
+		first["market"],
+		int(first["money"]),
+		6,
+		float(first["ship"].get("free_cargo_capacity", 0.0))
+	)
+	assert_true(not target.is_empty(), "found an affordable light market row")
+	var item_id := String(target["item_id"])
+	var hold_before := _hold_amount(first["ship"]["hold"], item_id)
+	var buy_cargo := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 2})
+	assert_true(bool(buy_cargo["ok"]), "buying into the hold succeeds: %s" % str(buy_cargo))
+	assert_eq(String(buy_cargo["data"].get("destination", "")), "cargo", "buy result reports the hold destination")
+	var after_cargo: Dictionary = context.queries.execute(&"market.view")["data"]
+	var cargo_row := _hold_row(after_cargo["ship"]["hold"], item_id, false)
+	assert_true(not cargo_row.is_empty(), "hold row appears after buying into the hold")
+	assert_eq(int(cargo_row["amount"]), hold_before + 2, "hold amount increased by the purchase")
+	assert_eq(int(cargo_row["sellable_amount"]), int(cargo_row["amount"]), "ordinary hold cargo is sellable")
+	assert_false(bool(cargo_row["is_contract"]), "bought goods are not contract cargo")
+	assert_true(float(cargo_row["unit_weight"]) > 0.0, "hold row keeps the unit weight")
+	var cargo_after := ShipOps.cargo_amount(context.state.ship(), item_id, false)
+
+	var buy_warehouse := context.commands.execute(&"trade.buy", {"item_id": item_id, "amount": 3, "destination": "warehouse"})
+	assert_true(bool(buy_warehouse["ok"]), "buying into the warehouse succeeds: %s" % str(buy_warehouse))
+	assert_eq(String(buy_warehouse["data"].get("destination", "")), "warehouse", "buy result reports the warehouse destination")
+	var after_warehouse: Dictionary = context.queries.execute(&"market.view")["data"]
+	var warehouse_row := _warehouse_row(after_warehouse["warehouse"]["materials"], item_id)
+	assert_true(not warehouse_row.is_empty(), "warehouse row appears after buying into the warehouse")
+	assert_eq(int(warehouse_row["amount"]), 3, "warehouse holds the purchased amount")
+	assert_eq(
+		ShipOps.cargo_amount(context.state.ship(), item_id, false),
+		cargo_after,
+		"buying into the warehouse leaves the hold untouched"
+	)
+	var sell_warehouse := context.commands.execute(&"trade.sell", {"item_id": item_id, "amount": 1, "source": "warehouse"})
+	assert_true(bool(sell_warehouse["ok"]), "selling from the warehouse succeeds: %s" % str(sell_warehouse))
+	var after_sell: Dictionary = context.queries.execute(&"market.view")["data"]
+	assert_eq(
+		int(_warehouse_row(after_sell["warehouse"]["materials"], item_id)["amount"]),
+		2,
+		"selling from the warehouse reduces the stored amount"
+	)
+	assert_eq(
+		ShipOps.cargo_amount(context.state.ship(), item_id, false),
+		cargo_after,
+		"selling from the warehouse leaves the hold untouched"
+	)
+
+
+func test_market_view_marks_contract_cargo_as_locked() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": "core:starting_scenario/steady", "seed": 8787})
+	var view: Dictionary = context.queries.execute(&"market.view")["data"]
+	var target := _first_buyable_market_row(view["market"], 1000000, 1)
+	assert_true(not target.is_empty(), "found a market row to use as contract cargo")
+	var item_id := String(target["item_id"])
+	if _hold_amount(view["ship"]["hold"], item_id) > 0:
+		# A contract stack of a variety the ship already carries would merge into a
+		# separate locked row by design; that is exactly what this test asserts.
+		pass
+	ShipOps.add_cargo(context.state.ship(), item_id, 2, "fixture_contract", 240.0)
+	var after: Dictionary = context.queries.execute(&"market.view")["data"]
+	var contract_row := _hold_row(after["ship"]["hold"], item_id, true)
+	assert_true(not contract_row.is_empty(), "contract cargo gets its own hold row")
+	assert_eq(int(contract_row["amount"]), 2, "contract row reports its own amount")
+	assert_eq(int(contract_row["sellable_amount"]), 0, "contract cargo cannot be sold")
+	assert_almost_eq(float(contract_row["avg_cost"]), 0.0, 0.001, "contract cargo has no player cost basis")
+	var free_row := _hold_row(after["ship"]["hold"], item_id, false)
+	if not free_row.is_empty():
+		assert_true(float(free_row["avg_cost"]) >= 0.0, "ordinary row keeps its own cost basis")
 
 
 func test_intel_table_binds_headless() -> void:
