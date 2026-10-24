@@ -2,7 +2,6 @@
 
 > 作用：单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。
 
-- 关键依赖：`SNResourceMeter`、`SNBadge`、`steam_navigator_theme.tres`
 - 类型：GDScript 源文件
 
 ## 关键符号
@@ -10,16 +9,23 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNSupplyCard` | L1 |
-| `command_requested (signal)` | L10 |
-| `COLOR_TEXT_MUTED` | L12 |
-| `COLOR_TEXT` | L13 |
-| `COLOR_WARNING` | L14 |
+| `command_requested (signal)` | L24 |
 
-## 契约与约束
+One supply commodity card (coal or water).
 
-- 只渲染传入的 ViewModel 并发出 `command_requested(command, params)`；不访问 CommandBus。
-- 最大购买量由查询层计算；卡片禁用 +5/+10/补满时必须已有明确的 blocker 文本。
-- `maximum` 为当前可达物理上限 capacity（不再是补给后可达上限）；上限被另一项补给占用时用 cap_loss 驱动 meter 的右端损失带，文案使用“可补至/上限损失/剩余可装”。
-- bind() 第 4 参 tr: Callable 可省略；缺省或缺键时回退内置中文，UI Kit 展示场景无需改动。
+The card only renders a ViewModel and emits intent; the shell owns commands.
+bind() takes an optional tr callable for the cap-loss/headroom copy; without it
+the card keeps its original Chinese wording. ViewModels without capacity keep
+the legacy "current + max_buy" meter scale.
+
+## 外观来源（外部贴图 + SNSkin）
+- 卡片底层用 Theme 变体 `SNElevatedPanel`；资源条 `SNResourceMeter` 走
+  `SNBrassProgressBar` / `SNWaterProgressBar` 的纹理填充。文字色全部取
+  `SNSkin.color(token)`（text.light / text.muted / state.warning），不写十六进制。
+- 按钮：步进 `+5 / +10` 用 `SNCompactButton`（小铭牌，保持 38 px 高、不撑宽卡片），
+  补满用 `SNPrimaryButton` + `Button.icon = SNSkin.icon("action_confirm")`
+  （`icon_max_width` 16，不加包装容器，按钮 `text` 不变）。
+- 尺寸约束：三个按钮 `custom_minimum_size = (0, 38)` 不变；内容区
+  `Content` 节点名与行顺序（标题 / 资源条 / 信息行 / 阻断 / 操作）保持不变。
 
 模块索引：[framework/ui](../README.md)

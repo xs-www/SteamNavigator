@@ -2,7 +2,6 @@
 
 > 作用：商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。
 
-- 关键依赖：`steam_navigator_theme.tres`
 - 类型：GDScript 源文件
 
 ## 关键符号
@@ -10,31 +9,38 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNIntelTable` | L1 |
-| `COLOR_TEXT` | L15 |
-| `COLOR_MUTED` | L16 |
-| `COLOR_BRASS` | L17 |
-| `COLOR_RED` | L18 |
-| `COLOR_GREEN` | L19 |
-| `COLOR_CELL` | L20 |
-| `COLOR_CELL_BORDER` | L21 |
-| `KEY_UNKNOWN_PORT` | L23 |
-| `KEY_GOODS` | L24 |
-| `KEY_UNIT_WEIGHT` | L25 |
-| `KEY_REF_PRICE` | L26 |
-| `KEY_COL_AGE` | L27 |
-| `KEY_LEGEND_CELL` | L28 |
-| `KEY_LEGEND_GAP` | L29 |
-| `KEY_LEGEND_TREND` | L30 |
-| `UNKNOWN_TEXT` | L32 |
-| `GAP_TEXT` | L33 |
-| `bind(columns: Array, rows: Array, current_port_id: String, tr: Callable) -> void` | L41 |
+| `KEY_UNKNOWN_PORT` | L29 |
+| `KEY_GOODS` | L30 |
+| `KEY_UNIT_WEIGHT` | L31 |
+| `KEY_REF_PRICE` | L32 |
+| `KEY_COL_AGE` | L33 |
+| `KEY_LEGEND_CELL` | L34 |
+| `KEY_LEGEND_GAP` | L35 |
+| `KEY_LEGEND_TREND` | L36 |
+| `UNKNOWN_TEXT` | L38 |
+| `GAP_TEXT` | L39 |
+| `bind(columns: Array, rows: Array, current_port_id: String, tr: Callable) -> void` | L47 |
 
-## 契约与约束
+The current port column reads the live market while every other column is a
+frozen intelligence snapshot; undiscovered ports keep a masked column so the
+player can still see how many ports are left to explore. All copy goes
+through the `tr` callable, so the component never hardcodes a language.
 
-- bind(columns, rows, current_port_id, tr) 为纯数据入口，可在 headless 下实例化；重复 bind 会清空旧内容后重建。
-- known=false 显示 `？`；buy_price/sell_price 为 -1 表示该侧不经营，显示 `-`（两侧都缺则整格 `-`）。
-- 趋势只显示红降/绿升的百分比数字（trend_percent×100），不使用文字；当前港口列用黄铜高亮。
-- 商品/单位重量/参考价列保持紧凑固定宽度，仅港口列均分剩余空间并保留 120 像素最小宽度；普通单元格显式使用深青背景，禁止回退到 StyleBoxFlat 默认灰色。
-- 全部文案经 tr: Callable 取本地化键（含 ui.intel.col_age 格式串），缺键回退键名，不硬编码中文。
+Cell rules:
+- `？`  : the port is unknown or the snapshot does not cover this commodity.
+- `-`  : the port neither buys nor sells the commodity (per side otherwise).
+- price: "port buy price / port sell price", i.e. player sell / player buy.
+
+## 外观来源（外部贴图 + SNSkin）
+- 面板底层用 Theme 变体 `SNElevatedPanel`（钢制抬高面）；每个表头 / 数值单元格
+  用 `SNSkin.style("panel_recess")`（普通格，承袭仪表凹槽纹理）与
+  `SNSkin.style("panel_steel")`（当前港高亮格），内容边距固定回 8 / 2 以保持旧
+  表格行高与列宽，不插入新布局。
+- 文字与趋势色一律取 `SNSkin.color(token)`（text.light / text.muted /
+  brass.highlight / state.success / state.danger），本文件不写十六进制颜色。
+- 尺寸约束：商品 180 px、单位重量 120 px、参考价 100 px、港口列 ≥120 px 的
+  固定最小宽度不变；网格列数、行数与 `Content/Grid` 节点结构不变。
+- 旧断言 `test_ui_shell.gd:201-202` 按 `StyleBoxFlat.bg_color` 检查单元格，换成
+  纹理 StyleBoxTexture 后需由验收侧改为检查纹理来源（本文件不修改测试）。
 
 模块索引：[framework/ui](../README.md)

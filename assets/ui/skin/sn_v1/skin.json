@@ -1,0 +1,682 @@
+{
+  "colors": {
+    "bg.abyss": "#061416",
+    "blueprint.base": "#153D47",
+    "blueprint.line": "#C8DED0",
+    "brass.base": "#C28A3B",
+    "brass.highlight": "#EDC46D",
+    "brass.shadow": "#6D431D",
+    "cloth.blue": "#285A72",
+    "cloth.teal": "#245B5E",
+    "ink.primary": "#2A2119",
+    "paper.base": "#D8C69E",
+    "paper.highlight": "#EFE1BD",
+    "paper.ink_muted": "#5C4A34",
+    "state.danger": "#A84A3E",
+    "state.success": "#6E9C75",
+    "state.warning": "#D19A42",
+    "state.water": "#4CA4B8",
+    "steel.base": "#102B2E",
+    "steel.raised": "#1A4548",
+    "steel.recess": "#071D20",
+    "text.ink": "#2A2119",
+    "text.light": "#F0E4C8",
+    "text.muted": "#A5B0A4"
+  },
+  "fonts": {
+    "body": 15,
+    "caption": 11,
+    "detail": 12,
+    "display": 36,
+    "h1": 28,
+    "h2": 22,
+    "key": 24,
+    "label": 14
+  },
+  "icons": {
+    "action_add": "icons/action_add.png",
+    "action_confirm": "icons/action_confirm.png",
+    "action_remove": "icons/action_remove.png",
+    "nav_chart": "icons/nav_chart.png",
+    "nav_contracts": "icons/nav_contracts.png",
+    "nav_departure": "icons/nav_departure.png",
+    "nav_intelligence": "icons/nav_intelligence.png",
+    "nav_market": "icons/nav_market.png",
+    "nav_resupply": "icons/nav_resupply.png",
+    "nav_shipyard": "icons/nav_shipyard.png",
+    "resource_cargo": "icons/resource_cargo.png",
+    "resource_coal": "icons/resource_coal.png",
+    "resource_coins": "icons/resource_coins.png",
+    "resource_durability": "icons/resource_durability.png",
+    "resource_water": "icons/resource_water.png",
+    "shipyard_boiler": "icons/shipyard_boiler.png",
+    "shipyard_cabin": "icons/shipyard_cabin.png",
+    "shipyard_cargo": "icons/shipyard_cargo.png",
+    "shipyard_hull": "icons/shipyard_hull.png",
+    "shipyard_navigation": "icons/shipyard_navigation.png",
+    "shipyard_safety": "icons/shipyard_safety.png",
+    "status_anchor": "icons/status_anchor.png",
+    "status_locked": "icons/status_locked.png",
+    "status_reputation": "icons/status_reputation.png",
+    "status_route": "icons/status_route.png",
+    "status_storm": "icons/status_storm.png",
+    "status_time": "icons/status_time.png",
+    "status_unlocked": "icons/status_unlocked.png",
+    "status_warning": "icons/status_warning.png",
+    "status_weather": "icons/status_weather.png"
+  },
+  "id": "sn_v1",
+  "scale": 0.5,
+  "source": {
+    "controls_atlas": "res://docs/design/ui_controls_v1/sn_controls_atlas_v1.png",
+    "controls_regions": "res://docs/design/ui_controls_v1/regions.json",
+    "icon_dir": "res://docs/design/ui_icons_v1/icons/",
+    "icon_manifest": "res://docs/design/ui_icons_v1/manifest.json"
+  },
+  "styles": {
+    "badge": {
+      "content_margin": [
+        10,
+        6,
+        10,
+        6
+      ],
+      "file": "nine_slice/badge.png",
+      "texture_margin": [
+        12,
+        10,
+        12,
+        10
+      ]
+    },
+    "badge_danger": {
+      "content_margin": [
+        10,
+        6,
+        10,
+        6
+      ],
+      "file": "nine_slice/badge_danger.png",
+      "texture_margin": [
+        12,
+        10,
+        12,
+        10
+      ]
+    },
+    "button_danger": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/button_danger.png",
+      "texture_margin": [
+        20,
+        17,
+        20,
+        17
+      ]
+    },
+    "button_disabled": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/button_disabled.png",
+      "texture_margin": [
+        20,
+        17,
+        20,
+        17
+      ]
+    },
+    "button_hover": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/button_hover.png",
+      "texture_margin": [
+        20,
+        17,
+        20,
+        17
+      ]
+    },
+    "button_normal": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/button_normal.png",
+      "texture_margin": [
+        20,
+        17,
+        20,
+        17
+      ]
+    },
+    "button_pressed": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/button_pressed.png",
+      "texture_margin": [
+        20,
+        17,
+        20,
+        17
+      ]
+    },
+    "button_selected": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/button_selected.png",
+      "texture_margin": [
+        20,
+        17,
+        20,
+        17
+      ]
+    },
+    "cell_recess": {
+      "content_margin": [
+        8,
+        2,
+        8,
+        2
+      ],
+      "file": "nine_slice/cell_recess.png",
+      "texture_margin": [
+        6,
+        5,
+        6,
+        5
+      ]
+    },
+    "checkbox_empty": {
+      "file": "parts/checkbox_empty.png",
+      "fixed": true,
+      "size": [
+        62,
+        61
+      ]
+    },
+    "fill_amber": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/fill_amber.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "fill_aqua": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/fill_aqua.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "fill_rust": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/fill_rust.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "fill_sage": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/fill_sage.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "flag_blue": {
+      "content_margin": [
+        16,
+        24,
+        16,
+        16
+      ],
+      "file": "nine_slice/flag_blue.png",
+      "texture_margin": [
+        15,
+        19,
+        15,
+        16
+      ]
+    },
+    "flag_cream": {
+      "content_margin": [
+        16,
+        24,
+        16,
+        16
+      ],
+      "file": "nine_slice/flag_cream.png",
+      "texture_margin": [
+        15,
+        19,
+        15,
+        16
+      ]
+    },
+    "flag_disabled": {
+      "content_margin": [
+        16,
+        24,
+        16,
+        16
+      ],
+      "file": "nine_slice/flag_disabled.png",
+      "texture_margin": [
+        15,
+        19,
+        15,
+        16
+      ]
+    },
+    "flag_red": {
+      "content_margin": [
+        16,
+        24,
+        16,
+        16
+      ],
+      "file": "nine_slice/flag_red.png",
+      "texture_margin": [
+        15,
+        19,
+        15,
+        16
+      ]
+    },
+    "flag_selected": {
+      "content_margin": [
+        16,
+        24,
+        16,
+        16
+      ],
+      "file": "nine_slice/flag_selected.png",
+      "texture_margin": [
+        15,
+        19,
+        15,
+        16
+      ]
+    },
+    "flag_teal": {
+      "content_margin": [
+        16,
+        24,
+        16,
+        16
+      ],
+      "file": "nine_slice/flag_teal.png",
+      "texture_margin": [
+        15,
+        19,
+        15,
+        16
+      ]
+    },
+    "focus_ring": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/focus_ring.png",
+      "texture_margin": [
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    "frame_open": {
+      "content_margin": [
+        16,
+        12,
+        16,
+        12
+      ],
+      "file": "nine_slice/frame_open.png",
+      "texture_margin": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "hook": {
+      "file": "parts/hook.png",
+      "fixed": true,
+      "size": [
+        44,
+        76
+      ]
+    },
+    "input_recess": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/input_recess.png",
+      "texture_margin": [
+        17,
+        14,
+        17,
+        14
+      ]
+    },
+    "list_parchment": {
+      "content_margin": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "file": "nine_slice/list_parchment.png",
+      "texture_margin": [
+        17,
+        14,
+        17,
+        14
+      ]
+    },
+    "meter_fill_amber": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/meter_fill_amber.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "meter_fill_aqua": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/meter_fill_aqua.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "meter_fill_rust": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/meter_fill_rust.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "meter_fill_sage": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/meter_fill_sage.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "meter_trough": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/meter_trough.png",
+      "texture_margin": [
+        6,
+        5,
+        6,
+        5
+      ]
+    },
+    "panel_blueprint": {
+      "content_margin": [
+        22,
+        20,
+        22,
+        20
+      ],
+      "file": "nine_slice/panel_blueprint.png",
+      "texture_margin": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "panel_canvas": {
+      "content_margin": [
+        20,
+        18,
+        20,
+        18
+      ],
+      "file": "nine_slice/panel_canvas.png",
+      "texture_margin": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "panel_parchment": {
+      "content_margin": [
+        28,
+        22,
+        28,
+        22
+      ],
+      "file": "nine_slice/panel_parchment.png",
+      "texture_margin": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "panel_recess": {
+      "content_margin": [
+        16,
+        14,
+        16,
+        14
+      ],
+      "file": "nine_slice/panel_recess.png",
+      "texture_margin": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "panel_steel": {
+      "content_margin": [
+        24,
+        20,
+        24,
+        20
+      ],
+      "file": "nine_slice/panel_steel.png",
+      "texture_margin": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "paper_clip": {
+      "file": "parts/paper_clip.png",
+      "fixed": true,
+      "size": [
+        66,
+        75
+      ]
+    },
+    "plate_small": {
+      "content_margin": [
+        12,
+        6,
+        12,
+        6
+      ],
+      "file": "nine_slice/badge.png",
+      "texture_margin": [
+        12,
+        10,
+        12,
+        10
+      ]
+    },
+    "progress_trough": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/progress_trough.png",
+      "texture_margin": [
+        17,
+        14,
+        17,
+        14
+      ]
+    },
+    "rope_loop": {
+      "file": "parts/rope_loop.png",
+      "fixed": true,
+      "size": [
+        70,
+        73
+      ]
+    },
+    "scrollbar_grabber": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/scrollbar_grabber.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "scrollbar_track": {
+      "content_margin": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "nine_slice/scrollbar_track.png",
+      "texture_margin": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "slider_knob": {
+      "file": "parts/slider_knob.png",
+      "fixed": true,
+      "size": [
+        100,
+        48
+      ]
+    },
+    "wax_seal": {
+      "file": "parts/wax_seal.png",
+      "fixed": true,
+      "size": [
+        84,
+        83
+      ]
+    }
+  },
+  "version": 1
+}

@@ -13,16 +13,19 @@ extends VBoxContainer
 ## - 纯展示：不查状态、不发命令；线索不输出目标港 / credibility / 搜索区。
 ## - 线索行由 `tavern.view.clues` 的等级裁剪字段渲染，购买与调查可用性完全由
 ##   `can_buy_clue` / `clue.can_investigate` 决定，按钮不自行猜规则。
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 面板用 Theme 默认钢制 `Panel`（纹理化）；物价情报矩阵由 `SNIntelTable`
+##   自己换皮（钢制抬高面 + 凹槽格）。文字 / 状态色取 `SNSkin.color(token)`
+##   （text.light / text.muted / brass.highlight / state.water / state.danger）。
+## - 按钮保持默认纹理化 `Button`（刷新物价 / 购买线索 / 调查线索），按钮文字与
+##   节点名 `RefreshIntelButton` / `BuyClueButton` / `InvestigateButton` 不变。
+## - 尺寸约束：面板间距 8、线索行间距 12、字号 16/14/13/12 不变；不新增布局。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
 const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_table.gd")
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const BRASS := Color("e1c487")
-const TEAL := Color("76aaa7")
-const RED := Color("c36b53")
 var _tr: Callable
 
 
@@ -42,13 +45,13 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 func _intel_panel(vm: Dictionary) -> Control:
 	var panel := _panel()
 	var content := _content(panel)
-	content.add_child(_label(_loc("ui.tavern.intel_title", "物价情报"), 16, BRASS))
+	content.add_child(_label(_loc("ui.tavern.intel_title", "物价情报"), 16, SNSkin.color("brass.highlight")))
 	if bool(vm.get("has_report", false)):
-		content.add_child(_label("%s：%s · %s" % [_loc("ui.label.generated", ""), vm.get("generated_label", ""), _age(float(vm.get("age_hours", 0.0)))], 14, TEXT))
-		content.add_child(_label(_loc("ui.intel.summary", "") % [int(vm.get("port_count", 0)), int(vm.get("column_count", 0)), int(vm.get("npc_count", 0))], 12, MUTED))
-		content.add_child(_label(_loc("ui.label.snapshot_tip", ""), 12, MUTED))
+		content.add_child(_label("%s：%s · %s" % [_loc("ui.label.generated", ""), vm.get("generated_label", ""), _age(float(vm.get("age_hours", 0.0)))], 14, SNSkin.color("text.light")))
+		content.add_child(_label(_loc("ui.intel.summary", "") % [int(vm.get("port_count", 0)), int(vm.get("column_count", 0)), int(vm.get("npc_count", 0))], 12, SNSkin.color("text.muted")))
+		content.add_child(_label(_loc("ui.label.snapshot_tip", ""), 12, SNSkin.color("text.muted")))
 	else:
-		content.add_child(_label(_loc("ui.label.no_intel", ""), 14, MUTED))
+		content.add_child(_label(_loc("ui.label.no_intel", ""), 14, SNSkin.color("text.muted")))
 	var rows: Array = vm.get("rows", [])
 	if rows.is_empty():
 		content.add_child(_message(_loc("ui.intel.empty", "")))
@@ -65,7 +68,7 @@ func _intel_panel(vm: Dictionary) -> Control:
 		button.pressed.connect(func(): command_requested.emit(&"intel.refresh", {}))
 		content.add_child(button)
 	else:
-		content.add_child(_label(_loc("ui.tavern.no_tavern", "当前港口没有酒馆。"), 12, MUTED))
+		content.add_child(_label(_loc("ui.tavern.no_tavern", "当前港口没有酒馆。"), 12, SNSkin.color("text.muted")))
 	content.add_child(_npc_panel(vm.get("npcs", [])))
 	return panel
 
@@ -73,13 +76,13 @@ func _intel_panel(vm: Dictionary) -> Control:
 func _clue_panel(vm: Dictionary) -> Control:
 	var panel := _panel()
 	var content := _content(panel)
-	content.add_child(_label(_loc("ui.tavern.clues_title", "港口线索"), 16, BRASS))
+	content.add_child(_label(_loc("ui.tavern.clues_title", "港口线索"), 16, SNSkin.color("brass.highlight")))
 	content.add_child(_label(
 		_loc("ui.tavern.clues_count", "持有 %d / %d 条线索") % [
 			int(vm.get("active_clue_count", 0)), int(vm.get("max_active_clues", 4)),
 		],
 		12,
-		MUTED
+		SNSkin.color("text.muted")
 	))
 	var buy: Dictionary = vm.get("can_buy_clue", {}) if vm.get("can_buy_clue", {}) is Dictionary else {}
 	var buy_button := Button.new()
@@ -91,10 +94,10 @@ func _clue_panel(vm: Dictionary) -> Control:
 	buy_button.pressed.connect(func(): command_requested.emit(&"clue.buy", {}))
 	content.add_child(buy_button)
 	if not bool(buy.get("available", true)):
-		content.add_child(_label(_loc(String(buy.get("reason_key", "")), ""), 12, RED))
+		content.add_child(_label(_loc(String(buy.get("reason_key", "")), ""), 12, SNSkin.color("state.danger")))
 	var clues: Array = vm.get("clues", [])
 	if clues.is_empty():
-		content.add_child(_label(_loc("ui.tavern.clues_empty", "暂时没有线索。在港等待、完成委托或向酒馆购买都可能得到线索。"), 13, MUTED))
+		content.add_child(_label(_loc("ui.tavern.clues_empty", "暂时没有线索。在港等待、完成委托或向酒馆购买都可能得到线索。"), 13, SNSkin.color("text.muted")))
 		return panel
 	for entry in clues:
 		if entry is Dictionary:
@@ -115,19 +118,19 @@ func _clue_row(clue: Dictionary) -> Control:
 	]
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_child(_label(title, 13, TEXT))
+	info.add_child(_label(title, 13, SNSkin.color("text.light")))
 	var type := String(clue.get("type", ClueService.TYPE_PORT_LOCATION))
 	if type == ClueService.TYPE_PORT_GOODS:
 		var goods: Dictionary = clue.get("goods", {}) if clue.get("goods", {}) is Dictionary else {}
 		var port_text := _loc(String(goods.get("port_name_key", "")), "")
 		var goods_line := _loc("ui.clue.goods.port", "港口：%s") % port_text
 		goods_line += " · %s" % _loc("ui.clue.goods.level.%d" % level, "")
-		info.add_child(_label(goods_line, 12, TEAL))
+		info.add_child(_label(goods_line, 12, SNSkin.color("state.water")))
 	else:
 		var distance := _loc("ui.clue.distance_range", "") % [
 			int(clue.get("distance_min_hours", 0.0)), int(clue.get("distance_max_hours", 0.0)),
 		]
-		info.add_child(_label(distance, 12, TEAL))
+		info.add_child(_label(distance, 12, SNSkin.color("state.water")))
 	if bool(clue.get("can_investigate", false)):
 		var investigate := Button.new()
 		investigate.name = "InvestigateButton"
@@ -146,25 +149,25 @@ func _clue_row(clue: Dictionary) -> Control:
 func _npc_panel(npcs: Array) -> Control:
 	var panel := _panel()
 	var content := _content(panel)
-	content.add_child(_label(_loc("ui.tavern.npc_title", "NPC 商船动向"), 16, BRASS))
+	content.add_child(_label(_loc("ui.tavern.npc_title", "NPC 商船动向"), 16, SNSkin.color("brass.highlight")))
 	if npcs.is_empty():
-		content.add_child(_label(_loc("ui.tavern.npc_empty", "暂无覆盖到的 NPC 动向（未发现的目的港不会出现）。"), 12, MUTED))
+		content.add_child(_label(_loc("ui.tavern.npc_empty", "暂无覆盖到的 NPC 动向（未发现的目的港不会出现）。"), 12, SNSkin.color("text.muted")))
 		return panel
 	var grid := GridContainer.new()
 	grid.columns = 4
 	for heading in ["目的港", "货物", _loc("ui.label.action", ""), _loc("ui.label.eta", "")]:
-		grid.add_child(_label(heading, 12, MUTED))
+		grid.add_child(_label(heading, 12, SNSkin.color("text.muted")))
 	for npc in npcs:
-		grid.add_child(_label(_loc(String(npc.get("destination_name_key", "")), String(npc.get("destination", ""))), 13, TEXT))
-		grid.add_child(_label(_loc(String(npc.get("item_name_key", "")), String(npc.get("item_id", ""))), 13, TEXT))
-		grid.add_child(_label(_loc(String(npc.get("action_label_key", "")), String(npc.get("action", ""))), 13, TEAL))
-		grid.add_child(_label("%s – %s" % [ClockService.format_time(float(npc.get("eta_from", 0.0))), ClockService.format_time(float(npc.get("eta_to", 0.0)))], 13, MUTED))
+		grid.add_child(_label(_loc(String(npc.get("destination_name_key", "")), String(npc.get("destination", ""))), 13, SNSkin.color("text.light")))
+		grid.add_child(_label(_loc(String(npc.get("item_name_key", "")), String(npc.get("item_id", ""))), 13, SNSkin.color("text.light")))
+		grid.add_child(_label(_loc(String(npc.get("action_label_key", "")), String(npc.get("action", ""))), 13, SNSkin.color("state.water")))
+		grid.add_child(_label("%s – %s" % [ClockService.format_time(float(npc.get("eta_from", 0.0))), ClockService.format_time(float(npc.get("eta_to", 0.0)))], 13, SNSkin.color("text.muted")))
 	content.add_child(grid)
 	return panel
 
 
 func _message(text: String) -> Control:
-	var panel := _panel(); _content(panel).add_child(_label(text, 13, MUTED)); return panel
+	var panel := _panel(); _content(panel).add_child(_label(text, 13, SNSkin.color("text.muted"))); return panel
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new(); panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL; return panel
 func _content(panel: PanelContainer) -> VBoxContainer:

@@ -9,18 +9,13 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNVoyageConfirm` | L1 |
-| `confirmed (signal)` | L24 |
-| `cancelled (signal)` | L25 |
-| `strategy_changed (signal)` | L26 |
-| `COLOR_TEXT` | L28 |
-| `COLOR_MUTED` | L29 |
-| `COLOR_BRASS` | L30 |
-| `COLOR_RED` | L31 |
-| `COLOR_GREEN` | L32 |
-| `PANEL_WIDTH` | L33 |
-| `bind(data: Dictionary, translate: Callable) -> void` | L41 |
-| `get_strategy_id() -> String` | L48 |
-| `is_feasible() -> bool` | L56 |
+| `confirmed (signal)` | L34 |
+| `cancelled (signal)` | L35 |
+| `strategy_changed (signal)` | L36 |
+| `PANEL_WIDTH` | L38 |
+| `bind(data: Dictionary, translate: Callable) -> void` | L46 |
+| `get_strategy_id() -> String` | L53 |
+| `is_feasible() -> bool` | L61 |
 
 展示航线预估（距离 / 预计时间 / 煤水 / 风险 / 发现概率）、可行性 blockers、
 锅炉策略切换与「取消 / 启航」。普通出航与「循线索出航」共用同一个弹窗。
@@ -39,5 +34,15 @@
 - 不可行时「启航」禁用、blockers 逐条列出被翻译后的文案；面板不自行判断可行性。
 - 弹窗打开时遮罩吃掉点击（`mouse_filter = STOP`），避免误触下层海图。
 - 4.3.5 连续消耗只改页面读数与结算，不改变本弹窗的数据契约。
+
+## 外观来源（外部贴图 + SNSkin）
+- 面板底层用 Theme 变体 `SNPanel`（黄铜钢框 + 凹槽承托），选钢而不是羊皮纸是因为
+  弹窗叠在海图上、正文含风险/阻断色；深底 + text.light/text.muted 的对比度更稳。
+- 遮罩色取 `SNSkin.color("bg.abyss")` 再降 alpha；正文/风险色全部取
+  `SNSkin.color(token)`（text.light / text.muted / brass.highlight / state.danger /
+  state.success），本文件无 `StyleBoxFlat`、无十六进制色。
+- 按钮：取消 `SNGhostButton`、启航 `SNPrimaryButton`；节点名
+  `ConfirmShade` / `ConfirmPanel` / `CancelButton` / `ConfirmButton` 与
+  `PANEL_WIDTH = 520` 保持不变。
 
 模块索引：[framework/ui](../README.md)

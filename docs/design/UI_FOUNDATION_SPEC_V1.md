@@ -222,3 +222,17 @@
 - Normal/Hover/Pressed/Selected/Focus/Disabled/Danger 状态在深色与 3D 场景背景上均可辨认。
 - 960×540 保留价格、持仓、风险、主要操作和禁用原因；装饰可降级。
 - 市场纵向样片通过后，才把材质与状态写入生产 Theme；Concept V1 不作为像素对照图。
+
+## 12. 已落地实现 V1（外部贴图皮肤管线）
+
+> 实现细节、换肤步骤与已知缺口见 [UI_SKIN_PIPELINE.md](UI_SKIN_PIPELINE.md)。
+
+- 控件与图标来自两份母版：`docs/design/ui_controls_v1/`（30 件无字控件）、`docs/design/ui_icons_v1/`（30 枚图标）；由 `pwsh ./tools/build_ui_skin.ps1` 生成 `assets/ui/skin/sn_v1/`（九宫格纹理、128px 图标、固定配件、`skin.json`）与 `assets/ui/theme/steam_navigator_theme.tres`（全部控件状态 = StyleBoxTexture）。
+- 程序化 UI 统一走 `framework/ui/skin/sn_skin.gd`（`SNSkin`）：`panel()` / `button_style()` / `style()` / `icon()` / `color()` / `icon_rect()`；业务脚本禁止新建 `StyleBoxFlat`、禁止硬编码 skin 路径或十六进制业务色。
+- 换肤：同名同尺寸覆盖 `assets/ui/skin/sn_v1/nine_slice|icons/` 即整体换肤（无需改代码）；改画布尺寸或九宫格边距时必须重跑生成器并 `-Check`。
+- 已实现 Theme variation：按钮 6（Primary/Secondary/Danger/Ghost/Compact/Plate）、面板 10（含 Parchment/BlueprintSheet/Canvas/Glass/Chrome/StatusBar/BlueprintPanel）、Badge 4、标签 3、进度 3；输入/复选/滚动条/页签/Tooltip/Popup 同步纹理化。
+- 尺寸预算（换肤必须复核）：TopChrome ≤130px、PortStatusBar 60px、侧牌 172×42、PageMargin 20/14/20/56；低于 38px 高的按钮用 `SNCompactButton`/`SNPlateButton`，不要套标准按钮九宫格。
+- 九宫格纹理不内嵌文字/状态色；`SNGhostButton` 全状态 content margin 必须一致，避免 hover 改变布局。
+- 保留绘制（数据/内容表现，不参与换肤）：海图海面/陆地/迷雾/航线、船厂线稿与槽位、sparkline、演出云；颜色必须来自 `SNSkin.color()` token。
+- 验收命令：`pwsh ./tools/build_ui_skin.ps1 -Check`、`& ./tools/test.ps1 -Suite ui_skin`、`pwsh ./tools/capture_ui.ps1 -AllScreens`（1440×900 + 960×540 各 26 页）。
+- V1 边界：Theme 绑定生成的皮肤目录，运行期多皮肤切换留后续；布旗（`flag_*`）尚未接入当前紧凑导航/侧牌布局；导航/船厂/行动类图标存在语义近似（缺口清单见管线文档 §6）。

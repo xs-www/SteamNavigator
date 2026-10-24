@@ -19,4 +19,11 @@
 - `mouse_filter = IGNORE`：目标条不拦截点击；位置由 Shell 负责摆放。
 - 进度 `target <= 0` 时只显示目标文案。
 
+## 皮肤与节点约束（UI 贴图层）
+- 面板用 `SNPanel` 钢框纹理；前导符号改为 skin 图标 `status_route`（16 px，
+  `SNSkin.icon_rect`，缺失贴图时回退文字符号「◈」），文字色取
+  `SNSkin.color("text.light")`，不再写颜色常量。
+- `ObjectiveLabel` 节点名、13 px 字号、进度模板与 target<=0 的文案分支不变
+  （test_story_ui 按名字读文本并断言「8/10」「还差 2」）。
+
 模块索引：[framework/ui](../README.md)

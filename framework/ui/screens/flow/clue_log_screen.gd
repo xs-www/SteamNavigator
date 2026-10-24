@@ -15,19 +15,22 @@ extends VBoxContainer
 ## - 整张卡片是一个按钮：`clue_selected(clue_id)` 由 Shell 转成「回海图并选中」。
 ## - 过期历史只读 `vm.expired`，灰显并标注 `ui.clue.expired`；不参与 active 计数。
 ## - 空态（active + expired 都为空）显示 `ui.clue.list.empty` 引导文案。
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 外观来自 `assets/ui/skin/sn_v1/` 纹理化 Theme：外层列表用 `SNPanel`，
+##   active 卡片改为 `SNParchmentPanel` 承托、内部 `SNGhostButton` 只渲染文字并
+##   由 Theme 表达 hover/pressed；不再手写三态 `StyleBoxFlat`。
+## - 纸面正文/次要文字取 `SNSkin.color("ink.primary")` / `"paper.ink_muted"`；
+##   深底标题/空态取 `text.light` / `text.muted`。
+## - 节点名 `ClueCard_<id>`（Button 文本即卡片内容）、`ExpiredClue_<id>`、
+##   `ClueList`、`CloseButton` 与线索列表 `520` 高滚动区不变，test_sea_chart
+##   按名字与卡片文本断言。
 ## @end-static-doc
 
 ## 关闭列表页（Shell 回到海图）。
 signal close_requested
 ## 选中一条线索（Shell 回海图并绑定该线索）。
 signal clue_selected(clue_id: String)
-
-const TEXT := Color("ece1c5")
-const MUTED := Color("9fafa7")
-const BRASS := Color("e1c487")
-const TEAL := Color("76aaa7")
-const GREEN := Color("76aa8c")
-const RED := Color("c36b53")
 
 var _tr: Callable = Callable()
 
@@ -49,16 +52,17 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 		]
 	))
 	if not bool(view_model.get("has_run", false)):
-		add_child(_label(_loc("ui.sea_chart.no_data", "没有可用的世界数据。"), 14, MUTED))
+		add_child(_label(_loc("ui.sea_chart.no_data", "没有可用的世界数据。"), 14, SNSkin.color("text.muted")))
 		add_child(_close_button())
 		return
 	var clues: Array = view_model.get("clues", [])
 	var expired: Array = view_model.get("expired", [])
 	if clues.is_empty() and expired.is_empty():
-		add_child(_label(_loc("ui.clue.list.empty", "目前没有线索。"), 14, MUTED))
+		add_child(_label(_loc("ui.clue.list.empty", "目前没有线索。"), 14, SNSkin.color("text.muted")))
 		add_child(_close_button())
 		return
 	var panel := PanelContainer.new()
+	panel.theme_type_variation = &"SNPanel"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(panel)
@@ -84,7 +88,7 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 		var separator := HSeparator.new()
 		list.add_child(separator)
 		var history_header := _label(
-			_loc("ui.clue.list.expired_section", "已过期"), 14, MUTED
+			_loc("ui.clue.list.expired_section", "已过期"), 14, SNSkin.color("text.muted")
 		)
 		list.add_child(history_header)
 		for clue in expired:
@@ -94,7 +98,10 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 
 
 ## 一条 active 线索卡片：类型 · 来源 / 等级 / 分级披露内容 / 剩余时效。
-func _clue_card(clue: Dictionary) -> Button:
+## 卡片表面是 `SNParchmentPanel` 纸面，`ClueCard_<id>` 按钮本身用 Ghost 变体只
+## 渲染文字（normal 为透明），hover / pressed 的视觉由 Theme 表达；点击仍由这个
+## Button 的 `pressed` 发出，测试按按钮名与 `text` 断言。
+func _clue_card(clue: Dictionary) -> Control:
 	var type := String(clue.get("type", "port_location"))
 	var level := int(clue.get("level", 1))
 	var source_key := String(clue.get("source_key", ""))
@@ -109,34 +116,29 @@ func _clue_card(clue: Dictionary) -> Button:
 		_append_goods_lines(lines, clue, level)
 	else:
 		_append_port_lines(lines, clue, level)
+	var card := PanelContainer.new()
+	card.name = "ClueCardPanel_%s" % String(clue.get("id", "")).replace(":", "_")
+	card.theme_type_variation = &"SNParchmentPanel"
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var button := Button.new()
 	button.name = "ClueCard_%s" % String(clue.get("id", "")).replace(":", "_")
 	button.text = "\n".join(PackedStringArray(lines))
+	button.theme_type_variation = &"SNGhostButton"
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.custom_minimum_size = Vector2(0, 88)
-	button.add_theme_color_override("font_color", TEXT)
-	button.add_theme_stylebox_override("normal", _card_style(Color(0.085, 0.26, 0.28, 0.95)))
-	button.add_theme_stylebox_override("hover", _card_style(Color(0.11, 0.32, 0.34, 0.98)))
-	button.add_theme_stylebox_override("pressed", _card_style(Color(0.065, 0.21, 0.23, 0.98)))
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# 纸面是浅底：正文与 hover / pressed 都保持深墨色，避免变体默认的浅色文字。
+	var ink := SNSkin.color("ink.primary")
+	button.add_theme_color_override("font_color", ink)
+	button.add_theme_color_override("font_hover_color", ink)
+	button.add_theme_color_override("font_pressed_color", ink)
+	button.add_theme_color_override("font_focus_color", ink)
 	var clue_id := String(clue.get("id", ""))
 	button.set_meta("clue_id", clue_id)
 	button.pressed.connect(func() -> void: clue_selected.emit(clue_id))
-	return button
-
-
-## 线索卡片底：深青面板 + 细黄铜边，与海图侧栏 / 港口卡片同一套观感。
-func _card_style(background: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = Color(0.88, 0.77, 0.53, 0.7)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 14.0
-	style.content_margin_right = 14.0
-	style.content_margin_top = 10.0
-	style.content_margin_bottom = 10.0
-	return style
+	card.add_child(button)
+	return card
 
 
 func _append_port_lines(lines: Array[String], clue: Dictionary, level: int) -> void:
@@ -205,7 +207,7 @@ func _expired_row(clue: Dictionary) -> Label:
 	if not port_key.is_empty():
 		parts.append(_loc(port_key, port_key))
 	parts.append(_loc("ui.clue.expired", "已过期"))
-	var row := _label(" · ".join(PackedStringArray(parts)), 12, MUTED)
+	var row := _label(" · ".join(PackedStringArray(parts)), 12, SNSkin.color("text.muted"))
 	row.name = "ExpiredClue_%s" % String(clue.get("id", "")).replace(":", "_")
 	return row
 

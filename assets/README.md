@@ -23,8 +23,10 @@
 ## 当前生产资产
 
 - `assets/ui/banners/main_menu_harbor.png` — 主菜单概念背景
-- `assets/ui/tokens.json` — UI 设计 token
+- `assets/ui/skin/sn_v1/` — UI 外部贴图皮肤包（九宫格纹理/图标/配件 + `skin.json`，由 `tools/build_ui_skin.ps1` 生成）
+- `assets/ui/theme/steam_navigator_theme.tres` — 纹理化 Theme（由 skin.json 生成）
+- `assets/ui/tokens.json` — 旧原型 token 快照（运行期数值来源已改为 `assets/ui/skin/sn_v1/skin.json`）
 - `assets/audio/sfx/economy/pickup_gold_00.wav` — 购买/拾取金币音效
 - `dev_mods/core/assets/ports/iron_harbor_banner.png` — 铁港横幅
 
-详细来源与映射见 [docs/design/ASSET_MAP.md](../docs/design/ASSET_MAP.md)。
+详细来源与映射见 [docs/design/ASSET_MAP.md](../docs/design/ASSET_MAP.md)；UI 换肤流程见 [docs/design/UI_SKIN_PIPELINE.md](../docs/design/UI_SKIN_PIPELINE.md)。

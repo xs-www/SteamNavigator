@@ -2,7 +2,6 @@
 
 > 作用：委托页面场景：按可接/进行中分组渲染主线与普通委托卡，并发出接取或规划出航意图。
 
-- 关键依赖：`SNBadge`、`SNSectionHeader`、`steam_navigator_theme.tres`
 - 类型：GDScript 源文件
 
 ## 关键符号
@@ -10,20 +9,23 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ContractsScreen` | L1 |
-| `command_requested (signal)` | L8 |
-| `navigation_requested (signal)` | L9 |
-| `COLOR_TEXT` | L11 |
-| `COLOR_MUTED` | L12 |
-| `COLOR_BRASS` | L13 |
-| `COLOR_TEAL` | L14 |
-| `COLOR_RED` | L15 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L20 |
+| `command_requested (signal)` | L22 |
+| `navigation_requested (signal)` | L23 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L29 |
 
-## 契约与约束
+Contract board presentation screen.
 
-- bind(view_model, translate) 接收 Shell 已补齐 destination_reachable、unlock_names、completed_names 的展示模型，不自行查询航行或定义注册表。
-- 接取操作发出 contract.accept；规划操作发出 navigation_requested(voyage, destination)，由 Shell 保存目的港并切页。
-- 卡片固定显示主线/普通、风险、目的地、剩余期限、载重、预计航程、说明、报酬与声誉；不足 24 小时使用危险色。
-- 非直达目的港禁用规划按钮并显示中转提示；普通委托持有上限与主线完成状态来自 ViewModel。
+Reachability and definition names are composed by the shell. This scene only
+renders the board and emits command/navigation intent.
+
+## 外观来源（外部贴图 + SNSkin）
+- 委托卡是公告板上的纸面：Theme 变体 `SNParchmentPanel`；卡内正文一律改用 ink
+  token（`ink.primary` / `paper.ink_muted` / `brass.shadow`），危险期限仍用
+  `state.danger`，保证纸面可读性。任务追踪 / 持有上限 / 已完成面板保持钢制面板。
+- 「接受」按钮用 `SNPrimaryButton` + `Button.icon = SNSkin.icon("action_confirm")`
+  （`icon_max_width` 16）；按钮 `text` 不变，测试仍按文字查找。
+- 其余文字颜色取 `SNSkin.color(token)`；无内联十六进制色与 StyleBoxFlat。
+- 尺寸约束：卡片两列网格 16 px 间距、标题最多 2 行、`_button` 高度 38、
+  所有节点结构与信号（contract.accept / sea_chart 导航）不变。
 
 模块索引：[framework/ui](../../README.md)

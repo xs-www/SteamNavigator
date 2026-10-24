@@ -19,17 +19,22 @@ extends Control
 ## - 不可行时「启航」禁用、blockers 逐条列出被翻译后的文案；面板不自行判断可行性。
 ## - 弹窗打开时遮罩吃掉点击（`mouse_filter = STOP`），避免误触下层海图。
 ## - 4.3.5 连续消耗只改页面读数与结算，不改变本弹窗的数据契约。
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 面板底层用 Theme 变体 `SNPanel`（黄铜钢框 + 凹槽承托），选钢而不是羊皮纸是因为
+##   弹窗叠在海图上、正文含风险/阻断色；深底 + text.light/text.muted 的对比度更稳。
+## - 遮罩色取 `SNSkin.color("bg.abyss")` 再降 alpha；正文/风险色全部取
+##   `SNSkin.color(token)`（text.light / text.muted / brass.highlight / state.danger /
+##   state.success），本文件无 `StyleBoxFlat`、无十六进制色。
+## - 按钮：取消 `SNGhostButton`、启航 `SNPrimaryButton`；节点名
+##   `ConfirmShade` / `ConfirmPanel` / `CancelButton` / `ConfirmButton` 与
+##   `PANEL_WIDTH = 520` 保持不变。
 ## @end-static-doc
 
 signal confirmed(strategy_id: String)
 signal cancelled
 signal strategy_changed(strategy_id: String)
 
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_RED := Color("c36b53")
-const COLOR_GREEN := Color("76aa8c")
 const PANEL_WIDTH := 520.0
 
 var _data: Dictionary = {}
@@ -68,7 +73,9 @@ func _rebuild() -> void:
 	var shade := ColorRect.new()
 	shade.name = "ConfirmShade"
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.color = Color(0.01, 0.04, 0.05, 0.62)
+	var shade_color := SNSkin.color("bg.abyss")
+	shade_color.a = 0.62
+	shade.color = shade_color
 	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(shade)
 
@@ -80,7 +87,7 @@ func _rebuild() -> void:
 	var panel := PanelContainer.new()
 	panel.name = "ConfirmPanel"
 	panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
-	panel.add_theme_stylebox_override("panel", _panel_style())
+	panel.theme_type_variation = &"SNPanel"
 	center.add_child(panel)
 
 	var box := VBoxContainer.new()
@@ -90,13 +97,13 @@ func _rebuild() -> void:
 	var title_fallback := "确认出航" if kind == "voyage" else "循线索出航"
 	box.add_child(_label(_loc(
 		"ui.confirm.title.%s" % kind, title_fallback
-	), 20, COLOR_BRASS))
+	), 20, SNSkin.color("brass.highlight")))
 	var current := String(_data.get("current_port_name", ""))
 	var target := String(_data.get("target_name", ""))
 	if kind == "explore":
-		box.add_child(_label(_loc("ui.confirm.clue", "线索：%s") % target, 14, COLOR_TEXT))
+		box.add_child(_label(_loc("ui.confirm.clue", "线索：%s") % target, 14, SNSkin.color("text.light")))
 	elif not current.is_empty() and not target.is_empty():
-		box.add_child(_label(_loc("ui.confirm.route", "航线：%s → %s") % [current, target], 14, COLOR_TEXT))
+		box.add_child(_label(_loc("ui.confirm.route", "航线：%s → %s") % [current, target], 14, SNSkin.color("text.light")))
 	box.add_child(HSeparator.new())
 
 	var preview: Dictionary = _data.get("preview", {}) if _data.get("preview", null) is Dictionary else {}
@@ -104,7 +111,7 @@ func _rebuild() -> void:
 	_add_strategy_picker(box)
 	_add_blockers(box, preview)
 	box.add_child(HSeparator.new())
-	box.add_child(_label(_loc("ui.confirm.hint", "出航后不能更改策略；遇到事件时只能从本次抽样出的选项中选择。"), 11, COLOR_MUTED))
+	box.add_child(_label(_loc("ui.confirm.hint", "出航后不能更改策略；遇到事件时只能从本次抽样出的选项中选择。"), 11, SNSkin.color("text.muted")))
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 10)
@@ -120,6 +127,7 @@ func _rebuild() -> void:
 	var confirm := Button.new()
 	confirm.name = "ConfirmButton"
 	confirm.text = _loc("ui.button.start_voyage", "启航")
+	confirm.theme_type_variation = &"SNPrimaryButton"
 	confirm.disabled = not bool(preview.get("feasible", true))
 	confirm.pressed.connect(func() -> void: confirmed.emit(get_strategy_id()))
 	actions.add_child(confirm)
@@ -153,7 +161,7 @@ func _add_estimate_rows(box: VBoxContainer, preview: Dictionary, kind: String) -
 			else _loc("risk." + VoyageCalculator.risk_label(risk_level), "")
 		box.add_child(_kv(_loc("ui.label.risk", "风险"), band_text, _risk_color(risk_band, risk_level)))
 	if preview.get("on_time", true) == false:
-		box.add_child(_label(_loc("ui.confirm.on_time", "按本航程预计会迟到。"), 12, COLOR_RED))
+		box.add_child(_label(_loc("ui.confirm.on_time", "按本航程预计会迟到。"), 12, SNSkin.color("state.danger")))
 
 
 func _add_strategy_picker(box: VBoxContainer) -> void:
@@ -161,7 +169,7 @@ func _add_strategy_picker(box: VBoxContainer) -> void:
 		return
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	var label := _label(_loc("ui.confirm.strategy", "锅炉策略"), 13, COLOR_MUTED)
+	var label := _label(_loc("ui.confirm.strategy", "锅炉策略"), 13, SNSkin.color("text.muted"))
 	label.custom_minimum_size = Vector2(110, 0)
 	row.add_child(label)
 	_strategy_picker = OptionButton.new()
@@ -185,22 +193,23 @@ func _add_blockers(box: VBoxContainer, preview: Dictionary) -> void:
 	var blockers: Array = preview.get("blockers", [])
 	if blockers.is_empty():
 		return
-	box.add_child(_label(_loc("ui.confirm.blockers", "无法出航："), 12, COLOR_RED))
+	box.add_child(_label(_loc("ui.confirm.blockers", "无法出航："), 12, SNSkin.color("state.danger")))
 	for blocker in blockers:
 		if not (blocker is Dictionary):
 			continue
 		var message_key := String((blocker as Dictionary).get("message_key", ""))
 		if message_key.is_empty():
 			continue
-		box.add_child(_label("· " + _loc(message_key, String((blocker as Dictionary).get("code", ""))), 11, COLOR_RED))
+		box.add_child(_label("· " + _loc(message_key, String((blocker as Dictionary).get("code", ""))), 11, SNSkin.color("state.danger")))
 
 
-func _kv(name: String, value: String, color: Color = COLOR_TEXT) -> Control:
+func _kv(name: String, value: String, color: Variant = null) -> Control:
+	var value_color: Color = SNSkin.color("text.light") if color == null else color
 	var row := HBoxContainer.new()
-	var key := _label(name, 13, COLOR_MUTED)
+	var key := _label(name, 13, SNSkin.color("text.muted"))
 	key.custom_minimum_size = Vector2(130, 0)
 	row.add_child(key)
-	row.add_child(_label(value, 13, color))
+	row.add_child(_label(value, 13, value_color))
 	return row
 
 
@@ -216,10 +225,10 @@ func _loc(key: String, fallback: String) -> String:
 
 func _risk_color(band: String, score: float) -> Color:
 	match band:
-		"low": return COLOR_GREEN
-		"medium": return COLOR_BRASS
-		"high": return COLOR_RED
-		_: return COLOR_MUTED if score < 0.0 else COLOR_TEXT
+		"low": return SNSkin.color("state.success")
+		"medium": return SNSkin.color("brass.highlight")
+		"high": return SNSkin.color("state.danger")
+		_: return SNSkin.color("text.muted") if score < 0.0 else SNSkin.color("text.light")
 
 
 ## `36` / `36.5` — one decimal only when it adds information.
@@ -246,13 +255,3 @@ func _label(text: String, size: int, color: Color) -> Label:
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", color)
 	return label
-
-
-func _panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.055, 0.13, 0.145, 0.98)
-	style.border_color = Color(0.35, 0.55, 0.52, 0.55)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(20)
-	return style

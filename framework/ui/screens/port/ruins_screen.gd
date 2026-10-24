@@ -10,14 +10,18 @@ extends VBoxContainer
 ##   `expedition.view` 基础上补 `available_ruins`。
 ## - 未开始：列出遗迹与开始按钮；进行中：房间进度、进入/选项/撤退按钮、日志。
 ## - 所有按钮只 emit `command_requested(command, params)`。
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 面板用 Theme 变体 `SNInsetPanel`（钢制凹槽）；状态徽标改用 `SNBadge`
+##   （13 px 中性纹理铭牌）。开始 / 进入按钮挂
+##   `Button.icon = SNSkin.icon("status_route")` + `icon_max_width` 16（远征路线语义），
+##   其余操作仍是 30 px 高的 `SNGhostButton`；按钮 `text` 不变。
+## - 文字色取 `SNSkin.color(token)`（text.light / text.muted / brass.highlight）；
+##   本文件无内联十六进制色与 StyleBoxFlat。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
 
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_RED := Color("c36b53")
 
 var _tr: Callable
 var _model: Dictionary = {}
@@ -38,14 +42,14 @@ func _rebuild() -> void:
 		var panel := _panel()
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 8)
-		box.add_child(_label(_t("ui.ruins.select", "选择遗迹开始远征"), 16, COLOR_BRASS))
+		box.add_child(_label(_t("ui.ruins.select", "选择遗迹开始远征"), 16, SNSkin.color("brass.highlight")))
 		var row := HFlowContainer.new()
 		row.add_theme_constant_override("h_separation", 8)
 		row.add_theme_constant_override("v_separation", 8)
 		for ruin in _model.get("available_ruins", []):
 			if ruin is Dictionary:
 				row.add_child(_action(_name((ruin as Dictionary).get("name_key", "")),
-					&"expedition.start", {"ruin_id": String((ruin as Dictionary).get("id", ""))}))
+					&"expedition.start", {"ruin_id": String((ruin as Dictionary).get("id", ""))}, "status_route"))
 		box.add_child(row)
 		panel.add_child(box)
 		add_child(panel)
@@ -56,7 +60,7 @@ func _rebuild() -> void:
 	if phase == "room":
 		var row := HFlowContainer.new()
 		row.add_theme_constant_override("h_separation", 8)
-		row.add_child(_action(_t("ui.ruins.enter", "进入房间"), &"expedition.enter", {}))
+		row.add_child(_action(_t("ui.ruins.enter", "进入房间"), &"expedition.enter", {}, "status_route"))
 		row.add_child(_action(_t("ui.ruins.retreat", "撤退"), &"expedition.retreat", {}))
 		add_child(row)
 	elif phase == "event":
@@ -69,12 +73,12 @@ func _rebuild() -> void:
 func _heading() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	box.add_child(_label(_t("ui.ruins.title", "遗迹远征"), 24, COLOR_BRASS))
+	box.add_child(_label(_t("ui.ruins.title", "遗迹远征"), 24, SNSkin.color("brass.highlight")))
 	var ruin: Dictionary = _model.get("ruin", {})
 	var subtitle := _t("ui.ruins.subtitle", "房间、危险与遗物")
 	if not ruin.is_empty():
 		subtitle = _name(ruin.get("name_key", ""))
-	box.add_child(_label(subtitle, 14, COLOR_MUTED))
+	box.add_child(_label(subtitle, 14, SNSkin.color("text.muted")))
 	return box
 
 
@@ -98,7 +102,7 @@ func _event_card() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	var event: Dictionary = _model.get("event", {})
-	box.add_child(_label(_t(String(event.get("text_key", "")), String(event.get("text_key", "事件"))), 15, COLOR_TEXT))
+	box.add_child(_label(_t(String(event.get("text_key", "")), String(event.get("text_key", "事件"))), 15, SNSkin.color("text.light")))
 	for index in _model.get("event_options", []).size():
 		var option: Dictionary = _model.get("event_options", [])[index]
 		box.add_child(_action(_name(option.get("text_key", "")), &"expedition.choose", {"option_index": index}))
@@ -109,20 +113,20 @@ func _event_card() -> Control:
 func _log() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	box.add_child(_label(_t("ui.ruins.log", "远征记录"), 16, COLOR_BRASS))
+	box.add_child(_label(_t("ui.ruins.log", "远征记录"), 16, SNSkin.color("brass.highlight")))
 	var log: Array = _model.get("log", [])
 	if log.is_empty():
-		box.add_child(_label("—", 13, COLOR_MUTED))
+		box.add_child(_label("—", 13, SNSkin.color("text.muted")))
 	for entry in log:
 		if entry is Dictionary:
-			box.add_child(_label(_log_line(entry), 13, COLOR_MUTED))
+			box.add_child(_label(_log_line(entry), 13, SNSkin.color("text.muted")))
 	return box
 
 
 func _relics() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	box.add_child(_label("%s %d" % [_t("ui.ruins.relics", "遗物收藏"), _model.get("relics", []).size()], 16, COLOR_BRASS))
+	box.add_child(_label("%s %d" % [_t("ui.ruins.relics", "遗物收藏"), _model.get("relics", []).size()], 16, SNSkin.color("brass.highlight")))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 8)
 	for relic in _model.get("relic_names", []):
@@ -146,12 +150,17 @@ func _log_line(entry: Dictionary) -> String:
 	return event
 
 
-func _action(text: String, command: StringName, params: Dictionary) -> Button:
+func _action(text: String, command: StringName, params: Dictionary, icon_id: String = "") -> Button:
 	var button := Button.new()
 	button.text = text
 	button.theme_type_variation = &"SNGhostButton"
 	button.custom_minimum_size = Vector2(0, 30)
 	button.add_theme_font_size_override("font_size", 13)
+	if not icon_id.is_empty():
+		var texture := SNSkin.icon(icon_id)
+		if texture != null:
+			button.icon = texture
+			button.add_theme_constant_override("icon_max_width", 16)
 	button.pressed.connect(func() -> void: command_requested.emit(command, params))
 	return button
 
@@ -171,11 +180,13 @@ func _label(text: String, size: int, color: Color) -> Label:
 	return label
 
 
+## Skin-badge, not a hand-rolled PanelContainer + Label; text stays a Label.
 func _badge(text: String) -> Control:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"SNInsetPanel"
-	panel.add_child(_label(text, 13, COLOR_TEXT))
-	return panel
+	var badge := SNBadge.new()
+	badge.text = text
+	badge.tone = SNBadge.Tone.NEUTRAL
+	badge.add_theme_font_size_override("font_size", 13)
+	return badge
 
 
 func _name(key: Variant) -> String:

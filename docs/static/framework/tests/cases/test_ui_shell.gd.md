@@ -31,23 +31,23 @@
 | `STEADY_BUILD` | L30 |
 | `LITERAL_EXPECTED_NOTICE_KEYS` | L36 |
 | `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L170 |
-| `test_damaged_module_is_visible_in_the_shell() -> void` | L206 |
-| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L225 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L294 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L340 |
-| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L391 |
-| `test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void` | L422 |
-| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L470 |
-| `test_base_page_claims_and_builds_from_the_ui() -> void` | L502 |
-| `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L534 |
-| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L552 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L594 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L652 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L685 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L893 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L913 |
-| `test_sea_chart_entry_integration() -> void` | L993 |
-| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1086 |
+| `test_damaged_module_is_visible_in_the_shell() -> void` | L211 |
+| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L230 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L299 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L345 |
+| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L396 |
+| `test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void` | L427 |
+| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L475 |
+| `test_base_page_claims_and_builds_from_the_ui() -> void` | L507 |
+| `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L539 |
+| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L557 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L599 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L657 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L690 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L898 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L918 |
+| `test_sea_chart_entry_integration() -> void` | L998 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1091 |
 
 ## 契约与约束
 

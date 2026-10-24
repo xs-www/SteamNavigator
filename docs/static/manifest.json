@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-23T12:50:28.864Z",
-  "commit": "97a6dc5",
+  "generated_at": "2026-10-24T04:27:32.174Z",
+  "commit": "e285d36",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1143,
-    "documented": 450,
-    "grouped": 693
+    "sources": 1150,
+    "documented": 456,
+    "grouped": 694
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "60ee1309595eff08eabaf07e324aa6f01e09625b3176f198562801619081be1d",
+      "sha256": "01c7e364fae42bcd4058f06f42932195a691abfadfa5006bbad6b2eb9a6525c1",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -392,7 +392,7 @@
     },
     {
       "source": "assets/ui/theme/steam_navigator_theme.tres",
-      "sha256": "7c23c134c1c4d9cb9f0c3b593e54a40830433f264011b437929ca4c3016d920e",
+      "sha256": "8a0b1a5673979cad1702cfa0a3324b77be630d7a792c827da8da0bbec21f602e",
       "doc": "docs/static/assets/ui/theme/steam_navigator_theme.tres.md",
       "status": "documented"
     },
@@ -4580,9 +4580,16 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "8eabbb63336737fdf24336b2c08d7d14ae77f845b6e50bb79517d70c343397b0",
+      "sha256": "467656ba238181021df48218a761b3e2b7136e0e05c726c23d9741e2e97accc5",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
+    },
+    {
+      "source": "framework/tests/cases/test_ui_skin.gd",
+      "sha256": "3e9bdc9dbd888b43f3ee954537bf3b370a080b142d3ed1cdb3463d63e78643b9",
+      "doc": "docs/static/framework/tests/README.md",
+      "status": "grouped",
+      "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/tests/cases/test_ui_views.gd",
@@ -4666,7 +4673,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "990d3c7be0bee6e4f85acb0f378108cb3663f72feaa85dee3de440235db5cfa9",
+      "sha256": "d8229f1e2d7ed516012b0173d52f6a27eea9d50280edab7ace1dc3cae9a6e8fd",
       "doc": "docs/static/framework/tests/test_runner.gd.md",
       "status": "documented"
     },
@@ -4679,7 +4686,7 @@
     },
     {
       "source": "framework/ui/components/sn_badge.gd",
-      "sha256": "e165154abc2f276d7dd21a09e409798ca7c5692589e547541ebe535d10d2d7f8",
+      "sha256": "c11de8daa071d89c6b1ee495c5a63505c6607208125d23bd3a1fe0f5fb872cce",
       "doc": "docs/static/framework/ui/components/sn_badge.gd.md",
       "status": "documented"
     },
@@ -4692,7 +4699,7 @@
     },
     {
       "source": "framework/ui/components/sn_button.gd",
-      "sha256": "f05d506409caacd67505e7892112a1190bc13f8a30bd9af7211db22e7636b63e",
+      "sha256": "2b1a215f949946d92db01ccdc5dde254563db06c9e2622a7e83b97f22d356d89",
       "doc": "docs/static/framework/ui/components/sn_button.gd.md",
       "status": "documented"
     },
@@ -4711,19 +4718,31 @@
     },
     {
       "source": "framework/ui/components/sn_harbor_sign.gd",
-      "sha256": "2b557707a5437d234c13fd8f351e06367bac16e424e128eabe4a5265e9cb71ad",
+      "sha256": "261fac6b27420fceb11ceab20a7b03bf638b1c546175e05b801e3504f1f519df",
       "doc": "docs/static/framework/ui/components/sn_harbor_sign.gd.md",
       "status": "documented"
     },
     {
+      "source": "framework/ui/components/sn_icon.gd",
+      "sha256": "7c4e46848886088c087e5d6a7c33543ce53203878a9c70f2058da7326a9e099c",
+      "doc": "docs/static/framework/ui/components/sn_icon.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/ui/components/sn_intel_table.gd",
-      "sha256": "f583e04c453028c0851901c7c58c4bdd7ea42d2c1a2ea19756fa26d36b9b6134",
+      "sha256": "2d02d45537b7d877521a8bf6bef5e6d6688e74ac6e04c2a31019dfb3186383e0",
       "doc": "docs/static/framework/ui/components/sn_intel_table.gd.md",
       "status": "documented"
     },
     {
+      "source": "framework/ui/components/sn_nav_button.gd",
+      "sha256": "bf9b6ca557142edbb12fda10c0954011d9f30c65946b69e58249b76f4c2bd78d",
+      "doc": "docs/static/framework/ui/components/sn_nav_button.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/ui/components/sn_panel.gd",
-      "sha256": "6e4be3d43f7483175cde2ac8d1b873b16b7d2e2454ea620d3fc6e6087551b5cf",
+      "sha256": "93e96b0fc85c36013fd488ece0da9c0c19dc9a563047108b51efb348565e77fd",
       "doc": "docs/static/framework/ui/components/sn_panel.gd.md",
       "status": "documented"
     },
@@ -4736,7 +4755,7 @@
     },
     {
       "source": "framework/ui/components/sn_part_row.gd",
-      "sha256": "08be4a7ba8e42907289c0c5cf655e0ff360dfc26f9a53aa6457e67c19acff837",
+      "sha256": "a7eb15ebe5dc84e6ee4799f2d95ef03ff1f87543f58471877c13c788c7617229",
       "doc": "docs/static/framework/ui/components/sn_part_row.gd.md",
       "status": "documented"
     },
@@ -4749,7 +4768,7 @@
     },
     {
       "source": "framework/ui/components/sn_resource_meter.gd",
-      "sha256": "01ed7e6bbb6f0f051088aa61c9ff4337362ccd7e52d6f3fe1b3a005125730b63",
+      "sha256": "97e7b89da6397bc2fc3c431729a4c11ba56923fadd19524a866a62da3b8cd2bb",
       "doc": "docs/static/framework/ui/components/sn_resource_meter.gd.md",
       "status": "documented"
     },
@@ -4762,7 +4781,7 @@
     },
     {
       "source": "framework/ui/components/sn_sea_chart_panel.gd",
-      "sha256": "ef9f4f3275804bc9b95be43a5a61f3f4649c18084b75a8b3443fc3a0642fc56e",
+      "sha256": "d5e754d80181a2e02a0fa8944cbca1c6ec49ac5f9d57610c3ece2cfab8d07f61",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_panel.gd.md",
       "status": "documented"
     },
@@ -4774,7 +4793,7 @@
     },
     {
       "source": "framework/ui/components/sn_section_header.gd",
-      "sha256": "3e5912114b8c34ccfe995494dcd8a14e274fc0c4ee3a3060b9f1ab8d6a14f818",
+      "sha256": "64be041680b0e1e04e5d31166080cd1b5ae4e71e7d0b781c505a78284b2df51d",
       "doc": "docs/static/framework/ui/components/sn_section_header.gd.md",
       "status": "documented"
     },
@@ -4793,7 +4812,7 @@
     },
     {
       "source": "framework/ui/components/sn_ship_view.gd",
-      "sha256": "80016000996f07b916f3e974ffc2ec65205a3df2c3a0e53204568a868efa3824",
+      "sha256": "cbe99ccff434eec7f15a12f20111e189b4a4c25e9dce9ae7d169d6fccc24cc83",
       "doc": "docs/static/framework/ui/components/sn_ship_view.gd.md",
       "status": "documented"
     },
@@ -4806,7 +4825,7 @@
     },
     {
       "source": "framework/ui/components/sn_slot_target.gd",
-      "sha256": "5243290f12617bfdc12e64c8ed0e0c1435edc65035c7ee3a3585ddc737bbd824",
+      "sha256": "5640f8034eb328ff1d479da71a6bf68ec8ee6b5426f3419c68c27552566257d7",
       "doc": "docs/static/framework/ui/components/sn_slot_target.gd.md",
       "status": "documented"
     },
@@ -4819,7 +4838,7 @@
     },
     {
       "source": "framework/ui/components/sn_sparkline.gd",
-      "sha256": "3f5b50fee4c02e92c23a09a21cac85bfcc45043b6fd2d804235cab07a270944f",
+      "sha256": "f56454fd64eade749b67cae6f4846f63a01cbee36c77cf1f21b3e2b2d1a542f8",
       "doc": "docs/static/framework/ui/components/sn_sparkline.gd.md",
       "status": "documented"
     },
@@ -4838,19 +4857,19 @@
     },
     {
       "source": "framework/ui/components/sn_story_card.gd",
-      "sha256": "0edfc05b7baa17a7d94f24cca95cb29b735b1cd47ab207ad1bd6554163a03d08",
+      "sha256": "5a1a1c59f236ea4d026b46edcb94e899e37e9b4b84752e99900691888fc9a4fd",
       "doc": "docs/static/framework/ui/components/sn_story_card.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_story_objective.gd",
-      "sha256": "d8bf0b36ebff53d7f06f610a51991f08731db8131ab075f6a5b717d533af3229",
+      "sha256": "a7b67e838e4fed0712730a437ff822a3349f10fcee584d90466f02d829b25259",
       "doc": "docs/static/framework/ui/components/sn_story_objective.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_supply_card.gd",
-      "sha256": "d027a29d7878f0013d3e0ed60b157d1d6598c1d43e0a34f4331c4ed0914061c3",
+      "sha256": "cd025b0b77697d1ab60813bfb221f175b9e874738fbb22ec13f7a5c861b8f242",
       "doc": "docs/static/framework/ui/components/sn_supply_card.gd.md",
       "status": "documented"
     },
@@ -4863,19 +4882,19 @@
     },
     {
       "source": "framework/ui/components/sn_task_tracker.gd",
-      "sha256": "d4911d80963d9c86d07d44787d63fe09f176e4d49cdb52787dd99126e06aa096",
+      "sha256": "640b029c89ab2fb222f76987116f7fbf06257adafcdf396a0e9bb3812c15814c",
       "doc": "docs/static/framework/ui/components/sn_task_tracker.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_voyage_confirm.gd",
-      "sha256": "a13e2283a7dc52dcfe5702987cbe5c4449622b456f03dbd03e48ee13451cc68d",
+      "sha256": "c627d466a90b715fa4328a1cf75ff1a86d78b71481f6d7e94df6bbcf55830435",
       "doc": "docs/static/framework/ui/components/sn_voyage_confirm.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/screens/flow/at_sea_screen.gd",
-      "sha256": "fdd051d8e366744bcbad529adac923028859600f042972f97eb96cb262bd68d3",
+      "sha256": "31aa556bf903be283e84308379fa8532598c274b702913947cef8fc10e24e5d0",
       "doc": "docs/static/framework/ui/screens/flow/at_sea_screen.gd.md",
       "status": "documented"
     },
@@ -4888,7 +4907,7 @@
     },
     {
       "source": "framework/ui/screens/flow/clue_log_screen.gd",
-      "sha256": "1aae97138d419b1775fb67f02865558eddfb69e3a30d8f6d56e84b0375eb51ef",
+      "sha256": "b5a3c3a7866276fefdac821a0e957d348421dd29e2bd51be61ca5ac13d659dfe",
       "doc": "docs/static/framework/ui/screens/flow/clue_log_screen.gd.md",
       "status": "documented"
     },
@@ -4901,7 +4920,7 @@
     },
     {
       "source": "framework/ui/screens/flow/event_screen.gd",
-      "sha256": "ce51118719d358456813ba9133a69f2a098c868cb79a9adb70c2f39350016299",
+      "sha256": "899265d0868e7d5e978108aef791071507f6f6c62fe5de2a332313e2108011b3",
       "doc": "docs/static/framework/ui/screens/flow/event_screen.gd.md",
       "status": "documented"
     },
@@ -4914,7 +4933,7 @@
     },
     {
       "source": "framework/ui/screens/flow/port_memory_screen.gd",
-      "sha256": "25a01e53d2944d67f4945b1354e7f2c57c461ab7263eb5899116857b7a62d29e",
+      "sha256": "c0238b1fd1e8ee84541aafe49f1d30427e111b36f71ccf18831e90330a5ca2a8",
       "doc": "docs/static/framework/ui/screens/flow/port_memory_screen.gd.md",
       "status": "documented"
     },
@@ -4927,7 +4946,7 @@
     },
     {
       "source": "framework/ui/screens/flow/sea_chart_screen.gd",
-      "sha256": "1619bcda5d1e62e51cd529fdd7151bc457afccbe09aac758ac09bda6330ef6c8",
+      "sha256": "45762db502adda95ca5db7b9700b6febc694af7eb82e1277782637b3cd65662c",
       "doc": "docs/static/framework/ui/screens/flow/sea_chart_screen.gd.md",
       "status": "documented"
     },
@@ -4940,7 +4959,7 @@
     },
     {
       "source": "framework/ui/screens/flow/settlement_screen.gd",
-      "sha256": "79c83f00616066525d4da3565711176302796239b6a8195fb25124faa27f7438",
+      "sha256": "9f348a8b54522b4ade53be7c3d65ebd7c6630812d5ea46b4131efb6c9422536d",
       "doc": "docs/static/framework/ui/screens/flow/settlement_screen.gd.md",
       "status": "documented"
     },
@@ -4953,7 +4972,7 @@
     },
     {
       "source": "framework/ui/screens/flow/victory_screen.gd",
-      "sha256": "7ae2606abee9ce2990b2bb920e26c84a42264322bb558d97da092fada5c18285",
+      "sha256": "927ccadbc51cdc2aadbe7d6faf026edae2e75a2457430390c37b45a0a768a870",
       "doc": "docs/static/framework/ui/screens/flow/victory_screen.gd.md",
       "status": "documented"
     },
@@ -4966,7 +4985,7 @@
     },
     {
       "source": "framework/ui/screens/menu/main_menu_screen.gd",
-      "sha256": "b274215ef19a1b08ea779fc2feff3d13aa44712e624e91171e0f081e01923a96",
+      "sha256": "d505548138b0a3ed68887768171f50b5f9795d69724772f05c07b8cbbb6923aa",
       "doc": "docs/static/framework/ui/screens/menu/main_menu_screen.gd.md",
       "status": "documented"
     },
@@ -4979,7 +4998,7 @@
     },
     {
       "source": "framework/ui/screens/menu/mods_screen.gd",
-      "sha256": "8339d4b7b4e07452c3f07ebbedbb9f5075f5ba8290f43df33035cb1f47d4650f",
+      "sha256": "632bcee77907d284312dc99217e929350e183395d6dbb478a04fefc5c3720acf",
       "doc": "docs/static/framework/ui/screens/menu/mods_screen.gd.md",
       "status": "documented"
     },
@@ -4992,7 +5011,7 @@
     },
     {
       "source": "framework/ui/screens/menu/new_game_screen.gd",
-      "sha256": "ec3924ba34207a46bfe498eb567bc40484d4d31995c3ca5edfd7dd44a2f7ec26",
+      "sha256": "5fc6c79574e7bd03ab9fec8a686197181423f5dcec38c7282da9a3fe265506a0",
       "doc": "docs/static/framework/ui/screens/menu/new_game_screen.gd.md",
       "status": "documented"
     },
@@ -5005,7 +5024,7 @@
     },
     {
       "source": "framework/ui/screens/menu/settings_screen.gd",
-      "sha256": "5bf0eaa20596267d355bd30c2e05a17ec83f445b41bc25d936c0fe5c4453b844",
+      "sha256": "ee9a5f988c20c5ef6f1d1d632566f3ed9cf71222a3f18de857b79ff7df3b9ece",
       "doc": "docs/static/framework/ui/screens/menu/settings_screen.gd.md",
       "status": "documented"
     },
@@ -5018,7 +5037,7 @@
     },
     {
       "source": "framework/ui/screens/port/auto_trade_screen.gd",
-      "sha256": "66a162675d626c1ad880b0f510844f840dddb0f0b794b9db542b75ce0cfd1cb6",
+      "sha256": "4b4527f32cda2bfd09854422ef18bccca1b9ed673def77d704125ec9b36b5c3a",
       "doc": "docs/static/framework/ui/screens/port/auto_trade_screen.gd.md",
       "status": "documented"
     },
@@ -5031,7 +5050,7 @@
     },
     {
       "source": "framework/ui/screens/port/base_screen.gd",
-      "sha256": "d1ce69363876993755ef273752584e8e8164063a80f486742ffba0db8b2b0b06",
+      "sha256": "20d8c1c1ff48144a776481bce820bd283e3d0857405266d55afffc1cdf40de39",
       "doc": "docs/static/framework/ui/screens/port/base_screen.gd.md",
       "status": "documented"
     },
@@ -5044,7 +5063,7 @@
     },
     {
       "source": "framework/ui/screens/port/contracts_screen.gd",
-      "sha256": "71bf2717c6d328e32c61d4a64a77858ae14333142aac9f079e24a1c4edb78c3b",
+      "sha256": "5ad537e4659fc2625f769d75854efa32048bd77ffb4ca17706e38c926941ec6e",
       "doc": "docs/static/framework/ui/screens/port/contracts_screen.gd.md",
       "status": "documented"
     },
@@ -5057,7 +5076,7 @@
     },
     {
       "source": "framework/ui/screens/port/market_screen.gd",
-      "sha256": "741791652a8225ac3f0f6618504f65e9c67e29a52ee04c0efdbeb9f0ca8179fd",
+      "sha256": "883c677eeca1b00338852a5ec51ac9296fd0ae1d7f202c2e41dd2ecc38fce68f",
       "doc": "docs/static/framework/ui/screens/port/market_screen.gd.md",
       "status": "documented"
     },
@@ -5070,7 +5089,7 @@
     },
     {
       "source": "framework/ui/screens/port/overview_screen.gd",
-      "sha256": "93cecbf6f9291a3d86cbd7ca25cdede8fb8c5c47f91532f17eb5c825680908cf",
+      "sha256": "1fced23a551c6bbfe22cb49faed8b43e8b2ea4f7c1213adb563992f40d6c2ca4",
       "doc": "docs/static/framework/ui/screens/port/overview_screen.gd.md",
       "status": "documented"
     },
@@ -5083,7 +5102,7 @@
     },
     {
       "source": "framework/ui/screens/port/ruins_screen.gd",
-      "sha256": "d453b22347d8811a1c2b4c64d4bc705db3c2c13c48b82cf13e52672b823a2053",
+      "sha256": "3e14a6094feed9756d99fe26b7717ce66f8b8664a7325e368599e427c3f5b5c0",
       "doc": "docs/static/framework/ui/screens/port/ruins_screen.gd.md",
       "status": "documented"
     },
@@ -5096,7 +5115,7 @@
     },
     {
       "source": "framework/ui/screens/port/shipyard_screen.gd",
-      "sha256": "e48037152a762049370cf2acf4b207e401267d901517f6d45d6619397dea3260",
+      "sha256": "bf2f0e93b32d942e1cd36e271b81b957012028d08eeb20222bd0a9faf76a6003",
       "doc": "docs/static/framework/ui/screens/port/shipyard_screen.gd.md",
       "status": "documented"
     },
@@ -5109,7 +5128,7 @@
     },
     {
       "source": "framework/ui/screens/port/supply_screen.gd",
-      "sha256": "c71843fd54a3fd02fd3f7e4f8f9a99ee07ab83d7366a9a3470842ebb1bfbcd1e",
+      "sha256": "6658e2dba91ba40875b501dfea18262641c806cbd097df5042dc0c7b2422a367",
       "doc": "docs/static/framework/ui/screens/port/supply_screen.gd.md",
       "status": "documented"
     },
@@ -5122,7 +5141,7 @@
     },
     {
       "source": "framework/ui/screens/port/tavern_screen.gd",
-      "sha256": "2cdf300ac0a0cebfffe64819a0d0621b8ae142cb1a0c7cd0ce725af8ed9a3e6d",
+      "sha256": "472ae0fc37f12cb0ee1f123ecd180fb66bcd2aeb8db9a66e870a68b9beaffbcd",
       "doc": "docs/static/framework/ui/screens/port/tavern_screen.gd.md",
       "status": "documented"
     },
@@ -5135,7 +5154,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "53f8be4e29d9782a24c14d02ce6bae83b420f968d63044636ecb353b27d04397",
+      "sha256": "0242ee872adf24912691cf1f9f8b4344d442a4e3c7d4ded2c94e19e2e02466b2",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -5148,16 +5167,22 @@
     },
     {
       "source": "framework/ui/showcase/ui_kit_showcase.gd",
-      "sha256": "16e31e0e435458d0c7e4a2477696cb44576c1685b5289a8b1525ea824ef25a35",
+      "sha256": "c1a35b31d3781c2e724aa46aa3cba6fb7f238a1122d544d3935f5115a01407d1",
       "doc": "docs/static/framework/ui/showcase/ui_kit_showcase.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/showcase/ui_kit_showcase.tscn",
-      "sha256": "cb41fb007d4ce20bf9a6383b378dc46d2c2d454417c77a7ab111f5cd204c3e02",
+      "sha256": "65b9c0067b67470c8d30d2251b927eff930f50aee5cb711cce5b095069672c91",
       "doc": "docs/static/framework/ui/README.md",
       "status": "grouped",
       "group": "docs/static/framework/ui/README.md"
+    },
+    {
+      "source": "framework/ui/skin/sn_skin.gd",
+      "sha256": "c37c5c9fc422114160eae9652b36664452fde204459c31123ab46f199c7dac5f",
+      "doc": "docs/static/framework/ui/skin/sn_skin.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/ui/stages/location_stage.gd",
@@ -6006,7 +6031,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "5132c5aabf58b61829cb0dad5d9df29c87427406ed999959fac6afe0db70742a",
+      "sha256": "b5108384f3f77a77f09c8f94e1ae00ae840c4b8ec283a4ca0d24d7320118cc77",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6030,8 +6055,14 @@
       "status": "documented"
     },
     {
+      "source": "tools/build_ui_skin.ps1",
+      "sha256": "56d6d0a89d6d2d682991c0607b855c515341de0e97fc7d14592655e38eedcf58",
+      "doc": "docs/static/tools/build_ui_skin.ps1.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/capture_ui.ps1",
-      "sha256": "76712c4993db4fe7dbac97844785134c31fbbf8baa4878be5cf1a407c65162d5",
+      "sha256": "c97e66741e92997c5b535c1bff4ccfeddc571a7e91567b60c81fb7a72fa1b451",
       "doc": "docs/static/tools/capture_ui.ps1.md",
       "status": "documented"
     },
@@ -7539,7 +7570,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "c5711eac05104ae4e4284b9bb8e14333ccb8a024540fa73235b9c0e559b3462e",
+      "sha256": "e8dbe100c8242e24360313cd03e65b1c6b18008ac421422d48de6fb4e0f17b2d",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
@@ -7557,8 +7588,20 @@
       "status": "documented"
     },
     {
+      "source": "tools/ui/build_ui_skin.gd",
+      "sha256": "60802ca3b2b8a2eb9b5645fa98c5c4c451e0ea4e2a0824b7c8ec1b0c2d4d79d1",
+      "doc": "docs/static/tools/ui/build_ui_skin.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/ui/build_ui_theme.gd",
+      "sha256": "d3bd82732ea6eb91e1ef78ef8656c907b30f1a3bb55ebe3838d77f4f579bcefb",
+      "doc": "docs/static/tools/ui/build_ui_theme.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "tools/ui_snapshot.gd",
-      "sha256": "887602de9b89b080bdd1196f9d1a6431f00f1454817d77264e76c961ea924fb0",
+      "sha256": "f705400baeaeee431d63ff80f11079a864cf237f687c59bcffff3f49c50edab9",
       "doc": "docs/static/tools/ui_snapshot.gd.md",
       "status": "documented"
     }

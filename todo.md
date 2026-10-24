@@ -10,6 +10,7 @@
 ## Pending
 
 ### 近期
+- [ ] UI 皮肤后续（V1 边界）：布旗 `flag_*` 接入导航/出航确认/港口识别（需布局改版，当前紧凑 64×36 导航与 172×42 侧牌放不下）；补齐 `nav_overview` / `nav_base` / `nav_trade` / `nav_ruins`、`shipyard_utility` / `shipyard_weapons`、`action_buy` / `sell` / `repair` / `wait`、`status_risk` 图标；多套皮肤运行时切换（Theme 动态重建，当前 Theme 绑定生成时的 skin 目录）；换肤后 960×540 文字/安全区复验与低动效模式
 - [ ] 船体蓝图后续：武器成对（左右舷同型）的运行时命令与校验；舱位运行时槽位化（`mount_state` + state 2.1 迁移）；把 `apply_hull_blueprints.mjs --check` 接入发布/CI 门禁，GLB 或线稿参数变化时自动重算坐标
 - [ ] 船厂改装页后续：港区 `shipyard` 站位接入真实干船坞 + 吊架（给 `port.view` / `facility_visuals.shipyard` 绑定 `SN_Dry_Dock.glb` + `SN_Shipyard_Gantry.glb`，当前是程序化 billboard）；3D 窗口按窗口宽度做机位微调，超宽屏下不要让船坞站位移到窗外
 - [ ] Lua Modding SDK S1：按 [LUA_SDK_S0_API_CONTRACT.md](docs/design/LUA_SDK_S0_API_CONTRACT.md) / [LUA_SDK_S0_THREAT_MODEL.md](docs/design/LUA_SDK_S0_THREAT_MODEL.md) / [LUA_SDK_S0_TEST_MATRIX.md](docs/design/LUA_SDK_S0_TEST_MATRIX.md) 做独立 Lua Host PoC（VM 选型、中断/内存/库隔离证据、纵向样例），实验分支，禁止接入正式 ModLoader；S0 已完成
@@ -47,6 +48,8 @@
 - [ ] 阶段 6：整合、内容量、Mod API 2.0 与发布验收（Content Schema 2.0 已冻结）
 
 ## Recently Completed
+
+- UI 外部贴图皮肤管线 V1（2026-10-24）：UI 从 Godot 内置绘制/StyleBoxFlat 全面切换为外部贴图控件。新增 `tools/ui/build_ui_skin.gd`（两份母版图集 → `assets/ui/skin/sn_v1/`：41 个九宫格 style、30 枚 128px 图标、6 个固定配件、派生仪表/铭牌/滚动条/复选框/焦点环 + `skin.json`）与 `tools/ui/build_ui_theme.gd`（skin.json → 纹理化 Theme，含按钮 6 变体、面板 10 变体、Badge 4、进度 3、输入/复选/滚动条/Tab/Tooltip/Popup），`tools/build_ui_skin.ps1 -Check` 作为母版一致性门禁；新增 `framework/ui/skin/sn_skin.gd`（SNSkin）作为程序化 UI 的唯一素材访问层。Shell 顶栏/HUD/导航/侧牌/底栏、8 个港口页、7 个流程页、4 个菜单页与 story 组件全部移除 `StyleBoxFlat.new()` 与十六进制业务色（Theme 0 flat、全局业务脚本 0 flat），接入 HUD/导航/侧牌/船厂分类/行动/状态图标；市场账册与委托/结算/线索用 Parchment 纸面、船厂保留 Blueprint 底板与 Glass 操作坞、HUD 用半透明钢框（TopChrome 实测 113px ≤130、状态条 50px）。换同名同尺寸贴图即整体换肤，流程见 `docs/design/UI_SKIN_PIPELINE.md`。验证：Godot 全量 **652/652**（新增 `test_ui_skin` 9 例含无 Flat/无 hex 守门）、`build_ui_skin -Check` 通过、`capture_ui -AllScreens` 两分辨率各 26 张、静态文档 `--check` 通过。
 
 - 船厂改装页重做（2026-10-23）：改装态改为画在连续港区 3D 舞台上的工作台——`PortStage` 新增 `shipyard` 站位（干船坞/吊架设施锚点 x 14.5，镜头与目标西移 7.5 m 对准中间 3D 窗口，玩家船泊位 (14.5,0,9)），`STAGE_SCREENS` 增加 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示（正常态仍用面板内 3D 船体舞台）。页面不再有整页不透明背景：左蓝图板 / 中 3D 窗口 / 右 `SNGlassPanel` 半透明操作坞；操作坞含舰船数据卡（船名 + 重量 / 耐久 / 货舱 / 客舱 / 武器 / 剩余货舱）、七项分类、`装配 / 购买 / 打造` 三个独立页签（杂项无页签），装配页高亮可安装槽位并保留拖放安装；移除「改装蓝图 / 蓝图线稿 / 贴图剖面 / 实机渲染」等测试向文案与蓝图上方金币/耐久/重量摘要行；顶栏品牌位改为当前港口名。验证：Godot 全量 **643/643**（新增 3 例）、`ui_snapshot --tabs` / `capture_ui -Tabs` 截图、静态文档 `--check` 通过。
 

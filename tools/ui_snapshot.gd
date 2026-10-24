@@ -39,7 +39,32 @@ extends SceneTree
 ##                                   current_station() / is_station_transitioning()，
 ##                                   等舞台可见且泊位过渡结束。
 ##   --skip-refit                    只截正常态
-## 任一截图失败或画面为空（纯色）时以退出码 1 结束，方便 CI/验收脚本判断。
+##
+## ## 全页面皮肤截图（-AllScreens / -Screens）
+## 由 `tools/capture_ui.ps1 -AllScreens` / `-Screens "..."` 调用：
+##   godot --path . --resolution 1440x900 --window=1440x900 --script res://tools/ui_snapshot.gd -- \
+##     --out-dir=res://docs/design/screenshots/skin/1440x900 --all-screens
+##   godot --path . --resolution 960x540 --window=960x540 --script res://tools/ui_snapshot.gd -- \
+##     --out-dir=res://docs/design/screenshots/skin/960x540 --screens=overview,market,victory
+## 逐页截图（每张输出 `<out-dir>/<screen>.png`）：main_menu / new_game / mods / settings /
+## overview / overview_2d / overview_detail / market / supply / contracts / tavern / base /
+## auto_trade / ruins / shipyard_normal / shipyard_refit / shipyard_buy / shipyard_craft /
+## shipyard_misc / sea_chart / clue_log / at_sea / event / settlement / victory / ui_kit。
+##
+## 特殊状态的进入方式（不造假数据）：
+##   - at_sea / event / settlement：在真实 shell 里执行 `voyage.start`，再用
+##     `shell._process()` 推进 `VoyagePresentation` 状态机到目标相位；event 用
+##     VoyageService 的确定性事件采样选出会触发事件的 seed（与 test_voyage_flow 同一手法）。
+##   - victory：用真实 CommandBus 脚本通关（主线 5 章 + 大型船体），再由 shell 的
+##     victory 视图挂载胜利页。
+##   - supply：4.5.3 起补给页已合并进 market（main.gd 把 `supply` 重定向到 `market`），
+##     这里按真实导航路径进入并把页面滚到 MarketSupply 区块后截图，报告里同样注明。
+##   - main_menu / new_game / mods / settings：真实 `reset_state()` 后由 shell 的
+##     `_menu_screen` 切换，走与玩家点击相同的菜单构建路径。
+##   - ui_kit：挂载 `framework/ui/showcase/ui_kit_showcase.tscn` 独立展示页。
+## 运行开始时逐张打印 `[EXPECT] <绝对路径>`，包装脚本据此校验每张截图存在且新鲜；
+## 任一截图失败、画面为空或目标页面进不去时以退出码 1 结束。
+
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyard_screen.gd")
@@ -65,6 +90,37 @@ const STATION_TIMEOUT_SECONDS := 10.0
 ## 兜底：脚本错误会让协程中断而不退出，窗口就会挂住，这里强制收尾。
 const WATCHDOG_SECONDS := 120
 
+## ---------------------------------------------------------------------------
+## 全页面皮肤截图（--all-screens / --screens=）：逐页 id = 输出文件名（不含 .png）
+## ---------------------------------------------------------------------------
+const VICTORY_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/victory_screen.gd")
+const EVENT_SCREEN_SCRIPT := preload("res://framework/ui/screens/flow/event_screen.gd")
+const UI_KIT_SCENE := "res://framework/ui/showcase/ui_kit_showcase.tscn"
+## 与 test_voyage_flow / test_full_clear 使用同一套公开 API 与策略 id。
+const STANDARD_STRATEGY := "core:boiler_strategy/standard"
+## 皮肤模式逐页截图的清单（顺序即执行顺序）；菜单/流程页由后面的阶段单独处理。
+const SKIN_PORT_SCREENS := [
+	"overview", "overview_2d", "overview_detail",
+	"market", "supply", "contracts", "tavern", "base", "auto_trade", "ruins",
+	"shipyard_normal", "shipyard_refit", "shipyard_buy", "shipyard_craft", "shipyard_misc",
+	"sea_chart", "clue_log",
+]
+const SKIN_FLOW_SCREENS := ["at_sea", "event", "settlement"]
+const SKIN_MENU_SCREENS := ["main_menu", "new_game", "mods", "settings"]
+const SKIN_ALL_SCREENS := [
+	"main_menu", "new_game", "mods", "settings",
+	"overview", "overview_2d", "overview_detail",
+	"market", "supply", "contracts", "tavern", "base", "auto_trade", "ruins",
+	"shipyard_normal", "shipyard_refit", "shipyard_buy", "shipyard_craft", "shipyard_misc",
+	"sea_chart", "clue_log", "ui_kit",
+	"at_sea", "event", "settlement", "victory",
+]
+## 推进 VoyagePresentation 状态机时每步模拟的秒数（与 test_voyage_flow 的 STEP_SECONDS 一致）。
+const FLOW_DRIVE_STEP := 0.1
+const FLOW_DRIVE_MAX_SECONDS := 90.0
+## 事件采样：在 1..N 里找会触发事件的确定性 seed（与 test_voyage_flow 同一手法）。
+const EVENT_SEED_SEARCH := 400
+
 var _failures: Array[String] = []
 var _seed := DEFAULT_SEED
 var _out_dir := DEFAULT_OUT_DIR
@@ -84,6 +140,9 @@ var _station_shots := false
 ## 截图前要损坏的模块实例：{"slot": "boiler", "index": 0, "ratio": 0.5}。
 var _damage_targets: Array = []
 var _saved: Array[String] = []
+## 全页面皮肤截图：--all-screens 或 --screens=<id,id>（为空时走旧的船厂/总览流程）。
+var _all_screens := false
+var _screens: Array[String] = []
 
 
 func _init() -> void:
@@ -93,7 +152,7 @@ func _init() -> void:
 
 
 func _watchdog() -> void:
-	var seconds := WATCHDOG_SECONDS + (45 if _station_shots else 0)
+	var seconds := WATCHDOG_SECONDS + (45 if _station_shots else 0) + (180 if _skin_battery_enabled() else 0)
 	await process_frame
 	await create_timer(seconds).timeout
 	push_error("ui_snapshot: 截图流程超时（%d 秒），强制退出" % seconds)
@@ -142,6 +201,15 @@ func _run() -> void:
 		return
 	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
 	print("[INFO] 起始页面：%s（菜单遮罩可见=%s）" % [String(shell._active_screen), str(shell._menu_background.visible)])
+
+	# 新入口：全页面皮肤截图（-AllScreens / -Screens）。旧的船厂/总览流程完全保留，
+	# 只有显式传入皮肤参数时才走这里，参数与输出路径向后兼容。
+	if _skin_battery_enabled():
+		_announce_skin_expectations()
+		await _capture_skin_battery(shell, context)
+		await _teardown(shell)
+		_finish()
+		return
 
 	# 正常态：船厂页船体侧视。
 	shell._active_screen = "shipyard"
@@ -607,6 +675,14 @@ func _parse_args() -> void:
 			_overview_stage = true
 		elif text == "--station-shots":
 			_station_shots = true
+		elif text == "--all-screens":
+			_all_screens = true
+		elif text.begins_with("--screens="):
+			_screens.clear()
+			for part in text.get_slice("=", 1).split(",", false):
+				var screen_id := String(part).strip_edges()
+				if not screen_id.is_empty():
+					_screens.append(screen_id)
 		elif text.begins_with("--damage="):
 			for part in text.get_slice("=", 1).split(",", false):
 				var pieces := String(part).strip_edges().split(":", false)
@@ -652,3 +728,644 @@ func _finish() -> void:
 		for failure in _failures:
 			print("  ! " + failure)
 		quit(1)
+
+
+## ---------------------------------------------------------------------------
+## 全页面皮肤截图（--all-screens / --screens=）
+## ---------------------------------------------------------------------------
+
+## 页面 id → 该页脚本（用于确认页面真的挂载了，而不是只截到空壳）。
+const SKIN_SCREEN_SCRIPTS := {
+	"overview": preload("res://framework/ui/screens/port/overview_screen.gd"),
+	"market": preload("res://framework/ui/screens/port/market_screen.gd"),
+	"contracts": preload("res://framework/ui/screens/port/contracts_screen.gd"),
+	"tavern": preload("res://framework/ui/screens/port/tavern_screen.gd"),
+	"base": preload("res://framework/ui/screens/port/base_screen.gd"),
+	"auto_trade": preload("res://framework/ui/screens/port/auto_trade_screen.gd"),
+	"ruins": preload("res://framework/ui/screens/port/ruins_screen.gd"),
+	"sea_chart": preload("res://framework/ui/screens/flow/sea_chart_screen.gd"),
+	"clue_log": preload("res://framework/ui/screens/flow/clue_log_screen.gd"),
+	"event": preload("res://framework/ui/screens/flow/event_screen.gd"),
+	"settlement": preload("res://framework/ui/screens/flow/settlement_screen.gd"),
+	"victory": preload("res://framework/ui/screens/flow/victory_screen.gd"),
+	"main_menu": preload("res://framework/ui/screens/menu/main_menu_screen.gd"),
+	"new_game": preload("res://framework/ui/screens/menu/new_game_screen.gd"),
+	"mods": preload("res://framework/ui/screens/menu/mods_screen.gd"),
+	"settings": preload("res://framework/ui/screens/menu/settings_screen.gd"),
+}
+const AUTO_TRADE_SCREEN_ID := "trade"
+const FULL_CLEAR_MEDIUM_HULL := "core:hull/medium_standard"
+const FULL_CLEAR_LARGE_HULL := "core:hull/large_efficient"
+const FULL_CLEAR_CABIN := "core:module/passenger_cabin"
+
+
+func _skin_battery_enabled() -> bool:
+	return _all_screens or not _screens.is_empty()
+
+
+func _wants(screen_id: String) -> bool:
+	if _skip_refit and screen_id in ["shipyard_refit", "shipyard_buy", "shipyard_craft", "shipyard_misc"]:
+		return false
+	return _all_screens or _screens.has(screen_id)
+
+
+func _requested_skin_screens() -> Array[String]:
+	var ids: Array[String] = []
+	for screen_id in SKIN_ALL_SCREENS:
+		if _wants(String(screen_id)):
+			ids.append(String(screen_id))
+	return ids
+
+
+func _skin_filename(screen_id: String) -> String:
+	return "%s.png" % screen_id
+
+
+## 运行开始时打印每张期望截图的绝对路径；包装脚本据此判断"缺失 / 不新鲜"。
+func _announce_skin_expectations() -> void:
+	for screen_id in _screens:
+		if not SKIN_ALL_SCREENS.has(screen_id):
+			_expect(false, "未知截图页 id：%s" % screen_id)
+	var ids := _requested_skin_screens()
+	for screen_id in ids:
+		print("[EXPECT] " + _global_path(_path(_skin_filename(screen_id))))
+	print("[INFO] 期望截图 %d 张 → %s" % [ids.size(), _out_dir])
+
+
+func _capture_skin_battery(shell: Control, context: AppContext) -> void:
+	print("=== 全页面皮肤截图（%dx%d，%d 张）===" % [_window.x, _window.y, _requested_skin_screens().size()])
+	await _capture_skin_port_pages(shell, context)
+	if _wants("ui_kit"):
+		await _capture_skin_ui_kit()
+	if _wants("at_sea") or _wants("event") or _wants("settlement"):
+		await _capture_skin_flow_pages(shell, context)
+	if _wants("victory"):
+		await _capture_skin_victory(shell, context)
+	if _wants("main_menu") or _wants("new_game") or _wants("mods") or _wants("settings"):
+		await _capture_skin_menus(shell, context)
+
+
+## 切页并等待布局稳定（走 shell 的真实导航状态，不直接替换页面节点）。
+func _goto_screen(shell: Control, screen_id: String) -> void:
+	shell._active_screen = screen_id
+	shell._refresh()
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+
+
+func _capture_skin(screen_id: String) -> void:
+	print("[SHOT] %s" % screen_id)
+	await _capture(_path(_skin_filename(screen_id)))
+
+
+func _screen_mounted(shell: Control, screen_id: String) -> bool:
+	if not SKIN_SCREEN_SCRIPTS.has(screen_id):
+		return false
+	return _node_with_script(shell._root_box, SKIN_SCREEN_SCRIPTS[screen_id]) != null
+
+
+## ---------------------------------------------------------------------------
+## 阶段 1：港口 / 功能页
+## ---------------------------------------------------------------------------
+
+func _capture_skin_port_pages(shell: Control, context: AppContext) -> void:
+	var any_port := false
+	for screen_id in SKIN_PORT_SCREENS:
+		if _wants(String(screen_id)):
+			any_port = true
+			break
+	if not any_port:
+		return
+	print("[INFO] 港口 / 功能页")
+
+	# 总览：3D 舞台、详细总览抽屉、2D 回退各一张。
+	if _wants("overview") or _wants("overview_detail") or _wants("overview_2d"):
+		await _goto_screen(shell, "overview")
+		var stage_available := bool(shell._port_stage_available())
+		if _wants("overview") or _wants("overview_detail"):
+			_expect(stage_available, "3D 港口舞台场景可用（overview）")
+			if not bool(shell._overview_stage_mode):
+				shell._on_overview_stage_toggle()
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+			_expect(bool(shell._overview_stage_mode), "总览进入 3D 港口舞台模式")
+			var stage_visible := await _wait_port_stage(shell, "总览页")
+			_expect(stage_visible, "总览页 3D 港口舞台可见")
+			if _wants("overview"):
+				_expect(_screen_mounted(shell, "overview"), "总览页已挂载")
+				await _capture_skin("overview")
+			if _wants("overview_detail"):
+				shell._overview_detail = true
+				shell._refresh()
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+				_expect(bool(shell._overview_detail), "详细总览抽屉已打开")
+				_expect(_screen_mounted(shell, "overview"), "详细抽屉挂在总览页上")
+				await _capture_skin("overview_detail")
+				shell._overview_detail = false
+				shell._refresh()
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		if _wants("overview_2d"):
+			if bool(shell._overview_stage_mode):
+				shell._on_overview_stage_toggle()
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+			_expect(not bool(shell._overview_stage_mode), "总览切到 2D 回退视图")
+			var detail_back := _node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT)
+			_expect(detail_back != null, "2D 总览页已挂载")
+			await _capture_skin("overview_2d")
+			if stage_available and not bool(shell._overview_stage_mode):
+				shell._on_overview_stage_toggle()
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+
+	# 市场 / 补给（4.5.3 起 supply 被重定向到 market，补给区块在 market 页内）。
+	if _wants("market") or _wants("supply"):
+		await _goto_screen(shell, "market")
+		await _wait_port_stage(shell, "market 页")
+		await _wait_station(shell, "market", "market 页")
+		if _wants("market"):
+			_expect(_screen_mounted(shell, "market"), "市场页已挂载")
+			await _capture_skin("market")
+		if _wants("supply"):
+			await _goto_screen(shell, "supply")
+			_expect(String(shell._active_screen) == "market", "supply 导航按 4.5.3 重定向到 market")
+			await _wait_port_stage(shell, "supply→market 页")
+			await _wait_station(shell, "market", "supply→market 页")
+			var supply_block: Node = shell._root_box.find_child("MarketSupply", true, false)
+			if supply_block == null:
+				_expect(false, "supply：market 页里找不到补给区块 MarketSupply")
+			else:
+				var page_scroll := shell.get_node_or_null("PageMargin/PageScroll") as ScrollContainer
+				if page_scroll != null:
+					page_scroll.ensure_control_visible(supply_block)
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+				print("[INFO] supply：页已合并进 market，截图为页面滚动到补给区块后的真实状态")
+				await _capture_skin("supply")
+
+	# 其余功能页：market 之外的 port 页 + 海图 / 线索。
+	for screen_id in ["contracts", "tavern", "base", "auto_trade", "ruins", "sea_chart", "clue_log"]:
+		if not _wants(screen_id):
+			continue
+		var target: String = AUTO_TRADE_SCREEN_ID if screen_id == "auto_trade" else String(screen_id)
+		if screen_id == "clue_log" and ClueService.active(context.state).is_empty():
+			# 用真实 clue.buy 命令先拿一条线索，否则线索页只有空态。
+			shell._run_command(&"clue.buy", {})
+			await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS * 0.5)
+		await _goto_screen(shell, target)
+		_expect(_screen_mounted(shell, screen_id), "%s 页已挂载" % screen_id)
+		await _capture_skin(screen_id)
+
+	# 船厂：正常态 + 改装态（默认装配页签）+ 购买 / 打造 / 杂项。
+	if _wants("shipyard_normal") or _wants("shipyard_refit") or _wants("shipyard_buy") \
+			or _wants("shipyard_craft") or _wants("shipyard_misc"):
+		await _goto_screen(shell, "shipyard")
+		var screen := _find_shipyard(shell)
+		_expect(screen != null, "船厂页已挂载")
+		if screen == null:
+			return
+		if _wants("shipyard_normal"):
+			await _capture_skin("shipyard_normal")
+		if _wants("shipyard_refit") or _wants("shipyard_buy") or _wants("shipyard_craft") or _wants("shipyard_misc"):
+			var pressed := _enter_refit(shell, screen)
+			_expect(pressed, "找到并点击了「改装」按钮")
+			await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
+			await _wait_port_stage_settled(shell)
+			_expect(bool(screen.get("_refit")), "船厂页进入改装态")
+			if _wants("shipyard_refit"):
+				await _capture_skin("shipyard_refit")
+			for tab in ["buy", "craft"]:
+				if not _wants("shipyard_%s" % tab):
+					continue
+				screen.set_tab(tab)
+				await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
+				_expect(String(screen.get("_tab")) == tab, "改装页签切换到 %s" % tab)
+				await _capture_skin("shipyard_%s" % tab)
+			if _wants("shipyard_misc"):
+				screen.set_tab("install")
+				screen.set_category("misc")
+				await _settle(REFIT_FRAMES, REFIT_SETTLE_SECONDS)
+				_expect(String(screen.get("_category")) == "misc", "改装分类切换到 misc")
+				await _capture_skin("shipyard_misc")
+
+
+## ---------------------------------------------------------------------------
+## 阶段 2：UI Kit 展示页
+## ---------------------------------------------------------------------------
+
+func _capture_skin_ui_kit() -> void:
+	print("[INFO] UI Kit 展示页")
+	var scene := load(UI_KIT_SCENE) as PackedScene
+	_expect(scene != null, "UI Kit 展示场景可加载：%s" % UI_KIT_SCENE)
+	if scene == null:
+		return
+	var kit: Control = scene.instantiate()
+	root.add_child(kit)
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	await _capture_skin("ui_kit")
+	if kit.get_parent() != null:
+		kit.get_parent().remove_child(kit)
+	kit.free()
+	await _settle(4, 0.1)
+
+
+## ---------------------------------------------------------------------------
+## 阶段 3：航行流程页（at_sea / event / settlement）
+## ---------------------------------------------------------------------------
+
+func _first_destination(context: AppContext) -> String:
+	var contracts: Dictionary = context.state.contracts()
+	var main_contract: Variant = contracts.get("main", null)
+	if main_contract is Dictionary:
+		return String((main_contract as Dictionary).get("destination", ""))
+	var main_offer: Variant = contracts.get("main_offer", null)
+	if main_offer is Dictionary:
+		return String((main_offer as Dictionary).get("destination", ""))
+	var neighbors := MapOps.neighbors(context.state.world(), context.state.current_port_id())
+	return String(neighbors[0]) if not neighbors.is_empty() else ""
+
+
+## 与 test_voyage_flow._force_event_context 相同：在 1..N 里找一个会触发事件的确定性
+## seed，并在返回前把 context.rng 复位到该 seed，让紧随其后的 voyage.start 抽到同一事件。
+func _force_event_context(context: AppContext, destination: String) -> Dictionary:
+	var preview := context.commands.execute(&"voyage.preview", {
+		"destination_id": destination,
+		"strategy_id": STANDARD_STRATEGY,
+	})
+	if not bool(preview.get("ok", false)):
+		return {}
+	var preview_data: Dictionary = preview.get("data", {})
+	for seed_value in range(1, EVENT_SEED_SEARCH):
+		context.rng = RngService.new(seed_value)
+		var picked := VoyageService._pick_event(context, preview_data, destination)
+		if picked.is_empty():
+			continue
+		context.rng = RngService.new(seed_value)
+		return picked
+	return {}
+
+
+func _safe_event_option(offered: Array) -> String:
+	var preferred := ["decline", "stop_repair", "water_cooling", "force_continue", "jettison_cargo", "paid_repair", "buy_intel"]
+	for option_id in preferred:
+		if offered.has(option_id):
+			return String(option_id)
+	return String(offered[0]) if not offered.is_empty() else ""
+
+
+## 推进 shell 的 VoyagePresentation 状态机（与 test_voyage_flow 的 _drive_until 同法），
+## 不依赖真实等待，截图前再统一 settle 让布局与渲染追上。
+func _drive_shell_until(shell: Control, predicate: Callable, max_seconds: float) -> bool:
+	var elapsed := 0.0
+	while elapsed < max_seconds:
+		if bool(predicate.call()):
+			return true
+		shell._process(FLOW_DRIVE_STEP)
+		elapsed += FLOW_DRIVE_STEP
+	return bool(predicate.call())
+
+
+func _capture_skin_flow_pages(shell: Control, context: AppContext) -> void:
+	print("[INFO] 航行流程页：at_sea / event / settlement")
+	_bot_ensure_liquidity(context, 300)
+	var destination := _first_destination(context)
+	_expect(not destination.is_empty(), "找到出航目的地（主线委托 / 相邻港口）")
+	if destination.is_empty():
+		return
+	# 先备货（真实 supply 命令），再采样事件 seed，最后立刻 voyage.start，rng 不被别的
+	# 命令消耗，保证抽到的事件与采样一致。
+	_bot_prepare_voyage(context, destination)
+	var forced := _force_event_context(context, destination)
+	if forced.is_empty():
+		print("[WARN] 该目的地没有采样到风险事件；event 页按实际航程结果取证")
+	shell._run_command(&"voyage.start", {"destination_id": destination, "strategy_id": STANDARD_STRATEGY})
+	_expect(shell._presentation != null, "voyage.start 交接到航行演出")
+	if shell._presentation == null:
+		return
+	var reached_at_sea := _drive_shell_until(shell, func() -> bool: return shell._at_sea_screen != null, FLOW_DRIVE_MAX_SECONDS)
+	_expect(reached_at_sea, "演出推进到海图航行页")
+	if reached_at_sea:
+		_drive_shell_until(shell, func() -> bool: return float(shell._presentation.veil) <= 0.001, 20.0)
+		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		if _wants("at_sea"):
+			await _capture_skin("at_sea")
+
+	var has_event := bool(shell._presentation.has_event)
+	var reached_event := false
+	if has_event:
+		# 无论是否要截 event 页，都必须把演出开到决策点并作出选择，否则剩余航段
+		# 永远停在 event_wait，结算页也到不了（-Screens at_sea 子集运行曾因此失败）。
+		reached_event = _drive_shell_until(shell, func() -> bool:
+			return shell._presentation != null and String(shell._presentation.phase_name()) == "event_wait",
+			FLOW_DRIVE_MAX_SECONDS)
+		_expect(reached_event, "演出停在事件决策点")
+		if reached_event and _wants("event"):
+			await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+			_expect(_node_with_script(shell._root_box, EVENT_SCREEN_SCRIPT) != null, "事件页已挂载")
+			await _capture_skin("event")
+	elif _wants("event"):
+		_expect(false, "event：本次航程没有触发风险事件，事件页无法稳定进入")
+
+	# 处理事件（若有）并让剩余航段播完，抵达结算页。
+	if reached_event:
+		var offered: Array = forced.get("option_ids", []) if not forced.is_empty() else []
+		if offered.is_empty():
+			var voyage: Variant = context.state.data.get("voyage", null)
+			if voyage is Dictionary and (voyage as Dictionary).get("event", null) is Dictionary:
+				offered = ((voyage as Dictionary)["event"] as Dictionary).get("option_ids", [])
+		var option_id := _safe_event_option(offered)
+		_expect(not option_id.is_empty(), "事件提供了可处理的选项")
+		if not option_id.is_empty():
+			shell._run_command(&"event.choose_option", {"option_id": option_id})
+			await _settle(4, 0.05)
+	var finished := _drive_shell_until(shell, func() -> bool: return shell._presentation == null, FLOW_DRIVE_MAX_SECONDS)
+	_expect(finished, "航行演出结束")
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	_expect(String(shell._active_screen) == "settlement", "抵达后进入结算页")
+	if String(shell._active_screen) == "settlement" and _wants("settlement"):
+		_expect(_screen_mounted(shell, "settlement"), "结算页已挂载")
+		await _capture_skin("settlement")
+
+
+## ---------------------------------------------------------------------------
+## 阶段 4：通关页（真实 CommandBus 脚本通关，与 test_full_clear 同一路径）
+## ---------------------------------------------------------------------------
+
+func _capture_skin_victory(shell: Control, context: AppContext) -> void:
+	print("[INFO] 通关页：脚本化真实通关（主线 5 章 + 大型船体）")
+	# 独立重开一局，避免航行流程页的损耗影响通关脚本；仍然全程走公开 CommandBus。
+	context.reset_state()
+	var started: Dictionary = context.commands.execute(&"run.start", {
+		"starting_scenario": STEADY_BUILD,
+		"seed": _seed,
+	})
+	_expect(bool(started.get("ok", false)), "通关脚本 run.start 成功：%s" % str(started))
+	if not bool(started.get("ok", false)):
+		return
+	var cleared := _play_to_victory(context)
+	_expect(cleared, "脚本化通关成功（victory.view.achieved）")
+	if not cleared:
+		return
+	shell._victory_dismissed = false
+	shell._refresh()
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	_expect(_screen_mounted(shell, "victory"), "胜利页已挂载")
+	await _capture_skin("victory")
+
+
+func _play_to_victory(context: AppContext) -> bool:
+	# 第 1-3 章只用主线委托攒第一次升级资金。
+	for sequence in [1, 2, 3]:
+		if not _bot_complete_main_step(context, sequence):
+			return false
+	var unlocks: Array = context.state.player().get("unlocks", [])
+	if not unlocks.has(FULL_CLEAR_MEDIUM_HULL):
+		print("[WARN] 主线 3 未解锁中型船体（unlocks=%s）" % str(unlocks))
+	_bot_navigate_to_facility(context, "shipyard")
+	if not _bot_earn_until(context, 2150):
+		return false
+	if not _bot_install(context, FULL_CLEAR_MEDIUM_HULL):
+		return false
+	_bot_ensure_liquidity(context, 500)
+	if not _bot_install(context, FULL_CLEAR_CABIN):
+		return false
+	for sequence in [4, 5]:
+		if not _bot_complete_main_step(context, sequence):
+			return false
+	_bot_navigate_to_facility(context, "shipyard")
+	if not _bot_earn_until(context, 3000):
+		return false
+	_bot_navigate_to_facility(context, "shipyard")
+	if not _bot_install(context, FULL_CLEAR_LARGE_HULL):
+		return false
+	var victory: Variant = context.state.data.get("victory", null)
+	return victory is Dictionary and bool((victory as Dictionary).get("achieved", false))
+
+
+func _bot_complete_main_step(context: AppContext, expected_sequence: int) -> bool:
+	_bot_accept_main_offer_if_needed(context)
+	var contracts: Dictionary = context.state.contracts()
+	var main: Variant = contracts.get("main", null)
+	if not (main is Dictionary):
+		_expect(false, "通关脚本：主线第 %d 章未接取" % expected_sequence)
+		return false
+	var destination := String((main as Dictionary).get("destination", ""))
+	if context.state.current_port_id() == destination:
+		var neighbors := MapOps.neighbors(context.state.world(), destination)
+		if neighbors.is_empty():
+			_expect(false, "通关脚本：目的港没有出港航线")
+			return false
+		if not _bot_sail(context, String(neighbors[0])):
+			return false
+	if not _bot_navigate_to(context, destination):
+		return false
+	var settled: Variant = context.state.contracts().get("main", null)
+	if settled != null:
+		_expect(false, "通关脚本：主线第 %d 章未在抵达时结算" % expected_sequence)
+		return false
+	return true
+
+
+func _bot_accept_main_offer_if_needed(context: AppContext) -> void:
+	var contracts: Dictionary = context.state.contracts()
+	if contracts.get("main", null) is Dictionary:
+		return
+	var offer: Variant = contracts.get("main_offer", null)
+	if not (offer is Dictionary):
+		return
+	context.commands.execute(&"contract.accept", {"instance_id": String((offer as Dictionary).get("instance_id", ""))})
+
+
+func _bot_earn_until(context: AppContext, target_money: int) -> bool:
+	var guard := 0
+	while context.state.money() < target_money and guard < 12:
+		guard += 1
+		_bot_ensure_liquidity(context, target_money)
+		if context.state.money() >= target_money:
+			return true
+		if not _bot_complete_one_normal_contract(context):
+			_bot_ensure_liquidity(context, target_money)
+			if context.state.money() >= target_money:
+				return true
+	if context.state.money() < target_money:
+		_expect(false, "通关脚本：资金未达到 %d（当前 %d）" % [target_money, context.state.money()])
+		return false
+	return true
+
+
+func _bot_ensure_liquidity(context: AppContext, floor: int = 700) -> void:
+	if context.state.money() >= floor:
+		return
+	if context.state.player().get("debt", null) == null:
+		context.commands.execute(&"debt.borrow", {"amount": 400})
+		return
+	_bot_complete_one_normal_contract(context)
+
+
+func _bot_complete_one_normal_contract(context: AppContext) -> bool:
+	var offers: Array = context.state.contracts().get("offers", [])
+	for offer in offers:
+		if not (offer is Dictionary):
+			continue
+		var accept: Dictionary = context.commands.execute(&"contract.accept", {
+			"instance_id": String((offer as Dictionary).get("instance_id", "")),
+		})
+		if not bool(accept.get("ok", false)):
+			continue
+		var destination := String((offer as Dictionary).get("destination", ""))
+		if _bot_navigate_to(context, destination):
+			return true
+	return false
+
+
+func _bot_navigate_to_facility(context: AppContext, facility: String) -> void:
+	var state: GameState = context.state
+	if MapOps.has_facility(MapOps.port(state.world(), state.current_port_id()), facility):
+		return
+	for port_id in state.world().get("ports", {}).keys():
+		if MapOps.has_facility(MapOps.port(state.world(), String(port_id)), facility):
+			_bot_navigate_to(context, String(port_id))
+			return
+	_expect(false, "通关脚本：地图上没有 %s 设施" % facility)
+
+
+func _bot_navigate_to(context: AppContext, target_port: String) -> bool:
+	var guard := 0
+	while context.state.current_port_id() != target_port and guard < 10:
+		guard += 1
+		var path := _bot_path_to(context.state.world(), context.state.current_port_id(), target_port)
+		if path.size() < 2:
+			_expect(false, "通关脚本：到 %s 没有航线" % target_port)
+			return false
+		if not _bot_sail(context, path[1]):
+			return false
+	return context.state.current_port_id() == target_port
+
+
+func _bot_path_to(world: Dictionary, from_port: String, to_port: String) -> Array[String]:
+	var result: Array[String] = []
+	if from_port == to_port:
+		result.append(from_port)
+		return result
+	var previous := {from_port: ""}
+	var queue: Array[String] = [from_port]
+	while not queue.is_empty():
+		var current: String = queue.pop_front()
+		for neighbor in MapOps.neighbors(world, current):
+			var neighbor_id := String(neighbor)
+			if previous.has(neighbor_id):
+				continue
+			previous[neighbor_id] = current
+			if neighbor_id == to_port:
+				var cursor := to_port
+				var reversed: Array[String] = []
+				while cursor != from_port:
+					reversed.append(cursor)
+					cursor = String(previous[cursor])
+				reversed.append(from_port)
+				reversed.reverse()
+				result.assign(reversed)
+				return result
+			queue.append(neighbor_id)
+	return result
+
+
+func _bot_sail(context: AppContext, destination: String) -> bool:
+	if context.state.money() < 250 and context.state.player().get("debt", null) == null:
+		context.commands.execute(&"debt.borrow", {"amount": 400})
+	_bot_prepare_voyage(context, destination)
+	var voyage: Dictionary = context.commands.execute(&"voyage.start", {
+		"destination_id": destination,
+		"strategy_id": STANDARD_STRATEGY,
+	})
+	if not bool(voyage.get("ok", false)):
+		_expect(false, "通关脚本：出航 %s 失败：%s" % [destination, str(voyage)])
+		return false
+	if not bool((voyage.get("data", {}) as Dictionary).get("arrived", false)):
+		if not _bot_resolve_event(context):
+			return false
+	if context.state.current_port_id() != destination:
+		_expect(false, "通关脚本：未抵达 %s" % destination)
+		return false
+	return true
+
+
+func _bot_resolve_event(context: AppContext) -> bool:
+	var voyage: Variant = context.state.data.get("voyage", null)
+	if not (voyage is Dictionary):
+		_expect(false, "通关脚本：事件航程缺少 voyage 记录")
+		return false
+	var event: Variant = (voyage as Dictionary).get("event", null)
+	if not (event is Dictionary):
+		_expect(false, "通关脚本：事件航程缺少 event 数据")
+		return false
+	var offered: Array = (event as Dictionary).get("option_ids", [])
+	var order := _safe_event_option(offered)
+	if order.is_empty():
+		_expect(false, "通关脚本：事件没有可用选项")
+		return false
+	var chosen: Dictionary = context.commands.execute(&"event.choose_option", {"option_id": order})
+	return bool(chosen.get("ok", false)) and not bool((chosen.get("data", {}) as Dictionary).get("failed", false))
+
+
+func _bot_prepare_voyage(context: AppContext, destination: String) -> void:
+	var preview: Dictionary = context.commands.execute(&"voyage.preview", {
+		"destination_id": destination,
+		"strategy_id": STANDARD_STRATEGY,
+	})
+	if not bool(preview.get("ok", false)):
+		return
+	var p: Dictionary = preview.get("data", {})
+	_bot_buy_supply(context, "coal", float(p.get("coal_required", 0.0)) + 4.0)
+	_bot_buy_supply(context, "water", float(p.get("water_required", 0.0)) + 4.0)
+	if float(context.state.ship().get("durability", 0.0)) < float(context.state.ship().get("max_durability", 1.0)) * 0.35:
+		context.commands.execute(&"supply.repair", {})
+
+
+func _bot_buy_supply(context: AppContext, kind: String, wanted: float) -> void:
+	var current := float(context.state.ship().get(kind, 0.0))
+	if current >= wanted:
+		return
+	var amount := int(ceil(wanted - current))
+	var command := &"supply.buy_coal" if kind == "coal" else &"supply.buy_water"
+	var result: Dictionary = context.commands.execute(command, {"amount": amount})
+	if bool(result.get("ok", false)):
+		return
+	var port := context.state.current_port_id()
+	var price := 4.0
+	var market: Dictionary = context.state.market().get(port, {})
+	var item: Variant = market.get("core:item/%s" % kind, null)
+	if item is Dictionary:
+		price = maxf(1.0, float((item as Dictionary).get("price", 4.0)))
+	var affordable := int(floor(float(context.state.money()) / price))
+	if affordable > 0:
+		context.commands.execute(command, {"amount": mini(affordable, amount)})
+
+
+func _bot_install(context: AppContext, module_id: String) -> bool:
+	var result: Dictionary = context.commands.execute(&"ship.install_module", {"module_id": module_id})
+	_expect(bool(result.get("ok", false)), "通关脚本：安装 %s：%s" % [module_id, str(result)])
+	return bool(result.get("ok", false))
+
+
+## ---------------------------------------------------------------------------
+## 阶段 5：菜单页（真实 reset_state + shell 菜单切换）
+## ---------------------------------------------------------------------------
+
+func _capture_skin_menus(shell: Control, context: AppContext) -> void:
+	print("[INFO] 菜单页：main_menu / new_game / mods / settings")
+	context.reset_state()
+	shell._victory_dismissed = false
+	shell._settlement_summary = {}
+	shell._overview_detail = false
+	shell._menu_screen = "main"
+	shell._active_screen = "overview"
+	shell._refresh()
+	await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+	_expect(_screen_mounted(shell, "main_menu"), "主菜单已挂载")
+	if _wants("main_menu"):
+		await _capture_skin("main_menu")
+	for pair in [["new_game", "new_game"], ["mods", "mods"], ["settings", "settings"]]:
+		var menu_id := String(pair[0])
+		if not _wants(menu_id):
+			continue
+		shell._menu_screen = menu_id
+		shell._refresh()
+		await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+		_expect(_screen_mounted(shell, menu_id), "%s 菜单页已挂载" % menu_id)
+		await _capture_skin(menu_id)

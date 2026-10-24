@@ -25,14 +25,20 @@ extends VBoxContainer
 ##   `set_presentation()` 都推给 `SNSeaChartView.set_ship_vision()`。纯表现：本页
 ##   不查询后端、不写领域状态。
 ## - `skip_requested` 只表达意图；跳过后事件仍由 Shell 推给玩家。
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 外观全部来自 `assets/ui/skin/sn_v1/`：底部航程条用 `SNPanel` 纹理承托，
+##   进度条用 `SNBrassProgressBar`，跳过按钮用 `SNGhostButton`；文字颜色一律取
+##   `SNSkin.color(...)`（`text.light` / `text.muted` / `state.water`），
+##   本页不再保留颜色常量或内联手写色值。
+## - 海图绘制归 `SNSeaChartView`（不在本页写域）；本页只驱动进度与取景。
+## - 节点名 `VoyageStrip` / `RouteLabel` / `SpeedLabel` / `ClockLabel` /
+##   `ProgressBar` / `SkipButton`、航程条布局与全屏海图 + 底部条结构不变，
+##   测试（test_voyage_flow / test_ui_shell）按名字与文本断言。
 ## @end-static-doc
 
 signal skip_requested
 
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_TEAL := Color("76a7a7")
-const COLOR_BRASS := Color("e1c487")
 ## 求航线切线时前后各取的弧长比例。足够小才能贴合弯道，足够大才不会被折线
 ## 顶点的数值抖动影响（14 节的航线是离散折线，间距不均匀）。
 const HEADING_SAMPLE := 0.004
@@ -44,6 +50,9 @@ var _positions: Dictionary = {}
 var _route_path: PackedVector2Array = PackedVector2Array()
 var _origin: String = ""
 var _destination: String = ""
+## Shell 解析好的本地化港口名（图表视图被迷雾过滤时 id 无法反查名称）。
+var _origin_name: String = ""
+var _destination_name: String = ""
 ## 探索演出的未知目的地（`{x, y, label_key}`）；空字典 = 普通航行。
 var _unknown_destination: Dictionary = {}
 var _path: PackedVector2Array = PackedVector2Array()
@@ -68,6 +77,8 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	_positions = vm.get("positions", {}) if vm.get("positions", {}) is Dictionary else {}
 	_origin = String(_voyage.get("origin", ""))
 	_destination = String(_voyage.get("destination", ""))
+	_origin_name = String(vm.get("origin_name", ""))
+	_destination_name = String(vm.get("destination_name", ""))
 	var unknown: Variant = vm.get("unknown_destination", null)
 	_unknown_destination = unknown if unknown is Dictionary else {}
 	_route_path = unpack_route_path(vm.get("route_path", null))
@@ -200,6 +211,7 @@ func _apply_unknown_destination() -> void:
 func _build_strip() -> Control:
 	var panel := PanelContainer.new()
 	panel.name = "VoyageStrip"
+	panel.theme_type_variation = &"SNPanel"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
@@ -211,12 +223,12 @@ func _build_strip() -> Control:
 	_route_label = _label(
 		"%s → %s" % [_port_name(_origin), _destination_label()],
 		15,
-		COLOR_TEXT
+		SNSkin.color("text.light")
 	)
 	_route_label.name = "RouteLabel"
 	_route_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(_route_label)
-	_speed_label = _label("", 12, COLOR_TEAL)
+	_speed_label = _label("", 12, SNSkin.color("state.water"))
 	_speed_label.name = "SpeedLabel"
 	top.add_child(_speed_label)
 	_skip_button = Button.new()
@@ -228,6 +240,7 @@ func _build_strip() -> Control:
 
 	_progress_bar = ProgressBar.new()
 	_progress_bar.name = "ProgressBar"
+	_progress_bar.theme_type_variation = &"SNBrassProgressBar"
 	_progress_bar.min_value = 0.0
 	_progress_bar.max_value = 100.0
 	_progress_bar.value = 0.0
@@ -236,7 +249,7 @@ func _build_strip() -> Control:
 	_progress_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_progress_bar)
 
-	_clock_label = _label("", 12, COLOR_MUTED)
+	_clock_label = _label("", 12, SNSkin.color("text.muted"))
 	_clock_label.name = "ClockLabel"
 	box.add_child(_clock_label)
 	return panel
@@ -338,6 +351,10 @@ func _heading_at(progress: float) -> float:
 
 
 func _port_name(port_id: String) -> String:
+	if port_id == _origin and not _origin_name.is_empty():
+		return _origin_name
+	if port_id == _destination and not _destination_name.is_empty():
+		return _destination_name
 	for entry in _view_model.get("ports", []):
 		if String((entry as Dictionary).get("id", "")) == port_id:
 			var key := String((entry as Dictionary).get("name_key", ""))

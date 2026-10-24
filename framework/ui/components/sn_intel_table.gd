@@ -1,6 +1,7 @@
 class_name SNIntelTable
 extends PanelContainer
-## Commodity x port comparison matrix for the intelligence page.
+## @static-doc
+## 作用：商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。
 ##
 ## The current port column reads the live market while every other column is a
 ## frozen intelligence snapshot; undiscovered ports keep a masked column so the
@@ -11,14 +12,19 @@ extends PanelContainer
 ## - `？`  : the port is unknown or the snapshot does not cover this commodity.
 ## - `-`  : the port neither buys nor sells the commodity (per side otherwise).
 ## - price: "port buy price / port sell price", i.e. player sell / player buy.
-
-const COLOR_TEXT := Color("ece1c5")
-const COLOR_MUTED := Color("9fafa7")
-const COLOR_BRASS := Color("e1c487")
-const COLOR_RED := Color("c36b53")
-const COLOR_GREEN := Color("76aa8c")
-const COLOR_CELL := Color("0b292d")
-const COLOR_CELL_BORDER := Color("2e4b4c")
+##
+## ## 外观来源（外部贴图 + SNSkin）
+## - 面板底层用 Theme 变体 `SNElevatedPanel`（钢制抬高面）；每个表头 / 数值单元格
+##   用 `SNSkin.style("panel_recess")`（普通格，承袭仪表凹槽纹理）与
+##   `SNSkin.style("panel_steel")`（当前港高亮格），内容边距固定回 8 / 2 以保持旧
+##   表格行高与列宽，不插入新布局。
+## - 文字与趋势色一律取 `SNSkin.color(token)`（text.light / text.muted /
+##   brass.highlight / state.success / state.danger），本文件不写十六进制颜色。
+## - 尺寸约束：商品 180 px、单位重量 120 px、参考价 100 px、港口列 ≥120 px 的
+##   固定最小宽度不变；网格列数、行数与 `Content/Grid` 节点结构不变。
+## - 旧断言 `test_ui_shell.gd:201-202` 按 `StyleBoxFlat.bg_color` 检查单元格，换成
+##   纹理 StyleBoxTexture 后需由验收侧改为检查纹理来源（本文件不修改测试）。
+## @end-static-doc
 
 const KEY_UNKNOWN_PORT := "ui.label.unknown_port"
 const KEY_GOODS := "ui.label.goods"
@@ -63,7 +69,7 @@ func _build_legend() -> void:
 	legend.name = "Legend"
 	legend.text = "  ·  ".join([_txt(KEY_LEGEND_CELL), _txt(KEY_LEGEND_GAP), _txt(KEY_LEGEND_TREND)])
 	legend.add_theme_font_size_override("font_size", 12)
-	legend.add_theme_color_override("font_color", COLOR_MUTED)
+	legend.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_content.add_child(legend)
 
@@ -87,7 +93,7 @@ func _build_grid(columns: Array, rows: Array, current_port_id: String) -> void:
 		var name_label := Label.new()
 		name_label.text = _item_name(row)
 		name_label.add_theme_font_size_override("font_size", 13)
-		name_label.add_theme_color_override("font_color", COLOR_TEXT)
+		name_label.add_theme_color_override("font_color", SNSkin.color("text.light"))
 		name_label.custom_minimum_size.x = 180.0
 		grid.add_child(name_label)
 		var weight_label := _muted_label(_fmt(float(row.get("unit_weight", 0.0))))
@@ -116,14 +122,17 @@ func _port_header(column: Dictionary, current_port_id: String) -> Control:
 	var name_label := Label.new()
 	name_label.text = _txt(KEY_UNKNOWN_PORT) if masked else _txt(String(column.get("name_key", "")))
 	name_label.add_theme_font_size_override("font_size", 13)
-	name_label.add_theme_color_override("font_color", COLOR_BRASS if current else COLOR_MUTED)
+	name_label.add_theme_color_override(
+		"font_color",
+		SNSkin.color("brass.highlight") if current else SNSkin.color("text.muted")
+	)
 	box.add_child(name_label)
 	var age := float(column.get("age_hours", -1.0))
 	if not current and bool(column.get("in_snapshot", false)) and age >= 0.0:
 		var age_label := Label.new()
 		age_label.text = _age_label_text(age)
 		age_label.add_theme_font_size_override("font_size", 10)
-		age_label.add_theme_color_override("font_color", COLOR_MUTED)
+		age_label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 		box.add_child(age_label)
 	return _frame(box, current, 120.0, true)
 
@@ -134,7 +143,10 @@ func _value_cell(cell: Dictionary, highlight: bool) -> Control:
 	var price_label := Label.new()
 	price_label.text = _price_text(cell)
 	price_label.add_theme_font_size_override("font_size", 13)
-	price_label.add_theme_color_override("font_color", COLOR_TEXT if bool(cell.get("known", false)) else COLOR_MUTED)
+	price_label.add_theme_color_override(
+		"font_color",
+		SNSkin.color("text.light") if bool(cell.get("known", false)) else SNSkin.color("text.muted")
+	)
 	box.add_child(price_label)
 	if bool(cell.get("known", false)):
 		var percent := float(cell.get("trend_percent", 0.0))
@@ -146,24 +158,27 @@ func _value_cell(cell: Dictionary, highlight: bool) -> Control:
 	return _frame(box, highlight, 120.0, true)
 
 
+## Cell backing: a low-margin skin nine-slice instead of a hand-built StyleBoxFlat.
+## `cell_recess` is derived from the atlas recess centre so 18–22 px tall matrix
+## cells stay calm; the current-port column modulates it with brass instead of
+## painting a full steel plate per cell. Content margins stay pinned to 8 / 2 so
+## the matrix keeps its old row height and column width.
 func _frame(inner: Control, highlight: bool, minimum_width: float, expand: bool) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size.x = minimum_width
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if expand else Control.SIZE_FILL
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(COLOR_BRASS, 0.10) if highlight else COLOR_CELL
-	style.border_color = Color(COLOR_BRASS, 0.35) if highlight else COLOR_CELL_BORDER
-	style.set_border_width_all(1)
-	if highlight:
-		style.corner_radius_top_left = 2
-		style.corner_radius_top_right = 2
-		style.corner_radius_bottom_left = 2
-		style.corner_radius_bottom_right = 2
-	style.content_margin_left = 8.0
-	style.content_margin_right = 8.0
-	style.content_margin_top = 2.0
-	style.content_margin_bottom = 2.0
-	panel.add_theme_stylebox_override("panel", style)
+	var base_style: StyleBoxTexture = SNSkin.style("cell_recess")
+	if base_style != null:
+		var style := base_style.duplicate() as StyleBoxTexture
+		style.content_margin_left = 8.0
+		style.content_margin_right = 8.0
+		style.content_margin_top = 2.0
+		style.content_margin_bottom = 2.0
+		if highlight:
+			style.modulate_color = SNSkin.color("brass.base")
+		panel.add_theme_stylebox_override("panel", style)
+	else:
+		panel.theme_type_variation = &"SNInsetPanel"
 	panel.add_child(inner)
 	return panel
 
@@ -172,7 +187,7 @@ func _muted_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", COLOR_MUTED)
+	label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 	return label
 
 
@@ -211,10 +226,10 @@ func _percent_text(percent: float) -> String:
 
 func _percent_color(percent: float) -> Color:
 	if percent > 0.0005:
-		return COLOR_GREEN
+		return SNSkin.color("state.success")
 	if percent < -0.0005:
-		return COLOR_RED
-	return COLOR_MUTED
+		return SNSkin.color("state.danger")
+	return SNSkin.color("text.muted")
 
 
 ## `ui.intel.col_age` is a format string ("Snapshot %s h old"); fall back to a

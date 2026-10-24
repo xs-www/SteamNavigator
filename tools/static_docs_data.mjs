@@ -2458,12 +2458,14 @@ export const MODULES = {
     contracts: ["GameState 可深克隆、可哈希，JSON 往返哈希一致。"]
   },
   "framework/ui": {
-    intro: "展示层。固定 Shell、四个菜单场景、八个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。共享 Godot Theme、可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。",
+    intro: "展示层。固定 Shell、四个菜单场景、八个功能页、五个流程页与海图组件均已场景化；Shell 仅保留上下文解析、ViewModel 组合、导航、命令和转场。UI 采用外部贴图皮肤管线（V1）：`assets/ui/skin/<skin>/` 提供九宫格纹理/图标与 `skin.json`，`tools/ui/build_ui_skin.gd` 生成运行纹理，`tools/ui/build_ui_theme.gd` 生成纹理化 Theme，`framework/ui/skin/sn_skin.gd`（SNSkin）是程序化 UI 的唯一素材访问层；换同名同尺寸贴图即整体换肤，流程见 `docs/design/UI_SKIN_PIPELINE.md`。可复用控件与 UI Kit 展示场景保持统一视觉。船厂中央改装台（SNShipView）与部件 HUD（SNSlotTarget/SNPartRow）是独立可复用组件，2.5D 渲染器经 set_renderer 接入。2.5D 固定舞台位于 `framework/ui/stages/`：`SNStageHost` 持有 SubViewport 与生命周期，`LocationStage` 是舞台契约，`ShipyardStage` 承载船厂 3D 船体，`PortStage` 是港口舞台骨架，`StageKit` 提供环境/水面/AABB 取景构建器；总览页已把 `PortStage` 作为全窗背景层接入，并生成 2D 设施热点（点击与顶部导航同一路径）。",
     contracts: [
       "UI 只识别 Query/Command 与定义类型，不识别 core 内容。",
       "公共视觉状态优先进入 Theme variation；业务页面只负责布局与数据绑定。",
       "页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。",
-      "2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。"
+      "2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。",
+      "UI 材质与图标只引用外部贴图：Theme 由 skin.json 生成，程序化样式走 SNSkin；业务脚本不得新建 StyleBoxFlat、不得硬编码 skin 路径或十六进制业务色。",
+      "换肤必须保持布局契约：TopChrome ≤130px、底部状态条 60px、侧牌 172×42、九宫格安全区；<38px 高按钮用 SNCompactButton/SNPlateButton。"
     ]
   },
   "framework/tests": {

@@ -15,6 +15,15 @@ extends Control
 ## - 遮罩 `mouse_filter = STOP`：卡片打开期间拦截页面点击；尺寸变化由布局自适应。
 ## - 测试通过节点名访问按钮：`ContinueButton` / `SkipButton` / `SkipConfirmButton` /
 ##   `SkipCancelButton`。
+##
+## ## 皮肤与节点约束（UI 贴图层）
+## - 剧情卡是航海日志纸面：面板用 `SNParchmentPanel`（`StoryPanel` 节点名不变），
+##   遮罩色取 `SNSkin.color("bg.abyss")` + 0.72 alpha；标题/眉题沿用
+##   `SNTitleLabel` / `SNEyebrowLabel`，在纸面上把文字色覆盖为
+##   `ink.primary` / `brass.shadow`。按钮统一 Theme 变体（继续 `SNPrimaryButton`、
+##   跳过/取消 `SNGhostButton`），Ghost 在纸面用深墨色字体覆盖以保证对比度。
+## - 卡片宽度 `CARD_WIDTH = 720`、按钮节点名与信号（`advance_requested` /
+##   `skip_requested`）不变，test_story_ui 按名字查找。
 ## @end-static-doc
 
 signal advance_requested
@@ -47,7 +56,9 @@ func _rebuild() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
 	dim.name = "StoryDim"
-	dim.color = Color(0.015, 0.05, 0.06, 0.72)
+	var dim_color := SNSkin.color("bg.abyss")
+	dim_color.a = 0.72
+	dim.color = dim_color
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
@@ -57,7 +68,7 @@ func _rebuild() -> void:
 	add_child(center)
 	_panel = PanelContainer.new()
 	_panel.name = "StoryPanel"
-	_panel.theme_type_variation = &"SNPanel"
+	_panel.theme_type_variation = &"SNParchmentPanel"
 	_panel.custom_minimum_size = Vector2(CARD_WIDTH, 0)
 	center.add_child(_panel)
 	var box := VBoxContainer.new()
@@ -74,11 +85,13 @@ func _build_card(box: VBoxContainer) -> void:
 	var eyebrow := Label.new()
 	eyebrow.text = _loc("ui.story.eyebrow", "航路局 · 新手教程")
 	eyebrow.theme_type_variation = &"SNEyebrowLabel"
+	eyebrow.add_theme_color_override("font_color", SNSkin.color("brass.shadow"))
 	box.add_child(eyebrow)
 	var title := Label.new()
 	title.name = "StoryTitle"
 	title.text = _loc(String(_card.get("title_key", "")), "")
 	title.theme_type_variation = &"SNTitleLabel"
+	title.add_theme_color_override("font_color", SNSkin.color("ink.primary"))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(title)
 	for key in Array(_card.get("body_keys", [])):
@@ -86,7 +99,7 @@ func _build_card(box: VBoxContainer) -> void:
 		body.text = _loc(String(key), "")
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body.add_theme_font_size_override("font_size", 15)
-		body.add_theme_color_override("font_color", Color("d8cfb8"))
+		body.add_theme_color_override("font_color", SNSkin.color("ink.primary"))
 		box.add_child(body)
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
@@ -96,6 +109,7 @@ func _build_card(box: VBoxContainer) -> void:
 	skip.name = "SkipButton"
 	skip.text = _loc(String(_card.get("skip_label_key", "")), _loc("ui.story.skip", "跳过教程"))
 	skip.theme_type_variation = &"SNGhostButton"
+	_ink_ghost(skip)
 	skip.pressed.connect(func() -> void:
 		_skip_confirm = true
 		_rebuild()
@@ -113,18 +127,20 @@ func _build_confirm(box: VBoxContainer) -> void:
 	var eyebrow := Label.new()
 	eyebrow.text = _loc("ui.story.eyebrow", "航路局 · 新手教程")
 	eyebrow.theme_type_variation = &"SNEyebrowLabel"
+	eyebrow.add_theme_color_override("font_color", SNSkin.color("brass.shadow"))
 	box.add_child(eyebrow)
 	var title := Label.new()
 	title.name = "StoryTitle"
 	title.text = _loc("ui.story.skip_confirm_title", "跳过新手教程？")
 	title.theme_type_variation = &"SNTitleLabel"
+	title.add_theme_color_override("font_color", SNSkin.color("ink.primary"))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(title)
 	var body := Label.new()
 	body.text = _loc("ui.story.skip_confirm_body", "")
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_font_size_override("font_size", 15)
-	body.add_theme_color_override("font_color", Color("d8cfb8"))
+	body.add_theme_color_override("font_color", SNSkin.color("ink.primary"))
 	box.add_child(body)
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
@@ -134,6 +150,7 @@ func _build_confirm(box: VBoxContainer) -> void:
 	cancel.name = "SkipCancelButton"
 	cancel.text = _loc("ui.story.skip_confirm_no", "取消")
 	cancel.theme_type_variation = &"SNGhostButton"
+	_ink_ghost(cancel)
 	cancel.pressed.connect(func() -> void:
 		_skip_confirm = false
 		_rebuild()
@@ -145,6 +162,15 @@ func _build_confirm(box: VBoxContainer) -> void:
 	confirm.theme_type_variation = &"SNPrimaryButton"
 	confirm.pressed.connect(func() -> void: skip_requested.emit())
 	buttons.add_child(confirm)
+
+
+## Ghost 变体在纸面上默认用深底浅色文字；这里把文字统一压成深墨，保证可读。
+func _ink_ghost(button: Button) -> void:
+	var ink := SNSkin.color("ink.primary")
+	button.add_theme_color_override("font_color", ink)
+	button.add_theme_color_override("font_hover_color", ink)
+	button.add_theme_color_override("font_pressed_color", ink)
+	button.add_theme_color_override("font_focus_color", ink)
 
 
 func _loc(key: String, fallback: String) -> String:

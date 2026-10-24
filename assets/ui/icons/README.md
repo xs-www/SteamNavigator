@@ -1,16 +1,23 @@
 # UI Icons
 
-放置全局通用图标，统一 24×24 画布。
+全局业务图标由 `docs/design/ui_icons_v1/` 生成，运行文件在 `assets/ui/skin/sn_v1/icons/`（128×128，已裁透明留白并居中）。
 
-计划分类：
+## 已生成图标（30 + 4 派生）
 
-- `goods/`：商品图标
-- `facilities/`：交易所、船厂、补给、情报站、港务
-- `status/`：风险、声望、耐久、重量、金币、煤、水
-- `actions/`：买入、卖出、接受、出航、维修
+- `nav_*`：market / contracts / shipyard / resupply / intelligence / chart / departure
+- `resource_*`：coins / coal / water / durability / cargo
+- `shipyard_*`：hull / boiler / cargo / navigation / safety / cabin
+- `action_*`：add / remove / confirm
+- `status_*`：warning / locked / unlocked / anchor / time / weather / storm / reputation / route
+- 派生（theme 直接引用，不写入 skin.json 业务图标表）：`check_empty` / `check_checked` / `check_empty_disabled` / `check_checked_disabled`
 
-要求：
+## 使用
 
-- 文件名 `snake_case`，例如 `good_iron_ore.svg`。
-- 优先 SVG；需要位图时用透明 PNG，2× 导出（48×48）。
-- 颜色通过 `modulate` 适配，不把主题色烘焙进图标。
+- 程序化 UI：`SNSkin.icon(id)` + `SNSkin.icon_rect(id, 24)`；按钮用 `Button.icon` + `icon_max_width`（16–20）。
+- 图标本身已带墨线与材质色，不要再统一 tint；禁用态由按钮/Theme 的 modulate 表达。
+- 最小推荐显示尺寸 24px（主 HUD 可 28–32）；20px 以下会丢失手绘细节。
+- 语义缺口与临时映射见 [docs/design/UI_SKIN_PIPELINE.md §6](../../../docs/design/UI_SKIN_PIPELINE.md)。
+
+## 母版更新
+
+图标母版在 `docs/design/ui_icons_v1/`（`icons/*.png` 256×256 + `manifest.json` 的 id 列表）。更新后运行 `pwsh ./tools/build_ui_skin.ps1` 重新生成，并跑 `-Check` 与 `-Suite ui_skin`。

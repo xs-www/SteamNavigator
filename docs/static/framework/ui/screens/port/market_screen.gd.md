@@ -2,7 +2,6 @@
 
 > 作用：港口市场页面场景：展示行情、真实价格历史、持仓成本及买卖操作；作为泊位侧栏时按 620 px 窄列设计（纵向商品条目列表，替代旧九列表格），外层 PageScroll 负责竖向滚动。
 
-- 关键依赖：`SNSparkline`、`SNSectionHeader`、`steam_navigator_theme.tres`
 - 类型：GDScript 源文件
 
 ## 关键符号
@@ -10,25 +9,32 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MarketScreen` | L1 |
-| `command_requested (signal)` | L14 |
-| `SPARKLINE_SCENE` | L16 |
-| `SUPPLY_CARD_SCENE` | L17 |
-| `COLOR_TEXT` | L18 |
-| `COLOR_MUTED` | L19 |
-| `COLOR_TEAL` | L20 |
-| `COLOR_BRASS` | L21 |
-| `COLOR_RED` | L22 |
-| `COLOR_GREEN` | L23 |
-| `ENTRY_SEPARATION` | L25 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L30 |
+| `command_requested (signal)` | L29 |
+| `SPARKLINE_SCENE` | L31 |
+| `SUPPLY_CARD_SCENE` | L32 |
+| `ENTRY_SEPARATION` | L34 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L39 |
 
-## 契约与约束
+Port market presentation screen.
 
-- bind(view_model, translate) 接收 Shell 组合后的 current_port/money/ship/market/trends，不访问 AppContext 或任何总线。
-- 买卖按钮只发出 trade.buy/trade.sell command_requested；可买性、港存和可售数量只决定展示与按钮禁用。
-- 折线只使用 recent_prices 真实样本；少于两个样本显示缺省状态，趋势颜色为红降绿升。
-- 窄列布局：每件商品是 `SNInsetPanel` + 三行（名称/仅收购标记 + 趋势 sparkline 与百分比；单价/库存/持有/可售/均价/单位重量；买入 1/5/10 与卖出 1/5），行内 HBox 不允许横向裁切；`_grid_label(text, size, color)` 保留 72 px 最小宽（现有 UI 测试依赖）。
-- 摘要（金币/重量、货舱/库存成本）与市场提示单独成段，长提示用 `_paragraph()`（AUTOWRAP_WORD_SMART），密集字段标签仍保持单行。
-- 仅收购商品隐藏买入数量组并明确显示 sell-only；平均成本缺失时显示破折号；点击发出 {item_id, amount}。
+The shell supplies a complete market ViewModel, including intelligence
+trends. Trading actions are emitted as intent and executed by the shell.
+
+Layout: the screen shares the window with the persistent 3D port stage, so
+it is designed for a 620 px berth sidebar. Goods render as a vertical list of
+compact entries instead of the old full-width nine-column grid; rows break
+vertically rather than clipping horizontally, and the outer PageScroll owns
+vertical scrolling (the screen itself adds no ScrollContainer).
+
+## 外观来源（外部贴图 + SNSkin）
+- 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），纸面正文改用
+  `SNSkin.color("ink.primary")`（数据行）/ `paper.ink_muted`（说明），保证纸面
+  对比度；商品行仍用 `SNInsetPanel`（钢制凹槽）承载密集价格数据。
+- 其余文字颜色取 `SNSkin.color(token)`（text.light / text.muted / state.water /
+  state.success / state.danger），趋势色与 sparkline 线色同源于 token。
+- 买卖数量按钮用 `SNCompactButton`（小铭牌）并保持 `custom_minimum_size = (34, 28)`；
+  数量按钮宽度不足 80，按规范不加图标以免溢出。
+- 尺寸约束：`_grid_label` 的 72 px 最小宽、趋势单元格 136 px、sparkline 64×24、
+  行间距 7 与所有节点结构/文本不变。
 
 模块索引：[framework/ui](../../README.md)

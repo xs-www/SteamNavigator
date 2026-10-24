@@ -9,23 +9,19 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AtSeaScreen` | L1 |
-| `skip_requested (signal)` | L30 |
-| `COLOR_TEXT` | L32 |
-| `COLOR_MUTED` | L33 |
-| `COLOR_TEAL` | L34 |
-| `COLOR_BRASS` | L35 |
-| `HEADING_SAMPLE` | L38 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L64 |
-| `set_presentation(snapshot: Dictionary) -> void` | L85 |
-| `get_chart() -> SNSeaChartView` | L110 |
-| `get_route_path() -> PackedVector2Array` | L116 |
-| `get_world_route_path() -> PackedVector2Array` | L121 |
-| `get_unknown_destination() -> Dictionary` | L126 |
-| `get_progress() -> float` | L131 |
-| `get_ship_world_position() -> Vector2` | L136 |
-| `get_ship_heading() -> float` | L142 |
-| `get_ship_vision_radius() -> float` | L147 |
-| `unpack_route_path(raw: Variant) -> PackedVector2Array` | L247 |
+| `skip_requested (signal)` | L40 |
+| `HEADING_SAMPLE` | L44 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L73 |
+| `set_presentation(snapshot: Dictionary) -> void` | L96 |
+| `get_chart() -> SNSeaChartView` | L121 |
+| `get_route_path() -> PackedVector2Array` | L127 |
+| `get_world_route_path() -> PackedVector2Array` | L132 |
+| `get_unknown_destination() -> Dictionary` | L137 |
+| `get_progress() -> float` | L142 |
+| `get_ship_world_position() -> Vector2` | L147 |
+| `get_ship_heading() -> float` | L153 |
+| `get_ship_vision_radius() -> float` | L158 |
+| `unpack_route_path(raw: Variant) -> PackedVector2Array` | L260 |
 
 **世界航线表里的真实航线**（Shell 通过 `route_path` 传入）按弧长行进，航程条
 显示进度、预计抵达时间、时间倍率，并提供「跳过演出」。
@@ -50,5 +46,15 @@
   `set_presentation()` 都推给 `SNSeaChartView.set_ship_vision()`。纯表现：本页
   不查询后端、不写领域状态。
 - `skip_requested` 只表达意图；跳过后事件仍由 Shell 推给玩家。
+
+## 皮肤与节点约束（UI 贴图层）
+- 外观全部来自 `assets/ui/skin/sn_v1/`：底部航程条用 `SNPanel` 纹理承托，
+  进度条用 `SNBrassProgressBar`，跳过按钮用 `SNGhostButton`；文字颜色一律取
+  `SNSkin.color(...)`（`text.light` / `text.muted` / `state.water`），
+  本页不再保留颜色常量或内联手写色值。
+- 海图绘制归 `SNSeaChartView`（不在本页写域）；本页只驱动进度与取景。
+- 节点名 `VoyageStrip` / `RouteLabel` / `SpeedLabel` / `ClockLabel` /
+  `ProgressBar` / `SkipButton`、航程条布局与全屏海图 + 底部条结构不变，
+  测试（test_voyage_flow / test_ui_shell）按名字与文本断言。
 
 模块索引：[framework/ui](../../README.md)

@@ -35,4 +35,5 @@
 - [UI_PROTOTYPE.md](UI_PROTOTYPE.md) — `.design` 美术与交互原型说明
 - [UI_VISUAL_BASELINE.md](UI_VISUAL_BASELINE.md) — SN Visual Baseline V1 与非约束性的 UI Kit Concept V1
 - [UI_FOUNDATION_SPEC_V1.md](UI_FOUNDATION_SPEC_V1.md) — 四类材质、基础尺寸、九宫格、安全区、字体、颜色、状态与动效生产前置规范
+- [UI_SKIN_PIPELINE.md](UI_SKIN_PIPELINE.md) — 外部贴图皮肤管线 V1：图集→运行纹理/Theme 生成、SNSkin 契约、换贴图流程、图标语义与已知缺口
 - [UI_SCREEN_PROTOTYPES_V1.md](UI_SCREEN_PROTOTYPES_V1.md) — 总览、市场、委托、船厂、补给、情报、海图/出航、抵达结算八张页面级视觉原型

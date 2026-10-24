@@ -9,22 +9,24 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNPartRow` | L1 |
-| `activated (signal)` | L9 |
-| `drag_started (signal)` | L10 |
-| `TEXT` | L12 |
-| `MUTED` | L13 |
-| `BRASS` | L14 |
-| `TEAL` | L15 |
-| `RED` | L16 |
-| `GREEN` | L17 |
-| `configure(part_data: Dictionary, tag_text: String, tag_color: Color, meta_text: String, hint_text: String, can_drag: bool) -> void` | L32 |
-| `set_compatible_hint(active: bool) -> void` | L57 |
+| `activated (signal)` | L22 |
+| `drag_started (signal)` | L23 |
+| `configure(part_data: Dictionary, tag_text: String, tag_color: Color, meta_text: String, hint_text: String, can_drag: bool) -> void` | L39 |
+| `set_compatible_hint(active: bool) -> void` | L64 |
 
-## 契约与约束
+One module entry in the shipyard parts HUD.
 
-- `configure(part, tag_text, tag_color, meta_text, hint_text, can_drag)` 之后重复调用只刷新内容，不重建子节点。
-- `draggable` 行实现 `_get_drag_data`：返回 `{"kind": "ship_parts", "part": part}` 并调用 `set_drag_preview`，由 SNSlotTarget 消费。
-- 不可拖拽行（已装 / 购买候选）左键点击发 `activated(part)`；只有 ShipyardScreen 会把购买行转成安装命令。
-- 标签文字与颜色由调用方本地化后传入；控件不读 _tr、不访问总线。
+A row is one of: installed (已装), owned free module (仓库/随船, draggable),
+purchasable candidate (点击购买安装). Owned free rows produce the
+`ship_parts` drag payload consumed by SNSlotTarget.
+
+## 外观来源（外部贴图 + SNSkin）
+- 行底板不再手搓 `StyleBoxFlat`：普通行取 `SNSkin.style("panel_recess")`（仪表凹槽
+  纹理），可拖 / 匹配高亮行改用 `SNSkin.style("panel_steel")` 并用
+  `modulate_color = SNSkin.color(...)` 着色；内容边距固定回 8 / 4，保持旧行高。
+- 拖拽预览用同一套钢制九宫格 + 10 / 6 内边距；文字色全部取
+  `SNSkin.color(token)`（text.light / text.muted / state.water），无十六进制色。
+- 尺寸约束：标签 64 px 右对齐、行内间距 8、字号 13/11/10 与信号/拖拽载荷
+  `{"kind": "ship_parts", "part": ...}` 保持不变；不新增包装容器。
 
 模块索引：[framework/ui](../README.md)
