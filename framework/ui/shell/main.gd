@@ -23,6 +23,11 @@ extends Control
 ## ## 契约
 ## - 数据只走 QueryBus，修改只走 CommandBus；UI 会话状态不写存档。
 ## - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
+## - 顶部导航只渲染 `SCREENS` 中不在 `HIDDEN_NAV_SCREENS` 里的页面：基地（D3 基地建设）、
+##   贸易（D4 自动贸易）、遗迹（D5 遗迹远征）三个系统尚未作为玩家功能发布，入口暂隐藏；
+##   其中遗迹属于**航行探索**玩法（海图 → 探索），不作为港口页入口。三个页面的场景、
+##   `_screen_*` 挂载函数与 `ui.nav.*` 本地化键保留：`tools/ui_snapshot.gd` 仍直接路由
+##   这些页面做视觉验收，未来重新发布时只需从 `HIDDEN_NAV_SCREENS` 移除对应键。
 ## - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
 ##
 ## ## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
@@ -64,6 +69,11 @@ extends Control
 ## - 舞台可用时挂三栏 `DockPanelRow`：`CargoHoldPanel`(360) + 透明 `StageWindow`
 ##   (expand, `MOUSE_FILTER_IGNORE`, 只露出 3D 港区) + `DockPanel`(640)；舞台不可用时
 ##   退化成 `CargoHoldPanel` + 市场面板两栏，不出现空白舞台窗口。
+## - 角标分工：市场行情格右上角显示**剩余库存**（`SNItemTile` 的 `remaining` 模式，
+##   `stock - pending`）；玩家已选数量（`×N`）与**预计消费**（`unit_price × amount`，
+##   文案键 `ui.market.estimated_cost`）显示在跟随鼠标的 `SNCarryGhost` 上。行情格
+##   `meta` 只保留单价 + 趋势，不和角标重复。`offer` 由 `MarketScreen._offer_for()`
+##   组装并携带 `unit_price`。
 ## - 页面只发命令意图：`trade.buy{destination}` / `trade.sell{source}` /
 ##   `warehouse.store_materials` / `warehouse.take_materials`。
 ##
@@ -178,6 +188,11 @@ const GAME_VERSION_FALLBACK := "0.2.0"
 ## 港口页面导航（4.3.4 / U7：出航准备页已删除；4.5.3：补给页并入市场；
 ## 4.5.4：情报站页面被酒馆页替换）。
 const SCREENS := ["overview", "market", "contracts", "shipyard", "base", "trade", "ruins", "tavern"]
+## 未发布系统的玩家入口：基地（D3）/ 自动贸易（D4）/ 遗迹远征（D5）都有完整内部页面，
+## 但尚未作为玩家功能发布，顶部导航不生成按钮（遗迹归航行探索，不是港口页入口）。
+## 只隐藏 **入口**：`SCREENS` 路由、三个页面场景与 `ui.nav.*` 文案都保留，因为
+## `tools/ui_snapshot.gd` 仍直接路由这些页面做视觉验收，后续重新发布时从本表移除即可。
+const HIDDEN_NAV_SCREENS := ["base", "trade", "ruins"]
 ## 2.5D port stage presented behind the overview page. Kept as a path (not a
 ## preload) so a missing scene degrades to the 2D banner instead of a parse error.
 const PORT_STAGE_SCENE_PATH := "res://framework/ui/stages/port_stage.tscn"
@@ -789,13 +804,26 @@ func _ensure_carry_ghost() -> Control:
 
 ## Shows (or updates) the carried stack from a `MarketScreen.carry_changed` offer.
 ## The pickup sound plays only when a carry actually starts, not on every +1.
+## 市场格角标显示剩余库存，玩家已选数量与预计消费（单价 × 数量）画在幽灵上。
 func _show_carry_ghost(offer: Dictionary) -> void:
 	if offer.is_empty():
 		_hide_carry_ghost()
 		return
 	var ghost := _ensure_carry_ghost()
 	var started := not bool(ghost.call("is_carrying"))
-	ghost.call("begin", offer.get("icon", null) as Texture2D, String(offer.get("name", "")), int(offer.get("amount", 0)), _tr("ui.hint.market_pickup", ""))
+	var amount := int(offer.get("amount", 0))
+	var unit_price := int(offer.get("unit_price", 0))
+	var cost_text := ""
+	if unit_price > 0 and amount > 0:
+		cost_text = _tr("ui.market.estimated_cost", "预计消费 %d 金") % (unit_price * amount)
+	ghost.call(
+		"begin",
+		offer.get("icon", null) as Texture2D,
+		String(offer.get("name", "")),
+		amount,
+		_tr("ui.hint.market_pickup", ""),
+		cost_text
+	)
 	if started:
 		_play_pickup()
 
@@ -1223,6 +1251,10 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 		_build_nav_buttons(row2)
 
 
+## Builds the compact navigation row from `SCREENS`, minus `HIDDEN_NAV_SCREENS`
+## (unpublished systems: base / auto trade / ruins) and minus story-locked pages.
+## Page routing itself is unchanged, so the internal pages stay reachable by the
+## snapshot tool and future re-release.
 func _build_nav_buttons(parent: HBoxContainer) -> void:
 	var visual_active := "overview" if _active_screen in ["port_memory", "settlement", "victory"] else _active_screen
 	# Nested container so the compact navigation gap does not override the
@@ -1232,6 +1264,9 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 	nav.add_theme_constant_override("separation", 2)
 	parent.add_child(nav)
 	for screen in SCREENS:
+		if HIDDEN_NAV_SCREENS.has(screen):
+			# 未发布系统：页面保留但不出现在玩家可见的导航里。
+			continue
 		if not _story_feature_unlocked(_story_screen_feature(screen)):
 			continue
 		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))

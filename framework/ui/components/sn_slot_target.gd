@@ -9,6 +9,15 @@ extends PanelContainer
 ## owned free module (SNPartRow payload, `kind = "ship_parts"`). The screen owns
 ## the command intent; this control only validates the module category and source.
 ##
+## ## 拖放载荷契约（2026-10-26 修复）
+## - `_drop_data` 必须把**完整拖拽载荷**（`{kind:"ship_parts", part:{...}}`）原样
+##   duplicate 后从 `part_dropped` 发出，不能只发内层 `part`：船厂页
+##   `_on_slot_drop(payload, slot)` 的契约是按 `SNPartRow._get_drag_data()` 的载荷
+##   形状解析 `payload.part`。只发内层 part 会让真实拖放在页面侧静默落空
+##   （空槽安装 / 已装替换都不触发命令），而直接调用页面函数的测试发现不了。
+## - `part_dropped(payload, slot)` → `SNShipView.slot_drop_requested` →
+##   `ShipyardScreen._on_slot_drop` 全链路保持同一载荷形状。
+##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 槽位底板不再手搓 `StyleBoxFlat`：取 `SNSkin.style("panel_recess")`（仪表凹槽
 ##   纹理），悬停 / 匹配 / 固定槽位改用 `SNSkin.style("panel_steel")` 并以
@@ -129,14 +138,24 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return accepted
 
 
+## The drop handler forwards the **whole drag payload** (top-level `kind ==
+## "ship_parts"` plus the `part` sub-dictionary), not just the part: the shipyard
+## screen's `_on_slot_drop(payload, slot)` contract is defined on the payload shape
+## that `SNPartRow._get_drag_data()` produces. Emitting the bare `part` here made
+## every real drop fall through `payload.get("part", {})` and silently do nothing
+## (empty-slot install and filled-slot replacement both), while the keyless unit
+## test that called the screen directly with a hand-built payload kept passing.
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	_hovering = false
-	_apply_style()
 	if not (data is Dictionary):
 		return
-	var part: Dictionary = data.get("part", {})
+	var part: Dictionary = (data as Dictionary).get("part", {})
 	if _accepts(part):
-		part_dropped.emit(part, slot)
+		_hovering = false
+		_apply_style()
+		part_dropped.emit((data as Dictionary).duplicate(true), slot)
+		return
+	_hovering = false
+	_apply_style()
 
 
 func _notification(what: int) -> void:

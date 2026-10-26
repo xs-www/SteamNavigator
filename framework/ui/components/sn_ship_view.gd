@@ -1,7 +1,7 @@
 class_name SNShipView
 extends Control
 ## @static-doc
-## 作用：船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。
+## 作用：船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动、可读可拖放的武器槽位贴片（`SNWeaponSocketTarget`）。
 ##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 舞台背景 wash、每视图框/底板与底部槽位坞条改用皮肤九宫格：
@@ -21,8 +21,24 @@ extends Control
 ##   `blueprint_socket_rects(view)` 用这个矩形把归一化坐标映射为屏幕框；缺失、越界或
 ##   形状错误的坐标跳过，不影响其它槽位和模块拖放。没有线稿时 rect 回退为整个 Control，
 ##   保持旧内容兼容。
-## - CUTAWAY 同时绘制 side（上方）与 top（下方）两个视图；槽位框空槽为灰、已装武器为
-##   黄铜、`highlight_slots()` 命中的 socket 为青色高亮；购买/安装命令仍由船厂页面发出。
+## - CUTAWAY 同时绘制 side（上方）与 top（下方）两个视图；武器槽位改由贴片控件绘制：
+##   空槽为暗色凹槽 + muted 文字、已装为黄铜底板 + 亮色文字、`highlight_slots()` 命中的
+##   socket 只换青色描边（不覆盖已装/空槽差异）；购买/安装命令仍由船厂页面发出。
+## - 武器贴片契约（2026-10-27，玩家反馈「装配后看不出装在哪 / 武器不能拖动安装」）：
+##   * `set_ship_model()` 的 `model.weapon_sockets[]` 每行至少含 `socket` / `socket_class` /
+##     `blueprint` / `weapon_id`；可选展示字段 `display_name`（已装武器本地化名，空槽 ""）、
+##     `slot_label`（短标签，如「左舷1」）、`slot_title`（完整友好名，作 tooltip）、
+##     `empty_text`、`occupied`。缺字段时按 `SNWeaponSocketTarget` 的兜底规则推导，不崩。
+##   * 每个 socket 只要在 side / top 某一视图有 `blueprint` 坐标，就在该视图生成一枚贴片；
+##     贴片始终随 CUTAWAY 可见（EXTERIOR 隐藏）。
+##   * `weapon_socket_display_rects(view)` 从 `blueprint_socket_rects(view)` 的锚点派生
+##     ≥96×30 的可读贴片矩形：锚点相同/过近的槽位（如 Port_1 / Starboard_1 共用同一
+##     side 坐标）沿垂直方向扇出，互不重叠，并 clamp 在 `blueprint_view_rect(view)` 内。
+##     `blueprint_socket_rects()` 保持原有的 28–42 px 小框语义，不变。
+##   * 拖放：贴片只接受 `{kind:"ship_weapon", weapon_id, weapon_class, source, name}`，
+##     `weapon_class == socket_class` 才接受；`_drop_data` 经 `weapon_dropped` 汇总为
+##     `weapon_drop_requested(payload, socket)`。`set_weapon_drop_enabled(false)` 只关闭
+##     拖放接收（非武器分类 / 非装配页签），不影响贴片可见性；默认接受。
 ## - 有每船线稿时船厂页把整列换成 `SNBlueprintPanel` 九宫格蓝图底板；页面调用
 ##   `set_blueprint_backdrop(true)` 后本视图只把线稿、视图标签、武器槽位框和槽位 chip
 ##   画在底板的深蓝内容区上。底板由 Theme 提供，本视图不持有底板纹理。
@@ -53,6 +69,17 @@ extends Control
 
 signal slot_drop_requested(payload: Dictionary, slot: Dictionary)
 signal slot_activated(slot: Dictionary)
+## A weapon patch accepted a `ship_weapon` drag payload. The screen owns the
+## command intent (`ship.install_weapon`); the stage only reports the socket row.
+signal weapon_drop_requested(payload: Dictionary, socket: Dictionary)
+## Hover over a weapon patch / left it (right-hand cards mirror the highlight).
+signal weapon_socket_hovered(socket_name: String)
+signal weapon_socket_unhovered
+
+## Preloaded instead of referencing the global `SNWeaponSocketTarget` class name:
+## tests run against `.godot/global_script_class_cache.cfg`, which is only refreshed
+## by an editor import, so a freshly added class_name file may not resolve yet.
+const WEAPON_TARGET_SCRIPT: Script = preload("res://framework/ui/components/sn_weapon_socket_target.gd")
 
 enum Mode { EXTERIOR, CUTAWAY }
 
@@ -73,6 +100,16 @@ const BLUEPRINT_SOCKET_MIN_SIZE := Vector2(28.0, 20.0)
 const BLUEPRINT_SOCKET_MAX_SIZE := Vector2(42.0, 30.0)
 const BLUEPRINT_SIDE_RATIO := 0.52
 const BLUEPRINT_VIEW_GAP := 0.02
+## Readable weapon patch layout. The old non-interactive socket frames were
+## 28-42 px; a patch must fit two text lines (slot label + weapon / empty text)
+## so the player can read the loadout on the blueprint.
+const WEAPON_CARD_MIN_WIDTH := 96.0
+const WEAPON_CARD_MAX_WIDTH := 156.0
+const WEAPON_CARD_HEIGHT := 36.0
+const WEAPON_CARD_MIN_HEIGHT := 26.0
+const WEAPON_CARD_WIDTH_RATIO := 0.24
+const WEAPON_CARD_GAP := 4.0
+const WEAPON_CARD_MARGIN := 2.0
 const SLOT_DOCK_MARGIN := 8.0
 const SLOT_DOCK_GAP := 8.0
 ## Refit cross-section texture. Replace this PNG to reskin the whole cutaway;
@@ -94,6 +131,12 @@ var _slots: Array = []
 var _slot_targets: Array = []
 var _renderer: Node = null
 var _slot_layer: Control
+var _weapon_layer: Control
+## One `SNWeaponSocketTarget` per (socket, blueprint view); rebuilt on model change.
+var _weapon_targets: Array = []
+## Page-owned gate for weapon drag & drop (weapons category + install tab only).
+## Visibility of the patches does not depend on it.
+var _weapon_drop_enabled := true
 var _section_texture: Texture2D = null
 var _blueprint_textures: Dictionary = {}
 var _blueprint_meta: Dictionary = {}
@@ -119,7 +162,16 @@ func _ready() -> void:
 	_slot_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_slot_layer)
 	_slot_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	resized.connect(_layout_slots)
+	# Weapon patches live on their own layer above the line art. The layer itself
+	# never eats input, but the patch Controls inside it do (hover + drop).
+	_weapon_layer = Control.new()
+	_weapon_layer.name = "WeaponLayer"
+	_weapon_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_weapon_layer)
+	_weapon_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_weapon_layer.visible = mode == Mode.CUTAWAY
+	_rebuild_weapon_targets()
+	resized.connect(_on_stage_resized)
 	set_process(true)
 	if not _slots.is_empty():
 		set_slots(_slots)
@@ -171,6 +223,7 @@ func set_ship_model(model: Dictionary) -> void:
 	_model = model.duplicate(true)
 	_load_blueprint_textures()
 	_notify_renderer("ship_view_update", [_model])
+	_rebuild_weapon_targets()
 	queue_redraw()
 
 
@@ -320,6 +373,9 @@ func set_slots(slots: Array) -> void:
 		target.visible = mode == Mode.CUTAWAY
 		_slot_targets.append(target)
 	_layout_slots()
+	# The slot dock changes `slot_dock_height()`, which shrinks the blueprint
+	# views, so the weapon patches must be re-derived after every slot rebuild.
+	_layout_weapon_targets()
 	queue_redraw()
 
 
@@ -328,8 +384,11 @@ func set_mode(next: int) -> void:
 	for target in _slot_targets:
 		if target is SNSlotTarget:
 			target.visible = mode == Mode.CUTAWAY
+	if _weapon_layer != null:
+		_weapon_layer.visible = mode == Mode.CUTAWAY
 	_notify_renderer("ship_view_set_mode", [mode])
 	_layout_slots()
+	_layout_weapon_targets()
 	queue_redraw()
 
 
@@ -338,6 +397,11 @@ func highlight_slots(slot_ids: Array) -> void:
 	for target in _slot_targets:
 		if target is SNSlotTarget:
 			target.set_compatible_hint(slot_ids.has(String(target.slot.get("id", ""))))
+	# Weapon socket ids share the same call: the weapons category highlights every
+	# patch, hovering a socket card highlights just that one.
+	for target in _weapon_targets:
+		if is_instance_valid(target) and target.has_method("set_highlighted"):
+			target.set_highlighted(slot_ids.has(String(target.row.get("socket", ""))))
 	_notify_renderer("ship_view_highlight", [slot_ids])
 	queue_redraw()
 
@@ -379,6 +443,262 @@ func blueprint_socket_rects(view: String = "side") -> Dictionary:
 		)
 		rects[socket_id] = Rect2(center - frame_size * 0.5, frame_size)
 	return rects
+
+
+## Readable on-screen frames for the weapon patches, keyed by socket id.
+##
+## Same anchors as `blueprint_socket_rects(view)` (which keeps its original
+## 28-42 px frame contract), but expanded into >=96x30 patches that fit the two
+## text lines. Sockets whose anchors are identical or too close (e.g. Port_1 /
+## Starboard_1 sharing one side-view coordinate) are fanned out vertically inside
+## their cluster so no two patches overlap, and every frame is clamped into
+## `blueprint_view_rect(view)`.
+func weapon_socket_display_rects(view: String = "side") -> Dictionary:
+	var rects: Dictionary = {}
+	if size.x <= 0.0 or size.y <= 0.0:
+		return rects
+	var view_rect := blueprint_view_rect(view)
+	if view_rect.size.x <= 0.0 or view_rect.size.y <= 0.0:
+		return rects
+	var anchors := blueprint_socket_rects(view)
+	if anchors.is_empty():
+		return rects
+	var card_width := clampf(view_rect.size.x * WEAPON_CARD_WIDTH_RATIO,
+		WEAPON_CARD_MIN_WIDTH, WEAPON_CARD_MAX_WIDTH)
+	card_width = minf(card_width, maxf(view_rect.size.x - WEAPON_CARD_MARGIN * 2.0, 40.0))
+	var card_height := minf(WEAPON_CARD_HEIGHT,
+		maxf(view_rect.size.y - WEAPON_CARD_MARGIN * 2.0, WEAPON_CARD_MIN_HEIGHT))
+	var entries: Array = []
+	for raw_id in anchors.keys():
+		var socket_id := String(raw_id)
+		entries.append({"socket": socket_id, "anchor": (anchors[socket_id] as Rect2).get_center()})
+	var placed: Array = []
+	for raw_cluster in _weapon_card_clusters(entries, card_width, card_height):
+		var cluster: Dictionary = raw_cluster
+		var members: Array = cluster["members"]
+		members.sort_custom(_sort_weapon_cards)
+		var count := members.size()
+		var total_height := float(count) * card_height + float(count - 1) * WEAPON_CARD_GAP
+		var center: Vector2 = cluster["center"]
+		var left := _clamp_span(center.x - card_width * 0.5,
+			view_rect.position.x + WEAPON_CARD_MARGIN,
+			view_rect.end.x - WEAPON_CARD_MARGIN - card_width)
+		var top := _clamp_span(center.y - total_height * 0.5,
+			view_rect.position.y + WEAPON_CARD_MARGIN,
+			view_rect.end.y - WEAPON_CARD_MARGIN - total_height)
+		for index in count:
+			var member: Dictionary = members[index]
+			placed.append({
+				"socket": String(member["socket"]),
+				"rect": Rect2(
+					Vector2(left, top + float(index) * (card_height + WEAPON_CARD_GAP)),
+					Vector2(card_width, card_height)
+				),
+			})
+	_weapon_cards_separate(placed, view_rect)
+	for entry in placed:
+		rects[String(entry["socket"])] = entry["rect"]
+	return rects
+
+
+## Enables / disables weapon drag & drop on every patch. The patches stay
+## visible: the shipyard only calls this with the weapons category + install tab
+## state, so a weapon row dropped elsewhere cannot install by accident.
+func set_weapon_drop_enabled(enabled: bool) -> void:
+	_weapon_drop_enabled = enabled
+	for target in _weapon_targets:
+		if is_instance_valid(target) and target.has_method("set_drop_enabled"):
+			target.set_drop_enabled(enabled)
+
+
+func is_weapon_drop_enabled() -> bool:
+	return _weapon_drop_enabled
+
+
+## Live weapon patch controls (test / screen access, one per socket + view).
+func weapon_targets() -> Array:
+	return _weapon_targets.duplicate()
+
+
+## One patch by socket id, optionally scoped to a blueprint view.
+func weapon_target(socket_id: String, view: String = "") -> Control:
+	for target in _weapon_targets:
+		if not is_instance_valid(target):
+			continue
+		if String(target.row.get("socket", "")) != socket_id:
+			continue
+		if not view.is_empty() and String(target.view) != view:
+			continue
+		return target as Control
+	return null
+
+
+# ---------------------------------------------------------------------------
+# Weapon patch rebuild / clustering / layout.
+# ---------------------------------------------------------------------------
+## Views that carry weapon patches: both blueprint views when per-view line art
+## exists, otherwise the legacy single `blueprint_view` (same rule the old
+## non-interactive frames used).
+func _weapon_views() -> Array:
+	var views: Array = []
+	if not _blueprint_textures.is_empty():
+		for view in ["side", "top"]:
+			if _blueprint_textures.has(view):
+				views.append(view)
+		return views
+	var legacy := String(_model.get("blueprint_view", "side"))
+	return [legacy] if legacy in ["side", "top"] else ["side"]
+
+
+func _socket_has_blueprint(row: Dictionary, view: String) -> bool:
+	var blueprint: Variant = row.get("blueprint", {})
+	if not (blueprint is Dictionary):
+		return false
+	var point: Variant = (blueprint as Dictionary).get(view, null)
+	return point is Array and (point as Array).size() == 2
+
+
+func _rebuild_weapon_targets() -> void:
+	if _weapon_layer == null:
+		return
+	for target in _weapon_targets:
+		if is_instance_valid(target):
+			_weapon_layer.remove_child(target)
+			target.queue_free()
+	_weapon_targets.clear()
+	var rows: Array = []
+	for raw_row in _model.get("weapon_sockets", []):
+		if raw_row is Dictionary:
+			rows.append(raw_row)
+	for view in _weapon_views():
+		for raw_row in rows:
+			var row: Dictionary = raw_row
+			var socket_id := String(row.get("socket", row.get("name", "")))
+			if socket_id.is_empty() or not _socket_has_blueprint(row, String(view)):
+				continue
+			var config: Dictionary = row.duplicate(true)
+			config["view"] = String(view)
+			var target: Variant = WEAPON_TARGET_SCRIPT.new()
+			target.name = "WeaponSocket_%s_%s" % [String(view), socket_id]
+			target.configure(config)
+			target.set_drop_enabled(_weapon_drop_enabled)
+			target.set_highlighted(_highlighted_slot_ids.has(socket_id))
+			target.weapon_dropped.connect(_on_weapon_dropped)
+			target.hovered.connect(_on_weapon_hovered)
+			target.unhovered.connect(_on_weapon_unhovered)
+			_weapon_layer.add_child(target)
+			target.visible = mode == Mode.CUTAWAY
+			_weapon_targets.append(target)
+	_layout_weapon_targets()
+
+
+func _on_weapon_dropped(payload: Dictionary, socket: Dictionary) -> void:
+	weapon_drop_requested.emit(payload, socket)
+
+
+func _on_weapon_hovered(socket_name: String) -> void:
+	weapon_socket_hovered.emit(socket_name)
+
+
+func _on_weapon_unhovered() -> void:
+	weapon_socket_unhovered.emit()
+
+
+func _on_stage_resized() -> void:
+	_layout_slots()
+	_layout_weapon_targets()
+
+
+func _layout_weapon_targets() -> void:
+	if _weapon_targets.is_empty():
+		return
+	var stage_ready := size.x >= 80.0 and size.y >= 80.0
+	var rects_by_view: Dictionary = {}
+	if stage_ready:
+		for view in _weapon_views():
+			rects_by_view[String(view)] = weapon_socket_display_rects(String(view))
+	for target in _weapon_targets:
+		if not is_instance_valid(target):
+			continue
+		if not stage_ready or mode != Mode.CUTAWAY:
+			target.visible = false
+			continue
+		var rects: Dictionary = rects_by_view.get(String(target.view), {})
+		var socket_id := String(target.row.get("socket", ""))
+		if not rects.has(socket_id):
+			target.visible = false
+			continue
+		var rect: Rect2 = rects[socket_id]
+		target.position = rect.position
+		target.size = rect.size
+		target.visible = true
+
+
+## Groups anchors whose patches would overlap, so the cluster can be fanned out.
+func _weapon_card_clusters(entries: Array, card_width: float, card_height: float) -> Array:
+	var clusters: Array = []
+	for entry in entries:
+		var anchor: Vector2 = entry["anchor"]
+		var joined := false
+		for raw_cluster in clusters:
+			var cluster: Dictionary = raw_cluster
+			var center: Vector2 = cluster["center"]
+			if absf(anchor.x - center.x) < card_width and absf(anchor.y - center.y) < card_height:
+				var members: Array = cluster["members"]
+				members.append(entry)
+				cluster["center"] = (center * float(members.size() - 1) + anchor) / float(members.size())
+				joined = true
+				break
+		if not joined:
+			clusters.append({"center": anchor, "members": [entry]})
+	return clusters
+
+
+## Deterministic order inside a fan: top to bottom, then left to right, then id.
+func _sort_weapon_cards(a: Dictionary, b: Dictionary) -> bool:
+	var a_anchor: Vector2 = a["anchor"]
+	var b_anchor: Vector2 = b["anchor"]
+	if not is_equal_approx(a_anchor.y, b_anchor.y):
+		return a_anchor.y < b_anchor.y
+	if not is_equal_approx(a_anchor.x, b_anchor.x):
+		return a_anchor.x < b_anchor.x
+	return String(a["socket"]) < String(b["socket"])
+
+
+## Clamps one axis of the fanned column into [low, high]; when the span does not
+## fit at all it is centred instead of pinned to one edge.
+func _clamp_span(value: float, low: float, high: float) -> float:
+	if high <= low:
+		return (low + high) * 0.5
+	return clampf(value, low, high)
+
+
+## Resolves residual overlaps between fanned clusters by nudging the later patch
+## down (or up when the view bottom is reached) until every patch is disjoint.
+func _weapon_cards_separate(placed: Array, view_rect: Rect2) -> void:
+	if placed.size() < 2:
+		return
+	for _iteration in 6:
+		var moved := false
+		for index in placed.size():
+			var first: Dictionary = placed[index]
+			var first_rect: Rect2 = first["rect"]
+			for other_index in range(index + 1, placed.size()):
+				var second: Dictionary = placed[other_index]
+				var second_rect: Rect2 = second["rect"]
+				if not first_rect.intersects(second_rect):
+					continue
+				var shift := first_rect.end.y - second_rect.position.y + WEAPON_CARD_GAP
+				var moved_rect := Rect2(second_rect.position + Vector2(0.0, shift), second_rect.size)
+				if moved_rect.end.y > view_rect.end.y - WEAPON_CARD_MARGIN:
+					var up_shift := first_rect.position.y - WEAPON_CARD_GAP - second_rect.end.y
+					moved_rect = Rect2(second_rect.position + Vector2(0.0, up_shift), second_rect.size)
+					if moved_rect.position.y < view_rect.position.y + WEAPON_CARD_MARGIN:
+						moved_rect.position.y = view_rect.position.y + WEAPON_CARD_MARGIN
+				second["rect"] = moved_rect
+				moved = true
+		if not moved:
+			return
 
 
 func _on_slot_drop(payload: Dictionary, slot: Dictionary) -> void:
@@ -562,7 +882,8 @@ func _draw_cutaway() -> void:
 		_draw_section_texture()
 	else:
 		_draw_cutaway_placeholder()
-	_draw_blueprint_weapon_slots()
+	# Weapon socket patches are child Controls (`_weapon_layer`), not line art:
+	# they own the occupied/empty states and the `ship_weapon` drop contract.
 	if not has_blueprint_views():
 		_draw_slot_leaders()
 
@@ -609,41 +930,6 @@ func _draw_blueprint_dock_bar() -> void:
 	var dock_rect := Rect2(0.0, size.y - dock, size.x, dock)
 	_draw_skin_box("panel_recess", dock_rect, Color(_token("steel.recess"), 0.82))
 	draw_line(Vector2(8.0, dock_rect.position.y), Vector2(size.x - 8.0, dock_rect.position.y), Color(TEAL, 0.22), 1.0)
-
-
-## Draws non-interactive weapon socket frames over the blueprint. Purchase and
-## install actions stay in the weapons panel; this layer only gives spatial
-## feedback and uses highlight_slots() for the active/compatible state.
-func _draw_blueprint_weapon_slots() -> void:
-	var sockets_by_id: Dictionary = {}
-	for raw_socket in _model.get("weapon_sockets", []):
-		if raw_socket is Dictionary:
-			var socket: Dictionary = raw_socket
-			sockets_by_id[String(socket.get("socket", socket.get("name", "")))] = socket
-	# With per-view line art both views are visible, so draw the socket frames in
-	# each. Legacy generic-section hulls keep the old single-view behaviour.
-	var views_to_draw: Array = ["side"]
-	if has_blueprint_views():
-		views_to_draw = ["side", "top"]
-	else:
-		var legacy_view := String(_model.get("blueprint_view", "side"))
-		if legacy_view in ["side", "top"]:
-			views_to_draw = [legacy_view]
-	for view in views_to_draw:
-		var socket_rects := blueprint_socket_rects(String(view))
-		for socket_id in socket_rects.keys():
-			var rect: Rect2 = socket_rects[socket_id]
-			var highlighted := _highlighted_slot_ids.has(String(socket_id))
-			var socket: Dictionary = sockets_by_id.get(socket_id, {})
-			var occupied := not String(socket.get("weapon_id", "")).is_empty()
-			var color := BRASS if occupied else MUTED
-			if highlighted:
-				color = TEAL
-			draw_rect(rect, Color(color, 0.18 if highlighted else 0.08), true)
-			draw_rect(rect, color, false, 2.5 if highlighted else 1.5)
-			var notch := minf(rect.size.x, rect.size.y) * 0.22
-			draw_line(rect.get_center() - Vector2(notch, 0.0), rect.get_center() + Vector2(notch, 0.0), color, 1.0)
-			draw_line(rect.get_center() - Vector2(0.0, notch), rect.get_center() + Vector2(0.0, notch), color, 1.0)
 
 
 ## Authored PNG section, cropped to cover the stage while keeping its aspect.

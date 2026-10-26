@@ -1,7 +1,7 @@
 class_name SNItemTile
 extends PanelContainer
 ## @static-doc
-## 作用：市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与待交易数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。
+## 作用：市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。
 ##
 ## One icon tile of the direct-manipulation market screen.
 ##
@@ -11,6 +11,12 @@ extends PanelContainer
 ## press, so incrementing on press would double-count the dragged unit); right
 ## click clears it; dragging emits a copy of the configured payload with
 ## `amount = max(pending, 1)`.
+##
+## ## 角标语义（badge_mode）
+## - `pending`（默认，船舱 / 仓库格）：右上角 `×N` = 已选待交易数量，pending=0 时隐藏。
+## - `remaining`（市场行情格）：右上角始终可见，纯数字 = `max(0, stock - pending)`，
+##   即「点击购买后还剩多少」；玩家已选数量由光标幽灵 `SNCarryGhost` 的 `×N` 显示，
+##   角标不再重复它。每 +1 立即刷新。
 ##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 底板取 `SNSkin.style("panel_recess")`；悬停 / 有待交易数量时改用
@@ -24,7 +30,8 @@ extends PanelContainer
 ##
 ## ## 契约与约束
 ## - `configure()` 接收 `{title, subtitle, meta, icon: Texture2D, max_pending,
-##   draggable, payload: Dictionary, locked?}`；`payload` 必须带顶层 `kind`。
+##   draggable, payload: Dictionary, locked?, badge_mode?, stock?}`；`payload` 必须带顶层 `kind`。
+##   `badge_mode` 缺省为 `"pending"`，旧调用方（船舱 / 仓库格）行为不变。
 ## - 委托货 / 不可交易行由 `draggable=false` + `locked=true` 表达，同时
 ##   `max_pending=0`，左键与拖拽都无效。
 ## - 左键只在 **release** 时 +1；拖拽起手（press → `_get_drag_data`）不改变 pending，
@@ -46,6 +53,10 @@ signal pending_changed(pending: int)
 const TILE_MIN_SIZE := Vector2(108.0, 132.0)
 const ICON_HEIGHT := 58.0
 const DRAG_PREVIEW_ICON := 40.0
+## Badge modes: `pending` = selected amount (`×N`, hidden at zero);
+## `remaining` = stock left (`stock - pending`, always visible, plain digits).
+const BADGE_MODE_PENDING := "pending"
+const BADGE_MODE_REMAINING := "remaining"
 
 ## Payload copy configured by the host screen (top-level `kind` selects drop zones).
 var payload: Dictionary = {}
@@ -55,6 +66,10 @@ var drop_host: Control = null
 ## Selected / pending trade amount shown on the tile.
 var pending := 0
 var max_pending := 0
+## `badge_mode` selects what the top-right `PendingBadge` paints; `stock` is the
+## market row's current stock, used by the `remaining` mode.
+var badge_mode := BADGE_MODE_PENDING
+var stock := 0
 var draggable := false
 var locked := false
 var item: Dictionary = {}
@@ -84,6 +99,8 @@ func configure(data: Dictionary) -> void:
 	_icon_texture = data.get("icon", null) as Texture2D
 	payload = (data.get("payload", {}) as Dictionary).duplicate(true) if data.get("payload", null) is Dictionary else {}
 	max_pending = maxi(0, int(data.get("max_pending", 0)))
+	badge_mode = String(data.get("badge_mode", BADGE_MODE_PENDING))
+	stock = maxi(0, int(data.get("stock", max_pending)))
 	draggable = bool(data.get("draggable", false)) and max_pending > 0
 	locked = bool(data.get("locked", false))
 	item = (data.get("item", {}) as Dictionary).duplicate(true) if data.get("item", null) is Dictionary else payload.duplicate(true)
@@ -241,6 +258,11 @@ func _apply_content() -> void:
 
 func _apply_pending() -> void:
 	if _badge == null:
+		return
+	if badge_mode == BADGE_MODE_REMAINING:
+		# 市场格：右上角显示「还剩多少」；已选数量由跟随鼠标的携带幽灵显示。
+		_badge.text = str(maxi(0, stock - pending))
+		_badge.visible = true
 		return
 	_badge.text = "×%d" % pending
 	_badge.visible = pending > 0

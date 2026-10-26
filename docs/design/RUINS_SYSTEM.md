@@ -56,6 +56,10 @@ loot_money, loot_items, log[]}`；`phase` = `room` / `event` / `finished`。
 最小遗迹页（`framework/ui/screens/port/ruins_screen.tscn`）随船厂解锁：
 未开始列出遗迹；进行中显示房间进度、进入/撤退按钮、事件选项与日志；底部遗物收藏。
 
+> 2026-10-26 玩家反馈：遗迹属于**航行探索**玩法（海图 → 探索），不作为港口页入口；
+> 在探索侧遗迹玩法发布前，顶部导航入口暂隐藏（`main.gd` 的 `HIDDEN_NAV_SCREENS`）。
+> `expedition.*` 命令 / `expedition.view` 与页面保留，截图工具仍可直接路由。
+
 ## 6. 验收
 
 - `test_expedition.gd` 9 例：命令/查询、开始校验、完整远征 + 遗物、危险结算、撤退、

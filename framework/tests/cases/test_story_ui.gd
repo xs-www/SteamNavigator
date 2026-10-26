@@ -120,7 +120,7 @@ func test_skip_confirmation_unlocks_everything_and_removes_the_card() -> void:
 	assert_true(bool(shell._story_vm.get("completed", false)), "the tutorial is completed")
 	assert_true(bool(shell._story_vm.get("skipped", false)), "the tutorial records that it was skipped")
 	assert_true(shell._story_card == null, "no card remains after skipping")
-	assert_eq(_nav_buttons(shell).size(), 9, "every nav screen is unlocked")
+	assert_eq(_nav_buttons(shell).size(), _unlocked_nav_count(shell), "every published nav screen is unlocked")
 	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
 	_unmount(bundle)
 
@@ -129,7 +129,7 @@ func test_non_tutorial_shell_has_no_card_and_no_gating() -> void:
 	var bundle := _mount(false)
 	var shell: Control = bundle["shell"]
 	assert_true(shell._story_card == null, "a non-tutorial run has no story card")
-	assert_eq(_nav_buttons(shell).size(), 9, "a non-tutorial run keeps every nav screen")
+	assert_eq(_nav_buttons(shell).size(), _unlocked_nav_count(shell), "a non-tutorial run keeps every published nav screen")
 	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
 	# 4.6 Phase A / C3：没有剧情时 HUD 显示聚合任务追踪（C3 起 auto_start 指引任务
 	# 优先于主线），而不是剧情目标条。
@@ -420,6 +420,21 @@ func _nav_buttons(shell: Control) -> Array:
 		if child is Button:
 			buttons.append(child)
 	return buttons
+
+
+## Nav button count once every story feature is unlocked: published `SCREENS`
+## pages (unpublished systems in `HIDDEN_NAV_SCREENS` have no entry) + the chart
+## toggle. Derived from the shell constants so adding / unhiding a page keeps the
+## tutorial tests honest instead of hard-coding a number.
+func _unlocked_nav_count(shell: Control) -> int:
+	var constants: Dictionary = shell.get_script().get_script_constant_map()
+	var screens: Array = Array(constants.get("SCREENS", []))
+	var hidden: Array = Array(constants.get("HIDDEN_NAV_SCREENS", []))
+	var visible := 0
+	for screen in screens:
+		if not hidden.has(String(screen)):
+			visible += 1
+	return visible + 1
 
 
 func _needs_supply_locked(shell: Control) -> bool:

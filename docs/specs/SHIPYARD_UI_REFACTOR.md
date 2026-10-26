@@ -50,7 +50,19 @@
 
 - 「已装模块」在分类内以**槽位卡**表达：显示模块名、效果行（`ship.modules[].effect`）、重量 / tier、卸下按钮与 `uninstall_blockers` 原因。
 - 拖拽装配协议不变：`_on_slot_drop` 只接受同类型且 `source ∈ {warehouse, transit}`，发 `ship.install_module{module_id, source}`；槽位已有不同件时补 `replace_module_id`。
+- 拖放载荷形状（2026-10-26 修复）：`SNPartRow._get_drag_data()` 产出 `{kind:"ship_parts", part:{...}}`；`SNSlotTarget._drop_data` 必须把**整个载荷**从 `part_dropped` 转发，页面 `_on_slot_drop` 按 `payload.part` 解析（同时兼容裸 part 字典）。只转发内层 `part` 会让真实鼠标拖放静默失效（空槽安装 / 已装替换都不发命令），而直接调用页面函数的测试看不出问题——回归用 `test_drag_drop_installs_into_empty_slot_and_replaces_filled_slot` 走 `SNSlotTarget._drop_data` 的真实链路。
 - 所有命令仍经 `command_requested` 交回 Shell，由 `CommandBus` 执行、存档与反馈错误；页面不写 `GameState`。
+
+### 武器分类（2026-10-27 玩家反馈）
+
+玩家反馈「装配后不知道装在哪、右侧显示后端 ID、左侧框没有变化、武器不能拖动安装」，武器分类按以下契约实现：
+
+- **玩家文案**：socket 标准名（`SN_Socket_Weapon_Port_1` / `Starboard_1` / `Bow` / `Stern` / `_2`）与 `socket_class`（Light/Medium/Heavy/Side/Tower）在 UI 层映射为「左舷 1 号炮位 · 轻型」类文案（本地化键 `ui.weapon_socket.*` / `ui.weapon_class.*`）；安装页、购买页、仓库武器按钮与蓝图贴片**不得出现 `SN_Socket_Weapon_*` 后端 ID**。未知 name 兜底为「武器槽位 N」。
+- **右侧操作坞**：安装页每个炮位一张 `SNWeaponSocketCard`（友好炮位名 + `已装` 徽标 + 已装武器本地化名 / `空槽位` + 重量·伤害 + 卸下按钮）；仓库武器与购买候选用 `SNWeaponRow` 可拖行条目（`{kind:"ship_weapon", weapon_id, weapon_class, source:"warehouse"|"purchase", name}`），行内保留「装到 左舷1 / 购买并安装」显式按钮。
+- **左侧蓝图**：`SNShipView` 的炮位贴片（`SNWeaponSocketTarget`，2026-10-27 层）按本地化 `slot_label` / `display_name` / `occupied` 绘制——空槽暗色、已装黄铜填充 + 武器名、武器分类高亮只加青色描边不掩盖已装状态；锚点重叠的炮位（Port/Starboard 同一 blueprint 坐标）垂直扇出，保证每枚贴片与文字可分辨。`blueprint_socket_rects()` 的既有语义不变，新增 `weapon_socket_display_rects()`。
+- **拖放**：炮位贴片与右侧槽位卡都是 `ship_weapon` 载荷的落点（等级匹配才接受；已装同型同 id 拒绝）；页面在「武器分类 + 装配页签 + 改装态」调用 `stage.set_weapon_drop_enabled(true)`，落点统一走 `_on_weapon_drop(payload, socket)` → `ship.install_weapon{socket, weapon_id, source}`。失败原因由命令层状态栏提示。
+- **数据注入**：`_stage_ship_model()` 把 `shipyard.view.ship.weapon_sockets` 补上 `slot_label` / `slot_title` / `display_name` / `empty_text` / `installed_tag` / `occupied` 后交给 `SNShipView`；后端键不变。
+- **回归**：`test_weapon_sockets_show_player_mount_names_and_drag_install`（友好文案、无后端 ID、仓库武器 `_can_drop_data`/`_drop_data` 真链路安装、重建后卡片/蓝图数据变为已装、class 不匹配拒绝）+ `test_weapon_sockets_project_blueprint_positions_into_stage_frames`（蓝图锚点/高亮契约）。
 
 ## 状态与信号
 

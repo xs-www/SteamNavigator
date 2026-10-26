@@ -14,6 +14,8 @@ const SHIPYARD_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/shipyar
 const SHIP_VIEW_SCRIPT := preload("res://framework/ui/components/sn_ship_view.gd")
 const SLOT_TARGET_SCRIPT := preload("res://framework/ui/components/sn_slot_target.gd")
 const PART_ROW_SCRIPT := preload("res://framework/ui/components/sn_part_row.gd")
+const WEAPON_ROW_SCRIPT := preload("res://framework/ui/components/sn_weapon_row.gd")
+const WEAPON_SOCKET_CARD_SCRIPT := preload("res://framework/ui/components/sn_weapon_socket_card.gd")
 const STEADY_BUILD := "core:starting_scenario/steady"
 const MODE_EXTERIOR := 0
 const MODE_CUTAWAY := 1
@@ -489,7 +491,14 @@ func test_dragging_a_warehouse_module_maps_to_install_command() -> void:
 	assert_eq(draggable.size(), 1, "the operations panel lists the owned free module as a draggable row")
 	assert_eq(String(draggable[0].part.get("module_id", "")), module_id, "the draggable row is the warehouse module")
 	assert_eq(String(draggable[0].part.get("source", "")), "warehouse", "the row reports its drag source")
-	screen._on_slot_drop({"kind": "ship_parts", "part": part}, nav_slot)
+	# Real drag payload from SNPartRow, dropped through the slot target (the same
+	# `_can_drop_data` / `_drop_data` pair the viewport calls for a mouse drop).
+	# Regression: the target used to forward only the inner `part`, so the page's
+	# `payload.get("part")` lookup was empty and every real drop silently did nothing.
+	var payload := {"kind": "ship_parts", "part": (draggable[0].part as Dictionary).duplicate(true)}
+	assert_true(bool(nav_target.call("_can_drop_data", Vector2.ZERO, payload)),
+		"the slot target accepts the SNPartRow drag payload")
+	nav_target.call("_drop_data", Vector2.ZERO, payload)
 	assert_eq(String(captured.get("command", "")), "ship.install_module", "dropping a part requests ship.install_module")
 	var params: Dictionary = captured.get("params", {})
 	assert_eq(String(params.get("module_id", "")), module_id, "the dragged module id is forwarded")
@@ -499,6 +508,101 @@ func test_dragging_a_warehouse_module_maps_to_install_command() -> void:
 	assert_eq(String(context.state.ship().get("navigation_module_id", "")), module_id, "the drag installs the module on the ship")
 	assert_eq(WarehouseOps.module_qty(context.state, port_id, module_id), 0, "the installed module leaves the warehouse")
 	_unmount(bundle)
+
+
+## 回归：真实拖拽链路要同时覆盖「空槽位安装」与「已装配槽位替换」。旧实现的槽位
+## 贴片只把内层 part 交给页面，页面按 `payload.part` 解析得到空字典后静默返回，
+## 两种拖放都没有命令；直接调页面函数的旧测试用手搓 payload 把这个问题遮住了。
+func test_drag_drop_installs_into_empty_slot_and_replaces_filled_slot() -> void:
+	var bundle := _mount(5207)
+	var context: AppContext = bundle["context"]
+	var port_id := String(context.state.current_port_id())
+	var starting_nav := String(context.state.ship().get("navigation_module_id", ""))
+	assert_true(not starting_nav.is_empty(), "the fixture ship starts with a navigation module")
+	var uninstalled := context.commands.execute(&"ship.uninstall_module", {"module_id": starting_nav})
+	assert_true(bool(uninstalled.get("ok", false)), "the starting navigation module can be uninstalled to empty its slot: %s" % str(uninstalled))
+	# Free some hull weight as well: the chart room is heavier than the spyglass,
+	# and a full hold would block the empty-slot install with `weight_limit`.
+	var cargo_modules: Array = Array(context.state.ship().get("cargo_modules", []))
+	if not cargo_modules.is_empty():
+		var cargo_removed := context.commands.execute(&"ship.uninstall_module", {"module_id": String(cargo_modules[0])})
+		assert_true(bool(cargo_removed.get("ok", false)), "a cargo module can be uninstalled to free weight: %s" % str(cargo_removed))
+	# Take another utility module straight from the content registry: the market
+	# candidate list depends on the generated run / port stock, but the drop path
+	# only needs an owned free module definition.
+	var new_module := _utility_module_id(context, starting_nav)
+	assert_true(not new_module.is_empty(), "the content registry offers another utility module")
+	WarehouseOps.add_module(context.state, port_id, new_module, 1)
+
+	# 1) Empty slot: dropping the warehouse module installs it without a replacement.
+	var screen := _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	screen.set_category("utility")
+	var target := _slot_target_for(screen.get("_stage"), "navigation_module")
+	assert_not_null(target, "the navigation slot has a drop target")
+	var empty_part := _warehouse_part(screen, new_module)
+	assert_true(not empty_part.is_empty(), "the operations panel lists the replacement module as a draggable warehouse row")
+	var empty_captured := {}
+	screen.command_requested.connect(func(command: StringName, params: Dictionary):
+		empty_captured["command"] = command
+		empty_captured["params"] = params
+	)
+	target.call("_drop_data", Vector2.ZERO, {"kind": "ship_parts", "part": empty_part})
+	assert_eq(String(empty_captured.get("command", "")), "ship.install_module", "dropping onto an empty slot installs")
+	var empty_params: Dictionary = empty_captured.get("params", {})
+	assert_eq(String(empty_params.get("module_id", "")), new_module, "the empty-slot drop forwards the module id")
+	assert_eq(String(empty_params.get("slot", "")), "navigation_module", "the empty-slot drop names the target slot")
+	assert_false(empty_params.has("replace_module_id"), "an empty slot must not send a replacement id")
+	assert_eq(String(context.state.ship().get("navigation_module_id", "")), new_module, "the module lands in the empty slot")
+
+	# 2) Filled slot: dropping the previous module back replaces the new one and
+	#    returns it to the warehouse.
+	screen = _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	screen.set_category("utility")
+	target = _slot_target_for(screen.get("_stage"), "navigation_module")
+	assert_not_null(target, "the rebuilt page still exposes the navigation slot target")
+	var replace_part := _warehouse_part(screen, starting_nav)
+	assert_true(not replace_part.is_empty(), "the replaced module is back in the warehouse and draggable")
+	var replace_captured := {}
+	screen.command_requested.connect(func(command: StringName, params: Dictionary):
+		replace_captured["command"] = command
+		replace_captured["params"] = params
+	)
+	target.call("_drop_data", Vector2.ZERO, {"kind": "ship_parts", "part": replace_part})
+	assert_eq(String(replace_captured.get("command", "")), "ship.install_module", "dropping onto a filled slot installs")
+	var replace_params: Dictionary = replace_captured.get("params", {})
+	assert_eq(String(replace_params.get("module_id", "")), starting_nav, "the replacement drop forwards the new module id")
+	assert_eq(String(replace_params.get("replace_module_id", "")), new_module, "a filled slot sends the module being replaced")
+	assert_eq(String(context.state.ship().get("navigation_module_id", "")), starting_nav, "the replacement lands in the slot")
+	assert_eq(WarehouseOps.module_qty(context.state, port_id, new_module), 1, "the replaced module returns to the warehouse")
+	_unmount(bundle)
+
+
+## Part payload of a draggable warehouse row for `module_id`, as SNPartRow produces it.
+func _warehouse_part(screen: Control, module_id: String) -> Dictionary:
+	for row in screen.get("_hud_rows"):
+		if row.get_script() != PART_ROW_SCRIPT or not bool(row.draggable):
+			continue
+		var part: Dictionary = row.part
+		if String(part.get("module_id", "")) == module_id and String(part.get("source", "")) == "warehouse":
+			return part.duplicate(true)
+	return {}
+
+
+## Any registered utility module id other than `exclude` (registry-driven fixture).
+func _utility_module_id(context: AppContext, exclude: String) -> String:
+	for definition in context.registries.get_all(ContentTypes.MODULE):
+		if definition == null:
+			continue
+		var module_id := String(definition.id)
+		if module_id != exclude and ModuleOps.category_of(definition) == "utility":
+			return module_id
+	return ""
 
 
 func _slot_target_for(stage: Node, slot_name: String) -> Control:
@@ -530,14 +634,11 @@ func test_category_navigation_switches_operations_and_misc_hosts_actions() -> vo
 	# Weapons: hull sockets live in the install tab, purchase actions in the buy tab.
 	screen.set_category("weapons")
 	labels = _label_texts(shell._root_box)
-	assert_contains(labels, "武器槽位", "the weapons category lists hull sockets")
-	var first_socket := String(view["ship"]["weapon_sockets"][0]["socket"])
-	var socket_visible := false
-	for label_text in labels:
-		if String(label_text).contains(first_socket):
-			socket_visible = true
-			break
-	assert_true(socket_visible, "the first real hull socket is visible")
+	assert_contains(labels, shell._tr("ui.label.weapon_sockets", "武器槽位"), "the weapons category lists hull sockets")
+	# Player feedback 2026-10-27: the dock must not print backend socket ids.
+	var first_socket_title := String(screen.call("_weapon_socket_title", view["ship"]["weapon_sockets"][0]))
+	assert_contains(labels, first_socket_title, "the first real hull socket is visible with its player-facing mount name")
+	assert_false(String("\n".join(labels)).contains("SN_Socket_Weapon_"), "no backend socket id is printed in the dock")
 	assert_false(labels.has("购买并安装"), "the install tab does not list purchase cards")
 	screen.set_tab("buy")
 	assert_contains(_label_texts(shell._root_box), "购买并安装", "the buy tab exposes shipyard purchase actions")
@@ -662,6 +763,200 @@ func test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void
 			"socket frames map through the line-art rect")
 	assert_eq(stage.get("_highlighted_slot_ids").size(), sockets.size(), "opening the weapons category highlights every socket frame")
 	_unmount(bundle)
+
+
+## 玩家反馈（2026-10-27）：武器装配后要知道装在哪；右侧不能显示后端 socket ID；
+## 左侧贴片的数据要随装配变化；仓库武器要能拖到炮位上安装。
+func test_weapon_sockets_show_player_mount_names_and_drag_install() -> void:
+	var bundle := _mount(5310)
+	var context: AppContext = bundle["context"]
+	var shell: Control = bundle["shell"]
+	var fixture := _weapon_install_fixture(context)
+	assert_false(fixture.is_empty(), "the fixture finds a warehouse weapon that fits an empty hull mount")
+	if fixture.is_empty():
+		_unmount(bundle)
+		return
+	var socket: Dictionary = fixture["socket"]
+	var socket_name := String(socket.get("socket", ""))
+	var socket_class := String(socket.get("socket_class", ""))
+	var weapon_id := String(fixture["weapon_id"])
+	var weapon_name := String(shell._tr(String(fixture["name_key"]), weapon_id))
+	var screen := _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	screen.set_category("weapons")
+	var expected_title := String(screen.call("_weapon_socket_title", socket))
+	var labels := _label_texts(shell._root_box)
+	assert_contains(labels, expected_title, "the socket card shows a player-facing mount name")
+	assert_false(String("\n".join(labels)).contains("SN_Socket_Weapon_"), "backend socket ids are not player-facing")
+	assert_true(String("\n".join(labels)).contains(weapon_name), "the warehouse weapon row shows the localized weapon name")
+	assert_contains(expected_title, shell._tr("ui.weapon_socket." + ("starboard" if socket_name.to_lower().contains("starboard") else "port" if socket_name.to_lower().contains("port") else "bow" if socket_name.to_lower().contains("bow") else "stern"), ""),
+		"the mount name names the hull side")
+	assert_contains(expected_title, shell._tr("ui.weapon_class." + socket_class.to_lower(), ""), "the mount name names the weapon class")
+	assert_false(expected_title.contains("SN_Socket_Weapon_"), "the friendly mount name does not leak the backend id")
+	# Empty mount card before the install.
+	var empty_text := String(shell._tr("ui.label.slot_empty", "空槽位"))
+	var target_card: Variant = _weapon_socket_card(shell._root_box, socket_name)
+	assert_not_null(target_card, "the mount has a socket card")
+	if target_card == null:
+		_unmount(bundle)
+		return
+	assert_eq(String(target_card.call("weapon_text")), empty_text, "the empty socket card shows the empty state")
+	# Warehouse weapon row is a real drag source with the weapon payload contract.
+	var weapon_row: Variant = _weapon_row_for(shell._root_box, weapon_id)
+	assert_not_null(weapon_row, "the warehouse weapon is listed as a draggable row")
+	if weapon_row == null:
+		_unmount(bundle)
+		return
+	assert_true(bool(weapon_row.get("draggable")), "the warehouse weapon row is draggable")
+	var payload := weapon_row.call("drag_payload") as Dictionary
+	assert_eq(String(payload.get("kind", "")), "ship_weapon", "the drag payload uses the weapon kind")
+	assert_eq(String(payload.get("weapon_class", "")), socket_class, "the payload carries the weapon class for the socket gate")
+	var mismatch := payload.duplicate(true)
+	mismatch["weapon_class"] = "NoSuchClass"
+	assert_false(bool(target_card.call("_can_drop_data", Vector2.ZERO, mismatch)),
+		"a mismatched weapon class cannot be dropped on the mount")
+	assert_true(bool(target_card.call("_can_drop_data", Vector2.ZERO, payload)),
+		"a compatible weapon is accepted by the mount card")
+	# Blueprint patches: readable per-mount cards (two lines), non-overlapping even
+	# when two sockets share one authored blueprint anchor (Port/Starboard).
+	var stage: Variant = screen.get("_stage")
+	var blueprint_target: Variant = stage.call("weapon_target", socket_name, "side")
+	assert_not_null(blueprint_target, "the blueprint exposes a weapon patch for the mount")
+	var short_label := String(screen.call("_weapon_socket_short_label", socket_name))
+	var display_rects: Dictionary = stage.call("weapon_socket_display_rects", "side")
+	var sockets_count := int(Array(screen.call("_enriched_weapon_sockets")).size())
+	assert_eq(display_rects.size(), sockets_count, "the blueprint draws one patch per weapon socket")
+	assert_eq(stage.call("weapon_targets").size(), sockets_count * 2, "side and top views both carry weapon patches")
+	var side_region: Rect2 = stage.call("blueprint_view_rect", "side")
+	var placed_rects: Array = display_rects.values()
+	for index in placed_rects.size():
+		assert_true(side_region.encloses(placed_rects[index]), "every weapon patch stays inside the side view")
+		for other_index in range(index + 1, placed_rects.size()):
+			assert_false((placed_rects[index] as Rect2).intersects(placed_rects[other_index] as Rect2),
+				"weapon patches fan out instead of overlapping")
+	if blueprint_target != null:
+		assert_false(bool(blueprint_target.call("accepts_payload", mismatch)),
+			"a mismatched weapon class cannot be dropped on the blueprint patch")
+		assert_true(bool(blueprint_target.call("accepts_payload", payload)),
+			"a compatible weapon is accepted by the blueprint patch")
+		assert_eq(String(blueprint_target.call("slot_label")), short_label, "the patch paints the short mount label")
+		assert_false(bool(blueprint_target.call("is_occupied")), "the patch starts empty")
+		assert_eq(String(blueprint_target.call("display_text")), empty_text, "the empty patch paints the empty state")
+	# Real drop through the blueprint patch -> install command -> ship loadout.
+	var captured: Array = []
+	screen.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+		captured.append({"command": String(command), "params": params.duplicate(true)})
+	)
+	if blueprint_target != null:
+		blueprint_target.call("_drop_data", Vector2.ZERO, payload)
+	else:
+		target_card.call("_drop_data", Vector2.ZERO, payload)
+	assert_eq(captured.size(), 1, "the drop publishes one install command")
+	if captured.size() == 1:
+		assert_eq(String(captured[0]["command"]), "ship.install_weapon", "dropping a weapon requests ship.install_weapon")
+		var params: Dictionary = captured[0]["params"]
+		assert_eq(String(params.get("socket", "")), socket_name, "the drop names the mount socket")
+		assert_eq(String(params.get("weapon_id", "")), weapon_id, "the drop forwards the weapon id")
+		assert_eq(String(params.get("source", "")), "warehouse", "the drop installs from the warehouse")
+	var installed := false
+	for row in Array(context.state.ship().get("weapon_loadout", [])):
+		if row is Dictionary and String(row.get("socket", "")) == socket_name and String(row.get("weapon_id", "")) == weapon_id:
+			installed = true
+	assert_true(installed, "the weapon is written to the ship loadout")
+	# Rebuilt page: dock + blueprint model now say where the weapon is mounted.
+	screen = _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	screen.set_category("weapons")
+	var rebuilt_card: Variant = _weapon_socket_card(shell._root_box, socket_name)
+	assert_not_null(rebuilt_card, "the rebuilt page keeps the mount card")
+	if rebuilt_card != null:
+		assert_eq(String(rebuilt_card.call("weapon_text")), weapon_name,
+			"the mount card shows the mounted weapon name after install")
+	var rebuilt_stage: Variant = screen.get("_stage")
+	var model: Dictionary = rebuilt_stage.get("_model")
+	var stage_socket := {}
+	for raw_socket in model.get("weapon_sockets", []):
+		if raw_socket is Dictionary and String((raw_socket as Dictionary).get("socket", "")) == socket_name:
+			stage_socket = raw_socket
+	assert_false(stage_socket.is_empty(), "the stage model contains the mount")
+	if not stage_socket.is_empty():
+		assert_true(bool(stage_socket.get("occupied", false)), "the blueprint mount data flips to occupied after install")
+		assert_eq(String(stage_socket.get("display_name", "")), weapon_name, "the blueprint mount paints the localized weapon name")
+		assert_eq(String(stage_socket.get("slot_title", "")), expected_title, "the blueprint mount keeps its player-facing name")
+	# The rebuilt patch itself flips to occupied and paints the weapon name: this is
+	# what the player reads to know where the weapon went.
+	var rebuilt_target: Variant = rebuilt_stage.call("weapon_target", socket_name, "side")
+	assert_not_null(rebuilt_target, "the rebuilt blueprint keeps the weapon patch")
+	if rebuilt_target != null:
+		assert_true(bool(rebuilt_target.call("is_occupied")), "the blueprint patch flips to occupied after install")
+		assert_eq(String(rebuilt_target.call("display_text")), weapon_name, "the blueprint patch paints the mounted weapon name")
+		assert_eq(String(rebuilt_target.call("slot_label")), short_label, "the blueprint patch keeps its mount label")
+	var rebuilt_labels := _label_texts(shell._root_box)
+	assert_false(String("\n".join(rebuilt_labels)).contains("SN_Socket_Weapon_"), "the rebuilt dock still hides backend socket ids")
+	assert_true(String("\n".join(rebuilt_labels)).contains(weapon_name), "the rebuilt dock shows the installed weapon name")
+	_unmount(bundle)
+
+
+func _weapon_socket_card(root: Node, socket_name: String) -> Control:
+	for node in _nodes_with_script(root, WEAPON_SOCKET_CARD_SCRIPT):
+		var row: Dictionary = node.get("socket")
+		if String(row.get("socket", "")) == socket_name:
+			return node
+	return null
+
+
+func _weapon_row_for(root: Node, weapon_id: String) -> Control:
+	for node in _nodes_with_script(root, WEAPON_ROW_SCRIPT):
+		var payload: Dictionary = node.get("payload")
+		if String(payload.get("weapon_id", "")) == weapon_id:
+			return node
+	return null
+
+
+## Free hull weight and pick a registered weapon that a hull mount accepts. Returns
+## `{socket, weapon_id, weapon_class, name_key}` or `{}` when no fixture fits.
+func _weapon_install_fixture(context: AppContext) -> Dictionary:
+	var hub: RegistryHub = context.registries
+	var state: GameState = context.state
+	var port_id := String(state.current_port_id())
+	for module_id in Array(state.ship().get("cargo_modules", [])).duplicate():
+		context.commands.execute(&"ship.uninstall_module", {"module_id": String(module_id)})
+	var safety_id := String(state.ship().get("safety_module_id", ""))
+	if not safety_id.is_empty():
+		context.commands.execute(&"ship.uninstall_module", {"module_id": safety_id})
+	for raw_socket in WeaponOps.sockets(hub, state.ship()):
+		if not (raw_socket is Dictionary):
+			continue
+		var socket: Dictionary = raw_socket
+		var socket_name := String(socket.get("name", socket.get("socket", "")))
+		if socket_name.is_empty():
+			continue
+		for weapon in WeaponOps.all(hub):
+			if not WeaponOps.accepts(socket, weapon):
+				continue
+			var weight := float(weapon.data.get("weight", 0.0))
+			if ShipOps.total_weight(hub, state) + weight > ShipOps.max_weight(hub, state.ship()) + 0.0001:
+				continue
+			WarehouseOps.add_weapon(state, port_id, String(weapon.id), 1)
+			var blockers := WeaponOps.install_blockers(hub, state, String(weapon.id), socket_name, "warehouse")
+			if blockers.is_empty():
+				return {
+					"socket": {
+						"socket": socket_name,
+						"socket_class": String(socket.get("socket_class", "")),
+						"socket_index": int(socket.get("socket_index", 0)),
+						"weapon_id": "",
+					},
+					"weapon_id": String(weapon.id),
+					"weapon_class": WeaponOps.weapon_class(weapon),
+					"name_key": String(weapon.name_key),
+				}
+			WarehouseOps.remove_weapon(state, port_id, String(weapon.id), 1)
+	return {}
 
 
 func test_shipyard_page_has_no_legacy_lower_panels() -> void:

@@ -1,7 +1,7 @@
 class_name MarketScreen
 extends VBoxContainer
 ## @static-doc
-## 作用：港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
+## 作用：港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
 ##
 ## Direct-manipulation port market page (Bounty Train style).
 ##
@@ -9,6 +9,11 @@ extends VBoxContainer
 ## pending amount (left click +1, right click clears) and dragging it to the left
 ## backpack buys into cargo / warehouse. Conversely the whole market panel is the
 ## sell drop target for `cargo_item` / `warehouse_item` payloads.
+##
+## The market tile's top-right badge shows the **remaining stock**
+## (`badge_mode: "remaining"`, `max(0, stock - pending)`) instead of the selected
+## amount: the selected amount is already painted on the cursor ghost
+## (`SNCarryGhost`), together with the estimated cost.
 ##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），纸面正文改用
@@ -24,6 +29,8 @@ extends VBoxContainer
 ## - `bind(view_model, translate)` 可重复调用：每次先清空自建子节点再重建。
 ## - ViewModel 字段按 `docs/design/MARKET_UI_REFACTOR.md` §3；行情行 `icon` 已由
 ##   Shell 解析成 `Texture2D`，本页不解析资产路径。
+## - 行情格角标是 `remaining` 语义（始终可见，纯数字 = `stock - pending`）；meta
+##   只显示单价 + 趋势，玩家已选数量只在光标幽灵上显示，两处不重复。
 ## - 图标行 `stock<=0` 或 `buyable=false` 时不可拖拽（仍显示，标注「仅收购」）。
 ## - 待交易上限只按 `stock` 设置，不预扣金币与剩余载重：数量可以点到库存上限，
 ##   金币 / 载重不足由 `trade.buy` 失败并在状态栏报错（页面刷新后归零）。
@@ -33,8 +40,9 @@ extends VBoxContainer
 ##
 ## ## 拿起 / 放下（feedback #1）
 ## - `signal carry_changed(offer)`：市场商品格子 `pending_changed` 的聚合结果。offer
-##   是 `{kind:"market_item", item_id, name, icon, amount}`，空字典表示放下 / 取消。
-##   Shell 拿它驱动光标幽灵（SNCarryGhost）并把 offer 转发给船舱 / 仓库落点
+##   是 `{kind:"market_item", item_id, name, icon, amount, unit_price}`，空字典表示
+##   放下 / 取消。Shell 用它驱动光标幽灵（SNCarryGhost，显示 `×amount` 与
+##   `unit_price × amount` 的预计消费）并把 offer 转发给船舱 / 仓库落点
 ##   （`SNCargoHoldPanel.set_offer`），玩家点落点即执行 `trade.buy`。
 ## - 同时只有一个格子被「拿起」：切换携带时先 `clear_pending()` 旧格子（避免重入：
 ##   先清 `_carry_tile` 再清旧格子，旧格子的 0 事件不会再发 carry_changed）。
@@ -53,7 +61,7 @@ const TILE_SCRIPT := preload("res://framework/ui/components/sn_item_tile.gd")
 const ZONE_SCRIPT := preload("res://framework/ui/components/sn_drop_zone.gd")
 
 ## Market grid: four expanding tiles per row (min 108 px + 8 px gaps) fit the
-## 592 px dock panel while leaving room for the two-line price / stock meta.
+## 592 px dock panel while leaving room for the single-line price / trend meta.
 const MARKET_GRID_COLUMNS := 4
 const GRID_SEPARATION := 8
 
@@ -163,15 +171,18 @@ func _on_tile_pending_changed(tile: Control, pending: int) -> void:
 
 
 ## Payload for the cursor ghost + the drop zones. `amount` is the tile's pending
-## amount, so the number on the ghost follows every +1 click.
+## amount, so the number on the ghost follows every +1 click; `unit_price` lets the
+## Shell show the estimated cost (`unit_price × amount`) next to the carried stack.
 func _offer_for(tile: Control) -> Dictionary:
 	var payload: Dictionary = tile.get("payload")
+	var item: Dictionary = tile.get("item")
 	return {
 		"kind": String(payload.get("kind", "")),
 		"item_id": String(payload.get("item_id", "")),
 		"name": String(payload.get("name", "")),
 		"icon": tile.call("icon_texture"),
 		"amount": int(tile.get("pending")),
+		"unit_price": int(item.get("price", 0)),
 	}
 
 
@@ -288,9 +299,12 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 	var item_id := String(row.get("item_id", ""))
 	var buyable := bool(row.get("buyable", true))
 	var stock := int(row.get("stock", 0))
+	var price := int(row.get("price", 0))
 	var title := _loc(String(row.get("name_key", "")), item_id)
 	var subtitle := _item_subtitle(row, buyable)
-	var meta := _loc("ui.market.tile_meta", "%d 金 · 存 %d") % [int(row.get("price", 0)), stock]
+	# 角标显示「还剩多少个」（remaining 模式），所以 meta 只保留单价 + 趋势，
+	# 避免和角标重复；玩家已选数量显示在光标幽灵上。
+	var meta := _loc("ui.market.tile_meta", "%d 金") % price
 	meta += " " + _trend_arrow(trend)
 	var tile: Variant = TILE_SCRIPT.new()
 	tile.configure({
@@ -301,6 +315,8 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 		"max_pending": stock if buyable else 0,
 		"draggable": buyable and stock > 0,
 		"locked": false,
+		"badge_mode": "remaining",
+		"stock": stock,
 		"payload": {
 			"kind": "market_item",
 			"item_id": item_id,
@@ -312,6 +328,7 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 			"item_id": item_id,
 			"buyable": buyable,
 			"stock": stock,
+			"price": price,
 		},
 	})
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL

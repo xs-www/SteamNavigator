@@ -20,10 +20,11 @@ extends VBoxContainer
 ## - 改装态画在 3D 港区舞台上：Shell 的 `STAGE_SCREENS` 含 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示；`_stage_window()` 是可让 3D 透出的空 Control（MOUSE_FILTER_IGNORE），蓝图板/操作坞用 `size_flags_stretch_ratio` 1.2 / 0.25 分配宽度。
 ## - 左列蓝图：`SNBlueprintPanel` + `SNShipView(CUTAWAY)`（`set_blueprint_backdrop(true)`），侧视/俯视等比绘制、武器框按 `weapon_sockets[].blueprint` 映射，槽位贴片停靠蓝图底部 dock。
 ## - 右列操作坞：顶部为当前分类标题 + 槽位计数徽标 + `_refit_button`（正常态在摘要行、改装态在坞头，文案 改装/完成改装）；`_ship_data_card()` 显示船名与重量·耐久·货舱槽·客舱槽·武器·剩余货舱；`_category_picker()` 两行七项分类；`_tab_row()` 三个页签。
-## - 装配页：当前分类的槽位卡 + 仓库/随船可拖行（`SNPartRow`，登记在 `_hud_rows`）+ 拖放提示；`_highlight_category_slots()` 把可安装槽位贴片高亮成青色（武器分类高亮蓝图武器框），购买/打造页清空高亮。拖放命令仍是 `ship.install_module{module_id, source, slot?, replace_module_id?}`。
+## - 装配页：当前分类的槽位卡 + 仓库/随船可拖行（`SNPartRow`，登记在 `_hud_rows`）+ 拖放提示；`_highlight_category_slots()` 把可安装槽位贴片高亮成青色（武器分类高亮蓝图武器框），购买/打造页清空高亮。拖放命令仍是 `ship.install_module{module_id, source, slot?, replace_module_id?}`。`_on_slot_drop(payload, slot)` 同时接受完整拖拽载荷（`{kind:"ship_parts", part}`，真实拖放链路）与裸 part 字典（旧调用方）；空槽不带 `replace_module_id`，已占槽带被替换的模块 ID。
 ## - 购买页：`candidates`（武器分类用 `weapon_candidates`）；打造页：`craft` 配方 + `ship.craft_module`。两者与装配列表完全分离；socket/module 长名用 `_clip_title()` 省略号截断，避免撑宽固定宽度操作坞。
 ## - `杂项` 分类不显示页签，直接展示打造订单 / 在港等待（6/12/24 h `port.wait`）/ 仓库材料 / 仓库模块；页面不重复通关条件清单（只在总览页）。
 ## - 所有 can_install/can_uninstall/can_craft、blockers、价格与工时来自 shipyard.view；页面只翻译原因、禁用按钮与组织布局。
+## - 武器分类（2026-10-27 玩家反馈）：右侧安装页用 `SNWeaponSocketCard`（本地化炮位名 + 已装武器名 + 卸下 + `ship_weapon` 拖放落点），仓库武器 / 购买候选用可拖行的 `SNWeaponRow`；蓝图上的炮位贴片由 `SNShipView` 承载（`set_weapon_drop_enabled(true)` 时接受同一 `ship_weapon` 载荷）。页面把 socket 标准名（`SN_Socket_Weapon_Port_1` 等）翻译成「左舷 1 号炮位 · 轻型」一类玩家文案并注入 stage 模型（`slot_label` / `slot_title` / `display_name` / `empty_text` / `occupied`），**不在界面上显示后端 socket ID**。拖放落到贴片或槽位卡后统一发 `ship.install_weapon{socket, weapon_id, source}`。
 ## - 固定尺寸保持：正常态 258 / 弹性 / 300；改装态 560 / 140 / 432；船卡缩略图 210×118；分类按钮 116×34 / 30 / 32；页签 32；蓝图板参数由 Theme 提供（841×299、56/54、66/62）不得改。
 ## @end-static-doc
 
@@ -44,6 +45,10 @@ const SLOT_DEFS := [
 	{"slot": "passenger_cabin", "category": "cabin", "instance": "cabin"},
 ]
 const CARGO_CATEGORY := "cargo"
+## Weapon UI components (preloaded instead of relying on the global class cache:
+## new class_name files are only registered after an editor import scan).
+const WEAPON_ROW_SCRIPT := preload("res://framework/ui/components/sn_weapon_row.gd")
+const WEAPON_SOCKET_CARD_SCRIPT := preload("res://framework/ui/components/sn_weapon_socket_card.gd")
 ## Operations dock tabs: install what you own, buy a new module, or craft one.
 ## Requirement: buying and crafting must not share one scrolling list.
 const TAB_ORDER := ["install", "buy", "craft"]
@@ -76,6 +81,22 @@ const SLOT_ICONS := {
 	"passenger_cabin": "shipyard_cabin",
 	"cargo_modules": "shipyard_cargo",
 }
+## GLB socket names are backend IDs (`SN_Socket_Weapon_Port_1`); the operations
+## dock must show player-facing mount names instead. The standard name tokens map
+## to localization keys; unknown tokens fall back to a numbered "weapon slot".
+const WEAPON_SOCKET_POSITIONS := [
+	{"token": "starboard", "key": "ui.weapon_socket.starboard", "fallback": "右舷"},
+	{"token": "port", "key": "ui.weapon_socket.port", "fallback": "左舷"},
+	{"token": "bow", "key": "ui.weapon_socket.bow", "fallback": "舰首"},
+	{"token": "stern", "key": "ui.weapon_socket.stern", "fallback": "舰尾"},
+]
+const WEAPON_CLASS_KEYS := {
+	"light": "ui.weapon_class.light",
+	"medium": "ui.weapon_class.medium",
+	"heavy": "ui.weapon_class.heavy",
+	"side": "ui.weapon_class.side",
+	"tower": "ui.weapon_class.tower",
+}
 
 ## Colour tokens come from `skin.json` (UI Foundation Spec V1 §7) so the page
 ## never hard-codes a business colour. Instance members are resolved once per
@@ -97,6 +118,9 @@ var _stage: SNShipView
 var _refit_button: SNButton
 var _stage_title: Label
 var _hud_rows: Array = []
+## Draggable weapon rows of the current weapons install / buy tab (tests + future
+## highlight wiring). Other categories never populate it.
+var _weapon_rows: Array = []
 var _body: HBoxContainer
 var _ship_thumb: Texture2D = null
 
@@ -127,6 +151,7 @@ func _build_page() -> void:
 	_body = null
 	_refit_button = null
 	_hud_rows.clear()
+	_weapon_rows.clear()
 	if _refit:
 		_build_refit_page()
 	else:
@@ -664,52 +689,175 @@ func _highlight_category_slots() -> void:
 	_stage.highlight_slots(ids)
 
 
-func _build_weapon_install_body(box: VBoxContainer) -> void:
-	box.add_child(_section_label("武器槽位"))
-	var sockets: Array = _vm.get("ship", {}).get("weapon_sockets", [])
-	if sockets.is_empty():
-		box.add_child(_label("当前船体没有舰载武器槽位。", 12, MUTED))
-	for socket in sockets:
-		if not (socket is Dictionary):
+## ---------------------------------------------------------------------------
+## Weapons: player-facing mount labels + drag install (2026-10-27 feedback)
+## ---------------------------------------------------------------------------
+
+## Only the weapons install tab accepts weapon drops on the blueprint chips.
+func _weapon_drag_enabled() -> bool:
+	return _refit and _category == "weapons" and _tab == "install"
+
+
+## Ship model handed to `SNShipView`: every weapon socket is enriched with the
+## localized mount label / mounted weapon name the blueprint chips paint. The
+## backend keys (`socket`, `weapon_id`, ...) stay untouched for commands.
+func _stage_ship_model() -> Dictionary:
+	var model: Dictionary = (_vm.get("ship", {}) as Dictionary).duplicate(true)
+	model["weapon_sockets"] = _enriched_weapon_sockets()
+	return model
+
+
+## `shipyard.view.ship.weapon_sockets` + localized mount / weapon display fields.
+func _enriched_weapon_sockets() -> Array:
+	var rows: Array = []
+	for raw_socket in _vm.get("ship", {}).get("weapon_sockets", []):
+		if not (raw_socket is Dictionary):
 			continue
-		var card := _panel()
-		card.mouse_filter = Control.MOUSE_FILTER_PASS
-		var content := _content(card)
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		var socket: Dictionary = (raw_socket as Dictionary).duplicate(true)
 		var socket_name := String(socket.get("socket", ""))
 		var weapon_id := String(socket.get("weapon_id", ""))
-		var title := _label("%s · %s" % [socket_name, String(socket.get("socket_class", ""))], 13, BRASS)
-		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		# Long socket ids must not widen the fixed dock.
-		title.clip_text = true
-		title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		row.add_child(title)
-		if not weapon_id.is_empty():
-			row.add_child(_label(_loc(String(socket.get("name_key", "")), weapon_id), 13, TEXT))
-			row.add_child(_command_button("卸下", &"ship.uninstall_weapon", {"socket": socket_name}))
-		else:
-			row.add_child(_label("空槽位", 12, MUTED))
-		content.add_child(row)
-		card.mouse_entered.connect(func() -> void: _highlight_weapon_socket(socket_name))
-		card.mouse_exited.connect(_highlight_all_weapon_sockets)
-		box.add_child(card)
+		socket["slot_label"] = _weapon_socket_short_label(socket_name)
+		socket["socket_label"] = socket["slot_label"]
+		socket["slot_title"] = _weapon_socket_title(socket)
+		socket["display_name"] = _loc(String(socket.get("name_key", "")), weapon_id) if not weapon_id.is_empty() else ""
+		socket["empty_text"] = _loc("ui.label.slot_empty", "空槽位")
+		socket["installed_tag"] = _loc("ui.tag.installed", "已装")
+		socket["uninstall_text"] = _loc("ui.button.uninstall", "卸下")
+		socket["weight_label"] = _loc("ui.label.weight_short", "重量")
+		socket["damage_label"] = _loc("ui.label.weapon_socket_damage", "伤害")
+		socket["drop_hint"] = _loc("ui.hint.weapon_socket_drop", "把仓库武器拖到这里")
+		socket["occupied"] = not weapon_id.is_empty()
+		rows.append(socket)
+	return rows
+
+
+## Short blueprint-chip label: 左舷1 / 右舷2 / 舰尾 / 舰首 / 武器槽位 3.
+func _weapon_socket_short_label(socket_name: String) -> String:
+	var position := _weapon_socket_position(socket_name)
+	var number := _weapon_socket_number(socket_name)
+	if position.is_empty():
+		return _loc("ui.weapon_socket.slot", "武器槽位")
+	if number <= 0:
+		return position
+	return _loc("ui.weapon_socket.short", "%s%d") % [position, number]
+
+
+## Player-facing mount name: 左舷 1 号炮位 · 轻型.
+func _weapon_socket_title(socket: Dictionary) -> String:
+	var socket_name := String(socket.get("socket", ""))
+	var position := _weapon_socket_position(socket_name)
+	var number := _weapon_socket_number(socket_name)
+	var slot_text := ""
+	if position.is_empty():
+		slot_text = _loc("ui.weapon_socket.slot", "武器槽位")
+		var index := int(socket.get("socket_index", -1))
+		if index >= 0:
+			slot_text = "%s %d" % [slot_text, index + 1]
+	elif number > 0:
+		slot_text = _loc("ui.weapon_socket.title", "%s %d 号炮位") % [position, number]
+	else:
+		slot_text = _loc("ui.weapon_socket.title_no_index", "%s炮位") % position
+	var class_label := _weapon_class_label(String(socket.get("socket_class", "")))
+	return slot_text if class_label.is_empty() else "%s · %s" % [slot_text, class_label]
+
+
+## Mount title from a backend socket name only (warehouse buttons / buy rows).
+func _weapon_socket_title_by_name(socket_name: String) -> String:
+	for raw_socket in _enriched_weapon_sockets():
+		if raw_socket is Dictionary and String((raw_socket as Dictionary).get("socket", "")) == socket_name:
+			return String((raw_socket as Dictionary).get("slot_title", ""))
+	return _weapon_socket_title({"socket": socket_name})
+
+
+func _weapon_socket_position(socket_name: String) -> String:
+	var lower := socket_name.to_lower()
+	for entry in WEAPON_SOCKET_POSITIONS:
+		if lower.contains(String(entry["token"])):
+			return _loc(String(entry["key"]), String(entry["fallback"]))
+	return ""
+
+
+## Trailing `_N` of the standard socket name (0 when the mount has no index).
+func _weapon_socket_number(socket_name: String) -> int:
+	var underscore := socket_name.rfind("_")
+	if underscore < 0 or underscore + 1 >= socket_name.length():
+		return 0
+	var suffix := socket_name.substr(underscore + 1)
+	return suffix.to_int() if suffix.is_valid_int() else 0
+
+
+func _weapon_class_label(weapon_class: String) -> String:
+	var key := weapon_class.to_lower()
+	if key.is_empty():
+		return ""
+	var loc_key := String(WEAPON_CLASS_KEYS.get(key, ""))
+	return _loc(loc_key, weapon_class) if not loc_key.is_empty() else weapon_class
+
+
+func _weapon_payload(weapon: Dictionary, source: String, name: String) -> Dictionary:
+	return {
+		"kind": "ship_weapon",
+		"weapon_id": String(weapon.get("weapon_id", "")),
+		"weapon_class": String(weapon.get("weapon_class", "")),
+		"source": source,
+		"name": name,
+	}
+
+
+## A weapon dropped on a blueprint mount / socket card: the command layer re-checks
+## class, warehouse qty, weight and money; the page only forwards the intent.
+func _on_weapon_drop(payload: Dictionary, socket: Dictionary) -> void:
+	if String(payload.get("kind", "")) != "ship_weapon":
+		return
+	var weapon_id := String(payload.get("weapon_id", ""))
+	var socket_name := String(socket.get("socket", ""))
+	var source := String(payload.get("source", "warehouse"))
+	if weapon_id.is_empty() or socket_name.is_empty():
+		return
+	if not ["warehouse", "purchase"].has(source):
+		source = "warehouse"
+	command_requested.emit(&"ship.install_weapon", {
+		"socket": socket_name,
+		"weapon_id": weapon_id,
+		"source": source,
+	})
+
+
+## Weapons install tab: one friendly socket card per mount + draggable warehouse rows.
+func _build_weapon_install_body(box: VBoxContainer) -> void:
+	box.add_child(_section_label(_loc("ui.label.weapon_sockets", "武器槽位")))
+	var sockets := _enriched_weapon_sockets()
+	if sockets.is_empty():
+		box.add_child(_label(_loc("ui.label.no_weapon_sockets", "当前船体没有舰载武器槽位。"), 12, MUTED))
+	else:
+		box.add_child(_label(_loc("ui.hint.weapon_drag_install", ""), 11, MUTED))
+		for socket in sockets:
+			var card: Variant = WEAPON_SOCKET_CARD_SCRIPT.new()
+			card.configure(socket)
+			var socket_name := String(socket.get("socket", ""))
+			card.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+				command_requested.emit(command, params)
+			)
+			card.weapon_dropped.connect(_on_weapon_drop)
+			card.hovered.connect(func(_hovered_socket: String) -> void: _highlight_weapon_socket(socket_name))
+			card.unhovered.connect(_highlight_all_weapon_sockets)
+			box.add_child(card)
 	var warehouse_weapons: Array = _vm.get("warehouse", {}).get("weapons", [])
 	if not warehouse_weapons.is_empty():
-		box.add_child(_section_label("仓库武器"))
+		box.add_child(_section_label(_loc("ui.label.warehouse_weapons", "仓库武器")))
 		for weapon in warehouse_weapons:
 			if weapon is Dictionary:
-				box.add_child(_warehouse_weapon_row(weapon))
+				box.add_child(_warehouse_weapon_row(weapon as Dictionary))
 
 
 func _build_weapon_buy_body(box: VBoxContainer) -> void:
-	box.add_child(_section_label("购买并安装"))
+	box.add_child(_section_label(_loc("ui.label.buy_and_install", "购买并安装")))
 	var candidates: Array = _vm.get("weapon_candidates", [])
 	if candidates.is_empty():
-		box.add_child(_label(_loc("ui.label.no_candidates", "当前没有可购买的模块"), 12, MUTED))
+		box.add_child(_label(_loc("ui.label.no_weapon_candidates", "当前没有可购买的武器"), 12, MUTED))
 	for candidate in candidates:
 		if candidate is Dictionary:
-			box.add_child(_weapon_candidate_card(candidate))
+			box.add_child(_weapon_candidate_row(candidate as Dictionary))
 
 
 func _build_misc_body(box: VBoxContainer) -> void:
@@ -895,12 +1043,18 @@ func _make_stage(mode: int, minimum: Vector2, blueprint_backdrop: bool = false) 
 	stage.custom_minimum_size = minimum
 	stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	stage.set_ship_model(_vm.get("ship", {}))
+	stage.set_ship_model(_stage_ship_model())
 	stage.set_blueprint_backdrop(blueprint_backdrop)
 	stage.set_slots(_slots)
 	stage.slot_drop_requested.connect(_on_slot_drop)
 	stage.slot_activated.connect(_on_slot_activated)
+	# Weapon mounts own their own drop contract (`ship_weapon` payload, socket-class
+	# gate); the blueprint chips and the right-hand socket cards both forward here.
+	if stage.has_signal("weapon_drop_requested"):
+		stage.weapon_drop_requested.connect(_on_weapon_drop)
 	stage.set_mode(mode)
+	if stage.has_method("set_weapon_drop_enabled"):
+		stage.set_weapon_drop_enabled(_weapon_drag_enabled())
 	if _category == "weapons":
 		stage.highlight_slots(_weapon_socket_ids())
 	# 2.5D 舞台：正常态用真实 3D 船身，改装态仍走纵剖图贴图。船体模型由船体定义
@@ -1079,7 +1233,9 @@ func _owned_parts_for_all() -> Array:
 # Commands and interactions
 # ---------------------------------------------------------------------------
 func _on_slot_drop(payload: Dictionary, slot: Dictionary) -> void:
-	var part: Dictionary = payload.get("part", {})
+	# Accepts both the full drag payload (`{kind, part}` — what SNSlotTarget forwards
+	# for a real mouse drop) and a bare part dictionary (older callers / tests).
+	var part: Dictionary = payload.get("part", payload)
 	var part_category := String(part.get("category", ""))
 	if part_category != String(slot.get("category", "")):
 		return
@@ -1142,52 +1298,95 @@ func _candidate_card(candidate: Dictionary) -> Control:
 	return card
 
 
-func _weapon_candidate_card(candidate: Dictionary) -> Control:
-	var card := _panel()
-	card.mouse_filter = Control.MOUSE_FILTER_PASS
-	var box := _content(card)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+## Weapon purchase candidate as a draggable row: mount target is part of the row
+## (click installs there) but dragging may land on any class-compatible mount.
+func _weapon_candidate_row(candidate: Dictionary) -> Control:
 	var weapon_id := String(candidate.get("weapon_id", ""))
-	var title := _label("%s → %s" % [_loc(String(candidate.get("name_key", "")), weapon_id), String(candidate.get("socket", ""))], 13, TEXT)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_clip_title(title)
-	row.add_child(title)
-	row.add_child(_label("%d 金币 · %s · 伤害 %s" % [int(candidate.get("price", 0)), _fmt(float(candidate.get("weight", 0.0))), _fmt(float(candidate.get("damage", 0.0)))], 11, MUTED))
-	var button := _command_button("购买并安装", &"ship.install_weapon", {"socket": String(candidate.get("socket", "")), "weapon_id": weapon_id, "source": "purchase"})
-	button.disabled = not bool(candidate.get("can_install", false))
-	row.add_child(button)
-	box.add_child(row)
-	var blocker := _blocker_text(candidate.get("blockers", []))
-	if not blocker.is_empty():
-		box.add_child(_wrap_label(blocker, 11, RED))
-	var socket_id := String(candidate.get("socket", ""))
-	card.mouse_entered.connect(func() -> void: _highlight_weapon_socket(socket_id))
-	card.mouse_exited.connect(_highlight_all_weapon_sockets)
-	return card
+	var name := _loc(String(candidate.get("name_key", "")), weapon_id)
+	var socket_name := String(candidate.get("socket", ""))
+	var socket_title := _weapon_socket_title_by_name(socket_name)
+	var class_label := _weapon_class_label(String(candidate.get("weapon_class", "")))
+	var can_install := bool(candidate.get("can_install", false))
+	var hint := _loc("ui.hint.weapon_drag_to_slot", "拖到左侧炮位") if can_install \
+		else _blocker_text(candidate.get("blockers", []))
+	var row: Variant = WEAPON_ROW_SCRIPT.new()
+	row.configure({
+		"title": name,
+		"tag": _loc("ui.tag.purchase", "购买 %d") % int(candidate.get("price", 0)),
+		"tag_color": BRASS,
+		"meta": "%s → %s · %s %s · %s %s" % [
+			class_label,
+			socket_title,
+			_loc("ui.label.weight_short", "重量"), _fmt(float(candidate.get("weight", 0.0))),
+			_loc("ui.label.weapon_socket_damage", "伤害"), _fmt(float(candidate.get("damage", 0.0))),
+		],
+		"hint": hint,
+		"draggable": can_install,
+		"payload": _weapon_payload(candidate, "purchase", name),
+		"actions": [{
+			"text": _loc("ui.button.install", "购买并安装"),
+			"command": &"ship.install_weapon",
+			"params": {"socket": socket_name, "weapon_id": weapon_id, "source": "purchase"},
+			"disabled": not can_install,
+		}],
+	})
+	row.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+		command_requested.emit(command, params)
+	)
+	row.mouse_entered.connect(func() -> void: _highlight_weapon_socket(socket_name))
+	row.mouse_exited.connect(_highlight_all_weapon_sockets)
+	_weapon_rows.append(row)
+	return row
 
 
+## Warehouse weapon as a draggable row: explicit "装到 左舷1" buttons stay for
+## click install, and dragging the row puts the weapon on a blueprint mount / card.
 func _warehouse_weapon_row(weapon: Dictionary) -> Control:
-	var card := _panel()
-	var box := _content(card)
-	var title := _label("%s ×%d · %s" % [_loc(String(weapon.get("name_key", "")), String(weapon.get("weapon_id", ""))), int(weapon.get("qty", 0)), String(weapon.get("weapon_class", ""))], 13, TEXT)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_clip_title(title)
-	box.add_child(title)
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
+	var weapon_id := String(weapon.get("weapon_id", ""))
+	var name := _loc(String(weapon.get("name_key", "")), weapon_id)
+	var qty := maxi(1, int(weapon.get("qty", 1)))
+	var class_label := _weapon_class_label(String(weapon.get("weapon_class", "")))
+	var actions: Array = []
+	var can_drag := false
+	var hint := ""
 	for option in weapon.get("install_options", []):
 		if not (option is Dictionary):
 			continue
-		var button := _command_button("安装到 %s" % String(option.get("socket", "")), &"ship.install_weapon", {
-			"socket": String(option.get("socket", "")),
-			"weapon_id": String(weapon.get("weapon_id", "")),
-			"source": "warehouse",
+		var socket_name := String((option as Dictionary).get("socket", ""))
+		var disabled := not bool((option as Dictionary).get("can_install", false))
+		actions.append({
+			"text": _loc("ui.button.install_to", "装到 %s") % _weapon_socket_short_label(socket_name),
+			"command": &"ship.install_weapon",
+			"params": {"socket": socket_name, "weapon_id": weapon_id, "source": "warehouse"},
+			"disabled": disabled,
 		})
-		button.disabled = not bool(option.get("can_install", false))
-		actions.add_child(button)
-	box.add_child(actions)
-	return card
+		if not disabled:
+			can_drag = true
+		elif hint.is_empty():
+			hint = _blocker_text((option as Dictionary).get("blockers", []))
+	if can_drag:
+		hint = _loc("ui.hint.weapon_drag_to_slot", "拖到左侧炮位")
+	elif not hint.is_empty():
+		hint = _blocker_text(weapon.get("blockers", [])) if weapon.has("blockers") else hint
+	var row: Variant = WEAPON_ROW_SCRIPT.new()
+	row.configure({
+		"title": "%s ×%d" % [name, qty],
+		"tag": _loc("ui.tag.warehouse", "仓库"),
+		"tag_color": TEAL,
+		"meta": "%s · %s %s" % [
+			class_label,
+			_loc("ui.label.weight_short", "重量"), _fmt(float(weapon.get("weight", 0.0))),
+		],
+		"hint": hint,
+		"draggable": can_drag,
+		"payload": _weapon_payload(weapon, "warehouse", name),
+		"actions": actions,
+	})
+	row.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+		command_requested.emit(command, params)
+	)
+	_weapon_rows.append(row)
+	return row
 
 
 func _craft_recipe(recipe: Dictionary, has_shipyard: bool) -> Control:

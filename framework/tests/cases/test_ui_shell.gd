@@ -803,8 +803,13 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
 	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
 	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	for screen in ["overview", "market", "contracts", "shipyard", "base", "trade", "ruins", "tavern"]:
+	# 用户反馈：基地 / 贸易 / 遗迹是未发布系统，不进入玩家可见导航；遗迹归航行
+	# 探索玩法，不作为港口页入口。页面路由与内部页面保留（截图工具 / 后续重新接入）。
+	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
 		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
+	for screen in ["base", "trade", "ruins"]:
+		assert_true(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)) == null,
+			"the compact chrome hides the unpublished %s navigation entry" % screen)
 	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
 		"4.3/U7: the voyage page is gone from the navigation")
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.sea_chart", "")),
@@ -983,6 +988,60 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	if stage_button != null:
 		stage_button.emit_signal("pressed")
 	assert_true(bool(shell._overview_stage_mode), "the 3D stage can be restored")
+	_unmount(bundle)
+
+
+## 用户反馈：基地 / 贸易 / 遗迹三个未开发系统不要出现在屏幕上。
+## 顶部导航不生成这三个入口；遗迹属于航行探索玩法，不作为港口页入口。页面路由、
+## 场景与 `ui.nav.*` 中英文案保留（`tools/ui_snapshot.gd` 仍直接路由这些页面做视觉
+## 验收，未来重新发布时只从 `HIDDEN_NAV_SCREENS` 移除即可）。
+func test_unpublished_systems_have_no_player_navigation_entry() -> void:
+	var bundle := _mount(5309)
+	var shell: Control = bundle["shell"]
+	_goto(shell, "overview")
+	var hidden: Array = Array(shell.get_script().get_script_constant_map().get("HIDDEN_NAV_SCREENS", []))
+	assert_eq(hidden, ["base", "trade", "ruins"], "the unpublished systems live in one navigation constant")
+	var screens: Array = Array(shell.get_script().get_script_constant_map().get("SCREENS", []))
+	for screen in hidden:
+		assert_true(screens.has(screen),
+			"%s keeps its route, so the internal page stays directly routable" % screen)
+	var zh: Dictionary = _localization_keys("res://framework/localization/zh_CN.json")
+	var en: Dictionary = _localization_keys("res://framework/localization/en.json")
+	var chrome: PanelContainer = shell._top_chrome
+	assert_not_null(chrome, "the compact chrome is mounted on the overview")
+	if chrome == null:
+		_unmount(bundle)
+		return
+	var nav := _named_node(chrome, "Nav")
+	assert_not_null(nav, "the chrome builds one navigation container")
+	if nav == null:
+		_unmount(bundle)
+		return
+	var nav_texts: Array[String] = []
+	for child in nav.get_children():
+		if child is Button:
+			nav_texts.append(String((child as Button).text))
+	for screen in hidden:
+		var key := "ui.nav.%s" % screen
+		var zh_text := String(zh.get(key, ""))
+		var en_text := String(en.get(key, ""))
+		assert_false(zh_text.is_empty(), "%s keeps its zh_CN label for the internal page" % key)
+		assert_false(en_text.is_empty(), "%s keeps its en label for the internal page" % key)
+		assert_true(zh_text != en_text, "%s is really translated in both languages" % key)
+		assert_false(nav_texts.has(zh_text), "the nav has no %s entry in zh_CN" % screen)
+		assert_false(nav_texts.has(en_text), "the nav has no %s entry in en either" % screen)
+		# 剧情引导解析同一个导航表：隐藏入口不能被 focus 高亮成假入口。
+		assert_true(shell._story_nav_button(screen) == null,
+			"story focus cannot resolve the hidden %s navigation entry" % screen)
+	# 舞台设施招牌是另一个玩家入口表：只允许打开已发布页面。
+	var facility_screens: Dictionary = shell.get_script().get_script_constant_map().get("PORT_STAGE_FACILITY_SCREENS", {})
+	for screen in hidden:
+		assert_false(Array(facility_screens.values()).has(screen),
+			"no port-stage facility sign opens the unpublished %s page" % screen)
+	# 已发布页面照常保留按钮（中英查找都走 `_tr`，不硬编码文案）。
+	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
+		assert_true(nav_texts.has(shell._tr("ui.nav.%s" % screen, screen)),
+			"the published %s entry keeps its button" % screen)
 	_unmount(bundle)
 
 
@@ -1653,7 +1712,31 @@ func test_market_pickup_ghost_and_offer_targets() -> void:
 	if tile == null:
 		_unmount(bundle)
 		return
+	# 角标语义（用户反馈）：市场格右上角显示「剩余库存」，不是已选购买数量。
+	# 已选数量（×N）与预计消费都画在跟随鼠标的幽灵上。
+	var stock := int(tile.get("max_pending"))
+	var unit_price := int((tile.get("item") as Dictionary).get("price", 0))
+	assert_true(unit_price > 0, "the fixture market row carries its unit price")
+	var badge: SNBadge = tile.call("pending_badge")
+	assert_not_null(badge, "the market tile exposes its corner badge")
+	if badge != null:
+		assert_true(badge.visible, "the remaining-stock badge is visible even before a click")
+		assert_eq(String(badge.text), str(stock), "the badge starts at the full stock")
+	var meta_label := tile.find_child("Meta", true, false) as Label
+	assert_not_null(meta_label, "the market tile keeps its meta line")
+	if meta_label != null:
+		assert_true(String(meta_label.text).begins_with(shell._tr("ui.market.tile_meta", "") % unit_price),
+			"the meta line only carries the unit price: %s" % String(meta_label.text))
+	var offers: Array = []
+	screen.carry_changed.connect(func(offer: Dictionary) -> void:
+		offers.append(offer.duplicate(true))
+	)
 	tile.call("increment_pending")
+	assert_eq(offers.size(), 1, "the first +1 publishes one carry offer")
+	if offers.size() == 1:
+		assert_eq(int(offers[0].get("unit_price", -1)), unit_price,
+			"the carry offer carries the unit price for the estimated cost")
+		assert_eq(int(offers[0].get("amount", 0)), 1, "the carry offer reports the selected amount")
 	var ghost: Control = shell._carry_ghost
 	assert_not_null(ghost, "picking up a market icon creates the cursor ghost")
 	if ghost == null:
@@ -1661,6 +1744,13 @@ func test_market_pickup_ghost_and_offer_targets() -> void:
 		return
 	assert_true(bool(ghost.call("is_carrying")), "the ghost reports the carried stack")
 	assert_eq(int(ghost.call("amount")), 1, "the ghost shows the pending amount")
+	assert_eq(String(ghost.call("cost_text")),
+		String(shell._tr("ui.market.estimated_cost", "")) % (unit_price * 1),
+		"the ghost shows unit_price x amount as the estimated cost")
+	if badge != null:
+		assert_eq(String(badge.text), str(stock - 1),
+			"the corner badge shows the remaining stock after one click, not the selected amount")
+		assert_false(String(badge.text).begins_with("×"), "the remaining-stock badge is a plain number")
 	assert_true(ghost.visible, "the ghost is visible while carrying")
 	# Headless mouse is (0,0): the pure placement helper asserts the +18/+12 offset.
 	assert_eq(ghost.call("place_at", Vector2.ZERO), Vector2(18.0, 12.0),
@@ -1668,6 +1758,12 @@ func test_market_pickup_ghost_and_offer_targets() -> void:
 	assert_not_null(ghost.call("carried_icon"), "the carried icon travels with the ghost")
 	tile.call("increment_pending")
 	assert_eq(int(ghost.call("amount")), 2, "the number on the ghost follows every +1")
+	assert_eq(String(ghost.call("cost_text")),
+		String(shell._tr("ui.market.estimated_cost", "")) % (unit_price * 2),
+		"the estimated cost follows every +1")
+	if badge != null:
+		assert_eq(String(badge.text), str(stock - 2),
+			"the corner badge keeps counting down the remaining stock")
 
 	var cargo_zone := _named_node(shell._root_box, "CargoDropZone")
 	var warehouse_zone := _named_node(shell._root_box, "WarehouseDropZone")
@@ -1682,6 +1778,10 @@ func test_market_pickup_ghost_and_offer_targets() -> void:
 		other_tile.call("increment_pending")
 		assert_eq(int(tile.get("pending")), 0, "switching the carried tile clears the old pending")
 		assert_eq(int(ghost.call("amount")), 1, "the ghost shows the new stack size")
+		var other_price := int((other_tile.get("item") as Dictionary).get("price", 0))
+		assert_eq(String(ghost.call("cost_text")),
+			String(shell._tr("ui.market.estimated_cost", "")) % (other_price * 1),
+			"the estimated cost follows the newly carried item's price")
 		var carried = screen.call("carrying_tile")
 		assert_eq(carried, other_tile, "the page tracks exactly one carried tile")
 		tile = other_tile
@@ -1757,9 +1857,46 @@ func test_market_pickup_click_places_the_carried_amount() -> void:
 		market.get_parent().remove_child(market)
 		market.free()
 		return
+	# 角标 / 单价契约（用户反馈）：fixture 行情行 price=88 / stock=10，角标显示剩余
+	# 库存（10 → 9 → 8，纯数字），meta 只显示单价 + 趋势，carry offer 携带 unit_price。
+	var offers: Array = []
+	market.carry_changed.connect(func(offer: Dictionary) -> void:
+		offers.append(offer.duplicate(true))
+	)
+	var expected_price := 88
+	var expected_stock := 10
+	assert_eq(int((tile.get("item") as Dictionary).get("price", 0)), expected_price,
+		"the market tile item carries its unit price")
+	assert_eq(int(tile.get("max_pending")), expected_stock, "the fixture tile starts from the full stock")
+	var badge: SNBadge = tile.call("pending_badge")
+	assert_not_null(badge, "the market tile exposes its corner badge")
+	if badge != null:
+		assert_true(badge.visible, "the remaining-stock badge is visible before any click")
+		assert_eq(String(badge.text), str(expected_stock), "the badge starts at the full stock")
+	var meta_label := tile.find_child("Meta", true, false) as Label
+	assert_not_null(meta_label, "the market tile keeps its meta line")
+	if meta_label != null:
+		assert_true(String(meta_label.text).begins_with(context.translate("ui.market.tile_meta") % expected_price),
+			"the meta line only carries the unit price, not the stock: %s" % String(meta_label.text))
 	tile.call("increment_pending")
+	assert_eq(offers.size(), 1, "the first +1 publishes one carry offer")
+	if offers.size() == 1:
+		assert_eq(int(offers[0].get("unit_price", -1)), expected_price,
+			"the carry offer carries the unit price for the estimated cost")
+		assert_eq(int(offers[0].get("amount", 0)), 1, "the carry offer reports the selected amount")
+	if badge != null:
+		assert_eq(String(badge.text), str(expected_stock - 1),
+			"the corner badge shows the remaining stock after one click")
+		assert_false(String(badge.text).begins_with("×"), "the remaining-stock badge is a plain number")
 	tile.call("increment_pending")
 	assert_eq(int(tile.get("pending")), 2, "two clicks carry two units")
+	if offers.size() == 2:
+		assert_eq(int(offers[1].get("unit_price", -1)), expected_price,
+			"every carry offer keeps the unit price")
+		assert_eq(int(offers[1].get("amount", 0)), 2, "the second offer reports both selected units")
+	if badge != null:
+		assert_eq(String(badge.text), str(expected_stock - 2),
+			"the corner badge keeps counting down the remaining stock (not ×N)")
 	assert_true(bool(cargo_zone.call("offer_active")), "the cargo target is armed while carrying")
 
 	var release := InputEventMouseButton.new()
@@ -1805,6 +1942,110 @@ func test_market_pickup_click_places_the_carried_amount() -> void:
 	hold.free()
 	market.get_parent().remove_child(market)
 	market.free()
+
+
+## 用户反馈（市场购买）：角标显示剩余数量、幽灵显示已选数量 + 预计消费。
+## 聚焦 fixture（price=88 / stock=10）断言：角标 10 → 9 → 8 纯数字；幽灵 cost 文本
+## = 单价 × 数量；market 行 meta 只有单价；中英文案都只插值价格 / 金额。
+func test_market_tile_remaining_badge_and_estimated_cost_ghost() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 5304})
+	var view_model := {
+		"current_port": {"id": "fixture", "name_key": "fixture"},
+		"money": 500,
+		"ship": {"total_weight": 0.0, "max_weight": 10.0, "cargo_used": 0.0, "cargo_capacity": 10.0, "hold": []},
+		"warehouse": {"port_id": "fixture", "materials": []},
+		"market": [{
+			"item_id": "core:item/brass", "name_key": "item.core.brass.name",
+			"category": "metal", "crafting_material": true, "unit_weight": 2.0,
+			"price": 88, "stock": 10, "buyable": true, "icon_key": "",
+		}],
+		"trends": {},
+	}
+	var tree := Engine.get_main_loop() as SceneTree
+	var market: Control = MARKET_SCREEN_SCRIPT.new()
+	market.bind(view_model, Callable(context, "translate"))
+	tree.root.add_child(market)
+	var ghost: Control = CARRY_GHOST_SCENE.instantiate() as Control
+	tree.root.add_child(ghost)
+	# 场景化（P0）：静态骨架来自 .tscn，节点名 / 尺寸 / 初始隐藏是契约（R2）。
+	assert_not_null(ghost.find_child("GhostPanel", true, false), "the ghost scene keeps its GhostPanel")
+	assert_not_null(ghost.find_child("GhostRow", true, false), "the ghost scene keeps its GhostRow")
+	var ghost_icon: TextureRect = ghost.find_child("Icon", true, false) as TextureRect
+	assert_not_null(ghost_icon, "the ghost scene keeps its 40 px Icon slot")
+	if ghost_icon != null:
+		assert_eq(ghost_icon.custom_minimum_size, Vector2(40.0, 40.0),
+			"the ghost icon size is a scene design constant")
+	var ghost_cost: Label = ghost.find_child("Cost", true, false) as Label
+	assert_not_null(ghost_cost, "the ghost scene keeps its estimated-cost line")
+	if ghost_cost != null:
+		assert_false(ghost_cost.visible, "the estimated-cost line starts hidden until a cost is passed")
+	var tile: Variant = null
+	for node in _nodes_with_script(market, ITEM_TILE_SCRIPT):
+		if String((node.get("item") as Dictionary).get("kind", "")) == "market_item":
+			tile = node
+			break
+	assert_not_null(tile, "the fixture market renders one market tile")
+	if tile == null:
+		market.get_parent().remove_child(market)
+		market.free()
+		ghost.get_parent().remove_child(ghost)
+		ghost.free()
+		return
+	var badge: SNBadge = tile.call("pending_badge")
+	assert_not_null(badge, "the market tile exposes its corner badge")
+	if badge != null:
+		assert_true(badge.visible, "the remaining-stock badge is always visible on market tiles")
+		assert_eq(String(badge.text), "10", "the badge starts at the full stock with plain digits")
+	var meta_label := tile.find_child("Meta", true, false) as Label
+	assert_not_null(meta_label, "the market tile keeps its meta line")
+	if meta_label != null:
+		assert_eq(String(meta_label.text),
+			String(context.translate("ui.market.tile_meta")) % 88 + " →",
+			"the meta line only carries the unit price plus the trend arrow")
+
+	var offers: Array = []
+	market.carry_changed.connect(func(offer: Dictionary) -> void:
+		offers.append(offer.duplicate(true))
+	)
+	tile.call("increment_pending")
+	assert_eq(int(tile.get("pending")), 1, "one click selects one unit")
+	assert_eq(offers.size(), 1, "the click publishes the carry offer")
+	if offers.size() == 1:
+		assert_eq(int(offers[0].get("unit_price", -1)), 88, "the offer carries the unit price")
+	var cost_template := String(context.translate("ui.market.estimated_cost"))
+	ghost.call("begin", tile.call("icon_texture"), "黄铜", int(offers[0].get("amount", 0)), "", cost_template % 88)
+	assert_eq(ghost.call("cost_text"), cost_template % 88,
+		"the ghost paints the estimated cost for one unit")
+	assert_eq(int(ghost.call("amount")), 1, "the ghost paints the selected amount")
+	if badge != null:
+		assert_eq(String(badge.text), "9", "after one click the badge shows the remaining stock")
+
+	tile.call("increment_pending")
+	assert_eq(offers.size(), 2, "the second click publishes an updated offer")
+	ghost.call("begin", tile.call("icon_texture"), "黄铜", int(offers[1].get("amount", 0)), "", cost_template % (88 * 2))
+	assert_eq(ghost.call("cost_text"), cost_template % 176,
+		"the estimated cost follows the selected amount (unit price x 2)")
+	if badge != null:
+		assert_eq(String(badge.text), "8", "two clicks leave 8 in stock")
+
+	# 空 cost_text 时隐藏预计消费行（非市场 / 没有单价时）。
+	ghost.call("begin", tile.call("icon_texture"), "黄铜", 1, "", "")
+	assert_eq(ghost.call("cost_text"), "", "an empty cost hides the estimated-cost line")
+
+	# 两套语言都只插值价格 / 金额，模板不再带库存槽位。
+	for path in ["res://framework/localization/zh_CN.json", "res://framework/localization/en.json"]:
+		var locale: Dictionary = _localization_keys(path)
+		assert_eq(_slots(String(locale.get("ui.market.tile_meta", ""))), "%d",
+			"ui.market.tile_meta interpolates only the unit price (%s)" % path)
+		assert_eq(_slots(String(locale.get("ui.market.estimated_cost", ""))), "%d",
+			"ui.market.estimated_cost interpolates only the total cost (%s)" % path)
+
+	market.get_parent().remove_child(market)
+	market.free()
+	ghost.get_parent().remove_child(ghost)
+	ghost.free()
 
 
 ## dev.3 反馈 #4：命令成功 / 失败的瞬时反馈要在鼠标交互处浮出，而不是只写顶部

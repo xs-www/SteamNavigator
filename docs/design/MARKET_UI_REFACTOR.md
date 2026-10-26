@@ -28,11 +28,21 @@
 
 | 操作 | 结果 |
 | --- | --- |
-| 左键点市场图标 | 待交易数量 +1（受 `stock` / `buyable` 限制），同时进入「拿起」：图标 + ×数量浮在鼠标指针旁（`SNCarryGhost`） |
+| 左键点市场图标 | 待交易数量 +1（受 `stock` / `buyable` 限制），同时进入「拿起」：图标 + ×数量 + **预计消费**（单价 × 数量）浮在鼠标指针旁（`SNCarryGhost`）；行情格右上角角标同时**减少 1**（显示剩余库存） |
 | 左键点船舱 / 仓库区 | 放下：执行 `trade.buy {amount = 待交易数量, destination}`；点落点内的货物格子同样生效（格子把点击转给 `drop_host`） |
-| 右键（页面任意处） | 取消拿起：清空该图标待交易数量并收起光标幽灵 |
+| 右键（页面任意处） | 取消拿起：清空该图标待交易数量并收起光标幽灵；角标回到 `stock` |
 | 右键点图标 | 清空该图标待交易数量（与取消拿起同一语义） |
 | 拖拽图标 | 携带 `max(待交易数量, 1)`；拖拽预览显示图标 + 名称 + ×数量（兼容手势，拖拽期间隐藏光标幽灵） |
+
+数量显示分工（用户反馈 2026-10-26）：
+
+| 位置 | 语义 | 格式 |
+| --- | --- | --- |
+| 市场行情格右上角角标（`SNItemTile`，`badge_mode: "remaining"`） | **剩余库存** `max(0, stock - pending)`，始终可见 | 纯数字（如 `7`），不显示 `×N` |
+| 行情格 meta 行 | 单价 + 趋势箭头 | `ui.market.tile_meta` 单参数（zh `%d 金` / en `%d g`） |
+| 跟随鼠标的携带幽灵（`SNCarryGhost`） | 玩家已选数量 + 预计消费 | `×N` + `ui.market.estimated_cost`（zh `预计消费 %d 金` / en `Estimated cost: %d gold`） |
+
+船舱 / 仓库格仍用默认 `pending` 语义（角标 `×N` = 待交易数量，0 时隐藏），本次不改。
 
 拖拽落点与命令（点击落点的 `dropped` 载荷与拖拽完全一致）：
 
@@ -57,7 +67,9 @@
 
 ```text
 MarketScreen.carry_changed(offer)                # offer {} = 未携带
-  → Shell._show_carry_ghost(offer)               # SNCarryGhost.begin(icon, name, amount, hint)
+                                                 # {kind, item_id, name, icon, amount, unit_price}
+  → Shell._show_carry_ghost(offer)               # SNCarryGhost.begin(icon, name, amount, hint, cost_text)
+                                                 # cost_text = ui.market.estimated_cost % (unit_price * amount)
   → SNCargoHoldPanel.set_offer(offer)            # 转发给两个 SNDropZone
        → SNDropZone.set_offer(offer)             # 仅接受 accept_kinds 的载荷，命中即高亮
 玩家左键落点
@@ -65,6 +77,12 @@ MarketScreen.carry_changed(offer)                # offer {} = 未携带
   → dropped(offer) → SNCargoHoldPanel.handle_*_drop() → trade.buy / warehouse.*
 ```
 
+- `SNItemTile.configure({..., badge_mode, stock})`：默认 `badge_mode = "pending"`（船舱 /
+  仓库格，`×N`，0 隐藏）；市场行情格传 `"remaining"` + 该行 `stock`，角标始终可见、
+  显示 `max(0, stock - pending)`，每次 +1 立即刷新。
+- `SNCarryGhost.begin(icon, title, amount, hint, cost_text = "")`：`cost_text` 在 `×数量`
+  下方以更小字号绘制，为空则隐藏；`cost_text()` getter 供测试读取。Shell 在每次
+  `carry_changed` 重新 `begin`，因此数量 / 预计消费随每次 +1 更新。
 - `SNItemTile.drop_host` 指向所在 `SNDropZone`：落点内的货物格子是
   `MOUSE_FILTER_STOP`，点击先交给 `drop_host.try_click_offer()`，被消费就不再给格子 +1。
 - 切换携带：新格子 pending > 0 时先 `clear_pending()` 旧格子（先清 `_carry_tile`
@@ -189,4 +207,15 @@ node tools/gen_static_docs.mjs --check
 - 反馈 #4：命令成功 / 失败的瞬时反馈由 `SNInteractionHint` 在鼠标处浮出并短淡出，
   顶部 banner 继续保留；Shell 通过 `_set_status()` 统一触发，页面无需各自接线。
 - 本节的「分类筛选 / 音效 / 动效」与「补给图标化」仍未做，留给市场 V2。
+
+### V1.2 已落地（2026-10-26）：角标改显示剩余数量 + 幽灵显示预计消费
+
+- 用户反馈：不要在货物 ICON 上显示「购买了多少个」，右上角数字改为「剩余多少个」；
+  购买数量已经显示在跟随鼠标的货物 icon 上，还需额外显示预计消费金额。
+- `SNItemTile` 新增 `badge_mode` / `stock` 配置：市场行情格用 `remaining`（角标始终可见，
+  纯数字 = `stock - pending`），船舱 / 仓库格保持默认 `pending`（`×N`）语义不变。
+- `market_screen` 行情格 meta 改为只显示单价 + 趋势（`ui.market.tile_meta` 单参数），
+  `item` 补 `price`，`_offer_for()` 增加 `unit_price`。
+- `SNCarryGhost.begin()` 新增 `cost_text` 行（数量下方、字号更小，空则隐藏），
+  Shell 用 `ui.market.estimated_cost` 格式化 `unit_price × amount`。
 
