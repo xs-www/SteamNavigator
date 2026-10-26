@@ -35,7 +35,7 @@
 | `deploy/Dockerfile.telemetry` | 游玩数据接收端生产镜像：node:22-alpine 跑零依赖 `server/telemetry.mjs`，非 root、8090 端口、`/data` 数据卷。 | [查看](./deploy/Dockerfile.telemetry.md) |
 | `deploy/nginx.conf` | 官网镜像内的 nginx 配置：单 worker、8080 端口、gzip、静态缓存、健康检查、基础安全响应头，以及 /api/telemetry/ 反代。 | [查看](./deploy/nginx.conf.md) |
 | `devlog.html` | 开发日志页：版本时间线、已交付系统与下一阶段方向；允许出现版本号与开发状态。 | [查看](./devlog.html.md) |
-| `docker-compose.yml` | 官网 Docker Compose：低内存静态站容器 + 游玩数据接收端容器 + 可选 Cloudflare Tunnel 容器。 | [查看](./docker-compose.yml.md) |
+| `docker-compose.yml` | 官网 Docker Compose：低内存静态站容器 + 游玩数据接收端容器 + 只读内容 API（含最新 Windows 包镜像）+ 可选看板 / Cloudflare Tunnel。 | [查看](./docker-compose.yml.md) |
 | `download.html` | 下载页：真实 GitHub Release 资产、平台卡片、运行需求、安装步骤与 FAQ。 | [查看](./download.html.md) |
 | `favicon.svg` | 官网 favicon：黄铜罗盘 / 菱形边框，呼应游戏蒸汽朋克罗盘母题。 | [查看](./favicon.svg.md) |
 | `game.html` | 游戏信息页：世界观、玩法循环、核心特色、五座港口与三大势力，向玩家解释游戏内容。 | [查看](./game.html.md) |
@@ -43,6 +43,7 @@
 | `server/site_api.mjs` | 官网只读内容 API：`GET /api/site/release` 在服务端拉取 GitHub Releases（内存缓存，默认 5 分钟）， | [查看](./server/site_api.mjs.md) |
 | `server/telemetry.mjs` | 游玩数据（telemetry）接收端：校验客户端上传的会话 JSON、按来源限流、写入会话文件与索引，并做 180 天保留清理。 | [查看](./server/telemetry.mjs.md) |
 | `tests/release-data.test.mjs` | 官网 Release 版本数据生成器（`tools/build-release-data.mjs`）的 Node 测试：覆盖 latest/stable 选择、 | [查看](./tests/release-data.test.mjs.md) |
+| `tests/site-api-mirror.test.mjs` | 官网只读内容 API 的「最新 Windows zip 镜像」测试：覆盖后台流式下载 + SHA-256 校验、镜像可用后 | [查看](./tests/site-api-mirror.test.mjs.md) |
 | `tests/site-api.test.mjs` | 官网只读内容 API（`server/site_api.mjs`）的 Node 测试：覆盖 health / release 响应、5 分钟缓存与并发共享、 | [查看](./tests/site-api.test.mjs.md) |
 | `tests/telemetry-dashboard.test.mjs` | 本地游玩数据看板（`tools/telemetry_dashboard.mjs`）的 Node 测试（node:test，零第三方依赖）： | [查看](./tests/telemetry-dashboard.test.mjs.md) |
 | `tests/telemetry.test.mjs` | 游玩数据接收端 Node 测试（node:test，零第三方依赖）：覆盖 health、合法/非法上传、存储与索引、限流、令牌、方法/路径错误与 180 天保留清理。 | [查看](./tests/telemetry.test.mjs.md) |

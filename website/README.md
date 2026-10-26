@@ -125,6 +125,18 @@ curl.exe http://127.0.0.1:8088/api/site/release
   首页不写版本，无需改动。
 
 ```powershell
+### Windows 安装包镜像（只保留最新版）
+
+- `site-api` 刷新到新 Release 后，在后台把**最新 Windows zip** 流式下载到命名卷 `release-downloads`，
+  校验字节数 + `SHA256SUMS.txt` 后暴露为 `/downloads/<tag>/<windows.zip>`；`website` 容器只读挂载同一卷，
+  由 nginx 直接下发（支持 Range / 断点续传，tag 不可变 → 30 天缓存）。
+- **只保留最新 tag 目录**：新版本下载成功后自动删除旧 tag（每个版本约 80 MB ≈ 磁盘占用）；历史版本下载
+  仍走 GitHub——API 的 `data.downloads.windows.github_url` 与静态 `links.windows` 始终保留。
+- 下载未完成 / 校验失败 / 磁盘满：API 的 `downloads.windows.available=false`，前端自动回退 GitHub 直链，不影响页面。
+- 关闭镜像：`.env` 设 `SN_SITE_API_MIRROR_WINDOWS=0`；磁盘/带宽观测见下方「内存与资源」。
+- **修改 `assets/js/release.js` 后要同步提高下载页 / 开发日志页 script 的 `?v=`**：静态 JS 在 CDN 缓存 7 天，
+  不换 query 的话已部署的旧脚本不会刷新。
+
 # 抽查下载链接（替换为生成文件里的最新 tag/文件名）
 curl.exe -I https://github.com/xs-www/SteamNavigator/releases/download/<tag>/<filename>
 ```
@@ -239,10 +251,11 @@ node --check website/tools/telemetry_dashboard.mjs
 Compose 同时起三个服务：
 
 - `website`：nginx 静态站，容器内 8080，只映射到 `127.0.0.1:8088`；`/api/telemetry/` 反代到接收端、`/api/site/` 反代到内容 API。
+- `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署；同时镜像最新 Windows zip 到 `release-downloads` 卷（只读挂载给 `website` 的 nginx `/downloads/`）。
 - `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署。
 - `telemetry`：Node 接收端，容器内 8090，**不映射宿主机端口**，只被 `website` 访问；`website` 等它 healthcheck 通过才启动。
 - `telemetry-dashboard`（可选，`--profile dashboard`）：看板容器，只读挂载同一个数据卷，只映射到 `127.0.0.1:8091`。
-- nginx：`location /api/telemetry/` → `http://telemetry:8090`（原样保留 URI、`client_max_body_size 1m`、只允许 GET/POST、关闭该 location 的 access_log 以免记录客户端 IP）；`location /api/site/` → `http://site-api:8092`（只允许 GET/HEAD）。
+- nginx：`location /api/telemetry/` → `http://telemetry:8090`（原样保留 URI、`client_max_body_size 1m`、只允许 GET/POST、关闭该 location 的 access_log 以免记录客户端 IP）；`location /api/site/` → `http://site-api:8092`（只允许 GET/HEAD）；`location /downloads/` 直接读只读卷（Range + 30 天缓存）。
 
 ```bash
 cd website

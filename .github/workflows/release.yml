@@ -99,7 +99,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs website/tests/site-api.test.mjs
+          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs
 
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB),

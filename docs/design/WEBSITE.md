@@ -31,6 +31,9 @@
     服务端缓存 GitHub Releases（默认 5 分钟），下载页 / 开发日志页先渲染静态数据、再请求同域 `/api/site/release`
     刷新。**发布 Release 后无需重新部署网站**，最迟约 5 分钟线上显示最新版本；GitHub 不可用时依次回退旧缓存、
     镜像内 `release-data.js`。`GITHUB_TOKEN` 只用于服务端调用，不下发浏览器。
+  - **最新 Windows 安装包镜像**：`site-api` 后台把最新 Release 的 windows.zip 流式下载到卷
+    `release-downloads`（校验字节数 + SHA256SUMS），暴露 `/downloads/<tag>/<file>` 由 nginx 直接下发
+    （Range / 30 天缓存）；新版本成功后删除旧 tag，**只保留最新版**，历史版本由前端回退 GitHub 直链。
 - 世界观关键词：蒸汽朋克、群岛、浓雾、煤烟、黄铜与铸铁、港口城邦、商会 / 皇家海军 / 海盗团、遗迹与失落的航路。
 - 核心玩法关键词：动态行情与港口库存、造船厂与模块改装、程序生成海图与线索探索、锅炉策略、蒸汽舰炮与舰队、基地生产链、遗迹远征、自动贸易。
 - 五个港口模板：铁港、香料港、自由镇、渔村、玻璃港。
@@ -208,7 +211,7 @@ window.SN_WIKI_DATA = {
 
 1. 5 个页面均可在 `http://127.0.0.1:<port>/` 正常打开；无 404（图片 / CSS / JS）。
 2. 首页可见文本（去掉导航与页脚链接文字后）不含 §1 的禁用词；不含版本号。
-3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过）。Runtime：部署后 `GET /api/site/release` 返回 200，`data.latest.tag` 等于 GitHub 最新 Release；发布新 Release 后 ≤5 分钟（服务端缓存 TTL）页面无需重新部署即可显示新版本。
+3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过）。Runtime：部署后 `GET /api/site/release` 返回 200，`data.latest.tag` 等于 GitHub 最新 Release；发布新 Release 后 ≤5 分钟（服务端缓存 TTL）页面无需重新部署即可显示新版本。Windows 镜像：`data.downloads.windows.available=true` 后页面 Windows 按钮指向 `/downloads/<tag>/...`（HEAD 200、Range 206、只保留最新 tag），不可用时回退 GitHub。
 4. 百科页：分类筛选、搜索、空结果提示、深链接（`#entry-id` / `#cat-id`）可用；条目数 ≥ 60。
 5. Chrome headless 截图 1440×900、1024×768、390×844 无横向滚动、无重叠、导航可用。
 6. 控制台无 JS 报错；图片均有 `alt`；按钮/链接键盘可达；灯箱可用 `Esc` 关闭。
@@ -225,7 +228,7 @@ window.SN_WIKI_DATA = {
 - wiki 任务：只写 `website/tools/build-wiki-data.mjs`、`website/assets/data/`。
 - QA：只写 `tmp/website-qa/`。
 - 版本数据任务：只写 `website/tools/build-release-data.mjs`、`website/assets/data/release-data.js`、`website/assets/js/release.js`、`.github/workflows/website-release-data.yml` 与下载/开发日志页的数据属性；不手改生成文件。
-- 内容 API 任务：只写 `website/server/site_api.mjs`、`website/tests/site-api.test.mjs`、`website/deploy/Dockerfile.site-api` 与 compose / nginx 的 `/api/site/` 段落；只读、不接触遥测数据，token 不进响应。
+- 内容 API 任务：只写 `website/server/site_api.mjs`、`website/tests/site-api*.test.mjs`、`website/deploy/Dockerfile.site-api` 与 compose / nginx 的 `/api/site/`、`/downloads/` 段落；只读、不接触遥测数据，token 不进响应；Windows 镜像只保留最新 tag。
 - QA：只写 `tmp/website-qa/`。
 - telemetry 任务：只写 `website/server/`、`website/tests/`、`website/deploy/Dockerfile.telemetry` 与本文档 §10 契约涉及的 nginx / compose / README 段落；契约先改 [TELEMETRY.md](TELEMETRY.md)。
 - 所有人不改 `dev_mods/`、`framework/`、`docs/static/`；站点目录加 `.gdignore`，避免 Godot 导入。
@@ -243,6 +246,7 @@ window.SN_WIKI_DATA = {
 - 游玩数据接收端（2026-10-27）：`website/server/telemetry.mjs` + `website/deploy/Dockerfile.telemetry` + compose `telemetry` 服务 + nginx `/api/telemetry/` 反代；数据卷 `website-telemetry-data`（`/data`），保留 180 天。契约见 [TELEMETRY.md](TELEMETRY.md)。
 - 版本数据自动同步（2026-10-27）：`website/tools/build-release-data.mjs` 从 GitHub Releases API 生成 `assets/data/release-data.js`（latest / stable / 平台直链 / 大小 / 日期），下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充；`ci.ps1` 部署前刷新，`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交；网络失败保留旧数据。
 - 运行时版本自动更新（2026-10-27）：新增只读 `site-api` 服务（`website/server/site_api.mjs` + `Dockerfile.site-api` + compose `site-api` + nginx `/api/site/` 反代），服务端缓存 GitHub Releases（默认 5 分钟、`Cache-Control: public, max-age=60, stale-while-revalidate=600`）；发版后网站无需重新部署即可在 ≤5 分钟内更新，失败时回退旧缓存 / 镜像内静态数据。`ci.ps1` 部署后检查 `/api/site/release`；`release-data.js` 单独 `no-cache`，避免浏览器/CDN 长期缓存旧版本。
+- 最新 Windows 安装包镜像（2026-10-27）：`site-api` 后台流式下载最新 Release 的 windows.zip 到命名卷 `release-downloads`（SHA-256 + 字节数校验），`website` 只读挂载后由 nginx `/downloads/<tag>/<file>` 下发（Range、30 天缓存）；新版本就绪后清理旧 tag，只保留最新版，历史版本与镜像未就绪时回退 GitHub。`release.js` 缓存标识用 `?v=` 版本串，修改脚本时需同步更新。
 
 
 - 本地游玩数据看板（2026-10-27）：`website/tools/telemetry_dashboard.mjs` + `Dockerfile.dashboard` + compose `telemetry-dashboard`（`profiles: ["dashboard"]`，只发布到 `127.0.0.1:8091`），只读同一个数据卷；**不是官网页面**，不进入站点导航，也不随静态站发布。

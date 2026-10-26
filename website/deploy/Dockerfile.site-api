@@ -26,13 +26,18 @@ LABEL org.opencontainers.image.source="https://github.com/xs-www/SteamNavigator"
 
 ENV NODE_ENV=production \
     SN_SITE_API_PORT=8092 \
-    SN_SITE_API_HOST=0.0.0.0
+    SN_SITE_API_HOST=0.0.0.0 \
+    SN_SITE_API_DOWNLOAD_DIR=/downloads \
+    SN_SITE_API_MIRROR_WINDOWS=1
 
 WORKDIR /app
 
 COPY --chown=node:node server/site_api.mjs server/site_api.mjs
 COPY --chown=node:node tools/build-release-data.mjs tools/build-release-data.mjs
 COPY --chown=node:node assets/data/release-data.js assets/data/release-data.js
+
+# 命名卷首次挂载会复制该目录的属主，保证非 root 用户可写镜像目录。
+RUN mkdir -p /downloads && chown node:node /downloads
 
 USER node
 

@@ -4,6 +4,8 @@
 //
 // ## 契约与约束
 // - 静态数据优先渲染：断网 / API 未部署 / 纯静态托管时页面仍有可用版本信息。
+// - Windows 下载优先使用后端镜像：API 的 `data.downloads.windows.available` 为真时用 `/downloads/<tag>/...`，
+//   否则回退 `data.links.windows`（GitHub）；镜像目录只保留最新版本，历史版本始终走 GitHub。
 // - 只做 `textContent` / `href` 赋值，不插入 HTML（tag / 名称按纯文本处理，避免注入）。
 // - 找不到数据、字段为 null 或元素不存在时保持页面原有静态 fallback 文案，不隐藏内容、不报错。
 // - 约定属性：`data-release="tag|date|state|windows-size|linux-size|banner-note"` 填文本；
@@ -61,7 +63,14 @@
   function applyData(data) {
     if (!data || !data.latest) return false;
     var latest = data.latest;
-    var links = data.links || {};
+    var links = {};
+    var sourceLinks = data.links || {};
+    for (var key in sourceLinks) {
+      if (Object.prototype.hasOwnProperty.call(sourceLinks, key)) links[key] = sourceLinks[key];
+    }
+    // 后端已镜像最新 Windows zip 时优先本地地址；否则（含历史/未就绪）回退 GitHub 直链。
+    var mirrored = data.downloads && data.downloads.windows;
+    if (mirrored && mirrored.available && mirrored.url) links.windows = mirrored.url;
 
     var nodes = document.querySelectorAll("[data-release]");
     for (var index = 0; index < nodes.length; index += 1) {

@@ -1,16 +1,19 @@
 # `website/docker-compose.yml`
 
-> 作用：官网 Docker Compose：低内存静态站容器 + 游玩数据接收端容器 + 可选 Cloudflare Tunnel 容器。
+> 作用：官网 Docker Compose：低内存静态站容器 + 游玩数据接收端容器 + 只读内容 API（含最新 Windows 包镜像）+ 可选看板 / Cloudflare Tunnel。
 
 - 类型：项目配置/数据文件
 
 ## 契约与约束
-- 契约：`docs/design/TELEMETRY.md` §4；`website` 通过 nginx 把 `/api/telemetry/` 反代到 `http://telemetry:8090`。
+- 契约：`docs/design/TELEMETRY.md` §4、`docs/design/WEBSITE.md` §7/§10；`website` 通过 nginx 把
+  `/api/telemetry/` 反代到 `http://telemetry:8090`，`/api/site/` 反代到 `http://site-api:8092`。
 - 默认只把宿主机 8088 绑定到 127.0.0.1（容器内 8080），公网入口由 Cloudflare Tunnel 提供；
-  `telemetry` 不映射宿主机端口，只能从 `website` 容器访问。
-- 两个容器都只读、丢弃 capabilities、限制 CPU / 内存 / pids；运行期分别只写 `/tmp` 与 `/data`。
+  `telemetry` / `site-api` 不映射宿主机端口，只能从 `website` 容器访问。
+- 所有容器只读、丢弃 capabilities、限制 CPU / 内存 / pids；运行期只写 `/tmp`、`/data` 与 `release-downloads` 卷。
 - `telemetry` 数据卷 `telemetry-data` 挂到 `/data`（会话 JSON 与 index.ndjson），备份与保留期见 `website/README.md`。
-- `website` 在 `telemetry` healthcheck 通过后才启动，避免反代目标长期 502。
+- `release-downloads` 卷：`site-api` 写入最新 Windows zip，`website` 只读挂载由 nginx `/downloads/` 下发；
+  只保留最新 tag，历史版本回退 GitHub。
+- `website` 在 `telemetry` / `site-api` healthcheck 通过后才启动，避免反代目标长期 502。
 - `cloudflared` 使用 profile `tunnel`，未启用时不启动；origin 地址使用 Compose 服务名 `http://website:8080`。
 
 ## 重点逻辑

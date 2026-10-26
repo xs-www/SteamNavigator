@@ -1,19 +1,19 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T22:32:51.601Z",
-  "commit": "e50cb5f",
+  "generated_at": "2026-10-26T22:42:33.848Z",
+  "commit": "3b0d15a",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1281,
-    "documented": 517,
+    "sources": 1282,
+    "documented": 518,
     "grouped": 764
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "176d7b91021d08e0571c8b150fe00f2a30756632671e5c7d9b5237e68f94c4ed",
+      "sha256": "75c1aab7f083acad801cc4ee5d3a8b4bb8e7904de4db9b78a7563329f84c8589",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
@@ -8169,7 +8169,7 @@
     },
     {
       "source": "website/.env.example",
-      "sha256": "c96a483fdab572ed4491d2b5c834355a3f5b85793bc415831907ea8805ed1b17",
+      "sha256": "b3e0ceb845275cdfa45237e815488442f2bc0e8720b15a9525c7d3cdbe40e9c3",
       "doc": "docs/static/website/README.md",
       "status": "grouped",
       "group": "docs/static/website/README.md"
@@ -8183,7 +8183,7 @@
     },
     {
       "source": "website/README.md",
-      "sha256": "d8bb71dda00940325f3902adb79cdae14a264112b482b59f1582b603771f6b91",
+      "sha256": "6a4a0989b6f101f8db205cf064189a13bc89c45bbaa01797613de2f3b298a9de",
       "doc": "docs/static/website/README.md.md",
       "status": "documented"
     },
@@ -8307,7 +8307,7 @@
     },
     {
       "source": "website/assets/js/release.js",
-      "sha256": "5b58f846b40da9cf13ee57aa5ac87c33c1df2e234e2f8f1751c15f1f5ede4e1b",
+      "sha256": "8cbe75ce9f3a4494e92ecca93fdb8c5ce0c77a82ac050b5cf578f4527dd66b34",
       "doc": "docs/static/website/assets/js/release.js.md",
       "status": "documented"
     },
@@ -8337,7 +8337,7 @@
     },
     {
       "source": "website/deploy/Dockerfile.site-api",
-      "sha256": "f645662a1c11d231ede0517238bd1dbc509a0b256f70b259a44cf7fd03cd67b2",
+      "sha256": "a0bf343a1f73aad2d13f8820ed615bbe7d78d72ed0753c0100eef75e844a0b5b",
       "doc": "docs/static/website/deploy/Dockerfile.site-api.md",
       "status": "documented"
     },
@@ -8349,25 +8349,25 @@
     },
     {
       "source": "website/deploy/nginx.conf",
-      "sha256": "cf5b1ee72b18e67161259dfc2da6c885491a4de1944943eb2d60991642c46130",
+      "sha256": "9bfdf2d2955ba3be2cf1eed80d4e0a177bcc09a512e549dfa2e1a9d319e51322",
       "doc": "docs/static/website/deploy/nginx.conf.md",
       "status": "documented"
     },
     {
       "source": "website/devlog.html",
-      "sha256": "a33bddaf166ef3c94af5dc1447460eeadb927c87fa2a50187d3fa9f6346da95a",
+      "sha256": "02fc2f05ea3c7417ee9d81d09fd61fd403f3986b1c57c68d77c8e3326e006836",
       "doc": "docs/static/website/devlog.html.md",
       "status": "documented"
     },
     {
       "source": "website/docker-compose.yml",
-      "sha256": "709a5950082d34ab2c82b2f09a6ee954f0b2a9523016661c5a2dcc9bac4dfe6e",
+      "sha256": "cc717969a7a5007a41b6d16171bb926af561af7d92198e2c0c7b82099be67e57",
       "doc": "docs/static/website/docker-compose.yml.md",
       "status": "documented"
     },
     {
       "source": "website/download.html",
-      "sha256": "fa557422576125fba64bd28b88f66932dd20b116e764d9f130c8298742fcdee9",
+      "sha256": "3b2c46ff8153c752b26476817bf62d9a118c6707ab683fc809ca68aa9e31d5a9",
       "doc": "docs/static/website/download.html.md",
       "status": "documented"
     },
@@ -8391,7 +8391,7 @@
     },
     {
       "source": "website/server/site_api.mjs",
-      "sha256": "80966ddaa3e3f76ec588707939b0d363690cd4a5c3224d093466cc1e55c640a0",
+      "sha256": "3a18ed0739b799dab00e5233ded108d456c3be6d02fead2d70ac04e11fb5361e",
       "doc": "docs/static/website/server/site_api.mjs.md",
       "status": "documented"
     },
@@ -8405,6 +8405,12 @@
       "source": "website/tests/release-data.test.mjs",
       "sha256": "3a3287aa0c5e42ee6e4620f7c43a8db5469affd456534a6987d3a72c28aaae85",
       "doc": "docs/static/website/tests/release-data.test.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tests/site-api-mirror.test.mjs",
+      "sha256": "2ed409f660054a2cba05841965676c2478ee0c6b771a183fe1c542f309d60ef7",
+      "doc": "docs/static/website/tests/site-api-mirror.test.mjs.md",
       "status": "documented"
     },
     {
