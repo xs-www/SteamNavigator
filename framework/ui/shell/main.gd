@@ -79,16 +79,6 @@ extends Control
 ##   `tavern.view.chart_offers` 的该港口变为 `unlocked=true`（显示「已测绘」）。
 ## - 海图页签 `voyage.preview` / `voyage.start` / `clue.travel` 的 `route_locked` 失败按
 ##   既有错误路径显示 `ui.error.route_locked`；面板在未测绘航线上禁用启航并显示酒馆提示。
-## @end-static-doc
-##
-## Playable shell for the framework slice.
-##
-## The UI only reads ViewModels through QueryBus and mutates through
-## CommandBus. Each major function has its own screen; the shell owns
-## navigation, the header, and transient selection state only.
-##
-## Two mount paths exist: ordinary pages go into `PageMargin/PageScroll/RootBox`,
-## while the at-sea chart page goes into the full-window `FullscreenLayer` (no
 ##
 ## ## 游玩数据上传（`docs/design/TELEMETRY.md`，唯一契约）
 ## - 首次解析到 AppContext 时（`_apply_settings_if_needed`）按设置创建 `TelemetryService`
@@ -102,6 +92,16 @@ extends Control
 ##   `EXIT_UPLOAD_WAIT_SECONDS`（3 秒）尝试上传，然后才执行原有 teardown / 3D 退出兜底；
 ##   `_prepare_quit()` 不做网络（测试直接调用它）。启动时的遗留队列补传在后台进行、不阻塞 UI。
 ## - 无头进程（测试/工具）不发起真实网络请求：启动补传在 headless 下跳过；`_prepare_quit` 不联网。
+## @end-static-doc
+##
+## Playable shell for the framework slice.
+##
+## The UI only reads ViewModels through QueryBus and mutates through
+## CommandBus. Each major function has its own screen; the shell owns
+## navigation, the header, and transient selection state only.
+##
+## Two mount paths exist: ordinary pages go into `PageMargin/PageScroll/RootBox`,
+## while the at-sea chart page goes into the full-window `FullscreenLayer` (no
 ## page margins, no scrolling) so the sea really fills the window. The voyage
 ## presentation also feeds that page its route polyline straight from the twin
 ## world's `WorldMap.edges` (`_presentation_route_path`) instead of the
@@ -250,6 +250,8 @@ const HUD_ICON_SIZE := 24.0
 ## bar is taller and replaces the footer while it is visible.
 const PAGE_BOTTOM_MARGIN := 56
 const PAGE_BOTTOM_MARGIN_WITH_BAR := 84
+## 退出时等待遗留 pending 上传的总预算（TELEMETRY.md §3.4、§1：绝不阻塞退出超过 3 秒）。
+const EXIT_UPLOAD_WAIT_SECONDS := 3.0
 var _context: AppContext = null
 @onready var _root_box: VBoxContainer = $PageMargin/PageScroll/RootBox
 ## 全窗演出层：航行页的海图挂在这里（在网页边距/滚动容器之外），海图才能真正
@@ -266,10 +268,14 @@ var _interaction_hint: Control = null
 ## True while a player-triggered command executes: `_set_status` uses it so only
 ## interaction feedback pops at the cursor (nav /演出 / 载入不弹)。
 var _interactive_command := false
-## 退出时等待遗留 pending 上传的总预算（TELEMETRY.md §3.4、§1：绝不阻塞退出超过 3 秒）。
-const EXIT_UPLOAD_WAIT_SECONDS := 3.0
 var _settings: SettingsService = null
 var _settings_applied: bool = false
+## 游玩数据上传（docs/design/TELEMETRY.md §3、§5）：首次解析到 context 后创建并绑定
+## `_context.telemetry`；上传器是 Shell 子节点，负责串行补传 pending 文件。
+var _telemetry: TelemetryService = null
+var _telemetry_uploader: TelemetryUploader = null
+## 当前记录器绑定的 context；retry bootstrap 换 context 时据此重建。
+var _telemetry_context: AppContext = null
 
 var _active_screen: String = "overview"
 var _menu_screen: String = "main"
@@ -286,12 +292,6 @@ var _sea_chart_return: String = "overview"
 var _chart_departure: Dictionary = {}
 ## 「规划出航」等入口请求打开海图时预选的港口（消费一次后清空）。
 var _pending_chart_port: String = ""
-## 游玩数据上传（docs/design/TELEMETRY.md §3、§5）：首次解析到 context 后创建并绑定
-## `_context.telemetry`；上传器是 Shell 子节点，负责串行补传 pending 文件。
-var _telemetry: TelemetryService = null
-var _telemetry_uploader: TelemetryUploader = null
-## 当前记录器绑定的 context；retry bootstrap 换 context 时据此重建。
-var _telemetry_context: AppContext = null
 ## 4.4.4：线索列表页点击条目后，回海图时要选中的线索 id（消费一次后清空）。
 var _pending_chart_clue: String = ""
 ## 4.5 / U1：当前剧情 ViewModel、剧情卡 / 目标条图层与卡片打开状态（仅 UI 会话）。
@@ -417,6 +417,7 @@ func _apply_settings_if_needed() -> void:
 	_context.localization.set_locale(_settings.locale())
 	_context.autosave_enabled = _settings.autosave()
 	_settings_applied = true
+	_init_telemetry()
 
 
 func _play_pickup() -> void:
@@ -433,7 +434,6 @@ func _set_menu_visual(enabled: bool) -> void:
 
 func _game_version() -> String:
 	return String(ProjectSettings.get_setting("application/config/version", GAME_VERSION_FALLBACK))
-	_init_telemetry()
 
 
 func _refresh_footer() -> void:
@@ -1618,6 +1618,8 @@ func _screen_settings(_app: Dictionary) -> void:
 	_mount_menu_screen(SETTINGS_SCREEN_SCENE, {
 		"locale": _context.localization.active_locale if _context != null else "zh_CN",
 		"autosave_enabled": bool(_context.autosave_enabled) if _context != null else true,
+		# TELEMETRY.md §2：设置页状态来自持久化设置（默认关），不读记录器内部状态。
+		"telemetry_enabled": _settings != null and _settings.telemetry(),
 		"show_settings_path": _settings != null,
 	})
 	_build_status_banner()
@@ -1654,8 +1656,6 @@ func _overview_model(data: Dictionary) -> Dictionary:
 	model["banner_path"] = _port_banner_path(data)
 	# 2.5D overview stage: availability is decided by the shell (scene present
 	# and not previously failed); stage mode and the detail drawer are UI-session
-		# TELEMETRY.md §2：设置页状态来自持久化设置（默认关），不读记录器内部状态。
-		"telemetry_enabled": _settings != null and _settings.telemetry(),
 	# state only.
 	model["stage_available"] = _port_stage_available()
 	model["stage_mode"] = _overview_stage_mode and _port_stage_available()
@@ -3824,6 +3824,8 @@ func _on_menu_action(action: StringName, params: Dictionary) -> void:
 			_on_set_locale(String(params.get("locale", "zh_CN")))
 		&"toggle_autosave":
 			_on_toggle_autosave()
+		&"toggle_telemetry":
+			_on_toggle_telemetry()
 		&"start_run":
 			_selected_scenario = String(params.get("starting_scenario", ""))
 			_seed_text = String(params.get("seed_text", ""))
@@ -3854,6 +3856,9 @@ func _graceful_quit() -> void:
 		return
 	_quitting = true
 	print("[quit] graceful teardown: freeing 3D stages and page tree")
+	# TELEMETRY.md §3.4：先把本局日志写进 pending，再最多等 3 秒尝试上传；无论结果
+	# 如何都继续原有 teardown / 退出流程（含 3D 退出崩溃兜底），绝不卡住退出。
+	await _finalize_telemetry()
 	_prepare_quit()
 	# The frees above are deferred (queue_free); let the tree process them so the
 	# stage viewports / meshes / textures reach the renderer before it is destroyed.
@@ -3863,8 +3868,6 @@ func _graceful_quit() -> void:
 	ContentAssetLoader.clear_cache()
 	FrameworkRuntime.shutdown()
 	# Flush the pending GL commands (buffer/texture deletions) before the engine
-		&"toggle_telemetry":
-			_on_toggle_telemetry()
 	# stops the rendering server; the exported GLES3 build crashed on exit when a
 	# 3D stage had been rendered, and an unsynchronised teardown was the suspect.
 	if RenderingServer.has_method("force_sync"):
@@ -3893,9 +3896,6 @@ func _graceful_quit() -> void:
 func _prepare_quit() -> void:
 	_presentation = null
 	_presentation_explore = {}
-	# TELEMETRY.md §3.4：先把本局日志写进 pending，再最多等 3 秒尝试上传；无论结果
-	# 如何都继续原有 teardown / 退出流程（含 3D 退出崩溃兜底），绝不卡住退出。
-	await _finalize_telemetry()
 	_presentation_voyage = {}
 	_presentation_origin_view = {}
 	_at_sea_screen = null
@@ -3964,42 +3964,6 @@ func _save_settings() -> void:
 		_set_status(_error_text(saved), true)
 
 
-func _on_nav(screen: String) -> void:
-	# 4.5.3：补给页并入市场，旧导航 / 旧存档里的 supply 入口统一重定向。
-	if screen == "supply":
-		screen = "market"
-	if screen != "sea_chart" and not _story_feature_unlocked(_story_screen_feature(screen)):
-		return
-	# Navigating away from the victory summary counts as "keep playing".
-	_victory_dismissed = true
-	var from := _active_screen
-	if screen == "sea_chart":
-		# Remember where the chart was opened from so closing returns there.
-		_sea_chart_return = from if SCREENS.has(from) else "overview"
-	elif not _chart_departure.is_empty():
-		# Navigating away from the chart abandons a pending departure confirmation.
-		_chart_departure = {}
-	# dev.3 #1：离开结算页就丢掉那份摘要——否则之后任何一次带着
-	# `_active_screen == "settlement"` 的重建都会把旧航次再“结算”一遍。
-	if from == "settlement" and screen != "settlement":
-		_settlement_summary = {}
-	if screen != "overview":
-		# The detail drawer only belongs to the overview main view.
-		_overview_detail = false
-	_active_screen = screen
-	_status_message = ""
-	# dev.3 #1：`ui:chart_opened` 只在真正打开海图时发一次（关闭仍由
-	# `_on_sea_chart_closed` 发 `ui:chart_closed`）；页面重建不再重复上报。
-	var chart_opened := screen == "sea_chart" and from != "sea_chart"
-	# Adjacent station pages share one 3D district: a fade to black would hide the
-	# camera pan and the sailing hull that are the point of the switch, so those
-	# navigations rebuild instantly and let the stage carry the transition. Every
-	# other navigation keeps the fade.
-	var continuous := (
-		STAGE_SCREENS.has(from)
-		and STAGE_SCREENS.has(screen)
-		and _port_stage_available()
-	)
 ## ---------------------------------------------------------------------------
 ## 游玩数据上传（docs/design/TELEMETRY.md §2 / §3 / §5）
 ## ---------------------------------------------------------------------------
@@ -4150,6 +4114,42 @@ func _finalize_telemetry() -> void:
 	await _telemetry_uploader.flush(_telemetry_endpoint(), _telemetry_token())
 
 
+func _on_nav(screen: String) -> void:
+	# 4.5.3：补给页并入市场，旧导航 / 旧存档里的 supply 入口统一重定向。
+	if screen == "supply":
+		screen = "market"
+	if screen != "sea_chart" and not _story_feature_unlocked(_story_screen_feature(screen)):
+		return
+	# Navigating away from the victory summary counts as "keep playing".
+	_victory_dismissed = true
+	var from := _active_screen
+	if screen == "sea_chart":
+		# Remember where the chart was opened from so closing returns there.
+		_sea_chart_return = from if SCREENS.has(from) else "overview"
+	elif not _chart_departure.is_empty():
+		# Navigating away from the chart abandons a pending departure confirmation.
+		_chart_departure = {}
+	# dev.3 #1：离开结算页就丢掉那份摘要——否则之后任何一次带着
+	# `_active_screen == "settlement"` 的重建都会把旧航次再“结算”一遍。
+	if from == "settlement" and screen != "settlement":
+		_settlement_summary = {}
+	if screen != "overview":
+		# The detail drawer only belongs to the overview main view.
+		_overview_detail = false
+	_active_screen = screen
+	_status_message = ""
+	# dev.3 #1：`ui:chart_opened` 只在真正打开海图时发一次（关闭仍由
+	# `_on_sea_chart_closed` 发 `ui:chart_closed`）；页面重建不再重复上报。
+	var chart_opened := screen == "sea_chart" and from != "sea_chart"
+	# Adjacent station pages share one 3D district: a fade to black would hide the
+	# camera pan and the sailing hull that are the point of the switch, so those
+	# navigations rebuild instantly and let the stage carry the transition. Every
+	# other navigation keeps the fade.
+	var continuous := (
+		STAGE_SCREENS.has(from)
+		and STAGE_SCREENS.has(screen)
+		and _port_stage_available()
+	)
 	# Observe before the rebuild so the refreshed card / objective / focus mask
 	# already reflect the stage the chart entry just advanced.
 	if chart_opened:

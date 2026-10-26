@@ -162,6 +162,7 @@ func _button_by_text(root: Node, text: String) -> Button:
 			return found
 	return null
 
+
 ## 设置页里字段名为「允许上传数据」的横向设置行（TELEMETRY.md §2）。
 func _telemetry_row(root: Node) -> HBoxContainer:
 	for node in root.find_children("*", "HBoxContainer", true, false):
@@ -190,7 +191,6 @@ func _remove_tree(path: String) -> void:
 			entry = dir.get_next()
 		dir.list_dir_end()
 	DirAccess.remove_absolute(path)
-
 
 
 func _meter_of_supply_card(root: Node, title: String) -> Control:
