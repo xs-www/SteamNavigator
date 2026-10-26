@@ -13,8 +13,7 @@ const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_tabl
 const ITEM_TILE_SCRIPT := preload("res://framework/ui/components/sn_item_tile.gd")
 const DROP_ZONE_SCRIPT := preload("res://framework/ui/components/sn_drop_zone.gd")
 const CARGO_HOLD_SCRIPT := preload("res://framework/ui/components/sn_cargo_hold_panel.gd")
-const CARRY_GHOST_SCRIPT := preload("res://framework/ui/components/sn_carry_ghost.gd")
-const INTERACTION_HINT_SCRIPT := preload("res://framework/ui/components/sn_interaction_hint.gd")
+const CARRY_GHOST_SCENE := preload("res://framework/ui/components/sn_carry_ghost.tscn")
 
 const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_screen.gd")
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
@@ -1826,6 +1825,10 @@ func test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void:
 	if hint == null:
 		_unmount(bundle)
 		return
+	# 场景化（P0）：浮层骨架来自 sn_interaction_hint.tscn（R2 节点名契约）。
+	for node_name in ["HintPanel", "HintRow", "Icon", "Message"]:
+		assert_not_null(hint.find_child(node_name, true, false),
+			"the hint scene keeps its %s node" % node_name)
 	assert_true(bool(hint.call("is_showing")), "the failed command pops the hint")
 	assert_true(hint.visible, "the hint is painted")
 	assert_true(bool(hint.call("current_error")), "failures use the error tone")
@@ -1834,6 +1837,11 @@ func test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void:
 	# The top banner is still filled (persistent status stays the contract).
 	assert_eq(String(shell._status_message), failed_message, "the banner keeps the same status message")
 	assert_true(bool(shell._status_is_error), "the banner keeps the error flag")
+	# 宽度回归（窗口实拍发现）：OVERRUN_TRIM_ELLIPSIS 让 Label 的最小宽度只剩 1 px，
+	# 旧实现的面板会塌缩成图标宽（约 45 px）且文字只剩省略号；show_at 必须按文本测宽。
+	var measured_hint_width: float = hint.get_combined_minimum_size().x
+	assert_true(measured_hint_width > 80.0,
+		"the hint measures its message instead of collapsing onto the icon (%s px)" % measured_hint_width)
 
 	# The hint lives on the shell overlay, outside the PageScroll.
 	var layer := hint.get_parent()
@@ -1877,8 +1885,6 @@ func test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void:
 		"menu status messages do not pop the floating hint")
 	shell._interactive_command = false
 	shell._active_screen = previous_screen
-	_unmount(bundle)
-
 	# 上限：超长消息最多撑到 MAX_TEXT_WIDTH(520) + 图标 18 + separation 6 + 内容边距 20，
 	# 不再无限变宽；截断仍由场景里的 text_overrun_behavior = 3 完成。
 	hint.call("show_at", Vector2(240.0, 240.0), "交互提示宽度上限回归".repeat(8), false)
@@ -2010,3 +2016,5 @@ func test_shell_telemetry_toggle_updates_service_and_settings() -> void:
 	shell._transitioning = false
 	shell._pending_transition = false
 	_remove_tree(root)
+	_unmount(bundle)
+

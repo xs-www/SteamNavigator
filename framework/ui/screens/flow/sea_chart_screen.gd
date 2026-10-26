@@ -36,6 +36,8 @@ extends VBoxContainer
 ## - 节点名 `Header` / `ChartBody` / `ChartRow` / `ClueListButton` / `CloseButton` /
 ##   `VoyageConfirm` 与 `PANEL_WIDTH = 320`、全窗 `VBox` 结构不变（test_sea_chart /
 ##   test_ui_shell 按名字与最小宽度断言）。
+## - 确认弹窗已场景化（P0，见 docs/specs/UI_SCENE_MIGRATION.md）：本页只负责
+##   `sn_voyage_confirm.tscn` 的实例化、信号接线与 `bind()`，不构造弹窗内部节点。
 ## @end-static-doc
 
 signal close_requested
@@ -57,7 +59,8 @@ signal investigate_requested(clue_id: String)
 const PANEL_WIDTH := 320.0
 ## 新组件按路径 preload，避免依赖编辑器生成的全局 class_name 缓存（无头测试与
 ## 全新检出都能直接加载；不引用 `SNVoyageConfirm` 这个全局名）。
-const VOYAGE_CONFIRM_SCRIPT := preload("res://framework/ui/components/sn_voyage_confirm.gd")
+## P0 场景化后弹窗是 `sn_voyage_confirm.tscn`（静态骨架在场景里，脚本只做绑定）。
+const VOYAGE_CONFIRM_SCENE := preload("res://framework/ui/components/sn_voyage_confirm.tscn")
 
 var _tr: Callable
 var _view_model: Dictionary = {}
@@ -153,9 +156,9 @@ func _rebuild() -> void:
 
 
 ## 4.3.4 / U7：统一出航确认弹窗。数据（目标名、预估、策略列表）都由 Shell 预翻译，
-## 本控件只负责显示并把意图转回给 Shell。
+## 本页只实例化 `sn_voyage_confirm.tscn`、接线并 `bind()`，不构造弹窗内部节点。
 func _add_confirm_overlay(body: Control) -> void:
-	_confirm = VOYAGE_CONFIRM_SCRIPT.new()
+	_confirm = VOYAGE_CONFIRM_SCENE.instantiate()
 	_confirm.name = "VoyageConfirm"
 	var kind := String(_departure.get("kind", "voyage"))
 	var target_id := String(_departure.get("target_id", ""))

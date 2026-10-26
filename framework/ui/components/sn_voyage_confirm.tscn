@@ -1,0 +1,97 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Theme" path="res://assets/ui/theme/steam_navigator_theme.tres" id="1_theme"]
+[ext_resource type="Script" path="res://framework/ui/components/sn_voyage_confirm.gd" id="2_script"]
+
+[node name="SNVoyageConfirm" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("1_theme")
+script = ExtResource("2_script")
+
+[node name="ConfirmShade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ConfirmPanel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_type_variation = &"SNPanel"
+
+[node name="Body" type="VBoxContainer" parent="Center/ConfirmPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="Subtitle" type="Label" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="SeparatorA" type="HSeparator" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+
+[node name="EstimateBox" type="VBoxContainer" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StrategyRow" type="HBoxContainer" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StrategyLabel" type="Label" parent="Center/ConfirmPanel/Body/StrategyRow"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+
+[node name="StrategyPicker" type="OptionButton" parent="Center/ConfirmPanel/Body/StrategyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BlockersBox" type="VBoxContainer" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SeparatorB" type="HSeparator" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+
+[node name="Hint" type="Label" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="Actions" type="HBoxContainer" parent="Center/ConfirmPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Spacer" type="Control" parent="Center/ConfirmPanel/Body/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CancelButton" type="Button" parent="Center/ConfirmPanel/Body/Actions"]
+layout_mode = 2
+theme_type_variation = &"SNGhostButton"
+
+[node name="ConfirmButton" type="Button" parent="Center/ConfirmPanel/Body/Actions"]
+layout_mode = 2
+theme_type_variation = &"SNPrimaryButton"

@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://d38qmk4ik1nli"]
+
+[ext_resource type="Script" uid="uid://hpobeqoxvlym" path="res://framework/ui/components/sn_carry_ghost.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://donrdopu47413" path="res://assets/ui/theme/steam_navigator_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://dvk6lfh7q3elm" path="res://dev_mods/core/assets/icons/items/boiler_plate.svg" id="3_ywhhm"]
+
+[node name="SNCarryGhost" type="Control" unique_id=1757886471]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+
+[node name="GhostPanel" type="PanelContainer" parent="." unique_id=1849251322]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="GhostRow" type="HBoxContainer" parent="GhostPanel" unique_id=779522947]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="GhostPanel/GhostRow" unique_id=394452868]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_ywhhm")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Labels" type="VBoxContainer" parent="GhostPanel/GhostRow" unique_id=317322055]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Title" type="Label" parent="GhostPanel/GhostRow/Labels" unique_id=10753936]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "锅炉"
+
+[node name="Amount" type="Label" parent="GhostPanel/GhostRow/Labels" unique_id=663665609]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "x2"
+
+[node name="Cost" type="Label" parent="GhostPanel/GhostRow/Labels" unique_id=1987913308]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "1100"
+
+[node name="Hint" type="Label" parent="GhostPanel/GhostRow/Labels" unique_id=1236113667]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 10

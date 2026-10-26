@@ -20,34 +20,67 @@ extends Control
 ## - 弹窗打开时遮罩吃掉点击（`mouse_filter = STOP`），避免误触下层海图。
 ## - 4.3.5 连续消耗只改页面读数与结算，不改变本弹窗的数据契约。
 ##
+## ## 场景化结构（P0；契约见 docs/specs/UI_SCENE_MIGRATION.md）
+## - `sn_voyage_confirm.tscn` 拥有静态骨架：`ConfirmShade`（全屏遮罩）/ `Center` /
+##   `ConfirmPanel`（Theme 变体 `SNPanel`，最小宽度 520）/ `Body`（VBox，sep 10）/
+##   `Title` / `Subtitle` / `SeparatorA` / `EstimateBox` / `StrategyRow`
+##   （`StrategyLabel` + `StrategyPicker`）/ `BlockersBox` / `SeparatorB` / `Hint` /
+##   `Actions`（`Spacer` + `CancelButton` + `ConfirmButton`）。
+## - 脚本只负责：本地化文本、估值/阻断行填充、策略项填充、遮罩/文字颜色（`SNSkin` token）、
+##   按钮禁用与信号；不再 `remove_child` 整棵重建。重复 `bind()` 只清空
+##   `EstimateBox` / `BlockersBox` 这类动态容器，静态骨架复用。
+## - 实例化契约：必须 `preload(".../sn_voyage_confirm.tscn").instantiate()`；
+##   `SNVoyageConfirm.new()` 只有脚本、没有子树，`bind()` 会安全空返回。
+## - 节点名 `ConfirmShade` / `ConfirmPanel` / `CancelButton` / `ConfirmButton` 与
+##   面板最小宽 520（场景 `custom_minimum_size.x`）仍是 Shell / 测试的契约。
+##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 面板底层用 Theme 变体 `SNPanel`（黄铜钢框 + 凹槽承托），选钢而不是羊皮纸是因为
 ##   弹窗叠在海图上、正文含风险/阻断色；深底 + text.light/text.muted 的对比度更稳。
 ## - 遮罩色取 `SNSkin.color("bg.abyss")` 再降 alpha；正文/风险色全部取
 ##   `SNSkin.color(token)`（text.light / text.muted / brass.highlight / state.danger /
 ##   state.success），本文件无 `StyleBoxFlat`、无十六进制色。
-## - 按钮：取消 `SNGhostButton`、启航 `SNPrimaryButton`；节点名
-##   `ConfirmShade` / `ConfirmPanel` / `CancelButton` / `ConfirmButton` 与
-##   `PANEL_WIDTH = 520` 保持不变。
+## - 按钮样式由场景的 Theme 变体给出：取消 `SNGhostButton`、启航 `SNPrimaryButton`。
 ## @end-static-doc
 
 signal confirmed(strategy_id: String)
 signal cancelled
 signal strategy_changed(strategy_id: String)
 
-const PANEL_WIDTH := 520.0
+## 遮罩透明度（`SNSkin.color("bg.abyss")` 上叠加）。
+const SHADE_ALPHA := 0.62
 
 var _data: Dictionary = {}
 var _tr: Callable
-var _strategy_picker: OptionButton = null
 var _strategies: Array = []
+var _shade: ColorRect = null
+var _title: Label = null
+var _subtitle: Label = null
+var _estimate_box: VBoxContainer = null
+var _strategy_row: HBoxContainer = null
+var _strategy_label: Label = null
+var _strategy_picker: OptionButton = null
+var _blockers_box: VBoxContainer = null
+var _hint: Label = null
+var _cancel_button: Button = null
+var _confirm_button: Button = null
+var _wired := false
 
 
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	_ensure_refs()
+
+
+## 注入/更新数据并重绘。可以在 `_ready()` 之前调用：场景子树在 `instantiate()` 时
+## 已经存在，`_ensure_refs()` 会在进树前解析节点。
 func bind(data: Dictionary, translate: Callable) -> void:
 	_data = data
 	_tr = translate
 	_strategies = data.get("strategies", []) if data.get("strategies", []) is Array else []
-	_rebuild()
+	if not _ensure_refs():
+		return
+	_render()
 
 
 func get_strategy_id() -> String:
@@ -63,118 +96,110 @@ func is_feasible() -> bool:
 	return bool(preview.get("feasible", true))
 
 
-func _rebuild() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
-	for child in get_children():
-		remove_child(child)
-		child.free()
+## 解析场景节点（幂等，返回是否成功）。返回 false 表示当前实例不是由
+## `sn_voyage_confirm.tscn` 创建（例如误用 `.new()`），调用方安全跳过渲染。
+func _ensure_refs() -> bool:
+	if _title != null:
+		return true
+	_shade = get_node_or_null("ConfirmShade") as ColorRect
+	_title = get_node_or_null("Center/ConfirmPanel/Body/Title") as Label
+	_subtitle = get_node_or_null("Center/ConfirmPanel/Body/Subtitle") as Label
+	_estimate_box = get_node_or_null("Center/ConfirmPanel/Body/EstimateBox") as VBoxContainer
+	_strategy_row = get_node_or_null("Center/ConfirmPanel/Body/StrategyRow") as HBoxContainer
+	_strategy_label = get_node_or_null("Center/ConfirmPanel/Body/StrategyRow/StrategyLabel") as Label
+	_strategy_picker = get_node_or_null("Center/ConfirmPanel/Body/StrategyRow/StrategyPicker") as OptionButton
+	_blockers_box = get_node_or_null("Center/ConfirmPanel/Body/BlockersBox") as VBoxContainer
+	_hint = get_node_or_null("Center/ConfirmPanel/Body/Hint") as Label
+	_cancel_button = get_node_or_null("Center/ConfirmPanel/Body/Actions/CancelButton") as Button
+	_confirm_button = get_node_or_null("Center/ConfirmPanel/Body/Actions/ConfirmButton") as Button
+	if _title == null or _confirm_button == null:
+		return false
+	_apply_static_skin()
+	_wire()
+	return true
 
-	var shade := ColorRect.new()
-	shade.name = "ConfirmShade"
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+## 遮罩与静态文字色：颜色 token 只从 `SNSkin` 来，场景里不复制十六进制值。
+func _apply_static_skin() -> void:
 	var shade_color := SNSkin.color("bg.abyss")
-	shade_color.a = 0.62
-	shade.color = shade_color
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(shade)
+	shade_color.a = SHADE_ALPHA
+	if _shade != null:
+		_shade.color = shade_color
+	if _title != null:
+		_title.add_theme_color_override("font_color", SNSkin.color("brass.highlight"))
+	if _subtitle != null:
+		_subtitle.add_theme_color_override("font_color", SNSkin.color("text.light"))
+	if _hint != null:
+		_hint.add_theme_color_override("font_color", SNSkin.color("text.muted"))
+	if _strategy_label != null:
+		_strategy_label.add_theme_color_override("font_color", SNSkin.color("text.muted"))
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(center)
 
-	var panel := PanelContainer.new()
-	panel.name = "ConfirmPanel"
-	panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
-	panel.theme_type_variation = &"SNPanel"
-	center.add_child(panel)
+## 场景节点只连一次信号；重复 `bind()` 不会重复连接。
+func _wire() -> void:
+	if _wired:
+		return
+	_wired = true
+	if _cancel_button != null:
+		_cancel_button.pressed.connect(func() -> void: cancelled.emit())
+	if _confirm_button != null:
+		_confirm_button.pressed.connect(func() -> void: confirmed.emit(get_strategy_id()))
+	if _strategy_picker != null:
+		_strategy_picker.item_selected.connect(_on_strategy_selected)
 
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
-	panel.add_child(box)
+
+func _on_strategy_selected(index: int) -> void:
+	if _strategy_picker == null:
+		return
+	var metadata: Variant = _strategy_picker.get_item_metadata(index)
+	strategy_changed.emit(String(metadata) if metadata != null else "")
+
+
+func _render() -> void:
 	var kind := String(_data.get("kind", "voyage"))
 	var title_fallback := "确认出航" if kind == "voyage" else "循线索出航"
-	box.add_child(_label(_loc(
-		"ui.confirm.title.%s" % kind, title_fallback
-	), 20, SNSkin.color("brass.highlight")))
+	_title.text = _loc("ui.confirm.title.%s" % kind, title_fallback)
 	var current := String(_data.get("current_port_name", ""))
 	var target := String(_data.get("target_name", ""))
+	var subtitle := ""
 	if kind == "explore":
-		box.add_child(_label(_loc("ui.confirm.clue", "线索：%s") % target, 14, SNSkin.color("text.light")))
+		subtitle = _loc("ui.confirm.clue", "线索：%s") % target
 	elif not current.is_empty() and not target.is_empty():
-		box.add_child(_label(_loc("ui.confirm.route", "航线：%s → %s") % [current, target], 14, SNSkin.color("text.light")))
-	box.add_child(HSeparator.new())
+		subtitle = _loc("ui.confirm.route", "航线：%s → %s") % [current, target]
+	_subtitle.text = subtitle
+	_subtitle.visible = not subtitle.is_empty()
 
 	var preview: Dictionary = _data.get("preview", {}) if _data.get("preview", null) is Dictionary else {}
-	_add_estimate_rows(box, preview, kind)
-	_add_strategy_picker(box)
-	_add_blockers(box, preview)
-	box.add_child(HSeparator.new())
-	box.add_child(_label(_loc("ui.confirm.hint", "出航后不能更改策略；遇到事件时只能从本次抽样出的选项中选择。"), 11, SNSkin.color("text.muted")))
+	_clear_dynamic(_estimate_box)
+	_add_estimate_rows(_estimate_box, preview, kind)
 
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 10)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(spacer)
-	var cancel := Button.new()
-	cancel.name = "CancelButton"
-	cancel.text = _loc("ui.button.cancel", "取消")
-	cancel.theme_type_variation = &"SNGhostButton"
-	cancel.pressed.connect(func() -> void: cancelled.emit())
-	actions.add_child(cancel)
-	var confirm := Button.new()
-	confirm.name = "ConfirmButton"
-	confirm.text = _loc("ui.button.start_voyage", "启航")
-	confirm.theme_type_variation = &"SNPrimaryButton"
-	confirm.disabled = not bool(preview.get("feasible", true))
-	confirm.pressed.connect(func() -> void: confirmed.emit(get_strategy_id()))
-	actions.add_child(confirm)
-	box.add_child(actions)
+	_strategy_row.visible = not _strategies.is_empty()
+	_strategy_label.text = _loc("ui.confirm.strategy", "锅炉策略")
+	_clear_dynamic(_blockers_box)
+	if _strategy_row.visible:
+		_fill_strategies()
+	_add_blockers(_blockers_box, preview)
+
+	_hint.text = _loc("ui.confirm.hint", "出航后不能更改策略；遇到事件时只能从本次抽样出的选项中选择。")
+	_cancel_button.text = _loc("ui.button.cancel", "取消")
+	_confirm_button.text = _loc("ui.button.start_voyage", "启航")
+	_confirm_button.disabled = not bool(preview.get("feasible", true))
 
 
-func _add_estimate_rows(box: VBoxContainer, preview: Dictionary, kind: String) -> void:
-	var distance := float(preview.get("distance", 0.0))
-	if distance > 0.0:
-		box.add_child(_kv(_loc("ui.label.distance", "距离"), "%d %s" % [
-			int(roundf(distance)), _loc("unit.nautical_miles", "海里"),
-		]))
-	var duration := float(preview.get("duration_hours", 0.0))
-	if duration > 0.0:
-		box.add_child(_kv(_loc("ui.label.estimated_time", "预计时间"), _format_duration(duration)))
-	var coal := float(preview.get("coal_required", 0.0))
-	var water := float(preview.get("water_required", 0.0))
-	if coal > 0.0 or water > 0.0:
-		box.add_child(_kv("%s / %s" % [_loc("ui.label.coal", "煤炭"), _loc("ui.label.water", "淡水")],
-			"%s / %s" % [_format_amount(coal), _format_amount(water)]))
-	var risk_level := float(preview.get("risk_score", 0.0))
-	var risk_band := String(preview.get("risk_label", ""))
-	if kind == "explore" and preview.has("discovery_chance"):
-		box.add_child(_kv(_loc("ui.confirm.discovery_chance", "发现概率"), "%d%%" % int(roundf(
-			clampf(float(preview.get("discovery_chance", 0.0)), 0.0, 1.0) * 100.0
-		))))
-	if risk_band == "unknown" or risk_level < 0.0:
-		box.add_child(_kv(_loc("ui.label.risk", "风险"), _loc("ui.label.risk_unknown", "无法评估")))
-	else:
-		var band_text := _loc("risk." + risk_band, risk_band) if not risk_band.is_empty() \
-			else _loc("risk." + VoyageCalculator.risk_label(risk_level), "")
-		box.add_child(_kv(_loc("ui.label.risk", "风险"), band_text, _risk_color(risk_band, risk_level)))
-	if preview.get("on_time", true) == false:
-		box.add_child(_label(_loc("ui.confirm.on_time", "按本航程预计会迟到。"), 12, SNSkin.color("state.danger")))
-
-
-func _add_strategy_picker(box: VBoxContainer) -> void:
-	if _strategies.is_empty():
+## 清空动态行容器（估值 / 阻断），静态骨架不重建。
+func _clear_dynamic(container: VBoxContainer) -> void:
+	if container == null:
 		return
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var label := _label(_loc("ui.confirm.strategy", "锅炉策略"), 13, SNSkin.color("text.muted"))
-	label.custom_minimum_size = Vector2(110, 0)
-	row.add_child(label)
-	_strategy_picker = OptionButton.new()
-	_strategy_picker.name = "StrategyPicker"
-	_strategy_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for child in container.get_children():
+		container.remove_child(child)
+		child.free()
+
+
+## 策略项每次渲染重建（策略列表来自查询层），信号连接在 `_wire()` 里只做一次。
+func _fill_strategies() -> void:
+	if _strategy_picker == null:
+		return
+	_strategy_picker.clear()
 	var selected := String(_data.get("strategy_id", ""))
 	for index in _strategies.size():
 		var entry: Dictionary = _strategies[index] if _strategies[index] is Dictionary else {}
@@ -182,25 +207,50 @@ func _add_strategy_picker(box: VBoxContainer) -> void:
 		_strategy_picker.set_item_metadata(index, String(entry.get("id", "")))
 		if String(entry.get("id", "")) == selected:
 			_strategy_picker.select(index)
-	_strategy_picker.item_selected.connect(func(index: int) -> void:
-		strategy_changed.emit(String(_strategy_picker.get_item_metadata(index)))
-	)
-	row.add_child(_strategy_picker)
-	box.add_child(row)
 
 
-func _add_blockers(box: VBoxContainer, preview: Dictionary) -> void:
+func _add_estimate_rows(container: VBoxContainer, preview: Dictionary, kind: String) -> void:
+	var distance := float(preview.get("distance", 0.0))
+	if distance > 0.0:
+		container.add_child(_kv(_loc("ui.label.distance", "距离"), "%d %s" % [
+			int(roundf(distance)), _loc("unit.nautical_miles", "海里"),
+		]))
+	var duration := float(preview.get("duration_hours", 0.0))
+	if duration > 0.0:
+		container.add_child(_kv(_loc("ui.label.estimated_time", "预计时间"), _format_duration(duration)))
+	var coal := float(preview.get("coal_required", 0.0))
+	var water := float(preview.get("water_required", 0.0))
+	if coal > 0.0 or water > 0.0:
+		container.add_child(_kv("%s / %s" % [_loc("ui.label.coal", "煤炭"), _loc("ui.label.water", "淡水")],
+			"%s / %s" % [_format_amount(coal), _format_amount(water)]))
+	var risk_level := float(preview.get("risk_score", 0.0))
+	var risk_band := String(preview.get("risk_label", ""))
+	if kind == "explore" and preview.has("discovery_chance"):
+		container.add_child(_kv(_loc("ui.confirm.discovery_chance", "发现概率"), "%d%%" % int(roundf(
+			clampf(float(preview.get("discovery_chance", 0.0)), 0.0, 1.0) * 100.0
+		))))
+	if risk_band == "unknown" or risk_level < 0.0:
+		container.add_child(_kv(_loc("ui.label.risk", "风险"), _loc("ui.label.risk_unknown", "无法评估")))
+	else:
+		var band_text := _loc("risk." + risk_band, risk_band) if not risk_band.is_empty() \
+			else _loc("risk." + VoyageCalculator.risk_label(risk_level), "")
+		container.add_child(_kv(_loc("ui.label.risk", "风险"), band_text, _risk_color(risk_band, risk_level)))
+	if preview.get("on_time", true) == false:
+		container.add_child(_label(_loc("ui.confirm.on_time", "按本航程预计会迟到。"), 12, SNSkin.color("state.danger")))
+
+
+func _add_blockers(container: VBoxContainer, preview: Dictionary) -> void:
 	var blockers: Array = preview.get("blockers", [])
 	if blockers.is_empty():
 		return
-	box.add_child(_label(_loc("ui.confirm.blockers", "无法出航："), 12, SNSkin.color("state.danger")))
+	container.add_child(_label(_loc("ui.confirm.blockers", "无法出航："), 12, SNSkin.color("state.danger")))
 	for blocker in blockers:
 		if not (blocker is Dictionary):
 			continue
 		var message_key := String((blocker as Dictionary).get("message_key", ""))
 		if message_key.is_empty():
 			continue
-		box.add_child(_label("· " + _loc(message_key, String((blocker as Dictionary).get("code", ""))), 11, SNSkin.color("state.danger")))
+		container.add_child(_label("· " + _loc(message_key, String((blocker as Dictionary).get("code", ""))), 11, SNSkin.color("state.danger")))
 
 
 func _kv(name: String, value: String, color: Variant = null) -> Control:

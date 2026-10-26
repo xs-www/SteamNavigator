@@ -16,7 +16,7 @@
 ## Godot 落地
 
 - `assets/ui/theme/steam_navigator_theme.tres` 是运行时共享 Theme。
-- `framework/ui/components/` 提供可拖入场景的语义按钮、面板、徽标、章节标题和资源存量条。
+- `framework/ui/components/` 同时提供两类控件：**场景化**（`.tscn` 持有静态骨架，脚本只做数据绑定/动态行，必须从场景实例化）与**脚本-only**（自绘或完全动态）。P0 已场景化 `SNInteractionHint` / `SNCarryGhost` / `SNVoyageConfirm`；迁移契约与 P1–P3 批次见 [UI_SCENE_MIGRATION.md](../specs/UI_SCENE_MIGRATION.md)。
 - 船厂界面分成两态：正常态三列「已有船舶船卡 / `SNShipView` 实机渲染（面板内的 3D 船体舞台）/ 组件分类入口」。
 - 改装态是独立的「船厂工作台」页面，画在连续港区的 3D 船厂站位上（镜头 = `STATIONS.shipyard`，干船坞 + 吊架 + 玩家船），不再有整页不透明背景。页面从左到右是：九宫格蓝图底板（侧视/俯视每船线稿 + 底部可拖放槽位贴片）→ 中间的 3D 窗口（露出场景与玩家船）→ 右侧半透明操作坞（`SNGlassPanel`）。
 - 操作坞从上到下：舰船整体数据卡（船名 + 重量 / 耐久 / 货舱 / 客舱 / 武器 / 剩余货舱）、七项部件分类选择、`装配 / 购买 / 打造` 三个独立页签（购买与打造不再混在同一条滚动列表里），以及页签内容。`杂项` 不显示页签，直接展示打造订单 / 在港等待 / 仓库材料 / 仓库模块。
@@ -26,7 +26,7 @@
 - 旧整页下方面板（打造订单 / 港口仓库 / 配方 / 可购买模块 / 通关清单）已删除，命令迁入改装分类与「杂项」；通关清单只在总览页。2.5D 渲染器仍经 `SNShipView.set_renderer()` 接入。
 - 截图：`docs/design/screenshots/shipyard_normal.png`（正常态）、`shipyard_refit.png`（改装态·装配页）、`shipyard_refit_buy.png`（购买页）、`shipyard_refit_craft.png`（打造页）、`shipyard_refit_cargo.png`（货舱）、`shipyard_refit_misc.png`（杂项）；完整重构说明见 [SHIPYARD_UI_REFACTOR.md](../specs/SHIPYARD_UI_REFACTOR.md)。
 - `framework/ui/showcase/ui_kit_showcase.tscn` 用于独立预览与视觉冒烟。
-- 页面先使用 Theme variation 表达公共状态，业务脚本只负责布局和数据绑定。
+- 页面先使用 Theme variation 表达公共状态，业务脚本只负责布局和数据绑定；场景化组件的静态结构以 `.tscn` 为准，新增/迁移控件先按 [UI_SCENE_MIGRATION.md](../specs/UI_SCENE_MIGRATION.md) 判定「进场景 / 留代码」。
 - 2.5D 固定舞台的后续升级方案见 [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md)。
 
 ## 原型契约

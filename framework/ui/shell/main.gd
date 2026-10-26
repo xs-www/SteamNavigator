@@ -131,9 +131,10 @@ const CARGO_HOLD_PANEL_SCRIPT := preload("res://framework/ui/components/sn_cargo
 ## 通用物品回退图标（内容模组没提供 `information.texture` 时使用）。
 const ITEM_FALLBACK_ICON := "res://assets/ui/icons/item_fallback.svg"
 ## 市场「拿起 / 放下」光标幽灵（feedback #1）与交互处浮出提示（dev.3 feedback #4）：
-## 纯脚本组件，挂在 Shell 的浮层（HintLayer）里，不依赖页面滚动区。
-const CARRY_GHOST_SCRIPT := preload("res://framework/ui/components/sn_carry_ghost.gd")
-const INTERACTION_HINT_SCRIPT := preload("res://framework/ui/components/sn_interaction_hint.gd")
+## 场景化组件（P0，UI_SCENE_MIGRATION.md），必须 `.instantiate()`，不能 `SCRIPT.new()`；
+## 挂在 Shell 的浮层（HintLayer）里，不依赖页面滚动区。
+const CARRY_GHOST_SCENE := preload("res://framework/ui/components/sn_carry_ghost.tscn")
+const INTERACTION_HINT_SCENE := preload("res://framework/ui/components/sn_interaction_hint.tscn")
 const CONTRACTS_SCREEN_SCENE := preload("res://framework/ui/screens/port/contracts_screen.tscn")
 const SUPPLY_SCREEN_SCENE := preload("res://framework/ui/screens/port/supply_screen.tscn")
 const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/tavern_screen.tscn")
@@ -779,7 +780,7 @@ func _ensure_hint_layer() -> Control:
 func _ensure_carry_ghost() -> Control:
 	if _carry_ghost != null and is_instance_valid(_carry_ghost):
 		return _carry_ghost
-	var ghost: Control = CARRY_GHOST_SCRIPT.new()
+	var ghost: Control = CARRY_GHOST_SCENE.instantiate() as Control
 	ghost.name = "CarryGhost"
 	_ensure_hint_layer().add_child(ghost)
 	_carry_ghost = ghost
@@ -809,7 +810,7 @@ func _hide_carry_ghost() -> void:
 func _ensure_interaction_hint() -> Control:
 	if _interaction_hint != null and is_instance_valid(_interaction_hint):
 		return _interaction_hint
-	var hint: Control = INTERACTION_HINT_SCRIPT.new()
+	var hint: Control = INTERACTION_HINT_SCENE.instantiate() as Control
 	hint.name = "InteractionHint"
 	_ensure_hint_layer().add_child(hint)
 	_interaction_hint = hint
