@@ -1,19 +1,19 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T22:01:35.116Z",
-  "commit": "089dc2b",
+  "generated_at": "2026-10-26T22:32:51.601Z",
+  "commit": "e50cb5f",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1278,
-    "documented": 514,
+    "sources": 1281,
+    "documented": 517,
     "grouped": 764
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "b225da6f743be834bd4a906044a508f4e1d41381136a249a6b9961de5a6c2915",
+      "sha256": "176d7b91021d08e0571c8b150fe00f2a30756632671e5c7d9b5237e68f94c4ed",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
@@ -6532,7 +6532,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "233ede1a43ea10987c7eccd8721a7424001814bae3185f55e0fd5ea7a28f4c13",
+      "sha256": "95f62455bc647190347ca4c71c6030d9e69bf9b5514b45c31de0ae48c4d39d57",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -8169,7 +8169,7 @@
     },
     {
       "source": "website/.env.example",
-      "sha256": "551718c7bd05d5d07fced8e96146bdca2127b88ee686a35c9a6b1453932b8a48",
+      "sha256": "c96a483fdab572ed4491d2b5c834355a3f5b85793bc415831907ea8805ed1b17",
       "doc": "docs/static/website/README.md",
       "status": "grouped",
       "group": "docs/static/website/README.md"
@@ -8183,7 +8183,7 @@
     },
     {
       "source": "website/README.md",
-      "sha256": "0135d1f21a36a72d52f3493afc9ed00517c8f5fce544ebbb979cd8f5cf8d50d5",
+      "sha256": "d8bb71dda00940325f3902adb79cdae14a264112b482b59f1582b603771f6b91",
       "doc": "docs/static/website/README.md.md",
       "status": "documented"
     },
@@ -8307,7 +8307,7 @@
     },
     {
       "source": "website/assets/js/release.js",
-      "sha256": "2f907c70f18076eb0f685a17fc3304721db9de29692490a3cb145abc07d0140e",
+      "sha256": "5b58f846b40da9cf13ee57aa5ac87c33c1df2e234e2f8f1751c15f1f5ede4e1b",
       "doc": "docs/static/website/assets/js/release.js.md",
       "status": "documented"
     },
@@ -8336,6 +8336,12 @@
       "status": "documented"
     },
     {
+      "source": "website/deploy/Dockerfile.site-api",
+      "sha256": "f645662a1c11d231ede0517238bd1dbc509a0b256f70b259a44cf7fd03cd67b2",
+      "doc": "docs/static/website/deploy/Dockerfile.site-api.md",
+      "status": "documented"
+    },
+    {
       "source": "website/deploy/Dockerfile.telemetry",
       "sha256": "619458c89c68c7f2487e0ecf030b8c460697cc24247b2025e1ba99513933403f",
       "doc": "docs/static/website/deploy/Dockerfile.telemetry.md",
@@ -8343,7 +8349,7 @@
     },
     {
       "source": "website/deploy/nginx.conf",
-      "sha256": "a34a38e8e7fa13cf3e2bba4da8072d462d304f0edeb0745775bc8e44c0d129fe",
+      "sha256": "cf5b1ee72b18e67161259dfc2da6c885491a4de1944943eb2d60991642c46130",
       "doc": "docs/static/website/deploy/nginx.conf.md",
       "status": "documented"
     },
@@ -8355,7 +8361,7 @@
     },
     {
       "source": "website/docker-compose.yml",
-      "sha256": "2c62caccb48cdea2ac141e2b39f0708f59e2c3c3878e7a98ab061b08c0e5eeb4",
+      "sha256": "709a5950082d34ab2c82b2f09a6ee954f0b2a9523016661c5a2dcc9bac4dfe6e",
       "doc": "docs/static/website/docker-compose.yml.md",
       "status": "documented"
     },
@@ -8384,6 +8390,12 @@
       "status": "documented"
     },
     {
+      "source": "website/server/site_api.mjs",
+      "sha256": "80966ddaa3e3f76ec588707939b0d363690cd4a5c3224d093466cc1e55c640a0",
+      "doc": "docs/static/website/server/site_api.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "website/server/telemetry.mjs",
       "sha256": "79571356192335577d54865ec2185450ec531738d378f47ccc11d6844938305d",
       "doc": "docs/static/website/server/telemetry.mjs.md",
@@ -8393,6 +8405,12 @@
       "source": "website/tests/release-data.test.mjs",
       "sha256": "3a3287aa0c5e42ee6e4620f7c43a8db5469affd456534a6987d3a72c28aaae85",
       "doc": "docs/static/website/tests/release-data.test.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tests/site-api.test.mjs",
+      "sha256": "1fcc94074c10b18dc479c4f0a1b464582182f5e1c3df1a4cf3f803ca4ff7f5f0",
+      "doc": "docs/static/website/tests/site-api.test.mjs.md",
       "status": "documented"
     },
     {
@@ -8421,7 +8439,7 @@
     },
     {
       "source": "website/tools/ci.ps1",
-      "sha256": "8a04ad07edc205ff1f5e6c96c0d8d1e3e23da95479313fec692b52cdbd4dcd6b",
+      "sha256": "2388a01200b9d12eacd2380d8c2f28c105e94832e7dc4a22afd1901d1d49ab41",
       "doc": "docs/static/website/tools/ci.ps1.md",
       "status": "documented"
     },

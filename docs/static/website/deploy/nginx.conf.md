@@ -7,8 +7,9 @@
 ## 契约与约束
 - 与 `deploy/Dockerfile` 配套：nginx 以非 root 运行，pid 和临时文件写入 `/tmp`，日志写 stdout/stderr。
 - 不使用 `add_header` 覆盖 server 级安全头；缓存用 `expires` 指令，避免 location 丢失继承。
-- HTML 不缓存，`assets/` 缓存 7 天；发布新版本后由浏览器重新校验入口页。
-- `/api/telemetry/` 反代到 Compose 服务 `telemetry:8090`（对应 `deploy/Dockerfile.telemetry`）；其余请求只服务静态文件。
+- HTML 与版本数据（`assets/data/release-data.js`）不缓存，其余 `assets/` 缓存 7 天；发布新版本后由浏览器重新校验入口页。
+- `/api/telemetry/` 反代到 Compose 服务 `telemetry:8090`；`/api/site/` 反代到 `site-api:8092`
+  （官网只读内容 API，服务端缓存 GitHub Releases）；其余请求只服务静态文件。
 - 接收端 location 关闭 access_log：nginx 默认访问日志会写客户端 IP，与 `docs/design/TELEMETRY.md` 的隐私红线冲突。
 
 ## 重点逻辑

@@ -2,6 +2,12 @@ name: Website Release Data Sync
 
 # 每次 GitHub Release 发布后，自动把官网的版本数据（website/assets/data/release-data.js）
 # 同步到仓库默认分支，让下载页 / 开发日志页的版本号、日期、大小与下载链接保持最新。
+#
+# 注意：由 GITHUB_TOKEN 创建的 Release（也就是 `.github/workflows/release.yml` 自动发布的那些）
+# 不会触发本 workflow（GitHub 会抑制 token 事件引发的连锁运行）；这类发布由 release.yml 末尾的
+# "Sync website release data" 步骤直接同步。本 workflow 负责：
+#   1) 人工在 GitHub UI 上发布的 Release；
+#   2) 手动 workflow_dispatch 补同步（例如某次发布漏了数据提交）。
 on:
   release:
     types: [published]

@@ -99,7 +99,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs
+          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs website/tests/site-api.test.mjs
 
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB),
@@ -245,3 +245,30 @@ jobs:
             dist/release/*.zip
             dist/release/SHA256SUMS.txt
             dist/mods/*.snavmod.zip
+
+      # GitHub suppresses new workflow runs for events created with GITHUB_TOKEN, so
+      # the separate "Website Release Data Sync" workflow never fires for releases
+      # published here. Sync the generated website version data in this job instead
+      # (idempotent; the standalone workflow still covers releases published by a
+      # human in the GitHub UI and manual workflow_dispatch runs).
+      - name: Sync website release data
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git fetch origin "${DEFAULT_BRANCH}"
+          git checkout -f -B website-release-data "origin/${DEFAULT_BRANCH}"
+          node website/tools/build-release-data.mjs --strict
+          if git diff --quiet -- website/assets/data/release-data.js; then
+            echo "website release data already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/assets/data/release-data.js
+          git commit -m "chore(website): sync latest release data [skip ci]"
+          if ! git push origin "HEAD:${DEFAULT_BRANCH}"; then
+            echo "::warning::could not push website release data to ${DEFAULT_BRANCH}; run Website Release Data Sync manually"
+          fi

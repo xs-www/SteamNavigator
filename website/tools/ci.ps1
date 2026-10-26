@@ -5,7 +5,7 @@
 # - 只在本地构建/测试/部署，不推任何 registry；镜像默认标签 `steam-navigator-website:local`。
 # - 冒烟容器必须使用与生产一致的约束：read-only rootfs、32 MB 内存、0.25 CPU、丢弃 capabilities。
 # - 冒烟覆盖 `/healthz`、首页、游戏信息、百科、CSS、404、gzip 与缓存头；任一项失败则不部署。
-# - 部署使用 `website/docker-compose.yml`，只更新 `website` 服务；Cloudflare Tunnel 另行启动。
+# - 部署使用 `website/docker-compose.yml`，更新 `website` + `site-api`（只读内容 API）服务；Cloudflare Tunnel 另行启动。
 # - 构建前先跑 `node website/tools/build-release-data.mjs`：从 GitHub Releases API 刷新版本数据
 #   （下载页 / 开发日志页的版本号、日期、大小、直链），网络失败时保留上一次生成的文件；
 #   `-SkipReleaseData` 可跳过（离线构建）。
@@ -14,7 +14,7 @@
 # ## 重点逻辑
 # ### 先测后部署
 # - 先用临时容器在 `-SmokePort`（默认 18080）验证镜像，再执行
-#   `docker compose -f website/docker-compose.yml up -d --build website`。
+#   `docker compose -f website/docker-compose.yml up -d --build website site-api`。
 # ### 清理
 # - 冒烟容器在 `finally` 中删除；部署后的健康检查失败会以非零退出码结束。
 # @end-static-doc
@@ -37,7 +37,15 @@ $NullDevice = if ($PSVersionTable.PSVersion.Major -ge 6 -and -not $IsWindows) { 
 
 function Invoke-Docker {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
-    & docker @Arguments
+    # Windows PowerShell 5.1: docker 的进度/警告写入 stderr，EAP=Stop 会把它误判为终止错误。
+    # 临时降级 EAP，只用退出码判断成败。
+    $previousErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & docker @Arguments
+    } finally {
+        $ErrorActionPreference = $previousErrorAction
+    }
     if ($LASTEXITCODE -ne 0) {
         throw "docker $($Arguments -join ' ') failed (exit $LASTEXITCODE)"
     }
@@ -110,7 +118,9 @@ if (-not $SkipSmoke) {
             @{ Name = "首页"; Url = "/"; Contains = "蒸汽航海" },
             @{ Name = "游戏信息"; Url = "/game.html"; Contains = "关于《蒸汽航海》" },
             @{ Name = "游戏百科"; Url = "/wiki.html"; Contains = "游戏百科" },
-            @{ Name = "样式表"; Url = "/assets/css/site.css"; Contains = "site-header" }
+            @{ Name = "开发团队"; Url = "/team.html"; Contains = "开发团队" },
+            @{ Name = "样式表"; Url = "/assets/css/site.css"; Contains = "site-header" },
+            @{ Name = "版本数据"; Url = "/assets/data/release-data.js"; Contains = "SN_RELEASE_DATA" }
         )
         foreach ($check in $checks) {
             $body = (Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$SmokePort$($check.Url)" -TimeoutSec 5).Content
@@ -134,6 +144,11 @@ if (-not $SkipSmoke) {
             throw "冒烟失败：静态资源未返回 7 天缓存。"
         }
 
+        $releaseDataHeaders = (& curl.exe -sSI "http://127.0.0.1:$SmokePort/assets/data/release-data.js" | Out-String)
+        if ($releaseDataHeaders -notmatch "(?i)cache-control:\s*no-cache") {
+            throw "冒烟失败：版本数据未返回 Cache-Control: no-cache（部署后会显示旧版本）。"
+        }
+
         $gzipHeaders = (& curl.exe -sSI -H "Accept-Encoding: gzip" "http://127.0.0.1:$SmokePort/assets/css/site.css" | Out-String)
         if ($gzipHeaders -notmatch "(?i)content-encoding:\s*gzip") {
             throw "冒烟失败：CSS 未启用 gzip。"
@@ -148,7 +163,7 @@ if (-not $SkipSmoke) {
 
 if (-not $SkipDeploy) {
     Write-Host "==> 部署到本机 Docker Compose" -ForegroundColor Cyan
-    Invoke-Docker -Arguments @("compose", "-f", $ComposeFile, "up", "-d", "--build", "website")
+    Invoke-Docker -Arguments @("compose", "-f", $ComposeFile, "up", "-d", "--build", "website", "site-api")
 
     $deployBinding = (& docker compose -f $ComposeFile port website 8080 2>$null | Out-String).Trim()
     if (-not $deployBinding) {
@@ -161,10 +176,28 @@ if (-not $SkipDeploy) {
         throw "部署后的站点未在 30 秒内就绪。"
     }
 
-    $stats = (& docker stats --no-stream --format "{{.Name}} {{.MemUsage}} {{.CPUPerc}}" steam-navigator-website | Out-String).Trim()
+    # site-api 通过 nginx 反代；等它 healthy 后确认 /api/site/release 可读（发版后网站的自动更新依赖它）。
+    $apiDeadline = (Get-Date).AddSeconds(30)
+    $apiReady = $false
+    while ((Get-Date) -lt $apiDeadline) {
+        try {
+            $apiBody = (Invoke-WebRequest -UseBasicParsing -Uri "http://$deployBinding/api/site/release" -TimeoutSec 3).Content
+            if ($apiBody -like '*"ok":true*') { $apiReady = $true; break }
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    if (-not $apiReady) {
+        & docker compose -f $ComposeFile logs --tail 60 site-api
+        & docker compose -f $ComposeFile logs --tail 60 website
+        throw "部署后 /api/site/release 不可用；网站将无法自动获取最新版本。"
+    }
+
+    $stats = (& docker stats --no-stream --format "{{.Name}} {{.MemUsage}} {{.CPUPerc}}" steam-navigator-website steam-navigator-site-api | Out-String).Trim()
     Write-Host "==> 完成" -ForegroundColor Green
     Write-Host "    站点：http://$deployBinding/"
     Write-Host "    健康：http://$deployBinding/healthz"
+    Write-Host "    版本 API：http://$deployBinding/api/site/release"
     Write-Host "    容器：$stats"
     Write-Host "    Cloudflare Tunnel：cd website; docker compose --profile tunnel up -d"
 }

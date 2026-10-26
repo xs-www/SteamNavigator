@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | `.env.example` | 本地部署配置示例：Cloudflare Tunnel token 与宿主机端口；真实 `.env` 已被 .gitignore 忽略。 | 本页 |
 | `.gdignore` | 阻止 Godot 导入官网静态目录。 | 本页 |
-| `README.md` | 官网使用说明：本地预览、目录结构、内容边界、版本更新清单、百科数据生成、游玩数据接收端联调、本地数据看板与生产部署。 | [查看](./README.md.md) |
+| `README.md` | 官网使用说明：本地预览、目录结构、内容边界、版本更新清单、百科数据生成、游玩数据接收端联调、本地数据看板、运行时内容 API 与生产部署。 | [查看](./README.md.md) |
 | `assets/css/site.css` | 官网唯一设计系统与全站样式：色彩/排版 token、导航、Hero、卡片、百科、下载、页脚、响应式与动效降级。 | [查看](./assets/css/site.css.md) |
 | `assets/data/wiki-data.js` | 官网百科数据：由 `website/tools/build-wiki-data.mjs` 从 Core 内容生成，禁止手改。 | 本页 |
 | `assets/img/MANIFEST.md` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
@@ -26,11 +26,12 @@
 | `assets/img/ship-paddle.jpg` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
 | `assets/img/ship-schooner.jpg` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
 | `assets/img/shipyard-ui.jpg` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
-| `assets/js/release.js` | 官网版本信息填充脚本：读取 `assets/data/release-data.js`（由 `tools/build-release-data.mjs` 从 GitHub Releases 生成）， | [查看](./assets/js/release.js.md) |
+| `assets/js/release.js` | 官网版本信息填充脚本：先用构建期生成的 `assets/data/release-data.js` 立即填充下载页 / 开发日志页， | [查看](./assets/js/release.js.md) |
 | `assets/js/site.js` | 官网全站交互（导航抽屉、滚动状态、滚动揭示、图片灯箱、页脚年份、Hero 视差）。 | [查看](./assets/js/site.js.md) |
 | `assets/js/wiki.js` | 渲染官网游戏百科：分类导航、实时搜索、条目卡片、结果计数与深链接。 | [查看](./assets/js/wiki.js.md) |
 | `deploy/Dockerfile` | 官网生产镜像：nginx alpine 运行静态页面，单 worker、非 root、8080 端口，面向低内存自托管与 Cloudflare Tunnel。 | [查看](./deploy/Dockerfile.md) |
 | `deploy/Dockerfile.dashboard` | 本地「游玩数据看板」镜像：node:22-alpine 跑 `tools/telemetry_dashboard.mjs`，只读挂载遥测数据卷，在容器 8091 提供看板页面。 | [查看](./deploy/Dockerfile.dashboard.md) |
+| `deploy/Dockerfile.site-api` | 官网只读内容 API 镜像：node:22-alpine 跑 `server/site_api.mjs`，在容器 8092 提供 `/api/site/release`， | [查看](./deploy/Dockerfile.site-api.md) |
 | `deploy/Dockerfile.telemetry` | 游玩数据接收端生产镜像：node:22-alpine 跑零依赖 `server/telemetry.mjs`，非 root、8090 端口、`/data` 数据卷。 | [查看](./deploy/Dockerfile.telemetry.md) |
 | `deploy/nginx.conf` | 官网镜像内的 nginx 配置：单 worker、8080 端口、gzip、静态缓存、健康检查、基础安全响应头，以及 /api/telemetry/ 反代。 | [查看](./deploy/nginx.conf.md) |
 | `devlog.html` | 开发日志页：版本时间线、已交付系统与下一阶段方向；允许出现版本号与开发状态。 | [查看](./devlog.html.md) |
@@ -39,8 +40,10 @@
 | `favicon.svg` | 官网 favicon：黄铜罗盘 / 菱形边框，呼应游戏蒸汽朋克罗盘母题。 | [查看](./favicon.svg.md) |
 | `game.html` | 游戏信息页：世界观、玩法循环、核心特色、五座港口与三大势力，向玩家解释游戏内容。 | [查看](./game.html.md) |
 | `index.html` | 官网首页：Hero、玩法特色、世界港口、画面画廊与下载 CTA。首页禁止出现版本号、开发/调试、测试与构建信息。 | [查看](./index.html.md) |
+| `server/site_api.mjs` | 官网只读内容 API：`GET /api/site/release` 在服务端拉取 GitHub Releases（内存缓存，默认 5 分钟）， | [查看](./server/site_api.mjs.md) |
 | `server/telemetry.mjs` | 游玩数据（telemetry）接收端：校验客户端上传的会话 JSON、按来源限流、写入会话文件与索引，并做 180 天保留清理。 | [查看](./server/telemetry.mjs.md) |
 | `tests/release-data.test.mjs` | 官网 Release 版本数据生成器（`tools/build-release-data.mjs`）的 Node 测试：覆盖 latest/stable 选择、 | [查看](./tests/release-data.test.mjs.md) |
+| `tests/site-api.test.mjs` | 官网只读内容 API（`server/site_api.mjs`）的 Node 测试：覆盖 health / release 响应、5 分钟缓存与并发共享、 | [查看](./tests/site-api.test.mjs.md) |
 | `tests/telemetry-dashboard.test.mjs` | 本地游玩数据看板（`tools/telemetry_dashboard.mjs`）的 Node 测试（node:test，零第三方依赖）： | [查看](./tests/telemetry-dashboard.test.mjs.md) |
 | `tests/telemetry.test.mjs` | 游玩数据接收端 Node 测试（node:test，零第三方依赖）：覆盖 health、合法/非法上传、存储与索引、限流、令牌、方法/路径错误与 180 天保留清理。 | [查看](./tests/telemetry.test.mjs.md) |
 | `tools/build-release-data.mjs` | 从 GitHub Releases API 生成官网的版本数据文件 `website/assets/data/release-data.js`（`window.SN_RELEASE_DATA`）， | [查看](./tools/build-release-data.mjs.md) |

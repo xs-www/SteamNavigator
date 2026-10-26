@@ -27,6 +27,10 @@
     具体直链、日期与字节数以生成文件为准。
 - 版本数据生成：`node website/tools/build-release-data.mjs`（`--check` 校验是否落后于 GitHub）。
   - 部署钩子：`website/tools/ci.ps1` 构建镜像前自动刷新；`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交更新。
+  - **运行时自动更新（主力）**：Compose 的 `site-api` 服务（`website/server/site_api.mjs`，容器内 8092，只读）
+    服务端缓存 GitHub Releases（默认 5 分钟），下载页 / 开发日志页先渲染静态数据、再请求同域 `/api/site/release`
+    刷新。**发布 Release 后无需重新部署网站**，最迟约 5 分钟线上显示最新版本；GitHub 不可用时依次回退旧缓存、
+    镜像内 `release-data.js`。`GITHUB_TOKEN` 只用于服务端调用，不下发浏览器。
 - 世界观关键词：蒸汽朋克、群岛、浓雾、煤烟、黄铜与铸铁、港口城邦、商会 / 皇家海军 / 海盗团、遗迹与失落的航路。
 - 核心玩法关键词：动态行情与港口库存、造船厂与模块改装、程序生成海图与线索探索、锅炉策略、蒸汽舰炮与舰队、基地生产链、遗迹远征、自动贸易。
 - 五个港口模板：铁港、香料港、自由镇、渔村、玻璃港。
@@ -54,20 +58,26 @@ website/
 │   ├── js/site.js      导航、滚动、揭示动画、图片灯箱、页脚年份
 │   ├── js/wiki.js      百科渲染 / 搜索 / 分类筛选 / 深链接
 │   ├── data/wiki-data.js  由 tools/build-wiki-data.mjs 生成
+│   ├── js/release.js   版本信息填充（静态数据 + /api/site/release 刷新）
 │   └── img/            官网图片（见 §5）
 │   ├── data/release-data.js  由 tools/build-release-data.mjs 从 GitHub Releases 生成（勿手改）
 ├── tools/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
 │   ├── serve.mjs            零依赖本地预览服务器（同时挂载 /api/telemetry/）
+│   ├── build-release-data.mjs  GitHub Releases → release-data.js
 │   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
 ├── server/
-│   └── telemetry.mjs        游玩日志接收端（校验 / 限流 / 落盘 / 保留），契约见 TELEMETRY.md
+│   ├── telemetry.mjs        游玩日志接收端（校验 / 限流 / 落盘 / 保留），契约见 TELEMETRY.md
+│   └── site_api.mjs         只读内容 API（服务端缓存 GitHub Releases），运行时自动更新版本
 ├── tests/
-│   └── telemetry.test.mjs   接收端 node:test 用例
+│   ├── telemetry.test.mjs   接收端 node:test 用例
+│   ├── site-api.test.mjs    内容 API node:test 用例（缓存 / 降级 / fallback）
+│   └── release-data.test.mjs 版本数据生成器 node:test 用例
 ├── deploy/
 │   ├── Dockerfile          nginx alpine 生产镜像（非 root / 单 worker）
 │   ├── Dockerfile.telemetry 接收端镜像（node:22-alpine / 非 root / 8090）
-│   └── nginx.conf          静态站 nginx 配置（gzip / 缓存 / 健康检查 / /api/telemetry/ 反代）
+│   ├── Dockerfile.site-api  内容 API 镜像（node:22-alpine / 非 root / 8092）
+│   └── nginx.conf          静态站 nginx 配置（gzip / 缓存 / 健康检查 / /api/telemetry/ + /api/site/ 反代）
 ├── .gdignore          防止 Godot 导入站点目录
 └── README.md           预览 / 部署 / 生成说明
 ├── .data/             本地预览的日志落盘目录（gitignore，不入库）
@@ -198,7 +208,7 @@ window.SN_WIKI_DATA = {
 
 1. 5 个页面均可在 `http://127.0.0.1:<port>/` 正常打开；无 404（图片 / CSS / JS）。
 2. 首页可见文本（去掉导航与页脚链接文字后）不含 §1 的禁用词；不含版本号。
-3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过，页面由生成数据填充）。
+3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过）。Runtime：部署后 `GET /api/site/release` 返回 200，`data.latest.tag` 等于 GitHub 最新 Release；发布新 Release 后 ≤5 分钟（服务端缓存 TTL）页面无需重新部署即可显示新版本。
 4. 百科页：分类筛选、搜索、空结果提示、深链接（`#entry-id` / `#cat-id`）可用；条目数 ≥ 60。
 5. Chrome headless 截图 1440×900、1024×768、390×844 无横向滚动、无重叠、导航可用。
 6. 控制台无 JS 报错；图片均有 `alt`；按钮/链接键盘可达；灯箱可用 `Esc` 关闭。
@@ -206,7 +216,7 @@ window.SN_WIKI_DATA = {
 8. 站点无外部网络依赖（字体 / CDN / 统计脚本）；下载外链除外。
 
 9. 游玩数据接收端：`GET /api/telemetry/health` 返回 200；合法会话 `POST /api/telemetry/session` 返回 204 并在数据目录生成对应文件与 `index.ndjson`；`node --test website/tests/telemetry.test.mjs` 全绿。接收端契约见 [TELEMETRY.md](TELEMETRY.md)。
-10. 版本数据：`node --test website/tests/release-data.test.mjs` 全绿；`node website/tools/build-release-data.mjs --check` 通过；GitHub API 不可达时部署仍能用上一次生成的数据启动（脚本保留旧文件）。
+10. 版本数据：`node --test website/tests/release-data.test.mjs website/tests/site-api.test.mjs` 全绿；`node website/tools/build-release-data.mjs --check` 通过；GitHub API 不可达时部署仍能用上一次生成的数据启动（脚本保留旧文件），`site-api` 仍能回退静态数据。
 
 ## 8. 协作与写入边界
 
@@ -215,6 +225,7 @@ window.SN_WIKI_DATA = {
 - wiki 任务：只写 `website/tools/build-wiki-data.mjs`、`website/assets/data/`。
 - QA：只写 `tmp/website-qa/`。
 - 版本数据任务：只写 `website/tools/build-release-data.mjs`、`website/assets/data/release-data.js`、`website/assets/js/release.js`、`.github/workflows/website-release-data.yml` 与下载/开发日志页的数据属性；不手改生成文件。
+- 内容 API 任务：只写 `website/server/site_api.mjs`、`website/tests/site-api.test.mjs`、`website/deploy/Dockerfile.site-api` 与 compose / nginx 的 `/api/site/` 段落；只读、不接触遥测数据，token 不进响应。
 - QA：只写 `tmp/website-qa/`。
 - telemetry 任务：只写 `website/server/`、`website/tests/`、`website/deploy/Dockerfile.telemetry` 与本文档 §10 契约涉及的 nginx / compose / README 段落；契约先改 [TELEMETRY.md](TELEMETRY.md)。
 - 所有人不改 `dev_mods/`、`framework/`、`docs/static/`；站点目录加 `.gdignore`，避免 Godot 导入。
@@ -231,6 +242,7 @@ window.SN_WIKI_DATA = {
 - Cloudflare：公网入口推荐 Cloudflare Tunnel；容器内 cloudflared 的 origin 填 `http://website:8080`，宿主机 cloudflared 填 `http://127.0.0.1:8088`。部署与缓存说明见 `website/README.md`。
 - 游玩数据接收端（2026-10-27）：`website/server/telemetry.mjs` + `website/deploy/Dockerfile.telemetry` + compose `telemetry` 服务 + nginx `/api/telemetry/` 反代；数据卷 `website-telemetry-data`（`/data`），保留 180 天。契约见 [TELEMETRY.md](TELEMETRY.md)。
 - 版本数据自动同步（2026-10-27）：`website/tools/build-release-data.mjs` 从 GitHub Releases API 生成 `assets/data/release-data.js`（latest / stable / 平台直链 / 大小 / 日期），下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充；`ci.ps1` 部署前刷新，`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交；网络失败保留旧数据。
+- 运行时版本自动更新（2026-10-27）：新增只读 `site-api` 服务（`website/server/site_api.mjs` + `Dockerfile.site-api` + compose `site-api` + nginx `/api/site/` 反代），服务端缓存 GitHub Releases（默认 5 分钟、`Cache-Control: public, max-age=60, stale-while-revalidate=600`）；发版后网站无需重新部署即可在 ≤5 分钟内更新，失败时回退旧缓存 / 镜像内静态数据。`ci.ps1` 部署后检查 `/api/site/release`；`release-data.js` 单独 `no-cache`，避免浏览器/CDN 长期缓存旧版本。
 
 
 - 本地游玩数据看板（2026-10-27）：`website/tools/telemetry_dashboard.mjs` + `Dockerfile.dashboard` + compose `telemetry-dashboard`（`profiles: ["dashboard"]`，只发布到 `127.0.0.1:8091`），只读同一个数据卷；**不是官网页面**，不进入站点导航，也不随静态站发布。
