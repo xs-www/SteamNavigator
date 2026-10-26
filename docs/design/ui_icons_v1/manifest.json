@@ -7,21 +7,36 @@
   "grid": {
     "columns": 6,
     "rows": 5,
-    "cell_width": 256,
-    "row_y": [
-      0,
-      205,
-      410,
-      614,
-      819
+    "row_bands": [
+      [
+        28,
+        219
+      ],
+      [
+        235,
+        411
+      ],
+      [
+        426,
+        620
+      ],
+      [
+        625,
+        795
+      ],
+      [
+        810,
+        996
+      ]
     ],
-    "row_height": [
-      205,
-      205,
-      204,
-      205,
-      205
-    ]
+    "detected_columns_per_row": [
+      6,
+      6,
+      7,
+      6,
+      6
+    ],
+    "note": "Columns are detected from content, not an equal grid; the extra row-3 icon is recorded under unmapped."
   },
   "individual_canvas_px": [
     256,
@@ -33,300 +48,300 @@
     {
       "id": "nav_market",
       "atlas_region": [
-        0,
-        0,
-        256,
-        205
+        45,
+        37,
+        182,
+        183
       ],
       "file": "icons/nav_market.png"
     },
     {
       "id": "nav_contracts",
       "atlas_region": [
-        256,
-        0,
-        256,
-        205
+        307,
+        21,
+        175,
+        206
       ],
       "file": "icons/nav_contracts.png"
     },
     {
       "id": "nav_shipyard",
       "atlas_region": [
-        512,
-        0,
-        256,
-        205
+        552,
+        38,
+        183,
+        180
       ],
       "file": "icons/nav_shipyard.png"
     },
     {
       "id": "nav_resupply",
       "atlas_region": [
-        768,
-        0,
-        256,
-        205
+        819,
+        35,
+        141,
+        188
       ],
       "file": "icons/nav_resupply.png"
     },
     {
       "id": "nav_intelligence",
       "atlas_region": [
-        1024,
-        0,
-        256,
-        205
+        1035,
+        51,
+        231,
+        163
       ],
       "file": "icons/nav_intelligence.png"
     },
     {
       "id": "nav_chart",
       "atlas_region": [
-        1280,
-        0,
-        256,
-        205
+        1298,
+        44,
+        223,
+        177
       ],
       "file": "icons/nav_chart.png"
     },
     {
       "id": "nav_departure",
       "atlas_region": [
-        0,
-        205,
-        256,
-        205
+        24,
+        232,
+        240,
+        178
       ],
       "file": "icons/nav_departure.png"
     },
     {
       "id": "resource_coal",
       "atlas_region": [
-        256,
-        205,
-        256,
-        205
+        301,
+        236,
+        193,
+        181
       ],
       "file": "icons/resource_coal.png"
     },
     {
       "id": "resource_water",
       "atlas_region": [
-        512,
-        205,
-        256,
-        205
+        572,
+        229,
+        132,
+        186
       ],
       "file": "icons/resource_water.png"
     },
     {
       "id": "resource_durability",
       "atlas_region": [
-        768,
-        205,
-        256,
-        205
+        793,
+        234,
+        192,
+        180
       ],
       "file": "icons/resource_durability.png"
     },
     {
       "id": "resource_cargo",
       "atlas_region": [
-        1024,
-        205,
-        256,
-        205
+        1045,
+        234,
+        192,
+        185
       ],
       "file": "icons/resource_cargo.png"
     },
     {
       "id": "resource_coins",
       "atlas_region": [
-        1280,
-        205,
-        256,
-        205
+        1325,
+        249,
+        170,
+        157
       ],
       "file": "icons/resource_coins.png"
     },
     {
       "id": "shipyard_hull",
       "atlas_region": [
-        0,
-        410,
-        256,
-        204
+        29,
+        433,
+        198,
+        177
       ],
       "file": "icons/shipyard_hull.png"
     },
     {
       "id": "shipyard_boiler",
       "atlas_region": [
-        256,
-        410,
-        256,
-        204
+        243,
+        424,
+        203,
+        199
       ],
       "file": "icons/shipyard_boiler.png"
     },
     {
       "id": "shipyard_cargo",
       "atlas_region": [
-        512,
-        410,
-        256,
-        204
+        458,
+        436,
+        196,
+        178
       ],
       "file": "icons/shipyard_cargo.png"
     },
     {
       "id": "shipyard_navigation",
       "atlas_region": [
-        768,
-        410,
-        256,
-        204
+        679,
+        419,
+        183,
+        208
       ],
       "file": "icons/shipyard_navigation.png"
     },
     {
       "id": "shipyard_safety",
       "atlas_region": [
-        1024,
-        410,
-        256,
-        204
+        882,
+        430,
+        205,
+        189
       ],
       "file": "icons/shipyard_safety.png"
     },
     {
       "id": "shipyard_cabin",
       "atlas_region": [
-        1280,
-        410,
-        256,
-        204
+        1099,
+        438,
+        207,
+        181
       ],
       "file": "icons/shipyard_cabin.png"
     },
     {
       "id": "action_add",
       "atlas_region": [
-        0,
-        614,
-        256,
-        205
+        61,
+        634,
+        171,
+        168
       ],
       "file": "icons/action_add.png"
     },
     {
       "id": "action_remove",
       "atlas_region": [
-        256,
-        614,
-        256,
-        205
+        301,
+        680,
+        174,
+        78
       ],
       "file": "icons/action_remove.png"
     },
     {
       "id": "action_confirm",
       "atlas_region": [
-        512,
-        614,
-        256,
-        205
+        524,
+        638,
+        190,
+        160
       ],
       "file": "icons/action_confirm.png"
     },
     {
       "id": "status_warning",
       "atlas_region": [
-        768,
-        614,
-        256,
-        205
+        769,
+        628,
+        195,
+        171
       ],
       "file": "icons/status_warning.png"
     },
     {
       "id": "status_locked",
       "atlas_region": [
-        1024,
-        614,
-        256,
-        205
+        1059,
+        623,
+        142,
+        179
       ],
       "file": "icons/status_locked.png"
     },
     {
       "id": "status_unlocked",
       "atlas_region": [
-        1280,
-        614,
-        256,
-        205
+        1318,
+        618,
+        137,
+        180
       ],
       "file": "icons/status_unlocked.png"
     },
     {
       "id": "status_anchor",
       "atlas_region": [
-        0,
-        819,
-        256,
-        205
+        55,
+        804,
+        181,
+        200
       ],
       "file": "icons/status_anchor.png"
     },
     {
       "id": "status_time",
       "atlas_region": [
-        256,
-        819,
-        256,
-        205
+        308,
+        806,
+        138,
+        195
       ],
       "file": "icons/status_time.png"
     },
     {
       "id": "status_weather",
       "atlas_region": [
-        512,
-        819,
-        256,
-        205
+        504,
+        838,
+        245,
+        150
       ],
       "file": "icons/status_weather.png"
     },
     {
       "id": "status_storm",
       "atlas_region": [
-        768,
-        819,
-        256,
-        205
+        787,
+        808,
+        205,
+        193
       ],
       "file": "icons/status_storm.png"
     },
     {
       "id": "status_reputation",
       "atlas_region": [
-        1024,
-        819,
-        256,
-        205
+        1044,
+        808,
+        188,
+        181
       ],
       "file": "icons/status_reputation.png"
     },
     {
       "id": "status_route",
       "atlas_region": [
-        1280,
-        819,
-        256,
-        205
+        1285,
+        820,
+        193,
+        164
       ],
       "file": "icons/status_route.png"
     }
@@ -335,6 +350,18 @@
     "shipyard_misc": "nav_shipyard",
     "currency": "resource_coins",
     "departure": "nav_departure"
-  }
+  },
+  "slicer": "tools/ui/slice_ui_icons.gd",
+  "unmapped": [
+    {
+      "row": 2,
+      "column": 6,
+      "atlas_region": [
+        1331,
+        434,
+        173,
+        178
+      ]
+    }
+  ]
 }
-

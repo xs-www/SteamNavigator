@@ -8,7 +8,7 @@
 
 ```text
 docs/design/ui_controls_v1/   30 个控件图集（无字透明，九宫格）
-docs/design/ui_icons_v1/      30 个 256×256 透明图标
+docs/design/ui_icons_v1/      30 个 256×256 透明图标（母版 sn_ui_icons_v1.png，切片器 tools/ui/slice_ui_icons.gd）
         │  tools/build_ui_skin.ps1
         ▼
 assets/ui/skin/sn_v1/
@@ -49,8 +49,9 @@ Shell / 页面 / 控件                         只写 Theme variation 或 SNSki
 ### 2.3 图集母版更新
 
 - 控件母版：`docs/design/ui_controls_v1/sn_controls_atlas_v1.png` + `regions.json`。
-- 图标母版：`docs/design/ui_icons_v1/icons/*.png`（`manifest.json` 只提供 id 列表；新增/删除图标会同步生成/校验）。
-- 改完母版必须跑 `pwsh ./tools/build_ui_skin.ps1`，然后 `-Check`、`-Suite ui_skin`，并提交运行纹理 + `skin.json` + Theme 三者的变化。
+- 图标母版：`docs/design/ui_icons_v1/sn_ui_icons_v1.png`（图集）+ `icons/*.png`（切好的 256×256 独立 PNG）+ `manifest.json`（id 列表 / 内容包围盒 / 未映射图标）。
+- **图标图集是生成式出图，行高不是整数等分、每行列数也不完全相等，不要用固定等宽/等高网格裁切**。切片统一走 `godot --headless --path . --script res://tools/ui/slice_ui_icons.gd`（先加 `-- --dry-run` 看检测结果）：它按「全透明行/列」分格、取 alpha 内容紧包围盒并居中到 256×256 画布，同时更新 `manifest.json`。旧的固定 256×256 裁切会把下一行图标顶端带进每张 PNG 的底部。
+- 改完母版必须跑 `pwsh ./tools/build_ui_skin.ps1`，然后 `-Check`、`-Suite ui_skin`，并提交运行纹理 + `skin.json` + Theme 三者的变化（图标内容变化会连带影响由 `action_confirm` 派生的 `check_*` 复选框图标）。
 
 ## 3. 目录与文件契约
 
@@ -63,6 +64,7 @@ Shell / 页面 / 控件                         只写 Theme variation 或 SNSki
 | `assets/ui/theme/steam_navigator_theme.tres` | 纹理化 Theme | `build_ui_theme.gd` 生成（勿手改） |
 | `framework/ui/skin/sn_skin.gd` | 运行时访问层 `SNSkin` | 手写 |
 | `tools/ui/build_ui_skin.gd` | 图集→PNG + skin.json | 手写 |
+| `tools/ui/slice_ui_icons.gd` | 图标图集→30 个居中 256×256 母版 + manifest | 手写 |
 | `tools/ui/build_ui_theme.gd` | skin.json→Theme | 手写 |
 | `tools/build_ui_skin.ps1` | 一键生成 / `-Check` | 手写 |
 
