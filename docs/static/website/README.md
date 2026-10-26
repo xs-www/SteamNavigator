@@ -42,6 +42,7 @@
 | `index.html` | 官网首页：Hero、玩法特色、世界港口、画面画廊与下载 CTA。首页禁止出现版本号、开发/调试、测试与构建信息。 | [查看](./index.html.md) |
 | `server/site_api.mjs` | 官网只读内容 API：`GET /api/site/release` 在服务端拉取 GitHub Releases（内存缓存，默认 5 分钟）， | [查看](./server/site_api.mjs.md) |
 | `server/telemetry.mjs` | 游玩数据（telemetry）接收端：校验客户端上传的会话 JSON、按来源限流、写入会话文件与索引，并做 180 天保留清理。 | [查看](./server/telemetry.mjs.md) |
+| `team.html` | 开发团队页：页脚入口的团队与致谢页面，当前为空白占位，后续补充 PlayThought 工作室与 Steam Navigator 项目组信息。 | [查看](./team.html.md) |
 | `tests/release-data.test.mjs` | 官网 Release 版本数据生成器（`tools/build-release-data.mjs`）的 Node 测试：覆盖 latest/stable 选择、 | [查看](./tests/release-data.test.mjs.md) |
 | `tests/site-api-mirror.test.mjs` | 官网只读内容 API 的「最新 Windows zip 镜像」测试：覆盖后台流式下载 + SHA-256 校验、镜像可用后 | [查看](./tests/site-api-mirror.test.mjs.md) |
 | `tests/site-api.test.mjs` | 官网只读内容 API（`server/site_api.mjs`）的 Node 测试：覆盖 health / release 响应、5 分钟缓存与并发共享、 | [查看](./tests/site-api.test.mjs.md) |

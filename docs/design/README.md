@@ -30,6 +30,7 @@
 - [RIG_KIT_CONTRACT.md](RIG_KIT_CONTRACT.md) — 船体帆索部件库 rig_kit（12 件 SN_Rig_* + 22 个 SN_Socket_Mast/Yard/Sail_*，M0-4）
 - [DEV_PLAN_2026-10.md](DEV_PLAN_2026-10.md) — 近期开发计划、优先级与验收标准
 - [FULL_GAME_ROADMAP.md](FULL_GAME_ROADMAP.md) — 正式版路线图（草案，随里程碑更新）
+- [FACTION_SYSTEM.md](FACTION_SYSTEM.md) — 势力 / 自由模式玩法（Draft 0.1：名望与关系分离、6 港准入 + 通行许可证、港口 owner/特产/禁运/走私、委托发起方与关系条款、势力专属装备）
 - [ENTITY_CONTRACT_V2.md](ENTITY_CONTRACT_V2.md) — 实体契约 v2（Draft 1，Schema 2.0 目标）
 - [CONTENT_SCHEMA_V2_MIGRATION.md](CONTENT_SCHEMA_V2_MIGRATION.md) — Content Schema 2.0 迁移落地方案（按类型版本 + 纵向切片，Phase A–E Finalized）
 - [WORLD_SCHEMA_V2_RUNTIME.md](WORLD_SCHEMA_V2_RUNTIME.md) — 世界与战役内容 Schema 2.0 运行时实现契约（Phase B，Draft 2；B0–B6 已完成）

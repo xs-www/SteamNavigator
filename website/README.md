@@ -47,16 +47,16 @@ website/
 ├── wiki.html           游戏百科：搜索 + 分类筛选
 ├── devlog.html         开发日志：版本时间线与下一阶段
 ├── download.html       下载：平台、版本、需求、安装、FAQ
+├── team.html           开发团队：页脚入口的团队与致谢占位页
 ├── favicon.svg
 ├── assets/
 │   ├── css/site.css    设计系统 + 全站样式 + 响应式
 │   ├── js/site.js      导航、滚动揭示、灯箱、页脚年份
 │   ├── js/wiki.js      百科渲染 / 搜索 / 分类 / 深链接
-│   ├── data/wiki-data.js  由 Core 内容生成的百科数据
 │   ├── js/release.js   版本信息填充（读取 release-data.js → 版本/日期/大小/链接）
-│   └── img/            官网图片（含 MANIFEST.md 来源记录）
+│   ├── data/wiki-data.js  由 Core 内容生成的百科数据
 │   ├── data/release-data.js  由 GitHub Releases 生成的版本数据（勿手改）
-├── tools/
+│   └── img/            官网图片（含 MANIFEST.md 来源记录）
 ├── server/
 │   ├── telemetry.mjs   游玩数据接收端：路由 / 校验 / 限流 / 存储 / 保留清理
 │   └── site_api.mjs    官网只读内容 API：服务端缓存 GitHub Releases（/api/site/release）
@@ -68,8 +68,8 @@ website/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
 │   ├── build-release-data.mjs  GitHub Releases → release-data.js
 │   ├── serve.mjs            本地预览服务器（含 /api/telemetry/*）
-│   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
 │   ├── telemetry_dashboard.mjs  本地游玩数据看板（127.0.0.1:8091，只读）
+│   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
 ├── deploy/
 │   ├── Dockerfile          nginx alpine 静态站镜像（非 root / 单 worker）
 │   ├── Dockerfile.telemetry  node 22 接收端镜像（非 root / 8090 / /data）
@@ -88,6 +88,7 @@ website/
 - **首页**不出现开发 / 调试信息：没有版本号、更新日志、测试状态、Godot / GitHub / 模组等开发者词汇。
 - 版本号、更新说明、构建信息只出现在 `download.html` 与 `devlog.html`。
 - 导航与页脚中的「开发日志」链接是允许的（用户明确要求该子页面存在）。
+- 「开发团队」只放在页脚，作为团队与致谢占位页；首页主体仍不展示开发团队内容。
 - 修改页面后请按 `docs/design/WEBSITE.md` §1 的禁用词表自查首页。
 
 ## 更新发布版本（自动）
@@ -106,10 +107,10 @@ node website/tools/build-release-data.mjs
 
 # 校验仓库里的静态数据是否落后于 GitHub 最新 Release（CI / 发版前可用）
 node website/tools/build-release-data.mjs --check
-```
 
 # 本地验证运行时 API（部署后）
 curl.exe http://127.0.0.1:8088/api/site/release
+```
 
 - **自动时机**：
   - 运行时：`site-api` 每 5 分钟从 GitHub 刷新一次；页面每次打开都会拿最新缓存值。
@@ -124,7 +125,6 @@ curl.exe http://127.0.0.1:8088/api/site/release
 - 版本时间线（`devlog.html` 的 `.timeline` 条目）仍人工维护，只自动同步页头版本与日期；
   首页不写版本，无需改动。
 
-```powershell
 ### Windows 安装包镜像（只保留最新版）
 
 - `site-api` 刷新到新 Release 后，在后台把**最新 Windows zip** 流式下载到命名卷 `release-downloads`，
@@ -137,6 +137,7 @@ curl.exe http://127.0.0.1:8088/api/site/release
 - **修改 `assets/js/release.js` 后要同步提高下载页 / 开发日志页 script 的 `?v=`**：静态 JS 在 CDN 缓存 7 天，
   不换 query 的话已部署的旧脚本不会刷新。
 
+```powershell
 # 抽查下载链接（替换为生成文件里的最新 tag/文件名）
 curl.exe -I https://github.com/xs-www/SteamNavigator/releases/download/<tag>/<filename>
 ```
@@ -156,8 +157,6 @@ node website/tools/build-wiki-data.mjs
 
 `assets/img/` 的 JPG 由 `docs/design/screenshots/` 与 `assets/ui/banners/` 裁切压缩而来，来源、尺寸与处理方式记录在 `assets/img/MANIFEST.md`。
 修改图片时保持文件名与目标尺寸不变，避免破坏页面布局。
-
-## Docker 镜像
 
 ## 游玩数据接收端（Telemetry）
 
@@ -251,9 +250,8 @@ node --check website/tools/telemetry_dashboard.mjs
 Compose 同时起三个服务：
 
 - `website`：nginx 静态站，容器内 8080，只映射到 `127.0.0.1:8088`；`/api/telemetry/` 反代到接收端、`/api/site/` 反代到内容 API。
-- `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署；同时镜像最新 Windows zip 到 `release-downloads` 卷（只读挂载给 `website` 的 nginx `/downloads/`）。
-- `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署。
 - `telemetry`：Node 接收端，容器内 8090，**不映射宿主机端口**，只被 `website` 访问；`website` 等它 healthcheck 通过才启动。
+- `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署；同时镜像最新 Windows zip 到 `release-downloads` 卷（只读挂载给 `website` 的 nginx `/downloads/`）。
 - `telemetry-dashboard`（可选，`--profile dashboard`）：看板容器，只读挂载同一个数据卷，只映射到 `127.0.0.1:8091`。
 - nginx：`location /api/telemetry/` → `http://telemetry:8090`（原样保留 URI、`client_max_body_size 1m`、只允许 GET/POST、关闭该 location 的 access_log 以免记录客户端 IP）；`location /api/site/` → `http://site-api:8092`（只允许 GET/HEAD）；`location /downloads/` 直接读只读卷（Range + 30 天缓存）。
 
@@ -261,8 +259,8 @@ Compose 同时起三个服务：
 cd website
 cp .env.example .env      # 需要令牌校验时填 SN_TELEMETRY_TOKEN；可选填 SN_SITE_GITHUB_TOKEN
 docker compose up -d --build
-curl -fsS http://127.0.0.1:8088/api/site/release
 curl -fsS http://127.0.0.1:8088/api/telemetry/health
+curl -fsS http://127.0.0.1:8088/api/site/release
 ```
 
 数据卷 `steam-navigator-website_telemetry-data` 挂到容器内 `/data`：
@@ -302,16 +300,15 @@ docker run --rm -p 127.0.0.1:8090:8090 --read-only --tmpfs /tmp:rw,noexec,nosuid
 生产用三个镜像：
 
 - `steam-navigator-website:local`（`deploy/Dockerfile`）：只包含静态页面与 nginx，不包含游戏本体、Node 或构建工具；nginx 以非 root 运行，单 worker，容器内监听 8080。
-- `steam-navigator-site-api:local`（`deploy/Dockerfile.site-api`）：node:22-alpine 跑 `server/site_api.mjs`，非 root，监听 8092，服务端缓存 GitHub Releases；镜像内烘焙 `release-data.js` 作为 fallback。
 - `steam-navigator-telemetry:local`（`deploy/Dockerfile.telemetry`）：node:22-alpine 跑 `server/telemetry.mjs`，非 root，监听 8090，数据写 `/data`。
+- `steam-navigator-site-api:local`（`deploy/Dockerfile.site-api`）：node:22-alpine 跑 `server/site_api.mjs`，非 root，监听 8092，服务端缓存 GitHub Releases；镜像内烘焙 `release-data.js` 作为 fallback。
 
 ```bash
+docker build -f website/deploy/Dockerfile -t steam-navigator-website:local website
 docker build -f website/deploy/Dockerfile.telemetry -t steam-navigator-telemetry:local website
 docker build -f website/deploy/Dockerfile.site-api -t steam-navigator-site-api:local website
-docker build -f website/deploy/Dockerfile -t steam-navigator-website:local website
 docker run --rm -p 127.0.0.1:8088:8080 \
   --read-only \
-docker build -f website/deploy/Dockerfile.telemetry -t steam-navigator-telemetry:local website
   --tmpfs /tmp:rw,noexec,nosuid,size=8m \
   --memory 32m --cpus 0.25 --pids-limit 64 \
   --cap-drop ALL --security-opt no-new-privileges \
@@ -324,12 +321,11 @@ docker build -f website/deploy/Dockerfile.telemetry -t steam-navigator-telemetry
 ```bash
 cd website
 docker compose up -d --build
-curl -fsS http://127.0.0.1:8088/api/telemetry/health
 docker compose ps
 curl -fsS http://127.0.0.1:8088/healthz
+curl -fsS http://127.0.0.1:8088/api/telemetry/health
 ```
 
-curl -fsS http://127.0.0.1:8088/api/telemetry/health
 ## 本地 CI：构建、冒烟、部署
 
 不需要远程 registry，也不依赖远程 runner。所有步骤在本机 Docker 上完成：
@@ -359,8 +355,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File website/tools/ci.ps1 -SkipSm
 powershell -NoProfile -ExecutionPolicy Bypass -File website/tools/ci.ps1 -SmokePort 18081 # 自定义冒烟端口
 ```
 
-部署完成后更新 Cloudflare Tunnel（如果还没有启动）：
-
 只改接收端时可以先跑 Node 测试，再单独重建容器：
 
 ```powershell
@@ -368,6 +362,8 @@ node --test website/tests/telemetry.test.mjs
 cd website
 docker compose up -d --build telemetry
 ```
+
+部署完成后更新 Cloudflare Tunnel（如果还没有启动）：
 
 ```powershell
 cd website
@@ -418,14 +414,13 @@ http://127.0.0.1:8088
 
 ## 内存与资源
 
-| `telemetry` | 64 MB / 0.5 CPU | Node 22 接收端；空闲通常 20–40 MiB，64 MB 覆盖每小时清理扫描与并发请求 |
-| `site-api` | 48 MB / 0.2 CPU | Node 22 只读内容 API；实测空闲约 17 MiB（含 GitHub 缓存），GitHub 不可用时自动回退静态文件 |
 | 容器 | 限制 | 实测/说明 |
 | --- | --- | --- |
 | `website` | 32 MB / 0.25 CPU | 静态 nginx 空闲约 2–3 MiB；16 MB 也能启动，32 MB 留出并发余量 |
+| `telemetry` | 64 MB / 0.5 CPU | Node 22 接收端；空闲通常 20–40 MiB，64 MB 覆盖每小时清理扫描与并发请求 |
+| `site-api` | 48 MB / 0.2 CPU | Node 22 只读内容 API；实测空闲约 17 MiB（含 GitHub 缓存），GitHub 不可用时自动回退静态文件 |
 | `cloudflared` | 64 MB | Cloudflare 官方镜像；只在启用 `tunnel` profile 时启动 |
 
-| `telemetry` | 64 MB / 0.5 CPU | Node 22 接收端；空闲通常 20–40 MiB，64 MB 覆盖每小时清理扫描与并发请求 |
 如果出现 OOM 或 502，把 `docker-compose.yml` 对应服务的 `mem_limit` 提高（静态站 48m、接收端 96m）；静态站通常不需要更高。
 
 ## 静态托管替代方案
@@ -439,15 +434,13 @@ node website/tools/serve.mjs
 # 另开终端
 # 首页禁用词自查（导航与页脚中的「开发日志」链接除外，需人工排除）
 Select-String -Path website/index.html -Pattern '开发|调试|测试|原型|MVP|版本|GitHub|Godot|模组|引擎|构建|诊断|日志|文档|代码|dev|build|debug|changelog'
-# 运行时版本 API 只由 Compose 提供（本地预览 serve.mjs 不挂载，页面自动用静态 fallback）：
-curl.exe http://127.0.0.1:8088/api/site/release
-```
-
-```
-
 
 # 游玩数据接收端 / 内容 API / 版本数据
 node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/site-api.test.mjs website/tests/release-data.test.mjs
 curl.exe http://127.0.0.1:4173/api/telemetry/health
+# 运行时版本 API 只由 Compose 提供（本地预览 serve.mjs 不挂载，页面自动用静态 fallback）：
+curl.exe http://127.0.0.1:8088/api/site/release
+```
+
 浏览器检查：1440×900 / 1024×768 / 390×844 无横向滚动；百科搜索、分类、`#entry-*` / `#cat-*` 深链接可用；灯箱可用 Esc 关闭。
 接收端契约验收见 `docs/design/TELEMETRY.md` §6；版本自动更新验收见 `docs/design/WEBSITE.md` §7；本地看板打开 `http://127.0.0.1:8091/` 能看到列表与 JSON 详情。

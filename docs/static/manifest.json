@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T23:02:06.036Z",
+  "generated_at": "2026-10-26T22:59:38.251Z",
   "commit": "7ffe686",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1282,
-    "documented": 518,
+    "sources": 1283,
+    "documented": 519,
     "grouped": 764
   },
   "files": [
@@ -6532,7 +6532,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "c9a577ca8de1d146f28590f43c1ee9af8fc3685e5fc55240677f72472dcf673c",
+      "sha256": "c5041931230887aab3d7fbcf2060e8f1fb7ad32d313a3cb4800b8f48e5545aa0",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -8183,13 +8183,13 @@
     },
     {
       "source": "website/README.md",
-      "sha256": "6a4a0989b6f101f8db205cf064189a13bc89c45bbaa01797613de2f3b298a9de",
+      "sha256": "04aae6eb9d23a3e182766afe09d485c2c6a88b627814fa294138cd5af150e3a7",
       "doc": "docs/static/website/README.md.md",
       "status": "documented"
     },
     {
       "source": "website/assets/css/site.css",
-      "sha256": "7dc3a164aa54f42b89ce4a043154ab64659167de830ecf9663638cb4a8ada9f1",
+      "sha256": "eaebecd552f91bee5d2e984c0e758511996438f208607649a2524805b8011a03",
       "doc": "docs/static/website/assets/css/site.css.md",
       "status": "documented"
     },
@@ -8325,7 +8325,7 @@
     },
     {
       "source": "website/deploy/Dockerfile",
-      "sha256": "8e1943eb136eb30d533b3bac8bab1f490a2fefd3b41c343f89e3169d02d0f612",
+      "sha256": "716b7effa7eaadfefb3a7942f4a2fd27a25064371c40b7a84eb66452f1744d84",
       "doc": "docs/static/website/deploy/Dockerfile.md",
       "status": "documented"
     },
@@ -8355,7 +8355,7 @@
     },
     {
       "source": "website/devlog.html",
-      "sha256": "2f2cd61d3ce85cd1fb381de00a97d8ecbd76ec5962be846106f5e577ca939460",
+      "sha256": "73b2a85b8fe7d1793ac409cb635e96e6c0722f2b2f90148df8e433a9fd7981bf",
       "doc": "docs/static/website/devlog.html.md",
       "status": "documented"
     },
@@ -8367,7 +8367,7 @@
     },
     {
       "source": "website/download.html",
-      "sha256": "4950f8a1f547a84eb012d46f0698c85acdb2235b65844b45c9c1523d7aec83bd",
+      "sha256": "cf5a7f5493bd570cf18a248072e856d646f83329c9e0a83c96717bee7407a9d0",
       "doc": "docs/static/website/download.html.md",
       "status": "documented"
     },
@@ -8379,13 +8379,13 @@
     },
     {
       "source": "website/game.html",
-      "sha256": "5ffafa1995e492a3aff7479d480f1ca54db402c699a578482c8dc1a3e62346e9",
+      "sha256": "28be6eddf7ecbb8263cca4ae68ce73da81e2170db9365c535e81cbc0f1eb1092",
       "doc": "docs/static/website/game.html.md",
       "status": "documented"
     },
     {
       "source": "website/index.html",
-      "sha256": "f62c53f6711db22d21b5488928a18315f47e1de572ea04daa1a0e8b6623ff45a",
+      "sha256": "d86405b0f910eb96ae6480b6f4adb6b5be2a25381faea11d724e1be0ef04db7c",
       "doc": "docs/static/website/index.html.md",
       "status": "documented"
     },
@@ -8399,6 +8399,12 @@
       "source": "website/server/telemetry.mjs",
       "sha256": "79571356192335577d54865ec2185450ec531738d378f47ccc11d6844938305d",
       "doc": "docs/static/website/server/telemetry.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/team.html",
+      "sha256": "7da28b0c056c5d632aa778827b05da2b8ac58fb1a95dd178716a1e32237a30b0",
+      "doc": "docs/static/website/team.html.md",
       "status": "documented"
     },
     {
@@ -8463,7 +8469,7 @@
     },
     {
       "source": "website/wiki.html",
-      "sha256": "3e3229dac95b4def40a178960bedba26a3c739f20985997ae34f401cd993719c",
+      "sha256": "9dfa26a0e9bb5db05dfa401ca35e7453c1401a53d7b03d0e954cbd048d3bc5fe",
       "doc": "docs/static/website/wiki.html.md",
       "status": "documented"
     }

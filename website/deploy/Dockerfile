@@ -25,7 +25,7 @@ LABEL org.opencontainers.image.source="https://github.com/xs-www/SteamNavigator"
 RUN rm -f /etc/nginx/conf.d/default.conf
 
 COPY deploy/nginx.conf /etc/nginx/nginx.conf
-COPY index.html game.html wiki.html devlog.html download.html favicon.svg /usr/share/nginx/html/
+COPY index.html game.html wiki.html devlog.html download.html team.html favicon.svg /usr/share/nginx/html/
 COPY assets/css/ /usr/share/nginx/html/assets/css/
 COPY assets/js/ /usr/share/nginx/html/assets/js/
 COPY assets/data/ /usr/share/nginx/html/assets/data/
