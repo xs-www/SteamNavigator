@@ -5,7 +5,8 @@
 
 ## In Progress
 
-- [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗
+- [ ] 剧情模式 3 天交付（2026-10-27 定；按人类监督 + Agent 流程排期，排除战斗集成）：**S2 加载链**（`story_arcs` / `story_levels` 提升运行时 active、剧情包「只加剧情」白名单在 Godot 侧生效、`story_mode.view`）→ **S4 运行时**（`data.story_mode` / `run.start story_level` / `StoryService` 泛化 / checkpoint 重试 / 存档 round-trip）→ **S5 UI**（主菜单模式入口 / 篇章选关 / 简报结算 / 关卡内 HUD / 失败二选一）→ **S3 首发 1 关内容** → **SNModMaker 直接添加格式化剧情关卡**（复用 Schema / 校验 / 打包；编辑器体量膨胀时拆分模块，把剧情地图编辑器抽离为独立页面）。契约见 [STORY_MODE.md](docs/design/STORY_MODE.md)
+- [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗；当前暂停，让位剧情模式
 
 ## Pending
 
@@ -17,7 +18,6 @@
 - [ ] 炮门舱段 port cassette：给明轮货轮 / 明轮客船 / 纵帆船（以及未来的船）提供“舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口”的适配模块，让 `SN_Weapon_CasemateGun` 能装到没有炮门的船上；同时解决空炮门的“暗腔”读感（当前是木制深色炮口板）
 - [ ] 铁甲舰 `SN_Ironclad_LOD1.glb` 随空炮门 LOD0 重建（当前 LOD1 仍是带炮旧件；LOD 切换未接线，暂不影响运行时）
 - [ ] 炮门 socket 内容镜像：`schemas/v2/hull.schema.json` 的 `hull_data` 新增可选 `gun_port_sockets` 数组并回填 Core `hulls.json`（供编辑器 / 装配器读内容，运行时仍以 GLB extras 为准）
-- [ ] 剧情模式（Story Mode）：**S1 数据契约已交付**（`story_arcs` / `story_levels` Schema 2.0 草案 + 内嵌固定地图 + 只加剧情白名单 + 示例包 `sdk/templates/story_pack_iron_tide/`）；下一步 **S2 加载链**：剧情包按内容模组加载、白名单校验、注册，`story_mode.view` 列出篇章与关卡；之后 S3 首发 1 关内容 → S4 运行时（`data.story_mode` / `run.start story_level` / checkpoint 重试）→ S5 UI → S6 档案 → S7 `SNStoryMaker/`（Node Web，复用 SNModMaker 的 Schema / 校验 / 打包）。首发固定主角、每关独立、奖励不影响自由模式（成就延后）；草案见 [STORY_MODE.md](docs/design/STORY_MODE.md)
 - [ ] 正式任务系统后续切片：Quest 奖励 / effects（`spawn_contract` 等）、任务发布点（酒馆 / 港务告示牌）、任务日志页；`quests` 内容类型与 `QuestService` 已随 C3 落地，契约见 [TASK_QUEST_SYSTEM.md](docs/design/TASK_QUEST_SYSTEM.md)
 - [ ] 势力 / 自由模式玩法：设计契约见 [FACTION_SYSTEM.md](docs/design/FACTION_SYSTEM.md)（Draft 0.1：名望与关系分离、6 港准入 + 通行许可证、港口 owner/特产/禁运/走私、委托发起方与关系条款、势力专属装备）；建议 P0 准入骨架 → P1 经济特色 → P2 条款与装备 → P3 自由模式内容/UI，待排期
 - [ ] 战斗后续接线：D1 已交付 6 类战斗内容 + `CombatOps` / `CombatService` / `combat.resolve|view|log`；剩余「航行遭遇接入（voyage 风险 → 遭遇表）」「敌舰可视化 / `combat_kit` 接入 ShipVisualAssembler」「舰队编成与 2v2」三项切片。`weapons` / `damage_types` / `combat_abilities` / `enemy_archetypes` / `encounter_tables` / `loot_tables` 均已 active 2.0，Core 已带 5+4+4+4+2+2 条内容；契约见 [WEAPON_CONTENT_SCHEMA.md](docs/design/WEAPON_CONTENT_SCHEMA.md) 与 [COMBAT_ARCHITECTURE_REVIEW.md](docs/specs/COMBAT_ARCHITECTURE_REVIEW.md)

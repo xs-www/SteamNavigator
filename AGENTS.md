@@ -16,6 +16,14 @@
 - 新增命令/查询必须经 `FrameworkApi` 注册，并补测试。
 - 数值改动先改 Core JSON（`dev_mods/core/content/`），不在框架里写死。
 
+## 估时与开发节奏
+
+- 本项目按「人类监督 + Agent 并行」的节奏开发，**不套用古典 sprint 估时**：不排 2–4 周迭代、不算故事点、不留整块缓冲日。
+- 估时单位是「人类监督会话」：一次监督内能完成并验收的垂直切片按 0.5–1 天计；多条 Agent 并行时按实际耗时（wall clock）算，不按人手叠加算。
+- 计划写清依赖、审查点与门禁（Godot 测试 / `gen_static_docs --check` / `check_content_schema_v2` / Node / CLI），不要用「第几天」当进度单位；返工按小时计。
+- Agent 能分钟级跑测试、批量改文件、跨多个文件重构，估时按「改动面 + 门禁成本」给，不按人工敲字速度给。
+- 默认交付当天可运行、可验收的纵向切片；完整功能（schema → 加载链 → 运行时 → UI → 编辑器）按天级交付，不要把切片摊到多周。
+
 ## 3D 建模
 
 - 3D 资产/建模任务走 [MODELING_WORKFLOW.md](docs/design/MODELING_WORKFLOW.md) + Blender MCP（`execute_blender_code` / `look`）链路。
