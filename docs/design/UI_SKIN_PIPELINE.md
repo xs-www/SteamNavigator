@@ -146,10 +146,16 @@ SNSkin.icon_rect(id, 24.0)        # 直接可用的 TextureRect
 
 30 个业务图标（`icons/`）+ 4 个派生复选框图标（`check_*`，由 `checkbox_empty` 底 + `action_confirm` 勾派生，theme 直接引用文件，不进 `skin.json` 业务图标表）。
 
-已接线位置：顶部 HUD 资源 chip、7 个导航页 + 海图、侧牌设施、船厂 7 类分类与三个操作页签、菜单/结算/委托/补给/遗迹等行动按钮。
+已接线位置：顶部 HUD 资源 chip、已发布导航页（总览 / 市场 / 委托 / 船厂 / 酒馆）+ 海图、侧牌设施、船厂 7 类分类与三个操作页签、菜单/结算/委托/补给/遗迹等行动按钮。
+
+内容侧调用：同一套 30 枚图标也复制进 Core 包（`dev_mods/core/assets/icons/ui/*.png`）并登记为 `icon.ui.<id>` 资源键，内容 JSON / 事件 / 后续系统可直接写 `information.texture: "icon.ui.nav_market"` 或 `AssetService.find_key("icon.ui.nav_market")`；Core 副本与运行图标由 `test_mod_loading::test_core_registers_the_ui_icon_set` 逐字节守同步（见 [ASSET_MAP.md](ASSET_MAP.md)「UI 图标资源键」）。
+
+> 2026-10-26：基地 / 贸易 / 遗迹三个未发布系统不再出现在玩家导航
+> （`main.gd` 的 `HIDDEN_NAV_SCREENS`），下表仍保留给内部页面（截图 / 未来重新发布）
+> 的图标语义参考；遗迹属于航行探索玩法，后续应在探索侧接入而非港口导航。
 
 已知缺口（需要美术后补，当前用语义近似 id）：
-- 导航：总览 → `status_anchor`、基地 → `shipyard_hull`、自动贸易 → `status_route`、遗迹 → `nav_chart`（与海图重复）。
+- 导航：总览 → `status_anchor`、基地 → `shipyard_hull`、自动贸易 → `status_route`、遗迹 → `nav_chart`（与海图重复；基地 / 贸易 / 遗迹入口当前隐藏）。
 - 船厂：utility → `shipyard_navigation`、weapons → `nav_shipyard`、misc → `nav_shipyard`。
 - 行动：购买/补满 → `action_confirm` 或 `resource_coins`、修复 → `action_add`、等待 → `status_time`；缺 repair/buy/sell/wait 专用图标。
 - 状态：风险等级用 `status_warning` 近似；`status_weather/status_storm` 目前没有消费点（项目尚无天气系统）。

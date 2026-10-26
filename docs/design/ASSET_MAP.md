@@ -723,7 +723,23 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 | `model.material.sealing_compound` | `assets/models/materials/SN_Barrel.glb` | 密封剂 |
 | `banner.port.iron_harbor` | `assets/ports/iron_harbor_banner.png` | 铁港；作为贴图 |
 
-淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **121 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`；M0-5 新增 4 个船体 LOD1 键 `model.ship.*_lod1`，kit 26 件 LOD1 登记在 [kit_catalog.json](../../tools/modeling/kit_catalog.json) 而非 manifest）。
+淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **179 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`；M0-5 新增 4 个船体 LOD1 键 `model.ship.*_lod1`，kit 26 件 LOD1 登记在 [kit_catalog.json](../../tools/modeling/kit_catalog.json) 而非 manifest；另有本批 30 个 `icon.ui.*`，见下）。
+
+### UI 图标资源键（`icon.ui.*`，30 个）
+
+`docs/design/ui_icons_v1/` 的 30 枚 UI 图标（导航 / 资源 / 船厂分类 / 动作 / 状态）已从 `assets/ui/skin/sn_v1/icons/` 复制进 Core 包内，并登记为 `icon.ui.<id>` 资源键（`<id>` 与 [ui_icons_v1/manifest.json](ui_icons_v1/manifest.json) 的 `assets[].id` 一致）：
+
+| Core 资源键 | Core 包内路径 | 说明 |
+|---|---|---|
+| `icon.ui.nav_market` 等 7 个 `nav_*` | `assets/icons/ui/nav_*.png` | 市场 / 委托 / 船厂 / 补给 / 情报 / 海图 / 出航 |
+| `icon.ui.resource_coal` 等 5 个 `resource_*` | `assets/icons/ui/resource_*.png` | 煤 / 水 / 耐久 / 货物 / 金币 |
+| `icon.ui.shipyard_boiler` 等 6 个 `shipyard_*` | `assets/icons/ui/shipyard_*.png` | 船厂分类（船体 / 锅炉 / 货舱 / 导航 / 安全 / 客舱） |
+| `icon.ui.action_add` 等 3 个 `action_*` | `assets/icons/ui/action_*.png` | 增加 / 减少 / 确认 |
+| `icon.ui.status_anchor` 等 9 个 `status_*` | `assets/icons/ui/status_*.png` | 状态与航线 |
+
+- 用途：内容 JSON 可直接写 `"information.texture": "icon.ui.nav_market"`；运行时走 `AssetService.find_key("icon.ui.nav_market")` / `asset://core/icon.ui.nav_market`，与 `icon.item.*` 同一套解析规则。
+- 尺寸：Core 包内是 128×128（与运行皮肤图标同尺寸、同字节），UI 常规按 24–40 px 显示；母版 256×256 仍在 `docs/design/ui_icons_v1/icons/`。
+- 同步门禁：`test_mod_loading::test_core_registers_the_ui_icon_set` 会逐字节比较 Core 副本与 `assets/ui/skin/sn_v1/icons/`，母版重切 / 换肤后两边必须一起更新（`tools/ui/slice_ui_icons.gd` → `tools/build_ui_skin.ps1` → 同步复制到 `dev_mods/core/assets/icons/ui/`）。
 
 ## 为什么这样分
 

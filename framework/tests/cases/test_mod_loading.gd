@@ -6,6 +6,9 @@ extends TestCase
 ## `information.texture` must resolve to a real `Texture2D` through
 ## `AssetService` (imported `.ctex` or raw SVG via `ContentAssetLoader`), and the
 ## framework-wide `assets/ui/icons/item_fallback.svg` placeholder must load.
+## The 30 UI icons from `docs/design/ui_icons_v1/` are also registered as Core
+## `icon.ui.*` resources (`assets/icons/ui/*.png`) and kept byte-identical to the
+## runtime skin icons, so content / future systems can call them by bare key.
 
 const ITEM_ICON_LOCAL_IDS := [
 	"iron_ore",
@@ -172,6 +175,56 @@ func test_framework_item_fallback_icon_loads() -> void:
 	var texture: Texture2D = context.assets.load_texture(fallback_path)
 	assert_not_null(texture, "framework item fallback loads as Texture2D")
 	_assert_icon_texture(texture, "framework item fallback")
+
+
+## 用户要求：把 `docs/design/ui_icons_v1/` 这套 UI 图标也登记进 Core 资源键（`icon.ui.*`），
+## 方便后续内容 / UI 按 key 调用。这里同时守住「Core 副本 == 运行图标」：母版重切或换肤后
+## 两边必须同步，否则 Core 包内图标会悄悄和游戏内显示不一致。
+func test_core_registers_the_ui_icon_set() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var icon_manifest := JsonUtils.parse_file("res://docs/design/ui_icons_v1/manifest.json")
+	assert_true(bool(icon_manifest.get("ok", false)), "UI icon source manifest parses")
+	var icon_assets: Array = []
+	if bool(icon_manifest.get("ok", false)):
+		icon_assets = icon_manifest["value"].get("assets", [])
+	assert_eq(icon_assets.size(), 30, "the UI icon set declares 30 icons")
+	var manifest_parsed := JsonUtils.parse_file("res://dev_mods/core/manifest.json")
+	assert_true(bool(manifest_parsed.get("ok", false)), "core manifest parses")
+	var declared_assets: Dictionary = {}
+	if bool(manifest_parsed.get("ok", false)):
+		declared_assets = manifest_parsed["value"].get("assets", {})
+	var checked := 0
+	var declared_ui := 0
+	for key in declared_assets:
+		if String(key).begins_with("icon.ui."):
+			declared_ui += 1
+	for entry in icon_assets:
+		if not (entry is Dictionary):
+			continue
+		var icon_id := String((entry as Dictionary).get("id", ""))
+		var asset_key := "icon.ui.%s" % icon_id
+		var relative_path := "assets/icons/ui/%s.png" % icon_id
+		assert_eq(String(declared_assets.get(asset_key, "")), relative_path,
+			"%s is declared in Core manifest.assets" % asset_key)
+		var core_path := "res://dev_mods/core/%s" % relative_path
+		assert_true(FileAccess.file_exists(core_path), "%s Core copy exists" % asset_key)
+		assert_eq(context.assets.find_key(asset_key), "asset://core/%s" % asset_key,
+			"find_key resolves the bare key %s" % asset_key)
+		var texture: Texture2D = context.assets.load_texture("asset://core/%s" % asset_key)
+		assert_not_null(texture, "%s loads as Texture2D through AssetService" % asset_key)
+		_assert_icon_texture(texture, asset_key)
+		var skin_path := "res://assets/ui/skin/sn_v1/icons/%s.png" % icon_id
+		assert_true(FileAccess.file_exists(skin_path), "runtime skin icon exists for %s" % icon_id)
+		if FileAccess.file_exists(skin_path):
+			assert_eq(
+				FileAccess.get_file_as_bytes(core_path),
+				FileAccess.get_file_as_bytes(skin_path),
+				"%s Core copy matches the runtime skin icon bytes" % asset_key
+			)
+		checked += 1
+	assert_eq(checked, 30, "all 30 UI icons are registered through icon.ui.* keys")
+	assert_eq(declared_ui, 30, "Core declares exactly 30 icon.ui.* resources")
 
 
 ## Icons render on 128x128 canvases; anything smaller would be illegible in the
