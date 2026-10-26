@@ -1,0 +1,11 @@
+<!-- @static-doc
+作用：官网 favicon：黄铜罗盘 / 菱形边框，呼应游戏蒸汽朋克罗盘母题。
+@end-static-doc -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="蒸汽航海">
+  <rect width="64" height="64" fill="#050f11"/>
+  <rect x="4" y="4" width="56" height="56" fill="none" stroke="#c59a54" stroke-width="1.5"/>
+  <rect x="9" y="9" width="46" height="46" fill="none" stroke="#c59a54" stroke-width="0.6" opacity="0.55" transform="rotate(45 32 32)"/>
+  <circle cx="32" cy="32" r="15" fill="none" stroke="#e7cf9a" stroke-width="1.4"/>
+  <path d="M32 12 36.5 27.5 52 32 36.5 36.5 32 52 27.5 36.5 12 32 27.5 27.5Z" fill="#c59a54"/>
+  <circle cx="32" cy="32" r="3.2" fill="#050f11" stroke="#e7cf9a" stroke-width="1"/>
+</svg>

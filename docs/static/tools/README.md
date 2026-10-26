@@ -29,8 +29,11 @@
 | `godot/capture_story_tutorial.gd` | 阶段 4.5.1 新手剧情框架的真实渲染截图工具（窗口模式）。开一局教程局 | [查看](./godot/capture_story_tutorial.gd.md) |
 | `godot/capture_task_tracker.gd` | 阶段 4.6 Phase A「任务追踪聚合」真实渲染截图工具（窗口模式）。用普通 | [查看](./godot/capture_task_tracker.gd.md) |
 | `godot/capture_voyage_presentation.gd` | 航行演出（海图系统阶段 3）的真实渲染截图工具。窗口模式挂载真正的 | [查看](./godot/capture_voyage_presentation.gd.md) |
-| `godot/measure_port_stage.gd` | PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与三个站位（market/harbor/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。 | [查看](./godot/measure_port_stage.gd.md) |
+| `godot/measure_port_stage.gd` | PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与舞台 `station_ids()` 的全部站位（当前 market/harbor/shipyard/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。 | [查看](./godot/measure_port_stage.gd.md) |
+| `godot/perf_cpu_probe.gd` | CPU 侧性能取证探针（headless）：启动链路分阶段耗时、`run.start` worldgen | [查看](./godot/perf_cpu_probe.gd.md) |
+| `godot/perf_probe.gd` | 渲染侧性能测量工具（真实窗口渲染，非 headless）。加载 Core → 实例化真实 shell → 逐页导航并采样帧时间/Performance 监视器，输出 JSON + 控制台表格到 `.design/perf/`，用于量化「像素数 / MSAA / 3D 舞台 vs 2D UI」各自的成本结构。 | [查看](./godot/perf_probe.gd.md) |
 | `godot/preview_voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**实机演示**：窗口模式下自动开一局、发出真实的 | [查看](./godot/preview_voyage_presentation.gd.md) |
+| `godot/probe_export_assets.gd` | 发布路径资产探针（只读）：挂载真实发布包 `release/SteamNavigator/mods/core-1.0.0.snavmod.zip`（或 `-- --pack=<abs path>`），在 headless 下逐项验证「发布构建的模组内原始 PNG/GLB 能否被 `ContentAssetLoader` 加载」，并统计贴图尺寸/未压缩 RGBA 显存量、重复内容、加载耗时与缺失资产行为，输出机器可读 JSON。 | [查看](./godot/probe_export_assets.gd.md) |
 | `godot/verify_crane_materials.gd` | 四台起重机 GLB 的**共享贴图运行时验收**（只读）：外部贴图 URI 解析、 | [查看](./godot/verify_crane_materials.gd.md) |
 | `godot/verify_cranes.gd` | 四台起重机 GLB 在 Godot 侧的导入验收（只读）：尺寸 / 三角面 / 材质 / 贴地。 | [查看](./godot/verify_cranes.gd.md) |
 | `godot/verify_harbor_diorama.gd` | 港口样片验收（只读）：场景可加载、新浮船 SN_Schooner_Fame 在场景且旧船已移除、无星条旗、水面使用自定义着色器、浮船随波运动、未接入主场景。 | [查看](./godot/verify_harbor_diorama.gd.md) |

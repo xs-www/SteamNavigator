@@ -11,6 +11,7 @@
 | 跑起来 / 跑测试 / 打包 | 本文件的「快速开始」「打包 Core 模组」 |
 | 了解当前做到哪、最近交付了什么 | [docs/design/PROJECT_STATUS.md](docs/design/PROJECT_STATUS.md)、[todo.md](todo.md) |
 | 了解版本变更 | [CHANGELOG.md](CHANGELOG.md) |
+| 看 / 改游戏官网 | [website/README.md](website/README.md)、[docs/design/WEBSITE.md](docs/design/WEBSITE.md) |
 | 改代码前定位文件 / 契约 | [docs/static/README.md](docs/static/README.md)（静态代码文档） |
 | 改内容、类型或 Schema | [content_types.json](content_types.json)、[ENTITY_CONTRACT_V2.md](docs/design/ENTITY_CONTRACT_V2.md)、[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) |
 | 改世界/战役运行时 | [WORLD_SCHEMA_V2_RUNTIME.md](docs/design/WORLD_SCHEMA_V2_RUNTIME.md)、[FULL_GAME_ROADMAP.md](docs/design/FULL_GAME_ROADMAP.md) |

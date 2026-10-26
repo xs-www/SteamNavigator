@@ -52,6 +52,7 @@ const MODULE_PATHS = [
   "tools",
   "SNBattleSim",
   "SNModMaker",
+  "website",
 ];
 
 // Generated bundles are reproduced from schemas/ and dev_mods/core; they are
@@ -164,13 +165,16 @@ export function extractSymbols(relativePath, text) {
 }
 
 function stripStaticDocComment(line) {
-  const value = line.trimStart();
-  if (/^\/\//.test(value)) return value.replace(/^\/\/\/?\s?/, "").trimEnd();
-  if (/^#/.test(value)) return value.replace(/^#{1,3}\s?/, "").trimEnd();
-  if (/^;/.test(value)) return value.replace(/^;\s?/, "").trimEnd();
-  if (/^<!--/.test(value)) return value.replace(/^<!--\s?/, "").replace(/\s*-->$/, "").trimEnd();
-  if (/^\/\*/.test(value)) return value.replace(/^\/\*+\s?/, "").replace(/\s*\*\/$/, "").trimEnd();
-  if (/^\*/.test(value)) return value.replace(/^\*\s?/, "").replace(/\s*\*\/$/, "").trimEnd();
+  let value = line.trimStart();
+  if (/^\/\//.test(value)) value = value.replace(/^\/\/\/?\s?/, "");
+  else if (/^#/.test(value)) value = value.replace(/^#{1,3}\s?/, "");
+  else if (/^;/.test(value)) value = value.replace(/^;\s?/, "");
+  else if (/^<!--/.test(value)) value = value.replace(/^<!--\s?/, "");
+  else if (/^\/\*/.test(value)) value = value.replace(/^\/\*+\s?/, "");
+  else if (/^\*/.test(value)) value = value.replace(/^\*\s?/, "");
+  // Comment terminators may sit on the same line as `@end-static-doc`, e.g.
+  // `@end-static-doc */` in CSS or `@end-static-doc -->` in HTML/Markdown.
+  value = value.replace(/\s*\*\/$/, "").replace(/\s*-->$/, "");
   return value.trimEnd();
 }
 
@@ -190,7 +194,9 @@ function parseStaticDocFragment(lines, source) {
 }
 
 export function extractStaticDoc(relativePath, text) {
-  const lines = text.split(/\r?\n/);
+  // Windows PowerShell scripts need a UTF-8 BOM to be parsed correctly, so the
+  // generated HTML/JS/Markdown readers must tolerate one before the first line.
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/);
   let start = -1;
   for (let index = 0; index < Math.min(lines.length, 120); index += 1) {
     if (stripStaticDocComment(lines[index]) === "@static-doc") {
@@ -482,6 +488,7 @@ function renderRootReadme(docRoot, generatedAt, commit) {
   l0.push("- 内容 CLI：[content.mjs](SNModMaker/tools/content.mjs.md)（agent 无头增删改内容）");
   l0.push("- 容器部署：[docker-compose.yml](docker-compose.yml.md)、[Dockerfile](SNModMaker/Dockerfile.md)（数据在容器卷，配合 tailscale serve）");
   l0.push("- 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)");
+  l0.push("- 游戏官网：[website](website/README.md)（静态站点：首页 / 游戏信息 / 百科 / 开发日志 / 下载）");
   l0.push("");
   l0.push("## 模块索引");
   l0.push("");
@@ -498,7 +505,8 @@ function renderRootReadme(docRoot, generatedAt, commit) {
   l0.push("      → ContentCompiler（Schema/注册/Patch）→ CrossReferenceValidator");
   l0.push("      → CoreCompletenessChecker → RegistryHub.freeze → FrameworkApi");
   l0.push("");
-  l0.push("新局：CommandBus(run.start) → RunFactory → MapGenerator + MarketOps + NPC");
+  l0.push("新局：CommandBus(run.start) → CampaignFactory → WorldGenerator.generate_chart（唯一海图世界）");
+  l0.push("      → ChartWorldProjection.from_chart（world.ports/routes）→ MarketOps + NPC");
   l0.push("      → ContractOps(主线 1) → GameState 提交 → autosave");
   l0.push("");
   l0.push("航行：voyage.preview → VoyageCalculator → voyage.start → VoyageService");

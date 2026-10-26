@@ -282,32 +282,6 @@ export const FILE_DOCS = {
     ]
   },
 
-  "framework/application/command_bus.gd": {
-    role: "命令执行器：在 GameState 深拷贝上运行用例，成功才提交并发布领域事件。",
-    contracts: [
-      "处理器签名 `(params: Dictionary, context) -> Result envelope`。",
-      "失败时丢弃工作副本，原始 GameState 与哈希保持不变。",
-      "提交后按顺序发布 `{type, payload}` 事件；结果可请求自动存档。",
-      "保留最近 200 条执行日志（命令、成功、错误码、耗时）。"
-    ],
-    l2: {
-      "execute(command_name, params)": [
-        "克隆 `context.state` 并临时替换，处理器对工作副本的修改不会泄漏到事务外。",
-        "成功时用 `replace_with()` 写回原对象，保持外部引用有效；随后发布事件并可选 autosave。",
-        "未知命令、无 context、非法返回值都转换为统一 Result.fail。"
-      ]
-    }
-  },
-
-  "framework/application/query_bus.gd": {
-    role: "只读查询执行器：给处理器临时克隆的 GameState，返回 ViewModel。",
-    contracts: [
-      "查询失败返回结构化 Result，不用 null 混淆“无数据”和“错误”。",
-      "处理器返回普通 Dictionary；若没有 `ok` 字段则自动包装为成功。",
-      "查询不得依赖副作用；克隆是隔离意外写入的兜底。"
-    ]
-  },
-
   "framework/application/domain_event_bus.gd": {
     role: "已提交领域事件的 envelope、历史与订阅信号。",
     contracts: [
@@ -1247,7 +1221,7 @@ export const FILE_DOCS = {
   },
 
   "framework/ui/stages/port_stage.gd": {
-    role: "固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 船厂 / 补给是同一港区里的四个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建；船厂站位正对干船坞/吊架设施，供改装页把蓝图与操作坞画在 3D 舞台上。全程序化 + 内容模组 GLB，无外部框架贴图。",
+    role: "固定 3/4 长焦港口舞台，也是一座连续港区：`_ready` 一次建静态层（L0 暖色 sky + 双层水面 + 160 m 桩基码头 + L1 兜底 painted backdrop + L6 前景框 + L7 3 组蒸汽粒子 + 相机），`bind()` 只重建 `_content` 下的数据层：L1 banner 背板、L2 双深度带剪影（仅无 banner 且无 town kit）、L2b 港口街坊 town kit（按 size/density 28/47/63 件）、站前道具（每站 5/8/11 件）、L3 设施、L5 玩家船、L7 雾带；随后把设施 + 街坊 + 站前道具 + 玩家船静态合批。市场 / 港务 / 船厂 / 补给是同一港区里的四个相邻站位，切换页面只平移镜头并把玩家船开到对应泊位（`focus_station()`），世界不重建；船厂站位正对干船坞/吊架设施，供改装页把蓝图与操作坞画在 3D 舞台上。门面（`landmark_path` 成功实例化）模式下只保留航站楼、水/码头、12 件小装饰与 3 艘氛围小艇，但**玩家船照常挂载**（缩放 0.75、泊位 z=6）。全程序化 + 内容模组 GLB，无外部框架贴图。",
     dependencies: ["LocationStage", "StageKit", "ContentAssetLoader"],
     contracts: [
       "bind ViewModel 字段全部可选：`port.{id,size,facilities,banner_path,palette,facility_visuals,town_visuals,landmark_path}` 与 `ship.{hull_model_path,hull_tier}`；`facility_visuals` / `town_visuals` 也可放在根层。",
@@ -1269,7 +1243,7 @@ export const FILE_DOCS = {
       "只读访问器：`foreground_frame()`、`atmosphere_particle_systems()`（1..3，当前固定 3）、`atmosphere_layers()`（有 banner 2 / 无 banner 3）、`skyline_building_count()`（无 banner 7/10/13，有 banner 0）、`skyline_crane_count()`（2/2/3）、`town_prop_count()`（按 density 28/47/63，无 town 时为 0）、`town_blockout_count()`、`town_density()`、`painted_backdrop_layer_count()`（无 banner 3 / 有 banner 0）、`batch_stats()`（facilities/town 与 ship 的 batches、mesh/surface 前后计数、`ship_fallback`）、`ship_foam_bounds()`（批处理前捕获的船体 AABB）；`has_backdrop()` 语义仍只表示 banner。站位查询：`station_ids()`、`current_station()`、`current_station_framing()`、`station_camera_pose(id, framing)`、`station_ship_position(id)`、`station_ship_yaw(id)`、`is_station_transitioning()`、`camera_position()`、`camera_target()`、`camera_shift_x()`、`ship_x()`、`station_ship_mooring_x()`、`station_prop_count()`。",
       "L6 `foreground_frame()` 始终存在：3 根深色 unshaded 梁（吊臂 0.30 / 钢缆 0.12 / 桅杆 0.18 m）从左上角入镜，用 `_screen_point(u, v, depth)` 钉在固定 16:9 画幅；限定 u<0.24 / v<0.45，不遮挡 HUD、设施招牌与热点标签，不投阴影。",
       "L7 大气：常驻 3 个 `GPUParticles3D`（ShipSteam / QuaySteam / ShoreSteam，16–22 粒、3.4–4.6 s、低 alpha 暖灰 + 程序化 radial `GradientTexture2D`）；雾带 billboard 有 banner 2 层 / 无 banner 3 层，`port.id` hash 决定正弦漂移相位；宿主 `process_mode` 停更时粒子与雾带一起停。",
-      "预算目标 ≤120 draws / ≤60k tris；窗口实测（`tools/godot/measure_port_stage.gd`，含已合并玩家船）preview **63 draws / 47,604 tris**、sparse **56 / 38,150**、market **57 / 47,604**、harbor **63 / 47,604**、supply **61 / 47,604**（三站位均 ≤120 / ≤60k）。`batch_stats()` 报告批处理前后 mesh/surface 计数。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop。",
+      "预算目标 ≤120 draws / ≤60k tris；窗口实测（`tools/godot/measure_port_stage.gd`，1440×900、gl_compatibility、含已合并玩家船）：门面四站位 **96 draws / 83,514 tris**（加船前 85 / 70,142；玩家船合批 7 batches、32→7 mesh / 90→7 surface），常规 sparse 港 **67 / 63,774**。文档旧的 preview 63/47,604、sparse 56/38,150 等读数来自 terminal 接入前；sparse 的 60 draws 则是门面模式隐藏 `_atmosphere_root`/前景框后常规港区未恢复造成的偏低读数，已随门面可见性回退修复。draw calls 全部 ≤120；tris 超 60k 的构成是 landmark terminal 自身 59,450 tri + 玩家船装配 13,372 tri，属门面模式独有的既有预算问题（建议 terminal LOD1 或按门面重设预算）。`batch_stats()` 报告批处理前后 mesh/surface 计数。官方内容目前只有铁港一张 banner，其余港口走 painted backdrop。",
       "码头是薄甲板桩基栈桥（不是实心箱体）：160 m 连续甲板（`DOCK_SIZE` 160×0.6×12）+ 19 根入水木桩 + 桩帽、纵向横梁与甲板边梁，系缆桩每 12 m 一组、煤气灯沿前景 7 根；远景岸线底座 500×1.3×110 把镜头内的水面切边藏起来。",
       "`port.size` ∈ small/medium/large → 设施组整体 0.9/1.0/1.15（`SIZE_SCALE`），只缩放设施层，不缩放船与码头。",
       "`facility_anchors()` 返回设施 id → 世界坐标；`facility_screen_anchor()` 用舞台相机投影并按 viewport 尺寸归一化到 0..1（缺席或未投影时返回 ZERO）；`hotspot_anchors()` 同 `facility_anchors()`。",
@@ -1277,6 +1251,7 @@ export const FILE_DOCS = {
       "`request_portal(facility)` 只发 `portal_requested`；`has_visual()` 恒 true（程序化舞台无资产也可绘制）。",
       "切片 5（ShipVisualAssembler）：`_rebuild_ship()` 优先按 `ship.visual` 调用 `ShipVisualAssembler.assemble(plan, _ship_root)` 装配玩家船（hull + rig_kit + 武器）；计划 hull 加载失败或无计划（旧存档 / 旧 ViewModel）走原 `hull_model_path`→`hull_tier` 回退链。",
       "装配后照旧 `ship_visual_is_rigid()` + `_batch_ship_visual()`（opaque 静态网格可烘进 `ShipBatches`）；新增只读 `ship_assembly_report()` / `ship_rig_report()`，合批后报告里的节点引用失效、字符串字段仍可读。",
+      "门面模式（玩家反馈 #5）：`_minimal_stage` 由 `_create_landmark_visual()` 是否成功实例化决定（不再只看 `landmark_path` 字符串），landmark 缺失/损坏时回退完整港区（含玩家船）；`_rebuild_ship()` 不再在门面模式 early-return，玩家船照常挂载并按 `MINIMAL_SHIP_SCALE=0.75` 缩放、泊位 `MINIMAL_STAGE_BERTH_Z=6`（market/harbor/supply 保持「站位中心 −13.5」、shipyard 14.5），`_sync_station_mooring()` 在 bind 换布局时先重算泊位；`MINIMAL_STAGE_BOATS`（2 rowboat + 1 cargo_lighter）复用 town kit 挂载并随静态合批；ShipSteam 保留并锚到缩放后船顶，Quay/ShoreSteam、前景框与手绘远景隐藏，切回常规港区时全部恢复。",
       "表现层：不读 GameState / QueryBus / CommandBus；所有资产路径已在 ViewModel 中解析。"
     ],
     l2: {
@@ -2567,6 +2542,17 @@ export const MODULES = {
       "`tools/content.mjs` 是无头 CLI，与网页端共用 `js/store.js` / `js/validate.js`；写回用 `tools/content_json.mjs` 保源编辑，写前按 SHA-256 检测并发修改。"
     ]
   },
+  "website": {
+    intro: "游戏官网静态站点：首页、游戏信息、游戏百科、开发日志与下载；百科数据由 Core 内容生成，官网图片来自游戏画面裁切与压缩。",
+    contracts: [
+      "零依赖、无构建步骤、无 CDN / 外部字体；本地预览 `node website/tools/serve.mjs`，生产环境交给任意静态托管。",
+      "首页禁止出现开发 / 调试 / 测试 / 版本号 / GitHub / Godot / 模组等信息；版本与构建信息只允许出现在下载页与开发日志页。",
+      "下载页只使用真实 GitHub Release 资产；发版后同步下载页版本、日期、体积与链接，并更新开发日志。",
+      "百科数据由 `website/tools/build-wiki-data.mjs` 从 `dev_mods/core` 生成，页面不得手改 `assets/data/wiki-data.js` 或展示 `core:` ID。",
+      "图片必须裁掉调试 UI 与开发者署名，来源、裁切与体积记录在 `website/assets/img/MANIFEST.md`。",
+      "页面在无 JS 时仍可阅读；`prefers-reduced-motion` 下关闭动画。"
+    ]
+  },
   "dev_scenes": {
     intro: "独立 3D 样片与舞台预览场景（不接入主流程）：港口水面/浮船样片与 PortStage 港口舞台预览，用于验证水面着色器、GLB 资产拼接与固定机位构图。",
     contracts: [
@@ -2682,6 +2668,14 @@ export const GROUPED_ROLES = {
   "SNModMaker/exports/README.md": "本地导出目录说明：ZIP 命名与忽略规则。",
   "SNModMaker/.dockerignore": "Docker 构建上下文过滤：排除本地 mods/、exports/ 与 Docker 自身文件。",
   "SNModMaker/js/schema-bundle.js": "自动生成：嵌入 `/schemas/*.schema.json`。",
-  "SNModMaker/js/core-index.js": "自动生成：Core 定义、内容与双语本地化索引。"
+  "SNModMaker/js/core-index.js": "自动生成：Core 定义、内容与双语本地化索引。",
+  "website/.gdignore": "阻止 Godot 导入官网静态目录。",
+  "website/.env.example": "本地部署配置示例：Cloudflare Tunnel token 与宿主机端口；真实 `.env` 已被 .gitignore 忽略。",
+  "website/favicon.svg": "官网 favicon：黄铜罗盘与菱形边框，呼应游戏罗盘母题。",
+  "website/assets/img": "官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。",
+  "website/assets/css": "官网设计系统与全站样式（token、组件、响应式、动效降级）。",
+  "website/assets/js": "官网交互脚本：导航抽屉、滚动揭示、图片灯箱、百科渲染与搜索。",
+  "website/assets/data": "官网百科数据：由 `website/tools/build-wiki-data.mjs` 从 Core 内容生成，禁止手改。",
+  "website/tools": "官网工具：零依赖本地预览服务器与百科数据生成器。"
 
 };

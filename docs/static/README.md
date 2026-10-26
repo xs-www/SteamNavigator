@@ -19,6 +19,7 @@
 - 内容 CLI：[content.mjs](SNModMaker/tools/content.mjs.md)（agent 无头增删改内容）
 - 容器部署：[docker-compose.yml](docker-compose.yml.md)、[Dockerfile](SNModMaker/Dockerfile.md)（数据在容器卷，配合 tailscale serve）
 - 本地美术原型：[`.design` 美术与交互原型](design-prototype.md)
+- 游戏官网：[website](website/README.md)（静态站点：首页 / 游戏信息 / 百科 / 开发日志 / 下载）
 
 ## 模块索引
 
@@ -40,6 +41,7 @@
 | [`tools`](tools/README.md) | PowerShell 辅助脚本、Godot 验收 / 截图脚本、建模工单 / 参数化生成器与静态文档生成器。 |
 | [`SNBattleSim`](SNBattleSim/README.md) | 独立 2D 舰队战斗规则试验台：验证固定船体、多武器、视野/战争迷雾、直射/炮击/侧弦齐射、货船护航与用户自定义武器。 |
 | [`SNModMaker`](SNModMaker/README.md) | 零依赖网页端模组制作器：原生 HTML/CSS/JS，从仓库 Schema 与 Core 索引生成表单、校验并打包模组。 |
+| [`website`](website/README.md) | 游戏官网静态站点：首页、游戏信息、游戏百科、开发日志与下载；百科数据由 Core 内容生成，官网图片来自游戏画面裁切与压缩。 |
 
 ## 主要数据流
 
@@ -48,7 +50,8 @@
       → ContentCompiler（Schema/注册/Patch）→ CrossReferenceValidator
       → CoreCompletenessChecker → RegistryHub.freeze → FrameworkApi
 
-新局：CommandBus(run.start) → RunFactory → MapGenerator + MarketOps + NPC
+新局：CommandBus(run.start) → CampaignFactory → WorldGenerator.generate_chart（唯一海图世界）
+      → ChartWorldProjection.from_chart（world.ports/routes）→ MarketOps + NPC
       → ContractOps(主线 1) → GameState 提交 → autosave
 
 航行：voyage.preview → VoyageCalculator → voyage.start → VoyageService
@@ -73,8 +76,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-24T07:55:07.378Z
-- 生成 commit：`013754a`
+- 生成时间：2026-10-26T11:03:29.923Z
+- 生成 commit：`ce2831e`
 - 模式：`compact`；规则版本：`3.0`
 - 更新方式：在源码头部维护 `@static-doc` 注释，运行 `node tools/gen_static_docs.mjs`；无注释格式使用 `docs/static_headers/<源码路径>.md` sidecar。
 - 检查方式：`node tools/gen_static_docs.mjs --check`；旧的 `tools/static_docs_data.mjs` 仅作为尚未迁移文件的兼容层。

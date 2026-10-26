@@ -44,3 +44,8 @@ SNBattleSim/user_data/*.tmp
 
 # Agent worktrees / local coordination (never project content)
 .agents/
+
+# Website deployment secrets
+website/.env
+website/.env.*
+!website/.env.example

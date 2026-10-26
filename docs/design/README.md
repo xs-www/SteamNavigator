@@ -6,6 +6,7 @@
 - [PROJECT_STATUS.md](PROJECT_STATUS.md) — 当前实现状态与最近交付的详细清单（从 README 拆出，按需读取）
 - [CORE_CONTENT.md](CORE_CONTENT.md) — MVP Core 内容与数值概览（真源仍是 `dev_mods/core/content/`）
 - [KNOWN_LIMITS.md](KNOWN_LIMITS.md) — 已知边界与暂缓项（判断需求是否已实现前先读）
+- [RUNTIME_PERF_REPORT.md](RUNTIME_PERF_REPORT.md) — 运行时性能与闪退取证报告（dev.3 exe 实测：交互整页重建 0.38 s、3D 舞台固定画布 + 强制 4× MSAA、退出阶段 0xC0000005；含 P0/P1 整改清单与测试者取证包）
 - [CORE_MECHANICS_PHASE1.md](CORE_MECHANICS_PHASE1.md) — 核心机制补全 Phase 1：模块状态实际影响性能、船厂武器购买/装配、损伤与维修回归
 - [LUA_MODDING_SDK.md](LUA_MODDING_SDK.md) — Lua 可执行模组 SDK 架构与实施规范（Draft 0.1；沙箱 / 权限 / API / 确定性 / 发布门禁；尚未实现）
 - [BASE_SYSTEM.md](BASE_SYSTEM.md) — Phase D3 基地系统（5 类 active 2.0、`data.base`、命令/查询、tick 生产与最小 UI）
@@ -16,6 +17,7 @@
 - [LUA_SDK_S0_TEST_MATRIX.md](LUA_SDK_S0_TEST_MATRIX.md) — Lua SDK S0-3/S0-4：测试矩阵 v0.2（83 条 TC、L0–L3 分级、TM 44/44、INV 28/28、API 20/20 覆盖、9 条阻断项全绿、S1/S2/S3 退出判定与 CI 门禁）
 - [2.5D_STAGE_PLAN.md](2.5D_STAGE_PLAN.md) — 2.5D 固定舞台升级方案（阶段 1 持续落地中）
 - [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) — 正式版航海图系统设计；阶段 1–3 已实现，后续阶段仍在本文件迭代
+- [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md) — 航线解锁系统（2026-10-26 已实现）：物理完全图 + 运行时 `unlocked_route_keys` 名册、委托/剧情/酒馆三种解锁来源、航行门禁与查询/UI 契约
 - [EXPLORATION_SYSTEM.md](EXPLORATION_SYSTEM.md) — 海图阶段 4 探索系统实现契约（4.1/4.2 已实现；4.3 体验修正的 8 条反馈、决策与分片计划见 §10，待实现）
 - [STORY_TUTORIAL.md](STORY_TUTORIAL.md) — 阶段 4.5 新手剧情 / 教学系统实现契约（全部 Implemented；Phase A 任务追踪见 TASK_QUEST_SYSTEM.md）
 - [STORY_MODE.md](STORY_MODE.md) — 剧情模式设计草案（Draft 5：只加剧情的模组数据包（多关）+ 内嵌固定地图 + 任务线 + 四类能力 + 仓库根目录 SNStoryMaker 编辑器；S1 数据契约已交付，S2 起做加载链）
@@ -38,3 +40,4 @@
 - [UI_SKIN_PIPELINE.md](UI_SKIN_PIPELINE.md) — 外部贴图皮肤管线 V1：图集→运行纹理/Theme 生成、SNSkin 契约、换贴图流程、图标语义与已知缺口
 - [MARKET_UI_REFACTOR.md](MARKET_UI_REFACTOR.md) — 市场界面重构 V1：图标直接交互（左键 +1 / 右键清空 / 拖拽买卖）、左背包 + 中 3D + 右市场布局、`market.view` 与 `trade.buy` destination / `trade.sell` source 契约、SVG 占位图标管线
 - [UI_SCREEN_PROTOTYPES_V1.md](UI_SCREEN_PROTOTYPES_V1.md) — 总览、市场、委托、船厂、补给、情报、海图/出航、抵达结算八张页面级视觉原型
+- [WEBSITE.md](WEBSITE.md) — 官网设计契约与实现记录：信息架构、视觉 token、图片槽位、百科数据格式、首页红线与验收（已实现于 `website/`）
