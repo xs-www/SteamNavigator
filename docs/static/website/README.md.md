@@ -8,6 +8,8 @@
 - 站点零依赖、无构建步骤；预览用 `node website/tools/serve.mjs`（同时提供本地 `/api/telemetry/*` 接收端）。
 - 首页禁止开发 / 调试信息；版本信息只允许出现在下载页与开发日志页。
 - `assets/data/wiki-data.js` 为生成物，不得手改；图片说明见 `assets/img/MANIFEST.md`。
+- `assets/data/release-data.js` 为生成物（GitHub Releases → 版本 / 日期 / 大小 / 下载直链），不得手改；
+下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充。
 - 生产为两个镜像：nginx alpine 静态站（非 root / 8080）+ node 22 游玩数据接收端（非 root / 8090 / `/data` 数据卷）；
 可选 `telemetry-dashboard` 看板镜像（非 root / 8091 / 只读数据卷，`--profile dashboard`）。
 - Compose 默认限制静态站 32 MB、接收端 64 MB，只把网站端口绑定到 `127.0.0.1`，公网入口交给 Cloudflare Tunnel；

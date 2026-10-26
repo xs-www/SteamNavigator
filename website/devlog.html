@@ -5,7 +5,9 @@
   作用：开发日志页：版本时间线、已交付系统与下一阶段方向；允许出现版本号与开发状态。
   
   ## 契约与约束
-  - 按时间倒序维护条目；新版本发布时同步页头「最新版本 / 最近更新」。
+  - 按时间倒序维护条目；页头「最新版本 / 最近更新」由 `assets/data/release-data.js`（GitHub Releases 生成）
+    + `assets/js/release.js` 自动填充，`data-release="tag|date"` 是契约，静态文案是 fallback。
+  - 时间线条目仍由人工维护（发布说明的叙事内容不自动抓取）。
   - 只写对玩家有意义的变更，不粘贴内部测试或构建流水账。
   @end-static-doc -->
   <meta charset="utf-8">
@@ -79,8 +81,8 @@
         <h1>开发日志</h1>
         <p class="page-hero__lead">记录已交付的系统、正在改动的内容与下一步计划。版本号与时间只用于沟通，最终内容仍可能调整。</p>
         <div class="page-hero__meta">
-          <span class="chip"><b>最新版本</b> v0.2.0-dev.3</span>
-          <span class="chip"><b>最近更新</b> 2026-10-24</span>
+          <span class="chip"><b>最新版本</b> <span data-release="tag">v0.2.0-dev.3</span></span>
+          <span class="chip"><b>最近更新</b> <span data-release="date">2026-10-24</span></span>
           <span class="chip"><b>阶段</b> 公开开发中</span>
         </div>
       </div>
@@ -277,5 +279,7 @@
   </footer>
 
   <script src="assets/js/site.js" defer></script>
+  <script src="assets/data/release-data.js" defer></script>
+  <script src="assets/js/release.js" defer></script>
 </body>
 </html>

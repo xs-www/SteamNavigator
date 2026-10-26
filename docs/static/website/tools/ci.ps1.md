@@ -9,7 +9,10 @@
 - 冒烟容器必须使用与生产一致的约束：read-only rootfs、32 MB 内存、0.25 CPU、丢弃 capabilities。
 - 冒烟覆盖 `/healthz`、首页、游戏信息、百科、CSS、404、gzip 与缓存头；任一项失败则不部署。
 - 部署使用 `website/docker-compose.yml`，只更新 `website` 服务；Cloudflare Tunnel 另行启动。
-- 不修改站点内容，不触碰 `dev_mods/`；可从任意工作目录运行。
+- 构建前先跑 `node website/tools/build-release-data.mjs`：从 GitHub Releases API 刷新版本数据
+  （下载页 / 开发日志页的版本号、日期、大小、直链），网络失败时保留上一次生成的文件；
+  `-SkipReleaseData` 可跳过（离线构建）。
+- 不修改站点内容（除生成数据外），不触碰 `dev_mods/`；可从任意工作目录运行。
 
 ## 重点逻辑
 ### 先测后部署

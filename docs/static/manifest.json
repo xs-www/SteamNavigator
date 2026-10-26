@@ -1,19 +1,19 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T21:56:40.877Z",
-  "commit": "d316d97",
+  "generated_at": "2026-10-26T22:01:35.116Z",
+  "commit": "089dc2b",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1275,
-    "documented": 511,
+    "sources": 1278,
+    "documented": 514,
     "grouped": 764
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "901e9edce1cf26bd8e43a0b7476de915b7ba18bf643d2df87cebe21494d66ed9",
+      "sha256": "b225da6f743be834bd4a906044a508f4e1d41381136a249a6b9961de5a6c2915",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
@@ -6532,7 +6532,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "f1fa72e687c3a8bfb0b3da0baeda344978f5ba22f116bbef25a56dc51894aa5b",
+      "sha256": "233ede1a43ea10987c7eccd8721a7424001814bae3185f55e0fd5ea7a28f4c13",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6588,7 +6588,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "6acd0ff05befaa6f545de2e1315ba48d9619d8ee8e204aadbda4e7a1513940ca",
+      "sha256": "3f34bd08befc184495212697e0a74594dc045473623de3e33cdba0114e34c12d",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -8183,7 +8183,7 @@
     },
     {
       "source": "website/README.md",
-      "sha256": "7c7080e750516f5fa0eb35cce69e3b0c6557ab167e7dbd7cd2ae149d90b31ff6",
+      "sha256": "0135d1f21a36a72d52f3493afc9ed00517c8f5fce544ebbb979cd8f5cf8d50d5",
       "doc": "docs/static/website/README.md.md",
       "status": "documented"
     },
@@ -8306,6 +8306,12 @@
       "group": "docs/static/website/README.md"
     },
     {
+      "source": "website/assets/js/release.js",
+      "sha256": "2f907c70f18076eb0f685a17fc3304721db9de29692490a3cb145abc07d0140e",
+      "doc": "docs/static/website/assets/js/release.js.md",
+      "status": "documented"
+    },
+    {
       "source": "website/assets/js/site.js",
       "sha256": "21b586ffc0fddbc7e149f2ae146910c499e630f86fa4c49a178d1672dbd8bc78",
       "doc": "docs/static/website/assets/js/site.js.md",
@@ -8343,7 +8349,7 @@
     },
     {
       "source": "website/devlog.html",
-      "sha256": "9f6772ce70331e1667ee9e587f1d94ab7a6a850c24d9fa19bcb5a90f8bb187c4",
+      "sha256": "a33bddaf166ef3c94af5dc1447460eeadb927c87fa2a50187d3fa9f6346da95a",
       "doc": "docs/static/website/devlog.html.md",
       "status": "documented"
     },
@@ -8355,7 +8361,7 @@
     },
     {
       "source": "website/download.html",
-      "sha256": "51d1345bf1a50364bcf62e3716ecdf8ac4bde0c7b637d0461b50c0a894df4790",
+      "sha256": "fa557422576125fba64bd28b88f66932dd20b116e764d9f130c8298742fcdee9",
       "doc": "docs/static/website/download.html.md",
       "status": "documented"
     },
@@ -8384,6 +8390,12 @@
       "status": "documented"
     },
     {
+      "source": "website/tests/release-data.test.mjs",
+      "sha256": "3a3287aa0c5e42ee6e4620f7c43a8db5469affd456534a6987d3a72c28aaae85",
+      "doc": "docs/static/website/tests/release-data.test.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "website/tests/telemetry-dashboard.test.mjs",
       "sha256": "37dae8116508d35d0340de29dda043243a152b1686d3bb388e46118a96f0a788",
       "doc": "docs/static/website/tests/telemetry-dashboard.test.mjs.md",
@@ -8396,6 +8408,12 @@
       "status": "documented"
     },
     {
+      "source": "website/tools/build-release-data.mjs",
+      "sha256": "451214f05956223bb19370dd785971b56d3dca265190424fb761fbd4070e71a0",
+      "doc": "docs/static/website/tools/build-release-data.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "website/tools/build-wiki-data.mjs",
       "sha256": "5886048282dc3065256d5adf34a93e20765e54946764c83f4774816cfac1e168",
       "doc": "docs/static/website/tools/build-wiki-data.mjs.md",
@@ -8403,7 +8421,7 @@
     },
     {
       "source": "website/tools/ci.ps1",
-      "sha256": "d39e17e66fdc9001555eb9e8fc8abe39ffa4203af7681153b9111a69922a8a06",
+      "sha256": "8a04ad07edc205ff1f5e6c96c0d8d1e3e23da95479313fec692b52cdbd4dcd6b",
       "doc": "docs/static/website/tools/ci.ps1.md",
       "status": "documented"
     },

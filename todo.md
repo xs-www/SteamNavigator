@@ -68,3 +68,5 @@
 ## Recently Completed
 
 - 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
+
+- 官网版本数据自动同步（2026-10-27）：用户反馈「官网最新游戏版本不是从 GitHub 自动获取」。①**生成器**：新增 `website/tools/build-release-data.mjs`，调 GitHub Releases API（可选 `GITHUB_TOKEN` 提高限流）生成 `website/assets/data/release-data.js`（`latest` / `stable` / 平台直链 / 字节数 / 日期，使用 `browser_download_url`）；网络失败保留上一次生成文件，`--check` 校验数据是否落后、`--strict` 才失败。②**前端**：新增 `website/assets/js/release.js`，下载页 / 开发日志页用 `data-release` / `data-release-link` 属性自动填充版本号、发布日期、大小、下载与校验链接；首页仍不出现版本，静态文案仅作无 JS fallback。③**自动时机**：`website/tools/ci.ps1` 构建镜像前自动刷新（`-SkipReleaseData` 可跳过），新增 `.github/workflows/website-release-data.yml` 在 Release 发布后自动生成并提交数据文件。④**验证**：`node --test website/tests/release-data.test.mjs` 5/5；`--check` 对真实 GitHub 数据通过；Chrome headless 渲染确认下载页 Linux 大小由静态 62 MB 变为 GitHub 实际 61 MB、开发日志页日期由 10-24 变为 Release 日期 10-22（证明 JS 已消费生成数据）；`gen_static_docs --check` 全绿。契约见 [WEBSITE.md](docs/design/WEBSITE.md) §2/§7。

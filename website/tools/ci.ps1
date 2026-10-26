@@ -6,7 +6,10 @@
 # - 冒烟容器必须使用与生产一致的约束：read-only rootfs、32 MB 内存、0.25 CPU、丢弃 capabilities。
 # - 冒烟覆盖 `/healthz`、首页、游戏信息、百科、CSS、404、gzip 与缓存头；任一项失败则不部署。
 # - 部署使用 `website/docker-compose.yml`，只更新 `website` 服务；Cloudflare Tunnel 另行启动。
-# - 不修改站点内容，不触碰 `dev_mods/`；可从任意工作目录运行。
+# - 构建前先跑 `node website/tools/build-release-data.mjs`：从 GitHub Releases API 刷新版本数据
+#   （下载页 / 开发日志页的版本号、日期、大小、直链），网络失败时保留上一次生成的文件；
+#   `-SkipReleaseData` 可跳过（离线构建）。
+# - 不修改站点内容（除生成数据外），不触碰 `dev_mods/`；可从任意工作目录运行。
 #
 # ## 重点逻辑
 # ### 先测后部署
@@ -20,7 +23,8 @@
 param(
     [int]$SmokePort = 18080,
     [switch]$SkipSmoke,
-    [switch]$SkipDeploy
+    [switch]$SkipDeploy,
+    [switch]$SkipReleaseData
 )
 
 $ErrorActionPreference = "Stop"
@@ -68,6 +72,14 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Set-Location $Root
+
+if (-not $SkipReleaseData) {
+    Write-Host "==> 同步 GitHub 最新 Release 版本数据（网站版本号 / 下载链接）" -ForegroundColor Cyan
+    & node website/tools/build-release-data.mjs
+    if ($LASTEXITCODE -ne 0) {
+        throw "release data generation failed (exit $LASTEXITCODE)；可加 -SkipReleaseData 跳过"
+    }
+}
 
 Write-Host "==> 构建镜像 $Image" -ForegroundColor Cyan
 Invoke-Docker -Arguments @("build", "-f", "website/deploy/Dockerfile", "-t", $Image, "website")

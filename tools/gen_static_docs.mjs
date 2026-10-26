@@ -56,13 +56,15 @@ const MODULE_PATHS = [
 ];
 
 // Generated bundles are reproduced from schemas/ and dev_mods/core; they are
-// intentionally excluded from per-file docs and from the manifest.
+// intentionally excluded from per-file docs and from the manifest. The website
+// release data is generated from the GitHub Releases API at deploy time.
 const SKIP_SOURCES = new Set([
   "SNModMaker/js/schema-bundle.js",
   "SNModMaker/js/core-index.js",
   "SNModMaker/js/content-types.js",
   "SNModMaker/mods/.gitignore",
   "SNModMaker/exports/.gitignore",
+  "website/assets/data/release-data.js",
 ]);
 
 const MODULE_OF = (source) => {

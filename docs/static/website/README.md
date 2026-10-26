@@ -26,6 +26,7 @@
 | `assets/img/ship-paddle.jpg` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
 | `assets/img/ship-schooner.jpg` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
 | `assets/img/shipyard-ui.jpg` | 官网图片资产：游戏画面裁切、压缩与质检结果；来源与裁切记录在 `website/assets/img/MANIFEST.md`。 | 本页 |
+| `assets/js/release.js` | 官网版本信息填充脚本：读取 `assets/data/release-data.js`（由 `tools/build-release-data.mjs` 从 GitHub Releases 生成）， | [查看](./assets/js/release.js.md) |
 | `assets/js/site.js` | 官网全站交互（导航抽屉、滚动状态、滚动揭示、图片灯箱、页脚年份、Hero 视差）。 | [查看](./assets/js/site.js.md) |
 | `assets/js/wiki.js` | 渲染官网游戏百科：分类导航、实时搜索、条目卡片、结果计数与深链接。 | [查看](./assets/js/wiki.js.md) |
 | `deploy/Dockerfile` | 官网生产镜像：nginx alpine 运行静态页面，单 worker、非 root、8080 端口，面向低内存自托管与 Cloudflare Tunnel。 | [查看](./deploy/Dockerfile.md) |
@@ -39,8 +40,10 @@
 | `game.html` | 游戏信息页：世界观、玩法循环、核心特色、五座港口与三大势力，向玩家解释游戏内容。 | [查看](./game.html.md) |
 | `index.html` | 官网首页：Hero、玩法特色、世界港口、画面画廊与下载 CTA。首页禁止出现版本号、开发/调试、测试与构建信息。 | [查看](./index.html.md) |
 | `server/telemetry.mjs` | 游玩数据（telemetry）接收端：校验客户端上传的会话 JSON、按来源限流、写入会话文件与索引，并做 180 天保留清理。 | [查看](./server/telemetry.mjs.md) |
+| `tests/release-data.test.mjs` | 官网 Release 版本数据生成器（`tools/build-release-data.mjs`）的 Node 测试：覆盖 latest/stable 选择、 | [查看](./tests/release-data.test.mjs.md) |
 | `tests/telemetry-dashboard.test.mjs` | 本地游玩数据看板（`tools/telemetry_dashboard.mjs`）的 Node 测试（node:test，零第三方依赖）： | [查看](./tests/telemetry-dashboard.test.mjs.md) |
 | `tests/telemetry.test.mjs` | 游玩数据接收端 Node 测试（node:test，零第三方依赖）：覆盖 health、合法/非法上传、存储与索引、限流、令牌、方法/路径错误与 180 天保留清理。 | [查看](./tests/telemetry.test.mjs.md) |
+| `tools/build-release-data.mjs` | 从 GitHub Releases API 生成官网的版本数据文件 `website/assets/data/release-data.js`（`window.SN_RELEASE_DATA`）， | [查看](./tools/build-release-data.mjs.md) |
 | `tools/build-wiki-data.mjs` | 把 Core 内容 JSON（`dev_mods/core/content/*.json`）与中文文案（`dev_mods/core/localization/zh_CN.json`）编译成官网百科数据 `website/assets/data/wiki-data.js`。 | [查看](./tools/build-wiki-data.mjs.md) |
 | `tools/ci.ps1` | 官网本地 CI：构建生产镜像，以生产资源限制跑容器冒烟，通过后用 Docker Compose 部署到本机。 | [查看](./tools/ci.ps1.md) |
 | `tools/serve.mjs` | 零依赖本地静态预览服务器，用于开发与验收官网（不对公网部署）；同时挂载游玩数据接收端方便游戏端联调。 | [查看](./tools/serve.mjs.md) |

@@ -5,6 +5,8 @@
 - 站点零依赖、无构建步骤；预览用 `node website/tools/serve.mjs`（同时提供本地 `/api/telemetry/*` 接收端）。
 - 首页禁止开发 / 调试信息；版本信息只允许出现在下载页与开发日志页。
 - `assets/data/wiki-data.js` 为生成物，不得手改；图片说明见 `assets/img/MANIFEST.md`。
+- `assets/data/release-data.js` 为生成物（GitHub Releases → 版本 / 日期 / 大小 / 下载直链），不得手改；
+  下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充。
 - 生产为两个镜像：nginx alpine 静态站（非 root / 8080）+ node 22 游玩数据接收端（非 root / 8090 / `/data` 数据卷）；
   可选 `telemetry-dashboard` 看板镜像（非 root / 8091 / 只读数据卷，`--profile dashboard`）。
 - Compose 默认限制静态站 32 MB、接收端 64 MB，只把网站端口绑定到 `127.0.0.1`，公网入口交给 Cloudflare Tunnel；
@@ -49,12 +51,16 @@ website/
 │   ├── js/site.js      导航、滚动揭示、灯箱、页脚年份
 │   ├── js/wiki.js      百科渲染 / 搜索 / 分类 / 深链接
 │   ├── data/wiki-data.js  由 Core 内容生成的百科数据
+│   ├── js/release.js   版本信息填充（读取 release-data.js → 版本/日期/大小/链接）
 │   └── img/            官网图片（含 MANIFEST.md 来源记录）
+│   ├── data/release-data.js  由 GitHub Releases 生成的版本数据（勿手改）
 ├── tools/
 ├── server/
 │   └── telemetry.mjs   游玩数据接收端：路由 / 校验 / 限流 / 存储 / 保留清理
 ├── tests/
-│   └── telemetry.test.mjs  接收端 node:test 测试（零依赖）
+│   ├── telemetry.test.mjs  接收端 node:test 测试（零依赖）
+│   └── release-data.test.mjs  版本数据生成器 node:test 测试
+├── tools/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
 │   ├── serve.mjs            本地预览服务器（含 /api/telemetry/*）
 │   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
@@ -78,17 +84,32 @@ website/
 - 导航与页脚中的「开发日志」链接是允许的（用户明确要求该子页面存在）。
 - 修改页面后请按 `docs/design/WEBSITE.md` §1 的禁用词表自查首页。
 
-## 更新发布版本
+## 更新发布版本（自动）
 
-新版本发布后需要同步三处：
+官网的版本号、发布日期、文件大小与下载直链**不再手改**：由 `tools/build-release-data.mjs` 调 GitHub Releases API，
+生成 `assets/data/release-data.js`，下载页 / 开发日志页用 `assets/js/release.js` 自动填充。
 
-1. `download.html`：版本号、日期、文件大小、下载链接、校验文件链接（共 4 个 GitHub Release 链接 × 平台）。
-2. `devlog.html`：在 `.timeline` 顶部追加一条 `log-entry`，更新页头「最新版本 / 最近更新」。
-3. 首页不写版本，因此无需改动。
+```powershell
+# 手动刷新（通常不需要：ci.ps1 构建前会自动跑）
+node website/tools/build-release-data.mjs
 
-下载链接使用真实 GitHub Release 资产：
-`https://github.com/xs-www/SteamNavigator/releases/download/<tag>/<filename>`。
-发版后可运行 `pwsh` 或 `curl -I` 抽查链接是否为 200。
+# 校验仓库里的数据是否落后于 GitHub 最新 Release（CI / 发版前可用）
+node website/tools/build-release-data.mjs --check
+```
+
+- **自动时机**：`website/tools/ci.ps1` 在构建镜像前刷新（`-SkipReleaseData` 可跳过）；GitHub Actions
+  `.github/workflows/website-release-data.yml` 在 Release 发布后自动生成并提交数据文件。
+- **离线/API 失败**：保留上一次生成的文件（部署不中断）；只有 `--strict` 才会失败。
+- **测试**：`node --test website/tests/release-data.test.mjs`（latest/stable 选择、直链推导、陈旧检测与失败降级）。
+- **契约**：`latest` 取最新非 draft Release（官网目前发布预发布版本），`stable` 取最新正式版；
+  平台链接只使用该 Release 的真实 assets，缺失时页面保留静态 fallback。
+- 版本时间线（`devlog.html` 的 `.timeline` 条目）仍人工维护，只自动同步页头版本与日期；
+  首页不写版本，无需改动。
+
+```powershell
+# 抽查下载链接（替换为生成文件里的最新 tag/文件名）
+curl.exe -I https://github.com/xs-www/SteamNavigator/releases/download/<tag>/<filename>
+```
 
 ## 百科数据
 

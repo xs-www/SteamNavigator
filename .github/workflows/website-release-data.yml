@@ -1,0 +1,46 @@
+name: Website Release Data Sync
+
+# 每次 GitHub Release 发布后，自动把官网的版本数据（website/assets/data/release-data.js）
+# 同步到仓库默认分支，让下载页 / 开发日志页的版本号、日期、大小与下载链接保持最新。
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch || 'main' }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test release data generator
+        run: node --test website/tests/release-data.test.mjs
+
+      - name: Refresh release data from GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node website/tools/build-release-data.mjs --strict
+
+      - name: Commit updated release data
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- website/assets/data/release-data.js; then
+            echo "release data already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/assets/data/release-data.js
+          git commit -m "chore(website): sync latest release data [skip ci]"
+          git push

@@ -20,12 +20,13 @@
 
 - 游戏名：蒸汽航海 / Steam Navigator；类型：蒸汽朋克航海贸易模拟；单人。
 - 平台：Windows x64、Linux x64；语言：简体中文（可切换英文，站内只宣传中文）。
-- 最新公开版本：`v0.2.0-dev.3`（2026-10-22，预发布）。
-- 下载地址（真实）：
+- 最新公开版本与下载资产：**以 GitHub Releases 为准**，由 `website/tools/build-release-data.mjs` 调 GitHub Releases API 生成
+  `website/assets/data/release-data.js`，下载页与开发日志页用 `assets/js/release.js` 自动填充；HTML 里不再手写版本号。
   - 发布页：`https://github.com/xs-www/SteamNavigator/releases`
-  - Windows：`https://github.com/xs-www/SteamNavigator/releases/download/v0.2.0-dev.3/SteamNavigator-v0.2.0-dev.3-windows.zip`（约 71 MB）
-  - Linux：`https://github.com/xs-www/SteamNavigator/releases/download/v0.2.0-dev.3/SteamNavigator-v0.2.0-dev.3-linux.zip`（约 62 MB）
-  - 校验文件：`https://github.com/xs-www/SteamNavigator/releases/download/v0.2.0-dev.3/SHA256SUMS.txt`
+  - 当前生成结果（`v0.2.0-dev.3`，2026-10-22 预发布）：Windows ≈71 MB、Linux ≈62 MB、`SHA256SUMS.txt`；
+    具体直链、日期与字节数以生成文件为准。
+- 版本数据生成：`node website/tools/build-release-data.mjs`（`--check` 校验是否落后于 GitHub）。
+  - 部署钩子：`website/tools/ci.ps1` 构建镜像前自动刷新；`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交更新。
 - 世界观关键词：蒸汽朋克、群岛、浓雾、煤烟、黄铜与铸铁、港口城邦、商会 / 皇家海军 / 海盗团、遗迹与失落的航路。
 - 核心玩法关键词：动态行情与港口库存、造船厂与模块改装、程序生成海图与线索探索、锅炉策略、蒸汽舰炮与舰队、基地生产链、遗迹远征、自动贸易。
 - 五个港口模板：铁港、香料港、自由镇、渔村、玻璃港。
@@ -54,6 +55,7 @@ website/
 │   ├── js/wiki.js      百科渲染 / 搜索 / 分类筛选 / 深链接
 │   ├── data/wiki-data.js  由 tools/build-wiki-data.mjs 生成
 │   └── img/            官网图片（见 §5）
+│   ├── data/release-data.js  由 tools/build-release-data.mjs 从 GitHub Releases 生成（勿手改）
 ├── tools/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
 │   ├── serve.mjs            零依赖本地预览服务器（同时挂载 /api/telemetry/）
@@ -196,7 +198,7 @@ window.SN_WIKI_DATA = {
 
 1. 5 个页面均可在 `http://127.0.0.1:<port>/` 正常打开；无 404（图片 / CSS / JS）。
 2. 首页可见文本（去掉导航与页脚链接文字后）不含 §1 的禁用词；不含版本号。
-3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级。
+3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过，页面由生成数据填充）。
 4. 百科页：分类筛选、搜索、空结果提示、深链接（`#entry-id` / `#cat-id`）可用；条目数 ≥ 60。
 5. Chrome headless 截图 1440×900、1024×768、390×844 无横向滚动、无重叠、导航可用。
 6. 控制台无 JS 报错；图片均有 `alt`；按钮/链接键盘可达；灯箱可用 `Esc` 关闭。
@@ -204,11 +206,15 @@ window.SN_WIKI_DATA = {
 8. 站点无外部网络依赖（字体 / CDN / 统计脚本）；下载外链除外。
 
 9. 游玩数据接收端：`GET /api/telemetry/health` 返回 200；合法会话 `POST /api/telemetry/session` 返回 204 并在数据目录生成对应文件与 `index.ndjson`；`node --test website/tests/telemetry.test.mjs` 全绿。接收端契约见 [TELEMETRY.md](TELEMETRY.md)。
+10. 版本数据：`node --test website/tests/release-data.test.mjs` 全绿；`node website/tools/build-release-data.mjs --check` 通过；GitHub API 不可达时部署仍能用上一次生成的数据启动（脚本保留旧文件）。
+
 ## 8. 协作与写入边界
 
 - Lead：`website/*.html`、`website/assets/css/`、`website/assets/js/site.js`、`website/assets/js/wiki.js`、`website/README.md`、`website/deploy/`、`website/docker-compose.yml`、`docs/design/WEBSITE.md`。
 - art 任务：只写 `website/assets/img/`。
 - wiki 任务：只写 `website/tools/build-wiki-data.mjs`、`website/assets/data/`。
+- QA：只写 `tmp/website-qa/`。
+- 版本数据任务：只写 `website/tools/build-release-data.mjs`、`website/assets/data/release-data.js`、`website/assets/js/release.js`、`.github/workflows/website-release-data.yml` 与下载/开发日志页的数据属性；不手改生成文件。
 - QA：只写 `tmp/website-qa/`。
 - telemetry 任务：只写 `website/server/`、`website/tests/`、`website/deploy/Dockerfile.telemetry` 与本文档 §10 契约涉及的 nginx / compose / README 段落；契约先改 [TELEMETRY.md](TELEMETRY.md)。
 - 所有人不改 `dev_mods/`、`framework/`、`docs/static/`；站点目录加 `.gdignore`，避免 Godot 导入。
@@ -224,6 +230,8 @@ window.SN_WIKI_DATA = {
 - 本地 CI：`website/tools/ci.ps1` 在本机构建镜像、以生产同款限制跑容器冒烟，通过后 `docker compose up -d --build website` 直接部署；不推任何 registry。
 - Cloudflare：公网入口推荐 Cloudflare Tunnel；容器内 cloudflared 的 origin 填 `http://website:8080`，宿主机 cloudflared 填 `http://127.0.0.1:8088`。部署与缓存说明见 `website/README.md`。
 - 游玩数据接收端（2026-10-27）：`website/server/telemetry.mjs` + `website/deploy/Dockerfile.telemetry` + compose `telemetry` 服务 + nginx `/api/telemetry/` 反代；数据卷 `website-telemetry-data`（`/data`），保留 180 天。契约见 [TELEMETRY.md](TELEMETRY.md)。
+- 版本数据自动同步（2026-10-27）：`website/tools/build-release-data.mjs` 从 GitHub Releases API 生成 `assets/data/release-data.js`（latest / stable / 平台直链 / 大小 / 日期），下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充；`ci.ps1` 部署前刷新，`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交；网络失败保留旧数据。
+
 
 - 本地游玩数据看板（2026-10-27）：`website/tools/telemetry_dashboard.mjs` + `Dockerfile.dashboard` + compose `telemetry-dashboard`（`profiles: ["dashboard"]`，只发布到 `127.0.0.1:8091`），只读同一个数据卷；**不是官网页面**，不进入站点导航，也不随静态站发布。
 ## 10. 游玩数据接收端（Telemetry ingest）

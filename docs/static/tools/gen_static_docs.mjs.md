@@ -15,41 +15,41 @@
 | `RULE_VERSION` | L33 |
 | `STATIC_COPY_PAGES` | L34 |
 | `MODULE_PATHS` | L38 |
-| `SKIP_SOURCES` | L60 |
-| `MODULE_OF` | L68 |
-| `GROUP_README` | L77 |
-| `walk(dir, out = [])` | L80 |
-| `read(relativePath)` | L97 |
-| `sha256(relativePath)` | L101 |
-| `lineAt(text, index)` | L112 |
-| `extractSymbols(relativePath, text)` | L116 |
-| `stripStaticDocComment(line)` | L167 |
-| `parseStaticDocFragment(lines, source)` | L181 |
-| `extractStaticDoc(relativePath, text)` | L196 |
-| `readSidecarDoc(source)` | L217 |
-| `metadataFor(source)` | L225 |
-| `sourceTypeLabel(source)` | L243 |
-| `ensureDir(dirPath)` | L256 |
-| `writeDoc(docRoot, relativePath, content)` | L260 |
-| `perFileDoc(docRoot, source)` | L266 |
-| `fallbackRole(source)` | L326 |
-| `repoSources()` | L348 |
-| `moduleSources(modulePath)` | L363 |
-| `renderModuleReadme(docRoot, modulePath)` | L372 |
-| `moduleDescription(modulePath)` | L413 |
-| `collectSources()` | L417 |
-| `validateSidecars(sources)` | L428 |
-| `inputDigests(sources)` | L440 |
-| `assertInputsUnchanged(before)` | L450 |
-| `currentCommit()` | L458 |
-| `renderRootReadme(docRoot, generatedAt, commit)` | L468 |
-| `buildDocs(docRoot, options = {})` | L544 |
-| `fileDigests(root)` | L595 |
-| `compareDocTrees(expectedRoot, actualRoot)` | L605 |
-| `replaceDocsAtomically(tempRoot)` | L612 |
-| `baselineGenerationInfo()` | L628 |
-| `printHelp()` | L635 |
-| `main(args = process.argv.slice(2)` | L642 |
+| `SKIP_SOURCES` | L61 |
+| `MODULE_OF` | L70 |
+| `GROUP_README` | L79 |
+| `walk(dir, out = [])` | L82 |
+| `read(relativePath)` | L99 |
+| `sha256(relativePath)` | L103 |
+| `lineAt(text, index)` | L114 |
+| `extractSymbols(relativePath, text)` | L118 |
+| `stripStaticDocComment(line)` | L169 |
+| `parseStaticDocFragment(lines, source)` | L183 |
+| `extractStaticDoc(relativePath, text)` | L198 |
+| `readSidecarDoc(source)` | L219 |
+| `metadataFor(source)` | L227 |
+| `sourceTypeLabel(source)` | L245 |
+| `ensureDir(dirPath)` | L258 |
+| `writeDoc(docRoot, relativePath, content)` | L262 |
+| `perFileDoc(docRoot, source)` | L268 |
+| `fallbackRole(source)` | L328 |
+| `repoSources()` | L350 |
+| `moduleSources(modulePath)` | L365 |
+| `renderModuleReadme(docRoot, modulePath)` | L374 |
+| `moduleDescription(modulePath)` | L415 |
+| `collectSources()` | L419 |
+| `validateSidecars(sources)` | L430 |
+| `inputDigests(sources)` | L442 |
+| `assertInputsUnchanged(before)` | L452 |
+| `currentCommit()` | L460 |
+| `renderRootReadme(docRoot, generatedAt, commit)` | L470 |
+| `buildDocs(docRoot, options = {})` | L546 |
+| `fileDigests(root)` | L597 |
+| `compareDocTrees(expectedRoot, actualRoot)` | L607 |
+| `replaceDocsAtomically(tempRoot)` | L614 |
+| `baselineGenerationInfo()` | L630 |
+| `printHelp()` | L637 |
+| `main(args = process.argv.slice(2)` | L644 |
 
 ## 契约与约束
 - 新源码优先在前 120 行维护 `@static-doc`；不能写注释的格式使用 `docs/static_headers/<源码路径>.md`。
