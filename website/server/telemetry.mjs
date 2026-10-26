@@ -26,8 +26,10 @@
 //   `duration_seconds` 为有限数值。其它字段（commands / events / errors / run / mods）不校验内容，只做摘要计数。
 // ### 存储
 // - `<dataDir>/sessions/<接收日期 YYYY-MM-DD>/<session_id>.json`：紧凑 JSON，先写临时文件再 rename，同名覆盖（幂等）。
-// - 同目录 `index.ndjson`：每行一条摘要（session_id / received_at / game_version / duration_seconds /
-//   commands / errors / bytes）；append 用 Promise 队列串行，避免多请求并发时行交错。
+// - 同目录 `index.ndjson`：每行一条摘要（session_id / received_at / ended_at / game_version / framework_version /
+//   locale / os / duration_seconds / commands / failed_commands / events / errors / bytes / has_run / seed /
+//   port_id / money / victory）；append 用 Promise 队列串行，避免多请求并发时行交错。
+//   摘要供本地看板（`tools/telemetry_dashboard.mjs`）与服务端统计直接消费；字段增补保持向后兼容。
 // ### 限流
 // - 来源键取 `X-Forwarded-For` 第一段（nginx 写入），否则 socket 地址；每小时 120 次，滑动窗口按桶重置。
 // - 限流表超过 4096 条时顺手清理过期桶，避免长期运行内存增长。
@@ -366,11 +368,22 @@ export function createTelemetryHandler(options = {}) {
     const summary = {
       session_id: payload.session_id,
       received_at: receivedAt.toISOString(),
+      ended_at: typeof payload.ended_at === "string" ? payload.ended_at : "",
       game_version: typeof payload.game_version === "string" ? payload.game_version : "",
+      framework_version: typeof payload.framework_version === "string" ? payload.framework_version : "",
+      locale: typeof payload.locale === "string" ? payload.locale : "",
+      os: typeof payload.os === "string" ? payload.os : "",
       duration_seconds: payload.duration_seconds,
       commands: countCommands(payload),
+      failed_commands: isPlainObject(payload.run) && isFiniteNumber(payload.run.failed_commands) ? payload.run.failed_commands : 0,
+      events: Array.isArray(payload.events) ? payload.events.length : 0,
       errors: Array.isArray(payload.errors) ? payload.errors.length : 0,
       bytes: bodyBytes,
+      has_run: isPlainObject(payload.run) && payload.run.has_run === true,
+      seed: isPlainObject(payload.run) ? (payload.run.seed ?? null) : null,
+      port_id: isPlainObject(payload.run) && typeof payload.run.port_id === "string" ? payload.run.port_id : "",
+      money: isPlainObject(payload.run) ? (payload.run.money ?? null) : null,
+      victory: isPlainObject(payload.run) && payload.run.victory === true,
     };
     await appendIndexLine(dayDir, `${JSON.stringify(summary)}\n`);
     return { dayDir, targetFile, summary };

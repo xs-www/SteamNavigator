@@ -1,12 +1,14 @@
 <!-- @static-doc
-作用：官网使用说明：本地预览、目录结构、内容边界、版本更新清单、百科数据生成、游玩数据接收端联调与生产部署。
+作用：官网使用说明：本地预览、目录结构、内容边界、版本更新清单、百科数据生成、游玩数据接收端联调、本地数据看板与生产部署。
 
 ## 契约与约束
 - 站点零依赖、无构建步骤；预览用 `node website/tools/serve.mjs`（同时提供本地 `/api/telemetry/*` 接收端）。
 - 首页禁止开发 / 调试信息；版本信息只允许出现在下载页与开发日志页。
 - `assets/data/wiki-data.js` 为生成物，不得手改；图片说明见 `assets/img/MANIFEST.md`。
-- 生产为两个镜像：nginx alpine 静态站（非 root / 8080）+ node 22 游玩数据接收端（非 root / 8090 / `/data` 数据卷）。
-- Compose 默认限制静态站 32 MB、接收端 64 MB，只把网站端口绑定到 `127.0.0.1`，公网入口交给 Cloudflare Tunnel。
+- 生产为两个镜像：nginx alpine 静态站（非 root / 8080）+ node 22 游玩数据接收端（非 root / 8090 / `/data` 数据卷）；
+  可选 `telemetry-dashboard` 看板镜像（非 root / 8091 / 只读数据卷，`--profile dashboard`）。
+- Compose 默认限制静态站 32 MB、接收端 64 MB，只把网站端口绑定到 `127.0.0.1`，公网入口交给 Cloudflare Tunnel；
+  看板同样只绑定 `127.0.0.1:8091`，不是官网页面。
 - 游玩数据接收端契约是 `docs/design/TELEMETRY.md` §3/§4：不改 schema、路由、状态码与存储路径。
 @end-static-doc -->
 
@@ -56,12 +58,14 @@ website/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
 │   ├── serve.mjs            本地预览服务器（含 /api/telemetry/*）
 │   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
+│   ├── telemetry_dashboard.mjs  本地游玩数据看板（127.0.0.1:8091，只读）
 ├── deploy/
 │   ├── Dockerfile          nginx alpine 静态站镜像（非 root / 单 worker）
 │   ├── Dockerfile.telemetry  node 22 接收端镜像（非 root / 8090 / /data）
 │   └── nginx.conf          静态站 + /api/telemetry/ 反代配置
+│   ├── Dockerfile.dashboard  看板镜像（node 22 / 非 root / 8091 / 只读数据卷）
 ├── .data/telemetry/        本地接收端数据（gitignore，不入库）
-├── docker-compose.yml      静态站 + 接收端 + 可选 Cloudflare Tunnel
+├── docker-compose.yml      静态站 + 接收端 + 可选看板 / Cloudflare Tunnel
 ├── .env.example            Compose 变量与数据说明
 ├── .gdignore               阻止 Godot 导入站点目录
 └── README.md
@@ -161,12 +165,32 @@ website/.data/telemetry/sessions/2026-10-27/index.ndjson
 5. 本地接收端也能校验令牌：`$env:SN_TELEMETRY_TOKEN="dev-token"; node website/tools/serve.mjs`，
    请求时带 `-H "X-SN-Telemetry-Token: dev-token"`。
 
+### 查看数据（本地看板）
+
+看板是**本地工具**，不是官网页面、也不进入站点导航；默认只绑定 `127.0.0.1`，只读数据目录。
+
+```powershell
+# 本地预览数据（website/.data/telemetry/）
+node website/tools/telemetry_dashboard.mjs
+# 打开 http://127.0.0.1:8091/ ；换端口：--port 8092；换数据目录：--data-dir D:\backup\telemetry
+
+# 生产数据（只读挂载 compose 数据卷；只发布到 127.0.0.1:8091）
+cd website
+docker compose --profile dashboard up -d --build telemetry-dashboard
+# 同样打开 http://127.0.0.1:8091/
+```
+
+- 页面能力：会话列表（接收时间 / 版本 / 时长 / 命令 / 错误 / 字节）、日期筛选、条数上限、10 秒自动刷新、点击行查看完整 JSON。
+- 只读接口：`GET /api/sessions?limit=&date=`、`GET /api/sessions/<session_id>`；索引缺失时回退扫描 JSON；不写数据目录。
+- 停止看板：`docker compose --profile dashboard stop telemetry-dashboard`（不删除数据卷）。
+
 ### 测试
 
 ```powershell
-node --test website/tests/telemetry.test.mjs
+node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs
 node --check website/server/telemetry.mjs
 node --check website/tools/serve.mjs
+node --check website/tools/telemetry_dashboard.mjs
 ```
 
 测试用临时目录 + 随机端口，不碰 `website/.data/`、不需要 Docker。
@@ -177,6 +201,7 @@ Compose 同时起两个服务：
 
 - `website`：nginx 静态站，容器内 8080，只映射到 `127.0.0.1:8088`；`/api/telemetry/` 反代到接收端。
 - `telemetry`：Node 接收端，容器内 8090，**不映射宿主机端口**，只被 `website` 访问；`website` 等它 healthcheck 通过才启动。
+- `telemetry-dashboard`（可选，`--profile dashboard`）：看板容器，只读挂载同一个数据卷，只映射到 `127.0.0.1:8091`。
 - nginx：`location /api/telemetry/` → `http://telemetry:8090`（原样保留 URI、`client_max_body_size 1m`、只允许 GET/POST、关闭该 location 的 access_log 以免记录客户端 IP）。
 
 ```bash
@@ -354,7 +379,7 @@ Select-String -Path website/index.html -Pattern '开发|调试|测试|原型|MVP
 
 
 # 游玩数据接收端
-node --test website/tests/telemetry.test.mjs
+node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs
 curl.exe http://127.0.0.1:4173/api/telemetry/health
 浏览器检查：1440×900 / 1024×768 / 390×844 无横向滚动；百科搜索、分类、`#entry-*` / `#cat-*` 深链接可用；灯箱可用 Esc 关闭。
-接收端契约验收见 `docs/design/TELEMETRY.md` §6。
+接收端契约验收见 `docs/design/TELEMETRY.md` §6；本地看板打开 `http://127.0.0.1:8091/` 能看到列表与 JSON 详情。

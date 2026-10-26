@@ -225,6 +225,7 @@ window.SN_WIKI_DATA = {
 - Cloudflare：公网入口推荐 Cloudflare Tunnel；容器内 cloudflared 的 origin 填 `http://website:8080`，宿主机 cloudflared 填 `http://127.0.0.1:8088`。部署与缓存说明见 `website/README.md`。
 - 游玩数据接收端（2026-10-27）：`website/server/telemetry.mjs` + `website/deploy/Dockerfile.telemetry` + compose `telemetry` 服务 + nginx `/api/telemetry/` 反代；数据卷 `website-telemetry-data`（`/data`），保留 180 天。契约见 [TELEMETRY.md](TELEMETRY.md)。
 
+- 本地游玩数据看板（2026-10-27）：`website/tools/telemetry_dashboard.mjs` + `Dockerfile.dashboard` + compose `telemetry-dashboard`（`profiles: ["dashboard"]`，只发布到 `127.0.0.1:8091`），只读同一个数据卷；**不是官网页面**，不进入站点导航，也不随静态站发布。
 ## 10. 游玩数据接收端（Telemetry ingest）
 
 > 完整契约（载荷 schema、状态码、限流、保留、客户端行为）见 [TELEMETRY.md](TELEMETRY.md)；本节只约束官网侧边界。
@@ -234,3 +235,4 @@ window.SN_WIKI_DATA = {
 - 接收端不记录客户端 IP；数据写入数据卷的 `sessions/<YYYY-MM-DD>/`（单会话 JSON + `index.ndjson` 摘要），保留 180 天。
 - 本地预览 `website/tools/serve.mjs` 同样挂载该接口，数据写 `website/.data/telemetry/`（gitignore）；不带接收端也能单独部署静态页面。
 - 部署与备份（数据卷位置、令牌、保留期）说明维护在 `website/README.md`。
+- 查看数据的本地看板与官网解耦：`node website/tools/telemetry_dashboard.mjs`（默认 `127.0.0.1:8091`，读 `.data/telemetry/`）或 `docker compose --profile dashboard up -d`（只读挂载生产数据卷，同样只绑定 loopback）；看板不注册在站点导航 / 页脚，也不经过 nginx。

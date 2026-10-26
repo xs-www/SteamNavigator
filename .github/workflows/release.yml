@@ -93,12 +93,12 @@ jobs:
 
       # The official-site ingest endpoint is a public HTTP surface; its
       # validation, storage and retention rules are release-gated like the other
-      # Node tooling.
+      # Node tooling. The local dashboard shares the same on-disk format.
       - name: Run website telemetry tests
         shell: bash
         run: |
           set -euo pipefail
-          node --test website/tests/telemetry.test.mjs
+          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs
 
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB),

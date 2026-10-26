@@ -90,6 +90,44 @@ services:
       retries: 3
       start_period: 5s
 
+  # 本地「游玩数据看板」：只读挂载同一个遥测数据卷，默认只发布到宿主机 127.0.0.1:8091。
+  # 只在需要查看数据时启动：`docker compose --profile dashboard up -d`。
+  telemetry-dashboard:
+    image: ${TELEMETRY_DASHBOARD_IMAGE:-steam-navigator-telemetry-dashboard:local}
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.dashboard
+    container_name: steam-navigator-telemetry-dashboard
+    profiles: ["dashboard"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${TELEMETRY_DASHBOARD_PORT:-8091}:8091"
+    volumes:
+      - telemetry-data:/data:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=4m
+    mem_limit: 32m
+    mem_reservation: 8m
+    cpus: "0.1"
+    pids_limit: 32
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('node:http').get('http://127.0.0.1:8091/api/health',(res)=>process.exit(res.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     profiles: ["tunnel"]

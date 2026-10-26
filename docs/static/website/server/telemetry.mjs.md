@@ -8,40 +8,40 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `DEFAULT_PORT` | L49 |
-| `DEFAULT_DATA_DIR` | L50 |
-| `DEFAULT_MAX_BODY_BYTES` | L51 |
-| `DEFAULT_RATE_LIMIT_PER_HOUR` | L52 |
-| `DEFAULT_RETENTION_DAYS` | L53 |
-| `DEFAULT_CLEANUP_INTERVAL_MS` | L54 |
-| `RATE_WINDOW_MS` | L55 |
-| `RATE_BUCKET_PRUNE_THRESHOLD` | L56 |
-| `HEALTH_PATH` | L57 |
-| `SESSION_PATH` | L58 |
-| `DAY_PATTERN` | L59 |
-| `ISO_TIMESTAMP_PATTERN` | L60 |
-| `JSON_CONTENT_TYPE_PATTERN` | L61 |
-| `MILLIS_PER_DAY` | L62 |
-| `isPlainObject(value)` | L81 |
-| `isFiniteNumber(value)` | L85 |
-| `isIsoTimestamp(value)` | L89 |
-| `utcDayKey(date)` | L98 |
-| `startOfUtcDay(date)` | L103 |
-| `countCommands(payload)` | L107 |
-| `validateSessionPayload(payload)` | L117 |
-| `tokenMatches(provided, expected)` | L132 |
-| `clientRateKey(req)` | L141 |
-| `createRateLimiter(limitPerHour)` | L152 |
-| `readRequestBody(req, maxBytes)` | L181 |
-| `sendJson(res, statusCode, payload, extraHeaders = {})` | L216 |
-| `sendEmpty(res, statusCode, extraHeaders = {})` | L230 |
-| `defaultLogger(entry)` | L242 |
-| `cleanupOldSessions(options = {})` | L250 |
-| `createTelemetryHandler(options = {})` | L299 |
-| `appendIndexLine(dayDir, line)` | L332 |
-| `writeSession(payload, receivedAt, bodyBytes)` | L342 |
-| `maybeCleanup(nowMs)` | L379 |
-| `startServer(options = {})` | L521 |
+| `DEFAULT_PORT` | L51 |
+| `DEFAULT_DATA_DIR` | L52 |
+| `DEFAULT_MAX_BODY_BYTES` | L53 |
+| `DEFAULT_RATE_LIMIT_PER_HOUR` | L54 |
+| `DEFAULT_RETENTION_DAYS` | L55 |
+| `DEFAULT_CLEANUP_INTERVAL_MS` | L56 |
+| `RATE_WINDOW_MS` | L57 |
+| `RATE_BUCKET_PRUNE_THRESHOLD` | L58 |
+| `HEALTH_PATH` | L59 |
+| `SESSION_PATH` | L60 |
+| `DAY_PATTERN` | L61 |
+| `ISO_TIMESTAMP_PATTERN` | L62 |
+| `JSON_CONTENT_TYPE_PATTERN` | L63 |
+| `MILLIS_PER_DAY` | L64 |
+| `isPlainObject(value)` | L83 |
+| `isFiniteNumber(value)` | L87 |
+| `isIsoTimestamp(value)` | L91 |
+| `utcDayKey(date)` | L100 |
+| `startOfUtcDay(date)` | L105 |
+| `countCommands(payload)` | L109 |
+| `validateSessionPayload(payload)` | L119 |
+| `tokenMatches(provided, expected)` | L134 |
+| `clientRateKey(req)` | L143 |
+| `createRateLimiter(limitPerHour)` | L154 |
+| `readRequestBody(req, maxBytes)` | L183 |
+| `sendJson(res, statusCode, payload, extraHeaders = {})` | L218 |
+| `sendEmpty(res, statusCode, extraHeaders = {})` | L232 |
+| `defaultLogger(entry)` | L244 |
+| `cleanupOldSessions(options = {})` | L252 |
+| `createTelemetryHandler(options = {})` | L301 |
+| `appendIndexLine(dayDir, line)` | L334 |
+| `writeSession(payload, receivedAt, bodyBytes)` | L344 |
+| `maybeCleanup(nowMs)` | L392 |
+| `startServer(options = {})` | L534 |
 
 ## 契约与约束
 - 唯一契约：`docs/design/TELEMETRY.md` §3「上传协议」与 §4「官网接收端」；不改 schema、路由、状态码与存储路径。
@@ -68,8 +68,10 @@
   `duration_seconds` 为有限数值。其它字段（commands / events / errors / run / mods）不校验内容，只做摘要计数。
 ### 存储
 - `<dataDir>/sessions/<接收日期 YYYY-MM-DD>/<session_id>.json`：紧凑 JSON，先写临时文件再 rename，同名覆盖（幂等）。
-- 同目录 `index.ndjson`：每行一条摘要（session_id / received_at / game_version / duration_seconds /
-  commands / errors / bytes）；append 用 Promise 队列串行，避免多请求并发时行交错。
+- 同目录 `index.ndjson`：每行一条摘要（session_id / received_at / ended_at / game_version / framework_version /
+  locale / os / duration_seconds / commands / failed_commands / events / errors / bytes / has_run / seed /
+  port_id / money / victory）；append 用 Promise 队列串行，避免多请求并发时行交错。
+  摘要供本地看板（`tools/telemetry_dashboard.mjs`）与服务端统计直接消费；字段增补保持向后兼容。
 ### 限流
 - 来源键取 `X-Forwarded-For` 第一段（nginx 写入），否则 socket 地址；每小时 120 次，滑动窗口按桶重置。
 - 限流表超过 4096 条时顺手清理过期桶，避免长期运行内存增长。

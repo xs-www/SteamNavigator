@@ -121,11 +121,19 @@
 - 限流：按来源 IP 每小时 120 次，超出 `429`；不持久化 IP。
 - 存储（数据目录默认 `/data`，环境变量 `SN_TELEMETRY_DATA_DIR`）：
   - `sessions/<YYYY-MM-DD>/<session_id>.json`：原始载荷（紧凑 JSON）。
-  - `sessions/<YYYY-MM-DD>/index.ndjson`：每行一条摘要（`session_id`、`received_at`、`game_version`、`duration_seconds`、`commands`、`errors`、`bytes`），便于统计。
+  - `sessions/<YYYY-MM-DD>/index.ndjson`：每行一条摘要（`session_id`、`received_at`、`ended_at`、`game_version`、`framework_version`、`locale`、`os`、`duration_seconds`、`commands`、`failed_commands`、`events`、`errors`、`bytes`、`has_run`、`seed`、`port_id`、`money`、`victory`），供本地看板与后续统计直接消费；字段只增不改。
   - 保留 180 天：每小时至多一次惰性清理；写入失败返回 `500`，客户端下次重试。
 - 可选令牌：环境变量 `SN_TELEMETRY_TOKEN` 非空时要求 `X-SN-Telemetry-Token` 相等，否则 `401`。
 - 部署：`website/deploy/Dockerfile.telemetry`（`node:22-alpine`，非 root，端口 8090）+ `website/docker-compose.yml` 的 `telemetry` 服务（数据卷、只读根、64 MB / 0.5 CPU、healthcheck）；`website/deploy/nginx.conf` 把 `/api/telemetry/` 反代到 `http://telemetry:8090`（`client_max_body_size 1m`，其余静态行为不变）。
 - 本地：`node website/tools/serve.mjs` 同样提供 `/api/telemetry/*`（数据写 `website/.data/telemetry/`，已 gitignore），方便游戏端联调与自动测试。
+
+### 本地数据看板（运营查看，不在游戏官网里）
+
+- 代码：`website/tools/telemetry_dashboard.mjs`（零依赖 Node，单文件内联前端），**只绑定 `127.0.0.1`**，不是官网页面、不进入站点导航。
+- 本地预览数据：`node website/tools/telemetry_dashboard.mjs` → `http://127.0.0.1:8091/`（默认读 `website/.data/telemetry/`；`--data-dir` 可指向任意同结构目录）。
+- 生产数据：compose 的 `telemetry-dashboard` 服务（`profiles: ["dashboard"]`）只读挂载遥测数据卷，`docker compose --profile dashboard up -d` 后同样访问 `http://127.0.0.1:8091/`。
+- 只读接口：`GET /api/sessions?limit=&date=`（列表，`limit` 默认 100 上限 500，按 `received_at` 倒序）与 `GET /api/sessions/<session_id>`（完整载荷）；索引缺失时回退扫描 JSON；不写数据目录。
+- 安全：宿主机端口只发布到 `127.0.0.1`，不做登录（单人本地运维工具）；`session_id` / 日期参数按契约正则校验，拒绝路径穿越。
 
 ## 5. 代码落点与职责
 
@@ -141,8 +149,9 @@
 | `framework/localization/{zh_CN,en}.json` | `ui.menu.telemetry` / `_on` / `_off` / `_note`。 |
 | `website/server/telemetry.mjs` | 接收、校验、限流、存储、保留策略。 |
 | `website/tools/serve.mjs` | 本地预览挂载同一 handler。 |
-| `website/deploy/Dockerfile.telemetry`、`website/docker-compose.yml`、`website/deploy/nginx.conf` | 生产部署与反代。 |
-| `website/tests/telemetry.test.mjs` | 接收端 Node 测试。 |
+| `website/tools/telemetry_dashboard.mjs` | 本地看板（127.0.0.1:8091）：只读列表 / 详情，单文件内联前端。 |
+| `website/deploy/Dockerfile.telemetry`、`website/deploy/Dockerfile.dashboard`、`website/docker-compose.yml`、`website/deploy/nginx.conf` | 生产部署、本地看板容器与反代。 |
+| `website/tests/telemetry.test.mjs`、`website/tests/telemetry-dashboard.test.mjs` | 接收端 / 看板 Node 测试。 |
 | `framework/tests/cases/test_telemetry.gd` | 客户端记录/队列/设置测试（进 `test_runner.gd`）。 |
 
 ## 6. 验收标准
@@ -151,10 +160,11 @@
 2. 关闭状态下启动、游玩、退出：`user://telemetry/` 不产生 pending；命令/事件不进入缓冲。
 3. 开启状态下退出：`user://telemetry/pending/` 出现一份符合 §3 schema 的 JSON；再次启动联调（本地 `node website/tools/serve.mjs` + `telemetry_endpoint=http://127.0.0.1:4173/api/telemetry/session`）后文件被删除，`website/.data/telemetry/sessions/<日期>/` 出现对应文件与 `index.ndjson`。
 4. 官网不可达时退出不被阻塞超过 3 秒，pending 保留，下次启动重试。
-5. `node --test website/tests/telemetry.test.mjs` 全绿（校验、413、429、401、存储、health）。
+5. `node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs` 全绿（接收端校验/413/429/401/存储/health；看板列表/详情/过滤/404/405/422/只读）。
 6. `pwsh ./tools/test.ps1 -Suite telemetry` 与 `-Suite settings`、`-Suite ui_shell` 全绿。
 7. `node tools/gen_static_docs.mjs --check` 通过。
 8. `commands[].params` 只含 §3.4 白名单键的标量值：嵌套对象/数组/自由文本键不出现，字符串 ≤80，无参数的命令不写 `params` 字段。
+9. 本地看板：`node website/tools/telemetry_dashboard.mjs` 在 `127.0.0.1:8091` 打开页面，列表 / 日期筛选 / 单条 JSON 详情可用；`docker compose --profile dashboard up -d` 后同样可看生产数据卷。
 
 ## 7. 发布配置注入
 

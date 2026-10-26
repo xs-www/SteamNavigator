@@ -170,6 +170,12 @@ test("合法 POST 返回 204，会话文件与 index.ndjson 摘要落盘", async
     assert.equal(summary.commands, 1);
     assert.equal(summary.errors, 0);
     assert.equal(summary.bytes, Buffer.byteLength(JSON.stringify(payload)));
+    assert.equal(summary.locale, "zh_CN");
+    assert.equal(summary.os, "Windows");
+    assert.equal(summary.has_run, true);
+    assert.equal(summary.seed, 12345);
+    assert.equal(summary.failed_commands, 3);
+    assert.equal(summary.ended_at, payload.ended_at);
     assert.ok(!Number.isNaN(Date.parse(summary.received_at)), "received_at 应为 ISO 时间");
     assert.match(summary.received_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });

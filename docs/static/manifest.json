@@ -1,19 +1,19 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T21:50:16.452Z",
-  "commit": "4df4d6f",
+  "generated_at": "2026-10-26T21:56:40.877Z",
+  "commit": "d316d97",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1272,
-    "documented": 508,
+    "sources": 1275,
+    "documented": 511,
     "grouped": 764
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "84ad67153fcb9259969c5a8a56252a9006597b3dd9356898f95f1346bda1d965",
+      "sha256": "901e9edce1cf26bd8e43a0b7476de915b7ba18bf643d2df87cebe21494d66ed9",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
@@ -8169,7 +8169,7 @@
     },
     {
       "source": "website/.env.example",
-      "sha256": "b85bb27439786aa3402d0ca3723028ba6ba73fa4694dc385a085c18e7fc63a3f",
+      "sha256": "551718c7bd05d5d07fced8e96146bdca2127b88ee686a35c9a6b1453932b8a48",
       "doc": "docs/static/website/README.md",
       "status": "grouped",
       "group": "docs/static/website/README.md"
@@ -8183,7 +8183,7 @@
     },
     {
       "source": "website/README.md",
-      "sha256": "3fff632598d747be57629b77db8898f02993f839402763c2ca919fd01b9de9c9",
+      "sha256": "7c7080e750516f5fa0eb35cce69e3b0c6557ab167e7dbd7cd2ae149d90b31ff6",
       "doc": "docs/static/website/README.md.md",
       "status": "documented"
     },
@@ -8324,6 +8324,12 @@
       "status": "documented"
     },
     {
+      "source": "website/deploy/Dockerfile.dashboard",
+      "sha256": "8e4ad28a5288409b193ce7b54ccf2b68e8202f22cbfcc6e6e44bad5551f9af9d",
+      "doc": "docs/static/website/deploy/Dockerfile.dashboard.md",
+      "status": "documented"
+    },
+    {
       "source": "website/deploy/Dockerfile.telemetry",
       "sha256": "619458c89c68c7f2487e0ecf030b8c460697cc24247b2025e1ba99513933403f",
       "doc": "docs/static/website/deploy/Dockerfile.telemetry.md",
@@ -8343,7 +8349,7 @@
     },
     {
       "source": "website/docker-compose.yml",
-      "sha256": "8948be7e2c9e392689984b533145c9f785c937c025b9280d9fc98ab85da042ab",
+      "sha256": "2c62caccb48cdea2ac141e2b39f0708f59e2c3c3878e7a98ab061b08c0e5eeb4",
       "doc": "docs/static/website/docker-compose.yml.md",
       "status": "documented"
     },
@@ -8373,13 +8379,19 @@
     },
     {
       "source": "website/server/telemetry.mjs",
-      "sha256": "c6731edbc7421b56cb33c98faeff4bda2115082ed447a063b3bc31ffbc042f15",
+      "sha256": "79571356192335577d54865ec2185450ec531738d378f47ccc11d6844938305d",
       "doc": "docs/static/website/server/telemetry.mjs.md",
       "status": "documented"
     },
     {
+      "source": "website/tests/telemetry-dashboard.test.mjs",
+      "sha256": "37dae8116508d35d0340de29dda043243a152b1686d3bb388e46118a96f0a788",
+      "doc": "docs/static/website/tests/telemetry-dashboard.test.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "website/tests/telemetry.test.mjs",
-      "sha256": "20475bbe0756c8660edd4c64269b0f83b14ead173a355a048ce73be071346ce8",
+      "sha256": "4c1aae961c0daaa8e6c686dba29cf55a36930073fb69d5c0a21ae74530465bd8",
       "doc": "docs/static/website/tests/telemetry.test.mjs.md",
       "status": "documented"
     },
@@ -8399,6 +8411,12 @@
       "source": "website/tools/serve.mjs",
       "sha256": "0be8de5465ba1f4832d316e7591b51e73e7558f175572814f0adce5d926896c3",
       "doc": "docs/static/website/tools/serve.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tools/telemetry_dashboard.mjs",
+      "sha256": "f907344315872bf536d56210686eef52fbffcbf09a4978054009db30efe6ba94",
+      "doc": "docs/static/website/tools/telemetry_dashboard.mjs.md",
       "status": "documented"
     },
     {
