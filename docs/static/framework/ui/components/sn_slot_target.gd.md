@@ -9,16 +9,25 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNSlotTarget` | L1 |
-| `part_dropped (signal)` | L23 |
-| `slot_activated (signal)` | L24 |
-| `configure(slot_data: Dictionary) -> void` | L44 |
-| `set_compatible_hint(active: bool) -> void` | L64 |
+| `part_dropped (signal)` | L32 |
+| `slot_activated (signal)` | L33 |
+| `configure(slot_data: Dictionary) -> void` | L53 |
+| `set_compatible_hint(active: bool) -> void` | L73 |
 
 One refit slot chip in the SNShipView cutaway.
 
 Draws the slot title, the installed module (or 空), and accepts a dragged
 owned free module (SNPartRow payload, `kind = "ship_parts"`). The screen owns
 the command intent; this control only validates the module category and source.
+
+## 拖放载荷契约（2026-10-26 修复）
+- `_drop_data` 必须把**完整拖拽载荷**（`{kind:"ship_parts", part:{...}}`）原样
+  duplicate 后从 `part_dropped` 发出，不能只发内层 `part`：船厂页
+  `_on_slot_drop(payload, slot)` 的契约是按 `SNPartRow._get_drag_data()` 的载荷
+  形状解析 `payload.part`。只发内层 part 会让真实拖放在页面侧静默落空
+  （空槽安装 / 已装替换都不触发命令），而直接调用页面函数的测试发现不了。
+- `part_dropped(payload, slot)` → `SNShipView.slot_drop_requested` →
+  `ShipyardScreen._on_slot_drop` 全链路保持同一载荷形状。
 
 ## 外观来源（外部贴图 + SNSkin）
 - 槽位底板不再手搓 `StyleBoxFlat`：取 `SNSkin.style("panel_recess")`（仪表凹槽

@@ -1,6 +1,6 @@
 # `framework/ui/components/sn_item_tile.gd`
 
-> 作用：市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与待交易数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。
+> 作用：市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。
 
 - 类型：GDScript 源文件
 
@@ -9,17 +9,19 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNItemTile` | L1 |
-| `pending_changed (signal)` | L44 |
-| `TILE_MIN_SIZE` | L46 |
-| `ICON_HEIGHT` | L47 |
-| `DRAG_PREVIEW_ICON` | L48 |
-| `configure(data: Dictionary) -> void` | L80 |
-| `bind(data: Dictionary) -> void` | L99 |
-| `increment_pending() -> void` | L104 |
-| `clear_pending() -> void` | L115 |
-| `drag_payload() -> Dictionary` | L125 |
-| `icon_texture() -> Texture2D` | L136 |
-| `pending_badge() -> SNBadge` | L141 |
+| `pending_changed (signal)` | L51 |
+| `TILE_MIN_SIZE` | L53 |
+| `ICON_HEIGHT` | L54 |
+| `DRAG_PREVIEW_ICON` | L55 |
+| `BADGE_MODE_PENDING` | L58 |
+| `BADGE_MODE_REMAINING` | L59 |
+| `configure(data: Dictionary) -> void` | L95 |
+| `bind(data: Dictionary) -> void` | L116 |
+| `increment_pending() -> void` | L121 |
+| `clear_pending() -> void` | L132 |
+| `drag_payload() -> Dictionary` | L142 |
+| `icon_texture() -> Texture2D` | L153 |
+| `pending_badge() -> SNBadge` | L158 |
 
 One icon tile of the direct-manipulation market screen.
 
@@ -29,6 +31,12 @@ click bumps the pending amount **on release** (a drag also starts with a left
 press, so incrementing on press would double-count the dragged unit); right
 click clears it; dragging emits a copy of the configured payload with
 `amount = max(pending, 1)`.
+
+## 角标语义（badge_mode）
+- `pending`（默认，船舱 / 仓库格）：右上角 `×N` = 已选待交易数量，pending=0 时隐藏。
+- `remaining`（市场行情格）：右上角始终可见，纯数字 = `max(0, stock - pending)`，
+  即「点击购买后还剩多少」；玩家已选数量由光标幽灵 `SNCarryGhost` 的 `×N` 显示，
+  角标不再重复它。每 +1 立即刷新。
 
 ## 外观来源（外部贴图 + SNSkin）
 - 底板取 `SNSkin.style("panel_recess")`；悬停 / 有待交易数量时改用
@@ -42,7 +50,8 @@ click clears it; dragging emits a copy of the configured payload with
 
 ## 契约与约束
 - `configure()` 接收 `{title, subtitle, meta, icon: Texture2D, max_pending,
-  draggable, payload: Dictionary, locked?}`；`payload` 必须带顶层 `kind`。
+  draggable, payload: Dictionary, locked?, badge_mode?, stock?}`；`payload` 必须带顶层 `kind`。
+  `badge_mode` 缺省为 `"pending"`，旧调用方（船舱 / 仓库格）行为不变。
 - 委托货 / 不可交易行由 `draggable=false` + `locked=true` 表达，同时
   `max_pending=0`，左键与拖拽都无效。
 - 左键只在 **release** 时 +1；拖拽起手（press → `_get_drag_data`）不改变 pending，

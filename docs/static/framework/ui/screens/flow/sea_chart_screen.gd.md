@@ -9,21 +9,21 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartScreen` | L1 |
-| `close_requested (signal)` | L41 |
-| `clue_list_requested (signal)` | L43 |
-| `departure_requested (signal)` | L45 |
-| `departure_confirmed (signal)` | L47 |
-| `departure_cancelled (signal)` | L49 |
-| `departure_strategy_changed (signal)` | L51 |
-| `purchase_clue_requested (signal)` | L53 |
-| `investigate_requested (signal)` | L55 |
-| `PANEL_WIDTH` | L57 |
-| `VOYAGE_CONFIRM_SCRIPT` | L60 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L71 |
-| `get_chart() -> SNSeaChartView` | L78 |
-| `get_panel() -> SNSeaChartPanel` | L82 |
-| `is_departure_open() -> bool` | L87 |
-| `get_departure() -> Dictionary` | L91 |
+| `close_requested (signal)` | L43 |
+| `clue_list_requested (signal)` | L45 |
+| `departure_requested (signal)` | L47 |
+| `departure_confirmed (signal)` | L49 |
+| `departure_cancelled (signal)` | L51 |
+| `departure_strategy_changed (signal)` | L53 |
+| `purchase_clue_requested (signal)` | L55 |
+| `investigate_requested (signal)` | L57 |
+| `PANEL_WIDTH` | L59 |
+| `VOYAGE_CONFIRM_SCENE` | L63 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L74 |
+| `get_chart() -> SNSeaChartView` | L81 |
+| `get_panel() -> SNSeaChartPanel` | L85 |
+| `is_departure_open() -> bool` | L90 |
+| `get_departure() -> Dictionary` | L94 |
 
 左侧 `SNSeaChartView` 铺满、右侧 `SNSeaChartPanel`（320 px）展示选中港口/航线/线索，
 顶部章节标题 + 关闭按钮；出航时在页内叠加 `SNVoyageConfirm` 确认弹窗。
@@ -59,5 +59,7 @@
 - 节点名 `Header` / `ChartBody` / `ChartRow` / `ClueListButton` / `CloseButton` /
   `VoyageConfirm` 与 `PANEL_WIDTH = 320`、全窗 `VBox` 结构不变（test_sea_chart /
   test_ui_shell 按名字与最小宽度断言）。
+- 确认弹窗已场景化（P0，见 docs/specs/UI_SCENE_MIGRATION.md）：本页只负责
+  `sn_voyage_confirm.tscn` 的实例化、信号接线与 `bind()`，不构造弹窗内部节点。
 
 模块索引：[framework/ui](../../README.md)

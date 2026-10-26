@@ -8,59 +8,60 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI_THEME` | L125 |
-| `HARBOR_SIGN_SCRIPT` | L127 |
-| `MARKET_SCREEN_SCENE` | L128 |
-| `CARGO_HOLD_PANEL_SCRIPT` | L130 |
-| `ITEM_FALLBACK_ICON` | L132 |
-| `CARRY_GHOST_SCRIPT` | L135 |
-| `INTERACTION_HINT_SCRIPT` | L136 |
-| `CONTRACTS_SCREEN_SCENE` | L137 |
-| `SUPPLY_SCREEN_SCENE` | L138 |
-| `INTEL_SCREEN_SCENE` | L139 |
-| `OVERVIEW_SCREEN_SCENE` | L140 |
-| `SHIPYARD_SCREEN_SCENE` | L141 |
-| `BASE_SCREEN_SCENE` | L142 |
-| `AUTO_TRADE_SCREEN_SCENE` | L143 |
-| `RUINS_SCREEN_SCENE` | L144 |
-| `PORT_MEMORY_SCREEN_SCENE` | L145 |
-| `SETTLEMENT_SCREEN_SCENE` | L146 |
-| `AT_SEA_SCREEN_SCENE` | L147 |
-| `EVENT_SCREEN_SCENE` | L148 |
-| `SEA_CHART_SCREEN_SCENE` | L149 |
-| `CLUE_LOG_SCREEN_SCENE` | L150 |
-| `STORY_CARD_SCRIPT` | L151 |
-| `STORY_OBJECTIVE_SCRIPT` | L152 |
-| `STORY_FOCUS_SCRIPT` | L153 |
-| `TASK_TRACKER_SCRIPT` | L154 |
-| `VICTORY_SCREEN_SCENE` | L155 |
-| `MAIN_MENU_SCREEN_SCENE` | L156 |
-| `NEW_GAME_SCREEN_SCENE` | L157 |
-| `MODS_SCREEN_SCENE` | L158 |
-| `SETTINGS_SCREEN_SCENE` | L159 |
-| `NAV_ICONS` | L162 |
-| `NAV_ICON_MAX_WIDTH` | L173 |
-| `DEV_TEAM` | L174 |
-| `GAME_VERSION_FALLBACK` | L175 |
-| `SCREENS` | L179 |
-| `PORT_STAGE_SCENE_PATH` | L182 |
-| `PORT_STAGE_FACILITY_SCREENS` | L184 |
-| `STAGE_SCREENS` | L197 |
-| `DOCK_PANEL_WIDTH` | L206 |
-| `CARGO_HOLD_PANEL_WIDTH` | L208 |
-| `MARKET_COLUMN_GAP` | L210 |
-| `TOP_CHROME_MAX_HEIGHT` | L214 |
-| `PORT_STATUS_BAR_HEIGHT` | L216 |
-| `PORT_STATUS_BAR_GAP` | L217 |
-| `PORT_SIGN_WIDTH` | L220 |
-| `PORT_SIGN_HEIGHT` | L221 |
-| `PORT_SIGN_GAP` | L222 |
-| `PORT_SIGN_MARGIN` | L223 |
-| `HUD_ICON_KEYS` | L227 |
-| `HUD_SKIN_ICONS` | L238 |
-| `HUD_ICON_SIZE` | L248 |
-| `PAGE_BOTTOM_MARGIN` | L251 |
-| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L252 |
+| `UI_THEME` | L135 |
+| `HARBOR_SIGN_SCRIPT` | L137 |
+| `MARKET_SCREEN_SCENE` | L138 |
+| `CARGO_HOLD_PANEL_SCRIPT` | L140 |
+| `ITEM_FALLBACK_ICON` | L142 |
+| `CARRY_GHOST_SCENE` | L146 |
+| `INTERACTION_HINT_SCENE` | L147 |
+| `CONTRACTS_SCREEN_SCENE` | L148 |
+| `SUPPLY_SCREEN_SCENE` | L149 |
+| `INTEL_SCREEN_SCENE` | L150 |
+| `OVERVIEW_SCREEN_SCENE` | L151 |
+| `SHIPYARD_SCREEN_SCENE` | L152 |
+| `BASE_SCREEN_SCENE` | L153 |
+| `AUTO_TRADE_SCREEN_SCENE` | L154 |
+| `RUINS_SCREEN_SCENE` | L155 |
+| `PORT_MEMORY_SCREEN_SCENE` | L156 |
+| `SETTLEMENT_SCREEN_SCENE` | L157 |
+| `AT_SEA_SCREEN_SCENE` | L158 |
+| `EVENT_SCREEN_SCENE` | L159 |
+| `SEA_CHART_SCREEN_SCENE` | L160 |
+| `CLUE_LOG_SCREEN_SCENE` | L161 |
+| `STORY_CARD_SCRIPT` | L162 |
+| `STORY_OBJECTIVE_SCRIPT` | L163 |
+| `STORY_FOCUS_SCRIPT` | L164 |
+| `TASK_TRACKER_SCRIPT` | L165 |
+| `VICTORY_SCREEN_SCENE` | L166 |
+| `MAIN_MENU_SCREEN_SCENE` | L167 |
+| `NEW_GAME_SCREEN_SCENE` | L168 |
+| `MODS_SCREEN_SCENE` | L169 |
+| `SETTINGS_SCREEN_SCENE` | L170 |
+| `NAV_ICONS` | L173 |
+| `NAV_ICON_MAX_WIDTH` | L184 |
+| `DEV_TEAM` | L185 |
+| `GAME_VERSION_FALLBACK` | L186 |
+| `SCREENS` | L190 |
+| `HIDDEN_NAV_SCREENS` | L195 |
+| `PORT_STAGE_SCENE_PATH` | L198 |
+| `PORT_STAGE_FACILITY_SCREENS` | L200 |
+| `STAGE_SCREENS` | L213 |
+| `DOCK_PANEL_WIDTH` | L222 |
+| `CARGO_HOLD_PANEL_WIDTH` | L224 |
+| `MARKET_COLUMN_GAP` | L226 |
+| `TOP_CHROME_MAX_HEIGHT` | L230 |
+| `PORT_STATUS_BAR_HEIGHT` | L232 |
+| `PORT_STATUS_BAR_GAP` | L233 |
+| `PORT_SIGN_WIDTH` | L236 |
+| `PORT_SIGN_HEIGHT` | L237 |
+| `PORT_SIGN_GAP` | L238 |
+| `PORT_SIGN_MARGIN` | L239 |
+| `HUD_ICON_KEYS` | L243 |
+| `HUD_SKIN_ICONS` | L254 |
+| `HUD_ICON_SIZE` | L264 |
+| `PAGE_BOTTOM_MARGIN` | L267 |
+| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L268 |
 | `EXIT_UPLOAD_WAIT_SECONDS` | L270 |
 
 ## 皮肤接线（ui-skin-v1）
@@ -84,6 +85,11 @@
 ## 契约
 - 数据只走 QueryBus，修改只走 CommandBus；UI 会话状态不写存档。
 - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
+- 顶部导航只渲染 `SCREENS` 中不在 `HIDDEN_NAV_SCREENS` 里的页面：基地（D3 基地建设）、
+  贸易（D4 自动贸易）、遗迹（D5 遗迹远征）三个系统尚未作为玩家功能发布，入口暂隐藏；
+  其中遗迹属于**航行探索**玩法（海图 → 探索），不作为港口页入口。三个页面的场景、
+  `_screen_*` 挂载函数与 `ui.nav.*` 本地化键保留：`tools/ui_snapshot.gd` 仍直接路由
+  这些页面做视觉验收，未来重新发布时只需从 `HIDDEN_NAV_SCREENS` 移除对应键。
 - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
 
 ## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
@@ -125,6 +131,11 @@
 - 舞台可用时挂三栏 `DockPanelRow`：`CargoHoldPanel`(360) + 透明 `StageWindow`
   (expand, `MOUSE_FILTER_IGNORE`, 只露出 3D 港区) + `DockPanel`(640)；舞台不可用时
   退化成 `CargoHoldPanel` + 市场面板两栏，不出现空白舞台窗口。
+- 角标分工：市场行情格右上角显示**剩余库存**（`SNItemTile` 的 `remaining` 模式，
+  `stock - pending`）；玩家已选数量（`×N`）与**预计消费**（`unit_price × amount`，
+  文案键 `ui.market.estimated_cost`）显示在跟随鼠标的 `SNCarryGhost` 上。行情格
+  `meta` 只保留单价 + 趋势，不和角标重复。`offer` 由 `MarketScreen._offer_for()`
+  组装并携带 `unit_price`。
 - 页面只发命令意图：`trade.buy{destination}` / `trade.sell{source}` /
   `warehouse.store_materials` / `warehouse.take_materials`。
 
@@ -140,5 +151,18 @@
   `tavern.view.chart_offers` 的该港口变为 `unlocked=true`（显示「已测绘」）。
 - 海图页签 `voyage.preview` / `voyage.start` / `clue.travel` 的 `route_locked` 失败按
   既有错误路径显示 `ui.error.route_locked`；面板在未测绘航线上禁用启航并显示酒馆提示。
+
+## 游玩数据上传（`docs/design/TELEMETRY.md`，唯一契约）
+- 首次解析到 AppContext 时（`_apply_settings_if_needed`）按设置创建 `TelemetryService`
+  并挂到 `AppContext.telemetry`；`TelemetryUploader` 作为 Shell 子节点，Shell 退出时随
+  场景树一起释放。`_settings_applied` 的重置（retry bootstrap）会重新绑定新 context。
+- 开启时 `begin_session(meta)`；`DomainEventBus.event_published` 只把契约白名单事件
+  （`voyage/port/contract/combat/story/quest/market/run.*`）交给服务，CommandBus 负责命令记录。
+- 设置页 VM 的 `telemetry_enabled` 来自 `SettingsService`；`toggle_telemetry` 先写设置、
+  再切换服务（关闭时服务清空缓冲并删除 pending 队列），最后保存配置。
+- 退出：`_graceful_quit()` 先 `finalize_session` 写 pending，再最多等
+  `EXIT_UPLOAD_WAIT_SECONDS`（3 秒）尝试上传，然后才执行原有 teardown / 3D 退出兜底；
+  `_prepare_quit()` 不做网络（测试直接调用它）。启动时的遗留队列补传在后台进行、不阻塞 UI。
+- 无头进程（测试/工具）不发起真实网络请求：启动补传在 headless 下跳过；`_prepare_quit` 不联网。
 
 模块索引：[framework/ui](../README.md)

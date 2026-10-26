@@ -12,7 +12,8 @@
 | `components/sn_button.gd` | 可复用语义按钮：在 Inspector 中选择主操作、次操作、危险或幽灵样式，并可挂一枚皮肤图标；外观全部来自外部贴图驱动的 Theme variation，代码不写颜色与 StyleBox。 | [查看](./components/sn_button.gd.md) |
 | `components/sn_button.tscn` | 框架源文件：sn_button.tscn | 本页 |
 | `components/sn_cargo_hold_panel.gd` | 市场页左侧「船只背包」：顶部载重 / 货舱摘要，上半船舱货物（`SNDropZone` + 图标格子，委托货带锁定标记），下半当前港仓库材料；把图标拖拽映射成买卖 / 存取命令意图。 | [查看](./components/sn_cargo_hold_panel.gd.md) |
-| `components/sn_carry_ghost.gd` | 市场「拿起 / 放下」手势的光标幽灵：把被拿起的商品图标、名称与 ×数量画成跟随鼠标的浮层（点击落点放下、右键取消），由 Shell 挂在页面滚动区之外的浮层里，任何页面都可复用。 | [查看](./components/sn_carry_ghost.gd.md) |
+| `components/sn_carry_ghost.gd` | 市场「拿起 / 放下」手势的光标幽灵：把被拿起的商品图标、名称、×数量与预计消费画成跟随鼠标的浮层（点击落点放下、右键取消），由 Shell 挂在页面滚动区之外的浮层里，任何页面都可复用。 | [查看](./components/sn_carry_ghost.gd.md) |
+| `components/sn_carry_ghost.tscn` | 市场「拿起 / 放下」光标幽灵的场景骨架（P0 场景化，契约见 `docs/specs/UI_SCENE_MIGRATION.md`）：黄铜底板 + 商品图标 + 标题 / ×数量 / 预计消费 / 提示四行；`sn_carry_ghost.gd` 负责延迟解析、固定黄铜色调、跟随鼠标与位置钳制。 | [查看](./components/sn_carry_ghost.tscn.md) |
 | `components/sn_cloud_veil.gd` | 航行演出的云层转场层（阶段 3）。全屏、不吃鼠标，用程序化云团把画面从 | [查看](./components/sn_cloud_veil.gd.md) |
 | `components/sn_drop_zone.gd` | 图标拖拽的通用落点面板：按载荷 `kind` 过滤、命中时用 SNSkin 九宫格纹理的 `modulate_color` 高亮、放下后发出 `dropped`；拖拽结束 / 鼠标移出复位。 | [查看](./components/sn_drop_zone.gd.md) |
 | `components/sn_focus_overlay.gd` | 框架级「强制引导」遮罩（v0.2.0-dev.3 反馈 #3）。全屏半透明遮罩只留一个 | [查看](./components/sn_focus_overlay.gd.md) |
@@ -20,7 +21,8 @@
 | `components/sn_icon.gd` | 皮肤图标控件：按 `SNSkin` 的 icon id 显示外部贴图图标（导航 / 资源 / 船厂 / 状态 / 行动），供程序化 UI 与展示场景复用，不在页面里拼贴图路径。 | [查看](./components/sn_icon.gd.md) |
 | `components/sn_intel_table.gd` | 商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。 | [查看](./components/sn_intel_table.gd.md) |
 | `components/sn_interaction_hint.gd` | 框架级「交互处浮出提示」：把命令成功 / 失败的一句话反馈画在最后鼠标位置旁（皮肤底板 + 语义图标 + 短淡出），挂在 Shell 的页面滚动区之外，任意页面都能复用，顶部状态 banner 仍保留。 | [查看](./components/sn_interaction_hint.gd.md) |
-| `components/sn_item_tile.gd` | 市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与待交易数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。 | [查看](./components/sn_item_tile.gd.md) |
+| `components/sn_interaction_hint.tscn` | 框架级「交互处浮出提示」的场景骨架（P0 场景化，契约见 `docs/specs/UI_SCENE_MIGRATION.md`）：皮肤底板 + 语义图标 + 单行消息；`sn_interaction_hint.gd` 负责延迟解析、成功/失败色调、位置钳制与淡出 Tween。 | [查看](./components/sn_interaction_hint.tscn.md) |
+| `components/sn_item_tile.gd` | 市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。 | [查看](./components/sn_item_tile.gd.md) |
 | `components/sn_nav_button.gd` | 主导航 / 侧牌用的图标导航按钮：皮肤图标 + 原样文字，`active` 表达当前页选中态，`primary` / `compact` 选择黄铜主操作或小铭牌语义；外观全部来自 Theme variation。 | [查看](./components/sn_nav_button.gd.md) |
 | `components/sn_panel.gd` | 可复用界面表面：基础、高架、内嵌三种层级，外加羊皮纸、蓝图（技术页）、画布与玻璃浮层四种材质变体；只通过 Theme variation 换材质，不在调用处复制 StyleBox。 | [查看](./components/sn_panel.gd.md) |
 | `components/sn_panel.tscn` | 框架源文件：sn_panel.tscn | 本页 |
@@ -33,7 +35,7 @@
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题、可选右侧说明，并可挂一枚 16–18 px 的皮肤图标；文字颜色与字号由 Theme 的 SNEyebrowLabel/SNTitleLabel/SNDetailLabel 变体决定。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
 | `components/sn_ship_stage_3d.gd` | 船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。 | [查看](./components/sn_ship_stage_3d.gd.md) |
-| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动的武器槽位框和高亮。 | [查看](./components/sn_ship_view.gd.md) |
+| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动、可读可拖放的武器槽位贴片（`SNWeaponSocketTarget`）。 | [查看](./components/sn_ship_view.gd.md) |
 | `components/sn_ship_view.tscn` | 框架源文件：sn_ship_view.tscn | 本页 |
 | `components/sn_slot_target.gd` | 纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。 | [查看](./components/sn_slot_target.gd.md) |
 | `components/sn_slot_target.tscn` | 框架源文件：sn_slot_target.tscn | 本页 |
@@ -46,6 +48,10 @@
 | `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
 | `components/sn_task_tracker.gd` | HUD 任务追踪条（阶段 4.6 Phase A）——显示 `task.view.active_task` 的类别、 | [查看](./components/sn_task_tracker.gd.md) |
 | `components/sn_voyage_confirm.gd` | 海图内的出航确认弹窗（阶段 4.3.4 / U7）。以半透明遮罩 + 居中面板覆盖海图， | [查看](./components/sn_voyage_confirm.gd.md) |
+| `components/sn_voyage_confirm.tscn` | 海图内的统一出航确认弹窗场景（P0 场景化，契约见 `docs/specs/UI_SCENE_MIGRATION.md`）：全屏遮罩 + 居中钢框面板，静态骨架由本场景持有，`sn_voyage_confirm.gd` 只负责文本、估值/阻断行、策略项与信号。 | [查看](./components/sn_voyage_confirm.tscn.md) |
+| `components/sn_weapon_row.gd` | 船厂武器分类里的可拖行武器条目：显示本地化武器名、等级 / 重量 / 伤害与来源标签，仓库武器 / 购买候选都可通过它拖到蓝图炮位或右侧槽位卡；可选行内操作按钮（安装到指定炮位、购买并安装）。 | [查看](./components/sn_weapon_row.gd.md) |
+| `components/sn_weapon_socket_card.gd` | 船厂改装操作坞里的单个武器槽位卡：显示本地化炮位名 / 武器等级、已装武器或空槽位、卸下按钮，并作为 `ship_weapon` 拖放落点（等级匹配才接受），把玩家意图交回船厂页。 | [查看](./components/sn_weapon_socket_card.gd.md) |
+| `components/sn_weapon_socket_target.gd` | 蓝图上的单个武器槽位贴片：两行自绘（槽位短标签 + 已装武器名 / 空槽位）， | [查看](./components/sn_weapon_socket_target.gd.md) |
 | `screens/flow/at_sea_screen.gd` | 航行演出页（海图系统阶段 3）：整幅海图 + 底部航程条。船只 icon 沿 | [查看](./screens/flow/at_sea_screen.gd.md) |
 | `screens/flow/at_sea_screen.tscn` | 框架源文件：at_sea_screen.tscn | 本页 |
 | `screens/flow/clue_log_screen.gd` | 线索列表页（阶段 4.4.4）。只读展示 `clue.list` 查询的输出：全部 active 线索 | [查看](./screens/flow/clue_log_screen.gd.md) |
@@ -74,7 +80,7 @@
 | `screens/port/base_screen.tscn` | 框架源文件：base_screen.tscn | 本页 |
 | `screens/port/contracts_screen.gd` | 委托页面场景：按可接/进行中分组渲染主线与普通委托卡，并发出接取或规划出航意图。 | [查看](./screens/port/contracts_screen.gd.md) |
 | `screens/port/contracts_screen.tscn` | 框架源文件：contracts_screen.tscn | 本页 |
-| `screens/port/market_screen.gd` | 港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。 | [查看](./screens/port/market_screen.gd.md) |
+| `screens/port/market_screen.gd` | 港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。 | [查看](./screens/port/market_screen.gd.md) |
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
 | `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |

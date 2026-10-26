@@ -1,6 +1,6 @@
 # `framework/ui/screens/port/market_screen.gd`
 
-> 作用：港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
+> 作用：港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
 
 - 类型：GDScript 源文件
 
@@ -9,17 +9,17 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MarketScreen` | L1 |
-| `command_requested (signal)` | L47 |
-| `carry_changed (signal)` | L49 |
-| `SUPPLY_CARD_SCENE` | L51 |
-| `TILE_SCRIPT` | L52 |
-| `ZONE_SCRIPT` | L53 |
-| `MARKET_GRID_COLUMNS` | L57 |
-| `GRID_SEPARATION` | L58 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L66 |
-| `handle_sell_drop(data: Dictionary) -> void` | L93 |
-| `carrying_tile() -> Control` | L114 |
-| `cancel_carry() -> void` | L137 |
+| `command_requested (signal)` | L55 |
+| `carry_changed (signal)` | L57 |
+| `SUPPLY_CARD_SCENE` | L59 |
+| `TILE_SCRIPT` | L60 |
+| `ZONE_SCRIPT` | L61 |
+| `MARKET_GRID_COLUMNS` | L65 |
+| `GRID_SEPARATION` | L66 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L74 |
+| `handle_sell_drop(data: Dictionary) -> void` | L101 |
+| `carrying_tile() -> Control` | L122 |
+| `cancel_carry() -> void` | L145 |
 
 Direct-manipulation port market page (Bounty Train style).
 
@@ -27,6 +27,11 @@ The icon grid replaces the old buy/sell quantity buttons: a market tile holds a
 pending amount (left click +1, right click clears) and dragging it to the left
 backpack buys into cargo / warehouse. Conversely the whole market panel is the
 sell drop target for `cargo_item` / `warehouse_item` payloads.
+
+The market tile's top-right badge shows the **remaining stock**
+(`badge_mode: "remaining"`, `max(0, stock - pending)`) instead of the selected
+amount: the selected amount is already painted on the cursor ghost
+(`SNCarryGhost`), together with the estimated cost.
 
 ## 外观来源（外部贴图 + SNSkin）
 - 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），纸面正文改用
@@ -42,6 +47,8 @@ sell drop target for `cargo_item` / `warehouse_item` payloads.
 - `bind(view_model, translate)` 可重复调用：每次先清空自建子节点再重建。
 - ViewModel 字段按 `docs/design/MARKET_UI_REFACTOR.md` §3；行情行 `icon` 已由
   Shell 解析成 `Texture2D`，本页不解析资产路径。
+- 行情格角标是 `remaining` 语义（始终可见，纯数字 = `stock - pending`）；meta
+  只显示单价 + 趋势，玩家已选数量只在光标幽灵上显示，两处不重复。
 - 图标行 `stock<=0` 或 `buyable=false` 时不可拖拽（仍显示，标注「仅收购」）。
 - 待交易上限只按 `stock` 设置，不预扣金币与剩余载重：数量可以点到库存上限，
   金币 / 载重不足由 `trade.buy` 失败并在状态栏报错（页面刷新后归零）。
@@ -51,8 +58,9 @@ sell drop target for `cargo_item` / `warehouse_item` payloads.
 
 ## 拿起 / 放下（feedback #1）
 - `signal carry_changed(offer)`：市场商品格子 `pending_changed` 的聚合结果。offer
-  是 `{kind:"market_item", item_id, name, icon, amount}`，空字典表示放下 / 取消。
-  Shell 拿它驱动光标幽灵（SNCarryGhost）并把 offer 转发给船舱 / 仓库落点
+  是 `{kind:"market_item", item_id, name, icon, amount, unit_price}`，空字典表示
+  放下 / 取消。Shell 用它驱动光标幽灵（SNCarryGhost，显示 `×amount` 与
+  `unit_price × amount` 的预计消费）并把 offer 转发给船舱 / 仓库落点
   （`SNCargoHoldPanel.set_offer`），玩家点落点即执行 `trade.buy`。
 - 同时只有一个格子被「拿起」：切换携带时先 `clear_pending()` 旧格子（避免重入：
   先清 `_carry_tile` 再清旧格子，旧格子的 0 事件不会再发 carry_changed）。

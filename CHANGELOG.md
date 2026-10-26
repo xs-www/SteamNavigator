@@ -3,21 +3,34 @@
 > 只记录有意义的功能与变更，不写逐条流水账；实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 [todo.md](todo.md) 的 `Recently Completed` 按版本归并到这里，并从 todo 移除。
 
-## [Unreleased]
+## [0.2.0-dev.4] — 2026-10-27
 
 ### Added
 
-- Content Schema 2.0 Phase C–E 完成：实体合并（`modules` / `items` / `quests` 与 C4 类型改名升 2.0）、
-  Phase D 系统切片（sim tick、combat、fleet、base、auto_trade、ruins）、Phase E 冻结 1.0；
-  42 个 active 类型与 3 类草案全部 2.0，1.0 内容生成/读取已关闭并新增发布门禁 `tools/check_content_schema_v2.mjs`
-- 基地 / 自动贸易 / 遗迹三套纵向切片：`data.base` 生产链、`data.trade` 自动买卖、`data.expedition` + `data.relics`
-  远征；对应命令、查询、tick 系统与最小页面
+- 游玩数据上传（Telemetry，opt-in）：设置页新增「允许上传数据」开关（默认关），`TelemetryService` / `TelemetryUploader` 记录命令、契约白名单领域事件与 WARN+ 错误快照，写入 `user://telemetry/pending/` 后串行上传；退出时先 finalize、最多等 3 秒尝试上传，不阻塞退出；官网新增零依赖接收端 `website/server/telemetry.mjs`（校验 / 限流 / 180 天保留）+ nginx / compose / Dockerfile.telemetry 部署与测试。契约见 [TELEMETRY.md](docs/design/TELEMETRY.md)
+- 可复用 UI 浮层场景化 P0：`SNInteractionHint` / `SNCarryGhost` / `SNVoyageConfirm` 从纯代码 `_build()` 升级为真 `.tscn` 骨架（静态结构 / 字号 / 间距 / 鼠标穿透进场景，脚本只做数据绑定、动态 `SNSkin` 色调与位置钳制），新增 [UI_SCENE_MIGRATION.md](docs/specs/UI_SCENE_MIGRATION.md) 说明边界、规则与 P0–P3 分批
+- UI 图标图集按内容重切：新增 `tools/ui/slice_ui_icons.gd`（全透明行/列分格 + alpha 紧包围盒 + 居中 256×256），重切 30 张母版并重新生成 128×128 运行图标与 `check_*` 派生图标；`manifest.json` 记录精确内容包围盒、行带与未映射图标
+- Core `icon.ui.*` 资源键（30 个）：30 枚 UI 图标复制进 Core 包并登记为内容资源键，内容 JSON / 事件 / 后续系统可直接 `information.texture: "icon.ui.nav_market"` 或 `AssetService.find_key("icon.ui.nav_market")`；测试逐字节守 Core 副本与运行图标同步
+- 船厂武器分类装配 UX：右侧槽位卡显示玩家炮位名（左舷 1 号炮位 · 轻型等）与已装武器，左侧蓝图绘制已装 / 空槽贴片；仓库与购买行可拖到贴片或槽位卡安装 / 替换（class 匹配、命令仍走 `ship.install_weapon`）
+- 市场「图标直接交易」：商品格角标改为**剩余库存**，跟随鼠标的光标幽灵显示已选 `×N` 与**预计消费**（单价 × 数量），点船舱 / 仓库落点即成交
+- 海图单一世界 + 航线解锁：`world_map` 成为唯一世界与拓扑，任意两港可通航但航线需通过委托 / 剧情 / 酒馆购买海图解锁；航线未解锁时 `voyage.preview` / `voyage.start` / `clue.travel` 返回 `route_locked`
+- Content Schema 2.0 Phase C–E 完成：实体合并（`modules` / `items` / `quests` 与 C4 类型改名升 2.0）、Phase D 系统切片（sim tick、combat、fleet、base、auto_trade、ruins）、Phase E 冻结 1.0；42 个 active 类型与 3 类草案全部 2.0，1.0 内容生成/读取已关闭并新增发布门禁 `tools/check_content_schema_v2.mjs`
+- 基地 / 自动贸易 / 遗迹三套纵向切片：`data.base` 生产链、`data.trade` 自动买卖、`data.expedition` + `data.relics` 远征；对应命令、查询、tick 系统与最小页面
 
 ### Changed
 
-- `FrameworkInfo.CONTENT_SCHEMA` 与 `content_types.json.content_schema` 升为 `2.0`；SNModMaker / Content CLI
-  不再默认或写出 1.0，1.0 内容明确报「需要 2.0」/ `schema_version_frozen`
-- 迁移与实体契约文档状态改为 **Finalized**
+- 顶部导航不再显示未发布的基地 / 贸易 / 遗迹入口（遗迹归航行探索玩法）；页面路由、场景与 `ui.nav.*` 文案保留，截图工具仍可直达内部页面
+- 船厂模块拖放递完整 `ship_parts` 载荷（空槽安装与已装替换恢复），槽位页签 / 分类记忆与旧面板移除逻辑不变
+- 市场行情格 meta 只保留单价 + 趋势，不再和角标重复；船舱 / 仓库格保持原「已选数量」角标
+- `FrameworkInfo.CONTENT_SCHEMA` 与 `content_types.json.content_schema` 升为 `2.0`；SNModMaker / Content CLI 不再默认或写出 1.0，1.0 内容明确报「需要 2.0」/ `schema_version_frozen`；迁移与实体契约文档状态改为 **Finalized**
+- 查询读作用域共享一次 GameState 克隆，`trade.buy` 381 → 309 ms、切海图 346 → 277 ms；运行时性能报告与网站 / 静态文档工具链落地
+
+### Fixed
+
+- 交互提示浮层宽度塌缩：`text_overrun_behavior` 在 Godot 4.7 让 Label 最小宽度只剩 1 px，面板缩成图标宽且文字只剩省略号；`show_at()` 改为按主题字体实测消息宽度（上限 520 px）
+- 图标母版固定网格裁切把下一行图标顶端带进每张 PNG 底部、第 3 行逐格串图；改为按内容包围盒切片并居中
+- 舞台站位切换在没有挂载船体时的过渡与港口演出接缝、退出 3D 舞台后的 teardown 顺序
+- 遥测落地时按 hunk 分割提交导致 shell 的 `_init_telemetry()` 落在 return 之后、静态文档头位置错乱；已恢复
 
 ## [0.2.0-dev.3] — 2026-10-22
 

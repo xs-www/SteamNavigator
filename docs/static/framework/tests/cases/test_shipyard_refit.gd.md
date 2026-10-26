@@ -13,24 +13,28 @@
 | `SHIP_VIEW_SCRIPT` | L14 |
 | `SLOT_TARGET_SCRIPT` | L15 |
 | `PART_ROW_SCRIPT` | L16 |
-| `STEADY_BUILD` | L17 |
-| `MODE_EXTERIOR` | L18 |
-| `MODE_CUTAWAY` | L19 |
-| `SHIP_THUMB_SIZE` | L20 |
-| `MODULE_CATEGORIES` | L21 |
-| `LEGACY_SECTION_KEYS` | L24 |
-| `test_normal_mode_shows_owned_ship_render_and_component_categories() -> void` | L176 |
-| `test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> void` | L214 |
-| `test_damaged_module_shows_a_condition_badge() -> void` | L273 |
-| `test_cutaway_uses_the_authored_section_texture() -> void` | L302 |
-| `test_refit_blueprint_board_uses_the_nine_slice_panel() -> void` | L325 |
-| `test_ship_card_uses_the_authored_thumbnail() -> void` | L382 |
-| `test_renderer_slot_is_swappable_for_the_future_2_5d_scene() -> void` | L401 |
-| `test_dragging_a_warehouse_module_maps_to_install_command() -> void` | L435 |
-| `test_category_navigation_switches_operations_and_misc_hosts_actions() -> void` | L511 |
-| `test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void` | L567 |
-| `test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void` | L607 |
-| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L667 |
+| `WEAPON_ROW_SCRIPT` | L17 |
+| `WEAPON_SOCKET_CARD_SCRIPT` | L18 |
+| `STEADY_BUILD` | L19 |
+| `MODE_EXTERIOR` | L20 |
+| `MODE_CUTAWAY` | L21 |
+| `SHIP_THUMB_SIZE` | L22 |
+| `MODULE_CATEGORIES` | L23 |
+| `LEGACY_SECTION_KEYS` | L26 |
+| `test_normal_mode_shows_owned_ship_render_and_component_categories() -> void` | L178 |
+| `test_refit_mode_switches_to_cutaway_and_remembers_mode_and_category() -> void` | L216 |
+| `test_damaged_module_shows_a_condition_badge() -> void` | L275 |
+| `test_cutaway_uses_the_authored_section_texture() -> void` | L304 |
+| `test_refit_blueprint_board_uses_the_nine_slice_panel() -> void` | L327 |
+| `test_ship_card_uses_the_authored_thumbnail() -> void` | L384 |
+| `test_renderer_slot_is_swappable_for_the_future_2_5d_scene() -> void` | L403 |
+| `test_dragging_a_warehouse_module_maps_to_install_command() -> void` | L437 |
+| `test_drag_drop_installs_into_empty_slot_and_replaces_filled_slot() -> void` | L516 |
+| `test_category_navigation_switches_operations_and_misc_hosts_actions() -> void` | L615 |
+| `test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void` | L668 |
+| `test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void` | L708 |
+| `test_weapon_sockets_show_player_mount_names_and_drag_install() -> void` | L770 |
+| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L962 |
 
 ## 契约与约束
 
