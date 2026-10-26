@@ -49,3 +49,5 @@ SNBattleSim/user_data/*.tmp
 website/.env
 website/.env.*
 !website/.env.example
+
+website/.data/

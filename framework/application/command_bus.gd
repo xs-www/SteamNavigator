@@ -9,11 +9,14 @@ extends RefCounted
 ## - 成功后按顺序发布 `{type, payload}` 事件，并通知 `QueryBus.invalidate_read_snapshot()`：活状态已变，页重建的共享读快照必须作废。
 ## - 结果带 `autosave` 且 `context.autosave_enabled` 时触发自动存档（开局/抵达/剧情/委托等节点）。
 ## - 保留最近 200 条执行日志（命令、成功、错误码、耗时、游戏时间）。
+## - 每次执行（含未知命令的失败）向 `context.telemetry` 记一条命令记录（成功、错误码、耗时、游戏时间、
+##   白名单参数摘要）；`context.telemetry` 为 null 或未开启记录时是 no-op（docs/design/TELEMETRY.md §3.3、§3.4、§5）。
 ##
 ## ## 重点逻辑
 ## ### `execute(command_name, params)`
 ## - 克隆 `context.state` 并临时替换，处理器对工作副本的修改不会泄漏到事务外。
 ## - 非法返回值/未知命令/无 context 统一转换为结构化 Result.fail；只有 `ok` 为真才提交。
+## - telemetry 记录与 200 条执行日志同源（同一耗时/错误码），不参与事务：记录失败不影响命令结果。
 ## @end-static-doc
 ##
 ## Executes state-changing use cases inside a clone-and-commit transaction.
@@ -51,6 +54,7 @@ func execute(command_name: StringName, params: Dictionary = {}) -> Dictionary:
 	if _context == null:
 		return Result.fail("no_context", "ui.error.start_failed", {"command": String(command_name)})
 	if not _handlers.has(command_name):
+		_record_telemetry(String(command_name), false, "unknown_command", 0, _context.state.now(), params)
 		return Result.fail("unknown_command", "ui.error.unknown_command", {"command": String(command_name)})
 
 	var started_at := Time.get_ticks_usec()
@@ -86,7 +90,22 @@ func execute(command_name: StringName, params: Dictionary = {}) -> Dictionary:
 	})
 	if _execution_log.size() > 200:
 		_execution_log.pop_front()
+	_record_telemetry(
+		String(command_name),
+		bool(result.get("ok", false)),
+		String(result.get("error_code", "")),
+		elapsed_ms,
+		_context.state.now(),
+		params
+	)
 	return result
+
+
+## 游玩日志记录点：context.telemetry 为 null（未接线/关闭）时直接跳过，绝不影响命令结果。
+func _record_telemetry(command: String, ok: bool, error_code: String, duration_ms: int, game_time: float, params: Dictionary) -> void:
+	if _context == null or _context.telemetry == null:
+		return
+	_context.telemetry.record_command(command, ok, error_code, duration_ms, game_time, params)
 
 
 func get_execution_log(limit: int = 50) -> Array[Dictionary]:

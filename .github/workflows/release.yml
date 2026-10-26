@@ -91,6 +91,15 @@ jobs:
           node SNModMaker/tests/run-tests.js
           node --test SNModMaker/tests/content-cli.test.mjs
 
+      # The official-site ingest endpoint is a public HTTP surface; its
+      # validation, storage and retention rules are release-gated like the other
+      # Node tooling.
+      - name: Run website telemetry tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test website/tests/telemetry.test.mjs
+
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB),
       # and rejects any draft content the runtime does not load.
@@ -137,6 +146,30 @@ jobs:
             echo "draft content must not pass --release packing" >&2
             exit 1
           fi
+
+      # The opt-in gameplay-log uploader posts to the official site. The endpoint
+      # and optional shared token are deployment values, not repository content:
+      # inject them before export so both the packaged default and the portable
+      # config/config.json next to the executable carry the real target. Empty
+      # repository values keep the committed defaults untouched.
+      - name: Inject telemetry endpoint
+        shell: bash
+        env:
+          SN_TELEMETRY_ENDPOINT: ${{ vars.SN_TELEMETRY_ENDPOINT }}
+          SN_TELEMETRY_TOKEN: ${{ secrets.SN_TELEMETRY_TOKEN }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const path = "config/config.json";
+            const config = JSON.parse(fs.readFileSync(path, "utf8"));
+            const endpoint = (process.env.SN_TELEMETRY_ENDPOINT || "").trim();
+            const token = (process.env.SN_TELEMETRY_TOKEN || "").trim();
+            if (endpoint) config.telemetry_endpoint = endpoint;
+            if (token) config.telemetry_token = token;
+            fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+            console.log(`telemetry endpoint: ${config.telemetry_endpoint}`);
+          '
 
       - name: Export Windows and Linux
         shell: bash

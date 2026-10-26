@@ -162,6 +162,36 @@ func _button_by_text(root: Node, text: String) -> Button:
 			return found
 	return null
 
+## 设置页里字段名为「允许上传数据」的横向设置行（TELEMETRY.md §2）。
+func _telemetry_row(root: Node) -> HBoxContainer:
+	for node in root.find_children("*", "HBoxContainer", true, false):
+		if node is HBoxContainer and _label_texts(node).has("允许上传数据"):
+			return node
+	return null
+
+
+## 递归删除测试用 `user://` 目录树。
+func _remove_tree(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+		return
+	if not DirAccess.dir_exists_absolute(path):
+		return
+	var dir := DirAccess.open(path)
+	if dir != null:
+		dir.list_dir_begin()
+		var entry := dir.get_next()
+		while not entry.is_empty():
+			var child := path.path_join(entry)
+			if dir.current_is_dir():
+				_remove_tree(child)
+			else:
+				DirAccess.remove_absolute(child)
+			entry = dir.get_next()
+		dir.list_dir_end()
+	DirAccess.remove_absolute(path)
+
+
 
 func _meter_of_supply_card(root: Node, title: String) -> Control:
 	for card in _nodes_with_script(root, CARD_SCRIPT):
@@ -1849,3 +1879,134 @@ func test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void:
 	shell._active_screen = previous_screen
 	_unmount(bundle)
 
+	# 上限：超长消息最多撑到 MAX_TEXT_WIDTH(520) + 图标 18 + separation 6 + 内容边距 20，
+	# 不再无限变宽；截断仍由场景里的 text_overrun_behavior = 3 完成。
+	hint.call("show_at", Vector2(240.0, 240.0), "交互提示宽度上限回归".repeat(8), false)
+	var capped_width: float = hint.get_combined_minimum_size().x
+	assert_true(capped_width <= 570.0,
+		"an overlong hint message is capped at 520 px of text (%s px)" % capped_width)
+	assert_true(capped_width > 80.0,
+		"the capped hint still measures its text instead of collapsing (%s px)" % capped_width)
+	_unmount(bundle)
+
+
+## 设置页「允许上传数据」行（docs/design/TELEMETRY.md §2）：96 px 字段名、不自动换行、
+## 开/关值按钮发出 toggle_telemetry，右侧说明使用契约文案。
+func test_settings_screen_offers_the_telemetry_row() -> void:
+	var translate := func(key: String) -> String: return key
+	var screen: Control = SETTINGS_SCREEN_SCRIPT.new()
+	var actions: Array = []
+	screen.action_requested.connect(func(action: StringName, params: Dictionary) -> void:
+		actions.append([String(action), params])
+	)
+	screen.bind({
+		"locale": "zh_CN",
+		"autosave_enabled": true,
+		"telemetry_enabled": false,
+		"show_settings_path": false,
+	}, translate)
+	var row := _telemetry_row(screen)
+	assert_not_null(row, "the settings page renders the telemetry row")
+	if row != null:
+		assert_true(row.get_child_count() >= 3, "the telemetry row has label + value button + note")
+		var field := row.get_child(0) as Label
+		assert_not_null(field, "the telemetry row starts with its field label")
+		if field != null:
+			assert_eq(field.custom_minimum_size.x, 96.0, "the telemetry field keeps the 96 px label width")
+			assert_eq(field.autowrap_mode, TextServer.AUTOWRAP_OFF, "the telemetry field never wraps")
+		for label in row.find_children("*", "Label", true, false):
+			assert_eq((label as Label).autowrap_mode, TextServer.AUTOWRAP_OFF,
+				"telemetry row labels stay on one horizontal line")
+		var toggle := row.get_child(1) as Button
+		assert_not_null(toggle, "the telemetry row has an on/off button")
+		if toggle != null:
+			assert_eq(toggle.text, "关", "telemetry defaults to off in the settings row")
+			toggle.emit_signal("pressed")
+	assert_eq(actions.size(), 1, "pressing the telemetry value emits exactly one intent")
+	if actions.size() == 1:
+		assert_eq(String(actions[0][0]), "toggle_telemetry", "the value button requests toggle_telemetry")
+	assert_contains(_label_texts(screen), "勾选后，每次结束游玩时会把本局游戏日志上传到官网，用于改进游戏；仅含游玩数据，不含个人信息。",
+		"the row explains what is uploaded")
+	screen.free()
+	var enabled_screen: Control = SETTINGS_SCREEN_SCRIPT.new()
+	enabled_screen.bind({
+		"locale": "zh_CN",
+		"autosave_enabled": true,
+		"telemetry_enabled": true,
+		"show_settings_path": false,
+	}, translate)
+	var enabled_row := _telemetry_row(enabled_screen)
+	assert_not_null(enabled_row, "the enabled settings page keeps the telemetry row")
+	if enabled_row != null:
+		var enabled_toggle := enabled_row.get_child(1) as Button
+		assert_not_null(enabled_toggle, "the enabled row still has its value button")
+		if enabled_toggle != null:
+			assert_eq(enabled_toggle.text, "开", "the row shows 开 when telemetry is enabled")
+	enabled_screen.free()
+
+
+## Shell 接线：设置页 VM 来自 SettingsService，toggle 即时切换记录器并写回配置；
+## 白名单领域事件与命令记录进本局日志（TELEMETRY.md §3、§6.1/§6.2）。
+func test_shell_telemetry_toggle_updates_service_and_settings() -> void:
+	var bundle := _mount(5211)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var root := "user://test_ui_telemetry"
+	_remove_tree(root)
+	shell._settings = SettingsService.load_settings(root.path_join("config/config.json"), "res://config/config.json")
+	shell._settings.set_locale("zh_CN")
+	context.localization.set_locale("zh_CN")
+	assert_not_null(context.telemetry, "the shell binds a telemetry service to the context")
+	if context.telemetry == null:
+		_unmount(bundle)
+		return
+	# 测试用临时队列目录，绝不写真实 user://telemetry/。
+	context.telemetry.pending_dir = root.path_join("pending")
+	assert_false(shell._settings.telemetry(), "telemetry defaults to off")
+	shell._on_menu_action(&"toggle_telemetry", {})
+	assert_true(shell._settings.telemetry(), "enabling telemetry writes the setting")
+	assert_true(context.telemetry.is_enabled(), "enabling telemetry turns the live service on")
+	assert_true(context.telemetry.is_recording(), "enabling telemetry starts a session")
+	var reloaded := SettingsService.load_settings(root.path_join("config/config.json"), "res://config/config.json")
+	assert_true(reloaded.telemetry(), "the toggle persists to config/config.json")
+	# §3.3：白名单领域事件进 events，UI 事件被忽略；CommandBus 记录命令。
+	context.events.publish(&"voyage.completed", {"destination": "core:port_template/iron_harbor"}, 5.0)
+	context.events.publish(&"ui.chart_opened", {}, 6.0)
+	shell._run_command(&"port.wait", {"hours": 1})
+	var payload := context.telemetry.build_payload(shell._telemetry_summary())
+	var events: Array = payload.get("events", [])
+	var event_types: Array = []
+	for entry in events:
+		event_types.append(String(entry.get("event_type", "")))
+	assert_true(event_types.has("voyage.completed"), "the whitelisted voyage event is recorded")
+	assert_false(event_types.has("ui.chart_opened"), "UI events are not recorded (contract whitelist)")
+	for event_type in event_types:
+		assert_false(String(event_type).begins_with("ui."), "only domain events reach the telemetry buffer")
+	var recorded := false
+	for entry in Array(payload.get("commands", [])):
+		if String(entry.get("command", "")) == "port.wait":
+			recorded = true
+			assert_eq(int((entry.get("params", {}) as Dictionary).get("hours", 0)), 1,
+				"the shell command forwards its whitelisted param to the telemetry payload")
+	assert_true(recorded, "commands executed through the shell are recorded by CommandBus")
+	# 关闭：停止记录、删除待上传队列（§2）。先回到主菜单设置页以便点按钮。
+	context.reset_state()
+	shell._transitioning = false
+	shell._pending_transition = false
+	shell._menu_screen = "settings"
+	shell._refresh()
+	var row := _telemetry_row(shell._root_box)
+	assert_not_null(row, "the settings menu renders the telemetry row")
+	if row != null:
+		var toggle := row.get_child(1) as Button
+		assert_not_null(toggle, "the settings menu has the telemetry toggle")
+		if toggle != null:
+			assert_eq(toggle.text, "开", "the row shows 开 after enabling")
+			toggle.emit_signal("pressed")
+	assert_false(shell._settings.telemetry(), "pressing the row toggles telemetry off")
+	assert_false(context.telemetry.is_enabled(), "disabling telemetry turns the service off")
+	assert_false(context.telemetry.is_recording(), "disabling telemetry stops recording")
+	assert_eq(context.telemetry.pending_count(), 0, "disabling telemetry deletes the pending queue")
+	shell._transitioning = false
+	shell._pending_transition = false
+	_remove_tree(root)

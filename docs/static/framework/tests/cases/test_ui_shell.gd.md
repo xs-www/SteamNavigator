@@ -35,32 +35,34 @@
 | `SETTINGS_SCREEN_SCRIPT` | L34 |
 | `STEADY_BUILD` | L35 |
 | `LITERAL_EXPECTED_NOTICE_KEYS` | L41 |
-| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L176 |
-| `test_damaged_module_is_visible_in_the_shell() -> void` | L217 |
-| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L236 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L305 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L351 |
-| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L402 |
-| `test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void` | L433 |
-| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L481 |
-| `test_base_page_claims_and_builds_from_the_ui() -> void` | L513 |
-| `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L545 |
-| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L563 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L605 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L698 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L731 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L961 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L981 |
-| `test_sea_chart_entry_integration() -> void` | L1061 |
-| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1157 |
-| `test_market_page_three_column_icon_trading() -> void` | L1212 |
-| `test_market_drag_drops_emit_the_contract_commands() -> void` | L1373 |
-| `test_query_read_scope_shares_one_snapshot_and_command_invalidates_it() -> void` | L1523 |
-| `test_port_name_lookup_fills_a_per_run_cache() -> void` | L1559 |
-| `test_prepare_quit_unmounts_the_stage_and_clears_pages() -> void` | L1580 |
-| `test_market_pickup_ghost_and_offer_targets() -> void` | L1598 |
-| `test_market_pickup_click_places_the_carried_amount() -> void` | L1675 |
-| `test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void` | L1784 |
+| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L206 |
+| `test_damaged_module_is_visible_in_the_shell() -> void` | L247 |
+| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L266 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L335 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L381 |
+| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L432 |
+| `test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void` | L463 |
+| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L511 |
+| `test_base_page_claims_and_builds_from_the_ui() -> void` | L543 |
+| `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L575 |
+| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L593 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L635 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L728 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L761 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L991 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L1011 |
+| `test_sea_chart_entry_integration() -> void` | L1091 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1187 |
+| `test_market_page_three_column_icon_trading() -> void` | L1242 |
+| `test_market_drag_drops_emit_the_contract_commands() -> void` | L1403 |
+| `test_query_read_scope_shares_one_snapshot_and_command_invalidates_it() -> void` | L1553 |
+| `test_port_name_lookup_fills_a_per_run_cache() -> void` | L1589 |
+| `test_prepare_quit_unmounts_the_stage_and_clears_pages() -> void` | L1610 |
+| `test_market_pickup_ghost_and_offer_targets() -> void` | L1628 |
+| `test_market_pickup_click_places_the_carried_amount() -> void` | L1705 |
+| `test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void` | L1814 |
+| `test_settings_screen_offers_the_telemetry_row() -> void` | L1895 |
+| `test_shell_telemetry_toggle_updates_service_and_settings() -> void` | L1950 |
 
 ## 契约与约束
 

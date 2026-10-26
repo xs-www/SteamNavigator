@@ -6,6 +6,7 @@
 ## 1. 目标与红线
 
 - 交付物：零依赖静态站点（HTML / CSS / 原生 JS），无需构建步骤即可用任意静态服务器部署。
+- 页面仍是纯静态；**游玩数据接收端**是可选伴随服务（`website/server/telemetry.mjs`，零依赖 Node，见 [TELEMETRY.md](TELEMETRY.md) §4），不参与页面渲染，静态托管方案可以不带它。
 - 页面：首页、游戏信息、游戏百科、开发日志、下载。所有子页面都可从任意页面导航到达。
 - **主页红线（用户需求）**：`index.html` 的主体内容禁止出现开发 / 调试相关资料。
   - 禁止：开发、调试、测试、原型、MVP、版本号、更新日志、开发者、GitHub、Godot、模组、引擎、构建、诊断、日志、文档、代码、内测、体验版、`dev`、`build`、`debug`、`changelog`。
@@ -55,9 +56,19 @@ website/
 │   └── img/            官网图片（见 §5）
 ├── tools/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
-│   └── serve.mjs            零依赖本地预览服务器
+│   ├── serve.mjs            零依赖本地预览服务器（同时挂载 /api/telemetry/）
+│   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
+├── server/
+│   └── telemetry.mjs        游玩日志接收端（校验 / 限流 / 落盘 / 保留），契约见 TELEMETRY.md
+├── tests/
+│   └── telemetry.test.mjs   接收端 node:test 用例
+├── deploy/
+│   ├── Dockerfile          nginx alpine 生产镜像（非 root / 单 worker）
+│   ├── Dockerfile.telemetry 接收端镜像（node:22-alpine / 非 root / 8090）
+│   └── nginx.conf          静态站 nginx 配置（gzip / 缓存 / 健康检查 / /api/telemetry/ 反代）
 ├── .gdignore          防止 Godot 导入站点目录
 └── README.md           预览 / 部署 / 生成说明
+├── .data/             本地预览的日志落盘目录（gitignore，不入库）
 ```
 
 导航顺序：首页（Logo）· 游戏信息 · 游戏百科 · 开发日志 · 下载（高亮按钮）。
@@ -192,12 +203,14 @@ window.SN_WIKI_DATA = {
 7. `prefers-reduced-motion` 下无强迫动画。
 8. 站点无外部网络依赖（字体 / CDN / 统计脚本）；下载外链除外。
 
+9. 游玩数据接收端：`GET /api/telemetry/health` 返回 200；合法会话 `POST /api/telemetry/session` 返回 204 并在数据目录生成对应文件与 `index.ndjson`；`node --test website/tests/telemetry.test.mjs` 全绿。接收端契约见 [TELEMETRY.md](TELEMETRY.md)。
 ## 8. 协作与写入边界
 
-- Lead：`website/*.html`、`website/assets/css/`、`website/assets/js/site.js`、`website/assets/js/wiki.js`、`website/README.md`、`docs/design/WEBSITE.md`。
+- Lead：`website/*.html`、`website/assets/css/`、`website/assets/js/site.js`、`website/assets/js/wiki.js`、`website/README.md`、`website/deploy/`、`website/docker-compose.yml`、`docs/design/WEBSITE.md`。
 - art 任务：只写 `website/assets/img/`。
 - wiki 任务：只写 `website/tools/build-wiki-data.mjs`、`website/assets/data/`。
 - QA：只写 `tmp/website-qa/`。
+- telemetry 任务：只写 `website/server/`、`website/tests/`、`website/deploy/Dockerfile.telemetry` 与本文档 §10 契约涉及的 nginx / compose / README 段落；契约先改 [TELEMETRY.md](TELEMETRY.md)。
 - 所有人不改 `dev_mods/`、`framework/`、`docs/static/`；站点目录加 `.gdignore`，避免 Godot 导入。
 
 ## 9. 实现状态
@@ -205,8 +218,19 @@ window.SN_WIKI_DATA = {
 - 5 个页面已落地：`index.html`、`game.html`、`wiki.html`、`devlog.html`、`download.html`。
 - 百科数据由 `website/tools/build-wiki-data.mjs` 生成，共 132 条（11 个分类）；`wiki.html` 支持搜索、分类、空结果与深链接。
 - 图片 14 张（合计约 1.48 MB），来源与裁切见 `website/assets/img/MANIFEST.md`。
-- 本地预览：`node website/tools/serve.mjs`（默认 `http://127.0.0.1:4173/`）。
+- 本地预览：`node website/tools/serve.mjs`（默认 `http://127.0.0.1:4173/`，同时提供 `/api/telemetry/`）。
 - QA 使用 Chrome headless + Selenium 覆盖 1440/1024/768/390 四档、外链 HTTP 200、控制台/网络错误、灯箱与移动导航；临时报告在 `tmp/website-qa/`（不入库）。
 - 生产镜像：`website/deploy/Dockerfile`（nginx 1.27 alpine、非 root、单 worker、8080）；`website/docker-compose.yml` 限制 32 MB 内存 / 0.25 CPU，只绑定 `127.0.0.1:8088`（容器内 8080），并带可选 `cloudflared` profile。
 - 本地 CI：`website/tools/ci.ps1` 在本机构建镜像、以生产同款限制跑容器冒烟，通过后 `docker compose up -d --build website` 直接部署；不推任何 registry。
 - Cloudflare：公网入口推荐 Cloudflare Tunnel；容器内 cloudflared 的 origin 填 `http://website:8080`，宿主机 cloudflared 填 `http://127.0.0.1:8088`。部署与缓存说明见 `website/README.md`。
+- 游玩数据接收端（2026-10-27）：`website/server/telemetry.mjs` + `website/deploy/Dockerfile.telemetry` + compose `telemetry` 服务 + nginx `/api/telemetry/` 反代；数据卷 `website-telemetry-data`（`/data`），保留 180 天。契约见 [TELEMETRY.md](TELEMETRY.md)。
+
+## 10. 游玩数据接收端（Telemetry ingest）
+
+> 完整契约（载荷 schema、状态码、限流、保留、客户端行为）见 [TELEMETRY.md](TELEMETRY.md)；本节只约束官网侧边界。
+
+- 路由只挂在同域 `/api/telemetry/`：`GET /health`、`POST /session`；官网页面本身不调用该接口，也不在页面里出现上传日志相关 UI。
+- 生产由 nginx location `/api/telemetry/` 反代到 compose 内 `http://telemetry:8090`（`client_max_body_size 1m`，只允许 GET/POST）；静态文件的缓存、安全头与 `healthz` 行为不变。
+- 接收端不记录客户端 IP；数据写入数据卷的 `sessions/<YYYY-MM-DD>/`（单会话 JSON + `index.ndjson` 摘要），保留 180 天。
+- 本地预览 `website/tools/serve.mjs` 同样挂载该接口，数据写 `website/.data/telemetry/`（gitignore）；不带接收端也能单独部署静态页面。
+- 部署与备份（数据卷位置、令牌、保留期）说明维护在 `website/README.md`。

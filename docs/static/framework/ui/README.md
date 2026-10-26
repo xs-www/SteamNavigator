@@ -66,7 +66,7 @@
 | `screens/menu/mods_screen.tscn` | 框架源文件：mods_screen.tscn | 本页 |
 | `screens/menu/new_game_screen.gd` | 新航程配置页面场景：选择初始构筑和随机种子，展示启动内容摘要与警告。 | [查看](./screens/menu/new_game_screen.gd.md) |
 | `screens/menu/new_game_screen.tscn` | 框架源文件：new_game_screen.tscn | 本页 |
-| `screens/menu/settings_screen.gd` | 设置页面场景：展示语言、自动存档与配置位置，并发出设置修改意图。 | [查看](./screens/menu/settings_screen.gd.md) |
+| `screens/menu/settings_screen.gd` | 设置页面场景：展示语言、自动存档与「允许上传数据」三项设置，并发出设置修改意图。 | [查看](./screens/menu/settings_screen.gd.md) |
 | `screens/menu/settings_screen.tscn` | 框架源文件：settings_screen.tscn | 本页 |
 | `screens/port/auto_trade_screen.gd` | Phase D4 自动贸易页：渲染 `auto_trade.view` 与可用策略，展示阶段、航程、 | [查看](./screens/port/auto_trade_screen.gd.md) |
 | `screens/port/auto_trade_screen.tscn` | 框架源文件：auto_trade_screen.tscn | 本页 |

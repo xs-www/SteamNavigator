@@ -89,6 +89,19 @@ extends Control
 ##
 ## Two mount paths exist: ordinary pages go into `PageMargin/PageScroll/RootBox`,
 ## while the at-sea chart page goes into the full-window `FullscreenLayer` (no
+##
+## ## 游玩数据上传（`docs/design/TELEMETRY.md`，唯一契约）
+## - 首次解析到 AppContext 时（`_apply_settings_if_needed`）按设置创建 `TelemetryService`
+##   并挂到 `AppContext.telemetry`；`TelemetryUploader` 作为 Shell 子节点，Shell 退出时随
+##   场景树一起释放。`_settings_applied` 的重置（retry bootstrap）会重新绑定新 context。
+## - 开启时 `begin_session(meta)`；`DomainEventBus.event_published` 只把契约白名单事件
+##   （`voyage/port/contract/combat/story/quest/market/run.*`）交给服务，CommandBus 负责命令记录。
+## - 设置页 VM 的 `telemetry_enabled` 来自 `SettingsService`；`toggle_telemetry` 先写设置、
+##   再切换服务（关闭时服务清空缓冲并删除 pending 队列），最后保存配置。
+## - 退出：`_graceful_quit()` 先 `finalize_session` 写 pending，再最多等
+##   `EXIT_UPLOAD_WAIT_SECONDS`（3 秒）尝试上传，然后才执行原有 teardown / 3D 退出兜底；
+##   `_prepare_quit()` 不做网络（测试直接调用它）。启动时的遗留队列补传在后台进行、不阻塞 UI。
+## - 无头进程（测试/工具）不发起真实网络请求：启动补传在 headless 下跳过；`_prepare_quit` 不联网。
 ## page margins, no scrolling) so the sea really fills the window. The voyage
 ## presentation also feeds that page its route polyline straight from the twin
 ## world's `WorldMap.edges` (`_presentation_route_path`) instead of the
@@ -253,6 +266,8 @@ var _interaction_hint: Control = null
 ## True while a player-triggered command executes: `_set_status` uses it so only
 ## interaction feedback pops at the cursor (nav /演出 / 载入不弹)。
 var _interactive_command := false
+## 退出时等待遗留 pending 上传的总预算（TELEMETRY.md §3.4、§1：绝不阻塞退出超过 3 秒）。
+const EXIT_UPLOAD_WAIT_SECONDS := 3.0
 var _settings: SettingsService = null
 var _settings_applied: bool = false
 
@@ -271,6 +286,12 @@ var _sea_chart_return: String = "overview"
 var _chart_departure: Dictionary = {}
 ## 「规划出航」等入口请求打开海图时预选的港口（消费一次后清空）。
 var _pending_chart_port: String = ""
+## 游玩数据上传（docs/design/TELEMETRY.md §3、§5）：首次解析到 context 后创建并绑定
+## `_context.telemetry`；上传器是 Shell 子节点，负责串行补传 pending 文件。
+var _telemetry: TelemetryService = null
+var _telemetry_uploader: TelemetryUploader = null
+## 当前记录器绑定的 context；retry bootstrap 换 context 时据此重建。
+var _telemetry_context: AppContext = null
 ## 4.4.4：线索列表页点击条目后，回海图时要选中的线索 id（消费一次后清空）。
 var _pending_chart_clue: String = ""
 ## 4.5 / U1：当前剧情 ViewModel、剧情卡 / 目标条图层与卡片打开状态（仅 UI 会话）。
@@ -412,6 +433,7 @@ func _set_menu_visual(enabled: bool) -> void:
 
 func _game_version() -> String:
 	return String(ProjectSettings.get_setting("application/config/version", GAME_VERSION_FALLBACK))
+	_init_telemetry()
 
 
 func _refresh_footer() -> void:
@@ -1632,6 +1654,8 @@ func _overview_model(data: Dictionary) -> Dictionary:
 	model["banner_path"] = _port_banner_path(data)
 	# 2.5D overview stage: availability is decided by the shell (scene present
 	# and not previously failed); stage mode and the detail drawer are UI-session
+		# TELEMETRY.md §2：设置页状态来自持久化设置（默认关），不读记录器内部状态。
+		"telemetry_enabled": _settings != null and _settings.telemetry(),
 	# state only.
 	model["stage_available"] = _port_stage_available()
 	model["stage_mode"] = _overview_stage_mode and _port_stage_available()
@@ -3812,11 +3836,14 @@ func _on_quit() -> void:
 
 ## Orderly shutdown shared by the window close request and the quit button.
 ##
-## Two things happen here:
-## 1. Game-resource teardown: stop the presentation, free the page tree and both
+## Three things happen here:
+## 1. Telemetry (docs/design/TELEMETRY.md §3.4): finalize the session into
+##    `user://telemetry/pending/` and wait at most 3 s for the serial uploader,
+##    then continue regardless of the result.
+## 2. Game-resource teardown: stop the presentation, free the page tree and both
 ##    3D stage hosts, drop the runtime content assets (`ContentAssetLoader` cache)
 ##    and the framework runtime — all while the renderer is still alive.
-## 2. Engine workaround: the exported GL Compatibility build crashes with
+## 3. Engine workaround: the exported GL Compatibility build crashes with
 ##    0xC0000005 inside GLES3 storage teardown once a 3D stage has rendered. The
 ##    teardown above is not enough to avoid it (verified on Godot 4.7.2), so a
 ##    session that rendered 3D terminates the process after the cleanup instead
@@ -3836,6 +3863,8 @@ func _graceful_quit() -> void:
 	ContentAssetLoader.clear_cache()
 	FrameworkRuntime.shutdown()
 	# Flush the pending GL commands (buffer/texture deletions) before the engine
+		&"toggle_telemetry":
+			_on_toggle_telemetry()
 	# stops the rendering server; the exported GLES3 build crashed on exit when a
 	# 3D stage had been rendered, and an unsynchronised teardown was the suspect.
 	if RenderingServer.has_method("force_sync"):
@@ -3859,10 +3888,14 @@ func _graceful_quit() -> void:
 ## Idempotent node-level half of `_graceful_quit()` (tests call it directly because
 ## the full shutdown ends the process): stop the presentation, free the page tree
 ## and unmount + free the 3D stages so their GPU resources are released while the
-## renderer is still alive.
+## renderer is still alive. Deliberately network-free: telemetry finalize/upload is
+## owned by `_finalize_telemetry()` so tests can tear down without real requests.
 func _prepare_quit() -> void:
 	_presentation = null
 	_presentation_explore = {}
+	# TELEMETRY.md §3.4：先把本局日志写进 pending，再最多等 3 秒尝试上传；无论结果
+	# 如何都继续原有 teardown / 退出流程（含 3D 退出崩溃兜底），绝不卡住退出。
+	await _finalize_telemetry()
 	_presentation_voyage = {}
 	_presentation_origin_view = {}
 	_at_sea_screen = null
@@ -3967,6 +4000,156 @@ func _on_nav(screen: String) -> void:
 		and STAGE_SCREENS.has(screen)
 		and _port_stage_available()
 	)
+## ---------------------------------------------------------------------------
+## 游玩数据上传（docs/design/TELEMETRY.md §2 / §3 / §5）
+## ---------------------------------------------------------------------------
+
+
+## 首次/重新绑定 AppContext 时创建记录器与串行上传器。关闭状态也创建空记录器：
+## 设置页开关可在不重启的情况下即时生效（关闭时服务自身清空缓冲并删除 pending）。
+func _init_telemetry() -> void:
+	if _context == null:
+		return
+	if _telemetry_context == _context and _telemetry != null:
+		return
+	_release_telemetry()
+	_telemetry_context = _context
+	_telemetry = TelemetryService.new()
+	_telemetry.set_enabled(_settings != null and _settings.telemetry())
+	_context.telemetry = _telemetry
+	_telemetry_uploader = TelemetryUploader.new()
+	_telemetry_uploader.name = "TelemetryUploader"
+	_telemetry_uploader.bind(_telemetry)
+	add_child(_telemetry_uploader)
+	if not _context.events.event_published.is_connected(_on_domain_event_published):
+		_context.events.event_published.connect(_on_domain_event_published)
+	if _telemetry.is_enabled():
+		_telemetry.begin_session(_telemetry_meta())
+		_start_background_upload()
+
+
+## retry bootstrap 换 context 时解绑旧记录器：旧队列留给下次启动，不在这里 finalize。
+func _release_telemetry() -> void:
+	var previous := _telemetry_context
+	if previous != null and previous.events != null \
+			and previous.events.event_published.is_connected(_on_domain_event_published):
+		previous.events.event_published.disconnect(_on_domain_event_published)
+	if previous != null and previous.telemetry == _telemetry:
+		previous.telemetry = null
+	_telemetry = null
+	if _telemetry_uploader != null and is_instance_valid(_telemetry_uploader):
+		_telemetry_uploader.queue_free()
+	_telemetry_uploader = null
+	_telemetry_context = null
+
+
+## 设置页「允许上传数据」开关（§2）：先写设置，再切换记录器，最后持久化。
+func _on_toggle_telemetry() -> void:
+	if _settings == null:
+		return
+	var enabled := not _settings.telemetry()
+	_settings.set_telemetry(enabled)
+	if _telemetry == null:
+		_init_telemetry()
+	if _telemetry != null:
+		_telemetry.set_enabled(enabled)
+		if enabled and not _telemetry.is_recording():
+			_telemetry.begin_session(_telemetry_meta())
+			_start_background_upload()
+	_save_settings()
+	_refresh(true)
+
+
+func _telemetry_endpoint() -> String:
+	return _settings.telemetry_endpoint() if _settings != null else TelemetryService.DEFAULT_ENDPOINT
+
+
+func _telemetry_token() -> String:
+	return _settings.telemetry_token() if _settings != null else ""
+
+
+## §3.2：会话元数据（版本/语言/平台/模组）；run 统计在退出时由 `_telemetry_summary` 补充。
+func _telemetry_meta() -> Dictionary:
+	return {
+		"game_version": _game_version(),
+		"framework_version": FrameworkInfo.VERSION,
+		"content_schema": FrameworkInfo.CONTENT_SCHEMA,
+		"locale": _context.localization.active_locale if _context != null else "zh_CN",
+		"os": OS.get_name(),
+		"mods": _telemetry_mods(),
+	}
+
+
+func _telemetry_mods() -> Array:
+	var mods: Array = []
+	if _context == null:
+		return mods
+	for mod in _context.mod_summaries():
+		if mod is Dictionary:
+			mods.append({"id": String(mod.get("id", "")), "version": String(mod.get("version", ""))})
+	return mods
+
+
+## §3「会话载荷」的 run 块：只放游玩统计，不含账号/路径/硬件信息。
+func _telemetry_summary() -> Dictionary:
+	var summary := {"run": {"has_run": false}}
+	if _context == null:
+		return summary
+	summary["mods"] = _telemetry_mods()
+	var state := _context.state
+	var has_run := _context.has_run()
+	var run := {"has_run": has_run}
+	if has_run:
+		run["seed"] = state.seed()
+		run["port_id"] = state.current_port_id()
+		run["money"] = state.money()
+		run["game_hours"] = state.now()
+		var victory: Variant = state.data.get("victory", null)
+		run["victory"] = bool(victory is Dictionary and bool((victory as Dictionary).get("achieved", false)))
+	summary["run"] = run
+	return summary
+
+
+## §3.3：白名单过滤在 TelemetryService 内完成，这里只转发已发布事件。
+func _on_domain_event_published(event: Dictionary) -> void:
+	if _telemetry != null:
+		_telemetry.record_event(event)
+
+
+## §3.5：启动且开启时后台补传遗留 pending（先进先出），不阻塞 UI。
+func _start_background_upload() -> void:
+	if _telemetry == null or _telemetry_uploader == null:
+		return
+	if DisplayServer.get_name() == "headless":
+		# 无头测试/工具进程不得发起真实外网请求；正常游戏窗口不是 headless。
+		return
+	if _telemetry.pending_count() == 0:
+		return
+	# flush 是协程：动态 call 让它在后台跑完（成功删除、失败留待下次启动）。
+	_telemetry_uploader.call("flush", _telemetry_endpoint(), _telemetry_token())
+
+
+## §3.4：退出收尾。先 finalize 写 pending，再在 3 秒预算内尝试上传；失败保留并继续退出。
+func _finalize_telemetry() -> void:
+	if _telemetry == null or _telemetry_uploader == null:
+		return
+	if not _telemetry.is_recording():
+		return
+	var logger: AppLogger = _context.logger if _context != null else null
+	var finalized := _telemetry.finalize_session(_telemetry_summary(), logger)
+	if not bool(finalized.get("ok", false)):
+		return
+	if _telemetry.pending_count() == 0:
+		return
+	# 到点 abort() 取消在途请求并结束本轮；flush 以 aborted 汇总返回，退出流程照常继续。
+	var timer := get_tree().create_timer(EXIT_UPLOAD_WAIT_SECONDS)
+	timer.timeout.connect(func() -> void:
+		if _telemetry_uploader != null and is_instance_valid(_telemetry_uploader):
+			_telemetry_uploader.abort()
+	)
+	await _telemetry_uploader.flush(_telemetry_endpoint(), _telemetry_token())
+
+
 	# Observe before the rebuild so the refreshed card / objective / focus mask
 	# already reflect the stage the chart entry just advanced.
 	if chart_opened:

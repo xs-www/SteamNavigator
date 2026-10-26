@@ -1,5 +1,8 @@
 {
   "version": 1,
   "locale": "zh_CN",
-  "autosave": true
+  "autosave": true,
+  "telemetry": false,
+  "telemetry_endpoint": "https://steamnavigator.playthought.cn/api/telemetry/session",
+  "telemetry_token": ""
 }

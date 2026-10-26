@@ -1,8 +1,7 @@
 # `framework/bootstrap/app_context.gd`
 
-> 作用：组合根对象：持有服务、注册表、总线、当前 GameState 与启动报告。
+> 作用：应用组合根：持有服务、总线、GameState 与启动报告，交给命令/查询/UI 使用；`telemetry` 是可选的本局游玩日志记录器（默认 null，未开启上传时不创建）。
 
-- 关键依赖：`Logger/AppLogger`、`LocalizationService`、`AssetService`、`RegistryHub`、`DomainEventBus`、`CommandBus`、`QueryBus`、`SaveService`、`RngService`、`GameState`
 - 类型：GDScript 源文件
 
 ## 关键符号
@@ -10,31 +9,35 @@
 | 符号 | 位置 |
 | --- | --- |
 | `AppContext` | L1 |
-| `FRAMEWORK_VERSION` | L8 |
-| `API_MAJOR` | L9 |
-| `API_MINOR` | L10 |
-| `KNOWN_CAPABILITIES` | L11 |
-| `_init(app_config: Dictionary = {}) -> void` | L33 |
-| `set_active(context: AppContext) -> void` | L51 |
-| `get_active() -> AppContext` | L55 |
-| `is_ready() -> bool` | L59 |
-| `has_run() -> bool` | L63 |
-| `reset_state() -> void` | L67 |
-| `set_state(new_state: GameState) -> void` | L71 |
-| `set_seed(seed_value: int) -> void` | L75 |
-| `content_count(content_type: StringName) -> int` | L79 |
-| `content_total() -> int` | L84 |
-| `mod_summaries() -> Array[Dictionary]` | L88 |
-| `save_meta(extra: Dictionary = {}) -> Dictionary` | L92 |
-| `autosave(extra: Dictionary = {}) -> Dictionary` | L105 |
-| `translate(key: String, fallback: String = "") -> String` | L111 |
-| `format_time(game_time: float = -1.0) -> String` | L115 |
+| `FRAMEWORK_VERSION` | L18 |
+| `API_MAJOR` | L19 |
+| `API_MINOR` | L20 |
+| `KNOWN_CAPABILITIES` | L21 |
+| `_init(app_config: Dictionary = {}) -> void` | L46 |
+| `set_active(context: AppContext) -> void` | L64 |
+| `get_active() -> AppContext` | L68 |
+| `is_ready() -> bool` | L72 |
+| `has_run() -> bool` | L76 |
+| `reset_state() -> void` | L80 |
+| `set_state(new_state: GameState) -> void` | L84 |
+| `set_seed(seed_value: int) -> void` | L88 |
+| `content_count(content_type: StringName) -> int` | L92 |
+| `content_total() -> int` | L97 |
+| `mod_summaries() -> Array[Dictionary]` | L101 |
+| `save_meta(extra: Dictionary = {}) -> Dictionary` | L105 |
+| `autosave(extra: Dictionary = {}) -> Dictionary` | L118 |
+| `translate(key: String, fallback: String = "") -> String` | L124 |
+| `format_time(game_time: float = -1.0) -> String` | L128 |
+
+- 关键依赖：`AppLogger`、`LocalizationService`、`RegistryHub`、`DomainEventBus`、`CommandBus`、`QueryBus`、`SaveService`、`TelemetryService`
 
 ## 契约与约束
+- 系统只通过 AppContext 取依赖，但只有 CommandBus 能改 GameState；查询/UI 走 ViewModel。
+- `telemetry` 必须 null 安全：菜单/启动失败/旧工具链没有记录器时，CommandBus 等调用方直接跳过记录（`docs/design/TELEMETRY.md` §3、§5）。
+- 启动链路不创建记录器：由 `main.gd` 在首次拿到 context 后按设置创建并绑定，避免无头工具意外产生上传数据。
 
-- UI 与用例共享同一个 AppContext；状态修改只能经 CommandBus。
-- `translate()` 是 UI 取本地化文本的唯一入口，缺失键回退到 fallback 或键名。
-- `save_meta()` 把模组清单、当前港与种子写入存档头，供兼容性检查。
-- `pre_voyage_state` 仅用于同一进程内的出航失败回滚；跨会话回滚依赖 `pre_voyage` 存档槽。
+## 重点逻辑
+### `autosave()/save_meta()`
+- 自动存档只在 `autosave_enabled` 且有本局状态时写入，并把版本/模组/港口/种子写进头信息。
 
 模块索引：[framework/bootstrap](./README.md)

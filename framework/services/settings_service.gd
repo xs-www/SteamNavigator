@@ -1,13 +1,21 @@
 class_name SettingsService
 extends RefCounted
-## Persistent UI settings.
+## @static-doc
+## 作用：持久化 UI/玩家设置（语言、自动存档、游玩数据上传），负责读取仓库默认 `config/config.json`、写用户配置并在发布版使用 exe 旁的 `config/config.json`。
 ##
-## Editor builds read the repository default `res://config/config.json` and
-## write `user://config/config.json`. Exported builds ship an editable
-## `config/config.json` next to the executable; that file is used as the live
-## settings file so a release folder stays portable. If it is not writable
-## (for example the game lives under Program Files), saving falls back to
-## `user://config/config.json`.
+## - 关键依赖：`JsonUtils`（解析/canonical 序列化）、`Result`（结构化失败）、`TelemetryService`（endpoint 规范化）
+##
+## ## 契约与约束
+## - `docs/design/TELEMETRY.md` §2：`telemetry` 默认 `false`；`telemetry_endpoint` 空/非法时回退 `TelemetryService.DEFAULT_ENDPOINT`；`telemetry_token` 默认空串、非空时随请求发送 `X-SN-Telemetry-Token`。
+## - 读设置：优先用户配置，其次发布版 exe 旁配置，最后 `res://config/config.json`；写入失败（目录只读）时发布版回退 `user://config/config.json`，设置不丢。
+## - `load()` 之后所有字段都经过 `_normalize()`，旧配置缺少 telemetry 键时补默认值而不是报错。
+##
+## ## 重点逻辑
+## ### `_normalize()`
+## - 语言只接受 `zh_CN` / `en`；autosave / telemetry 强制 bool；endpoint 走 `TelemetryService.normalize_endpoint`（空串、非 http(s)、无 host 都回退默认地址）。
+## ### `save()`
+## - 以 canonical JSON + 缩进写盘；只有发布版且原路径不可写时才切到 user 目录。
+## @end-static-doc
 
 const DEFAULT_PATH := "res://config/config.json"
 const USER_PATH := "user://config/config.json"
@@ -77,6 +85,12 @@ func _normalize() -> void:
 		locale = "zh_CN"
 	data["locale"] = locale
 	data["autosave"] = bool(data.get("autosave", true))
+	# §2：游玩数据上传默认关闭；endpoint 非法时回退代码常量，token 默认空串。
+	data["telemetry"] = bool(data.get("telemetry", false))
+	data["telemetry_endpoint"] = TelemetryService.normalize_endpoint(
+		String(data.get("telemetry_endpoint", ""))
+	)
+	data["telemetry_token"] = String(data.get("telemetry_token", ""))
 
 
 func locale() -> String:
@@ -87,6 +101,18 @@ func autosave() -> bool:
 	return bool(data.get("autosave", true))
 
 
+func telemetry() -> bool:
+	return bool(data.get("telemetry", false))
+
+
+func telemetry_endpoint() -> String:
+	return TelemetryService.normalize_endpoint(String(data.get("telemetry_endpoint", "")))
+
+
+func telemetry_token() -> String:
+	return String(data.get("telemetry_token", ""))
+
+
 func set_locale(value: String) -> void:
 	if VALID_LOCALES.has(value):
 		data["locale"] = value
@@ -94,6 +120,18 @@ func set_locale(value: String) -> void:
 
 func set_autosave(value: bool) -> void:
 	data["autosave"] = value
+
+
+func set_telemetry(value: bool) -> void:
+	data["telemetry"] = value
+
+
+func set_telemetry_endpoint(value: String) -> void:
+	data["telemetry_endpoint"] = TelemetryService.normalize_endpoint(value)
+
+
+func set_telemetry_token(value: String) -> void:
+	data["telemetry_token"] = value
 
 
 func save() -> Dictionary:

@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+# @static-doc
+# 作用：游玩数据接收端生产镜像：node:22-alpine 跑零依赖 `server/telemetry.mjs`，非 root、8090 端口、`/data` 数据卷。
+#
+# ## 契约与约束
+# - 契约：`docs/design/TELEMETRY.md` §4；镜像只含接收端代码，不含官网静态页面与 nginx。
+# - 构建上下文是 `website/`，只复制 `server/telemetry.mjs`；测试、README、.env 不进入镜像。
+# - 进程以非 root `node` 用户运行，监听 8090；数据目录固定 `/data`，由 Compose 卷持久化。
+# - 容器只读运行：运行期只写 `/data`（以及 tmpfs `/tmp`）；日志走 stdout/stderr。
+# - 环境变量：`SN_TELEMETRY_PORT`（8090）、`SN_TELEMETRY_DATA_DIR`（/data）、`SN_TELEMETRY_TOKEN`（可选，空 = 不校验）。
+#
+# ## 重点逻辑
+# ### 健康检查
+# - 内置健康检查直接请求 `/api/telemetry/health`，不经过 nginx，供 Docker / Compose / CI 等待就绪。
+# ### 低占用
+# - 零第三方依赖，无 npm install；镜像只有 Node 运行时与一个 .mjs 文件。
+# @end-static-doc
+
+FROM node:22-alpine
+
+LABEL org.opencontainers.image.title="Steam Navigator Telemetry"
+LABEL org.opencontainers.image.description="Telemetry receiver for Steam Navigator play sessions"
+LABEL org.opencontainers.image.source="https://github.com/xs-www/SteamNavigator"
+
+ENV NODE_ENV=production \
+    SN_TELEMETRY_PORT=8090 \
+    SN_TELEMETRY_HOST=0.0.0.0 \
+    SN_TELEMETRY_DATA_DIR=/data
+
+WORKDIR /app
+
+COPY --chown=node:node server/telemetry.mjs server/telemetry.mjs
+
+# 数据目录归属非 root 用户；Compose 用命名卷挂载到 /data。
+RUN mkdir -p /data && chown node:node /data
+
+USER node
+
+EXPOSE 8090
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('node:http').get('http://127.0.0.1:' + (process.env.SN_TELEMETRY_PORT || 8090) + '/api/telemetry/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+
+ENTRYPOINT ["node", "server/telemetry.mjs"]

@@ -1,25 +1,25 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T11:10:20.276Z",
-  "commit": "873fe42",
+  "generated_at": "2026-10-26T21:42:56.960Z",
+  "commit": "c2fceee",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1229,
-    "documented": 494,
-    "grouped": 735
+    "sources": 1235,
+    "documented": 501,
+    "grouped": 734
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "5c6045a06f1c006365fac77e656d259a5b5771db99385e1f95d4ca7ce067a22d",
+      "sha256": "84ad67153fcb9259969c5a8a56252a9006597b3dd9356898f95f1346bda1d965",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
     {
       "source": "README.md",
-      "sha256": "85759c5cfbcec6a2b13164494e569eee8d5a1d17f92bbcbd24c98bac20a2fd08",
+      "sha256": "014baa74b7ee696d02ee6c37102acd2236ce16eacfef87ed82c599ed6cc126a4",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -3442,7 +3442,7 @@
     },
     {
       "source": "framework/application/command_bus.gd",
-      "sha256": "9654a5282a834ecfc273baeff94d4e3126377028cb1221c83f8b7ab7e90147e1",
+      "sha256": "a5cc00fa96e5f9b0d4191dabcd90fe819e6ab12781883c65df31840f1e60f3ff",
       "doc": "docs/static/framework/application/command_bus.gd.md",
       "status": "documented"
     },
@@ -3759,7 +3759,7 @@
     },
     {
       "source": "framework/bootstrap/app_context.gd",
-      "sha256": "4168b0960a1137d829e4b5c47e54085942bc33b8ee459aa02bff7d0100748050",
+      "sha256": "1c1d2c9981e9a2cb821ac79fdf2b04aeb0d81c8899f10826bb3379ef98d98d1a",
       "doc": "docs/static/framework/bootstrap/app_context.gd.md",
       "status": "documented"
     },
@@ -4373,7 +4373,7 @@
     },
     {
       "source": "framework/services/settings_service.gd",
-      "sha256": "e4fab3ecfd740bec40be24b90746b6ca77f3ed4cac9066d83373f25d6fb1af98",
+      "sha256": "fa939a4ee0f5d32347c237a329c149992308a02e1fb735105c4e8fe8c7c34cbc",
       "doc": "docs/static/framework/services/settings_service.gd.md",
       "status": "documented"
     },
@@ -4381,6 +4381,18 @@
       "source": "framework/services/ship_visual_plan.gd",
       "sha256": "51a29f6840ac7c130d3554f901257e1716cd5246f2c6dc47f560995a76900768",
       "doc": "docs/static/framework/services/ship_visual_plan.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/telemetry_service.gd",
+      "sha256": "210f49d7ac8748a9b64a9ceb45c7575800b79e2cfee8f1cfd4a6a0fd69c8a08e",
+      "doc": "docs/static/framework/services/telemetry_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/services/telemetry_uploader.gd",
+      "sha256": "d674f5648758f84bf49d602371ea34bee11a0195c0067cd78c3de294960c0de4",
+      "doc": "docs/static/framework/services/telemetry_uploader.gd.md",
       "status": "documented"
     },
     {
@@ -4687,10 +4699,9 @@
     },
     {
       "source": "framework/tests/cases/test_settings.gd",
-      "sha256": "ca75bfd8c29f4d06c5193a631e835074d06153f07e099d5e58ab757a7c65b48f",
-      "doc": "docs/static/framework/tests/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/tests/README.md"
+      "sha256": "c94db523168d388d438b93d043c6676b741b8f1cafca139843aab3a14521d43b",
+      "doc": "docs/static/framework/tests/cases/test_settings.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_ship_gun_ports.gd",
@@ -4775,8 +4786,14 @@
       "status": "documented"
     },
     {
+      "source": "framework/tests/cases/test_telemetry.gd",
+      "sha256": "97605edb7e90ca5d8975e21d30f7057729a3afd69808dec2dee69dd125c59e2e",
+      "doc": "docs/static/framework/tests/cases/test_telemetry.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "d6034d5f70a7e3c3b75c023c96ad5b53c71118d9d8303991ce1d2d0672487a78",
+      "sha256": "b5c7a2f21aeaead89e39f90f5a9acfed49604372cd906746973133ab4b77828b",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -4875,7 +4892,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "9ac480de86f287453a3b8ee3ae8e0f2f5d70ca37007bec57a346dcd607044f32",
+      "sha256": "27369646770ba9f24c7411c7c6f0792bb2937ffda98acdd8da27b245ad244010",
       "doc": "docs/static/framework/tests/test_runner.gd.md",
       "status": "documented"
     },
@@ -5262,7 +5279,7 @@
     },
     {
       "source": "framework/ui/screens/menu/settings_screen.gd",
-      "sha256": "ee9a5f988c20c5ef6f1d1d632566f3ed9cf71222a3f18de857b79ff7df3b9ece",
+      "sha256": "972ba3885dc05ba2faa69f4bc22f3712bf7697b102e1015287bc5ac7cc48ca6f",
       "doc": "docs/static/framework/ui/screens/menu/settings_screen.gd.md",
       "status": "documented"
     },
@@ -5392,7 +5409,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "f8cf94232442998ce68095333da2c4ebd846391e7ef1fa5edd2580955951d2e0",
+      "sha256": "ccabc3a20f127075b27c2119b6cce41d92305d4bbe85d1d776b9edb09a897708",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -6269,7 +6286,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "62893c4ce0336baa71d1cd9f532e4dff3492dacb13fafedff3f97d780e3eea70",
+      "sha256": "ca986449530bcffe442b92bb4bb917fca3063fb9f4c7d979f0b908ea267a0d67",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -7900,7 +7917,7 @@
     },
     {
       "source": "website/.env.example",
-      "sha256": "1c00982fe1c9169bc667986b84e14eb167a8c254c815cfdad862eb44c8f60d21",
+      "sha256": "b85bb27439786aa3402d0ca3723028ba6ba73fa4694dc385a085c18e7fc63a3f",
       "doc": "docs/static/website/README.md",
       "status": "grouped",
       "group": "docs/static/website/README.md"
@@ -7914,7 +7931,7 @@
     },
     {
       "source": "website/README.md",
-      "sha256": "3d03bb6fdbb8b02f998eb7036625cebc902ed7681a05be258ff9169c61c40b1c",
+      "sha256": "3fff632598d747be57629b77db8898f02993f839402763c2ca919fd01b9de9c9",
       "doc": "docs/static/website/README.md.md",
       "status": "documented"
     },
@@ -8055,8 +8072,14 @@
       "status": "documented"
     },
     {
+      "source": "website/deploy/Dockerfile.telemetry",
+      "sha256": "619458c89c68c7f2487e0ecf030b8c460697cc24247b2025e1ba99513933403f",
+      "doc": "docs/static/website/deploy/Dockerfile.telemetry.md",
+      "status": "documented"
+    },
+    {
       "source": "website/deploy/nginx.conf",
-      "sha256": "e845a7c01a6e02bcffd696be8c3a192793d82920efcc613f3ad49bc61fe8d126",
+      "sha256": "a34a38e8e7fa13cf3e2bba4da8072d462d304f0edeb0745775bc8e44c0d129fe",
       "doc": "docs/static/website/deploy/nginx.conf.md",
       "status": "documented"
     },
@@ -8068,7 +8091,7 @@
     },
     {
       "source": "website/docker-compose.yml",
-      "sha256": "088b6dd0ff1842208de6739df6269e4397b876e707d64ea68cec35e9b211e3ef",
+      "sha256": "8948be7e2c9e392689984b533145c9f785c937c025b9280d9fc98ab85da042ab",
       "doc": "docs/static/website/docker-compose.yml.md",
       "status": "documented"
     },
@@ -8097,6 +8120,18 @@
       "status": "documented"
     },
     {
+      "source": "website/server/telemetry.mjs",
+      "sha256": "c6731edbc7421b56cb33c98faeff4bda2115082ed447a063b3bc31ffbc042f15",
+      "doc": "docs/static/website/server/telemetry.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tests/telemetry.test.mjs",
+      "sha256": "20475bbe0756c8660edd4c64269b0f83b14ead173a355a048ce73be071346ce8",
+      "doc": "docs/static/website/tests/telemetry.test.mjs.md",
+      "status": "documented"
+    },
+    {
       "source": "website/tools/build-wiki-data.mjs",
       "sha256": "5886048282dc3065256d5adf34a93e20765e54946764c83f4774816cfac1e168",
       "doc": "docs/static/website/tools/build-wiki-data.mjs.md",
@@ -8110,7 +8145,7 @@
     },
     {
       "source": "website/tools/serve.mjs",
-      "sha256": "07f2bc7adba0bae0ab24e88d9f976b9cd2834c48925fdc7193abd8d944fa7d85",
+      "sha256": "0be8de5465ba1f4832d316e7591b51e73e7558f175572814f0adce5d926896c3",
       "doc": "docs/static/website/tools/serve.mjs.md",
       "status": "documented"
     },
