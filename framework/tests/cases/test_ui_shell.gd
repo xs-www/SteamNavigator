@@ -13,6 +13,8 @@ const INTEL_TABLE_SCRIPT := preload("res://framework/ui/components/sn_intel_tabl
 const ITEM_TILE_SCRIPT := preload("res://framework/ui/components/sn_item_tile.gd")
 const DROP_ZONE_SCRIPT := preload("res://framework/ui/components/sn_drop_zone.gd")
 const CARGO_HOLD_SCRIPT := preload("res://framework/ui/components/sn_cargo_hold_panel.gd")
+const CARRY_GHOST_SCRIPT := preload("res://framework/ui/components/sn_carry_ghost.gd")
+const INTERACTION_HINT_SCRIPT := preload("res://framework/ui/components/sn_interaction_hint.gd")
 
 const MARKET_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/market_screen.gd")
 const CONTRACTS_SCREEN_SCRIPT := preload("res://framework/ui/screens/port/contracts_screen.gd")
@@ -40,6 +42,7 @@ const LITERAL_EXPECTED_NOTICE_KEYS := [
 	"ui.notice.craft_ordered",
 	"ui.notice.craft_completed",
 	"ui.notice.waited",
+	"ui.notice.chart_purchased",
 ]
 
 
@@ -618,6 +621,34 @@ func test_notice_log_renders_filled_localized_text() -> void:
 	var cost := int(recipe["craft_cost"])
 	assert_true(context.commands.execute(&"ship.craft_module", {"module_id": module_id}).get("ok", false), "the order is placed")
 	context.commands.execute(&"port.wait", {"hours": 24})
+	# 航线解锁（2026-10-26）：在酒馆买一张海图，让 `ui.notice.chart_purchased` 也进入
+	# 航行日志（两个槽位，必须按语言逐字校验，防止 %s/%d 顺序被换）。
+	var current_port := context.state.current_port_id()
+	var main_contract: Variant = context.state.contracts().get("main", null)
+	var main_destination := ""
+	if main_contract is Dictionary:
+		main_destination = String((main_contract as Dictionary).get("destination", ""))
+	# 只保留主线自带的那张海图，保证还有一条未测绘航线可以买。
+	var unlocked_keys: Array = WorldOps.unlocked_route_keys(context.state)
+	for key in unlocked_keys.duplicate():
+		var parts := String(key).split("|", false)
+		if parts.size() == 2 and parts[0] != main_destination and parts[1] != main_destination:
+			unlocked_keys.erase(key)
+	var chart_port := ""
+	for port in WorldOps.world_map(context.state).ports:
+		if port.id != current_port and port.id != main_destination:
+			chart_port = port.id
+			break
+	assert_false(chart_port.is_empty(), "a locked harbour is available for the chart purchase")
+	WorldOps.discover_port_id(context.state, chart_port)
+	MapOps.discover(context.state, chart_port)
+	_goto(shell, "tavern")
+	var buy_chart := _named_button_with_prefix(shell, "BuyChartButton_")
+	assert_not_null(buy_chart, "the tavern lists the newly discovered harbour's chart")
+	if buy_chart != null:
+		buy_chart.emit_signal("pressed")
+	var chart_port_key := MapOps.port_display_key(context.state.world(), chart_port)
+	var chart_cost := ChartCommands.chart_cost(context.state, context.registries)
 	# The shell takes its locale from the player's saved settings, so pin it here:
 	# the expected sentences below are per language.
 	context.localization.set_locale("zh_CN")
@@ -626,33 +657,40 @@ func test_notice_log_renders_filled_localized_text() -> void:
 	_goto(shell, "overview")
 	var log_texts := _log_lines(shell)
 	assert_true(log_texts.size() >= 3, "the sailing log lists the session notices: %s" % str(log_texts))
-	_assert_notice_log(log_texts, context, port_key, module_key, cost, str(float(recipe["craft_time_hours"])), false)
+	_assert_notice_log(log_texts, context, port_key, module_key, cost, str(float(recipe["craft_time_hours"])), false, chart_port_key, chart_cost)
 	# Same log in English. The expected sentences are spelled out per language
 	# below: a template whose slots are swapped still renders, so only a literal
 	# expectation catches "the English copy says it the wrong way round".
 	context.localization.set_locale("en")
 	_goto(shell, "overview")
-	_assert_notice_log(_log_lines(shell), context, port_key, module_key, cost, str(float(recipe["craft_time_hours"])), true)
+	_assert_notice_log(_log_lines(shell), context, port_key, module_key, cost, str(float(recipe["craft_time_hours"])), true, chart_port_key, chart_cost)
 	context.localization.set_locale("zh_CN")
 	_unmount(bundle)
 
 
-func _assert_notice_log(log_texts: Array, context: AppContext, port_key: String, module_key: String, cost: int, hours_text: String, english: bool) -> void:
+func _assert_notice_log(log_texts: Array, context: AppContext, port_key: String, module_key: String, cost: int, hours_text: String, english: bool, chart_port_key: String = "", chart_cost: int = 60) -> void:
 	var port_name := context.translate(port_key, "")
 	var module_name := context.translate(module_key, "")
 	var expected_order := "· 已在 %s 下单打造 %s · 工时 %s 小时 · 花费 %d 金币。" % [port_name, module_name, hours_text, cost]
 	var expected_completed := "· %s 打造完成，已存入 %s 仓库。" % [module_name, port_name]
 	var expected_wait := "· 在 %s 等待了 24 小时。" % port_name
+	var expected_chart := "· 已购买 %s 海图（%d 金币），航线已测绘。" % [
+		context.translate(chart_port_key, ""), chart_cost,
+	]
 	if english:
 		expected_order = "· Ordered at %s: %s · %s hours · %d gold." % [port_name, module_name, hours_text, cost]
 		expected_completed = "· %s finished and was stored in the warehouse of %s." % [module_name, port_name]
 		expected_wait = "· Waited at %s for 24 hours." % port_name
+		expected_chart = "· Bought the %s chart (%d gold) — the route is now charted." % [
+			context.translate(chart_port_key, ""), chart_cost,
+		]
 	for text in log_texts:
 		assert_false(text.contains("%s") or text.contains("%d"), "the log line is filled in, not a raw template: %s" % text)
 		assert_false(text.contains("ui.notice."), "the log line is translated, not a raw key: %s" % text)
 	assert_contains(log_texts, expected_order, "the log orders the port, module, hours and gold (%s)" % ("en" if english else "zh"))
 	assert_contains(log_texts, expected_completed, "the log reports the finished module before its port (%s)" % ("en" if english else "zh"))
 	assert_contains(log_texts, expected_wait, "the log waits at the port for the hours (%s)" % ("en" if english else "zh"))
+	assert_contains(log_texts, expected_chart, "the log reports the chart purchase with harbour and price (%s)" % ("en" if english else "zh"))
 	var build_name := context.translate(String(context.registries.get_by_id(ContentTypes.STARTING_SCENARIO, STEADY_BUILD).name_key), "")
 	assert_true(_log_line_with(log_texts, [build_name]) != "", "the opening notice names the chosen build: %s" % str(log_texts))
 
@@ -853,9 +891,10 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 
 	# Headless tests never advance frames, so step the stage clock directly: the
 	# camera really pans to the market shot and the hull really sails to the berth.
-	# A landmark facade (grand harbour terminal) intentionally keeps only the
-	# terminal plus small props — the player ship is not mounted there, so the
-	# berth assertion only applies to the regular district layout.
+	# The landmark facade (grand harbour terminal) keeps the player ship mounted —
+	# it is the stage's primary subject (player feedback #5) — so the berth
+	# assertion is unconditional; facade mode additionally scales the hull down
+	# beside the 0.42-scaled terminal.
 	var market_shot: Vector3 = port_stage.station_camera_pose("market", "panel")["position"]
 	port_stage.advance_station(2.0)
 	assert_almost_eq(
@@ -867,17 +906,31 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	port_stage.advance_station(8.0)
 	assert_false(port_stage.is_station_transitioning(), "the market station transition settles")
 	var current_port: Dictionary = shell._last_port_view.get("current_port", {})
-	if String(current_port.get("landmark_path", "")).is_empty():
-		var market_berth := port_stage.station_ship_position("market").x
-		assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the hull moors at the market berth")
-	else:
-		assert_false(port_stage.has_ship(), "the landmark facade hides the player ship")
+	assert_true(port_stage.has_ship(), "the market station keeps the player ship mounted")
+	var market_berth := port_stage.station_ship_position("market").x
+	assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the hull moors at the market berth")
+	var market_ship: Node3D = port_stage.get_node_or_null("Content/PlayerShip") as Node3D
+	assert_not_null(market_ship, "the market station shows a Content/PlayerShip root")
+	if market_ship != null:
+		assert_almost_eq(
+			market_ship.position.x, market_berth, 0.3, "the mounted hull sits at the market berth"
+		)
+		if not String(current_port.get("landmark_path", "")).is_empty():
+			assert_almost_eq(
+				market_ship.scale.x,
+				PortStage.MINIMAL_SHIP_SCALE,
+				0.001,
+				"the landmark facade shows a scaled player ship"
+			)
 
 	# 4.5.3: supply lives inside the market page, not as an adjacent station page;
 	# navigating to the old `supply` id is redirected to the market.
 	_goto(shell, "supply")
 	assert_eq(String(shell._active_screen), "market", "the legacy supply id redirects to the market")
 	assert_eq(_nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT).size(), 1, "the market page is mounted")
+	assert_eq(String(shell._stage_station), "market", "the supply redirect keeps the market station")
+	assert_eq(String(port_stage.current_station()), "market", "the PortStage stays on the market station")
+	assert_almost_eq(port_stage.ship_x(), market_berth, 0.3, "the supply redirect keeps the hull at the market berth")
 
 	# Pages that are not stage-backed still hide the district and show the fade.
 	_goto(shell, "contracts")
@@ -1028,6 +1081,9 @@ func test_sea_chart_entry_integration() -> void:
 	var discovered: Array = context.state.campaign_world().get("discovered_port_ids", [])
 	if not discovered.has(port_id):
 		discovered.append(port_id)
+	# 海图解锁是独立门禁：本用例验证「海图 → 确认弹窗 → voyage.start」的接线，
+	# 先把这条航线标记为已测绘（解锁机制本身由 test_route_unlock 覆盖）。
+	WorldOps.unlock_route(context.state, current_port_id, port_id)
 	_goto(shell, "sea_chart")
 	screens = _nodes_with_script(shell._root_box, SEA_CHART_SCREEN_SCRIPT)
 	chart_screen = screens[0]
@@ -1114,7 +1170,7 @@ func test_sea_chart_buys_an_intel_clue_from_the_panel() -> void:
 	if intel_port.is_empty():
 		_unmount(bundle)
 		return
-	# `GameState.current_port_id()` 读抽象地图的 current_port_id；`WorldOps` 的
+	# `GameState.current_port_id()` 读玩法世界字典的 current_port_id；`WorldOps` 的
 	# data 路径是给旧代码 / 演出用的镜像，两处都写才能让查询与面板看到新港口。
 	context.state.world()["current_port_id"] = intel_port
 	WorldOps.set_current_port(context.state, intel_port)
@@ -1449,3 +1505,347 @@ func _named_node(root: Node, node_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+## First Button whose node name starts with `prefix` (e.g. `BuyChartButton_`).
+func _named_button_with_prefix(root: Node, prefix: String) -> Button:
+	if root is Button and String(root.name).begins_with(prefix):
+		return root as Button
+	for child in root.get_children():
+		var found := _named_button_with_prefix(child, prefix)
+		if found != null:
+			return found
+	return null
+
+
+## 性能回归守门（P0）：整页重建在一个读作用域里只克隆一次 GameState。
+## 用「往快照写标记、下一个查询能否读到」来证明共享，避免实例 id 被复用造成误判。
+func test_query_read_scope_shares_one_snapshot_and_command_invalidates_it() -> void:
+	var bundle := _mount(5201)
+	var context: AppContext = bundle["context"]
+	context.queries.register(&"test.snapshot_write", func(_params: Dictionary, ctx) -> Dictionary:
+		ctx.state.data["__read_scope_probe"] = true
+		return {"ok": true, "data": {}})
+	context.queries.register(&"test.snapshot_read", func(_params: Dictionary, ctx) -> Dictionary:
+		return {"ok": true, "data": {"seen": ctx.state.data.has("__read_scope_probe")}})
+
+	context.queries.begin_read_scope()
+	context.queries.execute(&"test.snapshot_write")
+	var shared: Dictionary = context.queries.execute(&"test.snapshot_read")
+	context.queries.end_read_scope()
+	assert_true(bool(shared["data"].get("seen", false)),
+		"queries inside one read scope share the same state snapshot")
+	assert_eq(context.queries.read_scope_depth(), 0, "the read scope is closed again")
+	assert_false(context.state.data.has("__read_scope_probe"),
+		"the shared snapshot never touches live state")
+
+	context.queries.execute(&"test.snapshot_write")
+	var fresh: Dictionary = context.queries.execute(&"test.snapshot_read")
+	assert_false(bool(fresh["data"].get("seen", false)),
+		"outside a read scope each query still gets a fresh clone")
+
+	context.queries.begin_read_scope()
+	context.queries.execute(&"test.snapshot_write")
+	var waited := context.commands.execute(&"port.wait", {"hours": 1})
+	assert_true(bool(waited.get("ok", false)), "port.wait commits inside the read scope: %s" % str(waited))
+	var after_commit: Dictionary = context.queries.execute(&"test.snapshot_read")
+	context.queries.end_read_scope()
+	assert_false(bool(after_commit["data"].get("seen", false)),
+		"a committed command invalidates the shared snapshot")
+	_unmount(bundle)
+
+
+## 性能回归守门（P0）：港口名按 run seed 缓存，一次 map.view 填满整张表。
+func test_port_name_lookup_fills_a_per_run_cache() -> void:
+	var bundle := _mount(5201)
+	var context: AppContext = bundle["context"]
+	var shell: Control = bundle["shell"]
+	var ports: Array = context.queries.execute(&"map.view")["data"].get("ports", [])
+	assert_true(ports.size() > 0, "the fixture run has ports")
+	if ports.is_empty():
+		_unmount(bundle)
+		return
+	var port_id := String((ports[0] as Dictionary).get("id", ""))
+	var first: String = String(shell._port_name(port_id))
+	assert_true(not first.is_empty(), "the port resolves to a display name")
+	assert_eq(shell._port_name_cache.size(), ports.size(), "one map.view warms the whole table")
+	var cached_snapshot: Dictionary = shell._port_name_cache.duplicate()
+	assert_eq(shell._port_name(port_id), first, "a cached lookup returns the same name")
+	assert_eq(shell._port_name_cache, cached_snapshot, "cached lookups do not re-query the map")
+	_unmount(bundle)
+
+
+## 退出崩溃守门（P0）：窗口关闭前先把舞台卸掉并清空页面树，让 GL 资源在
+## renderer 还活着的时候释放；重复调用必须幂等。
+func test_prepare_quit_unmounts_the_stage_and_clears_pages() -> void:
+	var bundle := _mount(5201)
+	var shell: Control = bundle["shell"]
+	shell._active_screen = "overview"
+	shell._refresh()
+	var host: SNStageHost = shell._port_stage_host
+	assert_true(host != null and host.has_stage(), "the overview mounts the 3D port stage")
+	shell._prepare_quit()
+	assert_false(host.has_stage(), "prepare_quit unmounts the 3D stage")
+	assert_eq(shell._root_box.get_child_count(), 0, "prepare_quit clears the page tree")
+	assert_eq(shell._fullscreen_layer.get_child_count(), 0, "prepare_quit clears the full-screen layer")
+	shell._prepare_quit()
+	assert_false(host.has_stage(), "prepare_quit is idempotent")
+	_unmount(bundle)
+
+
+## 反馈 #1（拿起 / 放下）：点市场图标后光标幽灵带着图标与数量跟随鼠标，船舱 / 仓库
+## 落点被 arm，右键取消；切到另一个图标时旧格子归零。
+func test_market_pickup_ghost_and_offer_targets() -> void:
+	var bundle := _mount(5301)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	context.state.set_money(5000)
+	_goto(shell, "market")
+	var screens := _nodes_with_script(shell._root_box, MARKET_SCREEN_SCRIPT)
+	assert_eq(screens.size(), 1, "the market page mounts one MarketScreen")
+	if screens.is_empty():
+		_unmount(bundle)
+		return
+	var screen: Control = screens[0]
+	var market_tiles: Array = []
+	for node in _nodes_with_script(shell._root_box, ITEM_TILE_SCRIPT):
+		if String((node.get("item") as Dictionary).get("kind", "")) == "market_item":
+			market_tiles.append(node)
+	var tile: Variant = null
+	var other_tile: Variant = null
+	for node in market_tiles:
+		if not bool(node.get("draggable")):
+			continue
+		if tile == null and int(node.get("max_pending")) >= 2:
+			tile = node
+		elif other_tile == null and node != tile:
+			other_tile = node
+	assert_not_null(tile, "at least one market tile can be picked up")
+	if tile == null:
+		_unmount(bundle)
+		return
+	tile.call("increment_pending")
+	var ghost: Control = shell._carry_ghost
+	assert_not_null(ghost, "picking up a market icon creates the cursor ghost")
+	if ghost == null:
+		_unmount(bundle)
+		return
+	assert_true(bool(ghost.call("is_carrying")), "the ghost reports the carried stack")
+	assert_eq(int(ghost.call("amount")), 1, "the ghost shows the pending amount")
+	assert_true(ghost.visible, "the ghost is visible while carrying")
+	# Headless mouse is (0,0): the pure placement helper asserts the +18/+12 offset.
+	assert_eq(ghost.call("place_at", Vector2.ZERO), Vector2(18.0, 12.0),
+		"the ghost floats at the pointer with the documented offset")
+	assert_not_null(ghost.call("carried_icon"), "the carried icon travels with the ghost")
+	tile.call("increment_pending")
+	assert_eq(int(ghost.call("amount")), 2, "the number on the ghost follows every +1")
+
+	var cargo_zone := _named_node(shell._root_box, "CargoDropZone")
+	var warehouse_zone := _named_node(shell._root_box, "WarehouseDropZone")
+	assert_not_null(cargo_zone, "the hold exposes the cargo drop target")
+	assert_not_null(warehouse_zone, "the hold exposes the warehouse drop target")
+	if cargo_zone != null and warehouse_zone != null:
+		assert_true(bool(cargo_zone.call("offer_active")), "carrying arms the cargo target")
+		assert_true(bool(warehouse_zone.call("offer_active")), "carrying arms the warehouse target")
+
+	# Switching to another market tile clears the previous pending amount.
+	if other_tile != null:
+		other_tile.call("increment_pending")
+		assert_eq(int(tile.get("pending")), 0, "switching the carried tile clears the old pending")
+		assert_eq(int(ghost.call("amount")), 1, "the ghost shows the new stack size")
+		var carried = screen.call("carrying_tile")
+		assert_eq(carried, other_tile, "the page tracks exactly one carried tile")
+		tile = other_tile
+
+	# Right click cancels: pending, ghost and both drop targets reset.
+	var right_click := InputEventMouseButton.new()
+	right_click.button_index = MOUSE_BUTTON_RIGHT
+	right_click.pressed = true
+	screen.call("_input", right_click)
+	assert_eq(int(tile.get("pending")), 0, "right click clears the carried pending amount")
+	assert_false(bool(ghost.call("is_carrying")), "right click ends the carry")
+	assert_false(ghost.visible, "right click hides the cursor ghost")
+	if cargo_zone != null:
+		assert_false(bool(cargo_zone.call("offer_active")), "right click disarms the cargo target")
+	_unmount(bundle)
+
+
+## 反馈 #1：拿到手上的货物点落点 / 点落点里的格子都能放下，且只发一条
+## `trade.buy {amount = pending, destination}`；右键取消不发命令。
+func test_market_pickup_click_places_the_carried_amount() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {"starting_scenario": STEADY_BUILD, "seed": 5303})
+	var view_model := {
+		"current_port": {"id": "fixture", "name_key": "fixture"},
+		"money": 100,
+		"ship": {
+			"total_weight": 1.0, "max_weight": 10.0, "cargo_used": 1.0, "cargo_capacity": 10.0,
+			"hold": [{
+				"item_id": "core:item/brass", "name_key": "item.core.brass.name",
+				"category": "metal", "crafting_material": true, "unit_weight": 2.0,
+				"amount": 3, "sellable_amount": 3, "is_contract": false,
+				"contract_id": "", "avg_cost": 10.0, "icon_key": "",
+			}],
+		},
+		"warehouse": {"port_id": "fixture", "materials": []},
+		"market": [{
+			"item_id": "core:item/brass", "name_key": "item.core.brass.name",
+			"category": "metal", "crafting_material": true, "unit_weight": 2.0,
+			"price": 88, "stock": 10, "buyable": true, "icon_key": "",
+		}],
+		"trends": {},
+	}
+	var tree := Engine.get_main_loop() as SceneTree
+	var translate := Callable(context, "translate")
+	var emitted: Array = []
+	var hold: Control = CARGO_HOLD_SCRIPT.new()
+	hold.command_requested.connect(func(command: StringName, params: Dictionary) -> void:
+		emitted.append({"command": String(command), "params": params.duplicate(true)})
+	)
+	hold.bind(view_model, translate)
+	tree.root.add_child(hold)
+	var market: Control = MARKET_SCREEN_SCRIPT.new()
+	market.command_requested.connect(func(_command: StringName, _params: Dictionary) -> void:
+		emitted.append({"command": "sell_should_not_run"})
+	)
+	market.carry_changed.connect(func(offer: Dictionary) -> void:
+		hold.set_offer(offer)
+	)
+	market.bind(view_model, translate)
+	tree.root.add_child(market)
+
+	var cargo_zone := _named_node(hold, "CargoDropZone")
+	var tile: Variant = null
+	for node in _nodes_with_script(market, ITEM_TILE_SCRIPT):
+		if String((node.get("item") as Dictionary).get("kind", "")) == "market_item":
+			tile = node
+			break
+	assert_not_null(tile, "the fixture market renders one draggable tile")
+	if tile == null or cargo_zone == null:
+		hold.get_parent().remove_child(hold)
+		hold.free()
+		market.get_parent().remove_child(market)
+		market.free()
+		return
+	tile.call("increment_pending")
+	tile.call("increment_pending")
+	assert_eq(int(tile.get("pending")), 2, "two clicks carry two units")
+	assert_true(bool(cargo_zone.call("offer_active")), "the cargo target is armed while carrying")
+
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	cargo_zone.call("_gui_input", release)
+	assert_eq(emitted.size(), 1, "clicking the armed cargo target emits exactly one command")
+	if emitted.size() == 1:
+		assert_eq(emitted[0]["command"], "trade.buy", "clicking the hold buys")
+		assert_eq(String(emitted[0]["params"].get("destination", "")), "cargo", "the click names the cargo destination")
+		assert_eq(int(emitted[0]["params"].get("amount", 0)), 2, "the click carries the pending amount")
+		assert_false(bool(cargo_zone.call("offer_active")), "the target disarms after the drop")
+
+	# A click on a cargo tile *inside* the zone must place the stack too (the tile is
+	# MOUSE_FILTER_STOP, so it has to forward the click through `drop_host`).
+	tile.call("increment_pending")
+	assert_true(bool(cargo_zone.call("offer_active")), "the target re-arms on the next +1")
+	var cargo_tile: Variant = null
+	for node in _nodes_with_script(hold, ITEM_TILE_SCRIPT):
+		if String((node.get("item") as Dictionary).get("kind", "")) == "cargo_item":
+			cargo_tile = node
+			break
+	assert_not_null(cargo_tile, "the fixture hold renders a cargo tile")
+	if cargo_tile != null:
+		cargo_tile.call("_on_gui_input", release)
+		assert_eq(emitted.size(), 2, "clicking a cargo tile inside the armed zone also places")
+		if emitted.size() == 2:
+			assert_eq(emitted[1]["command"], "trade.buy", "the inner tile click buys")
+			assert_eq(int(emitted[1]["params"].get("amount", 0)), 3, "the inner tile click carries the pending amount")
+		assert_eq(int(cargo_tile.get("pending")), 0, "placing the stack never bumps the zone tile's own pending")
+
+	# Right click cancels without running a command.
+	tile.call("increment_pending")
+	var right_click := InputEventMouseButton.new()
+	right_click.button_index = MOUSE_BUTTON_RIGHT
+	right_click.pressed = true
+	market.call("_input", right_click)
+	assert_eq(int(tile.get("pending")), 0, "right click clears the pending carry")
+	assert_false(bool(cargo_zone.call("offer_active")), "right click disarms the cargo target")
+	assert_eq(emitted.size(), 2, "right click cancels the carry without a command")
+
+	hold.get_parent().remove_child(hold)
+	hold.free()
+	market.get_parent().remove_child(market)
+	market.free()
+
+
+## dev.3 反馈 #4：命令成功 / 失败的瞬时反馈要在鼠标交互处浮出，而不是只写顶部
+## banner；提示是框架级浮层（页面滚动区之外、不吃鼠标、两种分辨率都不越界），
+## 菜单 / 演出期间不弹。
+func test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void:
+	var bundle := _mount(5301)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	_goto(shell, "market")
+	# Mid-tutorial fixtures may keep the story card open; the floating hint is a port
+	# page interaction, so pin the card closed for this wiring test.
+	shell._story_card_open = false
+	# A failed command: hint must show the localized error at the cursor.
+	shell._run_command(&"trade.buy", {"item_id": "core:item/no_such_item", "amount": 1})
+	var hint: Control = shell._interaction_hint
+	assert_not_null(hint, "a command on a port page creates the floating hint")
+	if hint == null:
+		_unmount(bundle)
+		return
+	assert_true(bool(hint.call("is_showing")), "the failed command pops the hint")
+	assert_true(hint.visible, "the hint is painted")
+	assert_true(bool(hint.call("current_error")), "failures use the error tone")
+	assert_true(not String(hint.call("current_message")).is_empty(), "the hint carries the status text")
+	var failed_message := String(hint.call("current_message"))
+	# The top banner is still filled (persistent status stays the contract).
+	assert_eq(String(shell._status_message), failed_message, "the banner keeps the same status message")
+	assert_true(bool(shell._status_is_error), "the banner keeps the error flag")
+
+	# The hint lives on the shell overlay, outside the PageScroll.
+	var layer := hint.get_parent()
+	assert_not_null(layer, "the hint has a parent layer")
+	if layer != null:
+		assert_eq(String(layer.name), "HintLayer", "the hint sits on the shell hint layer")
+		assert_true(layer.get_parent() == shell, "the hint layer is a direct shell child")
+	var scroll := shell.get_node_or_null("PageMargin/PageScroll")
+	assert_true(scroll is ScrollContainer, "the page scroll container exists")
+	if scroll is ScrollContainer:
+		assert_false((scroll as ScrollContainer).is_ancestor_of(hint),
+			"the hint is outside the page scroll so it cannot be clipped")
+	for node in [hint, hint.get_child(0) if hint.get_child_count() > 0 else null]:
+		if node is Control:
+			assert_eq((node as Control).mouse_filter, Control.MOUSE_FILTER_IGNORE,
+				"the hint never swallows the click that places the carried stack")
+	var viewport_size := shell.get_viewport_rect().size
+	var hint_bounds: Vector2 = hint.get_combined_minimum_size()
+	# Pure placement: above the pointer, clamped inside the viewport at the edge.
+	var bottom_right: Vector2 = hint.call("place_at", viewport_size - Vector2(4.0, 4.0))
+	assert_true(bottom_right.x >= 0.0 and bottom_right.x + hint_bounds.x <= viewport_size.x + 0.5,
+		"the hint stays inside the viewport horizontally")
+	assert_true(bottom_right.y >= 0.0 and bottom_right.y + hint_bounds.y <= viewport_size.y + 0.5,
+		"the hint stays inside the viewport vertically")
+	var middle: Vector2 = hint.call("place_at", Vector2(400.0, 300.0))
+	assert_true(middle.y < 300.0, "the hint floats above the interaction point")
+
+	# A successful command updates the hint to the success tone / text.
+	shell._story_card_open = false
+	shell._run_command(&"port.wait", {"hours": 1})
+	assert_true(bool(hint.call("is_showing")), "the successful command keeps the hint visible")
+	assert_false(bool(hint.call("current_error")), "success uses the success tone")
+	assert_true(String(hint.call("current_message")).length() > 0, "success also reports the status text")
+
+	# Menu pages /演出 do not pop the hint.
+	var previous_screen := String(shell._active_screen)
+	shell._active_screen = "settings"
+	shell._interactive_command = true
+	shell._set_status("MENU_ONLY_STATUS", false)
+	assert_true(String(hint.call("current_message")) != "MENU_ONLY_STATUS",
+		"menu status messages do not pop the floating hint")
+	shell._interactive_command = false
+	shell._active_screen = previous_screen
+	_unmount(bundle)
+

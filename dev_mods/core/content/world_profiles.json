@@ -16,7 +16,6 @@
         "base_site_count": 2,
         "faction_count": 3,
         "weather_profile": "core:weather_profile/temperate",
-        "edge_density": 0.2,
         "start_region_tags": ["region.start"]
       }
     }

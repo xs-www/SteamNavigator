@@ -9,8 +9,8 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MapGenerator` | L1 |
-| `MAX_ATTEMPTS` | L11 |
-| `generate_spec(spec: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L23 |
+| `MAX_ATTEMPTS` | L19 |
+| `generate_spec(spec: Dictionary, hub: RegistryHub, rng_service: RngService, ship: Dictionary) -> Dictionary` | L31 |
 
 ## 契约与约束
 

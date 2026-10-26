@@ -75,13 +75,20 @@ func test_initial_offers_and_port_view_limit_fields() -> void:
 	var data: Dictionary = view["data"]
 	var contracts: Dictionary = data["contracts"]
 	var initial_ids := _offer_ids(contracts["offers"])
-	assert_eq(initial_ids.size(), 3, "run starts with three normal offers")
+	var pool_offers: Array = Array(context.state.contracts().get("offers", []))
+	assert_eq(pool_offers.size(), 3, "run starts with three normal offers in the pool")
+	assert_true(initial_ids.size() <= 3, "port.view exposes at most the pool")
 	assert_eq(int(contracts["active_limit"]), 1, "zero reputation holds one normal contract")
 	assert_eq(int(contracts["active_count"]), 0, "no normal contract is active at start")
 	assert_eq(int(contracts["normal_holds"]), 0, "normal_holds mirrors active_count")
 	assert_false(bool(contracts["main_chain_complete"]), "main chain is not complete at start")
 	for offer in contracts["offers"]:
 		assert_eq(String(offer.get("kind", "")), "normal", "initial offer is a normal contract")
+		# 反馈 #2：委托板只露出目的港已发现的普通委托（池仍是 3 条）。
+		assert_true(
+			MapOps.is_discovered(context.state, String(offer.get("destination", ""))),
+			"port.view only exposes offers to discovered destinations"
+		)
 	assert_true(contracts["main"] is Dictionary, "initial main contract stays active")
 	var ship: Dictionary = data["ship"]
 	assert_true(ship["transit_modules"] is Array, "ship view exposes transit module rows")
@@ -130,7 +137,7 @@ func test_active_limit_formula_and_accept_rejection() -> void:
 	assert_eq(int(contracts["active_count"]), 1, "active count grows with the accepted normal contract")
 	assert_eq(int(contracts["active_limit"]), limit, "port view exposes the current limit")
 	assert_eq(int(contracts["normal_holds"]), 1, "normal_holds mirrors the active count")
-	var second := _cargo_offer(contracts["offers"])
+	var second := _cargo_offer(context.state.contracts().get("offers", []))
 	assert_false(second.is_empty(), "another cargo offer remains in the pool")
 	var rejected := context.commands.execute(&"contract.accept", {"instance_id": String(second["instance_id"])})
 	assert_false(bool(rejected["ok"]), "second normal contract is rejected at the holding limit")
@@ -162,16 +169,30 @@ func test_arrival_refreshes_normal_offer_pool() -> void:
 	assert_true(_has_event(voyage.get("events", []), "contract.offers_refreshed"), "arrival emits contract.offers_refreshed")
 	var view := context.queries.execute(&"port.view")
 	var contracts: Dictionary = view["data"]["contracts"]
-	var after_signature := _offer_signature(contracts["offers"])
-	assert_eq(after_signature.size(), 3, "arrival refills the pool with three offers")
-	assert_eq(after_signature, _offer_signature(context.state.contracts().get("offers", [])), "view mirrors the refreshed pool")
-	for offer_id in _offer_ids(contracts["offers"]):
-		assert_false(before_ids.has(offer_id), "refreshed offer instance is new: %s" % str(offer_id))
+	var after_pool: Array = Array(context.state.contracts().get("offers", []))
+	var after_signature := _offer_signature(after_pool)
+	assert_eq(after_pool.size(), 3, "arrival refills the pool with three offers")
 	assert_ne(after_signature, before_signature, "the whole offer pool was replaced")
+	for offer_id in _offer_ids(after_pool):
+		assert_false(before_ids.has(offer_id), "refreshed offer instance is new: %s" % str(offer_id))
+	var exposed_signature := _offer_signature(contracts["offers"])
+	assert_true(exposed_signature.size() <= 3, "the board exposes at most the refreshed pool")
+	for row in exposed_signature:
+		assert_contains(after_signature, row, "view rows mirror refreshed pool instances")
+	for offer in contracts["offers"]:
+		assert_true(
+			MapOps.is_discovered(context.state, String(offer.get("destination", ""))),
+			"the refreshed board only exposes discovered destinations"
+		)
 	assert_true(contracts["main_offer"] is Dictionary, "the next main offer survives the refresh")
 	assert_eq(String(contracts["main_offer"]["kind"]), "main", "main offer is still a main contract")
 	var main_offer_id := String(contracts["main_offer"]["instance_id"])
 	assert_false(_offer_ids(contracts["offers"]).has(main_offer_id), "normal pool never contains the main offer")
+	# 反馈 #2：新主线 offer 生成即揭示目的港，委托板不会把引导送进迷雾。
+	assert_true(
+		MapOps.is_discovered(context.state, String(contracts["main_offer"]["destination"])),
+		"the refreshed main offer reveals its destination"
+	)
 	assert_true(Array(contracts["completed"]).has("core:contract/main_01"), "main chapter 1 completed on arrival")
 	assert_true(int(contracts["next_main_sequence"]) >= 2, "main chain advanced")
 

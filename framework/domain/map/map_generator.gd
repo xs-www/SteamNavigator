@@ -1,5 +1,13 @@
 class_name MapGenerator
 extends RefCounted
+## **RETIRED from the campaign path (2026-10-26,「海图唯一真相」).**
+##
+## `CampaignFactory` no longer calls this generator: the sea chart world
+## (`WorldGenerator.generate_chart`) is the single world and its topology is the only
+## gameplay topology. This file is kept as the retired abstract-topology generator
+## (它的随机 90–220 里程与 MST 拓扑不再被任何战役使用); `MapGenerationSpec` still exists
+## but now feeds the chart generator's content blueprint.
+##
 ## Procedural branch network of 4-5 ports.
 ##
 ## Hard constraints are checked per attempt:
@@ -11,9 +19,9 @@ extends RefCounted
 const MAX_ATTEMPTS := 60
 
 
-## Schema-2.0 entry point: identical constraints and world shape as the retired
-## 1.0 `generate()`, but the generator input is a plain spec dictionary instead of a
-## `map_profiles` definition. `CampaignFactory` builds it through `MapGenerationSpec`.
+## Retired entry point: identical constraints and world shape as the old 1.0 `generate()`,
+## but the generator input is a plain spec dictionary instead of a `map_profiles`
+## definition. **No campaign path calls this any more** (see class header).
 ##
 ## Recognised spec keys mirror the retired 1.0 generation fields:
 ## `port_count_range / archetypes / port_name_keys / start_archetype_tags /

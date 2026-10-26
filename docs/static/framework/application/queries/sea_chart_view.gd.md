@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SeaChartViewQuery` | L1 |
-| `DEFAULT_MIN_VISION_RADIUS` | L43 |
-| `DEFAULT_PORT_REVEAL_RADIUS` | L44 |
-| `execute(params: Dictionary, context) -> Dictionary` | L47 |
+| `DEFAULT_MIN_VISION_RADIUS` | L47 |
+| `DEFAULT_PORT_REVEAL_RADIUS` | L48 |
+| `execute(params: Dictionary, context) -> Dictionary` | L51 |
 
 陆地多边形、按发现等级分类的港口、已知航线、降采样迷雾网格与船只位置。
 
@@ -41,11 +41,15 @@
   `investigation_success_chance`；`port_goods` 不合并探索估算（`estimated` 为空字典），
   顶层追加 `expiring_clue_count` 供列表页入口角标；查询仍然不输出
   `target_port_id` / `credibility` / 真实 `search_zone`。
-- 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
-  煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
-  几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：
-  `voyage` = 抽象地图上真有这条航线（数值与 `voyage.preview` 逐项一致），
-  `chart` = 孪生世界 MST 图独有、抽象地图上没有对应边，此时风险为未知（-1），
-  不能假装安全。
+- **海图是唯一世界**（2026-10-26「海图唯一真相」）：`data.world_map` 的
+  `connectivity_graph` + `edges` 就是世界拓扑；`GameState.world()` 的 `routes` 由它派生
+  （`ChartWorldProjection.from_chart`）。每条边的 `distance` 是该边绘制路径的折线长度，
+  `base_risk` 也存在同一条边上。因此本查询对每条海图航线只输出**一个**距离
+  `distance` 和一个风险来源，不存在「第二把尺子」或「海图有边但不可出航」的分支。
+- `travel_hours` / `risk_level` / 煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与
+  航行规则推出（世界表里只存几何量与基础风险，不存时间/风险档位）。
+- **航线解锁标记**（2026-10-26）：每条 route 追加 `unlocked: bool`，来自
+  `WorldOps.is_route_unlocked`。输出条件仍是「两端都已发现」：未解锁但两端已发现的
+  边照常输出，供 UI 画「未测绘」虚线并在面板里禁用启航；未发现的一端仍被迷雾隐藏。
 
 模块索引：[framework/application](../README.md)

@@ -72,11 +72,6 @@
         "weather_profile": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },
-        "edge_density": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
         "start_region_tags": {
           "$ref": "common.schema.json#/$defs/tag_list"
         }

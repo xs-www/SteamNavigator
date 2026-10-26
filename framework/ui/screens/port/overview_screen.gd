@@ -13,6 +13,8 @@ extends VBoxContainer
 ##   state.success / state.danger），本文件无内联十六进制色与 StyleBoxFlat。
 ## - 尺寸约束：横幅 236 px、右列 `custom_minimum_size = (400, 0)`、左右 1.7:1、
 ##   快捷入口 / 等待按钮文本与信号不变；不新增节点层级。
+## - 反馈 #3：主线摘要的期限行在 `has_deadline=false` 时显示「引导委托 · 无期限」，
+##   奖励文案（`reward_text`，由 Shell 生成）对无期限委托显示「完成 +N」。
 ## @end-static-doc
 
 signal navigation_requested(screen_id: StringName, params: Dictionary)
@@ -131,7 +133,13 @@ func _objective_panel(vm: Dictionary) -> Control:
 	var contracts: Dictionary = vm.get("contracts", {}); var active: Variant = contracts.get("main", null); var offer: Variant = contracts.get("main_offer", null); var contract: Variant = active if active is Dictionary else offer
 	if contract is Dictionary:
 		box.add_child(_label("%s · %s" % ["主线进行中" if active is Dictionary else "可接主线", _loc(String(contract.get("name_key", "")), String(contract.get("template_id", "")))], 14, SNSkin.color("text.light")))
-		box.add_child(_label("%s → %s · 期限 %s" % [_loc(String(contract.get("origin_name_key", "")), String(contract.get("origin", ""))), _loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), String(contract.get("deadline_label", ""))], 13, SNSkin.color("text.muted")))
+		# 反馈 #3：无期限主线在摘要里显示「引导委托 · 无期限」，不显示占位截止时间。
+		var deadline_text := (
+			"期限 %s" % String(contract.get("deadline_label", ""))
+			if bool(contract.get("has_deadline", true))
+			else _loc("ui.label.contract_guidance", "引导委托") + " · " + _loc("ui.label.contract_untimed", "无期限")
+		)
+		box.add_child(_label("%s → %s · %s" % [_loc(String(contract.get("origin_name_key", "")), String(contract.get("origin", ""))), _loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), deadline_text], 13, SNSkin.color("text.muted")))
 		box.add_child(_label(String(contract.get("payload_text", "载荷：—")), 13, SNSkin.color("text.light"))); box.add_child(_label(String(contract.get("reward_text", "")), 13, SNSkin.color("text.muted")))
 	else: box.add_child(_label("暂无主线委托", 13, SNSkin.color("text.muted")))
 	box.add_child(_nav_button("查看全部委托", &"contracts")); box.add_child(_victory_plan(vm)); return panel

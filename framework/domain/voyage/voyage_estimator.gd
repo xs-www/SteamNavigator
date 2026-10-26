@@ -6,12 +6,16 @@ extends RefCounted
 ## 不写状态、不改存档，也不做可行性判定。
 ##
 ## ## 契约与约束
+## - **距离只有一把尺子**：`distance` 就是海图世界该边的 `WorldMap.edges[].distance`
+##   （= 绘制路径折线长度 = `voyage.preview` 计费的 `MapOps.route_between().distance`，
+##   后者由 `ChartWorldProjection.from_chart` 从同一条海图边派生）。海图查询把它原样传进来，
+##   不存在「展示距离 / 计费距离」两个参数。
 ## - **公式必须与 `VoyageCalculator.preview` 一致**：航速 = 船速 × 策略 `speed_mul` ×
 ##   载重系数；`duration = distance / speed`；煤 = `duration × coal_rate × coal_mul`；
 ##   水 = `duration × (water_rate × water_mul + 乘客数 × 0.06)`。这些常量直接引用
 ##   `VoyageCalculator`，不复制一份，避免海图与出航预览给出两个数字。
-## - **风险**：`base_risk` 只存在于抽象地图航线（`MapGenerator` 写入），坐标世界
-##   `WorldMap.edges` 只存几何量；没有可用的基础风险时返回 `risk_level = -1`
+## - **风险**：`base_risk` 存在同一条海图边上（海图世界生成时按 `route_templates.risk_range`
+##   掷出）；调用方直接把它传进来，读不到时才传 -1，返回 `risk_level = -1`
 ##   （面板显示「无法评估」），绝不把 0 当成「无风险」。
 ## - `travel_hours` 与方向无关；煤水按**出发港**的船上补给计算，所以 `supplies` 只对
 ##   「从当前港出发」的航线有直接意义，`sea_chart.view` 负责把这条语义解释给 UI
@@ -27,14 +31,13 @@ const LOW_SUPPLY_RATIO := 0.5
 ## 这里只做与领域规则一一对应的算术。
 ##
 ## 返回字段（全部可直接进 ViewModel / JSON）：
-## `distance` 海图距离 · `voyage_distance` 用于算时间的距离 · `travel_hours` ·
+## `distance`（唯一权威距离，同时用于展示与算时间）· `travel_hours` ·
 ## `arrival_hours`（相对当前游戏时间）· `speed` 有效航速 · `risk_level`（0–1，-1 未知）·
 ## `risk_label`（low/medium/high 或 unknown）· `risk_source`（voyage = 有基础风险，none = 未知）·
 ## `supplies`（煤水需求/存量/余量/是否足够）· `strategy_id` / `strategy_name_key`。
 static func estimate(
 	context: Dictionary,
 	distance: float,
-	voyage_distance: float,
 	base_risk: float,
 	strategy: ContentDefinition
 ) -> Dictionary:
@@ -49,7 +52,7 @@ static func estimate(
 	var load_ratio := float(context.get("load_ratio", 0.0))
 	var weight_factor := VoyageCalculator.weight_speed_factor(load_ratio)
 	var speed := maxf(0.1, float(stats.get("speed", 1.0)) * strategy_speed * weight_factor)
-	var duration := maxf(0.0, voyage_distance) / speed
+	var duration := maxf(0.0, distance) / speed
 	var ship: Dictionary = context.get("ship", {})
 	var coal_required := duration * float(stats.get("coal_rate", 0.0)) * strategy_coal
 	var water_required := duration * (
@@ -87,7 +90,6 @@ static func estimate(
 		risk = {"risk_level": -1.0, "risk_label": "unknown", "risk_source": "none"}
 	return {
 		"distance": distance,
-		"voyage_distance": voyage_distance,
 		"travel_hours": duration,
 		"arrival_hours": game_time + duration,
 		"speed": speed,

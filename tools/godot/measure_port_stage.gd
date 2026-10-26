@@ -1,11 +1,11 @@
 ## @static-doc
-## 作用：PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与三个站位（market/harbor/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。
+## 作用：PortStage 真实渲染预算实测（窗口 1440×900）：挂载 `port_stage_preview.tscn`，依次采样 `preview`、`sparse` 与舞台 `station_ids()` 的全部站位（当前 market/harbor/shipyard/supply，stage 构图），优先用 `RenderingServer.get_rendering_info()` 读取整帧 draw calls / primitives，并输出场景 mesh/MultiMesh/粒子/surface/triangle 分析、舞台分层 surface、`batch_stats()`、`town_density()`、`station_prop_count()`、`painted_backdrop_layer_count()` 与「排除玩家船后的 stage draws」。
 ##
 ## - 关键依赖：`dev_scenes/port_stage/port_stage_preview.tscn`、`RenderingServer`、`PortStage.batch_stats()`
 ##
 ## ## 契约与约束
 ## - 必须窗口模式才能读到真实 draw calls；headless 时打印明确说明并走 mesh/surface 分析口径，不视为失败、不挂窗口。
-## - 采样 6 帧取峰值，避免 resize / 首帧低值；成功条件为 5 个样本（preview/sparse/market/harbor/supply）都完成测量，否则退出码 1。
+## - 采样 6 帧取峰值，避免 resize / 首帧低值；成功条件为 `2 + station_ids().size()` 个样本（preview/sparse + 每个站位，当前 4 个站位共 6 个）都完成测量，否则退出码 1。
 ## - 预算阈值 120 draws / 60,000 tris；每个站位单独输出 ≤120 / ≤60k 判定与一行汇总，超出只报告 OVER 不改变退出码（测量工具不替代验收）。注意 60k 是整场景 tri 口径；§5.1 的「同屏城镇建筑 ≤60k / LOD1 组合 ≤20k」需用 5 栋 GLB 求和另行复算。
 ## - `-- --core-zip` 会把 `dev_mods/core` 打成 `.snavmod.zip` 并挂载，把 `SN_TOWN_ASSET_ROOT` 指向 `res://mods/core/assets/models/props`，从而以原始 `ContentAssetLoader` 路径实测 ZIP 加载；`-- --core-zip=PATH` 挂载既有包（如 `dist/mods/core-1.0.0.snavmod.zip`）。不传时仍是松散 `dev_mods`（导入资源路径）。
 ## - 180 s watchdog；只读场景，不修改游戏状态或源码。
@@ -24,9 +24,9 @@ extends SceneTree
 ##   1. `variant=preview` (town kit + painted banner) and `variant=sparse`
 ##      (small port, no banner) — the historical baseline, now on the default
 ##      `harbor` / `stage` station;
-##   2. one sample per berth (`station=market`, `station=harbor`,
-##      `station=supply`) on the preview payload, `stage` framing, with the
-##      camera driven by the Lead's `focus_station()` API.
+##   2. one sample per berth from the mounted stage's `station_ids()` (currently
+##      `market`, `harbor`, `shipyard`, `supply`) on the preview payload, `stage`
+##      framing, with the camera driven by the Lead's `focus_station()` API.
 ##
 ## Per sample it reports:
 ##   - renderer draw calls / primitives, when the active renderer reports them
@@ -44,10 +44,10 @@ extends SceneTree
 ## Each berth is evaluated against the project budget: ≤120 draw calls and
 ## ≤60k triangles. A final `[measure] SUMMARY` line aggregates the results.
 ##
-## Exit code 0 means all 5 samples were measured (budget overruns are reported,
-## not treated as tool failures). Any mount/read failure — including the station
-## API not being landed yet — exits with code 1; a watchdog quits instead of
-## hanging when the frame loop stalls.
+## Exit code 0 means all `2 + station_ids().size()` samples were measured (budget
+## overruns are reported, not treated as tool failures). Any mount/read failure —
+## including the station API not being landed yet — exits with code 1; a watchdog
+## quits instead of hanging when the frame loop stalls.
 
 const PREVIEW_SCENE := "res://dev_scenes/port_stage/port_stage_preview.tscn"
 const WINDOW := Vector2i(1440, 900)
@@ -65,8 +65,10 @@ const TRIANGLE_BUDGET := 60000
 ## Slots expected from the "continuous harbour + three adjacent berths" design.
 const STATIONS := ["market", "harbor", "supply"]
 const STATION_FRAMING := "stage"
-## preview + sparse + one sample per berth.
-const EXPECTED_MEASUREMENTS := 2 + 3
+## preview + sparse + one sample per berth. Derived from the mounted stage's
+## `station_ids()` in `_run()`, so adding a berth cannot make this tool report a
+## false failure any more.
+var _expected_measurements := 2 + STATIONS.size()
 
 var _failures := 0
 var _measured := 0
@@ -112,6 +114,9 @@ func _run() -> void:
 	var scene := packed.instantiate()
 	root.add_child(scene)
 	await _settle(SETTLE_FRAMES, SETTLE_SECONDS)
+	# The station list comes from the stage, so the sample count is dynamic
+	# (preview + sparse + one per berth).
+	_expected_measurements = 2 + _station_ids(scene).size()
 
 	# Baseline samples: the legacy camera is the `harbor` / `stage` station, so
 	# focus it explicitly when the station API exists (otherwise keep the old
@@ -601,6 +606,6 @@ func _finish() -> void:
 	_finished = true
 	_print_summary()
 	print("=== port stage measure: %d/%d sample(s) measured, %d failure(s) ===" % [
-		_measured, EXPECTED_MEASUREMENTS, _failures,
+		_measured, _expected_measurements, _failures,
 	])
-	quit(0 if _failures == 0 and _measured == EXPECTED_MEASUREMENTS else 1)
+	quit(0 if _failures == 0 and _measured == _expected_measurements else 1)

@@ -1327,8 +1327,8 @@ func test_save_load_roundtrip_preserves_exploration_state() -> void:
 ## 供需 / 库存 → 精确买卖价，且任何等级都不泄露 target_port_id / credibility。
 func test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void:
 	var context := _start_run(SEED)
-	var target_id := _discover_other_port(context)
-	assert_false(target_id.is_empty(), "a second discovered port is needed for a goods lead")
+	# Discover one extra harbour so a goods clue has a non-current target candidate.
+	_discover_other_port(context)
 	var clue := _acquire_goods(context, "intel")
 	assert_false(clue.is_empty(), "a goods clue should be acquirable")
 	if clue.is_empty():
@@ -1337,8 +1337,14 @@ func test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void:
 		"the clue type is port_goods")
 	var snapshot: Dictionary = clue.get("goods_snapshot", {})
 	assert_false(snapshot.is_empty(), "the market snapshot is frozen on the clue")
-	assert_eq(String(clue.get("target_port_id", "")), target_id,
-		"the goods clue targets an already discovered harbour")
+	# The target is any discovered non-current harbour with a tradable market, not a fixed
+	# port id: the chart layout/archetype assignment is content-driven.
+	var target_id := String(clue.get("target_port_id", ""))
+	var discovered: Array = context.state.campaign_world().get("discovered_port_ids", [])
+	assert_true(discovered.has(target_id),
+		"the goods clue targets an already discovered harbour (%s)" % target_id)
+	assert_ne(target_id, context.state.current_port_id(),
+		"goods clues never target the current harbour")
 	var rules := ExplorationRules.read(context.state, context.registries)
 	var expiry_hours := float((rules.get("goods_clue_expiry_hours", {}) as Dictionary).get("intel", -1.0))
 	assert_almost_eq(float(clue.get("expires_at", 0.0)), context.state.now() + expiry_hours, 0.001,
@@ -1650,12 +1656,19 @@ func test_contract_completion_hook_unlocks_a_clue() -> void:
 ## active（信息本身不会因为出航而失效）；港口位置线索 / 过期线索 / 在航都会被拒绝。
 func test_clue_travel_sails_to_the_goods_lead_harbour() -> void:
 	var context := _start_run(SEED)
-	var target_id := _discover_other_port(context)
+	# Discover one extra harbour so a goods clue has a non-current target candidate.
+	_discover_other_port(context)
 	var clue := _acquire_goods(context, "wait")
 	assert_false(clue.is_empty(), "a goods clue should exist")
 	if clue.is_empty():
 		return
 	var clue_id := String(clue.get("id", ""))
+	# The target harbour is content-driven (chart hover assignment), so read it from the
+	# clue instead of assuming which port the layout put second.
+	var target_id := String(clue.get("target_port_id", ""))
+	assert_false(target_id.is_empty(), "the goods clue resolves a target harbour")
+	# 海图解锁是独立门禁；本用例验证「货物线索 → 普通航线」的接线，先解锁目标航线。
+	WorldOps.unlock_route(context.state, context.state.current_port_id(), target_id)
 	var result := context.commands.execute(&"clue.travel", {
 		"clue_id": clue_id,
 		"strategy_id": STRATEGY_ID,
@@ -1679,8 +1692,14 @@ func test_clue_travel_sails_to_the_goods_lead_harbour() -> void:
 		)
 	assert_false(ClueService.find_clue(context.state, clue_id).is_empty(),
 		"the goods clue stays active while the ship sails")
-	# 港口位置线索不能走 clue.travel（目标不是已知港口）。
-	var port_clue := _acquire(context, "intel")
+	# 港口位置线索不能走 clue.travel（目标不是已知港口）。用显式目标港构造，避免依赖
+	# 当前世界是否还剩未发现港口（上面的航行可能已经发现了最后一个）。
+	var port_clue := _acquire(context, "intel", context.state.current_port_id())
+	assert_false(port_clue.is_empty(),
+		"a port-location clue should still be constructible (discovered=%s active=%d)" % [
+			str(context.state.campaign_world().get("discovered_port_ids", [])),
+			ClueService.active_count(context.state),
+		])
 	var not_goods := context.commands.execute(&"clue.travel", {
 		"clue_id": String(port_clue.get("id", "")),
 		"strategy_id": STRATEGY_ID,

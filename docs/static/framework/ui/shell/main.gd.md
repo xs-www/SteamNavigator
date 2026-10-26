@@ -8,56 +8,59 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI_THEME` | L69 |
-| `HARBOR_SIGN_SCRIPT` | L71 |
-| `MARKET_SCREEN_SCENE` | L72 |
-| `CARGO_HOLD_PANEL_SCRIPT` | L74 |
-| `ITEM_FALLBACK_ICON` | L76 |
-| `CONTRACTS_SCREEN_SCENE` | L77 |
-| `SUPPLY_SCREEN_SCENE` | L78 |
-| `INTEL_SCREEN_SCENE` | L79 |
-| `OVERVIEW_SCREEN_SCENE` | L80 |
-| `SHIPYARD_SCREEN_SCENE` | L81 |
-| `BASE_SCREEN_SCENE` | L82 |
-| `AUTO_TRADE_SCREEN_SCENE` | L83 |
-| `RUINS_SCREEN_SCENE` | L84 |
-| `PORT_MEMORY_SCREEN_SCENE` | L85 |
-| `SETTLEMENT_SCREEN_SCENE` | L86 |
-| `AT_SEA_SCREEN_SCENE` | L87 |
-| `EVENT_SCREEN_SCENE` | L88 |
-| `SEA_CHART_SCREEN_SCENE` | L89 |
-| `CLUE_LOG_SCREEN_SCENE` | L90 |
-| `STORY_CARD_SCRIPT` | L91 |
-| `STORY_OBJECTIVE_SCRIPT` | L92 |
-| `TASK_TRACKER_SCRIPT` | L93 |
-| `VICTORY_SCREEN_SCENE` | L94 |
-| `MAIN_MENU_SCREEN_SCENE` | L95 |
-| `NEW_GAME_SCREEN_SCENE` | L96 |
-| `MODS_SCREEN_SCENE` | L97 |
-| `SETTINGS_SCREEN_SCENE` | L98 |
-| `NAV_ICONS` | L101 |
-| `NAV_ICON_MAX_WIDTH` | L112 |
-| `DEV_TEAM` | L113 |
-| `GAME_VERSION_FALLBACK` | L114 |
-| `SCREENS` | L118 |
-| `PORT_STAGE_SCENE_PATH` | L121 |
-| `PORT_STAGE_FACILITY_SCREENS` | L123 |
-| `STAGE_SCREENS` | L136 |
-| `DOCK_PANEL_WIDTH` | L145 |
-| `CARGO_HOLD_PANEL_WIDTH` | L147 |
-| `MARKET_COLUMN_GAP` | L149 |
-| `TOP_CHROME_MAX_HEIGHT` | L153 |
-| `PORT_STATUS_BAR_HEIGHT` | L155 |
-| `PORT_STATUS_BAR_GAP` | L156 |
-| `PORT_SIGN_WIDTH` | L159 |
-| `PORT_SIGN_HEIGHT` | L160 |
-| `PORT_SIGN_GAP` | L161 |
-| `PORT_SIGN_MARGIN` | L162 |
-| `HUD_ICON_KEYS` | L166 |
-| `HUD_SKIN_ICONS` | L177 |
-| `HUD_ICON_SIZE` | L187 |
-| `PAGE_BOTTOM_MARGIN` | L190 |
-| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L191 |
+| `UI_THEME` | L112 |
+| `HARBOR_SIGN_SCRIPT` | L114 |
+| `MARKET_SCREEN_SCENE` | L115 |
+| `CARGO_HOLD_PANEL_SCRIPT` | L117 |
+| `ITEM_FALLBACK_ICON` | L119 |
+| `CARRY_GHOST_SCRIPT` | L122 |
+| `INTERACTION_HINT_SCRIPT` | L123 |
+| `CONTRACTS_SCREEN_SCENE` | L124 |
+| `SUPPLY_SCREEN_SCENE` | L125 |
+| `INTEL_SCREEN_SCENE` | L126 |
+| `OVERVIEW_SCREEN_SCENE` | L127 |
+| `SHIPYARD_SCREEN_SCENE` | L128 |
+| `BASE_SCREEN_SCENE` | L129 |
+| `AUTO_TRADE_SCREEN_SCENE` | L130 |
+| `RUINS_SCREEN_SCENE` | L131 |
+| `PORT_MEMORY_SCREEN_SCENE` | L132 |
+| `SETTLEMENT_SCREEN_SCENE` | L133 |
+| `AT_SEA_SCREEN_SCENE` | L134 |
+| `EVENT_SCREEN_SCENE` | L135 |
+| `SEA_CHART_SCREEN_SCENE` | L136 |
+| `CLUE_LOG_SCREEN_SCENE` | L137 |
+| `STORY_CARD_SCRIPT` | L138 |
+| `STORY_OBJECTIVE_SCRIPT` | L139 |
+| `STORY_FOCUS_SCRIPT` | L140 |
+| `TASK_TRACKER_SCRIPT` | L141 |
+| `VICTORY_SCREEN_SCENE` | L142 |
+| `MAIN_MENU_SCREEN_SCENE` | L143 |
+| `NEW_GAME_SCREEN_SCENE` | L144 |
+| `MODS_SCREEN_SCENE` | L145 |
+| `SETTINGS_SCREEN_SCENE` | L146 |
+| `NAV_ICONS` | L149 |
+| `NAV_ICON_MAX_WIDTH` | L160 |
+| `DEV_TEAM` | L161 |
+| `GAME_VERSION_FALLBACK` | L162 |
+| `SCREENS` | L166 |
+| `PORT_STAGE_SCENE_PATH` | L169 |
+| `PORT_STAGE_FACILITY_SCREENS` | L171 |
+| `STAGE_SCREENS` | L184 |
+| `DOCK_PANEL_WIDTH` | L193 |
+| `CARGO_HOLD_PANEL_WIDTH` | L195 |
+| `MARKET_COLUMN_GAP` | L197 |
+| `TOP_CHROME_MAX_HEIGHT` | L201 |
+| `PORT_STATUS_BAR_HEIGHT` | L203 |
+| `PORT_STATUS_BAR_GAP` | L204 |
+| `PORT_SIGN_WIDTH` | L207 |
+| `PORT_SIGN_HEIGHT` | L208 |
+| `PORT_SIGN_GAP` | L209 |
+| `PORT_SIGN_MARGIN` | L210 |
+| `HUD_ICON_KEYS` | L214 |
+| `HUD_SKIN_ICONS` | L225 |
+| `HUD_ICON_SIZE` | L235 |
+| `PAGE_BOTTOM_MARGIN` | L238 |
+| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L239 |
 
 ## 皮肤接线（ui-skin-v1）
 - 所有纹理/图标/颜色经 `SNSkin`（`framework/ui/skin/sn_skin.gd`）读取 `assets/ui/skin/sn_v1/skin.json`；
@@ -82,6 +85,36 @@
 - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
 - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
 
+## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
+- `ui:*` 是**玩家动作**，由 Shell 在动作发生处上报一次：`ui:chart_opened` 在
+  `_on_nav("sea_chart")`、`ui:chart_closed` 在 `_on_sea_chart_closed`、
+  `ui:arrival_settled` 在 `_finish_presentation()` / `_full_stop_after_voyage()`
+  的抵达结算点。页面挂载函数（`_screen_settlement` / `_screen_sea_chart`）只渲染、
+  不再 observe，因此剧情卡继续 / resize / 状态刷新引起的页面重建不会重复推进剧情。
+- `DEPARTURE_VEIL` 归入 `_presentation_on_stage()`：离港云层期间继续挂出发港 3D
+  舞台（origin 视图），不会在演出中途掉回海图页并重复上报 `ui:chart_opened`。
+- 离开结算页清空 `_settlement_summary`，避免旧航次摘要被后续重建再次“结算”。
+- `SNFocusOverlay`（framework/ui/components/sn_focus_overlay.gd）：剧情阶段的
+  `story.view.focus.target` 由 `_resolve_story_focus_target()` 解析成真实控件
+  （`market_supply` / `chart_entry` / `<screen>_nav`）；页面挂好、每次重建与窗口
+  resize 后由 `_sync_story_focus()` 更新，剧情卡 / 演出 / 结算页时清除。
+
+## 退出与性能（P0，2026-10-24）
+- **优雅退出**：`_ready()` 设 `get_tree().auto_accept_quit = false`，窗口关闭请求走
+  `_notification(NOTIFICATION_WM_CLOSE_REQUEST)` → `_graceful_quit()`；「退出游戏」按钮同样走它。
+  `_prepare_quit()` 幂等：停演出、`unmount_stage()` 并释放 `_port_stage_host`（它持有
+  SubViewport + 世界 + MSAA framebuffer）、释放页面树/全屏层与热点层，随后
+  `ContentAssetLoader.clear_cache()` + `FrameworkRuntime.shutdown()`（此前只有测试会调用）。
+- **导出构建退出崩溃的引擎兜底**：Godot 4.7.2 GL Compatibility 在「本会话渲染过 3D 舞台」
+  后退出时于 GLES3 storage teardown 崩溃（0xC0000005，dev.3 与 HEAD 导出版均可复现，应用层
+  清理无效）。因此 `_had_3d_stage` 为真且非编辑器构建时，清理完成后用 `OS.kill()` 结束进程，
+  玩家看到的是正常关闭而不是 Windows 崩溃弹窗；纯菜单会话仍走 `get_tree().quit()`。引擎升级后应移除该兜底。
+- **整页重建读作用域**：`_rebuild_ui()` 包在 `QueryBus.begin_read_scope()` /
+  `end_read_scope()` 里，一次重建只克隆一次 GameState（每查询克隆 11.6 ms → 一次）；
+  `CommandBus` 提交成功后 `invalidate_read_snapshot()` 保证后续查询看到已提交状态。
+- **港口名缓存**：`_port_name()` 以 run seed 为键缓存 `port_id → name_key`，一次 `map.view`
+  填满整表；状态消息不再每条触发一次 `map.view` 全状态克隆（13.5 ms/次）。
+
 ## 市场页（图标直接交易，`docs/design/MARKET_UI_REFACTOR.md`）
 - `_screen_market()` 先执行 `market.view`；查询不可用时回退用 `port.view` 的行情 / 船摘要
   组装同名字段的 ViewModel，页面不崩。
@@ -93,5 +126,18 @@
   退化成 `CargoHoldPanel` + 市场面板两栏，不出现空白舞台窗口。
 - 页面只发命令意图：`trade.buy{destination}` / `trade.sell{source}` /
   `warehouse.store_materials` / `warehouse.take_materials`。
+
+## 委托页（反馈 #2 / #3）
+- 可接委托列表直接来自 `port.view`（已在查询层过滤掉目的港未发现的普通委托）；
+  Shell 不再做二次雾判断，也不隐藏主线 offer（生成时已揭示目的地）。
+- 无期限委托（`has_deadline=false`）在总览奖励文案里用「完成 +N」而不是「准时 +N」；
+  委托页卡片的期限显示由 `contracts_screen` 负责。
+
+## 航线解锁（2026-10-26）
+- 酒馆页「海图（航线解锁）」区块发 `chart.buy {port_id}`；成功由 `_handle_success` 的
+  `"chart.buy"` 分支在状态栏确认已测绘航线，`_refresh()` 重建页面后
+  `tavern.view.chart_offers` 的该港口变为 `unlocked=true`（显示「已测绘」）。
+- 海图页签 `voyage.preview` / `voyage.start` / `clue.travel` 的 `route_locked` 失败按
+  既有错误路径显示 `ui.error.route_locked`；面板在未测绘航线上禁用启航并显示酒馆提示。
 
 模块索引：[framework/ui](../README.md)

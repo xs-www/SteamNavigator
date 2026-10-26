@@ -56,6 +56,7 @@
         "intel_cost": 25,
         "trade_margin": 0.95,
         "player_trade_impact": 0.35,
+        "chart_cost": 60,
         "default_starting_scenario": "core:starting_scenario/steady",
         "twin_world_size": 160,
         "exploration": {
@@ -177,6 +178,11 @@
                 },
                 {
                   "type": "discover_contract_destination"
+                },
+                {
+                  "type": "unlock_route",
+                  "from": "current",
+                  "to": "contract_destination"
                 }
               ],
               "advance": {
@@ -197,6 +203,10 @@
               "objective": {
                 "text_key": "story.core.supply_brief.objective",
                 "target": 4
+              },
+              "focus": {
+                "target": "market_supply",
+                "text_key": "story.core.focus.supply_brief"
               },
               "advance": {
                 "all": [
@@ -231,6 +241,10 @@
                 "text_key": "story.core.supply_hold.objective",
                 "target": 1
               },
+              "focus": {
+                "target": "chart_entry",
+                "text_key": "story.core.focus.supply_hold"
+              },
               "advance": {
                 "event": "ui:chart_opened"
               }
@@ -246,6 +260,10 @@
               "objective": {
                 "text_key": "story.core.chart_brief.objective",
                 "target": 1
+              },
+              "focus": {
+                "target": "chart_entry",
+                "text_key": "story.core.focus.chart_brief"
               },
               "advance": {
                 "event": "ui:chart_closed"
@@ -270,6 +288,10 @@
                 "text_key": "story.core.supply_finish.objective",
                 "target": 10
               },
+              "focus": {
+                "target": "market_supply",
+                "text_key": "story.core.focus.supply_finish"
+              },
               "advance": {
                 "event": "cmd:supply.buy_coal",
                 "counter": "coal_aboard",
@@ -290,6 +312,12 @@
                 "text_key": "story.core.depart_brief.objective",
                 "target": 1
               },
+              "advance": {
+                "event": "cmd:voyage.start"
+              }
+            },
+            {
+              "id": "first_arrival",
               "advance": {
                 "event": "ui:arrival_settled"
               }
@@ -321,6 +349,11 @@
                   "deadline_formula": "tutorial_trade",
                   "name_key": "contract.core.tutorial_trade.name",
                   "description_key": "contract.core.tutorial_trade.description"
+                },
+                {
+                  "type": "unlock_route",
+                  "from": "current",
+                  "to": "home"
                 }
               ],
               "objective": {
@@ -348,6 +381,12 @@
                 "text_key": "story.core.second_depart.objective",
                 "target": 1
               },
+              "advance": {
+                "event": "cmd:voyage.start"
+              }
+            },
+            {
+              "id": "second_arrival",
               "advance": {
                 "event": "ui:arrival_settled"
               }
@@ -605,9 +644,13 @@
                   "type": "grant_tutorial_contract",
                   "template_id": "core:contract/main_03",
                   "passengers": 1,
-                  "deadline_formula": "tutorial_craft",
                   "name_key": "contract.core.tutorial_passenger.name",
                   "description_key": "contract.core.tutorial_passenger.description"
+                },
+                {
+                  "type": "unlock_route",
+                  "from": "current",
+                  "to": "contract_destination"
                 }
               ],
               "objective": {

@@ -30,9 +30,23 @@ extends VBoxContainer
 ## - 拖入市场面板的载荷 kind 只认 `cargo_item` / `warehouse_item`，命令固定为
 ##   `trade.sell {item_id, amount, source}`。
 ## - `_grid_label` / `_label` / `_loc` 是测试与旧调用方依赖的 helper，保留签名。
+##
+## ## 拿起 / 放下（feedback #1）
+## - `signal carry_changed(offer)`：市场商品格子 `pending_changed` 的聚合结果。offer
+##   是 `{kind:"market_item", item_id, name, icon, amount}`，空字典表示放下 / 取消。
+##   Shell 拿它驱动光标幽灵（SNCarryGhost）并把 offer 转发给船舱 / 仓库落点
+##   （`SNCargoHoldPanel.set_offer`），玩家点落点即执行 `trade.buy`。
+## - 同时只有一个格子被「拿起」：切换携带时先 `clear_pending()` 旧格子（避免重入：
+##   先清 `_carry_tile` 再清旧格子，旧格子的 0 事件不会再发 carry_changed）。
+## - 右键取消走 `_input`（格子 / 落点是 `MOUSE_FILTER_STOP`，普通 `_gui_input`
+##   收不到别处的右键）：清 pending 并发 `carry_changed({})`。
+## - 市场格子仍是原生拖拽来源，拖拽与拿起可共存；`_clear()` 会丢弃携带引用，
+##   页面重建（命令成功）后 pending 与幽灵一起归零。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
+## Aggregated 拿起 state: non-empty offer = carried stack, `{}` = nothing carried.
+signal carry_changed(offer: Dictionary)
 
 const SUPPLY_CARD_SCENE := preload("res://framework/ui/components/sn_supply_card.tscn")
 const TILE_SCRIPT := preload("res://framework/ui/components/sn_item_tile.gd")
@@ -45,6 +59,8 @@ const GRID_SEPARATION := 8
 
 var _tr: Callable = Callable()
 var _sell_zone: Variant = null
+## The market tile currently carried by the 拿起手势 (null = nothing carried).
+var _carry_tile: Variant = null
 
 
 func bind(view_model: Dictionary, translate: Callable) -> void:
@@ -91,6 +107,73 @@ func handle_sell_drop(data: Dictionary) -> void:
 		"amount": maxi(1, int(data.get("amount", 1))),
 		"source": source,
 	})
+
+
+## Click-to-carry state of the market grid: the tile whose pending amount is being
+## carried, or null. Exposed for the Shell wiring / tests.
+func carrying_tile() -> Control:
+	if _carry_tile == null or not is_instance_valid(_carry_tile):
+		return null
+	return _carry_tile as Control
+
+
+## Right click anywhere on the page cancels the carry (the tiles and drop zones
+## are `MOUSE_FILTER_STOP`, so a page-level `_input` is the only place that sees a
+## right click outside the carried tile itself).
+func _input(event: InputEvent) -> void:
+	if _carry_tile == null:
+		return
+	if not (event is InputEventMouseButton):
+		return
+	var button := event as InputEventMouseButton
+	if button.button_index != MOUSE_BUTTON_RIGHT or not button.pressed:
+		return
+	cancel_carry()
+	if is_inside_tree():
+		get_viewport().set_input_as_handled()
+
+
+## Drops the carried stack without trading (right click / page teardown).
+func cancel_carry() -> void:
+	if _carry_tile == null:
+		return
+	var tile: Variant = _carry_tile
+	_carry_tile = null
+	if is_instance_valid(tile):
+		tile.call("clear_pending")
+	carry_changed.emit({})
+
+
+## One market tile changed its pending amount: adopt it as the carried stack, or
+## clear the carry when it dropped to zero. Switching tiles clears the old one
+## first (with `_carry_tile` already nulled, so its zero event is a no-op).
+func _on_tile_pending_changed(tile: Control, pending: int) -> void:
+	if pending > 0:
+		if _carry_tile != null and _carry_tile != tile:
+			var previous: Variant = _carry_tile
+			_carry_tile = null
+			if is_instance_valid(previous):
+				previous.call("clear_pending")
+		_carry_tile = tile
+		carry_changed.emit(_offer_for(tile))
+		return
+	if _carry_tile == tile:
+		_carry_tile = null
+		carry_changed.emit({})
+
+
+## Payload for the cursor ghost + the drop zones. `amount` is the tile's pending
+## amount, so the number on the ghost follows every +1 click.
+func _offer_for(tile: Control) -> Dictionary:
+	var payload: Dictionary = tile.get("payload")
+	return {
+		"kind": String(payload.get("kind", "")),
+		"item_id": String(payload.get("item_id", "")),
+		"name": String(payload.get("name", "")),
+		"icon": tile.call("icon_texture"),
+		"amount": int(tile.get("pending")),
+	}
+
 
 
 ## 4.5.3：补给并市 —— 市场页上方的煤 / 水区块，复用 `supply.buy_*` 命令。
@@ -178,7 +261,7 @@ func _market_section(view_model: Dictionary) -> VBoxContainer:
 	var title := _label(_loc("ui.market.grid_section", "市场行情"), 15, SNSkin.color("brass.highlight"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	header.add_child(_label(_loc("ui.hint.market_drag", "点击 +1 · 右键清空 · 拖拽交易"), 11, SNSkin.color("text.muted")))
+	header.add_child(_label(_loc("ui.hint.market_drag", "点击拿起 · 点落点放下 · 右键取消 · 可拖拽"), 11, SNSkin.color("text.muted")))
 	section.add_child(header)
 	var rows: Array = view_model.get("market", [])
 	if rows.is_empty():
@@ -232,6 +315,9 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 		},
 	})
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.pending_changed.connect(func(pending: int) -> void:
+		_on_tile_pending_changed(tile, pending)
+	)
 	return tile as Control
 
 
@@ -258,6 +344,10 @@ func _trend_arrow(trend: String) -> String:
 
 
 func _clear() -> void:
+	# The page is being rebuilt (navigation / committed command): the carried tile
+	# belongs to the old tree, so the Shell also hides its cursor ghost.
+	_carry_tile = null
+	_sell_zone = null
 	for child in get_children():
 		remove_child(child)
 		child.free()

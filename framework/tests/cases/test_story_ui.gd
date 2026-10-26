@@ -1,17 +1,23 @@
 extends TestCase
 ## @static-doc
-## 作用：阶段 4.5.1 新手剧情 UI 冒烟测试：教程局挂出剧情卡 / 目标条、导航与海图入口
-## 按功能解锁过滤、剧情卡继续推进阶段、跳过教程的确认页与全解锁。
+## 作用：新手剧情 UI 冒烟测试：教程局挂出剧情卡 / 目标条、导航与海图入口按功能
+## 解锁过滤、剧情卡继续推进阶段、跳过教程的确认页与全解锁；dev.3 #1 的触发时机
+## 回归（真实航海驱动：出航收出航指示、抵达才推抵达剧情、事件只上报一次）与
+## dev.3 #3 的框架级强制引导遮罩（组件遮罩契约 + Shell 在剧情阶段挂载 / 解析目标 /
+## 推进后清除）。
 ##
 ## ## 契约与约束
 ## - 用真实 `main.tscn` 与真实 Core 内容；教程局通过 `run.start tutorial=true` 建立，
 ##   非教程局用于对照（不弹卡、不门禁）。
 ## - 只驱动 Shell 的公开信号 / 命令，不断言内部节点布局尺寸；卡片按钮按节点名
 ##   `ContinueButton` / `SkipButton` / `SkipConfirmButton` 查找。
+## - 时间线回归用真实 `voyage.start → _process 逐帧 → _finish_presentation` 驱动，
+##   并用 `story.observe` 命令执行日志计数证明「一次玩家动作只上报一次 UI 事件」。
 ## @end-static-doc
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
 const NEW_GAME_SCENE := "res://framework/ui/screens/menu/new_game_screen.tscn"
+const FOCUS_OVERLAY_SCRIPT := preload("res://framework/ui/components/sn_focus_overlay.gd")
 const STEADY_BUILD := "core:starting_scenario/steady"
 
 
@@ -72,9 +78,10 @@ func test_continue_unlocks_market_then_buying_advances_to_the_chart() -> void:
 	assert_not_null(hold_dismiss, "the hold card can be dismissed")
 	hold_dismiss.pressed.emit()
 	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_hold", "dismissing does not advance the stage")
-	# 直接挂海图页（避免 await 页面淡入），打开 → 关闭分别推进剧情。
-	shell._active_screen = "sea_chart"
-	shell._refresh()
+	# 走真实的「打开海图」动作（`ui:chart_opened` 只在玩家动作时上报，页面重建不上报），
+	# 打开 → 关闭分别推进剧情。
+	shell._on_nav("sea_chart")
+	_sync_after_transition(shell)
 	assert_eq(String(shell._story_vm.get("stage_id", "")), "chart_brief", "opening the chart advances the story")
 	shell._on_sea_chart_closed()
 	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_finish", "closing the chart restores supplies")
@@ -190,6 +197,192 @@ func test_new_game_screen_hides_build_picker_in_tutorial_mode() -> void:
 	normal.free()
 
 
+## dev.3 #1 回归 T1 / T2：真实航海驱动 —— 出航只收掉「出航指示」，抵达剧情只在
+## 抵达结算时推进一次；结算页反复重建（剧情卡继续 / resize / 状态刷新）不再重复
+## 上报 `ui:arrival_settled`。
+func test_first_voyage_advances_the_arrival_story_once_at_arrival() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	_walk_act0(shell)
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "depart_brief",
+		"the first act ends on the departure brief")
+	var observes_before := _story_observe_count(context)
+	var main_contract: Dictionary = context.state.contracts().get("main", {})
+	var destination := String(main_contract.get("destination", ""))
+	shell._run_command(&"voyage.start", {
+		"destination_id": destination,
+		"strategy_id": "core:boiler_strategy/fast",
+	})
+	assert_not_null(shell._presentation, "departing hands over to the voyage presentation")
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "first_arrival",
+		"departure retires the departure beat; the arrival story must not be current yet")
+	assert_true(shell._story_card == null, "no story card appears at departure")
+	var saw_arrival_story := false
+	var elapsed := 0.0
+	# 离港云层（DEPARTURE_VEIL）里来一次页面重建：不能掉回上一页（旧实现会重挂
+	# 海图页并重发 `ui:chart_opened`），也不能上报任何剧情事件。
+	while shell._presentation != null \
+			and String(shell._presentation.phase_name()) != "departure_veil" and elapsed < 12.0:
+		shell._process(0.1)
+		elapsed += 0.1
+	assert_eq(String(shell._presentation.phase_name()), "departure_veil",
+		"the departure beat reaches the cloud veil")
+	var observes_at_veil := _story_observe_count(context)
+	shell._refresh()
+	assert_eq(_story_observe_count(context), observes_at_veil,
+		"a rebuild during the departure veil reports no story UI event")
+	assert_true(shell._at_sea_screen == null,
+		"the chart page is not mounted while the departure veil is rising")
+	while shell._presentation != null and elapsed < 60.0:
+		shell._process(0.1)
+		elapsed += 0.1
+		if String(shell._story_vm.get("stage_id", "")) == "second_port":
+			saw_arrival_story = true
+			assert_true(shell._presentation == null,
+				"the arrival story only appears after the presentation has finished")
+	assert_true(saw_arrival_story, "the arrival beat fires the second-port story on arrival")
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "second_port",
+		"the first voyage ends in the second-port act")
+	assert_eq(_story_observe_count(context) - observes_before, 2,
+		"one departure observe + exactly one arrival observe (no rebuild duplicates)")
+	var stage_before := String(shell._story_vm.get("stage_id", ""))
+	var observes_after_arrival := _story_observe_count(context)
+	for _index in 3:
+		shell._refresh()
+	assert_eq(_story_observe_count(context), observes_after_arrival,
+		"rebuilding the settlement page reports no extra ui:arrival_settled")
+	assert_eq(String(shell._story_vm.get("stage_id", "")), stage_before,
+		"rebuilding the settlement page does not advance the story")
+	_unmount(bundle)
+
+
+## dev.3 #1 回归 T3：海图打开 / 关闭各只在玩家动作时上报一次；页面重建（改策略 /
+## 开确认弹窗 / resize）不再重复上报 `ui:chart_opened`。
+func test_chart_events_are_reported_once_per_player_action() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	_walk_to_supply_hold(shell)
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_hold",
+		"provisioning enters the chart hold")
+	var observes_before := _story_observe_count(context)
+	shell._on_nav("sea_chart")
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "chart_brief",
+		"opening the chart advances the hold stage")
+	_sync_after_transition(shell)
+	for _index in 2:
+		shell._refresh()
+	assert_eq(_story_observe_count(context) - observes_before, 1,
+		"opening the chart reports ui:chart_opened exactly once, rebuilds report nothing")
+	shell._on_sea_chart_closed()
+	_sync_after_transition(shell)
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_finish",
+		"closing the chart restores supplies")
+	assert_eq(_story_observe_count(context) - observes_before, 2,
+		"closing the chart reports ui:chart_closed exactly once")
+	_unmount(bundle)
+
+
+## dev.3 #3 回归：强制引导遮罩 —— supply_brief 先指向市场入口、进市场后指向补给
+## 区块；遮罩只留目标可交互，推进阶段后自动清除。
+func test_guided_focus_masks_the_supply_block_and_clears_on_advance() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	var continue_button := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(continue_button, "the opening card can be continued")
+	continue_button.pressed.emit()
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_brief",
+		"continue enters the supply briefing")
+	assert_true(shell._story_focus == null,
+		"the story card wins: no mask while the briefing card is open")
+	assert_true(_dismiss_story_card(shell), "the supply briefing card can be dismissed")
+	assert_not_null(shell._story_focus, "dismissing the card mounts the guided mask")
+	var overlay: Control = shell._story_focus
+	assert_true(bool(overlay.call("is_active")), "the mask is active on the supply briefing")
+	var market_nav := _nav_button(shell, "market")
+	assert_not_null(market_nav, "the market entry is in the nav once the briefing unlocks it")
+	assert_true(_rect_close(overlay.call("get_target_rect"), market_nav.get_global_rect()),
+		"on the overview the focus resolves to the market entry")
+	# 进入市场：同一阶段把同一语义目标重新解析成真正的补给区块。
+	shell._on_nav("market")
+	_sync_after_transition(shell)
+	overlay = shell._story_focus
+	assert_not_null(overlay, "the mask is rebuilt together with the page")
+	var supply_block := shell.find_child("MarketSupply", true, false) as Control
+	assert_not_null(supply_block, "the market page hosts the supply block")
+	assert_true(bool(overlay.call("is_active")), "the mask is still active inside the market")
+	var hole: Rect2 = overlay.call("get_target_rect")
+	assert_true(_rect_close(hole, supply_block.get_global_rect()),
+		"inside the market the focus resolves to the supply block")
+	# 四块遮罩拼边；目标横跨整行时左右两块宽度为 0 会被隐藏，所以按「已拼出的边」
+	# 断言覆盖率，而组件本身必须建出四块。
+	var mask_pieces := 0
+	for child in overlay.get_children():
+		if String(child.name).begins_with("Mask"):
+			mask_pieces += 1
+	assert_eq(mask_pieces, 4, "four mask pieces are built around the interactive hole")
+	var mask_rects: Array = overlay.call("get_mask_rects")
+	assert_false(mask_rects.is_empty(), "the mask covers the page outside the supply block")
+	var center := hole.position + hole.size * 0.5
+	for mask_rect in mask_rects:
+		assert_false((mask_rect as Rect2).has_point(center), "no mask covers the supply block")
+	# 买齐 4 煤 2 水 → 进入补给受限：卡片优先，遮罩清除。
+	shell._run_command(&"supply.buy_coal", {"amount": 4})
+	shell._run_command(&"supply.buy_water", {"amount": 2})
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_hold",
+		"provisioning advances the hold stage")
+	assert_true(shell._story_focus == null or not bool(shell._story_focus.call("is_active")),
+		"advancing the stage clears the supply mask")
+	_unmount(bundle)
+
+
+## dev.3 #3 组件契约：全屏遮罩只留目标矩形可点；目标矩形之外四块遮罩全部 STOP，
+## 目标内部没有任何遮罩子节点（控件照常收到点击）；窗口尺寸变化后重新排版且不溢出。
+func test_focus_overlay_component_masks_everything_but_the_target() -> void:
+	var overlay: Control = FOCUS_OVERLAY_SCRIPT.new()
+	assert_eq(overlay.mouse_filter, Control.MOUSE_FILTER_IGNORE,
+		"the overlay root never blocks the interactive hole")
+	assert_false(bool(overlay.call("is_active")), "a fresh overlay is inactive")
+	overlay.size = Vector2(960, 540)
+	var target := Rect2(120, 90, 260, 64)
+	overlay.call("focus", target, "click here")
+	assert_true(bool(overlay.call("is_active")), "focus() activates the overlay")
+	overlay.visible = true
+	assert_eq(String(overlay.call("get_focus_text")), "click here", "the hint text is exposed")
+	var hole: Rect2 = overlay.call("get_target_rect")
+	assert_true(_rect_close(hole, target), "the hole is the requested target rect")
+	var masks: Array = overlay.call("get_mask_rects")
+	assert_eq(masks.size(), 4, "four mask pieces cover everything outside the hole")
+	var center := target.position + target.size * 0.5
+	for mask_rect in masks:
+		assert_false((mask_rect as Rect2).has_point(center), "no mask covers the target")
+	for point in [Vector2(2, 2), Vector2(958, 2), Vector2(2, 538), Vector2(958, 538),
+			Vector2(600, 20), Vector2(600, 500), Vector2(20, 300)]:
+		assert_true(_mask_covers_point(masks, point), "everything outside the hole is masked (%s)" % point)
+	for child in overlay.get_children():
+		if String(child.name).begins_with("Mask"):
+			assert_eq(Control.MOUSE_FILTER_STOP, (child as Control).mouse_filter,
+				"mask pieces eat clicks outside the hole")
+			if SNSkin.is_available():
+				assert_not_null(child.get_node_or_null("Skin"),
+					"the mask is a SNSkin nine-slice fill, not a flat rectangle")
+	# 1440×900：重新排版，遮罩不溢出、目标矩形不变。
+	overlay.size = Vector2(1440, 900)
+	overlay.notification(Control.NOTIFICATION_RESIZED)
+	assert_true(_rect_close(overlay.call("get_target_rect"), target),
+		"resizing keeps the same interactive hole")
+	for mask_rect in overlay.call("get_mask_rects"):
+		var rect := mask_rect as Rect2
+		assert_true(rect.position.x >= 0.0 and rect.position.y >= 0.0, "masks stay inside the screen")
+		assert_true(rect.end.x <= 1440.0 and rect.end.y <= 900.0, "masks stay inside the screen")
+	overlay.call("clear_focus")
+	assert_false(bool(overlay.call("is_active")), "clear_focus() deactivates the overlay")
+	assert_false(overlay.visible, "clear_focus() hides the overlay")
+	assert_true((overlay.call("get_mask_rects") as Array).is_empty(), "no mask remains after clearing")
+	overlay.free()
+
+
 # ── helpers ──
 
 
@@ -251,3 +444,90 @@ func _label_texts(root_node: Node, out: Array = []) -> Array:
 			out.append(String((child as Label).text))
 		_label_texts(child, out)
 	return out
+
+
+# ── story timing / guided-focus helpers (dev.3 #1 / #3) ──
+
+
+## Walks Act 0 with the same actions a player takes and stops on `depart_brief`
+## (10 coal aboard, departure instructions dismissed).
+func _walk_act0(shell: Control) -> void:
+	var continue_button := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(continue_button, "the opening card has a continue button")
+	continue_button.pressed.emit()
+	_dismiss_story_card(shell)
+	shell._run_command(&"supply.buy_coal", {"amount": 4})
+	shell._run_command(&"supply.buy_water", {"amount": 2})
+	# 海图：打开 → 关闭（supply_hold → chart_brief → supply_finish）。
+	shell._on_nav("sea_chart")
+	_sync_after_transition(shell)
+	shell._on_sea_chart_closed()
+	_sync_after_transition(shell)
+	shell._active_screen = "overview"
+	shell._refresh()
+	_dismiss_story_card(shell)
+	shell._run_command(&"supply.buy_coal", {"amount": 2})
+	_dismiss_story_card(shell)
+
+
+## Continues the tutorial only as far as the chart-hold stage (4 coal + 2 water),
+## leaving the chart unopened.
+func _walk_to_supply_hold(shell: Control) -> void:
+	var continue_button := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(continue_button, "the opening card has a continue button")
+	continue_button.pressed.emit()
+	_dismiss_story_card(shell)
+	shell._run_command(&"supply.buy_coal", {"amount": 4})
+	shell._run_command(&"supply.buy_water", {"amount": 2})
+
+
+## The real navigation path starts a page fade (`_refresh(true)`); headless tests
+## cannot wait for its tween, so settle it and rebuild synchronously.
+func _sync_after_transition(shell: Control) -> void:
+	shell._transitioning = false
+	shell._pending_transition = false
+	shell._refresh()
+
+
+func _dismiss_story_card(shell: Control) -> bool:
+	if shell._story_card == null:
+		return false
+	var button := shell.find_child("ContinueButton", true, false) as Button
+	if button == null:
+		return false
+	button.pressed.emit()
+	return true
+
+
+## Number of `story.observe` commands executed so far (the Shell forwards every
+## command / UI story event through it), used to prove one-shot UI events.
+func _story_observe_count(context: AppContext) -> int:
+	var count := 0
+	for entry in context.commands.get_execution_log(200):
+		if String((entry as Dictionary).get("command", "")) == "story.observe":
+			count += 1
+	return count
+
+
+func _nav_button(shell: Control, screen: String) -> Button:
+	var nav := shell.find_child("Nav", true, false)
+	if nav == null:
+		return null
+	var wanted := String(shell.call("_tr", "ui.nav.%s" % screen, screen))
+	for child in nav.get_children():
+		if child is Button and String((child as Button).text) == wanted:
+			return child
+	return null
+
+
+func _rect_close(a: Rect2, b: Rect2) -> bool:
+	return a.position.distance_to(b.position) <= 2.0 \
+		and abs(a.size.x - b.size.x) <= 2.0 \
+		and abs(a.size.y - b.size.y) <= 2.0
+
+
+func _mask_covers_point(masks: Array, point: Vector2) -> bool:
+	for mask_rect in masks:
+		if (mask_rect as Rect2).has_point(point):
+			return true
+	return false

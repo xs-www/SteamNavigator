@@ -9,10 +9,10 @@
 | 符号 | 位置 |
 | --- | --- |
 | `RegionAssembler` | L1 |
-| `KIND_WEIGHTS` | L24 |
-| `SIZE_WEIGHTS` | L32 |
-| `MIN_PORT_DENSITY_WEIGHT` | L37 |
-| `assemble(world_profile: ContentDefinition,, world: Dictionary,, region_definitions: Array,, rng: RandomNumberGenerator) -> Dictionary` | L43 |
+| `KIND_WEIGHTS` | L25 |
+| `SIZE_WEIGHTS` | L33 |
+| `MIN_PORT_DENSITY_WEIGHT` | L38 |
+| `assemble(world_profile: ContentDefinition,, world: Dictionary,, region_definitions: Array,, rng: RandomNumberGenerator) -> Dictionary` | L44 |
 
 `world_profiles.region_count` 生成区域实例，起始区域由 `start_region_tags` 匹配，
 其余按 `kind / size` 权重抽取；每个抽象港口归属一个 `region_id`，区域天气取
@@ -27,6 +27,7 @@
 - 区域定义数量 < `region_count` 时允许重复实例化同一原型（每个实例仍是独立 id）。
 - 港口归属：`port_0`（起始港）固定归 `region_0`；其余港口按各区域的
   `port_density` 加权抽取。权重为 0 的区域仍保留极小权重 0.01，避免"有区域没港口"。
+- `world` 是 `ChartWorldProjection.from_chart` 输出的玩法世界字典（只读 `ports`）。
 - **确定性**：所有随机来自调用方传入的 `STREAM_CAMPAIGN_WORLD / "regions"` 子流；
   定义数组先按 id 排序，港口按 id 数值排序。抽取序列固定（每个区域一次 randf，
   每个非起始港口一次 randf）。

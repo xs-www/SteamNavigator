@@ -6,7 +6,10 @@ extends RefCounted
 ## ## 契约与约束
 ## - 贝塞尔控制点方向由港口出航角度决定；控制臂过长会把曲线拽进岛里，
 ##   因此每条曲线发出前都必须过陆地校验（`_safe_bezier` 逐档收紧控制臂）。
-## - 连通图是无向图，且**稀疏但连通**：最小生成树 + 每港 2 条最近邻捷径。
+## - **可玩世界 = 完全图**（2026-10-26）：任意两港之间都有一条物理航线，
+##   拓扑不再做 MST / 补边；能否出航由运行时「航线解锁」状态决定
+##   （`WorldOps.is_route_unlocked`，见 `docs/design/ROUTE_UNLOCK_SYSTEM.md`）。
+## - 通用生成器（15–20 港验收骨架）仍用旧的稀疏图 `build_connectivity_graph`。
 ## - 路径计算不考虑运行时海洋迷雾（那是运行时状态）。
 ## - 港口正好在海岸线上，端点附近 `END_GRAZE_TOLERANCE` 内的擦岸算靠泊，不算穿陆。
 ##
@@ -21,6 +24,13 @@ extends RefCounted
 ##   `COAST_CLEARANCE * 0.5`、上限 `COAST_CLEARANCE`，小礁石不再把航线拽出 42 单位。
 ## ### `compute_departure_angles(...)`
 ## - 默认取直接邻居质心方向；若该方向指向本岛内陆，回退为"背离本岛质心"的向海方向。
+## ### `build_complete_connectivity(...)`
+## - **唯一可玩世界**的拓扑：每对港口互相连接（5 港 → 10 条边），只由港口 id 决定，
+##   确定性、无 RNG。生成器随后为每条边算贝塞尔路径 / 折线距离 / 基础风险；
+##   任一对算不出路径即判本次世界生成失败重试，不允许缺边。
+## ### `build_connectivity_graph(...)`
+## - 通用生成器（15–20 港验收骨架、`WorldGenerator.generate()`）用的旧稀疏图：MST +
+##   每港 2 条最近邻。**战役不再走它**，保留给通用世界生成与测试。
 ## @end-static-doc
 
 const BEZIER_SEGMENTS := 20
@@ -507,6 +517,24 @@ static func _smooth_segment(prev: Vector2, curr: Vector2, next: Vector2, is_firs
 		var t := float(i) / float(BEZIER_SEGMENTS)
 		result.append(_cubic_bezier(c0, c1, c2, c3, t))
 	return result
+
+
+## Builds the **playable world's** route network: a complete graph over every harbour
+## pair (2026-10-26, 「任意两港间均能通航，但航线需要解锁」).
+##
+## The chart is the single world, so this graph is the gameplay topology too. Every
+## pair of harbours gets exactly one physical route; the runtime "route unlocked" state
+## (`WorldOps.is_route_unlocked` / `campaign_world.unlocked_route_keys`) decides whether
+## the player may actually sail it. Geometry never gates sailing anymore, so the topology
+## is purely `n(n-1)/2` deterministic pairs with no RNG, no MST and no density budget.
+static func build_complete_connectivity(ports: Array[WorldPort]) -> Dictionary:
+	var graph := {}
+	for port in ports:
+		graph[port.id] = []
+	for i in ports.size():
+		for j in range(i + 1, ports.size()):
+			_connect(graph, ports[i].id, ports[j].id)
+	return graph
 
 
 static func build_connectivity_graph(ports: Array[WorldPort], landmasses: Array[Landmass]) -> Dictionary:

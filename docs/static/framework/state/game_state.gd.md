@@ -12,65 +12,65 @@
 | `SCHEMA_VERSION` | L9 |
 | `CAMPAIGN_DEFAULTS` | L13 |
 | `CAMPAIGN_SECTION_DEFAULTS` | L26 |
-| `FACTION_ENTRY_DEFAULTS` | L59 |
-| `STATS_DEFAULTS` | L67 |
-| `CLUES_DEFAULTS` | L79 |
-| `STORY_DEFAULTS` | L90 |
-| `_init(initial_data: Dictionary = {}) -> void` | L106 |
-| `clone() -> GameState` | L110 |
-| `replace_with(other: GameState) -> void` | L114 |
-| `to_dict() -> Dictionary` | L118 |
-| `from_dict(value: Dictionary) -> GameState` | L122 |
-| `is_empty() -> bool` | L126 |
-| `hash() -> String` | L130 |
-| `schema_version() -> String` | L137 |
-| `campaign() -> Dictionary` | L141 |
-| `ensure_campaign() -> Dictionary` | L146 |
-| `ensure_campaign_sections(campaign: Dictionary, warnings: Array = []) -> void` | L164 |
-| `campaign_world() -> Dictionary` | L198 |
-| `campaign_setup() -> Dictionary` | L204 |
-| `campaign_codex() -> Dictionary` | L208 |
-| `campaign_factions() -> Dictionary` | L214 |
-| `campaign_faction(faction_id: String) -> Dictionary` | L220 |
-| `mark_region_visited(region_id: String) -> bool` | L231 |
-| `is_region_visited(region_id: String) -> bool` | L235 |
-| `mark_port_visited(port_id: String) -> bool` | L239 |
-| `is_port_visited(port_id: String) -> bool` | L243 |
-| `discover_site(site_id: String) -> bool` | L247 |
-| `is_site_discovered(site_id: String) -> bool` | L251 |
-| `discover_codex(discovery_id: String) -> bool` | L256 |
-| `is_codex_discovered(discovery_id: String) -> bool` | L260 |
-| `set_faction_reputation(faction_id: String, value: int) -> void` | L264 |
-| `faction_reputation(faction_id: String) -> int` | L270 |
-| `run() -> Dictionary` | L303 |
-| `player() -> Dictionary` | L307 |
-| `world() -> Dictionary` | L311 |
-| `ship() -> Dictionary` | L315 |
-| `market() -> Dictionary` | L319 |
-| `contracts() -> Dictionary` | L323 |
-| `stats() -> Dictionary` | L329 |
-| `clues() -> Dictionary` | L334 |
-| `ensure_clues() -> Dictionary` | L338 |
-| `story() -> Dictionary` | L353 |
-| `ensure_story() -> Dictionary` | L357 |
-| `explore_voyage() -> Variant` | L370 |
-| `set_explore_voyage(voyage: Variant) -> void` | L374 |
-| `is_exploring() -> bool` | L378 |
-| `ensure_stats() -> Dictionary` | L382 |
-| `record_income(amount: int) -> void` | L395 |
-| `record_expense(amount: int) -> void` | L403 |
-| `now() -> float` | L411 |
-| `set_now(value: float) -> void` | L415 |
-| `advance_time(hours: float) -> void` | L421 |
-| `money() -> int` | L425 |
-| `set_money(value: int) -> void` | L429 |
-| `add_money(amount: int) -> void` | L435 |
-| `current_port_id() -> String` | L439 |
-| `is_at_port() -> bool` | L443 |
-| `seed() -> int` | L447 |
-| `push_notice(text_key: String, params: Dictionary = {}) -> void` | L451 |
-| `recent_notices(limit: int = 10) -> Array` | L464 |
-| `get_value(path: Array, fallback: Variant = null) -> Variant` | L470 |
+| `FACTION_ENTRY_DEFAULTS` | L63 |
+| `STATS_DEFAULTS` | L71 |
+| `CLUES_DEFAULTS` | L83 |
+| `STORY_DEFAULTS` | L94 |
+| `_init(initial_data: Dictionary = {}) -> void` | L110 |
+| `clone() -> GameState` | L114 |
+| `replace_with(other: GameState) -> void` | L118 |
+| `to_dict() -> Dictionary` | L122 |
+| `from_dict(value: Dictionary) -> GameState` | L126 |
+| `is_empty() -> bool` | L130 |
+| `hash() -> String` | L134 |
+| `schema_version() -> String` | L141 |
+| `campaign() -> Dictionary` | L145 |
+| `ensure_campaign() -> Dictionary` | L150 |
+| `ensure_campaign_sections(campaign: Dictionary, warnings: Array = []) -> void` | L168 |
+| `campaign_world() -> Dictionary` | L202 |
+| `campaign_setup() -> Dictionary` | L208 |
+| `campaign_codex() -> Dictionary` | L212 |
+| `campaign_factions() -> Dictionary` | L218 |
+| `campaign_faction(faction_id: String) -> Dictionary` | L224 |
+| `mark_region_visited(region_id: String) -> bool` | L235 |
+| `is_region_visited(region_id: String) -> bool` | L239 |
+| `mark_port_visited(port_id: String) -> bool` | L243 |
+| `is_port_visited(port_id: String) -> bool` | L247 |
+| `discover_site(site_id: String) -> bool` | L251 |
+| `is_site_discovered(site_id: String) -> bool` | L255 |
+| `discover_codex(discovery_id: String) -> bool` | L260 |
+| `is_codex_discovered(discovery_id: String) -> bool` | L264 |
+| `set_faction_reputation(faction_id: String, value: int) -> void` | L268 |
+| `faction_reputation(faction_id: String) -> int` | L274 |
+| `run() -> Dictionary` | L307 |
+| `player() -> Dictionary` | L311 |
+| `world() -> Dictionary` | L315 |
+| `ship() -> Dictionary` | L319 |
+| `market() -> Dictionary` | L323 |
+| `contracts() -> Dictionary` | L327 |
+| `stats() -> Dictionary` | L333 |
+| `clues() -> Dictionary` | L338 |
+| `ensure_clues() -> Dictionary` | L342 |
+| `story() -> Dictionary` | L357 |
+| `ensure_story() -> Dictionary` | L361 |
+| `explore_voyage() -> Variant` | L374 |
+| `set_explore_voyage(voyage: Variant) -> void` | L378 |
+| `is_exploring() -> bool` | L382 |
+| `ensure_stats() -> Dictionary` | L386 |
+| `record_income(amount: int) -> void` | L399 |
+| `record_expense(amount: int) -> void` | L407 |
+| `now() -> float` | L415 |
+| `set_now(value: float) -> void` | L419 |
+| `advance_time(hours: float) -> void` | L425 |
+| `money() -> int` | L429 |
+| `set_money(value: int) -> void` | L433 |
+| `add_money(amount: int) -> void` | L439 |
+| `current_port_id() -> String` | L443 |
+| `is_at_port() -> bool` | L447 |
+| `seed() -> int` | L451 |
+| `push_notice(text_key: String, params: Dictionary = {}) -> void` | L455 |
+| `recent_notices(limit: int = 10) -> Array` | L468 |
+| `get_value(path: Array, fallback: Variant = null) -> Variant` | L474 |
 
 ## 契约与约束
 

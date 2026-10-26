@@ -1,5 +1,31 @@
 class_name PortViewQuery
 extends RefCounted
+## @static-doc
+## 作用：主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知、统计与通关状态。
+##
+## ## 契约与约束
+## - 所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable、持仓均价与价格历史。
+## - 市场行的 recent_prices 与 trend_percent 只来自真实 price_history；样本不足时 sparkline 不绘制折线。
+## - 目的地只列当前港**已解锁**的相邻航线（2026-10-26 航线解锁；物理海图是完全图，
+##   但未测绘航线不进入目的地列表），标记未知设施与风险。
+## - 委托 ViewModel 提供目的港名称键、剩余期限、预计航程、风险和说明键；风险/航程由查询层计算，卡片不调用航行公式。
+## - 委托区额外暴露 active_limit/active_count/normal_holds（普通委托持有上限）与 main_chain_complete（主线全完成）。
+## - 船只 ViewModel 的 cargo_cost_basis 与 average_cost 来自 ShipOps 的成本口径；额外暴露 transit_modules/transit_weight。
+## - 顶层 victory 字段给出 achieved/achieved_at 与 conditions（VictoryService.conditions），供总览目标、通关清单与通关页判断。
+## - 委托区给出 main_done/main_total（主线完成度），总览据此提示「主线完成后如何通关」。
+## - 船只 ViewModel 额外给出 free_weight 与 free_cargo_capacity（剩余载重/剩余货舱），顶部信息条直接显示，避免只显示已用载重。
+## - 船只 ViewModel 给出模块实例摘要 worst_module_condition / damaged_modules / disabled_modules / module_damage_points，顶部信息条据此显示「部件 N · NN%」，健康时不占位。
+## - stats 来自 GameState.stats()（收入/支出/利润惰性初始化），不返回 ContentDefinition 或 GameState 内部引用。
+## - `current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。
+## - `ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。
+## - 切片 5：`ship.visual` = `ShipVisualPlan.resolve(hub, context.assets, ship)`，输出 hull / `rig_plan` / `weapon_loadout` 的物理路径供 PortStage 运行时装配；旧存档 / 旧调用方没有该键时舞台走原单船体路径。
+## - `current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从已注册的 `port_templates` 定义 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。
+## - `current_port.town_visuals` 由 `_resolved_town_visuals(context, source_mod, diorama)` 解析：把 `diorama.town` 的 slot → `model.prop.*` 资产键转成 `asset://<mod>/<key>` 并 `assets.resolve()` 成物理路径；缺键省略，PortStage 对缺失 slot 回退 blockout。
+## - 反馈 #2：委托池只露出目的港已发现的普通委托（`_discovered_offers`）；池仍是 3 条实例，
+##   目的港被发现后同一条自动重新出现；主线 offer 不过滤（生成时已揭示目的地，旧存档引导也不会被隐藏）。
+## - 反馈 #3：无期限委托输出 `has_deadline=false`、`timed=false`、`remaining_hours=-1`、
+##   `remaining_label=""`、`deadline_label="—"`；旧存档 main_03+ 实例由 `ContractOps.is_untimed` 覆盖。
+## @end-static-doc
 
 static func execute(_params: Dictionary, context) -> Dictionary:
 	var state: GameState = context.state
@@ -71,6 +97,10 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 
 	var destinations: Array = []
 	for neighbor in MapOps.neighbors(world, current_port):
+		# 航线解锁（2026-10-26）：目的地列表只列**已测绘**航线，物理完全图不直接暴露
+		# 到「可出航目的地」；未测绘航线在 `sea_chart.view` 里以 `unlocked=false` 出现。
+		if not WorldOps.is_route_unlocked(state, current_port, neighbor):
+			continue
 		var neighbor_data := MapOps.port(world, neighbor)
 		var route := MapOps.route_between(world, current_port, neighbor)
 		destinations.append({
@@ -145,7 +175,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"main": _contract_view(hub, state, main_contract),
 			"main_offer": _contract_view(hub, state, main_offer),
 			"active": _contract_list(hub, state, contracts.get("active", [])),
-			"offers": _contract_list(hub, state, contracts.get("offers", [])),
+			"offers": _contract_list(hub, state, _discovered_offers(state, contracts.get("offers", []))),
 			"completed": Array(contracts.get("completed", [])),
 			"next_main_sequence": int(contracts.get("next_main_sequence", 1)),
 			"active_limit": ContractOps.active_limit(state),
@@ -322,6 +352,22 @@ static func _resolved_town_visuals(context, source_mod: String, diorama: Diction
 	return result
 
 
+## 反馈 #2：只把目的港已发现的普通委托交给委托页。`state.contracts().offers`
+## 池保持 3 条实例不动（不改经济 / 确定性 / 存档）；目的港被发现后，同一条实例
+## 会自动重新出现在视图里。主线 offer 不在这里过滤（生成时已揭示目的地）。
+static func _discovered_offers(state: GameState, offers: Variant) -> Array:
+	var result: Array = []
+	if not (offers is Array):
+		return result
+	for contract in offers:
+		if not (contract is Dictionary):
+			continue
+		var destination := String((contract as Dictionary).get("destination", ""))
+		if MapOps.is_discovered(state, destination):
+			result.append(contract)
+	return result
+
+
 static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant) -> Variant:
 	if not (contract is Dictionary):
 		return null
@@ -331,10 +377,19 @@ static func _contract_view(hub: RegistryHub, state: GameState, contract: Variant
 	var destination := String(contract.get("destination", ""))
 	copy["destination_name_key"] = MapOps.port_display_key(world, destination)
 	copy["origin_name_key"] = MapOps.port_display_key(world, origin)
-	copy["deadline_label"] = ClockService.format_time(float(contract.get("deadline", 0.0)))
-	var remaining_hours := maxf(0.0, float(contract.get("deadline", 0.0)) - state.now())
-	copy["remaining_hours"] = remaining_hours
-	copy["remaining_label"] = _format_remaining(remaining_hours)
+	# 反馈 #3：无期限委托不暴露绝对截止时间 / 剩余小时（-1 = 无期限约定）。
+	var untimed := ContractOps.is_untimed(contract)
+	copy["has_deadline"] = not untimed
+	copy["timed"] = not untimed
+	if untimed:
+		copy["deadline_label"] = "—"
+		copy["remaining_hours"] = -1.0
+		copy["remaining_label"] = ""
+	else:
+		copy["deadline_label"] = ClockService.format_time(float(contract.get("deadline", 0.0)))
+		var remaining_hours := maxf(0.0, float(contract.get("deadline", 0.0)) - state.now())
+		copy["remaining_hours"] = remaining_hours
+		copy["remaining_label"] = _format_remaining(remaining_hours)
 	var template_id := String(contract.get("template_id", ""))
 	var template := hub.get_by_id(ContentTypes.CONTRACT, template_id)
 	if String(copy.get("description_key", "")).is_empty() and template != null:

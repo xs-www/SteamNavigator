@@ -129,7 +129,7 @@
             ]
           }
         ],
-        "deadline_formula": "tutorial_craft",
+        "deadline_formula": "none",
         "rewards": {
           "base_money": [
             380,
@@ -180,7 +180,7 @@
             ]
           }
         ],
-        "deadline_formula": "passenger_run",
+        "deadline_formula": "none",
         "rewards": {
           "base_money": [
             420,
@@ -240,7 +240,7 @@
             ]
           }
         ],
-        "deadline_formula": "balanced_finale",
+        "deadline_formula": "none",
         "rewards": {
           "base_money": [
             900,

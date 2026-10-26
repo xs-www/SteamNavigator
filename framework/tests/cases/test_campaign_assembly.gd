@@ -159,7 +159,6 @@ func _register_synthetic_contents(hub: RegistryHub) -> void:
 		"base_site_count": 2,
 		"faction_count": FACTION_COUNT,
 		"weather_profile": "test:weather_profile/temperate",
-		"edge_density": 0.5,
 		"start_region_tags": ["region.start"],
 	})
 	_start_profile(hub, START_PROFILE_ID, {

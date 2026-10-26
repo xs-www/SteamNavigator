@@ -759,21 +759,29 @@ func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 	assert_true(["small", "medium", "large"].has(size), "the current port reports a known size: %s" % size)
 
 	# End to end: the ViewModel the page would bind mounts the terminal facade
-	# (minimal stage mode) plus a small curated set of dock decorations.
+	# (minimal stage mode), a small curated set of dock decorations, the small
+	# boats that keep the water alive — and the player's ship, which is the whole
+	# point of the harbour stage (player feedback #5).
+	var ship_data: Dictionary = data.get("ship", {})
 	var bundle := _mount_port_stage()
 	var host: SNStageHost = bundle["host"]
 	var stage: Variant = bundle["stage"]
 	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
 	if stage is PortStage:
-		host.bind_view_model({"port": current_port})
 		var port := stage as PortStage
+		host.bind_view_model({"port": current_port, "ship": ship_data})
 		var minimal := not landmark_path.is_empty()
 		var expected_street := int(TOWN_DENSITY_COUNTS.get(port.town_density(), -1))
 		assert_true(expected_street > 0, "the resolved port reports a known density tier: %s" % port.town_density())
 		if minimal:
-			assert_true(
-				port.town_prop_count() > 0 and port.town_prop_count() <= 16,
-				"the terminal facade keeps only a small decoration set: %d" % port.town_prop_count()
+			var expected_facade := (
+				PortStage.MINIMAL_STAGE_DECOR.size()
+				+ PortStage.MINIMAL_STAGE_BOATS.size()
+			)
+			assert_eq(
+				port.town_prop_count(),
+				expected_facade,
+				"the terminal facade mounts its small decor set plus the mooring boats"
 			)
 		else:
 			assert_eq(
@@ -799,6 +807,52 @@ func test_port_view_resolves_town_visuals_for_the_port_stage() -> void:
 				(landmark as Node3D).position,
 				PortStage.LANDMARK_POS,
 				"the landmark sits on the harbour centre line"
+			)
+		if minimal:
+			# The facade mode must not swallow the player hull: the ship is the
+			# stage's primary subject, so it is mounted on the facade berth line,
+			# scaled down beside the 0.42-scaled terminal and still batched.
+			assert_true(
+				port.has_ship(),
+				"the terminal facade keeps the player ship mounted (player feedback #5)"
+			)
+			var berth := port.station_ship_position(port.current_station())
+			assert_almost_eq(
+				berth.z,
+				PortStage.MINIMAL_STAGE_BERTH_Z,
+				0.001,
+				"the facade berth is pulled toward the quay so the waterline stays in frame"
+			)
+			var ship := port.get_node_or_null("Content/PlayerShip")
+			assert_not_null(ship, "the facade mounts a Content/PlayerShip root")
+			if ship is Node3D:
+				var ship_root := ship as Node3D
+				assert_almost_eq(
+					ship_root.position.x,
+					berth.x,
+					0.01,
+					"the facade ship sits on the current station berth (x)"
+				)
+				assert_almost_eq(
+					ship_root.position.z,
+					berth.z,
+					0.01,
+					"the facade ship sits on the current station berth (z)"
+				)
+				assert_almost_eq(
+					ship_root.scale.x,
+					PortStage.MINIMAL_SHIP_SCALE,
+					0.001,
+					"the facade ship is scaled to the terminal facade"
+				)
+			var ship_stats: Dictionary = port.batch_stats()
+			assert_true(
+				int(ship_stats["ship_batches"]) > 0,
+				"the facade hull is folded into ship-local draw batches"
+			)
+			assert_true(
+				port.ship_foam_bounds().has_volume(),
+				"the foam ring gets a non-empty hull AABB in facade mode"
 			)
 	_free_host(host)
 
@@ -1687,4 +1741,278 @@ func test_port_stage_arrival_camera_falls_back_to_the_station_shot() -> void:
 	assert_almost_eq(
 		port.camera_pitch_deg(), station_pitch, 0.01, "camera pitch returns to the station pitch"
 	)
+	_free_host(host)
+
+
+# --- 12. Terminal facade (landmark) mode: the player ship stays mounted ------
+#
+# Player feedback #5: the terminal scene had no ship. `_rebuild_ship()` used to
+# early-return in facade mode, so the hull — the stage's primary subject — only
+# existed outside the landmark harbour. These cases pin the fixed contract:
+# facade mode mounts a scaled hull on the facade berth, the atmosphere art does
+# not hide it, a broken landmark falls back to the regular district (still with a
+# ship), and both voyage beats play on the facade hull.
+
+const TERMINAL_LANDMARK_MODEL := "res://dev_mods/core/assets/models/architecture/SN_Grand_Harbour_Terminal.glb"
+const MISSING_LANDMARK_MODEL := "res://dev_mods/core/assets/models/architecture/SN_Does_Not_Exist.glb"
+
+
+## Mounts the terminal facade payload exactly like the shell does (resolved
+## landmark + resolved hull). The caller frees `host`; `{}` means the scene did
+## not mount a PortStage.
+func _bound_terminal_facade() -> Dictionary:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	if not (bool(bundle["loaded"]) and stage is PortStage):
+		assert_true(false, "the port stage scene mounts a PortStage")
+		_free_host(host)
+		return {}
+	var port := stage as PortStage
+	host.bind_view_model({
+		"port": {
+			"id": "iron_harbor",
+			"size": "medium",
+			"facilities": ["exchange", "contracts", "supply", "tavern", "shipyard"],
+			"town_visuals": TOWN_VISUALS,
+			"landmark_path": TERMINAL_LANDMARK_MODEL,
+		},
+		"ship": {"hull_model_path": STEAMER_MODEL, "hull_tier": 1},
+	})
+	host.set_stage_visible(true)
+	return {"host": host, "stage": port}
+
+
+## Facade mode is a *stage* mode, not a "no ship" mode: the hull is mounted at
+## the facade berth, scaled down beside the 0.42-scaled terminal, batched and
+## given a foam AABB, while the decoration budget stays the small curated set.
+func test_port_stage_terminal_facade_mounts_a_scaled_player_ship() -> void:
+	var mounted := _bound_terminal_facade()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+
+	assert_true(port.has_ship(), "the terminal facade mounts the player ship (feedback #5)")
+	var ship := port.get_node_or_null("Content/PlayerShip")
+	assert_not_null(ship, "the facade mounts a Content/PlayerShip root")
+	if ship is Node3D:
+		var berth := port.station_ship_position(port.current_station())
+		assert_almost_eq(
+			(ship as Node3D).position.x, berth.x, 0.01, "the facade hull sits on the station berth (x)"
+		)
+		assert_almost_eq(
+			(ship as Node3D).position.z, berth.z, 0.01, "the facade hull sits on the station berth (z)"
+		)
+		assert_almost_eq(
+			(ship as Node3D).scale.x,
+			PortStage.MINIMAL_SHIP_SCALE,
+			0.001,
+			"the facade hull is scaled to the terminal facade"
+		)
+	assert_true(
+		port.batch_stats()["ship_batches"] > 0, "the facade hull is folded into ship-local draw batches"
+	)
+	assert_true(port.ship_foam_bounds().has_volume(), "the facade hull gives the foam ring a real AABB")
+	assert_true(
+		port.town_prop_count() == (
+			PortStage.MINIMAL_STAGE_DECOR.size() + PortStage.MINIMAL_STAGE_BOATS.size()
+		),
+		"the facade keeps only the curated decor + mooring boats: %d" % port.town_prop_count()
+	)
+	assert_true(port.find_child("Landmark", true, false) is Node3D, "the terminal landmark stays mounted")
+	_free_host(host)
+
+
+## Robustness: minimal mode is decided by the landmark *actually* instantiating,
+## not by the path string. A missing landmark GLB must fall back to the regular
+## district (which mounts the hull) instead of leaving an almost-empty harbour.
+func test_port_stage_falls_back_to_the_district_when_the_landmark_is_missing() -> void:
+	var bundle := _mount_port_stage()
+	var host: SNStageHost = bundle["host"]
+	var stage: Variant = bundle["stage"]
+	assert_true(bool(bundle["loaded"]) and stage is PortStage, "the port stage scene loads")
+	if not (stage is PortStage):
+		_free_host(host)
+		return
+	var port := stage as PortStage
+	host.bind_view_model({
+		"port": {
+			"id": "iron_harbor",
+			"size": "medium",
+			"facilities": ["exchange", "contracts", "supply", "tavern", "shipyard"],
+			"town_visuals": TOWN_VISUALS,
+			"landmark_path": MISSING_LANDMARK_MODEL,
+		},
+		"ship": {"hull_model_path": STEAMER_MODEL, "hull_tier": 1},
+	})
+	assert_true(
+		port.find_child("Landmark", true, false) == null,
+		"a broken landmark path never mounts a Landmark node"
+	)
+	assert_eq(
+		port.town_prop_count(),
+		int(TOWN_DENSITY_COUNTS["normal"]),
+		"a broken landmark falls back to the full district instead of an empty harbour"
+	)
+	assert_true(port.has_ship(), "the fallback district still mounts the player hull")
+	var berth := port.station_ship_position(port.current_station())
+	assert_almost_eq(
+		berth.z,
+		PortStage.SHIP_SPAWN.z,
+		0.001,
+		"the fallback keeps the regular district berth line (no facade pull-in)"
+	)
+	var fallback_ship: Node3D = port.get_node_or_null("Content/PlayerShip") as Node3D
+	assert_not_null(fallback_ship, "the fallback district mounts a PlayerShip root")
+	if fallback_ship != null:
+		assert_almost_eq(
+			fallback_ship.scale.x,
+			PortStage.SHIP_SCALE,
+			0.001,
+			"the fallback hull keeps the full district scale"
+		)
+	_free_host(host)
+
+
+## Facade berths: the station keeps its authored X (so the hull stays inside that
+## station's shot — the market/supply dock panel covers the right of the window)
+## but every berth moves onto the facade Z; the shipyard keeps its dry-dock berth.
+## Focusing a station pans and sails the hull to that berth, and the mounted node
+## follows.
+func test_port_stage_terminal_facade_berths_follow_the_station() -> void:
+	var mounted := _bound_terminal_facade()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+
+	for station in ["market", "harbor", "supply"]:
+		assert_almost_eq(
+			port.station_ship_position(station).x,
+			float((PortStage.STATIONS[station]["ship"] as Vector3).x),
+			0.001,
+			"the facade keeps the authored %s berth X" % station
+		)
+	assert_almost_eq(
+		port.station_ship_position("shipyard").x,
+		PortStage.MINIMAL_SHIPYARD_BERTH_X,
+		0.001,
+		"the shipyard keeps its dry-dock berth"
+	)
+	for station in port.station_ids():
+		assert_almost_eq(
+			port.station_ship_position(station).z,
+			PortStage.MINIMAL_STAGE_BERTH_Z,
+			0.001,
+			"the facade berth of %s is pulled toward the quay" % station
+		)
+
+	# Real station switch (no immediate snap): the camera pans and the hull sails.
+	assert_true(port.focus_station("market"), "the facade accepts a market station switch")
+	assert_true(port.is_station_transitioning(), "the station switch starts a visible transition")
+	port.advance_station(0.3)
+	assert_true(port.is_station_transitioning(), "the facade pan is still running after 0.3 s")
+	port.advance_station(10.0)
+	assert_false(port.is_station_transitioning(), "the facade pan and sail settle")
+	var market_berth := port.station_ship_position("market")
+	assert_almost_eq(port.ship_x(), market_berth.x, 0.3, "the facade hull sails to the market berth")
+	assert_almost_eq(port.ship_position().z, market_berth.z, 0.01, "the hull sails on the facade berth line")
+	var ship := port.get_node_or_null("Content/PlayerShip") as Node3D
+	assert_not_null(ship, "the facade hull root survives the station transit")
+	if ship != null:
+		assert_almost_eq(
+			ship.position.x, market_berth.x, 0.3, "the mounted hull node moved with the station"
+		)
+		assert_almost_eq(
+			ship.position.z, market_berth.z, 0.01, "the mounted hull node keeps the facade berth line"
+		)
+
+	# The shipyard berth stays in front of its dry dock.
+	assert_true(port.focus_station("shipyard", "stage", true), "the facade accepts the shipyard station")
+	assert_almost_eq(
+		port.ship_x(),
+		PortStage.MINIMAL_SHIPYARD_BERTH_X,
+		0.01,
+		"the shipyard station keeps the hull on the dry-dock berth"
+	)
+	_free_host(host)
+
+
+## The departure / arrival beat is geometry, not a district stub: a facade harbour
+## must sail the hull to `SEA_HANDOFF` and moor it back on the facade berth.
+func test_port_stage_terminal_facade_plays_the_voyage_beats() -> void:
+	var mounted := _bound_terminal_facade()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+	var berth := port.station_ship_position(port.current_station())
+
+	port.begin_departure(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_eq(String(port.voyage_mode()), "depart", "the facade stage reports the departure beat")
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS * 0.5)
+	assert_true(port.ship_position().z > berth.z, "the facade hull sails out to sea")
+	assert_true(
+		port.ship_position().z < PortStage.SEA_HANDOFF.z,
+		"the facade hull is still short of the handoff mid-beat"
+	)
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_false(port.is_voyage_transitioning(), "the facade departure beat finishes")
+	assert_true(
+		port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"the facade hull ends exactly on the sea handoff: %s" % str(port.ship_position())
+	)
+	assert_true(port.is_voyage_holding_handoff(), "the facade hull holds the handoff under the veil")
+
+	port.begin_arrival(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_true(
+		port.ship_position().is_equal_approx(PortStage.SEA_HANDOFF),
+		"the facade arrival starts from the same handoff point"
+	)
+	port.advance_voyage(PortStage.VOYAGE_BEAT_SECONDS)
+	assert_true(
+		port.ship_position().is_equal_approx(Vector3(berth.x, 0.0, berth.z)),
+		"the facade hull moors back on the facade berth: %s" % str(port.ship_position())
+	)
+	var ship := port.get_node_or_null("Content/PlayerShip") as Node3D
+	assert_not_null(ship, "the facade hull root survives the voyage beats")
+	if ship != null:
+		assert_almost_eq(ship.position.x, berth.x, 0.01, "the mounted hull node ends on the berth (x)")
+		assert_almost_eq(ship.position.z, berth.z, 0.01, "the mounted hull node ends on the berth (z)")
+	_free_host(host)
+
+
+## Facade mode hides the district atmosphere but must keep the ship's funnel
+## steam (the only life sign on the still terminal); leaving facade mode restores
+## the district layers instead of leaving them hidden for the rest of the session.
+func test_port_stage_terminal_facade_keeps_the_ship_steam_and_restores_the_district() -> void:
+	var mounted := _bound_terminal_facade()
+	if mounted.is_empty():
+		return
+	var host: SNStageHost = mounted["host"]
+	var port: PortStage = mounted["stage"]
+
+	assert_eq(port.atmosphere_particle_systems(), 3, "the static atmosphere systems stay mounted")
+	var ship_steam := port.get_node_or_null("Atmosphere/ShipSteam") as GPUParticles3D
+	var quay_steam := port.get_node_or_null("Atmosphere/QuaySteam") as GPUParticles3D
+	assert_not_null(ship_steam, "the ship funnel steam exists")
+	assert_not_null(quay_steam, "the quay vent exists")
+	if ship_steam != null:
+		assert_true(ship_steam.visible and ship_steam.emitting, "facade mode keeps the ship funnel steam")
+	if quay_steam != null:
+		assert_false(quay_steam.visible, "facade mode hides the quay vent")
+	assert_false(port.foreground_frame().visible, "facade mode hides the foreground frame")
+
+	# Back to a regular district (e.g. after sailing to another port): the
+	# hidden layers must come back, otherwise a session that ever visited the
+	# terminal would keep a half-empty stage.
+	host.bind_view_model(_port_view("medium", PORT_FACILITIES, {"town_visuals": TOWN_VISUALS}))
+	assert_true(port.foreground_frame().visible, "the district foreground frame is restored")
+	if quay_steam != null:
+		assert_true(quay_steam.visible, "the district quay vent is restored")
+	var painted := port.get_node_or_null("FallbackBackdrop/PaintedBackdrop") as MeshInstance3D
+	if painted != null:
+		assert_true(painted.visible, "the district painted backdrop layers are restored")
+	assert_true(port.has_ship(), "the regular district keeps its ship after leaving facade mode")
 	_free_host(host)

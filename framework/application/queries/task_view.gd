@@ -21,6 +21,8 @@ extends RefCounted
 ##   `kind / done / progress / target / 名称 key`。
 ## - 排序：剧情 300 > Quest 250 > 主线 200 > 待接主线 150 > 普通委托 100；同优先级先比
 ##   Quest 的 `tracking.priority`（降序），再按 id。
+## - 反馈 #3：无期限委托的 `deadline` 输出 0、`remaining_hours` 输出 -1（现有 -1 = 无期限约定），
+##   复用 `ContractOps.is_untimed`（含旧存档 main_03+ 覆盖）。
 ## @end-static-doc
 
 const KIND_STORY := "story"
@@ -173,6 +175,8 @@ static func _offer_task(offer: Dictionary, now: float) -> Dictionary:
 		"destination_name_key": "",
 		"fuel_sourced": false,
 	}
+	# 反馈 #3：无期限委托在 Task 里沿用 `remaining_hours = -1` 约定（deadline 0 = 无）。
+	var untimed := ContractOps.is_untimed(offer)
 	return {
 		"id": "main_offer:%s" % String(offer.get("instance_id", "")),
 		"kind": KIND_MAIN_OFFER,
@@ -180,8 +184,8 @@ static func _offer_task(offer: Dictionary, now: float) -> Dictionary:
 		"title_key": String(offer.get("name_key", "ui.task.kind.main_offer")),
 		"destination_id": destination,
 		"destination_name_key": "",
-		"deadline": float(offer.get("deadline", 0.0)),
-		"remaining_hours": maxf(0.0, float(offer.get("deadline", 0.0)) - now),
+		"deadline": 0.0 if untimed else float(offer.get("deadline", 0.0)),
+		"remaining_hours": -1.0 if untimed else maxf(0.0, float(offer.get("deadline", 0.0)) - now),
 		"priority": 150,
 		"steps": [step],
 		"current_step_index": 0,
@@ -212,6 +216,7 @@ static func _contract_task(
 		MapOps.port_display_key(state.world(), destination) if not destination.is_empty() else ""
 	)
 	var priority := 200 if kind == KIND_MAIN else 100
+	var untimed := ContractOps.is_untimed(contract)
 	return {
 		"id": "%s:%s" % [kind, String(contract.get("instance_id", ""))],
 		"kind": kind,
@@ -219,8 +224,8 @@ static func _contract_task(
 		"title_key": String(contract.get("name_key", "ui.task.kind.%s" % kind)),
 		"destination_id": destination,
 		"destination_name_key": destination_name_key,
-		"deadline": float(contract.get("deadline", 0.0)),
-		"remaining_hours": maxf(0.0, float(contract.get("deadline", 0.0)) - state.now()),
+		"deadline": 0.0 if untimed else float(contract.get("deadline", 0.0)),
+		"remaining_hours": -1.0 if untimed else maxf(0.0, float(contract.get("deadline", 0.0)) - state.now()),
 		"priority": priority,
 		"steps": steps,
 		"current_step_index": current_index,

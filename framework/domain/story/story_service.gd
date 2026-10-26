@@ -27,10 +27,17 @@ extends RefCounted
 ## - 4.5.6 引导：`set_counter_from_ship` 用船上现有资源初始化计数器，条件支持
 ##   `counter_from` 直接读取命令返回的数值（如补给购买后的煤舱 `stock`），
 ##   目标条据此显示真实进度与「还差 N」。
+## - 4.7 航线解锁（2026-10-26）：效果 `unlock_route {from, to}` 的端点支持语义 token
+##   （`current` / `home` / `contract_destination`）或具体港口 id，解析后调用
+##   `WorldOps.unlock_route`；`grant_tutorial_contract` 生成教学委托后也按**最终目的地**
+##   解锁 origin↔destination（委托自带海图）。发现港口本身不解锁航线。
 ## - 跳过教程必须解锁 `skip_unlocks` 里的全部功能并执行
 ##   `discover_contract_destination`，保证跳过不会卡死；跳过不会设置保底探索。
 ## - 查询（`story.view`）只输出公开字段；counters / flags 只暴露剧情效果需要的
 ##   `lock_actions` 语义，不泄露内部数值。
+## - 4.7 框架级强制引导（dev.3 #3）：阶段可选 `focus: {target, text_key}`，查询原样
+##   透传为 `story.view.focus`（空字典 = 无引导）。`target` 是框架语义 id（如
+##   `market_supply` / `chart_entry`），由 Shell 解析成真实控件，内容不写死页面。
 ## @end-static-doc
 
 ## 框架功能键（不是内容 ID）：与 Shell 的导航 / 入口一一对应。
@@ -110,6 +117,7 @@ static func view(context) -> Dictionary:
 		"unlocked_modules": Array(story.get("unlocked_modules", [])).duplicate(),
 		"lock_actions": [],
 		"preferred_strategy": "",
+		"focus": {},
 		"can_skip": bool(story.get("active", false)) and not bool(story.get("completed", true)),
 	}
 	# 未启用 / 已结束 / 旧存档：功能全开（Shell 不做门禁）。
@@ -141,6 +149,14 @@ static func view(context) -> Dictionary:
 		}
 	result["lock_actions"] = Array(stage.get("lock_actions", [])).duplicate()
 	result["preferred_strategy"] = String(stage.get("preferred_strategy", ""))
+	# 4.7 / dev.3 #3：框架级强制引导。阶段只声明语义目标（`target`）与文案键，
+	# Shell 负责把语义 target 解析成真实控件矩形；这里只做字段透传与裁剪。
+	var focus: Variant = stage.get("focus", null)
+	if focus is Dictionary and not String((focus as Dictionary).get("target", "")).is_empty():
+		result["focus"] = {
+			"target": String((focus as Dictionary).get("target", "")),
+			"text_key": String((focus as Dictionary).get("text_key", "")),
+		}
 	return result
 
 
@@ -439,6 +455,11 @@ static func _apply_effect(state: GameState, hub: RegistryHub, story: Dictionary,
 			_set_counter_from_ship(state, story, effect)
 		"complete_story":
 			_complete(story, config(state, hub))
+		"unlock_route":
+			# 2026-10-26 航线解锁：剧情显式解锁一条航线。`from` / `to` 支持
+			# `current` / `home` / `contract_destination` 语义 token 或具体港口 id；
+			# 内容只声明「哪两港」，端口 id 由运行时解析（框架不写死内容 ID）。
+			_unlock_route_effect(state, story, effect, events)
 		_:
 			push_warning("StoryService: unknown effect type '%s' (ignored)" % type)
 
@@ -651,6 +672,52 @@ static func _discover_contract_destination(state: GameState, _hub: RegistryHub) 
 	WorldOps.discover_port_id(state, destination)
 
 
+## 2026-10-26 航线解锁：剧情效果 `unlock_route {from, to}`。两端可写语义 token
+## （`current` / `home` / `contract_destination`）或具体港口 id；解析后调用
+## `WorldOps.unlock_route`，已解锁时是 no-op。内容不写死港口 id，剧情阶段顺序变化也安全。
+static func _unlock_route_effect(
+	state: GameState, story: Dictionary, effect: Dictionary, events: Array = []
+) -> void:
+	var from_port := _resolve_story_port(
+		state, story, String(effect.get("from", "current"))
+	)
+	var to_port := _resolve_story_port(state, story, String(effect.get("to", "")))
+	if from_port.is_empty() or to_port.is_empty() or from_port == to_port:
+		push_warning("StoryService: unlock_route needs two distinct ports (from='%s', to='%s')" % [
+			from_port, to_port,
+		])
+		return
+	if WorldOps.unlock_route(state, from_port, to_port):
+		events.append({
+			"type": "chart.route_unlocked",
+			"payload": {"from": from_port, "to": to_port, "source": "story"},
+		})
+
+
+## Resolves a story effect port token to a real harbour id.
+## - `current`：当前港；`home`：剧情开始记录的起始港（缺失时回退当前港）；
+## - `contract_destination`：当前主线委托目的港（其次主线 offer，都没有时为空）；
+## - 其它值按具体港口 id 原样返回。
+static func _resolve_story_port(state: GameState, story: Dictionary, token: String) -> String:
+	match token:
+		"", "current":
+			return state.current_port_id()
+		"home":
+			var home := String(story.get("home_port_id", ""))
+			return home if not home.is_empty() else state.current_port_id()
+		"contract_destination":
+			var contracts: Dictionary = state.contracts()
+			var main_contract: Variant = contracts.get("main", null)
+			if main_contract is Dictionary:
+				return String((main_contract as Dictionary).get("destination", ""))
+			var main_offer: Variant = contracts.get("main_offer", null)
+			if main_offer is Dictionary:
+				return String((main_offer as Dictionary).get("destination", ""))
+			return ""
+		_:
+			return token
+
+
 ## 4.5.2：用 Core 指定的教学委托模板替换开局自动主线（燃料舱运煤）。内容决定
 ## 模板 / 货物 / 数量 / 时限，框架只负责生成、接取与存入 `contracts.main`。
 static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect: Dictionary, rng: RngService) -> void:
@@ -719,6 +786,16 @@ static func _grant_tutorial_contract(state: GameState, hub: RegistryHub, effect:
 		})
 		if hours > 0.0:
 			offer["deadline"] = state.now() + hours
+		else:
+			# 反馈 #3：显式 `none`（或求值 0）覆盖 = 无期限；清成哨兵，防旧内容 /
+			# 热重载把模板里过期的正数 deadline 带进剧情委托。
+			offer["deadline"] = 0.0
+	# 2026-10-26 航线解锁：教学委托同样自带海图。`generate_offer` 解锁的是
+	# 模板随机目的地，剧情可能把目的地覆盖成 home，因此这里按**最终目的地**
+	# 再解锁一次（已解锁时是 no-op）。
+	WorldOps.unlock_route(
+		state, state.current_port_id(), String(offer.get("destination", ""))
+	)
 	var attached := ContractOps.attach(state, hub, offer)
 	if not bool(attached.get("ok", false)):
 		push_warning("StoryService: cannot attach tutorial contract '%s': %s" % [

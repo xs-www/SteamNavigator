@@ -46,13 +46,13 @@
 | `test_game_state_backfills_the_clue_block_lazily() -> void` | L1264 |
 | `test_save_load_roundtrip_preserves_exploration_state() -> void` | L1280 |
 | `test_goods_clue_freezes_a_snapshot_and_discloses_by_level() -> void` | L1328 |
-| `test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void` | L1397 |
-| `test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void` | L1437 |
-| `test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void` | L1496 |
-| `test_wait_clue_chance_math_and_command_acquisition() -> void` | L1547 |
-| `test_wait_prefers_goods_leads_when_a_market_is_known() -> void` | L1588 |
-| `test_contract_completion_hook_unlocks_a_clue() -> void` | L1613 |
-| `test_clue_travel_sails_to_the_goods_lead_harbour() -> void` | L1651 |
+| `test_expired_goods_clue_is_swept_by_commands_and_frees_the_cap() -> void` | L1403 |
+| `test_clue_list_query_returns_trimmed_clues_and_expired_history() -> void` | L1443 |
+| `test_legacy_clue_entries_are_normalized_without_a_schema_bump() -> void` | L1502 |
+| `test_wait_clue_chance_math_and_command_acquisition() -> void` | L1553 |
+| `test_wait_prefers_goods_leads_when_a_market_is_known() -> void` | L1594 |
+| `test_contract_completion_hook_unlocks_a_clue() -> void` | L1619 |
+| `test_clue_travel_sails_to_the_goods_lead_harbour() -> void` | L1657 |
 
 （`clue.investigate`）/ 分级裁剪 / 命名流复现、`clue.buy` 门禁、`explore.start`
 扣费与在航标记、`explore.settle` 成功发现与失败漂流、`explore.decide` 掉头 / 继续、

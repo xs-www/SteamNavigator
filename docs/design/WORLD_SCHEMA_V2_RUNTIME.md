@@ -131,7 +131,11 @@
 
 ### 4.3 `world_profiles` 微调
 
-- 新增**可选** `edge_density`（0–1）：抽象地图额外边比例；缺省用现有 `MapGenerator` 规则（`edge_count_range` 派生）。
+- ~~新增**可选** `edge_density`（0–1）：海图可玩拓扑的额外边比例~~ **2026-10-26 已退役**：
+  可玩世界改为**完全图**（任意两港可通航），生成器不再读边预算，
+  `world_profiles.edge_density` 已从 Core 内容与 Schema 删除；「能不能出航」改由运行时
+  `campaign_world.unlocked_route_keys` 门禁（见
+  [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)）。
 - 其余字段保持草案定义（`region_count / sites_per_region / port_count / ruin_density / base_site_count /
   faction_count / weather_profile / start_region_tags`）。
 - `port_count` 是**可玩港口数**（上限见 §12 D8）：Phase B 首个切片限制 ≤5（孪生世界固定 5 陆地布局），
@@ -240,6 +244,13 @@ player_trade_impact / npc_* / twin_world_size` 从 `map_config.data` 读取（�
 | 14 | 写 `campaign.setup` 与 `campaign.content_versions`（§7），`state.world` 增加 `world_profile_id / map_config_id /
 start_profile_id`，`map_profile_id` 在 v2 路径留空 | 新增 |
 
+> **2026-10-26 实现变更（「海图唯一真相」）**：上表第 3 / 4 步已合并——`MapGenerationSpec` 只产出
+> 内容蓝图，`WorldGenerator.generate_chart` 一次生成唯一海图世界（**完全图拓扑** / 坐标 / 每条边
+> distance 与 base_risk），`ChartWorldProjection.from_chart` 派生 `GameState.world()`；
+> `MapGenerator` 不再被战役调用。第 7 步 `RouteAssembler` 只给已存在的海图边挂 `template`
+> 元数据，不改几何/风险。**可出航性另由 `campaign_world.unlocked_route_keys` 门禁**（见
+> [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)）。详见 §6.3.1。
+
 ### 6.3 状态形状（v2 战役）
 
 ```text
@@ -252,22 +263,69 @@ data.campaign.world = {
   profile_id, generated: true, regions: [ {id, definition_id, kind, size, weather_profile,
   port_ids: [], site_ids: []} ], sites: [ {id, definition_id, region_id, port_id, kind,
   discovered:false, repeatable, loot_table, encounter_table} ], visited_region_ids,
-  discovered_site_ids, visited_port_ids
+  discovered_site_ids, visited_port_ids, unlocked_route_keys
 }
 data.campaign.codex = { discovered_ids: [], entries: { <discovery_id>: {site_id, at_time} } }
 data.campaign.factions = { <faction_id>: {reputation, attitude, discovered, met_at} }
-data.world = { 现有 ports/routes/... + world_profile_id / map_config_id / start_profile_id }
-data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
+data.world = 由海图派生的玩法视图（ports/routes + world_profile_id / map_config_id / start_profile_id）
+data.world_map = 唯一世界与唯一拓扑（海图；§6.3.1）
 ```
 
 注意：`GameState.CAMPAIGN_SECTION_DEFAULTS` 需要新增 `campaign.world.regions/sites`、`campaign.setup` 与
 `campaign.factions` 的新字段（`attitude/discovered/met_at`），全部走 `ensure_campaign_sections()` 的逐键惰性回填，
 不 bump `state_schema`；`campaign.view` 需在 `framework/application/queries/query_registry.gd` 注册。
 
+### 6.3.1 海图唯一真相：单一世界 / 单一拓扑 / 单一距离（2026-10-26）
+
+**模型**：坐标海图世界 `data.world_map` 是**唯一世界与唯一拓扑**；`GameState.world()` 的
+`ports` / `routes` 只是它的玩法视图（`ChartWorldProjection.from_chart` 派生），不再拥有
+自己的连通图、坐标或距离。
+
+- 开局链路（§6.2 步 1–2 + 步 8）：
+  `MapGenerationSpec`（内容蓝图：港口数 / 原型 / 名称 / 起始约束 / 设施与风险范围）
+  → `WorldGenerator.generate_chart`（唯一世界：5 陆地布局 + **完全图拓扑** + 每边绘制路径 /
+  折线 distance / base_risk）
+  → `ChartWorldProjection.from_chart`（派生 `GameState.world()`）
+  → 写 `state.data["world_map"]` 与 `state.world`（同一张海图）
+  → `_initialize_world_fog`（迷雾基于最终港口坐标）。
+- **物理连通 = 完全图**（2026-10-26「任意两港可通航 + 航线需解锁」）：
+  `WorldGenerator.generate_chart` 用 `RouteCalculator.build_complete_connectivity` 为
+  **每一对港口**建一条边（5 港 = 10 条，`edge_count == n(n-1)/2`），删除 MST / 补边 /
+  `edge_density` 拓扑逻辑。逐边 `RouteCalculator.calculate_route` 算绘制贝塞尔折线，
+  **`distance` = 折线长度**（坐标按 `WorldMap.PATH_DECIMALS = 2` 取整后再量，两位小数）；
+  **`base_risk`** 按 `route_templates.risk_range` 用
+  `STREAM_MAP_GENERATION / "route_risk:<pair>"` 命名流掷出；**任一对算不出路径即本次
+  世界生成失败重试，不允许缺边**（`_validate_chart_world` 断言完全图 + 每港度数 = n-1）。
+- 拓扑建好后按 BFS 距离分配港口 archetype，必需设施（`port.shipyard` / `port.intel`）
+  必须落在 `required_facility_max_edges` 内（完全图下所有港口都是 1 边可达，约束自然满足）。
+- **可出航 = 运行时解锁状态**（不改几何）：`campaign_world.unlocked_route_keys` 存规范
+  pair key（`a|b`），`WorldOps.route_key / is_route_unlocked / unlock_route /
+  unlocked_neighbor_ids` 是唯一入口。解锁来源 = 委托自带海图 / 剧情 `unlock_route` 效果 /
+  酒馆 `chart.buy`；**发现港口不解锁航线**。新局名册为空。契约见
+  [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)。
+- 由此：海图绘制弧长 = 标注里程 = `GameState.world().routes[].distance` =
+  `voyage.preview` 计费里程。`sea_chart.view` 只有 `distance` 一个距离字段，风险直接读
+  同一条边的 `base_risk`；每条 route 另带 `unlocked` 标记（未解锁但两端已发现的边也输出），
+  不再有 `chart_distance` / `distance_source` / 不可出航边。
+- 旧抽象拓扑生成器 `MapGenerator` 已退出战役链路（文件保留、无调用）；`route_templates.
+  distance_range` 与旧 `port_count_range` / `edge_count_range` / `route_risk_range` 的生成
+  语义由 `MapGenerationSpec` 的蓝图字段接替（`distance_range` 不再影响世界，仅模板元数据）。
+- 里程尺度由几何决定（约 25–150 海里，含绕岛），教程 `tutorial_express` 时限改为与距离
+  严格成比例（`max(0.5, distance / 13.5)`，不再有固定 6h 下限）。
+- 契约细节与实测数值见 [NAUTICAL_CHART_SYSTEM.md](NAUTICAL_CHART_SYSTEM.md) §4.1.1；
+  回归由 `framework/tests/cases/test_world_unity.gd`（完全图 / 边集合 == world routes /
+  距离 == 折线长度 / 坐标一致 / 同 seed 确定）与
+  `framework/tests/cases/test_route_unlock.gd`（解锁名册 / 三种来源 / 航行门禁 / UI）锁定。
+- 开发期不做旧存档 / 旧拓扑兼容：无 `world_map` 的旧档海图显示无数据提示，按需重开新局；
+  旧档没有 `unlocked_route_keys` 时视为「一条都没测绘」。
+
 ### 6.4 确定性
 
 - 新增随机流：`RngService.STREAM_CAMPAIGN_WORLD = &"campaign_world"`，按上下文键派生：`"regions"` / `"sites"` /
-  `"routes"` / `"factions"` / `"discoveries"`；几何仍用 `STREAM_MAP_GENERATION`。
+  `"routes"` / `"factions"` / `"discoveries"`；唯一海图的生成用 `STREAM_MAP_GENERATION` 的
+  `"chart_world"`（港口放置抖动）与 `"route_risk:<pair>"`（每条边的基础风险，按 pair 命名，
+  与边顺序无关）。拓扑本身是完全图（`n(n-1)/2` 对，确定性），不消耗随机数。
+- 航线解锁名册只由命令 / 剧情 / 委托生成顺序决定（同 seed + 同命令序列 → 同名册）。
 - 不可依赖字典遍历顺序：抽取前对注册表结果按 `id` 排序。
 - 契约：同 seed + 同内容注册表 + 同 framework → 世界实例完全相同；不同内容版本允许不同结果，但**旧档不重排**。
 
@@ -314,7 +372,7 @@ data.world_map = 孪生世界（与现有海图/迷雾/探索完全兼容）
 | 1.0 字段 | v2 去向 |
 | --- | --- |
 | `port_count_range` | `world_profiles.port_count`（取可玩目标值；core 用 5） |
-| `edge_count_range` | `world_profiles.edge_density`（派生；无则 `MapGenerator` 默认） |
+| `edge_count_range` | ~~`world_profiles.edge_density`（派生）~~ **2026-10-26 退役**：可玩海图恒为完全图，不再有边预算 |
 | `distance_range` / `route_risk_range` | `route_templates.distance_range / risk_range`（多条航路各自定义） |
 | `archetypes` / `port_name_keys` / `start_archetype_tags` | `map_configs.*` |
 | `required_facility_tags` / `required_facility_max_edges` | `map_configs.*` |

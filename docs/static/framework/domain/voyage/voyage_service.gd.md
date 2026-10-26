@@ -9,12 +9,12 @@
 | 符号 | 位置 |
 | --- | --- |
 | `VoyageService` | L1 |
-| `OPPORTUNITY_CHANCE` | L59 |
-| `MAX_EVENT_DELAY_HOURS` | L60 |
-| `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L63 |
-| `choose_option(context, option_id: String) -> Dictionary` | L164 |
-| `settle_arrival_services(context, destination: String, arrival_time: float, voyage: Dictionary) -> Dictionary` | L370 |
-| `record_arrival_stats(state: GameState, contract_results: Array, injuries: int = 0) -> Dictionary` | L455 |
+| `OPPORTUNITY_CHANCE` | L63 |
+| `MAX_EVENT_DELAY_HOURS` | L64 |
+| `start(context, destination_id: String, strategy_id: String) -> Dictionary` | L67 |
+| `choose_option(context, option_id: String) -> Dictionary` | L168 |
+| `settle_arrival_services(context, destination: String, arrival_time: float, voyage: Dictionary) -> Dictionary` | L375 |
+| `record_arrival_stats(state: GameState, contract_results: Array, injuries: int = 0) -> Dictionary` | L461 |
 
 小时一次性扣煤水）与失败回滚。
 
@@ -23,6 +23,9 @@
   `WorldOps` / `FogOps` / `ExplorationRules`（坐标世界与迷雾）
 
 ## 契约与约束
+- 航线解锁（2026-10-26）：`start` 复用 `VoyageCalculator.preview`，未解锁航线在预览
+  阶段即返回 `route_locked`（命令层无法绕过）；`clue.travel` 走同一入口。探索航次
+  （`explore.start`）不经过这里，因此不受航线解锁限制。
 - 出航前把当前状态存入 `context.pre_voyage_state` 和 `pre_voyage` 存档槽。
 - 风险事件概率对玩家隐藏；预览只暴露风险来源。事件最多提供 2 个加权抽样选项。
 - 耐久归零或 `fail_voyage` 效果会把工作副本替换回出航前快照，并发布 voyage.failed。
@@ -30,6 +33,7 @@
   下单港仓库并写入 `summary.completed_orders`）、结算主线/普通委托、推进 NPC、
   检查逾期、刷新普通委托池并自动存档。
 - 工资通过 `state.record_expense()` 计入统计支出；委托收入在 ContractOps 结算时计入收入。
+- 反馈 #3：无期限委托（`timed=false`）不发 `contract.late`，也不计入准时率统计。
 - 行动顺序固定：扣工资 → 生成 voyage（存出发库存与每小时煤水费率）→ 选事件 →
   若无事件立即抵达结算。
 - 连续消耗（阶段 4.3.5 / U8）：出发**不扣**煤水，只扣工资；`voyage` 快照记录
@@ -37,9 +41,9 @@
   预览计划消耗 ÷ 计划时长）。`_complete_arrival` 按 `elapsed = arrival_time -
   departure_time`（已含事件延误）一次性扣 `rate × elapsed`，演出期间顶栏只做插值
   读数、不写领域状态。事件 payload 仍报计划消耗，语义不变。
-- 坐标世界（海图数据源）与抽象地图同步：`_complete_arrival` 记录访问并揭示泊位；
-  4.3.3 / U4 起在揭示前先 `_trace_voyage_fog` 沿实际航线把沿途迷雾落账（沿海
-  格子留 EXPLORED），旧存档没有 `world_map` 时这些调用全部 no-op。
+- 海图（唯一世界）同步：`_complete_arrival` 记录访问并揭示泊位；4.3.3 / U4 起在揭示前
+  先 `_trace_voyage_fog` 沿实际航线（`WorldMap.edges[].path`）把沿途迷雾落账（沿海
+  格子留 EXPLORED），无 `world_map` 时这些调用全部 no-op。
 - 4.1 起每次抵达还调用 `ClueService.on_arrival` 抽传闻线索；空结果（没抽中 /
   没有目标 / 上限已满）永不阻断或失败抵达。
 - 4.4 起 `settle_arrival_services` 先按抵达时间 sweep 到期货物线索（所有抵达路径

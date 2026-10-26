@@ -15,7 +15,7 @@
 | `campaign/faction_assembler.gd` | v2 战役的阵营装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 8）。按 | [查看](./campaign/faction_assembler.gd.md) |
 | `campaign/map_generation_spec.gd` | 把 Content Schema 2.0 的 `world_profiles` / `map_configs` / `route_templates` | [查看](./campaign/map_generation_spec.gd.md) |
 | `campaign/region_assembler.gd` | v2 战役的区域装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 5）。按 | [查看](./campaign/region_assembler.gd.md) |
-| `campaign/route_assembler.gd` | v2 战役的航路装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 7）。为抽象海图的每条边 | [查看](./campaign/route_assembler.gd.md) |
+| `campaign/route_assembler.gd` | v2 战役的航路装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 7）。为海图世界的每条边 | [查看](./campaign/route_assembler.gd.md) |
 | `campaign/site_assembler.gd` | v2 战役的地点装配器（WORLD_SCHEMA_V2_RUNTIME §6.2 步 6）。每个区域按 | [查看](./campaign/site_assembler.gd.md) |
 | `combat/combat_ops.gd` | Phase D1 战斗自动结算的纯规则层。把「玩家船 + encounter_table 抽出的敌舰组合 + | [查看](./combat/combat_ops.gd.md) |
 | `combat/combat_service.gd` | Phase D1 战斗自动结算的运行时门面：解析遭遇表、调用 `CombatOps` 纯规则层， | [查看](./combat/combat_service.gd.md) |
@@ -61,6 +61,7 @@
 | `voyage/voyage_estimator.gd` | 把「一条航线 + 当前船况 + 锅炉策略 + 航行规则」折算成海图右侧面板需要的 | [查看](./voyage/voyage_estimator.gd.md) |
 | `voyage/voyage_presentation.gd` | 航行演出（海图系统阶段 3）的**纯状态机**：把一次已经由 `voyage.start` | [查看](./voyage/voyage_presentation.gd.md) |
 | `voyage/voyage_service.gd` | 航行执行：校验预览、出发扣工资、抽取事件、事件选择、抵达结算（按实际航行 | [查看](./voyage/voyage_service.gd.md) |
+| `world/chart_world_projection.gd` | 把**唯一世界**（海图 `WorldMap` / `state.data["world_map"]`）转换成玩法层使用的 | [查看](./world/chart_world_projection.gd.md) |
 | `world/fog_grid.gd` | 战争迷雾网格，维护未探索、已探索海岸与当前可见三种状态。 | [查看](./world/fog_grid.gd.md) |
 | `world/fog_ops.gd` | 战争迷雾高层操作，把 FogGrid 与 WorldMap、GameState 接合。 | [查看](./world/fog_ops.gd.md) |
 | `world/land_generator.gd` | 程序化生成陆地多边形，支持大陆、大岛、小岛和环礁。 | [查看](./world/land_generator.gd.md) |

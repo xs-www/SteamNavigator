@@ -9,17 +9,17 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNItemTile` | L1 |
-| `pending_changed (signal)` | L39 |
-| `TILE_MIN_SIZE` | L41 |
-| `ICON_HEIGHT` | L42 |
-| `DRAG_PREVIEW_ICON` | L43 |
-| `configure(data: Dictionary) -> void` | L72 |
-| `bind(data: Dictionary) -> void` | L91 |
-| `increment_pending() -> void` | L96 |
-| `clear_pending() -> void` | L107 |
-| `drag_payload() -> Dictionary` | L117 |
-| `icon_texture() -> Texture2D` | L128 |
-| `pending_badge() -> SNBadge` | L133 |
+| `pending_changed (signal)` | L44 |
+| `TILE_MIN_SIZE` | L46 |
+| `ICON_HEIGHT` | L47 |
+| `DRAG_PREVIEW_ICON` | L48 |
+| `configure(data: Dictionary) -> void` | L80 |
+| `bind(data: Dictionary) -> void` | L99 |
+| `increment_pending() -> void` | L104 |
+| `clear_pending() -> void` | L115 |
+| `drag_payload() -> Dictionary` | L125 |
+| `icon_texture() -> Texture2D` | L136 |
+| `pending_badge() -> SNBadge` | L141 |
 
 One icon tile of the direct-manipulation market screen.
 
@@ -52,5 +52,10 @@ click clears it; dragging emits a copy of the configured payload with
   状态栏报错，页面刷新后 pending 归零。这是本轮有意保留的边界，不是 bug。
 - `drag_payload()` 返回副本并把 `amount` 设为 `max(pending, 1)`，测试可直接调用；
   `_get_drag_data()` 复用同一份载荷并挂拖拽预览。
+- `drop_host` 是「拿起 / 放下」的宿主落点（`SNDropZone`）：市场商品被拿起后，
+  点船舱 / 仓库区里的**子格子**也要放下货物，而子格子是 `MOUSE_FILTER_STOP`，
+  事件的落点点击到不了 zone。因此左键 release 先问
+  `drop_host.try_click_offer()`，被落点消费就 return（不算自己的 +1）；没有 offer
+  时行为与旧版一致（pending +1）。原生拖拽路径完全不受影响。
 
 模块索引：[framework/ui](../README.md)

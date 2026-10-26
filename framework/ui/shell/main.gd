@@ -25,6 +25,36 @@ extends Control
 ## - `SCREENS` / `STAGE_SCREENS` / `PORT_STAGE_FACILITY_SCREENS` 是导航契约，换皮不得改动键名或命令路径。
 ## - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
 ##
+## ## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
+## - `ui:*` 是**玩家动作**，由 Shell 在动作发生处上报一次：`ui:chart_opened` 在
+##   `_on_nav("sea_chart")`、`ui:chart_closed` 在 `_on_sea_chart_closed`、
+##   `ui:arrival_settled` 在 `_finish_presentation()` / `_full_stop_after_voyage()`
+##   的抵达结算点。页面挂载函数（`_screen_settlement` / `_screen_sea_chart`）只渲染、
+##   不再 observe，因此剧情卡继续 / resize / 状态刷新引起的页面重建不会重复推进剧情。
+## - `DEPARTURE_VEIL` 归入 `_presentation_on_stage()`：离港云层期间继续挂出发港 3D
+##   舞台（origin 视图），不会在演出中途掉回海图页并重复上报 `ui:chart_opened`。
+## - 离开结算页清空 `_settlement_summary`，避免旧航次摘要被后续重建再次“结算”。
+## - `SNFocusOverlay`（framework/ui/components/sn_focus_overlay.gd）：剧情阶段的
+##   `story.view.focus.target` 由 `_resolve_story_focus_target()` 解析成真实控件
+##   （`market_supply` / `chart_entry` / `<screen>_nav`）；页面挂好、每次重建与窗口
+##   resize 后由 `_sync_story_focus()` 更新，剧情卡 / 演出 / 结算页时清除。
+##
+## ## 退出与性能（P0，2026-10-24）
+## - **优雅退出**：`_ready()` 设 `get_tree().auto_accept_quit = false`，窗口关闭请求走
+##   `_notification(NOTIFICATION_WM_CLOSE_REQUEST)` → `_graceful_quit()`；「退出游戏」按钮同样走它。
+##   `_prepare_quit()` 幂等：停演出、`unmount_stage()` 并释放 `_port_stage_host`（它持有
+##   SubViewport + 世界 + MSAA framebuffer）、释放页面树/全屏层与热点层，随后
+##   `ContentAssetLoader.clear_cache()` + `FrameworkRuntime.shutdown()`（此前只有测试会调用）。
+## - **导出构建退出崩溃的引擎兜底**：Godot 4.7.2 GL Compatibility 在「本会话渲染过 3D 舞台」
+##   后退出时于 GLES3 storage teardown 崩溃（0xC0000005，dev.3 与 HEAD 导出版均可复现，应用层
+##   清理无效）。因此 `_had_3d_stage` 为真且非编辑器构建时，清理完成后用 `OS.kill()` 结束进程，
+##   玩家看到的是正常关闭而不是 Windows 崩溃弹窗；纯菜单会话仍走 `get_tree().quit()`。引擎升级后应移除该兜底。
+## - **整页重建读作用域**：`_rebuild_ui()` 包在 `QueryBus.begin_read_scope()` /
+##   `end_read_scope()` 里，一次重建只克隆一次 GameState（每查询克隆 11.6 ms → 一次）；
+##   `CommandBus` 提交成功后 `invalidate_read_snapshot()` 保证后续查询看到已提交状态。
+## - **港口名缓存**：`_port_name()` 以 run seed 为键缓存 `port_id → name_key`，一次 `map.view`
+##   填满整表；状态消息不再每条触发一次 `map.view` 全状态克隆（13.5 ms/次）。
+##
 ## ## 市场页（图标直接交易，`docs/design/MARKET_UI_REFACTOR.md`）
 ## - `_screen_market()` 先执行 `market.view`；查询不可用时回退用 `port.view` 的行情 / 船摘要
 ##   组装同名字段的 ViewModel，页面不崩。
@@ -36,6 +66,19 @@ extends Control
 ##   退化成 `CargoHoldPanel` + 市场面板两栏，不出现空白舞台窗口。
 ## - 页面只发命令意图：`trade.buy{destination}` / `trade.sell{source}` /
 ##   `warehouse.store_materials` / `warehouse.take_materials`。
+##
+## ## 委托页（反馈 #2 / #3）
+## - 可接委托列表直接来自 `port.view`（已在查询层过滤掉目的港未发现的普通委托）；
+##   Shell 不再做二次雾判断，也不隐藏主线 offer（生成时已揭示目的地）。
+## - 无期限委托（`has_deadline=false`）在总览奖励文案里用「完成 +N」而不是「准时 +N」；
+##   委托页卡片的期限显示由 `contracts_screen` 负责。
+##
+## ## 航线解锁（2026-10-26）
+## - 酒馆页「海图（航线解锁）」区块发 `chart.buy {port_id}`；成功由 `_handle_success` 的
+##   `"chart.buy"` 分支在状态栏确认已测绘航线，`_refresh()` 重建页面后
+##   `tavern.view.chart_offers` 的该港口变为 `unlocked=true`（显示「已测绘」）。
+## - 海图页签 `voyage.preview` / `voyage.start` / `clue.travel` 的 `route_locked` 失败按
+##   既有错误路径显示 `ui.error.route_locked`；面板在未测绘航线上禁用启航并显示酒馆提示。
 ## @end-static-doc
 ##
 ## Playable shell for the framework slice.
@@ -74,6 +117,10 @@ const MARKET_SCREEN_SCENE := preload("res://framework/ui/screens/port/market_scr
 const CARGO_HOLD_PANEL_SCRIPT := preload("res://framework/ui/components/sn_cargo_hold_panel.gd")
 ## 通用物品回退图标（内容模组没提供 `information.texture` 时使用）。
 const ITEM_FALLBACK_ICON := "res://assets/ui/icons/item_fallback.svg"
+## 市场「拿起 / 放下」光标幽灵（feedback #1）与交互处浮出提示（dev.3 feedback #4）：
+## 纯脚本组件，挂在 Shell 的浮层（HintLayer）里，不依赖页面滚动区。
+const CARRY_GHOST_SCRIPT := preload("res://framework/ui/components/sn_carry_ghost.gd")
+const INTERACTION_HINT_SCRIPT := preload("res://framework/ui/components/sn_interaction_hint.gd")
 const CONTRACTS_SCREEN_SCENE := preload("res://framework/ui/screens/port/contracts_screen.tscn")
 const SUPPLY_SCREEN_SCENE := preload("res://framework/ui/screens/port/supply_screen.tscn")
 const INTEL_SCREEN_SCENE := preload("res://framework/ui/screens/port/tavern_screen.tscn")
@@ -90,6 +137,7 @@ const SEA_CHART_SCREEN_SCENE := preload("res://framework/ui/screens/flow/sea_cha
 const CLUE_LOG_SCREEN_SCENE := preload("res://framework/ui/screens/flow/clue_log_screen.tscn")
 const STORY_CARD_SCRIPT := preload("res://framework/ui/components/sn_story_card.gd")
 const STORY_OBJECTIVE_SCRIPT := preload("res://framework/ui/components/sn_story_objective.gd")
+const STORY_FOCUS_SCRIPT := preload("res://framework/ui/components/sn_focus_overlay.gd")
 const TASK_TRACKER_SCRIPT := preload("res://framework/ui/components/sn_task_tracker.gd")
 const VICTORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/victory_screen.tscn")
 const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_menu_screen.tscn")
@@ -197,6 +245,14 @@ var _context: AppContext = null
 var _last_port_view: Dictionary = {}
 ## Market page icon resolution cache: `icon_key` -> Texture2D (session only).
 var _market_icon_cache: Dictionary = {}
+## 拿起手势光标幽灵 / 交互处浮出提示：挂在 Shell 的全窗 `HintLayer` 浮层里，位于
+## `PageScroll` 之外（页面边距与滚动都裁不到），在转场淡出层之下。
+var _hint_layer: Control = null
+var _carry_ghost: Control = null
+var _interaction_hint: Control = null
+## True while a player-triggered command executes: `_set_status` uses it so only
+## interaction feedback pops at the cursor (nav /演出 / 载入不弹)。
+var _interactive_command := false
 var _settings: SettingsService = null
 var _settings_applied: bool = false
 
@@ -225,6 +281,9 @@ var _story_layer: Control = null
 var _story_card: Control = null
 var _story_objective: Control = null
 var _task_tracker: Control = null
+## 4.7 / dev.3 #3：强制引导遮罩（剧情阶段声明 `focus` 时由 Shell 挂载并解析目标）。
+var _story_focus: Control = null
+var _story_focus_warned: Dictionary = {}
 var _story_card_open := false
 var _seed_text: String = ""
 var _status_message: String = ""
@@ -292,12 +351,35 @@ var _at_sea_screen: AtSeaScreen = null
 ## Procedural cloud veil used by the presentation; created lazily as the topmost
 ## child so it covers both the 3D stage and the pages.
 var _cloud_veil: SNCloudVeil = null
+## Shutdown guard: the first close/quit request wins, so a second request (or the
+## in-game quit button pressed while the teardown runs) cannot start it twice.
+var _quitting := false
+## True once this session mounted a 3D stage. The exported GL Compatibility build
+## crashes (0xC0000005) inside the engine's GLES3 teardown when a 3D stage has been
+## rendered; `_graceful_quit()` therefore releases the game resources and then
+## terminates the process instead of letting the engine tear the GL context down.
+var _had_3d_stage := false
+## `port_id -> localized port name`. Ports are generated from the run seed, so the
+## seed is the cache key: a new run / a save from another seed rebuilds the table.
+## Status messages ask for port names 1–3 times per interaction and each lookup
+## used to run a whole `map.view` query (a full GameState clone).
+var _port_name_cache: Dictionary = {}
+var _port_name_seed: int = -2147483648
 
 
 func _ready() -> void:
 	theme = UI_THEME
+	# Close requests go through `_graceful_quit()` instead of Godot's default
+	# immediate quit: the exported build crashed with 0xC0000005 when the window
+	# closed while the 3D stage's runtime ImageTextures were still alive.
+	get_tree().auto_accept_quit = false
 	_settings = SettingsService.load_settings()
 	_refresh()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_graceful_quit()
 
 
 ## Drives the at-sea演出. Only the presentation advances the animation; the
@@ -374,7 +456,25 @@ func _begin_transition() -> void:
 	)
 
 
+## Public entry for a full page rebuild. Opens a query read scope so the whole
+## rebuild pays **one** GameState clone instead of one per query (the HEAD page
+## rebuild runs ~7 queries; a clone is 11.6 ms), and always closes it, including
+## on the early returns inside the body.
 func _rebuild_ui() -> void:
+	_context = _resolve_context()
+	var scoped := _context != null and _context.queries != null
+	if scoped:
+		_context.queries.begin_read_scope()
+	_rebuild_ui_body()
+	if scoped and _context != null and _context.queries != null:
+		_context.queries.end_read_scope()
+
+
+func _rebuild_ui_body() -> void:
+	# A page rebuild drops the page-owned pending amounts, so the 拿起光标幽灵 goes
+	# with it. The floating interaction hint deliberately survives the rebuild: it
+	# reports the command that triggered this rebuild.
+	_hide_carry_ghost()
 	_context = _resolve_context()
 	for child in _root_box.get_children():
 		_root_box.remove_child(child)
@@ -539,6 +639,8 @@ func _rebuild_ui() -> void:
 		_:
 			_screen_overview(data)
 	_sync_port_stage(data)
+	# 4.7 / dev.3 #3：页面挂好后再解析引导目标（市场补给区块 / 海图入口 / 导航按钮）。
+	_sync_story_focus()
 
 
 ## ---------------------------------------------------------------------------
@@ -618,6 +720,7 @@ func _clear_story_layer() -> void:
 	_story_card = null
 	_story_objective = null
 	_task_tracker = null
+	_story_focus = null
 	_story_card_open = false
 	if _story_layer == null or not is_instance_valid(_story_layer):
 		return
@@ -625,6 +728,94 @@ func _clear_story_layer() -> void:
 		_story_layer.remove_child(child)
 		child.queue_free()
 	_story_layer.visible = false
+
+
+## ---------------------------------------------------------------------------
+## 拿起光标幽灵 + 交互处浮出提示（feedback #1 / dev.3 feedback #4）
+## ---------------------------------------------------------------------------
+##
+## One shared Shell overlay hosts both transient interaction feedback components.
+## It is full-rect and mouse-transparent, sits above the pages and below the
+## transition fade, and lives outside `PageMargin/PageScroll` so a page can never
+## clip the ghost or the hint at 960×540 / 1440×900.
+
+func _ensure_hint_layer() -> Control:
+	if _hint_layer != null and is_instance_valid(_hint_layer):
+		return _hint_layer
+	_hint_layer = Control.new()
+	_hint_layer.name = "HintLayer"
+	_hint_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_hint_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_hint_layer)
+	if _fade_layer != null and is_instance_valid(_fade_layer):
+		# Below the transition fade: a page transition still darkens the feedback.
+		move_child(_hint_layer, _fade_layer.get_index())
+	return _hint_layer
+
+
+## Cursor ghost of the 拿起手势; created lazily on the shared hint layer.
+func _ensure_carry_ghost() -> Control:
+	if _carry_ghost != null and is_instance_valid(_carry_ghost):
+		return _carry_ghost
+	var ghost: Control = CARRY_GHOST_SCRIPT.new()
+	ghost.name = "CarryGhost"
+	_ensure_hint_layer().add_child(ghost)
+	_carry_ghost = ghost
+	return _carry_ghost
+
+
+## Shows (or updates) the carried stack from a `MarketScreen.carry_changed` offer.
+## The pickup sound plays only when a carry actually starts, not on every +1.
+func _show_carry_ghost(offer: Dictionary) -> void:
+	if offer.is_empty():
+		_hide_carry_ghost()
+		return
+	var ghost := _ensure_carry_ghost()
+	var started := not bool(ghost.call("is_carrying"))
+	ghost.call("begin", offer.get("icon", null) as Texture2D, String(offer.get("name", "")), int(offer.get("amount", 0)), _tr("ui.hint.market_pickup", ""))
+	if started:
+		_play_pickup()
+
+
+func _hide_carry_ghost() -> void:
+	if _carry_ghost == null or not is_instance_valid(_carry_ghost):
+		return
+	_carry_ghost.call("end")
+
+
+## Floating command feedback at the cursor; created lazily on the shared hint layer.
+func _ensure_interaction_hint() -> Control:
+	if _interaction_hint != null and is_instance_valid(_interaction_hint):
+		return _interaction_hint
+	var hint: Control = INTERACTION_HINT_SCRIPT.new()
+	hint.name = "InteractionHint"
+	_ensure_hint_layer().add_child(hint)
+	_interaction_hint = hint
+	return _interaction_hint
+
+
+func _show_interaction_hint(message: String, is_error: bool) -> void:
+	if message.is_empty():
+		return
+	var hint := _ensure_interaction_hint()
+	var at := get_viewport().get_mouse_position() if is_inside_tree() else Vector2.ZERO
+	hint.call("show_at", at, message, is_error)
+
+
+func _hide_interaction_hint() -> void:
+	if _interaction_hint == null or not is_instance_valid(_interaction_hint):
+		return
+	_interaction_hint.call("hide_hint")
+
+
+## True only while the player is on a port page of a live run: menus, story cards,
+## voyage演出 and page fades never pop the floating hint.
+func _in_port_interaction() -> bool:
+	if _context == null or not _context.has_run():
+		return false
+	if _presentation != null or _transitioning or _story_card_open:
+		return false
+	return SCREENS.has(_active_screen)
 
 
 ## The highest-priority aggregated task (`task.view.active_task`), or `{}`.
@@ -650,6 +841,7 @@ func _update_story_layer() -> void:
 		_story_card = null
 		_story_objective = null
 		_task_tracker = null
+		_story_focus = null
 		_story_card_open = false
 		_mount_task_tracker(layer, task)
 		layer.visible = true
@@ -663,7 +855,15 @@ func _update_story_layer() -> void:
 	_story_card = null
 	_story_objective = null
 	_task_tracker = null
+	_story_focus = null
 	_story_card_open = false
+	# 4.7 / dev.3 #3：强制引导遮罩先挂（在卡片之下），卡片打开时卡片优先；
+	# 目标矩形的解析与布局在所有页面挂好之后由 `_sync_story_focus()` 完成。
+	if _story_focus_requested():
+		var focus_control: Control = STORY_FOCUS_SCRIPT.new()
+		focus_control.name = "StoryFocus"
+		layer.add_child(focus_control)
+		_story_focus = focus_control
 	var card: Variant = _story_vm.get("card", null)
 	if card is Dictionary:
 		var card_control: Control = STORY_CARD_SCRIPT.new()
@@ -732,6 +932,102 @@ func _place_story_objective() -> void:
 			var layer_top := _story_layer.get_global_rect().position.y
 			y = maxf(y, banner_rect.end.y - layer_top + 4.0)
 	control.position = Vector2(x, y)
+
+
+## True when the current story stage declares a guided-focus target and no story card
+## is on screen (dev.3 feedback #3: the card always wins over the mask).
+func _story_focus_requested() -> bool:
+	if not _story_active():
+		return false
+	if _story_vm.get("card", null) is Dictionary:
+		return false
+	var focus: Variant = _story_vm.get("focus", null)
+	return focus is Dictionary and not String((focus as Dictionary).get("target", "")).is_empty()
+
+
+## Resolves `story.view.focus.target` (framework semantic id, never a page path) into
+## the live control and hands its screen rect to the overlay. Called after the page
+## tree is mounted, on page switches (rebuild) and on resize. Missing / unmounted
+## targets fail open (mask cleared) so a content typo can never trap the player.
+func _sync_story_focus() -> void:
+	if _story_focus == null or not is_instance_valid(_story_focus):
+		return
+	if not _story_focus_requested() or _presentation != null or _story_card_open \
+			or not (SCREENS.has(_active_screen) or _active_screen == "sea_chart"):
+		_story_focus.call("clear_focus")
+		return
+	var focus: Dictionary = _story_vm.get("focus", {})
+	var target := _resolve_story_focus_target(String(focus.get("target", "")))
+	if target == null or not is_instance_valid(target) or not target.is_visible_in_tree():
+		_story_focus.call("clear_focus")
+		return
+	var rect := target.get_global_rect()
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		_story_focus.call("clear_focus")
+		return
+	# 文案键缺失时不要渲染裸键名（content / 本地化缺键只显示遮罩）。
+	var text_key := String(focus.get("text_key", ""))
+	var hint := "" if text_key.is_empty() else _tr(text_key, "")
+	if hint == text_key:
+		hint = ""
+	_story_focus.call("focus", rect, hint)
+
+
+## Semantic focus target -> real control. Targets name framework surfaces, so Core
+## content never references a page / node path:
+##   market_supply   market page supply section (or the market nav entry when the
+##                   player is still on another port page)
+##   chart_entry     the chart entry (status-strip button on overview / nav toggle)
+##   chart_close     the chart page close button (falls back to the chart toggle)
+##   <screen>_nav    that screen's navigation button (market_nav / contracts_nav …)
+func _resolve_story_focus_target(target_id: String) -> Control:
+	if target_id.is_empty():
+		return null
+	match target_id:
+		"market_supply":
+			if _active_screen == "market":
+				var supply := find_child("MarketSupply", true, false) as Control
+				if supply != null:
+					return supply
+			return _story_nav_button("market")
+		"chart_entry", "chart_nav":
+			return _story_chart_entry_control()
+		"chart_close":
+			if _active_screen == "sea_chart":
+				var close := find_child("CloseButton", true, false) as Control
+				if close != null:
+					return close
+			return _story_chart_entry_control()
+	if target_id.ends_with("_nav"):
+		return _story_nav_button(target_id.trim_suffix("_nav"))
+	if not bool(_story_focus_warned.get(target_id, false)):
+		_story_focus_warned[target_id] = true
+		push_warning("SNFocusOverlay: unknown story focus target '%s'" % target_id)
+	return null
+
+
+## A navigation button from the compact chrome. The buttons are stock `Button`s
+## labelled with `ui.nav.<screen>`, so resolution stays independent of node names
+## added by other UI work.
+func _story_nav_button(screen: String) -> Control:
+	var nav := find_child("Nav", true, false)
+	if nav == null:
+		return null
+	var wanted := _tr("ui.nav.%s" % screen, screen)
+	for child in nav.get_children():
+		if child is Button and String((child as Button).text) == wanted:
+			return child
+	return null
+
+
+## The chart entry: the status-strip `ChartButton` while in port, the nav toggle
+## while the chart page is up (that same button closes it).
+func _story_chart_entry_control() -> Control:
+	if _active_screen != "sea_chart":
+		var chart_button := find_child("ChartButton", true, false) as Control
+		if chart_button != null and chart_button.is_visible_in_tree():
+			return chart_button
+	return _story_nav_button("sea_chart")
 
 
 ## Forwards a successful command / UI event to the story state machine and the quest
@@ -1498,6 +1794,7 @@ func _sync_port_stage(data: Dictionary, force_station: String = "") -> void:
 	var framing := "stage" if _active_screen == "overview" or _active_screen == "shipyard" or not force_station.is_empty() else "panel"
 	_port_stage_host.bind_view_model(_port_stage_payload(data))
 	_port_stage_host.set_stage_visible(true)
+	_had_3d_stage = true
 	_focus_stage_station(station, framing, just_mounted)
 	_sync_overview_detail_backdrop()
 	if _port_hotspot_layer != null:
@@ -1642,6 +1939,9 @@ func _on_port_stage_fallback(reason: String) -> void:
 func _on_viewport_size_changed() -> void:
 	if _port_stage_active():
 		_refresh_port_hotspots_soon()
+	# 4.7 / dev.3 #3：窗口尺寸变化后引导遮罩必须重新按目标控件矩形排版。
+	if _story_focus != null and is_instance_valid(_story_focus):
+		_sync_story_focus.call_deferred()
 
 
 ## Two deferred passes: the first runs after the container re-layout, the second
@@ -1866,6 +2166,15 @@ func _screen_market(data: Dictionary) -> void:
 	hold.name = "CargoHoldPanel"
 	hold.bind(market_model, Callable(self, "_tr"))
 	hold.command_requested.connect(_run_command)
+	# 拿起手势（feedback #1）：市场格子的 pending 聚合成 offer，一边驱动光标幽灵，
+	# 一边转发给船舱 / 仓库落点——玩家点落点即执行 trade.buy。
+	screen.carry_changed.connect(func(offer: Dictionary) -> void:
+		hold.set_offer(offer)
+		if offer.is_empty():
+			_hide_carry_ghost()
+		else:
+			_show_carry_ghost(offer)
+	)
 	if _stage_backed_page():
 		_mount_market_dock(hold, screen)
 	else:
@@ -2159,9 +2468,16 @@ func _contract_payload_text(contract: Dictionary) -> String:
 
 
 func _contract_reward_text(contract: Dictionary) -> String:
+	# 反馈 #3：无期限委托的 on_time_bonus 是「完成奖励」，文案从「准时 +N」改为
+	# 「完成 +N」（port.view 已给出 has_deadline；缺省时回退到 instance 判定）。
+	var timed := bool(contract.get("has_deadline", not ContractOps.is_untimed(contract)))
 	var parts := PackedStringArray()
 	parts.append("基础 %d" % int(contract.get("base_money", 0)))
-	parts.append("准时 +%d" % int(contract.get("on_time_bonus", 0)))
+	parts.append((
+		_tr("ui.reward.on_time", "准时 +%d")
+		if timed
+		else _tr("ui.reward.completion", "完成 +%d")
+	) % int(contract.get("on_time_bonus", 0)))
 	parts.append("声誉 +%d" % int(contract.get("reputation", 0)))
 	return "报酬：" + " · ".join(parts)
 
@@ -2293,6 +2609,10 @@ func _ruins_model(view: Dictionary, data: Dictionary) -> Dictionary:
 
 
 func _screen_shipyard(data: Dictionary) -> void:
+	# The normal shipyard page mounts its own 3D hull stage (`SNShipStage3D`), so the
+	# session counts as "3D rendered" for the GL teardown workaround even when the
+	# port stage never mounts (2D overview fallback).
+	_had_3d_stage = true
 	var result := _context.queries.execute(&"shipyard.view")
 	if not bool(result.get("ok", false)):
 		var error_panel := _panel()
@@ -2425,9 +2745,9 @@ func _screen_sea_chart(data: Dictionary) -> void:
 	screen.purchase_clue_requested.connect(_on_purchase_clue_requested)
 	screen.investigate_requested.connect(_on_investigate_requested)
 	_root_box.add_child(screen)
-	# 4.5：打开海图可能是剧情目标（chart_brief）；推进后下一帧刷新目标条。
-	if _observe_story("ui:chart_opened"):
-		call_deferred("_refresh")
+	# dev.3 #1：`ui:chart_opened` 是**玩家动作**，不再挂在这里——页面每次重建都会
+	# 重建海图（改策略 / 开确认弹窗 / 买线索），在这个函数里 observe 会把一次
+	# 「打开海图」重复上报。真实打开点在 `_on_nav("sea_chart")`。
 
 
 ## 确认弹窗当前策略：弹窗自己的选择 → Shell 记忆的上一次选择 → 按 `strategy.standard`
@@ -2738,9 +3058,10 @@ func _screen_settlement(data: Dictionary) -> void:
 	if _settlement_summary.is_empty():
 		_screen_overview(data)
 		return
-	# 4.5：抵达第二港是剧情阶段的推进点（第一航结束 / 后续幕）。
-	if _observe_story("ui:arrival_settled"):
-		call_deferred("_refresh")
+	# dev.3 #1：`ui:arrival_settled` 是**抵达事件**，只在演出结束 / 无演出结算时
+	# 由 Shell 发一次（`_finish_presentation` / `_full_stop_after_voyage`）。这里
+	# 只负责画结算页：页面每次重建（剧情卡继续、窗口 resize、状态刷新）都不能
+	# 重复推进剧情，否则「到港剧情」会被提前 / 重复触发。
 	var summary := _settlement_summary.duplicate(true)
 	var destination := String(summary.get("destination", ""))
 	var contracts: Array = summary.get("contracts", []).duplicate(true)
@@ -2988,8 +3309,13 @@ func _presentation_on_chart() -> bool:
 func _presentation_on_stage() -> bool:
 	if _presentation == null:
 		return false
+	# dev.3 #1：`DEPARTURE_VEIL` 也算「3D 演出页」。它既不在 `_presentation_on_chart()`
+	# 里，而 `port.view.at_sea` 在 `voyage.start` 返回时已经是 false（领域先结算抵达），
+	# 旧实现会在这个 0.7 s 相位里掉回「上一页」（出航时恒为海图），把海图页重新挂上
+	# 并重复上报 `ui:chart_opened`。让离港镜头继续留在 3D 舞台下面，云层照常升起。
 	return _presentation.phase in [
 		VoyagePresentation.Phase.DEPARTURE_3D,
+		VoyagePresentation.Phase.DEPARTURE_VEIL,
 		VoyagePresentation.Phase.ARRIVAL_HARBOR,
 	]
 
@@ -3018,12 +3344,17 @@ func _screen_voyage_stage(data: Dictionary) -> void:
 	# longer reports once the command has already settled the arrival; the origin
 	# view was captured from the last in-port rebuild. Arrival uses the live view
 	# (the ship is now at the destination).
+	# dev.3 #1：`DEPARTURE_VEIL` 也继续演出发港（云层盖住离港镜头的阶段不能被
+	# 目的港视图顶掉，否则云层下会提前露出抵达地）。
+	var departure_phase := _presentation.phase in [
+		VoyagePresentation.Phase.DEPARTURE_3D,
+		VoyagePresentation.Phase.DEPARTURE_VEIL,
+	]
 	var stage_data := data
-	if _presentation.phase == VoyagePresentation.Phase.DEPARTURE_3D \
-			and not _presentation_origin_view.is_empty():
+	if departure_phase and not _presentation_origin_view.is_empty():
 		stage_data = _presentation_origin_view
 	_sync_port_stage(stage_data, PortStage.DEFAULT_STATION)
-	if _presentation.phase == VoyagePresentation.Phase.DEPARTURE_3D:
+	if departure_phase:
 		_begin_stage_departure()
 	else:
 		_begin_stage_arrival()
@@ -3257,6 +3588,10 @@ func _finish_presentation() -> void:
 	_presentation_explore = {}
 	_at_sea_screen = null
 	_sync_cloud_veil(0.0)
+	# dev.3 #1：抵达事件在这里发**一次**——演出收尾 = 真正到港；结算页之后的任何
+	# 重建都不再上报 `ui:arrival_settled`。必须先 observe 再重建，让同帧的剧情卡 /
+	# 目标条直接是抵达后的阶段。
+	_observe_story("ui:arrival_settled")
 	_rebuild_ui()
 
 
@@ -3472,7 +3807,100 @@ func _on_menu_action(action: StringName, params: Dictionary) -> void:
 
 
 func _on_quit() -> void:
+	_graceful_quit()
+
+
+## Orderly shutdown shared by the window close request and the quit button.
+##
+## Two things happen here:
+## 1. Game-resource teardown: stop the presentation, free the page tree and both
+##    3D stage hosts, drop the runtime content assets (`ContentAssetLoader` cache)
+##    and the framework runtime — all while the renderer is still alive.
+## 2. Engine workaround: the exported GL Compatibility build crashes with
+##    0xC0000005 inside GLES3 storage teardown once a 3D stage has rendered. The
+##    teardown above is not enough to avoid it (verified on Godot 4.7.2), so a
+##    session that rendered 3D terminates the process after the cleanup instead
+##    of letting the engine destroy the GL context. Menu-only sessions still quit
+##    normally. Remove the workaround when the engine is updated.
+func _graceful_quit() -> void:
+	if _quitting:
+		return
+	_quitting = true
+	print("[quit] graceful teardown: freeing 3D stages and page tree")
+	_prepare_quit()
+	# The frees above are deferred (queue_free); let the tree process them so the
+	# stage viewports / meshes / textures reach the renderer before it is destroyed.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	ContentAssetLoader.clear_cache()
+	FrameworkRuntime.shutdown()
+	# Flush the pending GL commands (buffer/texture deletions) before the engine
+	# stops the rendering server; the exported GLES3 build crashed on exit when a
+	# 3D stage had been rendered, and an unsynchronised teardown was the suspect.
+	if RenderingServer.has_method("force_sync"):
+		RenderingServer.force_sync()
+	print("[quit] runtime caches released: quitting")
+	for _i in 3:
+		await get_tree().process_frame
+	if _had_3d_stage and not OS.has_feature("editor"):
+		# Engine workaround: with GL Compatibility the exported build crashes with
+		# 0xC0000005 inside GLES3 storage teardown once a 3D stage has rendered
+		# (reproduced on Godot 4.7.2, both dev.3 and HEAD builds; app-level cleanup
+		# does not help). Terminating after our own teardown gives the player a
+		# normal close instead of a Windows crash dialog. Revisit when the engine
+		# is updated (see docs/design/RUNTIME_PERF_REPORT.md §5).
+		print("[quit] terminating process to skip the GLES3 teardown crash")
+		OS.kill(OS.get_process_id())
+		return
 	get_tree().quit()
+
+
+## Idempotent node-level half of `_graceful_quit()` (tests call it directly because
+## the full shutdown ends the process): stop the presentation, free the page tree
+## and unmount + free the 3D stages so their GPU resources are released while the
+## renderer is still alive.
+func _prepare_quit() -> void:
+	_presentation = null
+	_presentation_explore = {}
+	_presentation_voyage = {}
+	_presentation_origin_view = {}
+	_at_sea_screen = null
+	if _port_stage_host != null and is_instance_valid(_port_stage_host):
+		_port_stage_host.unmount_stage()
+		_port_stage_host.set_stage_visible(false)
+		# The host owns a `SubViewport` (own World3D + MSAA framebuffer); free it
+		# explicitly so its render target is released while the renderer still exists.
+		remove_child(_port_stage_host)
+		_port_stage_host.queue_free()
+		_port_stage_host = null
+	if _cloud_veil != null and is_instance_valid(_cloud_veil):
+		_cloud_veil.queue_free()
+		_cloud_veil = null
+	if _port_hotspot_layer != null and is_instance_valid(_port_hotspot_layer):
+		_port_hotspot_layer.queue_free()
+		_port_hotspot_layer = null
+	if _overview_detail_backdrop != null and is_instance_valid(_overview_detail_backdrop):
+		_overview_detail_backdrop.queue_free()
+		_overview_detail_backdrop = null
+	_free_page_tree()
+
+
+
+## Frees the rebuilt page layer and the full-window layer (the at-sea chart). The
+## shipyard / overview pages own their own `SNStageHost` sub-viewports, so dropping
+## the page tree also releases those 3D stages and their viewport render targets.
+func _free_page_tree() -> void:
+	for layer in [_root_box, _fullscreen_layer]:
+		if layer == null or not is_instance_valid(layer):
+			continue
+		for child in layer.get_children():
+			layer.remove_child(child)
+			child.queue_free()
+	_top_chrome = null
+	_at_sea_screen = null
+	_hud_coal_value = null
+	_hud_water_value = null
 
 
 func _on_set_locale(locale: String) -> void:
@@ -3518,11 +3946,18 @@ func _on_nav(screen: String) -> void:
 	elif not _chart_departure.is_empty():
 		# Navigating away from the chart abandons a pending departure confirmation.
 		_chart_departure = {}
+	# dev.3 #1：离开结算页就丢掉那份摘要——否则之后任何一次带着
+	# `_active_screen == "settlement"` 的重建都会把旧航次再“结算”一遍。
+	if from == "settlement" and screen != "settlement":
+		_settlement_summary = {}
 	if screen != "overview":
 		# The detail drawer only belongs to the overview main view.
 		_overview_detail = false
 	_active_screen = screen
 	_status_message = ""
+	# dev.3 #1：`ui:chart_opened` 只在真正打开海图时发一次（关闭仍由
+	# `_on_sea_chart_closed` 发 `ui:chart_closed`）；页面重建不再重复上报。
+	var chart_opened := screen == "sea_chart" and from != "sea_chart"
 	# Adjacent station pages share one 3D district: a fade to black would hide the
 	# camera pan and the sailing hull that are the point of the switch, so those
 	# navigations rebuild instantly and let the stage carry the transition. Every
@@ -3532,6 +3967,10 @@ func _on_nav(screen: String) -> void:
 		and STAGE_SCREENS.has(screen)
 		and _port_stage_available()
 	)
+	# Observe before the rebuild so the refreshed card / objective / focus mask
+	# already reflect the stage the chart entry just advanced.
+	if chart_opened:
+		_observe_story("ui:chart_opened")
 	_refresh(not continuous)
 
 
@@ -3591,9 +4030,14 @@ func _on_continue() -> void:
 func _run_command(command: StringName, params: Dictionary) -> void:
 	if _context == null:
 		return
+	# Marks the status feedback as interaction-driven so `_set_status` also pops the
+	# floating hint at the cursor (dev.3 feedback #4). Cleared on every exit path.
+	# `run.start` comes from the new-game menu, so it must not pop a port-page hint.
+	_interactive_command = command != &"run.start"
 	# 4.5.2：剧情阶段可以临时锁住某个动作（如补给限购），由 Core 阶段表声明。
 	if _story_action_locked(command):
 		_set_status(_tr("ui.story.supply_locked", "补给暂时受限：先看完海图的目的港"), true)
+		_interactive_command = false
 		return
 	var result := _context.commands.execute(command, params)
 	if bool(result.get("ok", false)):
@@ -3612,6 +4056,7 @@ func _run_command(command: StringName, params: Dictionary) -> void:
 		&"run.start", &"voyage.start", &"event.choose_option", &"clue.travel",
 	] and not presentation_handoff
 	_refresh(animate)
+	_interactive_command = false
 
 
 func _handle_success(command: StringName, result: Dictionary) -> void:
@@ -3639,6 +4084,12 @@ func _handle_success(command: StringName, result: Dictionary) -> void:
 			_handle_clue_bought(data)
 		"clue.investigate":
 			_handle_clue_investigated(data)
+		"chart.buy":
+			# 2026-10-26 航线解锁：酒馆买到海图后状态栏确认「哪条航线已测绘」。
+			# 页面由 `_run_command` 的常规 `_refresh()` 重建（area 的 chart_offers 变已解锁）。
+			_set_status(_tr(
+				"ui.notice.chart_purchased", "已购买 %s 海图（%d 金币），航线已测绘。"
+			) % [_port_name(String(data.get("to", ""))), int(data.get("cost", 0))], false)
 		"event.choose_option":
 			if bool(data.get("failed", false)):
 				_presentation = null
@@ -3816,6 +4267,9 @@ func _full_stop_after_voyage(data: Dictionary) -> void:
 		_settlement_summary = summary
 		_active_screen = "settlement"
 		_status_message = ""
+		# dev.3 #1：没有演出可播的旧路径（读档后停在事件点）同样只在结算这一刻
+		# 上报一次抵达事件，不由结算页重建重复推进剧情。
+		_observe_story("ui:arrival_settled")
 	else:
 		_active_screen = "overview"
 		_set_status("已抵达目的港。", false)
@@ -3835,9 +4289,16 @@ func _resolve_context() -> AppContext:
 	return null
 
 
+## Persists the status message for the top banner, and — when the feedback comes
+## from a player interaction on a port page — also pops the floating hint at the
+## cursor. dev.3 feedback #4: the banner is at the top of the page while the player
+## interacts lower down; the banner stays (persistent state + tests), the hint is the
+## immediate feedback. Text still comes from `_tr` / localization keys.
 func _set_status(message: String, is_error: bool) -> void:
 	_status_message = message
 	_status_is_error = is_error
+	if _interactive_command and not message.is_empty() and _in_port_interaction():
+		_show_interaction_hint(message, is_error)
 
 
 func _retry_bootstrap() -> void:
@@ -3975,13 +4436,32 @@ func _module_name(module_id: String) -> String:
 	return _tr(definition.name_key, module_id) if definition != null else module_id
 
 
+## Localized display name of a port. Ports are generated from the run seed and
+## their ids/names never change during a run, so the table is cached per seed:
+## status messages ask for 1–3 names per interaction and each miss used to run a
+## full `map.view` query (i.e. a whole GameState clone, 13.5 ms).
 func _port_name(port_id: String) -> String:
+	if port_id.is_empty():
+		return port_id
+	if _context == null:
+		return port_id
+	var cache := _port_name_cache
+	if _port_name_seed != _context.state.seed():
+		cache.clear()
+		_port_name_seed = _context.state.seed()
+	if cache.has(port_id):
+		return _tr(String(cache[port_id]), port_id)
 	var map_result := _context.queries.execute(&"map.view")
 	if bool(map_result.get("ok", false)):
 		for port in map_result["data"].get("ports", []):
-			if String(port.get("id", "")) == port_id:
-				return _tr(String(port.get("name_key", "")), port_id)
+			var id := String(port.get("id", ""))
+			if id.is_empty():
+				continue
+			cache[id] = String(port.get("name_key", ""))
+		if cache.has(port_id):
+			return _tr(String(cache[port_id]), port_id)
 	return port_id
+
 
 
 func _value_name(port: Dictionary, fallback: String) -> String:

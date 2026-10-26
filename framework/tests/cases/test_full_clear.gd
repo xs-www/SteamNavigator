@@ -241,6 +241,9 @@ func _path_to(world: Dictionary, from_port: String, to_port: String) -> Array[St
 
 
 func _sail(context: AppContext, destination: String) -> void:
+	# 本回归驱动的是「完整通关」而不是海图解锁：脚本直接前往目标港，先按等价于
+	# 委托自带海图的方式解锁这条航线（解锁机制本身由 test_route_unlock 覆盖）。
+	WorldOps.unlock_route(context.state, context.state.current_port_id(), destination)
 	# Wages are charged at departure; keep the loan as the last soft-lock guard.
 	if context.state.money() < 250 and context.state.player().get("debt", null) == null:
 		context.commands.execute(&"debt.borrow", {"amount": 400})

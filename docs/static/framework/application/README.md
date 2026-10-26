@@ -6,9 +6,10 @@
 
 | 文件 | 职责 | 文档 |
 | --- | --- | --- |
-| `command_bus.gd` | 命令执行器：在 GameState 深拷贝上运行用例，成功才提交并发布领域事件。 | [查看](./command_bus.gd.md) |
+| `command_bus.gd` | 命令执行器：在 GameState 深拷贝上运行用例，成功才提交、发布领域事件并可请求自动存档。 | [查看](./command_bus.gd.md) |
 | `commands/auto_trade_commands.gd` | Phase D4 自动贸易的命令入口：`auto_trade.start` / `stop` / `set_policy` / | [查看](./commands/auto_trade_commands.gd.md) |
 | `commands/base_commands.gd` | Phase D3 基地的命令入口：`base.claim` / `base.build` / `base.upgrade` / | [查看](./commands/base_commands.gd.md) |
+| `commands/chart_commands.gd` | 航海图 / 航线解锁相关命令。本轮只有 `chart.buy {port_id}`：在带酒馆设施的 | [查看](./commands/chart_commands.gd.md) |
 | `commands/combat_commands.gd` | `combat.resolve` 命令入口（Phase D1 自动战斗）。把参数（可选 | [查看](./commands/combat_commands.gd.md) |
 | `commands/command_registry.gd` | 命令名到静态用例的绑定表（含船厂/仓库/打造/在港等待、D0 `sim.*`、D1 `combat.resolve` 与 D2 `fleet.*` 命令）。 | 本页 |
 | `commands/contract_commands.gd` | 委托接取命令包装。 | 本页 |
@@ -39,7 +40,7 @@
 | `queries/expedition_view.gd` | `expedition.view` 只读查询：输出遗迹、房间序列、当前房间/事件选项、奖励日志 | [查看](./queries/expedition_view.gd.md) |
 | `queries/fleet_view.gd` | `fleet.view` 只读查询：输出旗舰 / 名册 / captain 指派 / 编队与槽位 / | [查看](./queries/fleet_view.gd.md) |
 | `queries/intel_view.gd` | 情报独立界面 ViewModel：快照时间/年龄、商品 × 港口对比矩阵（含未探索港口列）与 NPC 预计动向。 | [查看](./queries/intel_view.gd.md) |
-| `queries/map_view.gd` | 海图 ViewModel：港口坐标、发现/访问、设施与航线。 | 本页 |
+| `queries/map_view.gd` | `map.view` 只读查询——输出港口列表与**已解锁**航线，供地图类 UI / 测试使用。 | [查看](./queries/map_view.gd.md) |
 | `queries/market_view.gd` | 市场页聚合 ViewModel：复用 `port.view` 的行情行，补充「船舱货物 / 当前港仓库材料」与图标资产键，供「左侧船只背包 + 右侧市场」的图标直接交互页使用。 | [查看](./queries/market_view.gd.md) |
 | `queries/port_memory_view.gd` | 点击已访问港口时的只读市场记忆 ViewModel：上次在港的价格、储备与可买标记。 | [查看](./queries/port_memory_view.gd.md) |
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知、统计与通关状态。 | [查看](./queries/port_view.gd.md) |
@@ -53,7 +54,7 @@
 | `queries/tavern_view.gd` | 酒馆页（`tavern.view`）的只读查询——把原「情报站」的物价情报矩阵 | [查看](./queries/tavern_view.gd.md) |
 | `queries/victory_view.gd` | 通关页 ViewModel：是否通关、通关时间与完整 run summary。 | [查看](./queries/victory_view.gd.md) |
 | `queries/voyage_preview.gd` | 出航预览查询包装。 | 本页 |
-| `query_bus.gd` | 只读查询执行器：给处理器临时克隆的 GameState，返回 ViewModel。 | [查看](./query_bus.gd.md) |
+| `query_bus.gd` | 只读查询执行器：在临时克隆的 GameState 上运行 ViewModel 查询，保证有 bug 的查询写不进活状态。 | [查看](./query_bus.gd.md) |
 | `result.gd` | 统一 `{ok,error_code,message_key,data,events}` 结果构造。 | 本页 |
 
 ## 模块契约

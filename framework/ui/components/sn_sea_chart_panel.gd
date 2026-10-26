@@ -10,9 +10,15 @@ extends PanelContainer
 ## ## 契约与约束
 ## - `bind(port_data, route_data, translate)` 注入数据；`clear()` 回到「点击港口」提示。
 ## - 面板不自行计算距离/时间/风险/消耗；所有数值由查询层（`VoyageEstimator`）给出。
+##   距离标签直接读查询给出的 `distance`——它就是海图绘制路径的长度，也是
+##   `voyage.preview` 计费的同一个数（dev.3 反馈 #2 彻底修复后只剩这一把尺子）。
+## - 海图就是唯一世界：每条海图边都对应玩法世界的一条物理航线。**但能出航要求航线
+##   已解锁**（2026-10-26）：`route_data.unlocked == false` 时面板显示
+##   「未测绘航线：在酒馆购买海图解锁」并禁用「启航」按钮（命令层对同一 pair 也返回
+##   `route_locked`，面板不会承诺一个会被拒绝的航次）。
 ## - 风险分档直接复用 `VoyageCalculator.risk_label`（low/medium/high），文案与颜色走本地化；
 ##   查询给的 `risk_label` 优先，避免海图与出航预览对同一个分数给出不同档位。
-## - `risk_level < 0` 表示该航线没有可用的基础风险（坐标世界缺抽象地图对应边），
+## - `risk_level < 0` 表示该航线没有可用的基础风险（海图边缺 `base_risk`），
 ##   显示「无法评估」而不是「无风险」。
 ## - 煤水块只在查询给出 `supplies` 时出现；`sufficient=false` 用警示色并提示，
 ##   但不在这里拦截出航（阻断仍由确认弹窗里的 `voyage.preview` / 线索预估决定）。
@@ -218,7 +224,8 @@ func _rebuild() -> void:
 		route_header.add_theme_color_override("font_color", SNSkin.color("state.water"))
 		vbox.add_child(route_header)
 		
-		# Distance
+		# Distance: the chart edge's stored distance, i.e. the drawn path's length and
+		# the distance `voyage.preview` bills (dev.3 反馈 #2 彻底修复后只有这一个口径).
 		var distance: float = float(_route_data.get("distance", 0.0))
 		if distance > 0.0:
 			var dist_label := Label.new()
@@ -272,19 +279,34 @@ func _rebuild() -> void:
 			status_label.add_theme_color_override("font_color", SNSkin.color("state.warning"))
 		status_label.add_theme_font_size_override("font_size", 11)
 		vbox.add_child(status_label)
+		# 航线解锁（2026-10-26）：两端都已发现但航线未测绘时，明确告诉玩家去哪解锁，
+		# 并禁用启航按钮（命令层同样会返回 route_locked）。
+		if not bool(_route_data.get("unlocked", true)):
+			var locked_label := Label.new()
+			locked_label.name = "RouteLockedLabel"
+			locked_label.text = _tr_or(
+				"ui.chart.route_locked_hint", "未测绘航线：在酒馆购买海图解锁"
+			)
+			locked_label.add_theme_font_size_override("font_size", 12)
+			locked_label.add_theme_color_override("font_color", SNSkin.color("state.danger"))
+			locked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			vbox.add_child(locked_label)
 	
 	# Spacer
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
 	
-	# Voyage button (only if route exists)
+	# Voyage button (only if a route exists). A route that is not charted (unlocked) yet
+	# disables the button and shows the tavern hint above; the command layer returns
+	# `route_locked` for the same pair, so the panel can never promise a refused voyage.
 	if not _route_data.is_empty():
 		var voyage_btn := Button.new()
 		voyage_btn.name = "DepartButton"
 		voyage_btn.text = _tr("ui.button.start_voyage")
 		voyage_btn.theme_type_variation = &"SNPrimaryButton"
 		_apply_button_icon(voyage_btn, "nav_departure", 18)
+		voyage_btn.disabled = not bool(_route_data.get("unlocked", true))
 		voyage_btn.pressed.connect(_on_voyage_pressed)
 		vbox.add_child(voyage_btn)
 	_append_purchase_button(vbox)

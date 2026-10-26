@@ -15,13 +15,15 @@
 | `test_non_tutorial_run_is_not_gated() -> void` | L54 |
 | `test_advance_unlocks_market_and_shows_objective() -> void` | L66 |
 | `test_observe_walks_the_first_voyage_act() -> void` | L86 |
-| `test_second_mainline_buys_market_goods_and_returns_home() -> void` | L127 |
-| `test_tavern_clue_guaranteed_explore_and_third_port() -> void` | L186 |
-| `test_skip_does_not_arm_the_guaranteed_exploration() -> void` | L319 |
-| `test_main_contract_needs_player_supplied_coal_before_departure() -> void` | L329 |
-| `test_skip_unlocks_everything_and_keeps_the_run_playable() -> void` | L368 |
-| `test_story_survives_a_save_load_roundtrip() -> void` | L385 |
-| `test_old_save_without_story_block_stays_open() -> void` | L411 |
+| `test_departure_beat_and_arrival_beat_are_separate_stages() -> void` | L128 |
+| `test_story_view_passes_the_optional_focus_target_through() -> void` | L169 |
+| `test_second_mainline_buys_market_goods_and_returns_home() -> void` | L188 |
+| `test_tavern_clue_guaranteed_explore_and_third_port() -> void` | L252 |
+| `test_skip_does_not_arm_the_guaranteed_exploration() -> void` | L385 |
+| `test_main_contract_needs_player_supplied_coal_before_departure() -> void` | L395 |
+| `test_skip_unlocks_everything_and_keeps_the_run_playable() -> void` | L434 |
+| `test_story_survives_a_save_load_roundtrip() -> void` | L451 |
+| `test_old_save_without_story_block_stays_open() -> void` | L477 |
 
 初始化剧情、功能解锁 / 门禁 ViewModel、剧情卡继续、`story.observe` 事件计数推进、
 `story.skip` 保底解锁与主委托目的港揭示、非教程局 / 旧存档不门禁、存档往返；

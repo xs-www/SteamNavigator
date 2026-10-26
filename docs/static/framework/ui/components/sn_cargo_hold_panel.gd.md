@@ -9,16 +9,18 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNCargoHoldPanel` | L1 |
-| `command_requested (signal)` | L34 |
-| `TILE_SCRIPT` | L36 |
-| `ZONE_SCRIPT` | L37 |
-| `TILE_COLUMNS` | L39 |
-| `ZONE_MIN_HEIGHT` | L40 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L52 |
-| `cargo_zone() -> Control` | L68 |
-| `warehouse_zone() -> Control` | L72 |
-| `handle_cargo_drop(data: Dictionary) -> void` | L77 |
-| `handle_warehouse_drop(data: Dictionary) -> void` | L97 |
+| `command_requested (signal)` | L37 |
+| `TILE_SCRIPT` | L39 |
+| `ZONE_SCRIPT` | L40 |
+| `TILE_COLUMNS` | L42 |
+| `ZONE_MIN_HEIGHT` | L43 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L55 |
+| `cargo_zone() -> Control` | L71 |
+| `warehouse_zone() -> Control` | L75 |
+| `set_offer(offer: Dictionary) -> void` | L81 |
+| `clear_offer() -> void` | L88 |
+| `handle_cargo_drop(data: Dictionary) -> void` | L93 |
+| `handle_warehouse_drop(data: Dictionary) -> void` | L113 |
 
 Left-hand "ship hold" column of the direct-manipulation market page.
 
@@ -46,5 +48,8 @@ command intent; the Shell executes `trade.*` / `warehouse.*`.
   cargo_item→仓库区 `warehouse.store_materials`、
   warehouse_item→cargo 区 `warehouse.take_materials`。
 - 委托货（`is_contract`）格子不可拖拽、不产生命令。
+- `set_offer(offer)` / `clear_offer()` 是「拿起 / 放下」手势的入口：把市场商品
+  offer 转发给船舱 / 仓库两个 `SNDropZone`，玩家点一下落点即可放下。格子自己
+  也把 `drop_host` 指向所在 zone，保证点 zone 内的子格子同样能放下。
 
 模块索引：[framework/ui](../README.md)

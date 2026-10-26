@@ -873,6 +873,7 @@
       intel_cost: 40,
       trade_margin: 0.9,
       player_trade_impact: 0.35,
+      chart_cost: 60,
       default_starting_scenario: 'core:starting_scenario/steady',
       twin_world_size: 160,
       exploration: {

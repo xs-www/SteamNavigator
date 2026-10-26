@@ -122,6 +122,67 @@ func test_observe_walks_the_first_voyage_act() -> void:
 	assert_true(bool(view.get("active", false)), "the tutorial is still running")
 
 
+## dev.3 #1 回归（领域层）：`depart_brief` / `second_depart` 是「出航指示」，由
+## `cmd:voyage.start` 收掉；抵达剧情要等独立的 `first_arrival` / `second_arrival`
+## 阶段吃掉 `ui:arrival_settled`。顺序反了（抵达事件先到 / 出航没发生）都不能推进。
+func test_departure_beat_and_arrival_beat_are_separate_stages() -> void:
+	var context := _start_tutorial(SEED)
+	context.commands.execute(&"story.advance", {})
+	context.commands.execute(&"supply.buy_coal", {"amount": 4})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": {"amount": 4}})
+	context.commands.execute(&"supply.buy_water", {"amount": 2})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_water", "data": {"amount": 2}})
+	context.commands.execute(&"story.observe", {"event": "ui:chart_opened", "data": {}})
+	context.commands.execute(&"story.observe", {"event": "ui:chart_closed", "data": {}})
+	var more_coal := context.commands.execute(&"supply.buy_coal", {"amount": 2})
+	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": more_coal.get("data", {})})
+	var view := _view(context)
+	assert_eq(String(view.get("stage_id", "")), "depart_brief", "the first voyage starts at depart_brief")
+	# 没有出航就到的 `ui:arrival_settled` 不能把出航指示收掉（也不再能直达第二港）。
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "depart_brief",
+		"an arrival event without a departure cannot retire the departure beat")
+	var departure_card: Variant = view.get("card", null)
+	assert_true(departure_card is Dictionary, "the departure stage keeps its own briefing card")
+	if departure_card is Dictionary:
+		assert_eq(String((departure_card as Dictionary).get("title_key", "")),
+			"story.core.depart_brief.title", "the card is still the departure briefing, never the arrival story")
+	# 真正出航：出航指示被 `cmd:voyage.start` 收掉，进入只等抵达的过渡阶段；
+	# 此时绝不能已经出现第二港（抵达剧情）。
+	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "first_arrival",
+		"departure retires the departure beat into the arrival-wait stage")
+	assert_true(view.get("card", null) == null, "no arrival story fires at departure")
+	# 抵达：过渡阶段吃掉 `ui:arrival_settled`，第二港剧情才出现。
+	var first_contract: Dictionary = context.state.contracts().get("main", {})
+	context.state.world()["current_port_id"] = String(first_contract.get("destination", ""))
+	context.state.mark_port_visited(String(first_contract.get("destination", "")))
+	context.commands.execute(&"story.observe", {"event": "ui:arrival_settled", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "second_port",
+		"the arrival beat only fires the second-port story when the ship actually arrives")
+
+
+## dev.3 #3：`story.view` 把 Core 阶段的 `focus` 原样透传（目标语义 id + 文案键）。
+func test_story_view_passes_the_optional_focus_target_through() -> void:
+	var context := _start_tutorial(SEED)
+	context.commands.execute(&"story.advance", {})
+	var view := _view(context)
+	var focus: Variant = view.get("focus", null)
+	assert_true(focus is Dictionary, "the supply briefing declares a guided-focus target")
+	if focus is Dictionary:
+		assert_eq(String((focus as Dictionary).get("target", "")), "market_supply",
+			"the supply briefing focuses the market supply section")
+		assert_false(String((focus as Dictionary).get("text_key", "")).is_empty(),
+			"the focus carries a localized hint key")
+	# 没有 focus 的阶段返回空字典（不是 null），Shell 据此清除遮罩。
+	context.commands.execute(&"story.skip", {})
+	assert_true((_view(context).get("focus", null) as Dictionary).is_empty(),
+		"a finished story exposes no focus target")
+
+
 ## 4.5.3 第二幕：第二港市场只开放 2 种贸易货物；第二主线把 6 件纺织品送回起始港，
 ## 余下 2 件在起始港卖出后教学第二章收尾。
 func test_second_mainline_buys_market_goods_and_returns_home() -> void:
@@ -159,7 +220,12 @@ func test_second_mainline_buys_market_goods_and_returns_home() -> void:
 	})
 	view = _view(context)
 	assert_eq(String(view.get("stage_id", "")), "second_depart", "8 textiles complete the purchase objective")
-	# 回起始港：先移动当前港，再模拟 Shell 的抵达结算事件。
+	# 返航：先出航（departure beat 吃掉 `cmd:voyage.start`，进入 arrival 等待阶段），
+	# 再移动当前港并模拟 Shell 在到港结算时发一次的 `ui:arrival_settled`。
+	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {}})
+	view = _view(context)
+	assert_eq(String(view.get("stage_id", "")), "second_arrival",
+		"departing consumes the return instruction and waits for the arrival beat")
 	var home := String(context.state.story().get("home_port_id", ""))
 	context.state.world()["current_port_id"] = home
 	context.state.mark_port_visited(home)
@@ -433,8 +499,10 @@ func _walk_to_second_port(context: AppContext) -> void:
 	context.commands.execute(&"story.observe", {"event": "ui:chart_closed", "data": {}})
 	var finish_coal := context.commands.execute(&"supply.buy_coal", {"amount": 2})
 	context.commands.execute(&"story.observe", {"event": "cmd:supply.buy_coal", "data": finish_coal.get("data", {})})
-	# 模拟抵达第二港：Shell 在到港后才会发 `ui:arrival_settled`，此时当前港已是
-	# 第二港，第二主线才会以它为起点生成。
+	# 出航：`depart_brief`（出航指示）由 `cmd:voyage.start` 收掉并进入 `first_arrival`；
+	# 随后 Shell 在到港后发一次 `ui:arrival_settled`，此时当前港已是第二港，第二主线
+	# 才会以它为起点生成。
+	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {}})
 	var first_contract: Dictionary = context.state.contracts().get("main", {})
 	var second_port := String(first_contract.get("destination", ""))
 	context.state.world()["current_port_id"] = second_port
@@ -451,6 +519,7 @@ func _walk_to_tavern(context: AppContext) -> void:
 		"event": "cmd:trade.buy",
 		"data": {"item_id": "core:item/textiles", "amount": 8},
 	})
+	context.commands.execute(&"story.observe", {"event": "cmd:voyage.start", "data": {}})
 	var home := String(context.state.story().get("home_port_id", ""))
 	context.state.world()["current_port_id"] = home
 	context.state.mark_port_visited(home)

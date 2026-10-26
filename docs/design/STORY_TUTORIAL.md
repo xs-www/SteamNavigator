@@ -36,6 +36,31 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 > 触发事件由 Shell 在**成功命令后**转发为 `story.observe`；条件 / 数值见 §10。
 > 每一幕的「解锁」是该幕进入时追加的 feature 集合。
 
+### 触发时机契约（v0.2.0-dev.3 反馈 #1 修复）
+
+剧情推进只认两类事件，且**一次玩家动作只上报一次**：
+
+| 事件 | 语义 | Shell 上报点（唯一） |
+|---|---|---|
+| `cmd:<command>` | 成功命令 | `_run_command()` → `_observe_story("cmd:...")` |
+| `ui:chart_opened` | 玩家**打开**海图 | `_on_nav("sea_chart")`（真正的打开动作） |
+| `ui:chart_closed` | 玩家**关闭**海图 | `_on_sea_chart_closed()` |
+| `ui:arrival_settled` | 航次**抵达结算** | `_finish_presentation()`（演出结束）/ `_full_stop_after_voyage()`（无演出旧路径） |
+
+- `_screen_settlement()` / `_screen_sea_chart()` 等**页面挂载函数只渲染，不再 observe**：
+  剧情卡继续、窗口 resize、状态刷新引起的页面重建不会重复推进阶段（旧实现里一次抵达
+  会被上报至少 2 次，海图页每次重建都会重发 `ui:chart_opened`）。
+- **出航 / 抵达拆成两个阶段**：`depart_brief` / `second_depart` 是「出航指示」，由
+  `cmd:voyage.start` 收掉；紧随其后的 `first_arrival` / `second_arrival` 才吃
+  `ui:arrival_settled`。这样「返航到港」的剧情只可能在抵达结算时出现，不可能在启航时
+  触发（旧内容把两个语义塞进同一个阶段，是 dev.3 反馈 #1 的根因）。
+- 离开结算页会清空 `_settlement_summary`；`DEPARTURE_VEIL` 归入演出分支（继续挂出发港
+  3D 舞台），演出中途的重建不会掉回上一页重发事件。
+- 回归测试：`test_story::test_departure_beat_and_arrival_beat_are_separate_stages`、
+  `test_story_ui::test_first_voyage_advances_the_arrival_story_once_at_arrival`（真实
+  `voyage.start → 逐帧演出 → _finish_presentation` + `story.observe` 计数）、
+  `test_story_ui::test_chart_events_are_reported_once_per_player_action`。
+
 ### 幕 0 · 开局（4.5.2）
 
 | 阶段 id | 玩家看到 / 可做 | 系统动作 | 推进条件 |
@@ -45,8 +70,8 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 | `supply_hold` | 剧情卡「补给受限」；解锁 `chart`；目标「打开海图」 | 补给购买暂时禁用（story flag）；海图入口出现 | `ui:chart_opened` |
 | `chart_brief` | 海图目标：目的港已标记；目标「关闭海图并继续补给」 | 剧情卡说明「快速航行」 | `ui:chart_closed` |
 | `supply_finish` | 补给恢复；目标「煤舱补到 10 煤」（进度从当前 8/10 起算，显示还差 2） | 限时委托提示（standard 迟到、express 准时） | 煤舱 ≥ 10 |
-| `depart` | 解锁 `chart`；目标「打开海图 → 出航 → 选快速航行」 | 确认弹窗默认策略由 Shell 记忆；剧情提示 | `cmd:voyage.start` |
-| `first_arrival` | 抵达第二港，结算页 | 完成第一主线、解锁邻港 | `ui:arrival_settled` |
+| `depart_brief` | 解锁 `chart`；目标「打开海图 → 出航 → 选快速航行」 | 确认弹窗默认策略由 Shell 记忆；剧情提示 | `cmd:voyage.start` |
+| `first_arrival` | 抵达第二港（过渡阶段，无卡片）；结算页出现 | 完成第一主线、解锁邻港 | `ui:arrival_settled` |
 
 > **4.5.2 实装说明**：第一主线不再使用默认 `main_01` 的委托货箱，而由 Core story 的
 > `grant_tutorial_contract` 效果以 `main_01` 模板生成一个「燃料舱交付 10 煤」的实例
@@ -60,8 +85,9 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 
 | 阶段 | 内容 | 系统动作 / 推进 |
 |---|---|---|
-| `second_port` | 剧情卡：解锁 `market`、`contracts`；第二主线「买 8 件纺织品，送 6 件回铁港」 | 市场只开放纺织品 / 香料两种贸易货物 + 补给区块；`grant_tutorial_contract`（main_02 模板，`provider: player`，`destination: home`，交付 6 件） |
-| `second_depart` | 目标：买 8 件纺织品后出航回铁港 | `cmd:trade.buy`（match 纺织品）累计 ≥ 8 → 目标「回铁港」 |
+| `second_port` | 剧情卡：解锁 `market`、`contracts`；第二主线「买 8 件纺织品，送 6 件回铁港」 | 市场只开放纺织品 / 香料两种贸易货物 + 补给区块；`grant_tutorial_contract`（main_02 模板，`provider: player`，`destination: home`，交付 6 件）；推进条件 `cmd:trade.buy`（match 纺织品）累计 ≥ 8 |
+| `second_depart` | 剧情卡「返航」：目标「从海图出航返回铁港」 | 出航指示阶段；`cmd:voyage.start` 收掉并进入 `second_arrival` |
+| `second_arrival` | 过渡阶段（无卡片）；抵达铁港结算页 | 只吃 `ui:arrival_settled`，抵达后才进入交货剧情 |
 | `back_first` | 抵达铁港；委托自动交付 6 件，剧情引导卖出剩余 2 件 | `cmd:trade.sell`（match 纺织品）累计 ≥ 2 |
 | `tavern_open` | 4.5.4：酒馆开店（物价情报 + 港口线索）；解锁 `clues` / `tavern`；自动给第一条线索并拉开两港价差 | `story.advance` |
 
@@ -95,6 +121,14 @@ Schema 2.0 接入；新存档格式（`data.story` 惰性 ensure，不改 `schem
 > `shipyard` 设施；`shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库安装
 > 候选（当前已装模块仍可查看 / 卸下）。第三主线沿用 `main_03` 段以保证 5 段主线计数与
 > 通关回归，只把 payload 从货箱替换成 1 名旅客；完成时照常推进到 `main_04`。
+>
+> **反馈 #2 / #3（2026-10）**：`contracts` 的 `main_03`–`main_05` 的 `deadline_formula`
+> 改为 `"none"`（第三主线起无期限，`FormulaRegistry` 新增 `none` → 0 哨兵）；
+> `on_time_bonus` 保留原数值，作为「完成奖励」无条件发放，UI 文案「准时 +N」→「完成 +N」。
+> `main_01/02` 保留教程限时（`tutorial_first` / `tutorial_trade`，教学首航另有
+> `tutorial_express` 覆盖）。同时主线 offer（含沙盒 `main_04/05`）在
+> `ContractOps.generate_offer` 生成时自动揭示目的港；普通委托目的地未发现前由
+> `port.view` 隐藏（`state.contracts().offers` 池仍是 3 条，发现后同一实例自动重现）。
 
 ## 4. 系统改造清单（按切片落地）
 
@@ -149,12 +183,15 @@ data.story = {
     enabled, active, completed, skipped, flow_id, stage_index, stage_id,
     card: null | {title_key, body_keys: [key], advance_label_key, skip_label_key},
     objective: null | {text_key, progress: int, target: int},
+    focus: {} | {target: String, text_key: String},
     unlocked_features: [String], unlocked_items: [String], unlocked_modules: [String],
+    lock_actions: [String], preferred_strategy: String,
     can_skip: bool,
   }
   ```
 
-  查询只读：由 `QueryBus` 克隆执行；Shell 每帧 / 每命令后读取即可。
+  查询只读：由 `QueryBus` 克隆执行；Shell 每帧 / 每命令后读取即可。`focus` 是可选
+  的强制引导目标（见 §8.1），未声明时是空字典。
 
 **命令**（经 `CommandRegistry` → `FrameworkApi`）
 
@@ -164,12 +201,12 @@ data.story = {
 | `story.skip` | `{}` | 跳过整段教程：`completed=true, skipped=true`，按 Core `skip_unlocks` 解锁全部功能；**必须**保底执行 `discover_contract_destination`，避免跳过即卡死 |
 | `story.observe` | `{event: String, data: Dictionary}` | 由 Shell 在成功命令 / UI 事件后调用：累加 counters、评估推进条件、进入下一阶段、应用效果 |
 
-Shell 转发的事件名约定：
+Shell 转发的事件名约定（每个玩家动作只发一次，见 §3「触发时机契约」）：
 
 ```text
 cmd:<command_name>        # payload = 该命令返回的 data（含 amount / item_id / ...）
 ui:chart_opened / ui:chart_closed
-ui:arrival_settled        # 结算页出现后
+ui:arrival_settled        # 演出结束、进入抵达结算时
 ui:screen_opened:<screen> # 可选
 ```
 
@@ -214,6 +251,8 @@ guarantee_explore_success / unlock_modules / complete_story
 
 - 文案键放 **Core 本地化**（`dev_mods/core/localization/zh_CN.json` / `en.json`，
   `story.core.*`），框架只放通用按钮 / 目标条键（`ui.story.*`）。
+- 阶段可选 `focus: {target, text_key}`（语义引导目标，见 §8.1）：`target` 由 Shell
+  解析成真实控件，内容不出现页面 / 节点路径；`text_key` 走 Core 本地化。
 - 阶段推进条件支持：`mode: confirm`、`event + counter + at_least`、`all/any` 组合、
   `flag` / `not_flag`（用于「打开海图后恢复补给」）。
 - 非法 / 缺失配置：`story.view.enabled=false`（不门禁、不弹剧情），不阻断开局。
@@ -234,6 +273,44 @@ guarantee_explore_success / unlock_modules / complete_story
   保证可继续正常游戏。教程完成后不再出现剧情卡，功能保持解锁。
 - `960×540` 与 `1440×900` 不裁切；中英同步。
 
+### 8.1 强制引导（focus）契约（v0.2.0-dev.3 反馈 #3）
+
+需求：剧情早期「只有唯一一处可交互，其余全屏用半透明遮罩盖住」，且必须是**框架接口**，
+内容只声明语义目标、不写死页面 / 控件。实现拆成三层：
+
+1. **内容声明**（Core `map_configs.story.stages[]`，可选）：
+   ```json
+   "focus": {"target": "market_supply", "text_key": "story.core.focus.supply_brief"}
+   ```
+   `schemas/v2/common.schema.json#/$defs/story_stage` 已声明 `focus{target*, text_key}`；
+   `SNModMaker` 嵌入式 schema bundle 由 `node SNModMaker/tools/sync-schemas.mjs` 同步。
+2. **查询透传**：`StoryService.view()` 把阶段的 `focus` 原样放进 `story.view.focus`
+   （只在剧情 active 且阶段声明时非空）。
+3. **呈现组件** `framework/ui/components/sn_focus_overlay.gd`（`SNFocusOverlay`）：
+   - 全屏四块遮罩拼出目标之外的四边（目标区域没有遮罩子节点，控件照常收到点击）；
+     四块遮罩 `mouse_filter = STOP` 吃掉其余点击，根节点 `IGNORE`。
+   - 外观全部来自皮肤：遮罩 = `SNSkin.style("fill_aqua")` + `bg.abyss` 半透明；
+     高亮边框 = `SNSkin.style("focus_ring")` + `brass.highlight`；提示底板 =
+     `SNSkin.style("panel_steel")` + `text.light`。禁止 `StyleBoxFlat` / 十六进制色。
+   - API：`focus(rect, text)`（屏幕坐标）/ `clear_focus()` / `is_active()` /
+     `get_target_rect()` / `get_mask_rects()`；resize 时重新拼边，不溢出视口。
+4. **Shell 解析**（`_resolve_story_focus_target`）：语义 id → 真实控件：
+   - `market_supply`：市场页的 `MarketSupply` 区块；不在市场页时回退到「市场」导航入口；
+   - `chart_entry`：状态条「海图 ▶」/ 顶部导航的海图开关；
+   - `chart_close`：海图页 `CloseButton`（回退 `chart_entry`）；
+   - `<screen>_nav`：对应页面的导航按钮。
+   目标找不到时 **fail-open**（清空遮罩），内容写错也不会把玩家锁死。
+5. **显示规则**：剧情卡打开时卡片优先（不显示遮罩）；演出 / 结算页 / 菜单清除；
+   页面切换（重建）与窗口 resize 后重新解析目标；阶段推进 / `story.skip` 后自动清除。
+6. 当前覆盖阶段：`supply_brief`（`market_supply`）、`supply_hold`（`chart_entry`）、
+   `chart_brief`（`chart_entry`：海图页上同一个开关即「关闭海图」）、`supply_finish`
+   （`market_supply`）。`depart_brief` / `second_depart` 不声明 `focus`：它们要在海图页
+   选目的港并确认出航，遮罩只留单一目标会把玩家锁在「只能关海图」的状态。
+7. 测试：`test_story_ui::test_focus_overlay_component_masks_everything_but_the_target`
+   （组件遮罩 / 点击穿透 / resize）、`..._test_guided_focus_masks_the_supply_block_and_clears_on_advance`
+   （Shell 解析 + 清除）、`test_story::test_story_view_passes_the_optional_focus_target_through`
+   （查询透传）；`960×540` / `1440×900` 由组件布局断言覆盖。
+
 ## 9. 分片与验收口径
 
 | 切片 | 内容 | 验收口径 | 状态 |
@@ -244,6 +321,7 @@ guarantee_explore_success / unlock_modules / complete_story
 | **4.5.4 酒馆 / 线索 / 保底探索** | ✅ 已实现：酒馆页替换情报页（`tavern` 设施 / feature，旧 `intel` 设施 / 页面兼容并归一）；酒馆自动给 L1 线索 + 刷新物价情报，前两港纺织品 / 香料注入确定性价差（归位库存、双向交易）；第三种货（木材）解锁；第二条 L3 线索指向同一未发现港并带 `guaranteed_explore_clue_id`，`explore.settle` 对该线索无视 `outcome_roll` 直接成功且消费 flag；`third_port` 占位阶段解锁船厂待 4.5.5 | 酒馆可刷新物价情报、购买 / 调查线索；起始港卖价 > 邻港买价且可盈利；第一条线索后市场出现第三种货；第二条线索 L3 + 保底探索必成功并发现第三港；跳过教程不设置保底；全量 **369 例 0 failed**；截图 `tutorial_tavern.png` / `tutorial_tavern_clues.png` / `tutorial_market_third_good.png` / `tutorial_clue_list.png` | ✅ |
 | **4.5.5 船厂 / 客舱 / 旅客** | ✅ 已实现：新增 `core:module/small_cabin`（1 人，120 金 / 轻量）；`shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库候选，第三港只显示该客舱；第三港由 Core 补 `shipyard` 设施并用 `upgrade_hull` 换成带客舱位的船体；`refit_unload`（match `category: cargo`）→ `refit_cabin`（match 小型客舱）→ 自动接 `main_03` 旅客委托（`passengers: 1`，货箱清空）→ 出航送客 → `story_complete` 解锁全部并交还沙盒；`ContractOps.attach` 不再用空货箱校验货舱容量 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成 1 人旅客委托；未解锁模块不可见不可买；剧情可推进到完成并解锁全部功能；`main_03` 完成推进 `main_04`；全量测试 0 failed；截图 `tutorial_shipyard_cabin.png` / `tutorial_shipyard_refit.png` / `tutorial_passenger_contract.png` | ✅ |
 | **4.5.6 收尾** | ✅ 已实现：全量测试（当前工作树 369 例 0 failed，其中本仓提交的测试集 363 例；并行 session 的 legacy UV / 武器 socket 套件 6 例不属于本片）、窗口截图（剧情卡 / 目标条 / 门禁 / 酒馆 / 并市 / 船厂 / 旅客，1440×900，脚本可重复运行）、README / todo / 本文回填、静态文档 | 全量 0 failed；截图脚本可重复生成同尺寸 PNG；`gen_static_docs --check` 通过；每片提交只含本片文件 | ✅ |
+| **dev.3 反馈 #1 / #3 修复** | ✅ 已实现：①触发时机——`ui:chart_opened` / `ui:arrival_settled` 改为玩家动作点一次性上报（页面挂载不再 observe）；`depart_brief` / `second_depart` 拆出 `first_arrival` / `second_arrival`（`cmd:voyage.start` vs `ui:arrival_settled`）；`DEPARTURE_VEIL` 归入演出分支；离开结算页清空摘要。②强制引导——`SNFocusOverlay` + `story.view.focus` + Schema `focus` 字段 + Shell 语义 target 解析（`market_supply` / `chart_entry` / `<screen>_nav`），覆盖 `supply_brief` / `supply_hold` / `chart_brief` / `supply_finish`，中英文案同步 | 真实航海驱动 T1：出航只收出航指示、抵达才出现第二港剧情、一次动作恰好 1 次 `story.observe`、结算页重建 0 次额外上报；T2：海图开 / 关各 1 次、页面重建 0 次；T3：DEPARTURE_VEIL 重建不重挂海图 / 不上报；`test_story` 14、`test_story_ui` 9、`test_ui_shell` 26、`test_voyage_flow` 16、schema 55、quest 14、task 6、full_clear 2 全绿；`gen_static_docs --check`、`check_content_schema_v2`、SNModMaker content CLI 64 全过；`960×540` / `1440×900` 由遮罩 rect 断言覆盖 | ✅ |
 
 ## 10. 数值建议（Core 可调，不写死框架）
 

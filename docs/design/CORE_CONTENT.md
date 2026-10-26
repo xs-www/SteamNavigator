@@ -3,12 +3,25 @@
 > 从 README 拆出的内容/数值概览；数值真源始终是 [dev_mods/core/content/](../../dev_mods/core/content/)，修改后跑校验与测试。
 
 - 5 个港口模板（`port_templates` 2.0，C4 由 port_archetypes 改名）：铁港、香料港、自由镇、渔村、玻璃港。
-- 每局生成 4–5 个港口的连通分支网络；造船厂与情报站保证在起点 2 条边内。
+- 每局生成 5 个港口的**完全图**航线网络（5 港 = 10 条边，任意两港均可通航）；造船厂与情报站保证在起点 2 条边内。
+  可出航性由航线解锁状态决定（委托自带海图 / 剧情 / 酒馆买海图；发现港口不解锁）。
+- 航线解锁内容字段：`map_configs.data.chart_cost = 60`（酒馆一张海图的价格，`schemas/v2/map_config.schema.json`）；
+  `world_profiles.edge_density` 已退役（完全图不再需要边预算）。
 - 7 种普通商品（含委托货箱）+ 2 种补给商品（煤炭/淡水）+ 3 种专用造船材料，统一为 `items` 2.0（`data.crafting_material` 区分材料）。
 - 4 个船体（小型/中型/大型）、`modules` 2.0 的锅炉 / 货舱 / 导航 / 安全 / 客舱（C1 由六类模块合并）。
 - `modules` 都带打造配方：tier1 为**仅金币**配方（`materials: []` + `craft_cost` + `craft_time_hours`，反馈 1），tier≥2 额外消耗材料与 `craft_cost`；两个造船厂港口限量出售精密齿轮。
 - `boiler_strategies` 2.0 三种策略（经济 / 标准 / 极速）；`crew_roles` 2.0 工程师 / 领航员岗位（C4 由 strategies/roles 改名）。
 - 5 段主线 + 4 种普通委托，属于 `contracts` 2.0（C4-D 升级）；2 类 `voyage_events` 2.0（C4-C 由 events 改名，锅炉过热 / 偶遇商船）。
+- 主线 / 普通委托生成时自带海图（解锁 origin ↔ destination 航线）；教程剧情
+  （`map_configs.story`，20 阶段）在 `opening` / `second_port` / `passenger_run` 阶段各带
+  一条 `unlock_route` 效果（`current → contract_destination` / `current → home`），保证教程可走通。
+  细则见 [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)。
+- 委托时限（反馈 #3，2026-10）：`main_01/02` 保留教程限时（`tutorial_first` / `tutorial_trade`），
+  `main_03`–`main_05` 的 `deadline_formula` 为 `"none"`（无期限引导委托）；这些段落的
+  `on_time_bonus` 保留原数值，作为「完成奖励」在交付时无条件发放（UI 文案「完成 +N」）。
+  4 种普通委托仍用 `normal_standard` / `normal_urgent` 限时。
+- 主线 offer 在 `ContractOps.generate_offer` 生成时自动揭示目的港（反馈 #2）；普通委托目的港
+  未发现前由 `port.view` 隐藏，委托池仍保持 3 条实例。
 - 2 套初始场景（`starting_scenarios` 2.0，C4 由 starting_builds 改名）：低耗稳健型、高速冒险型；显式补丁使用 `patches` 2.0
   （`v2/patch.schema.json`，默认文件 `content/patches.json`；Core 当前不随包发布补丁文件）。
 - 2 条 Quest 内容：`core:quest/first_voyage_guide`（`auto_start:true`，开局自动接取的燃料/出航引导）与

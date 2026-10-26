@@ -17,6 +17,9 @@ extends VBoxContainer
 ## - 其余文字颜色取 `SNSkin.color(token)`；无内联十六进制色与 StyleBoxFlat。
 ## - 尺寸约束：卡片两列网格 16 px 间距、标题最多 2 行、`_button` 高度 38、
 ##   所有节点结构与信号（contract.accept / sea_chart 导航）不变。
+## - 反馈 #2：可接委托来自 `port.view` 的已发现目的地过滤结果，本页不做二次雾判断。
+## - 反馈 #3：无期限委托显示「引导委托 · 无期限」（剩余期限/截止均不显示数字），
+##   奖励文案用「完成 +N」而不是「准时 +N」，也不能再让 -1 走「已到期」的红色样式。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
@@ -202,7 +205,7 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 		var description := _label(_loc(description_key, ""), 13, SNSkin.color("paper.ink_muted"))
 		description.max_lines_visible = 2
 		content.add_child(description)
-	var deadline := _label("截止 %s" % String(contract.get("deadline_label", "")), 11, SNSkin.color("paper.ink_muted"))
+	var deadline := _label(_deadline_caption(contract), 11, SNSkin.color("paper.ink_muted"))
 	deadline.tooltip_text = _loc("ui.label.deadline_hint", "绝对时间仅作参考，优先看剩余期限")
 	content.add_child(deadline)
 	var reward_row := HBoxContainer.new()
@@ -247,14 +250,29 @@ func _contract_data(contract: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	var remaining := float(contract.get("remaining_hours", 0.0))
+	var untimed := not bool(contract.get("has_deadline", true))
 	row.add_child(_contract_stat("目的地", _loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), SNSkin.color("ink.primary")))
 	row.add_child(VSeparator.new())
-	row.add_child(_contract_stat("剩余期限", String(contract.get("remaining_label", "—")), SNSkin.color("state.danger") if remaining < 24.0 else SNSkin.color("ink.primary")))
+	row.add_child(_contract_stat(
+		"剩余期限",
+		_loc("ui.label.contract_untimed", "无期限") if untimed else String(contract.get("remaining_label", "—")),
+		SNSkin.color("ink.primary") if untimed or remaining >= 24.0 else SNSkin.color("state.danger")
+	))
 	row.add_child(VSeparator.new())
 	row.add_child(_contract_stat("载重", _payload_text(contract).trim_prefix("载荷："), SNSkin.color("ink.primary")))
 	row.add_child(VSeparator.new())
 	row.add_child(_contract_stat("预计航程", String(contract.get("estimated_label", "—")), SNSkin.color("paper.ink_muted")))
 	return row
+
+
+## 反馈 #3：无期限委托不显示绝对截止时间，改显示「引导委托 · 无期限」。
+func _deadline_caption(contract: Dictionary) -> String:
+	if not bool(contract.get("has_deadline", true)):
+		return "%s · %s" % [
+			_loc("ui.label.contract_guidance", "引导委托"),
+			_loc("ui.label.contract_untimed", "无期限"),
+		]
+	return "截止 %s" % String(contract.get("deadline_label", ""))
 
 
 func _contract_stat(label_text: String, value_text: String, value_color: Color) -> Control:
@@ -285,9 +303,15 @@ func _payload_text(contract: Dictionary) -> String:
 
 
 func _reward_text(contract: Dictionary) -> String:
-	return "报酬：基础 %d · 准时 +%d · 声誉 +%d" % [
+	# 反馈 #3：无期限委托的 on_time_bonus 作为「完成奖励」无条件发放，文案区分。
+	var bonus_template := (
+		_loc("ui.reward.on_time", "准时 +%d")
+		if bool(contract.get("has_deadline", true))
+		else _loc("ui.reward.completion", "完成 +%d")
+	)
+	return "报酬：基础 %d · %s · 声誉 +%d" % [
 		int(contract.get("base_money", 0)),
-		int(contract.get("on_time_bonus", 0)),
+		bonus_template % int(contract.get("on_time_bonus", 0)),
 		int(contract.get("reputation", 0)),
 	]
 

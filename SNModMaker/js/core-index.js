@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-23T11:23:24.732Z",
+    "generated_at": "2026-10-26T10:41:48.161Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -69,6 +69,16 @@
       "assets": {
         "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png",
         "icon.coal": "assets/icons/coal.png",
+        "icon.item.iron_ore": "assets/icons/items/iron_ore.svg",
+        "icon.item.brass": "assets/icons/items/brass.svg",
+        "icon.item.textiles": "assets/icons/items/textiles.svg",
+        "icon.item.spices": "assets/icons/items/spices.svg",
+        "icon.item.timber": "assets/icons/items/timber.svg",
+        "icon.item.glassware": "assets/icons/items/glassware.svg",
+        "icon.item.contract_freight": "assets/icons/items/contract_freight.svg",
+        "icon.item.boiler_plate": "assets/icons/items/boiler_plate.svg",
+        "icon.item.precision_gear": "assets/icons/items/precision_gear.svg",
+        "icon.item.sealing_compound": "assets/icons/items/sealing_compound.svg",
         "icon.money": "assets/icons/money.png",
         "icon.water": "assets/icons/water.png",
         "model.good.coal": "assets/models/goods/SN_Coal_Pile.glb",
@@ -197,6 +207,7 @@
         "model.building.foundry": "assets/models/base/SN_Base_Foundry.glb",
         "model.building.stockyard": "assets/models/base/SN_Base_Stockyard.glb",
         "model.building.defense_tower": "assets/models/base/SN_Base_Defense_Tower.glb",
+        "model.building.grand_harbour_terminal": "assets/models/architecture/SN_Grand_Harbour_Terminal.glb",
         "blueprint.ship.small_efficient.side": "assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.side.png",
         "blueprint.ship.small_efficient.top": "assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.top.png",
         "blueprint.ship.medium_standard.side": "assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.side.png",
@@ -250,6 +261,7 @@
             ],
             "enabled": true,
             "information": {
+              "texture": "icon.item.iron_ore",
               "model": "model.good.iron_ore"
             },
             "data": {
@@ -271,6 +283,9 @@
               "good.shipbuilding"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.item.brass"
+            },
             "data": {
               "crafting_material": true,
               "unit_weight": 2,
@@ -290,6 +305,9 @@
               "good.consumer"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.item.textiles"
+            },
             "data": {
               "crafting_material": false,
               "unit_weight": 1,
@@ -309,6 +327,9 @@
               "good.luxury"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.item.spices"
+            },
             "data": {
               "crafting_material": false,
               "unit_weight": 0.5,
@@ -330,6 +351,7 @@
             ],
             "enabled": true,
             "information": {
+              "texture": "icon.item.timber",
               "model": "model.good.timber"
             },
             "data": {
@@ -351,6 +373,9 @@
               "good.fragile"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.item.glassware"
+            },
             "data": {
               "crafting_material": false,
               "unit_weight": 1.5,
@@ -369,6 +394,9 @@
               "good.contract"
             ],
             "enabled": true,
+            "information": {
+              "texture": "icon.item.contract_freight"
+            },
             "data": {
               "crafting_material": false,
               "unit_weight": 1,
@@ -436,6 +464,7 @@
             ],
             "enabled": true,
             "information": {
+              "texture": "icon.item.boiler_plate",
               "model": "model.material.boiler_plate"
             },
             "data": {
@@ -458,6 +487,7 @@
             ],
             "enabled": true,
             "information": {
+              "texture": "icon.item.precision_gear",
               "model": "model.material.precision_gear"
             },
             "data": {
@@ -480,6 +510,7 @@
             ],
             "enabled": true,
             "information": {
+              "texture": "icon.item.sealing_compound",
               "model": "model.material.sealing_compound"
             },
             "data": {
@@ -1806,6 +1837,7 @@
               "banner_asset": "banner.port.iron_harbor",
               "diorama": {
                 "kit": "harbor.iron",
+                "landmark": "model.building.grand_harbour_terminal",
                 "town": {
                   "warehouse_long": "model.prop.workshop_row",
                   "warehouse_short": "model.prop.warehouse_short",
@@ -2424,7 +2456,7 @@
                   ]
                 }
               ],
-              "deadline_formula": "tutorial_craft",
+              "deadline_formula": "none",
               "rewards": {
                 "base_money": [
                   380,
@@ -2475,7 +2507,7 @@
                   ]
                 }
               ],
-              "deadline_formula": "passenger_run",
+              "deadline_formula": "none",
               "rewards": {
                 "base_money": [
                   420,
@@ -2535,7 +2567,7 @@
                   ]
                 }
               ],
-              "deadline_formula": "balanced_finale",
+              "deadline_formula": "none",
               "rewards": {
                 "base_money": [
                   900,
@@ -3072,7 +3104,6 @@
               "base_site_count": 2,
               "faction_count": 3,
               "weather_profile": "core:weather_profile/temperate",
-              "edge_density": 0.2,
               "start_region_tags": [
                 "region.start"
               ]
@@ -3138,6 +3169,7 @@
               "intel_cost": 25,
               "trade_margin": 0.95,
               "player_trade_impact": 0.35,
+              "chart_cost": 60,
               "default_starting_scenario": "core:starting_scenario/steady",
               "twin_world_size": 160,
               "exploration": {
@@ -3259,6 +3291,11 @@
                       },
                       {
                         "type": "discover_contract_destination"
+                      },
+                      {
+                        "type": "unlock_route",
+                        "from": "current",
+                        "to": "contract_destination"
                       }
                     ],
                     "advance": {
@@ -3279,6 +3316,10 @@
                     "objective": {
                       "text_key": "story.core.supply_brief.objective",
                       "target": 4
+                    },
+                    "focus": {
+                      "target": "market_supply",
+                      "text_key": "story.core.focus.supply_brief"
                     },
                     "advance": {
                       "all": [
@@ -3313,6 +3354,10 @@
                       "text_key": "story.core.supply_hold.objective",
                       "target": 1
                     },
+                    "focus": {
+                      "target": "chart_entry",
+                      "text_key": "story.core.focus.supply_hold"
+                    },
                     "advance": {
                       "event": "ui:chart_opened"
                     }
@@ -3328,6 +3373,10 @@
                     "objective": {
                       "text_key": "story.core.chart_brief.objective",
                       "target": 1
+                    },
+                    "focus": {
+                      "target": "chart_entry",
+                      "text_key": "story.core.focus.chart_brief"
                     },
                     "advance": {
                       "event": "ui:chart_closed"
@@ -3352,6 +3401,10 @@
                       "text_key": "story.core.supply_finish.objective",
                       "target": 10
                     },
+                    "focus": {
+                      "target": "market_supply",
+                      "text_key": "story.core.focus.supply_finish"
+                    },
                     "advance": {
                       "event": "cmd:supply.buy_coal",
                       "counter": "coal_aboard",
@@ -3372,6 +3425,12 @@
                       "text_key": "story.core.depart_brief.objective",
                       "target": 1
                     },
+                    "advance": {
+                      "event": "cmd:voyage.start"
+                    }
+                  },
+                  {
+                    "id": "first_arrival",
                     "advance": {
                       "event": "ui:arrival_settled"
                     }
@@ -3403,6 +3462,11 @@
                         "deadline_formula": "tutorial_trade",
                         "name_key": "contract.core.tutorial_trade.name",
                         "description_key": "contract.core.tutorial_trade.description"
+                      },
+                      {
+                        "type": "unlock_route",
+                        "from": "current",
+                        "to": "home"
                       }
                     ],
                     "objective": {
@@ -3430,6 +3494,12 @@
                       "text_key": "story.core.second_depart.objective",
                       "target": 1
                     },
+                    "advance": {
+                      "event": "cmd:voyage.start"
+                    }
+                  },
+                  {
+                    "id": "second_arrival",
                     "advance": {
                       "event": "ui:arrival_settled"
                     }
@@ -3687,9 +3757,13 @@
                         "type": "grant_tutorial_contract",
                         "template_id": "core:contract/main_03",
                         "passengers": 1,
-                        "deadline_formula": "tutorial_craft",
                         "name_key": "contract.core.tutorial_passenger.name",
                         "description_key": "contract.core.tutorial_passenger.description"
+                      },
+                      {
+                        "type": "unlock_route",
+                        "from": "current",
+                        "to": "contract_destination"
                       }
                     ],
                     "objective": {
@@ -6811,9 +6885,9 @@
         "contract.core.main_03.name": "主线三：模块制造",
         "contract.core.main_03.description": "积累资金与材料，为中型船体做准备。",
         "contract.core.main_04.name": "主线四：客运",
-        "contract.core.main_04.description": "安装客舱并准备额外淡水，按时送达旅客。",
+        "contract.core.main_04.description": "安装客舱并准备额外淡水，把旅客安全送达。",
         "contract.core.main_05.name": "主线五：综合挑战",
-        "contract.core.main_05.description": "同时运输重货与旅客，在期限内抵达。",
+        "contract.core.main_05.description": "同时运输重货与旅客，完成最后的综合航程。",
         "contract.core.normal_cargo_short.name": "短途货运",
         "contract.core.normal_cargo_short.description": "相邻港口之间的普通货箱运输。",
         "contract.core.normal_cargo_long.name": "大宗货运",
@@ -6851,15 +6925,19 @@
         "story.core.supply_brief.title": "备航",
         "story.core.supply_brief.body.1": "打开市场的补给区，先买 4 单位煤和 2 单位淡水。码头管事说，海图和报关手续等补给装好再谈。",
         "story.core.supply_brief.objective": "为船购买 4 单位煤和 2 单位淡水（市场 · 补给区）",
+        "story.core.focus.supply_brief": "点击「市场 · 补给区」，先买 4 煤 2 水",
         "story.core.supply_hold.title": "补给受限",
         "story.core.supply_hold.body.1": "码头管事按住账本：「先别急着囤货。海图给你了，出航前得先看明白目的港。」",
         "story.core.supply_hold.objective": "打开海图查看目的港",
+        "story.core.focus.supply_hold": "点击「海图」入口查看目的港",
         "story.core.chart_brief.title": "海图解禁",
         "story.core.chart_brief.body.1": "码头管事看过你的委托书，把一张海图拍在桌上。目的港已经标出来了——确认完航线就回市场补给区把煤补满。",
         "story.core.chart_brief.objective": "关闭海图，回到市场继续买煤",
+        "story.core.focus.chart_brief": "点击「海图」按钮关闭海图，回到市场补给区",
         "story.core.supply_finish.title": "装满煤舱",
         "story.core.supply_finish.body.1": "补给限制解除。委托要求船上自备 10 单位煤，在市场的补给区买够再出航。",
         "story.core.supply_finish.objective": "为船买够 10 单位煤（市场 · 补给区）",
+        "story.core.focus.supply_finish": "点击「市场 · 补给区」，把煤舱补到 10",
         "story.core.depart_brief.title": "第一航",
         "story.core.depart_brief.body.1": "委托是限时的：标准航速会迟到，出航确认里记得选「极速」。目的港已经在海图上标出来了。",
         "story.core.depart_brief.objective": "从海图出航前往目的港（选极速）",
@@ -7246,9 +7324,9 @@
         "contract.core.main_03.name": "Main 3: Module Crafting",
         "contract.core.main_03.description": "Build capital and materials for a medium hull.",
         "contract.core.main_04.name": "Main 4: Passengers",
-        "contract.core.main_04.description": "Install a cabin, carry extra water, and deliver passengers on time.",
+        "contract.core.main_04.description": "Install a cabin, carry extra water, and deliver the passengers safely.",
         "contract.core.main_05.name": "Main 5: The Final Run",
-        "contract.core.main_05.description": "Carry heavy freight and passengers together, on deadline.",
+        "contract.core.main_05.description": "Carry heavy freight and passengers together on the final run.",
         "contract.core.normal_cargo_short.name": "Short Cargo Run",
         "contract.core.normal_cargo_short.description": "Ordinary crates between neighbouring ports.",
         "contract.core.normal_cargo_long.name": "Bulk Cargo Run",
@@ -7286,15 +7364,19 @@
         "story.core.supply_brief.title": "Making Ready",
         "story.core.supply_brief.body.1": "Open the market's supply section and buy 4 coal and 2 fresh water. The harbour clerk will talk charts and papers once she is provisioned.",
         "story.core.supply_brief.objective": "Buy 4 coal and 2 fresh water (Market - Supplies)",
+        "story.core.focus.supply_brief": "Click Market - Supplies, buy 4 coal and 2 water first",
         "story.core.supply_hold.title": "Supplies on Hold",
         "story.core.supply_hold.body.1": "The harbour clerk holds the ledger shut: \"Not so fast. The chart is yours — read it and know where you are going before you hoard coal.\"",
         "story.core.supply_hold.objective": "Open the chart and review the destination",
+        "story.core.focus.supply_hold": "Click the Chart entry to review the destination",
         "story.core.chart_brief.title": "The Chart Unsealed",
         "story.core.chart_brief.body.1": "The harbour clerk reads your contract and slaps a chart on the table. Your destination is marked - check the route, then go back to the market and top up the coal.",
         "story.core.chart_brief.objective": "Close the chart and keep buying coal",
+        "story.core.focus.chart_brief": "Click the Chart button to close it and return to Supplies",
         "story.core.supply_finish.title": "Fill the Bunkers",
         "story.core.supply_finish.body.1": "The hold on supplies is lifted. The contract needs 10 coal aboard; buy the rest in the market's supply section before departure.",
         "story.core.supply_finish.objective": "Buy 10 coal for the ship (Market - Supplies)",
+        "story.core.focus.supply_finish": "Click Market - Supplies and top the bunkers up to 10",
         "story.core.depart_brief.title": "First Voyage",
         "story.core.depart_brief.body.1": "The contract is on a clock: standard speed will arrive late, so pick Full Speed in the departure dialog. The destination is already marked on the chart.",
         "story.core.depart_brief.objective": "Depart from the chart for the destination (Full Speed)",
@@ -7610,6 +7692,7 @@
           ],
           "enabled": true,
           "information": {
+            "texture": "icon.item.iron_ore",
             "model": "model.good.iron_ore"
           },
           "data": {
@@ -7643,6 +7726,9 @@
             "good.shipbuilding"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.item.brass"
+          },
           "data": {
             "crafting_material": true,
             "unit_weight": 2,
@@ -7674,6 +7760,9 @@
             "good.consumer"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.item.textiles"
+          },
           "data": {
             "crafting_material": false,
             "unit_weight": 1,
@@ -7705,6 +7794,9 @@
             "good.luxury"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.item.spices"
+          },
           "data": {
             "crafting_material": false,
             "unit_weight": 0.5,
@@ -7739,6 +7831,7 @@
           ],
           "enabled": true,
           "information": {
+            "texture": "icon.item.timber",
             "model": "model.good.timber"
           },
           "data": {
@@ -7772,6 +7865,9 @@
             "good.fragile"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.item.glassware"
+          },
           "data": {
             "crafting_material": false,
             "unit_weight": 1.5,
@@ -7801,6 +7897,9 @@
             "good.contract"
           ],
           "enabled": true,
+          "information": {
+            "texture": "icon.item.contract_freight"
+          },
           "data": {
             "crafting_material": false,
             "unit_weight": 1,
@@ -7906,6 +8005,7 @@
           ],
           "enabled": true,
           "information": {
+            "texture": "icon.item.boiler_plate",
             "model": "model.material.boiler_plate"
           },
           "data": {
@@ -7940,6 +8040,7 @@
           ],
           "enabled": true,
           "information": {
+            "texture": "icon.item.precision_gear",
             "model": "model.material.precision_gear"
           },
           "data": {
@@ -7974,6 +8075,7 @@
           ],
           "enabled": true,
           "information": {
+            "texture": "icon.item.sealing_compound",
             "model": "model.material.sealing_compound"
           },
           "data": {
@@ -9548,6 +9650,7 @@
             "banner_asset": "banner.port.iron_harbor",
             "diorama": {
               "kit": "harbor.iron",
+              "landmark": "model.building.grand_harbour_terminal",
               "town": {
                 "warehouse_long": "model.prop.workshop_row",
                 "warehouse_short": "model.prop.warehouse_short",
@@ -10267,7 +10370,7 @@
                 ]
               }
             ],
-            "deadline_formula": "tutorial_craft",
+            "deadline_formula": "none",
             "rewards": {
               "base_money": [
                 380,
@@ -10331,7 +10434,7 @@
                 ]
               }
             ],
-            "deadline_formula": "passenger_run",
+            "deadline_formula": "none",
             "rewards": {
               "base_money": [
                 420,
@@ -10405,7 +10508,7 @@
                 ]
               }
             ],
-            "deadline_formula": "balanced_finale",
+            "deadline_formula": "none",
             "rewards": {
               "base_money": [
                 900,
@@ -11033,7 +11136,6 @@
             "base_site_count": 2,
             "faction_count": 3,
             "weather_profile": "core:weather_profile/temperate",
-            "edge_density": 0.2,
             "start_region_tags": [
               "region.start"
             ]
@@ -11105,6 +11207,7 @@
             "intel_cost": 25,
             "trade_margin": 0.95,
             "player_trade_impact": 0.35,
+            "chart_cost": 60,
             "default_starting_scenario": "core:starting_scenario/steady",
             "twin_world_size": 160,
             "exploration": {
@@ -11226,6 +11329,11 @@
                     },
                     {
                       "type": "discover_contract_destination"
+                    },
+                    {
+                      "type": "unlock_route",
+                      "from": "current",
+                      "to": "contract_destination"
                     }
                   ],
                   "advance": {
@@ -11246,6 +11354,10 @@
                   "objective": {
                     "text_key": "story.core.supply_brief.objective",
                     "target": 4
+                  },
+                  "focus": {
+                    "target": "market_supply",
+                    "text_key": "story.core.focus.supply_brief"
                   },
                   "advance": {
                     "all": [
@@ -11280,6 +11392,10 @@
                     "text_key": "story.core.supply_hold.objective",
                     "target": 1
                   },
+                  "focus": {
+                    "target": "chart_entry",
+                    "text_key": "story.core.focus.supply_hold"
+                  },
                   "advance": {
                     "event": "ui:chart_opened"
                   }
@@ -11295,6 +11411,10 @@
                   "objective": {
                     "text_key": "story.core.chart_brief.objective",
                     "target": 1
+                  },
+                  "focus": {
+                    "target": "chart_entry",
+                    "text_key": "story.core.focus.chart_brief"
                   },
                   "advance": {
                     "event": "ui:chart_closed"
@@ -11319,6 +11439,10 @@
                     "text_key": "story.core.supply_finish.objective",
                     "target": 10
                   },
+                  "focus": {
+                    "target": "market_supply",
+                    "text_key": "story.core.focus.supply_finish"
+                  },
                   "advance": {
                     "event": "cmd:supply.buy_coal",
                     "counter": "coal_aboard",
@@ -11339,6 +11463,12 @@
                     "text_key": "story.core.depart_brief.objective",
                     "target": 1
                   },
+                  "advance": {
+                    "event": "cmd:voyage.start"
+                  }
+                },
+                {
+                  "id": "first_arrival",
                   "advance": {
                     "event": "ui:arrival_settled"
                   }
@@ -11370,6 +11500,11 @@
                       "deadline_formula": "tutorial_trade",
                       "name_key": "contract.core.tutorial_trade.name",
                       "description_key": "contract.core.tutorial_trade.description"
+                    },
+                    {
+                      "type": "unlock_route",
+                      "from": "current",
+                      "to": "home"
                     }
                   ],
                   "objective": {
@@ -11397,6 +11532,12 @@
                     "text_key": "story.core.second_depart.objective",
                     "target": 1
                   },
+                  "advance": {
+                    "event": "cmd:voyage.start"
+                  }
+                },
+                {
+                  "id": "second_arrival",
                   "advance": {
                     "event": "ui:arrival_settled"
                   }
@@ -11654,9 +11795,13 @@
                       "type": "grant_tutorial_contract",
                       "template_id": "core:contract/main_03",
                       "passengers": 1,
-                      "deadline_formula": "tutorial_craft",
                       "name_key": "contract.core.tutorial_passenger.name",
                       "description_key": "contract.core.tutorial_passenger.description"
+                    },
+                    {
+                      "type": "unlock_route",
+                      "from": "current",
+                      "to": "contract_destination"
                     }
                   ],
                   "objective": {

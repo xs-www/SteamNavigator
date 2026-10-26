@@ -30,12 +30,16 @@ extends RefCounted
 ##   `investigation_success_chance`；`port_goods` 不合并探索估算（`estimated` 为空字典），
 ##   顶层追加 `expiring_clue_count` 供列表页入口角标；查询仍然不输出
 ##   `target_port_id` / `credibility` / 真实 `search_zone`。
-## - 每条航线附**预计航程**：`distance` 是坐标单位，`travel_hours` / `risk_level` /
-##   煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与航行规则推出（世界表里只存
-##   几何量，不存时间/风险）。`distance_source` 标明这个估算是按哪条距离算的：
-##   `voyage` = 抽象地图上真有这条航线（数值与 `voyage.preview` 逐项一致），
-##   `chart` = 孪生世界 MST 图独有、抽象地图上没有对应边，此时风险为未知（-1），
-##   不能假装安全。
+## - **海图是唯一世界**（2026-10-26「海图唯一真相」）：`data.world_map` 的
+##   `connectivity_graph` + `edges` 就是世界拓扑；`GameState.world()` 的 `routes` 由它派生
+##   （`ChartWorldProjection.from_chart`）。每条边的 `distance` 是该边绘制路径的折线长度，
+##   `base_risk` 也存在同一条边上。因此本查询对每条海图航线只输出**一个**距离
+##   `distance` 和一个风险来源，不存在「第二把尺子」或「海图有边但不可出航」的分支。
+## - `travel_hours` / `risk_level` / 煤水消耗由 `VoyageEstimator` 结合船速、锅炉策略与
+##   航行规则推出（世界表里只存几何量与基础风险，不存时间/风险档位）。
+## - **航线解锁标记**（2026-10-26）：每条 route 追加 `unlocked: bool`，来自
+##   `WorldOps.is_route_unlocked`。输出条件仍是「两端都已发现」：未解锁但两端已发现的
+##   边照常输出，供 UI 画「未测绘」虚线并在面板里禁用启航；未发现的一端仍被迷雾隐藏。
 ## @end-static-doc
 
 ## Legacy fallbacks only (fixtures without content rules); the real radii come
@@ -125,9 +129,11 @@ static func execute(params: Dictionary, context) -> Dictionary:
 		})
 
 	# Build route data (only between discovered ports). Routes are read from the world's
-	# precomputed route table; a world generated before schema 1.1 has none, so those
-	# saves fall back to computing paths here (slow, but only for legacy worlds).
+	# precomputed route table; a world generated before the chart-unification has none, so
+	# those saves fall back to computing paths here (slow, defensive path only).
 	# Each emitted route also carries the voyage estimate (travel time, supplies, risk).
+	# The chart is the single world: its `distance` is the drawn path's polyline length and
+	# `base_risk` lives on the same edge, so no other map is consulted.
 	var estimate := _estimate_context(context, params, current_port)
 	var routes_data: Array = []
 	if world.route_count() > 0:
@@ -139,15 +145,19 @@ static func execute(params: Dictionary, context) -> Dictionary:
 			var path: PackedVector2Array = edge.get("path", PackedVector2Array())
 			if path.size() < 2:
 				continue
+			var distance := float(edge.get("distance", 0.0))
 			routes_data.append({
 				"from": from_id,
 				"to": to_id,
 				"bezier_path": _pack_path(path),
-				"distance": float(edge.get("distance", 0.0)),
+				"distance": distance,
 				"explored": visited_ids.has(from_id) and visited_ids.has(to_id),
-			}.merged(_route_estimate(estimate, from_id, to_id, float(edge.get("distance", 0.0)))))
+				# 航线解锁（2026-10-26）：两端都已发现就输出（即使未解锁），UI 据此画
+				# 「未测绘」虚线并在面板里禁用启航；解锁状态来自运行时，不改世界几何。
+				"unlocked": WorldOps.is_route_unlocked(state, from_id, to_id),
+			}.merged(_route_estimate(estimate, distance, float(edge.get("base_risk", -1.0)))))
 	else:
-		routes_data = _compute_routes(world, discovered_ids, visited_ids, estimate)
+		routes_data = _compute_routes(state, world, discovered_ids, visited_ids, estimate)
 
 	# Build fog alpha grid (downsampled for UI performance)
 	var fog_grid_data: Dictionary = {}
@@ -225,7 +235,11 @@ static func execute(params: Dictionary, context) -> Dictionary:
 
 ## Legacy fallback for worlds generated before schema 1.1 (no stored route table).
 static func _compute_routes(
-	world: WorldMap, discovered_ids: Array, visited_ids: Array, estimate: Dictionary
+	state: GameState,
+	world: WorldMap,
+	discovered_ids: Array,
+	visited_ids: Array,
+	estimate: Dictionary
 ) -> Array:
 	var routes: Array = []
 	var connectivity: Dictionary = world.connectivity_graph
@@ -244,22 +258,30 @@ static func _compute_routes(
 			if from_port.is_empty() or to_port.is_empty():
 				continue
 			var route := RouteCalculator.calculate_route(from_port, to_port, world.landmasses)
-			var distance := float(route.get("distance", 0.0))
+			var distance := _polyline_length(route.get("bezier_path", PackedVector2Array()))
 			routes.append({
 				"from": String(from_id),
 				"to": to_id,
 				"bezier_path": _pack_path(route.get("bezier_path", PackedVector2Array())),
 				"distance": distance,
 				"explored": visited_ids.has(String(from_id)) and visited_ids.has(to_id),
-			}.merged(_route_estimate(estimate, String(from_id), to_id, distance)))
+				"unlocked": WorldOps.is_route_unlocked(state, String(from_id), to_id),
+			}.merged(_route_estimate(estimate, distance, -1.0)))
 	return routes
 
 
+## Length of a polyline, used for worlds saved without a route table: no stored distance
+## exists there, and the authoritative distance is by definition the drawn path's length.
+static func _polyline_length(path: PackedVector2Array) -> float:
+	var total := 0.0
+	for index in range(1, path.size()):
+		total += path[index - 1].distance_to(path[index])
+	return total
+
+
 ## Everything the per-route estimate needs, resolved once per query: the ship
-## (speed / coal / water rates / load), the boiler strategies and the played
-## abstract map routes (`base_risk` lives there, not in the coordinate world).
-## Returns `{}` when there is no run to estimate from — routes then carry only
-## geometry, which is exactly what the old query emitted.
+## (speed / coal / water rates / load) and the boiler strategy the panel assumes.
+## Returns `{}` when there is no run to estimate from — routes then carry only geometry.
 static func _estimate_context(context, params: Dictionary, current_port: String) -> Dictionary:
 	var state: GameState = context.state
 	var hub: RegistryHub = context.registries
@@ -270,37 +292,26 @@ static func _estimate_context(context, params: Dictionary, current_port: String)
 	if not bool(stats.get("valid", false)):
 		return {}
 	var preferred_strategy := String(params.get("strategy_id", ""))
-	var strategies: Dictionary = {}
 	var preferred: ContentDefinition = null
 	for strategy in hub.get_all(ContentTypes.BOILER_STRATEGY):
-		strategies[strategy.id] = strategy
 		if preferred == null and strategy.has_tag("strategy.standard"):
 			preferred = strategy
-	if preferred_strategy != "" and strategies.has(preferred_strategy):
-		preferred = strategies[preferred_strategy]
-	if preferred == null and not strategies.is_empty():
-		preferred = (strategies.values()[0] as ContentDefinition)
+	if preferred_strategy != "":
+		var override := hub.get_by_id(ContentTypes.BOILER_STRATEGY, preferred_strategy)
+		if override != null:
+			preferred = override
 	# Load ratio uses the full-load rules (`ShipOps.total_weight`), so the weight
 	# penalty and the risk source match what `voyage.preview` will report.
 	var max_weight := ShipOps.max_weight(hub, ship)
 	var total_weight := ShipOps.total_weight(hub, state)
-	var played_routes: Dictionary = {}
-	for route in MapOps.routes(state.world()):
-		if not (route is Dictionary):
-			continue
-		played_routes[_pair_key(
-			String(route.get("a", "")), String(route.get("b", ""))
-		)] = route
 	return {
 		"state": state,
 		"hub": hub,
 		"ship": ship,
 		"stats": stats,
-		"strategies": strategies,
 		"preferred_strategy": preferred,
 		"load_ratio": total_weight / max_weight if max_weight > 0.0 else 0.0,
 		"passengers": ShipOps.passenger_count(state),
-		"played_routes": played_routes,
 		"current_port": current_port,
 		"game_time": state.now(),
 		# The hull's own base risk is already inside `stats.risk_add`; the
@@ -315,53 +326,16 @@ static func _hull_base_risk(hub: RegistryHub, ship: Dictionary) -> float:
 	return float(hull.data.get("base_risk", 0.0)) if hull != null else 0.0
 
 
-## Adds the estimate fields for one chart route. `travel_hours` is direction
-## independent (distance / speed), so either orientation of the stored edge can
-## use the same number; the supply block additionally names the boiler strategy
-## it assumes and whether the abstract-map route matched the chart distance.
-static func _route_estimate(
-	estimate: Dictionary, from_id: String, to_id: String, distance: float
-) -> Dictionary:
+## Adds the estimate fields for one chart route. `travel_hours` is direction independent
+## (distance / speed). `distance` is the chart edge's drawn-polyline length and `base_risk`
+## the same edge's rolled risk, so `travel_hours` / supplies / risk match
+## `voyage.preview` field for field. The supply block additionally names the boiler
+## strategy it assumes. A missing `base_risk` (-1) means "unknown risk", never "safe".
+static func _route_estimate(estimate: Dictionary, distance: float, base_risk: float) -> Dictionary:
 	if estimate.is_empty():
 		return {}
-	var strategies: Dictionary = estimate["strategies"]
-	var preferred: ContentDefinition = estimate["preferred_strategy"]
-	var played: Variant = (estimate["played_routes"] as Dictionary).get(_pair_key(from_id, to_id), null)
-	# Pick the strategy the estimate is computed with: the played route's own
-	# strategy when this exact voyage is on the abstract map, else the standard
-	# one (`strategy_id` override from the caller wins for both).
-	var chosen: ContentDefinition = preferred
-	var strategy_source := "default"
-	if played is Dictionary:
-		var played_strategy := String((played as Dictionary).get("strategy_id", ""))
-		if strategies.has(played_strategy):
-			chosen = strategies[played_strategy]
-			strategy_source = "voyage"
-	var estimate_distance := distance
-	var distance_source := "chart"
-	if played is Dictionary:
-		# The voyage is actually judged on the abstract map's route; when that
-		# route exists, use it so time and supplies match `voyage.preview`.
-		var played_distance := float((played as Dictionary).get("distance", 0.0))
-		if played_distance > 0.0:
-			estimate_distance = played_distance
-			distance_source = "voyage"
-	var voyage := VoyageEstimator.estimate(
-		estimate,
-		distance,
-		estimate_distance,
-		# No abstract-map route means no base risk is known for this pair: pass -1
-		# so the estimator reports "unknown" instead of "safe".
-		float((played as Dictionary).get("base_risk", 0.0)) if played is Dictionary else -1.0,
-		chosen
-	)
-	voyage["distance_source"] = distance_source
-	voyage["strategy_source"] = strategy_source
-	return voyage
-
-
-static func _pair_key(a: String, b: String) -> String:
-	return "%s|%s" % [a, b] if a < b else "%s|%s" % [b, a]
+	var chosen: ContentDefinition = estimate["preferred_strategy"]
+	return VoyageEstimator.estimate(estimate, distance, base_risk, chosen)
 
 
 static func _empty_result() -> Dictionary:

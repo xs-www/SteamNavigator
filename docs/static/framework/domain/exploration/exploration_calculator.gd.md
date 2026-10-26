@@ -30,7 +30,7 @@
   `coal_mul`；水 = 耗时 ×（水耗 × `water_mul` + 乘客 × 0.06）；风险钳位 [0.01, 0.7]。
 - 距离按坐标世界 `origin.position -> zone.center` 的**直线距离**；`route_path` 另用
   `RouteCalculator` 生成绕陆航线（失败退回直线），只用于演出画线。
-- 探索没有抽象地图航线，因此基础风险取探索规则：`risk_base +
+- 探索航线不是海图世界的一条边，因此基础风险取探索规则：`risk_base +
   risk_per_unreliability * (1 - credibility)`，再叠加策略 / 超载 / 低耐久 / 装备风险。
 - `discovery_chance` 只是展示值（规则函数），真实判定在 `explore.settle` 用出发时
   抽定的 `outcome_roll` 比较，预览绝不泄露 roll。

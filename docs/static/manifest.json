@@ -1,14 +1,14 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-24T07:55:07.378Z",
-  "commit": "013754a",
+  "generated_at": "2026-10-26T11:10:20.276Z",
+  "commit": "873fe42",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1185,
-    "documented": 467,
-    "grouped": 718
+    "sources": 1229,
+    "documented": 494,
+    "grouped": 735
   },
   "files": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "source": "README.md",
-      "sha256": "9bdaf376857b7908614b66acf002ceef70c25376683e8788a8e77f7651bc6e04",
+      "sha256": "85759c5cfbcec6a2b13164494e569eee8d5a1d17f92bbcbd24c98bac20a2fd08",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -247,7 +247,7 @@
     },
     {
       "source": "SNModMaker/js/catalog.js",
-      "sha256": "50e02566add7fe9dc775a50e4315667290538243a7e1bcbc0f386f68a40c1474",
+      "sha256": "220ac2ed5a47d185e88a54f6fedce9171a9db2d201ee54a7b2fa166a18ae2756",
       "doc": "docs/static/SNModMaker/js/catalog.js.md",
       "status": "documented"
     },
@@ -3113,7 +3113,7 @@
     },
     {
       "source": "dev_mods/core/content/contracts.json",
-      "sha256": "022797f7f4c5b086c431bb509736d1fda6609d80088ac73a8022e38a0b3db32a",
+      "sha256": "68fb669abb8e3ead5dc8e0d844f16ead73dc9d8f5bc55c0521258e70059c9652",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3211,7 +3211,7 @@
     },
     {
       "source": "dev_mods/core/content/map_configs.json",
-      "sha256": "daad88bf684bfd529952b421682831b7df5ca764c35d587afa9ab8f1957266d0",
+      "sha256": "e4a2bdcef24ed74852c96e6b5671e20698ed137727d2fc4fc5580b5525b6669b",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3344,21 +3344,21 @@
     },
     {
       "source": "dev_mods/core/content/world_profiles.json",
-      "sha256": "f01a986157454d76b99c3fbade006fc108110304c3faa1eabfa2814cbe0c5fbf",
+      "sha256": "00bd5b069fc530a6ff483beb161be9ef665771eaf8e1fcaffebc5fc14f6722b8",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/localization/en.json",
-      "sha256": "92afb6383f198cc4aca6ac007f47451e07dac1ad2c0119ca57f4e2c1f149f7b1",
+      "sha256": "68d5b2191ed0e5893b2297c4dae15b5afc1cc0da993b5a6624b519d0f0a95b06",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
     },
     {
       "source": "dev_mods/core/localization/zh_CN.json",
-      "sha256": "13e2b6cb144bae7fbe8fff118d028663ce0782dd3c10bca4569b8cab7c43844a",
+      "sha256": "09c83ddfce8e2e13560b2b9544222ce70785ae6ba299f14032aad4eafa57f4b7",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3442,7 +3442,7 @@
     },
     {
       "source": "framework/application/command_bus.gd",
-      "sha256": "3304f649d9b6b6696fcdf266207af59c15553287451318bf8d035936bf9c0244",
+      "sha256": "9654a5282a834ecfc273baeff94d4e3126377028cb1221c83f8b7ab7e90147e1",
       "doc": "docs/static/framework/application/command_bus.gd.md",
       "status": "documented"
     },
@@ -3459,6 +3459,12 @@
       "status": "documented"
     },
     {
+      "source": "framework/application/commands/chart_commands.gd",
+      "sha256": "99090f8cf39e4f07b15e4eeadcb23a1d8c88b98a4e63f244cca6d350041bd57b",
+      "doc": "docs/static/framework/application/commands/chart_commands.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/application/commands/combat_commands.gd",
       "sha256": "654d4756586b5fa44a1f88dec89fc39c9b2d7f4ff3228c355e8da5e53083a01f",
       "doc": "docs/static/framework/application/commands/combat_commands.gd.md",
@@ -3466,7 +3472,7 @@
     },
     {
       "source": "framework/application/commands/command_registry.gd",
-      "sha256": "310aa23d384a506989bae50eef84dfaa3d7a15ceff13e65acbb1cfc0f7a35ac9",
+      "sha256": "8bbeca0bff2a381c8737e32c647663ece7fd3a3adf3c4e1bf866548c92ded75a",
       "doc": "docs/static/framework/application/README.md",
       "status": "grouped",
       "group": "docs/static/framework/application/README.md"
@@ -3648,10 +3654,9 @@
     },
     {
       "source": "framework/application/queries/map_view.gd",
-      "sha256": "f438c1cfe1c701673a05d4a22d681a143b67c65c312278a80ae86c3c47962601",
-      "doc": "docs/static/framework/application/README.md",
-      "status": "grouped",
-      "group": "docs/static/framework/application/README.md"
+      "sha256": "e0d7033b2bef046f30a96e376c77f4008c6caafea0c87e306c0ebea8db2c1f6a",
+      "doc": "docs/static/framework/application/queries/map_view.gd.md",
+      "status": "documented"
     },
     {
       "source": "framework/application/queries/market_view.gd",
@@ -3667,7 +3672,7 @@
     },
     {
       "source": "framework/application/queries/port_view.gd",
-      "sha256": "7d0c71edbae8ce3e907f6ff7345cfb303794a6a4170d9cd237c98a3a63e784a6",
+      "sha256": "1805ff4337c8555babb07637f9ef44af3cad957c931810396c9673803cf4be8f",
       "doc": "docs/static/framework/application/queries/port_view.gd.md",
       "status": "documented"
     },
@@ -3680,7 +3685,7 @@
     },
     {
       "source": "framework/application/queries/sea_chart_view.gd",
-      "sha256": "6ea1e272696292a18a06c3f51034dc25e5951c9b8c73cefba41657119ab31e54",
+      "sha256": "b3e30ab9a506c0f80ab2bd7ad757012a9460e8c7592f3f94a8c8412b9e55f421",
       "doc": "docs/static/framework/application/queries/sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -3710,13 +3715,13 @@
     },
     {
       "source": "framework/application/queries/task_view.gd",
-      "sha256": "1ba990af31010418eb497a634c0f20425ef1bb129e08f00f68bf96dedee67ad3",
+      "sha256": "f40bfd06cce836434b7a4d32b3c359be386a257806ef41fbc5c9c0b124a4d5ab",
       "doc": "docs/static/framework/application/queries/task_view.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/application/queries/tavern_view.gd",
-      "sha256": "b93c81f836dd21ae8ed9ac4e78e92c7fa4ab17d46993bc8ae0fc4462865c54d4",
+      "sha256": "a8b2f275d243b8faa371a4897ee89a87896b4b5f2ed062e3639c9cdd4a0ac61e",
       "doc": "docs/static/framework/application/queries/tavern_view.gd.md",
       "status": "documented"
     },
@@ -3735,7 +3740,7 @@
     },
     {
       "source": "framework/application/query_bus.gd",
-      "sha256": "5f8c3d50b4ab19e413714bd1ab435ff27929cb20978d515647661e178c6ad226",
+      "sha256": "4bb1df5b8fa927b2b7c70a8a20212bcdf02179b797c8ca0992779cd3a45aa9e6",
       "doc": "docs/static/framework/application/query_bus.gd.md",
       "status": "documented"
     },
@@ -3841,7 +3846,7 @@
     },
     {
       "source": "framework/domain/campaign/campaign_factory.gd",
-      "sha256": "9d97b760b10c98ad74d32e7b7f5067a56e08a3b9eddd328230b2109f92017cc8",
+      "sha256": "6e9efb81e32246a1c9099041d690ace60059c4f43da5478cd557ff3627b7c069",
       "doc": "docs/static/framework/domain/campaign/campaign_factory.gd.md",
       "status": "documented"
     },
@@ -3859,19 +3864,19 @@
     },
     {
       "source": "framework/domain/campaign/map_generation_spec.gd",
-      "sha256": "39c9716ab5ea6bfafc469c1a6943c1e5864f83d04b7316aa5370625b053ee2f6",
+      "sha256": "2572441e0c54f23a3a20a98ba0a855d54afcb68007b4e16b770d6ba7692de1a9",
       "doc": "docs/static/framework/domain/campaign/map_generation_spec.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/campaign/region_assembler.gd",
-      "sha256": "5e2c4dce503c80e2af5618474ed5c2c7b20abd9329fe19e358468f1a07e95435",
+      "sha256": "0959d027f02a4880b90f978ffd758660b9be29fc6d498e047ed3e431db0422b5",
       "doc": "docs/static/framework/domain/campaign/region_assembler.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/campaign/route_assembler.gd",
-      "sha256": "098d21f9a1f379eac00d9d03fa6acb8b7f761080707c4df93e7ec31a619c2d05",
+      "sha256": "0df33d40c515b8b5e2f377a74293dc9a2bf824db5a3421c04d00cc211a37fd29",
       "doc": "docs/static/framework/domain/campaign/route_assembler.gd.md",
       "status": "documented"
     },
@@ -3895,19 +3900,19 @@
     },
     {
       "source": "framework/domain/contracts/contract_ops.gd",
-      "sha256": "aba51e4bf92e8bb10b33a6b7e9a2398237bcf37e0934ac3de7ce4e37cdb480a9",
+      "sha256": "54e194cd83e20ebb914cb545d6a03c535b2c1a98ed81e5e1545c60a76dfcd33f",
       "doc": "docs/static/framework/domain/contracts/contract_ops.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/contracts/formula_registry.gd",
-      "sha256": "f2331c2eb5dae481b05db3a409f505d60fbd3b6677f5ddc05236f92a851443b2",
+      "sha256": "8bbab636385c8101eb8376ddbf6d2522b9260540b38eba608856894000105f9c",
       "doc": "docs/static/framework/domain/contracts/formula_registry.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/contracts/run_factory.gd",
-      "sha256": "db89a9cf098c3d271407b2bafc88d9e7654cd3390608bab5e4be18bd1b41bf9f",
+      "sha256": "cd423de3014aea63bc322897a2b01fb046ec33d6a14c4b3fa0cc52bd43769a8c",
       "doc": "docs/static/framework/domain/contracts/run_factory.gd.md",
       "status": "documented"
     },
@@ -3973,7 +3978,7 @@
     },
     {
       "source": "framework/domain/exploration/exploration_calculator.gd",
-      "sha256": "a42e09987f14647f6ef5a86ce4b97d44b1a9b37924b6275bc0e2016a8b9daf25",
+      "sha256": "e843ce3650b05728ca1167f79bddafec63dd394fbcea24b766a6df66d25cbb38",
       "doc": "docs/static/framework/domain/exploration/exploration_calculator.gd.md",
       "status": "documented"
     },
@@ -3985,7 +3990,7 @@
     },
     {
       "source": "framework/domain/exploration/explore_voyage_service.gd",
-      "sha256": "5f5c81cd1572fcdf173ac4821b8cd9209c0dd842f5b431c11650e826c1eaae13",
+      "sha256": "a255c130438fc8ca0d9ea70513182fec768ad3a8f873bba0745caca7f043e951",
       "doc": "docs/static/framework/domain/exploration/explore_voyage_service.gd.md",
       "status": "documented"
     },
@@ -4003,7 +4008,7 @@
     },
     {
       "source": "framework/domain/map/map_generator.gd",
-      "sha256": "a2c798bcdc78f7d4dfaafe498c8b9087515e33c2d4ce2747e344503b39b93349",
+      "sha256": "76270d4513089644f56aa3f6489b212600ec0a862dae57552aea9198cd4a19fd",
       "doc": "docs/static/framework/domain/map/map_generator.gd.md",
       "status": "documented"
     },
@@ -4099,7 +4104,7 @@
     },
     {
       "source": "framework/domain/story/story_service.gd",
-      "sha256": "d68a34df9c25378079b0c18b08da0e440a042ca59b7a86afb6e7d483815782b0",
+      "sha256": "702f2189f851f56f1491238fa252678a9488eed97781d28813e8bb7d9b3225f7",
       "doc": "docs/static/framework/domain/story/story_service.gd.md",
       "status": "documented"
     },
@@ -4123,13 +4128,13 @@
     },
     {
       "source": "framework/domain/voyage/voyage_calculator.gd",
-      "sha256": "8ef97ac8407488ddf953116d7e52a6619fc28df75cdd14e53f546e983c3a0f38",
+      "sha256": "6788d01be2749361a9d91c50fd6eae7a6aea8665232af841467d978a6bff570f",
       "doc": "docs/static/framework/domain/voyage/voyage_calculator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/voyage/voyage_estimator.gd",
-      "sha256": "de7f465c9d971caa9df38f647bc04ccce3cb7508dc22db380f2963aa7173ce3f",
+      "sha256": "dfe38cd65d398634ba91b6c064f4bff19a8332db69189eab99fd0add933df654",
       "doc": "docs/static/framework/domain/voyage/voyage_estimator.gd.md",
       "status": "documented"
     },
@@ -4141,8 +4146,14 @@
     },
     {
       "source": "framework/domain/voyage/voyage_service.gd",
-      "sha256": "065f37c91c2d88e91855e7a76504fa83416caf5801254aead54751298d377977",
+      "sha256": "8e8e03790655c5b31db228e5bb725a99c570546c431d19c33a826cd4003102d2",
       "doc": "docs/static/framework/domain/voyage/voyage_service.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/domain/world/chart_world_projection.gd",
+      "sha256": "fed60b9c8d685fbbc9f4aaaba7844bafc62561092b9d25b876691d1a60beda75",
+      "doc": "docs/static/framework/domain/world/chart_world_projection.gd.md",
       "status": "documented"
     },
     {
@@ -4177,25 +4188,25 @@
     },
     {
       "source": "framework/domain/world/route_calculator.gd",
-      "sha256": "23d893be61cb381c9f4eb73d7d8f1b1ffce89011a227bfc19c4ecbd7138ddb55",
+      "sha256": "99b77d4f8ddc3bccf4b37f867ad7cb850c9e906c27b98adf35c7f6d5391299c7",
       "doc": "docs/static/framework/domain/world/route_calculator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_generator.gd",
-      "sha256": "77eb74b08318cc3733d976c6c6b35deee36b1ac3ffabf8d4a508a755ee2b9eaa",
+      "sha256": "968b88eccdbd6817be999653968007cd916d1fa245bb8dd0d3025f694d9d5188",
       "doc": "docs/static/framework/domain/world/world_generator.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_map.gd",
-      "sha256": "138c0df5e5c148bd5ca94129e499e35fde80bd03a226cacf82e91a002377b467",
+      "sha256": "476f820f2fe34d807e1cdfec3ff83b917318b9fc06f917151d525ce7ace07bec",
       "doc": "docs/static/framework/domain/world/world_map.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/domain/world/world_ops.gd",
-      "sha256": "4c6cac7c559bb0c820aceef6f7e8ccdb8d907f236ed1f9d90113a959727de024",
+      "sha256": "a939b4186c2109bd201bd993af90ca2acc10d283a668b34130d6437668d41ed3",
       "doc": "docs/static/framework/domain/world/world_ops.gd.md",
       "status": "documented"
     },
@@ -4374,7 +4385,7 @@
     },
     {
       "source": "framework/state/game_state.gd",
-      "sha256": "705c6cf79bd8e9c2af1ea5fcadc605c4889522057073bb1274407c6d50fc948e",
+      "sha256": "f81d97fbc9131d591eb4d4ddf1495cc8664dea32ad0f3b0c52d32431311bf777",
       "doc": "docs/static/framework/state/game_state.gd.md",
       "status": "documented"
     },
@@ -4406,7 +4417,7 @@
     },
     {
       "source": "framework/tests/cases/test_campaign_assembly.gd",
-      "sha256": "c59e9d1eabae95068ab8ad34c626d3f7d68599d236d4771faa72f0769f5acabe",
+      "sha256": "8a94dad6ba619e38269ca18b70c22a42d398f2a783dd7aa6000894317cf00b7e",
       "doc": "docs/static/framework/tests/cases/test_campaign_assembly.gd.md",
       "status": "documented"
     },
@@ -4455,14 +4466,14 @@
     },
     {
       "source": "framework/tests/cases/test_contract_flow.gd",
-      "sha256": "091a7a4b9d4b24ad370be4484ca082d2b9aee99e0752938a2e706f0f65d4732c",
+      "sha256": "169c022de4f61f72322d3ec75e997d1f32e2c1f5bcc9d1b3a9ddcb8ffae1f1e3",
       "doc": "docs/static/framework/tests/README.md",
       "status": "grouped",
       "group": "docs/static/framework/tests/README.md"
     },
     {
       "source": "framework/tests/cases/test_contract_refresh.gd",
-      "sha256": "88bd5ce791e0065dc6a16fdf0012d9ec1f6708abe220c6bea72c249edec9bfaf",
+      "sha256": "0c585351d46fa078cef96c5eedc63b32cae5c9d1480dcb2fb516630da9c16c33",
       "doc": "docs/static/framework/tests/cases/test_contract_refresh.gd.md",
       "status": "documented"
     },
@@ -4487,7 +4498,7 @@
     },
     {
       "source": "framework/tests/cases/test_exploration.gd",
-      "sha256": "36a2cc81c7c0605ae9c274059530eb566f18d85a2bd1dab8e8e5c526afb834f5",
+      "sha256": "19cdda4f0875be1c2be04a9b12aadcb39b3e4bf2714c2585e93f0c77e9761d81",
       "doc": "docs/static/framework/tests/cases/test_exploration.gd.md",
       "status": "documented"
     },
@@ -4506,7 +4517,7 @@
     },
     {
       "source": "framework/tests/cases/test_full_clear.gd",
-      "sha256": "64e7e8860007824451872228078f5aaf3f2b24f7e25e090b3b8877210529b353",
+      "sha256": "7168c701dcedc491507ac621e9fb02b3730bdc986640c25cf339b789c4867a57",
       "doc": "docs/static/framework/tests/cases/test_full_clear.gd.md",
       "status": "documented"
     },
@@ -4611,6 +4622,12 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_route_unlock.gd",
+      "sha256": "49a3fe89cf0bc55e7bd1d702d36ef56f5f2e79c09155bc5a8e6a5c8cc78a43c2",
+      "doc": "docs/static/framework/tests/cases/test_route_unlock.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_run_pipeline.gd",
       "sha256": "8f0cbb6a1c64405363bdb6589d73573580d27a485b890e933b03659cd3792539",
       "doc": "docs/static/framework/tests/README.md",
@@ -4657,7 +4674,7 @@
     },
     {
       "source": "framework/tests/cases/test_sea_chart.gd",
-      "sha256": "a776bb9d33e57bfa3ae5d343bada12dc452d12ff40cbc6f214bbcdc1228ffd1a",
+      "sha256": "9189b1b0a7670a3388f5ed296b855d0a50141d82370496c2598ef1c2e5cc7546",
       "doc": "docs/static/framework/tests/cases/test_sea_chart.gd.md",
       "status": "documented"
     },
@@ -4728,19 +4745,19 @@
     },
     {
       "source": "framework/tests/cases/test_stage_host.gd",
-      "sha256": "1d9a2522b708519698c7fc2d19a6fc6ffdf9fba51133bee137d6668feaf1d9bc",
+      "sha256": "695c4674d3246959b27c096c7f33a23e78755530b8e2df4f40fa9965d80673a8",
       "doc": "docs/static/framework/tests/cases/test_stage_host.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_story.gd",
-      "sha256": "204bed5f63efb3a0b2f28b26265b440e3a84d561893eb00f6582196030b54a1d",
+      "sha256": "e1a5a34dc9d41ce44ccd443ee080dd9ed483bee9ed8d9b0fd3f0443bbce94019",
       "doc": "docs/static/framework/tests/cases/test_story.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_story_ui.gd",
-      "sha256": "d21c461ed5800cc4c6c355e35aaf1a97f5b6a334693a6189d6ba4fecda93156b",
+      "sha256": "c163c8553f0f64ce49653875f81cc1bfb2167e55fd1d086984186999c1f8e1c0",
       "doc": "docs/static/framework/tests/cases/test_story_ui.gd.md",
       "status": "documented"
     },
@@ -4759,7 +4776,7 @@
     },
     {
       "source": "framework/tests/cases/test_ui_shell.gd",
-      "sha256": "2a21d1414172c3753d3140cee3eb358479b530c623319c7b72b64489951cacc4",
+      "sha256": "d6034d5f70a7e3c3b75c023c96ad5b53c71118d9d8303991ce1d2d0672487a78",
       "doc": "docs/static/framework/tests/cases/test_ui_shell.gd.md",
       "status": "documented"
     },
@@ -4823,6 +4840,12 @@
       "status": "documented"
     },
     {
+      "source": "framework/tests/cases/test_world_unity.gd",
+      "sha256": "910f5fd17025604c283f1e0ba62dc3fc0e9056f9ef9860d588f4f2fa5d5445d1",
+      "doc": "docs/static/framework/tests/cases/test_world_unity.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_zip_pack.gd",
       "sha256": "1828546438e61dad0cb26cbcec34e532ef7dffaca1711df4f9cac16c9e2b9a33",
       "doc": "docs/static/framework/tests/README.md",
@@ -4852,7 +4875,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "d8229f1e2d7ed516012b0173d52f6a27eea9d50280edab7ace1dc3cae9a6e8fd",
+      "sha256": "9ac480de86f287453a3b8ee3ae8e0f2f5d70ca37007bec57a346dcd607044f32",
       "doc": "docs/static/framework/tests/test_runner.gd.md",
       "status": "documented"
     },
@@ -4891,8 +4914,14 @@
     },
     {
       "source": "framework/ui/components/sn_cargo_hold_panel.gd",
-      "sha256": "ad209437561cbd1d4fe4292cc761201328c6ef6dd356f0f44d4234f22f5c7a5b",
+      "sha256": "363be808884d2de06a2b3964c0a7e56db0b0b8c4dbcf932fdf7c3659bbdef18b",
       "doc": "docs/static/framework/ui/components/sn_cargo_hold_panel.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_carry_ghost.gd",
+      "sha256": "38a0235e8a1b550e94f8e9c783b74051f4f65bea1999e66eb7e8841b52923c8e",
+      "doc": "docs/static/framework/ui/components/sn_carry_ghost.gd.md",
       "status": "documented"
     },
     {
@@ -4903,8 +4932,14 @@
     },
     {
       "source": "framework/ui/components/sn_drop_zone.gd",
-      "sha256": "eee18f9f5bc187a989d356604be80d55754564b03bf924fc3ebe3e90d502d256",
+      "sha256": "33e4474a935ee97bae027b1f9ca0f6207942d8dab0544215d98e18839278ca62",
       "doc": "docs/static/framework/ui/components/sn_drop_zone.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "framework/ui/components/sn_focus_overlay.gd",
+      "sha256": "3c3d13946205351862e23e632d6a11db23fab91d0f3dd219003085d8bbfd24ba",
+      "doc": "docs/static/framework/ui/components/sn_focus_overlay.gd.md",
       "status": "documented"
     },
     {
@@ -4926,8 +4961,14 @@
       "status": "documented"
     },
     {
+      "source": "framework/ui/components/sn_interaction_hint.gd",
+      "sha256": "5cc5da288b86eb787d7a4e92ed787884404b3edc4df8a0be782726436dcb5f63",
+      "doc": "docs/static/framework/ui/components/sn_interaction_hint.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/ui/components/sn_item_tile.gd",
-      "sha256": "5b145deae00efc7fd8a7b8fcb246e90a995d4e7447b31a4a5bcfe32fce6a32d7",
+      "sha256": "649a82eb440a614f6556c07a44d06fdc5e4c282ba856e78455c7bd01a542b00c",
       "doc": "docs/static/framework/ui/components/sn_item_tile.gd.md",
       "status": "documented"
     },
@@ -4978,13 +5019,13 @@
     },
     {
       "source": "framework/ui/components/sn_sea_chart_panel.gd",
-      "sha256": "d5e754d80181a2e02a0fa8944cbca1c6ec49ac5f9d57610c3ece2cfab8d07f61",
+      "sha256": "7d8b6635f52a7017eb31011d66ebb4f14e2520bba85e52a07982a5a753982b3d",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_panel.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/ui/components/sn_sea_chart_view.gd",
-      "sha256": "b540cce75d90a3898baa5a6b5c9b4dee405a0352b74f698137b691363c35249c",
+      "sha256": "831676a5ab315fd25cce337b96df70dfd5ca5f24696a4f59b104af66d9b0bc63",
       "doc": "docs/static/framework/ui/components/sn_sea_chart_view.gd.md",
       "status": "documented"
     },
@@ -5260,7 +5301,7 @@
     },
     {
       "source": "framework/ui/screens/port/contracts_screen.gd",
-      "sha256": "5ad537e4659fc2625f769d75854efa32048bd77ffb4ca17706e38c926941ec6e",
+      "sha256": "7267bd9c31448877b5bf9960c7c92f6574c3e34c328b794b3cbb55b73b68dd1d",
       "doc": "docs/static/framework/ui/screens/port/contracts_screen.gd.md",
       "status": "documented"
     },
@@ -5273,7 +5314,7 @@
     },
     {
       "source": "framework/ui/screens/port/market_screen.gd",
-      "sha256": "7057f24f6aab0bd757f964438d28ff37bfdde40e969989155b2eabd9ac14c7d3",
+      "sha256": "9c4d750300ca904090d5c47d1ea0c35949af3b8dcde7f0b97ad2af3eda736d4a",
       "doc": "docs/static/framework/ui/screens/port/market_screen.gd.md",
       "status": "documented"
     },
@@ -5286,7 +5327,7 @@
     },
     {
       "source": "framework/ui/screens/port/overview_screen.gd",
-      "sha256": "1fced23a551c6bbfe22cb49faed8b43e8b2ea4f7c1213adb563992f40d6c2ca4",
+      "sha256": "4d347e0a58ae82ccf3b166af73850f09f6ef08d5fafa997306ce7ab9a350178e",
       "doc": "docs/static/framework/ui/screens/port/overview_screen.gd.md",
       "status": "documented"
     },
@@ -5338,7 +5379,7 @@
     },
     {
       "source": "framework/ui/screens/port/tavern_screen.gd",
-      "sha256": "472ae0fc37f12cb0ee1f123ecd180fb66bcd2aeb8db9a66e870a68b9beaffbcd",
+      "sha256": "2d8b712384645b1d3549a8e1ad6f4070ff6ad0cb946ab2f7e9e9cda3979bc874",
       "doc": "docs/static/framework/ui/screens/port/tavern_screen.gd.md",
       "status": "documented"
     },
@@ -5351,7 +5392,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "45abf80d19c0f11a450350da178a8531455048410cdeb15f1b7a941e8d5710e6",
+      "sha256": "f8cf94232442998ce68095333da2c4ebd846391e7ef1fa5edd2580955951d2e0",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -5389,7 +5430,7 @@
     },
     {
       "source": "framework/ui/stages/port_stage.gd",
-      "sha256": "5dee9e2c3e53c7c280ff65703503a092004b28c665dba6fb90cf0ef73d815b05",
+      "sha256": "2e843d03d909cfe2689cdc22304dd7c06dcd95ae017ff792a85e847e6aab5419",
       "doc": "docs/static/framework/ui/stages/port_stage.gd.md",
       "status": "documented"
     },
@@ -5520,7 +5561,7 @@
     },
     {
       "source": "schemas/v2/common.schema.json",
-      "sha256": "64e97fb291f2f50a4c2c8ae153835aa8f05e2fb4f69577381212f87bf342c7b3",
+      "sha256": "7fafb8c730fc1da113de911207ec59b1f52a0ce68c1524e54325381b80b71d12",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -5624,7 +5665,7 @@
     },
     {
       "source": "schemas/v2/map_config.schema.json",
-      "sha256": "f3168a4db81a8198143b73527a7574c73665abac8f50e49372eeb7d37da81ed8",
+      "sha256": "e5daa04889d5f6a9459db7b53da1bedec3054e4acf8bbeac5597005bd8dbe129",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -5776,7 +5817,7 @@
     },
     {
       "source": "schemas/v2/world_profile.schema.json",
-      "sha256": "6838d216f201cae407206f044e07e4663e376ea37c46fda5c038bbea9e468e3a",
+      "sha256": "b79299cdcbd8bbf3df34e25ae3b129f3d477d640d8d5493389936b0de9387ed9",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -6228,7 +6269,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "8b7381930901628eaec49de2c1e50c4aa2ba2ac5ab3ebac81d8378bcdb54fc01",
+      "sha256": "62893c4ce0336baa71d1cd9f532e4dff3492dacb13fafedff3f97d780e3eea70",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6284,7 +6325,7 @@
     },
     {
       "source": "tools/gen_static_docs.mjs",
-      "sha256": "841521e15b9374385d5a39ca0e1024fb1bf1c61f0c4eef900bb9f100d5e1f793",
+      "sha256": "6acd0ff05befaa6f545de2e1315ba48d9619d8ee8e204aadbda4e7a1513940ca",
       "doc": "docs/static/tools/gen_static_docs.mjs.md",
       "status": "documented"
     },
@@ -6374,14 +6415,32 @@
     },
     {
       "source": "tools/godot/measure_port_stage.gd",
-      "sha256": "67e989529d11635227679ac5b95e6bae1d504b8ebd0db53a3c40db162f8739df",
+      "sha256": "68c084deda1d7d61960c2aee42a291e37f33bdae32dd04b66cc33e54ceb5d60a",
       "doc": "docs/static/tools/godot/measure_port_stage.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/perf_cpu_probe.gd",
+      "sha256": "b14c58e2a4ca2470ee6b1d5fb6cb2024583133b3474b81162078bcd84042b6cd",
+      "doc": "docs/static/tools/godot/perf_cpu_probe.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/perf_probe.gd",
+      "sha256": "34d75a9e3ede98aff0516ab7d101307f3c4601a5485a1f793a38bffe26869858",
+      "doc": "docs/static/tools/godot/perf_probe.gd.md",
       "status": "documented"
     },
     {
       "source": "tools/godot/preview_voyage_presentation.gd",
       "sha256": "fbab6008d31bb48506b606e08a97be7690ddb8b112c93cc1fd504998d9ff5731",
       "doc": "docs/static/tools/godot/preview_voyage_presentation.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/godot/probe_export_assets.gd",
+      "sha256": "6cbb218859c074212bc0b4a9c28049e42f073f1a81f4129b1cb430a43440a96f",
+      "doc": "docs/static/tools/godot/probe_export_assets.gd.md",
       "status": "documented"
     },
     {
@@ -7804,7 +7863,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "e8dbe100c8242e24360313cd03e65b1c6b18008ac421422d48de6fb4e0f17b2d",
+      "sha256": "b72331b38361e15a1396eb72d48cb50cd0c956b1873b029f9ffb2cb985fac2a2",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
@@ -7837,6 +7896,228 @@
       "source": "tools/ui_snapshot.gd",
       "sha256": "f705400baeaeee431d63ff80f11079a864cf237f687c59bcffff3f49c50edab9",
       "doc": "docs/static/tools/ui_snapshot.gd.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/.env.example",
+      "sha256": "1c00982fe1c9169bc667986b84e14eb167a8c254c815cfdad862eb44c8f60d21",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/.gdignore",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/README.md",
+      "sha256": "3d03bb6fdbb8b02f998eb7036625cebc902ed7681a05be258ff9169c61c40b1c",
+      "doc": "docs/static/website/README.md.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/assets/css/site.css",
+      "sha256": "7dc3a164aa54f42b89ce4a043154ab64659167de830ecf9663638cb4a8ada9f1",
+      "doc": "docs/static/website/assets/css/site.css.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/assets/data/wiki-data.js",
+      "sha256": "c49f8774ae134f7c733e70fdda071441eda5fb9d1f40427db4d1853c45d0dc06",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/MANIFEST.md",
+      "sha256": "01f9cefe2707ae94aeac5c7577d9f7438ce6203b99b984f4d19d9013b9a5e848",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/base-kit.jpg",
+      "sha256": "f99b0bf433bc52c0e056113e2a60b33bb7b8129cecfb46f6788684fb7135f40d",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/chart.jpg",
+      "sha256": "465ff23f7a4072448d5f9558e2e3e2f0c65d78c135a5fb1556eab39a0cfbfac5",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/combat-lineup.jpg",
+      "sha256": "b23cebe6934b14bfd7d0b8d952a4aa998fb3b1da0b0a7f7183defb25da3226b6",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/harbor-diorama.jpg",
+      "sha256": "39e57ebf26b9225b376f867957f4a05f25dc76e67714855f20838cdc4068665a",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/hero-main.jpg",
+      "sha256": "5b42ebc6b5db29c5a31dabb7111a741eb4a8f975f28c34122a9f6ce09dbb12de",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/market-ui.jpg",
+      "sha256": "b79232ed8a7ff6959878929f0395a452b031148c05be0aa5412f274d2066fc45",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/og-cover.jpg",
+      "sha256": "1231cec2316c5e34a0ffa4d1c28ccf1b382c9541e017d8bc85b467c306743e61",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/port-hero.jpg",
+      "sha256": "e3c93fbd5da4b02894249dc2210f15dbc5bed57a1489fa7a8d34db36260307de",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/port-terminal.jpg",
+      "sha256": "a18fba860cfb7d4e76366a75e187ef43665adbd658d7d88a2e3678eed1ee2640",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/ruins.jpg",
+      "sha256": "8145111d165b9331364087bd158593fd03d3d21465adc1b8cb5f932639e28b29",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/ship-ironclad.jpg",
+      "sha256": "71960119f9fdb2688d4208a98853eb1e763527449da05452bebe96c9f0282488",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/ship-paddle.jpg",
+      "sha256": "d757acde0c498b8ebde2a9f4e904d1bbc0b9e9c8fa34acad23fed9b498396ea1",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/ship-schooner.jpg",
+      "sha256": "3e11a6a68d9b0095764d0b92582fadc44324e6cd41d61c596d7585cbdcb4b9b4",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/img/shipyard-ui.jpg",
+      "sha256": "dbe2d3520f174f55f9a36a63c0e3ed828b8de403ea47d1e456f30b1111e402b9",
+      "doc": "docs/static/website/README.md",
+      "status": "grouped",
+      "group": "docs/static/website/README.md"
+    },
+    {
+      "source": "website/assets/js/site.js",
+      "sha256": "21b586ffc0fddbc7e149f2ae146910c499e630f86fa4c49a178d1672dbd8bc78",
+      "doc": "docs/static/website/assets/js/site.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/assets/js/wiki.js",
+      "sha256": "923c331dc657e89e399847f30e558f788bd8ecdf594322bffb9847d617747c66",
+      "doc": "docs/static/website/assets/js/wiki.js.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/deploy/Dockerfile",
+      "sha256": "8e1943eb136eb30d533b3bac8bab1f490a2fefd3b41c343f89e3169d02d0f612",
+      "doc": "docs/static/website/deploy/Dockerfile.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/deploy/nginx.conf",
+      "sha256": "e845a7c01a6e02bcffd696be8c3a192793d82920efcc613f3ad49bc61fe8d126",
+      "doc": "docs/static/website/deploy/nginx.conf.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/devlog.html",
+      "sha256": "9f6772ce70331e1667ee9e587f1d94ab7a6a850c24d9fa19bcb5a90f8bb187c4",
+      "doc": "docs/static/website/devlog.html.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/docker-compose.yml",
+      "sha256": "088b6dd0ff1842208de6739df6269e4397b876e707d64ea68cec35e9b211e3ef",
+      "doc": "docs/static/website/docker-compose.yml.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/download.html",
+      "sha256": "51d1345bf1a50364bcf62e3716ecdf8ac4bde0c7b637d0461b50c0a894df4790",
+      "doc": "docs/static/website/download.html.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/favicon.svg",
+      "sha256": "006b9cdf05ba20b57597c79514c01e284471a27cd120667cdfb0c8396e781c68",
+      "doc": "docs/static/website/favicon.svg.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/game.html",
+      "sha256": "5ffafa1995e492a3aff7479d480f1ca54db402c699a578482c8dc1a3e62346e9",
+      "doc": "docs/static/website/game.html.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/index.html",
+      "sha256": "f62c53f6711db22d21b5488928a18315f47e1de572ea04daa1a0e8b6623ff45a",
+      "doc": "docs/static/website/index.html.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tools/build-wiki-data.mjs",
+      "sha256": "5886048282dc3065256d5adf34a93e20765e54946764c83f4774816cfac1e168",
+      "doc": "docs/static/website/tools/build-wiki-data.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tools/ci.ps1",
+      "sha256": "d39e17e66fdc9001555eb9e8fc8abe39ffa4203af7681153b9111a69922a8a06",
+      "doc": "docs/static/website/tools/ci.ps1.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/tools/serve.mjs",
+      "sha256": "07f2bc7adba0bae0ab24e88d9f976b9cd2834c48925fdc7193abd8d944fa7d85",
+      "doc": "docs/static/website/tools/serve.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "website/wiki.html",
+      "sha256": "3e3229dac95b4def40a178960bedba26a3c739f20985997ae34f401cd993719c",
+      "doc": "docs/static/website/wiki.html.md",
       "status": "documented"
     }
   ]

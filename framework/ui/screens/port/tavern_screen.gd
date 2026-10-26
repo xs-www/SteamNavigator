@@ -2,17 +2,20 @@ class_name TavernScreen
 extends VBoxContainer
 ## @static-doc
 ## 作用：酒馆页（阶段 4.5.4，替换原情报站页面）——上半部分保留物价情报矩阵与
-## NPC 动向，下半部分列出港口线索（购买线索、调查线索），把「物价情报 + 港口线索」
-## 合并到同一个设施入口。
+## NPC 动向，中部是**海图（航线解锁）**，下半部分列出港口线索（购买线索、调查线索），
+## 把「物价情报 + 海图 + 港口线索」合并到同一个设施入口。
 ##
 ## - 关键依赖：`tavern.view` 查询（Shell 传入 ViewModel）、`sn_intel_table`
 ## - 信号：`command_requested(command, params)` → Shell 执行 `intel.refresh` /
-##   `clue.buy` / `clue.investigate`
+##   `chart.buy` / `clue.buy` / `clue.investigate`
 ##
 ## ## 契约与约束
 ## - 纯展示：不查状态、不发命令；线索不输出目标港 / credibility / 搜索区。
 ## - 线索行由 `tavern.view.clues` 的等级裁剪字段渲染，购买与调查可用性完全由
 ##   `can_buy_clue` / `clue.can_investigate` 决定，按钮不自行猜规则。
+## - **海图区**（2026-10-26 航线解锁）：`tavern.view.chart_offers` 每行一个已发现港口，
+##   未解锁显示价格 + 购买按钮（`chart.buy {port_id}`），已解锁显示「已测绘」；
+##   按钮可用性完全由查询的 `can_buy` / `reason_key` 决定，页面不猜价格或门禁。
 ##
 ## ## 外观来源（外部贴图 + SNSkin）
 ## - 面板用 Theme 默认钢制 `Panel`（纹理化）；物价情报矩阵由 `SNIntelTable`
@@ -39,6 +42,7 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 		_loc("ui.hint.tavern", "在酒馆可以刷新物价情报，也可以购买 / 调查港口线索。")
 	))
 	add_child(_intel_panel(intel))
+	add_child(_chart_panel(vm))
 	add_child(_clue_panel(vm))
 
 
@@ -71,6 +75,58 @@ func _intel_panel(vm: Dictionary) -> Control:
 		content.add_child(_label(_loc("ui.tavern.no_tavern", "当前港口没有酒馆。"), 12, SNSkin.color("text.muted")))
 	content.add_child(_npc_panel(vm.get("npcs", [])))
 	return panel
+
+
+## 海图（航线解锁）区块：每个已发现港口一行——未解锁给价格与购买按钮，已解锁显示
+## 「已测绘」。价格与可用性来自 `tavern.view`，页面不重算。
+func _chart_panel(vm: Dictionary) -> Control:
+	var panel := _panel()
+	var content := _content(panel)
+	content.add_child(_label(_loc("ui.tavern.chart_title", "海图（航线解锁）"), 16, SNSkin.color("brass.highlight")))
+	content.add_child(_label(
+		_loc("ui.tavern.chart_hint", "购买海图可测绘当前港与已发现港口之间的航线；未测绘航线不能启航。"),
+		12,
+		SNSkin.color("text.muted")
+	))
+	var offers: Array = vm.get("chart_offers", []) if vm.get("chart_offers", []) is Array else []
+	if offers.is_empty():
+		content.add_child(_label(_loc("ui.tavern.chart_empty", "暂无可购买的海图。"), 12, SNSkin.color("text.muted")))
+		return panel
+	for raw_offer in offers:
+		if not (raw_offer is Dictionary):
+			continue
+		content.add_child(_chart_offer_row(raw_offer as Dictionary))
+	return panel
+
+
+func _chart_offer_row(offer: Dictionary) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var port_key := String(offer.get("name_key", offer.get("port_id", "")))
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_child(_label(_loc(port_key, String(offer.get("port_id", ""))), 14, SNSkin.color("text.light")))
+	if bool(offer.get("unlocked", false)):
+		info.add_child(_label(_loc("ui.tavern.chart_unlocked", "已测绘"), 12, SNSkin.color("state.success")))
+		row.add_child(info)
+		return row
+	info.add_child(_label(
+		_loc("ui.tavern.chart_cost", "海图价格：%d 金币") % int(offer.get("cost", 0)),
+		12,
+		SNSkin.color("state.water")
+	))
+	var reason_key := String(offer.get("reason_key", ""))
+	if not reason_key.is_empty():
+		info.add_child(_label(_loc(reason_key, ""), 12, SNSkin.color("state.danger")))
+	row.add_child(info)
+	var buy := Button.new()
+	buy.name = "BuyChartButton_%s" % String(offer.get("port_id", ""))
+	buy.text = _loc("ui.tavern.chart_buy", "购买海图")
+	buy.disabled = not bool(offer.get("can_buy", false))
+	var target_port_id := String(offer.get("port_id", ""))
+	buy.pressed.connect(func(): command_requested.emit(&"chart.buy", {"port_id": target_port_id}))
+	row.add_child(buy)
+	return row
 
 
 func _clue_panel(vm: Dictionary) -> Control:

@@ -45,6 +45,10 @@ const CAMPAIGN_SECTION_DEFAULTS := {
 		"visited_region_ids": [],
 		"discovered_site_ids": [],
 		"visited_port_ids": [],
+		## Charted (unlocked) route keys (`a|b`, sorted pair) — the runtime gate for
+		## sailing. The physical chart is a complete graph, but discovering a harbour
+		## never unlocks its routes (contracts / story / tavern charts do).
+		"unlocked_route_keys": [],
 	},
 	"codex": {
 		"discovered_ids": [],

@@ -18,6 +18,17 @@ extends LocationStage
 ## see `batch_stats()`. Repeated binds with the same ViewModel are no-ops, so
 ## the host can forward every application update without leaking nodes.
 ##
+## Terminal facade mode (`port.landmark_path` resolved and instantiable,
+## currently iron harbour): the grand harbour terminal replaces the whole
+## district, so only the terminal, the quay/water and `MINIMAL_STAGE_DECOR` are
+## mounted, plus `MINIMAL_STAGE_BOATS` so the water still reads as a working
+## harbour. The mode is entered only after the landmark GLB actually
+## instantiates: a missing/broken landmark falls back to the regular district
+## instead of an almost-empty harbour. The player hull is *not* hidden in facade
+## mode — it is the stage's primary subject — but it is scaled by
+## `MINIMAL_SHIP_SCALE` and moored on `MINIMAL_STAGE_BERTH_Z` so its waterline
+## and foam ring stay inside the frame; the ship funnel steam stays alive too.
+##
 ## `bind()` ViewModel (every field optional):
 ##   port.id               String  deterministic shoreline/street variation
 ##   port.size             String  "small" | "medium" | "large" -> 0.9/1.0/1.15
@@ -342,6 +353,37 @@ const TOWN_BOAT_SLOTS := [
 	{"slot": "rowboat", "pos": Vector3(-34.0, 0.02, 4.0), "yaw": 15.0},
 	{"slot": "rowboat", "pos": Vector3(33.0, 0.02, -2.0), "yaw": -10.0},
 ]
+## Terminal facade mode still needs a working harbour on the water: two rowboats
+## and a cargo lighter, spread either side of the terminal footprint and clear of
+## the player berth. They reuse the official town-kit slots
+## (`port.town_visuals.rowboat` / `cargo_lighter`), so a missing GLB simply
+## disappears and `_batch_static_meshes()` folds the mounted ones into the town
+## batches (they cost no extra draw when their material is shared).
+const MINIMAL_STAGE_BOATS := [
+	{"slot": "rowboat", "pos": Vector3(-25.0, 0.02, 3.0), "yaw": -25.0},
+	{"slot": "rowboat", "pos": Vector3(24.0, 0.02, 4.0), "yaw": 20.0},
+	{"slot": "cargo_lighter", "pos": Vector3(19.0, 0.02, 1.0), "yaw": -75.0},
+]
+## Terminal facade berth line: the regular district moors the hull 9 m off the
+## quay, but the terminal facade fills the frame from the quay back, so the hull
+## is pulled 3 m in (z 9 -> 6) to keep its waterline and foam ring on screen
+## instead of half-cut at the bottom edge.
+const MINIMAL_STAGE_BERTH_Z := 6.0
+## Station-relative X offset of the player berth. Every station keeps its
+## authored offset (centre - 13.5) so the hull stays inside that station's shot,
+## which matters on the market/supply pages: their 620 px dock panel covers the
+## right of the window, so the berth must stay west of the camera axis. The
+## shipyard is the exception and keeps its absolute dry-dock berth.
+const MINIMAL_STAGE_BERTH_OFFSET_X := -13.5
+const MINIMAL_SHIPYARD_BERTH_X := 14.5
+## Slight 3/4 bow toward the terminal: the same readable mooring angle as the
+## regular district (broadside would hide the hull's length behind the bow).
+const MINIMAL_SHIP_YAW_DEG := 20.0
+## The terminal is authored at 0.42 scale against true-scale hulls. In facade
+## mode the hull is scaled down so a 60 m ironclad reads as a ship moored beside
+## the terminal instead of a wall of iron across the shot; the foam ring and
+## `ship_foam_bounds()` follow the scaled world AABB automatically.
+const MINIMAL_SHIP_SCALE := 0.75
 ## New dock-side industry/market props (official kit keys only). Each list is
 ## cut to the density count above; positions avoid the facility slots on the
 ## quay and the authored town row on the plaza.
@@ -907,15 +949,38 @@ func station_camera_pose(station_id: String, framing: String = "stage") -> Dicti
 	}
 
 
-## The berth (world position) the player's hull takes at a station.
+## The berth (world position) the player's hull takes at a station. In terminal
+## facade mode the landmark replaces the district, so the hull moves onto the
+## facade berth line: the station's authored X offset and `MINIMAL_STAGE_BERTH_Z`
+## (the shipyard keeps its absolute dry-dock berth). Outside facade mode this is
+## simply the authored `STATIONS[station].ship`.
 func station_ship_position(station_id: String) -> Vector3:
 	var shot: Dictionary = STATIONS.get(station_id, STATIONS[DEFAULT_STATION])
-	return shot["ship"]
+	if not _minimal_stage:
+		return shot["ship"]
+	if station_id == "shipyard":
+		return Vector3(MINIMAL_SHIPYARD_BERTH_X, 0.0, MINIMAL_STAGE_BERTH_Z)
+	var center := float(shot.get("center", 0.0))
+	return Vector3(center + MINIMAL_STAGE_BERTH_OFFSET_X, 0.0, MINIMAL_STAGE_BERTH_Z)
 
 
 func station_ship_yaw(station_id: String) -> float:
+	if _minimal_stage:
+		return deg_to_rad(MINIMAL_SHIP_YAW_DEG)
 	var shot: Dictionary = STATIONS.get(station_id, STATIONS[DEFAULT_STATION])
 	return deg_to_rad(float(shot.get("ship_yaw", SHIP_YAW_DEG)))
+
+
+## Re-anchors the moored state (berth X/Z + yaw) to the station the stage is
+## serving. Called on focus and again on bind, because the layout mode decides
+## the berth line (`station_ship_position()`): switching a port between the
+## terminal facade and the regular district must move the hull to the matching
+## berth before it is rebuilt.
+func _sync_station_mooring() -> void:
+	var berth := station_ship_position(_station)
+	_ship_moor_x = berth.x
+	_ship_moor_z = berth.z
+	_ship_moor_yaw = station_ship_yaw(_station)
 
 
 ## Switches the camera and the hull to a station. Safe to call on every refresh:
@@ -930,9 +995,7 @@ func focus_station(station_id: String, framing: String = "stage", immediate: boo
 	var changed := station_id != _station or framing != _station_framing
 	_station = station_id
 	_station_framing = framing
-	_ship_moor_x = station_ship_position(station_id).x
-	_ship_moor_z = station_ship_position(station_id).z
-	_ship_moor_yaw = station_ship_yaw(station_id)
+	_sync_station_mooring()
 	if _camera == null:
 		return true
 	var pose := station_camera_pose(station_id, framing)
@@ -1080,7 +1143,25 @@ func _apply_ship_pose() -> void:
 	_ship_root.rotation = Vector3(0.0, _ship_yaw, sin(_time * BOB_SPEED * 0.75) * 0.004)
 	_sync_boat_foam()
 	if _ship_steam != null and is_instance_valid(_ship_steam):
-		_ship_steam.position.x = _ship_x - 2.5
+		_sync_ship_steam()
+
+
+## Places the ship funnel plume. In the regular district the plume is authored at
+## the harbour funnel position and only follows the hull in X (it keeps its
+## authored height while the hull sails between the adjacent stations). Terminal
+## facade mode re-berths and rescales the hull, so the plume is anchored on the
+## mounted hull's top and scaled with it, otherwise it would float away from the
+## smaller ship.
+func _sync_ship_steam() -> void:
+	if _minimal_stage and _ship_bounds.has_volume():
+		var hull_scale := MINIMAL_SHIP_SCALE
+		_ship_steam.position = Vector3(
+			_ship_x - 2.5 * hull_scale,
+			maxf(2.0, _ship_bounds.end.y - 0.4),
+			_ship_z - 5.0 * hull_scale
+		)
+		return
+	_ship_steam.position.x = _ship_x - 2.5
 
 
 # --- Voyage departure / arrival beat ---------------------------------------
@@ -1938,7 +2019,6 @@ func _has_stage_data(data: Dictionary) -> bool:
 
 func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary) -> void:
 	_port = port.duplicate(true)
-	_minimal_stage = not String(_port.get("landmark_path", "")).is_empty()
 	_size = String(_port.get("size", "medium")).to_lower()
 	if not SIZE_SCALE.has(_size):
 		_size = "medium"
@@ -1955,6 +2035,15 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	_banner_path = String(_port.get("banner_path", ""))
 	_apply_palette()
 	_clear_dynamic()
+	# `_clear_dynamic()` drops the cached atmosphere handles while the particle
+	# systems themselves stay mounted by `_ensure_static()`; re-resolve them so
+	# the ship funnel plume can follow the re-mounted hull.
+	_bind_atmosphere_refs()
+	# Terminal facade mode is entered only when the landmark GLB actually
+	# instantiates: a `landmark_path` whose file is missing/broken keeps the
+	# regular district instead of leaving an almost-empty harbour (ship included).
+	var landmark_visual := _create_landmark_visual()
+	_minimal_stage = landmark_visual != null
 	_town_visuals = town_value if town_value is Dictionary else {}
 	_facilities_root = Node3D.new()
 	_facilities_root.name = "Facilities"
@@ -1972,11 +2061,15 @@ func _apply_view_model(port: Dictionary, ship: Dictionary, root_data: Dictionary
 	_rebuild_fog_layers()
 	_rebuild_town()
 	_rebuild_facilities()
-	_rebuild_landmark()
+	_rebuild_landmark(landmark_visual)
 	_apply_minimal_visibility()
 	# Fold the freshly built static layers into draw batches before the player
 	# ship is mounted (the ship bobs and is deliberately not batched).
 	_batch_static_meshes()
+	# The layout mode decides the berth line (facade z 6 / district z 9) and the
+	# hull scale, so re-anchor the moored state to the current station before the
+	# hull is rebuilt; otherwise a port switch would mount it on the old berth.
+	_sync_station_mooring()
 	_rebuild_ship(ship)
 	# The rebuilt camera-facing layers (banner / sky card / painted layers) start
 	# at the reference framing; reapply the current station shift so a bind never
@@ -2129,21 +2222,64 @@ func _apply_fallback_visibility() -> void:
 		_shore_steam.emitting = use_fallback
 
 
-## Minimal facade mode hides the framing crane arm, painted skylines and steam
-## plumes; only the terminal, water/quay and a few small props remain.
+## Minimal facade mode hides the framing crane arm, painted skylines and the quay
+## / shore steam plumes; only the terminal, water/quay and a few small props
+## remain. The ship's funnel steam stays on purpose — it is the one sign of life
+## on an otherwise still terminal facade — and the hull is still mounted (see
+## `_rebuild_ship`). The else branch restores the district layers when a later
+## bind leaves facade mode (e.g. sailing to a regular port).
 func _apply_minimal_visibility() -> void:
 	if not _minimal_stage:
+		if _foreground_frame != null:
+			_foreground_frame.visible = true
+		if _atmosphere_root != null:
+			_atmosphere_root.visible = true
+			_set_steam_visible("QuaySteam", true)
+			# ShoreSteam only exists without a painted banner.
+			_set_steam_visible("ShoreSteam", not _has_backdrop)
+		if _fallback_sky_root != null:
+			var painted := _fallback_sky_root.get_node_or_null("PaintedBackdrop")
+			if painted != null:
+				painted.visible = true
 		return
 	if _foreground_frame != null:
 		_foreground_frame.visible = false
 	if _atmosphere_root != null:
-		_atmosphere_root.visible = false
+		# Keep the ship funnel plume: the hull is now the stage's primary subject.
+		_atmosphere_root.visible = true
+		_set_steam_visible("QuaySteam", false)
+		_set_steam_visible("ShoreSteam", false)
 	if _shore_shelf != null:
 		_shore_shelf.visible = false
 	if _fallback_sky_root != null:
 		for child in _fallback_sky_root.get_children():
 			if child.name == "PaintedBackdrop":
 				child.visible = false
+
+
+## Shows/hides one of the static atmosphere particle systems by node name. Kept
+## separate so facade-mode show/hide stays symmetric across binds.
+func _set_steam_visible(node_name: String, visible_now: bool) -> void:
+	if _atmosphere_root == null:
+		return
+	var particles := _atmosphere_root.get_node_or_null(node_name) as GPUParticles3D
+	if particles == null:
+		return
+	particles.visible = visible_now
+	particles.emitting = visible_now
+
+
+## Re-resolves the static atmosphere particle handles. `_clear_dynamic()` runs on
+## every bind and nulls the cached handles while `_add_atmosphere()` mounted the
+## systems only once, so without this the ship funnel plume could never follow
+## the re-mounted hull after the first bind.
+func _bind_atmosphere_refs() -> void:
+	_ship_steam = null
+	_shore_steam = null
+	if _atmosphere_root == null:
+		return
+	_ship_steam = _atmosphere_root.get_node_or_null("ShipSteam") as GPUParticles3D
+	_shore_steam = _atmosphere_root.get_node_or_null("ShoreSteam") as GPUParticles3D
 
 
 ## Deterministic two-depth silhouette bands (only when no banner is mounted).
@@ -2621,20 +2757,26 @@ func _build_filler(facility: String, root: Node3D) -> void:
 
 # --- Landmark ---------------------------------------------------------------
 
-func _rebuild_landmark() -> void:
-	var path := String(_port.get("landmark_path", ""))
-	if path.is_empty():
-		return
-	var visual := _instantiate_visual(path)
-	if visual == null:
+## Instantiates the optional single landmark model (`port.landmark_path`) before
+## the layout is rebuilt. The instantiated node is *not* parented yet: the caller
+## uses it to decide whether the stage can enter terminal facade mode, and only
+## then mounts it through `_rebuild_landmark()`. Returns null when the port has no
+## landmark or the GLB cannot be instantiated (missing/corrupt file), which makes
+## the stage fall back to the regular district instead of an almost-empty harbour.
+func _create_landmark_visual() -> Node3D:
+	return _instantiate_visual(String(_port.get("landmark_path", "")))
+
+
+func _rebuild_landmark(prepared_visual: Node3D = null) -> void:
+	if prepared_visual == null or not is_instance_valid(prepared_visual):
 		return
 	var landmark := Node3D.new()
 	landmark.name = "Landmark"
 	landmark.position = LANDMARK_POS
 	landmark.rotation_degrees = Vector3(0.0, LANDMARK_YAW, 0.0)
 	landmark.scale = Vector3.ONE * LANDMARK_SCALE
-	visual.position = Vector3.ZERO
-	landmark.add_child(visual)
+	prepared_visual.position = Vector3.ZERO
+	landmark.add_child(prepared_visual)
 	_content.add_child(landmark)
 	_landmark = landmark
 
@@ -2683,8 +2825,17 @@ func _rebuild_town() -> void:
 		"PlazaEdge"
 	)
 	if _minimal_stage:
-		# 主场景门面模式：只摆少量灯具/货箱/缆桩等小装饰。
+		# 主场景门面模式：只摆少量灯具/货箱/缆桩等小装饰，再加几艘小艇让水面
+		# 仍然读得出是「在用港口」，而不是一块空水面。
 		for spec in MINIMAL_STAGE_DECOR:
+			_add_town_prop(
+				String(spec["slot"]),
+				spec["pos"],
+				float(spec["yaw"]),
+				1.0,
+				false
+			)
+		for spec in MINIMAL_STAGE_BOATS:
 			_add_town_prop(
 				String(spec["slot"]),
 				spec["pos"],
@@ -3277,13 +3428,11 @@ func _transforms_aabb(mesh: Mesh, transforms: Array[Transform3D]) -> AABB:
 
 # --- L5 player ship ---------------------------------------------------------
 
+## Mounts the player's hull at the current station berth. Terminal facade mode is
+## *not* a reason to skip the hull (the hull is the reason the stage exists): the
+## only reason to end up without a ship is a missing/unloadable hull visual, which
+## the `visual == null` branch below handles by disabling the foam ring.
 func _rebuild_ship(ship: Dictionary) -> void:
-	if _minimal_stage:
-		# 主场景门面模式：不显示玩家船，把画面让给航站楼。
-		_disable_boat_foam()
-		_ship_root = null
-		_ship_assembly_report = {}
-		return
 	# Stage 5: the ship ViewModel may carry a resolved visual plan (hull + rig
 	# kit + weapons). Old ViewModels / saves have no `visual` block and keep the
 	# legacy single-hull path below.
@@ -3326,7 +3475,9 @@ func _rebuild_ship_from_plan(plan: Dictionary) -> bool:
 
 ## Creates the `PlayerShip` root at the current station berth (shared by the
 ## legacy and assembler paths). A rebuild keeps the current station: the hull is
-## rebuilt at its berth, not teleported back to the harbour reference shot.
+## rebuilt at its berth, not teleported back to the harbour reference shot. The
+## hull scale follows the layout mode (facade mode draws a smaller ship beside
+## the 0.42-scaled terminal), and the foam bounds are captured after this scale.
 func _place_player_ship_root() -> Node3D:
 	var root := Node3D.new()
 	root.name = "PlayerShip"
@@ -3335,10 +3486,15 @@ func _place_player_ship_root() -> Node3D:
 	_ship_yaw = _ship_moor_yaw
 	_ship_sailing = false
 	root.position = Vector3(_ship_moor_x, 0.0, _ship_moor_z)
-	root.scale = Vector3.ONE * SHIP_SCALE
+	root.scale = Vector3.ONE * _player_ship_scale()
 	root.rotation = Vector3(0.0, _ship_yaw, 0.0)
 	_content.add_child(root)
 	return root
+
+
+## Uniform scale applied to the player hull for the active layout mode.
+func _player_ship_scale() -> float:
+	return MINIMAL_SHIP_SCALE if _minimal_stage else SHIP_SCALE
 
 
 ## Foam bounds + rigid batching for a hull already mounted under `_ship_root`.

@@ -9,11 +9,11 @@
 | 符号 | 位置 |
 | --- | --- |
 | `OverviewScreen` | L1 |
-| `navigation_requested (signal)` | L18 |
-| `command_requested (signal)` | L19 |
-| `stage_toggle_requested (signal)` | L22 |
-| `detail_toggle_requested (signal)` | L25 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L30 |
+| `navigation_requested (signal)` | L20 |
+| `command_requested (signal)` | L21 |
+| `stage_toggle_requested (signal)` | L24 |
+| `detail_toggle_requested (signal)` | L27 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L32 |
 
 Port overview presentation. The shell supplies all resolved application data.
 
@@ -25,5 +25,7 @@ Port overview presentation. The shell supplies all resolved application data.
   state.success / state.danger），本文件无内联十六进制色与 StyleBoxFlat。
 - 尺寸约束：横幅 236 px、右列 `custom_minimum_size = (400, 0)`、左右 1.7:1、
   快捷入口 / 等待按钮文本与信号不变；不新增节点层级。
+- 反馈 #3：主线摘要的期限行在 `has_deadline=false` 时显示「引导委托 · 无期限」，
+  奖励文案（`reward_text`，由 Shell 生成）对无期限委托显示「完成 +N」。
 
 模块索引：[framework/ui](../../README.md)

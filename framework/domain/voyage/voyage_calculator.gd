@@ -1,8 +1,31 @@
 class_name VoyageCalculator
 extends RefCounted
-## Deterministic voyage preview: speed, duration, supplies, weight and risk
-## sources. Accident probability stays internal; only traceable sources are
-## exposed to the preview ViewModel.
+## @static-doc
+## 作用：纯计算航行预览：速度、耗时、煤水、准点、风险来源与可行性阻断。
+##
+## ## 契约与约束
+## - 有效航速 = 船体基础 × 锅炉系数 × 策略 × 重量系数 × 导航/岗位修正。
+## - 重量系数在 50% 载重内为 1.0，100% 为 0.65，超载继续线性下降并触发阻断。
+## - 煤/水需求基于耗时与单位时间消耗；旅客额外耗水。
+## - 预览返回 risk_score（内部）与 risk_sources（公开），不返回事故概率。
+## - 工资不足、补给不足、超重、无耐久都会进入 blockers。
+## - 反馈 #3：无期限主线委托（`ContractOps.is_untimed`）预览恒 `on_time=true`、`deadline=0`，
+##   完成奖励计入 `revenue_estimate`，确认弹窗不会误报「预计迟到」。
+## - 航线解锁（2026-10-26）：`MapOps.route_between` 只是「物理上有边」；`preview` 还要求
+##   `WorldOps.is_route_unlocked(state, origin, destination)`，否则返回
+##   `Result.fail("route_locked", "ui.error.route_locked")`。`voyage.start` 走同一个
+##   `preview`，因此命令层无法绕过；`clue.travel` 同样经 `VoyageService.start` 受门禁。
+##   `explore.start`（探索未知海域）不受此限制。
+##
+## ## 重点逻辑
+## ### `preview(context, destination_id, strategy_id)`
+## - 读取 strategy ContentDefinition，缺失或船只无效直接返回 Result.fail。
+## - 主线目的港匹配时附加 deadline/on_time/revenue_estimate（含 `timed`）。
+## - 所有计算只读；查询总线会额外克隆状态，保证无副作用。
+##
+## ### `weight_speed_factor(load_ratio)`
+## - 分段线性且连续：≤0.5 → 1.0；0.5–1.0 线性降至 0.65；>1.0 继续下降，最低 0.45。
+## @end-static-doc
 
 const PASSENGER_WATER_RATE := 0.06
 const RISK_LABEL_LOW := 0.12
@@ -20,6 +43,14 @@ static func preview(context, destination_id: String, strategy_id: String) -> Dic
 	var route := MapOps.route_between(state.world(), origin, destination_id)
 	if route.is_empty():
 		return Result.fail("no_route", "ui.error.no_route", {"destination": destination_id})
+	# 航线解锁（2026-10-26）：物理上任意两港可通航，但只有**已测绘**（unlocked）的
+	# 航线才能出航。解锁来源见 `docs/design/ROUTE_UNLOCK_SYSTEM.md`（委托自带海图 /
+	# 剧情效果 / 酒馆 `chart.buy`）；单纯发现港口不解锁。
+	if not WorldOps.is_route_unlocked(state, origin, destination_id):
+		return Result.fail("route_locked", "ui.error.route_locked", {
+			"destination": destination_id,
+			"origin": origin,
+		})
 	var strategy: ContentDefinition = hub.get_by_id(ContentTypes.BOILER_STRATEGY, strategy_id)
 	if strategy == null:
 		return Result.fail("unknown_strategy", "ui.error.unknown_strategy", {"strategy_id": strategy_id})
@@ -56,13 +87,16 @@ static func preview(context, destination_id: String, strategy_id: String) -> Dic
 	var on_time: Variant = null
 	var revenue_estimate := {}
 	if not contract.is_empty() and String(contract.get("destination", "")) == destination_id:
-		deadline = float(contract.get("deadline", 0.0))
-		on_time = arrival_time <= deadline
+		# 反馈 #3：无期限委托不会迟到；确认弹窗不要误报「预计迟到」，完成奖励照给。
+		var untimed := ContractOps.is_untimed(contract)
+		deadline = 0.0 if untimed else float(contract.get("deadline", 0.0))
+		on_time = true if untimed else arrival_time <= deadline
 		revenue_estimate = {
 			"base_money": int(contract.get("base_money", 0)),
 			"on_time_bonus": int(contract.get("on_time_bonus", 0)) if on_time else 0,
 			"deadline": deadline,
 			"on_time": on_time,
+			"timed": not untimed,
 		}
 
 	var risk := _risk_breakdown(

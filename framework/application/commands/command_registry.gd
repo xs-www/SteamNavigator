@@ -21,6 +21,7 @@ static func register_all(bus: CommandBus) -> void:
 	bus.register(&"clue.buy", Callable(ExploreCommands, "buy"))
 	bus.register(&"clue.investigate", Callable(ExploreCommands, "investigate"))
 	bus.register(&"clue.travel", Callable(ExploreCommands, "travel"))
+	bus.register(&"chart.buy", Callable(ChartCommands, "buy"))
 	bus.register(&"story.advance", Callable(StoryCommands, "advance"))
 	bus.register(&"story.skip", Callable(StoryCommands, "skip"))
 	bus.register(&"story.observe", Callable(StoryCommands, "observe"))

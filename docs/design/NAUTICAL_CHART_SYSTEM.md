@@ -92,9 +92,10 @@ WorldMap (一次性生成，seed 可复现)
   真的生成一张世界，断言港口数 = 15、全部锚定海岸线（< 2 单位）、陆地占比 < 0.45。
   配套 `test_world_below_port_floor_is_rejected` 断言 10 港的世界必须被拒。
 
-> 边界：当前 MVP 的可玩地图仍走 `MapGenerator` 的 4–5 港分支网络（`core:map_config/standard`），
-> 不经过 `WorldGenerator` 的 15 港下限；坐标空间世界（正式版口径 + 现有对局的孪生世界）
-> 才走这条校验。真实 run 直接跑 15–20 港的坐标空间世界属于阶段 3 之后的接入工作，见 `todo.md`。
+> 边界（2026-10-26 更新）：正式版「15–20 港广域海图」仍是 `formal_profile` 的验收骨架；
+> **当前可玩战役只跑 5 港坐标世界**（`WorldGenerator.generate_chart`，每块陆地 1 港，
+> `core:world_profile/default_world.port_count = 5`）。旧抽象分支网络 `MapGenerator` 已退出
+> 战役链路。广域海图（更多陆地 / 每陆多港）属于后续切片，见 `todo.md`。
 
 ### 2.3 区域分层
 
@@ -147,26 +148,92 @@ cell_size = min_vision_radius / 4
 Route (航线 = 两个港口之间的可航行路径)
 ├── from_port_id, to_port_id
 ├── bezier_path: PackedVector2Array        # 贝塞尔曲线路径
-├── distance: float                        # 路径总长度
-├── travel_hours: float                    # 按船速计算
-├── risk_level: float                      # 基础风险等级（离岸距离相关）
+├── distance: float                        # 该绘制路径的折线长度（唯一权威里程，见 §4.1.1）
+├── travel_hours: float                    # 按船速计算（查询层推导，不入世界表）
+├── risk_level: float                      # 基础风险等级（离岸距离相关，入世界表为 base_risk）
 └── is_explored: bool                      # 是否已被玩家走过
 ```
 
-**实现状态**：`WorldMap.edges[]` 已落地（world schema 1.1），每条连通边在**生成期**
-算好 `{from, to, distance, path}` 并随世界存档；查询与 UI 只读该表。
-`path` 以扁平整数组（`[x0,y0,x1,y1,…]`，坐标保留 2 位小数）存储以压小存档。
+**实现状态**：`WorldMap.edges[]` 是**唯一世界的拓扑表**（world schema 1.2），每条边在
+**生成期**算好 `{from, to, distance, base_risk, path}` 并随世界存档；`GameState.world()` 的
+`routes` 由这张表派生（`ChartWorldProjection.from_chart`），查询与 UI 只读同一张表。
+`path` 以扁平整数组（`[x0,y0,x1,y1,…]`，坐标保留 2 位小数）存储以压小存档；
+`base_risk` 按 `route_templates.risk_range` 用命名流为每条边掷出，是这个世界的航线风险。
 
-`travel_hours` / `risk_level` **不进世界表**（它们是船况与航行规则的函数，同一张世界表
+**航线解锁（2026-10-26）**：海图**物理上是完全图**（任意两港之间都有边），但玩家能否
+出航由运行时名册 `campaign_world.unlocked_route_keys` 决定（委托自带海图 / 剧情效果 /
+酒馆 `chart.buy` 三种来源；发现港口不解锁）。`sea_chart.view` 的每条 route 带
+`unlocked: bool`；未解锁但两端已发现的边仍输出，供海图画面板画「未测绘」并禁用启航。
+完整规则见 [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)。
+
+`travel_hours` / `risk_level` 档位**不进世界表**（它们是船况与航行规则的函数，同一张世界表
 配不同船会得出不同值），改由查询层 `VoyageEstimator` 在 `sea_chart.view` 输出时推导：
 `duration = distance / (船速 × 策略 speed_mul × 载重系数)`，煤/水消耗与风险档位与
 `VoyageCalculator.preview` 用同一套常量与同一套钳位，因此海图面板与出航预览不会给出
-两个数字。距离取抽象地图航线距离（`distance_source="voyage"`）；孪生世界 MST 图上
-不存在对应抽象边时退回海图距离，并把风险标记为未知（`risk_level = -1`）而不是 0。
+两个数字。距离口径见下面 §4.1.1。
 
-> 换航线算法的约定：算法只在**生成期写入**这一张表。只要
-> `{from, to, distance, path}` 契约不变，海图查询、渲染与将来的航行演出都不需要改；
-> 缺 `edges` 的旧存档由消费方回退现场计算（`sea_chart.view` 的 `_compute_routes`）。
+### 4.1.1 海图唯一真相：单一世界、单一拓扑、单一距离（2026-10-26）
+
+**整个游戏只有一个世界，就是海图。** 不存在「抽象对局地图」与「坐标孪生世界」两套数据：
+
+| 数据 | 角色 |
+| --- | --- |
+| `state.data["world_map"]`（`WorldMap`） | **唯一世界与唯一拓扑**：陆地、港口坐标/内容、**完全图连通图**、每条边的绘制路径、距离与基础风险 |
+| `GameState.world().ports / routes` | 由海图派生（`ChartWorldProjection.from_chart`）的**玩法视图**：MapOps / 委托 / 航行 / BFS / 探索读它，形状与历史世界字典兼容，但不再拥有自己的拓扑 |
+| `campaign_world.unlocked_route_keys` | **可出航性**：玩家已测绘的航线名册（规范 `a|b` 键）。物理完全图不代表玩家知道怎么走（2026-10-26，见 [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)） |
+
+开局链路（`CampaignFactory.create_campaign`）：
+
+1. `MapGenerationSpec` 只提供**内容蓝图**（港口数量 / 原型 / 名称 / 起始港约束 / 必需设施
+   与风险范围），拓扑不再由内容或旧抽象生成器决定。
+2. `WorldGenerator.generate_chart` 一次生成唯一世界：
+   - 5 块陆地布局（`map_config.twin_world_size` 缩放），每陆 1 港；
+   - **物理拓扑 = 完全图**（`RouteCalculator.build_complete_connectivity`）：任意两港之间
+     都有一条航线（5 港 = 10 条），不再有 MST / 补边 / `edge_density` 预算；
+   - 拓扑完成后按 BFS 距离分配港口 archetype，保证 `port.shipyard` / `port.intel` 等必需
+     设施落在 `required_facility_max_edges` 内；
+   - 逐对 `RouteCalculator.calculate_route` 算绘制贝塞尔折线，**`distance` = 折线长度**
+     （坐标按 `WorldMap.PATH_DECIMALS = 2` 取整后再量，两位小数）；**`base_risk`** 按
+     `route_templates.risk_range` 用 `STREAM_MAP_GENERATION / "route_risk:<pair>"` 命名流
+     掷出；任一对算不出曲线的时本次生成失败重试，不做直线兜底（完全图必须每对可航行）。
+3. `ChartWorldProjection.from_chart` 把同一张海图投影成 `GameState.world()`：
+   ports（含 archetype / facilities / tags / name_key / x/y / 发现状态）与 routes
+   （`{a, b, distance, base_risk}`）逐项来自海图；之后 `RouteAssembler` 只给这些边挂
+   `template` 元数据，不改几何与风险。
+4. 新局 `unlocked_route_keys` 为空；`ContractOps.generate_offer`（主线 / 普通）、
+   `StoryService`（教学委托 / `unlock_route` 效果）、`chart.buy` 在此后按各自时机解锁航线。
+
+因此：
+
+- `sea_chart.view` 每条航线只有**一个距离字段** `distance`（= 绘制路径折线长度 =
+  `WorldMap.edges[].distance` = `GameState.world().routes[].distance` =
+  `voyage.preview.distance`），风险直接取同一条边的 `base_risk`；另带 `unlocked` 标记。
+  上一轮的 `chart_distance` / `distance_source` / `sailable=false` 双口径补丁已全部删除。
+- 船演出沿 `WorldMap.edges[].path`（`_presentation_route_path`）行进，与绘制弧线、标注
+  里程、实际扣煤/耗时完全同源。
+- 逐项一致性（distance / duration / coal / water / risk）与「世界 routes == 海图边集合」
+  由 `framework/tests/cases/test_world_unity.gd` 锁定；解锁名册 / 三大来源 / 航行门禁由
+  `framework/tests/cases/test_route_unlock.gd` 锁定。
+
+实测（2026-10-26，固定种子 4242，证据探针输出；**完全图 5 港 10 边**）：
+
+| 港口对 | 绘制路径折线长度 = distance | 折线点数 | base_risk | `voyage.preview.distance` |
+| --- | --- | --- | --- | --- |
+| `port_0 → port_1` | **146.43** | 281（绕岛） | 0.1233 | 146.43 |
+| `port_0 → port_4` | **26.59** | 21（直线） | 0.0663 | 26.59 |
+| `port_1 → port_2` | **67.46** | 21（直线） | 0.0475 | 67.46 |
+
+同 seed 的成图：5 港 10 边（每港度数 4），起点港（`port_0` = iron harbor，`port.hub` 首个
+匹配原型）；同 seed 两次开局逐字段相同，不同 seed 因海岸抖动 / 剩余 archetype 分配 / 风险
+不同而不同。里程尺度由几何决定（约 25–150 海里，含绕岛），
+`route_templates.distance_range` 与旧抽象生成器的随机 90–220 里程**不再影响世界**；教程
+`tutorial_express` 的固定 6h 下限因此改为与距离严格成比例（`max(0.5, distance / 13.5)`），
+保住「标准迟到 / 极速准时」的教学契约（见 `FormulaRegistry`）。
+
+> 旧抽象拓扑生成器 `MapGenerator` 已退出战役链路（保留文件做死代码 / 历史参考）；它的
+> `distance_range` / `port_count_range` / `edge_count_range` / `route_risk_range` 语义已由
+> `MapGenerationSpec` 的蓝图字段接替。开发期不做旧存档 / 旧拓扑兼容：无 `world_map` 的
+> 旧档海图显示无数据提示，按需重开新局。
 
 ### 4.2 路径计算
 
@@ -177,7 +244,7 @@ Route (航线 = 两个港口之间的可航行路径)
 
 ### 4.3 「航线」语义澄清
 
-严格来说不存在「航线」这个实体——玩家只是「知道这两个港口是连通的」。海图演出需要一条可视化路径让船舶 icon 沿之移动，这就是 `Route.bezier_path`。已探索的港口之间总是可以安全往返（玩家已知道路），未探索区域仍充满风险。
+严格来说不存在「航线」这个实体——玩家只是「知道这两个港口是连通的」。海图演出需要一条可视化路径让船舶 icon 沿之移动，这就是 `Route.bezier_path`。2026-10-26 起，「知道连通」被拆成两层：物理上任意两港都有边（完全图），但只有**已测绘**（`unlocked_route_keys`）的 pair 才能出航；已测绘的航线可以安全往返，未测绘的航线画成虚线且不可启航（在酒馆购买海图解锁，见 [ROUTE_UNLOCK_SYSTEM.md](ROUTE_UNLOCK_SYSTEM.md)）。
 
 ## 5. 探索系统
 
@@ -428,6 +495,8 @@ PortStage.VOYAGE_BEAT_SECONDS`，有测试守护），云层才不会在镜头�
 - 当前船只位置（仅在航行中显示）
 - 线索可视化（按 §7.2 分级显示）
 - 战争迷雾（黑雾/灰雾/可见三态）
+- **已测绘航线**（实线，可启航）与**两端已发现但未测绘的航线**（虚线，面板禁用启航并
+  提示「未测绘航线：在酒馆购买海图解锁」；见 §4.1 / ROUTE_UNLOCK_SYSTEM.md）
 
 不显示：
 - 海洋实时信息（事件、NPC 位置）
@@ -466,7 +535,8 @@ tag 解析）+ 取消 / 启航；确认后直接发 `voyage.start` / `explore.st
 
 ### 10.2 替换现有系统
 
-- `MapGenerator`：从抽象图模型升级为坐标空间世界生成器
+- `MapGenerator`（抽象图模型）：**已退出战役链路（2026-10-26）**，由
+  `WorldGenerator.generate_chart`（坐标空间唯一世界）取代；文件保留但无调用。
 - `MapView`：从全连接图查询升级为海图查询（迷雾状态 + 已知港口）
 - 航行状态机：从「瞬间完成」升级为演出化状态机
 
@@ -479,6 +549,7 @@ GameState
 │   ├── discovered_ports: Set[port_id]
 │   ├── discovered_islands: Set[island_id]
 │   ├── explored_coast_cells: Set[(gx, gy)]
+│   ├── unlocked_route_keys: Set["a|b"]   # 已测绘航线（2026-10-26，唯一可出航真源）
 │   └── known_connectivity: Set[(from, to)]
 ├── data (新增)
 │   ├── active_clues: Clue[]

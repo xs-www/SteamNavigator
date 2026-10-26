@@ -9,13 +9,18 @@
 | 符号 | 位置 |
 | --- | --- |
 | `SNDropZone` | L1 |
-| `dropped (signal)` | L30 |
-| `DEFAULT_STYLE_ID` | L32 |
-| `HIGHLIGHT_STYLE_ID` | L33 |
-| `DEFAULT_PADDING` | L34 |
-| `configure(accepted_kinds: Array, style_id: String = DEFAULT_STYLE_ID) -> void` | L51 |
-| `content_root() -> VBoxContainer` | L61 |
-| `is_highlighted() -> bool` | L73 |
+| `dropped (signal)` | L40 |
+| `DEFAULT_STYLE_ID` | L42 |
+| `HIGHLIGHT_STYLE_ID` | L43 |
+| `DEFAULT_PADDING` | L44 |
+| `configure(accepted_kinds: Array, style_id: String = DEFAULT_STYLE_ID) -> void` | L64 |
+| `set_offer(data: Dictionary) -> void` | L76 |
+| `clear_offer() -> void` | L84 |
+| `offer_active() -> bool` | L91 |
+| `offer_payload() -> Dictionary` | L96 |
+| `try_click_offer() -> bool` | L102 |
+| `content_root() -> VBoxContainer` | L112 |
+| `is_highlighted() -> bool` | L124 |
 
 Shared drop target for the icon-direct market interaction.
 
@@ -39,5 +44,15 @@ maps the dropped payload to the trade or warehouse command.
   Godot 只把拖拽结束通知发给拖拽来源，所以高亮期间用 `_process` 轮询
   `Viewport.gui_is_dragging()`，拖到空处释放也不会留下残留高亮。
 - 子内容统一挂到 `content_root()` 返回的 VBox，落点自身只保留一个子节点。
+
+## 拿起 / 放下（点击落点，feedback #1）
+- `set_offer(data)` / `clear_offer()` / `offer_active()` / `offer_payload()`：市场
+  「拿起」手势的落点状态。`set_offer` 只接受 `accept_kinds` 里的载荷（不匹配直接
+  清空），有 offer 时落点用皮肤纹理高亮，玩家点一下落点（左键 release）就
+  `try_click_offer()` → 发出 `dropped`。原生拖拽仍是兼容手势，两条路径共用
+  `dropped` 契约。
+- `_gui_input` 里先 `accept_event()` 再发 `dropped`：命令成功会触发 Shell 整页重建，
+  落点节点可能已被移出场景树，事后再 `accept_event()` 会拿不到 Viewport。
+- `_process` 只复位**拖拽**高亮，绝不清 offer；offer 由宿主页面在携带结束时清空。
 
 模块索引：[framework/ui](../README.md)

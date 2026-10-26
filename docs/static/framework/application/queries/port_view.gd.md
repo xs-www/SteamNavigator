@@ -9,13 +9,13 @@
 | 符号 | 位置 |
 | --- | --- |
 | `PortViewQuery` | L1 |
-| `execute(_params: Dictionary, context) -> Dictionary` | L4 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L30 |
 
 ## 契约与约束
-
 - 所有数值只读复制；市场行同时给出库存、单价、持有、可售、buyable、持仓均价与价格历史。
 - 市场行的 recent_prices 与 trend_percent 只来自真实 price_history；样本不足时 sparkline 不绘制折线。
-- 目的地只列当前港的相邻航线，标记未知设施与风险。
+- 目的地只列当前港**已解锁**的相邻航线（2026-10-26 航线解锁；物理海图是完全图，
+  但未测绘航线不进入目的地列表），标记未知设施与风险。
 - 委托 ViewModel 提供目的港名称键、剩余期限、预计航程、风险和说明键；风险/航程由查询层计算，卡片不调用航行公式。
 - 委托区额外暴露 active_limit/active_count/normal_holds（普通委托持有上限）与 main_chain_complete（主线全完成）。
 - 船只 ViewModel 的 cargo_cost_basis 与 average_cost 来自 ShipOps 的成本口径；额外暴露 transit_modules/transit_weight。
@@ -27,7 +27,11 @@
 - `current_port` 额外给出 `archetype_id` 与 `size`（默认 medium），供 2D/2.5D 舞台选择港口构图与设施尺度。
 - `ship.hull_model_key` 取船体定义的 `information.model`；`ship.hull_model_path` 经 `context.assets.resolve()`（`_asset_path`）转成物理路径，供 PortStage 直接加载内容模组 GLB；缺资产时为空串。
 - 切片 5：`ship.visual` = `ShipVisualPlan.resolve(hub, context.assets, ship)`，输出 hull / `rig_plan` / `weapon_loadout` 的物理路径供 PortStage 运行时装配；旧存档 / 旧调用方没有该键时舞台走原单船体路径。
-- `current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从 `core:port_template/*` 的 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。
+- `current_port.diorama` 读取 world 里持久化的 `diorama` 块；旧存档/world 快照没有该块时按 `archetype_id` 从已注册的 `port_templates` 定义 `data.diorama` 回填（`kit/town/facility_visuals/palette/landmark`）。
 - `current_port.town_visuals` 由 `_resolved_town_visuals(context, source_mod, diorama)` 解析：把 `diorama.town` 的 slot → `model.prop.*` 资产键转成 `asset://<mod>/<key>` 并 `assets.resolve()` 成物理路径；缺键省略，PortStage 对缺失 slot 回退 blockout。
+- 反馈 #2：委托池只露出目的港已发现的普通委托（`_discovered_offers`）；池仍是 3 条实例，
+  目的港被发现后同一条自动重新出现；主线 offer 不过滤（生成时已揭示目的地，旧存档引导也不会被隐藏）。
+- 反馈 #3：无期限委托输出 `has_deadline=false`、`timed=false`、`remaining_hours=-1`、
+  `remaining_label=""`、`deadline_label="—"`；旧存档 main_03+ 实例由 `ContractOps.is_untimed` 覆盖。
 
 模块索引：[framework/application](../README.md)

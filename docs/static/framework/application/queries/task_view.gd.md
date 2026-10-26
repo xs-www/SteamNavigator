@@ -9,18 +9,18 @@
 | 符号 | 位置 |
 | --- | --- |
 | `TaskViewQuery` | L1 |
-| `KIND_STORY` | L26 |
-| `KIND_QUEST` | L27 |
-| `KIND_MAIN` | L28 |
-| `KIND_MAIN_OFFER` | L29 |
-| `KIND_CONTRACT` | L30 |
-| `STEP_OBJECTIVE` | L32 |
-| `STEP_ACCEPT` | L33 |
-| `STEP_LOAD` | L34 |
-| `STEP_PASSENGER` | L35 |
-| `STEP_SAIL` | L36 |
-| `STEP_DELIVER` | L37 |
-| `execute(_params: Dictionary, context) -> Dictionary` | L40 |
+| `KIND_STORY` | L28 |
+| `KIND_QUEST` | L29 |
+| `KIND_MAIN` | L30 |
+| `KIND_MAIN_OFFER` | L31 |
+| `KIND_CONTRACT` | L32 |
+| `STEP_OBJECTIVE` | L34 |
+| `STEP_ACCEPT` | L35 |
+| `STEP_LOAD` | L36 |
+| `STEP_PASSENGER` | L37 |
+| `STEP_SAIL` | L38 |
+| `STEP_DELIVER` | L39 |
+| `execute(_params: Dictionary, context) -> Dictionary` | L42 |
 
 当前目标、内容 Quest 实例、主线委托、已接普通委托聚合成统一的 Task 列表，并把委托
 拆成「备货 / 接客 / 前往 / 抵达交付」步骤、把 Quest 拆成当前 stage 的 objective 步骤，
@@ -41,5 +41,7 @@
   `kind / done / progress / target / 名称 key`。
 - 排序：剧情 300 > Quest 250 > 主线 200 > 待接主线 150 > 普通委托 100；同优先级先比
   Quest 的 `tracking.priority`（降序），再按 id。
+- 反馈 #3：无期限委托的 `deadline` 输出 0、`remaining_hours` 输出 -1（现有 -1 = 无期限约定），
+  复用 `ContractOps.is_untimed`（含旧存档 main_03+ 覆盖）。
 
 模块索引：[framework/application](../README.md)

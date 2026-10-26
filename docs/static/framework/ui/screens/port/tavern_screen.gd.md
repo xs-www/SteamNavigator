@@ -9,21 +9,24 @@
 | 符号 | 位置 |
 | --- | --- |
 | `TavernScreen` | L1 |
-| `command_requested (signal)` | L26 |
-| `INTEL_TABLE_SCRIPT` | L28 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L32 |
+| `command_requested (signal)` | L29 |
+| `INTEL_TABLE_SCRIPT` | L31 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L35 |
 
-NPC 动向，下半部分列出港口线索（购买线索、调查线索），把「物价情报 + 港口线索」
-合并到同一个设施入口。
+NPC 动向，中部是**海图（航线解锁）**，下半部分列出港口线索（购买线索、调查线索），
+把「物价情报 + 海图 + 港口线索」合并到同一个设施入口。
 
 - 关键依赖：`tavern.view` 查询（Shell 传入 ViewModel）、`sn_intel_table`
 - 信号：`command_requested(command, params)` → Shell 执行 `intel.refresh` /
-  `clue.buy` / `clue.investigate`
+  `chart.buy` / `clue.buy` / `clue.investigate`
 
 ## 契约与约束
 - 纯展示：不查状态、不发命令；线索不输出目标港 / credibility / 搜索区。
 - 线索行由 `tavern.view.clues` 的等级裁剪字段渲染，购买与调查可用性完全由
   `can_buy_clue` / `clue.can_investigate` 决定，按钮不自行猜规则。
+- **海图区**（2026-10-26 航线解锁）：`tavern.view.chart_offers` 每行一个已发现港口，
+  未解锁显示价格 + 购买按钮（`chart.buy {port_id}`），已解锁显示「已测绘」；
+  按钮可用性完全由查询的 `can_buy` / `reason_key` 决定，页面不猜价格或门禁。
 
 ## 外观来源（外部贴图 + SNSkin）
 - 面板用 Theme 默认钢制 `Panel`（纹理化）；物价情报矩阵由 `SNIntelTable`

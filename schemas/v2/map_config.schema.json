@@ -149,6 +149,11 @@
           "minimum": 0,
           "maximum": 1
         },
+        "chart_cost": {
+          "description": "Price in gold of one nautical chart bought at a tavern; it unlocks the route between the current harbour and a discovered harbour (ROUTE_UNLOCK_SYSTEM.md).",
+          "type": "number",
+          "minimum": 0
+        },
         "default_starting_scenario": {
           "$ref": "common.schema.json#/$defs/id_ref"
         },

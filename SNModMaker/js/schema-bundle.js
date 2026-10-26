@@ -1681,6 +1681,23 @@
               "type": "string",
               "minLength": 1
             },
+            "focus": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "target"
+              ],
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "text_key": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
             "effects": {
               "type": "array",
               "items": {
@@ -3986,6 +4003,11 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "chart_cost": {
+              "description": "Price in gold of one nautical chart bought at a tavern; it unlocks the route between the current harbour and a discovered harbour (ROUTE_UNLOCK_SYSTEM.md).",
+              "type": "number",
+              "minimum": 0
             },
             "default_starting_scenario": {
               "$ref": "common.schema.json#/$defs/id_ref"
@@ -7350,11 +7372,6 @@
             },
             "weather_profile": {
               "$ref": "common.schema.json#/$defs/id_ref"
-            },
-            "edge_density": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 1
             },
             "start_region_tags": {
               "$ref": "common.schema.json#/$defs/tag_list"

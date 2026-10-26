@@ -257,6 +257,23 @@
           "type": "string",
           "minLength": 1
         },
+        "focus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target"
+          ],
+          "properties": {
+            "target": {
+              "type": "string",
+              "minLength": 1
+            },
+            "text_key": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
         "effects": {
           "type": "array",
           "items": {

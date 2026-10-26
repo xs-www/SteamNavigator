@@ -110,6 +110,11 @@ Step = {
 
 `current_step` = 第一个未完成步骤；全部完成时 `-1`（通常任务会被结算移除）。
 
+> **无期限委托（反馈 #3，2026-10）**：`contracts.main` / `main_offer` 经
+> `ContractOps.is_untimed` 判定为无期限时（`deadline <= 0`，或旧存档 `kind=main` 且
+> `sequence >= 3`），Task 的 `deadline` 输出 0、`remaining_hours` 输出 `-1`（约定 = 无期限），
+> UI 据此不渲染「剩余 N 小时」。普通委托始终限时。
+
 ### 3.4 排序与 HUD
 
 - 排序：`priority` 降序（story 300 > quest 250 > main 200 > main_offer 150 > contract 100），

@@ -2,36 +2,38 @@ class_name MapGenerationSpec
 extends RefCounted
 ## @static-doc
 ## 作用：把 Content Schema 2.0 的 `world_profiles` / `map_configs` / `route_templates`
-## 适配成 `MapGenerator.generate_spec()` 的输入字典，让 v2 战役复用 1.0 抽象海图生成器
-## 而无需给生成器塞一个已退役的 map-profile 定义。
+## 适配成世界生成的**内容蓝图**（港口数量 / 原型 / 名称 / 起始约束 / 风险范围）。
+## 2026-10-26 起该蓝图喂给 `WorldGenerator.generate_chart`（海图即唯一世界），不再喂给
+## 已退役的抽象拓扑生成器 `MapGenerator`。
 ##
 ## ## 契约与约束
 ## - 输出键沿用历史生成字段：`port_count_range / archetypes /
 ##   port_name_keys / start_archetype_tags / required_facility_tags /
-##   required_facility_max_edges / edge_count_range / distance_range / route_risk_range`，
-##   因此 `MapGenerator` 的 `_build_graph` / `_try_generate` 逻辑与旧路径完全一致。
+##   required_facility_max_edges / distance_range / route_risk_range`；
+##   `CampaignFactory._chart_world_profile` 再补上坐标布局（world size / landmasses /
+##   port slots）后交给海图生成器。
+## - **拓扑不在蓝图里**（2026-10-26「任意两港可通航 + 航线需解锁」）：可玩世界恒为完全图，
+##   生成器不再读边预算，`world_profiles.edge_density` / `edge_count_range` 已退役。
 ## - `port_count_range` 固定为 `[port_count, port_count]`（v2 的 world profile 是目标值，
-##   不是区间）。D8：Phase B 首个切片孪生世界固定 5 陆地布局，`port_count` 超过
+##   不是区间）。D8：当前海图布局固定 5 陆地（每陆 1 港），`port_count` 超过
 ##   `MAX_PORTS_THIS_SLICE` 时 clamp 并 `push_warning`（B4 core 的 port_count 为 5）。
-## - `edge_density` 存在时派生 `edge_count_range`：最小边 = 港口数（生成树 N-1 加一条
-##   分叉边，保证"至少一个环"硬约束），最多再加 `round(density × 3)` 条；缺失时**不写**
-##   该键，交由 `MapGenerator._build_graph` 的 1.0 默认逻辑 `[port_count, port_count+2]`。
-## - `distance_range` / `route_risk_range` 聚合全部 active `route_templates` 的并集
-##   （下界取最小、上界取最大）；没有可用模板时不写该键，沿用 1.0 默认值。
+## - `route_risk_range` 聚合全部 active `route_templates` 的 `risk_range` 并集（下界取
+##   最小、上界取最大），海图生成器据此为每条边掷确定性 `base_risk`。`distance_range`
+##   仍被聚合输出，但**不再影响世界**：海图距离由绘制路径几何决定（见
+##   NAUTICAL_CHART_SYSTEM §4.1.1），该字段只作 route_template 元数据。
 ## - `start_archetype_tags`：`start_profile.starting_port_tags` 非空时优先（更具体的战役
 ##   起始港约束），否则用 `map_config.start_archetype_tags`。
 ## - 本适配器不读 GameState、不生成世界、不使用 RNG；纯内容 → 纯数据的映射。
 ## @end-static-doc
 
-## Phase B 首个切片的可玩港口上限（孪生海图世界固定 5 陆地布局，见契约 D8）。
+## Phase B 首个切片的可玩港口上限（海图世界固定 5 块陆地 × 每陆 1 港，见契约 D8）。
 const MAX_PORTS_THIS_SLICE := 5
-## `edge_density` = 1.0 时在最小边数之上追加的分叉边数量。
-const EDGE_DENSITY_MAX_EXTRA := 3
 
 
-## Builds the `MapGenerator.generate_spec()` input. `route_templates` may be in
-## registry order: it is re-sorted by id before aggregation so the same seed and
-## content yield the same bounds regardless of mod load order.
+## Builds the content blueprint consumed by `CampaignFactory._chart_world_profile` →
+## `WorldGenerator.generate_chart`. `route_templates` may be in registry order: it is
+## re-sorted by id before aggregation so the same seed and content yield the same bounds
+## regardless of mod load order.
 static func build(
 	world_profile: ContentDefinition,
 	map_config: ContentDefinition,
@@ -63,10 +65,6 @@ static func build(
 			start_tags = profile_tags
 	spec["start_archetype_tags"] = start_tags
 
-	var edge_range := _edge_count_range(port_count, world_data)
-	if not edge_range.is_empty():
-		spec["edge_count_range"] = edge_range
-
 	var route_bounds := _aggregate_route_bounds(route_templates)
 	if route_bounds.has("distance_range"):
 		spec["distance_range"] = route_bounds["distance_range"]
@@ -75,21 +73,9 @@ static func build(
 	return spec
 
 
-## Derives the abstract map's edge budget from `world_profile.edge_density`.
-## An empty array means "leave the key out and let MapGenerator use its 1.0
-## default". A graph needs N-1 tree edges plus at least one extra edge (cycle).
-static func _edge_count_range(port_count: int, world_data: Dictionary) -> Array:
-	if not world_data.has("edge_density"):
-		return []
-	var density := clampf(float(world_data.get("edge_density", 1.0)), 0.0, 1.0)
-	var minimum := maxi(port_count, 2)
-	var maximum := minimum + int(round(density * float(EDGE_DENSITY_MAX_EXTRA)))
-	return [minimum, maximum]
-
-
-## Unions every active route template's distance / risk bounds so the abstract
-## map can roll values any template can represent. Missing / malformed ranges are
-## skipped; a completely empty result means the caller should use 1.0 defaults.
+## Unions every active route template's distance / risk bounds so the chart can roll
+## values any template can represent. Missing / malformed ranges are skipped; a
+## completely empty result means the caller should use its own defaults.
 static func _aggregate_route_bounds(route_templates: Array) -> Dictionary:
 	var sorted := CampaignAssembly.sorted_by_id(route_templates)
 	var distance_min := INF

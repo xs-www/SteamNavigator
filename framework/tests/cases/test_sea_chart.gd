@@ -4,7 +4,8 @@ class_name TestSeaChart
 ## 作用：海图系统的无头测试——阶段 2 验证 `sea_chart.view` 的输出结构与陆地/港口/
 ## 航线/迷雾数据；阶段 4.1 追加线索可视化（视图几何、点击命中、面板线索区块、
 ## 未知终点）和整页信号转发；阶段 4.4 追加货物行情线索面板（类型 / 港口 / 分级行情 /
-## 时效 /「前往该港」）与「货物线索不画海图几何」。
+## 时效 /「前往该港」）与「货物线索不画海图几何」；dev.3 反馈 #2 追加航线距离口径
+## （海图 `distance` = 边绘制折线长度 = `voyage.preview` 计费距离，单一字段无第二把尺子）。
 ##
 ## ## 契约与约束
 ## - 每个用例通过 `bootstrap_core()` 获得真实 Core 注册表，再用内联 `TEST_PROFILE`
@@ -200,6 +201,10 @@ func test_sea_chart_routes_carry_voyage_estimates() -> void:
 	# would, so the query has real edges to estimate.
 	for neighbor_id in WorldOps.neighbors(world, current):
 		WorldOps.discover_port_id(context.state, String(neighbor_id))
+	# 本用例验证查询层的航程预估；可出航性（航线解锁）另由 test_route_unlock 覆盖，
+	# 这里把当前港的相邻边标为已测绘，让 `voyage.preview` 走正常数值路径。
+	for neighbor_id in WorldOps.neighbors(world, current):
+		WorldOps.unlock_route(context.state, current, String(neighbor_id))
 
 	var result := SeaChartViewQuery.execute({}, context)
 	var vm: Dictionary = result.get("data", {})
@@ -221,7 +226,7 @@ func test_sea_chart_routes_carry_voyage_estimates() -> void:
 		assert_true(float(supplies.get("water_required", -1.0)) >= 0.0,
 			"route %s should estimate water" % label)
 		# The estimate must agree with the voyage preview formula: distance / speed.
-		var expected_hours := float(route.get("voyage_distance", 0.0)) / float(route.get("speed", 1.0))
+		var expected_hours := float(route.get("distance", 0.0)) / float(route.get("speed", 1.0))
 		assert_almost_eq(float(route.get("travel_hours", 0.0)), expected_hours, 0.01,
 			"route %s travel time should be distance / speed" % label)
 		# Coal is duration × boiler rate × strategy coal multiplier. Recompute it
@@ -240,22 +245,12 @@ func test_sea_chart_routes_carry_voyage_estimates() -> void:
 		assert_almost_eq(float(supplies.get("water_required", 0.0)), expected_water, 0.05,
 			"route %s water should match the preview's water rule" % label)
 
-		# The twin world's MST graph is not the abstract map's graph (a known
-		# boundary recorded in todo.md), so only pairs that exist on both can be
-		# cross-checked. For those, the chart estimate must equal the preview.
+		# Every chart edge is a projected abstract route, so the chart estimate and
+		# `voyage.preview` must agree field for field for the current-port pairs.
 		var from_id := String(route.get("from", ""))
 		var to_id := String(route.get("to", ""))
 		var destination := to_id if from_id == current else (from_id if to_id == current else "")
 		if destination.is_empty():
-			continue
-		var abstract_route := MapOps.route_between(context.state.world(), current, destination)
-		if abstract_route.is_empty():
-			assert_eq(String(route.get("distance_source", "")), "chart",
-				"route %s has no abstract-map counterpart, so it estimates on chart distance" % label)
-			assert_eq(String(route.get("risk_source", "")), "none",
-				"route %s has no abstract-map counterpart, so its risk is unknown" % label)
-			assert_almost_eq(float(route.get("risk_level", 0.0)), -1.0, 0.0001,
-				"route %s should report unknown risk (-1), not zero" % label)
 			continue
 		var preview := context.commands.execute(&"voyage.preview", {
 			"destination_id": destination,
@@ -263,12 +258,12 @@ func test_sea_chart_routes_carry_voyage_estimates() -> void:
 		})
 		assert_true(bool(preview.get("ok", false)), "preview for %s should succeed" % label)
 		var preview_data: Dictionary = preview.get("data", {})
+		assert_almost_eq(float(route.get("distance", 0.0)), float(preview_data.get("distance", 0.0)), 0.01,
+			"chart distance for %s should equal voyage.preview distance" % label)
 		assert_almost_eq(float(route.get("travel_hours", 0.0)), float(preview_data.get("duration_hours", 0.0)), 0.05,
 			"chart estimate for %s should match voyage.preview duration (both feed the same voyage)" % label)
 		assert_almost_eq(float(route.get("risk_level", -1.0)), float(preview_data.get("risk_score", -2.0)), 0.02,
 			"chart risk for %s should match voyage.preview risk" % label)
-		assert_eq(String(route.get("distance_source", "")), "voyage",
-			"a route that exists on the abstract map should estimate on the voyage distance")
 
 
 ## The panel is a pure renderer: when the query supplies the estimate it must
@@ -632,6 +627,16 @@ func _setup_world_and_state(seed_value: int, context: AppContext) -> Dictionary:
 	var campaign_world := state.campaign_world()
 	campaign_world["discovered_port_ids"] = discovered
 	campaign_world["visited_port_ids"] = visited
+	# 航线解锁是运行时门禁（2026-10-26）。本套件只验证海图几何 / 距离 / 渲染，
+	# 不测「怎么解锁」，因此把测试世界的每条边都标记为已测绘。
+	var unlocked_keys: Array = []
+	for edge in world.edges:
+		var key := WorldOps.route_key(
+			String(edge.get("from", "")), String(edge.get("to", ""))
+		)
+		if not key.is_empty() and not unlocked_keys.has(key):
+			unlocked_keys.append(key)
+	campaign_world["unlocked_route_keys"] = unlocked_keys
 
 	context.set_state(state)
 	return world_dict
@@ -1767,3 +1772,152 @@ func test_clue_log_screen_lists_active_and_expired_leads() -> void:
 		return node is Button and String((node as Node).name).begins_with("ClueCard_")
 	) == null, "an empty log renders no clue cards")
 	empty_screen.free()
+
+
+# ── dev.3 反馈 #2：海图标注距离与实际消耗同一把尺子（唯一世界只有一个距离字段） ──
+
+## 海图航线的 `distance` 只有一个来源：海图世界该边的绘制路径长度。
+## 本用例逐条断言 `sea_chart.view` 不再输出任何「第二把尺子」字段，并且
+## 标注距离 == 折线长度 == `GameState.world().routes[].distance`（拓扑与距离都由
+## `WorldGenerator.generate_chart` 生成、`ChartWorldProjection.from_chart` 派生，
+## 查询只是读同一张海图边表）。
+func test_chart_route_distance_is_the_drawn_polyline() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {
+		"starting_scenario": "core:starting_scenario/steady",
+		"seed": SEED_A,
+	})
+	var world := WorldOps.world_map(context.state)
+	# 全部港口标为已发现：海图输出整张边表，才能逐条检查口径。
+	for port in world.ports:
+		WorldOps.discover_port_id(context.state, port.id)
+
+	var result := SeaChartViewQuery.execute({}, context)
+	assert_true(bool(result.get("ok", false)), "sea_chart.view should succeed")
+	var routes: Array = (result.get("data", {}) as Dictionary).get("routes", [])
+	assert_true(routes.size() > 0, "the run should expose chart routes")
+	assert_eq(routes.size(), MapOps.routes(context.state.world()).size(),
+		"GameState.world().routes is derived 1:1 from the chart edges")
+
+	var checked := 0
+	for route in routes:
+		var label := "%s-%s" % [route.get("from", ""), route.get("to", "")]
+		# 旧的两套世界补丁字段必须消失：只剩一个 distance。
+		for retired in ["chart_distance", "distance_source", "sailable", "voyage_distance"]:
+			assert_false(route.has(retired),
+				"route %s should not expose the retired dual-world field '%s'" % [label, retired])
+		var distance := float(route.get("distance", 0.0))
+		assert_true(distance > 0.0, "route %s should carry a positive distance" % label)
+		# 标注距离 == 实际绘制路径（bezier_path）的折线长度。
+		var points: Array = route.get("bezier_path", [])
+		assert_true(points.size() >= 2, "route %s should expose a drawn path" % label)
+		var length := 0.0
+		for index in range(1, points.size()):
+			var previous := Vector2(float(points[index - 1].get("x", 0.0)), float(points[index - 1].get("y", 0.0)))
+			var current_point := Vector2(float(points[index].get("x", 0.0)), float(points[index].get("y", 0.0)))
+			length += previous.distance_to(current_point)
+		assert_almost_eq(distance, length, 0.05,
+			"route %s distance should equal its drawn polyline length" % label)
+		# 同一值写进玩法世界航线：voyage 的耗时/煤水读的就是这个数。
+		var world_route := MapOps.route_between(
+			context.state.world(),
+			String(route.get("from", "")),
+			String(route.get("to", "")),
+		)
+		assert_false(world_route.is_empty(),
+			"route %s is a chart edge, so GameState.world() must expose it" % label)
+		assert_almost_eq(distance, float(world_route.get("distance", 0.0)), 0.01,
+			"route %s chart distance should equal the derived world route distance" % label)
+		checked += 1
+	assert_true(checked > 0, "the fixture should expose at least one chart route")
+
+
+## dev.3 反馈 #2 的验收断言：同一对港口，海图右侧面板的预估与出航确认用的
+## `voyage.preview` 逐项一致——distance / travel_hours / coal / water / risk。
+## 海图就是唯一世界，所以每条海图边的距离/风险与 `voyage.preview` 同源；能否出航另由
+## 航线解锁门禁决定（见 `test_route_unlock`），本用例先把全部边标为已测绘。
+func test_chart_estimate_matches_voyage_preview_for_the_same_route() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	context.commands.execute(&"run.start", {
+		"starting_scenario": "core:starting_scenario/steady",
+		"seed": SEED_A,
+	})
+	var world := WorldOps.world_map(context.state)
+	var current := WorldOps.current_port_id(context.state)
+	for port in world.ports:
+		WorldOps.discover_port_id(context.state, port.id)
+	# 本用例验证「海图预估 == voyage.preview」；航线解锁是另一层门禁（由
+	# test_route_unlock 覆盖），这里先把全部边标为已测绘。
+	for edge in world.edges:
+		WorldOps.unlock_route(
+			context.state, String(edge.get("from", "")), String(edge.get("to", ""))
+		)
+
+	var routes: Array = (SeaChartViewQuery.execute({}, context).get("data", {}) as Dictionary).get("routes", [])
+	assert_true(routes.size() > 0, "the run should expose chart routes")
+
+	var checked := 0
+	for route in routes:
+		var from_id := String(route.get("from", ""))
+		var to_id := String(route.get("to", ""))
+		var destination := to_id if from_id == current else (from_id if to_id == current else "")
+		if destination.is_empty():
+			continue
+		var label := "%s-%s" % [from_id, to_id]
+		var preview := context.commands.execute(&"voyage.preview", {
+			"destination_id": destination,
+			"strategy_id": String(route.get("strategy_id", "")),
+		})
+		assert_true(bool(preview.get("ok", false)),
+			"voyage.preview for chart edge %s should succeed" % label)
+		var data: Dictionary = preview.get("data", {})
+		assert_almost_eq(float(route.get("distance", 0.0)), float(data.get("distance", 0.0)), 0.01,
+			"chart distance for %s should equal voyage.preview distance" % label)
+		assert_almost_eq(float(route.get("travel_hours", 0.0)),
+			float(data.get("duration_hours", 0.0)), 0.05,
+			"chart travel_hours for %s should equal voyage.preview duration_hours" % label)
+		var supplies: Dictionary = route.get("supplies", {})
+		assert_almost_eq(float(supplies.get("coal_required", 0.0)),
+			float(data.get("coal_required", 0.0)), 0.05,
+			"chart coal for %s should equal voyage.preview coal_required" % label)
+		assert_almost_eq(float(supplies.get("water_required", 0.0)),
+			float(data.get("water_required", 0.0)), 0.05,
+			"chart water for %s should equal voyage.preview water_required" % label)
+		assert_almost_eq(float(route.get("risk_level", -2.0)),
+			float(data.get("risk_score", -1.0)), 0.02,
+			"chart risk for %s should equal voyage.preview risk_score" % label)
+		checked += 1
+	assert_true(checked > 0,
+		"at least one chart route must start from the current harbour for the cross-check")
+
+
+## 视图组件级的距离口径：面板标签只读查询给的 `distance`；每条海图边都能
+## 出航，所以「启航」按钮不再有 disabled / 不可出航提示分支。
+func test_chart_components_show_the_billed_distance() -> void:
+	var boot := bootstrap_core()
+	var context: AppContext = boot["context"]
+	var panel := SNSeaChartPanel.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(panel)
+	var port_data := {"id": "port_1", "name_key": "port_name.core.mist_cove"}
+	panel.bind(port_data, {
+		"from": "port_0",
+		"to": "port_1",
+		"distance": 200.0,
+		"travel_hours": 21.5,
+	}, Callable(context, "translate"))
+	var texts := _label_texts(panel)
+	assert_true(_any_text_contains(texts, "200"),
+		"the panel distance label shows the chart distance, got: %s" % str(texts))
+	var depart := _find_descendant(panel, func(node: Node) -> bool:
+		return node is Button and String((node as Node).name) == "DepartButton"
+	) as Button
+	assert_not_null(depart, "a chart route exposes the depart button")
+	if depart != null:
+		assert_false(depart.disabled, "a chart route keeps the depart button enabled")
+	assert_true(_find_descendant(panel, func(node: Node) -> bool:
+		return node is Label and String((node as Node).name) == "NotSailableLabel"
+	) == null, "a chart route never renders the retired not-sailable hint")
+	panel.free()

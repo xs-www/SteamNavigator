@@ -9,14 +9,17 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MarketScreen` | L1 |
-| `command_requested (signal)` | L35 |
-| `SUPPLY_CARD_SCENE` | L37 |
-| `TILE_SCRIPT` | L38 |
-| `ZONE_SCRIPT` | L39 |
-| `MARKET_GRID_COLUMNS` | L43 |
-| `GRID_SEPARATION` | L44 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L50 |
-| `handle_sell_drop(data: Dictionary) -> void` | L77 |
+| `command_requested (signal)` | L47 |
+| `carry_changed (signal)` | L49 |
+| `SUPPLY_CARD_SCENE` | L51 |
+| `TILE_SCRIPT` | L52 |
+| `ZONE_SCRIPT` | L53 |
+| `MARKET_GRID_COLUMNS` | L57 |
+| `GRID_SEPARATION` | L58 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L66 |
+| `handle_sell_drop(data: Dictionary) -> void` | L93 |
+| `carrying_tile() -> Control` | L114 |
+| `cancel_carry() -> void` | L137 |
 
 Direct-manipulation port market page (Bounty Train style).
 
@@ -45,5 +48,17 @@ sell drop target for `cargo_item` / `warehouse_item` payloads.
 - 拖入市场面板的载荷 kind 只认 `cargo_item` / `warehouse_item`，命令固定为
   `trade.sell {item_id, amount, source}`。
 - `_grid_label` / `_label` / `_loc` 是测试与旧调用方依赖的 helper，保留签名。
+
+## 拿起 / 放下（feedback #1）
+- `signal carry_changed(offer)`：市场商品格子 `pending_changed` 的聚合结果。offer
+  是 `{kind:"market_item", item_id, name, icon, amount}`，空字典表示放下 / 取消。
+  Shell 拿它驱动光标幽灵（SNCarryGhost）并把 offer 转发给船舱 / 仓库落点
+  （`SNCargoHoldPanel.set_offer`），玩家点落点即执行 `trade.buy`。
+- 同时只有一个格子被「拿起」：切换携带时先 `clear_pending()` 旧格子（避免重入：
+  先清 `_carry_tile` 再清旧格子，旧格子的 0 事件不会再发 carry_changed）。
+- 右键取消走 `_input`（格子 / 落点是 `MOUSE_FILTER_STOP`，普通 `_gui_input`
+  收不到别处的右键）：清 pending 并发 `carry_changed({})`。
+- 市场格子仍是原生拖拽来源，拖拽与拿起可共存；`_clear()` 会丢弃携带引用，
+  页面重建（命令成功）后 pending 与幽灵一起归零。
 
 模块索引：[framework/ui](../../README.md)

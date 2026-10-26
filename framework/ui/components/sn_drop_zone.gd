@@ -25,6 +25,16 @@ extends PanelContainer
 ##   Godot 只把拖拽结束通知发给拖拽来源，所以高亮期间用 `_process` 轮询
 ##   `Viewport.gui_is_dragging()`，拖到空处释放也不会留下残留高亮。
 ## - 子内容统一挂到 `content_root()` 返回的 VBox，落点自身只保留一个子节点。
+##
+## ## 拿起 / 放下（点击落点，feedback #1）
+## - `set_offer(data)` / `clear_offer()` / `offer_active()` / `offer_payload()`：市场
+##   「拿起」手势的落点状态。`set_offer` 只接受 `accept_kinds` 里的载荷（不匹配直接
+##   清空），有 offer 时落点用皮肤纹理高亮，玩家点一下落点（左键 release）就
+##   `try_click_offer()` → 发出 `dropped`。原生拖拽仍是兼容手势，两条路径共用
+##   `dropped` 契约。
+## - `_gui_input` 里先 `accept_event()` 再发 `dropped`：命令成功会触发 Shell 整页重建，
+##   落点节点可能已被移出场景树，事后再 `accept_event()` 会拿不到 Viewport。
+## - `_process` 只复位**拖拽**高亮，绝不清 offer；offer 由宿主页面在携带结束时清空。
 ## @end-static-doc
 
 signal dropped(data: Dictionary)
@@ -44,6 +54,9 @@ var content_padding := DEFAULT_PADDING
 
 var _highlighted := false
 var _content: VBoxContainer = null
+## Payload of the 拿起（click-to-carry）interaction while the player holds goods.
+## Empty = no click offer; the zone only reacts to native drag & drop.
+var _offer: Dictionary = {}
 
 
 ## Configures the accepted payload kinds and the idle skin style before / after
@@ -55,6 +68,44 @@ func configure(accepted_kinds: Array, style_id: String = DEFAULT_STYLE_ID) -> vo
 	zone_style_id = style_id
 	if is_node_ready():
 		_apply_style()
+
+
+## Click-to-drop state for the 拿起手势 (feedback #1): a compatible payload makes
+## the zone a valid "put it down here" target, highlighted with the skin sheet.
+## Incompatible payloads clear the offer instead of arming a wrong drop.
+func set_offer(data: Dictionary) -> void:
+	if not _accepts(data):
+		clear_offer()
+		return
+	_offer = data.duplicate(true)
+	_apply_style()
+
+
+func clear_offer() -> void:
+	if _offer.is_empty():
+		return
+	_offer.clear()
+	_apply_style()
+
+
+func offer_active() -> bool:
+	return not _offer.is_empty()
+
+
+## Copy of the armed offer payload (tests / hosts that need to inspect it).
+func offer_payload() -> Dictionary:
+	return _offer.duplicate(true)
+
+
+## Places the carried stack: emits `dropped` with the offered payload and disarms.
+## Returns false when no offer is armed (a click on an idle zone does nothing).
+func try_click_offer() -> bool:
+	if _offer.is_empty():
+		return false
+	var data := _offer.duplicate(true)
+	clear_offer()
+	dropped.emit(data)
+	return true
 
 
 ## Lazily builds (and returns) the single content container of the zone.
@@ -79,12 +130,17 @@ func _ready() -> void:
 	_apply_style()
 
 
-## Skin-backed sheet. Only the texture tint changes while highlighted; margins
-## are pinned so the layout does not jump when a drag enters or leaves.
+## Skin-backed sheet. Only the texture tint changes while highlighted / armed;
+## margins are pinned so the layout does not jump when a drag enters or leaves.
 func _apply_style() -> void:
 	var horizontal := float(content_padding.x)
 	var vertical := float(content_padding.y)
-	if zone_style_id.is_empty():
+	var highlighted := _highlighted or offer_active()
+	var style_id := HIGHLIGHT_STYLE_ID if highlighted else zone_style_id
+	if style_id.is_empty():
+		# Idle transparent zone (e.g. the whole market panel): keep an empty style
+		# so the page layout does not move. An *armed* transparent zone still gets
+		# the skin sheet below, otherwise the sell target could never light up.
 		var empty := StyleBoxEmpty.new()
 		empty.content_margin_left = horizontal
 		empty.content_margin_top = vertical
@@ -92,7 +148,6 @@ func _apply_style() -> void:
 		empty.content_margin_bottom = vertical
 		add_theme_stylebox_override("panel", empty)
 		return
-	var style_id := HIGHLIGHT_STYLE_ID if _highlighted else zone_style_id
 	var base_style: StyleBoxTexture = SNSkin.style(style_id)
 	if base_style == null:
 		theme_type_variation = &"SNInsetPanel"
@@ -102,7 +157,7 @@ func _apply_style() -> void:
 	style.content_margin_top = vertical
 	style.content_margin_right = horizontal
 	style.content_margin_bottom = vertical
-	if _highlighted:
+	if highlighted:
 		style.modulate_color = SNSkin.color(highlight_color_token)
 	add_theme_stylebox_override("panel", style)
 
@@ -118,10 +173,26 @@ func _set_highlighted(active: bool) -> void:
 	_apply_style()
 
 
-## Clears the highlight as soon as the drag operation is gone.
+## Clears the highlight as soon as the drag operation is gone. Never clears the
+## click offer: the host page owns that state for the whole carry.
 func _process(_delta: float) -> void:
 	if not is_inside_tree() or not get_viewport().gui_is_dragging():
 		_set_highlighted(false)
+
+
+## Left click (release) on the armed zone puts the carried stack down. The event is
+## accepted *before* `dropped` runs, because a successful command rebuilds the whole
+## page and this node may already be out of the tree afterwards.
+func _gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var button := event as InputEventMouseButton
+	if button.button_index != MOUSE_BUTTON_LEFT or button.pressed:
+		return
+	if not offer_active():
+		return
+	accept_event()
+	try_click_offer()
 
 
 func _accepts(data: Variant) -> bool:

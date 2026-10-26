@@ -34,6 +34,11 @@ extends PanelContainer
 ##   状态栏报错，页面刷新后 pending 归零。这是本轮有意保留的边界，不是 bug。
 ## - `drag_payload()` 返回副本并把 `amount` 设为 `max(pending, 1)`，测试可直接调用；
 ##   `_get_drag_data()` 复用同一份载荷并挂拖拽预览。
+## - `drop_host` 是「拿起 / 放下」的宿主落点（`SNDropZone`）：市场商品被拿起后，
+##   点船舱 / 仓库区里的**子格子**也要放下货物，而子格子是 `MOUSE_FILTER_STOP`，
+##   事件的落点点击到不了 zone。因此左键 release 先问
+##   `drop_host.try_click_offer()`，被落点消费就 return（不算自己的 +1）；没有 offer
+##   时行为与旧版一致（pending +1）。原生拖拽路径完全不受影响。
 ## @end-static-doc
 
 signal pending_changed(pending: int)
@@ -44,6 +49,9 @@ const DRAG_PREVIEW_ICON := 40.0
 
 ## Payload copy configured by the host screen (top-level `kind` selects drop zones).
 var payload: Dictionary = {}
+## Optional click-to-drop host (`SNDropZone`) that wraps this tile. When the player
+## carries goods, a left release on the tile is offered to the zone first.
+var drop_host: Control = null
 ## Selected / pending trade amount shown on the tile.
 var pending := 0
 var max_pending := 0
@@ -283,11 +291,25 @@ func _on_gui_input(event: InputEvent) -> void:
 				# payload already carries the pending amount.
 				if _dragging:
 					_dragging = false
-				else:
-					increment_pending()
+					return
+				# A carried stack (拿起手势) takes the click: the tile sits inside a
+				# drop zone that the click has to reach.
+				if _consume_click_offer():
+					return
+				increment_pending()
 		MOUSE_BUTTON_RIGHT:
 			if button.pressed:
 				clear_pending()
+
+
+## Asks the wrapping drop zone to place the carried stack; true when it consumed
+## the click (that click must not bump this tile's own pending amount).
+func _consume_click_offer() -> bool:
+	if drop_host == null or not is_instance_valid(drop_host):
+		return false
+	if not drop_host.has_method("try_click_offer"):
+		return false
+	return bool(drop_host.call("try_click_offer"))
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:

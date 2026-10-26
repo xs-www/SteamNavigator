@@ -29,6 +29,9 @@ extends PanelContainer
 ##   cargo_item→仓库区 `warehouse.store_materials`、
 ##   warehouse_item→cargo 区 `warehouse.take_materials`。
 ## - 委托货（`is_contract`）格子不可拖拽、不产生命令。
+## - `set_offer(offer)` / `clear_offer()` 是「拿起 / 放下」手势的入口：把市场商品
+##   offer 转发给船舱 / 仓库两个 `SNDropZone`，玩家点一下落点即可放下。格子自己
+##   也把 `drop_host` 指向所在 zone，保证点 zone 内的子格子同样能放下。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
@@ -71,6 +74,19 @@ func cargo_zone() -> Control:
 
 func warehouse_zone() -> Control:
 	return _warehouse_zone as Control
+
+
+## Arms / clears the click-to-drop offer of the 拿起手势 on both zones. The zones
+## filter incompatible payloads themselves (`SNDropZone.set_offer`).
+func set_offer(offer: Dictionary) -> void:
+	for zone in [_cargo_zone, _warehouse_zone]:
+		if zone == null or not is_instance_valid(zone):
+			continue
+		zone.call("set_offer", offer)
+
+
+func clear_offer() -> void:
+	set_offer({})
 
 
 ## Handles a payload dropped on the 船舱货物 zone.
@@ -126,7 +142,7 @@ func _header() -> Control:
 	var title := _label(_loc("ui.market.backpack", "船只背包"), 22, SNSkin.color("text.light"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
-	row.add_child(_label(_loc("ui.hint.market_drag", "点击 +1 · 右键清空 · 拖拽交易"), 11, SNSkin.color("text.muted")))
+	row.add_child(_label(_loc("ui.hint.market_drag", "点击拿起 · 点落点放下 · 右键取消 · 可拖拽"), 11, SNSkin.color("text.muted")))
 	return row
 
 
@@ -158,12 +174,12 @@ func _build_cargo_zone(view_model: Dictionary) -> Control:
 	var content: VBoxContainer = _cargo_zone.content_root()
 	content.add_child(_zone_heading("ui.market.cargo_section", "船舱货物", hold.size()))
 	if hold.is_empty():
-		content.add_child(_hint(_loc("ui.hint.cargo_zone_empty", "拖动市场商品到这里买入。"), 12))
+		content.add_child(_hint(_loc("ui.hint.cargo_zone_empty", "点击市场商品拿起，再点这里买入；也可拖拽。"), 12))
 	else:
 		_cargo_grid = _grid("CargoGrid")
 		for row in hold:
 			if row is Dictionary:
-				_cargo_grid.add_child(_tile(row as Dictionary, "cargo_item"))
+				_cargo_grid.add_child(_tile(row as Dictionary, "cargo_item", _cargo_zone))
 		content.add_child(_cargo_grid)
 		content.add_child(_hint(_loc("ui.hint.cargo_zone", "把货物拖到右侧市场卖出，或拖到下方仓库。"), 11))
 	return _cargo_zone as Control
@@ -177,12 +193,12 @@ func _build_warehouse_zone(view_model: Dictionary) -> Control:
 	var content: VBoxContainer = _warehouse_zone.content_root()
 	content.add_child(_zone_heading("ui.market.warehouse_section", "港口仓库", materials.size()))
 	if materials.is_empty():
-		content.add_child(_hint(_loc("ui.hint.warehouse_zone_empty", "拖动市场商品到这里直接入库。"), 12))
+		content.add_child(_hint(_loc("ui.hint.warehouse_zone_empty", "点击市场商品拿起，再点这里入库；也可拖拽。"), 12))
 	else:
 		_warehouse_grid = _grid("WarehouseGrid")
 		for row in materials:
 			if row is Dictionary:
-				_warehouse_grid.add_child(_tile(row as Dictionary, "warehouse_item"))
+				_warehouse_grid.add_child(_tile(row as Dictionary, "warehouse_item", _warehouse_zone))
 		content.add_child(_warehouse_grid)
 		content.add_child(_hint(_loc("ui.hint.warehouse_zone", "把船舱货物拖到这里存仓；拖到市场直接卖出。"), 11))
 	return _warehouse_zone as Control
@@ -200,6 +216,8 @@ func _zone(node_name: String, accepted_kinds: Array) -> Control:
 func _zone_heading(title_key: String, fallback: String, count: int) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
+	# PASS so a click on the heading still reaches the zone's click-to-drop handler.
+	row.mouse_filter = Control.MOUSE_FILTER_PASS
 	var title := _label(_loc(title_key, fallback), 15, SNSkin.color("brass.highlight"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
@@ -214,10 +232,12 @@ func _grid(node_name: String) -> GridContainer:
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 8)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# PASS: clicks on the grid gaps (between tiles) must bubble up to the zone.
+	grid.mouse_filter = Control.MOUSE_FILTER_PASS
 	return grid
 
 
-func _tile(row: Dictionary, kind: String) -> Control:
+func _tile(row: Dictionary, kind: String, drop_host: Control) -> Control:
 	var item_id := String(row.get("item_id", ""))
 	var is_contract := bool(row.get("is_contract", false))
 	var amount := int(row.get("amount", 0))
@@ -269,6 +289,7 @@ func _tile(row: Dictionary, kind: String) -> Control:
 		},
 	})
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.drop_host = drop_host
 	return tile as Control
 
 

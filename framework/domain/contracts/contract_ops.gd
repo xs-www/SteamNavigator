@@ -1,6 +1,44 @@
 class_name ContractOps
 extends RefCounted
-## Contract instance generation, loading and delivery settlement.
+## @static-doc
+## 作用：委托实例生成、装载、交付结算、接取规则、普通委托池生成与抵达刷新。
+##
+## ## 契约与约束
+## - 实例 ID 由模板 ID + 单调 serial 构成；奖励数额在生成时锁定。
+## - 货物载荷必须声明 cargo_item_id；载重与旅客数来自 payload 范围。
+## - 装载前检查客舱容量、总重量与货舱容量；合同货物以 contract_id 绑定到实例。
+## - 交付时按准时、伤病赔偿、奖金、声誉与解锁结算；收入优先偿还债务，并记录 gross payout 为统计收入。
+## - 主线 offer 与普通 offer 分开存储；主线同时只能有一个 active。
+## - 普通委托持有上限 `active_limit = max(1, 1 + reputation/2)`；主线槽位不计入。
+## - `generate_normal_offers()` 从 normal 模板加权抽 3 个实例；`refresh_normal_offers()` 在每次抵达时
+##   以 `<port>:<arrival>:<voyages>` 为命名流键整池刷新，不动主线状态。
+## - 反馈 #2：主线 offer 生成即揭示目的港（`MapOps.discover` + `WorldOps.discover_port_id`，
+##   与剧情同口径）；普通委托目的地在发现前由 `port.view` 过滤，池内实例保持不变。
+## - **委托自带海图**（2026-10-26 航线解锁）：`generate_offer` 生成主线 / 普通实例后
+##   立即 `WorldOps.unlock_route(origin, destination)`，保证委托卡片的「规划出航」
+##   永远可执行，不会出现「有委托但航线未测绘」。普通委托的目的地仍只在已发现港口中
+##   选取（见 `_destination_candidates`），发现港口本身不解锁任何航线。
+## - 反馈 #3：`deadline_formula = "none"` 求值 0 = 无期限哨兵；`create_instance` 存
+##   `deadline = 0.0`，`complete` 视为准时并照发 `on_time_bonus`（完成奖励），结果带 `timed`；
+##   负值（未知公式）仍回退 24h 防御。
+##
+## ## 重点逻辑
+## ### `create_instance(...)`
+## - 遍历 payload 汇总 cargo_weight/passengers；期限使用 FormulaRegistry 的安全公式 ID。
+## - 奖励使用同一命名随机流抽取范围；所有数据写入纯 Dictionary，便于存档。
+##
+## ### `complete(state, hub, instance, arrival_time)`
+## - 准时判定 `arrival_time <= deadline`；无期限实例恒准时（不发 contract.late），伤病每人扣 50 赔偿并降低声誉。
+## - `DebtService.receive_income()` 先还债再把余额入账；`record_income(payout)` 记录毛收入；解锁 ID 写入 player.unlocks。
+## - 交付后移除对应 contract_id 的货物；实例标记 completed。
+##
+## ### `is_untimed(instance)`
+## - `deadline <= 0` 或（`kind=main` 且 `sequence >= 3` 的旧存档实例）都视为无期限；不写存档迁移。
+##
+## ### `generate_normal_offers(state, hub, rng_service, key)`
+## - 候选按模板权重抽样，最多生成 3 个实例；随机流为 STREAM_CONTRACT_GENERATION 的 `normal_offers::<key>`。
+## - 初始池键为 `initial:<port>`；抵达刷新键包含港口、到达时间与航次数，保证同 seed+命令序列可复现。
+## @end-static-doc
 
 static func ensure_structure(state: GameState) -> void:
 	if state.data.get("contracts", null) is Dictionary:
@@ -77,8 +115,11 @@ static func create_instance(hub: RegistryHub, template: ContentDefinition, origi
 		"cargo_weight": cargo_weight,
 		"passengers": passengers,
 	})
+	# 反馈 #3：`none` 公式求值 0 = 无期限哨兵（第三主线起）。负值仍表示未知公式，
+	# 落回 24h 防御值；只有 >= 0 的 0 才是「无期限」。
 	if deadline_hours < 0.0:
 		deadline_hours = 24.0
+	var deadline := now + deadline_hours if deadline_hours > 0.0 else 0.0
 	return {
 		"instance_id": "%s@%d" % [template.id, serial],
 		"template_id": template.id,
@@ -88,7 +129,7 @@ static func create_instance(hub: RegistryHub, template: ContentDefinition, origi
 		"origin": origin,
 		"destination": destination,
 		"distance": distance,
-		"deadline": now + deadline_hours,
+		"deadline": deadline,
 		"accepted_at": now,
 		"cargo_weight": cargo_weight,
 		"cargo": cargo_entries,
@@ -171,7 +212,11 @@ static func missing_player_cargo(state: GameState, instance: Dictionary) -> Dict
 
 
 static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, arrival_time: float) -> Dictionary:
-	var on_time := arrival_time <= float(instance.get("deadline", 0.0))
+	# 反馈 #3：无期限委托没有「迟到」概念；on_time 恒真，on_time_bonus 作为完成奖励
+	# 照发（经济数值不变），结果用 `timed` 区分。
+	var untimed := is_untimed(instance)
+	var deadline := 0.0 if untimed else float(instance.get("deadline", 0.0))
+	var on_time := untimed or arrival_time <= deadline
 	var compensation := int(instance.get("injuries", 0)) * 50
 	var base_money := int(instance.get("base_money", 0))
 	var bonus := int(instance.get("on_time_bonus", 0)) if on_time else 0
@@ -210,6 +255,7 @@ static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, a
 	return {
 		"instance_id": String(instance.get("instance_id", "")),
 		"template_id": template_id,
+		"timed": not untimed,
 		"on_time": on_time,
 		"late": not on_time,
 		"base_money": base_money,
@@ -219,9 +265,18 @@ static func complete(state: GameState, hub: RegistryHub, instance: Dictionary, a
 		"debt": debt_result,
 		"reputation": int(player.get("reputation", 0)),
 		"unlocks": Array(instance.get("unlock_ids", [])),
-		"deadline": float(instance.get("deadline", 0.0)),
+		"deadline": deadline,
 		"arrival_time": arrival_time,
 	}
+
+
+## 反馈 #3：`deadline <= 0` 是「无期限」哨兵。旧存档 / 热重载的第三主线起引导委托
+## 可能已经写了正整数 deadline；不写迁移，按内容契约（main_03/04/05 的
+## `deadline_formula` 为 `"none"`）把「kind=main 且 sequence >= 3」视为无期限。
+static func is_untimed(instance: Dictionary) -> bool:
+	if float(instance.get("deadline", 0.0)) <= 0.0:
+		return true
+	return String(instance.get("kind", "")) == "main" and int(instance.get("sequence", 0)) >= 3
 
 
 static func find_template_by_sequence(hub: RegistryHub, sequence: int) -> ContentDefinition:
@@ -292,6 +347,7 @@ static func generate_offer(state: GameState, hub: RegistryHub, template: Content
 	var required_tags: Array = constraints.get("required_port_tags", [])
 	var distances := MapOps.bfs_distances(state.world(), origin)
 	var candidates: Array[String] = []
+	var discovered_candidates: Array[String] = []
 	for raw_port_id in distances.keys():
 		var port_id := String(raw_port_id)
 		if port_id == origin:
@@ -302,7 +358,15 @@ static func generate_offer(state: GameState, hub: RegistryHub, template: Content
 		if not _port_matches_tags(state.world(), port_id, required_tags):
 			continue
 		candidates.append(port_id)
+		if MapOps.is_discovered(state, port_id):
+			discovered_candidates.append(port_id)
 	candidates.sort()
+	discovered_candidates.sort()
+	# 航线解锁：普通委托的「选目的地」优先落在已发现港口（玩家看得见、能规划）；
+	# 开局还没有第二座已发现港时回退到全部合法候选，保证初始委托池不空，
+	# 目的地仍由 `port.view` 在发现前隐藏（反馈 #2 的过滤规则不变）。
+	if String(template.data.get("kind", "")) == "normal" and not discovered_candidates.is_empty():
+		candidates = discovered_candidates
 	if candidates.is_empty():
 		return {}
 	var rng := rng_service.stream(RngService.STREAM_CONTRACT_GENERATION, "%s::%s" % [template.id, origin])
@@ -311,7 +375,25 @@ static func generate_offer(state: GameState, hub: RegistryHub, template: Content
 	if distance <= 0.0:
 		distance = float(MapOps.bfs_distances(state.world(), origin).get(destination, 1)) * 100.0
 	var serial := next_serial(state)
-	return create_instance(hub, template, origin, destination, state.now(), distance, serial, rng)
+	var instance := create_instance(hub, template, origin, destination, state.now(), distance, serial, rng)
+	# 反馈 #2：主线 offer 是剧情引导，生成时即揭示目的港（与 StoryService
+	# `_discover_contract_destination` 同口径）；普通委托的目的地在发现前由
+	# `port.view` 过滤，池里的实例保持不变，发现后同一条自动重现。
+	if String(instance.get("kind", "")) == "main":
+		_reveal_destination(state, destination)
+	# 委托自带海图（2026-10-26）：生成的委托同时解锁 origin↔destination 航线，
+	# 玩家拿到委托即可在海图上规划出航，不会出现「有委托但航线未测绘」。
+	WorldOps.unlock_route(state, origin, destination)
+	return instance
+
+
+## Reveals a contract destination on both the played map and the coordinate twin,
+## so the chart can show it and the main-chain guidance never points into the fog.
+static func _reveal_destination(state: GameState, destination: String) -> void:
+	if destination.is_empty():
+		return
+	MapOps.discover(state, destination)
+	WorldOps.discover_port_id(state, destination)
 
 
 static func accept_offer(state: GameState, hub: RegistryHub, instance_id: String) -> Dictionary:

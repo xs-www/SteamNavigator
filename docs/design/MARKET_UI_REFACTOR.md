@@ -23,15 +23,18 @@
 
 ## 2. 交互契约
 
-数量只作为「待交易数量」存在于图标上，不再有买卖按钮：
+数量只作为「待交易数量」存在于图标上，不再有买卖按钮；主手势是**拿起 / 放下**
+（v0.2.0-dev.3 反馈 #1），原生拖拽保留为兼容手势：
 
 | 操作 | 结果 |
 | --- | --- |
-| 左键点图标 | 待交易数量 +1（买入：受 `stock` / `buyable` 限制；卖出/存取：受该物品可用数量限制） |
-| 右键点图标 | 清空该图标待交易数量 |
-| 拖拽图标 | 携带 `max(待交易数量, 1)`；拖拽预览显示图标 + 名称 + ×数量 |
+| 左键点市场图标 | 待交易数量 +1（受 `stock` / `buyable` 限制），同时进入「拿起」：图标 + ×数量浮在鼠标指针旁（`SNCarryGhost`） |
+| 左键点船舱 / 仓库区 | 放下：执行 `trade.buy {amount = 待交易数量, destination}`；点落点内的货物格子同样生效（格子把点击转给 `drop_host`） |
+| 右键（页面任意处） | 取消拿起：清空该图标待交易数量并收起光标幽灵 |
+| 右键点图标 | 清空该图标待交易数量（与取消拿起同一语义） |
+| 拖拽图标 | 携带 `max(待交易数量, 1)`；拖拽预览显示图标 + 名称 + ×数量（兼容手势，拖拽期间隐藏光标幽灵） |
 
-拖拽落点与命令：
+拖拽落点与命令（点击落点的 `dropped` 载荷与拖拽完全一致）：
 
 | 拖拽来源 | 落点 | 命令 |
 | --- | --- | --- |
@@ -46,8 +49,46 @@
 
 - 委托货物（`contract_id` 非空）不可拖拽、不可卖、不可存仓，图标显示锁定标记。
 - 市场里 `buyable=false` 或 `stock<=0` 的品种不可拖拽（仍可显示，标明「仅收购」）。
-- 命令成功后由 Shell 统一 `_refresh()` 重建页面，待交易数量随之重置；失败时沿用现有状态栏错误提示。
-- 拖拽落点高亮只改 `SNSkin` 纹理 `modulate_color`，不新增 `StyleBoxFlat`、不写十六进制色值。
+- 命令成功后由 Shell 统一 `_refresh()` 重建页面，待交易数量与光标幽灵随之重置；失败时沿用状态栏错误提示（顶部 banner 保留，同时 `SNInteractionHint` 在光标处浮出同一条文本，见 [交互处浮出提示](#交互处浮出提示dev3-反馈-4)）。
+- 拖拽 / 落点高亮只改 `SNSkin` 纹理 `modulate_color`，不新增 `StyleBoxFlat`、不写十六进制色值。
+- 光标幽灵与浮出提示都挂在 Shell 的全窗浮层（`HintLayer`，`PageScroll` 之外、转场淡出层之下），全部 `MOUSE_FILTER_IGNORE`，不吞落点点击。
+
+### 拿起 / 放下组件契约
+
+```text
+MarketScreen.carry_changed(offer)                # offer {} = 未携带
+  → Shell._show_carry_ghost(offer)               # SNCarryGhost.begin(icon, name, amount, hint)
+  → SNCargoHoldPanel.set_offer(offer)            # 转发给两个 SNDropZone
+       → SNDropZone.set_offer(offer)             # 仅接受 accept_kinds 的载荷，命中即高亮
+玩家左键落点
+  → SNDropZone._gui_input(release) → try_click_offer()
+  → dropped(offer) → SNCargoHoldPanel.handle_*_drop() → trade.buy / warehouse.*
+```
+
+- `SNItemTile.drop_host` 指向所在 `SNDropZone`：落点内的货物格子是
+  `MOUSE_FILTER_STOP`，点击先交给 `drop_host.try_click_offer()`，被消费就不再给格子 +1。
+- 切换携带：新格子 pending > 0 时先 `clear_pending()` 旧格子（先清 `_carry_tile`
+  防重入），保证同时只有一个格子被拿起。
+- 右键取消走 `MarketScreen._input`；`_clear()`（页面重建）丢弃携带引用，Shell 在
+  `_rebuild_ui_body()` 开头收起幽灵。
+- 原生拖拽与点击放下共用 `dropped` 契约；`Viewport.gui_is_dragging()` 期间幽灵隐藏，
+  避免和原生拖拽预览叠两个图标。
+
+### 交互处浮出提示（dev.3 反馈 #4）
+
+`SNInteractionHint`（`framework/ui/components/sn_interaction_hint.gd`）是**框架级**
+组件，任何页面都能调用 `show_at(at, message, is_error)`：
+
+- Shell 的 `_set_status()` 在「run 内的港口页面 + 玩家交互命令」时额外调用它，
+  文本沿用同一条本地化消息（顶部 banner 保留，仍是持久状态的契约）；
+  菜单、剧情卡、航行演出、页面淡出期间不弹。
+- 浮层是 Shell 的 `HintLayer`（全窗、`MOUSE_FILTER_IGNORE`、在 `PageScroll` 之外、
+  转场淡出层之下）：960×540 与 1440×900 都不会被裁切，也不吞光标下的点击。
+- 位置在指针上方（`place_at()` 纯函数，钳制在视口内），`HOLD_SECONDS` 后
+  `FADE_SECONDS` 淡出；新消息会重置计时。
+- 外观只用 `SNSkin.style("panel_steel")` + `brass.highlight` / `state.danger` 染色与
+  `action_confirm` / `status_warning` 图标，不新增 `StyleBoxFlat`、不写十六进制色。
+
 
 ## 3. `market.view` 查询契约
 
@@ -140,3 +181,12 @@ node tools/gen_static_docs.mjs --check
 - 从 3D 港区窗口推进到「3D 船内」：左侧背包面板可退化为 3D 船体的货舱热点，交互仍是同一套 `market_item` / `cargo_item` 拖拽载荷。
 - 补给（煤 / 水）也用图标直接交互；本轮保留补给卡按钮（见 [UI_SKIN_PIPELINE.md](UI_SKIN_PIPELINE.md) 的卡片规范）。
 - 市场商品按分类分组 / 筛选、买卖音效与拖拽动效。
+
+### V1.1 已落地（2026-10-24）：拿起 / 放下 + 交互处浮出提示
+
+- 反馈 #1：市场图标左键「拿起」后，图标 + ×数量由 `SNCarryGhost` 跟随鼠标；
+  船舱 / 仓库落点被 arm（高亮），左键落点即 `trade.buy`，右键取消；原生拖拽保留。
+- 反馈 #4：命令成功 / 失败的瞬时反馈由 `SNInteractionHint` 在鼠标处浮出并短淡出，
+  顶部 banner 继续保留；Shell 通过 `_set_status()` 统一触发，页面无需各自接线。
+- 本节的「分类筛选 / 音效 / 动效」与「补给图标化」仍未做，留给市场 V2。
+

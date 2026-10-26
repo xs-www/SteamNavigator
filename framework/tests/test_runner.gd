@@ -99,6 +99,8 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_task_view.gd",
 	"res://framework/tests/cases/test_quest_service.gd",
 	"res://framework/tests/cases/test_story_ui.gd",
+	"res://framework/tests/cases/test_world_unity.gd",
+	"res://framework/tests/cases/test_route_unlock.gd",
 ]
 
 var _started := false

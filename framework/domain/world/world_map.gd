@@ -7,12 +7,17 @@ extends RefCounted
 ## - `connectivity_graph` 是无向图，A 连接 B 时 B 也连接 A。
 ## - `bounds` 供 UI 视口裁剪与世界坐标映射使用。
 ## - `world_seed` 用于验证存档和当前内容版本的兼容性。
-## - `edges` 是**生成期算出、运行期只读**的航线表：每个连通边一条
-##   `{from, to, distance, path}`（`path` 为 `PackedVector2Array`）。航线算法可以随时替换，
-##   只要这个数据契约不变，查询/UI 就不受影响；缺 `edges` 的旧存档由消费方自行回退计算。
+## - `edges` 是**生成期算出、运行期只读**的航线表：每个边一条
+##   `{from, to, distance, base_risk?, path}`（`path` 为 `PackedVector2Array`）。这是唯一的
+##   世界拓扑：`GameState.world()` 的 `routes` 由它派生（`ChartWorldProjection.from_chart`），
+##   海图、航行演出、委托与 BFS 全部读这一张表。航线算法可以随时替换，只要这个数据契约
+##   不变，查询/UI 就不受影响；缺 `edges` 的旧存档由消费方自行回退计算。
+## - `base_risk` 只由可玩世界生成器（`WorldGenerator.generate_chart`，范围来自
+##   `route_templates.risk_range`）写入；通用生成器 / 旧存档的世界没有该键，消费方读不到
+##   时应视为「未知风险」而不是 0。
 ## @end-static-doc
 
-const SCHEMA_VERSION := "1.1"
+const SCHEMA_VERSION := "1.2"
 ## Path coordinates are stored rounded to this many decimals to keep saves small;
 ## far below the chart's pixel resolution.
 const PATH_DECIMALS := 2
@@ -173,7 +178,9 @@ func to_dict() -> Dictionary:
 
 
 ## Paths are flattened to `[x0, y0, x1, y1, ...]` rounded to `PATH_DECIMALS`; object
-## per point would roughly double the JSON size of the route table.
+## per point would roughly double the JSON size of the route table. `base_risk` is only
+## written when the edge has it (playable worlds), so generic worlds / old saves keep the
+## historical shape.
 static func _edge_to_dict(edge: Dictionary) -> Dictionary:
 	var path: PackedVector2Array = edge.get("path", PackedVector2Array())
 	var flat: Array = []
@@ -181,12 +188,15 @@ static func _edge_to_dict(edge: Dictionary) -> Dictionary:
 	for index in path.size():
 		flat[index * 2] = snappedf(path[index].x, pow(10.0, -PATH_DECIMALS))
 		flat[index * 2 + 1] = snappedf(path[index].y, pow(10.0, -PATH_DECIMALS))
-	return {
+	var value := {
 		"from": String(edge.get("from", "")),
 		"to": String(edge.get("to", "")),
 		"distance": snappedf(float(edge.get("distance", 0.0)), pow(10.0, -PATH_DECIMALS)),
 		"path": flat,
 	}
+	if edge.has("base_risk"):
+		value["base_risk"] = float(edge.get("base_risk", 0.0))
+	return value
 
 
 static func _edge_from_dict(value: Dictionary) -> Dictionary:
@@ -196,12 +206,15 @@ static func _edge_from_dict(value: Dictionary) -> Dictionary:
 	while index + 1 < flat.size():
 		path.append(Vector2(float(flat[index]), float(flat[index + 1])))
 		index += 2
-	return {
+	var edge := {
 		"from": String(value.get("from", "")),
 		"to": String(value.get("to", "")),
 		"distance": float(value.get("distance", 0.0)),
 		"path": path,
 	}
+	if value.has("base_risk"):
+		edge["base_risk"] = float(value.get("base_risk", 0.0))
+	return edge
 
 
 static func from_dict(value: Dictionary) -> WorldMap:

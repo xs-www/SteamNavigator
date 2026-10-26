@@ -25,8 +25,9 @@ extends RefCounted
 ##   结算只比较 `outcome_roll < discovery_chance`，同 seed 同状态可复现。
 ## - 4.5.4：剧情线索可带 `guaranteed_explore_clue_id`（`StoryService` 写入）——结算
 ##   时该线索无视 `outcome_roll` 直接成功，成功后消费 flag；其它线索 / 跳过教程不受影响。
-## - 成功：坐标世界 `discover_port_id` + `mark_visited` + `FogOps.reveal_arrival`，抽象地图
-##   同步发现 / 访问（贸易、市场、海图都读它），线索 resolved，进入目标港。
+## - 成功：海图世界 `discover_port_id` + `mark_visited` + `FogOps.reveal_arrival`，玩法视图
+##   （`GameState.world()`）同步发现 / 访问（贸易、市场、海图都读它），线索 resolved，
+##   进入目标港。
 ## - 失败（4.3 / U3）：线索**保留在 active**（只累加 `attempts` / `last_attempt_at`，
 ##   可再次 `start`），漂到**距搜索区最近的已发现港**并按其入港处理（记录访问 +
 ##   揭示泊位），耐久 / 煤 / 水按规则扣减且不为负，时间加 `drift_hours`。结算摘要

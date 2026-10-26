@@ -15,6 +15,7 @@ extends RefCounted
 ## - 区域定义数量 < `region_count` 时允许重复实例化同一原型（每个实例仍是独立 id）。
 ## - 港口归属：`port_0`（起始港）固定归 `region_0`；其余港口按各区域的
 ##   `port_density` 加权抽取。权重为 0 的区域仍保留极小权重 0.01，避免"有区域没港口"。
+## - `world` 是 `ChartWorldProjection.from_chart` 输出的玩法世界字典（只读 `ports`）。
 ## - **确定性**：所有随机来自调用方传入的 `STREAM_CAMPAIGN_WORLD / "regions"` 子流；
 ##   定义数组先按 id 排序，港口按 id 数值排序。抽取序列固定（每个区域一次 randf，
 ##   每个非起始港口一次 randf）。
@@ -38,7 +39,7 @@ const MIN_PORT_DENSITY_WEIGHT := 0.01
 
 
 ## Assembles region instances for one campaign.
-## `world` is the MapGenerator world (only `ports` is read).
+## `world` is the gameplay world derived from the chart (only `ports` is read).
 ## Returns `{regions: Array, region_for_port: Dictionary}`.
 static func assemble(
 	world_profile: ContentDefinition,

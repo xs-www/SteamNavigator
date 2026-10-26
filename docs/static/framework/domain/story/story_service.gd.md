@@ -9,28 +9,28 @@
 | 符号 | 位置 |
 | --- | --- |
 | `StoryService` | L1 |
-| `FEATURE_OVERVIEW` | L37 |
-| `FEATURE_SUPPLY` | L38 |
-| `FEATURE_CHART` | L39 |
-| `FEATURE_MARKET` | L40 |
-| `FEATURE_CONTRACTS` | L41 |
-| `FEATURE_CLUES` | L42 |
-| `FEATURE_TAVERN` | L43 |
-| `FEATURE_SHIPYARD` | L44 |
-| `FEATURES` | L45 |
-| `EVENT_STAGE_ENTERED` | L50 |
-| `EVENT_COMPLETED` | L51 |
-| `EVENT_FEATURE_UNLOCKED` | L52 |
-| `config(state: GameState, hub: RegistryHub) -> Dictionary` | L58 |
-| `begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void` | L66 |
-| `view(context) -> Dictionary` | L92 |
-| `market_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L149 |
-| `module_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L160 |
-| `advance(context) -> Dictionary` | L170 |
-| `skip(context) -> Dictionary` | L198 |
-| `observe(context, event: String, data: Dictionary = {}) -> Dictionary` | L225 |
-| `guaranteed_explore_clue_id(state: GameState) -> String` | L555 |
-| `consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool` | L564 |
+| `FEATURE_OVERVIEW` | L44 |
+| `FEATURE_SUPPLY` | L45 |
+| `FEATURE_CHART` | L46 |
+| `FEATURE_MARKET` | L47 |
+| `FEATURE_CONTRACTS` | L48 |
+| `FEATURE_CLUES` | L49 |
+| `FEATURE_TAVERN` | L50 |
+| `FEATURE_SHIPYARD` | L51 |
+| `FEATURES` | L52 |
+| `EVENT_STAGE_ENTERED` | L57 |
+| `EVENT_COMPLETED` | L58 |
+| `EVENT_FEATURE_UNLOCKED` | L59 |
+| `config(state: GameState, hub: RegistryHub) -> Dictionary` | L65 |
+| `begin(state: GameState, hub: RegistryHub, rng: RngService = null) -> void` | L73 |
+| `view(context) -> Dictionary` | L99 |
+| `market_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L165 |
+| `module_filter(state: GameState, hub: RegistryHub) -> Dictionary` | L176 |
+| `advance(context) -> Dictionary` | L186 |
+| `skip(context) -> Dictionary` | L214 |
+| `observe(context, event: String, data: Dictionary = {}) -> Dictionary` | L241 |
+| `guaranteed_explore_clue_id(state: GameState) -> String` | L576 |
+| `consume_guaranteed_explore_success(state: GameState, clue_id: String) -> bool` | L585 |
 
 C4 起 `map_profiles` 退役）的 `data.story`（Core JSON）阶段表，维护
 `GameState.data.story` 的进度、事件计数、标志、功能 / 商品 / 模块解锁，并分发
@@ -57,9 +57,16 @@ C4 起 `map_profiles` 退役）的 `data.story`（Core JSON）阶段表，维护
 - 4.5.6 引导：`set_counter_from_ship` 用船上现有资源初始化计数器，条件支持
   `counter_from` 直接读取命令返回的数值（如补给购买后的煤舱 `stock`），
   目标条据此显示真实进度与「还差 N」。
+- 4.7 航线解锁（2026-10-26）：效果 `unlock_route {from, to}` 的端点支持语义 token
+  （`current` / `home` / `contract_destination`）或具体港口 id，解析后调用
+  `WorldOps.unlock_route`；`grant_tutorial_contract` 生成教学委托后也按**最终目的地**
+  解锁 origin↔destination（委托自带海图）。发现港口本身不解锁航线。
 - 跳过教程必须解锁 `skip_unlocks` 里的全部功能并执行
   `discover_contract_destination`，保证跳过不会卡死；跳过不会设置保底探索。
 - 查询（`story.view`）只输出公开字段；counters / flags 只暴露剧情效果需要的
   `lock_actions` 语义，不泄露内部数值。
+- 4.7 框架级强制引导（dev.3 #3）：阶段可选 `focus: {target, text_key}`，查询原样
+  透传为 `story.view.focus`（空字典 = 无引导）。`target` 是框架语义 id（如
+  `market_supply` / `chart_entry`），由 Shell 解析成真实控件，内容不写死页面。
 
 模块索引：[framework/domain](../README.md)

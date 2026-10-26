@@ -9,6 +9,9 @@ extends RefCounted
 ##   `WorldOps` / `FogOps` / `ExplorationRules`（坐标世界与迷雾）
 ##
 ## ## 契约与约束
+## - 航线解锁（2026-10-26）：`start` 复用 `VoyageCalculator.preview`，未解锁航线在预览
+##   阶段即返回 `route_locked`（命令层无法绕过）；`clue.travel` 走同一入口。探索航次
+##   （`explore.start`）不经过这里，因此不受航线解锁限制。
 ## - 出航前把当前状态存入 `context.pre_voyage_state` 和 `pre_voyage` 存档槽。
 ## - 风险事件概率对玩家隐藏；预览只暴露风险来源。事件最多提供 2 个加权抽样选项。
 ## - 耐久归零或 `fail_voyage` 效果会把工作副本替换回出航前快照，并发布 voyage.failed。
@@ -16,6 +19,7 @@ extends RefCounted
 ##   下单港仓库并写入 `summary.completed_orders`）、结算主线/普通委托、推进 NPC、
 ##   检查逾期、刷新普通委托池并自动存档。
 ## - 工资通过 `state.record_expense()` 计入统计支出；委托收入在 ContractOps 结算时计入收入。
+## - 反馈 #3：无期限委托（`timed=false`）不发 `contract.late`，也不计入准时率统计。
 ## - 行动顺序固定：扣工资 → 生成 voyage（存出发库存与每小时煤水费率）→ 选事件 →
 ##   若无事件立即抵达结算。
 ## - 连续消耗（阶段 4.3.5 / U8）：出发**不扣**煤水，只扣工资；`voyage` 快照记录
@@ -23,9 +27,9 @@ extends RefCounted
 ##   预览计划消耗 ÷ 计划时长）。`_complete_arrival` 按 `elapsed = arrival_time -
 ##   departure_time`（已含事件延误）一次性扣 `rate × elapsed`，演出期间顶栏只做插值
 ##   读数、不写领域状态。事件 payload 仍报计划消耗，语义不变。
-## - 坐标世界（海图数据源）与抽象地图同步：`_complete_arrival` 记录访问并揭示泊位；
-##   4.3.3 / U4 起在揭示前先 `_trace_voyage_fog` 沿实际航线把沿途迷雾落账（沿海
-##   格子留 EXPLORED），旧存档没有 `world_map` 时这些调用全部 no-op。
+## - 海图（唯一世界）同步：`_complete_arrival` 记录访问并揭示泊位；4.3.3 / U4 起在揭示前
+##   先 `_trace_voyage_fog` 沿实际航线（`WorldMap.edges[].path`）把沿途迷雾落账（沿海
+##   格子留 EXPLORED），无 `world_map` 时这些调用全部 no-op。
 ## - 4.1 起每次抵达还调用 `ClueService.on_arrival` 抽传闻线索；空结果（没抽中 /
 ##   没有目标 / 上限已满）永不阻断或失败抵达。
 ## - 4.4 起 `settle_arrival_services` 先按抵达时间 sweep 到期货物线索（所有抵达路径
@@ -248,9 +252,9 @@ static func _reveal_world_fog(state: GameState, destination: String, hub: Regist
 
 
 ## Persists the fog met along a normal voyage (4.3.3 / U4): read the actual route
-## polyline between `voyage.origin` and `voyage.destination` from the coordinate
-## world's route table and sample it through `FogOps.trace_route` before the berth
-## reveal. Legacy worlds (no `world_map`) and voyages without a route are no-ops.
+## polyline between `voyage.origin` and `voyage.destination` from the chart world's route
+## table and sample it through `FogOps.trace_route` before the berth reveal. A world
+## without `world_map` is a no-op.
 static func _trace_voyage_fog(state: GameState, voyage: Dictionary, hub: RegistryHub) -> void:
 	var world := WorldOps.world_map(state)
 	if world.is_empty():
@@ -267,9 +271,10 @@ static func _trace_voyage_fog(state: GameState, voyage: Dictionary, hub: Registr
 	)
 
 
-## Worldwide route polyline between two harbours. The stored table uses `path`, the
-## on-the-fly `RouteCalculator` fallback uses `bezier_path`; a world with no edge for
-## the pair (legacy save / disconnected) falls back to the two-port straight line.
+## Chart route polyline between two harbours. The chart table stores `path`; a defensive
+## on-the-fly `RouteCalculator` fallback uses `bezier_path`, and a world with no edge for
+## the pair falls back to the two-port straight line (never the normal path — the chart
+## world always stores an edge for every sailable pair).
 static func _route_path_between(
 	world: WorldMap, from_port: WorldPort, to_port: WorldPort
 ) -> PackedVector2Array:
@@ -426,7 +431,8 @@ static func settle_arrival_services(
 		})
 	for contract_result in contract_results:
 		events.append({"type": "contract.completed", "payload": contract_result})
-		if not bool(contract_result.get("on_time", true)):
+		# 反馈 #3：无期限委托（timed=false）不存在迟到，不发 contract.late。
+		if bool(contract_result.get("timed", true)) and not bool(contract_result.get("on_time", true)):
 			events.append({"type": "contract.late", "payload": contract_result})
 	events.append_array(npc_events)
 	events.append_array(debt_events)
@@ -460,6 +466,9 @@ static func record_arrival_stats(
 	if not contract_results.is_empty():
 		var any_on_time := false
 		for result in contract_results:
+			# 反馈 #3：无期限委托不参与准时率统计（timed=false 直接跳过）。
+			if not bool(result.get("timed", true)):
+				continue
 			if bool(result.get("on_time", false)):
 				any_on_time = true
 		if any_on_time:
