@@ -351,6 +351,13 @@
       }
 
       if (typeOf(value) === 'object') {
+        const objectKeys = Object.keys(value);
+        if (typeof node.minProperties === 'number' && objectKeys.length < node.minProperties) {
+          add(pointer, 'minProperties', `至少需要 ${node.minProperties} 个字段`);
+        }
+        if (typeof node.maxProperties === 'number' && objectKeys.length > node.maxProperties) {
+          add(pointer, 'maxProperties', `最多允许 ${node.maxProperties} 个字段`);
+        }
         if (Array.isArray(node.required)) {
           for (const key of node.required) {
             if (!(key in value)) add(pointer, 'required', `缺少必填字段 "${key}"`);
@@ -360,6 +367,7 @@
         for (const [key, child] of Object.entries(properties)) {
           if (key in value) validate(value[key], child, joinPointer(pointer, key), depth + 1);
         }
+        const patternCovered = new Set();
         if (node.patternProperties) {
           for (const [pattern, child] of Object.entries(node.patternProperties)) {
             let regex = null;
@@ -369,17 +377,20 @@
               continue;
             }
             for (const key of Object.keys(value)) {
-              if (regex.test(key)) validate(value[key], child, joinPointer(pointer, key), depth + 1);
+              if (regex.test(key)) {
+                patternCovered.add(key);
+                validate(value[key], child, joinPointer(pointer, key), depth + 1);
+              }
             }
           }
         }
         if (node.additionalProperties === false) {
           for (const key of Object.keys(value)) {
-            if (!(key in properties)) add(pointer, 'additionalProperties', `不允许的字段 "${key}"`);
+            if (!(key in properties) && !patternCovered.has(key)) add(pointer, 'additionalProperties', `不允许的字段 "${key}"`);
           }
         } else if (node.additionalProperties && typeof node.additionalProperties === 'object') {
           for (const key of Object.keys(value)) {
-            if (!(key in properties)) {
+            if (!(key in properties) && !patternCovered.has(key)) {
               validate(value[key], node.additionalProperties, joinPointer(pointer, key), depth + 1);
             }
           }
@@ -683,6 +694,10 @@
    * policy that allows its own default. See docs/design/STORY_MODE.md.
    * ------------------------------------------------------------------------- */
   const STORY_TYPES = new Set(['story_arcs', 'story_levels']);
+  /* Canonical facility keys a fixed story port may declare. Legacy "intel" is
+   * normalized to "tavern" by MapOps; story packs are new content, so they must
+   * use the canonical key. Unknown keys warn (framework may add facilities). */
+  const STORY_FACILITIES = new Set(['exchange', 'contracts', 'supply', 'shipyard', 'tavern']);
 
   function storyFieldView(view, field) {
     return Object.assign({}, view, { field });
@@ -694,6 +709,7 @@
     if (!data || typeof data !== 'object') return;
     const characters = Array.isArray(data.characters) ? data.characters : [];
     const characterIds = new Set();
+    const characterRoles = new Map();
     let protagonistCount = 0;
     characters.forEach((character, index) => {
       if (!character || typeof character !== 'object') return;
@@ -704,6 +720,7 @@
             `角色 ID 重复：${id}（第 ${index + 1} 个角色）`, storyFieldView(view, `data.characters.${index}`));
         }
         characterIds.add(id);
+        characterRoles.set(id, String(character.role || ''));
       }
       if (character.role === 'protagonist') protagonistCount += 1;
     });
@@ -711,6 +728,10 @@
     if (protagonist && !characterIds.has(protagonist)) {
       add('error', 'story_protagonist_unknown',
         `protagonist_id "${protagonist}" 不在 characters 中。`, storyFieldView(view, 'data.protagonist_id'));
+    } else if (protagonist && characterRoles.has(protagonist) && characterRoles.get(protagonist) !== 'protagonist') {
+      add('warning', 'story_protagonist_role',
+        `protagonist_id "${protagonist}" 的角色 role 不是 protagonist；剧情模式固定主角建议显式标注。`,
+        storyFieldView(view, 'data.protagonist_id'));
     }
     if (protagonistCount > 1) {
       add('warning', 'story_multiple_protagonists',
@@ -758,7 +779,16 @@
 
     const narrative = data.narrative && typeof data.narrative === 'object' ? data.narrative : {};
     const beats = Array.isArray(narrative.beats) ? narrative.beats : [];
+    const beatIds = new Set();
     beats.forEach((beat, index) => {
+      const beatId = beat && typeof beat === 'object' && beat.id ? String(beat.id) : '';
+      if (beatId) {
+        if (beatIds.has(beatId)) {
+          add('error', 'story_beat_duplicate',
+            `叙事节拍 ID 重复：${beatId}（第 ${index + 1} 个节拍）`, storyFieldView(view, `data.narrative.beats.${index}`));
+        }
+        beatIds.add(beatId);
+      }
       const stageId = beat && typeof beat === 'object' && beat.stage_id ? String(beat.stage_id) : '';
       if (stageId && !stageIds.has(stageId)) {
         add('error', 'story_beat_stage_unknown',
@@ -779,13 +809,41 @@
     const ports = Array.isArray(fixed.ports) ? fixed.ports : [];
     const portIds = new Set();
     ports.forEach((port, index) => {
-      const id = port && typeof port === 'object' && port.id ? String(port.id) : '';
+      if (!port || typeof port !== 'object') return;
+      const id = port.id ? String(port.id) : '';
       if (!id) return;
       if (portIds.has(id)) {
         add('error', 'story_fixed_port_duplicate',
           `固定地图港口 ID 重复：${id}`, storyFieldView(view, `data.map.fixed.ports.${index}`));
       }
       portIds.add(id);
+      const facilitySeen = new Set();
+      for (const facility of Array.isArray(port.facilities) ? port.facilities : []) {
+        const key = String(facility || '');
+        if (!key) continue;
+        if (facilitySeen.has(key)) {
+          add('error', 'story_facility_duplicate',
+            `港口 ${id} 的设施重复：${key}`, storyFieldView(view, `data.map.fixed.ports.${index}.facilities`));
+        }
+        facilitySeen.add(key);
+        if (!STORY_FACILITIES.has(key)) {
+          add('warning', 'story_facility_unknown',
+            `港口 ${id} 的设施 "${key}" 不在固定地图设施清单（${[...STORY_FACILITIES].join(' / ')}）里；` +
+            '"intel" 等旧键请改成 "tavern"。', storyFieldView(view, `data.map.fixed.ports.${index}.facilities`));
+        }
+      }
+      const marketSeen = new Set();
+      const market = Array.isArray(port.market) ? port.market : [];
+      market.forEach((entry, marketIndex) => {
+        if (!entry || typeof entry !== 'object') return;
+        const itemId = String(entry.item || '');
+        if (!itemId) return;
+        if (marketSeen.has(itemId)) {
+          add('error', 'story_market_duplicate_item',
+            `港口 ${id} 的市场重复列出商品：${itemId}`, storyFieldView(view, `data.map.fixed.ports.${index}.market.${marketIndex}`));
+        }
+        marketSeen.add(itemId);
+      });
     });
     const startPort = fixed.start_port ? String(fixed.start_port) : '';
     if (startPort && !portIds.has(startPort)) {
@@ -798,13 +856,36 @@
       add('error', 'story_start_port_unknown',
         `start.port_id "${startPortId}" 不是固定地图里的港口。`, storyFieldView(view, 'data.start.port_id'));
     }
+    if (startPort && startPortId && startPort !== startPortId) {
+      add('error', 'story_start_port_conflict',
+        `map.fixed.start_port "${startPort}" 与 start.port_id "${startPortId}" 不一致；两者必须指向同一港口。`,
+        storyFieldView(view, 'data.start.port_id'));
+    }
+    if (!startPort && !startPortId) {
+      add('warning', 'story_level_start_port_missing',
+        '固定地图既没有 start_port 也没有 start.port_id；运行时将回退到第一个港口作为起点。',
+        storyFieldView(view, 'data.map.fixed.start_port'));
+    }
 
     const adjacency = new Map();
     const edges = Array.isArray(fixed.edges) ? fixed.edges : [];
+    const edgeSeen = new Set();
     edges.forEach((edge, index) => {
       if (!edge || typeof edge !== 'object') return;
       const from = String(edge.from || '');
       const to = String(edge.to || '');
+      if (from && to && from === to) {
+        add('error', 'story_fixed_edge_self',
+          `航道 #${index + 1} 的 from 与 to 是同一个港口：${from}`, storyFieldView(view, `data.map.fixed.edges.${index}`));
+      }
+      if (from && to) {
+        const key = from < to ? `${from}|${to}` : `${to}|${from}`;
+        if (edgeSeen.has(key)) {
+          add('error', 'story_fixed_edge_duplicate',
+            `固定地图重复的航道：${from} ↔ ${to}`, storyFieldView(view, `data.map.fixed.edges.${index}`));
+        }
+        edgeSeen.add(key);
+      }
       for (const [end, id] of [['from', from], ['to', to]]) {
         if (id && !portIds.has(id)) {
           add('error', 'story_fixed_edge_port_unknown',
@@ -841,8 +922,24 @@
   }
 
   /** Pack-level whitelist: a story pack carries story content only. */
-  function checkStoryPack(contentFiles, add) {
-    if (!contentFiles.some((file) => STORY_TYPES.has(file.content_type))) return;
+  function checkStoryPack(contentFiles, manifest, modId, add) {
+    const storyFiles = contentFiles.filter((file) => STORY_TYPES.has(file.content_type));
+    if (!storyFiles.length) {
+      const declared = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
+      if (declared.includes('content.story.v1')) {
+        add('warning', 'story_pack_empty',
+          'Manifest 声明了 content.story.v1，但包里没有 story_arcs / story_levels 内容。',
+          { name: 'content', type: 'story_arcs' });
+      }
+      return;
+    }
+
+    const capabilities = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
+    if (!capabilities.includes('content.story.v1')) {
+      add('error', 'story_pack_capability_required',
+        '剧情包必须按类型声明 capability "content.story.v1"（见 manifest.capabilities）。',
+        { name: 'content', type: 'story_arcs', field: 'capabilities' });
+    }
     for (const file of contentFiles) {
       if (STORY_TYPES.has(file.content_type)) continue;
       add('error', 'story_pack_off_whitelist',
@@ -858,21 +955,43 @@
         levels.set(definition.id, { file: file.path, index });
       });
     }
-    const referenced = new Set();
+    const arcs = [];
     for (const file of contentFiles) {
       if (file.content_type !== 'story_arcs') continue;
       (Array.isArray(file.definitions) ? file.definitions : []).forEach((definition, index) => {
-        const list = definition && definition.data && Array.isArray(definition.data.levels) ? definition.data.levels : [];
-        list.forEach((value, levelIndex) => {
-          const id = String(value || '');
-          if (!id) return;
-          referenced.add(id);
-          const type = referencedIdType(id);
-          if (type && type !== 'story_level') {
-            add('error', 'story_arc_level_type', `篇章关卡列表只能引用 story_level：${id}`,
-              { name: 'content', type: file.content_type, file: file.path, index, field: `data.levels.${levelIndex}` });
-          }
-        });
+        if (!definition || typeof definition.id !== 'string') return;
+        arcs.push({ file, definition, index });
+      });
+    }
+    /* Contract v1: one pack = one arc (multi-arc packs need a contract bump). */
+    if (arcs.length > 1) {
+      add('error', 'story_pack_multiple_arcs',
+        `剧情包 v1 只允许 1 个篇章（story_arc），当前有 ${arcs.length} 个；多篇章需升数据契约版本。`,
+        { name: 'content', type: 'story_arcs' });
+    }
+    if (arcs.length === 0 && levels.size > 0) {
+      add('error', 'story_pack_arc_missing',
+        '剧情包有关卡但没有篇章（story_arc）；v1 需要一个篇章按顺序列出关卡。',
+        { name: 'content', type: 'story_arcs' });
+    }
+    const referenced = new Set();
+    for (const { file, definition, index } of arcs) {
+      const list = definition && definition.data && Array.isArray(definition.data.levels) ? definition.data.levels : [];
+      list.forEach((value, levelIndex) => {
+        const id = String(value || '');
+        if (!id) return;
+        referenced.add(id);
+        const type = referencedIdType(id);
+        if (type && type !== 'story_level') {
+          add('error', 'story_arc_level_type', `篇章关卡列表只能引用 story_level：${id}`,
+            { name: 'content', type: file.content_type, file: file.path, index, field: `data.levels.${levelIndex}` });
+        }
+        const namespace = id.split(':')[0];
+        if (namespace && modId && namespace !== modId) {
+          add('error', 'story_arc_level_foreign',
+            `篇章关卡列表只能引用本剧情包内的关卡：${id}（属于 ${namespace}，当前包 ${modId}）。`,
+            { name: 'content', type: file.content_type, file: file.path, index, field: `data.levels.${levelIndex}` });
+        }
       });
     }
     for (const [id, entry] of levels) {
@@ -1195,7 +1314,7 @@
       add('error', 'no_content', '模组至少需要一个内容文件。', { name: 'overview', field: 'content' });
     }
 
-    checkStoryPack(contentFiles, add);
+    checkStoryPack(contentFiles, manifest, modId, add);
 
     for (const file of contentFiles) {
       if (!safePath(file.path) || extensionOf(file.path) !== '.json') {
@@ -1213,6 +1332,9 @@
       const fileInfo = catalog().BY_KEY[file.content_type];
       /* Draft (2.0) types reference planned types that Core does not ship yet. */
       const draftFile = !!(fileInfo && fileInfo.draft);
+      /* Story statements are frozen content for the game, so their core references
+       * must resolve even though the type itself is not loaded yet. */
+      const storyFile = STORY_TYPES.has(file.content_type);
       file.definitions.forEach((definition, index) => {
         if (!definition || typeof definition !== 'object' || file.content_type === 'patches') return;
         const view = { name: 'content', type: file.content_type, file: file.path, index };
@@ -1233,8 +1355,12 @@
             }
           } else if (namespace === 'core') {
             usesCore = true;
-            if (!draftFile && core && !core.definitions.some((item) => item.id === value)) {
-              add('warning', 'ref_core_unknown', `Core 中找不到引用的定义：${value}`, view);
+            if (core && !core.definitions.some((item) => item.id === value)) {
+              if (storyFile) {
+                add('error', 'ref_core_unknown', `Core 中找不到引用的定义：${value}`, view);
+              } else if (!draftFile) {
+                add('warning', 'ref_core_unknown', `Core 中找不到引用的定义：${value}`, view);
+              }
             }
           }
         }, 0);

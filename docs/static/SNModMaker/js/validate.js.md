@@ -34,32 +34,33 @@
 | `matchesType(value, type)` | L225 |
 | `validateSchema(instance, schema, file)` | L232 |
 | `runSchemaValidation(instance, schema, context, startDepth)` | L236 |
-| `parseSemver(text)` | L396 |
-| `versionRangeError(text)` | L407 |
-| `safePath(path)` | L424 |
-| `extensionOf(path)` | L434 |
-| `isForbiddenPath(path)` | L440 |
-| `walkStrings(value, path, callback, depth)` | L444 |
-| `referencedIdType(id)` | L459 |
-| `expectedRefType(path)` | L464 |
-| `LOCAL_IDENTIFIER_FIELDS` | L479 |
-| `SOCKET_CLASSES` | L484 |
-| `RIG_SOCKET_KINDS` | L485 |
-| `checkWeaponSemantics(definition, view, add)` | L488 |
-| `checkCombatAIProfileSemantics(definition, view, add)` | L522 |
-| `checkLootTableSemantics(definition, view, add)` | L554 |
-| `checkHullSocketSemantics(definition, view, add)` | L570 |
-| `QUEST_EVENT_RE` | L652 |
-| `checkQuestSemantics(definition, view, add)` | L655 |
-| `STORY_TYPES` | L685 |
-| `storyFieldView(view, field)` | L687 |
-| `checkStoryArcSemantics(definition, view, add)` | L692 |
-| `checkStoryLevelSemantics(definition, view, add)` | L736 |
-| `checkStoryPack(contentFiles, add)` | L844 |
-| `validateProject(project, options)` | L885 |
-| `finish(issues)` | L1262 |
-| `byDefinition(issues)` | L1271 |
-| `SNValidate (global)` | L1284 |
+| `parseSemver(text)` | L407 |
+| `versionRangeError(text)` | L418 |
+| `safePath(path)` | L435 |
+| `extensionOf(path)` | L445 |
+| `isForbiddenPath(path)` | L451 |
+| `walkStrings(value, path, callback, depth)` | L455 |
+| `referencedIdType(id)` | L470 |
+| `expectedRefType(path)` | L475 |
+| `LOCAL_IDENTIFIER_FIELDS` | L490 |
+| `SOCKET_CLASSES` | L495 |
+| `RIG_SOCKET_KINDS` | L496 |
+| `checkWeaponSemantics(definition, view, add)` | L499 |
+| `checkCombatAIProfileSemantics(definition, view, add)` | L533 |
+| `checkLootTableSemantics(definition, view, add)` | L565 |
+| `checkHullSocketSemantics(definition, view, add)` | L581 |
+| `QUEST_EVENT_RE` | L663 |
+| `checkQuestSemantics(definition, view, add)` | L666 |
+| `STORY_TYPES` | L696 |
+| `STORY_FACILITIES` | L700 |
+| `storyFieldView(view, field)` | L702 |
+| `checkStoryArcSemantics(definition, view, add)` | L707 |
+| `checkStoryLevelSemantics(definition, view, add)` | L757 |
+| `checkStoryPack(contentFiles, manifest, modId, add)` | L925 |
+| `validateProject(project, options)` | L1004 |
+| `finish(issues)` | L1388 |
+| `byDefinition(issues)` | L1397 |
+| `SNValidate (global)` | L1410 |
 
 ## 契约与约束
 

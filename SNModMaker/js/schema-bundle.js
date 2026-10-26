@@ -1547,6 +1547,7 @@
           ]
         },
         "story_stage": {
+          "$comment": "Shared by the tutorial map_config flow and Story Mode levels. Story Mode data contract v1 froze the shapes below on 2026-10-27 (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md).",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -1556,7 +1557,7 @@
           "properties": {
             "id": {
               "type": "string",
-              "minLength": 1
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
             },
             "checkpoint": {
               "type": "boolean"
@@ -1574,14 +1575,17 @@
               "properties": {
                 "title_key": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "body_keys": {
                   "type": "array",
                   "minItems": 1,
+                  "maxItems": 32,
                   "items": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "maxLength": 160
                   }
                 }
               }
@@ -1589,13 +1593,16 @@
             "unlock_features": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 32,
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
               }
             },
             "unlock_items": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "$ref": "#/$defs/id_ref"
               }
@@ -1603,6 +1610,7 @@
             "unlock_modules": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "$ref": "#/$defs/id_ref"
               }
@@ -1617,17 +1625,20 @@
               "properties": {
                 "text_key": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "target": {
                   "type": "integer",
-                  "minimum": 1
+                  "minimum": 1,
+                  "maximum": 1000000
                 }
               }
             },
             "advance": {
               "type": "object",
               "additionalProperties": false,
+              "minProperties": 1,
               "properties": {
                 "mode": {
                   "enum": [
@@ -1636,31 +1647,38 @@
                 },
                 "event": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "counter": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "counter_from": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "at_least": {
                   "type": "integer",
-                  "minimum": 1
+                  "minimum": 1,
+                  "maximum": 1000000
                 },
                 "flag": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "not_flag": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "all": {
                   "type": "array",
                   "minItems": 1,
+                  "maxItems": 32,
                   "items": {
                     "$ref": "#/$defs/story_condition"
                   }
@@ -1673,13 +1691,16 @@
             "lock_actions": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]{0,63}$"
               }
             },
             "preferred_strategy": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 64
             },
             "focus": {
               "type": "object",
@@ -1690,16 +1711,19 @@
               "properties": {
                 "target": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 },
                 "text_key": {
                   "type": "string",
-                  "minLength": 1
+                  "minLength": 1,
+                  "maxLength": 160
                 }
               }
             },
             "effects": {
               "type": "array",
+              "maxItems": 64,
               "items": {
                 "type": "object",
                 "required": [
@@ -1708,7 +1732,8 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "maxLength": 64
                   }
                 }
               }
@@ -1718,30 +1743,37 @@
         "story_condition": {
           "type": "object",
           "additionalProperties": false,
+          "minProperties": 1,
           "properties": {
             "event": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "counter": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "counter_from": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "at_least": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "maximum": 1000000
             },
             "flag": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "not_flag": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "match": {
               "$ref": "#/$defs/story_match"
@@ -1750,8 +1782,11 @@
         },
         "story_match": {
           "type": "object",
+          "minProperties": 1,
           "additionalProperties": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
           }
         },
         "modifier": {
@@ -5932,8 +5967,9 @@
     "v2/story_arc.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/story-arc-2.json",
-      "title": "Steam Navigator story arc content file (Schema 2.0 draft)",
-      "description": "Story Mode campaign arcs (Content Schema 2.0 draft). One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. See docs/design/STORY_MODE.md for the full contract. The Godot runtime does not load Schema 2.0 draft content yet.",
+      "title": "Steam Navigator story arc content file (Schema 2.0; Story Mode data contract v1, frozen)",
+      "description": "Story Mode campaign arcs. One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. The data contract is frozen (2026-10-27); see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md for the constraint list. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
+      "$comment": "Story Mode data contract v1 — frozen 2026-10-27. Breaking structural changes require a new contract version (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md §7).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -6043,12 +6079,14 @@
             "characters": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 64,
               "items": {
                 "$ref": "#/$defs/story_character"
               }
             },
             "terms": {
               "type": "array",
+              "maxItems": 64,
               "items": {
                 "$ref": "#/$defs/story_term"
               }
@@ -6056,6 +6094,7 @@
             "levels": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 32,
               "items": {
                 "$ref": "common.schema.json#/$defs/id_ref"
               }
@@ -6090,8 +6129,9 @@
     "v2/story_level.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/story-level-2.json",
-      "title": "Steam Navigator story level content file (Schema 2.0 draft)",
-      "description": "Story Mode levels (Content Schema 2.0 draft). One level is one hand-authored mission on a fixed map: the embedded fixed_layout ports/edges, the initial run state, the staged mission line (shared story_stage DSL from v2/common.schema.json), narrative briefing/beats/debrief, difficulty knobs, checkpoint-driven retry policy and non-gameplay rewards. See docs/design/STORY_MODE.md for the full contract. The Godot runtime does not load Schema 2.0 draft content yet.",
+      "title": "Steam Navigator story level content file (Schema 2.0; Story Mode data contract v1, frozen)",
+      "description": "Story Mode levels. One level is one hand-authored mission on a fixed map: the embedded fixed_layout ports/edges, the initial run state, the staged mission line (shared story_stage DSL from v2/common.schema.json), narrative briefing/beats/debrief, difficulty knobs, checkpoint-driven retry policy and non-gameplay rewards. The data contract is frozen (2026-10-27); see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md for the constraint list. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
+      "$comment": "Story Mode data contract v1 — frozen 2026-10-27. Breaking structural changes require a new contract version (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md §7).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -6131,6 +6171,16 @@
           "type": "string",
           "pattern": "^port_[0-9]{1,2}$"
         },
+        "story_position": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 4096
+          }
+        },
         "fixed_port": {
           "type": "object",
           "additionalProperties": false,
@@ -6152,22 +6202,32 @@
               "$ref": "common.schema.json#/$defs/id_ref"
             },
             "position": {
-              "$ref": "common.schema.json#/$defs/range2"
+              "$ref": "#/$defs/story_position"
             },
             "facilities": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 16,
               "items": {
                 "type": "string",
-                "pattern": "^[a-z_]+$"
+                "pattern": "^[a-z][a-z0-9_]{0,31}$"
               }
             },
             "market": {
-              "type": "object",
-              "additionalProperties": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
                 "type": "object",
                 "additionalProperties": false,
+                "required": [
+                  "item",
+                  "stock",
+                  "price"
+                ],
                 "properties": {
+                  "item": {
+                    "$ref": "common.schema.json#/$defs/id_ref"
+                  },
                   "stock": {
                     "type": "number",
                     "minimum": 0
@@ -6222,6 +6282,7 @@
             "ports": {
               "type": "array",
               "minItems": 2,
+              "maxItems": 32,
               "items": {
                 "$ref": "#/$defs/fixed_port"
               }
@@ -6229,6 +6290,7 @@
             "edges": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 128,
               "items": {
                 "$ref": "#/$defs/fixed_edge"
               }
@@ -6285,6 +6347,7 @@
             },
             "cargo": {
               "type": "array",
+              "maxItems": 64,
               "items": {
                 "$ref": "common.schema.json#/$defs/cargo_stack"
               }
@@ -6292,6 +6355,7 @@
             "equipped_modules": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "$ref": "common.schema.json#/$defs/id_ref"
               }
@@ -6299,7 +6363,8 @@
             "world_time": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
             }
           }
         },
@@ -6310,13 +6375,16 @@
             "unlock_features": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 32,
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
               }
             },
             "unlock_items": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "$ref": "common.schema.json#/$defs/id_ref"
               }
@@ -6324,6 +6392,7 @@
             "unlock_modules": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "$ref": "common.schema.json#/$defs/id_ref"
               }
@@ -6331,8 +6400,10 @@
             "lock_actions": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]{0,63}$"
               }
             }
           }
@@ -6347,14 +6418,17 @@
           "properties": {
             "title_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "body_keys": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 32,
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 160
               }
             }
           }
@@ -6372,18 +6446,22 @@
             },
             "speaker_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "title_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "body_keys": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 32,
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 160
               }
             }
           }
@@ -6398,11 +6476,12 @@
           "properties": {
             "id": {
               "type": "string",
-              "pattern": "^[a-z][a-z0-9_]*$"
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
             },
             "stage_id": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 64
             },
             "presentation": {
               "$ref": "common.schema.json#/$defs/story_presentation"
@@ -6425,21 +6504,26 @@
             "success_keys": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 16,
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 160
               }
             },
             "failure_keys": {
               "type": "array",
+              "maxItems": 16,
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 160
               }
             },
             "hook_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             }
           }
         },
@@ -6456,6 +6540,7 @@
             },
             "beats": {
               "type": "array",
+              "maxItems": 64,
               "items": {
                 "$ref": "#/$defs/narrative_beat"
               }
@@ -6482,19 +6567,23 @@
               "properties": {
                 "starting_money_scale": {
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 100
                 },
                 "deadline_scale": {
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 100
                 },
                 "risk_scale": {
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 100
                 },
                 "coal_water_scale": {
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 100
                 },
                 "hint_level": {
                   "enum": [
@@ -6514,6 +6603,7 @@
             "achievements": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9_.]{1,63}$"
@@ -6522,6 +6612,7 @@
             "codex_entries": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9_.]{1,63}$"
@@ -6530,6 +6621,7 @@
             "cosmetics": {
               "type": "array",
               "uniqueItems": true,
+              "maxItems": 64,
               "items": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9_.]{1,63}$"
@@ -6554,6 +6646,7 @@
             "allow": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 2,
               "uniqueItems": true,
               "items": {
                 "enum": [
@@ -6588,6 +6681,7 @@
             "stages": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 64,
               "items": {
                 "$ref": "common.schema.json#/$defs/story_stage"
               }

@@ -1170,7 +1170,7 @@
       terms: [],
       levels: [],
       canon: true,
-      source: { author: 'SNStoryMaker' },
+      source: { author: 'SNModMaker' },
     }),
     /* 剧情关卡（Schema 2.0 草案）：2 港 1 航道的固定小地图 + 首尾存档点，可直接进游戏试跑。 */
     story_levels: () => ({

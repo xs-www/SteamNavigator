@@ -5,7 +5,7 @@
 
 ## In Progress
 
-- [ ] 剧情模式 3 天交付（2026-10-27 定；按人类监督 + Agent 流程排期，排除战斗集成）：**S2 加载链**（`story_arcs` / `story_levels` 提升运行时 active、剧情包「只加剧情」白名单在 Godot 侧生效、`story_mode.view`）→ **S4 运行时**（`data.story_mode` / `run.start story_level` / `StoryService` 泛化 / checkpoint 重试 / 存档 round-trip）→ **S5 UI**（主菜单模式入口 / 篇章选关 / 简报结算 / 关卡内 HUD / 失败二选一）→ **S3 首发 1 关内容** → **SNModMaker 直接添加格式化剧情关卡**（复用 Schema / 校验 / 打包；编辑器体量膨胀时拆分模块，把剧情地图编辑器抽离为独立页面）。契约见 [STORY_MODE.md](docs/design/STORY_MODE.md)
+- [ ] 剧情模式 3 天实现（2026-10-27 定；按人类监督 + Agent 流程排期，排除战斗集成；**Schema 与约束 V1 已冻结**，见 [STORY_MODE_DATA_CONTRACT_V1.md](docs/specs/STORY_MODE_DATA_CONTRACT_V1.md)）：**S2 加载链**（`story_arcs` / `story_levels` 提升运行时 active、剧情包「只加剧情」白名单在 Godot 侧生效、`story_mode.view`）→ **S4 运行时**（`data.story_mode` / `run.start story_level` / `StoryService` 泛化 / checkpoint 重试 / 存档 round-trip）→ **S5 UI**（主菜单模式入口 / 篇章选关 / 简报结算 / 关卡内 HUD / 失败二选一）→ **S3 首发 1 关内容** → **S7 SNModMaker 直接添加格式化剧情关卡**（复用 Schema / 校验 / 打包；编辑器体量膨胀时拆分模块，把剧情地图编辑器抽离为独立页面）。设计见 [STORY_MODE.md](docs/design/STORY_MODE.md)
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗；当前暂停，让位剧情模式
 
 ## Pending
@@ -69,6 +69,8 @@
 ## Recently Completed
 
 - 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
+
+- 剧情模式数据契约 V1 冻结（2026-10-27）：Schema 边界（`story_arcs` / `story_levels` 与 common 的 4 个 story `$defs`）、固定港口市场改 `{item, stock, price}[]`、世界坐标 / ID / 键长上限、起点双字段一致性、固定地图自环 / 重复航道 / 重复市场商品、包级 capability / 单篇章 / 关卡归属、`intel → tavern` 设施键，全部落进 Schema 与 `SNModMaker/js/validate.js`；新增 `tools/check_story_schema_freeze.mjs` + `schemas/v2/story_schema_freeze.json` 冻结门禁，契约文档见 [STORY_MODE_DATA_CONTRACT_V1.md](docs/specs/STORY_MODE_DATA_CONTRACT_V1.md)。验证：`content.mjs validate` 示例包 0 error / 2 draft warning、SNModMaker 65/65、Content CLI 64/64、`check_story_schema_freeze --check` 通过。
 
 - 官网发布日期时区修正（2026-10-27）：用户反馈 `v0.2.0-dev.4` 在网站显示 10-26，按其当地时间（悉尼 UTC+11）应为 10-27。根因：`tools/build-release-data.mjs` 直接用 `published_at.slice(0, 10)` 截 UTC 日期（`2026-10-26T22:18:39Z`）。修复：`date` 改为按站点时区（默认 `Asia/Shanghai`，`SN_RELEASE_TIME_ZONE` / `--time-zone` 覆盖）计算并输出 `date_time_zone`；`release.js` 把 `published_at` 按访客本地时区格式化为 `YYYY-MM-DD`，解析失败回退 `date`；更新 `?v=` 缓存标识与 `WEBSITE.md` §2。验证：release-data 6/6（含 UTC 日界、UTC / 悉尼时区用例）、site-api 6/6；重新生成数据 `date=2026-10-27`。
 

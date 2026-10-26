@@ -81,6 +81,14 @@ jobs:
           set -euo pipefail
           node tools/check_content_schema_v2.mjs
 
+      # Story Mode data contract v1 is frozen: Schema/shared-DSL drift must be a
+      # deliberate contract-version decision, not an accidental edit.
+      - name: Check Story Mode data contract freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/check_story_schema_freeze.mjs --check
+
       # The editor and Content CLI share the same validation engine as the game;
       # keep their suites in the release gate so content-type promotions cannot
       # silently drift from the deploy guard / capability semantics.

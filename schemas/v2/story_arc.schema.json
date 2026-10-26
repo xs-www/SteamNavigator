@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/story-arc-2.json",
-  "title": "Steam Navigator story arc content file (Schema 2.0 draft)",
-  "description": "Story Mode campaign arcs (Content Schema 2.0 draft). One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. See docs/design/STORY_MODE.md for the full contract. The Godot runtime does not load Schema 2.0 draft content yet.",
+  "title": "Steam Navigator story arc content file (Schema 2.0; Story Mode data contract v1, frozen)",
+  "description": "Story Mode campaign arcs. One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. The data contract is frozen (2026-10-27); see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md for the constraint list. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
+  "$comment": "Story Mode data contract v1 — frozen 2026-10-27. Breaking structural changes require a new contract version (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md §7).",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
@@ -92,12 +93,14 @@
         "characters": {
           "type": "array",
           "minItems": 1,
+          "maxItems": 64,
           "items": {
             "$ref": "#/$defs/story_character"
           }
         },
         "terms": {
           "type": "array",
+          "maxItems": 64,
           "items": {
             "$ref": "#/$defs/story_term"
           }
@@ -105,6 +108,7 @@
         "levels": {
           "type": "array",
           "uniqueItems": true,
+          "maxItems": 32,
           "items": {
             "$ref": "common.schema.json#/$defs/id_ref"
           }

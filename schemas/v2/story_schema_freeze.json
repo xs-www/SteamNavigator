@@ -1,0 +1,18 @@
+{
+  "contract": "STORY_MODE_DATA_CONTRACT_V1",
+  "contract_version": 1,
+  "frozen_at": "2026-10-27",
+  "schema_version": "2.0",
+  "source": "node tools/check_story_schema_freeze.mjs --update",
+  "files": {
+    "story_arc.schema.json": "9ae9b353c975eb0f202fb547993ba2bfc75e9658db29d44a689f2d58abe29ac5",
+    "story_level.schema.json": "6dab4327a042bae1b7a4f6eec93a45edcaf93f1d854d7baa07ed205ad668a084"
+  },
+  "common_schema": "common.schema.json",
+  "common_story_defs": {
+    "story_presentation": "8517eb111412f7881644014a151cea13b0900c5bed572f4979e42945b7216a8f",
+    "story_stage": "342c5436ef621c83d39573b0347b628fa99ef1f4bba244beb3aca6b80b03b386",
+    "story_condition": "b94fc044764e0d74373611dc3bf3ac39cb1a4fcfd7d82123fb716ff805d8b273",
+    "story_match": "b2e5d693b24bc2bb5ff79b010677235262cba97aa2ee65de289b93370d65079d"
+  }
+}

@@ -1,21 +1,23 @@
-# 剧情模式（Story Mode）设计草案 — Draft 5
+# 剧情模式（Story Mode）设计草案 — Draft 6
 
 > 作用：定义与「自由模式」并列的**剧情模式**——在手工固定地图上、按固定任务线推进的关卡
 > 集合。本文确定三种边界：剧情模式与自由模式的模式边界、与持久战役（`campaign`）的命名
 > 边界、与现有新手剧情（`data.story`，见 [STORY_TUTORIAL.md](STORY_TUTORIAL.md)）的迁移边界；
 > 并给出**剧情数据包**与关卡的数据化存储契约。
 >
-> 状态：Active（讨论中，未定稿；S1 数据契约已落地为 Schema 2.0 草案与示例包，游戏运行时尚未加载）。
+> 状态：Active。**S1 数据契约与约束已于 2026-10-27 冻结为 V1**，见
+> [STORY_MODE_DATA_CONTRACT_V1.md](../specs/STORY_MODE_DATA_CONTRACT_V1.md)；运行时加载（S2 起）
+> 尚未开始，`story_arcs` / `story_levels` 仍是草案类型。
 >
-> 本版（Draft 5）已确认：
+> 本版（Draft 6）已确认：
 > - 游戏侧**不做任何剧情内容**，只交付「固定地图、剧情演出、初始状态、关卡数值」四类能力 +
 >   一个**可完全手动配置、可直接加载为剧情战役的数据包**。
 > - **World Forge 只交付世界观设定**；世界观 → 可导入剧情配置需要**人工**在剧情编辑器里完成，
 >   游戏运行时不依赖 World Forge，也不自动转换设定。
 > - **数据包就是「只加剧情的模组」**：仍然是内容模组格式，仍按模组格式加载；一个包内支持
 >   **多个剧情关卡**。
-> - 剧情编辑器 **`SNStoryMaker/`** 放在**仓库根目录**（与 `SNModMaker/`、`SNBattleSim/`
->   同级），能复用 SNModMaker 的 Schema / 校验 / 打包就复用。
+> - 剧情编辑器**复用 `SNModMaker/`**（不新建 `SNStoryMaker/`）：剧情关卡直接加在模组编辑器里；
+>   若编辑器体量膨胀，再拆分模块并把**剧情地图编辑器抽离为独立页面**（见 §8）。
 > - 首发 **1 关**验证纯数据驱动演出；**固定主角**；**每关数值独立**；失败按 **checkpoint**
 >   回档，「重开剧情」= **重开本关**；通关奖励不影响自由模式。
 > - **成就系统延后**：本文只保留奖励字段与「不影响自由模式」的约束，成就实装放到正式版交付前。
@@ -33,21 +35,24 @@
 | 自由模式 Free Mode | 在无尽的海图上经营、贸易，自己决定要做什么。 |
 | 剧情模式 Story Mode | 在一段完整的故事里启航，一关一关认识这片海。 |
 
-## 0.1 落地状态（S1：数据契约）
+## 0.1 落地状态（S1：数据契约；2026-10-27 冻结 V1）
 
-S1 已交付（2026-10-22），实现先于游戏侧能力：
+S1 已交付（2026-10-22），并已把 **Schema + 约束冻结为数据契约 V1**（2026-10-27）：
 
 | 交付物 | 位置 |
 |---|---|
-| 篇章 / 关卡 Schema 2.0 草案 | `schemas/v2/story_arc.schema.json`、`schemas/v2/story_level.schema.json`（共用 `v2/common.schema.json#/$defs/story_stage`） |
+| 篇章 / 关卡 Schema 2.0（Frozen v1） | `schemas/v2/story_arc.schema.json`、`schemas/v2/story_level.schema.json`（共用 `v2/common.schema.json#/$defs/story_stage`） |
+| 冻结契约与约束码表 | [STORY_MODE_DATA_CONTRACT_V1.md](../specs/STORY_MODE_DATA_CONTRACT_V1.md) |
+| 冻结门禁 | `node tools/check_story_schema_freeze.mjs --check`（锁文件 `schemas/v2/story_schema_freeze.json`） |
 | 类型登记（草案，运行时未加载） | `content_types.json` → `draft_schemas` + `draft_types` + `planned`（capability `content.story.v1`） |
 | 编辑器元数据（标签 / 默认值 / 枚举可读名） | `SNModMaker/js/catalog.js` |
-| 校验（白名单 + 篇章 / 关卡语义） | `SNModMaker/js/validate.js`（`story_pack_off_whitelist`、`story_level_checkpoint_missing` 等） |
+| 校验（白名单 + 篇章 / 关卡语义） | `SNModMaker/js/validate.js`（`story_pack_off_whitelist`、`story_level_checkpoint_missing`、`story_start_port_conflict` 等，见契约 §6） |
 | 可导入的示例数据包（1 篇章 + 2 关卡 + 中英文本） | `sdk/templates/story_pack_iron_tide/` |
 | 校验命令 | `node SNModMaker/tools/content.mjs validate --mod sdk/templates/story_pack_iron_tide`（0 error / 2 个预期 `draft_content` warning） |
 
 - **不改游戏运行时**：`ContentCompiler` 按每个 active 类型的 `schema_version` 加载，剧情包因类型仍是 draft 不会进入注册表（与其它 2.0 草案类型同一流程）。
 - S2 起才做加载链与 `story_mode.*`；S1 的验收是「数据包能写、能校验、能 round-trip」，不是「能进游戏玩」。
+- 冻结后任何 Schema 结构变更都要走契约 §7 的版本流程；实现侧的下一步是把草案类型提升 active 并接加载链。
 
 ## 1. 模式边界
 
@@ -498,7 +503,11 @@ mods/<pack_id>/
       "fixed": {
         "ports": [
           {"id": "port_0", "name_key": "port.ash_harbor.name", "position": [40, 80],
-           "facilities": ["exchange", "supply"], "market": {"coal": {"stock": 30, "price": 4}}},
+           "facilities": ["exchange", "supply"],
+           "market": [
+             {"item": "core:item/coal", "stock": 30, "price": 4},
+             {"item": "core:item/water", "stock": 30, "price": 2}
+           ]},
           {"id": "port_1", "name_key": "port.iron_bay.name", "position": [160, 80],
            "facilities": ["exchange", "shipyard"]}
         ],
@@ -587,11 +596,15 @@ mods/<pack_id>/
 
 字段约束：
 
+- **本节示例与语义以 [STORY_MODE_DATA_CONTRACT_V1.md](../specs/STORY_MODE_DATA_CONTRACT_V1.md) 为准**（2026-10-27 冻结）；下面的摘要若与契约冲突，以契约为准。
 - 只存 ID 与键，不存本地化文本、不存生成结果；文本进数据包本地化（`story_mode.*`）。
 - `map.fixed` 是本关唯一地形来源：`ports` ≥ 2、`edges` ≥ 1，港口 ID 形如 `port_0`；
   `start_port`、`start.port_id` 与航道两端都必须是已声明港口（语义错误
   `story_fixed_start_port_unknown` / `story_fixed_edge_port_unknown` / `story_start_port_unknown`）。
-  从起点走不到的港口只报 warning（`story_fixed_map_disconnected`），不阻塞写作。
+  两者都写时必须一致（`story_start_port_conflict`）；从起点走不到的港口只报 warning
+  （`story_fixed_map_disconnected`），不阻塞写作。
+- `ports[].market[]` 是 `{item, stock, price}` 数组，`item` 必须是完整定义 ID（如 `core:item/coal`），
+  同一港口同一商品只能出现一次（`story_market_duplicate_item`）。
 - `map.map_config` 是**可选引用**：只复用 Core `map_configs` 的经济 / 探索参数，地形仍以
   `fixed` 为准；不写也能完整跑一关。
 - `stages[]` 复用 `common.schema.json#/$defs/story_stage`（阶段 ID、对白、unlock、objective、
@@ -675,65 +688,40 @@ data.story_mode = {
 - 数据包里的 `rewards.achievements` 先只作为 ID 记录，不要求首发有成就定义、解锁动画或成就页。
 - 图鉴 / 名词解释读数据包自带的 `terms` / `characters`，不额外复制文本（图鉴页同样延后）。
 
-## 8. 剧情编辑器（Node Web）
+## 8. 剧情编辑器（复用 SNModMaker）
 
-### 8.1 定位
+### 8.1 决策（2026-10-27）
 
-- **独立于 SNModMaker**，与 [SNBattleSim](../../SNBattleSim/README.md) / [SNModMaker](../../SNModMaker/README.md)
-  同型：**Node 本地服务 + 浏览器 Web 应用**，零第三方依赖、无 CDN、无构建步骤。
-- 它不替代 World Forge：输入是人工理解后的设定，输出是**剧情数据包**。
-- 首发服务「1 个 arc + N 个 level」的编辑与导出（内容 1 关，格式支持多关）；不追求完整游戏编辑器。
+- **不新建 `SNStoryMaker/`**：剧情关卡直接加在现有 `SNModMaker/` 里，复用同一套 Schema、
+  校验器、ZIP 导出、Core 索引与 Content CLI。
+- 理由：S1 已把剧情 Schema / 校验 / 示例包放进 SNModMaker；再拆一个仓库根目录应用会重复
+  校验器与包格式，违反「校验与包格式只有一份」。
+- 编辑器继续遵守 SNModMaker 约定：零依赖经典脚本、`file://` 可打开、`tools/*.mjs` 为 Node ESM、
+  Node 纯逻辑测试 + CDP 浏览器冒烟。
 
-### 8.2 形态：仓库根目录的 `SNStoryMaker/`
+### 8.2 形态与模块拆分
 
-- 目录放在**仓库根目录**，与 `SNModMaker/`、`SNBattleSim/` 同级；名称确认为 **`SNStoryMaker`**。
-- 与 SNModMaker / SNBattleSim 同型：Node 本地服务 + 浏览器 Web 应用，零第三方依赖、
-  无 CDN、无构建步骤。
+- **基础形态（先做）**：在现有按内容类型表单里直接编辑 `story_arcs` / `story_levels` 的字段；
+  固定地图用可展开的表单 / 列表编辑（港口、航道、市场、起点），关卡列表由 `arc.levels[]` 排序。
+- **编辑器膨胀时**：允许把大模块拆出去，但拆分边界按「数据模型 / 校验 / 导出」保持不变：
+  - 剧情地图编辑器（画布：港口拖拽、航道连线、市场与起点）抽成**独立页面**，从剧情关卡表单打开；
+  - 叙事 / 阶段编辑器可独立成第二个页面；
+  - 页面只操作同一份项目模型，仍经 `SNModMaker/js/validate.js` 校验、`zip.js` 导出，
+    不新增第二套包格式或校验器。
+- 共享纯逻辑优先抽到仓库级公共目录（如 `tools/shared/`），不在两个页面各留一份。
 
-```text
-SNStoryMaker/
-├── index.html                # 应用外壳
-├── css/app.css               # 暗色蒸汽朋克主题
-├── js/schema-bundle.js       # 从 /schemas 生成（复用 SNModMaker 的 sync-schemas 流程）
-├── js/store.js               # 篇章 / 多关卡 / 地图 / 本地化项目模型
-├── js/validate.js            # Schema + 引用 + 本地化覆盖 + 剧情包白名单校验
-├── js/map-editor.js          # 固定地图画布：港口 / 航线 / 设施 / 市场
-├── js/flow-editor.js         # 关卡列表 + 阶段 / 条件 / 效果
-├── js/ui.js                  # 表单、叙事文本、初始状态、难度、checkpoint
-├── js/io.js                  # 导入 / 导出 .snavmod.zip 与项目文件
-├── tools/serve.mjs           # Node 本地静态服务 + 磁盘 API
-├── tools/export.mjs          # 无头导出 / 校验（供 agent / CI）
-├── tests/                    # node --test + 浏览器冒烟
-└── mods/                     # 本地工作区（gitignore）
-```
-
-- **能复用就复用**，不复制分叉：
-  - Schema 包生成：复用 `SNModMaker/tools/sync-schemas.mjs` 的做法（或在仓库工具里抽公共生成器）；
-  - ZIP 读写：复用 `SNModMaker/js/zip.js`（store / deflate-raw、CRC32、Godot `ZIPReader` 可读）；
-  - 校验：复用 `SNModMaker/js/validate.js` 的 Schema 子集与语义校验，再追加剧情包白名单、
-    地图连通、checkpoint、引用与本地化覆盖规则；
-  - 导出：复用 `.snavmod.zip` 的 `mods/<id>/` 结构，保证导出包与 SNModMaker / SDK 同构。
-- 如果复用需要跨目录引用，优先把共享纯逻辑抽到仓库级公共目录（例如 `tools/shared/`），
-  而不是在两个编辑器里各留一份；具体抽法在实现时定，但**校验与包格式必须只有一份**。
-- 与 SNModMaker 的差异：SNModMaker 是**按内容类型**的通用表单；SNStoryMaker 是**按篇章 →
-  关卡流程**的专用工作台（多关列表 + 地图画布 + 阶段流程图 + 演出文本），面向非程序员。
-- 沿用 SNModMaker 的约定：纯经典脚本、`globalThis.SN*` 暴露模块、`file://` 可打开、
-  `tools/*.mjs` 为 Node ESM、测试分「Node 纯逻辑」与「CDP 浏览器冒烟」。
-- 若后续发现编辑量太大，可把地图画布 / 流程图拆成独立子模块，但包格式与校验器保持一份。
-
-### 8.3 功能（首发）
+### 8.3 剧情编辑功能（目标）
 
 | 功能 | 说明 |
 |---|---|
-| 篇章配置 | 标题 / 摘要 / 主角 / 角色表 / 术语表；**多关卡列表与顺序**（首发 1 关，格式支持 N 关） |
-| 固定地图 | 画布摆放港口（坐标 / 原型 / 设施 / 初始市场）与航线（距离 / 风险 / 双向）；连通性与 id 校验 |
-| 关卡流程 | 阶段列表 / 条件 / 效果 / 目标文本；`checkpoint` 开关；失败默认重试方式 |
-| 叙事编辑 | 简报 / beats / 结算 / 钩子；`presentation` 选择；本地化表格（中英覆盖率） |
-| 初始状态 | 起始构筑 / 港口 / 资金 / 煤水 / 货物 / 模块 / 已解锁系统 |
-| 数值调整 | 难度旋钮、目标数值、时限公式、奖励字段、风险系数 |
-| 校验 | Schema、引用、本地化键、地图连通、白名单、checkpoint 至少 1 个、奖励无非法数值 |
-| 导出 | `.snavmod.zip` + 项目文件；可写 `mods/`（本地服务） |
-| 无头 CLI | `export` / `validate`，供 agent 与 CI 复用 |
+| 篇章配置 | 标题 / 摘要 / 主角 / 角色表 / 术语表；关卡顺序（`arc.levels[]`，首发 1 关、格式支持 N 关） |
+| 固定地图 | 港口（id / 坐标 / 设施 / 初始市场）与航道（距离 / 风险 / 双向）；起点与连通性校验 |
+| 关卡流程 | 阶段列表 / 条件 / 效果 / 目标；`checkpoint`；失败默认方式 |
+| 叙事编辑 | brief / beats / debrief / hook；presentation；本地化表格（中英覆盖率） |
+| 初始状态 | starting_scenario / 港口 / 资金 / 煤水 / 货物 / 模块 / 系统开关 |
+| 数值调整 | 难度旋钮、目标数值、奖励字段 |
+| 校验 | 契约 §6 的全部错误 / warning；地图连通、checkpoint、引用、本地化、白名单 |
+| 导出 | `.snavmod.zip` + 项目文件；CLI `validate` / 打包复用现有工具 |
 
 ### 8.4 不在编辑器里做的事
 
@@ -746,26 +734,27 @@ SNStoryMaker/
 
 | 切片 | 内容 | 验收口径 |
 |---|---|---|
-| S1 包与类型契约 | **✅ 已交付（2026-10-22）**：`story_arcs` / `story_levels` Schema 2.0 草案 + 内嵌固定地图 + 只加剧情白名单 + 多关包结构 + 有效 / 无效样本 + `sdk/templates/story_pack_iron_tide/` 示例包 | `gen_content_types --check` / `sync-schemas` / Node 与 Godot 草案测试通过；Core 不加载 |
-| S2 加载链 | 剧情包作为内容模组加载、白名单校验、注册；`story_mode.view` 列出篇章与关卡列表 | 手动包放进 `mods/` 后入口出现；坏包 / 越界内容有可读错误；2–3 关测试包能列出关卡 |
+| S1 包与类型契约 | **✅ 已交付（2026-10-22）并冻结 V1（2026-10-27）**：`story_arcs` / `story_levels` Schema 2.0 + 内嵌固定地图 + 只加剧情白名单 + 多关包结构 + 完整语义约束 + 冻结门禁 + `sdk/templates/story_pack_iron_tide/` 示例包 | `node tools/check_story_schema_freeze.mjs --check`、`SNModMaker` 测试、契约 §8 全绿；运行时仍不加载 |
+| S2 加载链 | 剧情包作为内容模组加载、运行时白名单校验、注册；`story_mode.view` 列出篇章与关卡列表 | 手动包放进 `mods/` 后入口出现；坏包 / 越界内容有可读错误；2–3 关测试包能列出关卡 |
 | S3 垂直切片 | **首发 1 关内容**：固定地图、L1 系统、完整简报 / 节点 / 结算 | 主菜单进入 → 走完 → 结算 → 回主菜单 / 重新挑战 |
 | S4 运行时 | `data.story_mode`、`run.start story_level`、`StoryService` 泛化、`story_mode.*`、checkpoint 重试 | 同数据两次进入完全一致；checkpoint / 重开本关可用；存档 round-trip |
 | S5 UI | 主菜单模式入口、篇章 / 选关页（N 关）、简报 / 结算卡、关卡内 HUD、失败二选一弹窗 | 960×540 与 1440×900 不裁切；中英同步 |
 | S6 剧情档案 | `StoryProfileService` + 通关进度 + 重玩（成就预留字段，实装延后） | 放弃 / 重试 / 重开不丢已通关进度 |
-| S7 剧情编辑器 | `SNStoryMaker/` MVP：篇章 / 多关列表 / 地图 / 流程 / 叙事 / 初始状态 / 校验 / 导出 | 能编辑并导出首发关数据包，round-trip 一致 |
+| S7 编辑器剧情关卡 | **复用 `SNModMaker/`**：篇章 / 多关列表 / 固定地图 / 流程 / 叙事 / 初始状态 / 校验 / 导出；体量膨胀时把剧情地图编辑器抽成独立页面 | 能编辑并导出首发关数据包，round-trip 一致，校验码表与契约一致 |
 | S8 数据驱动验收 | 只改数据包（文本 / 目标 / 数值 / 地图坐标 / 关卡数量）重跑 | 不改代码即可产生可感知差异；框架 0 具体剧情 ID |
 | S9 迁移（后续） | 正式版关闭自由模式教学、快速上手提示 | 旧存档可继续；新玩家 30 分钟内理解核心循环 |
 | S10 成就（正式版前） | 成就定义 / 解锁 / 展示页；仍不写自由模式状态 | 通关后可查看成就；自由模式数值不变 |
 
-优先做 S1–S3：先让 1 关数据包能加载、能玩完，再补编辑器；编辑器可以在 S3 之后用 JSON + 校验器
-手工产出第一个包。
+2026-10-27 的排期口径（人类监督 + Agent，不按古典 sprint）：**3 天内全量实现 S2 → S4 → S5 →
+S3 首发关 → S7 的编辑器关卡编辑**；S6 / S10 后置，S7 不新建 `SNStoryMaker/`。
+S1 已冻结，实现期间只允许在契约 §7 流程下改数据面。
 
 ## 10. 与现有系统的关系
 
 | 系统 | 关系 |
 |---|---|
 | World Forge（外部） | 只产出设定；游戏不读取、不依赖；转换由人工在编辑器完成 |
-| 剧情编辑器（`SNStoryMaker/`，新，Node Web，仓库根目录） | 产出剧情数据包；与 SNModMaker / SNBattleSim 同级、同型、零依赖，复用其 Schema / 校验 / 打包 |
+| 剧情编辑器（**复用 `SNModMaker/`**） | 产出剧情数据包：在现有模组编辑器里直接编辑篇章 / 关卡；体量膨胀时把剧情地图编辑器抽成独立页面；校验 / 打包只有一份 |
 | 模组加载链 | 剧情包 = 内容模组，复用扫描 / Manifest / 依赖 / 资源 / 校验，不新增包格式 |
 | `data.story`（教学） | 并存；剧情模式复用其阶段 / 效果 / 门禁语义，状态分开 |
 | `StoryService` | 泛化为双配置来源；教学流与关卡流共用推进逻辑 |
@@ -820,10 +809,14 @@ SNStoryMaker/
 | D16 | checkpoint 粒度 | **已确认：按阶段标记 `checkpoint`，每个 checkpoint 阶段一个存档点** | 2026-10-22 |
 | D17 | 包内关卡数 | **已确认：一个包支持多个剧情关卡**（`arc.levels[]`）；首发内容 1 关，格式与加载器按多关设计 | 2026-10-22 |
 | D18 | 成就系统 | **已确认：延后到正式版交付前开发**；首发只留字段与档案占位 | 2026-10-22 |
+| D19 | 剧情编辑器形态 | **已确认（2026-10-27）：复用 `SNModMaker/`，不新建 `SNStoryMaker/`**；剧情关卡直接加在模组编辑器里，体量膨胀时把剧情地图编辑器抽成独立页面 | 2026-10-27 |
+| D20 | 数据契约冻结 | **已确认（2026-10-27）：Schema + 约束冻结为 `STORY_MODE_DATA_CONTRACT_V1`**；锁文件 + `check_story_schema_freeze.mjs`；结构变更走契约 §7 版本流程 | 2026-10-27 |
+| D21 | 固定港口市场表达 | **已确认（2026-10-27）：`market` 为 `{item, stock, price}[]`**，`item` 用完整定义 ID（如 `core:item/coal`），同一港口同一商品唯一 | 2026-10-27 |
+| D22 | 剧情类型运行时状态 | **已确认：冻结 V1 后类型仍为草案**；S2 提升 active 属于实现动作，不改契约版本 | 2026-10-27 |
 
 ## 13. 验收口径
 
-### 13.1 S1（数据契约，已通过）
+### 13.1 S1（数据契约，已通过并冻结 V1）
 
 - [x] `story_arcs` / `story_levels` 进入 `content_types.json` 的 `draft_schemas` / `draft_types` / `planned`，
       `gen_content_types --check` 与 `sync-schemas` 通过，运行时类型表不变。
@@ -833,6 +826,10 @@ SNStoryMaker/
       只出现预期的 `draft_content` warning；导入 / 导出 round-trip 不丢字段。
 - [x] 白名单：同一故事包里加入 `items` 内容会产生 `story_pack_off_whitelist` error（CLI 退出码 1）。
 - [x] `catalog.DEFAULTS` 的篇章 / 关卡默认值可直接通过对应 Schema，空篇章 / 孤儿关卡只警告。
+- [x] **冻结 V1（2026-10-27）**：`node tools/check_story_schema_freeze.mjs --check` 锁定两个 Schema
+      与 common 的 4 个 story `$defs`；结构上限、market 数组、起点一致性、固定地图边、包级
+      capability / 单篇章等语义约束已补齐并有 Node 用例守护；契约见
+      [STORY_MODE_DATA_CONTRACT_V1.md](../specs/STORY_MODE_DATA_CONTRACT_V1.md)。
 - [x] 全量无头测试 0 failed；`gen_static_docs --check` 通过。
 
 ### 13.2 首发（1 关数据包，游戏侧）
@@ -852,7 +849,7 @@ SNStoryMaker/
 - [ ] 数据包校验覆盖 Schema、引用、本地化键、地图连通、白名单、奖励类型；坏包有可读错误。
 - [ ] 旧存档无 `story_mode` 块时行为不变；中英文本同步；960×540 与 1440×900 不裁切。
 - [ ] 全量无头测试 0 failed；`gen_static_docs --check` 通过。
-- [ ] `SNStoryMaker/` 能打开、编辑、校验、导出该数据包，round-trip 不丢字段。
+- [ ] `SNModMaker/` 能打开、编辑、校验、导出该数据包，round-trip 不丢字段；剧情地图编辑器（若拆分）与主编辑器共用同一份校验 / 包格式。
 
 后续（多关 / 引导接管）另立验收：每关只引入一组系统、自由模式教学关闭后的兜底提示、
 新手 30 分钟理解核心循环等。

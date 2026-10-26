@@ -45,5 +45,7 @@ SNModMaker / Content CLI 仍可用 `node SNModMaker/tools/content.mjs validate -
 
 ## 编辑
 
-用 `SNStoryMaker/`（剧情编辑器）打开本目录，或由编辑器导出同名数据包；两者共享同一套
-Schema 与校验逻辑，round-trip 不丢字段。
+用 `SNModMaker/`（模组编辑器，剧情关卡直接在其中编辑）打开本目录，或由编辑器导出同名数据包；
+两者共享同一套 Schema 与校验逻辑，round-trip 不丢字段。数据契约 V1 已冻结（2026-10-27）：
+`node tools/check_story_schema_freeze.mjs --check`，约束见
+[docs/specs/STORY_MODE_DATA_CONTRACT_V1.md](../../../docs/specs/STORY_MODE_DATA_CONTRACT_V1.md)。

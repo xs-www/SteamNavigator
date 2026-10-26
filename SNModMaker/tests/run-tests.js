@@ -646,6 +646,89 @@ function warningsOf(result) {
     assert.ok(codes().has('story_pack_off_whitelist'), 'a story pack may not carry free-mode content');
   });
 
+  await test('story contract v1 freeze: pack, start and fixed-map constraints', () => {
+    const project = Store.createProject({
+      id: 'story_mod',
+      name: 'Story Mod',
+      template: null,
+      drafts: ['story_arcs', 'story_levels'],
+    });
+    const arcFile = project.contentFiles.find((file) => file.content_type === 'story_arcs');
+    const levelFile = project.contentFiles.find((file) => file.content_type === 'story_levels');
+    const arc = arcFile.definitions[0];
+    const level = levelFile.definitions[0];
+    const codes = () => new Set(Validate.validateProject(project).issues.map((issue) => issue.code));
+
+    /* Pack-level: the story capability is mandatory once story content exists. */
+    const capabilities = project.manifest.capabilities;
+    project.manifest.capabilities = [];
+    assert.ok(codes().has('story_pack_capability_required'), 'story content requires content.story.v1');
+    project.manifest.capabilities = capabilities;
+
+    /* Cast: protagonist_id should point at a role = protagonist character. */
+    arc.data.characters.push({ id: 'friend', name_key: 'story.friend.name', role: 'supporting' });
+    arc.data.protagonist_id = 'friend';
+    assert.ok(codes().has('story_protagonist_role'), 'protagonist_id should carry role protagonist');
+    arc.data.protagonist_id = 'protagonist';
+    arc.data.characters.pop();
+
+    /* Stage advance must contain at least one trigger (schema minProperties). */
+    const firstAdvance = level.data.stages[0].advance;
+    level.data.stages[0].advance = {};
+    assert.ok(codes().has('schema_minProperties'), 'an empty advance must fail schema validation');
+    level.data.stages[0].advance = firstAdvance;
+
+    /* Start port: both spellings must agree, and one of them should be present. */
+    const startPortId = level.data.start.port_id;
+    level.data.start.port_id = 'port_1';
+    assert.ok(codes().has('story_start_port_conflict'), 'fixed.start_port and start.port_id must agree');
+    level.data.start.port_id = startPortId;
+    const fixedStartPort = level.data.map.fixed.start_port;
+    delete level.data.map.fixed.start_port;
+    delete level.data.start.port_id;
+    assert.ok(codes().has('story_level_start_port_missing'), 'a missing start port is a warning');
+    level.data.map.fixed.start_port = fixedStartPort;
+    level.data.start.port_id = startPortId;
+
+    /* Fixed map edges: self loops and duplicates are rejected. */
+    level.data.map.fixed.edges.push({ from: 'port_0', to: 'port_0', distance: 10, risk: 0.1 });
+    assert.ok(codes().has('story_fixed_edge_self'), 'a self-loop edge must error');
+    level.data.map.fixed.edges.pop();
+    level.data.map.fixed.edges.push({ from: 'port_1', to: 'port_0', distance: 10, risk: 0.1 });
+    assert.ok(codes().has('story_fixed_edge_duplicate'), 'a duplicate undirected edge must error');
+    level.data.map.fixed.edges.pop();
+
+    /* Fixed port market: item ids are full definition ids, unique per port. */
+    level.data.map.fixed.ports[0].market = [
+      { item: 'core:item/coal', stock: 10, price: 3 },
+      { item: 'core:item/coal', stock: 5, price: 4 },
+    ];
+    assert.ok(codes().has('story_market_duplicate_item'), 'one market entry per item');
+    level.data.map.fixed.ports[0].market = [{ item: 'core:item/not_a_real_item', stock: 1, price: 1 }];
+    assert.ok(codes().has('ref_core_unknown'), 'story core references must resolve (strict)');
+    level.data.map.fixed.ports[0].market = [];
+
+    /* Facilities use the canonical framework keys (intel was renamed to tavern). */
+    level.data.map.fixed.ports[0].facilities = ['intel'];
+    assert.ok(codes().has('story_facility_unknown'), 'legacy intel should warn');
+    level.data.map.fixed.ports[0].facilities = [];
+
+    /* Beats and stages share the local-id namespace rules. */
+    level.data.narrative.beats = [
+      { id: 'dup_beat', stage_id: 'opening', dialogue: { title_key: 'story.a', body_keys: ['story.b'] } },
+      { id: 'dup_beat', stage_id: 'opening', dialogue: { title_key: 'story.c', body_keys: ['story.d'] } },
+    ];
+    assert.ok(codes().has('story_beat_duplicate'), 'beat ids must be unique');
+    level.data.narrative.beats = [];
+
+    /* Pack-level: one pack = one arc; arc levels must stay inside the pack. */
+    arc.data.levels = ['other_mod:story_level/elsewhere'];
+    assert.ok(codes().has('story_arc_level_foreign'), 'arc levels may not reference another mod');
+    arc.data.levels = [];
+    Store.addDefinition(project, 'story_arcs', {});
+    assert.ok(codes().has('story_pack_multiple_arcs'), 'story contract v1 ships one arc per pack');
+  });
+
   await test('weapon form renders combat, assembly and economy fields with readable enums', () => {
     const project = freshProject();
     const added = Store.addDefinition(project, 'weapons', {});

@@ -12,6 +12,7 @@
 | `build_ui_skin.ps1` | UI 皮肤一键生成 / 一致性门禁。先运行 `tools/ui/build_ui_skin.gd` 把 `docs/design/` 的控件图集与图标图集裁成 `assets/ui/skin/<skin>/` 运行纹理 + skin.json，再运行 `tools/ui/build_ui_theme.gd` 从 skin.json 生成纹理化 Theme。 | [查看](./build_ui_skin.ps1.md) |
 | `capture_ui.ps1` | `tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。 | [查看](./capture_ui.ps1.md) |
 | `check_content_schema_v2.mjs` | Phase E 发布门禁：确认 Content Schema 1.0 已冻结，内容类型、Schema 文件与 | [查看](./check_content_schema_v2.mjs.md) |
+| `check_story_schema_freeze.mjs` | Story Mode 数据契约冻结门禁：锁定 story_arc / story_level Schema 与 | [查看](./check_story_schema_freeze.mjs.md) |
 | `fog_grid_simulator.html` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `gen_content_types.mjs` | 从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录（active `TYPES` + Schema 2.0 草案 `DRAFT_TYPES`）；提供 `--check` 过期检查。 | [查看](./gen_content_types.mjs.md) |
 | `gen_static_docs.mjs` | 从源码静态文档注释、sidecar 头文件和旧策展数据生成镜像文档、模块索引与 SHA-256 manifest。 | [查看](./gen_static_docs.mjs.md) |

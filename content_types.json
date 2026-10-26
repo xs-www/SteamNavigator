@@ -21,7 +21,7 @@
       "default_file": "content/story_arcs.json",
       "schema_version": "2.0",
       "capability": "content.story.v1",
-      "summary_zh": "剧情模式篇章：固定主角与角色表、术语、有序关卡列表（story_levels）与正史溯源；一个剧情包一个篇章。见 docs/design/STORY_MODE.md。"
+      "summary_zh": "剧情模式篇章：固定主角与角色表、术语、有序关卡列表（story_levels）与正史溯源；一个剧情包一个篇章。数据契约 V1 已冻结（2026-10-27，见 docs/specs/STORY_MODE_DATA_CONTRACT_V1.md），运行时不加载。"
     },
     {
       "key": "story_levels",
@@ -35,7 +35,7 @@
       "default_file": "content/story_levels.json",
       "schema_version": "2.0",
       "capability": "content.story.v1",
-      "summary_zh": "剧情模式关卡：内嵌固定地图（港口/航线/坐标）、初始状态、任务线阶段（共用 story_stage DSL）、叙事简报/节点/结算、难度旋钮、checkpoint 重试与仅成就类奖励。"
+      "summary_zh": "剧情模式关卡：内嵌固定地图（港口/航线/坐标/市场）、初始状态、任务线阶段（共用 story_stage DSL）、叙事简报/节点/结算、难度旋钮、checkpoint 重试与仅成就类奖励。数据契约 V1 已冻结（2026-10-27），运行时不加载。"
     },
     {
       "key": "combat_ai_profiles",

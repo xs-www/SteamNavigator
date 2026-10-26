@@ -76,8 +76,8 @@ UI：QueryBus → ViewModel → CommandBus → 事务克隆提交 → DomainEven
 
 ## 生成信息
 
-- 生成时间：2026-10-26T22:59:38.251Z
-- 生成 commit：`7ffe686`
+- 生成时间：2026-10-26T23:54:04.063Z
+- 生成 commit：`4916dcf`
 - 模式：`compact`；规则版本：`3.0`
 - 更新方式：在源码头部维护 `@static-doc` 注释，运行 `node tools/gen_static_docs.mjs`；无注释格式使用 `docs/static_headers/<源码路径>.md` sidecar。
 - 检查方式：`node tools/gen_static_docs.mjs --check`；旧的 `tools/static_docs_data.mjs` 仅作为尚未迁移文件的兼容层。

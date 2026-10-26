@@ -123,6 +123,7 @@
       ]
     },
     "story_stage": {
+      "$comment": "Shared by the tutorial map_config flow and Story Mode levels. Story Mode data contract v1 froze the shapes below on 2026-10-27 (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -132,7 +133,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
         },
         "checkpoint": {
           "type": "boolean"
@@ -150,14 +151,17 @@
           "properties": {
             "title_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "body_keys": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 32,
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 160
               }
             }
           }
@@ -165,13 +169,16 @@
         "unlock_features": {
           "type": "array",
           "uniqueItems": true,
+          "maxItems": 32,
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
           }
         },
         "unlock_items": {
           "type": "array",
           "uniqueItems": true,
+          "maxItems": 64,
           "items": {
             "$ref": "#/$defs/id_ref"
           }
@@ -179,6 +186,7 @@
         "unlock_modules": {
           "type": "array",
           "uniqueItems": true,
+          "maxItems": 64,
           "items": {
             "$ref": "#/$defs/id_ref"
           }
@@ -193,17 +201,20 @@
           "properties": {
             "text_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "target": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "maximum": 1000000
             }
           }
         },
         "advance": {
           "type": "object",
           "additionalProperties": false,
+          "minProperties": 1,
           "properties": {
             "mode": {
               "enum": [
@@ -212,31 +223,38 @@
             },
             "event": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "counter": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "counter_from": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "at_least": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "maximum": 1000000
             },
             "flag": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "not_flag": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "all": {
               "type": "array",
               "minItems": 1,
+              "maxItems": 32,
               "items": {
                 "$ref": "#/$defs/story_condition"
               }
@@ -249,13 +267,16 @@
         "lock_actions": {
           "type": "array",
           "uniqueItems": true,
+          "maxItems": 64,
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.]{0,63}$"
           }
         },
         "preferred_strategy": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 64
         },
         "focus": {
           "type": "object",
@@ -266,16 +287,19 @@
           "properties": {
             "target": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             },
             "text_key": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 160
             }
           }
         },
         "effects": {
           "type": "array",
+          "maxItems": 64,
           "items": {
             "type": "object",
             "required": [
@@ -284,7 +308,8 @@
             "properties": {
               "type": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 64
               }
             }
           }
@@ -294,30 +319,37 @@
     "story_condition": {
       "type": "object",
       "additionalProperties": false,
+      "minProperties": 1,
       "properties": {
         "event": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 160
         },
         "counter": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 160
         },
         "counter_from": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 160
         },
         "at_least": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "maximum": 1000000
         },
         "flag": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 160
         },
         "not_flag": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 160
         },
         "match": {
           "$ref": "#/$defs/story_match"
@@ -326,8 +358,11 @@
     },
     "story_match": {
       "type": "object",
+      "minProperties": 1,
       "additionalProperties": {
-        "type": "string"
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
       }
     },
     "modifier": {

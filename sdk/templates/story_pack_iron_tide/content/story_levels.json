@@ -18,25 +18,25 @@
                 "name_key": "story.iron_tide.port.ash_harbor",
                 "position": [40, 80],
                 "facilities": ["exchange", "supply"],
-                "market": {
-                  "coal": {"stock": 30, "price": 4},
-                  "water": {"stock": 30, "price": 2}
-                }
+                "market": [
+                  {"item": "core:item/coal", "stock": 30, "price": 4},
+                  {"item": "core:item/water", "stock": 30, "price": 2}
+                ]
               },
               {
                 "id": "port_1",
                 "name_key": "story.iron_tide.port.iron_bay",
                 "position": [160, 80],
                 "facilities": ["exchange", "shipyard"],
-                "market": {
-                  "coal": {"stock": 12, "price": 7}
-                }
+                "market": [
+                  {"item": "core:item/coal", "stock": 12, "price": 7}
+                ]
               },
               {
                 "id": "port_2",
                 "name_key": "story.iron_tide.port.mist_reef",
                 "position": [100, 180],
-                "facilities": ["intel"]
+                "facilities": ["tavern"]
               }
             ],
             "edges": [
@@ -171,9 +171,9 @@
                 "name_key": "story.iron_tide.port.ash_harbor",
                 "position": [40, 80],
                 "facilities": ["exchange", "supply"],
-                "market": {
-                  "coal": {"stock": 4, "price": 11}
-                }
+                "market": [
+                  {"item": "core:item/coal", "stock": 4, "price": 11}
+                ]
               }
             ],
             "edges": [
