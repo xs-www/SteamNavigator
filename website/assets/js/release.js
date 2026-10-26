@@ -16,7 +16,9 @@
 // - 首屏用 `window.SN_RELEASE_DATA`；随后 `fetch("/api/site/release", {cache:"no-cache"})`，
 //   成功则用响应里的 `data`（与静态文件同构）重新填充，实现「发布 Release 后网站自动更新」。
 // ### 填充
-// - 版本：`latest.tag`；日期：`latest.date`；状态：预发布 / 正式版；大小：字节 → `约 N MB`。
+// - 版本：`latest.tag`；状态：预发布 / 正式版；大小：字节 → `约 N MB`。
+// - 日期：优先把 `published_at`（UTC）按**访客本地时区**格式化成 `YYYY-MM-DD`；
+//   解析失败时退回 `latest.date`（生成器按站点时区算好的日历日），再不行保留静态文案。
 // - 链接：只使用 release 的真实 asset 直链；缺失的平台保持原静态 href。
 // @end-static-doc
 
@@ -39,12 +41,28 @@
     return 0;
   }
 
+  function formatLocalDate(latest) {
+    var published = latest && latest.published_at;
+    if (typeof published === "string" && published) {
+      var time = Date.parse(published);
+      if (!isNaN(time)) {
+        var date = new Date(time);
+        var month = String(date.getMonth() + 1);
+        var day = String(date.getDate());
+        if (month.length < 2) month = "0" + month;
+        if (day.length < 2) day = "0" + day;
+        return date.getFullYear() + "-" + month + "-" + day;
+      }
+    }
+    return (latest && latest.date) || "";
+  }
+
   function textFor(latest, key) {
     switch (key) {
       case "tag":
         return latest.tag || "";
       case "date":
-        return latest.date || "";
+        return formatLocalDate(latest);
       case "state":
         return latest.prerelease ? "预发布" : "正式版";
       case "windows-size":

@@ -3,12 +3,13 @@
 window.SN_RELEASE_DATA = {
   "source": "github",
   "repo": "xs-www/SteamNavigator",
-  "fetched_at": "2026-10-26T22:23:15.776Z",
+  "fetched_at": "2026-10-26T22:59:03.144Z",
   "latest": {
     "tag": "v0.2.0-dev.4",
     "name": "Steam Navigator v0.2.0-dev.4",
     "published_at": "2026-10-26T22:18:39Z",
-    "date": "2026-10-26",
+    "date": "2026-10-27",
+    "date_time_zone": "Asia/Shanghai",
     "prerelease": true,
     "url": "https://github.com/xs-www/SteamNavigator/releases/tag/v0.2.0-dev.4",
     "assets": [

@@ -11,9 +11,12 @@
 // - 生成物只含公开版本信息（tag / 名称 / 发布时间 / 资产名 / 字节数 / GitHub 链接），不含 token 或私有数据。
 // - 网络失败时默认保留上一次生成的文件并 exit 0（离线部署不炸站）；`--strict` 才失败。
 // - `--check` 只比较版本内容（忽略 `fetched_at`），用于确认仓库里的数据是否落后于 GitHub。
+// - 日期：`published_at` 保留 GitHub 的 UTC 时间；`date` 是**站点时区**（默认 `Asia/Shanghai`，
+//   `SN_RELEASE_TIME_ZONE` / `--time-zone` 可覆盖）的日历日，`date_time_zone` 记录所用时区。
+//   直接截取 UTC 日期会让 22:18Z 这类晚间发布显示成前一天，页面再用访客本地时区覆盖显示。
 //
 // ## 重点逻辑
-// ### `buildReleaseData(releases, { repo, now })`
+// ### `buildReleaseData(releases, { repo, now, timeZone })`
 // - 过滤 draft → 选 latest / stable → 从 assets 推导 windows / linux / SHA256SUMS 直链 → 生成 `window.SN_RELEASE_DATA`。
 // ### `updateReleaseData(options)`
 // - CLI 与测试共用：fetch → build → 与现有文件比较 → 写入或保留；返回 `{ok, changed, stale, data, path, error}`。
@@ -28,8 +31,52 @@ import { fileURLToPath } from "node:url";
 const TOOLS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_OUT = path.resolve(TOOLS_DIR, "..", "assets", "data", "release-data.js");
 export const DEFAULT_REPO = "xs-www/SteamNavigator";
+/** 站点时区：`date` 字段按它计算（官网面向中文玩家，默认北京时间 UTC+8）。 */
+export const DEFAULT_TIME_ZONE = "Asia/Shanghai";
 const API_BASE = "https://api.github.com";
 const PER_PAGE = 30;
+
+function isValidTimeZone(timeZone) {
+  if (typeof timeZone !== "string" || timeZone === "") return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** 解析时区：调用方传入 > `SN_RELEASE_TIME_ZONE` > 站点默认；非法值退回默认，不让发版挂掉。 */
+export function resolveTimeZone(value) {
+  const candidate = typeof value === "string" && value.trim() !== "" ? value.trim() : "";
+  if (isValidTimeZone(candidate)) return candidate;
+  const fromEnv =
+    candidate === "" && typeof process !== "undefined" && process.env ? process.env.SN_RELEASE_TIME_ZONE : "";
+  if (isValidTimeZone(fromEnv)) return String(fromEnv).trim();
+  return DEFAULT_TIME_ZONE;
+}
+
+/** ISO 时间 → 指定时区的 `YYYY-MM-DD`；解析失败返回空串。 */
+export function formatDateInTimeZone(iso, timeZone) {
+  const time = Date.parse(String(iso ?? ""));
+  if (!Number.isFinite(time)) return "";
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date(time));
+    const pick = (type) => (parts.find((part) => part.type === type) || {}).value || "";
+    const year = pick("year");
+    const month = pick("month");
+    const day = pick("day");
+    if (year && month && day) return `${year}-${month}-${day}`;
+  } catch {
+    // 无效时区：退回 UTC，保证仍有可用日期。
+  }
+  return new Date(time).toISOString().slice(0, 10);
+}
 
 function pickAsset(assets, pattern) {
   if (!Array.isArray(assets)) return null;
@@ -50,14 +97,15 @@ function normalizeAsset(asset) {
   };
 }
 
-function normalizeLatest(raw) {
+function normalizeLatest(raw, timeZone) {
   const assets = Array.isArray(raw.assets) ? raw.assets.map(normalizeAsset) : [];
   const published = typeof raw.published_at === "string" ? raw.published_at : "";
   return {
     tag: String(raw.tag_name ?? ""),
     name: String(raw.name ?? raw.tag_name ?? ""),
     published_at: published,
-    date: published.slice(0, 10),
+    date: formatDateInTimeZone(published, timeZone),
+    date_time_zone: timeZone,
     prerelease: raw.prerelease === true,
     url: typeof raw.html_url === "string" ? raw.html_url : "",
     assets,
@@ -65,13 +113,14 @@ function normalizeLatest(raw) {
 }
 
 /** 只保留可展示的已发布 release，最新在前（GitHub API 已按创建时间倒序）。 */
-export function selectReleases(rawReleases) {
+export function selectReleases(rawReleases, options = {}) {
+  const timeZone = resolveTimeZone(options.timeZone);
   const valid = (Array.isArray(rawReleases) ? rawReleases : []).filter(
     (release) => release && release.draft !== true && typeof release.tag_name === "string" && release.tag_name.length > 0,
   );
-  const latest = valid.length > 0 ? normalizeLatest(valid[0]) : null;
+  const latest = valid.length > 0 ? normalizeLatest(valid[0], timeZone) : null;
   const stableRaw = valid.find((release) => release.prerelease !== true) ?? null;
-  return { latest, stable: stableRaw ? normalizeLatest(stableRaw) : null };
+  return { latest, stable: stableRaw ? normalizeLatest(stableRaw, timeZone) : null };
 }
 
 /**
@@ -81,7 +130,8 @@ export function selectReleases(rawReleases) {
 export function buildReleaseData(rawReleases, options = {}) {
   const repo = String(options.repo ?? DEFAULT_REPO);
   const now = options.now instanceof Date ? options.now : new Date();
-  const { latest, stable } = selectReleases(rawReleases);
+  const timeZone = resolveTimeZone(options.timeZone);
+  const { latest, stable } = selectReleases(rawReleases, { timeZone });
   if (latest === null) return null;
 
   const windows = pickAsset(latest.assets, /-windows\.zip$/i);
@@ -195,7 +245,15 @@ export async function updateReleaseData(options = {}) {
 }
 
 function parseArgs(argv) {
-  const args = { out: DEFAULT_OUT, repo: DEFAULT_REPO, token: process.env.GITHUB_TOKEN || "", check: false, strict: false, help: false };
+  const args = {
+    out: DEFAULT_OUT,
+    repo: DEFAULT_REPO,
+    token: process.env.GITHUB_TOKEN || "",
+    timeZone: process.env.SN_RELEASE_TIME_ZONE || "",
+    check: false,
+    strict: false,
+    help: false,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--check") args.check = true;
@@ -203,6 +261,7 @@ function parseArgs(argv) {
     else if (arg === "--out") args.out = path.resolve(argv[++index] ?? ".");
     else if (arg === "--repo") args.repo = String(argv[++index] ?? DEFAULT_REPO);
     else if (arg === "--token") args.token = String(argv[++index] ?? "");
+    else if (arg === "--time-zone") args.timeZone = String(argv[++index] ?? "");
     else if (arg === "--help" || arg === "-h") args.help = true;
   }
   return args;
@@ -212,7 +271,9 @@ const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : "";
 if (invokedPath === path.resolve(fileURLToPath(import.meta.url))) {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
-    console.log("Usage: node website/tools/build-release-data.mjs [--check] [--strict] [--repo <owner/name>] [--token <token>] [--out <file>]");
+    console.log(
+      "Usage: node website/tools/build-release-data.mjs [--check] [--strict] [--repo <owner/name>] [--token <token>] [--time-zone <IANA>] [--out <file>]",
+    );
     process.exit(0);
   }
   updateReleaseData(args)

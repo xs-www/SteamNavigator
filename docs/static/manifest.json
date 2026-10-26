@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T22:42:33.848Z",
-  "commit": "3b0d15a",
+  "generated_at": "2026-10-26T23:02:06.036Z",
+  "commit": "7ffe686",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -6532,7 +6532,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "95f62455bc647190347ca4c71c6030d9e69bf9b5514b45c31de0ae48c4d39d57",
+      "sha256": "c9a577ca8de1d146f28590f43c1ee9af8fc3685e5fc55240677f72472dcf673c",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -8307,7 +8307,7 @@
     },
     {
       "source": "website/assets/js/release.js",
-      "sha256": "8cbe75ce9f3a4494e92ecca93fdb8c5ce0c77a82ac050b5cf578f4527dd66b34",
+      "sha256": "c430b1384511aeb11d5d14fe87d6b5b7c1ae0253baa3902934f8aa9f66666c3e",
       "doc": "docs/static/website/assets/js/release.js.md",
       "status": "documented"
     },
@@ -8355,7 +8355,7 @@
     },
     {
       "source": "website/devlog.html",
-      "sha256": "02fc2f05ea3c7417ee9d81d09fd61fd403f3986b1c57c68d77c8e3326e006836",
+      "sha256": "2f2cd61d3ce85cd1fb381de00a97d8ecbd76ec5962be846106f5e577ca939460",
       "doc": "docs/static/website/devlog.html.md",
       "status": "documented"
     },
@@ -8367,7 +8367,7 @@
     },
     {
       "source": "website/download.html",
-      "sha256": "3b2c46ff8153c752b26476817bf62d9a118c6707ab683fc809ca68aa9e31d5a9",
+      "sha256": "4950f8a1f547a84eb012d46f0698c85acdb2235b65844b45c9c1523d7aec83bd",
       "doc": "docs/static/website/download.html.md",
       "status": "documented"
     },
@@ -8403,7 +8403,7 @@
     },
     {
       "source": "website/tests/release-data.test.mjs",
-      "sha256": "3a3287aa0c5e42ee6e4620f7c43a8db5469affd456534a6987d3a72c28aaae85",
+      "sha256": "ec27b948527f64990e6773d9f78171595b5e520701e5cf17a91662a946da89ed",
       "doc": "docs/static/website/tests/release-data.test.mjs.md",
       "status": "documented"
     },
@@ -8415,7 +8415,7 @@
     },
     {
       "source": "website/tests/site-api.test.mjs",
-      "sha256": "1fcc94074c10b18dc479c4f0a1b464582182f5e1c3df1a4cf3f803ca4ff7f5f0",
+      "sha256": "e399e1472e60682489525de5c8faccd220699a5156dbc47080f57568c1a68bf8",
       "doc": "docs/static/website/tests/site-api.test.mjs.md",
       "status": "documented"
     },
@@ -8433,7 +8433,7 @@
     },
     {
       "source": "website/tools/build-release-data.mjs",
-      "sha256": "451214f05956223bb19370dd785971b56d3dca265190424fb761fbd4070e71a0",
+      "sha256": "f38e97e81b8ab275a414624ad75daadb9abd542941b8de70692662d7aefa34d3",
       "doc": "docs/static/website/tools/build-release-data.mjs.md",
       "status": "documented"
     },

@@ -129,7 +129,8 @@ test("release 从 GitHub 取最新 tag，返回同构 data 与短缓存头", asy
       assert.equal(body.ok, true);
       assert.equal(body.source, "github");
       assert.equal(body.data.latest.tag, "v0.2.0-dev.4");
-      assert.equal(body.data.latest.date, "2026-10-26");
+      assert.equal(body.data.latest.date, "2026-10-27", "22:18Z 的发布在站点时区（UTC+8）已是次日");
+      assert.equal(body.data.latest.date_time_zone, "Asia/Shanghai");
       assert.match(body.data.links.windows, /v0\.2\.0-dev\.4-windows\.zip$/);
       assert.equal(calls, 1);
     },

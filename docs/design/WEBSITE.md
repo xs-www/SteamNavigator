@@ -23,8 +23,12 @@
 - 最新公开版本与下载资产：**以 GitHub Releases 为准**，由 `website/tools/build-release-data.mjs` 调 GitHub Releases API 生成
   `website/assets/data/release-data.js`，下载页与开发日志页用 `assets/js/release.js` 自动填充；HTML 里不再手写版本号。
   - 发布页：`https://github.com/xs-www/SteamNavigator/releases`
-  - 当前生成结果（`v0.2.0-dev.3`，2026-10-22 预发布）：Windows ≈71 MB、Linux ≈62 MB、`SHA256SUMS.txt`；
+  - 当前生成结果（`v0.2.0-dev.4`，2026-10-27 预发布）：Windows ≈80 MB、Linux ≈71 MB、`SHA256SUMS.txt`；
     具体直链、日期与字节数以生成文件为准。
+  - **日期时区**：`published_at` 保留 GitHub 的 UTC 时间；`date` 按站点时区计算（默认 `Asia/Shanghai`，
+    可用 `SN_RELEASE_TIME_ZONE` 或 `--time-zone` 覆盖），同时输出 `date_time_zone`；下载页 / 开发日志页再用
+    `release.js` 按访客本地时区显示 `YYYY-MM-DD`。不要直接截取 UTC 日期——晚间发布（如 `22:18Z`）
+    在 UTC+8 / UTC+11 已是次日，会被显示成前一天。
 - 版本数据生成：`node website/tools/build-release-data.mjs`（`--check` 校验是否落后于 GitHub）。
   - 部署钩子：`website/tools/ci.ps1` 构建镜像前自动刷新；`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交更新。
   - **运行时自动更新（主力）**：Compose 的 `site-api` 服务（`website/server/site_api.mjs`，容器内 8092，只读）
@@ -247,6 +251,7 @@ window.SN_WIKI_DATA = {
 - 版本数据自动同步（2026-10-27）：`website/tools/build-release-data.mjs` 从 GitHub Releases API 生成 `assets/data/release-data.js`（latest / stable / 平台直链 / 大小 / 日期），下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充；`ci.ps1` 部署前刷新，`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交；网络失败保留旧数据。
 - 运行时版本自动更新（2026-10-27）：新增只读 `site-api` 服务（`website/server/site_api.mjs` + `Dockerfile.site-api` + compose `site-api` + nginx `/api/site/` 反代），服务端缓存 GitHub Releases（默认 5 分钟、`Cache-Control: public, max-age=60, stale-while-revalidate=600`）；发版后网站无需重新部署即可在 ≤5 分钟内更新，失败时回退旧缓存 / 镜像内静态数据。`ci.ps1` 部署后检查 `/api/site/release`；`release-data.js` 单独 `no-cache`，避免浏览器/CDN 长期缓存旧版本。
 - 最新 Windows 安装包镜像（2026-10-27）：`site-api` 后台流式下载最新 Release 的 windows.zip 到命名卷 `release-downloads`（SHA-256 + 字节数校验），`website` 只读挂载后由 nginx `/downloads/<tag>/<file>` 下发（Range、30 天缓存）；新版本就绪后清理旧 tag，只保留最新版，历史版本与镜像未就绪时回退 GitHub。`release.js` 缓存标识用 `?v=` 版本串，修改脚本时需同步更新。
+- 发布日期时区（2026-10-27）：`build-release-data.mjs` 的 `date` 改为按站点时区（默认 `Asia/Shanghai`，`SN_RELEASE_TIME_ZONE` / `--time-zone` 可覆盖）从 `published_at` 计算，并输出 `date_time_zone`；`release.js` 用访客本地时区格式化日期。修复 `v0.2.0-dev.4`（`2026-10-26T22:18:39Z`）显示为 10-26 的问题（北京时间 / 悉尼时间均为 10-27）。
 
 
 - 本地游玩数据看板（2026-10-27）：`website/tools/telemetry_dashboard.mjs` + `Dockerfile.dashboard` + compose `telemetry-dashboard`（`profiles: ["dashboard"]`，只发布到 `127.0.0.1:8091`），只读同一个数据卷；**不是官网页面**，不进入站点导航，也不随静态站发布。

@@ -100,6 +100,27 @@ test("生成数据推导下载直链、日期与大小，缺失资产留 null", 
   assert.match(partial.links.windows, /windows\.zip$/);
 });
 
+test("date 按站点时区计算（默认 Asia/Shanghai），跨 UTC 日界不显示成前一天", () => {
+  // 真实 dev.4：2026-10-26T22:18:39Z = 北京时间 10-27 06:18。
+  const crossMidnight = release({ published_at: "2026-10-26T22:18:39Z" });
+  const data = buildReleaseData([crossMidnight]);
+  assert.equal(data.latest.published_at, "2026-10-26T22:18:39Z");
+  assert.equal(data.latest.date, "2026-10-27");
+  assert.equal(data.latest.date_time_zone, "Asia/Shanghai");
+
+  const utc = buildReleaseData([crossMidnight], { timeZone: "UTC" });
+  assert.equal(utc.latest.date, "2026-10-26");
+  assert.equal(utc.latest.date_time_zone, "UTC");
+
+  const sydney = buildReleaseData([crossMidnight], { timeZone: "Australia/Sydney" });
+  assert.equal(sydney.latest.date, "2026-10-27");
+
+  // 非法时区退回站点默认值，不抛错。
+  const invalid = buildReleaseData([crossMidnight], { timeZone: "Not/AZone" });
+  assert.equal(invalid.latest.date_time_zone, "Asia/Shanghai");
+  assert.equal(invalid.latest.date, "2026-10-27");
+});
+
 test("生成文件可被 parse 还原（window.SN_RELEASE_DATA）", () => {
   const data = buildReleaseData([release()], { now: new Date("2026-10-27T00:00:00Z") });
   const text = renderReleaseDataFile(data);
