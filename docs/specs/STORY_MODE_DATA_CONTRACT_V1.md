@@ -1,5 +1,8 @@
 # 剧情模式数据契约 V1（Story Mode Data Contract v1）
 
+> **已被 V2 取代（2026-10-27）**：V2 契约见 [STORY_MODE_DATA_CONTRACT_V2.md](STORY_MODE_DATA_CONTRACT_V2.md)。
+> V1 未发布任何内容，因此没有迁移负担；本文件仅保留为历史记录。当前冻结门禁以 V2 为准。
+
 > 作用：冻结剧情模式（Story Mode）的 `story_arcs` / `story_levels` 数据结构与全部语义约束，
 > 作为后续加载链（S2）、运行时（S4）、UI（S5）与模组编辑器剧情关卡编辑的唯一数据契约。
 > 状态：**Frozen v1（2026-10-27）**。本文件定稿后，Schema 与约束只能按 §7 的版本流程变更。

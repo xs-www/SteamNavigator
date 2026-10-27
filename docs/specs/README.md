@@ -18,4 +18,5 @@
 - [UI_SCENE_MIGRATION.md](UI_SCENE_MIGRATION.md) — 可复用 UI 组件场景化（.tscn + 脚本绑定）边界与分批计划
 - [HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md](HIGH_FREQUENCY_UI_REFACTOR_GUIDE.md) — 高频决策页面规范
 - [COMBAT_ARCHITECTURE_REVIEW.md](COMBAT_ARCHITECTURE_REVIEW.md) — 战斗系统架构采纳边界
-- [STORY_MODE_DATA_CONTRACT_V1.md](STORY_MODE_DATA_CONTRACT_V1.md) — 剧情模式数据契约 V1（**Frozen 2026-10-27**）：`story_arcs` / `story_levels` Schema 与全部语义约束码表、包级白名单、冻结门禁与变更流程
+- [STORY_MODE_DATA_CONTRACT_V2.md](STORY_MODE_DATA_CONTRACT_V2.md) — 剧情模式数据契约 V2（**当前草案，冻结中**）：手写陆地+航道、2D 叙事（文本/说话人/立绘/背景/音频/选项）、内嵌 tasks 复用 quest 状态机、系统限制三态、触发器与效果白名单
+- [STORY_MODE_DATA_CONTRACT_V1.md](STORY_MODE_DATA_CONTRACT_V1.md) — 剧情模式数据契约 V1（已被 V2 取代，仅作历史；V1 未发布内容、无迁移）
