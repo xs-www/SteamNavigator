@@ -8,17 +8,17 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `canonical(value)` | L30 |
-| `digest(value)` | L40 |
-| `readJson(file)` | L44 |
-| `currentDigests()` | L48 |
-| `loadLock()` | L62 |
-| `compare(lock, current)` | L67 |
+| `canonical(value)` | L34 |
+| `digest(value)` | L44 |
+| `readJson(file)` | L48 |
+| `currentDigests()` | L52 |
+| `loadLock()` | L66 |
+| `compare(lock, current)` | L71 |
 
 common 里的 story DSL 定义，防止在实现加载链/运行时前被无意改动。
 
 ## 契约与约束
-- 冻结契约见 `docs/specs/STORY_MODE_DATA_CONTRACT_V1.md`；锁文件在
+- 冻结契约见 `docs/specs/STORY_MODE_DATA_CONTRACT_V2.md`；锁文件在
   `schemas/v2/story_schema_freeze.json`。
 - 比较对象是**规范化 JSON**（递归 key 排序）的 SHA-256，格式化/缩进变化不算改动。
 - `common.schema.json` 只锁 story_presentation / story_stage / story_condition /

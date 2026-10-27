@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-26T23:54:04.063Z",
-  "commit": "4916dcf",
+  "generated_at": "2026-10-27T00:31:33.837Z",
+  "commit": "5429a5a",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -247,7 +247,7 @@
     },
     {
       "source": "SNModMaker/js/catalog.js",
-      "sha256": "b7098ad6968964b57458f7e2717ed56e3b2be04222aab846246ff03a92d68306",
+      "sha256": "6a3019d533c11a355c53f4411bfd17cd35570ca3ebae31a82a71fdf34a6aac89",
       "doc": "docs/static/SNModMaker/js/catalog.js.md",
       "status": "documented"
     },
@@ -283,7 +283,7 @@
     },
     {
       "source": "SNModMaker/js/validate.js",
-      "sha256": "3b38f50fe0c89943681d0a30bb0cdb935a298fe65de32a1b725429def22deb5c",
+      "sha256": "d276d2aa2f8ab8802f6541b084fe2018a94043148a4d447dde15f585773f8d21",
       "doc": "docs/static/SNModMaker/js/validate.js.md",
       "status": "documented"
     },
@@ -320,7 +320,7 @@
     },
     {
       "source": "SNModMaker/tests/run-tests.js",
-      "sha256": "2da86aa85a5b1a45ffb76f48dc720b2c4f267f47d440bc786880c9578f32284e",
+      "sha256": "46ac4c8a4d23d0023f15f101927297f18b7b41998b0e709de2ac7624aba6603c",
       "doc": "docs/static/SNModMaker/tests/run-tests.js.md",
       "status": "documented"
     },
@@ -338,7 +338,7 @@
     },
     {
       "source": "SNModMaker/tools/content.mjs",
-      "sha256": "21a9a86d9da1bbe57af1999a919f7561706b503eb1cc88a65ae52b428ff0ab85",
+      "sha256": "03ac71320c255f576d10c2a8763c0dbc7071ab70401ae6de0b36da8456c3a382",
       "doc": "docs/static/SNModMaker/tools/content.mjs.md",
       "status": "documented"
     },
@@ -398,7 +398,7 @@
     },
     {
       "source": "content_types.json",
-      "sha256": "d84c6960ec7d4d3db93701e7a4ff83e002dc3a2b0a96d34f96d2e74c8226a070",
+      "sha256": "7c52f9ac9e07495c9ae16e51a7558e6489af40619f7012e618b03a38638481b0",
       "doc": "docs/static/content_types.json.md",
       "status": "documented"
     },
@@ -4871,7 +4871,7 @@
     },
     {
       "source": "framework/tests/cases/test_schema_v2_drafts.gd",
-      "sha256": "b3af651f4ff21fb2fd687352f4dc1c2b40eafde4a67b5df4eb989fad2275b72e",
+      "sha256": "d76afc889e14d57064bbc1769a54c3b07a9be373e41f15137e470153cdc5d497",
       "doc": "docs/static/framework/tests/cases/test_schema_v2_drafts.gd.md",
       "status": "documented"
     },
@@ -5824,7 +5824,7 @@
     },
     {
       "source": "schemas/v2/common.schema.json",
-      "sha256": "0597c7c62de6bfa4a647404ddc6cb41f907c0952532f83bd864978e2d82b81a6",
+      "sha256": "b36df5200c9b94074f459213c5ba79209a8b1e4e4aed88c4af586dac1e9c3268",
       "doc": "docs/static/schemas/README.md",
       "status": "grouped",
       "group": "docs/static/schemas/README.md"
@@ -6033,19 +6033,19 @@
     },
     {
       "source": "schemas/v2/story_arc.schema.json",
-      "sha256": "00d17b8cf9bf194fd291a30aa1dde176a1d31eab68594f4b64557eed547b8f6f",
+      "sha256": "4a57b7713daf36a9bb0323e637eccd103e393bfaa7e12cece609e07800ff6a83",
       "doc": "docs/static/schemas/v2/story_arc.schema.json.md",
       "status": "documented"
     },
     {
       "source": "schemas/v2/story_level.schema.json",
-      "sha256": "f1ec172cfd4a2e10091b588335836651ef464eeea3dbb15b412bdc2436b914e3",
+      "sha256": "9dde60091b0363d8da9ee4a023cd2e8ba6adbd47b39033471d2490c0304149d0",
       "doc": "docs/static/schemas/v2/story_level.schema.json.md",
       "status": "documented"
     },
     {
       "source": "schemas/v2/story_schema_freeze.json",
-      "sha256": "94ac6cc3380f5f6606be047d00b10d09606216033766b29bb80be5af7652b70c",
+      "sha256": "2a4b2c40868c95082e65df317c82f9a19649e62cea7f8bf7a5a663ace9a061d1",
       "doc": "docs/static/schemas/v2/story_schema_freeze.json.md",
       "status": "documented"
     },
@@ -6484,7 +6484,7 @@
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/README.md",
-      "sha256": "364fa345602f29576997e45f0149e5242ebbca8362eef049bb0a8a450364f07b",
+      "sha256": "6e5485fb9171aa4eb84c80e8afb8be3de5d5ec2951e92e1d61642ae5fe4565a9",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
@@ -6498,28 +6498,28 @@
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/content/story_levels.json",
-      "sha256": "2bc27b540f8e3a4656fb183da24a896aba5f91e099fbb75f1c9157f3b57e10f4",
+      "sha256": "f2b7670d21c4907c52c471c3ab29ad81db4b9dad597385f08f3be9e92a5aaed7",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/localization/en.json",
-      "sha256": "770a05489edcc10ffd489e9ef33d4e61e93abef6060ca5bc530e63e822f4b1f2",
+      "sha256": "5113dabf63ba8d2f48fa3bbccf59b59759a0973ac0c2aa81f50197397a6fcdae",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/localization/zh_CN.json",
-      "sha256": "a9b1bd1fdbee277225f82e0f569613e95f45ae6c7c770dc9afeeac91651f4b15",
+      "sha256": "bc69e16020363f3bc494f208d89af45525c5a263ca1626b0bdb6918790e65740",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
     },
     {
       "source": "sdk/templates/story_pack_iron_tide/manifest.json",
-      "sha256": "5b1d310208f1d679acc188c5d78dbb9e56f3216040822334c6e08bd89401a4c9",
+      "sha256": "c62c3c2f3a3be0f502775d377de1984748a76c0ca8fceadc9432d17213923b95",
       "doc": "docs/static/sdk/README.md",
       "status": "grouped",
       "group": "docs/static/sdk/README.md"
@@ -6538,7 +6538,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "934a1c97307e344825fc6afa168510b7c78996a6b762c7089c131026f6062e49",
+      "sha256": "18a28f03d96efc794353d521083caa84ff3b9cd4897edbc71ef97983c34e598c",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6581,7 +6581,7 @@
     },
     {
       "source": "tools/check_story_schema_freeze.mjs",
-      "sha256": "fedf7a83125bc8ac1c4ecf240d5c4de3ae37e0cce94d67109c60e116f25fe449",
+      "sha256": "305582f23c5a2ccf16121ee9a3fa5aaf3b4adc241ba24a507b2f05a089d12b3a",
       "doc": "docs/static/tools/check_story_schema_freeze.mjs.md",
       "status": "documented"
     },

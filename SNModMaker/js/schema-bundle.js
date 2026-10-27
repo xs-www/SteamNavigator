@@ -1547,7 +1547,7 @@
           ]
         },
         "story_stage": {
-          "$comment": "Shared by the tutorial map_config flow and Story Mode levels. Story Mode data contract v1 froze the shapes below on 2026-10-27 (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md).",
+          "$comment": "Shared by the tutorial map_config flow and Story Mode levels. Data contract v2 adds 2D lines/choices, focus targets, access overrides and asset keys; tutorial fields stay compatible.",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -1589,6 +1589,26 @@
                   }
                 }
               }
+            },
+            "lines": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/story_line"
+              }
+            },
+            "choices": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/story_choice"
+              }
+            },
+            "background_asset": {
+              "$ref": "#/$defs/asset_key"
+            },
+            "audio_asset": {
+              "$ref": "#/$defs/asset_key"
             },
             "unlock_features": {
               "type": "array",
@@ -1705,37 +1725,42 @@
             "focus": {
               "type": "object",
               "additionalProperties": false,
-              "required": [
-                "target"
-              ],
+              "minProperties": 1,
               "properties": {
                 "target": {
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 160
+                  "maxLength": 64
+                },
+                "targets": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 4,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
                 },
                 "text_key": {
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 160
+                },
+                "blocking": {
+                  "type": "boolean"
                 }
               }
+            },
+            "access": {
+              "$ref": "#/$defs/story_access"
             },
             "effects": {
               "type": "array",
               "maxItems": 64,
               "items": {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 64
-                  }
-                }
+                "$ref": "#/$defs/story_effect"
               }
             }
           }
@@ -1985,6 +2010,239 @@
               "items": {
                 "$ref": "#/$defs/id_ref"
               }
+            }
+          }
+        },
+        "asset_key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}$"
+        },
+        "story_line": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text_key"
+          ],
+          "properties": {
+            "speaker_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,31}$"
+            },
+            "text_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "portrait_asset": {
+              "$ref": "#/$defs/asset_key"
+            },
+            "background_asset": {
+              "$ref": "#/$defs/asset_key"
+            },
+            "audio_asset": {
+              "$ref": "#/$defs/asset_key"
+            }
+          }
+        },
+        "story_effect": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "unlock_features",
+                "set_flag",
+                "clear_flag",
+                "set_counter",
+                "add_money",
+                "remove_money",
+                "add_item",
+                "remove_item",
+                "add_fuel",
+                "add_water",
+                "damage_ship",
+                "repair_ship",
+                "set_world_time",
+                "set_ship_fuel",
+                "unlock_route",
+                "add_facility",
+                "upgrade_hull",
+                "discover_contract_destination",
+                "grant_tutorial_contract",
+                "grant_clue",
+                "set_market_price_bias",
+                "guarantee_explore_success",
+                "set_counter_from_ship",
+                "complete_story",
+                "start_task",
+                "complete_task",
+                "fail_task",
+                "set_access"
+              ]
+            }
+          }
+        },
+        "story_choice": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "text_key"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "text_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "condition": {
+              "$ref": "#/$defs/story_condition"
+            },
+            "effects": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/story_effect"
+              }
+            }
+          }
+        },
+        "story_page_entry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "state"
+          ],
+          "properties": {
+            "key": {
+              "enum": [
+                "overview",
+                "market",
+                "contracts",
+                "shipyard",
+                "tavern",
+                "chart",
+                "base",
+                "trade",
+                "ruins"
+              ]
+            },
+            "state": {
+              "enum": [
+                "available",
+                "locked",
+                "hidden"
+              ]
+            },
+            "reason_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        },
+        "story_action_entry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "state"
+          ],
+          "properties": {
+            "key": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.]{0,95}$"
+            },
+            "state": {
+              "enum": [
+                "available",
+                "locked"
+              ]
+            },
+            "reason_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        },
+        "story_market_filter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "all",
+                "allow"
+              ]
+            },
+            "items": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/id_ref"
+              }
+            }
+          }
+        },
+        "story_module_filter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "all",
+                "allow"
+              ]
+            },
+            "modules": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/id_ref"
+              }
+            }
+          }
+        },
+        "story_access": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pages": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/story_page_entry"
+              }
+            },
+            "actions": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/story_action_entry"
+              }
+            },
+            "market": {
+              "$ref": "#/$defs/story_market_filter"
+            },
+            "modules": {
+              "$ref": "#/$defs/story_module_filter"
             }
           }
         }
@@ -5967,9 +6225,9 @@
     "v2/story_arc.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/story-arc-2.json",
-      "title": "Steam Navigator story arc content file (Schema 2.0; Story Mode data contract v1, frozen)",
-      "description": "Story Mode campaign arcs. One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. The data contract is frozen (2026-10-27); see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md for the constraint list. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
-      "$comment": "Story Mode data contract v1 — frozen 2026-10-27. Breaking structural changes require a new contract version (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md §7).",
+      "title": "Steam Navigator story arc content file (Story Mode data contract v2, draft)",
+      "description": "Story Mode campaign arcs (data contract v2 draft). One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, a cast with optional portrait assets, a glossary, and the ordered level list. See docs/specs/STORY_MODE_DATA_CONTRACT_V2.md. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
+      "$comment": "Story Mode data contract v2 (draft 2026-10-27). Supersedes v1 before any content ships; breaking changes follow docs/specs/STORY_MODE_DATA_CONTRACT_V2.md §14.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -6037,6 +6295,9 @@
                 "antagonist",
                 "other"
               ]
+            },
+            "portrait_asset": {
+              "$ref": "common.schema.json#/$defs/asset_key"
             }
           }
         },
@@ -6129,9 +6390,9 @@
     "v2/story_level.schema.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://steam-navigator.local/schema/story-level-2.json",
-      "title": "Steam Navigator story level content file (Schema 2.0; Story Mode data contract v1, frozen)",
-      "description": "Story Mode levels. One level is one hand-authored mission on a fixed map: the embedded fixed_layout ports/edges, the initial run state, the staged mission line (shared story_stage DSL from v2/common.schema.json), narrative briefing/beats/debrief, difficulty knobs, checkpoint-driven retry policy and non-gameplay rewards. The data contract is frozen (2026-10-27); see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md for the constraint list. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
-      "$comment": "Story Mode data contract v1 — frozen 2026-10-27. Breaking structural changes require a new contract version (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md §7).",
+      "title": "Steam Navigator story level content file (Story Mode data contract v2, draft)",
+      "description": "Story Mode levels (data contract v2 draft). One level is one hand-authored mission: hand-written landmasses and route paths, the initial run state, visible system limits, staged narrative (2D lines/choices/focus) and task definitions, plus triggers, difficulty knobs, checkpoint retry policy and non-gameplay rewards. See docs/specs/STORY_MODE_DATA_CONTRACT_V2.md. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
+      "$comment": "Story Mode data contract v2 (draft 2026-10-27). Supersedes v1 before any content ships; breaking changes follow docs/specs/STORY_MODE_DATA_CONTRACT_V2.md §14.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -6167,6 +6428,10 @@
         }
       },
       "$defs": {
+        "local_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
         "port_id": {
           "type": "string",
           "pattern": "^port_[0-9]{1,2}$"
@@ -6179,6 +6444,61 @@
             "type": "number",
             "minimum": 0,
             "maximum": 4096
+          }
+        },
+        "landmass": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "polygon"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/local_id"
+            },
+            "kind": {
+              "enum": [
+                "island",
+                "continent",
+                "reef"
+              ]
+            },
+            "name_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "polygon": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 256,
+              "items": {
+                "$ref": "#/$defs/story_position"
+              }
+            }
+          }
+        },
+        "market_entry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "item",
+            "stock",
+            "price"
+          ],
+          "properties": {
+            "item": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
+            "stock": {
+              "type": "number",
+              "minimum": 0
+            },
+            "price": {
+              "type": "number",
+              "minimum": 0
+            }
           }
         },
         "fixed_port": {
@@ -6217,28 +6537,17 @@
               "type": "array",
               "maxItems": 64,
               "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "item",
-                  "stock",
-                  "price"
-                ],
-                "properties": {
-                  "item": {
-                    "$ref": "common.schema.json#/$defs/id_ref"
-                  },
-                  "stock": {
-                    "type": "number",
-                    "minimum": 0
-                  },
-                  "price": {
-                    "type": "number",
-                    "minimum": 0
-                  }
-                }
+                "$ref": "#/$defs/market_entry"
               }
             }
+          }
+        },
+        "route_path": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/story_position"
           }
         },
         "fixed_edge": {
@@ -6247,7 +6556,7 @@
           "required": [
             "from",
             "to",
-            "distance",
+            "path",
             "risk"
           ],
           "properties": {
@@ -6257,9 +6566,8 @@
             "to": {
               "$ref": "#/$defs/port_id"
             },
-            "distance": {
-              "type": "number",
-              "minimum": 1
+            "path": {
+              "$ref": "#/$defs/route_path"
             },
             "risk": {
               "type": "number",
@@ -6275,10 +6583,20 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "landmasses",
             "ports",
-            "edges"
+            "edges",
+            "start_port"
           ],
           "properties": {
+            "landmasses": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/landmass"
+              }
+            },
             "ports": {
               "type": "array",
               "minItems": 2,
@@ -6307,9 +6625,6 @@
             "fixed"
           ],
           "properties": {
-            "map_config": {
-              "$ref": "common.schema.json#/$defs/id_ref"
-            },
             "fog": {
               "enum": [
                 "revealed",
@@ -6317,18 +6632,39 @@
                 "unknown"
               ]
             },
+            "revealed_ports": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/port_id"
+              }
+            },
+            "map_config": {
+              "$ref": "common.schema.json#/$defs/id_ref"
+            },
             "fixed": {
               "$ref": "#/$defs/fixed_map"
             }
           }
         },
+        "route_pair": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/port_id"
+          }
+        },
         "level_start": {
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "starting_scenario"
+          ],
           "properties": {
             "starting_scenario": {
-              "$ref": "common.schema.json#/$defs/id_ref",
-              "description": "C4: references a core:starting_scenario/* definition (the retired 1.0 start-build field was renamed)."
+              "$ref": "common.schema.json#/$defs/id_ref"
             },
             "port_id": {
               "$ref": "#/$defs/port_id"
@@ -6365,188 +6701,218 @@
               "minLength": 1,
               "maxLength": 64,
               "pattern": "^[a-z][a-z0-9_]{0,63}$"
-            }
-          }
-        },
-        "level_systems": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "unlock_features": {
-              "type": "array",
-              "uniqueItems": true,
-              "maxItems": 32,
-              "items": {
-                "type": "string",
-                "pattern": "^[a-z][a-z0-9_]{0,63}$"
-              }
             },
-            "unlock_items": {
+            "route_access": {
+              "enum": [
+                "all",
+                "none",
+                "listed"
+              ]
+            },
+            "unlocked_routes": {
               "type": "array",
               "uniqueItems": true,
               "maxItems": 64,
               "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "unlock_modules": {
-              "type": "array",
-              "uniqueItems": true,
-              "maxItems": 64,
-              "items": {
-                "$ref": "common.schema.json#/$defs/id_ref"
-              }
-            },
-            "lock_actions": {
-              "type": "array",
-              "uniqueItems": true,
-              "maxItems": 64,
-              "items": {
-                "type": "string",
-                "pattern": "^[a-z][a-z0-9_.]{0,63}$"
+                "$ref": "#/$defs/route_pair"
               }
             }
           }
         },
-        "narrative_dialogue": {
+        "task_objective": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "title_key",
-            "body_keys"
+            "event"
           ],
           "properties": {
-            "title_key": {
+            "event": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 160
+              "maxLength": 120
             },
-            "body_keys": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 32,
-              "items": {
+            "counter": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "at_least": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000
+            },
+            "match": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 160
               }
-            }
-          }
-        },
-        "narrative_brief": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "title_key",
-            "body_keys"
-          ],
-          "properties": {
-            "presentation": {
-              "$ref": "common.schema.json#/$defs/story_presentation"
             },
-            "speaker_key": {
+            "text_key": {
               "type": "string",
               "minLength": 1,
               "maxLength": 160
-            },
-            "title_key": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 160
-            },
-            "body_keys": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 32,
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160
-              }
             }
           }
         },
-        "narrative_beat": {
+        "task_stage": {
           "type": "object",
           "additionalProperties": false,
           "required": [
             "id",
-            "dialogue"
+            "title_key",
+            "objectives"
           ],
           "properties": {
             "id": {
-              "type": "string",
-              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              "$ref": "#/$defs/local_id"
             },
-            "stage_id": {
+            "title_key": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 64
+              "maxLength": 160
             },
-            "presentation": {
-              "$ref": "common.schema.json#/$defs/story_presentation"
+            "description_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
             },
-            "dialogue": {
-              "$ref": "#/$defs/narrative_dialogue"
+            "objectives": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/task_objective"
+              }
             }
           }
         },
-        "narrative_debrief": {
+        "task_tracking": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "label_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          }
+        },
+        "task_rewards": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "money": {
+              "type": "number",
+              "minimum": 0
+            },
+            "items": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "$ref": "common.schema.json#/$defs/cargo_stack"
+              }
+            },
+            "flags": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 16,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.-]{0,63}$"
+              }
+            }
+          }
+        },
+        "story_task": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "success_keys"
+            "id",
+            "name_key",
+            "kind",
+            "stages"
           ],
           "properties": {
-            "presentation": {
-              "$ref": "common.schema.json#/$defs/story_presentation"
+            "id": {
+              "$ref": "#/$defs/local_id"
             },
-            "success_keys": {
+            "name_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "description_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "kind": {
+              "enum": [
+                "story",
+                "guide",
+                "system"
+              ]
+            },
+            "auto_start": {
+              "type": "boolean"
+            },
+            "tracking": {
+              "$ref": "#/$defs/task_tracking"
+            },
+            "stages": {
               "type": "array",
               "minItems": 1,
               "maxItems": 16,
               "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160
+                "$ref": "#/$defs/task_stage"
               }
             },
-            "failure_keys": {
-              "type": "array",
-              "maxItems": 16,
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160
-              }
+            "rewards": {
+              "$ref": "#/$defs/task_rewards"
             },
-            "hook_key": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 160
+            "deadline_hours": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100000
             }
           }
         },
-        "level_narrative": {
+        "story_trigger": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "brief",
-            "debrief"
+            "id",
+            "when",
+            "effects"
           ],
           "properties": {
-            "brief": {
-              "$ref": "#/$defs/narrative_brief"
+            "id": {
+              "$ref": "#/$defs/local_id"
             },
-            "beats": {
+            "once": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "common.schema.json#/$defs/story_condition"
+            },
+            "effects": {
               "type": "array",
-              "maxItems": 64,
+              "minItems": 1,
+              "maxItems": 16,
               "items": {
-                "$ref": "#/$defs/narrative_beat"
+                "$ref": "common.schema.json#/$defs/story_effect"
               }
-            },
-            "debrief": {
-              "$ref": "#/$defs/narrative_debrief"
             }
           }
         },
@@ -6654,6 +7020,20 @@
                   "level_start"
                 ]
               }
+            },
+            "failure_title_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "failure_keys": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
             }
           }
         },
@@ -6662,8 +7042,8 @@
           "additionalProperties": false,
           "required": [
             "map",
-            "stages",
-            "narrative"
+            "start",
+            "stages"
           ],
           "properties": {
             "map": {
@@ -6672,11 +7052,22 @@
             "start": {
               "$ref": "#/$defs/level_start"
             },
-            "systems": {
-              "$ref": "#/$defs/level_systems"
+            "access": {
+              "$ref": "common.schema.json#/$defs/story_access"
             },
-            "narrative": {
-              "$ref": "#/$defs/level_narrative"
+            "tasks": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/story_task"
+              }
+            },
+            "triggers": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/story_trigger"
+              }
             },
             "stages": {
               "type": "array",

@@ -5,7 +5,7 @@
 
 ## In Progress
 
-- [ ] 剧情模式：**先冻结数据契约 V2 + Schema（进行中）**，再实现（排除战斗集成）：V2 为完全数据驱动——手写陆地+航道、2D 叙事（文本/说话人/立绘/背景/音频/选项，无 3D 镜头）、关卡内嵌 `tasks[]` 复用 quest 状态机、页面/动作 available/locked(reason)/hidden 三态与阶段覆盖。契约见 [STORY_MODE_DATA_CONTRACT_V2.md](docs/specs/STORY_MODE_DATA_CONTRACT_V2.md)；冻结后按 **S2 加载链 → S4 运行时 → S5 UI → S3 首发 1 关 → S7 SNModMaker 剧情编辑**（含地图编辑器拆分）推进。V1 已被取代、无迁移。
+- [ ] 剧情模式：**数据契约 V2 + Schema 已冻结（2026-10-27）**，下一步实现（排除战斗集成）：V2 为完全数据驱动——手写陆地+航道、2D 叙事（文本/说话人/立绘/背景/音频/选项，无 3D 镜头）、关卡内嵌 `tasks[]` 复用 quest 状态机、页面/动作 available/locked(reason)/hidden 三态与阶段覆盖、触发器与效果白名单。契约见 [STORY_MODE_DATA_CONTRACT_V2.md](docs/specs/STORY_MODE_DATA_CONTRACT_V2.md)；按 **S2 加载链 → S4 运行时 → S5 UI → S3 首发 1 关 → S7 SNModMaker 剧情编辑**（含地图编辑器拆分）推进。V1 已被取代、无迁移。
 - [ ] SNBattleSim 战术状态机工作台：人工浏览器验收（节点拖拽、转移表、状态机 CRUD、舰船挂载）后评估是否并入正式战斗；当前暂停，让位剧情模式
 
 ## Pending

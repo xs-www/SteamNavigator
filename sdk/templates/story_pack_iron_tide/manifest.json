@@ -23,6 +23,6 @@
   "assets": {},
   "authors": ["SNModMaker sample"],
   "license": "CC-BY-4.0",
-  "description": "A story-only content mod for Story Mode (Content Schema 2.0 draft): one arc and two hand-authored levels on fixed maps. Fictional sample, not canon.",
+  "description": "A story-only content mod for Story Mode (data contract v2): one arc and two hand-authored levels on fixed maps. Fictional sample, not canon.",
   "capabilities": ["content.story.v1"]
 }

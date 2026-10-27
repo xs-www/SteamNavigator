@@ -4,7 +4,7 @@
 // common 里的 story DSL 定义，防止在实现加载链/运行时前被无意改动。
 //
 // ## 契约与约束
-// - 冻结契约见 `docs/specs/STORY_MODE_DATA_CONTRACT_V1.md`；锁文件在
+// - 冻结契约见 `docs/specs/STORY_MODE_DATA_CONTRACT_V2.md`；锁文件在
 //   `schemas/v2/story_schema_freeze.json`。
 // - 比较对象是**规范化 JSON**（递归 key 排序）的 SHA-256，格式化/缩进变化不算改动。
 // - `common.schema.json` 只锁 story_presentation / story_stage / story_condition /
@@ -25,7 +25,11 @@ const lockPath = path.join(root, 'schemas/v2/story_schema_freeze.json');
 const schemaDir = path.join(root, 'schemas/v2');
 const frozenFiles = ['story_arc.schema.json', 'story_level.schema.json'];
 const commonSchema = 'common.schema.json';
-const frozenCommonDefs = ['story_presentation', 'story_stage', 'story_condition', 'story_match'];
+const frozenCommonDefs = [
+  'story_presentation', 'story_stage', 'story_condition', 'story_match',
+  'story_line', 'story_choice', 'story_page_entry', 'story_action_entry',
+  'story_market_filter', 'story_module_filter', 'story_access', 'story_effect',
+];
 
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
@@ -82,7 +86,7 @@ function compare(lock, current) {
 const args = new Set(process.argv.slice(2));
 const wantJson = args.has('--json');
 const update = args.has('--update');
-const contractDoc = path.join(root, 'docs/specs/STORY_MODE_DATA_CONTRACT_V1.md');
+const contractDoc = path.join(root, 'docs/specs/STORY_MODE_DATA_CONTRACT_V2.md');
 const errors = [];
 
 if (!fs.existsSync(contractDoc)) {
@@ -104,8 +108,8 @@ if (update) {
     process.exit(2);
   }
   const lock = {
-    contract: 'STORY_MODE_DATA_CONTRACT_V1',
-    contract_version: 1,
+    contract: 'STORY_MODE_DATA_CONTRACT_V2',
+    contract_version: 2,
     frozen_at: '2026-10-27',
     schema_version: '2.0',
     source: 'node tools/check_story_schema_freeze.mjs --update',
@@ -126,7 +130,7 @@ if (!lock) {
 const drift = compare(lock, current);
 if (drift.length) {
   errors.push(...drift);
-  errors.push('Story Mode data contract v1 is frozen; review docs/specs/STORY_MODE_DATA_CONTRACT_V1.md before re-freezing');
+  errors.push('Story Mode data contract v2 is frozen; review docs/specs/STORY_MODE_DATA_CONTRACT_V2.md before re-freezing');
 }
 
 const summary = {

@@ -34,5 +34,18 @@
   "story.iron_tide.l02.brief.title": "归航",
   "story.iron_tide.l02.brief.body.0": "把船开回灰烬港；路上只有一条航道，但风浪不会替你省煤。",
   "story.iron_tide.l02.debrief.success.0": "你带着铁潮湾的消息回到灰烬港，铁潮的故事才刚刚开始。",
-  "story.iron_tide.l02.debrief.failure.0": "煤仓见底，船停在了半路。换一条更省的航线再试。"
+  "story.iron_tide.l02.debrief.failure.0": "煤仓见底，船停在了半路。换一条更省的航线再试。",
+  "story.iron_tide.l01.choice.continue": "明白，开始补给。",
+  "story.iron_tide.l01.lock.reason": "教程期间不能借贷。",
+  "story.iron_tide.l01.task.name": "为出航补煤",
+  "story.iron_tide.l01.task.group": "教学",
+  "story.iron_tide.l01.task.stage": "补给并离港",
+  "story.iron_tide.l01.task.obj": "把煤补到 6 单位并抵达铁潮湾",
+  "story.iron_tide.l01.focus.supply": "在市场补给区购买煤炭。",
+  "story.iron_tide.l01.focus.chart": "打开海图，选择铁潮湾并确认起航。",
+  "story.iron_tide.l02.lock.reason": "归航前船厂暂不开放改装。",
+  "story.iron_tide.l02.task.name": "归航灰烬港",
+  "story.iron_tide.l02.task.group": "教学",
+  "story.iron_tide.l02.task.stage": "驶回灰烬港",
+  "story.iron_tide.l02.task.obj": "抵达灰烬港"
 }

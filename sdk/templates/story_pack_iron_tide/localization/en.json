@@ -34,5 +34,18 @@
   "story.iron_tide.l02.brief.title": "Homeward",
   "story.iron_tide.l02.brief.body.0": "Steam back to Ash Harbor. There is only one channel, but the weather will not spare your coal.",
   "story.iron_tide.l02.debrief.success.0": "You bring word of Iron Bay home to Ash Harbor. The story of the Iron Tide is only beginning.",
-  "story.iron_tide.l02.debrief.failure.0": "The bunker ran empty and the ship stopped halfway. Try a leaner route next time."
+  "story.iron_tide.l02.debrief.failure.0": "The bunker ran empty and the ship stopped halfway. Try a leaner route next time.",
+  "story.iron_tide.l01.choice.continue": "Understood. Start resupplying.",
+  "story.iron_tide.l01.lock.reason": "Loans are unavailable during the tutorial.",
+  "story.iron_tide.l01.task.name": "Coal for the first voyage",
+  "story.iron_tide.l01.task.group": "Tutorial",
+  "story.iron_tide.l01.task.stage": "Resupply and depart",
+  "story.iron_tide.l01.task.obj": "Load 6 coal and reach Iron Bay",
+  "story.iron_tide.l01.focus.supply": "Buy coal in the market supply block.",
+  "story.iron_tide.l01.focus.chart": "Open the chart, pick Iron Bay and confirm departure.",
+  "story.iron_tide.l02.lock.reason": "The shipyard is closed until you return home.",
+  "story.iron_tide.l02.task.name": "Homeward to Ash Harbor",
+  "story.iron_tide.l02.task.group": "Tutorial",
+  "story.iron_tide.l02.task.stage": "Sail home",
+  "story.iron_tide.l02.task.obj": "Reach Ash Harbor"
 }

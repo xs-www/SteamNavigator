@@ -117,7 +117,7 @@ CLI 不会自动声明 capability：内容使用 Schema 2.0 但未在 manifest.c
 
 剩余 Schema 2.0 草案类型（story_arcs / story_levels / combat_ai_profiles）同样可编辑、可校验，
 内容文件写 schema_version "2.0"；但游戏运行时不加载，校验给出 draft_content 警告。
-剧情数据契约 V1 已冻结（2026-10-27，见 docs/specs/STORY_MODE_DATA_CONTRACT_V1.md）。
+剧情数据契约 V2 已冻结（2026-10-27，见 docs/specs/STORY_MODE_DATA_CONTRACT_V2.md）。
 草案模组使用 capability 时还需在 manifest.capabilities 声明对应能力（战斗 AI →
 content.combat.v1，剧情 → content.story.v1）。剧情包是白名单模组：同一包里出现故事
 内容之外的类型会报 story_pack_off_whitelist；另外还会校验

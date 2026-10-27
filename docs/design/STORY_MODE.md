@@ -5,7 +5,7 @@
 > 边界、与现有新手剧情（`data.story`，见 [STORY_TUTORIAL.md](STORY_TUTORIAL.md)）的迁移边界；
 > 并给出**剧情数据包**与关卡的数据化存储契约。
 >
-> 状态：Active。**2026-10-27 起数据面改以 V2 契约为准**（完全数据驱动：
+> 状态：Active。**2026-10-27 起数据面以 V2 契约为准并已冻结**（完全数据驱动：
 > [STORY_MODE_DATA_CONTRACT_V2.md](../specs/STORY_MODE_DATA_CONTRACT_V2.md)），V1 已被取代；
 > 运行时加载（S2 起）尚未开始，`story_arcs` / `story_levels` 仍是草案类型。
 > 本文的字段示例以 V2 契约为准，若冲突以契约为准。
@@ -40,24 +40,24 @@
 | 自由模式 Free Mode | 在无尽的海图上经营、贸易，自己决定要做什么。 |
 | 剧情模式 Story Mode | 在一段完整的故事里启航，一关一关认识这片海。 |
 
-## 0.1 落地状态（S1：数据契约；2026-10-27 冻结 V1）
+## 0.1 落地状态（S1：数据契约；2026-10-27 冻结 V2）
 
-S1 已交付（2026-10-22），并已把 **Schema + 约束冻结为数据契约 V1**（2026-10-27）：
+S1 已交付（2026-10-22），数据契约于 2026-10-27 升级并**冻结为 V2**（完全数据驱动）：
 
 | 交付物 | 位置 |
 |---|---|
-| 篇章 / 关卡 Schema 2.0（Frozen v1） | `schemas/v2/story_arc.schema.json`、`schemas/v2/story_level.schema.json`（共用 `v2/common.schema.json#/$defs/story_stage`） |
-| 冻结契约与约束码表 | [STORY_MODE_DATA_CONTRACT_V1.md](../specs/STORY_MODE_DATA_CONTRACT_V1.md) |
+| 篇章 / 关卡 Schema 2.0（Frozen v2） | `schemas/v2/story_arc.schema.json`、`schemas/v2/story_level.schema.json`（共用 `v2/common.schema.json` 的 12 个 story `$defs`） |
+| 冻结契约与约束码表 | [STORY_MODE_DATA_CONTRACT_V2.md](../specs/STORY_MODE_DATA_CONTRACT_V2.md)（V1 已归档为历史） |
 | 冻结门禁 | `node tools/check_story_schema_freeze.mjs --check`（锁文件 `schemas/v2/story_schema_freeze.json`） |
 | 类型登记（草案，运行时未加载） | `content_types.json` → `draft_schemas` + `draft_types` + `planned`（capability `content.story.v1`） |
-| 编辑器元数据（标签 / 默认值 / 枚举可读名） | `SNModMaker/js/catalog.js` |
-| 校验（白名单 + 篇章 / 关卡语义） | `SNModMaker/js/validate.js`（`story_pack_off_whitelist`、`story_level_checkpoint_missing`、`story_start_port_conflict` 等，见契约 §6） |
-| 可导入的示例数据包（1 篇章 + 2 关卡 + 中英文本） | `sdk/templates/story_pack_iron_tide/` |
+| 编辑器元数据（标签 / 默认值 / 可读名） | `SNModMaker/js/catalog.js`（V2 默认值：手写陆地/航道、lines/choices、access、tasks、triggers） |
+| 校验（白名单 + 篇章 / 关卡语义） | `SNModMaker/js/validate.js`（`story_pack_off_whitelist`、`story_port_on_land`、`story_route_endpoint_mismatch`、`story_access_reason_missing`、`story_effect_params` 等，见契约 §11） |
+| 可导入的示例数据包（1 篇章 + 2 关卡 + 中英文本） | `sdk/templates/story_pack_iron_tide/`（V2：手写陆地/航道路径 + 2D 叙事 + 任务 + 可见限制） |
 | 校验命令 | `node SNModMaker/tools/content.mjs validate --mod sdk/templates/story_pack_iron_tide`（0 error / 2 个预期 `draft_content` warning） |
 
 - **不改游戏运行时**：`ContentCompiler` 按每个 active 类型的 `schema_version` 加载，剧情包因类型仍是 draft 不会进入注册表（与其它 2.0 草案类型同一流程）。
-- S2 起才做加载链与 `story_mode.*`；S1 的验收是「数据包能写、能校验、能 round-trip」，不是「能进游戏玩」。
-- 冻结后任何 Schema 结构变更都要走契约 §7 的版本流程；实现侧的下一步是把草案类型提升 active 并接加载链。
+- S2 起才做加载链与 `story_mode.*`；数据契约的验收是「数据包能写、能校验、能 round-trip」，不是「能进游戏玩」。
+- 冻结后任何 Schema 结构变更都要走 V2 契约 §14 的版本流程；实现侧的下一步是把草案类型提升 active 并接加载链。
 
 ## 1. 模式边界
 

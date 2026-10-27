@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://steam-navigator.local/schema/story-arc-2.json",
-  "title": "Steam Navigator story arc content file (Schema 2.0; Story Mode data contract v1, frozen)",
-  "description": "Story Mode campaign arcs. One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, the cast and glossary authored from the World Forge world bible, and the ordered level list. The data contract is frozen (2026-10-27); see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md for the constraint list. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
-  "$comment": "Story Mode data contract v1 — frozen 2026-10-27. Breaking structural changes require a new contract version (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md §7).",
+  "title": "Steam Navigator story arc content file (Story Mode data contract v2, draft)",
+  "description": "Story Mode campaign arcs (data contract v2 draft). One arc is one playable story campaign inside a story-only content mod: a fixed protagonist, a cast with optional portrait assets, a glossary, and the ordered level list. See docs/specs/STORY_MODE_DATA_CONTRACT_V2.md. Runtime loading lands with Story Mode S2; until then the type stays a draft type and the Godot runtime rejects it as inactive.",
+  "$comment": "Story Mode data contract v2 (draft 2026-10-27). Supersedes v1 before any content ships; breaking changes follow docs/specs/STORY_MODE_DATA_CONTRACT_V2.md §14.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "content_type", "definitions"],
@@ -59,6 +59,9 @@
         },
         "role": {
           "enum": ["protagonist", "supporting", "antagonist", "other"]
+        },
+        "portrait_asset": {
+          "$ref": "common.schema.json#/$defs/asset_key"
         }
       }
     },

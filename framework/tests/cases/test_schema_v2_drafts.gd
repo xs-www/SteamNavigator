@@ -434,12 +434,21 @@ func _valid_story_level_file() -> Dictionary:
 			"data": {
 				"map": {
 					"fog": "revealed",
+					"revealed_ports": ["port_0", "port_1"],
 					"fixed": {
+						"landmasses": [{
+							"id": "starter_island",
+							"kind": "island",
+							"polygon": [[20, 40], [90, 30], [110, 80], [50, 110], [10, 70]],
+						}],
 						"ports": [
-							{"id": "port_0", "name_key": "story.iron_tide.port.ash_harbor", "position": [40, 80]},
-							{"id": "port_1", "name_key": "story.iron_tide.port.iron_bay", "position": [160, 80]},
+							{"id": "port_0", "name_key": "story.iron_tide.port.ash_harbor", "position": [40, 140]},
+							{"id": "port_1", "name_key": "story.iron_tide.port.iron_bay", "position": [160, 140]},
 						],
-						"edges": [{"from": "port_0", "to": "port_1", "distance": 120, "risk": 0.05}],
+						"edges": [{
+							"from": "port_0", "to": "port_1", "risk": 0.05,
+							"path": [[40, 140], [100, 150], [160, 140]],
+						}],
 						"start_port": "port_0",
 					},
 				},
@@ -452,33 +461,57 @@ func _valid_story_level_file() -> Dictionary:
 					"cargo": [],
 					"equipped_modules": [],
 					"world_time": "day_1_0600",
+					"route_access": "all",
 				},
-				"stages": [
-					{"id": "opening", "checkpoint": true, "presentation": "briefing", "advance": {"mode": "confirm"}},
-					{"id": "closing", "checkpoint": true, "advance": {"event": "story.level_complete"}},
-				],
-				"narrative": {
-					"brief": {
-						"presentation": "briefing",
-						"title_key": "story.iron_tide.l01.brief.title",
-						"body_keys": ["story.iron_tide.l01.brief.body.0"],
-					},
-					"beats": [{
-						"id": "farewell",
-						"stage_id": "closing",
-						"dialogue": {
-							"title_key": "story.iron_tide.l01.beat.title",
-							"body_keys": ["story.iron_tide.l01.beat.body.0"],
-						},
+				"access": {
+					"pages": [{"key": "market", "state": "available"}],
+					"actions": [{"key": "loan", "state": "locked", "reason_key": "story.iron_tide.lock.loan"}],
+					"market": {"mode": "all"},
+					"modules": {"mode": "all"},
+				},
+				"tasks": [{
+					"id": "starter_task",
+					"name_key": "story.iron_tide.task.name",
+					"kind": "guide",
+					"stages": [{
+						"id": "first",
+						"title_key": "story.iron_tide.task.stage",
+						"objectives": [{"event": "cmd:trade.buy", "at_least": 1}],
 					}],
-					"debrief": {
-						"success_keys": ["story.iron_tide.l01.debrief.success.0"],
-						"failure_keys": ["story.iron_tide.l01.debrief.failure.0"],
+					"rewards": {"money": 10},
+				}],
+				"triggers": [{
+					"id": "starter_flag",
+					"once": true,
+					"when": {"event": "cmd:trade.buy"},
+					"effects": [{"type": "set_flag", "flag": "bought_once"}],
+				}],
+				"stages": [
+					{
+						"id": "opening",
+						"checkpoint": true,
+						"presentation": "briefing",
+						"lines": [{"speaker_id": "captain", "text_key": "story.iron_tide.l01.brief.body.0"}],
+						"choices": [{"id": "understood", "text_key": "story.iron_tide.l01.choice.continue"}],
+						"focus": {"targets": ["market_nav"], "text_key": "story.iron_tide.l01.focus.market"},
+						"access": {"pages": [{"key": "market", "state": "available"}]},
+						"advance": {"mode": "confirm"},
 					},
-				},
+					{
+						"id": "closing",
+						"checkpoint": true,
+						"presentation": "debrief",
+						"lines": [{"text_key": "story.iron_tide.l01.debrief.success.0"}],
+						"advance": {"event": "story.level_complete"},
+					},
+				],
 				"difficulty": {"profile": "story.intro", "knobs": {"risk_scale": 0.6, "hint_level": "full"}},
 				"rewards": {"achievements": ["iron_tide.first_smoke"]},
-				"fail": {"default_mode": "checkpoint", "allow": ["checkpoint", "level_start"]},
+				"fail": {
+					"default_mode": "checkpoint",
+					"allow": ["checkpoint", "level_start"],
+					"failure_keys": ["story.iron_tide.l01.debrief.failure.0"],
+				},
 			},
 		}],
 	}

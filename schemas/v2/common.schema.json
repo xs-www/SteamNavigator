@@ -123,7 +123,7 @@
       ]
     },
     "story_stage": {
-      "$comment": "Shared by the tutorial map_config flow and Story Mode levels. Story Mode data contract v1 froze the shapes below on 2026-10-27 (see docs/specs/STORY_MODE_DATA_CONTRACT_V1.md).",
+      "$comment": "Shared by the tutorial map_config flow and Story Mode levels. Data contract v2 adds 2D lines/choices, focus targets, access overrides and asset keys; tutorial fields stay compatible.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -165,6 +165,26 @@
               }
             }
           }
+        },
+        "lines": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/story_line"
+          }
+        },
+        "choices": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/story_choice"
+          }
+        },
+        "background_asset": {
+          "$ref": "#/$defs/asset_key"
+        },
+        "audio_asset": {
+          "$ref": "#/$defs/asset_key"
         },
         "unlock_features": {
           "type": "array",
@@ -281,37 +301,42 @@
         "focus": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "target"
-          ],
+          "minProperties": 1,
           "properties": {
             "target": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 160
+              "maxLength": 64
+            },
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
             },
             "text_key": {
               "type": "string",
               "minLength": 1,
               "maxLength": 160
+            },
+            "blocking": {
+              "type": "boolean"
             }
           }
+        },
+        "access": {
+          "$ref": "#/$defs/story_access"
         },
         "effects": {
           "type": "array",
           "maxItems": 64,
           "items": {
-            "type": "object",
-            "required": [
-              "type"
-            ],
-            "properties": {
-              "type": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 64
-              }
-            }
+            "$ref": "#/$defs/story_effect"
           }
         }
       }
@@ -561,6 +586,239 @@
           "items": {
             "$ref": "#/$defs/id_ref"
           }
+        }
+      }
+    },
+    "asset_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,63}$"
+    },
+    "story_line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text_key"
+      ],
+      "properties": {
+        "speaker_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$"
+        },
+        "text_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "portrait_asset": {
+          "$ref": "#/$defs/asset_key"
+        },
+        "background_asset": {
+          "$ref": "#/$defs/asset_key"
+        },
+        "audio_asset": {
+          "$ref": "#/$defs/asset_key"
+        }
+      }
+    },
+    "story_effect": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "unlock_features",
+            "set_flag",
+            "clear_flag",
+            "set_counter",
+            "add_money",
+            "remove_money",
+            "add_item",
+            "remove_item",
+            "add_fuel",
+            "add_water",
+            "damage_ship",
+            "repair_ship",
+            "set_world_time",
+            "set_ship_fuel",
+            "unlock_route",
+            "add_facility",
+            "upgrade_hull",
+            "discover_contract_destination",
+            "grant_tutorial_contract",
+            "grant_clue",
+            "set_market_price_bias",
+            "guarantee_explore_success",
+            "set_counter_from_ship",
+            "complete_story",
+            "start_task",
+            "complete_task",
+            "fail_task",
+            "set_access"
+          ]
+        }
+      }
+    },
+    "story_choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text_key"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "text_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "condition": {
+          "$ref": "#/$defs/story_condition"
+        },
+        "effects": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/story_effect"
+          }
+        }
+      }
+    },
+    "story_page_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "state"
+      ],
+      "properties": {
+        "key": {
+          "enum": [
+            "overview",
+            "market",
+            "contracts",
+            "shipyard",
+            "tavern",
+            "chart",
+            "base",
+            "trade",
+            "ruins"
+          ]
+        },
+        "state": {
+          "enum": [
+            "available",
+            "locked",
+            "hidden"
+          ]
+        },
+        "reason_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    },
+    "story_action_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "state"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]{0,95}$"
+        },
+        "state": {
+          "enum": [
+            "available",
+            "locked"
+          ]
+        },
+        "reason_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    },
+    "story_market_filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "all",
+            "allow"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/id_ref"
+          }
+        }
+      }
+    },
+    "story_module_filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "all",
+            "allow"
+          ]
+        },
+        "modules": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/id_ref"
+          }
+        }
+      }
+    },
+    "story_access": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/story_page_entry"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/story_action_entry"
+          }
+        },
+        "market": {
+          "$ref": "#/$defs/story_market_filter"
+        },
+        "modules": {
+          "$ref": "#/$defs/story_module_filter"
         }
       }
     }

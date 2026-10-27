@@ -15,8 +15,9 @@
 | `freshProject()` | L68 |
 | `projectFromDir(dir)` | L73 |
 | `storyPackProject()` | L88 |
-| `errorsOf(result)` | L92 |
-| `warningsOf(result)` | L96 |
+| `storyProject()` | L93 |
+| `errorsOf(result)` | L102 |
+| `warningsOf(result)` | L106 |
 
 ## 契约与约束
 

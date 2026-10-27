@@ -53,14 +53,26 @@
 | `checkQuestSemantics(definition, view, add)` | L666 |
 | `STORY_TYPES` | L696 |
 | `STORY_FACILITIES` | L700 |
-| `storyFieldView(view, field)` | L702 |
-| `checkStoryArcSemantics(definition, view, add)` | L707 |
-| `checkStoryLevelSemantics(definition, view, add)` | L757 |
-| `checkStoryPack(contentFiles, manifest, modId, add)` | L925 |
-| `validateProject(project, options)` | L1004 |
-| `finish(issues)` | L1388 |
-| `byDefinition(issues)` | L1397 |
-| `SNValidate (global)` | L1410 |
+| `STORY_PAGES` | L701 |
+| `STORY_PRESENTATIONS` | L702 |
+| `STORY_MEDIA` | L703 |
+| `ID_REF_PATTERN` | L708 |
+| `storyFieldView(view, field)` | L710 |
+| `storyPointInPolygon(point, polygon)` | L715 |
+| `storyOrientation(a, b, c)` | L730 |
+| `storyOnSegment(a, b, c)` | L736 |
+| `storySegmentsIntersect(p1, p2, q1, q2)` | L741 |
+| `storyRouteCrossesLand(path, landmasses)` | L754 |
+| `storyAssetView(view, field, key, kind, declaredAssets, add)` | L768 |
+| `checkStoryAccess(access, view, add)` | L785 |
+| `checkStoryEffect(effect, view, field, taskIds, add)` | L826 |
+| `checkStoryArcSemantics(definition, view, add, declaredAssets)` | L927 |
+| `checkStoryLevelSemantics(definition, view, add, declaredAssets)` | L980 |
+| `checkStoryPack(contentFiles, manifest, modId, declaredAssets, add)` | L1320 |
+| `validateProject(project, options)` | L1426 |
+| `finish(issues)` | L1810 |
+| `byDefinition(issues)` | L1819 |
+| `SNValidate (global)` | L1832 |
 
 ## 契约与约束
 

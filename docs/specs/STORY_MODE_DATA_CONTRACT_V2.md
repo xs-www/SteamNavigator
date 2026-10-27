@@ -3,7 +3,9 @@
 > 作用：定义**完全数据驱动**的剧情关卡格式：固定地图（手写陆地 + 航道）、初始状态、
 > 2D 叙事（文本 / 说话人 / 立绘 / 背景 / 音频 / 选项）、任务（复用 quest 状态机）、
 > 可见系统限制（可用 / 可见但锁定 / 隐藏三态 + 阶段覆盖）与关卡流程。
-> 状态：**V2 契约草案（2026-10-27）**，目标是在写运行时之前冻结；V1 由本文件取代。
+> 状态：**Frozen v2（2026-10-27）**；V1 已被本文件取代。Schema 与 common story DSL 的
+> 规范化哈希已锁在 `schemas/v2/story_schema_freeze.json`，由
+> `node tools/check_story_schema_freeze.mjs --check` 守护。
 > 运行时状态：`story_arcs` / `story_levels` 仍是 Content Schema 2.0 草案类型，Godot 运行时不加载。
 > 上位设计：[STORY_MODE.md](../design/STORY_MODE.md)；V1 历史：[STORY_MODE_DATA_CONTRACT_V1.md](STORY_MODE_DATA_CONTRACT_V1.md)。
 
@@ -402,12 +404,12 @@ mods/<pack_id>/
 
 ## 15. 验收（冻结 V2 时）
 
-- [ ] `story_arcs` / `story_levels` V2 Schema 通过示例包与非法样本测试。
-- [ ] 手写地图校验：港口/陆地/航道端点、穿陆、连通性；无 `distance` 字段。
-- [ ] 叙事：lines / choices / speaker / 立绘/背景/音频资产引用 / focus targets / access 覆盖。
-- [ ] 任务：内嵌 tasks 的 schema + 语义校验；奖励引用；期限。
-- [ ] 触发器：条件 + 效果 + once。
-- [ ] 白名单 / capability / 单篇章 / 引用 / 本地化约束保持。
-- [ ] `node SNModMaker/tests/run-tests.js`、`node --test SNModMaker/tests/content-cli.test.mjs`、
+- [x] `story_arcs` / `story_levels` V2 Schema 通过示例包与非法样本测试。
+- [x] 手写地图校验：港口/陆地/航道端点、穿陆、连通性；无 `distance` 字段。
+- [x] 叙事：lines / choices / speaker / 立绘/背景/音频资产引用 / focus targets / access 覆盖。
+- [x] 任务：内嵌 tasks 的 schema + 语义校验；奖励引用；期限。
+- [x] 触发器：条件 + 效果 + once。
+- [x] 白名单 / capability / 单篇章 / 引用 / 本地化约束保持。
+- [x] `node SNModMaker/tests/run-tests.js`、`node --test SNModMaker/tests/content-cli.test.mjs`、
       Godot `test_schema_v2_drafts.gd`、`check_story_schema_freeze --check`、`gen_static_docs --check` 全绿。
-- [ ] 运行时代码**不改**（S2 起另行实现）。
+- [x] 运行时代码**不改**（S2 起另行实现）。

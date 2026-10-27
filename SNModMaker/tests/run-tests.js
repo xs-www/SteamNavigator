@@ -89,6 +89,16 @@ function storyPackProject() {
   return projectFromDir(path.resolve(__dirname, '..', '..', 'sdk', 'templates', 'story_pack_iron_tide'));
 }
 
+/* A fresh story draft project built from the editor defaults. */
+function storyProject() {
+  return Store.createProject({
+    id: 'story_mod',
+    name: 'Story Mod',
+    template: null,
+    drafts: ['story_arcs', 'story_levels'],
+  });
+}
+
 function errorsOf(result) {
   return result.issues.filter((issue) => issue.severity === 'error');
 }
@@ -561,7 +571,7 @@ function warningsOf(result) {
     // Catalog defaults must pass the real draft schemas.
     for (const [typeKey, id, required] of [
       ['story_arcs', 'test_mod:story_arc/iron_tide', ['protagonist_id', 'characters', 'levels']],
-      ['story_levels', 'test_mod:story_level/01_first_smoke', ['map', 'stages', 'narrative']],
+      ['story_levels', 'test_mod:story_level/01_first_smoke', ['map', 'start', 'stages']],
     ]) {
       const info = Types.DRAFT_TYPES.find((item) => item.key === typeKey);
       const defaults = Catalog.DEFAULTS[typeKey]();
@@ -594,19 +604,17 @@ function warningsOf(result) {
       'example_story_iron_tide:story_level/01_first_smoke',
       'example_story_iron_tide:story_level/02_homeward',
     ]);
+    const level = project.contentFiles[1].definitions[0];
+    assert.equal(level.data.map.fixed.landmasses.length, 2, 'the sample map hand-writes its landmasses');
+    assert.ok(level.data.map.fixed.edges.every((edge) => edge.path.length >= 2 && !('distance' in edge)),
+      'hand-written routes carry path points and no derived distance');
   });
 
-  await test('story semantics catch cast, checkpoint, beat, fixed map and whitelist mistakes', () => {
-    const project = Store.createProject({
-      id: 'story_mod',
-      name: 'Story Mod',
-      template: null,
-      drafts: ['story_arcs', 'story_levels'],
-    });
-    const arcFile = project.contentFiles.find((file) => file.content_type === 'story_arcs');
-    const levelFile = project.contentFiles.find((file) => file.content_type === 'story_levels');
-    const arc = arcFile.definitions[0];
-    const level = levelFile.definitions[0];
+  await test('story semantics catch cast, checkpoint, stage, map and whitelist mistakes', () => {
+    const project = storyProject();
+    const arc = project.contentFiles.find((file) => file.content_type === 'story_arcs').definitions[0];
+    const level = project.contentFiles.find((file) => file.content_type === 'story_levels').definitions[0];
+    arc.data.levels = [level.id];
     const codes = () => new Set(Validate.validateProject(project).issues.map((issue) => issue.code));
 
     assert.ok(!codes().has('story_protagonist_unknown'), 'the starter keeps its protagonist in the cast');
@@ -616,25 +624,17 @@ function warningsOf(result) {
 
     arc.data.levels = ['story_mod:story_arc/other'];
     assert.ok(codes().has('story_arc_level_type'), 'an arc may only list story_level ids');
-    arc.data.levels = [];
+    arc.data.levels = [level.id];
 
     level.data.stages = level.data.stages.map((stage) => Object.assign({}, stage, { checkpoint: false }));
     assert.ok(codes().has('story_level_checkpoint_missing'), 'a level without a checkpoint must error');
     level.data.stages[0].checkpoint = true;
 
-    level.data.narrative.beats = [{
-      id: 'oops',
-      stage_id: 'missing_stage',
-      dialogue: { title_key: 'story.placeholder.title', body_keys: ['story.placeholder.body'] },
-    }];
-    assert.ok(codes().has('story_beat_stage_unknown'), 'a beat on an unknown stage must error');
-    level.data.narrative.beats = [];
-
     level.data.fail = { default_mode: 'level_start', allow: ['checkpoint'] };
     assert.ok(codes().has('story_fail_default_not_allowed'), 'default_mode outside allow must error');
     level.data.fail = { default_mode: 'checkpoint', allow: ['checkpoint', 'level_start'] };
 
-    level.data.map.fixed.edges.push({ from: 'port_0', to: 'port_9', distance: 10, risk: 0.1 });
+    level.data.map.fixed.edges.push({ from: 'port_0', to: 'port_9', path: [[40, 140], [40, 40]], risk: 0.1 });
     assert.ok(codes().has('story_fixed_edge_port_unknown'), 'an edge to an unknown port must error');
     level.data.map.fixed.edges.pop();
 
@@ -646,17 +646,11 @@ function warningsOf(result) {
     assert.ok(codes().has('story_pack_off_whitelist'), 'a story pack may not carry free-mode content');
   });
 
-  await test('story contract v1 freeze: pack, start and fixed-map constraints', () => {
-    const project = Store.createProject({
-      id: 'story_mod',
-      name: 'Story Mod',
-      template: null,
-      drafts: ['story_arcs', 'story_levels'],
-    });
-    const arcFile = project.contentFiles.find((file) => file.content_type === 'story_arcs');
-    const levelFile = project.contentFiles.find((file) => file.content_type === 'story_levels');
-    const arc = arcFile.definitions[0];
-    const level = levelFile.definitions[0];
+  await test('story contract v2: geometry, narrative, access, tasks and effects', () => {
+    const project = storyProject();
+    const arc = project.contentFiles.find((file) => file.content_type === 'story_arcs').definitions[0];
+    const level = project.contentFiles.find((file) => file.content_type === 'story_levels').definitions[0];
+    arc.data.levels = [level.id];
     const codes = () => new Set(Validate.validateProject(project).issues.map((issue) => issue.code));
 
     /* Pack-level: the story capability is mandatory once story content exists. */
@@ -690,43 +684,71 @@ function warningsOf(result) {
     level.data.map.fixed.start_port = fixedStartPort;
     level.data.start.port_id = startPortId;
 
-    /* Fixed map edges: self loops and duplicates are rejected. */
-    level.data.map.fixed.edges.push({ from: 'port_0', to: 'port_0', distance: 10, risk: 0.1 });
-    assert.ok(codes().has('story_fixed_edge_self'), 'a self-loop edge must error');
-    level.data.map.fixed.edges.pop();
-    level.data.map.fixed.edges.push({ from: 'port_1', to: 'port_0', distance: 10, risk: 0.1 });
-    assert.ok(codes().has('story_fixed_edge_duplicate'), 'a duplicate undirected edge must error');
-    level.data.map.fixed.edges.pop();
+    /* Land and route geometry: ports stay in water, routes stay connected to their ports. */
+    level.data.map.fixed.landmasses.push(Object.assign({}, level.data.map.fixed.landmasses[0]));
+    assert.ok(codes().has('story_landmass_duplicate'), 'landmass ids must be unique');
+    level.data.map.fixed.landmasses.pop();
+    const portPosition = level.data.map.fixed.ports[0].position;
+    level.data.map.fixed.ports[0].position = [55, 60]; // inside the starter island polygon
+    assert.ok(codes().has('story_port_on_land'), 'a port must not sit on land');
+    level.data.map.fixed.ports[0].position = portPosition;
+    const edgePath = level.data.map.fixed.edges[0].path;
+    level.data.map.fixed.edges[0].path = [[41, 141], [100, 150], [160, 140]];
+    assert.ok(codes().has('story_route_endpoint_mismatch'), 'route endpoints must match the port positions');
+    level.data.map.fixed.edges[0].path = edgePath;
 
-    /* Fixed port market: item ids are full definition ids, unique per port. */
-    level.data.map.fixed.ports[0].market = [
-      { item: 'core:item/coal', stock: 10, price: 3 },
-      { item: 'core:item/coal', stock: 5, price: 4 },
+    /* Access: locked entries explain themselves; allowlists cannot be empty. */
+    level.data.access.pages = [{ key: 'market', state: 'locked' }];
+    assert.ok(codes().has('story_access_reason_missing'), 'locked pages require a reason_key');
+    level.data.access.pages = [{ key: 'market', state: 'available' }, { key: 'market', state: 'hidden' }];
+    assert.ok(codes().has('story_access_duplicate_key'), 'access keys must be unique per layer');
+    level.data.access.pages = [{ key: 'market', state: 'available' }];
+    level.data.access.market = { mode: 'allow', items: [] };
+    assert.ok(codes().has('story_access_filter_empty'), 'allow mode needs at least one item');
+    level.data.access.market = { mode: 'all' };
+
+    /* Narrative: lines carry speakers/assets, presentation is 2D-only, choices are unique. */
+    level.data.stages[0].lines = [{ speaker_id: 'ghost', text_key: 'story.ghost' }];
+    assert.ok(codes().has('story_speaker_unknown'), 'line speakers must exist in the arc cast');
+    level.data.stages[0].lines = [{ text_key: 'story.starter.brief.title' }];
+    level.data.stages[0].presentation = 'camera_hint';
+    assert.ok(codes().has('story_presentation_unsupported'), 'story levels do not use 3D camera presentations');
+    level.data.stages[0].presentation = 'briefing';
+    level.data.stages[0].background_asset = 'bg.missing';
+    assert.ok(codes().has('story_asset_missing'), 'media refs must resolve in manifest.assets');
+    delete level.data.stages[0].background_asset;
+    level.data.stages[0].focus = { target: 'market_nav', targets: ['market_nav'], text_key: 'story.focus' };
+    assert.ok(codes().has('story_focus_target_conflict'), 'focus cannot set target and targets together');
+    level.data.stages[0].focus = { targets: ['market_nav'], text_key: 'story.focus', blocking: true };
+    const openingChoices = level.data.stages[0].choices;
+    level.data.stages[0].choices = [
+      { id: 'dup', text_key: 'story.choice' },
+      { id: 'dup', text_key: 'story.choice' },
     ];
-    assert.ok(codes().has('story_market_duplicate_item'), 'one market entry per item');
-    level.data.map.fixed.ports[0].market = [{ item: 'core:item/not_a_real_item', stock: 1, price: 1 }];
-    assert.ok(codes().has('ref_core_unknown'), 'story core references must resolve (strict)');
-    level.data.map.fixed.ports[0].market = [];
+    assert.ok(codes().has('story_stage_choice_duplicate'), 'choice ids must be unique per stage');
+    level.data.stages[0].choices = openingChoices;
 
-    /* Facilities use the canonical framework keys (intel was renamed to tavern). */
-    level.data.map.fixed.ports[0].facilities = ['intel'];
-    assert.ok(codes().has('story_facility_unknown'), 'legacy intel should warn');
-    level.data.map.fixed.ports[0].facilities = [];
-
-    /* Beats and stages share the local-id namespace rules. */
-    level.data.narrative.beats = [
-      { id: 'dup_beat', stage_id: 'opening', dialogue: { title_key: 'story.a', body_keys: ['story.b'] } },
-      { id: 'dup_beat', stage_id: 'opening', dialogue: { title_key: 'story.c', body_keys: ['story.d'] } },
-    ];
-    assert.ok(codes().has('story_beat_duplicate'), 'beat ids must be unique');
-    level.data.narrative.beats = [];
+    /* Tasks: ids are unique; task effects must reference a declared task. */
+    layer: {
+      const tasks = level.data.tasks;
+      level.data.tasks = [...tasks, Object.assign({}, tasks[0])];
+      assert.ok(codes().has('story_task_duplicate'), 'task ids must be unique');
+      level.data.tasks = tasks;
+    }
+    level.data.triggers = [{ id: 'bad_task', once: true, when: { event: 'cmd:trade.buy' },
+      effects: [{ type: 'start_task', task_id: 'missing_task' }] }];
+    assert.ok(codes().has('story_effect_params'), 'start_task must reference a declared task');
+    level.data.triggers = [];
+    level.data.stages[0].effects = [{ type: 'add_money', amount: -1 }];
+    assert.ok(codes().has('story_effect_params'), 'effect parameters are validated');
+    level.data.stages[0].effects = [];
 
     /* Pack-level: one pack = one arc; arc levels must stay inside the pack. */
     arc.data.levels = ['other_mod:story_level/elsewhere'];
     assert.ok(codes().has('story_arc_level_foreign'), 'arc levels may not reference another mod');
     arc.data.levels = [];
     Store.addDefinition(project, 'story_arcs', {});
-    assert.ok(codes().has('story_pack_multiple_arcs'), 'story contract v1 ships one arc per pack');
+    assert.ok(codes().has('story_pack_multiple_arcs'), 'story contract v2 ships one arc per pack');
   });
 
   await test('weapon form renders combat, assembly and economy fields with readable enums', () => {

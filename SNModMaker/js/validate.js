@@ -683,28 +683,248 @@
   }
 
   /* ---------------------------------------------------------------------------
-   * Story Mode (Content Schema 2.0 draft).
+   * Story Mode (data contract v2).
    *
    * A story pack is a story-only content mod: story_arcs plus their
-   * story_levels and nothing else. The schemas already pin each object's shape;
-   * these checks cover what JSON Schema cannot express: a cast whose fixed
-   * protagonist exists, a level list that fills up progressively, a fixed map
-   * whose edges only touch declared ports and stays reachable, a stage line with
-   * a usable checkpoint, narrative beats attached to real stages, and a retry
-   * policy that allows its own default. See docs/design/STORY_MODE.md.
+   * story_levels and nothing else. The schemas pin each object's shape; these
+   * checks cover what JSON Schema cannot express: a cast whose fixed protagonist
+   * exists, hand-written land/route geometry (ports not on land, route endpoints,
+   * duplicate/self edges, connectivity), access three-state overrides, speakers
+   * and media assets, effect opcode parameters, inline tasks/triggers and a retry
+   * policy that allows its own default. See docs/specs/STORY_MODE_DATA_CONTRACT_V2.md.
    * ------------------------------------------------------------------------- */
   const STORY_TYPES = new Set(['story_arcs', 'story_levels']);
   /* Canonical facility keys a fixed story port may declare. Legacy "intel" is
    * normalized to "tavern" by MapOps; story packs are new content, so they must
    * use the canonical key. Unknown keys warn (framework may add facilities). */
   const STORY_FACILITIES = new Set(['exchange', 'contracts', 'supply', 'shipyard', 'tavern']);
+  const STORY_PAGES = new Set(['overview', 'market', 'contracts', 'shipyard', 'tavern', 'chart', 'base', 'trade', 'ruins']);
+  const STORY_PRESENTATIONS = new Set(['card', 'briefing', 'choice', 'debrief', 'toast', 'radio']);
+  const STORY_MEDIA = {
+    portrait: { exts: ['.png', '.webp'], label: '立绘' },
+    background: { exts: ['.png', '.webp'], label: '背景' },
+    audio: { exts: ['.ogg', '.wav'], label: '音频' },
+  };
+  const ID_REF_PATTERN = /^[a-z][a-z0-9_]{2,31}:[a-z_]+\/[a-z0-9_]+$/;
 
   function storyFieldView(view, field) {
     return Object.assign({}, view, { field });
   }
 
-  /** Arc semantics: protagonist must be in the cast; empty level list is a warning. */
-  function checkStoryArcSemantics(definition, view, add) {
+  /** Land polygons are open rings; point-in-polygon only needs the vertices. */
+  function storyPointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = Number(polygon[i][0]);
+      const yi = Number(polygon[i][1]);
+      const xj = Number(polygon[j][0]);
+      const yj = Number(polygon[j][1]);
+      const crosses = (yi > point[1]) !== (yj > point[1]);
+      if (!crosses) continue;
+      const x = ((xj - xi) * (point[1] - yi)) / ((yj - yi) || Number.EPSILON) + xi;
+      if (point[0] < x) inside = !inside;
+    }
+    return inside;
+  }
+
+  function storyOrientation(a, b, c) {
+    const value = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    if (Math.abs(value) < 1e-9) return 0;
+    return value > 0 ? 1 : 2;
+  }
+
+  function storyOnSegment(a, b, c) {
+    return c[0] <= Math.max(a[0], b[0]) + 1e-9 && c[0] >= Math.min(a[0], b[0]) - 1e-9
+      && c[1] <= Math.max(a[1], b[1]) + 1e-9 && c[1] >= Math.min(a[1], b[1]) - 1e-9;
+  }
+
+  function storySegmentsIntersect(p1, p2, q1, q2) {
+    const o1 = storyOrientation(p1, p2, q1);
+    const o2 = storyOrientation(p1, p2, q2);
+    const o3 = storyOrientation(q1, q2, p1);
+    const o4 = storyOrientation(q1, q2, p2);
+    if (o1 !== o2 && o3 !== o4) return true;
+    if (o1 === 0 && storyOnSegment(p1, p2, q1)) return true;
+    if (o2 === 0 && storyOnSegment(p1, p2, q2)) return true;
+    if (o3 === 0 && storyOnSegment(q1, q2, p1)) return true;
+    if (o4 === 0 && storyOnSegment(q1, q2, p2)) return true;
+    return false;
+  }
+
+  function storyRouteCrossesLand(path, landmasses) {
+    for (let index = 1; index < path.length; index += 1) {
+      const a = path[index - 1];
+      const b = path[index];
+      for (const landmass of landmasses) {
+        const polygon = Array.isArray(landmass.polygon) ? landmass.polygon : [];
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+          if (storySegmentsIntersect(a, b, polygon[j], polygon[i])) return landmass;
+        }
+      }
+    }
+    return null;
+  }
+
+  function storyAssetView(view, field, key, kind, declaredAssets, add) {
+    if (!key) return;
+    const keyText = String(key);
+    const path = declaredAssets ? declaredAssets[keyText] : undefined;
+    if (!path) {
+      add('error', 'story_asset_missing',
+        `${STORY_MEDIA[kind].label}资源键 "${keyText}" 不在 manifest.assets 中。`, storyFieldView(view, field));
+      return;
+    }
+    const lower = String(path).toLowerCase();
+    if (!STORY_MEDIA[kind].exts.some((ext) => lower.endsWith(ext))) {
+      add('error', 'story_asset_type',
+        `${STORY_MEDIA[kind].label}资源 "${keyText}" 必须是 ${STORY_MEDIA[kind].exts.join(' / ')}，实际 ${path}。`,
+        storyFieldView(view, field));
+    }
+  }
+
+  function checkStoryAccess(access, view, add) {
+    if (!access || typeof access !== 'object') return;
+    const checkEntries = (entries, kind) => {
+      const seen = new Set();
+      (Array.isArray(entries) ? entries : []).forEach((entry, index) => {
+        if (!entry || typeof entry !== 'object') return;
+        const key = String(entry.key || '');
+        const field = `data.access.${kind}.${index}`;
+        if (key) {
+          if (seen.has(key)) {
+            add('error', 'story_access_duplicate_key',
+              `access.${kind} 重复的 key：${key}`, storyFieldView(view, field));
+          }
+          seen.add(key);
+        }
+        if (kind === 'pages' && key && !STORY_PAGES.has(key)) {
+          add('error', 'story_access_page_unknown',
+            `未知页面键 "${key}"；允许：${[...STORY_PAGES].join(' / ')}。`, storyFieldView(view, field));
+        }
+        if (entry.state === 'locked' && !String(entry.reason_key || '').trim()) {
+          add('error', 'story_access_reason_missing',
+            `access.${kind} 的 "${key}" 是 locked，必须提供 reason_key。`, storyFieldView(view, field));
+        }
+      });
+    };
+    checkEntries(access.pages, 'pages');
+    checkEntries(access.actions, 'actions');
+    const checkFilter = (filter, kind, listKey) => {
+      if (!filter || typeof filter !== 'object') return;
+      if (filter.mode === 'allow') {
+        const list = Array.isArray(filter[listKey]) ? filter[listKey] : [];
+        if (!list.length) {
+          add('error', 'story_access_filter_empty',
+            `access.${kind}.mode=allow 时必须至少列出一项。`, storyFieldView(view, `data.access.${kind}.${listKey}`));
+        }
+      }
+    };
+    checkFilter(access.market, 'market', 'items');
+    checkFilter(access.modules, 'modules', 'modules');
+  }
+
+  function checkStoryEffect(effect, view, field, taskIds, add) {
+    if (!effect || typeof effect !== 'object') return;
+    const type = String(effect.type || '');
+    const fail = (message) => add('error', 'story_effect_params', `${type}: ${message}`, storyFieldView(view, field));
+    const requireString = (key) => {
+      if (typeof effect[key] !== 'string' || !String(effect[key]).trim()) {
+        fail(`缺少字符串参数 ${key}`);
+        return false;
+      }
+      return true;
+    };
+    const requireNumber = (key, min) => {
+      const value = Number(effect[key]);
+      if (!Number.isFinite(value) || value < min) {
+        fail(`参数 ${key} 必须是 ≥ ${min} 的数字`);
+        return false;
+      }
+      return true;
+    };
+    const requireIdRef = (key) => {
+      if (!requireString(key)) return false;
+      if (!ID_REF_PATTERN.test(String(effect[key]))) {
+        fail(`参数 ${key} 必须是完整定义 ID（mod:type/local）`);
+        return false;
+      }
+      return true;
+    };
+    switch (type) {
+      case 'unlock_features': {
+        const features = Array.isArray(effect.features) ? effect.features : [];
+        if (!features.length || features.some((item) => typeof item !== 'string' || !item.trim())) {
+          fail('参数 features 必须是非空字符串数组');
+        }
+        break;
+      }
+      case 'set_flag':
+        requireString('flag');
+        if ('value' in effect && typeof effect.value !== 'boolean') fail('参数 value 必须是布尔值');
+        break;
+      case 'clear_flag':
+        requireString('flag');
+        break;
+      case 'set_counter':
+        requireString('counter');
+        if (!Number.isFinite(Number(effect.value))) fail('参数 value 必须是数字');
+        break;
+      case 'add_money':
+      case 'remove_money':
+        requireNumber('amount', 1);
+        break;
+      case 'add_item':
+      case 'remove_item':
+        requireIdRef('item_id');
+        requireNumber('amount', 1);
+        break;
+      case 'add_fuel':
+      case 'add_water':
+      case 'damage_ship':
+      case 'repair_ship':
+      case 'set_ship_fuel':
+        requireNumber('amount', 0);
+        break;
+      case 'set_world_time':
+        requireString('world_time');
+        break;
+      case 'unlock_route':
+        requireString('from');
+        requireString('to');
+        break;
+      case 'add_facility':
+        requireString('facility');
+        break;
+      case 'upgrade_hull':
+        requireIdRef('hull_id');
+        break;
+      case 'start_task':
+      case 'complete_task':
+      case 'fail_task': {
+        if (!requireString('task_id')) break;
+        const id = String(effect.task_id);
+        if (taskIds && !taskIds.has(id)) {
+          fail(`引用了本关不存在的任务 task_id "${id}"`);
+        }
+        break;
+      }
+      case 'set_access':
+        if (!effect.access || typeof effect.access !== 'object') fail('缺少 access 对象');
+        break;
+      case 'grant_tutorial_contract':
+        requireIdRef('template_id');
+        break;
+      case 'set_counter_from_ship':
+        requireString('counter');
+        requireString('kind');
+        break;
+      default:
+        break;
+    }
+  }
+
+  /** Arc semantics: protagonist must be in the cast; portraits resolve. */
+  function checkStoryArcSemantics(definition, view, add, declaredAssets) {
     const data = definition && definition.data;
     if (!data || typeof data !== 'object') return;
     const characters = Array.isArray(data.characters) ? data.characters : [];
@@ -723,6 +943,9 @@
         characterRoles.set(id, String(character.role || ''));
       }
       if (character.role === 'protagonist') protagonistCount += 1;
+      if (character.portrait_asset) {
+        storyAssetView(view, `data.characters.${index}.portrait_asset`, character.portrait_asset, 'portrait', declaredAssets, add);
+      }
     });
     const protagonist = String(data.protagonist_id || '');
     if (protagonist && !characterIds.has(protagonist)) {
@@ -753,61 +976,59 @@
     });
   }
 
-  /** Level semantics: checkpoint exists, beats point at real stages, fixed map is coherent. */
-  function checkStoryLevelSemantics(definition, view, add) {
+  /** Level semantics: map geometry, access, narrative lines/choices, tasks/triggers. */
+  function checkStoryLevelSemantics(definition, view, add, declaredAssets) {
     const data = definition && definition.data;
     if (!data || typeof data !== 'object') return;
-    const stages = Array.isArray(data.stages) ? data.stages : [];
-    const stageIds = new Set();
-    let hasCheckpoint = false;
-    stages.forEach((stage, index) => {
-      if (!stage || typeof stage !== 'object') return;
-      const id = String(stage.id || '');
+
+    const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    const taskIds = new Set();
+    tasks.forEach((task, index) => {
+      if (!task || typeof task !== 'object') return;
+      const id = String(task.id || '');
+      const taskView = storyFieldView(view, `data.tasks.${index}`);
       if (id) {
-        if (stageIds.has(id)) {
-          add('error', 'story_stage_duplicate',
-            `阶段 ID 重复：${id}（第 ${index + 1} 个阶段）`, storyFieldView(view, `data.stages.${index}`));
+        if (taskIds.has(id)) {
+          add('error', 'story_task_duplicate', `任务 ID 重复：${id}`, taskView);
         }
-        stageIds.add(id);
+        taskIds.add(id);
       }
-      if (stage.checkpoint === true) hasCheckpoint = true;
-    });
-    if (stages.length && !hasCheckpoint) {
-      add('error', 'story_level_checkpoint_missing',
-        '任务阶段里没有 checkpoint = true 的存档点；失败后只能重开本关。', storyFieldView(view, 'data.stages'));
-    }
-
-    const narrative = data.narrative && typeof data.narrative === 'object' ? data.narrative : {};
-    const beats = Array.isArray(narrative.beats) ? narrative.beats : [];
-    const beatIds = new Set();
-    beats.forEach((beat, index) => {
-      const beatId = beat && typeof beat === 'object' && beat.id ? String(beat.id) : '';
-      if (beatId) {
-        if (beatIds.has(beatId)) {
-          add('error', 'story_beat_duplicate',
-            `叙事节拍 ID 重复：${beatId}（第 ${index + 1} 个节拍）`, storyFieldView(view, `data.narrative.beats.${index}`));
+      const stageIds = new Set();
+      (Array.isArray(task.stages) ? task.stages : []).forEach((stage, stageIndex) => {
+        if (!stage || typeof stage !== 'object') return;
+        const stageId = String(stage.id || '');
+        if (!stageId) return;
+        if (stageIds.has(stageId)) {
+          add('error', 'story_task_stage_duplicate',
+            `任务 ${id} 的阶段 ID 重复：${stageId}`, storyFieldView(taskView, `stages.${stageIndex}`));
         }
-        beatIds.add(beatId);
-      }
-      const stageId = beat && typeof beat === 'object' && beat.stage_id ? String(beat.stage_id) : '';
-      if (stageId && !stageIds.has(stageId)) {
-        add('error', 'story_beat_stage_unknown',
-          `叙事节拍 #${index + 1} 的 stage_id "${stageId}" 不是本关已声明的阶段。`,
-          storyFieldView(view, `data.narrative.beats.${index}`));
-      }
+        stageIds.add(stageId);
+      });
     });
 
-    const fail = data.fail && typeof data.fail === 'object' ? data.fail : {};
-    const allow = Array.isArray(fail.allow) ? fail.allow : [];
-    if (fail.default_mode && allow.length && !allow.includes(fail.default_mode)) {
-      add('error', 'story_fail_default_not_allowed',
-        `default_mode "${fail.default_mode}" 不在 allow 列表里。`, storyFieldView(view, 'data.fail.default_mode'));
-    }
+    const landmasses = data.map && data.map.fixed && Array.isArray(data.map.fixed.landmasses)
+      ? data.map.fixed.landmasses : [];
+    const landmassIds = new Set();
+    landmasses.forEach((landmass, index) => {
+      if (!landmass || typeof landmass !== 'object') return;
+      const id = String(landmass.id || '');
+      if (id) {
+        if (landmassIds.has(id)) {
+          add('error', 'story_landmass_duplicate',
+            `陆地 ID 重复：${id}`, storyFieldView(view, `data.map.fixed.landmasses.${index}`));
+        }
+        landmassIds.add(id);
+      }
+      if (!Array.isArray(landmass.polygon) || landmass.polygon.length < 3) {
+        add('error', 'story_landmass_polygon_invalid',
+          `陆地 ${id || index} 的 polygon 至少需要 3 个点`, storyFieldView(view, `data.map.fixed.landmasses.${index}.polygon`));
+      }
+    });
 
-    const map = data.map && typeof data.map === 'object' ? data.map : {};
-    const fixed = map.fixed && typeof map.fixed === 'object' ? map.fixed : {};
-    const ports = Array.isArray(fixed.ports) ? fixed.ports : [];
+    const ports = data.map && data.map.fixed && Array.isArray(data.map.fixed.ports)
+      ? data.map.fixed.ports : [];
     const portIds = new Set();
+    const portPositions = new Map();
     ports.forEach((port, index) => {
       if (!port || typeof port !== 'object') return;
       const id = port.id ? String(port.id) : '';
@@ -817,6 +1038,17 @@
           `固定地图港口 ID 重复：${id}`, storyFieldView(view, `data.map.fixed.ports.${index}`));
       }
       portIds.add(id);
+      const position = Array.isArray(port.position) ? port.position : null;
+      if (position && position.length === 2) {
+        portPositions.set(id, position);
+        const onLand = landmasses.find((landmass) => Array.isArray(landmass.polygon)
+          && storyPointInPolygon(position, landmass.polygon));
+        if (onLand) {
+          add('error', 'story_port_on_land',
+            `港口 ${id} 落在陆地 "${onLand.id || ''}" 多边形内；港口必须在水面。`,
+            storyFieldView(view, `data.map.fixed.ports.${index}.position`));
+        }
+      }
       const facilitySeen = new Set();
       for (const facility of Array.isArray(port.facilities) ? port.facilities : []) {
         const key = String(facility || '');
@@ -845,6 +1077,8 @@
         marketSeen.add(itemId);
       });
     });
+
+    const fixed = data.map && data.map.fixed && typeof data.map.fixed === 'object' ? data.map.fixed : {};
     const startPort = fixed.start_port ? String(fixed.start_port) : '';
     if (startPort && !portIds.has(startPort)) {
       add('error', 'story_fixed_start_port_unknown',
@@ -867,6 +1101,14 @@
         storyFieldView(view, 'data.map.fixed.start_port'));
     }
 
+    const revealed = data.map && Array.isArray(data.map.revealed_ports) ? data.map.revealed_ports : [];
+    revealed.forEach((portId, index) => {
+      if (!portIds.has(String(portId))) {
+        add('error', 'story_revealed_port_unknown',
+          `revealed_ports 引用了未声明的港口：${portId}`, storyFieldView(view, `data.map.revealed_ports.${index}`));
+      }
+    });
+
     const adjacency = new Map();
     const edges = Array.isArray(fixed.edges) ? fixed.edges : [];
     const edgeSeen = new Set();
@@ -874,23 +1116,44 @@
       if (!edge || typeof edge !== 'object') return;
       const from = String(edge.from || '');
       const to = String(edge.to || '');
+      const edgeView = storyFieldView(view, `data.map.fixed.edges.${index}`);
       if (from && to && from === to) {
-        add('error', 'story_fixed_edge_self',
-          `航道 #${index + 1} 的 from 与 to 是同一个港口：${from}`, storyFieldView(view, `data.map.fixed.edges.${index}`));
+        add('error', 'story_fixed_edge_self', `航道 #${index + 1} 的 from 与 to 是同一个港口：${from}`, edgeView);
       }
       if (from && to) {
         const key = from < to ? `${from}|${to}` : `${to}|${from}`;
         if (edgeSeen.has(key)) {
-          add('error', 'story_fixed_edge_duplicate',
-            `固定地图重复的航道：${from} ↔ ${to}`, storyFieldView(view, `data.map.fixed.edges.${index}`));
+          add('error', 'story_fixed_edge_duplicate', `固定地图重复的航道：${from} ↔ ${to}`, edgeView);
         }
         edgeSeen.add(key);
       }
       for (const [end, id] of [['from', from], ['to', to]]) {
         if (id && !portIds.has(id)) {
           add('error', 'story_fixed_edge_port_unknown',
-            `航道 #${index + 1} 的 ${end} 引用了未声明的港口：${id}`,
-            storyFieldView(view, `data.map.fixed.edges.${index}`));
+            `航道 #${index + 1} 的 ${end} 引用了未声明的港口：${id}`, edgeView);
+        }
+      }
+      const path = Array.isArray(edge.path) ? edge.path : [];
+      if (path.length >= 2 && portPositions.has(from) && portPositions.has(to)) {
+        const first = path[0];
+        const last = path[path.length - 1];
+        const fromPosition = portPositions.get(from);
+        const toPosition = portPositions.get(to);
+        if (Math.hypot(first[0] - fromPosition[0], first[1] - fromPosition[1]) > 0.5) {
+          add('error', 'story_route_endpoint_mismatch',
+            `航道 ${from} → ${to} 的 path 首点必须与 ${from} 的 position 一致（容差 0.5）。`,
+            storyFieldView(edgeView, 'path.0'));
+        }
+        if (Math.hypot(last[0] - toPosition[0], last[1] - toPosition[1]) > 0.5) {
+          add('error', 'story_route_endpoint_mismatch',
+            `航道 ${from} → ${to} 的 path 末点必须与 ${to} 的 position 一致（容差 0.5）。`,
+            storyFieldView(edgeView, `path.${path.length - 1}`));
+        }
+        const crossing = storyRouteCrossesLand(path, landmasses);
+        if (crossing) {
+          add('warning', 'story_route_crosses_land',
+            `航道 ${from} → ${to} 的 path 穿越陆地 "${crossing.id || ''}"；确认是运河/河口等刻意设计。`,
+            storyFieldView(edgeView, 'path'));
         }
       }
       if (!from || !to || !portIds.has(from) || !portIds.has(to)) return;
@@ -899,7 +1162,7 @@
       adjacency.get(from).add(to);
       if (edge.bidirectional !== false) adjacency.get(to).add(from);
     });
-    /* The level starts somewhere; every port should be sailable from there. */
+
     const origin = startPort || startPortId || (ports[0] && String(ports[0].id)) || '';
     if (origin && portIds.has(origin) && portIds.size > 1) {
       const seen = new Set([origin]);
@@ -919,10 +1182,142 @@
           storyFieldView(view, 'data.map.fixed.edges'));
       }
     }
+
+    const routeAccess = String(start.route_access || 'all');
+    const unlockedRoutes = Array.isArray(start.unlocked_routes) ? start.unlocked_routes : [];
+    if (routeAccess === 'listed') {
+      if (!unlockedRoutes.length) {
+        add('error', 'story_route_access_invalid',
+          'route_access = listed 时必须至少列出一条 unlocked_routes。', storyFieldView(view, 'data.start.unlocked_routes'));
+      }
+      const edgeKeys = new Set();
+      for (const edge of edges) {
+        if (!edge || typeof edge !== 'object') continue;
+        const a = String(edge.from || '');
+        const b = String(edge.to || '');
+        edgeKeys.add(`${a}|${b}`);
+        edgeKeys.add(`${b}|${a}`);
+      }
+      unlockedRoutes.forEach((pair, index) => {
+        const from = Array.isArray(pair) ? String(pair[0] || '') : '';
+        const to = Array.isArray(pair) ? String(pair[1] || '') : '';
+        const field = `data.start.unlocked_routes.${index}`;
+        if (!portIds.has(from) || !portIds.has(to)) {
+          add('error', 'story_unlocked_route_unknown',
+            `unlocked_routes 引用了未声明的港口：${from} ↔ ${to}`, storyFieldView(view, field));
+        } else if (!edgeKeys.has(`${from}|${to}`)) {
+          add('error', 'story_unlocked_route_unknown',
+            `unlocked_routes 引用了不存在的航道：${from} ↔ ${to}`, storyFieldView(view, field));
+        }
+      });
+    }
+
+    checkStoryAccess(data.access, view, add);
+
+    const triggers = Array.isArray(data.triggers) ? data.triggers : [];
+    const triggerIds = new Set();
+    triggers.forEach((trigger, index) => {
+      if (!trigger || typeof trigger !== 'object') return;
+      const triggerView = storyFieldView(view, `data.triggers.${index}`);
+      const id = String(trigger.id || '');
+      if (id) {
+        if (triggerIds.has(id)) {
+          add('error', 'story_trigger_duplicate', `触发器 ID 重复：${id}`, triggerView);
+        }
+        triggerIds.add(id);
+      }
+      const when = trigger.when && typeof trigger.when === 'object' ? trigger.when : {};
+      if (!Object.keys(when).length) {
+        add('error', 'story_trigger_condition_empty', `触发器 ${id} 的 when 不能为空。`, storyFieldView(triggerView, 'when'));
+      }
+      (Array.isArray(trigger.effects) ? trigger.effects : []).forEach((effect, effectIndex) => {
+        checkStoryEffect(effect, triggerView, `effects.${effectIndex}`, taskIds, add);
+      });
+    });
+
+    const stages = Array.isArray(data.stages) ? data.stages : [];
+    const stageIds = new Set();
+    let hasCheckpoint = false;
+    stages.forEach((stage, index) => {
+      if (!stage || typeof stage !== 'object') return;
+      const stageView = storyFieldView(view, `data.stages.${index}`);
+      const id = String(stage.id || '');
+      if (id) {
+        if (stageIds.has(id)) {
+          add('error', 'story_stage_duplicate', `阶段 ID 重复：${id}（第 ${index + 1} 个阶段）`, stageView);
+        }
+        stageIds.add(id);
+      }
+      if (stage.checkpoint === true) hasCheckpoint = true;
+      if (stage.presentation && !STORY_PRESENTATIONS.has(String(stage.presentation))) {
+        add('error', 'story_presentation_unsupported',
+          `剧情关卡不支持 presentation "${stage.presentation}"；允许：${[...STORY_PRESENTATIONS].join(' / ')}。`,
+          storyFieldView(stageView, 'presentation'));
+      }
+      if (stage.dialogue && Array.isArray(stage.lines) && stage.lines.length) {
+        add('error', 'story_stage_lines_dialogue_conflict',
+          '同一阶段不能同时使用 lines 与 dialogue。', storyFieldView(stageView, 'lines'));
+      }
+      (Array.isArray(stage.lines) ? stage.lines : []).forEach((line, lineIndex) => {
+        if (!line || typeof line !== 'object') return;
+        for (const [field, kind] of [
+          ['portrait_asset', 'portrait'],
+          ['background_asset', 'background'],
+          ['audio_asset', 'audio'],
+        ]) {
+          if (line[field]) storyAssetView(stageView, `lines.${lineIndex}.${field}`, line[field], kind, declaredAssets, add);
+        }
+      });
+      for (const [field, kind] of [['background_asset', 'background'], ['audio_asset', 'audio']]) {
+        if (stage[field]) storyAssetView(stageView, field, stage[field], kind, declaredAssets, add);
+      }
+      const choiceIds = new Set();
+      (Array.isArray(stage.choices) ? stage.choices : []).forEach((choice, choiceIndex) => {
+        if (!choice || typeof choice !== 'object') return;
+        const choiceId = String(choice.id || '');
+        if (choiceId) {
+          if (choiceIds.has(choiceId)) {
+            add('error', 'story_stage_choice_duplicate',
+              `阶段 ${id} 的选项 ID 重复：${choiceId}`, storyFieldView(stageView, `choices.${choiceIndex}`));
+          }
+          choiceIds.add(choiceId);
+        }
+        (Array.isArray(choice.effects) ? choice.effects : []).forEach((effect, effectIndex) => {
+          checkStoryEffect(effect, stageView, `choices.${choiceIndex}.effects.${effectIndex}`, taskIds, add);
+        });
+      });
+      (Array.isArray(stage.effects) ? stage.effects : []).forEach((effect, effectIndex) => {
+        checkStoryEffect(effect, stageView, `effects.${effectIndex}`, taskIds, add);
+      });
+      checkStoryAccess(stage.access, stageView, add);
+      const focus = stage.focus && typeof stage.focus === 'object' ? stage.focus : null;
+      if (focus) {
+        const hasTarget = typeof focus.target === 'string' && focus.target.trim();
+        const hasTargets = Array.isArray(focus.targets) && focus.targets.length;
+        if (hasTarget && hasTargets) {
+          add('error', 'story_focus_target_conflict',
+            'focus 不能同时声明 target 与 targets。', storyFieldView(stageView, 'focus'));
+        }
+        if (focus.targets !== undefined && !hasTargets) {
+          add('error', 'story_focus_targets_empty', 'focus.targets 不能为空。', storyFieldView(stageView, 'focus.targets'));
+        }
+      }
+    });
+    if (stages.length && !hasCheckpoint) {
+      add('error', 'story_level_checkpoint_missing',
+        '任务阶段里没有 checkpoint = true 的存档点；失败后只能重开本关。', storyFieldView(view, 'data.stages'));
+    }
+
+    const fail = data.fail && typeof data.fail === 'object' ? data.fail : {};
+    const allow = Array.isArray(fail.allow) ? fail.allow : [];
+    if (fail.default_mode && allow.length && !allow.includes(fail.default_mode)) {
+      add('error', 'story_fail_default_not_allowed',
+        `default_mode "${fail.default_mode}" 不在 allow 列表里。`, storyFieldView(view, 'data.fail.default_mode'));
+    }
   }
 
-  /** Pack-level whitelist: a story pack carries story content only. */
-  function checkStoryPack(contentFiles, manifest, modId, add) {
+  /** Pack-level whitelist + cross-file speaker/asset checks. */
+  function checkStoryPack(contentFiles, manifest, modId, declaredAssets, add) {
     const storyFiles = contentFiles.filter((file) => STORY_TYPES.has(file.content_type));
     if (!storyFiles.length) {
       const declared = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
@@ -952,18 +1347,24 @@
       if (file.content_type !== 'story_levels') continue;
       (Array.isArray(file.definitions) ? file.definitions : []).forEach((definition, index) => {
         if (!definition || typeof definition.id !== 'string') return;
-        levels.set(definition.id, { file: file.path, index });
+        levels.set(definition.id, { file: file.path, index, definition });
       });
     }
     const arcs = [];
+    const castByLevel = new Map();
     for (const file of contentFiles) {
       if (file.content_type !== 'story_arcs') continue;
       (Array.isArray(file.definitions) ? file.definitions : []).forEach((definition, index) => {
         if (!definition || typeof definition.id !== 'string') return;
         arcs.push({ file, definition, index });
+        const characters = definition.data && Array.isArray(definition.data.characters) ? definition.data.characters : [];
+        const cast = new Set(characters.filter((item) => item && typeof item.id === 'string').map((item) => item.id));
+        const levelIds = definition.data && Array.isArray(definition.data.levels) ? definition.data.levels : [];
+        for (const levelId of levelIds) {
+          if (typeof levelId === 'string' && !castByLevel.has(levelId)) castByLevel.set(levelId, cast);
+        }
       });
     }
-    /* Contract v1: one pack = one arc (multi-arc packs need a contract bump). */
     if (arcs.length > 1) {
       add('error', 'story_pack_multiple_arcs',
         `剧情包 v1 只允许 1 个篇章（story_arc），当前有 ${arcs.length} 个；多篇章需升数据契约版本。`,
@@ -998,6 +1399,27 @@
       if (referenced.has(id)) continue;
       add('warning', 'story_level_orphan', `关卡没有被任何篇章的 levels 引用：${id}`,
         { name: 'content', type: 'story_levels', file: entry.file, index: entry.index });
+    }
+
+    for (const [id, entry] of levels) {
+      const cast = castByLevel.get(id);
+      if (!cast) continue;
+      const stages = entry.definition.data && Array.isArray(entry.definition.data.stages)
+        ? entry.definition.data.stages : [];
+      stages.forEach((stage, stageIndex) => {
+        if (!stage || typeof stage !== 'object') return;
+        const lines = Array.isArray(stage.lines) ? stage.lines : [];
+        lines.forEach((line, lineIndex) => {
+          if (!line || typeof line !== 'object') return;
+          const speaker = String(line.speaker_id || '');
+          if (speaker && !cast.has(speaker)) {
+            add('error', 'story_speaker_unknown',
+              `阶段 ${stage.id || stageIndex} 的 speaker_id "${speaker}" 不在篇章角色表。`,
+              { name: 'content', type: 'story_levels', file: entry.file, index: entry.index,
+                field: `data.stages.${stageIndex}.lines.${lineIndex}.speaker_id` });
+          }
+        });
+      });
     }
   }
 
@@ -1314,7 +1736,7 @@
       add('error', 'no_content', '模组至少需要一个内容文件。', { name: 'overview', field: 'content' });
     }
 
-    checkStoryPack(contentFiles, manifest, modId, add);
+    checkStoryPack(contentFiles, manifest, modId, declaredAssets, add);
 
     for (const file of contentFiles) {
       if (!safePath(file.path) || extensionOf(file.path) !== '.json') {

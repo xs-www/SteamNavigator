@@ -1172,16 +1172,32 @@
       canon: true,
       source: { author: 'SNModMaker' },
     }),
-    /* 剧情关卡（Schema 2.0 草案）：2 港 1 航道的固定小地图 + 首尾存档点，可直接进游戏试跑。 */
+    /* 剧情关卡（数据契约 V2 草案）：手写陆地 + 航道路径 + 2D 叙事/任务/可见限制示例。 */
     story_levels: () => ({
       map: {
+        fog: 'revealed',
+        revealed_ports: ['port_0', 'port_1'],
         fixed: {
+          landmasses: [
+            {
+              id: 'starter_island',
+              kind: 'island',
+              name_key: 'story.starter.land',
+              polygon: [[20, 40], [90, 30], [110, 80], [50, 110], [10, 70]],
+            },
+          ],
           ports: [
-            { id: 'port_0', name_key: 'port.story.starter.origin', position: [40, 80] },
-            { id: 'port_1', name_key: 'port.story.starter.destination', position: [120, 80] },
+            { id: 'port_0', name_key: 'port.story.starter.origin', position: [40, 140], facilities: [] },
+            { id: 'port_1', name_key: 'port.story.starter.destination', position: [160, 140], facilities: [] },
           ],
           edges: [
-            { from: 'port_0', to: 'port_1', distance: 80, risk: 0.02, bidirectional: true },
+            {
+              from: 'port_0',
+              to: 'port_1',
+              risk: 0.02,
+              bidirectional: true,
+              path: [[40, 140], [100, 150], [160, 140]],
+            },
           ],
           start_port: 'port_0',
         },
@@ -1195,29 +1211,64 @@
         cargo: [],
         equipped_modules: [],
         world_time: 'day_1_0600',
+        route_access: 'all',
       },
-      systems: {
-        unlock_features: [],
-        unlock_items: [],
-        unlock_modules: [],
-        lock_actions: [],
+      access: {
+        pages: [
+          { key: 'market', state: 'available' },
+          { key: 'shipyard', state: 'hidden' },
+        ],
+        actions: [
+          { key: 'loan', state: 'locked', reason_key: 'story.starter.lock.loan' },
+        ],
+        market: { mode: 'all' },
+        modules: { mode: 'all' },
       },
-      stages: [
-        { id: 'opening', checkpoint: true, presentation: 'briefing', advance: { mode: 'confirm' } },
-        { id: 'closing', checkpoint: true, presentation: 'debrief', advance: { event: 'story.level_complete' } },
+      tasks: [
+        {
+          id: 'starter_task',
+          name_key: 'story.starter.task.name',
+          kind: 'guide',
+          tracking: { label_key: 'story.starter.task.group', priority: 50 },
+          stages: [
+            {
+              id: 'first',
+              title_key: 'story.starter.task.stage',
+              objectives: [
+                { event: 'cmd:trade.buy', counter: 'starter_bought', at_least: 1, text_key: 'story.starter.task.obj' },
+              ],
+            },
+          ],
+          rewards: { money: 10, items: [], flags: [] },
+        },
       ],
-      narrative: {
-        brief: {
+      triggers: [
+        {
+          id: 'starter_flag',
+          once: true,
+          when: { event: 'cmd:trade.buy' },
+          effects: [{ type: 'set_flag', flag: 'bought_once' }],
+        },
+      ],
+      stages: [
+        {
+          id: 'opening',
+          checkpoint: true,
           presentation: 'briefing',
-          title_key: 'story.starter.brief.title',
-          body_keys: ['story.starter.brief.body.0'],
+          lines: [{ speaker_id: 'protagonist', text_key: 'story.starter.brief.title' }],
+          choices: [{ id: 'ok', text_key: 'story.starter.choice.ok' }],
+          focus: { targets: ['market_nav'], text_key: 'story.starter.focus.market', blocking: true },
+          access: { pages: [{ key: 'market', state: 'available' }] },
+          advance: { mode: 'confirm' },
         },
-        beats: [],
-        debrief: {
+        {
+          id: 'closing',
+          checkpoint: true,
           presentation: 'debrief',
-          success_keys: ['story.starter.debrief.success.0'],
+          lines: [{ text_key: 'story.starter.debrief.success.0' }],
+          advance: { event: 'story.level_complete' },
         },
-      },
+      ],
       difficulty: {
         profile: 'story.intro',
         knobs: {
@@ -1229,7 +1280,11 @@
         },
       },
       rewards: { achievements: [], codex_entries: [], cosmetics: [] },
-      fail: { default_mode: 'checkpoint', allow: ['checkpoint', 'level_start'] },
+      fail: {
+        default_mode: 'checkpoint',
+        allow: ['checkpoint', 'level_start'],
+        failure_keys: ['story.starter.debrief.failure.0'],
+      },
     }),
     /* C3: abstract guidance quest. Nested stage/objective keys are derived from
      * the new definition's mod id + local id so the editor can localize them. */
