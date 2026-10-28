@@ -264,7 +264,7 @@
 | `ui/build_ui_skin.gd` | 把 `docs/design/` 下的 UI 控件图集与图标图集切成运行纹理，输出到 `assets/ui/skin/<skin>/`，并写 `skin.json`（样式/九宫格/颜色 token/图标表）。这是「外部贴图驱动 UI」的唯一素材入口：页面与 Theme 只引用本脚本产出的 PNG，换同名同尺寸贴图即可整体换肤。 | [查看](./ui/build_ui_skin.gd.md) |
 | `ui/build_ui_theme.gd` | 从 `assets/ui/skin/<skin>/skin.json` 生成 `assets/ui/theme/steam_navigator_theme.tres`。Theme 里的每个可见状态都是一张外部 PNG（StyleBoxTexture 九宫格）或外部图标，因此换掉 skin 目录里的同名同尺寸贴图即可整体换肤；本脚本只在换整套皮肤/改九宫格参数时重新运行。 | [查看](./ui/build_ui_theme.gd.md) |
 | `ui/slice_ui_icons.gd` | 把 `docs/design/ui_icons_v1/sn_ui_icons_v1.png`（1536×1024 的透明 UI 图标图集） | [查看](./ui/slice_ui_icons.gd.md) |
-| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。 | [查看](./ui_snapshot.gd.md) |
+| `ui_snapshot.gd` | 真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌）、2D 总览页（原详细总览抽屉在 2026-10-28 UI 轮移除），以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。 | [查看](./ui_snapshot.gd.md) |
 
 ## 模块契约
 

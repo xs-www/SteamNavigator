@@ -1,16 +1,15 @@
 extends Control
 ## @static-doc
-## 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并挂载已场景化的菜单/港口/流程页。主界面是「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的分层外壳；Shell 只保留上下文解析、ViewModel 组合、会话导航状态与命令派发。
+## 作用：可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并挂载已场景化的菜单/港口/流程页。主界面是「全窗 3D 港口舞台 + 紧凑顶部 chrome（图标 + 文字导航）+ 两侧设施招牌」的分层外壳；底部状态条与详细总览抽屉已在 2026-10-28 UI 轮移除（功能由顶部 chrome / 2D 总览页承担）。Shell 只保留上下文解析、ViewModel 组合、会话导航状态与命令派发。
 ##
 ## ## 皮肤接线（ui-skin-v1）
 ## - 所有纹理/图标/颜色经 `SNSkin`（`framework/ui/skin/sn_skin.gd`）读取 `assets/ui/skin/sn_v1/skin.json`；
 ##   本文件不写贴图路径、不写十六进制颜色，也不再手写 StyleBoxFlat。
-## - 顶栏 `_chrome_style()` = `SNSkin.panel("chrome")`（半透明钢框、content 16/12）；底部状态条
-##   `_bottom_bar_style()` = `SNSkin.panel("status_bar")`（content 14/6）。皮肤缺失时退回 Theme 的
-##   `SNChromePanel` / `SNStatusBarPanel` 变体，文字与交互不丢。
+## - 顶栏 `_chrome_style()` = `SNSkin.panel("chrome")`（半透明钢框、content 16/12）；皮肤缺失时
+##   退回 Theme 的 `SNChromePanel` 变体，文字与交互不丢。底部状态条（`SNStatusBarPanel`）已移除。
 ## - 导航/小按钮走 Theme 变体：当前页 `SNPrimaryButton`，其余 `SNCompactButton`；图标来自
-##   `SNSkin.icon()`（`button.icon` + `icon_max_width = 22`）。2026-10-28 图标轮起导航是
-##   纯图标按钮（`text = ""`），入口身份走 `nav_screen` meta，本地化导航名只作 `tooltip_text`。
+##   `SNSkin.icon()`（`button.icon` + `icon_max_width = 18`）。2026-10-28 UI 轮：导航是
+##   「图标 + 本地化页名」按钮，入口身份仍走 `nav_screen` meta（剧情引导与测试按 meta 解析）。
 ## - HUD chip 图标：皮肤表 `HUD_SKIN_ICONS` 是唯一来源（语义键 → 皮肤 icon id）；内容包仍可
 ##   经 `HUD_ICON_KEYS` 覆盖（本轮为空表，`AssetService.find_key` 返回空则安全回退到皮肤），
 ##   两者都没有时只显示数值文字。
@@ -19,8 +18,8 @@ extends Control
 ## ## 尺寸预算
 ## - `TOP_CHROME_MAX_HEIGHT = 130`：两行 chrome（品牌/状态/时间·金钱·声望 + 资源 chip/导航）实测最小高度必须 ≤130；
 ##   3D 舞台是主视图，HUD 只做画框。图标轮后 chip 是 24 px 图标 + 数值单行，比旧的两行 label 更矮。
-## - `PORT_STATUS_BAR_HEIGHT = 60`：总览底部状态条固定高度，实测 ≤72 px 预算；chip 数值 15、按钮 32 高，不得裁内容。
-## - 招牌 `172×42`、右列固定「海图 ▶」入口；`PageMargin` 底部为页脚/状态条预留 56/84。
+## - 招牌 `172×42`、右列固定「海图 ▶」入口；`PageMargin` 底部为页脚预留 56。
+##   底部状态条移除后页脚在页面态常驻，3D 总览主视图隐藏页脚（`_sync_footer_visibility()`）。
 ##
 ## ## 契约
 ## - 数据只走 QueryBus，修改只走 CommandBus；UI 会话状态不写存档。
@@ -41,13 +40,12 @@ extends Control
 ##   coal→resource_coal、water→resource_water、durability→resource_durability、cargo→resource_cargo、
 ##   money→resource_coins、reputation→status_reputation、time→status_time、damaged→status_warning；
 ##   `HUD_ICON_KEYS` 已清空（早期 `icon.money/coal/water` 内容资产退役），只保留内容包覆盖通道。
-## - 导航纯图标：`SCREENS` 每个入口 44×36、`text=""`、`tooltip_text = ui.nav.<screen>`、
+## - 导航是「图标 + 本地化页名」：`SCREENS` 每个入口 64×36、`icon` + `text`、
 ##   `set_meta("nav_screen", screen)`；海图 toggle 同样带 `nav_screen = "sea_chart"`。
 ##   `_story_nav_button()` 先按 meta 解析、再按旧文字回退，隐藏入口仍返回 null。
-## - 底部状态条：chip 图标化 + tooltip；「最新通告」小标题删除，正文前加 `nav_intelligence`
-##   图标（tooltip = `ui.label.latest_notice`）；海图入口纯图标（节点名 `ChartButton` 不变）；
-##   等待按钮「12 h」+ `status_time` 图标，tooltip = `ui.button.wait_hours`（格式化 12）。
-##   「详细总览 / 回到场景」保留文字。无损伤时受损 chip 不显示警告图标（只留灰字「无」）。
+## - 2026-10-28 UI 轮：底部状态条与「详细总览」抽屉整条移除（与顶部 chrome 重复）；
+##   耐久/货舱/煤/水/受损读数留在顶部 chip，海图入口留在导航，等待 6/12/24 h 与
+##   航行记录留在 2D 总览页。「详细总览」= 顶部「2D 总览」开关切到的 2D 页面。
 ##
 ## ## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
 ## - `ui:*` 是**玩家动作**，由 Shell 在动作发生处上报一次：`ui:chart_opened` 在
@@ -254,9 +252,6 @@ const MARKET_COLUMN_GAP := 14
 ## The measured minimum height must stay under `TOP_CHROME_MAX_HEIGHT`, because
 ## the 3D stage is the main view and the HUD only frames it.
 const TOP_CHROME_MAX_HEIGHT := 130.0
-## Bottom ship/port status strip on the overview page (fixed shell layer).
-const PORT_STATUS_BAR_HEIGHT := 60.0
-const PORT_STATUS_BAR_GAP := 14.0
 ## Side signboards: fixed columns at the scene edges, one per present facility
 ## plus the always-present "voyage" sign at the bottom of the right column.
 const PORT_SIGN_WIDTH := 172.0
@@ -271,7 +266,7 @@ const PORT_SIGN_MARGIN := 20.0
 const HUD_ICON_KEYS := {}
 ## Skin icon per logical HUD key (assets/ui/skin/sn_v1/icons). The two cargo crates
 ## are told apart by their tooltip: free_weight = 剩余载重, free_capacity = 剩余货舱；
-## `cargo` 是底部状态条的已用货舱读数。
+## `cargo` 供其它读数复用（底部状态条已在 2026-10-28 UI 轮移除）。
 const HUD_SKIN_ICONS := {
 	"free_weight": "resource_cargo",
 	"free_capacity": "shipyard_cargo",
@@ -285,10 +280,9 @@ const HUD_SKIN_ICONS := {
 	"damaged": "status_warning",
 }
 const HUD_ICON_SIZE := 24.0
-## Page bottom reserve: default leaves room for the footer, the overview status
-## bar is taller and replaces the footer while it is visible.
+## Page bottom reserve: leaves room for the footer (the old bottom status strip
+## was removed in the 2026-10-28 UI round).
 const PAGE_BOTTOM_MARGIN := 56
-const PAGE_BOTTOM_MARGIN_WITH_BAR := 84
 ## 退出时等待遗留 pending 上传的总预算（TELEMETRY.md §3.4、§1：绝不阻塞退出超过 3 秒）。
 const EXIT_UPLOAD_WAIT_SECONDS := 3.0
 var _context: AppContext = null
@@ -370,14 +364,9 @@ var _stage_station: String = ""
 var _stage_framing: String = ""
 ## 2D sign layer over the stage (one sign per present facility + voyage).
 var _port_hotspot_layer: Control = null
-## Overview detail drawer: when opened, the existing 2D overview panels are
-## shown over an opaque backdrop instead of the bare 3D stage.
-var _overview_detail: bool = false
-var _overview_detail_backdrop: ColorRect = null
 ## Fixed chrome nodes rebuilt every refresh; kept so tests and the layout code
 ## can measure them without walking the whole tree.
 var _top_chrome: PanelContainer = null
-var _port_status_bar: PanelContainer = null
 ## Resolved optional HUD icon textures (key -> Texture2D or null). Assets are
 ## frozen after bootstrap, so the cache never needs invalidation.
 var _hud_icon_cache: Dictionary = {}
@@ -480,6 +469,22 @@ func _refresh_footer() -> void:
 		_footer_team.text = _tr("ui.menu.team", "开发团队：%s" % DEV_TEAM)
 	if _footer_version != null:
 		_footer_version.text = "%s v%s" % [_tr("ui.menu.version", "版本"), _game_version()]
+	# 底部状态条移除后，页脚在页面态常驻；3D 总览主视图由 `_sync_footer_visibility()`
+	# 单独隐藏，保持无遮挡画框。
+	_set_footer_visible(true)
+
+
+## 页脚只在页面态显示：裸露的 3D 港口舞台是主视图，不再叠开发团队 / 版本文字。
+func _sync_footer_visibility() -> void:
+	_set_footer_visible(not _port_stage_active())
+
+
+func _set_footer_visible(visible: bool) -> void:
+	if _footer_team == null:
+		return
+	var footer := _footer_team.get_parent() as CanvasItem
+	if footer != null:
+		footer.visible = visible
 
 
 func _refresh(animate: bool = false) -> void:
@@ -552,7 +557,6 @@ func _rebuild_ui_body() -> void:
 	_hud_water_value = null
 	if _context == null:
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_story_vm = {}
 		_task_vm = {}
 		_update_story_layer()
@@ -563,7 +567,6 @@ func _rebuild_ui_body() -> void:
 	var app_view := _context.queries.execute(&"app.view")
 	if not bool(app_view.get("ok", false)):
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_root_box.add_child(_label(_error_text(app_view), 18, SNSkin.color("state.danger")))
 		return
 	var app: Dictionary = app_view["data"]
@@ -572,7 +575,6 @@ func _rebuild_ui_body() -> void:
 	_set_menu_visual(not has_run)
 	if not has_run:
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_story_vm = {}
 		_task_vm = {}
 		_update_story_layer()
@@ -581,7 +583,6 @@ func _rebuild_ui_body() -> void:
 	var port_result := _context.queries.execute(&"port.view")
 	if not bool(port_result.get("ok", false)):
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_root_box.add_child(_label(_error_text(port_result), 18, SNSkin.color("state.danger")))
 		return
 	var data: Dictionary = port_result["data"]
@@ -626,13 +627,11 @@ func _rebuild_ui_body() -> void:
 		_root_box.add_child(story_spacer)
 	if victory_active:
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_victory(victory)
 		return
 	if _presentation_on_stage():
 		# Departure / arrival cut: the harbour *is* the screen, no page on top.
-		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_voyage_stage(data)
 		return
@@ -640,19 +639,16 @@ func _rebuild_ui_body() -> void:
 		# 探索演出 · 资源告急（4.2）：海图已被云层盖住，事件页换成告警页。
 		# 必须在 `presenting` / `at_sea` 之前判断，否则会先挂出海图页。
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_explore_alert(data)
 		return
 	if presenting:
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		_screen_at_sea(data, data.get("voyage", null))
 		return
 	if at_sea:
 		_hide_port_stage()
-		_set_port_status_bar_visible(false)
 		_build_status_banner()
 		var voyage: Variant = data.get("voyage", null)
 		if voyage is Dictionary and voyage.get("event", null) is Dictionary:
@@ -672,8 +668,8 @@ func _rebuild_ui_body() -> void:
 			and not ["port_memory", "settlement", "sea_chart", "clue_log"].has(_active_screen):
 		_active_screen = "overview"
 	# The overview main view is a full-window 3D stage with edge HUD; the other
-	# pages keep their own layout and hide the stage/status strip again.
-	_set_port_status_bar_visible(_active_screen == "overview", data)
+	# pages keep their own layout. 2026-10-28: the old bottom status strip was
+	# removed (duplicate of the top chrome), so pages no longer toggle it here.
 	match _active_screen:
 		"market":
 			_screen_market(data)
@@ -700,6 +696,7 @@ func _rebuild_ui_body() -> void:
 		_:
 			_screen_overview(data)
 	_sync_port_stage(data)
+	_sync_footer_visibility()
 	# 4.7 / dev.3 #3：页面挂好后再解析引导目标（市场补给区块 / 海图入口 / 导航按钮）。
 	_sync_story_focus()
 	# 刚重建的 TopChrome / Nav 还没有完成容器排版，上面这次同步读到的是旧矩形；
@@ -1123,13 +1120,10 @@ func _story_nav_button(screen: String) -> Control:
 	return null
 
 
-## The chart entry: the status-strip `ChartButton` while in port, the nav toggle
-## while the chart page is up (that same button closes it).
+## The chart entry is the nav toggle (`nav_screen = sea_chart`); the same button
+## closes the chart while that page is up. 2026-10-28：底部状态条的 `ChartButton`
+## 随状态条一起移除，剧情引导的 `chart_entry` 目标改为导航里的海图按钮。
 func _story_chart_entry_control() -> Control:
-	if _active_screen != "sea_chart":
-		var chart_button := find_child("ChartButton", true, false) as Control
-		if chart_button != null and chart_button.is_visible_in_tree():
-			return chart_button
 	return _story_nav_button("sea_chart")
 
 
@@ -1307,10 +1301,10 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 
 ## Builds the compact navigation row from `SCREENS`, minus `HIDDEN_NAV_SCREENS`
 ## (unpublished systems: base / auto trade / ruins) and minus story-locked pages.
-## 2026-10-28 图标轮：每个入口是 44×36 的纯图标按钮（`text = ""`），入口身份由
-## `nav_screen` meta 承载，本地化导航名进 `tooltip_text`；剧情强制引导与快照工具都
-## 按 meta 解析，不再依赖按钮文字。Page routing itself is unchanged, so the internal
-## pages stay reachable by the snapshot tool and future re-release.
+## 2026-10-28 图标轮：每个入口是「皮肤图标 + 本地化页名」的 64×36 按钮；入口身份
+## 仍由 `nav_screen` meta 承载，剧情强制引导与快照工具按 meta 解析（不依赖按钮文字）。
+## Page routing itself is unchanged, so the internal pages stay reachable by the
+## snapshot tool and future re-release.
 func _build_nav_buttons(parent: HBoxContainer) -> void:
 	var visual_active := "overview" if _active_screen in ["port_memory", "settlement", "victory"] else _active_screen
 	# Nested container so the compact navigation gap does not override the
@@ -1326,24 +1320,22 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 		if not _story_feature_unlocked(_story_screen_feature(screen)):
 			continue
 		var nav_label := _tr("ui.nav.%s" % screen, screen)
-		var button := _button("", _on_nav.bind(screen))
-		button.tooltip_text = nav_label
+		var button := _button(nav_label, _on_nav.bind(screen))
 		button.set_meta("nav_screen", screen)
-		button.custom_minimum_size = Vector2(44, 36)
+		button.custom_minimum_size = Vector2(64, 36)
 		button.add_theme_font_size_override("font_size", 13)
 		# Current page uses the selected plate texture; every other entry is a
 		# compact plate. Both are external-texture Theme variations, so the
-		# icon-only button behaviour stays stock Button.
+		# button text/behaviour stays stock Button.
 		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNCompactButton"
 		_apply_skin_icon(button, NAV_ICONS.get(screen, ""))
 		nav.add_child(button)
 	# The nautical chart is a toggle, not a nav page: M opens/closes it and the
 	# button highlights only while the chart is up. Gated by the story feature.
 	if _story_feature_unlocked(StoryService.FEATURE_CHART):
-		var chart_button := _button("", _toggle_sea_chart)
-		chart_button.tooltip_text = _tr("ui.nav.sea_chart", "海图")
+		var chart_button := _button(_tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
 		chart_button.set_meta("nav_screen", "sea_chart")
-		chart_button.custom_minimum_size = Vector2(44, 36)
+		chart_button.custom_minimum_size = Vector2(64, 36)
 		chart_button.add_theme_font_size_override("font_size", 13)
 		chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNCompactButton"
 		_apply_skin_icon(chart_button, NAV_ICONS["sea_chart"])
@@ -1487,184 +1479,12 @@ func _build_status_banner() -> void:
 
 
 ## ---------------------------------------------------------------------------
-## Bottom ship / port status strip (overview only, fixed shell layer)
-## ---------------------------------------------------------------------------
-
-## Builds (once) the fixed bottom strip and syncs its contents for the current
-## view model: durability, hold usage, coal, water, damaged parts, the latest
-## notice and the detail / depart / wait actions.
-func _set_port_status_bar_visible(visible: bool, data: Dictionary = {}) -> void:
-	if not visible:
-		if _port_status_bar != null and is_instance_valid(_port_status_bar):
-			_port_status_bar.visible = false
-		_set_footer_visible(true)
-		_set_page_bottom_reserve(false)
-		return
-	if data.is_empty():
-		data = _last_port_view
-	if data.is_empty():
-		return
-	_ensure_port_status_bar()
-	_refresh_port_status_bar(data)
-	if _port_status_bar != null:
-		_port_status_bar.visible = true
-	_set_footer_visible(false)
-	_set_page_bottom_reserve(true)
-
-
-func _ensure_port_status_bar() -> void:
-	if _port_status_bar != null and is_instance_valid(_port_status_bar):
-		return
-	_port_status_bar = PanelContainer.new()
-	_port_status_bar.name = "PortStatusBar"
-	var bar_style := _bottom_bar_style()
-	if bar_style != null:
-		_port_status_bar.add_theme_stylebox_override("panel", bar_style)
-	else:
-		_port_status_bar.theme_type_variation = &"SNStatusBarPanel"
-	_port_status_bar.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(_port_status_bar)
-	_port_status_bar.anchor_left = 0.0
-	_port_status_bar.anchor_top = 1.0
-	_port_status_bar.anchor_right = 1.0
-	_port_status_bar.anchor_bottom = 1.0
-	_port_status_bar.offset_left = PORT_SIGN_MARGIN
-	_port_status_bar.offset_right = -PORT_SIGN_MARGIN
-	_port_status_bar.offset_top = -(PORT_STATUS_BAR_HEIGHT + PORT_STATUS_BAR_GAP)
-	_port_status_bar.offset_bottom = -PORT_STATUS_BAR_GAP
-	var content := HBoxContainer.new()
-	content.name = "Content"
-	content.add_theme_constant_override("separation", 12)
-	_port_status_bar.add_child(content)
-	# Above the page and footer, below the transition fade.
-	if _fade_layer != null:
-		move_child(_port_status_bar, _fade_layer.get_index())
-
-
-func _refresh_port_status_bar(data: Dictionary) -> void:
-	if _port_status_bar == null or not is_instance_valid(_port_status_bar):
-		return
-	var content := _port_status_bar.get_node_or_null("Content") as HBoxContainer
-	if content == null:
-		return
-	for child in content.get_children():
-		content.remove_child(child)
-		child.queue_free()
-	var ship: Dictionary = data.get("ship", {})
-	var damaged := int(ship.get("damaged_modules", 0))
-	var worst := clampf(float(ship.get("worst_module_condition", 1.0)), 0.0, 1.0)
-	var chips := [
-		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
-			_fmt(float(ship.get("durability", 0.0))),
-			_fmt(float(ship.get("max_durability", 0.0))),
-		], SNSkin.color("state.success"), "durability"],
-		[_tr("ui.label.cargo_hold", "Hold"), "%s / %s" % [
-			_fmt(float(ship.get("cargo_used", 0.0))),
-			_fmt(float(ship.get("cargo_capacity", 0.0))),
-		], SNSkin.color("state.water"), "cargo"],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), "coal"],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), "water"],
-		[_tr("ui.label.damaged_modules", "Damaged modules"),
-			"%d · %d%%" % [damaged, int(round(worst * 100.0))] if damaged > 0
-			else _tr("ui.label.none", "None"),
-			SNSkin.color("state.danger") if damaged > 0 and worst <= 0.0 else (
-				SNSkin.color("brass.base") if damaged > 0 else SNSkin.color("text.muted")
-			),
-	# 2026-10-28 图标轮：无损伤时不显示警告图标，只留灰字「无」，避免常驻一个危险三角。
-			"damaged" if damaged > 0 else ""],
-	]
-	for chip in chips:
-		content.add_child(_stat_chip(chip[0], chip[1], chip[2], 15, String(chip[3])))
-	content.add_child(VSeparator.new())
-	# 2026-10-28 图标轮：删掉「最新通告」小标题，正文前放情报图标，语义进 tooltip。
-	var notice_row := HBoxContainer.new()
-	notice_row.name = "NoticeRow"
-	notice_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	notice_row.add_theme_constant_override("separation", 6)
-	notice_row.tooltip_text = _tr("ui.label.latest_notice", "Latest notice")
-	notice_row.add_child(SNSkin.icon_rect(NAV_ICONS["tavern"], 18))
-	var notice_label := _label(_latest_notice_text(data), 12, SNSkin.color("text.light"))
-	notice_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	notice_label.clip_text = true
-	notice_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	notice_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	notice_row.add_child(notice_label)
-	content.add_child(notice_row)
-	# The detail drawer only exists over the live stage; the 2D overview already
-	# shows every panel, so it gets no detail toggle.
-	if _active_screen == "overview" and _overview_stage_mode and _port_stage_available():
-		var detail_button := _button(
-			_tr("ui.button.overview_main", "Back to scene")
-			if _overview_detail
-			else _tr("ui.button.overview_detail", "Detail overview"),
-			_on_overview_detail_toggle
-		)
-		detail_button.theme_type_variation = &"SNCompactButton"
-		detail_button.custom_minimum_size = Vector2(0, 32)
-		detail_button.add_theme_font_size_override("font_size", 13)
-		content.add_child(detail_button)
-	# 4.3.4 / U7：出航准备页已删除，状态条只负责打开海图（出航在弹窗里确认）。
-	# 4.5: chart / wait entries are gated while the story is running.
-	# 2026-10-28 图标轮：海图入口改纯图标（`nav_chart`），导航名进 tooltip。
-	if _story_feature_unlocked(StoryService.FEATURE_CHART):
-		var chart_button := _button("", _toggle_sea_chart)
-		chart_button.name = "ChartButton"
-		chart_button.tooltip_text = _tr("ui.nav.sea_chart", "海图")
-		chart_button.theme_type_variation = &"SNPrimaryButton"
-		chart_button.custom_minimum_size = Vector2(44, 32)
-		chart_button.add_theme_font_size_override("font_size", 13)
-		_apply_skin_icon(chart_button, NAV_ICONS["sea_chart"])
-		content.add_child(chart_button)
-	if not _story_active():
-		# 保留小时数（「12 h」），完整文案进 tooltip；图标用 HUD 的 time 语义。
-		var wait_hours := 12
-		var wait_button := _button(
-			"%d h" % wait_hours,
-			func() -> void: _run_command(&"port.wait", {"hours": 12})
-		)
-		wait_button.tooltip_text = _tr("ui.button.wait_hours", "Wait %d h") % wait_hours
-		wait_button.theme_type_variation = &"SNCompactButton"
-		wait_button.custom_minimum_size = Vector2(0, 32)
-		wait_button.add_theme_font_size_override("font_size", 13)
-		_apply_skin_icon(wait_button, String(HUD_SKIN_ICONS.get("time", "status_time")))
-		content.add_child(wait_button)
-
-
-## Last pushed notice rendered with the same template filling as the overview log.
-func _latest_notice_text(data: Dictionary) -> String:
-	var notices: Array = data.get("notices", [])
-	if notices.is_empty():
-		return _tr("ui.label.no_notice", "No notices yet")
-	var notice: Variant = notices[notices.size() - 1]
-	if not (notice is Dictionary):
-		return ""
-	return _notice_text(notice)
-
-
-## Bottom status strip material, same skin pipeline as the chrome: a slightly
-## more opaque steel panel with tight 14/6 content margins so the 60 px budget
-## keeps every chip and action. Null means no skin -> `SNStatusBarPanel` fallback.
-func _bottom_bar_style() -> StyleBox:
-	return SNSkin.panel("status_bar")
-
-
-func _set_footer_visible(visible: bool) -> void:
-	if _footer_team == null:
-		return
-	var footer := _footer_team.get_parent() as CanvasItem
-	if footer != null:
-		footer.visible = visible
-
-
-## Reserve space under the scroll page so neither the footer nor the status strip
-## covers the last row of a page.
-func _set_page_bottom_reserve(bar_visible: bool) -> void:
-	if _page_margin == null:
-		return
-	_page_margin.add_theme_constant_override(
-		"margin_bottom",
-		PAGE_BOTTOM_MARGIN_WITH_BAR if bar_visible else PAGE_BOTTOM_MARGIN
-	)
+## 用户反馈：底部状态条与顶部 chrome 完全重复（耐久 / 货舱 / 煤 / 水 / 受损、
+## 海图入口都在顶部或导航里），因此整条移除。它原先额外提供的「详细总览」抽屉
+## 与「等待 12 h」分别由顶部「2D 总览」开关和总览页的快捷入口（6/12/24 h）承担，
+## 海图入口由顶部导航承担；通告正文在总览页「航行记录」面板里。
+##
+## 2026-10-28 图标轮：热门 chip 的图标化改进（受损时不显示警告图标）随状态条一起移除。
 
 
 func _build_menu(app: Dictionary) -> void:
@@ -1752,7 +1572,6 @@ func _screen_overview(data: Dictionary) -> void:
 	screen.navigation_requested.connect(_on_screen_navigation)
 	screen.command_requested.connect(_run_command)
 	screen.stage_toggle_requested.connect(_on_overview_stage_toggle)
-	screen.detail_toggle_requested.connect(_on_overview_detail_toggle)
 	_root_box.add_child(screen)
 
 
@@ -1769,7 +1588,6 @@ func _overview_model(data: Dictionary) -> Dictionary:
 	# state only.
 	model["stage_available"] = _port_stage_available()
 	model["stage_mode"] = _overview_stage_mode and _port_stage_available()
-	model["overview_detail"] = _overview_detail
 	# 4.3 / U6：详细总览不再挂旧线稿海图（`map_canvas` 已删除），全屏海图页是唯一
 	# 海图入口；`map.view` 仍供港口名等其它查询使用，但不再进入总览模型。
 	var contracts: Dictionary = model.get("contracts", {}).duplicate(true)
@@ -1792,21 +1610,12 @@ func _overview_model(data: Dictionary) -> Dictionary:
 ## Overview 3D port stage (2.5D fixed stage + edge signs + detail drawer)
 ## ---------------------------------------------------------------------------
 
-## Toggles the 3D stage / 2D overview fallback. Leaving the stage also closes the
-## detail drawer, because the drawer only makes sense over the live scene.
+## Toggles the 3D stage / 2D overview fallback. 2026-10-28：底部状态条与「详细总览」
+## 抽屉一并移除（抽屉内容就是 2D 总览页，顶部「2D 总览」开关承担同一入口）。
 func _on_overview_stage_toggle() -> void:
 	if not _port_stage_available():
 		return
 	_overview_stage_mode = not _overview_stage_mode
-	if not _overview_stage_mode:
-		_overview_detail = false
-	_status_message = ""
-	_refresh()
-
-
-## Toggles the detailed 2D overview drawer over the 3D stage.
-func _on_overview_detail_toggle() -> void:
-	_overview_detail = not _overview_detail
 	_status_message = ""
 	_refresh()
 
@@ -1821,7 +1630,7 @@ func _ensure_port_stage_host() -> void:
 	if _port_stage_host != null and is_instance_valid(_port_stage_host):
 		return
 	# Full-window 3D backdrop: directly above the flat Background and below every
-	# UI layer, so the chrome / status bar / side signs float over the scene.
+	# UI layer, so the chrome / side signs float over the scene.
 	_port_stage_host = SNStageHost.new()
 	_port_stage_host.name = "PortStageHost"
 	_port_stage_host.auto_load = false
@@ -1831,10 +1640,6 @@ func _ensure_port_stage_host() -> void:
 	_port_stage_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	move_child(_port_stage_host, $Background.get_index() + 1)
 	_port_stage_host.set_stage_visible(false)
-
-	# Opaque backdrop for the detail drawer: covers the stage (but not the top
-	# chrome or the bottom status strip) while the 2D overview panels are open.
-	_ensure_overview_detail_backdrop()
 
 	# Edge sign layer over the stage: fixed left/right columns driven by the
 	# PortStage camera projection, never 3D raycasts. The layer itself ignores
@@ -1848,44 +1653,6 @@ func _ensure_port_stage_host() -> void:
 	_port_hotspot_layer.visible = false
 	if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
 		get_viewport().size_changed.connect(_on_viewport_size_changed)
-
-
-func _ensure_overview_detail_backdrop() -> void:
-	if _overview_detail_backdrop != null and is_instance_valid(_overview_detail_backdrop):
-		return
-	_overview_detail_backdrop = ColorRect.new()
-	_overview_detail_backdrop.name = "OverviewDetailBackdrop"
-	_overview_detail_backdrop.color = SNSkin.color("bg.abyss")
-	_overview_detail_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overview_detail_backdrop.visible = false
-	add_child(_overview_detail_backdrop)
-	_overview_detail_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_place_overview_detail_backdrop()
-
-
-## Keeps the backdrop above the stage but below the scrolling page. `move_child`
-## takes the final sibling index, so a forward move needs the page's current
-## index while the backdrop is still behind it.
-func _place_overview_detail_backdrop() -> void:
-	if _overview_detail_backdrop == null or not is_instance_valid(_overview_detail_backdrop):
-		return
-	if _page_margin == null:
-		return
-	var page_index := _page_margin.get_index()
-	if _overview_detail_backdrop.get_index() < page_index:
-		return
-	move_child(_overview_detail_backdrop, page_index)
-
-
-func _sync_overview_detail_backdrop() -> void:
-	if _overview_detail_backdrop == null or not is_instance_valid(_overview_detail_backdrop):
-		_ensure_overview_detail_backdrop()
-	if _overview_detail_backdrop == null:
-		return
-	var visible_now := _overview_detail and _port_stage_active()
-	_overview_detail_backdrop.visible = visible_now
-	if visible_now:
-		_place_overview_detail_backdrop()
 
 
 ## Shows the shared 3D district. `force_station` is used by the voyage演出: during
@@ -1930,11 +1697,10 @@ func _sync_port_stage(data: Dictionary, force_station: String = "") -> void:
 	_port_stage_host.set_stage_visible(true)
 	_had_3d_stage = true
 	_focus_stage_station(station, framing, just_mounted)
-	_sync_overview_detail_backdrop()
 	if _port_hotspot_layer != null:
 		# Edge signs belong to the overview main view; the market / supply dock
 		# panels carry their own navigation, and the voyage cut shows a clean shot.
-		_port_hotspot_layer.visible = _active_screen == "overview" and not _overview_detail and force_station.is_empty()
+		_port_hotspot_layer.visible = _active_screen == "overview" and force_station.is_empty()
 	_refresh_port_hotspots_soon()
 
 
@@ -1987,8 +1753,6 @@ func _mount_dock_panel(screen: Control) -> void:
 func _hide_port_stage() -> void:
 	if _port_stage_host != null and is_instance_valid(_port_stage_host):
 		_port_stage_host.set_stage_visible(false)
-	if _overview_detail_backdrop != null and is_instance_valid(_overview_detail_backdrop):
-		_overview_detail_backdrop.visible = false
 	if _port_hotspot_layer != null and is_instance_valid(_port_hotspot_layer):
 		_port_hotspot_layer.visible = false
 		for child in _port_hotspot_layer.get_children():
@@ -2063,7 +1827,6 @@ func _on_port_stage_fallback(reason: String) -> void:
 		return
 	_port_stage_load_failed = true
 	_overview_stage_mode = false
-	_overview_detail = false
 	_hide_port_stage()
 	push_warning("PortStage unavailable (%s), falling back to the 2D overview" % reason)
 	_set_status(_tr("ui.error.port_stage_unavailable", "3D port stage unavailable, showing the 2D overview."), true)
@@ -2094,14 +1857,14 @@ func _delayed_port_hotspot_pass() -> void:
 ## by their projected x (< 0.5 -> left column, otherwise right column), sorted by
 ## projected y and stacked at the screen edges. The right column reserves its
 ## bottom slot for the permanent "voyage" sign. Layout keeps clear of the compact
-## top chrome and the bottom status strip, and is redone on every resize.
+## top chrome and the footer area, and is redone on every resize.
 func _layout_port_hotspots() -> void:
 	if _port_hotspot_layer == null or not is_instance_valid(_port_hotspot_layer):
 		return
 	for child in _port_hotspot_layer.get_children():
 		_port_hotspot_layer.remove_child(child)
 		child.queue_free()
-	if not _port_stage_active() or _overview_detail:
+	if not _port_stage_active():
 		return
 	var stage := _port_stage_host.current_stage()
 	if stage == null or not stage.has_method("facility_screen_anchor"):
@@ -2215,12 +1978,9 @@ func _port_hud_top_safe() -> float:
 	return TOP_CHROME_MAX_HEIGHT + 8.0
 
 
-## Top edge of the bottom status strip (or the footer reserve) in window coords.
+## Top edge of the fixed footer area in window coords (the old bottom status strip
+## was removed in the 2026-10-28 UI round).
 func _port_hud_bottom_safe(layer_size: Vector2) -> float:
-	if _port_status_bar != null and is_instance_valid(_port_status_bar) and _port_status_bar.visible:
-		var rect := _port_status_bar.get_global_rect()
-		if rect.size.y > 0.0:
-			return rect.position.y - 8.0
 	return layer_size.y - 48.0
 
 
@@ -3238,7 +2998,6 @@ func _on_play_again() -> void:
 	_settlement_summary = {}
 	_reset_voyage_presentation()
 	_status_message = ""
-	_overview_detail = false
 	_menu_screen = "new_game"
 	_active_screen = "overview"
 	_refresh(true)
@@ -4024,9 +3783,6 @@ func _prepare_quit() -> void:
 	if _port_hotspot_layer != null and is_instance_valid(_port_hotspot_layer):
 		_port_hotspot_layer.queue_free()
 		_port_hotspot_layer = null
-	if _overview_detail_backdrop != null and is_instance_valid(_overview_detail_backdrop):
-		_overview_detail_backdrop.queue_free()
-		_overview_detail_backdrop = null
 	_free_page_tree()
 
 
@@ -4244,9 +4000,6 @@ func _on_nav(screen: String) -> void:
 	# `_active_screen == "settlement"` 的重建都会把旧航次再“结算”一遍。
 	if from == "settlement" and screen != "settlement":
 		_settlement_summary = {}
-	if screen != "overview":
-		# The detail drawer only belongs to the overview main view.
-		_overview_detail = false
 	_active_screen = screen
 	_status_message = ""
 	# dev.3 #1：`ui:chart_opened` 只在真正打开海图时发一次（关闭仍由
@@ -4315,7 +4068,6 @@ func _on_continue() -> void:
 	_sea_chart_return = "overview"
 	_reset_voyage_presentation()
 	_active_screen = "overview"
-	_overview_detail = false
 	_victory_dismissed = false
 	_set_status("已载入自动存档", false)
 	_refresh(true)

@@ -147,6 +147,7 @@ MarketScreen.carry_changed(offer)                # offer {} = 未携带
 - `icon_key` 取 `ContentDefinition.information["texture"]` 的逻辑资产键（如 `icon.item.iron_ore`），为空表示内容没提供图标。
 - 展示层（Shell）负责把 `icon_key` 解析成 `Texture2D` 填到每一行的 `"icon"` 字段：`AssetService.find_key` → `AssetService.load_texture`，缺失时回退 `res://assets/ui/icons/item_fallback.svg`。
 - `trends` 沿用现有 `_market_trends()` 的语义：来自 `intel.view` 当前港报告的价格趋势；无报告时为空字典，页面按 `stable` 处理。
+- **展示过滤（2026-10-28 反馈）**：行情网格只渲染 `buyable=true` 的行——本港买不到的「仅收购」品种不再占格子；卖出不受影响：整块市场面板仍是 `cargo_item` / `warehouse_item` 的落点，`trade.sell` 不依赖行情行存在。查询层 `market.view` 仍返回全部行（含 `buyable=false`），供其它系统 / 测试读取。
 
 ## 4. 物品图标（临时占位）
 

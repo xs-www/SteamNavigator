@@ -24,7 +24,7 @@
 
 - [ ] 2.5D 舞台收尾：委托 / 情报页舞台化、事件触发的 3D 场景预加载、质量档位与低配回退、L2 LOD、第三方 `.glb` 白名单评审
 - [ ] 高频决策页第二轮：持久 `ScreenHost` 与局部数据刷新（市场数量步进 / 即时成本已由「图标直接交易」取代）
-- [ ] 市场 V2：从「中间 3D 港区窗口」推进到 3D 船内交互（左侧背包退化为船体货舱热点，复用 `market_item` / `cargo_item` 拖拽载荷）；补给（煤 / 水）也改图标直接交互；商品分类筛选 / 分组；买卖音效与拖拽动效；用正式美术替换剩余 8 张 SVG 占位图标（保持 `icon.item.*` 同名同尺寸即可）。（2026-10-26：市场商品「拿起 / 放下」与交互处浮出提示已落地；2026-10-28 图标轮：煤 / 水 / 锅炉钢板 / 委托货箱改用 `icon.ui.*` 新批次，市场文字精简；剩余补给图标直接交互、分类筛选、买卖音效、8 张商品图）
+- [ ] 市场 V2：从「中间 3D 港区窗口」推进到 3D 船内交互（左侧背包退化为船体货舱热点，复用 `market_item` / `cargo_item` 拖拽载荷）；补给（煤 / 水）也改图标直接交互；商品分类筛选 / 分组；买卖音效与拖拽动效；用正式美术替换剩余 8 张 SVG 占位图标（保持 `icon.item.*` 同名同尺寸即可）。（2026-10-26：市场商品「拿起 / 放下」与交互处浮出提示已落地；2026-10-28 图标轮：煤 / 水 / 锅炉钢板 / 委托货箱改用 `icon.ui.*` 新批次，市场文字精简、**只显示可买货物**（卖出不受影响）；剩余补给图标直接交互、分类筛选、买卖音效、8 张商品图）
 - [ ] 可复用浮层视觉重排（等 UI 素材到位）：`SNCarryGhost` 当前是「图标 + 名称 / ×N / 预计消费 / 拿起提示」四行紧凑布局，偏功能化，用户反馈观感一般、留待素材到位再改。重排方向：更大图标、名称与数量同行、金额用徽标 / 右对齐、把「点船舱 / 仓库落点放下」这类长提示迁到 `SNInteractionHint` 做一次性提示；同时把运行时 tint 收进 Theme 变体（`SNCarryGhostPanel` / `SNHintSuccessPanel` / `SNHintErrorPanel`）让编辑器所见即运行时。改动范围仍只是 `.tscn` + `_ensure_refs()` 路径 + 结构断言，契约见 [UI_SCENE_MIGRATION.md](docs/specs/UI_SCENE_MIGRATION.md)。
 - [ ] 存档：声明式 ID 别名与数据迁移执行器；出航失败回滚的存档路径端到端测试
 - [ ] SDK / 发布：模组管理 UI（启用 / 禁用 / 优先级）、发布签名与固定哈希校验
@@ -70,7 +70,7 @@
 
 - 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
 
-- 图标轮：新批次图标替换 + UI 文字精简（2026-10-28）：30 枚皮肤图标接入 HUD / 导航 / 市场 / 委托 / 酒馆；HUD chip 改「图标 + 数值」（字段名进 tooltip，`_stat_chip` 单行化）、导航改纯图标（44×36、`tooltip`、`nav_screen` meta，剧情引导/测试按 meta 解析）、底部状态条 chip + 海图 + 等待按钮图标化；市场账册摘要改单行 icon chip、删长说明与商品分类副标题、补给卡字段名进 tooltip；委托卡 4 字段与报酬行图标化、删重复「截止」行与声望 badge；酒馆删纯说明段落。内容侧煤 / 水 / 锅炉钢板 / 委托货箱 4 个商品改用 `icon.ui.*`，早期 `icon.coal` / `icon.money` / `icon.water` PNG 与 2 个被替换 SVG 退役（Core 资产键 179→174）。验证：Godot 全量 734/734、`check_content_schema_v2`、SNModMaker 65/65、`gen_static_docs --check`；截图 `docs/design/screenshots/skin/1440x900/*`。
+- 图标轮 + UI 收尾（2026-10-28）：30 枚皮肤图标接入 HUD / 导航 / 市场 / 委托 / 酒馆；HUD chip 改「图标 + 数值」（字段名进 tooltip，`_stat_chip` 单行化）、导航为「图标 + 本地化页名」（64×36、`nav_screen` meta，剧情引导/测试按 meta 解析）；第二轮反馈移除与顶部完全重复的底部状态条与详细总览抽屉（等待 / 航行记录 / 详细总览留在 2D 总览页，3D 主视图隐藏页脚）；市场只显示可买货物（卖出仍走整块面板落点）；市场账册摘要改单行 icon chip、删长说明与商品分类副标题、补给卡字段名进 tooltip；委托卡 4 字段与报酬行图标化、删重复「截止」行与声望 badge；酒馆删纯说明段落。内容侧煤 / 水 / 锅炉钢板 / 委托货箱 4 个商品改用 `icon.ui.*`，早期 `icon.coal` / `icon.money` / `icon.water` PNG 与 2 个被替换 SVG 退役（Core 资产键 179→174）。验证：Godot 全量 735/735、`check_content_schema_v2`、SNModMaker 65/65、`gen_static_docs --check`；截图 `docs/design/screenshots/skin/1440x900/*`。
 
 - 船厂改装界面第二轮反馈（2026-10-28）：改装蓝图只保留侧视图，普通槽位按 Core hull `module_slots` / `compartments` 的 `blueprint_position.side`（`shipyard.view.ship.slot_anchors`）画圆点，槽位方框移到侧视图下方的标注带并用点线连到圆点（`SNShipView` 新增 `slot_anchor_rects()` / `slot_chip_rects()` / `chip_band_rect()` / `slot_leader_lines()` / `set_module_chips_visible()` / `set_weapon_patches_visible()`）；操作坞拆「部件改装 / 武器装配」两个模式，常规分类 6 项 3×2 等宽对齐、武器模式独立炮位/仓库/购买（无打造页签）；4 艘 Core 船补侧视槽位坐标并同步 `SNModMaker/js/core-index.js`。新增 `test_shipyard_blueprint` 8 例 + `test_shipyard_refit` 模式分离用例；验证 `check_content_schema_v2`、SNModMaker 65/65、截图 `_check5/shipyard_refit*.png`。
 

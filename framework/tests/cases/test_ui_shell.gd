@@ -305,9 +305,9 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 	var bundle := _mount(5101)
 	var shell: Control = bundle["shell"]
 	var context: AppContext = bundle["context"]
-	# The main view is the bare 3D stage, so the detailed 2D panels live in the
-	# overview drawer; open it before asserting the map / detail content.
-	shell._overview_detail = true
+	# The main view is the bare 3D stage, so the detailed 2D panels live on the
+	# 2D overview page (top chrome "2D 总览" toggle); open it before asserting.
+	shell._overview_stage_mode = false
 	shell._refresh()
 	var view: Dictionary = context.queries.execute(&"port.view")["data"]
 	var ship: Dictionary = view["ship"]
@@ -373,8 +373,8 @@ func test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void:
 func test_victory_plan_explains_how_to_clear_the_mvp() -> void:
 	var bundle := _mount(5102)
 	var shell: Control = bundle["shell"]
-	# The victory plan is part of the detailed overview drawer over the stage.
-	shell._overview_detail = true
+	# The victory plan is part of the 2D overview page over the stage.
+	shell._overview_stage_mode = false
 	shell._refresh()
 	var overview_screens := _nodes_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT)
 	assert_eq(overview_screens.size(), 1, "the victory plan is hosted by the extracted overview screen")
@@ -464,6 +464,37 @@ func test_shipyard_order_and_port_wait_make_time_move() -> void:
 	assert_almost_eq(context.state.now(), time_before + 24.0, 0.001, "the wait button advances game time")
 	assert_eq(CraftOps.orders(context.state).size(), 0, "the finished order leaves the queue")
 	assert_eq(WarehouseOps.module_qty(context.state, port_id, module_id), 1, "the finished module lands in the ordering port warehouse")
+	_unmount(bundle)
+
+
+## 2026-10-28 反馈：市场只显示「本港买得到」的货；仅收购品种不再占格子，但卖出
+## 不受影响（整块市场面板是落点，`trade.sell` 不依赖行情行存在）。
+func test_market_hides_sell_only_goods_but_still_allows_selling() -> void:
+	var bundle := _mount(5211)
+	var shell: Control = bundle["shell"]
+	var context: AppContext = bundle["context"]
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var sell_only := {}
+	for raw_row in view["market"]:
+		if raw_row is Dictionary and not bool((raw_row as Dictionary).get("buyable", true)):
+			sell_only = raw_row
+			break
+	assert_true(not sell_only.is_empty(), "the fixture market exposes a sell-only good")
+	if sell_only.is_empty():
+		_unmount(bundle)
+		return
+	var item_id := String(sell_only["item_id"])
+	var item_name := context.translate(String(sell_only.get("name_key", "")), item_id)
+	ShipOps.add_cargo(context.state.ship(), item_id, 2, "", 0.0)
+	_goto(shell, "market")
+	var grid := _named_node(shell._root_box, "MarketGrid")
+	assert_not_null(grid, "the market renders its goods grid")
+	if grid != null:
+		assert_false(_label_texts(grid).has(item_name),
+			"a sell-only good gets no market tile")
+	# The sell path is the drop zone on the panel, not the removed row.
+	var sell := context.commands.execute(&"trade.sell", {"item_id": item_id, "amount": 1})
+	assert_true(bool(sell.get("ok", false)), "the sell-only good can still be sold: %s" % str(sell))
 	_unmount(bundle)
 
 
@@ -720,8 +751,8 @@ func test_notice_log_renders_filled_localized_text() -> void:
 	# The shell takes its locale from the player's saved settings, so pin it here:
 	# the expected sentences below are per language.
 	context.localization.set_locale("zh_CN")
-	# The sailing log is part of the detailed overview drawer, not the bare stage.
-	shell._overview_detail = true
+	# The sailing log is part of the 2D overview page, not the bare stage.
+	shell._overview_stage_mode = false
 	_goto(shell, "overview")
 	var log_texts := _log_lines(shell)
 	assert_true(log_texts.size() >= 3, "the sailing log lists the session notices: %s" % str(log_texts))
@@ -847,14 +878,14 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	]:
 		assert_false(_nodes_with_tooltip(chrome, context.translate(label_key, "")).is_empty(),
 			"the chrome keeps the %s field name as a chip tooltip" % label_key)
-	# 导航：纯图标按钮，入口身份走 `nav_screen` meta（未发布系统不出现在玩家可见导航里）。
+	# 导航：图标 + 本地化页名按钮，入口身份仍走 `nav_screen` meta（未发布系统不出现）。
 	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
 		var nav_entry := _nav_button(chrome, screen)
 		assert_not_null(nav_entry, "the compact chrome keeps the %s navigation button" % screen)
 		if nav_entry != null:
-			assert_eq(String(nav_entry.text), "", "the %s navigation entry is icon-only" % screen)
-			assert_eq(String(nav_entry.tooltip_text), shell._tr("ui.nav.%s" % screen, screen),
-				"the %s icon-only entry keeps its navigation name as a tooltip" % screen)
+			assert_eq(String(nav_entry.text), shell._tr("ui.nav.%s" % screen, screen),
+				"the %s navigation entry keeps its label" % screen)
+			assert_not_null(nav_entry.icon, "the %s navigation entry keeps its icon" % screen)
 	for screen in ["base", "trade", "ruins"]:
 		assert_true(_nav_button(chrome, screen) == null,
 			"the compact chrome hides the unpublished %s navigation entry" % screen)
@@ -964,7 +995,8 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 				dock_panel.custom_minimum_size.x >= 620.0,
 				"the dock panel keeps the narrow content column (%.0f px)" % dock_panel.custom_minimum_size.x
 			)
-	assert_false(bool(shell._port_status_bar.visible), "leaving the overview hides the status strip")
+	assert_true(shell.find_child("PortStatusBar", true, false) == null,
+		"the removed bottom status strip never mounts on any page")
 	assert_true(shell._top_chrome != null and shell._top_chrome.get_combined_minimum_size().y <= 130.0, "the compact chrome is shared by every page")
 	assert_not_null(_nav_button(shell._top_chrome, "market"), "the shared chrome keeps navigation on other pages")
 
@@ -1114,82 +1146,35 @@ func test_overview_stage_falls_back_to_the_usable_2d_overview() -> void:
 	_unmount(bundle)
 
 
-## 底部船舶/港口状态条 + 详细总览抽屉：开关、状态数据、等待与出航命令。
-func test_overview_status_strip_and_detail_drawer() -> void:
+## 2026-10-28 反馈：底部状态条与顶部 chrome 完全重复，整条移除；等待 / 航行记录 /
+## 详细总览仍在 2D 总览页，海图入口在顶部导航（`nav_screen = sea_chart`）。
+func test_overview_has_no_duplicate_status_strip_and_2d_page_keeps_actions() -> void:
 	var bundle := _mount(5206)
 	var shell: Control = bundle["shell"]
 	var context: AppContext = bundle["context"]
 	_goto(shell, "overview")
-	var bar: PanelContainer = shell._port_status_bar
-	assert_not_null(bar, "the overview mounts the bottom status strip")
-	if bar == null:
-		_unmount(bundle)
-		return
-	assert_true(bar.visible, "the status strip is visible on the overview")
-	assert_true(bar.get_combined_minimum_size().y <= 72.0, "the status strip content fits its 72 px budget (%.1f)" % bar.get_combined_minimum_size().y)
-	var bar_texts := _label_texts(bar)
-	# 2026-10-28 图标轮：底部条删掉文字标签，字段名只挂在 tooltip 上，数值保留。
-	for label_key in [
-		"ui.label.durability", "ui.label.cargo_hold", "ui.label.coal",
-		"ui.label.water", "ui.label.damaged_modules", "ui.label.latest_notice",
-	]:
-		assert_false(_nodes_with_tooltip(bar, context.translate(label_key, "")).is_empty(),
-			"the strip keeps the %s field name as a tooltip" % label_key)
-	var view: Dictionary = context.queries.execute(&"port.view")["data"]
-	var ship: Dictionary = view["ship"]
-	assert_contains(bar_texts, "%.1f / %.1f" % [float(ship["durability"]), float(ship["max_durability"])], "the strip shows durability values")
-	assert_contains(bar_texts, "%.1f / %.1f" % [float(ship["cargo_used"]), float(ship["cargo_capacity"])], "the strip shows the cargo hold values")
-	assert_not_null(_button_by_text(bar, shell._tr("ui.button.overview_detail", "")), "the strip offers the detail overview button")
-	assert_not_null(_named_node(bar, "ChartButton"), "the strip offers the chart button (departure is confirmed in the chart)")
-	var wait_text: String = "12 h"
-	assert_not_null(_button_by_text(bar, wait_text), "the strip offers the 12-hour wait button in short number form")
-
-	# Opening the drawer shows the existing 2D overview panels over the stage.
-	var detail_button := _button_by_text(bar, shell._tr("ui.button.overview_detail", ""))
-	if detail_button != null:
-		detail_button.emit_signal("pressed")
-	assert_true(bool(shell._overview_detail), "the detail drawer opens")
+	assert_true(shell.find_child("PortStatusBar", true, false) == null,
+		"the duplicate bottom status strip is gone")
+	# 2D 总览页（顶部「2D 总览」开关）：详细面板 / 等待 / 航行记录都在这里。
+	shell._overview_stage_mode = false
+	shell._refresh()
+	assert_false(bool(shell._overview_stage_mode), "the 2D overview page opens")
 	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
-		"4.3/U6: the detail drawer no longer shows the old chart")
-	assert_contains(_label_texts(shell._root_box), context.translate("ui.victory.plan_title", ""), "the drawer keeps the victory plan")
-	var host: SNStageHost = shell._port_stage_host
-	assert_not_null(host, "the stage host stays mounted behind the drawer")
-	if host != null:
-		assert_true(host.is_stage_visible(), "the 3D stage is not destroyed while the drawer is open")
-	assert_true(shell._overview_detail_backdrop != null and shell._overview_detail_backdrop.visible, "an opaque backdrop covers the scene behind the drawer")
-	if shell._port_hotspot_layer != null:
-		assert_false(shell._port_hotspot_layer.visible, "edge signs hide while the drawer is open")
-	# The same bottom button toggles back to the main view.
-	var back_button := _button_by_text(shell._port_status_bar, shell._tr("ui.button.overview_main", ""))
-	assert_not_null(back_button, "the strip offers the way back to the scene")
-	if back_button != null:
-		back_button.emit_signal("pressed")
-	assert_false(bool(shell._overview_detail), "the detail drawer closes")
-	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
-		"the main view is the bare stage again (no old chart anywhere)")
-	if shell._overview_detail_backdrop != null:
-		assert_false(shell._overview_detail_backdrop.visible, "the backdrop hides with the drawer")
-
-	# Wait 12h goes through the same command path as the port-wait UI.
+		"4.3/U6: the 2D overview page no longer shows the old chart")
+	var texts := _label_texts(shell._root_box)
+	assert_contains(texts, context.translate("ui.victory.plan_title", ""), "the 2D page keeps the victory plan")
+	assert_contains(texts, "航行记录", "the 2D page keeps the notices log")
 	var time_before := context.state.now()
-	var wait_button := _button_by_text(shell._port_status_bar, wait_text)
-	assert_not_null(wait_button, "the strip still offers the wait button after the rebuild")
+	var wait_button := _button_by_text(shell._root_box, "12 h")
+	assert_not_null(wait_button, "the 2D quick actions keep the 12-hour wait")
 	if wait_button != null:
 		wait_button.emit_signal("pressed")
-	assert_almost_eq(context.state.now(), time_before + 12.0, 0.001, "the bottom wait button advances game time by 12 hours")
-
-	# Leave and re-enter the overview: the strip follows the page.
-	_goto(shell, "tavern")
-	assert_false(bool(shell._port_status_bar.visible), "the status strip is overview-only")
-	if host != null:
-		assert_false(bool(host.visible), "the stage hides outside the overview")
-	_goto(shell, "overview")
-	assert_true(bool(shell._port_status_bar.visible), "returning to the overview restores the status strip")
-	var chart_button := _named_node(shell._port_status_bar, "ChartButton") as Button
-	assert_not_null(chart_button, "the strip offers the chart button again")
+	assert_almost_eq(context.state.now(), time_before + 12.0, 0.001, "the 2D wait button advances game time by 12 hours")
+	var chart_button := _nav_button(shell, "sea_chart") as Button
+	assert_not_null(chart_button, "the chart entry lives in the top navigation now")
 	if chart_button != null:
 		chart_button.emit_signal("pressed")
-	assert_eq(String(shell._active_screen), "sea_chart", "the bottom chart button opens the chart")
+	assert_eq(String(shell._active_screen), "sea_chart", "the nav chart button opens the chart")
 	_unmount(bundle)
 
 
@@ -1413,13 +1398,19 @@ func test_market_page_three_column_icon_trading() -> void:
 	assert_contains(Array(sell_zone.get("accept_kinds")), "cargo_item", "the market sells hold icons")
 	assert_contains(Array(sell_zone.get("accept_kinds")), "warehouse_item", "the market sells warehouse icons")
 
-	# Icon grid: every market row renders one tile with a resolved texture.
 	var market_tiles: Array = []
 	for node in _nodes_with_script(shell._root_box, ITEM_TILE_SCRIPT):
 		var tile_item: Dictionary = node.get("item")
 		if String(tile_item.get("kind", "")) == "market_item":
 			market_tiles.append(node)
-	assert_eq(market_tiles.size(), rows.size(), "every market row gets exactly one icon tile")
+
+	# Icon grid: every buyable market row renders one tile; sell-only rows are hidden
+	# (2026-10-28 feedback) but stay sellable through the panel drop zone.
+	var buyable_rows := 0
+	for row in rows:
+		if bool((row as Dictionary).get("buyable", true)):
+			buyable_rows += 1
+	assert_eq(market_tiles.size(), buyable_rows, "every buyable market row gets exactly one icon tile")
 	for node in market_tiles:
 		assert_not_null(node.call("icon_texture"), "market tiles paint a resolved icon texture (content icon or fallback)")
 

@@ -1,6 +1,6 @@
 # `framework/ui/screens/port/overview_screen.gd`
 
-> 作用：港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。
+> 作用：港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图；2026-10-28 底部状态条与抽屉移除后，「详细总览」就是 2D 总览页本身。
 
 - 类型：GDScript 源文件
 
@@ -12,8 +12,7 @@
 | `navigation_requested (signal)` | L20 |
 | `command_requested (signal)` | L21 |
 | `stage_toggle_requested (signal)` | L24 |
-| `detail_toggle_requested (signal)` | L27 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L32 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L29 |
 
 Port overview presentation. The shell supplies all resolved application data.
 

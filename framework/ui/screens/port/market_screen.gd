@@ -35,11 +35,13 @@ extends VBoxContainer
 ##   `ui.market.cargo_summary`）。
 ## - 行情格角标是 `remaining` 语义（始终可见，纯数字 = `stock - pending`）；meta
 ##   只显示单价 + 趋势，玩家已选数量只在光标幽灵上显示，两处不重复。
-## - 商品副标题只表达 `buyable=false` 的「仅收购」；分类 / 材料标记不再进入格子
-##   （`SNItemTile` 在 subtitle 为空时自动隐藏该行）。
+## - 2026-10-28 反馈：行情网格只渲染 `buyable=true` 的品种（本港买得到的货）；
+##   `buyable=false`（仅收购）品种不再占格子。卖出不受影响：整块市场面板仍是
+##   `cargo_item` / `warehouse_item` 的落点，`trade.sell` 不需要行情行存在。
+## - 商品格不再有分类 / 材料 / 「仅收购」副标题（`SNItemTile` 在 subtitle 为空时
+##   自动隐藏该行）。
 ## - 「点击拿起 · 点落点放下 · 右键取消 · 可拖拽」长提示挂在 `MarketList` 的
 ##   `tooltip_text` 上，区块头只保留标题。
-## - 图标行 `stock<=0` 或 `buyable=false` 时不可拖拽（仍显示，标注「仅收购」）。
 ## - 待交易上限只按 `stock` 设置，不预扣金币与剩余载重：数量可以点到库存上限，
 ##   金币 / 载重不足由 `trade.buy` 失败并在状态栏报错（页面刷新后归零）。
 ## - 拖入市场面板的载荷 kind 只认 `cargo_item` / `warehouse_item`，命令固定为
@@ -324,7 +326,16 @@ func _market_section(view_model: Dictionary) -> VBoxContainer:
 	section.tooltip_text = _loc("ui.hint.market_drag", "")
 	var title := _label(_loc("ui.market.grid_section", "市场行情"), 15, SNSkin.color("brass.highlight"))
 	section.add_child(title)
-	var rows: Array = view_model.get("market", [])
+	# 2026-10-28 反馈：市场只展示「本港可买入」的货；仅收购（buyable=false）的
+	# 品种不再占格子，但玩家仍可把船舱 / 仓库货物拖到整块市场面板卖出（卖出
+	# 走 `trade.sell`，不依赖行情行）。
+	var rows: Array = []
+	for raw_row in view_model.get("market", []):
+		if not (raw_row is Dictionary):
+			continue
+		if not bool((raw_row as Dictionary).get("buyable", true)):
+			continue
+		rows.append(raw_row)
 	if rows.is_empty():
 		section.add_child(_paragraph(_loc("ui.market.no_goods", "本港今日没有可交易的商品。"), 12, SNSkin.color("text.muted")))
 		return section
@@ -336,8 +347,6 @@ func _market_section(view_model: Dictionary) -> VBoxContainer:
 	grid.add_theme_constant_override("v_separation", GRID_SEPARATION)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for row in rows:
-		if not (row is Dictionary):
-			continue
 		var item_id := String((row as Dictionary).get("item_id", ""))
 		grid.add_child(_market_tile(row as Dictionary, String(trends.get(item_id, ""))))
 	section.add_child(grid)
@@ -350,7 +359,8 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 	var stock := int(row.get("stock", 0))
 	var price := int(row.get("price", 0))
 	var title := _loc(String(row.get("name_key", "")), item_id)
-	var subtitle := _item_subtitle(row, buyable)
+	# 行情格不再显示分类 / 材料 / 仅收购副标题：仅可买品种会进入本网格（见
+	# `_market_section`），卖出仍走整块面板落点。
 	# 角标显示「还剩多少个」（remaining 模式），所以 meta 只保留单价 + 趋势，
 	# 避免和角标重复；玩家已选数量显示在光标幽灵上。
 	var meta := _loc("ui.market.tile_meta", "%d 金") % price
@@ -358,7 +368,7 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 	var tile: Variant = TILE_SCRIPT.new()
 	tile.configure({
 		"title": title,
-		"subtitle": subtitle,
+		"subtitle": "",
 		"meta": meta,
 		"icon": row.get("icon", null),
 		"max_pending": stock if buyable else 0,
@@ -385,14 +395,6 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 		_on_tile_pending_changed(tile, pending)
 	)
 	return tile as Control
-
-
-## 商品格副标题只表达不可买的「仅收购」：分类 / 材料标记不再进格子（文字精简），
-## 空字符串由 `SNItemTile` 自动隐藏该行。
-func _item_subtitle(_row: Dictionary, buyable: bool) -> String:
-	if buyable:
-		return ""
-	return _loc("ui.label.sell_only", "仅收购")
 
 
 func _trend_arrow(trend: String) -> String:

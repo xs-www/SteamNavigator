@@ -305,24 +305,27 @@ func _run() -> void:
 		var facility_count := 0
 		if port_stage is PortStage:
 			facility_count = int((port_stage as PortStage).facility_count())
-		_expect(sign_buttons == facility_count + 1, "总览舞台生成了设施招牌 + 出航招牌（%d 个）" % sign_buttons)
+		# 4.5.3 起 supply 并入 market，PortStage 仍计 supply 设施但没有独立招牌，
+		# 因此招牌数 = 设施数（有 supply）或设施数 + 1（无 supply，海图招牌常驻）。
+		_expect(
+			sign_buttons == facility_count or sign_buttons == facility_count + 1,
+			"总览舞台生成了设施招牌 + 出航招牌（%d 个 / 设施 %d）" % [sign_buttons, facility_count]
+		)
 		_expect(shell._top_chrome != null, "紧凑顶部 HUD 已挂载")
 		if shell._top_chrome != null:
 			var chrome_height := (shell._top_chrome as Control).get_combined_minimum_size().y
 			_expect(chrome_height <= 130.0, "顶部 HUD 高度 %.1f px（预算 ≤130）" % chrome_height)
-		_expect(shell._port_status_bar != null and shell._port_status_bar.visible, "底部船舶/港口状态条可见")
+		_expect(shell.find_child("PortStatusBar", true, false) == null,
+			"底部状态条已移除（2026-10-28 UI 轮）")
 		await _capture(_path("overview_port_stage.png"))
 		if _overview_detail:
-			var detail_button := _button_with_text(shell._port_status_bar, String(shell._tr("ui.button.overview_detail", "")))
-			_expect(detail_button != null, "底部状态条上有「详细总览」按钮")
-			if detail_button != null:
-				detail_button.emit_signal("pressed")
-			else:
-				shell._overview_detail = true
-				shell._refresh()
-			await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
-			_expect(bool(shell._overview_detail), "详细总览抽屉已打开")
-			_expect(_node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT) != null, "详细抽屉挂载在总览页上")
+			# 2026-10-28：底部状态条与「详细总览」抽屉移除；详细总览就是 2D 总览页
+			# （顶部「2D 总览」开关切过去），这里直接切换后截图。
+			if bool(shell._overview_stage_mode):
+				shell._on_overview_stage_toggle()
+				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+			_expect(not bool(shell._overview_stage_mode), "详细总览切到 2D 总览页")
+			_expect(_node_with_script(shell._root_box, OVERVIEW_SCREEN_SCRIPT) != null, "2D 总览页已挂载")
 			await _capture(_path("overview_detail.png"))
 
 	if _station_shots:
@@ -853,15 +856,16 @@ func _capture_skin_port_pages(shell: Control, context: AppContext) -> void:
 				_expect(_screen_mounted(shell, "overview"), "总览页已挂载")
 				await _capture_skin("overview")
 			if _wants("overview_detail"):
-				shell._overview_detail = true
-				shell._refresh()
-				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
-				_expect(bool(shell._overview_detail), "详细总览抽屉已打开")
-				_expect(_screen_mounted(shell, "overview"), "详细抽屉挂在总览页上")
+				# 2026-10-28：抽屉移除后详细总览 = 2D 总览页；切过去截图再切回舞台。
+				if bool(shell._overview_stage_mode):
+					shell._on_overview_stage_toggle()
+					await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+				_expect(not bool(shell._overview_stage_mode), "详细总览切到 2D 总览页")
+				_expect(_screen_mounted(shell, "overview"), "2D 总览页已挂载")
 				await _capture_skin("overview_detail")
-				shell._overview_detail = false
-				shell._refresh()
-				await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
+				if stage_available:
+					shell._on_overview_stage_toggle()
+					await _settle(LAYOUT_FRAMES, LAYOUT_SETTLE_SECONDS)
 		if _wants("overview_2d"):
 			if bool(shell._overview_stage_mode):
 				shell._on_overview_stage_toggle()
@@ -1352,7 +1356,6 @@ func _capture_skin_menus(shell: Control, context: AppContext) -> void:
 	context.reset_state()
 	shell._victory_dismissed = false
 	shell._settlement_summary = {}
-	shell._overview_detail = false
 	shell._menu_screen = "main"
 	shell._active_screen = "overview"
 	shell._refresh()

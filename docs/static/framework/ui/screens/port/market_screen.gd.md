@@ -9,17 +9,17 @@
 | 符号 | 位置 |
 | --- | --- |
 | `MarketScreen` | L1 |
-| `command_requested (signal)` | L67 |
-| `carry_changed (signal)` | L69 |
-| `SUPPLY_CARD_SCENE` | L71 |
-| `TILE_SCRIPT` | L72 |
-| `ZONE_SCRIPT` | L73 |
-| `MARKET_GRID_COLUMNS` | L77 |
-| `GRID_SEPARATION` | L78 |
-| `bind(view_model: Dictionary, translate: Callable) -> void` | L86 |
-| `handle_sell_drop(data: Dictionary) -> void` | L115 |
-| `carrying_tile() -> Control` | L136 |
-| `cancel_carry() -> void` | L159 |
+| `command_requested (signal)` | L69 |
+| `carry_changed (signal)` | L71 |
+| `SUPPLY_CARD_SCENE` | L73 |
+| `TILE_SCRIPT` | L74 |
+| `ZONE_SCRIPT` | L75 |
+| `MARKET_GRID_COLUMNS` | L79 |
+| `GRID_SEPARATION` | L80 |
+| `bind(view_model: Dictionary, translate: Callable) -> void` | L88 |
+| `handle_sell_drop(data: Dictionary) -> void` | L117 |
+| `carrying_tile() -> Control` | L138 |
+| `cancel_carry() -> void` | L161 |
 
 Direct-manipulation port market page (Bounty Train style).
 
@@ -53,11 +53,13 @@ amount: the selected amount is already painted on the cursor ghost
   `ui.market.cargo_summary`）。
 - 行情格角标是 `remaining` 语义（始终可见，纯数字 = `stock - pending`）；meta
   只显示单价 + 趋势，玩家已选数量只在光标幽灵上显示，两处不重复。
-- 商品副标题只表达 `buyable=false` 的「仅收购」；分类 / 材料标记不再进入格子
-  （`SNItemTile` 在 subtitle 为空时自动隐藏该行）。
+- 2026-10-28 反馈：行情网格只渲染 `buyable=true` 的品种（本港买得到的货）；
+  `buyable=false`（仅收购）品种不再占格子。卖出不受影响：整块市场面板仍是
+  `cargo_item` / `warehouse_item` 的落点，`trade.sell` 不需要行情行存在。
+- 商品格不再有分类 / 材料 / 「仅收购」副标题（`SNItemTile` 在 subtitle 为空时
+  自动隐藏该行）。
 - 「点击拿起 · 点落点放下 · 右键取消 · 可拖拽」长提示挂在 `MarketList` 的
   `tooltip_text` 上，区块头只保留标题。
-- 图标行 `stock<=0` 或 `buyable=false` 时不可拖拽（仍显示，标注「仅收购」）。
 - 待交易上限只按 `stock` 设置，不预扣金币与剩余载重：数量可以点到库存上限，
   金币 / 载重不足由 `trade.buy` 失败并在状态栏报错（页面刷新后归零）。
 - 拖入市场面板的载荷 kind 只认 `cargo_item` / `warehouse_item`，命令固定为

@@ -146,7 +146,7 @@ SNSkin.icon_rect(id, 24.0)        # 直接可用的 TextureRect
 
 30 个业务图标（`icons/`）+ 4 个派生复选框图标（`check_*`，由 `checkbox_empty` 底 + `action_confirm` 勾派生，theme 直接引用文件，不进 `skin.json` 业务图标表）。
 
-已接线位置：顶部 HUD 资源 chip（图标 + 数值，字段名只进 tooltip）、导航页（**纯图标 + tooltip + `nav_screen` meta**）+ 海图、侧牌设施、船厂 7 类分类与三个操作页签、菜单/结算/委托/补给/遗迹等行动按钮、市场账册摘要 / 补给卡 / 委托卡字段 / 酒馆行动按钮（2026-10-28 图标轮，见 §6.1）。
+已接线位置：顶部 HUD 资源 chip（图标 + 数值，字段名只进 tooltip）、导航页（**图标 + 本地化页名 + `nav_screen` meta**）+ 海图、侧牌设施、船厂 7 类分类与三个操作页签、菜单/结算/委托/补给/遗迹等行动按钮、市场账册摘要 / 补给卡 / 委托卡字段 / 酒馆行动按钮（2026-10-28 图标轮，见 §6.1）。
 
 内容侧调用：同一套 30 枚图标也复制进 Core 包（`dev_mods/core/assets/icons/ui/*.png`）并登记为 `icon.ui.<id>` 资源键，内容 JSON / 事件 / 后续系统可直接写 `information.texture: "icon.ui.nav_market"` 或 `AssetService.find_key("icon.ui.nav_market")`；Core 副本与运行图标由 `test_mod_loading::test_core_registers_the_ui_icon_set` 逐字节守同步（见 [ASSET_MAP.md](ASSET_MAP.md)「UI 图标资源键」）。
 
@@ -162,9 +162,15 @@ SNSkin.icon_rect(id, 24.0)        # 直接可用的 TextureRect
 - **语义映射**：剩余载重 `resource_cargo`、剩余货舱 `shipyard_cargo`（两个货箱图标靠
   tooltip 区分）；煤 / 水 / 耐久 / 金币 / 声望 / 时间 / 受损分别用 `resource_coal` /
   `resource_water` / `resource_durability` / `resource_coins` / `status_reputation` /
-  `status_time` / `status_warning`；底部通告用 `nav_intelligence`。
-- **导航纯图标**：每个入口 44×36、`text=""`、`tooltip_text = ui.nav.<screen>`、
-  `set_meta("nav_screen", screen)`；剧情引导与测试按 meta 解析。海图 toggle / 底部 `ChartButton` 同。
+  `status_time` / `status_warning`。
+- **导航「图标 + 文字」**：每个入口 64×36、`icon` + `text = ui.nav.<screen>`、
+  `set_meta("nav_screen", screen)`；剧情引导与测试按 meta 解析。海图 toggle 同。
+- **底部状态条 / 详细总览抽屉（第二轮反馈后移除）**：底部条与顶部 chrome 的 chip 完全
+  重复，已整条删除；等待 6/12/24 h 与航行记录留在 2D 总览页，「详细总览」= 顶部
+  `2D 总览` 开关切到的 2D 页面。页脚在页面态常驻、3D 总览主视图隐藏。
+- **市场只显示可买货物**：行情网格只渲染 `buyable=true` 的行（`buyable=false` 的
+  仅收购品种不再占格子）；卖出不受影响——整块市场面板仍是 `cargo_item` /
+  `warehouse_item` 的落点，`trade.sell` 不依赖行情行存在。
 - **商品图标（有选择地换）**：煤、水、锅炉钢板、委托货箱 4 个商品的 `information.texture`
   改走 `icon.ui.resource_coal` / `resource_water` / `shipyard_hull` / `resource_cargo`；
   其余 8 个（香料 / 玻璃器皿 / 纺织品 / 铁矿石 / 黄铜 / 精密齿轮 / 密封胶 / 木材）保留
@@ -178,7 +184,7 @@ SNSkin.icon_rect(id, 24.0)        # 直接可用的 TextureRect
 - 船厂：utility → `shipyard_navigation`、weapons → `nav_shipyard`、misc → `nav_shipyard`。
 - 行动：购买/补满 → `action_confirm` 或 `resource_coins`、修复 → `action_add`、等待 → `status_time`；缺 repair/buy/sell/wait 专用图标。
 - 状态：风险等级用 `status_warning` 近似；`status_weather/status_storm` 目前没有消费点（项目尚无天气系统）。
-- 布旗 `flag_*`（6 个）已生成但当前 44×36 图标导航与 172×42 侧牌都放不下，保留给后续布局改版（出航确认/主导航）。
+- 布旗 `flag_*`（6 个）已生成但当前 64×36 图标+文字导航与 172×42 侧牌都放不下，保留给后续布局改版（出航确认/主导航）。
 - 内容专属图标（商品、设施、港口）仍走内容模组 `manifest.assets` 的 `icon.*` 机制，不在全局皮肤里；其中 8 个商品仍是早期 SVG 占位图，后续可用新一批商品图标替换（保持 `icon.item.*` 同名同尺寸）。
 
 ## 7. 验证门禁

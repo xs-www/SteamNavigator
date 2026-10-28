@@ -37,7 +37,7 @@ func test_tutorial_shell_mounts_card_and_locks_features() -> void:
 	var nav := _nav_buttons(shell)
 	assert_eq(nav.size(), 1, "the opening stage only exposes the overview nav button")
 	assert_true(_needs_supply_locked(shell), "supply is not reachable before the briefing")
-	var chart_button := shell.find_child("ChartButton", true, false)
+	var chart_button := _chart_entry(shell)
 	assert_true(chart_button == null, "the chart entry stays hidden in the opening stage")
 	_unmount(bundle)
 
@@ -126,7 +126,7 @@ func test_skip_confirmation_unlocks_everything_and_removes_the_card() -> void:
 	assert_true(bool(shell._story_vm.get("skipped", false)), "the tutorial records that it was skipped")
 	assert_true(shell._story_card == null, "no card remains after skipping")
 	assert_eq(_nav_buttons(shell).size(), _unlocked_nav_count(shell), "every published nav screen is unlocked")
-	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
+	assert_not_null(_chart_entry(shell), "the chart entry is available")
 	_unmount(bundle)
 
 
@@ -135,7 +135,7 @@ func test_non_tutorial_shell_has_no_card_and_no_gating() -> void:
 	var shell: Control = bundle["shell"]
 	assert_true(shell._story_card == null, "a non-tutorial run has no story card")
 	assert_eq(_nav_buttons(shell).size(), _unlocked_nav_count(shell), "a non-tutorial run keeps every published nav screen")
-	assert_not_null(shell.find_child("ChartButton", true, false), "the chart entry is available")
+	assert_not_null(_chart_entry(shell), "the chart entry is available")
 	# 4.6 Phase A / C3：没有剧情时 HUD 显示聚合任务追踪（C3 起 auto_start 指引任务
 	# 优先于主线），而不是剧情目标条。
 	var tracker := shell.find_child("TaskTracker", true, false)
@@ -611,13 +611,18 @@ func _nav_button(shell: Control, screen: String) -> Button:
 	for child in nav.get_children():
 		if not (child is Button):
 			continue
-		# 2026-10-28 图标轮：导航按钮改纯图标，入口身份走 `nav_screen` meta；
-		# 旧皮肤/旧路径可能仍带文字，保留按文字回退以兼容。
+		# 2026-10-28：导航是「图标 + 文字」，入口身份仍走 `nav_screen` meta；
+		# 保留按本地化文字回退，兼容旧布局。
 		if String(child.get_meta("nav_screen", "")) == screen:
 			return child as Button
 		if String((child as Button).text) == wanted:
 			return child as Button
 	return null
+
+
+## 2026-10-28：底部状态条的 `ChartButton` 移除，海图入口就是导航里的海图 toggle。
+func _chart_entry(shell: Control) -> Control:
+	return shell.call("_story_nav_button", "sea_chart") as Control
 
 
 func _rect_close(a: Rect2, b: Rect2) -> bool:

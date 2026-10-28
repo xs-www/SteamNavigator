@@ -1971,7 +1971,7 @@ export const FILE_DOCS = {
   },
 
   "framework/tests/cases/test_ui_shell.gd": {
-    role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 资源图标 + 主题化两侧招牌 + 底部状态条 + 详细总览抽屉 + 2D 回退）、连续港区三站位的页面接线（overview/market/supply 共用同一舞台实例、镜头与船移动、右侧泊位面板），以及 960 窄布局 helper。",
+    role: "迭代 2 主界面接线测试：把真实外壳场景挂进场景树，断言六条反馈在界面构建路径上真的生效，并守护通报文案的本地化；另覆盖 Bounty Train 式主界面（默认 3D 舞台 + 紧凑顶部 HUD + 资源图标 + 主题化两侧招牌 + 2D 回退；2026-10-28 UI 轮后底部状态条 / 详细总览抽屉已移除）、连续港区三站位的页面接线（overview/market/supply 共用同一舞台实例、镜头与船移动、右侧泊位面板），以及 960 窄布局 helper。",
     contracts: [
       "首帧运行器让 `_ready` 正常投递，因此控件树（含 SNSectionHeader 等自行构建子节点的组件）与游戏内一致。",
       "覆盖信息条（当前港口 + 剩余载重/剩余舱容，反馈 5）、通关清单与两种提示分支（反馈 6）；期望值独立复算（RegistryHub 翻译 + ShipOps 重量/舱容 + printf），不使用被测 helper 自证。通关清单只在总览页渲染：船厂页断言不再出现 `ui.victory.plan_title`，改为出现「组件」分类入口。",
@@ -1979,7 +1979,7 @@ export const FILE_DOCS = {
       "覆盖船厂下单按钮 → CraftOps 订单 → 在港等待按钮 → 时间推进与成品入下单港仓库（反馈 4，经由真实按钮 pressed 信号）；打造入口在改装态模块分类内，下单后重建的页面必须保持改装态与分类，24 小时等待按钮在「杂项」页签。",
       "场景接线断言覆盖独立总览、市场、委托、船厂、补给、情报、海图页面及四个菜单页面；船厂流程从 ShipyardScreen 的真实按钮驱动。",
       "流程场景接线覆盖港口记忆、抵达结算、航行中、航行事件与通关总结，逐一调用 Shell 构建入口并按脚本类型断言实例。",
-      "依赖详细总览面板的旧用例（信息条、通关清单、航行记录）先在 `_overview_detail = true` 下 `_refresh()`，因为默认主视图是裸 3D 舞台；其余断言不改。",
+      "依赖 2D 详细面板的旧用例（信息条、通关清单、航行记录）先把 `_overview_stage_mode = false` 再 `_refresh()`，因为默认主视图是裸 3D 舞台、详细总览抽屉已随底部状态条在 2026-10-28 UI 轮移除；其余断言不改。",
       "覆盖设置/总览/市场/船厂/港口记忆密集字段禁用自动换行、市场与快照单元格最小宽度，以及情报矩阵固定元数据列、可扩展港口列、最小列宽和深色单元格背景。",
       "覆盖补给页损失带：买煤后水的 meter.loss_value/cap_loss 与 baseline 跨度（反馈 2）、情报页 SNIntelTable 与未知港口掩码（反馈 3，列数对照 MapOps.ports）。",
       "覆盖「航行记录」：真实下单 + 等待后在 zh 与 en 两种 locale 下逐行断言通报无 `%s/%d` 残留、无裸键，并与**逐语言写死的期望句子**相等（模板槽位互换照样能渲染，只有字面期望能抓住「某一种语言的文案说反了」；en 只写错顺序时该用例会失败）。",
@@ -1987,14 +1987,15 @@ export const FILE_DOCS = {
       "组件按路径 preload，不依赖编辑器全局类缓存。",
       "`test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 6 个导航按钮 + 海图切换、诊断/刷新按钮全部保留（4.3.4/U7 删除出航导航页）。",
       "HUD 图标（2026-10-28 图标轮）：chip 只由皮肤表 `HUD_SKIN_ICONS` 驱动（逻辑键 → `SNSkin.icon(id)`，字段名只挂在 chip 的 `tooltip_text` 上，不再有 9 px 文字标签）；chrome 里每个 `TextureRect` 都有已加载纹理，早期内容 `icon.money` / `icon.coal` / `icon.water` 已从 Core manifest 退役。",
-      "导航（2026-10-28 图标轮）：`Nav` 下每个入口是纯图标 Button（`text == \"\"`、`tooltip_text == ui.nav.<screen>`、`set_meta(\"nav_screen\", screen)`）；隐藏系统按 meta 断言不存在，剧情引导 `_story_nav_button()` 也按 meta 解析。",
+      "导航（2026-10-28）：`Nav` 下每个入口是「图标 + 本地化页名」Button（`text == ui.nav.<screen>`、`icon != null`、`set_meta(\"nav_screen\", screen)`）；隐藏系统按 meta 断言不存在，剧情引导 `_story_nav_button()` 也按 meta 解析。",
       "窗口缩放说明：`canvas_items + expand` 把 960×540 窗口映射为缩放后的 1600×900 逻辑画布，因此 chrome 保留全部 chip（含剩余载重/货舱），不设 compact 分支；960×540 验收截图是这条布局的证据。",
       "招牌组件：present 设施的 Button 必须 `has_method(\"configure\")`（SNHarborSign）、`custom_minimum_size == 172×42`，`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。",
       "同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_sea_chart` 固定在右下，4.3.4 起替代出航招牌）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market。",
       "连续港区页面接线：切到 market 后宿主的 `PortStage` 实例不变（`host.current_stage()` 与切页前同一节点）、舞台保持可见、`_stage_station==market`/`_stage_framing==panel`、`PortStage.current_station()==market`；`_root_box` 下出现 `DockPanelRow` 与 ≥640 px 的 `DockPanel`，页面脚本仍恰好一个实例。headless 不推进帧，用例直接 `port_stage.advance_station()` 断言镜头落到 `station_camera_pose(market, panel)`、船落到 market 泊位。",
       "切到 supply 后仍是同一舞台实例，船从 market 泊位沿岸向东航行到 supply 泊位（两泊位相距 >40 m）；切到 contracts 等非舞台页时宿主隐藏；回到 overview 时舞台恢复并回到 harbor 站位。",
       "`test_overview_stage_falls_back_to_the_usable_2d_overview`：调 `_on_port_stage_fallback` 后 `_port_stage_load_failed` 记忆、stage 模式关闭、2D 地图挂载、显示 `ui.error.port_stage_unavailable`、导航仍可用。",
-      "`test_overview_status_strip_and_detail_drawer`：底部状态条可见且最小高度 ≤72，含耐久/货舱/受损/最新通告与「详细总览/出航/等待 12 小时」；打开抽屉后地图与 `ui.victory.plan_title` 出现、舞台未销毁、backdrop 显示、招牌隐藏；返回主界面后抽屉关闭；点等待按钮让 `GameState.now()` +12 h；切到 intel 时状态条隐藏、返回总览恢复、点出航进入 voyage 页。"
+      "`test_overview_has_no_duplicate_status_strip_and_2d_page_keeps_actions`（2026-10-28）：底部状态条不再挂载；切到 2D 总览页后 `ui.victory.plan_title` 与「航行记录」出现，`12 h` 等待按钮让 `GameState.now()` +12 h，顶部导航的海图 toggle 打开海图。",
+      "`test_market_hides_sell_only_goods_but_still_allows_selling`（2026-10-28）：只买得到的货才有行情格，仅收购品种无 tile；同一品种加入船舱后 `trade.sell` 仍成功。"
     ]
   },
 
@@ -2197,13 +2198,13 @@ export const FILE_DOCS = {
   },
 
   "tools/ui_snapshot.gd": {
-    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌 + 底部状态条）、详细总览抽屉，以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。",
+    role: "真实渲染 UI 截图验收：以与框架测试一致的 bootstrap 启动 Core，挂载 main.tscn，截取船厂正常态/改装态/分类/操作坞页签/受损状态，并可选截取主界面（全窗 3D 港口舞台 + 紧凑 HUD + 两侧招牌）、2D 总览页（原详细总览抽屉在 2026-10-28 UI 轮移除），以及市场/补给页的泊位侧栏（舞台 + 右侧面板）及其 960×540 版本。",
     contracts: [
       "必须窗口模式运行：`--headless` 时视口纹理为空，脚本直接判失败。",
       "参数走 `--` 之后：`--seed` / `--out-dir` / `--window` / `--category` / `--tabs` / `--damage` / `--skip-refit` / `--overview-stage` / `--overview-detail` / `--station-shots`。",
       "`--damage=slot[:index]:ratio` 在 run.start 后用 `ShipModules.damage()` 损坏模块实例，额外截取 `shipyard_normal_damaged` / `shipyard_refit_damaged` / `supply_damaged`；只影响截图进程，不进入游戏逻辑。",
-      "`--tabs=buy,craft`：进入改装态后按操作坞页签各截一张 `shipyard_refit_<tab>.png`（购买 / 打造与装配分离），再切回装配页继续分类截图。`--overview-stage`：切到总览（默认即 3D 舞台，若处于 2D 回退才调 `_on_overview_stage_toggle()`）→ 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、招牌数 = 设施数 + 1、`_top_chrome` 高度 ≤130、底部状态条可见 → 保存 `overview_port_stage.png`。",
-      "`--overview-detail`：在 `--overview-stage` 基础上点底部「详细总览」按钮（兜底直接置 `_overview_detail=true` 并 refresh），断言抽屉打开、总览页仍挂载 → 保存 `overview_detail.png`。",
+      "`--tabs=buy,craft`：进入改装态后按操作坞页签各截一张 `shipyard_refit_<tab>.png`（购买 / 打造与装配分离），再切回装配页继续分类截图。`--overview-stage`：切到总览（默认即 3D 舞台，若处于 2D 回退才调 `_on_overview_stage_toggle()`）→ 断言 `_overview_stage_mode`、`PortStage` 宿主可见、设施数 > 0、`has_ship()`、招牌数 = 设施数（supply 并入 market 后无独立招牌）或设施数 + 1、`_top_chrome` 高度 ≤130、不存在 `PortStatusBar` → 保存 `overview_port_stage.png`。",
+      "`--overview-detail`：在 `--overview-stage` 基础上把总览切到 2D 页面（顶部「2D 总览」同一入口；抽屉已在 2026-10-28 UI 轮移除），断言 2D 总览页挂载 → 保存 `overview_detail.png`。",
       "`--station-shots`：分别切到 market / supply 页，轮询 `_port_stage_host` 的 `has_stage()+is_stage_visible()`、`PortStage.current_station()==目标` 且 `is_station_transitioning()==false` 后截图，保存 `market_station.png` / `supply_station.png`，并在同一进程内把窗口缩到 960×540 补拍 `market_station_960.png`，用于验证缩放下舞台与侧栏都不裁切。",
       "进入改装态优先点页面真实「改装」按钮，其次调 `_on_toggle_refit()`，最后按按钮文案兜底，页面小改版后工具仍可用；改装页画在 3D 港区 `shipyard` 站位上，截图前用 `_wait_port_stage_settled()` 轮询 `_port_stage_host` 的 `is_stage_visible()` / `PortStage.is_station_transitioning()`，等镜头平移与玩家船靠泊结束再拍。",
       "纯色画面判定为失败；120 s watchdog 防止协程中断挂住窗口；成功退出码 0，失败 1。",
@@ -2441,7 +2442,7 @@ export const MODULES = {
       "页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。",
       "2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。",
       "UI 材质与图标只引用外部贴图：Theme 由 skin.json 生成，程序化样式走 SNSkin；业务脚本不得新建 StyleBoxFlat、不得硬编码 skin 路径或十六进制业务色。",
-      "换肤必须保持布局契约：TopChrome ≤130px、底部状态条 60px、侧牌 172×42、九宫格安全区；<38px 高按钮用 SNCompactButton/SNPlateButton。"
+      "换肤必须保持布局契约：TopChrome ≤130px、导航 64×36（图标 + 文字）、侧牌 172×42、九宫格安全区；<38px 高按钮用 SNCompactButton/SNPlateButton。底部状态条在 2026-10-28 UI 轮移除，勿再引入。"
     ]
   },
   "framework/tests": {

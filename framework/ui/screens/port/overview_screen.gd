@@ -1,7 +1,7 @@
 class_name OverviewScreen
 extends VBoxContainer
 ## @static-doc
-## 作用：港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。
+## 作用：港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图；2026-10-28 底部状态条与抽屉移除后，「详细总览」就是 2D 总览页本身。
 ##
 ## Port overview presentation. The shell supplies all resolved application data.
 ##
@@ -22,9 +22,6 @@ signal command_requested(command: StringName, params: Dictionary)
 ## Requested when the player switches between the 2D overview and the 3D port
 ## stage. The Shell owns the stage host; the page only expresses intent.
 signal stage_toggle_requested
-## Requested when the player opens/closes the detailed overview drawer that is
-## shown over the 3D stage.
-signal detail_toggle_requested
 
 var _tr: Callable
 
@@ -34,15 +31,9 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	_clear()
 	var stage_available := bool(vm.get("stage_available", false))
 	var stage_mode := bool(vm.get("stage_mode", false)) and stage_available
-	var detail := bool(vm.get("overview_detail", false)) and stage_available
-	# The detail drawer is the existing 2D overview laid over the stage: an
-	# opaque backdrop in the Shell covers the 3D scene while these panels scroll.
-	if detail:
-		add_child(_detail_header())
-		_build_detail(vm)
-		return
 	# 3D stage mode keeps the page empty so the Shell's full-window stage shows
-	# through; the compact chrome, edge signs and status strip stay outside it.
+	# through; the compact chrome and edge signs stay outside it. 2026-10-28：底部
+	# 状态条与「详细总览」抽屉移除后，2D 详细布局只作为页面态（`2D 总览`）出现。
 	if stage_mode:
 		var spacer := Control.new()
 		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -65,21 +56,6 @@ func _build_detail(vm: Dictionary) -> void:
 	var right := VBoxContainer.new(); right.size_flags_horizontal = Control.SIZE_EXPAND_FILL; right.size_flags_stretch_ratio = 1.0; right.custom_minimum_size = Vector2(400, 0); columns.add_child(right)
 	left.add_child(_port_panel(vm)); left.add_child(_objective_panel(vm)); left.add_child(_notices_panel(vm))
 	right.add_child(_ship_summary_panel(vm)); right.add_child(_quick_actions_panel()); right.add_child(_finance_panel(vm))
-
-
-## Header of the detail drawer: close control back to the live scene.
-func _detail_header() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var close_button := Button.new()
-	close_button.theme_type_variation = &"SNGhostButton"
-	close_button.text = _loc("ui.button.overview_main", "返回主界面")
-	close_button.pressed.connect(func(): detail_toggle_requested.emit())
-	row.add_child(close_button)
-	var hint := _label(_loc("ui.hint.overview_detail", ""), 12, SNSkin.color("text.muted"))
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(hint)
-	return row
 
 
 ## One row above the content: opens/closes the Shell's 3D port stage.

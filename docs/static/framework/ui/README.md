@@ -82,7 +82,7 @@
 | `screens/port/contracts_screen.tscn` | 框架源文件：contracts_screen.tscn | 本页 |
 | `screens/port/market_screen.gd` | 港口市场页面（图标直接交易）：单行图标账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。 | [查看](./screens/port/market_screen.gd.md) |
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
-| `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。 | [查看](./screens/port/overview_screen.gd.md) |
+| `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图；2026-10-28 底部状态条与抽屉移除后，「详细总览」就是 2D 总览页本身。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |
 | `screens/port/ruins_screen.gd` | Phase D5 遗迹远征页：渲染 `expedition.view` 与可用遗迹原型，展示房间进度、 | [查看](./screens/port/ruins_screen.gd.md) |
 | `screens/port/ruins_screen.tscn` | 框架源文件：ruins_screen.tscn | 本页 |
@@ -92,7 +92,7 @@
 | `screens/port/supply_screen.tscn` | 框架源文件：supply_screen.tscn | 本页 |
 | `screens/port/tavern_screen.gd` | 酒馆页（阶段 4.5.4，替换原情报站页面）——上半部分保留物价情报矩阵与 | [查看](./screens/port/tavern_screen.gd.md) |
 | `screens/port/tavern_screen.tscn` | 框架源文件：tavern_screen.tscn | 本页 |
-| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并挂载已场景化的菜单/港口/流程页。主界面是「全窗 3D 港口舞台 + 紧凑顶部 chrome + 两侧设施招牌 + 底部状态条 + 详细总览抽屉」的分层外壳；Shell 只保留上下文解析、ViewModel 组合、会话导航状态与命令派发。 | [查看](./shell/main.gd.md) |
+| `shell/main.gd` | 可玩 UI 组合根：解析上下文、查询 ViewModel、执行命令、处理导航/转场，并挂载已场景化的菜单/港口/流程页。主界面是「全窗 3D 港口舞台 + 紧凑顶部 chrome（图标 + 文字导航）+ 两侧设施招牌」的分层外壳；底部状态条与详细总览抽屉已在 2026-10-28 UI 轮移除（功能由顶部 chrome / 2D 总览页承担）。Shell 只保留上下文解析、ViewModel 组合、会话导航状态与命令派发。 | [查看](./shell/main.gd.md) |
 | `shell/main.tscn` | 框架源文件：main.tscn | 本页 |
 | `showcase/ui_kit_showcase.gd` | 皮肤验收展示页：在一个可滚动页面里集中展示纹理化 Theme 与 SNSkin 素材的全部可复用控件状态——按钮矩阵、面板材质、徽标、表单、资源条、进度条、九宫格拉伸对照、图标网格、parts 装饰、旗帜与 sparkline；供 1440×900 / 960×540 截图验收与视觉冒烟。 | [查看](./showcase/ui_kit_showcase.gd.md) |
 | `showcase/ui_kit_showcase.tscn` | 框架源文件：ui_kit_showcase.tscn | 本页 |
@@ -115,4 +115,4 @@
 - 页面场景不得直接持有 AppContext；查询、命令、跨页导航、全局提示与音效属于 Shell。
 - 2.5D 舞台只做表现层：资产路径由 ViewModel 解析后传入，舞台不读 GameState/QueryBus/CommandBus；同一时间只渲染一个 3D 舞台，隐藏即停更。
 - UI 材质与图标只引用外部贴图：Theme 由 skin.json 生成，程序化样式走 SNSkin；业务脚本不得新建 StyleBoxFlat、不得硬编码 skin 路径或十六进制业务色。
-- 换肤必须保持布局契约：TopChrome ≤130px、底部状态条 60px、侧牌 172×42、九宫格安全区；<38px 高按钮用 SNCompactButton/SNPlateButton。
+- 换肤必须保持布局契约：TopChrome ≤130px、导航 64×36（图标 + 文字）、侧牌 172×42、九宫格安全区；<38px 高按钮用 SNCompactButton/SNPlateButton。底部状态条在 2026-10-28 UI 轮移除，勿再引入。

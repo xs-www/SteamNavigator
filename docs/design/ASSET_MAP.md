@@ -740,7 +740,7 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 - 用途：内容 JSON 可直接写 `"information.texture": "icon.ui.nav_market"`；运行时走 `AssetService.find_key("icon.ui.nav_market")` / `asset://core/icon.ui.nav_market`，与 `icon.item.*` 同一套解析规则。
 - 尺寸：Core 包内是 128×128（与运行皮肤图标同尺寸、同字节），UI 常规按 24–40 px 显示；母版 256×256 仍在 `docs/design/ui_icons_v1/icons/`。
 - 同步门禁：`test_mod_loading::test_core_registers_the_ui_icon_set` 会逐字节比较 Core 副本与 `assets/ui/skin/sn_v1/icons/`，母版重切 / 换肤后两边必须一起更新（`tools/ui/slice_ui_icons.gd` → `tools/build_ui_skin.ps1` → 同步复制到 `dev_mods/core/assets/icons/ui/`）。
-- 2026-10-28 图标轮接线：HUD 顶部 / 底部资源 chip 只由皮肤图标表驱动（`main.gd` 的 `HUD_SKIN_ICONS`；早期内容 `icon.coal` / `icon.money` / `icon.water` 已退役），导航是纯图标按钮（`nav_screen` meta + tooltip），市场摘要 / 补给卡 / 委托卡 / 酒馆按钮直接用 `icon.ui.*`；4 个商品（煤 / 水 / 锅炉钢板 / 委托货箱）的 `information.texture` 也改走本批图标。其余 8 个商品仍用 `icon.item.*` SVG 占位（新批次没有语义更准的匹配）。
+- 2026-10-28 图标轮接线：HUD 顶部资源 chip 只由皮肤图标表驱动（`main.gd` 的 `HUD_SKIN_ICONS`；早期内容 `icon.coal` / `icon.money` / `icon.water` 已退役），导航是「图标 + 本地化页名」按钮（`nav_screen` meta），市场摘要 / 补给卡 / 委托卡 / 酒馆按钮直接用 `icon.ui.*`；4 个商品（煤 / 水 / 锅炉钢板 / 委托货箱）的 `information.texture` 也改走本批图标。其余 8 个商品仍用 `icon.item.*` SVG 占位（新批次没有语义更准的匹配）。市场行情网格只显示可买货物（卖出仍走整块面板落点）。
 
 ## 为什么这样分
 
