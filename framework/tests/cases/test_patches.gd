@@ -7,7 +7,9 @@ func _write_file(path: String, text: String) -> void:
 	file.close()
 
 
-func _make_patch_mod(root: String, mod_id: String, price: int, texture_key: String = "icon.coal") -> void:
+## 2026-10-28 图标轮：早期 `icon.coal` 内容资产已退役，patch fixture 改用仍存在的
+## `icon.item.iron_ore` SVG 资源键（patch 引用的贴图必须能解析，否则内容编译会降级）。
+func _make_patch_mod(root: String, mod_id: String, price: int, texture_key: String = "icon.item.iron_ore") -> void:
 	var mod_root := root + "/" + mod_id
 	DirAccess.make_dir_recursive_absolute(mod_root + "/content")
 	var manifest := {
@@ -59,8 +61,8 @@ func test_patch_applies_to_core_definition() -> void:
 	var iron_ore := context.registries.get_by_id(ContentTypes.ITEM, "core:item/iron_ore")
 	assert_not_null(iron_ore, "patched definition still exists")
 	assert_eq(int(iron_ore.data["base_price"]), 50, "patch replaces the value")
-	assert_eq(String(iron_ore.information.get("texture", "")), "icon.coal", "patch updates parsed information")
-	assert_eq(iron_ore.asset_uri("texture"), "asset://core/icon.coal", "patched bare asset key keeps the target namespace")
+	assert_eq(String(iron_ore.information.get("texture", "")), "icon.item.iron_ore", "patch updates parsed information")
+	assert_eq(iron_ore.asset_uri("texture"), "asset://core/icon.item.iron_ore", "patched bare asset key keeps the target namespace")
 	assert_true(iron_ore.patched_by.has("patch_a"), "patch source is recorded")
 
 

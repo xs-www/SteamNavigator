@@ -1,7 +1,7 @@
 class_name SNSupplyCard
 extends PanelContainer
 ## @static-doc
-## 作用：单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。
+## 作用：单种补给品的决策卡：存量条、可补上限、价格、港存、预计续航和购买操作；信息行已图标化（图标 + 数值，字段名只进 tooltip）。
 ##
 ## One supply commodity card (coal or water).
 ##
@@ -19,6 +19,16 @@ extends PanelContainer
 ##   （`icon_max_width` 16，不加包装容器，按钮 `text` 不变）。
 ## - 尺寸约束：三个按钮 `custom_minimum_size = (0, 38)` 不变；内容区
 ##   `Content` 节点名与行顺序（标题 / 资源条 / 信息行 / 阻断 / 操作）保持不变。
+##
+## ## 文字精简（2026-10-28 图标轮）
+## - 信息行原来是「单价 / 港存 / 补满花费 / 剩余可装 / 上限损失」五个文字字段，
+##   现在改为 16 px 皮肤图标 + 数值的 chip 行：
+##   `resource_coins` 单价、`shipyard_cargo` 港存、`resource_coins` 补满花费、
+##   `resource_cargo` 剩余可装、`status_warning`（`state.warning` 色）上限损失。
+## - 字段名只挂在每枚 chip 的 `tooltip_text` 上，复用现有本地化键
+##   （`ui.label.ref_price` / `ui.label.port_stock` / `ui.label.cost` /
+##   `ui.label.headroom` / `ui.label.cap_loss`），不新增键。
+## - 资源条不再渲染「存量」名称（`label_text = ""`），数值 `当前 / 上限` 保留。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
@@ -62,7 +72,9 @@ func bind(data: Dictionary, title: String, blocker_labels: Array = [], tr: Calla
 	_content.add_child(header)
 
 	var meter := SNResourceMeter.new()
-	meter.label_text = "存量"
+	# 2026-10-28 文字精简：卡片标题已写明补给种类，条内不再重复「存量」名称；
+	# 数值（当前 / 上限）与损失带保持不变。
+	meter.label_text = ""
 	meter.current_value = current
 	meter.maximum_value = maximum
 	meter.loss_value = cap_loss
@@ -77,13 +89,18 @@ func bind(data: Dictionary, title: String, blocker_labels: Array = [], tr: Calla
 
 	var info := HBoxContainer.new()
 	info.add_theme_constant_override("separation", 14)
-	info.add_child(_small("单价 %s" % _fmt(price)))
-	info.add_child(_small("港存 %d" % port_stock))
-	info.add_child(_small("补满花费 %d" % fill_cost))
+	info.add_child(_info_chip("resource_coins", _fmt(price), _loc("ui.label.ref_price", "单价")))
+	info.add_child(_info_chip("shipyard_cargo", str(port_stock), _loc("ui.label.port_stock", "港存")))
+	info.add_child(_info_chip("resource_coins", str(fill_cost), _loc("ui.label.cost", "补满花费")))
 	if has_capacity:
-		info.add_child(_small("%s %s" % [_loc("ui.label.headroom", "剩余可装"), _fmt(headroom)]))
+		info.add_child(_info_chip("resource_cargo", _fmt(headroom), _loc("ui.label.headroom", "剩余可装")))
 		if cap_loss > 0.0:
-			info.add_child(_small("%s %s" % [_loc("ui.label.cap_loss", "上限损失"), _fmt(cap_loss)], SNSkin.color("state.warning")))
+			info.add_child(_info_chip(
+				"status_warning",
+				_fmt(cap_loss),
+				_loc("ui.label.cap_loss", "上限损失"),
+				SNSkin.color("state.warning")
+			))
 	_content.add_child(info)
 
 	if not blocker_labels.is_empty():
@@ -147,13 +164,23 @@ func _apply_button_icon(button: Button, icon_id: String, max_width: int) -> void
 	button.add_theme_constant_override("icon_max_width", max_width)
 
 
-func _small(text: String, color: Variant = null) -> Label:
+## 信息行单枚 chip：16 px 皮肤图标 + 数值；字段名只挂 tooltip（键由调用方传入，
+## 不新增本地化键，也不在卡片里写数据标签文字）。
+func _info_chip(icon_id: String, value: String, tooltip: String, color: Variant = null) -> Control:
 	var resolved: Color = SNSkin.color("text.muted") if color == null else (color as Color)
+	var chip := HBoxContainer.new()
+	chip.add_theme_constant_override("separation", 4)
+	chip.mouse_filter = Control.MOUSE_FILTER_PASS
+	chip.tooltip_text = tooltip
+	chip.add_child(SNSkin.icon_rect(icon_id, 16.0))
 	var label := Label.new()
-	label.text = text
+	label.text = value
 	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", resolved)
-	return label
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	chip.add_child(label)
+	return chip
 
 
 func _fmt(value: float) -> String:

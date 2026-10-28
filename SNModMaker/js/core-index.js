@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-28T04:02:03.435Z",
+    "generated_at": "2026-10-28T11:55:52.397Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -68,18 +68,14 @@
       ],
       "assets": {
         "banner.port.iron_harbor": "assets/ports/iron_harbor_banner.png",
-        "icon.coal": "assets/icons/coal.png",
         "icon.item.iron_ore": "assets/icons/items/iron_ore.svg",
         "icon.item.brass": "assets/icons/items/brass.svg",
         "icon.item.textiles": "assets/icons/items/textiles.svg",
         "icon.item.spices": "assets/icons/items/spices.svg",
         "icon.item.timber": "assets/icons/items/timber.svg",
         "icon.item.glassware": "assets/icons/items/glassware.svg",
-        "icon.item.contract_freight": "assets/icons/items/contract_freight.svg",
-        "icon.item.boiler_plate": "assets/icons/items/boiler_plate.svg",
         "icon.item.precision_gear": "assets/icons/items/precision_gear.svg",
         "icon.item.sealing_compound": "assets/icons/items/sealing_compound.svg",
-        "icon.money": "assets/icons/money.png",
         "icon.ui.action_add": "assets/icons/ui/action_add.png",
         "icon.ui.action_confirm": "assets/icons/ui/action_confirm.png",
         "icon.ui.action_remove": "assets/icons/ui/action_remove.png",
@@ -110,7 +106,6 @@
         "icon.ui.status_unlocked": "assets/icons/ui/status_unlocked.png",
         "icon.ui.status_warning": "assets/icons/ui/status_warning.png",
         "icon.ui.status_weather": "assets/icons/ui/status_weather.png",
-        "icon.water": "assets/icons/water.png",
         "model.good.coal": "assets/models/goods/SN_Coal_Pile.glb",
         "model.good.iron_ore": "assets/models/goods/SN_Ore_Pile.glb",
         "model.good.timber": "assets/models/goods/SN_Timber_Stack.glb",
@@ -425,7 +420,7 @@
             ],
             "enabled": true,
             "information": {
-              "texture": "icon.item.contract_freight"
+              "texture": "icon.ui.resource_cargo"
             },
             "data": {
               "crafting_material": false,
@@ -448,7 +443,7 @@
             ],
             "enabled": true,
             "information": {
-              "texture": "icon.coal",
+              "texture": "icon.ui.resource_coal",
               "model": "model.good.coal"
             },
             "data": {
@@ -472,7 +467,7 @@
             ],
             "enabled": true,
             "information": {
-              "texture": "icon.water"
+              "texture": "icon.ui.resource_water"
             },
             "data": {
               "crafting_material": false,
@@ -494,7 +489,7 @@
             ],
             "enabled": true,
             "information": {
-              "texture": "icon.item.boiler_plate",
+              "texture": "icon.ui.shipyard_hull",
               "model": "model.material.boiler_plate"
             },
             "data": {
@@ -8244,7 +8239,7 @@
           ],
           "enabled": true,
           "information": {
-            "texture": "icon.item.contract_freight"
+            "texture": "icon.ui.resource_cargo"
           },
           "data": {
             "crafting_material": false,
@@ -8280,7 +8275,7 @@
           ],
           "enabled": true,
           "information": {
-            "texture": "icon.coal",
+            "texture": "icon.ui.resource_coal",
             "model": "model.good.coal"
           },
           "data": {
@@ -8317,7 +8312,7 @@
           ],
           "enabled": true,
           "information": {
-            "texture": "icon.water"
+            "texture": "icon.ui.resource_water"
           },
           "data": {
             "crafting_material": false,
@@ -8351,7 +8346,7 @@
           ],
           "enabled": true,
           "information": {
-            "texture": "icon.item.boiler_plate",
+            "texture": "icon.ui.shipyard_hull",
             "model": "model.material.boiler_plate"
           },
           "data": {

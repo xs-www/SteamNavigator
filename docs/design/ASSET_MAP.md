@@ -716,14 +716,14 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 | `model.ship.paddle_freighter` | `assets/models/ships/SN_Paddle_Freighter.glb` | 两种大型船体 |
 | `model.module.boiler` | `assets/models/modules/SN_Boiler_Unit.glb` | 三种锅炉 |
 | `model.good.iron_ore` | `assets/models/goods/SN_Ore_Pile.glb` | 铁矿石 |
-| `model.good.coal` | `assets/models/goods/SN_Coal_Pile.glb` | 煤炭；同时使用 `icon.coal` |
+| `model.good.coal` | `assets/models/goods/SN_Coal_Pile.glb` | 煤炭；贴图用 `icon.ui.resource_coal`（2026-10-28 替换早期 `icon.coal`） |
 | `model.good.timber` | `assets/models/goods/SN_Timber_Stack.glb` | 木材 |
 | `model.material.boiler_plate` | `assets/models/materials/SN_Plate_Stack.glb` | 锅炉钢板 |
 | `model.material.precision_gear` | `assets/models/materials/SN_Gear_Crate.glb` | 精密齿轮 |
 | `model.material.sealing_compound` | `assets/models/materials/SN_Barrel.glb` | 密封剂 |
 | `banner.port.iron_harbor` | `assets/ports/iron_harbor_banner.png` | 铁港；作为贴图 |
 
-淡水实体继续使用既有 `icon.water` 贴图。Core manifest 当前声明 **179 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`；M0-5 新增 4 个船体 LOD1 键 `model.ship.*_lod1`，kit 26 件 LOD1 登记在 [kit_catalog.json](../../tools/modeling/kit_catalog.json) 而非 manifest；另有本批 30 个 `icon.ui.*`，见下）。
+淡水 / 煤 / 锅炉钢板 / 委托货箱的 `information.texture` 已改用 30 枚 UI 图标批次（`icon.ui.resource_water` / `resource_coal` / `shipyard_hull` / `resource_cargo`）；早期 `icon.coal` / `icon.money` / `icon.water` 与两个被替换的 `icon.item.*` SVG 已在 2026-10-28 图标轮退役。Core manifest 当前声明 **174 个资源键**（含街景第一批 10 个 `model.prop.*`，见「3D 港口街景」章节；起重机三件新资产 `model.prop.mega_gantry` / `model.prop.wooden_mast_crane` / `model.prop.hand_jib_crane`；M0-5 新增 4 个船体 LOD1 键 `model.ship.*_lod1`，kit 26 件 LOD1 登记在 [kit_catalog.json](../../tools/modeling/kit_catalog.json) 而非 manifest；另有本批 30 个 `icon.ui.*`，见下）。
 
 ### UI 图标资源键（`icon.ui.*`，30 个）
 
@@ -740,6 +740,7 @@ Core 内容使用 `information.texture/model` 保存逻辑资源键；下列 GLB
 - 用途：内容 JSON 可直接写 `"information.texture": "icon.ui.nav_market"`；运行时走 `AssetService.find_key("icon.ui.nav_market")` / `asset://core/icon.ui.nav_market`，与 `icon.item.*` 同一套解析规则。
 - 尺寸：Core 包内是 128×128（与运行皮肤图标同尺寸、同字节），UI 常规按 24–40 px 显示；母版 256×256 仍在 `docs/design/ui_icons_v1/icons/`。
 - 同步门禁：`test_mod_loading::test_core_registers_the_ui_icon_set` 会逐字节比较 Core 副本与 `assets/ui/skin/sn_v1/icons/`，母版重切 / 换肤后两边必须一起更新（`tools/ui/slice_ui_icons.gd` → `tools/build_ui_skin.ps1` → 同步复制到 `dev_mods/core/assets/icons/ui/`）。
+- 2026-10-28 图标轮接线：HUD 顶部 / 底部资源 chip 只由皮肤图标表驱动（`main.gd` 的 `HUD_SKIN_ICONS`；早期内容 `icon.coal` / `icon.money` / `icon.water` 已退役），导航是纯图标按钮（`nav_screen` meta + tooltip），市场摘要 / 补给卡 / 委托卡 / 酒馆按钮直接用 `icon.ui.*`；4 个商品（煤 / 水 / 锅炉钢板 / 委托货箱）的 `information.texture` 也改走本批图标。其余 8 个商品仍用 `icon.item.*` SVG 占位（新批次没有语义更准的匹配）。
 
 ## 为什么这样分
 

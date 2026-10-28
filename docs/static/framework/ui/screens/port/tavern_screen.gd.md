@@ -9,9 +9,9 @@
 | 符号 | 位置 |
 | --- | --- |
 | `TavernScreen` | L1 |
-| `command_requested (signal)` | L29 |
-| `INTEL_TABLE_SCRIPT` | L31 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L35 |
+| `command_requested (signal)` | L38 |
+| `INTEL_TABLE_SCRIPT` | L40 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L44 |
 
 NPC 动向，中部是**海图（航线解锁）**，下半部分列出港口线索（购买线索、调查线索），
 把「物价情报 + 海图 + 港口线索」合并到同一个设施入口。
@@ -35,5 +35,14 @@ NPC 动向，中部是**海图（航线解锁）**，下半部分列出港口线
 - 按钮保持默认纹理化 `Button`（刷新物价 / 购买线索 / 调查线索），按钮文字与
   节点名 `RefreshIntelButton` / `BuyClueButton` / `InvestigateButton` 不变。
 - 尺寸约束：面板间距 8、线索行间距 12、字号 16/14/13/12 不变；不新增布局。
+
+## 2026-10-28 图标化 / 文字精简
+- 标题 detail（`ui.hint.tavern` 长句）不再占正文，转到标题 tooltip。
+- 纯说明段落删除并转 tooltip：`ui.label.snapshot_tip` → 情报摘要行、
+  `ui.tavern.chart_hint` → 海图标题、`ui.tavern.npc_empty` → NPC 标题（空态不再
+  占一行）、`ui.tavern.clues_empty` → 持有线索计数行（空态不再占一行）。
+- 按钮加 16 px 皮肤图标：刷新情报 / 购买线索 / 调查 → `nav_intelligence`，
+  购买海图 → `nav_chart`；按钮文字（含价格）与节点名全部保留。
+- 数据表格表头、线索信息行（港口 / 等级 / 航程）与价格数值保留。
 
 模块索引：[framework/ui](../../README.md)

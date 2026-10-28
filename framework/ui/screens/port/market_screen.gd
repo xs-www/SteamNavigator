@@ -1,7 +1,7 @@
 class_name MarketScreen
 extends VBoxContainer
 ## @static-doc
-## 作用：港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
+## 作用：港口市场页面（图标直接交易）：单行图标账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。
 ##
 ## Direct-manipulation port market page (Bounty Train style).
 ##
@@ -16,10 +16,11 @@ extends VBoxContainer
 ## (`SNCarryGhost`), together with the estimated cost.
 ##
 ## ## 外观来源（外部贴图 + SNSkin）
-## - 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），纸面正文改用
-##   `SNSkin.color("ink.primary")` / `paper.ink_muted`；行情格子是 `SNItemTile`
-##   （`panel_recess` / `panel_steel` 皮肤纹理）；整个面板的落点用透明
-##   `SNDropZone`（高亮时仍是皮肤纹理 + token 染色）。
+## - 「市场账册摘要」用 Theme 变体 `SNParchmentPanel`（暖纸面），正文只保留一行
+##   `18 px 图标 + 数值` 的 icon chip（金币 / 重量 / 货舱 / 库存成本）；字段名只在
+##   `tooltip_text` 里，纸面文字用 `ink.primary`，库存成本用纸面次级色
+##   `paper.ink_muted`。行情格子是 `SNItemTile`（`panel_recess` / `panel_steel`
+##   皮肤纹理）；整个面板的落点用透明 `SNDropZone`（高亮时仍是皮肤纹理 + token 染色）。
 ## - 其余文字颜色取 `SNSkin.color(token)`（text.light / text.muted /
 ##   brass.highlight / state.water）。
 ## - 尺寸约束：行情网格 4 列（108 px 格子 + 8 px 间距），适配 Shell 提供的
@@ -29,13 +30,24 @@ extends VBoxContainer
 ## - `bind(view_model, translate)` 可重复调用：每次先清空自建子节点再重建。
 ## - ViewModel 字段按 `docs/design/MARKET_UI_REFACTOR.md` §3；行情行 `icon` 已由
 ##   Shell 解析成 `Texture2D`，本页不解析资产路径。
+## - 账册摘要只渲染数值（金币 / 重量 / 货舱 / 库存成本），字段名走 tooltip
+##   （`ui.label.money` / `ui.market.summary` / `ui.label.cargo_hold` /
+##   `ui.market.cargo_summary`）。
 ## - 行情格角标是 `remaining` 语义（始终可见，纯数字 = `stock - pending`）；meta
 ##   只显示单价 + 趋势，玩家已选数量只在光标幽灵上显示，两处不重复。
+## - 商品副标题只表达 `buyable=false` 的「仅收购」；分类 / 材料标记不再进入格子
+##   （`SNItemTile` 在 subtitle 为空时自动隐藏该行）。
+## - 「点击拿起 · 点落点放下 · 右键取消 · 可拖拽」长提示挂在 `MarketList` 的
+##   `tooltip_text` 上，区块头只保留标题。
 ## - 图标行 `stock<=0` 或 `buyable=false` 时不可拖拽（仍显示，标注「仅收购」）。
 ## - 待交易上限只按 `stock` 设置，不预扣金币与剩余载重：数量可以点到库存上限，
 ##   金币 / 载重不足由 `trade.buy` 失败并在状态栏报错（页面刷新后归零）。
 ## - 拖入市场面板的载荷 kind 只认 `cargo_item` / `warehouse_item`，命令固定为
 ##   `trade.sell {item_id, amount, source}`。
+## - 补给区块 `MarketSupply` 不再渲染「补给（煤 / 水）」标题（补给卡自带标题），
+##   节点名与卡片结构保持不变。
+## - 卖出提示（`ui.hint.market_sell`）不再占页面底部一行，挂到整块市场落点的
+##   tooltip 上；与 `ui.hint.market_drag` 一起构成纯 tooltip 的交互说明。
 ## - `_grid_label` / `_label` / `_loc` 是测试与旧调用方依赖的 helper，保留签名。
 ##
 ## ## 拿起 / 放下（feedback #1）
@@ -82,6 +94,8 @@ func bind(view_model: Dictionary, translate: Callable) -> void:
 	_sell_zone.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_sell_zone.content_padding = Vector2.ZERO
 	_sell_zone.configure(["cargo_item", "warehouse_item"], "")
+	# 2026-10-28 文字精简：卖出提示不再占页面底部一行，挂到整块市场落点的 tooltip 上。
+	_sell_zone.tooltip_text = _loc("ui.hint.market_sell", "把船只背包里的货物拖到这里卖出。")
 	_sell_zone.dropped.connect(handle_sell_drop)
 	add_child(_sell_zone)
 	var content: VBoxContainer = _sell_zone.content_root()
@@ -188,16 +202,18 @@ func _offer_for(tile: Control) -> Dictionary:
 
 
 ## 4.5.3：补给并市 —— 市场页上方的煤 / 水区块，复用 `supply.buy_*` 命令。
+## 2026-10-28 文字精简：区块标题删除（卡片自带「煤炭 / 淡水」标题），原标题只留
+## 在区块 `tooltip_text` 里；`MarketSupply` 节点名与小节结构保持不变。
 func _supply_block(view_model: Dictionary) -> Control:
 	var supply: Dictionary = view_model.get("supply", {})
 	var block := VBoxContainer.new()
 	block.name = "MarketSupply"
 	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	block.add_theme_constant_override("separation", 7)
+	block.mouse_filter = Control.MOUSE_FILTER_PASS
+	block.tooltip_text = _loc("ui.market.supply_section", "补给（煤 / 水）")
 	if supply.is_empty():
 		return block
-	var title := _label(_loc("ui.market.supply_section", "补给（煤 / 水）"), 15, SNSkin.color("brass.highlight"))
-	block.add_child(title)
 	for kind in ["coal", "water"]:
 		var data: Dictionary = supply.get("%s_view" % kind, {})
 		if data.is_empty():
@@ -237,29 +253,64 @@ func _supply_blocker_labels(blockers: Array) -> Array:
 	return labels
 
 
-## 「账册摘要」是一张羊皮纸：纸面正文只用 ink token，避免浅色字落在暖纸上。
+## 「账册摘要」是一张羊皮纸：一行 icon chip（金币 / 重量 / 货舱 / 库存成本），
+## 数值保留、字段名只进 `tooltip_text`；纸面正文只用 ink token。
 func _summary_panel(view_model: Dictionary) -> Control:
 	var panel := PanelContainer.new()
 	panel.theme_type_variation = &"SNParchmentPanel"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 6)
-	panel.add_child(content)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	panel.add_child(row)
 	var ship: Dictionary = view_model.get("ship", {})
-	content.add_child(_label(_loc("ui.market.summary", "金币 %d · 重量 %s / %s") % [
-		int(view_model.get("money", 0)),
-		_fmt(float(ship.get("total_weight", 0.0))),
-		_fmt(float(ship.get("max_weight", 0.0))),
-	], 13, SNSkin.color("ink.primary")))
-	content.add_child(_label(_loc("ui.market.cargo_summary", "货舱 %s / %s · 库存成本 %s") % [
-		_fmt(float(ship.get("cargo_used", 0.0))),
-		_fmt(float(ship.get("cargo_capacity", 0.0))),
-		_fmt(float(ship.get("cargo_cost_basis", 0.0))),
-	], 13, SNSkin.color("ink.primary")))
-	var hint := _paragraph(_loc("ui.hint.market", ""), 12, SNSkin.color("paper.ink_muted"))
-	if not hint.text.is_empty():
-		content.add_child(hint)
+	var money := int(view_model.get("money", 0))
+	var total_weight := _fmt(float(ship.get("total_weight", 0.0)))
+	var max_weight := _fmt(float(ship.get("max_weight", 0.0)))
+	var cargo_used := _fmt(float(ship.get("cargo_used", 0.0)))
+	var cargo_capacity := _fmt(float(ship.get("cargo_capacity", 0.0)))
+	var cargo_cost := _fmt(float(ship.get("cargo_cost_basis", 0.0)))
+	var ink := SNSkin.color("ink.primary")
+	var muted := SNSkin.color("paper.ink_muted")
+	row.add_child(_summary_chip("resource_coins", str(money), _loc("ui.label.money", "金币"), ink))
+	row.add_child(_summary_chip(
+		"resource_cargo",
+		"%s / %s" % [total_weight, max_weight],
+		_loc("ui.market.summary", "金币 %d · 重量 %s / %s") % [money, total_weight, max_weight],
+		ink
+	))
+	row.add_child(_summary_chip(
+		"shipyard_cargo",
+		"%s / %s" % [cargo_used, cargo_capacity],
+		_loc("ui.label.cargo_hold", "货舱"),
+		ink
+	))
+	# 库存成本复用金币图标，用纸面次级色（text.muted 的纸面变体）和现金区分。
+	row.add_child(_summary_chip(
+		"resource_coins",
+		cargo_cost,
+		_loc("ui.market.cargo_summary", "货舱 %s / %s · 库存成本 %s") % [cargo_used, cargo_capacity, cargo_cost],
+		muted,
+		true
+	))
 	return panel
+
+
+## 账册摘要的单枚 chip：18 px 皮肤图标 + 数值；字段名只挂在 chip 的 tooltip 上，
+## 图标默认保留皮肤原色，`muted_icon = true` 时按文字色压暗（库存成本）。
+func _summary_chip(icon_id: String, value: String, tooltip: String, color: Color, muted_icon := false) -> Control:
+	var chip := HBoxContainer.new()
+	chip.add_theme_constant_override("separation", 5)
+	chip.mouse_filter = Control.MOUSE_FILTER_PASS
+	chip.tooltip_text = tooltip
+	var icon := SNSkin.icon_rect(icon_id, 18.0)
+	if muted_icon:
+		icon.modulate = color
+	chip.add_child(icon)
+	var label := _label(value, 13, color)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	chip.add_child(label)
+	return chip
 
 
 func _market_section(view_model: Dictionary) -> VBoxContainer:
@@ -267,13 +318,12 @@ func _market_section(view_model: Dictionary) -> VBoxContainer:
 	section.name = "MarketList"
 	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	section.add_theme_constant_override("separation", 7)
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 8)
+	# 交互长提示只在 tooltip 里（区块头不再占一行文字），PASS 让点击继续传给
+	# 市场落点（SNDropZone），不阻断「点落点放下」手势。
+	section.mouse_filter = Control.MOUSE_FILTER_PASS
+	section.tooltip_text = _loc("ui.hint.market_drag", "")
 	var title := _label(_loc("ui.market.grid_section", "市场行情"), 15, SNSkin.color("brass.highlight"))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-	header.add_child(_label(_loc("ui.hint.market_drag", "点击拿起 · 点落点放下 · 右键取消 · 可拖拽"), 11, SNSkin.color("text.muted")))
-	section.add_child(header)
+	section.add_child(title)
 	var rows: Array = view_model.get("market", [])
 	if rows.is_empty():
 		section.add_child(_paragraph(_loc("ui.market.no_goods", "本港今日没有可交易的商品。"), 12, SNSkin.color("text.muted")))
@@ -291,7 +341,6 @@ func _market_section(view_model: Dictionary) -> VBoxContainer:
 		var item_id := String((row as Dictionary).get("item_id", ""))
 		grid.add_child(_market_tile(row as Dictionary, String(trends.get(item_id, ""))))
 	section.add_child(grid)
-	section.add_child(_paragraph(_loc("ui.hint.market_sell", "把船只背包里的货物拖到这里卖出。"), 11, SNSkin.color("text.muted")))
 	return section
 
 
@@ -338,16 +387,12 @@ func _market_tile(row: Dictionary, trend: String) -> Control:
 	return tile as Control
 
 
-func _item_subtitle(row: Dictionary, buyable: bool) -> String:
-	var parts: Array[String] = []
-	var category := String(row.get("category", ""))
-	if not category.is_empty():
-		parts.append(_loc("ui.item.category." + category, category))
-	if bool(row.get("crafting_material", false)):
-		parts.append(_loc("ui.label.crafting_material", "材料"))
-	if not buyable:
-		parts.append(_loc("ui.label.sell_only", "仅收购"))
-	return " · ".join(parts)
+## 商品格副标题只表达不可买的「仅收购」：分类 / 材料标记不再进格子（文字精简），
+## 空字符串由 `SNItemTile` 自动隐藏该行。
+func _item_subtitle(_row: Dictionary, buyable: bool) -> String:
+	if buyable:
+		return ""
+	return _loc("ui.label.sell_only", "仅收购")
 
 
 func _trend_arrow(trend: String) -> String:

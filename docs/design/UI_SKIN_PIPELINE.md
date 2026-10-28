@@ -146,7 +146,7 @@ SNSkin.icon_rect(id, 24.0)        # 直接可用的 TextureRect
 
 30 个业务图标（`icons/`）+ 4 个派生复选框图标（`check_*`，由 `checkbox_empty` 底 + `action_confirm` 勾派生，theme 直接引用文件，不进 `skin.json` 业务图标表）。
 
-已接线位置：顶部 HUD 资源 chip、已发布导航页（总览 / 市场 / 委托 / 船厂 / 酒馆）+ 海图、侧牌设施、船厂 7 类分类与三个操作页签、菜单/结算/委托/补给/遗迹等行动按钮。
+已接线位置：顶部 HUD 资源 chip（图标 + 数值，字段名只进 tooltip）、导航页（**纯图标 + tooltip + `nav_screen` meta**）+ 海图、侧牌设施、船厂 7 类分类与三个操作页签、菜单/结算/委托/补给/遗迹等行动按钮、市场账册摘要 / 补给卡 / 委托卡字段 / 酒馆行动按钮（2026-10-28 图标轮，见 §6.1）。
 
 内容侧调用：同一套 30 枚图标也复制进 Core 包（`dev_mods/core/assets/icons/ui/*.png`）并登记为 `icon.ui.<id>` 资源键，内容 JSON / 事件 / 后续系统可直接写 `information.texture: "icon.ui.nav_market"` 或 `AssetService.find_key("icon.ui.nav_market")`；Core 副本与运行图标由 `test_mod_loading::test_core_registers_the_ui_icon_set` 逐字节守同步（见 [ASSET_MAP.md](ASSET_MAP.md)「UI 图标资源键」）。
 
@@ -154,13 +154,32 @@ SNSkin.icon_rect(id, 24.0)        # 直接可用的 TextureRect
 > （`main.gd` 的 `HIDDEN_NAV_SCREENS`），下表仍保留给内部页面（截图 / 未来重新发布）
 > 的图标语义参考；遗迹属于航行探索玩法，后续应在探索侧接入而非港口导航。
 
+### 6.1 2026-10-28 图标轮（新批次替换早期图标 + 文字精简）
+
+- **HUD 图标唯一来源**：`main.gd` 的 `HUD_SKIN_ICONS`（逻辑键 → 皮肤 id）。早期内容图标
+  `icon.coal` / `icon.money` / `icon.water` 与从未声明的 `icon.durability` 等键已从
+  `HUD_ICON_KEYS` 清空并从 Core manifest 退役；内容包仍可通过 `HUD_ICON_KEYS` 覆盖。
+- **语义映射**：剩余载重 `resource_cargo`、剩余货舱 `shipyard_cargo`（两个货箱图标靠
+  tooltip 区分）；煤 / 水 / 耐久 / 金币 / 声望 / 时间 / 受损分别用 `resource_coal` /
+  `resource_water` / `resource_durability` / `resource_coins` / `status_reputation` /
+  `status_time` / `status_warning`；底部通告用 `nav_intelligence`。
+- **导航纯图标**：每个入口 44×36、`text=""`、`tooltip_text = ui.nav.<screen>`、
+  `set_meta("nav_screen", screen)`；剧情引导与测试按 meta 解析。海图 toggle / 底部 `ChartButton` 同。
+- **商品图标（有选择地换）**：煤、水、锅炉钢板、委托货箱 4 个商品的 `information.texture`
+  改走 `icon.ui.resource_coal` / `resource_water` / `shipyard_hull` / `resource_cargo`；
+  其余 8 个（香料 / 玻璃器皿 / 纺织品 / 铁矿石 / 黄铜 / 精密齿轮 / 密封胶 / 木材）保留
+  `icon.item.*` SVG（新批次没有语义更准的匹配）。被替换的旧 PNG / SVG 已删除。
+- **文字精简原则**：删除装饰性 / 重复性文字（HUD chip 小标签、市场长说明、商品分类副标题、
+  委托「截止 Day X」与重复声望 badge、酒馆说明段落、补给卡字段名），字段名改挂
+  `tooltip_text`；价格 / 数量 / 耐久 / 奖励等数值与按钮动作词保留。
+
 已知缺口（需要美术后补，当前用语义近似 id）：
 - 导航：总览 → `status_anchor`、基地 → `shipyard_hull`、自动贸易 → `status_route`、遗迹 → `nav_chart`（与海图重复；基地 / 贸易 / 遗迹入口当前隐藏）。
 - 船厂：utility → `shipyard_navigation`、weapons → `nav_shipyard`、misc → `nav_shipyard`。
 - 行动：购买/补满 → `action_confirm` 或 `resource_coins`、修复 → `action_add`、等待 → `status_time`；缺 repair/buy/sell/wait 专用图标。
 - 状态：风险等级用 `status_warning` 近似；`status_weather/status_storm` 目前没有消费点（项目尚无天气系统）。
-- 布旗 `flag_*`（6 个）已生成但当前 64×36 紧凑导航与 172×42 侧牌都放不下，保留给后续布局改版（出航确认/主导航）。
-- 内容专属图标（商品、设施、港口）仍走内容模组 `manifest.assets` 的 `icon.*` 机制，不在全局皮肤里。
+- 布旗 `flag_*`（6 个）已生成但当前 44×36 图标导航与 172×42 侧牌都放不下，保留给后续布局改版（出航确认/主导航）。
+- 内容专属图标（商品、设施、港口）仍走内容模组 `manifest.assets` 的 `icon.*` 机制，不在全局皮肤里；其中 8 个商品仍是早期 SVG 占位图，后续可用新一批商品图标替换（保持 `icon.item.*` 同名同尺寸）。
 
 ## 7. 验证门禁
 

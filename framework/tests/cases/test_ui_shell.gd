@@ -90,6 +90,42 @@ func _texture_rects(root: Node, out: Array = []) -> Array:
 	return out
 
 
+## 2026-10-28 图标轮：导航按钮改纯图标，入口身份放在 `nav_screen` meta；旧路径仍按
+## 本地化导航名 `text` 回退，测试两种形态都能定位。
+func _nav_buttons(root: Node) -> Array:
+	var nav := _named_node(root, "Nav")
+	if nav == null:
+		return []
+	var buttons: Array = []
+	for child in nav.get_children():
+		if child is Button:
+			buttons.append(child)
+	return buttons
+
+
+func _nav_button(root: Node, screen: String) -> Button:
+	for child in _nav_buttons(root):
+		if String((child as Button).get_meta("nav_screen", "")) == screen:
+			return child
+	var shell := root
+	var wanted := String(shell.call("_tr", "ui.nav.%s" % screen, screen)) if shell.has_method("_tr") else screen
+	for child in _nav_buttons(root):
+		if String((child as Button).text) == wanted:
+			return child
+	return null
+
+
+## 文字标签被图标化后，语义只存在于控件 `tooltip_text` 上；按 tooltip 找 chip。
+func _nodes_with_tooltip(root: Node, tooltip: String, out: Array = []) -> Array:
+	if tooltip.is_empty():
+		return out
+	for child in root.get_children():
+		if child is Control and String((child as Control).tooltip_text) == tooltip:
+			out.append(child)
+		_nodes_with_tooltip(child, tooltip, out)
+	return out
+
+
 ## Every `push_notice(key, …)` written by the game code, so a missing or
 ## mis-ordered localization entry fails here instead of showing a raw template to
 ## the player. The keys are read from the domain/application sources (test
@@ -249,12 +285,15 @@ func test_damaged_module_is_visible_in_the_shell() -> void:
 	var context: AppContext = bundle["context"]
 	var module_chip: String = context.translate("ui.label.module_status", "部件")
 	var damaged_label: String = context.translate("ui.label.damaged_modules", "受损部件")
-	assert_false(_label_texts(shell._root_box).has(module_chip), "a healthy ship shows no module chip in the info bar")
+	# 2026-10-28 图标轮：HUD chip 只有图标 + 数值，字段名只挂在 tooltip 上。
+	assert_true(_nodes_with_tooltip(shell._root_box, module_chip).is_empty(),
+		"a healthy ship shows no module chip in the info bar")
 	ShipModules.damage(context.state.ship(), "boiler", 0, 0.5)
 	shell._refresh()
 	var texts := _label_texts(shell._root_box)
-	assert_contains(texts, module_chip, "the info bar adds a module status chip once a part is damaged")
-	assert_contains(texts, "1 · 50%", "the module chip shows damaged count and worst condition")
+	assert_contains(texts, "1 · 50%", "the info bar adds a module status chip once a part is damaged")
+	assert_false(_nodes_with_tooltip(shell._root_box, module_chip).is_empty(),
+		"the damaged module chip keeps its field name in the tooltip")
 	_goto(shell, "shipyard")
 	var card_texts := _label_texts(shell._root_box)
 	assert_contains(card_texts, damaged_label, "the ship card lists damaged modules")
@@ -800,35 +839,41 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 	assert_contains(chrome_texts, str(int(view["reputation"])), "the chrome keeps the reputation chip")
 	assert_contains(chrome_texts, "%.1f / %.1f" % [float(ship["free_weight"]), float(ship["max_weight"])], "the chrome keeps the remaining weight chip")
 	assert_contains(chrome_texts, "%.1f / %.1f" % [float(ship["free_cargo_capacity"]), float(ship["cargo_capacity"])], "the chrome keeps the remaining cargo chip")
-	assert_contains(chrome_texts, context.translate("ui.label.durability", ""), "the chrome keeps the durability chip")
-	assert_contains(chrome_texts, context.translate("ui.label.coal", ""), "the chrome keeps the coal chip")
-	assert_contains(chrome_texts, context.translate("ui.label.water", ""), "the chrome keeps the water chip")
-	# 用户反馈：基地 / 贸易 / 遗迹是未发布系统，不进入玩家可见导航；遗迹归航行
-	# 探索玩法，不作为港口页入口。页面路由与内部页面保留（截图工具 / 后续重新接入）。
+	# 2026-10-28 图标轮：chip 不再画 9 px 文字标签，字段名收敛到 chip 的 tooltip。
+	for label_key in [
+		"ui.label.time", "ui.label.money", "ui.label.reputation",
+		"ui.label.free_weight", "ui.label.free_capacity",
+		"ui.label.coal", "ui.label.water", "ui.label.durability",
+	]:
+		assert_false(_nodes_with_tooltip(chrome, context.translate(label_key, "")).is_empty(),
+			"the chrome keeps the %s field name as a chip tooltip" % label_key)
+	# 导航：纯图标按钮，入口身份走 `nav_screen` meta（未发布系统不出现在玩家可见导航里）。
 	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
-		assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)), "the compact chrome keeps the %s navigation button" % screen)
+		var nav_entry := _nav_button(chrome, screen)
+		assert_not_null(nav_entry, "the compact chrome keeps the %s navigation button" % screen)
+		if nav_entry != null:
+			assert_eq(String(nav_entry.text), "", "the %s navigation entry is icon-only" % screen)
+			assert_eq(String(nav_entry.tooltip_text), shell._tr("ui.nav.%s" % screen, screen),
+				"the %s icon-only entry keeps its navigation name as a tooltip" % screen)
 	for screen in ["base", "trade", "ruins"]:
-		assert_true(_button_by_text(chrome, shell._tr("ui.nav.%s" % screen, screen)) == null,
+		assert_true(_nav_button(chrome, screen) == null,
 			"the compact chrome hides the unpublished %s navigation entry" % screen)
-	assert_true(_button_by_text(chrome, shell._tr("ui.nav.voyage", "")) == null,
+	assert_true(_nav_button(chrome, "voyage") == null,
 		"4.3/U7: the voyage page is gone from the navigation")
-	assert_not_null(_button_by_text(chrome, shell._tr("ui.nav.sea_chart", "")),
+	assert_not_null(_nav_button(chrome, "sea_chart"),
 		"the chart toggle stays in the navigation")
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.log", "")), "the compact chrome keeps the diagnostics button")
 	assert_not_null(_button_by_text(chrome, shell._tr("ui.button.refresh", "")), "the compact chrome keeps the refresh button")
 
-	# HUD icons: optional content icons are resolved through AssetService by bare
-	# key (`icon.money`) so the framework never hardcodes a mod namespace. A pack
-	# without those keys still works: the chips render text-only.
-	var money_key: String = context.assets.find_key("icon.money")
-	assert_false(money_key.is_empty(), "AssetService.find_key resolves a bare HUD icon key")
-	assert_true(context.assets.has(money_key), "the resolved money icon exists in the mounted pack")
-	var coal_key: String = context.assets.find_key("icon.coal")
-	var water_key: String = context.assets.find_key("icon.water")
-	assert_false(coal_key.is_empty(), "the coal HUD icon resolves")
-	assert_false(water_key.is_empty(), "the water HUD icon resolves")
+	# HUD icons come from the skin table only in the 2026-10-28 icon round (the
+	# early content `icon.coal|money|water` assets were retired): every chip paints
+	# a loaded skin texture and the logical-key table stays complete.
+	var skin_icons: Dictionary = shell.get_script().get_script_constant_map().get("HUD_SKIN_ICONS", {})
+	for logical_key in skin_icons:
+		assert_not_null(SNSkin.icon(String(skin_icons[logical_key])),
+			"%s maps to a real skin icon" % logical_key)
 	var hud_icons := _texture_rects(chrome)
-	assert_true(hud_icons.size() >= 3, "the chrome paints money/coal/water icons (%d texture nodes)" % hud_icons.size())
+	assert_true(hud_icons.size() >= 8, "the chrome paints the HUD icons (%d texture nodes)" % hud_icons.size())
 	for icon_node in hud_icons:
 		assert_not_null((icon_node as TextureRect).texture, "every HUD icon node has a loaded texture")
 
@@ -921,7 +966,7 @@ func test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void:
 			)
 	assert_false(bool(shell._port_status_bar.visible), "leaving the overview hides the status strip")
 	assert_true(shell._top_chrome != null and shell._top_chrome.get_combined_minimum_size().y <= 130.0, "the compact chrome is shared by every page")
-	assert_not_null(_button_by_text(shell._top_chrome, shell._tr("ui.nav.market", "")), "the shared chrome keeps navigation on other pages")
+	assert_not_null(_nav_button(shell._top_chrome, "market"), "the shared chrome keeps navigation on other pages")
 
 	# Headless tests never advance frames, so step the stage clock directly: the
 	# camera really pans to the market shot and the hull really sails to the berth.
@@ -1017,10 +1062,12 @@ func test_unpublished_systems_have_no_player_navigation_entry() -> void:
 	if nav == null:
 		_unmount(bundle)
 		return
-	var nav_texts: Array[String] = []
+	var nav_screens: Array[String] = []
+	var nav_tooltips: Array[String] = []
 	for child in nav.get_children():
 		if child is Button:
-			nav_texts.append(String((child as Button).text))
+			nav_screens.append(String((child as Button).get_meta("nav_screen", "")))
+			nav_tooltips.append(String((child as Button).tooltip_text))
 	for screen in hidden:
 		var key := "ui.nav.%s" % screen
 		var zh_text := String(zh.get(key, ""))
@@ -1028,8 +1075,10 @@ func test_unpublished_systems_have_no_player_navigation_entry() -> void:
 		assert_false(zh_text.is_empty(), "%s keeps its zh_CN label for the internal page" % key)
 		assert_false(en_text.is_empty(), "%s keeps its en label for the internal page" % key)
 		assert_true(zh_text != en_text, "%s is really translated in both languages" % key)
-		assert_false(nav_texts.has(zh_text), "the nav has no %s entry in zh_CN" % screen)
-		assert_false(nav_texts.has(en_text), "the nav has no %s entry in en either" % screen)
+		# 2026-10-28 图标轮：导航是纯图标按钮，入口身份走 meta（不再是 text）。
+		assert_false(nav_screens.has(screen), "the nav has no %s entry" % screen)
+		assert_false(nav_tooltips.has(zh_text), "the nav has no %s tooltip entry in zh_CN" % screen)
+		assert_false(nav_tooltips.has(en_text), "the nav has no %s tooltip entry in en either" % screen)
 		# 剧情引导解析同一个导航表：隐藏入口不能被 focus 高亮成假入口。
 		assert_true(shell._story_nav_button(screen) == null,
 			"story focus cannot resolve the hidden %s navigation entry" % screen)
@@ -1038,9 +1087,9 @@ func test_unpublished_systems_have_no_player_navigation_entry() -> void:
 	for screen in hidden:
 		assert_false(Array(facility_screens.values()).has(screen),
 			"no port-stage facility sign opens the unpublished %s page" % screen)
-	# 已发布页面照常保留按钮（中英查找都走 `_tr`，不硬编码文案）。
+	# 已发布页面照常保留图标入口（身份走 `nav_screen` meta）。
 	for screen in ["overview", "market", "contracts", "shipyard", "tavern"]:
-		assert_true(nav_texts.has(shell._tr("ui.nav.%s" % screen, screen)),
+		assert_true(nav_screens.has(screen),
 			"the published %s entry keeps its button" % screen)
 	_unmount(bundle)
 
@@ -1061,7 +1110,7 @@ func test_overview_stage_falls_back_to_the_usable_2d_overview() -> void:
 	assert_true(_named_node(shell._root_box, "MapCanvas") == null,
 		"4.3/U6: the fallback 2D overview has no old chart panel either")
 	assert_contains(_label_texts(shell._root_box), shell._tr("ui.error.port_stage_unavailable", ""), "the fallback explains what happened")
-	assert_not_null(_button_by_text(shell._root_box, shell._tr("ui.nav.market", "")), "navigation keeps working after the fallback")
+	assert_not_null(_nav_button(shell._root_box, "market"), "navigation keeps working after the fallback")
 	_unmount(bundle)
 
 
@@ -1079,14 +1128,21 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 	assert_true(bar.visible, "the status strip is visible on the overview")
 	assert_true(bar.get_combined_minimum_size().y <= 72.0, "the status strip content fits its 72 px budget (%.1f)" % bar.get_combined_minimum_size().y)
 	var bar_texts := _label_texts(bar)
-	assert_contains(bar_texts, context.translate("ui.label.durability", ""), "the strip shows durability")
-	assert_contains(bar_texts, context.translate("ui.label.cargo_hold", ""), "the strip shows the cargo hold")
-	assert_contains(bar_texts, context.translate("ui.label.damaged_modules", ""), "the strip shows damaged parts")
-	assert_contains(bar_texts, context.translate("ui.label.latest_notice", ""), "the strip shows the latest notice label")
+	# 2026-10-28 图标轮：底部条删掉文字标签，字段名只挂在 tooltip 上，数值保留。
+	for label_key in [
+		"ui.label.durability", "ui.label.cargo_hold", "ui.label.coal",
+		"ui.label.water", "ui.label.damaged_modules", "ui.label.latest_notice",
+	]:
+		assert_false(_nodes_with_tooltip(bar, context.translate(label_key, "")).is_empty(),
+			"the strip keeps the %s field name as a tooltip" % label_key)
+	var view: Dictionary = context.queries.execute(&"port.view")["data"]
+	var ship: Dictionary = view["ship"]
+	assert_contains(bar_texts, "%.1f / %.1f" % [float(ship["durability"]), float(ship["max_durability"])], "the strip shows durability values")
+	assert_contains(bar_texts, "%.1f / %.1f" % [float(ship["cargo_used"]), float(ship["cargo_capacity"])], "the strip shows the cargo hold values")
 	assert_not_null(_button_by_text(bar, shell._tr("ui.button.overview_detail", "")), "the strip offers the detail overview button")
-	assert_not_null(_button_by_text(bar, "%s ▶" % shell._tr("ui.nav.sea_chart", "")), "the strip offers the chart button (departure is confirmed in the chart)")
-	var wait_text: String = shell._tr("ui.button.wait_hours", "") % 12
-	assert_not_null(_button_by_text(bar, wait_text), "the strip offers the 12-hour wait button")
+	assert_not_null(_named_node(bar, "ChartButton"), "the strip offers the chart button (departure is confirmed in the chart)")
+	var wait_text: String = "12 h"
+	assert_not_null(_button_by_text(bar, wait_text), "the strip offers the 12-hour wait button in short number form")
 
 	# Opening the drawer shows the existing 2D overview panels over the stage.
 	var detail_button := _button_by_text(bar, shell._tr("ui.button.overview_detail", ""))
@@ -1129,7 +1185,7 @@ func test_overview_status_strip_and_detail_drawer() -> void:
 		assert_false(bool(host.visible), "the stage hides outside the overview")
 	_goto(shell, "overview")
 	assert_true(bool(shell._port_status_bar.visible), "returning to the overview restores the status strip")
-	var chart_button := _button_by_text(shell._port_status_bar, "%s ▶" % shell._tr("ui.nav.sea_chart", ""))
+	var chart_button := _named_node(shell._port_status_bar, "ChartButton") as Button
 	assert_not_null(chart_button, "the strip offers the chart button again")
 	if chart_button != null:
 		chart_button.emit_signal("pressed")

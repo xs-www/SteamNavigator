@@ -152,8 +152,8 @@ MarketScreen.carry_changed(offer)                # offer {} = 未携带
 
 正式图标尚未产出，本轮用内容模组资产 + SVG 占位：
 
-- `dev_mods/core/assets/icons/items/<local_id>.svg`：10 个贸易货物 / 材料图标（铜、纺织、香料、木材、玻璃器、铁矿石、锅炉板、精密齿轮、密封剂、委托货箱）；煤 / 水沿用现有 `icon.coal` / `icon.water` PNG。
-- `dev_mods/core/content/items.json` 的 `information.texture` 写入 `icon.item.<local_id>`；`dev_mods/core/manifest.json` 注册对应 `icon.item.*` 资产键。
+- `dev_mods/core/assets/icons/items/<local_id>.svg`：8 个贸易货物 / 材料图标（铜、纺织、香料、木材、玻璃器、铁矿石、精密齿轮、密封剂）；2026-10-28 图标轮起，锅炉板与委托货箱改用 30 枚 UI 图标批次的 `icon.ui.shipyard_hull` / `icon.ui.resource_cargo`，煤 / 水用 `icon.ui.resource_coal` / `icon.ui.resource_water`（早期 `icon.coal` / `icon.water` PNG 已退役）。
+- `dev_mods/core/content/items.json` 的 `information.texture` 写入 `icon.item.<local_id>` 或 `icon.ui.<id>`；`dev_mods/core/manifest.json` 注册对应资产键。
 - 框架不硬编码 `core:*` ID：图标键由内容定义提供，Shell 只认逻辑键；内容缺失时回退框架通用占位 `assets/ui/icons/item_fallback.svg`。
 - 美术替换时保持同名键与 1:1 画布即可整体替换，不需要改页面代码。
 

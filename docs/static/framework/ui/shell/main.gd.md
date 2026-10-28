@@ -8,61 +8,61 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI_THEME` | L140 |
-| `HARBOR_SIGN_SCRIPT` | L142 |
-| `MARKET_SCREEN_SCENE` | L143 |
-| `CARGO_HOLD_PANEL_SCRIPT` | L145 |
-| `ITEM_FALLBACK_ICON` | L147 |
-| `CARRY_GHOST_SCENE` | L151 |
-| `INTERACTION_HINT_SCENE` | L152 |
-| `CONTRACTS_SCREEN_SCENE` | L153 |
-| `SUPPLY_SCREEN_SCENE` | L154 |
-| `INTEL_SCREEN_SCENE` | L155 |
-| `OVERVIEW_SCREEN_SCENE` | L156 |
-| `SHIPYARD_SCREEN_SCENE` | L157 |
-| `BASE_SCREEN_SCENE` | L158 |
-| `AUTO_TRADE_SCREEN_SCENE` | L159 |
-| `RUINS_SCREEN_SCENE` | L160 |
-| `PORT_MEMORY_SCREEN_SCENE` | L161 |
-| `SETTLEMENT_SCREEN_SCENE` | L162 |
-| `AT_SEA_SCREEN_SCENE` | L163 |
-| `EVENT_SCREEN_SCENE` | L164 |
-| `SEA_CHART_SCREEN_SCENE` | L165 |
-| `CLUE_LOG_SCREEN_SCENE` | L166 |
-| `STORY_CARD_SCRIPT` | L167 |
-| `STORY_OBJECTIVE_SCRIPT` | L168 |
-| `STORY_FOCUS_SCRIPT` | L169 |
-| `TASK_TRACKER_SCRIPT` | L170 |
-| `VICTORY_SCREEN_SCENE` | L171 |
-| `MAIN_MENU_SCREEN_SCENE` | L172 |
-| `NEW_GAME_SCREEN_SCENE` | L173 |
-| `MODS_SCREEN_SCENE` | L174 |
-| `SETTINGS_SCREEN_SCENE` | L175 |
-| `NAV_ICONS` | L178 |
-| `NAV_ICON_MAX_WIDTH` | L189 |
-| `DEV_TEAM` | L190 |
-| `GAME_VERSION_FALLBACK` | L191 |
-| `SCREENS` | L195 |
-| `HIDDEN_NAV_SCREENS` | L200 |
-| `PORT_STAGE_SCENE_PATH` | L203 |
-| `PORT_STAGE_FACILITY_SCREENS` | L205 |
-| `STAGE_SCREENS` | L218 |
-| `DOCK_PANEL_WIDTH` | L227 |
-| `CARGO_HOLD_PANEL_WIDTH` | L229 |
-| `MARKET_COLUMN_GAP` | L231 |
-| `TOP_CHROME_MAX_HEIGHT` | L235 |
-| `PORT_STATUS_BAR_HEIGHT` | L237 |
-| `PORT_STATUS_BAR_GAP` | L238 |
-| `PORT_SIGN_WIDTH` | L241 |
-| `PORT_SIGN_HEIGHT` | L242 |
-| `PORT_SIGN_GAP` | L243 |
-| `PORT_SIGN_MARGIN` | L244 |
-| `HUD_ICON_KEYS` | L248 |
-| `HUD_SKIN_ICONS` | L259 |
-| `HUD_ICON_SIZE` | L269 |
-| `PAGE_BOTTOM_MARGIN` | L272 |
-| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L273 |
-| `EXIT_UPLOAD_WAIT_SECONDS` | L275 |
+| `UI_THEME` | L159 |
+| `HARBOR_SIGN_SCRIPT` | L161 |
+| `MARKET_SCREEN_SCENE` | L162 |
+| `CARGO_HOLD_PANEL_SCRIPT` | L164 |
+| `ITEM_FALLBACK_ICON` | L166 |
+| `CARRY_GHOST_SCENE` | L170 |
+| `INTERACTION_HINT_SCENE` | L171 |
+| `CONTRACTS_SCREEN_SCENE` | L172 |
+| `SUPPLY_SCREEN_SCENE` | L173 |
+| `INTEL_SCREEN_SCENE` | L174 |
+| `OVERVIEW_SCREEN_SCENE` | L175 |
+| `SHIPYARD_SCREEN_SCENE` | L176 |
+| `BASE_SCREEN_SCENE` | L177 |
+| `AUTO_TRADE_SCREEN_SCENE` | L178 |
+| `RUINS_SCREEN_SCENE` | L179 |
+| `PORT_MEMORY_SCREEN_SCENE` | L180 |
+| `SETTLEMENT_SCREEN_SCENE` | L181 |
+| `AT_SEA_SCREEN_SCENE` | L182 |
+| `EVENT_SCREEN_SCENE` | L183 |
+| `SEA_CHART_SCREEN_SCENE` | L184 |
+| `CLUE_LOG_SCREEN_SCENE` | L185 |
+| `STORY_CARD_SCRIPT` | L186 |
+| `STORY_OBJECTIVE_SCRIPT` | L187 |
+| `STORY_FOCUS_SCRIPT` | L188 |
+| `TASK_TRACKER_SCRIPT` | L189 |
+| `VICTORY_SCREEN_SCENE` | L190 |
+| `MAIN_MENU_SCREEN_SCENE` | L191 |
+| `NEW_GAME_SCREEN_SCENE` | L192 |
+| `MODS_SCREEN_SCENE` | L193 |
+| `SETTINGS_SCREEN_SCENE` | L194 |
+| `NAV_ICONS` | L197 |
+| `NAV_ICON_MAX_WIDTH` | L210 |
+| `DEV_TEAM` | L211 |
+| `GAME_VERSION_FALLBACK` | L212 |
+| `SCREENS` | L216 |
+| `HIDDEN_NAV_SCREENS` | L221 |
+| `PORT_STAGE_SCENE_PATH` | L224 |
+| `PORT_STAGE_FACILITY_SCREENS` | L226 |
+| `STAGE_SCREENS` | L239 |
+| `DOCK_PANEL_WIDTH` | L248 |
+| `CARGO_HOLD_PANEL_WIDTH` | L250 |
+| `MARKET_COLUMN_GAP` | L252 |
+| `TOP_CHROME_MAX_HEIGHT` | L256 |
+| `PORT_STATUS_BAR_HEIGHT` | L258 |
+| `PORT_STATUS_BAR_GAP` | L259 |
+| `PORT_SIGN_WIDTH` | L262 |
+| `PORT_SIGN_HEIGHT` | L263 |
+| `PORT_SIGN_GAP` | L264 |
+| `PORT_SIGN_MARGIN` | L265 |
+| `HUD_ICON_KEYS` | L271 |
+| `HUD_SKIN_ICONS` | L275 |
+| `HUD_ICON_SIZE` | L287 |
+| `PAGE_BOTTOM_MARGIN` | L290 |
+| `PAGE_BOTTOM_MARGIN_WITH_BAR` | L291 |
+| `EXIT_UPLOAD_WAIT_SECONDS` | L293 |
 
 ## 皮肤接线（ui-skin-v1）
 - 所有纹理/图标/颜色经 `SNSkin`（`framework/ui/skin/sn_skin.gd`）读取 `assets/ui/skin/sn_v1/skin.json`；
@@ -71,15 +71,17 @@
   `_bottom_bar_style()` = `SNSkin.panel("status_bar")`（content 14/6）。皮肤缺失时退回 Theme 的
   `SNChromePanel` / `SNStatusBarPanel` 变体，文字与交互不丢。
 - 导航/小按钮走 Theme 变体：当前页 `SNPrimaryButton`，其余 `SNCompactButton`；图标来自
-  `SNSkin.icon()`（`button.icon` + `icon_max_width = 18`），正文仍由 Theme 绘制，`text` 保持原样供测试精确查找。
-- HUD chip 图标：内容包 `icon.*` 资产优先（`AssetService.find_key/load_texture`），缺失时按
-  `HUD_SKIN_ICONS` 回退到皮肤图标；两者都没有时只显示文字。
+  `SNSkin.icon()`（`button.icon` + `icon_max_width = 22`）。2026-10-28 图标轮起导航是
+  纯图标按钮（`text = ""`），入口身份走 `nav_screen` meta，本地化导航名只作 `tooltip_text`。
+- HUD chip 图标：皮肤表 `HUD_SKIN_ICONS` 是唯一来源（语义键 → 皮肤 icon id）；内容包仍可
+  经 `HUD_ICON_KEYS` 覆盖（本轮为空表，`AssetService.find_key` 返回空则安全回退到皮肤），
+  两者都没有时只显示数值文字。
 - 边缘设施招牌交给 `SNHarborSign`（纹理化 Button）；Shell 只负责 `facilities → 页面` 的布局与导航。
 
 ## 尺寸预算
 - `TOP_CHROME_MAX_HEIGHT = 130`：两行 chrome（品牌/状态/时间·金钱·声望 + 资源 chip/导航）实测最小高度必须 ≤130；
-  3D 舞台是主视图，HUD 只做画框。
-- `PORT_STATUS_BAR_HEIGHT = 60`：总览底部状态条固定高度，chip 字号 10/15、按钮 32 高，不得裁内容。
+  3D 舞台是主视图，HUD 只做画框。图标轮后 chip 是 24 px 图标 + 数值单行，比旧的两行 label 更矮。
+- `PORT_STATUS_BAR_HEIGHT = 60`：总览底部状态条固定高度，实测 ≤72 px 预算；chip 数值 15、按钮 32 高，不得裁内容。
 - 招牌 `172×42`、右列固定「海图 ▶」入口；`PageMargin` 底部为页脚/状态条预留 56/84。
 
 ## 契约
@@ -91,6 +93,23 @@
   `_screen_*` 挂载函数与 `ui.nav.*` 本地化键保留：`tools/ui_snapshot.gd` 仍直接路由
   这些页面做视觉验收，未来重新发布时只需从 `HIDDEN_NAV_SCREENS` 移除对应键。
 - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
+
+## HUD 图标化 / 文字精简（2026-10-28 图标轮）
+- 顶部 chrome 的品牌列删掉 9 px `ui.label.port` 小标题，只留港口名（语义进 tooltip）；
+  时间 / 金币 / 声望 chip 只剩图标 + 数值。
+- `_stat_chip()` 统一为「皮肤图标 + 数值」单行容器：`label_text` 变成 chip 的
+  `tooltip_text`，不再画 label；`chip_key` 与内部 `Value` 子节点名保留（煤 / 水逐帧插值依赖）。
+- `HUD_SKIN_ICONS` 语义键：free_weight→resource_cargo、free_capacity→shipyard_cargo、
+  coal→resource_coal、water→resource_water、durability→resource_durability、cargo→resource_cargo、
+  money→resource_coins、reputation→status_reputation、time→status_time、damaged→status_warning；
+  `HUD_ICON_KEYS` 已清空（早期 `icon.money/coal/water` 内容资产退役），只保留内容包覆盖通道。
+- 导航纯图标：`SCREENS` 每个入口 44×36、`text=""`、`tooltip_text = ui.nav.<screen>`、
+  `set_meta("nav_screen", screen)`；海图 toggle 同样带 `nav_screen = "sea_chart"`。
+  `_story_nav_button()` 先按 meta 解析、再按旧文字回退，隐藏入口仍返回 null。
+- 底部状态条：chip 图标化 + tooltip；「最新通告」小标题删除，正文前加 `nav_intelligence`
+  图标（tooltip = `ui.label.latest_notice`）；海图入口纯图标（节点名 `ChartButton` 不变）；
+  等待按钮「12 h」+ `status_time` 图标，tooltip = `ui.button.wait_hours`（格式化 12）。
+  「详细总览 / 回到场景」保留文字。无损伤时受损 chip 不显示警告图标（只留灰字「无」）。
 
 ## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
 - `ui:*` 是**玩家动作**，由 Shell 在动作发生处上报一次：`ui:chart_opened` 在

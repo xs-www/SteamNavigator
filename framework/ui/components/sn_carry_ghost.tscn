@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://hpobeqoxvlym" path="res://framework/ui/components/sn_carry_ghost.gd" id="1_script"]
 [ext_resource type="Theme" uid="uid://donrdopu47413" path="res://assets/ui/theme/steam_navigator_theme.tres" id="2_theme"]
-[ext_resource type="Texture2D" uid="uid://dvk6lfh7q3elm" path="res://dev_mods/core/assets/icons/items/boiler_plate.svg" id="3_ywhhm"]
+[ext_resource type="Texture2D" uid="uid://bjvow734jyv62" path="res://assets/ui/icons/item_fallback.svg" id="3_ywhhm"]
 
 [node name="SNCarryGhost" type="Control" unique_id=1757886471]
 layout_mode = 3

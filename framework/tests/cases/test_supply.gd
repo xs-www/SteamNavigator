@@ -229,12 +229,21 @@ func test_supply_meter_loss_api_stays_backward_compatible() -> void:
 	assert_almost_eq(card_meter.maximum_value, 40.0, 0.001, "card forwards the reachable capacity")
 	assert_almost_eq(card_meter.loss_value, 10.0, 0.001, "card forwards the cap loss as the reverse band")
 	var texts: Array[String] = []
-	for row in content.get_children():
-		if row is HBoxContainer:
-			for child in row.get_children():
-				if child is Label:
-					texts.append((child as Label).text)
+	var tooltips: Array[String] = []
+	# 2026-10-28 图标轮后信息行是「chip（图标 + 数值）」的嵌套结构，递归收集。
+	var stack: Array = [content]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is Label:
+			texts.append(String((node as Label).text))
+		if node is Control and not String((node as Control).tooltip_text).is_empty():
+			tooltips.append(String((node as Control).tooltip_text))
+		for child in node.get_children():
+			stack.append(child)
 	var joined := " | ".join(texts)
-	assert_true(joined.contains("上限损失 10"), "card shows the cap loss: %s" % joined)
-	assert_true(joined.contains("剩余可装 35"), "card shows the remaining headroom: %s" % joined)
+	# 2026-10-28 图标轮：补给卡信息行改「图标 + 数值」，字段名只挂在 chip 的 tooltip 上。
+	assert_true(joined.contains("10"), "card shows the cap loss value: %s" % joined)
+	assert_true(joined.contains("35"), "card shows the remaining headroom value: %s" % joined)
+	assert_true(tooltips.has("上限损失"), "the cap-loss chip keeps its field name in the tooltip: %s" % str(tooltips))
+	assert_true(tooltips.has("剩余可装"), "the headroom chip keeps its field name in the tooltip: %s" % str(tooltips))
 	card.free()

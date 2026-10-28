@@ -1,7 +1,7 @@
 class_name SNItemTile
 extends PanelContainer
 ## @static-doc
-## 作用：市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。
+## 作用：市场 / 船只背包的单个物品图标格子：显示图标、名称、可选副标题与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。
 ##
 ## One icon tile of the direct-manipulation market screen.
 ##
@@ -11,6 +11,11 @@ extends PanelContainer
 ## press, so incrementing on press would double-count the dragged unit); right
 ## click clears it; dragging emits a copy of the configured payload with
 ## `amount = max(pending, 1)`.
+##
+## The subtitle line is optional: an empty `subtitle` hides the node entirely
+## (2026-10-28 text slimming — market tiles only show "仅收购" when the row cannot
+## be bought; category / material tags no longer render), so tiles without copy
+## keep the same title / meta / badge contract.
 ##
 ## ## 角标语义（badge_mode）
 ## - `pending`（默认，船舱 / 仓库格）：右上角 `×N` = 已选待交易数量，pending=0 时隐藏。
@@ -32,6 +37,8 @@ extends PanelContainer
 ## - `configure()` 接收 `{title, subtitle, meta, icon: Texture2D, max_pending,
 ##   draggable, payload: Dictionary, locked?, badge_mode?, stock?}`；`payload` 必须带顶层 `kind`。
 ##   `badge_mode` 缺省为 `"pending"`，旧调用方（船舱 / 仓库格）行为不变。
+##   `subtitle` 为空字符串时副标题行自动隐藏（不占行、不进 tooltip）；市场格现在
+##   只在 `buyable=false` 时传入「仅收购」，其余行为不带副标题。
 ## - 委托货 / 不可交易行由 `draggable=false` + `locked=true` 表达，同时
 ##   `max_pending=0`，左键与拖拽都无效。
 ## - 左键只在 **release** 时 +1；拖拽起手（press → `_get_drag_data`）不改变 pending，

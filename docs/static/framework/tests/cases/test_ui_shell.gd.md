@@ -34,36 +34,36 @@
 | `SETTINGS_SCREEN_SCRIPT` | L33 |
 | `STEADY_BUILD` | L34 |
 | `LITERAL_EXPECTED_NOTICE_KEYS` | L40 |
-| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L205 |
-| `test_damaged_module_is_visible_in_the_shell() -> void` | L246 |
-| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L265 |
-| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L334 |
-| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L380 |
-| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L431 |
-| `test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void` | L462 |
-| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L510 |
-| `test_base_page_claims_and_builds_from_the_ui() -> void` | L542 |
-| `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L574 |
-| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L592 |
-| `test_notice_log_renders_filled_localized_text() -> void` | L634 |
-| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L727 |
-| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L760 |
-| `test_unpublished_systems_have_no_player_navigation_entry() -> void` | L998 |
-| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L1049 |
-| `test_overview_status_strip_and_detail_drawer() -> void` | L1069 |
-| `test_sea_chart_entry_integration() -> void` | L1149 |
-| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1245 |
-| `test_market_page_three_column_icon_trading() -> void` | L1300 |
-| `test_market_drag_drops_emit_the_contract_commands() -> void` | L1461 |
-| `test_query_read_scope_shares_one_snapshot_and_command_invalidates_it() -> void` | L1611 |
-| `test_port_name_lookup_fills_a_per_run_cache() -> void` | L1647 |
-| `test_prepare_quit_unmounts_the_stage_and_clears_pages() -> void` | L1668 |
-| `test_market_pickup_ghost_and_offer_targets() -> void` | L1686 |
-| `test_market_pickup_click_places_the_carried_amount() -> void` | L1804 |
-| `test_market_tile_remaining_badge_and_estimated_cost_ghost() -> void` | L1950 |
-| `test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void` | L2054 |
-| `test_settings_screen_offers_the_telemetry_row() -> void` | L2142 |
-| `test_shell_telemetry_toggle_updates_service_and_settings() -> void` | L2197 |
+| `test_dense_screen_fields_keep_horizontal_minimum_widths() -> void` | L241 |
+| `test_damaged_module_is_visible_in_the_shell() -> void` | L282 |
+| `test_stats_bar_shows_the_current_port_and_remaining_capacity() -> void` | L304 |
+| `test_victory_plan_explains_how_to_clear_the_mvp() -> void` | L373 |
+| `test_shipyard_order_and_port_wait_make_time_move() -> void` | L419 |
+| `test_market_supply_block_paints_the_lost_capacity_band() -> void` | L470 |
+| `test_shipyard_refit_draws_over_the_port_stage_and_chrome_names_the_port() -> void` | L501 |
+| `test_tavern_screen_renders_price_intel_and_port_clues() -> void` | L549 |
+| `test_base_page_claims_and_builds_from_the_ui() -> void` | L581 |
+| `test_auto_trade_page_starts_a_policy_from_the_ui() -> void` | L613 |
+| `test_ruins_page_starts_an_expedition_from_the_ui() -> void` | L631 |
+| `test_notice_log_renders_filled_localized_text() -> void` | L673 |
+| `test_every_pushed_notice_key_is_localized_in_both_languages() -> void` | L766 |
+| `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome() -> void` | L799 |
+| `test_unpublished_systems_have_no_player_navigation_entry() -> void` | L1043 |
+| `test_overview_stage_falls_back_to_the_usable_2d_overview() -> void` | L1098 |
+| `test_overview_status_strip_and_detail_drawer() -> void` | L1118 |
+| `test_sea_chart_entry_integration() -> void` | L1205 |
+| `test_sea_chart_buys_an_intel_clue_from_the_panel() -> void` | L1301 |
+| `test_market_page_three_column_icon_trading() -> void` | L1356 |
+| `test_market_drag_drops_emit_the_contract_commands() -> void` | L1517 |
+| `test_query_read_scope_shares_one_snapshot_and_command_invalidates_it() -> void` | L1667 |
+| `test_port_name_lookup_fills_a_per_run_cache() -> void` | L1703 |
+| `test_prepare_quit_unmounts_the_stage_and_clears_pages() -> void` | L1724 |
+| `test_market_pickup_ghost_and_offer_targets() -> void` | L1742 |
+| `test_market_pickup_click_places_the_carried_amount() -> void` | L1860 |
+| `test_market_tile_remaining_badge_and_estimated_cost_ghost() -> void` | L2006 |
+| `test_interaction_hint_pops_at_the_cursor_for_command_feedback() -> void` | L2110 |
+| `test_settings_screen_offers_the_telemetry_row() -> void` | L2198 |
+| `test_shell_telemetry_toggle_updates_service_and_settings() -> void` | L2253 |
 
 ## 契约与约束
 
@@ -80,7 +80,8 @@
 - 扫描 domain/application 源码里所有 `push_notice("…")` 字面量：每个键在 framework 或 core 的 zh_CN/en 中恰好被一套定义，两套 locale 的键集合与**保序**槽位序列一致；槽位多于一个的键必须出现在用例的逐语言字面期望清单里。
 - 组件按路径 preload，不依赖编辑器全局类缓存。
 - `test_overview_defaults_to_the_3d_port_stage_with_compact_chrome`：seed 5205 切总览后断言 `_overview_stage_mode` 默认 true、`PortStage` 已挂载且设施数 = port.view；`_top_chrome` 最小高度 ≤130 px，且港口/金钱/声望/剩余载重/货舱/耐久/煤/水 chip 与 6 个导航按钮 + 海图切换、诊断/刷新按钮全部保留（4.3.4/U7 删除出航导航页）。
-- HUD 图标：`AssetService.find_key("icon.money")` / coal / water 均能解析且 `has()` 为真；chrome 里至少 3 个 `TextureRect` 且每个都有已加载纹理（缺资产时页面应退化为纯文字，不产生空纹理节点）。
+- HUD 图标（2026-10-28 图标轮）：chip 只由皮肤表 `HUD_SKIN_ICONS` 驱动（逻辑键 → `SNSkin.icon(id)`，字段名只挂在 chip 的 `tooltip_text` 上，不再有 9 px 文字标签）；chrome 里每个 `TextureRect` 都有已加载纹理，早期内容 `icon.money` / `icon.coal` / `icon.water` 已从 Core manifest 退役。
+- 导航（2026-10-28 图标轮）：`Nav` 下每个入口是纯图标 Button（`text == ""`、`tooltip_text == ui.nav.<screen>`、`set_meta("nav_screen", screen)`）；隐藏系统按 meta 断言不存在，剧情引导 `_story_nav_button()` 也按 meta 解析。
 - 窗口缩放说明：`canvas_items + expand` 把 960×540 窗口映射为缩放后的 1600×900 逻辑画布，因此 chrome 保留全部 chip（含剩余载重/货舱），不设 compact 分支；960×540 验收截图是这条布局的证据。
 - 招牌组件：present 设施的 Button 必须 `has_method("configure")`（SNHarborSign）、`custom_minimum_size == 172×42`，`arrow_direction` 与投影左右列一致（左列 -1、右列 1）；文字仍以 `设施 ▶` / `◀ 设施` 结尾/开头。
 - 同一用例断言两侧招牌：投影 x<0.5 进左列（文字 `设施 ▶`）、≥0.5 进右列（`◀ 设施`），数量 = 设施数 + 1（`Hotspot_sea_chart` 固定在右下，4.3.4 起替代出航招牌）；1280×720 重排后数量不丢不重；点 exchange 招牌进入 market。

@@ -22,7 +22,7 @@
 | `components/sn_intel_table.gd` | 商品 × 港口对比表控件：一次渲染情报矩阵的列头、价格/趋势单元格与图例。 | [查看](./components/sn_intel_table.gd.md) |
 | `components/sn_interaction_hint.gd` | 框架级「交互处浮出提示」：把命令成功 / 失败的一句话反馈画在最后鼠标位置旁（皮肤底板 + 语义图标 + 短淡出），挂在 Shell 的页面滚动区之外，任意页面都能复用，顶部状态 banner 仍保留。 | [查看](./components/sn_interaction_hint.gd.md) |
 | `components/sn_interaction_hint.tscn` | 框架级「交互处浮出提示」的场景骨架（P0 场景化，契约见 `docs/specs/UI_SCENE_MIGRATION.md`）：皮肤底板 + 语义图标 + 单行消息；`sn_interaction_hint.gd` 负责延迟解析、成功/失败色调、位置钳制与淡出 Tween。 | [查看](./components/sn_interaction_hint.tscn.md) |
-| `components/sn_item_tile.gd` | 市场 / 船只背包的单个物品图标格子：显示图标、名称、分类与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。 | [查看](./components/sn_item_tile.gd.md) |
+| `components/sn_item_tile.gd` | 市场 / 船只背包的单个物品图标格子：显示图标、名称、可选副标题与价格信息与数量角标；左键单击（release）待交易数量 +1（不超过 `max_pending`）、右键清空，可拖拽时把带 `kind` 与 `amount` 的载荷交给 SNDropZone。 | [查看](./components/sn_item_tile.gd.md) |
 | `components/sn_nav_button.gd` | 主导航 / 侧牌用的图标导航按钮：皮肤图标 + 原样文字，`active` 表达当前页选中态，`primary` / `compact` 选择黄铜主操作或小铭牌语义；外观全部来自 Theme variation。 | [查看](./components/sn_nav_button.gd.md) |
 | `components/sn_panel.gd` | 可复用界面表面：基础、高架、内嵌三种层级，外加羊皮纸、蓝图（技术页）、画布与玻璃浮层四种材质变体；只通过 Theme variation 换材质，不在调用处复制 StyleBox。 | [查看](./components/sn_panel.gd.md) |
 | `components/sn_panel.tscn` | 框架源文件：sn_panel.tscn | 本页 |
@@ -44,7 +44,7 @@
 | `components/sn_stage_host.gd` | 通用 3D 舞台宿主（SubViewportContainer）：持有独占 SubViewport/World3D，加载并挂载一个 `LocationStage`，驱动 enter→bind 生命周期、舞台显隐与渲染停更，并转发 `portal_requested` / `fallback_requested`；同时是船厂 `SNShipView` 的渲染器后端。 | [查看](./components/sn_stage_host.gd.md) |
 | `components/sn_story_card.gd` | 新手剧情 / 教学系统的全屏剧情卡（阶段 4.5）。深色遮罩 + 居中剧情面板： | [查看](./components/sn_story_card.gd.md) |
 | `components/sn_story_objective.gd` | 新手剧情 / 教学系统的非阻塞目标条（阶段 4.5）：顶部居中的小面板，显示 | [查看](./components/sn_story_objective.gd.md) |
-| `components/sn_supply_card.gd` | 单种补给品的决策卡：存量、可补上限、价格、港存、预计续航和购买操作。 | [查看](./components/sn_supply_card.gd.md) |
+| `components/sn_supply_card.gd` | 单种补给品的决策卡：存量条、可补上限、价格、港存、预计续航和购买操作；信息行已图标化（图标 + 数值，字段名只进 tooltip）。 | [查看](./components/sn_supply_card.gd.md) |
 | `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
 | `components/sn_task_tracker.gd` | HUD 任务追踪条（阶段 4.6 Phase A）——显示 `task.view.active_task` 的类别、 | [查看](./components/sn_task_tracker.gd.md) |
 | `components/sn_voyage_confirm.gd` | 海图内的出航确认弹窗（阶段 4.3.4 / U7）。以半透明遮罩 + 居中面板覆盖海图， | [查看](./components/sn_voyage_confirm.gd.md) |
@@ -80,7 +80,7 @@
 | `screens/port/base_screen.tscn` | 框架源文件：base_screen.tscn | 本页 |
 | `screens/port/contracts_screen.gd` | 委托页面场景：按可接/进行中分组渲染主线与普通委托卡，并发出接取或规划出航意图。 | [查看](./screens/port/contracts_screen.gd.md) |
 | `screens/port/contracts_screen.tscn` | 框架源文件：contracts_screen.tscn | 本页 |
-| `screens/port/market_screen.gd` | 港口市场页面（图标直接交易）：账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。 | [查看](./screens/port/market_screen.gd.md) |
+| `screens/port/market_screen.gd` | 港口市场页面（图标直接交易）：单行图标账册摘要 + 行情图标网格（左键 +1 / 右键清空 / 拖拽交易）+ 补给区块；行情格右上角显示剩余库存，整块市场面板是卖出落点，把拖入的船舱 / 仓库货物映射成 `trade.sell {source}` 命令。 | [查看](./screens/port/market_screen.gd.md) |
 | `screens/port/market_screen.tscn` | 框架源文件：market_screen.tscn | 本页 |
 | `screens/port/overview_screen.gd` | 港口总览页面场景：组合港口横幅、主线目标、通关清单、船只摘要、快捷操作、财务与航行记录；三种呈现由 Shell 控制——裸 3D 舞台（页面只留 spacer）、详细总览抽屉（原 2D 面板覆盖舞台）与 2D 回退总览。阶段 4.3 / U6 起不再渲染旧线稿海图。 | [查看](./screens/port/overview_screen.gd.md) |
 | `screens/port/overview_screen.tscn` | 框架源文件：overview_screen.tscn | 本页 |

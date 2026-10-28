@@ -14,10 +14,7 @@
 | `assets/blueprints/ships/SN_Paddle_Steamer/SN_Paddle_Steamer.top.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.side.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/blueprints/ships/SN_Schooner_Fame/SN_Schooner_Fame.top.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `assets/icons/coal.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `assets/icons/items/boiler_plate.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/items/brass.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `assets/icons/items/contract_freight.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/items/glassware.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/items/iron_ore.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/items/precision_gear.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -25,7 +22,6 @@
 | `assets/icons/items/spices.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/items/textiles.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/items/timber.svg` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `assets/icons/money.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/ui/action_add.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/ui/action_confirm.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/ui/action_remove.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
@@ -56,7 +52,6 @@
 | `assets/icons/ui/status_unlocked.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/ui/status_warning.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/icons/ui/status_weather.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
-| `assets/icons/water.png` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/SN_Arch_Factory.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/SN_Arch_Factory_LOD1.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |
 | `assets/models/architecture/SN_Arch_Gate.glb` | 官方 Core 内容文件（manifest/content/localization/assets）。 | 本页 |

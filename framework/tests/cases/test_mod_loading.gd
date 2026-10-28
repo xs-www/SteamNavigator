@@ -6,10 +6,14 @@ extends TestCase
 ## `information.texture` must resolve to a real `Texture2D` through
 ## `AssetService` (imported `.ctex` or raw SVG via `ContentAssetLoader`), and the
 ## framework-wide `assets/ui/icons/item_fallback.svg` placeholder must load.
+## 2026-10-28 icon round: four items moved onto the new `icon.ui.*` batch and the
+## early `icon.coal|money|water` PNGs + two replaced SVG placeholders were retired.
 ## The 30 UI icons from `docs/design/ui_icons_v1/` are also registered as Core
 ## `icon.ui.*` resources (`assets/icons/ui/*.png`) and kept byte-identical to the
 ## runtime skin icons, so content / future systems can call them by bare key.
 
+## 2026-10-28 图标轮：4 个商品改用新皮肤图标批次的 `icon.ui.*` 资源键
+## （煤 / 水 / 锅炉钢板 / 委托货箱），其余 8 个仍用早期 SVG 占位图（语义没有更准的新图标）。
 const ITEM_ICON_LOCAL_IDS := [
 	"iron_ore",
 	"brass",
@@ -17,11 +21,17 @@ const ITEM_ICON_LOCAL_IDS := [
 	"spices",
 	"timber",
 	"glassware",
-	"contract_freight",
-	"boiler_plate",
 	"precision_gear",
 	"sealing_compound",
 ]
+
+## 这批商品改用 30 枚 UI 图标里的对应语义图标（`icon.ui.*`）。
+const ITEM_UI_ICON_IDS := {
+	"core:item/coal": "resource_coal",
+	"core:item/water": "resource_water",
+	"core:item/boiler_plate": "shipyard_hull",
+	"core:item/contract_freight": "resource_cargo",
+}
 
 ## Scratch dir for the raw-SVG load assertion (see the icon asset test).
 const RAW_ICON_COPY_DIR := "user://item_icon_raw_check"
@@ -61,7 +71,11 @@ func test_registry_accessible_after_freeze() -> void:
 			"every Core manifest asset is registered (image, model and shared-texture keys)"
 		)
 	var coal := context.registries.get_by_id(ContentTypes.ITEM, "core:item/coal")
-	assert_eq(String(coal.information.get("texture", "")), "icon.coal", "Core items expose parsed texture information")
+	assert_eq(
+		String(coal.information.get("texture", "")),
+		"icon.ui.resource_coal",
+		"Core items expose parsed texture information (new skin icon batch)"
+	)
 	assert_eq(coal.asset_uri("model"), "asset://core/model.good.coal", "Core items expose namespaced model URIs")
 	assert_true(context.assets.has(coal.asset_uri("texture")), "Core texture URI resolves")
 	assert_true(context.assets.has(coal.asset_uri("model")), "Core model URI resolves")
@@ -96,7 +110,9 @@ func test_third_party_mod_uses_public_api() -> void:
 
 ## Icons are content data, not framework UI: every item that exposes
 ## `information.texture` must resolve through `AssetService` (asset:// URI ->
-## imported resource or raw mod file). Coal / water keep their existing PNGs.
+## imported resource or raw mod file). The 2026-10-28 icon round moved coal /
+## water / boiler plate / contract freight onto the new `icon.ui.*` batch; the
+## other eight items keep their early SVG placeholders (no better new match).
 func test_item_texture_icons_load() -> void:
 	var boot := bootstrap_core()
 	var context: AppContext = boot["context"]
@@ -104,6 +120,7 @@ func test_item_texture_icons_load() -> void:
 	assert_eq(items.size(), 12, "core registers 12 items")
 	var textured := 0
 	var item_icon_keys := {}
+	var ui_icon_keys := {}
 	for definition in items:
 		var texture_key := String(definition.information.get("texture", "")).strip_edges()
 		if texture_key.is_empty():
@@ -111,6 +128,8 @@ func test_item_texture_icons_load() -> void:
 		textured += 1
 		if texture_key.begins_with("icon.item."):
 			item_icon_keys[texture_key] = true
+		if texture_key.begins_with("icon.ui."):
+			ui_icon_keys[texture_key] = true
 		var logical_key := definition.asset_uri("texture")
 		assert_true(context.assets.has(logical_key), "item %s texture asset is mounted (%s)" % [definition.id, logical_key])
 		var texture: Texture2D = context.assets.load_texture(logical_key)
@@ -120,12 +139,29 @@ func test_item_texture_icons_load() -> void:
 		if not model_key.is_empty():
 			assert_true(context.assets.has(definition.asset_uri("model")), "item %s keeps its model asset" % definition.id)
 	assert_eq(textured, 12, "every core item declares information.texture")
-	assert_eq(item_icon_keys.size(), ITEM_ICON_LOCAL_IDS.size(), "ten items use an icon.item.* placeholder")
+	assert_eq(item_icon_keys.size(), ITEM_ICON_LOCAL_IDS.size(), "eight items keep the early icon.item.* SVG placeholder")
 	for local_id in ITEM_ICON_LOCAL_IDS:
 		assert_true(item_icon_keys.has("icon.item.%s" % local_id), "icon.item.%s is used by an item definition" % local_id)
+	assert_eq(ui_icon_keys.size(), ITEM_UI_ICON_IDS.size(), "four items use the new icon.ui.* batch")
+	for item_id in ITEM_UI_ICON_IDS:
+		var icon_id := String(ITEM_UI_ICON_IDS[item_id])
+		var definition := context.registries.get_by_id(ContentTypes.ITEM, item_id)
+		assert_not_null(definition, "%s is registered" % item_id)
+		if definition == null:
+			continue
+		assert_eq(
+			String(definition.information.get("texture", "")),
+			"icon.ui.%s" % icon_id,
+			"%s uses the new skin icon icon.ui.%s" % [item_id, icon_id]
+		)
+		assert_true(context.assets.has("asset://core/icon.ui.%s" % icon_id),
+			"icon.ui.%s resolves through AssetService" % icon_id)
 
 
-## Manifest keys, loose Core files and the real load chain for the 10 SVG icons.
+
+## Manifest keys, loose Core files and the real load chain for the remaining early
+## SVG item icons (8 after the 2026-10-28 icon round; coal / water / boiler plate /
+## contract freight now use the new `icon.ui.*` PNG batch).
 ## `AssetService.load_texture()` covers whichever branch the environment provides
 ## (imported `.ctex` or raw mod file); `.snavmod` packs ship the SVGs raw, so the
 ## `ContentAssetLoader` rasterization path is asserted separately.

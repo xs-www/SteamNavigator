@@ -9,15 +9,17 @@ extends Control
 ##   `_bottom_bar_style()` = `SNSkin.panel("status_bar")`（content 14/6）。皮肤缺失时退回 Theme 的
 ##   `SNChromePanel` / `SNStatusBarPanel` 变体，文字与交互不丢。
 ## - 导航/小按钮走 Theme 变体：当前页 `SNPrimaryButton`，其余 `SNCompactButton`；图标来自
-##   `SNSkin.icon()`（`button.icon` + `icon_max_width = 18`），正文仍由 Theme 绘制，`text` 保持原样供测试精确查找。
-## - HUD chip 图标：内容包 `icon.*` 资产优先（`AssetService.find_key/load_texture`），缺失时按
-##   `HUD_SKIN_ICONS` 回退到皮肤图标；两者都没有时只显示文字。
+##   `SNSkin.icon()`（`button.icon` + `icon_max_width = 22`）。2026-10-28 图标轮起导航是
+##   纯图标按钮（`text = ""`），入口身份走 `nav_screen` meta，本地化导航名只作 `tooltip_text`。
+## - HUD chip 图标：皮肤表 `HUD_SKIN_ICONS` 是唯一来源（语义键 → 皮肤 icon id）；内容包仍可
+##   经 `HUD_ICON_KEYS` 覆盖（本轮为空表，`AssetService.find_key` 返回空则安全回退到皮肤），
+##   两者都没有时只显示数值文字。
 ## - 边缘设施招牌交给 `SNHarborSign`（纹理化 Button）；Shell 只负责 `facilities → 页面` 的布局与导航。
 ##
 ## ## 尺寸预算
 ## - `TOP_CHROME_MAX_HEIGHT = 130`：两行 chrome（品牌/状态/时间·金钱·声望 + 资源 chip/导航）实测最小高度必须 ≤130；
-##   3D 舞台是主视图，HUD 只做画框。
-## - `PORT_STATUS_BAR_HEIGHT = 60`：总览底部状态条固定高度，chip 字号 10/15、按钮 32 高，不得裁内容。
+##   3D 舞台是主视图，HUD 只做画框。图标轮后 chip 是 24 px 图标 + 数值单行，比旧的两行 label 更矮。
+## - `PORT_STATUS_BAR_HEIGHT = 60`：总览底部状态条固定高度，实测 ≤72 px 预算；chip 数值 15、按钮 32 高，不得裁内容。
 ## - 招牌 `172×42`、右列固定「海图 ▶」入口；`PageMargin` 底部为页脚/状态条预留 56/84。
 ##
 ## ## 契约
@@ -29,6 +31,23 @@ extends Control
 ##   `_screen_*` 挂载函数与 `ui.nav.*` 本地化键保留：`tools/ui_snapshot.gd` 仍直接路由
 ##   这些页面做视觉验收，未来重新发布时只需从 `HIDDEN_NAV_SCREENS` 移除对应键。
 ## - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
+##
+## ## HUD 图标化 / 文字精简（2026-10-28 图标轮）
+## - 顶部 chrome 的品牌列删掉 9 px `ui.label.port` 小标题，只留港口名（语义进 tooltip）；
+##   时间 / 金币 / 声望 chip 只剩图标 + 数值。
+## - `_stat_chip()` 统一为「皮肤图标 + 数值」单行容器：`label_text` 变成 chip 的
+##   `tooltip_text`，不再画 label；`chip_key` 与内部 `Value` 子节点名保留（煤 / 水逐帧插值依赖）。
+## - `HUD_SKIN_ICONS` 语义键：free_weight→resource_cargo、free_capacity→shipyard_cargo、
+##   coal→resource_coal、water→resource_water、durability→resource_durability、cargo→resource_cargo、
+##   money→resource_coins、reputation→status_reputation、time→status_time、damaged→status_warning；
+##   `HUD_ICON_KEYS` 已清空（早期 `icon.money/coal/water` 内容资产退役），只保留内容包覆盖通道。
+## - 导航纯图标：`SCREENS` 每个入口 44×36、`text=""`、`tooltip_text = ui.nav.<screen>`、
+##   `set_meta("nav_screen", screen)`；海图 toggle 同样带 `nav_screen = "sea_chart"`。
+##   `_story_nav_button()` 先按 meta 解析、再按旧文字回退，隐藏入口仍返回 null。
+## - 底部状态条：chip 图标化 + tooltip；「最新通告」小标题删除，正文前加 `nav_intelligence`
+##   图标（tooltip = `ui.label.latest_notice`）；海图入口纯图标（节点名 `ChartButton` 不变）；
+##   等待按钮「12 h」+ `status_time` 图标，tooltip = `ui.button.wait_hours`（格式化 12）。
+##   「详细总览 / 回到场景」保留文字。无损伤时受损 chip 不显示警告图标（只留灰字「无」）。
 ##
 ## ## 剧情 UI 事件时机与强制引导（v0.2.0-dev.3 #1 / #3）
 ## - `ui:*` 是**玩家动作**，由 Shell 在动作发生处上报一次：`ui:chart_opened` 在
@@ -186,7 +205,9 @@ const NAV_ICONS := {
 	"tavern": "nav_intelligence",
 	"sea_chart": "nav_chart",
 }
-const NAV_ICON_MAX_WIDTH := 18
+## Icon-only navigation: the glyph is the whole button face, so it gets a bit more
+## width than the old text+18 px icon layout.
+const NAV_ICON_MAX_WIDTH := 22
 const DEV_TEAM := "PlayThought Team"
 const GAME_VERSION_FALLBACK := "0.2.0"
 
@@ -242,26 +263,23 @@ const PORT_SIGN_WIDTH := 172.0
 const PORT_SIGN_HEIGHT := 42.0
 const PORT_SIGN_GAP := 10.0
 const PORT_SIGN_MARGIN := 20.0
-## Optional HUD icon keys. Content packs may declare `icon.*` assets; the Shell
-## resolves whichever mounted pack provides them and falls back to the skin icon
-## table (`HUD_SKIN_ICONS`), then to a text-only chip when neither exists.
-const HUD_ICON_KEYS := {
-	"money": "icon.money",
-	"coal": "icon.coal",
-	"water": "icon.water",
-	"durability": "icon.durability",
-	"cargo": "icon.cargo",
-	"reputation": "icon.reputation",
-	"time": "icon.time",
-	"damaged": "icon.damaged",
-}
-## Skin icon fallback per logical HUD key (assets/ui/skin/sn_v1/icons).
+## Optional HUD icon overrides. Content packs may declare `icon.*` assets and the
+## Shell resolves whichever mounted pack provides them (`AssetService.find_key`),
+## then falls back to the skin table below. 2026-10-28 图标轮：退役的早期内容图标
+## （`icon.money` / `icon.coal` / `icon.water`）与从未声明的键全部清空，HUD chip 统一
+## 走 `HUD_SKIN_ICONS`；覆盖通道保留给未来的内容包（`find_key` 返回空也安全回退）。
+const HUD_ICON_KEYS := {}
+## Skin icon per logical HUD key (assets/ui/skin/sn_v1/icons). The two cargo crates
+## are told apart by their tooltip: free_weight = 剩余载重, free_capacity = 剩余货舱；
+## `cargo` 是底部状态条的已用货舱读数。
 const HUD_SKIN_ICONS := {
-	"money": "resource_coins",
+	"free_weight": "resource_cargo",
+	"free_capacity": "shipyard_cargo",
 	"coal": "resource_coal",
 	"water": "resource_water",
 	"durability": "resource_durability",
 	"cargo": "resource_cargo",
+	"money": "resource_coins",
 	"reputation": "status_reputation",
 	"time": "status_time",
 	"damaged": "status_warning",
@@ -1088,13 +1106,16 @@ func _resolve_story_focus_target(target_id: String) -> Control:
 	return null
 
 
-## A navigation button from the compact chrome. The buttons are stock `Button`s
-## labelled with `ui.nav.<screen>`, so resolution stays independent of node names
-## added by other UI work.
+## A navigation button from the compact chrome. 2026-10-28 图标轮：按钮是纯图标，
+## 入口身份存放在 `nav_screen` meta 里，所以解析优先按 meta；旧皮肤 / 旧路径仍可能
+## 用文字标按钮，保留精确文字匹配作为回退，隐藏入口继续返回 null。
 func _story_nav_button(screen: String) -> Control:
 	var nav := find_child("Nav", true, false)
 	if nav == null:
 		return null
+	for child in nav.get_children():
+		if child is Button and String((child as Button).get_meta("nav_screen", "")) == screen:
+			return child
 	var wanted := _tr("ui.nav.%s" % screen, screen)
 	for child in nav.get_children():
 		if child is Button and String((child as Button).text) == wanted:
@@ -1207,8 +1228,9 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	var brand := VBoxContainer.new()
 	brand.name = "PortBrand"
 	brand.add_theme_constant_override("separation", 0)
+	brand.tooltip_text = _tr("ui.label.port", "Port")
 	row.add_child(brand)
-	brand.add_child(_label(_tr("ui.label.port", "Port"), 9, SNSkin.color("text.muted")))
+	# 2026-10-28 图标轮：删掉 9 px 的「港口」小标题，品牌列只留港口名。
 	brand.add_child(_label(_current_port_label(data), 22, SNSkin.color("brass.highlight")))
 	row.add_child(_badge(
 		_tr(String(app.get("status_key", "ui.status.ok")), ""),
@@ -1216,12 +1238,13 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 	))
 	row.add_child(_label("v%s" % app.get("framework_version", "?"), 10, SNSkin.color("text.muted")))
 	row.add_child(VSeparator.new())
+	# 时间 / 金币 / 声望：只留图标 + 数值，标签文案进 tooltip（`_stat_chip` 负责）。
 	for stat in [
-		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), SNSkin.color("text.light"), HUD_ICON_KEYS["time"]],
-		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), SNSkin.color("brass.highlight"), HUD_ICON_KEYS["money"]],
-		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), SNSkin.color("state.success"), HUD_ICON_KEYS["reputation"]],
+		[_tr("ui.label.time", "Time"), String(data.get("time_label", "")), SNSkin.color("text.light"), "time"],
+		[_tr("ui.label.money", "Money"), str(int(data.get("money", 0))), SNSkin.color("brass.highlight"), "money"],
+		[_tr("ui.label.reputation", "Reputation"), str(int(data.get("reputation", 0))), SNSkin.color("state.success"), "reputation"],
 	]:
-		row.add_child(_stat_chip(stat[0], stat[1], stat[2], 10, 16, String(stat[3])))
+		row.add_child(_stat_chip(stat[0], stat[1], stat[2], 16, String(stat[3])))
 	var top_spacer := Control.new()
 	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(top_spacer)
@@ -1245,17 +1268,17 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 		[_tr("ui.label.free_weight", ""), "%s / %s" % [
 			_fmt(float(ship.get("free_weight", 0.0))),
 			_fmt(float(ship.get("max_weight", 0.0))),
-		], SNSkin.color("text.light"), HUD_ICON_KEYS["cargo"]],
+		], SNSkin.color("text.light"), "free_weight"],
 		[_tr("ui.label.free_capacity", ""), "%s / %s" % [
 			_fmt(float(ship.get("free_cargo_capacity", 0.0))),
 			_fmt(float(ship.get("cargo_capacity", 0.0))),
-		], SNSkin.color("state.water"), HUD_ICON_KEYS["cargo"]],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), HUD_ICON_KEYS["coal"], "CoalChip"],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), HUD_ICON_KEYS["water"], "WaterChip"],
+		], SNSkin.color("state.water"), "free_capacity"],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), "coal", "CoalChip"],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), "water", "WaterChip"],
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
 			_fmt(float(ship.get("durability", 0.0))),
 			_fmt(float(ship.get("max_durability", 0.0))),
-		], SNSkin.color("state.success"), HUD_ICON_KEYS["durability"]],
+		], SNSkin.color("state.success"), "durability"],
 	]
 	var damaged_modules := int(ship.get("damaged_modules", 0))
 	if damaged_modules > 0:
@@ -1264,11 +1287,11 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 			_tr("ui.label.module_status", "Modules"),
 			"%d · %d%%" % [damaged_modules, int(round(worst * 100.0))],
 			SNSkin.color("state.danger") if worst <= 0.0 else SNSkin.color("brass.base"),
-			HUD_ICON_KEYS["damaged"],
+			"damaged",
 		])
 	for stat in detail_stats:
 		var chip_key := String(stat[4]) if stat.size() > 4 else ""
-		var stat_chip := _stat_chip(stat[0], stat[1], stat[2], 10, 16, String(stat[3]), chip_key)
+		var stat_chip := _stat_chip(stat[0], stat[1], stat[2], 16, String(stat[3]), chip_key)
 		row2.add_child(stat_chip)
 		# 4.3.5 / U8：演出中只有煤 / 水读数需要逐帧插值，保存它们的数值 Label。
 		if chip_key == "CoalChip":
@@ -1284,8 +1307,10 @@ func _build_top_chrome(app: Dictionary, data: Dictionary, show_nav: bool) -> voi
 
 ## Builds the compact navigation row from `SCREENS`, minus `HIDDEN_NAV_SCREENS`
 ## (unpublished systems: base / auto trade / ruins) and minus story-locked pages.
-## Page routing itself is unchanged, so the internal pages stay reachable by the
-## snapshot tool and future re-release.
+## 2026-10-28 图标轮：每个入口是 44×36 的纯图标按钮（`text = ""`），入口身份由
+## `nav_screen` meta 承载，本地化导航名进 `tooltip_text`；剧情强制引导与快照工具都
+## 按 meta 解析，不再依赖按钮文字。Page routing itself is unchanged, so the internal
+## pages stay reachable by the snapshot tool and future re-release.
 func _build_nav_buttons(parent: HBoxContainer) -> void:
 	var visual_active := "overview" if _active_screen in ["port_memory", "settlement", "victory"] else _active_screen
 	# Nested container so the compact navigation gap does not override the
@@ -1300,20 +1325,25 @@ func _build_nav_buttons(parent: HBoxContainer) -> void:
 			continue
 		if not _story_feature_unlocked(_story_screen_feature(screen)):
 			continue
-		var button := _button(_tr("ui.nav.%s" % screen, screen), _on_nav.bind(screen))
-		button.custom_minimum_size = Vector2(64, 36)
+		var nav_label := _tr("ui.nav.%s" % screen, screen)
+		var button := _button("", _on_nav.bind(screen))
+		button.tooltip_text = nav_label
+		button.set_meta("nav_screen", screen)
+		button.custom_minimum_size = Vector2(44, 36)
 		button.add_theme_font_size_override("font_size", 13)
 		# Current page uses the selected plate texture; every other entry is a
 		# compact plate. Both are external-texture Theme variations, so the
-		# button text/behaviour stays stock Button (tests find it by exact text).
+		# icon-only button behaviour stays stock Button.
 		button.theme_type_variation = &"SNPrimaryButton" if screen == visual_active else &"SNCompactButton"
 		_apply_skin_icon(button, NAV_ICONS.get(screen, ""))
 		nav.add_child(button)
 	# The nautical chart is a toggle, not a nav page: M opens/closes it and the
 	# button highlights only while the chart is up. Gated by the story feature.
 	if _story_feature_unlocked(StoryService.FEATURE_CHART):
-		var chart_button := _button(_tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
-		chart_button.custom_minimum_size = Vector2(64, 36)
+		var chart_button := _button("", _toggle_sea_chart)
+		chart_button.tooltip_text = _tr("ui.nav.sea_chart", "海图")
+		chart_button.set_meta("nav_screen", "sea_chart")
+		chart_button.custom_minimum_size = Vector2(44, 36)
 		chart_button.add_theme_font_size_override("font_size", 13)
 		chart_button.theme_type_variation = &"SNPrimaryButton" if _active_screen == "sea_chart" else &"SNCompactButton"
 		_apply_skin_icon(chart_button, NAV_ICONS["sea_chart"])
@@ -1387,13 +1417,18 @@ func _current_port_label(data: Dictionary) -> String:
 	return _tr(String(port.get("name_key", "")), String(port.get("id", "")))
 
 
-## One compact HUD stat. `chip_key`（4.3.5 / U8）只给需要逐帧改读数的 chip（煤 / 水）
-## 一个稳定名字，并把数值 Label 命名为 `Value`，Shell 据此保存引用。
-func _stat_chip(label_text: String, value_text: String, accent: Color, label_size: int = 9, value_size: int = 14, icon_key: String = "", chip_key: String = "") -> Control:
+## One compact HUD stat: icon + value on a single line（2026-10-28 图标轮）。
+## `label_text` 不再画成 9 px 小标题，改为 chip 的 `tooltip_text`，让纯图标读数仍可解释。
+## `chip_key`（4.3.5 / U8）继续给需要逐帧改读数的 chip（煤 / 水）一个稳定名字，并把
+## 数值 Label 命名为 `Value`，Shell 据此保存引用。
+func _stat_chip(label_text: String, value_text: String, accent: Color, value_size: int = 15, icon_key: String = "", chip_key: String = "") -> Control:
 	var chip := HBoxContainer.new()
 	if not chip_key.is_empty():
 		chip.name = chip_key
 	chip.add_theme_constant_override("separation", 6)
+	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if not label_text.is_empty():
+		chip.tooltip_text = label_text
 	var icon := _hud_icon(icon_key)
 	if icon != null:
 		var texture_rect := TextureRect.new()
@@ -1404,35 +1439,32 @@ func _stat_chip(label_text: String, value_text: String, accent: Color, label_siz
 		texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		texture_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		chip.add_child(texture_rect)
-	var column := VBoxContainer.new()
-	column.size_flags_horizontal = Control.SIZE_FILL
-	column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	column.add_theme_constant_override("separation", 0)
-	column.add_child(_label(label_text, label_size, SNSkin.color("text.muted")))
 	var value_label := _label(value_text, value_size, accent)
+	value_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if not chip_key.is_empty():
 		value_label.name = "Value"
-	column.add_child(value_label)
-	chip.add_child(column)
+	chip.add_child(value_label)
 	return chip
 
 
-## Optional HUD icon. Content packs win: the logical key (`icon.money`) is
-## resolved through `AssetService.find_key` / `load_texture` so the framework
-## never hardcodes a mod namespace. When no mounted pack provides it, the skin
-## fallback (`HUD_SKIN_ICONS`) is used; both missing -> null (text-only chip).
+## HUD icon for a logical chip key (`HUD_SKIN_ICONS`). Content packs may still
+## override a key through `HUD_ICON_KEYS` (`icon.*` → `AssetService.find_key` /
+## `load_texture`, so the framework never hardcodes a mod namespace); a retired or
+## missing key makes `find_key` return empty, which just falls through to the skin
+## icon. Both missing -> null (text-only chip).
 func _hud_icon(icon_key: String) -> Texture2D:
 	if icon_key.is_empty():
 		return null
 	if _hud_icon_cache.has(icon_key):
 		return _hud_icon_cache[icon_key] as Texture2D
 	var texture: Texture2D = null
-	if _context != null:
-		var logical_key := _context.assets.find_key(icon_key)
+	var content_key := String(HUD_ICON_KEYS.get(icon_key, ""))
+	if _context != null and not content_key.is_empty():
+		var logical_key := _context.assets.find_key(content_key)
 		if not logical_key.is_empty() and _context.assets.has(logical_key):
 			texture = _context.assets.load_texture(logical_key)
 	if texture == null:
-		var skin_id := String(HUD_SKIN_ICONS.get(icon_key.trim_prefix("icon."), ""))
+		var skin_id := String(HUD_SKIN_ICONS.get(icon_key, ""))
 		if not skin_id.is_empty():
 			texture = SNSkin.icon(skin_id)
 	_hud_icon_cache[icon_key] = texture
@@ -1525,34 +1557,39 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 		[_tr("ui.label.durability", "Durability"), "%s / %s" % [
 			_fmt(float(ship.get("durability", 0.0))),
 			_fmt(float(ship.get("max_durability", 0.0))),
-		], SNSkin.color("state.success"), HUD_ICON_KEYS["durability"]],
+		], SNSkin.color("state.success"), "durability"],
 		[_tr("ui.label.cargo_hold", "Hold"), "%s / %s" % [
 			_fmt(float(ship.get("cargo_used", 0.0))),
 			_fmt(float(ship.get("cargo_capacity", 0.0))),
-		], SNSkin.color("state.water"), HUD_ICON_KEYS["cargo"]],
-		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), HUD_ICON_KEYS["coal"]],
-		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), HUD_ICON_KEYS["water"]],
+		], SNSkin.color("state.water"), "cargo"],
+		[_tr("ui.label.coal", "Coal"), _fmt(float(ship.get("coal", 0.0))), SNSkin.color("brass.highlight"), "coal"],
+		[_tr("ui.label.water", "Water"), _fmt(float(ship.get("water", 0.0))), SNSkin.color("state.water"), "water"],
 		[_tr("ui.label.damaged_modules", "Damaged modules"),
 			"%d · %d%%" % [damaged, int(round(worst * 100.0))] if damaged > 0
 			else _tr("ui.label.none", "None"),
 			SNSkin.color("state.danger") if damaged > 0 and worst <= 0.0 else (
 				SNSkin.color("brass.base") if damaged > 0 else SNSkin.color("text.muted")
 			),
-			HUD_ICON_KEYS["damaged"] if damaged > 0 else ""],
+	# 2026-10-28 图标轮：无损伤时不显示警告图标，只留灰字「无」，避免常驻一个危险三角。
+			"damaged" if damaged > 0 else ""],
 	]
 	for chip in chips:
-		content.add_child(_stat_chip(chip[0], chip[1], chip[2], 10, 15, String(chip[3])))
+		content.add_child(_stat_chip(chip[0], chip[1], chip[2], 15, String(chip[3])))
 	content.add_child(VSeparator.new())
-	var notice_box := VBoxContainer.new()
-	notice_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	notice_box.add_theme_constant_override("separation", 0)
-	notice_box.add_child(_label(_tr("ui.label.latest_notice", "Latest notice"), 9, SNSkin.color("text.muted")))
+	# 2026-10-28 图标轮：删掉「最新通告」小标题，正文前放情报图标，语义进 tooltip。
+	var notice_row := HBoxContainer.new()
+	notice_row.name = "NoticeRow"
+	notice_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notice_row.add_theme_constant_override("separation", 6)
+	notice_row.tooltip_text = _tr("ui.label.latest_notice", "Latest notice")
+	notice_row.add_child(SNSkin.icon_rect(NAV_ICONS["tavern"], 18))
 	var notice_label := _label(_latest_notice_text(data), 12, SNSkin.color("text.light"))
 	notice_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	notice_label.clip_text = true
 	notice_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	notice_box.add_child(notice_label)
-	content.add_child(notice_box)
+	notice_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	notice_row.add_child(notice_label)
+	content.add_child(notice_row)
 	# The detail drawer only exists over the live stage; the 2D overview already
 	# shows every panel, so it gets no detail toggle.
 	if _active_screen == "overview" and _overview_stage_mode and _port_stage_available():
@@ -1568,22 +1605,28 @@ func _refresh_port_status_bar(data: Dictionary) -> void:
 		content.add_child(detail_button)
 	# 4.3.4 / U7：出航准备页已删除，状态条只负责打开海图（出航在弹窗里确认）。
 	# 4.5: chart / wait entries are gated while the story is running.
+	# 2026-10-28 图标轮：海图入口改纯图标（`nav_chart`），导航名进 tooltip。
 	if _story_feature_unlocked(StoryService.FEATURE_CHART):
-		var chart_button := _button("%s ▶" % _tr("ui.nav.sea_chart", "海图"), _toggle_sea_chart)
+		var chart_button := _button("", _toggle_sea_chart)
 		chart_button.name = "ChartButton"
+		chart_button.tooltip_text = _tr("ui.nav.sea_chart", "海图")
 		chart_button.theme_type_variation = &"SNPrimaryButton"
-		chart_button.custom_minimum_size = Vector2(0, 32)
+		chart_button.custom_minimum_size = Vector2(44, 32)
 		chart_button.add_theme_font_size_override("font_size", 13)
 		_apply_skin_icon(chart_button, NAV_ICONS["sea_chart"])
 		content.add_child(chart_button)
 	if not _story_active():
+		# 保留小时数（「12 h」），完整文案进 tooltip；图标用 HUD 的 time 语义。
+		var wait_hours := 12
 		var wait_button := _button(
-			_tr("ui.button.wait_hours", "Wait %d h") % 12,
+			"%d h" % wait_hours,
 			func() -> void: _run_command(&"port.wait", {"hours": 12})
 		)
+		wait_button.tooltip_text = _tr("ui.button.wait_hours", "Wait %d h") % wait_hours
 		wait_button.theme_type_variation = &"SNCompactButton"
 		wait_button.custom_minimum_size = Vector2(0, 32)
 		wait_button.add_theme_font_size_override("font_size", 13)
+		_apply_skin_icon(wait_button, String(HUD_SKIN_ICONS.get("time", "status_time")))
 		content.add_child(wait_button)
 
 

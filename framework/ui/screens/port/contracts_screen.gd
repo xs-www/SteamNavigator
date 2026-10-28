@@ -20,6 +20,15 @@ extends VBoxContainer
 ## - 反馈 #2：可接委托来自 `port.view` 的已发现目的地过滤结果，本页不做二次雾判断。
 ## - 反馈 #3：无期限委托显示「引导委托 · 无期限」（剩余期限/截止均不显示数字），
 ##   奖励文案用「完成 +N」而不是「准时 +N」，也不能再让 -1 走「已到期」的红色样式。
+## - 2026-10-28 图标化 / 文字精简：委托卡 4 个字段改为「16 px 皮肤图标 + 数值」单行
+##   （`status_anchor` / `status_time` / `resource_cargo`（纯旅客载荷用 `shipyard_cabin`）/
+##   `status_route`），字段名只进 `tooltip_text`；报酬行改为
+##   `resource_coins` + 基础、`status_time` + 奖金、`status_reputation` + 声望，
+##   tooltip 复用 `ui.label.reward` / `ui.reward.on_time|completion` / `ui.label.reputation`。
+##   删除「截止 Day X」行与重复的「声望 +N」badge；无期限的「引导委托」提示并入剩余
+##   期限格的小字与 tooltip。标题 detail（主线规则长句）与委托池刷新说明不再以正文
+##   出现：前者挂到标题 tooltip，后者挂到持有面板 tooltip（`ui.hint.contract_refresh`）。
+##   图标固定 16 px，数值文本自动换行，卡片两列网格不溢出。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
@@ -28,11 +37,17 @@ signal navigation_requested(screen_id: StringName, params: Dictionary)
 
 var _tr: Callable
 
+const STAT_ICON_SIZE := 16
+const REWARD_ICON_SIZE := 16
+
 
 func bind(view_model: Dictionary, translate: Callable) -> void:
 	_tr = translate
 	_clear()
-	add_child(_heading("海事局委托处", "委托与航线", "主线只能同时进行一个；普通委托持有上限随声誉提高。"))
+	# 2026-10-28：标题右侧的主线规则长句不再占正文，改为标题 tooltip（视觉去噪）。
+	var heading := _heading("海事局委托处", "委托与航线", "")
+	_apply_tooltip(heading, "主线只能同时进行一个；普通委托持有上限随声誉提高。")
+	add_child(heading)
 	var tasks: Array = view_model.get("tasks", [])
 	if not tasks.is_empty():
 		add_child(_task_panel(tasks, String(view_model.get("active_task_id", ""))))
@@ -164,7 +179,8 @@ func _holding_panel(contracts: Dictionary) -> Control:
 	if bool(contracts.get("main_chain_complete", false)):
 		row.add_child(_badge(_loc("ui.label.main_chain_complete", "主线已完成"), SNBadge.Tone.SUCCESS))
 	content.add_child(row)
-	content.add_child(_label(_loc("ui.hint.contract_refresh", "每次抵达目的港后，普通委托池会自动刷新。"), 12, SNSkin.color("text.muted")))
+	# 2026-10-28：刷新说明不再占一行正文，改为面板 tooltip（复用现有键）。
+	_apply_tooltip(panel, _loc("ui.hint.contract_refresh", "每次抵达目的港后，普通委托池会自动刷新。"))
 	return panel
 
 
@@ -205,15 +221,8 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 		var description := _label(_loc(description_key, ""), 13, SNSkin.color("paper.ink_muted"))
 		description.max_lines_visible = 2
 		content.add_child(description)
-	var deadline := _label(_deadline_caption(contract), 11, SNSkin.color("paper.ink_muted"))
-	deadline.tooltip_text = _loc("ui.label.deadline_hint", "绝对时间仅作参考，优先看剩余期限")
-	content.add_child(deadline)
-	var reward_row := HBoxContainer.new()
-	var reward := _label(_reward_text(contract), 14, SNSkin.color("ink.primary"))
-	reward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	reward_row.add_child(reward)
-	reward_row.add_child(_badge("声望 +%d" % int(contract.get("reputation", 0)), SNBadge.Tone.SUCCESS))
-	content.add_child(reward_row)
+	# 2026-10-28：删除重复的「截止 Day X」行；无期限提示并入剩余期限格。
+	content.add_child(_contract_reward_row(contract))
 	var unlock_names: Array = contract.get("unlock_names", [])
 	if not unlock_names.is_empty():
 		content.add_child(_label("解锁：%s" % ", ".join(PackedStringArray(unlock_names)), 12, SNSkin.color("brass.shadow")))
@@ -246,42 +255,117 @@ func _contract_card(contract: Dictionary, is_main: bool, can_accept: bool, can_p
 	return panel
 
 
+## 2026-10-28：字段名文字改图标，字段名只留在 tooltip 里，数值与危险色语义不变。
 func _contract_data(contract: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	var remaining := float(contract.get("remaining_hours", 0.0))
 	var untimed := not bool(contract.get("has_deadline", true))
-	row.add_child(_contract_stat("目的地", _loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))), SNSkin.color("ink.primary")))
-	row.add_child(VSeparator.new())
 	row.add_child(_contract_stat(
-		"剩余期限",
-		_loc("ui.label.contract_untimed", "无期限") if untimed else String(contract.get("remaining_label", "—")),
-		SNSkin.color("ink.primary") if untimed or remaining >= 24.0 else SNSkin.color("state.danger")
+		"status_anchor",
+		_loc(String(contract.get("destination_name_key", "")), String(contract.get("destination", ""))),
+		SNSkin.color("ink.primary"),
+		_loc("ui.label.destination", "目的港")
 	))
 	row.add_child(VSeparator.new())
-	row.add_child(_contract_stat("载重", _payload_text(contract).trim_prefix("载荷："), SNSkin.color("ink.primary")))
+	# 反馈 #3：无期限委托不显示数字；「引导委托 · 无期限」并入本格小字与 tooltip。
+	var remaining_tooltip := _loc("ui.label.deadline", "委托期限")
+	var remaining_sub := ""
+	if untimed:
+		remaining_sub = _loc("ui.label.contract_guidance", "引导委托")
+		remaining_tooltip = "%s · %s" % [remaining_sub, _loc("ui.label.contract_untimed", "无期限")]
+	row.add_child(_contract_stat(
+		"status_time",
+		_loc("ui.label.contract_untimed", "无期限") if untimed else String(contract.get("remaining_label", "—")),
+		SNSkin.color("ink.primary") if untimed or remaining >= 24.0 else SNSkin.color("state.danger"),
+		remaining_tooltip,
+		remaining_sub
+	))
 	row.add_child(VSeparator.new())
-	row.add_child(_contract_stat("预计航程", String(contract.get("estimated_label", "—")), SNSkin.color("paper.ink_muted")))
+	# 纯旅客载荷用客舱图标，货物 / 混合载荷用货箱图标（语义优先）。
+	var payload_icon := (
+		"shipyard_cabin"
+		if float(contract.get("cargo_weight", 0.0)) <= 0.0 and int(contract.get("passengers", 0)) > 0
+		else "resource_cargo"
+	)
+	row.add_child(_contract_stat(
+		payload_icon,
+		_payload_text(contract).trim_prefix("载荷："),
+		SNSkin.color("ink.primary"),
+		_loc("ui.label.payload", "载荷")
+	))
+	row.add_child(VSeparator.new())
+	row.add_child(_contract_stat(
+		"status_route",
+		String(contract.get("estimated_label", "—")),
+		SNSkin.color("paper.ink_muted"),
+		_loc("ui.label.voyage_info", "航程信息")
+	))
 	return row
 
 
-## 反馈 #3：无期限委托不显示绝对截止时间，改显示「引导委托 · 无期限」。
-func _deadline_caption(contract: Dictionary) -> String:
-	if not bool(contract.get("has_deadline", true)):
-		return "%s · %s" % [
-			_loc("ui.label.contract_guidance", "引导委托"),
-			_loc("ui.label.contract_untimed", "无期限"),
-		]
-	return "截止 %s" % String(contract.get("deadline_label", ""))
-
-
-func _contract_stat(label_text: String, value_text: String, value_color: Color) -> Control:
+## 图标 + 数值的单行统计格；`sub_text` 用于无期限委托的「引导委托」小字。
+func _contract_stat(
+	icon_id: String,
+	value_text: String,
+	value_color: Color,
+	tooltip_text: String,
+	sub_text: String = ""
+) -> Control:
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 1)
-	column.add_child(_label(label_text, 10, SNSkin.color("paper.ink_muted")))
-	column.add_child(_label(value_text, 14, value_color))
+	var value_row := HBoxContainer.new()
+	value_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_row.add_theme_constant_override("separation", 5)
+	value_row.add_child(SNSkin.icon_rect(icon_id, STAT_ICON_SIZE))
+	var value := _label(value_text, 14, value_color)
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	value_row.add_child(value)
+	column.add_child(value_row)
+	if not sub_text.is_empty():
+		column.add_child(_label(sub_text, 10, SNSkin.color("paper.ink_muted")))
+	_apply_tooltip(column, tooltip_text)
 	return column
+
+
+## 报酬行：金币图标 + 基础报酬、时间图标 + 奖金、声望图标 + 声望；重复的声望 badge 删除。
+func _contract_reward_row(contract: Dictionary) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.add_child(_reward_stat(
+		"resource_coins",
+		str(int(contract.get("base_money", 0))),
+		_loc("ui.label.reward", "报酬")
+	))
+	# 反馈 #3：无期限委托的 on_time_bonus 是「完成奖励」，tooltip 文案区分。
+	var bonus_template := (
+		_loc("ui.reward.on_time", "准时 +%d")
+		if bool(contract.get("has_deadline", true))
+		else _loc("ui.reward.completion", "完成 +%d")
+	)
+	var bonus := int(contract.get("on_time_bonus", 0))
+	row.add_child(_reward_stat("status_time", "+%d" % bonus, bonus_template % bonus))
+	row.add_child(_reward_stat(
+		"status_reputation",
+		"+%d" % int(contract.get("reputation", 0)),
+		_loc("ui.label.reputation", "声誉")
+	))
+	return row
+
+
+func _reward_stat(icon_id: String, value_text: String, tooltip_text: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	row.add_child(SNSkin.icon_rect(icon_id, REWARD_ICON_SIZE))
+	var value := _label(value_text, 14, SNSkin.color("ink.primary"))
+	# 报酬是短数值：关掉自动换行，否则标签在 HBox 里会被压成一列单字。
+	value.autowrap_mode = TextServer.AUTOWRAP_OFF
+	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(value)
+	_apply_tooltip(row, tooltip_text)
+	return row
 
 
 func _completed_panel(names: Array) -> Control:
@@ -300,20 +384,6 @@ func _payload_text(contract: Dictionary) -> String:
 	if int(contract.get("passengers", 0)) > 0:
 		parts.append("旅客 %d 人" % int(contract.get("passengers", 0)))
 	return "载荷：—" if parts.is_empty() else "载荷：" + " · ".join(parts)
-
-
-func _reward_text(contract: Dictionary) -> String:
-	# 反馈 #3：无期限委托的 on_time_bonus 作为「完成奖励」无条件发放，文案区分。
-	var bonus_template := (
-		_loc("ui.reward.on_time", "准时 +%d")
-		if bool(contract.get("has_deadline", true))
-		else _loc("ui.reward.completion", "完成 +%d")
-	)
-	return "报酬：基础 %d · %s · 声誉 +%d" % [
-		int(contract.get("base_money", 0)),
-		bonus_template % int(contract.get("on_time_bonus", 0)),
-		int(contract.get("reputation", 0)),
-	]
 
 
 func _risk_tone(risk: String) -> int:
@@ -373,6 +443,17 @@ func _apply_button_icon(button: Button, icon_id: String, max_width: int) -> void
 		return
 	button.icon = texture
 	button.add_theme_constant_override("icon_max_width", max_width)
+
+
+## 同一段 tooltip 发给控件本身与全部子控件——Godot 的 tooltip 不会自动向父节点
+## 冒泡，说明文字挂在容器上时若内层 Label / Badge 吃掉鼠标就再也看不到。
+func _apply_tooltip(control: Control, text: String) -> void:
+	if text.is_empty():
+		return
+	control.tooltip_text = text
+	for child in control.get_children():
+		if child is Control:
+			_apply_tooltip(child as Control, text)
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:

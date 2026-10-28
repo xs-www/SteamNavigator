@@ -1726,7 +1726,7 @@ function warningsOf(result) {
     definition.information = { texture: 'texture.tea', model: 'model.tea' };
     let result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
-    definition.information = { texture: 'asset://core/icon.coal', model: 'asset://core/model.ship.prototype' };
+    definition.information = { texture: 'asset://core/icon.item.iron_ore', model: 'asset://core/model.ship.prototype' };
     result = Validate.validateProject(project);
     assert.equal(result.counts.error, 0, JSON.stringify(errorsOf(result), null, 2));
     definition.information.model = 'model.missing';

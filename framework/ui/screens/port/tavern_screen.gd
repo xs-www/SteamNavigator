@@ -24,6 +24,15 @@ extends VBoxContainer
 ## - 按钮保持默认纹理化 `Button`（刷新物价 / 购买线索 / 调查线索），按钮文字与
 ##   节点名 `RefreshIntelButton` / `BuyClueButton` / `InvestigateButton` 不变。
 ## - 尺寸约束：面板间距 8、线索行间距 12、字号 16/14/13/12 不变；不新增布局。
+##
+## ## 2026-10-28 图标化 / 文字精简
+## - 标题 detail（`ui.hint.tavern` 长句）不再占正文，转到标题 tooltip。
+## - 纯说明段落删除并转 tooltip：`ui.label.snapshot_tip` → 情报摘要行、
+##   `ui.tavern.chart_hint` → 海图标题、`ui.tavern.npc_empty` → NPC 标题（空态不再
+##   占一行）、`ui.tavern.clues_empty` → 持有线索计数行（空态不再占一行）。
+## - 按钮加 16 px 皮肤图标：刷新情报 / 购买线索 / 调查 → `nav_intelligence`，
+##   购买海图 → `nav_chart`；按钮文字（含价格）与节点名全部保留。
+## - 数据表格表头、线索信息行（港口 / 等级 / 航程）与价格数值保留。
 ## @end-static-doc
 
 signal command_requested(command: StringName, params: Dictionary)
@@ -36,11 +45,14 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	_tr = translate
 	_clear()
 	var intel: Dictionary = vm.get("intel", {}) if vm.get("intel", {}) is Dictionary else {}
-	add_child(_heading(
+	# 2026-10-28：标题 detail 长句不再占正文，改为标题 tooltip（复用 ui.hint.tavern）。
+	var heading := _heading(
 		_loc("ui.tavern.eyebrow", "酒馆"),
 		_loc("ui.tavern.title", "物价情报与港口线索"),
-		_loc("ui.hint.tavern", "在酒馆可以刷新物价情报，也可以购买 / 调查港口线索。")
-	))
+		""
+	)
+	_apply_tooltip(heading, _loc("ui.hint.tavern", "在酒馆可以刷新物价情报，也可以购买 / 调查港口线索。"))
+	add_child(heading)
 	add_child(_intel_panel(intel))
 	add_child(_chart_panel(vm))
 	add_child(_clue_panel(vm))
@@ -52,8 +64,10 @@ func _intel_panel(vm: Dictionary) -> Control:
 	content.add_child(_label(_loc("ui.tavern.intel_title", "物价情报"), 16, SNSkin.color("brass.highlight")))
 	if bool(vm.get("has_report", false)):
 		content.add_child(_label("%s：%s · %s" % [_loc("ui.label.generated", ""), vm.get("generated_label", ""), _age(float(vm.get("age_hours", 0.0)))], 14, SNSkin.color("text.light")))
-		content.add_child(_label(_loc("ui.intel.summary", "") % [int(vm.get("port_count", 0)), int(vm.get("column_count", 0)), int(vm.get("npc_count", 0))], 12, SNSkin.color("text.muted")))
-		content.add_child(_label(_loc("ui.label.snapshot_tip", ""), 12, SNSkin.color("text.muted")))
+		# 2026-10-28：快照说明不再占正文，挂到摘要行 tooltip。
+		var summary := _label(_loc("ui.intel.summary", "") % [int(vm.get("port_count", 0)), int(vm.get("column_count", 0)), int(vm.get("npc_count", 0))], 12, SNSkin.color("text.muted"))
+		_apply_tooltip(summary, _loc("ui.label.snapshot_tip", ""))
+		content.add_child(summary)
 	else:
 		content.add_child(_label(_loc("ui.label.no_intel", ""), 14, SNSkin.color("text.muted")))
 	var rows: Array = vm.get("rows", [])
@@ -69,6 +83,7 @@ func _intel_panel(vm: Dictionary) -> Control:
 		button.name = "RefreshIntelButton"
 		button.text = "%s（%d 金币）" % [_loc("ui.button.refresh_intel", ""), int(vm.get("cost", 25))]
 		button.disabled = not bool(vm.get("can_refresh", false))
+		_apply_button_icon(button, "nav_intelligence", 16)
 		button.pressed.connect(func(): command_requested.emit(&"intel.refresh", {}))
 		content.add_child(button)
 	else:
@@ -82,12 +97,10 @@ func _intel_panel(vm: Dictionary) -> Control:
 func _chart_panel(vm: Dictionary) -> Control:
 	var panel := _panel()
 	var content := _content(panel)
-	content.add_child(_label(_loc("ui.tavern.chart_title", "海图（航线解锁）"), 16, SNSkin.color("brass.highlight")))
-	content.add_child(_label(
-		_loc("ui.tavern.chart_hint", "购买海图可测绘当前港与已发现港口之间的航线；未测绘航线不能启航。"),
-		12,
-		SNSkin.color("text.muted")
-	))
+	# 2026-10-28：海图说明不再占正文，挂到区块标题 tooltip。
+	var title := _label(_loc("ui.tavern.chart_title", "海图（航线解锁）"), 16, SNSkin.color("brass.highlight"))
+	_apply_tooltip(title, _loc("ui.tavern.chart_hint", "购买海图可测绘当前港与已发现港口之间的航线；未测绘航线不能启航。"))
+	content.add_child(title)
 	var offers: Array = vm.get("chart_offers", []) if vm.get("chart_offers", []) is Array else []
 	if offers.is_empty():
 		content.add_child(_label(_loc("ui.tavern.chart_empty", "暂无可购买的海图。"), 12, SNSkin.color("text.muted")))
@@ -123,6 +136,7 @@ func _chart_offer_row(offer: Dictionary) -> Control:
 	buy.name = "BuyChartButton_%s" % String(offer.get("port_id", ""))
 	buy.text = _loc("ui.tavern.chart_buy", "购买海图")
 	buy.disabled = not bool(offer.get("can_buy", false))
+	_apply_button_icon(buy, "nav_chart", 16)
 	var target_port_id := String(offer.get("port_id", ""))
 	buy.pressed.connect(func(): command_requested.emit(&"chart.buy", {"port_id": target_port_id}))
 	row.add_child(buy)
@@ -133,13 +147,14 @@ func _clue_panel(vm: Dictionary) -> Control:
 	var panel := _panel()
 	var content := _content(panel)
 	content.add_child(_label(_loc("ui.tavern.clues_title", "港口线索"), 16, SNSkin.color("brass.highlight")))
-	content.add_child(_label(
+	var clue_count := _label(
 		_loc("ui.tavern.clues_count", "持有 %d / %d 条线索") % [
 			int(vm.get("active_clue_count", 0)), int(vm.get("max_active_clues", 4)),
 		],
 		12,
 		SNSkin.color("text.muted")
-	))
+	)
+	content.add_child(clue_count)
 	var buy: Dictionary = vm.get("can_buy_clue", {}) if vm.get("can_buy_clue", {}) is Dictionary else {}
 	var buy_button := Button.new()
 	buy_button.name = "BuyClueButton"
@@ -147,13 +162,16 @@ func _clue_panel(vm: Dictionary) -> Control:
 		_loc("ui.tavern.buy_clue", "购买线索"), int(buy.get("cost", 0)),
 	]
 	buy_button.disabled = not bool(buy.get("available", false))
+	_apply_button_icon(buy_button, "nav_intelligence", 16)
 	buy_button.pressed.connect(func(): command_requested.emit(&"clue.buy", {}))
 	content.add_child(buy_button)
-	if not bool(buy.get("available", true)):
-		content.add_child(_label(_loc(String(buy.get("reason_key", "")), ""), 12, SNSkin.color("state.danger")))
+	var buy_reason := String(buy.get("reason_key", ""))
+	if not bool(buy.get("available", true)) and not buy_reason.is_empty():
+		content.add_child(_label(_loc(buy_reason, ""), 12, SNSkin.color("state.danger")))
 	var clues: Array = vm.get("clues", [])
 	if clues.is_empty():
-		content.add_child(_label(_loc("ui.tavern.clues_empty", "暂时没有线索。在港等待、完成委托或向酒馆购买都可能得到线索。"), 13, SNSkin.color("text.muted")))
+		# 2026-10-28：空态长句删除，说明挂到持有计数行 tooltip。
+		_apply_tooltip(clue_count, _loc("ui.tavern.clues_empty", "暂时没有线索。在港等待、完成委托或向酒馆购买都可能得到线索。"))
 		return panel
 	for entry in clues:
 		if entry is Dictionary:
@@ -193,6 +211,7 @@ func _clue_row(clue: Dictionary) -> Control:
 		investigate.text = _loc("ui.tavern.investigate", "调查（%d 金 / %d 时）") % [
 			int(clue.get("investigation_cost", 0)), int(clue.get("investigation_hours", 0.0)),
 		]
+		_apply_button_icon(investigate, "nav_intelligence", 16)
 		var clue_id := String(clue.get("id", ""))
 		investigate.pressed.connect(
 			func(): command_requested.emit(&"clue.investigate", {"clue_id": clue_id})
@@ -205,9 +224,11 @@ func _clue_row(clue: Dictionary) -> Control:
 func _npc_panel(npcs: Array) -> Control:
 	var panel := _panel()
 	var content := _content(panel)
-	content.add_child(_label(_loc("ui.tavern.npc_title", "NPC 商船动向"), 16, SNSkin.color("brass.highlight")))
+	var title := _label(_loc("ui.tavern.npc_title", "NPC 商船动向"), 16, SNSkin.color("brass.highlight"))
+	content.add_child(title)
 	if npcs.is_empty():
-		content.add_child(_label(_loc("ui.tavern.npc_empty", "暂无覆盖到的 NPC 动向（未发现的目的港不会出现）。"), 12, SNSkin.color("text.muted")))
+		# 2026-10-28：空态长句删除，说明挂到区块标题 tooltip。
+		_apply_tooltip(title, _loc("ui.tavern.npc_empty", "暂无覆盖到的 NPC 动向（未发现的目的港不会出现）。"))
 		return panel
 	var grid := GridContainer.new()
 	grid.columns = 4
@@ -224,6 +245,21 @@ func _npc_panel(npcs: Array) -> Control:
 
 func _message(text: String) -> Control:
 	var panel := _panel(); _content(panel).add_child(_label(text, 13, SNSkin.color("text.muted"))); return panel
+## Skin icon without a wrapper node; button text / node names stay intact.
+func _apply_button_icon(button: Button, icon_id: String, max_width: int) -> void:
+	var texture := SNSkin.icon(icon_id)
+	if texture == null:
+		return
+	button.icon = texture
+	button.add_theme_constant_override("icon_max_width", max_width)
+## Same tooltip on a control and all descendants (tooltips do not bubble up to the parent).
+func _apply_tooltip(control: Control, text: String) -> void:
+	if text.is_empty():
+		return
+	control.tooltip_text = text
+	for child in control.get_children():
+		if child is Control:
+			_apply_tooltip(child as Control, text)
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new(); panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL; return panel
 func _content(panel: PanelContainer) -> VBoxContainer:

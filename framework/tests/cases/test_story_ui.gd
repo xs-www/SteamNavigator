@@ -609,8 +609,14 @@ func _nav_button(shell: Control, screen: String) -> Button:
 		return null
 	var wanted := String(shell.call("_tr", "ui.nav.%s" % screen, screen))
 	for child in nav.get_children():
-		if child is Button and String((child as Button).text) == wanted:
-			return child
+		if not (child is Button):
+			continue
+		# 2026-10-28 图标轮：导航按钮改纯图标，入口身份走 `nav_screen` meta；
+		# 旧皮肤/旧路径可能仍带文字，保留按文字回退以兼容。
+		if String(child.get_meta("nav_screen", "")) == screen:
+			return child as Button
+		if String((child as Button).text) == wanted:
+			return child as Button
 	return null
 
 

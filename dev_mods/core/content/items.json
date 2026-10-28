@@ -147,7 +147,7 @@
       ],
       "enabled": true,
       "information": {
-        "texture": "icon.item.contract_freight"
+        "texture": "icon.ui.resource_cargo"
       },
       "data": {
         "crafting_material": false,
@@ -170,7 +170,7 @@
       ],
       "enabled": true,
       "information": {
-        "texture": "icon.coal",
+        "texture": "icon.ui.resource_coal",
         "model": "model.good.coal"
       },
       "data": {
@@ -194,7 +194,7 @@
       ],
       "enabled": true,
       "information": {
-        "texture": "icon.water"
+        "texture": "icon.ui.resource_water"
       },
       "data": {
         "crafting_material": false,
@@ -216,7 +216,7 @@
       ],
       "enabled": true,
       "information": {
-        "texture": "icon.item.boiler_plate",
+        "texture": "icon.ui.shipyard_hull",
         "model": "model.material.boiler_plate"
       },
       "data": {
