@@ -4,7 +4,8 @@ extends TestCase
 ## 解锁过滤、剧情卡继续推进阶段、跳过教程的确认页与全解锁；dev.3 #1 的触发时机
 ## 回归（真实航海驱动：出航收出航指示、抵达才推抵达剧情、事件只上报一次）与
 ## dev.3 #3 的框架级强制引导遮罩（组件遮罩契约 + Shell 在剧情阶段挂载 / 解析目标 /
-## 推进后清除）。
+## 推进后清除）；2026-10-28 P0 反馈的引导框错位回归（页面/顶栏重建后遮罩目标洞
+## 必须追到真实「市场」按钮、提示板保持一行高、四块遮罩贴在目标四边）。
 ##
 ## ## 契约与约束
 ## - 用真实 `main.tscn` 与真实 Core 内容；教程局通过 `run.start tutorial=true` 建立，
@@ -13,6 +14,10 @@ extends TestCase
 ##   `ContinueButton` / `SkipButton` / `SkipConfirmButton` 查找。
 ## - 时间线回归用真实 `voyage.start → _process 逐帧 → _finish_presentation` 驱动，
 ##   并用 `story.observe` 命令执行日志计数证明「一次玩家动作只上报一次 UI 事件」。
+## - 测试跑在单帧里，不能 await；需要「等布局稳定」时用 `Container.NOTIFICATION_SORT_CHILDREN`
+##   同步推完挂起的容器排版，再让遮罩 `refresh_target()` 做一帧自愈 tick。
+## - 组件测试同时守护皮肤合约：遮罩对 `SNSkin.style()` 的共享 StyleBox 只改 `duplicate()`
+##   克隆，不能把 tint / content_margin 污染到全局主题缓存。
 ## @end-static-doc
 
 const MAIN_SCENE := "res://framework/ui/shell/main.tscn"
@@ -284,6 +289,56 @@ func test_chart_events_are_reported_once_per_player_action() -> void:
 	_unmount(bundle)
 
 
+## 2026-10-28 P0 回归：页面 / 顶栏重建后容器还没排版完，引导框不能停在重建瞬间的
+## 旧矩形（反馈：框在左上角、按钮在右上角）。关闭 supply_brief 剧情卡后等布局稳定，
+## 遮罩洞（局部→全局换算）必须与真实「市场」按钮矩形一致、提示板保持一行高度，
+## 四块遮罩分别贴在目标的上 / 下 / 左 / 右。
+func test_focus_overlay_tracks_the_market_nav_after_rebuild() -> void:
+	var bundle := _mount(true)
+	var shell: Control = bundle["shell"]
+	var continue_button := shell.find_child("ContinueButton", true, false) as Button
+	assert_not_null(continue_button, "the opening card can be continued")
+	continue_button.pressed.emit()
+	assert_eq(String(shell._story_vm.get("stage_id", "")), "supply_brief",
+		"continue enters the supply briefing")
+	assert_true(_dismiss_story_card(shell), "the supply briefing card can be dismissed")
+	var overlay: Control = shell._story_focus
+	assert_not_null(overlay, "dismissing the card mounts the guided mask on the overview")
+	assert_true(bool(overlay.call("is_active")), "the mask is active on the supply briefing")
+	# 无头测试跑在单帧里，不能 `await process_frame`：用容器自己的
+	# `NOTIFICATION_SORT_CHILDREN` 把重建后排版同步推完（与引擎 deferred sort 等价），
+	# 再让遮罩做一帧自愈 tick —— 这正是窗口模式下 deferred 重同步 / 逐帧自愈做的事。
+	for _pass in 3:
+		_force_container_layout(shell)
+	assert_true(overlay.has_method("refresh_target"),
+		"the overlay can re-read its bound target after the layout settled")
+	overlay.call("refresh_target")
+	var target: Control = shell._resolve_story_focus_target("market_supply")
+	assert_not_null(target, "the market focus target resolves to the nav entry")
+	assert_true(target is Button, "the market focus target is the real nav button")
+	var nav := shell.find_child("Nav", true, false) as Control
+	assert_true(nav != null and nav.is_ancestor_of(target),
+		"the resolved target is mounted inside the rebuilt nav row")
+	var target_rect := target.get_global_rect()
+	assert_true(target_rect.size.x > 0.0 and target_rect.size.y > 0.0,
+		"the rebuilt market button has a real layout rect: %s" % target_rect)
+	var hole: Rect2 = overlay.call("get_target_rect")
+	var hole_global := Rect2(overlay.get_global_rect().position + hole.position, hole.size)
+	assert_true(_rect_near(hole_global, target_rect, 8.0),
+		"the focus hole follows the market button once layout settles (hole=%s target=%s)" % [hole_global, target_rect])
+	var hint := overlay.get_node_or_null("FocusHint") as Control
+	assert_not_null(hint, "the hint plate is mounted")
+	assert_true(hint.size.y <= 80.0,
+		"the hint plate stays a compact strip, not a tall panel (height=%f)" % hint.size.y)
+	var masks: Array = overlay.call("get_mask_rects")
+	assert_eq(masks.size(), 4, "four mask pieces are visible around the whole-window hole")
+	var sides := _mask_sides(masks, hole)
+	for side in ["top", "bottom", "left", "right"]:
+		assert_true(sides.has(side),
+			"a mask strips the %s side of the target (mask rects=%s)" % [side, str(masks)])
+	_unmount(bundle)
+
+
 ## dev.3 #3 回归：强制引导遮罩 —— supply_brief 先指向市场入口、进市场后指向补给
 ## 区块；遮罩只留目标可交互，推进阶段后自动清除。
 func test_guided_focus_masks_the_supply_block_and_clears_on_advance() -> void:
@@ -344,10 +399,34 @@ func test_focus_overlay_component_masks_everything_but_the_target() -> void:
 	assert_eq(overlay.mouse_filter, Control.MOUSE_FILTER_IGNORE,
 		"the overlay root never blocks the interactive hole")
 	assert_false(bool(overlay.call("is_active")), "a fresh overlay is inactive")
+	# 2026-10-28 P0：`SNSkin.style()` 返回按 id 缓存的共享 StyleBox；遮罩只能改克隆，
+	# 不能把 tint / content_margin 写回全局主题（否则其他面板跟着变）。
+	var shared_ring := SNSkin.style("focus_ring")
+	var ring_tint_before: Variant = null
+	if shared_ring is StyleBoxTexture:
+		ring_tint_before = (shared_ring as StyleBoxTexture).modulate_color
+	var shared_text := SNSkin.style("panel_steel")
+	if shared_text == null:
+		shared_text = SNSkin.style("panel_recess")
+	var text_margins_before: Variant = null
+	if shared_text != null:
+		text_margins_before = Vector4(
+			shared_text.content_margin_left, shared_text.content_margin_top,
+			shared_text.content_margin_right, shared_text.content_margin_bottom
+		)
 	overlay.size = Vector2(960, 540)
 	var target := Rect2(120, 90, 260, 64)
 	overlay.call("focus", target, "click here")
 	assert_true(bool(overlay.call("is_active")), "focus() activates the overlay")
+	if shared_ring is StyleBoxTexture:
+		assert_eq((shared_ring as StyleBoxTexture).modulate_color, ring_tint_before,
+			"the ring tints its own StyleBox clone, leaving the shared skin cache untouched")
+	if shared_text != null:
+		assert_eq(Vector4(
+			shared_text.content_margin_left, shared_text.content_margin_top,
+			shared_text.content_margin_right, shared_text.content_margin_bottom
+		), text_margins_before,
+			"the hint plate overrides content margins on a clone, leaving the shared skin cache untouched")
 	overlay.visible = true
 	assert_eq(String(overlay.call("get_focus_text")), "click here", "the hint text is exposed")
 	var hole: Rect2 = overlay.call("get_target_rect")
@@ -539,6 +618,39 @@ func _rect_close(a: Rect2, b: Rect2) -> bool:
 	return a.position.distance_to(b.position) <= 2.0 \
 		and abs(a.size.x - b.size.x) <= 2.0 \
 		and abs(a.size.y - b.size.y) <= 2.0
+
+
+## P0 回归用：同步推完重建后挂起的容器排版。引擎里 Container 的 deferred sort 就是
+## `NOTIFICATION_SORT_CHILDREN`；逐个 Container 手动发一次等于立刻「等一帧布局」。
+func _force_container_layout(node: Node) -> void:
+	if node is Container:
+		(node as Container).notification(Container.NOTIFICATION_SORT_CHILDREN)
+	for child in node.get_children():
+		_force_container_layout(child)
+
+
+## Hole / target tolerance check used by the P0 regression (the plan allows ≤ 8 px).
+func _rect_near(a: Rect2, b: Rect2, tolerance: float) -> bool:
+	return a.position.distance_to(b.position) <= tolerance \
+		and absf(a.size.x - b.size.x) <= tolerance \
+		and absf(a.size.y - b.size.y) <= tolerance
+
+
+## Classifies the four mask pieces around `hole` (local coords) into top / bottom /
+## left / right by which side of the hole they strip.
+func _mask_sides(masks: Array, hole: Rect2) -> Array:
+	var sides: Array = []
+	for mask in masks:
+		var rect := mask as Rect2
+		if rect.end.y <= hole.position.y + 1.0:
+			sides.append("top")
+		elif rect.position.y >= hole.end.y - 1.0:
+			sides.append("bottom")
+		elif rect.end.x <= hole.position.x + 1.0:
+			sides.append("left")
+		elif rect.position.x >= hole.end.x - 1.0:
+			sides.append("right")
+	return sides
 
 
 func _mask_covers_point(masks: Array, point: Vector2) -> bool:

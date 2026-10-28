@@ -1,13 +1,13 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-27T00:31:33.837Z",
-  "commit": "5429a5a",
+  "generated_at": "2026-10-28T04:09:12.255Z",
+  "commit": "f64de04",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1285,
-    "documented": 521,
+    "sources": 1286,
+    "documented": 522,
     "grouped": 764
   },
   "files": [
@@ -3400,7 +3400,7 @@
     },
     {
       "source": "dev_mods/core/content/hulls.json",
-      "sha256": "ed5b319ef0b26adc8c7c96fe547e12431bc4ea47d8307ef0a487d0903e60e0d7",
+      "sha256": "1798e04d18a31ab917e2420119933231f596824d24a33058c13ff659a17a3160",
       "doc": "docs/static/dev_mods/core/README.md",
       "status": "grouped",
       "group": "docs/static/dev_mods/core/README.md"
@@ -3901,7 +3901,7 @@
     },
     {
       "source": "framework/application/queries/shipyard_view.gd",
-      "sha256": "204ff5a3d621419e1225f960be8a316f3d190027da40109f4ad5a42458e3dac8",
+      "sha256": "8a460d5d58dc98c94bc5f2d365d885b39ef5730816e2577d256ba5d921c7a25b",
       "doc": "docs/static/framework/application/queries/shipyard_view.gd.md",
       "status": "documented"
     },
@@ -4953,8 +4953,14 @@
       "group": "docs/static/framework/tests/README.md"
     },
     {
+      "source": "framework/tests/cases/test_shipyard_blueprint.gd",
+      "sha256": "8328154808219df6d24e86c242fa5582ebc7a3d99aef3c995927d026823254a3",
+      "doc": "docs/static/framework/tests/cases/test_shipyard_blueprint.gd.md",
+      "status": "documented"
+    },
+    {
       "source": "framework/tests/cases/test_shipyard_refit.gd",
-      "sha256": "5911287ae68133e5d88dfd27e9fbeaf51f5b4624e461d47872e0c198e6c00cf0",
+      "sha256": "a8875cf71ca2d15c0f93f1c6f0ff65848e868ac409f692a5bf8d1333c941a8c2",
       "doc": "docs/static/framework/tests/cases/test_shipyard_refit.gd.md",
       "status": "documented"
     },
@@ -4978,7 +4984,7 @@
     },
     {
       "source": "framework/tests/cases/test_story_ui.gd",
-      "sha256": "58f58ff9d5eb06873b695c9f60d1a925d93c7f7eb406cda5f76fbdca8d4189a7",
+      "sha256": "7dfb579d22f48f68c898ea632371899a95ef7aaae8e32e1c57457a7c5310a0b0",
       "doc": "docs/static/framework/tests/cases/test_story_ui.gd.md",
       "status": "documented"
     },
@@ -5102,7 +5108,7 @@
     },
     {
       "source": "framework/tests/test_runner.gd",
-      "sha256": "27369646770ba9f24c7411c7c6f0792bb2937ffda98acdd8da27b245ad244010",
+      "sha256": "abdae67f9e276dee199a51b7c34348f905ef7a41d6a7ed2e51145aecfecd25d4",
       "doc": "docs/static/framework/tests/test_runner.gd.md",
       "status": "documented"
     },
@@ -5171,7 +5177,7 @@
     },
     {
       "source": "framework/ui/components/sn_focus_overlay.gd",
-      "sha256": "3c3d13946205351862e23e632d6a11db23fab91d0f3dd219003085d8bbfd24ba",
+      "sha256": "ee144a7ef9d0b1dd8c079dd4023738829275968a6088ce5bf8ecde123ae56823",
       "doc": "docs/static/framework/ui/components/sn_focus_overlay.gd.md",
       "status": "documented"
     },
@@ -5289,7 +5295,7 @@
     },
     {
       "source": "framework/ui/components/sn_ship_view.gd",
-      "sha256": "d274f9519d95e6b0536fcca17f664e96c86899b8cf0c9c21d5988f609e02fa58",
+      "sha256": "8754e6586a132df84f8f285ea769b5e29c64bba2362121e9fdc16f8b10aac9f2",
       "doc": "docs/static/framework/ui/components/sn_ship_view.gd.md",
       "status": "documented"
     },
@@ -5302,7 +5308,7 @@
     },
     {
       "source": "framework/ui/components/sn_slot_target.gd",
-      "sha256": "18e5a392b5ce37ca198315ed4b251e03897234dae453252cf89a1b05a5bf4d08",
+      "sha256": "67de087f25a3484b73d4f68fe3af20d39048794f1d0b1520434b7f1b3f2d4809",
       "doc": "docs/static/framework/ui/components/sn_slot_target.gd.md",
       "status": "documented"
     },
@@ -5616,7 +5622,7 @@
     },
     {
       "source": "framework/ui/screens/port/shipyard_screen.gd",
-      "sha256": "424cb421aab933287d4e7cf6cd6207811141f52964579b4c32c8a56034389668",
+      "sha256": "9e731d581107218acc5516ae0a3c1b2d145e0e44cea350bf382ee879656a27b3",
       "doc": "docs/static/framework/ui/screens/port/shipyard_screen.gd.md",
       "status": "documented"
     },
@@ -5655,7 +5661,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "34bdef7c65082760fc78fe822b64310f61c430ee4118ac2561c7d9c421df7a71",
+      "sha256": "f7cbab71b03765c17a5eee93c8512ac97d56b3186690b2b2e13434d99f2c9394",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -6538,7 +6544,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "18a28f03d96efc794353d521083caa84ff3b9cd4897edbc71ef97983c34e598c",
+      "sha256": "5745a75268440f7377c464a4aaffed7dd8c6836b67699e548b626d7c231efb7e",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"

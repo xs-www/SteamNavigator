@@ -46,7 +46,7 @@
 | `queries/port_view.gd` | 主界面 ViewModel：当前港、市场、目的地、船只、委托、策略、情报、通知、统计与通关状态。 | [查看](./queries/port_view.gd.md) |
 | `queries/query_registry.gd` | 查询名到 ViewModel 构造器的绑定表（含 shipyard/victory、D0 `sim.view`、D1 `combat.view` / `combat.log` 与 D2 `fleet.view`）。 | 本页 |
 | `queries/sea_chart_view.gd` | 为可缩放 2D 海图生成只读视图模型（`sea_chart.view`），输出世界边界、 | [查看](./queries/sea_chart_view.gd.md) |
-| `queries/shipyard_view.gd` | 船厂只读 ViewModel；统一投影模块改装/打造/仓库、舰载武器 socket、购买/装配/库存，以及船体每视图蓝图线稿的已解析路径。 | [查看](./queries/shipyard_view.gd.md) |
+| `queries/shipyard_view.gd` | 船厂只读 ViewModel；统一投影模块改装/打造/仓库、舰载武器 socket、购买/装配/库存、船体每视图蓝图线稿的已解析路径，以及槽位圆点用的蓝图锚点（`ship.slot_anchors`）。 | [查看](./queries/shipyard_view.gd.md) |
 | `queries/sim_view.gd` | `sim.view` 只读查询：输出模拟时钟的 paused / speed / tick / 步长 / | [查看](./queries/sim_view.gd.md) |
 | `queries/story_view.gd` | 新手剧情 / 教学系统的只读查询（`story.view`）。输出剧情卡、目标条、功能 / | [查看](./queries/story_view.gd.md) |
 | `queries/supply_view.gd` | 补给界面 ViewModel：煤水价/库存、载重余量、可补上限、预计续航与维修报价。 | [查看](./queries/supply_view.gd.md) |

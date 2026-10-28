@@ -292,8 +292,14 @@ guarantee_explore_success / unlock_modules / complete_story
    - 外观全部来自皮肤：遮罩 = `SNSkin.style("fill_aqua")` + `bg.abyss` 半透明；
      高亮边框 = `SNSkin.style("focus_ring")` + `brass.highlight`；提示底板 =
      `SNSkin.style("panel_steel")` + `text.light`。禁止 `StyleBoxFlat` / 十六进制色。
-   - API：`focus(rect, text)`（屏幕坐标）/ `clear_focus()` / `is_active()` /
-     `get_target_rect()` / `get_mask_rects()`；resize 时重新拼边，不溢出视口。
+   - API：`focus(rect, text)`（屏幕坐标）/ `focus_target(control, text)`（绑定真实控件）/
+     `refresh_target()` / `clear_focus()` / `is_active()` / `get_target_rect()` /
+     `get_mask_rects()`；resize 时重新拼边，不溢出视口。
+   - 位置自愈（2026-10-28 P0）：容器排版 / 页面重建 / resize 会让目标控件在调用方
+     拿到一次 `get_global_rect()` 之后继续移动，因此 Shell 优先传**真实 Control**，
+     遮罩每帧重读目标矩形并在变化时重排；目标被释放 / 隐藏 / 矩形归零立即清除。
+     提示板高度按字体实测换行高度固定，水平内容边距 24 px 避开 `panel_steel` 的
+     19 px 黄铜角饰。
 4. **Shell 解析**（`_resolve_story_focus_target`）：语义 id → 真实控件：
    - `market_supply`：市场页的 `MarketSupply` 区块；不在市场页时回退到「市场」导航入口；
    - `chart_entry`：状态条「海图 ▶」/ 顶部导航的海图开关；
@@ -302,6 +308,9 @@ guarantee_explore_success / unlock_modules / complete_story
    目标找不到时 **fail-open**（清空遮罩），内容写错也不会把玩家锁死。
 5. **显示规则**：剧情卡打开时卡片优先（不显示遮罩）；演出 / 结算页 / 菜单清除；
    页面切换（重建）与窗口 resize 后重新解析目标；阶段推进 / `story.skip` 后自动清除。
+   遮罩在 `StoryLayer` 中**最后挂载**（位于目标条 / 任务追踪条之上），否则提示文案会
+   被目标条压住；Shell 在页面重建后做同步 + 两次 deferred 重解析，位置正确性最终由
+   遮罩的目标绑定自愈兜底。
 6. 当前覆盖阶段：`supply_brief`（`market_supply`）、`supply_hold`（`chart_entry`）、
    `chart_brief`（`chart_entry`：海图页上同一个开关即「关闭海图」）、`supply_finish`
    （`market_supply`）。`depart_brief` / `second_depart` 不声明 `focus`：它们要在海图页
@@ -309,7 +318,9 @@ guarantee_explore_success / unlock_modules / complete_story
 7. 测试：`test_story_ui::test_focus_overlay_component_masks_everything_but_the_target`
    （组件遮罩 / 点击穿透 / resize）、`..._test_guided_focus_masks_the_supply_block_and_clears_on_advance`
    （Shell 解析 + 清除）、`test_story::test_story_view_passes_the_optional_focus_target_through`
-   （查询透传）；`960×540` / `1440×900` 由组件布局断言覆盖。
+   （查询透传）；2026-10-28 新增 `test_focus_overlay_tracks_the_market_nav_after_rebuild`
+   （真实 shell + 教程局：重建后遮罩洞 = 「市场」导航按钮 ≤8 px、提示板高度 ≤80 px、
+   四块遮罩在目标四边）；`960×540` / `1440×900` 由组件布局断言覆盖。
 
 ## 9. 分片与验收口径
 
@@ -322,6 +333,7 @@ guarantee_explore_success / unlock_modules / complete_story
 | **4.5.5 船厂 / 客舱 / 旅客** | ✅ 已实现：新增 `core:module/small_cabin`（1 人，120 金 / 轻量）；`shipyard.view` 在剧情期间按 `unlocked_modules` 过滤购买 / 打造 / 仓库候选，第三港只显示该客舱；第三港由 Core 补 `shipyard` 设施并用 `upgrade_hull` 换成带客舱位的船体；`refit_unload`（match `category: cargo`）→ `refit_cabin`（match 小型客舱）→ 自动接 `main_03` 旅客委托（`passengers: 1`，货箱清空）→ 出航送客 → `story_complete` 解锁全部并交还沙盒；`ContractOps.attach` 不再用空货箱校验货舱容量 | 第三港船厂只显示小型客舱；客舱安装后可接 / 完成 1 人旅客委托；未解锁模块不可见不可买；剧情可推进到完成并解锁全部功能；`main_03` 完成推进 `main_04`；全量测试 0 failed；截图 `tutorial_shipyard_cabin.png` / `tutorial_shipyard_refit.png` / `tutorial_passenger_contract.png` | ✅ |
 | **4.5.6 收尾** | ✅ 已实现：全量测试（当前工作树 369 例 0 failed，其中本仓提交的测试集 363 例；并行 session 的 legacy UV / 武器 socket 套件 6 例不属于本片）、窗口截图（剧情卡 / 目标条 / 门禁 / 酒馆 / 并市 / 船厂 / 旅客，1440×900，脚本可重复运行）、README / todo / 本文回填、静态文档 | 全量 0 failed；截图脚本可重复生成同尺寸 PNG；`gen_static_docs --check` 通过；每片提交只含本片文件 | ✅ |
 | **dev.3 反馈 #1 / #3 修复** | ✅ 已实现：①触发时机——`ui:chart_opened` / `ui:arrival_settled` 改为玩家动作点一次性上报（页面挂载不再 observe）；`depart_brief` / `second_depart` 拆出 `first_arrival` / `second_arrival`（`cmd:voyage.start` vs `ui:arrival_settled`）；`DEPARTURE_VEIL` 归入演出分支；离开结算页清空摘要。②强制引导——`SNFocusOverlay` + `story.view.focus` + Schema `focus` 字段 + Shell 语义 target 解析（`market_supply` / `chart_entry` / `<screen>_nav`），覆盖 `supply_brief` / `supply_hold` / `chart_brief` / `supply_finish`，中英文案同步 | 真实航海驱动 T1：出航只收出航指示、抵达才出现第二港剧情、一次动作恰好 1 次 `story.observe`、结算页重建 0 次额外上报；T2：海图开 / 关各 1 次、页面重建 0 次；T3：DEPARTURE_VEIL 重建不重挂海图 / 不上报；`test_story` 14、`test_story_ui` 9、`test_ui_shell` 26、`test_voyage_flow` 16、schema 55、quest 14、task 6、full_clear 2 全绿；`gen_static_docs --check`、`check_content_schema_v2`、SNModMaker content CLI 64 全过；`960×540` / `1440×900` 由遮罩 rect 断言覆盖 | ✅ |
+| **2026-10-28 P0 引导框错位修复** | ✅ 已实现：玩家反馈「框与按钮根本不在一个地方」。根因：`main.gd` 在刚重建的 `TopChrome/Nav` 完成排版前同步调用 `_sync_story_focus()`，只拿到旧 `global_rect`；且之后不再重排，右上「市场」按钮的引导框停在左上角、提示板被 autowrap Label 的过期最小高度撑到 484×387。修复：`SNFocusOverlay.focus_target(control, text)` 绑定真实控件并逐帧 `refresh_target()` 自愈（目标释放 / 隐藏即清除），`main.gd` 重建后补两次 deferred 重解析；遮罩最后挂到 `StoryLayer`（在目标条之上，提示不再被压）；三处 `SNSkin.style()` 共享 StyleBox 改为克隆后 tint；提示板按字体实测换行高度 + 24 px 水平内边距避开角饰 | 1440×900 实测 hole = target = (1332,77,72,38)（误差 0）、FocusHint 484×30、四块遮罩分别贴目标四边；960×540 同样 hole=target；`test_story_ui` 新增重建后回归用例（单测 / 组件 / Shell 各层）；窗口重截 `docs/design/screenshots/story/tutorial_objective.png`（ring 套住「市场」按钮、提示完整可读） | ✅ |
 
 ## 10. 数值建议（Core 可调，不写死框架）
 

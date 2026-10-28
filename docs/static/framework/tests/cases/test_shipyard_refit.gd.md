@@ -31,10 +31,11 @@
 | `test_dragging_a_warehouse_module_maps_to_install_command() -> void` | L437 |
 | `test_drag_drop_installs_into_empty_slot_and_replaces_filled_slot() -> void` | L516 |
 | `test_category_navigation_switches_operations_and_misc_hosts_actions() -> void` | L615 |
-| `test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void` | L668 |
-| `test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void` | L708 |
-| `test_weapon_sockets_show_player_mount_names_and_drag_install() -> void` | L770 |
-| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L962 |
+| `test_refit_dock_splits_weapon_install_from_regular_refit() -> void` | L669 |
+| `test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void` | L756 |
+| `test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void` | L796 |
+| `test_weapon_sockets_show_player_mount_names_and_drag_install() -> void` | L863 |
+| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L1057 |
 
 ## 契约与约束
 

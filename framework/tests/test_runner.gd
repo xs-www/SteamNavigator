@@ -54,6 +54,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_ui_shell.gd",
 	"res://framework/tests/cases/test_ui_skin.gd",
 	"res://framework/tests/cases/test_shipyard_refit.gd",
+	"res://framework/tests/cases/test_shipyard_blueprint.gd",
 	"res://framework/tests/cases/test_ship_modules.gd",
 	"res://framework/tests/cases/test_settings.gd",
 	"res://framework/tests/cases/test_telemetry.gd",

@@ -35,9 +35,9 @@
 | `components/sn_section_header.gd` | 章节标题组合控件：眉题、标题、可选右侧说明，并可挂一枚 16–18 px 的皮肤图标；文字颜色与字号由 Theme 的 SNEyebrowLabel/SNTitleLabel/SNDetailLabel 变体决定。 | [查看](./components/sn_section_header.gd.md) |
 | `components/sn_section_header.tscn` | 框架源文件：sn_section_header.tscn | 本页 |
 | `components/sn_ship_stage_3d.gd` | 船厂正常态的 3D 舞台适配器：把通用 `SNStageHost` 接入既有 `SNShipView.set_renderer()` 协议，加载 `ShipyardStage` 承载船体、环境、灯光与水面；节点本身只做 ViewModel/模式转发与显隐。 | [查看](./components/sn_ship_stage_3d.gd.md) |
-| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船侧视/俯视蓝图线稿、模块拖放槽位，以及 hull `weapon_sockets[].blueprint` 驱动、可读可拖放的武器槽位贴片（`SNWeaponSocketTarget`）。 | [查看](./components/sn_ship_view.gd.md) |
+| `components/sn_ship_view.gd` | 船厂中央船体视图；正常态承载 2.5D 船体/程序化船身，改装态绘制每船**侧视**蓝图线稿、内容锚点圆点（`ship.slot_anchors` + `weapon_sockets[].blueprint.side`）、圆点到模块方框/武器贴片的折线，以及可拖放的槽位贴片与武器贴片。 | [查看](./components/sn_ship_view.gd.md) |
 | `components/sn_ship_view.tscn` | 框架源文件：sn_ship_view.tscn | 本页 |
-| `components/sn_slot_target.gd` | 纵剖图上的单个槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型。 | [查看](./components/sn_slot_target.gd.md) |
+| `components/sn_slot_target.gd` | 纵剖图/侧视蓝图上的单个模块槽位贴片：显示槽位与已装模块，接收 `ship_parts` 拖放载荷，只校验来源与槽位类型；支持紧凑两行模式（P2b 贴锚点窄区）与拖放开关（P2a 模式隔离）。 | [查看](./components/sn_slot_target.gd.md) |
 | `components/sn_slot_target.tscn` | 框架源文件：sn_slot_target.tscn | 本页 |
 | `components/sn_sparkline.gd` | 市场价格历史迷你折线；只有两个以上真实样本才绘制。 | [查看](./components/sn_sparkline.gd.md) |
 | `components/sn_sparkline.tscn` | 框架源文件：sn_sparkline.tscn | 本页 |

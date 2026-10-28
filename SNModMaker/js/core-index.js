@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   root.SN_CORE_INDEX = {
-    "generated_at": "2026-10-26T22:06:38.840Z",
+    "generated_at": "2026-10-28T04:02:03.435Z",
     "manifest": {
       "$schema": "https://steam-navigator.local/schema/mod-manifest-1.json",
       "id": "core",
@@ -664,6 +664,70 @@
                   "mount_scale": 1
                 }
               ],
+              "module_slots": [
+                {
+                  "id": "boiler",
+                  "blueprint_position": {
+                    "side": [
+                      0.475,
+                      0.7
+                    ]
+                  },
+                  "allowed_categories": [
+                    "boiler"
+                  ]
+                },
+                {
+                  "id": "navigation",
+                  "blueprint_position": {
+                    "side": [
+                      0.705,
+                      0.48
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "safety",
+                  "blueprint_position": {
+                    "side": [
+                      0.83,
+                      0.57
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "cabin",
+                  "blueprint_position": {
+                    "side": [
+                      0.35,
+                      0.5
+                    ]
+                  },
+                  "allowed_categories": [
+                    "cabin"
+                  ]
+                }
+              ],
+              "compartments": [
+                {
+                  "id": "cargo_1",
+                  "blueprint_position": {
+                    "side": [
+                      0.22,
+                      0.62
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                }
+              ],
               "blueprint_views": {
                 "side": {
                   "image": "blueprint.ship.small_efficient.side",
@@ -884,6 +948,82 @@
                 ],
                 "mast_asset": "model.rig.mast_sail"
               },
+              "module_slots": [
+                {
+                  "id": "boiler",
+                  "blueprint_position": {
+                    "side": [
+                      0.5,
+                      0.85
+                    ]
+                  },
+                  "allowed_categories": [
+                    "boiler"
+                  ]
+                },
+                {
+                  "id": "navigation",
+                  "blueprint_position": {
+                    "side": [
+                      0.71,
+                      0.775
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "safety",
+                  "blueprint_position": {
+                    "side": [
+                      0.8,
+                      0.78
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "cabin",
+                  "blueprint_position": {
+                    "side": [
+                      0.66,
+                      0.8
+                    ]
+                  },
+                  "allowed_categories": [
+                    "cabin"
+                  ]
+                }
+              ],
+              "compartments": [
+                {
+                  "id": "cargo_1",
+                  "blueprint_position": {
+                    "side": [
+                      0.3,
+                      0.83
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                },
+                {
+                  "id": "cargo_2",
+                  "blueprint_position": {
+                    "side": [
+                      0.58,
+                      0.83
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                }
+              ],
               "blueprint_views": {
                 "side": {
                   "image": "blueprint.ship.medium_standard.side",
@@ -1125,6 +1265,94 @@
                 "mast_asset": "model.rig.mast_steam",
                 "yard_asset": "model.rig.yard"
               },
+              "module_slots": [
+                {
+                  "id": "boiler",
+                  "blueprint_position": {
+                    "side": [
+                      0.47,
+                      0.68
+                    ]
+                  },
+                  "allowed_categories": [
+                    "boiler"
+                  ]
+                },
+                {
+                  "id": "navigation",
+                  "blueprint_position": {
+                    "side": [
+                      0.47,
+                      0.5
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "safety",
+                  "blueprint_position": {
+                    "side": [
+                      0.7,
+                      0.6
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "cabin",
+                  "blueprint_position": {
+                    "side": [
+                      0.52,
+                      0.56
+                    ]
+                  },
+                  "allowed_categories": [
+                    "cabin"
+                  ]
+                }
+              ],
+              "compartments": [
+                {
+                  "id": "cargo_1",
+                  "blueprint_position": {
+                    "side": [
+                      0.18,
+                      0.62
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                },
+                {
+                  "id": "cargo_2",
+                  "blueprint_position": {
+                    "side": [
+                      0.6,
+                      0.62
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                },
+                {
+                  "id": "cargo_3",
+                  "blueprint_position": {
+                    "side": [
+                      0.75,
+                      0.62
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                }
+              ],
               "blueprint_views": {
                 "side": {
                   "image": "blueprint.ship.large_efficient.side",
@@ -1382,6 +1610,94 @@
                     -20,
                     0,
                     12.34
+                  ]
+                }
+              ],
+              "module_slots": [
+                {
+                  "id": "boiler",
+                  "blueprint_position": {
+                    "side": [
+                      0.47,
+                      0.68
+                    ]
+                  },
+                  "allowed_categories": [
+                    "boiler"
+                  ]
+                },
+                {
+                  "id": "navigation",
+                  "blueprint_position": {
+                    "side": [
+                      0.5,
+                      0.53
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "safety",
+                  "blueprint_position": {
+                    "side": [
+                      0.66,
+                      0.56
+                    ]
+                  },
+                  "allowed_categories": [
+                    "utility"
+                  ]
+                },
+                {
+                  "id": "cabin",
+                  "blueprint_position": {
+                    "side": [
+                      0.6,
+                      0.55
+                    ]
+                  },
+                  "allowed_categories": [
+                    "cabin"
+                  ]
+                }
+              ],
+              "compartments": [
+                {
+                  "id": "cargo_1",
+                  "blueprint_position": {
+                    "side": [
+                      0.25,
+                      0.7
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                },
+                {
+                  "id": "cargo_2",
+                  "blueprint_position": {
+                    "side": [
+                      0.62,
+                      0.7
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
+                  ]
+                },
+                {
+                  "id": "cargo_3",
+                  "blueprint_position": {
+                    "side": [
+                      0.78,
+                      0.7
+                    ]
+                  },
+                  "allowed_types": [
+                    "cargo"
                   ]
                 }
               ],
@@ -8237,6 +8553,70 @@
                 "mount_scale": 1
               }
             ],
+            "module_slots": [
+              {
+                "id": "boiler",
+                "blueprint_position": {
+                  "side": [
+                    0.475,
+                    0.7
+                  ]
+                },
+                "allowed_categories": [
+                  "boiler"
+                ]
+              },
+              {
+                "id": "navigation",
+                "blueprint_position": {
+                  "side": [
+                    0.705,
+                    0.48
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "safety",
+                "blueprint_position": {
+                  "side": [
+                    0.83,
+                    0.57
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "cabin",
+                "blueprint_position": {
+                  "side": [
+                    0.35,
+                    0.5
+                  ]
+                },
+                "allowed_categories": [
+                  "cabin"
+                ]
+              }
+            ],
+            "compartments": [
+              {
+                "id": "cargo_1",
+                "blueprint_position": {
+                  "side": [
+                    0.22,
+                    0.62
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              }
+            ],
             "blueprint_views": {
               "side": {
                 "image": "blueprint.ship.small_efficient.side",
@@ -8471,6 +8851,82 @@
               ],
               "mast_asset": "model.rig.mast_sail"
             },
+            "module_slots": [
+              {
+                "id": "boiler",
+                "blueprint_position": {
+                  "side": [
+                    0.5,
+                    0.85
+                  ]
+                },
+                "allowed_categories": [
+                  "boiler"
+                ]
+              },
+              {
+                "id": "navigation",
+                "blueprint_position": {
+                  "side": [
+                    0.71,
+                    0.775
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "safety",
+                "blueprint_position": {
+                  "side": [
+                    0.8,
+                    0.78
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "cabin",
+                "blueprint_position": {
+                  "side": [
+                    0.66,
+                    0.8
+                  ]
+                },
+                "allowed_categories": [
+                  "cabin"
+                ]
+              }
+            ],
+            "compartments": [
+              {
+                "id": "cargo_1",
+                "blueprint_position": {
+                  "side": [
+                    0.3,
+                    0.83
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              },
+              {
+                "id": "cargo_2",
+                "blueprint_position": {
+                  "side": [
+                    0.58,
+                    0.83
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              }
+            ],
             "blueprint_views": {
               "side": {
                 "image": "blueprint.ship.medium_standard.side",
@@ -8726,6 +9182,94 @@
               "mast_asset": "model.rig.mast_steam",
               "yard_asset": "model.rig.yard"
             },
+            "module_slots": [
+              {
+                "id": "boiler",
+                "blueprint_position": {
+                  "side": [
+                    0.47,
+                    0.68
+                  ]
+                },
+                "allowed_categories": [
+                  "boiler"
+                ]
+              },
+              {
+                "id": "navigation",
+                "blueprint_position": {
+                  "side": [
+                    0.47,
+                    0.5
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "safety",
+                "blueprint_position": {
+                  "side": [
+                    0.7,
+                    0.6
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "cabin",
+                "blueprint_position": {
+                  "side": [
+                    0.52,
+                    0.56
+                  ]
+                },
+                "allowed_categories": [
+                  "cabin"
+                ]
+              }
+            ],
+            "compartments": [
+              {
+                "id": "cargo_1",
+                "blueprint_position": {
+                  "side": [
+                    0.18,
+                    0.62
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              },
+              {
+                "id": "cargo_2",
+                "blueprint_position": {
+                  "side": [
+                    0.6,
+                    0.62
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              },
+              {
+                "id": "cargo_3",
+                "blueprint_position": {
+                  "side": [
+                    0.75,
+                    0.62
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              }
+            ],
             "blueprint_views": {
               "side": {
                 "image": "blueprint.ship.large_efficient.side",
@@ -8997,6 +9541,94 @@
                   -20,
                   0,
                   12.34
+                ]
+              }
+            ],
+            "module_slots": [
+              {
+                "id": "boiler",
+                "blueprint_position": {
+                  "side": [
+                    0.47,
+                    0.68
+                  ]
+                },
+                "allowed_categories": [
+                  "boiler"
+                ]
+              },
+              {
+                "id": "navigation",
+                "blueprint_position": {
+                  "side": [
+                    0.5,
+                    0.53
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "safety",
+                "blueprint_position": {
+                  "side": [
+                    0.66,
+                    0.56
+                  ]
+                },
+                "allowed_categories": [
+                  "utility"
+                ]
+              },
+              {
+                "id": "cabin",
+                "blueprint_position": {
+                  "side": [
+                    0.6,
+                    0.55
+                  ]
+                },
+                "allowed_categories": [
+                  "cabin"
+                ]
+              }
+            ],
+            "compartments": [
+              {
+                "id": "cargo_1",
+                "blueprint_position": {
+                  "side": [
+                    0.25,
+                    0.7
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              },
+              {
+                "id": "cargo_2",
+                "blueprint_position": {
+                  "side": [
+                    0.62,
+                    0.7
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
+                ]
+              },
+              {
+                "id": "cargo_3",
+                "blueprint_position": {
+                  "side": [
+                    0.78,
+                    0.7
+                  ]
+                },
+                "allowed_types": [
+                  "cargo"
                 ]
               }
             ],

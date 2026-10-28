@@ -9,27 +9,33 @@
 | 符号 | 位置 |
 | --- | --- |
 | `ShipyardScreen` | L1 |
-| `command_requested (signal)` | L31 |
-| `refit_mode_changed (signal)` | L32 |
-| `refit_category_changed (signal)` | L33 |
-| `CATEGORY_ORDER` | L35 |
-| `MODULE_CATEGORIES` | L36 |
-| `TYPE_LABELS` | L37 |
-| `SLOT_TITLES` | L38 |
-| `SLOT_DEFS` | L40 |
-| `CARGO_CATEGORY` | L47 |
-| `WEAPON_ROW_SCRIPT` | L50 |
-| `WEAPON_SOCKET_CARD_SCRIPT` | L51 |
-| `TAB_ORDER` | L54 |
-| `SHIP_THUMB_PATH` | L55 |
-| `CATEGORY_ICONS` | L58 |
-| `TAB_ICONS` | L68 |
-| `SLOT_ICONS` | L76 |
-| `WEAPON_SOCKET_POSITIONS` | L87 |
-| `WEAPON_CLASS_KEYS` | L93 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L128 |
-| `set_category(category: String) -> void` | L235 |
-| `set_tab(tab: String) -> void` | L253 |
+| `command_requested (signal)` | L32 |
+| `refit_mode_changed (signal)` | L33 |
+| `refit_category_changed (signal)` | L34 |
+| `CATEGORY_ORDER` | L36 |
+| `MODULE_CATEGORIES` | L37 |
+| `MODULE_CATEGORY_ORDER` | L41 |
+| `WEAPON_CATEGORY` | L42 |
+| `WEAPON_TAB_ORDER` | L45 |
+| `TYPE_LABELS` | L46 |
+| `SLOT_TITLES` | L47 |
+| `SLOT_DEFS` | L49 |
+| `CARGO_CATEGORY` | L56 |
+| `WEAPON_ROW_SCRIPT` | L59 |
+| `WEAPON_SOCKET_CARD_SCRIPT` | L60 |
+| `TAB_ORDER` | L63 |
+| `SHIP_THUMB_PATH` | L64 |
+| `CATEGORY_ICONS` | L67 |
+| `TAB_ICONS` | L77 |
+| `SLOT_ICONS` | L85 |
+| `WEAPON_SOCKET_POSITIONS` | L96 |
+| `WEAPON_CLASS_KEYS` | L102 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L140 |
+| `set_category(category: String) -> void` | L254 |
+| `set_weapon_mode() -> void` | L270 |
+| `set_module_mode() -> void` | L275 |
+| `is_weapon_mode() -> bool` | L279 |
+| `set_tab(tab: String) -> void` | L300 |
 
 - 关键依赖：`SNShipView`、`SNPartRow`、`SNBadge`、`SNButton`、`SNSectionHeader`、`SNSkin`、`steam_navigator_theme.tres`
 
@@ -43,7 +49,8 @@
 ## 契约与约束
 - `bind(vm, translate)` 接收 Shell 组合后的 shipyard.view（含 refit/category/ship.hull_name/warehouse/candidates/craft/orders/wait_options），不访问 AppContext、QueryBus、CommandBus 或注册表；`_build_page()` 每次整体重建，可重复 bind。
 - `_build_page()` 先把旧根节点 `remove_child` 后 `queue_free`（不是立即 free），所以操作坞里的「完成改装」按钮可以在自己的 `pressed` 信号里重建整页；绑定/切模式/切分类/切页签都走这一个入口。
-- `CATEGORY_ORDER` = 船体/锅炉/货舱/通用/客舱/武器/杂项；`TAB_ORDER` = 装配(install)/购买(buy)/打造(craft)。`set_category` 只接受声明值，未在改装态时先置 refit 并发 `refit_mode_changed(true)`，同时把页签重置为装配；`set_tab` 只切页签（相同值 no-op）。
+- `CATEGORY_ORDER` = 船体/锅炉/货舱/通用/客舱/武器/杂项（对外兼容值）；操作坞分类按钮只列 `MODULE_CATEGORY_ORDER` 的六个常规分类，舰载武器由坞头「部件改装 / 武器装配」模式切换单独进入（2026-10-28 玩家反馈：武器安装与常规改装分离）。`set_category("weapons")` 仍等于进入武器装配模式，供测试 / 截图工具使用；`TAB_ORDER` = 装配(install)/购买(buy)/打造(craft)，武器模式只保留装配 / 购买。`set_category` 只接受声明值，未在改装态时先置 refit 并发 `refit_mode_changed(true)`，同时把页签重置为装配；`set_tab` 只切页签（相同值 no-op）。
+- 坞头固定顺序：分类标题 + 槽位徽标 + `_refit_button`；下面一行 `_mode_switch()`（两个等宽模式按钮），再往下是船体数据卡。常规模式显示 `部件分类` 3×2 等宽网格 + 装配/购买/打造页签；武器模式显示一行说明 + 炮位卡/仓库武器/购买列表（无打造页签）。
 - `_body` 固定三列：正常态 `_ship_list_panel / _render_panel / _components_panel`；改装态 `_blueprint_panel / _stage_window / _refit_dock_panel`（`StageWindow` 空 Control、`RefitDock` 操作坞）。正常态保留章节标题与摘要行，改装态不显示标题/摘要行。
 - 改装态画在 3D 港区舞台上：Shell 的 `STAGE_SCREENS` 含 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示；`_stage_window()` 是可让 3D 透出的空 Control（MOUSE_FILTER_IGNORE），蓝图板/操作坞用 `size_flags_stretch_ratio` 1.2 / 0.25 分配宽度。
 - 左列蓝图：`SNBlueprintPanel` + `SNShipView(CUTAWAY)`（`set_blueprint_backdrop(true)`），侧视/俯视等比绘制、武器框按 `weapon_sockets[].blueprint` 映射，槽位贴片停靠蓝图底部 dock。

@@ -13,7 +13,7 @@
 ### 近期
 - [ ] UI 皮肤后续（V1 边界）：布旗 `flag_*` 接入导航/出航确认/港口识别（需布局改版，当前紧凑 64×36 导航与 172×42 侧牌放不下）；补齐 `nav_overview` / `nav_base` / `nav_trade` / `nav_ruins`、`shipyard_utility` / `shipyard_weapons`、`action_buy` / `sell` / `repair` / `wait`、`status_risk` 图标；多套皮肤运行时切换（Theme 动态重建，当前 Theme 绑定生成时的 skin 目录）；换肤后 960×540 文字/安全区复验与低动效模式
 - [ ] 船体蓝图后续：武器成对（左右舷同型）的运行时命令与校验；舱位运行时槽位化（`mount_state` + state 2.1 迁移）；把 `apply_hull_blueprints.mjs --check` 接入发布/CI 门禁，GLB 或线稿参数变化时自动重算坐标
-- [ ] 船厂改装页后续：港区 `shipyard` 站位接入真实干船坞 + 吊架（给 `port.view` / `facility_visuals.shipyard` 绑定 `SN_Dry_Dock.glb` + `SN_Shipyard_Gantry.glb`，当前是程序化 billboard）；3D 窗口按窗口宽度做机位微调，超宽屏下不要让船坞站位移到窗外
+- [ ] 船厂改装页后续：俯视图恢复（当前只画侧视，`top` 系列 API 保留）需要先补每船 `blueprint_views.top` 的槽位锚点作者流程，并把 Core 4 船人工标定的 side 锚点接进编辑器拾取；港区 `shipyard` 站位接入真实干船坞 + 吊架（给 `port.view` / `facility_visuals.shipyard` 绑定 `SN_Dry_Dock.glb` + `SN_Shipyard_Gantry.glb`，当前是程序化 billboard）；3D 窗口按窗口宽度做机位微调，超宽屏下不要让船坞站位移到窗外
 - [ ] Lua Modding SDK S1：按 [LUA_SDK_S0_API_CONTRACT.md](docs/design/LUA_SDK_S0_API_CONTRACT.md) / [LUA_SDK_S0_THREAT_MODEL.md](docs/design/LUA_SDK_S0_THREAT_MODEL.md) / [LUA_SDK_S0_TEST_MATRIX.md](docs/design/LUA_SDK_S0_TEST_MATRIX.md) 做独立 Lua Host PoC（VM 选型、中断/内存/库隔离证据、纵向样例），实验分支，禁止接入正式 ModLoader；S0 已完成
 - [ ] 炮门舱段 port cassette：给明轮货轮 / 明轮客船 / 纵帆船（以及未来的船）提供“舷侧开口 + 暗腔 + 标准 `SN_Socket_GunPort` 接口”的适配模块，让 `SN_Weapon_CasemateGun` 能装到没有炮门的船上；同时解决空炮门的“暗腔”读感（当前是木制深色炮口板）
 - [ ] 铁甲舰 `SN_Ironclad_LOD1.glb` 随空炮门 LOD0 重建（当前 LOD1 仍是带炮旧件；LOD 切换未接线，暂不影响运行时）
@@ -69,6 +69,10 @@
 ## Recently Completed
 
 - 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
+
+- 船厂改装界面第二轮反馈（2026-10-28）：改装蓝图只保留侧视图，普通槽位按 Core hull `module_slots` / `compartments` 的 `blueprint_position.side`（`shipyard.view.ship.slot_anchors`）画圆点 + 折线连到贴锚点的模块方框（`SNShipView` 新增 `slot_anchor_rects()` / `slot_chip_rects()` / `set_module_chips_visible()` / `set_weapon_patches_visible()`）；操作坞拆「部件改装 / 武器装配」两个模式，常规分类 6 项 3×2 等宽对齐、武器模式独立炮位/仓库/购买（无打造页签）；4 艘 Core 船补侧视槽位坐标并同步 `SNModMaker/js/core-index.js`。新增 `test_shipyard_blueprint` 8 例 + `test_shipyard_refit` 模式分离用例；验证 `check_content_schema_v2`、SNModMaker 65/65、截图 `_check3/shipyard_refit*.png`。
+
+- 教程强制引导 P0 修复（2026-10-28）：玩家反馈「框与按钮根本不在一个地方」。`SNFocusOverlay` 新增 `focus_target(control, text)` + 逐帧 `refresh_target()` 自愈，Shell 页面重建后补两次 deferred 重解析；遮罩改挂到目标条之上（提示不再被压字）、三处共享 `SNSkin.style()` 改克隆、提示板按字体实测高度 + 24 px 内边距；1440×900 / 960×540 实测 hole=target（0 误差）、FocusHint 484×30；新增 `test_story_ui` 回归，重截 `docs/design/screenshots/story/tutorial_objective.png`。
 
 - 剧情模式数据契约 V1 冻结（2026-10-27）：Schema 边界（`story_arcs` / `story_levels` 与 common 的 4 个 story `$defs`）、固定港口市场改 `{item, stock, price}[]`、世界坐标 / ID / 键长上限、起点双字段一致性、固定地图自环 / 重复航道 / 重复市场商品、包级 capability / 单篇章 / 关卡归属、`intel → tavern` 设施键，全部落进 Schema 与 `SNModMaker/js/validate.js`；新增 `tools/check_story_schema_freeze.mjs` + `schemas/v2/story_schema_freeze.json` 冻结门禁，契约文档见 [STORY_MODE_DATA_CONTRACT_V1.md](docs/specs/STORY_MODE_DATA_CONTRACT_V1.md)。验证：`content.mjs validate` 示例包 0 error / 2 draft warning、SNModMaker 65/65、Content CLI 64/64、`check_story_schema_freeze --check` 通过。
 

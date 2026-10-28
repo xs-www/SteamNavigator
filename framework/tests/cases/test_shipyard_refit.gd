@@ -663,6 +663,94 @@ func test_category_navigation_switches_operations_and_misc_hosts_actions() -> vo
 	_unmount(bundle)
 
 
+## 2026-10-28 玩家反馈：武器装配与常规改装分离。操作坞分类只保留 6 个常规分类
+## （3×2 等宽对齐），舰载武器由坞头「部件改装 / 武器装配」模式切换单独进入；
+## 武器模式只有装配 / 购买，没有打造页签，`set_category("weapons")` 仍然兼容。
+func test_refit_dock_splits_weapon_install_from_regular_refit() -> void:
+	var bundle := _mount(5214)
+	var shell: Control = bundle["shell"]
+	var screen := _shipyard(bundle)
+	if screen == null:
+		_unmount(bundle)
+		return
+	var refit_button: Variant = screen.get("_refit_button")
+	if refit_button is Button:
+		(refit_button as Button).emit_signal("pressed")
+	assert_false(bool(screen.call("is_weapon_mode")), "the dock opens in regular module mode")
+	# 1) Regular categories: six equal-width buttons in a 3x2 grid, no 武器 entry.
+	var picker := _node_named(shell._root_box, "CategoryPicker")
+	assert_not_null(picker, "regular mode shows the module category picker")
+	if picker != null:
+		var grid := picker as GridContainer
+		assert_eq(grid.get_child_count(), 6, "the picker lists exactly the six regular categories")
+		assert_eq(int(grid.columns), 3, "six categories use a tidy 3-column grid")
+		for category in ["hulls", "boiler", "cargo", "utility", "cabin", "misc"]:
+			var label: String = shell._tr("ui.category.%s" % category, "")
+			assert_not_null(_button_with_text(grid, label), "the picker offers %s" % category)
+			for child in grid.get_children():
+				if child is Button and String((child as Button).text) == label:
+					assert_eq(
+						(child as Control).size_flags_horizontal,
+						Control.SIZE_EXPAND_FILL,
+						"%s expands to its grid column so every plate shares one width" % category
+					)
+		assert_eq(
+			_button_count_with_text(grid, shell._tr("ui.category.weapons", "武器")),
+			0,
+			"weapons are not a regular category button"
+		)
+	# 2) The dock header carries the two dock modes.
+	var mode_row := _node_named(shell._root_box, "RefitModeSwitch")
+	assert_not_null(mode_row, "the dock exposes a module / weapon mode switch")
+	var modules_mode: Button = null
+	var weapons_mode: Button = null
+	if mode_row != null:
+		assert_eq(mode_row.get_child_count(), 2, "the mode switch has exactly two plates")
+		modules_mode = _button_with_text(mode_row, shell._tr("ui.label.refit_mode_modules", ""))
+		weapons_mode = _button_with_text(mode_row, shell._tr("ui.label.refit_mode_weapons", ""))
+		assert_not_null(modules_mode, "the mode switch offers 部件改装")
+		assert_not_null(weapons_mode, "the mode switch offers 武器装配")
+		for button in [modules_mode, weapons_mode]:
+			if button != null:
+				assert_eq(
+					button.size_flags_horizontal,
+					Control.SIZE_EXPAND_FILL,
+					"both mode plates share the dock width"
+				)
+				assert_false(button.pressed.get_connections().is_empty(), "the mode plate is wired")
+	# 3) Weapon mode: sockets + install / buy only, no category grid, no craft tab.
+	screen.set_weapon_mode()
+	assert_true(bool(screen.call("is_weapon_mode")), "set_weapon_mode enters the dedicated weapon dock")
+	assert_eq(String(screen.get("_category")), "weapons", "weapon mode is the compatible weapons category")
+	assert_eq(String(shell._shipyard_category), "weapons", "the shell stores the weapon dock mode")
+	assert_true(
+		_node_named(shell._root_box, "CategoryPicker") == null,
+		"weapon mode hides the regular category grid"
+	)
+	var weapon_labels := _label_texts(shell._root_box)
+	assert_contains(weapon_labels, shell._tr("ui.label.weapon_sockets", "武器槽位"), "weapon mode lists the hull mounts")
+	assert_contains(weapon_labels, shell._tr("ui.hint.weapon_refit_mode", ""), "weapon mode explains the split")
+	assert_not_null(_button_with_text(shell._root_box, shell._tr("ui.tab.install", "装配")), "weapon mode keeps the install tab")
+	assert_not_null(_button_with_text(shell._root_box, shell._tr("ui.tab.buy", "购买")), "weapon mode keeps the buy tab")
+	assert_true(
+		_button_with_text(shell._root_box, shell._tr("ui.tab.craft", "打造")) == null,
+		"weapon mode does not offer the module craft tab"
+	)
+	# Craft is rejected while in weapon mode instead of rendering an empty panel.
+	screen.set_tab("craft")
+	assert_ne(String(screen.get("_tab")), "craft", "a module-only tab cannot be selected in weapon mode")
+	screen.set_tab("buy")
+	assert_contains(_label_texts(shell._root_box), "购买并安装", "the weapon buy tab still lists purchase actions")
+	# 4) Returning to module mode restores the last regular category.
+	screen.set_category("cargo")
+	assert_false(bool(screen.call("is_weapon_mode")), "choosing a regular category leaves weapon mode")
+	screen.set_weapon_mode()
+	screen.set_module_mode()
+	assert_eq(String(screen.get("_category")), "cargo", "module mode returns to the last regular category")
+	assert_not_null(_node_named(shell._root_box, "CategoryPicker"), "returning restores the category grid")
+	_unmount(bundle)
+
+
 ## 新版改装页：左侧蓝图 / 中间 3D 窗口 / 右侧操作坞，舰船整体数据进坞，
 ## 购买与打造是独立页签，且不再出现测试向文案（改装蓝图 / 蓝图线稿 / 贴图剖面）。
 func test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void:
@@ -738,10 +826,15 @@ func test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void
 	var side_region: Rect2 = stage.blueprint_view_rect("side")
 	var top_region: Rect2 = stage.blueprint_view_rect("top")
 	assert_true(side_region.size.x > 0.0 and side_region.size.y > 0.0, "the side view has an on-screen rect")
-	assert_true(top_region.size.x > 0.0 and top_region.size.y > 0.0, "the top view has an on-screen rect")
-	assert_true(top_region.position.y >= side_region.position.y + side_region.size.y, "the top view is stacked below the side view")
-	assert_true(absf(side_region.size.x - top_region.size.x) < 0.5, "both views share the same width for x alignment")
-	assert_true(absf(side_region.position.x - top_region.position.x) < 0.5, "both views share the same left edge for x alignment")
+	# P2b（2026-10-28）：改装蓝图只绘制侧视图，可用高度全部给 side、底部槽位 dock
+	# 取消；`blueprint_view_rect("top")` / `blueprint_socket_rects("top")` 仍按旧的
+	# 双视图公式返回可计算矩形（内容坐标校验兼容），但 top 上不再生成武器贴片。
+	assert_true(top_region.size.x > 0.0 and top_region.size.y > 0.0, "the top view keeps a computable legacy rect")
+	assert_false(
+		stage.call("weapon_target", String(sockets[0].get("socket", "")), "top") != null,
+		"the side-only blueprint no longer carries weapon patches on the top view"
+	)
+	assert_eq(float(stage.call("slot_dock_height")), 0.0, "the side-only blueprint drops the bottom slot dock")
 	var side_rects: Dictionary = stage.blueprint_socket_rects("side")
 	var top_rects: Dictionary = stage.blueprint_socket_rects("top")
 	assert_eq(side_rects.size(), sockets.size(), "side blueprint draws one frame per hull weapon socket")
@@ -828,7 +921,9 @@ func test_weapon_sockets_show_player_mount_names_and_drag_install() -> void:
 	var display_rects: Dictionary = stage.call("weapon_socket_display_rects", "side")
 	var sockets_count := int(Array(screen.call("_enriched_weapon_sockets")).size())
 	assert_eq(display_rects.size(), sockets_count, "the blueprint draws one patch per weapon socket")
-	assert_eq(stage.call("weapon_targets").size(), sockets_count * 2, "side and top views both carry weapon patches")
+	# P2b：侧视单视图后每枚 socket 只有一枚 side 贴片（top 系列 API 仍可计算）。
+	assert_eq(stage.call("weapon_targets").size(), sockets_count, "the side-only blueprint carries one weapon patch per socket")
+	assert_true(stage.call("weapon_target", socket_name, "top") == null, "the top view carries no weapon patch")
 	var side_region: Rect2 = stage.call("blueprint_view_rect", "side")
 	var placed_rects: Array = display_rects.values()
 	for index in placed_rects.size():

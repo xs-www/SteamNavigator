@@ -15,7 +15,8 @@ extends VBoxContainer
 ## ## 契约与约束
 ## - `bind(vm, translate)` 接收 Shell 组合后的 shipyard.view（含 refit/category/ship.hull_name/warehouse/candidates/craft/orders/wait_options），不访问 AppContext、QueryBus、CommandBus 或注册表；`_build_page()` 每次整体重建，可重复 bind。
 ## - `_build_page()` 先把旧根节点 `remove_child` 后 `queue_free`（不是立即 free），所以操作坞里的「完成改装」按钮可以在自己的 `pressed` 信号里重建整页；绑定/切模式/切分类/切页签都走这一个入口。
-## - `CATEGORY_ORDER` = 船体/锅炉/货舱/通用/客舱/武器/杂项；`TAB_ORDER` = 装配(install)/购买(buy)/打造(craft)。`set_category` 只接受声明值，未在改装态时先置 refit 并发 `refit_mode_changed(true)`，同时把页签重置为装配；`set_tab` 只切页签（相同值 no-op）。
+## - `CATEGORY_ORDER` = 船体/锅炉/货舱/通用/客舱/武器/杂项（对外兼容值）；操作坞分类按钮只列 `MODULE_CATEGORY_ORDER` 的六个常规分类，舰载武器由坞头「部件改装 / 武器装配」模式切换单独进入（2026-10-28 玩家反馈：武器安装与常规改装分离）。`set_category("weapons")` 仍等于进入武器装配模式，供测试 / 截图工具使用；`TAB_ORDER` = 装配(install)/购买(buy)/打造(craft)，武器模式只保留装配 / 购买。`set_category` 只接受声明值，未在改装态时先置 refit 并发 `refit_mode_changed(true)`，同时把页签重置为装配；`set_tab` 只切页签（相同值 no-op）。
+## - 坞头固定顺序：分类标题 + 槽位徽标 + `_refit_button`；下面一行 `_mode_switch()`（两个等宽模式按钮），再往下是船体数据卡。常规模式显示 `部件分类` 3×2 等宽网格 + 装配/购买/打造页签；武器模式显示一行说明 + 炮位卡/仓库武器/购买列表（无打造页签）。
 ## - `_body` 固定三列：正常态 `_ship_list_panel / _render_panel / _components_panel`；改装态 `_blueprint_panel / _stage_window / _refit_dock_panel`（`StageWindow` 空 Control、`RefitDock` 操作坞）。正常态保留章节标题与摘要行，改装态不显示标题/摘要行。
 ## - 改装态画在 3D 港区舞台上：Shell 的 `STAGE_SCREENS` 含 `shipyard→shipyard` 且只在 `_shipyard_refit` 时显示；`_stage_window()` 是可让 3D 透出的空 Control（MOUSE_FILTER_IGNORE），蓝图板/操作坞用 `size_flags_stretch_ratio` 1.2 / 0.25 分配宽度。
 ## - 左列蓝图：`SNBlueprintPanel` + `SNShipView(CUTAWAY)`（`set_blueprint_backdrop(true)`），侧视/俯视等比绘制、武器框按 `weapon_sockets[].blueprint` 映射，槽位贴片停靠蓝图底部 dock。
@@ -34,6 +35,14 @@ signal refit_category_changed(category: String)
 
 const CATEGORY_ORDER := ["hulls", "boiler", "cargo", "utility", "cabin", "weapons", "misc"]
 const MODULE_CATEGORIES := ["hulls", "boiler", "cargo", "utility", "cabin", "weapons"]
+## Categories that the regular refit picker lists. Weapons are installed through
+## their own dock mode (mounts are a different interaction), so they are not a
+## regular category button; six buttons fit a tidy 3x2 grid.
+const MODULE_CATEGORY_ORDER := ["hulls", "boiler", "cargo", "utility", "cabin", "misc"]
+const WEAPON_CATEGORY := "weapons"
+## Weapon mode keeps install + buy; crafting a hull module has nothing to do with
+## installing a ship weapon, so the craft tab is hidden there.
+const WEAPON_TAB_ORDER := ["install", "buy"]
 const TYPE_LABELS := {"hulls": "船体", "boiler": "锅炉", "cargo": "货舱", "utility": "通用", "cabin": "客舱", "weapons": "武器", "misc": "杂项"}
 const SLOT_TITLES := {"hull": "ui.label.slot_hull", "boiler": "ui.label.slot_boiler", "navigation_module": "ui.label.slot_navigation", "safety_module": "ui.label.slot_safety", "passenger_cabin": "ui.label.slot_cabin"}
 ## Refit slots: flat ship slot key + the UI category it belongs to + instance name.
@@ -113,6 +122,9 @@ var _vm: Dictionary = {}
 var _refit := false
 var _category := "hulls"
 var _tab := "install"
+## Last regular (module) category, so leaving weapon mode returns somewhere
+## sensible instead of always snapping back to hulls.
+var _last_module_category := "hulls"
 var _slots: Array = []
 var _stage: SNShipView
 var _refit_button: SNButton
@@ -134,6 +146,9 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var requested := String(vm.get("category", "hulls"))
 	_category = requested if CATEGORY_ORDER.has(requested) else "hulls"
+	_last_module_category = _category if MODULE_CATEGORY_ORDER.has(_category) else "hulls"
+	if _category == WEAPON_CATEGORY and _tab == "craft":
+		_tab = "install"
 	_slots = _build_slots(vm)
 	_ship_thumb = null
 	if ResourceLoader.exists(SHIP_THUMB_PATH):
@@ -232,6 +247,10 @@ func _on_toggle_refit() -> void:
 
 
 ## Enter refit mode on one category. Tests and the shell may call this directly.
+## `weapons` is kept as a valid value: it switches the dock into weapon-install
+## mode (see `_mode_switch()`), while the regular picker only lists module
+## categories. Selecting a weapon mode from the picker is impossible, but the
+## shell / snapshot tool can still ask for it directly.
 func set_category(category: String) -> void:
 	if not CATEGORY_ORDER.has(category):
 		return
@@ -239,9 +258,35 @@ func set_category(category: String) -> void:
 		_refit = true
 		refit_mode_changed.emit(true)
 	_category = category
+	if MODULE_CATEGORY_ORDER.has(category):
+		_last_module_category = category
 	_tab = "install"
 	refit_category_changed.emit(_category)
 	_build_page()
+
+
+## Weapons get their own dock mode: install and buy live here, crafting (a hull
+## module action) is not offered. Idempotent.
+func set_weapon_mode() -> void:
+	set_category(WEAPON_CATEGORY)
+
+
+## Returns from weapon mode to the last regular module category.
+func set_module_mode() -> void:
+	set_category(_last_module_category)
+
+
+func is_weapon_mode() -> bool:
+	return _category == WEAPON_CATEGORY
+
+
+func _switch_weapon_mode(weapons: bool) -> void:
+	if weapons:
+		if _category != WEAPON_CATEGORY:
+			set_category.call_deferred(WEAPON_CATEGORY)
+		return
+	if _category == WEAPON_CATEGORY:
+		set_category.call_deferred(_last_module_category)
 
 
 func _ui_set_category(category: String) -> void:
@@ -249,9 +294,13 @@ func _ui_set_category(category: String) -> void:
 
 
 ## Switches the operations dock tab (`install` / `buy` / `craft`). Tests and the
-## shell may call this directly; unknown values are ignored.
+## shell may call this directly; unknown values are ignored. Weapon mode only
+## exposes install / buy, so craft is rejected there instead of rendering an
+## empty panel.
 func set_tab(tab: String) -> void:
 	if not TAB_ORDER.has(tab) or tab == _tab:
+		return
+	if is_weapon_mode() and not WEAPON_TAB_ORDER.has(tab):
 		return
 	_tab = tab
 	_build_page()
@@ -464,8 +513,9 @@ func _stage_window() -> Control:
 	return window
 
 
-## Right column: translucent dock with the ship data card, the category picker,
-## the install / buy / craft tabs and the tab body.
+## Right column: translucent dock with the ship data card, the mode switch, the
+## category picker (modules) or weapon-install hint, the install / buy / craft
+## tabs and the tab body.
 func _refit_dock_panel() -> Control:
 	var panel := PanelContainer.new()
 	panel.name = "RefitDock"
@@ -488,10 +538,17 @@ func _refit_dock_panel() -> Control:
 	_refit_button.pressed.connect(_on_toggle_refit)
 	header.add_child(_refit_button)
 	box.add_child(header)
+	box.add_child(_mode_switch())
 	box.add_child(_ship_data_card())
-	box.add_child(_section_label(_loc("ui.label.category_tabs", "部件分类")))
-	box.add_child(_category_picker())
-	if _category != "misc":
+	if is_weapon_mode():
+		# Weapons are a separate interaction (mounts), so the regular category
+		# grid is replaced by a one-line explanation. The socket cards below the
+		# tabs carry the actual install / buy actions.
+		box.add_child(_wrap_label(_loc("ui.hint.weapon_refit_mode", "舰载武器按炮位单独安装；船体部件请切回「部件改装」。"), 11, MUTED))
+	else:
+		box.add_child(_section_label(_loc("ui.label.category_tabs", "部件分类")))
+		box.add_child(_category_picker())
+	if is_weapon_mode() or _category != "misc":
 		box.add_child(_tab_row())
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -505,6 +562,31 @@ func _refit_dock_panel() -> Control:
 	_build_tab_body(body)
 	_highlight_category_slots()
 	return panel
+
+
+## Two equal-width mode plates: regular module refit vs ship-weapon installation.
+## The mode is the `_category` value (`weapons` = weapon mode), so tests / the
+## shell keep driving it through the same category API.
+func _mode_switch() -> Control:
+	var row := HBoxContainer.new()
+	row.name = "RefitModeSwitch"
+	row.add_theme_constant_override("separation", 6)
+	var weapons := is_weapon_mode()
+	for entry in [
+		{"weapons": false, "text": _loc("ui.label.refit_mode_modules", "部件改装"), "icon": "shipyard_hull"},
+		{"weapons": true, "text": _loc("ui.label.refit_mode_weapons", "武器装配"), "icon": String(CATEGORY_ICONS.get(WEAPON_CATEGORY, ""))},
+	]:
+		var active := bool(entry["weapons"]) == weapons
+		var button := SNButton.new()
+		button.variant = SNButton.Variant.PRIMARY if active else SNButton.Variant.SECONDARY
+		button.compact = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(0, 30)
+		button.text = String(entry["text"])
+		_apply_button_icon(button, String(entry["icon"]), 16)
+		button.pressed.connect(_switch_weapon_mode.bind(bool(entry["weapons"])))
+		row.add_child(button)
+	return row
 
 
 ## Ship-wide numbers live here in the dock instead of a summary line over the
@@ -569,16 +651,20 @@ func _stat_cell(grid: GridContainer, label_text: String, value_text: String) -> 
 	grid.add_child(row)
 
 
-## Seven part categories in a compact two-row grid (no separate tab column).
+## Six regular part categories in a tidy 3x2 grid of equal-width plates (weapons
+## moved to the dock's mode switch, 2026-10-28 player feedback). Equal widths and
+## the fixed 16 px icon slot keep every label on the same baseline / grid line.
 func _category_picker() -> Control:
 	var grid := GridContainer.new()
-	grid.columns = 4
+	grid.name = "CategoryPicker"
+	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 6)
 	grid.add_theme_constant_override("v_separation", 6)
-	for category in CATEGORY_ORDER:
+	for category in MODULE_CATEGORY_ORDER:
 		var button := SNButton.new()
 		button.variant = SNButton.Variant.PRIMARY if category == _category else SNButton.Variant.SECONDARY
 		button.compact = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size = Vector2(0, 30)
 		button.text = _category_label(category)
 		_apply_button_icon(button, String(CATEGORY_ICONS.get(category, "")), 16)
@@ -591,7 +677,8 @@ func _tab_row() -> Control:
 	var row := HBoxContainer.new()
 	row.name = "RefitTabs"
 	row.add_theme_constant_override("separation", 6)
-	for tab in TAB_ORDER:
+	var tabs: Array = WEAPON_TAB_ORDER if is_weapon_mode() else TAB_ORDER
+	for tab in tabs:
 		var button := SNButton.new()
 		button.variant = SNButton.Variant.PRIMARY if tab == _tab else SNButton.Variant.SECONDARY
 		button.compact = true
@@ -618,6 +705,10 @@ func _build_tab_body(box: VBoxContainer) -> void:
 	if _category == "misc":
 		_build_misc_body(box)
 		return
+	# Weapon mode has no crafting: guard here as well so a stale `_tab` can never
+	# render module recipes inside the weapon-install panel.
+	if is_weapon_mode() and _tab == "craft":
+		_tab = "install"
 	match _tab:
 		"buy":
 			_build_buy_body(box)
@@ -1055,6 +1146,12 @@ func _make_stage(mode: int, minimum: Vector2, blueprint_backdrop: bool = false) 
 	stage.set_mode(mode)
 	if stage.has_method("set_weapon_drop_enabled"):
 		stage.set_weapon_drop_enabled(_weapon_drag_enabled())
+	# 2026-10-28 玩家反馈：武器装配与常规改装分离也要体现在蓝图上——常规模式只看
+	# 模块槽位方框，武器模式只看炮位贴片；旧无蓝图船体忽略这两个开关（由舞台内部处理）。
+	if stage.has_method("set_module_chips_visible"):
+		stage.set_module_chips_visible(not is_weapon_mode())
+	if stage.has_method("set_weapon_patches_visible"):
+		stage.set_weapon_patches_visible(is_weapon_mode())
 	if _category == "weapons":
 		stage.highlight_slots(_weapon_socket_ids())
 	# 2.5D 舞台：正常态用真实 3D 船身，改装态仍走纵剖图贴图。船体模型由船体定义
@@ -1518,7 +1615,7 @@ func _category_label(category: String) -> String:
 		"cargo": return _loc("ui.category.cargo", "货舱")
 		"utility": return _loc("ui.category.utility", "通用")
 		"cabin": return _loc("ui.category.cabin", "客舱")
-		"weapons": return "武器"
+		"weapons": return _loc("ui.category.weapons", "武器")
 		"misc": return _loc("ui.category.misc", "杂项")
 		_: return category
 

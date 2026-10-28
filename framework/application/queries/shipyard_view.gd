@@ -1,7 +1,7 @@
 class_name ShipyardViewQuery
 extends RefCounted
 ## @static-doc
-## 作用：船厂只读 ViewModel；统一投影模块改装/打造/仓库、舰载武器 socket、购买/装配/库存，以及船体每视图蓝图线稿的已解析路径。
+## 作用：船厂只读 ViewModel；统一投影模块改装/打造/仓库、舰载武器 socket、购买/装配/库存、船体每视图蓝图线稿的已解析路径，以及槽位圆点用的蓝图锚点（`ship.slot_anchors`）。
 ##
 ## Shipyard ViewModel: current modules, transit modules, port warehouse, craft
 ## recipes, open craft orders, wait options and every purchasable module with the
@@ -12,6 +12,24 @@ extends RefCounted
 ## draws them in the refit view and falls back to the generic section when absent.
 ## 4.5.5：剧情期间（`StoryService.module_filter`）购买 / 打造 / 仓库候选按 Core
 ## `unlocked_modules` 裁剪；当前已装模块与当前槽位仍完整输出，保证可以卸下。
+##
+## ## `ship.slot_anchors`（P2b 契约，2026-10-28）
+## 把内容 `hull.data.module_slots[]` / `hull.data.compartments[]` 的
+## `blueprint_position.side`（左上原点 0..1，相对 `space:"trimmed"` 侧视线稿）投影成
+## UI 槽位键，供 `SNShipView` 在船体上画圆点 + 折线：
+## ```
+## {
+##   "hull": [x, y], "boiler": [x, y], "navigation_module": [x, y],
+##   "safety_module": [x, y], "passenger_cabin": [x, y],
+##   "cargo_modules": [[x, y], ...]   # 按 x 从左到右，序号对应 UI 货舱槽
+## }
+## ```
+## - `module_slots` 按 `allowed_categories` 映射（boiler/cabin/cargo），`navigation` /
+##   `safety` 同属 utility，用 id 关键字区分；不依赖 id 的其它键留空。
+## - `compartments` 按 `allowed_types` 映射：cabin→客舱，其余→货舱（`cargo_N` 顺序）。
+## - schema 的 `module_slots.allowed_categories` 没有 `hull`，因此 `hull` 锚点默认用所有
+##   已解析锚点的质心兜底（内容显式给 `id:"hull"` 的 module_slot 时优先采用）。
+## - 内容没有锚点时返回**空字典**：UI 回退到面板内通用锚点，旧内容 / SDK 模板不崩。
 ## @end-static-doc
 
 const WeaponOps := preload("res://framework/domain/ship/weapon_ops.gd")
@@ -103,6 +121,7 @@ static func execute(_params: Dictionary, context) -> Dictionary:
 			"hull_model_key": String(hull.information.get("model", "")) if hull != null else "",
 			"hull_model_path": _asset_path(context, hull.asset_uri("model")) if hull != null else "",
 			"blueprint_views": _blueprint_views(context, hull),
+			"slot_anchors": _slot_anchors(hull),
 			"visual": ShipVisualPlan.resolve(hub, context.assets, ship),
 			"boiler_id": String(ship.get("boiler_id", "")),
 			"modules": current_modules,
@@ -159,6 +178,7 @@ static func _empty_view() -> Dictionary:
 			"hull_model_key": "",
 			"hull_model_path": "",
 			"blueprint_views": {},
+			"slot_anchors": {},
 			"visual": ShipVisualPlan.empty(),
 			"boiler_id": "",
 			"modules": [],
@@ -285,6 +305,132 @@ static func _blueprint_views(context, hull: ContentDefinition) -> Dictionary:
 			"space": String((entry as Dictionary).get("space", "trimmed")),
 		}
 	return result
+
+
+## Blueprint slot anchors for the refit stage, keyed like the UI slot descriptors.
+## Content driven (`hull.data.module_slots` / `compartments`); `{}` when the hull
+## declares none, so `SNShipView` falls back to its generic panel anchors.
+static func _slot_anchors(hull: ContentDefinition) -> Dictionary:
+	if hull == null:
+		return {}
+	return _slot_anchors_from_data(hull.data)
+
+
+## Pure data projection, split out so tests and future editors can run it on raw
+## hull JSON without a ContentDefinition / registry. See the header for the shape.
+static func _slot_anchors_from_data(data: Dictionary) -> Dictionary:
+	var anchors: Dictionary = {}
+	var cargo_points: Array = []
+	var module_slots: Variant = data.get("module_slots", null)
+	if module_slots is Array:
+		for raw_entry in module_slots:
+			if not (raw_entry is Dictionary):
+				continue
+			var entry: Dictionary = raw_entry
+			var key := _module_slot_anchor_key(entry)
+			var point := _blueprint_side_point(entry.get("blueprint_position", null))
+			if key.is_empty() or point == Vector2(-1.0, -1.0):
+				continue
+			if key == "cargo_modules":
+				cargo_points.append(point)
+			elif not anchors.has(key):
+				anchors[key] = [point.x, point.y]
+	var compartments: Variant = data.get("compartments", null)
+	if compartments is Array:
+		for raw_entry in compartments:
+			if not (raw_entry is Dictionary):
+				continue
+			var entry: Dictionary = raw_entry
+			var key := _compartment_anchor_key(entry)
+			var point := _blueprint_side_point(entry.get("blueprint_position", null))
+			if key.is_empty() or point == Vector2(-1.0, -1.0):
+				continue
+			if key == "cargo_modules":
+				cargo_points.append(point)
+			elif not anchors.has(key):
+				anchors[key] = [point.x, point.y]
+	if not cargo_points.is_empty():
+		cargo_points.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+		var rows: Array = []
+		for point in cargo_points:
+			rows.append([point.x, point.y])
+		anchors["cargo_modules"] = rows
+	if anchors.is_empty():
+		return {}
+	# schema has no `hull` module slot: the hull chip anchors on the centroid of
+	# every other anchor (a point on the hull body) unless content declares one.
+	if not anchors.has("hull"):
+		var sum := Vector2.ZERO
+		var count := 0
+		for key in anchors.keys():
+			if String(key) == "cargo_modules":
+				for row in anchors[key]:
+					sum += Vector2(float(row[0]), float(row[1]))
+					count += 1
+				continue
+			var row: Array = anchors[key]
+			sum += Vector2(float(row[0]), float(row[1]))
+			count += 1
+		if count > 0:
+			anchors["hull"] = [sum.x / float(count), sum.y / float(count)]
+	return anchors
+
+
+## `module_slots[]` → UI slot key. Categories win; `navigation` / `safety` are both
+## `utility` and are told apart by their readable id (`navigation` / `safety`).
+static func _module_slot_anchor_key(entry: Dictionary) -> String:
+	var slot_id := String(entry.get("id", "")).to_lower()
+	var categories: Variant = entry.get("allowed_categories", [])
+	var has_category := func(category: String) -> bool:
+		return categories is Array and (categories as Array).has(category)
+	if slot_id.contains("navigation"):
+		return "navigation_module"
+	if slot_id.contains("safety") or slot_id.contains("life"):
+		return "safety_module"
+	if slot_id.contains("hull"):
+		return "hull"
+	if has_category.call("boiler") or slot_id.contains("boiler"):
+		return "boiler"
+	if has_category.call("cabin") or slot_id.contains("cabin"):
+		return "passenger_cabin"
+	if has_category.call("cargo") or slot_id.contains("cargo"):
+		return "cargo_modules"
+	return ""
+
+
+## `compartments[]` → UI slot key: cabin compartments are passenger cabins, every
+## other compartment is a cargo bay (matching `cargo_slots` / `cabin_slots`).
+static func _compartment_anchor_key(entry: Dictionary) -> String:
+	var compartment_id := String(entry.get("id", "")).to_lower()
+	var types: Variant = entry.get("allowed_types", [])
+	var allows_cargo := types is Array and (types as Array).has("cargo")
+	var allows_cabin := types is Array and (types as Array).has("cabin")
+	if compartment_id.contains("cabin") or (allows_cabin and not allows_cargo):
+		return "passenger_cabin"
+	if compartment_id.contains("cargo") or allows_cargo:
+		return "cargo_modules"
+	if allows_cabin:
+		return "passenger_cabin"
+	return ""
+
+
+## Reads `blueprint_position.side` as a validated 0..1 Vector2; (-1,-1) = missing.
+static func _blueprint_side_point(raw_position: Variant) -> Vector2:
+	if not (raw_position is Dictionary):
+		return Vector2(-1.0, -1.0)
+	var side: Variant = (raw_position as Dictionary).get("side", null)
+	if not (side is Array) or (side as Array).size() != 2:
+		return Vector2(-1.0, -1.0)
+	var point: Array = side
+	if not (point[0] is float or point[0] is int) or not (point[1] is float or point[1] is int):
+		return Vector2(-1.0, -1.0)
+	var x := float(point[0])
+	var y := float(point[1])
+	if not is_finite(x) or not is_finite(y):
+		return Vector2(-1.0, -1.0)
+	if x < 0.0 or x > 1.0 or y < 0.0 or y > 1.0:
+		return Vector2(-1.0, -1.0)
+	return Vector2(x, y)
 
 
 static func _disabled_module_count(ship: Dictionary) -> int:

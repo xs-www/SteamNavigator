@@ -43,6 +43,11 @@ extends Control
 ##   `story.view.focus.target` 由 `_resolve_story_focus_target()` 解析成真实控件
 ##   （`market_supply` / `chart_entry` / `<screen>_nav`）；页面挂好、每次重建与窗口
 ##   resize 后由 `_sync_story_focus()` 更新，剧情卡 / 演出 / 结算页时清除。
+## - **重建后的引导框定位**：`_rebuild_ui_body()` 里的同步 `_sync_story_focus()` 只能
+##   读到刚重建的 TopChrome/Nav 还没排版时的旧 `global_rect`。所以重建后紧接
+##   `_sync_story_focus_soon()`（两次 deferred，同 `_refresh_port_hotspots_soon` 手法）
+##   兜底目标重解析；遮罩本身通过 `focus_target()` 绑定真实控件并逐帧自愈，
+##   容器排版 / resize 导致目标移动时框自动追上（不再停在旧位置）。
 ##
 ## ## 退出与性能（P0，2026-10-24）
 ## - **优雅退出**：`_ready()` 设 `get_tree().auto_accept_quit = false`，窗口关闭请求走
@@ -679,6 +684,10 @@ func _rebuild_ui_body() -> void:
 	_sync_port_stage(data)
 	# 4.7 / dev.3 #3：页面挂好后再解析引导目标（市场补给区块 / 海图入口 / 导航按钮）。
 	_sync_story_focus()
+	# 刚重建的 TopChrome / Nav 还没有完成容器排版，上面这次同步读到的是旧矩形；
+	# 重建后补两次 deferred 重同步（兜底目标重解析 / 页面挂载顺序），位置则由遮罩
+	# 绑定目标控件逐帧自愈。详见 `_sync_story_focus_soon()`。
+	_sync_story_focus_soon()
 
 
 ## ---------------------------------------------------------------------------
@@ -908,13 +917,6 @@ func _update_story_layer() -> void:
 	_task_tracker = null
 	_story_focus = null
 	_story_card_open = false
-	# 4.7 / dev.3 #3：强制引导遮罩先挂（在卡片之下），卡片打开时卡片优先；
-	# 目标矩形的解析与布局在所有页面挂好之后由 `_sync_story_focus()` 完成。
-	if _story_focus_requested():
-		var focus_control: Control = STORY_FOCUS_SCRIPT.new()
-		focus_control.name = "StoryFocus"
-		layer.add_child(focus_control)
-		_story_focus = focus_control
 	var card: Variant = _story_vm.get("card", null)
 	if card is Dictionary:
 		var card_control: Control = STORY_CARD_SCRIPT.new()
@@ -945,6 +947,15 @@ func _update_story_layer() -> void:
 	elif _story_card == null and not task.is_empty() and String(task.get("kind", "")) != "story":
 		# 剧情没有目标时（转场卡 / 结束）交给统一任务追踪条。
 		_mount_task_tracker(layer, task)
+	# 4.7 / dev.3 #3：强制引导遮罩最后挂：它必须在目标条 / 任务追踪条之上，否则
+	# 提示文案会被目标条压住（2026-10-28 P0：右上「市场」引导的提示首字被压掉）。
+	# 卡片打开时 `_story_focus_requested()` 为 false，遮罩不会盖住剧情卡。
+	# 目标矩形的解析与布局在所有页面挂好之后由 `_sync_story_focus()` 完成。
+	if _story_focus_requested():
+		var focus_control: Control = STORY_FOCUS_SCRIPT.new()
+		focus_control.name = "StoryFocus"
+		layer.add_child(focus_control)
+		_story_focus = focus_control
 	layer.visible = true
 	if layer.get_parent() == self:
 		move_child(layer, get_child_count() - 1)
@@ -997,9 +1008,12 @@ func _story_focus_requested() -> bool:
 
 
 ## Resolves `story.view.focus.target` (framework semantic id, never a page path) into
-## the live control and hands its screen rect to the overlay. Called after the page
-## tree is mounted, on page switches (rebuild) and on resize. Missing / unmounted
-## targets fail open (mask cleared) so a content typo can never trap the player.
+## the live control and hands the overlay the target itself, not just a rect: freshly
+## mounted containers are sorted deferred, so a one-shot `get_global_rect()` snapshot
+## would stay stale (the 2026-10-28 P0: focus ring in the top-left, market button in
+## the top-right). Called after the page tree is mounted (immediate + two deferred
+## passes), on page switches (rebuild) and on resize. Missing / unmounted targets fail
+## open (mask cleared) so a content typo can never trap the player.
 func _sync_story_focus() -> void:
 	if _story_focus == null or not is_instance_valid(_story_focus):
 		return
@@ -1021,7 +1035,24 @@ func _sync_story_focus() -> void:
 	var hint := "" if text_key.is_empty() else _tr(text_key, "")
 	if hint == text_key:
 		hint = ""
-	_story_focus.call("focus", rect, hint)
+	# 绑定控件让遮罩在排版完成后自愈；无 `focus_target` 的旧实现退回一次性矩形。
+	if _story_focus.has_method("focus_target"):
+		_story_focus.call("focus_target", target, hint)
+	else:
+		_story_focus.call("focus", rect, hint)
+
+
+## Re-runs `_sync_story_focus()` on the next two idle frames. Rebuilding the chrome
+## creates brand-new containers whose layout happens deferred in the same frame, so
+## the immediate sync above can only read a pre-layout rect; the second pass catches
+## the follow-up stage / SubViewport resize (same shape as `_refresh_port_hotspots_soon`).
+func _sync_story_focus_soon() -> void:
+	_sync_story_focus.call_deferred()
+	_delayed_story_focus_pass.call_deferred()
+
+
+func _delayed_story_focus_pass() -> void:
+	_sync_story_focus.call_deferred()
 
 
 ## Semantic focus target -> real control. Targets name framework surfaces, so Core
@@ -2000,8 +2031,9 @@ func _on_viewport_size_changed() -> void:
 	if _port_stage_active():
 		_refresh_port_hotspots_soon()
 	# 4.7 / dev.3 #3：窗口尺寸变化后引导遮罩必须重新按目标控件矩形排版。
+	# 遮罩绑定了目标控件会逐帧自愈，这里再补两次 deferred 重同步兜底目标重解析。
 	if _story_focus != null and is_instance_valid(_story_focus):
-		_sync_story_focus.call_deferred()
+		_sync_story_focus_soon()
 
 
 ## Two deferred passes: the first runs after the container re-layout, the second
