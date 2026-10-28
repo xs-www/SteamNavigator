@@ -16,14 +16,14 @@
 | `SYNTHETIC_STAGE_SIZE` | L24 |
 | `CORE_HULL_IDS` | L25 |
 | `EXPECTED_ANCHOR_KEYS` | L32 |
-| `test_cutaway_draws_only_the_side_view() -> void` | L137 |
-| `test_every_slot_and_weapon_has_an_anchor_dot_inside_the_side_view() -> void` | L168 |
-| `test_module_chips_never_overlap_and_stay_inside_the_side_view() -> void` | L212 |
-| `test_content_without_slot_anchors_falls_back_without_crashing() -> void` | L245 |
-| `test_mode_isolation_hides_one_group_and_refuses_its_drops() -> void` | L270 |
-| `test_highlight_slots_marks_dots_chips_and_weapon_patches() -> void` | L316 |
-| `test_all_core_hulls_lay_their_blueprint_chips_out_cleanly() -> void` | L402 |
-| `test_small_panel_falls_back_to_a_non_overlapping_layout() -> void` | L418 |
+| `test_cutaway_draws_only_the_side_view() -> void` | L138 |
+| `test_every_slot_and_weapon_has_an_anchor_dot_inside_the_side_view() -> void` | L172 |
+| `test_chips_leave_the_side_view_and_keep_dotted_leaders() -> void` | L216 |
+| `test_content_without_slot_anchors_falls_back_without_crashing() -> void` | L264 |
+| `test_mode_isolation_hides_one_group_and_refuses_its_drops() -> void` | L291 |
+| `test_highlight_slots_marks_dots_chips_and_weapon_patches() -> void` | L337 |
+| `test_all_core_hulls_lay_their_blueprint_chips_out_cleanly() -> void` | L423 |
+| `test_small_panel_falls_back_to_a_non_overlapping_layout() -> void` | L439 |
 
 覆盖 `.design/refit_round2_plan.md` 的 P2b 契约与 Lead 补充的 P2a 蓝图侧隔离：
 - CUTAWAY 有 `blueprint_views` 时只画 side（top 不再占 48% 高度，仅保留可计算坐标）；

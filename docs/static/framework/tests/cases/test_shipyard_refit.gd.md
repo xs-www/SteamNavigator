@@ -34,8 +34,8 @@
 | `test_refit_dock_splits_weapon_install_from_regular_refit() -> void` | L669 |
 | `test_refit_page_shows_ship_data_and_separate_operation_tabs() -> void` | L756 |
 | `test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void` | L796 |
-| `test_weapon_sockets_show_player_mount_names_and_drag_install() -> void` | L863 |
-| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L1057 |
+| `test_weapon_sockets_show_player_mount_names_and_drag_install() -> void` | L870 |
+| `test_shipyard_page_has_no_legacy_lower_panels() -> void` | L1067 |
 
 ## 契约与约束
 

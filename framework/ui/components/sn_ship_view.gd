@@ -20,19 +20,22 @@ extends Control
 ## - `blueprint_view_rect(view)` 返回该视图等比适配后的屏幕矩形；`blueprint_socket_rects(view)`
 ##   用这个矩形把归一化坐标映射为屏幕框；缺失、越界或形状错误的坐标跳过，不影响其它
 ##   槽位和模块拖放。没有线稿时 rect 回退为整个 Control，保持旧内容兼容。
-## - **P2b（2026-10-28）单侧视 + 圆点折线**：
+## - **P2b（2026-10-28，第二版：方框移出侧视图）单侧视 + 圆点 + 点线 + 底部标注带**：
 ##   * CUTAWAY 有 `blueprint_views` 时只绘制 side（`top` 暂不绘制、不再生成武器贴片），
-##     `blueprint_view_rect("side")` 独占可用区域；`blueprint_view_rect("top")` /
-##     `blueprint_socket_rects("top")` 仍按旧双视图公式返回可计算坐标（兼容语义，不绘制）。
+##     `blueprint_view_rect("side")` 独占「舞台减去底部标注带」的区域；
+##     `blueprint_view_rect("top")` / `blueprint_socket_rects("top")` 仍按旧双视图公式返回
+##     可计算坐标（兼容语义，不绘制）。
 ##   * `ship.slot_anchors`（键：hull / boiler / navigation_module / safety_module /
 ##     passenger_cabin / cargo_modules[[x,y],...]）给出普通模块槽位的侧视归一化锚点；
 ##     内容缺失时每个槽位回退到面板内通用锚点（不崩）。武器槽位仍用
 ##     `weapon_sockets[].blueprint.side`。
-##   * 每个槽位（模块 + 武器）在锚点画圆点（黄铜 idle / 青色高亮），用「水平出线 + 斜线
-##     到方框边缘」的折线连到自己的方框；`highlight_slots()` 与拖拽悬停时圆点、方框一起变色。
-##   * 普通模块方框（`SNSlotTarget`）不再停靠底部 dock，改为贴着锚点摆放：锚点 x<0.6 放右、
-##     否则放左；按 y 排序后纵向避让，必要时向外开第二条车道，全部 clamp 在侧视图矩形内，
-##     互不重叠、不出界。面板小/槽位多时方框进入紧凑两行模式（隐藏第三行 hint）。
+##   * 每个槽位（模块 + 武器）在船体锚点画**圆点**（黄铜 idle / 青色高亮），槽位方框不再
+##     压在线稿上，而是统一排进**底部标注带**（`chip_band_rect()`，深色凹槽 + 顶部分隔线），
+##     用**点线（dashed leader）**从圆点连到方框顶边；`slot_leader_lines()` 暴露同样的
+##     两点折线供测试断言。`highlight_slots()` 与拖拽悬停时圆点、引线、方框一起变色。
+##   * 标注带按侧视图宽度自动决定每行方框数（`CHIP_BAND_MARGIN/GAP`、紧凑两行贴片），
+##     行为确定：按锚点 x 排序、逐行从左到右摆放，方框互不重叠、始终在带内且在侧视图
+##     之外；槽位多时自动增行，标注带最多占舞台高度 `CHIP_BAND_MAX_HEIGHT_RATIO`。
 ##   * 旧无 `blueprint_views` 的船继续走 `_draw_section_texture()` / `_draw_cutaway_placeholder()`
 ##     与原有槽位排布（含 `_draw_slot_leaders()`），回退路径不变。
 ## - **P2a（2026-10-28）模式隔离**：`set_module_chips_visible(bool)` /
@@ -46,20 +49,21 @@ extends Control
 ##     `empty_text`、`occupied`。缺字段时按 `SNWeaponSocketTarget` 的兜底规则推导，不崩。
 ##   * 每个 socket 只要有 `blueprint.side` 坐标就生成一枚 side 贴片（P2b 起不再有 top 贴片）；
 ##     贴片始终随 CUTAWAY 可见（EXTERIOR 隐藏）。
-##   * `weapon_socket_display_rects("side")` 返回与模块方框统一排布后的 ≥96×30 可读贴片矩形：
-##     同一锚点/过近的槽位（如 Port_1 / Starboard_1 共用同一 side 坐标）沿垂直方向扇出，
-##     互不重叠，并 clamp 在 `blueprint_view_rect("side")` 内。`blueprint_socket_rects()`
-##     保持原有的 28–42 px 小框语义，不变。
+##   * `weapon_socket_display_rects("side")` 返回底部标注带里的可读贴片矩形（与模块方框
+##     一起统一排布，互不重叠、不出带）；同一锚点/过近的槽位（如 Port_1 / Starboard_1
+##     共用同一 side 坐标）会按锚点顺序各占一格。`blueprint_socket_rects()` 保持原有的
+##     28–42 px 小框语义，不变。
 ##   * 拖放：贴片只接受 `{kind:"ship_weapon", weapon_id, weapon_class, source, name}`，
 ##     `weapon_class == socket_class` 才接受；`_drop_data` 经 `weapon_dropped` 汇总为
 ##     `weapon_drop_requested(payload, socket)`。`set_weapon_drop_enabled(false)` 只关闭
 ##     拖放接收（非武器分类 / 非装配页签），不影响贴片可见性；默认接受。
 ## - 有每船线稿时船厂页把整列换成 `SNBlueprintPanel` 九宫格蓝图底板；页面调用
-##   `set_blueprint_backdrop(true)` 后本视图只把线稿、视图标签、圆点折线、武器贴片和槽位
-##   chip 画在底板的深蓝内容区上。底板由 Theme 提供，本视图不持有底板纹理。
-## - 新增公共读取 API（测试 / 屏幕用）：`slot_anchor_rects()` 返回每个槽位圆点的小矩形
-##   （键 = 模块槽位 id / 武器 socket 名），`slot_chip_rects()` 返回普通模块方框矩形；
-##   两者都只包含当前可见的那一组。
+##   `set_blueprint_backdrop(true)` 后本视图只把线稿、视图标签、圆点/点线、武器贴片和
+##   槽位 chip 画在底板的深蓝内容区上。底板由 Theme 提供，本视图不持有底板纹理。
+## - 公共读取 API（测试 / 屏幕用）：`slot_anchor_rects()` 返回每个槽位圆点的小矩形
+##   （键 = 模块槽位 id / 武器 socket 名），`slot_chip_rects()` 返回普通模块方框矩形，
+##   `chip_band_rect()` 返回底部标注带矩形，`slot_leader_lines()` 返回每个方框的点线
+##   两端坐标；前三者都只包含当前可见的那一组，旧无蓝图船体返回空。
 ##
 ## Refit stage for the centre of the shipyard screen.
 ##
@@ -129,26 +133,29 @@ const WEAPON_CARD_WIDTH_RATIO := 0.24
 const WEAPON_CARD_GAP := 4.0
 const WEAPON_CARD_MARGIN := 2.0
 # ---------------------------------------------------------------------------
-# P2b (2026-10-28): anchor dots + leader lines + chips beside their anchors.
+# P2b (2026-10-28, second pass): the hull keeps the anchor dots, the slot boxes
+# move off the line art into a call-out band below it, linked by dotted leaders.
 # ---------------------------------------------------------------------------
-## Normalized anchor x below this goes to the right of the dot, above it to the left.
-const BLUEPRINT_CHIP_SIDE_SPLIT := 0.6
 const SLOT_CHIP_MIN_WIDTH := 96.0
-const SLOT_CHIP_MAX_WIDTH := 168.0
-const SLOT_CHIP_WIDTH_RATIO := 0.26
-const SLOT_CHIP_HEIGHT := 52.0
-const SLOT_CHIP_MIN_HEIGHT := 32.0
-const SLOT_CHIP_HEIGHT_RATIO := 0.16
-const SLOT_CHIP_GAP := 4.0
-const SLOT_CHIP_MARGIN := 2.0
-## Below this chip height the slot chip drops to two compact lines (hint hidden).
-const SLOT_CHIP_COMPACT_HEIGHT := 42.0
-## Anchor dot radius (px) and the horizontal leader stub before the diagonal.
+const SLOT_CHIP_MAX_WIDTH := 150.0
+const SLOT_CHIP_WIDTH_RATIO := 0.24
+## Regular module box height inside the call-out band (two compact lines).
+const SLOT_CHIP_BAND_HEIGHT := 40.0
+## Weapon mount box height inside the call-out band.
+const WEAPON_CARD_BAND_HEIGHT := 34.0
+## Gaps / outer margins of the call-out band.
+const CHIP_BAND_GAP := 6.0
+const CHIP_BAND_MARGIN := 8.0
+## The band may use at most this share of the stage height; chips shrink to their
+## minimum first, and drawing keeps the remaining top area.
+const CHIP_BAND_MAX_HEIGHT_RATIO := 0.55
+## Bottom call-out band kept free of line art.
+var _blueprint_band := Rect2()
+var _blueprint_band_valid := false
+## Anchor dot radius (px) and the dotted-leader dash pattern.
 const ANCHOR_DOT_RADIUS := 4.0
-const ANCHOR_LEADER_OUT := 12.0
-## Extra horizontal lanes tried when a side column is too crowded to stack in
-## one line (e.g. a freighter with 3 cargo bays + 4 weapon mounts).
-const BLUEPRINT_CHIP_LANES := 3
+const LEADER_DASH := 5.0
+const LEADER_SPACE := 4.0
 ## Refit cross-section texture. Replace this PNG to reskin the whole cutaway;
 ## the screen and slot logic never depend on how the section is drawn.
 const SECTION_TEXTURE_PATH := "res://assets/ui/shipyard/ship_section.png"
@@ -291,10 +298,12 @@ func blueprint_texture_size(view: String) -> Vector2:
 	return texture.get_size() if texture != null else Vector2.ZERO
 
 
-## P2b: the bottom slot dock is gone (module chips sit beside their anchor), so
-## this always reports 0. Kept as a public no-op-ish API for older callers.
+## P2b second pass: the call-out band below the ship drawing is reserved for the
+## module / weapon boxes, so the stage reports its height here (public API name
+## kept from the old bottom slot dock).
 func slot_dock_height() -> float:
-	return 0.0
+	_ensure_blueprint_band()
+	return _blueprint_band.size.y
 
 
 ## Lets the screen declare that the parent column is a blueprint board. The
@@ -317,9 +326,11 @@ func _uses_blueprint_board() -> bool:
 	return _blueprint_backdrop and has_blueprint_views()
 
 
-## Stage area left for line art: the whole control (P2b removed the slot dock).
+## Stage area left for line art: the whole control minus the bottom call-out band
+## (the slot/weapon boxes live outside the ship drawing, linked by dotted leaders).
 func _blueprint_view_available_rect() -> Rect2:
-	return Rect2(Vector2.ZERO, size)
+	_ensure_blueprint_band()
+	return Rect2(Vector2.ZERO, Vector2(size.x, maxf(0.0, size.y - _blueprint_band.size.y)))
 
 
 ## Aspect-preserving on-screen rect of one blueprint view; falls back to the
@@ -433,6 +444,7 @@ func set_mode(next: int) -> void:
 	mode = next
 	_apply_layer_visibility()
 	_notify_renderer("ship_view_set_mode", [mode])
+	_mark_blueprint_layout_dirty()
 	_layout_slots()
 	_layout_weapon_targets()
 	queue_redraw()
@@ -441,6 +453,7 @@ func set_mode(next: int) -> void:
 ## P2a: show/hide the regular module chips (and their anchor dots). Hidden chips
 ## are not laid out, not visible and refuse `ship_parts` drops. Weapons mode calls
 ## `set_module_chips_visible(false)`. Legacy hulls without line art keep chips.
+## The call-out band is mode-scoped, so hiding a group also re-packs the band.
 func set_module_chips_visible(visible: bool) -> void:
 	if _module_chips_visible == visible:
 		return
@@ -450,6 +463,7 @@ func set_module_chips_visible(visible: bool) -> void:
 		if is_instance_valid(target):
 			target.set_drop_enabled(effective)
 	_apply_layer_visibility()
+	_mark_blueprint_layout_dirty()
 	_layout_slots()
 	queue_redraw()
 
@@ -470,6 +484,8 @@ func set_weapon_patches_visible(visible: bool) -> void:
 		if is_instance_valid(target) and target.has_method("set_drop_enabled"):
 			target.call("set_drop_enabled", _weapon_drop_enabled and effective)
 	_apply_layer_visibility()
+	_mark_blueprint_layout_dirty()
+	_layout_slots()
 	_layout_weapon_targets()
 	queue_redraw()
 
@@ -574,10 +590,10 @@ func blueprint_socket_rects(view: String = "side") -> Dictionary:
 
 ## Readable on-screen frames for the weapon patches, keyed by socket id.
 ##
-## P2b: in the single side view the patches are laid out together with the module
-## chips (same unified layout, so slot boxes and weapon patches never overlap).
-## Sockets sharing one side anchor (e.g. Port_1 / Starboard_1) are stacked in the
-## same lane. Other views / legacy content keep the old cluster fan-out path.
+## P2b second pass: in the single side view the patches sit in the bottom call-out
+## band (outside the ship drawing) and share the unified layout with the module
+## boxes, so the two groups never overlap. The pre-P2b cluster fan-out path is only
+## used for the compatibility `top` rect and for hulls without per-view line art.
 func weapon_socket_display_rects(view: String = "side") -> Dictionary:
 	if has_blueprint_views() and view == _blueprint_drawn_view():
 		_ensure_blueprint_layout()
@@ -908,16 +924,10 @@ func _layout_blueprint_chips() -> void:
 		target.visible = effective_visible
 
 
-## True when the side view is short enough that chips must drop to two lines.
+## True when the blueprint path is active: the chips then use the compact two-line
+## style because they live in the call-out band below the drawing.
 func _slot_chip_compact() -> bool:
-	if not has_blueprint_views():
-		return false
-	var view_rect := blueprint_view_rect(_blueprint_drawn_view())
-	if view_rect.size.y <= 0.0:
-		return false
-	var chip_height := clampf(view_rect.size.y * SLOT_CHIP_HEIGHT_RATIO,
-		SLOT_CHIP_MIN_HEIGHT, SLOT_CHIP_HEIGHT)
-	return chip_height < SLOT_CHIP_COMPACT_HEIGHT
+	return has_blueprint_views()
 
 
 ## Legacy (no line art) chip row layout: one evenly spaced row over the section.
@@ -938,24 +948,114 @@ func _place_row(targets: Array, left: float, span: float, top: float, chip_h: fl
 
 
 # ---------------------------------------------------------------------------
-# Unified side-view blueprint layout (P2b): anchors, module chips, weapon patches.
-# Both chip groups are placed in one pass so they never overlap each other; the
-# result is cached until the model / slots / size change.
+# Unified side-view blueprint layout (P2b second pass): anchor dots stay on the
+# hull, while module / weapon boxes move off the line art into a call-out band
+# below it and are linked back with dotted leaders. Everything is cached until
+# the model / slots / mode / size changes.
 # ---------------------------------------------------------------------------
 func _mark_blueprint_layout_dirty() -> void:
 	_blueprint_layout_dirty = true
+	_blueprint_band_valid = false
 
 
 func _ensure_blueprint_layout() -> void:
 	if not _blueprint_layout_dirty:
 		return
+	_ensure_blueprint_band()
 	_blueprint_layout = _compute_blueprint_chip_layout()
 	_blueprint_layout_dirty = false
 
 
-## Builds the cached layout:
-## `{slots: {id: Rect2}, weapons: {socket: Rect2}, slot_anchors: {id: Vector2},
-##   weapon_anchors: {socket: Vector2}}`.
+## Recomputes the bottom call-out band from the currently visible chip groups.
+## Cheap and independent of the line-art rect, so `blueprint_view_rect()` can ask
+## for it before the layout itself is built.
+func _ensure_blueprint_band() -> void:
+	if _blueprint_band_valid:
+		return
+	_blueprint_band = _compute_blueprint_band()
+	_blueprint_band_valid = true
+
+
+## Bottom call-out band (stage-local pixels). Empty when there is no line art or
+## nothing to call out. Public so tests / tooling can assert the boxes sit outside
+## the ship drawing.
+func chip_band_rect() -> Rect2:
+	_ensure_blueprint_band()
+	return _blueprint_band
+
+
+## Dotted leader data per chip id: `PackedVector2Array([hull_dot, chip_top_point])`.
+## Public for the layout regression tests (the drawing itself uses the same data).
+func slot_leader_lines() -> Dictionary:
+	_ensure_blueprint_layout()
+	return (_blueprint_layout.get("leaders", {}) as Dictionary).duplicate()
+
+
+func _compute_blueprint_band() -> Rect2:
+	if not has_blueprint_views() or size.x < 80.0 or size.y < 80.0:
+		return Rect2()
+	var specs := _chip_band_specs()
+	if specs.is_empty():
+		return Rect2()
+	# Conservative row estimate: each row fits floor((usable + gap) / (widest + gap))
+	# boxes. Using the widest spec (and all specs, not just one kind) guarantees the
+	# band is tall enough for the real greedy placement, so no box is ever nudged
+	# onto another one.
+	var usable := maxf(size.x - CHIP_BAND_MARGIN * 2.0, 40.0)
+	var widest := 0.0
+	var tallest := 0.0
+	for spec in specs:
+		widest = maxf(widest, float(spec["width"]))
+		tallest = maxf(tallest, float(spec["height"]))
+	var per_row := maxi(1, int(floor((usable + CHIP_BAND_GAP) / (widest + CHIP_BAND_GAP))))
+	var rows := maxi(1, int(ceil(float(specs.size()) / float(per_row))))
+	var height := CHIP_BAND_MARGIN * 2.0 + float(rows) * tallest + float(rows - 1) * CHIP_BAND_GAP
+	height = minf(height, size.y * CHIP_BAND_MAX_HEIGHT_RATIO)
+	return Rect2(0.0, size.y - height, size.x, height)
+
+
+## One spec per box that must be laid out in the call-out band. Only the visible
+## group is included: module mode lays out module boxes, weapons mode the mounts.
+func _chip_band_specs() -> Array:
+	var specs: Array = []
+	var slot_width := _band_chip_width("slot")
+	if _module_chips_visible or not has_blueprint_views():
+		for target in _slot_targets:
+			if not is_instance_valid(target):
+				continue
+			var slot_id := String(target.slot.get("id", ""))
+			if slot_id.is_empty():
+				continue
+			specs.append({
+				"kind": "slot", "id": slot_id,
+				"width": slot_width, "height": SLOT_CHIP_BAND_HEIGHT,
+			})
+	var weapon_width := _band_chip_width("weapon")
+	if _weapon_patches_visible or not has_blueprint_views():
+		var drawn_view := _blueprint_drawn_view()
+		for raw_row in _model.get("weapon_sockets", []):
+			if not (raw_row is Dictionary):
+				continue
+			var row: Dictionary = raw_row
+			var socket_id := String(row.get("socket", row.get("name", "")))
+			if socket_id.is_empty() or _socket_blueprint_point(row, drawn_view) == Vector2(-1.0, -1.0):
+				continue
+			specs.append({
+				"kind": "weapon", "id": socket_id,
+				"width": weapon_width, "height": WEAPON_CARD_BAND_HEIGHT,
+			})
+	return specs
+
+
+func _band_chip_width(kind: String) -> float:
+	var width: float
+	if kind == "weapon":
+		width = clampf(size.x * WEAPON_CARD_WIDTH_RATIO, WEAPON_CARD_MIN_WIDTH, WEAPON_CARD_MAX_WIDTH)
+	else:
+		width = clampf(size.x * SLOT_CHIP_WIDTH_RATIO, SLOT_CHIP_MIN_WIDTH, SLOT_CHIP_MAX_WIDTH)
+	return minf(width, maxf(size.x - CHIP_BAND_MARGIN * 2.0, 60.0))
+
+
 ## `side` when the hull ships it, otherwise the `top` fallback (a hull may bind
 ## only one view); empty when there is no line art at all.
 func _blueprint_drawn_view() -> String:
@@ -966,237 +1066,161 @@ func _blueprint_drawn_view() -> String:
 	return ""
 
 
+## Builds the cached layout:
+## `{slots: {id: Rect2}, weapons: {socket: Rect2}, slot_anchors: {id: Vector2},
+##   weapon_anchors: {socket: Vector2}, leaders: {id: PackedVector2Array}}`.
+## Chips are placed in the call-out band (below the drawing), ordered by their
+## anchor x so the dotted leaders stay monotonic and rarely cross each other.
 func _compute_blueprint_chip_layout() -> Dictionary:
-	var layout := {"slots": {}, "weapons": {}, "slot_anchors": {}, "weapon_anchors": {}}
+	var layout := {
+		"slots": {}, "weapons": {}, "slot_anchors": {}, "weapon_anchors": {}, "leaders": {},
+	}
 	if not has_blueprint_views() or size.x < 80.0 or size.y < 80.0:
 		return layout
-	var view_rect := blueprint_view_rect(_blueprint_drawn_view())
+	var drawn_view := _blueprint_drawn_view()
+	var view_rect := blueprint_view_rect(drawn_view)
 	if view_rect.size.x <= 0.0 or view_rect.size.y <= 0.0:
 		return layout
-	var margin := SLOT_CHIP_MARGIN
-	var slot_width := clampf(view_rect.size.x * SLOT_CHIP_WIDTH_RATIO,
-		SLOT_CHIP_MIN_WIDTH, SLOT_CHIP_MAX_WIDTH)
-	slot_width = minf(slot_width, maxf(view_rect.size.x * 0.5, 40.0))
-	var slot_height := clampf(view_rect.size.y * SLOT_CHIP_HEIGHT_RATIO,
-		SLOT_CHIP_MIN_HEIGHT, SLOT_CHIP_HEIGHT)
+	var band := chip_band_rect()
 	var entries: Array = []
-	var compact := slot_height < SLOT_CHIP_COMPACT_HEIGHT
-	for target in _slot_targets:
-		if not is_instance_valid(target):
-			continue
-		var slot: Dictionary = target.slot
-		var slot_id := String(slot.get("id", ""))
-		if slot_id.is_empty():
-			continue
-		# Compact mode first, so the measured minimum matches the final chip.
-		target.set_compact(compact)
-		var min_height := maxf(target.get_combined_minimum_size().y, SLOT_CHIP_MIN_HEIGHT)
-		var anchor := _blueprint_point_to_screen(view_rect, _slot_anchor_normalized(slot))
-		layout["slot_anchors"][slot_id] = anchor
-		var slot_entry_height := maxf(slot_height, min_height)
-		entries.append({
-			"kind": "slot", "id": slot_id, "anchor": anchor,
-			"width": slot_width, "height": slot_entry_height,
-			"base_height": slot_entry_height, "min_height": min_height,
-		})
-	var weapon_width := clampf(view_rect.size.x * WEAPON_CARD_WIDTH_RATIO,
-		WEAPON_CARD_MIN_WIDTH, WEAPON_CARD_MAX_WIDTH)
-	weapon_width = minf(weapon_width, maxf(view_rect.size.x - margin * 2.0, 60.0))
-	var weapon_height := minf(WEAPON_CARD_HEIGHT,
-		maxf(view_rect.size.y - margin * 2.0, WEAPON_CARD_MIN_HEIGHT))
-	var drawn_view := _blueprint_drawn_view()
-	for raw_row in _model.get("weapon_sockets", []):
-		if not (raw_row is Dictionary):
-			continue
-		var row: Dictionary = raw_row
-		var socket_id := String(row.get("socket", row.get("name", "")))
-		if socket_id.is_empty():
-			continue
-		var normalized := _socket_blueprint_point(row, drawn_view)
-		if normalized == Vector2(-1.0, -1.0):
-			continue
-		var anchor := _blueprint_point_to_screen(view_rect, normalized)
-		layout["weapon_anchors"][socket_id] = anchor
-		entries.append({
-			"kind": "weapon", "id": socket_id, "anchor": anchor,
-			"width": weapon_width, "height": weapon_height,
-			"base_height": weapon_height, "min_height": WEAPON_CARD_MIN_HEIGHT,
-		})
-	# Crowded ships (freighter: 3 cargo + 4 mounts on a wide, short side view) may
-	# not fit at the readable default size: retry with progressively shorter chips,
-	# then fall back to a packed grid so boxes still never overlap.
-	var placed := false
-	for scale in [1.0, 0.9, 0.82, 0.74, 0.68]:
-		for entry in entries:
-			var base_height := float(entry["base_height"])
-			var min_height := float(entry["min_height"])
-			entry["height"] = maxf(min_height, base_height * float(scale))
-		placed = _place_blueprint_entries(entries, view_rect)
-		if placed:
-			break
-	if not placed:
-		placed = _place_blueprint_grid(entries, view_rect)
-	if not placed:
-		# Last resort for a panel too small for every chip: keep them on screen
-		# (clamped beside their anchors) rather than dropping any of them.
-		_place_blueprint_entries(entries, view_rect)
+	if _module_chips_visible:
+		for target in _slot_targets:
+			if not is_instance_valid(target):
+				continue
+			var slot: Dictionary = target.slot
+			var slot_id := String(slot.get("id", ""))
+			if slot_id.is_empty():
+				continue
+			# Compact two-line chips are the call-out band style.
+			target.set_compact(true)
+			var anchor := _blueprint_point_to_screen(view_rect, _slot_anchor_normalized(slot))
+			layout["slot_anchors"][slot_id] = anchor
+			entries.append({
+				"kind": "slot", "id": slot_id, "anchor": anchor,
+				"width": _band_chip_width("slot"), "height": SLOT_CHIP_BAND_HEIGHT,
+			})
+	if _weapon_patches_visible:
+		for raw_row in _model.get("weapon_sockets", []):
+			if not (raw_row is Dictionary):
+				continue
+			var row: Dictionary = raw_row
+			var socket_id := String(row.get("socket", row.get("name", "")))
+			if socket_id.is_empty():
+				continue
+			var normalized := _socket_blueprint_point(row, drawn_view)
+			if normalized == Vector2(-1.0, -1.0):
+				continue
+			var anchor := _blueprint_point_to_screen(view_rect, normalized)
+			layout["weapon_anchors"][socket_id] = anchor
+			entries.append({
+				"kind": "weapon", "id": socket_id, "anchor": anchor,
+				"width": _band_chip_width("weapon"), "height": WEAPON_CARD_BAND_HEIGHT,
+			})
+	if entries.is_empty():
+		return layout
+	_place_band_entries(entries, band)
 	for entry in entries:
+		var chip_id := String(entry["id"])
+		var rect: Rect2 = entry["rect"]
 		if String(entry["kind"]) == "slot":
-			layout["slots"][String(entry["id"])] = entry["rect"]
+			layout["slots"][chip_id] = rect
 		else:
-			layout["weapons"][String(entry["id"])] = entry["rect"]
+			layout["weapons"][chip_id] = rect
+		var anchor: Vector2 = entry["anchor"]
+		var chip_top := Vector2(
+			clampf(anchor.x, rect.position.x + 10.0, rect.end.x - 10.0),
+			rect.position.y
+		)
+		layout["leaders"][chip_id] = PackedVector2Array([anchor, chip_top])
 	return layout
 
 
-## Places every chip (module + weapon) around its own anchor: right of the dot
-## when the anchor sits left of 60% of the side view, left otherwise. Chips are
-## vertically nudged on collision; crowded groups fan out into extra horizontal
-## lanes. Every returned rect is clamped inside the side view. Returns true when
-## every chip found a fully disjoint in-bounds slot.
-func _place_blueprint_entries(entries: Array, view_rect: Rect2) -> bool:
-	if entries.is_empty():
-		return true
-	var gap := SLOT_CHIP_GAP
-	var margin := SLOT_CHIP_MARGIN
+## Packs the entries into rows inside the call-out band: the row count / capacity is
+## deterministic (same formula as the band height), and inside one row each box is
+## centred under its hull dot (clamped to keep left-to-right order). That keeps the
+## dotted leaders almost vertical and mostly free of crossings.
+func _place_band_entries(entries: Array, band: Rect2) -> void:
+	if entries.is_empty() or band.size.y <= 0.0:
+		return
 	entries.sort_custom(_sort_blueprint_entries)
-	var placed: Array = []
-	var ok := true
+	var margin := CHIP_BAND_MARGIN
+	var gap := CHIP_BAND_GAP
+	var right := size.x - margin
+	var usable := maxf(size.x - margin * 2.0, 40.0)
+	var widest := 0.0
 	for entry in entries:
-		var anchor: Vector2 = entry["anchor"]
-		var width := float(entry["width"])
-		var height := float(entry["height"])
-		var to_the_right: bool = _anchor_normalized_x(anchor, view_rect) < BLUEPRINT_CHIP_SIDE_SPLIT
-		var base_left := anchor.x + ANCHOR_LEADER_OUT if to_the_right else anchor.x - ANCHOR_LEADER_OUT - width
-		var outward := width + gap
-		var chosen := Rect2()
-		var chosen_cost := INF
-		for lane in BLUEPRINT_CHIP_LANES:
-			var lane_offset := outward * float(lane)
-			var raw_left := base_left + lane_offset if to_the_right else base_left - lane_offset
-			var left := clampf(raw_left, view_rect.position.x + margin,
-				view_rect.position.x + view_rect.size.x - margin - width)
-			var candidate := Rect2(Vector2(left, anchor.y - height * 0.5), Vector2(width, height))
-			var nudged := _nudge_chip_vertical(candidate, placed, view_rect, gap, margin)
-			if not _rect_inside(nudged, view_rect, margin):
-				continue
-			var cost: float = absf(nudged.position.y - candidate.position.y) \
-				+ float(lane) * height * 1.2
-			if cost < chosen_cost:
-				chosen = nudged
-				chosen_cost = cost
-			if cost < 0.5:
-				break
-		if chosen_cost == INF:
-			# Extreme fallback (very small stage): keep the chip beside the dot and
-			# clamp it back into the view; no silent crash / missing chip.
-			var left := clampf(base_left, view_rect.position.x + margin,
-				view_rect.position.x + view_rect.size.x - margin - width)
-			var top := clampf(anchor.y - height * 0.5, view_rect.position.y + margin,
-				view_rect.position.y + view_rect.size.y - margin - height)
-			chosen = Rect2(Vector2(left, top), Vector2(width, height))
-			ok = false
-		entry["rect"] = chosen
-		placed.append(chosen)
-	return ok
-
-
-## Guaranteed non-overlap fallback for small panels: pack every chip into a
-## uniform grid inside the side view (each chip keeps its compact minimum height,
-## which is still the readable two-line size). Returns false when even the grid
-## cannot fit, so the caller can keep the anchor placement.
-func _place_blueprint_grid(entries: Array, view_rect: Rect2) -> bool:
-	if entries.is_empty():
-		return true
-	var gap := SLOT_CHIP_GAP
-	var margin := SLOT_CHIP_MARGIN
-	var cell_width := 0.0
-	var cell_height := 0.0
-	for entry in entries:
-		entry["height"] = maxf(float(entry["min_height"]), 1.0)
-		cell_width = maxf(cell_width, float(entry["width"]))
-		cell_height = maxf(cell_height, float(entry["height"]))
-	var usable_width := view_rect.size.x - margin * 2.0
-	var usable_height := view_rect.size.y - margin * 2.0
-	if usable_width < cell_width or usable_height < cell_height:
-		return false
-	var columns := int(floor((usable_width + gap) / (cell_width + gap)))
-	columns = clampi(columns, 1, entries.size())
-	var rows := int(ceil(float(entries.size()) / float(columns)))
-	if float(rows) * cell_height + float(rows - 1) * gap > usable_height + 0.5:
-		return false
-	entries.sort_custom(_sort_blueprint_entries)
+		widest = maxf(widest, float(entry["width"]))
+	var per_row := maxi(1, int(floor((usable + gap) / (widest + gap))))
+	var rows: Array = []
 	var index := 0
-	for row in rows:
-		for column in columns:
-			if index >= entries.size():
-				return true
-			var entry: Dictionary = entries[index]
+	while index < entries.size():
+		var end := mini(entries.size(), index + per_row)
+		var chunk: Array = entries.slice(index, end)
+		var cursor := margin
+		var row_height := 0.0
+		for entry in chunk:
 			var width := float(entry["width"])
 			var height := float(entry["height"])
-			var cell_position := view_rect.position + Vector2(
-				margin + float(column) * (cell_width + gap),
-				margin + float(row) * (cell_height + gap)
+			var anchor: Vector2 = entry["anchor"]
+			var left := clampf(anchor.x - width * 0.5, cursor, maxf(cursor, right - width))
+			entry["rect"] = Rect2(left, band.position.y, width, height)
+			cursor = left + width + gap
+			row_height = maxf(row_height, height)
+		# A row centred under right-side dots can start too far right and overflow:
+		# first slide the whole row left as far as the margin allows (keeps leaders
+		# short); only a row that still cannot fit is repacked from the margin.
+		var overflow := (cursor - gap) - right
+		if overflow > 0.0 and not chunk.is_empty():
+			var min_left := right
+			for entry in chunk:
+				min_left = minf(min_left, (entry["rect"] as Rect2).position.x)
+			var shift := minf(overflow, min_left - margin)
+			if shift > 0.0:
+				for entry in chunk:
+					var shifted: Rect2 = entry["rect"]
+					shifted.position.x -= shift
+					entry["rect"] = shifted
+				overflow -= shift
+		if overflow > 0.0:
+			var packed_cursor := margin
+			for entry in chunk:
+				var width := float(entry["width"])
+				entry["rect"] = Rect2(packed_cursor, band.position.y, width, float(entry["height"]))
+				packed_cursor += width + gap
+		rows.append({"height": row_height, "entries": chunk})
+		index = end
+	var content_height := 0.0
+	for row_index in rows.size():
+		content_height += float(rows[row_index]["height"])
+		if row_index > 0:
+			content_height += gap
+	var usable_height := maxf(band.size.y - margin * 2.0, 0.0)
+	var y := band.position.y + margin + maxf(0.0, (usable_height - content_height) * 0.5)
+	for raw_row in rows:
+		var packed: Dictionary = raw_row
+		var packed_height := float(packed["height"])
+		for entry in packed["entries"]:
+			var rect: Rect2 = entry["rect"]
+			# Last-resort clamp: even when crowded, a box never leaves the band.
+			rect.position.y = clampf(
+				y + (packed_height - rect.size.y) * 0.5,
+				band.position.y + 1.0,
+				maxf(band.position.y + 1.0, band.end.y - 1.0 - rect.size.y)
 			)
-			entry["rect"] = Rect2(
-				cell_position + Vector2((cell_width - width) * 0.5, (cell_height - height) * 0.5),
-				Vector2(width, height)
-			)
-			index += 1
-	return true
+			entry["rect"] = rect
+		y += packed_height + gap
 
 
-## Pushes `rect` below every already-placed chip it collides with, then flips to
-## packing upward when the nudged chip would leave the view bottom.
-func _nudge_chip_vertical(rect: Rect2, placed: Array, view_rect: Rect2, gap: float, margin: float) -> Rect2:
-	var result := rect
-	for _iteration in 32:
-		var collided := false
-		for raw_other in placed:
-			var other: Rect2 = raw_other
-			if not result.intersects(other):
-				continue
-			result.position.y = other.end.y + gap
-			collided = true
-		if not collided:
-			break
-	var bottom := view_rect.position.y + view_rect.size.y - margin
-	if result.end.y > bottom:
-		result.position.y = bottom - result.size.y
-		for _iteration in 32:
-			var collided := false
-			for raw_other in placed:
-				var other: Rect2 = raw_other
-				if not result.intersects(other):
-					continue
-				result.position.y = other.position.y - gap - result.size.y
-				collided = true
-			if not collided:
-				break
-	return result
-
-
-## Deterministic order: top to bottom, then left to right, then id.
+## Deterministic order: left to right by hull anchor, then top to bottom, then id.
+## Keeps the dotted leaders monotonic so they rarely cross.
 func _sort_blueprint_entries(a: Dictionary, b: Dictionary) -> bool:
 	var a_anchor: Vector2 = a["anchor"]
 	var b_anchor: Vector2 = b["anchor"]
-	if not is_equal_approx(a_anchor.y, b_anchor.y):
-		return a_anchor.y < b_anchor.y
 	if not is_equal_approx(a_anchor.x, b_anchor.x):
 		return a_anchor.x < b_anchor.x
+	if not is_equal_approx(a_anchor.y, b_anchor.y):
+		return a_anchor.y < b_anchor.y
 	return String(a["id"]) < String(b["id"])
-
-
-func _rect_inside(rect: Rect2, view_rect: Rect2, margin: float) -> bool:
-	return rect.position.x >= view_rect.position.x + margin - 0.5 \
-		and rect.end.x <= view_rect.position.x + view_rect.size.x - margin + 0.5 \
-		and rect.position.y >= view_rect.position.y + margin - 0.5 \
-		and rect.end.y <= view_rect.position.y + view_rect.size.y - margin + 0.5
-
-
-func _anchor_normalized_x(anchor: Vector2, view_rect: Rect2) -> float:
-	if view_rect.size.x <= 0.0:
-		return 0.5
-	return (anchor.x - view_rect.position.x) / view_rect.size.x
 
 
 ## Side-view normalized anchor of one module slot. Content driven via
@@ -1425,32 +1449,40 @@ func _draw_blueprint_side() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, Color(TEAL, 0.82))
 
 
-## P2b: every visible slot gets an anchor dot on the hull, connected to its chip
-## with a leader that leaves the dot horizontally and then runs diagonally to the
-## chip edge. Dots turn teal when the slot / socket is highlighted or hovered.
+## P2b second pass: every visible slot / weapon keeps its anchor dot on the hull;
+## the chip itself sits in the call-out band below the drawing, linked back to the
+## dot with a dotted leader. Dots turn teal when the slot / socket is highlighted
+## or hovered. The band gets a faint recessed strip so the floating list reads as a
+## separate shelf rather than part of the drawing.
 func _draw_slot_anchors() -> void:
 	_ensure_blueprint_layout()
+	var band := chip_band_rect()
+	if band.size.y > 0.0:
+		draw_rect(band, Color(_token("bg.abyss"), 0.20), true)
+		draw_line(Vector2(0.0, band.position.y), Vector2(size.x, band.position.y),
+			Color(TEAL, 0.28), 1.0)
+	var leaders: Dictionary = _blueprint_layout.get("leaders", {})
 	if _module_chips_visible:
 		var slot_anchors: Dictionary = _blueprint_layout.get("slot_anchors", {})
-		var slot_chips: Dictionary = _blueprint_layout.get("slots", {})
 		for raw_id in slot_anchors.keys():
 			var slot_id := String(raw_id)
 			_draw_anchor_dot(slot_anchors[raw_id],
-				slot_chips.get(slot_id, Rect2()), _hovered_slot_ids.has(slot_id))
+				leaders.get(slot_id, PackedVector2Array()), _hovered_slot_ids.has(slot_id))
 	if _weapon_patches_visible:
 		var weapon_anchors: Dictionary = _blueprint_layout.get("weapon_anchors", {})
-		var weapon_chips: Dictionary = _blueprint_layout.get("weapons", {})
 		for raw_id in weapon_anchors.keys():
 			var socket_id := String(raw_id)
 			_draw_anchor_dot(weapon_anchors[raw_id],
-				weapon_chips.get(socket_id, Rect2()),
+				leaders.get(socket_id, PackedVector2Array()),
 				_hovered_weapon_socket == socket_id or _highlighted_slot_ids.has(socket_id))
 
 
-func _draw_anchor_dot(anchor: Vector2, chip: Rect2, active: bool) -> void:
+func _draw_anchor_dot(anchor: Vector2, leader: PackedVector2Array, active: bool) -> void:
 	var color := TEAL if active else BRASS
-	if chip.size.x > 0.0:
-		_draw_anchor_leader(anchor, chip, color)
+	if leader.size() >= 2:
+		_draw_dotted_line(leader[0], leader[1], Color(color, 0.9), 1.4)
+		# Small rivet where the dotted leader meets the box, so the link reads.
+		draw_circle(leader[1], 2.0, Color(color, 0.9))
 	# Dark rim keeps the dot readable on both the pale line art and the board.
 	draw_circle(anchor, ANCHOR_DOT_RADIUS + 1.5, Color(_token("bg.abyss"), 0.72))
 	draw_circle(anchor, ANCHOR_DOT_RADIUS, color)
@@ -1458,21 +1490,18 @@ func _draw_anchor_dot(anchor: Vector2, chip: Rect2, active: bool) -> void:
 		draw_arc(anchor, ANCHOR_DOT_RADIUS + 3.0, 0.0, TAU, 20, color, 1.5)
 
 
-## Leader from the dot to the chip edge: a short horizontal stub, then a straight
-## diagonal into the chip's left/right edge nearest the dot's height.
-func _draw_anchor_leader(anchor: Vector2, chip: Rect2, color: Color) -> void:
-	var goes_right := anchor.x < chip.position.x + chip.size.x * 0.5
-	var out_x := anchor.x + ANCHOR_LEADER_OUT if goes_right else anchor.x - ANCHOR_LEADER_OUT
-	var edge_x := chip.position.x if goes_right else chip.position.x + chip.size.x
-	var edge_y := clampf(anchor.y, chip.position.y + 4.0, chip.position.y + chip.size.y - 4.0)
-	var points := PackedVector2Array([
-		anchor,
-		Vector2(out_x, anchor.y),
-		Vector2(edge_x, edge_y),
-	])
-	draw_polyline(points, Color(color, 0.9), 1.5)
-	# Small brass rivet where the lead meets the box, so the connection reads.
-	draw_circle(Vector2(edge_x, edge_y), 2.0, color)
+## Dotted leader (玩家要求「用点线连过去」): dashes with gaps, so the line reads as a
+## technical call-out and never competes with the line art.
+func _draw_dotted_line(from: Vector2, to: Vector2, color: Color, width: float) -> void:
+	var length := from.distance_to(to)
+	if length <= 0.1:
+		return
+	var direction := (to - from) / length
+	var traveled := 0.0
+	while traveled < length:
+		var dash_end := minf(traveled + LEADER_DASH, length)
+		draw_line(from + direction * traveled, from + direction * dash_end, color, width)
+		traveled = dash_end + LEADER_SPACE
 
 
 ## Authored PNG section, cropped to cover the stage while keeping its aspect.

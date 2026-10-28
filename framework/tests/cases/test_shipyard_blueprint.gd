@@ -121,11 +121,12 @@ func _assert_rects_disjoint(rects: Dictionary, label: String) -> void:
 
 
 func _fit_side_rect(stage: Control) -> Rect2:
-	## 独立复算 side 充满可用区域后的等比矩形（预期值，不是被测实现）。
+	## 独立复算 side 充满「舞台减去底部标注带」后的等比矩形（预期值，不是被测实现）。
 	var texture_size: Vector2 = stage.call("blueprint_texture_size", "side")
 	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
 		return Rect2()
-	var available: Rect2 = Rect2(Vector2.ZERO, (stage as Control).size)
+	var band: Rect2 = stage.call("chip_band_rect")
+	var available := Rect2(Vector2.ZERO, Vector2((stage as Control).size.x, (stage as Control).size.y - band.size.y))
 	var scale: float = minf(available.size.x / texture_size.x, available.size.y / texture_size.y)
 	var fitted := texture_size * scale
 	return Rect2(available.position + (available.size - fitted) * 0.5, fitted)
@@ -146,11 +147,14 @@ func test_cutaway_draws_only_the_side_view() -> void:
 		assert_true(side_rect.size.x > 0.0 and side_rect.size.y > 0.0, "the side view has an on-screen rect")
 		assert_almost_eq(side_rect.size.x, expected.size.x, 0.5, "the side view fills the available width")
 		assert_almost_eq(side_rect.size.y, expected.size.y, 0.5, "the side view fills the available height")
-		# P2b: side no longer shares the height with a 52% top band.
-		var legacy_side_height: float = (stage as Control).size.y * 0.52
-		assert_true(side_rect.size.y > legacy_side_height + 1.0,
-			"the side view is taller than the old dual-view 52%% band (%.1f > %.1f)" % [side_rect.size.y, legacy_side_height])
-		assert_eq(float(stage.call("slot_dock_height")), 0.0, "the bottom slot dock is gone")
+		# P2b second pass: chip boxes no longer share the line-art rect; the band
+		# below it is reserved for the call-out list (checked below).
+		# P2b second pass: chips moved off the drawing into a call-out band below it.
+		var band: Rect2 = stage.call("chip_band_rect")
+		assert_true(band.size.y > 0.0, "the call-out band reserves space below the ship drawing")
+		assert_almost_eq(float(stage.call("slot_dock_height")), band.size.y, 0.5,
+			"slot_dock_height() reports the call-out band height")
+		assert_true(side_rect.end.y <= band.position.y + 0.5, "the line art stays above the call-out band")
 		assert_eq(Array(stage.call("_weapon_views")), ["side"], "weapon patches only live on the side view")
 		var target_views: Array = []
 		for target in Array(stage.call("weapon_targets")):
@@ -207,35 +211,50 @@ func test_every_slot_and_weapon_has_an_anchor_dot_inside_the_side_view() -> void
 
 
 # ---------------------------------------------------------------------------
-# P2b: 方框布局
+# P2b second pass: 方框移出侧视图 + 点线引线
 # ---------------------------------------------------------------------------
-func test_module_chips_never_overlap_and_stay_inside_the_side_view() -> void:
+func test_chips_leave_the_side_view_and_keep_dotted_leaders() -> void:
 	var bundle := _mount(5503)
 	var stage := _cutaway_stage(bundle)
 	if stage != null:
 		var side_rect: Rect2 = stage.call("blueprint_view_rect", "side")
+		var band: Rect2 = stage.call("chip_band_rect")
 		var chips: Dictionary = stage.call("slot_chip_rects")
-		var weapon_rects: Dictionary = stage.call("weapon_socket_display_rects", "side")
+		var anchors: Dictionary = stage.call("slot_anchor_rects")
+		var leaders: Dictionary = stage.call("slot_leader_lines")
 		assert_eq(chips.size(), _slot_target_ids(stage).size(), "every module slot has a chip")
-		assert_eq(weapon_rects.size(), _weapon_socket_ids(stage).size(), "every weapon socket has a patch")
 		var combined: Dictionary = {}
 		for raw_id in chips.keys():
 			var rect: Rect2 = chips[raw_id]
 			assert_true(rect.size.x > 0.0 and rect.size.y > 0.0, "chip '%s' has a size" % String(raw_id))
-			assert_true(_rect_inside(rect, side_rect), "chip '%s' stays inside the side view" % String(raw_id))
+			assert_true(_rect_inside(rect, band), "chip '%s' sits inside the call-out band" % String(raw_id))
+			assert_false(rect.intersects(side_rect), "chip '%s' is off the ship drawing" % String(raw_id))
 			combined["slot:" + String(raw_id)] = rect
+			assert_true(anchors.has(raw_id), "chip '%s' keeps its hull dot" % String(raw_id))
+			assert_true(leaders.has(raw_id), "chip '%s' keeps a dotted leader" % String(raw_id))
+			var leader: PackedVector2Array = leaders.get(raw_id, PackedVector2Array())
+			assert_eq(leader.size(), 2, "leader '%s' is a dot → box segment" % String(raw_id))
+			if leader.size() == 2:
+				assert_true(leader[0].distance_to((anchors[raw_id] as Rect2).get_center()) <= 0.6,
+					"leader '%s' starts on its hull dot" % String(raw_id))
+				assert_true((rect as Rect2).grow(0.6).has_point(leader[1]),
+					"leader '%s' ends on its chip" % String(raw_id))
+		_assert_rects_disjoint(combined, "blueprint chips")
+		# 武器模式：炮位贴片走同一条标注带，也同样离开船体线稿。
+		stage.call("set_module_chips_visible", false)
+		stage.call("set_weapon_patches_visible", true)
+		var weapon_band: Rect2 = stage.call("chip_band_rect")
+		var weapon_rects: Dictionary = stage.call("weapon_socket_display_rects", "side")
+		assert_eq(weapon_rects.size(), _weapon_socket_ids(stage).size(), "every weapon socket has a patch")
 		for raw_id in weapon_rects.keys():
 			var rect: Rect2 = weapon_rects[raw_id]
-			assert_true(_rect_inside(rect, side_rect), "weapon patch '%s' stays inside the side view" % String(raw_id))
-			combined["weapon:" + String(raw_id)] = rect
-		_assert_rects_disjoint(combined, "blueprint chips")
-		# 每个方框中心都能连回自己的圆点（折线数据存在且不重合）。
-		var anchors: Dictionary = stage.call("slot_anchor_rects")
-		for raw_id in chips.keys():
-			assert_true(anchors.has(raw_id), "chip '%s' keeps its anchor dot" % String(raw_id))
-			var anchor: Rect2 = anchors[raw_id]
-			assert_true(anchor.get_center().distance_to((chips[raw_id] as Rect2).get_center()) > 1.0,
-				"chip '%s' is offset from its dot so the leader is visible" % String(raw_id))
+			assert_true(_rect_inside(rect, weapon_band),
+				"weapon patch '%s' sits inside the call-out band" % String(raw_id))
+			assert_false(rect.intersects(side_rect),
+				"weapon patch '%s' is off the ship drawing" % String(raw_id))
+		_assert_rects_disjoint(weapon_rects, "weapon patches")
+		stage.call("set_module_chips_visible", true)
+		stage.call("set_weapon_patches_visible", false)
 	_unmount(bundle)
 
 
@@ -254,13 +273,15 @@ func test_content_without_slot_anchors_falls_back_without_crashing() -> void:
 		var chips: Dictionary = stage.call("slot_chip_rects")
 		assert_eq(chips.size(), _slot_target_ids(stage).size(),
 			"every slot still gets a chip with generic fallback anchors")
-		var side_rect: Rect2 = stage.call("blueprint_view_rect", "side")
+		var band: Rect2 = stage.call("chip_band_rect")
 		for raw_id in chips.keys():
-			assert_true(_rect_inside(chips[raw_id], side_rect),
-				"fallback chip '%s' stays inside the side view" % String(raw_id))
+			assert_true(_rect_inside(chips[raw_id], band),
+				"fallback chip '%s' stays inside the call-out band" % String(raw_id))
 		_assert_rects_disjoint(chips, "fallback chips")
 		var anchors: Dictionary = stage.call("slot_anchor_rects")
 		assert_false(anchors.is_empty(), "fallback anchors still produce dots")
+		var leaders: Dictionary = stage.call("slot_leader_lines")
+		assert_eq(leaders.size(), chips.size(), "every fallback chip keeps its dotted leader")
 	_unmount(bundle)
 
 
@@ -430,25 +451,40 @@ func test_small_panel_falls_back_to_a_non_overlapping_layout() -> void:
 		stage.free()
 
 
-## Shared assertions: every chip / patch has a size, stays inside the side view
-## and no two of them overlap.
+## Shared assertions: every chip / patch has a size, sits in the call-out band
+## below the drawing (never on the line art), no two overlap, and every call-out
+## keeps a dotted leader from the hull dot to its box.
 func _assert_stage_chips_fit(stage: Control, label: String) -> void:
 	var side_rect: Rect2 = stage.call("blueprint_view_rect", "side")
+	var band: Rect2 = stage.call("chip_band_rect")
 	var chips: Dictionary = stage.call("slot_chip_rects")
 	var weapon_rects: Dictionary = stage.call("weapon_socket_display_rects", "side")
 	var anchors: Dictionary = stage.call("slot_anchor_rects")
+	var leaders: Dictionary = stage.call("slot_leader_lines")
 	assert_eq(chips.size(), Array(stage.get("_slot_targets")).size(),
 		"%s places a chip for every slot" % label)
 	assert_eq(weapon_rects.size(), _weapon_socket_ids(stage).size(),
 		"%s places a patch for every weapon socket" % label)
 	var combined: Dictionary = {}
 	for raw_id in chips.keys():
-		assert_true(_rect_inside(chips[raw_id], side_rect),
-			"%s: chip '%s' stays inside the side view" % [label, String(raw_id)])
+		assert_true(_rect_inside(chips[raw_id], band),
+			"%s: chip '%s' sits inside the call-out band" % [label, String(raw_id)])
+		assert_false((chips[raw_id] as Rect2).intersects(side_rect),
+			"%s: chip '%s' is off the ship drawing" % [label, String(raw_id)])
 		combined["slot:" + String(raw_id)] = chips[raw_id]
+		assert_true(leaders.has(raw_id),
+			"%s: chip '%s' keeps a dotted leader" % [label, String(raw_id)])
+		var leader: PackedVector2Array = leaders.get(raw_id, PackedVector2Array())
+		if leader.size() == 2 and anchors.has(raw_id):
+			assert_true(leader[0].distance_to((anchors[raw_id] as Rect2).get_center()) <= 0.6,
+				"%s: leader '%s' starts on its hull dot" % [label, String(raw_id)])
+			assert_true((chips[raw_id] as Rect2).grow(0.6).has_point(leader[1]),
+				"%s: leader '%s' ends on its chip" % [label, String(raw_id)])
 	for raw_id in weapon_rects.keys():
-		assert_true(_rect_inside(weapon_rects[raw_id], side_rect),
-			"%s: weapon patch '%s' stays inside the side view" % [label, String(raw_id)])
+		assert_true(_rect_inside(weapon_rects[raw_id], band),
+			"%s: weapon patch '%s' sits inside the call-out band" % [label, String(raw_id)])
+		assert_false((weapon_rects[raw_id] as Rect2).intersects(side_rect),
+			"%s: weapon patch '%s' is off the ship drawing" % [label, String(raw_id)])
 		combined["weapon:" + String(raw_id)] = weapon_rects[raw_id]
 	_assert_rects_disjoint(combined, "%s blueprint chips" % label)
 	for raw_id in anchors.keys():

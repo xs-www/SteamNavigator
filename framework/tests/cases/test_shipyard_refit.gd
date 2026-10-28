@@ -834,7 +834,14 @@ func test_weapon_sockets_project_blueprint_positions_into_stage_frames() -> void
 		stage.call("weapon_target", String(sockets[0].get("socket", "")), "top") != null,
 		"the side-only blueprint no longer carries weapon patches on the top view"
 	)
-	assert_eq(float(stage.call("slot_dock_height")), 0.0, "the side-only blueprint drops the bottom slot dock")
+	assert_true(
+		float(stage.call("slot_dock_height")) > 0.0,
+		"the side-only blueprint reserves a bottom call-out band for the slot boxes"
+	)
+	assert_true(
+		side_region.end.y <= float((stage.call("chip_band_rect") as Rect2).position.y) + 0.5,
+		"the line art stays above the call-out band"
+	)
 	var side_rects: Dictionary = stage.blueprint_socket_rects("side")
 	var top_rects: Dictionary = stage.blueprint_socket_rects("top")
 	assert_eq(side_rects.size(), sockets.size(), "side blueprint draws one frame per hull weapon socket")
@@ -925,12 +932,15 @@ func test_weapon_sockets_show_player_mount_names_and_drag_install() -> void:
 	assert_eq(stage.call("weapon_targets").size(), sockets_count, "the side-only blueprint carries one weapon patch per socket")
 	assert_true(stage.call("weapon_target", socket_name, "top") == null, "the top view carries no weapon patch")
 	var side_region: Rect2 = stage.call("blueprint_view_rect", "side")
+	var band: Rect2 = stage.call("chip_band_rect")
 	var placed_rects: Array = display_rects.values()
 	for index in placed_rects.size():
-		assert_true(side_region.encloses(placed_rects[index]), "every weapon patch stays inside the side view")
+		assert_true(band.encloses(placed_rects[index]), "every weapon patch sits inside the call-out band")
+		assert_false((placed_rects[index] as Rect2).intersects(side_region),
+			"the weapon patches no longer sit on the ship drawing")
 		for other_index in range(index + 1, placed_rects.size()):
 			assert_false((placed_rects[index] as Rect2).intersects(placed_rects[other_index] as Rect2),
-				"weapon patches fan out instead of overlapping")
+				"weapon patches stay disjoint instead of overlapping")
 	if blueprint_target != null:
 		assert_false(bool(blueprint_target.call("accepts_payload", mismatch)),
 			"a mismatched weapon class cannot be dropped on the blueprint patch")

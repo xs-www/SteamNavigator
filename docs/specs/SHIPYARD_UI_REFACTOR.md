@@ -116,20 +116,21 @@
 - 蓝图侧隔离：常规模式只显示模块槽位圆点/方框（`set_module_chips_visible(true)` + `set_weapon_patches_visible(false)`）；武器模式相反。旧无 `blueprint_views` 的船体忽略两个开关，保持底部 dock。
 - 新增本地化键 `ui.label.refit_mode_modules` / `ui.label.refit_mode_weapons` / `ui.hint.weapon_refit_mode`（zh_CN + en 同步，slot 数一致）。
 
-### 侧视蓝图：圆点 + 折线 + 贴锚点方框（P2b）
+### 侧视蓝图：圆点 + 点线 + 底部标注带（P2b，含第二版调整）
 
-- `SNShipView` 在 `CUTAWAY` 且内容绑定了 `blueprint_views` 时**只绘制侧视图**（`_blueprint_drawn_view()` 优先 side），可用高度全部给侧视；`blueprint_view_rect("top")` / `blueprint_socket_rects("top")` 保留旧公式仅作兼容与数据校验，`slot_dock_height()` 恒 0，`_weapon_views()` 只返回 `["side"]`（只绑定 top 的内容回退 top）。
+- `SNShipView` 在 `CUTAWAY` 且内容绑定了 `blueprint_views` 时**只绘制侧视图**（`_blueprint_drawn_view()` 优先 side）；`blueprint_view_rect("top")` / `blueprint_socket_rects("top")` 保留旧公式仅作兼容与数据校验，`_weapon_views()` 只返回 `["side"]`（只绑定 top 的内容回退 top）。
+- **方框移出侧视图（第二版，玩家要求「把这些槽位从侧视图上移走，用点线连过去」）**：舞台底部保留一条标注带 `chip_band_rect()`（深色凹槽 + 顶部分隔线），普通模块方框与武器贴片全部排进带内、不再压在线稿上；每个槽位在船体锚点处保留圆点，用**点线（dashed leader）**连到方框顶边。`slot_dock_height()` 返回标注带高度（旧 API 名保留）；线稿在「舞台 − 标注带」区域内等比适配。
+- 标注带行数/容量确定：`floor((可用宽 + gap) / (最宽方框 + gap))` 个/行，行高取该行最高方框；带高 = 边距 + 行高 + 行距，最多占舞台高度 55%。带内每行按锚点 x 排序、方框尽量居中在自己的圆点下方（右侧过挤时该行退化为左对齐平铺），保证互不重叠、始终在带内、始终在侧视图之外；行内方框也会被 clamp 回带内。
 - 槽位锚点来自内容：`shipyard.view.data.ship.slot_anchors`，由 Core hull `data.module_slots[]` / `data.compartments[]` 的 `blueprint_position.side`（0..1、左上原点、相对 `space:"trimmed"` 侧视线稿）投影而成；键为 `hull` / `boiler` / `navigation_module` / `safety_module` / `passenger_cabin` / `cargo_modules[]`（按 x 排序，序号对应 UI 货舱槽）。内容没给锚点时返回 `{}`，UI 用面板内通用锚点兜底，旧内容 / SDK 模板不崩。
 - Core 4 艘船已补 `module_slots` / `compartments` 侧视坐标（`hulls.json`），`hull` 槽位未单独声明时用其它锚点质心兜底。
-- 每个槽位（模块 + 舰载武器）在锚点画圆点（`ANCHOR_DOT_RADIUS`），用「水平出线 + 斜线入框」折线连到方框；模块方框由 `SNSlotTarget` 紧凑两行样式贴着锚点摆放（锚点 x < 60% 放右，否则放左；碰撞纵向避让 + 3 条横向车道，极端小面板退化为网格，保证不重叠不出界）。
-- `SNShipView` 新公开 API：`slot_anchor_rects()` / `slot_chip_rects()` / `set_module_chips_visible()` / `set_weapon_patches_visible()` / `module_chips_visible()` / `weapon_patches_visible()`；隐藏组的圆点、方框、贴片不绘制且关闭拖放接收，`weapon_targets()` 数量仍等于 socket 数。
+- `SNShipView` 新公开 API：`slot_anchor_rects()`（圆点）/ `slot_chip_rects()`（模块方框）/ `chip_band_rect()`（标注带）/ `slot_leader_lines()`（点线两端）/ `set_module_chips_visible()` / `set_weapon_patches_visible()` / `module_chips_visible()` / `weapon_patches_visible()`；隐藏组的圆点、方框、贴片不绘制且关闭拖放接收，`weapon_targets()` 数量仍等于 socket 数。
 - `SNSlotTarget` 新公开 API：`set_compact(bool)`（两行、字号 10/12、隐藏 hint）、`set_drop_enabled(bool)` / `is_drop_enabled()` / `is_hovering()`；载荷契约（完整 `ship_parts` payload）与信号不变。槽位贴片水平内容边距 20 px，避开 `panel_recess` 九宫格 19 px 角饰（此前 8 px 时分类标题首字压在角饰上，即玩家所说「分类没有对齐」的一部分）。
-- 回归：`framework/tests/cases/test_shipyard_blueprint.gd`（8 例：单侧视、四艘船的锚点圆点、方框不重叠不出界、折线锚点存在、无锚点回退、单视图武器贴片、模式隔离、高亮联动）；`test_shipyard_refit.gd` 的 top 双视图旧断言改为「top 仅兼容可计算、不再绘制贴片」，并新增 `test_refit_dock_splits_weapon_install_from_regular_refit`。
-- 截图（1440×900，窗口模式）：`docs/design/screenshots/_check3/shipyard_refit.png`（模块圆点+折线+方框）、`shipyard_refit_weapons.png`（武器模式）、`shipyard_refit_cargo.png`（分类高亮）；960×540 走紧凑/网格兜底路径。
+- 回归：`framework/tests/cases/test_shipyard_blueprint.gd`（8 例：单侧视、四艘船的锚点圆点、方框/贴片全部落在标注带且不与侧视图相交、点线从圆点连到方框、无锚点回退、单视图武器贴片、模式隔离、高亮联动）；`test_shipyard_refit.gd` 的 top 双视图旧断言改为「top 仅兼容可计算、不再绘制贴片」，并新增 `test_refit_dock_splits_weapon_install_from_regular_refit`。
+- 截图（1440×900，窗口模式）：`docs/design/screenshots/_check5/shipyard_refit.png`（圆点 + 点线 + 底部标注带）、`shipyard_refit_weapons.png`（武器模式同带排布）、`shipyard_refit_cargo.png`（分类高亮）。
 
 ### 已知缺口（本轮新增）
 
 - 俯视图暂时移除：等每船 `blueprint_views.top` 与槽位锚点的作者流程补齐后再考虑恢复双视图；top 系列 API 仍在。
 - 4 艘 Core 船的锚点坐标为人工按侧视线稿标定（0.1/0.02 网格 + 截图复核），后续可接入 `apply_hull_blueprints.mjs` 的编辑器拾取流程。
-- 极窄面板（远小于 320×150）仍可能退化为「相接但不重叠」的最后兜底布局；960×540 已走非重叠路径。
+- 极窄面板（远小于 320×150）时标注带占比会逼近 55% 上限，线稿相应变小；960×540 已走非重叠路径。
 

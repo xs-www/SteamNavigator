@@ -70,7 +70,7 @@
 
 - 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
 
-- 船厂改装界面第二轮反馈（2026-10-28）：改装蓝图只保留侧视图，普通槽位按 Core hull `module_slots` / `compartments` 的 `blueprint_position.side`（`shipyard.view.ship.slot_anchors`）画圆点 + 折线连到贴锚点的模块方框（`SNShipView` 新增 `slot_anchor_rects()` / `slot_chip_rects()` / `set_module_chips_visible()` / `set_weapon_patches_visible()`）；操作坞拆「部件改装 / 武器装配」两个模式，常规分类 6 项 3×2 等宽对齐、武器模式独立炮位/仓库/购买（无打造页签）；4 艘 Core 船补侧视槽位坐标并同步 `SNModMaker/js/core-index.js`。新增 `test_shipyard_blueprint` 8 例 + `test_shipyard_refit` 模式分离用例；验证 `check_content_schema_v2`、SNModMaker 65/65、截图 `_check3/shipyard_refit*.png`。
+- 船厂改装界面第二轮反馈（2026-10-28）：改装蓝图只保留侧视图，普通槽位按 Core hull `module_slots` / `compartments` 的 `blueprint_position.side`（`shipyard.view.ship.slot_anchors`）画圆点，槽位方框移到侧视图下方的标注带并用点线连到圆点（`SNShipView` 新增 `slot_anchor_rects()` / `slot_chip_rects()` / `chip_band_rect()` / `slot_leader_lines()` / `set_module_chips_visible()` / `set_weapon_patches_visible()`）；操作坞拆「部件改装 / 武器装配」两个模式，常规分类 6 项 3×2 等宽对齐、武器模式独立炮位/仓库/购买（无打造页签）；4 艘 Core 船补侧视槽位坐标并同步 `SNModMaker/js/core-index.js`。新增 `test_shipyard_blueprint` 8 例 + `test_shipyard_refit` 模式分离用例；验证 `check_content_schema_v2`、SNModMaker 65/65、截图 `_check5/shipyard_refit*.png`。
 
 - 教程强制引导 P0 修复（2026-10-28）：玩家反馈「框与按钮根本不在一个地方」。`SNFocusOverlay` 新增 `focus_target(control, text)` + 逐帧 `refresh_target()` 自愈，Shell 页面重建后补两次 deferred 重解析；遮罩改挂到目标条之上（提示不再被压字）、三处共享 `SNSkin.style()` 改克隆、提示板按字体实测高度 + 24 px 内边距；1440×900 / 960×540 实测 hole=target（0 误差）、FocusHint 484×30；新增 `test_story_ui` 回归，重截 `docs/design/screenshots/story/tutorial_objective.png`。
 

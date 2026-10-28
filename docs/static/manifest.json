@@ -1,8 +1,8 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-28T04:09:12.255Z",
-  "commit": "f64de04",
+  "generated_at": "2026-10-28T04:27:17.487Z",
+  "commit": "34247be",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
@@ -4954,13 +4954,13 @@
     },
     {
       "source": "framework/tests/cases/test_shipyard_blueprint.gd",
-      "sha256": "8328154808219df6d24e86c242fa5582ebc7a3d99aef3c995927d026823254a3",
+      "sha256": "722dd51e7904ab8e60b6baa056bc20dcb4842d5d9fa20b58f120361fe7c71514",
       "doc": "docs/static/framework/tests/cases/test_shipyard_blueprint.gd.md",
       "status": "documented"
     },
     {
       "source": "framework/tests/cases/test_shipyard_refit.gd",
-      "sha256": "a8875cf71ca2d15c0f93f1c6f0ff65848e868ac409f692a5bf8d1333c941a8c2",
+      "sha256": "18ed1e5c42f5a3fe3371fb67198778c24b717eeb234bd8c1a09fdddbc0bb171e",
       "doc": "docs/static/framework/tests/cases/test_shipyard_refit.gd.md",
       "status": "documented"
     },
@@ -5295,7 +5295,7 @@
     },
     {
       "source": "framework/ui/components/sn_ship_view.gd",
-      "sha256": "8754e6586a132df84f8f285ea769b5e29c64bba2362121e9fdc16f8b10aac9f2",
+      "sha256": "682868af03e228e6872d746a318b8095666d25adcc921ebc45c6d189977dcd92",
       "doc": "docs/static/framework/ui/components/sn_ship_view.gd.md",
       "status": "documented"
     },
@@ -6544,7 +6544,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "5745a75268440f7377c464a4aaffed7dd8c6836b67699e548b626d7c231efb7e",
+      "sha256": "b92e8f2e9e894c8aef19cb51ac2109b165cf20b2216ed5d435e12b860a622f21",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
