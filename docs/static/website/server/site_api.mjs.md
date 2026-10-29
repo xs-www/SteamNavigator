@@ -8,27 +8,28 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `SERVER_DIR` | L39 |
-| `DEFAULT_PORT` | L40 |
-| `DEFAULT_HOST` | L41 |
-| `DEFAULT_CACHE_TTL_MS` | L42 |
-| `DEFAULT_FALLBACK_FILE` | L43 |
-| `DEFAULT_MAX_DOWNLOAD_BYTES` | L44 |
-| `RELEASE_PATH` | L45 |
-| `HEALTH_PATH` | L46 |
-| `RESPONSE_CACHE_CONTROL` | L47 |
-| `sendJson(res, statusCode, payload, extraHeaders = {})` | L49 |
-| `readFallback(file)` | L61 |
-| `streamToFile(webStream, filePath, maxBytes)` | L70 |
-| `createSiteApiHandler(options = {})` | L113 |
-| `mirrorUrl(data)` | L140 |
-| `withDownloads(data)` | L146 |
-| `cleanupOtherTags(keepTag)` | L161 |
-| `expectedSha256(fetchImpl, latest, fileName)` | L175 |
-| `downloadLatestWindows(data)` | L192 |
-| `refresh()` | L231 |
-| `getRelease()` | L239 |
-| `startSiteApi(options = {})` | L310 |
+| `SERVER_DIR` | L41 |
+| `DEFAULT_PORT` | L42 |
+| `DEFAULT_HOST` | L43 |
+| `DEFAULT_CACHE_TTL_MS` | L44 |
+| `DEFAULT_FALLBACK_FILE` | L45 |
+| `DEFAULT_MAX_DOWNLOAD_BYTES` | L46 |
+| `RELEASE_PATH` | L47 |
+| `HEALTH_PATH` | L48 |
+| `RESPONSE_CACHE_CONTROL` | L49 |
+| `sendJson(res, statusCode, payload, extraHeaders = {})` | L51 |
+| `readFallback(file)` | L63 |
+| `fileSha256(filePath)` | L72 |
+| `streamToFile(webStream, filePath, maxBytes)` | L79 |
+| `createSiteApiHandler(options = {})` | L122 |
+| `mirrorUrl(data)` | L149 |
+| `withDownloads(data)` | L155 |
+| `cleanupOtherTags(keepTag)` | L170 |
+| `expectedSha256(fetchImpl, latest, fileName)` | L184 |
+| `downloadLatestWindows(data)` | L197 |
+| `refresh()` | L240 |
+| `getRelease()` | L248 |
+| `startSiteApi(options = {})` | L319 |
 
 供前端在不重新部署网站的情况下自动显示「最新版本」；GitHub/网络失败时回退到镜像内烘焙的
 `release-data.js`，两者都没有才返回 503。`GET /api/site/health` 供 Docker / Compose 健康检查。
@@ -42,6 +43,8 @@
 - 可选 Windows 镜像：把最新 Release 的 Windows zip 流式下载到 `SN_SITE_API_DOWNLOAD_DIR`（不配置则关闭），
   校验字节数与 `SHA256SUMS.txt` 后暴露为 `data.downloads.windows.url`（`/downloads/<tag>/<file>`）；只保留
   最新 tag，旧版本目录自动删除，历史版本仍由前端回退 GitHub 直链。
+- 校验清单兼容裸文件名与发布流程的 `dist/release/<文件名>`；校验和缺失、请求失败或不匹配时不提供镜像。
+  进程重启后也必须重新计算已有文件的 SHA-256；损坏副本移除后重新下载，不能只凭相同大小复用。
 - 依赖 `tools/build-release-data.mjs` 的纯函数（fetchReleases / buildReleaseData / parseReleaseDataFile），
   零第三方依赖，Node >= 18。
 

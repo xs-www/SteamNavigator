@@ -23,7 +23,7 @@
 - 最新公开版本与下载资产：**以 GitHub Releases 为准**，由 `website/tools/build-release-data.mjs` 调 GitHub Releases API 生成
   `website/assets/data/release-data.js`，下载页与开发日志页用 `assets/js/release.js` 自动填充；HTML 里不再手写版本号。
   - 发布页：`https://github.com/xs-www/SteamNavigator/releases`
-  - 当前生成结果（`v0.2.0-dev.4`，2026-10-27 预发布）：Windows ≈80 MB、Linux ≈71 MB、`SHA256SUMS.txt`；
+  - 当前生成结果（`v0.2.0-dev.4-fixed`，预发布）：Windows ≈80 MB、Linux ≈71 MB、`SHA256SUMS.txt`；
     具体直链、日期与字节数以生成文件为准。
   - **日期时区**：`published_at` 保留 GitHub 的 UTC 时间；`date` 按站点时区计算（默认 `Asia/Shanghai`，
     可用 `SN_RELEASE_TIME_ZONE` 或 `--time-zone` 覆盖），同时输出 `date_time_zone`；下载页 / 开发日志页再用
@@ -38,6 +38,9 @@
   - **最新 Windows 安装包镜像**：`site-api` 后台把最新 Release 的 windows.zip 流式下载到卷
     `release-downloads`（校验字节数 + SHA256SUMS），暴露 `/downloads/<tag>/<file>` 由 nginx 直接下发
     （Range / 30 天缓存）；新版本成功后删除旧 tag，**只保留最新版**，历史版本由前端回退 GitHub 直链。
+    校验清单条目兼容裸文件名与发布流程实际写出的 `dist/release/<文件名>` 路径；清单缺失 / 请求失败 /
+    缺少目标条目时**不提供镜像**（`available=false`，前端回退 GitHub），不得跳过 SHA 校验。
+    进程重启后对已有文件重新计算 SHA-256，同大小的损坏副本会被删除并重新下载，不能只凭文件大小复用。
 - 世界观关键词：蒸汽朋克、群岛、浓雾、煤烟、黄铜与铸铁、港口城邦、商会 / 皇家海军 / 海盗团、遗迹与失落的航路。
 - 核心玩法关键词：动态行情与港口库存、造船厂与模块改装、程序生成海图与线索探索、锅炉策略、蒸汽舰炮与舰队、基地生产链、遗迹远征、自动贸易。
 - 五个港口模板：铁港、香料港、自由镇、渔村、玻璃港。
@@ -251,6 +254,7 @@ window.SN_WIKI_DATA = {
 - 版本数据自动同步（2026-10-27）：`website/tools/build-release-data.mjs` 从 GitHub Releases API 生成 `assets/data/release-data.js`（latest / stable / 平台直链 / 大小 / 日期），下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充；`ci.ps1` 部署前刷新，`.github/workflows/website-release-data.yml` 在 Release 发布后自动提交；网络失败保留旧数据。
 - 运行时版本自动更新（2026-10-27）：新增只读 `site-api` 服务（`website/server/site_api.mjs` + `Dockerfile.site-api` + compose `site-api` + nginx `/api/site/` 反代），服务端缓存 GitHub Releases（默认 5 分钟、`Cache-Control: public, max-age=60, stale-while-revalidate=600`）；发版后网站无需重新部署即可在 ≤5 分钟内更新，失败时回退旧缓存 / 镜像内静态数据。`ci.ps1` 部署后检查 `/api/site/release`；`release-data.js` 单独 `no-cache`，避免浏览器/CDN 长期缓存旧版本。
 - 最新 Windows 安装包镜像（2026-10-27）：`site-api` 后台流式下载最新 Release 的 windows.zip 到命名卷 `release-downloads`（SHA-256 + 字节数校验），`website` 只读挂载后由 nginx `/downloads/<tag>/<file>` 下发（Range、30 天缓存）；新版本就绪后清理旧 tag，只保留最新版，历史版本与镜像未就绪时回退 GitHub。`release.js` 缓存标识用 `?v=` 版本串，修改脚本时需同步更新。
+- 镜像校验加固（2026-10-29，随 `v0.2.0-dev.4-fixed` 发布）：反馈「官网下载的 Windows 包打不开」排查发现镜像本身字节完整（与 GitHub 原包 SHA 一致），但旧校验逻辑只按裸文件名匹配 `SHA256SUMS.txt`，而发布流程写的是 `dist/release/<文件名>` 路径，导致镜像跳过 SHA 校验；进程重启后也只比较文件大小复用旧副本。修复为按 basename 匹配清单路径、清单缺失 / 请求失败 / 无目标条目时不提供镜像、已有文件重启后流式重算 SHA-256，坏副本删除重下；`site-api-mirror` 测试覆盖 `dist/release/` 路径、清单异常与重启复验。
 - 发布日期时区（2026-10-27）：`build-release-data.mjs` 的 `date` 改为按站点时区（默认 `Asia/Shanghai`，`SN_RELEASE_TIME_ZONE` / `--time-zone` 可覆盖）从 `published_at` 计算，并输出 `date_time_zone`；`release.js` 用访客本地时区格式化日期。修复 `v0.2.0-dev.4`（`2026-10-26T22:18:39Z`）显示为 10-26 的问题（北京时间 / 悉尼时间均为 10-27）。
 
 ## 10. 游玩数据接收端（Telemetry ingest）

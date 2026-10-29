@@ -3,6 +3,14 @@
 > 只记录有意义的功能与变更，不写逐条流水账；实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 [todo.md](todo.md) 的 `Recently Completed` 按版本归并到这里，并从 todo 移除。
 
+## [0.2.0-dev.4-fixed] — 2026-10-29
+
+### Fixed
+
+- **官网 Windows 包主菜单打不开**：`v0.2.0-dev.4` 的 `sn_carry_ghost.tscn` 仍引用 `res://dev_mods/core/assets/icons/items/boiler_plate.svg`，而导出预设排除 `dev_mods/*`；发布包加载该场景时依赖缺失，`main.gd` 预加载失败，主菜单不出现，但 Godot 仍以 0 退出（旧发布门禁只验证源码 / 模组，没有启动成品）。图标改为随本体导出的 `assets/ui/icons/item_fallback.svg`（10-28 图标轮已换源，本次重新打包发布），并用 `v0.2.0-dev.4` 实物包复现、确认修复后的包可正常进入主菜单。
+- 发布流程新增成品启动门禁：`tools/check_release_smoke.mjs` 解压最终 ZIP，在隔离用户目录原生运行包内可执行文件，检查 Core 启动报告、MainMenuScreen 场景 / ready / 按钮树并打印 `[release-smoke] main-menu-ready`；退出码、启动脚本错误（`SCRIPT ERROR` / `Failed to load script`）或缺少标记均失败，`ERROR: N resources still in use at exit` 这类引擎退出期资源计数噪声除外。`release.yml` 拆成 `build` → `smoke-windows` → `publish`：Linux 在构建 runner 冒烟，Windows 在 `windows-latest` 原生冒烟，任一失败都不创建 Release；发布 job 下载 artifact 后先校验 `SHA256SUMS.txt`。
+- 官网 Windows 镜像校验加固：`site_api.mjs` 按 basename 匹配 `SHA256SUMS.txt` 中 `dist/release/<文件名>` 形式的条目；清单缺失 / 请求失败 / 缺少目标条目时不提供镜像（回退 GitHub），不再跳过 SHA 校验；进程重启后重新计算已有文件 SHA-256，同大小损坏副本删除重下。
+
 ## [0.2.0-dev.4] — 2026-10-27
 
 ### Added

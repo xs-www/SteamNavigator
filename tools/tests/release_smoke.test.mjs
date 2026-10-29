@@ -1,0 +1,77 @@
+// @static-doc
+// 作用：成品启动门禁的 Node 回归测试；真实子进程覆盖成功、Godot 报错但退出 0、缺标记、崩溃和超时。
+// - 不运行游戏、不读写玩家目录；验证隔离用户环境与 Windows 大小写环境变量覆盖。
+// @end-static-doc
+
+import test from "node:test";
+import assert from "node:assert/strict";
+import path from "node:path";
+import { READY_MARKER, isolatedEnvironment, isFatalStartupError, parseArguments, runProcess, verifyStartup } from "../check_release_smoke.mjs";
+
+const execute = (source, options) => runProcess(process.execPath, ["-e", source], options);
+
+test("a real child process must exit cleanly after reporting main-menu readiness", async () => {
+  const result = await execute(`console.log(${JSON.stringify(READY_MARKER)})`);
+  assert.doesNotThrow(() => verifyStartup(result));
+});
+
+test("the reported regression fails even when bootstrap succeeds and Godot exits zero", async () => {
+  const result = await execute('console.log("bootstrap finished: ok"); console.error("SCRIPT ERROR: Parse Error: Could not preload resource sn_carry_ghost.tscn");');
+  assert.equal(result.exitCode, 0);
+  assert.throws(() => verifyStartup(result), /Godot reported startup errors/);
+});
+
+test("errors after the success marker still fail, including teardown errors", async () => {
+  for (const prefix of ["ERROR", "SCRIPT ERROR", "USER ERROR"]) {
+    const result = await execute(`console.log(${JSON.stringify(READY_MARKER)}); console.error(${JSON.stringify(`${prefix}: resource failure`)});`);
+    assert.throws(() => verifyStartup(result), /Godot reported startup errors/);
+  }
+});
+
+test("engine resource-accounting noise at exit does not mask a working main menu", async () => {
+  const result = await execute(`console.log(${JSON.stringify(READY_MARKER)}); console.error("ERROR: 16 resources still in use at exit (run with --verbose for details).");`);
+  assert.doesNotThrow(() => verifyStartup(result));
+  assert.equal(isFatalStartupError("ERROR: 16 resources still in use at exit (run with --verbose for details)."), false);
+  assert.equal(isFatalStartupError("ERROR: Failed to load script \"res://framework/ui/shell/main.gd\""), true);
+  assert.equal(isFatalStartupError("SCRIPT ERROR: Parse Error: Could not preload resource"), true);
+});
+
+test("exit zero without the exact marker fails instead of passing a blank main window", async () => {
+  const result = await execute(`console.log("bootstrap finished: ok"); console.log(${JSON.stringify(`${READY_MARKER} (not really)`)});`);
+  assert.throws(() => verifyStartup(result), /never reported readiness/);
+});
+
+test("a nonzero exit after the marker fails", async () => {
+  const result = await execute(`console.log(${JSON.stringify(READY_MARKER)}); process.exitCode = 7;`);
+  assert.throws(() => verifyStartup(result), /code 7/);
+});
+
+test("a hanging process is killed and fails even if it printed readiness", async () => {
+  const result = await execute(`console.log(${JSON.stringify(READY_MARKER)}); setInterval(() => {}, 1000);`, { timeoutMs: 500 });
+  assert.equal(result.timedOut, true);
+  assert.throws(() => verifyStartup(result), /timed out/);
+});
+
+test("an executable that cannot be launched rejects", async () => {
+  await assert.rejects(runProcess(path.resolve("missing-release-smoke-executable"), []), /ENOENT/);
+});
+
+test("all player-data roots are isolated without duplicate Windows variable spellings", () => {
+  const root = path.resolve("isolated-user");
+  const env = isolatedEnvironment(root, { Path: "keep-path", AppData: "player", LOCALAPPDATA: "player", HOME: "player", USERPROFILE: "player", XDG_DATA_HOME: "player" });
+  assert.equal(env.Path, "keep-path");
+  assert.equal(env.AppData, undefined);
+  for (const name of ["HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"]) {
+    assert.ok(env[name] === root || env[name].startsWith(root + path.sep), name);
+    assert.notEqual(env[name], "player");
+  }
+});
+
+test("CLI requires a known platform, archive and bounded positive timeout", () => {
+  assert.deepEqual(parseArguments(["--archive", "build.zip", "--platform", "windows", "--timeout-ms", "5000"]), {
+    archive: path.resolve("build.zip"), platform: "windows", timeoutMs: 5000,
+  });
+  for (const args of [[], ["--archive", "a", "--platform", "mac"], ["--archive", "a", "--platform", "linux", "--timeout-ms", "0"], ["--wat"]]) {
+    assert.throws(() => parseArguments(args));
+  }
+});

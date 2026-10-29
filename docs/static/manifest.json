@@ -1,25 +1,25 @@
 {
   "rule_version": "3.0",
   "mode": "compact",
-  "generated_at": "2026-10-28T12:39:16.332Z",
-  "commit": "04a95f6",
+  "generated_at": "2026-10-29T03:49:13.999Z",
+  "commit": "50c81c2",
   "project_root": ".",
   "doc_root": "docs/static",
   "counts": {
-    "sources": 1281,
-    "documented": 522,
+    "sources": 1283,
+    "documented": 524,
     "grouped": 759
   },
   "files": [
     {
       "source": ".github/workflows/release.yml",
-      "sha256": "2cebcdd43d3d3135e69d979d34febab20a8fca95e028375508af426276b5d7e5",
+      "sha256": "9b8d37fcfefe5af019f0447c173cf9db44708f6025acab05a27a1c345888d600",
       "doc": "docs/static/.github/workflows/release.yml.md",
       "status": "documented"
     },
     {
       "source": "README.md",
-      "sha256": "014baa74b7ee696d02ee6c37102acd2236ce16eacfef87ed82c599ed6cc126a4",
+      "sha256": "9d9ba441f82d0a0550583456d6ec6d8b25811582591e3292923c600180cf5eb6",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -5626,7 +5626,7 @@
     },
     {
       "source": "framework/ui/shell/main.gd",
-      "sha256": "6985b2cf5fc68cda8992a0944f12c690926c22c61a089a40c31da702ad24cc71",
+      "sha256": "dd98b6f0c7189f7168af721d217d342bce04625e8e2636b766e8e9b0f606d1be",
       "doc": "docs/static/framework/ui/shell/main.gd.md",
       "status": "documented"
     },
@@ -6509,7 +6509,7 @@
     },
     {
       "source": "todo.md",
-      "sha256": "cda2dd606a9fdb8c6366a7a280039f35937216f5e2c35ed9f5ee6018bef35daf",
+      "sha256": "b0cb713404facba69bb01010725c7b93c3af1bb1d8a3eb358b075631b5fbaf2b",
       "doc": "docs/static/README.md",
       "status": "grouped",
       "group": "docs/static/README.md"
@@ -6548,6 +6548,12 @@
       "source": "tools/check_content_schema_v2.mjs",
       "sha256": "e2b04774fc0adb5e22ffdcce2507bf6266cf3272ae31e06c3c93696b4e5c9949",
       "doc": "docs/static/tools/check_content_schema_v2.mjs.md",
+      "status": "documented"
+    },
+    {
+      "source": "tools/check_release_smoke.mjs",
+      "sha256": "ad7560a44967204e2f8e3229355f0834ed3529af45c7d02a49d8746eaf47f8ba",
+      "doc": "docs/static/tools/check_release_smoke.mjs.md",
       "status": "documented"
     },
     {
@@ -8109,7 +8115,7 @@
     },
     {
       "source": "tools/static_docs_data.mjs",
-      "sha256": "0b93847d97ab394ede1561affae3968953eb95a7d94dab263468c222e8ffd52c",
+      "sha256": "73bf7c6b5d3264df9da1ae220b3704f9e2203232279a6ca0e508a4230ef39dc4",
       "doc": "docs/static/tools/static_docs_data.mjs.md",
       "status": "documented"
     },
@@ -8119,6 +8125,12 @@
       "doc": "docs/static/tools/README.md",
       "status": "grouped",
       "group": "docs/static/tools/README.md"
+    },
+    {
+      "source": "tools/tests/release_smoke.test.mjs",
+      "sha256": "9b51045b68716698006207a367f736f7ba92d738450d4d34139bd2008204f1ae",
+      "doc": "docs/static/tools/tests/release_smoke.test.mjs.md",
+      "status": "documented"
     },
     {
       "source": "tools/tests/static_docs.test.mjs",
@@ -8374,7 +8386,7 @@
     },
     {
       "source": "website/server/site_api.mjs",
-      "sha256": "3a18ed0739b799dab00e5233ded108d456c3be6d02fead2d70ac04e11fb5361e",
+      "sha256": "b4b465210ae1e7026d7cb0bfb08339c467a882b5a62d9394630034214507e5e4",
       "doc": "docs/static/website/server/site_api.mjs.md",
       "status": "documented"
     },
@@ -8398,7 +8410,7 @@
     },
     {
       "source": "website/tests/site-api-mirror.test.mjs",
-      "sha256": "2ed409f660054a2cba05841965676c2478ee0c6b771a183fe1c542f309d60ef7",
+      "sha256": "55cffe9b6696a1f9ad772928af7ff508e9593f63f24642e2e634dfd1b0a9192b",
       "doc": "docs/static/website/tests/site-api-mirror.test.mjs.md",
       "status": "documented"
     },

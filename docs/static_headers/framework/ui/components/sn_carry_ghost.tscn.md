@@ -14,6 +14,7 @@
 
 ## 契约
 
+- 预览图标只引用随本体导出的 `assets/ui/icons/item_fallback.svg`；实际商品图标由 `begin()` 注入。禁止引用 `dev_mods/` 等发布排除目录，否则 Shell 的场景预加载会失败，整个主菜单无法启动（`v0.2.0-dev.4` 已复现）。
 - 必须从 `framework/ui/components/sn_carry_ghost.tscn` 实例化；`SNCarryGhost.new()` 没有子树，`begin()` 会安全空返回。
 - 节点名 `GhostPanel` / `GhostRow` / `Icon` / `Labels` / `Title` / `Amount` / `Cost` / `Hint`、根 `visible = false`、整棵子树 `mouse_filter = IGNORE` 是测试与 Shell 的契约。
 - 字号 / 尺寸 / 间距属于设计常量，只写在场景里；四行文字颜色与底板 tint 由脚本从 `SNSkin` token 写入。

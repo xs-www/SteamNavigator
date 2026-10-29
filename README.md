@@ -81,6 +81,8 @@ godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/co
 
 推送 `v*` tag 会触发 [.github/workflows/release.yml](.github/workflows/release.yml)：跑测试、导出 Windows/Linux、Runtime 校验、打包 Core、生成 SHA256，并创建 GitHub Release。带 `-dev.` 的 tag 自动标记为预发布。
 
+发布前会解压最终 ZIP 并原生启动包内可执行文件做冒烟验证：Linux 在构建 runner 上跑，Windows 在 `windows-latest` 上跑；要求退出码 0、无启动脚本错误并打印 `[release-smoke] main-menu-ready`，任一条件不满足都不会创建 Release。
+
 ### 校验第三方模组
 
 ```powershell

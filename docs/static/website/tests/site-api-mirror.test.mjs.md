@@ -8,14 +8,16 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `makeTempDir(prefix)` | L25 |
-| `sha256(buffer)` | L31 |
-| `asset(name, size, url)` | L35 |
-| `release({ tag = "v0.2.0-dev.4", windowsBytes, sumsHash } = {})` | L39 |
-| `waitForAvailability(url, expected, timeoutMs = 8000)` | L67 |
-| `withMirror(fixture, fn)` | L78 |
+| `makeTempDir(prefix)` | L26 |
+| `sha256(buffer)` | L32 |
+| `asset(name, size, url)` | L36 |
+| `release({ tag = "v0.2.0-dev.4", windowsBytes, sumsHash } = {})` | L40 |
+| `waitForAvailability(url, expected, timeoutMs = 8000)` | L68 |
+| `withMirror(fixture, fn)` | L79 |
+| `waitForMirrorError(mirrorErrors, timeoutMs = 8000)` | L167 |
 
 `data.downloads.windows` 暴露本地地址、旧 tag 目录清理、哈希不匹配不暴露、无 Windows 资产不下载。
+增量回归覆盖发布流水线 `dist/release/` 校验路径、校验文件缺失/请求失败，以及重启后已有文件的哈希复验。
 
 ## 契约与约束
 - 契约：`server/site_api.mjs` 文件头「Windows 镜像」与小节；GitHub / 下载请求全部用 `fetchImpl` 注入，不访问真实网络。

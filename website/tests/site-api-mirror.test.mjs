@@ -1,6 +1,7 @@
 // @static-doc
 // 作用：官网只读内容 API 的「最新 Windows zip 镜像」测试：覆盖后台流式下载 + SHA-256 校验、镜像可用后
 // `data.downloads.windows` 暴露本地地址、旧 tag 目录清理、哈希不匹配不暴露、无 Windows 资产不下载。
+// 增量回归覆盖发布流水线 `dist/release/` 校验路径、校验文件缺失/请求失败，以及重启后已有文件的哈希复验。
 //
 // ## 契约与约束
 // - 契约：`server/site_api.mjs` 文件头「Windows 镜像」与小节；GitHub / 下载请求全部用 `fetchImpl` 注入，不访问真实网络。
@@ -78,6 +79,7 @@ async function waitForAvailability(url, expected, timeoutMs = 8000) {
 async function withMirror(fixture, fn) {
   const downloadDir = await makeTempDir("sn-site-mirror-");
   let windowDownloads = 0;
+  const mirrorErrors = [];
   const fetchImpl = async (url) => {
     if (String(url).includes("/releases?per_page=")) {
       return new Response(JSON.stringify(fixture.releases), { status: 200, headers: { "Content-Type": "application/json" } });
@@ -90,21 +92,23 @@ async function withMirror(fixture, fn) {
       });
     }
     if (String(url).includes("SHA256SUMS.txt")) {
-      return new Response(fixture.sumsText, { status: 200, headers: { "Content-Type": "text/plain" } });
+      return new Response(fixture.sumsText, { status: fixture.checksumStatus ?? 200, headers: { "Content-Type": "text/plain" } });
     }
     return new Response("not found", { status: 404 });
   };
   const instance = await startSiteApi({
     host: "127.0.0.1",
     port: 0,
-    logger: null,
+    logger: (event) => {
+      if (event.event === "site_api.mirror_error") mirrorErrors.push(event);
+    },
     fallbackFile: path.join(downloadDir, "missing-release-data.js"),
     downloadDir,
     cacheTtlMs: 60 * 1000,
     fetchImpl,
   });
   try {
-    return await fn({ instance, downloadDir, windowDownloads: () => windowDownloads });
+    return await fn({ instance, downloadDir, mirrorErrors, windowDownloads: () => windowDownloads });
   } finally {
     await instance.close();
   }
@@ -157,5 +161,90 @@ test("没有 Windows 资产时不做下载，镜像保持不可用", async () =>
     assert.equal(body.data.downloads.windows.available, false);
     await new Promise((resolve) => setTimeout(resolve, 200));
     assert.equal(windowDownloads(), 0, "没有 Windows 资产就不发起下载");
+  });
+});
+
+async function waitForMirrorError(mirrorErrors, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (mirrorErrors.length > 0) return mirrorErrors[0];
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error("timed out waiting for mirror failure");
+}
+
+test("实际发布的 dist/release 校验路径可匹配，并拒绝错误哈希", async () => {
+  for (const valid of [true, false]) {
+    const windowsBytes = Buffer.from("release archive bytes");
+    const fixture = release({ windowsBytes, sumsHash: valid ? sha256(windowsBytes) : "0".repeat(64) });
+    fixture.sumsText = fixture.sumsText.replace(fixture.winName, `dist/release/${fixture.winName}`);
+    await withMirror(fixture, async ({ instance, downloadDir, mirrorErrors }) => {
+      const url = `${instance.url}/api/site/release`;
+      await (await fetch(url)).json();
+      const target = path.join(downloadDir, fixture.tag, fixture.winName);
+      if (valid) {
+        const body = await waitForAvailability(url, true);
+        assert.equal(body.data.downloads.windows.size, windowsBytes.length);
+        assert.deepEqual(await fsp.readFile(target), windowsBytes);
+      } else {
+        assert.match((await waitForMirrorError(mirrorErrors)).message, /sha256 mismatch/);
+        const body = await (await fetch(url)).json();
+        assert.equal(body.data.downloads.windows.available, false);
+        assert.deepEqual(await fsp.readdir(path.dirname(target)), []);
+      }
+    });
+  }
+});
+
+test("校验清单缺失、请求失败或缺少目标条目时不下载、不暴露镜像", async () => {
+  for (const failure of ["missing", "unavailable", "no-entry"]) {
+    const fixture = release({ windowsBytes: Buffer.from("release archive bytes") });
+    if (failure === "missing") fixture.releases[0].assets = fixture.releases[0].assets.filter((item) => item.name !== "SHA256SUMS.txt");
+    if (failure === "unavailable") fixture.checksumStatus = 503;
+    if (failure === "no-entry") fixture.sumsText = `${sha256(fixture.windowsBytes)}  unrelated.zip\n`;
+    await withMirror(fixture, async ({ instance, downloadDir, mirrorErrors, windowDownloads }) => {
+      const url = `${instance.url}/api/site/release`;
+      await (await fetch(url)).json();
+      await waitForMirrorError(mirrorErrors);
+      const body = await (await fetch(url)).json();
+      assert.equal(body.data.latest.tag, fixture.tag);
+      assert.equal(body.data.downloads.windows.available, false);
+      assert.match(body.data.links.windows, /v0\.2\.0-dev\.4-windows\.zip$/);
+      assert.equal(windowDownloads(), 0);
+      await assert.rejects(fsp.stat(path.join(downloadDir, fixture.tag, fixture.winName)), { code: "ENOENT" });
+    });
+  }
+});
+
+test("重启后已有文件必须通过 SHA 复验，同大小损坏文件重新下载", async () => {
+  for (const valid of [true, false]) {
+    const windowsBytes = Buffer.from("release archive bytes");
+    const fixture = release({ windowsBytes });
+    await withMirror(fixture, async ({ instance, downloadDir, windowDownloads }) => {
+      const target = path.join(downloadDir, fixture.tag, fixture.winName);
+      await fsp.mkdir(path.dirname(target), { recursive: true });
+      await fsp.writeFile(target, valid ? windowsBytes : Buffer.alloc(windowsBytes.length));
+      const body = await waitForAvailability(`${instance.url}/api/site/release`, true);
+      assert.equal(body.data.downloads.windows.available, true);
+      assert.equal(windowDownloads(), valid ? 0 : 1);
+      assert.deepEqual(await fsp.readFile(target), windowsBytes);
+    });
+  }
+});
+
+test("校验清单不可用时，重启后也不信任磁盘已有副本", async () => {
+  const windowsBytes = Buffer.from("release archive bytes");
+  const fixture = release({ windowsBytes });
+  fixture.checksumStatus = 503;
+  await withMirror(fixture, async ({ instance, downloadDir, mirrorErrors }) => {
+    const target = path.join(downloadDir, fixture.tag, fixture.winName);
+    await fsp.mkdir(path.dirname(target), { recursive: true });
+    await fsp.writeFile(target, windowsBytes);
+    const url = `${instance.url}/api/site/release`;
+    await (await fetch(url)).json();
+    await waitForMirrorError(mirrorErrors);
+    const body = await (await fetch(url)).json();
+    assert.equal(body.data.downloads.windows.available, false);
+    assert.match(body.data.downloads.windows.github_url, /v0\.2\.0-dev\.4-windows\.zip$/);
   });
 });

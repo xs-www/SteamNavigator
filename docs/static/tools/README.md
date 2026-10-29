@@ -12,6 +12,7 @@
 | `build_ui_skin.ps1` | UI 皮肤一键生成 / 一致性门禁。先运行 `tools/ui/build_ui_skin.gd` 把 `docs/design/` 的控件图集与图标图集裁成 `assets/ui/skin/<skin>/` 运行纹理 + skin.json，再运行 `tools/ui/build_ui_theme.gd` 从 skin.json 生成纹理化 Theme。 | [查看](./build_ui_skin.ps1.md) |
 | `capture_ui.ps1` | `tools/ui_snapshot.gd` 的 PowerShell 包装：窗口 1440×900 跑真实渲染截图，并校验产物新鲜度。 | [查看](./capture_ui.ps1.md) |
 | `check_content_schema_v2.mjs` | Phase E 发布门禁：确认 Content Schema 1.0 已冻结，内容类型、Schema 文件与 | [查看](./check_content_schema_v2.mjs.md) |
+| `check_release_smoke.mjs` | 解压最终发布 ZIP，在本机原生运行包内 Windows/Linux 可执行文件，验证真实主菜单启动。 | [查看](./check_release_smoke.mjs.md) |
 | `check_story_schema_freeze.mjs` | Story Mode 数据契约冻结门禁：锁定 story_arc / story_level Schema 与 | [查看](./check_story_schema_freeze.mjs.md) |
 | `fog_grid_simulator.html` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `gen_content_types.mjs` | 从 content_types.json 生成框架 ContentTypes 与 SNModMaker 的类型目录（active `TYPES` + Schema 2.0 草案 `DRAFT_TYPES`）；提供 `--check` 过期检查。 | [查看](./gen_content_types.mjs.md) |
@@ -260,6 +261,7 @@
 | `pack_core.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
 | `static_docs_data.mjs` | 静态文档的兼容策展数据：保留尚未迁移文件的职责/契约，并维护模块简介与分组角色。 | [查看](./static_docs_data.mjs.md) |
 | `test.ps1` | PowerShell 测试/打包脚本与静态文档生成器。 | 本页 |
+| `tests/release_smoke.test.mjs` | 成品启动门禁的 Node 回归测试；真实子进程覆盖成功、Godot 报错但退出 0、缺标记、崩溃和超时。 | [查看](./tests/release_smoke.test.mjs.md) |
 | `tests/static_docs.test.mjs` | 静态文档生成器的 Node 单元测试，守护源码注释解析与符号提取。 | [查看](./tests/static_docs.test.mjs.md) |
 | `ui/build_ui_skin.gd` | 把 `docs/design/` 下的 UI 控件图集与图标图集切成运行纹理，输出到 `assets/ui/skin/<skin>/`，并写 `skin.json`（样式/九宫格/颜色 token/图标表）。这是「外部贴图驱动 UI」的唯一素材入口：页面与 Theme 只引用本脚本产出的 PNG，换同名同尺寸贴图即可整体换肤。 | [查看](./ui/build_ui_skin.gd.md) |
 | `ui/build_ui_theme.gd` | 从 `assets/ui/skin/<skin>/skin.json` 生成 `assets/ui/theme/steam_navigator_theme.tres`。Theme 里的每个可见状态都是一张外部 PNG（StyleBoxTexture 九宫格）或外部图标，因此换掉 skin 目录里的同名同尺寸贴图即可整体换肤；本脚本只在换整套皮肤/改九宫格参数时重新运行。 | [查看](./ui/build_ui_theme.gd.md) |

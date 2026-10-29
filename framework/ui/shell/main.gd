@@ -30,6 +30,10 @@ extends Control
 ##   `_screen_*` 挂载函数与 `ui.nav.*` 本地化键保留：`tools/ui_snapshot.gd` 仍直接路由
 ##   这些页面做视觉验收，未来重新发布时只需从 `HIDDEN_NAV_SCREENS` 移除对应键。
 ## - 每个 PanelContainer 只允许一个 VBox 内容容器（`_panel_add()`）；页面场景只发意图，不持有 AppContext。
+## - `-- --release-smoke` 专供成品启动门禁：真实 Autoload 与主场景启动后检查 Core 报告、
+##   MainMenuScreen 脚本/ready/按钮树；成功打印 `[release-smoke] main-menu-ready`，再走
+##   `_graceful_quit(exit_code)` 的真实退出路径，检查结果只通过退出码表达。
+##   未传参数时不执行检查；不创建新局、不修改正常启动流程。
 ##
 ## ## HUD 图标化 / 文字精简（2026-10-28 图标轮）
 ## - 顶部 chrome 的品牌列删掉 9 px `ui.label.port` 小标题，只留港口名（语义进 tooltip）；
@@ -424,6 +428,27 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	_settings = SettingsService.load_settings()
 	_refresh()
+	if OS.get_cmdline_user_args().has("--release-smoke"):
+		_report_release_smoke.call_deferred()
+
+
+func _report_release_smoke() -> void:
+	var bootstrap := get_tree().root.get_node_or_null("AppBootstrap")
+	var menu := _root_box.get_node_or_null("MainMenuScreen")
+	var startup_ok: bool = bootstrap != null and bootstrap.is_ready_for_scene() \
+		and _context != null and _context == bootstrap.context \
+		and _context.report.status_name() == "ok" and _context.report.content_total() > 0
+	var menu_ok: bool = menu is MainMenuScreen and menu.is_node_ready() \
+		and menu.has_node("MenuStatusRow") and menu.find_child("MenuBoard", true, false) != null \
+		and menu.find_children("*", "Button", true, false).size() >= 6
+	if startup_ok and menu_ok:
+		print("[release-smoke] main-menu-ready")
+	else:
+		push_error("Release smoke failed: bootstrap or main menu is not ready")
+	# Use the real player quit path (telemetry finalize -> free page tree -> release
+	# runtime caches) so the gate also catches teardown errors; only the exit code
+	# carries the check result.
+	_graceful_quit(0 if startup_ok and menu_ok else 1)
 
 
 func _notification(what: int) -> void:
@@ -3721,7 +3746,9 @@ func _on_quit() -> void:
 ##    session that rendered 3D terminates the process after the cleanup instead
 ##    of letting the engine destroy the GL context. Menu-only sessions still quit
 ##    normally. Remove the workaround when the engine is updated.
-func _graceful_quit() -> void:
+## `exit_code` is only used by the packaged startup smoke (`--release-smoke`); the
+## player paths keep the default 0.
+func _graceful_quit(exit_code: int = 0) -> void:
 	if _quitting:
 		return
 	_quitting = true
@@ -3755,7 +3782,7 @@ func _graceful_quit() -> void:
 		print("[quit] terminating process to skip the GLES3 teardown crash")
 		OS.kill(OS.get_process_id())
 		return
-	get_tree().quit()
+	get_tree().quit(exit_code)
 
 
 ## Idempotent node-level half of `_graceful_quit()` (tests call it directly because

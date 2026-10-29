@@ -12,6 +12,8 @@
 // - 可选 Windows 镜像：把最新 Release 的 Windows zip 流式下载到 `SN_SITE_API_DOWNLOAD_DIR`（不配置则关闭），
 //   校验字节数与 `SHA256SUMS.txt` 后暴露为 `data.downloads.windows.url`（`/downloads/<tag>/<file>`）；只保留
 //   最新 tag，旧版本目录自动删除，历史版本仍由前端回退 GitHub 直链。
+// - 校验清单兼容裸文件名与发布流程的 `dist/release/<文件名>`；校验和缺失、请求失败或不匹配时不提供镜像。
+//   进程重启后也必须重新计算已有文件的 SHA-256；损坏副本移除后重新下载，不能只凭相同大小复用。
 // - 依赖 `tools/build-release-data.mjs` 的纯函数（fetchReleases / buildReleaseData / parseReleaseDataFile），
 //   零第三方依赖，Node >= 18。
 //
@@ -64,6 +66,13 @@ function readFallback(file) {
   } catch {
     return null;
   }
+}
+
+/** 流式复验磁盘副本，避免进程重启后把同大小损坏文件直接标记为可用。 */
+async function fileSha256(filePath) {
+  const hash = crypto.createHash("sha256");
+  for await (const chunk of fs.createReadStream(filePath)) hash.update(chunk);
+  return hash.digest("hex");
 }
 
 /** 把 Web Stream 下载到文件，同时计算 SHA-256 与字节数（用于镜像校验，不把整个 zip 读进内存）。 */
@@ -174,18 +183,14 @@ export function createSiteApiHandler(options = {}) {
 
   async function expectedSha256(fetchImpl, latest, fileName) {
     const sums = (latest.assets || []).find((asset) => /^SHA256SUMS\.txt$/i.test(asset.name) && asset.url);
-    if (!sums) return "";
-    try {
-      const response = await fetchImpl(sums.url, { redirect: "follow" });
-      if (!response || !response.ok) return "";
-      for (const line of String(await response.text()).split("\n")) {
-        const match = /^([a-f0-9]{64})\s+\*?(.+)$/i.exec(line.trim());
-        if (match && match[2].trim() === fileName) return match[1].toLowerCase();
-      }
-    } catch {
-      // 校验文件不可用时不阻断镜像（仍会校验字节数）。
+    if (!sums) throw new Error("windows checksum manifest missing");
+    const response = await fetchImpl(sums.url, { redirect: "follow" });
+    if (!response || !response.ok) throw new Error("windows checksum manifest unavailable");
+    for (const line of String(await response.text()).split("\n")) {
+      const match = /^([a-f0-9]{64})\s+\*?(.+)$/i.exec(line.trim());
+      if (match && path.posix.basename(match[2].trim().replaceAll("\\", "/")) === fileName) return match[1].toLowerCase();
     }
-    return "";
+    throw new Error("windows checksum entry missing");
   }
 
   /** 只把「最新 Release 的 Windows zip」下载到镜像目录；旧 tag 目录自动清理，历史版本回退 GitHub。 */
@@ -201,11 +206,16 @@ export function createSiteApiHandler(options = {}) {
       const target = path.join(dayDir, win.name);
       const temp = path.join(dayDir, `.${win.name}.${process.pid}.tmp`);
       try {
+        const expected = await expectedSha256(fetchImpl, latest, win.name);
         await fs.promises.mkdir(dayDir, { recursive: true });
-        if (fs.existsSync(target) && (!win.size || fs.statSync(target).size === win.size)) {
-          mirror = { tag: latest.tag, file: win.name, size: fs.statSync(target).size, ready: true };
-          await cleanupOtherTags(latest.tag);
-          return;
+        if (fs.existsSync(target)) {
+          const size = (await fs.promises.stat(target)).size;
+          if ((!win.size || size === win.size) && await fileSha256(target) === expected) {
+            mirror = { tag: latest.tag, file: win.name, size, ready: true };
+            await cleanupOtherTags(latest.tag);
+            return;
+          }
+          await fs.promises.rm(target);
         }
         const response = await fetchImpl(win.url, { redirect: "follow" });
         if (!response || !response.ok) throw new Error(`windows download ${response ? response.status : "unavailable"}`);
@@ -213,8 +223,7 @@ export function createSiteApiHandler(options = {}) {
         if (declared > maxDownloadBytes) throw new Error("windows download exceeds size limit");
         const { sha256, bytes } = await streamToFile(response.body, temp, maxDownloadBytes);
         if (win.size > 0 && bytes !== win.size) throw new Error(`windows download size mismatch (${bytes} != ${win.size})`);
-        const expected = await expectedSha256(fetchImpl, latest, win.name);
-        if (expected && expected !== sha256) throw new Error("windows download sha256 mismatch");
+        if (expected !== sha256) throw new Error("windows download sha256 mismatch");
         await fs.promises.rename(temp, target);
         mirror = { tag: latest.tag, file: win.name, size: bytes, ready: true };
         await cleanupOtherTags(latest.tag);

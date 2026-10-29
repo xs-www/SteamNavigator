@@ -109,6 +109,14 @@ jobs:
           set -euo pipefail
           node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs
 
+      # The release smoke gate decides whether a ZIP may be published, so its
+      # helper logic (marker parsing, isolated user dir, timeout) is release tooling.
+      - name: Run release tooling tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tools/tests/release_smoke.test.mjs
+
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB),
       # and rejects any draft content the runtime does not load.
@@ -233,6 +241,18 @@ jobs:
           sha256sum dist/release/*.zip dist/mods/*.snavmod.zip > dist/release/SHA256SUMS.txt
           ls -lh dist/release dist/mods
 
+      # The archive players download is the release artifact, so the smoke gate runs
+      # on the packaged ZIP (real executable, embedded PCK, sibling mods/), not on
+      # `godot --path`. Linux runs here because the build runner is Linux; Windows
+      # cannot execute the Linux-runner-built exe, so it is gated on a native runner.
+      - name: Smoke-test Linux release
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/check_release_smoke.mjs \
+            --archive "dist/release/SteamNavigator-${GITHUB_REF_NAME}-linux.zip" \
+            --platform linux --timeout-ms 180000
+
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
@@ -241,6 +261,47 @@ jobs:
             dist/release/*
             dist/mods/*.snavmod.zip
 
+  # Native Windows smoke gate. The Windows ZIP is exported from this repository on
+  # the build runner, but a Windows game can only prove it starts on Windows; the
+  # v0.2.0-dev.4 regression (a preloaded .tscn pointing into the excluded
+  # dev_mods/ folder) failed here while Godot still exited 0.
+  smoke-windows:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: SteamNavigator-${{ github.ref_name }}
+          path: dist
+      - name: Smoke-test Windows release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $archive = Get-ChildItem -Path "dist/release" -Filter "*-windows.zip" | Select-Object -First 1
+          if (-not $archive) { throw "Windows release archive was not downloaded" }
+          node tools/check_release_smoke.mjs --archive $archive.FullName --platform windows --timeout-ms 180000
+
+  # Publishing is a separate job so no asset is visible to players until both native
+  # smoke gates pass. GitHub suppresses workflow runs for events created with
+  # GITHUB_TOKEN, so the website version data is synced here instead of in the
+  # separate "Website Release Data Sync" workflow (which still covers releases
+  # published by a human in the GitHub UI and manual workflow_dispatch runs).
+  publish:
+    needs: [build, smoke-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: SteamNavigator-${{ github.ref_name }}
+          path: dist
+      - name: Verify downloaded release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum -c dist/release/SHA256SUMS.txt
+          ls -lh dist/release dist/mods
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -253,12 +314,6 @@ jobs:
             dist/release/*.zip
             dist/release/SHA256SUMS.txt
             dist/mods/*.snavmod.zip
-
-      # GitHub suppresses new workflow runs for events created with GITHUB_TOKEN, so
-      # the separate "Website Release Data Sync" workflow never fires for releases
-      # published here. Sync the generated website version data in this job instead
-      # (idempotent; the standalone workflow still covers releases published by a
-      # human in the GitHub UI and manual workflow_dispatch runs).
       - name: Sync website release data
         shell: bash
         env:
