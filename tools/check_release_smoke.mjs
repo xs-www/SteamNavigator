@@ -150,7 +150,9 @@ export async function verifyInstallMetadata(directory, executablePath, platform)
   const installPath = path.join(directory, "config", "install.json");
   let install;
   try {
-    install = JSON.parse(await fs.readFile(installPath, "utf8"));
+    // Tolerate a UTF-8 BOM from editors that re-save the generated JSON by hand.
+    const text = (await fs.readFile(installPath, "utf8")).replace(/^\uFEFF/, "");
+    install = JSON.parse(text);
   } catch (error) {
     throw new Error(`Release is missing config/install.json: ${error.message}`);
   }

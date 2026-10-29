@@ -18,7 +18,7 @@
 | `extractArchive(archive, destination)` | L123 |
 | `fileSha256(filePath)` | L138 |
 | `verifyInstallMetadata(directory, executablePath, platform)` | L149 |
-| `checkReleaseSmoke({ archive, platform, timeoutMs = 60_000 })` | L173 |
+| `checkReleaseSmoke({ archive, platform, timeoutMs = 60_000 })` | L175 |
 
 ## 用法与门禁
 - `node tools/check_release_smoke.mjs --archive <zip> --platform windows|linux [--timeout-ms 60000]`。

@@ -93,6 +93,10 @@ test("install.json metadata must match the shipped executable and core pack", as
     await fs.writeFile(core, "core bytes");
     await writeInstall();
     assert.equal((await verifyInstallMetadata(directory, executable, "windows")).tag, "v0.2.0-dev.5");
+    // Editors may re-save the generated JSON with a UTF-8 BOM; the smoke gate tolerates it.
+    const text = await fs.readFile(install, "utf8");
+    await fs.writeFile(install, "\uFEFF" + text);
+    assert.equal((await verifyInstallMetadata(directory, executable, "windows")).tag, "v0.2.0-dev.5");
     await writeInstall("0".repeat(64));
     await assert.rejects(() => verifyInstallMetadata(directory, executable, "windows"), /engine hash/);
     await writeInstall(null, "0".repeat(64));
