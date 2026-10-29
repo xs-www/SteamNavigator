@@ -1,4 +1,4 @@
-# Godot 4 generated data
+﻿# Godot 4 generated data
 .godot/
 *.translation
 *.import
@@ -15,7 +15,7 @@ dist/mods/*.zip
 dist/build/
 dist/release/
 # Local updater end-to-end fixture (export, fake release, installs)
-dist/e2e/
+dist/e2e*/
 *.tmp
 *.log
 
@@ -53,3 +53,4 @@ website/.env.*
 !website/.env.example
 
 website/.data/
+

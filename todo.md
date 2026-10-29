@@ -1,4 +1,4 @@
-# TODO
+﻿# TODO
 
 > 只保留最近 10–15 项已完成与尚未实现的目标；逐条实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 `Recently Completed` 里的条目按版本归并进 [CHANGELOG.md](CHANGELOG.md)（只写有意义的功能 / 变更），并从本文件移除。
@@ -68,7 +68,7 @@
 
 ## Recently Completed
 
-- 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
+- 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.5]）；后续完成项继续记录在本节。
 
 - 游戏内自动更新（2026-10-29）：主菜单「检查更新」+ 更新对话框；`UpdateService` 按 `update-manifest.json` 与 `config/install.json` 的 engine/core SHA 决策——内容变化只下 ~40 MB core 包，本体变化下 ~84 MB 平台 ZIP 并用 `ZIPReader` 只解压 exe/core，运行中 exe 备份改名后自替换，重启生效；`UpdateApplier` 启动时替换 core、写 install.json、清 `.old`；发布流程生成清单 + install.json，`site_api` 新增 `GET /api/site/update` 并镜像三个文件，冒烟校验 install.json 与包内文件一致。验证：本地 e2e（全量自替换+重启、仅内容更新、篡改哈希拒绝）通过；Godot 全量、Node 68+、静态文档与 schema 门禁通过。
 
@@ -87,3 +87,4 @@
 - 官网运行时版本自动更新（2026-10-27）：用户要求「每次发布后网站能自动更新最新版本」。①新增只读内容 API `website/server/site_api.mjs`（容器 8092，`Dockerfile.site-api` + compose `site-api` + nginx `/api/site/` 反代），服务端用 `GITHUB_TOKEN` 可选地调 GitHub Releases API，内存缓存默认 5 分钟、同进程刷新去重，失败降级旧缓存 → 镜像内 `release-data.js` → 503。②前端 `assets/js/release.js` 改为「静态数据立即渲染 + `/api/site/release` 异步刷新」，发版后无需重新部署网站即可在 ≤5 分钟显示新版本。③缓存：`release-data.js` 单独 `no-cache`；API `public, max-age=60, stale-while-revalidate=600`。④发布链路：`release.yml` 发布后直接同步静态数据（`GITHUB_TOKEN` 创建的 Release 不会再触发独立 workflow）；`ci.ps1` 修 Windows PowerShell 5.1 把 docker stderr 当错误的问题，部署 `website + site-api` 后校验 `/api/site/release`。验证：site-api 6/6、release-data 5/5、website 全量 34/34；实际部署后线上 `dev.4`、页面版本/日期/大小已更新。
 
 - 官网版本数据自动同步（2026-10-27）：用户反馈「官网最新游戏版本不是从 GitHub 自动获取」。①**生成器**：新增 `website/tools/build-release-data.mjs`，调 GitHub Releases API（可选 `GITHUB_TOKEN` 提高限流）生成 `website/assets/data/release-data.js`（`latest` / `stable` / 平台直链 / 字节数 / 日期，使用 `browser_download_url`）；网络失败保留上一次生成文件，`--check` 校验数据是否落后、`--strict` 才失败。②**前端**：新增 `website/assets/js/release.js`，下载页 / 开发日志页用 `data-release` / `data-release-link` 属性自动填充版本号、发布日期、大小、下载与校验链接；首页仍不出现版本，静态文案仅作无 JS fallback。③**自动时机**：`website/tools/ci.ps1` 构建镜像前自动刷新（`-SkipReleaseData` 可跳过），新增 `.github/workflows/website-release-data.yml` 在 Release 发布后自动生成并提交数据文件。④**验证**：`node --test website/tests/release-data.test.mjs` 5/5；`--check` 对真实 GitHub 数据通过；Chrome headless 渲染确认下载页 Linux 大小由静态 62 MB 变为 GitHub 实际 61 MB、开发日志页日期由 10-24 变为 Release 日期 10-22（证明 JS 已消费生成数据）；`gen_static_docs --check` 全绿。契约见 [WEBSITE.md](docs/design/WEBSITE.md) §2/§7。
+
