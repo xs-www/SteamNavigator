@@ -8,58 +8,59 @@
 
 | 符号 | 位置 |
 | --- | --- |
-| `UI_THEME` | L161 |
-| `HARBOR_SIGN_SCRIPT` | L163 |
-| `MARKET_SCREEN_SCENE` | L164 |
-| `CARGO_HOLD_PANEL_SCRIPT` | L166 |
-| `ITEM_FALLBACK_ICON` | L168 |
-| `CARRY_GHOST_SCENE` | L172 |
-| `INTERACTION_HINT_SCENE` | L173 |
-| `CONTRACTS_SCREEN_SCENE` | L174 |
-| `SUPPLY_SCREEN_SCENE` | L175 |
-| `INTEL_SCREEN_SCENE` | L176 |
-| `OVERVIEW_SCREEN_SCENE` | L177 |
-| `SHIPYARD_SCREEN_SCENE` | L178 |
-| `BASE_SCREEN_SCENE` | L179 |
-| `AUTO_TRADE_SCREEN_SCENE` | L180 |
-| `RUINS_SCREEN_SCENE` | L181 |
-| `PORT_MEMORY_SCREEN_SCENE` | L182 |
-| `SETTLEMENT_SCREEN_SCENE` | L183 |
-| `AT_SEA_SCREEN_SCENE` | L184 |
-| `EVENT_SCREEN_SCENE` | L185 |
-| `SEA_CHART_SCREEN_SCENE` | L186 |
-| `CLUE_LOG_SCREEN_SCENE` | L187 |
-| `STORY_CARD_SCRIPT` | L188 |
-| `STORY_OBJECTIVE_SCRIPT` | L189 |
-| `STORY_FOCUS_SCRIPT` | L190 |
-| `TASK_TRACKER_SCRIPT` | L191 |
-| `VICTORY_SCREEN_SCENE` | L192 |
-| `MAIN_MENU_SCREEN_SCENE` | L193 |
-| `NEW_GAME_SCREEN_SCENE` | L194 |
-| `MODS_SCREEN_SCENE` | L195 |
-| `SETTINGS_SCREEN_SCENE` | L196 |
-| `NAV_ICONS` | L199 |
-| `NAV_ICON_MAX_WIDTH` | L212 |
-| `DEV_TEAM` | L213 |
-| `GAME_VERSION_FALLBACK` | L214 |
-| `SCREENS` | L218 |
-| `HIDDEN_NAV_SCREENS` | L223 |
-| `PORT_STAGE_SCENE_PATH` | L226 |
-| `PORT_STAGE_FACILITY_SCREENS` | L228 |
-| `STAGE_SCREENS` | L241 |
-| `DOCK_PANEL_WIDTH` | L250 |
-| `CARGO_HOLD_PANEL_WIDTH` | L252 |
-| `MARKET_COLUMN_GAP` | L254 |
-| `TOP_CHROME_MAX_HEIGHT` | L258 |
-| `PORT_SIGN_WIDTH` | L261 |
-| `PORT_SIGN_HEIGHT` | L262 |
-| `PORT_SIGN_GAP` | L263 |
-| `PORT_SIGN_MARGIN` | L264 |
-| `HUD_ICON_KEYS` | L270 |
-| `HUD_SKIN_ICONS` | L274 |
-| `HUD_ICON_SIZE` | L286 |
-| `PAGE_BOTTOM_MARGIN` | L289 |
-| `EXIT_UPLOAD_WAIT_SECONDS` | L291 |
+| `UI_THEME` | L166 |
+| `HARBOR_SIGN_SCRIPT` | L168 |
+| `MARKET_SCREEN_SCENE` | L169 |
+| `CARGO_HOLD_PANEL_SCRIPT` | L171 |
+| `ITEM_FALLBACK_ICON` | L173 |
+| `CARRY_GHOST_SCENE` | L177 |
+| `INTERACTION_HINT_SCENE` | L178 |
+| `CONTRACTS_SCREEN_SCENE` | L179 |
+| `SUPPLY_SCREEN_SCENE` | L180 |
+| `INTEL_SCREEN_SCENE` | L181 |
+| `OVERVIEW_SCREEN_SCENE` | L182 |
+| `SHIPYARD_SCREEN_SCENE` | L183 |
+| `BASE_SCREEN_SCENE` | L184 |
+| `AUTO_TRADE_SCREEN_SCENE` | L185 |
+| `RUINS_SCREEN_SCENE` | L186 |
+| `PORT_MEMORY_SCREEN_SCENE` | L187 |
+| `SETTLEMENT_SCREEN_SCENE` | L188 |
+| `AT_SEA_SCREEN_SCENE` | L189 |
+| `EVENT_SCREEN_SCENE` | L190 |
+| `SEA_CHART_SCREEN_SCENE` | L191 |
+| `CLUE_LOG_SCREEN_SCENE` | L192 |
+| `STORY_CARD_SCRIPT` | L193 |
+| `STORY_OBJECTIVE_SCRIPT` | L194 |
+| `STORY_FOCUS_SCRIPT` | L195 |
+| `TASK_TRACKER_SCRIPT` | L196 |
+| `VICTORY_SCREEN_SCENE` | L197 |
+| `MAIN_MENU_SCREEN_SCENE` | L198 |
+| `UPDATE_DIALOG_SCENE` | L199 |
+| `NEW_GAME_SCREEN_SCENE` | L200 |
+| `MODS_SCREEN_SCENE` | L201 |
+| `SETTINGS_SCREEN_SCENE` | L202 |
+| `NAV_ICONS` | L205 |
+| `NAV_ICON_MAX_WIDTH` | L218 |
+| `DEV_TEAM` | L219 |
+| `GAME_VERSION_FALLBACK` | L220 |
+| `SCREENS` | L224 |
+| `HIDDEN_NAV_SCREENS` | L229 |
+| `PORT_STAGE_SCENE_PATH` | L232 |
+| `PORT_STAGE_FACILITY_SCREENS` | L234 |
+| `STAGE_SCREENS` | L247 |
+| `DOCK_PANEL_WIDTH` | L256 |
+| `CARGO_HOLD_PANEL_WIDTH` | L258 |
+| `MARKET_COLUMN_GAP` | L260 |
+| `TOP_CHROME_MAX_HEIGHT` | L264 |
+| `PORT_SIGN_WIDTH` | L267 |
+| `PORT_SIGN_HEIGHT` | L268 |
+| `PORT_SIGN_GAP` | L269 |
+| `PORT_SIGN_MARGIN` | L270 |
+| `HUD_ICON_KEYS` | L276 |
+| `HUD_SKIN_ICONS` | L280 |
+| `HUD_ICON_SIZE` | L292 |
+| `PAGE_BOTTOM_MARGIN` | L295 |
+| `EXIT_UPLOAD_WAIT_SECONDS` | L297 |
 
 ## 皮肤接线（ui-skin-v1）
 - 所有纹理/图标/颜色经 `SNSkin`（`framework/ui/skin/sn_skin.gd`）读取 `assets/ui/skin/sn_v1/skin.json`；
@@ -93,6 +94,11 @@
   MainMenuScreen 脚本/ready/按钮树；成功打印 `[release-smoke] main-menu-ready`，再走
   `_graceful_quit(exit_code)` 的真实退出路径，检查结果只通过退出码表达。
   未传参数时不执行检查；不创建新局、不修改正常启动流程。
+- 自动更新（`docs/design/AUTO_UPDATE.md`）：`_setup_update_service()` 只在发布版（`OS.has_feature("template")`）
+  创建 `UpdateService`；主菜单的 `UpdateButton` 只显示状态，「游戏更新」对话框由 Shell 持有并只转发意图。
+  `_on_update_restart()` 启动自替换后的新 exe 再走 `_graceful_quit()`。编辑器与无头测试永不联网。
+  `-- --update-selftest` 是发布包专用内部验收钩子：自动 check → available 时 download，staged/up_to_date
+  时打印 `[update-selftest]` 后退出，供 `tools/update_e2e.ps1` 在真实安装目录验证下载/替换/重启。
 
 ## HUD 图标化 / 文字精简（2026-10-28 图标轮）
 - 顶部 chrome 的品牌列删掉 9 px `ui.label.port` 小标题，只留港口名（语义进 tooltip）；

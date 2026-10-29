@@ -10,6 +10,7 @@
 | --- | --- |
 | `test_settings_round_trip() -> void` | L19 |
 | `test_telemetry_settings_round_trip() -> void` | L36 |
+| `test_update_settings_defaults_and_round_trip() -> void` | L61 |
 
 ## 契约与约束
 - 期望值来自 `docs/design/TELEMETRY.md` §2：telemetry 默认 false、非法 endpoint 回退 `TelemetryService.DEFAULT_ENDPOINT`、token 默认空串。

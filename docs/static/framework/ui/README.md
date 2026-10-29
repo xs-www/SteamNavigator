@@ -47,6 +47,8 @@
 | `components/sn_supply_card.gd` | 单种补给品的决策卡：存量条、可补上限、价格、港存、预计续航和购买操作；信息行已图标化（图标 + 数值，字段名只进 tooltip）。 | [查看](./components/sn_supply_card.gd.md) |
 | `components/sn_supply_card.tscn` | 框架源文件：sn_supply_card.tscn | 本页 |
 | `components/sn_task_tracker.gd` | HUD 任务追踪条（阶段 4.6 Phase A）——显示 `task.view.active_task` 的类别、 | [查看](./components/sn_task_tracker.gd.md) |
+| `components/sn_update_dialog.gd` | 主菜单的更新对话框：只负责把 `UpdateService` 的 state 映射成文案 / 进度 / 按钮，操作以信号交给 Shell，不访问网络与文件。 | [查看](./components/sn_update_dialog.gd.md) |
+| `components/sn_update_dialog.tscn` | 主菜单「游戏更新」对话框的场景骨架：遮罩 + 居中面板（标题 / 版本 / 说明 / 进度条 / 状态 / 下载 / 取消 / 重启 / 稍后）；`sn_update_dialog.gd` 只把 `UpdateService` 的 state 映成文案与可见性，操作以信号交给 Shell。 | [查看](./components/sn_update_dialog.tscn.md) |
 | `components/sn_voyage_confirm.gd` | 海图内的出航确认弹窗（阶段 4.3.4 / U7）。以半透明遮罩 + 居中面板覆盖海图， | [查看](./components/sn_voyage_confirm.gd.md) |
 | `components/sn_voyage_confirm.tscn` | 海图内的统一出航确认弹窗场景（P0 场景化，契约见 `docs/specs/UI_SCENE_MIGRATION.md`）：全屏遮罩 + 居中钢框面板，静态骨架由本场景持有，`sn_voyage_confirm.gd` 只负责文本、估值/阻断行、策略项与信号。 | [查看](./components/sn_voyage_confirm.tscn.md) |
 | `components/sn_weapon_row.gd` | 船厂武器分类里的可拖行武器条目：显示本地化武器名、等级 / 重量 / 伤害与来源标签，仓库武器 / 购买候选都可通过它拖到蓝图炮位或右侧槽位卡；可选行内操作按钮（安装到指定炮位、购买并安装）。 | [查看](./components/sn_weapon_row.gd.md) |

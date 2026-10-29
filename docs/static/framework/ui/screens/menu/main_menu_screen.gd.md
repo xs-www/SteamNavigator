@@ -10,7 +10,8 @@
 | --- | --- |
 | `MainMenuScreen` | L1 |
 | `action_requested (signal)` | L28 |
-| `bind(vm: Dictionary, translate: Callable) -> void` | L33 |
+| `bind(vm: Dictionary, translate: Callable) -> void` | L35 |
+| `set_update_state(state: Dictionary) -> void` | L95 |
 
 - 关键依赖：`app.view` 启动状态、`SNBadge`、`SNSkin`、纹理化 Theme
 

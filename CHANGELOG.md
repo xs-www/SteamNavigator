@@ -3,6 +3,25 @@
 > 只记录有意义的功能与变更，不写逐条流水账；实现细节见 git 历史。
 > 发布约定：打 `v*` tag 前把 [todo.md](todo.md) 的 `Recently Completed` 按版本归并到这里，并从 todo 移除。
 
+## [0.2.0-dev.5] — 2026-10-29
+
+### Added
+
+- **游戏内自动更新（Windows）**：主菜单新增「检查更新」与更新对话框。`UpdateService` 读取网站 `GET /api/site/update`，用 `config/install.json` 的 tag / engine / core SHA-256 判断更新粒度：只有内容变化时下载约 40 MB 的 core 包；本体变化时下载约 84 MB 平台 ZIP，用 `ZIPReader` 只解压 `SteamNavigator.exe` 与 core 包，运行中 exe 改名备份后自替换，重启生效。所有下载先写 `*.part` 并校验字节数与 SHA-256；失败保留旧版本，可重试，不阻塞启动。`UpdateApplier` 在 Bootstrap 扫描模组前替换 core、写 `install.json`、清理 `.old` 备份。契约见 [AUTO_UPDATE.md](docs/design/AUTO_UPDATE.md)
+- 发布流水线生成 `update-manifest.json`（`schema=1`、tag、构建时间、engine/core/package 的 SHA-256/大小）与每个平台包内的 `config/install.json`；`SHA256SUMS.txt` 覆盖清单；`site_api` 镜像清单 + core 包 + Windows ZIP，并提供 `/api/site/update`（清单哈希必须与 `SHA256SUMS.txt` 交叉一致，否则 503 回退手动更新）
+- 成品冒烟新增 `config/install.json` 校验：schema/tag、engine/core 哈希必须与包内实际文件一致，防止更新器元数据错位
+
+### Changed
+
+- `config/config.json` 新增 `update_endpoint` / `auto_check_updates`（默认官方接口、自动检查开启）；`SettingsService` 持久化并在旧配置缺键时补默认值
+- 主菜单状态行新增「检查更新」ghost 按钮，显示检查中 / 发现新版本 / 下载进度 / 待重启 / 失败重试；不改变原有五个入口按钮的文本、顺序与尺寸
+- `README.md`、`WEBSITE.md` 与 `AUTO_UPDATE.md` 记录自动更新链路、接口与验收方式
+
+### Fixed
+
+- 更新应用对同名 core 包先备份再落新包，删备份时不再误删新包（本地 e2e 发现并覆盖同名回归）
+- 更新应用与 `install.json` 引擎哈希不匹配时丢弃 pending，避免新内容混进旧框架启动
+
 ## [0.2.0-dev.4-fixed] — 2026-10-29
 
 ### Fixed

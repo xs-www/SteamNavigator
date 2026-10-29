@@ -28,6 +28,8 @@ extends VBoxContainer
 signal action_requested(action: StringName, params: Dictionary)
 
 var _tr: Callable
+var _update_button: Button = null
+var _update_state: Dictionary = {}
 
 
 func bind(vm: Dictionary, translate: Callable) -> void:
@@ -40,6 +42,15 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	status.text = _loc(String(vm.get("status_key", "ui.status.ok")), "")
 	status.tone = int(vm.get("status_tone", SNBadge.Tone.NEUTRAL))
 	top_row.add_child(status)
+	var update := Button.new()
+	update.name = "UpdateButton"
+	update.text = _loc("ui.update.check", "检查更新")
+	update.theme_type_variation = &"SNGhostButton"
+	update.icon = SNSkin.icon("status_time")
+	update.add_theme_constant_override("icon_max_width", 20)
+	update.pressed.connect(func(): action_requested.emit(&"check_update", {}))
+	top_row.add_child(update)
+	_update_button = update
 	var diagnostics := Button.new()
 	diagnostics.text = _loc("ui.button.log", "Diagnostics")
 	diagnostics.theme_type_variation = &"SNGhostButton"
@@ -77,6 +88,41 @@ func bind(vm: Dictionary, translate: Callable) -> void:
 	column.add_child(_menu_button(_loc("ui.menu.settings", "设置"), &"open", {"screen": "settings"}, false, false, "nav_intelligence"))
 	column.add_child(_menu_button(_loc("ui.menu.quit", "退出游戏"), &"quit", {}, false, false, "status_anchor"))
 	var right_spacer := Control.new(); right_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.add_child(right_spacer)
+	_render_update_state()
+
+
+## 更新状态由 Shell 的 UpdateService 推送；只改状态行按钮，不重建入口按钮列。
+func set_update_state(state: Dictionary) -> void:
+	_update_state = state.duplicate(true)
+	_render_update_state()
+
+
+func _render_update_state() -> void:
+	if _update_button == null or not is_instance_valid(_update_button):
+		return
+	var phase := String(_update_state.get("phase", "idle"))
+	var tag := String(_update_state.get("tag", ""))
+	var progress := int(round(float(_update_state.get("progress", 0.0)) * 100.0))
+	var text := _loc("ui.update.check", "检查更新")
+	var disabled := false
+	match phase:
+		"checking":
+			text = _loc("ui.update.checking", "检查更新中……")
+			disabled = true
+		"downloading":
+			text = _loc("ui.update.downloading", "更新下载中 %d%%") % progress
+			disabled = true
+		"available":
+			text = _loc("ui.update.available", "发现新版本 %s") % tag
+		"staged":
+			text = _loc("ui.update.staged", "重启以完成更新")
+		"up_to_date":
+			text = _loc("ui.update.up_to_date_short", "已是最新版本")
+		"error":
+			text = _loc("ui.update.failed_short", "更新失败，点击重试")
+	_update_button.text = text
+	_update_button.disabled = disabled
+	_update_button.tooltip_text = String(_update_state.get("error", ""))
 
 
 func _menu_button(text: String, action: StringName, params: Dictionary, disabled: bool = false, primary: bool = false, icon_id: String = "") -> Button:
@@ -94,4 +140,5 @@ func _label(text: String, size: int, color: Color) -> Label:
 func _loc(key: String, fallback: String) -> String:
 	var text := String(_tr.call(key)) if _tr.is_valid() else fallback; return fallback if text.is_empty() or text == key else text
 func _clear() -> void:
+	_update_button = null
 	for child in get_children(): remove_child(child); child.free()

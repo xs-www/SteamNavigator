@@ -4,5 +4,7 @@
   "autosave": true,
   "telemetry": false,
   "telemetry_endpoint": "https://steamnavigator.playthought.cn/api/telemetry/session",
-  "telemetry_token": ""
+  "telemetry_token": "",
+  "update_endpoint": "https://steamnavigator.playthought.cn/api/site/update",
+  "auto_check_updates": true
 }

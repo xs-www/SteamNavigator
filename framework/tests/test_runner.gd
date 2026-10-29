@@ -58,6 +58,7 @@ const SUITE_PATHS := [
 	"res://framework/tests/cases/test_ship_modules.gd",
 	"res://framework/tests/cases/test_settings.gd",
 	"res://framework/tests/cases/test_telemetry.gd",
+	"res://framework/tests/cases/test_update_service.gd",
 	"res://framework/tests/cases/test_contract_flow.gd",
 	"res://framework/tests/cases/test_contract_refresh.gd",
 	"res://framework/tests/cases/test_map_constraints.gd",

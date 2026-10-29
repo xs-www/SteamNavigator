@@ -56,3 +56,20 @@ func test_telemetry_settings_round_trip() -> void:
 	assert_eq(reloaded.telemetry_endpoint(), TelemetryService.DEFAULT_ENDPOINT,
 		"an invalid endpoint is normalized back to the default before saving")
 	_cleanup(directory)
+
+
+func test_update_settings_defaults_and_round_trip() -> void:
+	var directory := "user://test_settings_update"
+	_cleanup(directory)
+	var service := SettingsService.load_settings(directory + "/config.json", "res://config/config.json")
+	assert_true(service.auto_check_updates(), "auto update checks default to on")
+	assert_eq(service.update_endpoint(), UpdateService.DEFAULT_ENDPOINT, "default update endpoint is the official one")
+	service.set_auto_check_updates(false)
+	service.set_update_endpoint("http://127.0.0.1:8088/api/site/update")
+	assert_true(bool(service.save()["ok"]), "update settings save")
+	var reloaded := SettingsService.load_settings(directory + "/config.json", "res://config/config.json")
+	assert_false(reloaded.auto_check_updates(), "auto update toggle round-trips")
+	assert_eq(reloaded.update_endpoint(), "http://127.0.0.1:8088/api/site/update", "update endpoint round-trips")
+	reloaded.set_update_endpoint("ftp://example.invalid/update")
+	assert_eq(reloaded.update_endpoint(), UpdateService.DEFAULT_ENDPOINT, "invalid update endpoint falls back to default")
+	_cleanup(directory)

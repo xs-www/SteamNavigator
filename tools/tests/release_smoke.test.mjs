@@ -5,10 +5,14 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
-import { READY_MARKER, isolatedEnvironment, isFatalStartupError, parseArguments, runProcess, verifyStartup } from "../check_release_smoke.mjs";
+import { READY_MARKER, isolatedEnvironment, isFatalStartupError, parseArguments, runProcess, verifyInstallMetadata, verifyStartup } from "../check_release_smoke.mjs";
 
 const execute = (source, options) => runProcess(process.execPath, ["-e", source], options);
+const sha = (buffer) => crypto.createHash("sha256").update(buffer).digest("hex");
 
 test("a real child process must exit cleanly after reporting main-menu readiness", async () => {
   const result = await execute(`console.log(${JSON.stringify(READY_MARKER)})`);
@@ -64,6 +68,41 @@ test("all player-data roots are isolated without duplicate Windows variable spel
   for (const name of ["HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"]) {
     assert.ok(env[name] === root || env[name].startsWith(root + path.sep), name);
     assert.notEqual(env[name], "player");
+  }
+});
+
+test("install.json metadata must match the shipped executable and core pack", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "sn-install-metadata-"));
+  const directory = path.join(root, "SteamNavigator");
+  const executable = path.join(directory, "SteamNavigator.exe");
+  const core = path.join(directory, "mods", "core-1.0.0.snavmod.zip");
+  const install = path.join(directory, "config", "install.json");
+  const writeInstall = async (engineSha = null, coreSha = null) => {
+    await fs.mkdir(path.dirname(install), { recursive: true });
+    await fs.writeFile(install, JSON.stringify({
+      schema: 1,
+      tag: "v0.2.0-dev.5",
+      published_at: "2026-10-30T05:00:00Z",
+      engine_sha256: engineSha ?? sha(await fs.readFile(executable)),
+      core_sha256: coreSha ?? sha(await fs.readFile(core)),
+    }));
+  };
+  try {
+    await fs.mkdir(path.dirname(core), { recursive: true });
+    await fs.writeFile(executable, "engine bytes");
+    await fs.writeFile(core, "core bytes");
+    await writeInstall();
+    assert.equal((await verifyInstallMetadata(directory, executable, "windows")).tag, "v0.2.0-dev.5");
+    await writeInstall("0".repeat(64));
+    await assert.rejects(() => verifyInstallMetadata(directory, executable, "windows"), /engine hash/);
+    await writeInstall(null, "0".repeat(64));
+    await assert.rejects(() => verifyInstallMetadata(directory, executable, "windows"), /core hash/);
+    await fs.writeFile(install, JSON.stringify({ schema: 1, tag: "", engine_sha256: "", core_sha256: "" }));
+    await assert.rejects(() => verifyInstallMetadata(directory, executable, "windows"), /schema=1/);
+    await fs.rm(install);
+    await assert.rejects(() => verifyInstallMetadata(directory, executable, "windows"), /missing config\/install.json/);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
   }
 });
 

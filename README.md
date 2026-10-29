@@ -12,6 +12,7 @@
 | 了解当前做到哪、最近交付了什么 | [docs/design/PROJECT_STATUS.md](docs/design/PROJECT_STATUS.md)、[todo.md](todo.md) |
 | 了解版本变更 | [CHANGELOG.md](CHANGELOG.md) |
 | 看 / 改游戏官网 | [website/README.md](website/README.md)、[docs/design/WEBSITE.md](docs/design/WEBSITE.md) |
+| 改自动更新 / 发布清单 | [AUTO_UPDATE.md](docs/design/AUTO_UPDATE.md) |
 | 改游玩数据上传（设置项 / 日志回传） | [TELEMETRY.md](docs/design/TELEMETRY.md)（契约）、[website/server/](website/server/)（接收端） |
 | 改代码前定位文件 / 契约 | [docs/static/README.md](docs/static/README.md)（静态代码文档） |
 | 改内容、类型或 Schema | [content_types.json](content_types.json)、[ENTITY_CONTRACT_V2.md](docs/design/ENTITY_CONTRACT_V2.md)、[CONTENT_SCHEMA_V2_MIGRATION.md](docs/design/CONTENT_SCHEMA_V2_MIGRATION.md) |
@@ -82,6 +83,8 @@ godot --headless --path . --script res://sdk/pack_mod.gd -- --source=dev_mods/co
 推送 `v*` tag 会触发 [.github/workflows/release.yml](.github/workflows/release.yml)：跑测试、导出 Windows/Linux、Runtime 校验、打包 Core、生成 SHA256，并创建 GitHub Release。带 `-dev.` 的 tag 自动标记为预发布。
 
 发布前会解压最终 ZIP 并原生启动包内可执行文件做冒烟验证：Linux 在构建 runner 上跑，Windows 在 `windows-latest` 上跑；要求退出码 0、无启动脚本错误并打印 `[release-smoke] main-menu-ready`，任一条件不满足都不会创建 Release。
+
+发布同时生成 `update-manifest.json` 与包内 `config/install.json`，游戏内更新器（主菜单「检查更新」）据此只下载变化的部分：仅内容变化时约 40 MB，本体变化时自动下载约 84 MB、解压并自替换，详见 [AUTO_UPDATE.md](docs/design/AUTO_UPDATE.md)。
 
 ### 校验第三方模组
 

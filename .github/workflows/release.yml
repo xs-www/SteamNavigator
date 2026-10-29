@@ -107,15 +107,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs
+          node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/release-data.test.mjs website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs website/tests/site-api-update.test.mjs
 
       # The release smoke gate decides whether a ZIP may be published, so its
       # helper logic (marker parsing, isolated user dir, timeout) is release tooling.
+      # The update-manifest generator is likewise part of the published contract:
+      # clients refuse to install anything whose manifest fields or hashes drift.
       - name: Run release tooling tests
         shell: bash
         run: |
           set -euo pipefail
-          node --test tools/tests/release_smoke.test.mjs
+          node --test tools/tests/release_smoke.test.mjs tools/tests/update_manifest.test.mjs
 
       # Fails the release when the loose core mod is missing a declared
       # content file, localization file or asset (for example an untracked GLB),
@@ -223,6 +225,30 @@ jobs:
             cp "${CORE_PACK}" "dist/build/${target}/mods/"
             cp config/config.json "dist/build/${target}/config/config.json"
           done
+          # The in-game updater trusts config/install.json (built-in tag + engine/core
+          # hashes) instead of re-hashing a 115 MB exe on every launch. It is written
+          # before packaging so it ships inside the platform ZIPs.
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import path from "node:path";
+            import crypto from "node:crypto";
+            const sha = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+            const tag = process.env.GITHUB_REF_NAME;
+            const published = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+            const core = fs.readdirSync("dist/mods").find((name) => /^core-.*\.snavmod\.zip$/.test(name));
+            if (!core) throw new Error("core pack missing");
+            const targets = { windows: "SteamNavigator.exe", linux: "SteamNavigator.x86_64" };
+            for (const [target, exe] of Object.entries(targets)) {
+              const install = {
+                schema: 1,
+                tag,
+                published_at: published,
+                engine_sha256: sha(`dist/build/${target}/${exe}`),
+                core_sha256: sha(path.join("dist/mods", core)),
+              };
+              fs.writeFileSync(`dist/build/${target}/config/install.json`, JSON.stringify(install, null, 2) + "\n");
+            }
+          '
 
       - name: Package release assets
         shell: bash
@@ -236,9 +262,24 @@ jobs:
           cp -a dist/build/linux/. "${STAGE}/linux/SteamNavigator/"
           (cd "${STAGE}/windows" && zip -q -r "../../release/SteamNavigator-${TAG}-windows.zip" "SteamNavigator")
           (cd "${STAGE}/linux" && zip -q -r "../../release/SteamNavigator-${TAG}-linux.zip" "SteamNavigator")
-          # The subshells above return to the repo root, not to dist/: keep the
-          # checksum inputs and the sums file under dist/release.
-          sha256sum dist/release/*.zip dist/mods/*.snavmod.zip > dist/release/SHA256SUMS.txt
+          ls -lh dist/release dist/mods
+
+      # The in-game updater downloads this manifest before anything else, so it is
+      # generated after the platform ZIPs and before the checksum gate. It is then
+      # folded into SHA256SUMS.txt (the manifest cannot contain its own hash): the
+      # publish job's `sha256sum -c` therefore validates the manifest too.
+      - name: Build update manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/build_update_manifest.mjs \
+            --tag "$GITHUB_REF_NAME" \
+            --published-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --engine dist/build/windows/SteamNavigator.exe \
+            --core "$(ls dist/mods/*.snavmod.zip)" \
+            --package dist/release/SteamNavigator-${GITHUB_REF_NAME}-windows.zip \
+            --output dist/release/update-manifest.json
+          sha256sum dist/release/*.zip dist/release/update-manifest.json dist/mods/*.snavmod.zip > dist/release/SHA256SUMS.txt
           ls -lh dist/release dist/mods
 
       # The archive players download is the release artifact, so the smoke gate runs
@@ -312,6 +353,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             dist/release/*.zip
+            dist/release/update-manifest.json
             dist/release/SHA256SUMS.txt
             dist/mods/*.snavmod.zip
       - name: Sync website release data

@@ -1,12 +1,13 @@
 class_name SettingsService
 extends RefCounted
 ## @static-doc
-## 作用：持久化 UI/玩家设置（语言、自动存档、游玩数据上传），负责读取仓库默认 `config/config.json`、写用户配置并在发布版使用 exe 旁的 `config/config.json`。
+## 作用：持久化 UI/玩家设置（语言、自动存档、游玩数据上传、自动更新），负责读取仓库默认 `config/config.json`、写用户配置并在发布版使用 exe 旁的 `config/config.json`。
 ##
-## - 关键依赖：`JsonUtils`（解析/canonical 序列化）、`Result`（结构化失败）、`TelemetryService`（endpoint 规范化）
+## - 关键依赖：`JsonUtils`（解析/canonical 序列化）、`Result`（结构化失败）、`TelemetryService`（endpoint 规范化）、`UpdateService`（更新 endpoint 规范化）
 ##
 ## ## 契约与约束
 ## - `docs/design/TELEMETRY.md` §2：`telemetry` 默认 `false`；`telemetry_endpoint` 空/非法时回退 `TelemetryService.DEFAULT_ENDPOINT`；`telemetry_token` 默认空串、非空时随请求发送 `X-SN-Telemetry-Token`。
+## - `docs/design/AUTO_UPDATE.md` §6：`update_endpoint` 空/非法时回退 `UpdateService.DEFAULT_ENDPOINT`；`auto_check_updates` 默认 `true`；旧配置缺键时补默认值而不是报错。
 ## - 读设置：优先用户配置，其次发布版 exe 旁配置，最后 `res://config/config.json`；写入失败（目录只读）时发布版回退 `user://config/config.json`，设置不丢。
 ## - `load()` 之后所有字段都经过 `_normalize()`，旧配置缺少 telemetry 键时补默认值而不是报错。
 ##
@@ -91,6 +92,10 @@ func _normalize() -> void:
 		String(data.get("telemetry_endpoint", ""))
 	)
 	data["telemetry_token"] = String(data.get("telemetry_token", ""))
+	# 自动更新（docs/design/AUTO_UPDATE.md §6）：endpoint 允许被便携 config 覆盖，非法值回退官方地址；
+	# 自动检查默认开启，玩家可在旧配置里缺键时安全升级。
+	data["update_endpoint"] = UpdateService.normalize_endpoint(String(data.get("update_endpoint", "")))
+	data["auto_check_updates"] = bool(data.get("auto_check_updates", true))
 
 
 func locale() -> String:
@@ -132,6 +137,22 @@ func set_telemetry_endpoint(value: String) -> void:
 
 func set_telemetry_token(value: String) -> void:
 	data["telemetry_token"] = value
+
+
+func update_endpoint() -> String:
+	return UpdateService.normalize_endpoint(String(data.get("update_endpoint", "")))
+
+
+func auto_check_updates() -> bool:
+	return bool(data.get("auto_check_updates", true))
+
+
+func set_update_endpoint(value: String) -> void:
+	data["update_endpoint"] = UpdateService.normalize_endpoint(value)
+
+
+func set_auto_check_updates(value: bool) -> void:
+	data["auto_check_updates"] = value
 
 
 func save() -> Dictionary:

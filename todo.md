@@ -70,6 +70,8 @@
 
 - 已按版本归并到 [CHANGELOG.md](CHANGELOG.md)（最新 [0.2.0-dev.4]）；后续完成项继续记录在本节。
 
+- 游戏内自动更新（2026-10-29）：主菜单「检查更新」+ 更新对话框；`UpdateService` 按 `update-manifest.json` 与 `config/install.json` 的 engine/core SHA 决策——内容变化只下 ~40 MB core 包，本体变化下 ~84 MB 平台 ZIP 并用 `ZIPReader` 只解压 exe/core，运行中 exe 备份改名后自替换，重启生效；`UpdateApplier` 启动时替换 core、写 install.json、清 `.old`；发布流程生成清单 + install.json，`site_api` 新增 `GET /api/site/update` 并镜像三个文件，冒烟校验 install.json 与包内文件一致。验证：本地 e2e（全量自替换+重启、仅内容更新、篡改哈希拒绝）通过；Godot 全量、Node 68+、静态文档与 schema 门禁通过。
+
 - Windows 包主菜单打不开修复 + 发布门禁（2026-10-29）：复现 `v0.2.0-dev.4` 官网包——`sn_carry_ghost.tscn` 的图标引用 `res://dev_mods/...` 被导出排除，`main.gd` 预加载失败、主菜单不出现且 Godot 仍退出 0；改用 `assets/ui/icons/item_fallback.svg` 重新打包，新增 `tools/check_release_smoke.mjs` + `tools/tests/release_smoke.test.mjs`（解压成品、隔离用户目录原生启动、`[release-smoke] main-menu-ready` 标记 + 错误扫描），`release.yml` 拆 `build` / `smoke-windows` / `publish` 两平台原生冒烟后才发布；`site_api` 镜像校验改按 basename 匹配 `dist/release/` 清单路径、清单异常不提供镜像、重启后复验 SHA。验证：dev.4 实物包被门禁拒绝、修复包通过；site-api-mirror 7/7、release-smoke 测试 10/10。
 
 - 图标轮 + UI 收尾（2026-10-28）：30 枚皮肤图标接入 HUD / 导航 / 市场 / 委托 / 酒馆；HUD chip 改「图标 + 数值」（字段名进 tooltip，`_stat_chip` 单行化）、导航为「图标 + 本地化页名」（64×36、`nav_screen` meta，剧情引导/测试按 meta 解析）；第二轮反馈移除与顶部完全重复的底部状态条与详细总览抽屉（等待 / 航行记录 / 详细总览留在 2D 总览页，3D 主视图隐藏页脚）；市场只显示可买货物（卖出仍走整块面板落点）；市场账册摘要改单行 icon chip、删长说明与商品分类副标题、补给卡字段名进 tooltip；委托卡 4 字段与报酬行图标化、删重复「截止」行与声望 badge；酒馆删纯说明段落。内容侧煤 / 水 / 锅炉钢板 / 委托货箱 4 个商品改用 `icon.ui.*`，早期 `icon.coal` / `icon.money` / `icon.water` PNG 与 2 个被替换 SVG 退役（Core 资产键 179→174）。验证：Godot 全量 735/735、`check_content_schema_v2`、SNModMaker 65/65、`gen_static_docs --check`；截图 `docs/design/screenshots/skin/1440x900/*`。

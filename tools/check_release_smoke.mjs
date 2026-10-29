@@ -9,9 +9,13 @@
 //   SCRIPT ERROR / 其他 ERROR（`ERROR: N resources still in use at exit` 这类引擎退出期资源计数除外）、
 //   缺少 `[release-smoke] main-menu-ready` 中任一条件都失败，避免 Godot 脚本加载失败仍返回 0 的漏报。
 // - Windows 用 PowerShell Expand-Archive，Linux 用 unzip；只在与包相同的平台运行。临时文件始终清理。
+// - 同时校验 `config/install.json`（schema=1/tag、engine/core SHA-256 与包内实际文件一致）：游戏内更新器
+//   以它为本地版本依据，元数据错位会导致重复下载或漏更新。
 // @end-static-doc
 
 import { spawn } from "node:child_process";
+import crypto from "node:crypto";
+import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -131,6 +135,41 @@ async function extractArchive(archive, destination) {
   }
 }
 
+async function fileSha256(filePath) {
+  const hash = crypto.createHash("sha256");
+  for await (const chunk of createReadStream(filePath)) hash.update(chunk);
+  return hash.digest("hex");
+}
+
+/**
+ * The in-game updater trusts config/install.json instead of re-hashing a 115 MB
+ * exe on every launch, so a mismatch between it and the shipped files would make
+ * the client loop or skip a release. Verify it as part of the release smoke.
+ */
+export async function verifyInstallMetadata(directory, executablePath, platform) {
+  const installPath = path.join(directory, "config", "install.json");
+  let install;
+  try {
+    install = JSON.parse(await fs.readFile(installPath, "utf8"));
+  } catch (error) {
+    throw new Error(`Release is missing config/install.json: ${error.message}`);
+  }
+  if (install.schema !== 1 || typeof install.tag !== "string" || install.tag.length === 0) {
+    throw new Error("config/install.json is missing schema=1 or a release tag");
+  }
+  const coreFile = (await fs.readdir(path.join(directory, "mods"))).find((name) => /^core-.+\.snavmod\.zip$/.test(name));
+  if (!coreFile) throw new Error("Release is missing the Core mod pack");
+  const engineSha = await fileSha256(executablePath);
+  const coreSha = await fileSha256(path.join(directory, "mods", coreFile));
+  if (install.engine_sha256 !== engineSha) {
+    throw new Error(`config/install.json engine hash does not match the ${platform} executable`);
+  }
+  if (install.core_sha256 !== coreSha) {
+    throw new Error("config/install.json core hash does not match the shipped Core mod pack");
+  }
+  return install;
+}
+
 export async function checkReleaseSmoke({ archive, platform, timeoutMs = 60_000 }) {
   const expectedHost = { windows: "win32", linux: "linux" }[platform];
   if (!expectedHost || process.platform !== expectedHost) {
@@ -147,6 +186,7 @@ export async function checkReleaseSmoke({ archive, platform, timeoutMs = 60_000 
     await fs.access(path.join(directory, "config", "config.json"));
     const mods = await fs.readdir(path.join(directory, "mods"));
     if (!mods.some((name) => /^core-.+\.snavmod\.zip$/.test(name))) throw new Error("Release is missing the Core mod pack");
+    await verifyInstallMetadata(directory, executable, platform);
     if (platform === "linux") await fs.chmod(executable, 0o755);
     const userDirectory = path.join(temporary, "user");
     const env = isolatedEnvironment(userDirectory);

@@ -34,6 +34,11 @@ extends Control
 ##   MainMenuScreen 脚本/ready/按钮树；成功打印 `[release-smoke] main-menu-ready`，再走
 ##   `_graceful_quit(exit_code)` 的真实退出路径，检查结果只通过退出码表达。
 ##   未传参数时不执行检查；不创建新局、不修改正常启动流程。
+## - 自动更新（`docs/design/AUTO_UPDATE.md`）：`_setup_update_service()` 只在发布版（`OS.has_feature("template")`）
+##   创建 `UpdateService`；主菜单的 `UpdateButton` 只显示状态，「游戏更新」对话框由 Shell 持有并只转发意图。
+##   `_on_update_restart()` 启动自替换后的新 exe 再走 `_graceful_quit()`。编辑器与无头测试永不联网。
+##   `-- --update-selftest` 是发布包专用内部验收钩子：自动 check → available 时 download，staged/up_to_date
+##   时打印 `[update-selftest]` 后退出，供 `tools/update_e2e.ps1` 在真实安装目录验证下载/替换/重启。
 ##
 ## ## HUD 图标化 / 文字精简（2026-10-28 图标轮）
 ## - 顶部 chrome 的品牌列删掉 9 px `ui.label.port` 小标题，只留港口名（语义进 tooltip）；
@@ -191,6 +196,7 @@ const STORY_FOCUS_SCRIPT := preload("res://framework/ui/components/sn_focus_over
 const TASK_TRACKER_SCRIPT := preload("res://framework/ui/components/sn_task_tracker.gd")
 const VICTORY_SCREEN_SCENE := preload("res://framework/ui/screens/flow/victory_screen.tscn")
 const MAIN_MENU_SCREEN_SCENE := preload("res://framework/ui/screens/menu/main_menu_screen.tscn")
+const UPDATE_DIALOG_SCENE := preload("res://framework/ui/components/sn_update_dialog.tscn")
 const NEW_GAME_SCREEN_SCENE := preload("res://framework/ui/screens/menu/new_game_screen.tscn")
 const MODS_SCREEN_SCENE := preload("res://framework/ui/screens/menu/mods_screen.tscn")
 const SETTINGS_SCREEN_SCENE := preload("res://framework/ui/screens/menu/settings_screen.tscn")
@@ -300,6 +306,9 @@ var _market_icon_cache: Dictionary = {}
 ## 拿起手势光标幽灵 / 交互处浮出提示：挂在 Shell 的全窗 `HintLayer` 浮层里，位于
 ## `PageScroll` 之外（页面边距与滚动都裁不到），在转场淡出层之下。
 var _hint_layer: Control = null
+## 游戏内更新（docs/design/AUTO_UPDATE.md）：发布版才有实例；编辑器/测试不联网。
+var _update_service: UpdateService = null
+var _update_dialog: Control = null
 var _carry_ghost: Control = null
 var _interaction_hint: Control = null
 ## True while a player-triggered command executes: `_set_status` uses it so only
@@ -428,6 +437,9 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	_settings = SettingsService.load_settings()
 	_refresh()
+	_setup_update_service()
+	if OS.get_cmdline_user_args().has("--update-selftest"):
+		_run_update_selftest.call_deferred()
 	if OS.get_cmdline_user_args().has("--release-smoke"):
 		_report_release_smoke.call_deferred()
 
@@ -1513,6 +1525,8 @@ func _build_status_banner() -> void:
 
 
 func _build_menu(app: Dictionary) -> void:
+	if _menu_screen != "main":
+		_hide_update_dialog()
 	var report: Dictionary = app.get("report", {})
 	if not report.get("errors", []).is_empty():
 		var error_panel := _panel()
@@ -1539,6 +1553,137 @@ func _screen_main_menu(app: Dictionary) -> void:
 	vm["status_tone"] = _status_badge_tone(app)
 	_mount_menu_screen(MAIN_MENU_SCREEN_SCENE, vm)
 	_build_status_banner()
+
+
+## ---------------------------------------------------------------------------
+## Auto update（docs/design/AUTO_UPDATE.md）
+## ---------------------------------------------------------------------------
+
+
+## 发布版才创建更新服务；编辑器与无头测试保持零网络。
+func _setup_update_service() -> void:
+	if not OS.has_feature("template") or _settings == null or _update_service != null:
+		return
+	_update_service = UpdateService.new()
+	_update_service.name = "UpdateService"
+	add_child(_update_service)
+	_update_service.configure(_settings.update_endpoint(), _settings.auto_check_updates())
+	_update_service.state_changed.connect(_on_update_state_changed)
+	_update_service.restart_requested.connect(_on_update_restart)
+	var selftest := OS.get_cmdline_user_args().has("--update-selftest")
+	if _settings.auto_check_updates() and not selftest:
+		get_tree().create_timer(2.0).timeout.connect(func() -> void:
+			if _update_service != null and is_instance_valid(_update_service):
+				_update_service.check(false))
+
+
+## 状态行按钮 / 对话框 / 状态条共用同一份 state。
+func _on_update_state_changed(state: Dictionary) -> void:
+	if _update_dialog != null and is_instance_valid(_update_dialog) and _update_dialog.visible:
+		_update_dialog.call("update", state)
+	if _menu_screen == "main":
+		var menu := _root_box.get_node_or_null("MainMenuScreen")
+		if menu is MainMenuScreen:
+			(menu as MainMenuScreen).set_update_state(state)
+	match String(state.get("phase", "")):
+		"available":
+			_set_status(_tr("ui.update.available_status", "发现新版本 %s，可在主菜单更新") % String(state.get("tag", "")), false)
+		"staged":
+			_set_status(_tr("ui.update.staged_status", "更新已下载完成，重启游戏生效"), false)
+
+
+func _on_check_update() -> void:
+	if _update_service == null:
+		_set_status(_tr("ui.update.unsupported", "当前版本不支持自动更新"), true)
+		return
+	var snapshot := _update_service.snapshot()
+	if _menu_screen != "main":
+		_on_menu("main")
+	_show_update_dialog(_update_service.snapshot())
+	if String(snapshot.get("phase", "")) not in ["available", "downloading", "staged"]:
+		_update_service.check(true)
+
+
+func _show_update_dialog(state: Dictionary) -> void:
+	if _update_dialog == null or not is_instance_valid(_update_dialog):
+		_update_dialog = UPDATE_DIALOG_SCENE.instantiate()
+		_update_dialog.name = "UpdateDialog"
+		add_child(_update_dialog)
+		_update_dialog.download_pressed.connect(_on_update_download)
+		_update_dialog.cancel_pressed.connect(_on_update_cancel)
+		_update_dialog.restart_pressed.connect(_on_update_restart)
+		_update_dialog.close_pressed.connect(_hide_update_dialog)
+	move_child(_update_dialog, get_child_count() - 1)
+	_update_dialog.call("bind", state, Callable(self, "_tr"))
+	_update_dialog.visible = true
+
+
+func _hide_update_dialog() -> void:
+	if _update_dialog != null and is_instance_valid(_update_dialog):
+		_update_dialog.visible = false
+
+
+func _on_update_download() -> void:
+	if _update_service == null:
+		return
+	if String(_update_service.snapshot().get("phase", "")) == "available":
+		_update_service.download()
+	else:
+		_update_service.check(true)
+
+
+func _on_update_cancel() -> void:
+	if _update_service != null:
+		_update_service.cancel()
+
+
+## 新 exe 已就位（或 core 已暂存）：启动新进程后走正常退出清理。
+func _on_update_restart() -> void:
+	_hide_update_dialog()
+	var executable := OS.get_executable_path()
+	if executable.is_empty() or not FileAccess.file_exists(executable):
+		_set_status(_tr("ui.update.restart_manually", "更新已完成，请手动重新启动游戏"), true)
+		return
+	OS.create_process(executable, PackedStringArray())
+	_graceful_quit()
+
+
+## 发布包内部验收钩子（`-- --update-selftest`）：真实 HTTP/下载/解压/自替换链路自动跑一遍。
+## 只由本地 e2e 驱动脚本使用，正常启动不会触发。
+func _run_update_selftest() -> void:
+	if _update_service == null:
+		push_error("update selftest requires a release build")
+		_graceful_quit(1)
+		return
+	_update_service.state_changed.connect(_on_update_selftest_state)
+	get_tree().create_timer(0.5).timeout.connect(_start_update_selftest_check)
+	get_tree().create_timer(240.0).timeout.connect(_fail_update_selftest_timeout)
+
+
+func _start_update_selftest_check() -> void:
+	if _update_service != null:
+		_update_service.check(true)
+
+
+func _fail_update_selftest_timeout() -> void:
+	push_error("update selftest timed out")
+	_graceful_quit(1)
+
+
+func _on_update_selftest_state(state: Dictionary) -> void:
+	var phase := String(state.get("phase", ""))
+	print("[update-selftest] phase=", phase, " tag=", state.get("tag", ""), " error=", state.get("error", ""))
+	match phase:
+		"available":
+			_update_service.download()
+		"staged":
+			print("[update-selftest] staged")
+			_graceful_quit(0)
+		"up_to_date":
+			print("[update-selftest] up_to_date")
+			_graceful_quit(0)
+		"error":
+			_graceful_quit(1)
 
 
 func _screen_new_game(app: Dictionary) -> void:
@@ -1585,6 +1730,8 @@ func _mount_menu_screen(scene: PackedScene, view_model: Dictionary) -> void:
 	screen.bind(view_model, Callable(self, "_tr"))
 	screen.action_requested.connect(_on_menu_action)
 	_root_box.add_child(screen)
+	if screen is MainMenuScreen and _update_service != null:
+		(screen as MainMenuScreen).set_update_state(_update_service.snapshot())
 
 
 ## ---------------------------------------------------------------------------
@@ -3711,6 +3858,8 @@ func _on_menu_action(action: StringName, params: Dictionary) -> void:
 			_on_continue()
 		&"diagnostics":
 			_show_diagnostics()
+		&"check_update":
+			_on_check_update()
 		&"retry":
 			_retry_bootstrap()
 		&"quit":
@@ -3791,6 +3940,7 @@ func _graceful_quit(exit_code: int = 0) -> void:
 ## renderer is still alive. Deliberately network-free: telemetry finalize/upload is
 ## owned by `_finalize_telemetry()` so tests can tear down without real requests.
 func _prepare_quit() -> void:
+	_hide_update_dialog()
 	_presentation = null
 	_presentation_explore = {}
 	_presentation_voyage = {}

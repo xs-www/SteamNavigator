@@ -45,6 +45,7 @@
 | `team.html` | 开发团队页：页脚入口的团队与致谢页面，当前为空白占位，后续补充 PlayThought 工作室与 Steam Navigator 项目组信息。 | [查看](./team.html.md) |
 | `tests/release-data.test.mjs` | 官网 Release 版本数据生成器（`tools/build-release-data.mjs`）的 Node 测试：覆盖 latest/stable 选择、 | [查看](./tests/release-data.test.mjs.md) |
 | `tests/site-api-mirror.test.mjs` | 官网只读内容 API 的「最新 Windows zip 镜像」测试：覆盖后台流式下载 + SHA-256 校验、镜像可用后 | [查看](./tests/site-api-mirror.test.mjs.md) |
+| `tests/site-api-update.test.mjs` | 官网只读内容 API 的「游戏内自动更新」测试：覆盖 `update-manifest.json` 与 package / core 镜像、 | [查看](./tests/site-api-update.test.mjs.md) |
 | `tests/site-api.test.mjs` | 官网只读内容 API（`server/site_api.mjs`）的 Node 测试：覆盖 health / release 响应、5 分钟缓存与并发共享、 | [查看](./tests/site-api.test.mjs.md) |
 | `tests/telemetry-dashboard.test.mjs` | 本地游玩数据看板（`tools/telemetry_dashboard.mjs`）的 Node 测试（node:test，零第三方依赖）： | [查看](./tests/telemetry-dashboard.test.mjs.md) |
 | `tests/telemetry.test.mjs` | 游玩数据接收端 Node 测试（node:test，零第三方依赖）：覆盖 health、合法/非法上传、存储与索引、限流、令牌、方法/路径错误与 180 天保留清理。 | [查看](./tests/telemetry.test.mjs.md) |

@@ -11,6 +11,9 @@
 - `assets/data/release-data.js` 为生成物（GitHub Releases → 版本 / 日期 / 大小 / 下载直链），不得手改；
 下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充，
 运行时还会请求同域 `/api/site/release` 刷新到 GitHub 最新 Release（无需重新部署）。
+- `site-api` 同时提供游戏内自动更新接口 `GET /api/site/update`：镜像最新 Release 的 `update-manifest.json`、
+Windows zip 与 `core-*.snavmod.zip`，只返回通过 `SHA256SUMS.txt` 交叉校验的清单数据（契约
+`docs/design/AUTO_UPDATE.md` §4）。
 - 生产为三个镜像：nginx alpine 静态站（非 root / 8080）+ node 22 游玩数据接收端（非 root / 8090 / `/data` 数据卷）
 + node 22 只读内容 API（非 root / 8092 / 服务端缓存 GitHub Releases）；可选 `telemetry-dashboard` 看板镜像
 （非 root / 8091 / 只读数据卷，`--profile dashboard`）。

@@ -8,6 +8,9 @@
 - `assets/data/release-data.js` 为生成物（GitHub Releases → 版本 / 日期 / 大小 / 下载直链），不得手改；
   下载页与开发日志页通过 `assets/js/release.js` 的 `data-release` / `data-release-link` 契约自动填充，
   运行时还会请求同域 `/api/site/release` 刷新到 GitHub 最新 Release（无需重新部署）。
+- `site-api` 同时提供游戏内自动更新接口 `GET /api/site/update`：镜像最新 Release 的 `update-manifest.json`、
+  Windows zip 与 `core-*.snavmod.zip`，只返回通过 `SHA256SUMS.txt` 交叉校验的清单数据（契约
+  `docs/design/AUTO_UPDATE.md` §4）。
 - 生产为三个镜像：nginx alpine 静态站（非 root / 8080）+ node 22 游玩数据接收端（非 root / 8090 / `/data` 数据卷）
   + node 22 只读内容 API（非 root / 8092 / 服务端缓存 GitHub Releases）；可选 `telemetry-dashboard` 看板镜像
   （非 root / 8091 / 只读数据卷，`--profile dashboard`）。
@@ -59,10 +62,12 @@ website/
 │   └── img/            官网图片（含 MANIFEST.md 来源记录）
 ├── server/
 │   ├── telemetry.mjs   游玩数据接收端：路由 / 校验 / 限流 / 存储 / 保留清理
-│   └── site_api.mjs    官网只读内容 API：服务端缓存 GitHub Releases（/api/site/release）
+│   └── site_api.mjs    官网只读内容 API：缓存 GitHub Releases（/api/site/release）＋自动更新清单 / 文件镜像与 /api/site/update
 ├── tests/
 │   ├── telemetry.test.mjs  接收端 node:test 测试（零依赖）
 │   ├── site-api.test.mjs   内容 API node:test 测试（缓存 / 降级 / 503）
+│   ├── site-api-mirror.test.mjs  Windows 下载镜像 node:test 测试
+│   ├── site-api-update.test.mjs  自动更新清单镜像与 /api/site/update node:test 测试
 │   └── release-data.test.mjs  版本数据生成器 node:test 测试
 ├── tools/
 │   ├── build-wiki-data.mjs  Core 内容 → wiki-data.js
@@ -119,27 +124,36 @@ curl.exe http://127.0.0.1:8088/api/site/release
     workflow，所以同步放在发布流程末尾）；人工在 GitHub UI 发布的 Release 由
     `.github/workflows/website-release-data.yml` 处理，也可手动 `workflow_dispatch` 补同步。
 - **离线/API 失败**：`site-api` 依次使用旧缓存 → 镜像内静态文件；再失败才返回 503，页面保留静态值。
-- **测试**：`node --test website/tests/site-api.test.mjs website/tests/release-data.test.mjs`。
+- **测试**：`node --test website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs website/tests/site-api-update.test.mjs website/tests/release-data.test.mjs`。
 - **契约**：`latest` 取最新非 draft Release（官网目前发布预发布版本），`stable` 取最新正式版；
   平台链接只使用该 Release 的真实 assets，缺失时页面保留静态 fallback。
 - 版本时间线（`devlog.html` 的 `.timeline` 条目）仍人工维护，只自动同步页头版本与日期；
   首页不写版本，无需改动。
 
-### Windows 安装包镜像（只保留最新版）
+### Windows 安装包镜像与游戏内自动更新（只保留最新版）
 
 - `site-api` 刷新到新 Release 后，在后台把**最新 Windows zip** 流式下载到命名卷 `release-downloads`，
   校验字节数 + `SHA256SUMS.txt` 后暴露为 `/downloads/<tag>/<windows.zip>`；`website` 容器只读挂载同一卷，
   由 nginx 直接下发（支持 Range / 断点续传，tag 不可变 → 30 天缓存）。
+- 同一后台任务还镜像自动更新所需的 **`update-manifest.json`** 与 **`core-*.snavmod.zip`**，供
+  `GET /api/site/update` 返回（契约 `docs/design/AUTO_UPDATE.md` §4）。接口只使用与 `SHA256SUMS.txt`
+  交叉校验通过的清单：清单自身、package、core 的 SHA-256 必须一致、`schema` 为 1 且 tag 等于最新 Release，
+  否则返回 `503 { ok:false, error }`；engine 在 ZIP 内（无独立 sums 条目），游戏端解压后按清单哈希校验。
+- 镜像未就绪 / 下载未完成时，自动更新接口的 `files.package/core.url` 为空字符串，客户端用
+  `fallback_url`（GitHub 直链），页面与接口本身不受影响。
 - **只保留最新 tag 目录**：新版本下载成功后自动删除旧 tag（每个版本约 80 MB ≈ 磁盘占用）；历史版本下载
   仍走 GitHub——API 的 `data.downloads.windows.github_url` 与静态 `links.windows` 始终保留。
 - 下载未完成 / 校验失败 / 磁盘满：API 的 `downloads.windows.available=false`，前端自动回退 GitHub 直链，不影响页面。
-- 关闭镜像：`.env` 设 `SN_SITE_API_MIRROR_WINDOWS=0`；磁盘/带宽观测见下方「内存与资源」。
+- 关闭镜像：`.env` 设 `SN_SITE_API_MIRROR_WINDOWS=0`（自动更新接口仍可返回清单与 GitHub fallback）。
 - **修改 `assets/js/release.js` 后要同步提高下载页 / 开发日志页 script 的 `?v=`**：静态 JS 在 CDN 缓存 7 天，
   不换 query 的话已部署的旧脚本不会刷新。
 
 ```powershell
 # 抽查下载链接（替换为生成文件里的最新 tag/文件名）
 curl.exe -I https://github.com/xs-www/SteamNavigator/releases/download/<tag>/<filename>
+
+# 自动更新接口（Compose 部署后；镜像未就绪时 files.*.url 为空串）
+curl.exe http://127.0.0.1:8088/api/site/update
 ```
 
 ## 百科数据
@@ -251,7 +265,7 @@ Compose 同时起三个服务：
 
 - `website`：nginx 静态站，容器内 8080，只映射到 `127.0.0.1:8088`；`/api/telemetry/` 反代到接收端、`/api/site/` 反代到内容 API。
 - `telemetry`：Node 接收端，容器内 8090，**不映射宿主机端口**，只被 `website` 访问；`website` 等它 healthcheck 通过才启动。
-- `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署；同时镜像最新 Windows zip 到 `release-downloads` 卷（只读挂载给 `website` 的 nginx `/downloads/`）。
+- `site-api`：只读内容 API，容器内 8092，**不映射宿主机端口**；服务端缓存 GitHub Releases（默认 5 分钟），发版后网站自动显示最新版本，无需重新部署；同时镜像最新 Windows zip / `update-manifest.json` / `core-*.snavmod.zip` 到 `release-downloads` 卷（只读挂载给 `website` 的 nginx `/downloads/`），并提供游戏内自动更新接口 `/api/site/update`。
 - `telemetry-dashboard`（可选，`--profile dashboard`）：看板容器，只读挂载同一个数据卷，只映射到 `127.0.0.1:8091`。
 - nginx：`location /api/telemetry/` → `http://telemetry:8090`（原样保留 URI、`client_max_body_size 1m`、只允许 GET/POST、关闭该 location 的 access_log 以免记录客户端 IP）；`location /api/site/` → `http://site-api:8092`（只允许 GET/HEAD）；`location /downloads/` 直接读只读卷（Range + 30 天缓存）。
 
@@ -436,10 +450,11 @@ node website/tools/serve.mjs
 Select-String -Path website/index.html -Pattern '开发|调试|测试|原型|MVP|版本|GitHub|Godot|模组|引擎|构建|诊断|日志|文档|代码|dev|build|debug|changelog'
 
 # 游玩数据接收端 / 内容 API / 版本数据
-node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/site-api.test.mjs website/tests/release-data.test.mjs
+node --test website/tests/telemetry.test.mjs website/tests/telemetry-dashboard.test.mjs website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs website/tests/site-api-update.test.mjs website/tests/release-data.test.mjs
 curl.exe http://127.0.0.1:4173/api/telemetry/health
 # 运行时版本 API 只由 Compose 提供（本地预览 serve.mjs 不挂载，页面自动用静态 fallback）：
 curl.exe http://127.0.0.1:8088/api/site/release
+curl.exe http://127.0.0.1:8088/api/site/update
 ```
 
 浏览器检查：1440×900 / 1024×768 / 390×844 无横向滚动；百科搜索、分类、`#entry-*` / `#cat-*` 深链接可用；灯箱可用 Esc 关闭。

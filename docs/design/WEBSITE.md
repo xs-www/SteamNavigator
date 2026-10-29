@@ -41,6 +41,12 @@
     校验清单条目兼容裸文件名与发布流程实际写出的 `dist/release/<文件名>` 路径；清单缺失 / 请求失败 /
     缺少目标条目时**不提供镜像**（`available=false`，前端回退 GitHub），不得跳过 SHA 校验。
     进程重启后对已有文件重新计算 SHA-256，同大小的损坏副本会被删除并重新下载，不能只凭文件大小复用。
+  - **游戏内自动更新接口**（契约 `docs/design/AUTO_UPDATE.md` §4）：`site-api` 额外镜像最新 Release 的
+    `update-manifest.json` 与 `core-*.snavmod.zip`，并提供 `GET /api/site/update`，返回 `tag` / `published_at` /
+    清单原文 / `files.package`、`files.core`（`url` / `size` / `sha256` / `fallback_url`）。清单自身、package、core
+    的 SHA-256 必须与 `SHA256SUMS.txt` 对应条目一致、`schema` 必须为 1 且 `tag` 等于最新 Release，否则接口
+    `503 { ok:false, error }`、不提供更新数据；engine 在平台 ZIP 内（无独立 sums 条目），客户端解压后按清单哈希
+    校验。镜像未就绪时 `files.*.url` 为空字符串，客户端用 `fallback_url`（GitHub 直链）。
 - 世界观关键词：蒸汽朋克、群岛、浓雾、煤烟、黄铜与铸铁、港口城邦、商会 / 皇家海军 / 海盗团、遗迹与失落的航路。
 - 核心玩法关键词：动态行情与港口库存、造船厂与模块改装、程序生成海图与线索探索、锅炉策略、蒸汽舰炮与舰队、基地生产链、遗迹远征、自动贸易。
 - 五个港口模板：铁港、香料港、自由镇、渔村、玻璃港。
@@ -79,10 +85,12 @@ website/
 │   └── ci.ps1               本地 CI：构建 / 冒烟 / 部署
 ├── server/
 │   ├── telemetry.mjs        游玩日志接收端（校验 / 限流 / 落盘 / 保留），契约见 TELEMETRY.md
-│   └── site_api.mjs         只读内容 API（服务端缓存 GitHub Releases），运行时自动更新版本
+│   └── site_api.mjs         只读内容 API（/api/site/release 缓存 GitHub Releases；镜像清单 / ZIP / core 并暴露 /api/site/update）
 ├── tests/
 │   ├── telemetry.test.mjs   接收端 node:test 用例
 │   ├── site-api.test.mjs    内容 API node:test 用例（缓存 / 降级 / fallback）
+│   ├── site-api-mirror.test.mjs Windows 下载镜像 node:test 用例
+│   ├── site-api-update.test.mjs 自动更新清单镜像与 /api/site/update node:test 用例
 │   └── release-data.test.mjs 版本数据生成器 node:test 用例
 ├── deploy/
 │   ├── Dockerfile          nginx alpine 生产镜像（非 root / 单 worker）
@@ -219,14 +227,14 @@ window.SN_WIKI_DATA = {
 
 1. 5 个页面均可在 `http://127.0.0.1:<port>/` 正常打开；无 404（图片 / CSS / JS）。
 2. 首页可见文本（去掉导航与页脚链接文字后）不含 §1 的禁用词；不含版本号。
-3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过）。Runtime：部署后 `GET /api/site/release` 返回 200，`data.latest.tag` 等于 GitHub 最新 Release；发布新 Release 后 ≤5 分钟（服务端缓存 TTL）页面无需重新部署即可显示新版本。Windows 镜像：`data.downloads.windows.available=true` 后页面 Windows 按钮指向 `/downloads/<tag>/...`（HEAD 200、Range 206、只保留最新 tag），不可用时回退 GitHub。
+3. 下载页的 3 个外链可访问（HTTP 200），平台卡片显示真实文件大小量级；版本号 / 发布日期 / 文件大小 / 下载直链与 GitHub 最新 Release 一致（`node website/tools/build-release-data.mjs --check` 通过）。Runtime：部署后 `GET /api/site/release` 返回 200，`data.latest.tag` 等于 GitHub 最新 Release；发布新 Release 后 ≤5 分钟（服务端缓存 TTL）页面无需重新部署即可显示新版本。Windows 镜像：`data.downloads.windows.available=true` 后页面 Windows 按钮指向 `/downloads/<tag>/...`（HEAD 200、Range 206、只保留最新 tag），不可用时回退 GitHub。自动更新：`GET /api/site/update` 在清单通过 `SHA256SUMS.txt` 校验后返回 200，`data.files.package/core` 的 `sha256` / `size` 与清单一致、`fallback_url` 指向 GitHub；镜像未就绪时 `url` 为空字符串；清单缺失 / 哈希不匹配 / 无 Release 数据时返回 503。
 4. 百科页：分类筛选、搜索、空结果提示、深链接（`#entry-id` / `#cat-id`）可用；条目数 ≥ 60。
 5. Chrome headless 截图 1440×900、1024×768、390×844 无横向滚动、无重叠、导航可用。
 6. 控制台无 JS 报错；图片均有 `alt`；按钮/链接键盘可达；灯箱可用 `Esc` 关闭。
 7. `prefers-reduced-motion` 下无强迫动画。
 8. 站点无外部网络依赖（字体 / CDN / 统计脚本）；下载外链除外。
 9. 游玩数据接收端：`GET /api/telemetry/health` 返回 200；合法会话 `POST /api/telemetry/session` 返回 204 并在数据目录生成对应文件与 `index.ndjson`；`node --test website/tests/telemetry.test.mjs` 全绿。接收端契约见 [TELEMETRY.md](TELEMETRY.md)。
-10. 版本数据：`node --test website/tests/release-data.test.mjs website/tests/site-api.test.mjs` 全绿；`node website/tools/build-release-data.mjs --check` 通过；GitHub API 不可达时部署仍能用上一次生成的数据启动（脚本保留旧文件），`site-api` 仍能回退静态数据。
+10. 版本数据：`node --test website/tests/release-data.test.mjs website/tests/site-api.test.mjs website/tests/site-api-mirror.test.mjs website/tests/site-api-update.test.mjs` 全绿；`node website/tools/build-release-data.mjs --check` 通过；GitHub API 不可达时部署仍能用上一次生成的数据启动（脚本保留旧文件），`site-api` 仍能回退静态数据。
 
 ## 8. 协作与写入边界
 
@@ -235,7 +243,7 @@ window.SN_WIKI_DATA = {
 - wiki 任务：只写 `website/tools/build-wiki-data.mjs`、`website/assets/data/`。
 - telemetry 任务：只写 `website/server/`、`website/tests/`、`website/deploy/Dockerfile.telemetry` 与本文档 §10 契约涉及的 nginx / compose / README 段落；契约先改 [TELEMETRY.md](TELEMETRY.md)。
 - 版本数据任务：只写 `website/tools/build-release-data.mjs`、`website/assets/data/release-data.js`、`website/assets/js/release.js`、`.github/workflows/website-release-data.yml` 与下载/开发日志页的数据属性；不手改生成文件。
-- 内容 API 任务：只写 `website/server/site_api.mjs`、`website/tests/site-api*.test.mjs`、`website/deploy/Dockerfile.site-api` 与 compose / nginx 的 `/api/site/`、`/downloads/` 段落；只读、不接触遥测数据，token 不进响应；Windows 镜像只保留最新 tag。
+- 内容 API 任务：只写 `website/server/site_api.mjs`、`website/tests/site-api*.test.mjs`、`website/deploy/Dockerfile.site-api` 与 compose / nginx 的 `/api/site/`、`/downloads/` 段落；只读、不接触遥测数据，token 不进响应；Windows 镜像与自动更新清单（`update-manifest.json` / core 包）只保留最新 tag，`/api/site/update` 只返回通过 `SHA256SUMS.txt` 校验的数据。
 - QA：只写 `tmp/website-qa/`。
 - 所有人不改 `dev_mods/`、`framework/`、`docs/static/`；站点目录加 `.gdignore`，避免 Godot 导入。
 
@@ -256,6 +264,7 @@ window.SN_WIKI_DATA = {
 - 最新 Windows 安装包镜像（2026-10-27）：`site-api` 后台流式下载最新 Release 的 windows.zip 到命名卷 `release-downloads`（SHA-256 + 字节数校验），`website` 只读挂载后由 nginx `/downloads/<tag>/<file>` 下发（Range、30 天缓存）；新版本就绪后清理旧 tag，只保留最新版，历史版本与镜像未就绪时回退 GitHub。`release.js` 缓存标识用 `?v=` 版本串，修改脚本时需同步更新。
 - 镜像校验加固（2026-10-29，随 `v0.2.0-dev.4-fixed` 发布）：反馈「官网下载的 Windows 包打不开」排查发现镜像本身字节完整（与 GitHub 原包 SHA 一致），但旧校验逻辑只按裸文件名匹配 `SHA256SUMS.txt`，而发布流程写的是 `dist/release/<文件名>` 路径，导致镜像跳过 SHA 校验；进程重启后也只比较文件大小复用旧副本。修复为按 basename 匹配清单路径、清单缺失 / 请求失败 / 无目标条目时不提供镜像、已有文件重启后流式重算 SHA-256，坏副本删除重下；`site-api-mirror` 测试覆盖 `dist/release/` 路径、清单异常与重启复验。
 - 发布日期时区（2026-10-27）：`build-release-data.mjs` 的 `date` 改为按站点时区（默认 `Asia/Shanghai`，`SN_RELEASE_TIME_ZONE` / `--time-zone` 可覆盖）从 `published_at` 计算，并输出 `date_time_zone`；`release.js` 用访客本地时区格式化日期。修复 `v0.2.0-dev.4`（`2026-10-26T22:18:39Z`）显示为 10-26 的问题（北京时间 / 悉尼时间均为 10-27）。
+- 游戏内自动更新（2026-10-29）：发布流水线新增 `tools/build_update_manifest.mjs` 生成 `dist/release/update-manifest.json`（契约 `docs/design/AUTO_UPDATE.md` §3，并入 `SHA256SUMS.txt` 并随 artifact / Release 上传）；`site_api.mjs` 新增 `GET /api/site/update` 并把清单 + 最新 Windows ZIP + `core-*.snavmod.zip` 镜像到 `release-downloads`，清单 package / core 哈希必须与 `SHA256SUMS.txt` 一致才提供数据，镜像未就绪时 `url` 为空串、客户端回退 GitHub；新增 `tools/tests/update_manifest.test.mjs` 与 `website/tests/site-api-update.test.mjs` 覆盖生成器与接口降级。
 
 ## 10. 游玩数据接收端（Telemetry ingest）
 
